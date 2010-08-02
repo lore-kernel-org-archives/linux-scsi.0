@@ -1,43 +1,76 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] usb-storage: implement autosuspend
-Date: Mon, 2 Aug 2010 11:07:27 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1008021104180.1595-100000@iolanthe.rowland.org>
-References: <201008021636.10290.oneukum@suse.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: 2.6.35-rc6-git6: Reported regressions from 2.6.34
+Date: Mon, 02 Aug 2010 18:32:13 +0200
+Message-ID: <4C56F30D.3020304@kernel.org>
+References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera> <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:59021 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751590Ab0HBPHb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2010 11:07:31 -0400
-In-Reply-To: <201008021636.10290.oneukum@suse.de>
+Received: from hera.kernel.org ([140.211.167.34]:32949 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751852Ab0HBQd3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Aug 2010 12:33:29 -0400
+In-Reply-To: <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, Greg KH <greg@kroah.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Jens Axboe <jaxboe@fusionio.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>
 
-On Mon, 2 Aug 2010, Oliver Neukum wrote:
+Hello, Linus.
 
-> Am Mittwoch, 28. Juli 2010, 23:12:39 schrieb Alan Stern:
-> > 
-> > This patch (as1400) adds runtime-PM support to usb-storage.  It
-> > utilizes the SCSI layer's runtime-PM implementation, so its scope is
-> > limited.  Currently the only effect is that disk-like devices (such as
-> > card readers or flash drives) will be autosuspended if they aren't
-> > mounted and their device files aren't open.  This would apply, for
-> > example, to card readers that don't contain a memory card.
+On 08/01/2010 08:01 PM, Linus Torvalds wrote:
+> This has a proposed patch. I don't know what the status of it is, though. Jens?
 > 
-> So it will autosuspend devices that do contain a medium, which
-> is not mounted? This is a bit problematic, as some card readers
-> will report a medium change upon resumption?
+>    http://marc.info/?l=linux-kernel&m=127950018204029&w=2
 > 
-> How does user space deal with this?
+>> Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16393
+>> Subject         : kernel BUG at fs/block_dev.c:765!
+>> Submitter       : Markus Trippelsdorf <markus@trippelsdorf.de>
+>> Date            : 2010-07-14 13:52 (19 days old)
+>> Message-ID      : <20100714135217.GA1797@arch.tripp.de>
+>> References      : http://marc.info/?l=linux-kernel&m=127911564213748&w=2
+> 
+> This one is interesting. And I think I perhaps see where it's coming from.
+> 
+> bd_start_claiming() (through bd_prepare_to_claim()) has two separate
+> success cases: either there was no holder (bd_claiming is NULL) or the
+> new holder was already claiming it (bd_claiming == holder).
+> 
+> Note in particular the case of the holder _already_ holding it. What happens is:
+> 
+>  - bd_start_claiming() succeeds because we had _already_ claimed it
+> with the same holder
+> 
+>  - then some error happens, and we call bd_abort_claiming(), which
+> does whole->bd_claiming = NULL;
+> 
+>  - the original holder thinks it still holds the bd, but it has been released!
+> 
+>  - a new claimer comes in, and succeeds because bd_claiming is now NULL.
+> 
+>  - we now have two "owners" of the bd, but bd_claiming only points to
+> the second one.
+> 
+> I think bd_start_claiming() needs to do some kind of refcount for the
+> nested holder case, and bd_abort_claiming() needs to decrement the
+> refcount and only clear the bd_claiming field when it goes down to
+> zero.
+> 
+> I dunno. Maybe there's something else going on, but it does look
+> suspicious, and the above would explain the BUG_ON().
 
-For the most part it won't matter.  It's rare to open a card reader's 
-device file without mounting it.
+Yeah, that definitely sounds plausible.  I think the condition check
+in bd_prepare_to_claim() should have been "if (whole->bd_claiming)"
+instead of "if (whole->bd_claiming && whole->bd_claiming != holder)".
+It doesn't make much sense to allow multiple parallel claiming
+operations anyway and the comment above already says - "This function
+fails if @bdev is already claimed by another holder and waits if
+another claiming is in progress."
 
-If it does matter, the user can disable autosuspend (or more 
-accurately, avoid enabling it) for that device.
+I'll try to build a test case and verify it.
 
-Alan Stern
+Thank you.
 
+-- 
+tejun
