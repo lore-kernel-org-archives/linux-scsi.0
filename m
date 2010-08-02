@@ -1,48 +1,113 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 0/6] Remove owner field from sysfs attribute structure
-Date: Mon, 2 Aug 2010 16:31:28 -0700
-Message-ID: <20100802233128.GA21286@kroah.com>
-References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
- <AANLkTinM+m15QbAg+J3YyHWnObsxtHYYU6p6C89p8wjp@mail.gmail.com>
+From: <gregkh@suse.de>
+Subject: patch "USB: usb-storage: implement autosuspend" added to gregkh-2.6 tree
+Date: Mon, 02 Aug 2010 16:47:34 -0700
+Message-ID: <1280792854321@site>
+References: <Pine.LNX.4.44L0.1007281702030.1744-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTinM+m15QbAg+J3YyHWnObsxtHYYU6p6C89p8wjp@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eric Biederman <ebiederm@aristanetworks.com>
-Cc: Guenter Roeck <guenter.roeck@ericsson.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Greg Kroah-Hartman <gregkh@suse.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Jean Delvare <khali@linux-fr.org>, Dmitry Torokhov <dtor@mail.ru>, Liam Girdwood <lrg@slimlogic.co.uk>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, Chris Wright <chrisw@sous-sol.org>, Nick Cheng <nick.cheng@areca.com.tw>, James Smart <james.smart@emulex.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, Benjamin Thery <benjamin.thery@bull.net>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
+Content-Type: text/plain; charset=ANSI_X3.4-1968
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kroah.org ([198.145.64.141]:36280 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751420Ab0HBXsN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Aug 2010 19:48:13 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1007281702030.1744-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: stern@rowland.harvard.edu, gregkh@suse.de, greg@kroah.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, mdharm-usb@one-eyed-alien.net, oliver@neukum.org, usb-storage@lists.one
 
-On Wed, Jul 28, 2010 at 11:16:35PM -0700, Eric Biederman wrote:
-> On Wed, Jul 28, 2010 at 10:09 PM, Guenter Roeck
-> <guenter.roeck@ericsson.com> wrote:
-> > The following comment is found in include/linux/sysfs.h:
-> >
-> > =A0 /* FIXME
-> > =A0 =A0* The *owner field is no longer used.
-> > =A0 =A0* x86 tree has been cleaned up. The owner
-> > =A0 =A0* attribute is still left for other arches.
-> > =A0 =A0*/
-> >
-> > As it turns out, the *owner field is (again?) initialized in severa=
-l modules,
-> > suggesting that such initialization may be creeping back into the c=
-ode.
-> >
-> > This patch set removes the above comment, the *owner field, and eac=
-h instance
-> > in the code where it was found to be initialized.
-> >
-> > Compiled with x86 allmodconfig as well as with all alpha, arm, mips=
-, powerpc,
-> > and sparc defconfig builds.
->=20
-> This seems reasonable to me.  Can we get this in linux-next?
 
-It will show up in linux-next tomorrow.
+This is a note to let you know that I've just added the patch titled
 
-thanks,
+    USB: usb-storage: implement autosuspend
 
-greg k-h
+to my gregkh-2.6 tree which can be found in directory form at:
+    http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/patches/
+ and in git form at:
+    git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/patches.git
+
+The filename of this patch is:
+    usb-usb-storage-implement-autosuspend.patch
+
+The patch will show up in the next release of the linux-next tree
+(usually sometime within the next 24 hours during the week.)
+
+If this patch meets the merge guidelines for a bugfix, it should be
+merged into Linus's tree before the next major kernel release.
+If not, it will be merged into Linus's tree during the next merge window.
+
+Either way, you will probably be copied on the patch when it gets sent
+to Linus for merging so that others can see what is happening in kernel
+development.
+
+If you have any questions about this process, please let me know.
+
+
+>From stern+4c5c36d6@rowland.harvard.edu  Mon Aug  2 16:02:08 2010
+Date: Wed, 28 Jul 2010 17:12:39 -0400 (EDT)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: James Bottomley <James.Bottomley@suse.de>, Greg KH <greg@kroah.com>
+cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, 
+    Oliver Neukum <oliver@neukum.org>, 
+    SCSI development list <linux-scsi@vger.kernel.org>, 
+    USB Storage list <usb-storage@lists.one-eyed-alien.net>
+Subject: USB: usb-storage: implement autosuspend
+Message-ID: <Pine.LNX.4.44L0.1007281702030.1744-100000@iolanthe.rowland.org>
+
+This patch (as1400) adds runtime-PM support to usb-storage.  It
+utilizes the SCSI layer's runtime-PM implementation, so its scope is
+limited.  Currently the only effect is that disk-like devices (such as
+card readers or flash drives) will be autosuspended if they aren't
+mounted and their device files aren't open.  This would apply, for
+example, to card readers that don't contain a memory card.
+
+Unfortunately this won't interact very well with the removable-media
+polling normally carried out by hal or DeviceKit.  Maybe those
+programs can be changed to use a longer polling interval, or maybe the
+default autosuspend time for usb-storage should be set to something
+below 1 second.
+
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@suse.de>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+
+---
+ drivers/usb/storage/usb.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -336,6 +336,7 @@ static int usb_stor_control_thread(void
+ 		else {
+ 			US_DEBUG(usb_stor_show_command(us->srb));
+ 			us->proto_handler(us->srb, us);
++			usb_mark_last_busy(us->pusb_dev);
+ 		}
+ 
+ 		/* lock access to the state */
+@@ -845,6 +846,7 @@ static int usb_stor_scan_thread(void * _
+ 		/* Should we unbind if no devices were detected? */
+ 	}
+ 
++	usb_autopm_put_interface(us->pusb_intf);
+ 	complete_and_exit(&us->scanning_done, 0);
+ }
+ 
+@@ -968,6 +970,7 @@ int usb_stor_probe2(struct us_data *us)
+ 		goto BadDevice;
+ 	}
+ 
++	usb_autopm_get_interface_no_resume(us->pusb_intf);
+ 	wake_up_process(th);
+ 
+ 	return 0;
+@@ -1040,6 +1043,7 @@ static struct usb_driver usb_storage_dri
+ 	.pre_reset =	usb_stor_pre_reset,
+ 	.post_reset =	usb_stor_post_reset,
+ 	.id_table =	usb_storage_usb_ids,
++	.supports_autosuspend = 1,
+ 	.soft_unbind =	1,
+ };
+ 
+
