@@ -1,56 +1,141 @@
-From: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
-Subject: Re: 2.6.35-rc6-git6: Reported regressions from 2.6.34
-Date: Sun, 1 Aug 2010 23:37:09 +0200
-Message-ID: <201008012337.09961.rjw@sisk.pl>
-References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera> <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com>
+From: "jack wang" <jack_wang@usish.com>
+Subject: RE: [PATCH] drivers/scsi/pm8001: introduce missing kfree
+Date: Mon, 2 Aug 2010 09:34:05 +0800
+Message-ID: <4B727C2D637F4C98A716EA3AA8060F6D@usish.com.cn>
+References: <Pine.LNX.4.64.1008011923120.2222@ask.diku.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain;
+	charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
-Cc: Jens Axboe <jaxboe-5c4llco8/ftWk0Htik3J/w@public.gmane.org>, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:48039 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752094Ab0HBBaw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Aug 2010 21:30:52 -0400
+In-Reply-To: <Pine.LNX.4.64.1008011923120.2222@ask.diku.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Julia Lawall' <julia@diku.dk>, lindar_liu@usish.com, "'James E.J. Bottomley'" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-jan
 
-On Sunday, August 01, 2010, Linus Torvalds wrote:
-> On Sun, Aug 1, 2010 at 6:46 AM, Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org> wrote:
-...
-> 
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16369
-> > Subject         : Yet another 2.6.35 regression (AGP)?
-> > Submitter       : Woody Suwalski <terraluna977-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > Date            : 2010-07-09 14:21 (24 days old)
-> > Message-ID      : <4C373084.8000503-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> > References      : http://marc.info/?l=linux-kernel&m=127868797119254&w=2
-> 
-> Should hopefully be fixed by commit e7b96f28c58c ("agp/intel: Use the
-> correct mask to detect i830 aperture size.")
 
-Closed.
+[Jack]Looks good to me! Thanks!
+Acked-by: Jack Wang<jack_wang@usish.com>
 
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16365
-> > Subject         : kernel BUG at fs/btrfs/extent-tree.c:1353
-> > Submitter       : Johannes Hirte <johannes.hirte-3kN+8DYepx7zMJDuovMtMLNAH6kLmebB@public.gmane.org>
-> > Date            : 2010-07-08 14:27 (25 days old)
-> > Message-ID      : <201007081627.24654.johannes.hirte-3kN+8DYepx7zMJDuovMtMLNAH6kLmebB@public.gmane.org>
-> > References      : http://marc.info/?l=linux-kernel&m=127859960725931&w=2
-> 
-> This one is reportedly fixed by commit 83ba7b071f30 ("writeback:
-> simplify the write back thread queue")
 
-Closed.
+From: Julia Lawall <julia@diku.dk>
 
-> > Bug-Entry       : http://bugzilla.kernel.org/show_bug.cgi?id=16215
-> > Subject         : sysfs: cannot create duplicate filename '/class/net/bnep0'
-> > Submitter       : Janusz Krzysztofik <jkrzyszt-NCk8gXQAEuFz6jiHbVrK7g@public.gmane.org>
-> > Date            : 2010-06-15 14:55 (48 days old)
-> > Handled-By      : Eric W. Biederman <ebiederm-aS9lmoZGLiVWk0Htik3J/w@public.gmane.org>
-> 
-> Fixed by commit 24b1442d01ae155ea716dfb94ed21605541c317d.
+Error handling code following a kmalloc should free the allocated data.
 
-Closed.
+The semantic match that finds the problem is as follows:
+(http://www.emn.fr/x-info/coccinelle/)
 
-Thanks,
-Rafael
+// <smpl>
+@r exists@
+local idexpression x;
+expression E;
+identifier f,f1;
+position p1,p2;
+@@
+
+x@p1 = \(kmalloc\|kzalloc\|kcalloc\)(...);
+<... when != x
+     when != if (...) { <+...x...+> }
+     when != (x) == NULL
+     when != (x) != NULL
+     when != (x) == 0
+     when != (x) != 0
+(
+x->f1 = E
+|
+ (x->f1 == NULL || ...)
+|
+ f(...,x->f1,...)
+)
+...>
+(
+ return <+...x...+>;
+|
+ return@p2 ...;
+)
+
+@script:python@
+p1 << r.p1;
+p2 << r.p2;
+@@
+
+print "* file: %s kmalloc %s return %s" % (p1[0].file,p1[0].line,p2[0].line)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia@diku.dk>
+---
+Another problem with this code is that there is no error checking for the
+calls to kzalloc that are used to initialize fw_control_context.  But the
+existing error handling code mostly returns the result of pm8001_tag_alloc,
+which uses constants of the enumerated type exec_status, defined in
+include/scsi/libsas.h, and it is not clear which of these values should be
+used in the case of insufficient memory.  Nevertheless, one of the
+functions affected by this patch does return -ENOMEM in case of
+insufficient memory.
+
+ drivers/scsi/pm8001/pm8001_hwi.c    |   13 ++++++++++---
+ 1 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.c
+b/drivers/scsi/pm8001/pm8001_hwi.c
+index 58d1134..9793aa6 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.c
++++ b/drivers/scsi/pm8001/pm8001_hwi.c
+@@ -4199,8 +4199,10 @@ static int pm8001_chip_get_nvmd_req(struct
+pm8001_hba_info *pm8001_ha,
+ 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+ 	memset(&nvmd_req, 0, sizeof(nvmd_req));
+ 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+-	if (rc)
++	if (rc) {
++		kfree(fw_control_context);
+ 		return rc;
++	}
+ 	ccb = &pm8001_ha->ccb_info[tag];
+ 	ccb->ccb_tag = tag;
+ 	ccb->fw_control_context = fw_control_context;
+@@ -4276,8 +4278,10 @@ static int pm8001_chip_set_nvmd_req(struct
+pm8001_hba_info *pm8001_ha,
+ 		ioctl_payload->length);
+ 	memset(&nvmd_req, 0, sizeof(nvmd_req));
+ 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+-	if (rc)
++	if (rc) {
++		kfree(fw_control_context);
+ 		return rc;
++	}
+ 	ccb = &pm8001_ha->ccb_info[tag];
+ 	ccb->fw_control_context = fw_control_context;
+ 	ccb->ccb_tag = tag;
+@@ -4387,6 +4391,7 @@ pm8001_chip_fw_flash_update_req(struct pm8001_hba_info
+*pm8001_ha,
+ 			fw_control->len, 0) != 0) {
+ 				PM8001_FAIL_DBG(pm8001_ha,
+ 					pm8001_printk("Mem alloc
+failure\n"));
++				kfree(fw_control_context);
+ 				return -ENOMEM;
+ 		}
+ 	}
+@@ -4401,8 +4406,10 @@ pm8001_chip_fw_flash_update_req(struct
+pm8001_hba_info *pm8001_ha,
+ 	fw_control_context->virtAddr = buffer;
+ 	fw_control_context->len = fw_control->len;
+ 	rc = pm8001_tag_alloc(pm8001_ha, &tag);
+-	if (rc)
++	if (rc) {
++		kfree(fw_control_context);
+ 		return rc;
++	}
+ 	ccb = &pm8001_ha->ccb_info[tag];
+ 	ccb->fw_control_context = fw_control_context;
+ 	ccb->ccb_tag = tag;
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
