@@ -1,42 +1,37 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Mon, 2 Aug 2010 15:14:29 +0200
-Message-ID: <20100802131429.GE3278@quack.suse.cz>
-References: <25F5E16E-968D-4FEF-8187-70453985B19B@dilger.ca>
- <20100729230406.GI4506@thunk.org>
- <4C52CBFF.6090406@vlnb.net>
- <20100730130957.GA26894@lst.de>
- <4C52D2E0.5000609@vlnb.net>
- <20100730133410.GA27996@lst.de>
- <4C52D728.6070008@vlnb.net>
- <20100730142025.GA29341@lst.de>
- <20100731004756.GC3273@quack.suse.cz>
- <20100731091245.GA4643@lst.de>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: Re: [PATCH] usb-storage: implement autosuspend
+Date: Mon, 2 Aug 2010 16:36:10 +0200
+Message-ID: <201008021636.10290.oneukum@suse.de>
+References: <Pine.LNX.4.44L0.1007281702030.1744-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100731091245.GA4643@lst.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, Vladislav Bolkhovitin <vst@vlnb.net>, Ted Ts'o <tytso@mit.edu>, Andreas Dilger <adilger@dilger.ca>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:39077 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751102Ab0HBOgi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Aug 2010 10:36:38 -0400
+In-Reply-To: <Pine.LNX.4.44L0.1007281702030.1744-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@suse.de>, Greg KH <greg@kroah.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, SCSI development list <linux-scsi@vger.kernel.org>, USB Storage list <usb-storage@lists.one-eyed-alien.net>
 
-On Sat 31-07-10 11:12:46, Christoph Hellwig wrote:
-> On Sat, Jul 31, 2010 at 02:47:57AM +0200, Jan Kara wrote:
-> > > There is a few caes where we could do that - the fsync without metadata
-> > > changes above would be the prime example.  But there's a lot lower
-> > > hanging fruit until we get to the point where it's worth trying.
-> >   Umm, I don't understand you. I think that fsync in particular is an
-> > example where you have to wait and issue cache flush if the drive has
-> > volatile write cache.
+Am Mittwoch, 28. Juli 2010, 23:12:39 schrieb Alan Stern:
 > 
-> Of course.  What makes you believe anyone said something else?
-  Ok, then I just misunderstood which requests you wanted to send ORDERED.
-Never mind, I think we agree on what needs to / can be done.
+> This patch (as1400) adds runtime-PM support to usb-storage.  It
+> utilizes the SCSI layer's runtime-PM implementation, so its scope is
+> limited.  Currently the only effect is that disk-like devices (such as
+> card readers or flash drives) will be autosuspended if they aren't
+> mounted and their device files aren't open.  This would apply, for
+> example, to card readers that don't contain a memory card.
 
-								Honza
+So it will autosuspend devices that do contain a medium, which
+is not mounted? This is a bit problematic, as some card readers
+will report a medium change upon resumption?
 
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+How does user space deal with this?
+
+	Regards
+		Oliver
