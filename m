@@ -1,63 +1,48 @@
-From: Hans de Goede <hdegoede@redhat.com>
-Subject: Re: [PATCH resend 1/4] scsi/sr: add no_read_disc_info scsi_device
- flag
-Date: Mon, 02 Aug 2010 23:43:25 +0200
-Message-ID: <4C573BFD.8090407@redhat.com>
-References: <1279875174-2905-1-git-send-email-hdegoede@redhat.com> <1280323195.30808.58.camel@mulgrave.site>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 0/6] Remove owner field from sysfs attribute structure
+Date: Mon, 2 Aug 2010 16:31:28 -0700
+Message-ID: <20100802233128.GA21286@kroah.com>
+References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
+ <AANLkTinM+m15QbAg+J3YyHWnObsxtHYYU6p6C89p8wjp@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44882 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755541Ab0HBVjX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Aug 2010 17:39:23 -0400
-In-Reply-To: <1280323195.30808.58.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTinM+m15QbAg+J3YyHWnObsxtHYYU6p6C89p8wjp@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Eric Biederman <ebiederm@aristanetworks.com>
+Cc: Guenter Roeck <guenter.roeck@ericsson.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Greg Kroah-Hartman <gregkh@suse.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Jean Delvare <khali@linux-fr.org>, Dmitry Torokhov <dtor@mail.ru>, Liam Girdwood <lrg@slimlogic.co.uk>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, Chris Wright <chrisw@sous-sol.org>, Nick Cheng <nick.cheng@areca.com.tw>, James Smart <james.smart@emulex.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, Benjamin Thery <benjamin.thery@bull.net>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, Alan Stern <stern@rowland.harvard.edu>, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-Hi,
+On Wed, Jul 28, 2010 at 11:16:35PM -0700, Eric Biederman wrote:
+> On Wed, Jul 28, 2010 at 10:09 PM, Guenter Roeck
+> <guenter.roeck@ericsson.com> wrote:
+> > The following comment is found in include/linux/sysfs.h:
+> >
+> > =A0 /* FIXME
+> > =A0 =A0* The *owner field is no longer used.
+> > =A0 =A0* x86 tree has been cleaned up. The owner
+> > =A0 =A0* attribute is still left for other arches.
+> > =A0 =A0*/
+> >
+> > As it turns out, the *owner field is (again?) initialized in severa=
+l modules,
+> > suggesting that such initialization may be creeping back into the c=
+ode.
+> >
+> > This patch set removes the above comment, the *owner field, and eac=
+h instance
+> > in the code where it was found to be initialized.
+> >
+> > Compiled with x86 allmodconfig as well as with all alpha, arm, mips=
+, powerpc,
+> > and sparc defconfig builds.
+>=20
+> This seems reasonable to me.  Can we get this in linux-next?
 
-On 07/28/2010 03:19 PM, James Bottomley wrote:
-> On Fri, 2010-07-23 at 10:52 +0200, Hans de Goede wrote:
->> Some USB devices emulate a usb-mass-storage attached (scsi) cdrom device,
->> usually this fake cdrom contains the windows software for the device.
->> While working on supporting Appotech ax3003 based photoframes, which do
->> this I discovered that they will go of into lala land when ever they
->> see a READ_DISC_INFO scsi command.
->>
->> Thus this patch adds a scsi_device flag (which can then be set by the
->> usb-storage driver through an unsual-devs entry), to indicate this, and
->> makes the sr driver honor this flag.
->>
->> I know this sucks, but as discussed on linux-scsi list there is no other
->> way to make this device work properly.
->>
->> Looking at usb traces made under windows, windows never sends a
->> READ_DISC_INFO during normal interactions with a usb cdrom device. So as
->> this cdrom emulation thingie becomes more common we might see more of
->> this problem.
->
-> So, I suppose we can do this.  I dislike threading device bugs like this
-> up and down the stack.  The usb stor_control_thread already does some
-> command filtering; if it just rejected this command and READ
-> CAPACITY(16) on the flags, I think it would be far less code and the
-> SCSI subsystem would just do the right thing.
->
-> I'd actually like to hear from USB what they'd prefer to do.
->
+It will show up in linux-next tomorrow.
 
-I was sort of hoping that Alan Stern would reply to this, but maybe he is
-on vacation?
+thanks,
 
-The reason I've done this patchset this way, is that I've added several
-other usb mass storage specific quirks in the past and each time the USB
-guys said that they don't want to do any (extra) command filtering and
-asked me to split the patch in a scsi / sd flag adding patch and a
-patch for the usb mass storage driver to use that flag.
-
-Regards,
-
-Hans
+greg k-h
