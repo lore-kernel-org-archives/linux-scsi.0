@@ -1,57 +1,49 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: linux-next: build failure after merge of the final tree
- (scsi-post-merge tree related)
-Date: Mon, 02 Aug 2010 15:14:02 -0500
-Message-ID: <1280780042.2843.628.camel@mulgrave.site>
-References: <20100803024445.0bf7ec86.sfr@canb.auug.org.au>
-	 <20100803024701.b3dff69a.sfr@canb.auug.org.au>
-	 <1280768048.2843.242.camel@mulgrave.site> <4C570464.9010204@cs.wisc.edu>
-	 <20100802185925.GA32503@andromeda.dapyr.net> <4C5717E6.8010805@cs.wisc.edu>
-	 <20100802195940.GC32503@andromeda.dapyr.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100802195940.GC32503@andromeda.dapyr.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad@kernel.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Jayamohan Kallickal <jayamohank@serverengines.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 1/1] libfc: call fc_remote_port_chkready under the host lock.
+Date: Mon,  2 Aug 2010 16:02:24 -0500
+Message-ID: <1280782944-22078-1-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:59274 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753250Ab0HBU6m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Aug 2010 16:58:42 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: robert.w.love@intel.com, devel@open-fcoe.org, Mike Christie <michaelc@cs.wisc.edu>
 
-On Mon, 2010-08-02 at 15:59 -0400, Konrad Rzeszutek Wilk wrote:
-> > >Yikes. Last minute change, eh?
-> > 
-> > I do not know what you mean. The patches always had iscsi_boot_sysfs in 
-> > the firmware dir. You mean this is a last minute change?
-> 
-> Yes, this rename.
-> > 
-> > >
-> > >>interface is generic and should be used on any arch and with anything
-> > >>(ibft or iscsi driver) that wants to export iscsi boot info. The
-> > >>attached patch moves iscsi_boot_sysfs to drivers/scsi. It was made over
-> > >>linux-next. I have only compile tested it.
-> > >
-> > >did you compile test it with the x86 native iBFT driver?
-> > 
-> > Yes.
-> 
-> Excellent. The patch does not look like it has changed at all, so:
-> 
->  1). Signed-off-by: Konrad Rzeszutek Wilk <konrad@kernel.org>
->    for the removal from firmware/ibft, and
->  2). Reviewed-by: Konrad Rzeszutek Wilk <konrad@kernel.org> for the
->  the part that puts in drivers/scsi and will make it now under James'
->  mainternship.
-> 
-> James,
-> 
-> I've asked Linus to pull my iBFT tree before yours as there was this
-> dependency. Are you OK putting this patch in your tree, or would you prefer
-> that I expunge Mike's patch from mine?
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-I can put this patch into my post merge tree.  I suspect you having a
-post-post-merge tree (needed for the build problems) might be a bit
-overkill ...
+The rport port state and flags are set under the host lock,
+so this patch calls fc_remote_port_chkready with the host lock
+held like is also done in the other fc drivers.
 
-James
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/libfc/fc_fcp.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index eac4d09..c797f6b 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1765,14 +1765,14 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 	struct fcoe_dev_stats *stats;
+ 
+ 	lport = shost_priv(sc_cmd->device->host);
+-	spin_unlock_irq(lport->host->host_lock);
+ 
+ 	rval = fc_remote_port_chkready(rport);
+ 	if (rval) {
+ 		sc_cmd->result = rval;
+ 		done(sc_cmd);
+-		goto out;
++		return 0;
+ 	}
++	spin_unlock_irq(lport->host->host_lock);
+ 
+ 	if (!*(struct fc_remote_port **)rport->dd_data) {
+ 		/*
+-- 
+1.6.6.1
+
