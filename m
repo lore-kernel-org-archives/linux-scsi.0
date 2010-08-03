@@ -1,53 +1,51 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [RFC 1/2] block: implement an unprep function corresponding directly
- to prep
-Date: Mon, 02 Aug 2010 23:01:23 -0400
-Message-ID: <4C578683.5010409@teksavvy.com>
-References: <1277917264.2839.153.camel@mulgrave.site> <20100701104653O.fujita.tomonori@lab.ntt.co.jp> <20100702110343.GA27159@lst.de> <20100705160023S.fujita.tomonori@lab.ntt.co.jp> <20100705192413.GA24189@lst.de> <4C3253C0.8040900@teksavvy.com> <4C3254A3.6080709@teksavvy.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [patch 0/1] Apply segment size and segment boundary to integrity data
+Date: Tue, 03 Aug 2010 00:44:50 -0400
+Message-ID: <yq1vd7s8ful.fsf@sermon.lab.mkp.net>
+References: <20100715153410.774329000@de.ibm.com>
+	<yq1mxtspwab.fsf@sermon.lab.mkp.net>
+	<20100716083034.GA7474@schmichrtp.ibm.com>
+	<yq1bpa292wy.fsf@sermon.lab.mkp.net>
+	<20100720092850.GA4547@schmichrtp.mainz.de.ibm.com>
+	<yq1y6d579fy.fsf@sermon.lab.mkp.net>
+	<20100802110517.GA4556@schmichrtp.mainz.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.181]:43523 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752835Ab0HCDBZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2010 23:01:25 -0400
-In-Reply-To: <4C3254A3.6080709@teksavvy.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100802110517.GA4556@schmichrtp.mainz.de.ibm.com> (Christof
+	Schmitt's message of "Mon, 2 Aug 2010 13:05:17 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@suse.de, snitzer@redhat.com, axboe@kernel.dk, linux-scsi@vger.kernel.org, dm-devel@redhat.com, linux-ide@vger.kernel.org
 
-On 10-07-05 05:54 PM, Mark Lord wrote:
->> On 05/07/10 03:24 PM, Christoph Hellwig wrote:
->>>
->>> What codebase were you testing on? Sorry, but curently I'm a bit lost
->>> in the maze of patches. I've got both and intel and an OCZ SSD
-> ..
->
-> Do you, or anyone else with one, know what the upper limit is on
-> TRIM operations with the Intel SSDs ?
->
-> I need to know the maximum amount of TRIM ranges they will process
-> in a single command.
->
-> Eg. Indilinx-based SSDs don't appear to have a limit -- they'll accept
-> a TRIM command with thousands of LBA ranges included.
->
-> Sandforce-based SSDs appear to restrict things to max 4KB of range data.
->
-> So.. what about Intel?
+>>>>> "Christof" == Christof Schmitt <christof.schmitt@de.ibm.com> writes:
+
+Christof> To summarize the limits i see in the zfcp hardware:
+Christof> - Maximum size of 4k per segment
+Christof> - The segments must not cross page boundaries
+Christof> - The number of segments per request is limited
+
+The interesting thing here is that your hw has a limit for the total
+number of segments whereas other DIX HBAs have separate limits for data
+and integrity scatterlists.
 
 
-Well, I still don't know about Intel drives -- anyone?
+Christof> What would be the preferred approach for handling the
+Christof> integrity data limits in the block layer? Introduce new queue
+Christof> limits for integrity data, or assume that the limits for
+Christof> integrity data are the same as for user data? I can update my
+Christof> patch accordingly and include a check for the maximum number
+Christof> of segments.
 
-But for the latest hardware, some manufacturers are now reporting
-their TRIM limits in word[105] of the identify data,
-as described (optional) in the latest draft ATA ACS-2 specs.
+I've been messing with this tonight.  It's not entirely trivial because
+of the housekeeping involved, having to accomodate different types of
+hardware, having to avoid breaking existing setups, and having to work
+with integrity compiled and without.
 
-It appears that Sandforce drives officially only allow 512-bytes of range data.
-So I'll limit hdparm's TRIM functions to match word[105] when it is specified.
+My first attempt at this got quite messy.  I think I have found a way
+but it's bedtime here.  Give me a day or two to get back to you with
+something that'll hopefully work for everyone.
 
-The Indilinx drives I have here don't report anything in word[105], though.
-
-Cheers
+-- 
+Martin K. Petersen	Oracle Linux Engineering
