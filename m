@@ -1,77 +1,54 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH] scsi/block: increase flush/sync timeout
-Date: Tue,  3 Aug 2010 14:26:00 -0500
-Message-ID: <1280863560-4747-1-git-send-email-michaelc@cs.wisc.edu>
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 1/9] drivers/scsi/qla2xxx: Drop unnecessary null test
+Date: Tue, 3 Aug 2010 23:31:35 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1008032331170.20393@ask.diku.dk>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8271 "EHLO mx1.redhat.com"
+Received: from mgw2.diku.dk ([130.225.96.92]:57708 "EHLO mgw2.diku.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753672Ab0HCTWN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Aug 2010 15:22:13 -0400
+	id S1753993Ab0HCVbi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Aug 2010 17:31:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, axboe@kernel.dk, bs_lists@aakef.fastmail.fm
-Cc: Mike Christie <mchristi@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, "J, ames E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.orgker
 
-From: Mike Christie <mchristi@redhat.com>
+From: Julia Lawall <julia@diku.dk>
 
-We have been seeing the flush request timeout with a wide
-range of hardware from tgt+iser to FC targets from a major vendor.
+list_for_each_entry_safe binds its first argument to a non-null value, and
+thus any null test on the value of that argument is superfluous.
 
-I did this patch which added a flush timeout:
-http://marc.info/?l=linux-scsi&m=127957359200466&w=2
+The semantic patch that makes this change is as follows:
+(http://coccinelle.lip6.fr/)
 
-A problem with that patch is how to determine what value
-should be set and when you need to set it. You will
-not know that you need to increase until it times out
-and fails, then to figure out what to set it to you
-need to set the timeout and try it out a couple times.
+// <smpl>
+@@
+iterator I;
+expression x,E;
+@@
 
-So this patch just increases the flush/sync cache timeout
-to 2 minutes. In testing, it has taken at most around 60
-seconds to complete the operation, so I thought 120 would
-be safe and not add that long of delay if the device was
-really jammed and needed the scsi eh.
+I(x,...) { <...
+- (x != NULL) &&
+  E
+  ...> }
+// </smpl>
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
 ---
- drivers/scsi/sd.c |    4 ++--
- drivers/scsi/sd.h |    1 +
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 108daea..3ef08bd 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -477,7 +477,7 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index ff2172d..2b0e6ef 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2348,7 +2348,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 	ha = base_vha->hw;
  
- static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
- {
--	rq->timeout = SD_TIMEOUT;
-+	rq->timeout = SD_FLUSH_TIMEOUT;
- 	rq->retries = SD_MAX_RETRIES;
- 	rq->cmd[0] = SYNCHRONIZE_CACHE;
- 	rq->cmd_len = 10;
-@@ -1064,7 +1064,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
- 		 * flush everything.
- 		 */
- 		res = scsi_execute_req(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
--				       SD_TIMEOUT, SD_MAX_RETRIES, NULL);
-+				       SD_FLUSH_TIMEOUT, SD_MAX_RETRIES, NULL);
- 		if (res == 0)
- 			break;
+ 	list_for_each_entry_safe(vha, temp, &ha->vp_list, list) {
+-		if (vha && vha->fc_vport)
++		if (vha->fc_vport)
+ 			fc_vport_terminate(vha->fc_vport);
  	}
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index f81a930..86e6dc3 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -19,6 +19,7 @@
-  */
- #define SD_TIMEOUT		(30 * HZ)
- #define SD_MOD_TIMEOUT		(75 * HZ)
-+#define SD_FLUSH_TIMEOUT	(120 * HZ)
  
- /*
-  * Number of allowed retries
--- 
-1.6.6.1
-
