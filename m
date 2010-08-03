@@ -1,71 +1,70 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC PATCH] Flush only barriers (Was: Re: [RFC] relaxed barrier semantics)
-Date: Tue, 3 Aug 2010 15:03:47 +0200
-Message-ID: <20100803130347.GA25643@lst.de>
-References: <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100729014431.GD4506@thunk.org> <20100729024334.GA21736@redhat.com> <20100729084225.GA30446@lst.de> <20100729200217.GD28704@redhat.com> <20100729200655.GB17767@lst.de> <20100730031721.GA31762@redhat.com> <20100730070732.GA6291@lst.de> <20100802182804.GD19740@redhat.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH resend 1/4] scsi/sr: add no_read_disc_info scsi_device
+ flag
+Date: Tue, 3 Aug 2010 10:14:48 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1008031012160.1853-100000@iolanthe.rowland.org>
+References: <4C573BFD.8090407@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:36172 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754767Ab0HCNES (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Aug 2010 09:04:18 -0400
-Content-Disposition: inline
-In-Reply-To: <20100802182804.GD19740@redhat.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:44650 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756180Ab0HCOOt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2010 10:14:49 -0400
+In-Reply-To: <4C573BFD.8090407@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ted Ts'o <tytso@mit.edu>, Tejun Heo <tj@kernel.org>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, James Bottomley <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>
 
-On Mon, Aug 02, 2010 at 02:28:04PM -0400, Vivek Goyal wrote:
-> Hi Christoph,
-> 
-> Please find attached a new version of patch where I am trying to implement
-> flush only barriers. Why do that? I was thinking that it would nice to avoid
-> elevator drains with WCE=1.
-> 
-> Here I have a DRAIN queue and I seem to be issuing post-flush only after
-> barrier has finished. Need to find some device with TAG queue also to test.
-> 
-> This is still a very crude patch where I need to do lot of testing to see if
-> things are working. For the time being I have just hooked up ext3 to use
-> flush barrier and verified that in case of WCE=0 we don't issue barrier
-> and in case of WCE=1 we do issue barrier with pre flush and postflush.
-> 
-> I don't yet have found a device with FUA and tagging support to verify 
-> that functionality.
+On Mon, 2 Aug 2010, Hans de Goede wrote:
 
-There are not devices that use the tagging support.  Only brd and virtio
-every use the QUEUE_ORDERED_TAG type.  For brd Nick chose it at random,
-and it really doesn't matter when we're dealing with a ramdisk.  For
-virtio-blk it's only used by lguest which only allows a signle
-outstanding command anyway.  In short we can just remove it once we
-stop draining for the other modes.
-
-> o On storage with write cache, for empty barrier, only pre-flush is done.
->   For barrier request with some data one of following should happen depending
->   on queue capability.
+> Hi,
 > 
-> 	Draining queue
-> 	--------------
-> 	preflush ==> barrier (FUA)
-> 	preflush ==> barrier ===> postflush
-> 	
-> 	Ordered Queue
-> 	-------------
-> 	preflush-->barrier (FUA)
-> 	preflush --> barrier ---> postflush
+> On 07/28/2010 03:19 PM, James Bottomley wrote:
+> > On Fri, 2010-07-23 at 10:52 +0200, Hans de Goede wrote:
+> >> Some USB devices emulate a usb-mass-storage attached (scsi) cdrom device,
+> >> usually this fake cdrom contains the windows software for the device.
+> >> While working on supporting Appotech ax3003 based photoframes, which do
+> >> this I discovered that they will go of into lala land when ever they
+> >> see a READ_DISC_INFO scsi command.
+> >>
+> >> Thus this patch adds a scsi_device flag (which can then be set by the
+> >> usb-storage driver through an unsual-devs entry), to indicate this, and
+> >> makes the sr driver honor this flag.
+> >>
+> >> I know this sucks, but as discussed on linux-scsi list there is no other
+> >> way to make this device work properly.
+> >>
+> >> Looking at usb traces made under windows, windows never sends a
+> >> READ_DISC_INFO during normal interactions with a usb cdrom device. So as
+> >> this cdrom emulation thingie becomes more common we might see more of
+> >> this problem.
+> >
+> > So, I suppose we can do this.  I dislike threading device bugs like this
+> > up and down the stack.  The usb stor_control_thread already does some
+> > command filtering; if it just rejected this command and READ
+> > CAPACITY(16) on the flags, I think it would be far less code and the
+> > SCSI subsystem would just do the right thing.
+> >
+> > I'd actually like to hear from USB what they'd prefer to do.
+> >
 > 
-> 	===> Wait for previous request to finish
-> 	---> Issue an ordered request in Tagged queue.
+> I was sort of hoping that Alan Stern would reply to this, but maybe he is
+> on vacation?
 
-with ordered you mean the unused _TAG mode?
+No, I'm here.  I've been waiting to hear from Matt Dharm.  He's the 
+usb-storage maintainer, so it's his call.
 
->   - Not sure how to avoid this drain. Trying to allow other non-barrier
->     requests to dispatch while we wait for pre-flush/flush barrier to finish
->     will make code more complicated.
+> The reason I've done this patchset this way, is that I've added several
+> other usb mass storage specific quirks in the past and each time the USB
+> guys said that they don't want to do any (extra) command filtering and
+> asked me to split the patch in a scsi / sd flag adding patch and a
+> patch for the usb mass storage driver to use that flag.
 
-That's pretty much where I got stuck, too.  Thanks for doing this, but
-I'd be surprised if it really gives us all that much benefits for real
-life workloads.
+In general it's hard to know how command filtering at the usb-storage 
+level will interact with the higher SCSI layers.  In this case we have 
+James's assurance that it will be okay.
+
+Alan Stern
 
