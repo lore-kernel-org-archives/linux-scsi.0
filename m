@@ -1,15 +1,15 @@
 From: Tejun Heo <htejun@gmail.com>
-Subject: [PATCH block#for-2.6.36] block_dev: always serialize exclusive open
- attempts
-Date: Wed, 04 Aug 2010 17:40:59 +0200
-Message-ID: <4C598A0B.9000301@gmail.com>
+Subject: [PATCH RESEND block#for-2.6.36] block_dev: always serialize exclusive
+ open attempts
+Date: Wed, 04 Aug 2010 17:59:39 +0200
+Message-ID: <4C598E6B.7050405@gmail.com>
 References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera> <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com> <4C56F30D.3020304@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
 In-Reply-To: <4C56F30D.3020304@kernel.org>
-Sender: netdev-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 To: Jens Axboe <jaxboe@fusionio.com>
 Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Linus Torvalds <torvalds@linux-foundation.org>, stable@kernel.orgMaciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
@@ -33,9 +33,13 @@ disk.
 stable: only applicable to v2.6.35
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Maciej Rutecki <maciej.rutecki@gmail.com>
+Reported-by: Markus Trippelsdorf <markus@trippelsdorf.de>
 Cc: stable@kernel.org
 ---
+Oops, had the wrong reported-by credit.  Updated.
+
+Thanks.
+
  fs/block_dev.c |    4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
