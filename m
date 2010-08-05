@@ -1,83 +1,33 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 3/12] scsi: megaraid_sas - Online Controller Reset - III:
- add the reset function for Gen2 related chip
-Date: Thu, 5 Aug 2010 13:57:25 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3DBD67F7A@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804546@cosmail02.lsi.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC] relaxed barrier semantics
+Date: Fri, 06 Aug 2010 00:05:52 +0400
+Message-ID: <4C5B19A0.9070200@vlnb.net>
+References: <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100802173930.GP16630@think> <4C5AB89C.5080700@vlnb.net> <20100805133225.GF29846@think> <4C5B1583.6070706@vlnb.net> <20100805195048.GA19030@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:50514 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759273Ab0HET5t convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Aug 2010 15:57:49 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3D0804546@cosmail02.lsi.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20100805195048.GA19030@lst.de>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-Re-submitted requested by James Bottomley.
+Christoph Hellwig, on 08/05/2010 11:50 PM wrote:
+> On Thu, Aug 05, 2010 at 11:48:19PM +0400, Vladislav Bolkhovitin wrote:
+>> So, I believe, Linux must use that possibility to get full storage
+>> performance and to finally simplify its storage stack.
+>
+> So instead of talking what about doing a prototype and show us what
+> improvement it gives?
 
-Add the gen2 chip reset functions to the driver.  Driver will write the gen2 chip register offset to force the controller to reset.
+Sure, I'd love to. But, unfortunately, I can't clone myself, so I'm 
+trying to help the best of what I could: my level of storage and SCSI 
+expertise. This area is quite special, so I'm trying to explain some 
+misunderstandings I see and illustrate my points by some possible work 
+flows and interfaces.
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+But I can shut up if you'd like.
 
----
-drivers/scsi/megaraid/megaraid_sas.c |   41 +++++++++++++++++++++++++++++++++++
- 1 file changed, 41 insertions(+)
-
-diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c new/drivers/scsi/megaraid/megaraid_sas.c
---- old/drivers/scsi/megaraid/megaraid_sas.c	2010-06-08 14:38:29.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-06-08 14:38:43.000000000 -0400
-@@ -662,6 +662,47 @@ static int
- megasas_adp_reset_gen2(struct megasas_instance *instance,
- 			struct megasas_register_set __iomem *reg_set)
- {
-+	u32			retry = 0 ;
-+	u32			HostDiag;
-+
-+	writel(0, &reg_set->seq_offset);
-+	writel(4, &reg_set->seq_offset);
-+	writel(0xb, &reg_set->seq_offset);
-+	writel(2, &reg_set->seq_offset);
-+	writel(7, &reg_set->seq_offset);
-+	writel(0xd, &reg_set->seq_offset);
-+	msleep(1000);
-+
-+	HostDiag = (u32)readl(&reg_set->host_diag);
-+
-+	while ( !( HostDiag & DIAG_WRITE_ENABLE) ) {
-+		msleep(100);
-+		HostDiag = (u32)readl(&reg_set->host_diag);
-+		printk(KERN_NOTICE "RESETGEN2: retry=%x, hostdiag=%x\n",
-+					retry, HostDiag);
-+
-+		if (retry++ >= 100)
-+			return 1;
-+
-+	}
-+
-+	printk(KERN_NOTICE "ADP_RESET_GEN2: HostDiag=%x\n", HostDiag);
-+
-+	writel((HostDiag | DIAG_RESET_ADAPTER), &reg_set->host_diag);
-+
-+	ssleep(10);
-+
-+	HostDiag = (u32)readl(&reg_set->host_diag);
-+	while ( ( HostDiag & DIAG_RESET_ADAPTER) ) {
-+		msleep(100);
-+		HostDiag = (u32)readl(&reg_set->host_diag);
-+		printk(KERN_NOTICE "RESET_GEN2: retry=%x, hostdiag=%x\n",
-+				retry, HostDiag);
-+
-+		if (retry++ >= 1000)
-+			return 1;
-+
-+	}
- 	return 0;
- }
-
+Thanks,
+Vlad
