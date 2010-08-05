@@ -1,49 +1,40 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: xfs rm performance
-Date: Thu, 05 Aug 2010 23:31:06 +0400
-Message-ID: <4C5B117A.4080706@vlnb.net>
-References: <4C52CBFF.6090406@vlnb.net> <20100730130957.GA26894@lst.de> <4C52D2E0.5000609@vlnb.net> <20100730133410.GA27996@lst.de> <4C52D728.6070008@vlnb.net> <20100730142025.GA29341@lst.de> <20100731004756.GC3273@quack.suse.cz> <4C56A01A.1050107@vlnb.net> <20100802124830.GB22345@lst.de> <4C571664.7030107@vlnb.net> <20100802191821.GA13452@lst.de>
+Subject: Re: [RFC] relaxed barrier semantics
+Date: Thu, 05 Aug 2010 23:32:04 +0400
+Message-ID: <4C5B11B4.9020807@vlnb.net>
+References: <4C4FE58C.8080403@kernel.org> <20100728082447.GA7668@lst.de> <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100802173930.GP16630@think> <4C5AB89C.5080700@vlnb.net> <20100805170933.GB10728@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20100802191821.GA13452@lst.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, Ted Ts'o <tytso@mit.edu>, Andreas Dilger <adilger@dilger.ca>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.171]:61379 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755727Ab0HETcP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2010 15:32:15 -0400
+In-Reply-To: <20100805170933.GB10728@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
 
-Christoph Hellwig, on 08/02/2010 11:18 PM wrote:
-> On Mon, Aug 02, 2010 at 11:03:00PM +0400, Vladislav Bolkhovitin wrote:
->> I traced what XFS is doing that time. The initiator is sending by a _single command at time_ the following pattern:
+Christoph Hellwig, on 08/05/2010 09:09 PM wrote:
+> On Thu, Aug 05, 2010 at 05:11:56PM +0400, Vladislav Bolkhovitin wrote:
+>> Chris Mason, on 08/02/2010 09:39 PM wrote:
+>>> I regret putting the ordering into the original barrier code...it
+>>> definitely did help reiserfs back in the day but it stinks of magic and
+>>> voodoo.
+>>
+>> But if the ordering isn't in the common (block) code, how to implement
+>> the "hardware offload" for ordering, i.e. ORDERED commands, in an
+>> acceptable way?
 >
-> That's exactly the queue draining we're talking about here.  To see
-> how the pattern gets better use the nobarrier option.
+> Right now we have no working implementation of actually using ordered
+> tags for a storage device in Linux. There's very little need for common
+> code in that implementation - basically we just need flag in the bio /
+> request to make this one an ordered tag in addition to the existing
+> reordering preventing in the block queue.
 
-Yes, with this option it's almost 2 times better and I see slight queue 
-depth (1-2-3 entries in average, max 8), but the performance is still bad:
+New flag.. Easy to add, hard to live with. Aren't you already tied of 
+the existing flags hell?
 
-# time rm _*
-
-real	3m31.385s
-user	0m0.004s
-sys	0m26.674s
-
-> Even with that XFS traditionally has a bad I/O pattern for metadata
-> intensive workloads due to the amount of log I/O needed for it.
-> Starting from Linux 2.6.35 the delayed logging code fixes this, and
-> we hope to enable it by default after about 10 to 12 month of
-> extensive testing.
->
-> Try to re-run your test with
->
-> 	-o delaylog,logbsize=262144
->
-> to see better log I/O pattern.  If you target doesn't present a volatile
-> write cache also add the nobarrier option mentioned above.
-
-Unfortunately, at the moment I can't run 2.6.35 on that kernel, but will 
-try as soon as I can.
-
-Thanks,
 Vlad
