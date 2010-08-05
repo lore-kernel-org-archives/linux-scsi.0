@@ -1,76 +1,96 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 2.6.36 merge
-	window
-Date: Wed, 4 Aug 2010 15:51:17 -0700
-Message-ID: <AANLkTintTMXirWF+Y-CwK4dn8Mqk8=ba9_+yjX9P837V@mail.gmail.com>
-References: <1280895197.11045.317.camel@mulgrave.site>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: linux-next: build failure after merge of the final tree
+ (scsi-post-merge tree related)
+Date: Thu, 5 Aug 2010 11:55:35 +1000
+Message-ID: <20100805115535.74df93af.sfr@canb.auug.org.au>
+References: <20100803024445.0bf7ec86.sfr@canb.auug.org.au>
+	<20100803024701.b3dff69a.sfr@canb.auug.org.au>
+	<1280768048.2843.242.camel@mulgrave.site>
+	<4C570464.9010204@cs.wisc.edu>
+	<20100802185925.GA32503@andromeda.dapyr.net>
+	<4C5717E6.8010805@cs.wisc.edu>
+	<20100802195940.GC32503@andromeda.dapyr.net>
+	<1280780042.2843.628.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1280895197.11045.317.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, Alan Stern <stern@rowland.harvard.edu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Thu__5_Aug_2010_11_55_35_+1000_Esg6teY.bofDtXLH"
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1280780042.2843.628.camel@mulgrave.site>
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Konrad Rzeszutek Wilk <konrad@kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Jayamohan Kallickal <jayamohank@serverengines.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 3, 2010 at 9:13 PM, James Bottomley <James.Bottomley@suse.d=
-e> wrote:
+--Signature=_Thu__5_Aug_2010_11_55_35_+1000_Esg6teY.bofDtXLH
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi James,
+
+On Mon, 02 Aug 2010 15:14:02 -0500 James Bottomley <James.Bottomley@suse.de=
+> wrote:
 >
-> Alan Stern (3):
-> =A0 =A0 =A0sd: add support for runtime PM
-> =A0 =A0 =A0implement runtime Power Management
-> =A0 =A0 =A0convert to the new PM framework
+> On Mon, 2010-08-02 at 15:59 -0400, Konrad Rzeszutek Wilk wrote:
+> > > >Yikes. Last minute change, eh?
+> > >=20
+> > > I do not know what you mean. The patches always had iscsi_boot_sysfs =
+in=20
+> > > the firmware dir. You mean this is a last minute change?
+> >=20
+> > Yes, this rename.
+> > >=20
+> > > >
+> > > >>interface is generic and should be used on any arch and with anythi=
+ng
+> > > >>(ibft or iscsi driver) that wants to export iscsi boot info. The
+> > > >>attached patch moves iscsi_boot_sysfs to drivers/scsi. It was made =
+over
+> > > >>linux-next. I have only compile tested it.
+> > > >
+> > > >did you compile test it with the x86 native iBFT driver?
+> > >=20
+> > > Yes.
+> >=20
+> > Excellent. The patch does not look like it has changed at all, so:
+> >=20
+> >  1). Signed-off-by: Konrad Rzeszutek Wilk <konrad@kernel.org>
+> >    for the removal from firmware/ibft, and
+> >  2). Reviewed-by: Konrad Rzeszutek Wilk <konrad@kernel.org> for the
+> >  the part that puts in drivers/scsi and will make it now under James'
+> >  mainternship.
+> >=20
+> > James,
+> >=20
+> > I've asked Linus to pull my iBFT tree before yours as there was this
+> > dependency. Are you OK putting this patch in your tree, or would you pr=
+efer
+> > that I expunge Mike's patch from mine?
+>=20
+> I can put this patch into my post merge tree.  I suspect you having a
+> post-post-merge tree (needed for the build problems) might be a bit
+> overkill ...
 
-Guys, these kind of crazy games really aren't appropriate:
+Ping?
+--=20
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
 
-  +/* scsi_pm.c */
-  +#ifdef CONFIG_PM_OPS
-  +extern const struct dev_pm_ops scsi_bus_pm_ops;
-  +#else
-  +#define scsi_bus_pm_ops                (*NULL)
-  +#endif
+--Signature=_Thu__5_Aug_2010_11_55_35_+1000_Esg6teY.bofDtXLH
+Content-Type: application/pgp-signature
 
-that's just crazy. Yes, I see how it's then used (address-of operator
-turns it back into NULL), but the compiler warns about it
-("drivers/scsi/scsi_sysfs.c:384: warning: dereferencing =91void *=92
-pointer") and I think the compiler is 100% correct about warning about
-it.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-It's not just the (*NULL) games, btw. The above can cause confusion.
-It's ugly not just because it causes the compiler to warn, but because
-you use a very subtle and non-standard way of using #define's, so that
-when you look at the source code where this is used, it's not at all
-obvious what is going on. The code looks like
+iQEcBAEBAgAGBQJMWhoXAAoJEDMEi1NhKgbseS8IAIt3cCKe4oJTDBevrZIWUHk+
+H1XYj2REDE7tLdxZOqdRATLu/xCMsvY7aD54kbDoYwxsePlTpZviYOSIUpiM1HK3
+qHNMTyYNGadR0pEfx1UXk+4E/ARHPMmGwfKzAYkngbY/Qp8kkxXxXrr2x1ECIGdp
+0ax1dlxhwcPQTklFcmkCBJdcDTh3wIDEkRuTHpjI6U5PVevHSDkqpsiyb11VGGSu
+iXZtDf3/ujwACrW7St4vnInNxZ+xJtvUOUW/ln0qUs2S8XU5gzpeNwKq/5yKryne
+WzUoBjzH8BbtX9XJ9rnriG9Vj9ERQak/uUxNmJCFLrOf+urO5ZJCf2/ZJ9pRz2E=
+=twdf
+-----END PGP SIGNATURE-----
 
-    .pm             =3D &scsi_bus_pm_ops,
-
-and dammit, it would be rather understandable if some _human_ that
-reads that is also confused and thinks that the above means that the
-=2Epm pointer can never be NULL. The address-of would certainly throw
-me, and not necessarily at all make me grep for "could that possibly
-be some crazy way to say NULL".
-
-And there is absolutely no reason to play games like that. It would
-have been entirely understandable if you just put the #ifdef in the C
-code itself, or if you used a #define that just said
-
-  #ifdef CONFIG_PM_OPS
-  #define SCSI_BUS_PM_OPS &scsi_bus_pm_ops
-  #else
-  #define SCSI_BUS_PM_OPS NULL
-  #endif
-
-and I think it would be less confusing, and it wouldn't upset the compi=
-ler.
-
-Yes, yes, I realize that we do these kinds of things for function
-pointers all the time, so I do understand where the pattern comes
-from. At the same time, I rather think that function pointers are a
-bit different, and they don't have the whole address-of problem.
-
-I guess I should be happy that you didn't use some linker tricks to
-make "&scsi_bus_pm_ops" turn into NULL at link time. That could be
-done too, and would have been even more subtly confusing.
-
-                      Linus
+--Signature=_Thu__5_Aug_2010_11_55_35_+1000_Esg6teY.bofDtXLH--
