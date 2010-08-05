@@ -1,54 +1,32 @@
-From: Jens Axboe <jaxboe-5c4llco8/ftWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH RESEND block#for-2.6.36] block_dev: always serialize
- exclusive open attempts
-Date: Thu, 5 Aug 2010 11:20:51 +0200
-Message-ID: <4C5A8273.2010803@fusionio.com>
-References: <2dWFdr9kTFM.A.P0D.spXVMB@chimera> <AANLkTimcH7+Bq1UEbaSU7SQpzArPgmSLegiqE13V8=CF@mail.gmail.com> <4C56F30D.3020304@kernel.org> <4C598E6B.7050405@gmail.com> <4C5A7E33.3060101@fusionio.com> <20100805091704.GA1772@arch.tripp.de>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC] relaxed barrier semantics
+Date: Thu, 05 Aug 2010 17:11:56 +0400
+Message-ID: <4C5AB89C.5080700@vlnb.net>
+References: <20100727175418.GF6820@quack.suse.cz> <20100727183546.GG7347@redhat.com> <4C4FE58C.8080403@kernel.org> <20100728082447.GA7668@lst.de> <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100802173930.GP16630@think>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20100805091704.GA1772-joY5NpejW+Hx3b7vapvTcQ@public.gmane.org>
-Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Markus Trippelsdorf <markus-xp2qqqlHh3xzoYq+O6RWwA@public.gmane.org>
-Cc: Tejun Heo <htejun-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, "stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org" <stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:64307 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759012Ab0HENMP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2010 09:12:15 -0400
+In-Reply-To: <20100802173930.GP16630@think>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.B
 
-On 2010-08-05 11:17, Markus Trippelsdorf wrote:
-> On Thu, Aug 05, 2010 at 11:02:43AM +0200, Jens Axboe wrote:
->> On 2010-08-04 17:59, Tejun Heo wrote:
->>> bd_prepare_to_claim() incorrectly allowed multiple attempts for
->>> exclusive open to progress in parallel if the attempting holders are
->>> identical.  This triggered BUG_ON() as reported in the following bug.
->>>
->>>   https://bugzilla.kernel.org/show_bug.cgi?id=16393
->>>
->>> __bd_abort_claiming() is used to finish claiming blocks and doesn't
->>> work if multiple openers are inside a claiming block.  Allowing
->>> multiple parallel open attempts to continue doesn't gain anything as
->>> those are serialized down in the call chain anyway.  Fix it by always
->>> allowing only single open attempt in a claiming block.
->>>
->>> This problem can easily be reproduced by adding a delay after
->>> bd_prepare_to_claim() and attempting to mount two partitions of a
->>> disk.
->>>
->>> stable: only applicable to v2.6.35
->>>
->>> Signed-off-by: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
->>> Reported-by: Markus Trippelsdorf <markus-xp2qqqlHh3xzoYq+O6RWwA@public.gmane.org>
->>> Cc: stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
->>
->> Thanks Tejun, applied.
-> 
-> It's already in mainline:
-> e75aa85892b2ee78c79edac720868cbef16e62eb
+Chris Mason, on 08/02/2010 09:39 PM wrote:
+> I regret putting the ordering into the original barrier code...it
+> definitely did help reiserfs back in the day but it stinks of magic and
+> voodoo.
 
-Irk, had not noticed yet, my for-2.6.36 branch isn't fully merged
-up yet. Thanks for the heads-up.
+But if the ordering isn't in the common (block) code, how to implement 
+the "hardware offload" for ordering, i.e. ORDERED commands, in an 
+acceptable way?
 
--- 
-Jens Axboe
+I believe, the decision was right, but the flags and magic requests 
+based interface (and, hence, implementation) was wrong. That's it which 
+stinks of magic and voodoo.
 
-
-Confidentiality Notice: This e-mail message, its contents and any attachments to it are confidential to the intended recipient, and may contain information that is privileged and/or exempt from disclosure under applicable law. If you are not the intended recipient, please immediately notify the sender and destroy the original e-mail message and any attachments (and any copies that may have been made) from your system or otherwise. Any unauthorized use, copying, disclosure or distribution of this information is strictly prohibited.
+Vlad
