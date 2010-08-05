@@ -1,70 +1,119 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 29/42] drivers/scsi: Adjust confusing if indentation
-Date: Thu, 5 Aug 2010 22:25:46 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1008052225240.31692@ask.diku.dk>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: [PATCH 8/12] scsi: megaraid_sas - Online Controller Reset (OCR):
+ Driver re-issue the pending cmds to FW
+Date: Thu, 5 Aug 2010 14:26:57 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3DBD67FA5@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C3D080455A@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C3D09274A2@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mgw2.diku.dk ([130.225.96.92]:57967 "EHLO mgw2.diku.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934228Ab0HEUZs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Aug 2010 16:25:48 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3D09274A2@cosmail02.lsi.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: =?iso-8859-1?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>, Willem Riede <osst@riede.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, osst-users@
 
-From: Julia Lawall <julia@diku.dk>
+RESUBMIT requested by James Bottomley:
 
-Outdent the code following the if.
+After OCR finished, driver need to re-issue the pending cmds to FW again.
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
-
-// <smpl>
-@r disable braces4@
-position p1,p2;
-statement S1,S2;
-@@
-
-(
-if (...) { ... }
-|
-if (...) S1@p1 S2@p2
-)
-
-@script:python@
-p1 << r.p1;
-p2 << r.p2;
-@@
-
-if (p1[0].column == p2[0].column):
-  cocci.print_main("branch",p1)
-  cocci.print_secs("after",p2)
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
+Signed-off-by Bo Yang<bo.yang@lsi.com>
 
 ---
-This patch doesn't change the semantics of the code.  But it might not be
-what is intended.
+drivers/scsi/megaraid/megaraid_sas.c |   81 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 80 insertions(+), 1 deletion(-)
 
- drivers/scsi/st.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 24211d0..9c57a50 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -4166,9 +4166,9 @@ out_free_tape:
- 			if (STm->cdevs[j]) {
- 				if (cdev == STm->cdevs[j])
- 					cdev = NULL;
--					device_destroy(st_sysfs_class,
--						       MKDEV(SCSI_TAPE_MAJOR,
--							     TAPE_MINOR(i, mode, j)));
-+				device_destroy(st_sysfs_class,
-+					       MKDEV(SCSI_TAPE_MAJOR,
-+						     TAPE_MINOR(i, mode, j)));
- 				cdev_del(STm->cdevs[j]);
- 			}
- 		}
+diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c new/drivers/scsi/megaraid/megaraid_sas.c
+--- old/drivers/scsi/megaraid/megaraid_sas.c	2010-06-17 07:51:23.000000000 -0400
++++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-06-17 07:51:23.000000000 -0400
+@@ -2088,7 +2088,86 @@ megasas_complete_cmd(struct megasas_inst
+ static inline void
+ megasas_issue_pending_cmds_again(struct megasas_instance *instance)
+ {
+-	return;
++	struct megasas_cmd *cmd;
++	struct list_head clist_local;
++	union megasas_evt_class_locale class_locale;
++	unsigned long flags;
++	u32 seq_num;
++
++	INIT_LIST_HEAD(&clist_local);
++	spin_lock_irqsave(&instance->hba_lock, flags);
++	list_splice_init(&instance->internal_reset_pending_q, &clist_local);
++	spin_unlock_irqrestore(&instance->hba_lock, flags);
++
++	while (!list_empty(&clist_local)) {
++		cmd	= list_entry((&clist_local)->next,
++					struct megasas_cmd, list);
++		list_del_init(&cmd->list);
++
++		if (cmd->sync_cmd || cmd->scmd) {
++			printk(KERN_NOTICE "megaraid_sas: command %p, %p:%d"
++				"detected to be pending while HBA reset.\n",
++					cmd, cmd->scmd, cmd->sync_cmd);
++
++			cmd->retry_for_fw_reset++;
++
++			if (cmd->retry_for_fw_reset == 3) {
++				printk(KERN_NOTICE "megaraid_sas: cmd %p, %p:%d"
++					"was tried multiple times during reset."
++					"Shutting down the HBA\n",
++					cmd, cmd->scmd, cmd->sync_cmd);
++				megaraid_sas_kill_hba(instance);
++
++				instance->adprecovery =
++						MEGASAS_HW_CRITICAL_ERROR;
++				return;
++			}
++		}
++
++		if (cmd->sync_cmd == 1) {
++			if (cmd->scmd) {
++				printk(KERN_NOTICE "megaraid_sas: unexpected"
++					"cmd attached to internal command!\n");
++			}
++			printk(KERN_NOTICE "megasas: %p synchronous cmd"
++						"on the internal reset queue,"
++						"issue it again.\n", cmd);
++			cmd->cmd_status = ENODATA;
++			instance->instancet->fire_cmd(instance,
++							cmd->frame_phys_addr ,
++							0, instance->reg_set);
++		} else if (cmd->scmd) {
++			printk(KERN_NOTICE "megasas: %p scsi cmd [%02x],%#lx"
++			"detected on the internal queue, issue again.\n",
++			cmd, cmd->scmd->cmnd[0], cmd->scmd->serial_number);
++
++			atomic_inc(&instance->fw_outstanding);
++			instance->instancet->fire_cmd(instance,
++					cmd->frame_phys_addr,
++					cmd->frame_count-1, instance->reg_set);
++		} else {
++			printk(KERN_NOTICE "megasas: %p unexpected cmd on the"
++				"internal reset defer list while re-issue!!\n",
++				cmd);
++		}
++	}
++
++	if (instance->aen_cmd) {
++		printk(KERN_NOTICE "megaraid_sas: aen_cmd in def process\n");
++		megasas_return_cmd(instance, instance->aen_cmd);
++
++		instance->aen_cmd	= NULL;
++	}
++
++	/*
++	* Initiate AEN (Asynchronous Event Notification)
++	*/
++	seq_num = instance->last_seq_num;
++	class_locale.members.reserved = 0;
++	class_locale.members.locale = MR_EVT_LOCALE_ALL;
++	class_locale.members.class = MR_EVT_CLASS_DEBUG;
++
++	megasas_register_aen(instance, seq_num, class_locale.word);
+ }
+ 
+ /**
