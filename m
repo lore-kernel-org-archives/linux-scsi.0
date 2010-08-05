@@ -1,17 +1,21 @@
 From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 6/42] drivers/scsi: Adjust confusing if indentation
-Date: Thu, 5 Aug 2010 22:18:39 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1008052218190.31692@ask.diku.dk>
+Subject: [PATCH 9/42] drivers/scsi: Adjust confusing if indentation
+Date: Thu, 5 Aug 2010 22:19:36 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.1008052219190.31692@ask.diku.dk>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Willem Riede <osst@riede.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-jan
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mgw2.diku.dk ([130.225.96.92]:55376 "EHLO mgw2.diku.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934086Ab0HEUTi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Aug 2010 16:19:38 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 
 From: Julia Lawall <julia@diku.dk>
 
-Indent the branch of an if.
+Outdent the code following the if.
 
 The semantic match that finds this problem is as follows:
 (http://coccinelle.lip6.fr/)
@@ -41,19 +45,37 @@ if (p1[0].column == p2[0].column):
 Signed-off-by: Julia Lawall <julia@diku.dk>
 
 ---
- drivers/scsi/osst.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This might be the wrong fix, however it doesn't change the current semantics.
 
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index d64b717..f974c10 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -4694,7 +4694,7 @@ static int __os_scsi_tape_open(struct inode * inode, struct file * filp)
- 						    STp->timeout, MAX_RETRIES, 1);
- 			if ((SRpnt->sense[0] & 0x70) != 0x70 ||
- 			    (SRpnt->sense[2] & 0x0f) == NOT_READY)
--			break;
-+				break;
- 
- 			if ((SRpnt->sense[2] & 0x0f) == UNIT_ATTENTION) {
- 				STp->pos_unknown = 0;
+ drivers/scsi/arcmsr/arcmsr_hba.c    |    4 ++--
+ drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 95a895d..c4e5cdc 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -877,8 +877,8 @@ static void arcmsr_report_ccb_state(struct AdapterControlBlock *acb,
+ 	if (!error) {
+ 		if (acb->devstate[id][lun] == ARECA_RAID_GONE)
+ 			acb->devstate[id][lun] = ARECA_RAID_GOOD;
+-			ccb->pcmd->result = DID_OK << 16;
+-			arcmsr_ccb_complete(ccb);
++		ccb->pcmd->result = DID_OK << 16;
++		arcmsr_ccb_complete(ccb);
+ 	}else{
+ 		switch (ccb->arcmsr_cdb.DeviceStatus) {
+ 		case ARCMSR_DEV_SELECT_TIMEOUT: {
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
+index 57bcd5c..12faf64 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_base.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+@@ -534,7 +534,7 @@ _base_display_event_data(struct MPT2SAS_ADAPTER *ioc,
+ 		if (event_data->DiscoveryStatus)
+ 			printk("discovery_status(0x%08x)",
+ 			    le32_to_cpu(event_data->DiscoveryStatus));
+-			printk("\n");
++		printk("\n");
+ 		return;
+ 	}
+ 	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
