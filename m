@@ -1,96 +1,49 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: linux-next: build failure after merge of the final tree
- (scsi-post-merge tree related)
-Date: Thu, 5 Aug 2010 11:55:35 +1000
-Message-ID: <20100805115535.74df93af.sfr@canb.auug.org.au>
-References: <20100803024445.0bf7ec86.sfr@canb.auug.org.au>
-	<20100803024701.b3dff69a.sfr@canb.auug.org.au>
-	<1280768048.2843.242.camel@mulgrave.site>
-	<4C570464.9010204@cs.wisc.edu>
-	<20100802185925.GA32503@andromeda.dapyr.net>
-	<4C5717E6.8010805@cs.wisc.edu>
-	<20100802195940.GC32503@andromeda.dapyr.net>
-	<1280780042.2843.628.camel@mulgrave.site>
+From: "Jun'ichi Nomura" <j-nomura@ce.jp.nec.com>
+Subject: Re: [PATCH, RFC 2/2] dm: support REQ_FLUSH directly
+Date: Thu, 05 Aug 2010 11:16:37 +0900
+Message-ID: <4C5A1F05.40308@ce.jp.nec.com>
+References: <20100727165627.GA474@lst.de> <20100727175418.GF6820@quack.suse.cz> <20100803184939.GA12198@lst.de> <20100803185148.GA12258@lst.de> <4C58F341.9060605@ct.jp.nec.com> <20100804085423.GA15687@lst.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Thu__5_Aug_2010_11_55_35_+1000_Esg6teY.bofDtXLH"
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1280780042.2843.628.camel@mulgrave.site>
-Sender: linux-next-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Konrad Rzeszutek Wilk <konrad@kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Jayamohan Kallickal <jayamohank@serverengines.com>, Randy Dunlap <randy.dunlap@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from TYO201.gate.nec.co.jp ([202.32.8.193]:34060 "EHLO
+	tyo201.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758532Ab0HECXz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2010 22:23:55 -0400
+In-Reply-To: <20100804085423.GA15687@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, tj@kernel.org, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, linux-raid@vger.kernel.org
 
---Signature=_Thu__5_Aug_2010_11_55_35_+1000_Esg6teY.bofDtXLH
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Hi Christoph,
 
-Hi James,
+(08/04/10 17:54), Christoph Hellwig wrote:
+> On Wed, Aug 04, 2010 at 01:57:37PM +0900, Kiyoshi Ueda wrote:
+>>> -		if (unlikely(dm_rq_is_flush_request(rq))) {
+>>> +		if (rq->cmd_flags & REQ_FLUSH) {
+>>>  			BUG_ON(md->flush_request);
+>>>  			md->flush_request = rq;
+>>>  			blk_start_request(rq);
+>>
+>> Current request-based device-mapper's flush code depends on
+>> the block-layer's barrier behavior which dispatches only one request
+>> at a time when flush is needed.
+>> In other words, current request-based device-mapper can't handle
+>> other requests while a flush request is in progress.
+>>
+>> I'll take a look how I can fix the request-based device-mapper to
+>> cope with it.  I think it'll take time for carefull investigation.
+> 
+> Given that request based device mapper doesn't even look at the
+> block numbers from what I can see just removing any special casing
+> for REQ_FLUSH should probably do it.
 
-On Mon, 02 Aug 2010 15:14:02 -0500 James Bottomley <James.Bottomley@suse.de=
-> wrote:
->
-> On Mon, 2010-08-02 at 15:59 -0400, Konrad Rzeszutek Wilk wrote:
-> > > >Yikes. Last minute change, eh?
-> > >=20
-> > > I do not know what you mean. The patches always had iscsi_boot_sysfs =
-in=20
-> > > the firmware dir. You mean this is a last minute change?
-> >=20
-> > Yes, this rename.
-> > >=20
-> > > >
-> > > >>interface is generic and should be used on any arch and with anythi=
-ng
-> > > >>(ibft or iscsi driver) that wants to export iscsi boot info. The
-> > > >>attached patch moves iscsi_boot_sysfs to drivers/scsi. It was made =
-over
-> > > >>linux-next. I have only compile tested it.
-> > > >
-> > > >did you compile test it with the x86 native iBFT driver?
-> > >=20
-> > > Yes.
-> >=20
-> > Excellent. The patch does not look like it has changed at all, so:
-> >=20
-> >  1). Signed-off-by: Konrad Rzeszutek Wilk <konrad@kernel.org>
-> >    for the removal from firmware/ibft, and
-> >  2). Reviewed-by: Konrad Rzeszutek Wilk <konrad@kernel.org> for the
-> >  the part that puts in drivers/scsi and will make it now under James'
-> >  mainternship.
-> >=20
-> > James,
-> >=20
-> > I've asked Linus to pull my iBFT tree before yours as there was this
-> > dependency. Are you OK putting this patch in your tree, or would you pr=
-efer
-> > that I expunge Mike's patch from mine?
->=20
-> I can put this patch into my post merge tree.  I suspect you having a
-> post-post-merge tree (needed for the build problems) might be a bit
-> overkill ...
+Special casing is necessary because device-mapper may have to
+send multiple copies of REQ_FLUSH request to multiple
+targets, while normal request is just sent to single target.
 
-Ping?
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Thu__5_Aug_2010_11_55_35_+1000_Esg6teY.bofDtXLH
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQEcBAEBAgAGBQJMWhoXAAoJEDMEi1NhKgbseS8IAIt3cCKe4oJTDBevrZIWUHk+
-H1XYj2REDE7tLdxZOqdRATLu/xCMsvY7aD54kbDoYwxsePlTpZviYOSIUpiM1HK3
-qHNMTyYNGadR0pEfx1UXk+4E/ARHPMmGwfKzAYkngbY/Qp8kkxXxXrr2x1ECIGdp
-0ax1dlxhwcPQTklFcmkCBJdcDTh3wIDEkRuTHpjI6U5PVevHSDkqpsiyb11VGGSu
-iXZtDf3/ujwACrW7St4vnInNxZ+xJtvUOUW/ln0qUs2S8XU5gzpeNwKq/5yKryne
-WzUoBjzH8BbtX9XJ9rnriG9Vj9ERQak/uUxNmJCFLrOf+urO5ZJCf2/ZJ9pRz2E=
-=twdf
------END PGP SIGNATURE-----
-
---Signature=_Thu__5_Aug_2010_11_55_35_+1000_Esg6teY.bofDtXLH--
+Thanks,
+-- 
+Jun'ichi Nomura, NEC Corporation
