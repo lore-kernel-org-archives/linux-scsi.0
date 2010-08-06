@@ -1,64 +1,86 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Fri, 06 Aug 2010 16:56:56 +0200
-Message-ID: <4C5C22B8.9040109@suse.de>
-References: <4C4FECFE.9040509@kernel.org> <20100728085048.GA8884@lst.de> <4C4FF136.5000205@kernel.org> <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100802173930.GP16630@think> <4C5AB89C.5080700@vlnb.net> <20100805133225.GF29846@think> <4C5B1583.6070706@vlnb.net> <20100805195048.GA19030@lst.de> <4C5B19A0.9070200@vlnb.net>
+From: Joe Eykholt <jeykholt@cisco.com>
+Subject: Re: [PATCH 4/5] fnic: do not reset dev_loss_tmo in slave callout
+Date: Fri, 06 Aug 2010 08:06:31 -0700
+Message-ID: <4C5C24F7.3050403@cisco.com>
+References: <1281081761-24586-1-git-send-email-michaelc@cs.wisc.edu> <1281081761-24586-2-git-send-email-michaelc@cs.wisc.edu> <1281081761-24586-3-git-send-email-michaelc@cs.wisc.edu> <1281081761-24586-4-git-send-email-michaelc@cs.wisc.edu> <1281081761-24586-5-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <4C5B19A0.9070200@vlnb.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Christoph Hellwig <hch@lst.de>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-4.cisco.com ([171.68.10.86]:56985 "EHLO
+	sj-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754948Ab0HFPGb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2010 11:06:31 -0400
+In-Reply-To: <1281081761-24586-5-git-send-email-michaelc@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, giridhar.malavali@qlogic.com, James.Smart@Emulex.Com, brking@us.ibm.com
 
-Vladislav Bolkhovitin wrote:
-> Christoph Hellwig, on 08/05/2010 11:50 PM wrote:
->> On Thu, Aug 05, 2010 at 11:48:19PM +0400, Vladislav Bolkhovitin wrot=
-e:
->>> So, I believe, Linux must use that possibility to get full storage
->>> performance and to finally simplify its storage stack.
->>
->> So instead of talking what about doing a prototype and show us what
->> improvement it gives?
->=20
-> Sure, I'd love to. But, unfortunately, I can't clone myself, so I'm
-> trying to help the best of what I could: my level of storage and SCSI
-> expertise. This area is quite special, so I'm trying to explain some
-> misunderstandings I see and illustrate my points by some possible wor=
-k
-> flows and interfaces.
->=20
-I can't, neither.
+On 8/6/10 1:02 AM, michaelc@cs.wisc.edu wrote:
+> From: Mike Christie<michaelc@cs.wisc.edu>
+>
+> This fixes a bug where the driver was resetting the
+> rport dev_loss_tmo when devices were added by adding
+> support for the get_host_def_dev_loss_tmo callout.
 
-But I can do bonnie runs in no time.
-I have done some preliminary benchmarks by just enable ordered
-queueing in sd.c and no other changes.
-Bonnie says:
+fnic devloss timeout isn't settable on the host.
+It's only configurable from network configuration.
+So, I think this patch is unnecessary.
 
-Writing intelligently: 115208 vs.  82739=20
-Reading intelligently: 134133 vs. 129395
+Note that we don't have a set method, so the
+/sys file will be read-only.
 
-putc() performance suffers, though:
-I get 52M vs 90M writing and 50M vs. 65M reading.
-No idea why; shouldn't be that harmful here.
-
-But in any case there is some speed improvement
-to be had from using ordered tags.
-
-Oh, and that was against an EVA 6400.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-fsdevel=
-" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Patch has only been compile tested.
+>
+> Signed-off-by: Mike Christie<michaelc@cs.wisc.edu>
+> ---
+>   drivers/scsi/fnic/fnic_main.c |   14 ++++++++++----
+>   1 files changed, 10 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+> index 9eb7a9e..df91a61 100644
+> --- a/drivers/scsi/fnic/fnic_main.c
+> +++ b/drivers/scsi/fnic/fnic_main.c
+> @@ -80,8 +80,6 @@ static struct libfc_function_template fnic_transport_template = {
+>   static int fnic_slave_alloc(struct scsi_device *sdev)
+>   {
+>   	struct fc_rport *rport = starget_to_rport(scsi_target(sdev));
+> -	struct fc_lport *lp = shost_priv(sdev->host);
+> -	struct fnic *fnic = lport_priv(lp);
+>
+>   	sdev->tagged_supported = 1;
+>
+> @@ -89,8 +87,6 @@ static int fnic_slave_alloc(struct scsi_device *sdev)
+>   		return -ENXIO;
+>
+>   	scsi_activate_tcq(sdev, FNIC_DFLT_QUEUE_DEPTH);
+> -	rport->dev_loss_tmo = fnic->config.port_down_timeout / 1000;
+> -
+>   	return 0;
+>   }
+>
+> @@ -113,6 +109,15 @@ static struct scsi_host_template fnic_host_template = {
+>   	.shost_attrs = fnic_attrs,
+>   };
+>
+> +static void
+> +fnic_get_host_def_loss_tmo(struct Scsi_Host *shost)
+> +{
+> +	struct fc_lport *lp = shost_priv(shost);
+> +	struct fnic *fnic = lport_priv(lp);
+> +
+> +	fc_host_def_dev_loss_tmo(shost) = fnic->config.port_down_timeout / 1000;
+> +}
+> +
+>   static void fnic_get_host_speed(struct Scsi_Host *shost);
+>   static struct scsi_transport_template *fnic_fc_transport;
+>   static struct fc_host_statistics *fnic_get_stats(struct Scsi_Host *);
+> @@ -142,6 +147,7 @@ static struct fc_function_template fnic_fc_functions = {
+>   	.show_rport_dev_loss_tmo = 1,
+>   	.issue_fc_host_lip = fnic_reset,
+>   	.get_fc_host_stats = fnic_get_stats,
+> +	.get_host_def_dev_loss_tmo = fnic_get_host_def_loss_tmo,
+>   	.dd_fcrport_size = sizeof(struct fc_rport_libfc_priv),
+>   	.terminate_rport_io = fnic_terminate_rport_io,
+>   	.bsg_request = fc_lport_bsg_request,
