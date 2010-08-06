@@ -1,53 +1,37 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: [PATCH] mvsas: mvs_lu_reset iterates phy num times when releasing task
-Date: Fri, 6 Aug 2010 11:16:22 -0500
-Message-ID: <20100806161622.GA8696@localhost.localdomain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 4/5] fnic: do not reset dev_loss_tmo in slave callout
+Date: Fri, 06 Aug 2010 11:32:38 -0500
+Message-ID: <4C5C3926.4030105@cs.wisc.edu>
+References: <1281081761-24586-1-git-send-email-michaelc@cs.wisc.edu> <1281081761-24586-2-git-send-email-michaelc@cs.wisc.edu> <1281081761-24586-3-git-send-email-michaelc@cs.wisc.edu> <1281081761-24586-4-git-send-email-michaelc@cs.wisc.edu> <1281081761-24586-5-git-send-email-michaelc@cs.wisc.edu> <4C5C24F7.3050403@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7440 "EHLO mx1.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42197 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756190Ab0HFQQ1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Aug 2010 12:16:27 -0400
-Content-Disposition: inline
+	id S1761272Ab0HFQ2i (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Aug 2010 12:28:38 -0400
+In-Reply-To: <4C5C24F7.3050403@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@suse.de, sgruszka@redhat.com, satyasrinivasp@hcl.in, jeff@garzik.org
+To: Joe Eykholt <jeykholt@cisco.com>
+Cc: linux-scsi@vger.kernel.org, andrew.vasquez@qlogic.com, giridhar.malavali@qlogic.com, James.Smart@Emulex.Com, brking@us.ibm.com
 
-mvs_lu_reset should not call mvs_release_task phy number of times,
-each phy is handled in mvs_release_task.
+On 08/06/2010 10:06 AM, Joe Eykholt wrote:
+> On 8/6/10 1:02 AM, michaelc@cs.wisc.edu wrote:
+>> From: Mike Christie<michaelc@cs.wisc.edu>
+>>
+>> This fixes a bug where the driver was resetting the
+>> rport dev_loss_tmo when devices were added by adding
+>> support for the get_host_def_dev_loss_tmo callout.
+>
+> fnic devloss timeout isn't settable on the host.
+> It's only configurable from network configuration.
+> So, I think this patch is unnecessary.
+>
+> Note that we don't have a set method, so the
+> /sys file will be read-only.
 
-Signed-off-by: David Milburn <dmilburn@redhat.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Srinivas <satyasrinivasp@hcl.in>
-Cc: Andy Yan <ayan@marvell.com>
----
- drivers/scsi/mvsas/mv_sas.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index adedaa9..013ab8d 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -1551,7 +1551,7 @@ static int mvs_debug_I_T_nexus_reset(struct domain_device *dev)
- int mvs_lu_reset(struct domain_device *dev, u8 *lun)
- {
- 	unsigned long flags;
--	int i, phyno[WIDE_PORT_MAX_PHY], num , rc = TMF_RESP_FUNC_FAILED;
-+	int rc = TMF_RESP_FUNC_FAILED;
- 	struct mvs_tmf_task tmf_task;
- 	struct mvs_device * mvi_dev = dev->lldd_dev;
- 	struct mvs_info *mvi = mvi_dev->mvi_info;
-@@ -1560,10 +1560,8 @@ int mvs_lu_reset(struct domain_device *dev, u8 *lun)
- 	mvi_dev->dev_status = MVS_DEV_EH;
- 	rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
- 	if (rc == TMF_RESP_FUNC_COMPLETE) {
--		num = mvs_find_dev_phyno(dev, phyno);
- 		spin_lock_irqsave(&mvi->lock, flags);
--		for (i = 0; i < num; i++)
--			mvs_release_task(mvi, dev);
-+		mvs_release_task(mvi, dev);
- 		spin_unlock_irqrestore(&mvi->lock, flags);
- 	}
- 	/* If failed, fall-through I_T_Nexus reset */
+Ah yeah, I see that now. I argee it is not needed to fix the bug I was 
+fixing. It might be nice to have it, so drivers are setting the dev loss 
+tmo in the same way though. It does not matter to me either way though.
