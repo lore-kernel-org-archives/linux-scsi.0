@@ -1,41 +1,51 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
- Enable Online Controller Reset Bit in register related functions
-Date: Thu, 05 Aug 2010 19:36:13 -0500
-Message-ID: <1281054973.22157.5.camel@mulgrave.site>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
-	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
-	 <1277046060.5242.18.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CC@cosmail02.lsi.com>
-	 <1277063250.5242.25.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CE@cosmail02.lsi.com>
-	 <1277066924.5242.41.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3DBCC8483@cosmail02.lsi.com>
-	 <1280598371.2801.11.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3DBD67FC4@cosmail02.lsi.com>
+From: Joe Eykholt <jeykholt@cisco.com>
+Subject: [PATCH] tgt: fix warning
+Date: Thu, 05 Aug 2010 17:50:37 -0700
+Message-ID: <20100806005037.12928.5358.stgit@savbu-bu.cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3DBD67FC4@cosmail02.lsi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Maharana, Parag" <Parag.Maharana@lsi.com>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-4.cisco.com ([171.68.10.86]:45274 "EHLO
+	sj-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754603Ab0HFAuh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2010 20:50:37 -0400
+Received: from savbu-bu.cisco.com (savbu-bu.cisco.com [10.193.164.54])
+	by sj-core-2.cisco.com (8.13.8/8.14.3) with ESMTP id o760ob4N006215
+	for <linux-scsi@vger.kernel.org>; Fri, 6 Aug 2010 00:50:37 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 2010-08-05 at 14:44 -0600, Yang, Bo wrote:
-> I re-submitted all 12 patches.  Can you help to push them to main tree?
+Using scsi_tgt_lib in a new target module, we were getting
+the following warning and a stack traceback on every I/O completion:
 
-That's actually not what I asked for.  I said please send the set of
-individually compilable patches.  I think that's something like 1-8
-rolled up as one patch with one change set and then the remaining 4 sent
-as individual patches.
+WARNING: at block/blk-core.c:1108
 
-So let me put it this way. I'm sorry I managed to lose the tree I was
-trying to build for this.  However, I have two conferences and four
-talks coming up before the end of the merge window, so I have no time to
-do this again.  If you want this patch set in for 2.6.36, please redo it
-as indicated above ASAP.  Otherwise, I'll take another look when I get
-some free time.
+Which is claiming we may be leaking a bio.
+We don't leak bios (blk_rq_unmap_user should free them).
 
-James
+Set rq->bio to NULL before calling scsi_host_put_command().
+This was as advised by Fujita Tomonori.
+
+Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/scsi_tgt_lib.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 66241dd..c399be9 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -185,6 +185,7 @@ static void scsi_tgt_cmd_destroy(struct work_struct *work)
+ 	dprintk("cmd %p %d %u\n", cmd, cmd->sc_data_direction,
+ 		rq_data_dir(cmd->request));
+ 	scsi_unmap_user_pages(tcmd);
++	tcmd->rq->bio = NULL;
+ 	scsi_host_put_command(scsi_tgt_cmd_to_host(cmd), cmd);
+ }
+ 
+
+
