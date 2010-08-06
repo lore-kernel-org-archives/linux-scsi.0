@@ -1,89 +1,41 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 2.6.36 merge
- window
-Date: Thu, 05 Aug 2010 19:32:48 -0500
-Message-ID: <1281054768.22157.2.camel@mulgrave.site>
-References: <1280895197.11045.317.camel@mulgrave.site>
-	 <AANLkTintTMXirWF+Y-CwK4dn8Mqk8=ba9_+yjX9P837V@mail.gmail.com>
+Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
+ Enable Online Controller Reset Bit in register related functions
+Date: Thu, 05 Aug 2010 19:36:13 -0500
+Message-ID: <1281054973.22157.5.camel@mulgrave.site>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
+	 <1277046060.5242.18.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3D09275CC@cosmail02.lsi.com>
+	 <1277063250.5242.25.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3D09275CE@cosmail02.lsi.com>
+	 <1277066924.5242.41.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3DBCC8483@cosmail02.lsi.com>
+	 <1280598371.2801.11.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3DBD67FC4@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AANLkTintTMXirWF+Y-CwK4dn8Mqk8=ba9_+yjX9P837V@mail.gmail.com>
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3DBD67FC4@cosmail02.lsi.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: Yinghai Lu <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Maharana, Parag" <Parag.Maharana@lsi.com>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2010-08-04 at 15:51 -0700, Linus Torvalds wrote:
-> On Tue, Aug 3, 2010 at 9:13 PM, James Bottomley <James.Bottomley@suse=
-=2Ede> wrote:
-> >
-> > Alan Stern (3):
-> >      sd: add support for runtime PM
-> >      implement runtime Power Management
-> >      convert to the new PM framework
->=20
-> Guys, these kind of crazy games really aren't appropriate:
->=20
->   +/* scsi_pm.c */
->   +#ifdef CONFIG_PM_OPS
->   +extern const struct dev_pm_ops scsi_bus_pm_ops;
->   +#else
->   +#define scsi_bus_pm_ops                (*NULL)
->   +#endif
->=20
-> that's just crazy. Yes, I see how it's then used (address-of operator
-> turns it back into NULL), but the compiler warns about it
-> ("drivers/scsi/scsi_sysfs.c:384: warning: dereferencing =E2=80=98void=
- *=E2=80=99
-> pointer") and I think the compiler is 100% correct about warning abou=
-t
-> it.
+On Thu, 2010-08-05 at 14:44 -0600, Yang, Bo wrote:
+> I re-submitted all 12 patches.  Can you help to push them to main tree?
 
-Sigh ... I did actually check this because I thought the compiler would
-warn.  Apparently it only warns on certain versions.
+That's actually not what I asked for.  I said please send the set of
+individually compilable patches.  I think that's something like 1-8
+rolled up as one patch with one change set and then the remaining 4 sent
+as individual patches.
 
-> It's not just the (*NULL) games, btw. The above can cause confusion.
-> It's ugly not just because it causes the compiler to warn, but becaus=
-e
-> you use a very subtle and non-standard way of using #define's, so tha=
-t
-> when you look at the source code where this is used, it's not at all
-> obvious what is going on. The code looks like
->=20
->     .pm             =3D &scsi_bus_pm_ops,
->=20
-> and dammit, it would be rather understandable if some _human_ that
-> reads that is also confused and thinks that the above means that the
-> .pm pointer can never be NULL. The address-of would certainly throw
-> me, and not necessarily at all make me grep for "could that possibly
-> be some crazy way to say NULL".
->=20
-> And there is absolutely no reason to play games like that. It would
-> have been entirely understandable if you just put the #ifdef in the C
-> code itself, or if you used a #define that just said
->=20
->   #ifdef CONFIG_PM_OPS
->   #define SCSI_BUS_PM_OPS &scsi_bus_pm_ops
->   #else
->   #define SCSI_BUS_PM_OPS NULL
->   #endif
->=20
-> and I think it would be less confusing, and it wouldn't upset the com=
-piler.
->=20
-> Yes, yes, I realize that we do these kinds of things for function
-> pointers all the time, so I do understand where the pattern comes
-> from. At the same time, I rather think that function pointers are a
-> bit different, and they don't have the whole address-of problem.
->=20
-> I guess I should be happy that you didn't use some linker tricks to
-> make "&scsi_bus_pm_ops" turn into NULL at link time. That could be
-> done too, and would have been even more subtly confusing.
-
-Agreed.  Alan already sent a patch to fix it.  I'll add it for the fina=
-l
-SCSI patch set.
+So let me put it this way. I'm sorry I managed to lose the tree I was
+trying to build for this.  However, I have two conferences and four
+talks coming up before the end of the merge window, so I have no time to
+do this again.  If you want this patch set in for 2.6.36, please redo it
+as indicated above ASAP.  Otherwise, I'll take another look when I get
+some free time.
 
 James
