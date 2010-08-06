@@ -1,18 +1,18 @@
 From: michaelc@cs.wisc.edu
 Subject: FC: fix rport dev_loss_tmo initialization
-Date: Fri,  6 Aug 2010 03:01:54 -0500
-Message-ID: <1281081719-24513-1-git-send-email-michaelc@cs.wisc.edu>
+Date: Fri,  6 Aug 2010 03:02:36 -0500
+Message-ID: <1281081761-24586-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55890 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:23733 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759165Ab0HFH5y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Aug 2010 03:57:54 -0400
+	id S1760545Ab0HFH6q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 6 Aug 2010 03:58:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, jeykholt@cisco.com, andrew.vasquez@qlogic.com, giridhar.malavali@qlogic.com, James.Smart@Emulex.Com, brking@us.ibm.com
 
 This patchset fixes a bug where the rport dev_loss_tmo
-is reset when devices are added because the driver
+is reset when devices are added, because the driver
 sets the dev_loss_tmo in the scsi_host_template slave_configure
 function. 
 
