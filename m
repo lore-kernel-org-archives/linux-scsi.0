@@ -1,110 +1,146 @@
-From: "Nick Cheng" <nick.cheng@areca.com.tw>
-Subject: RE: [PATCH 9/42] drivers/scsi: Adjust confusing if indentation
-Date: Fri, 6 Aug 2010 17:42:37 +0800
-Message-ID: <125A3006922D4D419060126ED7EE2E56@areca4e4f859d4>
-References: <Pine.LNX.4.64.1008052219190.31692@ask.diku.dk> <20100806074920.GR9031@bicker>
-Reply-To: <nick.cheng@areca.com.tw>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 10/12] scsi: megaraid_sas - Add input parameter for max_sectors
+Date: Fri, 06 Aug 2010 12:43:43 +0200
+Message-ID: <4C5BE75F.1050105@suse.de>
+References: <4B6A08C587958942AA3002690DD4F8C3D080455E@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C3D09274AC@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C3DBD67FAE@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100806074920.GR9031@bicker>
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3DBD67FAE@cosmail02.lsi.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: 'Dan Carpenter' <error27@gmail.com>, 'Julia Lawall' <julia@diku.dk>
-Cc: "'James E.J. Bottomley'" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-I agree.
-Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
------Original Message-----
-From: Dan Carpenter [mailto:error27@gmail.com] 
-Sent: Friday, August 06, 2010 3:50 PM
-To: Julia Lawall
-Cc: James E.J. Bottomley; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; kernel-janitors@vger.kernel.org;
-nick.cheng@areca.com.tw
-Subject: Re: [PATCH 9/42] drivers/scsi: Adjust confusing if indentation
-
-
-This should go to Nick Cheng.  He would know about the arcmsr driver.
-
-regards,
-dan carpenter
-
-On Thu, Aug 05, 2010 at 10:19:36PM +0200, Julia Lawall wrote:
-> From: Julia Lawall <julia@diku.dk>
-> 
-> Outdent the code following the if.
-> 
-> The semantic match that finds this problem is as follows:
-> (http://coccinelle.lip6.fr/)
-> 
-> // <smpl>
-> @r disable braces4@
-> position p1,p2;
-> statement S1,S2;
-> @@
-> 
-> (
-> if (...) { ... }
-> |
-> if (...) S1@p1 S2@p2
-> )
-> 
-> @script:python@
-> p1 << r.p1;
-> p2 << r.p2;
-> @@
-> 
-> if (p1[0].column == p2[0].column):
->   cocci.print_main("branch",p1)
->   cocci.print_secs("after",p2)
-> // </smpl>
-> 
-> Signed-off-by: Julia Lawall <julia@diku.dk>
-> 
+Yang, Bo wrote:
+> RESUBMIT requested by James Bottomley:
+>=20
+> Driver add the input parameters support for max_sectors for our gen2 =
+chip.  Customer can
+> Set the max_sectors support to 1MB for gen2 chip during the driver lo=
+ad.
+>=20
+> Signed-off-by Bo Yang<bo.yang@lsi.com>
+>=20
 > ---
-> This might be the wrong fix, however it doesn't change the current
-semantics.
-> 
->  drivers/scsi/arcmsr/arcmsr_hba.c    |    4 ++--
->  drivers/scsi/mpt2sas/mpt2sas_base.c |    2 +-
->  2 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c
-b/drivers/scsi/arcmsr/arcmsr_hba.c
-> index 95a895d..c4e5cdc 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-> @@ -877,8 +877,8 @@ static void arcmsr_report_ccb_state(struct
-AdapterControlBlock *acb,
->  	if (!error) {
->  		if (acb->devstate[id][lun] == ARECA_RAID_GONE)
->  			acb->devstate[id][lun] = ARECA_RAID_GOOD;
-> -			ccb->pcmd->result = DID_OK << 16;
-> -			arcmsr_ccb_complete(ccb);
-> +		ccb->pcmd->result = DID_OK << 16;
-> +		arcmsr_ccb_complete(ccb);
->  	}else{
->  		switch (ccb->arcmsr_cdb.DeviceStatus) {
->  		case ARCMSR_DEV_SELECT_TIMEOUT: {
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
-b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> index 57bcd5c..12faf64 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> @@ -534,7 +534,7 @@ _base_display_event_data(struct MPT2SAS_ADAPTER *ioc,
->  		if (event_data->DiscoveryStatus)
->  			printk("discovery_status(0x%08x)",
->  			    le32_to_cpu(event_data->DiscoveryStatus));
-> -			printk("\n");
-> +		printk("\n");
->  		return;
+> drivers/scsi/megaraid/megaraid_sas.c |   74 +++++++++++++++++++++++++=
+++++++++++
+>  drivers/scsi/megaraid/megaraid_sas.h |    1
+>  2 files changed, 75 insertions(+)
+>=20
+> diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c new/drivers/scsi/=
+megaraid/megaraid_sas.c
+> --- old/drivers/scsi/megaraid/megaraid_sas.c	2010-06-08 09:04:38.0000=
+00000 -0400
+> +++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-06-08 09:51:56.0000=
+00000 -0400
+> @@ -57,6 +57,15 @@ module_param_named(poll_mode_io, poll_mo
+>  MODULE_PARM_DESC(poll_mode_io,
+>  	"Complete cmds from IO path, (default=3D0)");
+> =20
+> +/*
+> + * Number of sectors per IO command
+> + * Will be set in megasas_init_mfi if user does not provide
+> + */
+> +static unsigned int max_sectors;
+> +module_param_named(max_sectors, max_sectors, int, 0);
+> +MODULE_PARM_DESC(max_sectors,
+> +	"Maximum number of sectors per IO command");
+> +
+>  MODULE_LICENSE("GPL");
+>  MODULE_VERSION(MEGASAS_VERSION);
+>  MODULE_AUTHOR("megaraidlinux@lsi.com");
+> @@ -3566,6 +3575,32 @@ static int megasas_start_aen(struct mega
+>  				    class_locale.word);
+>  }
+> =20
+> +static ssize_t
+> +sysfs_max_sectors_read(struct kobject *kobj, struct bin_attribute *b=
+in_attr,
+> +			char *buf, loff_t off, size_t count)
+> +{
+> +	struct device *dev =3D container_of(kobj, struct device, kobj);
+> +
+> +	struct Scsi_Host *host =3D class_to_shost(dev);
+> +
+> +	struct megasas_instance *instance =3D
+> +				(struct megasas_instance *)host->hostdata;
+> +
+> +	count =3D sprintf(buf, "%u\n", instance->max_sectors_per_req);
+> +
+> +	return count+1;
+> +}
+> +
+> +static struct bin_attribute sysfs_max_sectors_attr =3D {
+> +	.attr =3D {
+> +		.name =3D "max_sectors",
+> +		.mode =3D S_IRUSR|S_IRGRP|S_IROTH,
+> +		.owner =3D THIS_MODULE,
+> +	},
+> +	.size =3D 7,
+> +	.read =3D sysfs_max_sectors_read,
+> +};
+> +
+>  /**
+>   * megasas_io_attach -	Attaches this driver to SCSI mid-layer
+>   * @instance:		Adapter soft state
+> @@ -3573,6 +3608,7 @@ static int megasas_start_aen(struct mega
+>  static int megasas_io_attach(struct megasas_instance *instance)
+>  {
+>  	struct Scsi_Host *host =3D instance->host;
+> +	u32		error;
+> =20
+>  	/*
+>  	 * Export parameters required by SCSI mid-layer
+> @@ -3588,6 +3624,27 @@ static int megasas_io_attach(struct mega
+>  			instance->max_fw_cmds - MEGASAS_INT_CMDS;
+>  	host->this_id =3D instance->init_id;
+>  	host->sg_tablesize =3D instance->max_num_sge;
+> +	/*
+> +	 * Check if the module parameter value for max_sectors can be used
+> +	 */
+> +	if (max_sectors && max_sectors < instance->max_sectors_per_req)
+> +		instance->max_sectors_per_req =3D max_sectors;
+> +	else {
+> +		if (max_sectors) {
+> +			if (((instance->pdev->device =3D=3D
+> +				PCI_DEVICE_ID_LSI_SAS1078GEN2) ||
+> +				(instance->pdev->device =3D=3D
+> +				PCI_DEVICE_ID_LSI_SAS0079GEN2)) &&
+> +				(max_sectors <=3D MEGASAS_MAX_SECTORS)) {
+> +				instance->max_sectors_per_req =3D max_sectors;
+> +			} else {
+> +			printk(KERN_INFO "megasas: max_sectors should be > 0"
+> +				"and <=3D %d (or < 1MB for GEN2 controller)\n",
+> +				instance->max_sectors_per_req);
+> +			}
+> +		}
+> +	}
+> +
+>  	host->max_sectors =3D instance->max_sectors_per_req;
+>  	host->cmd_per_lun =3D 128;
+>  	host->max_channel =3D MEGASAS_MAX_CHANNELS - 1;
+> @@ -3604,10 +3661,27 @@ static int megasas_io_attach(struct mega
 >  	}
->  	case MPI2_EVENT_SAS_BROADCAST_PRIMITIVE:
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors"
-in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> =20
+>  	/*
+> +	 * Create sysfs entries for module paramaters
+> +	 */
+> +	error =3D sysfs_create_bin_file(&instance->host->shost_dev.kobj,
+> +			&sysfs_max_sectors_attr);
+> +
+Errm. sysfs_create_bin_file?=20
+Do you expect a user to paste binary values in there?
+Please use the standard interface here.
+sysfs_create_bin_file should only be used for 'real' binary values,
+like raw f/w commands.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
