@@ -1,67 +1,44 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: tcm/pscsi: Removal of struct scsi_disk access from
-	pscsi_do_task()..?
-Date: Fri, 06 Aug 2010 21:01:50 -0700
-Message-ID: <1281153710.9098.0.camel@haakon2.linux-iscsi.org>
+From: <vikas.chaudhary@qlogic.com>
+Subject: [PATCH] qla4xxx: fix compilation warning
+Date: Sat, 7 Aug 2010 13:42:38 +0530
+Message-ID: <1281168758-13751-1-git-send-email-vikas.chaudhary@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp128.sbc.mail.sp1.yahoo.com ([69.147.65.187]:25441 "HELO
-	smtp128.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750706Ab0HGEF3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2010 00:05:29 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+Sender: linux-next-owner@vger.kernel.org
+To: sfr@canb.auug.org.au, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, ravi.anand@qlogic.com, karen.higgins@qlogic.com, linux-next@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-Greetings hch and Co,
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
 
-With this todays TCM/pSCSI cleanups pushed to lio-core-2.6.git/lio-4.0,
-I am currently looking at removing the last two remaining uses of
-drivers/scsi/sd.h:struct scsi_disk in pscsi_do_task() and
-__pscsi_get_dev_info().
+Fix following warning:
 
-The latter is easy enough as the modern LIO userspace tools no longer
-depend on this 'pSCSI claimer' information from $PSCSI_HBA/$DEV/info, so
-I have go ahead and removed it this reference.  The former case for the
-main I/O path for struct se_task currently looks like:
+drivers/scsi/qla4xxx/ql4_nx.c: In function 'qla4_8xxx_get_flash_info':
+drivers/scsi/qla4xxx/ql4_nx.c:1952: warning: 'mid' may be used uninitialized in this function
+drivers/scsi/qla4xxx/ql4_nx.c:1952: note: 'mid' was declared here
+drivers/scsi/qla4xxx/ql4_nx.c:1952: warning: 'fid' may be used uninitialized in this function
+drivers/scsi/qla4xxx/ql4_nx.c:1952: note: 'fid' was declared here
 
-        /*
-         * Grab pointer to struct gendisk for TYPE_DISK and TYPE_ROM
-         * cases (eg: cases where struct scsi_device has a backing
-         * struct block_device.  Also set the struct request->timeout
-         * value based on peripheral device type (from SCSI).
-         */
-        if (pdv->pdv_sd->type == TYPE_DISK) {
-                struct scsi_disk *sdisk = dev_get_drvdata(
-                                        &pdv->pdv_sd->sdev_gendev);
-                gd = sdisk->disk;
-                pt->pscsi_req->timeout = PS_TIMEOUT_DISK;
-        } else
-                pt->pscsi_req->timeout = PS_TIMEOUT_OTHER;
+Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Reported-by: Stephen Rothwell <sfr@canb.auug.org.au>
+---
+ drivers/scsi/qla4xxx/ql4_nx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-        pt->pscsi_req->retries = PS_RETRY;
-        /*
-         * Queue the struct request into the struct scsi_device->request_queue.
-         */
-        blk_execute_rq_nowait(pdv->pdv_sd->request_queue, gd,
-                              pt->pscsi_req, 1, pscsi_req_done);
-
-        return PYX_TRANSPORT_SENT_TO_TRANSPORT;
-
-My two questions are:
-
-*) Is passing NULL for struct gendisk *gd into blk_execute_rq_nowait() and hence
-   a NULL struct request->rd_disk acceptable for struct request->rq_flags=REQ_TYPE_BLOCK_PC
-   usage in pscsi_blk_init_request() and pscsi_blk_get_request()..?
-
-*) Is there a more sane way to locate struct gendisk *gd from struct scsi_device
-   for the typical backing struct block_device TYPE_DISK case..?
-
-
-Thanks!
-
---nab
-
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 1b85235..e031a73 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -1953,7 +1953,8 @@ qla4_8xxx_get_fdt_info(struct scsi_qla_host *ha)
+ 	uint16_t cnt, chksum;
+ 	uint16_t *wptr;
+ 	struct qla_fdt_layout *fdt;
+-	uint16_t mid, fid;
++	uint16_t mid = 0;
++	uint16_t fid = 0;
+ 	struct ql82xx_hw_data *hw = &ha->hw;
+ 
+ 	hw->flash_conf_off = FARX_ACCESS_FLASH_CONF;
+-- 
+1.7.0.5
