@@ -1,26 +1,67 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC] relaxed barrier semantics
-Date: Sat, 7 Aug 2010 01:34:59 +0200
-Message-ID: <20100806233459.GB14751@lst.de>
-References: <20100728090025.GA9252@lst.de> <4C4FF592.9090800@kernel.org> <20100728092859.GA11096@lst.de> <20100802173930.GP16630@think> <4C5AB89C.5080700@vlnb.net> <20100805133225.GF29846@think> <4C5B1583.6070706@vlnb.net> <20100805195048.GA19030@lst.de> <4C5B19A0.9070200@vlnb.net> <4C5C22B8.9040109@suse.de>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: tcm/pscsi: Removal of struct scsi_disk access from
+	pscsi_do_task()..?
+Date: Fri, 06 Aug 2010 21:01:50 -0700
+Message-ID: <1281153710.9098.0.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:57545 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760423Ab0HFXtE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 6 Aug 2010 19:49:04 -0400
-Content-Disposition: inline
-In-Reply-To: <4C5C22B8.9040109@suse.de>
+Received: from smtp128.sbc.mail.sp1.yahoo.com ([69.147.65.187]:25441 "HELO
+	smtp128.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750706Ab0HGEF3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2010 00:05:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Christoph Hellwig <hch@lst.de>, Chris Mason <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>, Vivek Goyal <vgoyal@redhat.com>, Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Fri, Aug 06, 2010 at 04:56:56PM +0200, Hannes Reinecke wrote:
-> But I can do bonnie runs in no time.
-> I have done some preliminary benchmarks by just enable ordered
-> queueing in sd.c and no other changes.
+Greetings hch and Co,
 
-Enabled what exactly?
+With this todays TCM/pSCSI cleanups pushed to lio-core-2.6.git/lio-4.0,
+I am currently looking at removing the last two remaining uses of
+drivers/scsi/sd.h:struct scsi_disk in pscsi_do_task() and
+__pscsi_get_dev_info().
+
+The latter is easy enough as the modern LIO userspace tools no longer
+depend on this 'pSCSI claimer' information from $PSCSI_HBA/$DEV/info, so
+I have go ahead and removed it this reference.  The former case for the
+main I/O path for struct se_task currently looks like:
+
+        /*
+         * Grab pointer to struct gendisk for TYPE_DISK and TYPE_ROM
+         * cases (eg: cases where struct scsi_device has a backing
+         * struct block_device.  Also set the struct request->timeout
+         * value based on peripheral device type (from SCSI).
+         */
+        if (pdv->pdv_sd->type == TYPE_DISK) {
+                struct scsi_disk *sdisk = dev_get_drvdata(
+                                        &pdv->pdv_sd->sdev_gendev);
+                gd = sdisk->disk;
+                pt->pscsi_req->timeout = PS_TIMEOUT_DISK;
+        } else
+                pt->pscsi_req->timeout = PS_TIMEOUT_OTHER;
+
+        pt->pscsi_req->retries = PS_RETRY;
+        /*
+         * Queue the struct request into the struct scsi_device->request_queue.
+         */
+        blk_execute_rq_nowait(pdv->pdv_sd->request_queue, gd,
+                              pt->pscsi_req, 1, pscsi_req_done);
+
+        return PYX_TRANSPORT_SENT_TO_TRANSPORT;
+
+My two questions are:
+
+*) Is passing NULL for struct gendisk *gd into blk_execute_rq_nowait() and hence
+   a NULL struct request->rd_disk acceptable for struct request->rq_flags=REQ_TYPE_BLOCK_PC
+   usage in pscsi_blk_init_request() and pscsi_blk_get_request()..?
+
+*) Is there a more sane way to locate struct gendisk *gd from struct scsi_device
+   for the typical backing struct block_device TYPE_DISK case..?
+
+
+Thanks!
+
+--nab
 
