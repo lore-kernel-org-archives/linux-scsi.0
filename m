@@ -1,44 +1,40 @@
-From: Tejun Heo <teheo@suse.de>
-Subject: Re: [PATCH REPOST RFC] relaxed barriers
-Date: Mon, 09 Aug 2010 16:50:37 +0200
-Message-ID: <4C6015BD.6090304@suse.de>
-References: <20100727165627.GA474@lst.de> <20100727175418.GF6820@quack.suse.cz> <20100803184939.GA12198@lst.de> <4C5C3287.1010404@kernel.org> <4C5D31B2.9080509@suse.de> <20100808143126.GA15531@lst.de>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH 1/5] fc class: add fc host default default dev loss setting
+Date: Mon, 9 Aug 2010 10:53:53 -0400
+Message-ID: <4C601681.3020807@emulex.com>
+References: <1281081761-24586-1-git-send-email-michaelc@cs.wisc.edu> <1281081761-24586-2-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:46168 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756654Ab0HIOvk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Aug 2010 10:51:40 -0400
-In-Reply-To: <20100808143126.GA15531@lst.de>
+Received: from exht1.emulex.com ([138.239.113.183]:50206 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756860Ab0HIOyZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2010 10:54:25 -0400
+In-Reply-To: <1281081761-24586-2-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, linux-raid@vger.kernel.org
+To: "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jeykholt@cisco.com" <jeykholt@cisco.com>, "andrew.vasquez@qlogic.com" <andrew.vasquez@qlogic.com>, "giridhar.malavali@qlogic.com" <giridhar.malavali@qlogic.com>, "brking@us.ibm.com" <brking@us.ibm.com>
 
-On 08/08/2010 04:31 PM, Christoph Hellwig wrote:
-> On Sat, Aug 07, 2010 at 12:13:06PM +0200, Tejun Heo wrote:
->> The patch was on top of v2.6.35 but was generated against dirty tree
->> and wouldn't apply cleanly.  Here's the proper one.
+Mike,
+
+why the motivation to get the dev_loss_tmo from the LLDD ?  I would have 
+assumed this would have become a base fc_host attribute which is rd/wr, the 
+default coming from the module parameter, with the "set" propagating to the 
+LLDD to change all rports to the host value (either new direct callback, or 
+loop which calls rport set routine).
+
+- james s
+
+
+michaelc@cs.wisc.edu wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
 > 
-> Here's an updated version:
+> This patch adds a fc_host setting to store the
+> default dev_loss_tmo. It is used if the driver
+> has a callack to get the value from the LLD. If
+> the callback is not set, then we use the fc class
+> module default value.
 > 
->  (a) ported to Jens' current block tree
->  (b) optimize barriers on devices not requiring flushes to be no-ops
->  (b) redo the blk_queue_ordered interface to just set QUEUE_HAS_FLUSH
->      and QUEUE_HAS_FUA flags.
 
-Nice.  I'm working on a properly split patchset implementing
-REQ_FLUSH/FUA based interface, which replaces REQ_HARDBARRIER.  Empty
-request w/ REQ_FLUSH just flushes cache but has no other ordering
-restrictions.  REQ_FLUSH + data means preflush + data write.  REQ_FUA
-+ data means data would be committed to NV media on completion.
-REQ_FLUSH + FUA + data means preflush + NV data write.  All FLUSH/FUA
-requests w/ data are ordered only against each other.  I think I'll be
-able to post in several days.
-
-Thanks.
-
--- 
-tejun
