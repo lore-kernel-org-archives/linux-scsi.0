@@ -1,58 +1,31 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 1/5] fc class: add fc host default default dev loss
- setting
-Date: Mon, 9 Aug 2010 11:32:29 -0700
-Message-ID: <20100809183229.GE70144@plapp.qlogic.org>
-References: <1281081761-24586-1-git-send-email-michaelc@cs.wisc.edu>
- <1281081761-24586-2-git-send-email-michaelc@cs.wisc.edu>
- <4C601681.3020807@emulex.com>
- <4C60180F.5030209@cs.wisc.edu>
- <4C601C1D.2020601@cs.wisc.edu>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: tcm/pscsi: Removal of struct scsi_disk access from pscsi_do_task()..?
+Date: Mon, 9 Aug 2010 20:49:46 +0200
+Message-ID: <20100809184946.GB3424@lst.de>
+References: <1281153710.9098.0.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:36570 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753698Ab0HISca (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2010 14:32:30 -0400
+Received: from verein.lst.de ([213.95.11.210]:54815 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753557Ab0HISuB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Aug 2010 14:50:01 -0400
 Content-Disposition: inline
-In-Reply-To: <4C601C1D.2020601@cs.wisc.edu>
+In-Reply-To: <1281153710.9098.0.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Smart <james.smart@emulex.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jeykholt@cisco.com" <jeykholt@cisco.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "brking@us.ibm.com" <brking@us.ibm.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Mon, 09 Aug 2010, Mike Christie wrote:
+On Fri, Aug 06, 2010 at 09:01:50PM -0700, Nicholas A. Bellinger wrote:
+> *) Is passing NULL for struct gendisk *gd into blk_execute_rq_nowait() and hence
+>    a NULL struct request->rd_disk acceptable for struct request->rq_flags=REQ_TYPE_BLOCK_PC
+>    usage in pscsi_blk_init_request() and pscsi_blk_get_request()..?
 
-> On 08/09/2010 10:00 AM, Mike Christie wrote:
-> > On 08/09/2010 09:53 AM, James Smart wrote:
-> >> Mike,
-> >>
-> >> why the motivation to get the dev_loss_tmo from the LLDD ? I would have
-> >> assumed this would have become a base fc_host attribute which is rd/wr,
-> >> the default coming from the module parameter, with the "set" propagating
-> >> to the LLDD to change all rports to the host value (either new direct
-> >> callback, or loop which calls rport set routine).
-> >
-> > qla2xxx and fnic set the default/initial dev_loss_tmo based on some
-> > value they get from firmware.
-> >
-> 
-> The qla2xxx mention is not right.
-> 
-> Andrew,
-> 
-> It looks like when the port_down_retry_count is set the 
-> login_retry_count could be adjusted.
+Yes.
 
-Actualy it's the other way around.  login_retry_count is initially
-seeded with NVRAM values, then based on value, reassigned to
-port_down_retry_count.
+> *) Is there a more sane way to locate struct gendisk *gd from struct scsi_device
+>    for the typical backing struct block_device TYPE_DISK case..?
 
-> When the dev_loss_tmo is set by 
-> sysfs does qla2xxx, possibly want to adjust the login_retry_count?
+No.
 
-I'd prefer to continue to have port_down_retry_count stay as a seeded
-value to the transport (fc_host).
-
--- av
