@@ -1,56 +1,44 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: RE: [PATCH] scsi: mpt2sas: Add space in printk
-Date: Mon, 9 Aug 2010 16:45:19 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.1008091644280.28909@ask.diku.dk>
-References: <Pine.LNX.4.64.1008052219190.31692@ask.diku.dk> <20100806075914.GS9031@bicker>
- <1C9608B8A4CD534FB19C7C7543CBB24902991CD597@inbmail02.lsi.com>
+From: Tejun Heo <teheo@suse.de>
+Subject: Re: [PATCH REPOST RFC] relaxed barriers
+Date: Mon, 09 Aug 2010 16:50:37 +0200
+Message-ID: <4C6015BD.6090304@suse.de>
+References: <20100727165627.GA474@lst.de> <20100727175418.GF6820@quack.suse.cz> <20100803184939.GA12198@lst.de> <4C5C3287.1010404@kernel.org> <4C5D31B2.9080509@suse.de> <20100808143126.GA15531@lst.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1C9608B8A4CD534FB19C7C7543CBB24902991CD597@inbmail02.lsi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: Dan Carpenter <error27@gmail.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:46168 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756654Ab0HIOvk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Aug 2010 10:51:40 -0400
+In-Reply-To: <20100808143126.GA15531@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jan Kara <jack@suse.cz>, jaxboe@fusionio.com, James.Bottomley@suse.de, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, linux-raid@vger.kernel.org
 
-On Mon, 9 Aug 2010, Desai, Kashyap wrote:
-
+On 08/08/2010 04:31 PM, Christoph Hellwig wrote:
+> On Sat, Aug 07, 2010 at 12:13:06PM +0200, Tejun Heo wrote:
+>> The patch was on top of v2.6.35 but was generated against dirty tree
+>> and wouldn't apply cleanly.  Here's the proper one.
 > 
+> Here's an updated version:
 > 
-> > -----Original Message-----
-> > From: Dan Carpenter [mailto:error27@gmail.com]
-> > Sent: Friday, August 06, 2010 1:29 PM
-> > To: Julia Lawall
-> > Cc: James E.J. Bottomley; linux-scsi@vger.kernel.org; linux-
-> > kernel@vger.kernel.org; kernel-janitors@vger.kernel.org; Moore, Eric;
-> > Desai, Kashyap
-> > Subject: [PATCH] scsi: mpt2sas: Add space in printk
-> > 
-> > Add a space in the output:
-> > old:  Discovery: (stop)discovery_status(0x%08x)
-> > new:  Discovery: (stop) discovery_status(0x%08x)
-> > 
-> > Signed-off-by: Dan Carpenter <error27@gmail.com>
-> > ---
-> > This goes on top of Julia's [PATCH 9/42] drivers/scsi: Adjust
-> > confusing if indentation
-> > 
-> > diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> > b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> > index 12faf64..562b909 100644
-> > --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-> > +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-> > @@ -532,7 +532,7 @@ _base_display_event_data(struct MPT2SAS_ADAPTER
-> > *ioc,
-> >  		    (event_data->ReasonCode ==
-> > MPI2_EVENT_SAS_DISC_RC_STARTED) ?
-> >  		    "start" : "stop");
-> >  		if (event_data->DiscoveryStatus)
-> > -			printk("discovery_status(0x%08x)",
-> > +			printk(" discovery_status(0x%08x)",
-> I don't see any significant reason for changing print. It not adding any benefit.
+>  (a) ported to Jens' current block tree
+>  (b) optimize barriers on devices not requiring flushes to be no-ops
+>  (b) redo the blk_queue_ordered interface to just set QUEUE_HAS_FLUSH
+>      and QUEUE_HAS_FUA flags.
 
-It would look a little nicer to have a space after the ) that is printed 
-by the previous statement.
+Nice.  I'm working on a properly split patchset implementing
+REQ_FLUSH/FUA based interface, which replaces REQ_HARDBARRIER.  Empty
+request w/ REQ_FLUSH just flushes cache but has no other ordering
+restrictions.  REQ_FLUSH + data means preflush + data write.  REQ_FUA
++ data means data would be committed to NV media on completion.
+REQ_FLUSH + FUA + data means preflush + NV data write.  All FLUSH/FUA
+requests w/ data are ordered only against each other.  I think I'll be
+able to post in several days.
 
-julia
+Thanks.
+
+-- 
+tejun
