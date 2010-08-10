@@ -1,118 +1,63 @@
-From: Audio Haven <audiohaven@gmail.com>
-Subject: Re: [PATCH] mvsas: mvs_lu_reset iterates phy num times when releasing
-	task
-Date: Tue, 10 Aug 2010 21:10:30 +0200
-Message-ID: <AANLkTink9DyvHmgRDDe8WqwTJhAVX=DFQ8_b-U6Fy+Fi@mail.gmail.com>
-References: <20100806161622.GA8696@localhost.localdomain>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/2] ipr: fix resource address formatting and add attribute
+ for device ID
+Date: Tue, 10 Aug 2010 15:32:47 -0500
+Message-ID: <4C61B76F.3050100@linux.vnet.ibm.com>
+References: <20100810160721.438853503@linux.vnet.ibm.com> <4C617A7A.5070906@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:38155 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932514Ab0HJTUh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2010 15:20:37 -0400
-Received: by bwz3 with SMTP id 3so2137972bwz.19
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Aug 2010 12:20:35 -0700 (PDT)
-In-Reply-To: <20100806161622.GA8696@localhost.localdomain>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:49171 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753210Ab0HJUdN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2010 16:33:13 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o7AKOxn8019858
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Aug 2010 14:24:59 -0600
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id o7AKX5Mp111054
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Aug 2010 14:33:07 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o7AKWqbB006751
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Aug 2010 14:32:54 -0600
+In-Reply-To: <4C617A7A.5070906@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, sgruszka@redhat.com, satyasrinivasp@hcl.in, jeff@garzik.org
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
 
-Hello David,
+On 08/10/2010 11:12 AM, Wayne Boyer wrote:
+> Index: b/drivers/scsi/ipr.h
+> ===================================================================
+> --- a/drivers/scsi/ipr.h	2010-08-05 11:23:35.000000000 -0700
+> +++ b/drivers/scsi/ipr.h	2010-08-09 10:09:04.000000000 -0700
+> @@ -372,7 +372,7 @@ struct ipr_config_table_entry {
+> 
+>  	struct ipr_res_addr res_addr;
+>  	__be32 res_handle;
+> -	__be32 reserved4[2];
+> +	__be64 lun_wwn;
+>  	struct ipr_std_inq_data std_inq_data;
+>  }__attribute__ ((packed, aligned (4)));
+> 
+> @@ -1210,6 +1210,7 @@ struct ipr_resource_entry {
+> 
+>  	__be32 res_handle;
+>  	__be64 dev_id;
+> +	__be64 lun_wwn;
 
-Does this patch solve the Unplug Notice issues ?
+This should be two __be32's or just an array of u8's instead,
+since this field is not aligned on an 8 byte boundary. You can
+use the unaligned accessors to make it easier to deal with.
 
-When copying lots of large video files in sequence to a 6 TB XFS
-filesystem on top of a 8 TB software raid6 set, I frequently see my
-copy (over samba) being stalled for a while, then the following is
-reported:
+Thanks,
 
-drivers/scsi/mvsas/mv_sas.c 1701:<7>mv_abort_task()
-mvi=3Dffff88003d1c0000 task=3Dffff880004285080 slot=3Dffff88003d1de478
-slot_idx=3Dx1
-drivers/scsi/mvsas/mv_sas.c 1632:mvs_query_task:rc=3D 5
-drivers/scsi/mvsas/mv_sas.c 2081:port 4 ctrl sts=3D0x89800.
-drivers/scsi/mvsas/mv_sas.c 2083:Port 4 irq sts =3D 0x1001
-drivers/scsi/mvsas/mv_sas.c 2109:phy4 Unplug Notice
-drivers/scsi/mvsas/mv_sas.c 2081:port 4 ctrl sts=3D0x199800.
-drivers/scsi/mvsas/mv_sas.c 2083:Port 4 irq sts =3D 0x1081
-drivers/scsi/mvsas/mv_sas.c 2081:port 4 ctrl sts=3D0x199800.
-drivers/scsi/mvsas/mv_sas.c 2083:Port 4 irq sts =3D 0x10000
-drivers/scsi/mvsas/mv_sas.c 2136:notify plug in on phy[4]
-drivers/scsi/mvsas/mv_sas.c 1224:port 4 attach dev info is 4
-drivers/scsi/mvsas/mv_sas.c 1226:port 4 attach sas addr is 4
-drivers/scsi/mvsas/mv_sas.c 378:phy 4 byte dmaded.
-drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for device[4]:rc=3D=
- 0
-ata13: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-ata13: status=3D0x01 { Error }
-ata13: error=3D0x04 { DriveStatusError }
+Brian
 
-I'm using the SuperMicro AOC-SASLP-MV8 to control 8 1TB disks, which
-are never physically unplugged. Used kernel is 2.6.35.
-Raid never breaks so no data loss occurs, but the samba copy
-frequently breaks when the above error occurs, so copying always needs
-a double check, which is quite annoying.
-
-Best regards,
-
-=46rederic Vanden Poel
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
 
-On Fri, Aug 6, 2010 at 6:16 PM, David Milburn <dmilburn@redhat.com> wro=
-te:
-> mvs_lu_reset should not call mvs_release_task phy number of times,
-> each phy is handled in mvs_release_task.
->
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
-> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
-> Cc: Srinivas <satyasrinivasp@hcl.in>
-> Cc: Andy Yan <ayan@marvell.com>
-> ---
-> =A0drivers/scsi/mvsas/mv_sas.c | =A0 =A06 ++----
-> =A01 files changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.=
-c
-> index adedaa9..013ab8d 100644
-> --- a/drivers/scsi/mvsas/mv_sas.c
-> +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -1551,7 +1551,7 @@ static int mvs_debug_I_T_nexus_reset(struct dom=
-ain_device *dev)
-> =A0int mvs_lu_reset(struct domain_device *dev, u8 *lun)
-> =A0{
-> =A0 =A0 =A0 =A0unsigned long flags;
-> - =A0 =A0 =A0 int i, phyno[WIDE_PORT_MAX_PHY], num , rc =3D TMF_RESP_=
-=46UNC_FAILED;
-> + =A0 =A0 =A0 int rc =3D TMF_RESP_FUNC_FAILED;
-> =A0 =A0 =A0 =A0struct mvs_tmf_task tmf_task;
-> =A0 =A0 =A0 =A0struct mvs_device * mvi_dev =3D dev->lldd_dev;
-> =A0 =A0 =A0 =A0struct mvs_info *mvi =3D mvi_dev->mvi_info;
-> @@ -1560,10 +1560,8 @@ int mvs_lu_reset(struct domain_device *dev, u8=
- *lun)
-> =A0 =A0 =A0 =A0mvi_dev->dev_status =3D MVS_DEV_EH;
-> =A0 =A0 =A0 =A0rc =3D mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
-> =A0 =A0 =A0 =A0if (rc =3D=3D TMF_RESP_FUNC_COMPLETE) {
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 num =3D mvs_find_dev_phyno(dev, phyno);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_lock_irqsave(&mvi->lock, flags);
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 for (i =3D 0; i < num; i++)
-> - =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 mvs_release_task(mvi, d=
-ev);
-> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 mvs_release_task(mvi, dev);
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0spin_unlock_irqrestore(&mvi->lock, fla=
-gs);
-> =A0 =A0 =A0 =A0}
-> =A0 =A0 =A0 =A0/* If failed, fall-through I_T_Nexus reset */
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
