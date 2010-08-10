@@ -1,40 +1,138 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 0/5] Patch set to fix various bugs in bnx2i
-Date: Tue, 10 Aug 2010 12:09:29 -0700
-Message-ID: <1281467374-6182-1-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH 4/5] BNX2I: Added chip cleanup for the remove module
+ path
+Date: Tue, 10 Aug 2010 12:09:33 -0700
+Message-ID: <1281467374-6182-5-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3616 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3617 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932995Ab0HJTIG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Aug 2010 15:08:06 -0400
+	id S932991Ab0HJTIF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Aug 2010 15:08:05 -0400
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-The first 2 patches fix issues related to rfc3720 for nopout and TMF.
-The last 2 patches fix issues related to Broadcom specific cleanup
-under different situations.
+In the case when an ep_connect request is interrupted due to route
+request stall, if the iSCSI daemon is terminated by the user, the chip
+will be left in a state which will not get cleaned up upon module
+removal.  Upon module reload, when the same context id is used for a
+new connection, chip panic would occur.
 
-Please review, thanks.
-Eddie
+This patch adds chip cleanup in the module removal path.
 
-Eddie Wai (5):
-  BNX2I: Fixed a protocol violation on nopout responses
-  BNX2I: Added support for other TMFs besides ABORT_TASK
-  BNX2I: Recouple the CFC delete cleanup with cm_abort/close completion
-  BNX2I: Added chip cleanup for the remove module path
-  BNX2I: Updated version to bnx2i-2.1.3
+Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+Acked-by: Benjamin Li <benli@broadcom.com>
+---
+ drivers/scsi/bnx2i/bnx2i_init.c  |   53 +++++++++++++++++++++++--------------
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 ++
+ 2 files changed, 36 insertions(+), 20 deletions(-)
 
- drivers/scsi/bnx2i/bnx2i.h       |    2 +-
- drivers/scsi/bnx2i/bnx2i_hwi.c   |   69 +++++++++++++++++++++----------------
- drivers/scsi/bnx2i/bnx2i_init.c  |   61 +++++++++++++++++++++------------
- drivers/scsi/bnx2i/bnx2i_iscsi.c |   15 +++++---
- 4 files changed, 87 insertions(+), 60 deletions(-)
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
+index a796f56..99b861b 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -167,6 +167,37 @@ void bnx2i_start(void *handle)
+ 
+ 
+ /**
++ * bnx2i_chip_cleanup - local routine to handle chip cleanup
++ *
++ * Driver checks if adapter still has any active connections before
++ *	executing the cleanup process
++ */
++static void bnx2i_chip_cleanup(struct bnx2i_hba *hba)
++{
++	struct bnx2i_endpoint *bnx2i_ep;
++	struct list_head *pos, *tmp;
++
++	if (hba->ofld_conns_active) {
++		/* Stage to force the disconnection
++		 * This is the case where the daemon is either slow or
++		 * not present
++		 */
++		printk(KERN_ALERT "bnx2i: (%s) chip cleanup for %d active "
++			"connections\n", hba->netdev->name,
++			hba->ofld_conns_active);
++		mutex_lock(&hba->net_dev_lock);
++		list_for_each_safe(pos, tmp, &hba->ep_active_list) {
++			bnx2i_ep = list_entry(pos, struct bnx2i_endpoint, link);
++			/* Clean up the chip only */
++			bnx2i_hw_ep_disconnect(bnx2i_ep);
++			bnx2i_ep->cm_sk = NULL;
++		}
++		mutex_unlock(&hba->net_dev_lock);
++	}
++}
++
++
++/**
+  * bnx2i_stop - cnic callback to shutdown adapter instance
+  * @handle:	transparent handle pointing to adapter structure
+  *
+@@ -176,8 +207,6 @@ void bnx2i_start(void *handle)
+ void bnx2i_stop(void *handle)
+ {
+ 	struct bnx2i_hba *hba = handle;
+-	struct list_head *pos, *tmp;
+-	struct bnx2i_endpoint *bnx2i_ep;
+ 	int conns_active;
+ 
+ 	/* check if cleanup happened in GOING_DOWN context */
+@@ -198,24 +227,7 @@ void bnx2i_stop(void *handle)
+ 		if (hba->ofld_conns_active == conns_active)
+ 			break;
+ 	}
+-	if (hba->ofld_conns_active) {
+-		/* Stage to force the disconnection
+-		 * This is the case where the daemon is either slow or
+-		 * not present
+-		 */
+-		printk(KERN_ALERT "bnx2i: Wait timeout, force all eps "
+-			"to disconnect (%d)\n", hba->ofld_conns_active);
+-		mutex_lock(&hba->net_dev_lock);
+-		list_for_each_safe(pos, tmp, &hba->ep_active_list) {
+-			bnx2i_ep = list_entry(pos, struct bnx2i_endpoint, link);
+-			/* Clean up the chip only */
+-			bnx2i_hw_ep_disconnect(bnx2i_ep);
+-		}
+-		mutex_unlock(&hba->net_dev_lock);
+-		if (hba->ofld_conns_active)
+-			printk(KERN_ERR "bnx2i: EP disconnect timeout (%d)!\n",
+-				hba->ofld_conns_active);
+-	}
++	bnx2i_chip_cleanup(hba);
+ 
+ 	/* This flag should be cleared last so that ep_disconnect() gracefully
+ 	 * cleans up connection context
+@@ -457,6 +469,7 @@ static void __exit bnx2i_mod_exit(void)
+ 		adapter_count--;
+ 
+ 		if (test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic)) {
++			bnx2i_chip_cleanup(hba);
+ 			hba->cnic->unregister_device(hba->cnic, CNIC_ULP_ISCSI);
+ 			clear_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic);
+ 		}
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 40f3758..abe73b9 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1953,6 +1953,9 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
+ 	if (!cnic)
+ 		return 0;
+ 
++	if (bnx2i_ep->state == EP_STATE_IDLE)
++		return 0;
++
+ 	if (!bnx2i_ep_tcp_conn_active(bnx2i_ep))
+ 		goto destroy_conn;
+ 
+-- 
+1.7.0.5
 
 
