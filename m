@@ -1,52 +1,55 @@
-From: Jean Delvare <khali@linux-fr.org>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
 Subject: Re: [PATCH 0/6] Remove owner field from sysfs attribute structure
-Date: Tue, 10 Aug 2010 15:43:37 +0200
-Message-ID: <20100810154337.006a0df9@hyperion.delvare>
+Date: Wed, 11 Aug 2010 01:17:33 +1000
+Message-ID: <20100811011733.16243ddb.sfr@canb.auug.org.au>
 References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
 	<AANLkTinM+m15QbAg+J3YyHWnObsxtHYYU6p6C89p8wjp@mail.gmail.com>
 	<20100802233128.GA21286@kroah.com>
+	<20100810154337.006a0df9@hyperion.delvare>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__11_Aug_2010_01_17_33_+1000_Zx2XhMZSWJniZd5n"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100802233128.GA21286@kroah.com>
+In-Reply-To: <20100810154337.006a0df9@hyperion.delvare>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Eric Biederman <ebiederm@aristanetworks.com>, Guenter Roeck <guenter.roeck@ericsson.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Greg Kroah-Hartman <gregkh@suse.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Dmitry Torokhov <dtor@mail.ru>, Liam Girdwood <lrg@slimlogic.co.uk>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, Chris Wright <chrisw@sous-sol.org>, Nick Cheng <nick.cheng@areca.com.tw>, James Smart <james.smart@emulex.com>, Alex Iannicelli <alex.iannicelli@emulex.com>, Benjamin Thery <benjamin.thery@bull.net>, Tejun Heo <tj@kernel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org
+To: Jean Delvare <khali@linux-fr.org>
+Cc: Greg KH <greg@kroah.com>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, James Smart <james.smart@emulex.com>, Eric Biederman <ebiederm@aristanetworks.com>, Benjamin Thery <benjamin.thery@bull.net>, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, Chris Wright <chrisw@sous-sol.org>, linuxppc-dev@ozlabs.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Nick Cheng <nick.cheng@areca.com.tw>, Dmitry Torokhov <dtor@mail.ru>, Tejun Heo <tj@kernel.org>, Paul Mackerras <paulus@samba.org>, Liam Girdwood <lrg@slimlogic.co.uk>, linux-scsi@vger.kernel.org, Alex Iannicelli <alex.iannicelli@emulex.com>, Guenter Roeck <guenter.roeck@ericsson.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2 Aug 2010 16:31:28 -0700, Greg KH wrote:
-> On Wed, Jul 28, 2010 at 11:16:35PM -0700, Eric Biederman wrote:
-> > On Wed, Jul 28, 2010 at 10:09 PM, Guenter Roeck
-> > <guenter.roeck@ericsson.com> wrote:
-> > > The following comment is found in include/linux/sysfs.h:
-> > >
-> > > =C2=A0 /* FIXME
-> > > =C2=A0 =C2=A0* The *owner field is no longer used.
-> > > =C2=A0 =C2=A0* x86 tree has been cleaned up. The owner
-> > > =C2=A0 =C2=A0* attribute is still left for other arches.
-> > > =C2=A0 =C2=A0*/
-> > >
-> > > As it turns out, the *owner field is (again?) initialized in seve=
-ral modules,
-> > > suggesting that such initialization may be creeping back into the=
- code.
-> > >
-> > > This patch set removes the above comment, the *owner field, and e=
-ach instance
-> > > in the code where it was found to be initialized.
-> > >
-> > > Compiled with x86 allmodconfig as well as with all alpha, arm, mi=
-ps, powerpc,
-> > > and sparc defconfig builds.
-> >=20
-> > This seems reasonable to me.  Can we get this in linux-next?
+--Signature=_Wed__11_Aug_2010_01_17_33_+1000_Zx2XhMZSWJniZd5n
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi Jean,
+
+On Tue, 10 Aug 2010 15:43:37 +0200 Jean Delvare <khali@linux-fr.org> wrote:
+>
+> Related bug?
 >=20
-> It will show up in linux-next tomorrow.
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D16544
 
-Related bug?
-
-https://bugzilla.kernel.org/show_bug.cgi?id=3D16544
+Yep, fixed in linux-next today - hopefully the fix is on its way to Linus.
 
 --=20
-Jean Delvare
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+http://www.canb.auug.org.au/~sfr/
+
+--Signature=_Wed__11_Aug_2010_01_17_33_+1000_Zx2XhMZSWJniZd5n
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
+
+iQEcBAEBAgAGBQJMYW2NAAoJEDMEi1NhKgbsDHoIAKI+LxF3i365ZTQjPgodUhMi
+fyVQUKttBZBHDK59URtJ6NlLEUspb7iLiOCqbmu6HSq+7wZsax0/7Kq8FKjD87/s
+uko9t9WELvZCtNhQ2PnehUYUOWhO5SCnYgJyzZOCrFZWDpmA3Hl3MSpxNs5drOin
+QiKtx2x5ldf03I205RHYDbBy/w1XZegG4fG/M/nTrdzO1B2EfLStYpjY5G49C+Lw
+qP120VrFb7BsCs7uHIl9750MV0GHiVfGNpQDcaIGJv5TNPAyvoZhUyC9C0eTQfj6
+xHZnf32ihT9Ugrx5qRSpjEaR34atvkQwaZGC+BejZzrfvhl8/3WnAYegvli/zOk=
+=Qznw
+-----END PGP SIGNATURE-----
+
+--Signature=_Wed__11_Aug_2010_01_17_33_+1000_Zx2XhMZSWJniZd5n--
