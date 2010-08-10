@@ -1,124 +1,188 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: [PATCH] mvsas: mvs_lu_reset iterates phy num times when releasing
- 	task
-Date: Tue, 10 Aug 2010 16:22:31 -0500
-Message-ID: <4C61C317.8010609@redhat.com>
-References: <20100806161622.GA8696@localhost.localdomain> <AANLkTink9DyvHmgRDDe8WqwTJhAVX=DFQ8_b-U6Fy+Fi@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16558] New: iSCSI Connection / Stability Problems
+Date: Tue, 10 Aug 2010 23:31:19 GMT
+Message-ID: <bug-16558-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41427 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932249Ab0HJVW3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Aug 2010 17:22:29 -0400
-In-Reply-To: <AANLkTink9DyvHmgRDDe8WqwTJhAVX=DFQ8_b-U6Fy+Fi@mail.gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:58522 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757887Ab0HJXbW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2010 19:31:22 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o7ANVKdH020458
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Aug 2010 23:31:20 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Audio Haven <audiohaven@gmail.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, sgruszka@redhat.com, satyasrinivasp@hcl.in, jeff@garzik.org
+To: linux-scsi@vger.kernel.org
 
-Audio Haven wrote:
-> Hello David,
+https://bugzilla.kernel.org/show_bug.cgi?id=16558
 
-Hello Frederic,
+           Summary: iSCSI Connection / Stability Problems
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.32-02063215
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: peepstein@gmail.com
+        Regression: No
 
-> 
-> Does this patch solve the Unplug Notice issues ?
 
-No, it is not directly related to the problem you are seeing.
+Created an attachment (id=27400)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=27400)
+Output of lspci -vv and dmesg
 
-> 
-> When copying lots of large video files in sequence to a 6 TB XFS
-> filesystem on top of a 8 TB software raid6 set, I frequently see my
-> copy (over samba) being stalled for a while, then the following is
-> reported:
-> 
-> drivers/scsi/mvsas/mv_sas.c 1701:<7>mv_abort_task()
-> mvi=ffff88003d1c0000 task=ffff880004285080 slot=ffff88003d1de478
-> slot_idx=x1
+Hi All,  I am using the Atto Xtend SAN Initiator on a couple of Mac OS X
+computers (one desktop, one laptop).  I've also tried using the globalSAN
+initiator on the laptop and with both initiators I've had the same problem.
 
-The abort task is initiated from the error handler.
+The target is running on a fresh Ubuntu Server 10.04.1 install, and I have the
+problem regardless of whether I run the Ubuntu kernel (2.6.32-24-server) or the
+mainline kernel from the Ubuntu Mainline package (2.6.32-02063215).
 
-> drivers/scsi/mvsas/mv_sas.c 1632:mvs_query_task:rc= 5
-> drivers/scsi/mvsas/mv_sas.c 2081:port 4 ctrl sts=0x89800.
-> drivers/scsi/mvsas/mv_sas.c 2083:Port 4 irq sts = 0x1001
-> drivers/scsi/mvsas/mv_sas.c 2109:phy4 Unplug Notice
+The server hardware is a new build of new components and I am trying to rule
+out flaky hardware as well so if you see anything that might indicate that
+please let me know.
 
-Here the driver read interrupt status which showed
+I have the same problem regardless of whether I use my PCI Intel Gigabit NIC or
+the PCI-Express built-in Realtek NIC. I've also installed and tried with the
+latest drivers downloaded from the Realtek site.
 
-PHYEV_POOF (phy ready from 1 -> 0) | PHYEV_RDY_CH (phy ready
-changed state)
+I've tried with both the standalone iscsi-target 1.4.20.2 kernel module and
+with the tgt userspace iSCSI tool without the iscsi-target module-- so using
+whatever kernel hooks exist for iSCSI that, I believe, have been in the kernel
+since 2.6.20 (according to stgt.sourceforge.net).
 
-Then mvs_is_phy_ready reports phy is not ready resulting
-in the "Unplug Notice".
+Along with the symptom of losing my iSCSI connection, of course, I see this
+sort of thing in my kern.log:
 
-David
+Aug  7 10:37:21 robot kernel: [49647.372558] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(200) exp_cmd_sn(202) max_cmd_sn(0)
+Aug  7 10:37:21 robot kernel: [49647.383599] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(201) exp_cmd_sn(202) max_cmd_sn(0)
+Aug  7 15:36:15 robot kernel: [67173.945360] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(1863) exp_cmd_sn(1864) max_cmd_sn(0)
+Aug  7 15:36:18 robot kernel: [67176.440027] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(21064) exp_cmd_sn(21066) max_cmd_sn(0)
+Aug  7 15:36:18 robot kernel: [67176.441095] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(21065) exp_cmd_sn(21066) max_cmd_sn(0)
+Aug  7 16:27:53 robot kernel: [70272.008883] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(2817) exp_cmd_sn(2818) max_cmd_sn(0)
+Aug  7 16:30:44 robot kernel: [70443.114556] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(2855) exp_cmd_sn(2856) max_cmd_sn(0)
+Aug  7 19:36:57 robot kernel: [81616.310002] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38980) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:57 robot kernel: [81616.320817] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38981) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:57 robot kernel: [81616.332909] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38982) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:57 robot kernel: [81616.343656] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38983) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:58 robot kernel: [81616.352255] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38984) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:58 robot kernel: [81616.373330] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38985) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:58 robot kernel: [81616.382273] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38986) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:58 robot kernel: [81616.382273] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38987) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:58 robot kernel: [81616.382273] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38988) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:58 robot kernel: [81616.382273] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38989) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:58 robot kernel: [81616.382273] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38990) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:58 robot kernel: [81616.382273] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38991) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:36:58 robot kernel: [81616.382273] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(38992) exp_cmd_sn(38993) max_cmd_sn(0)
+Aug  7 19:39:05 robot kernel: [81744.120085] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(71184) exp_cmd_sn(71185) max_cmd_sn(0)
+Aug  7 20:00:13 robot kernel: [83011.830886] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(1) exp_cmd_sn(0) max_cmd_sn(0)
+Aug  7 20:03:19 robot kernel: [83197.481900] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(85037) exp_cmd_sn(85038) max_cmd_sn(0)
+Aug  7 20:03:47 robot kernel: [83225.874178] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(85047) exp_cmd_sn(85048) max_cmd_sn(0)
+Aug  7 20:03:47 robot kernel: [83225.874199] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(85047) exp_cmd_sn(85048) max_cmd_sn(0)
+Aug  7 20:04:04 robot kernel: [83243.068396] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(85052) exp_cmd_sn(85053) max_cmd_sn(0)
+Aug  7 20:04:04 robot kernel: [83243.068396] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(85052) exp_cmd_sn(85053) max_cmd_sn(0)
+Aug  7 20:09:27 robot kernel: [83565.852475] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(85159) exp_cmd_sn(85160) max_cmd_sn(0)
+Aug  7 20:14:30 robot kernel: [83868.657851] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(85265) exp_cmd_sn(85266) max_cmd_sn(0)
+Aug  7 20:16:29 robot kernel: [83987.606834] iscsi_trgt: check_cmd_sn(549)
+sequence error: cmd_sn(85305) exp_cmd_sn(85306) max_cmd_sn(0)
 
-> drivers/scsi/mvsas/mv_sas.c 2081:port 4 ctrl sts=0x199800.
-> drivers/scsi/mvsas/mv_sas.c 2083:Port 4 irq sts = 0x1081
-> drivers/scsi/mvsas/mv_sas.c 2081:port 4 ctrl sts=0x199800.
-> drivers/scsi/mvsas/mv_sas.c 2083:Port 4 irq sts = 0x10000
-> drivers/scsi/mvsas/mv_sas.c 2136:notify plug in on phy[4]
-> drivers/scsi/mvsas/mv_sas.c 1224:port 4 attach dev info is 4
-> drivers/scsi/mvsas/mv_sas.c 1226:port 4 attach sas addr is 4
-> drivers/scsi/mvsas/mv_sas.c 378:phy 4 byte dmaded.
-> drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for device[4]:rc= 0
-> ata13: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-> ata13: status=0x01 { Error }
-> ata13: error=0x04 { DriveStatusError }
-> 
-> I'm using the SuperMicro AOC-SASLP-MV8 to control 8 1TB disks, which
-> are never physically unplugged. Used kernel is 2.6.35.
-> Raid never breaks so no data loss occurs, but the samba copy
-> frequently breaks when the above error occurs, so copying always needs
-> a double check, which is quite annoying.
-> 
-> Best regards,
-> 
-> Frederic Vanden Poel
-> 
-> 
-> On Fri, Aug 6, 2010 at 6:16 PM, David Milburn <dmilburn@redhat.com> wrote:
->> mvs_lu_reset should not call mvs_release_task phy number of times,
->> each phy is handled in mvs_release_task.
->>
->> Signed-off-by: David Milburn <dmilburn@redhat.com>
->> Cc: Stanislaw Gruszka <sgruszka@redhat.com>
->> Cc: Srinivas <satyasrinivasp@hcl.in>
->> Cc: Andy Yan <ayan@marvell.com>
->> ---
->>  drivers/scsi/mvsas/mv_sas.c |    6 ++----
->>  1 files changed, 2 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
->> index adedaa9..013ab8d 100644
->> --- a/drivers/scsi/mvsas/mv_sas.c
->> +++ b/drivers/scsi/mvsas/mv_sas.c
->> @@ -1551,7 +1551,7 @@ static int mvs_debug_I_T_nexus_reset(struct domain_device *dev)
->>  int mvs_lu_reset(struct domain_device *dev, u8 *lun)
->>  {
->>        unsigned long flags;
->> -       int i, phyno[WIDE_PORT_MAX_PHY], num , rc = TMF_RESP_FUNC_FAILED;
->> +       int rc = TMF_RESP_FUNC_FAILED;
->>        struct mvs_tmf_task tmf_task;
->>        struct mvs_device * mvi_dev = dev->lldd_dev;
->>        struct mvs_info *mvi = mvi_dev->mvi_info;
->> @@ -1560,10 +1560,8 @@ int mvs_lu_reset(struct domain_device *dev, u8 *lun)
->>        mvi_dev->dev_status = MVS_DEV_EH;
->>        rc = mvs_debug_issue_ssp_tmf(dev, lun, &tmf_task);
->>        if (rc == TMF_RESP_FUNC_COMPLETE) {
->> -               num = mvs_find_dev_phyno(dev, phyno);
->>                spin_lock_irqsave(&mvi->lock, flags);
->> -               for (i = 0; i < num; i++)
->> -                       mvs_release_task(mvi, dev);
->> +               mvs_release_task(mvi, dev);
->>                spin_unlock_irqrestore(&mvi->lock, flags);
->>        }
->>        /* If failed, fall-through I_T_Nexus reset */
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
 
+
+Aug  9 21:07:23 robot kernel: [ 1007.350013] iscsi_trgt: scsi_cmnd_start(949)
+1002 0
+Aug  9 21:07:23 robot kernel: [ 1007.350013] iscsi_trgt: cmnd_skip_pdu(459)
+1002 1c 0 0
+Aug  9 21:07:38 robot kernel: [ 1022.050061] iscsi_trgt: scsi_cmnd_start(949)
+1002 0
+Aug  9 21:07:38 robot kernel: [ 1022.050061] iscsi_trgt: cmnd_skip_pdu(459)
+1002 1c 0 0
+Aug  9 21:07:46 robot kernel: [ 1030.450119] iscsi_trgt: scsi_cmnd_start(949)
+1002 0
+Aug  9 21:07:46 robot kernel: [ 1030.450119] iscsi_trgt: cmnd_skip_pdu(459)
+1002 1c 0 0
+Aug  9 21:08:07 robot kernel: [ 1051.320081] iscsi_trgt: scsi_cmnd_start(949)
+1002 0
+Aug  9 21:08:07 robot kernel: [ 1051.320081] iscsi_trgt: cmnd_skip_pdu(459)
+1002 1c 0 0
+Aug  9 21:08:21 robot kernel: [ 1065.170089] iscsi_trgt: scsi_cmnd_start(949)
+1002 0
+Aug  9 21:08:21 robot kernel: [ 1065.170089] iscsi_trgt: cmnd_skip_pdu(459)
+1002 1c 0 0
+Aug  9 21:08:26 robot kernel: [ 1069.730090] iscsi_trgt: scsi_cmnd_start(949)
+1002 0
+Aug  9 21:08:26 robot kernel: [ 1069.730090] iscsi_trgt: cmnd_skip_pdu(459)
+1002 1c 0 0
+Aug  9 21:08:51 robot kernel: [ 1095.600121] iscsi_trgt: scsi_cmnd_start(949)
+1002 0
+Aug  9 21:08:51 robot kernel: [ 1095.600121] iscsi_trgt: cmnd_skip_pdu(459)
+1002 1c 0 0
+
+Aug  9 21:10:27 robot kernel: [ 1191.160556] iscsi_trgt: scsi_cmnd_start(1045)
+Unsupported 5a
+Aug  9 21:10:27 robot kernel: [ 1191.160556] iscsi_trgt: cmnd_skip_pdu(459)
+101f 1c 5a 0
+Aug  9 21:14:57 robot kernel: [ 1461.144821] iscsi_trgt: scsi_cmnd_start(1045)
+Unsupported 5a
+Aug  9 21:14:57 robot kernel: [ 1461.144821] iscsi_trgt: cmnd_skip_pdu(459)
+101f 1c 5a 0
+Aug  9 21:19:25 robot kernel: [ 1729.057073] iscsi_trgt: cmnd_rx_start(1849) 1
+117a -7
+Aug  9 21:19:25 robot kernel: [ 1729.070381] iscsi_trgt: cmnd_skip_pdu(459)
+117a 1 2a 8192
+
+
+I've had quite a few other problems surrounding my server, but they all relate
+to iSCSI usage (that is the only use of the server).
+
+I've had to be booting with notsc hpet=disable and clocksource=acpi_pm because
+of other errors and wonkyness I've had related to timing.  I've also had some
+weirdness related to a Promise SATA 300TX4 PCI card, so I've removed it from
+the system for now.
+
+Let me know if you think I should create a kernel bug as well at the kernel
+bugzilla.
+
+Helpful output attached.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
