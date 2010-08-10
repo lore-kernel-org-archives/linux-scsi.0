@@ -1,68 +1,154 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 0/6] Remove owner field from sysfs attribute structure
-Date: Wed, 11 Aug 2010 01:20:01 +1000
-Message-ID: <20100811012001.6fb50655.sfr@canb.auug.org.au>
-References: <1280380166-29196-1-git-send-email-guenter.roeck@ericsson.com>
-	<AANLkTinM+m15QbAg+J3YyHWnObsxtHYYU6p6C89p8wjp@mail.gmail.com>
-	<20100802233128.GA21286@kroah.com>
-	<20100810154337.006a0df9@hyperion.delvare>
-	<20100811011733.16243ddb.sfr@canb.auug.org.au>
+From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Subject: [PATCH 1/2] ipr: fix resource address formatting and add attribute
+ for device ID
+Date: Tue, 10 Aug 2010 09:12:42 -0700
+Message-ID: <4C617A7A.5070906@linux.vnet.ibm.com>
+References: <20100810160721.438853503@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Wed__11_Aug_2010_01_20_01_+1000_p628nrvSadM=jkIG"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:47538 "EHLO smtps.tip.net.au"
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:45482 "EHLO e2.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932157Ab0HJPUI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Aug 2010 11:20:08 -0400
-In-Reply-To: <20100811011733.16243ddb.sfr@canb.auug.org.au>
+	id S932105Ab0HJQM4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Aug 2010 12:12:56 -0400
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e2.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id o7AFwlvm011960
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Aug 2010 11:58:47 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o7AGCjYX133448
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Aug 2010 12:12:45 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o7AGCh6d016023
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Aug 2010 13:12:45 -0300
+In-Reply-To: <20100810160721.438853503@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jean Delvare <khali@linux-fr.org>
-Cc: Greg KH <greg@kroah.com>, Mark Brown <broonie@opensource.wolfsonmicro.com>, Jani Nikula <ext-jani.1.nikula@nokia.com>, Linus Walleij <linus.walleij@stericsson.com>, James Smart <james.smart@emulex.com>, Eric Biederman <ebiederm@aristanetworks.com>, Benjamin Thery <benjamin.thery@bull.net>, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, Chris Wright <chrisw@sous-sol.org>, linuxppc-dev@ozlabs.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Richard Purdie <rpurdie@rpsys.net>, Nick Cheng <nick.cheng@areca.com.tw>, Dmitry Torokhov <dtor@mail.ru>, Tejun Heo <tj@kernel.org>, Paul Mackerras <paulus@samba.org>, Liam Girdwood <lrg@slimlogic.co.uk>, linux-scsi@vger.kernel.org, Alex Iannicelli <alex.iannicelli@emulex.com>, Guenter Roeck <guenter.roeck@ericsson.com>, David Woodhouse <David.Woodhouse@intel.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
 
---Signature=_Wed__11_Aug_2010_01_20_01_+1000_p628nrvSadM=jkIG
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This patch fixes a resource address formatting problem where the first byte
+was being zeroed out.
 
-Hi Jean,
+Also, the device ID is now made available as a sysfs attribute.
 
-On Wed, 11 Aug 2010 01:17:33 +1000 Stephen Rothwell <sfr@canb.auug.org.au> =
-wrote:
->
-> On Tue, 10 Aug 2010 15:43:37 +0200 Jean Delvare <khali@linux-fr.org> wrot=
-e:
-> >
-> > Related bug?
-> >=20
-> > https://bugzilla.kernel.org/show_bug.cgi?id=3D16544
->=20
-> Yep, fixed in linux-next today - hopefully the fix is on its way to Linus.
+Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+---
 
-Sorry, more info:
+ drivers/scsi/ipr.c |   43 ++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/ipr.h |    3 ++-
+ 2 files changed, 44 insertions(+), 2 deletions(-)
 
-Fixed by commit 690e85a3957291f4cfe0cac22d97994ec7e5ee45 ("olpc_battery:
-Fix build failure caused by sysfs changes") from the battery tree.
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2010-08-02 17:28:18.000000000 -0700
++++ b/drivers/scsi/ipr.c	2010-08-09 10:09:01.000000000 -0700
+@@ -1096,6 +1096,7 @@ static void ipr_init_res_entry(struct ip
+ 		res->bus = cfgtew->u.cfgte->res_addr.bus;
+ 		res->target = cfgtew->u.cfgte->res_addr.target;
+ 		res->lun = cfgtew->u.cfgte->res_addr.lun;
++		res->lun_wwn = cfgtew->u.cfgte->lun_wwn;
+ 	}
 
---Signature=_Wed__11_Aug_2010_01_20_01_+1000_p628nrvSadM=jkIG
-Content-Type: application/pgp-signature
+ 	ipr_update_ata_class(res, proto);
+@@ -1142,7 +1143,7 @@ static char *ipr_format_res_path(u8 *res
+ 	int i;
+ 	char *p = buffer;
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
+-	res_path[0] = '\0';
++	*p = '\0';
+ 	p += snprintf(p, buffer + len - p, "%02X", res_path[0]);
+ 	for (i = 1; res_path[i] != 0xff && ((i * 3) < len); i++)
+ 		p += snprintf(p, buffer + len - p, "-%02X", res_path[i]);
+@@ -4086,6 +4087,7 @@ static int ipr_change_queue_type(struct 
+ /**
+  * ipr_show_adapter_handle - Show the adapter's resource handle for this device
+  * @dev:	device struct
++ * @attr:	device attribute structure
+  * @buf:	buffer
+  *
+  * Return value:
+@@ -4119,6 +4121,7 @@ static struct device_attribute ipr_adapt
+  * ipr_show_resource_path - Show the resource path or the resource address for
+  *			    this device.
+  * @dev:	device struct
++ * @attr:	device attribute structure
+  * @buf:	buffer
+  *
+  * Return value:
+@@ -4156,8 +4159,45 @@ static struct device_attribute ipr_resou
+ };
 
-iQEcBAEBAgAGBQJMYW4hAAoJEDMEi1NhKgbsGMgIAIZxDAUh17iEyQwHYE64/aJV
-OEP/MbMbHFwhFIcmUqv0lPpMJnPN1FmJbPg0vVjtMJlmp+BQxtLCXD4bwd8IE8mz
-uIImBQ8eALRAIKoXAN2mr9ezYzJ4zxvHhPg1lkN9nRKnaHYoQoAOaaD9Xv83QH/Z
-badkXo0KNXHeP7aUv67+u5g7yaNO5eec4kLaaBL520s/IZWCNKSYK/ofN4HE5Hd/
-QSGgfYYHGtBjpMwaF+ssYpEN7AB0dni+mYoGB9eRvxlCLaQYKTJoop+3UQDe/sAy
-bHrI1fbbcMul3Fsd0sDjYV2TQ3Uin3WJbTT3u1DiCP4PV1OZMbyYSgctIcPnv0k=
-=IGCR
------END PGP SIGNATURE-----
+ /**
++ * ipr_show_device_id - Show the device_id for this device.
++ * @dev:	device struct
++ * @attr:	device attribute structure
++ * @buf:	buffer
++ *
++ * Return value:
++ *	number of bytes printed to buffer
++ **/
++static ssize_t ipr_show_device_id(struct device *dev, struct device_attribute *attr, char *buf)
++{
++	struct scsi_device *sdev = to_scsi_device(dev);
++	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)sdev->host->hostdata;
++	struct ipr_resource_entry *res;
++	unsigned long lock_flags = 0;
++	ssize_t len = -ENXIO;
++
++	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	res = (struct ipr_resource_entry *)sdev->hostdata;
++	if (res && ioa_cfg->sis64)
++		len = snprintf(buf, PAGE_SIZE, "0x%llx\n", res->dev_id);
++	else if (res)
++		len = snprintf(buf, PAGE_SIZE, "0x%llx\n", res->lun_wwn);
++
++	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++	return len;
++}
++
++static struct device_attribute ipr_device_id_attr = {
++	.attr = {
++		.name =		"device_id",
++		.mode =		S_IRUGO,
++	},
++	.show = ipr_show_device_id
++};
++
++/**
+  * ipr_show_resource_type - Show the resource type for this device.
+  * @dev:	device struct
++ * @attr:	device attribute structure
+  * @buf:	buffer
+  *
+  * Return value:
+@@ -4192,6 +4232,7 @@ static struct device_attribute ipr_resou
+ static struct device_attribute *ipr_dev_attrs[] = {
+ 	&ipr_adapter_handle_attr,
+ 	&ipr_resource_path_attr,
++	&ipr_device_id_attr,
+ 	&ipr_resource_type_attr,
+ 	NULL,
+ };
+Index: b/drivers/scsi/ipr.h
+===================================================================
+--- a/drivers/scsi/ipr.h	2010-08-05 11:23:35.000000000 -0700
++++ b/drivers/scsi/ipr.h	2010-08-09 10:09:04.000000000 -0700
+@@ -372,7 +372,7 @@ struct ipr_config_table_entry {
 
---Signature=_Wed__11_Aug_2010_01_20_01_+1000_p628nrvSadM=jkIG--
+ 	struct ipr_res_addr res_addr;
+ 	__be32 res_handle;
+-	__be32 reserved4[2];
++	__be64 lun_wwn;
+ 	struct ipr_std_inq_data std_inq_data;
+ }__attribute__ ((packed, aligned (4)));
+
+@@ -1210,6 +1210,7 @@ struct ipr_resource_entry {
+
+ 	__be32 res_handle;
+ 	__be64 dev_id;
++	__be64 lun_wwn;
+ 	struct scsi_lun dev_lun;
+ 	u8 res_path[8];
+
+
