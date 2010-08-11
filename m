@@ -1,21 +1,32 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Bug 16558] New: iSCSI Connection / Stability Problems
-Date: Wed, 11 Aug 2010 11:33:59 +0900
-Message-ID: <20100811113231N.fujita.tomonori@lab.ntt.co.jp>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16558] iSCSI Connection / Stability Problems
+Date: Wed, 11 Aug 2010 03:11:47 GMT
+Message-ID: <201008110311.o7B3Blfu031462@demeter.kernel.org>
 References: <bug-16558-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:56882 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757937Ab0HKCek (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Aug 2010 22:34:40 -0400
+Received: from demeter.kernel.org ([140.211.167.39]:43624 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758096Ab0HKDLs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2010 23:11:48 -0400
+Received: from demeter.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o7B3BlTL031463
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Aug 2010 03:11:47 GMT
 In-Reply-To: <bug-16558-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16558
+
+
+
+
+
+--- Comment #1 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-08-11 03:11:44 ---
+Reply-To: fujita.tomonori@lab.ntt.co.jp
 
 On Tue, 10 Aug 2010 23:31:19 GMT
 bugzilla-daemon@bugzilla.kernel.org wrote:
@@ -39,6 +50,7 @@ bugzilla-daemon@bugzilla.kernel.org wrote:
 > 
 > 
 > Created an attachment (id=27400)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=27400)
 >  --> (https://bugzilla.kernel.org/attachment.cgi?id=27400)
 > Output of lspci -vv and dmesg
 > 
@@ -77,3 +89,8 @@ stgt.sourceforge.net
 
 The log says that you use the former. If you use the latter and hit a
 problem, please report it to stgt@vger.kernel.org.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
