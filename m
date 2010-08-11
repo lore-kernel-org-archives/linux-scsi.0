@@ -1,87 +1,146 @@
 From: bo yang <boyang1288@gmail.com>
-Subject: [PATCH 3/5] scsi: megaraid_sas - Add input parameter for max_sectors
-Date: Wed, 11 Aug 2010 17:03:39 -0400
-Message-ID: <AANLkTi=p2Jz_ypEKvf+uYDbfm=cqz1BmYpCShu8okpoa@mail.gmail.com>
+Subject: [PATCH 4/5] scsi: megaraid_sas - Add three times Online controller
+	reset in driver's reset routine
+Date: Wed, 11 Aug 2010 17:08:37 -0400
+Message-ID: <AANLkTin_jX=KcOLbsCxC3Hwqcvi-heWg+Rdk8JGZgquL@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pv0-f174.google.com ([74.125.83.174]:56799 "EHLO
-	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753318Ab0HKVDk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Aug 2010 17:03:40 -0400
+Received: from mail-px0-f174.google.com ([209.85.212.174]:44642 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752167Ab0HKVIl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Aug 2010 17:08:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bo.yang@lsi.com, James.Bottomley@HansenPartnership.com, James.Bottomley@suse.de
 Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
 
-Driver add the input parameters support for max_sectors for our gen2
-chip.  Customer can
-Set the max_sectors support to 1MB for gen2 chip during the driver load.
+If fw didn't raise the interrupt with the fw state change to driver
+and fw goes to failure state, driver
+Will check the FW state in driver's timeout routine and issue the
+reset if need.  Driver will do the OCR upto three
+Times until kill adapter.  Also driver will issue OCR before driver
+kill adapter even if fw in operational state.
 
 Signed-off-by Bo Yang<bo.yang@lsi.com>
 
 ---
- drivers/scsi/megaraid/megaraid_sas.c |   30 ++++++++++++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas.h |    1 +
- 2 files changed, 31 insertions(+)
+ drivers/scsi/megaraid/megaraid_sas.c |   70 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 69 insertions(+), 1 deletion(-)
 
 diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c
 new/drivers/scsi/megaraid/megaraid_sas.c
---- old/drivers/scsi/megaraid/megaraid_sas.c	2010-08-08 02:30:29.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-08-10 04:24:26.000000000 -0400
-@@ -57,6 +57,15 @@ module_param_named(poll_mode_io, poll_mo
- MODULE_PARM_DESC(poll_mode_io,
- 	"Complete cmds from IO path, (default=0)");
-
-+/*
-+ * Number of sectors per IO command
-+ * Will be set in megasas_init_mfi if user does not provide
-+ */
-+static unsigned int max_sectors;
-+module_param_named(max_sectors, max_sectors, int, 0);
-+MODULE_PARM_DESC(max_sectors,
-+	"Maximum number of sectors per IO command");
+--- old/drivers/scsi/megaraid/megaraid_sas.c	2010-08-10 04:37:53.000000000 -0400
++++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-08-10 04:49:38.000000000 -0400
+@@ -730,6 +730,10 @@ static int
+ megasas_check_reset_gen2(struct megasas_instance *instance,
+ 		struct megasas_register_set __iomem *regs)
+ {
++	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
++		return 1;
++	}
 +
- MODULE_LICENSE("GPL");
- MODULE_VERSION(MEGASAS_VERSION);
- MODULE_AUTHOR("megaraidlinux@lsi.com");
-@@ -3588,6 +3597,27 @@ static int megasas_io_attach(struct mega
- 			instance->max_fw_cmds - MEGASAS_INT_CMDS;
- 	host->this_id = instance->init_id;
- 	host->sg_tablesize = instance->max_num_sge;
-+	/*
-+	 * Check if the module parameter value for max_sectors can be used
-+	 */
-+	if (max_sectors && max_sectors < instance->max_sectors_per_req)
-+		instance->max_sectors_per_req = max_sectors;
-+	else {
-+		if (max_sectors) {
-+			if (((instance->pdev->device ==
-+				PCI_DEVICE_ID_LSI_SAS1078GEN2) ||
-+				(instance->pdev->device ==
-+				PCI_DEVICE_ID_LSI_SAS0079GEN2)) &&
-+				(max_sectors <= MEGASAS_MAX_SECTORS)) {
-+				instance->max_sectors_per_req = max_sectors;
-+			} else {
-+			printk(KERN_INFO "megasas: max_sectors should be > 0"
-+				"and <= %d (or < 1MB for GEN2 controller)\n",
-+				instance->max_sectors_per_req);
+ 	return 0;
+ }
+
+@@ -942,6 +946,7 @@ megasas_make_sgl_skinny(struct megasas_i
+ 			mfi_sgl->sge_skinny[i].length = sg_dma_len(os_sgl);
+ 			mfi_sgl->sge_skinny[i].phys_addr =
+ 						sg_dma_address(os_sgl);
++			mfi_sgl->sge_skinny[i].flag = 0;
+ 		}
+ 	}
+ 	return sge_count;
+@@ -1569,6 +1574,28 @@ static void megasas_complete_cmd_dpc(uns
+ 	}
+ }
+
++static void
++megasas_internal_reset_defer_cmds(struct megasas_instance *instance);
++
++static void
++process_fw_state_change_wq(struct work_struct *work);
++
++void megasas_do_ocr(struct megasas_instance *instance)
++{
++	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1064R) ||
++	(instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5) ||
++	(instance->pdev->device == PCI_DEVICE_ID_LSI_VERDE_ZCR)) {
++		*instance->consumer     = MEGASAS_ADPRESET_INPROG_SIGN;
++	}
++	instance->instancet->disable_intr(instance->reg_set);
++	instance->adprecovery   = MEGASAS_ADPRESET_SM_INFAULT;
++	instance->issuepend_done = 0;
++
++	atomic_set(&instance->fw_outstanding, 0);
++	megasas_internal_reset_defer_cmds(instance);
++	process_fw_state_change_wq(&instance->work_init);
++}
++
+ /**
+  * megasas_wait_for_outstanding -	Wait for all outstanding cmds
+  * @instance:				Adapter soft state
+@@ -1586,6 +1613,8 @@ static int megasas_wait_for_outstanding(
+ 	unsigned long flags;
+ 	struct list_head clist_local;
+ 	struct megasas_cmd *reset_cmd;
++	u32 fw_state;
++	u8 kill_adapter_flag;
+
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+ 	adprecovery = instance->adprecovery;
+@@ -1671,7 +1700,45 @@ static int megasas_wait_for_outstanding(
+ 		msleep(1000);
+ 	}
+
+-	if (atomic_read(&instance->fw_outstanding)) {
++	i = 0;
++	kill_adapter_flag = 0;
++	do {
++		fw_state = instance->instancet->read_fw_status_reg(
++					instance->reg_set) & MFI_STATE_MASK;
++		if ((fw_state == MFI_STATE_FAULT) &&
++			(instance->disableOnlineCtrlReset == 0)) {
++			if (i == 3) {
++				kill_adapter_flag = 2;
++				break;
++			}
++			megasas_do_ocr(instance);
++			kill_adapter_flag = 1;
++
++			/* wait for 1 secs to let FW finish the pending cmds */
++			msleep(1000);
++		}
++		i++;
++	} while (i <= 3);
++
++	if (atomic_read(&instance->fw_outstanding) &&
++					!kill_adapter_flag) {
++		if (instance->disableOnlineCtrlReset == 0) {
++
++			megasas_do_ocr(instance);
++
++			/* wait for 5 secs to let FW finish the pending cmds */
++			for (i = 0; i < wait_time; i++) {
++				int outstanding =
++					atomic_read(&instance->fw_outstanding);
++				if (!outstanding)
++					return SUCCESS;
++				msleep(1000);
 +			}
 +		}
 +	}
 +
- 	host->max_sectors = instance->max_sectors_per_req;
- 	host->cmd_per_lun = 128;
- 	host->max_channel = MEGASAS_MAX_CHANNELS - 1;
-diff -rupN old/drivers/scsi/megaraid/megaraid_sas.h
-new/drivers/scsi/megaraid/megaraid_sas.h
---- old/drivers/scsi/megaraid/megaraid_sas.h	2010-08-08 02:30:29.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_sas.h	2010-08-10 04:20:35.000000000 -0400
-@@ -706,6 +706,7 @@ struct megasas_ctrl_info {
- #define MEGASAS_MAX_LD_IDS			(MEGASAS_MAX_LD_CHANNELS * \
- 						MEGASAS_MAX_DEV_PER_CHANNEL)
++	if (atomic_read(&instance->fw_outstanding) ||
++					(kill_adapter_flag == 2)) {
+ 		printk(KERN_NOTICE "megaraid_sas: pending cmds after reset\n");
+ 		/*
+ 		* Send signal to FW to stop processing any pending cmds.
+@@ -2681,6 +2748,7 @@ static int megasas_create_frame_pool(str
+ 			return -ENOMEM;
+ 		}
 
-+#define MEGASAS_MAX_SECTORS                    (2*1024)
- #define MEGASAS_DBG_LVL				1
-
- #define MEGASAS_FW_BUSY				1
++		memset(cmd->frame, 0, total_sz);
+ 		cmd->frame->io.context = cmd->index;
+ 		cmd->frame->io.pad_0 = 0;
+ 	}
