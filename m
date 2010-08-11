@@ -1,47 +1,56 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/5] BNX2I: Added chip cleanup for the remove module path
-Date: Wed, 11 Aug 2010 14:09:44 -0500
-Message-ID: <4C62F578.3090607@cs.wisc.edu>
-References: <Eddie Wai <eddie.wai@broadcom.com> <1281467374-6182-5-git-send-email-eddie.wai@broadcom.com>
+From: "Eddie Wai" <waie@broadcom.com>
+Subject: RE: [PATCH 2/5] BNX2I: Added support for other TMFs besides
+ ABORT_TASK
+Date: Wed, 11 Aug 2010 12:26:47 -0700
+Message-ID: <F856AC0DBD5E8A48948C6FDDFF2ECA9F94F7F3FAFF@IRVEXCHCCR02.corp.ad.broadcom.com>
+References: <Eddie Wai <eddie.wai@broadcom.com>
+ <1281467374-6182-3-git-send-email-eddie.wai@broadcom.com>
+ <4C62F4DB.8070006@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57088 "EHLO sabe.cs.wisc.edu"
+Received: from mms3.broadcom.com ([216.31.210.19]:1842 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754783Ab0HKTF2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Aug 2010 15:05:28 -0400
-In-Reply-To: <1281467374-6182-5-git-send-email-eddie.wai@broadcom.com>
+	id S1753363Ab0HKT05 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Aug 2010 15:26:57 -0400
+In-Reply-To: <4C62F4DB.8070006@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
+To: 'Mike Christie' <michaelc@cs.wisc.edu>
+Cc: 'James Bottomley' <JBottomley@novell.com>, 'open-iscsi' <open-iscsi@googlegroups.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
+
+Hello Mike,
+
+Thanks for reviewing.  Since both scsi_device->lun and the local scsi_lun array variable are defined as u32 so we're using a direct u32 manipulation.  It's also consistent to the old code.  
+
+We chose to use memcpy for the default case as both tmfabort_wqe->lun and tmfabort_hdr->lun are defined to be u8.  This u8 copying is also consistent to the other code paths in the existing bnx2i like nopout_wqe, etc.
+
+Thanks,
+Eddie
+
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Wednesday, August 11, 2010 12:07 PM
+To: Eddie Wai
+Cc: James Bottomley; open-iscsi; linux-scsi; Michael Chan; Anil Veerabhadrappa; Benjamin Li
+Subject: Re: [PATCH 2/5] BNX2I: Added support for other TMFs besides ABORT_TASK
 
 On 08/10/2010 02:09 PM, Eddie Wai wrote:
-> In the case when an ep_connect request is interrupted due to route
-> request stall, if the iSCSI daemon is terminated by the user, the chip
-> will be left in a state which will not get cleaned up upon module
-> removal.  Upon module reload, when the same context id is used for a
-> new connection, chip panic would occur.
->
-> This patch adds chip cleanup in the module removal path.
->
-> Signed-off-by: Eddie Wai<eddie.wai@broadcom.com>
-> Acked-by: Benjamin Li<benli@broadcom.com>
-> ---
->   drivers/scsi/bnx2i/bnx2i_init.c  |   53 +++++++++++++++++++++++--------------
->   drivers/scsi/bnx2i/bnx2i_iscsi.c |    3 ++
->   2 files changed, 36 insertions(+), 20 deletions(-)
->
-> diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-> index a796f56..99b861b 100644
-> --- a/drivers/scsi/bnx2i/bnx2i_init.c
-> +++ b/drivers/scsi/bnx2i/bnx2i_init.c
-> @@ -167,6 +167,37 @@ void bnx2i_start(void *handle)
->
->
->   /**
-> + * bnx2i_chip_cleanup - local routine to handle chip cleanup
+> +		/* Retrieve LUN directly from the ref_sc */
+> +		int_to_scsilun(ref_sc->device->lun,
+> +			       (struct scsi_lun *) scsi_lun);
+> +		tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
+> +		tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);
+> +
 
-For docbook comments you need the argument info
-@hba: driver's hba struct
+
+
+> +	default:
+> +		memcpy(tmfabort_wqe->lun, tmfabort_hdr->lun, 8);
+
+Why do you copy the lun differently?
+
+
