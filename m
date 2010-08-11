@@ -1,63 +1,154 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/5] BNX2I: Added support for other TMFs besides ABORT_TASK
-Date: Wed, 11 Aug 2010 14:38:54 -0500
-Message-ID: <4C62FC4E.5030605@cs.wisc.edu>
-References: <Eddie Wai <eddie.wai@broadcom.com> <1281467374-6182-3-git-send-email-eddie.wai@broadcom.com> <4C62F4DB.8070006@cs.wisc.edu> <F856AC0DBD5E8A48948C6FDDFF2ECA9F94F7F3FAFF@IRVEXCHCCR02.corp.ad.broadcom.com>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH 1/3] libcxgbi: common library for cxgb3i and cxgb4i
+Date: Wed, 11 Aug 2010 13:19:28 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD33408403C60@maui.asicdesigners.com>
+References: <201008091753.o79HrTqQ020147@localhost.localdomain> <4C62EBCD.7000301@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:34880 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756070Ab0HKTei (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Aug 2010 15:34:38 -0400
-In-Reply-To: <F856AC0DBD5E8A48948C6FDDFF2ECA9F94F7F3FAFF@IRVEXCHCCR02.corp.ad.broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi@googlegroups.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Rakesh Ranjan <rakesh@chelsio.com>, James.Bottomley@HansenPartnership.com
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <waie@broadcom.com>
-Cc: 'James Bottomley' <JBottomley@novell.com>, 'open-iscsi' <open-iscsi@googlegroups.com>, 'linux-scsi' <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
 
-On 08/11/2010 02:26 PM, Eddie Wai wrote:
-> Hello Mike,
->
-> Thanks for reviewing.  Since both scsi_device->lun and the local scsi_lun array variable are defined as u32 so we're using a direct u32 manipulation.  It's also consistent to the old code.
->
-> We chose to use memcpy for the default case as both tmfabort_wqe->lun and tmfabort_hdr->lun are defined to be u8.  This u8 copying is also consistent to the other code paths in the existing bnx2i like nopout_wqe, etc.
->
+Sure, I will move the callouts for both iscsi_transport and
+scsi_host_template to LLD.
 
-You can do the same for the abort case. For aborts the tmfabort_hdr->lun 
-has already been converted from a int to a scsi_lun for you so you 
-should be able to copy it too.
+Thanks,
+Karen
+
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Wednesday, August 11, 2010 11:28 AM
+To: open-iscsi@googlegroups.com
+Cc: Karen Xie; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org;
+Rakesh Ranjan; James.Bottomley@HansenPartnership.com
+Subject: Re: [PATCH 1/3] libcxgbi: common library for cxgb3i and cxgb4i
+
+On 08/09/2010 12:53 PM, kxie@chelsio.com wrote:
+> +void cxgbi_fill_iscsi_transport(struct iscsi_transport *itp)
+> +{
+> +	/* owner and name should be set already */
+> +	itp->caps		= CAP_RECOVERY_L0 | CAP_MULTI_R2T |
+CAP_HDRDGST
+> +				| CAP_DATADGST | CAP_DIGEST_OFFLOAD |
+> +				CAP_PADDING_OFFLOAD;
+> +	itp->param_mask		= ISCSI_MAX_RECV_DLENGTH |
+> +				ISCSI_MAX_XMIT_DLENGTH |
+> +				ISCSI_HDRDGST_EN |
+> +				ISCSI_DATADGST_EN |
+> +				ISCSI_INITIAL_R2T_EN |
+> +				ISCSI_MAX_R2T |
+> +				ISCSI_IMM_DATA_EN |
+> +				ISCSI_FIRST_BURST |
+> +				ISCSI_MAX_BURST |
+> +				ISCSI_PDU_INORDER_EN |
+> +				ISCSI_DATASEQ_INORDER_EN |
+> +				ISCSI_ERL |
+> +				ISCSI_CONN_PORT |
+> +				ISCSI_CONN_ADDRESS |
+> +				ISCSI_EXP_STATSN |
+> +				ISCSI_PERSISTENT_PORT |
+> +				ISCSI_PERSISTENT_ADDRESS |
+> +				ISCSI_TARGET_NAME | ISCSI_TPGT |
+> +				ISCSI_USERNAME | ISCSI_PASSWORD |
+> +				ISCSI_USERNAME_IN | ISCSI_PASSWORD_IN |
+> +				ISCSI_FAST_ABORT | ISCSI_ABORT_TMO |
+> +				ISCSI_LU_RESET_TMO | ISCSI_TGT_RESET_TMO
+|
+> +				ISCSI_PING_TMO | ISCSI_RECV_TMO |
+> +				ISCSI_IFACE_NAME | ISCSI_INITIATOR_NAME;
+> +	itp->host_param_mask	= ISCSI_HOST_HWADDRESS |
+ISCSI_HOST_IPADDRESS |
+> +				ISCSI_HOST_INITIATOR_NAME |
+> +				ISCSI_HOST_NETDEV_NAME;
+> +	itp->get_host_param	= cxgbi_get_host_param;
+> +	itp->set_host_param	= cxgbi_set_host_param;
+> +	/* session management */
+> +	itp->create_session	= cxgbi_create_session;
+> +	itp->destroy_session	= cxgbi_destroy_session;
+> +	itp->get_session_param	= iscsi_session_get_param;
+> +	/* connection management */
+> +	itp->create_conn	= cxgbi_create_conn;
+> +	itp->bind_conn		= cxgbi_bind_conn;
+> +	itp->destroy_conn	= iscsi_tcp_conn_teardown;
+> +	itp->start_conn		= iscsi_conn_start;
+> +	itp->stop_conn		= iscsi_conn_stop;
+> +	itp->get_conn_param	= cxgbi_get_conn_param;
+> +	itp->set_param		= cxgbi_set_conn_param;
+> +	itp->get_stats		= cxgbi_get_conn_stats;
+> +	/* pdu xmit reqitp->  from user space */
+> +	itp->send_pdu		= iscsi_conn_send_pdu;
+> +	/* task */
+> +	itp->init_task		= iscsi_tcp_task_init;
+> +	itp->xmit_task		= iscsi_tcp_task_xmit;
+> +	itp->cleanup_task	= cxgbi_cleanup_task;
+> +
+> +	/* pdu */
+> +	itp->alloc_pdu		= cxgbi_conn_alloc_pdu;
+> +	itp->init_pdu		= cxgbi_conn_init_pdu;
+> +	itp->xmit_pdu		= cxgbi_conn_xmit_pdu;
+> +	itp->parse_pdu_itt	= cxgbi_parse_pdu_itt;
+> +
+> +	/* TCP connect/disconnect */
+> +	itp->ep_connect		= cxgbi_ep_connect;
+> +	itp->ep_poll		= cxgbi_ep_poll;
+> +	itp->ep_disconnect	= cxgbi_ep_disconnect;
+> +	/* Error recovery timeout call */
+> +	itp->session_recovery_timedout =
+iscsi_session_recovery_timedout;
+> +}
+> +EXPORT_SYMBOL_GPL(cxgbi_fill_iscsi_transport);
+> +
+> +void cxgbi_fill_scsi_host_template(struct scsi_host_template *sht)
+> +{
+> +	/*
+> +	 * the following fields should be set already:
+> +	 * module; name, proc_name, can_queue
+> +	 */
+> +	sht->queuecommand	= iscsi_queuecommand;
+> +	sht->change_queue_depth	= iscsi_change_queue_depth;
+> +	sht->sg_tablesize	= SG_ALL;
+> +	sht->max_sectors	= 0xFFFF;
+> +	sht->cmd_per_lun	= ISCSI_DEF_CMD_PER_LUN;
+> +	sht->eh_abort_handler	= iscsi_eh_abort;
+> +	sht->eh_device_reset_handler = iscsi_eh_device_reset;
+> +	sht->eh_target_reset_handler = iscsi_eh_recover_target;
+> +	sht->target_alloc	= iscsi_target_alloc;
+> +	sht->use_clustering	= DISABLE_CLUSTERING;
+> +	sht->this_id		= -1;
+> +}
+> +EXPORT_SYMBOL_GPL(cxgbi_fill_scsi_host_template);
+> +
+
+Can each module just set these callouts in the low level module?
+static struct scsi_host_template cxgb3i_host_template = {
+         .module         = THIS_MODULE,
+         .name           = DRV_MODULE_NAME,
+         .proc_name      = DRV_MODULE_NAME,
+         .can_queue      = CXGB3I_SCSI_HOST_QDEPTH,
+	.queuecommand	= iscsi_queuecommand;
+	.change_queue_depth	= iscsi_change_queue_depth;
+
+etc...
+
+Can you just do that for the iscsi_transport callouts too? I think it is
+
+more standard way of doing it in scsi drivers when there is no need to 
+dynamically do it.
 
 
-> Thanks,
-> Eddie
->
-> -----Original Message-----
-> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
-> Sent: Wednesday, August 11, 2010 12:07 PM
-> To: Eddie Wai
-> Cc: James Bottomley; open-iscsi; linux-scsi; Michael Chan; Anil Veerabhadrappa; Benjamin Li
-> Subject: Re: [PATCH 2/5] BNX2I: Added support for other TMFs besides ABORT_TASK
->
-> On 08/10/2010 02:09 PM, Eddie Wai wrote:
->> +		/* Retrieve LUN directly from the ref_sc */
->> +		int_to_scsilun(ref_sc->device->lun,
->> +			       (struct scsi_lun *) scsi_lun);
->> +		tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
->> +		tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);
->> +
->
->
->
->> +	default:
->> +		memcpy(tmfabort_wqe->lun, tmfabort_hdr->lun, 8);
->
-> Why do you copy the lun differently?
->
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+If you build both drivers in the kernel instead of modules you get this 
+error message:
 
+drivers/scsi/cxgbi/cxgb3i/built-in.o:(.bss+0x0): multiple definition of 
+`dbg_level'
+drivers/scsi/cxgbi/libcxgbi.o:(.bss+0x0): first defined here
+drivers/scsi/cxgbi/cxgb4i/built-in.o:(.bss+0x0): multiple definition of 
+`dbg_level'
+drivers/scsi/cxgbi/libcxgbi.o:(.bss+0x0): first defined here
+make[3]: *** [drivers/scsi/cxgbi/built-in.o] Error 1
+make[2]: *** [drivers/scsi/cxgbi] Error 2
