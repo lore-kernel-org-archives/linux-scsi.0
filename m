@@ -1,66 +1,42 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/3] cxgb4i v5: iscsi driver
-Date: Wed, 11 Aug 2010 13:37:31 -0500
-Message-ID: <4C62EDEB.3030007@cs.wisc.edu>
-References: <201008091753.o79HrTmr020149@localhost.localdomain>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH 2/5] BNX2I: Added support for other TMFs besides ABORT_TASK
+Date: Wed, 11 Aug 2010 14:07:07 -0500
+Message-ID: <4C62F4DB.8070006@cs.wisc.edu>
+References: <Eddie Wai <eddie.wai@broadcom.com> <1281467374-6182-3-git-send-email-eddie.wai@broadcom.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201008091753.o79HrTmr020149@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: kxie@chelsio.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rranjan@chelsio.com, James.Bottomley@HansenPartnership.com
+Return-path: <open-iscsi+bncCLPJla3WGRDa54vjBBoECwdGLA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <1281467374-6182-3-git-send-email-eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Cc: James Bottomley <JBottomley-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Ben Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/09/2010 12:53 PM, kxie@chelsio.com wrote:
+On 08/10/2010 02:09 PM, Eddie Wai wrote:
+> +		/* Retrieve LUN directly from the ref_sc */
+> +		int_to_scsilun(ref_sc->device->lun,
+> +			       (struct scsi_lun *) scsi_lun);
+> +		tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
+> +		tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);
 > +
-> +static void *t4_uld_add(const struct cxgb4_lld_info *lldi)
-> +{
-> +	struct cxgbi_device *cdev;
-> +	struct port_info *pi;
-> +	int i, rc;
-> +
-> +	cxgb4i_log_info("%s", version);
-> +
-> +	cdev = cxgbi_device_register(sizeof(*lldi), lldi->nports);
-> +	if (!cdev) {
-> +		cxgb4i_log_info("t4 device 0x%p, register failed.\n", lldi);
-> +		return NULL;
-> +	}
-> +	cxgb4i_log_debug(1<<  CXGBI_DBG_DEV,
-> +			"t4 0x%p,0x%x, ports %u,%s, chan %u, q %u,%u, wr %u.\n",
-> +			cdev, lldi->adapter_type, lldi->nports,
-> +			lldi->ports[0]->name, lldi->nchan, lldi->ntxq,
-> +			lldi->nrxq, lldi->wr_cred);
-> +	for (i = 0; i<  lldi->nrxq; i++)
-> +			cxgb4i_log_debug(1<<  CXGBI_DBG_DEV,
-> +				"t4 0x%p, rxq id #%d: %u.\n",
-> +				cdev, i, lldi->rxq_ids[i]);
-> +
-> +	memcpy(cxgbi_cdev_priv(cdev), lldi, sizeof(*lldi));
-> +	cdev->flags = CXGBI_FLAG_DEV_T4;
-> +	cdev->pdev = lldi->pdev;
-> +	cdev->ports = lldi->ports;
-> +	cdev->nports = lldi->nports;
-> +	cdev->mtus = lldi->mtus;
-> +	cdev->nmtus = NMTUS;
-> +	cdev->snd_win = cxgb4i_snd_win;
-> +	cdev->rcv_win = cxgb4i_rcv_win;
-> +	cdev->rx_credit_thres = cxgb4i_rx_credit_thres;
-> +	cdev->skb_tx_rsvd = CXGB4I_TX_HEADER_LEN;
-> +	cdev->skb_rx_extra = sizeof(struct cpl_iscsi_hdr);
-> +	cdev->itp =&cxgb4i_iscsi_transport;
-> +
-> +	rc = cxgbi_iscsi_init(cdev);
-> +	if (rc) {
-> +		cxgb4i_log_info("t4 0x%p iscsi init failed\n", cdev);
-> +		goto err_out;
-> +	}
 
-For each LLD (cxgb3i and cxgb4i) could it get called more than once? I 
-mean if you had multiple cxgb3i HBAs could it get called once for each 
-or is it called just once time for all cxgb3i hbas? If more than once 
-the cxgbi_iscsi_init call to iscsi_register_transport would fail on the 
-second call, because the iscsi class would not allow you to register the 
-same transport twice.
+
+
+> +	default:
+> +		memcpy(tmfabort_wqe->lun, tmfabort_hdr->lun, 8);
+
+Why do you copy the lun differently?
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
