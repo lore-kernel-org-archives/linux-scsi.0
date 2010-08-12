@@ -1,63 +1,43 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: [PATCH -next] firmware: ibft depends on SCSI
-Date: Thu, 12 Aug 2010 10:31:38 -0400
-Message-ID: <4C6405CA.3080701@redhat.com>
-References: <20100811140009.6ff33109.sfr@canb.auug.org.au> <20100811103620.2d25d573.randy.dunlap@oracle.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
+ Enable Online Controller Reset Bit in register related functions
+Date: Thu, 12 Aug 2010 09:20:39 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3DBE6239A@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
+	 <1277046060.5242.18.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3D09275CC@cosmail02.lsi.com>
+	 <1277063250.5242.25.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3D09275CE@cosmail02.lsi.com>
+	 <1277066924.5242.41.camel@mulgrave.site>
+	 <4B6A08C587958942AA3002690DD4F8C3DBCC8483@cosmail02.lsi.com>
+ <1280598371.2801.11.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20100811103620.2d25d573.randy.dunlap@oracle.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, Konrad Rzeszutek Wilk <konrad@kernel.org>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1280598371.2801.11.camel@mulgrave.site>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Yinghai Lu <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Maharana, Parag" <Parag.Maharana@lsi.com>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/11/2010 01:36 PM, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
-> 
-> Prevent build errors when SCSI is not enabled:
-> 
-> iscsi_ibft.c:(.init.text+0x548d): undefined reference to `iscsi_boot_create_initiator'
-> iscsi_ibft.c:(.init.text+0x54a9): undefined reference to `iscsi_boot_create_ethernet'
-> iscsi_ibft.c:(.init.text+0x54c5): undefined reference to `iscsi_boot_create_target'
-> iscsi_ibft.c:(.init.text+0x55ff): undefined reference to `iscsi_boot_destroy_kset'
-> iscsi_ibft.c:(.init.text+0x561e): undefined reference to `iscsi_boot_create_kset'
-> iscsi_ibft.c:(.exit.text+0xe2c): undefined reference to `iscsi_boot_destroy_kset'
-> 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-> Cc:	Peter Jones <pjones@redhat.com>
-> Cc:	Konrad Rzeszutek Wilk <konrad@kernel.org>
-
-This looks good to me, thanks for catching it.
-
-Signed-of-by: Peter Jones <pjones@redhat.com>
-
-> ---
->  drivers/firmware/Kconfig |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- linux-next-20100811.orig/drivers/firmware/Kconfig
-> +++ linux-next-20100811/drivers/firmware/Kconfig
-> @@ -125,7 +125,7 @@ config ISCSI_IBFT_FIND
->  config ISCSI_IBFT
->  	tristate "iSCSI Boot Firmware Table Attributes module"
->  	select ISCSI_BOOT_SYSFS
-> -	depends on ISCSI_IBFT_FIND
-> +	depends on ISCSI_IBFT_FIND && SCSI
->  	default	n
->  	help
->  	  This option enables support for detection and exposing of iSCSI
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
-
--- 
-        Peter
-
-RFC 882 put the dots in .com.
-
-01234567890123456789012345678901234567890123456789012345678901234567890123456789
+SmFtZXMsDQoNCkp1c3QgbGV0IHlvdSBrbm93IHRoZSBuZXcgcGF0Y2hlcyBhbHJlYWR5IHN1Ym1p
+dHRlZCB5ZXN0ZXJkYXkuICBQbGVhc2UgbGV0IG1lIGtub3cgYWZ0ZXIgeW91IHVwZGF0ZWQgdGhv
+c2UgcGF0Y2hlcyB0byB0aGUgbWFpbiB0cmVlLg0KDQpSZWdhcmRzLA0KDQpCbyBZYW5nDQoNCi0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21haWx0bzpK
+YW1lcy5Cb3R0b21sZXlAc3VzZS5kZV0gDQpTZW50OiBTYXR1cmRheSwgSnVseSAzMSwgMjAxMCAx
+OjQ2IFBNDQpUbzogWWFuZywgQm8NCkNjOiBZaW5naGFpIEx1OyBsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZzsgYWtwbUBvc2RsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgTWFo
+YXJhbmEsIFBhcmFnOyBEYWZ0YXJkYXIsIEpheWFudA0KU3ViamVjdDogUkU6IFtQQVRDSCAxLzEy
+XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBPbmxpbmUgQ29udHJvbGxlciBSZXNldCAtIEk6IEVuYWJs
+ZSBPbmxpbmUgQ29udHJvbGxlciBSZXNldCBCaXQgaW4gcmVnaXN0ZXIgcmVsYXRlZCBmdW5jdGlv
+bnMNCg0KT24gRnJpLCAyMDEwLTA3LTMwIGF0IDEyOjUzIC0wNjAwLCBZYW5nLCBCbyB3cm90ZToN
+Cj4gRG8geW91IGtub3cgd2hlbiB0aG9zZSBwYXRjaGVzICgxMiBwYXRjaGVzKSB3aWxsIGJlIHB1
+c2hlZCB0byB1cHN0cmVhbT8NCg0KV2VsbCwgaXQgbG9va3MgbGlrZSBJIGxvc3QgdGhlIGJyYW5j
+aCBJIHdhcyBmaXhpbmcgYWxsIHRoaXMgdXAgaW4NCnNvbWV3aGVyZS4gIEkgZG9uJ3QgcmVhbGx5
+IGhhdmUgdGltZSB0byByZWRvIHRoYXQgd29yaywgc28gY291bGQgeW91DQpzZW5kIHRoZSBzZXJp
+ZXMgY29ycmVjdGx5ICh0aGF0J3MgdGhlIDggT0NSIHBhdGNoZXMgdGhhdCBkb24ndA0KaW5kaXZp
+ZHVhbGx5IGNvbXBpbGUgYXMgYSBzaW5nbGUgcGF0Y2ggd2l0aCBhIGNvcnJlY3QgY2hhbmdlbG9n
+IHBsdXMgdGhlDQpmb3VyIG90aGVycykuDQoNClRoYW5rcywNCg0KSmFtZXMNCg0KDQo=
