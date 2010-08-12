@@ -1,99 +1,160 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCHSET block#for-2.6.36-post] block: replace barrier with sequenced flush
-Date: Thu, 12 Aug 2010 14:41:20 +0200
-Message-ID: <1281616891-5691-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 04/11] block: remove spurious uses of REQ_HARDBARRIER
+Date: Thu, 12 Aug 2010 14:41:24 +0200
+Message-ID: <1281616891-5691-5-git-send-email-tj@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1281616891-5691-1-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.
+Cc: Tejun Heo <tj@kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, Peter Osterlund <petero2@telia.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+REQ_HARDBARRIER is deprecated.  Remove spurious uses in the following
+users.  Please note that other than osdblk, all other uses were
+already spurious before deprecation.
 
-This patchset replaces the current barrier implementation with
-sequenced flush which doesn't impose any restriction on ordering
-around the flush requests.  This patchst is result of the following
-discussion thread.
+* osdblk: osdblk_rq_fn() won't receive any request with
+  REQ_HARDBARRIER set.  Remove the test for it.
 
-  http://thread.gmane.org/gmane.linux.file-systems/43877
+* pktcdvd: use of REQ_HARDBARRIER in pkt_generic_packet() doesn't mean
+  anything.  Removed.
 
-In summary, filesystems can take over the ordering of requests around
-commit writes and the block layer should just supply a mechanism to
-perform the commit writes themselves.  This would greatly lessen tha
-stall caused by queue dumping and draining used by the current barrier
-implementation for request ordering.
+* aic7xxx_old: Setting MSG_ORDERED_Q_TAG on REQ_HARDBARRIER is
+  spurious.  Removed.
 
-This patchset converts barrier mechanism to sequenced flush/fua
-mechanism in the following steps.
+* sas_scsi_host: Setting TASK_ATTR_ORDERED on REQ_HARDBARRIER is
+  spurious.  Removed.
 
-1. Kill the mostly unused ORDERED_BY_TAG support.
+* scsi_tcq: The ordered tag path wasn't being used anyway.  Removed.
 
-2. Deprecate REQ_HARDBARRIER support.  All hard barrier requests are
-   failed with -EOPNOTSUPP.
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@suse.de>
+Cc: Peter Osterlund <petero2@telia.com>
+---
+ drivers/block/osdblk.c              |    3 +--
+ drivers/block/pktcdvd.c             |    1 -
+ drivers/scsi/aic7xxx_old.c          |   21 ++-------------------
+ drivers/scsi/libsas/sas_scsi_host.c |   13 +------------
+ include/scsi/scsi_tcq.h             |    6 +-----
+ 5 files changed, 5 insertions(+), 39 deletions(-)
 
-3. Drop barrier ordering by queue draining mechanism.
+diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
+index 72d6246..87311eb 100644
+--- a/drivers/block/osdblk.c
++++ b/drivers/block/osdblk.c
+@@ -310,8 +310,7 @@ static void osdblk_rq_fn(struct request_queue *q)
+ 			break;
+ 
+ 		/* filter out block requests we don't understand */
+-		if (rq->cmd_type != REQ_TYPE_FS &&
+-		    !(rq->cmd_flags & REQ_HARDBARRIER)) {
++		if (rq->cmd_type != REQ_TYPE_FS) {
+ 			blk_end_request_all(rq, 0);
+ 			continue;
+ 		}
+diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+index b1cbeb5..0166ea1 100644
+--- a/drivers/block/pktcdvd.c
++++ b/drivers/block/pktcdvd.c
+@@ -753,7 +753,6 @@ static int pkt_generic_packet(struct pktcdvd_device *pd, struct packet_command *
+ 
+ 	rq->timeout = 60*HZ;
+ 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+-	rq->cmd_flags |= REQ_HARDBARRIER;
+ 	if (cgc->quiet)
+ 		rq->cmd_flags |= REQ_QUIET;
+ 
+diff --git a/drivers/scsi/aic7xxx_old.c b/drivers/scsi/aic7xxx_old.c
+index 93984c9..e1cd606 100644
+--- a/drivers/scsi/aic7xxx_old.c
++++ b/drivers/scsi/aic7xxx_old.c
+@@ -2850,12 +2850,6 @@ aic7xxx_done(struct aic7xxx_host *p, struct aic7xxx_scb *scb)
+       aic_dev->r_total++;
+       ptr = aic_dev->r_bins;
+     }
+-    if(cmd->device->simple_tags && cmd->request->cmd_flags & REQ_HARDBARRIER)
+-    {
+-      aic_dev->barrier_total++;
+-      if(scb->tag_action == MSG_ORDERED_Q_TAG)
+-        aic_dev->ordered_total++;
+-    }
+     x = scb->sg_length;
+     x >>= 10;
+     for(i=0; i<6; i++)
+@@ -10144,19 +10138,8 @@ static void aic7xxx_buildscb(struct aic7xxx_host *p, struct scsi_cmnd *cmd,
+     /* We always force TEST_UNIT_READY to untagged */
+     if (cmd->cmnd[0] != TEST_UNIT_READY && sdptr->simple_tags)
+     {
+-      if (req->cmd_flags & REQ_HARDBARRIER)
+-      {
+-	if(sdptr->ordered_tags)
+-	{
+-          hscb->control |= MSG_ORDERED_Q_TAG;
+-          scb->tag_action = MSG_ORDERED_Q_TAG;
+-	}
+-      }
+-      else
+-      {
+-        hscb->control |= MSG_SIMPLE_Q_TAG;
+-        scb->tag_action = MSG_SIMPLE_Q_TAG;
+-      }
++      hscb->control |= MSG_SIMPLE_Q_TAG;
++      scb->tag_action = MSG_SIMPLE_Q_TAG;
+     }
+   }
+   if ( !(aic_dev->dtr_pending) &&
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index f0cfba9..535085c 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -130,17 +130,6 @@ static void sas_scsi_task_done(struct sas_task *task)
+ 	sc->scsi_done(sc);
+ }
+ 
+-static enum task_attribute sas_scsi_get_task_attr(struct scsi_cmnd *cmd)
+-{
+-	enum task_attribute ta = TASK_ATTR_SIMPLE;
+-	if (cmd->request && blk_rq_tagged(cmd->request)) {
+-		if (cmd->device->ordered_tags &&
+-		    (cmd->request->cmd_flags & REQ_HARDBARRIER))
+-			ta = TASK_ATTR_ORDERED;
+-	}
+-	return ta;
+-}
+-
+ static struct sas_task *sas_create_task(struct scsi_cmnd *cmd,
+ 					       struct domain_device *dev,
+ 					       gfp_t gfp_flags)
+@@ -160,7 +149,7 @@ static struct sas_task *sas_create_task(struct scsi_cmnd *cmd,
+ 	task->ssp_task.retry_count = 1;
+ 	int_to_scsilun(cmd->device->lun, &lun);
+ 	memcpy(task->ssp_task.LUN, &lun.scsi_lun, 8);
+-	task->ssp_task.task_attr = sas_scsi_get_task_attr(cmd);
++	task->ssp_task.task_attr = TASK_ATTR_SIMPLE;
+ 	memcpy(task->ssp_task.cdb, cmd->cmnd, 16);
+ 
+ 	task->scatter = scsi_sglist(cmd);
+diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
+index 1723138..d6e7994 100644
+--- a/include/scsi/scsi_tcq.h
++++ b/include/scsi/scsi_tcq.h
+@@ -97,13 +97,9 @@ static inline void scsi_deactivate_tcq(struct scsi_device *sdev, int depth)
+ static inline int scsi_populate_tag_msg(struct scsi_cmnd *cmd, char *msg)
+ {
+         struct request *req = cmd->request;
+-	struct scsi_device *sdev = cmd->device;
+ 
+         if (blk_rq_tagged(req)) {
+-		if (sdev->ordered_tags && req->cmd_flags & REQ_HARDBARRIER)
+-        	        *msg++ = MSG_ORDERED_TAG;
+-        	else
+-        	        *msg++ = MSG_SIMPLE_TAG;
++		*msg++ = MSG_SIMPLE_TAG;
+         	*msg++ = req->tag;
+         	return 2;
+ 	}
+-- 
+1.7.1
 
-4. Rename barrier to flush and implement new interface based on
-   REQ_FLUSH and REQ_FUA as suggested by Christoph.
-
-blkdev_issue_flush() is converted to use the new mechanism but all the
-filesystems still use the deprecated REQ_HARDBARRIER which always
-fails.  Each filesystem needs to be updated to enforce request
-ordering themselves and then to use REQ_FLUSH/FUA mechanism.
-
-loop, md, dm, etc... haven't been converted yet and REQ_FLUSH/FUA
-doesn't work with them yet.  I'll convert most of them soonish if this
-patchset is generally agreed upon.
-
-This patchset contains the following patches.
-
-  0001-block-loop-queue-ordered-mode-should-be-DRAIN_FLUSH.patch
-  0002-block-kill-QUEUE_ORDERED_BY_TAG.patch
-  0003-block-deprecate-barrier-and-replace-blk_queue_ordere.patch
-  0004-block-remove-spurious-uses-of-REQ_HARDBARRIER.patch
-  0005-block-misc-cleanups-in-barrier-code.patch
-  0006-block-drop-barrier-ordering-by-queue-draining.patch
-  0007-block-rename-blk-barrier.c-to-blk-flush.c.patch
-  0008-block-rename-barrier-ordered-to-flush.patch
-  0009-block-implement-REQ_FLUSH-FUA-based-interface-for-FL.patch
-  0010-fs-block-propagate-REQ_FLUSH-FUA-interface-to-upper-.patch
-  0011-block-use-REQ_FLUSH-in-blkdev_issue_flush.patch
-
-and is also available in the following git tree.
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua
-
-and contains the following changes.
-
- block/Makefile                      |    2 
- block/blk-barrier.c                 |  350 ------------------------------------
- block/blk-core.c                    |   55 ++---
- block/blk-flush.c                   |  248 +++++++++++++++++++++++++
- block/blk-settings.c                |   20 ++
- block/blk.h                         |    8 
- block/elevator.c                    |   79 --------
- drivers/block/brd.c                 |    1 
- drivers/block/loop.c                |    2 
- drivers/block/osdblk.c              |    5 
- drivers/block/pktcdvd.c             |    1 
- drivers/block/ps3disk.c             |    2 
- drivers/block/virtio_blk.c          |   34 ---
- drivers/block/xen-blkfront.c        |   47 +---
- drivers/ide/ide-disk.c              |   13 -
- drivers/md/dm.c                     |    2 
- drivers/mmc/card/queue.c            |    1 
- drivers/s390/block/dasd.c           |    1 
- drivers/scsi/aic7xxx_old.c          |   21 --
- drivers/scsi/libsas/sas_scsi_host.c |   13 -
- drivers/scsi/sd.c                   |   18 -
- fs/buffer.c                         |   27 +-
- include/linux/blk_types.h           |    4 
- include/linux/blkdev.h              |   73 +------
- include/linux/buffer_head.h         |    8 
- include/linux/fs.h                  |   20 +-
- include/scsi/scsi_tcq.h             |    6 
- 27 files changed, 402 insertions(+), 659 deletions(-)
-
-Thanks.
-
---
-tejun
