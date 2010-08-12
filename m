@@ -1,61 +1,69 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH v2] BLOCK: fix bio.bi_rw handling
-Date: Thu, 12 Aug 2010 18:24:39 +0200
-Message-ID: <4C642047.6030108@gmail.com>
-References: <1281616266-4709-1-git-send-email-jslaby@suse.cz> <1281616266-4709-3-git-send-email-jslaby@suse.cz> <20100812160809.GC28689@lst.de>
+From: Jayamohan Kallickal <jayamohank@serverengines.com>
+Subject: [PATCH 1/1] be2iscsi: Fix for Login failure
+Date: Thu, 12 Aug 2010 23:36:06 +0530
+Message-ID: <20100812180547.GA8202@serverengines.com>
+Reply-To: Jayamohan Kalickal <jayamohank@serverengines.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:40248 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752604Ab0HLQYn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2010 12:24:43 -0400
-In-Reply-To: <20100812160809.GC28689@lst.de>
+Received: from segment-124-30.sify.net ([124.30.166.146]:27719 "EHLO
+	akhaparde.serverengines.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753470Ab0HLSGA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Aug 2010 14:06:00 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jiri Slaby <jslaby@suse.cz>, akpm@linux-foundation.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, michaelc@cs.wisc.edu
 
-On 08/12/2010 06:08 PM, Christoph Hellwig wrote:
-> On Thu, Aug 12, 2010 at 02:31:06PM +0200, Jiri Slaby wrote:
->> Return of the bi_rw tests is no longer bool after commit 74450be1. B=
-ut
->> results of such tests are stored in bools. This doesn't fit in there
->> for some compilers (gcc 4.5 here), so either use !! magic to get rea=
-l
->> bools or use ulong where the result is assigned somewhere.
->=20
-> I'd have to look at my copy of the C standard if it's guaranteed,
+   The current code in tree has problems with Login.
+This patch fixes the Login Failure .
 
-=A76.5.3.3 of ANSI C99, par 5:
-The result of the logical negation operator ! is 0 if the value of its
-operand compares unequal to 0, 1 if the value of its operand compares
-equal to 0. The result has type int. The expression !E is equivalent to
-(0=3D=3DE).
+ This patch has been made on the latest scsi-misc tree pulled today
 
-On =3D=3D (=A76.5.9 par 3):
-The =3D=3D (equal to) and !=3D (not equal to) operators are analogous t=
-o the
-relational operators except for their lower precedence. Each of the
-operators yields 1 if the specified relation is true and 0 if it is
-false. The result has type int. For any pair of operands, exactly one o=
-f
-the relations is true.
+Signed-off-by: Jayamohan Kallickal <jayamohank@serverengines.com>
+---
+ drivers/scsi/be2iscsi/be_iscsi.c |    5 ++---
+ drivers/scsi/be2iscsi/be_mgmt.c  |    2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-On bool =3D> _Bool (=A76.2.5 par 2)
-An object declared as type _Bool is large enough to store the values 0
-and 1.
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 7d4d227..7f11f3e 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -300,8 +300,7 @@ int beiscsi_get_host_param(struct Scsi_Host *shost,
+ 			   enum iscsi_host_param param, char *buf)
+ {
+ 	struct beiscsi_hba *phba = (struct beiscsi_hba *)iscsi_host_priv(shost);
+-	int len = 0;
+-	int status;
++	int status = 0;
+ 
+ 	SE_DEBUG(DBG_LVL_8, "In beiscsi_get_host_param, param= %d\n", param);
+ 	switch (param) {
+@@ -315,7 +314,7 @@ int beiscsi_get_host_param(struct Scsi_Host *shost,
+ 	default:
+ 		return iscsi_host_get_param(shost, param, buf);
+ 	}
+-	return len;
++	return status;
+ }
+ 
+ int beiscsi_get_macaddr(char *buf, struct beiscsi_hba *phba)
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 26350e4..877324f 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -368,7 +368,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 	memset(req, 0, sizeof(*req));
+ 	wrb->tag0 |= tag;
+ 
+-	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 1);
++	be_wrb_hdr_prepare(wrb, sizeof(*req), false, 1);
+ 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+ 			   OPCODE_COMMON_ISCSI_TCP_CONNECT_AND_OFFLOAD,
+ 			   sizeof(*req));
+-- 
+1.6.4
 
-So it should be safe :).
-
-BTW just of curiosity, sizeof(bool) is 1 here (8 bits).
-
-regards,
---=20
-js
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
