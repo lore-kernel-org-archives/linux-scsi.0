@@ -1,47 +1,45 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH v2 1/3] libcxgbi: common library for cxgb3i and cxgb4i
-Date: Thu, 12 Aug 2010 20:21:40 -0700
-Message-ID: <1281669700.15486.71.camel@Joe-Laptop>
-References: <201008130257.o7D2vLVx001282@localhost.localdomain>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH v2 1/3] libcxgbi: common library for cxgb3i and cxgb4i
+Date: Thu, 12 Aug 2010 20:44:16 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD33408403F41@maui.asicdesigners.com>
+References: <201008130257.o7D2vLVx001282@localhost.localdomain> <1281669700.15486.71.camel@Joe-Laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1044 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751268Ab0HMDVm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Aug 2010 23:21:42 -0400
-In-Reply-To: <201008130257.o7D2vLVx001282@localhost.localdomain>
+Received: from stargate.chelsio.com ([67.207.112.58]:15090 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448Ab0HMDoa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2010 23:44:30 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kxie@chelsio.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, rranjan@chelsio.com, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Rakesh Ranjan <rakesh@chelsio.com>, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-On Thu, 2010-08-12 at 19:57 -0700, kxie@chelsio.com wrote:
-> [PATCH v2 1/3] libcxgbi: common library for cxgb3i and cxgb4i
-[]
-> +#define libcxgbi_log_error	cxgbi_dbg_error
-> +#define libcxgbi_log_warn	cxgbi_dbg_warn
-> +#define libcxgbi_log_info	cxgbi_dbg_info
-> +#define libcxgbi_log_debug(flag, fmt, args...) \
-> +	cxgbi_dbg_print(flag, fmt, ## args)
-
-I think this double indirection isn't useful and it would
-be simpler/better to use pr_<level>
-
-[]
-
-> +#define cxgbi_dbg_print(level, fmt, args...)	\
-> +	do {	\
-> +		if (dbg_level & (level)) \
-> +			printk(KERN_INFO "cxgbi: %s - " fmt, \
-> +				__func__ , ## args); \
-> +	} while (0)
-> +#define	cxgbi_dbg_error(fmt, args...) \
-> +	printk(KERN_ERR "cxgbi: ERR! %s, " fmt, __func__ , ## args)
-> +#define cxgbi_dbg_warn(fmt, args...) \
-> +	printk(KERN_WARNING "cxgbi: WARN! %s, " fmt, __func__ , ## args)
-> +#define cxgbi_dbg_info(fmt, args...) \
-> +	printk(KERN_INFO "cxgbi: %s, " fmt, __func__ , ## args)
-
-
+VGhhbmtzLA0KDQpXaWxsIHVzZSBwcl94eHggaW5zdGVhZC4NCg0KS2FyZW4NCg0KLS0tLS1Pcmln
+aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvZSBQZXJjaGVzIFttYWlsdG86am9lQHBlcmNoZXMu
+Y29tXSANClNlbnQ6IFRodXJzZGF5LCBBdWd1c3QgMTIsIDIwMTAgODoyMiBQTQ0KVG86IEthcmVu
+IFhpZQ0KQ2M6IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXNjc2lAdmdlci5r
+ZXJuZWwub3JnOyBvcGVuLWlzY3NpQGdvb2dsZWdyb3Vwcy5jb207IFJha2VzaCBSYW5qYW47IEph
+bWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb207IG1pY2hhZWxjQGNzLndpc2MuZWR1
+DQpTdWJqZWN0OiBSZTogW1BBVENIIHYyIDEvM10gbGliY3hnYmk6IGNvbW1vbiBsaWJyYXJ5IGZv
+ciBjeGdiM2kgYW5kIGN4Z2I0aQ0KDQpPbiBUaHUsIDIwMTAtMDgtMTIgYXQgMTk6NTcgLTA3MDAs
+IGt4aWVAY2hlbHNpby5jb20gd3JvdGU6DQo+IFtQQVRDSCB2MiAxLzNdIGxpYmN4Z2JpOiBjb21t
+b24gbGlicmFyeSBmb3IgY3hnYjNpIGFuZCBjeGdiNGkNCltdDQo+ICsjZGVmaW5lIGxpYmN4Z2Jp
+X2xvZ19lcnJvcgljeGdiaV9kYmdfZXJyb3INCj4gKyNkZWZpbmUgbGliY3hnYmlfbG9nX3dhcm4J
+Y3hnYmlfZGJnX3dhcm4NCj4gKyNkZWZpbmUgbGliY3hnYmlfbG9nX2luZm8JY3hnYmlfZGJnX2lu
+Zm8NCj4gKyNkZWZpbmUgbGliY3hnYmlfbG9nX2RlYnVnKGZsYWcsIGZtdCwgYXJncy4uLikgXA0K
+PiArCWN4Z2JpX2RiZ19wcmludChmbGFnLCBmbXQsICMjIGFyZ3MpDQoNCkkgdGhpbmsgdGhpcyBk
+b3VibGUgaW5kaXJlY3Rpb24gaXNuJ3QgdXNlZnVsIGFuZCBpdCB3b3VsZA0KYmUgc2ltcGxlci9i
+ZXR0ZXIgdG8gdXNlIHByXzxsZXZlbD4NCg0KW10NCg0KPiArI2RlZmluZSBjeGdiaV9kYmdfcHJp
+bnQobGV2ZWwsIGZtdCwgYXJncy4uLikJXA0KPiArCWRvIHsJXA0KPiArCQlpZiAoZGJnX2xldmVs
+ICYgKGxldmVsKSkgXA0KPiArCQkJcHJpbnRrKEtFUk5fSU5GTyAiY3hnYmk6ICVzIC0gIiBmbXQs
+IFwNCj4gKwkJCQlfX2Z1bmNfXyAsICMjIGFyZ3MpOyBcDQo+ICsJfSB3aGlsZSAoMCkNCj4gKyNk
+ZWZpbmUJY3hnYmlfZGJnX2Vycm9yKGZtdCwgYXJncy4uLikgXA0KPiArCXByaW50ayhLRVJOX0VS
+UiAiY3hnYmk6IEVSUiEgJXMsICIgZm10LCBfX2Z1bmNfXyAsICMjIGFyZ3MpDQo+ICsjZGVmaW5l
+IGN4Z2JpX2RiZ193YXJuKGZtdCwgYXJncy4uLikgXA0KPiArCXByaW50ayhLRVJOX1dBUk5JTkcg
+ImN4Z2JpOiBXQVJOISAlcywgIiBmbXQsIF9fZnVuY19fICwgIyMgYXJncykNCj4gKyNkZWZpbmUg
+Y3hnYmlfZGJnX2luZm8oZm10LCBhcmdzLi4uKSBcDQo+ICsJcHJpbnRrKEtFUk5fSU5GTyAiY3hn
+Ymk6ICVzLCAiIGZtdCwgX19mdW5jX18gLCAjIyBhcmdzKQ0KDQoNCg==
