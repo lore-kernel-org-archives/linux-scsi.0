@@ -1,37 +1,66 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with sequenced flush
-Date: Fri, 13 Aug 2010 13:48:58 +0200
-Message-ID: <20100813114858.GA31937@lst.de>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Fri, 13 Aug 2010 16:55:33 +0400
+Message-ID: <4C6540C5.8070108@vlnb.net>
 References: <1281616891-5691-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
 In-Reply-To: <1281616891-5691-1-git-send-email-tj@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-The patchset looks functionally correct to me, and with a small patch
-to make use of WRITE_FUA_FLUSH survives xfstests, and instrumenting the
-underlying qemu shows that we actually get the flush requests where we should.
+Tejun Heo, on 08/12/2010 04:41 PM wrote:
+> Each filesystem needs to be updated to enforce request
+> ordering themselves and then to use REQ_FLUSH/FUA mechanism.
 
-No performance or power fail testing done yet.
+I generally agree with the patchset, but I believe this particular move 
+is a really bad move.
 
-But I do not like the transition very much.  The new WRITE_FUA_FLUSH
-request is exactly what filesystems expect from a current barrier
-request, so I'd rather move to that functionality without breaking stuff
-inbetween.
+I'm not mentioning the obvious that a common functionality (enforcing 
+requests ordering in this case) should be handled by a common library, 
+but not internally by a zillion file systems Linux has.
 
-So if it was to me I'd keep patches 1, 2, 4 and 5 from your series, than
-a main one to relax barrier semantics, then have the renaming patches 7
-and 8, and possible keep patch 11 separate from the main implementation
-change, and if absolutely also a separate one to introduce REQ_FUA and
-REQ_FLUSH in the bio interface, but keep things working while doing
-this.
+The worst in this move is that it would hide all the requests ordering 
+semantic inside file systems in, most likely, a very much unclear way. 
+That would lead that if I or someone else decide to implement the 
+"hardware offload" of requests ordering (ORDERED requests), I or he/she 
+would not be able to see any improvement until at least one file system 
+be changed to be able to use it. Worse, if the implementor can't 
+demonstrate the improvement, how can he encourage file systems 
+developers to update their file systems? Which, basically, would mean 
+that only a person with *BOTH* deep storage and file systems internals 
+knowledge can do the job. How many do you know such people? Both storage 
+and file systems topics are very wide and tricky, so nearly always 
+people specialize in one of them, not both.
 
-Then we can patches do disable the reiserfs barrier "optimization" as
-the very first one, and DM/MD support which I'm currently working on
-as the last one and we can start doing the heavy testing.
+Thus, this move would basically mean that the proper ordered queuing 
+would probably never be implemented in Linux.
 
+I believe, much better would be to create a common interface, which file 
+systems would use to enforce requests order, when they need it.
+
+Advantages of this approach:
+
+1. The ordering requirements of file systems would be clear.
+
+2. They would be handled in one place by a common code.
+
+3. Any storage level expert can try to implement ordered queuing without 
+a deep dive into file systems design and implementation.
+
+I already suggested such interface in 
+http://marc.info/?l=linux-scsi&m=128077574815881&w=2. Internally for the 
+moment it can be implemented using existing REQ_FLUSH/FUA/etc. and 
+waiting for all the requests in the group to finish. As a nice side 
+effect, if a device doesn't support FUA, it would be possible to issue 
+SYNC_CACHE command(s) only for required blocks, not for the whole device 
+as it is done now.
+
+If requested, I can develop the interface further.
+
+Vlad
