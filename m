@@ -1,45 +1,45 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [PATCH v2 1/3] libcxgbi: common library for cxgb3i and cxgb4i
-Date: Thu, 12 Aug 2010 20:44:16 -0700
-Message-ID: <8A71B368A89016469F72CD08050AD33408403F41@maui.asicdesigners.com>
-References: <201008130257.o7D2vLVx001282@localhost.localdomain> <1281669700.15486.71.camel@Joe-Laptop>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 10/11] fs, block: propagate REQ_FLUSH/FUA interface to
+ upper layers
+Date: Fri, 13 Aug 2010 09:19:57 +0200
+Message-ID: <4C64F21D.7010409@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <1281616891-5691-11-git-send-email-tj@kernel.org> <20100812212404.GB3665@quack.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:15090 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448Ab0HMDoa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2010 23:44:30 -0400
-Content-class: urn:content-classes:message
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20100812212404.GB3665@quack.suse.cz>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Rakesh Ranjan <rakesh@chelsio.com>, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-VGhhbmtzLA0KDQpXaWxsIHVzZSBwcl94eHggaW5zdGVhZC4NCg0KS2FyZW4NCg0KLS0tLS1Pcmln
-aW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IEpvZSBQZXJjaGVzIFttYWlsdG86am9lQHBlcmNoZXMu
-Y29tXSANClNlbnQ6IFRodXJzZGF5LCBBdWd1c3QgMTIsIDIwMTAgODoyMiBQTQ0KVG86IEthcmVu
-IFhpZQ0KQ2M6IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LXNjc2lAdmdlci5r
-ZXJuZWwub3JnOyBvcGVuLWlzY3NpQGdvb2dsZWdyb3Vwcy5jb207IFJha2VzaCBSYW5qYW47IEph
-bWVzLkJvdHRvbWxleUBIYW5zZW5QYXJ0bmVyc2hpcC5jb207IG1pY2hhZWxjQGNzLndpc2MuZWR1
-DQpTdWJqZWN0OiBSZTogW1BBVENIIHYyIDEvM10gbGliY3hnYmk6IGNvbW1vbiBsaWJyYXJ5IGZv
-ciBjeGdiM2kgYW5kIGN4Z2I0aQ0KDQpPbiBUaHUsIDIwMTAtMDgtMTIgYXQgMTk6NTcgLTA3MDAs
-IGt4aWVAY2hlbHNpby5jb20gd3JvdGU6DQo+IFtQQVRDSCB2MiAxLzNdIGxpYmN4Z2JpOiBjb21t
-b24gbGlicmFyeSBmb3IgY3hnYjNpIGFuZCBjeGdiNGkNCltdDQo+ICsjZGVmaW5lIGxpYmN4Z2Jp
-X2xvZ19lcnJvcgljeGdiaV9kYmdfZXJyb3INCj4gKyNkZWZpbmUgbGliY3hnYmlfbG9nX3dhcm4J
-Y3hnYmlfZGJnX3dhcm4NCj4gKyNkZWZpbmUgbGliY3hnYmlfbG9nX2luZm8JY3hnYmlfZGJnX2lu
-Zm8NCj4gKyNkZWZpbmUgbGliY3hnYmlfbG9nX2RlYnVnKGZsYWcsIGZtdCwgYXJncy4uLikgXA0K
-PiArCWN4Z2JpX2RiZ19wcmludChmbGFnLCBmbXQsICMjIGFyZ3MpDQoNCkkgdGhpbmsgdGhpcyBk
-b3VibGUgaW5kaXJlY3Rpb24gaXNuJ3QgdXNlZnVsIGFuZCBpdCB3b3VsZA0KYmUgc2ltcGxlci9i
-ZXR0ZXIgdG8gdXNlIHByXzxsZXZlbD4NCg0KW10NCg0KPiArI2RlZmluZSBjeGdiaV9kYmdfcHJp
-bnQobGV2ZWwsIGZtdCwgYXJncy4uLikJXA0KPiArCWRvIHsJXA0KPiArCQlpZiAoZGJnX2xldmVs
-ICYgKGxldmVsKSkgXA0KPiArCQkJcHJpbnRrKEtFUk5fSU5GTyAiY3hnYmk6ICVzIC0gIiBmbXQs
-IFwNCj4gKwkJCQlfX2Z1bmNfXyAsICMjIGFyZ3MpOyBcDQo+ICsJfSB3aGlsZSAoMCkNCj4gKyNk
-ZWZpbmUJY3hnYmlfZGJnX2Vycm9yKGZtdCwgYXJncy4uLikgXA0KPiArCXByaW50ayhLRVJOX0VS
-UiAiY3hnYmk6IEVSUiEgJXMsICIgZm10LCBfX2Z1bmNfXyAsICMjIGFyZ3MpDQo+ICsjZGVmaW5l
-IGN4Z2JpX2RiZ193YXJuKGZtdCwgYXJncy4uLikgXA0KPiArCXByaW50ayhLRVJOX1dBUk5JTkcg
-ImN4Z2JpOiBXQVJOISAlcywgIiBmbXQsIF9fZnVuY19fICwgIyMgYXJncykNCj4gKyNkZWZpbmUg
-Y3hnYmlfZGJnX2luZm8oZm10LCBhcmdzLi4uKSBcDQo+ICsJcHJpbnRrKEtFUk5fSU5GTyAiY3hn
-Ymk6ICVzLCAiIGZtdCwgX19mdW5jX18gLCAjIyBhcmdzKQ0KDQoNCg==
+Hello, Jan.
+
+On 08/12/2010 11:24 PM, Jan Kara wrote:
+> On Thu 12-08-10 14:41:30, Tejun Heo wrote:
+>> Propagate deprecation of REQ_HARDBARRIER and new REQ_FLUSH/FUA
+>> interface to upper layers.
+>>
+>> * WRITE_BARRIER is marked deprecated and WRITE_FLUSH, WRITE_FUA and
+>>   WRITE_FLUSH_FUA are added.
+>>
+>> * REQ_COMMON_MASK now includes REQ_FLUSH | REQ_FUA so that they are
+>>   copied from bio to request.
+>>
+>> * BH_Ordered is marked deprecated and BH_Flush and BH_FUA are added.
+>
+>   Deprecating BH_Ordered is fine but I wouldn't introduce new BH flags for
+> this. BH flags should be used for buffer state, not for encoding how the
+> buffer should be written (there were actually bugs in the past because of
+> this). Being able to set proper flags when calling submit_bh() in the rw
+> parameter is enough.
+
+Ah, okay, I was just trying to match the BH_Ordered usage but you're
+saying just requiring submit_bh() users to specify appropriate REQ_*
+(or WRITE_*) in @rw is okay, right?  I'll drop the bh part then.
+
+Thanks.
+
+-- 
+tejun
