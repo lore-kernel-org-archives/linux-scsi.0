@@ -1,47 +1,47 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] fusion: add function parameter names to kernel-doc
-Date: Sat, 14 Aug 2010 13:05:57 -0700
-Message-ID: <20100814130557.100acad5.randy.dunlap@oracle.com>
+From: Stefan Schmitt <development.stefan@alice.de>
+Subject: Re: Interest in a driver for PCMCIA Bus toaster (New Media) with advansys chip set?
+Date: Sat, 14 Aug 2010 22:57:57 +0200
+Message-ID: <201008142257.57197.development.stefan@alice.de>
+References: <201008141934.05664.development.stefan@alice.de> <20100814183713.GE12892@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:29099 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754947Ab0HNUIJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Aug 2010 16:08:09 -0400
+Received: from smtp-out03.alice-dsl.net ([88.44.63.5]:58508 "EHLO
+	smtp-out03.alice-dsl.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755973Ab0HNVNw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Aug 2010 17:13:52 -0400
+In-Reply-To: <20100814183713.GE12892@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: torvalds <torvalds@linux-foundation.org>, Eric Moore <Eric.Moore@lsi.com>, akpm <akpm@linux-foundation.org>
+To: linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Saturday 14 August 2010 at 20:37:14 Matthew Wilcox wrote:
+> On Sat, Aug 14, 2010 at 07:34:05PM +0200, Stefan Schmitt wrote:
+> > Hallo,
+> >
+> > the card is labelled PS: 404-15-02A. As much as I could see, there
+> > is no linux driver available.
+> >
+> >         Product Name:   PCMCIA Bus Toaster SCSI Adapter
+> >         Identification: manf_id: 0x10cd card_id: 0x0001
+> >                  function: 8 (SCSI)
+> >                  prod_id(1): "PCMCIA Bus Toaster" (0x590031a6)
+> >                  prod_id(2): "SCSI Adapter" (0x96269fcd)
+> >
+> > I have an initial version of driver code (for the 2.6 kernel). I could
+> > send the code to someone more experienced if there is interest.
+> 
+> Is it (in any way) similar to the PCI/ISA advansys chipsets?  (see
+> drivers/scsi/advansys.c)  If so, we should probably merge the drivers.
+> 
+the code is sort of similar, so maybe this could be done. Here are the main 
+differences:
 
-Fix fusion missing kernel-doc:
+ (1) the PCMCIA card uses memory mapped IO in contrast to the PCI/ISA drivers
+ (2) the PCMCIA card does not do DMA [at least not on my computer] so there is 
+an extra part in the driver for doing PIO.
 
-Warning(drivers/message/fusion/mptbase.c:649): No description found for parameter 'func_name'
-Warning(drivers/message/fusion/mptbase.c:8010): No description found for parameter 'cb_idx'
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/message/fusion/mptbase.c |    2 ++
- 1 file changed, 2 insertions(+)
-
---- linux-2.6.35-git8.orig/drivers/message/fusion/mptbase.c
-+++ linux-2.6.35-git8/drivers/message/fusion/mptbase.c
-@@ -629,6 +629,7 @@ mptbase_reply(MPT_ADAPTER *ioc, MPT_FRAM
-  *	mpt_register - Register protocol-specific main callback handler.
-  *	@cbfunc: callback function pointer
-  *	@dclass: Protocol driver's class (%MPT_DRIVER_CLASS enum value)
-+ *	@func_name: call function's name
-  *
-  *	This routine is called by a protocol-specific driver (SCSI host,
-  *	LAN, SCSI target) to register its reply callback routine.  Each
-@@ -8004,6 +8005,7 @@ mpt_spi_log_info(MPT_ADAPTER *ioc, u32 l
-  *	mpt_sas_log_info - Log information returned from SAS IOC.
-  *	@ioc: Pointer to MPT_ADAPTER structure
-  *	@log_info: U32 LogInfo reply word from the IOC
-+ *	@cb_idx: callback function's handle
-  *
-  *	Refer to lsi/mpi_log_sas.h.
-  **/
+I also experienced some difficulties with a few other parts of the PCI/ISA 
+driver code and this PCMCIA board. The microcode can be shared in any case.
