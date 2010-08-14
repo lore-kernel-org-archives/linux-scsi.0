@@ -1,44 +1,58 @@
-From: Sage Weil <sage@newdream.net>
-Subject: Re: [PATCH 0/8] rados block device and ceph refactor
-Date: Fri, 13 Aug 2010 16:11:55 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.1008131609270.5383@cobra.newdream.net>
-References: <1281721240-26130-1-git-send-email-sage@newdream.net>
- <20100813153706.ee61c94e.rdunlap@xenotime.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: TCM/LIO slides for Linux Storage Filesystem workshop 2010
+Date: Fri, 13 Aug 2010 17:52:44 -0700
+Message-ID: <1281747164.4930.137.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cobra.newdream.net ([66.33.216.30]:54578 "EHLO
-	cobra.newdream.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756078Ab0HMXLk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Aug 2010 19:11:40 -0400
-In-Reply-To: <20100813153706.ee61c94e.rdunlap@xenotime.net>
+Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:44374 "HELO
+	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756512Ab0HNA4W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Aug 2010 20:56:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, yehuda@hq.newdream.net
+To: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Philipp Reisner <philipp.reisner@linbit.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Richard Sharpe <realrichardsharpe@gmail.com>, Joel Becker <joel.becker@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, "Love, Robert W" <robert.w.love@intel.com>, Jerome Martin <jxm@risingtidesystems.com>
 
-On Fri, 13 Aug 2010, Randy Dunlap wrote:
-> On Fri, 13 Aug 2010 10:40:32 -0700 Sage Weil wrote:
-> 
-> > Hi,
-> > 
-> > The rados block device (rbd) implements a network block device backed by 
-> > the Ceph distributed object store (think nbd/iSCSI, but distributed and 
-> > fault tolerant).  At the suggestion of Christoph and James, this version 
-> > of the patchset factors out the common Ceph bits (the network protocol, 
-> > cluster membership, and object storage parts) into a libceph module 
-> > (currently in net/ceph/ and include/linux/ceph/) that is shared by the 
-> > file system component (fs/ceph) and rbd (drivers/block/rbd.c). The first 
-> > few patches lay some groundwork, #7 moves does the ceph -> libceph+ceph 
-> > split, and #8 adds the block device driver.
-> 
-> Hi,
-> Did patch #7 make it to any mailing lists?
-> I didn't receive it.
+Greetings folks,
 
-Sorry, I think vger ate it (it's 850KB).  You can see it here:
+Here are the slides from the Target Mode / ConfigFS and demo slot this
+week:
 
-http://git.kernel.org/?p=linux/kernel/git/sage/ceph-client.git;a=commit;h=a6da68196474aabcdcc2f5dab64c0b55ca5090b7
+http://linux-iscsi.org/builds/LIO-LSF-2010/
 
-sage
+First, I wanted to say thank you to everyone who was in attendence and
+all of the very positive and thoughtful feedback from many different
+folks throughout the week.  A consensus was reached during the I/O track
+to apply another round of review for TCM/LIO v4.0 on linux-scsi for:
+
+	*) TCM Core HBA/DEV abstraction and subsystem plugins
+	*) TCM Core fabric independent configfs infrastructure
+	*) TCM_Loop multi-fabric virtual SCSI LLD
+	*) LIO-Target iSCSI module
+
+and tag these bits for v2.6.37.  The reason here is two-fold:
+
+	*) Get more eyes on the existing code and shake
+           out existing bugs
+	*) Allow for addition of new experimental features for 
+           in seperate mainline tracking branches for v2.6.38.
+
+The Linux/iSCSI team will be moving forward over the upcoming weeks to
+make this second review happen on linux-scsi together with hch, tomo and
+mnc.
+
+Also, I am very happy to mention that this was the very first public
+demo of the GPL rtsadmin shell to the I/O track community.  I wanted to
+give an extra special thanks to the handful of community members who's
+own context was allowed to be saved throughout the course of the demo.  
+The demo would certainly not have been possible without the presence of
+giants from all three LSF tracks!
+
+Best,
+
+--nab
+
 
