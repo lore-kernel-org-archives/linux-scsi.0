@@ -1,143 +1,50 @@
-From: Sage Weil <sage@newdream.net>
-Subject: Re: [PATCH 8/8] rbd: introduce rados block device (rbd), based on
- libceph
-Date: Fri, 13 Aug 2010 20:29:51 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.1008132015480.2022@cobra.newdream.net>
-References: <1281721240-26130-1-git-send-email-sage@newdream.net>
- <1281721240-26130-9-git-send-email-sage@newdream.net>
- <20100813194410.9c608b38.randy.dunlap@oracle.com>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH 03/11] block: deprecate barrier and replace
+	blk_queue_ordered() with blk_queue_flush()
+Date: Sat, 14 Aug 2010 11:42:32 +0200
+Message-ID: <20100814094232.GA12336@lst.de>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org>
+	<1281616891-5691-4-git-send-email-tj@kernel.org>
+	<4C65EC41.1060906@goop.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <ceph-devel-owner@vger.kernel.org>
-In-Reply-To: <20100813194410.9c608b38.randy.dunlap@oracle.com>
-Sender: ceph-devel-owner@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, yehuda@hq.newdream.net
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <4C65EC41.1060906@goop.org>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: "jack@suse.cz" <jack@suse.cz>, "Michael S. Tsirkin" <mst@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, Pierre Ossman <drzeus@drzeus.cx>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, Alasdair G Kergon <agk@redhat.com>, Stefan Weinhuber <wein@de.ibm.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Daniel Stodden <daniel.stodden@citrix.com>, Nick Piggin <npiggin@kernel.dk>, Chris Wright <chrisw@sous-sol.org>, Tejun Heo <tj@kernel.org>, "swhiteho@redhat.com" <swhiteho@redhat.com>, chris.mason@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 13 Aug 2010, Randy Dunlap wrote:
-> On Fri, 13 Aug 2010 10:40:40 -0700 Sage Weil wrote:
+On Fri, Aug 13, 2010 at 06:07:13PM -0700, Jeremy Fitzhardinge wrote:
+>  On 08/12/2010 05:41 AM, Tejun Heo wrote:
+> > Barrier is deemed too heavy and will soon be replaced by FLUSH/FUA
+> > requests.  Deprecate barrier.  All REQ_HARDBARRIERs are failed with
+> > -EOPNOTSUPP and blk_queue_ordered() is replaced with simpler
+> > blk_queue_flush().
+> >
+> > blk_queue_flush() takes combinations of REQ_FLUSH and FUA.  If a
+> > device has write cache and can flush it, it should set REQ_FLUSH.  If
+> > the device can handle FUA writes, it should also set REQ_FUA.
 > 
-> > From: Yehuda Sadeh <yehuda@hq.newdream.net>
-> > 
-> > The rados block device (rbd), based on osdblk, creates a block device
-> > that is backed by objects stored in the Ceph distributed object storage
-> > cluster.  Each device consists of a single metadata object and data
-> > striped over many data objects.
-> > 
-> > The rbd driver supports read-only snapshots.
-> > 
-> > Signed-off-by: Yehuda Sadeh <yehuda@hq.newdream.net>
-> > Signed-off-by: Sage Weil <sage@newdream.net>
-> > ---
-> >  MAINTAINERS               |    9 +
-> >  drivers/block/Kconfig     |   13 +
-> >  drivers/block/Makefile    |    1 +
-> >  drivers/block/rbd.c       | 1844 +++++++++++++++++++++++++++++++++++++++++++++
-> >  drivers/block/rbd_types.h |   73 ++
-> >  5 files changed, 1940 insertions(+), 0 deletions(-)
-> >  create mode 100644 drivers/block/rbd.c
-> >  create mode 100644 drivers/block/rbd_types.h
-> > 
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 5102922..cb34b1b 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -4694,6 +4694,15 @@ F:	fs/qnx4/
-> >  F:	include/linux/qnx4_fs.h
-> >  F:	include/linux/qnxtypes.h
-> >  
-> > +RADOS BLOCK DEVICE (RBD)
-> > +F:	include/linux/qnxtypes.h
-> > +M:	Yehuda Sadeh <yehuda@hq.newdream.net>
-> > +M:	Sage Weil <sage@newdream.net>
-> > +M:	ceph-devel@vger.kernel.org
-> > +S:	Supported
-> > +F:	drivers/block/rbd.c
-> > +F:	drivers/block/rbd_types.h
-> > +
-> >  RADEON FRAMEBUFFER DISPLAY DRIVER
-> >  M:	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> >  L:	linux-fbdev@vger.kernel.org
-> > diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-> > index de27768..708104b 100644
-> > --- a/drivers/block/Kconfig
-> > +++ b/drivers/block/Kconfig
-> > @@ -488,4 +488,17 @@ config BLK_DEV_HD
-> >  
-> >  	  If unsure, say N.
-> >  
-> > +config BLK_DEV_RBD
-> > +	tristate "Rados block device (RBD)"
-> > +	select CEPH_LIB
-> > +	default n
-> > +	help
-> > +	  Say Y here if you want include the Rados block device, which stripes
-> > +	  a block device over objects stored in the Ceph distributed object
-> > +	  store.
-> > +
-> > +	  More information at http://ceph.newdream.net/.
-> > +
-> > +	  If unsure, say N.
-> > +
-> >  endif # BLK_DEV
-> 
-> In linux-next of 20100813, I get:
-> 
-> net/built-in.o: In function `read_partial_message_section':
-> messenger.c:(.text+0x6598b): undefined reference to `crc32c'
-> net/built-in.o: In function `read_partial_message_bio':
-> messenger.c:(.text+0x65a57): undefined reference to `crc32c'
-> net/built-in.o: In function `write_partial_msg_pages':
-> messenger.c:(.text+0x65e22): undefined reference to `crc32c'
-> net/built-in.o: In function `prepare_write_message':
-> messenger.c:(.text+0x66219): undefined reference to `crc32c'
-> messenger.c:(.text+0x66240): undefined reference to `crc32c'
-> net/built-in.o:messenger.c:(.text+0x66264): more undefined references to `crc32c' follow
-> 
-> when CONFIG_INET is not enabled.  It looks like BLK_DEV_RBD needs to depend on
-> INET and possibly on BLOCK (I sent a patch for depends on BLOCK on 2010-aug-04
-> due to other build errors).
+> Christoph, do these two patches (parts 2 and 3) make xen-blkfront
+> correct WRT barriers/flushing as far as your concerned?
 
-I see the problem: BLK_DEV_RBD and CEPH_FS both have 'select CEPH_LIB' and 
-CEPH_LIB depends on INET and selects LIBCRC32C, but kconfig doesn't 
-propagate those backward dependencies for you.  It looks like CEPH_FS and 
-BLK_DEV_RBD should then depend on/select CEPH_LIB _and_ its dependencies.  
-Patching that (and the BLOCK dependency) up now...
-
-Unless there is a better way to do it?
-
-Thanks!
-sage
-
-
-diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-index 708104b..4a6e1b7 100644
---- a/drivers/block/Kconfig
-+++ b/drivers/block/Kconfig
-@@ -490,7 +490,10 @@ config BLK_DEV_HD
- 
- config BLK_DEV_RBD
- 	tristate "Rados block device (RBD)"
-+	depends on INET && EXPERIMENTAL && BLOCK
- 	select CEPH_LIB
-+	select LIBCRC32C
-+	select CRYPTO_AES
- 	default n
- 	help
- 	  Say Y here if you want include the Rados block device, which stripes
-diff --git a/fs/ceph/Kconfig b/fs/ceph/Kconfig
-index 89f9718..73a7b31 100644
---- a/fs/ceph/Kconfig
-+++ b/fs/ceph/Kconfig
-@@ -1,9 +1,9 @@
- config CEPH_FS
-         tristate "Ceph distributed file system (EXPERIMENTAL)"
- 	depends on INET && EXPERIMENTAL
-+	select CEPH_LIB
- 	select LIBCRC32C
- 	select CRYPTO_AES
--	select CEPH_LIB
- 	default n
- 	help
- 	  Choose Y or M here to include support for mounting the
+If all your backends handle a zero-length BLKIF_OP_WRITE_BARRIER request
+it is a fully correct, but rather suboptimal implementation.  To get
+all the benefit of the new non-draining barriers you'll need a new
+If all your backends handle a zero-length BLKIF_OP_FLUSH request that
+only flushes the cache, but has no ordering side effects.  Note that
+the quite suboptimal here means not as good as the new barrier
+implementation, but it shouldn't be notiably worse than the old one
+for Xen.
