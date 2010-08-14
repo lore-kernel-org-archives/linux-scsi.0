@@ -1,46 +1,38 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] final scsi updates for the 2.6.36 merge window [possibly]
-Date: Sat, 14 Aug 2010 12:40:16 -0700
-Message-ID: <AANLkTinLrhfiW9e0Vn=p=tOT85V9bTpX8CTEVSMHSxjO@mail.gmail.com>
-References: <1281814081.21641.11.camel@mulgrave.site>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] fusion: fix non-kernel-doc comment block
+Date: Sat, 14 Aug 2010 13:05:50 -0700
+Message-ID: <20100814130550.bc3cc5e6.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:43094 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752261Ab0HNTlK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 14 Aug 2010 15:41:10 -0400
-In-Reply-To: <1281814081.21641.11.camel@mulgrave.site>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:29065 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754940Ab0HNUHk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Aug 2010 16:07:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: Eric Moore <Eric.Moore@lsi.com>, torvalds <torvalds@linux-foundation.org>, akpm <akpm@linux-foundation.org>
 
-On Sat, Aug 14, 2010 at 12:28 PM, James Bottomley
-<James.Bottomley@suse.de> wrote:
->
-> =A0drivers/firmware/iscsi_boot_sysfs.c | =A0481 ---------------------=
----------------
-> =A0drivers/scsi/iscsi_boot_sysfs.c =A0 =A0 | =A0481 +++++++++++++++++=
-+++++++++++++++++++
-> ...
-> =A045 files changed, 1999 insertions(+), 851 deletions(-)
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-You really need to learn to use the -M (and --summary) flag. That's a
-pure rename, and it should look like
+Fix comment begin notation not to look like kernel-doc
+since it's not.  Removes kernel-doc warnings.
 
- drivers/{firmware =3D> scsi}/iscsi_boot_sysfs.c |    0
- ...
- 44 files changed, 1518 insertions(+), 370 deletions(-)
- rename drivers/{firmware =3D> scsi}/iscsi_boot_sysfs.c (100%)
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/message/fusion/mptbase.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-which is a whole lot less changes.
-
-                    Linus
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- linux-2.6.35-git15.orig/drivers/message/fusion/mptbase.c
++++ linux-2.6.35-git15/drivers/message/fusion/mptbase.c
+@@ -6560,7 +6560,7 @@ procmpt_destroy(void)
+ }
+ 
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-/**
++/*
+  *	Handles read request from /proc/mpt/summary or /proc/mpt/iocN/summary.
+  */
+ static void seq_mpt_print_ioc_summary(MPT_ADAPTER *ioc, struct seq_file *m, int showlan);
