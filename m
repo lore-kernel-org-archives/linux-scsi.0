@@ -1,47 +1,103 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: RE: [patch] qla4xxx: initialize some variables for gcc
-Date: Fri, 13 Aug 2010 19:40:51 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA87128F84727@AVEXMB1.qlogic.org>
-References: <20100813210350.GT645@bicker>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 8/8] rbd: introduce rados block device (rbd), based on
+ libceph
+Date: Fri, 13 Aug 2010 19:44:10 -0700
+Message-ID: <20100813194410.9c608b38.randy.dunlap@oracle.com>
+References: <1281721240-26130-1-git-send-email-sage@newdream.net>
+	<1281721240-26130-9-git-send-email-sage@newdream.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100813210350.GT645@bicker>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>, Ravi Anand <ravi.anand@qlogic.com>
-Cc: Dept_iscsi_driver <iscsi-driver@qlogic.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Karen Higgins <karen.higgins@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <ceph-devel-owner@vger.kernel.org>
+In-Reply-To: <1281721240-26130-9-git-send-email-sage@newdream.net>
+Sender: ceph-devel-owner@vger.kernel.org
+To: Sage Weil <sage@newdream.net>
+Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, yehuda@hq.newdream.net
 List-Id: linux-scsi@vger.kernel.org
 
-Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogRGFuIENhcnBlbnRlciBbbWFpbHRv
-OmVycm9yMjdAZ21haWwuY29tXQ0KPlNlbnQ6IFNhdHVyZGF5LCBBdWd1c3QgMTQsIDIwMTAgMjoz
-NCBBTQ0KPlRvOiBSYXZpIEFuYW5kDQo+Q2M6IFZpa2FzIENoYXVkaGFyeTsgRGVwdF9pc2NzaV9k
-cml2ZXI7IEphbWVzIEUuSi4gQm90dG9tbGV5OyBLYXJlbg0KPkhpZ2dpbnM7IGxpbnV4LXNjc2lA
-dmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBrZXJuZWwtDQo+
-amFuaXRvcnNAdmdlci5rZXJuZWwub3JnDQo+U3ViamVjdDogW3BhdGNoXSBxbGE0eHh4OiBpbml0
-aWFsaXplIHNvbWUgdmFyaWFibGVzIGZvciBnY2MNCj4NCj5HY2MgY29tcGxhaW5zIGJlY2F1c2Ug
-dGhlc2UgdmFyaWFibGVzIGFyZW4ndCBpbml0aWFsaXplZC4NCj4NCj5kcml2ZXJzL3Njc2kvcWxh
-NHh4eC9xbDRfbnguYzogSW4gZnVuY3Rpb24g4oCYcWxhNF84eHh4X2dldF9mbGFzaF9pbmZv4oCZ
-Og0KPmRyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9ueC5jOjE5NTI6IHdhcm5pbmc6IOKAmGZpZOKA
-mSBtYXkgYmUgdXNlZA0KPnVuaW5pdGlhbGl6ZWQgaW4gdGhpcyBmdW5jdGlvbg0KPmRyaXZlcnMv
-c2NzaS9xbGE0eHh4L3FsNF9ueC5jOjE5NTI6IG5vdGU6IOKAmGZpZOKAmSB3YXMgZGVjbGFyZWQg
-aGVyZQ0KPmRyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9ueC5jOjE5NTI6IHdhcm5pbmc6IOKAmG1p
-ZOKAmSBtYXkgYmUgdXNlZA0KPnVuaW5pdGlhbGl6ZWQgaW4gdGhpcyBmdW5jdGlvbg0KPmRyaXZl
-cnMvc2NzaS9xbGE0eHh4L3FsNF9ueC5jOjE5NTI6IG5vdGU6IOKAmG1pZOKAmSB3YXMgZGVjbGFy
-ZWQgaGVyZQ0KPg0KPkl0J3Mgbm90IGEgYmlnIGRlYWwuICBXZSBvbmx5IHByaW50IHRoZSB1bmlu
-aXRpYWxpemVkIHZhbHVlIG9uIGVycm9yDQo+cGF0aHMgd2hlbiBkZWJ1Z2dpbmcgaXMgZW5hYmxl
-ZC4gIFN0aWxsIGl0J3MgbmljZSB0byBjbGVhbiBpdCB1cCBhbmQgdG8NCj5zdG9wIGdjYyBmcm9t
-IGdydW1ibGluZy4NCj4NCj5TaWduZWQtb2ZmLWJ5OiBEYW4gQ2FycGVudGVyIDxlcnJvcjI3QGdt
-YWlsLmNvbT4NCj4NCj5kaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTR4eHgvcWw0X254LmMg
-Yi9kcml2ZXJzL3Njc2kvcWxhNHh4eC9xbDRfbnguYw0KPmluZGV4IDNlMTE5YWUuLmU0NDNmYTYg
-MTAwNjQ0DQo+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTR4eHgvcWw0X254LmMNCj4rKysgYi9kcml2
-ZXJzL3Njc2kvcWxhNHh4eC9xbDRfbnguYw0KPkBAIC0xOTQ5LDcgKzE5NDksOCBAQCBxbGE0Xzh4
-eHhfZ2V0X2ZkdF9pbmZvKHN0cnVjdCBzY3NpX3FsYV9ob3N0ICpoYSkNCj4gCXVpbnQxNl90IGNu
-dCwgY2hrc3VtOw0KPiAJdWludDE2X3QgKndwdHI7DQo+IAlzdHJ1Y3QgcWxhX2ZkdF9sYXlvdXQg
-KmZkdDsNCj4tCXVpbnQxNl90IG1pZCwgZmlkOw0KPisJdWludDE2X3QgbWlkID0gLTE7DQo+Kwl1
-aW50MTZfdCBmaWQgPSAtMTsNCj4gCXN0cnVjdCBxbDgyeHhfaHdfZGF0YSAqaHcgPSAmaGEtPmh3
-Ow0KPg0KPiAJaHctPmZsYXNoX2NvbmZfb2ZmID0gRkFSWF9BQ0NFU1NfRkxBU0hfQ09ORjsNCg0K
-SSBhbHJlYWR5IHN1Ym1pdHRlZCBwYXRjaCB0byBmaXggdGhpcyB3YXJuaW5nIGluIGZvbGxvd2lu
-ZyBtYWlsIHRocmVhZC4NCmh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtc2NzaSZtPTEyODE1MjE1
-ODQwMzg1MyZ3PTINCg0K
+On Fri, 13 Aug 2010 10:40:40 -0700 Sage Weil wrote:
+
+> From: Yehuda Sadeh <yehuda@hq.newdream.net>
+> 
+> The rados block device (rbd), based on osdblk, creates a block device
+> that is backed by objects stored in the Ceph distributed object storage
+> cluster.  Each device consists of a single metadata object and data
+> striped over many data objects.
+> 
+> The rbd driver supports read-only snapshots.
+> 
+> Signed-off-by: Yehuda Sadeh <yehuda@hq.newdream.net>
+> Signed-off-by: Sage Weil <sage@newdream.net>
+> ---
+>  MAINTAINERS               |    9 +
+>  drivers/block/Kconfig     |   13 +
+>  drivers/block/Makefile    |    1 +
+>  drivers/block/rbd.c       | 1844 +++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/block/rbd_types.h |   73 ++
+>  5 files changed, 1940 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/block/rbd.c
+>  create mode 100644 drivers/block/rbd_types.h
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 5102922..cb34b1b 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -4694,6 +4694,15 @@ F:	fs/qnx4/
+>  F:	include/linux/qnx4_fs.h
+>  F:	include/linux/qnxtypes.h
+>  
+> +RADOS BLOCK DEVICE (RBD)
+> +F:	include/linux/qnxtypes.h
+> +M:	Yehuda Sadeh <yehuda@hq.newdream.net>
+> +M:	Sage Weil <sage@newdream.net>
+> +M:	ceph-devel@vger.kernel.org
+> +S:	Supported
+> +F:	drivers/block/rbd.c
+> +F:	drivers/block/rbd_types.h
+> +
+>  RADEON FRAMEBUFFER DISPLAY DRIVER
+>  M:	Benjamin Herrenschmidt <benh@kernel.crashing.org>
+>  L:	linux-fbdev@vger.kernel.org
+> diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
+> index de27768..708104b 100644
+> --- a/drivers/block/Kconfig
+> +++ b/drivers/block/Kconfig
+> @@ -488,4 +488,17 @@ config BLK_DEV_HD
+>  
+>  	  If unsure, say N.
+>  
+> +config BLK_DEV_RBD
+> +	tristate "Rados block device (RBD)"
+> +	select CEPH_LIB
+> +	default n
+> +	help
+> +	  Say Y here if you want include the Rados block device, which stripes
+> +	  a block device over objects stored in the Ceph distributed object
+> +	  store.
+> +
+> +	  More information at http://ceph.newdream.net/.
+> +
+> +	  If unsure, say N.
+> +
+>  endif # BLK_DEV
+
+In linux-next of 20100813, I get:
+
+net/built-in.o: In function `read_partial_message_section':
+messenger.c:(.text+0x6598b): undefined reference to `crc32c'
+net/built-in.o: In function `read_partial_message_bio':
+messenger.c:(.text+0x65a57): undefined reference to `crc32c'
+net/built-in.o: In function `write_partial_msg_pages':
+messenger.c:(.text+0x65e22): undefined reference to `crc32c'
+net/built-in.o: In function `prepare_write_message':
+messenger.c:(.text+0x66219): undefined reference to `crc32c'
+messenger.c:(.text+0x66240): undefined reference to `crc32c'
+net/built-in.o:messenger.c:(.text+0x66264): more undefined references to `crc32c' follow
+
+when CONFIG_INET is not enabled.  It looks like BLK_DEV_RBD needs to depend on
+INET and possibly on BLOCK (I sent a patch for depends on BLOCK on 2010-aug-04
+due to other build errors).
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
