@@ -1,53 +1,47 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH 0/8] rados block device and ceph refactor
-Date: Fri, 13 Aug 2010 19:32:33 -0700
-Message-ID: <20100813193233.80f09131.rdunlap@xenotime.net>
-References: <1281721240-26130-1-git-send-email-sage@newdream.net>
-	<20100813153706.ee61c94e.rdunlap@xenotime.net>
-	<Pine.LNX.4.64.1008131609270.5383@cobra.newdream.net>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: RE: [patch] qla4xxx: initialize some variables for gcc
+Date: Fri, 13 Aug 2010 19:40:51 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA87128F84727@AVEXMB1.qlogic.org>
+References: <20100813210350.GT645@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <ceph-devel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.1008131609270.5383@cobra.newdream.net>
-Sender: ceph-devel-owner@vger.kernel.org
-To: Sage Weil <sage@newdream.net>
-Cc: linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, ceph-devel@vger.kernel.org, hch@lst.de, akpm@linux-foundation.org, yehuda@hq.newdream.net
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100813210350.GT645@bicker>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <error27@gmail.com>, Ravi Anand <ravi.anand@qlogic.com>
+Cc: Dept_iscsi_driver <iscsi-driver@qlogic.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Karen Higgins <karen.higgins@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 13 Aug 2010 16:11:55 -0700 (PDT) Sage Weil wrote:
-
-> On Fri, 13 Aug 2010, Randy Dunlap wrote:
-> > On Fri, 13 Aug 2010 10:40:32 -0700 Sage Weil wrote:
-> > 
-> > > Hi,
-> > > 
-> > > The rados block device (rbd) implements a network block device backed by 
-> > > the Ceph distributed object store (think nbd/iSCSI, but distributed and 
-> > > fault tolerant).  At the suggestion of Christoph and James, this version 
-> > > of the patchset factors out the common Ceph bits (the network protocol, 
-> > > cluster membership, and object storage parts) into a libceph module 
-> > > (currently in net/ceph/ and include/linux/ceph/) that is shared by the 
-> > > file system component (fs/ceph) and rbd (drivers/block/rbd.c). The first 
-> > > few patches lay some groundwork, #7 moves does the ceph -> libceph+ceph 
-> > > split, and #8 adds the block device driver.
-> > 
-> > Hi,
-> > Did patch #7 make it to any mailing lists?
-> > I didn't receive it.
-> 
-> Sorry, I think vger ate it (it's 850KB).  You can see it here:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/sage/ceph-client.git;a=commit;h=a6da68196474aabcdcc2f5dab64c0b55ca5090b7
-
-Yes, vger has a limit of 400 KB on lkml and netdev.
-Other lists are probably less than that.
-
-David M. wrote on 13-AUG-2007:
-
-"The posting limit is 400K for linux-kernel, netdev, and one
-or two of the other lists."
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogRGFuIENhcnBlbnRlciBbbWFpbHRv
+OmVycm9yMjdAZ21haWwuY29tXQ0KPlNlbnQ6IFNhdHVyZGF5LCBBdWd1c3QgMTQsIDIwMTAgMjoz
+NCBBTQ0KPlRvOiBSYXZpIEFuYW5kDQo+Q2M6IFZpa2FzIENoYXVkaGFyeTsgRGVwdF9pc2NzaV9k
+cml2ZXI7IEphbWVzIEUuSi4gQm90dG9tbGV5OyBLYXJlbg0KPkhpZ2dpbnM7IGxpbnV4LXNjc2lA
+dmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBrZXJuZWwtDQo+
+amFuaXRvcnNAdmdlci5rZXJuZWwub3JnDQo+U3ViamVjdDogW3BhdGNoXSBxbGE0eHh4OiBpbml0
+aWFsaXplIHNvbWUgdmFyaWFibGVzIGZvciBnY2MNCj4NCj5HY2MgY29tcGxhaW5zIGJlY2F1c2Ug
+dGhlc2UgdmFyaWFibGVzIGFyZW4ndCBpbml0aWFsaXplZC4NCj4NCj5kcml2ZXJzL3Njc2kvcWxh
+NHh4eC9xbDRfbnguYzogSW4gZnVuY3Rpb24g4oCYcWxhNF84eHh4X2dldF9mbGFzaF9pbmZv4oCZ
+Og0KPmRyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9ueC5jOjE5NTI6IHdhcm5pbmc6IOKAmGZpZOKA
+mSBtYXkgYmUgdXNlZA0KPnVuaW5pdGlhbGl6ZWQgaW4gdGhpcyBmdW5jdGlvbg0KPmRyaXZlcnMv
+c2NzaS9xbGE0eHh4L3FsNF9ueC5jOjE5NTI6IG5vdGU6IOKAmGZpZOKAmSB3YXMgZGVjbGFyZWQg
+aGVyZQ0KPmRyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9ueC5jOjE5NTI6IHdhcm5pbmc6IOKAmG1p
+ZOKAmSBtYXkgYmUgdXNlZA0KPnVuaW5pdGlhbGl6ZWQgaW4gdGhpcyBmdW5jdGlvbg0KPmRyaXZl
+cnMvc2NzaS9xbGE0eHh4L3FsNF9ueC5jOjE5NTI6IG5vdGU6IOKAmG1pZOKAmSB3YXMgZGVjbGFy
+ZWQgaGVyZQ0KPg0KPkl0J3Mgbm90IGEgYmlnIGRlYWwuICBXZSBvbmx5IHByaW50IHRoZSB1bmlu
+aXRpYWxpemVkIHZhbHVlIG9uIGVycm9yDQo+cGF0aHMgd2hlbiBkZWJ1Z2dpbmcgaXMgZW5hYmxl
+ZC4gIFN0aWxsIGl0J3MgbmljZSB0byBjbGVhbiBpdCB1cCBhbmQgdG8NCj5zdG9wIGdjYyBmcm9t
+IGdydW1ibGluZy4NCj4NCj5TaWduZWQtb2ZmLWJ5OiBEYW4gQ2FycGVudGVyIDxlcnJvcjI3QGdt
+YWlsLmNvbT4NCj4NCj5kaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTR4eHgvcWw0X254LmMg
+Yi9kcml2ZXJzL3Njc2kvcWxhNHh4eC9xbDRfbnguYw0KPmluZGV4IDNlMTE5YWUuLmU0NDNmYTYg
+MTAwNjQ0DQo+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTR4eHgvcWw0X254LmMNCj4rKysgYi9kcml2
+ZXJzL3Njc2kvcWxhNHh4eC9xbDRfbnguYw0KPkBAIC0xOTQ5LDcgKzE5NDksOCBAQCBxbGE0Xzh4
+eHhfZ2V0X2ZkdF9pbmZvKHN0cnVjdCBzY3NpX3FsYV9ob3N0ICpoYSkNCj4gCXVpbnQxNl90IGNu
+dCwgY2hrc3VtOw0KPiAJdWludDE2X3QgKndwdHI7DQo+IAlzdHJ1Y3QgcWxhX2ZkdF9sYXlvdXQg
+KmZkdDsNCj4tCXVpbnQxNl90IG1pZCwgZmlkOw0KPisJdWludDE2X3QgbWlkID0gLTE7DQo+Kwl1
+aW50MTZfdCBmaWQgPSAtMTsNCj4gCXN0cnVjdCBxbDgyeHhfaHdfZGF0YSAqaHcgPSAmaGEtPmh3
+Ow0KPg0KPiAJaHctPmZsYXNoX2NvbmZfb2ZmID0gRkFSWF9BQ0NFU1NfRkxBU0hfQ09ORjsNCg0K
+SSBhbHJlYWR5IHN1Ym1pdHRlZCBwYXRjaCB0byBmaXggdGhpcyB3YXJuaW5nIGluIGZvbGxvd2lu
+ZyBtYWlsIHRocmVhZC4NCmh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtc2NzaSZtPTEyODE1MjE1
+ODQwMzg1MyZ3PTINCg0K
