@@ -1,35 +1,26 @@
-From: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Subject: Re: [PATCH 1/1] Remove LUNs that no longer exist when we scan a target with REPORT LUNS.
-Date: Mon, 16 Aug 2010 10:58:22 -0400
-Message-ID: <201008161058.23562.konrad@darnok.org>
-References: <1281917313-1855-1-git-send-email-realrichardsharpe@gmail.com> <201008160945.01369.konrad@darnok.org> <AANLkTi=mSgyGAK2NDnE-6bF5wG_FkX8mc6BsYwM5QpYt@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
+Date: Mon, 16 Aug 2010 20:33:17 +0200
+Message-ID: <20100816183317.GA28171@lst.de>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from andromeda.dapyr.net ([206.212.254.10]:37530 "EHLO
-	andromeda.dapyr.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754790Ab0HPRos (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2010 13:44:48 -0400
-In-Reply-To: <AANLkTi=mSgyGAK2NDnE-6bF5wG_FkX8mc6BsYwM5QpYt@mail.gmail.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1281977523-19335-3-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Richard Sharpe <realrichardsharpe@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
-> >> Tested by adding four LUNs with scst_local and then deleting them in
-> >> various combinations, including deleting from LUN 0, deleting from last
-> >> LUN and deleting in the middle out.
-> >
-> > What happens if you stack the device? Say you got multipath on top of
-> > this or device-mapper? Does this work properly ? For multipath I would
-> > expect it to work OK, and multipath device would queue the I/O until a
-> > LUN with the same SCSI_ID would reappear.
->
-> I do not know :-)
->
-> Let me test this situation to find out.
+On Mon, Aug 16, 2010 at 06:52:00PM +0200, Tejun Heo wrote:
+> From: Tejun Heo <tj@kernle.org>
+> 
+> Remove now unused REQ_HARDBARRIER support and implement REQ_FLUSH/FUA
+> support instead.  A new feature flag VIRTIO_BLK_F_FUA is added to
+> indicate the support for FUA.
 
-Cool. Thanks.
+I'm not sure it's worth it.  The pure REQ_FLUSH path works not and is
+well tested with kvm/qemu.   We can still easily add a FUA bit, and
+even a pre-flush bit if the protocol roundtrips matter in real life
+benchmarking.
