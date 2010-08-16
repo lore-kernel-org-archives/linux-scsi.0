@@ -1,51 +1,73 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
- Enable Online Controller Reset Bit in register related functions
-Date: Mon, 16 Aug 2010 08:22:59 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3DBE62B60@cosmail02.lsi.com>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
-	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
-	 <1277046060.5242.18.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CC@cosmail02.lsi.com>
-	 <1277063250.5242.25.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CE@cosmail02.lsi.com>
-	 <1277066924.5242.41.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3DBCC8483@cosmail02.lsi.com>
- <1280598371.2801.11.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] scsi: fix use-after-free in scsi_init_io()
+Date: Mon, 16 Aug 2010 10:06:26 -0500
+Message-ID: <1281971186.8326.1.camel@mulgrave.site>
+References: <4C6947E5.2080208@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@suse.de>, "Austria, Winston" <Winston.Austria@lsi.com>
-Cc: Yinghai Lu <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Maharana, Parag" <Parag.Maharana@lsi.com>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, "Benz, Michael" <Michael.Benz@lsi.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:56051 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753398Ab0HPPGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2010 11:06:31 -0400
+In-Reply-To: <4C6947E5.2080208@kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, stable@kernel.org
 
-SmFtZXMsDQoNCldlIHN1Ym1pdHRlZCB0aGUgcGF0Y2hlcyBvbiA4LzExLiAgRG8geW91IGdldCB0
-aGUgY2hhbmNlcyB0byB1cGRhdGUgdGhvc2UgcGF0Y2hlcyB0byBtYWluIHRyZWU/DQoNClRoYW5r
-cywNCg0KQm8gWWFuZw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogWWFuZywg
-Qm8gDQpTZW50OiBUaHVyc2RheSwgQXVndXN0IDEyLCAyMDEwIDExOjIxIEFNDQpUbzogJ0phbWVz
-IEJvdHRvbWxleScNCkNjOiBZaW5naGFpIEx1OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsg
-YWtwbUBvc2RsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgTWFoYXJhbmEsIFBh
-cmFnOyBEYWZ0YXJkYXIsIEpheWFudA0KU3ViamVjdDogUkU6IFtQQVRDSCAxLzEyXSBzY3NpOiBt
-ZWdhcmFpZF9zYXMgLSBPbmxpbmUgQ29udHJvbGxlciBSZXNldCAtIEk6IEVuYWJsZSBPbmxpbmUg
-Q29udHJvbGxlciBSZXNldCBCaXQgaW4gcmVnaXN0ZXIgcmVsYXRlZCBmdW5jdGlvbnMNCg0KSmFt
-ZXMsDQoNCkp1c3QgbGV0IHlvdSBrbm93IHRoZSBuZXcgcGF0Y2hlcyBhbHJlYWR5IHN1Ym1pdHRl
-ZCB5ZXN0ZXJkYXkuICBQbGVhc2UgbGV0IG1lIGtub3cgYWZ0ZXIgeW91IHVwZGF0ZWQgdGhvc2Ug
-cGF0Y2hlcyB0byB0aGUgbWFpbiB0cmVlLg0KDQpSZWdhcmRzLA0KDQpCbyBZYW5nDQoNCi0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21haWx0bzpKYW1l
-cy5Cb3R0b21sZXlAc3VzZS5kZV0gDQpTZW50OiBTYXR1cmRheSwgSnVseSAzMSwgMjAxMCAxOjQ2
-IFBNDQpUbzogWWFuZywgQm8NCkNjOiBZaW5naGFpIEx1OyBsaW51eC1zY3NpQHZnZXIua2VybmVs
-Lm9yZzsgYWtwbUBvc2RsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgTWFoYXJh
-bmEsIFBhcmFnOyBEYWZ0YXJkYXIsIEpheWFudA0KU3ViamVjdDogUkU6IFtQQVRDSCAxLzEyXSBz
-Y3NpOiBtZWdhcmFpZF9zYXMgLSBPbmxpbmUgQ29udHJvbGxlciBSZXNldCAtIEk6IEVuYWJsZSBP
-bmxpbmUgQ29udHJvbGxlciBSZXNldCBCaXQgaW4gcmVnaXN0ZXIgcmVsYXRlZCBmdW5jdGlvbnMN
-Cg0KT24gRnJpLCAyMDEwLTA3LTMwIGF0IDEyOjUzIC0wNjAwLCBZYW5nLCBCbyB3cm90ZToNCj4g
-RG8geW91IGtub3cgd2hlbiB0aG9zZSBwYXRjaGVzICgxMiBwYXRjaGVzKSB3aWxsIGJlIHB1c2hl
-ZCB0byB1cHN0cmVhbT8NCg0KV2VsbCwgaXQgbG9va3MgbGlrZSBJIGxvc3QgdGhlIGJyYW5jaCBJ
-IHdhcyBmaXhpbmcgYWxsIHRoaXMgdXAgaW4NCnNvbWV3aGVyZS4gIEkgZG9uJ3QgcmVhbGx5IGhh
-dmUgdGltZSB0byByZWRvIHRoYXQgd29yaywgc28gY291bGQgeW91DQpzZW5kIHRoZSBzZXJpZXMg
-Y29ycmVjdGx5ICh0aGF0J3MgdGhlIDggT0NSIHBhdGNoZXMgdGhhdCBkb24ndA0KaW5kaXZpZHVh
-bGx5IGNvbXBpbGUgYXMgYSBzaW5nbGUgcGF0Y2ggd2l0aCBhIGNvcnJlY3QgY2hhbmdlbG9nIHBs
-dXMgdGhlDQpmb3VyIG90aGVycykuDQoNClRoYW5rcywNCg0KSmFtZXMNCg0KDQo=
+On Mon, 2010-08-16 at 16:15 +0200, Tejun Heo wrote:
+> scsi_init_io() dereferences scsi_cmnd after putting it in the error
+> path leading to oops.  Fix it.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: stable@kernel.org
+> ---
+>  drivers/scsi/scsi_lib.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> Index: block/drivers/scsi/scsi_lib.c
+> ===================================================================
+> --- block.orig/drivers/scsi/scsi_lib.c
+> +++ block/drivers/scsi/scsi_lib.c
+> @@ -968,7 +968,9 @@ static int scsi_init_sgtable(struct requ
+>   */
+>  int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+>  {
+> +	struct request *req = cmd->request;
+>  	int error = scsi_init_sgtable(cmd->request, &cmd->sdb, gfp_mask);
+> +
+>  	if (error)
+>  		goto err_exit;
+> 
+> @@ -1012,7 +1014,7 @@ int scsi_init_io(struct scsi_cmnd *cmd,
+>  err_exit:
+>  	scsi_release_buffers(cmd);
+>  	scsi_put_command(cmd);
+> -	cmd->request->special = NULL;
+> +	req->special = NULL;
+
+Thanks for the bug report.  The fix is a bit heavy handed; what about
+this?
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 9ade720..ee02d38 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1011,8 +1011,8 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ 
+ err_exit:
+ 	scsi_release_buffers(cmd);
+-	scsi_put_command(cmd);
+ 	cmd->request->special = NULL;
++	scsi_put_command(cmd);
+ 	return error;
+ }
+ EXPORT_SYMBOL(scsi_init_io);
+
+
