@@ -1,80 +1,28 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: scsi_netlink: fix userspace warnings in scsi_netlink.h
-Date: Sun, 15 Aug 2010 22:12:05 +0200
-Message-ID: <20100815201205.GB4571@merkur.ravnborg.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: lkml <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+From: realrichardsharpe@gmail.com
+Subject: (unknown)
+Date: Sun, 15 Aug 2010 17:08:32 -0700
+Message-ID: <1281917313-1855-1-git-send-email-realrichardsharpe@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pz0-f46.google.com ([209.85.210.46]:53275 "EHLO
+	mail-pz0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750993Ab0HPAIv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Aug 2010 20:08:51 -0400
+Received: by pzk26 with SMTP id 26so1679671pzk.19
+        for <linux-scsi@vger.kernel.org>; Sun, 15 Aug 2010 17:08:51 -0700 (PDT)
+Subject: 
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-"make headers_check" gave following warning:
 
-CHECK   include/scsi (3 files)
-include/scsi/scsi_netlink.h:108: found __[us]{8,16,32,64} type without #include <linux/types.h>
+This patch is being sent for feedback and review.
 
-It has previously been discussed the value of fixing
-scsi headers because glibc had their own copies of scsi headers.
+When I got AEN working in scst_local I noticed that deleting LUNs on 
+the target (Linux SCSI) so I tracked it down to what looks like failure 
+to take into account that LUNs might have been deleted in 
+drivers/scsi/scsi_scan.c, in particular in scsi_report_lun_scan.
 
-But that does not matter at all as there may ibe other
-users of the exported headers and exported headers
-should be warning free.
-
-The following patch does two things:
-1) include linux/types.h as suggested in the warning
-2) replace all uses of uintxx_t with the kernel exportable variants
-
-uintxx_t belongs to the namespace of
-userspace - and not in the kernel.
-At least not in the exprted headers.
-
-Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
----
-diff --git a/include/scsi/scsi_netlink.h b/include/scsi/scsi_netlink.h
-index 58ce8fe..180ed38 100644
---- a/include/scsi/scsi_netlink.h
-+++ b/include/scsi/scsi_netlink.h
-@@ -23,6 +23,7 @@
- #define SCSI_NETLINK_H
- 
- #include <linux/netlink.h>
-+#include <linux/types.h>
- 
- 
- /*
-@@ -40,12 +41,12 @@
- 
- /* SCSI_TRANSPORT_MSG event message header */
- struct scsi_nl_hdr {
--	uint8_t version;
--	uint8_t transport;
--	uint16_t magic;
--	uint16_t msgtype;
--	uint16_t msglen;
--} __attribute__((aligned(sizeof(uint64_t))));
-+	__u8 version;
-+	__u8 transport;
-+	__u16 magic;
-+	__u16 msgtype;
-+	__u16 msglen;
-+} __attribute__((aligned(sizeof(__u64))));
- 
- /* scsi_nl_hdr->version value */
- #define SCSI_NL_VERSION				1
-@@ -89,10 +90,10 @@ struct scsi_nl_hdr {
-  */
- struct scsi_nl_host_vendor_msg {
- 	struct scsi_nl_hdr snlh;		/* must be 1st element ! */
--	uint64_t vendor_id;
--	uint16_t host_no;
--	uint16_t vmsg_datalen;
--} __attribute__((aligned(sizeof(uint64_t))));
-+	__u64 vendor_id;
-+	__u16 host_no;
-+	__u16 vmsg_datalen;
-+} __attribute__((aligned(sizeof(__u64))));
- 
- 
- /*
+The changes work in the sense that if I delete LUNs in a variety of 
+orders (starting at 0 and working up, starting at the largest and 
+working backward, starting in the middle), but I wonder if I have 
+missed anything.
