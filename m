@@ -1,156 +1,982 @@
-From: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Subject: Re: [PATCH 1/1] Remove LUNs that no longer exist when we scan a target with REPORT LUNS.
-Date: Mon, 16 Aug 2010 09:45:00 -0400
-Message-ID: <201008160945.01369.konrad@darnok.org>
-References: <1281917313-1855-1-git-send-email-realrichardsharpe@gmail.com> <1281917313-1855-2-git-send-email-realrichardsharpe@gmail.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: PROBLEM: megasas_issue_blocked_abort_cmd+0x3a/0x13a
+Date: Mon, 16 Aug 2010 07:53:42 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3DBE62B40@cosmail02.lsi.com>
+References: <4C690D09.70908@news-service.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from andromeda.dapyr.net ([206.212.254.10]:56343 "EHLO
-	andromeda.dapyr.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313Ab0HPNtF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2010 09:49:05 -0400
-In-Reply-To: <1281917313-1855-2-git-send-email-realrichardsharpe@gmail.com>
-Content-Disposition: inline
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:45755 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750962Ab0HPNyG convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Aug 2010 09:54:06 -0400
+In-Reply-To: <4C690D09.70908@news-service.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: realrichardsharpe@gmail.com
-Cc: linux-scsi@vger.kernel.org
+To: Reinier Haasjes <reinier@news-service.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sunday 15 August 2010 20:08:33 realrichardsharpe@gmail.com wrote:
-> From: Richard Sharpe <realrichardsharpe@gmail.com>
->
-> If the target returns logical_unit_not_supported when we send REPORT LUNS
-> it means that it supports REPORT LUNS but there really are no LUNs there.
-> Delete LUN 0 in that case.
->
-> Also, when parsing the LUNs reported, remove any LUNs that used to exist
-> in the gaps, and remove LUNs beyond the end of those reported. They no
-> longer exist.
->
-> Also don't scan a target where the ID is too large or the channel is
-> too large.
->
-> Tested by adding four LUNs with scst_local and then deleting them in
-> various combinations, including deleting from LUN 0, deleting from last
-> LUN and deleting in the middle out.
+Reinier,
 
-What happens if you stack the device? Say you got multipath on top of this or 
-device-mapper? Does this work properly ? For multipath I would expect it to 
-work OK, and multipath device would queue the I/O until a LUN with the same 
-SCSI_ID would reappear.
->
-> Signed-off-by: Richard Sharpe <realrichardsharpe@gmail.com>
-> ---
->  drivers/scsi/scsi_scan.c |   65
-> +++++++++++++++++++++++++++++++++++++++++++-- 1 files changed, 62
-> insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 1c027a9..d0f5d30 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1309,7 +1309,7 @@ static int scsi_report_lun_scan(struct scsi_target
-> *starget, int bflags, char devname[64];
->  	unsigned char scsi_cmd[MAX_COMMAND_SIZE];
->  	unsigned int length;
-> -	unsigned int lun;
-> +	unsigned int lun, old_lun = 0;
->  	unsigned int num_luns;
->  	unsigned int retries;
->  	int result;
-> @@ -1410,6 +1410,22 @@ static int scsi_report_lun_scan(struct scsi_target
-> *starget, int bflags, if (result == 0)
->  			break;
->  		else if (scsi_sense_valid(&sshdr)) {
-> +			/*
-> +			 * This is awful. We should use a named constant!
-> +			 * If the target returns logical_unit_not_supported
-> +			 * then there really are zero LUNs there, so delete
-> +			 * LUN 0 if it exists.
-> +			 */
-> +			if (sshdr.asc == 0x25) {
-> +				struct scsi_device *sdev = NULL;
-> +				sdev = scsi_device_lookup_by_target(starget, 0);
-> +				if (sdev) {
-> +					scsi_device_put(sdev);
-> +					__scsi_remove_device(sdev);
-> +					SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
-> +						"Removing LUN 0\n"));
-> +				}
-> +			}
->  			if (sshdr.sense_key != UNIT_ATTENTION)
->  				break;
->  		}
-> @@ -1473,6 +1489,27 @@ static int scsi_report_lun_scan(struct scsi_target
-> *starget, int bflags, } else {
->  			int res;
->
-> +			/*
-> +			 * First, check for and remove any missing LUNs, as
-> +			 * they have been removed on the target.
-> +			 */
-> +			if (lun > old_lun + 1) {
-> +				unsigned int i;
-> +				for (i = old_lun + 1; i < lun; i++) {
-> +					struct scsi_device *sdev;
-> +					sdev = scsi_device_lookup_by_target(
-> +							starget, i);
-> +					if (sdev) {
-> +						scsi_device_put(sdev);
-> +						__scsi_remove_device(sdev);
-> +						SCSI_LOG_SCAN_BUS(3,
-> +							printk(KERN_INFO
-> +							"Removing LUN %d\n",
-> +							i));
-> +					}
-> +				}
-> +			}
-> +
->  			res = scsi_probe_and_add_lun(starget,
->  				lun, NULL, NULL, rescan, NULL);
->  			if (res == SCSI_SCAN_NO_RESPONSE) {
-> @@ -1485,6 +1522,26 @@ static int scsi_report_lun_scan(struct scsi_target
-> *starget, int bflags, " aborted\n", lun);
->  				break;
->  			}
-> +
-> +			old_lun = lun;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * Remove any device that no longer exist. Does not work for LUN 0.
-> +	 * See above.
-> +	 */
-> +	if (lun < shost->max_lun) {
-> +		int i = 0;
-> +		for (i = lun + 1; i < shost->max_lun; i++) {
-> +			struct scsi_device *sdev;
-> +			sdev = scsi_device_lookup_by_target(starget, i);
-> +			if (sdev) {
-> +				scsi_device_put(sdev);
-> +				__scsi_remove_device(sdev);
-> +				SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
-> +					"Removed LUN %d\n", i));
-> +			}
->  		}
->  	}
->
-> @@ -1565,9 +1622,11 @@ static void __scsi_scan_target(struct device
-> *parent, unsigned int channel, int res;
->  	struct scsi_target *starget;
->
-> -	if (shost->this_id == id)
-> +	if (shost->this_id == id ||
-> +		id > shost->max_id ||
-> +		channel > shost->max_channel)
->  		/*
-> -		 * Don't scan the host adapter
-> +		 * Don't scan the host adapter or dis-allowed ones.
->  		 */
->  		return;
+What is the driver version you are using?  Is there possible you can apply 4.31 driver (we already submitted the patches)?
 
+Thanks,
+
+Bo Yang
+
+-----Original Message-----
+From: Reinier Haasjes [mailto:reinier@news-service.com]
+Sent: Monday, August 16, 2010 6:04 AM
+To: DL-MegaRAID Linux; linux-scsi@vger.kernel.org
+Subject: PROBLEM: megasas_issue_blocked_abort_cmd+0x3a/0x13a
+
+[1.] One line summary of the problem:
+Kernel OOPS 'megasas_issue_blocked_abort_cmd' after a few thousand "scanning ..." lines
+
+[2.] Full description of the problem/report:
+If something on the scsi bus happens (or the kernel things that something happens) we get a few thousand "scanning ..." lines. After some time (between 30 min. and 5 hours) the 'scanning ...' stops with an kernel OOPS
+
+[3.] Keywords (i.e., modules, networking, kernel):
+megaraid, megasas, scanning, kernel, scsi
+
+[4.] Kernel version (from /proc/version):
+Linux version 2.6.33.2 (root@sd53) (gcc version 4.3.2 (Debian 4.3.2-1.1) ) #3 SMP Fri Apr 9 20:28:13 CEST 2010
+
+[5.] Output of Oops.. message (if applicable) with symbolic information
+     resolved (see Documentation/oops-tracing.txt)
+Aug 14 04:54:27 sd53 kernel: BUG: unable to handle kernel NULL pointer dereference at 0000000000000020
+Aug 14 04:54:27 sd53 kernel: IP: [<ffffffff811baffe>] megasas_issue_blocked_abort_cmd+0x3a/0x13a
+Aug 14 04:54:27 sd53 kernel: PGD 67ba88067 PUD 67ba89067 PMD 0
+Aug 14 04:54:27 sd53 kernel: Oops: 0000 [#1] SMP
+Aug 14 04:54:27 sd53 kernel: last sysfs file: /sys/devices/system/cpu/cpu7/cache/index2/shared_cpu_map
+Aug 14 04:54:27 sd53 kernel: CPU 7
+Aug 14 04:54:27 sd53 kernel: Pid: 26, comm: events/7 Not tainted 2.6.33.2 #3 086HF8/PowerEdge R610
+Aug 14 04:54:27 sd53 kernel: RIP: 0010:[<ffffffff811baffe>]  [<ffffffff811baffe>] megasas_issue_blocked_abort_cmd+0x3a/0x13a
+Aug 14 04:54:27 sd53 kernel: RSP: 0000:ffff880c7cccdd90  EFLAGS: 00010282
+Aug 14 04:54:27 sd53 kernel: RAX: 00000000ffffffff RBX: 0000000000000000 RCX: ffff880c7bd74b08
+Aug 14 04:54:27 sd53 kernel: RDX: ffff88007f28c800 RSI: 0000000000000286 RDI: ffff880c7cda8400
+Aug 14 04:54:27 sd53 kernel: RBP: ffff880c7bd74ae0 R08: 0000000000000002 R09: 0000000000000001
+Aug 14 04:54:27 sd53 kernel: R10: 0000000000000002 R11: ffffffffa000579f R12: ffff880c7cda8400
+Aug 14 04:54:27 sd53 kernel: R13: 00000000fe00ffff R14: 0000000000000001 R15: 0000000000000080
+Aug 14 04:54:27 sd53 kernel: FS:  0000000000000000(0000) GS:ffff880028380000(0000) knlGS:0000000000000000
+Aug 14 04:54:27 sd53 kernel: CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+Aug 14 04:54:27 sd53 kernel: CR2: 0000000000000020 CR3: 000000067ce55000 CR4: 00000000000006e0
+Aug 14 04:54:27 sd53 kernel: DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+Aug 14 04:54:27 sd53 kernel: DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Aug 14 04:54:27 sd53 kernel: Process events/7 (pid: 26, threadinfo ffff880c7cccc000, task ffff880c7ccb40a0)
+Aug 14 04:54:27 sd53 kernel: Stack:
+Aug 14 04:54:27 sd53 kernel: 0000000000000002 ffff88007f1f3400 00000000fe00ffff 00000000fe00ffff
+Aug 14 04:54:27 sd53 kernel: <0> 0000000000000001 ffff880c7bd6aa80 ffff880c7cda88a8 ffff880c7cda8400
+Aug 14 04:54:27 sd53 kernel: <0> 0000000000000001 00000000fe00ffff 0000000000000001 ffffffff811bb272
+Aug 14 04:54:27 sd53 kernel: Call Trace:
+Aug 14 04:54:27 sd53 kernel: [<ffffffff811bb272>] ? megasas_register_aen+0x7e/0x18e
+Aug 14 04:54:27 sd53 kernel: [<ffffffff811bc51f>] ? megasas_aen_polling+0x121/0x171
+Aug 14 04:54:27 sd53 kernel: [<ffffffff811bc3fe>] ? megasas_aen_polling+0x0/0x171
+Aug 14 04:54:27 sd53 kernel: [<ffffffff81039fa2>] ? worker_thread+0xf5/0x179
+Aug 14 04:54:27 sd53 kernel: [<ffffffff8103ce42>] ? autoremove_wake_function+0x0/0x2e
+Aug 14 04:54:27 sd53 kernel: [<ffffffff81039ead>] ? worker_thread+0x0/0x179
+Aug 14 04:54:27 sd53 kernel: [<ffffffff8103ca71>] ? kthread+0x79/0x81
+Aug 14 04:54:27 sd53 kernel: [<ffffffff81002c14>] ? kernel_thread_helper+0x4/0x10
+Aug 14 04:54:27 sd53 kernel: [<ffffffff8103c9f8>] ? kthread+0x0/0x81
+Aug 14 04:54:27 sd53 kernel: [<ffffffff81002c10>] ? kernel_thread_helper+0x0/0x10
+Aug 14 04:54:27 sd53 kernel: Code: 83 ec 30 e8 fa fc ff ff 48 89 c5 83 c8 ff 48 85 ed 0f 84 07 01 00 00 48 8b 55 00 4c 89 e7 c6 02 06 c6 42 02 ff 66 c7 42 10 00 00 <8b> 43 20 89 42 18 48 8b 43 08 c7 42 24 00 00 00 00 89 42 20 c6
+Aug 14 04:54:27 sd53 kernel: RIP  [<ffffffff811baffe>] megasas_issue_blocked_abort_cmd+0x3a/0x13a
+Aug 14 04:54:27 sd53 kernel: RSP <ffff880c7cccdd90>
+Aug 14 04:54:27 sd53 kernel: CR2: 0000000000000020
+Aug 14 04:54:27 sd53 kernel: ---[ end trace 2472a972a600883c ]---
+
+[6.] A small shell script or example program which triggers the
+     problem (if possible)
+If you hot-swap a disk (eject of insert) the scanning loop starts, no software trigger found.
+
+[7.] Environment
+[7.1.] Software (add the output of the ver_linux script here)
+Linux sd53 2.6.33.2 #3 SMP Fri Apr 9 20:28:13 CEST 2010 x86_64 GNU/Linux
+
+Gnu C                  4.3.2
+Gnu make               3.81
+binutils               2.18.0.20080103
+util-linux             2.13.1.1
+mount                  2.13.1.1
+module-init-tools      3.4
+e2fsprogs              1.41.3
+xfsprogs               3.1.2
+Linux C Library        2.7
+Dynamic linker (ldd)   2.7
+Procps                 3.2.7
+Net-tools              1.60
+Console-tools          0.2.3
+Sh-utils               6.10
+udev                   125
+Modules Loaded         acpi_cpufreq cpufreq_ondemand ipmi_si ipmi_devintf ipmi_msghandler dcdbas processor bnx2 thermal fan thermal_sys
+
+[7.2.] Processor information (from /proc/cpuinfo):
+processor       : 0
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 26
+model name      : Intel(R) Xeon(R) CPU           L5520  @ 2.27GHz
+stepping        : 5
+cpu MHz         : 1596.000
+cache size      : 8192 KB
+physical id     : 1
+siblings        : 4
+core id         : 0
+cpu cores       : 4
+apicid          : 16
+initial apicid  : 16
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 11
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm ida tpr_shadow vnmi flexpriority ept vpid
+bogomips        : 4521.16
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 40 bits physical, 48 bits virtual
+power management:
+
+processor       : 1
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 26
+model name      : Intel(R) Xeon(R) CPU           L5520  @ 2.27GHz
+stepping        : 5
+cpu MHz         : 1596.000
+cache size      : 8192 KB
+physical id     : 0
+siblings        : 4
+core id         : 0
+cpu cores       : 4
+apicid          : 0
+initial apicid  : 0
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 11
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm ida tpr_shadow vnmi flexpriority ept vpid
+bogomips        : 4521.83
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 40 bits physical, 48 bits virtual
+power management:
+
+processor       : 2
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 26
+model name      : Intel(R) Xeon(R) CPU           L5520  @ 2.27GHz
+stepping        : 5
+cpu MHz         : 1596.000
+cache size      : 8192 KB
+physical id     : 1
+siblings        : 4
+core id         : 1
+cpu cores       : 4
+apicid          : 18
+initial apicid  : 18
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 11
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm ida tpr_shadow vnmi flexpriority ept vpid
+bogomips        : 4521.83
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 40 bits physical, 48 bits virtual
+power management:
+
+processor       : 3
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 26
+model name      : Intel(R) Xeon(R) CPU           L5520  @ 2.27GHz
+stepping        : 5
+cpu MHz         : 1596.000
+cache size      : 8192 KB
+physical id     : 0
+siblings        : 4
+core id         : 1
+cpu cores       : 4
+apicid          : 2
+initial apicid  : 2
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 11
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm ida tpr_shadow vnmi flexpriority ept vpid
+bogomips        : 4521.84
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 40 bits physical, 48 bits virtual
+power management:
+
+processor       : 4
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 26
+model name      : Intel(R) Xeon(R) CPU           L5520  @ 2.27GHz
+stepping        : 5
+cpu MHz         : 1596.000
+cache size      : 8192 KB
+physical id     : 1
+siblings        : 4
+core id         : 2
+cpu cores       : 4
+apicid          : 20
+initial apicid  : 20
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 11
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm ida tpr_shadow vnmi flexpriority ept vpid
+bogomips        : 4521.84
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 40 bits physical, 48 bits virtual
+power management:
+
+processor       : 5
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 26
+model name      : Intel(R) Xeon(R) CPU           L5520  @ 2.27GHz
+stepping        : 5
+cpu MHz         : 1596.000
+cache size      : 8192 KB
+physical id     : 0
+siblings        : 4
+core id         : 2
+cpu cores       : 4
+apicid          : 4
+initial apicid  : 4
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 11
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm ida tpr_shadow vnmi flexpriority ept vpid
+bogomips        : 4521.86
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 40 bits physical, 48 bits virtual
+power management:
+
+processor       : 6
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 26
+model name      : Intel(R) Xeon(R) CPU           L5520  @ 2.27GHz
+stepping        : 5
+cpu MHz         : 1596.000
+cache size      : 8192 KB
+physical id     : 1
+siblings        : 4
+core id         : 3
+cpu cores       : 4
+apicid          : 22
+initial apicid  : 22
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 11
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm ida tpr_shadow vnmi flexpriority ept vpid
+bogomips        : 4521.84
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 40 bits physical, 48 bits virtual
+power management:
+
+processor       : 7
+vendor_id       : GenuineIntel
+cpu family      : 6
+model           : 26
+model name      : Intel(R) Xeon(R) CPU           L5520  @ 2.27GHz
+stepping        : 5
+cpu MHz         : 1596.000
+cache size      : 8192 KB
+physical id     : 0
+siblings        : 4
+core id         : 3
+cpu cores       : 4
+apicid          : 6
+initial apicid  : 6
+fpu             : yes
+fpu_exception   : yes
+cpuid level     : 11
+wp              : yes
+flags           : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx rdtscp lm constant_tsc arch_perfmon pebs bts rep_good xtopology nonstop_tsc aperfmperf pni dtes64 monitor ds_cpl vmx est tm2 ssse3 cx16 xtpr pdcm dca sse4_1 sse4_2 popcnt lahf_lm ida tpr_shadow vnmi flexpriority ept vpid
+bogomips        : 4521.87
+clflush size    : 64
+cache_alignment : 64
+address sizes   : 40 bits physical, 48 bits virtual
+power management:
+
+[7.3.] Module information (from /proc/modules):
+acpi_cpufreq 5107 1 - Live 0xffffffffa0014000
+cpufreq_ondemand 7021 8 - Live 0xffffffffa0005000
+ipmi_si 32442 2 - Live 0xffffffffa0053000
+ipmi_devintf 6371 4 - Live 0xffffffffa004c000
+ipmi_msghandler 25956 2 ipmi_si,ipmi_devintf, Live 0xffffffffa003e000
+dcdbas 4832 0 - Live 0xffffffffa0036000
+processor 22897 9 acpi_cpufreq, Live 0xffffffffa002e000
+bnx2 60164 0 - Live 0xffffffffa0018000
+thermal 11634 0 - Live 0xffffffffa000f000
+fan 2314 0 - Live 0xffffffffa0009000
+thermal_sys 10549 3 processor,thermal,fan, Live 0xffffffffa0000000
+
+[7.4.] Loaded driver and hardware information (/proc/ioports, /proc/iomem)
+/proc/ioports
+0000-001f : dma1
+0020-0021 : pic1
+0040-0043 : timer0
+0050-0053 : timer1
+0060-0060 : keyboard
+0064-0064 : keyboard
+0070-0077 : rtc
+0080-008f : dma page reg
+00a0-00a1 : pic2
+00c0-00df : dma2
+00f0-00ff : fpu
+02f8-02ff : serial
+03c0-03df : vga+
+03f8-03ff : serial
+0800-087f : 0000:00:1f.0
+  0800-087f : pnp 00:07
+    0800-0803 : ACPI PM1a_EVT_BLK
+    0804-0805 : ACPI PM1a_CNT_BLK
+    0808-080b : ACPI PM_TMR
+    0810-0815 : ACPI CPU throttle
+    0820-082f : ACPI GPE0_BLK
+    0850-0850 : ACPI PM2_CNT_BLK
+0880-08bf : 0000:00:1f.0
+0900-091f : pnp 00:07
+0920-0923 : pnp 00:07
+0924-0924 : pnp 00:07
+0c00-0c7f : pnp 00:07
+0ca0-0ca7 : pnp 00:07
+0ca8-0ca8 : pnp 00:08
+  0ca8-0ca8 : ipmi_si
+0ca9-0cab : pnp 00:07
+0cac-0cac : pnp 00:08
+  0cac-0cac : ipmi_si
+0cad-0caf : pnp 00:07
+0cf8-0cff : PCI conf1
+dc40-dc5f : 0000:00:1a.0
+  dc40-dc5f : uhci_hcd
+dc60-dc7f : 0000:00:1a.1
+  dc60-dc7f : uhci_hcd
+dc80-dc9f : 0000:00:1d.0
+  dc80-dc9f : uhci_hcd
+dca0-dcbf : 0000:00:1d.1
+  dca0-dcbf : uhci_hcd
+e000-efff : PCI Bus 0000:04
+  ec00-ecff : 0000:04:00.0
+f000-ffff : PCI Bus 0000:03
+  fc00-fcff : 0000:03:00.0
+
+/proc/iomem
+00000000-0009ffff : System RAM
+00100000-7f678fff : System RAM
+  01000000-0125ac0f : Kernel code
+  0125ac10-0137aa97 : Kernel data
+  0140d000-01440d27 : Kernel bss
+7f679000-7f68efff : reserved
+7f68f000-7f6cdfff : ACPI Tables
+7f6ce000-7fffffff : reserved
+d9800000-d9ffffff : PCI Bus 0000:06
+  d9800000-d9ffffff : 0000:06:03.0
+da000000-ddffffff : PCI Bus 0000:01
+  da000000-dbffffff : 0000:01:00.0
+    da000000-dbffffff : bnx2
+  dc000000-ddffffff : 0000:01:00.1
+    dc000000-ddffffff : bnx2
+de000000-deffffff : PCI Bus 0000:06
+  de000000-de00ffff : 0000:06:03.0
+  de7fc000-de7fffff : 0000:06:03.0
+  de800000-deffffff : 0000:06:03.0
+df0ff800-df0ffbff : 0000:00:1a.7
+  df0ff800-df0ffbff : ehci_hcd
+df0ffc00-df0fffff : 0000:00:1d.7
+  df0ffc00-df0fffff : ehci_hcd
+df100000-df1fffff : PCI Bus 0000:04
+  df100000-df107fff : 0000:04:00.0
+  df180000-df1bffff : 0000:04:00.0
+    df180000-df1bffff : megasas: LSI
+  df1c0000-df1fffff : 0000:04:00.0
+    df1c0000-df1fffff : megasas: LSI
+df200000-df2fffff : PCI Bus 0000:03
+  df200000-df23ffff : 0000:03:00.0
+  df2bc000-df2bffff : 0000:03:00.0
+    df2bc000-df2bffff : megasas: LSI
+  df2c0000-df2fffff : 0000:03:00.0
+    df2c0000-df2fffff : megasas: LSI
+e0000000-efffffff : PCI MMCONFIG 0000 [bus 00-ff]
+  e0000000-efffffff : reserved
+    e0000000-efffffff : pnp 00:0a
+fe000000-ffffffff : reserved
+  fec00000-fec003ff : IOAPIC 0
+  fec80000-fec803ff : IOAPIC 1
+  fed00000-fed003ff : HPET 0
+  fed90000-fed91fff : pnp 00:0c
+  fee00000-fee00fff : Local APIC
+100000000-c7fffffff : System RAM
+sd53:~#
+
+[7.5.] PCI information ('lspci -vvv' as root)
+00:00.0 Host bridge: Intel Corporation QuickPath Architecture I/O Hub to ESI Port (rev 13)
+        Subsystem: Dell Device 0236
+        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Interrupt: pin A routed to IRQ 15
+        Capabilities: [60] Message Signalled Interrupts: Mask+ 64bit- Queue=0/1 Enable-
+                Address: 00000000  Data: 0000
+                Masking: 00000000  Pending: 00000000
+        Capabilities: [90] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s L1, Latency L0 <512ns, L1 <64us
+                        ClockPM- Suprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal+ ErrFatal+ PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+        Capabilities: [e0] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [100] Advanced Error Reporting <?>
+        Capabilities: [150] Access Controls <?>
+        Capabilities: [160] Vendor Specific Information <?>
+
+00:01.0 PCI bridge: Intel Corporation QuickPath Architecture I/O Hub PCI Express Root Port 1 (rev 13) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+        I/O behind bridge: 0000f000-00000fff
+        Memory behind bridge: da000000-ddffffff
+        Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+        BridgeCtl: Parity+ SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Subsystem: Dell Device 0236
+        Capabilities: [60] Message Signalled Interrupts: Mask+ 64bit- Queue=0/1 Enable+
+                Address: feeff00c  Data: 4159
+                Masking: 00000003  Pending: 00000000
+        Capabilities: [90] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 256 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #1, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <512ns, L1 <64us
+                        ClockPM- Suprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal+ ErrFatal+ PMEIntEna+ CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+        Capabilities: [e0] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [100] Advanced Error Reporting <?>
+        Capabilities: [150] Access Controls <?>
+        Capabilities: [160] Vendor Specific Information <?>
+        Kernel driver in use: pcieport
+
+00:03.0 PCI bridge: Intel Corporation QuickPath Architecture I/O Hub PCI Express Root Port 3 (rev 13) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
+        I/O behind bridge: 0000f000-00000fff
+        Memory behind bridge: fff00000-000fffff
+        Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Subsystem: Dell Device 0236
+        Capabilities: [60] Message Signalled Interrupts: Mask+ 64bit- Queue=0/1 Enable+
+                Address: feeff00c  Data: 4161
+                Masking: 00000003  Pending: 00000000
+        Capabilities: [90] Express (v2) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #3, Speed 5GT/s, Width x4, ASPM L0s L1, Latency L0 <512ns, L1 <64us
+                        ClockPM- Suprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled+ Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal+ ErrFatal+ PMEIntEna+ CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+        Capabilities: [e0] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [100] Advanced Error Reporting <?>
+        Capabilities: [150] Access Controls <?>
+        Capabilities: [160] Vendor Specific Information <?>
+        Kernel driver in use: pcieport
+
+00:07.0 PCI bridge: Intel Corporation QuickPath Architecture I/O Hub PCI Express Root Port 7 (rev 13) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=04, subordinate=04, sec-latency=0
+        I/O behind bridge: 0000e000-0000efff
+        Memory behind bridge: df100000-df1fffff
+        Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Subsystem: Dell Device 0236
+        Capabilities: [60] Message Signalled Interrupts: Mask+ 64bit- Queue=0/1 Enable+
+                Address: feeff00c  Data: 4169
+                Masking: 00000003  Pending: 00000000
+        Capabilities: [90] Express (v2) Root Port (Slot+), MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 256 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #7, Speed 5GT/s, Width x8, ASPM L0s L1, Latency L0 <512ns, L1 <64us
+                        ClockPM- Suprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x8, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surpise-
+                        Slot #  1, PowerLimit 25.000000; Interlock- NoCompl-
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Off, PwrInd Off, Power- Interlock-
+                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+                        Changed: MRL- PresDet+ LinkState+
+                RootCtl: ErrCorrectable- ErrNon-Fatal+ ErrFatal+ PMEIntEna+ CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+        Capabilities: [e0] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [100] Advanced Error Reporting <?>
+        Capabilities: [150] Access Controls <?>
+        Capabilities: [160] Vendor Specific Information <?>
+        Kernel driver in use: pcieport
+
+00:09.0 PCI bridge: Intel Corporation QuickPath Architecture I/O Hub PCI Express Root Port 9 (rev 13) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=05, subordinate=05, sec-latency=0
+        I/O behind bridge: 0000f000-00000fff
+        Memory behind bridge: fff00000-000fffff
+        Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Subsystem: Dell Device 0236
+        Capabilities: [60] Message Signalled Interrupts: Mask+ 64bit- Queue=0/1 Enable+
+                Address: feeff00c  Data: 4171
+                Masking: 00000003  Pending: 00000000
+        Capabilities: [90] Express (v2) Root Port (Slot+), MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #9, Speed 5GT/s, Width x8, ASPM L0s L1, Latency L0 <512ns, L1 <64us
+                        ClockPM- Suprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled+ Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surpise-
+                        Slot #  2, PowerLimit 25.000000; Interlock- NoCompl-
+                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+                        Control: AttnInd Off, PwrInd Off, Power- Interlock-
+                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
+                        Changed: MRL- PresDet+ LinkState-
+                RootCtl: ErrCorrectable- ErrNon-Fatal+ ErrFatal+ PMEIntEna+ CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+        Capabilities: [e0] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [100] Advanced Error Reporting <?>
+        Capabilities: [150] Access Controls <?>
+        Kernel driver in use: pcieport
+
+00:14.0 PIC: Intel Corporation QuickPath Architecture I/O Hub System Management Registers (rev 13) (prog-if 00 [8259])
+        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Capabilities: [40] Express (v2) Root Complex Integrated Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed unknown, Width x0, ASPM L0s, Latency L0 unlimited, L1 unlimited
+                        ClockPM- Suprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed unknown, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+
+00:14.1 PIC: Intel Corporation QuickPath Architecture I/O Hub GPIO and Scratch Pad Registers (rev 13) (prog-if 00 [8259])
+        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Capabilities: [40] Express (v2) Root Complex Integrated Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed unknown, Width x0, ASPM L0s, Latency L0 unlimited, L1 unlimited
+                        ClockPM- Suprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed unknown, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+
+00:14.2 PIC: Intel Corporation QuickPath Architecture I/O Hub Control Status and RAS Registers (rev 13) (prog-if 00 [8259])
+        Control: I/O- Mem- BusMaster- SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Capabilities: [40] Express (v2) Root Complex Integrated Endpoint, MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed unknown, Width x0, ASPM L0s, Latency L0 unlimited, L1 unlimited
+                        ClockPM- Suprise+ LLActRep+ BwNot+
+                LnkCtl: ASPM Disabled; Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed unknown, Width x0, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+
+00:1a.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #4 (rev 02) (prog-if 00 [UHCI])
+        Subsystem: Dell Device 0236
+        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin A routed to IRQ 17
+        Region 4: I/O ports at dc40 [size=32]
+        Capabilities: [50] PCIe advanced features <?>
+        Kernel driver in use: uhci_hcd
+
+00:1a.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #5 (rev 02) (prog-if 00 [UHCI])
+        Subsystem: Dell Device 0236
+        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin B routed to IRQ 18
+        Region 4: I/O ports at dc60 [size=32]
+        Capabilities: [50] PCIe advanced features <?>
+        Kernel driver in use: uhci_hcd
+
+00:1a.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #2 (rev 02) (prog-if 20 [EHCI])
+        Subsystem: Dell Device 0236
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin C routed to IRQ 19
+        Region 0: Memory at df0ff800 (32-bit, non-prefetchable) [size=1K]
+        Capabilities: [50] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [58] Debug port: BAR=1 offset=00a0
+        Capabilities: [98] PCIe advanced features <?>
+        Kernel driver in use: ehci_hcd
+
+00:1c.0 PCI bridge: Intel Corporation 82801I (ICH9 Family) PCI Express Port 1 (rev 02) (prog-if 00 [Normal decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Bus: primary=00, secondary=03, subordinate=03, sec-latency=0
+        I/O behind bridge: 0000f000-0000ffff
+        Memory behind bridge: df200000-df2fffff
+        Prefetchable memory behind bridge: 00000000fff00000-00000000000fffff
+        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+        BridgeCtl: Parity+ SERR+ NoISA+ VGA- MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [40] Express (v1) Root Port (Slot-), MSI 00
+                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+                        MaxPayload 128 bytes, MaxReadReq 128 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
+                LnkCap: Port #1, Speed 2.5GT/s, Width x4, ASPM L0s L1, Latency L0 <256ns, L1 <4us
+                        ClockPM- Suprise- LLActRep+ BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
+                RootCtl: ErrCorrectable- ErrNon-Fatal+ ErrFatal+ PMEIntEna- CRSVisible-
+                RootCap: CRSVisible-
+                RootSta: PME ReqID 0000, PMEStatus- PMEPending-
+        Capabilities: [80] Message Signalled Interrupts: Mask- 64bit- Queue=0/0 Enable+
+                Address: feeff00c  Data: 4179
+        Capabilities: [90] Subsystem: Dell Device 0236
+        Capabilities: [a0] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [100] Virtual Channel <?>
+        Capabilities: [180] Root Complex Link <?>
+        Kernel driver in use: pcieport
+
+00:1d.0 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #1 (rev 02) (prog-if 00 [UHCI])
+        Subsystem: Dell Device 0236
+        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin A routed to IRQ 21
+        Region 4: I/O ports at dc80 [size=32]
+        Capabilities: [50] PCIe advanced features <?>
+        Kernel driver in use: uhci_hcd
+
+00:1d.1 USB Controller: Intel Corporation 82801I (ICH9 Family) USB UHCI Controller #2 (rev 02) (prog-if 00 [UHCI])
+        Subsystem: Dell Device 0236
+        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin B routed to IRQ 20
+        Region 4: I/O ports at dca0 [size=32]
+        Capabilities: [50] PCIe advanced features <?>
+        Kernel driver in use: uhci_hcd
+
+00:1d.7 USB Controller: Intel Corporation 82801I (ICH9 Family) USB2 EHCI Controller #1 (rev 02) (prog-if 20 [EHCI])
+        Subsystem: Dell Device 0236
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Interrupt: pin A routed to IRQ 21
+        Region 0: Memory at df0ffc00 (32-bit, non-prefetchable) [size=1K]
+        Capabilities: [50] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=375mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [58] Debug port: BAR=1 offset=00a0
+        Capabilities: [98] PCIe advanced features <?>
+        Kernel driver in use: ehci_hcd
+
+00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 92) (prog-if 01 [Subtractive decode])
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Bus: primary=00, secondary=06, subordinate=06, sec-latency=32
+        I/O behind bridge: 0000f000-00000fff
+        Memory behind bridge: de000000-deffffff
+        Prefetchable memory behind bridge: 00000000d9800000-00000000d9ffffff
+        Secondary status: 66MHz- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
+        BridgeCtl: Parity+ SERR+ NoISA- VGA+ MAbort- >Reset- FastB2B-
+                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+        Capabilities: [50] Subsystem: Dell Device 0236
+
+00:1f.0 ISA bridge: Intel Corporation 82801IB (ICH9) LPC Interface Controller (rev 02)
+        Subsystem: Dell Device 0236
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ Stepping- SERR+ FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0
+        Capabilities: [e0] Vendor Specific Information <?>
+
+01:00.0 Ethernet controller: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet (rev 20)
+        Subsystem: Dell Device 0236
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 36
+        Region 0: Memory at da000000 (64-bit, non-prefetchable) [size=32M]
+        Capabilities: [48] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [50] Vital Product Data <?>
+        Capabilities: [58] Message Signalled Interrupts: Mask- 64bit+ Queue=0/4 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [a0] MSI-X: Enable+ Mask- TabSize=9
+                Vector table: BAR=0 offset=0000c000
+                PBA: BAR=0 offset=0000e000
+        Capabilities: [ac] Express (v2) Endpoint, MSI 00
+                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <4us, L1 <64us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr+ NoSnoop+
+                        MaxPayload 256 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s L1, Latency L0 <2us, L1 <2us
+                        ClockPM- Suprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [100] Device Serial Number e1-66-6a-fe-ff-19-22-00
+        Capabilities: [110] Advanced Error Reporting <?>
+        Capabilities: [150] Power Budgeting <?>
+        Capabilities: [160] Virtual Channel <?>
+        Kernel driver in use: bnx2
+        Kernel modules: bnx2
+
+01:00.1 Ethernet controller: Broadcom Corporation NetXtreme II BCM5709 Gigabit Ethernet (rev 20)
+        Subsystem: Dell Device 0236
+        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin B routed to IRQ 48
+        Region 0: Memory at dc000000 (64-bit, non-prefetchable) [size=32M]
+        Capabilities: [48] Power Management version 3
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+                Status: D0 PME-Enable- DSel=0 DScale=1 PME-
+        Capabilities: [50] Vital Product Data <?>
+        Capabilities: [58] Message Signalled Interrupts: Mask- 64bit+ Queue=0/4 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [a0] MSI-X: Enable- Mask- TabSize=9
+                Vector table: BAR=0 offset=0000c000
+                PBA: BAR=0 offset=0000e000
+        Capabilities: [ac] Express (v2) Endpoint, MSI 00
+                DevCap: MaxPayload 512 bytes, PhantFunc 0, Latency L0s <4us, L1 <64us
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr+ NoSnoop+
+                        MaxPayload 256 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr+ UncorrErr- FatalErr- UnsuppReq+ AuxPwr+ TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L0s L1, Latency L0 <2us, L1 <2us
+                        ClockPM- Suprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [100] Device Serial Number e3-66-6a-fe-ff-19-22-00
+        Capabilities: [110] Advanced Error Reporting <?>
+        Capabilities: [150] Power Budgeting <?>
+        Capabilities: [160] Virtual Channel <?>
+        Kernel driver in use: bnx2
+        Kernel modules: bnx2
+
+03:00.0 RAID bus controller: LSI Logic / Symbios Logic Device 0079 (rev 04)
+        Subsystem: Dell Device 1f17
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 16
+        Region 0: I/O ports at fc00 [size=256]
+        Region 1: Memory at df2bc000 (64-bit, non-prefetchable) [size=16K]
+        Region 3: Memory at df2c0000 (64-bit, non-prefetchable) [size=256K]
+        Expansion ROM at df200000 [disabled] [size=256K]
+        Capabilities: [50] Power Management version 3
+                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [68] Express (v2) Endpoint, MSI 00
+                DevCap: MaxPayload 4096 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
+                DevCtl: Report errors: Correctable- Non-Fatal+ Fatal+ Unsupported+
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+                        MaxPayload 128 bytes, MaxReadReq 512 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 5GT/s, Width x8, ASPM L0s, Latency L0 <64ns, L1 <1us
+                        ClockPM- Suprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x4, TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [d0] Vital Product Data <?>
+        Capabilities: [a8] Message Signalled Interrupts: Mask- 64bit+ Queue=0/0 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [c0] MSI-X: Enable- Mask- TabSize=15
+                Vector table: BAR=1 offset=00002000
+                PBA: BAR=1 offset=00003800
+        Capabilities: [100] Advanced Error Reporting <?>
+        Capabilities: [138] Power Budgeting <?>
+        Kernel driver in use: megaraid_sas
+
+04:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 1078 (rev 04)
+        Subsystem: Dell PERC 6/E Adapter RAID Controller
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 0, Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 38
+        Region 0: Memory at df180000 (64-bit, non-prefetchable) [size=256K]
+        Region 2: I/O ports at ec00 [size=256]
+        Region 3: Memory at df1c0000 (64-bit, non-prefetchable) [size=256K]
+        Expansion ROM at df100000 [disabled] [size=32K]
+        Capabilities: [b0] Express (v1) Endpoint, MSI 00
+                DevCap: MaxPayload 256 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
+                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+                DevCtl: Report errors: Correctable- Non-Fatal- Fatal+ Unsupported-
+                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
+                        MaxPayload 256 bytes, MaxReadReq 2048 bytes
+                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
+                LnkCap: Port #0, Speed 2.5GT/s, Width x8, ASPM L0s, Latency L0 <2us, L1 unlimited
+                        ClockPM- Suprise- LLActRep- BwNot-
+                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- Retrain- CommClk-
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x8, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
+        Capabilities: [c4] Message Signalled Interrupts: Mask- 64bit+ Queue=0/2 Enable-
+                Address: 0000000000000000  Data: 0000
+        Capabilities: [d4] MSI-X: Enable- Mask- TabSize=4
+                Vector table: BAR=0 offset=0003e000
+                PBA: BAR=0 offset=00fff000
+        Capabilities: [e0] Power Management version 2
+                Flags: PMEClk- DSI- D1+ D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [ec] Vital Product Data <?>
+        Capabilities: [100] Power Budgeting <?>
+        Kernel driver in use: megaraid_sas
+
+06:03.0 VGA compatible controller: Matrox Graphics, Inc. MGA G200eW WPCM450 [Hermon] - Winbond/Nuvoton (rev 0a) (prog-if 00 [VGA controller])
+        Subsystem: Dell Device 0236
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
+        Status: Cap+ 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+        Latency: 32 (4000ns min, 8000ns max), Cache Line Size: 64 bytes
+        Interrupt: pin A routed to IRQ 10
+        Region 0: Memory at d9800000 (32-bit, prefetchable) [size=8M]
+        Region 1: Memory at de7fc000 (32-bit, non-prefetchable) [size=16K]
+        Region 2: Memory at de800000 (32-bit, non-prefetchable) [size=8M]
+        [virtual] Expansion ROM at de000000 [disabled] [size=64K]
+        Capabilities: [dc] Power Management version 1
+                Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+
+[7.6.] SCSI information (from /proc/scsi/scsi)
+Attached devices:
+Host: scsi0 Channel: 00 Id: 46 Lun: 00
+  Vendor: Dell     Model: J23              Rev: R109
+  Type:   Enclosure                        ANSI  SCSI revision: 05
+Host: scsi0 Channel: 00 Id: 47 Lun: 00
+  Vendor: Dell     Model: J23              Rev: R109
+  Type:   Enclosure                        ANSI  SCSI revision: 05
+Host: scsi0 Channel: 02 Id: 00 Lun: 00
+  Vendor: DELL     Model: PERC 6/E Adapter Rev: 1.22
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi0 Channel: 02 Id: 01 Lun: 00
+  Vendor: DELL     Model: PERC 6/E Adapter Rev: 1.22
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi1 Channel: 02 Id: 00 Lun: 00
+  Vendor: DELL     Model: PERC H700        Rev: 2.0.
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+
+[7.7.] Other information that might be relevant to the problem
+       (please look in /proc and include all information that you
+       think to be relevant):
+[X.] Other notes, patches, fixes, workarounds:
+I think the problem is the H700 controller in combination with the megasas-driver.
+We have a lot more systems running 2.6.33.2 and only the servers with the H700 controller are giving this problem.
+Also after some sime (after the scanning and oops) we experience user space freezes.
+I tried 2.6.34 and give the same problem, only not the 'scanning-loop', just 1 'scanning-line'.
+It's on a production server so I didn't test 2.6.35, can't reproduce it on a test machine.
+
+Best Regards,
+
+Reinier
+--
+News-Service.com - European Usenet Provider
+Luttenbergweg 4, 1101 EC Amsterdam
+P.O BOX: 12026 1100 AA, Netherlands
+http://www.news-service.com +31(0)20 398 1111
 
