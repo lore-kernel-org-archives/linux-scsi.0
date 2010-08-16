@@ -1,31 +1,55 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: RE: [PATCH 1/12] scsi: megaraid_sas - Online Controller Reset - I:
- Enable Online Controller Reset Bit in register related functions
-Date: Mon, 16 Aug 2010 10:06:47 -0500
-Message-ID: <1281971207.8326.2.camel@mulgrave.site>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
-	 <AANLkTikM_rCfKKUd9vokhBi_YWg5qIPRKsnfiQiluFwl@mail.gmail.com>
-	 <1277046060.5242.18.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CC@cosmail02.lsi.com>
-	 <1277063250.5242.25.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3D09275CE@cosmail02.lsi.com>
-	 <1277066924.5242.41.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3DBCC8483@cosmail02.lsi.com>
-	 <1280598371.2801.11.camel@mulgrave.site>
-	 <4B6A08C587958942AA3002690DD4F8C3DBE62B60@cosmail02.lsi.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Fwd: Re: [Scst-devel] linuxcon 2010...
+Date: Mon, 16 Aug 2010 20:20:14 +0400
+Message-ID: <4C69653E.6050808@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3DBE62B60@cosmail02.lsi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: "Austria, Winston" <Winston.Austria@lsi.com>, Yinghai Lu <yinghai@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Maharana, Parag" <Parag.Maharana@lsi.com>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, "Benz, Michael" <Michael.Benz@lsi.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.187]:60289 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754652Ab0HPQUQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2010 12:20:16 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2010-08-16 at 08:22 -0600, Yang, Bo wrote:
-> We submitted the patches on 8/11.  Do you get the chances to update those patches to main tree?
+Hello James,
 
-Yes, they'll go in the next merge window.
+Could you comment rumors that decision about future Linux SCSI target 
+subsystem is done as well as other related rumors:
 
-James
+1. What don't you like in the transition path for users from STGT to 
+SCST, which I proposed:
+
+  - The only people which would be affected by replacing of STGT by SCST
+would be users of ibmvstgt. Other STGT users would not notice it at all. 
+Thus, we should update ibmvstgt for SCST. If ibmvstgt updated for SCST, 
+the update for its users would be just writing of a simple scstadmin's 
+config file.
+
+  - STGT doesn't have backend drivers, which SCST doesn't have, so
+there's nothing to worry here. At max, AIO support should be added to 
+fileio_tgt.
+
+  - STGT user space targets can use SCST backend via scst_local module.
+Scst_local module is ready and work very well.
+
+The result would be very clear without any obsolete mess.
+
+2. Don't you like something in the sysfs interface SCST has?
+
+3. I have heard you said "Vlad wasn't comfortable in handing up the 
+control to the maintainers ... (this is how kernel.org works)." I have 
+no idea what you meant. I have never been asked about anything like 
+that, so I couldn't say anyhow that I'm not comfortable with anything. 
+Could you clarify that?
+
+4. Have you changed your opinion that a driver level multipath is 
+forbidden in Linux and now you think that an iSCSI target with MC/S 
+support is acceptable?
+
+Thanks,
+Vlad
+
