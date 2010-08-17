@@ -1,52 +1,57 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH 2/2] scsi: fix kconfig dependency warnings
-Date: Tue, 17 Aug 2010 11:36:56 -0700
-Message-ID: <20100817113656.c4191013.randy.dunlap@oracle.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH] scsi_dh_alua: add missing transitioning state support
+Date: Tue, 17 Aug 2010 15:05:56 -0400
+Message-ID: <1282071956-391-1-git-send-email-snitzer@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:32969 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932358Ab0HQSio (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2010 14:38:44 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:25907 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751197Ab0HQTGD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Aug 2010 15:06:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejbscsi <james.bottomley@suse.de>, Ralf Baechle <ralf@linux-mips.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Handle transitioning in the prep_fn.
+Handle transitioning in alua_rtpg's implicit alua code too.
 
-Fix kconfig dependency warnings in scsi/Kconfig:
+These gaps were identified during controller failover testing of an
+ALUA array.
 
-warning: (SCSI_SAS_LIBSAS && SCSI || SCSI_MPT2SAS && SCSI_LOWLEVEL && PCI && SCSI || FUSION_SAS && FUSION && PCI && SCSI) selects SCSI_SAS_ATTRS which has unmet direct dependencies (SCSI && BLK_DEV_BSG)
-
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc:	Ralf Baechle <ralf@linux-mips.org>
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 ---
- drivers/scsi/Kconfig        |    3 ++-
- drivers/scsi/libsas/Kconfig |    1 +
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
---- linux-next-20100810.orig/drivers/scsi/libsas/Kconfig
-+++ linux-next-20100810/drivers/scsi/libsas/Kconfig
-@@ -26,6 +26,7 @@ config SCSI_SAS_LIBSAS
- 	tristate "SAS Domain Transport Attributes"
- 	depends on SCSI
- 	select SCSI_SAS_ATTRS
-+	select BLK_DEV_BSG
- 	help
- 	  This provides transport specific helpers for SAS drivers which
- 	  use the domain device construct (like the aic94xxx).
---- linux-next-20100810.orig/drivers/scsi/Kconfig
-+++ linux-next-20100810/drivers/scsi/Kconfig
-@@ -316,7 +316,8 @@ config SCSI_ISCSI_ATTRS
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 1a970a7..c1eedc5 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -616,6 +616,9 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ 		    h->state == TPGS_STATE_STANDBY)
+ 			/* Useable path if active */
+ 			err = SCSI_DH_OK;
++		else if (h->state == TPGS_STATE_TRANSITIONING)
++			/* State transition, retry */
++			goto retry;
+ 		else
+ 			/* Path unuseable for unavailable/offline */
+ 			err = SCSI_DH_DEV_OFFLINED;
+@@ -698,13 +701,14 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+ 	struct alua_dh_data *h = get_alua_data(sdev);
+ 	int ret = BLKPREP_OK;
  
- config SCSI_SAS_ATTRS
- 	tristate "SAS Transport Attributes"
--	depends on SCSI && BLK_DEV_BSG
-+	depends on SCSI
-+	select BLK_DEV_BSG
- 	help
- 	  If you wish to export transport-specific information about
- 	  each attached SAS device to sysfs, say Y.
+-	if (h->state != TPGS_STATE_OPTIMIZED &&
+-	    h->state != TPGS_STATE_NONOPTIMIZED) {
++	if (h->state == TPGS_STATE_TRANSITIONING)
++		ret = BLKPREP_DEFER;
++	else if (h->state != TPGS_STATE_OPTIMIZED &&
++		 h->state != TPGS_STATE_NONOPTIMIZED) {
+ 		ret = BLKPREP_KILL;
+ 		req->cmd_flags |= REQ_QUIET;
+ 	}
+ 	return ret;
+-
+ }
+ 
+ static const struct scsi_dh_devlist alua_dev_list[] = {
