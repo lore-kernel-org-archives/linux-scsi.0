@@ -1,36 +1,32 @@
-From: Joe Perches <joe@perches.com>
-Subject: RE: [PATCH v2 1/3] libcxgbi: common library for cxgb3i and cxgb4i
-Date: Mon, 16 Aug 2010 17:22:37 -0700
-Message-ID: <1282004557.24541.2.camel@Joe-Laptop>
-References: <201008130257.o7D2vLVx001282@localhost.localdomain>
-	 <1281669700.15486.71.camel@Joe-Laptop>
-	 <8A71B368A89016469F72CD08050AD33408403F41@maui.asicdesigners.com>
-	 <1281977297.6518.68.camel@Joe-Laptop>
-	 <8A71B368A89016469F72CD08050AD334084A2C95@maui.asicdesigners.com>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
+Date: Tue, 17 Aug 2010 10:46:51 +0930
+Message-ID: <201008171046.53220.rusty@rustcorp.com.au>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <8A71B368A89016469F72CD08050AD334084A2C95@maui.asicdesigners.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: open-iscsi@googlegroups.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Rakesh Ranjan <rakesh@chelsio.com>, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1281977523-19335-3-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, mst@redhat.com, Tejun Heo <tj@kernle.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2010-08-16 at 17:02 -0700, Karen Xie wrote:
-> Thanks, Joe.
+On Tue, 17 Aug 2010 02:22:00 am Tejun Heo wrote:
+> From: Tejun Heo <tj@kernle.org>
 > 
-> I will update the patch with your suggestion. BTW, I probably won't use
-> pr_<level> just to avoid any confusion since they are already defined in
-> kernel.h. I know I can undef them, but rather not to.
+> Remove now unused REQ_HARDBARRIER support and implement REQ_FLUSH/FUA
+> support instead.  A new feature flag VIRTIO_BLK_F_FUA is added to
+> indicate the support for FUA.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Michael S. Tsirkin <mst@redhat.com>
 
-Hi Karen.
+Acked-by: Rusty Russell <rusty@rustcorp.com.au>
 
-The point is to use pr_<level> precisely because it is
-defined in kernel.h and they are standard kernel functions
-commonly used in the rest of the kernel source.
+And also for the lguest-specific patch.
 
-There's no need to undef it any more than there is to
-#undef printk or use a #define printf printk
-
-cheers, Joe
+Thanks!
+Rusty.
