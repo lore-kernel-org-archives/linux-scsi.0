@@ -1,41 +1,34 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
-Date: Tue, 17 Aug 2010 10:17:15 +0200
-Message-ID: <4C6A458B.5040407@kernel.org>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org> <20100816183317.GA28171@lst.de>
+Date: Tue, 17 Aug 2010 10:18:43 +0200
+Message-ID: <4C6A45E3.7020005@kernel.org>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org> <201008171046.53220.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:50531 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752829Ab0HQIUv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2010 04:20:51 -0400
-In-Reply-To: <20100816183317.GA28171@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <201008171046.53220.rusty@rustcorp.com.au>
+Sender: linux-raid-owner@vger.kernel.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, mst@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com
 
-Hello,
-
-On 08/16/2010 08:33 PM, Christoph Hellwig wrote:
-> On Mon, Aug 16, 2010 at 06:52:00PM +0200, Tejun Heo wrote:
+On 08/17/2010 03:16 AM, Rusty Russell wrote:
+> On Tue, 17 Aug 2010 02:22:00 am Tejun Heo wrote:
 >> From: Tejun Heo <tj@kernle.org>
 >>
 >> Remove now unused REQ_HARDBARRIER support and implement REQ_FLUSH/FUA
 >> support instead.  A new feature flag VIRTIO_BLK_F_FUA is added to
 >> indicate the support for FUA.
+>>
+>> Signed-off-by: Tejun Heo <tj@kernel.org>
+>> Cc: Michael S. Tsirkin <mst@redhat.com>
 > 
-> I'm not sure it's worth it.  The pure REQ_FLUSH path works not and is
-> well tested with kvm/qemu.   We can still easily add a FUA bit, and
-> even a pre-flush bit if the protocol roundtrips matter in real life
-> benchmarking.
+> Acked-by: Rusty Russell <rusty@rustcorp.com.au>
+> 
+> And also for the lguest-specific patch.
 
-Hmmm... the underlying storage could be md/dm RAIDs in which case FUA
-should be cheaper than FLUSH.
-
-Thanks.
+Thanks.  Acked-by's added.
 
 -- 
 tejun
