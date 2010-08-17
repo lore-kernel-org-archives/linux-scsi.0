@@ -1,75 +1,100 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Tue, 17 Aug 2010 18:41:47 +0200
-Message-ID: <4C6ABBCB.9030306@kernel.org>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de>
+Subject: Re: [PATCH 5/5] dm: implement REQ_FLUSH/FUA support
+Date: Tue, 17 Aug 2010 18:51:30 +0200
+Message-ID: <4C6ABE12.40705@kernel.org>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-6-git-send-email-tj@kernel.org> <20100816190203.GA22299@redhat.com> <4C6A5780.2090100@kernel.org> <20100817140734.GA30768@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:47778 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753129Ab0HQQpW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2010 12:45:22 -0400
-In-Reply-To: <20100817131915.GB2963@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <20100817140734.GA30768@redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Mikulas Patocka <mpatocka@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 
-Hi,
+Hello,
 
-On 08/17/2010 03:19 PM, Christoph Hellwig wrote:
-> On Tue, Aug 17, 2010 at 11:59:38AM +0200, Tejun Heo wrote:
->> I'm not against restructuring the patchset if it makes more sense but
->> it just feels like it would be a bit pointless effort (and one which
->> would require much tighter coordination among different trees) at this
->> point.  Am I missing something?
+On 08/17/2010 04:07 PM, Mike Snitzer wrote:
+>> With the patch applied, there's no second flush.  Those requests would
+>> now be REQ_FLUSH + REQ_DISCARD.  The first can't be avoided anyway and
+>> there won't be the second flush to begin with, so I don't think this
+>> worsens anything.
 > 
-> What other trees do you mean?
+> Makes sense, but your patches still need to be refreshed against the
+> latest (2.6.36-rc1) upstream code.  Numerous changes went in to DM
+> recently.
 
-I was mostly thinking about dm/md, drdb and stuff, but you're talking
-about filesystem conversion patches being routed through block tree,
-right?
+Sure thing.  The block part isn't fixed yet and so the RFC tag.  Once
+the block layer part is settled, it probably should be pulled into
+dm/md and other trees and conversions should happen there.
 
-> The conversions of the 8 filesystems that actually support barriers
-> need to go through this tree anyway if we want to be able to test
-> it.  Also the changes in the filesystem are absolutely minimal -
-> it's basically just s/WRITE_BARRIER/WRITE_FUA_FLUSH/ after my
-> initial patch kill BH_Orderd, and removing about 10 lines of code in
-> reiserfs.
-
-I might just resequence it to finish this part of discussion but what
-does that really buy us?  It's not really gonna help bisection.
-Bisection won't be able to tell anything in higher resolution than
-"the new implementation doesn't work".  If you show me how it would
-actually help, I'll happily reshuffle the patches.
-
->> I wasn't sure about that part.  You removed store_flush_error(), but
->> DM_ENDIO_REQUEUE should still have higher priority than other
->> failures, no?
+>> Yeap, I want you to be concerned. :-) This was the first time I looked
+>> at the dm code and there are many different disjoint code paths and I
+>> couldn't fully follow or test all of them, so it definitely needs a
+>> careful review from someone who understands the whole thing.
 > 
-> Which priority?
+> You'll need Mikulas (bio-based) and NEC (request-based, Kiyoshi and
+> Jun'ichi) to give it serious review.
 
-IIUC, when any of flushes get DM_ENDIO_REQUEUE (which tells the dm
-core layer to retry the whole bio later), it trumps all other failures
-and the bio is retried later.  That was why DM_ENDIO_REQUEUE was
-prioritized over other error codes, which actually is sort of
-incorrect in that once a FLUSH fails, it _MUST_ be reported to upper
-layers as FLUSH failure implies data already lost.  So,
-DM_ENDIO_REQUEUE actually should have lower priority than other
-failures.  But, then again, the error codes still need to be
-prioritized.
+Oh, you already cc'd them.  Great.  Hello, guys, the original thread
+is
 
->> But how do you make sure REQ_FLUSHes for preflush finish before
->> starting the write?
+  http://thread.gmane.org/gmane.linux.raid/29100
+
+> NOTE: NEC has already given some preliminary feedback to hch in the
+> "[PATCH, RFC 2/2] dm: support REQ_FLUSH directly" thread:
+> https://www.redhat.com/archives/dm-devel/2010-August/msg00026.html
+> https://www.redhat.com/archives/dm-devel/2010-August/msg00033.html
+
+Hmmm... I think both issues don't exist in this incarnation of
+conversion although I'm fairly sure there will be other issues.  :-)
+
+>>     A related question: Is dm_wait_for_completion() used in
+>>     process_flush() safe against starvation under continuous influx of
+>>     other commands?
+>
+> As for your specific dm_wait_for_completion() concern -- I'll defer to
+> Mikulas.  But I'll add: we haven't had any reported starvation issues
+> with DM's existing barrier support.  DM uses a mempool for its clones,
+> so it should naturally throttle (without starvation) when memory gets
+> low.
+
+I see but single pending flush and steady write streams w/o saturating
+the mempool would be able to stall dm_wait_for_completeion(), no?  Eh
+well, it's a separate issue, I guess.
+
+>>   * Guarantee that REQ_FLUSH w/ data never reaches targets (this in
+>>     part is to put it in alignment with request based dm).
 > 
-> Hmm, okay.  I see how the special flush_bio makes the waiting easier,
-> let's see if Mike or other in the DM team have a better idea.
+> bio-based DM already split the barrier out from the data (in
+> process_barrier).  You've renamed process_barrier to process_flush and
+> added the REQ_FLUSH logic like I'd expect.
 
-Yeah, it would be better if it can be sequenced w/o using a work but
-let's leave it for later.
+Yeah and threw in WARN_ON() there to make sure REQ_FLUSH + data bios
+don't slip through for whatever reason.
+
+>> * For request based dm:
+>>
+>>   * The sequencing is done by the block layer for the top level
+>>     request_queue, so the only things request based dm needs to make
+>>     sure is 1. handling empty REQ_FLUSH correctly (block layer will
+>>     only send down empty REQ_FLUSHes) and 2. propagate REQ_FUA bit to
+>>     member devices.
+> 
+> OK, so seems 1 is done, 2 is still TODO.  Looking at your tree it seems
+> 2 would be as simple as using the following in
+
+Oh, I was talking about the other way around.  Passing REQ_FUA in
+bio->bi_rw down to member request_queues.  Sometimes while
+constructing clone / split bios, the bit is lost (e.g. md raid5).
+
+> dm_init_request_based_queue (on the most current upstream dm.c):
+> blk_queue_flush(q, REQ_FLUSH | REQ_FUA);
+> (your current patch only sets REQ_FLUSH in alloc_dev).
+
+Yeah, but for that direction, just adding REQ_FUA to blk_queue_flush()
+should be enough.  I'll add it.
 
 Thanks.
 
