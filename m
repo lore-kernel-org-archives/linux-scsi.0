@@ -1,68 +1,39 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] scsi_dh_alua: add missing transitioning state support
-Date: Tue, 17 Aug 2010 12:23:59 -0700
-Message-ID: <1282073039.30453.37.camel@haakon2.linux-iscsi.org>
-References: <1282071956-391-1-git-send-email-snitzer@redhat.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Notes from LSF10/MM online
+Date: Tue, 17 Aug 2010 14:54:17 -0500
+Message-ID: <1282074857.16098.4.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:37610 "HELO
-	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751002Ab0HQT1o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Aug 2010 15:27:44 -0400
-In-Reply-To: <1282071956-391-1-git-send-email-snitzer@redhat.com>
+Received: from cantor.suse.de ([195.135.220.2]:53817 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750892Ab0HQTyW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Aug 2010 15:54:22 -0400
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 5B5C193717
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Aug 2010 21:54:21 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2010-08-17 at 15:05 -0400, Mike Snitzer wrote:
-> Handle transitioning in the prep_fn.
-> Handle transitioning in alua_rtpg's implicit alua code too.
-> 
-> These gaps were identified during controller failover testing of an
-> ALUA array.
-> 
-> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-> ---
->  drivers/scsi/device_handler/scsi_dh_alua.c |   10 +++++++---
->  1 files changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 1a970a7..c1eedc5 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -616,6 +616,9 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
->  		    h->state == TPGS_STATE_STANDBY)
->  			/* Useable path if active */
->  			err = SCSI_DH_OK;
-> +		else if (h->state == TPGS_STATE_TRANSITIONING)
-> +			/* State transition, retry */
-> +			goto retry;
->  		else
->  			/* Path unuseable for unavailable/offline */
->  			err = SCSI_DH_DEV_OFFLINED;
-> @@ -698,13 +701,14 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
->  	struct alua_dh_data *h = get_alua_data(sdev);
->  	int ret = BLKPREP_OK;
->  
-> -	if (h->state != TPGS_STATE_OPTIMIZED &&
-> -	    h->state != TPGS_STATE_NONOPTIMIZED) {
-> +	if (h->state == TPGS_STATE_TRANSITIONING)
-> +		ret = BLKPREP_DEFER;
-> +	else if (h->state != TPGS_STATE_OPTIMIZED &&
-> +		 h->state != TPGS_STATE_NONOPTIMIZED) {
->  		ret = BLKPREP_KILL;
->  		req->cmd_flags |= REQ_QUIET;
->  	}
->  	return ret;
-> -
->  }
->  
+I've had a lot of private email wanting to know what went on, so here
+are some of the best descriptions available:
 
-Makes sense to me..
+Jon's notes (covering plenaries and mm track are here):
 
-Acked-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Day1: http://lwn.net/Articles/399148/
+Day2: http://lwn.net/Articles/399313/
+
+I think these are both freely available now ... but if not, it's only a
+day or so before they will be.
+
+Mine covering the I/O track are here:
+
+http://lwn.net/Articles/400589/
+
+James
+
 
