@@ -1,131 +1,239 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 5/5] dm: implement REQ_FLUSH/FUA support
-Date: Tue, 17 Aug 2010 11:33:52 +0200
-Message-ID: <4C6A5780.2090100@kernel.org>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-6-git-send-email-tj@kernel.org> <20100816190203.GA22299@redhat.com>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Tue, 17 Aug 2010 11:59:38 +0200
+Message-ID: <4C6A5D8A.4010205@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20100816190203.GA22299@redhat.com>
+In-Reply-To: <20100814103654.GA13292@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+Hello, Christoph.
 
-On 08/16/2010 09:02 PM, Mike Snitzer wrote:
-> On Mon, Aug 16 2010 at 12:52pm -0400,
-> Tejun Heo <tj@kernel.org> wrote:
+On 08/14/2010 12:36 PM, Christoph Hellwig wrote:
+> On Fri, Aug 13, 2010 at 04:51:17PM +0200, Tejun Heo wrote:
+>> Do you want to change the whole thing in a single commit?  That would
+>> be a pretty big invasive patch touching multiple subsystems.
 > 
->> From: Tejun Heo <tj@kernle.org>
+> We can just stop draining in the block layer in the first patch, then
+> stop doing the stuff in md/dm/etc in the following and then do the
+> final renaming patches.  It would still be less patches then now, but
+> keep things working through the whole transition, which would really
+> help biseting any problems.
+
+I'm not really convinced that would help much.  If bisecting can point
+to the conversion as the culprit for whatever kind of failure,
+wouldn't that be enough?  No matter what we do the conversion will be
+a single step thing.  If we make the filesystems enforce the ordering
+first and then relax ordering in the block layer, bisection would
+still just point at the later patch.  The same goes for md/dm, the
+best we can find out would be whether the conversion is correct or not
+anyway.
+
+I'm not against restructuring the patchset if it makes more sense but
+it just feels like it would be a bit pointless effort (and one which
+would require much tighter coordination among different trees) at this
+point.  Am I missing something?
+
+>> +			if (req->cmd_flags & REQ_FUA)
+>> +				vbr->out_hdr.type |= VIRTIO_BLK_T_FUA;
+> 
+> I'd suggest not adding FUA support to virtio yet.  Just using the flush
+> feature gives you a fully working barrier implementation.
+> 
+> Eventually we might want to add a flag in the block queue to send
+> REQ_FLUSH|REQ_FUA request through to virtio directly so that we can
+> avoid separate pre- and post flushes, but I really want to benchmark if
+> it makes an impact on real life setups first.
+
+I wrote this in the other mail but I think it would make difference if
+the backend storag is md/dm especially if it's shared by multiple VMs.
+It cuts down on one array wide cache flush.
+
+>> Index: block/drivers/md/linear.c
+>> ===================================================================
+>> --- block.orig/drivers/md/linear.c
+>> +++ block/drivers/md/linear.c
+>> @@ -294,8 +294,8 @@ static int linear_make_request (mddev_t
+>>  	dev_info_t *tmp_dev;
+>>  	sector_t start_sector;
 >>
->> This patch converts dm to support REQ_FLUSH/FUA instead of now
->> deprecated REQ_HARDBARRIER.
+>> -	if (unlikely(bio->bi_rw & REQ_HARDBARRIER)) {
+>> -		md_barrier_request(mddev, bio);
+>> +	if (unlikely(bio->bi_rw & REQ_FLUSH)) {
+>> +		md_flush_request(mddev, bio);
 > 
-> What tree does this patch apply to?  I know it doesn't apply to
-> v2.6.36-rc1, e.g.: http://git.kernel.org/linus/708e929513502fb0
+> We only need the special md_flush_request handling for
+> empty REQ_FLUSH requests.  REQ_WRITE | REQ_FLUSH just need the
+> flag propagated to the underlying devices.
 
-(from the head message)
-These patches are on top of
+Hmm, not really, the WRITE should happen after all the data in cache
+are committed to NV media, meaning that empty FLUSH should already
+have finished by the time the WRITE starts.
 
-  block#for-2.6.36-post (c047ab2dddeeafbd6f7c00e45a13a5c4da53ea0b)
-+ block-replace-barrier-with-sequenced-flush patchset[1]
-+ block-fix-incorrect-bio-request-flag-conversion-in-md patch[2]
-
-and available in the following git tree.
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua
-
-[1] http://thread.gmane.org/gmane.linux.kernel/1022363
-[2] http://thread.gmane.org/gmane.linux.kernel/1023435
-
-Probably fetching the git tree is the easist way to review?
-
->> For bio-based dm,
->> * -EOPNOTSUPP retry logic dropped.
->
-> That logic wasn't just about retries (at least not in the latest
-> kernel).  With commit 708e929513502fb0 the -EOPNOTSUPP checking also
-> serves to optimize the barrier+discard case (when discards aren't
-> supported).
-
-With the patch applied, there's no second flush.  Those requests would
-now be REQ_FLUSH + REQ_DISCARD.  The first can't be avoided anyway and
-there won't be the second flush to begin with, so I don't think this
-worsens anything.
-
->> * Nothing much changes.  It just needs to handle FLUSH requests as
->>   before.  It would be beneficial to advertise FUA capability so that
->>   it can propagate FUA flags down to member request_queues instead of
->>   sequencing it as WRITE + FLUSH at the top queue.
+>> +static void md_end_flush(struct bio *bio, int err)
+>>  {
+>>  	mdk_rdev_t *rdev = bio->bi_private;
+>>  	mddev_t *mddev = rdev->mddev;
+>>
+>>  	rdev_dec_pending(rdev, mddev);
+>>
+>>  	if (atomic_dec_and_test(&mddev->flush_pending)) {
+>> +		/* The pre-request flush has finished */
+>> +		schedule_work(&mddev->flush_work);
 > 
-> Can you expand on that TODO a bit?  What is the mechanism to propagate
-> FUA down to a DM device's members?  I'm only aware of propagating member
-> devices' features up to the top-level DM device's request-queue (not the
-> opposite).
+> Once we only handle empty barriers here we can directly call bio_endio
+> instead of first scheduling a work queue.Once we only handle empty
+> barriers here we can directly call bio_endio and the super wakeup
+> instead of first scheduling a work queue.
+
+Yeap, right.  That would be a nice optimization.
+
+>>  	while ((bio = bio_list_pop(writes))) {
+>> -		if (unlikely(bio_empty_barrier(bio))) {
+>> +		if ((bio->bi_rw & REQ_FLUSH) && !bio_has_data(bio)) {
 > 
-> Are you saying that establishing the FUA capability on the top-level DM
-> device's request_queue is sufficient?  If so then why not make the
-> change?
+> I kept bio_empty_barrier as bio_empty_flush, which actually is a quite
+> useful macro for the bio based drivers.
 
-Yeah, I think it would be enough to always advertise FLUSH|FUA if the
-member devices support FLUSH (regardless of FUA support).  The reason
-why I didn't do it was, umm, laziness, I suppose.
+Hmm... maybe.  The reason why I removed bio_empty_flush() was that
+except for the front-most sequencer (block layer for all the request
+based ones and the front-most make_request for bio based ones), it
+doesn't make sense to see REQ_FLUSH + data bios.  They should be
+sequenced at the front-most stage anyway, so I didn't have much use
+for them.  Those code paths couldn't deal with REQ_FLUSH + data bios
+anyway.
 
->> Lightly tested linear, stripe, raid1, snap and crypt targets.  Please
->> proceed with caution as I'm not familiar with the code base.
+>> @@ -621,7 +621,7 @@ static void dec_pending(struct dm_io *io
+>>  			 */
+>>  			spin_lock_irqsave(&md->deferred_lock, flags);
+>>  			if (__noflush_suspending(md)) {
+>> -				if (!(io->bio->bi_rw & REQ_HARDBARRIER))
+>> +				if (!(io->bio->bi_rw & REQ_FLUSH))
 > 
-> This is concerning...
+> I suspect we don't actually need to special case flushes here anymore.
 
-Yeap, I want you to be concerned. :-) This was the first time I looked
-at the dm code and there are many different disjoint code paths and I
-couldn't fully follow or test all of them, so it definitely needs a
-careful review from someone who understands the whole thing.
+Oh, I'm not sure about this part at all.  I'll ask Mike.
 
-> if we're to offer more comprehensive review I think we need more
-> detail on what guided your changes rather than details of what the
-> resulting changes are.
+>> @@ -633,14 +633,14 @@ static void dec_pending(struct dm_io *io
+>>  		io_error = io->error;
+>>  		bio = io->bio;
+>>
+>> -		if (bio->bi_rw & REQ_HARDBARRIER) {
+>> +		if (bio->bi_rw & REQ_FLUSH) {
+>>  			/*
+>> -			 * There can be just one barrier request so we use
+>> +			 * There can be just one flush request so we use
+>>  			 * a per-device variable for error reporting.
+>>  			 * Note that you can't touch the bio after end_io_acct
+>>  			 */
+>> -			if (!md->barrier_error && io_error != -EOPNOTSUPP)
+>> -				md->barrier_error = io_error;
+>> +			if (!md->flush_error)
+>> +				md->flush_error = io_error;
+> 
+> And we certainly do not need any special casing here.  See my patch.
 
-I'll try to explain it.  If you have any further questions, please let
-me know.
+I wasn't sure about that part.  You removed store_flush_error(), but
+DM_ENDIO_REQUEUE should still have higher priority than other
+failures, no?
 
-* For common part (dm-io, dm-log):
+>>  {
+>>  	int rw = rq_data_dir(clone);
+>>  	int run_queue = 1;
+>> -	bool is_barrier = clone->cmd_flags & REQ_HARDBARRIER;
+>> +	bool is_flush = clone->cmd_flags & REQ_FLUSH;
+>>  	struct dm_rq_target_io *tio = clone->end_io_data;
+>>  	struct mapped_device *md = tio->md;
+>>  	struct request *rq = tio->orig;
+>>
+>> -	if (rq->cmd_type == REQ_TYPE_BLOCK_PC && !is_barrier) {
+>> +	if (rq->cmd_type == REQ_TYPE_BLOCK_PC && !is_flush) {
+> 
+> We never send flush requests as REQ_TYPE_BLOCK_PC anymore, so no need
+> for the second half of this conditional.
 
-  * Empty REQ_HARDBARRIER is converted to empty REQ_FLUSH.
+I see.
 
-  * REQ_HARDBARRIER w/ data is converted either to data + REQ_FLUSH +
-    REQ_FUA or data + REQ_FUA.  The former is the safe equivalent
-    conversion but there could be cases where ther latter is enough.
+>> +	if (!is_flush)
+>> +		blk_end_request_all(rq, error);
+>> +	else {
+>>  		if (unlikely(error))
+>> -			store_barrier_error(md, error);
+>> +			store_flush_error(md, error);
+>>  		run_queue = 0;
+>> -	} else
+>> -		blk_end_request_all(rq, error);
+>> +	}
+> 
+> Flush requests can now be completed normally.
 
-* For bio based dm:
+The same question as before.  I think we still need to prioritize
+DM_ENDIO_REQUEUE failures.
 
-  * Unlike REQ_HARDBARRIER, REQ_FLUSH/FUA doesn't have any ordering
-    requirements.  Remove assumptions of ordering and/or draining.
+>> @@ -1417,11 +1419,11 @@ static int _dm_request(struct request_qu
+>>  	part_stat_unlock();
+>>
+>>  	/*
+>> -	 * If we're suspended or the thread is processing barriers
+>> +	 * If we're suspended or the thread is processing flushes
+>>  	 * we have to queue this io for later.
+>>  	 */
+>>  	if (unlikely(test_bit(DMF_QUEUE_IO_TO_THREAD, &md->flags)) ||
+>> -	    unlikely(bio->bi_rw & REQ_HARDBARRIER)) {
+>> +	    (bio->bi_rw & REQ_FLUSH)) {
+>>  		up_read(&md->io_lock);
+> 
+> AFAICS this is only needed for the old barrier code, no need for this
+> for pure flushes.
 
-    A related question: Is dm_wait_for_completion() used in
-    process_flush() safe against starvation under continuous influx of
-    other commands?
+I'll ask Mike.
 
-  * As REQ_FLUSH/FUA doesn't require any ordering of requests before
-    or after it, on array devices, the latter part - REQ_FUA - can be
-    handled like other writes.  ie. REQ_FLUSH needs to be broadcasted
-    to all devices but once that is complete the data/REQ_FUA bio can
-    be sent to only the affected devices.  This needs some care as
-    there are bio cloning/splitting code paths where REQ_FUA bit isn't
-    preserved.
+>> @@ -1464,10 +1466,7 @@ static int dm_request(struct request_que
+>>
+>>  static bool dm_rq_is_flush_request(struct request *rq)
+>>  {
+>> -	if (rq->cmd_flags & REQ_FLUSH)
+>> -		return true;
+>> -	else
+>> -		return false;
+>> +	return rq->cmd_flags & REQ_FLUSH;
+>>  }
+> 
+> It's probably worth just killing this wrapper.
 
-  * Guarantee that REQ_FLUSH w/ data never reaches targets (this in
-    part is to put it in alignment with request based dm).
+Yeah, probably.  It was an accidental edit to begin with and I left
+this part out in the new patch.
 
-* For request based dm:
+>> +static void process_flush(struct mapped_device *md, struct bio *bio)
+>>  {
+>> +	md->flush_error = 0;
+>> +
+>> +	/* handle REQ_FLUSH */
+>>  	dm_wait_for_completion(md, TASK_UNINTERRUPTIBLE);
+>>
+>> -	bio_init(&md->barrier_bio);
+>> -	md->barrier_bio.bi_bdev = md->bdev;
+>> -	md->barrier_bio.bi_rw = WRITE_BARRIER;
+>> -	__split_and_process_bio(md, &md->barrier_bio);
+>> +	bio_init(&md->flush_bio);
+>> +	md->flush_bio.bi_bdev = md->bdev;
+>> +	md->flush_bio.bi_rw = WRITE_FLUSH;
+>> +	__split_and_process_bio(md, &md->flush_bio);
+> 
+> There's not need to use a separate flush_bio here.
+> __split_and_process_bio does the right thing for empty REQ_FLUSH
+> requests.  See my patch for how to do this differenty.  And yeah,
+> my version has been tested.
 
-  * The sequencing is done by the block layer for the top level
-    request_queue, so the only things request based dm needs to make
-    sure is 1. handling empty REQ_FLUSH correctly (block layer will
-    only send down empty REQ_FLUSHes) and 2. propagate REQ_FUA bit to
-    member devices.
+But how do you make sure REQ_FLUSHes for preflush finish before
+starting the write?
 
 Thanks.
 
