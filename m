@@ -1,52 +1,90 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Bart Van Assche <bvanassche@acm.org>
 Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Wed, 18 Aug 2010 11:18:16 -0500
-Message-ID: <1282148296.3035.49.camel@mulgrave.site>
+Date: Wed, 18 Aug 2010 18:19:24 +0200
+Message-ID: <AANLkTikf2zwVf-9XC_vA8oEMsF6CM0kbqSRjmR=awWbH@mail.gmail.com>
 References: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
-	 <1282144271.3035.31.camel@mulgrave.site>
-	 <AANLkTinRDMXqyDAVkcbioD=L7XO-47KHL2qjR+8KA5m3@mail.gmail.com>
+	<1282144271.3035.31.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinRDMXqyDAVkcbioD=L7XO-47KHL2qjR+8KA5m3@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chetan Loke <chetanloke@gmail.com>
-Cc: Chetan Loke <generationgnu@yahoo.com>, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pv0-f174.google.com ([74.125.83.174]:39687 "EHLO
+	mail-pv0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750902Ab0HRQT0 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2010 12:19:26 -0400
+In-Reply-To: <1282144271.3035.31.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Chetan Loke <generationgnu@yahoo.com>, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2010-08-18 at 12:04 -0400, Chetan Loke wrote:
-> On Wed, Aug 18, 2010 at 11:11 AM, James Bottomley
-> <James.Bottomley@suse.de> wrote:
-> > The decision hasn't been taken to merge LIO, but based on what happened
-> > at the summit, I think it's the most viable candidate and will likely be
-> > merged by 2.6.37
-> >
-> 
-> During the open panel, facebook guys and others were tooting that
-> start-ups thrive because they can hack linux. Well there are quite a
-> few start-ups that use scst too for creating target appliances.
-> Has anyone even bothered to glance the scst mailing list to see if
-> that community is dead or alive?
-> 
-> I for one use scst to create synthetic work-loads and test 200+ VM
-> nodes in an ESX cluster. Anyone who has worked on a SAN OS will
-> appreciate the simplicity of SCST. And if folks still can't understand
-> the SCST code(after reading the README) then they are still welcome to
-> send an email on SCST. Would you like to make your FC stack go faster,
-> well please drop us an email on SCST and we will try our best to
-> further optimize the FC driver.
-> 
-> I know folks who don't understand simple DMA bus traces, FC wire
-> traces and yet they have the power to influence decisions.
-> 
-> James you are an expert but not everyone is. This is not a venting
-> session but even folks who are new to target architecture find it easy
-> to hack SCST.
+On Wed, Aug 18, 2010 at 5:11 PM, James Bottomley
+<James.Bottomley@suse.de> wrote:
+> On Wed, 2010-08-18 at 07:58 -0700, Chetan Loke wrote:
+>> Hello James and others,
+>>
+>> --- On Tue, 8/17/10, James Bottomley <James.Bottomley@suse.de> wrote=
+:
+>>
+>> > From: James Bottomley <James.Bottomley@suse.de>
+>> > Subject: Re: [Scst-devel] Fwd: Re: =A0linuxcon 2010...
+>> > To: "Vladislav Bolkhovitin" <vst@vlnb.net>
+>> > Cc: "scst-devel" <scst-devel@lists.sourceforge.net>, linux-kernel@=
+vger.kernel.org, linux-scsi@vger.kernel.org
+>> > Date: Tuesday, August 17, 2010, 8:30 PM
+>> > On Mon, 2010-08-16 at 20:20 +0400,
+>> > Vladislav Bolkhovitin wrote:
+>> > > Hello James,
+>> > >
+>> > > Could you comment rumors that decision about future
+>> > Linux SCSI target
+>> > > subsystem is done as well as other related rumors:
+>> >
+>> > If this is related to LSF, the notes on the I/O track are
+>> > here:
+>> >
+>> > http://lwn.net/Articles/400491/
+>>
+>>
+>> During the open panel, my question was really specific -
+>>
+>> Q) What is the future of a SCSI-target subsystem in linux. Which
+>> =A0 =A0target engine/subsystem can we expect?
+>>
+>> Your answer) There is place for only 1 target-subsystem in the Linux
+>> scsi stack and in the LSF summit the decision was taken to merge LIO=
+=2E
+>> Has that
+>> decision changed since the summit?
+>
+> The decision hasn't been taken to merge LIO, but based on what happen=
+ed
+> at the summit, I think it's the most viable candidate and will likely=
+ be
+> merged by 2.6.37
+>
+>> As a scst-user what I would like to understand is, what was that
+>> decision based on? Because the LSF summit was 'small by invitation'
+>> only summit. The notes don't give us an insight on the selection
+>> criteria/merits etc.
+>
+> The notes list 3, what's unclear about it?
 
-But that's not really relevant, is it?  I would expect that whatever I
-do, even keeping both out of tree, the communities around the solutions
-would still exist and be vibrant, since they're out of tree now, nothing
-will have changed.
+Hello James,
 
-James
+Thanks for taking notes during the storage track and sharing these
+notes (http://lwn.net/Articles/400589/). These notes are interesting
+but do not reveal why LIO is preferred.
+
+Also, the list with the three acceptance criteria is incomplete. A
+very important criterion before any kernel code can be merged upstream
+is whether or not there is a maintainer for that code. Someone who has
+proven prior kernel coding experience and someone who understands the
+new code thoroughly.
+
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
