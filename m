@@ -1,54 +1,62 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 1/1] Remove LUNs that no longer exist when we scan a
- target with REPORT LUNS.
-Date: Wed, 18 Aug 2010 10:13:17 -0500
-Message-ID: <1282144397.3035.32.camel@mulgrave.site>
-References: <1281917313-1855-1-git-send-email-realrichardsharpe@gmail.com>
-	 <1281917313-1855-2-git-send-email-realrichardsharpe@gmail.com>
-	 <AANLkTi=LvbUnQjPjFrHFtszMkY526mu8X9vCrMDEBO5C@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
+Date: Wed, 18 Aug 2010 17:30:33 +0200
+Message-ID: <AANLkTinARwxMat+YA0XsKTozdvh5Tta8_CDhZ8bM-NMa@mail.gmail.com>
+References: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
+	<1282144271.3035.31.camel@mulgrave.site>
+	<AANLkTimJGxn=5kEMH68XVWqFcYG3vpfLjLjZpFGqhG_4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:58943 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753864Ab0HRPNW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Aug 2010 11:13:22 -0400
-In-Reply-To: <AANLkTi=LvbUnQjPjFrHFtszMkY526mu8X9vCrMDEBO5C@mail.gmail.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:58486 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751482Ab0HRPaj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2010 11:30:39 -0400
+In-Reply-To: <AANLkTimJGxn=5kEMH68XVWqFcYG3vpfLjLjZpFGqhG_4@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Richard Sharpe <realrichardsharpe@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Chetan Loke <generationgnu@yahoo.com>, Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2010-08-18 at 08:10 -0700, Richard Sharpe wrote:
-> On Sun, Aug 15, 2010 at 5:08 PM,  <realrichardsharpe@gmail.com> wrote:
-> > From: Richard Sharpe <realrichardsharpe@gmail.com>
+On Wed, Aug 18, 2010 at 5:11 PM, James Bottomley
+<James.Bottomley@suse.de> wrote:
+>
+> On Wed, 2010-08-18 at 07:58 -0700, Chetan Loke wrote:
+> > [ ... ]
 > >
-> > If the target returns logical_unit_not_supported when we send REPORT LUNS
-> > it means that it supports REPORT LUNS but there really are no LUNs there.
-> > Delete LUN 0 in that case.
+> > During the open panel, my question was really specific -
 > >
-> > Also, when parsing the LUNs reported, remove any LUNs that used to exist
-> > in the gaps, and remove LUNs beyond the end of those reported. They no
-> > longer exist.
+> > Q) What is the future of a SCSI-target subsystem in linux. Which
+> > =A0 =A0target engine/subsystem can we expect?
 > >
-> > Also don't scan a target where the ID is too large or the channel is
-> > too large.
-> >
-> > Tested by adding four LUNs with scst_local and then deleting them in
-> > various combinations, including deleting from LUN 0, deleting from last
-> > LUN and deleting in the middle out.
-> 
-> Hmmm, before James responds, it turns out that I did not test as
-> carefully as I thought, and deleting LUNs in the order 0, 2, ... does
-> not produce the results I expected, so I will have to rework this.
+> > Your answer) There is place for only 1 target-subsystem in the Linu=
+x
+> > scsi stack and in the LSF summit the decision was taken to merge LI=
+O.
+> > Has that
+> > decision changed since the summit?
+>
+> The decision hasn't been taken to merge LIO, but based on what happen=
+ed
+> at the summit, I think it's the most viable candidate and will likely=
+ be
+> merged by 2.6.37
 
-OK, so I think what I'd really like is an AEN notification
-infrastructure based on the unit attentions that bubbles this up to user
-space for a decision.  That way if user space does the removal, we're
-not going to get into locking or other problems.
+(resending as plain text)
 
-James
+No matter which kernel-based storage target subsystem is merged, a
+migration path should be provided for SCST users such that these can
+continue using their SCST target drivers without too much trouble.
+Otherwise you'll upset a large number of SCST users.
 
+Note: an SCST target driver is the code that implements a storage
+protocol. See also http://scst.sourceforge.net/scst_pg.html for a
+overview diagram.
 
-
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
