@@ -1,125 +1,54 @@
-From: Chetan Loke <generationgnu@yahoo.com>
-Subject: Re: [Scst-devel] Fwd: Re:  linuxcon 2010...
-Date: Wed, 18 Aug 2010 08:12:56 -0700 (PDT)
-Message-ID: <976203.51076.qm@web111913.mail.gq1.yahoo.com>
-References: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 1/1] Remove LUNs that no longer exist when we scan a
+ target with REPORT LUNS.
+Date: Wed, 18 Aug 2010 10:13:17 -0500
+Message-ID: <1282144397.3035.32.camel@mulgrave.site>
+References: <1281917313-1855-1-git-send-email-realrichardsharpe@gmail.com>
+	 <1281917313-1855-2-git-send-email-realrichardsharpe@gmail.com>
+	 <AANLkTi=LvbUnQjPjFrHFtszMkY526mu8X9vCrMDEBO5C@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@suse.de>
-Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:58943 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753864Ab0HRPNW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Aug 2010 11:13:22 -0400
+In-Reply-To: <AANLkTi=LvbUnQjPjFrHFtszMkY526mu8X9vCrMDEBO5C@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Richard Sharpe <realrichardsharpe@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-Ok, pls ignore my first question:
+On Wed, 2010-08-18 at 08:10 -0700, Richard Sharpe wrote:
+> On Sun, Aug 15, 2010 at 5:08 PM,  <realrichardsharpe@gmail.com> wrote:
+> > From: Richard Sharpe <realrichardsharpe@gmail.com>
+> >
+> > If the target returns logical_unit_not_supported when we send REPORT LUNS
+> > it means that it supports REPORT LUNS but there really are no LUNs there.
+> > Delete LUN 0 in that case.
+> >
+> > Also, when parsing the LUNs reported, remove any LUNs that used to exist
+> > in the gaps, and remove LUNs beyond the end of those reported. They no
+> > longer exist.
+> >
+> > Also don't scan a target where the ID is too large or the channel is
+> > too large.
+> >
+> > Tested by adding four LUNs with scst_local and then deleting them in
+> > various combinations, including deleting from LUN 0, deleting from last
+> > LUN and deleting in the middle out.
+> 
+> Hmmm, before James responds, it turns out that I did not test as
+> carefully as I thought, and deleting LUNs in the order 0, 2, ... does
+> not produce the results I expected, so I will have to rework this.
 
-I was trying to access https://lwn.net/Articles/399148/
+OK, so I think what I'd really like is an AEN notification
+infrastructure based on the unit attentions that bubbles this up to user
+space for a decision.  That way if user space does the removal, we're
+not going to get into locking or other problems.
 
-But I just read:
-http://lwn.net/Articles/400589/
-
-Chetan
-
---- On Wed, 8/18/10, Chetan Loke <generationgnu@yahoo.com> wrote:
-
-> From: Chetan Loke <generationgnu@yahoo.com>
-> Subject: Re: [Scst-devel] Fwd: Re:  linuxcon 2010...
-> To: "Vladislav Bolkhovitin" <vst@vlnb.net>, "James Bottomley" <James.=
-Bottomley@suse.de>
-> Cc: "scst-devel" <scst-devel@lists.sourceforge.net>, linux-kernel@vge=
-r.kernel.org, linux-scsi@vger.kernel.org
-> Date: Wednesday, August 18, 2010, 2:58 PM
-> Hello James and others,
->=20
-> --- On Tue, 8/17/10, James Bottomley <James.Bottomley@suse.de>
-> wrote:
->=20
-> > From: James Bottomley <James.Bottomley@suse.de>
-> > Subject: Re: [Scst-devel] Fwd: Re:=A0 linuxcon 2010...
-> > To: "Vladislav Bolkhovitin" <vst@vlnb.net>
-> > Cc: "scst-devel" <scst-devel@lists.sourceforge.net>,
-> linux-kernel@vger.kernel.org,
-> linux-scsi@vger.kernel.org
-> > Date: Tuesday, August 17, 2010, 8:30 PM
-> > On Mon, 2010-08-16 at 20:20 +0400,
-> > Vladislav Bolkhovitin wrote:
-> > > Hello James,
-> > >=20
-> > > Could you comment rumors that decision about
-> future
-> > Linux SCSI target=20
-> > > subsystem is done as well as other related
-> rumors:
-> >=20
-> > If this is related to LSF, the notes on the I/O track
-> are
-> > here:
-> >=20
-> > http://lwn.net/Articles/400491/
->=20
->=20
-> During the open panel, my question was really specific -=20
->=20
-> Q) What is the future of a SCSI-target subsystem in linux.
-> Which=20
-> =A0=A0=A0target engine/subsystem can we expect?
->=20
-> Your answer) There is place for only 1 target-subsystem in
-> the Linux scsi stack and in the LSF summit the decision was
-> taken to merge LIO. Has that
-> decision changed since the summit?
->=20
-> As a scst-user what I would like to understand is, what was
-> that decision based on? Because the LSF summit was 'small by
-> invitation' only summit. The notes don't give us an insight
-> on the selection criteria/merits etc.
->=20
->=20
-> >=20
-> > > 3. I have heard you said "Vlad wasn't comfortable
-> in
-> > handing up the=20
-> > > control to the maintainers ... (this is how
-> kernel.org
-> > works)." I have=20
-> > > no idea what you meant. I have never been asked
-> about
-> > anything like=20
-> > > that, so I couldn't say anyhow that I'm not
-> > comfortable with anything.=20
-> > > Could you clarify that?
-> > >=20
->=20
-> 3) above is something that I emailed Vlad and the scst
-> community based on our offline conversation after the open
-> panel. If SCST really has licensing issues then I will
-> personally stop using SCST. Since Vlad hasn't
-> expressed any concerns on the above and neither have you
-> commented on it, is it safe to assume that the licensing
-> requirement is a non-issue?
->=20
->=20
-> Chetan Loke
->=20
->=20
->=20
-> =A0 =A0 =A0=20
->=20
->=20
-> ---------------------------------------------------------------------=
----------
-> This SF.net email is sponsored by=20
->=20
-> Make an app they can't live without
-> Enter the BlackBerry Developer Challenge
-> http://p.sf.net/sfu/RIM-dev2dev=20
-> _______________________________________________
-> Scst-devel mailing list
-> Scst-devel@lists.sourceforge.net
-> https://lists.sourceforge.net/lists/listinfo/scst-devel
->=20
+James
 
 
-     =20
+
