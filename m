@@ -1,32 +1,26 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC PATCHSET block#for-2.6.36-post] block: convert to REQ_FLUSH/FUA
-Date: Wed, 18 Aug 2010 11:53:52 +0200
-Message-ID: <20100818095352.GA15005@lst.de>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
+Date: Wed, 18 Aug 2010 19:52:02 +0930
+Message-ID: <201008181952.03093.rusty@rustcorp.com.au>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <4C6A458B.5040407@kernel.org> <20100817132327.GA3347@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:60501 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750974Ab0HRJx7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Aug 2010 05:53:59 -0400
-Content-Disposition: inline
-In-Reply-To: <1281977523-19335-1-git-send-email-tj@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20100817132327.GA3347@lst.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, mst@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, hare@suse.de
 
-On Mon, Aug 16, 2010 at 06:51:58PM +0200, Tejun Heo wrote:
-> * scsi_error.c for some reason tests REQ_HARDBARRIER.  I think this
->   part can be dropped altogether but am not sure.
+On Tue, 17 Aug 2010 10:53:27 pm Christoph Hellwig wrote:
+> Given how little testing lguest gets compared to qemu I really don't
+> want a protocol addition for it unless it really buys us something.
+> Once we're done with this barrier conversion I plan into benchmarking
+> FUA and a pre-flush tag on the command for virtio in real life setups,
+> and see if it actually buys us anything.
 
-That was introduced by commit 77a4229719e511a0d38d9c355317ae1469adeb54
+Absolutely.  Lguest should follow, not lead!
 
-[SCSI] Retry commands with UNIT_ATTENTION sense codes to fix ext3/ext4 I/O error
-
-which just went in this May.  Given that we now send barriers and
-discards as FS requests I think it should be reverted, preferably
-already during this cycle, in which the patches to send these requests
-as FS type were added.
-
+Rusty.
