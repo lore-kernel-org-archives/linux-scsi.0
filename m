@@ -1,47 +1,90 @@
-From: Richard Sharpe <realrichardsharpe@gmail.com>
-Subject: Re: [PATCH 1/1] Remove LUNs that no longer exist when we scan a
- target with REPORT LUNS.
-Date: Wed, 18 Aug 2010 08:10:44 -0700
-Message-ID: <AANLkTi=LvbUnQjPjFrHFtszMkY526mu8X9vCrMDEBO5C@mail.gmail.com>
-References: <1281917313-1855-1-git-send-email-realrichardsharpe@gmail.com>
-	<1281917313-1855-2-git-send-email-realrichardsharpe@gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [Scst-devel] Fwd: Re:  linuxcon 2010...
+Date: Wed, 18 Aug 2010 10:11:11 -0500
+Message-ID: <1282144271.3035.31.camel@mulgrave.site>
+References: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:43076 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752814Ab0HRPKp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2010 11:10:45 -0400
-Received: by gwj17 with SMTP id 17so228084gwj.19
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2010 08:10:45 -0700 (PDT)
-In-Reply-To: <1281917313-1855-2-git-send-email-realrichardsharpe@gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:52056 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752860Ab0HRPLS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Aug 2010 11:11:18 -0400
+In-Reply-To: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Richard Sharpe <realrichardsharpe@gmail.com>
+To: Chetan Loke <generationgnu@yahoo.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, Aug 15, 2010 at 5:08 PM,  <realrichardsharpe@gmail.com> wrote:
-> From: Richard Sharpe <realrichardsharpe@gmail.com>
->
-> If the target returns logical_unit_not_supported when we send REPORT LUNS
-> it means that it supports REPORT LUNS but there really are no LUNs there.
-> Delete LUN 0 in that case.
->
-> Also, when parsing the LUNs reported, remove any LUNs that used to exist
-> in the gaps, and remove LUNs beyond the end of those reported. They no
-> longer exist.
->
-> Also don't scan a target where the ID is too large or the channel is
-> too large.
->
-> Tested by adding four LUNs with scst_local and then deleting them in
-> various combinations, including deleting from LUN 0, deleting from last
-> LUN and deleting in the middle out.
+On Wed, 2010-08-18 at 07:58 -0700, Chetan Loke wrote:
+> Hello James and others,
+> 
+> --- On Tue, 8/17/10, James Bottomley <James.Bottomley@suse.de> wrote:
+> 
+> > From: James Bottomley <James.Bottomley@suse.de>
+> > Subject: Re: [Scst-devel] Fwd: Re:  linuxcon 2010...
+> > To: "Vladislav Bolkhovitin" <vst@vlnb.net>
+> > Cc: "scst-devel" <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+> > Date: Tuesday, August 17, 2010, 8:30 PM
+> > On Mon, 2010-08-16 at 20:20 +0400,
+> > Vladislav Bolkhovitin wrote:
+> > > Hello James,
+> > > 
+> > > Could you comment rumors that decision about future
+> > Linux SCSI target 
+> > > subsystem is done as well as other related rumors:
+> > 
+> > If this is related to LSF, the notes on the I/O track are
+> > here:
+> > 
+> > http://lwn.net/Articles/400491/
+> 
+> 
+> During the open panel, my question was really specific - 
+> 
+> Q) What is the future of a SCSI-target subsystem in linux. Which 
+>    target engine/subsystem can we expect?
+> 
+> Your answer) There is place for only 1 target-subsystem in the Linux
+> scsi stack and in the LSF summit the decision was taken to merge LIO.
+> Has that
+> decision changed since the summit?
 
-Hmmm, before James responds, it turns out that I did not test as
-carefully as I thought, and deleting LUNs in the order 0, 2, ... does
-not produce the results I expected, so I will have to rework this.
+The decision hasn't been taken to merge LIO, but based on what happened
+at the summit, I think it's the most viable candidate and will likely be
+merged by 2.6.37
 
--- 
-Regards,
-Richard Sharpe
+> As a scst-user what I would like to understand is, what was that
+> decision based on? Because the LSF summit was 'small by invitation'
+> only summit. The notes don't give us an insight on the selection
+> criteria/merits etc.
+
+The notes list 3, what's unclear about it?
+
+> 
+> > 
+> > > 3. I have heard you said "Vlad wasn't comfortable in
+> > handing up the 
+> > > control to the maintainers ... (this is how kernel.org
+> > works)." I have 
+> > > no idea what you meant. I have never been asked about
+> > anything like 
+> > > that, so I couldn't say anyhow that I'm not
+> > comfortable with anything. 
+> > > Could you clarify that?
+> > > 
+> 
+> 3) above is something that I emailed Vlad and the scst community based
+> on our offline conversation after the open panel. If SCST really has
+> licensing issues then I will personally stop using SCST. Since Vlad
+> hasn't
+> expressed any concerns on the above and neither have you commented on
+> it, is it safe to assume that the licensing requirement is a
+> non-issue?
+
+No.
+
+James
+
+
