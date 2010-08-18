@@ -1,26 +1,38 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 2/5] virtio_blk: implement REQ_FLUSH/FUA support
-Date: Wed, 18 Aug 2010 19:52:02 +0930
-Message-ID: <201008181952.03093.rusty@rustcorp.com.au>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <4C6A458B.5040407@kernel.org> <20100817132327.GA3347@lst.de>
+From: Jiri Slaby <jirislaby@gmail.com>
+Subject: Re: [BUG raid1] kernel BUG at drivers/scsi/scsi_lib.c:1113
+Date: Wed, 18 Aug 2010 13:42:38 +0200
+Message-ID: <4C6BC72E.6040607@gmail.com>
+References: <20100817220917.GA5268@Krystal> <4C6B097E.7060505@gmail.com> <20100817223145.GC4641@Krystal>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20100817132327.GA3347@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, mst@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:41434 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751661Ab0HRLmn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2010 07:42:43 -0400
+In-Reply-To: <20100817223145.GC4641@Krystal>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 
-On Tue, 17 Aug 2010 10:53:27 pm Christoph Hellwig wrote:
-> Given how little testing lguest gets compared to qemu I really don't
-> want a protocol addition for it unless it really buys us something.
-> Once we're done with this barrier conversion I plan into benchmarking
-> FUA and a pre-flush tag on the command for virtio in real life setups,
-> and see if it actually buys us anything.
+On 08/18/2010 12:31 AM, Mathieu Desnoyers wrote:
+> * Jiri Slaby (jirislaby@gmail.com) wrote:
+>> On 08/18/2010 12:09 AM, Mathieu Desnoyers wrote:
+>>> This is with these changes applied:
+>>
+>> Hi, these are very wrong. Please use ones from:
+>> http://lkml.org/lkml/2010/8/12/98
+> 
+> Yep, my system boot fine now.
+> 
+> Any plans to fast-track these fixes to mainline ?
 
-Absolutely.  Lguest should follow, not lead!
+Neil sent a pull request for the raid fixup earlier today.
 
-Rusty.
+James and Jens, could you take the two remaining (SCSI and BLOCK)?
+
+thanks,
+-- 
+js
