@@ -1,65 +1,42 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 2/2] scsi: fix kconfig dependency warnings
-Date: Wed, 18 Aug 2010 09:28:46 -0500
-Message-ID: <1282141726.3035.8.camel@mulgrave.site>
-References: <20100817113656.c4191013.randy.dunlap@oracle.com>
+Subject: Re: [BUG raid1] kernel BUG at drivers/scsi/scsi_lib.c:1113
+Date: Wed, 18 Aug 2010 09:32:10 -0500
+Message-ID: <1282141930.3035.9.camel@mulgrave.site>
+References: <20100817220917.GA5268@Krystal> <4C6B097E.7060505@gmail.com>
+	 <20100817223145.GC4641@Krystal>  <4C6BC72E.6040607@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:56612 "EHLO mx1.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:50123 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752814Ab0HRO24 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Aug 2010 10:28:56 -0400
-In-Reply-To: <20100817113656.c4191013.randy.dunlap@oracle.com>
+	id S1752828Ab0HROcP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Aug 2010 10:32:15 -0400
+In-Reply-To: <4C6BC72E.6040607@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, Ralf Baechle <ralf@linux-mips.org>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 
-On Tue, 2010-08-17 at 11:36 -0700, Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
+On Wed, 2010-08-18 at 13:42 +0200, Jiri Slaby wrote:
+> On 08/18/2010 12:31 AM, Mathieu Desnoyers wrote:
+> > * Jiri Slaby (jirislaby@gmail.com) wrote:
+> >> On 08/18/2010 12:09 AM, Mathieu Desnoyers wrote:
+> >>> This is with these changes applied:
+> >>
+> >> Hi, these are very wrong. Please use ones from:
+> >> http://lkml.org/lkml/2010/8/12/98
+> > 
+> > Yep, my system boot fine now.
+> > 
+> > Any plans to fast-track these fixes to mainline ?
 > 
-> Fix kconfig dependency warnings in scsi/Kconfig:
+> Neil sent a pull request for the raid fixup earlier today.
 > 
-> warning: (SCSI_SAS_LIBSAS && SCSI || SCSI_MPT2SAS && SCSI_LOWLEVEL && PCI && SCSI || FUSION_SAS && FUSION && PCI && SCSI) selects SCSI_SAS_ATTRS which has unmet direct dependencies (SCSI && BLK_DEV_BSG)
-> 
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-> Cc:	Ralf Baechle <ralf@linux-mips.org>
-> ---
->  drivers/scsi/Kconfig        |    3 ++-
->  drivers/scsi/libsas/Kconfig |    1 +
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> --- linux-next-20100810.orig/drivers/scsi/libsas/Kconfig
-> +++ linux-next-20100810/drivers/scsi/libsas/Kconfig
-> @@ -26,6 +26,7 @@ config SCSI_SAS_LIBSAS
->  	tristate "SAS Domain Transport Attributes"
->  	depends on SCSI
->  	select SCSI_SAS_ATTRS
-> +	select BLK_DEV_BSG
+> James and Jens, could you take the two remaining (SCSI and BLOCK)?
 
-This isn't right if you do the below.
-
-Selects cascade.
-
->  	help
->  	  This provides transport specific helpers for SAS drivers which
->  	  use the domain device construct (like the aic94xxx).
-> --- linux-next-20100810.orig/drivers/scsi/Kconfig
-> +++ linux-next-20100810/drivers/scsi/Kconfig
-> @@ -316,7 +316,8 @@ config SCSI_ISCSI_ATTRS
->  
->  config SCSI_SAS_ATTRS
->  	tristate "SAS Transport Attributes"
-> -	depends on SCSI && BLK_DEV_BSG
-> +	depends on SCSI
-> +	select BLK_DEV_BSG
-
-So this is the only part that's necessary, isn't it?  Could you resubmit
-with just this?
-
-Thanks,
+Sure ... could you identify the email by subject, please? lkml.org seems
+to be down this morning.
 
 James
 
