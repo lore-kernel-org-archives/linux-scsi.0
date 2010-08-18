@@ -1,38 +1,66 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [BUG raid1] kernel BUG at drivers/scsi/scsi_lib.c:1113
-Date: Wed, 18 Aug 2010 13:42:38 +0200
-Message-ID: <4C6BC72E.6040607@gmail.com>
-References: <20100817220917.GA5268@Krystal> <4C6B097E.7060505@gmail.com> <20100817223145.GC4641@Krystal>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH 1/2] fusion: select BLK_DEV_BSG
+Date: Wed, 18 Aug 2010 17:37:28 +0530
+Message-ID: <1C9608B8A4CD534FB19C7C7543CBB249029923AB32@inbmail02.lsi.com>
+References: <20100817113540.83e98a77.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:41434 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751661Ab0HRLmn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2010 07:42:43 -0400
-In-Reply-To: <20100817223145.GC4641@Krystal>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:35147 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752684Ab0HRMHk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Aug 2010 08:07:40 -0400
+In-Reply-To: <20100817113540.83e98a77.randy.dunlap@oracle.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>
+Cc: jejbscsi <james.bottomley@suse.de>, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On 08/18/2010 12:31 AM, Mathieu Desnoyers wrote:
-> * Jiri Slaby (jirislaby@gmail.com) wrote:
->> On 08/18/2010 12:09 AM, Mathieu Desnoyers wrote:
->>> This is with these changes applied:
->>
->> Hi, these are very wrong. Please use ones from:
->> http://lkml.org/lkml/2010/8/12/98
+Please consider this patch as an ACKed.
+
+~ Kashyap
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Randy Dunlap
+> Sent: Wednesday, August 18, 2010 12:06 AM
+> To: scsi
+> Cc: jejbscsi; Moore, Eric
+> Subject: [PATCH 1/2] fusion: select BLK_DEV_BSG
 > 
-> Yep, my system boot fine now.
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> Any plans to fast-track these fixes to mainline ?
-
-Neil sent a pull request for the raid fixup earlier today.
-
-James and Jens, could you take the two remaining (SCSI and BLOCK)?
-
-thanks,
--- 
-js
+> Fusion selects SCSI_SAS_ATTRS which needs BLK_DEV_BSG, so also select
+> BLK_DEV_BSG in fusion.
+> 
+> Fixes the kconfig warning:
+> 
+> warning: (SCSI_SAS_LIBSAS && SCSI || SCSI_MPT2SAS && SCSI_LOWLEVEL &&
+> PCI && SCSI || FUSION_SAS && FUSION && PCI && SCSI) selects
+> SCSI_SAS_ATTRS which has unmet direct dependencies (SCSI &&
+> BLK_DEV_BSG)
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Cc: Eric Moore <Eric.Moore@lsi.com>
+> ---
+>  drivers/message/fusion/Kconfig |    1 +
+>  1 file changed, 1 insertion(+)
+> 
+> --- linux-next-20100810.orig/drivers/message/fusion/Kconfig
+> +++ linux-next-20100810/drivers/message/fusion/Kconfig
+> @@ -49,6 +49,7 @@ config FUSION_SAS
+>  	tristate "Fusion MPT ScsiHost drivers for SAS"
+>  	depends on PCI && SCSI
+>  	select SCSI_SAS_ATTRS
+> +	select BLK_DEV_BSG
+>  	---help---
+>  	  SCSI HOST support for a SAS host adapters.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
