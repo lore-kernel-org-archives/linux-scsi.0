@@ -1,43 +1,24 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [BUG raid1] kernel BUG at drivers/scsi/scsi_lib.c:1113
-Date: Wed, 18 Aug 2010 09:32:10 -0500
-Message-ID: <1282141930.3035.9.camel@mulgrave.site>
-References: <20100817220917.GA5268@Krystal> <4C6B097E.7060505@gmail.com>
-	 <20100817223145.GC4641@Krystal>  <4C6BC72E.6040607@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [RFC PATCHSET block#for-2.6.36-post] block: convert to REQ_FLUSH/FUA
+Date: Wed, 18 Aug 2010 16:33:44 +0200
+Message-ID: <20100818143344.GA27515@lst.de>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <20100818095352.GA15005@lst.de> <1282141587.3035.6.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50123 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752828Ab0HROcP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Aug 2010 10:32:15 -0400
-In-Reply-To: <4C6BC72E.6040607@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1282141587.3035.6.camel@mulgrave.site>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
 
-On Wed, 2010-08-18 at 13:42 +0200, Jiri Slaby wrote:
-> On 08/18/2010 12:31 AM, Mathieu Desnoyers wrote:
-> > * Jiri Slaby (jirislaby@gmail.com) wrote:
-> >> On 08/18/2010 12:09 AM, Mathieu Desnoyers wrote:
-> >>> This is with these changes applied:
-> >>
-> >> Hi, these are very wrong. Please use ones from:
-> >> http://lkml.org/lkml/2010/8/12/98
-> > 
-> > Yep, my system boot fine now.
-> > 
-> > Any plans to fast-track these fixes to mainline ?
+On Wed, Aug 18, 2010 at 09:26:27AM -0500, James Bottomley wrote:
+> Right ... it was the quickest hack to get around the fact that we expect
+> the caller to do error handling for BLOCK_PC requests and none of the
+> block discard and barrier code expects to do this.
 > 
-> Neil sent a pull request for the raid fixup earlier today.
-> 
-> James and Jens, could you take the two remaining (SCSI and BLOCK)?
+> Once they all go as REQ_TYPE_FS, this code can be removed.
 
-Sure ... could you identify the email by subject, please? lkml.org seems
-to be down this morning.
-
-James
-
+In current mainline all discard and barrier requests are REQ_TYPE_FS.
 
