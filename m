@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/3] tcm: Remove task_offset parameter from transport_map_sg_to_mem()
-Date: Wed, 18 Aug 2010 15:23:38 -0700
-Message-ID: <1282170218-23481-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 2/3] tcm: Make transport_calc_sg_num() properly handle task_offset
+Date: Wed, 18 Aug 2010 15:23:46 -0700
+Message-ID: <1282170226-23502-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:24017 "HELO
-	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751737Ab0HRWXk (ORCPT
+Received: from smtp105.sbc.mail.gq1.yahoo.com ([67.195.14.108]:33877 "HELO
+	smtp105.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751419Ab0HRWXt (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Aug 2010 18:23:40 -0400
+	Wed, 18 Aug 2010 18:23:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
@@ -15,152 +15,114 @@ Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, FUJITA Tomonor
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch removes the unused task_offset parameter from transport_map_sg_to_mem(),
-which was originally used to determine an offset into the first
-struct scatterlist -> struct se_mem mapping.  With the removal of task_offset,
-the code is simplified, and assumes a 1:1 mapping between the source struct
-scatterlist and the destination struct se_mem.
+transport_calc_sg_num() is used by dev_obj_do_se_mem_map() to determine
+the number of scatterlists for an individual struct se_task, and then proceeds
+to allocate a contigious array of struct scatterlist in struct se_task->task_sg[].
+This struct se_task->task_sg[] is then used by subsystem plugins like IBLOCK, FILEIO
+and PSCSI to setup I/O descriptors down to the Linux storage subsystem.
 
-It also updates transport_generic_map_mem_to_cmd() and removes it's local
-usage of se_mem_task_off.
+This patch updates transport_calc_sg_num() to fix an issue that was originally
+reported when an underlying struct Scsi_Host was reporting 255 max_sectors to
+IBLOCK, which manifested itself by generating an number of scatterlists for
+the map task_offset carried between struct se_task allocations inside of
+transport_generic_get_cdb_count().
+
+This patch also makes an small improvement by removing the improper usage of
+list_for_each_entry_continue() when picking off the next struct se_mem, and
+instead adds a !list_is_last() check around list_entry().
+
+So far this patch has been tested with TCM_Loop using max_sectors=1024 on top of
+TCM/IBLOCK connected to a scsi_debug device using max_sectors 255-251 to force the
+task_offset to span struct task allocations.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   74 ++++++++-----------------------
- include/target/target_core_transport.h |    2 +-
- 2 files changed, 20 insertions(+), 56 deletions(-)
+ drivers/target/target_core_transport.c |   45 +++++++++++++++++---------------
+ 1 files changed, 24 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 9e92e93..dbedb7a 100644
+index dbedb7a..43eeb14 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -6244,7 +6244,7 @@ int transport_generic_map_mem_to_cmd(
- 	void *mem,
- 	u32 se_mem_num)
+@@ -6554,54 +6554,57 @@ extern u32 transport_calc_sg_num(
+ 	struct se_mem *in_se_mem,
+ 	u32 task_offset)
  {
--	u32 se_mem_cnt_out = 0, se_mem_task_off = 0;
-+	u32 se_mem_cnt_out = 0;
- 	int ret;
- 
- 	if (!(mem) || !(se_mem_num))
-@@ -6275,8 +6275,7 @@ int transport_generic_map_mem_to_cmd(
- 			return -1;
- 
- 		ret = transport_map_sg_to_mem(cmd,
--			T_TASK(cmd)->t_mem_list, mem, &se_mem_cnt_out,
--			&se_mem_task_off);
-+			T_TASK(cmd)->t_mem_list, mem, &se_mem_cnt_out);
- 		if (ret < 0)
- 			return -1;
- 
-@@ -6682,12 +6681,11 @@ int transport_map_sg_to_mem(
- 	struct se_cmd *cmd,
- 	struct list_head *se_mem_list,
- 	void *in_mem,
--	u32 *se_mem_cnt,
--	u32 *task_offset)
-+	u32 *se_mem_cnt)
- {
- 	struct se_mem *se_mem;
- 	struct scatterlist *sg;
--	u32 sg_count = 0, saved_task_offset = 0, task_size = cmd->data_length;
-+	u32 sg_count = 1, cmd_size = cmd->data_length;
- 
- 	if (!in_mem) {
- 		printk(KERN_ERR "No source scatterlist\n");
-@@ -6695,65 +6693,31 @@ int transport_map_sg_to_mem(
- 	}
- 	sg = (struct scatterlist *)in_mem;
++	struct se_cmd *se_cmd = task->task_se_cmd;
+ 	struct se_mem *se_mem = in_se_mem;
+-	u32 sg_length, sg_offset, task_size = task->task_size;
+-	u32 saved_task_offset = 0;
++	u32 sg_length, task_size = task->task_size;
  
 -	while (task_size) {
-+	while (cmd_size) {
- 		se_mem = kmem_cache_zalloc(se_mem_cache, GFP_KERNEL);
- 		if (!(se_mem)) {
- 			printk(KERN_ERR "Unable to allocate struct se_mem\n");
- 			return -1;
- 		}
- 		INIT_LIST_HEAD(&se_mem->se_list);
--		DEBUG_MEM("sg_to_mem: Starting loop with task_size: %u"
--			" sg_page: %p offset: %d length: %d\n", task_size,
-+		DEBUG_MEM("sg_to_mem: Starting loop with cmd_size: %u"
-+			" sg_page: %p offset: %d length: %d\n", cmd_size,
- 			sg_page(sg), sg->offset, sg->length);
++	while (task_size != 0) {
+ 		DEBUG_SC("se_mem->se_page(%p) se_mem->se_len(%u)"
+ 			" se_mem->se_off(%u) task_offset(%u)\n",
+ 			se_mem->se_page, se_mem->se_len,
+ 			se_mem->se_off, task_offset);
  
--		if (*task_offset == 0) {
--			se_mem->se_page = sg_page(sg);
--			se_mem->se_off = sg->offset;
--
--			if (task_size >= sg->length) {
--				se_mem->se_len =  sg->length;
--				sg = sg_next(sg);
--				sg_count++;
--			} else {
--				se_mem->se_len = task_size;
--
--				task_size -= se_mem->se_len;
--				if (!(task_size)) {
--					*task_offset = (se_mem->se_len +
--							saved_task_offset);
--					goto next;
--				}
--			}
+ 		if (task_offset == 0) {
+-			if (task_size > se_mem->se_len)
++			if (task_size >= se_mem->se_len) {
+ 				sg_length = se_mem->se_len;
+-			else
++
++				if (!(list_is_last(&se_mem->se_list,
++						T_TASK(se_cmd)->t_mem_list)))
++					se_mem = list_entry(se_mem->se_list.next,
++							struct se_mem, se_list);
++			} else {
+ 				sg_length = task_size;
++				task_size -= sg_length;
++				goto next;
++			}
+ 
+ 			DEBUG_SC("sg_length(%u) task_size(%u)\n",
+ 					sg_length, task_size);
 -
 -			if (saved_task_offset)
--				*task_offset = saved_task_offset;
--		} else {
--			se_mem->se_page = sg_page(sg);
--			se_mem->se_off = (*task_offset + sg->offset);
-+		se_mem->se_page = sg_page(sg);
-+		se_mem->se_off = sg->offset;
+-				task_offset = saved_task_offset;
+ 		} else {
+-			sg_offset = task_offset;
+-
+-			if ((se_mem->se_len - task_offset) > task_size)
++			if ((se_mem->se_len - task_offset) > task_size) {
+ 				sg_length = task_size;
+-			else
++				task_size -= sg_length;
++				goto next;
++			 } else {
+ 				sg_length = (se_mem->se_len - task_offset);
  
--			if ((sg->length - *task_offset) > task_size) {
--				se_mem->se_len = task_size;
-+		if (cmd_size > sg->length) {
-+			se_mem->se_len = sg->length;
-+			sg = sg_next(sg);
-+			sg_count++;
-+		} else
-+			se_mem->se_len = cmd_size;
++				if (!(list_is_last(&se_mem->se_list,
++						T_TASK(se_cmd)->t_mem_list)))
++					se_mem = list_entry(se_mem->se_list.next,
++							struct se_mem, se_list);
++			}
++
+ 			DEBUG_SC("sg_length(%u) task_size(%u)\n",
+ 					sg_length, task_size);
  
--				task_size -= se_mem->se_len;
--				if (!(task_size)) {
--					*task_offset += se_mem->se_len;
--					goto next;
--				}
--			} else {
--				se_mem->se_len = (sg->length - *task_offset);
--				sg = sg_next(sg);
--				sg_count++;
--			}
-+		cmd_size -= se_mem->se_len;
+-			saved_task_offset = task_offset;
+ 			task_offset = 0;
+ 		}
+ 		task_size -= sg_length;
+-
++next:
+ 		DEBUG_SC("task[%u] - Reducing task_size to(%u)\n",
+ 			task->task_no, task_size);
  
--			saved_task_offset = *task_offset;
--			*task_offset = 0;
--		}
--		task_size -= se_mem->se_len;
--next:
--		DEBUG_MEM("sg_to_mem: *se_mem_cnt: %u task_size: %u, *task_offset: %u "
--			"saved_task_offset: %d\n", *se_mem_cnt, task_size, *task_offset,
--			saved_task_offset);
--				
-+		DEBUG_MEM("sg_to_mem: *se_mem_cnt: %u cmd_size: %u\n",
-+				*se_mem_cnt, cmd_size);
- 		DEBUG_MEM("sg_to_mem: Final se_page: %p se_off: %d se_len: %d\n",
- 				se_mem->se_page, se_mem->se_off, se_mem->se_len);
+ 		task->task_sg_num++;
+-
+-		list_for_each_entry_continue(se_mem,
+-				task->task_se_cmd->t_task->t_mem_list, se_list)
+-			break;
+-
+-		if (!se_mem)
+-			break;
+ 	}
  
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 4e5591b..9a04033 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -279,7 +279,7 @@ extern void transport_free_se_mem_list(struct list_head *);
- extern int transport_generic_get_mem(struct se_cmd *, u32, u32);
- extern u32 transport_calc_sg_num(struct se_task *, struct se_mem *, u32);
- extern int transport_map_sg_to_mem(struct se_cmd *, struct list_head *,
--					void *, u32 *, u32 *);
-+					void *, u32 *);
- extern int transport_map_mem_to_mem(struct se_task *, struct list_head *,
- 					void *, struct se_mem *,
- 					struct se_mem **, u32 *, u32 *);
+ 	task->task_sg = kzalloc(task->task_sg_num *
 -- 
 1.5.6.5
 
