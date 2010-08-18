@@ -1,41 +1,61 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Wed, 18 Aug 2010 23:30:40 +0400
-Message-ID: <4C6C34E0.3050601@vlnb.net>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <4C6540C5.8070108@vlnb.net> <4C6546E0.7070208@kernel.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Fwd: Re: [Scst-devel] linuxcon 2010...
+Date: Wed, 18 Aug 2010 15:43:08 -0500
+Message-ID: <1282164188.10878.22.camel@mulgrave.site>
+References: <4C69653E.6050808@vlnb.net>
+	 <1282077040.16098.47.camel@mulgrave.site>  <4C6C1DC1.8090208@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <4C6546E0.7070208@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C6C1DC1.8090208@vlnb.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
-
-Tejun Heo, on 08/13/2010 05:21 PM wrote:
->> If requested, I can develop the interface further.
+On Wed, 2010-08-18 at 21:52 +0400, Vladislav Bolkhovitin wrote:
+> James Bottomley, on 08/18/2010 12:30 AM wrote:
+> >> 1. What don't you like in the transition path for users from STGT to
+> >> SCST, which I proposed:
+> >>
+> >>    - The only people which would be affected by replacing of STGT by SCST
+> >> would be users of ibmvstgt. Other STGT users would not notice it at all.
+> >> Thus, we should update ibmvstgt for SCST. If ibmvstgt updated for SCST,
+> >> the update for its users would be just writing of a simple scstadmin's
+> >> config file.
+> >>
+> >>    - STGT doesn't have backend drivers, which SCST doesn't have, so
+> >> there's nothing to worry here. At max, AIO support should be added to
+> >> fileio_tgt.
+> >>
+> >>    - STGT user space targets can use SCST backend via scst_local module.
+> >> Scst_local module is ready and work very well.
+> >>
+> >> The result would be very clear without any obsolete mess.
+> >
+> > So does that get us up to being a drop in replacement?  I think you're
+> > saying that even with all of this, at least the VSCSI part will need
+> > updating, so the answer seems to be "no".
 >
-> I still think the benefit of ordering by tag would be marginal at
-> best, and what have you guys measured there?  Under the current
-> framework, there's no easy way to measure full ordered-by-tag
-> implementation.  The mechanism for filesystems to communicate the
-> ordering information (which would be a partially ordered graph) just
-> isn't there and there is no way the current usage of ordering-by-tag
-> only for barrier sequence can achieve anything close to that level of
-> difference.
+> Sorry, I can't understand, "no" for which? For the whole transition 
+> path, or just until there is a patch for ibmvstgt to become ibmvscst?
 
-Basically, I measured how iSCSI link utilization depends from amount of 
-queued commands and queued data size. This is why I made it as a table. 
- From it you can see which improvement you will have removing queue 
-draining after 1, 2, 4, etc. commands depending of commands sizes.
+No to the question "does that get us up to being a drop in replacement
+[for STGT]?"
 
-For instance, on my previous XFS rm example, where rm of 4 files took 
-3.5 minutes with nobarrier option, I could see that XFS was sending 1-3 
-  32K commands in a row. From my table you can see that if it sent all 
-them at once without draining, it would have about 150-200% speed increase.
+> >> 4. Have you changed your opinion that a driver level multipath is
+> >> forbidden in Linux and now you think that an iSCSI target with MC/S
+> >> support is acceptable?
+> >
+> > no; I still think MCS is a pointless duplication of multipath that only
+> > works for iSCSI.
+> 
+> Then, does it mean that similarly as it was with open-iscsi, which had 
+> to remove MC/S support to be able to be accepted into the mainline, an 
+> iSCSI target can't go into mainline if it has MC/S?
 
-Vlad
+To be honest, I don't care about targets.  I only care that the
+initiators do the right thing.
+
+James
