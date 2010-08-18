@@ -1,42 +1,89 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [BUG raid1] kernel BUG at drivers/scsi/scsi_lib.c:1113
-Date: Wed, 18 Aug 2010 09:41:38 -0500
-Message-ID: <1282142498.3035.17.camel@mulgrave.site>
-References: <20100817220917.GA5268@Krystal> <4C6B097E.7060505@gmail.com>
-	 <20100817223145.GC4641@Krystal>  <4C6BC72E.6040607@gmail.com>
-	 <1282141930.3035.9.camel@mulgrave.site>  <4C6BEFD1.8010200@gmail.com>
+From: Chetan Loke <generationgnu@yahoo.com>
+Subject: Re: [Scst-devel] Fwd: Re:  linuxcon 2010...
+Date: Wed, 18 Aug 2010 07:58:19 -0700 (PDT)
+Message-ID: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50625 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753342Ab0HROlo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Aug 2010 10:41:44 -0400
-In-Reply-To: <4C6BEFD1.8010200@gmail.com>
+Received: from n2-vm0.bullet.mail.gq1.yahoo.com ([67.195.23.154]:28233 "HELO
+	n2-vm0.bullet.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752926Ab0HRO6V convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Aug 2010 10:58:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-scsi@vger.kernel.org, hch@lst.de, jaxboe@fusionio.com, LKML <linux-kernel@vger.kernel.org>, linux-raid@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@suse.de>
+Cc: scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2010-08-18 at 16:36 +0200, Jiri Slaby wrote:
-> On 08/18/2010 04:32 PM, James Bottomley wrote:
-> >> James and Jens, could you take the two remaining (SCSI and BLOCK)?
-> > 
-> > Sure ... could you identify the email by subject, please? lkml.org seems
-> > to be down this morning.
-> 
-> Sure:
-> [PATCH v2] BLOCK: fix bio.bi_rw handling
-> and
-> [PATCH v2] SCSI: fix bio.bi_rw handling
-> 
-> You should have received one copy to your suse.de inbox, if everything
-> worked.
+Hello James and others,
 
-Got it.  One of life's little ironies is that I couldn't immediately
-locate it in the SCSI list because it was already queued for inclusion.
+--- On Tue, 8/17/10, James Bottomley <James.Bottomley@suse.de> wrote:
 
-James
+> From: James Bottomley <James.Bottomley@suse.de>
+> Subject: Re: [Scst-devel] Fwd: Re:=A0 linuxcon 2010...
+> To: "Vladislav Bolkhovitin" <vst@vlnb.net>
+> Cc: "scst-devel" <scst-devel@lists.sourceforge.net>, linux-kernel@vge=
+r.kernel.org, linux-scsi@vger.kernel.org
+> Date: Tuesday, August 17, 2010, 8:30 PM
+> On Mon, 2010-08-16 at 20:20 +0400,
+> Vladislav Bolkhovitin wrote:
+> > Hello James,
+> >=20
+> > Could you comment rumors that decision about future
+> Linux SCSI target=20
+> > subsystem is done as well as other related rumors:
+>=20
+> If this is related to LSF, the notes on the I/O track are
+> here:
+>=20
+> http://lwn.net/Articles/400491/
 
 
+During the open panel, my question was really specific -=20
+
+Q) What is the future of a SCSI-target subsystem in linux. Which=20
+=A0=A0=A0target engine/subsystem can we expect?
+
+Your answer) There is place for only 1 target-subsystem in the Linux sc=
+si stack and in the LSF summit the decision was taken to merge LIO. Has=
+ that
+decision changed since the summit?
+
+As a scst-user what I would like to understand is, what was that decisi=
+on based on? Because the LSF summit was 'small by invitation' only summ=
+it. The notes don't give us an insight on the selection criteria/merits=
+ etc.
+
+
+>=20
+> > 3. I have heard you said "Vlad wasn't comfortable in
+> handing up the=20
+> > control to the maintainers ... (this is how kernel.org
+> works)." I have=20
+> > no idea what you meant. I have never been asked about
+> anything like=20
+> > that, so I couldn't say anyhow that I'm not
+> comfortable with anything.=20
+> > Could you clarify that?
+> >=20
+
+3) above is something that I emailed Vlad and the scst community based =
+on our offline conversation after the open panel. If SCST really has li=
+censing issues then I will personally stop using SCST. Since Vlad hasn'=
+t
+expressed any concerns on the above and neither have you commented on i=
+t, is it safe to assume that the licensing requirement is a non-issue?
+
+
+Chetan Loke
+
+
+
+     =20
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
