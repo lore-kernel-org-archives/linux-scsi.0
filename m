@@ -1,52 +1,57 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [BUG raid1] kernel BUG at drivers/scsi/scsi_lib.c:1113
-Date: Wed, 18 Aug 2010 22:59:28 -0400
-Message-ID: <4C6C9E10.9030202@fusionio.com>
-References: <20100817220917.GA5268@Krystal> <4C6B097E.7060505@gmail.com>	 <20100817223145.GC4641@Krystal>  <4C6BC72E.6040607@gmail.com>	 <1282141930.3035.9.camel@mulgrave.site>  <4C6BEFD1.8010200@gmail.com>	 <1282142498.3035.17.camel@mulgrave.site>  <4C6C5561.5040302@fusionio.com> <1282171834.13811.51.camel@mulgrave.site>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Thu, 19 Aug 2010 11:51:38 +0200
+Message-ID: <4C6CFEAA.1060004@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <4C6540C5.8070108@vlnb.net> <4C6546E0.7070208@kernel.org> <4C6C34E0.3050601@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <1282171834.13811.51.camel@mulgrave.site>
-Sender: linux-raid-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Jiri Slaby <jirislaby@gmail.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C6C34E0.3050601@vlnb.net>
+Sender: linux-ide-owner@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/18/2010 06:50 PM, James Bottomley wrote:
-> On Wed, 2010-08-18 at 17:49 -0400, Jens Axboe wrote:
->> On 08/18/2010 10:41 AM, James Bottomley wrote:
->>> On Wed, 2010-08-18 at 16:36 +0200, Jiri Slaby wrote:
->>>> On 08/18/2010 04:32 PM, James Bottomley wrote:
->>>>>> James and Jens, could you take the two remaining (SCSI and BLOCK)?
->>>>>
->>>>> Sure ... could you identify the email by subject, please? lkml.org seems
->>>>> to be down this morning.
->>>>
->>>> Sure:
->>>> [PATCH v2] BLOCK: fix bio.bi_rw handling
->>>> and
->>>> [PATCH v2] SCSI: fix bio.bi_rw handling
->>>>
->>>> You should have received one copy to your suse.de inbox, if everything
->>>> worked.
->>>
->>> Got it.  One of life's little ironies is that I couldn't immediately
->>> locate it in the SCSI list because it was already queued for inclusion.
->>
->> Please add my acked-by to both of them.
-> 
-> OK.
-> 
->>  I'm away on vacation, so if
->> you James could queue them up, I would appreciate it. Thanks!
-> 
-> Certainly sir ... and would you like your patches served to your table
-> or by the pool?
+Hello,
 
-Pool, please. With that first name and the British accent, it's hard
-not to boss you around.
+On 08/18/2010 09:30 PM, Vladislav Bolkhovitin wrote:
+> Basically, I measured how iSCSI link utilization depends from amount
+> of queued commands and queued data size. This is why I made it as a
+> table. From it you can see which improvement you will have removing
+> queue draining after 1, 2, 4, etc. commands depending of commands
+> sizes.
+>
+> For instance, on my previous XFS rm example, where rm of 4 files
+> took 3.5 minutes with nobarrier option, I could see that XFS was
+> sending 1-3 32K commands in a row. From my table you can see that if
+> it sent all them at once without draining, it would have about
+> 150-200% speed increase.
+
+You compared barrier off/on.  Of course, it will make a big
+difference.  I think good part of that gain should be realized by the
+currently proposed patchset which removes draining.  What's needed to
+be demonstrated is the difference between ordered-by-waiting and
+ordered-by-tag.  We've never had code to do that properly.
+
+The original ordered-by-tag we had only applied tag ordering to two or
+three command sequences inside a barrier, which doesn't amount to much
+(and could even be harmful as it imposes draining of all simple
+commands inside the device only to reduce issue latencies for a few
+commands).  You'll need to hook into filesystem and somehow export the
+ordering information down to the driver so that whatever needs
+ordering is sent out as ordered commands.
+
+As I've wrote multiple times, I'm pretty skeptical it will bring much.
+Ordered tag mandates draining inside the device just like the original
+barrier implementation.  Sure, it's done at a lower layer and command
+issue latencies will be reduced thanks to that but ordered-by-waiting
+doesn't require _any_ draining at all.  The whole pipeline can be kept
+full all the time.  I'm often wrong tho, so please feel free to go
+ahead and prove me wrong.  :-)
+
+Thanks.
 
 -- 
-Jens Axboe
-
+tejun
