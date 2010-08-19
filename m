@@ -1,70 +1,71 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [BUG raid1] kernel BUG at drivers/scsi/scsi_lib.c:1113
-Date: Thu, 19 Aug 2010 09:52:52 -0500
-Message-ID: <1282229572.8139.16.camel@mulgrave.site>
-References: <20100817220917.GA5268@Krystal> <4C6B097E.7060505@gmail.com>
-	 <20100817223145.GC4641@Krystal>  <4C6BC72E.6040607@gmail.com>
-	 <1282141930.3035.9.camel@mulgrave.site>  <4C6BEFD1.8010200@gmail.com>
-	 <1282142498.3035.17.camel@mulgrave.site>  <4C6C5561.5040302@fusionio.com>
-	 <1282171834.13811.51.camel@mulgrave.site>  <4C6C9E10.9030202@fusionio.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 2/5 UPDATED] virtio_blk: drop REQ_HARDBARRIER support
+Date: Thu, 19 Aug 2010 17:14:21 +0200
+Message-ID: <4C6D4A4D.7090501@kernel.org>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C6C9E10.9030202@fusionio.com>
+In-Reply-To: <1281977523-19335-3-git-send-email-tj@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: Jiri Slaby <jirislaby@gmail.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hch@lst.de" <hch@lst.de>, LKML <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2010-08-18 at 22:59 -0400, Jens Axboe wrote:
-> On 08/18/2010 06:50 PM, James Bottomley wrote:
-> > On Wed, 2010-08-18 at 17:49 -0400, Jens Axboe wrote:
-> >> On 08/18/2010 10:41 AM, James Bottomley wrote:
-> >>> On Wed, 2010-08-18 at 16:36 +0200, Jiri Slaby wrote:
-> >>>> On 08/18/2010 04:32 PM, James Bottomley wrote:
-> >>>>>> James and Jens, could you take the two remaining (SCSI and BLOCK)?
-> >>>>>
-> >>>>> Sure ... could you identify the email by subject, please? lkml.org seems
-> >>>>> to be down this morning.
-> >>>>
-> >>>> Sure:
-> >>>> [PATCH v2] BLOCK: fix bio.bi_rw handling
-> >>>> and
-> >>>> [PATCH v2] SCSI: fix bio.bi_rw handling
-> >>>>
-> >>>> You should have received one copy to your suse.de inbox, if everything
-> >>>> worked.
-> >>>
-> >>> Got it.  One of life's little ironies is that I couldn't immediately
-> >>> locate it in the SCSI list because it was already queued for inclusion.
-> >>
-> >> Please add my acked-by to both of them.
-> > 
-> > OK.
-> > 
-> >>  I'm away on vacation, so if
-> >> you James could queue them up, I would appreciate it. Thanks!
-> > 
-> > Certainly sir ... and would you like your patches served to your table
-> > or by the pool?
-> 
-> Pool, please. With that first name and the British accent, it's hard
-> not to boss you around.
+Remove now unused REQ_HARDBARRIER support.  virtio_blk already
+supports REQ_FLUSH and the usefulness of REQ_FUA for virtio_blk is
+questionable at this point, so there's nothing else to do to support
+new REQ_FLUSH/FUA interface.
 
-Well, sir, the wait staff and I thought we'd just write to ask how your
-convalescence was going.  Sorry about spilling the patch down your
-front, sir, but the glass was slippery.  Who could have foreseen that
-you'd step backwards, fall over the pool boy and upset a flaming bananas
-foster on to the front of your shorts.  I did get a commendation for my
-quick action with a high pressure hose to the affected area (thank you,
-sir, for your shocked but grateful expression).  I must say I didn't
-foresee the force of the blast catapulting you against the pool steps,
-but a concussion is a small price to pay for avoiding fried nuts with
-the bananas, eh, sir? It's funny how things turn out, and I bet if you
-could do it over again, you'd have got off your arse to fetch your own
-damn patch now, wouldn't you, sir?
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
+---
+REQ_FUA support dropped as suggested by Christoph.
 
-Yours sincerely,
+ drivers/block/virtio_blk.c |   17 ++++-------------
+ 1 file changed, 4 insertions(+), 13 deletions(-)
 
-James
+Index: block/drivers/block/virtio_blk.c
+===================================================================
+--- block.orig/drivers/block/virtio_blk.c
++++ block/drivers/block/virtio_blk.c
+@@ -128,9 +128,6 @@ static bool do_req(struct request_queue
+ 		}
+ 	}
+
+-	if (vbr->req->cmd_flags & REQ_HARDBARRIER)
+-		vbr->out_hdr.type |= VIRTIO_BLK_T_BARRIER;
+-
+ 	sg_set_buf(&vblk->sg[out++], &vbr->out_hdr, sizeof(vbr->out_hdr));
+
+ 	/*
+@@ -388,13 +385,7 @@ static int __devinit virtblk_probe(struc
+ 	vblk->disk->driverfs_dev = &vdev->dev;
+ 	index++;
+
+-	/*
+-	 * If the FLUSH feature is supported we do have support for
+-	 * flushing a volatile write cache on the host.  Use that to
+-	 * implement write barrier support; otherwise, we must assume
+-	 * that the host does not perform any kind of volatile write
+-	 * caching.
+-	 */
++	/* configure queue flush support */
+ 	if (virtio_has_feature(vdev, VIRTIO_BLK_F_FLUSH))
+ 		blk_queue_flush(q, REQ_FLUSH);
+
+@@ -515,9 +506,9 @@ static const struct virtio_device_id id_
+ };
+
+ static unsigned int features[] = {
+-	VIRTIO_BLK_F_BARRIER, VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX,
+-	VIRTIO_BLK_F_GEOMETRY, VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE,
+-	VIRTIO_BLK_F_SCSI, VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
++	VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX, VIRTIO_BLK_F_GEOMETRY,
++	VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE, VIRTIO_BLK_F_SCSI,
++	VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
+ };
+
+ /*
