@@ -1,55 +1,38 @@
 From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
  sequenced flush
-Date: Thu, 19 Aug 2010 11:51:38 +0200
-Message-ID: <4C6CFEAA.1060004@kernel.org>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <4C6540C5.8070108@vlnb.net> <4C6546E0.7070208@kernel.org> <4C6C34E0.3050601@vlnb.net>
+Date: Thu, 19 Aug 2010 11:57:53 +0200
+Message-ID: <4C6D0021.4040601@kernel.org>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100818094620.GA14707@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C6C34E0.3050601@vlnb.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hera.kernel.org ([140.211.167.34]:35963 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751206Ab0HSKBz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Aug 2010 06:01:55 -0400
+In-Reply-To: <20100818094620.GA14707@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 
 Hello,
 
-On 08/18/2010 09:30 PM, Vladislav Bolkhovitin wrote:
-> Basically, I measured how iSCSI link utilization depends from amount
-> of queued commands and queued data size. This is why I made it as a
-> table. From it you can see which improvement you will have removing
-> queue draining after 1, 2, 4, etc. commands depending of commands
-> sizes.
->
-> For instance, on my previous XFS rm example, where rm of 4 files
-> took 3.5 minutes with nobarrier option, I could see that XFS was
-> sending 1-3 32K commands in a row. From my table you can see that if
-> it sent all them at once without draining, it would have about
-> 150-200% speed increase.
+On 08/18/2010 11:46 AM, Christoph Hellwig wrote:
+> FYI: One issue with this series is that make_request based drivers
+> not have to access all REQ_FLUSH and REQ_FUA requests.  We'll either
+> need to add handling to empty REQ_FLUSH requests to all of them or
+> figure out a way to prevent them getting sent.  That is assuming they'll
+> simply ignore REQ_FLUSH/REQ_FUA on normal writes.
 
-You compared barrier off/on.  Of course, it will make a big
-difference.  I think good part of that gain should be realized by the
-currently proposed patchset which removes draining.  What's needed to
-be demonstrated is the difference between ordered-by-waiting and
-ordered-by-tag.  We've never had code to do that properly.
-
-The original ordered-by-tag we had only applied tag ordering to two or
-three command sequences inside a barrier, which doesn't amount to much
-(and could even be harmful as it imposes draining of all simple
-commands inside the device only to reduce issue latencies for a few
-commands).  You'll need to hook into filesystem and somehow export the
-ordering information down to the driver so that whatever needs
-ordering is sent out as ordered commands.
-
-As I've wrote multiple times, I'm pretty skeptical it will bring much.
-Ordered tag mandates draining inside the device just like the original
-barrier implementation.  Sure, it's done at a lower layer and command
-issue latencies will be reduced thanks to that but ordered-by-waiting
-doesn't require _any_ draining at all.  The whole pipeline can be kept
-full all the time.  I'm often wrong tho, so please feel free to go
-ahead and prove me wrong.  :-)
+Can you be a bit more specific?  In most cases, request based drivers
+should be fine.  They sit behind the front most request_queue which
+would discompose REQ_FLUSH/FUAs into appropriate command sequence.
+For the request based drivers, it's not different from the original
+REQ_HARDBARRIER mechanism, it'll just see flushes and optionally FUA
+writes.
 
 Thanks.
 
