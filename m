@@ -1,71 +1,93 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/5 UPDATED] virtio_blk: drop REQ_HARDBARRIER support
-Date: Thu, 19 Aug 2010 17:14:21 +0200
-Message-ID: <4C6D4A4D.7090501@kernel.org>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-3-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH 3/5] lguest: replace VIRTIO_F_BARRIER support with VIRTIO_F_FLUSH
+ support
+Date: Thu, 19 Aug 2010 17:15:41 +0200
+Message-ID: <4C6D4A9D.1020400@kernel.org>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1281977523-19335-3-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1281977523-19335-4-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
 Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Remove now unused REQ_HARDBARRIER support.  virtio_blk already
-supports REQ_FLUSH and the usefulness of REQ_FUA for virtio_blk is
-questionable at this point, so there's nothing else to do to support
-new REQ_FLUSH/FUA interface.
+VIRTIO_F_BARRIER is deprecated.  Replace it with VIRTIO_F_FLUSH
+support.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
 Cc: Christoph Hellwig <hch@lst.de>
 ---
-REQ_FUA support dropped as suggested by Christoph.
+FUA support dropped as suggested by Christoph.  Rusty, can you please
+ack this version too?  I tested it with the updated virtio_blk and it
+works fine.
 
- drivers/block/virtio_blk.c |   17 ++++-------------
- 1 file changed, 4 insertions(+), 13 deletions(-)
+Thanks.
 
-Index: block/drivers/block/virtio_blk.c
+ Documentation/lguest/lguest.c |   29 +++++++++--------------------
+ 1 file changed, 9 insertions(+), 20 deletions(-)
+
+Index: block/Documentation/lguest/lguest.c
 ===================================================================
---- block.orig/drivers/block/virtio_blk.c
-+++ block/drivers/block/virtio_blk.c
-@@ -128,9 +128,6 @@ static bool do_req(struct request_queue
+--- block.orig/Documentation/lguest/lguest.c
++++ block/Documentation/lguest/lguest.c
+@@ -1639,15 +1639,6 @@ static void blk_request(struct virtqueue
+ 	off = out->sector * 512;
+
+ 	/*
+-	 * The block device implements "barriers", where the Guest indicates
+-	 * that it wants all previous writes to occur before this write.  We
+-	 * don't have a way of asking our kernel to do a barrier, so we just
+-	 * synchronize all the data in the file.  Pretty poor, no?
+-	 */
+-	if (out->type & VIRTIO_BLK_T_BARRIER)
+-		fdatasync(vblk->fd);
+-
+-	/*
+ 	 * In general the virtio block driver is allowed to try SCSI commands.
+ 	 * It'd be nice if we supported eject, for example, but we don't.
+ 	 */
+@@ -1679,6 +1670,13 @@ static void blk_request(struct virtqueue
+ 			/* Die, bad Guest, die. */
+ 			errx(1, "Write past end %llu+%u", off, ret);
+ 		}
++
++		wlen = sizeof(*in);
++		*in = (ret >= 0 ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR);
++	} else if (out->type & VIRTIO_BLK_T_FLUSH) {
++		/* Flush */
++		ret = fdatasync(vblk->fd);
++		verbose("FLUSH fdatasync: %i\n", ret);
+ 		wlen = sizeof(*in);
+ 		*in = (ret >= 0 ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR);
+ 	} else {
+@@ -1702,15 +1700,6 @@ static void blk_request(struct virtqueue
  		}
  	}
 
--	if (vbr->req->cmd_flags & REQ_HARDBARRIER)
--		vbr->out_hdr.type |= VIRTIO_BLK_T_BARRIER;
--
- 	sg_set_buf(&vblk->sg[out++], &vbr->out_hdr, sizeof(vbr->out_hdr));
-
- 	/*
-@@ -388,13 +385,7 @@ static int __devinit virtblk_probe(struc
- 	vblk->disk->driverfs_dev = &vdev->dev;
- 	index++;
-
 -	/*
--	 * If the FLUSH feature is supported we do have support for
--	 * flushing a volatile write cache on the host.  Use that to
--	 * implement write barrier support; otherwise, we must assume
--	 * that the host does not perform any kind of volatile write
--	 * caching.
+-	 * OK, so we noted that it was pretty poor to use an fdatasync as a
+-	 * barrier.  But Christoph Hellwig points out that we need a sync
+-	 * *afterwards* as well: "Barriers specify no reordering to the front
+-	 * or the back."  And Jens Axboe confirmed it, so here we are:
 -	 */
-+	/* configure queue flush support */
- 	if (virtio_has_feature(vdev, VIRTIO_BLK_F_FLUSH))
- 		blk_queue_flush(q, REQ_FLUSH);
+-	if (out->type & VIRTIO_BLK_T_BARRIER)
+-		fdatasync(vblk->fd);
+-
+ 	/* Finished that request. */
+ 	add_used(vq, head, wlen);
+ }
+@@ -1735,8 +1724,8 @@ static void setup_block_file(const char
+ 	vblk->fd = open_or_die(filename, O_RDWR|O_LARGEFILE);
+ 	vblk->len = lseek64(vblk->fd, 0, SEEK_END);
 
-@@ -515,9 +506,9 @@ static const struct virtio_device_id id_
- };
+-	/* We support barriers. */
+-	add_feature(dev, VIRTIO_BLK_F_BARRIER);
++	/* We support FLUSH. */
++	add_feature(dev, VIRTIO_BLK_F_FLUSH);
 
- static unsigned int features[] = {
--	VIRTIO_BLK_F_BARRIER, VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX,
--	VIRTIO_BLK_F_GEOMETRY, VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE,
--	VIRTIO_BLK_F_SCSI, VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
-+	VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX, VIRTIO_BLK_F_GEOMETRY,
-+	VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE, VIRTIO_BLK_F_SCSI,
-+	VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
- };
-
- /*
+ 	/* Tell Guest how many sectors this device has. */
+ 	conf.capacity = cpu_to_le64(vblk->len / 512);
