@@ -1,93 +1,138 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 3/5] lguest: replace VIRTIO_F_BARRIER support with VIRTIO_F_FLUSH
- support
-Date: Thu, 19 Aug 2010 17:15:41 +0200
-Message-ID: <4C6D4A9D.1020400@kernel.org>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-4-git-send-email-tj@kernel.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC PATCHSET block#for-2.6.36-post] block: convert to
+ REQ_FLUSH/FUA
+Date: Fri, 20 Aug 2010 00:37:14 +0900
+Message-ID: <20100820003348C.fujita.tomonori@lab.ntt.co.jp>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org>
+	<20100818095352.GA15005@lst.de>
+	<1282141587.3035.6.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1281977523-19335-4-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:59138 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753989Ab0HSPhe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Aug 2010 11:37:34 -0400
+In-Reply-To: <1282141587.3035.6.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: hch@lst.de, tj@kernel.org, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, hare@suse.de
 
-VIRTIO_F_BARRIER is deprecated.  Replace it with VIRTIO_F_FLUSH
-support.
+On Wed, 18 Aug 2010 09:26:27 -0500
+James Bottomley <James.Bottomley@suse.de> wrote:
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Christoph Hellwig <hch@lst.de>
+> On Wed, 2010-08-18 at 11:53 +0200, Christoph Hellwig wrote:
+> > On Mon, Aug 16, 2010 at 06:51:58PM +0200, Tejun Heo wrote:
+> > > * scsi_error.c for some reason tests REQ_HARDBARRIER.  I think this
+> > >   part can be dropped altogether but am not sure.
+> > 
+> > That was introduced by commit 77a4229719e511a0d38d9c355317ae1469adeb54
+> > 
+> > [SCSI] Retry commands with UNIT_ATTENTION sense codes to fix ext3/ext4 I/O error
+> > 
+> > which just went in this May.  Given that we now send barriers and
+> > discards as FS requests I think it should be reverted, preferably
+> > already during this cycle, in which the patches to send these requests
+> > as FS type were added.
+> 
+> Right ... it was the quickest hack to get around the fact that we expect
+> the caller to do error handling for BLOCK_PC requests and none of the
+> block discard and barrier code expects to do this.
+> 
+> Once they all go as REQ_TYPE_FS, this code can be removed.
+
+I think that I reverted it with the discard and flush conversion. No
+idea why the code exists in the current git.
+
+
+commit e96f6abe02fc3320d669985443e8c68ff8e83294
+Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Date:   Fri Jul 9 09:38:26 2010 +0900
+
+scsi-ml uses REQ_TYPE_BLOCK_PC for flush requests from file
+systems. The definition of REQ_TYPE_BLOCK_PC is that we don't retry
+requests even when we can (e.g. UNIT ATTENTION) and we send the
+response to the callers (then the callers can decide what they want).
+We need a workaround such as the commit
+77a4229719e511a0d38d9c355317ae1469adeb54 to retry BLOCK_PC flush
+requests. We will need the similar workaround for discard requests too
+since SCSI-ml handle them as BLOCK_PC internally.
+
+This uses REQ_TYPE_FS for flush requests from file systems instead of
+REQ_TYPE_BLOCK_PC.
+
+scsi-ml retries only REQ_TYPE_FS requests that have data to
+transfer when we can retry them (e.g. UNIT_ATTENTION). However, we
+also need to retry REQ_TYPE_FS requests without data because the
+callers don't.
+
+This also changes scsi_check_sense() to retry all the REQ_TYPE_FS
+requests when appropriate. Thanks to scsi_noretry_cmd(),
+REQ_TYPE_BLOCK_PC requests don't be retried as before.
+
+Note that basically, this reverts the commit
+77a4229719e511a0d38d9c355317ae1469adeb54 since now we use REQ_TYPE_FS
+for flush requests.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Jens Axboe <jaxboe@fusionio.com>
 ---
-FUA support dropped as suggested by Christoph.  Rusty, can you please
-ack this version too?  I tested it with the updated virtio_blk and it
-works fine.
+ drivers/scsi/scsi_error.c |   19 ++++---------------
+ drivers/scsi/sd.c         |    2 --
+ 2 files changed, 4 insertions(+), 17 deletions(-)
 
-Thanks.
-
- Documentation/lguest/lguest.c |   29 +++++++++--------------------
- 1 file changed, 9 insertions(+), 20 deletions(-)
-
-Index: block/Documentation/lguest/lguest.c
-===================================================================
---- block.orig/Documentation/lguest/lguest.c
-+++ block/Documentation/lguest/lguest.c
-@@ -1639,15 +1639,6 @@ static void blk_request(struct virtqueue
- 	off = out->sector * 512;
-
- 	/*
--	 * The block device implements "barriers", where the Guest indicates
--	 * that it wants all previous writes to occur before this write.  We
--	 * don't have a way of asking our kernel to do a barrier, so we just
--	 * synchronize all the data in the file.  Pretty poor, no?
--	 */
--	if (out->type & VIRTIO_BLK_T_BARRIER)
--		fdatasync(vblk->fd);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1b88af8..2768bf6 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -307,20 +307,7 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
+ 		    (sshdr.asc == 0x04) && (sshdr.ascq == 0x02))
+ 			return FAILED;
+ 
+-		if (scmd->request->cmd_flags & REQ_HARDBARRIER)
+-			/*
+-			 * barrier requests should always retry on UA
+-			 * otherwise block will get a spurious error
+-			 */
+-			return NEEDS_RETRY;
+-		else
+-			/*
+-			 * for normal (non barrier) commands, pass the
+-			 * UA upwards for a determination in the
+-			 * completion functions
+-			 */
+-			return SUCCESS;
 -
--	/*
- 	 * In general the virtio block driver is allowed to try SCSI commands.
- 	 * It'd be nice if we supported eject, for example, but we don't.
- 	 */
-@@ -1679,6 +1670,13 @@ static void blk_request(struct virtqueue
- 			/* Die, bad Guest, die. */
- 			errx(1, "Write past end %llu+%u", off, ret);
- 		}
-+
-+		wlen = sizeof(*in);
-+		*in = (ret >= 0 ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR);
-+	} else if (out->type & VIRTIO_BLK_T_FLUSH) {
-+		/* Flush */
-+		ret = fdatasync(vblk->fd);
-+		verbose("FLUSH fdatasync: %i\n", ret);
- 		wlen = sizeof(*in);
- 		*in = (ret >= 0 ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR);
- 	} else {
-@@ -1702,15 +1700,6 @@ static void blk_request(struct virtqueue
- 		}
++		return NEEDS_RETRY;
+ 		/* these three are not supported */
+ 	case COPY_ABORTED:
+ 	case VOLUME_OVERFLOW:
+@@ -1336,7 +1323,9 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
+ 		 * assume caller has checked sense and determinted
+ 		 * the check condition was retryable.
+ 		 */
+-		return (scmd->request->cmd_flags & REQ_FAILFAST_DEV);
++		if (scmd->request->cmd_flags & REQ_FAILFAST_DEV ||
++		    scmd->request->cmd_type == REQ_TYPE_BLOCK_PC)
++			return 1;
  	}
+ 
+ 	return 0;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index e63b85a..108daea 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -477,8 +477,6 @@ static int scsi_setup_discard_cmnd(struct scsi_device *sdp, struct request *rq)
+ 
+ static int scsi_setup_flush_cmnd(struct scsi_device *sdp, struct request *rq)
+ {
+-	/* for now, we use REQ_TYPE_BLOCK_PC. */
+-	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+ 	rq->timeout = SD_TIMEOUT;
+ 	rq->retries = SD_MAX_RETRIES;
+ 	rq->cmd[0] = SYNCHRONIZE_CACHE;
+-- 
+1.6.5
 
--	/*
--	 * OK, so we noted that it was pretty poor to use an fdatasync as a
--	 * barrier.  But Christoph Hellwig points out that we need a sync
--	 * *afterwards* as well: "Barriers specify no reordering to the front
--	 * or the back."  And Jens Axboe confirmed it, so here we are:
--	 */
--	if (out->type & VIRTIO_BLK_T_BARRIER)
--		fdatasync(vblk->fd);
--
- 	/* Finished that request. */
- 	add_used(vq, head, wlen);
- }
-@@ -1735,8 +1724,8 @@ static void setup_block_file(const char
- 	vblk->fd = open_or_die(filename, O_RDWR|O_LARGEFILE);
- 	vblk->len = lseek64(vblk->fd, 0, SEEK_END);
-
--	/* We support barriers. */
--	add_feature(dev, VIRTIO_BLK_F_BARRIER);
-+	/* We support FLUSH. */
-+	add_feature(dev, VIRTIO_BLK_F_FLUSH);
-
- 	/* Tell Guest how many sectors this device has. */
- 	conf.capacity = cpu_to_le64(vblk->len / 512);
