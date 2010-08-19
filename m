@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 2/6] libata: Report supported TRIM payload size
-Date: Thu, 19 Aug 2010 11:48:57 -0400
-Message-ID: <1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
+Subject: [PATCH 6/6] sd: Update thin provisioning support
+Date: Thu, 19 Aug 2010 11:49:01 -0400
+Message-ID: <1282232941-9910-7-git-send-email-martin.petersen@oracle.com>
 References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
 Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
@@ -10,61 +10,96 @@ To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-ATA IDENTIFY DEVICE word 105 contains the number of 512-byte blocks of
-TRIM payload information the device can accept in one command.  Use this
-value to enable payloads > 512 bytes.
+Add support for the Thin Provisioning VPD page and use the TPU and TPWS
+bits to switch between UNMAP and WRITE SAME(16) for discards.
 
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/ata/libata-scsi.c |    7 ++++++-
- include/linux/ata.h       |    9 +++++++++
- 2 files changed, 15 insertions(+), 1 deletions(-)
+ drivers/scsi/sd.c |   40 +++++++++++++++++++++++++++++++++++-----
+ drivers/scsi/sd.h |    2 ++
+ 2 files changed, 37 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index e280ae6..145f099 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2152,7 +2152,12 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
- 	 * with the unmap bit set.
- 	 */
- 	if (ata_id_has_trim(args->id)) {
--		put_unaligned_be32(65535 * 512 / 8, &rbuf[20]);
-+		unsigned int blocks;
-+
-+		/* Default to 1 if unspecified in word 105.  Cap at 1 page. */
-+		blocks = clamp(ata_id_trim_range_blocks(args->id), 1U, 8U);
-+
-+		put_unaligned_be32(65535 * 512 / 8 * blocks, &rbuf[20]);
- 		put_unaligned_be32(1, &rbuf[28]);
- 	}
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 8802e48..7d6a61c 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1991,14 +1991,19 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
+ 		lba_count = get_unaligned_be32(&buffer[20]);
+ 		desc_count = get_unaligned_be32(&buffer[24]);
  
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index fe6e681..5584356 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -88,6 +88,7 @@ enum {
- 	ATA_ID_HW_CONFIG	= 93,
- 	ATA_ID_SPG		= 98,
- 	ATA_ID_LBA_CAPACITY_2	= 100,
-+	ATA_ID_TRIM_RANGE_BLKS	= 105,
- 	ATA_ID_SECTOR_SIZE	= 106,
- 	ATA_ID_LAST_LUN		= 126,
- 	ATA_ID_DLF		= 128,
-@@ -827,6 +828,14 @@ static inline int ata_id_has_zero_after_trim(const u16 *id)
- 	return 0;
+-		if (lba_count) {
++		if (sdkp->tpu && desc_count && lba_count)
++			sdkp->unmap = 1;
++		else if (!sdkp->tpws) {
++			sd_printk(KERN_ERR, sdkp, "Thin provisioning is "  \
++				  "enabled but neither TPU, nor TPWS are " \
++				  "set. Disabling discard!\n");
++			goto out;
++		}
++
++		if (lba_count)
+ 			q->limits.max_discard_sectors =
+ 				lba_count * sector_sz >> 9;
+ 
+-			if (desc_count)
+-				sdkp->unmap = 1;
+-		}
+-
+ 		granularity = get_unaligned_be32(&buffer[28]);
+ 
+ 		if (granularity)
+@@ -2039,6 +2044,30 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
+ 	kfree(buffer);
  }
  
-+static inline unsigned int ata_id_trim_range_blocks(const u16 *id)
++/**
++ * sd_read_thin_provisioning - Query thin provisioning VPD page
++ * @disk: disk to query
++ */
++static void sd_read_thin_provisioning(struct scsi_disk *sdkp)
 +{
-+	if (ata_id_has_trim(id))
-+		return id[ATA_ID_TRIM_RANGE_BLKS];
++	unsigned char *buffer;
++	const int vpd_len = 8;
 +
-+	return 0;
++	if (sdkp->thin_provisioning == 0)
++		return;
++
++	buffer = kmalloc(vpd_len, GFP_KERNEL);
++
++	if (!buffer || scsi_get_vpd_page(sdkp->device, 0xb2, buffer, vpd_len))
++		goto out;
++
++	sdkp->tpu   = (buffer[5] >> 7) & 1;	/* UNMAP */
++	sdkp->tpws  = (buffer[5] >> 6) & 1;	/* WRITE SAME(16) with UNMAP */
++
++ out:
++	kfree(buffer);
 +}
 +
- static inline int ata_id_current_chs_valid(const u16 *id)
+ static int sd_try_extended_inquiry(struct scsi_device *sdp)
  {
- 	/* For ATA-1 devices, if the INITIALIZE DEVICE PARAMETERS command
+ 	/*
+@@ -2090,6 +2119,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 		sd_read_capacity(sdkp, buffer);
+ 
+ 		if (sd_try_extended_inquiry(sdp)) {
++			sd_read_thin_provisioning(sdkp);
+ 			sd_read_block_limits(sdkp);
+ 			sd_read_block_characteristics(sdkp);
+ 		}
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 43d3caf..9646062 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -62,6 +62,8 @@ struct scsi_disk {
+ 	unsigned	first_scan : 1;
+ 	unsigned	thin_provisioning : 1;
+ 	unsigned	unmap : 1;
++	unsigned	tpws : 1;
++	unsigned	tpu : 1;
+ };
+ #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
+ 
 -- 
 1.7.2.1
 
