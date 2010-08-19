@@ -1,58 +1,61 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Thu, 19 Aug 2010 12:22:45 +0200
-Message-ID: <4C6D05F5.9000204@kernel.org>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100818094620.GA14707@lst.de> <4C6D0021.4040601@kernel.org> <20100819102023.GA6736@lst.de>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 5/5] dm: implement REQ_FLUSH/FUA support
+Date: Thu, 19 Aug 2010 19:32:04 +0900
+Message-ID: <4C6D0824.3070908@ct.jp.nec.com>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <1281977523-19335-6-git-send-email-tj@kernel.org> <20100816190203.GA22299@redhat.com> <4C6A5780.2090100@kernel.org> <20100817140734.GA30768@redhat.com> <4C6ABE12.40705@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:43356 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750927Ab0HSK0u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 19 Aug 2010 06:26:50 -0400
-In-Reply-To: <20100819102023.GA6736@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C6ABE12.40705@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>, Mike Snitzer <snitzer@redhat.com>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Mikulas Patocka <mpatocka@redhat.com>, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 
-Hello,
+Hi Tejun, Mike,
 
-On 08/19/2010 12:20 PM, Christoph Hellwig wrote:
-> I said make_request based drivers, that is drivers taking bios.
+On 08/18/2010 01:51 AM +0900, Tejun Heo wrote:
+> On 08/17/2010 04:07 PM, Mike Snitzer wrote:
+>> NOTE: NEC has already given some preliminary feedback to hch in the
+>> "[PATCH, RFC 2/2] dm: support REQ_FLUSH directly" thread:
+>> https://www.redhat.com/archives/dm-devel/2010-August/msg00026.html
+>> https://www.redhat.com/archives/dm-devel/2010-August/msg00033.html
+> 
+> Hmmm... I think both issues don't exist in this incarnation of
+> conversion although I'm fairly sure there will be other issues.  :-)
 
-Right.  Gees, it's confusing.
+The same issue is still there for request-based dm.  See below.
 
-> These get bios directly from __generic_make_request and need to deal
-> with REQ_FLUSH/FUA themselves.  We have quite a few more than just
-> dm/md of this kind:
->
-> arch/powerpc/sysdev/axonram.c
-> drivers/block/aoe/aoeblk.c
-> drivers/block/brd.c
 
-I'll try to convert these three.
+>>>     A related question: Is dm_wait_for_completion() used in
+>>>     process_flush() safe against starvation under continuous influx of
+>>>     other commands?
+>> As for your specific dm_wait_for_completion() concern -- I'll defer to
+>> Mikulas.  But I'll add: we haven't had any reported starvation issues
+>> with DM's existing barrier support.  DM uses a mempool for its clones,
+>> so it should naturally throttle (without starvation) when memory gets
+>> low.
+> 
+> I see but single pending flush and steady write streams w/o saturating
+> the mempool would be able to stall dm_wait_for_completeion(), no?  Eh
+> well, it's a separate issue, I guess.
 
-> drivers/block/drbd/drbd_main.c
+Your understanding is correct, dm_wait_for_completion() for flush
+will stall in such cases for request-based dm.
+That's why I mentioned below in
+https://www.redhat.com/archives/dm-devel/2010-August/msg00026.html.
 
-I'd rather leave drbd to its maintainers.
+    In other words, current request-based device-mapper can't handle
+    other requests while a flush request is in progress.
 
-> drivers/block/loop.c
+In flush request handling, request-based dm uses dm_wait_for_completion()
+to wait for the completion of cloned flush requests, depending on
+the fact that there should be only flush requests in flight owning
+to the block layer sequencing.
 
-Already converted.
+It's not a separate issue and we need to resolve it at least.
+I'm still considering how I can fix the request-based dm.
 
-> drivers/block/pktcdvd.c
-> drivers/block/ps3vram.c
-> drivers/block/umem.c
-> drivers/s390/block/dcssblk.c
-> drivers/s390/block/xpram.c
-> drivers/staging/zram/zram_drv.c
-
-Will work on these.
-
-Thanks.
-
--- 
-tejun
+Thanks,
+Kiyoshi Ueda
