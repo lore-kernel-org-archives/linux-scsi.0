@@ -1,28 +1,48 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
-Date: Thu, 19 Aug 2010 17:50:11 -0400
-Message-ID: <4C6DA713.40601@teksavvy.com>
-References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>	<1282232941-9910-3-git-send-email-martin.petersen@oracle.com>	<AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com> <yq1fwyamq9s.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <yq1fwyamq9s.fsf@sermon.lab.mkp.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Greg Freemyer <greg.freemyer@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/3] tcm: More cleanups for v4.0.0-rc3
+Date: Thu, 19 Aug 2010 15:12:52 -0700
+Message-ID: <1282255972-12850-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10-08-19 02:05 PM, Martin K. Petersen wrote:
->I'm only aware of one drive that currently
-> supports more than 512 bytes of payload and it also caps at 4KB.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-SSDs based upon the Indilinx Barefoot controller support
-more or less "infinite" payload for TRIM, with no cap.
-But it predates idword[105], so just has a zero there.
+Greetings all,
 
-OCZ Vertex-LE specifies a single sector of payload.
+Here are few more TCM cleanups that are being pushed to lio-core-2.6.git/lio-4.0.
 
-Those are the ones I know about and have on hand here for TRIM.
+Patch #1 removes an unused struct se_mem -> struct se_mem w/ task_offset
+mapping function, patch #2 was recommended by hch now that se_obj_lun_type_t
+no longer exists, and patch #3 removes legacy usage of type 'void *' for
+struct se_lun->lun_type_ptr, and instead uses a easily grokable struct se_lun->lun_se_dev
+member for existing all struct se_lun -> struct se_device references.
 
-Cheers
+Thanks!
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Nicholas Bellinger (3):
+  tcm: Remove legacy transport_map_mem_to_mem()
+  tcm: Remove remaining code out of target_core_seobj.c
+  tcm: Remove legacy struct se_lun->lun_type_ptr
+
+ drivers/target/Kbuild                        |    1 -
+ drivers/target/lio-target/iscsi_target_mib.c |    8 +-
+ drivers/target/target_core_alua.c            |    6 +-
+ drivers/target/target_core_configfs.c        |    1 -
+ drivers/target/target_core_device.c          |   86 +++++-
+ drivers/target/target_core_fabric_configfs.c |    3 +-
+ drivers/target/target_core_mib.c             |    8 +-
+ drivers/target/target_core_seobj.c           |  214 ---------------
+ drivers/target/target_core_seobj.h           |   47 ----
+ drivers/target/target_core_tpg.c             |   15 +-
+ drivers/target/target_core_transport.c       |  379 +++++++++++++-------------
+ include/target/target_core_base.h            |    5 +-
+ include/target/target_core_device.h          |    6 +
+ include/target/target_core_transport.h       |   11 +-
+ 14 files changed, 286 insertions(+), 504 deletions(-)
+ delete mode 100644 drivers/target/target_core_seobj.c
+ delete mode 100644 drivers/target/target_core_seobj.h
