@@ -1,54 +1,65 @@
-From: Thomas Mueller <thomas@chaschperli.ch>
-Subject: Re: mvsas: blocked task on writing to tape
-Date: Thu, 19 Aug 2010 19:41:09 +0200
-Message-ID: <4C6D6CB5.5030806@chaschperli.ch>
-References: <i4jbu0$icb$2@dough.gmane.org> <6B62480106F2B34D8404CF2FDAA4D9EF96D9C4CBFF@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
+Date: Thu, 19 Aug 2010 14:05:51 -0400
+Message-ID: <yq1fwyamq9s.fsf@sermon.lab.mkp.net>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
+	<1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
+	<AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from trillian.muellerit.ch ([83.169.22.129]:46242 "EHLO
-	trillian.muellerit.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754249Ab0HSRrp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2010 13:47:45 -0400
-In-Reply-To: <6B62480106F2B34D8404CF2FDAA4D9EF96D9C4CBFF@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com>
+	(Greg Freemyer's message of "Thu, 19 Aug 2010 13:27:21 -0400")
+Sender: linux-ide-owner@vger.kernel.org
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
-To: "Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL Tech" <satyasrinivasp@hcl.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Geetha Gopalan, ERS-HCLTech" <geethagp@hcl.com>
 
-On 19.08.2010 17:40, Srinivas Naga Venkatasatya Pasagadugula - ERS, HCL 
-Tech wrote:
- > Hi Thomas,
- > Need below information.
- > 1. Dmesg or /var/log/messages
+>>>>> "Greg" == Greg Freemyer <greg.freemyer@gmail.com> writes:
 
-partial output from dmesg from 2.6.35.2 kernel -> see my last mail. have 
-no access to the system anymore today. can provide more tomorrow.
+>> + /* Default to 1 if unspecified in word 105. Cap at 1 page. */
 
- > 2. Which kernel version you are using?
+Greg> Should there at least be a todo comment about raising that cap?
 
-2.6.32-bpo.4-amd64 (debian pacakge, IMHO 2.6.32.11 with debian patches) 
-is OK
-2.6.32-bpo.5-amd64 (debian package, IMHO 2.6.32.15 with debian patches) 
-is NOT OK
-2.6.34-1-amd64 (debian package) is NOT OK
-2.6.35.2  (compiled from kernel.org source) is NOT OK
+We don't currently plan to.  The payload is a single page which we can
+allocate fairly easily.  A bigger payload would be more problematic.
 
- > 3. Are you running any applications?
+With the 4KB payload you can adress 16GB with one command.
 
-as i told i was writing to a tape with btape (Bacula tape test tool, 
-btape command "speed file_size=50"). It was writing the 4th file (50gb 
-per file) when it stopped working
 
- > 4. Whether tape drive is discovered or not? As I was working with 
-this same drive only. I never faced any problem with this drive.
+Greg> Or is there a fundamental reason for it.  ie. I don't think the
+Greg> ATA spec calls for it, so this is a kernel restriction I assume.
 
-see answer 3. i suspect the the SAS card (mvsas) not the drive to be the 
-problem.
+Yes, this is part of the internal SCSI-ATA translation mechanism in
+Linux.  But fwiw, there I'm only aware of one drive that currently
+supports more than 512 bytes of payload and it also caps at 4KB.
 
- > 5. Check whether this is working with 2.6.33 kernels or not?
 
-no 2.6.33 kernel handy yet, could compile one tomorrow.
+Greg> Is this patch actually enabling the block layer to initiate ATA
+Greg> multi-sector trim payloads, or is this only allowing the max
+Greg> payloads sectors to be queried?
 
-- Thomas
+TRIM only takes 65535 blocks per entry.  So we need many entries to
+decribe a single, contiguous space being freed.  That's what's being
+bumped here.
+
+
+Greg> Are there plans (or existing code) to accumulate trim ranges in
+Greg> the block layer and create trim commands with multiple sectors?
+
+I have worked on this on and off.  It's not trivial for several reasons.
+We discussed the issues at the storage workshop last week and there was
+concensus that the changes were too intrusive.  So we're holding off
+until we see what's happening with:
+
+      a) the SSD market. Win 7 also issues lots of small, individual
+         trims like we do
+
+      b) the TRIM TNG command that's being worked on in T13
+
+This doesn't mean that TRIM coalescing is impossible and that it will
+never happen.  But right now it appears to be more hassle than it's
+worth...
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
