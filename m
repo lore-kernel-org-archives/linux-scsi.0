@@ -1,56 +1,57 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
-Date: Fri, 20 Aug 2010 14:28:34 -0400
-Message-ID: <4C6EC952.4010706@teksavvy.com>
-References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>	<1282232941-9910-3-git-send-email-martin.petersen@oracle.com>	<AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com>	<yq1fwyamq9s.fsf@sermon.lab.mkp.net>	<4C6DA713.40601@teksavvy.com>	<20100820085801.GB27033@lst.de>	<4C6E88E6.7060307@teksavvy.com> <AANLkTikMkNsqS=nmCmGY4t9bKouaeDC8aAxybcykBSBF@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Conversion of LIO-Target to use include/scsi/iscsi_proto.h defs
+Date: Fri, 20 Aug 2010 16:41:18 -0500
+Message-ID: <4C6EF67E.2060908@cs.wisc.edu>
+References: <1282257947.30453.296.camel@haakon2.linux-iscsi.org> <20100820163058P.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikMkNsqS=nmCmGY4t9bKouaeDC8aAxybcykBSBF@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Greg Freemyer <greg.freemyer@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100820163058P.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-kernel-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On 10-08-20 01:13 PM, Greg Freemyer wrote:
-> On Fri, Aug 20, 2010 at 9:53 AM, Mark Lord<kernel@teksavvy.com>  wrote:
->> On 10-08-20 04:58 AM, Christoph Hellwig wrote:
->>>
->>> On Thu, Aug 19, 2010 at 05:50:11PM -0400, Mark Lord wrote:
->>>>
->>>> On 10-08-19 02:05 PM, Martin K. Petersen wrote:
->>>>>
->>>>> I'm only aware of one drive that currently
->>>>> supports more than 512 bytes of payload and it also caps at 4KB.
->>>>
->>>> SSDs based upon the Indilinx Barefoot controller support
->>>> more or less "infinite" payload for TRIM, with no cap.
->>>> But it predates idword[105], so just has a zero there.
->>>
->>> Is there an easy way to identify them?  If so we could add a quirk
->>> for them if it provides enough benefit.
-..
-> A whitelist to enable large contiguous range trims via 8 512B-block
-> payloads seems useful for those devices that don't support word 105.
-> (ie. 4KB payload)
+On 08/20/2010 02:32 AM, FUJITA Tomonori wrote:
+> On Thu, 19 Aug 2010 15:45:47 -0700
+> "Nicholas A. Bellinger"<nab@linux-iscsi.org>  wrote:
 >
-> But, I doubt there is enough observable performance advantage to
-> justify reworking the internal SCSI-ATA translation mechanism in the
-> kernel to handle larger payloads.   Especially if only one or two SSDs
-> will accept greater than 4KB of payload to the trim command.
-..
+>> So, assuming that the conversion of all struct iscsi_init_* and struct
+>> iscsi_target* to use include/scsi/iscsi_proto.h defs just involves
+>> checking structure size and renaming the member use in
+>> drivers/target/lio-target, would it be acceptable to do something like:
+>>
+>> /* iSCSI PDU Header */
+>> struct iscsi_cmd {
+>>          uint8_t opcode;
+>>          uint8_t flags;
+>>          __be16 rsvd2;
+>>          uint8_t hlength;
+>>          uint8_t dlength[3];
+>>          uint8_t lun[8];
+>>          itt_t    itt;   /* Initiator Task Tag */
+>>          __be32 data_length;
+>>          __be32 cmdsn;
+>>          __be32 exp_statsn;
+>>          uint8_t cdb[ISCSI_CDB_SIZE];    /* SCSI Command Block */
+>>          /* Additional Data (Command Dependent) */
+>> #ifdef ISCSI_TARGET_MODE
+>>          __be32 header_digest;
+>> #endif
+>> };
+>
+> It's up to Mike but it looks hacky to me. struct iscsi_pdu is defined
+> in the exact way as the spec does.
+>
+> I don't think that iscsi_proto.h conversion is a must for the mainline
+> inclusion. I prefer to let it alone for now.
 
-Actually, for in-kernel uses, even just a single 512-byte long list
-would likely be adequate.  The biggest gains will come from simply
-having more than one range per TRIM command issued.
+For the iscsi target, I think it is. For iscsi initiator drivers like 
+bnx2i and be2iscsi we have made them convert from their headers to 
+common linux ones including switching from driver specific defs to 
+iscsi_proto.h.
 
-Once we get that, it's diminishing returns for larger and larger lists,
-and in-kernel code is unlikely to ever be able to generate lists that long.
-
-But getting started should be easier than folks are making it out to be.
-The first step is to have "file deletion" issue multi-range trims for
-all extents of the file at once, rather than one range at a time as at present.
-
-That'll be the biggest gain, and shouldn't be too complex to implement.
-Especially not after Christoph/Tejun's current barrier rework stuff is in place.
+For the merging of any target core stuff though, I do not think it is 
+critical. The core target stuff does not need to be merged with a 
+software iscsi target. They can do in at different times.
