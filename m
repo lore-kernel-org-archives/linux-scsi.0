@@ -1,38 +1,51 @@
-From: Bernd Schubert <bs_lists@aakef.fastmail.fm>
-Subject: SG_ALL definition
-Date: Fri, 20 Aug 2010 09:18:40 +0200
-Message-ID: <201008200918.40405.bs_lists@aakef.fastmail.fm>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Conversion of LIO-Target to use include/scsi/iscsi_proto.h defs
+Date: Fri, 20 Aug 2010 16:32:37 +0900
+Message-ID: <20100820163058P.fujita.tomonori@lab.ntt.co.jp>
+References: <1282257947.30453.296.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out1.smtp.messagingengine.com ([66.111.4.25]:51658 "EHLO
-	out1.smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751054Ab0HTHSn convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Aug 2010 03:18:43 -0400
-Received: from compute2.internal (compute2.internal [10.202.2.42])
-	by gateway1.messagingengine.com (Postfix) with ESMTP id 37C721BE
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2010 03:18:42 -0400 (EDT)
-Received: from bathl.localnet (stgt-4d03a7af.pool.mediaWays.net [77.3.167.175])
-	by mail.messagingengine.com (Postfix) with ESMTPSA id E8DEB4086E5
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2010 03:18:41 -0400 (EDT)
+Received: from sh.osrg.net ([192.16.179.4]:32800 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750935Ab0HTHdD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2010 03:33:03 -0400
+In-Reply-To: <1282257947.30453.296.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: michaelc@cs.wisc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, hare@suse.de
 
->From ancient times SG_ALL was defined as 0xff = 255. Rather likely for that 
-reason we see lots of IO requests of size 1020 from drivers that do not 
-support sg-chaining yet. And IO sizes of 1020 are a nightmare for DDN 
-hardware. Is there a chance to increase that to 256 by default? 
-Lustre includes a kernel patch to that for RHEL5 kernel and it greatly helps 
-to get correct IO sizes. 
+On Thu, 19 Aug 2010 15:45:47 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
+> So, assuming that the conversion of all struct iscsi_init_* and struct
+> iscsi_target* to use include/scsi/iscsi_proto.h defs just involves
+> checking structure size and renaming the member use in
+> drivers/target/lio-target, would it be acceptable to do something like:
+> 
+> /* iSCSI PDU Header */
+> struct iscsi_cmd {
+>         uint8_t opcode;
+>         uint8_t flags;
+>         __be16 rsvd2;
+>         uint8_t hlength;
+>         uint8_t dlength[3];
+>         uint8_t lun[8];
+>         itt_t    itt;   /* Initiator Task Tag */
+>         __be32 data_length;
+>         __be32 cmdsn;
+>         __be32 exp_statsn;
+>         uint8_t cdb[ISCSI_CDB_SIZE];    /* SCSI Command Block */
+>         /* Additional Data (Command Dependent) */
+> #ifdef ISCSI_TARGET_MODE
+>         __be32 header_digest;
+> #endif
+> };
 
-Thanks,
-Bernd
+It's up to Mike but it looks hacky to me. struct iscsi_pdu is defined
+in the exact way as the spec does.
 
--- 
-Bernd Schubert
-DataDirect Networks
+I don't think that iscsi_proto.h conversion is a must for the mainline
+inclusion. I prefer to let it alone for now.
