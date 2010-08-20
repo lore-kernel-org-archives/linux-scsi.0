@@ -1,51 +1,59 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: Conversion of LIO-Target to use include/scsi/iscsi_proto.h defs
-Date: Fri, 20 Aug 2010 16:32:37 +0900
-Message-ID: <20100820163058P.fujita.tomonori@lab.ntt.co.jp>
-References: <1282257947.30453.296.camel@haakon2.linux-iscsi.org>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Fri, 20 Aug 2010 17:26:02 +0900
+Message-ID: <4C6E3C1A.50205@ct.jp.nec.com>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org> <20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org> <20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:32800 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750935Ab0HTHdD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Aug 2010 03:33:03 -0400
-In-Reply-To: <1282257947.30453.296.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20100817165929.GB13800@lst.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: michaelc@cs.wisc.edu, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, hare@suse.de
 
-On Thu, 19 Aug 2010 15:45:47 -0700
-"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+Hi Tejun, Christoph,
 
-> So, assuming that the conversion of all struct iscsi_init_* and struct
-> iscsi_target* to use include/scsi/iscsi_proto.h defs just involves
-> checking structure size and renaming the member use in
-> drivers/target/lio-target, would it be acceptable to do something like:
-> 
-> /* iSCSI PDU Header */
-> struct iscsi_cmd {
->         uint8_t opcode;
->         uint8_t flags;
->         __be16 rsvd2;
->         uint8_t hlength;
->         uint8_t dlength[3];
->         uint8_t lun[8];
->         itt_t    itt;   /* Initiator Task Tag */
->         __be32 data_length;
->         __be32 cmdsn;
->         __be32 exp_statsn;
->         uint8_t cdb[ISCSI_CDB_SIZE];    /* SCSI Command Block */
->         /* Additional Data (Command Dependent) */
-> #ifdef ISCSI_TARGET_MODE
->         __be32 header_digest;
-> #endif
-> };
+On Tue, Aug 17, 2010 at 06:41:47PM +0200, Tejun Heo wrote:
+>>> I wasn't sure about that part.  You removed store_flush_error(), but
+>>> DM_ENDIO_REQUEUE should still have higher priority than other
+>>> failures, no?
+>>
+>> Which priority?
+>
+> IIUC, when any of flushes get DM_ENDIO_REQUEUE (which tells the dm
+> core layer to retry the whole bio later), it trumps all other failures
+> and the bio is retried later.  That was why DM_ENDIO_REQUEUE was
+> prioritized over other error codes, which actually is sort of
+> incorrect in that once a FLUSH fails, it _MUST_ be reported to upper
+> layers as FLUSH failure implies data already lost.  So,
+> DM_ENDIO_REQUEUE actually should have lower priority than other
+> failures.  But, then again, the error codes still need to be
+> prioritized.
 
-It's up to Mike but it looks hacky to me. struct iscsi_pdu is defined
-in the exact way as the spec does.
+I think that's correct and changing the priority of DM_ENDIO_REQUEUE
+for REQ_FLUSH down to the lowest should be fine.
+(I didn't know that FLUSH failure implies data loss possibility.)
 
-I don't think that iscsi_proto.h conversion is a must for the mainline
-inclusion. I prefer to let it alone for now.
+But the patch is not enough, you have to change target drivers, too.
+E.g. As for multipath, you need to change
+     drivers/md/dm-mpath.c:do_end_io() to return error for REQ_FLUSH
+     like the REQ_DISCARD support included in 2.6.36-rc1.
+
+
+By the way, if these patch-set with the change above are included,
+even one path failure for REQ_FLUSH on multipath configuration will
+be reported to upper layer as error, although it's retried using
+other paths currently.
+Then, if an upper layer won't take correct recovery action for the error,
+it would be seen as a regression for users. (e.g. Frequent EXT3-error
+resulting in read-only mount on multipath configuration.)
+
+Although I think the explicit error is fine rather than implicit data
+corruption, please check upper layers carefully so that users won't see
+such errors as much as possible.
+
+Thanks,
+Kiyoshi Ueda
