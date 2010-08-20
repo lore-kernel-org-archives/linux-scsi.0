@@ -1,29 +1,34 @@
-From: Thomas Mueller <thomas@chaschperli.ch>
-Subject: Re: mvsas: blocked task on writing to tape
-Date: Fri, 20 Aug 2010 11:26:55 +0200
-Message-ID: <4C6E4A5F.1010708@chaschperli.ch>
-References: <i4jbu0$icb$2@dough.gmane.org>	<6B62480106F2B34D8404CF2FDAA4D9EF96D9C4CBFF@CHN-HCLT-EVS06.HCLT.CORP.HCL.IN>	<4C6D6CB5.5030806@chaschperli.ch>	<AANLkTi=q0q0UOq8gw6O1Q7aoD-X0VKcOST1r0AsOUtt=@mail.gmail.com>	<4C6E132F.40207@chaschperli.ch> <AANLkTik2R0e__9W0bkvat0Ma95KgkUKBfe2cp=G-s=pQ@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Conversion of LIO-Target to use include/scsi/iscsi_proto.h defs
+Date: Fri, 20 Aug 2010 18:41:46 +0900
+Message-ID: <20100820184031L.fujita.tomonori@lab.ntt.co.jp>
+References: <1282257947.30453.296.camel@haakon2.linux-iscsi.org>
+	<20100820163058P.fujita.tomonori@lab.ntt.co.jp>
+	<1282295674.30453.337.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from trillian.muellerit.ch ([83.169.22.129]:51236 "EHLO
-	trillian.muellerit.ch" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752158Ab0HTJ1C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Aug 2010 05:27:02 -0400
-In-Reply-To: <AANLkTik2R0e__9W0bkvat0Ma95KgkUKBfe2cp=G-s=pQ@mail.gmail.com>
+Received: from sh.osrg.net ([192.16.179.4]:33369 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752206Ab0HTJoa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2010 05:44:30 -0400
+In-Reply-To: <1282295674.30453.337.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andy yan <andyysj@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: nab@linux-iscsi.org
+Cc: fujita.tomonori@lab.ntt.co.jp, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, hare@suse.de
 
-On 20.08.2010 08:54, andy yan wrote:
-> There should be not wide port with your connections, it is strange wide
-> port is configured.
-> you can try attaching only one tage drive and cable, then check the log
-> if wide port is build.
+On Fri, 20 Aug 2010 02:14:34 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-i'll check it , but i'm just next thursday on site.
+> I am pretty sure there are more important items to focus on inside from
+> this particuarly time-consuming and tedious cleanup, but am happy to
 
-at least the card (ARC-1300ix-16) supports "wide port":
-http://www.areca.us/products/sasnoneraid.htm
+btw, it would be better to focus on the target core code first rather
+than its iscsi target driver? The mainline supports only ibm vscsi
+target now. So the target core code and its new vscsi driver can be
+merged to replace the current mainline target infrastructure and its
+vscsi driver, I think. the iscsi target driver is a "new" feature,
+which can be added later. No need to merge it with the target core
+code (of course, we can merge it together if possible).
