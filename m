@@ -1,52 +1,108 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Conversion of LIO-Target to use include/scsi/iscsi_proto.h defs
-Date: Fri, 20 Aug 2010 03:57:26 -0700
-Message-ID: <1282301846.30453.383.camel@haakon2.linux-iscsi.org>
-References: <1282295674.30453.337.camel@haakon2.linux-iscsi.org>
-	 <20100820184031L.fujita.tomonori@lab.ntt.co.jp>
-	 <1282298560.30453.370.camel@haakon2.linux-iscsi.org>
-	 <20100820194231R.fujita.tomonori@lab.ntt.co.jp>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with sequenced flush
+Date: Fri, 20 Aug 2010 15:22:14 +0200
+Message-ID: <20100820132214.GA6184@lst.de>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp127.sbc.mail.sp1.yahoo.com ([69.147.65.186]:25379 "HELO
-	smtp127.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751102Ab0HTLBI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Aug 2010 07:01:08 -0400
-In-Reply-To: <20100820194231R.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1281616891-5691-1-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, hare@suse.de
 
-On Fri, 2010-08-20 at 19:43 +0900, FUJITA Tomonori wrote:
-> On Fri, 20 Aug 2010 03:02:40 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> > review of TCM core and TCM_Loop.   But perhaps at this point LIO-Target
-> > should go in together with TCM Core and TCM_Loop once mnc can review the
-> > software iSCSI target pieces..?
-> 
-> I think that James meant that we have only one scsi target
-> implementation and we need to replace the current in-kernel target
-> mode driver. So I don't think that we can merge TCM core without its
-> ibm vscsi driver. I might be wrong though.
+FYI: here's a little writeup to document the new cache flushing scheme,
+intended to replace Documentation/block/barriers.txt.  Any good
+suggestion for a filename in the kernel tree?
 
-Ah yes the ibm vscsi driver.   Well for that part I suppose we will need
-a seperate tcm_ibmvscsi fabric module moving forward.  This is where
-that python script I mentioned when tcm_lpfc, tcm_qla2xxx, tcm_mvsas
-where originally posted that would generates a new functioning configfs
-skeleton with NOP I/O path handlers from a handful of user input.
+---
 
-Anyways, something like this would really come in handy for making ibm
-vscsi go, and plus it makes life easier for me too.  I will try to get a
-script along this lines coded up in the next week(s) so that we can
-finally have a pain-free method of generation for new v4 kernel target
-mode modules for new developers.
+Explicit volatile write cache control
+=====================================
 
-There will be no limit per customer.  ;)
+Introduction
+------------
 
---nab
+Many storage devices, especially in the consumer market, come with volatile
+write back caches.  That means the devices signal I/O completion to the
+operating system before data actually has hit the physical medium.  This
+behavior obviously speeds up various workloads, but it means the operating
+system needs to force data out to the physical medium when it performs
+a data integrity operation like fsync, sync or an unmount.
 
+The Linux block layer provides a two simple mechanism that lets filesystems
+control the caching behavior of the storage device.  These mechanisms are
+a forced cache flush, and the Force Unit Access (FUA) flag for requests.
+
+
+Explicit cache flushes
+----------------------
+
+The REQ_FLUSH flag can be OR ed into the r/w flags of a bio submitted from the
+filesystem and will make sure the volatile cache of the storage device
+has been flushed before the actual I/O operation is started.  The explicit
+guarantees write requests that have completed before the bio was submitted
+actually are on the physical medium before this request has started.
+In addition the REQ_FLUSH flag can be set on an otherwise empty bio
+structure, which causes only an explicit cache flush without any dependent
+I/O.  It is recommend to use the blkdev_issue_flush() helper for a pure
+cache flush.
+
+
+Forced Unit Access
+-----------------
+
+The REQ_FUA flag can be OR ed into the r/w flags of a bio submitted from the
+filesystem and will make sure that I/O completion for this requests is not
+signaled before the data has made it to non-volatile storage on the
+physical medium.
+
+
+Implementation details for filesystems
+--------------------------------------
+
+Filesystem can simply set the REQ_FLUSH and REQ_FUA bits and do not have to
+worry if the underlying devices need any explicit cache flushing and how
+the Forced Unit Access is implemented.  The REQ_FLUSH and REQ_FUA flags
+may both be set on a single bio.
+
+
+Implementation details for make_request_fn based block drivers
+--------------------------------------------------------------
+
+These drivers will always see the REQ_FLUSH and REQ_FUA bits as they sit
+directly below the submit_bio interface.  For remapping drivers the REQ_FUA
+bits needs to be propagate to underlying devices, and a global flush needs
+to be implemented for bios with the REQ_FLUSH bit set.  For real device
+drivers that do not have a volatile cache the REQ_FLUSH and REQ_FUA bits
+on non-empty bios can simply be ignored, and REQ_FLUSH requests without
+data can be completed successfully without doing any work.  Drivers for
+devices with volatile caches need to implement the support for these
+flags themselves without any help from the block layer.
+
+
+Implementation details for request_fn based block drivers
+--------------------------------------------------------------
+
+For devices that do not support volatile write caches there is no driver
+support required, the block layer completes empty REQ_FLUSH requests before
+entering the driver and strips off the REQ_FLUSH and REQ_FUA bits from
+requests that have a payload.  For device with volatile write caches the
+driver needs to tell the block layer that it supports flushing caches by
+doing:
+
+	blk_queue_flush(sdkp->disk->queue, REQ_FLUSH);
+
+and handle empty REQ_FLUSH requests in it's prep_fn/request_fn.  Note that
+REQ_FLUSH requests with a payload are automatically turned into a sequence
+of empty REQ_FLUSH and the actual write by the block layer.  For devices
+that also support the FUA bit the block layer needs to be told to pass
+through that bit using:
+
+	blk_queue_flush(sdkp->disk->queue, REQ_FLUSH | REQ_FUA);
+
+and handle write requests that have the REQ_FUA bit set properly in it's
+prep_fn/request_fn.  If the FUA bit is not natively supported the block
+layer turns it into an empty REQ_FLUSH requests after the actual write.
