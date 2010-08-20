@@ -1,39 +1,66 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Fri, 20 Aug 2010 12:02:49 -0400
-Message-ID: <4C6EA729.7030308@redhat.com>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com> <20100820160009.GI5854@think>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
+Date: Fri, 20 Aug 2010 13:13:31 -0400
+Message-ID: <AANLkTikMkNsqS=nmCmGY4t9bKouaeDC8aAxybcykBSBF@mail.gmail.com>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com>
+	<1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
+	<AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com>
+	<yq1fwyamq9s.fsf@sermon.lab.mkp.net>
+	<4C6DA713.40601@teksavvy.com>
+	<20100820085801.GB27033@lst.de>
+	<4C6E88E6.7060307@teksavvy.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20100820160009.GI5854@think>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.orglinux-
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C6E88E6.7060307@teksavvy.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/20/2010 12:00 PM, Chris Mason wrote:
-> On Fri, Aug 20, 2010 at 11:18:07AM -0400, Ric Wheeler wrote:
->> On 08/20/2010 09:22 AM, Christoph Hellwig wrote:
->>> FYI: here's a little writeup to document the new cache flushing scheme,
->>> intended to replace Documentation/block/barriers.txt.  Any good
->>> suggestion for a filename in the kernel tree?
->>>
->>> ---
+On Fri, Aug 20, 2010 at 9:53 AM, Mark Lord <kernel@teksavvy.com> wrote:
+> On 10-08-20 04:58 AM, Christoph Hellwig wrote:
 >>
->> I was thinking that we might be better off using the "durable
->> writes" term more since it is well documented (at least in the
->> database world, where it is the "D" in ACID properties).  Maybe
->> "durable_writes_support.txt" ?
+>> On Thu, Aug 19, 2010 at 05:50:11PM -0400, Mark Lord wrote:
+>>>
+>>> On 10-08-19 02:05 PM, Martin K. Petersen wrote:
+>>>>
+>>>> I'm only aware of one drive that currently
+>>>> supports more than 512 bytes of payload and it also caps at 4KB.
+>>>
+>>> SSDs based upon the Indilinx Barefoot controller support
+>>> more or less "infinite" payload for TRIM, with no cap.
+>>> But it predates idword[105], so just has a zero there.
+>>
+>> Is there an easy way to identify them? =A0If so we could add a quirk
+>> for them if it provides enough benefit.
 >
-> sata_lies.txt?
 >
-> Ok, maybe writeback_cache.txt?
+> Each brand/model identifies itself differently.
+> But we could start a whitelist on based on the model name field
+> from the ATA identify data.
 >
-> -chris
+> The OCZ VERTEX drives I have here, identify themselves as "OCZ-VERTEX=
+",
+> and accept very very long payloads (no limit?).
+>
+> The OCZ VERTEX-LE drives here do have a limit, of 8 sectors,
+> and identify themselves as "OCZ VERTEX-LE" in that field.
+>
+> That's what hdparm-9.30 uses to figure out the max TRIM payloads,
+> in the absence of a value in word 105.
+>
+> Cheers
+>
 
-writeback_cache.txt is certainly the least confusing :)
+A whitelist to enable large contiguous range trims via 8 512B-block
+payloads seems useful for those devices that don't support word 105.
+(ie. 4KB payload)
 
-ric
+But, I doubt there is enough observable performance advantage to
+justify reworking the internal SCSI-ATA translation mechanism in the
+kernel to handle larger payloads.   Especially if only one or two SSDs
+will accept greater than 4KB of payload to the trim command.
 
+Greg
