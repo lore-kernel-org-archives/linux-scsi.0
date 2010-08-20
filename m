@@ -1,44 +1,31 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
-Date: Fri, 20 Aug 2010 09:53:42 -0400
-Message-ID: <4C6E88E6.7060307@teksavvy.com>
-References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com> <1282232941-9910-3-git-send-email-martin.petersen@oracle.com> <AANLkTike+4Z2Z7eHEN=NHY=N72cO5bGJUwJbXzgJAKUx@mail.gmail.com> <yq1fwyamq9s.fsf@sermon.lab.mkp.net> <4C6DA713.40601@teksavvy.com> <20100820085801.GB27033@lst.de>
+From: Ruben Laban <r.laban@ism.nl>
+Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
+Date: Fri, 20 Aug 2010 15:46:03 +0200
+Message-ID: <201008201546.03448.r.laban@ism.nl>
+References: <594039.74663.qm@web111905.mail.gq1.yahoo.com> <4C6C1D70.7020502@vlnb.net> <41A1E2691BBB412BADCDE5F515CD8EDA@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20100820085801.GB27033@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Freemyer <greg.freemyer@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx-out-02.ism.nl ([217.148.190.4]:57554 "EHLO mx-out-02.ism.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750905Ab0HTN4X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Aug 2010 09:56:23 -0400
+In-Reply-To: <41A1E2691BBB412BADCDE5F515CD8EDA@usish.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scst-devel@lists.sourceforge.net
+Cc: jack wang <jack_wang@usish.com>, 'Vladislav Bolkhovitin' <vst@vlnb.net>, 'James Bottomley' <James.Bottomley@suse.de>, 'Chetan Loke' <chetanloke@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 10-08-20 04:58 AM, Christoph Hellwig wrote:
-> On Thu, Aug 19, 2010 at 05:50:11PM -0400, Mark Lord wrote:
->> On 10-08-19 02:05 PM, Martin K. Petersen wrote:
->>> I'm only aware of one drive that currently
->>> supports more than 512 bytes of payload and it also caps at 4KB.
->>
->> SSDs based upon the Indilinx Barefoot controller support
->> more or less "infinite" payload for TRIM, with no cap.
->> But it predates idword[105], so just has a zero there.
->
-> Is there an easy way to identify them?  If so we could add a quirk
-> for them if it provides enough benefit.
+On Thursday 19 August 2010 at 03:18 (CET), jack wang wrote:
+> [Jack]Vote for SCST as a user and target driver developer based on SCST.
+> SCST really do good job. 
 
++1 from a happy SCST end-user.
 
-Each brand/model identifies itself differently.
-But we could start a whitelist on based on the model name field
-from the ATA identify data.
+Regards,
 
-The OCZ VERTEX drives I have here, identify themselves as "OCZ-VERTEX",
-and accept very very long payloads (no limit?).
-
-The OCZ VERTEX-LE drives here do have a limit, of 8 sectors,
-and identify themselves as "OCZ VERTEX-LE" in that field.
-
-That's what hdparm-9.30 uses to figure out the max TRIM payloads,
-in the absence of a value in word 105.
-
-Cheers
-
+Ruben Laban
+Senior Network and Systems Administrator
+ISM eCompany
