@@ -1,75 +1,110 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Gennadiy Nerubayev <parakie@gmail.com>
 Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Sun, 22 Aug 2010 15:29:13 -0500
-Message-ID: <1282508953.3042.102.camel@mulgrave.site>
-References: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
-	 <1282144271.3035.31.camel@mulgrave.site>
-	 <AANLkTinRDMXqyDAVkcbioD=L7XO-47KHL2qjR+8KA5m3@mail.gmail.com>
-	 <1282148296.3035.49.camel@mulgrave.site> <4C6C1D70.7020502@vlnb.net>
-	 <41A1E2691BBB412BADCDE5F515CD8EDA@usish.com.cn>
-	 <8A96806D-6CD7-44AD-8A9D-143C098C95A4@uni-paderborn.de>
-	 <1282256949.30453.278.camel@haakon2.linux-iscsi.org>
-	 <4C701E08.2020005@vlnb.net> <1282423398.3015.39.camel@mulgrave.site>
-	 <AANLkTikcReFsYMhs1RkCHoRkL1+Q9WuptHj1xbx49YsA@mail.gmail.com>
+Date: Sun, 22 Aug 2010 18:10:08 -0400
+Message-ID: <AANLkTin9STqUz440fCOEWW=YmedVQtQWU2JLO2wZCt5j@mail.gmail.com>
+References: <4C69653E.6050808@vlnb.net>
+	<1282077040.16098.47.camel@mulgrave.site>
+	<4C6C1DC1.8090208@vlnb.net>
+	<1282164188.10878.22.camel@mulgrave.site>
+	<4C702030.2070306@vlnb.net>
+	<1282423128.3015.35.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44108 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751856Ab0HVU3T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 22 Aug 2010 16:29:19 -0400
-In-Reply-To: <AANLkTikcReFsYMhs1RkCHoRkL1+Q9WuptHj1xbx49YsA@mail.gmail.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:51129 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750870Ab0HVWKK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Aug 2010 18:10:10 -0400
+In-Reply-To: <1282423128.3015.35.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Dirk Meister <dmeister@uni-paderborn.de>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, Chetan Loke <generationgnu@yahoo.com>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, 2010-08-22 at 09:39 +0200, Bart Van Assche wrote:
-> On Sat, Aug 21, 2010 at 10:43 PM, James Bottomley
-> <James.Bottomley@suse.de> wrote:
-> > On Sat, 2010-08-21 at 22:42 +0400, Vladislav Bolkhovitin wrote:
-> >> [ ... ]
-> >>
-> >> You forgot to mention one small thing. You are going to (re)use current
-> >> STGT interface for user space backend, which in 5 years of being
-> >> mainline has not gained any noticeable interest, because it is
-> >> fundamentally slow.
-> >
-> > That's not exactly what the results of a speed comparison one of your
-> > people did said, now is it?  The results were actually not much
-> > difference on line speeds up to GigE.
-> >
-> > [ ... ]
-> 
-> I assume that you are referring to this message:
-> http://lkml.org/lkml/2008/1/29/387 ? You might have missed the reply
-> that was posted by Roland Dreier, a highly regarded kernel maintainer
-> and InfiniBand expert (http://lkml.org/lkml/2008/1/29/402):
-> 
-> "Maybe I'm all wet, but I think iSER vs. SRP should be roughly
-> comparable.  The exact formatting of various messages etc. is
-> different but the data path using RDMA is pretty much identical.  So
-> the big difference between STGT iSER and SCST SRP hints at some big
-> difference in the efficiency of the two implementations."
+On Sat, Aug 21, 2010 at 4:38 PM, James Bottomley
+<James.Bottomley@suse.de> wrote:
+> On Sat, 2010-08-21 at 22:51 +0400, Vladislav Bolkhovitin wrote:
+>> James Bottomley, on 08/19/2010 12:43 AM wrote:
+>> >>>> 1. What don't you like in the transition path for users from ST=
+GT to
+>> >>>> SCST, which I proposed:
+>> >>>>
+>> >>>> =A0 =A0 - The only people which would be affected by replacing =
+of STGT by SCST
+>> >>>> would be users of ibmvstgt. Other STGT users would not notice i=
+t at all.
+>> >>>> Thus, we should update ibmvstgt for SCST. If ibmvstgt updated f=
+or SCST,
+>> >>>> the update for its users would be just writing of a simple scst=
+admin's
+>> >>>> config file.
+>> >>>>
+>> >>>> =A0 =A0 - STGT doesn't have backend drivers, which SCST doesn't=
+ have, so
+>> >>>> there's nothing to worry here. At max, AIO support should be ad=
+ded to
+>> >>>> fileio_tgt.
+>> >>>>
+>> >>>> =A0 =A0 - STGT user space targets can use SCST backend via scst=
+_local module.
+>> >>>> Scst_local module is ready and work very well.
+>> >>>>
+>> >>>> The result would be very clear without any obsolete mess.
+>> >>>
+>> >>> So does that get us up to being a drop in replacement? =A0I thin=
+k you're
+>> >>> saying that even with all of this, at least the VSCSI part will =
+need
+>> >>> updating, so the answer seems to be "no".
+>> >>
+>> >> Sorry, I can't understand, "no" for which? For the whole transiti=
+on
+>> >> path, or just until there is a patch for ibmvstgt to become ibmvs=
+cst?
+>> >
+>> > No to the question "does that get us up to being a drop in replace=
+ment
+>> > [for STGT]?"
+>>
+>> I'm sorry again, I did my best, but still can't understand. What you
+>> wrote looks for me too ambiguous. My English must be too bad..
+>>
+>> Could elaborate more for what the "no" is, please? What don't you li=
+ke
+>> in the plan I suggested?
+>
+> No it isn't a plan that gives us a drop in replacement for STGT. =A0I
+> didn't say migration path to random userspace target, I said reuse of
+> existing code.
 
-So the phrase "up to GigE" was deliberately in the above to exclude the
-disputed infiniband results.  I'm not really interested in re-opening
-the arguments over how to interpret those results.  The fact that SCST
-and STGT were on par up to 1GbE is enough to refute the contention that
-STGT is "fundamentally slow".
+Hi James,
 
-James 
+(disclaimer: I'm a hoi polloi SCST user)
 
-> Furthermore, I would like to clarify that Vlad hasn't asked me to
-> start working on the SCST project but that I selected the SCST project
-> myself after an extensive stability and performance comparison of four
-> existing open source storage target projects.
-> 
-> Bart.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I'm not sure if I understand why there is a need for a replacement
+target to reuse existing code, and would definitely appreciate a brief
+explanation or a pointer to an earlier one. But even that aside, I'm
+curious if the criteria for what a replacement target must have for
+(at least potential) inclusion into the kernel were ever clearly
+outlined in the past. If they were, then there probably would have
+been things like interested contenders, deadlines, feature
+comparisons, code reviews, and so on, right?
 
+Now, I can't claim familiarity with the kernel development process, or
+any "political" workings in it. The aforementioned however would seem
+like a logical way of doing this since I assume that for whatever
+reason, there is a strict limit to only one generic SCSI target in the
+Linux kernel, and obviously as per this thread the current one is
+being replaced.
 
+Please correct/rebuke me as needed :)
+
+Thanks,
+
+-Gennadiy
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
