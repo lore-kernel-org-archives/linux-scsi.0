@@ -1,26 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/6] libata: Report supported TRIM payload size
-Date: Mon, 23 Aug 2010 15:50:24 +0200
-Message-ID: <20100823135024.GA22554@lst.de>
-References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com> <1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
+From: Ric Wheeler <rwheeler@redhat.com>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Mon, 23 Aug 2010 09:58:46 -0400
+Message-ID: <4C727E96.5020801@redhat.com>
+References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com> <4C7269E9.9070304@kernel.org> <20100823124815.GA20095@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1282232941-9910-3-git-send-email-martin.petersen@oracle.com>
+In-Reply-To: <20100823124815.GA20095@lst.de>
 Sender: linux-ide-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
+To: Christoph Hellwig <hch@lst.de>
+Cc: Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, hare@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 19, 2010 at 11:48:57AM -0400, Martin K. Petersen wrote:
-> ATA IDENTIFY DEVICE word 105 contains the number of 512-byte blocks of
-> TRIM payload information the device can accept in one command.  Use this
-> value to enable payloads > 512 bytes.
+On 08/23/2010 08:48 AM, Christoph Hellwig wrote:
+> On Mon, Aug 23, 2010 at 02:30:33PM +0200, Tejun Heo wrote:
+>> It might be useful to give several example configurations with
+>> different cache configurations.  I don't have much experience with
+>> battery backed arrays but aren't they suppose to report write through
+>> cache automatically?
+>
+> They usually do.  I have one that doesn't, but SYNCHRONIZE CACHE on
+> it is so fast that it effectively must be a no-op.
+>
 
-Currently ata_scsi_write_same_xlat passes uses a constant 512 for the
-payload all over the place, so the larger payloads won't actually work yet.
+Arrays are not a problem in general - they normally have internally, redundant 
+batteries to hold up the cache.
 
-I don't think advertising a larger size than we actually support is a
-good idea.
+The issue is when you have an internal hardware RAID card with a large cache. 
+Those cards sit in your server and the batteries on the card protect its 
+internal cache, but do not have the capacity to hold up the drives behind it.
+
+Normally, those drives should have their write cache disabled, but sometimes 
+(especially with S-ATA disks) this is not done.
+
+ric
 
