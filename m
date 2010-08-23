@@ -1,81 +1,125 @@
-From: Sergey Vlasov <vsu@altlinux.ru>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace
- barrier with sequenced flush
-Date: Mon, 23 Aug 2010 20:45:22 +0400
-Message-ID: <20100823164522.GA9528@atlas.home>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org>
-	<20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com>
-	<4C7269E9.9070304@kernel.org> <20100823124815.GA20095@lst.de>
-	<4C727E96.5020801@redhat.com> <4C727F2B.6060501@fusionio.com>
-	<4C729171.3030605@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
+Date: Mon, 23 Aug 2010 11:59:00 -0500
+Message-ID: <1282582740.11194.17.camel@mulgrave.site>
+References: <4C69653E.6050808@vlnb.net>
+	 <1282077040.16098.47.camel@mulgrave.site> <4C6C1DC1.8090208@vlnb.net>
+	 <1282164188.10878.22.camel@mulgrave.site> <4C702030.2070306@vlnb.net>
+	 <1282423128.3015.35.camel@mulgrave.site>
+	 <AANLkTin9STqUz440fCOEWW=YmedVQtQWU2JLO2wZCt5j@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============5913051511334986110=="
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4C729171.3030605@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Ric Wheeler <rwheeler@redhat.com>
-Cc: "jack@suse.cz" <jack@suse.cz>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Jens Axboe <jaxboe@fusionio.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "tytso@mit.edu" <tytso@mit.edu>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, Tejun Heo <tj@kernel.org>
-List-Id: linux-scsi@vger.kernel.org
-
-
---===============5913051511334986110==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
-Content-Disposition: inline
-
-
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Aug 23, 2010 at 11:19:13AM -0400, Ric Wheeler wrote:
-[...]
-> (2) hardware raid cards with internal buffer memory and on-card battery b=
-ackup=20
-> (they sit in your server, disks sit in jbod like expansion shelves). Thes=
-e are=20
-> fine if the drives in those shelves have write cache disabled.
-
-Actually some of such cards keep write cache on the drives enabled and
-issue FLUSH CACHE commands to the drives.  E.g., 3ware 9690SA behaves
-like this at least with SATA drives (the FLUSH CACHE commands can be
-seen after enabling performance monitoring - they often end up in the
-"10 commands having the largest latency" table).  This can actually be
-safe if the card waits for the FLUSH CACHE completion before making
-the write cache data in its battery-backed memory available for reuse
-(and the drive implements the FLUSH CACHE command correctly).
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAkxypaIACgkQW82GfkQfsqI94QCeLiRSclQhAVlFnmFnK49Fh41s
-55EAn1CXk2dhHSW/+tvscDZYwHy5ZG37
-=v7Fn
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
-
-
---===============5913051511334986110==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:48603 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752730Ab0HWQ7H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Aug 2010 12:59:07 -0400
+In-Reply-To: <AANLkTin9STqUz440fCOEWW=YmedVQtQWU2JLO2wZCt5j@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Gennadiy Nerubayev <parakie@gmail.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+
+On Sun, 2010-08-22 at 18:10 -0400, Gennadiy Nerubayev wrote: 
+> On Sat, Aug 21, 2010 at 4:38 PM, James Bottomley
+> <James.Bottomley@suse.de> wrote:
+> > On Sat, 2010-08-21 at 22:51 +0400, Vladislav Bolkhovitin wrote:
+> >> James Bottomley, on 08/19/2010 12:43 AM wrote:
+> >> >>>> 1. What don't you like in the transition path for users from STGT to
+> >> >>>> SCST, which I proposed:
+> >> >>>>
+> >> >>>>     - The only people which would be affected by replacing of STGT by SCST
+> >> >>>> would be users of ibmvstgt. Other STGT users would not notice it at all.
+> >> >>>> Thus, we should update ibmvstgt for SCST. If ibmvstgt updated for SCST,
+> >> >>>> the update for its users would be just writing of a simple scstadmin's
+> >> >>>> config file.
+> >> >>>>
+> >> >>>>     - STGT doesn't have backend drivers, which SCST doesn't have, so
+> >> >>>> there's nothing to worry here. At max, AIO support should be added to
+> >> >>>> fileio_tgt.
+> >> >>>>
+> >> >>>>     - STGT user space targets can use SCST backend via scst_local module.
+> >> >>>> Scst_local module is ready and work very well.
+> >> >>>>
+> >> >>>> The result would be very clear without any obsolete mess.
+> >> >>>
+> >> >>> So does that get us up to being a drop in replacement?  I think you're
+> >> >>> saying that even with all of this, at least the VSCSI part will need
+> >> >>> updating, so the answer seems to be "no".
+> >> >>
+> >> >> Sorry, I can't understand, "no" for which? For the whole transition
+> >> >> path, or just until there is a patch for ibmvstgt to become ibmvscst?
+> >> >
+> >> > No to the question "does that get us up to being a drop in replacement
+> >> > [for STGT]?"
+> >>
+> >> I'm sorry again, I did my best, but still can't understand. What you
+> >> wrote looks for me too ambiguous. My English must be too bad..
+> >>
+> >> Could elaborate more for what the "no" is, please? What don't you like
+> >> in the plan I suggested?
+> >
+> > No it isn't a plan that gives us a drop in replacement for STGT.  I
+> > didn't say migration path to random userspace target, I said reuse of
+> > existing code.
+> 
+> Hi James,
+> 
+> (disclaimer: I'm a hoi polloi SCST user)
+> 
+> I'm not sure if I understand why there is a need for a replacement
+> target to reuse existing code, and would definitely appreciate a brief
+> explanation or a pointer to an earlier one.
+
+The best thread on the topic is this massive one:
+
+http://marc.info/?t=120109820100005
+
+I want replacement because evidence suggests that multiple things doing
+the same thing don't get as much attention as a single one.  We need to
+support STGT because it's the one that has the in-kernel user base.
+Just breaking them constitutes an ABI problem under the new kernel
+rules.
+
+> But even that aside, I'm
+> curious if the criteria for what a replacement target must have for
+> (at least potential) inclusion into the kernel were ever clearly
+> outlined in the past. If they were, then there probably would have
+> been things like interested contenders, deadlines, feature
+> comparisons, code reviews, and so on, right?
+
+Yes, in that thread.
+
+My basic conclusion was that there's no incredible discriminator between
+LIO and STGT (although there are reams written on which performs better
+in which circumsances, is useful for clustering, supports ALUA, etc.
+each with partisans for the features).  If the two communities can't
+work together (as seems to be the case) and I have to choose one, I'll
+go by what helps me which, as I've said before, are:
+
+     1. That it would be a drop in replacement for STGT (our current
+        in-kernel target mode driver), since he only wanted a single
+        SCSI target infrastructure. 
+        
+     2. That it used a modern sysfs based control and configuration
+        plane. 
+        
+     3. That the code was reviewed as clean enough for inclusion.
 
 
---===============5913051511334986110==--
+> Now, I can't claim familiarity with the kernel development process, or
+> any "political" workings in it. The aforementioned however would seem
+> like a logical way of doing this since I assume that for whatever
+> reason, there is a strict limit to only one generic SCSI target in the
+> Linux kernel, and obviously as per this thread the current one is
+> being replaced.
+
+Well, my preference would be to keep STGT.  However, I indicated to both
+target infrastructures that if they could satisfy the above, I'd be OK
+with replacing STGT, so I'm not about to go back on that after causing
+quite a large amount of work.
+
+James
+
+
