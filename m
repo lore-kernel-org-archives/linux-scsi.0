@@ -1,84 +1,67 @@
-From: Chetan Loke <chetanloke@gmail.com>
-Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Mon, 23 Aug 2010 14:03:26 -0400
-Message-ID: <AANLkTim+fj-OL+Bixfbrxv6AgSVv_NpT-KdG6vrc6ub-@mail.gmail.com>
-References: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
-	<1282144271.3035.31.camel@mulgrave.site>
-	<AANLkTinRDMXqyDAVkcbioD=L7XO-47KHL2qjR+8KA5m3@mail.gmail.com>
-	<1282148296.3035.49.camel@mulgrave.site>
-	<4C6C1D70.7020502@vlnb.net>
-	<41A1E2691BBB412BADCDE5F515CD8EDA@usish.com.cn>
-	<8A96806D-6CD7-44AD-8A9D-143C098C95A4@uni-paderborn.de>
-	<1282256949.30453.278.camel@haakon2.linux-iscsi.org>
-	<4C701E08.2020005@vlnb.net>
-	<1282423398.3015.39.camel@mulgrave.site>
-	<AANLkTikcReFsYMhs1RkCHoRkL1+Q9WuptHj1xbx49YsA@mail.gmail.com>
-	<1282508953.3042.102.camel@mulgrave.site>
-	<4C727BEB.9020100@scalableinformatics.com>
-	<AANLkTim-M6dfLvJQnbieFqZCGG33E+-i+u_soCq2p9f1@mail.gmail.com>
-	<AANLkTinDY8hEABHaPsCC+3wGMCn0ZLcyfDa9U9jXJ3d4@mail.gmail.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH 1/6] libata: Signal that our SATL supports WRITE SAME(16)
+ with UNMAP
+Date: Mon, 23 Aug 2010 14:22:24 -0400
+Message-ID: <4C72BC60.4090705@interlog.com>
+References: <1282232941-9910-1-git-send-email-martin.petersen@oracle.com> <1282232941-9910-2-git-send-email-martin.petersen@oracle.com> <4C723215.3080507@kernel.org>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:49638 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423Ab0HWSD1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Aug 2010 14:03:27 -0400
-In-Reply-To: <AANLkTinDY8hEABHaPsCC+3wGMCn0ZLcyfDa9U9jXJ3d4@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C723215.3080507@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, hch@lst.de
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: landman@scalableinformatics.com, James Bottomley <James.Bottomley@suse.de>, Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
 
-I actually received 3+ off-post emails asking whether I was talking
-about initiator or target in the 100K IOPS case below and what did I
-mean by the ACKs.
-I was referring to the 'Initiator' side.
-ACKs =3D=3D When scsi-ML down-calls the LLD via the queue-command, proc=
-ess
-the sgl's(if you like) and then trigger the scsi_done up-call path.
+On 10-08-23 04:32 AM, Tejun Heo wrote:
+> On 08/19/2010 05:48 PM, Martin K. Petersen wrote:
+>> Until now identifying that a device supports WRITE SAME(16) with the
+>> UNMAP bit set has been black magic.  Implement support for the new (SBC3
+>> r24) Thin Provisioning VPD page and the TPWS bit.
+>>
+>> Signed-off-by: Martin K. Petersen<martin.petersen@oracle.com>
+>> ---
+>>   drivers/ata/libata-scsi.c |   13 +++++++++++++
+>>   1 files changed, 13 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index a54273d..e280ae6 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -2001,6 +2001,7 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
+>>   		0x89,	/* page 0x89, ata info page */
+>>   		0xb0,	/* page 0xb0, block limits page */
+>>   		0xb1,	/* page 0xb1, block device characteristics page */
+>> +		0xb2,	/* page 0xb2, thin provisioning page */
+>>   	};
+>>
+>>   	rbuf[3] = sizeof(pages);	/* number of supported VPD pages */
+>> @@ -2172,6 +2173,15 @@ static unsigned int ata_scsiop_inq_b1(struct ata_scsi_args *args, u8 *rbuf)
+>>   	return 0;
+>>   }
+>>
+>> +static unsigned int ata_scsiop_inq_b2(struct ata_scsi_args *args, u8 *rbuf)
+>> +{
+>> +	rbuf[1] = 0xb1;
+>> +	rbuf[3] = 0x3c;
+>> +	rbuf[5] = 1<<  6;	/* TPWS */
+>
+> I would love a bit more documentation here.
 
-Chetan Loke
+Yes, that style comes from my code in scsi_debug and
+some of my utilities. Recently I added some more
+documentation, just prior the the function:
 
-On Mon, Aug 23, 2010 at 12:07 PM, Chetan Loke <chetanloke@gmail.com> wr=
-ote:
-> On Mon, Aug 23, 2010 at 11:11 AM, Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
->>
->> There is an important design difference between SCST and LIO: SCST b=
-y
->> defaults creates multiple threads to process the I/O operations for =
-a
->> storage target, while LIO only creates a single thread per storage t=
-arget.
->> This makes SCST perform measurably faster.
->>
->
-> Forget that. You could have discussed this if there were code reviews
-> or other mainline inclusion emails from James B. From what I have
-> heard, the decision was taken around 8-9 months back.
-> Would anyone like to either comment/validate/refute this please? =C2=A0=
-If
-> not then I would kindly request these guys to stop taking us for a
-> test drive. And also I'm not sure when was the last time James B.
-> bench-marked our scsi-stack. Even if I ACK in the xmit-path then I
-> can't push more than 100K IOPs. But other folks have re-engineered ou=
-r
-> linux-scsi stack and from what I've heard they can push > 300K+ IOPs.
-> So I would just ignore performance discussion because I don't think
-> folks have done even simple lame experiments in the last 1 year. Or
-> may be I'm completely wrong and so please enlighten me so that I can
-> re-run the tests.
->
->
->> Bart.
->>
-> Chetan Loke
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+/* SCSI Thin Provisioning VPD page: SBC-3 rev 22 or later */
+
+I see no point in commenting the individual code lines.
+Just follow that reference ...
+
+And when I do then I see that rbuf[3] should be 4 (not 0x3c)
+unless the DP bit is set.
+
+Doug Gilbert
+
+
