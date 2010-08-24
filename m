@@ -1,43 +1,65 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace
- barrier with sequenced flush
-Date: Wed, 25 Aug 2010 00:14:21 +0100
-Message-ID: <20100825001421.67eb8aad@lxorguk.ukuu.org.uk>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org>
-	<20100813114858.GA31937@lst.de> <4C654D4B.1030507@kernel.org>
-	<20100813143820.GA7931@lst.de> <4C655BE5.4070809@kernel.org>
-	<20100814103654.GA13292@lst.de> <4C6A5D8A.4010205@kernel.org>
-	<20100817131915.GB2963@lst.de> <4C6ABBCB.9030306@kernel.org>
-	<20100817165929.GB13800@lst.de> <4C6E3C1A.50205@ct.jp.nec.com>
-	<4C72660A.7070009@kernel.org> <4C73FD52.7000305@vlnb.net>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: tcm: Add Documentation/target/tcm_mod_builder.py script and
+	mini-HOWTO
+Date: Tue, 24 Aug 2010 16:14:42 -0700
+Message-ID: <1282691682.32007.71.camel@haakon2.linux-iscsi.org>
+References: <1282683207.32007.40.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4C73FD52.7000305@vlnb.net>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, tytso@mit.edu, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, Tejun Heo <tj@kernel.org>, jack@suse.cz, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp101.sbc.mail.gq1.yahoo.com ([67.195.15.60]:36135 "HELO
+	smtp101.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933949Ab0HXXSb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Aug 2010 19:18:31 -0400
+In-Reply-To: <1282683207.32007.40.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Richard Sharpe <realrichardsharpe@gmail.com>, Joel Becker <joel.becker@oracle.com>
 
-> In SCSI there are conditions when a command, including FLUSH 
-> (SYNC_CACHE), failed which don't imply lost data. For them the caller 
-> expected to retry the failed command. Most common cases are Unit 
-> Attentions and TASK QUEUE FULL status.
+On Tue, 2010-08-24 at 13:53 -0700, Nicholas A. Bellinger wrote:
+> Greetings all,
+> 
+> The initial commit for the new tcm_mod_builder.py script has been pushed
+> into lio-core-2.6.git/lio-4.0!  Included is a brief mini-HOWTO as to how
+> the TCM fabric module generation logic actually functions, and what is
+> currently supported.  I thought instead of spamming the kernel lists
+> with 1K LOC of python for actually generating *new* TCM kernel fabric
+> modules, it might be easier to post the HOWTO to the list and a gitweb
+> URL of the script itself for those interested parties here:
+> 
+> http://www.kernel.org/pub/linux/kernel/people/nab/Documentation/target/tcm_mod_builder.py
+> 
+> So after a single day of python coding things are working remarkably
+> well, so far I am able to generate functioning ConfigFS skeletons with
+> proper target_core_fabric_lib.c Transport / WWPN handlers, eg:
+> multi-fabric transitional SPC-3 PR and ALUA (configfs attributes
+> included) that work right out of the box.
+> 
+> There are are a list of remaining TODO items at the bottom of the doc,
+> but I hope that people will actually give this script a shot and see for
+> themselves how easy the generation of new configfs code for TCM fabric
+> modules can really be!
+> 
+> Comments are welcome, Enjoy!
+> 
 
-ATA expects the command to be retried as well because a failed flush
-indicates the specific sector is lost (unless the host still has a copy
-of course - which is *very* likely although we don't use it) but the rest
-of the flush transaction can be retried to continue to flush sectors
-beyond the failed one.
+Just a quick followup, the functional kernel source generated by the
+tcm_mod_builder.py mini-HOWTO example can be found here:
 
-Alan
+http://www.kernel.org/pub/linux/kernel/people/nab/tcm_nab5000/
+
+This example is currently using 'main():proto_ident=iSCSI' to generate
+iSCSI specific structure member naming, and includes the necessary
+$PROTO_IDENT dependent code from drivers/target/target_core_fabric_lib.c
+into the newly generated TCM fabric module in order to provide a running
+TransportID / WWPN model in ConfigFS for high level logic from
+drivers/target/target_core_pr.c and friends to 'just work'.
+
+Comments are welcome, thanks!
+
+--nab
+
+
