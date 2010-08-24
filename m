@@ -1,49 +1,63 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Tue, 24 Aug 2010 18:41:25 +0400
-Message-ID: <4C73DA15.2010207@vlnb.net>
-References: <594039.74663.qm@web111905.mail.gq1.yahoo.com>	 <1282144271.3035.31.camel@mulgrave.site>	 <AANLkTinRDMXqyDAVkcbioD=L7XO-47KHL2qjR+8KA5m3@mail.gmail.com>	 <1282148296.3035.49.camel@mulgrave.site> <4C6C1D70.7020502@vlnb.net>	 <41A1E2691BBB412BADCDE5F515CD8EDA@usish.com.cn>	 <8A96806D-6CD7-44AD-8A9D-143C098C95A4@uni-paderborn.de>	 <1282256949.30453.278.camel@haakon2.linux-iscsi.org>	 <4C701E08.2020005@vlnb.net> <1282423398.3015.39.camel@mulgrave.site>
+Subject: Re: Linux I/O subsystem performance (was: linuxcon 2010...)
+Date: Tue, 24 Aug 2010 18:43:29 +0400
+Message-ID: <4C73DA91.9040101@vlnb.net>
+References: <8A96806D-6CD7-44AD-8A9D-143C098C95A4@uni-paderborn.de> <1282256949.30453.278.camel@haakon2.linux-iscsi.org> <4C701E08.2020005@vlnb.net> <1282423398.3015.39.camel@mulgrave.site> <AANLkTikcReFsYMhs1RkCHoRkL1+Q9WuptHj1xbx49YsA@mail.gmail.com> <1282508953.3042.102.camel@mulgrave.site> <4C727BEB.9020100@scalableinformatics.com> <AANLkTim-M6dfLvJQnbieFqZCGG33E+-i+u_soCq2p9f1@mail.gmail.com> <AANLkTinDY8hEABHaPsCC+3wGMCn0ZLcyfDa9U9jXJ3d4@mail.gmail.com> <AANLkTim+fj-OL+Bixfbrxv6AgSVv_NpT-KdG6vrc6ub-@mail.gmail.com> <20100824072557.GK2804@reaktio.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.186]:63286 "EHLO
+Received: from moutng.kundenserver.de ([212.227.17.9]:62167 "EHLO
 	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407Ab0HXOle (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2010 10:41:34 -0400
-In-Reply-To: <1282423398.3015.39.camel@mulgrave.site>
+	with ESMTP id S1752071Ab0HXOnY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2010 10:43:24 -0400
+In-Reply-To: <20100824072557.GK2804@reaktio.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Dirk Meister <dmeister@uni-paderborn.de>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, Chetan Loke <generationgnu@yahoo.com>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
+To: =?ISO-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik@iki.fi>
+Cc: Chetan Loke <chetanloke@gmail.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, scst-devel <scst-devel@lists.sourceforge.net>
 
-James Bottomley, on 08/22/2010 12:43 AM wrote:
-> Interface re-use (or at least ABI compatibility) is the whole point,
-> it's what makes the solution a drop in replacement.
+Pasi K=E4rkk=E4inen, on 08/24/2010 11:25 AM wrote:
+> On Mon, Aug 23, 2010 at 02:03:26PM -0400, Chetan Loke wrote:
+>> I actually received 3+ off-post emails asking whether I was talking
+>> about initiator or target in the 100K IOPS case below and what did I
+>> mean by the ACKs.
+>> I was referring to the 'Initiator' side.
+>> ACKs =3D=3D When scsi-ML down-calls the LLD via the queue-command, p=
+rocess
+>> the sgl's(if you like) and then trigger the scsi_done up-call path.
+>>
+>
+> Uhm, Intel and Microsoft demonstrated over 1 million IOPS
+> using software iSCSI and a single 10 Gbit Ethernet NIC (Intel 82599).
+>
+> How come there is such a huge difference? What are we lacking in Linu=
+x?
 
-I see now. You want ABI compatibility to keep the "contract" that no 
-kernel changes can break applications binary compatibility for unlimited 
-time.
+I also have an impression that Linux I/O subsystem has some performance=
+=20
+problems. For instance, in one recent SCST performance test only 8 Linu=
+x=20
+initiators with fio as a load generator were able to saturate a single=20
+SCST target with dual IB cards (SRP) on 4K AIO direct accesses over an=20
+SSD backend. This rawly means that any initiator took several times (8?=
+)=20
+more processing time than the target. Hardware used for that target and=
+=20
+initiators was the same. I can't see on this load why the initiators=20
+would need to do something more than the target. Well, I know we in SCS=
+T=20
+did an excellent work to maximize performance, but such a difference=20
+looks too much ;)
 
-OK, we will write the compatibility module. It shouldn't take much time.
-
-But before we start, I'd like to clear 2 related questions:
-
-1. How far the ABI compatibility "contract" goes? Are there cases, where 
-it isn't so strong? I'm asking, because I can recall that open-iscsi at 
-least once has broken ABI compatibility with user space tools. Was it an 
-accidental (but not corrected) mistake or was it deliberate? If the 
-latter, then, I guess, there must be some exceptions defining when ABI 
-compatibility can be not followed.
-
-2. Currently STGT in the kernel is just 2 files, scsi_tgt_if.c and
-scsi_tgt_lib.c (with headers), + ibmvstgt driver. The C files define the 
-STGT interface in question. So, if we keep ABI compatibility with the 
-new target engine, we would have to keep those 2 files included in the 
-kernel, which would effectively mean that STGT would stay in the kernel. 
-This would lead to the situation you are trying to avoid: 2 SCSI target 
-infrastructures in the kernel. Would it be OK?
-
-Thanks for (eventually!) defining clear rules and removing confusions!
+Also it looks very suspicious why nobody even tried to match that=20
+Microsoft/Intel record, even Intel itself who closely works with Linux=20
+community in the storage area and could do it using the same hardware.
 
 Vlad
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
