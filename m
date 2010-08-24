@@ -1,40 +1,96 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Linux I/O subsystem performance
-Date: Tue, 24 Aug 2010 21:51:38 +0400
-Message-ID: <4C7406AA.7080308@vlnb.net>
-References: <4C701E08.2020005@vlnb.net> <1282423398.3015.39.camel@mulgrave.site> <AANLkTikcReFsYMhs1RkCHoRkL1+Q9WuptHj1xbx49YsA@mail.gmail.com> <1282508953.3042.102.camel@mulgrave.site> <4C727BEB.9020100@scalableinformatics.com> <AANLkTim-M6dfLvJQnbieFqZCGG33E+-i+u_soCq2p9f1@mail.gmail.com> <AANLkTinDY8hEABHaPsCC+3wGMCn0ZLcyfDa9U9jXJ3d4@mail.gmail.com> <AANLkTim+fj-OL+Bixfbrxv6AgSVv_NpT-KdG6vrc6ub-@mail.gmail.com> <20100824072557.GK2804@reaktio.net> <4C73DA91.9040101@vlnb.net> <20100824145522.GQ12892@parisc-linux.org>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
+ sequenced flush
+Date: Tue, 24 Aug 2010 13:52:16 -0400
+Message-ID: <20100824175215.GA29409@redhat.com>
+References: <20100814103654.GA13292@lst.de>
+ <4C6A5D8A.4010205@kernel.org>
+ <20100817131915.GB2963@lst.de>
+ <4C6ABBCB.9030306@kernel.org>
+ <20100817165929.GB13800@lst.de>
+ <4C6E3C1A.50205@ct.jp.nec.com>
+ <4C72660A.7070009@kernel.org>
+ <20100823141733.GA21158@redhat.com>
+ <4C739DE9.5070803@ct.jp.nec.com>
+ <4C73FA8F.5080800@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100824145522.GQ12892@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Pasi K?rkk?inen <pasik@iki.fi>, Chetan Loke <chetanloke@gmail.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, scst-devel <scst-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4C73FA8F.5080800@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Matthew Wilcox, on 08/24/2010 06:55 PM wrote:
-> On Tue, Aug 24, 2010 at 06:43:29PM +0400, Vladislav Bolkhovitin wrote:
->> Also it looks very suspicious why nobody even tried to match that
->> Microsoft/Intel record, even Intel itself who closely works with Linux
->> community in the storage area and could do it using the same hardware.
->
-> You seem to be under the impression that "Intel" is some monolithic
-> entity.  Despite working with six different storage&  performance
-> groups within Intel, I have no idea what record you're referring to,
-> nor what hardware it was accomplished with.
+On Tue, Aug 24 2010 at 12:59pm -0400,
+Tejun Heo <tj@kernel.org> wrote:
 
-It is 
-http://communities.intel.com/community/wired/blog/2010/04/22/1-million-iops-how-about-125-million
+> Hello,
+> 
+> On 08/24/2010 12:24 PM, Kiyoshi Ueda wrote:
+> > Yes, checking whether it's a transport error in lower layer is
+> > the right solution.
+> > (Since I know it's not available yet, I just hoped if upper layers
+> >  had some other options.)
+> > 
+> > Anyway, only reporting errors for REQ_FLUSH to upper layer without
+> > such a solution would make dm-multipath almost unusable in real world,
+> > although it's better than implicit data loss.
+> 
+> I see.
+> 
+> >>> Maybe just turn off barrier support in mpath for now?
+> > 
+> > If it's possible, it could be a workaround for a short term.
+> > But how can you do that?
+> > 
+> > I think it's not enough to just drop REQ_FLUSH flag from q->flush_flags.
+> > Underlying devices of a mpath device may have write-back cache and
+> > it may be enabled.
+> > So if a mpath device doesn't set REQ_FLUSH flag in q->flush_flags, it
+> > becomes a device which has write-back cache but doesn't support flush.
+> > Then, upper layer can do nothing to ensure cache flush?
+> 
+> Yeah, I was basically suggesting to forget about cache flush w/ mpath
+> until it can be fixed.  You're saying that if mpath just passes
+> REQ_FLUSH upwards without retrying, it will be almost unuseable,
+> right?  I'm not sure how to proceed here.
 
-> Even if I did, I wouldn't
-> know which group within Intel to contact to see if they still have
-> the setup.  Then I'd have to convince them that it's in their interest
-> to try to replicate this on Linux.  And I'd have to be prepared to sink
-> a considerable quantity of my time into it ... which I don't have.
+Seems clear that we must fix mpath to receive the SCSI errors, in some
+form, so it can decide if a retry is required/valid or not.
 
-Sorry if it looked like I was blaming you. I just was wondering why 
-Intel developed Linux drivers for those network adapters and isn't 
-interested to similarly demonstrate their performance on Linux.
+Such error processing was a big selling point for the transition from
+bio-based to request-based multipath; so it's unfortunate that this
+piece has been left until now.
 
-Vlad
+> How much work would discerning between transport and IO errors take?
+
+Hannes already proposed some patches:
+https://patchwork.kernel.org/patch/61282/
+https://patchwork.kernel.org/patch/61283/
+https://patchwork.kernel.org/patch/61596/
+
+This work was discussed at LSF, see "Error Handling - Hannes Reinecke"
+here: http://lwn.net/Articles/400589/
+
+I thought James, Alasdair and others offered some guidance on what he'd
+like to see...
+
+Unfortunately, even though I was at this LSF session, I can't recall any
+specific consensus on how Hannes' work should be refactored (to avoid
+adding SCSI sense processing code directly in dm-mpath).  Maybe James,
+Hannes or others remember?
+
+Was it enough to just have the SCSI sense processing code split out in a
+new sub-section of the SCSI midlayer -- and then DM calls that code?
+
+> If it can't be done quickly enough the retry logic can be kept around
+> to keep the old behavior but that already was a broken behavior, so...
+> :-(
+
+I'll have to review this thread again to understand why mpath's existing
+retry logic is broken behavior.  mpath is used with more capable SCSI
+devices so I'm missing why a failed FLUSH implies data loss.
+
+Mike
