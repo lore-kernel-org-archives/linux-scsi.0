@@ -1,82 +1,83 @@
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH] scsi_debug: add TPRZ support
-Date: Mon, 23 Aug 2010 20:17:10 -0500
-Message-ID: <4C731D96.5000308@redhat.com>
-References: <4C72CAF7.8020601@redhat.com> <4C731B08.1060100@interlog.com>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH 4/5] md: implment REQ_FLUSH/FUA support
+Date: Tue, 24 Aug 2010 15:41:02 +1000
+Message-ID: <20100824154102.7b68818b@notabene>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org>
+	<1281977523-19335-5-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43919 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752125Ab0HXBRT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Aug 2010 21:17:19 -0400
-In-Reply-To: <4C731B08.1060100@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1281977523-19335-5-git-send-email-tj@kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: mkp@mkp.net, linux-scsi@vger.kernel.org
 
-Douglas Gilbert wrote:
-> Eric,
-> Now for a really serious issue: in sbc3r24
-> TPRZ == "thin provisioning read zeros".
-> SBC-3 uses the shorter variant of the plural of
-> zero. [ACS-2 uses both zeros and zeroes :-)]
-> 
-> The reason I point that out (apart from trying to
-> distract James B. from another dispute) is that
-> you are introducing a new module option called
-> "unmap_zeroes". I prefer the shorter form.
+On Mon, 16 Aug 2010 18:52:02 +0200
+Tejun Heo <tj@kernel.org> wrote:
 
-Ok, I think i was following Martin's lead there,
-based on what's presented in sysfs:
 
-queue/discard_zeroes_data
+Hi Tejun,
+ thanks for doing this.
+ It mostly looks good, especially ...
 
-Believe it or not I thought about this ;)
 
-> When I tried to combine your patch on top of Martin's
-> I needed to do a hand merge (since I'm "gitless") onto
-> lk 2.6.35 . Both of you picked almost the same lines
-> to change. Attached is the result of my patch merge
-> against lk 2.6.35 . It may not be tab clean.
-> 
-> With that combined patch I checked a real SSD that
-> does TPRZ against the scsi_debug virtual SSD and it
-> looked okay with my utilities.
+> * REQ_FLUSH/FUA failures are final and its users don't need retry
+>   logic.  Retry logic is removed.
 
-Thanks, will look over your combined patch & let you know
-if I see anything.
+This bit - all that retry logic felt so clumsy :-)
 
--Eric
+Only change I would make is:
 
-> 
-> SCSI WRITE SAME does have one interesting quirk that
-> Martin may like to consider. If the "number of
-> logical blocks" field is zero, then that implies write
-> to the end of the LU!! Madness when you think about it.
-> libata's SCSI WRITE SAME translation takes the zero
-> number of LBs literally and does nothing I guess
-> (when the UNMAP bit is given).
-> 
-> Doug Gilbert
-> 
-> 
-> 
-> On 10-08-23 03:24 PM, Eric Sandeen wrote:
->> Add TPRZ support to scsi_debug; i.e. return zero for
->> unmapped blocks.
->>
->> Rather than checking for unmapped blocks at
->> read time, this just zeroes them on the backing store
->> at unmap time so it behaves the same way.
->>
->> This also adds a module parameter to disable it, since
->> some SSDs have this behavior.
->>
->> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
-> 
-> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-> 
+>  
+> @@ -4083,7 +4089,7 @@ static int make_request(mddev_t *mddev, struct bio * bi)
+>  			finish_wait(&conf->wait_for_overlap, &w);
+>  			set_bit(STRIPE_HANDLE, &sh->state);
+>  			clear_bit(STRIPE_DELAYED, &sh->state);
+> -			if (mddev->barrier && 
+> +			if (mddev->flush_bio &&
+>  			    !test_and_set_bit(STRIPE_PREREAD_ACTIVE, &sh->state))
+>  				atomic_inc(&conf->preread_active_stripes);
+>  			release_stripe(sh);
+> @@ -4106,7 +4112,7 @@ static int make_request(mddev_t *mddev, struct bio * bi)
+>  		bio_endio(bi, 0);
+>  	}
+>  
+> -	if (mddev->barrier) {
+> +	if (mddev->flush_bio) {
+>  		/* We need to wait for the stripes to all be handled.
+>  		 * So: wait for preread_active_stripes to drop to 0.
+>  		 */
+
+These two in raid5.c aren't quite right.
+The first should be changed to test
+   bi->bi_rw & REQ_SYNC
+rather than
+   mddev->flush_bio.
+(Assuming the REQ_SYNC means "don't bother waiting for more requests that
+might combine with this one to make it all go faster" which I think it does.)
+
+For the second we can just drop the whole if statement.
+It was needed so that the all the writes would go done to the underlying
+devices so that the null-barrier which would subsequently be passed to all
+those devices would go *after* the writes for the barrier request.
+As there is no longer a post-flush, that code can go.
+
+Thanks a lot, and sorry for the delay in reviewing it.
+NeilBrown
+
+
+> diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+> index 0f86f5e..ff9cad2 100644
+> --- a/drivers/md/raid5.h
+> +++ b/drivers/md/raid5.h
+> @@ -275,6 +275,7 @@ struct r6_state {
+>  				    * filling
+>  				    */
+>  #define R5_Wantdrain	13 /* dev->towrite needs to be drained */
+> +#define R5_WantFUA	14	/* Write should be FUA */
+>  /*
+>   * Write method
+>   */
 
