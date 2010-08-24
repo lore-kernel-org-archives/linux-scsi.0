@@ -1,69 +1,89 @@
-From: Chris Weiss <cweiss@gmail.com>
-Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Tue, 24 Aug 2010 08:01:06 -0500
-Message-ID: <AANLkTikbyEtMiJ2ii3TreJGsbqz4Kf61WvzkwFDDOo4L@mail.gmail.com>
-References: <4C69653E.6050808@vlnb.net> <1282077040.16098.47.camel@mulgrave.site>
- <4C6C1DC1.8090208@vlnb.net> <1282164188.10878.22.camel@mulgrave.site>
- <4C702030.2070306@vlnb.net> <1282423128.3015.35.camel@mulgrave.site>
- <AANLkTin9STqUz440fCOEWW=YmedVQtQWU2JLO2wZCt5j@mail.gmail.com>
- <1282582740.11194.17.camel@mulgrave.site> <4C72CEC5.4080204@vlnb.net> <1282595927.11194.78.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16901] New: Security problem in the FTP URL for obtaining
+ QLogic Fibre Channel HBA firmware
+Date: Tue, 24 Aug 2010 13:31:58 GMT
+Message-ID: <bug-16901-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:52053 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751375Ab0HXNCF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2010 09:02:05 -0400
-In-Reply-To: <1282595927.11194.78.camel@mulgrave.site>
+Received: from demeter.kernel.org ([140.211.167.39]:56549 "EHLO
+	demeter.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755073Ab0HXNb7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2010 09:31:59 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter.kernel.org (8.14.4/8.14.3) with ESMTP id o7ODVwAO026215
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Aug 2010 13:31:58 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Aug 23, 2010 at 3:38 PM, James Bottomley
-<James.Bottomley@suse.de> wrote:
-> =A0 =A0 =A0* STGT users should just migrate to scst_local
-> =A0 =A0 =A0* STGT doesn't have enough users to bother with
-> =A0 =A0 =A0* STGT has fundamental design flaws which makes its pass t=
-hrough
-> =A0 =A0 =A0 =A0architecture unusable and its ABI flawed.
->
-> I'm sure STGT appreciates the frank assessments, but it doesn't seem =
-to
-> merit too many "plays well with others" points.
+https://bugzilla.kernel.org/show_bug.cgi?id=16901
 
-I get what you are saying, and I haven't use STGT, but if these things
-are true (especially the last), well truth sometimes hurts,
-and if they aren't true, why replace the target anyway?
+           Summary: Security problem in the FTP URL for obtaining QLogic
+                    Fibre Channel HBA firmware
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.35.3
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: QLOGIC QLA2XXX
+        AssignedTo: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+        ReportedBy: plamen@tonev.net
+        Regression: No
 
-There is also some precedence for dropping features, at least
-temporarily and sometimes longer, to move to a new backend.  In fact I
-have a fax server that I still have to run on a specific 2.4 kernel
-version because latter 2.4's and all 2.6's serial subsystem don't
-quite work right with the old hardware.  Sometimes you do have to drop
-some old code to move forward, and hope someone that cares will fix
-it, and sometimes there really is not enough users to bother with.
 
-I haven't tried using LIO for nearly 3 years, at which point I was not
-able to connect a VMware ESX initiator and transfer data reliably, and
-Nick really didn't seem to care.  SCST works, and Vlad worked quite
-hard helping me both with config issues and code patches to making it
-rock stable with great performance.  If my memory serves, at the time
-STGT was documented to have issues with ESX so i didn't even bother
-testing it.  I also rarely see any technical conversation on LIO
-lists, I actually thought the project had gone slightly stale or
-niche, until this thread.
+Created an attachment (id=27801)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=27801)
+Proof that firmware files can be replaces with malicious ones
 
-Let me also toss this out there:
-How many commercial iscsi products are based on LIO, and certified to
-work with other commercial products?
-I don't ask this because I think the kernel should listen to the whims
-of commercial products, I ask because working with things that aren't
-Linux is a clear sign of "plays well with others".  Does LIO actually
-play well with others, not just its lead developer?
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The qla2xxx driver in the latest stable 2.6.35.3 prints dangerous URL
+(ftp.qlogic.com) for obtaining new firmware for their adapters.
+
+From: linux-2.6.35.3/drivers/scsi/qla2xxx/qla_init.c
+---- quote -----
+#define QLA_FW_URL "ftp://ftp.qlogic.com/outgoing/linux/firmware/"
+
+int
+qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+{
+        int     rval;
+        int     i, fragment;
+        uint16_t *wcode, *fwcode;
+        uint32_t risc_addr, risc_size, fwclen, wlen, *seg;
+        struct fw_blob *blob;
+        struct qla_hw_data *ha = vha->hw;
+        struct req_que *req = ha->req_q_map[0];
+
+        /* Load firmware blob. */
+        blob = qla2x00_request_firmware(vha);
+        if (!blob) {
+                qla_printk(KERN_ERR, ha, "Firmware image unavailable.\n");
+                qla_printk(KERN_ERR, ha, "Firmware images can be retrieved "
+                    "from: " QLA_FW_URL ".\n");
+                return QLA_FUNCTION_FAILED;
+        }
+
+---- end quote -----
+
+  It is dangerous to give the users this URL for obtaining new firmware images,
+because this QLogic FTP site isn't secure at all and everyone anonymously can
+exchange the original firmware .bin files with their own files.
+The outgoing/linux/firmware folder is read-only and files cannot be replaced,
+or created new ones. The folder itself cannot be renamed too, but everyone can
+rename linux folder to linux2 for example, then create a new linux folder with
+firmware inside and put their own files instead of the 'official' ones from
+QLogic.
+  It can be done easy and you can see the attached screenshot for proof.
+Until better security is implemented on this FTP (or better place for storing
+firmware releases is found) I recommend to print a warning to all users of this
+driver about security problems with the QLogic FTP site.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
