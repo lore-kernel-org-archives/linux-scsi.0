@@ -1,96 +1,79 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Tue, 24 Aug 2010 13:52:16 -0400
-Message-ID: <20100824175215.GA29409@redhat.com>
-References: <20100814103654.GA13292@lst.de>
- <4C6A5D8A.4010205@kernel.org>
- <20100817131915.GB2963@lst.de>
- <4C6ABBCB.9030306@kernel.org>
- <20100817165929.GB13800@lst.de>
- <4C6E3C1A.50205@ct.jp.nec.com>
- <4C72660A.7070009@kernel.org>
- <20100823141733.GA21158@redhat.com>
- <4C739DE9.5070803@ct.jp.nec.com>
- <4C73FA8F.5080800@kernel.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
+Date: Tue, 24 Aug 2010 22:08:39 +0400
+Message-ID: <4C740AA7.1070002@vlnb.net>
+References: <594039.74663.qm@web111905.mail.gq1.yahoo.com>	 <1282144271.3035.31.camel@mulgrave.site>	 <AANLkTinRDMXqyDAVkcbioD=L7XO-47KHL2qjR+8KA5m3@mail.gmail.com>	 <1282148296.3035.49.camel@mulgrave.site> <4C6C1D70.7020502@vlnb.net>	 <41A1E2691BBB412BADCDE5F515CD8EDA@usish.com.cn>	 <8A96806D-6CD7-44AD-8A9D-143C098C95A4@uni-paderborn.de>	 <1282256949.30453.278.camel@haakon2.linux-iscsi.org>	 <4C701E08.2020005@vlnb.net> <1282422316.30453.498.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C73FA8F.5080800@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.10]:53895 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710Ab0HXSIm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2010 14:08:42 -0400
+In-Reply-To: <1282422316.30453.498.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Dirk Meister <dmeister@uni-paderborn.de>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, Chetan Loke <chetanloke@gmail.com>, Chetan Loke <generationgnu@yahoo.com>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org
 
-On Tue, Aug 24 2010 at 12:59pm -0400,
-Tejun Heo <tj@kernel.org> wrote:
+Nicholas A. Bellinger, on 08/22/2010 12:25 AM wrote:
+>> It needs a complete redesign to become fast.
+>
+> Secondly, not being the original author of drivers/scsi/scsi_tgt_*, I am
+> happy to do the work and submit the necessary patches to achieve the
+> desired goal.  Also, considering now we have the TCM v4 HBA/DEV
+> abstraction with a fabric independent control path in
+> target_core_fabric_configfs.c, there suddenly new interest to build upon
+> tomo's and mnc'c original STGT work in drivers/scsi/scsi_tgt_*.c
+>
+> Using struct scsi_cmnd allocation from a specially allocated struct
+> request_queue still my preferred method for doing this, unless tomo and
+> mnc state otherwise.   Also if we need to change the request_queue from
+> being per struct Scsi_Host to struct scsi_device that is one thing that
+> will be fine.  If we need to make more drastic changes to
+> drivers/scsi/scsi_tgt_if.c that is also fine.
 
-> Hello,
-> 
-> On 08/24/2010 12:24 PM, Kiyoshi Ueda wrote:
-> > Yes, checking whether it's a transport error in lower layer is
-> > the right solution.
-> > (Since I know it's not available yet, I just hoped if upper layers
-> >  had some other options.)
-> > 
-> > Anyway, only reporting errors for REQ_FLUSH to upper layer without
-> > such a solution would make dm-multipath almost unusable in real world,
-> > although it's better than implicit data loss.
-> 
-> I see.
-> 
-> >>> Maybe just turn off barrier support in mpath for now?
-> > 
-> > If it's possible, it could be a workaround for a short term.
-> > But how can you do that?
-> > 
-> > I think it's not enough to just drop REQ_FLUSH flag from q->flush_flags.
-> > Underlying devices of a mpath device may have write-back cache and
-> > it may be enabled.
-> > So if a mpath device doesn't set REQ_FLUSH flag in q->flush_flags, it
-> > becomes a device which has write-back cache but doesn't support flush.
-> > Then, upper layer can do nothing to ensure cache flush?
-> 
-> Yeah, I was basically suggesting to forget about cache flush w/ mpath
-> until it can be fixed.  You're saying that if mpath just passes
-> REQ_FLUSH upwards without retrying, it will be almost unuseable,
-> right?  I'm not sure how to proceed here.
+That would be a bad design, because it would couple together 
+fundamentally separate things: target and initiator subsystems (server 
+and client, eg apache and firefox, sendmail and mutt, etc.). It would 
+make the code harder to maintain and more fragile for modifications. On 
+the user level it would lead to the need to have target mode core module 
+always loaded. It is already so with STGT if you use FC or SRP. With 
+them the only way to not have scsi_tgt loaded is to remove STGT on the 
+compilation time.
 
-Seems clear that we must fix mpath to receive the SCSI errors, in some
-form, so it can decide if a retry is required/valid or not.
+> However saying that it needs a 'complete redesign', especially without
+> ever consulting or offering to creat patches with STGT guys is not how
+> mainline development functions.
 
-Such error processing was a big selling point for the transition from
-bio-based to request-based multipath; so it's unfortunate that this
-piece has been left until now.
+Well, it isn't my habit to bother people asking something about what I 
+can find an answer myself. I have spent sufficient amount of time 
+hacking Linux kernel (>10 years, from which 8 in the target mode), so I 
+can read others C code as easy as a book.
 
-> How much work would discerning between transport and IO errors take?
+I've already described which flaws I see in the STGT design and nobody 
+objected me (one of the objections I repeated above). You can find my 
+messages in the list archive. Isn't answering on exact critics a way how 
+a cooperative development is supposed to be done? If somebody comes with 
+a better solution for an existing problem is he supposed be ignored? Is 
+it the way how the mainline development functions?
 
-Hannes already proposed some patches:
-https://patchwork.kernel.org/patch/61282/
-https://patchwork.kernel.org/patch/61283/
-https://patchwork.kernel.org/patch/61596/
+>> In
+>> contrast, interface provided by scst_user has just 3% overhead comparing
+>> with fully in-kernel backend and allows to build storage capable of
+>> handling 1,500,000 IOPSes (Kaminario).
+>
+> Please understand that you are more than welcome to create your
+> own TCM subsystem plugin for your SCST kernel<->  user passthrough
+> interface so it can take advantage of all the drivers/target/ code has
+> to offer.
 
-This work was discussed at LSF, see "Error Handling - Hannes Reinecke"
-here: http://lwn.net/Articles/400589/
+Well, please understand that you are more than welcome to stop 
+reinventing a wheel and instead just have the functionality and the 
+advantages you referring already long ago implemented in SCST and being 
+used to build (using your expression) records breaking storage products. 
+You are also more than welcome to add the only extra functionality LIO 
+has over SCST, ALUA, into SCST. Your patches are always welcome.
 
-I thought James, Alasdair and others offered some guidance on what he'd
-like to see...
-
-Unfortunately, even though I was at this LSF session, I can't recall any
-specific consensus on how Hannes' work should be refactored (to avoid
-adding SCSI sense processing code directly in dm-mpath).  Maybe James,
-Hannes or others remember?
-
-Was it enough to just have the SCSI sense processing code split out in a
-new sub-section of the SCSI midlayer -- and then DM calls that code?
-
-> If it can't be done quickly enough the retry logic can be kept around
-> to keep the old behavior but that already was a broken behavior, so...
-> :-(
-
-I'll have to review this thread again to understand why mpath's existing
-retry logic is broken behavior.  mpath is used with more capable SCSI
-devices so I'm missing why a failed FLUSH implies data loss.
-
-Mike
+Vlad
