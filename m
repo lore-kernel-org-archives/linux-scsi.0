@@ -1,69 +1,28 @@
-From: Bart Van Assche <bvanassche@acm.org>
+From: Chris Weiss <cweiss@gmail.com>
 Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Tue, 24 Aug 2010 12:32:05 +0200
-Message-ID: <AANLkTi=vjApRS+hXA8xuNv7NkfLmgCKvQFcMBPWEUeoB@mail.gmail.com>
-References: <4C69653E.6050808@vlnb.net>
-	<1282077040.16098.47.camel@mulgrave.site>
-	<4C6C1DC1.8090208@vlnb.net>
-	<1282164188.10878.22.camel@mulgrave.site>
-	<4C702030.2070306@vlnb.net>
-	<1282423128.3015.35.camel@mulgrave.site>
-	<AANLkTin9STqUz440fCOEWW=YmedVQtQWU2JLO2wZCt5j@mail.gmail.com>
-	<1282582740.11194.17.camel@mulgrave.site>
-	<4C72CEC5.4080204@vlnb.net>
-	<1282595927.11194.78.camel@mulgrave.site>
+Date: Tue, 24 Aug 2010 08:01:06 -0500
+Message-ID: <AANLkTikbyEtMiJ2ii3TreJGsbqz4Kf61WvzkwFDDOo4L@mail.gmail.com>
+References: <4C69653E.6050808@vlnb.net> <1282077040.16098.47.camel@mulgrave.site>
+ <4C6C1DC1.8090208@vlnb.net> <1282164188.10878.22.camel@mulgrave.site>
+ <4C702030.2070306@vlnb.net> <1282423128.3015.35.camel@mulgrave.site>
+ <AANLkTin9STqUz440fCOEWW=YmedVQtQWU2JLO2wZCt5j@mail.gmail.com>
+ <1282582740.11194.17.camel@mulgrave.site> <4C72CEC5.4080204@vlnb.net> <1282595927.11194.78.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:50613 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754188Ab0HXKcH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2010 06:32:07 -0400
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:52053 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751375Ab0HXNCF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2010 09:02:05 -0400
 In-Reply-To: <1282595927.11194.78.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
 Cc: Vladislav Bolkhovitin <vst@vlnb.net>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Aug 23, 2010 at 10:38 PM, James Bottomley
+On Mon, Aug 23, 2010 at 3:38 PM, James Bottomley
 <James.Bottomley@suse.de> wrote:
-> On Mon, 2010-08-23 at 23:40 +0400, Vladislav Bolkhovitin wrote:
->> James Bottomley, on 08/23/2010 08:59 PM wrote:
->> > My basic conclusion was that there's no incredible discriminator b=
-etween
->> > LIO and STGT (although there are reams written on which performs b=
-etter
->> > in which circumsances, is useful for clustering, supports ALUA, et=
-c.
->> > each with partisans for the features).
->>
->> Here is a comprehensive features comparison I prepared some time ago=
-:
->> http://scst.sourceforge.net/comparison.html. It's a bit outdated at =
-the
->> moment, but I'm going to make it completely up do date in the next f=
-ew days.
->
-> That's not really going to help ... I don't really want another 500 m=
-ail
-> thread of partisan yelling about which is better. =A0I'm happy to con=
-cede
-> that either could beat the other on a given set of well chosen tests =
-=2E..
-> but knowing that is completely useless to me. =A0I can also guess, gi=
-ven
-> the antipathy, that neither of you would agree on a definitive set of
-> comparison tests.
->
-> So it comes down to a community test instead: which works better with
-> the community. =A0This is important to me because it's an indication =
-of
-> what might ensue once code goes upstream and thus moves outside the
-> exclusive province of the project to become a community resource. STG=
-T
-> is a community too and so far what you seem to have told me is:
->
 > =A0 =A0 =A0* STGT users should just migrate to scst_local
 > =A0 =A0 =A0* STGT doesn't have enough users to bother with
 > =A0 =A0 =A0* STGT has fundamental design flaws which makes its pass t=
@@ -74,22 +33,35 @@ hrough
 to
 > merit too many "plays well with others" points.
 
-Although it may not be clear from this thread, we respect the STGT
-software and the all work the STGT authors have done to make it a
-successful, stable and high performance storage target. The iSCSI-SCST
-target driver even contains some of the code that was originally
-written by an STGT author (Tomo) for a different project (IET).
+I get what you are saying, and I haven't use STGT, but if these things
+are true (especially the last), well truth sometimes hurts,
+and if they aren't true, why replace the target anyway?
 
-A lot has already been discussed in this thread. It is already clear
-that integrating LIO instead of SCST would hurt many SCST users. What
-is not yet clear is what the consequences would be for LIO users if
-SCST would be integrated instead of LIO ? A few months SCST has gained
-support for persistent reservations (clustering). The SCSI engine of
-SCST is powerful, and the core - target driver interface of SCST is a
-rich interface. If there are any user-developed LIO target drivers,
-it's probably relatively easy to port these to SCST.
+There is also some precedence for dropping features, at least
+temporarily and sometimes longer, to move to a new backend.  In fact I
+have a fax server that I still have to run on a specific 2.4 kernel
+version because latter 2.4's and all 2.6's serial subsystem don't
+quite work right with the old hardware.  Sometimes you do have to drop
+some old code to move forward, and hope someone that cares will fix
+it, and sometimes there really is not enough users to bother with.
 
-Bart.
+I haven't tried using LIO for nearly 3 years, at which point I was not
+able to connect a VMware ESX initiator and transfer data reliably, and
+Nick really didn't seem to care.  SCST works, and Vlad worked quite
+hard helping me both with config issues and code patches to making it
+rock stable with great performance.  If my memory serves, at the time
+STGT was documented to have issues with ESX so i didn't even bother
+testing it.  I also rarely see any technical conversation on LIO
+lists, I actually thought the project had gone slightly stale or
+niche, until this thread.
+
+Let me also toss this out there:
+How many commercial iscsi products are based on LIO, and certified to
+work with other commercial products?
+I don't ask this because I think the kernel should listen to the whims
+of commercial products, I ask because working with things that aren't
+Linux is a clear sign of "plays well with others".  Does LIO actually
+play well with others, not just its lead developer?
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
