@@ -1,35 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
-Date: Wed, 25 Aug 2010 17:57:41 +0200
-Message-ID: <4C753D75.2010305@kernel.org>
-References: <1282751267-3530-1-git-send-email-tj@kernel.org> <1282751267-3530-27-git-send-email-tj@kernel.org> <20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Linux I/O subsystem performance
+Date: Wed, 25 Aug 2010 23:12:55 +0400
+Message-ID: <4C756B37.4000007@vlnb.net>
+References: <8A96806D-6CD7-44AD-8A9D-143C098C95A4@uni-paderborn.de>	<1282256949.30453.278.camel@haakon2.linux-iscsi.org>	<4C701E08.2020005@vlnb.net>	<1282423398.3015.39.camel@mulgrave.site>	<AANLkTikcReFsYMhs1RkCHoRkL1+Q9WuptHj1xbx49YsA@mail.gmail.com>	<1282508953.3042.102.camel@mulgrave.site>	<4C727BEB.9020100@scalableinformatics.com>	<AANLkTim-M6dfLvJQnbieFqZCGG33E+-i+u_soCq2p9f1@mail.gmail.com>	<AANLkTinDY8hEABHaPsCC+3wGMCn0ZLcyfDa9U9jXJ3d4@mail.gmail.com>	<AANLkTim+fj-OL+Bixfbrxv6AgSVv_NpT-KdG6vrc6ub-@mail.gmail.com>	<20100824072557.GK2804@reaktio.net>	<4C7404C4.4040704@vlnb.net> <AANLkTin85yqvykJPW=Zk46m2hA=n2wTRamYodRgMZCVM@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20100825160032.GC3229@lst.de>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, jack@suse.cz
-Cc: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.9]:50912 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751771Ab0HYTNK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Aug 2010 15:13:10 -0400
+In-Reply-To: <AANLkTin85yqvykJPW=Zk46m2hA=n2wTRamYodRgMZCVM@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Worley <worleys@gmail.com>
+Cc: =?ISO-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik@iki.fi>, Chetan Loke <chetanloke@gmail.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, scst-devel <scst-devel@lists.sourceforge.net>
 
-On 08/25/2010 06:00 PM, Christoph Hellwig wrote:
-> On Wed, Aug 25, 2010 at 05:58:42PM +0200, Christoph Hellwig wrote:
->> On Wed, Aug 25, 2010 at 05:47:43PM +0200, Tejun Heo wrote:
->>> From: Christoph Hellwig <hch@infradead.org>
->>>
->>> ext4 already uses synchronous discards, no need to add I/O barriers.
->>
->> This needs the patch that Jan sent in reply to my initial version merged
->> into it.
-> 
-> Actually the jbd2 patch needs it merged, but the point still stands.
+Chris Worley, on 08/25/2010 12:31 AM wrote:
+>> I also have an impression that Linux I/O subsystem has some performance
+>> problems. For instance, in one recent SCST performance test only 8 Linux
+>> initiators with fio as a load generator were able to saturate a single SCST
+>> target with dual IB cards (SRP) on 4K AIO direct accesses over an SSD
+>> backend. This rawly means that any initiator took several times (8?) more
+>> processing time than the target.
+>
+> While I can't tell you where the bottlenecks are, I can share some
+> performance numbers...
+>
+> 4 initiators can get>600K random 4KB IOPS off a single target...
 
-Yeah, wasn't sure about that one.  Has anyone tested it?  I'll be
-happy to merge it but I have no idea whether it's correct or not and
-Jan didn't seem to have tested it so...  Jan, shall I merge the patch?
+Hmm, on the data you sent me only 8 initiators were capable to do so... 
+I'm glad to see an improvement here ;).
 
-Thanks.
+> which is ~150% of what the Emulex/Intel/Microsoft results show using 8
+> targets at 4KB (their 1M IOPS was at 512 byte blocks, which is not a
+> realistic test point
 
--- 
-tejun
+ From my, a storage developer's, POV it isn't about if this test is 
+realistic or not. 512 bytes tests are good if you want to test how 
+processing effective your I/O stack, because they produce the max 
+possible CPU/memory/hardware interaction load. Since processing power 
+isn't unlimited, in case if it is a bottleneck, N IOPS on 512b < N IOPS 
+on 4K * 8 and system with more effective processing will have better 
+numbers.
+
+Vlad
