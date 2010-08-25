@@ -1,8 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 02/30] block/loop: queue ordered mode should be
-	DRAIN_FLUSH
-Date: Wed, 25 Aug 2010 17:47:19 +0200
-Message-ID: <1282751267-3530-3-git-send-email-tj@kernel.org>
+Subject: [PATCH 13/30] block: simplify queue_next_fseq
+Date: Wed, 25 Aug 2010 17:47:30 +0200
+Message-ID: <1282751267-3530-14-git-send-email-tj@kernel.org>
 References: <1282751267-3530-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -23,28 +22,79 @@ To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-loop implements FLUSH using fsync but was incorrectly setting its
-ordered mode to DRAIN.  Change it to DRAIN_FLUSH.  In practice, this
-doesn't change anything as loop doesn't make use of the block layer
-ordered implementation.
+From: Christoph Hellwig <hch@lst.de>
 
+We need to call blk_rq_init and elv_insert for all cases in queue_next_fseq,
+so take these calls into common code.  Also move the end_io initialization
+from queue_flush into queue_next_fseq and rename queue_flush to
+init_flush_request now that it's old name doesn't apply anymore.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/block/loop.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ block/blk-flush.c |   26 ++++++++++----------------
+ 1 files changed, 10 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index f3c636d..c3a4a2e 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -832,7 +832,7 @@ static int loop_set_fd(struct loop_device *lo, fmode_t mode,
- 	lo->lo_queue->unplug_fn = loop_unplug;
+diff --git a/block/blk-flush.c b/block/blk-flush.c
+index ab765c2..4e96e18 100644
+--- a/block/blk-flush.c
++++ b/block/blk-flush.c
+@@ -74,16 +74,11 @@ static void post_flush_end_io(struct request *rq, int error)
+ 	blk_flush_complete_seq(rq->q, QUEUE_FSEQ_POSTFLUSH, error);
+ }
  
- 	if (!(lo_flags & LO_FLAGS_READ_ONLY) && file->f_op->fsync)
--		blk_queue_ordered(lo->lo_queue, QUEUE_ORDERED_DRAIN);
-+		blk_queue_ordered(lo->lo_queue, QUEUE_ORDERED_DRAIN_FLUSH);
+-static void queue_flush(struct request_queue *q, struct request *rq,
+-			rq_end_io_fn *end_io)
++static void init_flush_request(struct request *rq, struct gendisk *disk)
+ {
+-	blk_rq_init(q, rq);
+ 	rq->cmd_type = REQ_TYPE_FS;
+ 	rq->cmd_flags = REQ_FLUSH;
+-	rq->rq_disk = q->orig_flush_rq->rq_disk;
+-	rq->end_io = end_io;
+-
+-	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
++	rq->rq_disk = disk;
+ }
  
- 	set_capacity(lo->lo_disk, size);
- 	bd_set_size(bdev, size << 9);
+ static struct request *queue_next_fseq(struct request_queue *q)
+@@ -91,29 +86,28 @@ static struct request *queue_next_fseq(struct request_queue *q)
+ 	struct request *orig_rq = q->orig_flush_rq;
+ 	struct request *rq = &q->flush_rq;
+ 
++	blk_rq_init(q, rq);
++
+ 	switch (blk_flush_cur_seq(q)) {
+ 	case QUEUE_FSEQ_PREFLUSH:
+-		queue_flush(q, rq, pre_flush_end_io);
++		init_flush_request(rq, orig_rq->rq_disk);
++		rq->end_io = pre_flush_end_io;
+ 		break;
+-
+ 	case QUEUE_FSEQ_DATA:
+-		/* initialize proxy request, inherit FLUSH/FUA and queue it */
+-		blk_rq_init(q, rq);
+ 		init_request_from_bio(rq, orig_rq->bio);
+ 		rq->cmd_flags &= ~(REQ_FLUSH | REQ_FUA);
+ 		rq->cmd_flags |= orig_rq->cmd_flags & (REQ_FLUSH | REQ_FUA);
+ 		rq->end_io = flush_data_end_io;
+-
+-		elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
+ 		break;
+-
+ 	case QUEUE_FSEQ_POSTFLUSH:
+-		queue_flush(q, rq, post_flush_end_io);
++		init_flush_request(rq, orig_rq->rq_disk);
++		rq->end_io = post_flush_end_io;
+ 		break;
+-
+ 	default:
+ 		BUG();
+ 	}
++
++	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
+ 	return rq;
+ }
+ 
 -- 
 1.7.1
