@@ -1,7 +1,8 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 15/30] virtio_blk: drop REQ_HARDBARRIER support
-Date: Wed, 25 Aug 2010 17:47:32 +0200
-Message-ID: <1282751267-3530-16-git-send-email-tj@kernel.org>
+Subject: [PATCH 02/30] block/loop: queue ordered mode should be
+	DRAIN_FLUSH
+Date: Wed, 25 Aug 2010 17:47:19 +0200
+Message-ID: <1282751267-3530-3-git-send-email-tj@kernel.org>
 References: <1282751267-3530-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -22,59 +23,28 @@ To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Remove now unused REQ_HARDBARRIER support.  virtio_blk already
-supports REQ_FLUSH and the usefulness of REQ_FUA for virtio_blk is
-questionable at this point, so there's nothing else to do to support
-new REQ_FLUSH/FUA interface.
+loop implements FLUSH using fsync but was incorrectly setting its
+ordered mode to DRAIN.  Change it to DRAIN_FLUSH.  In practice, this
+doesn't change anything as loop doesn't make use of the block layer
+ordered implementation.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/virtio_blk.c |   17 ++++-------------
- 1 files changed, 4 insertions(+), 13 deletions(-)
+ drivers/block/loop.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index d10b635..1260628 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -128,9 +128,6 @@ static bool do_req(struct request_queue *q, struct virtio_blk *vblk,
- 		}
- 	}
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index f3c636d..c3a4a2e 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -832,7 +832,7 @@ static int loop_set_fd(struct loop_device *lo, fmode_t mode,
+ 	lo->lo_queue->unplug_fn = loop_unplug;
  
--	if (vbr->req->cmd_flags & REQ_HARDBARRIER)
--		vbr->out_hdr.type |= VIRTIO_BLK_T_BARRIER;
--
- 	sg_set_buf(&vblk->sg[out++], &vbr->out_hdr, sizeof(vbr->out_hdr));
+ 	if (!(lo_flags & LO_FLAGS_READ_ONLY) && file->f_op->fsync)
+-		blk_queue_ordered(lo->lo_queue, QUEUE_ORDERED_DRAIN);
++		blk_queue_ordered(lo->lo_queue, QUEUE_ORDERED_DRAIN_FLUSH);
  
- 	/*
-@@ -388,13 +385,7 @@ static int __devinit virtblk_probe(struct virtio_device *vdev)
- 	vblk->disk->driverfs_dev = &vdev->dev;
- 	index++;
- 
--	/*
--	 * If the FLUSH feature is supported we do have support for
--	 * flushing a volatile write cache on the host.  Use that to
--	 * implement write barrier support; otherwise, we must assume
--	 * that the host does not perform any kind of volatile write
--	 * caching.
--	 */
-+	/* configure queue flush support */
- 	if (virtio_has_feature(vdev, VIRTIO_BLK_F_FLUSH))
- 		blk_queue_flush(q, REQ_FLUSH);
- 
-@@ -515,9 +506,9 @@ static const struct virtio_device_id id_table[] = {
- };
- 
- static unsigned int features[] = {
--	VIRTIO_BLK_F_BARRIER, VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX,
--	VIRTIO_BLK_F_GEOMETRY, VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE,
--	VIRTIO_BLK_F_SCSI, VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
-+	VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX, VIRTIO_BLK_F_GEOMETRY,
-+	VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE, VIRTIO_BLK_F_SCSI,
-+	VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
- };
- 
- /*
+ 	set_capacity(lo->lo_disk, size);
+ 	bd_set_size(bdev, size << 9);
 -- 
 1.7.1
