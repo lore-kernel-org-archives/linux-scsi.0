@@ -1,117 +1,141 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 29/30] block: remove the BLKDEV_IFL_BARRIER flag
-Date: Wed, 25 Aug 2010 17:47:46 +0200
-Message-ID: <1282751267-3530-30-git-send-email-tj@kernel.org>
+Subject: [PATCH 20/30] btrfs: replace barriers with explicit
+	flush / FUA usage
+Date: Wed, 25 Aug 2010 17:47:37 +0200
+Message-ID: <1282751267-3530-21-git-send-email-tj@kernel.org>
 References: <1282751267-3530-1-git-send-email-tj@kernel.org>
-Return-path: <linux-raid-owner@vger.kernel.org>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
 In-Reply-To: <1282751267-3530-1-git-send-email-tj@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
-To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@l
 Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Remove support for barriers on discards, which is unused now.  Also
-remove the DISCARD_NOBARRIER I/O type in favour of just setting the
-rw flags up locally in blkdev_issue_discard.
-
-tj: Also remove DISCARD_SECURE and use REQ_SECURE directly.
+Switch to the WRITE_FLUSH_FUA flag for log writes, remove the EOPNOTSUPP
+detection for barriers and stop setting the barrier flag for discards.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+Acked-by: Chris Mason <chris.mason@oracle.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- block/blk-lib.c        |   18 ++----------------
- include/linux/blkdev.h |    2 --
- include/linux/fs.h     |    8 --------
- 3 files changed, 2 insertions(+), 26 deletions(-)
+ fs/btrfs/disk-io.c     |   19 ++++---------------
+ fs/btrfs/extent-tree.c |    2 +-
+ fs/btrfs/volumes.c     |    4 ----
+ fs/btrfs/volumes.h     |    1 -
+ 4 files changed, 5 insertions(+), 21 deletions(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index c392029..fe2e6ed 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -39,8 +39,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+diff --git a/fs/btrfs/disk-io.c b/fs/btrfs/disk-io.c
+index 64f1008..5e789f4 100644
+--- a/fs/btrfs/disk-io.c
++++ b/fs/btrfs/disk-io.c
+@@ -2063,7 +2063,7 @@ static void btrfs_end_buffer_write_sync(struct buffer_head *bh, int uptodate)
+ 	if (uptodate) {
+ 		set_buffer_uptodate(bh);
+ 	} else {
+-		if (!buffer_eopnotsupp(bh) && printk_ratelimit()) {
++		if (printk_ratelimit()) {
+ 			printk(KERN_WARNING "lost page write due to "
+ 					"I/O error on %s\n",
+ 				       bdevname(bh->b_bdev, b));
+@@ -2200,21 +2200,10 @@ static int write_dev_supers(struct btrfs_device *device,
+ 			bh->b_end_io = btrfs_end_buffer_write_sync;
+ 		}
+ 
+-		if (i == last_barrier && do_barriers && device->barriers) {
+-			ret = submit_bh(WRITE_BARRIER, bh);
+-			if (ret == -EOPNOTSUPP) {
+-				printk("btrfs: disabling barriers on dev %s\n",
+-				       device->name);
+-				set_buffer_uptodate(bh);
+-				device->barriers = 0;
+-				/* one reference for submit_bh */
+-				get_bh(bh);
+-				lock_buffer(bh);
+-				ret = submit_bh(WRITE_SYNC, bh);
+-			}
+-		} else {
++		if (i == last_barrier && do_barriers)
++			ret = submit_bh(WRITE_FLUSH_FUA, bh);
++		else
+ 			ret = submit_bh(WRITE_SYNC, bh);
+-		}
+ 
+ 		if (ret)
+ 			errors++;
+diff --git a/fs/btrfs/extent-tree.c b/fs/btrfs/extent-tree.c
+index 32d0940..43dc9ea 100644
+--- a/fs/btrfs/extent-tree.c
++++ b/fs/btrfs/extent-tree.c
+@@ -1696,7 +1696,7 @@ static void btrfs_issue_discard(struct block_device *bdev,
+ 				u64 start, u64 len)
  {
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct request_queue *q = bdev_get_queue(bdev);
--	int type = flags & BLKDEV_IFL_BARRIER ?
--		DISCARD_BARRIER : DISCARD_NOBARRIER;
-+	int type = REQ_WRITE | REQ_DISCARD;
- 	unsigned int max_discard_sectors;
- 	struct bio *bio;
- 	int ret = 0;
-@@ -65,7 +64,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	if (flags & BLKDEV_IFL_SECURE) {
- 		if (!blk_queue_secdiscard(q))
- 			return -EOPNOTSUPP;
--		type |= DISCARD_SECURE;
-+		type |= REQ_SECURE;
- 	}
- 
- 	while (nr_sects && !ret) {
-@@ -162,12 +161,6 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	bb.wait = &wait;
- 	bb.end_io = NULL;
- 
--	if (flags & BLKDEV_IFL_BARRIER) {
--		/* issue async barrier before the data */
--		ret = blkdev_issue_flush(bdev, gfp_mask, NULL, 0);
--		if (ret)
--			return ret;
--	}
- submit:
- 	ret = 0;
- 	while (nr_sects != 0) {
-@@ -199,13 +192,6 @@ submit:
- 		issued++;
- 		submit_bio(WRITE, bio);
- 	}
--	/*
--	 * When all data bios are in flight. Send final barrier if requeted.
--	 */
--	if (nr_sects == 0 && flags & BLKDEV_IFL_BARRIER)
--		ret = blkdev_issue_flush(bdev, gfp_mask, NULL,
--					flags & BLKDEV_IFL_WAIT);
--
- 
- 	if (flags & BLKDEV_IFL_WAIT)
- 		/* Wait for bios in-flight */
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6b305eb..cfcb3a6 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -869,11 +869,9 @@ static inline struct request *blk_map_queue_find_tag(struct blk_queue_tag *bqt,
+ 	blkdev_issue_discard(bdev, start >> 9, len >> 9, GFP_KERNEL,
+-			BLKDEV_IFL_WAIT | BLKDEV_IFL_BARRIER);
++			BLKDEV_IFL_WAIT);
  }
- enum{
- 	BLKDEV_WAIT,	/* wait for completion */
--	BLKDEV_BARRIER,	/* issue request with barrier */
- 	BLKDEV_SECURE,	/* secure discard */
- };
- #define BLKDEV_IFL_WAIT		(1 << BLKDEV_WAIT)
--#define BLKDEV_IFL_BARRIER	(1 << BLKDEV_BARRIER)
- #define BLKDEV_IFL_SECURE	(1 << BLKDEV_SECURE)
- extern int blkdev_issue_flush(struct block_device *, gfp_t, sector_t *,
- 			unsigned long);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 352c486..32703a9 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -166,14 +166,6 @@ struct inodes_stat_t {
- #define WRITE_FLUSH_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
- 				 REQ_FLUSH | REQ_FUA)
  
--/*
-- * These aren't really reads or writes, they pass down information about
-- * parts of device that are now unused by the file system.
-- */
--#define DISCARD_NOBARRIER	(WRITE | REQ_DISCARD)
--#define DISCARD_BARRIER		(WRITE | REQ_DISCARD | REQ_HARDBARRIER)
--#define DISCARD_SECURE		(DISCARD_NOBARRIER | REQ_SECURE)
--
- #define SEL_IN		1
- #define SEL_OUT		2
- #define SEL_EX		4
+ static int btrfs_discard_extent(struct btrfs_root *root, u64 bytenr,
+diff --git a/fs/btrfs/volumes.c b/fs/btrfs/volumes.c
+index dd318ff..e25e46a 100644
+--- a/fs/btrfs/volumes.c
++++ b/fs/btrfs/volumes.c
+@@ -398,7 +398,6 @@ static noinline int device_list_add(const char *path,
+ 		device->work.func = pending_bios_fn;
+ 		memcpy(device->uuid, disk_super->dev_item.uuid,
+ 		       BTRFS_UUID_SIZE);
+-		device->barriers = 1;
+ 		spin_lock_init(&device->io_lock);
+ 		device->name = kstrdup(path, GFP_NOFS);
+ 		if (!device->name) {
+@@ -462,7 +461,6 @@ static struct btrfs_fs_devices *clone_fs_devices(struct btrfs_fs_devices *orig)
+ 		device->devid = orig_dev->devid;
+ 		device->work.func = pending_bios_fn;
+ 		memcpy(device->uuid, orig_dev->uuid, sizeof(device->uuid));
+-		device->barriers = 1;
+ 		spin_lock_init(&device->io_lock);
+ 		INIT_LIST_HEAD(&device->dev_list);
+ 		INIT_LIST_HEAD(&device->dev_alloc_list);
+@@ -1489,7 +1487,6 @@ int btrfs_init_new_device(struct btrfs_root *root, char *device_path)
+ 	trans = btrfs_start_transaction(root, 0);
+ 	lock_chunks(root);
+ 
+-	device->barriers = 1;
+ 	device->writeable = 1;
+ 	device->work.func = pending_bios_fn;
+ 	generate_random_uuid(device->uuid);
+@@ -3084,7 +3081,6 @@ static struct btrfs_device *add_missing_dev(struct btrfs_root *root,
+ 		return NULL;
+ 	list_add(&device->dev_list,
+ 		 &fs_devices->devices);
+-	device->barriers = 1;
+ 	device->dev_root = root->fs_info->dev_root;
+ 	device->devid = devid;
+ 	device->work.func = pending_bios_fn;
+diff --git a/fs/btrfs/volumes.h b/fs/btrfs/volumes.h
+index 31b0fab..2b638b6 100644
+--- a/fs/btrfs/volumes.h
++++ b/fs/btrfs/volumes.h
+@@ -42,7 +42,6 @@ struct btrfs_device {
+ 	int running_pending;
+ 	u64 generation;
+ 
+-	int barriers;
+ 	int writeable;
+ 	int in_fs_metadata;
+ 
 -- 
 1.7.1
-
