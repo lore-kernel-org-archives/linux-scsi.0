@@ -1,48 +1,64 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Linux I/O subsystem performance
-Date: Wed, 25 Aug 2010 23:12:55 +0400
-Message-ID: <4C756B37.4000007@vlnb.net>
-References: <8A96806D-6CD7-44AD-8A9D-143C098C95A4@uni-paderborn.de>	<1282256949.30453.278.camel@haakon2.linux-iscsi.org>	<4C701E08.2020005@vlnb.net>	<1282423398.3015.39.camel@mulgrave.site>	<AANLkTikcReFsYMhs1RkCHoRkL1+Q9WuptHj1xbx49YsA@mail.gmail.com>	<1282508953.3042.102.camel@mulgrave.site>	<4C727BEB.9020100@scalableinformatics.com>	<AANLkTim-M6dfLvJQnbieFqZCGG33E+-i+u_soCq2p9f1@mail.gmail.com>	<AANLkTinDY8hEABHaPsCC+3wGMCn0ZLcyfDa9U9jXJ3d4@mail.gmail.com>	<AANLkTim+fj-OL+Bixfbrxv6AgSVv_NpT-KdG6vrc6ub-@mail.gmail.com>	<20100824072557.GK2804@reaktio.net>	<4C7404C4.4040704@vlnb.net> <AANLkTin85yqvykJPW=Zk46m2hA=n2wTRamYodRgMZCVM@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC] training mpath to discern between SCSI errors
+Date: Wed, 25 Aug 2010 14:15:13 -0500
+Message-ID: <4C756BC1.1030105@cs.wisc.edu>
+References: <20100825155918.GB8509@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.9]:50912 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771Ab0HYTNK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Aug 2010 15:13:10 -0400
-In-Reply-To: <AANLkTin85yqvykJPW=Zk46m2hA=n2wTRamYodRgMZCVM@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <20100825155918.GB8509@redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Tejun Heo <tj@kernel.org>, James.Bottomley@suse.de, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Worley <worleys@gmail.com>
-Cc: =?ISO-8859-1?Q?Pasi_K=E4rkk=E4inen?= <pasik@iki.fi>, Chetan Loke <chetanloke@gmail.com>, Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, scst-devel <scst-devel@lists.sourceforge.net>
 
-Chris Worley, on 08/25/2010 12:31 AM wrote:
->> I also have an impression that Linux I/O subsystem has some performance
->> problems. For instance, in one recent SCST performance test only 8 Linux
->> initiators with fio as a load generator were able to saturate a single SCST
->> target with dual IB cards (SRP) on 4K AIO direct accesses over an SSD
->> backend. This rawly means that any initiator took several times (8?) more
->> processing time than the target.
+On 08/25/2010 10:59 AM, Mike Snitzer wrote:
+> On Wed, Aug 25 2010 at  4:00am -0400,
+> Kiyoshi Ueda<k-ueda@ct.jp.nec.com>  wrote:
 >
-> While I can't tell you where the bottlenecks are, I can share some
-> performance numbers...
+>>> I'm not sure how to proceed here.  How much work would
+>>> discerning between transport and IO errors take?  If it can't be done
+>>> quickly enough the retry logic can be kept around to keep the old
+>>> behavior but that already was a broken behavior, so...  :-(
+>>
+>> I'm not sure how long will it take.
 >
-> 4 initiators can get>600K random 4KB IOPS off a single target...
+> We first need to understand what direction we want to go with this.  We
+> currently have 2 options.  But any other ideas are obviously welcome.
+>
+> 1)
+> Mike Christie has a patchset that introduce more specific
+> target/transport/host error codes.  Mike shared these pointers but he'd
+> have to put the work in to refresh them:
+> http://marc.info/?l=linux-scsi&m=112487427230642&w=2
+> http://marc.info/?l=linux-scsi&m=112487427306501&w=2
+> http://marc.info/?l=linux-scsi&m=112487431524436&w=2
+> http://marc.info/?l=linux-scsi&m=112487431524350&w=2
+>
+> errno.h new EXYZ
+> http://marc.info/?l=linux-kernel&m=107715299008231&w=2
+>
+> add block layer blkdev.h error values
+> http://marc.info/?l=linux-kernel&m=107961883915068&w=2
+>
+> add block layer blkdev.h error values (v2 convert more drivers)
+> http://marc.info/?l=linux-scsi&m=112487427230642&w=2
+>
+> I think that patchset's appoach is fairly disruptive just to be able to
+> train upper layers to differentiate (e.g. mpath).  But in the end maybe
+> that change takes the code in a more desirable direction?
 
-Hmm, on the data you sent me only 8 initiators were capable to do so... 
-I'm glad to see an improvement here ;).
+I think it is more disruptive, but is the cleaner approach in the end.
 
-> which is ~150% of what the Emulex/Intel/Microsoft results show using 8
-> targets at 4KB (their 1M IOPS was at 512 byte blocks, which is not a
-> realistic test point
+#2 looks hacky. In upper layers, we will have checks for dasd and other 
+AOE and other drivers. And then #2 does not even work for filesystems 
+(ext said they need this).
 
- From my, a storage developer's, POV it isn't about if this test is 
-realistic or not. 512 bytes tests are good if you want to test how 
-processing effective your I/O stack, because they produce the max 
-possible CPU/memory/hardware interaction load. Since processing power 
-isn't unlimited, in case if it is a bottleneck, N IOPS on 512b < N IOPS 
-on 4K * 8 and system with more effective processing will have better 
-numbers.
 
-Vlad
+
+>
+> 2)
+> Another option is Hannes' approach of having DM consume req->errors and
+> SCSI sense more directly.
+>
