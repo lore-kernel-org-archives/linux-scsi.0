@@ -1,129 +1,86 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 19/30] xfs: replace barriers with explicit flush / FUA usage
-Date: Wed, 25 Aug 2010 17:47:36 +0200
-Message-ID: <1282751267-3530-20-git-send-email-tj@kernel.org>
+Subject: [PATCH 16/30] lguest: replace VIRTIO_F_BARRIER support with VIRTIO_F_FLUSH support
+Date: Wed, 25 Aug 2010 17:47:33 +0200
+Message-ID: <1282751267-3530-17-git-send-email-tj@kernel.org>
 References: <1282751267-3530-1-git-send-email-tj@kernel.org>
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1282751267-3530-1-git-send-email-tj@kernel.org>
 Sender: linux-fsdevel-owner@vger.kernel.org
 To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.
-Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@infradead.org>
+VIRTIO_F_BARRIER is deprecated.  Replace it with VIRTIO_F_FLUSH
+support.
 
-Switch to the WRITE_FLUSH_FUA flag for log writes and remove the EOPNOTSUPP
-detection for barriers.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_buf.c   |   16 ++--------------
- fs/xfs/linux-2.6/xfs_buf.h   |   11 +----------
- fs/xfs/linux-2.6/xfs_trace.h |    1 -
- fs/xfs/xfs_log.c             |   13 -------------
- 4 files changed, 3 insertions(+), 38 deletions(-)
+ Documentation/lguest/lguest.c |   29 +++++++++--------------------
+ 1 files changed, 9 insertions(+), 20 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index ea79072..b93ea33 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -929,19 +929,7 @@ xfs_buf_iodone_work(
- 	xfs_buf_t		*bp =
- 		container_of(work, xfs_buf_t, b_iodone_work);
- 
--	/*
--	 * We can get an EOPNOTSUPP to ordered writes.  Here we clear the
--	 * ordered flag and reissue them.  Because we can't tell the higher
--	 * layers directly that they should not issue ordered I/O anymore, they
--	 * need to check if the _XFS_BARRIER_FAILED flag was set during I/O completion.
--	 */
--	if ((bp->b_error == EOPNOTSUPP) &&
--	    (bp->b_flags & (XBF_ORDERED|XBF_ASYNC)) == (XBF_ORDERED|XBF_ASYNC)) {
--		trace_xfs_buf_ordered_retry(bp, _RET_IP_);
--		bp->b_flags &= ~XBF_ORDERED;
--		bp->b_flags |= _XFS_BARRIER_FAILED;
--		xfs_buf_iorequest(bp);
--	} else if (bp->b_iodone)
-+	if (bp->b_iodone)
- 		(*(bp->b_iodone))(bp);
- 	else if (bp->b_flags & XBF_ASYNC)
- 		xfs_buf_relse(bp);
-@@ -1200,7 +1188,7 @@ _xfs_buf_ioapply(
- 
- 	if (bp->b_flags & XBF_ORDERED) {
- 		ASSERT(!(bp->b_flags & XBF_READ));
--		rw = WRITE_BARRIER;
-+		rw = WRITE_FLUSH_FUA;
- 	} else if (bp->b_flags & XBF_LOG_BUFFER) {
- 		ASSERT(!(bp->b_flags & XBF_READ_AHEAD));
- 		bp->b_flags &= ~_XBF_RUN_QUEUES;
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index d072e5f..d533d64 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -86,14 +86,6 @@ typedef enum {
-  */
- #define _XBF_PAGE_LOCKED	(1 << 22)
- 
--/*
-- * If we try a barrier write, but it fails we have to communicate
-- * this to the upper layers.  Unfortunately b_error gets overwritten
-- * when the buffer is re-issued so we have to add another flag to
-- * keep this information.
-- */
--#define _XFS_BARRIER_FAILED	(1 << 23)
--
- typedef unsigned int xfs_buf_flags_t;
- 
- #define XFS_BUF_FLAGS \
-@@ -114,8 +106,7 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ _XBF_PAGES,		"PAGES" }, \
- 	{ _XBF_RUN_QUEUES,	"RUN_QUEUES" }, \
- 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
--	{ _XBF_PAGE_LOCKED,	"PAGE_LOCKED" }, \
--	{ _XFS_BARRIER_FAILED,	"BARRIER_FAILED" }
-+	{ _XBF_PAGE_LOCKED,	"PAGE_LOCKED" }
- 
- 
- typedef enum {
-diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
-index be5dffd..8fe311a 100644
---- a/fs/xfs/linux-2.6/xfs_trace.h
-+++ b/fs/xfs/linux-2.6/xfs_trace.h
-@@ -325,7 +325,6 @@ DEFINE_BUF_EVENT(xfs_buf_lock);
- DEFINE_BUF_EVENT(xfs_buf_lock_done);
- DEFINE_BUF_EVENT(xfs_buf_cond_lock);
- DEFINE_BUF_EVENT(xfs_buf_unlock);
--DEFINE_BUF_EVENT(xfs_buf_ordered_retry);
- DEFINE_BUF_EVENT(xfs_buf_iowait);
- DEFINE_BUF_EVENT(xfs_buf_iowait_done);
- DEFINE_BUF_EVENT(xfs_buf_delwri_queue);
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 925d572..430a8fc 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -917,19 +917,6 @@ xlog_iodone(xfs_buf_t *bp)
- 	l = iclog->ic_log;
+diff --git a/Documentation/lguest/lguest.c b/Documentation/lguest/lguest.c
+index e9ce3c5..fbc64b3 100644
+--- a/Documentation/lguest/lguest.c
++++ b/Documentation/lguest/lguest.c
+@@ -1639,15 +1639,6 @@ static void blk_request(struct virtqueue *vq)
+ 	off = out->sector * 512;
  
  	/*
--	 * If the _XFS_BARRIER_FAILED flag was set by a lower
--	 * layer, it means the underlying device no longer supports
--	 * barrier I/O. Warn loudly and turn off barriers.
+-	 * The block device implements "barriers", where the Guest indicates
+-	 * that it wants all previous writes to occur before this write.  We
+-	 * don't have a way of asking our kernel to do a barrier, so we just
+-	 * synchronize all the data in the file.  Pretty poor, no?
 -	 */
--	if (bp->b_flags & _XFS_BARRIER_FAILED) {
--		bp->b_flags &= ~_XFS_BARRIER_FAILED;
--		l->l_mp->m_flags &= ~XFS_MOUNT_BARRIER;
--		xfs_fs_cmn_err(CE_WARN, l->l_mp,
--				"xlog_iodone: Barriers are no longer supported"
--				" by device. Disabling barriers\n");
--	}
+-	if (out->type & VIRTIO_BLK_T_BARRIER)
+-		fdatasync(vblk->fd);
 -
 -	/*
- 	 * Race to shutdown the filesystem if we see an error.
+ 	 * In general the virtio block driver is allowed to try SCSI commands.
+ 	 * It'd be nice if we supported eject, for example, but we don't.
  	 */
- 	if (XFS_TEST_ERROR((XFS_BUF_GETERROR(bp)), l->l_mp,
+@@ -1679,6 +1670,13 @@ static void blk_request(struct virtqueue *vq)
+ 			/* Die, bad Guest, die. */
+ 			errx(1, "Write past end %llu+%u", off, ret);
+ 		}
++
++		wlen = sizeof(*in);
++		*in = (ret >= 0 ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR);
++	} else if (out->type & VIRTIO_BLK_T_FLUSH) {
++		/* Flush */
++		ret = fdatasync(vblk->fd);
++		verbose("FLUSH fdatasync: %i\n", ret);
+ 		wlen = sizeof(*in);
+ 		*in = (ret >= 0 ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR);
+ 	} else {
+@@ -1702,15 +1700,6 @@ static void blk_request(struct virtqueue *vq)
+ 		}
+ 	}
+ 
+-	/*
+-	 * OK, so we noted that it was pretty poor to use an fdatasync as a
+-	 * barrier.  But Christoph Hellwig points out that we need a sync
+-	 * *afterwards* as well: "Barriers specify no reordering to the front
+-	 * or the back."  And Jens Axboe confirmed it, so here we are:
+-	 */
+-	if (out->type & VIRTIO_BLK_T_BARRIER)
+-		fdatasync(vblk->fd);
+-
+ 	/* Finished that request. */
+ 	add_used(vq, head, wlen);
+ }
+@@ -1735,8 +1724,8 @@ static void setup_block_file(const char *filename)
+ 	vblk->fd = open_or_die(filename, O_RDWR|O_LARGEFILE);
+ 	vblk->len = lseek64(vblk->fd, 0, SEEK_END);
+ 
+-	/* We support barriers. */
+-	add_feature(dev, VIRTIO_BLK_F_BARRIER);
++	/* We support FLUSH. */
++	add_feature(dev, VIRTIO_BLK_F_FLUSH);
+ 
+ 	/* Tell Guest how many sectors this device has. */
+ 	conf.capacity = cpu_to_le64(vblk->len / 512);
 -- 
 1.7.1
 
