@@ -1,8 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 05/30] block: remove spurious uses of
-	REQ_HARDBARRIER
-Date: Wed, 25 Aug 2010 17:47:22 +0200
-Message-ID: <1282751267-3530-6-git-send-email-tj@kernel.org>
+Subject: [PATCH 30/30] block: remove the BH_Eopnotsupp flag
+Date: Wed, 25 Aug 2010 17:47:47 +0200
+Message-ID: <1282751267-3530-31-git-send-email-tj@kernel.org>
 References: <1282751267-3530-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -20,153 +19,89 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@l
-Cc: Tejun Heo <tj@kernel.org>, Peter Osterlund <petero2@telia.com>, Boaz Harrosh <bharrosh@panasas.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-REQ_HARDBARRIER is deprecated.  Remove spurious uses in the following
-users.  Please note that other than osdblk, all other uses were
-already spurious before deprecation.
+From: Christoph Hellwig <hch@infradead.org>
 
-* osdblk: osdblk_rq_fn() won't receive any request with
-  REQ_HARDBARRIER set.  Remove the test for it.
+This flag was only set for barrier buffers, which we don't submit
+anymore.
 
-* pktcdvd: use of REQ_HARDBARRIER in pkt_generic_packet() doesn't mean
-  anything.  Removed.
-
-* aic7xxx_old: Setting MSG_ORDERED_Q_TAG on REQ_HARDBARRIER is
-  spurious.  Removed.
-
-* sas_scsi_host: Setting TASK_ATTR_ORDERED on REQ_HARDBARRIER is
-  spurious.  Removed.
-
-* scsi_tcq: The ordered tag path wasn't being used anyway.  Removed.
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@suse.de>
-Cc: Peter Osterlund <petero2@telia.com>
 ---
- drivers/block/osdblk.c              |    3 +--
- drivers/block/pktcdvd.c             |    1 -
- drivers/scsi/aic7xxx_old.c          |   21 ++-------------------
- drivers/scsi/libsas/sas_scsi_host.c |   13 +------------
- include/scsi/scsi_tcq.h             |    6 +-----
- 5 files changed, 5 insertions(+), 39 deletions(-)
+ fs/buffer.c                 |    7 +------
+ fs/fat/misc.c               |    5 +----
+ include/linux/buffer_head.h |    2 --
+ 3 files changed, 2 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
-index 72d6246..87311eb 100644
---- a/drivers/block/osdblk.c
-+++ b/drivers/block/osdblk.c
-@@ -310,8 +310,7 @@ static void osdblk_rq_fn(struct request_queue *q)
- 			break;
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 3e7dca2..7f0b9b0 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -156,7 +156,7 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
+ 	if (uptodate) {
+ 		set_buffer_uptodate(bh);
+ 	} else {
+-		if (!buffer_eopnotsupp(bh) && !quiet_error(bh)) {
++		if (!quiet_error(bh)) {
+ 			buffer_io_error(bh);
+ 			printk(KERN_WARNING "lost page write due to "
+ 					"I/O error on %s\n",
+@@ -2891,7 +2891,6 @@ static void end_bio_bh_io_sync(struct bio *bio, int err)
  
- 		/* filter out block requests we don't understand */
--		if (rq->cmd_type != REQ_TYPE_FS &&
--		    !(rq->cmd_flags & REQ_HARDBARRIER)) {
-+		if (rq->cmd_type != REQ_TYPE_FS) {
- 			blk_end_request_all(rq, 0);
- 			continue;
- 		}
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index b1cbeb5..0166ea1 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -753,7 +753,6 @@ static int pkt_generic_packet(struct pktcdvd_device *pd, struct packet_command *
- 
- 	rq->timeout = 60*HZ;
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
--	rq->cmd_flags |= REQ_HARDBARRIER;
- 	if (cgc->quiet)
- 		rq->cmd_flags |= REQ_QUIET;
- 
-diff --git a/drivers/scsi/aic7xxx_old.c b/drivers/scsi/aic7xxx_old.c
-index 93984c9..e1cd606 100644
---- a/drivers/scsi/aic7xxx_old.c
-+++ b/drivers/scsi/aic7xxx_old.c
-@@ -2850,12 +2850,6 @@ aic7xxx_done(struct aic7xxx_host *p, struct aic7xxx_scb *scb)
-       aic_dev->r_total++;
-       ptr = aic_dev->r_bins;
-     }
--    if(cmd->device->simple_tags && cmd->request->cmd_flags & REQ_HARDBARRIER)
--    {
--      aic_dev->barrier_total++;
--      if(scb->tag_action == MSG_ORDERED_Q_TAG)
--        aic_dev->ordered_total++;
--    }
-     x = scb->sg_length;
-     x >>= 10;
-     for(i=0; i<6; i++)
-@@ -10144,19 +10138,8 @@ static void aic7xxx_buildscb(struct aic7xxx_host *p, struct scsi_cmnd *cmd,
-     /* We always force TEST_UNIT_READY to untagged */
-     if (cmd->cmnd[0] != TEST_UNIT_READY && sdptr->simple_tags)
-     {
--      if (req->cmd_flags & REQ_HARDBARRIER)
--      {
--	if(sdptr->ordered_tags)
--	{
--          hscb->control |= MSG_ORDERED_Q_TAG;
--          scb->tag_action = MSG_ORDERED_Q_TAG;
--	}
--      }
--      else
--      {
--        hscb->control |= MSG_SIMPLE_Q_TAG;
--        scb->tag_action = MSG_SIMPLE_Q_TAG;
--      }
-+      hscb->control |= MSG_SIMPLE_Q_TAG;
-+      scb->tag_action = MSG_SIMPLE_Q_TAG;
-     }
-   }
-   if ( !(aic_dev->dtr_pending) &&
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index f0cfba9..535085c 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -130,17 +130,6 @@ static void sas_scsi_task_done(struct sas_task *task)
- 	sc->scsi_done(sc);
- }
- 
--static enum task_attribute sas_scsi_get_task_attr(struct scsi_cmnd *cmd)
--{
--	enum task_attribute ta = TASK_ATTR_SIMPLE;
--	if (cmd->request && blk_rq_tagged(cmd->request)) {
--		if (cmd->device->ordered_tags &&
--		    (cmd->request->cmd_flags & REQ_HARDBARRIER))
--			ta = TASK_ATTR_ORDERED;
--	}
--	return ta;
--}
--
- static struct sas_task *sas_create_task(struct scsi_cmnd *cmd,
- 					       struct domain_device *dev,
- 					       gfp_t gfp_flags)
-@@ -160,7 +149,7 @@ static struct sas_task *sas_create_task(struct scsi_cmnd *cmd,
- 	task->ssp_task.retry_count = 1;
- 	int_to_scsilun(cmd->device->lun, &lun);
- 	memcpy(task->ssp_task.LUN, &lun.scsi_lun, 8);
--	task->ssp_task.task_attr = sas_scsi_get_task_attr(cmd);
-+	task->ssp_task.task_attr = TASK_ATTR_SIMPLE;
- 	memcpy(task->ssp_task.cdb, cmd->cmnd, 16);
- 
- 	task->scatter = scsi_sglist(cmd);
-diff --git a/include/scsi/scsi_tcq.h b/include/scsi/scsi_tcq.h
-index 1723138..d6e7994 100644
---- a/include/scsi/scsi_tcq.h
-+++ b/include/scsi/scsi_tcq.h
-@@ -97,13 +97,9 @@ static inline void scsi_deactivate_tcq(struct scsi_device *sdev, int depth)
- static inline int scsi_populate_tag_msg(struct scsi_cmnd *cmd, char *msg)
- {
-         struct request *req = cmd->request;
--	struct scsi_device *sdev = cmd->device;
- 
-         if (blk_rq_tagged(req)) {
--		if (sdev->ordered_tags && req->cmd_flags & REQ_HARDBARRIER)
--        	        *msg++ = MSG_ORDERED_TAG;
--        	else
--        	        *msg++ = MSG_SIMPLE_TAG;
-+		*msg++ = MSG_SIMPLE_TAG;
-         	*msg++ = req->tag;
-         	return 2;
+ 	if (err == -EOPNOTSUPP) {
+ 		set_bit(BIO_EOPNOTSUPP, &bio->bi_flags);
+-		set_bit(BH_Eopnotsupp, &bh->b_state);
  	}
+ 
+ 	if (unlikely (test_bit(BIO_QUIET,&bio->bi_flags)))
+@@ -3031,10 +3030,6 @@ int __sync_dirty_buffer(struct buffer_head *bh, int rw)
+ 		bh->b_end_io = end_buffer_write_sync;
+ 		ret = submit_bh(rw, bh);
+ 		wait_on_buffer(bh);
+-		if (buffer_eopnotsupp(bh)) {
+-			clear_buffer_eopnotsupp(bh);
+-			ret = -EOPNOTSUPP;
+-		}
+ 		if (!ret && !buffer_uptodate(bh))
+ 			ret = -EIO;
+ 	} else {
+diff --git a/fs/fat/misc.c b/fs/fat/misc.c
+index 1736f23..970e682 100644
+--- a/fs/fat/misc.c
++++ b/fs/fat/misc.c
+@@ -255,10 +255,7 @@ int fat_sync_bhs(struct buffer_head **bhs, int nr_bhs)
+ 
+ 	for (i = 0; i < nr_bhs; i++) {
+ 		wait_on_buffer(bhs[i]);
+-		if (buffer_eopnotsupp(bhs[i])) {
+-			clear_buffer_eopnotsupp(bhs[i]);
+-			err = -EOPNOTSUPP;
+-		} else if (!err && !buffer_uptodate(bhs[i]))
++		if (!err && !buffer_uptodate(bhs[i]))
+ 			err = -EIO;
+ 	}
+ 	return err;
+diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
+index fc999f5..dd1b25b 100644
+--- a/include/linux/buffer_head.h
++++ b/include/linux/buffer_head.h
+@@ -32,7 +32,6 @@ enum bh_state_bits {
+ 	BH_Delay,	/* Buffer is not yet allocated on disk */
+ 	BH_Boundary,	/* Block is followed by a discontiguity */
+ 	BH_Write_EIO,	/* I/O error on write */
+-	BH_Eopnotsupp,	/* DEPRECATED: operation not supported (barrier) */
+ 	BH_Unwritten,	/* Buffer is allocated on disk but not written */
+ 	BH_Quiet,	/* Buffer Error Prinks to be quiet */
+ 
+@@ -124,7 +123,6 @@ BUFFER_FNS(Async_Write, async_write)
+ BUFFER_FNS(Delay, delay)
+ BUFFER_FNS(Boundary, boundary)
+ BUFFER_FNS(Write_EIO, write_io_error)
+-BUFFER_FNS(Eopnotsupp, eopnotsupp)
+ BUFFER_FNS(Unwritten, unwritten)
+ 
+ #define bh_offset(bh)		((unsigned long)(bh)->b_data & ~PAGE_MASK)
 -- 
 1.7.1
