@@ -1,64 +1,43 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC] training mpath to discern between SCSI errors
-Date: Wed, 25 Aug 2010 14:15:13 -0500
-Message-ID: <4C756BC1.1030105@cs.wisc.edu>
-References: <20100825155918.GB8509@redhat.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Wed, 25 Aug 2010 22:02:24 +0200
+Message-ID: <20100825200223.GE2738@quack.suse.cz>
+References: <1282751267-3530-1-git-send-email-tj@kernel.org>
+ <1282751267-3530-27-git-send-email-tj@kernel.org>
+ <20100825155842.GA3229@lst.de>
+ <20100825160032.GC3229@lst.de>
+ <4C753D75.2010305@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20100825155918.GB8509@redhat.com>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Tejun Heo <tj@kernel.org>, James.Bottomley@suse.de, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4C753D75.2010305@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, jack@suse.cz, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/25/2010 10:59 AM, Mike Snitzer wrote:
-> On Wed, Aug 25 2010 at  4:00am -0400,
-> Kiyoshi Ueda<k-ueda@ct.jp.nec.com>  wrote:
->
->>> I'm not sure how to proceed here.  How much work would
->>> discerning between transport and IO errors take?  If it can't be done
->>> quickly enough the retry logic can be kept around to keep the old
->>> behavior but that already was a broken behavior, so...  :-(
->>
->> I'm not sure how long will it take.
->
-> We first need to understand what direction we want to go with this.  We
-> currently have 2 options.  But any other ideas are obviously welcome.
->
-> 1)
-> Mike Christie has a patchset that introduce more specific
-> target/transport/host error codes.  Mike shared these pointers but he'd
-> have to put the work in to refresh them:
-> http://marc.info/?l=linux-scsi&m=112487427230642&w=2
-> http://marc.info/?l=linux-scsi&m=112487427306501&w=2
-> http://marc.info/?l=linux-scsi&m=112487431524436&w=2
-> http://marc.info/?l=linux-scsi&m=112487431524350&w=2
->
-> errno.h new EXYZ
-> http://marc.info/?l=linux-kernel&m=107715299008231&w=2
->
-> add block layer blkdev.h error values
-> http://marc.info/?l=linux-kernel&m=107961883915068&w=2
->
-> add block layer blkdev.h error values (v2 convert more drivers)
-> http://marc.info/?l=linux-scsi&m=112487427230642&w=2
->
-> I think that patchset's appoach is fairly disruptive just to be able to
-> train upper layers to differentiate (e.g. mpath).  But in the end maybe
-> that change takes the code in a more desirable direction?
+On Wed 25-08-10 17:57:41, Tejun Heo wrote:
+> On 08/25/2010 06:00 PM, Christoph Hellwig wrote:
+> > On Wed, Aug 25, 2010 at 05:58:42PM +0200, Christoph Hellwig wrote:
+> >> On Wed, Aug 25, 2010 at 05:47:43PM +0200, Tejun Heo wrote:
+> >>> From: Christoph Hellwig <hch@infradead.org>
+> >>>
+> >>> ext4 already uses synchronous discards, no need to add I/O barriers.
+> >>
+> >> This needs the patch that Jan sent in reply to my initial version merged
+> >> into it.
+> > 
+> > Actually the jbd2 patch needs it merged, but the point still stands.
+> 
+> Yeah, wasn't sure about that one.  Has anyone tested it?  I'll be
+> happy to merge it but I have no idea whether it's correct or not and
+> Jan didn't seem to have tested it so...  Jan, shall I merge the patch?
+  I'm quite confident the patch is correct so you can merge it I think but
+tomorrow I'll give it some crash testing together with the rest of your
+patch set in KVM to be sure.
 
-I think it is more disruptive, but is the cleaner approach in the end.
-
-#2 looks hacky. In upper layers, we will have checks for dasd and other 
-AOE and other drivers. And then #2 does not even work for filesystems 
-(ext said they need this).
-
-
-
->
-> 2)
-> Another option is Hannes' approach of having DM consume req->errors and
-> SCSI sense more directly.
->
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
