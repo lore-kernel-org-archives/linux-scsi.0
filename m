@@ -1,107 +1,81 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 30/30] block: remove the BH_Eopnotsupp flag
-Date: Wed, 25 Aug 2010 17:47:47 +0200
-Message-ID: <1282751267-3530-31-git-send-email-tj@kernel.org>
+Subject: [PATCH 18/30] block: pass gfp_mask and flags to sb_issue_discard
+Date: Wed, 25 Aug 2010 17:47:35 +0200
+Message-ID: <1282751267-3530-19-git-send-email-tj@kernel.org>
 References: <1282751267-3530-1-git-send-email-tj@kernel.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 In-Reply-To: <1282751267-3530-1-git-send-email-tj@kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@l
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.
 Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-This flag was only set for barrier buffers, which we don't submit
-anymore.
+We'll need to get rid of the BLKDEV_IFL_BARRIER flag, and to facilitate
+that and to make the interface less confusing pass all flags explicitly.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Mike Snitzer <snitzer@redhat.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- fs/buffer.c                 |    7 +------
- fs/fat/misc.c               |    5 +----
- include/linux/buffer_head.h |    2 --
- 3 files changed, 2 insertions(+), 12 deletions(-)
+ fs/ext4/mballoc.c      |    3 ++-
+ fs/fat/fatent.c        |    4 +++-
+ include/linux/blkdev.h |   11 +++++------
+ 3 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 3e7dca2..7f0b9b0 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -156,7 +156,7 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
- 	if (uptodate) {
- 		set_buffer_uptodate(bh);
- 	} else {
--		if (!buffer_eopnotsupp(bh) && !quiet_error(bh)) {
-+		if (!quiet_error(bh)) {
- 			buffer_io_error(bh);
- 			printk(KERN_WARNING "lost page write due to "
- 					"I/O error on %s\n",
-@@ -2891,7 +2891,6 @@ static void end_bio_bh_io_sync(struct bio *bio, int err)
+diff --git a/fs/ext4/mballoc.c b/fs/ext4/mballoc.c
+index 4b4ad4b..df44b34 100644
+--- a/fs/ext4/mballoc.c
++++ b/fs/ext4/mballoc.c
+@@ -2566,7 +2566,8 @@ static inline void ext4_issue_discard(struct super_block *sb,
+ 	discard_block = block + ext4_group_first_block_no(sb, block_group);
+ 	trace_ext4_discard_blocks(sb,
+ 			(unsigned long long) discard_block, count);
+-	ret = sb_issue_discard(sb, discard_block, count);
++	ret = sb_issue_discard(sb, discard_block, count, GFP_NOFS,
++			       BLKDEV_IFL_WAIT | BLKDEV_IFL_BARRIER);
+ 	if (ret == EOPNOTSUPP) {
+ 		ext4_warning(sb, "discard not supported, disabling");
+ 		clear_opt(EXT4_SB(sb)->s_mount_opt, DISCARD);
+diff --git a/fs/fat/fatent.c b/fs/fat/fatent.c
+index 81184d3..3a56a82 100644
+--- a/fs/fat/fatent.c
++++ b/fs/fat/fatent.c
+@@ -577,7 +577,9 @@ int fat_free_clusters(struct inode *inode, int cluster)
  
- 	if (err == -EOPNOTSUPP) {
- 		set_bit(BIO_EOPNOTSUPP, &bio->bi_flags);
--		set_bit(BH_Eopnotsupp, &bh->b_state);
- 	}
+ 				sb_issue_discard(sb,
+ 					fat_clus_to_blknr(sbi, first_cl),
+-					nr_clus * sbi->sec_per_clus);
++					nr_clus * sbi->sec_per_clus,
++					GFP_NOFS,
++					BLKDEV_IFL_WAIT | BLKDEV_IFL_BARRIER);
  
- 	if (unlikely (test_bit(BIO_QUIET,&bio->bi_flags)))
-@@ -3031,10 +3030,6 @@ int __sync_dirty_buffer(struct buffer_head *bh, int rw)
- 		bh->b_end_io = end_buffer_write_sync;
- 		ret = submit_bh(rw, bh);
- 		wait_on_buffer(bh);
--		if (buffer_eopnotsupp(bh)) {
--			clear_buffer_eopnotsupp(bh);
--			ret = -EOPNOTSUPP;
--		}
- 		if (!ret && !buffer_uptodate(bh))
- 			ret = -EIO;
- 	} else {
-diff --git a/fs/fat/misc.c b/fs/fat/misc.c
-index 1736f23..970e682 100644
---- a/fs/fat/misc.c
-+++ b/fs/fat/misc.c
-@@ -255,10 +255,7 @@ int fat_sync_bhs(struct buffer_head **bhs, int nr_bhs)
+ 				first_cl = cluster;
+ 			}
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 8ef705f..6b305eb 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -881,13 +881,12 @@ extern int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 		sector_t nr_sects, gfp_t gfp_mask, unsigned long flags);
+ extern int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
+ 			sector_t nr_sects, gfp_t gfp_mask, unsigned long flags);
+-static inline int sb_issue_discard(struct super_block *sb,
+-				   sector_t block, sector_t nr_blocks)
++static inline int sb_issue_discard(struct super_block *sb, sector_t block,
++		sector_t nr_blocks, gfp_t gfp_mask, unsigned long flags)
+ {
+-	block <<= (sb->s_blocksize_bits - 9);
+-	nr_blocks <<= (sb->s_blocksize_bits - 9);
+-	return blkdev_issue_discard(sb->s_bdev, block, nr_blocks, GFP_NOFS,
+-				   BLKDEV_IFL_WAIT | BLKDEV_IFL_BARRIER);
++	return blkdev_issue_discard(sb->s_bdev, block << (sb->s_blocksize_bits - 9),
++				    nr_blocks << (sb->s_blocksize_bits - 9),
++				    gfp_mask, flags);
+ }
  
- 	for (i = 0; i < nr_bhs; i++) {
- 		wait_on_buffer(bhs[i]);
--		if (buffer_eopnotsupp(bhs[i])) {
--			clear_buffer_eopnotsupp(bhs[i]);
--			err = -EOPNOTSUPP;
--		} else if (!err && !buffer_uptodate(bhs[i]))
-+		if (!err && !buffer_uptodate(bhs[i]))
- 			err = -EIO;
- 	}
- 	return err;
-diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-index fc999f5..dd1b25b 100644
---- a/include/linux/buffer_head.h
-+++ b/include/linux/buffer_head.h
-@@ -32,7 +32,6 @@ enum bh_state_bits {
- 	BH_Delay,	/* Buffer is not yet allocated on disk */
- 	BH_Boundary,	/* Block is followed by a discontiguity */
- 	BH_Write_EIO,	/* I/O error on write */
--	BH_Eopnotsupp,	/* DEPRECATED: operation not supported (barrier) */
- 	BH_Unwritten,	/* Buffer is allocated on disk but not written */
- 	BH_Quiet,	/* Buffer Error Prinks to be quiet */
- 
-@@ -124,7 +123,6 @@ BUFFER_FNS(Async_Write, async_write)
- BUFFER_FNS(Delay, delay)
- BUFFER_FNS(Boundary, boundary)
- BUFFER_FNS(Write_EIO, write_io_error)
--BUFFER_FNS(Eopnotsupp, eopnotsupp)
- BUFFER_FNS(Unwritten, unwritten)
- 
- #define bh_offset(bh)		((unsigned long)(bh)->b_data & ~PAGE_MASK)
+ extern int blk_verify_command(unsigned char *cmd, fmode_t has_write_perm);
 -- 
 1.7.1
+
