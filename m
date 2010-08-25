@@ -1,60 +1,30 @@
-From: Ted Ts'o <tytso@mit.edu>
-Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Wed, 25 Aug 2010 18:45:00 -0400
-Message-ID: <20100825224500.GJ4453@thunk.org>
-References: <594039.74663.qm@web111905.mail.gq1.yahoo.com>
- <4C73DA15.2010207@vlnb.net>
- <AANLkTi=m15OJg+QsM76r1O74OWjdxht3tqza1DYEeLVw@mail.gmail.com>
- <201008251820.27293.konrad@darnok.org>
+From: Jean Sacren <sakiwit@gmail.com>
+Subject: [PATCH 0/1] scsi: Fix warning: zero-length gnu_printf format string
+Date: Wed, 25 Aug 2010 17:55:29 -0600
+Message-ID: <20100825235529.GA7152@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:61693 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751460Ab0HYXz1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Aug 2010 19:55:27 -0400
+Received: by pxi10 with SMTP id 10so409546pxi.19
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Aug 2010 16:55:27 -0700 (PDT)
 Content-Disposition: inline
-In-Reply-To: <201008251820.27293.konrad@darnok.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Cc: Chris Weiss <cweiss@gmail.com>, Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Aug 25, 2010 at 06:20:26PM -0400, Konrad Rzeszutek Wilk wrote:
-> On Tuesday 24 August 2010 10:51:04 Chris Weiss wrote:
-> > On Tue, Aug 24, 2010 at 9:41 AM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
-> > > James Bottomley, on 08/22/2010 12:43 AM wrote:
-> > >> Interface re-use (or at least ABI compatibility) is the whole point,
-> > >> it's what makes the solution a drop in replacement.
-> > >
-> > > I see now. You want ABI compatibility to keep the "contract" that no
-> > > kernel changes can break applications binary compatibility for unlimited
-> > > time.
-> >
-> > ok now I'm confused, or maybe I'm not understanding ABI correctly, or
-> > maybe you guys are using it in a way that is inconsistent with popular
-> 
-> You are thinking of the KABI. That changes per each release except
-> if you buy a vendor product. Red Hat for example keeps an KABI
-> symbol list where they guarantee that those parameters, structures
-> ,etc will never change. John Masters wrote a nice paper about how
-> they solved this:
-> http://dup.et.redhat.com/presentations/DriverUpdateProgramTechnical.pdf
+Hi,
 
-Just to make sure people aren't getting more confused.  What Red Hat
-calls the KABI (and SLES and Ubuntu do something similar) is the
-Kernel ABI which is presented to kernel modules.  This is important
-for companies shipping out-of-tree and proprietary kernel modules.
-(And we'll ignore the questions about whether such proprietary kernel
-modules violate the GPL or not; contact your favorite lawyer for an
-opinion on that subject.  It depends on the facts of the case and your
-legal jourisdiction, almost certainly.)
+Jean Sacren (1):
+  scsi: Fix warning: zero-length gnu_printf format string
 
-> In terms of ABI, think ioctl calls and its a parameters. They are suppose to 
-> stay the same for long long durations.
+ drivers/scsi/constants.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-When we talk about the ABI must be constant, this is the kernel
-interface presented to userspace programs, including statically linked
-userspace progams.   So system calls, ioctl's, etc.
 
-This is what allows you to download or purchase a userspace program
-(including silly things like DB2, or Oracle Database, or Adobe Flash),
-and it will work even if you upgrade your kernel.
-
-						- Ted
+-- 
+Jean Sacren
+Bring LAMP To People
