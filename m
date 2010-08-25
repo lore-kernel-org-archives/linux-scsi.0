@@ -1,43 +1,59 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
-Date: Wed, 25 Aug 2010 22:02:24 +0200
-Message-ID: <20100825200223.GE2738@quack.suse.cz>
-References: <1282751267-3530-1-git-send-email-tj@kernel.org>
- <1282751267-3530-27-git-send-email-tj@kernel.org>
- <20100825155842.GA3229@lst.de>
- <20100825160032.GC3229@lst.de>
- <4C753D75.2010305@kernel.org>
+From: Konrad Rzeszutek Wilk <konrad@darnok.org>
+Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
+Date: Wed, 25 Aug 2010 18:20:26 -0400
+Message-ID: <201008251820.27293.konrad@darnok.org>
+References: <594039.74663.qm@web111905.mail.gq1.yahoo.com> <4C73DA15.2010207@vlnb.net> <AANLkTi=m15OJg+QsM76r1O74OWjdxht3tqza1DYEeLVw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from andromeda.dapyr.net ([206.212.254.10]:35871 "EHLO
+	andromeda.dapyr.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751748Ab0HYWVc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Aug 2010 18:21:32 -0400
+In-Reply-To: <AANLkTi=m15OJg+QsM76r1O74OWjdxht3tqza1DYEeLVw@mail.gmail.com>
 Content-Disposition: inline
-In-Reply-To: <4C753D75.2010305@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, jack@suse.cz, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chris Weiss <cweiss@gmail.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
 
-On Wed 25-08-10 17:57:41, Tejun Heo wrote:
-> On 08/25/2010 06:00 PM, Christoph Hellwig wrote:
-> > On Wed, Aug 25, 2010 at 05:58:42PM +0200, Christoph Hellwig wrote:
-> >> On Wed, Aug 25, 2010 at 05:47:43PM +0200, Tejun Heo wrote:
-> >>> From: Christoph Hellwig <hch@infradead.org>
-> >>>
-> >>> ext4 already uses synchronous discards, no need to add I/O barriers.
-> >>
-> >> This needs the patch that Jan sent in reply to my initial version merged
-> >> into it.
-> > 
-> > Actually the jbd2 patch needs it merged, but the point still stands.
-> 
-> Yeah, wasn't sure about that one.  Has anyone tested it?  I'll be
-> happy to merge it but I have no idea whether it's correct or not and
-> Jan didn't seem to have tested it so...  Jan, shall I merge the patch?
-  I'm quite confident the patch is correct so you can merge it I think but
-tomorrow I'll give it some crash testing together with the rest of your
-patch set in KVM to be sure.
+On Tuesday 24 August 2010 10:51:04 Chris Weiss wrote:
+> On Tue, Aug 24, 2010 at 9:41 AM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+> > James Bottomley, on 08/22/2010 12:43 AM wrote:
+> >> Interface re-use (or at least ABI compatibility) is the whole point,
+> >> it's what makes the solution a drop in replacement.
+> >
+> > I see now. You want ABI compatibility to keep the "contract" that no
+> > kernel changes can break applications binary compatibility for unlimited
+> > time.
+>
+> ok now I'm confused, or maybe I'm not understanding ABI correctly, or
+> maybe you guys are using it in a way that is inconsistent with popular
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+You are thinking of the KABI. That changes per each release except if you buy 
+a vendor product. Red Hat for example keeps an KABI symbol list where they 
+guarantee that those parameters, structures ,etc will never change. John 
+Masters wrote a nice paper about how they solved this:
+http://dup.et.redhat.com/presentations/DriverUpdateProgramTechnical.pdf
+
+I don't have experience with other vendors.
+
+In terms of ABI, think ioctl calls and its a parameters. They are suppose to 
+stay the same for long long durations.
+
+> convention.   As a VMware user, I have experienced fully that the
+> kernel ABI changes in various places with every release.  VMwares
+> drivers have to be constantly updated to match changes in kernel
+> function parameters and even what functions are available.
+>
+> I've also experienced it with scsi cards, dsl modems, and other 3rd
+> party drivers.  It's the one big downside to developing for the Linux
+> kernel, the ABI is /always/ changing.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
