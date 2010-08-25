@@ -1,69 +1,83 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 24/30] jbd: replace barriers with explicit flush / FUA usage
-Date: Wed, 25 Aug 2010 17:47:41 +0200
-Message-ID: <1282751267-3530-25-git-send-email-tj@kernel.org>
+Subject: [PATCH 21/30] gfs2: replace barriers with explicit flush / FUA usage
+Date: Wed, 25 Aug 2010 17:47:38 +0200
+Message-ID: <1282751267-3530-22-git-send-email-tj@kernel.org>
 References: <1282751267-3530-1-git-send-email-tj@kernel.org>
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1282751267-3530-1-git-send-email-tj@kernel.org>
-Sender: linux-raid-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.
 Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Switch to the WRITE_FLUSH_FUA flag for journal commits and remove the
-EOPNOTSUPP detection for barriers.
+Switch to the WRITE_FLUSH_FUA flag for log writes, remove the EOPNOTSUPP
+detection for barriers and stop setting the barrier flag for discards.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Jan Kara <jack@suse.cz>
+Acked-by: Steven Whitehouse <swhiteho@redhat.com>
+Acked-by: Bob Peterson <rpeterso@redhat.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- fs/jbd/commit.c |   30 +++---------------------------
- 1 files changed, 3 insertions(+), 27 deletions(-)
+ fs/gfs2/log.c  |   19 +++++--------------
+ fs/gfs2/rgrp.c |    5 ++---
+ 2 files changed, 7 insertions(+), 17 deletions(-)
 
-diff --git a/fs/jbd/commit.c b/fs/jbd/commit.c
-index 95d8c11..484c5e5 100644
---- a/fs/jbd/commit.c
-+++ b/fs/jbd/commit.c
-@@ -137,34 +137,10 @@ static int journal_write_commit_record(journal_t *journal,
- 	JBUFFER_TRACE(descriptor, "write commit block");
- 	set_buffer_dirty(bh);
+diff --git a/fs/gfs2/log.c b/fs/gfs2/log.c
+index cde1248..9c65170 100644
+--- a/fs/gfs2/log.c
++++ b/fs/gfs2/log.c
+@@ -592,22 +592,13 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags, int pull)
+ 	lh->lh_hash = cpu_to_be32(hash);
  
--	if (journal->j_flags & JFS_BARRIER) {
--		ret = __sync_dirty_buffer(bh, WRITE_SYNC | WRITE_BARRIER);
--
--		/*
--		 * Is it possible for another commit to fail at roughly
--		 * the same time as this one?  If so, we don't want to
--		 * trust the barrier flag in the super, but instead want
--		 * to remember if we sent a barrier request
--		 */
--		if (ret == -EOPNOTSUPP) {
--			char b[BDEVNAME_SIZE];
--
--			printk(KERN_WARNING
--				"JBD: barrier-based sync failed on %s - "
--				"disabling barriers\n",
--				bdevname(journal->j_dev, b));
--			spin_lock(&journal->j_state_lock);
--			journal->j_flags &= ~JFS_BARRIER;
--			spin_unlock(&journal->j_state_lock);
--
--			/* And try again, without the barrier */
--			set_buffer_uptodate(bh);
--			set_buffer_dirty(bh);
--			ret = sync_dirty_buffer(bh);
--		}
--	} else {
-+	if (journal->j_flags & JFS_BARRIER)
-+		ret = __sync_dirty_buffer(bh, WRITE_SYNC | WRITE_FLUSH_FUA);
-+	else
- 		ret = sync_dirty_buffer(bh);
+ 	bh->b_end_io = end_buffer_write_sync;
+-	if (test_bit(SDF_NOBARRIERS, &sdp->sd_flags))
+-		goto skip_barrier;
+ 	get_bh(bh);
+-	submit_bh(WRITE_BARRIER | REQ_META, bh);
+-	wait_on_buffer(bh);
+-	if (buffer_eopnotsupp(bh)) {
+-		clear_buffer_eopnotsupp(bh);
+-		set_buffer_uptodate(bh);
+-		fs_info(sdp, "barrier sync failed - disabling barriers\n");
+-		set_bit(SDF_NOBARRIERS, &sdp->sd_flags);
+-		lock_buffer(bh);
+-skip_barrier:
+-		get_bh(bh);
++	if (test_bit(SDF_NOBARRIERS, &sdp->sd_flags))
+ 		submit_bh(WRITE_SYNC | REQ_META, bh);
+-		wait_on_buffer(bh);
 -	}
- 
- 	put_bh(bh);		/* One for getblk() */
- 	journal_put_journal_head(descriptor);
++	else
++		submit_bh(WRITE_FLUSH_FUA | REQ_META, bh);
++	wait_on_buffer(bh);
++
+ 	if (!buffer_uptodate(bh))
+ 		gfs2_io_error_bh(sdp, bh);
+ 	brelse(bh);
+diff --git a/fs/gfs2/rgrp.c b/fs/gfs2/rgrp.c
+index 171a744..3793164 100644
+--- a/fs/gfs2/rgrp.c
++++ b/fs/gfs2/rgrp.c
+@@ -854,8 +854,7 @@ static void gfs2_rgrp_send_discards(struct gfs2_sbd *sdp, u64 offset,
+ 				if ((start + nr_sects) != blk) {
+ 					rv = blkdev_issue_discard(bdev, start,
+ 							    nr_sects, GFP_NOFS,
+-							    BLKDEV_IFL_WAIT |
+-							    BLKDEV_IFL_BARRIER);
++							    BLKDEV_IFL_WAIT);
+ 					if (rv)
+ 						goto fail;
+ 					nr_sects = 0;
+@@ -870,7 +869,7 @@ start_new_extent:
+ 	}
+ 	if (nr_sects) {
+ 		rv = blkdev_issue_discard(bdev, start, nr_sects, GFP_NOFS,
+-					 BLKDEV_IFL_WAIT | BLKDEV_IFL_BARRIER);
++					 BLKDEV_IFL_WAIT);
+ 		if (rv)
+ 			goto fail;
+ 	}
 -- 
 1.7.1
-
