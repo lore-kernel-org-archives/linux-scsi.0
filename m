@@ -1,37 +1,64 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
-  sequenced flush
-Date: Wed, 25 Aug 2010 13:31:49 +0200
-Message-ID: <4C74FF25.3060200@fusionio.com>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com> <4C7269E9.9070304@kernel.org> <20100823124815.GA20095@lst.de> <4C727E96.5020801@redhat.com> <4C727F2B.6060501@fusionio.com> <20100823140823.GA23490@lst.de>
+From: Neil Brown <neilb@suse.de>
+Subject: Re: [PATCH UPDATED 4/5] md: implment REQ_FLUSH/FUA support
+Date: Wed, 25 Aug 2010 21:42:32 +1000
+Message-ID: <20100825214232.4a502c47@notabene>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org>
+	<1281977523-19335-5-git-send-email-tj@kernel.org>
+	<20100824154102.7b68818b@notabene>
+	<4C74FCF2.2090809@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-raid-owner@vger.kernel.org>
-In-Reply-To: <20100823140823.GA23490@lst.de>
-Sender: linux-raid-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "tytso@mit.edu" <tytso@mit.edu>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "vst@vlnb.net" <vst@vlnb.net>, "jack@suse.cz" <jack@suse.cz>, "hare@suse.de" <hare@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C74FCF2.2090809@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, rusty@rustcorp.com.au, mst@redhat.com, Tejun Heo <tj@kernle.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2010-08-23 16:08, Christoph Hellwig wrote:
-> On Mon, Aug 23, 2010 at 04:01:15PM +0200, Jens Axboe wrote:
->> The problem purely exists on arrays that report write back cache enabled
->> AND don't implement SYNC_CACHE as a noop. Do any of them exist, or are
->> they purely urban legend?
+On Wed, 25 Aug 2010 13:22:26 +0200
+Tejun Heo <tj@kernel.org> wrote:
+
+> This patch converts md to support REQ_FLUSH/FUA instead of now
+> deprecated REQ_HARDBARRIER.  In the core part (md.c), the following
+> changes are notable.
 > 
-> I haven't seen it.  I don't care particularly about this case, but once
-> it a while people want to disable flushing for testing or because they
-> really don't care.
+> * Unlike REQ_HARDBARRIER, REQ_FLUSH/FUA don't interfere with
+>   processing of other requests and thus there is no reason to mark the
+>   queue congested while FLUSH/FUA is in progress.
 > 
-> What about adding a sysfs attribue to every request_queue that allows
-> disabling the cache flushing feature?  Compared to the barrier option
-> this controls the feature at the right level and makes it available
-> to everyone instead of beeing duplicated.  After a while we can then
-> simply ignore the barrier/nobarrier options.
+> * REQ_FLUSH/FUA failures are final and its users don't need retry
+>   logic.  Retry logic is removed.
+> 
+> * Preflush needs to be issued to all member devices but FUA writes can
+>   be handled the same way as other writes - their processing can be
+>   deferred to request_queue of member devices.  md_barrier_request()
+>   is renamed to md_flush_request() and simplified accordingly.
+> 
+> For linear, raid0 and multipath, the core changes are enough.  raid1,
+> 5 and 10 need the following conversions.
+> 
+> * raid1: Handling of FLUSH/FUA bio's can simply be deferred to
+>   request_queues of member devices.  Barrier related logic removed.
+> 
+> * raid5: Queue draining logic dropped.  FUA bit is propagated through
+>   biodrain and stripe resconstruction such that all the updated parts
+>   of the stripe are written out with FUA writes if any of the dirtying
+>   writes was FUA.  preread_active_stripes handling in make_request()
+>   is updated as suggested by Neil Brown.
+> 
+> * raid10: FUA bit needs to be propagated to write clones.
+> 
+> linear, raid0, 1, 5 and 10 tested.
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Neil Brown <neilb@suse.de>
+> ---
+> Rebased on top of -rc2 and updated as suggested.  Can you please
+> review and ack it?
 
-Agree, that would be fine.
+Reviewed-by: NeilBrown <neilb@suse.de>
 
--- 
-Jens Axboe
+Thanks!
 
+NeilBrown
