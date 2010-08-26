@@ -1,23 +1,33 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [Bug 16539] end_request: I/O error, dev sr1, sector 0;
- quiet_error: 40 callbacks suppressed
-Date: Thu, 26 Aug 2010 18:03:42 -0500
-Message-ID: <1282863822.8133.56.camel@mulgrave.site>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16539] end_request: I/O error, dev sr1, sector 0; quiet_error:
+ 40 callbacks suppressed
+Date: Thu, 26 Aug 2010 23:38:17 GMT
+Message-ID: <201008262338.o7QNcHah004319@demeter1.kernel.org>
 References: <bug-16539-11613@https.bugzilla.kernel.org/>
-	 <201008262156.o7QLutdE017280@demeter1.kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:57032 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752464Ab0HZXDu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Aug 2010 19:03:50 -0400
-In-Reply-To: <201008262156.o7QLutdE017280@demeter1.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:54191 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753297Ab0HZXiT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Aug 2010 19:38:19 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o7QNcHZ0004322
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Aug 2010 23:38:17 GMT
+In-Reply-To: <bug-16539-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16539
+
+
+
+
+
+--- Comment #4 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-08-26 23:38:10 ---
+Reply-To: James.Bottomley@suse.de
 
 On Thu, 2010-08-26 at 21:56 +0000, bugzilla-daemon@bugzilla.kernel.org
 wrote:
@@ -55,5 +65,7 @@ wrong mode ... what is the program doing the read?
 
 James
 
-
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
