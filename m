@@ -1,65 +1,43 @@
-From: Jean Sacren <sakiwit@gmail.com>
-Subject: [PATCH 1/1] scsi: Fix warning: zero-length gnu_printf format string
-Date: Wed, 25 Aug 2010 17:58:09 -0600
-Message-ID: <20100825235809.GA7160@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 1/1] scsi: Fix warning: zero-length gnu_printf format string
+Date: Thu, 26 Aug 2010 08:00:07 +0200
+Message-ID: <AANLkTimQbCX9epuxSQ1NvTk5ejnWpA9jaENfwSAEC_wZ@mail.gmail.com>
 References: <20100825235529.GA7152@mail.gmail.com>
+	<20100825235809.GA7160@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:56885 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751824Ab0HYX6H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Aug 2010 19:58:07 -0400
-Received: by pwi7 with SMTP id 7so498558pwi.19
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Aug 2010 16:58:07 -0700 (PDT)
-Content-Disposition: inline
-In-Reply-To: <20100825235529.GA7152@mail.gmail.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:61683 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751922Ab0HZGAI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Aug 2010 02:00:08 -0400
+Received: by bwz11 with SMTP id 11so870219bwz.19
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Aug 2010 23:00:07 -0700 (PDT)
+In-Reply-To: <20100825235809.GA7160@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jean Sacren <sakiwit@gmail.com>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-warning: zero-length gnu_printf format string
+On Thu, Aug 26, 2010 at 1:58 AM, Jean Sacren <sakiwit@gmail.com> wrote:
+>
+> warning: zero-length gnu_printf format string
+>
+> Fix the above warning by inserting a space into the literal string.
+[ ... ]
+> - =A0 =A0 =A0 scmd_printk(KERN_INFO, cmd, "");
+> + =A0 =A0 =A0 scmd_printk(KERN_INFO, cmd, " ");
 
-Fix the above warning by inserting a space into the literal string.
+Hello Jean,
 
-Signed-off-by: Jean Sacren <sakiwit@gmail.com>
----
- drivers/scsi/constants.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+Have you considered to replace the empty string by "%s", "" or to
+submit a patch that disables the compiler warning on empty format
+strings ?
 
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index cd05e04..d0c8234 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -1404,13 +1404,13 @@ void scsi_print_sense(char *name, struct scsi_cmnd *cmd)
- {
- 	struct scsi_sense_hdr sshdr;
- 
--	scmd_printk(KERN_INFO, cmd, "");
-+	scmd_printk(KERN_INFO, cmd, " ");
- 	scsi_decode_sense_buffer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
- 				 &sshdr);
- 	scsi_show_sense_hdr(&sshdr);
- 	scsi_decode_sense_extras(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
- 				 &sshdr);
--	scmd_printk(KERN_INFO, cmd, "");
-+	scmd_printk(KERN_INFO, cmd, " ");
- 	scsi_show_extd_sense(sshdr.asc, sshdr.ascq);
- }
- EXPORT_SYMBOL(scsi_print_sense);
-@@ -1453,7 +1453,7 @@ EXPORT_SYMBOL(scsi_show_result);
- 
- void scsi_print_result(struct scsi_cmnd *cmd)
- {
--	scmd_printk(KERN_INFO, cmd, "");
-+	scmd_printk(KERN_INFO, cmd, " ");
- 	scsi_show_result(cmd->result);
- }
- EXPORT_SYMBOL(scsi_print_result);
--- 
-1.7.1
-
-
--- 
-Jean Sacren
-Bring LAMP To People
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
