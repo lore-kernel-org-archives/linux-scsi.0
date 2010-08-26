@@ -1,78 +1,59 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH, RFC 2/2] dm: support REQ_FLUSH directly
-Date: Thu, 26 Aug 2010 18:50:24 -0400
-Message-ID: <20100826225024.GB17832@redhat.com>
-References: <20100727165627.GA474@lst.de>
- <20100727175418.GF6820@quack.suse.cz>
- <20100803184939.GA12198@lst.de>
- <20100803185148.GA12258@lst.de>
- <4C58F341.9060605@ct.jp.nec.com>
- <20100804085423.GA15687@lst.de>
- <4C5A1F05.40308@ce.jp.nec.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [Bug 16539] end_request: I/O error, dev sr1, sector 0;
+ quiet_error: 40 callbacks suppressed
+Date: Thu, 26 Aug 2010 18:03:42 -0500
+Message-ID: <1282863822.8133.56.camel@mulgrave.site>
+References: <bug-16539-11613@https.bugzilla.kernel.org/>
+	 <201008262156.o7QLutdE017280@demeter1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10113 "EHLO mx1.redhat.com"
+Received: from cantor.suse.de ([195.135.220.2]:57032 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752155Ab0HZWut (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Aug 2010 18:50:49 -0400
-Content-Disposition: inline
-In-Reply-To: <4C5A1F05.40308@ce.jp.nec.com>
+	id S1752464Ab0HZXDu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Aug 2010 19:03:50 -0400
+In-Reply-To: <201008262156.o7QLutdE017280@demeter1.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-Cc: Christoph Hellwig <hch@lst.de>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, Jan Kara <jack@suse.cz>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, linux-raid@vger.kernel.org, linux-fsdevel@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, tj@kernel.org, tytso@mit.edu, swhiteho@redhat.com, chris.mason@oracle.com, dm-devel@redhat.com
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Aug 04 2010 at 10:16pm -0400,
-Jun'ichi Nomura <j-nomura@ce.jp.nec.com> wrote:
-
-> Hi Christoph,
+On Thu, 2010-08-26 at 21:56 +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
+> --- Comment #3 from Andrew Morton <akpm@linux-foundation.org>  2010-08-26 21:56:51 ---
+> (recategorised as scsi)
 > 
-> (08/04/10 17:54), Christoph Hellwig wrote:
-> > On Wed, Aug 04, 2010 at 01:57:37PM +0900, Kiyoshi Ueda wrote:
-> >>> -		if (unlikely(dm_rq_is_flush_request(rq))) {
-> >>> +		if (rq->cmd_flags & REQ_FLUSH) {
-> >>>  			BUG_ON(md->flush_request);
-> >>>  			md->flush_request = rq;
-> >>>  			blk_start_request(rq);
-> >>
-> >> Current request-based device-mapper's flush code depends on
-> >> the block-layer's barrier behavior which dispatches only one request
-> >> at a time when flush is needed.
-> >> In other words, current request-based device-mapper can't handle
-> >> other requests while a flush request is in progress.
-> >>
-> >> I'll take a look how I can fix the request-based device-mapper to
-> >> cope with it.  I think it'll take time for carefull investigation.
-> > 
-> > Given that request based device mapper doesn't even look at the
-> > block numbers from what I can see just removing any special casing
-> > for REQ_FLUSH should probably do it.
+> [    3.468174] sr1: scsi3-mmc drive: 24x/24x writer dvd-ram cd/rw xa/form2 cdda
+> tray
+> [    3.468305] sr 4:0:0:0: Attached scsi CD-ROM sr1
+> [    3.468381] sr 4:0:0:0: Attached scsi generic sg2 type 5
+> [    8.126108] EXT4-fs (sda5): mounted filesystem with ordered data mode
+> [   15.752273] udev: starting version 151
+> [   15.770035] Adding 3574424k swap on /dev/sda7.  Priority:-1 extents:1
+> across:3574424k 
+> [   16.055126] sony-laptop: Sony Notebook Control Driver v0.6.
+> [   16.090212] sr 4:0:0:0: [sr1] Result: hostbyte=DID_OK
+> driverbyte=DRIVER_SENSE
+> [   16.090217] sr 4:0:0:0: [sr1] Sense Key : Illegal Request [current] 
+> [   16.090222] sr 4:0:0:0: [sr1] Add. Sense: Illegal mode for this track
+> [   16.090229] sr 4:0:0:0: [sr1] CDB: Read(10): 28 00 00 00 00 00 00 00 01 00
+> [   16.090239] end_request: I/O error, dev sr1, sector 0
+> [   16.090245] Buffer I/O error on device sr1, logical block 0
 > 
-> Special casing is necessary because device-mapper may have to
-> send multiple copies of REQ_FLUSH request to multiple
-> targets, while normal request is just sent to single target.
+> hm, who maintains drivers/scsi/sr.c?
 
-Yes, request-based DM is meant to have all the same capabilities as
-bio-based DM.  So in theory it should support multiple targets but in
-practice it doesn't.  DM's multipath target is the only consumer of
-request-based DM and it only ever clones a single flush request
-(num_flush_requests = 1).
+Well, technically, that's Jens.
 
-So why not remove all of request-based DM's barrier infrastructure and
-simply rely on the revised block layer to sequence the FLUSH+WRITE
-request for request-based DM?
+However, what's the actual bug here ... as in what's going on?
 
-Given that we do not have a request-based DM target that requires
-cloning multiple FLUSH requests its unused code that is delaying DM
-support for the new FLUSH+FUA work (NOTE: bio-based DM obviously still
-needs work in this area).
+The kernel trace implies that some user land process tried to read block
+0 and got told it's not readable, giving an I/O error.
 
-Once we have a need for using request-based DM for something other than
-multipath we can take a fresh look at implementing rq-based FLUSH+FUA.
+MMC says this usually happens when you try to read a sector with the
+wrong mode ... what is the program doing the read?
 
-Mike
+James
 
-p.s. I know how hard NEC worked on request-based DM's barrier support;
-so I'm not suggesting this lightly.  For me it just seems like we're
-carrying complexity in DM that hasn't ever been required.
+
+
