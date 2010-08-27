@@ -1,66 +1,54 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
- timed out, resetting card.
-Date: Fri, 27 Aug 2010 13:10:40 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan>
-References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan> <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Fri, 27 Aug 2010 19:31:48 +0200
+Message-ID: <20100827173147.GA12374@quack.suse.cz>
+References: <1282751267-3530-1-git-send-email-tj@kernel.org>
+ <1282751267-3530-27-git-send-email-tj@kernel.org>
+ <20100825155842.GA3229@lst.de>
+ <20100825160032.GC3229@lst.de>
+ <4C753D75.2010305@kernel.org>
+ <20100825200223.GE2738@quack.suse.cz>
+ <4C76250B.6060800@kernel.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4C76250B.6060800@kernel.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu 26-08-10 10:25:47, Tejun Heo wrote:
+> On 08/25/2010 10:02 PM, Jan Kara wrote:
+> > On Wed 25-08-10 17:57:41, Tejun Heo wrote:
+> >> On 08/25/2010 06:00 PM, Christoph Hellwig wrote:
+> >>> On Wed, Aug 25, 2010 at 05:58:42PM +0200, Christoph Hellwig wrote:
+> >>>> On Wed, Aug 25, 2010 at 05:47:43PM +0200, Tejun Heo wrote:
+> >>>>> From: Christoph Hellwig <hch@infradead.org>
+> >>>>>
+> >>>>> ext4 already uses synchronous discards, no need to add I/O barriers.
+> >>>>
+> >>>> This needs the patch that Jan sent in reply to my initial version merged
+> >>>> into it.
+> >>>
+> >>> Actually the jbd2 patch needs it merged, but the point still stands.
+> >>
+> >> Yeah, wasn't sure about that one.  Has anyone tested it?  I'll be
+> >> happy to merge it but I have no idea whether it's correct or not and
+> >> Jan didn't seem to have tested it so...  Jan, shall I merge the patch?
+> >   I'm quite confident the patch is correct so you can merge it I think but
+> > tomorrow I'll give it some crash testing together with the rest of your
+> > patch set in KVM to be sure.
+> 
+> Patch included in the series before jbd2 conversion patch.
+  An update: I've set up an ext4 barrier testing in KVM - run fsstress,
+kill KVM at some random moment and check that the filesystem is consistent
+(kvm is run in cache=writeback mode to simulate disk cache). About 70 runs
+without journal_async_commit passed fine, now I'm running some tests with
+the option enabled and the first few rounds passed OK as well.
 
-
-On Fri, 27 Aug 2010, adam radford wrote:
-
-> Justin,
->
-> This just means the firmware didn't complete an ioctl in 60 seconds.
->
-> Can try changing this define in 3w-9xxx.h:
->
-> #define TW_IOCTL_CHRDEV_TIMEOUT               60 /* 60 seconds */
->
-> to 90 or 120 seconds to see if that fixes your issue?
->
-> Thanks,
->
-> -Adam
->
-
-Hi Adam,
-
-Thanks for responding!
-
-LSI just got back to me on a second case, their latest beta firmware:
-http://www.lsi.com/DistributionSystem/AssetDocument/readme.txt
-
-SCR 2196:  Unexpected controller soft resets
-Fixed an issue with regards to  deferral of write and read commands to 
-help eliminate unexpected soft resets.
-
-Well well!
-
-Plan of action:
-
-1. See if the error recurs without 'nobarrier' - only because there are 
-some threads about problems when this is enabled on 3ware controllers.
-
-2. LSI recommended I disconnect/replace my BBU module, I already did once 
-before, ~$120, so the next step I will apply their latest Beta firmware.
-
-3. If it STILL does it, I can increase the timeout, HOWEVER, when I see 
-this, I/O on the system, everything locks up for 60-120-180-360 seconds 
-and then it comes back after it resets the controller.  The weird thing is 
-this controller is only for a /data volume and not the root filesystem. 
-The root filesystem is on a separate RAID-1 4 port card (also w/BBU).
-
-If you google that exact error, there is very little information, if I 
-find something that works, I'll update the list so others have something 
-to point to when they see this problem.
-
-Justin.
+									Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
