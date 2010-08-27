@@ -1,64 +1,38 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace
- barrier with sequenced flush
-Date: Fri, 27 Aug 2010 18:47:42 +0900
-Message-ID: <4C7789BE.1060609@ct.jp.nec.com>
-References: <4C6A5D8A.4010205@kernel.org> <20100817131915.GB2963@lst.de>
-	<4C6ABBCB.9030306@kernel.org> <20100817165929.GB13800@lst.de>
-	<4C6E3C1A.50205@ct.jp.nec.com> <4C72660A.7070009@kernel.org>
-	<20100823141733.GA21158@redhat.com>
-	<4C739DE9.5070803@ct.jp.nec.com> <4C73FA8F.5080800@kernel.org>
-	<4C74CD95.1000208@ct.jp.nec.com> <20100825152831.GA8509@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
+ timed out, resetting card.
+Date: Fri, 27 Aug 2010 09:12:04 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20100825152831.GA8509@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: jack@suse.cz, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, Tejun Heo <tj@kernel.org>, tytso@mit.edu, rwheeler@redhat.com, vst@vlnb.net, swhiteho@redhat.com, chris.mason@oracle.com
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Mike,
+Hello,
 
-On 08/26/2010 12:28 AM +0900, Mike Snitzer wrote:
-> Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
->> Anyway, as you said, the flush error handling of dm-mpath is already
->> broken if data loss really happens on any storage used by dm-mpath.
->> Although it's a serious issue and quick fix is required, I think
->> you may leave the old behavior in your patch-set, since it's
->> a separate issue.
-> 
-> I'm not seeing where anything is broken with current mpath.  If a
-> multipathed LUN is WCE=1 then it should be fair to assume the cache is
-> mirrored or shared across ports.  Therefore retrying the SYNCHRONIZE
-> CACHE is needed.
-> 
-> Do we still have fear that SYNCHRONIZE CACHE can silently drop data?
-> Seems unlikely especially given what Tejun shared from SBC.
+I sometimes see this on one of my two 3ware cards in my system.
 
-Do we have any proof to wipe that fear?
+I have opened a case previously with LSI/3ware and they are not sure what 
+is going on, all disks are good, etc.
 
-If retrying on flush failure is safe on all storages used with multipath
-(e.g. SCSI, CCISS, DASD, etc), then current dm-mpath should be fine in
-the real world.
-But I'm afraid if there is a storage where something like below can happen:
-    - a flush command is returned as error to mpath because a part of
-      cache has physically broken at the time or so, then that part of
-      data loses and the size of the cache is shrunk by the storage.
-    - mpath retries the flush command using other path.
-    - the flush command is returned as success to mpath.
-    - mpath passes the result, success, to upper layer, but some of
-      the data already lost.
+I notice this sometimes occurs when there is high I/O & network activity, 
+but I am not able to reproduce it at will.  I do remember it happening 
+before though just running a postmap on some files and rsyncing a few 
+configuration files around.
 
-Thanks,
-Kiyoshi Ueda
+Originally I thought it might be something to do with having smartd 
+running, but I disabled it and the problem persists.
+
+The next thing I am looking at is the 'nobarrier' option, I've always used 
+it in the past, I have now mounted all FS without it and I will see if the 
+error recurs.
+
+Does anyone know what the root cause of this problem may be?
+
+Aug 24 09:14:04 p34 kernel: [247295.662461] 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108) timed out, resetting card.
+
+Latest kernel (2.6.35.x) and latest firmware on the card, etc.
+
+Justin.
