@@ -1,86 +1,70 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
- unreliable operation - drive / controller resets
-Date: Mon, 30 Aug 2010 16:42:16 GMT
-Message-ID: <201008301642.o7UGgGms014547@demeter1.kernel.org>
-References: <bug-14831-11613@https.bugzilla.kernel.org/>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: 2.6.36-rc3: EIP is at scsi_init_io+...
+Date: Mon, 30 Aug 2010 21:46:20 +0300
+Message-ID: <20100830184620.GA4818@core2.telecom.by>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:59955 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755942Ab0H3QmR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Aug 2010 12:42:17 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o7UGgGjv014548
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2010 16:42:16 GMT
-In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: torvalds@linux-foundation.org, akpm@linux-foundation.org, James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=14831
+Not much of a calltrace, it scrolled away because of hardlockup detector.
+On the bright side, radeon KMS worked correctly and actually showed it.
 
-
-
-
-
---- Comment #42 from starlight@binnacle.cx  2010-08-30 16:42:08 ---
-Kashyap,
-
-Thank you for looking at this problem in depth.
-
-Since it is different, I certainly can create a new bugzilla for 
-it.  I'll do that in the next day or so.
-
-Do you have any ideas about what might be the cause?
-
-One thing that crosses my mind is that the drives here are not 
-enterprise Seagate Constellation drives, but are Seagate 
-Momentus drives that have more aggressive power saving features 
-intended for laptops.  We chose them because at the time they 
-were much less expensive and the sequential read/write 
-performance was the same.  Now the price differential is much 
-smaller and we would have gone with Constellations.
-
-Is there any chance that the Momentus drives require the 10 
-second command time-out in the LSI BIOS config to be extended? 
-This is just a random idea.  The drives were all active at the 
-time of the event and so would not have been in power saving 
-mode or been responding slowly to commands.
-
-Another theory I have is that there might be a memory leak in 
-the firmware and that when all free memory is exhausted, the 
-controller "goes insane".  Is such a memory leak something that 
-would be apparent in the tracing?
-
-Finally should mention that I believe the configuration is 
-unusual.  A large, identical partition on the eight drives is 
-configured as a software RAID0 volume.  I doubt that many people 
-configure systems this way.  It might be stressing the
-firmware/software in a unique fashion.
-
-Thanks,
-
-David
+$ addr2line -e vmlinux ffffffff812d207b 
+drivers/scsi/scsi_lib.c:1015 
 
 
-
-
-
-At 03:18 PM 8/30/2010 +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
->https://bugzilla.kernel.org/show_bug.cgi?id=14831
->
->I have taken a deep look of all the available logs for below 
->configuration.
->
->In summary, this can be a completely different issue. Can we move this issue to
->new bugzilla, so that I can have a fresh look on it ?
->
->Thanks, Kashyap
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+   969	int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+   970	{
+   971		int error = scsi_init_sgtable(cmd->request, &cmd->sdb, gfp_mask);
+   972		if (error)
+   973			goto err_exit;
+   974	
+   975		if (blk_bidi_rq(cmd->request)) {
+   976			struct scsi_data_buffer *bidi_sdb = kmem_cache_zalloc(
+   977				scsi_sdb_cache, GFP_ATOMIC);
+   978			if (!bidi_sdb) {
+   979				error = BLKPREP_DEFER;
+   980				goto err_exit;
+   981			}
+   982	
+   983			cmd->request->next_rq->special = bidi_sdb;
+   984			error = scsi_init_sgtable(cmd->request->next_rq, bidi_sdb,
+   985									    GFP_ATOMIC);
+   986			if (error)
+   987				goto err_exit;
+   988		}
+   989	
+   990		if (blk_integrity_rq(cmd->request)) {
+   991			struct scsi_data_buffer *prot_sdb = cmd->prot_sdb;
+   992			int ivecs, count;
+   993	
+   994			BUG_ON(prot_sdb == NULL);
+   995			ivecs = blk_rq_count_integrity_sg(cmd->request);
+   996	
+   997			if (scsi_alloc_sgtable(prot_sdb, ivecs, gfp_mask)) {
+   998				error = BLKPREP_DEFER;
+   999				goto err_exit;
+  1000			}
+  1001	
+  1002			count = blk_rq_map_integrity_sg(cmd->request,
+  1003							prot_sdb->table.sgl);
+  1004			BUG_ON(unlikely(count > ivecs));
+  1005	
+  1006			cmd->prot_sdb = prot_sdb;
+  1007			cmd->prot_sdb->table.nents = count;
+  1008		}
+  1009	
+  1010		return BLKPREP_OK ;
+  1011	
+  1012	err_exit:
+  1013		scsi_release_buffers(cmd);
+  1014		scsi_put_command(cmd);
+  1015	===>	cmd->request->special = NULL; <===
+  1016		return error;
+  1017	}
+  1018	EXPORT_SYMBOL(scsi_init_io);
