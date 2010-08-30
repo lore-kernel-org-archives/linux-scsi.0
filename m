@@ -1,73 +1,62 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
-Date: Mon, 30 Aug 2010 17:01:19 -0400
-Message-ID: <x49y6bn7r34.fsf@segfault.boston.devel.redhat.com>
-References: <1282751267-3530-1-git-send-email-tj@kernel.org>
-	<1282751267-3530-27-git-send-email-tj@kernel.org>
-	<20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de>
-	<4C753D75.2010305@kernel.org> <20100825200223.GE2738@quack.suse.cz>
-	<4C76250B.6060800@kernel.org> <20100827173147.GA12374@quack.suse.cz>
-	<x4939tv98n8.fsf@segfault.boston.devel.redhat.com>
-	<20100830202034.GB12226@quack.quadriga.com>
+From: Nathan Wan <nlw@andrew.cmu.edu>
+Subject: Re: ssd's and iops testing
+Date: Mon, 30 Aug 2010 17:21:54 -0400
+Message-ID: <AANLkTi=XMndNRm5awJMkY-kwF7dFXvVJ5Nk7nDfhZh68@mail.gmail.com>
+References: <AANLkTi=TUG_nH7oNDNHBkmtGaJHgBwtC6Y-KRWrRfgD9@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63264 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752192Ab0H3VEH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Aug 2010 17:04:07 -0400
-In-Reply-To: <20100830202034.GB12226@quack.quadriga.com> (Jan Kara's message
-	of "Mon, 30 Aug 2010 22:20:34 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AANLkTi=TUG_nH7oNDNHBkmtGaJHgBwtC6Y-KRWrRfgD9@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Nathan Wan <nlw@andrew.cmu.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Kara <jack@suse.cz>
-Cc: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 
-Jan Kara <jack@suse.cz> writes:
+Hello,
 
-> On Mon 30-08-10 15:56:43, Jeff Moyer wrote:
->> Jan Kara <jack@suse.cz> writes:
->> 
->> >   An update: I've set up an ext4 barrier testing in KVM - run fsstress,
->> > kill KVM at some random moment and check that the filesystem is consistent
->> > (kvm is run in cache=writeback mode to simulate disk cache). About 70 runs
->> 
->> But doesn't your "disk cache" survive the "power cycle" of your guest?
->   Yes, you're right. Thinking about it now the test setup was wrong because
-> it didn't refuse writes to the VM's data partition after the moment I
-> killed KVM. Thanks for catching this. I will probably have to use the fault
-> injection on the host to disallow writing the device at a certain moment.
-> Or does somebody have a better option?
->   My setup is that I have a dedicated partition / drive for a filesystem
-> which is written to from a guest kernel running under KVM. I have set it up
-> using virtio driver with cache=writeback so that the host caches the writes
-> in a similar way disk caches them. At some point I just kill the qemu-kvm
-> process and at that point I'd like to also throw away data cached by the
-> host...
+This is a first post for me on a linux list so please forgive if I am
+doing it wrong.
 
-I've used ilo to power off the system under test from remote.  I have a
-tool to automate the testing.  It works as follows:
+I'm looking for some advice about the scsi subsystem and the linux
+kernel.  I am writing a module to test the capabilities of particular
+i/o hardware configurations. Specifically, I am trying to bypass the
+block io system to identify bottlenecks for less powerful cpu's paired
+with solid state drives (e.g. an Intel Atom processor with an SSD
+capable of 60K iops).
 
-There's a client and a server.  The server listens on an ip/port for
-connections.  A client will connect, tell the server it's configuration
-(including what disk it's writing to, what block size it's using, and
-the total amount of I/O to be done), and then start doing I/O.  The I/O
-is done using the AIO api, and the data written includes a block number,
-a generation number, fill, and a crc.  As each completion comes in, the
-completed sectors are communicated to the server program.  Upon
-completion of an entire series of writes (writing the entire data set
-once), the server waits some amount of time and then power cycles the
-client.  The client comes back up and is run in check mode to verify
-that all of the data it reported as completed to the server is actually
-in tact.
+My goal is to make a module that will saturate the ncq of the drive
+and see if it is possible for the cpu keep up with the drive.  I am
+doing this by creating scsi commands that read random sectors off the
+disk.  Essentially the module mimics the role of the block layer,
+performing operations similar to the request function
+(scsi_request_fn) and the sd_prep_fn, and uses the Scsi_Host,
+scsi_device and scsi_target structs to insert my own scsi commands.
+scsi_cmnd structs are taken from the scsi_device through
+scsi_get_command and dispatched to the ahci host by the queuecommand
+function.
 
-I recently updated the code to run against a file on a file system
-(previously it would only work on a block device).  It makes use of
-stonith modules to do the power cycling.  It works, but it isn't the
-most elegant bit of engineering I've ever done.  ;-)
+The drives are supported by the ahci driver in libata, and are already
+mounted on the machine as scsi drives (e.g. /dev/sda and /dev/sdb).
 
-Anyway, that code is available here:
-  http://people.redhat.com/jmoyer/dainto-0.99.4.tar.bz2
+My problem now is that when I run the module, asking to issue too many
+read commands can cause the kernel to hang.  I would like to run the
+thread for about ten seconds (60K iops * 10 sec = 600K read requests),
+but I'm not sure if it is a problem running it from the insmod
+application thread, i.e. my module's init thread is issuing all the
+commands.  Also, I am not sure what I need to do to ensure I am not
+ruining something in the i/o hierarchy, e.g. messing up something in
+the block layer, or breaking the sd or ahci driver.  Any advice would
+be greatly appreciated.
 
-Cheers,
-Jeff
+Is ten seconds too long for an insmod thread to run?
+
+I have tried to use blk_{start, stop}_queue while my thread is issuing
+commands; is this appropriate?
+
+What else can I do to see how my module changed the kernel?
+
+Thanks in advance
+
+Nathan
+
+PS I'm not signed up for the list yet, so please cc me on the responses
