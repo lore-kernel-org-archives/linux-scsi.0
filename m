@@ -1,42 +1,42 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHSET block#for-2.6.36-post] block: replace barrier with
- sequenced flush
-Date: Mon, 30 Aug 2010 12:04:56 +0200
-Message-ID: <4C7B8248.5070602@suse.de>
-References: <1281616891-5691-1-git-send-email-tj@kernel.org> <20100820132214.GA6184@lst.de> <4C6E9CAF.5010202@redhat.com> <4C7269E9.9070304@kernel.org> <20100823124815.GA20095@lst.de> <4C727E96.5020801@redhat.com> <4C727F2B.6060501@fusionio.com> <20100823140823.GA23490@lst.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Why is AHA152X_CS !64BIT?
+Date: Mon, 30 Aug 2010 14:13:17 +0300
+Message-ID: <4C7B924D.6030703@panasas.com>
+References: <4C72D310.4040004@suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20100823140823.GA23490@lst.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <jaxboe@fusionio.com>, Ric Wheeler <rwheeler@redhat.com>, Tejun Heo <tj@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "tytso@mit.edu" <tytso@mit.edu>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "vst@vlnb.net" <vst@vlnb.net>, "jack@suse.cz" <jack@suse.cz>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from daytona.panasas.com ([67.152.220.89]:50599 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752058Ab0H3LNW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Aug 2010 07:13:22 -0400
+In-Reply-To: <4C72D310.4040004@suse.cz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: fischer@linux-buechse.de, linux-scsi@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
-Christoph Hellwig wrote:
-> On Mon, Aug 23, 2010 at 04:01:15PM +0200, Jens Axboe wrote:
->> The problem purely exists on arrays that report write back cache ena=
-bled
->> AND don't implement SYNC_CACHE as a noop. Do any of them exist, or a=
-re
->> they purely urban legend?
->=20
-> I haven't seen it.  I don't care particularly about this case, but on=
-ce
-> it a while people want to disable flushing for testing or because the=
-y
-> really don't care.
->=20
-aacraid for one falls into this category.
-SYNC_CACHE is no-oped in the driver. Otherwise you get a _HUGE_
-performance loss.
+On 08/23/2010 10:59 PM, Jiri Slaby wrote:
+> Hi,
+> 
+> I see that the aha152x driver for pcmcia is marked as unsupported on
+> 64bit. But I also see a patch [1] which removes the restriction based on
+> user's testing in bugzilla [2].
+> 
+> Is there a reason why it would have to be marked as !64BIT? I'm asking
+> because there is an opensuse user with this card who updated to 64-bit
+> distro and lost this driver thereafter.
+> 
+> [1] http://kerneltrap.org/mailarchive/linux-scsi/2010/3/6/6832393
+> [2] https://bugzilla.kernel.org/show_bug.cgi?id=14333
+> 
+> thanks,
 
-Cheers,
+If memory serves correctly, it might be that you need more then 4 Gbyte
+of memory installed to exercise the bug, something about IO bouncing
+addresses > 4G.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+But don't believe me, I might be imagining things ;-)
+
+Boaz
