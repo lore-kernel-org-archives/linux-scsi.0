@@ -1,117 +1,86 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 04/30] block: deprecate barrier and replace blk_queue_ordered()
- with blk_queue_flush()
-Date: Mon, 30 Aug 2010 18:37:53 +0300
-Message-ID: <4C7BD051.70302@panasas.com>
-References: <1282751267-3530-1-git-send-email-tj@kernel.org> <1282751267-3530-5-git-send-email-tj@kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
+ unreliable operation - drive / controller resets
+Date: Mon, 30 Aug 2010 16:42:16 GMT
+Message-ID: <201008301642.o7UGgGms014547@demeter1.kernel.org>
+References: <bug-14831-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1282751267-3530-5-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>, Nick Piggin <npiggin@kernel.dk>, Jeremy Fitzhardinge <jeremy@xensource.com>, Chris Wright <chrisw@sous-sol.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, "David S. Miller" <davem@davemloft.net>, Alasdair G Kergon <agk@redhat.com>, Pierre Ossman <drzeus@drzeus.cx>, Stefan Weinhuber <wein@>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter.kernel.org ([140.211.167.39]:59955 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755942Ab0H3QmR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Aug 2010 12:42:17 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o7UGgGjv014548
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2010 16:42:16 GMT
+In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 08/25/2010 06:47 PM, Tejun Heo wrote:
-> Barrier is deemed too heavy and will soon be replaced by FLUSH/FUA
-> requests.  Deprecate barrier.  All REQ_HARDBARRIERs are failed with
-> -EOPNOTSUPP and blk_queue_ordered() is replaced with simpler
-> blk_queue_flush().
-> 
-> blk_queue_flush() takes combinations of REQ_FLUSH and FUA.  If a
-> device has write cache and can flush it, it should set REQ_FLUSH.  If
-> the device can handle FUA writes, it should also set REQ_FUA.
-> 
-> All blk_queue_ordered() users are converted.
-> 
-> * ORDERED_DRAIN is mapped to 0 which is the default value.
-> * ORDERED_DRAIN_FLUSH is mapped to REQ_FLUSH.
-> * ORDERED_DRAIN_FLUSH_FUA is mapped to REQ_FLUSH | REQ_FUA.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Nick Piggin <npiggin@kernel.dk>
-> Cc: Michael S. Tsirkin <mst@redhat.com>
-> Cc: Jeremy Fitzhardinge <jeremy@xensource.com>
-> Cc: Chris Wright <chrisw@sous-sol.org>
-> Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Cc: Boaz Harrosh <bharrosh@panasas.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=14831
 
-Acked-by: Boaz Harrosh <bharrosh@panasas.com>
 
-Actually osd as support for FUA as well. It's on my todo
-to implement it.
 
-Thanks Tejun, as usual, after your visit there is more room
-in the house.
 
-> Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: Alasdair G Kergon <agk@redhat.com>
-> Cc: Pierre Ossman <drzeus@drzeus.cx>
-> Cc: Stefan Weinhuber <wein@de.ibm.com>
-> ---
-<snip>
->  drivers/block/osdblk.c       |    2 +-
-> diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
-> index 2284b4f..72d6246 100644
-> --- a/drivers/block/osdblk.c
-> +++ b/drivers/block/osdblk.c
-> @@ -439,7 +439,7 @@ static int osdblk_init_disk(struct osdblk_device *osdev)
->  	blk_queue_stack_limits(q, osd_request_queue(osdev->osd));
->  
->  	blk_queue_prep_rq(q, blk_queue_start_tag);
-> -	blk_queue_ordered(q, QUEUE_ORDERED_DRAIN_FLUSH);
-> +	blk_queue_flush(q, REQ_FLUSH);
->  
->  	disk->queue = q;
->  
-<snip>
 
-Also this mail
-On 08/25/2010 06:47 PM, Tejun Heo wrote:
-> REQ_HARDBARRIER is deprecated.  Remove spurious uses in the following
-> users.  Please note that other than osdblk, all other uses were
-> already spurious before deprecation.
-> 
-> * osdblk: osdblk_rq_fn() won't receive any request with
->   REQ_HARDBARRIER set.  Remove the test for it.
-> 
-> * pktcdvd: use of REQ_HARDBARRIER in pkt_generic_packet() doesn't mean
->   anything.  Removed.
-> 
-> * aic7xxx_old: Setting MSG_ORDERED_Q_TAG on REQ_HARDBARRIER is
->   spurious.  Removed.
-> 
-> * sas_scsi_host: Setting TASK_ATTR_ORDERED on REQ_HARDBARRIER is
->   spurious.  Removed.
-> 
-> * scsi_tcq: The ordered tag path wasn't being used anyway.  Removed.
-> 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Cc: Boaz Harrosh <bharrosh@panasas.com>
+--- Comment #42 from starlight@binnacle.cx  2010-08-30 16:42:08 ---
+Kashyap,
 
-Acked-by: Boaz Harrosh <bharrosh@panasas.com>
+Thank you for looking at this problem in depth.
 
-> Cc: James Bottomley <James.Bottomley@suse.de>
-> Cc: Peter Osterlund <petero2@telia.com>
-> ---
->  drivers/block/osdblk.c              |    3 +--
-<snip>
-> diff --git a/drivers/block/osdblk.c b/drivers/block/osdblk.c
-> index 72d6246..87311eb 100644
-> --- a/drivers/block/osdblk.c
-> +++ b/drivers/block/osdblk.c
-> @@ -310,8 +310,7 @@ static void osdblk_rq_fn(struct request_queue *q)
->  			break;
->  
->  		/* filter out block requests we don't understand */
-> -		if (rq->cmd_type != REQ_TYPE_FS &&
-> -		    !(rq->cmd_flags & REQ_HARDBARRIER)) {
-> +		if (rq->cmd_type != REQ_TYPE_FS) {
->  			blk_end_request_all(rq, 0);
->  			continue;
->  		}
+Since it is different, I certainly can create a new bugzilla for 
+it.  I'll do that in the next day or so.
 
+Do you have any ideas about what might be the cause?
+
+One thing that crosses my mind is that the drives here are not 
+enterprise Seagate Constellation drives, but are Seagate 
+Momentus drives that have more aggressive power saving features 
+intended for laptops.  We chose them because at the time they 
+were much less expensive and the sequential read/write 
+performance was the same.  Now the price differential is much 
+smaller and we would have gone with Constellations.
+
+Is there any chance that the Momentus drives require the 10 
+second command time-out in the LSI BIOS config to be extended? 
+This is just a random idea.  The drives were all active at the 
+time of the event and so would not have been in power saving 
+mode or been responding slowly to commands.
+
+Another theory I have is that there might be a memory leak in 
+the firmware and that when all free memory is exhausted, the 
+controller "goes insane".  Is such a memory leak something that 
+would be apparent in the tracing?
+
+Finally should mention that I believe the configuration is 
+unusual.  A large, identical partition on the eight drives is 
+configured as a software RAID0 volume.  I doubt that many people 
+configure systems this way.  It might be stressing the
+firmware/software in a unique fashion.
+
+Thanks,
+
+David
+
+
+
+
+
+At 03:18 PM 8/30/2010 +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+>https://bugzilla.kernel.org/show_bug.cgi?id=14831
+>
+>I have taken a deep look of all the available logs for below 
+>configuration.
+>
+>In summary, this can be a completely different issue. Can we move this issue to
+>new bugzilla, so that I can have a fresh look on it ?
+>
+>Thanks, Kashyap
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
