@@ -1,271 +1,71 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC 08/22] tcm: Add HBA core infrastructure
-Date: Mon, 30 Aug 2010 02:21:24 -0700
-Message-ID: <1283160084-6715-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp110.sbc.mail.gq1.yahoo.com ([67.195.14.95]:23535 "HELO
-	smtp110.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754932Ab0H3JV1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Aug 2010 05:21:27 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [RFC 02/22] configfs: Add struct configfs_item_operations->check_link() in configfs_unlink()
+Date: Mon, 30 Aug 2010 02:20:25 -0700
+Message-ID: <1283160025-6598-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds the core struct se_hba functionality that is used internally by
-target_core_mod to group the same subsystem storage objects types until a single
-/sys/kernel/config/target/core/$HBA directory.  The HBA code supports boths
-physical storage objects (from Linux/SCSI) and virtual storage objects (from Linux/BLOCK,
-Linux/VFS, RAMDISK)
+This patch adds a optional struct configfs_item_operations->check_link() check
+called in fs/configfs/symlink.c:configfs_unlink() that can be used by configfs
+consumers to check for an explict struct config_group dependence with active
+symlink and fail with -EPERM before the unlink(2) syscall is allowed to occur.
+
+Currently without this patch, there is not a method that a consumer can tell
+configfs_unlink() that it needs to fail for this particular case.  Allowing
+->check_link() to propigate up the errno to VFS is also another option for the
+call, but currently for TCM using the existing -EPERM in configfs_unlink() is fine here.
+
+Note this patch is used by TCM v4 generic configfs fabric module infrastructure to
+allow  explict Initiator Port MappedLUNs symlinks to create a dependency for
+the fabric TPG Port LUNs living in a configfs group that is not a direct
+struct config_group parent.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_hba.c |  211 ++++++++++++++++++++++++++++++++++++++
- drivers/target/target_core_hba.h |   14 +++
- 2 files changed, 225 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/target_core_hba.c
- create mode 100644 drivers/target/target_core_hba.h
+ fs/configfs/symlink.c    |   13 +++++++++++++
+ include/linux/configfs.h |    1 +
+ 2 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
-new file mode 100644
-index 0000000..d9e286c
---- /dev/null
-+++ b/drivers/target/target_core_hba.c
-@@ -0,0 +1,211 @@
-+/*******************************************************************************
-+ * Filename:  target_core_hba.c
-+ *
-+ * This file copntains the iSCSI HBA Transport related functions.
-+ *
-+ * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-+ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-+ * Copyright (c) 2007-2010 Rising Tide Systems
-+ * Copyright (c) 2008-2010 Linux-iSCSI.org
-+ *
-+ * Nicholas A. Bellinger <nab@kernel.org>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ *
-+ ******************************************************************************/
-+
-+#include <linux/net.h>
-+#include <linux/string.h>
-+#include <linux/timer.h>
-+#include <linux/slab.h>
-+#include <linux/spinlock.h>
-+#include <linux/smp_lock.h>
-+#include <linux/in.h>
-+#include <net/sock.h>
-+#include <net/tcp.h>
-+
-+#include <target/target_core_base.h>
-+#include <target/target_core_device.h>
-+#include <target/target_core_device.h>
-+#include <target/target_core_tpg.h>
-+#include <target/target_core_transport.h>
-+
-+#include "target_core_hba.h"
-+
-+int core_get_hba(struct se_hba *hba)
-+{
-+	return ((mutex_lock_interruptible(&hba->hba_access_mutex) != 0) ?
-+		-1 : 0);
-+}
-+
-+struct se_hba *core_alloc_hba(void)
-+{
-+	struct se_hba *hba;
-+
-+	hba = kmem_cache_zalloc(se_hba_cache, GFP_KERNEL);
-+	if (!(hba)) {
-+		printk(KERN_ERR "Unable to allocate struct se_hba\n");
-+		return NULL;
-+	}
-+
-+	hba->hba_status |= HBA_STATUS_FREE;
-+	INIT_LIST_HEAD(&hba->hba_dev_list);
-+	spin_lock_init(&hba->device_lock);
-+	spin_lock_init(&hba->hba_queue_lock);
-+	mutex_init(&hba->hba_access_mutex);
-+	hba->hba_index = scsi_get_new_index(SCSI_INST_INDEX);
-+
-+	return hba;
-+}
-+EXPORT_SYMBOL(core_alloc_hba);
-+
-+void core_put_hba(struct se_hba *hba)
-+{
-+	mutex_unlock(&hba->hba_access_mutex);
-+}
-+EXPORT_SYMBOL(core_put_hba);
-+
-+/*	se_core_add_hba():
-+ *
-+ *
-+ */
-+int se_core_add_hba(
-+	struct se_hba *hba,
-+	const char *plugin_name,
-+	u32 plugin_dep_id)
-+{
-+	struct se_subsystem_api *t;
-+	int ret = 0;
-+
-+	if (hba->hba_status & HBA_STATUS_ACTIVE)
-+		return -EEXIST;
-+
-+	atomic_set(&hba->max_queue_depth, 0);
-+	atomic_set(&hba->left_queue_depth, 0);
-+
-+	t = transport_core_get_sub_by_name(plugin_name);
-+	if (!(t))
-+		return -EINVAL;
-+
-+	hba->transport = t;
+diff --git a/fs/configfs/symlink.c b/fs/configfs/symlink.c
+index 0f3eb41..b8010de 100644
+--- a/fs/configfs/symlink.c
++++ b/fs/configfs/symlink.c
+@@ -205,6 +205,19 @@ int configfs_unlink(struct inode *dir, struct dentry *dentry)
+ 	parent_item = configfs_get_config_item(dentry->d_parent);
+ 	type = parent_item->ci_type;
+ 
 +	/*
-+	 * Get TCM subsystem api struct module reference to struct se_hba
++	 * See if the underlying struct config_item has dependent
++	 * symlinks, and should return -EPERM here.
 +	 */
-+	if (t->external_submod) {
-+		if (!(t->sub_owner)) {
-+			printk(KERN_ERR "Pointer to struct module does not"
-+				" exist for %s\n", t->name);
-+			hba->transport = NULL;
-+			transport_core_put_sub(t);
-+			return -EINVAL;
-+		}
-+		/*
-+		 * Grab a struct module reference count for subsystem plugin
-+		 */
-+		if (!(try_module_get(t->sub_owner))) {
-+			printk(KERN_ERR "try_module_get() failed for"
-+				" t->sub_owner\n");
-+			hba->transport = NULL;
-+			transport_core_put_sub(t);
-+			return -EINVAL;
++	if (type && type->ct_item_ops &&
++	    type->ct_item_ops->check_link) {
++		if (type->ct_item_ops->check_link(parent_item,
++					sl->sl_target) != 0) {
++			config_item_put(parent_item);
++			goto out;
 +		}
 +	}
 +
-+	ret = t->attach_hba(hba, plugin_dep_id);
-+	if (ret < 0) {
-+		hba->transport = NULL;
-+		if (t->external_submod)
-+			module_put(t->sub_owner);
-+		transport_core_put_sub(t);
-+		return ret;
-+	}
-+
-+	hba->hba_status &= ~HBA_STATUS_FREE;
-+	hba->hba_status |= HBA_STATUS_ACTIVE;
-+
-+	spin_lock(&se_global->hba_lock);
-+	hba->hba_id = se_global->g_hba_id_counter++;
-+	list_add_tail(&hba->hba_list, &se_global->g_hba_list);
-+	spin_unlock(&se_global->hba_lock);
-+
-+	printk(KERN_INFO "CORE_HBA[%d] - Attached HBA to Generic Target"
-+			" Core\n", hba->hba_id);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(se_core_add_hba);
-+
-+static int se_core_shutdown_hba(
-+	struct se_hba *hba)
-+{
-+	struct se_subsystem_api *t = hba->transport;;
-+
-+	if (t->detach_hba(hba) < 0)
-+		return -1;
-+	/*
-+	 * Release TCM subsystem api struct module reference from struct se_hba
-+	 */
-+	if (t->external_submod)
-+		module_put(t->sub_owner);
-+
-+	return 0;
-+}
-+
-+/*	se_core_del_hba():
-+ *
-+ *
-+ */
-+int se_core_del_hba(
-+	struct se_hba *hba)
-+{
-+	struct se_device *dev, *dev_tmp;
-+
-+	if (!(hba->hba_status & HBA_STATUS_ACTIVE)) {
-+		printk(KERN_ERR "HBA ID: %d Status: INACTIVE, ignoring"
-+			" delhbafromtarget request\n", hba->hba_id);
-+		return -EINVAL;
-+	}
-+
-+	spin_lock(&hba->device_lock);
-+	list_for_each_entry_safe(dev, dev_tmp, &hba->hba_dev_list, dev_list) {
-+
-+		se_clear_dev_ports(dev);
-+		spin_unlock(&hba->device_lock);
-+
-+		se_release_device_for_hba(dev);
-+
-+		spin_lock(&hba->device_lock);
-+	}
-+	spin_unlock(&hba->device_lock);
-+
-+	se_core_shutdown_hba(hba);
-+	if (!(hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
-+		transport_core_put_sub(hba->transport);
-+
-+	spin_lock(&se_global->hba_lock);
-+	list_del(&hba->hba_list);
-+	spin_unlock(&se_global->hba_lock);
-+
-+	hba->transport = NULL;
-+	hba->hba_status &= ~HBA_STATUS_ACTIVE;
-+	hba->hba_status |= HBA_STATUS_FREE;
-+
-+	printk(KERN_INFO "CORE_HBA[%d] - Detached HBA from Generic Target"
-+			" Core\n", hba->hba_id);
-+
-+	kmem_cache_free(se_hba_cache, hba);
-+	return 0;
-+}
-+EXPORT_SYMBOL(se_core_del_hba);
-diff --git a/drivers/target/target_core_hba.h b/drivers/target/target_core_hba.h
-new file mode 100644
-index 0000000..01cf4fe
---- /dev/null
-+++ b/drivers/target/target_core_hba.h
-@@ -0,0 +1,14 @@
-+#ifndef TARGET_CORE_HBA_H
-+#define TARGET_CORE_HBA_H
-+
-+extern struct se_global *se_global;
-+
-+extern struct kmem_cache *se_hba_cache;
-+
-+extern int core_get_hba(struct se_hba *);
-+extern struct se_hba *core_alloc_hba(void);
-+extern void core_put_hba(struct se_hba *);
-+extern int se_core_add_hba(struct se_hba *, const char *, u32);
-+extern int se_core_del_hba(struct se_hba *);
-+
-+#endif /* TARGET_CORE_HBA_H */
+ 	spin_lock(&configfs_dirent_lock);
+ 	list_del_init(&sd->s_sibling);
+ 	spin_unlock(&configfs_dirent_lock);
+diff --git a/include/linux/configfs.h b/include/linux/configfs.h
+index ddb7a97..7c01d86 100644
+--- a/include/linux/configfs.h
++++ b/include/linux/configfs.h
+@@ -226,6 +226,7 @@ struct configfs_item_operations {
+ 	ssize_t	(*show_attribute)(struct config_item *, struct configfs_attribute *,char *);
+ 	ssize_t	(*store_attribute)(struct config_item *,struct configfs_attribute *,const char *, size_t);
+ 	int (*allow_link)(struct config_item *src, struct config_item *target);
++	int (*check_link)(struct config_item *src, struct config_item *target);
+ 	int (*drop_link)(struct config_item *src, struct config_item *target);
+ };
+ 
 -- 
 1.7.2.2
-
