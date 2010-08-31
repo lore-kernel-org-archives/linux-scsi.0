@@ -1,40 +1,58 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 17551] mpt2sas -- spurious hotplug event causes drive drop to
- drop out of JBOD array
-Date: Tue, 31 Aug 2010 08:23:26 GMT
-Message-ID: <201008310823.o7V8NQpp006739@demeter1.kernel.org>
-References: <bug-17551-11613@https.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Tue, 31 Aug 2010 12:55:23 +0300
+Message-ID: <4C7CD18B.2060608@panasas.com>
+References: <1282751267-3530-27-git-send-email-tj@kernel.org> <20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de> <4C753D75.2010305@kernel.org> <20100825200223.GE2738@quack.suse.cz> <4C76250B.6060800@kernel.org> <20100827173147.GA12374@quack.suse.cz> <x4939tv98n8.fsf@segfault.boston.devel.redhat.com> <20100830202034.GB12226@quack.quadriga.com> <4C7C170D.9090409@vlnb.net> <20100830210205.GD12226@quack.quadriga.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:39389 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932248Ab0HaIX1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Aug 2010 04:23:27 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o7V8NQQ5006744
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Aug 2010 08:23:26 GMT
-In-Reply-To: <bug-17551-11613@https.bugzilla.kernel.org/>
+Received: from daytona.panasas.com ([67.152.220.89]:53449 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751183Ab0HaJzc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Aug 2010 05:55:32 -0400
+In-Reply-To: <20100830210205.GD12226@quack.quadriga.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=17551
+On 08/31/2010 12:02 AM, Jan Kara wrote:
+> On Tue 31-08-10 00:39:41, Vladislav Bolkhovitin wrote:
+>> Jan Kara, on 08/31/2010 12:20 AM wrote:
+>>> On Mon 30-08-10 15:56:43, Jeff Moyer wrote:
+>>>> Jan Kara<jack@suse.cz>  writes:
+>>>>
+>>>>>   An update: I've set up an ext4 barrier testing in KVM - run fsstress,
+>>>>> kill KVM at some random moment and check that the filesystem is consistent
+>>>>> (kvm is run in cache=writeback mode to simulate disk cache). About 70 runs
+>>>>
+>>>> But doesn't your "disk cache" survive the "power cycle" of your guest?
+>>>   Yes, you're right. Thinking about it now the test setup was wrong because
+>>> it didn't refuse writes to the VM's data partition after the moment I
+>>> killed KVM. Thanks for catching this. I will probably have to use the fault
+>>> injection on the host to disallow writing the device at a certain moment.
+>>> Or does somebody have a better option?
+>>
+>> Have you considered to setup a second box as an iSCSI target (e.g.
+>> with iSCSI-SCST)? With it killing the connectivity is just a matter
+>> of a single iptables command + a lot more options.
 
+Still same problem no? the data is still cached on the backing store device
+how do you trash the cached data?
 
+>   Hmm, this might be an interesting option. Will try that. Thanks for
+> suggestion. 
+> 
+> 								Honza
 
+with stgt it's very simple as well. It's a user mode application.
+All on the same machine:
+- run stgt application
+- login + mount a filesystem
+- run test
+- kill -9 stgt mid flight
 
+But how to throw away the data on the backing store cache?
 
---- Comment #6 from starlight@binnacle.cx  2010-08-31 08:23:09 ---
-Hardware details:
-
-Supermicro 1026T-URF
-two Intel / Xeon X5560 2.8GHz / 1333MHz / 8MB L3 / D0
-Hynix / ECC UDIMM HMT351U7AFR8C-H9 / 1333MHz / 4GB x 6 = 24GB
-Supermicro AOC-USAS2-L8i SAS controller
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Boaz
