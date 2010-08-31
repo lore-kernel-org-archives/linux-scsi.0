@@ -1,100 +1,49 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
- timed out, resetting card.
-Date: Tue, 31 Aug 2010 11:15:23 -0700
-Message-ID: <AANLkTi=s5LusUgDFY4+qeWg4nfXZzF34UEafqZwEG+AM@mail.gmail.com>
-References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan>
-	<AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com>
-	<alpine.DEB.2.00.1008271306100.24692@p34.internal.lan>
-	<alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
-	<alpine.DEB.2.00.1008310717260.4858@p34.internal.lan>
-	<alpine.DEB.2.00.1008310732120.5156@p34.internal.lan>
-	<alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: libfc_lport.c:fc_lport_recv_req() dropping struct fc_seq parameter
+	for v2.6.36-rc3..?
+Date: Tue, 31 Aug 2010 13:14:23 -0700
+Message-ID: <1283285663.32007.476.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
-Sender: linux-ide-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp101.sbc.mail.gq1.yahoo.com ([67.195.15.60]:25604 "HELO
+	smtp101.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753740Ab0HaUSL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Aug 2010 16:18:11 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Eykholt <jeykholt@cisco.com>, "Love, Robert W" <robert.w.love@intel.com>
+Cc: openfcoe-devel <devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Justin,
+Hi Joe and Robert,
 
-There were no changes in the driver other than to force a 60 second I/O
-timeout.  You probably have a udev rule that was already giving you 60
-second timeouts for all scsi devices, so this patch did absolutely noth=
-ing.
+So after jumping to v2.6.36-rc3 for the lio-core-2.6.git/lio-4.0 branch
+recently and fixing some minor breakage around the original struct
+fc4_prov patches I merged from Joe in the spring, mostly having to do
+with drivers/scsi/libfc/libfc_lport.c:fc_lport_recv_req() changes from
+this commit:
 
-More likely is that there is an I/O pattern change between the kernels
-that is causing a 3ware firmware issue (or drive firmware issue) on
-your configuration.
-I have forwarded your case to 3ware firmware support.
+[SCSI] libfc: don't require a local exchange for incomining requests
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=922611569572d3c1aa0ed6491d21583fb3fcca22
 
--Adam
+I was able to get libfc + struct fc4_prov compiling after fixing the
+conflicts.  However, I have run into non-trivial breakage in the
+Open-FCoE.org / TCM_FC fabric module itself because of it's dependence
+bit upon having direct access to the passed struct fc_seq.   The code
+currently assigns to struct fc_seq * to struct ft_cmd->seq, and gets
+used in a number of subsequent areas after the struct fc4_prov->recv()
+entry hook at drivers/target/tcm_fc/tfc_cmd.c:ft_recv_cmd() gets called.
 
+I took a very brief look at trying to resolve the breakage myself, but
+quickly got a bit lost in terms of what TCM_FC actually needs to be
+accessing struct fc_seq directly for.  Would either of you gentlemen
+mind giving me a bit of insight into what you think would be required by
+TCM_FC in order to function with the recent libfc fc_lport_recv_req()
+changes..?
 
-On Tue, Aug 31, 2010 at 5:23 AM, Justin Piszcz <jpiszcz@lucidpixels.com=
-> wrote:
->
->
-> On Tue, 31 Aug 2010, Justin Piszcz wrote:
->
->>
->>
->> On Tue, 31 Aug 2010, Justin Piszcz wrote:
->>
->>>
->>>
->>> On Sun, 29 Aug 2010, Justin Piszcz wrote:
->>>
->>>> On Fri, 27 Aug 2010, Justin Piszcz wrote:
->>
->> Per my earlier message, both cards were resetting, scsi0 and scsi1 u=
-nder
->> kernel 2.6.35(.x), with 2.6.34, the lag problem is gone and my machi=
-ne is
->> back to normal again. =A0It is unlikely that both cards would be at =
-fault,
->> in addition I spent several hours trying different things, removing =
-the
->> BBU
->> modules for example, but always staying on the 2.6.35 kernel.
->>
->> I am now able to run rss2email (which ALWAYS caused the machine to l=
-ockup
->> and freeze until one of the controllers reset) without any problems =
-using
->> 2.6.34.
->>
->> 2.6.34.1 =3D good
->> 2.6.35.x =3D has 3ware bug
->>
->> There appears to be a bug in the commit for the 3w-9xxx updates.
->>
->> On 2.6.34 now and no problems so far, I am continuing to test.
->>
->> http://marc.info/?l=3Dlinux-kernel&m=3D127419418304483&w=3D2
->>
->> Adam Radford (2):
->> =A0 =A0 3ware maintainers update
->> =A0 =A0 3w-xxxx, 3w-9xxx: force 60 second timeout
->>
->>
->> Justin.
->
->
-> Latest-- 2.6.34.x seems to fix the issue, no lag whatsoever, the syst=
-em is
-> very responsive when running rss2email, again no lag, have run 10-15 =
-tests
-> without a single incident. =A0I also re-enabled msi and put my optimi=
-zation
-> script back in init.d, everything continues to work perfectly.
->
-> Will wait for Adam on what went wrong with the 2.6.35 3w-9xxx update.
->
-> Justin.
->
->
+Thanks!
+
+--nab
+
