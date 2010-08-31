@@ -1,37 +1,32 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 17551] mpt2sas -- spurious hotplug event causes drive drop to
- drop out of JBOD array
-Date: Tue, 31 Aug 2010 08:10:37 GMT
-Message-ID: <201008310810.o7V8AbT7004243@demeter1.kernel.org>
-References: <bug-17551-11613@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Tue, 31 Aug 2010 10:11:34 +0200
+Message-ID: <4C7CB936.8010509@kernel.org>
+References: <1282751267-3530-1-git-send-email-tj@kernel.org> <1282751267-3530-27-git-send-email-tj@kernel.org> <20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de> <4C753D75.2010305@kernel.org> <20100825200223.GE2738@quack.suse.cz> <4C76250B.6060800@kernel.org> <20100827173147.GA12374@quack.suse.cz> <x4939tv98n8.fsf@segfault.boston.devel.redhat.com> <20100830202034.GB12226@quack.quadriga.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:49637 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756922Ab0HaIKi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Aug 2010 04:10:38 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o7V8Ab0V004244
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Aug 2010 08:10:37 GMT
-In-Reply-To: <bug-17551-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20100830202034.GB12226@quack.quadriga.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=17551
+On 08/30/2010 10:20 PM, Jan Kara wrote:
+>   My setup is that I have a dedicated partition / drive for a filesystem
+> which is written to from a guest kernel running under KVM. I have set it up
+> using virtio driver with cache=writeback so that the host caches the writes
+> in a similar way disk caches them. At some point I just kill the qemu-kvm
+> process and at that point I'd like to also throw away data cached by the
+> host...
 
+$ echo 1 > /sys/block/sdX/device/delete
+$ echo - - - > /sys/class/scsi_host/hostX/scan
 
+should do the trick.
 
-
-
---- Comment #4 from starlight@binnacle.cx  2010-08-31 08:10:31 ---
-Created an attachment (id=28641)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=28641)
-boot-time information from 'lsiutil'
+Thanks.
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+tejun
