@@ -1,51 +1,59 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
-Date: Tue, 31 Aug 2010 13:27:04 +0300
-Message-ID: <4C7CD8F8.4050409@panasas.com>
-References: <1282751267-3530-1-git-send-email-tj@kernel.org> <1282751267-3530-27-git-send-email-tj@kernel.org> <20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de> <4C753D75.2010305@kernel.org> <20100825200223.GE2738@quack.suse.cz> <4C76250B.6060800@kernel.org> <20100827173147.GA12374@quack.suse.cz> <x4939tv98n8.fsf@segfault.boston.devel.redhat.com> <20100830202034.GB12226@quack.quadriga.com> <4C7CB936.8010509@kernel.org> <4C7CD47B.1050409@panasas.com> <4C7CD5D0.40007@kernel.org>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
+ timed out, resetting card.
+Date: Tue, 31 Aug 2010 07:21:57 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.1008310717260.4858@p34.internal.lan>
+References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan> <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com> <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan> <alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C7CD5D0.40007@kernel.org>
+In-Reply-To: <alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
 Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
+To: adam radford <aradford@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/31/2010 01:13 PM, Tejun Heo wrote:
-> Hello,
-> 
-> On 08/31/2010 12:07 PM, Boaz Harrosh wrote:
->> I don't know all the specifics of the virtio driver and the KVM backend but
->> don't the KVM target io is eventually directed to a local file or device?
->> If so the scsi device has disappeard but the bulk of the data is in host cache
->> at the backstore (file or bdev). Once all files are closed the data is synced
->> to disk.
->>
->> Is it not the same as Ric's problem of disconnecting the sata cable but
->> not dropping power to the drive. The main of the cache is still intact.
-> 
-> There are two layers of caching there.
-> 
->  drive cache - host page cache - guest
-> 
-> When guest issues FLUSH, qemu will translate it into fdatasync which
-> will flush the host page cache followed by FLUSH to the drive which
-> will flush the drive cache to the media.  If you delete the host disk
-> device, it will be detached w/o host page cache flushed.  So, although
-> it's not complete, it will lose good part of cache.  With out write
-> out timeout increased and/or with laptop mode enabled, it will
-> probably lose most of cache.
-> 
 
-Ha, ok you meant that device. So if you have a dedicated physical device
-for backstore that would be a very nice scriptable way.
 
-Thanks, that's a much better automated test than pulling drives out of
-sockets.
+On Sun, 29 Aug 2010, Justin Piszcz wrote:
 
-> Thanks.
-> 
+>
+>
+> On Fri, 27 Aug 2010, Justin Piszcz wrote:
 
-Boaz
+
+Problem persists during heavy I/O, different error this time:
+
+[152904.636062] 3w-9xxx: scsi1: ERROR: (0x06:0x0036): Response queue (large) empty failed during reset sequence.
+[152917.721865] 3w-9xxx: scsi1: AEN: INFO (0x04:0x0001): Controller reset occurred:resets=2.
+
+--
+
+syslog:Aug  6 05:58:19 p34 kernel: [    1.763002] 3w-9xxx: scsi1: AEN: INFO (0x04:0x0001): Controller reset occurred:resets=1.
+syslog:Aug 20 07:30:41 p34 kernel: [1171646.371290] 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108) timed out, resetting card.
+syslog:Aug 24 09:04:11 p34 kernel: [246703.526388] 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108) timed out, resetting card.
+syslog:Aug 24 09:14:04 p34 kernel: [247295.662461] 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108) timed out, resetting card.
+syslog:Aug 26 21:05:22 p34 kernel: [462727.945313] 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108) timed out, resetting card.
+syslog:Aug 27 00:39:43 p34 kernel: [475586.575030] 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108) timed out, resetting card.
+syslog:Aug 31 05:53:03 p34 kernel: [152904.636062] 3w-9xxx: scsi1: ERROR: (0x06:0x0036): Response queue (large) empty failed during reset sequence.
+syslog:Aug 31 05:53:03 p34 kernel: [152917.721865] 3w-9xxx: scsi1: AEN: INFO (0x04:0x0001): Controller reset occurred:resets=2.
+
+--
+
+It started happening on August 6th, this is around the same time I upgraded
+to the 2.6.35 kernel, the 2.6.35 kernel according to kernelnewbies was
+released on August 1, 2010:
+
+http://kernelnewbies.org/LinuxChanges
+Linux 2.6.35 has been released on 1 Aug, 2010.
+
+http://marc.info/?l=linux-kernel&m=127419418304483&w=2
+
+Adam Radford (2):
+       3ware maintainers update
+       3w-xxxx, 3w-9xxx: force 60 second timeout
+
+I will go back to 2.6.34 and see if the problems persists.
+
+Justin.
+
