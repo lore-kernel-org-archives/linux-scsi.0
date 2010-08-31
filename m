@@ -1,83 +1,180 @@
-From: Joe Eykholt <jeykholt@cisco.com>
-Subject: Re: libfc_lport.c:fc_lport_recv_req() dropping struct fc_seq	parameter
- for v2.6.36-rc3..?
-Date: Tue, 31 Aug 2010 14:12:26 -0700
-Message-ID: <4C7D703A.1000607@cisco.com>
-References: <1283285663.32007.476.camel@haakon2.linux-iscsi.org>	 <4C7D6B2A.5060609@cisco.com> <1283288430.32007.495.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [Open-FCoE] [RFC PATCH] scsi, fcoe, libfc: drop scsi host_lock
+	use from fc_queuecommand
+Date: Tue, 31 Aug 2010 16:56:25 -0700
+Message-ID: <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
+References: <20100831225338.25102.59500.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-4.cisco.com ([171.68.10.86]:48605 "EHLO
-	sj-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754045Ab0HaVM1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Aug 2010 17:12:27 -0400
-In-Reply-To: <1283288430.32007.495.camel@haakon2.linux-iscsi.org>
+Received: from smtp108.sbc.mail.gq1.yahoo.com ([67.195.14.111]:34784 "HELO
+	smtp108.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751125Ab0IAAAO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Aug 2010 20:00:14 -0400
+In-Reply-To: <20100831225338.25102.59500.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-iscsi-target-dev@googlegroups.com, "Love, Robert W" <robert.w.love@intel.com>, openfcoe-devel <devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Vasu Dev <vasu.dev@intel.com>
+Cc: michaelc@cs.wisc.edu, devel@open-fcoe.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
+
+On Tue, 2010-08-31 at 15:53 -0700, Vasu Dev wrote:
+> Currently fc_queuecommand drops this lock very early on and then re-acquires
+> this lock just before return, this re-acquired lock gets dropped immediately
+> by its fast path caller scsi_dispatch_cmd, this re-acquire and then immediate
+> drop on each IO hits performance especially with small size IOs on multi-core
+> systems, this hit is significant about 25% with 512 bytes size IOs.
+> 
+> This lock is not needed in fc_queuecommand and calling fc_queuecommand
+> without this lock held removes performance hit due to above described
+> re-acquire and immediately dropping this lock on each IO.
+
+Hi Vasu,
+
+Very interesting numbers with small blocksizes and your patch.  I recall
+trying to make a similar optimization patch myself in early 2.6.0 for
+Linux/iSCSI initiators which still obtained struct Scsi_Host->host_lock
+before calling struct scsi_host_template->queuecommand() in
+drivers/scsi/scsi.c:scsi_dispatch_cmd(), but instead simply did not
+attempt disable hard interrupts with spin_lock_irqsave().  I actually
+run into some deadlocks way back then, and ended up giving up on the
+patch and have not pursued the idea further since..
+
+Anyways the idea is an interesting one for discussion, and it's
+interesting to finally see the numbers on this.
+
+I have comment on your patch below..
+
+> 
+> So this patch adds unlocked_qcmds flag to drop host_lock before
+> calling only fc_queuecommand and no need to re-acquire and then drop
+> this lock on each IO, this added flag drops this lock only if LLD wants
+> as fcoe.ko does here, thus this change won't affect existing LLD since
+> added unlocked_qcmds flag will be zero in those cases and their host
+> lock uses would remain same after this patch.
+> 
+> I considered having this lock dropped inside fc_queuecommand using irq flags
+> saved by its caller then return without re-acquiring this lock but that
+> would make this lock usage asymmetric and passing saved irq flags was
+> another issue with this approach, so RFC to seek any better possible fix
+> for this or any issue with added unlocked_qcmds while not having
+> fc_queuecommand under host_lock anymore. I'd appreciate any comments from
+> Mike, Joe and folks on open-fcoe first before taking this patch to
+> linux-scsi directly as suggested by Rob and Chris here.
+> 
+> I also did cable pull test in middle of IOs with this patch and I don't see
+> any issue with that after this patch and some more testing is already done
+> successfully with this patch.
+> 
+> Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+> ---
+>  drivers/scsi/fcoe/fcoe.c    |    1 +
+>  drivers/scsi/libfc/fc_fcp.c |   14 +++++---------
+>  drivers/scsi/scsi.c         |    8 +++++++-
+>  include/scsi/scsi_host.h    |    3 +++
+>  4 files changed, 16 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index 844d618..280a4df 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -706,6 +706,7 @@ static int fcoe_shost_config(struct fc_lport *lport, struct device *dev)
+>  	lport->host->max_id = FCOE_MAX_FCP_TARGET;
+>  	lport->host->max_channel = 0;
+>  	lport->host->max_cmd_len = FCOE_MAX_CMD_LEN;
+> +	lport->host->unlocked_qcmds = 1;
+>  
+>  	if (lport->vport)
+>  		lport->host->transportt = fcoe_vport_transport_template;
+> diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+> index 43866e6..39b6bfa 100644
+> --- a/drivers/scsi/libfc/fc_fcp.c
+> +++ b/drivers/scsi/libfc/fc_fcp.c
+> @@ -1751,8 +1751,7 @@ static inline int fc_fcp_lport_queue_ready(struct fc_lport *lport)
+>   * @cmd:   The scsi_cmnd to be executed
+>   * @done:  The callback function to be called when the scsi_cmnd is complete
+>   *
+> - * This is the i/o strategy routine, called by the SCSI layer. This routine
+> - * is called with the host_lock held.
+> + * This is the i/o strategy routine, called by the SCSI layer.
+>   */
+>  int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+>  {
+> @@ -1770,9 +1769,8 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+>  	if (rval) {
+>  		sc_cmd->result = rval;
+>  		done(sc_cmd);
+> -		return 0;
+> +		return rc;
+>  	}
+> -	spin_unlock_irq(lport->host->host_lock);
+>  
+>  	if (!*(struct fc_remote_port **)rport->dd_data) {
+>  		/*
+> @@ -1781,7 +1779,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+>  		 */
+>  		sc_cmd->result = DID_IMM_RETRY << 16;
+>  		done(sc_cmd);
+> -		goto out;
+> +		return rc;
+>  	}
+>  
+>  	rpriv = rport->dd_data;
+> @@ -1790,13 +1788,13 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+>  		if (lport->qfull)
+>  			fc_fcp_can_queue_ramp_down(lport);
+>  		rc = SCSI_MLQUEUE_HOST_BUSY;
+> -		goto out;
+> +		return rc;
+>  	}
+>  
+>  	fsp = fc_fcp_pkt_alloc(lport, GFP_ATOMIC);
+>  	if (fsp == NULL) {
+>  		rc = SCSI_MLQUEUE_HOST_BUSY;
+> -		goto out;
+> +		return rc;
+>  	}
+>  
+>  	/*
+> @@ -1848,8 +1846,6 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+>  		fc_fcp_pkt_release(fsp);
+>  		rc = SCSI_MLQUEUE_HOST_BUSY;
+>  	}
+> -out:
+> -	spin_lock_irq(lport->host->host_lock);
+>  	return rc;
+>  }
+>  EXPORT_SYMBOL(fc_queuecommand);
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index ad0ed21..e7b9f3c 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -746,6 +746,9 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+>  	 */
+>  	scsi_cmd_get_serial(host, cmd); 
+>  
+> +	if (host->unlocked_qcmds)
+> +		spin_unlock_irqrestore(host->host_lock, flags);
+> +
+>  	if (unlikely(host->shost_state == SHOST_DEL)) {
+>  		cmd->result = (DID_NO_CONNECT << 16);
+>  		scsi_done(cmd);
+
+I don't think it's safe to call scsi_done() for the SHOST_DEL case here
+with host->unlocked_qcmds=1 w/o holding host_lock, nor would it be safe
+for the SCSI LLD itself using host->unlocked_qcmds=1 to call the
+(*scsi_done)() being passed into sht->queuecommand() without
+host->host_lock being held by either the SCSI ML or the SCSI LLD.
+
+There may also be some other issues with doing this that are more
+subtle..  Any comments on the possibility of doing this properly for
+software initiators from the Linux/SCSI folks..?  Considering that
+host_lock is always held for scsi_dispatch_cmd() -> scsi_done()
+competion..?
+
+Thanks!
+
+--nab
 
 
-
-On 8/31/10 2:00 PM, Nicholas A. Bellinger wrote:
-> On Tue, 2010-08-31 at 13:50 -0700, Joe Eykholt wrote:
->>
->> On 8/31/10 1:14 PM, Nicholas A. Bellinger wrote:
->>> Hi Joe and Robert,
->>>
->>> So after jumping to v2.6.36-rc3 for the lio-core-2.6.git/lio-4.0 branch
->>> recently and fixing some minor breakage around the original struct
->>> fc4_prov patches I merged from Joe in the spring, mostly having to do
->>> with drivers/scsi/libfc/libfc_lport.c:fc_lport_recv_req() changes from
->>> this commit:
->>>
->>> [SCSI] libfc: don't require a local exchange for incomining requests
->>> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=922611569572d3c1aa0ed6491d21583fb3fcca22
->>>
->>> I was able to get libfc + struct fc4_prov compiling after fixing the
->>> conflicts.  However, I have run into non-trivial breakage in the
->>> Open-FCoE.org / TCM_FC fabric module itself because of it's dependence
->>> bit upon having direct access to the passed struct fc_seq.   The code
->>> currently assigns to struct fc_seq * to struct ft_cmd->seq, and gets
->>> used in a number of subsequent areas after the struct fc4_prov->recv()
->>> entry hook at drivers/target/tcm_fc/tfc_cmd.c:ft_recv_cmd() gets called.
->>>
->>> I took a very brief look at trying to resolve the breakage myself, but
->>> quickly got a bit lost in terms of what TCM_FC actually needs to be
->>> accessing struct fc_seq directly for.  Would either of you gentlemen
->>> mind giving me a bit of insight into what you think would be required by
->>> TCM_FC in order to function with the recent libfc fc_lport_recv_req()
->>> changes..?
->>
->> I caused this problem, and anticipated that I would have
->> to make changes to tcm_fc to accommodate it.  Then I forgot by the
->> time it made it upstream.
-> 
-> <nod>
-> 
->>
->> Now incoming requests don't get a sequence assigned unless they ask for
->> it, so we need to call lport->tt.seq_assign() for the request.
->> It turns out I forgot that that takes a reference on the sequence, so
->> I have another patch to add to drop the refcnt.
->>
-> 
-> Ahh, I think I understand a bit more now, thanks for the extra context
-> here.  Does this mean that lport->tt.seq_assign() will be returning the
-> struct fc_exch * used by the primary READ/WRITE handlers in tfc_io.c
-> code..?
-
-Sort of.  It returns a struct fc_seq *, but sequences and exchanges are 1:1,
-so we can find the exchange using fc_seq_exch().
-
->> I can work on this at some point in the next few days if you can wait.
-
-> Sure, no rush on this item.  I was just curious to understand the bigger
-> picture of the recent changes you guys have been working on.  8-)
-> 
-> Thanks for your comments Joe!
-> 
-> --nab
-> 
-> 
