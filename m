@@ -1,49 +1,115 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: libfc_lport.c:fc_lport_recv_req() dropping struct fc_seq parameter
-	for v2.6.36-rc3..?
-Date: Tue, 31 Aug 2010 13:14:23 -0700
-Message-ID: <1283285663.32007.476.camel@haakon2.linux-iscsi.org>
+From: David Miller <davem@davemloft.net>
+Subject: [PATCH] scsi: Remove warnings after vsprintf %pV introducation.
+Date: Tue, 31 Aug 2010 13:35:31 -0700 (PDT)
+Message-ID: <20100831.133531.186321637.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.gq1.yahoo.com ([67.195.15.60]:25604 "HELO
-	smtp101.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753740Ab0HaUSL (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51114
+	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754073Ab0HaUfP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Aug 2010 16:18:11 -0400
+	Tue, 31 Aug 2010 16:35:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Eykholt <jeykholt@cisco.com>, "Love, Robert W" <robert.w.love@intel.com>
-Cc: openfcoe-devel <devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, joe@perches.com, sfr@canb.auug.org.au
 
-Hi Joe and Robert,
 
-So after jumping to v2.6.36-rc3 for the lio-core-2.6.git/lio-4.0 branch
-recently and fixing some minor breakage around the original struct
-fc4_prov patches I merged from Joe in the spring, mostly having to do
-with drivers/scsi/libfc/libfc_lport.c:fc_lport_recv_req() changes from
-this commit:
+GCC warns about empty printf format strings, and after
+the addition of %pV these existing such cases in the
+scsi driver layer were exposed enough for the compiler
+to start seeing them.
 
-[SCSI] libfc: don't require a local exchange for incomining requests
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=922611569572d3c1aa0ed6491d21583fb3fcca22
+Based almost entirely upon a patch by Joe Perches.
 
-I was able to get libfc + struct fc4_prov compiling after fixing the
-conflicts.  However, I have run into non-trivial breakage in the
-Open-FCoE.org / TCM_FC fabric module itself because of it's dependence
-bit upon having direct access to the passed struct fc_seq.   The code
-currently assigns to struct fc_seq * to struct ft_cmd->seq, and gets
-used in a number of subsequent areas after the struct fc4_prov->recv()
-entry hook at drivers/target/tcm_fc/tfc_cmd.c:ft_recv_cmd() gets called.
+Signed-off-by: David S. Miller <davem@davemloft.net>
 
-I took a very brief look at trying to resolve the breakage myself, but
-quickly got a bit lost in terms of what TCM_FC actually needs to be
-accessing struct fc_seq directly for.  Would either of you gentlemen
-mind giving me a bit of insight into what you think would be required by
-TCM_FC in order to function with the recent libfc fc_lport_recv_req()
-changes..?
-
-Thanks!
-
---nab
-
+diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
+index cd05e04..d0c8234 100644
+--- a/drivers/scsi/constants.c
++++ b/drivers/scsi/constants.c
+@@ -1404,13 +1404,13 @@ void scsi_print_sense(char *name, struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_sense_hdr sshdr;
+ 
+-	scmd_printk(KERN_INFO, cmd, "");
++	scmd_printk(KERN_INFO, cmd, " ");
+ 	scsi_decode_sense_buffer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
+ 				 &sshdr);
+ 	scsi_show_sense_hdr(&sshdr);
+ 	scsi_decode_sense_extras(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
+ 				 &sshdr);
+-	scmd_printk(KERN_INFO, cmd, "");
++	scmd_printk(KERN_INFO, cmd, " ");
+ 	scsi_show_extd_sense(sshdr.asc, sshdr.ascq);
+ }
+ EXPORT_SYMBOL(scsi_print_sense);
+@@ -1453,7 +1453,7 @@ EXPORT_SYMBOL(scsi_show_result);
+ 
+ void scsi_print_result(struct scsi_cmnd *cmd)
+ {
+-	scmd_printk(KERN_INFO, cmd, "");
++	scmd_printk(KERN_INFO, cmd, " ");
+ 	scsi_show_result(cmd->result);
+ }
+ EXPORT_SYMBOL(scsi_print_result);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2714bec..cd71f46 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2625,15 +2625,15 @@ module_exit(exit_sd);
+ static void sd_print_sense_hdr(struct scsi_disk *sdkp,
+ 			       struct scsi_sense_hdr *sshdr)
+ {
+-	sd_printk(KERN_INFO, sdkp, "");
++	sd_printk(KERN_INFO, sdkp, " ");
+ 	scsi_show_sense_hdr(sshdr);
+-	sd_printk(KERN_INFO, sdkp, "");
++	sd_printk(KERN_INFO, sdkp, " ");
+ 	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
+ }
+ 
+ static void sd_print_result(struct scsi_disk *sdkp, int result)
+ {
+-	sd_printk(KERN_INFO, sdkp, "");
++	sd_printk(KERN_INFO, sdkp, " ");
+ 	scsi_show_result(result);
+ }
+ 
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index a7bc8b7..d740a5b 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -72,10 +72,7 @@ static void sym_printl_hex(u_char *p, int n)
+ 
+ static void sym_print_msg(struct sym_ccb *cp, char *label, u_char *msg)
+ {
+-	if (label)
+-		sym_print_addr(cp->cmd, "%s: ", label);
+-	else
+-		sym_print_addr(cp->cmd, "");
++	sym_print_addr(cp->cmd, "%s: ", label);
+ 
+ 	spi_print_msg(msg);
+ 	printf("\n");
+@@ -4558,7 +4555,8 @@ static void sym_int_sir(struct sym_hcb *np)
+ 			switch (np->msgin [2]) {
+ 			case M_X_MODIFY_DP:
+ 				if (DEBUG_FLAGS & DEBUG_POINTER)
+-					sym_print_msg(cp, NULL, np->msgin);
++					sym_print_msg(cp, "extended msg ",
++						      np->msgin);
+ 				tmp = (np->msgin[3]<<24) + (np->msgin[4]<<16) + 
+ 				      (np->msgin[5]<<8)  + (np->msgin[6]);
+ 				sym_modify_dp(np, tp, cp, tmp);
+@@ -4585,7 +4583,7 @@ static void sym_int_sir(struct sym_hcb *np)
+ 		 */
+ 		case M_IGN_RESIDUE:
+ 			if (DEBUG_FLAGS & DEBUG_POINTER)
+-				sym_print_msg(cp, NULL, np->msgin);
++				sym_print_msg(cp, "half byte ", np->msgin);
+ 			if (cp->host_flags & HF_SENSE)
+ 				OUTL_DSP(np, SCRIPTA_BA(np, clrack));
+ 			else
