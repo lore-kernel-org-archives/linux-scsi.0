@@ -1,80 +1,73 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: libfc_lport.c:fc_lport_recv_req() dropping struct fc_seq
-	parameter for v2.6.36-rc3..?
-Date: Tue, 31 Aug 2010 14:00:30 -0700
-Message-ID: <1283288430.32007.495.camel@haakon2.linux-iscsi.org>
-References: <1283285663.32007.476.camel@haakon2.linux-iscsi.org>
-	 <4C7D6B2A.5060609@cisco.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] scsi: Remove warnings after vsprintf %pV introducation.
+Date: Tue, 31 Aug 2010 15:07:46 -0600
+Message-ID: <20100831210746.GJ3521@parisc-linux.org>
+References: <20100831.133531.186321637.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.gq1.yahoo.com ([67.195.15.60]:39072 "HELO
-	smtp101.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751911Ab0HaVES (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Aug 2010 17:04:18 -0400
-In-Reply-To: <4C7D6B2A.5060609@cisco.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:60619 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755786Ab0HaVHs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Aug 2010 17:07:48 -0400
+Content-Disposition: inline
+In-Reply-To: <20100831.133531.186321637.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Eykholt <jeykholt@cisco.com>
-Cc: linux-iscsi-target-dev@googlegroups.com, "Love, Robert W" <robert.w.love@intel.com>, openfcoe-devel <devel@open-fcoe.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, joe@perches.com, sfr@canb.auug.org.au
 
-On Tue, 2010-08-31 at 13:50 -0700, Joe Eykholt wrote:
-> 
-> On 8/31/10 1:14 PM, Nicholas A. Bellinger wrote:
-> > Hi Joe and Robert,
-> > 
-> > So after jumping to v2.6.36-rc3 for the lio-core-2.6.git/lio-4.0 branch
-> > recently and fixing some minor breakage around the original struct
-> > fc4_prov patches I merged from Joe in the spring, mostly having to do
-> > with drivers/scsi/libfc/libfc_lport.c:fc_lport_recv_req() changes from
-> > this commit:
-> > 
-> > [SCSI] libfc: don't require a local exchange for incomining requests
-> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=922611569572d3c1aa0ed6491d21583fb3fcca22
-> > 
-> > I was able to get libfc + struct fc4_prov compiling after fixing the
-> > conflicts.  However, I have run into non-trivial breakage in the
-> > Open-FCoE.org / TCM_FC fabric module itself because of it's dependence
-> > bit upon having direct access to the passed struct fc_seq.   The code
-> > currently assigns to struct fc_seq * to struct ft_cmd->seq, and gets
-> > used in a number of subsequent areas after the struct fc4_prov->recv()
-> > entry hook at drivers/target/tcm_fc/tfc_cmd.c:ft_recv_cmd() gets called.
-> > 
-> > I took a very brief look at trying to resolve the breakage myself, but
-> > quickly got a bit lost in terms of what TCM_FC actually needs to be
-> > accessing struct fc_seq directly for.  Would either of you gentlemen
-> > mind giving me a bit of insight into what you think would be required by
-> > TCM_FC in order to function with the recent libfc fc_lport_recv_req()
-> > changes..?
-> 
-> I caused this problem, and anticipated that I would have
-> to make changes to tcm_fc to accommodate it.  Then I forgot by the
-> time it made it upstream.
+On Tue, Aug 31, 2010 at 01:35:31PM -0700, David Miller wrote:
+> diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+> index a7bc8b7..d740a5b 100644
+> --- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
+> +++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+> @@ -72,10 +72,7 @@ static void sym_printl_hex(u_char *p, int n)
+>  
+>  static void sym_print_msg(struct sym_ccb *cp, char *label, u_char *msg)
+>  {
+> -	if (label)
+> -		sym_print_addr(cp->cmd, "%s: ", label);
+> -	else
+> -		sym_print_addr(cp->cmd, "");
+> +	sym_print_addr(cp->cmd, "%s: ", label);
+>  
+>  	spi_print_msg(msg);
+>  	printf("\n");
+> @@ -4558,7 +4555,8 @@ static void sym_int_sir(struct sym_hcb *np)
+>  			switch (np->msgin [2]) {
+>  			case M_X_MODIFY_DP:
+>  				if (DEBUG_FLAGS & DEBUG_POINTER)
+> -					sym_print_msg(cp, NULL, np->msgin);
+> +					sym_print_msg(cp, "extended msg ",
+> +						      np->msgin);
+>  				tmp = (np->msgin[3]<<24) + (np->msgin[4]<<16) + 
+>  				      (np->msgin[5]<<8)  + (np->msgin[6]);
+>  				sym_modify_dp(np, tp, cp, tmp);
 
-<nod>
+The extra space before the colon looks a little weird.
 
-> 
-> Now incoming requests don't get a sequence assigned unless they ask for
-> it, so we need to call lport->tt.seq_assign() for the request.
-> It turns out I forgot that that takes a reference on the sequence, so
-> I have another patch to add to drop the refcnt.
-> 
+> @@ -4585,7 +4583,7 @@ static void sym_int_sir(struct sym_hcb *np)
+>  		 */
+>  		case M_IGN_RESIDUE:
+>  			if (DEBUG_FLAGS & DEBUG_POINTER)
+> -				sym_print_msg(cp, NULL, np->msgin);
+> +				sym_print_msg(cp, "half byte ", np->msgin);
+>  			if (cp->host_flags & HF_SENSE)
+>  				OUTL_DSP(np, SCRIPTA_BA(np, clrack));
+>  			else
 
-Ahh, I think I understand a bit more now, thanks for the extra context
-here.  Does this mean that lport->tt.seq_assign() will be returning the
-struct fc_exch * used by the primary READ/WRITE handlers in tfc_io.c
-code..?
+Um, half byte?  Oh, I see ...
 
-> I can work on this at some point in the next few days if you can wait.
-> 
+                /*
+                 *  We received a 1/2 byte message not handled from SCRIPTS.
 
-Sure, no rush on this item.  I was just curious to understand the bigger
-picture of the recent changes you guys have been working on.  8-)
+That's a 'one or two byte message', not an 0.5 byte message :-)  There's
+really nothing good to print here.  Print a space if you absolutely must,
+but why the hell is GCC warning about this?
 
-Thanks for your comments Joe!
-
---nab
-
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
