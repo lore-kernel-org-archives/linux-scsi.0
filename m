@@ -1,99 +1,39 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH] scsi_transport_fc:  fix blocked bsg request when fc object
- deleted
-Date: Tue, 31 Aug 2010 22:27:31 -0400
-Message-ID: <8a40ef31-efb0-44c2-a92a-c2072a670748@exht1.ad.emulex.com>
-Reply-To: james.smart@emulex.com
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [Open-FCoE] [RFC PATCH] scsi, fcoe, libfc: drop scsi host_lock
+ use from fc_queuecommand
+Date: Tue, 31 Aug 2010 23:17:44 -0500
+Message-ID: <4C7DD3E8.9050700@cs.wisc.edu>
+References: <20100831225338.25102.59500.stgit@localhost.localdomain> <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:53786 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751972Ab0IAC2O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Aug 2010 22:28:14 -0400
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:51972 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750779Ab0IAEM6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Sep 2010 00:12:58 -0400
+In-Reply-To: <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: carl.lajeunesse@emulex.com
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Vasu Dev <vasu.dev@intel.com>, devel@open-fcoe.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
 
-When an rport is "blocked" and a bsg request is received, the bsg request gets
-placed on the queue but the queue stalls. If the fc object is then deleted - the
-bsg queue never restarts and keeps the reference on the object, and stops the
-overall teardown.
+On 08/31/2010 06:56 PM, Nicholas A. Bellinger wrote:
+>> +	if (host->unlocked_qcmds)
+>> +		spin_unlock_irqrestore(host->host_lock, flags);
+>> +
+>>   	if (unlikely(host->shost_state == SHOST_DEL)) {
+>>   		cmd->result = (DID_NO_CONNECT<<  16);
+>>   		scsi_done(cmd);
+>
+> I don't think it's safe to call scsi_done() for the SHOST_DEL case here
+> with host->unlocked_qcmds=1 w/o holding host_lock, nor would it be safe
+> for the SCSI LLD itself using host->unlocked_qcmds=1 to call the
+> (*scsi_done)() being passed into sht->queuecommand() without
+> host->host_lock being held by either the SCSI ML or the SCSI LLD.
 
-This patch restarts the bsg queue on teardown and drains any pending requests,
-allowing the teardown to succeed.
-
--- james s
-
-
- Signed-off-by: Carl Lajeunesse <carl.lajeunesse@emulex.com>
- Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- scsi_transport_fc.c |   43 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 43 insertions(+)
-
-
-diff -upNr a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c	2010-08-06 12:23:59.000000000 -0400
-+++ b/drivers/scsi/scsi_transport_fc.c	2010-08-31 22:14:12.000000000 -0400
-@@ -4044,11 +4044,54 @@ fc_bsg_rportadd(struct Scsi_Host *shost,
- /**
-  * fc_bsg_remove - Deletes the bsg hooks on fchosts/rports
-  * @q:	the request_queue that is to be torn down.
-+ *
-+ * Notes:
-+ *   Before unregistering the queue empty any requests that are blocked
-+ *
-+ *
-  */
- static void
- fc_bsg_remove(struct request_queue *q)
- {
-+	struct request *req; /* block request */
-+	int counts; /* totals for request_list count and starved */
-+
- 	if (q) {
-+		/* Stop taking in new requests */
-+		spin_lock_irq(q->queue_lock);
-+		blk_stop_queue(q);
-+
-+		/* drain all requests in the queue */
-+		while (1) {
-+			/* need the lock to fetch a request
-+			 * this may fetch the same reqeust as the previous pass
-+			 */
-+			req = blk_fetch_request(q);
-+			/* save requests in use and starved */
-+			counts = q->rq.count[0] + q->rq.count[1] +
-+				q->rq.starved[0] + q->rq.starved[1];
-+			spin_unlock_irq(q->queue_lock);
-+			/* any requests still outstanding? */
-+			if (counts == 0)
-+				break;
-+
-+			/* This may be the same req as the previous iteration,
-+			 * always send the blk_end_request_all after a prefetch.
-+			 * It is not okay to not end the request because the
-+			 * prefetch started the request.
-+			 */
-+			if (req) {
-+				/* return -ENXIO to indicate that this queue is
-+				 * going away
-+				 */
-+				req->errors = -ENXIO;
-+				blk_end_request_all(req, -ENXIO);
-+			}
-+
-+			msleep(200); /* allow bsg to possibly finish */
-+			spin_lock_irq(q->queue_lock);
-+		}
-+
- 		bsg_unregister_queue(q);
- 		blk_cleanup_queue(q);
- 	}
-
-
+The host state should be checked under the host lock, but I do not think 
+it needs to be held with calling scsi_done. scsi_done just queues up the 
+request to be completed in the block softirq, and the block layer 
+protects against something like the command getting completed by 
+multiple code paths/threads.
