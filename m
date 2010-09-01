@@ -1,181 +1,111 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [Open-FCoE] [RFC PATCH] scsi, fcoe, libfc: drop scsi host_lock
-	use from fc_queuecommand
-Date: Tue, 31 Aug 2010 17:16:38 -0700
-Message-ID: <1283300198.32007.534.camel@haakon2.linux-iscsi.org>
-References: <20100831225338.25102.59500.stgit@localhost.localdomain>
-	 <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: safety of retrying SYNCHRONIZE CACHE [was: Re: [PATCHSET
+ block#for-2.6.36-post] block: replace barrier with sequenced flush]
+Date: Tue, 31 Aug 2010 20:55:37 -0400
+Message-ID: <20100901005537.GA21466@redhat.com>
+References: <4C6E3C1A.50205@ct.jp.nec.com>
+ <4C72660A.7070009@kernel.org>
+ <20100823141733.GA21158@redhat.com>
+ <4C739DE9.5070803@ct.jp.nec.com>
+ <4C73FA8F.5080800@kernel.org>
+ <4C74CD95.1000208@ct.jp.nec.com>
+ <20100825152831.GA8509@redhat.com>
+ <4C7789BE.1060609@ct.jp.nec.com>
+ <20100827134940.GA22504@redhat.com>
+ <4C7B4C23.8020100@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:48464 "HELO
-	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752248Ab0IAAU1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Aug 2010 20:20:27 -0400
-In-Reply-To: <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4C7B4C23.8020100@ct.jp.nec.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, dm-devel@redhat.com, Frederick.Knight@netapp.com
 List-Id: linux-scsi@vger.kernel.org
-To: Vasu Dev <vasu.dev@intel.com>
-Cc: michaelc@cs.wisc.edu, devel@open-fcoe.org, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
 
-On Tue, 2010-08-31 at 16:56 -0700, Nicholas A. Bellinger wrote:
-> On Tue, 2010-08-31 at 15:53 -0700, Vasu Dev wrote:
-> > Currently fc_queuecommand drops this lock very early on and then re-acquires
-> > this lock just before return, this re-acquired lock gets dropped immediately
-> > by its fast path caller scsi_dispatch_cmd, this re-acquire and then immediate
-> > drop on each IO hits performance especially with small size IOs on multi-core
-> > systems, this hit is significant about 25% with 512 bytes size IOs.
-> > 
-> > This lock is not needed in fc_queuecommand and calling fc_queuecommand
-> > without this lock held removes performance hit due to above described
-> > re-acquire and immediately dropping this lock on each IO.
-> 
-> Hi Vasu,
-> 
-> Very interesting numbers with small blocksizes and your patch.  I recall
-> trying to make a similar optimization patch myself in early 2.6.0 for
-> Linux/iSCSI initiators which still obtained struct Scsi_Host->host_lock
-> before calling struct scsi_host_template->queuecommand() in
-> drivers/scsi/scsi.c:scsi_dispatch_cmd(), but instead simply did not
-> attempt disable hard interrupts with spin_lock_irqsave().  I actually
-> run into some deadlocks way back then, and ended up giving up on the
-> patch and have not pursued the idea further since..
-> 
-> Anyways the idea is an interesting one for discussion, and it's
-> interesting to finally see the numbers on this.
-> 
-> I have comment on your patch below..
-> 
-> > 
-> > So this patch adds unlocked_qcmds flag to drop host_lock before
-> > calling only fc_queuecommand and no need to re-acquire and then drop
-> > this lock on each IO, this added flag drops this lock only if LLD wants
-> > as fcoe.ko does here, thus this change won't affect existing LLD since
-> > added unlocked_qcmds flag will be zero in those cases and their host
-> > lock uses would remain same after this patch.
-> > 
-> > I considered having this lock dropped inside fc_queuecommand using irq flags
-> > saved by its caller then return without re-acquiring this lock but that
-> > would make this lock usage asymmetric and passing saved irq flags was
-> > another issue with this approach, so RFC to seek any better possible fix
-> > for this or any issue with added unlocked_qcmds while not having
-> > fc_queuecommand under host_lock anymore. I'd appreciate any comments from
-> > Mike, Joe and folks on open-fcoe first before taking this patch to
-> > linux-scsi directly as suggested by Rob and Chris here.
-> > 
-> > I also did cable pull test in middle of IOs with this patch and I don't see
-> > any issue with that after this patch and some more testing is already done
-> > successfully with this patch.
-> > 
-> > Signed-off-by: Vasu Dev <vasu.dev@intel.com>
-> > ---
-> >  drivers/scsi/fcoe/fcoe.c    |    1 +
-> >  drivers/scsi/libfc/fc_fcp.c |   14 +++++---------
-> >  drivers/scsi/scsi.c         |    8 +++++++-
-> >  include/scsi/scsi_host.h    |    3 +++
-> >  4 files changed, 16 insertions(+), 10 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-> > index 844d618..280a4df 100644
-> > --- a/drivers/scsi/fcoe/fcoe.c
-> > +++ b/drivers/scsi/fcoe/fcoe.c
-> > @@ -706,6 +706,7 @@ static int fcoe_shost_config(struct fc_lport *lport, struct device *dev)
-> >  	lport->host->max_id = FCOE_MAX_FCP_TARGET;
-> >  	lport->host->max_channel = 0;
-> >  	lport->host->max_cmd_len = FCOE_MAX_CMD_LEN;
-> > +	lport->host->unlocked_qcmds = 1;
-> >  
-> >  	if (lport->vport)
-> >  		lport->host->transportt = fcoe_vport_transport_template;
-> > diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-> > index 43866e6..39b6bfa 100644
-> > --- a/drivers/scsi/libfc/fc_fcp.c
-> > +++ b/drivers/scsi/libfc/fc_fcp.c
-> > @@ -1751,8 +1751,7 @@ static inline int fc_fcp_lport_queue_ready(struct fc_lport *lport)
-> >   * @cmd:   The scsi_cmnd to be executed
-> >   * @done:  The callback function to be called when the scsi_cmnd is complete
-> >   *
-> > - * This is the i/o strategy routine, called by the SCSI layer. This routine
-> > - * is called with the host_lock held.
-> > + * This is the i/o strategy routine, called by the SCSI layer.
-> >   */
-> >  int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
-> >  {
-> > @@ -1770,9 +1769,8 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
-> >  	if (rval) {
-> >  		sc_cmd->result = rval;
-> >  		done(sc_cmd);
-> > -		return 0;
-> > +		return rc;
-> >  	}
-> > -	spin_unlock_irq(lport->host->host_lock);
-> >  
-> >  	if (!*(struct fc_remote_port **)rport->dd_data) {
-> >  		/*
-> > @@ -1781,7 +1779,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
-> >  		 */
-> >  		sc_cmd->result = DID_IMM_RETRY << 16;
-> >  		done(sc_cmd);
-> > -		goto out;
-> > +		return rc;
-> >  	}
-> >  
-> >  	rpriv = rport->dd_data;
-> > @@ -1790,13 +1788,13 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
-> >  		if (lport->qfull)
-> >  			fc_fcp_can_queue_ramp_down(lport);
-> >  		rc = SCSI_MLQUEUE_HOST_BUSY;
-> > -		goto out;
-> > +		return rc;
-> >  	}
-> >  
-> >  	fsp = fc_fcp_pkt_alloc(lport, GFP_ATOMIC);
-> >  	if (fsp == NULL) {
-> >  		rc = SCSI_MLQUEUE_HOST_BUSY;
-> > -		goto out;
-> > +		return rc;
-> >  	}
-> >  
-> >  	/*
-> > @@ -1848,8 +1846,6 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
-> >  		fc_fcp_pkt_release(fsp);
-> >  		rc = SCSI_MLQUEUE_HOST_BUSY;
-> >  	}
-> > -out:
-> > -	spin_lock_irq(lport->host->host_lock);
-> >  	return rc;
-> >  }
-> >  EXPORT_SYMBOL(fc_queuecommand);
-> > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> > index ad0ed21..e7b9f3c 100644
-> > --- a/drivers/scsi/scsi.c
-> > +++ b/drivers/scsi/scsi.c
-> > @@ -746,6 +746,9 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
-> >  	 */
-> >  	scsi_cmd_get_serial(host, cmd); 
-> >  
-> > +	if (host->unlocked_qcmds)
-> > +		spin_unlock_irqrestore(host->host_lock, flags);
-> > +
-> >  	if (unlikely(host->shost_state == SHOST_DEL)) {
-> >  		cmd->result = (DID_NO_CONNECT << 16);
-> >  		scsi_done(cmd);
-> 
-> I don't think it's safe to call scsi_done() for the SHOST_DEL case here
-> with host->unlocked_qcmds=1 w/o holding host_lock, nor would it be safe
-> for the SCSI LLD itself using host->unlocked_qcmds=1 to call the
-> (*scsi_done)() being passed into sht->queuecommand() without
-> host->host_lock being held by either the SCSI ML or the SCSI LLD.
-> 
+Hi Kiyoshi,
 
-Actually also, the accessing of host->shost_state needs to be protected
-by host->host_lock at all times in order for HBA shutdown logic to
-function as expected for scsi_dispatch_cmd()..
+On Mon, Aug 30 2010 at  2:13am -0400,
+Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
 
-Best,
+> > That does seem like a valid concern.  But I'm not seeing why its unique
+> > to SYNCHRONIZE CACHE.  Any IO that fails on the target side should be
+> > passed up once the error gets to DM.
+> 
+> See the Tejun's explanation again:
+>     http://marc.info/?l=linux-kernel&m=128267361813859&w=2
+> What I'm concerning is whether the same thing as Tejun explained
+> for ATA can happen on other types of devices.
+> 
+> 
+> Normal write command has data and no data loss happens on error.
+> So it can be retried cleanly, and if the result of the retry is
+> success, it's really success, no implicit data loss.
+> 
+> Normal read command has a sector to read.  If the sector is broken,
+> all retries will fail and the error will be reported upwards.
+> So it can be retried cleanly as well.
 
---nab
+I reached out to Fred Knight on this, to get a more insight from a pure
+SCSI SBC perspective, and he shared the following:
 
+----- Forwarded message from "Knight, Frederick" <Frederick.Knight@netapp.com> -----
 
+> Date: Tue, 31 Aug 2010 13:24:15 -0400
+> From: "Knight, Frederick" <Frederick.Knight@netapp.com>
+> To: Mike Snitzer <snitzer@redhat.com>
+> Subject: RE: safety of retrying SYNCHRONIZE CACHE?
+>
+> There are requirements in SBC to maintain data integrity.  If you WRITE
+> a block and READ that block, you must get the data you sent in the
+> WRITE.  This will be synchronized around the completion of the WRITE.
+> Before the WRITE completes, who knows what a READ will return.  Maybe
+> all the old data, maybe all the new data, maybe some mix of old and new
+> data.  Once the WRITE ends successful, all READs of those LBAs (from any
+> port) will always get the same data.
+>
+> As for errors, SBC describes how the deferred errors are reported (like
+> when a CACHE tries to flush but fails).  So if a write from cache to
+> media does have problems, the device would tell you via a CHECK
+> CONDITION (with the first byte of the sense data set to 71h or 73h.  SBC
+> clause 4.12 and 4.13 cover a lot of this information.  It is these error
+> codes that prevent silent loss of data.  And, in this case, when the
+> CHECK CONDITION is delivered, it will have nothing to do with the
+> command that was issued (the victim command).  If you look into the
+> sense data, you will see the deferred error flag, and all the additional
+> information fields will relate to the original I/O
+>
+> SYNCHRONIZE CACHE is not substantially different than a WRITE (it puts
+> data on the media).  So issuing it multiple times wouldn't be any
+> different than issuing multiple WRITES (it might put a temporary dent in
+> performance as everything flushes out to media).  If it or any other
+> commands fail with 71h/73h, then you have to dig down into the sense
+> data buffer to find out what happened.  For example, if you issue a
+> WRITE command, and it completes into write back cache but later (before
+> being written to the media), some of the cache breaks and looses data,
+> then the device must signal a deferred error to tell the host, and cause
+> a forced error on the LBA in question.
+>
+> Does that help?
+>
+>       Fred
+----- End forwarded message -----
+
+Seems like verifying/improving the handling of CHECK CONDITION is a more
+pressing concern than silent data loss purely due to SYNCHRONIZE CACHE
+retries.  Without proper handling we could completely miss these
+deferred errors.
+
+But how to effectively report such errors to upper layers is unclear to
+me given that a particular SCSI command can carry error information for
+IO that was already acknowledged successful (e.g. to the FS).
+
+drivers/scsi/scsi_error.c's various calls to scsi_check_sense()
+illustrate Linux's current CHECK CONDITION handling.  I need to look
+closer at how deferred errors propagate to upper layers.  After an
+initial look it seems scsi_error.c does handle retrying commands where
+appropriate.
+
+I believe Hannes has concerns/insight here.
+
+Mike
