@@ -1,64 +1,46 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 3/3] mpt2sas: Bump driver version 06.100.00.03
-Date: Wed, 1 Sep 2010 15:39:38 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED704B0A367@inbmail01.lsi.com>
-References: <20100804083746.GD13442@lsi.com>
+From: Naohiro Aota <naota@elisp.net>
+Subject: [PATCH] bsg: call idr_pre_get() outside the lock.
+Date: Wed, 01 Sep 2010 23:26:01 +0900
+Message-ID: <m2eidda6bq.fsf@elisp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:57252 "EHLO
-	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753789Ab0IAKJr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Sep 2010 06:09:47 -0400
-In-Reply-To: <20100804083746.GD13442@lsi.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Jiri Kosina <jkosina@suse.cz>, Greg Kroah-Hartman <gregkh@suse.de>, Naohiro Aota <naota@elisp.net>, Daniel Mack <daniel@caiaq.de>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-James,
+The idr_pre_get() kernel-doc says "This function should be called
+prior to locking and calling the idr_get_new* functions.", but the
+idr_pre_get() calling in bsg_register_queue() is put inside
+mutex_lock(). Let's fix it.
 
-Any update on my patch set submission?
+Signed-off-by: Naohiro Aota <naota@elisp.net>
+---
+ block/bsg.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
-Thanks,
-Kashyap
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Kashyap, Desai
-> Sent: Wednesday, August 04, 2010 2:08 PM
-> To: linux-scsi@vger.kernel.org
-> Cc: James.Bottomley@HansenPartnership.com; Moore, Eric; Prakash, Sathya
-> Subject: [PATCH 3/3] mpt2sas: Bump driver version 06.100.00.03
-> 
-> Bump version to 06.100.00.03
-> 
-> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-> ---
-> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h
-> b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> index 3f390de..0b7e810 100644
-> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-> @@ -69,11 +69,11 @@
->  #define MPT2SAS_DRIVER_NAME		"mpt2sas"
->  #define MPT2SAS_AUTHOR	"LSI Corporation <DL-MPTFusionLinux@lsi.com>"
->  #define MPT2SAS_DESCRIPTION	"LSI MPT Fusion SAS 2.0 Device Driver"
-> -#define MPT2SAS_DRIVER_VERSION		"06.100.00.00"
-> +#define MPT2SAS_DRIVER_VERSION		"06.100.00.03"
->  #define MPT2SAS_MAJOR_VERSION		06
->  #define MPT2SAS_MINOR_VERSION		100
->  #define MPT2SAS_BUILD_VERSION		00
-> -#define MPT2SAS_RELEASE_VERSION		00
-> +#define MPT2SAS_RELEASE_VERSION		03
-> 
->  /*
->   * Set MPT2SAS_SG_DEPTH value based on user input.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/block/bsg.c b/block/bsg.c
+index 82d5882..5fd8dd1 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -1010,13 +1010,11 @@ int bsg_register_queue(struct request_queue *q, struct device *parent,
+ 	bcd = &q->bsg_dev;
+ 	memset(bcd, 0, sizeof(*bcd));
+ 
+-	mutex_lock(&bsg_mutex);
+-
+ 	ret = idr_pre_get(&bsg_minor_idr, GFP_KERNEL);
+-	if (!ret) {
+-		ret = -ENOMEM;
+-		goto unlock;
+-	}
++	if (!ret)
++		return -ENOMEM;
++
++	mutex_lock(&bsg_mutex);
+ 
+ 	ret = idr_get_new(&bsg_minor_idr, bcd, &minor);
+ 	if (ret < 0)
+-- 
+1.7.2
