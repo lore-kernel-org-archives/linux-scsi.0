@@ -1,131 +1,71 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [PATCH] scsi: Remove QUEUE_FLAG_REENTER from SCSI code
-Date: Thu, 2 Sep 2010 17:01:58 +0200
-Message-ID: <20100902150158.GA10556@schmichrtp.mainz.de.ibm.com>
-References: <Pine.LNX.4.64.1008281908150.13508@ask.diku.dk>
- <20100902105326.GA4097@schmichrtp.mainz.de.ibm.com>
- <4C7FA91B.60607@suse.de>
- <20100902142835.GA4992@schmichrtp.mainz.de.ibm.com>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: RE: [Open-FCoE] [RFC PATCH] scsi, fcoe, libfc: drop scsi host_lock
+ use from fc_queuecommand
+Date: Thu, 02 Sep 2010 10:24:22 -0700
+Message-ID: <1283448262.30431.172.camel@vi2.jf.intel.com>
+References: <20100831225338.25102.59500.stgit@localhost.localdomain>
+	 <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
+	 <4C7DD3E8.9050700@cs.wisc.edu>
+	 <7C88852EF6F99F4EB538472FCFEBE222013AF95EB2@orsmsx509.amr.corp.intel.com>
+	 <1283371821.32007.636.camel@haakon2.linux-iscsi.org>
+	 <1283375187.30431.71.camel@vi2.jf.intel.com>
+	 <1283377121.5598.23.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.17.161]:58815 "EHLO
-	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055Ab0IBPCG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Sep 2010 11:02:06 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.13.1/8.13.1) with ESMTP id o82F1xp4025463
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Sep 2010 15:01:59 GMT
-Received: from d12av03.megacenter.de.ibm.com (d12av03.megacenter.de.ibm.com [9.149.165.213])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o82F1x6L4063300
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Sep 2010 17:01:59 +0200
-Received: from d12av03.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av03.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o82F1w6X026157
-	for <linux-scsi@vger.kernel.org>; Thu, 2 Sep 2010 17:01:59 +0200
-Content-Disposition: inline
-In-Reply-To: <20100902142835.GA4992@schmichrtp.mainz.de.ibm.com>
+Received: from mga09.intel.com ([134.134.136.24]:9804 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751091Ab0IBRYX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Sep 2010 13:24:23 -0400
+In-Reply-To: <1283377121.5598.23.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Julia Lawall <julia@diku.dk>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, joe@perches.com, James Smart <James.Smart@Emulex.Com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, "Zou, Yi" <yi.zou@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, "devel@open-fcoe.org" <devel@open-fcoe.org>, Christoph Hellwig <hch@lst.de>, Joe Eykholt <jeykholt@cisco.com>, Hannes Reinecke <hare@suse.de>
 
-scsi_run_queue and fc_bsg_goose_queue try to call __blk_run_queue with
-the flag QUEUE_FLAG_REENTER set. Since __blk_run_queue already sets
-the flag internally, this part can be removed from the SCSI and FC
-transport code. With this change, the function fc_bsg_goose_queue can
-simply be replaced with a conditional call to blk_run_queue.
+On Wed, 2010-09-01 at 14:38 -0700, Nicholas A. Bellinger wrote:
+> > Maybe two additional checks here is not so neat but not too bad
+> either
+> > as just two additional checks here, I excluded this unlocked_qcmd
+> checks
+> > from scsi_error queuecommand calling to not clutter its code there
+> with
+> > these additional checks  w/o any good case for that code path.
+> > 
+> 
+> Hmmmm, handing off the locking like this between ML and LLD gets ugly
+> pretty quick, so I am not sure exactly sure if this is the right way
+> to
+> go about it..
+> 
+> Mabye in code terms we might need to consider converting some (or
+> all..?) struct Scsi_Host->host_lock accesses to some form of
+> Linux/SCSI
+> Host specific lock and unlock wrapper that is aware of the current
+> ->queuecommand() LLD lock status..?  Obviously this would only need to
+> cover the queuecommand path here first, but perhaps would be useful in
+> other areas as well..?
+> 
 
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
- drivers/scsi/scsi_lib.c          |   15 +--------------
- drivers/scsi/scsi_transport_fc.c |   34 ++--------------------------------
- 2 files changed, 3 insertions(+), 46 deletions(-)
+This patch would add only two conditional locking and unlocking of host
+lock in scsi_dispatch_cmd and these are not applicable to all other
+several places host_lock use, therefore any wrapper for just these two
+new places is not worthy as that would hide conditions inside wrapper,
+or may be I'm missing something here.
 
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -411,8 +411,6 @@ static void scsi_run_queue(struct reques
- 	list_splice_init(&shost->starved_list, &starved_list);
- 
- 	while (!list_empty(&starved_list)) {
--		int flagset;
--
- 		/*
- 		 * As long as shost is accepting commands and we have
- 		 * starved queues, call blk_run_queue. scsi_request_fn
-@@ -436,18 +434,7 @@ static void scsi_run_queue(struct reques
- 		}
- 
- 		spin_unlock(shost->host_lock);
--
--		spin_lock(sdev->request_queue->queue_lock);
--		flagset = test_bit(QUEUE_FLAG_REENTER, &q->queue_flags) &&
--				!test_bit(QUEUE_FLAG_REENTER,
--					&sdev->request_queue->queue_flags);
--		if (flagset)
--			queue_flag_set(QUEUE_FLAG_REENTER, sdev->request_queue);
--		__blk_run_queue(sdev->request_queue);
--		if (flagset)
--			queue_flag_clear(QUEUE_FLAG_REENTER, sdev->request_queue);
--		spin_unlock(sdev->request_queue->queue_lock);
--
-+		blk_run_queue(sdev->request_queue);
- 		spin_lock(shost->host_lock);
- 	}
- 	/* put any unprocessed entries back */
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -50,7 +50,6 @@ static int fc_vport_setup(struct Scsi_Ho
- static int fc_bsg_hostadd(struct Scsi_Host *, struct fc_host_attrs *);
- static int fc_bsg_rportadd(struct Scsi_Host *, struct fc_rport *);
- static void fc_bsg_remove(struct request_queue *);
--static void fc_bsg_goose_queue(struct fc_rport *);
- 
- /*
-  * Redefine so that we can have same named attributes in the
-@@ -2737,7 +2736,8 @@ fc_remote_port_add(struct Scsi_Host *sho
- 					spin_unlock_irqrestore(shost->host_lock,
- 							flags);
- 
--				fc_bsg_goose_queue(rport);
-+				if (rport->rqst_q)
-+					blk_run_queue(rport->rqst_q);
- 
- 				return rport;
- 			}
-@@ -3752,36 +3752,6 @@ fail_host_msg:
- 	return FC_DISPATCH_UNLOCKED;
- }
- 
--
--/*
-- * fc_bsg_goose_queue - restart rport queue in case it was stopped
-- * @rport:	rport to be restarted
-- */
--static void
--fc_bsg_goose_queue(struct fc_rport *rport)
--{
--	int flagset;
--	unsigned long flags;
--
--	if (!rport->rqst_q)
--		return;
--
--	get_device(&rport->dev);
--
--	spin_lock_irqsave(rport->rqst_q->queue_lock, flags);
--	flagset = test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags) &&
--		  !test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags);
--	if (flagset)
--		queue_flag_set(QUEUE_FLAG_REENTER, rport->rqst_q);
--	__blk_run_queue(rport->rqst_q);
--	if (flagset)
--		queue_flag_clear(QUEUE_FLAG_REENTER, rport->rqst_q);
--	spin_unlock_irqrestore(rport->rqst_q->queue_lock, flags);
--
--	put_device(&rport->dev);
--}
--
--
- /**
-  * fc_bsg_rport_dispatch - process rport bsg requests and dispatch to LLDD
-  * @q:		rport request queue
+  
+> This would at least (I think) allow ML and LLD code to be a tad bit
+> cleaner than something like the example above where
+> host->unlocked_qcmds
+> TRUE/FALSE conditionals exist directly within ML and LLD code.
+> 
+
+Yeah but direct use makes things more obvious at first look. However
+neatness is worthy using wrapper(macros) if there are several such
+places. Anycase this is very minor code style thing here and I'm fine
+with wrapper if you want.
+
+	Thanks
+	Vasu
+
