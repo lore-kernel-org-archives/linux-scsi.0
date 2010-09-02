@@ -1,71 +1,38 @@
-From: Vasu Dev <vasu.dev@linux.intel.com>
-Subject: RE: [Open-FCoE] [RFC PATCH] scsi, fcoe, libfc: drop scsi host_lock
- use from fc_queuecommand
-Date: Thu, 02 Sep 2010 10:24:22 -0700
-Message-ID: <1283448262.30431.172.camel@vi2.jf.intel.com>
-References: <20100831225338.25102.59500.stgit@localhost.localdomain>
-	 <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
-	 <4C7DD3E8.9050700@cs.wisc.edu>
-	 <7C88852EF6F99F4EB538472FCFEBE222013AF95EB2@orsmsx509.amr.corp.intel.com>
-	 <1283371821.32007.636.camel@haakon2.linux-iscsi.org>
-	 <1283375187.30431.71.camel@vi2.jf.intel.com>
-	 <1283377121.5598.23.camel@haakon2.linux-iscsi.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
+Date: Thu, 02 Sep 2010 22:46:35 +0400
+Message-ID: <4C7FF10B.2040102@vlnb.net>
+References: <1282751267-3530-27-git-send-email-tj@kernel.org> <20100825155842.GA3229@lst.de> <20100825160032.GC3229@lst.de> <4C753D75.2010305@kernel.org> <20100825200223.GE2738@quack.suse.cz> <4C76250B.6060800@kernel.org> <20100827173147.GA12374@quack.suse.cz> <x4939tv98n8.fsf@segfault.boston.devel.redhat.com> <20100830202034.GB12226@quack.quadriga.com> <4C7C170D.9090409@vlnb.net> <20100830210205.GD12226@quack.quadriga.com> <4C7CD18B.2060608@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:9804 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751091Ab0IBRYX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Sep 2010 13:24:23 -0400
-In-Reply-To: <1283377121.5598.23.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C7CD18B.2060608@panasas.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, "Zou, Yi" <yi.zou@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, "devel@open-fcoe.org" <devel@open-fcoe.org>, Christoph Hellwig <hch@lst.de>, Joe Eykholt <jeykholt@cisco.com>, Hannes Reinecke <hare@suse.de>
 
-On Wed, 2010-09-01 at 14:38 -0700, Nicholas A. Bellinger wrote:
-> > Maybe two additional checks here is not so neat but not too bad
-> either
-> > as just two additional checks here, I excluded this unlocked_qcmd
-> checks
-> > from scsi_error queuecommand calling to not clutter its code there
-> with
-> > these additional checks  w/o any good case for that code path.
-> > 
-> 
-> Hmmmm, handing off the locking like this between ML and LLD gets ugly
-> pretty quick, so I am not sure exactly sure if this is the right way
-> to
-> go about it..
-> 
-> Mabye in code terms we might need to consider converting some (or
-> all..?) struct Scsi_Host->host_lock accesses to some form of
-> Linux/SCSI
-> Host specific lock and unlock wrapper that is aware of the current
-> ->queuecommand() LLD lock status..?  Obviously this would only need to
-> cover the queuecommand path here first, but perhaps would be useful in
-> other areas as well..?
-> 
+Boaz Harrosh, on 08/31/2010 01:55 PM wrote:
+>>>>>> An update: I've set up an ext4 barrier testing in KVM - run fsstress,
+>>>>>> kill KVM at some random moment and check that the filesystem is consistent
+>>>>>> (kvm is run in cache=writeback mode to simulate disk cache). About 70 runs
+>>>>>
+>>>>> But doesn't your "disk cache" survive the "power cycle" of your guest?
+>>>> Yes, you're right. Thinking about it now the test setup was wrong because
+>>>> it didn't refuse writes to the VM's data partition after the moment I
+>>>> killed KVM. Thanks for catching this. I will probably have to use the fault
+>>>> injection on the host to disallow writing the device at a certain moment.
+>>>> Or does somebody have a better option?
+>>>
+>>> Have you considered to setup a second box as an iSCSI target (e.g.
+>>> with iSCSI-SCST)? With it killing the connectivity is just a matter
+>>> of a single iptables command + a lot more options.
+>
+> Still same problem no? the data is still cached on the backing store device
+> how do you trash the cached data?
 
-This patch would add only two conditional locking and unlocking of host
-lock in scsi_dispatch_cmd and these are not applicable to all other
-several places host_lock use, therefore any wrapper for just these two
-new places is not worthy as that would hide conditions inside wrapper,
-or may be I'm missing something here.
+If you need to kill the device's cache you can crash/panic/power off the 
+target. That also can be well scriptable.
 
-  
-> This would at least (I think) allow ML and LLD code to be a tad bit
-> cleaner than something like the example above where
-> host->unlocked_qcmds
-> TRUE/FALSE conditionals exist directly within ML and LLD code.
-> 
-
-Yeah but direct use makes things more obvious at first look. However
-neatness is worthy using wrapper(macros) if there are several such
-places. Anycase this is very minor code style thing here and I'm fine
-with wrapper if you want.
-
-	Thanks
-	Vasu
-
+Vlad
