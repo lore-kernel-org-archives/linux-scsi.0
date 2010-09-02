@@ -1,55 +1,56 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
- timed out, resetting card.
-Date: Thu, 2 Sep 2010 10:29:31 -0400 (EDT)
-Message-ID: <alpine.DEB.2.00.1009021025190.16817@p34.internal.lan>
-References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan> <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com> <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan> <alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
- <alpine.DEB.2.00.1008310717260.4858@p34.internal.lan> <alpine.DEB.2.00.1008310732120.5156@p34.internal.lan> <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan> <alpine.DEB.2.00.1009010536070.14332@p34.internal.lan> <AANLkTi=SO1nZbFySAs8_+TmCZcKBPihN6xrZfJihBnXG@mail.gmail.com>
- <alpine.DEB.2.00.1009020540500.22317@p34.internal.lan>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH] scsi: fix SCSI_SAS_ATTRS' reference to BLK_DEV_BSG
+Date: Thu, 2 Sep 2010 07:56:57 -0700
+Message-ID: <20100902075657.7a699c3c.randy.dunlap@oracle.com>
+References: <4C7FBF290200007800013FB9@vpn.id2.novell.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1009020540500.22317@p34.internal.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:54347 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751279Ab0IBO5e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Sep 2010 10:57:34 -0400
+In-Reply-To: <4C7FBF290200007800013FB9@vpn.id2.novell.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jan Beulich <JBeulich@novell.com>
+Cc: James.Bottomley@suse.de, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
+On Thu, 02 Sep 2010 14:13:45 +0100 Jan Beulich wrote:
 
+> Since SCSI_SAS_ATTRS gets selected in a few places, making it merely
+> depend on the (user selectable) BLK_DEV_BSG isn't correct (as the
+> result may be that the latter doesn't get enabled, which recent
+> kconfig validly warns about). Convert the "depends on" to a "select".
+> 
+> Signed-off-by: Jan Beulich <jbeulich@novell.com>
+> Cc: Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> 
+> ---
+>  drivers/scsi/Kconfig |    3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> --- linux-2.6.36-rc3/drivers/scsi/Kconfig
+> +++ 2.6.36-rc3-scsi-sas-attrs/drivers/scsi/Kconfig
+> @@ -316,7 +316,8 @@ config SCSI_ISCSI_ATTRS
+>  
+>  config SCSI_SAS_ATTRS
+>  	tristate "SAS Transport Attributes"
+> -	depends on SCSI && BLK_DEV_BSG
+> +	depends on SCSI
+> +	select BLK_DEV_BSG
+>  	help
+>  	  If you wish to export transport-specific information about
+>  	  each attached SAS device to sysfs, say Y.
+> 
+> 
+> 
+> --
 
-On Thu, 2 Sep 2010, Justin Piszcz wrote:
+Ack if it will help.
+http://marc.info/?l=linux-scsi&m=128214896025671&w=2
 
->
->
-> On Wed, 1 Sep 2010, adam radford wrote:
->
->> On Wed, Sep 1, 2010 at 2:40 AM, Justin Piszcz <jpiszcz@lucidpixels.com> 
->> wrote:
->> 
->>> Could the lock/unlock be causing the issue?
->>> Again, in 2.6.34, there are no latency problems or controller resets.
->> 
->> Justin,
->> 
->> We are looking into this issue and should get back to you soon.
->> 
->> The lock/unlock() kernel calls were not added by me but were part of a
->> series of 'BKL pushdown' patches added by someone to all drivers with
->> an ioctl interface.  If you think those might be related to your
->> issue, you could try
->> removing those 2 lines of code and recompiling.
->> 
->> If you haven't already, please email you kernel .config files for both
->> the working kernel and non working kernel to the 3ware/LSI support
->> people you are in contact with.
->> 
->> Thanks.
->> 
->> -Adam
->> 
->
-
-I spoke too fast, it also happens with the 2.6.34 driver under 2.6.35.
-I will have to research this more, until then I'll stick with 2.6.34.
-
-Justin.
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
