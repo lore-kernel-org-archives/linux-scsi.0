@@ -1,165 +1,86 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 02/22] configfs: Add struct
-	configfs_item_operations->check_link() in configfs_unlink()
-Date: Thu, 02 Sep 2010 12:40:40 -0700
-Message-ID: <1283456440.5598.108.camel@haakon2.linux-iscsi.org>
-References: <1283160025-6598-1-git-send-email-nab@linux-iscsi.org>
-	 <201009020031.08750.konrad@darnok.org>
-	 <20100902064814.GB27904@mail.oracle.com>
+Subject: RE: [Open-FCoE] [RFC PATCH] scsi, fcoe, libfc: drop scsi host_lock
+	use from fc_queuecommand
+Date: Thu, 02 Sep 2010 12:48:48 -0700
+Message-ID: <1283456928.5598.117.camel@haakon2.linux-iscsi.org>
+References: <20100831225338.25102.59500.stgit@localhost.localdomain>
+	 <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
+	 <4C7DD3E8.9050700@cs.wisc.edu>
+	 <7C88852EF6F99F4EB538472FCFEBE222013AF95EB2@orsmsx509.amr.corp.intel.com>
+	 <1283371821.32007.636.camel@haakon2.linux-iscsi.org>
+	 <1283375187.30431.71.camel@vi2.jf.intel.com>
+	 <1283377121.5598.23.camel@haakon2.linux-iscsi.org>
+	 <1283448262.30431.172.camel@vi2.jf.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100902064814.GB27904@mail.oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: Konrad Rzeszutek Wilk <konrad@darnok.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp104.sbc.mail.mud.yahoo.com ([68.142.198.203]:41950 "HELO
+	smtp104.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756733Ab0IBTwq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Sep 2010 15:52:46 -0400
+In-Reply-To: <1283448262.30431.172.camel@vi2.jf.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vasu Dev <vasu.dev@linux.intel.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, "Zou, Yi" <yi.zou@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, "devel@open-fcoe.org" <devel@open-fcoe.org>, Christoph Hellwig <hch@lst.de>, Joe Eykholt <jeykholt@cisco.com>, Hannes Reinecke <hare@suse.de>
 
-On Wed, 2010-09-01 at 23:48 -0700, Joel Becker wrote:
-> On Thu, Sep 02, 2010 at 12:31:07AM -0400, Konrad Rzeszutek Wilk wrote:
-> > On Monday 30 August 2010 05:20:25 Nicholas A. Bellinger wrote:
-> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > >
-> > > This patch adds a optional struct configfs_item_operations->check_link()
-> > > check called in fs/configfs/symlink.c:configfs_unlink() that can be used by
-> > > configfs consumers to check for an explict struct config_group dependence
-> > > with active symlink and fail with -EPERM before the unlink(2) syscall is
-> > > allowed to occur.
-> > >
-> > > Currently without this patch, there is not a method that a consumer can
-> > > tell configfs_unlink() that it needs to fail for this particular case. 
-> > > Allowing ->check_link() to propigate up the errno to VFS is also another
-> > > option for the call, but currently for TCM using the existing -EPERM in
-> > > configfs_unlink() is fine here.
-> > >
-> > > Note this patch is used by TCM v4 generic configfs fabric module
-> > > infrastructure to allow  explict Initiator Port MappedLUNs symlinks to
-> > > create a dependency for the fabric TPG Port LUNs living in a configfs group
-> > > that is not a direct struct config_group parent.
-> > >
-> > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+On Thu, 2010-09-02 at 10:24 -0700, Vasu Dev wrote:
+> On Wed, 2010-09-01 at 14:38 -0700, Nicholas A. Bellinger wrote:
+> > > Maybe two additional checks here is not so neat but not too bad
+> > either
+> > > as just two additional checks here, I excluded this unlocked_qcmd
+> > checks
+> > > from scsi_error queuecommand calling to not clutter its code there
+> > with
+> > > these additional checks  w/o any good case for that code path.
+> > > 
+> > 
+> > Hmmmm, handing off the locking like this between ML and LLD gets ugly
+> > pretty quick, so I am not sure exactly sure if this is the right way
+> > to
+> > go about it..
+> > 
+> > Mabye in code terms we might need to consider converting some (or
+> > all..?) struct Scsi_Host->host_lock accesses to some form of
+> > Linux/SCSI
+> > Host specific lock and unlock wrapper that is aware of the current
+> > ->queuecommand() LLD lock status..?  Obviously this would only need to
+> > cover the queuecommand path here first, but perhaps would be useful in
+> > other areas as well..?
+> > 
 > 
-> 	I NAK'd this a while back.  I'm willing to be convinced, but so
-> far it remains that way.
+> This patch would add only two conditional locking and unlocking of host
+> lock in scsi_dispatch_cmd and these are not applicable to all other
+> several places host_lock use, therefore any wrapper for just these two
+> new places is not worthy as that would hide conditions inside wrapper,
+> or may be I'm missing something here.
+
+Hmmm, fair point here..  It is just something about seeing single block
+conditional with unlock and locking spins that makes me a little
+un-easy.. ;-)
+
 > 
+>   
+> > This would at least (I think) allow ML and LLD code to be a tad bit
+> > cleaner than something like the example above where
+> > host->unlocked_qcmds
+> > TRUE/FALSE conditionals exist directly within ML and LLD code.
+> > 
+> 
+> Yeah but direct use makes things more obvious at first look. However
+> neatness is worthy using wrapper(macros) if there are several such
+> places. Anycase this is very minor code style thing here and I'm fine
+> with wrapper if you want.
 
-Hi Joel,
+Sure, I am thinking about these simple host_lock wrappers as more of a
+transitional look for LLDs more than anything..
 
-Thanks for bringing this point up again.  So a brief refresh on why this
-is currently required in the fabric independent configfs handlers in
-drivers/target/target_core_fabric_configfs.c (patch #19).
-
-So, say we have an TCM fabric module endpoint (a LIO-Target iSCSI
-TargetName+TargetPortalGroupTag in the example below) 
-
-target# tree /sys/kernel/config/target/iscsi/iqn.2003-01.org.linux-iscsi.target.i686\:sn.e475ed6fcdd0/tpgt_1/       
-<SNIP>
-|-- lun
-|   |-- lun_0
-|   |   |-- alua_tg_pt_gp
-|   |   |-- alua_tg_pt_offline
-|   |   |-- alua_tg_pt_status
-|   |   |-- alua_tg_pt_write_md
-|   |   `-- lio_west_port -> ../../../../../../target/core/iblock_0/lvm_test0
-|   |-- lun_1
-|   |   |-- alua_tg_pt_gp
-|   |   |-- alua_tg_pt_offline
-|   |   |-- alua_tg_pt_status
-|   |   |-- alua_tg_pt_write_md
-|   |   `-- lio_east_port -> ../../../../../../target/core/pscsi_0/sdd
-|   |-- lun_2
-|   |   |-- alua_tg_pt_gp
-|   |   |-- alua_tg_pt_offline
-|   |   |-- alua_tg_pt_status
-|   |   |-- alua_tg_pt_write_md
-|   |   `-- ramdisk_port -> ../../../../../../target/core/rd_dr_0/ramdisk
-|   |-- lun_3
-|   |   |-- alua_tg_pt_gp
-|   |   |-- alua_tg_pt_offline
-|   |   |-- alua_tg_pt_status
-|   |   |-- alua_tg_pt_write_md
-|   |   `-- fileio_port -> ../../../../../../target/core/fileio_0/fileio
-|   `-- lun_4
-|       |-- alua_tg_pt_gp
-|       |-- alua_tg_pt_offline
-|       |-- alua_tg_pt_status
-|       |-- alua_tg_pt_write_md
-|       `-- lio_sync_fileio -> ../../../../../../target/core/fileio_1/sync_file
-<SNIP>
-
-with some Port/LUNs that are using configfs symlinks back to TCM Core (a seperate module) in
-/sys/kernel/config/target/core/$HBA/$DEV/.
-
-So this symlink happens in target_fabric_port_link() here:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/target/target_core_fabric_configfs.c;hb=refs/heads/lio-4.0#l619
-
-Then, we add an iSCSI Initiator NodeACL with MappedLUNs using the same
-fabric independent handler code in target_core_fabric_configfs.c:
-
-target# tree /sys/kernel/config/target/iscsi/iqn.2003-01.org.linux-iscsi.target.i686\:sn.e475ed6fcdd0/tpgt_1/acls/   
-<SNIP>
-|   `-- iqn.2008-04.com.sun.virtualbox.initiator
-|       |-- attrib
-|       |   |-- dataout_timeout
-|       |   |-- dataout_timeout_retries
-|       |   |-- default_erl
-|       |   |-- nopin_response_timeout
-|       |   |-- nopin_timeout
-|       |   |-- random_datain_pdu_offsets
-|       |   |-- random_datain_seq_offsets
-|       |   `-- random_r2t_offsets
-|       |-- auth
-|       |   |-- authenticate_target
-|       |   |-- password
-|       |   |-- password_mutual
-|       |   |-- userid
-|       |   `-- userid_mutual
-|       |-- cmdsn_depth
-|       |-- info
-|       |-- lun_0
-|       |   |-- lun_0 -> ../../../../../../../target/iscsi/iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0/tp
-gt_1/lun/lun_0
-|       |   `-- write_protect
-|       |-- lun_1
-|       |   |-- lun_1 -> ../../../../../../../target/iscsi/iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0/tp
-gt_1/lun/lun_1
-|       |   `-- write_protect
-|       |-- lun_2
-|       |   |-- lun_2 -> ../../../../../../../target/iscsi/iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0/tp
-gt_1/lun/lun_2
-|       |   `-- write_protect
-|       |-- lun_3
-|       |   |-- lun_3 -> ../../../../../../../target/iscsi/iqn.2003-01.org.linux-iscsi.target.i686:sn.e475ed6fcdd0/tpgt_1/lun/lun_3
-|       |   `-- write_protect
-<SNIP>
-
-So minus the fabric dependent groups and attributes listed above, notice
-the explict LUN ACLs for the iqn.2008-04.com.sun.virtualbox.initiator
-NodeACL (known in TCM lingo at MappedLUNs), which contain a symlink back
-to the fabric module's $IQN/$TPGT/lun/lun_$ID configfs group that
-contains parent struct se_lun->lun_group.  You can see how this works in
-target_fabric_mappedlun_link() here:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/target/target_core_fabric_configfs.c;hb=refs/heads/lio-4.0#l67
-
-So, the reason why something like this patch is required is if unlink(2)
-is called on the struct lun_group -> struct
-se_subsystem_dev->se_dev_group, the ->check_link() is called in
-target_fabric_port_check_link(), and we know to fail the unlink(2) by
-checking the struct se_lun->lun_acl_count (eg: if LUN ACls for NodeACLs
-exist)
-
-This method has been working fine for the ~12 months, if of course the
-configfs consumer is aware of limitiations with symlinks, and provides
-the special caller to do the check.  However, if you don't like the idea
-of configfs consumers handling this, I would also be open to looking
-into a patch that would do this referencing counting for parent / child
-symlinks within configfs.ko itself.
-
-What do you think..?
+Btw, I would be happy to include your forthcoming v2 patch into a
+lio-core-2.6.git branch, and give it some testing in the next week.
 
 Thanks!
 
 --nab
+
+
