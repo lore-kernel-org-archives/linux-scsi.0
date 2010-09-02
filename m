@@ -1,56 +1,54 @@
-From: Joel Becker <Joel.Becker@oracle.com>
-Subject: Re: [RFC 02/22] configfs: Add struct
- configfs_item_operations->check_link() in configfs_unlink()
-Date: Wed, 1 Sep 2010 23:48:15 -0700
-Message-ID: <20100902064814.GB27904@mail.oracle.com>
-References: <1283160025-6598-1-git-send-email-nab@linux-iscsi.org>
- <201009020031.08750.konrad@darnok.org>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: question about drivers/scsi/scsi_transport_fc.c
+Date: Thu, 2 Sep 2010 12:53:26 +0200
+Message-ID: <20100902105326.GA4097@schmichrtp.mainz.de.ibm.com>
+References: <Pine.LNX.4.64.1008281908150.13508@ask.diku.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate2.uk.ibm.com ([194.196.100.162]:44014 "EHLO
+	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799Ab0IBKx4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Sep 2010 06:53:56 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate2.uk.ibm.com (8.13.1/8.13.1) with ESMTP id o82Aref1028964
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Sep 2010 10:53:40 GMT
+Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o82ArbKj3866748
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Sep 2010 12:53:38 +0200
+Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o82ArZZW007514
+	for <linux-scsi@vger.kernel.org>; Thu, 2 Sep 2010 12:53:36 +0200
 Content-Disposition: inline
-In-Reply-To: <201009020031.08750.konrad@darnok.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>
+In-Reply-To: <Pine.LNX.4.64.1008281908150.13508@ask.diku.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Julia Lawall <julia@diku.dk>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, joe@perches.com
 
-On Thu, Sep 02, 2010 at 12:31:07AM -0400, Konrad Rzeszutek Wilk wrote:
-> On Monday 30 August 2010 05:20:25 Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> >
-> > This patch adds a optional struct configfs_item_operations->check_link()
-> > check called in fs/configfs/symlink.c:configfs_unlink() that can be used by
-> > configfs consumers to check for an explict struct config_group dependence
-> > with active symlink and fail with -EPERM before the unlink(2) syscall is
-> > allowed to occur.
-> >
-> > Currently without this patch, there is not a method that a consumer can
-> > tell configfs_unlink() that it needs to fail for this particular case. 
-> > Allowing ->check_link() to propigate up the errno to VFS is also another
-> > option for the call, but currently for TCM using the existing -EPERM in
-> > configfs_unlink() is fine here.
-> >
-> > Note this patch is used by TCM v4 generic configfs fabric module
-> > infrastructure to allow  explict Initiator Port MappedLUNs symlinks to
-> > create a dependency for the fabric TPG Port LUNs living in a configfs group
-> > that is not a direct struct config_group parent.
-> >
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+On Sat, Aug 28, 2010 at 07:11:12PM +0200, Julia Lawall wrote:
+> The function fc_bsg_goose_queue in the file drivers/scsi/scsi_transport_fc.c
+> contains the following code:
+> 
+>         flagset = test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags) &&
+>                   !test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags);
+> 
+> I have the impression that this is always 0.  QUEUE_FLAG_REENTER is 
+> defined with quite a lot of other constants, so I don't really have a 
+> guess as to what was intended.
 
-	I NAK'd this a while back.  I'm willing to be convinced, but so
-far it remains that way.
+I just came across the code in scsi_run_queue in
+drivers/scsi/scsi_lib.c. It looks like the check of QUEUE_FLAG_REENTER
+in fc_bsg_goose_queue is modeled after the check in scsi_run_queue.
 
-Joel
+The check in scsi_run_queue has been introduced with this commit,
+maybe this helps understanding the code:
 
--- 
+commit 04846f25920d4b05d6040c531cc601049260db52
+Author: Andreas Herrmann <aherrman@de.ibm.com>
+Date:   Wed Aug 9 17:31:16 2006 +0200
 
-Life's Little Instruction Book #109
+    [SCSI] limit recursion when flushing shost->starved_list
 
-	"Know how to drive a stick shift."
-
-Joel Becker
-Consulting Software Developer
-Oracle
-E-mail: joel.becker@oracle.com
-Phone: (650) 506-8127
+--
+Christof
