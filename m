@@ -1,88 +1,110 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: question about drivers/scsi/scsi_transport_fc.c
-Date: Thu, 02 Sep 2010 15:39:39 +0200
-Message-ID: <4C7FA91B.60607@suse.de>
-References: <Pine.LNX.4.64.1008281908150.13508@ask.diku.dk> <20100902105326.GA4097@schmichrtp.mainz.de.ibm.com>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
+ timed out, resetting card.
+Date: Thu, 2 Sep 2010 10:21:57 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.1009020540500.22317@p34.internal.lan>
+References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan> <AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com> <alpine.DEB.2.00.1008271306100.24692@p34.internal.lan> <alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
+ <alpine.DEB.2.00.1008310717260.4858@p34.internal.lan> <alpine.DEB.2.00.1008310732120.5156@p34.internal.lan> <alpine.DEB.2.00.1008310820350.19249@p34.internal.lan> <alpine.DEB.2.00.1009010536070.14332@p34.internal.lan>
+ <AANLkTi=SO1nZbFySAs8_+TmCZcKBPihN6xrZfJihBnXG@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58904 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751966Ab0IBNjk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Sep 2010 09:39:40 -0400
-In-Reply-To: <20100902105326.GA4097@schmichrtp.mainz.de.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <AANLkTi=SO1nZbFySAs8_+TmCZcKBPihN6xrZfJihBnXG@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: Julia Lawall <julia@diku.dk>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, joe@perches.com, James Smart <James.Smart@Emulex.Com>
 
-Christof Schmitt wrote:
-> On Sat, Aug 28, 2010 at 07:11:12PM +0200, Julia Lawall wrote:
->> The function fc_bsg_goose_queue in the file drivers/scsi/scsi_transp=
-ort_fc.c
->> contains the following code:
->>
->>         flagset =3D test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->que=
-ue_flags) &&
->>                   !test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queu=
-e_flags);
->>
->> I have the impression that this is always 0.  QUEUE_FLAG_REENTER is=20
->> defined with quite a lot of other constants, so I don't really have =
-a=20
->> guess as to what was intended.
->=20
-> I just came across the code in scsi_run_queue in
-> drivers/scsi/scsi_lib.c. It looks like the check of QUEUE_FLAG_REENTE=
-R
-> in fc_bsg_goose_queue is modeled after the check in scsi_run_queue.
->=20
-> The check in scsi_run_queue has been introduced with this commit,
-> maybe this helps understanding the code:
->=20
-> commit 04846f25920d4b05d6040c531cc601049260db52
-> Author: Andreas Herrmann <aherrman@de.ibm.com>
-> Date:   Wed Aug 9 17:31:16 2006 +0200
->=20
->     [SCSI] limit recursion when flushing shost->starved_list
->=20
-Then it's still wrong. The above commit has:
 
-+               if (test_bit(QUEUE_FLAG_REENTER, &q->queue_flags) &&
-+                   !test_and_set_bit(QUEUE_FLAG_REENTER,
-+                                     &sdev->request_queue->queue_flags=
-)) {
 
-Which is slightly different than the above. Looks like a copy and past =
-error.
-It probably should read
+On Wed, 1 Sep 2010, adam radford wrote:
 
-         flagset =3D test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue=
-_flags) &&
-                   !test_and_set_bit(QUEUE_FLAG_REENTER, &rport->rqst_q=
-->queue_flags);
+> On Wed, Sep 1, 2010 at 2:40 AM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
+>
+>> Could the lock/unlock be causing the issue?
+>> Again, in 2.6.34, there are no latency problems or controller resets.
+>
+> Justin,
+>
+> We are looking into this issue and should get back to you soon.
+>
+> The lock/unlock() kernel calls were not added by me but were part of a
+> series of 'BKL pushdown' patches added by someone to all drivers with
+> an ioctl interface.  If you think those might be related to your
+> issue, you could try
+> removing those 2 lines of code and recompiling.
+>
+> If you haven't already, please email you kernel .config files for both
+> the working kernel and non working kernel to the 3ware/LSI support
+> people you are in contact with.
+>
+> Thanks.
+>
+> -Adam
+>
 
-This was introduced by
+Hi,
 
-commit 9e4f5e29610162fd426366f3b29e3cc6e575b858
-Author: James Smart <James.Smart@Emulex.Com>
-Date:   Thu Mar 26 13:33:19 2009 -0400
+Done, attached to the 3ware/LSI case, also available below:
 
-    [SCSI] FC Pass Thru support
+wget http://home.comcast.net/~jpiszcz/20100902/2.6.34.1-config-good.txt
+wget http://home.comcast.net/~jpiszcz/20100902/2.6.35.4-io-ctrl-resets.txt
 
-so we should be blaming^Wasking him.
+Adam, per your recommendation, I removed the two kernel calls:
++       lock_kernel();
++       unlock_kernel();
 
-Cheers,
+Recompiled and the problem persisted, so I took the old driver and copied it
+to the new kernel:
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+p34:/usr/src# cp linux-2.6.34.6/drivers/scsi/3w-9xxx.h linux-2.6.35.4/drivers/scsi/3w-9xxx.h
+p34:/usr/src# cp linux-2.6.34.6/drivers/scsi/3w-9xxx.c linux-2.6.35.4/drivers/scsi/3w-9xxx.c
+p34:/usr/src#
+
+Moving the 2.6.34.6 driver to 2.6.35.4: success, so it is not a kernel bug,
+but a driver issue:
+
+Any other recommendations on what is going on here?
+
+If it isn't the kernel locks, it must be something else:
+
+--- linux-2.6.34.6/drivers/scsi/3w-9xxx.c       2010-08-26 19:44:38.000000000 -0400
++++ linux-2.6.35.4/drivers/scsi/3w-9xxx.c       2010-08-26 19:47:12.000000000 -0400
+-   Written By: Adam Radford <linuxraid@amcc.com>
+-   Modifications By: Tom Couch <linuxraid@amcc.com>
++   Written By: Adam Radford <linuxraid@lsi.com>
++   Modifications By: Tom Couch <linuxraid@lsi.com>
++   Copyright (C) 2010 LSI Corporation.
+-   linuxraid@amcc.com
++   linuxraid@lsi.com
+-   http://www.amcc.com
++   http://www.lsi.com
++   2.26.02.014 - Force 60 second timeout default.
+-#define TW_DRIVER_VERSION "2.26.02.013"
++#define TW_DRIVER_VERSION "2.26.02.014"
+-MODULE_AUTHOR ("AMCC");
++MODULE_AUTHOR ("LSI");
+-static int twa_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg);
++static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
+-       .ioctl          = twa_chrdev_ioctl,
++       .unlocked_ioctl = twa_chrdev_ioctl,
+-static int twa_chrdev_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
++static long twa_chrdev_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
++       struct inode *inode = file->f_path.dentry->d_inode;
++       lock_kernel();
++
++       unlock_kernel();
++/* This function gets called when a disk is coming on-line */
++static int twa_slave_configure(struct scsi_device *sdev)
++{
++       /* Force 60 second timeout */
++       blk_queue_rq_timeout(sdev->request_queue, 60 * HZ);
++
++       return 0;
++} /* End twa_slave_configure() */
++
++       .slave_configure        = twa_slave_configure,
+
+
+Justin.
+
