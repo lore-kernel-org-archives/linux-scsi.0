@@ -1,48 +1,37 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
- timed out, resetting card.
-Date: Thu, 2 Sep 2010 16:34:28 -0700
-Message-ID: <AANLkTi=8jU7gKVDcngZDv6MBfPSax=sRz2ZT9hvCEQd0@mail.gmail.com>
-References: <alpine.DEB.2.00.1008270907110.5274@p34.internal.lan>
-	<AANLkTik0BSJC5DJtVNw-MA9cuoAEUrw-M1Dn4XaF99u4@mail.gmail.com>
-	<alpine.DEB.2.00.1008271306100.24692@p34.internal.lan>
-	<alpine.DEB.2.00.1008291137560.5384@p34.internal.lan>
-	<alpine.DEB.2.00.1008310717260.4858@p34.internal.lan>
-	<alpine.DEB.2.00.1008310732120.5156@p34.internal.lan>
-	<alpine.DEB.2.00.1008310820350.19249@p34.internal.lan>
-	<alpine.DEB.2.00.1009010536070.14332@p34.internal.lan>
-	<AANLkTi=SO1nZbFySAs8_+TmCZcKBPihN6xrZfJihBnXG@mail.gmail.com>
-	<alpine.DEB.2.00.1009020540500.22317@p34.internal.lan>
-	<alpine.DEB.2.00.1009021025190.16817@p34.internal.lan>
-	<alpine.DEB.2.00.1009021818040.3149@p34.internal.lan>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 9123] 2.6.23-rcX SG_GET_SCSI_ID regression?
+Date: Fri, 3 Sep 2010 08:00:25 GMT
+Message-ID: <201009030800.o8380PNi017846@demeter1.kernel.org>
+References: <bug-9123-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:39906 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754251Ab0IBXea (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Sep 2010 19:34:30 -0400
-In-Reply-To: <alpine.DEB.2.00.1009021818040.3149@p34.internal.lan>
+Received: from demeter.kernel.org ([140.211.167.39]:49138 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753457Ab0ICIA0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2010 04:00:26 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o8380Pme017847
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 3 Sep 2010 08:00:25 GMT
+In-Reply-To: <bug-9123-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Sep 2, 2010 at 3:19 PM, Justin Piszcz <jpiszcz@lucidpixels.com> wrote:
-> Any recommendations on how to capture the freezing between the two kernels?
-> Which debug method would be best?
-> Does anyone else experience high wait times under 2.6.35 that uses 3ware
-> cards?
->
-> I tested under another host with 2.6.35 (software raid only) and it did not
-> have any issues..
->
+https://bugzilla.kernel.org/show_bug.cgi?id=9123
 
-Justin,
 
-We are trying to duplicate your issue.  Please stay in touch with the
-3ware/LSI support person you are in touch with.
+Florian Mickler <florian@mickler.org> changed:
 
-Thanks,
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|RESOLVED                    |CLOSED
 
--Adam
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
