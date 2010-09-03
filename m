@@ -1,7 +1,8 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 19/41] virtio_blk: drop REQ_HARDBARRIER support
-Date: Fri,  3 Sep 2010 12:29:34 +0200
-Message-ID: <1283509796-1510-20-git-send-email-tj@kernel.org>
+Subject: [PATCH 35/41] jbd2: replace barriers with explicit flush
+	/ FUA usage
+Date: Fri,  3 Sep 2010 12:29:50 +0200
+Message-ID: <1283509796-1510-36-git-send-email-tj@kernel.org>
 References: <1283509796-1510-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -19,62 +20,84 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Remove now unused REQ_HARDBARRIER support.  virtio_blk already
-supports REQ_FLUSH and the usefulness of REQ_FUA for virtio_blk is
-questionable at this point, so there's nothing else to do to support
-new REQ_FLUSH/FUA interface.
+From: Christoph Hellwig <hch@infradead.org>
 
+Switch to the WRITE_FLUSH_FUA flag for journal commits and remove the
+EOPNOTSUPP detection for barriers.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Michael S. Tsirkin <mst@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/virtio_blk.c |   17 ++++-------------
- 1 files changed, 4 insertions(+), 13 deletions(-)
+ fs/jbd2/commit.c |   43 ++++---------------------------------------
+ 1 files changed, 4 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index d10b635..1260628 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -128,9 +128,6 @@ static bool do_req(struct request_queue *q, struct virtio_blk *vblk,
- 		}
- 	}
+diff --git a/fs/jbd2/commit.c b/fs/jbd2/commit.c
+index d6aeb1f..f204e27 100644
+--- a/fs/jbd2/commit.c
++++ b/fs/jbd2/commit.c
+@@ -134,25 +134,11 @@ static int journal_submit_commit_record(journal_t *journal,
  
--	if (vbr->req->cmd_flags & REQ_HARDBARRIER)
--		vbr->out_hdr.type |= VIRTIO_BLK_T_BARRIER;
+ 	if (journal->j_flags & JBD2_BARRIER &&
+ 	    !JBD2_HAS_INCOMPAT_FEATURE(journal,
+-				       JBD2_FEATURE_INCOMPAT_ASYNC_COMMIT)) {
+-		ret = submit_bh(WRITE_SYNC_PLUG | WRITE_BARRIER, bh);
+-		if (ret == -EOPNOTSUPP) {
+-			printk(KERN_WARNING
+-			       "JBD2: Disabling barriers on %s, "
+-			       "not supported by device\n", journal->j_devname);
+-			write_lock(&journal->j_state_lock);
+-			journal->j_flags &= ~JBD2_BARRIER;
+-			write_unlock(&journal->j_state_lock);
 -
- 	sg_set_buf(&vblk->sg[out++], &vbr->out_hdr, sizeof(vbr->out_hdr));
+-			/* And try again, without the barrier */
+-			lock_buffer(bh);
+-			set_buffer_uptodate(bh);
+-			clear_buffer_dirty(bh);
+-			ret = submit_bh(WRITE_SYNC_PLUG, bh);
+-		}
+-	} else {
++				       JBD2_FEATURE_INCOMPAT_ASYNC_COMMIT))
++		ret = submit_bh(WRITE_SYNC_PLUG | WRITE_FLUSH_FUA, bh);
++	else
+ 		ret = submit_bh(WRITE_SYNC_PLUG, bh);
+-	}
++
+ 	*cbh = bh;
+ 	return ret;
+ }
+@@ -166,29 +152,8 @@ static int journal_wait_on_commit_record(journal_t *journal,
+ {
+ 	int ret = 0;
  
- 	/*
-@@ -388,13 +385,7 @@ static int __devinit virtblk_probe(struct virtio_device *vdev)
- 	vblk->disk->driverfs_dev = &vdev->dev;
- 	index++;
+-retry:
+ 	clear_buffer_dirty(bh);
+ 	wait_on_buffer(bh);
+-	if (buffer_eopnotsupp(bh) && (journal->j_flags & JBD2_BARRIER)) {
+-		printk(KERN_WARNING
+-		       "JBD2: %s: disabling barries on %s - not supported "
+-		       "by device\n", __func__, journal->j_devname);
+-		write_lock(&journal->j_state_lock);
+-		journal->j_flags &= ~JBD2_BARRIER;
+-		write_unlock(&journal->j_state_lock);
+-
+-		lock_buffer(bh);
+-		clear_buffer_dirty(bh);
+-		set_buffer_uptodate(bh);
+-		bh->b_end_io = journal_end_buffer_io_sync;
+-
+-		ret = submit_bh(WRITE_SYNC_PLUG, bh);
+-		if (ret) {
+-			unlock_buffer(bh);
+-			return ret;
+-		}
+-		goto retry;
+-	}
  
--	/*
--	 * If the FLUSH feature is supported we do have support for
--	 * flushing a volatile write cache on the host.  Use that to
--	 * implement write barrier support; otherwise, we must assume
--	 * that the host does not perform any kind of volatile write
--	 * caching.
--	 */
-+	/* configure queue flush support */
- 	if (virtio_has_feature(vdev, VIRTIO_BLK_F_FLUSH))
- 		blk_queue_flush(q, REQ_FLUSH);
- 
-@@ -515,9 +506,9 @@ static const struct virtio_device_id id_table[] = {
- };
- 
- static unsigned int features[] = {
--	VIRTIO_BLK_F_BARRIER, VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX,
--	VIRTIO_BLK_F_GEOMETRY, VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE,
--	VIRTIO_BLK_F_SCSI, VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
-+	VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX, VIRTIO_BLK_F_GEOMETRY,
-+	VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE, VIRTIO_BLK_F_SCSI,
-+	VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
- };
- 
- /*
+ 	if (unlikely(!buffer_uptodate(bh)))
+ 		ret = -EIO;
 -- 
 1.7.1
