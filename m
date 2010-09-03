@@ -1,188 +1,232 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 31/41] reiserfs: replace barriers with explicit flush / FUA usage
-Date: Fri,  3 Sep 2010 12:29:46 +0200
-Message-ID: <1283509796-1510-32-git-send-email-tj@kernel.org>
+Subject: [PATCH 03/41] block: kill QUEUE_ORDERED_BY_TAG
+Date: Fri,  3 Sep 2010 12:29:18 +0200
+Message-ID: <1283509796-1510-4-git-send-email-tj@kernel.org>
 References: <1283509796-1510-1-git-send-email-tj@kernel.org>
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1283509796-1510-1-git-send-email-tj@kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.co
-Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>, Nick Piggin <npiggin@kernel.dk>, Jeremy Fitzhardinge <jeremy@xensource.com>, Chris Wright <chrisw@sous-sol.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@infradead.org>
+Nobody is making meaningful use of ORDERED_BY_TAG now and queue
+draining for barrier requests will be removed soon which will render
+the advantage of tag ordering moot.  Kill ORDERED_BY_TAG.  The
+following users are affected.
 
-Switch to the WRITE_FLUSH_FUA flag for log writes and remove the EOPNOTSUPP
-detection for barriers.  Note that reiserfs had a fairly different code
-path for barriers before as it wa the only filesystem actually making use
-of them.  The new code always uses the old non-barrier codepath and just
-sets the WRITE_FLUSH_FUA explicitly for the journal commits.
+* brd: converted to ORDERED_DRAIN.
+* virtio_blk: ORDERED_TAG path was already marked deprecated.  Removed.
+* xen-blkfront: ORDERED_TAG case dropped.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Jan Kara <jack@suse.cz>
-Acked-by: Chris Mason <chris.mason@oracle.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Nick Piggin <npiggin@kernel.dk>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Jeremy Fitzhardinge <jeremy@xensource.com>
+Cc: Chris Wright <chrisw@sous-sol.org>
 ---
- fs/reiserfs/journal.c |  106 +++++++++---------------------------------------
- 1 files changed, 20 insertions(+), 86 deletions(-)
+ block/blk-barrier.c          |   35 +++++++----------------------------
+ drivers/block/brd.c          |    2 +-
+ drivers/block/virtio_blk.c   |    9 ---------
+ drivers/block/xen-blkfront.c |    8 +++-----
+ drivers/scsi/sd.c            |    4 +---
+ include/linux/blkdev.h       |   17 +----------------
+ 6 files changed, 13 insertions(+), 62 deletions(-)
 
-diff --git a/fs/reiserfs/journal.c b/fs/reiserfs/journal.c
-index 812e2c0..076c8b1 100644
---- a/fs/reiserfs/journal.c
-+++ b/fs/reiserfs/journal.c
-@@ -138,13 +138,6 @@ static int reiserfs_clean_and_file_buffer(struct buffer_head *bh)
- 	return 0;
- }
- 
--static void disable_barrier(struct super_block *s)
--{
--	REISERFS_SB(s)->s_mount_opt &= ~(1 << REISERFS_BARRIER_FLUSH);
--	printk("reiserfs: disabling flush barriers on %s\n",
--	       reiserfs_bdevname(s));
--}
--
- static struct reiserfs_bitmap_node *allocate_bitmap_node(struct super_block
- 							 *sb)
- {
-@@ -677,30 +670,6 @@ static void submit_ordered_buffer(struct buffer_head *bh)
- 	submit_bh(WRITE, bh);
- }
- 
--static int submit_barrier_buffer(struct buffer_head *bh)
--{
--	get_bh(bh);
--	bh->b_end_io = reiserfs_end_ordered_io;
--	clear_buffer_dirty(bh);
--	if (!buffer_uptodate(bh))
--		BUG();
--	return submit_bh(WRITE_BARRIER, bh);
--}
--
--static void check_barrier_completion(struct super_block *s,
--				     struct buffer_head *bh)
--{
--	if (buffer_eopnotsupp(bh)) {
--		clear_buffer_eopnotsupp(bh);
--		disable_barrier(s);
--		set_buffer_uptodate(bh);
--		set_buffer_dirty(bh);
--		reiserfs_write_unlock(s);
--		sync_dirty_buffer(bh);
--		reiserfs_write_lock(s);
--	}
--}
--
- #define CHUNK_SIZE 32
- struct buffer_chunk {
- 	struct buffer_head *bh[CHUNK_SIZE];
-@@ -1009,7 +978,6 @@ static int flush_commit_list(struct super_block *s,
- 	struct buffer_head *tbh = NULL;
- 	unsigned int trans_id = jl->j_trans_id;
- 	struct reiserfs_journal *journal = SB_JOURNAL(s);
--	int barrier = 0;
- 	int retval = 0;
- 	int write_len;
- 
-@@ -1094,24 +1062,6 @@ static int flush_commit_list(struct super_block *s,
+diff --git a/block/blk-barrier.c b/block/blk-barrier.c
+index f0faefc..c807e9c 100644
+--- a/block/blk-barrier.c
++++ b/block/blk-barrier.c
+@@ -26,10 +26,7 @@ int blk_queue_ordered(struct request_queue *q, unsigned ordered)
+ 	if (ordered != QUEUE_ORDERED_NONE &&
+ 	    ordered != QUEUE_ORDERED_DRAIN &&
+ 	    ordered != QUEUE_ORDERED_DRAIN_FLUSH &&
+-	    ordered != QUEUE_ORDERED_DRAIN_FUA &&
+-	    ordered != QUEUE_ORDERED_TAG &&
+-	    ordered != QUEUE_ORDERED_TAG_FLUSH &&
+-	    ordered != QUEUE_ORDERED_TAG_FUA) {
++	    ordered != QUEUE_ORDERED_DRAIN_FUA) {
+ 		printk(KERN_ERR "blk_queue_ordered: bad value %d\n", ordered);
+ 		return -EINVAL;
  	}
- 	atomic_dec(&journal->j_async_throttle);
- 
--	/* We're skipping the commit if there's an error */
--	if (retval || reiserfs_is_journal_aborted(journal))
--		barrier = 0;
--
--	/* wait on everything written so far before writing the commit
--	 * if we are in barrier mode, send the commit down now
--	 */
--	barrier = reiserfs_barrier_flush(s);
--	if (barrier) {
--		int ret;
--		lock_buffer(jl->j_commit_bh);
--		ret = submit_barrier_buffer(jl->j_commit_bh);
--		if (ret == -EOPNOTSUPP) {
--			set_buffer_uptodate(jl->j_commit_bh);
--			disable_barrier(s);
--			barrier = 0;
+@@ -155,21 +152,9 @@ static inline bool start_ordered(struct request_queue *q, struct request **rqp)
+ 	 * For an empty barrier, there's no actual BAR request, which
+ 	 * in turn makes POSTFLUSH unnecessary.  Mask them off.
+ 	 */
+-	if (!blk_rq_sectors(rq)) {
++	if (!blk_rq_sectors(rq))
+ 		q->ordered &= ~(QUEUE_ORDERED_DO_BAR |
+ 				QUEUE_ORDERED_DO_POSTFLUSH);
+-		/*
+-		 * Empty barrier on a write-through device w/ ordered
+-		 * tag has no command to issue and without any command
+-		 * to issue, ordering by tag can't be used.  Drain
+-		 * instead.
+-		 */
+-		if ((q->ordered & QUEUE_ORDERED_BY_TAG) &&
+-		    !(q->ordered & QUEUE_ORDERED_DO_PREFLUSH)) {
+-			q->ordered &= ~QUEUE_ORDERED_BY_TAG;
+-			q->ordered |= QUEUE_ORDERED_BY_DRAIN;
 -		}
 -	}
- 	for (i = 0; i < (jl->j_len + 1); i++) {
- 		bn = SB_ONDISK_JOURNAL_1st_BLOCK(s) +
- 		    (jl->j_start + i) % SB_ONDISK_JOURNAL_SIZE(s);
-@@ -1143,27 +1093,22 @@ static int flush_commit_list(struct super_block *s,
  
- 	BUG_ON(atomic_read(&(jl->j_commit_left)) != 1);
+ 	/* stash away the original request */
+ 	blk_dequeue_request(rq);
+@@ -210,7 +195,7 @@ static inline bool start_ordered(struct request_queue *q, struct request **rqp)
+ 	} else
+ 		skip |= QUEUE_ORDSEQ_PREFLUSH;
  
--	if (!barrier) {
--		/* If there was a write error in the journal - we can't commit
--		 * this transaction - it will be invalid and, if successful,
--		 * will just end up propagating the write error out to
--		 * the file system. */
--		if (likely(!retval && !reiserfs_is_journal_aborted (journal))) {
--			if (buffer_dirty(jl->j_commit_bh))
--				BUG();
--			mark_buffer_dirty(jl->j_commit_bh) ;
--			reiserfs_write_unlock(s);
--			sync_dirty_buffer(jl->j_commit_bh) ;
--			reiserfs_write_lock(s);
--		}
+-	if ((q->ordered & QUEUE_ORDERED_BY_DRAIN) && queue_in_flight(q))
++	if (queue_in_flight(q))
+ 		rq = NULL;
+ 	else
+ 		skip |= QUEUE_ORDSEQ_DRAIN;
+@@ -257,16 +242,10 @@ bool blk_do_ordered(struct request_queue *q, struct request **rqp)
+ 	    rq != &q->pre_flush_rq && rq != &q->post_flush_rq)
+ 		return true;
+ 
+-	if (q->ordered & QUEUE_ORDERED_BY_TAG) {
+-		/* Ordered by tag.  Blocking the next barrier is enough. */
+-		if (is_barrier && rq != &q->bar_rq)
+-			*rqp = NULL;
 -	} else {
-+	/* If there was a write error in the journal - we can't commit
-+	 * this transaction - it will be invalid and, if successful,
-+	 * will just end up propagating the write error out to
-+	 * the file system. */
-+	if (likely(!retval && !reiserfs_is_journal_aborted (journal))) {
-+		if (buffer_dirty(jl->j_commit_bh))
-+			BUG();
-+		mark_buffer_dirty(jl->j_commit_bh) ;
- 		reiserfs_write_unlock(s);
--		wait_on_buffer(jl->j_commit_bh);
-+		if (reiserfs_barrier_flush(s))
-+			__sync_dirty_buffer(jl->j_commit_bh, WRITE_FLUSH_FUA);
-+		else
-+			sync_dirty_buffer(jl->j_commit_bh);
- 		reiserfs_write_lock(s);
+-		/* Ordered by draining.  Wait for turn. */
+-		WARN_ON(blk_ordered_req_seq(rq) < blk_ordered_cur_seq(q));
+-		if (blk_ordered_req_seq(rq) > blk_ordered_cur_seq(q))
+-			*rqp = NULL;
+-	}
++	/* Ordered by draining.  Wait for turn. */
++	WARN_ON(blk_ordered_req_seq(rq) < blk_ordered_cur_seq(q));
++	if (blk_ordered_req_seq(rq) > blk_ordered_cur_seq(q))
++		*rqp = NULL;
+ 
+ 	return true;
+ }
+diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+index 1c7f637..47a4127 100644
+--- a/drivers/block/brd.c
++++ b/drivers/block/brd.c
+@@ -482,7 +482,7 @@ static struct brd_device *brd_alloc(int i)
+ 	if (!brd->brd_queue)
+ 		goto out_free_dev;
+ 	blk_queue_make_request(brd->brd_queue, brd_make_request);
+-	blk_queue_ordered(brd->brd_queue, QUEUE_ORDERED_TAG);
++	blk_queue_ordered(brd->brd_queue, QUEUE_ORDERED_DRAIN);
+ 	blk_queue_max_hw_sectors(brd->brd_queue, 1024);
+ 	blk_queue_bounce_limit(brd->brd_queue, BLK_BOUNCE_ANY);
+ 
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index 2aafafc..7965280 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -395,15 +395,6 @@ static int __devinit virtblk_probe(struct virtio_device *vdev)
+ 		 * to implement write barrier support.
+ 		 */
+ 		blk_queue_ordered(q, QUEUE_ORDERED_DRAIN_FLUSH);
+-	} else if (virtio_has_feature(vdev, VIRTIO_BLK_F_BARRIER)) {
+-		/*
+-		 * If the BARRIER feature is supported the host expects us
+-		 * to order request by tags.  This implies there is not
+-		 * volatile write cache on the host, and that the host
+-		 * never re-orders outstanding I/O.  This feature is not
+-		 * useful for real life scenarious and deprecated.
+-		 */
+-		blk_queue_ordered(q, QUEUE_ORDERED_TAG);
+ 	} else {
+ 		/*
+ 		 * If the FLUSH feature is not supported we must assume that
+diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
+index ab735a6..8341862 100644
+--- a/drivers/block/xen-blkfront.c
++++ b/drivers/block/xen-blkfront.c
+@@ -424,8 +424,7 @@ static int xlvbd_barrier(struct blkfront_info *info)
+ 	const char *barrier;
+ 
+ 	switch (info->feature_barrier) {
+-	case QUEUE_ORDERED_DRAIN:	barrier = "enabled (drain)"; break;
+-	case QUEUE_ORDERED_TAG:		barrier = "enabled (tag)"; break;
++	case QUEUE_ORDERED_DRAIN:	barrier = "enabled"; break;
+ 	case QUEUE_ORDERED_NONE:	barrier = "disabled"; break;
+ 	default:			return -EINVAL;
  	}
+@@ -1078,8 +1077,7 @@ static void blkfront_connect(struct blkfront_info *info)
+ 	 * we're dealing with a very old backend which writes
+ 	 * synchronously; draining will do what needs to get done.
+ 	 *
+-	 * If there are barriers, then we can do full queued writes
+-	 * with tagged barriers.
++	 * If there are barriers, then we use flush.
+ 	 *
+ 	 * If barriers are not supported, then there's no much we can
+ 	 * do, so just set ordering to NONE.
+@@ -1087,7 +1085,7 @@ static void blkfront_connect(struct blkfront_info *info)
+ 	if (err)
+ 		info->feature_barrier = QUEUE_ORDERED_DRAIN;
+ 	else if (barrier)
+-		info->feature_barrier = QUEUE_ORDERED_TAG;
++		info->feature_barrier = QUEUE_ORDERED_DRAIN_FLUSH;
+ 	else
+ 		info->feature_barrier = QUEUE_ORDERED_NONE;
  
--	check_barrier_completion(s, jl->j_commit_bh);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2714bec..cdfc51a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2151,9 +2151,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 
+ 	/*
+ 	 * We now have all cache related info, determine how we deal
+-	 * with ordered requests.  Note that as the current SCSI
+-	 * dispatch function can alter request order, we cannot use
+-	 * QUEUE_ORDERED_TAG_* even when ordered tag is supported.
++	 * with ordered requests.
+ 	 */
+ 	if (sdkp->WCE)
+ 		ordered = sdkp->DPOFUA
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 015375c..7077bc0 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -470,12 +470,7 @@ enum {
+ 	 * DRAIN	: ordering by draining is enough
+ 	 * DRAIN_FLUSH	: ordering by draining w/ pre and post flushes
+ 	 * DRAIN_FUA	: ordering by draining w/ pre flush and FUA write
+-	 * TAG		: ordering by tag is enough
+-	 * TAG_FLUSH	: ordering by tag w/ pre and post flushes
+-	 * TAG_FUA	: ordering by tag w/ pre flush and FUA write
+ 	 */
+-	QUEUE_ORDERED_BY_DRAIN		= 0x01,
+-	QUEUE_ORDERED_BY_TAG		= 0x02,
+ 	QUEUE_ORDERED_DO_PREFLUSH	= 0x10,
+ 	QUEUE_ORDERED_DO_BAR		= 0x20,
+ 	QUEUE_ORDERED_DO_POSTFLUSH	= 0x40,
+@@ -483,8 +478,7 @@ enum {
+ 
+ 	QUEUE_ORDERED_NONE		= 0x00,
+ 
+-	QUEUE_ORDERED_DRAIN		= QUEUE_ORDERED_BY_DRAIN |
+-					  QUEUE_ORDERED_DO_BAR,
++	QUEUE_ORDERED_DRAIN		= QUEUE_ORDERED_DO_BAR,
+ 	QUEUE_ORDERED_DRAIN_FLUSH	= QUEUE_ORDERED_DRAIN |
+ 					  QUEUE_ORDERED_DO_PREFLUSH |
+ 					  QUEUE_ORDERED_DO_POSTFLUSH,
+@@ -492,15 +486,6 @@ enum {
+ 					  QUEUE_ORDERED_DO_PREFLUSH |
+ 					  QUEUE_ORDERED_DO_FUA,
+ 
+-	QUEUE_ORDERED_TAG		= QUEUE_ORDERED_BY_TAG |
+-					  QUEUE_ORDERED_DO_BAR,
+-	QUEUE_ORDERED_TAG_FLUSH		= QUEUE_ORDERED_TAG |
+-					  QUEUE_ORDERED_DO_PREFLUSH |
+-					  QUEUE_ORDERED_DO_POSTFLUSH,
+-	QUEUE_ORDERED_TAG_FUA		= QUEUE_ORDERED_TAG |
+-					  QUEUE_ORDERED_DO_PREFLUSH |
+-					  QUEUE_ORDERED_DO_FUA,
 -
- 	/* If there was a write error in the journal - we can't commit this
- 	 * transaction - it will be invalid and, if successful, will just end
- 	 * up propagating the write error out to the filesystem. */
-@@ -1319,26 +1264,15 @@ static int _update_journal_header_block(struct super_block *sb,
- 		jh->j_first_unflushed_offset = cpu_to_le32(offset);
- 		jh->j_mount_id = cpu_to_le32(journal->j_mount_id);
- 
--		if (reiserfs_barrier_flush(sb)) {
--			int ret;
--			lock_buffer(journal->j_header_bh);
--			ret = submit_barrier_buffer(journal->j_header_bh);
--			if (ret == -EOPNOTSUPP) {
--				set_buffer_uptodate(journal->j_header_bh);
--				disable_barrier(sb);
--				goto sync;
--			}
--			reiserfs_write_unlock(sb);
--			wait_on_buffer(journal->j_header_bh);
--			reiserfs_write_lock(sb);
--			check_barrier_completion(sb, journal->j_header_bh);
--		} else {
--		      sync:
--			set_buffer_dirty(journal->j_header_bh);
--			reiserfs_write_unlock(sb);
-+		set_buffer_dirty(journal->j_header_bh);
-+		reiserfs_write_unlock(sb);
-+
-+		if (reiserfs_barrier_flush(sb))
-+			__sync_dirty_buffer(journal->j_header_bh, WRITE_FLUSH_FUA);
-+		else
- 			sync_dirty_buffer(journal->j_header_bh);
--			reiserfs_write_lock(sb);
--		}
-+
-+		reiserfs_write_lock(sb);
- 		if (!buffer_uptodate(journal->j_header_bh)) {
- 			reiserfs_warning(sb, "journal-837",
- 					 "IO error during journal replay");
+ 	/*
+ 	 * Ordered operation sequence
+ 	 */
 -- 
 1.7.1
 
