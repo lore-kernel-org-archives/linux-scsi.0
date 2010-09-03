@@ -1,7 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 40/41] block: remove the BLKDEV_IFL_BARRIER flag
-Date: Fri,  3 Sep 2010 12:29:55 +0200
-Message-ID: <1283509796-1510-41-git-send-email-tj@kernel.org>
+Subject: [PATCH 08/41] block: rename blk-barrier.c to blk-flush.c
+Date: Fri,  3 Sep 2010 12:29:23 +0200
+Message-ID: <1283509796-1510-9-git-send-email-tj@kernel.org>
 References: <1283509796-1510-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -19,110 +19,543 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@infradead.org>
+Without ordering requirements, barrier and ordering are minomers.
+Rename block/blk-barrier.c to block/blk-flush.c.  Rename of symbols
+will follow.
 
-Remove support for barriers on discards, which is unused now.  Also
-remove the DISCARD_NOBARRIER I/O type in favour of just setting the
-rw flags up locally in blkdev_issue_discard.
-
-tj: Also remove DISCARD_SECURE and use REQ_SECURE directly.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Mike Snitzer <snitzer@redhat.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
 ---
- block/blk-lib.c        |   18 ++----------------
- include/linux/blkdev.h |    2 --
- include/linux/fs.h     |    8 --------
- 3 files changed, 2 insertions(+), 26 deletions(-)
+ block/Makefile      |    2 +-
+ block/blk-barrier.c |  248 ---------------------------------------------------
+ block/blk-flush.c   |  248 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 249 insertions(+), 249 deletions(-)
+ delete mode 100644 block/blk-barrier.c
+ create mode 100644 block/blk-flush.c
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index c392029..fe2e6ed 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -39,8 +39,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- {
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct request_queue *q = bdev_get_queue(bdev);
--	int type = flags & BLKDEV_IFL_BARRIER ?
--		DISCARD_BARRIER : DISCARD_NOBARRIER;
-+	int type = REQ_WRITE | REQ_DISCARD;
- 	unsigned int max_discard_sectors;
- 	struct bio *bio;
- 	int ret = 0;
-@@ -65,7 +64,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	if (flags & BLKDEV_IFL_SECURE) {
- 		if (!blk_queue_secdiscard(q))
- 			return -EOPNOTSUPP;
--		type |= DISCARD_SECURE;
-+		type |= REQ_SECURE;
- 	}
+diff --git a/block/Makefile b/block/Makefile
+index 0bb499a..f627e4b 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -3,7 +3,7 @@
+ #
  
- 	while (nr_sects && !ret) {
-@@ -162,12 +161,6 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	bb.wait = &wait;
- 	bb.end_io = NULL;
+ obj-$(CONFIG_BLOCK) := elevator.o blk-core.o blk-tag.o blk-sysfs.o \
+-			blk-barrier.o blk-settings.o blk-ioc.o blk-map.o \
++			blk-flush.o blk-settings.o blk-ioc.o blk-map.o \
+ 			blk-exec.o blk-merge.o blk-softirq.o blk-timeout.o \
+ 			blk-iopoll.o blk-lib.o ioctl.o genhd.o scsi_ioctl.o
  
--	if (flags & BLKDEV_IFL_BARRIER) {
--		/* issue async barrier before the data */
--		ret = blkdev_issue_flush(bdev, gfp_mask, NULL, 0);
--		if (ret)
--			return ret;
--	}
- submit:
- 	ret = 0;
- 	while (nr_sects != 0) {
-@@ -199,13 +192,6 @@ submit:
- 		issued++;
- 		submit_bio(WRITE, bio);
- 	}
--	/*
--	 * When all data bios are in flight. Send final barrier if requeted.
--	 */
--	if (nr_sects == 0 && flags & BLKDEV_IFL_BARRIER)
--		ret = blkdev_issue_flush(bdev, gfp_mask, NULL,
--					flags & BLKDEV_IFL_WAIT);
--
- 
- 	if (flags & BLKDEV_IFL_WAIT)
- 		/* Wait for bios in-flight */
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 6b305eb..cfcb3a6 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -869,11 +869,9 @@ static inline struct request *blk_map_queue_find_tag(struct blk_queue_tag *bqt,
- }
- enum{
- 	BLKDEV_WAIT,	/* wait for completion */
--	BLKDEV_BARRIER,	/* issue request with barrier */
- 	BLKDEV_SECURE,	/* secure discard */
- };
- #define BLKDEV_IFL_WAIT		(1 << BLKDEV_WAIT)
--#define BLKDEV_IFL_BARRIER	(1 << BLKDEV_BARRIER)
- #define BLKDEV_IFL_SECURE	(1 << BLKDEV_SECURE)
- extern int blkdev_issue_flush(struct block_device *, gfp_t, sector_t *,
- 			unsigned long);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index d6add69..6b0f6e9 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -163,14 +163,6 @@ struct inodes_stat_t {
- #define WRITE_FLUSH_FUA		(WRITE | REQ_SYNC | REQ_NOIDLE | REQ_UNPLUG | \
- 				 REQ_FLUSH | REQ_FUA)
- 
+diff --git a/block/blk-barrier.c b/block/blk-barrier.c
+deleted file mode 100644
+index e8b2e5c..0000000
+--- a/block/blk-barrier.c
++++ /dev/null
+@@ -1,248 +0,0 @@
 -/*
-- * These aren't really reads or writes, they pass down information about
-- * parts of device that are now unused by the file system.
+- * Functions related to barrier IO handling
 - */
--#define DISCARD_NOBARRIER	(WRITE | REQ_DISCARD)
--#define DISCARD_BARRIER		(WRITE | REQ_DISCARD | REQ_HARDBARRIER)
--#define DISCARD_SECURE		(DISCARD_NOBARRIER | REQ_SECURE)
+-#include <linux/kernel.h>
+-#include <linux/module.h>
+-#include <linux/bio.h>
+-#include <linux/blkdev.h>
+-#include <linux/gfp.h>
 -
- #define SEL_IN		1
- #define SEL_OUT		2
- #define SEL_EX		4
+-#include "blk.h"
+-
+-static struct request *queue_next_ordseq(struct request_queue *q);
+-
+-/*
+- * Cache flushing for ordered writes handling
+- */
+-unsigned blk_ordered_cur_seq(struct request_queue *q)
+-{
+-	if (!q->ordseq)
+-		return 0;
+-	return 1 << ffz(q->ordseq);
+-}
+-
+-static struct request *blk_ordered_complete_seq(struct request_queue *q,
+-						unsigned seq, int error)
+-{
+-	struct request *next_rq = NULL;
+-
+-	if (error && !q->orderr)
+-		q->orderr = error;
+-
+-	BUG_ON(q->ordseq & seq);
+-	q->ordseq |= seq;
+-
+-	if (blk_ordered_cur_seq(q) != QUEUE_ORDSEQ_DONE) {
+-		/* not complete yet, queue the next ordered sequence */
+-		next_rq = queue_next_ordseq(q);
+-	} else {
+-		/* complete this barrier request */
+-		__blk_end_request_all(q->orig_bar_rq, q->orderr);
+-		q->orig_bar_rq = NULL;
+-		q->ordseq = 0;
+-
+-		/* dispatch the next barrier if there's one */
+-		if (!list_empty(&q->pending_barriers)) {
+-			next_rq = list_entry_rq(q->pending_barriers.next);
+-			list_move(&next_rq->queuelist, &q->queue_head);
+-		}
+-	}
+-	return next_rq;
+-}
+-
+-static void pre_flush_end_io(struct request *rq, int error)
+-{
+-	elv_completed_request(rq->q, rq);
+-	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_PREFLUSH, error);
+-}
+-
+-static void bar_end_io(struct request *rq, int error)
+-{
+-	elv_completed_request(rq->q, rq);
+-	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_BAR, error);
+-}
+-
+-static void post_flush_end_io(struct request *rq, int error)
+-{
+-	elv_completed_request(rq->q, rq);
+-	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_POSTFLUSH, error);
+-}
+-
+-static void queue_flush(struct request_queue *q, struct request *rq,
+-			rq_end_io_fn *end_io)
+-{
+-	blk_rq_init(q, rq);
+-	rq->cmd_type = REQ_TYPE_FS;
+-	rq->cmd_flags = REQ_FLUSH;
+-	rq->rq_disk = q->orig_bar_rq->rq_disk;
+-	rq->end_io = end_io;
+-
+-	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
+-}
+-
+-static struct request *queue_next_ordseq(struct request_queue *q)
+-{
+-	struct request *rq = &q->bar_rq;
+-
+-	switch (blk_ordered_cur_seq(q)) {
+-	case QUEUE_ORDSEQ_PREFLUSH:
+-		queue_flush(q, rq, pre_flush_end_io);
+-		break;
+-
+-	case QUEUE_ORDSEQ_BAR:
+-		/* initialize proxy request and queue it */
+-		blk_rq_init(q, rq);
+-		init_request_from_bio(rq, q->orig_bar_rq->bio);
+-		rq->cmd_flags &= ~REQ_HARDBARRIER;
+-		if (q->ordered & QUEUE_ORDERED_DO_FUA)
+-			rq->cmd_flags |= REQ_FUA;
+-		rq->end_io = bar_end_io;
+-
+-		elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
+-		break;
+-
+-	case QUEUE_ORDSEQ_POSTFLUSH:
+-		queue_flush(q, rq, post_flush_end_io);
+-		break;
+-
+-	default:
+-		BUG();
+-	}
+-	return rq;
+-}
+-
+-struct request *blk_do_ordered(struct request_queue *q, struct request *rq)
+-{
+-	unsigned skip = 0;
+-
+-	if (!(rq->cmd_flags & REQ_HARDBARRIER))
+-		return rq;
+-
+-	if (q->ordseq) {
+-		/*
+-		 * Barrier is already in progress and they can't be
+-		 * processed in parallel.  Queue for later processing.
+-		 */
+-		list_move_tail(&rq->queuelist, &q->pending_barriers);
+-		return NULL;
+-	}
+-
+-	if (unlikely(q->next_ordered == QUEUE_ORDERED_NONE)) {
+-		/*
+-		 * Queue ordering not supported.  Terminate
+-		 * with prejudice.
+-		 */
+-		blk_dequeue_request(rq);
+-		__blk_end_request_all(rq, -EOPNOTSUPP);
+-		return NULL;
+-	}
+-
+-	/*
+-	 * Start a new ordered sequence
+-	 */
+-	q->orderr = 0;
+-	q->ordered = q->next_ordered;
+-	q->ordseq |= QUEUE_ORDSEQ_STARTED;
+-
+-	/*
+-	 * For an empty barrier, there's no actual BAR request, which
+-	 * in turn makes POSTFLUSH unnecessary.  Mask them off.
+-	 */
+-	if (!blk_rq_sectors(rq))
+-		q->ordered &= ~(QUEUE_ORDERED_DO_BAR |
+-				QUEUE_ORDERED_DO_POSTFLUSH);
+-
+-	/* stash away the original request */
+-	blk_dequeue_request(rq);
+-	q->orig_bar_rq = rq;
+-
+-	if (!(q->ordered & QUEUE_ORDERED_DO_PREFLUSH))
+-		skip |= QUEUE_ORDSEQ_PREFLUSH;
+-
+-	if (!(q->ordered & QUEUE_ORDERED_DO_BAR))
+-		skip |= QUEUE_ORDSEQ_BAR;
+-
+-	if (!(q->ordered & QUEUE_ORDERED_DO_POSTFLUSH))
+-		skip |= QUEUE_ORDSEQ_POSTFLUSH;
+-
+-	/* complete skipped sequences and return the first sequence */
+-	return blk_ordered_complete_seq(q, skip, 0);
+-}
+-
+-static void bio_end_empty_barrier(struct bio *bio, int err)
+-{
+-	if (err) {
+-		if (err == -EOPNOTSUPP)
+-			set_bit(BIO_EOPNOTSUPP, &bio->bi_flags);
+-		clear_bit(BIO_UPTODATE, &bio->bi_flags);
+-	}
+-	if (bio->bi_private)
+-		complete(bio->bi_private);
+-	bio_put(bio);
+-}
+-
+-/**
+- * blkdev_issue_flush - queue a flush
+- * @bdev:	blockdev to issue flush for
+- * @gfp_mask:	memory allocation flags (for bio_alloc)
+- * @error_sector:	error sector
+- * @flags:	BLKDEV_IFL_* flags to control behaviour
+- *
+- * Description:
+- *    Issue a flush for the block device in question. Caller can supply
+- *    room for storing the error offset in case of a flush error, if they
+- *    wish to. If WAIT flag is not passed then caller may check only what
+- *    request was pushed in some internal queue for later handling.
+- */
+-int blkdev_issue_flush(struct block_device *bdev, gfp_t gfp_mask,
+-		sector_t *error_sector, unsigned long flags)
+-{
+-	DECLARE_COMPLETION_ONSTACK(wait);
+-	struct request_queue *q;
+-	struct bio *bio;
+-	int ret = 0;
+-
+-	if (bdev->bd_disk == NULL)
+-		return -ENXIO;
+-
+-	q = bdev_get_queue(bdev);
+-	if (!q)
+-		return -ENXIO;
+-
+-	/*
+-	 * some block devices may not have their queue correctly set up here
+-	 * (e.g. loop device without a backing file) and so issuing a flush
+-	 * here will panic. Ensure there is a request function before issuing
+-	 * the barrier.
+-	 */
+-	if (!q->make_request_fn)
+-		return -ENXIO;
+-
+-	bio = bio_alloc(gfp_mask, 0);
+-	bio->bi_end_io = bio_end_empty_barrier;
+-	bio->bi_bdev = bdev;
+-	if (test_bit(BLKDEV_WAIT, &flags))
+-		bio->bi_private = &wait;
+-
+-	bio_get(bio);
+-	submit_bio(WRITE_BARRIER, bio);
+-	if (test_bit(BLKDEV_WAIT, &flags)) {
+-		wait_for_completion(&wait);
+-		/*
+-		 * The driver must store the error location in ->bi_sector, if
+-		 * it supports it. For non-stacked drivers, this should be
+-		 * copied from blk_rq_pos(rq).
+-		 */
+-		if (error_sector)
+-			*error_sector = bio->bi_sector;
+-	}
+-
+-	if (bio_flagged(bio, BIO_EOPNOTSUPP))
+-		ret = -EOPNOTSUPP;
+-	else if (!bio_flagged(bio, BIO_UPTODATE))
+-		ret = -EIO;
+-
+-	bio_put(bio);
+-	return ret;
+-}
+-EXPORT_SYMBOL(blkdev_issue_flush);
+diff --git a/block/blk-flush.c b/block/blk-flush.c
+new file mode 100644
+index 0000000..e8b2e5c
+--- /dev/null
++++ b/block/blk-flush.c
+@@ -0,0 +1,248 @@
++/*
++ * Functions related to barrier IO handling
++ */
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/bio.h>
++#include <linux/blkdev.h>
++#include <linux/gfp.h>
++
++#include "blk.h"
++
++static struct request *queue_next_ordseq(struct request_queue *q);
++
++/*
++ * Cache flushing for ordered writes handling
++ */
++unsigned blk_ordered_cur_seq(struct request_queue *q)
++{
++	if (!q->ordseq)
++		return 0;
++	return 1 << ffz(q->ordseq);
++}
++
++static struct request *blk_ordered_complete_seq(struct request_queue *q,
++						unsigned seq, int error)
++{
++	struct request *next_rq = NULL;
++
++	if (error && !q->orderr)
++		q->orderr = error;
++
++	BUG_ON(q->ordseq & seq);
++	q->ordseq |= seq;
++
++	if (blk_ordered_cur_seq(q) != QUEUE_ORDSEQ_DONE) {
++		/* not complete yet, queue the next ordered sequence */
++		next_rq = queue_next_ordseq(q);
++	} else {
++		/* complete this barrier request */
++		__blk_end_request_all(q->orig_bar_rq, q->orderr);
++		q->orig_bar_rq = NULL;
++		q->ordseq = 0;
++
++		/* dispatch the next barrier if there's one */
++		if (!list_empty(&q->pending_barriers)) {
++			next_rq = list_entry_rq(q->pending_barriers.next);
++			list_move(&next_rq->queuelist, &q->queue_head);
++		}
++	}
++	return next_rq;
++}
++
++static void pre_flush_end_io(struct request *rq, int error)
++{
++	elv_completed_request(rq->q, rq);
++	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_PREFLUSH, error);
++}
++
++static void bar_end_io(struct request *rq, int error)
++{
++	elv_completed_request(rq->q, rq);
++	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_BAR, error);
++}
++
++static void post_flush_end_io(struct request *rq, int error)
++{
++	elv_completed_request(rq->q, rq);
++	blk_ordered_complete_seq(rq->q, QUEUE_ORDSEQ_POSTFLUSH, error);
++}
++
++static void queue_flush(struct request_queue *q, struct request *rq,
++			rq_end_io_fn *end_io)
++{
++	blk_rq_init(q, rq);
++	rq->cmd_type = REQ_TYPE_FS;
++	rq->cmd_flags = REQ_FLUSH;
++	rq->rq_disk = q->orig_bar_rq->rq_disk;
++	rq->end_io = end_io;
++
++	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
++}
++
++static struct request *queue_next_ordseq(struct request_queue *q)
++{
++	struct request *rq = &q->bar_rq;
++
++	switch (blk_ordered_cur_seq(q)) {
++	case QUEUE_ORDSEQ_PREFLUSH:
++		queue_flush(q, rq, pre_flush_end_io);
++		break;
++
++	case QUEUE_ORDSEQ_BAR:
++		/* initialize proxy request and queue it */
++		blk_rq_init(q, rq);
++		init_request_from_bio(rq, q->orig_bar_rq->bio);
++		rq->cmd_flags &= ~REQ_HARDBARRIER;
++		if (q->ordered & QUEUE_ORDERED_DO_FUA)
++			rq->cmd_flags |= REQ_FUA;
++		rq->end_io = bar_end_io;
++
++		elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
++		break;
++
++	case QUEUE_ORDSEQ_POSTFLUSH:
++		queue_flush(q, rq, post_flush_end_io);
++		break;
++
++	default:
++		BUG();
++	}
++	return rq;
++}
++
++struct request *blk_do_ordered(struct request_queue *q, struct request *rq)
++{
++	unsigned skip = 0;
++
++	if (!(rq->cmd_flags & REQ_HARDBARRIER))
++		return rq;
++
++	if (q->ordseq) {
++		/*
++		 * Barrier is already in progress and they can't be
++		 * processed in parallel.  Queue for later processing.
++		 */
++		list_move_tail(&rq->queuelist, &q->pending_barriers);
++		return NULL;
++	}
++
++	if (unlikely(q->next_ordered == QUEUE_ORDERED_NONE)) {
++		/*
++		 * Queue ordering not supported.  Terminate
++		 * with prejudice.
++		 */
++		blk_dequeue_request(rq);
++		__blk_end_request_all(rq, -EOPNOTSUPP);
++		return NULL;
++	}
++
++	/*
++	 * Start a new ordered sequence
++	 */
++	q->orderr = 0;
++	q->ordered = q->next_ordered;
++	q->ordseq |= QUEUE_ORDSEQ_STARTED;
++
++	/*
++	 * For an empty barrier, there's no actual BAR request, which
++	 * in turn makes POSTFLUSH unnecessary.  Mask them off.
++	 */
++	if (!blk_rq_sectors(rq))
++		q->ordered &= ~(QUEUE_ORDERED_DO_BAR |
++				QUEUE_ORDERED_DO_POSTFLUSH);
++
++	/* stash away the original request */
++	blk_dequeue_request(rq);
++	q->orig_bar_rq = rq;
++
++	if (!(q->ordered & QUEUE_ORDERED_DO_PREFLUSH))
++		skip |= QUEUE_ORDSEQ_PREFLUSH;
++
++	if (!(q->ordered & QUEUE_ORDERED_DO_BAR))
++		skip |= QUEUE_ORDSEQ_BAR;
++
++	if (!(q->ordered & QUEUE_ORDERED_DO_POSTFLUSH))
++		skip |= QUEUE_ORDSEQ_POSTFLUSH;
++
++	/* complete skipped sequences and return the first sequence */
++	return blk_ordered_complete_seq(q, skip, 0);
++}
++
++static void bio_end_empty_barrier(struct bio *bio, int err)
++{
++	if (err) {
++		if (err == -EOPNOTSUPP)
++			set_bit(BIO_EOPNOTSUPP, &bio->bi_flags);
++		clear_bit(BIO_UPTODATE, &bio->bi_flags);
++	}
++	if (bio->bi_private)
++		complete(bio->bi_private);
++	bio_put(bio);
++}
++
++/**
++ * blkdev_issue_flush - queue a flush
++ * @bdev:	blockdev to issue flush for
++ * @gfp_mask:	memory allocation flags (for bio_alloc)
++ * @error_sector:	error sector
++ * @flags:	BLKDEV_IFL_* flags to control behaviour
++ *
++ * Description:
++ *    Issue a flush for the block device in question. Caller can supply
++ *    room for storing the error offset in case of a flush error, if they
++ *    wish to. If WAIT flag is not passed then caller may check only what
++ *    request was pushed in some internal queue for later handling.
++ */
++int blkdev_issue_flush(struct block_device *bdev, gfp_t gfp_mask,
++		sector_t *error_sector, unsigned long flags)
++{
++	DECLARE_COMPLETION_ONSTACK(wait);
++	struct request_queue *q;
++	struct bio *bio;
++	int ret = 0;
++
++	if (bdev->bd_disk == NULL)
++		return -ENXIO;
++
++	q = bdev_get_queue(bdev);
++	if (!q)
++		return -ENXIO;
++
++	/*
++	 * some block devices may not have their queue correctly set up here
++	 * (e.g. loop device without a backing file) and so issuing a flush
++	 * here will panic. Ensure there is a request function before issuing
++	 * the barrier.
++	 */
++	if (!q->make_request_fn)
++		return -ENXIO;
++
++	bio = bio_alloc(gfp_mask, 0);
++	bio->bi_end_io = bio_end_empty_barrier;
++	bio->bi_bdev = bdev;
++	if (test_bit(BLKDEV_WAIT, &flags))
++		bio->bi_private = &wait;
++
++	bio_get(bio);
++	submit_bio(WRITE_BARRIER, bio);
++	if (test_bit(BLKDEV_WAIT, &flags)) {
++		wait_for_completion(&wait);
++		/*
++		 * The driver must store the error location in ->bi_sector, if
++		 * it supports it. For non-stacked drivers, this should be
++		 * copied from blk_rq_pos(rq).
++		 */
++		if (error_sector)
++			*error_sector = bio->bi_sector;
++	}
++
++	if (bio_flagged(bio, BIO_EOPNOTSUPP))
++		ret = -EOPNOTSUPP;
++	else if (!bio_flagged(bio, BIO_UPTODATE))
++		ret = -EIO;
++
++	bio_put(bio);
++	return ret;
++}
++EXPORT_SYMBOL(blkdev_issue_flush);
 -- 
 1.7.1
