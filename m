@@ -1,153 +1,95 @@
-From: Vasu Dev <vasu.dev@intel.com>
-Subject: [PATCH] scsi, fcoe,
-	libfc: drop scsi host_lock use from fc_queuecommand
-Date: Fri, 03 Sep 2010 15:27:16 -0700
-Message-ID: <20100903222715.6237.75737.stgit@localhost.localdomain>
+From: "Gustavo F. Padovan" <padovan@profusion.mobi>
+Subject: Re: [PATCH 07/15] pcmcia: move config_{base,index,regs} to struct
+ pcmcia_device
+Date: Fri, 3 Sep 2010 19:32:56 -0300
+Message-ID: <20100903223256.GC16973@vigoh>
+References: <20100903105628.GA21255@comet.dominikbrodowski.net>
+ <1283511434-21620-7-git-send-email-linux@dominikbrodowski.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:17975 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751376Ab0ICW1R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Sep 2010 18:27:17 -0400
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:53928 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399Ab0ICWcx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2010 18:32:53 -0400
+Content-Disposition: inline
+In-Reply-To: <1283511434-21620-7-git-send-email-linux@dominikbrodowski.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Joe Eykholt <jeykholt@cisco.com>, James Bottomley <James.Bottomley@sus>
+To: Dominik Brodowski <linux@dominikbrodowski.net>
+Cc: linux-pcmcia@lists.infradead.org, netdev@vger.kernel.org, linux-wireless@vger.kernel.org, linux-ide@vger.kernel.org, linux-usb@vger.kernel.org, laforge@gnumonks.org, linux-mtd@lists.infradead.org, linux-bluetooth@vger.kernel.org, alsa-devel@alsa-project.org, linux-serial@vger.kernel.org, Jiri Kosina <jkosina@suse.cz>, linux-scsi@vger.kernel.org
 
-Currently fc_queuecommand drops this lock very early on and then re-acquires
-this lock just before return, this re-acquired lock gets dropped immediately
-by its fast path caller scsi_dispatch_cmd, this re-acquire and then immediate
-drop on each IO hits performance especially with small size IOs on multi-core
-systems, this hit is significant about 25% with 512 bytes size IOs.
+* Dominik Brodowski <linux@dominikbrodowski.net> [2010-09-03 12:57:06 +0200]:
 
-This lock is not needed in fc_queuecommand and calling fc_queuecommand
-without this lock held removes above described performance hit.
+> Several drivers prefer to explicitly set config_{base,index,regs},
+> formerly known as ConfigBase, ConfigIndex and Present. Instead of
+> passing these values inside config_req_t, store it in struct
+> pcmcia_device.
+> 
+> CC: netdev@vger.kernel.org
+> CC: linux-wireless@vger.kernel.org
+> CC: linux-ide@vger.kernel.org
+> CC: linux-usb@vger.kernel.org
+> CC: laforge@gnumonks.org
+> CC: linux-mtd@lists.infradead.org
+> CC: linux-bluetooth@vger.kernel.org
+> CC: alsa-devel@alsa-project.org
+> CC: linux-serial@vger.kernel.org
+> CC: Jiri Kosina <jkosina@suse.cz>
+> CC: linux-scsi@vger.kernel.org
+> Signed-off-by: Dominik Brodowski <linux@dominikbrodowski.net>
+> ---
+>  drivers/bluetooth/bluecard_cs.c                  |    2 +-
+>  drivers/char/pcmcia/ipwireless/main.c            |    2 +-
+>  drivers/char/pcmcia/synclink_cs.c                |    6 ++--
+>  drivers/ide/ide-cs.c                             |    3 +-
+>  drivers/isdn/hardware/avm/avm_cs.c               |    4 +-
+>  drivers/isdn/hisax/avma1_cs.c                    |    4 +-
+>  drivers/isdn/hisax/elsa_cs.c                     |    2 +-
+>  drivers/isdn/hisax/sedlbauer_cs.c                |    2 +-
+>  drivers/isdn/hisax/teles_cs.c                    |    2 +-
+>  drivers/mtd/maps/pcmciamtd.c                     |    2 +-
+>  drivers/net/pcmcia/3c574_cs.c                    |    2 +-
+>  drivers/net/pcmcia/3c589_cs.c                    |    2 +-
+>  drivers/net/pcmcia/axnet_cs.c                    |    6 ++--
+>  drivers/net/pcmcia/fmvj18x_cs.c                  |   22 ++++++------
+>  drivers/net/pcmcia/ibmtr_cs.c                    |    4 +-
+>  drivers/net/pcmcia/nmclan_cs.c                   |    4 +-
+>  drivers/net/pcmcia/pcnet_cs.c                    |    6 ++--
+>  drivers/net/pcmcia/smc91c92_cs.c                 |   10 +++---
+>  drivers/net/pcmcia/xirc2ps_cs.c                  |    2 +-
+>  drivers/net/wireless/airo_cs.c                   |    2 +-
+>  drivers/net/wireless/hostap/hostap_cs.c          |    2 +-
+>  drivers/net/wireless/ray_cs.c                    |    2 +-
+>  drivers/net/wireless/wl3501_cs.c                 |    2 +-
+>  drivers/parport/parport_cs.c                     |    2 +-
+>  drivers/pcmcia/cs_internal.h                     |    3 --
+>  drivers/pcmcia/ds.c                              |    8 ++--
+>  drivers/pcmcia/pcmcia_cis.c                      |    2 +-
+>  drivers/pcmcia/pcmcia_resource.c                 |   38 +++++++++++-----------
+>  drivers/scsi/pcmcia/aha152x_stub.c               |    2 +-
+>  drivers/scsi/pcmcia/fdomain_stub.c               |    2 +-
+>  drivers/scsi/pcmcia/nsp_cs.c                     |    2 +-
+>  drivers/scsi/pcmcia/qlogic_stub.c                |    2 +-
+>  drivers/serial/serial_cs.c                       |    6 ++--
+>  drivers/staging/comedi/drivers/cb_das16_cs.c     |    2 +-
+>  drivers/staging/comedi/drivers/das08_cs.c        |    2 +-
+>  drivers/staging/comedi/drivers/ni_daq_700.c      |    2 +-
+>  drivers/staging/comedi/drivers/ni_daq_dio24.c    |    2 +-
+>  drivers/staging/comedi/drivers/ni_labpc_cs.c     |    2 +-
+>  drivers/staging/comedi/drivers/quatech_daqp_cs.c |    2 +-
+>  drivers/staging/wlags49_h2/wl_cs.c               |    4 +-
+>  drivers/usb/host/sl811_cs.c                      |    2 +-
+>  include/pcmcia/cs.h                              |   15 --------
+>  include/pcmcia/ds.h                              |   14 ++++++++
+>  sound/pcmcia/pdaudiocf/pdaudiocf.c               |    6 ++--
+>  sound/pcmcia/vx/vxpocket.c                       |    4 +-
+>  45 files changed, 107 insertions(+), 112 deletions(-)
 
-So this patch adds unlocked_qcmds flag to drop host_lock before
-calling only fc_queuecommand and removes re-acquire &  then drop
-for  each IO. Added flag, drops this lock only if LLD wants such
-as fcoe.ko does here for fc_queuecommand. This change won't affect
-any existing LLD since added unlocked_qcmds flag will be zero
-in those cases and their host lock uses would effectively remain
-same after this patch.
+For drivers/bluetooth
 
-As per Mike and Nab comments, restored host lock around SHOST_DEL state
-in scsi_dispatch_cmd.
+Acked-by: Gustavo F. Padovan <padovan@profusion.mobi>
 
-Signed-off-by: Vasu Dev <vasu.dev@intel.com>
----
- drivers/scsi/fcoe/fcoe.c    |    1 +
- drivers/scsi/libfc/fc_fcp.c |   14 +++++---------
- drivers/scsi/scsi.c         |    7 ++++++-
- include/scsi/scsi_host.h    |    3 +++
- 4 files changed, 15 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 844d618..280a4df 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -706,6 +706,7 @@ static int fcoe_shost_config(struct fc_lport *lport, struct device *dev)
- 	lport->host->max_id = FCOE_MAX_FCP_TARGET;
- 	lport->host->max_channel = 0;
- 	lport->host->max_cmd_len = FCOE_MAX_CMD_LEN;
-+	lport->host->unlocked_qcmds = 1;
- 
- 	if (lport->vport)
- 		lport->host->transportt = fcoe_vport_transport_template;
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 43866e6..39b6bfa 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1751,8 +1751,7 @@ static inline int fc_fcp_lport_queue_ready(struct fc_lport *lport)
-  * @cmd:   The scsi_cmnd to be executed
-  * @done:  The callback function to be called when the scsi_cmnd is complete
-  *
-- * This is the i/o strategy routine, called by the SCSI layer. This routine
-- * is called with the host_lock held.
-+ * This is the i/o strategy routine, called by the SCSI layer.
-  */
- int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- {
-@@ -1770,9 +1769,8 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 	if (rval) {
- 		sc_cmd->result = rval;
- 		done(sc_cmd);
--		return 0;
-+		return rc;
- 	}
--	spin_unlock_irq(lport->host->host_lock);
- 
- 	if (!*(struct fc_remote_port **)rport->dd_data) {
- 		/*
-@@ -1781,7 +1779,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 		 */
- 		sc_cmd->result = DID_IMM_RETRY << 16;
- 		done(sc_cmd);
--		goto out;
-+		return rc;
- 	}
- 
- 	rpriv = rport->dd_data;
-@@ -1790,13 +1788,13 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 		if (lport->qfull)
- 			fc_fcp_can_queue_ramp_down(lport);
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
--		goto out;
-+		return rc;
- 	}
- 
- 	fsp = fc_fcp_pkt_alloc(lport, GFP_ATOMIC);
- 	if (fsp == NULL) {
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
--		goto out;
-+		return rc;
- 	}
- 
- 	/*
-@@ -1848,8 +1846,6 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 		fc_fcp_pkt_release(fsp);
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
- 	}
--out:
--	spin_lock_irq(lport->host->host_lock);
- 	return rc;
- }
- EXPORT_SYMBOL(fc_queuecommand);
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index ad0ed21..3819d66 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -749,11 +749,16 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	if (unlikely(host->shost_state == SHOST_DEL)) {
- 		cmd->result = (DID_NO_CONNECT << 16);
- 		scsi_done(cmd);
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	} else {
- 		trace_scsi_dispatch_cmd_start(cmd);
-+		if (host->unlocked_qcmds)
-+			spin_unlock_irqrestore(host->host_lock, flags);
- 		rtn = host->hostt->queuecommand(cmd, scsi_done);
-+		if (!host->unlocked_qcmds)
-+			spin_unlock_irqrestore(host->host_lock, flags);
- 	}
--	spin_unlock_irqrestore(host->host_lock, flags);
-+
- 	if (rtn) {
- 		trace_scsi_dispatch_cmd_error(cmd, rtn);
- 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index b7bdecb..1814c51 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -636,6 +636,9 @@ struct Scsi_Host {
- 	/* Asynchronous scan in progress */
- 	unsigned async_scan:1;
- 
-+	/* call queuecommand without Scsi_Host lock held */
-+	unsigned unlocked_qcmds:1;
-+
- 	/*
- 	 * Optional work queue to be utilized by the transport
- 	 */
-
+-- 
+Gustavo F. Padovan
+ProFUSION embedded systems - http://profusion.mobi
