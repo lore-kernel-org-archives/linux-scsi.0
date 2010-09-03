@@ -1,49 +1,60 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: [PATCH] mvsas: mvs_lu_reset iterates phy num times when releasing task
-Date: Fri, 3 Sep 2010 17:13:03 -0500
-Message-ID: <20100903221303.GA9527@localhost.localdomain>
-References: <20100806161622.GA8696@localhost.localdomain> <4C5C448C.2040509@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: madhu.iyengar@qlogic.com
+Subject: [PATCH 01/10] qla2xxx: Don't issue set or get port param MBC if port is not online.
+Date: Fri,  3 Sep 2010 15:20:48 -0700
+Message-ID: <1283552457-4497-2-git-send-email-madhu.iyengar@qlogic.com>
+References: <1283552457-4497-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59632 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752993Ab0ICWR5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Sep 2010 18:17:57 -0400
-Content-Disposition: inline
-In-Reply-To: <4C5C448C.2040509@gmail.com>
+Received: from vpn.pathscale.com ([198.186.3.75]:39315 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1752752Ab0ICW05 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Sep 2010 18:26:57 -0400
+In-Reply-To: <1283552457-4497-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Konstantinos Skarlatos <k.skarlatos@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Fri, Aug 06, 2010 at 08:21:16PM +0300, Konstantinos Skarlatos wrote:
->  Hello,
-> 
-> Does this patch fix any of the mvs_abort_task:rc= 5 and the other 
-> problems that are being reported for this driver? for more info please 
-> see http://marc.info/?l=linux-scsi&m=127583131805429&w=2
-> 
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-Hello,
 
-Can you see if this patch prevents the ata_qc_issue warning?
+Signed-off-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_bsg.c  |    7 +++----
+ drivers/scsi/qla2xxx/qla_init.c |    3 +++
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-Thanks,
-David
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 9067629..fdfbf83 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1254,10 +1254,9 @@ qla24xx_iidma(struct fc_bsg_job *bsg_job)
+ 		return -EINVAL;
+ 	}
+ 
+-	if (fcport->loop_id == FC_NO_LOOP_ID) {
+-		DEBUG2(printk(KERN_ERR "%s(%ld): Invalid port loop id, "
+-			"loop_id = 0x%x\n",
+-			__func__, vha->host_no, fcport->loop_id));
++	if (atomic_read(&fcport->state) != FCS_ONLINE) {
++		DEBUG2(printk(KERN_ERR "%s(%ld): Port not online\n",
++			__func__, vha->host_no));
+ 		return -EINVAL;
+ 	}
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 9c383ba..3514237 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2799,6 +2799,9 @@ qla2x00_iidma_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 	if (!IS_IIDMA_CAPABLE(ha))
+ 		return;
+ 
++	if (atomic_read(&fcport->state) != FCS_ONLINE)
++		return;
++
+ 	if (fcport->fp_speed == PORT_SPEED_UNKNOWN ||
+ 	    fcport->fp_speed > ha->link_data_rate)
+ 		return;
+-- 
+1.6.0.2
 
- drivers/scsi/libsas/sas_ata.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 042153c..ddbade7 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -347,6 +347,7 @@ static int sas_ata_scr_read(struct ata_link *link, unsigned int sc_reg_in,
- static struct ata_port_operations sas_sata_ops = {
- 	.phy_reset		= sas_ata_phy_reset,
- 	.post_internal_cmd	= sas_ata_post_internal,
-+	.qc_defer               = ata_std_qc_defer,
- 	.qc_prep		= ata_noop_qc_prep,
- 	.qc_issue		= sas_ata_qc_issue,
- 	.qc_fill_rtf		= sas_ata_qc_fill_rtf,
