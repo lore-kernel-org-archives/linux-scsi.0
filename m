@@ -1,8 +1,8 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 17/41] block: use REQ_FLUSH in
-	blkdev_issue_flush()
-Date: Fri,  3 Sep 2010 12:29:32 +0200
-Message-ID: <1283509796-1510-18-git-send-email-tj@kernel.org>
+Subject: [PATCH 34/41] jbd2: Modify ASYNC_COMMIT code to not rely
+	on queue draining on barrier
+Date: Fri,  3 Sep 2010 12:29:49 +0200
+Message-ID: <1283509796-1510-35-git-send-email-tj@kernel.org>
 References: <1283509796-1510-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -20,70 +20,74 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@infradead.org>
+Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Update blkdev_issue_flush() to use new REQ_FLUSH interface.
+From: Jan Kara <jack@suse.cz>
 
+Currently JBD2 relies blkdev_issue_flush() draining the queue when ASYNC_COMMIT
+feature is set. This property is going away so make JBD2 wait for buffers it
+needs on its own before submitting the cache flush.
+
+Signed-off-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
 ---
- block/blk-flush.c |   17 ++++++-----------
- 1 files changed, 6 insertions(+), 11 deletions(-)
+ fs/jbd2/commit.c |   29 ++++++++++++++++-------------
+ 1 files changed, 16 insertions(+), 13 deletions(-)
 
-diff --git a/block/blk-flush.c b/block/blk-flush.c
-index 7d1fc98..62b7df9 100644
---- a/block/blk-flush.c
-+++ b/block/blk-flush.c
-@@ -191,13 +191,10 @@ struct request *blk_do_flush(struct request_queue *q, struct request *rq)
- 	return blk_flush_complete_seq(q, skip, 0);
- }
- 
--static void bio_end_empty_barrier(struct bio *bio, int err)
-+static void bio_end_flush(struct bio *bio, int err)
- {
--	if (err) {
--		if (err == -EOPNOTSUPP)
--			set_bit(BIO_EOPNOTSUPP, &bio->bi_flags);
-+	if (err)
- 		clear_bit(BIO_UPTODATE, &bio->bi_flags);
--	}
- 	if (bio->bi_private)
- 		complete(bio->bi_private);
- 	bio_put(bio);
-@@ -235,19 +232,19 @@ int blkdev_issue_flush(struct block_device *bdev, gfp_t gfp_mask,
- 	 * some block devices may not have their queue correctly set up here
- 	 * (e.g. loop device without a backing file) and so issuing a flush
- 	 * here will panic. Ensure there is a request function before issuing
--	 * the barrier.
-+	 * the flush.
- 	 */
- 	if (!q->make_request_fn)
- 		return -ENXIO;
- 
- 	bio = bio_alloc(gfp_mask, 0);
--	bio->bi_end_io = bio_end_empty_barrier;
-+	bio->bi_end_io = bio_end_flush;
- 	bio->bi_bdev = bdev;
- 	if (test_bit(BLKDEV_WAIT, &flags))
- 		bio->bi_private = &wait;
- 
- 	bio_get(bio);
--	submit_bio(WRITE_BARRIER, bio);
-+	submit_bio(WRITE_FLUSH, bio);
- 	if (test_bit(BLKDEV_WAIT, &flags)) {
- 		wait_for_completion(&wait);
- 		/*
-@@ -259,9 +256,7 @@ int blkdev_issue_flush(struct block_device *bdev, gfp_t gfp_mask,
- 			*error_sector = bio->bi_sector;
+diff --git a/fs/jbd2/commit.c b/fs/jbd2/commit.c
+index 7c068c1..d6aeb1f 100644
+--- a/fs/jbd2/commit.c
++++ b/fs/jbd2/commit.c
+@@ -701,6 +701,16 @@ start_journal_io:
+ 		}
  	}
  
--	if (bio_flagged(bio, BIO_EOPNOTSUPP))
--		ret = -EOPNOTSUPP;
--	else if (!bio_flagged(bio, BIO_UPTODATE))
-+	if (!bio_flagged(bio, BIO_UPTODATE))
- 		ret = -EIO;
++	err = journal_finish_inode_data_buffers(journal, commit_transaction);
++	if (err) {
++		printk(KERN_WARNING
++			"JBD2: Detected IO errors while flushing file data "
++		       "on %s\n", journal->j_devname);
++		if (journal->j_flags & JBD2_ABORT_ON_SYNCDATA_ERR)
++			jbd2_journal_abort(journal, err);
++		err = 0;
++	}
++
+ 	/* 
+ 	 * If the journal is not located on the file system device,
+ 	 * then we must flush the file system device before we issue
+@@ -719,19 +729,6 @@ start_journal_io:
+ 						 &cbh, crc32_sum);
+ 		if (err)
+ 			__jbd2_journal_abort_hard(journal);
+-		if (journal->j_flags & JBD2_BARRIER)
+-			blkdev_issue_flush(journal->j_dev, GFP_KERNEL, NULL,
+-				BLKDEV_IFL_WAIT);
+-	}
+-
+-	err = journal_finish_inode_data_buffers(journal, commit_transaction);
+-	if (err) {
+-		printk(KERN_WARNING
+-			"JBD2: Detected IO errors while flushing file data "
+-		       "on %s\n", journal->j_devname);
+-		if (journal->j_flags & JBD2_ABORT_ON_SYNCDATA_ERR)
+-			jbd2_journal_abort(journal, err);
+-		err = 0;
+ 	}
  
- 	bio_put(bio);
+ 	/* Lo and behold: we have just managed to send a transaction to
+@@ -845,6 +842,12 @@ wait_for_iobuf:
+ 	}
+ 	if (!err && !is_journal_aborted(journal))
+ 		err = journal_wait_on_commit_record(journal, cbh);
++	if (JBD2_HAS_INCOMPAT_FEATURE(journal,
++				      JBD2_FEATURE_INCOMPAT_ASYNC_COMMIT) &&
++	    journal->j_flags & JBD2_BARRIER) {
++		blkdev_issue_flush(journal->j_dev, GFP_KERNEL, NULL,
++				   BLKDEV_IFL_WAIT);
++	}
+ 
+ 	if (err)
+ 		jbd2_journal_abort(journal, err);
 -- 
 1.7.1
