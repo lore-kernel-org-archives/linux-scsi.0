@@ -1,8 +1,8 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 33/41] jbd: replace barriers with explicit flush
-	/ FUA usage
-Date: Fri,  3 Sep 2010 12:29:48 +0200
-Message-ID: <1283509796-1510-34-git-send-email-tj@kernel.org>
+Subject: [PATCH 32/41] nilfs2: replace barriers with explicit
+	flush / FUA usage
+Date: Fri,  3 Sep 2010 12:29:47 +0200
+Message-ID: <1283509796-1510-33-git-send-email-tj@kernel.org>
 References: <1283509796-1510-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -25,57 +25,67 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Switch to the WRITE_FLUSH_FUA flag for journal commits and remove the
-EOPNOTSUPP detection for barriers.
+Switch to the WRITE_FLUSH_FUA flag for log writes, remove the EOPNOTSUPP
+detection for barriers and stop setting the barrier flag for discards.
+
+tj: nilfs is now fixed to wait for discard completion.  Updated this
+    patch accordingly and dropped warning about it.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Jan Kara <jack@suse.cz>
+Acked-by: Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- fs/jbd/commit.c |   30 +++---------------------------
- 1 files changed, 3 insertions(+), 27 deletions(-)
+ fs/nilfs2/super.c     |   10 +---------
+ fs/nilfs2/the_nilfs.c |    7 ++-----
+ 2 files changed, 3 insertions(+), 14 deletions(-)
 
-diff --git a/fs/jbd/commit.c b/fs/jbd/commit.c
-index 95d8c11..484c5e5 100644
---- a/fs/jbd/commit.c
-+++ b/fs/jbd/commit.c
-@@ -137,34 +137,10 @@ static int journal_write_commit_record(journal_t *journal,
- 	JBUFFER_TRACE(descriptor, "write commit block");
- 	set_buffer_dirty(bh);
+diff --git a/fs/nilfs2/super.c b/fs/nilfs2/super.c
+index 9222633..faa5078 100644
+--- a/fs/nilfs2/super.c
++++ b/fs/nilfs2/super.c
+@@ -178,17 +178,9 @@ static int nilfs_sync_super(struct nilfs_sb_info *sbi, int flag)
  
--	if (journal->j_flags & JFS_BARRIER) {
--		ret = __sync_dirty_buffer(bh, WRITE_SYNC | WRITE_BARRIER);
+  retry:
+ 	set_buffer_dirty(nilfs->ns_sbh[0]);
 -
--		/*
--		 * Is it possible for another commit to fail at roughly
--		 * the same time as this one?  If so, we don't want to
--		 * trust the barrier flag in the super, but instead want
--		 * to remember if we sent a barrier request
--		 */
--		if (ret == -EOPNOTSUPP) {
--			char b[BDEVNAME_SIZE];
--
--			printk(KERN_WARNING
--				"JBD: barrier-based sync failed on %s - "
--				"disabling barriers\n",
--				bdevname(journal->j_dev, b));
--			spin_lock(&journal->j_state_lock);
--			journal->j_flags &= ~JFS_BARRIER;
--			spin_unlock(&journal->j_state_lock);
--
--			/* And try again, without the barrier */
--			set_buffer_uptodate(bh);
--			set_buffer_dirty(bh);
--			ret = sync_dirty_buffer(bh);
+ 	if (nilfs_test_opt(sbi, BARRIER)) {
+ 		err = __sync_dirty_buffer(nilfs->ns_sbh[0],
+-					  WRITE_SYNC | WRITE_BARRIER);
+-		if (err == -EOPNOTSUPP) {
+-			nilfs_warning(sbi->s_super, __func__,
+-				      "barrier-based sync failed. "
+-				      "disabling barriers\n");
+-			nilfs_clear_opt(sbi, BARRIER);
+-			goto retry;
 -		}
--	} else {
-+	if (journal->j_flags & JFS_BARRIER)
-+		ret = __sync_dirty_buffer(bh, WRITE_SYNC | WRITE_FLUSH_FUA);
-+	else
- 		ret = sync_dirty_buffer(bh);
--	}
++					  WRITE_SYNC | WRITE_FLUSH_FUA);
+ 	} else {
+ 		err = sync_dirty_buffer(nilfs->ns_sbh[0]);
+ 	}
+diff --git a/fs/nilfs2/the_nilfs.c b/fs/nilfs2/the_nilfs.c
+index 4317f17..400b2ca 100644
+--- a/fs/nilfs2/the_nilfs.c
++++ b/fs/nilfs2/the_nilfs.c
+@@ -774,9 +774,7 @@ int nilfs_discard_segments(struct the_nilfs *nilfs, __u64 *segnump,
+ 			ret = blkdev_issue_discard(nilfs->ns_bdev,
+ 						   start * sects_per_block,
+ 						   nblocks * sects_per_block,
+-						   GFP_NOFS,
+-						   BLKDEV_IFL_WAIT |
+-						   BLKDEV_IFL_BARRIER);
++						   GFP_NOFS, BLKDEV_IFL_WAIT);
+ 			if (ret < 0)
+ 				return ret;
+ 			nblocks = 0;
+@@ -786,8 +784,7 @@ int nilfs_discard_segments(struct the_nilfs *nilfs, __u64 *segnump,
+ 		ret = blkdev_issue_discard(nilfs->ns_bdev,
+ 					   start * sects_per_block,
+ 					   nblocks * sects_per_block,
+-					   GFP_NOFS,
+-					  BLKDEV_IFL_WAIT | BLKDEV_IFL_BARRIER);
++					   GFP_NOFS, BLKDEV_IFL_WAIT);
+ 	return ret;
+ }
  
- 	put_bh(bh);		/* One for getblk() */
- 	journal_put_journal_head(descriptor);
 -- 
 1.7.1
