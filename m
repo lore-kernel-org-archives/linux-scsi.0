@@ -1,400 +1,588 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 24/41] dm: implement REQ_FLUSH/FUA support for
-	request-based dm
-Date: Fri,  3 Sep 2010 12:29:39 +0200
-Message-ID: <1283509796-1510-25-git-send-email-tj@kernel.org>
+Subject: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based dm
+Date: Fri,  3 Sep 2010 12:29:38 +0200
+Message-ID: <1283509796-1510-24-git-send-email-tj@kernel.org>
 References: <1283509796-1510-1-git-send-email-tj@kernel.org>
-Reply-To: device-mapper development <dm-devel@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1283509796-1510-1-git-send-email-tj@kernel.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.co
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts request-based dm to support the new REQ_FLUSH/FUA.
+This patch converts bio-based dm to support REQ_FLUSH/FUA instead of
+now deprecated REQ_HARDBARRIER.
 
-The original request-based flush implementation depended on
-request_queue blocking other requests while a barrier sequence is in
-progress, which is no longer true for the new REQ_FLUSH/FUA.
+* -EOPNOTSUPP handling logic dropped.
 
-In general, request-based dm doesn't have infrastructure for cloning
-one source request to multiple targets, but the original flush
-implementation had a special mostly independent path which can issue
-flushes to multiple targets and sequence them.  However, the
-capability isn't currently in use and adds a lot of complexity.
-Moreoever, it's unlikely to be useful in its current form as it
-doesn't make sense to be able to send out flushes to multiple targets
-when write requests can't be.
+* Preflush is handled as before but postflush is dropped and replaced
+  with passing down REQ_FUA to member request_queues.  This replaces
+  one array wide cache flush w/ member specific FUA writes.
 
-This patch rips out special flush code path and deals handles
-REQ_FLUSH/FUA requests the same way as other requests.  The only
-special treatment is that REQ_FLUSH requests use the block address 0
-when finding target, which is enough for now.
+* __split_and_process_bio() now calls __clone_and_map_flush() directly
+  for flushes and guarantees all FLUSH bio's going to targets are zero
+`  length.
 
-* added BUG_ON(!dm_target_is_valid(ti)) in dm_request_fn() as
-  suggested by Mike Snitzer
+* It's now guaranteed that all FLUSH bio's which are passed onto dm
+  targets are zero length.  bio_empty_barrier() tests are replaced
+  with REQ_FLUSH tests.
+
+* Empty WRITE_BARRIERs are replaced with WRITE_FLUSHes.
+
+* Dropped unlikely() around REQ_FLUSH tests.  Flushes are not unlikely
+  enough to be marked with unlikely().
+
+* Block layer now filters out REQ_FLUSH/FUA bio's if the request_queue
+  doesn't support cache flushing.  Advertise REQ_FLUSH | REQ_FUA
+  capability.
+
+* Request based dm isn't converted yet.  dm_init_request_based_queue()
+  resets flush support to 0 for now.  To avoid disturbing request
+  based dm code, dm->flush_error is added for bio based dm while
+  requested based dm continues to use dm->barrier_error.
+
+Lightly tested linear, stripe, raid1, snap and crypt targets.  Please
+proceed with caution as I'm not familiar with the code base.
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Acked-by: Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com
+Cc: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/dm.c |  206 ++++++-------------------------------------------------
- 1 files changed, 22 insertions(+), 184 deletions(-)
+ drivers/md/dm-crypt.c           |    2 +-
+ drivers/md/dm-io.c              |   20 +-----
+ drivers/md/dm-log.c             |    2 +-
+ drivers/md/dm-raid1.c           |    8 +-
+ drivers/md/dm-region-hash.c     |   16 +++---
+ drivers/md/dm-snap-persistent.c |    2 +-
+ drivers/md/dm-snap.c            |    6 +-
+ drivers/md/dm-stripe.c          |    2 +-
+ drivers/md/dm.c                 |  119 +++++++++++++++++++--------------------
+ 9 files changed, 80 insertions(+), 97 deletions(-)
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 32e6622..65114e4 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -149,20 +149,9 @@ struct mapped_device {
- 	int flush_error;
+diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
+index 368e8e9..d5b0e4c 100644
+--- a/drivers/md/dm-crypt.c
++++ b/drivers/md/dm-crypt.c
+@@ -1278,7 +1278,7 @@ static int crypt_map(struct dm_target *ti, struct bio *bio,
+ 	struct dm_crypt_io *io;
+ 	struct crypt_config *cc;
  
- 	/*
--	 * Protect barrier_error from concurrent endio processing
--	 * in request-based dm.
--	 */
--	spinlock_t barrier_error_lock;
--	int barrier_error;
--
--	/*
--	 * Processing queue (flush/barriers)
-+	 * Processing queue (flush)
- 	 */
- 	struct workqueue_struct *wq;
--	struct work_struct barrier_work;
--
--	/* A pointer to the currently processing pre/post flush request */
--	struct request *flush_request;
- 
- 	/*
- 	 * The current mapping.
-@@ -750,23 +739,6 @@ static void end_clone_bio(struct bio *clone, int error)
- 	blk_update_request(tio->orig, 0, nr_bytes);
- }
- 
--static void store_barrier_error(struct mapped_device *md, int error)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&md->barrier_error_lock, flags);
--	/*
--	 * Basically, the first error is taken, but:
--	 *   -EOPNOTSUPP supersedes any I/O error.
--	 *   Requeue request supersedes any I/O error but -EOPNOTSUPP.
--	 */
--	if (!md->barrier_error || error == -EOPNOTSUPP ||
--	    (md->barrier_error != -EOPNOTSUPP &&
--	     error == DM_ENDIO_REQUEUE))
--		md->barrier_error = error;
--	spin_unlock_irqrestore(&md->barrier_error_lock, flags);
--}
--
- /*
-  * Don't touch any member of the md after calling this function because
-  * the md may be freed in dm_put() at the end of this function.
-@@ -804,13 +776,11 @@ static void free_rq_clone(struct request *clone)
- static void dm_end_request(struct request *clone, int error)
+-	if (unlikely(bio_empty_barrier(bio))) {
++	if (bio->bi_rw & REQ_FLUSH) {
+ 		cc = ti->private;
+ 		bio->bi_bdev = cc->dev->bdev;
+ 		return DM_MAPIO_REMAPPED;
+diff --git a/drivers/md/dm-io.c b/drivers/md/dm-io.c
+index 0590c75..136d4f7 100644
+--- a/drivers/md/dm-io.c
++++ b/drivers/md/dm-io.c
+@@ -31,7 +31,6 @@ struct dm_io_client {
+  */
+ struct io {
+ 	unsigned long error_bits;
+-	unsigned long eopnotsupp_bits;
+ 	atomic_t count;
+ 	struct task_struct *sleeper;
+ 	struct dm_io_client *client;
+@@ -130,11 +129,8 @@ static void retrieve_io_and_region_from_bio(struct bio *bio, struct io **io,
+  *---------------------------------------------------------------*/
+ static void dec_count(struct io *io, unsigned int region, int error)
  {
- 	int rw = rq_data_dir(clone);
--	int run_queue = 1;
--	bool is_barrier = clone->cmd_flags & REQ_HARDBARRIER;
- 	struct dm_rq_target_io *tio = clone->end_io_data;
- 	struct mapped_device *md = tio->md;
- 	struct request *rq = tio->orig;
+-	if (error) {
++	if (error)
+ 		set_bit(region, &io->error_bits);
+-		if (error == -EOPNOTSUPP)
+-			set_bit(region, &io->eopnotsupp_bits);
+-	}
  
--	if (rq->cmd_type == REQ_TYPE_BLOCK_PC && !is_barrier) {
-+	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
- 		rq->errors = clone->errors;
- 		rq->resid_len = clone->resid_len;
+ 	if (atomic_dec_and_test(&io->count)) {
+ 		if (io->sleeper)
+@@ -310,8 +306,8 @@ static void do_region(int rw, unsigned region, struct dm_io_region *where,
+ 	sector_t remaining = where->count;
  
-@@ -824,15 +794,8 @@ static void dm_end_request(struct request *clone, int error)
+ 	/*
+-	 * where->count may be zero if rw holds a write barrier and we
+-	 * need to send a zero-sized barrier.
++	 * where->count may be zero if rw holds a flush and we need to
++	 * send a zero-sized flush.
+ 	 */
+ 	do {
+ 		/*
+@@ -364,7 +360,7 @@ static void dispatch_io(int rw, unsigned int num_regions,
+ 	 */
+ 	for (i = 0; i < num_regions; i++) {
+ 		*dp = old_pages;
+-		if (where[i].count || (rw & REQ_HARDBARRIER))
++		if (where[i].count || (rw & REQ_FLUSH))
+ 			do_region(rw, i, where + i, dp, io);
  	}
  
- 	free_rq_clone(clone);
+@@ -393,9 +389,7 @@ static int sync_io(struct dm_io_client *client, unsigned int num_regions,
+ 		return -EIO;
+ 	}
+ 
+-retry:
+ 	io->error_bits = 0;
+-	io->eopnotsupp_bits = 0;
+ 	atomic_set(&io->count, 1); /* see dispatch_io() */
+ 	io->sleeper = current;
+ 	io->client = client;
+@@ -412,11 +406,6 @@ retry:
+ 	}
+ 	set_current_state(TASK_RUNNING);
+ 
+-	if (io->eopnotsupp_bits && (rw & REQ_HARDBARRIER)) {
+-		rw &= ~REQ_HARDBARRIER;
+-		goto retry;
+-	}
 -
--	if (unlikely(is_barrier)) {
--		if (unlikely(error))
--			store_barrier_error(md, error);
--		run_queue = 0;
--	} else
--		blk_end_request_all(rq, error);
--
--	rq_completed(md, rw, run_queue);
-+	blk_end_request_all(rq, error);
-+	rq_completed(md, rw, true);
+ 	if (error_bits)
+ 		*error_bits = io->error_bits;
+ 
+@@ -437,7 +426,6 @@ static int async_io(struct dm_io_client *client, unsigned int num_regions,
+ 
+ 	io = mempool_alloc(client->pool, GFP_NOIO);
+ 	io->error_bits = 0;
+-	io->eopnotsupp_bits = 0;
+ 	atomic_set(&io->count, 1); /* see dispatch_io() */
+ 	io->sleeper = NULL;
+ 	io->client = client;
+diff --git a/drivers/md/dm-log.c b/drivers/md/dm-log.c
+index 5a08be0..33420e6 100644
+--- a/drivers/md/dm-log.c
++++ b/drivers/md/dm-log.c
+@@ -300,7 +300,7 @@ static int flush_header(struct log_c *lc)
+ 		.count = 0,
+ 	};
+ 
+-	lc->io_req.bi_rw = WRITE_BARRIER;
++	lc->io_req.bi_rw = WRITE_FLUSH;
+ 
+ 	return dm_io(&lc->io_req, 1, &null_location, NULL);
  }
+diff --git a/drivers/md/dm-raid1.c b/drivers/md/dm-raid1.c
+index 7c081bc..19a59b0 100644
+--- a/drivers/md/dm-raid1.c
++++ b/drivers/md/dm-raid1.c
+@@ -259,7 +259,7 @@ static int mirror_flush(struct dm_target *ti)
+ 	struct dm_io_region io[ms->nr_mirrors];
+ 	struct mirror *m;
+ 	struct dm_io_request io_req = {
+-		.bi_rw = WRITE_BARRIER,
++		.bi_rw = WRITE_FLUSH,
+ 		.mem.type = DM_IO_KMEM,
+ 		.mem.ptr.bvec = NULL,
+ 		.client = ms->io_client,
+@@ -629,7 +629,7 @@ static void do_write(struct mirror_set *ms, struct bio *bio)
+ 	struct dm_io_region io[ms->nr_mirrors], *dest = io;
+ 	struct mirror *m;
+ 	struct dm_io_request io_req = {
+-		.bi_rw = WRITE | (bio->bi_rw & WRITE_BARRIER),
++		.bi_rw = WRITE | (bio->bi_rw & WRITE_FLUSH_FUA),
+ 		.mem.type = DM_IO_BVEC,
+ 		.mem.ptr.bvec = bio->bi_io_vec + bio->bi_idx,
+ 		.notify.fn = write_callback,
+@@ -670,7 +670,7 @@ static void do_writes(struct mirror_set *ms, struct bio_list *writes)
+ 	bio_list_init(&requeue);
  
- static void dm_unprep_request(struct request *rq)
-@@ -857,16 +820,6 @@ void dm_requeue_unmapped_request(struct request *clone)
- 	struct request_queue *q = rq->q;
- 	unsigned long flags;
- 
--	if (unlikely(clone->cmd_flags & REQ_HARDBARRIER)) {
--		/*
--		 * Barrier clones share an original request.
--		 * Leave it to dm_end_request(), which handles this special
--		 * case.
--		 */
--		dm_end_request(clone, DM_ENDIO_REQUEUE);
--		return;
--	}
--
- 	dm_unprep_request(rq);
- 
- 	spin_lock_irqsave(q->queue_lock, flags);
-@@ -956,19 +909,6 @@ static void dm_complete_request(struct request *clone, int error)
- 	struct dm_rq_target_io *tio = clone->end_io_data;
- 	struct request *rq = tio->orig;
- 
--	if (unlikely(clone->cmd_flags & REQ_HARDBARRIER)) {
--		/*
--		 * Barrier clones share an original request.  So can't use
--		 * softirq_done with the original.
--		 * Pass the clone to dm_done() directly in this special case.
--		 * It is safe (even if clone->q->queue_lock is held here)
--		 * because there is no I/O dispatching during the completion
--		 * of barrier clone.
--		 */
--		dm_done(clone, error, true);
--		return;
--	}
--
- 	tio->error = error;
- 	rq->completion_data = clone;
- 	blk_complete_request(rq);
-@@ -985,17 +925,6 @@ void dm_kill_unmapped_request(struct request *clone, int error)
- 	struct dm_rq_target_io *tio = clone->end_io_data;
- 	struct request *rq = tio->orig;
- 
--	if (unlikely(clone->cmd_flags & REQ_HARDBARRIER)) {
--		/*
--		 * Barrier clones share an original request.
--		 * Leave it to dm_end_request(), which handles this special
--		 * case.
--		 */
--		BUG_ON(error > 0);
--		dm_end_request(clone, error);
--		return;
--	}
--
- 	rq->cmd_flags |= REQ_FAILED;
- 	dm_complete_request(clone, error);
- }
-@@ -1536,14 +1465,6 @@ static int dm_request(struct request_queue *q, struct bio *bio)
- 	return _dm_request(q, bio);
- }
- 
--static bool dm_rq_is_flush_request(struct request *rq)
--{
--	if (rq->cmd_flags & REQ_FLUSH)
--		return true;
--	else
--		return false;
--}
--
- void dm_dispatch_request(struct request *rq)
- {
- 	int r;
-@@ -1591,22 +1512,15 @@ static int setup_clone(struct request *clone, struct request *rq,
- {
- 	int r;
- 
--	if (dm_rq_is_flush_request(rq)) {
--		blk_rq_init(NULL, clone);
--		clone->cmd_type = REQ_TYPE_FS;
--		clone->cmd_flags |= (REQ_HARDBARRIER | WRITE);
--	} else {
--		r = blk_rq_prep_clone(clone, rq, tio->md->bs, GFP_ATOMIC,
--				      dm_rq_bio_constructor, tio);
--		if (r)
--			return r;
--
--		clone->cmd = rq->cmd;
--		clone->cmd_len = rq->cmd_len;
--		clone->sense = rq->sense;
--		clone->buffer = rq->buffer;
--	}
-+	r = blk_rq_prep_clone(clone, rq, tio->md->bs, GFP_ATOMIC,
-+			      dm_rq_bio_constructor, tio);
-+	if (r)
-+		return r;
- 
-+	clone->cmd = rq->cmd;
-+	clone->cmd_len = rq->cmd_len;
-+	clone->sense = rq->sense;
-+	clone->buffer = rq->buffer;
- 	clone->end_io = end_clone_request;
- 	clone->end_io_data = tio;
- 
-@@ -1647,9 +1561,6 @@ static int dm_prep_fn(struct request_queue *q, struct request *rq)
- 	struct mapped_device *md = q->queuedata;
- 	struct request *clone;
- 
--	if (unlikely(dm_rq_is_flush_request(rq)))
--		return BLKPREP_OK;
--
- 	if (unlikely(rq->special)) {
- 		DMWARN("Already has something in rq->special.");
- 		return BLKPREP_KILL;
-@@ -1726,6 +1637,7 @@ static void dm_request_fn(struct request_queue *q)
- 	struct dm_table *map = dm_get_live_table(md);
- 	struct dm_target *ti;
- 	struct request *rq, *clone;
-+	sector_t pos;
+ 	while ((bio = bio_list_pop(writes))) {
+-		if (unlikely(bio_empty_barrier(bio))) {
++		if (bio->bi_rw & REQ_FLUSH) {
+ 			bio_list_add(&sync, bio);
+ 			continue;
+ 		}
+@@ -1203,7 +1203,7 @@ static int mirror_end_io(struct dm_target *ti, struct bio *bio,
+ 	 * We need to dec pending if this was a write.
+ 	 */
+ 	if (rw == WRITE) {
+-		if (likely(!bio_empty_barrier(bio)))
++		if (!(bio->bi_rw & REQ_FLUSH))
+ 			dm_rh_dec(ms->rh, map_context->ll);
+ 		return error;
+ 	}
+diff --git a/drivers/md/dm-region-hash.c b/drivers/md/dm-region-hash.c
+index bd5c58b..dad011a 100644
+--- a/drivers/md/dm-region-hash.c
++++ b/drivers/md/dm-region-hash.c
+@@ -81,9 +81,9 @@ struct dm_region_hash {
+ 	struct list_head failed_recovered_regions;
  
  	/*
- 	 * For suspend, check blk_queue_stopped() and increment
-@@ -1738,15 +1650,14 @@ static void dm_request_fn(struct request_queue *q)
- 		if (!rq)
- 			goto plug_and_out;
+-	 * If there was a barrier failure no regions can be marked clean.
++	 * If there was a flush failure no regions can be marked clean.
+ 	 */
+-	int barrier_failure;
++	int flush_failure;
  
--		if (unlikely(dm_rq_is_flush_request(rq))) {
--			BUG_ON(md->flush_request);
--			md->flush_request = rq;
--			blk_start_request(rq);
--			queue_work(md->wq, &md->barrier_work);
--			goto out;
--		}
-+		/* always use block 0 to find the target for flushes for now */
-+		pos = 0;
-+		if (!(rq->cmd_flags & REQ_FLUSH))
-+			pos = blk_rq_pos(rq);
-+
-+		ti = dm_table_find_target(map, pos);
-+		BUG_ON(!dm_target_is_valid(ti));
+ 	void *context;
+ 	sector_t target_begin;
+@@ -217,7 +217,7 @@ struct dm_region_hash *dm_region_hash_create(
+ 	INIT_LIST_HEAD(&rh->quiesced_regions);
+ 	INIT_LIST_HEAD(&rh->recovered_regions);
+ 	INIT_LIST_HEAD(&rh->failed_recovered_regions);
+-	rh->barrier_failure = 0;
++	rh->flush_failure = 0;
  
--		ti = dm_table_find_target(map, blk_rq_pos(rq));
- 		if (ti->type->busy && ti->type->busy(ti))
- 			goto plug_and_out;
+ 	rh->region_pool = mempool_create_kmalloc_pool(MIN_REGIONS,
+ 						      sizeof(struct dm_region));
+@@ -399,8 +399,8 @@ void dm_rh_mark_nosync(struct dm_region_hash *rh, struct bio *bio)
+ 	region_t region = dm_rh_bio_to_region(rh, bio);
+ 	int recovering = 0;
  
-@@ -1917,7 +1828,6 @@ out:
- static const struct block_device_operations dm_blk_dops;
+-	if (bio_empty_barrier(bio)) {
+-		rh->barrier_failure = 1;
++	if (bio->bi_rw & REQ_FLUSH) {
++		rh->flush_failure = 1;
+ 		return;
+ 	}
  
- static void dm_wq_work(struct work_struct *work);
--static void dm_rq_barrier_work(struct work_struct *work);
+@@ -524,7 +524,7 @@ void dm_rh_inc_pending(struct dm_region_hash *rh, struct bio_list *bios)
+ 	struct bio *bio;
  
- static void dm_init_md_queue(struct mapped_device *md)
+ 	for (bio = bios->head; bio; bio = bio->bi_next) {
+-		if (bio_empty_barrier(bio))
++		if (bio->bi_rw & REQ_FLUSH)
+ 			continue;
+ 		rh_inc(rh, dm_rh_bio_to_region(rh, bio));
+ 	}
+@@ -555,9 +555,9 @@ void dm_rh_dec(struct dm_region_hash *rh, region_t region)
+ 		 */
+ 
+ 		/* do nothing for DM_RH_NOSYNC */
+-		if (unlikely(rh->barrier_failure)) {
++		if (unlikely(rh->flush_failure)) {
+ 			/*
+-			 * If a write barrier failed some time ago, we
++			 * If a write flush failed some time ago, we
+ 			 * don't know whether or not this write made it
+ 			 * to the disk, so we must resync the device.
+ 			 */
+diff --git a/drivers/md/dm-snap-persistent.c b/drivers/md/dm-snap-persistent.c
+index cc2bdb8..0b61792 100644
+--- a/drivers/md/dm-snap-persistent.c
++++ b/drivers/md/dm-snap-persistent.c
+@@ -687,7 +687,7 @@ static void persistent_commit_exception(struct dm_exception_store *store,
+ 	/*
+ 	 * Commit exceptions to disk.
+ 	 */
+-	if (ps->valid && area_io(ps, WRITE_BARRIER))
++	if (ps->valid && area_io(ps, WRITE_FLUSH_FUA))
+ 		ps->valid = 0;
+ 
+ 	/*
+diff --git a/drivers/md/dm-snap.c b/drivers/md/dm-snap.c
+index 5974d30..eed2101 100644
+--- a/drivers/md/dm-snap.c
++++ b/drivers/md/dm-snap.c
+@@ -1587,7 +1587,7 @@ static int snapshot_map(struct dm_target *ti, struct bio *bio,
+ 	chunk_t chunk;
+ 	struct dm_snap_pending_exception *pe = NULL;
+ 
+-	if (unlikely(bio_empty_barrier(bio))) {
++	if (bio->bi_rw & REQ_FLUSH) {
+ 		bio->bi_bdev = s->cow->bdev;
+ 		return DM_MAPIO_REMAPPED;
+ 	}
+@@ -1691,7 +1691,7 @@ static int snapshot_merge_map(struct dm_target *ti, struct bio *bio,
+ 	int r = DM_MAPIO_REMAPPED;
+ 	chunk_t chunk;
+ 
+-	if (unlikely(bio_empty_barrier(bio))) {
++	if (bio->bi_rw & REQ_FLUSH) {
+ 		if (!map_context->target_request_nr)
+ 			bio->bi_bdev = s->origin->bdev;
+ 		else
+@@ -2135,7 +2135,7 @@ static int origin_map(struct dm_target *ti, struct bio *bio,
+ 	struct dm_dev *dev = ti->private;
+ 	bio->bi_bdev = dev->bdev;
+ 
+-	if (unlikely(bio_empty_barrier(bio)))
++	if (bio->bi_rw & REQ_FLUSH)
+ 		return DM_MAPIO_REMAPPED;
+ 
+ 	/* Only tell snapshots if this is a write */
+diff --git a/drivers/md/dm-stripe.c b/drivers/md/dm-stripe.c
+index c297f6d..f0371b4 100644
+--- a/drivers/md/dm-stripe.c
++++ b/drivers/md/dm-stripe.c
+@@ -271,7 +271,7 @@ static int stripe_map(struct dm_target *ti, struct bio *bio,
+ 	uint32_t stripe;
+ 	unsigned target_request_nr;
+ 
+-	if (unlikely(bio_empty_barrier(bio))) {
++	if (bio->bi_rw & REQ_FLUSH) {
+ 		target_request_nr = map_context->target_request_nr;
+ 		BUG_ON(target_request_nr >= sc->stripes);
+ 		bio->bi_bdev = sc->stripe[target_request_nr].dev->bdev;
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index b1d92be..32e6622 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -144,15 +144,16 @@ struct mapped_device {
+ 	spinlock_t deferred_lock;
+ 
+ 	/*
+-	 * An error from the barrier request currently being processed.
++	 * An error from the flush request currently being processed.
+ 	 */
+-	int barrier_error;
++	int flush_error;
+ 
+ 	/*
+ 	 * Protect barrier_error from concurrent endio processing
+ 	 * in request-based dm.
+ 	 */
+ 	spinlock_t barrier_error_lock;
++	int barrier_error;
+ 
+ 	/*
+ 	 * Processing queue (flush/barriers)
+@@ -200,8 +201,8 @@ struct mapped_device {
+ 	/* sysfs handle */
+ 	struct kobject kobj;
+ 
+-	/* zero-length barrier that will be cloned and submitted to targets */
+-	struct bio barrier_bio;
++	/* zero-length flush that will be cloned and submitted to targets */
++	struct bio flush_bio;
+ };
+ 
+ /*
+@@ -512,7 +513,7 @@ static void end_io_acct(struct dm_io *io)
+ 
+ 	/*
+ 	 * After this is decremented the bio must not be touched if it is
+-	 * a barrier.
++	 * a flush.
+ 	 */
+ 	dm_disk(md)->part0.in_flight[rw] = pending =
+ 		atomic_dec_return(&md->pending[rw]);
+@@ -626,7 +627,7 @@ static void dec_pending(struct dm_io *io, int error)
+ 			 */
+ 			spin_lock_irqsave(&md->deferred_lock, flags);
+ 			if (__noflush_suspending(md)) {
+-				if (!(io->bio->bi_rw & REQ_HARDBARRIER))
++				if (!(io->bio->bi_rw & REQ_FLUSH))
+ 					bio_list_add_head(&md->deferred,
+ 							  io->bio);
+ 			} else
+@@ -638,20 +639,14 @@ static void dec_pending(struct dm_io *io, int error)
+ 		io_error = io->error;
+ 		bio = io->bio;
+ 
+-		if (bio->bi_rw & REQ_HARDBARRIER) {
++		if (bio->bi_rw & REQ_FLUSH) {
+ 			/*
+-			 * There can be just one barrier request so we use
++			 * There can be just one flush request so we use
+ 			 * a per-device variable for error reporting.
+ 			 * Note that you can't touch the bio after end_io_acct
+-			 *
+-			 * We ignore -EOPNOTSUPP for empty flush reported by
+-			 * underlying devices. We assume that if the device
+-			 * doesn't support empty barriers, it doesn't need
+-			 * cache flushing commands.
+ 			 */
+-			if (!md->barrier_error &&
+-			    !(bio_empty_barrier(bio) && io_error == -EOPNOTSUPP))
+-				md->barrier_error = io_error;
++			if (!md->flush_error)
++				md->flush_error = io_error;
+ 			end_io_acct(io);
+ 			free_io(md, io);
+ 		} else {
+@@ -1119,7 +1114,7 @@ static void dm_bio_destructor(struct bio *bio)
+ }
+ 
+ /*
+- * Creates a little bio that is just does part of a bvec.
++ * Creates a little bio that just does part of a bvec.
+  */
+ static struct bio *split_bvec(struct bio *bio, sector_t sector,
+ 			      unsigned short idx, unsigned int offset,
+@@ -1134,7 +1129,7 @@ static struct bio *split_bvec(struct bio *bio, sector_t sector,
+ 
+ 	clone->bi_sector = sector;
+ 	clone->bi_bdev = bio->bi_bdev;
+-	clone->bi_rw = bio->bi_rw & ~REQ_HARDBARRIER;
++	clone->bi_rw = bio->bi_rw;
+ 	clone->bi_vcnt = 1;
+ 	clone->bi_size = to_bytes(len);
+ 	clone->bi_io_vec->bv_offset = offset;
+@@ -1161,7 +1156,6 @@ static struct bio *clone_bio(struct bio *bio, sector_t sector,
+ 
+ 	clone = bio_alloc_bioset(GFP_NOIO, bio->bi_max_vecs, bs);
+ 	__bio_clone(clone, bio);
+-	clone->bi_rw &= ~REQ_HARDBARRIER;
+ 	clone->bi_destructor = dm_bio_destructor;
+ 	clone->bi_sector = sector;
+ 	clone->bi_idx = idx;
+@@ -1225,7 +1219,7 @@ static void __issue_target_requests(struct clone_info *ci, struct dm_target *ti,
+ 		__issue_target_request(ci, ti, request_nr, len);
+ }
+ 
+-static int __clone_and_map_empty_barrier(struct clone_info *ci)
++static int __clone_and_map_flush(struct clone_info *ci)
  {
-@@ -1972,7 +1882,6 @@ static struct mapped_device *alloc_dev(int minor)
- 	mutex_init(&md->suspend_lock);
- 	mutex_init(&md->type_lock);
- 	spin_lock_init(&md->deferred_lock);
--	spin_lock_init(&md->barrier_error_lock);
- 	rwlock_init(&md->map_lock);
- 	atomic_set(&md->holders, 1);
- 	atomic_set(&md->open_count, 0);
-@@ -1995,7 +1904,6 @@ static struct mapped_device *alloc_dev(int minor)
- 	atomic_set(&md->pending[1], 0);
- 	init_waitqueue_head(&md->wait);
- 	INIT_WORK(&md->work, dm_wq_work);
--	INIT_WORK(&md->barrier_work, dm_rq_barrier_work);
- 	init_waitqueue_head(&md->eventq);
+ 	unsigned target_nr = 0;
+ 	struct dm_target *ti;
+@@ -1289,9 +1283,6 @@ static int __clone_and_map(struct clone_info *ci)
+ 	sector_t len = 0, max;
+ 	struct dm_target_io *tio;
  
- 	md->disk->major = _major;
-@@ -2245,8 +2153,6 @@ static int dm_init_request_based_queue(struct mapped_device *md)
+-	if (unlikely(bio_empty_barrier(bio)))
+-		return __clone_and_map_empty_barrier(ci);
+-
+ 	if (unlikely(bio->bi_rw & REQ_DISCARD))
+ 		return __clone_and_map_discard(ci);
+ 
+@@ -1383,11 +1374,11 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
+ 
+ 	ci.map = dm_get_live_table(md);
+ 	if (unlikely(!ci.map)) {
+-		if (!(bio->bi_rw & REQ_HARDBARRIER))
++		if (!(bio->bi_rw & REQ_FLUSH))
+ 			bio_io_error(bio);
+ 		else
+-			if (!md->barrier_error)
+-				md->barrier_error = -EIO;
++			if (!md->flush_error)
++				md->flush_error = -EIO;
+ 		return;
+ 	}
+ 
+@@ -1400,14 +1391,22 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
+ 	ci.io->md = md;
+ 	spin_lock_init(&ci.io->endio_lock);
+ 	ci.sector = bio->bi_sector;
+-	ci.sector_count = bio_sectors(bio);
+-	if (unlikely(bio_empty_barrier(bio)))
++	if (!(bio->bi_rw & REQ_FLUSH))
++		ci.sector_count = bio_sectors(bio);
++	else {
++		/* all FLUSH bio's reaching here should be empty */
++		WARN_ON_ONCE(bio_has_data(bio));
+ 		ci.sector_count = 1;
++	}
+ 	ci.idx = bio->bi_idx;
+ 
+ 	start_io_acct(ci.io);
+-	while (ci.sector_count && !error)
+-		error = __clone_and_map(&ci);
++	while (ci.sector_count && !error) {
++		if (!(bio->bi_rw & REQ_FLUSH))
++			error = __clone_and_map(&ci);
++		else
++			error = __clone_and_map_flush(&ci);
++	}
+ 
+ 	/* drop the extra reference count */
+ 	dec_pending(ci.io, error);
+@@ -1492,11 +1491,11 @@ static int _dm_request(struct request_queue *q, struct bio *bio)
+ 	part_stat_unlock();
+ 
+ 	/*
+-	 * If we're suspended or the thread is processing barriers
++	 * If we're suspended or the thread is processing flushes
+ 	 * we have to queue this io for later.
+ 	 */
+ 	if (unlikely(test_bit(DMF_QUEUE_IO_TO_THREAD, &md->flags)) ||
+-	    unlikely(bio->bi_rw & REQ_HARDBARRIER)) {
++	    (bio->bi_rw & REQ_FLUSH)) {
+ 		up_read(&md->io_lock);
+ 
+ 		if (unlikely(test_bit(DMF_BLOCK_IO_FOR_SUSPEND, &md->flags)) &&
+@@ -1940,6 +1939,7 @@ static void dm_init_md_queue(struct mapped_device *md)
+ 	blk_queue_bounce_limit(md->queue, BLK_BOUNCE_ANY);
+ 	md->queue->unplug_fn = dm_unplug_all;
+ 	blk_queue_merge_bvec(md->queue, dm_merge_bvec);
++	blk_queue_flush(md->queue, REQ_FLUSH | REQ_FUA);
+ }
+ 
+ /*
+@@ -2245,7 +2245,8 @@ static int dm_init_request_based_queue(struct mapped_device *md)
  	blk_queue_softirq_done(md->queue, dm_softirq_done);
  	blk_queue_prep_rq(md->queue, dm_prep_fn);
  	blk_queue_lld_busy(md->queue, dm_lld_busy);
--	/* no flush support for request based dm yet */
--	blk_queue_flush(md->queue, 0);
+-	blk_queue_flush(md->queue, REQ_FLUSH);
++	/* no flush support for request based dm yet */
++	blk_queue_flush(md->queue, 0);
  
  	elv_register_queue(md->queue);
  
-@@ -2483,73 +2389,6 @@ static void dm_queue_flush(struct mapped_device *md)
- 	queue_work(md->wq, &md->work);
+@@ -2406,41 +2407,35 @@ static int dm_wait_for_completion(struct mapped_device *md, int interruptible)
+ 	return r;
  }
  
--static void dm_rq_set_target_request_nr(struct request *clone, unsigned request_nr)
--{
--	struct dm_rq_target_io *tio = clone->end_io_data;
--
--	tio->info.target_request_nr = request_nr;
--}
--
--/* Issue barrier requests to targets and wait for their completion. */
--static int dm_rq_barrier(struct mapped_device *md)
--{
--	int i, j;
--	struct dm_table *map = dm_get_live_table(md);
--	unsigned num_targets = dm_table_get_num_targets(map);
--	struct dm_target *ti;
--	struct request *clone;
--
--	md->barrier_error = 0;
--
--	for (i = 0; i < num_targets; i++) {
--		ti = dm_table_get_target(map, i);
--		for (j = 0; j < ti->num_flush_requests; j++) {
--			clone = clone_rq(md->flush_request, md, GFP_NOIO);
--			dm_rq_set_target_request_nr(clone, j);
--			atomic_inc(&md->pending[rq_data_dir(clone)]);
--			map_request(ti, clone, md);
--		}
--	}
--
+-static void dm_flush(struct mapped_device *md)
++static void process_flush(struct mapped_device *md, struct bio *bio)
+ {
 -	dm_wait_for_completion(md, TASK_UNINTERRUPTIBLE);
--	dm_table_put(map);
 -
--	return md->barrier_error;
--}
--
--static void dm_rq_barrier_work(struct work_struct *work)
--{
--	int error;
--	struct mapped_device *md = container_of(work, struct mapped_device,
--						barrier_work);
--	struct request_queue *q = md->queue;
--	struct request *rq;
--	unsigned long flags;
--
--	/*
--	 * Hold the md reference here and leave it at the last part so that
--	 * the md can't be deleted by device opener when the barrier request
--	 * completes.
--	 */
--	dm_get(md);
--
--	error = dm_rq_barrier(md);
--
--	rq = md->flush_request;
--	md->flush_request = NULL;
--
--	if (error == DM_ENDIO_REQUEUE) {
--		spin_lock_irqsave(q->queue_lock, flags);
--		blk_requeue_request(q, rq);
--		spin_unlock_irqrestore(q->queue_lock, flags);
--	} else
--		blk_end_request_all(rq, error);
--
--	blk_run_queue(q);
--
--	dm_put(md);
--}
--
- /*
-  * Swap in a new table, returning the old one for the caller to destroy.
-  */
-@@ -2686,9 +2525,8 @@ int dm_suspend(struct mapped_device *md, unsigned suspend_flags)
- 	up_write(&md->io_lock);
+-	bio_init(&md->barrier_bio);
+-	md->barrier_bio.bi_bdev = md->bdev;
+-	md->barrier_bio.bi_rw = WRITE_BARRIER;
+-	__split_and_process_bio(md, &md->barrier_bio);
++	md->flush_error = 0;
  
- 	/*
--	 * Request-based dm uses md->wq for barrier (dm_rq_barrier_work) which
--	 * can be kicked until md->queue is stopped.  So stop md->queue before
--	 * flushing md->wq.
-+	 * Stop md->queue before flushing md->wq in case request-based
-+	 * dm defers requests to md->wq from md->queue.
- 	 */
- 	if (dm_request_based(md))
- 		stop_queue(md->queue);
++	/* handle REQ_FLUSH */
+ 	dm_wait_for_completion(md, TASK_UNINTERRUPTIBLE);
+-}
+ 
+-static void process_barrier(struct mapped_device *md, struct bio *bio)
+-{
+-	md->barrier_error = 0;
++	bio_init(&md->flush_bio);
++	md->flush_bio.bi_bdev = md->bdev;
++	md->flush_bio.bi_rw = WRITE_FLUSH;
++	__split_and_process_bio(md, &md->flush_bio);
+ 
+-	dm_flush(md);
++	dm_wait_for_completion(md, TASK_UNINTERRUPTIBLE);
+ 
+-	if (!bio_empty_barrier(bio)) {
+-		__split_and_process_bio(md, bio);
+-		/*
+-		 * If the request isn't supported, don't waste time with
+-		 * the second flush.
+-		 */
+-		if (md->barrier_error != -EOPNOTSUPP)
+-			dm_flush(md);
++	/* if it's an empty flush or the preflush failed, we're done */
++	if (!bio_has_data(bio) || md->flush_error) {
++		if (md->flush_error != DM_ENDIO_REQUEUE)
++			bio_endio(bio, md->flush_error);
++		else {
++			spin_lock_irq(&md->deferred_lock);
++			bio_list_add_head(&md->deferred, bio);
++			spin_unlock_irq(&md->deferred_lock);
++		}
++		return;
+ 	}
+ 
+-	if (md->barrier_error != DM_ENDIO_REQUEUE)
+-		bio_endio(bio, md->barrier_error);
+-	else {
+-		spin_lock_irq(&md->deferred_lock);
+-		bio_list_add_head(&md->deferred, bio);
+-		spin_unlock_irq(&md->deferred_lock);
+-	}
++	/* issue data + REQ_FUA */
++	bio->bi_rw &= ~REQ_FLUSH;
++	__split_and_process_bio(md, bio);
+ }
+ 
+ /*
+@@ -2469,8 +2464,8 @@ static void dm_wq_work(struct work_struct *work)
+ 		if (dm_request_based(md))
+ 			generic_make_request(c);
+ 		else {
+-			if (c->bi_rw & REQ_HARDBARRIER)
+-				process_barrier(md, c);
++			if (c->bi_rw & REQ_FLUSH)
++				process_flush(md, c);
+ 			else
+ 				__split_and_process_bio(md, c);
+ 		}
 -- 
 1.7.1
