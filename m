@@ -1,91 +1,78 @@
-From: "Gustavo F. Padovan" <padovan-Y3ZbgMPKUGA34EUeqzHoZw@public.gmane.org>
-Subject: Re: [PATCH 10/15] pcmcia: introduce autoconfiguration feature
-Date: Fri, 3 Sep 2010 19:38:01 -0300
-Message-ID: <20100903223801.GG16973@vigoh>
-References: <20100903105628.GA21255@comet.dominikbrodowski.net>
- <1283511434-21620-10-git-send-email-linux@dominikbrodowski.net>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: RE: [Open-FCoE] [RFC PATCH] scsi, fcoe, libfc: drop scsi host_lock
+ use from fc_queuecommand
+Date: Fri, 03 Sep 2010 15:38:45 -0700
+Message-ID: <1283553525.30431.192.camel@vi2.jf.intel.com>
+References: <20100831225338.25102.59500.stgit@localhost.localdomain>
+	 <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
+	 <4C7DD3E8.9050700@cs.wisc.edu>
+	 <7C88852EF6F99F4EB538472FCFEBE222013AF95EB2@orsmsx509.amr.corp.intel.com>
+	 <1283371821.32007.636.camel@haakon2.linux-iscsi.org>
+	 <1283375187.30431.71.camel@vi2.jf.intel.com>
+	 <1283377121.5598.23.camel@haakon2.linux-iscsi.org>
+	 <1283448262.30431.172.camel@vi2.jf.intel.com>
+	 <1283456928.5598.117.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1283511434-21620-10-git-send-email-linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-Sender: linux-bluetooth-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-Cc: linux-pcmcia-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, laforge-TgoAw6mPHtdg9hUCZPvPmw@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org, linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:57094 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752399Ab0ICW6I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Sep 2010 18:58:08 -0400
+In-Reply-To: <1283456928.5598.117.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, "Zou, Yi" <yi.zou@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, "devel@open-fcoe.org" <devel@open-fcoe.org>, Christoph Hellwig <hch@lst.de>, Joe Eykholt <jeykholt@cisco.com>, Hannes Reinecke <hare@suse.de>
 
-* Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org> [2010-09-03 12:57:09 +0200]:
-
-> Introduce an autoconfiguration feature to set certain values in
-> pcmcia_loop_config(), instead of copying the same code over and over
-> in each PCMCIA driver. At first, introduce the following options:
+On Thu, 2010-09-02 at 12:48 -0700, Nicholas A. Bellinger wrote:
+> > Yeah but direct use makes things more obvious at first look. However
+> > neatness is worthy using wrapper(macros) if there are several such
+> > places. Anycase this is very minor code style thing here and I'm
+> fine
+> > with wrapper if you want.
 > 
-> CONF_AUTO_CHECK_VCC	check or matching Vcc entry
-> CONF_AUTO_SET_VPP	set Vpp
-> CONF_AUTO_AUDIO		enable the speaker line
+> Sure, I am thinking about these simple host_lock wrappers as more of a
+> transitional look for LLDs more than anything..
 > 
-> CC: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: laforge-TgoAw6mPHtdg9hUCZPvPmw@public.gmane.org
-> CC: linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org
-> CC: linux-bluetooth-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
-> CC: linux-serial-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> CC: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-> CC: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Signed-off-by: Dominik Brodowski <linux-X3ehHDuj6sIIGcDfoQAp7OTW4wlIGRCZ@public.gmane.org>
-> ---
->  drivers/ata/pata_pcmcia.c                        |   23 +----
->  drivers/bluetooth/bt3c_cs.c                      |    7 +-
->  drivers/bluetooth/btuart_cs.c                    |    7 +-
->  drivers/bluetooth/dtl1_cs.c                      |    1 -
->  drivers/char/pcmcia/cm4000_cs.c                  |    1 -
->  drivers/char/pcmcia/cm4040_cs.c                  |    1 -
->  drivers/char/pcmcia/ipwireless/main.c            |    1 -
->  drivers/char/pcmcia/synclink_cs.c                |    1 -
->  drivers/ide/ide-cs.c                             |   23 +----
->  drivers/isdn/hardware/avm/avm_cs.c               |    1 -
->  drivers/isdn/hisax/avma1_cs.c                    |    1 -
->  drivers/isdn/hisax/elsa_cs.c                     |    1 -
->  drivers/isdn/hisax/sedlbauer_cs.c                |   25 +-----
->  drivers/isdn/hisax/teles_cs.c                    |    1 -
->  drivers/net/pcmcia/axnet_cs.c                    |    1 -
->  drivers/net/pcmcia/fmvj18x_cs.c                  |    1 -
->  drivers/net/pcmcia/pcnet_cs.c                    |    1 -
->  drivers/net/pcmcia/smc91c92_cs.c                 |    2 -
->  drivers/net/pcmcia/xirc2ps_cs.c                  |    5 +-
->  drivers/net/wireless/airo_cs.c                   |   17 +---
->  drivers/net/wireless/atmel_cs.c                  |   17 +---
->  drivers/net/wireless/hostap/hostap_cs.c          |   27 +-----
->  drivers/net/wireless/libertas/if_cs.c            |    1 -
->  drivers/net/wireless/orinoco/orinoco_cs.c        |   31 +------
->  drivers/net/wireless/orinoco/spectrum_cs.c       |   24 +----
->  drivers/parport/parport_cs.c                     |    1 -
->  drivers/pcmcia/pcmcia_cis.c                      |   36 ++++++-
->  drivers/scsi/pcmcia/aha152x_stub.c               |    1 -
->  drivers/scsi/pcmcia/fdomain_stub.c               |    1 -
->  drivers/scsi/pcmcia/nsp_cs.c                     |  110 ++++++++-------------
->  drivers/scsi/pcmcia/qlogic_stub.c                |    1 -
->  drivers/scsi/pcmcia/sym53c500_cs.c               |    1 -
->  drivers/serial/serial_cs.c                       |   10 +--
->  drivers/staging/comedi/drivers/cb_das16_cs.c     |    1 -
->  drivers/staging/comedi/drivers/das08_cs.c        |    1 -
->  drivers/staging/comedi/drivers/ni_daq_700.c      |   10 +--
->  drivers/staging/comedi/drivers/ni_daq_dio24.c    |   10 +--
->  drivers/staging/comedi/drivers/ni_labpc_cs.c     |   11 +--
->  drivers/staging/comedi/drivers/ni_mio_cs.c       |    1 -
->  drivers/staging/comedi/drivers/quatech_daqp_cs.c |    1 -
->  drivers/telephony/ixj_pcmcia.c                   |    1 -
->  drivers/usb/host/sl811_cs.c                      |   24 +----
->  include/pcmcia/ds.h                              |    7 +-
->  43 files changed, 120 insertions(+), 329 deletions(-)
+> Btw, I would be happy to include your forthcoming v2 patch into a
+> lio-core-2.6.git branch, and give it some testing in the next week.
+> 
 
-For drivers/bluetooth
+Awesome, Thanks for your all help Nab,
 
-Acked-by: Gustavo F. Padovan <padovan-Y3ZbgMPKUGA34EUeqzHoZw@public.gmane.org>
+	I tried to have wrapper instead of checks to drop host_lock before
+fc_queuecommand using wrapper something like this :-
 
--- 
-Gustavo F. Padovan
-ProFUSION embedded systems - http://profusion.mobi
++static inline void scsi_qcmd_host_unlock(struct Scsi_Host *shost,
+unsigned long irq_flags)
++{
++       if (shost->host_lock_pending) {
++               shost->host_lock_pending = 0;
++               spin_unlock_irqrestore(shost->host_lock, irq_flags);
++       } else if (shost->unlocked_qcmds)
++               spin_unlock_irqrestore(shost->host_lock, irq_flags);
++       else
++               shost->host_lock_pending = 1;
++}
++
+
+This didn't work well beside required lot more checks to track host lock
+so that this wrapper can be called w/o checks as:-
+
+	scsi_qcmd_host_unlock(host, flags);
+	rtn = host->hostt->queuecommand(cmd, scsi_done);
+	scsi_qcmd_host_unlock(host, flags);
+
+I think it is better of with simple checks for now as I posted in my
+patch, may be a wrapper can be added in case more places neeeds such
+checks as we talked before.
+
+	Thanks
+	Vasu 
+
+
+
+
+
