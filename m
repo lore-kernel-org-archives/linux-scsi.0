@@ -1,8 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 13/41] block: initialize flush request with
-	WRITE_FLUSH instead of REQ_FLUSH
-Date: Fri,  3 Sep 2010 12:29:28 +0200
-Message-ID: <1283509796-1510-14-git-send-email-tj@kernel.org>
+Subject: [PATCH 12/41] block: simplify queue_next_fseq
+Date: Fri,  3 Sep 2010 12:29:27 +0200
+Message-ID: <1283509796-1510-13-git-send-email-tj@kernel.org>
 References: <1283509796-1510-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -23,26 +22,78 @@ To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-init_flush_request() only set REQ_FLUSH when initializing flush
-requests making them READ requests.  Use WRITE_FLUSH instead.
+From: Christoph Hellwig <hch@lst.de>
 
+We need to call blk_rq_init and elv_insert for all cases in queue_next_fseq,
+so take these calls into common code.  Also move the end_io initialization
+from queue_flush into queue_next_fseq and rename queue_flush to
+init_flush_request now that it's old name doesn't apply anymore.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Mike Snitzer <snitzer@redhat.com>
 ---
- block/blk-flush.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ block/blk-flush.c |   26 ++++++++++----------------
+ 1 files changed, 10 insertions(+), 16 deletions(-)
 
 diff --git a/block/blk-flush.c b/block/blk-flush.c
-index 72905f8..f357f1f 100644
+index 452c552..72905f8 100644
 --- a/block/blk-flush.c
 +++ b/block/blk-flush.c
-@@ -77,7 +77,7 @@ static void post_flush_end_io(struct request *rq, int error)
- static void init_flush_request(struct request *rq, struct gendisk *disk)
+@@ -74,16 +74,11 @@ static void post_flush_end_io(struct request *rq, int error)
+ 	blk_flush_complete_seq(rq->q, QUEUE_FSEQ_POSTFLUSH, error);
+ }
+ 
+-static void queue_flush(struct request_queue *q, struct request *rq,
+-			rq_end_io_fn *end_io)
++static void init_flush_request(struct request *rq, struct gendisk *disk)
  {
+-	blk_rq_init(q, rq);
  	rq->cmd_type = REQ_TYPE_FS;
--	rq->cmd_flags = REQ_FLUSH;
-+	rq->cmd_flags = WRITE_FLUSH;
- 	rq->rq_disk = disk;
+ 	rq->cmd_flags = REQ_FLUSH;
+-	rq->rq_disk = q->orig_flush_rq->rq_disk;
+-	rq->end_io = end_io;
+-
+-	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
++	rq->rq_disk = disk;
+ }
+ 
+ static struct request *queue_next_fseq(struct request_queue *q)
+@@ -91,29 +86,28 @@ static struct request *queue_next_fseq(struct request_queue *q)
+ 	struct request *orig_rq = q->orig_flush_rq;
+ 	struct request *rq = &q->flush_rq;
+ 
++	blk_rq_init(q, rq);
++
+ 	switch (blk_flush_cur_seq(q)) {
+ 	case QUEUE_FSEQ_PREFLUSH:
+-		queue_flush(q, rq, pre_flush_end_io);
++		init_flush_request(rq, orig_rq->rq_disk);
++		rq->end_io = pre_flush_end_io;
+ 		break;
+-
+ 	case QUEUE_FSEQ_DATA:
+-		/* initialize proxy request, inherit FLUSH/FUA and queue it */
+-		blk_rq_init(q, rq);
+ 		init_request_from_bio(rq, orig_rq->bio);
+ 		rq->cmd_flags &= ~(REQ_FLUSH | REQ_FUA);
+ 		rq->cmd_flags |= orig_rq->cmd_flags & (REQ_FLUSH | REQ_FUA);
+ 		rq->end_io = flush_data_end_io;
+-
+-		elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
+ 		break;
+-
+ 	case QUEUE_FSEQ_POSTFLUSH:
+-		queue_flush(q, rq, post_flush_end_io);
++		init_flush_request(rq, orig_rq->rq_disk);
++		rq->end_io = post_flush_end_io;
+ 		break;
+-
+ 	default:
+ 		BUG();
+ 	}
++
++	elv_insert(q, rq, ELEVATOR_INSERT_FRONT);
+ 	return rq;
  }
  
 -- 
