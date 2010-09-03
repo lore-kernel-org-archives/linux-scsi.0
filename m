@@ -1,8 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 30/41] gfs2: replace barriers with explicit flush
-	/ FUA usage
-Date: Fri,  3 Sep 2010 12:29:45 +0200
-Message-ID: <1283509796-1510-31-git-send-email-tj@kernel.org>
+Subject: [PATCH 19/41] virtio_blk: drop REQ_HARDBARRIER support
+Date: Fri,  3 Sep 2010 12:29:34 +0200
+Message-ID: <1283509796-1510-20-git-send-email-tj@kernel.org>
 References: <1283509796-1510-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -20,77 +19,62 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Christoph Hellwig <hch@infradead.org>
+Remove now unused REQ_HARDBARRIER support.  virtio_blk already
+supports REQ_FLUSH and the usefulness of REQ_FUA for virtio_blk is
+questionable at this point, so there's nothing else to do to support
+new REQ_FLUSH/FUA interface.
 
-Switch to the WRITE_FLUSH_FUA flag for log writes, remove the EOPNOTSUPP
-detection for barriers and stop setting the barrier flag for discards.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Steven Whitehouse <swhiteho@redhat.com>
-Acked-by: Bob Peterson <rpeterso@redhat.com>
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>
 ---
- fs/gfs2/log.c  |   19 +++++--------------
- fs/gfs2/rgrp.c |    5 ++---
- 2 files changed, 7 insertions(+), 17 deletions(-)
+ drivers/block/virtio_blk.c |   17 ++++-------------
+ 1 files changed, 4 insertions(+), 13 deletions(-)
 
-diff --git a/fs/gfs2/log.c b/fs/gfs2/log.c
-index cde1248..9c65170 100644
---- a/fs/gfs2/log.c
-+++ b/fs/gfs2/log.c
-@@ -592,22 +592,13 @@ static void log_write_header(struct gfs2_sbd *sdp, u32 flags, int pull)
- 	lh->lh_hash = cpu_to_be32(hash);
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index d10b635..1260628 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -128,9 +128,6 @@ static bool do_req(struct request_queue *q, struct virtio_blk *vblk,
+ 		}
+ 	}
  
- 	bh->b_end_io = end_buffer_write_sync;
--	if (test_bit(SDF_NOBARRIERS, &sdp->sd_flags))
--		goto skip_barrier;
- 	get_bh(bh);
--	submit_bh(WRITE_BARRIER | REQ_META, bh);
--	wait_on_buffer(bh);
--	if (buffer_eopnotsupp(bh)) {
--		clear_buffer_eopnotsupp(bh);
--		set_buffer_uptodate(bh);
--		fs_info(sdp, "barrier sync failed - disabling barriers\n");
--		set_bit(SDF_NOBARRIERS, &sdp->sd_flags);
--		lock_buffer(bh);
--skip_barrier:
--		get_bh(bh);
-+	if (test_bit(SDF_NOBARRIERS, &sdp->sd_flags))
- 		submit_bh(WRITE_SYNC | REQ_META, bh);
--		wait_on_buffer(bh);
--	}
-+	else
-+		submit_bh(WRITE_FLUSH_FUA | REQ_META, bh);
-+	wait_on_buffer(bh);
-+
- 	if (!buffer_uptodate(bh))
- 		gfs2_io_error_bh(sdp, bh);
- 	brelse(bh);
-diff --git a/fs/gfs2/rgrp.c b/fs/gfs2/rgrp.c
-index 171a744..3793164 100644
---- a/fs/gfs2/rgrp.c
-+++ b/fs/gfs2/rgrp.c
-@@ -854,8 +854,7 @@ static void gfs2_rgrp_send_discards(struct gfs2_sbd *sdp, u64 offset,
- 				if ((start + nr_sects) != blk) {
- 					rv = blkdev_issue_discard(bdev, start,
- 							    nr_sects, GFP_NOFS,
--							    BLKDEV_IFL_WAIT |
--							    BLKDEV_IFL_BARRIER);
-+							    BLKDEV_IFL_WAIT);
- 					if (rv)
- 						goto fail;
- 					nr_sects = 0;
-@@ -870,7 +869,7 @@ start_new_extent:
- 	}
- 	if (nr_sects) {
- 		rv = blkdev_issue_discard(bdev, start, nr_sects, GFP_NOFS,
--					 BLKDEV_IFL_WAIT | BLKDEV_IFL_BARRIER);
-+					 BLKDEV_IFL_WAIT);
- 		if (rv)
- 			goto fail;
- 	}
+-	if (vbr->req->cmd_flags & REQ_HARDBARRIER)
+-		vbr->out_hdr.type |= VIRTIO_BLK_T_BARRIER;
+-
+ 	sg_set_buf(&vblk->sg[out++], &vbr->out_hdr, sizeof(vbr->out_hdr));
+ 
+ 	/*
+@@ -388,13 +385,7 @@ static int __devinit virtblk_probe(struct virtio_device *vdev)
+ 	vblk->disk->driverfs_dev = &vdev->dev;
+ 	index++;
+ 
+-	/*
+-	 * If the FLUSH feature is supported we do have support for
+-	 * flushing a volatile write cache on the host.  Use that to
+-	 * implement write barrier support; otherwise, we must assume
+-	 * that the host does not perform any kind of volatile write
+-	 * caching.
+-	 */
++	/* configure queue flush support */
+ 	if (virtio_has_feature(vdev, VIRTIO_BLK_F_FLUSH))
+ 		blk_queue_flush(q, REQ_FLUSH);
+ 
+@@ -515,9 +506,9 @@ static const struct virtio_device_id id_table[] = {
+ };
+ 
+ static unsigned int features[] = {
+-	VIRTIO_BLK_F_BARRIER, VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX,
+-	VIRTIO_BLK_F_GEOMETRY, VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE,
+-	VIRTIO_BLK_F_SCSI, VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
++	VIRTIO_BLK_F_SEG_MAX, VIRTIO_BLK_F_SIZE_MAX, VIRTIO_BLK_F_GEOMETRY,
++	VIRTIO_BLK_F_RO, VIRTIO_BLK_F_BLK_SIZE, VIRTIO_BLK_F_SCSI,
++	VIRTIO_BLK_F_FLUSH, VIRTIO_BLK_F_TOPOLOGY
+ };
+ 
+ /*
 -- 
 1.7.1
