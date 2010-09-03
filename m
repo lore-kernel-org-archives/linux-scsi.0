@@ -1,7 +1,8 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 41/41] block: remove the BH_Eopnotsupp flag
-Date: Fri,  3 Sep 2010 12:29:56 +0200
-Message-ID: <1283509796-1510-42-git-send-email-tj@kernel.org>
+Subject: [PATCH 33/41] jbd: replace barriers with explicit flush
+	/ FUA usage
+Date: Fri,  3 Sep 2010 12:29:48 +0200
+Message-ID: <1283509796-1510-34-git-send-email-tj@kernel.org>
 References: <1283509796-1510-1-git-send-email-tj@kernel.org>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
@@ -24,84 +25,57 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Christoph Hellwig <hch@infradead.org>
 
-This flag was only set for barrier buffers, which we don't submit
-anymore.
+Switch to the WRITE_FLUSH_FUA flag for journal commits and remove the
+EOPNOTSUPP detection for barriers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Jan Kara <jack@suse.cz>
 Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- fs/buffer.c                 |    7 +------
- fs/fat/misc.c               |    5 +----
- include/linux/buffer_head.h |    2 --
- 3 files changed, 2 insertions(+), 12 deletions(-)
+ fs/jbd/commit.c |   30 +++---------------------------
+ 1 files changed, 3 insertions(+), 27 deletions(-)
 
-diff --git a/fs/buffer.c b/fs/buffer.c
-index 3e7dca2..7f0b9b0 100644
---- a/fs/buffer.c
-+++ b/fs/buffer.c
-@@ -156,7 +156,7 @@ void end_buffer_write_sync(struct buffer_head *bh, int uptodate)
- 	if (uptodate) {
- 		set_buffer_uptodate(bh);
- 	} else {
--		if (!buffer_eopnotsupp(bh) && !quiet_error(bh)) {
-+		if (!quiet_error(bh)) {
- 			buffer_io_error(bh);
- 			printk(KERN_WARNING "lost page write due to "
- 					"I/O error on %s\n",
-@@ -2891,7 +2891,6 @@ static void end_bio_bh_io_sync(struct bio *bio, int err)
+diff --git a/fs/jbd/commit.c b/fs/jbd/commit.c
+index 95d8c11..484c5e5 100644
+--- a/fs/jbd/commit.c
++++ b/fs/jbd/commit.c
+@@ -137,34 +137,10 @@ static int journal_write_commit_record(journal_t *journal,
+ 	JBUFFER_TRACE(descriptor, "write commit block");
+ 	set_buffer_dirty(bh);
  
- 	if (err == -EOPNOTSUPP) {
- 		set_bit(BIO_EOPNOTSUPP, &bio->bi_flags);
--		set_bit(BH_Eopnotsupp, &bh->b_state);
- 	}
- 
- 	if (unlikely (test_bit(BIO_QUIET,&bio->bi_flags)))
-@@ -3031,10 +3030,6 @@ int __sync_dirty_buffer(struct buffer_head *bh, int rw)
- 		bh->b_end_io = end_buffer_write_sync;
- 		ret = submit_bh(rw, bh);
- 		wait_on_buffer(bh);
--		if (buffer_eopnotsupp(bh)) {
--			clear_buffer_eopnotsupp(bh);
--			ret = -EOPNOTSUPP;
+-	if (journal->j_flags & JFS_BARRIER) {
+-		ret = __sync_dirty_buffer(bh, WRITE_SYNC | WRITE_BARRIER);
+-
+-		/*
+-		 * Is it possible for another commit to fail at roughly
+-		 * the same time as this one?  If so, we don't want to
+-		 * trust the barrier flag in the super, but instead want
+-		 * to remember if we sent a barrier request
+-		 */
+-		if (ret == -EOPNOTSUPP) {
+-			char b[BDEVNAME_SIZE];
+-
+-			printk(KERN_WARNING
+-				"JBD: barrier-based sync failed on %s - "
+-				"disabling barriers\n",
+-				bdevname(journal->j_dev, b));
+-			spin_lock(&journal->j_state_lock);
+-			journal->j_flags &= ~JFS_BARRIER;
+-			spin_unlock(&journal->j_state_lock);
+-
+-			/* And try again, without the barrier */
+-			set_buffer_uptodate(bh);
+-			set_buffer_dirty(bh);
+-			ret = sync_dirty_buffer(bh);
 -		}
- 		if (!ret && !buffer_uptodate(bh))
- 			ret = -EIO;
- 	} else {
-diff --git a/fs/fat/misc.c b/fs/fat/misc.c
-index 1736f23..970e682 100644
---- a/fs/fat/misc.c
-+++ b/fs/fat/misc.c
-@@ -255,10 +255,7 @@ int fat_sync_bhs(struct buffer_head **bhs, int nr_bhs)
+-	} else {
++	if (journal->j_flags & JFS_BARRIER)
++		ret = __sync_dirty_buffer(bh, WRITE_SYNC | WRITE_FLUSH_FUA);
++	else
+ 		ret = sync_dirty_buffer(bh);
+-	}
  
- 	for (i = 0; i < nr_bhs; i++) {
- 		wait_on_buffer(bhs[i]);
--		if (buffer_eopnotsupp(bhs[i])) {
--			clear_buffer_eopnotsupp(bhs[i]);
--			err = -EOPNOTSUPP;
--		} else if (!err && !buffer_uptodate(bhs[i]))
-+		if (!err && !buffer_uptodate(bhs[i]))
- 			err = -EIO;
- 	}
- 	return err;
-diff --git a/include/linux/buffer_head.h b/include/linux/buffer_head.h
-index fc999f5..dd1b25b 100644
---- a/include/linux/buffer_head.h
-+++ b/include/linux/buffer_head.h
-@@ -32,7 +32,6 @@ enum bh_state_bits {
- 	BH_Delay,	/* Buffer is not yet allocated on disk */
- 	BH_Boundary,	/* Block is followed by a discontiguity */
- 	BH_Write_EIO,	/* I/O error on write */
--	BH_Eopnotsupp,	/* DEPRECATED: operation not supported (barrier) */
- 	BH_Unwritten,	/* Buffer is allocated on disk but not written */
- 	BH_Quiet,	/* Buffer Error Prinks to be quiet */
- 
-@@ -124,7 +123,6 @@ BUFFER_FNS(Async_Write, async_write)
- BUFFER_FNS(Delay, delay)
- BUFFER_FNS(Boundary, boundary)
- BUFFER_FNS(Write_EIO, write_io_error)
--BUFFER_FNS(Eopnotsupp, eopnotsupp)
- BUFFER_FNS(Unwritten, unwritten)
- 
- #define bh_offset(bh)		((unsigned long)(bh)->b_data & ~PAGE_MASK)
+ 	put_bh(bh);		/* One for getblk() */
+ 	journal_put_journal_head(descriptor);
 -- 
 1.7.1
