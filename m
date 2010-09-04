@@ -1,78 +1,86 @@
-From: Vasu Dev <vasu.dev@linux.intel.com>
-Subject: RE: [Open-FCoE] [RFC PATCH] scsi, fcoe, libfc: drop scsi host_lock
- use from fc_queuecommand
-Date: Fri, 03 Sep 2010 15:38:45 -0700
-Message-ID: <1283553525.30431.192.camel@vi2.jf.intel.com>
-References: <20100831225338.25102.59500.stgit@localhost.localdomain>
-	 <1283298985.32007.530.camel@haakon2.linux-iscsi.org>
-	 <4C7DD3E8.9050700@cs.wisc.edu>
-	 <7C88852EF6F99F4EB538472FCFEBE222013AF95EB2@orsmsx509.amr.corp.intel.com>
-	 <1283371821.32007.636.camel@haakon2.linux-iscsi.org>
-	 <1283375187.30431.71.camel@vi2.jf.intel.com>
-	 <1283377121.5598.23.camel@haakon2.linux-iscsi.org>
-	 <1283448262.30431.172.camel@vi2.jf.intel.com>
-	 <1283456928.5598.117.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] scsi, fcoe, libfc: drop scsi host_lock use from
+	fc_queuecommand
+Date: Fri, 03 Sep 2010 18:20:38 -0700
+Message-ID: <1283563238.20549.113.camel@haakon2.linux-iscsi.org>
+References: <20100903222715.6237.75737.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:57094 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752399Ab0ICW6I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Sep 2010 18:58:08 -0400
-In-Reply-To: <1283456928.5598.117.camel@haakon2.linux-iscsi.org>
+Received: from smtp103.sbc.mail.re3.yahoo.com ([66.196.96.86]:39628 "HELO
+	smtp103.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752212Ab0IDBYj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2010 21:24:39 -0400
+In-Reply-To: <20100903222715.6237.75737.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, "Zou, Yi" <yi.zou@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, "devel@open-fcoe.org" <devel@open-fcoe.org>, Christoph Hellwig <hch@lst.de>, Joe Eykholt <jeykholt@cisco.com>, Hannes Reinecke <hare@suse.de>
+To: Vasu Dev <vasu.dev@intel.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, Joe Eykholt <jeykholt@cisco.com>, James Bottomley <James.Bottomley@suse.de>, devel@open-fcoe.org, Robert Love <robert.w.love@intel.com>
 
-On Thu, 2010-09-02 at 12:48 -0700, Nicholas A. Bellinger wrote:
-> > Yeah but direct use makes things more obvious at first look. However
-> > neatness is worthy using wrapper(macros) if there are several such
-> > places. Anycase this is very minor code style thing here and I'm
-> fine
-> > with wrapper if you want.
+On Fri, 2010-09-03 at 15:27 -0700, Vasu Dev wrote:
+> Currently fc_queuecommand drops this lock very early on and then re-acquires
+> this lock just before return, this re-acquired lock gets dropped immediately
+> by its fast path caller scsi_dispatch_cmd, this re-acquire and then immediate
+> drop on each IO hits performance especially with small size IOs on multi-core
+> systems, this hit is significant about 25% with 512 bytes size IOs.
 > 
-> Sure, I am thinking about these simple host_lock wrappers as more of a
-> transitional look for LLDs more than anything..
+> This lock is not needed in fc_queuecommand and calling fc_queuecommand
+> without this lock held removes above described performance hit.
 > 
-> Btw, I would be happy to include your forthcoming v2 patch into a
-> lio-core-2.6.git branch, and give it some testing in the next week.
+> So this patch adds unlocked_qcmds flag to drop host_lock before
+> calling only fc_queuecommand and removes re-acquire &  then drop
+> for  each IO. Added flag, drops this lock only if LLD wants such
+> as fcoe.ko does here for fc_queuecommand. This change won't affect
+> any existing LLD since added unlocked_qcmds flag will be zero
+> in those cases and their host lock uses would effectively remain
+> same after this patch.
+> 
+> As per Mike and Nab comments, restored host lock around SHOST_DEL state
+> in scsi_dispatch_cmd.
+> 
+> Signed-off-by: Vasu Dev <vasu.dev@intel.com>
+> ---
+>  drivers/scsi/fcoe/fcoe.c    |    1 +
+>  drivers/scsi/libfc/fc_fcp.c |   14 +++++---------
+>  drivers/scsi/scsi.c         |    7 ++++++-
+>  include/scsi/scsi_host.h    |    3 +++
+>  4 files changed, 15 insertions(+), 10 deletions(-)
 > 
 
-Awesome, Thanks for your all help Nab,
+<SNIP>
 
-	I tried to have wrapper instead of checks to drop host_lock before
-fc_queuecommand using wrapper something like this :-
+> index b7bdecb..1814c51 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -636,6 +636,9 @@ struct Scsi_Host {
+>  	/* Asynchronous scan in progress */
+>  	unsigned async_scan:1;
+>  
+> +	/* call queuecommand without Scsi_Host lock held */
+> +	unsigned unlocked_qcmds:1;
+> +
 
-+static inline void scsi_qcmd_host_unlock(struct Scsi_Host *shost,
-unsigned long irq_flags)
-+{
-+       if (shost->host_lock_pending) {
-+               shost->host_lock_pending = 0;
-+               spin_unlock_irqrestore(shost->host_lock, irq_flags);
-+       } else if (shost->unlocked_qcmds)
-+               spin_unlock_irqrestore(shost->host_lock, irq_flags);
-+       else
-+               shost->host_lock_pending = 1;
-+}
-+
+I am not sure why this structure member (or any of the other ones) need
+to be using :1 at this point, considering drivers/scsi/hosts.c:scsi_host_alloc()
+is doing a kzalloc() on struct Scsi_Host to begin with..
 
-This didn't work well beside required lot more checks to track host lock
-so that this wrapper can be called w/o checks as:-
+Other than that minor nit, I have merged this patch into branch at
+lio-core-2.6.git/scsi-unlocked-qcmds available here:
 
-	scsi_qcmd_host_unlock(host, flags);
-	rtn = host->hostt->queuecommand(cmd, scsi_done);
-	scsi_qcmd_host_unlock(host, flags);
+	git://git.kernel.org/pub/scm/linux/kernel/git/nab/lio-core-2.6.git scsi-unlocked-qcmds
 
-I think it is better of with simple checks for now as I posted in my
-patch, may be a wrapper can be added in case more places neeeds such
-checks as we talked before.
+and via gitweb here:
 
-	Thanks
-	Vasu 
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=shortlog;h=refs/heads/scsi-unlocked_qcmds
 
+I will have a look at running some modified TCM_Loop and Linux/iSCSI Initiators tests
+using with SHT->unlocked-qcmds=1 in the very near future on this code.  8-)
 
+Many thanks again for your very worthwhile efforts Vasu!
 
+Best,
+
+--nab
 
 
