@@ -1,96 +1,74 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 04/22] tcm: Add v4 base data structures and struct
-	target_core_fabric_ops
-Date: Sat, 04 Sep 2010 16:53:10 -0700
-Message-ID: <1283644390.556.74.camel@haakon2.linux-iscsi.org>
-References: <1283160040-6636-1-git-send-email-nab@linux-iscsi.org>
-	 <201009020156.53803.konrad@darnok.org>
-	 <1283455187.5598.86.camel@haakon2.linux-iscsi.org>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 00/13] trivial: Remove unnecessary casts of private_data
+Date: Sat,  4 Sep 2010 18:52:41 -0700
+Message-ID: <cover.1283650107.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1283455187.5598.86.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>
+Return-path: <devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
+List-Post: <mailto:devel@linuxdriverproject.org>
+List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
+Sender: devel-bounces@linuxdriverproject.org
+Errors-To: devel-bounces@linuxdriverproject.org
+To: Jiri Kosina <trivial@kernel.org>
+Cc: alsa-devel@alsa-project.org, David Airlie <airlied@linux.ie>, Heiko Carstens <heiko.carstens@de.ibm.com>, dri-devel@lists.freedesktop.org, Jaroslav Kysela <perex@perex.cz>, "J. Bruce Fields" <bfields@fieldses.org>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, Wey-Yi Guy <wey-yi.w.guy@intel.com>, Sean Hefty <sean.hefty@intel.com>, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, "Pekka Savola (ipv6)" <pekkas@netcore.fi>, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, James Morris <jmorris@namei.org>, Intel Linux Wireless <ilw@linux.intel.com>, Neil Brown <neilb@suse.de>, Ingo Molnar <mingo@redhat.com>, Doug Gilbert <dgilbert@interlog.com>, Alexey Kuznetsov <kuznet@ms2.inr.ac.ru>, Roland Dreier <rolandd@cisco.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, Trond Myklebust <Trond.Myklebust@netapp.com>, ecryptfs-devel@lists.launchpad.net, John W.
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2010-09-02 at 12:19 -0700, Nicholas A. Bellinger wrote:
-> On Thu, 2010-09-02 at 01:56 -0400, Konrad Rzeszutek Wilk wrote:
-> > On Monday 30 August 2010 05:20:40 Nicholas A. Bellinger wrote:
-> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Hey Nicholas,
-> > 
-> > I did a cursory review .
-> > 
+Resend removal of remaining casts of private_data
 
-<BIG SNIP>
+Joe Perches (13):
+  drivers/gpu/drm: Remove unnecessary casts of private_data
+  drivers/infiniband: Remove unnecessary casts of private_data
+  drivers/net/wireless/iwlwifi: Remove unnecessary casts of private_data
+  drivers/s390: Remove unnecessary casts of private_data
+  drivers/scsi: Remove unnecessary casts of private_data
+  drivers/staging/lirc: Remove unnecessary casts of private_data
+  fs/ecryptfs: Remove unnecessary casts of private_data
+  fs/seq_file.c: Remove unnecessary casts of private_data
+  kernel/pm_qos_params.c: Remove unnecessary casts of private_data
+  kernel/trace: Remove unnecessary casts of private_data
+  net/ipv4: Remove unnecessary casts of private_data
+  net/sunrpc/rpc_pipe.c: Remove unnecessary casts of private_data
+  sound: Remove unnecessary casts of private_data
 
-> 
-> Ok, I will go ahead and make the changes per the above comments and will
-> drop you a line when the push is ready.  I do agree that mixing the
-> struct variables with #defines in target_core_base.h does make things a
-> bit more readable.  Let me consider this a bit.
-> 
-> Any comments from the kernel folks on this particular item..?
-> 
-> Thanks for your comments Konrad!
-> 
+ drivers/gpu/drm/radeon/radeon_ttm.c            |    2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_fifo.c           |    2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_ttm_glue.c       |    2 +-
+ drivers/infiniband/hw/qib/qib_file_ops.c       |    4 ++--
+ drivers/net/wireless/iwlwifi/iwl-agn-debugfs.c |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-debugfs.c     |    4 ++--
+ drivers/s390/char/vmcp.c                       |    6 +++---
+ drivers/scsi/aacraid/linit.c                   |    2 +-
+ drivers/scsi/sg.c                              |    2 +-
+ drivers/staging/lirc/lirc_imon.c               |    4 ++--
+ drivers/staging/lirc/lirc_zilog.c              |   10 +++++-----
+ fs/ecryptfs/ecryptfs_kernel.h                  |    2 +-
+ fs/seq_file.c                                  |    6 +++---
+ kernel/pm_qos_params.c                         |    2 +-
+ kernel/trace/ftrace.c                          |    4 ++--
+ kernel/trace/trace.c                           |    2 +-
+ net/ipv4/raw.c                                 |    2 +-
+ net/sunrpc/rpc_pipe.c                          |    4 ++--
+ sound/core/oss/mixer_oss.c                     |   22 +++++++++++-----------
+ sound/core/pcm.c                               |    3 +--
+ sound/drivers/virmidi.c                        |    2 +-
+ sound/i2c/other/ak4xxx-adda.c                  |    2 +-
+ sound/isa/ad1816a/ad1816a.c                    |    2 +-
+ sound/isa/azt2320.c                            |    2 +-
+ sound/isa/gus/gusmax.c                         |    4 ++--
+ sound/isa/sb/sb8.c                             |    2 +-
+ sound/oss/au1550_ac97.c                        |   18 +++++++++---------
+ sound/pci/emu10k1/emumpu401.c                  |    2 +-
+ sound/pci/ice1712/pontis.c                     |    6 +++---
+ sound/pci/ice1712/prodigy192.c                 |    2 +-
+ sound/pci/rme96.c                              |    8 ++++----
+ sound/pci/rme9652/hdsp.c                       |    8 ++++----
+ 32 files changed, 72 insertions(+), 73 deletions(-)
 
-Hi Konard,
-
-I just pushed most of your recommend cleanups for target_core_base.h to
-lio-core-2.6.git/lio-4.0.  The cleanup series has been posted on
-lio-devel list to prevent extra noise on linux-scsi, et al, but for
-reference the shortlog and diffstat are attached below..  I did not dive
-into intermixed struct + #defines, but I am still pretty indifferent on
-this particular item.
-
-Please have a look and feel free to make additional comments.
-
-Thanks again!
-
---nab
-
-Nicholas Bellinger (13):
-  tcm: Remove legacy struct se_lun->lun_type usage
-  tcm: Remove legacy DEV_STATUS_THR_* defines
-  tcm: Convert TCM base defines to enums, round 1
-  tcm: Convert NAF_DYNAMIC_NODE_ACL to struct
-    se_node_acl->dynamic_node_acl bitfield
-  tcm: Convert MAP_SG_KMAP to struct se_map_sg->sg_kmap_active bitfield
-  tcm: Convert TCM base defines to enums, round 2:
-  tcm: Convert DEF_PR_REGISTERED to struct
-    se_dev_entry->def_pr_registered bitfield
-  tcm: Convert PRF_ISID_PRESENT_AT_REG to struct
-    t10_pr_registration->isid_present_at_reg bitfield
-  tcm: Convert struct se_cmd->scsi_sense_reason enum and add TCM_*
-    prefix
-  tcm: Add comments for t10_alua_index_t, t10_task_attr_index_t and
-    t10_reservations_index_t
-  tcm/pr: Add proper comment for struct
-    t10_reservation_template->pr_res_holder
-  tcm/alua: Move (*t10_*)() callers into struct t10_reservation_ops
-  tcm: Cleanups for struct se_transport_task usage
-
- drivers/target/lio-target/iscsi_target.c       |   12 +-
- drivers/target/lio-target/iscsi_target_erl0.c  |    4 +-
- drivers/target/lio-target/iscsi_target_mib.c   |    6 +-
- drivers/target/lio-target/iscsi_target_util.c  |    6 +-
- drivers/target/target_core_device.c            |   17 +-
- drivers/target/target_core_fabric_lib.c        |    5 +-
- drivers/target/target_core_file.c              |    2 +-
- drivers/target/target_core_iblock.c            |    2 +-
- drivers/target/target_core_mib.c               |    6 +-
- drivers/target/target_core_pr.c                |   46 ++--
- drivers/target/target_core_rd.c                |    6 +-
- drivers/target/target_core_tpg.c               |   38 +--
- drivers/target/target_core_transport.c         |  161 ++++++------
- drivers/target/tcm_fc/tfc_cmd.c                |    4 +-
- drivers/target/tcm_fc/tfc_io.c                 |    4 +-
- drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |    4 +-
- include/target/target_core_base.h              |  314 ++++++++++++++----------
- include/target/target_core_tpg.h               |    4 +-
- 18 files changed, 331 insertions(+), 310 deletions(-)
+-- 
+1.7.2.19.g9a302
