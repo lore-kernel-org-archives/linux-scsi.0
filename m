@@ -1,38 +1,44 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 17822] drivers/scsi/ipr.c implicit declaration of function
- 'writeq'
-Date: Mon, 6 Sep 2010 13:31:18 GMT
-Message-ID: <201009061331.o86DVI1W028034@demeter1.kernel.org>
-References: <bug-17822-11613@https.bugzilla.kernel.org/>
+From: Christian Dietrich <qy03fugy@stud.informatik.uni-erlangen.de>
+Subject: [PATCH 08/14] drivers/scsi: Removing undead ifdef CONFIG_PCI
+Date: Mon, 6 Sep 2010 16:36:36 +0200
+Message-ID: <7b18a70423acd7cdae3a8d6ae636b99e202acc64.1283782701.git.qy03fugy@stud.informatik.uni-erlangen.de>
+References: <cover.1283782698.git.qy03fugy@stud.informatik.uni-erlangen.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:57955 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750775Ab0IFNbU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2010 09:31:20 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o86DVJw8028035
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Sep 2010 13:31:19 GMT
-In-Reply-To: <bug-17822-11613@https.bugzilla.kernel.org/>
+Received: from faui40.informatik.uni-erlangen.de ([131.188.34.40]:33588 "EHLO
+	faui40.informatik.uni-erlangen.de" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754165Ab0IFOgi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2010 10:36:38 -0400
+Content-Disposition: inline
+In-Reply-To: <cover.1283782698.git.qy03fugy@stud.informatik.uni-erlangen.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: vamos-dev@i4.informatik.uni-erlangen.de
 
-https://bugzilla.kernel.org/show_bug.cgi?id=17822
+The CONFIG_PCI ifdef isn't necessary at this point, because it is
+checked in an outer ifdef level already and has no effect here.
 
+Signed-off-by: Christian Dietrich <qy03fugy@stud.informatik.uni-erlangen.de>
+---
+ drivers/scsi/aic7xxx_old.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-
-
-
---- Comment #3 from Teej <xteejyx@googlemail.com>  2010-09-06 13:31:17 ---
-That does look very similar to this problem, but of course in another driver.
-Strangely, that is also ppc.
-I have also had the same error in the 2.6.35-r5 kernel sources in Gentoo, so
-this hasn't since been noticed/fixed and has in fact regressed.
-
+diff --git a/drivers/scsi/aic7xxx_old.c b/drivers/scsi/aic7xxx_old.c
+index 93984c9..c0953be 100644
+--- a/drivers/scsi/aic7xxx_old.c
++++ b/drivers/scsi/aic7xxx_old.c
+@@ -9655,9 +9655,7 @@ aic7xxx_detect(struct scsi_host_template *template)
+           found++;
+ 	  continue;
+ skip_pci_controller:
+-#ifdef CONFIG_PCI
+ 	  pci_release_regions(temp_p->pdev);
+-#endif
+ 	  kfree(temp_p);
+         }  /* Found an Adaptec PCI device. */
+         else /* Well, we found one, but we couldn't get any memory */
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+1.7.0.4
+
