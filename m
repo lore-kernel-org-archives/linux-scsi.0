@@ -1,8 +1,10 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Sun, 05 Sep 2010 16:59:54 -0700
-Message-ID: <1283731194.556.147.camel@haakon2.linux-iscsi.org>
-References: <4C76CA57.3050405@vlnb.net>
+Date: Sun, 05 Sep 2010 17:12:19 -0700
+Message-ID: <1283731939.556.159.camel@haakon2.linux-iscsi.org>
+References: <4C7421FB.2060007@vlnb.net>
+	 <1282685014.32007.51.camel@haakon2.linux-iscsi.org>
+	 <4C76CA57.3050405@vlnb.net>
 	 <1282857806.32007.175.camel@haakon2.linux-iscsi.org>
 	 <4C79484B.3090607@vlnb.net>
 	 <1283028468.32007.357.camel@haakon2.linux-iscsi.org>
@@ -12,50 +14,88 @@ References: <4C76CA57.3050405@vlnb.net>
 	 <1283459158.5598.143.camel@haakon2.linux-iscsi.org>
 	 <20100905201802.GC18411@core.coreip.homeip.net>
 	 <1283723447.556.133.camel@haakon2.linux-iscsi.org>
-	 <20100905234134.GA17212@core.coreip.homeip.net>
+	 <AANLkTimdHotxVS8ZJJhg0D08FUiw4scSMTb2dryqJ_vQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.mud.yahoo.com ([68.142.198.202]:22206 "HELO
-	smtp103.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754270Ab0IFADy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Sep 2010 20:03:54 -0400
-In-Reply-To: <20100905234134.GA17212@core.coreip.homeip.net>
+Received: from smtp102.sbc.mail.ne1.yahoo.com ([98.138.84.213]:39375 "HELO
+	smtp102.sbc.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754864Ab0IFAQS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Sep 2010 20:16:18 -0400
+In-Reply-To: <AANLkTimdHotxVS8ZJJhg0D08FUiw4scSMTb2dryqJ_vQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@suse.de>, Dirk Meister <dmeister@uni-paderborn.de>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, Chetan Loke <generationgnu@yahoo.com>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Mark Deneen <mdeneen@gmail.com>
+Cc: Dmitry Torokhov <dmitry.torokhov@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>, Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, scst-devel <scst-devel@lists.sourceforge.net>
 
-On Sun, 2010-09-05 at 16:41 -0700, Dmitry Torokhov wrote:
-> On Sun, Sep 05, 2010 at 02:50:47PM -0700, Nicholas A. Bellinger wrote:
+On Sun, 2010-09-05 at 19:13 -0400, Mark Deneen wrote:
+> On Sun, Sep 5, 2010 at 5:50 PM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> >
+> > I think the difference between what Linus says and what he actually
+> > means in the above video could be easily misinterpreted, well especially
+> > for some non-english speaking folks.  But I am certainly glad to see
+> > that a russian translation is also available for this google git talk
+> > for those who really want try to understand his reasons (and technical
+> > requirements) for what he is saying.
+> >
+> > So as to the specifics about why git is really the only right SCM choice
+> > for mainline target mode maintainership, it really all comes down to
+> > workflow.  Does your SCM allow other people to easily and without-pain
+> > track your upstream subsystem tree changes and 'rebase' as necessary for
+> > their patch series you make improvements..?   If we are talking about
+> > say, a single standalone driver being developed against mainline, then
+> > sure using a SCM like CVS or SVN is perfectly acceptable when you push
+> > to someone upstream like gregkh or akpm via email patch attachments.
+> >
+> > However, if we are talking about a subsystem maintainer workflow that
+> > requires many different people to track your subsystem tree for their
+> > own drivers and new feature bits, not being able to keep local branches
+> > for these level developers makes their life excruciatingly painful and
+> > unpleasent as they attempt to pull new upstream changes, especially when
+> > the speed of new upstream development is moving quickly.  This rule
+> > applys even more when said subsystem has a greater scope within the
+> > source tree in question.
+> >
 > > Anyways, if we are going to compare SCM distributed vs. centralized
 > > workflow in terms of kernel projects, lets please at least compare
 > > apples to apples here.
-> > 
+> >
+> > Best,
+> >
+> > --nab
 > 
-> No, we should not be comparing SCMs at all here but rather 2 competing
-> implementations based on quality of the code. You tried to bring SMC
-> angle in and I am saying that it is BS.
+> I've been trying to keep my 2 cents out of this, as I am merely an
+> SCST user.  Both of you have valid criticisms; the choice of SCM is
+> not one of them.  It is nit-picking at best, especially when SCST
+> could switch to git easily if they so desired.
+> 
+> Seven years ago, would you be pushing BitKeeper?
 > 
 
-Again, without getting into another pointless flamewar,  I think the
-main point here is that a open source project using a distributed
-workflow (like git) has major advantages when it comes to working with a
-larger group of developers than a centralized model (like SVN) does.
+Hi Mark,
 
-Because being a subsystem maintainer typically involves this type of
-complex workflow involving lots of different parties, git is a tool that
-was created (originally) expressely for a kernel workflow, and for those
-types of people it works really, really well.
+I will always be advocating using the best tool for the job in any given
+situation.  So absoulutely, I would have picked bitkeeper over tarballs
+any day of the week 7 years ago, or over SVN if it had existed back
+then.
 
-So, please understand that code and project workflow is only one of the
-reasons why TCM/LIO v4 was selected over SCST.   I invite you to take a
-closer look at the RFC Code that has been posted last week if you want
-to get into the nitty-gritty techinical details, which this thread has
-thus far been avoiding.
+But again, I think it's an important point that git is a tool that was
+made explictly for the linux kernel workflow.  Why would a new subsystem
+maintainer is participates in the kernel workflow ever use anything
+besides git at this point..?
+
+And sorry, but considering the obvious advantages in terms of workflow
+speed and flexibility that git brings to the table for a subsystem
+maintainer, calling the choise of SCM a nit-pick item demonstrates a
+level certain level of inexperience wrt to mainline kernel workflow.
+Which is perfectly OK, but if you really want to understand the issues
+at hand in a distributed vs. centrailized SCM model, I strongly suggest
+you watch Linus's talk as well.
 
 Best,
 
 --nab
+
 
