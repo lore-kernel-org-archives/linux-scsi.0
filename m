@@ -1,57 +1,100 @@
-From: david@lang.hm
-Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Mon, 6 Sep 2010 15:14:10 -0700 (PDT)
-Message-ID: <alpine.DEB.2.00.1009061507180.23167@asgard.lang.hm>
-References: <4C76CA57.3050405@vlnb.net>  <1282857806.32007.175.camel@haakon2.linux-iscsi.org>  <4C79484B.3090607@vlnb.net>  <1283028468.32007.357.camel@haakon2.linux-iscsi.org>  <4C7C18CE.5020103@vlnb.net>  <1283204792.32007.448.camel@haakon2.linux-iscsi.org>
-  <4C7FFD1A.8090509@vlnb.net>  <1283459158.5598.143.camel@haakon2.linux-iscsi.org>  <20100905201802.GC18411@core.coreip.homeip.net>  <1283723447.556.133.camel@haakon2.linux-iscsi.org>  <20100905234134.GA17212@core.coreip.homeip.net>
- <1283731194.556.147.camel@haakon2.linux-iscsi.org>  <1283769578.15944.1293.camel@mulgrave.site>  <4C85617E.2080603@vlnb.net> <1283810135.556.238.camel@haakon2.linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] tcm_loop: Convert to using root_device_register() and root_device_unregister()
+Date: Mon,  6 Sep 2010 15:19:41 -0700
+Message-ID: <1283811581-17702-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.lang.hm ([64.81.33.126]:37383 "EHLO bifrost.lang.hm"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752746Ab0IFWOv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Sep 2010 18:14:51 -0400
-In-Reply-To: <1283810135.556.238.camel@haakon2.linux-iscsi.org>
+Received: from smtp103.sbc.mail.ne1.yahoo.com ([98.138.84.214]:26275 "HELO
+	smtp103.sbc.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754697Ab0IFWTp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2010 18:19:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@suse.de>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Dirk Meister <dmeister@uni-paderborn.de>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, Chetan Loke <generationgnu@yahoo.com>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Richard Sharpe <realrichardsharpe@gmail.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Greg KH <greg@kroah.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Mon, 6 Sep 2010, Nicholas A. Bellinger wrote:
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-> So at this point, I will once again to refrain from any non technical
-> interaction with yourself.  If you have geninue concerns about any of
-> the TCM/LIO v4 code, then I suggest that you and your devels make them
-> known from within threads containing [PATCH] and [RFC] tags, because I
-> will not be bothering with anything that does not contain comments on
-> creating new or improving existing design and code.
+This patch updates TCM_Loop to use root_device_register() and root_device_unregister()
+from include/linux/device.h instead of device_register() and device_unregister()
+respectively within tcm_loop_alloc_core_bus() and tcm_loop_release_core_bus().
+This simply involved converting the static struct device tcm_loop_primary into
+a pointer that is setup by the call to root_device_register().
 
-I haven't seen any techinical discussion from you either.
+Thanks to Richard Sharpe and Dmitry Torokhov for their help with this item.
 
-all I see is how your favorite has been blessed as being the next thing to 
-be included, even though it still needs work and Vlad's can't even be 
-looked at.
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |   29 +++++++++--------------
+ 1 files changed, 11 insertions(+), 18 deletions(-)
 
-that's hardly a technical discussion.
+diff --git a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
+index 78476bc..eda6949 100644
+--- a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
++++ b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
+@@ -257,16 +257,10 @@ static struct device_driver tcm_loop_driverfs = {
+ 	.name			= "tcm_loop",
+ 	.bus			= &tcm_loop_lld_bus,
+ };
+-
+-static void tcm_loop_primary_release(struct device *dev)
+-{
+-	return;
+-}
+-
+-static struct device tcm_loop_primary = {
+-	.init_name		= "tcm_loop_0",
+-	.release		= tcm_loop_primary_release,
+-};
++/*
++ * Used with root_device_register() in tcm_loop_alloc_core_bus() below
++ */
++struct device *tcm_loop_primary;
+ 
+ /*
+  * Copied from drivers/scsi/libfc/fc_fcp.c:fc_change_queue_depth() and
+@@ -555,7 +549,7 @@ int tcm_loop_setup_hba_bus(struct tcm_loop_hba *tl_hba, int tcm_loop_host_id)
+ 	int ret;
+ 
+ 	tl_hba->dev.bus = &tcm_loop_lld_bus;
+-	tl_hba->dev.parent = &tcm_loop_primary;
++	tl_hba->dev.parent = tcm_loop_primary;
+ 	tl_hba->dev.release = &tcm_loop_release_adapter;
+ 	dev_set_name(&tl_hba->dev, "tcm_loop_adapter_%d", tcm_loop_host_id);
+ 
+@@ -577,11 +571,10 @@ int tcm_loop_alloc_core_bus(void)
+ {
+ 	int ret;
+ 
+-	ret = device_register(&tcm_loop_primary);
+-	if (ret) {
+-		printk(KERN_ERR "device_register() failed for"
+-				" tcm_loop_primary\n");
+-		return ret;
++	tcm_loop_primary = root_device_register("tcm_loop_0");
++	if (!(tcm_loop_primary)) {
++		printk(KERN_ERR "Unable to allocate tcm_loop_primary\n");
++		return -ENOMEM;
+ 	}
+ 	
+ 	ret = bus_register(&tcm_loop_lld_bus);
+@@ -603,7 +596,7 @@ int tcm_loop_alloc_core_bus(void)
+ bus_unreg:
+ 	bus_unregister(&tcm_loop_lld_bus);
+ dev_unreg:
+-	device_unregister(&tcm_loop_primary);
++	root_device_unregister(tcm_loop_primary);
+ 	return ret;
+ }
+ 
+@@ -611,7 +604,7 @@ void tcm_loop_release_core_bus(void)
+ {
+ 	driver_unregister(&tcm_loop_driverfs);
+ 	bus_unregister(&tcm_loop_lld_bus);
+-	device_unregister(&tcm_loop_primary);
++	root_device_unregister(tcm_loop_primary);
+ 
+ 	printk(KERN_INFO "Releasing TCM Loop Core BUS\n");
+ }
+-- 
+1.5.6.5
 
-Vlad seems to be trying to document features of the different options, 
-naturally he knows his option better than anyone else's. He offered to 
-correct his listing with any information provided by anyone else, and 
-instead of corrections to the feature lists, we just got accusations of 
-handwaving and a reiteration that your favorite was selected in some 
-meeting to be merged.
-
-I would like to point out that over the years there have been many things 
-that were expected to be merged that didn't get merged. Don't take any 
-statement in any meeting to be a final decision. It doesn't matter how 
-promising yourcode looked at that point in time, until it's merged you may 
-find that it doesn't get merged. And even after it gets merged, if someone 
-else has better code, their code may replace yours if the other code is 
-better.
-
-As a user, I would sure like to see more information about the two major 
-choices and a lot less "this is what was picked at an invitation-only 
-meeting where one option wasn't represented"
-
-David Lang
