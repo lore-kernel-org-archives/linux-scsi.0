@@ -1,100 +1,105 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] tcm_loop: Convert to using root_device_register() and root_device_unregister()
-Date: Mon,  6 Sep 2010 15:19:41 -0700
-Message-ID: <1283811581-17702-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH] scsi_debug: Convert to use root_device_register() and root_device_unregister()
+Date: Mon,  6 Sep 2010 15:32:20 -0700
+Message-ID: <1283812340-21132-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.ne1.yahoo.com ([98.138.84.214]:26275 "HELO
+Received: from smtp103.sbc.mail.ne1.yahoo.com ([98.138.84.214]:33353 "HELO
 	smtp103.sbc.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754697Ab0IFWTp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2010 18:19:45 -0400
+	by vger.kernel.org with SMTP id S1753542Ab0IFWcX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2010 18:32:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Richard Sharpe <realrichardsharpe@gmail.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Dmitry
 Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Greg KH <greg@kroah.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch updates TCM_Loop to use root_device_register() and root_device_unregister()
-from include/linux/device.h instead of device_register() and device_unregister()
-respectively within tcm_loop_alloc_core_bus() and tcm_loop_release_core_bus().
-This simply involved converting the static struct device tcm_loop_primary into
-a pointer that is setup by the call to root_device_register().
+Hi Doug and Co,
+
+This patch updates the scsi_debug virtual LLD to use root_device_register()
+and root_device_unregister() from include/linux/device.h instead of device_register()
+and device_unregister() respectively within scsi_debug_init() and scsi_debug_exit()
+This simply involved converting the static struct device pseudo_primary into a
+pointer that is setup by the call to root_device_register().
 
 Thanks to Richard Sharpe and Dmitry Torokhov for their help with this item.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |   29 +++++++++--------------
- 1 files changed, 11 insertions(+), 18 deletions(-)
+ drivers/scsi/scsi_debug.c |   26 ++++++++------------------
+ 1 files changed, 8 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-index 78476bc..eda6949 100644
---- a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-+++ b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-@@ -257,16 +257,10 @@ static struct device_driver tcm_loop_driverfs = {
- 	.name			= "tcm_loop",
- 	.bus			= &tcm_loop_lld_bus,
- };
--
--static void tcm_loop_primary_release(struct device *dev)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index b02bdc6..399c430 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -3207,23 +3207,14 @@ static void do_remove_driverfs_files(void)
+ 	driver_remove_file(&sdebug_driverfs_driver, &driver_attr_add_host);
+ }
+ 
+-static void pseudo_0_release(struct device *dev)
 -{
--	return;
+-	if (SCSI_DEBUG_OPT_NOISE & scsi_debug_opts)
+-		printk(KERN_INFO "scsi_debug: pseudo_0_release() called\n");
 -}
 -
--static struct device tcm_loop_primary = {
--	.init_name		= "tcm_loop_0",
--	.release		= tcm_loop_primary_release,
+-static struct device pseudo_primary = {
+-	.init_name	= "pseudo_0",
+-	.release	= pseudo_0_release,
 -};
-+/*
-+ * Used with root_device_register() in tcm_loop_alloc_core_bus() below
-+ */
-+struct device *tcm_loop_primary;
++struct device *pseudo_primary;
  
- /*
-  * Copied from drivers/scsi/libfc/fc_fcp.c:fc_change_queue_depth() and
-@@ -555,7 +549,7 @@ int tcm_loop_setup_hba_bus(struct tcm_loop_hba *tl_hba, int tcm_loop_host_id)
- 	int ret;
- 
- 	tl_hba->dev.bus = &tcm_loop_lld_bus;
--	tl_hba->dev.parent = &tcm_loop_primary;
-+	tl_hba->dev.parent = tcm_loop_primary;
- 	tl_hba->dev.release = &tcm_loop_release_adapter;
- 	dev_set_name(&tl_hba->dev, "tcm_loop_adapter_%d", tcm_loop_host_id);
- 
-@@ -577,11 +571,10 @@ int tcm_loop_alloc_core_bus(void)
+ static int __init scsi_debug_init(void)
  {
- 	int ret;
+ 	unsigned long sz;
+ 	int host_to_add;
+ 	int k;
+-	int ret;
++	int ret = 0;
  
--	ret = device_register(&tcm_loop_primary);
--	if (ret) {
--		printk(KERN_ERR "device_register() failed for"
--				" tcm_loop_primary\n");
--		return ret;
-+	tcm_loop_primary = root_device_register("tcm_loop_0");
-+	if (!(tcm_loop_primary)) {
-+		printk(KERN_ERR "Unable to allocate tcm_loop_primary\n");
-+		return -ENOMEM;
+ 	switch (scsi_debug_sector_size) {
+ 	case  512:
+@@ -3352,10 +3343,9 @@ static int __init scsi_debug_init(void)
+ 			map_region(0, 2);
  	}
- 	
- 	ret = bus_register(&tcm_loop_lld_bus);
-@@ -603,7 +596,7 @@ int tcm_loop_alloc_core_bus(void)
+ 
+-	ret = device_register(&pseudo_primary);
+-	if (ret < 0) {
+-		printk(KERN_WARNING "scsi_debug: device_register error: %d\n",
+-			ret);
++	pseudo_primary = root_device_register("pseudo_0");
++	if (!(pseudo_primary)) {
++		printk(KERN_WARNING "scsi_debug: root_device_register() error\n");
+ 		goto free_vm;
+ 	}
+ 	ret = bus_register(&pseudo_lld_bus);
+@@ -3402,7 +3392,7 @@ del_files:
  bus_unreg:
- 	bus_unregister(&tcm_loop_lld_bus);
+ 	bus_unregister(&pseudo_lld_bus);
  dev_unreg:
--	device_unregister(&tcm_loop_primary);
-+	root_device_unregister(tcm_loop_primary);
- 	return ret;
- }
+-	device_unregister(&pseudo_primary);
++	root_device_unregister(pseudo_primary);
+ free_vm:
+ 	if (map_storep)
+ 		vfree(map_storep);
+@@ -3423,7 +3413,7 @@ static void __exit scsi_debug_exit(void)
+ 	do_remove_driverfs_files();
+ 	driver_unregister(&sdebug_driverfs_driver);
+ 	bus_unregister(&pseudo_lld_bus);
+-	device_unregister(&pseudo_primary);
++	root_device_unregister(pseudo_primary);
  
-@@ -611,7 +604,7 @@ void tcm_loop_release_core_bus(void)
- {
- 	driver_unregister(&tcm_loop_driverfs);
- 	bus_unregister(&tcm_loop_lld_bus);
--	device_unregister(&tcm_loop_primary);
-+	root_device_unregister(tcm_loop_primary);
+ 	if (dif_storep)
+ 		vfree(dif_storep);
+@@ -3474,7 +3464,7 @@ static int sdebug_add_adapter(void)
+         spin_unlock(&sdebug_host_list_lock);
  
- 	printk(KERN_INFO "Releasing TCM Loop Core BUS\n");
- }
+         sdbg_host->dev.bus = &pseudo_lld_bus;
+-        sdbg_host->dev.parent = &pseudo_primary;
++        sdbg_host->dev.parent = pseudo_primary;
+         sdbg_host->dev.release = &sdebug_release_adapter;
+         dev_set_name(&sdbg_host->dev, "adapter%d", scsi_debug_add_host);
+ 
 -- 
 1.5.6.5
 
