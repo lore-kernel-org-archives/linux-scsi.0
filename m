@@ -1,108 +1,54 @@
-From: Andreas Dilger <adilger@dilger.ca>
-Subject: Re: [PATCH 24.5/30] jbd2: Modify ASYNC_COMMIT code to not rely on queue draining on barrier
-Date: Mon, 6 Sep 2010 13:15:52 +0200
-Message-ID: <08ADE50E-9B33-4834-B08A-AD342D63D1F9@dilger.ca>
-References: <1282751267-3530-1-git-send-email-tj@kernel.org> <4C762476.2020802@suse.de>
-Mime-Version: 1.0 (Apple Message framework v1081)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C762476.2020802@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <teheo@suse.de>
-Cc: jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
+Date: Mon, 06 Sep 2010 07:27:23 -0400
+Message-ID: <1283772443.15944.1320.camel@mulgrave.site>
+References: <4C76CA57.3050405@vlnb.net>
+	 <1282857806.32007.175.camel@haakon2.linux-iscsi.org>
+	 <4C79484B.3090607@vlnb.net>
+	 <1283028468.32007.357.camel@haakon2.linux-iscsi.org>
+	 <4C7C18CE.5020103@vlnb.net>
+	 <1283204792.32007.448.camel@haakon2.linux-iscsi.org>
+	 <4C7FFD1A.8090509@vlnb.net>
+	 <1283459158.5598.143.camel@haakon2.linux-iscsi.org>
+	 <20100905201802.GC18411@core.coreip.homeip.net>
+	 <1283723447.556.133.camel@haakon2.linux-iscsi.org>
+	 <20100905234134.GA17212@core.coreip.homeip.net>
+	 <1283731194.556.147.camel@haakon2.linux-iscsi.org>
+	 <1283769578.15944.1293.camel@mulgrave.site>
+	 <AANLkTikaE=7++X1VQj36Np93msyCViLs40_ti_2=ybqn@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:48067 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754491Ab0IFL13 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Sep 2010 07:27:29 -0400
+In-Reply-To: <AANLkTikaE=7++X1VQj36Np93msyCViLs40_ti_2=ybqn@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, scst-devel <scst-devel@lists.sourceforge.net>
 
-On 2010-08-26, at 10:23, Tejun Heo wrote:
-> From 49f4cef00a1bd3c79fb2fe1f982c5157f0792867 Mon Sep 17 00:00:00 2001
-> From: Jan Kara <jack@suse.cz>
+On Mon, 2010-09-06 at 13:02 +0200, Bart Van Assche wrote:
+> On Mon, Sep 6, 2010 at 12:39 PM, James Bottomley
+> <James.Bottomley@suse.de> wrote:
+> >
+> > [ ... ]
+> >
+> > > So, please understand that code and project workflow is only one of the
+> > > reasons why TCM/LIO v4 was selected over SCST.
+> >
+> > It isn't yet ... your code still has to be reviewed properly.  My
+> > preferred reviewer is currently honing his skills on a diet of raw beef
+> > in Argentina, but hopefully he'll get around to it shortly.
 > 
-> Currently JBD2 relies blkdev_issue_flush() draining the queue when ASYNC_COMMIT
-> feature is set. This property is going away so make JBD2 wait for buffers it
-> needs on its own before submitting the cache flush.
+> The SCST developers and the SCST users will definitely appreciate it
+> if review efforts will be spread evenly over both projects.
 
-I finally had a chance to look at this patch more closely, and I think it may be breaking the ASYNC_COMMIT functionality, by forcing a wait for all of the data blocks _before_ the journal commit block is even submitted, even though ASYNC_COMMIT is enabled.
+SCST isn't at the starting gate yet, so there's nothing currently to
+review.
 
-When ASYNC_COMMIT is enabled, it means that the journal transaction coherency is handled by the commit block checksum of the transaction data blocks, so the commit block can be submitted to the journal at the same time as the transaction data blocks.  The flush on the journal device (and the filesystem device, if they are separate) should happen after both are submitted.
-
-However, if ASYNC_COMMIT is NOT enabled, then the transaction data blocks should be submitted and flushed before the journal commit block is submitted, and then there should be a second cache flush afterward.
-
----
-> This patch is necessary before enabling flush/fua support in jbd2.
-> The flush-fua git tree has been udpated to included this between patch
-> 24 and 25.
-> 
-> Thanks.
-> 
-> fs/jbd2/commit.c |   29 ++++++++++++++++-------------
-> 1 files changed, 16 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/jbd2/commit.c b/fs/jbd2/commit.c
-> index 7c068c1..8797fd1 100644
-> --- a/fs/jbd2/commit.c
-> +++ b/fs/jbd2/commit.c
-> @@ -701,6 +701,16 @@ start_journal_io:
-> 		}
-> 	}
-> 
-> +	err = journal_finish_inode_data_buffers(journal, commit_transaction);
-> +	if (err) {
-> +		printk(KERN_WARNING
-> +			"JBD2: Detected IO errors while flushing file data "
-> +		       "on %s\n", journal->j_devname);
-> +		if (journal->j_flags & JBD2_ABORT_ON_SYNCDATA_ERR)
-> +			jbd2_journal_abort(journal, err);
-> +		err = 0;
-> +	}
-> +
-> 	/*
-> 	 * If the journal is not located on the file system device,
-> 	 * then we must flush the file system device before we issue
-> @@ -719,19 +729,6 @@ start_journal_io:
-> 						 &cbh, crc32_sum);
-> 		if (err)
-> 			__jbd2_journal_abort_hard(journal);
-> -		if (journal->j_flags & JBD2_BARRIER)
-> -			blkdev_issue_flush(journal->j_dev, GFP_KERNEL, NULL,
-> -				BLKDEV_IFL_WAIT);
-> -	}
-> -
-> -	err = journal_finish_inode_data_buffers(journal, commit_transaction);
-> -	if (err) {
-> -		printk(KERN_WARNING
-> -			"JBD2: Detected IO errors while flushing file data "
-> -		       "on %s\n", journal->j_devname);
-> -		if (journal->j_flags & JBD2_ABORT_ON_SYNCDATA_ERR)
-> -			jbd2_journal_abort(journal, err);
-> -		err = 0;
-> 	}
-> 
-> 	/* Lo and behold: we have just managed to send a transaction to
-> @@ -845,6 +842,12 @@ wait_for_iobuf:
-> 	}
-> 	if (!err && !is_journal_aborted(journal))
-> 		err = journal_wait_on_commit_record(journal, cbh);
-> +	if (JBD2_HAS_INCOMPAT_FEATURE(journal,
-> +				      JBD2_FEATURE_INCOMPAT_ASYNC_COMMIT) &&
-> +	    journal->j_flags & JBD2_BARRIER) {
-> +			blkdev_issue_flush(journal->j_dev, GFP_KERNEL, NULL,
-> +				BLKDEV_IFL_WAIT);
-> +	}
-> 
-> 	if (err)
-> 		jbd2_journal_abort(journal, err);
-> -- 
-> 1.7.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-Cheers, Andreas
-
-
-
+James
 
 
