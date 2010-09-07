@@ -1,119 +1,50 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: Re: [PATCH v3] scsi_debug: Convert to use root_device_register()
  and root_device_unregister()
-Date: Mon, 06 Sep 2010 22:56:40 -0400
-Message-ID: <4C85A9E8.8060708@interlog.com>
-References: <1283819068-24587-1-git-send-email-nab@linux-iscsi.org> <20100907003251.GA21430@core.coreip.homeip.net>
-Reply-To: dgilbert@interlog.com
+Date: Mon, 06 Sep 2010 23:00:56 -0400
+Message-ID: <1283828456.15944.1323.camel@mulgrave.site>
+References: <1283819068-24587-1-git-send-email-nab@linux-iscsi.org>
+	 <20100907003251.GA21430@core.coreip.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:56387 "EHLO smtp.infotech.no"
+Received: from cantor2.suse.de ([195.135.220.15]:43399 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755960Ab0IGC4s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Sep 2010 22:56:48 -0400
+	id S1751584Ab0IGDBL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 6 Sep 2010 23:01:11 -0400
 In-Reply-To: <20100907003251.GA21430@core.coreip.homeip.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Richard Sharpe <realrichardsharpe@gmail.com>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Greg KH <greg@kroah.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Greg KH <greg@kroah.com>
 
-On 10-09-06 08:32 PM, Dmitry Torokhov wrote:
+On Mon, 2010-09-06 at 17:32 -0700, Dmitry Torokhov wrote:
 > On Mon, Sep 06, 2010 at 05:24:28PM -0700, Nicholas A. Bellinger wrote:
->> From: Nicholas Bellinger<nab@linux-iscsi.org>
->>
->> Hi Doug and Co,
->>
->> This patch updates the scsi_debug virtual LLD to use root_device_register()
->> and root_device_unregister() from include/linux/device.h instead of device_register()
->> and device_unregister() respectively within scsi_debug_init() and scsi_debug_exit()
->> This simply involved converting the static struct device pseudo_primary into a
->> pointer that is setup by the call to root_device_register().
->>
->> This patch also contains the correct IS_ERR() conditional check of
->> root_device_register() from within scsi_debug_init().
->>
->> Thanks to Richard Sharpe and Dmitry Torokhov for their help with this item.
->>
->> Signed-off-by: Nicholas A. Bellinger<nab@linux-iscsi.org>
->
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > Hi Doug and Co,
+> > 
+> > This patch updates the scsi_debug virtual LLD to use root_device_register()
+> > and root_device_unregister() from include/linux/device.h instead of device_register()
+> > and device_unregister() respectively within scsi_debug_init() and scsi_debug_exit()
+> > This simply involved converting the static struct device pseudo_primary into a
+> > pointer that is setup by the call to root_device_register().
+> > 
+> > This patch also contains the correct IS_ERR() conditional check of
+> > root_device_register() from within scsi_debug_init().
+> > 
+> > Thanks to Richard Sharpe and Dmitry Torokhov for their help with this item.
+> > 
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> 
 > Thanks for making the changes.
->
-> Acked-by: Dmitry Torokhov<dtor@mail.ru>
+> 
+> Acked-by: Dmitry Torokhov <dtor@mail.ru>
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Can I make that Reviewed-by:? Acked-by is really just for maintainer
+patches which don't warrant a signoff.
 
->> ---
->>   drivers/scsi/scsi_debug.c |   25 ++++++++-----------------
->>   1 files changed, 8 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
->> index b02bdc6..6047c10 100644
->> --- a/drivers/scsi/scsi_debug.c
->> +++ b/drivers/scsi/scsi_debug.c
->> @@ -3207,16 +3207,7 @@ static void do_remove_driverfs_files(void)
->>   	driver_remove_file(&sdebug_driverfs_driver,&driver_attr_add_host);
->>   }
->>
->> -static void pseudo_0_release(struct device *dev)
->> -{
->> -	if (SCSI_DEBUG_OPT_NOISE&  scsi_debug_opts)
->> -		printk(KERN_INFO "scsi_debug: pseudo_0_release() called\n");
->> -}
->> -
->> -static struct device pseudo_primary = {
->> -	.init_name	= "pseudo_0",
->> -	.release	= pseudo_0_release,
->> -};
->> +struct device *pseudo_primary;
->>
->>   static int __init scsi_debug_init(void)
->>   {
->> @@ -3352,10 +3343,10 @@ static int __init scsi_debug_init(void)
->>   			map_region(0, 2);
->>   	}
->>
->> -	ret = device_register(&pseudo_primary);
->> -	if (ret<  0) {
->> -		printk(KERN_WARNING "scsi_debug: device_register error: %d\n",
->> -			ret);
->> +	pseudo_primary = root_device_register("pseudo_0");
->> +	if (IS_ERR(pseudo_primary)) {
->> +		printk(KERN_WARNING "scsi_debug: root_device_register() error\n");
->> +		ret = PTR_ERR(pseudo_primary);
->>   		goto free_vm;
->>   	}
->>   	ret = bus_register(&pseudo_lld_bus);
->> @@ -3402,7 +3393,7 @@ del_files:
->>   bus_unreg:
->>   	bus_unregister(&pseudo_lld_bus);
->>   dev_unreg:
->> -	device_unregister(&pseudo_primary);
->> +	root_device_unregister(pseudo_primary);
->>   free_vm:
->>   	if (map_storep)
->>   		vfree(map_storep);
->> @@ -3423,7 +3414,7 @@ static void __exit scsi_debug_exit(void)
->>   	do_remove_driverfs_files();
->>   	driver_unregister(&sdebug_driverfs_driver);
->>   	bus_unregister(&pseudo_lld_bus);
->> -	device_unregister(&pseudo_primary);
->> +	root_device_unregister(pseudo_primary);
->>
->>   	if (dif_storep)
->>   		vfree(dif_storep);
->> @@ -3474,7 +3465,7 @@ static int sdebug_add_adapter(void)
->>           spin_unlock(&sdebug_host_list_lock);
->>
->>           sdbg_host->dev.bus =&pseudo_lld_bus;
->> -        sdbg_host->dev.parent =&pseudo_primary;
->> +        sdbg_host->dev.parent = pseudo_primary;
->>           sdbg_host->dev.release =&sdebug_release_adapter;
->>           dev_set_name(&sdbg_host->dev, "adapter%d", scsi_debug_add_host);
->>
->> --
->> 1.5.6.5
->>
->
+James
+
 
