@@ -1,78 +1,45 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
- MegaRAID SAS driver
-Date: Tue, 7 Sep 2010 11:11:49 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3DC054B04@cosmail02.lsi.com>
-References: <AANLkTiktJycDkXu+FHQanTNe-djvvTe9V=9KfSkLcXZd@mail.gmail.com>
- <1283709850.15944.1277.camel@mulgrave.site>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
+Date: Wed, 08 Sep 2010 00:14:11 +0400
+Message-ID: <4C869D13.90401@vlnb.net>
+References: <4C76CA57.3050405@vlnb.net>	 <1282857806.32007.175.camel@haakon2.linux-iscsi.org>	 <4C79484B.3090607@vlnb.net>	 <1283028468.32007.357.camel@haakon2.linux-iscsi.org>	 <4C7C18CE.5020103@vlnb.net>	 <1283204792.32007.448.camel@haakon2.linux-iscsi.org>	 <4C7FFD1A.8090509@vlnb.net>	 <1283459158.5598.143.camel@haakon2.linux-iscsi.org>	 <20100905201802.GC18411@core.coreip.homeip.net>	 <1283723447.556.133.camel@haakon2.linux-iscsi.org>	 <20100905234134.GA17212@core.coreip.homeip.net>	 <1283731194.556.147.camel@haakon2.linux-iscsi.org>	 <1283769578.15944.1293.camel@mulgrave.site>  <4C85617E.2080603@vlnb.net> <1283810135.556.238.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:60484 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756792Ab0IGRL5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 13:11:57 -0400
-Content-Language: en-US
+Received: from moutng.kundenserver.de ([212.227.17.8]:61773 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758220Ab0IGUO2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 16:14:28 -0400
+In-Reply-To: <1283810135.556.238.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Dirk Meister <dmeister@uni-paderborn.de>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, Chetan Loke <generationgnu@yahoo.com>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-SmFtZXMsDQoNClRob3NlIHdlcmUgY29ycmVjdGVkIGFuZCBzdWJtaXR0ZWQuICANCg0KVGhhbmtz
-LA0KDQpCbyBZYW5nDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBZYW5nLCBC
-byANClNlbnQ6IFR1ZXNkYXksIFNlcHRlbWJlciAwNywgMjAxMCAxMTo1NCBBTQ0KVG86ICdKYW1l
-cyBCb3R0b21sZXknOyBibyB5YW5nDQpDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IGFr
-cG1Ab3NkbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IERhZnRhcmRhciwgSmF5
-YW50DQpTdWJqZWN0OiBSRTogW1BBVENIIDEvNV0gc2NzaTogbWVnYXJhaWRfc2FzIC0gQWRkIE9u
-bGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlEIFNBUyBkcml2ZXINCg0KVGhhbmtzIEph
-bWVzLA0KDQpUaGUgZS1tYWlsIGJyb2tlbiBsaW5lcyBvZiB0aGUgZGVzY3JpcHRpb24uICBJIGFt
-IGNoYW5naW5nIHRoZSBkZXNjcmlwdGlvbiB0byBhdm9pZCByZS1zdWJtaXQgYWxsIHRoZSBwYXRj
-aGVzKDUgb2YgdGhlbSkuDQoNCkFsc28gDQoNCj4gIG1lZ2FzYXNfY29tcGxldGVfY21kKHN0cnVj
-dCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgc3RydWN0DQo+IG1lZ2FzYXNfY21kICpjbWQs
-DQo+ICAJCSAgICAgdTggYWx0X3N0YXR1cyk7DQoNCk5vdCBwYXRjaCBsaW5lKGFscmVhZHkgaW4g
-dGhlIHNyYywgYnV0IG1vcmUgdGhhbiA4MCBjaGFycykuDQoNClJlZ2FyZHMsDQoNCkJvIFlhbmcg
-ICAgDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKYW1lcyBCb3R0b21sZXkg
-W21haWx0bzpKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZV0gDQpTZW50OiBTdW5kYXksIFNlcHRlbWJl
-ciAwNSwgMjAxMCAyOjA0IFBNDQpUbzogYm8geWFuZw0KQ2M6IFlhbmcsIEJvOyBsaW51eC1zY3Np
-QHZnZXIua2VybmVsLm9yZzsgYWtwbUBvc2RsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVs
-Lm9yZzsgRGFmdGFyZGFyLCBKYXlhbnQNClN1YmplY3Q6IFJlOiBbUEFUQ0ggMS81XSBzY3NpOiBt
-ZWdhcmFpZF9zYXMgLSBBZGQgT25saW5lIENvbnRyb2xsZXIgUmVzZXQgdG8gTWVnYVJBSUQgU0FT
-IGRyaXZlcg0KDQpPbiBXZWQsIDIwMTAtMDgtMTEgYXQgMTY6NDUgLTA0MDAsIGJvIHlhbmcgd3Jv
-dGU6DQo+IFRvIGFkZCB0aGUgT25saW5lIENvbnRyb2xsZXIgUmVzZXQgIChPQ1IpIHN1cHBvcnQs
-IGRyaXZlciBuZWVkIHRvIGRvOg0KPiAJCWEpLiByZXNldCB0aGUgY29udHJvbGxlciBjaGlwcyAt
-LSBYc2NhbGUgYW5kIEdlbjIgd2hpY2ggd2lsbCBjaGFuZ2UNCj4gdGhlIGZ1bmN0aW9uIGNhbGxz
-IGFuZCBhZGQgdGhlIHJlc2V0IGZ1bmN0aW9uDQo+IAkJcmVsYXRlZCB0byB0aGlzIHR3byBjaGlw
-cy4NCj4gCQkNCj4gCQliKS4gZHVyaW5nIHRoZSByZXNldCwgZHJpdmVyIHdpbGwgc3RvcmUgdGhl
-IHBlbmRpbmcgY21kcyB3aGljaCBub3QNCj4gcmV0dXJuZWQgYnkgRlcgdG8gZHJpdmVyJ3MgcGVu
-ZGluZyBxdWV1ZS4gIERyaXZlcg0KPiAJCXdpbGwgcmUtaXNzdWUgdGhvc2UgcGVuZGluZyBjbWRz
-IGFnYWluIHRvIEZXIGFmdGVyIHRoZSBPQ1IgZmluaXNoZWQuDQo+IAkJDQo+IAkJYykuIEluIGRy
-aXZlcidzIHRpbWVvdXQgcm91dGluZSwgZHJpdmVyIHdpbGwgcmVwb3J0IHRvIE9TIGFzIHJlc2V0
-Lg0KPiBBbHNvIGRyaXZlcidzIHF1ZXVlIHJvdXRpbmUgd2lsbCBibG9jayB0aGUNCj4gCQljbWRz
-IHVudGlsIHRoZSBPQ1IgZmluaXNoZWQuDQo+IAkJDQo+IAkJZCkuIGluIERyaXZlcidzIElTUiBy
-b3V0aW5lLCBpZiBkcml2ZXIgZ2V0IHRoZSBGVyBzdGF0ZSBhcyBzdGF0ZQ0KPiBjaGFuZ2UsIEZX
-IGluIEZhaWx1cmUgc3RhdHVzIGFuZCBGVyBzdXBwb3J0IG9ubGluZSBjb250cm9sbGVyDQo+IAkJ
-cmVzZXQgKE9DUiksIGRyaXZlciB3aWxsIHN0YXJ0IHRvIGRvIHRoZSBjb250cm9sbGVyIHJlc2V0
-Lg0KPiAJCQ0KPiAJCWUpLiBJbiBkcml2ZXIncyBJT0NUTCByb3V0aW5lLCB0aGUgYXBwbGljYXRp
-b24gY21kcyB3aWxsIHdhaXQgZm9yDQo+IHRoZSBPQ1IgdG8gZmluaXNoLCB0aGVuIGlzc3VlIHRo
-ZSBjbWRzIHRvIEZXLg0KPiANCj4gU2lnbmVkLW9mZi1ieSBCbyBZYW5nPGJvLnlhbmdAbHNpLmNv
-bT4NCg0KVGhpcyBwYXRjaCBpcyBmdWxsIG9mIGxpbmUgYnJlYWtzIHdoaWNoIHByZXZlbnQgYXBw
-bGljYXRpb24sIGxpa2UgdGhpcw0Kb25lOg0KDQo+IGRpZmYgLXJ1cE4gb2xkL0RvY3VtZW50YXRp
-b24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzDQo+IG5ldy9Eb2N1bWVudGF0aW9uL3Njc2kv
-Q2hhbmdlTG9nLm1lZ2FyYWlkX3Nhcw0KPiAtLS0gb2xkL0RvY3VtZW50YXRpb24vc2NzaS9DaGFu
-Z2VMb2cubWVnYXJhaWRfc2FzCTIwMTAtMDgtMTANCj4gMDQ6NTg6MzYuMDAwMDAwMDAwIC0wNDAw
-DQo+ICsrKyBuZXcvRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMJMjAx
-MC0wOC0xMA0KPiAwNDo1NjozMC4wMDAwMDAwMDAgLTA0MDANCj4gQEAgLTEsMyArMSwzNiBAQA0K
-PiArMSBSZWxlYXNlIERhdGUgICAgOiBUaHVyLiAgTWF5IDAzLCAyMDEwIDA5OjEyOjQ1IFBTVCAy
-MDA5IC0NCj4gKwkJCShlbWFpbGQtaWQ6bWVnYXJhaWRsaW51eEBsc2kuY29tKQ0KPiArCQkJQm8g
-WWFuZw0KW3NuaXBdDQoNCmFuZCB0aGlzIG9uZQ0KPiBkaWZmIC1ydXBOIG9sZC9kcml2ZXJzL3Nj
-c2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMNCj4gbmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9t
-ZWdhcmFpZF9zYXMuYw0KPiAtLS0gb2xkL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9z
-YXMuYwkyMDEwLTA4LTEwIDA0OjU1OjQxLjAwMDAwMDAwMCAtMDQwMA0KPiArKysgbmV3L2RyaXZl
-cnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYwkyMDEwLTA4LTEwIDA0OjU2OjMwLjAwMDAw
-MDAwMCAtMDQwMA0KPiBAQCAtMTA3LDYgKzEwNywxMiBAQCBzdGF0aWMgdm9pZA0KPiAgbWVnYXNh
-c19jb21wbGV0ZV9jbWQoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNlLCBzdHJ1Y3QN
-Cj4gbWVnYXNhc19jbWQgKmNtZCwNCj4gIAkJICAgICB1OCBhbHRfc3RhdHVzKTsNCg0KU2luY2Ug
-bm90IGV2ZXJ5IGxvbmcgbGluZSBpcyBicm9rZW4sIHRoaXMgbG9va3MgbGlrZSBzb21lIHR5cGUg
-b2YgY3V0DQphbmQgcGFzdGUgZXJyb3IgLi4uIGFueXdheSwgY291bGQgeW91IGZpeCBpdCB1cCwg
-cGxlYXNlPw0KDQpUaGFua3MsDQoNCkphbWVzDQoNCg0K
+Nicholas A. Bellinger, on 09/07/2010 01:55 AM wrote:
+>> Frankly, in all the situation around Linux SCSI targets I for quite a
+>> long time feeling myself as a hero of a Kafka novel. Supposed to be
+>> goals are to have the best code doing its job the best, but on practice
+>> nobody cares about technical arguments and figuring out which subsystem
+>> is the best. Instead, everything lives it own incomprehensible life,
+>> where doesn't matter what you are doing, all already long ago decided
+>> behind your back and you will never be told why. All accurate statements
+>> not heard or, at best, called "handwaving", but dirty public opinion
+>> manipulations based on half- and less-than-half- truth have very warn
+>> welcome. This atmosphere is unhealthy, really.
+>
+> Sorry Vlad, but this is simply not the truth.  You have had ample time
+> to comment on the hundreds of TCM/LIO patches posted to linux-scsi and
+> lkml over the last years, but you have chosen never to comment on a
+> *single* one then, or even on a single one now of the dozens that have
+> been posted in the last 3 weeks while this thread has been lumbering
+> forward..
+
+Actually, http://scst.sourceforge.net/comparison.html is the result of a 
+very careful and comprehensive review of your code, most likely, the 
+best it has ever had. Until high level questions are answered (Dmitry 
+perfectly summarized them), there's no point to go into low level 
+details reviewing particular patches.
+
+Vlad
