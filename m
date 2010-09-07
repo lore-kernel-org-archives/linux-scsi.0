@@ -1,68 +1,52 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
- dm
-Date: Tue, 7 Sep 2010 17:17:24 -0400
-Message-ID: <20100907211724.GA22525@redhat.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
- <1283509796-1510-24-git-send-email-tj@kernel.org>
- <4C84CD18.6060906@redhat.com>
+From: Konrad Rzeszutek Wilk <konrad@darnok.org>
+Subject: Re: Why is AHA152X_CS !64BIT?
+Date: Tue, 7 Sep 2010 17:12:54 -0400
+Message-ID: <201009071712.54867.konrad@darnok.org>
+References: <4C72D310.4040004@suse.cz> <4C7B924D.6030703@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from andromeda.dapyr.net ([206.212.254.10]:53222 "EHLO
+	andromeda.dapyr.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756653Ab0IGV0S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 17:26:18 -0400
+In-Reply-To: <4C7B924D.6030703@panasas.com>
 Content-Disposition: inline
-In-Reply-To: <4C84CD18.6060906@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Milan Broz <mbroz@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, Tejun Heo <tj@kernel.org>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com, mpatocka@redhat.com
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Jiri Slaby <jslaby@suse.cz>, fischer@linux-buechse.de, linux-scsi@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
-On Mon, Sep 06 2010 at  7:14am -0400,
-Milan Broz <mbroz@redhat.com> wrote:
+On Monday 30 August 2010 07:13:17 Boaz Harrosh wrote:
+> On 08/23/2010 10:59 PM, Jiri Slaby wrote:
+> > Hi,
+> >
+> > I see that the aha152x driver for pcmcia is marked as unsupported on
+> > 64bit. But I also see a patch [1] which removes the restriction based on
+> > user's testing in bugzilla [2].
+> >
+> > Is there a reason why it would have to be marked as !64BIT? I'm asking
+> > because there is an opensuse user with this card who updated to 64-bit
+> > distro and lost this driver thereafter.
+> >
+> > [1] http://kerneltrap.org/mailarchive/linux-scsi/2010/3/6/6832393
+> > [2] https://bugzilla.kernel.org/show_bug.cgi?id=14333
+> >
+> > thanks,
+>
+> If memory serves correctly, it might be that you need more then 4 Gbyte
+> of memory installed to exercise the bug, something about IO bouncing
+> addresses > 4G.
 
-> On 09/03/2010 12:29 PM, Tejun Heo wrote:
-> 
-> > +++ b/drivers/md/dm-crypt.c
-> > @@ -1278,7 +1278,7 @@ static int crypt_map(struct dm_target *ti, struct bio *bio,
-> >  	struct dm_crypt_io *io;
-> >  	struct crypt_config *cc;
-> >  
-> > -	if (unlikely(bio_empty_barrier(bio))) {
-> > +	if (bio->bi_rw & REQ_FLUSH) {
-> >  		cc = ti->private;
-> >  		bio->bi_bdev = cc->dev->bdev;
-> >  		return DM_MAPIO_REMAPPED;
-> 
-> ...
-> 
-> > +++ b/drivers/md/dm.c
-> > @@ -1400,14 +1391,22 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
-> >  	ci.io->md = md;
-> >  	spin_lock_init(&ci.io->endio_lock);
-> >  	ci.sector = bio->bi_sector;
-> > -	ci.sector_count = bio_sectors(bio);
-> > -	if (unlikely(bio_empty_barrier(bio)))
-> > +	if (!(bio->bi_rw & REQ_FLUSH))
-> > +		ci.sector_count = bio_sectors(bio);
-> > +	else {
-> > +		/* all FLUSH bio's reaching here should be empty */
-> > +		WARN_ON_ONCE(bio_has_data(bio));
-> >  		ci.sector_count = 1;
-> > +	}
-> 
-> 
-> I would add BUG_ON(bio_has_data(bio)) either to dm-crypt target or directly to DM core
-> in this path.
+If the machine is using SWIOTLB, then the bounce buffer would be activated. By 
+default if your machine has more than 4GB compiled under x86_64 the SWIOTLB 
+is turned on - but if you have an Intel/AMD IOMMU it gets turned off. Which 
+is OK as the Intel/AMD IOMMUs would handle the 4GB restricted devices. So as 
+long as the driver has pci_dma_mask_set.
 
-I agree, that WARN_ON_ONCE should be changed to BUG_ON.  This is a
-guarantee that the block layer now provides so it seems correct to have
-the DM core bug if that guarantee isn't actually provided.
- 
-> Note that empty barrier request bypass encryption layer now in dm-crypt, so if some bio
-> with data payload reach it after the change, it causes data corruption
-> (moreover plain data reach the disk directly).
+Looking at the git gui blame tool history, the reason that was added was 
+for 'allow drivers to be built non-modular'.
 
-Given the consequences, it wouldn't hurt to BUG_ON() in dm-crypt too.
-It's redundant if the DM core will also BUG_ON() but it serves as a
-dm-crypt safety-net/documentation.
-
-Mike
+So, does this driver build if you make it non-modular?
