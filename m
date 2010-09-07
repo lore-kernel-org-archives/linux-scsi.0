@@ -1,75 +1,67 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
- dm
-Date: Tue, 7 Sep 2010 18:15:43 -0400
-Message-ID: <20100907221543.GB22525@redhat.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
- <1283509796-1510-24-git-send-email-tj@kernel.org>
- <4C84CD18.6060906@redhat.com>
- <20100907211724.GA22525@redhat.com>
+From: Joel Becker <Joel.Becker@oracle.com>
+Subject: Re: [RFC 02/22] configfs: Add struct
+ configfs_item_operations->check_link() in configfs_unlink()
+Date: Tue, 7 Sep 2010 15:44:13 -0700
+Message-ID: <20100907224413.GC21935@mail.oracle.com>
+References: <1283160025-6598-1-git-send-email-nab@linux-iscsi.org>
+ <20100902064814.GB27904@mail.oracle.com>
+ <1283456440.5598.108.camel@haakon2.linux-iscsi.org>
+ <201009071701.02847.konrad@darnok.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-raid-owner@vger.kernel.org>
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20100907211724.GA22525@redhat.com>
-Sender: linux-raid-owner@vger.kernel.org
-To: Milan Broz <mbroz@redhat.com>
-Cc: jack@suse.cz, mst@redhat.com, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, hch@lst.de, k-ueda@ct.jp.nec.com, vst@vlnb.net, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, mpatocka@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, tytso@mit.edu, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com
+In-Reply-To: <201009071701.02847.konrad@darnok.org>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad@darnok.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Sep 07 2010 at  5:17pm -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
-
-> On Mon, Sep 06 2010 at  7:14am -0400,
-> Milan Broz <mbroz@redhat.com> wrote:
+On Tue, Sep 07, 2010 at 05:01:01PM -0400, Konrad Rzeszutek Wilk wrote:
+> > > 	I NAK'd this a while back.  I'm willing to be convinced, but so
+> > > far it remains that way.
+> >
+> > Hi Joel,
+> >
+> > Thanks for bringing this point up again.  So a brief refresh on why this
+> > is currently required in the fabric independent configfs handlers in
+> > drivers/target/target_core_fabric_configfs.c (patch #19).
 > 
-> > On 09/03/2010 12:29 PM, Tejun Heo wrote:
-> > 
-> > > +++ b/drivers/md/dm-crypt.c
-> > > @@ -1278,7 +1278,7 @@ static int crypt_map(struct dm_target *ti, struct bio *bio,
-> > >  	struct dm_crypt_io *io;
-> > >  	struct crypt_config *cc;
-> > >  
-> > > -	if (unlikely(bio_empty_barrier(bio))) {
-> > > +	if (bio->bi_rw & REQ_FLUSH) {
-> > >  		cc = ti->private;
-> > >  		bio->bi_bdev = cc->dev->bdev;
-> > >  		return DM_MAPIO_REMAPPED;
-> > 
-> > ...
-> > 
-> > > +++ b/drivers/md/dm.c
-> > > @@ -1400,14 +1391,22 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
-> > >  	ci.io->md = md;
-> > >  	spin_lock_init(&ci.io->endio_lock);
-> > >  	ci.sector = bio->bi_sector;
-> > > -	ci.sector_count = bio_sectors(bio);
-> > > -	if (unlikely(bio_empty_barrier(bio)))
-> > > +	if (!(bio->bi_rw & REQ_FLUSH))
-> > > +		ci.sector_count = bio_sectors(bio);
-> > > +	else {
-> > > +		/* all FLUSH bio's reaching here should be empty */
-> > > +		WARN_ON_ONCE(bio_has_data(bio));
-> > >  		ci.sector_count = 1;
-> > > +	}
-> > 
-> > 
-> > I would add BUG_ON(bio_has_data(bio)) either to dm-crypt target or directly to DM core
-> > in this path.
-> 
-> I agree, that WARN_ON_ONCE should be changed to BUG_ON.  This is a
-> guarantee that the block layer now provides so it seems correct to have
-> the DM core bug if that guarantee isn't actually provided.
+> Well, that is great that you mentioned your requirements. But I don't see a 
+> quote of Joel's concerns? Is there an LKML link for it perhaps?
 
-I was mistaken, DM enforces that guarantee... ;)
+	It was a while back.  Essentially, the concern is that configfs
+is defined to be userspace-driven.  If the user asks you to remove
+something, the module should be handling safe teardown rather than
+rejecting the user's request.
+	Now, the world isn't always clean-cut.  Code outside of the
+filesystem representation can lay a claim on a configfs item to say "I'm
+busy with this."  An example is ocfs2 pinning the configfs item
+describing its cluster heartbeat device.   But this is ocfs2 - a
+separate thing - claiming it.  There is a defined API to take and
+release these claims.
+	This API doesn't cover symlinks, as symlinks are simply linkage
+between config items.  It may be, as Nick suggested at the bottom of his
+reply, that we want the API extended to cover that case.  But he hasn't
+yet convinced me that safe teardown is impossible or disasterous.
+That's what I'd like to see.  It's not obvious on the face of all the
+file trees in the email.
+	Nick, can you provide some form of description, not long
+pathnames, that explains a) what breaks when the symlink is removed b)
+why that can't be allowed if the user is dumb enough to request it?
 
-(but block layer will also enforce empty flush for request-based)
+Joel
 
-But it wasn't clear until Christoph and I looked closer.  The point
-stands though; we should BUG_ON rather than WARN_ON_ONCE.
+-- 
 
-I'll send a follow-on patch to help clean this code up a bit more (based
-on Christoph's suggestions).  Mainly just making the flush paths a bit
-more distinct and adding some comments.
+"The lawgiver, of all beings, most owes the law allegiance.  He of all
+ men should behave as though the law compelled him.  But it is the
+ universal weakness of mankind that what we are given to administer we
+ presently imagine we own."
+        - H.G. Wells
 
-Mike
+Joel Becker
+Consulting Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
