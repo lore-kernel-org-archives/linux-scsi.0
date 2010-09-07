@@ -1,97 +1,54 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
-Date: Tue, 07 Sep 2010 17:20:32 +0400
-Message-ID: <4C863C20.2080004@vlnb.net>
-References: <1283204792.32007.448.camel@haakon2.linux-iscsi.org>	<4C7FFD1A.8090509@vlnb.net>	<1283459158.5598.143.camel@haakon2.linux-iscsi.org>	<20100905201802.GC18411@core.coreip.homeip.net>	<1283723447.556.133.camel@haakon2.linux-iscsi.org>	<20100905234134.GA17212@core.coreip.homeip.net>	<1283731194.556.147.camel@haakon2.linux-iscsi.org>	<1283769578.15944.1293.camel@mulgrave.site>	<4C85617E.2080603@vlnb.net>	<1283810135.556.238.camel@haakon2.linux-iscsi.org>	<20100907004424.GB21430@core.coreip.homeip.net>	<AANLkTin9Hk8+oMdXfB4h_DhirRyPf00739g5BpKcUE_5@mail.gmail.com>	<4C85DBC9.6030601@suse.de> <AANLkTi=zS=zTFZ-93vdMwPo1wcRsoLL9fnm5rxNT+4WH@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: [patch 14/30] scsi: aacraid semaphore cleanup
+Date: Tue, 07 Sep 2010 14:32:47 -0000
+Message-ID: <20100907125056.040881100@linutronix.de>
+References: <20100907124636.880953480@linutronix.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:60558 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756374Ab0IGNUm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 09:20:42 -0400
-In-Reply-To: <AANLkTi=zS=zTFZ-93vdMwPo1wcRsoLL9fnm5rxNT+4WH@mail.gmail.com>
+Received: from www.tglx.de ([62.245.132.106]:43756 "EHLO www.tglx.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932113Ab0IGOdL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Sep 2010 10:33:11 -0400
+Content-Disposition: inline; filename=drivers-scsi-sema.patch
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, Peter Zijlstra <peterz@infradead.org>, Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-Bart Van Assche, on 09/07/2010 10:45 AM wrote:
-> On Tue, Sep 7, 2010 at 8:29 AM, Hannes Reinecke<hare@suse.de>  wrote:
->>
->> Bart Van Assche wrote:
->> [ ... ]
->>> You seem to have missed the start of this thread. The design of SCST
->>> is significantly more advanced than that of LIO, and it has already
->>> been explained in this thread why
->>> (http://www.spinics.net/lists/linux-scsi/msg45856.html).
->>>
->> Hmm. That link seems to be misrouted. I was hoping for a design
->> overview of SCST there; however it's just a complain to
->> James Bottomley etc.
->>
->> Care to send the correct link?
->
-> An SCST design overview diagram together with SCST API documentation
-> can be found here: http://scst.sourceforge.net/scst_pg.html (sorry for
-> the language imperfections on this page, which should not affect
-> readability though).
+Get rid of init_MUTEX[_LOCKED]() and use sema_init() instead.
 
-For iSCSI-like transports, which support immediate/unsolicited data, 
-additional description of the processing flow is here.
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org
+---
+ drivers/scsi/aacraid/commctrl.c |    2 +-
+ drivers/scsi/aacraid/commsup.c  |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-In short, in this flow target drivers called by the SCST core 
-(preprocessing_done() callback) after preprocessing of this command 
-finished and the command has allocated buffer, so now the driver can 
-continue processing of the command and transfer in its buffer 
-immediate/unsolicited data, if there are any.
+Index: linux-2.6/drivers/scsi/aacraid/commctrl.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/aacraid/commctrl.c
++++ linux-2.6/drivers/scsi/aacraid/commctrl.c
+@@ -190,7 +190,7 @@ static int open_getadapter_fib(struct aa
+ 		/*
+ 		 *	Initialize the mutex used to wait for the next AIF.
+ 		 */
+-		init_MUTEX_LOCKED(&fibctx->wait_sem);
++		sema_init(&fibctx->wait_sem, 0);
+ 		fibctx->wait = 0;
+ 		/*
+ 		 *	Initialize the fibs and set the count of fibs on
+Index: linux-2.6/drivers/scsi/aacraid/commsup.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/aacraid/commsup.c
++++ linux-2.6/drivers/scsi/aacraid/commsup.c
+@@ -124,7 +124,7 @@ int aac_fib_setup(struct aac_dev * dev)
+ 		fibptr->hw_fib_va = hw_fib;
+ 		fibptr->data = (void *) fibptr->hw_fib_va->data;
+ 		fibptr->next = fibptr+1;	/* Forward chain the fibs */
+-		init_MUTEX_LOCKED(&fibptr->event_wait);
++		sema_init(&fibptr->event_wait, 0);
+ 		spin_lock_init(&fibptr->event_lock);
+ 		hw_fib->header.XferState = cpu_to_le32(0xffffffff);
+ 		hw_fib->header.SenderSize = cpu_to_le16(dev->max_fib_size);
 
-In details it is as the following:
 
-After iSCSI-SCST received new command in scsi_cmnd_start() it calls 
-scst_rx_cmd() to create scst_cmd then after it initialized necessary 
-fields in it (CDB, task attribute, expected data direction, etc.) it 
-calls scst_cmd_init_stage1_done() to notify SCST that scst_cmd 
-initialization finished and its processing can be started. Then SCST 
-parses SCSI CDB to determines data transfer length and direction (this 
-is necessary to prevent various DoS'es from remote initiators like 
-sending a command with wrong data direction; try this in the 
-pass-through case and you will see what happens) and allocates necessary 
-data buffer. From this point the following 2 scenarios are possible:
-
-1. Regular path, when SCST does all the processing directly as simple 
-function calls. SCST in the end of processing calls 
-iscsi_preprocessing_done() callback, which sets scst_state and returns. 
-Following the call stack the execution flow will return to 
-scsi_cmnd_start() and continue there.
-
-2. During processing SCST has to change context (switch to another 
-thread). It can be necessary, e.g., to handle some management activity. 
-Here everything is the same as in (1) above, but after 
-scst_cmd_init_stage1_done() returned scsi_cmnd_start() returns 1 and 
-further processing of this connection is suspended. Then 
-iscsi_preprocessing_done() will resume it. Then process_read_io() will 
-call cmnd_rx_continue().
-
-Then iSCSI-SCST will do necessary checks and if all correct:
-
-   - For READ commands and commands without data transfers, calls in 
-iscsi_restart_cmnd() scst_restart_cmd() to tell SCST to start command's 
-execution.
-
-   - Fro WRITE commands it receives immediate data, sends the necessary 
-R2T PDUs (send_r2t()), receives data for them and then calls 
-scst_restart_cmd().
-
-Then, after the command is finished, SCST returns to iSCSI-SCST status 
-of the command's execution in iscsi_xmit_response() callback, which 
-using send_data_rsp() makes the necessary Data-In PDUs and then either 
-directly sends them using iscsi_try_local_processing()->iscsi_send() (to 
-minimize latency) or passes to the write thread.
-
-Other internal SCST processing is as shown on the "The commands 
-processing flow" in http://scst.sourceforge.net/scst_pg.html.
-
-Thanks,
-Vlad
