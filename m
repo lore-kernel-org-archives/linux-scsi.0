@@ -1,94 +1,72 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] sd: improve logic and efficiecy of media-change detection
-Date: Tue, 7 Sep 2010 11:44:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1009071142100.1848-100000@iolanthe.rowland.org>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+ MegaRAID SAS driver
+Date: Tue, 7 Sep 2010 09:53:58 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3DC054A67@cosmail02.lsi.com>
+References: <AANLkTiktJycDkXu+FHQanTNe-djvvTe9V=9KfSkLcXZd@mail.gmail.com>
+ <1283709850.15944.1277.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:54366 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757281Ab0IGPoB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 11:44:01 -0400
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:58961 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757242Ab0IGPyN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 11:54:13 -0400
+In-Reply-To: <1283709850.15944.1277.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-This patch (as1415) improves the formerly incomprehensible logic in
-sd_media_changed() (the current code refers to "changed" as a state,
-whereas in fact it is a relation between two states).  It also adds a
-big comment so that everyone can understand what is really going on.
-
-The patch also improves efficiency by not reporting a media change
-when no medium was ever present.  If no medium was present the last
-time we checked and there's still no medium, it's not necessary to
-tell the caller that a change occurred.  Doing so merely causes the
-caller to attempt to revalidate a non-existent disk, which is a waste
-of time.
-
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-
----
-
-Index: usb-2.6/drivers/scsi/sd.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/sd.c
-+++ usb-2.6/drivers/scsi/sd.c
-@@ -561,7 +561,7 @@ static int sd_prep_fn(struct request_que
- 		 * quietly refuse to do anything to a changed disc until 
- 		 * the changed bit has been reset
- 		 */
--		/* printk("SCSI disk has been changed. Prohibiting further I/O.\n"); */
-+		/* printk("SCSI disk has been changed or is not present. Prohibiting further I/O.\n"); */
- 		goto out;
- 	}
- 
-@@ -1001,7 +1001,6 @@ static int sd_media_changed(struct gendi
- 	 */
- 	if (!scsi_device_online(sdp)) {
- 		set_media_not_present(sdkp);
--		retval = 1;
- 		goto out;
- 	}
- 
-@@ -1032,7 +1031,6 @@ static int sd_media_changed(struct gendi
- 		       /* 0x3a is medium not present */
- 		       sshdr->asc == 0x3a)) {
- 		set_media_not_present(sdkp);
--		retval = 1;
- 		goto out;
- 	}
- 
-@@ -1043,12 +1041,27 @@ static int sd_media_changed(struct gendi
- 	 */
- 	sdkp->media_present = 1;
- 
--	retval = sdp->changed;
--	sdp->changed = 0;
- out:
--	if (retval != sdkp->previous_state)
-+	/*
-+	 * Report a media change under the following conditions:
-+	 *
-+	 *	Medium is present now and wasn't present before.
-+	 *	Medium wasn't present before and is present now.
-+	 *	Medium was present at all times, but it changed while
-+	 *		we weren't looking (sdp->changed is set).
-+	 *
-+	 * If there was no medium before and there is no medium now then
-+	 * don't report a change, even if a medium was inserted and removed
-+	 * while we weren't looking.
-+	 */
-+	retval = (sdkp->media_present != sdkp->previous_state ||
-+			(sdkp->media_present && sdp->changed));
-+	if (retval)
- 		sdev_evt_send_simple(sdp, SDEV_EVT_MEDIA_CHANGE, GFP_KERNEL);
--	sdkp->previous_state = retval;
-+	sdkp->previous_state = sdkp->media_present;
-+
-+	/* sdp->changed indicates medium was changed or is not present */
-+	sdp->changed = !sdkp->media_present;
- 	kfree(sshdr);
- 	return retval;
- }
-
+VGhhbmtzIEphbWVzLA0KDQpUaGUgZS1tYWlsIGJyb2tlbiBsaW5lcyBvZiB0aGUgZGVzY3JpcHRp
+b24uICBJIGFtIGNoYW5naW5nIHRoZSBkZXNjcmlwdGlvbiB0byBhdm9pZCByZS1zdWJtaXQgYWxs
+IHRoZSBwYXRjaGVzKDUgb2YgdGhlbSkuDQoNCkFsc28gDQoNCj4gIG1lZ2FzYXNfY29tcGxldGVf
+Y21kKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgc3RydWN0DQo+IG1lZ2FzYXNf
+Y21kICpjbWQsDQo+ICAJCSAgICAgdTggYWx0X3N0YXR1cyk7DQoNCk5vdCBwYXRjaCBsaW5lKGFs
+cmVhZHkgaW4gdGhlIHNyYywgYnV0IG1vcmUgdGhhbiA4MCBjaGFycykuDQoNClJlZ2FyZHMsDQoN
+CkJvIFlhbmcgICAgDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKYW1lcyBC
+b3R0b21sZXkgW21haWx0bzpKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZV0gDQpTZW50OiBTdW5kYXks
+IFNlcHRlbWJlciAwNSwgMjAxMCAyOjA0IFBNDQpUbzogYm8geWFuZw0KQ2M6IFlhbmcsIEJvOyBs
+aW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgYWtwbUBvc2RsLm9yZzsgbGludXgta2VybmVsQHZn
+ZXIua2VybmVsLm9yZzsgRGFmdGFyZGFyLCBKYXlhbnQNClN1YmplY3Q6IFJlOiBbUEFUQ0ggMS81
+XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBBZGQgT25saW5lIENvbnRyb2xsZXIgUmVzZXQgdG8gTWVn
+YVJBSUQgU0FTIGRyaXZlcg0KDQpPbiBXZWQsIDIwMTAtMDgtMTEgYXQgMTY6NDUgLTA0MDAsIGJv
+IHlhbmcgd3JvdGU6DQo+IFRvIGFkZCB0aGUgT25saW5lIENvbnRyb2xsZXIgUmVzZXQgIChPQ1Ip
+IHN1cHBvcnQsIGRyaXZlciBuZWVkIHRvIGRvOg0KPiAJCWEpLiByZXNldCB0aGUgY29udHJvbGxl
+ciBjaGlwcyAtLSBYc2NhbGUgYW5kIEdlbjIgd2hpY2ggd2lsbCBjaGFuZ2UNCj4gdGhlIGZ1bmN0
+aW9uIGNhbGxzIGFuZCBhZGQgdGhlIHJlc2V0IGZ1bmN0aW9uDQo+IAkJcmVsYXRlZCB0byB0aGlz
+IHR3byBjaGlwcy4NCj4gCQkNCj4gCQliKS4gZHVyaW5nIHRoZSByZXNldCwgZHJpdmVyIHdpbGwg
+c3RvcmUgdGhlIHBlbmRpbmcgY21kcyB3aGljaCBub3QNCj4gcmV0dXJuZWQgYnkgRlcgdG8gZHJp
+dmVyJ3MgcGVuZGluZyBxdWV1ZS4gIERyaXZlcg0KPiAJCXdpbGwgcmUtaXNzdWUgdGhvc2UgcGVu
+ZGluZyBjbWRzIGFnYWluIHRvIEZXIGFmdGVyIHRoZSBPQ1IgZmluaXNoZWQuDQo+IAkJDQo+IAkJ
+YykuIEluIGRyaXZlcidzIHRpbWVvdXQgcm91dGluZSwgZHJpdmVyIHdpbGwgcmVwb3J0IHRvIE9T
+IGFzIHJlc2V0Lg0KPiBBbHNvIGRyaXZlcidzIHF1ZXVlIHJvdXRpbmUgd2lsbCBibG9jayB0aGUN
+Cj4gCQljbWRzIHVudGlsIHRoZSBPQ1IgZmluaXNoZWQuDQo+IAkJDQo+IAkJZCkuIGluIERyaXZl
+cidzIElTUiByb3V0aW5lLCBpZiBkcml2ZXIgZ2V0IHRoZSBGVyBzdGF0ZSBhcyBzdGF0ZQ0KPiBj
+aGFuZ2UsIEZXIGluIEZhaWx1cmUgc3RhdHVzIGFuZCBGVyBzdXBwb3J0IG9ubGluZSBjb250cm9s
+bGVyDQo+IAkJcmVzZXQgKE9DUiksIGRyaXZlciB3aWxsIHN0YXJ0IHRvIGRvIHRoZSBjb250cm9s
+bGVyIHJlc2V0Lg0KPiAJCQ0KPiAJCWUpLiBJbiBkcml2ZXIncyBJT0NUTCByb3V0aW5lLCB0aGUg
+YXBwbGljYXRpb24gY21kcyB3aWxsIHdhaXQgZm9yDQo+IHRoZSBPQ1IgdG8gZmluaXNoLCB0aGVu
+IGlzc3VlIHRoZSBjbWRzIHRvIEZXLg0KPiANCj4gU2lnbmVkLW9mZi1ieSBCbyBZYW5nPGJvLnlh
+bmdAbHNpLmNvbT4NCg0KVGhpcyBwYXRjaCBpcyBmdWxsIG9mIGxpbmUgYnJlYWtzIHdoaWNoIHBy
+ZXZlbnQgYXBwbGljYXRpb24sIGxpa2UgdGhpcw0Kb25lOg0KDQo+IGRpZmYgLXJ1cE4gb2xkL0Rv
+Y3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzDQo+IG5ldy9Eb2N1bWVudGF0
+aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3Nhcw0KPiAtLS0gb2xkL0RvY3VtZW50YXRpb24v
+c2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzCTIwMTAtMDgtMTANCj4gMDQ6NTg6MzYuMDAwMDAw
+MDAwIC0wNDAwDQo+ICsrKyBuZXcvRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFp
+ZF9zYXMJMjAxMC0wOC0xMA0KPiAwNDo1NjozMC4wMDAwMDAwMDAgLTA0MDANCj4gQEAgLTEsMyAr
+MSwzNiBAQA0KPiArMSBSZWxlYXNlIERhdGUgICAgOiBUaHVyLiAgTWF5IDAzLCAyMDEwIDA5OjEy
+OjQ1IFBTVCAyMDA5IC0NCj4gKwkJCShlbWFpbGQtaWQ6bWVnYXJhaWRsaW51eEBsc2kuY29tKQ0K
+PiArCQkJQm8gWWFuZw0KW3NuaXBdDQoNCmFuZCB0aGlzIG9uZQ0KPiBkaWZmIC1ydXBOIG9sZC9k
+cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMNCj4gbmV3L2RyaXZlcnMvc2NzaS9t
+ZWdhcmFpZC9tZWdhcmFpZF9zYXMuYw0KPiAtLS0gb2xkL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9t
+ZWdhcmFpZF9zYXMuYwkyMDEwLTA4LTEwIDA0OjU1OjQxLjAwMDAwMDAwMCAtMDQwMA0KPiArKysg
+bmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYwkyMDEwLTA4LTEwIDA0OjU2
+OjMwLjAwMDAwMDAwMCAtMDQwMA0KPiBAQCAtMTA3LDYgKzEwNywxMiBAQCBzdGF0aWMgdm9pZA0K
+PiAgbWVnYXNhc19jb21wbGV0ZV9jbWQoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3RhbmNl
+LCBzdHJ1Y3QNCj4gbWVnYXNhc19jbWQgKmNtZCwNCj4gIAkJICAgICB1OCBhbHRfc3RhdHVzKTsN
+Cg0KU2luY2Ugbm90IGV2ZXJ5IGxvbmcgbGluZSBpcyBicm9rZW4sIHRoaXMgbG9va3MgbGlrZSBz
+b21lIHR5cGUgb2YgY3V0DQphbmQgcGFzdGUgZXJyb3IgLi4uIGFueXdheSwgY291bGQgeW91IGZp
+eCBpdCB1cCwgcGxlYXNlPw0KDQpUaGFua3MsDQoNCkphbWVzDQoNCg0K
