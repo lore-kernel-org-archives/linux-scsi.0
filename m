@@ -1,50 +1,59 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH v3] scsi_debug: Convert to use root_device_register()
- and root_device_unregister()
-Date: Mon, 06 Sep 2010 23:00:56 -0400
-Message-ID: <1283828456.15944.1323.camel@mulgrave.site>
-References: <1283819068-24587-1-git-send-email-nab@linux-iscsi.org>
-	 <20100907003251.GA21430@core.coreip.homeip.net>
+From: Chetan Loke <chetanloke@gmail.com>
+Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
+Date: Mon, 6 Sep 2010 23:45:05 -0400
+Message-ID: <AANLkTikxeV3yVXcnKgZCiORyzZ8xR4Ydxf2rbquvRcJ=@mail.gmail.com>
+References: <1283204792.32007.448.camel@haakon2.linux-iscsi.org>
+	<4C7FFD1A.8090509@vlnb.net>
+	<1283459158.5598.143.camel@haakon2.linux-iscsi.org>
+	<20100905201802.GC18411@core.coreip.homeip.net>
+	<1283723447.556.133.camel@haakon2.linux-iscsi.org>
+	<20100905234134.GA17212@core.coreip.homeip.net>
+	<1283731194.556.147.camel@haakon2.linux-iscsi.org>
+	<1283769578.15944.1293.camel@mulgrave.site>
+	<4C85617E.2080603@vlnb.net>
+	<1283810135.556.238.camel@haakon2.linux-iscsi.org>
+	<20100907004424.GB21430@core.coreip.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43399 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751584Ab0IGDBL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Sep 2010 23:01:11 -0400
-In-Reply-To: <20100907003251.GA21430@core.coreip.homeip.net>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20100907004424.GB21430@core.coreip.homeip.net>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Greg KH <greg@kroah.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@suse.de>, Dirk Meister <dmeister@uni-paderborn.de>, linux-scsi@vger.kernel.org, Chetan Loke <generationgnu@yahoo.com>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2010-09-06 at 17:32 -0700, Dmitry Torokhov wrote:
-> On Mon, Sep 06, 2010 at 05:24:28PM -0700, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Hi Doug and Co,
-> > 
-> > This patch updates the scsi_debug virtual LLD to use root_device_register()
-> > and root_device_unregister() from include/linux/device.h instead of device_register()
-> > and device_unregister() respectively within scsi_debug_init() and scsi_debug_exit()
-> > This simply involved converting the static struct device pseudo_primary into a
-> > pointer that is setup by the call to root_device_register().
-> > 
-> > This patch also contains the correct IS_ERR() conditional check of
-> > root_device_register() from within scsi_debug_init().
-> > 
-> > Thanks to Richard Sharpe and Dmitry Torokhov for their help with this item.
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> 
-> Thanks for making the changes.
-> 
-> Acked-by: Dmitry Torokhov <dtor@mail.ru>
+On Mon, Sep 6, 2010 at 8:44 PM, Dmitry Torokhov
+<dmitry.torokhov@gmail.com> wrote:
+> I think this is somewhat backwards...
+>
+> Vlad appears to be asserting that SCST is more feature-complete that LIO
+> at this point. It also seems that LIO is somewhat younger than SCST. So
+> at this point it might be interesting to see:
+>
+> 1. What are the shortcomings of SCST design compared to LIO and why LIO
+> developers chose to come with their own solution instead of
+> collaborating with SCST folks?
+>
+> 2. What features are missing from SCST that are currently available in
+> LIO?
+>
+> Once this is sorted out and [most] everyone agrees that LIO is indeed
+> technically superior (even if maybe not as mature yet) solution, then it
+> would make sense to request SCST developers to go to file/line depth of
+> the review.
+>
 
-Can I make that Reviewed-by:? Acked-by is really just for maintainer
-patches which don't warrant a signoff.
+I would also appreciate an overview or a block diagram of how things
+work in LIO. I hope that's not too much to ask for? That way we can
+compare/contrast how things work from 10,000 feet level.
+I for one don't want to look at a single patch and comment -
+i) Oh, change this variable here because it doesn't follow linux coding style.
+ii) You dropped a lock in queue-cmd? Good. qla's driver has been doing
+it for sometime, no? So you could have just looked at that LLDD.
 
-James
+Sorry, not trying to criticize anything but would like to offer my 2 cents too.
 
+> --
+> Dmitry
 
+Chetan Loke
