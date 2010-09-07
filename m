@@ -1,28 +1,70 @@
-From: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Subject: Re: [RFC 02/22] configfs: Add struct configfs_item_operations->check_link() in configfs_unlink()
-Date: Tue, 7 Sep 2010 17:01:01 -0400
-Message-ID: <201009071701.02847.konrad@darnok.org>
-References: <1283160025-6598-1-git-send-email-nab@linux-iscsi.org> <20100902064814.GB27904@mail.oracle.com> <1283456440.5598.108.camel@haakon2.linux-iscsi.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: Why is AHA152X_CS !64BIT?
+Date: Tue, 07 Sep 2010 14:41:56 -0700
+Message-ID: <4C86B1A4.8030308@oracle.com>
+References: <4C72D310.4040004@suse.cz> <4C7B924D.6030703@panasas.com> <201009071712.54867.konrad@darnok.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1283456440.5598.108.camel@haakon2.linux-iscsi.org>
-Content-Disposition: inline
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Joel Becker <Joel.Becker@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:19069 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957Ab0IGVnl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 17:43:41 -0400
+In-Reply-To: <201009071712.54867.konrad@darnok.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad@darnok.org>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Jiri Slaby <jslaby@suse.cz>, fischer@linux-buechse.de, linux-scsi@vger.kernel.org
 
-> > 	I NAK'd this a while back.  I'm willing to be convinced, but so
-> > far it remains that way.
->
-> Hi Joel,
->
-> Thanks for bringing this point up again.  So a brief refresh on why this
-> is currently required in the fabric independent configfs handlers in
-> drivers/target/target_core_fabric_configfs.c (patch #19).
+On 09/07/10 14:12, Konrad Rzeszutek Wilk wrote:
+> On Monday 30 August 2010 07:13:17 Boaz Harrosh wrote:
+>> On 08/23/2010 10:59 PM, Jiri Slaby wrote:
+>>> Hi,
+>>>
+>>> I see that the aha152x driver for pcmcia is marked as unsupported on
+>>> 64bit. But I also see a patch [1] which removes the restriction based on
+>>> user's testing in bugzilla [2].
+>>>
+>>> Is there a reason why it would have to be marked as !64BIT? I'm asking
+>>> because there is an opensuse user with this card who updated to 64-bit
+>>> distro and lost this driver thereafter.
+>>>
+>>> [1] http://kerneltrap.org/mailarchive/linux-scsi/2010/3/6/6832393
+>>> [2] https://bugzilla.kernel.org/show_bug.cgi?id=14333
+>>>
+>>> thanks,
+>>
+>> If memory serves correctly, it might be that you need more then 4 Gbyte
+>> of memory installed to exercise the bug, something about IO bouncing
+>> addresses > 4G.
+> 
+> If the machine is using SWIOTLB, then the bounce buffer would be activated. By 
+> default if your machine has more than 4GB compiled under x86_64 the SWIOTLB 
+> is turned on - but if you have an Intel/AMD IOMMU it gets turned off. Which 
+> is OK as the Intel/AMD IOMMUs would handle the 4GB restricted devices. So as 
+> long as the driver has pci_dma_mask_set.
+> 
+> Looking at the git gui blame tool history, the reason that was added was 
+> for 'allow drivers to be built non-modular'.
 
-Well, that is great that you mentioned your requirements. But I don't see a 
-quote of Joel's concerns? Is there an LKML link for it perhaps?
+023ae619 (Robert P. J. Day  2007-03-26 16:06:45 -0400 14) 	depends on !64BIT
+
+That commit just removed the "depends on m" part:
+
+-	depends on m && !64BIT
++	depends on !64BIT
+
+
+> So, does this driver build if you make it non-modular?
+
+It shouldn't since it still depends on !64BIT.
+
+I expect someone thought or had evidence that the driver was not 64-bit clean.
+
+Is the bitkeeper kernel repo still visible somewhere?
+Looks like we would need to look at it for patch history that far back.
+
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
