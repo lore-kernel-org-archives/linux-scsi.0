@@ -1,43 +1,94 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 17822] drivers/scsi/ipr.c implicit declaration of function
- 'writeq'
-Date: Tue, 7 Sep 2010 23:04:42 GMT
-Message-ID: <201009072304.o87N4gla031843@demeter1.kernel.org>
-References: <bug-17822-11613@https.bugzilla.kernel.org/>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH 42/41] dm: convey that all flushes are processed as empty
+Date: Tue, 7 Sep 2010 19:49:18 -0400
+Message-ID: <20100907234918.GA23921@redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org>
+ <4C84CD18.6060906@redhat.com>
+ <20100907211724.GA22525@redhat.com>
+ <20100907221543.GB22525@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:46083 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752310Ab0IGXEn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 19:04:43 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o87N4gsW031844
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 7 Sep 2010 23:04:42 GMT
-In-Reply-To: <bug-17822-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20100907221543.GB22525@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jack@suse.cz, mst@redhat.com, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, hch@lst.de, k-ueda@ct.jp.nec.com, vst@vlnb.net, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, linux-raid@vger.kernel.org, mpatocka@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, tytso@mit.edu, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com, Milan Broz <mbroz@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=17822
+Rename __clone_and_map_flush to __clone_and_map_empty_flush for added
+clarity.
 
+Reintroduce a BUG_ON() and add a few more helpful comments to the code
+so that it is clear that all flushes are empty.
 
-Wayne Boyer <wayneb@linux.vnet.ibm.com> changed:
+Cleanup __split_and_process_bio() so that an empty flush isn't processed
+by a 'sector_count' focused while loop.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |wayneb@linux.vnet.ibm.com
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+---
+ drivers/md/dm.c |   21 +++++++++------------
+ 1 files changed, 9 insertions(+), 12 deletions(-)
 
+Tejun, please feel free to fold this patch into (or insert after)
+0025-dm-relax-ordering-of-bio-based-flush-implementation.patch
 
-
-
---- Comment #4 from Wayne Boyer <wayneb@linux.vnet.ibm.com>  2010-09-07 23:04:39 ---
-The problem in the IPR driver is fixed with this patch:
-
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=c5f10187965f93ef7ef67da9c7c449b13b6dee1b
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index cd2f7e7..9a852ee 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -622,6 +622,7 @@ static void dec_pending(struct dm_io *io, int error)
+ 			return;
+ 
+ 		if (!(bio->bi_rw & REQ_FLUSH) || !bio->bi_size) {
++			/* done with normal IO or empty flush */
+ 			trace_block_bio_complete(md->queue, bio);
+ 			bio_endio(bio, io_error);
+ 		} else {
+@@ -1132,16 +1133,15 @@ static void __issue_target_requests(struct clone_info *ci, struct dm_target *ti,
+ 		__issue_target_request(ci, ti, request_nr, len);
+ }
+ 
+-static int __clone_and_map_flush(struct clone_info *ci)
++static int __clone_and_map_empty_flush(struct clone_info *ci)
+ {
+ 	unsigned target_nr = 0;
+ 	struct dm_target *ti;
+ 
++	BUG_ON(bio_has_data(ci->bio));
+ 	while ((ti = dm_table_get_target(ci->map, target_nr++)))
+ 		__issue_target_requests(ci, ti, ti->num_flush_requests, 0);
+ 
+-	ci->sector_count = 0;
+-
+ 	return 0;
+ }
+ 
+@@ -1302,20 +1302,17 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
+ 	ci.sector = bio->bi_sector;
+ 	ci.idx = bio->bi_idx;
+ 
++	start_io_acct(ci.io);
+ 	if (!is_flush) {
+ 		ci.bio = bio;
+ 		ci.sector_count = bio_sectors(bio);
++		while (ci.sector_count && !error)
++			error = __clone_and_map(&ci);
+ 	} else {
+ 		ci.bio = &ci.md->flush_bio;
+-		ci.sector_count = 1;
+-	}
+-
+-	start_io_acct(ci.io);
+-	while (ci.sector_count && !error) {
+-		if (!is_flush)
+-			error = __clone_and_map(&ci);
+-		else
+-			error = __clone_and_map_flush(&ci);
++		ci.sector_count = 0;
++		error = __clone_and_map_empty_flush(&ci);
++		/* dec_pending submits any data associated with flush */
+ 	}
+ 
+ 	/* drop the extra reference count */
