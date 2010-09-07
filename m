@@ -1,54 +1,55 @@
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: Re: [PATCH v3] scsi_debug: Convert to use root_device_register() and
- root_device_unregister()
-Date: Mon, 6 Sep 2010 20:58:03 -0700
-Message-ID: <20100907035803.GA1562@core.coreip.homeip.net>
-References: <1283819068-24587-1-git-send-email-nab@linux-iscsi.org>
- <20100907003251.GA21430@core.coreip.homeip.net>
- <1283828456.15944.1323.camel@mulgrave.site>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [Scst-devel] Fwd: Re: linuxcon 2010...
+Date: Tue, 7 Sep 2010 08:08:37 +0200
+Message-ID: <AANLkTin9Hk8+oMdXfB4h_DhirRyPf00739g5BpKcUE_5@mail.gmail.com>
+References: <1283204792.32007.448.camel@haakon2.linux-iscsi.org>
+	<4C7FFD1A.8090509@vlnb.net>
+	<1283459158.5598.143.camel@haakon2.linux-iscsi.org>
+	<20100905201802.GC18411@core.coreip.homeip.net>
+	<1283723447.556.133.camel@haakon2.linux-iscsi.org>
+	<20100905234134.GA17212@core.coreip.homeip.net>
+	<1283731194.556.147.camel@haakon2.linux-iscsi.org>
+	<1283769578.15944.1293.camel@mulgrave.site>
+	<4C85617E.2080603@vlnb.net>
+	<1283810135.556.238.camel@haakon2.linux-iscsi.org>
+	<20100907004424.GB21430@core.coreip.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:61725 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754031Ab0IGD6J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2010 23:58:09 -0400
-Content-Disposition: inline
-In-Reply-To: <1283828456.15944.1323.camel@mulgrave.site>
+Received: from mail-gw0-f46.google.com ([74.125.83.46]:61951 "EHLO
+	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750805Ab0IGGIi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 02:08:38 -0400
+In-Reply-To: <20100907004424.GB21430@core.coreip.homeip.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Douglas Gilbert <dgilbert@interlog.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Greg KH <greg@kroah.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@suse.de>, Dirk Meister <dmeister@uni-paderborn.de>, linux-scsi@vger.kernel.org, Chetan Loke <chetanloke@gmail.com>, Chetan Loke <generationgnu@yahoo.com>, scst-devel <scst-devel@lists.sourceforge.net>, linux-kernel@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Mon, Sep 06, 2010 at 11:00:56PM -0400, James Bottomley wrote:
-> On Mon, 2010-09-06 at 17:32 -0700, Dmitry Torokhov wrote:
-> > On Mon, Sep 06, 2010 at 05:24:28PM -0700, Nicholas A. Bellinger wrote:
-> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > 
-> > > Hi Doug and Co,
-> > > 
-> > > This patch updates the scsi_debug virtual LLD to use root_device_register()
-> > > and root_device_unregister() from include/linux/device.h instead of device_register()
-> > > and device_unregister() respectively within scsi_debug_init() and scsi_debug_exit()
-> > > This simply involved converting the static struct device pseudo_primary into a
-> > > pointer that is setup by the call to root_device_register().
-> > > 
-> > > This patch also contains the correct IS_ERR() conditional check of
-> > > root_device_register() from within scsi_debug_init().
-> > > 
-> > > Thanks to Richard Sharpe and Dmitry Torokhov for their help with this item.
-> > > 
-> > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > 
-> > Thanks for making the changes.
-> > 
-> > Acked-by: Dmitry Torokhov <dtor@mail.ru>
-> 
-> Can I make that Reviewed-by:? Acked-by is really just for maintainer
-> patches which don't warrant a signoff.
-> 
+On Tue, Sep 7, 2010 at 2:44 AM, Dmitry Torokhov
+<dmitry.torokhov@gmail.com> wrote:
+>
+> [ ... ]
+>
+> Vlad appears to be asserting that SCST is more feature-complete that LIO
+> at this point. It also seems that LIO is somewhat younger than SCST. So
+> at this point it might be interesting to see:
+>
+> 1. What are the shortcomings of SCST design compared to LIO and why LIO
+> developers chose to come with their own solution instead of
+> collaborating with SCST folks?
+>
+> 2. What features are missing from SCST that are currently available in
+> LIO?
+>
+> Once this is sorted out and [most] everyone agrees that LIO is indeed
+> technically superior (even if maybe not as mature yet) solution, then it
+> would make sense to request SCST developers to go to file/line depth of
+> the review.
 
-Sure, whatever suits better.
+You seem to have missed the start of this thread. The design of SCST
+is significantly more advanced than that of LIO, and it has already
+been explained in this thread why
+(http://www.spinics.net/lists/linux-scsi/msg45856.html).
 
--- 
-Dmitry
+Bart.
