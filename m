@@ -1,124 +1,99 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH 42/41 v2] dm: convey that all flushes are processed as empty
-Date: Tue, 7 Sep 2010 22:04:30 -0400
-Message-ID: <20100908020429.GA24635@redhat.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
- <1283509796-1510-24-git-send-email-tj@kernel.org>
- <4C84CD18.6060906@redhat.com>
- <20100907211724.GA22525@redhat.com>
- <20100907221543.GB22525@redhat.com>
- <20100907234918.GA23921@redhat.com>
- <20100908000001.GA21552@lst.de>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC 02/22] configfs: Add struct
+	configfs_item_operations->check_link() in configfs_unlink()
+Date: Tue, 07 Sep 2010 19:08:59 -0700
+Message-ID: <1283911739.556.420.camel@haakon2.linux-iscsi.org>
+References: <1283160025-6598-1-git-send-email-nab@linux-iscsi.org>
+	 <20100902064814.GB27904@mail.oracle.com>
+	 <1283456440.5598.108.camel@haakon2.linux-iscsi.org>
+	 <201009071701.02847.konrad@darnok.org>
+	 <20100907224413.GC21935@mail.oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20100908000001.GA21552@lst.de>
+In-Reply-To: <20100907224413.GC21935@mail.oracle.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Tejun Heo <tj@kernel.org>, jack@suse.cz, mst@redhat.com, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, k-ueda@ct.jp.nec.com, vst@vlnb.net, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, linux-raid@vger.kernel.org, mpatocka@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, tytso@mit.edu, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com, Milan Broz <mbroz@redhat.com>
+To: Joel Becker <Joel.Becker@oracle.com>
+Cc: Konrad Rzeszutek Wilk <konrad@darnok.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Rename __clone_and_map_flush to __clone_and_map_empty_flush for added
-clarity.
+On Tue, 2010-09-07 at 15:44 -0700, Joel Becker wrote:
+> On Tue, Sep 07, 2010 at 05:01:01PM -0400, Konrad Rzeszutek Wilk wrote:
+> > > > 	I NAK'd this a while back.  I'm willing to be convinced, but so
+> > > > far it remains that way.
+> > >
+> > > Hi Joel,
+> > >
+> > > Thanks for bringing this point up again.  So a brief refresh on why this
+> > > is currently required in the fabric independent configfs handlers in
+> > > drivers/target/target_core_fabric_configfs.c (patch #19).
+> > 
+> > Well, that is great that you mentioned your requirements. But I don't see a 
+> > quote of Joel's concerns? Is there an LKML link for it perhaps?
+> 
+> 	It was a while back.  Essentially, the concern is that configfs
+> is defined to be userspace-driven.  If the user asks you to remove
+> something, the module should be handling safe teardown rather than
+> rejecting the user's request.
+> 	Now, the world isn't always clean-cut.  Code outside of the
+> filesystem representation can lay a claim on a configfs item to say "I'm
+> busy with this."  An example is ocfs2 pinning the configfs item
+> describing its cluster heartbeat device.   But this is ocfs2 - a
+> separate thing - claiming it.  There is a defined API to take and
+> release these claims.
+> 	This API doesn't cover symlinks, as symlinks are simply linkage
+> between config items.  It may be, as Nick suggested at the bottom of his
+> reply, that we want the API extended to cover that case.  But he hasn't
+> yet convinced me that safe teardown is impossible or disasterous.
+> That's what I'd like to see.  It's not obvious on the face of all the
+> file trees in the email.
+> 	Nick, can you provide some form of description, not long
+> pathnames, that explains a) what breaks when the symlink is removed b)
+> why that can't be allowed if the user is dumb enough to request it?
+> 
 
-Simplify logic associated with REQ_FLUSH conditionals.
+Hi Joel,
 
-Introduce a BUG_ON() and add a few more helpful comments to the code
-so that it is clear that all flushes are empty.
+So, the case where configfs will actually OOPs without the
+->check_link() patch (or without some other internal solution) is on the
+unlink(2) path is when the symlink is created to a destination outside
+of the source struct config_group.  This may have not been exactly
+apparent in my LIO-Target example, but here is another shot at an
+example without the other complexities of target mode invovled.
 
-Cleanup __split_and_process_bio() so that an empty flush isn't processed
-by a 'sector_count' focused while loop.
+Say we have two different struct config_subsystem in two different LKM
+sub_parent and sub_child.  I will spare the actual mkdir(2) and ln(2)
+calls here, but (I hope) these are obvious:
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- drivers/md/dm.c |   34 +++++++++++++++-------------------
- 1 files changed, 15 insertions(+), 19 deletions(-)
+First, we start out with the parent source struct config_group from
+sub_parent module:
 
-Tejun, please feel free to fold this patch into (or insert after)
-0025-dm-relax-ordering-of-bio-based-flush-implementation.patch
+	/sys/kernel/config/sub_parent/group1/parent/
 
-v2: Simplify logic associated with REQ_FLUSH conditionals
+Next, we have a symlink from sub_parent/group1/parent to a different LKM
+in sub_child:
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index cd2f7e7..f934e98 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -621,16 +621,17 @@ static void dec_pending(struct dm_io *io, int error)
- 		if (io_error == DM_ENDIO_REQUEUE)
- 			return;
- 
--		if (!(bio->bi_rw & REQ_FLUSH) || !bio->bi_size) {
--			trace_block_bio_complete(md->queue, bio);
--			bio_endio(bio, io_error);
--		} else {
-+		if ((bio->bi_rw & REQ_FLUSH) && bio->bi_size) {
- 			/*
- 			 * Preflush done for flush with data, reissue
- 			 * without REQ_FLUSH.
- 			 */
- 			bio->bi_rw &= ~REQ_FLUSH;
- 			queue_io(md, bio);
-+		} else {
-+			/* done with normal IO or empty flush */
-+			trace_block_bio_complete(md->queue, bio);
-+			bio_endio(bio, io_error);
- 		}
- 	}
- }
-@@ -1132,16 +1133,15 @@ static void __issue_target_requests(struct clone_info *ci, struct dm_target *ti,
- 		__issue_target_request(ci, ti, request_nr, len);
- }
- 
--static int __clone_and_map_flush(struct clone_info *ci)
-+static int __clone_and_map_empty_flush(struct clone_info *ci)
- {
- 	unsigned target_nr = 0;
- 	struct dm_target *ti;
- 
-+	BUG_ON(bio_has_data(ci->bio));
- 	while ((ti = dm_table_get_target(ci->map, target_nr++)))
- 		__issue_target_requests(ci, ti, ti->num_flush_requests, 0);
- 
--	ci->sector_count = 0;
--
- 	return 0;
- }
- 
-@@ -1282,7 +1282,6 @@ static int __clone_and_map(struct clone_info *ci)
-  */
- static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
- {
--	bool is_flush = bio->bi_rw & REQ_FLUSH;
- 	struct clone_info ci;
- 	int error = 0;
- 
-@@ -1302,20 +1301,17 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
- 	ci.sector = bio->bi_sector;
- 	ci.idx = bio->bi_idx;
- 
--	if (!is_flush) {
-+	start_io_acct(ci.io);
-+	if (bio->bi_rw & REQ_FLUSH) {
-+		ci.bio = &ci.md->flush_bio;
-+		ci.sector_count = 0;
-+		error = __clone_and_map_empty_flush(&ci);
-+		/* dec_pending submits any data associated with flush */
-+	} else {
- 		ci.bio = bio;
- 		ci.sector_count = bio_sectors(bio);
--	} else {
--		ci.bio = &ci.md->flush_bio;
--		ci.sector_count = 1;
--	}
--
--	start_io_acct(ci.io);
--	while (ci.sector_count && !error) {
--		if (!is_flush)
-+		while (ci.sector_count && !error)
- 			error = __clone_and_map(&ci);
--		else
--			error = __clone_and_map_flush(&ci);
- 	}
- 
- 	/* drop the extra reference count */
+	/sys/kernel/config/sub_child/group1/src_0/src_link -> ../../../../sub_parent/group1/parent
+
+And then a second symlink from sub_child/group1/src_0/src_link to a
+sstuct config_group outside of group1, but still within sub_child:
+
+	/sys/kernel/config/sub_child/group2/dst_0/dst_link -> ../../../group1/src_0/
+
+So once the sub_child/group2/dest_0/dst_link has been created to back to
+sub_child/group1/src_0/src_link, the oops will appear any time that
+'unlink sub_child/group1/src_0/src_link' is called while the second
+group2/dst_0/dst_link is still present.  I don't recall the actual
+backtrace of the OOPs that occurs when the unlink(2) is called, but it
+is easily reproducable .
+
+I am really starting to think that fixing this properly below the struct
+config_item_operations API is going to make the most sense, but I have
+not realized this in a patch for fs/configfs/ just yet..  I am happy to
+do this in the next days if you think this would be the cleanest
+resolution for the above case.
+
+Thanks Joel!
+
+--nab
