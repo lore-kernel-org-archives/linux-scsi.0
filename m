@@ -1,150 +1,2412 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 02/22] configfs: Add struct
-	configfs_item_operations->check_link() in configfs_unlink()
-Date: Wed, 08 Sep 2010 13:53:27 -0700
-Message-ID: <1283979207.556.510.camel@haakon2.linux-iscsi.org>
-References: <1283160025-6598-1-git-send-email-nab@linux-iscsi.org>
-	 <20100902064814.GB27904@mail.oracle.com>
-	 <1283456440.5598.108.camel@haakon2.linux-iscsi.org>
-	 <201009071701.02847.konrad@darnok.org>
-	 <20100907224413.GC21935@mail.oracle.com>
-	 <1283911739.556.420.camel@haakon2.linux-iscsi.org>
-	 <20100908192639.GD29545@mail.oracle.com>
+Subject: Re: [RFC 05/22] tcm: Add SPC-4 explict and implict Asymmetric
+	Logical Unit Access (ALUA)
+Date: Wed, 08 Sep 2010 16:45:37 -0700
+Message-ID: <1283989537.556.603.camel@haakon2.linux-iscsi.org>
+References: <1283160048-6655-1-git-send-email-nab@linux-iscsi.org>
+	 <201009072234.56162.konrad@darnok.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.re3.yahoo.com ([66.196.96.86]:45389 "HELO
+Received: from smtp103.sbc.mail.re3.yahoo.com ([66.196.96.86]:29049 "HELO
 	smtp103.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754290Ab0IHU5d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2010 16:57:33 -0400
-In-Reply-To: <20100908192639.GD29545@mail.oracle.com>
+	by vger.kernel.org with SMTP id S1753140Ab0IHXtn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2010 19:49:43 -0400
+In-Reply-To: <201009072234.56162.konrad@darnok.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <Joel.Becker@ORACLE.COM>
-Cc: Konrad Rzeszutek Wilk <konrad@darnok.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Konrad Rzeszutek Wilk <konrad@darnok.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>
 
-On Wed, 2010-09-08 at 12:26 -0700, Joel Becker wrote:
-> On Tue, Sep 07, 2010 at 07:08:59PM -0700, Nicholas A. Bellinger wrote:
-> > On Tue, 2010-09-07 at 15:44 -0700, Joel Becker wrote:
-> > > 	Nick, can you provide some form of description, not long
-> > > pathnames, that explains a) what breaks when the symlink is removed b)
-> > > why that can't be allowed if the user is dumb enough to request it?
-> > > 
-> > 
-> > So, the case where configfs will actually OOPs without the
-> > ->check_link() patch (or without some other internal solution) is on the
-> > unlink(2) path is when the symlink is created to a destination outside
-> > of the source struct config_group.  This may have not been exactly
-> > apparent in my LIO-Target example, but here is another shot at an
-> > example without the other complexities of target mode invovled.
+On Tue, 2010-09-07 at 22:34 -0400, Konrad Rzeszutek Wilk wrote:
+> On Monday 30 August 2010 05:20:48 Nicholas A. Bellinger wrote:
+> > +/*
+> > + * REPORT_TARGET_PORT_GROUPS
+> > + *
+> > + * See spc4r17 section 6.27
+> > + */
+> > +int core_scsi3_emulate_report_target_port_groups(struct se_cmd
+> *cmd)
 > 
-> 	I wish you'd mentioned the oops earlier.  We need to figure out
-> who is oopsing.
+> Is there any added benefit of having such a long name? How about
+> 'alua_report_tgp' ?
 
-Ok, I ran the code w/o ->check_link() again and have a few corrections
-below.
+Not really.  I try to keep the spec defined CDB names for functions like
+this doing the actual CDB emulation.
+
+How about core_emulate_report_target_port_groups()..?
 
 > 
-> > Say we have two different struct config_subsystem in two different LKM
-> > sub_parent and sub_child.  I will spare the actual mkdir(2) and ln(2)
-> > calls here, but (I hope) these are obvious:
-> > 
-> > First, we start out with the parent source struct config_group from
-> > sub_parent module:
-> > 
-> > 	/sys/kernel/config/sub_parent/group1/parent/
-> > 
-> > Next, we have a symlink from sub_parent/group1/parent to a different LKM
-> > in sub_child:
-> > 
-> > 	/sys/kernel/config/sub_child/group1/src_0/src_link -> ../../../../sub_parent/group1/parent
-> > 
-> > And then a second symlink from sub_child/group1/src_0/src_link to a
-> > sstuct config_group outside of group1, but still within sub_child:
-> > 
-> > 	/sys/kernel/config/sub_child/group2/dst_0/dst_link -> ../../../group1/src_0/
+> > +{
+> > +	struct se_subsystem_dev *su_dev = SE_DEV(cmd)->se_sub_dev;
+> > +	struct se_port *port;
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp;
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
+> > +	unsigned char *buf = (unsigned char *)T_TASK(cmd)->t_task_buf;
+> > +	u32 rd_len = 0, off = 4;
 > 
-> 	I think you have too many ../ on your examples.  dst_link
-> pointing to ../../../../group1/src_0 resolves to
-> /sys/kernel/config/group1/src_0, which I don't think you want.  I think
-> you have:
-> 
->     sub_parent/group1/parent
->     sub_child/group1/src_0/src_link -> ../../../sub_parent/group1/parent
->     sub_child/group2/dst_0/dst_link -> ../../group1/src_0
-> 
-> 	If I'm reading this right, 'ls sub_child/group1/src_0/src_link'
-> gives you the contents of sub_parent/group1/parent, 'ls
-> sub_child/group2/dst_0/dst_link' gives you 'src_link', and 'ls
-> sub_child/group2/dst_0/dst_link/src_link' brings you right back to the
-> contents of sub_parent/group1/parent.  Am I right?
+> Offset is at 4, .. is there anything you need to do between 0 and 3 ?
+> Set it 
+> to zero or what not? Ah, at the end of the function you fill it in.
+> Can you 
+> add a comment here saying that. Similar to what did 
+> in 'core_scsi3_emulate_set_target_port_groups' ?
 
-This is correct.
+<nod> comment added here.
 
+> > +
+> > +	spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +	list_for_each_entry(tg_pt_gp, &T10_ALUA(su_dev)->tg_pt_gps_list,
+> > +			tg_pt_gp_list) {
+> > +		/*
+> > +		 * PREF: Preferred target port bit, determine if this
+> > +		 * bit should be set for port group.
+> > +		 */
+> > +		if (tg_pt_gp->tg_pt_gp_pref)
 > 
-> > So once the sub_child/group2/dest_0/dst_link has been created to back to
-> > sub_child/group1/src_0/src_link, the oops will appear any time that
-> > 'unlink sub_child/group1/src_0/src_link' is called while the second
-> > group2/dst_0/dst_link is still present.  I don't recall the actual
-> > backtrace of the OOPs that occurs when the unlink(2) is called, but it
-> > is easily reproducable .
-> 
-> 	I'm confused.  Above it appears that
-> sub_child/group2/dst_0/dst_link -> ../../group1/src_0, but this
-> paragraph suggests that sub_child/group2/dst_0/dst_link ->
-> ../../group1/src_0/src_link.  Which is it?
+> Yeah, this looks ugly. By looking at this I already know that the
+> structure is 
+> tg_pt_gp, and then I get to see it once more.
 
-Sorry, the symlink should be from sub_child/group2/dst_0/dst_link
--> ../../group1/src_0/
+Hmmm, I agree that this is somewhat ugly.  The reason that I use
+'tg_pt_gp' variable names instead of say 'tpg' is because there are a
+number of locations outside of target_core_alua.c where 'tpg' referrs to
+struct se_portal_group.
+
+So because of this I have been try to keep everything releated to ALUA
+target port groups known as 'tg_pt_gp'.
 
 > 
-> > I am really starting to think that fixing this properly below the struct
-> > config_item_operations API is going to make the most sense, but I have
-> > not realized this in a patch for fs/configfs/ just yet..  I am happy to
-> > do this in the next days if you think this would be the cleanest
-> > resolution for the above case.
+> > +			buf[off] = 0x80;
+> > +		/*
+> > +		 * Set the ASYMMETRIC ACCESS State
+> > +		 */
+> > +		buf[off++] |= (atomic_read(
+> > +			&tg_pt_gp->tg_pt_gp_alua_access_state) & 0xff);
 > 
-> 	My big question is whether the oops comes from something
-> configfs is doing wrong when symlinking symlinks, or if your module is
-> just surprised when things change.  If the former, it needs to be fixed
-> in configfs.  It shouldn't require a hook for your module to avoid
-> configfs breakage.  If it is the latter, and your module needs to know
-> not to break itself, then we discuss how to help it.
+> Ditto.
+> > +		/*
+> > +		 * Set supported ASYMMETRIC ACCESS State bits
+> > +		 */
+> > +		buf[off] = 0x80; /* T_SUP */
+> > +		buf[off] |= 0x40; /* O_SUP */
+> > +		buf[off] |= 0x8; /* U_SUP */
+> > +		buf[off] |= 0x4; /* S_SUP */
+> > +		buf[off] |= 0x2; /* AN_SUP */
+> > +		buf[off++] |= 0x1; /* AO_SUP */
+> > +		/*
+> > +		 * TARGET PORT GROUP
+> > +		 */
+> > +		buf[off++] = ((tg_pt_gp->tg_pt_gp_id >> 8) & 0xff);
+> > +		buf[off++] = (tg_pt_gp->tg_pt_gp_id & 0xff);
+> > +
+> > +		off++; /* Skip over Reserved */
+> > +		/*
+> > +		 * STATUS CODE
+> > +		 */
+> > +		buf[off++] = (tg_pt_gp->tg_pt_gp_alua_access_status & 0xff);
+> 
+> Hmm, so you used atomic_read earlier on. Here it does not matter what
+> the 
+> state of it is?
+
+Correct.  So the tg_pt_gp_alua_access_status is actually an
+informational value set in report_target_port_groups() to signal if the
+ALUA op was an explict or implict operation.   This does not need to be
+atomic.
+
+> 
+> > +		/*
+> > +		 * Vendor Specific field
+> > +		 */
+> > +		buf[off++] = 0x00;
+> > +		/*
+> > +		 * TARGET PORT COUNT
+> > +		 */
+> > +		buf[off++] = (tg_pt_gp->tg_pt_gp_members & 0xff);
+> > +		rd_len += 8;
+> > +
+> > +		spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+> > +		list_for_each_entry(tg_pt_gp_mem, &tg_pt_gp->tg_pt_gp_mem_list,
+> > +				tg_pt_gp_mem_list) {
+> > +			port = tg_pt_gp_mem->tg_pt;
+> > +			/*
+> > +			 * Start Target Port descriptor format
+> > +			 *
+> > +			 * See spc4r17 section 6.2.7 Table 247
+> > +			 */
+> > +			off += 2; /* Skip over Obsolete */
+> > +			/*
+> > +			 * Set RELATIVE TARGET PORT IDENTIFIER
+> > +			 */
+> > +			buf[off++] = ((port->sep_rtpi >> 8) & 0xff);
+> > +			buf[off++] = (port->sep_rtpi & 0xff);
+> > +			rd_len += 4;
+> > +		}
+> > +		spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+> > +	}
+> > +	spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +	/*
+> > +	 * Set the RETURN DATA LENGTH set in the header of the DataIN
+> Payload
+> > +	 */
+> > +	buf[0] = ((rd_len >> 24) & 0xff);
+> > +	buf[1] = ((rd_len >> 16) & 0xff);
+> > +	buf[2] = ((rd_len >> 8) & 0xff);
+> > +	buf[3] = (rd_len & 0xff);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> > + * SET_TARGET_PORT_GROUPS for explict ALUA operation.
+> > + *
+> > + * See spc4r17 section 6.35
+> > + */
+> > +int core_scsi3_emulate_set_target_port_groups(struct se_cmd *cmd)
+> 
+> The same question. Can you shorten the name ?
+
+Is core_emulate_set_target_port_groups() acceptable..?
+
+> > +{
+> > +	struct se_device *dev = SE_DEV(cmd);
+> > +	struct se_subsystem_dev *su_dev = SE_DEV(cmd)->se_sub_dev;
+> > +	struct se_port *port, *l_port = SE_LUN(cmd)->lun_sep;
+> > +	struct se_node_acl *nacl = SE_SESS(cmd)->se_node_acl;
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp = NULL, *l_tg_pt_gp;
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem, *l_tg_pt_gp_mem;
+> > +	unsigned char *buf = (unsigned char *)T_TASK(cmd)->t_task_buf;
+> > +	unsigned char *ptr = &buf[4]; /* Skip over RESERVED area in header
+> */
+> > +	u32 len = 4; /* Skip over RESERVED area in header */
+> > +	int alua_access_state, primary = 0, ret;
+> 
+> It is called ret, but in actuality you are using it more like an 'rc'.
+
+Fixed.
+
+> 
+> > +	u16 tg_pt_id, rtpi;
+> > +
+> > +	if (!(l_port))
+> > +		return -1;
+> 
+> Um, what error code is that? Should you define this in your
+> enums/#defines?
 > 
 
-So after re-running this again, I was a bit off about where the OOOPs is
-actually occuring.  So, the OOPs does not occur during in the simple
-example here with the first unlink(2):
+Whoops, this should be PYX_TRANSPORT_LU_COMM_FAILURE.  Fixed
 
-	unlink sub_child/group1/src_0/src_link
+> > +	/*
+> > +	 * Determine if explict ALUA via SET_TARGET_PORT_GROUPS is allowed
+> > +	 * for the local tg_pt_gp.
+> > +	 */
+> > +	l_tg_pt_gp_mem = l_port->sep_alua_tg_pt_gp_mem;
+> > +	if (!(l_tg_pt_gp_mem)) {
+> > +		printk(KERN_ERR "Unable to access *l_tg_pt_gp_mem\n");
+> 
+> How will this help the user/maintainer troubleshoot this?
 
-but rather after the second unlink(2) is called after the first for
-src_link occurs:
+Ok, this is really never expected to happen, but I added a slightly more
+helpful printk() here.
 
-	unlink sub_child/group2/dst_0/dst_link
+> 
+> > +		return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
+> > +	}
+> > +	spin_lock(&l_tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	l_tg_pt_gp = l_tg_pt_gp_mem->tg_pt_gp;
+> > +	if (!(l_tg_pt_gp)) {
+> > +		spin_unlock(&l_tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +		printk(KERN_ERR "Unable to access *l_l_tg_pt_gp\n");
+> 
+> Ditto.
 
-So back to the OOPs with the current TCM code example, on v2.6.36-rc3
-this actually triggers a SLUB warning "Object already free" from inside
-of TCM code. This is attributed to the releasing a specific LUN ACLs
-from the second unlink(2)'s struct config_item_operations->drop_link(),
-that the first unlink had already released.  This is because the first
-unlink(2) will currently assume that the remaining LUN ACLs are safe to
-release because, it still assumes the disabled check_link call.
+Also, this is really never expected to happen, but I added a slightly
+more helpful printk() here.
 
-I am still pretty certain that I had seen an OOPs in fs/configfs/ code
-while doing this at some point (perhaps was w/o slub_debug=FZ..?), but
-so far I have not been able to trigger an issue in fs/configfs/
-directly.
+> > +		return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
+> > +	}
+> > +	ret = (l_tg_pt_gp->tg_pt_gp_alua_access_type & TPGS_EXPLICT_ALUA);
+> > +	spin_unlock(&l_tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +
+> > +	if (!(ret)) {
+> > +		printk(KERN_INFO "Unable to process SET_TARGET_PORT_GROUPS"
+> > +				" while TPGS_EXPLICT_ALUA is disabled\n");
+> 
+> Little better, but the error code is the same as for the earlier
+> return. So 
+> should it be different perhaps? Or if not, should you change it from 
+> KERN_INFO to KERN_ERR?
 
-So, I believe that the main issue here is still involving the unlinking
-the first symlink (sub_child/group1/src_0/src_link), and then unlinking
-the second symlink (sub_child/group2/dst_0/dst_link) which is still
-depending upon the first configfs consumer data structures still being
-present.
+Ok, we can reach this if Explict ALUA is disabled via configfs.
+Changing this to KERN_INFO.
 
-Does this make sense..?
+> 
+> > +		return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
+> > +	}
+> > +
+> > +	while (len < cmd->data_length) {
+> > +		alua_access_state = (ptr[0] & 0x0f);
+> > +		/*
+> > +		 * Check the received ALUA access state, and determine if
+> > +		 * the state is a primary or secondary target port asymmetric
+> > +		 * access state.
+> > +		 */
+> > +		ret = core_alua_check_transition(alua_access_state, &primary);
+> > +		if (ret != 0) {
+> > +			/*
+> > +			 * If the SET TARGET PORT GROUPS attempts to establish
+> > +			 * an invalid combination of target port asymmetric
+> > +			 * access states or attempts to establish an
+> > +			 * unsupported target port asymmetric access state,
+> > +			 * then the command shall be terminated with CHECK
+> > +			 * CONDITION status, with the sense key set to ILLEGAL
+> > +			 * REQUEST, and the additional sense code set to INVALID
+> > +			 * FIELD IN PARAMETER LIST.
+> > +			 */
+> > +			return PYX_TRANSPORT_INVALID_PARAMETER_LIST;
+> > +		}
+> > +		ret = -1;
+> > +		/*
+> > +		 * If the ASYMMETRIC ACCESS STATE field (see table 267)
+> > +		 * specifies a primary target port asymmetric access state,
+> > +		 * then the TARGET PORT GROUP OR TARGET PORT field specifies
+> > +		 * a primary target port group for which the primary target
+> > +		 * port asymmetric access state shall be changed. If the
+> > +		 * ASYMMETRIC ACCESS STATE field specifies a secondary target
+> > +		 * port asymmetric access state, then the TARGET PORT GROUP OR
+> > +		 * TARGET PORT field specifies the relative target port
+> > +		 * identifier (see 3.1.120) of the target port for which the
+> > +		 * secondary target port asymmetric access state shall be
+> > +		 * changed.
+> > +		 */
+> > +		if (primary) {
+> > +			tg_pt_id = ((ptr[2] << 8) & 0xff);
+> > +			tg_pt_id |= (ptr[3] & 0xff);
+> > +			/*
+> > +			 * Locate the matching target port group ID from
+> > +			 * the global tg_pt_gp list
+> > +			 */
+> > +			spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +			list_for_each_entry(tg_pt_gp,
+> > +					&T10_ALUA(su_dev)->tg_pt_gps_list,
+> > +					tg_pt_gp_list) {
+> > +				if (!(tg_pt_gp->tg_pt_gp_valid_id))
+> > +					continue;
+> > +
+> > +				if (tg_pt_id != tg_pt_gp->tg_pt_gp_id)
+> > +					continue;
+> > +
+> > +				atomic_inc(&tg_pt_gp->tg_pt_gp_ref_cnt);
+> > +				smp_mb__after_atomic_inc();
+> 
+> So, the barrier() here enforces that the gcc compiler create the code
+> in this 
+> specific order. And looking at atomic_inc it uses the 'volatile' which
+> does 
+> the same exact trick. I think you don't need this? Or did you get hit
+> this at 
+> some point with instructions being re-order?
+
+Yes, the barrier is needed here because the tg_pt_gp->tg_pt_gp_ref_cnt
+is expected to be read on a per struct t10_alua_tg_pt_gp basis without
+the T10_ALUA(su_dev)->tg_pt_gps_lock being help elsewhere.
+
+> 
+> > +				spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +
+> > +				ret = core_alua_do_port_transition(tg_pt_gp,
+> > +						dev, l_port, nacl,
+> > +						alua_access_state, 1);
+> > +
+> > +				spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> 
+> Actually, I am not understanding your usage of spin_lock here. It
+> usually is 
+> used to access a critical section, but you are already using a simple 
+> mechanism for this: the atomic inc/dec which atomically does this
+> operation 
+> across _all_ CPUs.
+> 
+> So if the spinlock is just for incrementing/decrementing that _ref_cnt
+> value 
+> you can get rid off it.
+
+T10_ALUA(su_dev)->tg_pt_gps_lock is used to protect the
+10_ALUA(su_dev)->tg_pt_gps_list list, and not individual structure non
+list_head member in struct t10_alua_tg_pt_gp.
+
+> 
+> > +				atomic_dec(&tg_pt_gp->tg_pt_gp_ref_cnt);
+> > +				smp_mb__after_atomic_dec();
+> > +				break;
+> > +			}
+> > +			spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +			/*
+> > +			 * If not matching target port group ID can be located
+> > +			 * throw an exception with ASCQ: INVALID_PARAMETER_LIST
+> > +			 */
+> > +			if (ret != 0)
+> > +				return PYX_TRANSPORT_INVALID_PARAMETER_LIST;
+> > +		} else {
+> > +			rtpi = ((ptr[2] << 8) & 0xff);
+> > +			rtpi |= (ptr[3] & 0xff);
+> 
+> Magic stuff. How about a comment that explains this bitshifting.
+
+Done.
+
+> > +			/*
+> > +			 * Locate the matching relative target port identifer
+> > +			 * for the struct se_device storage object.
+> > +			 */
+> > +			spin_lock(&dev->se_port_lock);
+> > +			list_for_each_entry(port, &dev->dev_sep_list,
+> > +							sep_list) {
+> > +				if (port->sep_rtpi != rtpi)
+> > +					continue;
+> > +
+> > +				tg_pt_gp_mem = port->sep_alua_tg_pt_gp_mem;
+> > +				spin_unlock(&dev->se_port_lock);
+> > +
+> > +				ret = core_alua_set_tg_pt_secondary_state(
+> > +						tg_pt_gp_mem, port, 1, 1);
+> > +
+> > +				spin_lock(&dev->se_port_lock);
+> > +				break;
+> > +			}
+> > +			spin_unlock(&dev->se_port_lock);
+> 
+> you could probably avoid all of this spin lock/unlocking by using a 
+> list_for_each_entry_safe variant?
+
+Unfortuately this cannot be avoided and this code cannot hold
+dev->se_port_lock while calling core_alua_set_tg_pt_secondary_state(),
+because it is expected to obtain a different struct
+t10_alua_tg_pt_gp_member->tg_pt_gp_mem_lock.
+
+> 
+> > +			/*
+> > +			 * If not matching relative target port identifier can
+> > +			 * be located, throw an exception with ASCQ:
+> > +			 * INVALID_PARAMETER_LIST
+> > +			 */
+> > +			if (ret != 0)
+> > +				return PYX_TRANSPORT_INVALID_PARAMETER_LIST;
+> 
+> Do those #define/enum's have negative values for failures? I am asking
+> b/c 
+> this function returns -1, 0, PYX_* and one mistake is to sometimes
+> check the 
+> return value of just (if (blah)>0)) at which point if the PYX_ were
+> positive 
+> you would think it is OK, but in actuality it was a failure.
+
+Correct, all of the PYX_TRANSPORT_* defs are using negative values.
+
+> > +		}
+> > +
+> > +		ptr += 4;
+> > +		len += 4;
+> > +	}
+> > +
+> > +	return 0;
+> 
+> no #define or enum for success?
+
+Nope, this function is expected to return zero on success.
+
+> > +}
+> > +
+> > +static inline int core_alua_state_optimized(
+> > +	struct se_cmd *cmd,
+> > +	unsigned char *cdb,
+> > +	u8 *alua_ascq)
+> > +{
+> > +	/*
+> > +	 * For the Optimized ALUA access state case, we want to process
+> the
+> > +	 * incoming fabric cmd ASAP..
+> 
+> Ok, and we do that by returning zero. Why not just remove this
+> function 
+> altogether and have the function that calls this check if this value
+> is 
+> filled in the function structure?
+
+Sure, this was originally intended to house any Optimized specific
+state.  But since this ended up being a NOP, I will change this to
+follow your recommendation.
+
+> 
+> > +	 */
+> > +	return 0;
+> > +}
+> > +
+> > +static inline int core_alua_state_nonoptimized(
+> > +	struct se_cmd *cmd,
+> > +	unsigned char *cdb,
+> > +	int nonop_delay_msecs,
+> > +	u8 *alua_ascq)
+> > +{
+> > +	/*
+> > +	 * Set SCF_ALUA_NON_OPTIMIZED here, this value will be checked
+> > +	 * later to determine if processing of this cmd needs to be
+> > +	 * temporarily delayed for the Active/NonOptimized primary access
+> state.
+> > +	 */
+> > +	cmd->se_cmd_flags |= SCF_ALUA_NON_OPTIMIZED;
+> > +	cmd->alua_nonop_delay = nonop_delay_msecs;
+> > +	return 0;
+> > +}
+> > +
+> > +static inline int core_alua_state_standby(
+> > +	struct se_cmd *cmd,
+> > +	unsigned char *cdb,
+> > +	u8 *alua_ascq)
+> > +{
+> > +	/*
+> > +	 * Allowed CDBs for ALUA_ACCESS_STATE_STANDBY as defined by
+> > +	 * spc4r17 section 5.9.2.4.4
+> > +	 */
+> > +	switch (cdb[0]) {
+> > +	case INQUIRY:
+> > +	case LOG_SELECT:
+> > +	case LOG_SENSE:
+> > +	case MODE_SELECT:
+> > +	case MODE_SENSE:
+> > +	case REPORT_LUNS:
+> > +	case RECEIVE_DIAGNOSTIC:
+> > +	case SEND_DIAGNOSTIC:
+> > +	case 0xa3:
+> 
+> And what is '0xa3' ?
+
+Whoops, changed to proper MAINTENANCE_IN from:
+
+include/scsi/scsi.h:#define MAINTENANCE_IN        0xa3
+
+> 
+> > +		switch (cdb[1]) {
+> > +		case MI_REPORT_TARGET_PGS:
+> > +			return 0;
+> > +		default:
+> > +			*alua_ascq = ASCQ_04H_ALUA_TG_PT_STANDBY;
+> > +			return 1;
+> > +		}
+> > +	case 0xa4:
+
+Also changed this to proper MAINTENANCE_OUT from:
+
+include/scsi/scsi.h:#define MAINTENANCE_OUT       0xa4
+
+> > +		switch (cdb[1]) {
+> > +		case MO_SET_TARGET_PGS:
+> > +			return 0;
+> > +		default:
+> > +			*alua_ascq = ASCQ_04H_ALUA_TG_PT_STANDBY;
+> > +			return 1;
+> > +		}
+> > +	case REQUEST_SENSE:
+> > +	case PERSISTENT_RESERVE_IN:
+> > +	case PERSISTENT_RESERVE_OUT:
+> > +	case READ_BUFFER:
+> > +	case WRITE_BUFFER:
+> > +		return 0;
+> > +	default:
+> > +		*alua_ascq = ASCQ_04H_ALUA_TG_PT_STANDBY;
+> > +		return 1;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static inline int core_alua_state_unavailable(
+> > +	struct se_cmd *cmd,
+> > +	unsigned char *cdb,
+> > +	u8 *alua_ascq)
+> > +{
+> > +	/*
+> > +	 * Allowed CDBs for ALUA_ACCESS_STATE_UNAVAILABLE as defined by
+> > +	 * spc4r17 section 5.9.2.4.5
+> > +	 */
+> > +	switch (cdb[0]) {
+> > +	case INQUIRY:
+> > +	case REPORT_LUNS:
+> > +	case 0xa3:
+> 
+> Ditto.
+
+Fixed
+
+> > +		switch (cdb[1]) {
+> > +		case MI_REPORT_TARGET_PGS:
+> > +			return 0;
+> > +		default:
+> > +			*alua_ascq = ASCQ_04H_ALUA_TG_PT_UNAVAILABLE;
+> > +			return 1;
+> > +		}
+> > +	case 0xa4:
+> > +		switch (cdb[1]) {
+> > +		case MO_SET_TARGET_PGS:
+> > +			return 0;
+> > +		default:
+> > +			*alua_ascq = ASCQ_04H_ALUA_TG_PT_UNAVAILABLE;
+> > +			return 1;
+> > +		}
+
+Fixed
+
+> > +	case REQUEST_SENSE:
+> > +	case READ_BUFFER:
+> > +	case WRITE_BUFFER:
+> > +		return 0;
+> > +	default:
+> > +		*alua_ascq = ASCQ_04H_ALUA_TG_PT_UNAVAILABLE;
+> > +		return 1;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +static inline int core_alua_state_transition(
+> > +	struct se_cmd *cmd,
+> > +	unsigned char *cdb,
+> > +	u8 *alua_ascq)
+> > +{
+> > +	/*
+> > +	 * Allowed CDBs for ALUA_ACCESS_STATE_TRANSITIO as defined by
+> > +	 * spc4r17 section 5.9.2.5
+> > +	 */
+> > +	switch (cdb[0]) {
+> > +	case INQUIRY:
+> > +	case REPORT_LUNS:
+> > +	case 0xa3:
+> 
+> Ditto.
+
+Fixed
+
+> > +		switch (cdb[1]) {
+> > +		case MI_REPORT_TARGET_PGS:
+> > +			return 0;
+> > +		default:
+> > +			*alua_ascq = ASCQ_04H_ALUA_STATE_TRANSITION;
+> > +			return 1;
+> > +		}
+> > +	case REQUEST_SENSE:
+> > +	case READ_BUFFER:
+> > +	case WRITE_BUFFER:
+> > +		return 0;
+> > +	default:
+> > +		*alua_ascq = ASCQ_04H_ALUA_STATE_TRANSITION;
+> > +		return 1;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> > + * Used for alua_type SPC_ALUA_PASSTHROUGH and SPC2_ALUA_DISABLED
+> 
+> How?
+
+Added additional reference comment here..
+
+> > + */
+> > +int core_alua_state_check_nop(
+> > +	struct se_cmd *cmd,
+> > +	unsigned char *cdb,
+> > +	u8 *alua_ascq)
+> > +{
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> > + * Used for alua_type SPC3_ALUA_EMULATED
+> 
+> How? How does the return value determine the alua_type determination?
+
+Added additional reference comment here..
+
+> > + */
+> > +int core_alua_state_check(
+> > +	struct se_cmd *cmd,
+> > +	unsigned char *cdb,
+> > +	u8 *alua_ascq)
+> > +{
+> > +	struct se_lun *lun = SE_LUN(cmd);
+> > +	struct se_port *port = lun->lun_sep;
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp;
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
+> > +	int out_alua_state, nonop_delay_msecs;
+> > +
+> > +	if (!(port))
+> > +		return 0;
+> > +	/*
+> > +	 * First, check for a struct se_port specific secondary ALUA
+> target port
+> > +	 * access state: OFFLINE
+> > +	 */
+> > +	if (atomic_read(&port->sep_tg_pt_secondary_offline)) {
+> > +		*alua_ascq = ASCQ_04H_ALUA_OFFLINE;
+> > +		printk(KERN_INFO "ALUA: Got secondary offline status for local"
+> > +				" target port\n");
+> 
+> Is this a normal condition? If so, should this be KERN_DEBUG?
+
+Yes, this is a possible normal condition.
+
+> > +		*alua_ascq = ASCQ_04H_ALUA_OFFLINE;
+> > +		return 1;
+> > +	}
+> > +	 /*
+> > +	 * Second, obtain the struct t10_alua_tg_pt_gp_member pointer to
+> the
+> > +	 * ALUA target port group, to obtain current ALUA access state.
+> > +	 * Otherwise look for the underlying struct se_device association
+> with
+> > +	 * a ALUA logical unit group.
+> > +	 */
+> > +	tg_pt_gp_mem = port->sep_alua_tg_pt_gp_mem;
+> > +	spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	tg_pt_gp = tg_pt_gp_mem->tg_pt_gp;
+> > +	out_alua_state =
+> atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state);
+> > +	nonop_delay_msecs = tg_pt_gp->tg_pt_gp_nonop_delay_msecs;
+> > +	spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	/*
+> > +	 * Process ALUA_ACCESS_STATE_ACTIVE_OPTMIZED in a seperate
+> conditional
+> > +	 * statement so the complier knows explictly to check this case
+> first.
+> > +	 */
+> > +	if (out_alua_state == ALUA_ACCESS_STATE_ACTIVE_OPTMIZED)
+> > +		return core_alua_state_optimized(cmd, cdb, alua_ascq);
+> 
+> Which returns zero. So why not just do 'return 0; // not
+> implemented.' ?
+
+Yep, this was changed to just 'return 0' following the removal of the
+NOP core_alua_state_optimized() above.
+
+> > +
+> > +	switch (out_alua_state) {
+> > +	case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
+> > +		return core_alua_state_nonoptimized(cmd, cdb,
+> > +					nonop_delay_msecs, alua_ascq);
+> > +	case ALUA_ACCESS_STATE_STANDBY:
+> > +		return core_alua_state_standby(cmd, cdb, alua_ascq);
+> > +	case ALUA_ACCESS_STATE_UNAVAILABLE:
+> > +		return core_alua_state_unavailable(cmd, cdb, alua_ascq);
+> > +	case ALUA_ACCESS_STATE_TRANSITION:
+> > +		return core_alua_state_transition(cmd, cdb, alua_ascq);
+> > +	/*
+> > +	 * OFFLINE is a secondary ALUA target port group access state,
+> that is
+> > +	 * handled above with struct
+> se_port->sep_tg_pt_secondary_offline=1
+> > +	 */
+> > +	case ALUA_ACCESS_STATE_OFFLINE:
+> > +	default:
+> > +		printk(KERN_ERR "Unknown ALUA access state: 0x%02x\n",
+> > +				out_alua_state);
+> > +		return -1;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> 
+> So this function returns -1 for errors, 0 if
+> tg_pt_gp_alua_access_state is set 
+> to ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED and 1 or 0 depending on what
+> the 
+> core_alua_state_* return?
+> 
+> I am a bit of loss on what the return value of 1 or 0 means. It looks
+> as if 
+> this function is doing three things depending on which state it is,
+> the 
+> return values have different meanings. Any chance of adding a comment
+> at the 
+> beginning of the function explaining the states?
+> 
+> 
+
+Ok, the struct t10_alua *alua->alua_state_check() is called in
+drivers/target/target_core_transport.c:transport_cmd_sequencer().  Added
+comment for the 1, 0, and -1 return codes here.
+
+> > +
+> > +/*
+> > + * Check implict and explict ALUA state change request.
+> > + */
+> > +int core_alua_check_transition(int state, int *primary)
+> > +{
+> > +	switch (state) {
+> > +	case ALUA_ACCESS_STATE_ACTIVE_OPTMIZED:
+> > +	case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
+> > +	case ALUA_ACCESS_STATE_STANDBY:
+> > +	case ALUA_ACCESS_STATE_UNAVAILABLE:
+> > +		/*
+> > +		 * OPTIMIZED, NON-OPTIMIZED, STANDBY and UNAVAILABLE are
+> > +		 * defined as primary target port asymmetric access states.
+> > +		 */
+> > +		*primary = 1;
+> > +		break;
+> > +	case ALUA_ACCESS_STATE_OFFLINE:
+> > +		/*
+> > +		 * OFFLINE state is defined as a secondary target port
+> > +		 * asymmetric access state.
+> > +		 */
+> > +		*primary = 0;
+> > +		break;
+> > +	default:
+> > +		printk(KERN_ERR "Unknown ALUA access state: 0x%02x\n", state);
+> > +		return -1;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +char *core_alua_dump_state(int state)
+> > +{
+> > +	switch (state) {
+> > +	case ALUA_ACCESS_STATE_ACTIVE_OPTMIZED:
+> > +		return "Active/Optimized";
+> > +	case ALUA_ACCESS_STATE_ACTIVE_NON_OPTIMIZED:
+> > +		return "Active/NonOptimized";
+> > +	case ALUA_ACCESS_STATE_STANDBY:
+> > +		return "Standby";
+> > +	case ALUA_ACCESS_STATE_UNAVAILABLE:
+> > +		return "Unavailable";
+> > +	case ALUA_ACCESS_STATE_OFFLINE:
+> > +		return "Offline";
+> > +	default:
+> > +		return "Unknown";
+> > +	}
+> > +
+> > +	return NULL;
+> > +}
+> > +
+> > +char *core_alua_dump_status(int status)
+> > +{
+> > +	switch (status) {
+> > +	case ALUA_STATUS_NONE:
+> > +		return "None";
+> > +	case ALUA_STATUS_ALTERED_BY_EXPLICT_STPG:
+> > +		return "Altered by Explict STPG";
+> > +	case ALUA_STATUS_ALTERED_BY_IMPLICT_ALUA:
+> > +		return "Altered by Implict ALUA";
+> > +	default:
+> > +		return "Unknown";
+> > +	}
+> > +
+> > +	return NULL;
+> > +}
+> > +
+> > +/*
+> > + * Used by fabric modules to determine when we need to delay
+> processing
+> > + * for the Active/NonOptimized paths..
+> > + */
+> > +int core_alua_check_nonop_delay(
+> > +	struct se_cmd *cmd)
+> > +{
+> > +	if (!(cmd->se_cmd_flags & SCF_ALUA_NON_OPTIMIZED))
+> > +		return 0;
+> > +	if (in_interrupt())
+> > +		return 0;
+> > +	/*
+> > +	 * The ALUA Active/NonOptimized access state delay can be disabled
+> > +	 * in via configfs with a value of zero
+> > +	 */
+> > +	if (!(cmd->alua_nonop_delay))
+> > +		return 0;
+> > +	/*
+> > +	 * struct se_cmd->alua_nonop_delay gets set by a target port group
+> > +	 * defined interval in core_alua_state_nonoptimized()
+> > +	 */
+> > +	msleep_interruptible(cmd->alua_nonop_delay);
+> > +	return 0;
+> > +}
+> > +EXPORT_SYMBOL(core_alua_check_nonop_delay);
+> 
+> Why not EXPORT_SYMBOL_GPL?
+
+I thought that using EXPORT_SYMBOL_GPL was no longer recommended..?
+
+> > +
+> > +/*
+> > + * Called with tg_pt_gp->tg_pt_gp_md_mutex or
+> > tg_pt_gp_mem->sep_tg_pt_md_mutex + *
+> > + */
+> > +int core_alua_write_tpg_metadata(
+> > +	const char *path,
+> > +	unsigned char *md_buf,
+> > +	u32 md_buf_len)
+> > +{
+> > +	mm_segment_t old_fs;
+> > +	struct file *file;
+> > +	struct iovec iov[1];
+> > +	int flags = O_RDWR | O_CREAT | O_TRUNC, ret;
+> > +
+> > +	memset(iov, 0, sizeof(struct iovec));
+> > +
+> > +	file = filp_open(path, flags, 0600);
+> > +	if (IS_ERR(file) || !file || !file->f_dentry) {
+> > +		printk(KERN_ERR "filp_open(%s) for ALUA metadata failed\n",
+> > +			path);
+> > +		return -1;
+> 
+> -ENODEV?
+
+Fixed
+
+> > +	}
+> > +
+> > +	iov[0].iov_base = &md_buf[0];
+> > +	iov[0].iov_len = md_buf_len;
+> > +
+> > +	old_fs = get_fs();
+> > +	set_fs(get_ds());
+> > +	ret = vfs_writev(file, &iov[0], 1, &file->f_pos);
+> > +	set_fs(old_fs);
+> > +
+> > +	if (ret < 0) {
+> > +		printk(KERN_ERR "Error writing ALUA metadata file: %s\n", path);
+> > +		filp_close(file, NULL);
+> > +		return -1;
+> 
+> -ENO something?
+
+Fixed.
+
+> > +	}
+> > +	filp_close(file, NULL);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> > + * Called with tg_pt_gp->tg_pt_gp_md_mutex held
+> > + */
+> > +int core_alua_update_tpg_primary_metadata(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	int primary_state,
+> > +	unsigned char *md_buf)
+> > +{
+> > +	struct se_subsystem_dev *su_dev = tg_pt_gp->tg_pt_gp_su_dev;
+> > +	struct t10_wwn *wwn = &su_dev->t10_wwn;
+> > +	char path[512];
+> 
+> Why 512? Why not make it a #define?
+
+Done, added ALUA_METADATA_PATH_LEN to target_core_alua.h
+
+> 
+> > +	int len;
+> > +
+> > +	memset(path, 0, 512);
+> > +
+> > +	len = snprintf(md_buf, tg_pt_gp->tg_pt_gp_md_buf_len,
+> > +			"tg_pt_gp_id=%hu\n"
+> > +			"alua_access_state=0x%02x\n"
+> > +			"alua_access_status=0x%02x\n",
+> > +			tg_pt_gp->tg_pt_gp_id, primary_state,
+> > +			tg_pt_gp->tg_pt_gp_alua_access_status);
+> > +
+> > +	snprintf(path, 512, "/var/target/alua/tpgs_%s/%s",
+> > +		&wwn->unit_serial[0],
+> > +		config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item));
+> > +
+> > +	return core_alua_write_tpg_metadata(path, md_buf, len);
+> > +}
+> > +
+> > +int core_alua_do_transition_tg_pt(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	struct se_port *l_port,
+> > +	struct se_node_acl *nacl,
+> > +	unsigned char *md_buf,
+> > +	int new_state,
+> > +	int explict)
+> > +{
+> > +	struct se_dev_entry *se_deve;
+> > +	struct se_lun_acl *lacl;
+> > +	struct se_port *port;
+> > +	struct t10_alua_tg_pt_gp_member *mem;
+> > +	int old_state = 0;
+> > +	/*
+> > +	 * Save the old primary ALUA access state, and set the current
+> state
+> > +	 * to ALUA_ACCESS_STATE_TRANSITION.
+> > +	 */
+> > +	old_state = atomic_read(&tg_pt_gp->tg_pt_gp_alua_access_state);
+> > +	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
+> > +			ALUA_ACCESS_STATE_TRANSITION);
+> > +	tg_pt_gp->tg_pt_gp_alua_access_status = (explict) ?
+> > +				ALUA_STATUS_ALTERED_BY_EXPLICT_STPG :
+> > +				ALUA_STATUS_ALTERED_BY_IMPLICT_ALUA;
+> > +	/*
+> > +	 * Check for the optional ALUA primary state transition delay
+> > +	 */
+> > +	if (tg_pt_gp->tg_pt_gp_trans_delay_msecs != 0)
+> > +		msleep_interruptible(tg_pt_gp->tg_pt_gp_trans_delay_msecs);
+> > +
+> > +	spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+> > +	list_for_each_entry(mem, &tg_pt_gp->tg_pt_gp_mem_list,
+> > +				tg_pt_gp_mem_list) {
+> > +		port = mem->tg_pt;
+> > +		/*
+> > +		 * After an implicit target port asymmetric access state
+> > +		 * change, a device server shall establish a unit attention
+> > +		 * condition for the initiator port associated with every I_T
+> > +		 * nexus with the additional sense code set to ASYMMETRIC
+> > +		 * ACCESS STATE CHAGED.
+> > +		 *
+> > +		 * After an explicit target port asymmetric access state
+> > +		 * change, a device server shall establish a unit attention
+> > +		 * condition with the additional sense code set to ASYMMETRIC
+> > +		 * ACCESS STATE CHANGED for the initiator port associated with
+> > +		 * every I_T nexus other than the I_T nexus on which the SET
+> > +		 * TARGET PORT GROUPS command
+> > +		 */
+> > +		atomic_inc(&mem->tg_pt_gp_mem_ref_cnt);
+> > +		smp_mb__after_atomic_inc();
+> > +		spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+> > +
+> > +		spin_lock_bh(&port->sep_alua_lock);
+> > +		list_for_each_entry(se_deve, &port->sep_alua_list,
+> > +					alua_port_list) {
+> > +			lacl = se_deve->se_lun_acl;
+> > +			/*
+> > +			 * se_deve->se_lun_acl pointer may be NULL for a
+> > +			 * entry created without explict Node+MappedLUN ACLs
+> > +			 */
+> > +			if (!(lacl))
+> > +				continue;
+> > +
+> > +			if (explict &&
+> > +			   (nacl != NULL) && (nacl == lacl->se_lun_nacl) &&
+> > +			   (l_port != NULL) && (l_port == port))
+> > +				continue;
+> > +
+> > +			core_scsi3_ua_allocate(lacl->se_lun_nacl,
+> > +				se_deve->mapped_lun, 0x2A,
+> > +				ASCQ_2AH_ASYMMETRIC_ACCESS_STATE_CHANGED);
+> 
+> Don't enough about that function to know, but if it is doing a kzalloc
+> or 
+> kmalloc with a spin_lock held, that is a no-no.
+
+Unfortuately core_scsi3_ua_allocate() is expected to be called with a
+couple of different locks being held.  Because of this,
+core_scsi3_ua_allocate() is always going to use:
+
+	kmem_cache_zalloc(se_ua_cache, GFP_ATOMIC);
+
+> 
+> > +		}
+> > +		spin_unlock_bh(&port->sep_alua_lock);
+> > +
+> > +		spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+> > +		atomic_dec(&mem->tg_pt_gp_mem_ref_cnt);
+> > +		smp_mb__after_atomic_dec();
+> > +	}
+> > +	spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+> > +	/*
+> > +	 * Update the ALUA metadata buf that has been allocated in
+> > +	 * core_alua_do_port_transition(), this metadata will be written
+> > +	 * to struct file.
+> > +	 *
+> > +	 * Note that there is the case where we do not want to update the
+> > +	 * metadata when the saved metadata is being parsed in userspace
+> > +	 * when setting the existing port access state and access status.
+> > +	 *
+> > +	 * Also note that the failure to write out the ALUA metadata to
+> > +	 * struct file does NOT affect the actual ALUA transition.
+> > +	 */
+> > +	if (tg_pt_gp->tg_pt_gp_write_metadata) {
+> > +		mutex_lock(&tg_pt_gp->tg_pt_gp_md_mutex);
+> > +		core_alua_update_tpg_primary_metadata(tg_pt_gp,
+> > +					new_state, md_buf);
+> > +		mutex_unlock(&tg_pt_gp->tg_pt_gp_md_mutex);
+> > +	}
+> > +	/*
+> > +	 * Set the current primary ALUA access state to the requested new
+> state
+> > +	 */
+> > +	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state, new_state);
+> > +
+> > +	printk(KERN_INFO "Successful %s ALUA transition TG PT Group: %s
+> ID: %hu"
+> > +		" from primary access state %s to %s\n", (explict) ? "explict" :
+> > +		"implict", config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item),
+> > +		tg_pt_gp->tg_pt_gp_id, core_alua_dump_state(old_state),
+> > +		core_alua_dump_state(new_state));
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +int core_alua_do_port_transition(
+> > +	struct t10_alua_tg_pt_gp *l_tg_pt_gp,
+> > +	struct se_device *l_dev,
+> > +	struct se_port *l_port,
+> > +	struct se_node_acl *l_nacl,
+> > +	int new_state,
+> > +	int explict)
+> > +{
+> > +	struct se_device *dev;
+> > +	struct se_port *port;
+> > +	struct se_subsystem_dev *su_dev;
+> > +	struct se_node_acl *nacl;
+> > +	struct t10_alua_lu_gp *lu_gp;
+> > +	struct t10_alua_lu_gp_member *lu_gp_mem, *local_lu_gp_mem;
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp;
+> > +	unsigned char *md_buf;
+> > +	int primary;
+> > +
+> > +	if (core_alua_check_transition(new_state, &primary) != 0)
+> > +		return -1;
+> > +
+
+Changed this to -EINVAL.
+
+> > +	md_buf = kzalloc(l_tg_pt_gp->tg_pt_gp_md_buf_len, GFP_KERNEL);
+> > +	if (!(md_buf)) {
+> > +		printk("Unable to allocate buf for ALUA metadata\n");
+> > +		return -1;
+> 
+> -ENOMEM?
+
+Fixed
+
+> 
+> > +	}
+> > +
+> > +	local_lu_gp_mem = l_dev->dev_alua_lu_gp_mem;
+> > +	spin_lock(&local_lu_gp_mem->lu_gp_mem_lock);
+> > +	lu_gp = local_lu_gp_mem->lu_gp;
+> > +	atomic_inc(&lu_gp->lu_gp_ref_cnt);
+> > +	smp_mb__after_atomic_inc();
+> > +	spin_unlock(&local_lu_gp_mem->lu_gp_mem_lock);
+> > +	/*
+> > +	 * For storage objects that are members of the 'default_lu_gp',
+> > +	 * we only do transition on the passed *l_tp_pt_gp, and not
+> > +	 * on all of the matching target port groups IDs in default_lu_gp.
+> > +	 */
+> > +	if (!(lu_gp->lu_gp_id)) {
+> > +		/*
+> > +		 * core_alua_do_transition_tg_pt() will always return
+> > +		 * success.
+> > +		 */
+> > +		core_alua_do_transition_tg_pt(l_tg_pt_gp, l_port, l_nacl,
+> > +					md_buf, new_state, explict);
+> > +		atomic_dec(&lu_gp->lu_gp_ref_cnt);
+> > +		smp_mb__after_atomic_dec();
+> > +		kfree(md_buf);
+> > +		return 0;
+> > +	}
+> > +	/*
+> > +	 * For all other LU groups aside from 'default_lu_gp', walk all of
+> > +	 * the associated storage objects looking for a matching target
+> port
+> > +	 * group ID from the local target port group.
+> > +	 */
+> > +	spin_lock(&lu_gp->lu_gp_lock);
+> > +	list_for_each_entry(lu_gp_mem, &lu_gp->lu_gp_mem_list,
+> > +				lu_gp_mem_list) {
+> > +
+> > +		dev = lu_gp_mem->lu_gp_mem_dev;
+> > +		su_dev = dev->se_sub_dev;
+> > +		atomic_inc(&lu_gp_mem->lu_gp_mem_ref_cnt);
+> > +		smp_mb__after_atomic_inc();
+> > +		spin_unlock(&lu_gp->lu_gp_lock);
+> > +
+> > +		spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +		list_for_each_entry(tg_pt_gp,
+> > +				&T10_ALUA(su_dev)->tg_pt_gps_list,
+> > +				tg_pt_gp_list) {
+> > +
+> > +			if (!(tg_pt_gp->tg_pt_gp_valid_id))
+> > +				continue;
+> > +			/*
+> > +			 * If the target behavior port asymmetric access state
+> > +			 * is changed for any target port group accessiable via
+> > +			 * a logical unit within a LU group, the target port
+> > +			 * behavior group asymmetric access states for the same
+> > +			 * target port group accessible via other logical units
+> > +			 * in that LU group will also change.
+> > +			 */
+> > +			if (l_tg_pt_gp->tg_pt_gp_id != tg_pt_gp->tg_pt_gp_id)
+> > +				continue;
+> > +
+> > +			if (l_tg_pt_gp == tg_pt_gp) {
+> > +				port = l_port;
+> > +				nacl = l_nacl;
+> > +			} else {
+> > +				port = NULL;
+> > +				nacl = NULL;
+> > +			}
+> > +			atomic_inc(&tg_pt_gp->tg_pt_gp_ref_cnt);
+> > +			smp_mb__after_atomic_inc();
+> > +			spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +			/*
+> > +			 * core_alua_do_transition_tg_pt() will always return
+> > +			 * success.
+> > +			 */
+> > +			core_alua_do_transition_tg_pt(tg_pt_gp, port,
+> > +					nacl, md_buf, new_state, explict);
+> > +
+> > +			spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +			atomic_dec(&tg_pt_gp->tg_pt_gp_ref_cnt);
+> > +			smp_mb__after_atomic_dec();
+> > +		}
+> > +		spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +
+> > +		spin_lock(&lu_gp->lu_gp_lock);
+> > +		atomic_dec(&lu_gp_mem->lu_gp_mem_ref_cnt);
+> > +		smp_mb__after_atomic_dec();
+> > +	}
+> > +	spin_unlock(&lu_gp->lu_gp_lock);
+> > +
+> > +	printk(KERN_INFO "Successfully processed LU Group: %s all ALUA TG
+> PT"
+> > +		" Group IDs: %hu %s transition to primary state: %s\n",
+> > +		config_item_name(&lu_gp->lu_gp_group.cg_item),
+> > +		l_tg_pt_gp->tg_pt_gp_id, (explict) ? "explict" : "implict",
+> > +		core_alua_dump_state(new_state));
+> > +
+> > +	atomic_dec(&lu_gp->lu_gp_ref_cnt);
+> > +	smp_mb__after_atomic_dec();
+> > +	kfree(md_buf);
+> > +	return 0;
+> > +}
+> > +
+> > +/*
+> > + * Called with tg_pt_gp_mem->sep_tg_pt_md_mutex held
+> > + */
+> > +int core_alua_update_tpg_secondary_metadata(
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem,
+> > +	struct se_port *port,
+> > +	unsigned char *md_buf,
+> > +	u32 md_buf_len)
+> > +{
+> > +	struct se_portal_group *se_tpg = port->sep_tpg;
+> > +	char path[512], wwn[1024];
+> 
+> Whoa. 1024? 512? how about some #defines for this.
+> Can the WWN get that long? Or the path?
+
+OK, using ALUA_METADATA_PATH_LEN here following the above.  The WWN has
+ben shorted to 256 bytes (the largest we will expect is the 224 from
+iSCSI IQNs + ,t,0x$TPGT) and I went ahead and added
+ALUA_SECONDARY_METADATA_WWN_LEN to target_core_alua.h
+
+> 
+> > +	int len;
+> > +
+> > +	memset(path, 0, 512);
+> > +	memset(wwn, 0, 1024);
+> > +
+> > +	len = snprintf(wwn, 512, "%s",
+> > +			TPG_TFO(se_tpg)->tpg_get_wwn(se_tpg));
+> > +
+> > +	if (TPG_TFO(se_tpg)->tpg_get_tag != NULL)
+> > +		snprintf(wwn+len, 1024-len, "+%hu",
+> 
+> Ditto. Those #defines.
+
+Fixed
+
+> > +				TPG_TFO(se_tpg)->tpg_get_tag(se_tpg));
+> > +
+> > +	len = snprintf(md_buf, md_buf_len, "alua_tg_pt_offline=%d\n"
+> > +			"alua_tg_pt_status=0x%02x\n",
+> > +			atomic_read(&port->sep_tg_pt_secondary_offline),
+> > +			port->sep_tg_pt_secondary_stat);
+> > +
+> > +	snprintf(path, 512, "/var/target/alua/%s/%s/lun_%u",
+> > +			TPG_TFO(se_tpg)->get_fabric_name(), wwn,
+> > +			port->sep_lun->unpacked_lun);
+> > +
+> > +	return core_alua_write_tpg_metadata(path, md_buf, len);
+> > +}
+> > +
+> > +int core_alua_set_tg_pt_secondary_state(
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem,
+> > +	struct se_port *port,
+> > +	int explict,
+> > +	int offline)
+> > +{
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp;
+> > +	unsigned char *md_buf;
+> > +	u32 md_buf_len;
+> > +	int trans_delay_msecs;
+> > +
+> > +	spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	tg_pt_gp = tg_pt_gp_mem->tg_pt_gp;
+> > +	if (!(tg_pt_gp)) {
+> > +		spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +		printk(KERN_ERR "Unable to complete secondary state"
+> > +				" transition\n");
+> > +		return -1;
+> > +	}
+> > +	trans_delay_msecs = tg_pt_gp->tg_pt_gp_trans_delay_msecs;
+> > +	/*
+> > +	 * Set the secondary ALUA target port access state to OFFLINE
+> > +	 * or release the previously secondary state for struct se_port
+> > +	 */
+> > +	if (offline)
+> > +		atomic_set(&port->sep_tg_pt_secondary_offline, 1);
+> > +	else
+> > +		atomic_set(&port->sep_tg_pt_secondary_offline, 0);
+> > +
+> > +	md_buf_len = tg_pt_gp->tg_pt_gp_md_buf_len;
+> > +	port->sep_tg_pt_secondary_stat = (explict) ?
+> > +			ALUA_STATUS_ALTERED_BY_EXPLICT_STPG :
+> > +			ALUA_STATUS_ALTERED_BY_IMPLICT_ALUA;
+> > +
+> > +	printk(KERN_INFO "Successful %s ALUA transition TG PT Group: %s
+> ID: %hu"
+> > +		" to secondary access state: %s\n", (explict) ? "explict" :
+> > +		"implict", config_item_name(&tg_pt_gp->tg_pt_gp_group.cg_item),
+> > +		tg_pt_gp->tg_pt_gp_id, (offline) ? "OFFLINE" : "ONLINE");
+> > +
+> > +	spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	/*
+> > +	 * Do the optional transition delay after we set the secondary
+> > +	 * ALUA access state.
+> > +	 */
+> > +	if (trans_delay_msecs != 0)
+> > +		msleep_interruptible(trans_delay_msecs);
+> > +	/*
+> > +	 * See if we need to update the ALUA fabric port metadata for
+> > +	 * secondary state and status
+> > +	 */
+> > +	if (port->sep_tg_pt_secondary_write_md) {
+> > +		md_buf = kzalloc(md_buf_len, GFP_KERNEL);
+> > +		if (!(md_buf)) {
+> > +			printk(KERN_ERR "Unable to allocate md_buf for"
+> > +				" secondary ALUA access metadata\n");
+> > +			return -1;
+> > +		}
+> > +		mutex_lock(&port->sep_tg_pt_md_mutex);
+> > +		core_alua_update_tpg_secondary_metadata(tg_pt_gp_mem, port,
+> > +				md_buf, md_buf_len);
+> > +		mutex_unlock(&port->sep_tg_pt_md_mutex);
+> > +
+> > +		kfree(md_buf);
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +struct t10_alua_lu_gp *core_alua_allocate_lu_gp(const char *name,
+> int
+> > def_group) +{
+> > +	struct t10_alua_lu_gp *lu_gp;
+> > +
+> > +	lu_gp = kmem_cache_zalloc(t10_alua_lu_gp_cache, GFP_KERNEL);
+> > +	if (!(lu_gp)) {
+> > +		printk(KERN_ERR "Unable to allocate struct t10_alua_lu_gp\n");
+> > +		return NULL;
+> > +	}
+> > +	INIT_LIST_HEAD(&lu_gp->lu_gp_list);
+> > +	INIT_LIST_HEAD(&lu_gp->lu_gp_mem_list);
+> > +	spin_lock_init(&lu_gp->lu_gp_lock);
+> > +	atomic_set(&lu_gp->lu_gp_ref_cnt, 0);
+> > +
+> > +	if (def_group) {
+> > +		lu_gp->lu_gp_id = se_global->alua_lu_gps_counter++;;
+> > +		lu_gp->lu_gp_valid_id = 1;
+> > +		se_global->alua_lu_gps_count++;
+> > +	}
+> > +
+> > +	return lu_gp;
+> > +}
+> > +
+> > +int core_alua_set_lu_gp_id(struct t10_alua_lu_gp *lu_gp, u16
+> lu_gp_id)
+> > +{
+> > +	struct t10_alua_lu_gp *lu_gp_tmp;
+> > +	u16 lu_gp_id_tmp;
+> > +	/*
+> > +	 * The lu_gp->lu_gp_id may only be set once..
+> > +	 */
+> > +	if (lu_gp->lu_gp_valid_id) {
+> > +		printk(KERN_ERR "ALUA LU Group already has a valid ID,"
+> > +			" ignoring request\n");
+> 
+> That looks to be in WARNING category.
+
+Fixed
+
+> > +		return -1;
+> > +	}
+> > +
+> > +	spin_lock(&se_global->lu_gps_lock);
+> > +	if (se_global->alua_lu_gps_count == 0x0000ffff) {
+> > +		printk(KERN_ERR "Maximum ALUA se_global->alua_lu_gps_count:"
+> > +				" 0x0000ffff reached\n");
+> > +		spin_unlock(&se_global->lu_gps_lock);
+> > +		kmem_cache_free(t10_alua_lu_gp_cache, lu_gp);
+> > +		return -1;
+> > +	}
+> > +again:
+> > +	lu_gp_id_tmp = (lu_gp_id != 0) ? lu_gp_id :
+> > +				se_global->alua_lu_gps_counter++;
+> > +
+> > +	list_for_each_entry(lu_gp_tmp, &se_global->g_lu_gps_list,
+> lu_gp_list) {
+> > +		if (lu_gp_tmp->lu_gp_id == lu_gp_id_tmp) {
+> > +			if (!(lu_gp_id))
+> > +				goto again;
+> > +
+> > +			printk(KERN_ERR "ALUA Logical Unit Group ID: %hu"
+> > +				" already exists, ignoring request\n",
+> > +				lu_gp_id);
+> 
+> KERN_WARNING.
+
+Fixed
+
+> > +			spin_unlock(&se_global->lu_gps_lock);
+> > +			return -1;
+> > +		}
+> > +	}
+> > +
+> > +	lu_gp->lu_gp_id = lu_gp_id_tmp;
+> > +	lu_gp->lu_gp_valid_id = 1;
+> > +	list_add_tail(&lu_gp->lu_gp_list, &se_global->g_lu_gps_list);
+> > +	se_global->alua_lu_gps_count++;
+> > +	spin_unlock(&se_global->lu_gps_lock);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +struct t10_alua_lu_gp_member *core_alua_allocate_lu_gp_mem(
+> > +	struct se_device *dev)
+> > +{
+> > +	struct t10_alua_lu_gp_member *lu_gp_mem;
+> > +
+> > +	lu_gp_mem = kmem_cache_zalloc(t10_alua_lu_gp_mem_cache,
+> GFP_KERNEL);
+> > +	if (!(lu_gp_mem)) {
+> > +		printk(KERN_ERR "Unable to allocate struct t10_alua_lu_gp_member
+> \n");
+> > +		return ERR_PTR(-ENOMEM);
+> 
+> Aaah, so if you are using this here, can you use the same return for
+> all the 
+> other functions in which you do 'return NULL' ?
+
+<nod> So the only other place that this would be useful is
+core_alua_allocate_lu_gp().  Changed to use ERR_PTR(-ENOMEM), and
+updated it's usage in target_core_configfs.c
+
+> > +	}
+> > +	INIT_LIST_HEAD(&lu_gp_mem->lu_gp_mem_list);
+> > +	spin_lock_init(&lu_gp_mem->lu_gp_mem_lock);
+> > +	atomic_set(&lu_gp_mem->lu_gp_mem_ref_cnt, 0);
+> > +
+> > +	lu_gp_mem->lu_gp_mem_dev = dev;
+> > +	dev->dev_alua_lu_gp_mem = lu_gp_mem;
+> > +
+> > +	return lu_gp_mem;
+> > +}
+> > +
+> > +void core_alua_free_lu_gp(struct t10_alua_lu_gp *lu_gp)
+> > +{
+> > +	struct t10_alua_lu_gp_member *lu_gp_mem, *lu_gp_mem_tmp;
+> > +	/*
+> > +	 * Once we have reached this point, config_item_put() has
+> > +	 * already been called from target_core_alua_drop_lu_gp().
+> > +	 *
+> > +	 * Here, we remove the *lu_gp from the global list so that
+> > +	 * no associations can be made while we are releasing
+> > +	 * struct t10_alua_lu_gp.
+> > +	 */
+> > +	spin_lock(&se_global->lu_gps_lock);
+> > +	atomic_set(&lu_gp->lu_gp_shutdown, 1);
+> > +	list_del(&lu_gp->lu_gp_list);
+> > +	se_global->alua_lu_gps_count--;
+> > +	spin_unlock(&se_global->lu_gps_lock);
+> > +	/*
+> > +	 * Allow struct t10_alua_lu_gp * referenced by
+> > core_alua_get_lu_gp_by_name() +	 * in
+> > target_core_configfs.c:target_core_store_alua_lu_gp() to be +	 *
+> released
+> > with core_alua_put_lu_gp_from_name()
+> > +	 */
+> > +	while (atomic_read(&lu_gp->lu_gp_ref_cnt))
+> > +		msleep(10);
+> 
+> Use cpu_relax(); instead.
+
+Fixed..
+
+> 
+> > +	/*
+> > +	 * Release reference to struct t10_alua_lu_gp * from all
+> associated
+> > +	 * struct se_device.
+> > +	 */
+> > +	spin_lock(&lu_gp->lu_gp_lock);
+> > +	list_for_each_entry_safe(lu_gp_mem, lu_gp_mem_tmp,
+> > +				&lu_gp->lu_gp_mem_list, lu_gp_mem_list) {
+> > +		if (lu_gp_mem->lu_gp_assoc) {
+> > +			list_del(&lu_gp_mem->lu_gp_mem_list);
+> > +			lu_gp->lu_gp_members--;
+> > +			lu_gp_mem->lu_gp_assoc = 0;
+> > +		}
+> > +		spin_unlock(&lu_gp->lu_gp_lock);
+> > +		/*
+> > +		 *
+> > +		 * lu_gp_mem is assoicated with a single
+> > +		 * struct se_device->dev_alua_lu_gp_mem, and is released when
+> > +		 * struct se_device is released via core_alua_free_lu_gp_mem().
+> > +		 *
+> > +		 * If the passed lu_gp does NOT match the default_lu_gp, assume
+> > +		 * we want to re-assocate a given lu_gp_mem with default_lu_gp.
+> > +		 */
+> > +		spin_lock(&lu_gp_mem->lu_gp_mem_lock);
+> > +		if (lu_gp != se_global->default_lu_gp)
+> > +			__core_alua_attach_lu_gp_mem(lu_gp_mem,
+> > +					se_global->default_lu_gp);
+> > +		else
+> > +			lu_gp_mem->lu_gp = NULL;
+> > +		spin_unlock(&lu_gp_mem->lu_gp_mem_lock);
+> > +
+> > +		spin_lock(&lu_gp->lu_gp_lock);
+> > +	}
+> > +	spin_unlock(&lu_gp->lu_gp_lock);
+> > +
+> > +	kmem_cache_free(t10_alua_lu_gp_cache, lu_gp);
+> > +}
+> > +
+> > +void core_alua_free_lu_gp_mem(struct se_device *dev)
+> > +{
+> > +	struct se_subsystem_dev *su_dev = dev->se_sub_dev;
+> > +	struct t10_alua *alua = T10_ALUA(su_dev);
+> > +	struct t10_alua_lu_gp *lu_gp;
+> > +	struct t10_alua_lu_gp_member *lu_gp_mem;
+> > +
+> > +	if (alua->alua_type != SPC3_ALUA_EMULATED)
+> > +		return;
+> > +
+> > +	lu_gp_mem = dev->dev_alua_lu_gp_mem;
+> > +	if (!(lu_gp_mem))
+> > +		return;
+> > +
+> > +	while (atomic_read(&lu_gp_mem->lu_gp_mem_ref_cnt))
+> > +		msleep(10);
+> 
+> cpu_relax();
+
+Fixed
+
+> > +
+> > +	spin_lock(&lu_gp_mem->lu_gp_mem_lock);
+> > +	lu_gp = lu_gp_mem->lu_gp;
+> > +	if ((lu_gp)) {
+> > +		spin_lock(&lu_gp->lu_gp_lock);
+> > +		if (lu_gp_mem->lu_gp_assoc) {
+> > +			list_del(&lu_gp_mem->lu_gp_mem_list);
+> > +			lu_gp->lu_gp_members--;
+> > +			lu_gp_mem->lu_gp_assoc = 0;
+> > +		}
+> > +		spin_unlock(&lu_gp->lu_gp_lock);
+> > +		lu_gp_mem->lu_gp = NULL;
+> > +	}
+> > +	spin_unlock(&lu_gp_mem->lu_gp_mem_lock);
+> > +
+> > +	kmem_cache_free(t10_alua_lu_gp_mem_cache, lu_gp_mem);
+> > +}
+> > +
+> > +struct t10_alua_lu_gp *core_alua_get_lu_gp_by_name(const char
+> *name)
+> > +{
+> > +	struct t10_alua_lu_gp *lu_gp;
+> > +	struct config_item *ci;
+> > +
+> > +	spin_lock(&se_global->lu_gps_lock);
+> > +	list_for_each_entry(lu_gp, &se_global->g_lu_gps_list, lu_gp_list)
+> {
+> > +		if (!(lu_gp->lu_gp_valid_id))
+> > +			continue;
+> > +		ci = &lu_gp->lu_gp_group.cg_item;
+> > +		if (!(strcmp(config_item_name(ci), name))) {
+> > +			atomic_inc(&lu_gp->lu_gp_ref_cnt);
+> > +			spin_unlock(&se_global->lu_gps_lock);
+> > +			return lu_gp;
+> > +		}
+> > +	}
+> > +	spin_unlock(&se_global->lu_gps_lock);
+> > +
+> > +	return NULL;
+> > +}
+> > +
+> > +void core_alua_put_lu_gp_from_name(struct t10_alua_lu_gp *lu_gp)
+> > +{
+> > +	spin_lock(&se_global->lu_gps_lock);
+> > +	atomic_dec(&lu_gp->lu_gp_ref_cnt);
+> > +	spin_unlock(&se_global->lu_gps_lock);
+> > +}
+> > +
+> > +/*
+> > + * Called with struct t10_alua_lu_gp_member->lu_gp_mem_lock
+> > + */
+> > +void __core_alua_attach_lu_gp_mem(
+> > +	struct t10_alua_lu_gp_member *lu_gp_mem,
+> > +	struct t10_alua_lu_gp *lu_gp)
+> > +{
+> > +	spin_lock(&lu_gp->lu_gp_lock);
+> > +	lu_gp_mem->lu_gp = lu_gp;
+> > +	lu_gp_mem->lu_gp_assoc = 1;
+> 
+> Put a comment explaining what '1' stands for.
+
+This is actually the 'association bit'.  Changing this to a bitfield
+now.
+
+> 
+> > +	list_add_tail(&lu_gp_mem->lu_gp_mem_list, &lu_gp->lu_gp_mem_list);
+> > +	lu_gp->lu_gp_members++;
+> > +	spin_unlock(&lu_gp->lu_gp_lock);
+> > +}
+> > +
+> > +/*
+> > + * Called with struct t10_alua_lu_gp_member->lu_gp_mem_lock
+> > + */
+> > +void __core_alua_drop_lu_gp_mem(
+> > +	struct t10_alua_lu_gp_member *lu_gp_mem,
+> > +	struct t10_alua_lu_gp *lu_gp)
+> > +{
+> > +	spin_lock(&lu_gp->lu_gp_lock);
+> > +	list_del(&lu_gp_mem->lu_gp_mem_list);
+> > +	lu_gp_mem->lu_gp = NULL;
+> > +	lu_gp_mem->lu_gp_assoc = 0;
+> > +	lu_gp->lu_gp_members--;
+> > +	spin_unlock(&lu_gp->lu_gp_lock);
+> > +}
+> > +
+> > +struct t10_alua_tg_pt_gp *core_alua_allocate_tg_pt_gp(
+> > +	struct se_subsystem_dev *su_dev,
+> > +	const char *name,
+> > +	int def_group)
+> > +{
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp;
+> > +
+> > +	tg_pt_gp = kmem_cache_zalloc(t10_alua_tg_pt_gp_cache, GFP_KERNEL);
+> > +	if (!(tg_pt_gp)) {
+> > +		printk(KERN_ERR "Unable to allocate struct t10_alua_tg_pt_gp\n");
+> > +		return NULL;
+> > +	}
+> > +	INIT_LIST_HEAD(&tg_pt_gp->tg_pt_gp_list);
+> > +	INIT_LIST_HEAD(&tg_pt_gp->tg_pt_gp_mem_list);
+> > +	mutex_init(&tg_pt_gp->tg_pt_gp_md_mutex);
+> > +	spin_lock_init(&tg_pt_gp->tg_pt_gp_lock);
+> > +	atomic_set(&tg_pt_gp->tg_pt_gp_ref_cnt, 0);
+> > +	tg_pt_gp->tg_pt_gp_su_dev = su_dev;
+> > +	tg_pt_gp->tg_pt_gp_md_buf_len = ALUA_MD_BUF_LEN;
+> > +	atomic_set(&tg_pt_gp->tg_pt_gp_alua_access_state,
+> > +		ALUA_ACCESS_STATE_ACTIVE_OPTMIZED);
+> > +	/*
+> > +	 * Enable both explict and implict ALUA support by default
+> > +	 */
+> > +	tg_pt_gp->tg_pt_gp_alua_access_type =
+> > +			TPGS_EXPLICT_ALUA | TPGS_IMPLICT_ALUA;
+> > +	/*
+> > +	 * Set the default Active/NonOptimized Delay in milliseconds
+> > +	 */
+> > +	tg_pt_gp->tg_pt_gp_nonop_delay_msecs =
+> ALUA_DEFAULT_NONOP_DELAY_MSECS;
+> > +	tg_pt_gp->tg_pt_gp_trans_delay_msecs =
+> ALUA_DEFAULT_TRANS_DELAY_MSECS;
+> > +
+> > +	if (def_group) {
+> > +		spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +		tg_pt_gp->tg_pt_gp_id =
+> > +				T10_ALUA(su_dev)->alua_tg_pt_gps_counter++;
+> > +		tg_pt_gp->tg_pt_gp_valid_id = 1;
+> > +		T10_ALUA(su_dev)->alua_tg_pt_gps_count++;
+> > +		list_add_tail(&tg_pt_gp->tg_pt_gp_list,
+> > +			      &T10_ALUA(su_dev)->tg_pt_gps_list);
+> > +		spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +	}
+> > +
+> > +	return tg_pt_gp;
+> > +}
+> > +
+> > +int core_alua_set_tg_pt_gp_id(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	u16 tg_pt_gp_id)
+> > +{
+> > +	struct se_subsystem_dev *su_dev = tg_pt_gp->tg_pt_gp_su_dev;
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp_tmp;
+> > +	u16 tg_pt_gp_id_tmp;
+> > +	/*
+> > +	 * The tg_pt_gp->tg_pt_gp_id may only be set once..
+> > +	 */
+> > +	if (tg_pt_gp->tg_pt_gp_valid_id) {
+> > +		printk(KERN_ERR "ALUA TG PT Group already has a valid ID,"
+> > +			" ignoring request\n");
+> 
+> KERN_WARNING?
+
+Fixed
+
+> > +		return -1;
+> > +	}
+> > +
+> > +	spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +	if (T10_ALUA(su_dev)->alua_tg_pt_gps_count == 0x0000ffff) {
+> > +		printk(KERN_ERR "Maximum ALUA alua_tg_pt_gps_count:"
+> > +			" 0x0000ffff reached\n");
+> > +		spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +		kmem_cache_free(t10_alua_tg_pt_gp_cache, tg_pt_gp);
+> > +		return -1;
+> > +	}
+> > +again:
+> > +	tg_pt_gp_id_tmp = (tg_pt_gp_id != 0) ? tg_pt_gp_id :
+> > +			T10_ALUA(su_dev)->alua_tg_pt_gps_counter++;
+> > +
+> > +	list_for_each_entry(tg_pt_gp_tmp,
+> &T10_ALUA(su_dev)->tg_pt_gps_list,
+> > +			tg_pt_gp_list) {
+> > +		if (tg_pt_gp_tmp->tg_pt_gp_id == tg_pt_gp_id_tmp) {
+> > +			if (!(tg_pt_gp_id))
+> > +				goto again;
+> > +
+> > +			printk(KERN_ERR "ALUA Target Port Group ID: %hu already"
+> > +				" exists, ignoring request\n", tg_pt_gp_id);
+> > +			spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +			return -1;
+> > +		}
+> > +	}
+> > +
+> > +	tg_pt_gp->tg_pt_gp_id = tg_pt_gp_id_tmp;
+> > +	tg_pt_gp->tg_pt_gp_valid_id = 1;
+> > +	list_add_tail(&tg_pt_gp->tg_pt_gp_list,
+> > +			&T10_ALUA(su_dev)->tg_pt_gps_list);
+> > +	T10_ALUA(su_dev)->alua_tg_pt_gps_count++;
+> > +	spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +
+> 
+> This function looks similar to "core_alua_set_lu_gp_id". Any way to
+> unify 
+> it/share?
+
+Unfortuately I think unifying "core_alua_set_lu_gp_id() and
+core_alua_set_tg_pt_gp_id() would not be worth the trouble..
+
+> > +	return 0;
+> > +}
+> > +
+> > +struct t10_alua_tg_pt_gp_member *core_alua_allocate_tg_pt_gp_mem(
+> > +	struct se_port *port)
+> > +{
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
+> > +
+> > +	tg_pt_gp_mem = kmem_cache_zalloc(t10_alua_tg_pt_gp_mem_cache,
+> > +				GFP_KERNEL);
+> > +	if (!(tg_pt_gp_mem)) {
+> > +		printk(KERN_ERR "Unable to allocate struct
+> t10_alua_tg_pt_gp_member\n");
+> > +		return ERR_PTR(-ENOMEM);
+> > +	}
+> > +	INIT_LIST_HEAD(&tg_pt_gp_mem->tg_pt_gp_mem_list);
+> > +	spin_lock_init(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	atomic_set(&tg_pt_gp_mem->tg_pt_gp_mem_ref_cnt, 0);
+> > +
+> > +	tg_pt_gp_mem->tg_pt = port;
+> > +	port->sep_alua_tg_pt_gp_mem = tg_pt_gp_mem;
+> > +	atomic_set(&port->sep_tg_pt_gp_active, 1);
+> > +
+> > +	return tg_pt_gp_mem;
+> > +}
+> > +
+> > +void core_alua_free_tg_pt_gp(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp)
+> > +{
+> > +	struct se_subsystem_dev *su_dev = tg_pt_gp->tg_pt_gp_su_dev;
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem, *tg_pt_gp_mem_tmp;
+> > +	/*
+> > +	 * Once we have reached this point, config_item_put() has already
+> > +	 * been called from target_core_alua_drop_tg_pt_gp().
+> > +	 *
+> > +	 * Here we remove *tg_pt_gp from the global list so that
+> > +	 * no assications *OR* explict ALUA via SET_TARGET_PORT_GROUPS
+> > +	 * can be made while we are releasing struct t10_alua_tg_pt_gp.
+> > +	 */
+> > +	spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +	list_del(&tg_pt_gp->tg_pt_gp_list);
+> > +	T10_ALUA(su_dev)->alua_tg_pt_gps_counter--;
+> > +	spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +	/*
+> > +	 * Allow a struct t10_alua_tg_pt_gp_member * referenced by
+> > +	 * core_alua_get_tg_pt_gp_by_name() in
+> > +	 * target_core_configfs.c:target_core_store_alua_tg_pt_gp()
+> > +	 * to be released with core_alua_put_tg_pt_gp_from_name().
+> > +	 */
+> > +	while (atomic_read(&tg_pt_gp->tg_pt_gp_ref_cnt))
+> > +		msleep(10);
+> 
+> cpu_relax();
+
+Fixed
+
+> > +	/*
+> > +	 * Release reference to struct t10_alua_tg_pt_gp from all
+> associated
+> > +	 * struct se_port.
+> > +	 */
+> > +	spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+> > +	list_for_each_entry_safe(tg_pt_gp_mem, tg_pt_gp_mem_tmp,
+> > +			&tg_pt_gp->tg_pt_gp_mem_list, tg_pt_gp_mem_list) {
+> > +		if (tg_pt_gp_mem->tg_pt_gp_assoc) {
+> > +			list_del(&tg_pt_gp_mem->tg_pt_gp_mem_list);
+> > +			tg_pt_gp->tg_pt_gp_members--;
+> > +			tg_pt_gp_mem->tg_pt_gp_assoc = 0;
+> > +		}
+> > +		spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+> > +		/*
+> > +		 * tg_pt_gp_mem is assoicated with a single
+> > +		 * se_port->sep_alua_tg_pt_gp_mem, and is released via
+> > +		 * core_alua_free_tg_pt_gp_mem().
+> > +		 *
+> > +		 * If the passed tg_pt_gp does NOT match the default_tg_pt_gp,
+> > +		 * assume we want to re-assocate a given tg_pt_gp_mem with
+> > +		 * default_tg_pt_gp.
+> > +		 */
+> > +		spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +		if (tg_pt_gp != T10_ALUA(su_dev)->default_tg_pt_gp) {
+> > +			__core_alua_attach_tg_pt_gp_mem(tg_pt_gp_mem,
+> > +					T10_ALUA(su_dev)->default_tg_pt_gp);
+> > +		} else
+> > +			tg_pt_gp_mem->tg_pt_gp = NULL;
+> > +		spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +
+> > +		spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+> > +	}
+> > +	spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+> > +
+> > +	kmem_cache_free(t10_alua_tg_pt_gp_cache, tg_pt_gp);
+> 
+> Hmm, this function looks familiar too. There was another one that did
+> almost 
+> the same thing - any way of collapsing them in one?
+
+Same point here.  I don't think it would be worth the effort to unify
+ore_alua_free_lu_gp() core_alua_free_tg_pt_gp().
+
+> > +}
+> > +
+> > +void core_alua_free_tg_pt_gp_mem(struct se_port *port)
+> > +{
+> > +	struct se_subsystem_dev *su_dev =
+> port->sep_lun->lun_se_dev->se_sub_dev;
+> > +	struct t10_alua *alua = T10_ALUA(su_dev);
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp;
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
+> > +
+> > +	if (alua->alua_type != SPC3_ALUA_EMULATED)
+> > +		return;
+> > +
+> > +	tg_pt_gp_mem = port->sep_alua_tg_pt_gp_mem;
+> > +	if (!(tg_pt_gp_mem))
+> > +		return;
+> > +
+> > +	while (atomic_read(&tg_pt_gp_mem->tg_pt_gp_mem_ref_cnt))
+> > +		msleep(10);
+> > +
+> 
+> cpu_relax()
+
+Fixed
+
+> > +	spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	tg_pt_gp = tg_pt_gp_mem->tg_pt_gp;
+> > +	if ((tg_pt_gp)) {
+> > +		spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+> > +		if (tg_pt_gp_mem->tg_pt_gp_assoc) {
+> > +			list_del(&tg_pt_gp_mem->tg_pt_gp_mem_list);
+> > +			tg_pt_gp->tg_pt_gp_members--;
+> > +			tg_pt_gp_mem->tg_pt_gp_assoc = 0;
+> > +		}
+> > +		spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+> > +		tg_pt_gp_mem->tg_pt_gp = NULL;
+> > +	}
+> > +	spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +
+> > +	kmem_cache_free(t10_alua_tg_pt_gp_mem_cache, tg_pt_gp_mem);
+> > +}
+> > +
+> > +struct t10_alua_tg_pt_gp *core_alua_get_tg_pt_gp_by_name(
+> > +	struct se_subsystem_dev *su_dev,
+> > +	const char *name)
+> > +{
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp;
+> > +	struct config_item *ci;
+> > +
+> > +	spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +	list_for_each_entry(tg_pt_gp, &T10_ALUA(su_dev)->tg_pt_gps_list,
+> > +			tg_pt_gp_list) {
+> > +		if (!(tg_pt_gp->tg_pt_gp_valid_id))
+> > +			continue;
+> > +		ci = &tg_pt_gp->tg_pt_gp_group.cg_item;
+> > +		if (!(strcmp(config_item_name(ci), name))) {
+> > +			atomic_inc(&tg_pt_gp->tg_pt_gp_ref_cnt);
+> > +			spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +			return tg_pt_gp;
+> > +		}
+> > +	}
+> > +	spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +
+> > +	return NULL;
+> > +}
+> > +
+> > +void core_alua_put_tg_pt_gp_from_name(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp)
+> > +{
+> > +	struct se_subsystem_dev *su_dev = tg_pt_gp->tg_pt_gp_su_dev;
+> > +
+> > +	spin_lock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +	atomic_dec(&tg_pt_gp->tg_pt_gp_ref_cnt);
+> > +	spin_unlock(&T10_ALUA(su_dev)->tg_pt_gps_lock);
+> > +}
+> > +
+> > +/*
+> > + * Called with struct t10_alua_tg_pt_gp_member->tg_pt_gp_mem_lock
+> held
+> > + */
+> > +void __core_alua_attach_tg_pt_gp_mem(
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem,
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp)
+> > +{
+> > +	spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+> > +	tg_pt_gp_mem->tg_pt_gp = tg_pt_gp;
+> > +	tg_pt_gp_mem->tg_pt_gp_assoc = 1;
+> > +	list_add_tail(&tg_pt_gp_mem->tg_pt_gp_mem_list,
+> > +			&tg_pt_gp->tg_pt_gp_mem_list);
+> > +	tg_pt_gp->tg_pt_gp_members++;
+> > +	spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+> > +}
+> > +
+> > +/*
+> > + * Called with struct t10_alua_tg_pt_gp_member->tg_pt_gp_mem_lock
+> held
+> > + */
+> > +void __core_alua_drop_tg_pt_gp_mem(
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem,
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp)
+> > +{
+> > +	spin_lock(&tg_pt_gp->tg_pt_gp_lock);
+> > +	list_del(&tg_pt_gp_mem->tg_pt_gp_mem_list);
+> > +	tg_pt_gp_mem->tg_pt_gp = NULL;
+> > +	tg_pt_gp_mem->tg_pt_gp_assoc = 0;
+> > +	tg_pt_gp->tg_pt_gp_members--;
+> > +	spin_unlock(&tg_pt_gp->tg_pt_gp_lock);
+> > +}
+> > +
+> > +ssize_t core_alua_show_tg_pt_gp_info(struct se_port *port, char
+> *page)
+> > +{
+> > +	struct se_subsystem_dev *su_dev =
+> port->sep_lun->lun_se_dev->se_sub_dev;
+> > +	struct config_item *tg_pt_ci;
+> > +	struct t10_alua *alua = T10_ALUA(su_dev);
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp;
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
+> > +	ssize_t len = 0;
+> > +
+> > +	if (alua->alua_type != SPC3_ALUA_EMULATED)
+> > +		return len;
+> > +
+> > +	tg_pt_gp_mem = port->sep_alua_tg_pt_gp_mem;
+> > +	if (!(tg_pt_gp_mem))
+> > +		return len;
+> > +
+> > +	spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	tg_pt_gp = tg_pt_gp_mem->tg_pt_gp;
+> > +	if ((tg_pt_gp)) {
+> > +		tg_pt_ci = &tg_pt_gp->tg_pt_gp_group.cg_item;
+> > +		len += sprintf(page, "TG Port Alias: %s\nTG Port Group ID:"
+> > +			" %hu\nTG Port Primary Access State: %s\nTG Port "
+> > +			"Primary Access Status: %s\nTG Port Secondary Access"
+> > +			" State: %s\nTG Port Secondary Access Status: %s\n",
+> > +			config_item_name(tg_pt_ci), tg_pt_gp->tg_pt_gp_id,
+> > +			core_alua_dump_state(atomic_read(
+> > +					&tg_pt_gp->tg_pt_gp_alua_access_state)),
+> > +			core_alua_dump_status(
+> > +				tg_pt_gp->tg_pt_gp_alua_access_status),
+> > +			(atomic_read(&port->sep_tg_pt_secondary_offline)) ?
+> > +			"Offline" : "None",
+> > +			core_alua_dump_status(port->sep_tg_pt_secondary_stat));
+> > +	}
+> > +	spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +
+> > +	return len;
+> > +}
+> > +EXPORT_SYMBOL(core_alua_show_tg_pt_gp_info);
+> 
+> Why not EXPORT_SYMBOL_GPL?
+
+No particular reason here..
+
+> > +
+> > +ssize_t core_alua_store_tg_pt_gp_info(
+> > +	struct se_port *port,
+> > +	const char *page,
+> > +	size_t count)
+> > +{
+> > +	struct se_portal_group *tpg;
+> > +	struct se_lun *lun;
+> > +	struct se_subsystem_dev *su_dev =
+> port->sep_lun->lun_se_dev->se_sub_dev;
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp = NULL, *tg_pt_gp_new = NULL;
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
+> > +	unsigned char buf[TG_PT_GROUP_NAME_BUF];
+> > +	int move = 0;
+> > +
+> > +	tpg = port->sep_tpg;
+> > +	lun = port->sep_lun;
+> > +
+> > +	if (T10_ALUA(su_dev)->alua_type != SPC3_ALUA_EMULATED) {
+> > +		printk(KERN_WARNING "SPC3_ALUA_EMULATED not enabled for"
+> > +			" %s/tpgt_%hu/%s\n", TPG_TFO(tpg)->tpg_get_wwn(tpg),
+> > +			TPG_TFO(tpg)->tpg_get_tag(tpg),
+> > +			config_item_name(&lun->lun_group.cg_item));
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	if (count > TG_PT_GROUP_NAME_BUF) {
+> > +		printk(KERN_ERR "ALUA Target Port Group alias too large!\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	memset(buf, 0, TG_PT_GROUP_NAME_BUF);
+> > +	memcpy(buf, page, count);
+> > +	/*
+> > +	 * Any ALUA target port group alias besides "NULL" means we will
+> be
+> > +	 * making a new group association.
+> > +	 */
+> > +	if (strcmp(strstrip(buf), "NULL")) {
+> > +		/*
+> > +		 * core_alua_get_tg_pt_gp_by_name() will increment reference to
+> > +		 * struct t10_alua_tg_pt_gp.  This reference is released with
+> > +		 * core_alua_put_tg_pt_gp_from_name() below.
+> > +		 */
+> > +		tg_pt_gp_new = core_alua_get_tg_pt_gp_by_name(su_dev,
+> > +					strstrip(buf));
+> > +		if (!(tg_pt_gp_new))
+> > +			return -ENODEV;
+> > +	}
+> > +	tg_pt_gp_mem = port->sep_alua_tg_pt_gp_mem;
+> > +	if (!(tg_pt_gp_mem)) {
+> > +		if (tg_pt_gp_new)
+> > +			core_alua_put_tg_pt_gp_from_name(tg_pt_gp_new);
+> > +		printk(KERN_ERR "NULL struct se_port->sep_alua_tg_pt_gp_mem
+> pointer\n");
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	spin_lock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	tg_pt_gp = tg_pt_gp_mem->tg_pt_gp;
+> > +	if ((tg_pt_gp)) {
+> > +		/*
+> > +		 * Clearing an existing tg_pt_gp association, and replacing
+> > +		 * with the default_tg_pt_gp.
+> > +		 */
+> > +		if (!(tg_pt_gp_new)) {
+> > +			printk(KERN_INFO "Target_Core_ConfigFS: Moving"
+> > +				" %s/tpgt_%hu/%s from ALUA Target Port Group:"
+> > +				" alua/%s, ID: %hu back to"
+> > +				" default_tg_pt_gp\n",
+> > +				TPG_TFO(tpg)->tpg_get_wwn(tpg),
+> > +				TPG_TFO(tpg)->tpg_get_tag(tpg),
+> > +				config_item_name(&lun->lun_group.cg_item),
+> > +				config_item_name(
+> > +					&tg_pt_gp->tg_pt_gp_group.cg_item),
+> > +				tg_pt_gp->tg_pt_gp_id);
+> > +
+> > +			__core_alua_drop_tg_pt_gp_mem(tg_pt_gp_mem, tg_pt_gp);
+> > +			__core_alua_attach_tg_pt_gp_mem(tg_pt_gp_mem,
+> > +					T10_ALUA(su_dev)->default_tg_pt_gp);
+> > +			spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +
+> > +			return count;
+> > +		}
+> > +		/*
+> > +		 * Removing existing association of tg_pt_gp_mem with tg_pt_gp
+> > +		 */
+> > +		__core_alua_drop_tg_pt_gp_mem(tg_pt_gp_mem, tg_pt_gp);
+> > +		move = 1;
+> > +	}
+> > +	/*
+> > +	 * Associate tg_pt_gp_mem with tg_pt_gp_new.
+> > +	 */
+> > +	__core_alua_attach_tg_pt_gp_mem(tg_pt_gp_mem, tg_pt_gp_new);
+> > +	spin_unlock(&tg_pt_gp_mem->tg_pt_gp_mem_lock);
+> > +	printk("Target_Core_ConfigFS: %s %s/tpgt_%hu %s to ALUA Target
+> Port"
+> 
+> And this is KERN_INFO?
+
+Fixed
+
+> 
+> > +		" Group: alua/%s, ID: %hu\n", (move) ?
+> > +		"Moving" : "Adding", TPG_TFO(tpg)->tpg_get_wwn(tpg),
+> > +		TPG_TFO(tpg)->tpg_get_tag(tpg),
+> > +		config_item_name(&lun->lun_group.cg_item),
+> > +		config_item_name(&tg_pt_gp_new->tg_pt_gp_group.cg_item),
+> > +		tg_pt_gp_new->tg_pt_gp_id);
+> > +
+> > +	core_alua_put_tg_pt_gp_from_name(tg_pt_gp_new);
+> > +	return count;
+> > +}
+> > +EXPORT_SYMBOL(core_alua_store_tg_pt_gp_info);
+> 
+> Why not EXPORT_SYMBOL_GPL?
+
+No particular reason..
+
+> > +
+> > +ssize_t core_alua_show_access_type(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	char *page)
+> > +{
+> > +	if ((tg_pt_gp->tg_pt_gp_alua_access_type & TPGS_EXPLICT_ALUA) &&
+> > +	    (tg_pt_gp->tg_pt_gp_alua_access_type & TPGS_IMPLICT_ALUA))
+> > +		return sprintf(page, "Implict and Explict\n");
+> > +	else if (tg_pt_gp->tg_pt_gp_alua_access_type & TPGS_IMPLICT_ALUA)
+> > +		return sprintf(page, "Implict\n");
+> > +	else if (tg_pt_gp->tg_pt_gp_alua_access_type & TPGS_EXPLICT_ALUA)
+> > +		return sprintf(page, "Explict\n");
+> > +	else
+> > +		return sprintf(page, "None\n");
+> > +}
+> > +
+> > +ssize_t core_alua_store_access_type(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	const char *page,
+> > +	size_t count)
+> > +{
+> > +	unsigned long tmp;
+> > +	int ret;
+> > +
+> > +	ret = strict_strtoul(page, 0, &tmp);
+> > +	if (ret < 0) {
+> > +		printk(KERN_ERR "Unable to extract alua_access_type\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	if ((tmp != 0) && (tmp != 1) && (tmp != 2) && (tmp != 3)) {
+> > +		printk(KERN_ERR "Illegal value for alua_access_type:"
+> > +				" %lu\n", tmp);
+> > +		return -EINVAL;
+> > +	}
+> > +	if (tmp == 3)
+> > +		tg_pt_gp->tg_pt_gp_alua_access_type =
+> > +			TPGS_IMPLICT_ALUA | TPGS_EXPLICT_ALUA;
+> > +	else if (tmp == 2)
+> > +		tg_pt_gp->tg_pt_gp_alua_access_type = TPGS_EXPLICT_ALUA;
+> > +	else if (tmp == 1)
+> > +		tg_pt_gp->tg_pt_gp_alua_access_type = TPGS_IMPLICT_ALUA;
+> > +	else
+> > +		tg_pt_gp->tg_pt_gp_alua_access_type = 0;
+> > +
+> > +	return count;
+> > +}
+> > +
+> > +ssize_t core_alua_show_nonop_delay_msecs(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	char *page)
+> > +{
+> > +	return sprintf(page, "%d\n",
+> tg_pt_gp->tg_pt_gp_nonop_delay_msecs);
+> > +}
+> > +
+> > +ssize_t core_alua_store_nonop_delay_msecs(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	const char *page,
+> > +	size_t count)
+> > +{
+> > +	unsigned long tmp;
+> > +	int ret;
+> > +
+> > +	ret = strict_strtoul(page, 0, &tmp);
+> > +	if (ret < 0) {
+> > +		printk(KERN_ERR "Unable to extract nonop_delay_msecs\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	if (tmp > ALUA_MAX_NONOP_DELAY_MSECS) {
+> > +		printk(KERN_ERR "Passed nonop_delay_msecs: %lu, exceeds"
+> > +			" ALUA_MAX_NONOP_DELAY_MSECS: %d\n", tmp,
+> > +			ALUA_MAX_NONOP_DELAY_MSECS);
+> > +		return -EINVAL;
+> > +	}
+> > +	tg_pt_gp->tg_pt_gp_nonop_delay_msecs = (int)tmp;
+> > +
+> > +	return count;
+> > +}
+> > +
+> > +ssize_t core_alua_show_trans_delay_msecs(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	char *page)
+> > +{
+> > +	return sprintf(page, "%d\n",
+> tg_pt_gp->tg_pt_gp_trans_delay_msecs);
+> > +}
+> > +
+> > +ssize_t core_alua_store_trans_delay_msecs(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	const char *page,
+> > +	size_t count)
+> > +{
+> > +	unsigned long tmp;
+> > +	int ret;
+> > +
+> > +	ret = strict_strtoul(page, 0, &tmp);
+> > +	if (ret < 0) {
+> > +		printk(KERN_ERR "Unable to extract trans_delay_msecs\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	if (tmp > ALUA_MAX_TRANS_DELAY_MSECS) {
+> > +		printk(KERN_ERR "Passed trans_delay_msecs: %lu, exceeds"
+> > +			" ALUA_MAX_TRANS_DELAY_MSECS: %d\n", tmp,
+> > +			ALUA_MAX_TRANS_DELAY_MSECS);
+> > +		return -EINVAL;
+> > +	}
+> > +	tg_pt_gp->tg_pt_gp_trans_delay_msecs = (int)tmp;
+> > +
+> > +	return count;
+> > +}
+> > +
+> > +ssize_t core_alua_show_preferred_bit(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	char *page)
+> > +{
+> > +	return sprintf(page, "%d\n", tg_pt_gp->tg_pt_gp_pref);
+> > +}
+> > +
+> > +ssize_t core_alua_store_preferred_bit(
+> > +	struct t10_alua_tg_pt_gp *tg_pt_gp,
+> > +	const char *page,
+> > +	size_t count)
+> > +{
+> > +	unsigned long tmp;
+> > +	int ret;
+> > +
+> > +	ret = strict_strtoul(page, 0, &tmp);
+> > +	if (ret < 0) {
+> > +		printk(KERN_ERR "Unable to extract preferred ALUA value\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	if ((tmp != 0) && (tmp != 1)) {
+> > +		printk(KERN_ERR "Illegal value for preferred ALUA: %lu\n", tmp);
+> > +		return -EINVAL;
+> > +	}
+> > +	tg_pt_gp->tg_pt_gp_pref = (int)tmp;
+> > +
+> > +	return count;
+> > +}
+> > +
+> > +ssize_t core_alua_show_offline_bit(struct se_lun *lun, char *page)
+> > +{
+> > +	if (!(lun->lun_sep))
+> > +		return -ENODEV;
+> > +
+> > +	return sprintf(page, "%d\n",
+> > +		atomic_read(&lun->lun_sep->sep_tg_pt_secondary_offline));
+> > +}
+> > +EXPORT_SYMBOL(core_alua_show_offline_bit);
+> 
+> And _GPL here?
+> > +
+> > +ssize_t core_alua_store_offline_bit(
+> > +	struct se_lun *lun,
+> > +	const char *page,
+> > +	size_t count)
+> > +{
+> > +	struct t10_alua_tg_pt_gp_member *tg_pt_gp_mem;
+> > +	unsigned long tmp;
+> > +	int ret;
+> > +
+> > +	if (!(lun->lun_sep))
+> > +		return -ENODEV;
+> > +
+> > +	ret = strict_strtoul(page, 0, &tmp);
+> > +	if (ret < 0) {
+> > +		printk(KERN_ERR "Unable to extract alua_tg_pt_offline value\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	if ((tmp != 0) && (tmp != 1)) {
+> > +		printk(KERN_ERR "Illegal value for alua_tg_pt_offline: %lu\n",
+> > +				tmp);
+> > +		return -EINVAL;
+> > +	}
+> > +	tg_pt_gp_mem = lun->lun_sep->sep_alua_tg_pt_gp_mem;
+> > +	if (!(tg_pt_gp_mem)) {
+> > +		printk(KERN_ERR "Unable to locate *tg_pt_gp_mem\n");
+> > +		return -EINVAL;
+> > +	}
+> > +
+> > +	ret = core_alua_set_tg_pt_secondary_state(tg_pt_gp_mem,
+> > +			lun->lun_sep, 0, (int)tmp);
+> > +	if (ret < 0)
+> > +		return -EINVAL;
+> > +
+> > +	return count;
+> > +}
+> > +EXPORT_SYMBOL(core_alua_store_offline_bit);
+> 
+> EXPORT_SYMBOL_GPL?
+> > +
+> > +ssize_t core_alua_show_secondary_status(
+> > +	struct se_lun *lun,
+> > +	char *page)
+> > +{
+> > +	return sprintf(page, "%d\n",
+> lun->lun_sep->sep_tg_pt_secondary_stat);
+> > +}
+> > +EXPORT_SYMBOL(core_alua_show_secondary_status);
+> 
+> Ditto.
+> > +
+> > +ssize_t core_alua_store_secondary_status(
+> > +	struct se_lun *lun,
+> > +	const char *page,
+> > +	size_t count)
+> > +{
+> > +	unsigned long tmp;
+> > +	int ret;
+> > +
+> > +	ret = strict_strtoul(page, 0, &tmp);
+> > +	if (ret < 0) {
+> > +		printk(KERN_ERR "Unable to extract alua_tg_pt_status\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	if ((tmp != ALUA_STATUS_NONE) &&
+> > +	    (tmp != ALUA_STATUS_ALTERED_BY_EXPLICT_STPG) &&
+> > +	    (tmp != ALUA_STATUS_ALTERED_BY_IMPLICT_ALUA)) {
+> > +		printk(KERN_ERR "Illegal value for alua_tg_pt_status: %lu\n",
+> > +				tmp);
+> > +		return -EINVAL;
+> > +	}
+> > +	lun->lun_sep->sep_tg_pt_secondary_stat = (int)tmp;
+> > +
+> > +	return count;
+> > +}
+> > +EXPORT_SYMBOL(core_alua_store_secondary_status);
+> 
+> Ditto.h
+> > +
+> > +ssize_t core_alua_show_secondary_write_metadata(
+> > +	struct se_lun *lun,
+> > +	char *page)
+> > +{
+> > +	return sprintf(page, "%d\n",
+> > +			lun->lun_sep->sep_tg_pt_secondary_write_md);
+> > +}
+> > +EXPORT_SYMBOL(core_alua_show_secondary_write_metadata);
+> 
+> Ditto
+> > +
+> > +ssize_t core_alua_store_secondary_write_metadata(
+> > +	struct se_lun *lun,
+> > +	const char *page,
+> > +	size_t count)
+> > +{
+> > +	unsigned long tmp;
+> > +	int ret;
+> > +
+> > +	ret = strict_strtoul(page, 0, &tmp);
+> > +	if (ret < 0) {
+> > +		printk(KERN_ERR "Unable to extract alua_tg_pt_write_md\n");
+> > +		return -EINVAL;
+> > +	}
+> > +	if ((tmp != 0) && (tmp != 1)) {
+> > +		printk(KERN_ERR "Illegal value for alua_tg_pt_write_md:"
+> > +				" %lu\n", tmp);
+> > +		return -EINVAL;
+> > +	}
+> > +	lun->lun_sep->sep_tg_pt_secondary_write_md = (int)tmp;
+> > +
+> > +	return count;
+> > +}
+> > +EXPORT_SYMBOL(core_alua_store_secondary_write_metadata);
+> 
+> Ditto
+> > +
+> > +int core_setup_alua(struct se_device *dev, int force_pt)
+> > +{
+> > +	struct se_subsystem_dev *su_dev = dev->se_sub_dev;
+> > +	struct t10_alua *alua = T10_ALUA(su_dev);
+> > +	struct t10_alua_lu_gp_member *lu_gp_mem;
+> > +	/*
+> > +	 * If this device is from Target_Core_Mod/pSCSI, use the ALUA
+> logic
+> > +	 * of the Underlying SCSI hardware.  In Linux/SCSI terms, this can
+> > +	 * cause a problem because libata and some SATA RAID HBAs appear
+> > +	 * under Linux/SCSI, but emulate SCSI logic themselves.
+> > +	 */
+> > +	if (((TRANSPORT(dev)->transport_type ==
+> TRANSPORT_PLUGIN_PHBA_PDEV) &&
+> > +	    !(DEV_ATTRIB(dev)->emulate_alua)) || force_pt) {
+> > +		alua->alua_type = SPC_ALUA_PASSTHROUGH;
+> > +		alua->alua_state_check = &core_alua_state_check_nop;
+> > +		printk(KERN_INFO "%s: Using SPC_ALUA_PASSTHROUGH, no ALUA"
+> > +			" emulation\n", TRANSPORT(dev)->name);
+> > +		return 0;
+> > +	}
+> > +	/*
+> > +	 * If SPC-3 or above is reported by real or emulated struct
+> se_device,
+> > +	 * use emulated ALUA.
+> > +	 */
+> > +	if (TRANSPORT(dev)->get_device_rev(dev) >= SCSI_3) {
+> > +		printk(KERN_INFO "%s: Enabling ALUA Emulation for SPC-3"
+> > +			" device\n", TRANSPORT(dev)->name);
+> > +		/*
+> > +		 * Assoicate this struct se_device with the default ALUA
+> > +		 * LUN Group.
+> > +		 */
+> > +		lu_gp_mem = core_alua_allocate_lu_gp_mem(dev);
+> > +		if (IS_ERR(lu_gp_mem) || !lu_gp_mem)
+> > +			return -1;
+> > +
+> > +		alua->alua_type = SPC3_ALUA_EMULATED;
+> > +		alua->alua_state_check = &core_alua_state_check;
+> > +		spin_lock(&lu_gp_mem->lu_gp_mem_lock);
+> > +		__core_alua_attach_lu_gp_mem(lu_gp_mem,
+> > +				se_global->default_lu_gp);
+> > +		spin_unlock(&lu_gp_mem->lu_gp_mem_lock);
+> > +
+> > +		printk(KERN_INFO "%s: Adding to default ALUA LU Group:"
+> > +			" core/alua/lu_gps/default_lu_gp\n",
+> > +			TRANSPORT(dev)->name);
+> > +	} else {
+> > +		alua->alua_type = SPC2_ALUA_DISABLED;
+> > +		alua->alua_state_check = &core_alua_state_check_nop;
+> > +		printk("%s: Disabling ALUA Emulation for SPC-2 device\n",
+> > +				TRANSPORT(dev)->name);
+> 
+> You forgot the runlevel. I _know_ the scripts/checkpatch.pl complains
+> about 
+> this. Do run it before you post any patches on LKML and fix them
+> please.
+> 
+
+Fixed
+
+I will commit the ACKed items from above, and will go ahead replace the
+other usages of msleep() in a loop to use cpu_relax() instead.
+
+Thanks again for your astute comments Konrad!  
 
 --nab
-
 
