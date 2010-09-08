@@ -1,61 +1,124 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 04/22] tcm: Add v4 base data structures and struct
-	target_core_fabric_ops
-Date: Tue, 07 Sep 2010 18:44:20 -0700
-Message-ID: <1283910260.556.393.camel@haakon2.linux-iscsi.org>
-References: <1283160040-6636-1-git-send-email-nab@linux-iscsi.org>
-	 <1283455187.5598.86.camel@haakon2.linux-iscsi.org>
-	 <1283644390.556.74.camel@haakon2.linux-iscsi.org>
-	 <201009071656.21568.konrad@darnok.org>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH 42/41 v2] dm: convey that all flushes are processed as empty
+Date: Tue, 7 Sep 2010 22:04:30 -0400
+Message-ID: <20100908020429.GA24635@redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org>
+ <4C84CD18.6060906@redhat.com>
+ <20100907211724.GA22525@redhat.com>
+ <20100907221543.GB22525@redhat.com>
+ <20100907234918.GA23921@redhat.com>
+ <20100908000001.GA21552@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp109.sbc.mail.mud.yahoo.com ([68.142.198.205]:23234 "HELO
-	smtp109.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756037Ab0IHBsU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2010 21:48:20 -0400
-In-Reply-To: <201009071656.21568.konrad@darnok.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20100908000001.GA21552@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Tejun Heo <tj@kernel.org>, jack@suse.cz, mst@redhat.com, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, k-ueda@ct.jp.nec.com, vst@vlnb.net, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, linux-raid@vger.kernel.org, mpatocka@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, tytso@mit.edu, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com, Milan Broz <mbroz@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>
 
-On Tue, 2010-09-07 at 16:56 -0400, Konrad Rzeszutek Wilk wrote:
-> > Hi Konard,
-> >
-> > I just pushed most of your recommend cleanups for target_core_base.h to
-> > lio-core-2.6.git/lio-4.0.  The cleanup series has been posted on
-> > lio-devel list to prevent extra noise on linux-scsi, et al, but for
-> > reference the shortlog and diffstat are attached below..  I did not dive
-> > into intermixed struct + #defines, but I am still pretty indifferent on
-> > this particular item.
-> >
-> 
-> So the reasons why I thought it would be a good idea to combine the #defines 
-> and the values and also dropping the prefix of structs for all of the 'flag' 
-> members is that:
-> 
-> 1) once you have them intermixed, searching for a particular flag either using 
-> cscope/ctags becomes easier. You have the definition of the 'flag' and the 
-> different values it can have in one localized spot. It also removes your 
-> worry about the 'grep' - you usually search for the values that a specific 
-> flag has and if you use that tool you can find it right there along with the
-> structure it was defined in.
-> 
-> 2). From a perspective of a vendor maintainer who has to find a fix, getting
->  familiarized with the code within a short window time frame and having the 
-> acceptable states and its definitions in one place (and even pointers to the 
-> specs if there are some) makes it sooo much easier to grok the code.
-> Having even nice ascii art of how/what works together is even better.
+Rename __clone_and_map_flush to __clone_and_map_empty_flush for added
+clarity.
 
-Ok, I think these are both reasonable points for combining the #defines
-near the structure members where they are actually used.  I will go
-ahead and make this change, but I would still like to keep the exiting
-prefixes for structure members for now.
+Simplify logic associated with REQ_FLUSH conditionals.
 
-Thanks for your comments Konrad!
+Introduce a BUG_ON() and add a few more helpful comments to the code
+so that it is clear that all flushes are empty.
 
---nab
+Cleanup __split_and_process_bio() so that an empty flush isn't processed
+by a 'sector_count' focused while loop.
 
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+---
+ drivers/md/dm.c |   34 +++++++++++++++-------------------
+ 1 files changed, 15 insertions(+), 19 deletions(-)
 
+Tejun, please feel free to fold this patch into (or insert after)
+0025-dm-relax-ordering-of-bio-based-flush-implementation.patch
+
+v2: Simplify logic associated with REQ_FLUSH conditionals
+
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index cd2f7e7..f934e98 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -621,16 +621,17 @@ static void dec_pending(struct dm_io *io, int error)
+ 		if (io_error == DM_ENDIO_REQUEUE)
+ 			return;
+ 
+-		if (!(bio->bi_rw & REQ_FLUSH) || !bio->bi_size) {
+-			trace_block_bio_complete(md->queue, bio);
+-			bio_endio(bio, io_error);
+-		} else {
++		if ((bio->bi_rw & REQ_FLUSH) && bio->bi_size) {
+ 			/*
+ 			 * Preflush done for flush with data, reissue
+ 			 * without REQ_FLUSH.
+ 			 */
+ 			bio->bi_rw &= ~REQ_FLUSH;
+ 			queue_io(md, bio);
++		} else {
++			/* done with normal IO or empty flush */
++			trace_block_bio_complete(md->queue, bio);
++			bio_endio(bio, io_error);
+ 		}
+ 	}
+ }
+@@ -1132,16 +1133,15 @@ static void __issue_target_requests(struct clone_info *ci, struct dm_target *ti,
+ 		__issue_target_request(ci, ti, request_nr, len);
+ }
+ 
+-static int __clone_and_map_flush(struct clone_info *ci)
++static int __clone_and_map_empty_flush(struct clone_info *ci)
+ {
+ 	unsigned target_nr = 0;
+ 	struct dm_target *ti;
+ 
++	BUG_ON(bio_has_data(ci->bio));
+ 	while ((ti = dm_table_get_target(ci->map, target_nr++)))
+ 		__issue_target_requests(ci, ti, ti->num_flush_requests, 0);
+ 
+-	ci->sector_count = 0;
+-
+ 	return 0;
+ }
+ 
+@@ -1282,7 +1282,6 @@ static int __clone_and_map(struct clone_info *ci)
+  */
+ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
+ {
+-	bool is_flush = bio->bi_rw & REQ_FLUSH;
+ 	struct clone_info ci;
+ 	int error = 0;
+ 
+@@ -1302,20 +1301,17 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
+ 	ci.sector = bio->bi_sector;
+ 	ci.idx = bio->bi_idx;
+ 
+-	if (!is_flush) {
++	start_io_acct(ci.io);
++	if (bio->bi_rw & REQ_FLUSH) {
++		ci.bio = &ci.md->flush_bio;
++		ci.sector_count = 0;
++		error = __clone_and_map_empty_flush(&ci);
++		/* dec_pending submits any data associated with flush */
++	} else {
+ 		ci.bio = bio;
+ 		ci.sector_count = bio_sectors(bio);
+-	} else {
+-		ci.bio = &ci.md->flush_bio;
+-		ci.sector_count = 1;
+-	}
+-
+-	start_io_acct(ci.io);
+-	while (ci.sector_count && !error) {
+-		if (!is_flush)
++		while (ci.sector_count && !error)
+ 			error = __clone_and_map(&ci);
+-		else
+-			error = __clone_and_map_flush(&ci);
+ 	}
+ 
+ 	/* drop the extra reference count */
