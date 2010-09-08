@@ -1,14 +1,14 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 05/12] zfcp: Allow running unit/LUN shutdown without acquiring reference
-Date: Wed, 08 Sep 2010 14:39:54 +0200
-Message-ID: <20100908124353.288204789@de.ibm.com>
+Subject: [patch 08/12] zfcp: Change spin_lock_bh to spin_lock_irq to fix lockdep warning
+Date: Wed, 08 Sep 2010 14:39:57 +0200
+Message-ID: <20100908124353.750309742@de.ibm.com>
 References: <20100908123949.483410445@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.17.163]:56556 "EHLO
-	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758724Ab0IHMn5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2010 08:43:57 -0400
-Content-Disposition: inline; filename=704-zfcp-shutdown-ref.diff
+Received: from mtagate4.de.ibm.com ([195.212.17.164]:44872 "EHLO
+	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758715Ab0IHMn4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2010 08:43:56 -0400
+Content-Disposition: inline; filename=707-zfcp-spin-lock-irq.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,283 +16,459 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-With the change for the LUN data to be part of the scsi_device, the
-slave_destroy callback will be the final call to the
-zfcp_erp_unit_shutdown function. The erp tries to acquire a reference
-to run the action asynchronously and fail, if it cannot get the
-reference. But calling scsi_device_get from slave_destroy will fail,
-because the scsi_device is already in the state SDEV_DEL.
+With the change to use the data on the SCSI device, iterating through
+all LUNs/scsi_devices takes the SCSI host_lock. This triggers warnings
+from the lock dependency checker:
 
-Introduce a new call into the zfcp erp to solve this: The function
-zfcp_erp_unit_shutdown_wait will close the LUN and wait for the erp to
-finish without acquiring an additional reference. The wait allows to
-omit the reference; the caller waiting for the erp to finish already
-has a reference that holds the struct in place.
+=========================================================
+[ INFO: possible irq lock inversion dependency detected ]
+2.6.34.1 #97
+---------------------------------------------------------
+chchp/3224 just changed the state of lock:
+ (&(shost->host_lock)->rlock){-.-...}, at: [<00000000003a73f4>] __scsi_iterate_devices+0x38/0xbc
+but this lock took another, HARDIRQ-unsafe lock in the past:
+ (&(&qdio->req_q_lock)->rlock){+.-...}
+
+and interrupts could create inverse lock ordering between them.
+
+other info that might help us debug this: [   24.972394] 2 locks held by chchp/3224:
+ #0:  (&(sch->lock)->rlock){-.-...}, at: [<0000000000401efa>] do_IRQ+0xb2/0x1e4
+ #1:  (&adapter->port_list_lock){.-....}, at: [<0000000000490302>] zfcp_erp_modify_adapter_status+0x9e/0x16c
+[...]
+
+=========================================================
+[ INFO: possible irq lock inversion dependency detected ]
+2.6.34.1 #98
+---------------------------------------------------------
+chchp/3235 just changed the state of lock:
+ (&(shost->host_lock)->rlock){-.-...}, at: [<00000000003a73f4>] __scsi_iterate_devices+0x38/0xbc
+but this lock took another, HARDIRQ-unsafe lock in the past:
+ (&(&qdio->stat_lock)->rlock){+.-...}
+
+and interrupts could create inverse lock ordering between them.
+
+other info that might help us debug this:
+2 locks held by chchp/3235:
+ #0:  (&(sch->lock)->rlock){-.-...}, at: [<0000000000401efa>] do_IRQ+0xb2/0x1e4
+ #1:  (&adapter->port_list_lock){.-.-..}, at: [<00000000004902f6>] zfcp_erp_modify_adapter_status+0x9e/0x16c
+[...]
+
+To stop this warning, change the request queue lock to disable irqs,
+not only softirq. The changes are required only outside of the
+critical "send fcp command" path.
 
 Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_erp.c |   98 +++++++++++++++++++++++++++----------------
- drivers/s390/scsi/zfcp_ext.h |    1 
- 2 files changed, 63 insertions(+), 36 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c  |   72 +++++++++++++++++++++---------------------
+ drivers/s390/scsi/zfcp_qdio.c |   18 +++++-----
+ 2 files changed, 46 insertions(+), 44 deletions(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
---- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2010-09-08 08:49:06.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2010-09-08 08:49:28.000000000 +0200
-@@ -21,6 +21,7 @@ enum zfcp_erp_act_flags {
- 	ZFCP_STATUS_ERP_DISMISSING	= 0x00100000,
- 	ZFCP_STATUS_ERP_DISMISSED	= 0x00200000,
- 	ZFCP_STATUS_ERP_LOWMEM		= 0x00400000,
-+	ZFCP_STATUS_ERP_NO_REF		= 0x00800000,
- };
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -773,7 +773,7 @@ int zfcp_fsf_status_read(struct zfcp_qdi
+ 	struct fsf_status_read_buffer *sr_buf;
+ 	int retval = -EIO;
  
- enum zfcp_erp_steps {
-@@ -169,22 +170,22 @@ static int zfcp_erp_required_act(int wan
- 	return need;
- }
- 
--static struct zfcp_erp_action *zfcp_erp_setup_act(int need,
-+static struct zfcp_erp_action *zfcp_erp_setup_act(int need, u32 act_status,
- 						  struct zfcp_adapter *adapter,
- 						  struct zfcp_port *port,
- 						  struct zfcp_unit *unit)
- {
- 	struct zfcp_erp_action *erp_action;
--	u32 status = 0;
- 
- 	switch (need) {
- 	case ZFCP_ERP_ACTION_REOPEN_UNIT:
--		if (!get_device(&unit->dev))
--			return NULL;
-+		if (!(act_status & ZFCP_STATUS_ERP_NO_REF))
-+			if (!get_device(&unit->dev))
-+				return NULL;
- 		atomic_set_mask(ZFCP_STATUS_COMMON_ERP_INUSE, &unit->status);
- 		erp_action = &unit->erp_action;
- 		if (!(atomic_read(&unit->status) & ZFCP_STATUS_COMMON_RUNNING))
--			status = ZFCP_STATUS_ERP_CLOSE_ONLY;
-+			act_status |= ZFCP_STATUS_ERP_CLOSE_ONLY;
- 		break;
- 
- 	case ZFCP_ERP_ACTION_REOPEN_PORT:
-@@ -195,7 +196,7 @@ static struct zfcp_erp_action *zfcp_erp_
- 		atomic_set_mask(ZFCP_STATUS_COMMON_ERP_INUSE, &port->status);
- 		erp_action = &port->erp_action;
- 		if (!(atomic_read(&port->status) & ZFCP_STATUS_COMMON_RUNNING))
--			status = ZFCP_STATUS_ERP_CLOSE_ONLY;
-+			act_status |= ZFCP_STATUS_ERP_CLOSE_ONLY;
- 		break;
- 
- 	case ZFCP_ERP_ACTION_REOPEN_ADAPTER:
-@@ -205,7 +206,7 @@ static struct zfcp_erp_action *zfcp_erp_
- 		erp_action = &adapter->erp_action;
- 		if (!(atomic_read(&adapter->status) &
- 		      ZFCP_STATUS_COMMON_RUNNING))
--			status = ZFCP_STATUS_ERP_CLOSE_ONLY;
-+			act_status |= ZFCP_STATUS_ERP_CLOSE_ONLY;
- 		break;
- 
- 	default:
-@@ -217,14 +218,15 @@ static struct zfcp_erp_action *zfcp_erp_
- 	erp_action->port = port;
- 	erp_action->unit = unit;
- 	erp_action->action = need;
--	erp_action->status = status;
-+	erp_action->status = act_status;
- 
- 	return erp_action;
- }
- 
- static int zfcp_erp_action_enqueue(int want, struct zfcp_adapter *adapter,
- 				   struct zfcp_port *port,
--				   struct zfcp_unit *unit, char *id, void *ref)
-+				   struct zfcp_unit *unit, char *id, void *ref,
-+				   u32 act_status)
- {
- 	int retval = 1, need;
- 	struct zfcp_erp_action *act = NULL;
-@@ -236,10 +238,10 @@ static int zfcp_erp_action_enqueue(int w
- 	if (!need)
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
  		goto out;
  
--	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_PENDING, &adapter->status);
--	act = zfcp_erp_setup_act(need, adapter, port, unit);
-+	act = zfcp_erp_setup_act(need, act_status, adapter, port, unit);
- 	if (!act)
+@@ -807,7 +807,7 @@ failed_buf:
+ 	zfcp_fsf_req_free(req);
+ 	zfcp_dbf_hba_fsf_unsol("fail", adapter->dbf, NULL);
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
+ }
+ 
+@@ -876,7 +876,7 @@ struct zfcp_fsf_req *zfcp_fsf_abort_fcp_
+ 	struct zfcp_qdio *qdio = zfcp_sdev->port->adapter->qdio;
+ 	unsigned long old_req_id = (unsigned long) scmnd->host_scribble;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
  		goto out;
-+	atomic_set_mask(ZFCP_STATUS_ADAPTER_ERP_PENDING, &adapter->status);
- 	++adapter->erp_total_count;
- 	list_add_tail(&act->list, &adapter->erp_ready_head);
- 	wake_up(&adapter->erp_ready_wq);
-@@ -262,7 +264,7 @@ static int _zfcp_erp_adapter_reopen(stru
- 		return -EIO;
+ 	req = zfcp_fsf_req_create(qdio, FSF_QTCB_ABORT_FCP_CMND,
+@@ -907,7 +907,7 @@ out_error_free:
+ 	zfcp_fsf_req_free(req);
+ 	req = NULL;
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return req;
+ }
+ 
+@@ -1046,7 +1046,7 @@ int zfcp_fsf_send_ct(struct zfcp_fc_wka_
+ 	struct zfcp_fsf_req *req;
+ 	int ret = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1078,7 +1078,7 @@ int zfcp_fsf_send_ct(struct zfcp_fc_wka_
+ failed_send:
+ 	zfcp_fsf_req_free(req);
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return ret;
+ }
+ 
+@@ -1142,7 +1142,7 @@ int zfcp_fsf_send_els(struct zfcp_adapte
+ 	struct zfcp_qdio *qdio = adapter->qdio;
+ 	int ret = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1178,7 +1178,7 @@ int zfcp_fsf_send_els(struct zfcp_adapte
+ failed_send:
+ 	zfcp_fsf_req_free(req);
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return ret;
+ }
+ 
+@@ -1188,7 +1188,7 @@ int zfcp_fsf_exchange_config_data(struct
+ 	struct zfcp_qdio *qdio = erp_action->adapter->qdio;
+ 	int retval = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1220,7 +1220,7 @@ int zfcp_fsf_exchange_config_data(struct
+ 		erp_action->fsf_req_id = 0;
  	}
- 	return zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_ADAPTER,
--				       adapter, NULL, NULL, id, ref);
-+				       adapter, NULL, NULL, id, ref, 0);
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
  }
  
- /**
-@@ -285,7 +287,7 @@ void zfcp_erp_adapter_reopen(struct zfcp
- 		zfcp_erp_adapter_failed(adapter, "erareo1", NULL);
- 	else
- 		zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_ADAPTER, adapter,
--					NULL, NULL, id, ref);
-+					NULL, NULL, id, ref, 0);
- 	write_unlock_irqrestore(&adapter->erp_lock, flags);
+@@ -1230,7 +1230,7 @@ int zfcp_fsf_exchange_config_data_sync(s
+ 	struct zfcp_fsf_req *req = NULL;
+ 	int retval = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out_unlock;
+ 
+@@ -1256,7 +1256,7 @@ int zfcp_fsf_exchange_config_data_sync(s
+ 
+ 	zfcp_fsf_start_timer(req, ZFCP_FSF_REQUEST_TIMEOUT);
+ 	retval = zfcp_fsf_req_send(req);
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	if (!retval)
+ 		wait_for_completion(&req->completion);
+ 
+@@ -1264,7 +1264,7 @@ int zfcp_fsf_exchange_config_data_sync(s
+ 	return retval;
+ 
+ out_unlock:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
  }
  
-@@ -317,20 +319,6 @@ void zfcp_erp_port_shutdown(struct zfcp_
- 	zfcp_erp_port_reopen(port, clear | flags, id, ref);
+@@ -1282,7 +1282,7 @@ int zfcp_fsf_exchange_port_data(struct z
+ 	if (!(qdio->adapter->adapter_features & FSF_FEATURE_HBAAPI_MANAGEMENT))
+ 		return -EOPNOTSUPP;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1309,7 +1309,7 @@ int zfcp_fsf_exchange_port_data(struct z
+ 		erp_action->fsf_req_id = 0;
+ 	}
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
  }
  
--/**
-- * zfcp_erp_unit_shutdown - Shutdown unit
-- * @unit: Unit to shut down.
-- * @clear: Status flags to clear.
-- * @id: Id for debug trace event.
-- * @ref: Reference for debug trace event.
-- */
--void zfcp_erp_unit_shutdown(struct zfcp_unit *unit, int clear, char *id,
--			    void *ref)
--{
--	int flags = ZFCP_STATUS_COMMON_RUNNING | ZFCP_STATUS_COMMON_ERP_FAILED;
--	zfcp_erp_unit_reopen(unit, clear | flags, id, ref);
--}
--
- static void zfcp_erp_port_block(struct zfcp_port *port, int clear)
+@@ -1328,7 +1328,7 @@ int zfcp_fsf_exchange_port_data_sync(str
+ 	if (!(qdio->adapter->adapter_features & FSF_FEATURE_HBAAPI_MANAGEMENT))
+ 		return -EOPNOTSUPP;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out_unlock;
+ 
+@@ -1348,7 +1348,7 @@ int zfcp_fsf_exchange_port_data_sync(str
+ 	req->handler = zfcp_fsf_exchange_port_data_handler;
+ 	zfcp_fsf_start_timer(req, ZFCP_FSF_REQUEST_TIMEOUT);
+ 	retval = zfcp_fsf_req_send(req);
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 
+ 	if (!retval)
+ 		wait_for_completion(&req->completion);
+@@ -1358,7 +1358,7 @@ int zfcp_fsf_exchange_port_data_sync(str
+ 	return retval;
+ 
+ out_unlock:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
+ }
+ 
+@@ -1442,7 +1442,7 @@ int zfcp_fsf_open_port(struct zfcp_erp_a
+ 	struct zfcp_fsf_req *req;
+ 	int retval = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1473,7 +1473,7 @@ int zfcp_fsf_open_port(struct zfcp_erp_a
+ 		put_device(&port->dev);
+ 	}
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
+ }
+ 
+@@ -1510,7 +1510,7 @@ int zfcp_fsf_close_port(struct zfcp_erp_
+ 	struct zfcp_fsf_req *req;
+ 	int retval = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1539,7 +1539,7 @@ int zfcp_fsf_close_port(struct zfcp_erp_
+ 		erp_action->fsf_req_id = 0;
+ 	}
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
+ }
+ 
+@@ -1585,7 +1585,7 @@ int zfcp_fsf_open_wka_port(struct zfcp_f
+ 	struct zfcp_fsf_req *req;
+ 	int retval = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1610,7 +1610,7 @@ int zfcp_fsf_open_wka_port(struct zfcp_f
+ 	if (retval)
+ 		zfcp_fsf_req_free(req);
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
+ }
+ 
+@@ -1638,7 +1638,7 @@ int zfcp_fsf_close_wka_port(struct zfcp_
+ 	struct zfcp_fsf_req *req;
+ 	int retval = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1663,7 +1663,7 @@ int zfcp_fsf_close_wka_port(struct zfcp_
+ 	if (retval)
+ 		zfcp_fsf_req_free(req);
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
+ }
+ 
+@@ -1728,7 +1728,7 @@ int zfcp_fsf_close_physical_port(struct
+ 	struct zfcp_fsf_req *req;
+ 	int retval = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1757,7 +1757,7 @@ int zfcp_fsf_close_physical_port(struct
+ 		erp_action->fsf_req_id = 0;
+ 	}
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
+ }
+ 
+@@ -1900,7 +1900,7 @@ int zfcp_fsf_open_lun(struct zfcp_erp_ac
+ 	struct zfcp_fsf_req *req;
+ 	int retval = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -1933,7 +1933,7 @@ int zfcp_fsf_open_lun(struct zfcp_erp_ac
+ 		erp_action->fsf_req_id = 0;
+ 	}
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
+ }
+ 
+@@ -1987,7 +1987,7 @@ int zfcp_fsf_close_lun(struct zfcp_erp_a
+ 	struct zfcp_fsf_req *req;
+ 	int retval = -EIO;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -2017,7 +2017,7 @@ int zfcp_fsf_close_lun(struct zfcp_erp_a
+ 		erp_action->fsf_req_id = 0;
+ 	}
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return retval;
+ }
+ 
+@@ -2363,7 +2363,7 @@ struct zfcp_fsf_req *zfcp_fsf_fcp_task_m
+ 		       ZFCP_STATUS_COMMON_UNBLOCKED)))
+ 		return NULL;
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -2397,7 +2397,7 @@ struct zfcp_fsf_req *zfcp_fsf_fcp_task_m
+ 	zfcp_fsf_req_free(req);
+ 	req = NULL;
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return req;
+ }
+ 
+@@ -2433,7 +2433,7 @@ struct zfcp_fsf_req *zfcp_fsf_control_fi
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (zfcp_qdio_sbal_get(qdio))
+ 		goto out;
+ 
+@@ -2460,7 +2460,7 @@ struct zfcp_fsf_req *zfcp_fsf_control_fi
+ 	zfcp_fsf_start_timer(req, ZFCP_FSF_REQUEST_TIMEOUT);
+ 	retval = zfcp_fsf_req_send(req);
+ out:
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 
+ 	if (!retval) {
+ 		wait_for_completion(&req->completion);
+--- a/drivers/s390/scsi/zfcp_qdio.c
++++ b/drivers/s390/scsi/zfcp_qdio.c
+@@ -60,13 +60,11 @@ static inline void zfcp_qdio_account(str
+ 	unsigned long long now, span;
+ 	int used;
+ 
+-	spin_lock(&qdio->stat_lock);
+ 	now = get_clock_monotonic();
+ 	span = (now - qdio->req_q_time) >> 12;
+ 	used = QDIO_MAX_BUFFERS_PER_Q - atomic_read(&qdio->req_q_free);
+ 	qdio->req_q_util += used * span;
+ 	qdio->req_q_time = now;
+-	spin_unlock(&qdio->stat_lock);
+ }
+ 
+ static void zfcp_qdio_int_req(struct ccw_device *cdev, unsigned int qdio_err,
+@@ -84,7 +82,9 @@ static void zfcp_qdio_int_req(struct ccw
+ 	/* cleanup all SBALs being program-owned now */
+ 	zfcp_qdio_zero_sbals(qdio->req_q, idx, count);
+ 
++	spin_lock_irq(&qdio->stat_lock);
+ 	zfcp_qdio_account(qdio);
++	spin_unlock_irq(&qdio->stat_lock);
+ 	atomic_add(count, &qdio->req_q_free);
+ 	wake_up(&qdio->req_q_wq);
+ }
+@@ -201,11 +201,11 @@ int zfcp_qdio_sbals_from_sg(struct zfcp_
+ 
+ static int zfcp_qdio_sbal_check(struct zfcp_qdio *qdio)
  {
- 	zfcp_erp_modify_port_status(port, "erpblk1", NULL,
-@@ -348,7 +336,7 @@ static void _zfcp_erp_port_forced_reopen
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	if (atomic_read(&qdio->req_q_free) ||
+ 	    !(atomic_read(&qdio->adapter->status) & ZFCP_STATUS_ADAPTER_QDIOUP))
+ 		return 1;
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	return 0;
+ }
+ 
+@@ -223,7 +223,7 @@ int zfcp_qdio_sbal_get(struct zfcp_qdio
+ {
+ 	long ret;
+ 
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
+ 	ret = wait_event_interruptible_timeout(qdio->req_q_wq,
+ 			       zfcp_qdio_sbal_check(qdio), 5 * HZ);
+ 
+@@ -239,7 +239,7 @@ int zfcp_qdio_sbal_get(struct zfcp_qdio
+ 		zfcp_erp_adapter_reopen(qdio->adapter, 0, "qdsbg_1", NULL);
+ 	}
+ 
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	return -EIO;
+ }
+ 
+@@ -254,7 +254,9 @@ int zfcp_qdio_send(struct zfcp_qdio *qdi
+ 	int retval;
+ 	u8 sbal_number = q_req->sbal_number;
+ 
++	spin_lock(&qdio->stat_lock);
+ 	zfcp_qdio_account(qdio);
++	spin_unlock(&qdio->stat_lock);
+ 
+ 	retval = do_QDIO(qdio->adapter->ccw_device, QDIO_FLAG_SYNC_OUTPUT, 0,
+ 			 q_req->sbal_first, sbal_number);
+@@ -328,9 +330,9 @@ void zfcp_qdio_close(struct zfcp_qdio *q
  		return;
  
- 	zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_PORT_FORCED,
--				port->adapter, port, NULL, id, ref);
-+				port->adapter, port, NULL, id, ref, 0);
- }
+ 	/* clear QDIOUP flag, thus do_QDIO is not called during qdio_shutdown */
+-	spin_lock_bh(&qdio->req_q_lock);
++	spin_lock_irq(&qdio->req_q_lock);
+ 	atomic_clear_mask(ZFCP_STATUS_ADAPTER_QDIOUP, &adapter->status);
+-	spin_unlock_bh(&qdio->req_q_lock);
++	spin_unlock_irq(&qdio->req_q_lock);
  
- /**
-@@ -381,7 +369,7 @@ static int _zfcp_erp_port_reopen(struct
- 	}
+ 	wake_up(&qdio->req_q_wq);
  
- 	return zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_PORT,
--				       port->adapter, port, NULL, id, ref);
-+				       port->adapter, port, NULL, id, ref, 0);
- }
- 
- /**
-@@ -412,7 +400,7 @@ static void zfcp_erp_unit_block(struct z
- }
- 
- static void _zfcp_erp_unit_reopen(struct zfcp_unit *unit, int clear, char *id,
--				  void *ref)
-+				  void *ref, u32 act_status)
- {
- 	struct zfcp_adapter *adapter = unit->port->adapter;
- 
-@@ -422,7 +410,7 @@ static void _zfcp_erp_unit_reopen(struct
- 		return;
- 
- 	zfcp_erp_action_enqueue(ZFCP_ERP_ACTION_REOPEN_UNIT,
--				adapter, unit->port, unit, id, ref);
-+				adapter, unit->port, unit, id, ref, act_status);
- }
- 
- /**
-@@ -439,8 +427,45 @@ void zfcp_erp_unit_reopen(struct zfcp_un
- 	struct zfcp_adapter *adapter = port->adapter;
- 
- 	write_lock_irqsave(&adapter->erp_lock, flags);
--	_zfcp_erp_unit_reopen(unit, clear, id, ref);
-+	_zfcp_erp_unit_reopen(unit, clear, id, ref, 0);
-+	write_unlock_irqrestore(&adapter->erp_lock, flags);
-+}
-+
-+/**
-+ * zfcp_erp_unit_shutdown - Shutdown unit
-+ * @unit: Unit to shut down.
-+ * @clear: Status flags to clear.
-+ * @id: Id for debug trace event.
-+ * @ref: Reference for debug trace event.
-+ */
-+void zfcp_erp_unit_shutdown(struct zfcp_unit *unit, int clear, char *id,
-+			    void *ref)
-+{
-+	int flags = ZFCP_STATUS_COMMON_RUNNING | ZFCP_STATUS_COMMON_ERP_FAILED;
-+	zfcp_erp_unit_reopen(unit, clear | flags, id, ref);
-+}
-+
-+/**
-+ * zfcp_erp_unit_shutdown_wait - Shutdown unit and wait for erp completion
-+ * @unit: Unit to shut down.
-+ * @id: Id for debug trace event.
-+ *
-+ * Do not acquire a reference for the unit when creating the ERP
-+ * action. It is safe, because this function waits for the ERP to
-+ * complete first.
-+ */
-+void zfcp_erp_unit_shutdown_wait(struct zfcp_unit *unit, char *id)
-+{
-+	unsigned long flags;
-+	struct zfcp_port *port = unit->port;
-+	struct zfcp_adapter *adapter = port->adapter;
-+	int clear = ZFCP_STATUS_COMMON_RUNNING | ZFCP_STATUS_COMMON_ERP_FAILED;
-+
-+	write_lock_irqsave(&adapter->erp_lock, flags);
-+	_zfcp_erp_unit_reopen(unit, clear, id, NULL, ZFCP_STATUS_ERP_NO_REF);
- 	write_unlock_irqrestore(&adapter->erp_lock, flags);
-+
-+	zfcp_erp_wait(adapter);
- }
- 
- static int status_change_set(unsigned long mask, atomic_t *status)
-@@ -566,7 +591,7 @@ static void _zfcp_erp_unit_reopen_all(st
- 
- 	read_lock(&port->unit_list_lock);
- 	list_for_each_entry(unit, &port->unit_list, list)
--		_zfcp_erp_unit_reopen(unit, clear, id, ref);
-+		_zfcp_erp_unit_reopen(unit, clear, id, ref, 0);
- 	read_unlock(&port->unit_list_lock);
- }
- 
-@@ -583,7 +608,7 @@ static void zfcp_erp_strategy_followup_f
- 		_zfcp_erp_port_reopen(act->port, 0, "ersff_3", NULL);
- 		break;
- 	case ZFCP_ERP_ACTION_REOPEN_UNIT:
--		_zfcp_erp_unit_reopen(act->unit, 0, "ersff_4", NULL);
-+		_zfcp_erp_unit_reopen(act->unit, 0, "ersff_4", NULL, 0);
- 		break;
- 	}
- }
-@@ -1143,7 +1168,7 @@ static int zfcp_erp_strategy_statechange
- 		if (zfcp_erp_strat_change_det(&unit->status, erp_status)) {
- 			_zfcp_erp_unit_reopen(unit,
- 					      ZFCP_STATUS_COMMON_ERP_FAILED,
--					      "ersscg3", NULL);
-+					      "ersscg3", NULL, 0);
- 			return ZFCP_ERP_EXIT;
- 		}
- 		break;
-@@ -1191,7 +1216,8 @@ static void zfcp_erp_action_cleanup(stru
- 
- 	switch (act->action) {
- 	case ZFCP_ERP_ACTION_REOPEN_UNIT:
--		put_device(&unit->dev);
-+		if (!(act->status & ZFCP_STATUS_ERP_NO_REF))
-+			put_device(&unit->dev);
- 		break;
- 
- 	case ZFCP_ERP_ACTION_REOPEN_PORT:
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ext.h linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h
---- linux-2.6/drivers/s390/scsi/zfcp_ext.h	2010-09-08 08:49:27.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h	2010-09-08 08:49:28.000000000 +0200
-@@ -80,6 +80,7 @@ extern void zfcp_erp_modify_unit_status(
- 					int);
- extern void zfcp_erp_unit_reopen(struct zfcp_unit *, int, char *, void *);
- extern void zfcp_erp_unit_shutdown(struct zfcp_unit *, int, char *, void *);
-+extern void zfcp_erp_unit_shutdown_wait(struct zfcp_unit *, char *);
- extern void zfcp_erp_unit_failed(struct zfcp_unit *, char *, void *);
- extern int  zfcp_erp_thread_setup(struct zfcp_adapter *);
- extern void zfcp_erp_thread_kill(struct zfcp_adapter *);
 
