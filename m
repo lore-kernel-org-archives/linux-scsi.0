@@ -1,28 +1,45 @@
-From: madhu.iyengar@qlogic.com
-Subject: [PATCH 0/1] Update for scsi-misc-2.6
-Date: Tue,  7 Sep 2010 20:55:31 -0700
-Message-ID: <1283918132-9521-1-git-send-email-madhu.iyengar@qlogic.com>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Why is AHA152X_CS !64BIT?
+Date: Wed, 8 Sep 2010 08:05:57 +0200
+Message-ID: <20100908080557.511d307b@basil.nowhere.org>
+References: <4C72D310.4040004@suse.cz>
+	<4C7B924D.6030703@panasas.com>
+	<201009071712.54867.konrad@darnok.org>
+	<4C86B1A4.8030308@oracle.com>
+	<4C86B320.8090709@oracle.com>
+	<4C86B860.1070105@suse.cz>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:49268 "HELO mx.mv.qlogic.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1750777Ab0IHEA7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Sep 2010 00:00:59 -0400
+Received: from one.firstfloor.org ([213.235.205.2]:40030 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757147Ab0IHGGD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2010 02:06:03 -0400
+In-Reply-To: <4C86B860.1070105@suse.cz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: Jiri Slaby <jslaby@suse.cz>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, fischer@linux-buechse.de, linux-scsi@vger.kernel.org
 
-From: Giridhar Malavali <giridhar.malavali@qlogic.com>
 
-James,
+> 
+> Hmm, the changelog says:
+> The warning I saw was actually for the PCMCIA aha152x driver.
+> 
+> which I think are compiler warnings. But I see only one emitted by the
+> compiler and it is in a debug print.
 
-We missed this patch a few days ago. Can you please include this.
 
-Thanks.
+Don't remember the exact warning, but I was rather trigger happy
+on getting rid of all these ancient unmaintained drivers on 64bit 
+back then.
 
-Shyam Sundar (1):
-  qla2xxx: ROM lock recovery if fw hangs while holding the lock.
+In hindsight it was the right thing to do -- their userbase
+seems to be near zero and there were little to no complains 
+about it ever.
 
- drivers/scsi/qla2xxx/qla_nx.c |   39 ++++++++++++++++++++++++++++++++++++---
- 1 files changed, 36 insertions(+), 3 deletions(-)
+-Andi
 
+-- 
+ak@linux.intel.com -- Speaking for myself only.
