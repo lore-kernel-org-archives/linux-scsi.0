@@ -1,52 +1,124 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Why is AHA152X_CS !64BIT?
-Date: Wed, 08 Sep 2010 10:30:23 -0500
-Message-ID: <1283959823.29920.172.camel@mulgrave.site>
-References: <4C72D310.4040004@suse.cz> <4C7B924D.6030703@panasas.com>
-	 <201009071712.54867.konrad@darnok.org> <4C86B1A4.8030308@oracle.com>
-	 <4C86B320.8090709@oracle.com> <4C86B860.1070105@suse.cz>
-	 <20100908080557.511d307b@basil.nowhere.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 42/41 v2] dm: convey that all flushes are processed as
+ empty
+Date: Wed, 08 Sep 2010 18:09:00 +0200
+Message-ID: <4C87B51C.6050703@kernel.org>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org> <1283509796-1510-24-git-send-email-tj@kernel.org> <4C84CD18.6060906@redhat.com> <20100907211724.GA22525@redhat.com> <20100907221543.GB22525@redhat.com> <20100907234918.GA23921@redhat.com> <20100908000001.GA21552@lst.de> <20100908020429.GA24635@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:41408 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754466Ab0IHPab (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Sep 2010 11:30:31 -0400
-In-Reply-To: <20100908080557.511d307b@basil.nowhere.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20100908020429.GA24635@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, jack@suse.cz, mst@redhat.com, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, k-ueda@ct.jp.nec.com, vst@vlnb.net, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, linux-raid@vger.kernel.org, mpatocka@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, tytso@mit.edu, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com, Milan Broz <mbroz@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Jiri Slaby <jslaby@suse.cz>, Randy Dunlap <randy.dunlap@oracle.com>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, fischer@linux-buechse.de, linux-scsi@vger.kernel.org
 
-On Wed, 2010-09-08 at 08:05 +0200, Andi Kleen wrote:
-> >=20
-> > Hmm, the changelog says:
-> > The warning I saw was actually for the PCMCIA aha152x driver.
-> >=20
-> > which I think are compiler warnings. But I see only one emitted by =
-the
-> > compiler and it is in a debug print.
->=20
->=20
-> Don't remember the exact warning, but I was rather trigger happy
-> on getting rid of all these ancient unmaintained drivers on 64bit=20
-> back then.
->=20
-> In hindsight it was the right thing to do -- their userbase
-> seems to be near zero and there were little to no complains=20
-> about it ever.
+On 09/08/2010 04:04 AM, Mike Snitzer wrote:
+> Rename __clone_and_map_flush to __clone_and_map_empty_flush for added
+> clarity.
+> 
+> Simplify logic associated with REQ_FLUSH conditionals.
+> 
+> Introduce a BUG_ON() and add a few more helpful comments to the code
+> so that it is clear that all flushes are empty.
+> 
+> Cleanup __split_and_process_bio() so that an empty flush isn't processed
+> by a 'sector_count' focused while loop.
+> 
+> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+> ---
+>  drivers/md/dm.c |   34 +++++++++++++++-------------------
+>  1 files changed, 15 insertions(+), 19 deletions(-)
+> 
+> Tejun, please feel free to fold this patch into (or insert after)
+> 0025-dm-relax-ordering-of-bio-based-flush-implementation.patch
+> 
+> v2: Simplify logic associated with REQ_FLUSH conditionals
+> 
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index cd2f7e7..f934e98 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -621,16 +621,17 @@ static void dec_pending(struct dm_io *io, int error)
+>  		if (io_error == DM_ENDIO_REQUEUE)
+>  			return;
+>  
+> -		if (!(bio->bi_rw & REQ_FLUSH) || !bio->bi_size) {
+> -			trace_block_bio_complete(md->queue, bio);
+> -			bio_endio(bio, io_error);
+> -		} else {
+> +		if ((bio->bi_rw & REQ_FLUSH) && bio->bi_size) {
+>  			/*
+>  			 * Preflush done for flush with data, reissue
+>  			 * without REQ_FLUSH.
+>  			 */
+>  			bio->bi_rw &= ~REQ_FLUSH;
+>  			queue_io(md, bio);
+> +		} else {
+> +			/* done with normal IO or empty flush */
+> +			trace_block_bio_complete(md->queue, bio);
+> +			bio_endio(bio, io_error);
+>  		}
+>  	}
+>  }
+> @@ -1132,16 +1133,15 @@ static void __issue_target_requests(struct clone_info *ci, struct dm_target *ti,
+>  		__issue_target_request(ci, ti, request_nr, len);
+>  }
+>  
+> -static int __clone_and_map_flush(struct clone_info *ci)
+> +static int __clone_and_map_empty_flush(struct clone_info *ci)
+>  {
+>  	unsigned target_nr = 0;
+>  	struct dm_target *ti;
+>  
+> +	BUG_ON(bio_has_data(ci->bio));
+>  	while ((ti = dm_table_get_target(ci->map, target_nr++)))
+>  		__issue_target_requests(ci, ti, ti->num_flush_requests, 0);
+>  
+> -	ci->sector_count = 0;
+> -
+>  	return 0;
+>  }
+>  
+> @@ -1282,7 +1282,6 @@ static int __clone_and_map(struct clone_info *ci)
+>   */
+>  static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
+>  {
+> -	bool is_flush = bio->bi_rw & REQ_FLUSH;
+>  	struct clone_info ci;
+>  	int error = 0;
+>  
+> @@ -1302,20 +1301,17 @@ static void __split_and_process_bio(struct mapped_device *md, struct bio *bio)
+>  	ci.sector = bio->bi_sector;
+>  	ci.idx = bio->bi_idx;
+>  
+> -	if (!is_flush) {
+> +	start_io_acct(ci.io);
+> +	if (bio->bi_rw & REQ_FLUSH) {
+> +		ci.bio = &ci.md->flush_bio;
+> +		ci.sector_count = 0;
+> +		error = __clone_and_map_empty_flush(&ci);
+> +		/* dec_pending submits any data associated with flush */
+> +	} else {
+>  		ci.bio = bio;
+>  		ci.sector_count = bio_sectors(bio);
+> -	} else {
+> -		ci.bio = &ci.md->flush_bio;
+> -		ci.sector_count = 1;
+> -	}
+> -
+> -	start_io_acct(ci.io);
+> -	while (ci.sector_count && !error) {
+> -		if (!is_flush)
+> +		while (ci.sector_count && !error)
+>  			error = __clone_and_map(&ci);
+> -		else
+> -			error = __clone_and_map_flush(&ci);
+>  	}
+>  
+>  	/* drop the extra reference count */
 
-OK ... let's try it.  Ji=C5=99=C3=AD send a patch ... and if it breaks =
-I'm handing
-you the pieces ...
 
-James
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
