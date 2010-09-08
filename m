@@ -1,45 +1,76 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: Why is AHA152X_CS !64BIT?
-Date: Wed, 8 Sep 2010 08:05:57 +0200
-Message-ID: <20100908080557.511d307b@basil.nowhere.org>
-References: <4C72D310.4040004@suse.cz>
-	<4C7B924D.6030703@panasas.com>
-	<201009071712.54867.konrad@darnok.org>
-	<4C86B1A4.8030308@oracle.com>
-	<4C86B320.8090709@oracle.com>
-	<4C86B860.1070105@suse.cz>
+From: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+Subject: Re: [PATCH] mvsas: mvs_lu_reset iterates phy num times when releasing
+ task
+Date: Wed, 08 Sep 2010 13:53:59 +0300
+Message-ID: <4C876B47.50805@gmail.com>
+References: <20100806161622.GA8696@localhost.localdomain> <4C5C448C.2040509@gmail.com> <20100903221303.GA9527@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:40030 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757147Ab0IHGGD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2010 02:06:03 -0400
-In-Reply-To: <4C86B860.1070105@suse.cz>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:35916 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757090Ab0IHKyW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2010 06:54:22 -0400
+Received: by eyb6 with SMTP id 6so2886472eyb.19
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Sep 2010 03:54:21 -0700 (PDT)
+In-Reply-To: <20100903221303.GA9527@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, fischer@linux-buechse.de, linux-scsi@vger.kernel.org
+To: David Milburn <dmilburn@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Wouter Naaktgeboren <wouter_naaktgeboren@xs4all.nl>
 
+  On 4/9/2010 1:13 =CF=80=CE=BC, David Milburn wrote:
+> On Fri, Aug 06, 2010 at 08:21:16PM +0300, Konstantinos Skarlatos wrot=
+e:
+>> >    Hello,
+>> > =20
+>> >  Does this patch fix any of the mvs_abort_task:rc=3D 5 and the oth=
+er
+>> >  problems that are being reported for this driver? for more info p=
+lease
+>> >  seehttp://marc.info/?l=3Dlinux-scsi&m=3D127583131805429&w=3D2
+>> > =20
+> Hello,
+>
+> Can you see if this patch prevents the ata_qc_issue warning?
+>
+> Thanks,
+> David
+>
+>   drivers/scsi/libsas/sas_ata.c |    1 +
+>   1 files changed, 1 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_=
+ata.c
+> index 042153c..ddbade7 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -347,6 +347,7 @@ static int sas_ata_scr_read(struct ata_link *link=
+, unsigned int sc_reg_in,
+>   static struct ata_port_operations sas_sata_ops =3D {
+>   	.phy_reset		=3D sas_ata_phy_reset,
+>   	.post_internal_cmd	=3D sas_ata_post_internal,
+> +	.qc_defer               =3D ata_std_qc_defer,
+>   	.qc_prep		=3D ata_noop_qc_prep,
+>   	.qc_issue		=3D sas_ata_qc_issue,
+>   	.qc_fill_rtf		=3D sas_ata_qc_fill_rtf,
 
-> 
-> Hmm, the changelog says:
-> The warning I saw was actually for the PCMCIA aha152x driver.
-> 
-> which I think are compiler warnings. But I see only one emitted by the
-> compiler and it is in a debug print.
+Hello,
 
+I have been unable to patch my kernel, I am a noob at this and the=20
+method i used a few months ago to apply Srinivas patches for mvsas does=
+=20
+not work now. I have asked for help from my distro (arch linux), but if=
+=20
+you have a quick and easy way for me to patch sas_ata.c and reload the=20
+module without reboots or complete kernel recompilations I would be=20
+grateful to hear it.
 
-Don't remember the exact warning, but I was rather trigger happy
-on getting rid of all these ancient unmaintained drivers on 64bit 
-back then.
-
-In hindsight it was the right thing to do -- their userbase
-seems to be near zero and there were little to no complains 
-about it ever.
-
--Andi
-
--- 
-ak@linux.intel.com -- Speaking for myself only.
+Kind regards
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
