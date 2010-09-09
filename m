@@ -1,85 +1,68 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
- MegaRAID SAS driver
-Date: Thu, 9 Sep 2010 11:28:45 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3DC0D4B41@cosmail02.lsi.com>
-References: <AANLkTiktJycDkXu+FHQanTNe-djvvTe9V=9KfSkLcXZd@mail.gmail.com>
- <1283709850.15944.1277.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: 2.6.36-rc3: EIP is at scsi_init_io+...
+Date: Thu, 09 Sep 2010 12:30:09 -0500
+Message-ID: <1284053409.20480.62.camel@mulgrave.site>
+References: <20100830184620.GA4818@core2.telecom.by>
+	 <AANLkTikyv10vkg1g+G3LW+nu=0omBpc40KehOUH=YXk2@mail.gmail.com>
+	 <1284036441.20480.2.camel@mulgrave.site>  <4C88D841.3070100@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:44813 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753041Ab0IIR3O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2010 13:29:14 -0400
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:41288 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752216Ab0IIRaT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Sep 2010 13:30:19 -0400
+In-Reply-To: <4C88D841.3070100@fusionio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-SmFtZXMsDQoNCkRvIHlvdSBoYXZlIGFueSBmZWVkYmFjayBmb3IgdGhlIHBhdGNoZXM/DQoNClRo
-YW5rcywNCg0KQm8gWWFuZw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogWWFu
-ZywgQm8gDQpTZW50OiBUdWVzZGF5LCBTZXB0ZW1iZXIgMDcsIDIwMTAgMToxMiBQTQ0KVG86IFlh
-bmcsIEJvOyAnSmFtZXMgQm90dG9tbGV5JzsgJ2JvIHlhbmcnDQpDYzogJ2xpbnV4LXNjc2lAdmdl
-ci5rZXJuZWwub3JnJzsgJ2FrcG1Ab3NkbC5vcmcnOyAnbGludXgta2VybmVsQHZnZXIua2VybmVs
-Lm9yZyc7IERhZnRhcmRhciwgSmF5YW50DQpTdWJqZWN0OiBSRTogW1BBVENIIDEvNV0gc2NzaTog
-bWVnYXJhaWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlEIFNB
-UyBkcml2ZXINCg0KSmFtZXMsDQoNClRob3NlIHdlcmUgY29ycmVjdGVkIGFuZCBzdWJtaXR0ZWQu
-ICANCg0KVGhhbmtzLA0KDQpCbyBZYW5nDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpG
-cm9tOiBZYW5nLCBCbyANClNlbnQ6IFR1ZXNkYXksIFNlcHRlbWJlciAwNywgMjAxMCAxMTo1NCBB
-TQ0KVG86ICdKYW1lcyBCb3R0b21sZXknOyBibyB5YW5nDQpDYzogbGludXgtc2NzaUB2Z2VyLmtl
-cm5lbC5vcmc7IGFrcG1Ab3NkbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IERh
-ZnRhcmRhciwgSmF5YW50DQpTdWJqZWN0OiBSRTogW1BBVENIIDEvNV0gc2NzaTogbWVnYXJhaWRf
-c2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlEIFNBUyBkcml2ZXIN
-Cg0KVGhhbmtzIEphbWVzLA0KDQpUaGUgZS1tYWlsIGJyb2tlbiBsaW5lcyBvZiB0aGUgZGVzY3Jp
-cHRpb24uICBJIGFtIGNoYW5naW5nIHRoZSBkZXNjcmlwdGlvbiB0byBhdm9pZCByZS1zdWJtaXQg
-YWxsIHRoZSBwYXRjaGVzKDUgb2YgdGhlbSkuDQoNCkFsc28gDQoNCj4gIG1lZ2FzYXNfY29tcGxl
-dGVfY21kKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgc3RydWN0DQo+IG1lZ2Fz
-YXNfY21kICpjbWQsDQo+ICAJCSAgICAgdTggYWx0X3N0YXR1cyk7DQoNCk5vdCBwYXRjaCBsaW5l
-KGFscmVhZHkgaW4gdGhlIHNyYywgYnV0IG1vcmUgdGhhbiA4MCBjaGFycykuDQoNClJlZ2FyZHMs
-DQoNCkJvIFlhbmcgICAgDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBKYW1l
-cyBCb3R0b21sZXkgW21haWx0bzpKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZV0gDQpTZW50OiBTdW5k
-YXksIFNlcHRlbWJlciAwNSwgMjAxMCAyOjA0IFBNDQpUbzogYm8geWFuZw0KQ2M6IFlhbmcsIEJv
-OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgYWtwbUBvc2RsLm9yZzsgbGludXgta2VybmVs
-QHZnZXIua2VybmVsLm9yZzsgRGFmdGFyZGFyLCBKYXlhbnQNClN1YmplY3Q6IFJlOiBbUEFUQ0gg
-MS81XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBBZGQgT25saW5lIENvbnRyb2xsZXIgUmVzZXQgdG8g
-TWVnYVJBSUQgU0FTIGRyaXZlcg0KDQpPbiBXZWQsIDIwMTAtMDgtMTEgYXQgMTY6NDUgLTA0MDAs
-IGJvIHlhbmcgd3JvdGU6DQo+IFRvIGFkZCB0aGUgT25saW5lIENvbnRyb2xsZXIgUmVzZXQgIChP
-Q1IpIHN1cHBvcnQsIGRyaXZlciBuZWVkIHRvIGRvOg0KPiAJCWEpLiByZXNldCB0aGUgY29udHJv
-bGxlciBjaGlwcyAtLSBYc2NhbGUgYW5kIEdlbjIgd2hpY2ggd2lsbCBjaGFuZ2UNCj4gdGhlIGZ1
-bmN0aW9uIGNhbGxzIGFuZCBhZGQgdGhlIHJlc2V0IGZ1bmN0aW9uDQo+IAkJcmVsYXRlZCB0byB0
-aGlzIHR3byBjaGlwcy4NCj4gCQkNCj4gCQliKS4gZHVyaW5nIHRoZSByZXNldCwgZHJpdmVyIHdp
-bGwgc3RvcmUgdGhlIHBlbmRpbmcgY21kcyB3aGljaCBub3QNCj4gcmV0dXJuZWQgYnkgRlcgdG8g
-ZHJpdmVyJ3MgcGVuZGluZyBxdWV1ZS4gIERyaXZlcg0KPiAJCXdpbGwgcmUtaXNzdWUgdGhvc2Ug
-cGVuZGluZyBjbWRzIGFnYWluIHRvIEZXIGFmdGVyIHRoZSBPQ1IgZmluaXNoZWQuDQo+IAkJDQo+
-IAkJYykuIEluIGRyaXZlcidzIHRpbWVvdXQgcm91dGluZSwgZHJpdmVyIHdpbGwgcmVwb3J0IHRv
-IE9TIGFzIHJlc2V0Lg0KPiBBbHNvIGRyaXZlcidzIHF1ZXVlIHJvdXRpbmUgd2lsbCBibG9jayB0
-aGUNCj4gCQljbWRzIHVudGlsIHRoZSBPQ1IgZmluaXNoZWQuDQo+IAkJDQo+IAkJZCkuIGluIERy
-aXZlcidzIElTUiByb3V0aW5lLCBpZiBkcml2ZXIgZ2V0IHRoZSBGVyBzdGF0ZSBhcyBzdGF0ZQ0K
-PiBjaGFuZ2UsIEZXIGluIEZhaWx1cmUgc3RhdHVzIGFuZCBGVyBzdXBwb3J0IG9ubGluZSBjb250
-cm9sbGVyDQo+IAkJcmVzZXQgKE9DUiksIGRyaXZlciB3aWxsIHN0YXJ0IHRvIGRvIHRoZSBjb250
-cm9sbGVyIHJlc2V0Lg0KPiAJCQ0KPiAJCWUpLiBJbiBkcml2ZXIncyBJT0NUTCByb3V0aW5lLCB0
-aGUgYXBwbGljYXRpb24gY21kcyB3aWxsIHdhaXQgZm9yDQo+IHRoZSBPQ1IgdG8gZmluaXNoLCB0
-aGVuIGlzc3VlIHRoZSBjbWRzIHRvIEZXLg0KPiANCj4gU2lnbmVkLW9mZi1ieSBCbyBZYW5nPGJv
-LnlhbmdAbHNpLmNvbT4NCg0KVGhpcyBwYXRjaCBpcyBmdWxsIG9mIGxpbmUgYnJlYWtzIHdoaWNo
-IHByZXZlbnQgYXBwbGljYXRpb24sIGxpa2UgdGhpcw0Kb25lOg0KDQo+IGRpZmYgLXJ1cE4gb2xk
-L0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzDQo+IG5ldy9Eb2N1bWVu
-dGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3Nhcw0KPiAtLS0gb2xkL0RvY3VtZW50YXRp
-b24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzCTIwMTAtMDgtMTANCj4gMDQ6NTg6MzYuMDAw
-MDAwMDAwIC0wNDAwDQo+ICsrKyBuZXcvRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdh
-cmFpZF9zYXMJMjAxMC0wOC0xMA0KPiAwNDo1NjozMC4wMDAwMDAwMDAgLTA0MDANCj4gQEAgLTEs
-MyArMSwzNiBAQA0KPiArMSBSZWxlYXNlIERhdGUgICAgOiBUaHVyLiAgTWF5IDAzLCAyMDEwIDA5
-OjEyOjQ1IFBTVCAyMDA5IC0NCj4gKwkJCShlbWFpbGQtaWQ6bWVnYXJhaWRsaW51eEBsc2kuY29t
-KQ0KPiArCQkJQm8gWWFuZw0KW3NuaXBdDQoNCmFuZCB0aGlzIG9uZQ0KPiBkaWZmIC1ydXBOIG9s
-ZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMNCj4gbmV3L2RyaXZlcnMvc2Nz
-aS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYw0KPiAtLS0gb2xkL2RyaXZlcnMvc2NzaS9tZWdhcmFp
-ZC9tZWdhcmFpZF9zYXMuYwkyMDEwLTA4LTEwIDA0OjU1OjQxLjAwMDAwMDAwMCAtMDQwMA0KPiAr
-KysgbmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYwkyMDEwLTA4LTEwIDA0
-OjU2OjMwLjAwMDAwMDAwMCAtMDQwMA0KPiBAQCAtMTA3LDYgKzEwNywxMiBAQCBzdGF0aWMgdm9p
-ZA0KPiAgbWVnYXNhc19jb21wbGV0ZV9jbWQoc3RydWN0IG1lZ2FzYXNfaW5zdGFuY2UgKmluc3Rh
-bmNlLCBzdHJ1Y3QNCj4gbWVnYXNhc19jbWQgKmNtZCwNCj4gIAkJICAgICB1OCBhbHRfc3RhdHVz
-KTsNCg0KU2luY2Ugbm90IGV2ZXJ5IGxvbmcgbGluZSBpcyBicm9rZW4sIHRoaXMgbG9va3MgbGlr
-ZSBzb21lIHR5cGUgb2YgY3V0DQphbmQgcGFzdGUgZXJyb3IgLi4uIGFueXdheSwgY291bGQgeW91
-IGZpeCBpdCB1cCwgcGxlYXNlPw0KDQpUaGFua3MsDQoNCkphbWVzDQoNCg0K
+On Thu, 2010-09-09 at 14:51 +0200, Jens Axboe wrote:
+> On 2010-09-09 14:47, James Bottomley wrote:
+> > On Wed, 2010-09-08 at 17:12 -0700, Linus Torvalds wrote:
+> >> Hmm. No noise about this one.
+> >>
+> >> Jens, Fujita, James, any comments?
+> >>
+> >> On Mon, Aug 30, 2010 at 11:46 AM, Alexey Dobriyan <adobriyan@gmail.com> wrote:
+> >>> Not much of a calltrace, it scrolled away because of hardlockup detector.
+> >>> On the bright side, radeon KMS worked correctly and actually showed it.
+> >>>
+> >>> $ addr2line -e vmlinux ffffffff812d207b
+> >>> drivers/scsi/scsi_lib.c:1015
+> >>>
+> >>>  1012  err_exit:
+> >>>  1013          scsi_release_buffers(cmd);
+> >>>  1014          scsi_put_command(cmd);
+> >>>  1015  ===>    cmd->request->special = NULL; <===
+> >>>  1016          return error;
+> >>>  1017  }
+> >>>  1018  EXPORT_SYMBOL(scsi_init_io);
+> >>
+> >> I do have to say that it looks rather wrong that it accesses "cmd"
+> >> after it has done the "scsi_put_command(cmd)" on it.
+> >>
+> >> I also note that that was introduced pretty recently by commit
+> >> 610a63498f7 ("scsi: fix discard page leak"), merged during this merge
+> >> window. That does look suspicious to me.
+> > 
+> > It's a use after free:  The put actually frees the cmnd and then we use
+> > it to get to the request.  Most of the time nothing notices, but if you
+> > have poison on free enabled, we may see the problem.  The fix is just to
+> > reverse the put and the set.
+> 
+> You are right, I misspoke in my original reply. It's clearing the
+> request field, not the command field (which would be bogus of course).
+
+Embarrassingly enough, Tejun spotted this a month ago, and I actually
+created a patch and then forgot to apply it.  I've just pushed it out to
+the rc-fixes branch:
+
+http://marc.info/?l=linux-scsi&m=128197119525504
+
+James
+
+
+
