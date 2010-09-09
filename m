@@ -1,53 +1,28 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: 2.6.36-rc3: EIP is at scsi_init_io+...
-Date: Thu, 09 Sep 2010 14:51:13 +0200
-Message-ID: <4C88D841.3070100@fusionio.com>
-References: <20100830184620.GA4818@core2.telecom.by>	 <AANLkTikyv10vkg1g+G3LW+nu=0omBpc40KehOUH=YXk2@mail.gmail.com> <1284036441.20480.2.camel@mulgrave.site>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: scsi_cmnd data_buffer checksum
+Date: Thu, 09 Sep 2010 09:23:24 -0400
+Message-ID: <yq1fwxjt5ir.fsf@sermon.lab.mkp.net>
+References: <215508.92384.qm@web32402.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1284036441.20480.2.camel@mulgrave.site>
+In-Reply-To: <215508.92384.qm@web32402.mail.mud.yahoo.com> (Anil kumar's
+	message of "Thu, 9 Sep 2010 02:09:28 -0700 (PDT)")
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Alexey Dobriyan <adobriyan@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Anil kumar <anils_r@yahoo.com>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2010-09-09 14:47, James Bottomley wrote:
-> On Wed, 2010-09-08 at 17:12 -0700, Linus Torvalds wrote:
->> Hmm. No noise about this one.
->>
->> Jens, Fujita, James, any comments?
->>
->> On Mon, Aug 30, 2010 at 11:46 AM, Alexey Dobriyan <adobriyan@gmail.com> wrote:
->>> Not much of a calltrace, it scrolled away because of hardlockup detector.
->>> On the bright side, radeon KMS worked correctly and actually showed it.
->>>
->>> $ addr2line -e vmlinux ffffffff812d207b
->>> drivers/scsi/scsi_lib.c:1015
->>>
->>>  1012  err_exit:
->>>  1013          scsi_release_buffers(cmd);
->>>  1014          scsi_put_command(cmd);
->>>  1015  ===>    cmd->request->special = NULL; <===
->>>  1016          return error;
->>>  1017  }
->>>  1018  EXPORT_SYMBOL(scsi_init_io);
->>
->> I do have to say that it looks rather wrong that it accesses "cmd"
->> after it has done the "scsi_put_command(cmd)" on it.
->>
->> I also note that that was introduced pretty recently by commit
->> 610a63498f7 ("scsi: fix discard page leak"), merged during this merge
->> window. That does look suspicious to me.
-> 
-> It's a use after free:  The put actually frees the cmnd and then we use
-> it to get to the request.  Most of the time nothing notices, but if you
-> have poison on free enabled, we may see the problem.  The fix is just to
-> reverse the put and the set.
+>>>>> "Anil" == Anil kumar <anils_r@yahoo.com> writes:
 
-You are right, I misspoke in my original reply. It's clearing the
-request field, not the command field (which would be bogus of course).
+Anil> cmd-> write_buf = (u8 *)(kmap_atomic(sg->page, KM_IRQ0) + sg->offset);
+Anil> memcpy(cmd->local_write_buf, cmd->write_buf, cmd->scsibufflen(scsi_cmnd));
+
+You need to walk the scatterlist.  You can't assume that the pages are
+contiguous in memory.
+
+But why are you doing this checksumming stuff manually when the existing
+DIX/DIF code can do it for you?
 
 -- 
-Jens Axboe
+Martin K. Petersen	Oracle Linux Engineering
