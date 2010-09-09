@@ -1,50 +1,58 @@
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 26/30] ext4: do not send discards as barriers
-Date: Fri, 10 Sep 2010 00:53:13 +0200
-Message-ID: <20100909225313.GB29405@quack.suse.cz>
-References: <1282751267-3530-27-git-send-email-tj@kernel.org>
- <20100825155842.GA3229@lst.de>
- <20100825160032.GC3229@lst.de>
- <4C753D75.2010305@kernel.org>
- <20100825200223.GE2738@quack.suse.cz>
- <4C76250B.6060800@kernel.org>
- <20100827173147.GA12374@quack.suse.cz>
- <x4939tv98n8.fsf@segfault.boston.devel.redhat.com>
- <20100830202034.GB12226@quack.quadriga.com>
- <4C7CB936.8010509@kernel.org>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 1/3] mpt2sas: Wait for port enable to get complete
+ before reporting devices to OS.
+Date: Thu, 9 Sep 2010 16:43:56 -0600
+Message-ID: <4565AEA676113A449269C2F3A549520F4918A80E@cosmail03.lsi.com>
+References: <20100804083355.GB13442@lsi.com>
+ <1283704496.15944.1271.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:44928 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756966Ab0IIWyJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Sep 2010 18:54:09 -0400
-Content-Disposition: inline
-In-Reply-To: <4C7CB936.8010509@kernel.org>
+Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:47045 "EHLO
+	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756445Ab0IIXI6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2010 19:08:58 -0400
+In-Reply-To: <1283704496.15944.1271.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Jan Kara <jack@suse.cz>, Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, konishi.ryusuke@lab.ntt.co.jp, dm-devel@redhat.com, vst@vlnb.net, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, jeremy@goop.org, snitzer@redhat.com, k-ueda@ct.jp.nec.com, Christoph Hellwig <hch@infradead.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-On Tue 31-08-10 10:11:34, Tejun Heo wrote:
-> On 08/30/2010 10:20 PM, Jan Kara wrote:
-> >   My setup is that I have a dedicated partition / drive for a filesystem
-> > which is written to from a guest kernel running under KVM. I have set it up
-> > using virtio driver with cache=writeback so that the host caches the writes
-> > in a similar way disk caches them. At some point I just kill the qemu-kvm
-> > process and at that point I'd like to also throw away data cached by the
-> > host...
-> 
-> $ echo 1 > /sys/block/sdX/device/delete
-> $ echo - - - > /sys/class/scsi_host/hostX/scan
-> 
-> should do the trick.
-  I've tested that when mounting with barrier=0 option inside KVM, this indeed
-does destroy the filesystem rather badly. With the barrier option, ext4 has
-already survived several crash cycles while running fsstress with
-journal_async_commit option. So the patch seems to work as expected.
-
-									Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+T24gU3VuZGF5LCBTZXB0ZW1iZXIgMDUsIDIwMTAgMTA6MzUgQU0sIEphbWVzIEJvdHRvbWxleSB3
+cm90ZToNCj4gT24gV2VkLCAyMDEwLTA4LTA0IGF0IDE0OjA0ICswNTMwLCBLYXNoeWFwLCBEZXNh
+aSB3cm90ZToNCj4gPiBBZGQgc3VwcG9ydCBpbiBkcml2ZXIgc28gaXQgd2lsbCB3YWl0IGZvciBk
+aXNjb3ZlcnkgdG8gY29tcGxldGUNCj4gPiBiZWZvcmUgcmV0dXJuaW5nIGZyb20gdGhlIHNlbmRf
+cG9ydF9lbmFibGUgcm91dGluZS4gIFRoZXJlIGFyZSBzb21lDQo+ID4gY2FzZXMgd2hlcmUgZmly
+bXdhcmUgaXMgZG9pbmcgZGlzY292ZXJ5IGFmdGVyIHBvcnQgZW5hYmxlIGNvbXBsZXRlcy4NCj4g
+PiBXaGVuIGl0IGRvZXMgdGhpcywgdGhlIGRyaXZlciB3aWxsIG5vdCBoYXZlIGFsbCB0aGUgZGV2
+aWNlcyBpbiB0aGUNCj4gPiBzYXNfZGV2aWNlX2luaXRfbGlzdCBsaXN0IHByaW9yIHRvIGNhbGxp
+bmcgdGhlIHNvcnQgcm91dGluZSBmb3INCj4gcmVwb3J0aW5nDQo+ID4gYm9vdCBkZXZpY2VzIHRv
+IE9TLg0KPiA+DQo+ID4gVGhpcyBwYXRjaCBpcyByZXF1aXJlZCBzbyB0aGUgZHJpdmVyIGlzIHdh
+aXRpbmcgZm9yIGFsbCB0aGUgZXZlbnRzIHRvDQo+ID4gYmUgcHJvY2Vzc2VkIGluIHRoZSBob3Qg
+cGx1ZyB3b3JrZXIgdGhyZWFkIHByaW9yIHRvIHJlcG9ydGluZyB0aGVtIHRvDQo+IHRoZQ0KPiA+
+IE9TLg0KPiA+DQo+ID4gKDEpIFRoZSBkcml2ZXIgd2lsbCB3YWl0IGZvciBwb3J0IGVuYWJsZSB0
+byBjb21wbGV0ZQ0KPiA+ICgyKSBXYWl0IGZvciB0aGUgZmlyc3QgZGlzY292ZXJ5IHN0b3AgZXZl
+bnQNCj4gPiAoMykgV2FpdCBhbiBhZGRpdGlvbmFsIDUwMG1zIGluIGNhc2UgdGhlcmUgYXJlIGFk
+ZGl0aW9uYWwgZGlzY292ZXJpZXMNCj4gPiAoNCkgcHJvY2VzcyBkZXZpY2UgbGlzdCAtPiByZXBv
+cnRpbmcgZGV2Y2llcyB0byBPUw0KPiANCj4gV2h5IGlzIHRoZXJlIGFueSBuZWVkIHRvIHdhaXQg
+YW5kIHNvcnQgYXQgYWxsPyAgSWYgeW91IGp1c3QgcmVwb3J0IHRoZQ0KPiBkZXZpY2VzIGFzIGhv
+dHBsdWcgc2VlcyB0aGVtLCBib290IHdpbGwgYmUgbXVjaCBmYXN0ZXIgKGVzcGVjaWFsbHkgZm9y
+DQo+IHJvb3QgZGV2aWNlcykuDQo+IA0KDQpJTU8sIHRoaXMgcGF0Y2ggaXMgcmVhbGx5IG5lZWRl
+ZC4gV2l0aG91dCBpdCB5b3UgcHJvYmFibHkgd2lsbCBub3QgYmUgYWJsZSB0byBib290IGFmdGVy
+IGEgZnJlc2ggaW5zdGFsbGF0aW9uIG9mIE9TIHdoZW4gdGhlcmUgYXJlIG11bHRpcGxlIGRyaXZl
+cy4gIFRoZSBpc3N1ZSBpcyBSZWQgSGF0IG9yIFN1U0UgaXMgZ29pbmcgdG8gcGxhY2UgdGhlIG5l
+dyBPUyBvbiB0aGUgZmlyc3QgcmVwb3J0ZWQgZHJpdmUsIGUuZy4gL2Rldi9zZGEuICBUaGlzIGJv
+b3QgZHJpdmUgaW5mb3JtYXRpb24gaXMgcGFzc2VkIGZyb20gdGhlIEJJT1MgdG8gdGhlIGRyaXZl
+ciB2aWEgYSBjb25maWd1cmF0aW9uIHBhZ2UgY2FsbGVkIGJpb3MgcGFnZSAyLiAgVGhlIGRyaXZl
+ciBuZWVkcyB0byB3YWl0IGZvciBhbGwgZmlybXdhcmUgdG8gY29tcGxldGUgZGlzY292ZXJ5LCB0
+aGVuIHNlYXJjaCBmb3IgYm9vdCBkZXZpY2UgYXMgaW5kaWNhdGVkIGluIHRoZSBjb25maWcgcGFn
+ZSwgdGhlbiByZXBvcnQgaXQgZmlyc3QuICBXaXRob3V0IHRoZSBwYXRjaCwgdGhlcmUgaXMgbm8g
+Z3VhcmFudGVlIHdoaWNoIGRyaXZlIG9yIHJhaWQgdm9sdW1lIGlzIGdldHRpbmcgcmVwb3J0ZWQg
+Zmlyc3QuICBJbiBvdGhlciB3b3JkcyB0aGUgZGV2aWNlIGRyaXZlciBjb3VsZCBvZiByZXBvcnRl
+ZCBiaW9zIGRyaXZlIGxvY2F0ZWQgYXQgMHg4MyBhcyAvZGV2L3NkYSwgaW5zdGVhZCBvZiAweDgw
+LCB0aGVuIHdoZW4geW91IHJlYm9vdCwgdGhlIEJJT1MgaXMgbm90IGZpbmRpbmcgYm9vdCBwYXJ0
+aXRpb24uIFRoZSBlbmQgdXNlciBjYW4gc2VsZWN0IHRoZSBib290IGRldmljZSBieSBnb2luZyBp
+bnRvIHRoZSBCSU9TIGNvbmZpZ3VyYXRpb24gdXRpbGl0eTsgZS5nLiBjb250cm9sIEMuDQoNCkVy
+aWMNCg0KDQoNCg0K
