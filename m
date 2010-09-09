@@ -1,161 +1,130 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ibmvfc: Log link up/down events
-Date: Thu, 09 Sep 2010 16:20:42 -0500
-Message-ID: <201009092120.o89LKZXd030398@d03av03.boulder.ibm.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] tcm: Convert to cpu_relax() for atomic_read() in tight loops
+Date: Thu,  9 Sep 2010 14:29:28 -0700
+Message-ID: <1284067768-23863-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:49477 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753658Ab0IIVUh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2010 17:20:37 -0400
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o89LC7HZ003600
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Sep 2010 15:12:07 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o89LKb9a192988
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Sep 2010 15:20:37 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o89LKaQK030625
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Sep 2010 15:20:36 -0600
+Received: from smtp101.sbc.mail.re3.yahoo.com ([66.196.96.84]:32071 "HELO
+	smtp101.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753792Ab0IIV3e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2010 17:29:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-By default, ibmvfc does not log any async events in order
-to avoid flooding the log with them. Improve on this by
-logging by default events that are not likely to flood the
-log, such as link up/down. Having these events in the log
-will improve the ability to debug issues with ibmvfc.
+Greetings all,
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+This patch converts the following functions from within shutdown and release
+path code to use cpu_relax() instead of msleep() while doing atomic_read() in
+a tight loop waiting for various PR and MIB reference count(s) to return to zero:
+
+	*) core_update_device_list_for_node() + struct se_dev_entry->pr_ref_count
+	*) core_release_port() + struct se_port->sep_tg_pt_ref_cnt
+	*) se_dev_stop() + struct se_hba->dev_mib_access_count
+	*) __core_scsi3_free_registration() + struct t10_pr_registration->pr_res_holders
+	*) core_tpg_wait_for_nacl_pr_ref() + struct se_node_acl->acl_pr_ref_count
+	*) core_tpg_wait_for_mib_ref() + struct se_node_acl->mib_ref_count
+	*) core_tpg_deregister() + struct se_portal_group->tpg_pr_ref_count
+	*) transport_deregister_session() + struct se_session->mib_ref_count
+
+Thanks to Konrad Rzeszutek Wilk for mentioning cpu_relax() usage!
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
+ drivers/target/target_core_device.c    |    6 +++---
+ drivers/target/target_core_pr.c        |    2 +-
+ drivers/target/target_core_tpg.c       |    6 +++---
+ drivers/target/target_core_transport.c |    2 +-
+ 4 files changed, 8 insertions(+), 8 deletions(-)
 
- drivers/scsi/ibmvscsi/ibmvfc.c |   74 +++++++++++++++++++++++++++--------------
- drivers/scsi/ibmvscsi/ibmvfc.h |    6 +++
- 2 files changed, 56 insertions(+), 24 deletions(-)
-
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_async_log_level drivers/scsi/ibmvscsi/ibmvfc.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_async_log_level	2010-08-30 08:45:09.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2010-08-30 17:30:04.000000000 -0500
-@@ -2496,41 +2496,66 @@ static void ibmvfc_terminate_rport_io(st
- 	LEAVE;
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 665b8e2..459f0f8 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -532,7 +532,7 @@ int core_update_device_list_for_node(
+ 	 */
+ 	spin_unlock_irq(&nacl->device_list_lock);
+ 	while (atomic_read(&deve->pr_ref_count) != 0)
+-		msleep(100);
++		cpu_relax();
+ 	spin_lock_irq(&nacl->device_list_lock);
+ 	/*
+ 	 * Disable struct se_dev_entry LUN ACL mapping
+@@ -687,7 +687,7 @@ void core_release_port(struct se_device *dev, struct se_port *port)
+ 	 */
+ 	spin_unlock(&dev->se_port_lock);
+ 	if (atomic_read(&port->sep_tg_pt_ref_cnt))
+-		msleep(100);
++		cpu_relax();
+ 	spin_lock(&dev->se_port_lock);
+ 
+ 	core_alua_free_tg_pt_gp_mem(port);
+@@ -965,7 +965,7 @@ void se_dev_stop(struct se_device *dev)
+ 	spin_unlock(&hba->device_lock);
+ 
+ 	while (atomic_read(&hba->dev_mib_access_count))
+-		msleep(10);
++		cpu_relax();
  }
  
--static const struct {
--	enum ibmvfc_async_event ae;
--	const char *desc;
--} ae_desc [] = {
--	{ IBMVFC_AE_ELS_PLOGI,		"PLOGI" },
--	{ IBMVFC_AE_ELS_LOGO,		"LOGO" },
--	{ IBMVFC_AE_ELS_PRLO,		"PRLO" },
--	{ IBMVFC_AE_SCN_NPORT,		"N-Port SCN" },
--	{ IBMVFC_AE_SCN_GROUP,		"Group SCN" },
--	{ IBMVFC_AE_SCN_DOMAIN,		"Domain SCN" },
--	{ IBMVFC_AE_SCN_FABRIC,		"Fabric SCN" },
--	{ IBMVFC_AE_LINK_UP,		"Link Up" },
--	{ IBMVFC_AE_LINK_DOWN,		"Link Down" },
--	{ IBMVFC_AE_LINK_DEAD,		"Link Dead" },
--	{ IBMVFC_AE_HALT,			"Halt" },
--	{ IBMVFC_AE_RESUME,		"Resume" },
--	{ IBMVFC_AE_ADAPTER_FAILED,	"Adapter Failed" },
-+static const struct ibmvfc_async_desc ae_desc [] = {
-+	{ IBMVFC_AE_ELS_PLOGI,		"PLOGI",		IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ IBMVFC_AE_ELS_LOGO,		"LOGO",		IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ IBMVFC_AE_ELS_PRLO,		"PRLO",		IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ IBMVFC_AE_SCN_NPORT,		"N-Port SCN",	IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ IBMVFC_AE_SCN_GROUP,		"Group SCN",	IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ IBMVFC_AE_SCN_DOMAIN,		"Domain SCN",	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ IBMVFC_AE_SCN_FABRIC,		"Fabric SCN",	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ IBMVFC_AE_LINK_UP,		"Link Up",		IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ IBMVFC_AE_LINK_DOWN,		"Link Down",	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ IBMVFC_AE_LINK_DEAD,		"Link Dead",	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ IBMVFC_AE_HALT,			"Halt",		IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ IBMVFC_AE_RESUME,		"Resume",		IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ IBMVFC_AE_ADAPTER_FAILED,	"Adapter Failed",	IBMVFC_DEFAULT_LOG_LEVEL },
- };
+ int se_dev_check_online(struct se_device *dev)
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 2cebafa..11118fb 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -1289,7 +1289,7 @@ static void __core_scsi3_free_registration(
+ 		spin_unlock(&pr_tmpl->registration_lock);
+ 		printk("SPC-3 PR [%s] waiting for pr_res_holders\n",
+ 				tfo->get_fabric_name());
+-		msleep(10);
++		cpu_relax();
+ 		spin_lock(&pr_tmpl->registration_lock);
+ 	}
  
--static const char *unknown_ae = "Unknown async";
-+static const struct ibmvfc_async_desc unknown_ae = {
-+	0, "Unknown async", IBMVFC_DEFAULT_LOG_LEVEL
-+};
- 
- /**
-  * ibmvfc_get_ae_desc - Get text description for async event
-  * @ae:	async event
-  *
-  **/
--static const char *ibmvfc_get_ae_desc(u64 ae)
-+static const struct ibmvfc_async_desc *ibmvfc_get_ae_desc(u64 ae)
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index 75c3900..e598f2b 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -315,13 +315,13 @@ EXPORT_SYMBOL(core_tpg_check_initiator_node_acl);
+ void core_tpg_wait_for_nacl_pr_ref(struct se_node_acl *nacl)
  {
- 	int i;
- 
- 	for (i = 0; i < ARRAY_SIZE(ae_desc); i++)
- 		if (ae_desc[i].ae == ae)
--			return ae_desc[i].desc;
-+			return &ae_desc[i];
-+
-+	return &unknown_ae;
-+}
-+
-+static const struct {
-+	enum ibmvfc_ae_link_state state;
-+	const char *desc;
-+} link_desc [] = {
-+	{ IBMVFC_AE_LS_LINK_UP,		" link up" },
-+	{ IBMVFC_AE_LS_LINK_BOUNCED,	" link bounced" },
-+	{ IBMVFC_AE_LS_LINK_DOWN,	" link down" },
-+	{ IBMVFC_AE_LS_LINK_DEAD,	" link dead" },
-+};
-+
-+/**
-+ * ibmvfc_get_link_state - Get text description for link state
-+ * @state:	link state
-+ *
-+ **/
-+static const char *ibmvfc_get_link_state(enum ibmvfc_ae_link_state state)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(link_desc); i++)
-+		if (link_desc[i].state == state)
-+			return link_desc[i].desc;
- 
--	return unknown_ae;
-+	return "";
+ 	while (atomic_read(&nacl->acl_pr_ref_count) != 0)
+-		msleep(100);
++		cpu_relax();
  }
  
- /**
-@@ -2542,11 +2567,12 @@ static const char *ibmvfc_get_ae_desc(u6
- static void ibmvfc_handle_async(struct ibmvfc_async_crq *crq,
- 				struct ibmvfc_host *vhost)
+ void core_tpg_wait_for_mib_ref(struct se_node_acl *nacl)
  {
--	const char *desc = ibmvfc_get_ae_desc(crq->event);
-+	const struct ibmvfc_async_desc *desc = ibmvfc_get_ae_desc(crq->event);
- 	struct ibmvfc_target *tgt;
+ 	while (atomic_read(&nacl->mib_ref_count) != 0)
+-		msleep(100);
++		cpu_relax();
+ }
  
--	ibmvfc_log(vhost, 3, "%s event received. scsi_id: %llx, wwpn: %llx,"
--		   " node_name: %llx\n", desc, crq->scsi_id, crq->wwpn, crq->node_name);
-+	ibmvfc_log(vhost, desc->log_level, "%s event received. scsi_id: %llx, wwpn: %llx,"
-+		   " node_name: %llx%s\n", desc->desc, crq->scsi_id, crq->wwpn, crq->node_name,
-+		   ibmvfc_get_link_state(crq->link_state));
+ void core_tpg_clear_object_luns(struct se_portal_group *tpg)
+@@ -713,7 +713,7 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
+ 	spin_unlock_bh(&se_global->se_tpg_lock);
  
- 	switch (crq->event) {
- 	case IBMVFC_AE_RESUME:
-diff -puN drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_async_log_level drivers/scsi/ibmvscsi/ibmvfc.h
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvfc.h~ibmvfc_async_log_level	2010-08-30 08:45:09.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvfc.h	2010-08-30 17:30:04.000000000 -0500
-@@ -541,6 +541,12 @@ enum ibmvfc_async_event {
- 	IBMVFC_AE_ADAPTER_FAILED	= 0x1000,
- };
+ 	while (atomic_read(&se_tpg->tpg_pr_ref_count) != 0)
+-		msleep(100);
++		cpu_relax();
  
-+struct ibmvfc_async_desc {
-+	enum ibmvfc_async_event ae;
-+	const char *desc;
-+	int log_level;
-+};
-+
- struct ibmvfc_crq {
- 	volatile u8 valid;
- 	volatile u8 format;
-_
+ 	if (se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL)
+ 		core_tpg_release_virtual_lun0(se_tpg);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 9e7582b..95401cb 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -750,7 +750,7 @@ void transport_deregister_session(struct se_session *se_sess)
+ 	 * scsi_att_intr_port_seq_show()
+ 	 */
+ 	while (atomic_read(&se_sess->mib_ref_count) != 0)
+-		msleep(100);
++		cpu_relax();
+ 
+ 	spin_lock_bh(&se_tpg->session_lock);
+ 	list_del(&se_sess->sess_list);
+-- 
+1.5.6.5
+
