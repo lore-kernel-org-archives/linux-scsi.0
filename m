@@ -1,59 +1,54 @@
-From: Anil kumar <anils_r@yahoo.com>
-Subject: Re: scsi_cmnd data_buffer checksum
-Date: Thu, 9 Sep 2010 12:34:55 -0700 (PDT)
-Message-ID: <198194.69355.qm@web32407.mail.mud.yahoo.com>
-References: <yq1fwxjt5ir.fsf@sermon.lab.mkp.net>
+From: =?unknown-8bit?B?SvxyZ2VuIEUu?= Fischer <fischer@norbit.de>
+Subject: Re: Why is AHA152X_CS !64BIT?
+Date: Thu, 9 Sep 2010 22:01:01 +0200
+Message-ID: <20100909200101.GA19568@linux-buechse.de>
+References: <4C72D310.4040004@suse.cz>
+ <4C7B924D.6030703@panasas.com>
+ <201009071712.54867.konrad@darnok.org>
+ <4C86B1A4.8030308@oracle.com>
+ <4C86B320.8090709@oracle.com>
+ <1283897409.22844.7.camel@mulgrave.site>
+ <4C86B9A6.2050808@suse.cz>
+Reply-To: fischer@linux-buechse.de
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1fwxjt5ir.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.126.171]:49285 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753505Ab0IIUBG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2010 16:01:06 -0400
+Received: from elrond.intern.linux-buechse.de (fischer@localhost [127.0.0.1])
+	by linux-buechse.de (8.14.3/8.14.3/Debian-9.2) with ESMTP id o89K12Gt020053
+	for <linux-scsi@vger.kernel.org>; Thu, 9 Sep 2010 22:01:02 +0200
+Received: (from fischer@localhost)
+	by elrond.intern.linux-buechse.de (8.14.3/8.14.3/Submit) id o89K11ur020052
+	for linux-scsi@vger.kernel.org; Thu, 9 Sep 2010 22:01:01 +0200
+Content-Disposition: inline
+In-Reply-To: <4C86B9A6.2050808@suse.cz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Martin,
+Hi Jiri,
 
-Thanks. I will go thru the DIF document and code.=20
+On Wed, Sep 08, 2010 at 00:16:06 +0200, Jiri Slaby wrote:
+> As I wrote few minutes ago, there is only one which is in print. And I
+> cannot find anybody fixing anything similar since 2.1.
+ 
+> So can we enable it on 64-bit when we have two reports it works on
+> 64-bit? (Is it still maintained? MAINTAINERS says so...)
 
-But I had a quick question, isn't that drive has to support "protection=
- enable" also. Also, does Controller FW need to do anything extra to se=
-nd DIF block down to drive. Ideally we will be sending 512 byte blocks =
-down to drive.
+For the maintainance: My ISA machine is defunct, but I still have a
+PCMCIA card to test and debug it needed - although no 64bit machine with
+a PCMCIA slot.
 
--Anil
+I suppose the hardware is so hardly used nowadays, that there simply
+hasn't been any need for aha152x specific changes (or debugging) for
+years.  And all the interface updates were done by whoever changed the
+generic interface and I eventually ceased to follow.
 
---- On Thu, 9/9/10, Martin K. Petersen <martin.petersen@oracle.com> wro=
-te:
-
-> From: Martin K. Petersen <martin.petersen@oracle.com>
-> Subject: Re: scsi_cmnd data_buffer checksum
-> To: "Anil kumar" <anils_r@yahoo.com>
-> Cc: "Christof Schmitt" <christof.schmitt@de.ibm.com>, linux-kernel@vg=
-er.kernel.org, linux-scsi@vger.kernel.org
-> Date: Thursday, September 9, 2010, 9:23 AM
-> >>>>> "Anil" =3D=3D Anil
-> kumar <anils_r@yahoo.com>
-> writes:
->=20
-> Anil> cmd-> write_buf =3D (u8
-> *)(kmap_atomic(sg->page, KM_IRQ0) + sg->offset);
-> Anil> memcpy(cmd->local_write_buf, cmd->write_buf,
-> cmd->scsibufflen(scsi_cmnd));
->=20
-> You need to walk the scatterlist.=A0 You can't assume
-> that the pages are
-> contiguous in memory.
->=20
-> But why are you doing this checksumming stuff manually when
-> the existing
-> DIX/DIF code can do it for you?
->=20
-> --=20
-> Martin K. Petersen=A0=A0=A0 Oracle Linux
-> Engineering
->=20
+So I guess the maintainance state should be changed to "Odd fixes" at
+best.
 
 
-     =20
+Juergen
