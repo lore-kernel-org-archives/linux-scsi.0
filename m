@@ -1,293 +1,250 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/4] tcm: Add support for fabric module provided struct se_cmd descriptors
-Date: Fri, 10 Sep 2010 02:26:35 -0700
-Message-ID: <1284110795-316-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 4/4] tcm_fc: Convert to use pre-allocated struct se_cmd descriptors
+Date: Fri, 10 Sep 2010 02:27:03 -0700
+Message-ID: <1284110823-384-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp101.sbc.mail.re3.yahoo.com ([66.196.96.84]:40904 "HELO
+	smtp101.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751345Ab0IJJ1J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Sep 2010 05:27:09 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Joe Eykholt <jeykholt@cisco.com>
 Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for the initialization and release of pre-allocated
-struct se_cmd descriptors for use within a per I/O context TCM fabric module dependent
-data structures.  This allows a TCM fabric module to avoid the extra memory allocation
-calls in *transport_alloc_se_cmd(), and have the 'struct se_cmd', 'struct se_cmd->t_task'
-and 'struct se_cmd->sense_buffer' memory provided by said per I/O context TCM fabric
-module dependent data structures.
+This patch converts the Open-FCoE.org / TCM_FC fabric module to use pre-allocated
+struct se_cmd descriptors and sense data buffer located at struct ft_cmd->se_cmd
+and struct ft_cmd->ft_sense_buffer respectively.
 
-This includes the addition of a new transport_init_se_cmd() function, which is
-intended to be used by v4 fabric modules using pre-allocated struct se_cmd descriptors
-instead of the current *transport_alloc_se_cmd() code.  This includes a
-'unsigned char *sense_buffer' parameter used for setting up the struct se_cmd->sense_buffer
-pointer.  __transport_alloc_se_cmd() has also been converted to use transport_init_se_cmd().
-
-On the release path, this includes the addition of a transport_release_se_cmd() wrapper
-for handling both the pre-allocation and legacy allocation cases, and also updates
-transport_release_cmd_to_pool() to follow the new pre-allocated logic.
-
-Also note this patch series keeps existing TCM fabric module compatibility of
-using *transport_alloc_se_cmd(), and transport_init_se_cmd() can be enabled
-transparently as an optional feature on a per fabric module basis.
-
-Many thanks to Joe Eykholt for originally mentioning this optimization here:
-
-http://groups.google.com/group/linux-iscsi-target-dev/browse_thread/thread/88a6434fa9cad163
-
-Thanks again Joe!
+This includes updating ft_send_cmd() to use transport_init_se_cmd() for the main
+FCoE CDB RX side entry point.  It also includes the conversion of a number of
+functions to use container_of() instead of struct se_cmd->se_fabric_cmd_ptr to
+locate the struct ft_cmd, and the addition of the assignment operator when
+accessing struct ft_cmd->se_cmd within per I/O context operation.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |  131 +++++++++++++++++++++++++-------
- include/target/target_core_base.h      |    3 +
- include/target/target_core_transport.h |    4 +
- 3 files changed, 110 insertions(+), 28 deletions(-)
+ drivers/target/tcm_fc/tcm_fc.h  |    3 +-
+ drivers/target/tcm_fc/tfc_cmd.c |   59 ++++++++++++++++++--------------------
+ drivers/target/tcm_fc/tfc_io.c  |    4 +-
+ 3 files changed, 32 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 95401cb..8c72993 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2738,6 +2738,7 @@ struct se_cmd *__transport_alloc_se_cmd(
- 	int task_attr)
- {
- 	struct se_cmd *cmd;
-+	unsigned char *sense_buffer;
- 	int gfp_type = (in_interrupt()) ? GFP_ATOMIC : GFP_KERNEL;
+diff --git a/drivers/target/tcm_fc/tcm_fc.h b/drivers/target/tcm_fc/tcm_fc.h
+index 8d59800..210c33e 100644
+--- a/drivers/target/tcm_fc/tcm_fc.h
++++ b/drivers/target/tcm_fc/tcm_fc.h
+@@ -147,11 +147,12 @@ struct ft_cmd {
+ 	u16 lun;			/* LUN from request */
+ 	struct ft_sess *sess;		/* session held for cmd */
+ 	struct fc_seq *seq;		/* sequence in exchange mgr */
+-	struct se_cmd *se_cmd;
++	struct se_cmd se_cmd;		/* Local TCM I/O descriptor */
+ 	struct fc_frame *req_frame;
+ 	unsigned char *cdb;		/* pointer to CDB inside frame */
+ 	u32 write_data_len;		/* data received on writes */
+ 	struct se_queue_req se_req;
++	unsigned char ft_sense_buffer[TRANSPORT_SENSE_BUFFER]; /* Local sense buffer */
+ };
  
- 	if (data_direction == SE_DIRECTION_BIDI) {
-@@ -2750,27 +2751,50 @@ struct se_cmd *__transport_alloc_se_cmd(
- 		printk(KERN_ERR "kmem_cache_alloc() failed for se_cmd_cache\n");
- 		return ERR_PTR(-ENOMEM);
+ extern struct list_head ft_lport_list;
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 7c3340e..a3a3e78 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -64,7 +64,7 @@ void ft_dump_cmd(struct ft_cmd *cmd, const char *caller)
+ 	if (!(ft_debug_logging & FT_DEBUG_IO))
+ 		return;
+ 
+-	se_cmd = cmd->se_cmd;
++	se_cmd = &cmd->se_cmd;
+ 	printk(KERN_INFO "%s: cmd %p state %d sess %p seq %p se_cmd %p\n",
+ 		caller, cmd, cmd->state, cmd->sess, cmd->seq, se_cmd);
+ 	printk(KERN_INFO "%s: cmd %p cdb %p\n",
+@@ -113,7 +113,7 @@ static int ft_get_lun_for_cmd(struct ft_cmd *cmd, u8 *lunp)
+ 	if (lun >= TRANSPORT_MAX_LUNS_PER_TPG)
+ 		return -1;
+ 	cmd->lun = lun;
+-	return transport_get_lun_for_cmd(cmd->se_cmd, NULL, lun);
++	return transport_get_lun_for_cmd(&cmd->se_cmd, NULL, lun);
+ }
+ 
+ static void ft_queue_cmd(struct ft_sess *sess, struct ft_cmd *cmd)
+@@ -164,7 +164,7 @@ static void ft_free_cmd(struct ft_cmd *cmd)
+ 
+ void ft_release_cmd(struct se_cmd *se_cmd)
+ {
+-	struct ft_cmd *cmd = se_cmd->se_fabric_cmd_ptr;
++	struct ft_cmd *cmd = container_of(se_cmd, struct ft_cmd, se_cmd);
+ 
+ 	ft_free_cmd(cmd);
+ }
+@@ -179,7 +179,7 @@ void ft_check_stop_free(struct se_cmd *se_cmd)
+  */
+ int ft_queue_status(struct se_cmd *se_cmd)
+ {
+-	struct ft_cmd *cmd = se_cmd->se_fabric_cmd_ptr;
++	struct ft_cmd *cmd = container_of(se_cmd, struct ft_cmd, se_cmd);
+ 	struct fc_frame *fp;
+ 	struct fcp_resp_with_ext *fcp;
+ 	struct fc_lport *lport;
+@@ -232,7 +232,7 @@ int ft_queue_status(struct se_cmd *se_cmd)
+ 
+ int ft_write_pending_status(struct se_cmd *se_cmd)
+ {
+-	struct ft_cmd *cmd = se_cmd->se_fabric_cmd_ptr;
++	struct ft_cmd *cmd = container_of(se_cmd, struct ft_cmd, se_cmd);
+ 
+ 	return cmd->write_data_len != se_cmd->data_length;
+ }
+@@ -242,7 +242,7 @@ int ft_write_pending_status(struct se_cmd *se_cmd)
+  */
+ int ft_write_pending(struct se_cmd *se_cmd)
+ {
+-	struct ft_cmd *cmd = se_cmd->se_fabric_cmd_ptr;
++	struct ft_cmd *cmd = container_of(se_cmd, struct ft_cmd, se_cmd);
+ 	struct fc_frame *fp;
+ 	struct fcp_txrdy *txrdy;
+ 	struct fc_lport *lport;
+@@ -270,14 +270,14 @@ int ft_write_pending(struct se_cmd *se_cmd)
+ 
+ u32 ft_get_task_tag(struct se_cmd *se_cmd)
+ {
+-	struct ft_cmd *cmd = se_cmd->se_fabric_cmd_ptr;
++	struct ft_cmd *cmd = container_of(se_cmd, struct ft_cmd, se_cmd);
+ 
+ 	return fc_seq_exch(cmd->seq)->rxid;
+ }
+ 
+ int ft_get_cmd_state(struct se_cmd *se_cmd)
+ {
+-	struct ft_cmd *cmd = se_cmd->se_fabric_cmd_ptr;
++	struct ft_cmd *cmd = container_of(se_cmd, struct ft_cmd, se_cmd);
+ 
+ 	return cmd->state;
+ }
+@@ -303,9 +303,9 @@ static void ft_recv_seq(struct fc_seq *sp, struct fc_frame *fp, void *arg)
+ 
+ 	if (IS_ERR(fp)) {
+ 		/* XXX need to find cmd if queued */
+-		cmd->se_cmd->t_state = TRANSPORT_REMOVE;
++		cmd->se_cmd.t_state = TRANSPORT_REMOVE;
+ 		cmd->seq = NULL;
+-		transport_generic_free_cmd(cmd->se_cmd, 0, 1, 0);
++		transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
+ 		return;
  	}
--	INIT_LIST_HEAD(&cmd->se_lun_list);
--	INIT_LIST_HEAD(&cmd->se_delayed_list);
--	INIT_LIST_HEAD(&cmd->se_ordered_list);
--
--	cmd->t_task = kzalloc(sizeof(struct se_transport_task), gfp_type);
--	if (!(cmd->t_task)) {
--		printk(KERN_ERR "Unable to allocate cmd->t_task\n");
--		kmem_cache_free(se_cmd_cache, cmd);
--		return NULL;
+ 
+@@ -322,7 +322,7 @@ static void ft_recv_seq(struct fc_seq *sp, struct fc_frame *fp, void *arg)
+ 		printk(KERN_INFO "%s: unhandled frame r_ctl %x\n",
+ 		       __func__, fh->fh_r_ctl);
+ 		fc_frame_free(fp);
+-		transport_generic_free_cmd(cmd->se_cmd, 0, 1, 0);
++		transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
+ 		break;
+ 	}
+ }
+@@ -397,8 +397,8 @@ static void ft_send_tm(struct ft_cmd *cmd)
+ 		tm_func = LUN_RESET;
+ 		if (ft_get_lun_for_cmd(cmd, fcp->fc_lun) < 0) {
+ 			ft_dump_cmd(cmd, __func__);
+-			transport_send_check_condition_and_sense(cmd->se_cmd,
+-				cmd->se_cmd->scsi_sense_reason, 0);
++			transport_send_check_condition_and_sense(&cmd->se_cmd,
++				cmd->se_cmd.scsi_sense_reason, 0);
+ 			ft_sess_put(cmd->sess);
+ 			return;
+ 		}
+@@ -426,14 +426,14 @@ static void ft_send_tm(struct ft_cmd *cmd)
+ 	}
+ 
+ 	FT_TM_DBG("alloc tm cmd fn %d\n", tm_func);
+-	tmr = core_tmr_alloc_req(cmd->se_cmd, cmd, tm_func);
++	tmr = core_tmr_alloc_req(&cmd->se_cmd, cmd, tm_func);
+ 	if (!tmr) {
+ 		FT_TM_DBG("alloc failed\n");
+ 		ft_send_resp_code(cmd, FCP_TMF_FAILED);
+ 		return;
+ 	}
+-	cmd->se_cmd->se_tmr_req = tmr;
+-	transport_generic_handle_tmr(cmd->se_cmd);
++	cmd->se_cmd.se_tmr_req = tmr;
++	transport_generic_handle_tmr(&cmd->se_cmd);
+ }
+ 
+ /*
+@@ -441,7 +441,7 @@ static void ft_send_tm(struct ft_cmd *cmd)
+  */
+ int ft_queue_tm_resp(struct se_cmd *se_cmd)
+ {
+-	struct ft_cmd *cmd = se_cmd->se_fabric_cmd_ptr;
++	struct ft_cmd *cmd = container_of(se_cmd, struct ft_cmd, se_cmd);
+ 	struct se_tmr_req *tmr = se_cmd->se_tmr_req;
+ 	enum fcp_resp_rsp_codes code;
+ 
+@@ -570,18 +570,15 @@ static void ft_send_cmd(struct ft_cmd *cmd)
+ 		cmd->cdb = fcp->fc_cdb;
+ 	}
+ 
+-	se_cmd = transport_alloc_se_cmd(&ft_configfs->tf_ops,
+-					cmd->sess->se_sess, cmd, data_len,
+-					data_dir, task_attr);
+-	if (!se_cmd) {
+-		FT_IO_DBG("se_cmd allocation failure - sending BUSY\n");
+-		ft_send_resp_status(cmd->sess->tport->lport, cmd->req_frame,
+-				    SAM_STAT_BUSY, 0);
+-		ft_free_cmd(cmd);
+-		return;
 -	}
- 
--	cmd->sense_buffer = kzalloc(
-+	sense_buffer = kzalloc(
- 			TRANSPORT_SENSE_BUFFER + tfo->get_fabric_sense_len(),
- 			gfp_type);
--	if (!(cmd->sense_buffer)) {
-+	if (!(sense_buffer)) {
- 		printk(KERN_ERR "Unable to allocate memory for"
- 			" cmd->sense_buffer\n");
--		kfree(cmd->t_task);
- 		kmem_cache_free(se_cmd_cache, cmd);
- 		return NULL;
- 	}
-+	/*
-+	 * Initialize the new struct se_cmd descriptor
-+	 */
-+	transport_init_se_cmd(cmd, tfo, se_sess, data_length, data_direction,
-+			task_attr, sense_buffer);
-+	/*
-+	 * Setup the se_fabric_cmd_ptr assignment which will signal
-+	 * TCM allocation of struct se_cmd in the release and free codepaths
-+	 */
-+	cmd->se_fabric_cmd_ptr = fabric_cmd_ptr;
-+	return cmd;
-+}
-+
-+/*
-+ * Used by fabric modules containing a local struct se_cmd within their
-+ * fabric dependent per I/O descriptor.
-+ */
-+void transport_init_se_cmd(
-+	struct se_cmd *cmd,
-+	struct target_core_fabric_ops *tfo,
-+	struct se_session *se_sess,
-+	u32 data_length,
-+	int data_direction,
-+	int task_attr,
-+	unsigned char *sense_buffer)
-+{
-+	INIT_LIST_HEAD(&cmd->se_lun_list);
-+	INIT_LIST_HEAD(&cmd->se_delayed_list);
-+	INIT_LIST_HEAD(&cmd->se_ordered_list);
-+	/*
-+	 * Setup t_task pointer to t_task_backstore
-+	 */
-+	cmd->t_task = &cmd->t_task_backstore;
-+
- 	INIT_LIST_HEAD(&T_TASK(cmd)->t_task_list);
- 	init_completion(&T_TASK(cmd)->transport_lun_fe_stop_comp);
- 	init_completion(&T_TASK(cmd)->transport_lun_stop_comp);
-@@ -2782,13 +2806,12 @@ struct se_cmd *__transport_alloc_se_cmd(
- 
- 	cmd->se_tfo = tfo;
- 	cmd->se_sess = se_sess;
--	cmd->se_fabric_cmd_ptr = fabric_cmd_ptr;
- 	cmd->data_length = data_length;
- 	cmd->data_direction = data_direction;
- 	cmd->sam_task_attr = task_attr;
+-	cmd->se_cmd = se_cmd;
 -
--	return cmd;
-+	cmd->sense_buffer = sense_buffer;
- }
-+EXPORT_SYMBOL(transport_init_se_cmd);
- 
- int transport_check_alloc_task_attr(struct se_cmd *cmd)
- {
-@@ -2834,11 +2857,19 @@ void transport_free_se_cmd(
- {
- 	if (se_cmd->se_tmr_req)
- 		core_tmr_release_req(se_cmd->se_tmr_req);
--
++	se_cmd = &cmd->se_cmd;
 +	/*
-+	 * Release any optional TCM fabric dependent iovecs allocated by
-+	 * transport_allocate_iovecs_for_cmd()
++	 * Initialize struct se_cmd descriptor from target_core_mod infrastructure
 +	 */
- 	kfree(se_cmd->iov_data);
--	kfree(se_cmd->sense_buffer);
--	kfree(se_cmd->t_task);
--	kmem_cache_free(se_cmd_cache, se_cmd);
++	transport_init_se_cmd(se_cmd, &ft_configfs->tf_ops, cmd->sess->se_sess,
++			data_len, data_dir, task_attr, &cmd->ft_sense_buffer[0]);
 +	/*
-+	 * Only release the sense_buffer, t_task, and remaining se_cmd memory
-+	 * if this descriptor was allocated with transport_alloc_se_cmd()
++	 * Check for FCP task management flags
 +	 */
-+	if (se_cmd->se_fabric_cmd_ptr) {
-+		kfree(se_cmd->sense_buffer);
-+		kmem_cache_free(se_cmd_cache, se_cmd);
-+	}
- }
- EXPORT_SYMBOL(transport_free_se_cmd);
- 
-@@ -5841,8 +5872,8 @@ static inline struct se_cmd *transport_alloc_passthrough_cmd(
- 	u32 data_length,
- 	int data_direction)
- {
--	return __transport_alloc_se_cmd(&passthrough_fabric_ops, NULL, NULL,
--			data_length, data_direction, TASK_ATTR_SIMPLE);
-+	return __transport_alloc_se_cmd(&passthrough_fabric_ops, NULL,
-+		(void *)1, data_length, data_direction, TASK_ATTR_SIMPLE);
- }
- 
- static inline void transport_release_tasks(struct se_cmd *);
-@@ -6346,6 +6377,22 @@ static inline int transport_dec_and_check(struct se_cmd *cmd)
- 	return 0;
- }
- 
-+static inline void transport_release_se_cmd(struct se_cmd *cmd)
-+{
-+	/*
-+	 * Determine if this struct se_cmd descriptor was allocated
-+	 * with __transport_alloc_se_cmd(), or is a member of a
-+	 * TCM fabric module dependent descriptor.
-+	 */
-+	if (cmd->se_fabric_cmd_ptr) {
-+		CMD_TFO(cmd)->release_cmd_direct(cmd);
-+		transport_free_se_cmd(cmd);
-+	} else {
-+		transport_free_se_cmd(cmd);
-+		CMD_TFO(cmd)->release_cmd_direct(cmd);
-+	}
-+}
-+
- void transport_release_fe_cmd(struct se_cmd *cmd)
- {
- 	unsigned long flags;
-@@ -6369,8 +6416,7 @@ free_pages:
- 	if (cmd->se_cmd_flags & SCF_CMD_PASSTHROUGH)
- 		kfree(cmd->se_lun);
- 
--	CMD_TFO(cmd)->release_cmd_direct(cmd);
--	transport_free_se_cmd(cmd);
-+	transport_release_se_cmd(cmd);
- }
- 
- /*	transport_generic_remove():
-@@ -6417,8 +6463,7 @@ release_cmd:
- 		if (cmd->se_cmd_flags & SCF_CMD_PASSTHROUGH)
- 			kfree(cmd->se_lun);
- 
--		CMD_TFO(cmd)->release_cmd_direct(cmd);
--		transport_free_se_cmd(cmd);
-+		transport_release_se_cmd(cmd);
+ 	if (fcp->fc_tm_flags) {
+ 		ft_send_tm(cmd);
+ 		return;
+@@ -592,8 +589,8 @@ static void ft_send_cmd(struct ft_cmd *cmd)
+ 	ret = ft_get_lun_for_cmd(cmd, fcp->fc_lun);
+ 	if (ret < 0) {
+ 		ft_dump_cmd(cmd, __func__);
+-		transport_send_check_condition_and_sense(cmd->se_cmd,
+-			cmd->se_cmd->scsi_sense_reason, 0);
++		transport_send_check_condition_and_sense(&cmd->se_cmd,
++			cmd->se_cmd.scsi_sense_reason, 0);
+ 		return;
  	}
  
- 	return 0;
-@@ -7498,9 +7543,39 @@ void transport_release_cmd_to_pool(struct se_cmd *cmd)
- 	if (cmd->se_cmd_flags & SCF_CMD_PASSTHROUGH)
- 		kfree(cmd->se_lun);
- 	/*
--	 * Release struct se_cmd->se_fabric_cmd_ptr in fabric
-+	 * A NULL cmd->se_fabric_cmd_ptr signals that the TCM fabric module
-+	 * is using struct se_cmd as part of it's internal fabric per I/O
-+	 * descriptor
-+	 */
-+	if (!(cmd->se_fabric_cmd_ptr)) {
-+		transport_free_se_cmd(cmd);
-+		/*
-+		 * Make sure that this is only called for struct se_cmd
-+		 * descriptors containing valid T_TASK(cmd) and CMD_TFO(cmd)
-+		 * pointers
-+		 */	
-+		if ((T_TASK(cmd) && (CMD_TFO(cmd))))
-+			CMD_TFO(cmd)->release_cmd_to_pool(cmd);
-+		else {
-+			printk(KERN_ERR "T_TASK(cmd) && (CMD_TFO(cmd) NULL for"
-+				" se_fabric_cmd_ptr=NULL inside of"
-+				" transport_release_cmd_to_pool()\n");
-+			dump_stack();
-+		}
-+
-+		return;
-+	}
-+	/*
-+	 * Release explict allocated struct se_cmd->se_fabric_cmd_ptr in fabric
- 	 */
--	CMD_TFO(cmd)->release_cmd_to_pool(cmd);
-+	if ((T_TASK(cmd) && (CMD_TFO(cmd))))
-+		CMD_TFO(cmd)->release_cmd_to_pool(cmd);
-+	else {
-+		dump_stack();
-+		printk(KERN_ERR "NULL T_TASK(cmd) && (CMD_TFO(cmd) for"
-+			" se_fabric_cmd_ptr=1 inside of"
-+			" transport_release_cmd_to_pool()\n");
-+	}
- 
- 	transport_free_se_cmd(cmd);
- }
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 3c14037..e9f053f 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -584,10 +584,13 @@ struct se_cmd {
- 	struct se_device	*se_obj_ptr;
- 	struct se_device	*se_orig_obj_ptr;
- 	struct se_lun		*se_lun;
-+	/* Only used for internal passthrough and legacy TCM fabric modules */
- 	void			*se_fabric_cmd_ptr;
- 	struct se_session	*se_sess;
- 	struct se_tmr_req	*se_tmr_req;
-+	/* t_task is setup to t_task_backstore in transport_init_se_cmd() */
- 	struct se_transport_task *t_task;
-+	struct se_transport_task t_task_backstore;
- 	struct target_core_fabric_ops *se_tfo;
- 	int (*transport_add_cmd_to_queue)(struct se_cmd *, int);
- 	int (*transport_allocate_resources)(struct se_cmd *, u32, u32);
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 2eee898..8f6e3e2 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -186,6 +186,10 @@ extern int transport_check_alloc_task_attr(struct se_cmd *);
- extern struct se_cmd *transport_alloc_se_cmd(struct target_core_fabric_ops *,
- 					struct se_session *, void *,
- 					u32, int, int);
-+extern void transport_init_se_cmd(struct se_cmd *,
-+					struct target_core_fabric_ops *,
-+					struct se_session *, u32, int, int,
-+					unsigned char *);
- extern void transport_free_se_cmd(struct se_cmd *);
- extern int transport_generic_allocate_tasks(struct se_cmd *, unsigned char *);
- extern int transport_generic_handle_cdb(struct se_cmd *);
+diff --git a/drivers/target/tcm_fc/tfc_io.c b/drivers/target/tcm_fc/tfc_io.c
+index f473782..2080891 100644
+--- a/drivers/target/tcm_fc/tfc_io.c
++++ b/drivers/target/tcm_fc/tfc_io.c
+@@ -64,7 +64,7 @@
+  */
+ int ft_queue_data_in(struct se_cmd *se_cmd)
+ {
+-	struct ft_cmd *cmd = se_cmd->se_fabric_cmd_ptr;
++	struct ft_cmd *cmd = container_of(se_cmd, struct ft_cmd, se_cmd);
+ 	struct se_transport_task *task;
+ 	struct fc_frame *fp = NULL;
+ 	struct fc_exch *ep;
+@@ -187,7 +187,7 @@ int ft_queue_data_in(struct se_cmd *se_cmd)
+  */
+ void ft_recv_write_data(struct ft_cmd *cmd, struct fc_frame *fp)
+ {
+-	struct se_cmd *se_cmd = cmd->se_cmd;
++	struct se_cmd *se_cmd = &cmd->se_cmd;
+ 	struct se_transport_task *task;
+ 	struct fc_frame_header *fh;
+ 	struct se_mem *mem;
 -- 
 1.5.6.5
+
