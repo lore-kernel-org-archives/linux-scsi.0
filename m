@@ -1,83 +1,76 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] tcm: Convert to cpu_relax() for atomic_read() in tight
-	loops
-Date: Fri, 10 Sep 2010 12:13:50 -0700
-Message-ID: <1284146030.19890.77.camel@haakon2.linux-iscsi.org>
-References: <1284067768-23863-1-git-send-email-nab@linux-iscsi.org>
-	 <4C89D0E0.4000803@gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Fri, 10 Sep 2010 15:24:04 -0400
+Message-ID: <20100910192403.GA24582@redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org>
+ <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
+ <20100910184652.GA24470@redhat.com>
+ <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp127.sbc.mail.sp1.yahoo.com ([69.147.65.186]:30149 "HELO
-	smtp127.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751453Ab0IJTR5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Sep 2010 15:17:57 -0400
-In-Reply-To: <4C89D0E0.4000803@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-raid-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jirislaby@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>
 
-On Fri, 2010-09-10 at 08:32 +0200, Jiri Slaby wrote:
-> On 09/09/2010 11:29 PM, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Greetings all,
-> > 
-> > This patch converts the following functions from within shutdown and release
-> > path code to use cpu_relax() instead of msleep() while doing atomic_read() in
-> > a tight loop waiting for various PR and MIB reference count(s) to return to zero:
-> > 
-> > 	*) core_update_device_list_for_node() + struct se_dev_entry->pr_ref_count
-> > 	*) core_release_port() + struct se_port->sep_tg_pt_ref_cnt
-> > 	*) se_dev_stop() + struct se_hba->dev_mib_access_count
-> > 	*) __core_scsi3_free_registration() + struct t10_pr_registration->pr_res_holders
-> > 	*) core_tpg_wait_for_nacl_pr_ref() + struct se_node_acl->acl_pr_ref_count
-> > 	*) core_tpg_wait_for_mib_ref() + struct se_node_acl->mib_ref_count
-> > 	*) core_tpg_deregister() + struct se_portal_group->tpg_pr_ref_count
-> > 	*) transport_deregister_session() + struct se_session->mib_ref_count
-> > 
-> > Thanks to Konrad Rzeszutek Wilk for mentioning cpu_relax() usage!
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  drivers/target/target_core_device.c    |    6 +++---
-> >  drivers/target/target_core_pr.c        |    2 +-
-> >  drivers/target/target_core_tpg.c       |    6 +++---
-> >  drivers/target/target_core_transport.c |    2 +-
-> >  4 files changed, 8 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> > index 665b8e2..459f0f8 100644
-> > --- a/drivers/target/target_core_device.c
-> > +++ b/drivers/target/target_core_device.c
-> > @@ -532,7 +532,7 @@ int core_update_device_list_for_node(
-> >  	 */
-> >  	spin_unlock_irq(&nacl->device_list_lock);
-> >  	while (atomic_read(&deve->pr_ref_count) != 0)
-> > -		msleep(100);
-> > +		cpu_relax();
-> >  	spin_lock_irq(&nacl->device_list_lock);
-> >  	/*
-> >  	 * Disable struct se_dev_entry LUN ACL mapping
+On Fri, Sep 10 2010 at  3:05pm -0400,
+Mikulas Patocka <mpatocka@redhat.com> wrote:
+
 > 
-> Why would you want to convert those to busy-waiting? This should rather
-> be converted to wait_event/wake_up, right?
+> 
+> On Fri, 10 Sep 2010, Mike Snitzer wrote:
+> > And in fact, this first patch basically is as minimal as it gets
+> > relative to bio-based DM's conversion to FLUSH+FUA.
+> > 
+> > Please direct your energy and talent in a positive way rather than
+> > starting a potential flame.
+> > 
+> > Thanks,
+> > Mike
+> 
+> I don't want to flame. I mean this:
+> 
+> * person X writes a patch P.
+> * person Y reads P, sees that the condition C is true and writes patch Q 
+> that dependes on condition C.
+> * person X changes a patch P, so that the patch is correct but condition C 
+> is no longer true.
+> 
+> Now, there is a bug in the patch Q and NEITHER X NOR Y can find out about 
+> that bug.
+> 
+> That's why parallel development doesn't work.
+> 
+> If you develop on things in the kernel, it is different.
+> * person X writes a patch P and puts it in the kernel.
+> * person Y reads the kernel code, sees that the condition C is true and 
+> writes a patch Q that assumes that the condition C is true. He puts this 
+> patch to the kernel too.
+> * person X wants to change his code so that the condition C isn't true, 
+> but it is now his responsibility to search the rest of the kernel to see 
+> if it depends on the condition C. He searches the code and finds Q.
+> 
+> This is not a flamewar, just a technical explanation, why I don't want to 
+> develop on interfaces that are not in the kernel.
 
-Hi Jiri,
+We're reasonable people and can certainly prevent a flamewar but what
+you're doing is an elaborate distraction.  The energy it took you to
+write and reason through your logic above could've been used to just
+review the DM FLUSH+FUA patches.
 
-I agree that this is the one scenario within the msleep() -> cpu_relax()
-conversion patch that involves something besides a simple shortly held
-'non CDB I/O emulation path context ref/deref', and might probably be
-better served by using wait_event/wake_up.
+The various interfaces are hardened now and staged for inclussion in
+2.6.37.  Jens has already pulled the entire 40+ patchset into his
+for-next branch for wider linux-next testing.
 
-I will take a look at a conversion to use wait_queue_head_t in the near
-future.
+Tejun, Christoph and others have done an amazing job with this
+conversion.  The fact that Tejun tackled the heavy lifting of DM's
+conversion was unexpected but 100% appreciated (by me and I assume
+others).  Please don't dismiss, or misrepresent the status of, this
+FLUSH+FUA work.
 
-Thanks for your comments Jiri!
-
---nab
-
-
+Mike
