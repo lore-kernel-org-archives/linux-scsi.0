@@ -1,44 +1,41 @@
-From: "Ciechanowski, Ed" <ed.ciechanowski@intel.com>
-Subject: libsas: question and suggested patch for hotplug issue in
- sas_discover.c
-Date: Fri, 10 Sep 2010 15:20:25 -0700
-Message-ID: <E3280858FA94444CA49D2BA02341C9830114B6452A@orsmsx506.amr.corp.intel.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Sat, 11 Sep 2010 01:36:21 +0200
+Message-ID: <4C8AC0F5.5080206@kernel.org>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org> <1283509796-1510-24-git-send-email-tj@kernel.org> <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com> <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com> <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:4270 "EHLO mga09.intel.com"
+Received: from hera.kernel.org ([140.211.167.34]:54932 "EHLO hera.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751991Ab0IJWUe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Sep 2010 18:20:34 -0400
-Content-Language: en-US
+	id S1753841Ab0IJXf7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Sep 2010 19:35:59 -0400
+In-Reply-To: <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Williams, Dan J" <dan.j.williams@intel.com>, "Neubauer, Wojciech" <Wojciech.Neubauer@intel.com>, "Fan, Haipao" <haipao.fan@intel.com>, "Jeppsen, Roger C" <roger.c.jeppsen@intel.com>, James Bottomley <James.Bottomley@suse.de>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
 
-We have found an issue with hot plugging behind an expander - After we unplug a drive behind expander, the sas_unregister_dev function is called, it then calls sas_rphy_delete to notify the upper layer that the device is gone. 
+On 09/10/2010 10:06 PM, Mikulas Patocka wrote:
+> But I have my work rules that I learned: I use no git kernels and no 
+> external patches (except Alasdair's patchset that I want to test). I only 
+> use -rc or final kernels. I need a stable computer --- I don't want to 
+> solve problems like "does it crash because I pulled something or does it 
+> crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and 
+> I'll optimize flushes in dm for -rc2 or -rc3.
 
-However, this sas_rphy_delete is not returning for several minutes later after the I/O timeout process is exhausted. Once sas_rphy_delete returns, the sas_notify_lldd_dev_gone function is called to notify the lldd driver the device is gone.
+Alright, I'm sorry but this is as far as I would go for dm conversion
+patches.  If you wanna split it further or do it your way, please feel
+free to.  I think it would be beneficial to do things now but, hey,
+you guys are maintaining dm part of the kernel, so it's up to you
+guys.  But, I think it would be silly for everyone else to wait for
+the rather special requirement for dm, so if we have to go forward
+without dm updates, I suppose we will have to.  Jens, please feel free
+to drop dm conversion patches.
 
-The problem we have seen is that the device is not posted after several minutes of being unplugged and a then replugged.
- 
-The following change is in ../libsas/sas_discover.c file. By calling the sas_notify_lldd_dev_gone function before calling the sas_unregister_dev function we can resolve the hot plug drive behind expander issue.
+Thanks.
 
---- linux-2.6.36-rc3/drivers/scsi/libsas/sas_discover.c.old	2010-09-09 06:54:05.096757412 -0700
-+++ linux-2.6.36-rc3/drivers/scsi/libsas/sas_discover.c	2010-09-09 06:56:32.115230046 -0700
-@@ -233,6 +233,7 @@
- {
- 	if (dev->rphy) {
- 		sas_remove_children(&dev->rphy->dev);
-+		sas_notify_lldd_dev_gone(dev);
- 		sas_rphy_delete(dev->rphy);
- 		dev->rphy = NULL;
- 	}
-
-The above change is to call sas_notify_lldd_dev_gone before calling sas_rphy_delete which causes I/O's to abort instead of timeout, so the return from calling sas_rphy_delete is more like seconds instead of minutes.
-
-
-Thanks, 
-ed.ciechanowski@intel.com
-
+-- 
+tejun
