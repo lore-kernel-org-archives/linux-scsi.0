@@ -1,43 +1,53 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCHSET #upstream] block,
- fs: replace HARDBARRIER with  FLUSH/FUA, take#2
-Date: Fri, 10 Sep 2010 12:19:15 +0200
-Message-ID: <4C8A0623.7060404@fusionio.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
-	<4C87B5E2.6070207@suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [PATCH] zfcp: Report scatter gather limit for DIX protection
+ information
+Date: Fri, 10 Sep 2010 13:45:03 +0200
+Message-ID: <20100910114503.GA3059@schmichrtp.mainz.de.ibm.com>
+References: <1284096730-13147-1-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <4C87B5E2.6070207@suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Tejun Heo <teheo@suse.de>
-Cc: "jack@suse.cz" <jack@suse.cz>, "snitzer@redhat.com" <snitzer@redhat.com>, "mst@redhat.com" <mst@redhat.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "konishi.ryusuke@lab.ntt.co.jp" <konishi.ryusuke@lab.ntt.co.jp>, "hch@lst.de" <hch@lst.de>, "k-ueda@ct.jp.nec.com" <k-ueda@ct.jp.nec.com>, "vst@vlnb.net" <vst@vlnb.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "rusty@rustcorp.com.au" <rusty@rustcorp.com.au>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "mpatocka@redhat.com" <mpatocka@redhat.com>, "swhiteho@redhat.com" <swhiteho@redhat.com>, "chris.mason@oracle.com" <chris.mason@oracle.com>, "tytso@mit.edu" <tytso@mit.edu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate1.de.ibm.com ([195.212.17.161]:57138 "EHLO
+	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751191Ab0IJLpG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Sep 2010 07:45:06 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate1.de.ibm.com (8.13.1/8.13.1) with ESMTP id o8ABj40q000763
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2010 11:45:04 GMT
+Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o8ABj4xA4096120
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2010 13:45:04 +0200
+Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id o8ABj3qD022128
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2010 13:45:04 +0200
+Content-Disposition: inline
+In-Reply-To: <1284096730-13147-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@hansenpartnership.com
+Cc: jaxboe@fusionio.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-On 2010-09-08 18:12, Tejun Heo wrote:
-> Hello, Jens.
-> 
-> I added Mike's cleanup patch and Kiyoshi's Tested-by and updated
-> flush-fua branch accordingly.
-> 
->   git://git.kernel.org/pub/scm/linux/kernel/git/tj/misc.git flush-fua
-> 
-> I guess it's about ready.  Please consider pulling it into the block
-> tree so that it can get linux-next exposure.  If you want the whole
-> patch series resent, please let me know.
+When sending DIX integrity segments with an I/O request, the
+restriction for the maximum number of segments is still the same for
+the zfcp hardware. Report the new sg_prot_tablesize for the SCSI host,
+so that the number of integrity segments plus the number of data
+segments is not larger than the hardware limit. This results in using
+half of the hardware segments for integrity data and the other half
+for regular data.
 
-Thanks Tejun, I'm pulling it in now.
+Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+---
+ drivers/s390/scsi/zfcp_scsi.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-
--- 
-Jens Axboe
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -681,6 +681,7 @@ void zfcp_scsi_set_prot(struct zfcp_adap
+ 	    adapter->adapter_features & FSF_FEATURE_DIX_PROT_TCPIP) {
+ 		mask |= SHOST_DIX_TYPE1_PROTECTION;
+ 		scsi_host_set_guard(shost, SHOST_DIX_GUARD_IP);
++		shost->sg_prot_tablesize = ZFCP_QDIO_MAX_SBALES_PER_REQ / 2;
+ 		shost->sg_tablesize = ZFCP_QDIO_MAX_SBALES_PER_REQ / 2;
+ 		shost->max_sectors = ZFCP_QDIO_MAX_SBALES_PER_REQ * 8 / 2;
+ 	}
