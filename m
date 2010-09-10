@@ -1,90 +1,102 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 02/22] configfs: Add struct
-	configfs_item_operations->check_link() in configfs_unlink()
-Date: Fri, 10 Sep 2010 12:52:03 -0700
-Message-ID: <1284148323.19890.94.camel@haakon2.linux-iscsi.org>
-References: <1283160025-6598-1-git-send-email-nab@linux-iscsi.org>
-	 <20100902064814.GB27904@mail.oracle.com>
-	 <1283456440.5598.108.camel@haakon2.linux-iscsi.org>
-	 <201009071701.02847.konrad@darnok.org>
-	 <20100907224413.GC21935@mail.oracle.com>
-	 <1283911739.556.420.camel@haakon2.linux-iscsi.org>
-	 <20100908192639.GD29545@mail.oracle.com>
-	 <1283979207.556.510.camel@haakon2.linux-iscsi.org>
-	 <20100910152802.GG885@mail.oracle.com>
-	 <1284145606.19890.68.camel@haakon2.linux-iscsi.org>
-	 <20100910194404.GJ885@mail.oracle.com>
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for bio-based
+ dm
+Date: Fri, 10 Sep 2010 16:06:01 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org>
+ <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
+ <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
+ <20100910192403.GA24582@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:41463 "HELO
-	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752976Ab0IJT4I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Sep 2010 15:56:08 -0400
-In-Reply-To: <20100910194404.GJ885@mail.oracle.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39111 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751520Ab0IJUGh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Sep 2010 16:06:37 -0400
+In-Reply-To: <20100910192403.GA24582@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: Konrad Rzeszutek Wilk <konrad@darnok.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Tejun Heo <tj@kernel.org>, agk@redhat.com, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com, hch@lst.de, konishi.ryusuke@lab.ntt.co.jp, James.Bottomley@suse.de, tytso@mit.edu, chris.mason@oracle.com, swhiteho@redhat.com, vst@vlnb.net, jack@suse.cz, rwheeler@redhat.com, hare@suse.de, neilb@suse.de, rusty@rustcorp.com.au, mst@redhat.com, k-ueda@ct.jp.nec.com
 
-On Fri, 2010-09-10 at 12:44 -0700, Joel Becker wrote:
-> On Fri, Sep 10, 2010 at 12:06:46PM -0700, Nicholas A. Bellinger wrote:
-> > On Fri, 2010-09-10 at 08:28 -0700, Joel Becker wrote:
-> > > 	The trivial solution is to refcount your ACLs.  You get both
-> > > allow_link() calls, so you should be able to increment a counter there,
-> > > and then drop them when the last drop_link() call is made.  That will
-> > > keep your consumer structures around until all links are exhausted.
+
+
+On Fri, 10 Sep 2010, Mike Snitzer wrote:
+
+> On Fri, Sep 10 2010 at  3:05pm -0400,
+> Mikulas Patocka <mpatocka@redhat.com> wrote:
+> 
+> > 
+> > 
+> > On Fri, 10 Sep 2010, Mike Snitzer wrote:
+> > > And in fact, this first patch basically is as minimal as it gets
+> > > relative to bio-based DM's conversion to FLUSH+FUA.
 > > > 
+> > > Please direct your energy and talent in a positive way rather than
+> > > starting a potential flame.
+> > > 
+> > > Thanks,
+> > > Mike
 > > 
-> > So I am a bit confused wrt to this last response..  The ->check_link()
-> > patch and it's use in the fabric independent code within
-> > target_core_fabric_configfs.c does exactly this for the 'MappedLUN'
-> > symlink case, eg: requires the consumer to do the allow_link() +
-> > drop_link() refcounting, and add the
-> > API check into fs/configfs/symlink.c:configfs_unlink()
-> 
-> 	You can refcount without check_link().
-
-So what do you recommend here..?
-
->  
-> > Is there another form of configfs consumer refcounting that you had in
-> > mind beyond using an atomic_t for this with ->check_link() here..?
-> 
-> 	I'm saying that you won't crash if you don't free the ACLs on
-> the first drop_link().  That is, the drop_link() goes through as
-> configfs wants it to, but you don't crash.
-
-The problem is that the 'unlink sub_child/group1/src_0/src_link' can't
-signal to the other struct config_group to also call an internal 'unlink
-sub_child/group2/dst_0/dst_link' to drop the child link outside of it's
-struct config_group.
-
-> 
-> > So beyond a configfs consumer solution, what do you think about checking
-> > for the sub_child/group2/dst_0/dst_link style of symlink
-> > in fs/configfs/symlink.c:configfs_symlink() in order to add some form of
-> > internal refcount when the symlink source is within the same consumer
-> > LKM, but outside of the parent struct config_group..?
+> > I don't want to flame. I mean this:
 > > 
-> > This would involve the conversion of fs/configfs/symlink.c:
-> > configfs_unlink() path to check for the existence of this internal
-> > refcount and returning -EPERM when any sub_child/group2/dst_0/dst_link
-> > exist when 'unlink sub_child/group1/src_0/src_link' is attempted.
+> > * person X writes a patch P.
+> > * person Y reads P, sees that the condition C is true and writes patch Q 
+> > that dependes on condition C.
+> > * person X changes a patch P, so that the patch is correct but condition C 
+> > is no longer true.
+> > 
+> > Now, there is a bug in the patch Q and NEITHER X NOR Y can find out about 
+> > that bug.
+> > 
+> > That's why parallel development doesn't work.
+> > 
+> > If you develop on things in the kernel, it is different.
+> > * person X writes a patch P and puts it in the kernel.
+> > * person Y reads the kernel code, sees that the condition C is true and 
+> > writes a patch Q that assumes that the condition C is true. He puts this 
+> > patch to the kernel too.
+> > * person X wants to change his code so that the condition C isn't true, 
+> > but it is now his responsibility to search the rest of the kernel to see 
+> > if it depends on the condition C. He searches the code and finds Q.
+> > 
+> > This is not a flamewar, just a technical explanation, why I don't want to 
+> > develop on interfaces that are not in the kernel.
 > 
-> 	You're still fighting allowing the links to go away.  You
-> haven't explained why that is necessary.  You had a problem with a crash
-> because you expected one reference to your ACLs and actually have two,
-> but you can fix that without modifying configfs.
+> We're reasonable people and can certainly prevent a flamewar but what
+> you're doing is an elaborate distraction.  The energy it took you to
+> write and reason through your logic above could've been used to just
+> review the DM FLUSH+FUA patches.
 
-If this is the case then I must be mis-understanding what you mean by
-configfs consumer refcounting from allow_link() and drop_link().  Can
-you give me a bit more detail where I should be looking..?
+No. If I reviewed 40 patches perfectly, I would take long long time (the 
+previous 2-line patch that I reviewed took me a week to review --- but I 
+found a flaw that the other people who reviewed it quickly didn't find). 
 
-Thanks!
+So I reviewed only "dm" patch and found out that it is too big.
 
---nab
+Make a smaller patch with barrier -> FLUSH logic only. And then you can 
+make additional patches with function/variable renames or logic changes.
 
+> The various interfaces are hardened now and staged for inclussion in
+> 2.6.37.  Jens has already pulled the entire 40+ patchset into his
+> for-next branch for wider linux-next testing.
+> 
+> Tejun, Christoph and others have done an amazing job with this
+> conversion.  The fact that Tejun tackled the heavy lifting of DM's
+> conversion was unexpected but 100% appreciated (by me and I assume
+> others).  Please don't dismiss, or misrepresent the status of, this
+> FLUSH+FUA work.
 
+I am not dismissing anything. I agree with barrier -> flush change. It 
+simplifies things a lot.
+
+But I have my work rules that I learned: I use no git kernels and no 
+external patches (except Alasdair's patchset that I want to test). I only 
+use -rc or final kernels. I need a stable computer --- I don't want to 
+solve problems like "does it crash because I pulled something or does it 
+crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and 
+I'll optimize flushes in dm for -rc2 or -rc3.
+
+Mikulas
