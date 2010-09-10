@@ -1,68 +1,73 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 1/2] Consolidate min_not_zero
-Date: Fri, 10 Sep 2010 10:13:51 +0200
-Message-ID: <201009101014.00667.eike-kernel@sf-tec.de>
-References: <1284095925-12841-1-git-send-email-martin.petersen@oracle.com> <1284095925-12841-2-git-send-email-martin.petersen@oracle.com>
-Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart4985245.lrTXmFUr6I";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/4] tcm: Add pre-allocated struct se_cmd descriptor support
+Date: Fri, 10 Sep 2010 02:26:24 -0700
+Message-ID: <1284110784-32763-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:48881 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755401Ab0IJIUp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Sep 2010 04:20:45 -0400
-In-Reply-To: <1284095925-12841-2-git-send-email-martin.petersen@oracle.com>
+Received: from smtp103.sbc.mail.re3.yahoo.com ([66.196.96.86]:24537 "HELO
+	smtp103.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750768Ab0IJJ0a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Sep 2010 05:26:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, christof.schmitt@de.ibm.com, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Joe Eykholt <jeykholt@cisco.com>
+Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
---nextPart4985245.lrTXmFUr6I
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-> --- a/include/linux/kernel.h
-> +++ b/include/linux/kernel.h
-> @@ -636,6 +636,12 @@ static inline void ftrace_dump(enum ftrace_dump_mode
-> oops_dump_mode) { } (void) (&_max1 =3D=3D &_max2);		\
->  	_max1 > _max2 ? _max1 : _max2; })
->=20
-> +/*
-> + * Returns the minimum that is _not_ zero, unless both are zero.
-> + */
-> +#define min_not_zero(__x, __y) ({		\
-> +	__x =3D=3D 0 ? __y : ((__y =3D=3D 0) ? __x : min(__x, __y)); })
-> +
->  /**
->   * clamp - return a value clamped to a given range with strict
-> typechecking * @val: current value
+Greetings Joe and Co,
 
-This will evaluate the value of __x and __y multiple times. Something like=
-=20
-this should be better (untested):
+This patch series adds support to TCM Core for allowing TCM fabric modules to use
+pre-allocated struct se_cmd descriptors and sense data buffers living within
+fabric module dependent data structures.  This patch series was orginally inspiried
+as a future TCM v4.1 optimization by Joe Eykholt in a thread here:
 
-define min_not_zero(__x, __y) ({		\
-	typeof(__x) _minz1 =3D (__x);			\
-	typeof(__y) _minz2 =3D (__y);			\
-	_minz1 =3D=3D 0 ? _minz2 : ((_minz2 =3D=3D 0) ? _minz1 : min(_minz1, _minz=
-2)); })
+http://groups.google.com/group/linux-iscsi-target-dev/browse_thread/thread/88a6434fa9cad163
 
-Eike
+The first patch adds the necessary TCM Core infrastructure to support the
+initialization and proper release of struct se_cmd living within TCM fabric
+module dependent data structures.  This includes the conversion of existing logic
+and the addition of the new transport_init_se_cmd() EXPORT_SYMBOL() code.
 
---nextPart4985245.lrTXmFUr6I
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+The second patch converts the TCM_Loop fabric module to use
+struct tcm_loop_cmd->tl_se_cmd and struct tcm_loop_cmd->tl_sense_buf.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
+The third patch converts the LIO-Target fabric module to use
+struct iscsi_cmd->se_cmd and struct iscsi_cmd->sense_buffer.
 
-iEYEABECAAYFAkyJ6MgACgkQXKSJPmm5/E6QvwCgjm1nohX/9nHfwKI5a5FdYUL3
-HFgAnAjVg6/VxCVMXMfvDNHP2mhrsFYY
-=vOct
------END PGP SIGNATURE-----
+The forth patch converts the Open-FCoE.org / TCM_FC fabric module to
+use struct ft_cmd->se_cmd and struct ft_cmd->ft_sense_buffer.
 
---nextPart4985245.lrTXmFUr6I--
+So far this has been lightly tested with TCM_Loop and LIO-Target fabric
+modules on v2.6.36-rc3 HVM x86 guest, and will require more testing
+to properly ensure the patch series is functionally correct, and that
+other new TCM modules are still 100% functional using the existing
+*transport_alloc_se_cmd() callers.
+
+Many thanks again to Joe for noticing the oppourtunity for improvement
+within the per I/O descriptor path and making this astute suggestion!!
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Nicholas Bellinger (4):
+  tcm: Add support for fabric module provided struct se_cmd descriptors
+  tcm_loop: Convert to pre-allocated struct se_cmd descriptors
+  lio-target: Convert to use pre-allocated struct se_cmd descriptors
+  tcm_fc: Convert to use pre-allocated struct se_cmd descriptors
+
+ drivers/target/lio-target/iscsi_target.c       |   27 +++--
+ drivers/target/lio-target/iscsi_target_core.h  |   10 ++-
+ drivers/target/lio-target/iscsi_target_erl1.c  |    8 +-
+ drivers/target/lio-target/iscsi_target_tmr.c   |   23 ++---
+ drivers/target/lio-target/iscsi_target_util.c  |   44 ++++----
+ drivers/target/target_core_transport.c         |  131 +++++++++++++++++++-----
+ drivers/target/tcm_fc/tcm_fc.h                 |    3 +-
+ drivers/target/tcm_fc/tfc_cmd.c                |   59 +++++------
+ drivers/target/tcm_fc/tfc_io.c                 |    4 +-
+ drivers/target/tcm_loop/tcm_loop_core.h        |    6 +-
+ drivers/target/tcm_loop/tcm_loop_fabric.c      |   12 +-
+ drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |   37 +++----
+ include/target/target_core_base.h              |    3 +
+ include/target/target_core_transport.h         |    4 +
+ 14 files changed, 226 insertions(+), 145 deletions(-)
+
