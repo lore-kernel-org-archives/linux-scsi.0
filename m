@@ -1,68 +1,68 @@
-From: Jiri Slaby <jirislaby@gmail.com>
-Subject: Re: [PATCH] tcm: Convert to cpu_relax() for atomic_read() in tight
- loops
-Date: Fri, 10 Sep 2010 08:32:00 +0200
-Message-ID: <4C89D0E0.4000803@gmail.com>
-References: <1284067768-23863-1-git-send-email-nab@linux-iscsi.org>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: [PATCH 1/2] Consolidate min_not_zero
+Date: Fri, 10 Sep 2010 10:13:51 +0200
+Message-ID: <201009101014.00667.eike-kernel@sf-tec.de>
+References: <1284095925-12841-1-git-send-email-martin.petersen@oracle.com> <1284095925-12841-2-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: multipart/signed;
+  boundary="nextPart4985245.lrTXmFUr6I";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:50471 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750974Ab0IJGcF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Sep 2010 02:32:05 -0400
-In-Reply-To: <1284067768-23863-1-git-send-email-nab@linux-iscsi.org>
+Received: from mail.sf-mail.de ([62.27.20.61]:48881 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755401Ab0IJIUp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Sep 2010 04:20:45 -0400
+In-Reply-To: <1284095925-12841-2-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jens.axboe@oracle.com, James.Bottomley@hansenpartnership.com, christof.schmitt@de.ibm.com, linux-scsi@vger.kernel.org
 
-On 09/09/2010 11:29 PM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> Greetings all,
-> 
-> This patch converts the following functions from within shutdown and release
-> path code to use cpu_relax() instead of msleep() while doing atomic_read() in
-> a tight loop waiting for various PR and MIB reference count(s) to return to zero:
-> 
-> 	*) core_update_device_list_for_node() + struct se_dev_entry->pr_ref_count
-> 	*) core_release_port() + struct se_port->sep_tg_pt_ref_cnt
-> 	*) se_dev_stop() + struct se_hba->dev_mib_access_count
-> 	*) __core_scsi3_free_registration() + struct t10_pr_registration->pr_res_holders
-> 	*) core_tpg_wait_for_nacl_pr_ref() + struct se_node_acl->acl_pr_ref_count
-> 	*) core_tpg_wait_for_mib_ref() + struct se_node_acl->mib_ref_count
-> 	*) core_tpg_deregister() + struct se_portal_group->tpg_pr_ref_count
-> 	*) transport_deregister_session() + struct se_session->mib_ref_count
-> 
-> Thanks to Konrad Rzeszutek Wilk for mentioning cpu_relax() usage!
-> 
-> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/target_core_device.c    |    6 +++---
->  drivers/target/target_core_pr.c        |    2 +-
->  drivers/target/target_core_tpg.c       |    6 +++---
->  drivers/target/target_core_transport.c |    2 +-
->  4 files changed, 8 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> index 665b8e2..459f0f8 100644
-> --- a/drivers/target/target_core_device.c
-> +++ b/drivers/target/target_core_device.c
-> @@ -532,7 +532,7 @@ int core_update_device_list_for_node(
->  	 */
->  	spin_unlock_irq(&nacl->device_list_lock);
->  	while (atomic_read(&deve->pr_ref_count) != 0)
-> -		msleep(100);
-> +		cpu_relax();
->  	spin_lock_irq(&nacl->device_list_lock);
->  	/*
->  	 * Disable struct se_dev_entry LUN ACL mapping
+--nextPart4985245.lrTXmFUr6I
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Why would you want to convert those to busy-waiting? This should rather
-be converted to wait_event/wake_up, right?
+> --- a/include/linux/kernel.h
+> +++ b/include/linux/kernel.h
+> @@ -636,6 +636,12 @@ static inline void ftrace_dump(enum ftrace_dump_mode
+> oops_dump_mode) { } (void) (&_max1 =3D=3D &_max2);		\
+>  	_max1 > _max2 ? _max1 : _max2; })
+>=20
+> +/*
+> + * Returns the minimum that is _not_ zero, unless both are zero.
+> + */
+> +#define min_not_zero(__x, __y) ({		\
+> +	__x =3D=3D 0 ? __y : ((__y =3D=3D 0) ? __x : min(__x, __y)); })
+> +
+>  /**
+>   * clamp - return a value clamped to a given range with strict
+> typechecking * @val: current value
 
-thanks,
--- 
-js
+This will evaluate the value of __x and __y multiple times. Something like=
+=20
+this should be better (untested):
+
+define min_not_zero(__x, __y) ({		\
+	typeof(__x) _minz1 =3D (__x);			\
+	typeof(__y) _minz2 =3D (__y);			\
+	_minz1 =3D=3D 0 ? _minz2 : ((_minz2 =3D=3D 0) ? _minz1 : min(_minz1, _minz=
+2)); })
+
+Eike
+
+--nextPart4985245.lrTXmFUr6I
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEABECAAYFAkyJ6MgACgkQXKSJPmm5/E6QvwCgjm1nohX/9nHfwKI5a5FdYUL3
+HFgAnAjVg6/VxCVMXMfvDNHP2mhrsFYY
+=vOct
+-----END PGP SIGNATURE-----
+
+--nextPart4985245.lrTXmFUr6I--
