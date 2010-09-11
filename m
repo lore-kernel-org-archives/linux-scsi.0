@@ -1,81 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [PATCH 1/3] mpt2sas: Wait for port enable to get complete
- before reporting devices to OS.
-Date: Sat, 11 Sep 2010 09:03:02 -0500
-Message-ID: <1284213782.2986.15.camel@mulgrave.site>
-References: <20100804083355.GB13442@lsi.com>
-	 <1283704496.15944.1271.camel@mulgrave.site>
-	 <4565AEA676113A449269C2F3A549520F4918A80E@cosmail03.lsi.com>
+From: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+Subject: Re: [PATCH] mvsas: mvs_lu_reset iterates phy num times when releasing
+ task
+Date: Sat, 11 Sep 2010 18:05:51 +0300
+Message-ID: <4C8B9ACF.1080404@gmail.com>
+References: <20100806161622.GA8696@localhost.localdomain> <4C5C448C.2040509@gmail.com> <20100903221303.GA9527@localhost.localdomain> <4C876B47.50805@gmail.com> <4C88BBB2.8080309@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:52509 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752415Ab0IKODG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 11 Sep 2010 10:03:06 -0400
-In-Reply-To: <4565AEA676113A449269C2F3A549520F4918A80E@cosmail03.lsi.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:39147 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059Ab0IKPF7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Sep 2010 11:05:59 -0400
+Received: by wwb13 with SMTP id 13so1435440wwb.1
+        for <linux-scsi@vger.kernel.org>; Sat, 11 Sep 2010 08:05:58 -0700 (PDT)
+In-Reply-To: <4C88BBB2.8080309@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: David Milburn <dmilburn@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Wouter Naaktgeboren <wouter_naaktgeboren@xs4all.nl>
 
-On Thu, 2010-09-09 at 16:43 -0600, Moore, Eric wrote:
-> On Sunday, September 05, 2010 10:35 AM, James Bottomley wrote:
-> > On Wed, 2010-08-04 at 14:04 +0530, Kashyap, Desai wrote:
-> > > Add support in driver so it will wait for discovery to complete
-> > > before returning from the send_port_enable routine.  There are some
-> > > cases where firmware is doing discovery after port enable completes.
-> > > When it does this, the driver will not have all the devices in the
-> > > sas_device_init_list list prior to calling the sort routine for
-> > reporting
-> > > boot devices to OS.
-> > >
-> > > This patch is required so the driver is waiting for all the events to
-> > > be processed in the hot plug worker thread prior to reporting them to
-> > the
-> > > OS.
-> > >
-> > > (1) The driver will wait for port enable to complete
-> > > (2) Wait for the first discovery stop event
-> > > (3) Wait an additional 500ms in case there are additional discoveries
-> > > (4) process device list -> reporting devcies to OS
-> > 
-> > Why is there any need to wait and sort at all?  If you just report the
-> > devices as hotplug sees them, boot will be much faster (especially for
-> > root devices).
-> > 
-> 
-> IMO, this patch is really needed. Without it you probably will not be
-> able to boot after a fresh installation of OS when there are multiple
-> drives.
+  Dear David,
 
-But that's an installer problem, not a kernel one.
+After a few days of testing your patch i think it is pretty solid. The 
+only troubling messages I got are these
 
->   The issue is Red Hat or SuSE is going to place the new OS on the
-> first reported drive, e.g. /dev/sda.  This boot drive information is
-> passed from the BIOS to the driver via a configuration page called
-> bios page 2.
+ata61.00: qc timeout (cmd 0x27)
+ata61.00: failed to read native max address (err_mask=0x4)
+ata61.00: HPA support seems broken, skipping HPA handling
+drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for device[b]:rc= 0
 
-I think both installers already take this into account: grub finds it
-when it builds the mapping table for the first time.
-
->   The driver needs to wait for all firmware to complete discovery,
-> then search for boot device as indicated in the config page, then
-> report it first.  Without the patch, there is no guarantee which drive
-> or raid volume is getting reported first.  In other words the device
-> driver could of reported bios drive located at 0x83 as /dev/sda,
-> instead of 0x80, then when you reboot, the BIOS is not finding boot
-> partition. The end user can select the boot device by going into the
-> BIOS configuration utility; e.g. control C.
-
-But you don't need it to be reported first.  The default install on both
-SLES and RHEL (and Fedora and openSUSE) is by label.  So once we get the
-boot drive from the mapping, we build its label into the grub config and
-fstab files and we always run from it, regardless of the order it
-appears in the bootup.
-
-James
-
+ata61: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+ata61.00: device reported invalid CHS sector 0
+ata61: status=0x01 { Error }
+ata61: error=0x04 { DriveStatusError }
 
