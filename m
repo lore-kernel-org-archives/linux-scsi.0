@@ -1,90 +1,188 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16547] mptscsih: ioc0: attempting task abort, raid array LUNs
- not detected properly on some boots
-Date: Sun, 12 Sep 2010 11:08:53 GMT
-Message-ID: <201009121108.o8CB8rKm018374@demeter1.kernel.org>
-References: <bug-16547-11613@https.bugzilla.kernel.org/>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] scsi, fcoe, libfc: drop scsi host_lock use from fc_queuecommand
+Date: Sun, 12 Sep 2010 18:37:11 +0200
+Message-ID: <AANLkTinVTSboQB=kxyOCQ-eF6hYWqsn9YYJn7bnLeTtW@mail.gmail.com>
+References: <20100903222715.6237.75737.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:55652 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176Ab0ILLIy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Sep 2010 07:08:54 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o8CB8rtq018405
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 12 Sep 2010 11:08:53 GMT
-In-Reply-To: <bug-16547-11613@https.bugzilla.kernel.org/>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:57407 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752800Ab0ILQhN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Sep 2010 12:37:13 -0400
+Received: by fxm16 with SMTP id 16so2717354fxm.19
+        for <linux-scsi@vger.kernel.org>; Sun, 12 Sep 2010 09:37:12 -0700 (PDT)
+In-Reply-To: <20100903222715.6237.75737.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Vasu Dev <vasu.dev@intel.com>
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16547
+On Sat, Sep 4, 2010 at 12:27 AM, Vasu Dev <vasu.dev@intel.com> wrote:
+>
+> Currently fc_queuecommand drops this lock very early on and then re-a=
+cquires
+> this lock just before return, this re-acquired lock gets dropped imme=
+diately
+> by its fast path caller scsi_dispatch_cmd, this re-acquire and then i=
+mmediate
+> drop on each IO hits performance especially with small size IOs on mu=
+lti-core
+> systems, this hit is significant about 25% with 512 bytes size IOs.
+>
+> This lock is not needed in fc_queuecommand and calling fc_queuecomman=
+d
+> without this lock held removes above described performance hit.
+>
+> So this patch adds unlocked_qcmds flag to drop host_lock before
+> calling only fc_queuecommand and removes re-acquire & =A0then drop
+> for =A0each IO. Added flag, drops this lock only if LLD wants such
+> as fcoe.ko does here for fc_queuecommand. This change won't affect
+> any existing LLD since added unlocked_qcmds flag will be zero
+> in those cases and their host lock uses would effectively remain
+> same after this patch.
+[ ... ]
 
+Hello Vasu,
 
-ksb@inbox.lv changed:
+While I don't doubt that your patch improves performance, there might
+be more bottlenecks in the Linux storage stack than the SCSI host
+lock. After having converted the SRP initiator (ib_srp) to use per-LUN
+locking instead of per-host locking and after having enabled
+unlocked_qcmds, I noticed that the largest source of contention was in
+the block layer. There was ten times more contention on
+request_queue.queue_lock than on any other spinlock. As you can see
+below, the four most contended locks in the test I ran were:
+* request_queue.queue_lock, needed by __make_request() in blk-core.c.
+* srp_target_port.lock, the per-LUN lock in ib_srp.c.
+* The SCSI host lock.
+* An AIO lock.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |ksb@inbox.lv
+The test I ran used libaio and the NOOP scheduler. Block merging was
+disabled via sysfs.
 
+=46rom /proc/lock_stat:
 
+lock_stat version 0.3
+-----------------------------------------------------------------------=
+-----------------------------------------------------------------------=
+-------------------------------------------------
+                              class name    con-bounces    contentions
+  waittime-min   waittime-max waittime-total    acq-bounces
+acquisitions   holdtime-min   holdtime-max holdtime-total
+-----------------------------------------------------------------------=
+-----------------------------------------------------------------------=
+-------------------------------------------------
 
+              &(&q->__queue_lock)->rlock:      11093047       11093901
+          0.22           9.37    10163231.15       41697489
+74851829           0.00          21.14    60656375.82
+              --------------------------
+              &(&q->__queue_lock)->rlock        2093562
+[<ffffffff811af406>] __make_request+0x56/0x500
+              &(&q->__queue_lock)->rlock              2
+[<ffffffff811bcd70>] cfq_get_queue+0xf0/0x2a0
+              &(&q->__queue_lock)->rlock              1
+[<ffffffff811bd3e4>] cfq_set_request+0x414/0x500
+              &(&q->__queue_lock)->rlock             36
+[<ffffffff811bd049>] cfq_set_request+0x79/0x500
+              --------------------------
+              &(&q->__queue_lock)->rlock             17
+[<ffffffff811bd049>] cfq_set_request+0x79/0x500
+              &(&q->__queue_lock)->rlock        1007349
+[<ffffffff811af406>] __make_request+0x56/0x500
+              &(&q->__queue_lock)->rlock        3036167
+[<ffffffff811af45f>] __make_request+0xaf/0x500
+              &(&q->__queue_lock)->rlock              1
+[<ffffffff811bcd70>] cfq_get_queue+0xf0/0x2a0
 
---- Comment #4 from ksb@inbox.lv  2010-09-12 11:08:46 ---
-I'm also have something like that:
-[ 4499.860030] mptscsih: ioc0: attempting task abort! (sc=ffff88007a588200)
-[ 4499.860036] sd 4:0:0:0: [sda] CDB: Write(10): 2a 00 0f dc f8 9f 00 04 00 00
-[ 4499.894551] mptbase: ioc0: LogInfo(0x31120403): Originator={PL},
-Code={Abort}, SubCode(0x0403) cb_idx mptbase_reply
-[ 4501.256258] mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, Code={IO
-Executed}, SubCode(0x0000) cb_idx mptscsih_io_done
-[ 4501.268298] mptscsih: ioc0: task abort: SUCCESS (sc=ffff88007a588200)
-[ 4503.256426] mptbase: ioc0: LogInfo(0x31120403): Originator={PL},
-Code={Abort}, SubCode(0x0403) cb_idx mptscsih_io_done
-[ 4503.256439] mptscsih: ioc0: attempting task abort! (sc=ffff88007ab5cc00)
-[ 4503.256443] sd 4:0:0:0: [sda] CDB: Write(10): 2a 00 0f dc fc 9f 00 04 00 00
-[ 4503.256455] mptscsih: ioc0: task abort: SUCCESS (sc=ffff88007ab5cc00)
-[ 4503.506394] mptscsih: ioc0: attempting task abort! (sc=ffff88007a588000)
-[ 4503.506399] sd 4:0:0:0: [sda] CDB: Write(10): 2a 00 0f dd 00 9f 00 04 00 00
-[ 4503.506412] mptscsih: ioc0: task abort: SUCCESS (sc=ffff88007a588000)
-... and so on.
-Happens when heavy disk write operations ongoing.
-Identically on ubuntu's stock 2.6.32-24 and also on custom built 2.6.35.4 and
-2.6.36-rc3 kernels.
+=2E....................................................................=
+=2E....................................................................=
+=2E....................................................
 
-cat /proc/mpt/version
-mptlinux-3.04.17
-  Fusion MPT base driver
-  Fusion MPT SAS host driver
+                 &(&target->lock)->rlock:       1098815        1098945
+          0.21           3.67      317746.64       16107020
+48401787           0.00          14.65    11997072.82
+                 -----------------------
+                 &(&target->lock)->rlock         220238
+[<ffffffffa04e1307>] __srp_get_tx_iu+0x47/0xd0 [ib_srp]
+                 &(&target->lock)->rlock         366255
+[<ffffffffa04e2ee0>] srp_queuecommand+0xb0/0xad0 [ib_srp]
+                 &(&target->lock)->rlock         297993
+[<ffffffffa04e25b6>] srp_remove_req+0x46/0x80 [ib_srp]
+                 &(&target->lock)->rlock         114850
+[<ffffffffa04e2ae2>] srp_handle_recv+0x182/0x420 [ib_srp]
+                 -----------------------
+                 &(&target->lock)->rlock         277148
+[<ffffffffa04e2ee0>] srp_queuecommand+0xb0/0xad0 [ib_srp]
+                 &(&target->lock)->rlock         142360
+[<ffffffffa04e2ae2>] srp_handle_recv+0x182/0x420 [ib_srp]
+                 &(&target->lock)->rlock         245220
+[<ffffffffa04e1307>] __srp_get_tx_iu+0x47/0xd0 [ib_srp]
+                 &(&target->lock)->rlock         266847
+[<ffffffffa04e25b6>] srp_remove_req+0x46/0x80 [ib_srp]
 
-cat /proc/mpt/summary
-ioc0: LSISAS1064E B2, FwRev=01140000h, Ports=1, MaxQ=511, IRQ=17
+=2E....................................................................=
+=2E....................................................................=
+=2E....................................................
 
-cat /proc/mpt/ioc0/info
-ioc0:
-  ProductID = 0x2204 (LSISAS1064E B2)
-  FWVersion = 0x01140000
-  MsgVersion = 0x0105
-  FirstWhoInit = 0x00
-  EventState = 0x00
-  CurrentHostMfaHighAddr = 0x00000000
-  CurrentSenseBufferHighAddr = 0x00000000
-  MaxChainDepth = 0x60 frames
-  MinBlockSize = 0x20 bytes
-  RequestFrames @ 0xffff88007a502800 (Dma @ 0x000000007a502800)
-    {CurReqSz=128} x {CurReqDepth=511} = 65408 bytes ^= 0x10000
-    {MaxReqSz=128}   {MaxReqDepth=511}
-  Frames   @ 0xffff88007a500000 (Dma @ 0x000000007a500000)
-    {CurRepSz=80} x {CurRepDepth=128} = 10240 bytes ^= 0x2880
-    {MaxRepSz=0}   {MaxRepDepth=511}
-  MaxDevices = 173
-  MaxBuses = 1
-  PortNumber = 1 (of 1)
+              &(shost->host_lock)->rlock:        989776         989903
+          0.21           5.78      271707.74       20089204
+38990409           0.00           7.07     9908160.13
+              --------------------------
+              &(shost->host_lock)->rlock         123198
+[<ffffffffa0037583>] scsi_request_fn+0x163/0x4d0 [scsi_mod]
+              &(shost->host_lock)->rlock         235047
+[<ffffffffa003036c>] scsi_dispatch_cmd+0x11c/0x3e0 [scsi_mod]
+              &(shost->host_lock)->rlock         389901
+[<ffffffffa00383cd>] scsi_device_unbusy+0x3d/0xd0 [scsi_mod]
+              &(shost->host_lock)->rlock         241762
+[<ffffffffa0036824>] scsi_run_queue+0x54/0x3d0 [scsi_mod]
+              --------------------------
+              &(shost->host_lock)->rlock         107827
+[<ffffffffa0037583>] scsi_request_fn+0x163/0x4d0 [scsi_mod]
+              &(shost->host_lock)->rlock          95756
+[<ffffffffa003036c>] scsi_dispatch_cmd+0x11c/0x3e0 [scsi_mod]
+              &(shost->host_lock)->rlock         316122
+[<ffffffffa0036824>] scsi_run_queue+0x54/0x3d0 [scsi_mod]
+              &(shost->host_lock)->rlock         470203
+[<ffffffffa00383cd>] scsi_device_unbusy+0x3d/0xd0 [scsi_mod]
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug.
-You are watching the assignee of the bug.
+=2E....................................................................=
+=2E....................................................................=
+=2E....................................................
+
+                &(&ctx->ctx_lock)->rlock:        399855         399868
+          0.22           4.22      143530.86        7351017
+50104676           0.00           8.92    14706301.05
+                ------------------------
+                &(&ctx->ctx_lock)->rlock         194753
+[<ffffffff81158805>] aio_complete+0x45/0x260
+                &(&ctx->ctx_lock)->rlock          67287
+[<ffffffff81159434>] do_io_submit+0x214/0x7b0
+                &(&ctx->ctx_lock)->rlock          56529
+[<ffffffff81157da5>] __aio_get_req+0x95/0x1a0
+                &(&ctx->ctx_lock)->rlock          54461
+[<ffffffff8115785d>] aio_put_req+0x2d/0x60
+                ------------------------
+                &(&ctx->ctx_lock)->rlock         205740
+[<ffffffff81158805>] aio_complete+0x45/0x260
+                &(&ctx->ctx_lock)->rlock         125933
+[<ffffffff8115785d>] aio_put_req+0x2d/0x60
+                &(&ctx->ctx_lock)->rlock          37042
+[<ffffffff81157da5>] __aio_get_req+0x95/0x1a0
+                &(&ctx->ctx_lock)->rlock          29197
+[<ffffffff81159434>] do_io_submit+0x214/0x7b0
+
+=2E....................................................................=
+=2E....................................................................=
+=2E....................................................
+[ ... ]
+
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
