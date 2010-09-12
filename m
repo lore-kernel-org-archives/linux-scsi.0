@@ -1,188 +1,45 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi, fcoe, libfc: drop scsi host_lock use from fc_queuecommand
-Date: Sun, 12 Sep 2010 18:37:11 +0200
-Message-ID: <AANLkTinVTSboQB=kxyOCQ-eF6hYWqsn9YYJn7bnLeTtW@mail.gmail.com>
-References: <20100903222715.6237.75737.stgit@localhost.localdomain>
+From: Mikael Pettersson <mikpe@it.uu.se>
+Subject: UltraStar fails detection with "Unsupported sector size 524"
+Date: Sun, 12 Sep 2010 19:30:45 +0200
+Message-ID: <19597.3653.893156.794645@pilspetsen.it.uu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:57407 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752800Ab0ILQhN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Sep 2010 12:37:13 -0400
-Received: by fxm16 with SMTP id 16so2717354fxm.19
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Sep 2010 09:37:12 -0700 (PDT)
-In-Reply-To: <20100903222715.6237.75737.stgit@localhost.localdomain>
+Received: from fanny.its.uu.se ([130.238.4.241]:54497 "EHLO fanny.its.uu.se"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753283Ab0ILRas (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 12 Sep 2010 13:30:48 -0400
+Received: from fanny.its.uu.se (localhost [127.0.0.1])
+	by fanny.its.uu.se (Postfix) with ESMTP id A7C486296
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Sep 2010 19:30:46 +0200 (MSZ)
+Received: from pilspetsen.it.uu.se (pilspetsen.it.uu.se [130.238.18.39])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by fanny.its.uu.se (Postfix) with ESMTP id 6789C6214
+	for <linux-scsi@vger.kernel.org>; Sun, 12 Sep 2010 19:30:46 +0200 (MSZ)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vasu Dev <vasu.dev@intel.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Sep 4, 2010 at 12:27 AM, Vasu Dev <vasu.dev@intel.com> wrote:
->
-> Currently fc_queuecommand drops this lock very early on and then re-a=
-cquires
-> this lock just before return, this re-acquired lock gets dropped imme=
-diately
-> by its fast path caller scsi_dispatch_cmd, this re-acquire and then i=
-mmediate
-> drop on each IO hits performance especially with small size IOs on mu=
-lti-core
-> systems, this hit is significant about 25% with 512 bytes size IOs.
->
-> This lock is not needed in fc_queuecommand and calling fc_queuecomman=
-d
-> without this lock held removes above described performance hit.
->
-> So this patch adds unlocked_qcmds flag to drop host_lock before
-> calling only fc_queuecommand and removes re-acquire & =A0then drop
-> for =A0each IO. Added flag, drops this lock only if LLD wants such
-> as fcoe.ko does here for fc_queuecommand. This change won't affect
-> any existing LLD since added unlocked_qcmds flag will be zero
-> in those cases and their host lock uses would effectively remain
-> same after this patch.
-[ ... ]
+I got a bunch of 72G IBM UltraStars that were taken from some
+kind of IBM storage server.  The Linux kernel however doesn't
+like them, complaining about a non-512 byte sector size:
 
-Hello Vasu,
+scsi 0:0:1:0: Direct-Access     IBM      IC35L073UCDY10-0 S27N PQ: 0 ANSI: 3
+scsi target0:0:1: tagged command queuing enabled, command queue depth 16.
+scsi target0:0:1: Beginning Domain Validation
+scsi target0:0:1: FAST-20 WIDE SCSI 40.0 MB/s ST (50 ns, offset 8)
+scsi target0:0:1: Domain Validation skipping write tests
+scsi target0:0:1: Ending Domain Validation
+sd 0:0:1:0: [sdb] Unsupported sector size 524.
 
-While I don't doubt that your patch improves performance, there might
-be more bottlenecks in the Linux storage stack than the SCSI host
-lock. After having converted the SRP initiator (ib_srp) to use per-LUN
-locking instead of per-host locking and after having enabled
-unlocked_qcmds, I noticed that the largest source of contention was in
-the block layer. There was ten times more contention on
-request_queue.queue_lock than on any other spinlock. As you can see
-below, the four most contended locks in the test I ran were:
-* request_queue.queue_lock, needed by __make_request() in blk-core.c.
-* srp_target_port.lock, the per-LUN lock in ib_srp.c.
-* The SCSI host lock.
-* An AIO lock.
+(that's from the 2.6.35 kernel's SYM53C8XX_2)
 
-The test I ran used libaio and the NOOP scheduler. Block merging was
-disabled via sysfs.
+According to the datasheets these drives have soft-configurable
+sector sizes from 512 up to 528 bytes, but they don't say how
+that configuration is done.
 
-=46rom /proc/lock_stat:
+Any ideas on how to reconfigure these drives for 512-byte sectors?
 
-lock_stat version 0.3
------------------------------------------------------------------------=
------------------------------------------------------------------------=
--------------------------------------------------
-                              class name    con-bounces    contentions
-  waittime-min   waittime-max waittime-total    acq-bounces
-acquisitions   holdtime-min   holdtime-max holdtime-total
------------------------------------------------------------------------=
------------------------------------------------------------------------=
--------------------------------------------------
-
-              &(&q->__queue_lock)->rlock:      11093047       11093901
-          0.22           9.37    10163231.15       41697489
-74851829           0.00          21.14    60656375.82
-              --------------------------
-              &(&q->__queue_lock)->rlock        2093562
-[<ffffffff811af406>] __make_request+0x56/0x500
-              &(&q->__queue_lock)->rlock              2
-[<ffffffff811bcd70>] cfq_get_queue+0xf0/0x2a0
-              &(&q->__queue_lock)->rlock              1
-[<ffffffff811bd3e4>] cfq_set_request+0x414/0x500
-              &(&q->__queue_lock)->rlock             36
-[<ffffffff811bd049>] cfq_set_request+0x79/0x500
-              --------------------------
-              &(&q->__queue_lock)->rlock             17
-[<ffffffff811bd049>] cfq_set_request+0x79/0x500
-              &(&q->__queue_lock)->rlock        1007349
-[<ffffffff811af406>] __make_request+0x56/0x500
-              &(&q->__queue_lock)->rlock        3036167
-[<ffffffff811af45f>] __make_request+0xaf/0x500
-              &(&q->__queue_lock)->rlock              1
-[<ffffffff811bcd70>] cfq_get_queue+0xf0/0x2a0
-
-=2E....................................................................=
-=2E....................................................................=
-=2E....................................................
-
-                 &(&target->lock)->rlock:       1098815        1098945
-          0.21           3.67      317746.64       16107020
-48401787           0.00          14.65    11997072.82
-                 -----------------------
-                 &(&target->lock)->rlock         220238
-[<ffffffffa04e1307>] __srp_get_tx_iu+0x47/0xd0 [ib_srp]
-                 &(&target->lock)->rlock         366255
-[<ffffffffa04e2ee0>] srp_queuecommand+0xb0/0xad0 [ib_srp]
-                 &(&target->lock)->rlock         297993
-[<ffffffffa04e25b6>] srp_remove_req+0x46/0x80 [ib_srp]
-                 &(&target->lock)->rlock         114850
-[<ffffffffa04e2ae2>] srp_handle_recv+0x182/0x420 [ib_srp]
-                 -----------------------
-                 &(&target->lock)->rlock         277148
-[<ffffffffa04e2ee0>] srp_queuecommand+0xb0/0xad0 [ib_srp]
-                 &(&target->lock)->rlock         142360
-[<ffffffffa04e2ae2>] srp_handle_recv+0x182/0x420 [ib_srp]
-                 &(&target->lock)->rlock         245220
-[<ffffffffa04e1307>] __srp_get_tx_iu+0x47/0xd0 [ib_srp]
-                 &(&target->lock)->rlock         266847
-[<ffffffffa04e25b6>] srp_remove_req+0x46/0x80 [ib_srp]
-
-=2E....................................................................=
-=2E....................................................................=
-=2E....................................................
-
-              &(shost->host_lock)->rlock:        989776         989903
-          0.21           5.78      271707.74       20089204
-38990409           0.00           7.07     9908160.13
-              --------------------------
-              &(shost->host_lock)->rlock         123198
-[<ffffffffa0037583>] scsi_request_fn+0x163/0x4d0 [scsi_mod]
-              &(shost->host_lock)->rlock         235047
-[<ffffffffa003036c>] scsi_dispatch_cmd+0x11c/0x3e0 [scsi_mod]
-              &(shost->host_lock)->rlock         389901
-[<ffffffffa00383cd>] scsi_device_unbusy+0x3d/0xd0 [scsi_mod]
-              &(shost->host_lock)->rlock         241762
-[<ffffffffa0036824>] scsi_run_queue+0x54/0x3d0 [scsi_mod]
-              --------------------------
-              &(shost->host_lock)->rlock         107827
-[<ffffffffa0037583>] scsi_request_fn+0x163/0x4d0 [scsi_mod]
-              &(shost->host_lock)->rlock          95756
-[<ffffffffa003036c>] scsi_dispatch_cmd+0x11c/0x3e0 [scsi_mod]
-              &(shost->host_lock)->rlock         316122
-[<ffffffffa0036824>] scsi_run_queue+0x54/0x3d0 [scsi_mod]
-              &(shost->host_lock)->rlock         470203
-[<ffffffffa00383cd>] scsi_device_unbusy+0x3d/0xd0 [scsi_mod]
-
-=2E....................................................................=
-=2E....................................................................=
-=2E....................................................
-
-                &(&ctx->ctx_lock)->rlock:        399855         399868
-          0.22           4.22      143530.86        7351017
-50104676           0.00           8.92    14706301.05
-                ------------------------
-                &(&ctx->ctx_lock)->rlock         194753
-[<ffffffff81158805>] aio_complete+0x45/0x260
-                &(&ctx->ctx_lock)->rlock          67287
-[<ffffffff81159434>] do_io_submit+0x214/0x7b0
-                &(&ctx->ctx_lock)->rlock          56529
-[<ffffffff81157da5>] __aio_get_req+0x95/0x1a0
-                &(&ctx->ctx_lock)->rlock          54461
-[<ffffffff8115785d>] aio_put_req+0x2d/0x60
-                ------------------------
-                &(&ctx->ctx_lock)->rlock         205740
-[<ffffffff81158805>] aio_complete+0x45/0x260
-                &(&ctx->ctx_lock)->rlock         125933
-[<ffffffff8115785d>] aio_put_req+0x2d/0x60
-                &(&ctx->ctx_lock)->rlock          37042
-[<ffffffff81157da5>] __aio_get_req+0x95/0x1a0
-                &(&ctx->ctx_lock)->rlock          29197
-[<ffffffff81159434>] do_io_submit+0x214/0x7b0
-
-=2E....................................................................=
-=2E....................................................................=
-=2E....................................................
-[ ... ]
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+/Mikael
