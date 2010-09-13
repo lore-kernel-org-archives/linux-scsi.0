@@ -1,74 +1,94 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/2] lio-target: Add support for libcrypto crc32c and
- crc32-intel offload
-Date: Mon, 13 Sep 2010 11:21:27 +0200
-Message-ID: <4C8DED17.6080801@suse.de>
-References: <1284201076-22361-1-git-send-email-nab@linux-iscsi.org>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+ MegaRAID SAS driver
+Date: Mon, 13 Sep 2010 07:20:10 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3DC0D5280@cosmail02.lsi.com>
+References: <AANLkTiktJycDkXu+FHQanTNe-djvvTe9V=9KfSkLcXZd@mail.gmail.com>
+ <1283709850.15944.1277.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33437 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750843Ab0IMJVd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2010 05:21:33 -0400
-In-Reply-To: <1284201076-22361-1-git-send-email-nab@linux-iscsi.org>
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:44945 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753903Ab0IMNae (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2010 09:30:34 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>Mike Christie <michaelc@cs.wisc.edu>, Vasu Dev <vasu.dev@linux.intel.com>, Joe Eykholt <jeykholt@cisco.com>
+To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, "Austria, Winston" <Winston.Austria@lsi.com>
 
-Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
->=20
-> Greetings all,
->=20
-> This patch series converts the LIO-Target fabric module from using a =
-legacy
-> internal slicing by 1x CRC32C algorithm to the slicing by 1x CRC32C a=
-vailable in
-> crc32c.ko, as well as initial support for the Nehalem series crc32c-i=
-ntel.ko
-> instruction offload available since v2.6.27 in late 2008.
->=20
-> So far this series has been lightly tested with a handful of Open-iSC=
-SI client VMs
-> with the optimized crc32c-intel.ko offload case, and there appears to=
- be some
-> HeaderDigest failures for one case with RHEL6 B2 x86_64, while Ubuntu=
- i686 on
-> v2.6.27 and OpenSuse 11.2 x86_64 on v2.6.31 work as expected with Hea=
-derDigest=3DCRC32C
-> and DataDigest=3DCRC32C using the offload on the LIO-Target side.
->=20
-> Currently this patch disables the new iSCSI TPG attribute crc32c_x86_=
-offload
-> to force the crc32c.ko slicing by x1 CRC32C algorithm until these com=
-patibility
-> issues with existing libcrc32c clients can be properly resolved with =
-the Nehalem
-> CRC32C offload instructions running on the LIO-Target side.
->=20
-Due to a customer issue I had to revisit the CRC32 issue recently.
-And according to you the main reason for using your own CRC routines
-had been endianness issues.
-IE the in-kernel crc32c routines apparently weren't able to
-calculate the checksum in an endianness-independent manner.
-So a CRC calculated on a BE machine would fail to be validated by a
-LE machine and vice versa.
-
-Has this been fixed / verified?
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SmFtZXMsDQoNCkRpZCB5b3UgYmUgYWJsZSB0byBzdWNjZXNzZnVsbHkgYXBwbHkgdGhlIHBhdGNo
+ZXM/ICBJIGFtIGlkbGluZyBpZiB5b3UgZmVlbCBtb3JlIGNoYW5nZXMgbmVlZGVkLg0KDQpSZWdh
+cmRzLA0KDQpCbyBZYW5nDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBZYW5n
+LCBCbyANClNlbnQ6IFRodXJzZGF5LCBTZXB0ZW1iZXIgMDksIDIwMTAgMToyOSBQTQ0KVG86IFlh
+bmcsIEJvOyAnSmFtZXMgQm90dG9tbGV5JzsgJ2JvIHlhbmcnDQpDYzogJ2xpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnJzsgJ2FrcG1Ab3NkbC5vcmcnOyAnbGludXgta2VybmVsQHZnZXIua2VybmVs
+Lm9yZyc7IERhZnRhcmRhciwgSmF5YW50DQpTdWJqZWN0OiBSRTogW1BBVENIIDEvNV0gc2NzaTog
+bWVnYXJhaWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlEIFNB
+UyBkcml2ZXINCg0KSmFtZXMsDQoNCkRvIHlvdSBoYXZlIGFueSBmZWVkYmFjayBmb3IgdGhlIHBh
+dGNoZXM/DQoNClRoYW5rcywNCg0KQm8gWWFuZw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0t
+LQ0KRnJvbTogWWFuZywgQm8gDQpTZW50OiBUdWVzZGF5LCBTZXB0ZW1iZXIgMDcsIDIwMTAgMTox
+MiBQTQ0KVG86IFlhbmcsIEJvOyAnSmFtZXMgQm90dG9tbGV5JzsgJ2JvIHlhbmcnDQpDYzogJ2xp
+bnV4LXNjc2lAdmdlci5rZXJuZWwub3JnJzsgJ2FrcG1Ab3NkbC5vcmcnOyAnbGludXgta2VybmVs
+QHZnZXIua2VybmVsLm9yZyc7IERhZnRhcmRhciwgSmF5YW50DQpTdWJqZWN0OiBSRTogW1BBVENI
+IDEvNV0gc2NzaTogbWVnYXJhaWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRv
+IE1lZ2FSQUlEIFNBUyBkcml2ZXINCg0KSmFtZXMsDQoNClRob3NlIHdlcmUgY29ycmVjdGVkIGFu
+ZCBzdWJtaXR0ZWQuICANCg0KVGhhbmtzLA0KDQpCbyBZYW5nDQoNCi0tLS0tT3JpZ2luYWwgTWVz
+c2FnZS0tLS0tDQpGcm9tOiBZYW5nLCBCbyANClNlbnQ6IFR1ZXNkYXksIFNlcHRlbWJlciAwNywg
+MjAxMCAxMTo1NCBBTQ0KVG86ICdKYW1lcyBCb3R0b21sZXknOyBibyB5YW5nDQpDYzogbGludXgt
+c2NzaUB2Z2VyLmtlcm5lbC5vcmc7IGFrcG1Ab3NkbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtl
+cm5lbC5vcmc7IERhZnRhcmRhciwgSmF5YW50DQpTdWJqZWN0OiBSRTogW1BBVENIIDEvNV0gc2Nz
+aTogbWVnYXJhaWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlE
+IFNBUyBkcml2ZXINCg0KVGhhbmtzIEphbWVzLA0KDQpUaGUgZS1tYWlsIGJyb2tlbiBsaW5lcyBv
+ZiB0aGUgZGVzY3JpcHRpb24uICBJIGFtIGNoYW5naW5nIHRoZSBkZXNjcmlwdGlvbiB0byBhdm9p
+ZCByZS1zdWJtaXQgYWxsIHRoZSBwYXRjaGVzKDUgb2YgdGhlbSkuDQoNCkFsc28gDQoNCj4gIG1l
+Z2FzYXNfY29tcGxldGVfY21kKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgc3Ry
+dWN0DQo+IG1lZ2FzYXNfY21kICpjbWQsDQo+ICAJCSAgICAgdTggYWx0X3N0YXR1cyk7DQoNCk5v
+dCBwYXRjaCBsaW5lKGFscmVhZHkgaW4gdGhlIHNyYywgYnV0IG1vcmUgdGhhbiA4MCBjaGFycyku
+DQoNClJlZ2FyZHMsDQoNCkJvIFlhbmcgICAgDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
+DQpGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21haWx0bzpKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZV0g
+DQpTZW50OiBTdW5kYXksIFNlcHRlbWJlciAwNSwgMjAxMCAyOjA0IFBNDQpUbzogYm8geWFuZw0K
+Q2M6IFlhbmcsIEJvOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgYWtwbUBvc2RsLm9yZzsg
+bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgRGFmdGFyZGFyLCBKYXlhbnQNClN1YmplY3Q6
+IFJlOiBbUEFUQ0ggMS81XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBBZGQgT25saW5lIENvbnRyb2xs
+ZXIgUmVzZXQgdG8gTWVnYVJBSUQgU0FTIGRyaXZlcg0KDQpPbiBXZWQsIDIwMTAtMDgtMTEgYXQg
+MTY6NDUgLTA0MDAsIGJvIHlhbmcgd3JvdGU6DQo+IFRvIGFkZCB0aGUgT25saW5lIENvbnRyb2xs
+ZXIgUmVzZXQgIChPQ1IpIHN1cHBvcnQsIGRyaXZlciBuZWVkIHRvIGRvOg0KPiAJCWEpLiByZXNl
+dCB0aGUgY29udHJvbGxlciBjaGlwcyAtLSBYc2NhbGUgYW5kIEdlbjIgd2hpY2ggd2lsbCBjaGFu
+Z2UNCj4gdGhlIGZ1bmN0aW9uIGNhbGxzIGFuZCBhZGQgdGhlIHJlc2V0IGZ1bmN0aW9uDQo+IAkJ
+cmVsYXRlZCB0byB0aGlzIHR3byBjaGlwcy4NCj4gCQkNCj4gCQliKS4gZHVyaW5nIHRoZSByZXNl
+dCwgZHJpdmVyIHdpbGwgc3RvcmUgdGhlIHBlbmRpbmcgY21kcyB3aGljaCBub3QNCj4gcmV0dXJu
+ZWQgYnkgRlcgdG8gZHJpdmVyJ3MgcGVuZGluZyBxdWV1ZS4gIERyaXZlcg0KPiAJCXdpbGwgcmUt
+aXNzdWUgdGhvc2UgcGVuZGluZyBjbWRzIGFnYWluIHRvIEZXIGFmdGVyIHRoZSBPQ1IgZmluaXNo
+ZWQuDQo+IAkJDQo+IAkJYykuIEluIGRyaXZlcidzIHRpbWVvdXQgcm91dGluZSwgZHJpdmVyIHdp
+bGwgcmVwb3J0IHRvIE9TIGFzIHJlc2V0Lg0KPiBBbHNvIGRyaXZlcidzIHF1ZXVlIHJvdXRpbmUg
+d2lsbCBibG9jayB0aGUNCj4gCQljbWRzIHVudGlsIHRoZSBPQ1IgZmluaXNoZWQuDQo+IAkJDQo+
+IAkJZCkuIGluIERyaXZlcidzIElTUiByb3V0aW5lLCBpZiBkcml2ZXIgZ2V0IHRoZSBGVyBzdGF0
+ZSBhcyBzdGF0ZQ0KPiBjaGFuZ2UsIEZXIGluIEZhaWx1cmUgc3RhdHVzIGFuZCBGVyBzdXBwb3J0
+IG9ubGluZSBjb250cm9sbGVyDQo+IAkJcmVzZXQgKE9DUiksIGRyaXZlciB3aWxsIHN0YXJ0IHRv
+IGRvIHRoZSBjb250cm9sbGVyIHJlc2V0Lg0KPiAJCQ0KPiAJCWUpLiBJbiBkcml2ZXIncyBJT0NU
+TCByb3V0aW5lLCB0aGUgYXBwbGljYXRpb24gY21kcyB3aWxsIHdhaXQgZm9yDQo+IHRoZSBPQ1Ig
+dG8gZmluaXNoLCB0aGVuIGlzc3VlIHRoZSBjbWRzIHRvIEZXLg0KPiANCj4gU2lnbmVkLW9mZi1i
+eSBCbyBZYW5nPGJvLnlhbmdAbHNpLmNvbT4NCg0KVGhpcyBwYXRjaCBpcyBmdWxsIG9mIGxpbmUg
+YnJlYWtzIHdoaWNoIHByZXZlbnQgYXBwbGljYXRpb24sIGxpa2UgdGhpcw0Kb25lOg0KDQo+IGRp
+ZmYgLXJ1cE4gb2xkL0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzDQo+
+IG5ldy9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3Nhcw0KPiAtLS0gb2xk
+L0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzCTIwMTAtMDgtMTANCj4g
+MDQ6NTg6MzYuMDAwMDAwMDAwIC0wNDAwDQo+ICsrKyBuZXcvRG9jdW1lbnRhdGlvbi9zY3NpL0No
+YW5nZUxvZy5tZWdhcmFpZF9zYXMJMjAxMC0wOC0xMA0KPiAwNDo1NjozMC4wMDAwMDAwMDAgLTA0
+MDANCj4gQEAgLTEsMyArMSwzNiBAQA0KPiArMSBSZWxlYXNlIERhdGUgICAgOiBUaHVyLiAgTWF5
+IDAzLCAyMDEwIDA5OjEyOjQ1IFBTVCAyMDA5IC0NCj4gKwkJCShlbWFpbGQtaWQ6bWVnYXJhaWRs
+aW51eEBsc2kuY29tKQ0KPiArCQkJQm8gWWFuZw0KW3NuaXBdDQoNCmFuZCB0aGlzIG9uZQ0KPiBk
+aWZmIC1ydXBOIG9sZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMNCj4gbmV3
+L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYw0KPiAtLS0gb2xkL2RyaXZlcnMv
+c2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYwkyMDEwLTA4LTEwIDA0OjU1OjQxLjAwMDAwMDAw
+MCAtMDQwMA0KPiArKysgbmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYwky
+MDEwLTA4LTEwIDA0OjU2OjMwLjAwMDAwMDAwMCAtMDQwMA0KPiBAQCAtMTA3LDYgKzEwNywxMiBA
+QCBzdGF0aWMgdm9pZA0KPiAgbWVnYXNhc19jb21wbGV0ZV9jbWQoc3RydWN0IG1lZ2FzYXNfaW5z
+dGFuY2UgKmluc3RhbmNlLCBzdHJ1Y3QNCj4gbWVnYXNhc19jbWQgKmNtZCwNCj4gIAkJICAgICB1
+OCBhbHRfc3RhdHVzKTsNCg0KU2luY2Ugbm90IGV2ZXJ5IGxvbmcgbGluZSBpcyBicm9rZW4sIHRo
+aXMgbG9va3MgbGlrZSBzb21lIHR5cGUgb2YgY3V0DQphbmQgcGFzdGUgZXJyb3IgLi4uIGFueXdh
+eSwgY291bGQgeW91IGZpeCBpdCB1cCwgcGxlYXNlPw0KDQpUaGFua3MsDQoNCkphbWVzDQoNCg0K
