@@ -1,74 +1,64 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 17/25] drivers/scsi: Use static const char arrays
-Date: Mon, 13 Sep 2010 12:47:55 -0700
-Message-ID: <f36b9f69b71b2c6efe3bee1a39722a1534338b92.1284406639.git.joe@perches.com>
-References: <cover.1284406638.git.joe@perches.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:1902 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755133Ab0IMTsh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2010 15:48:37 -0400
-In-Reply-To: <cover.1284406638.git.joe@perches.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/2] lio-target: Add support for libcrypto crc32c and
+	crc32-intel offload
+Date: Mon, 13 Sep 2010 12:50:32 -0700
+Message-ID: <1284407432.8171.41.camel@haakon2.linux-iscsi.org>
+References: <1284201076-22361-1-git-send-email-nab@linux-iscsi.org>
+	 <4C8DED17.6080801@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C8DED17.6080801@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Vasu Dev <vasu.dev@linux.intel.com>, Joe Eykholt <jeykholt@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/bnx2i/bnx2i_hwi.c        |    6 +++---
- drivers/scsi/lpfc/lpfc_init.c         |    2 +-
- drivers/scsi/megaraid/megaraid_mbox.c |    6 +++---
- 3 files changed, 7 insertions(+), 7 deletions(-)
+On Mon, 2010-09-13 at 11:21 +0200, Hannes Reinecke wrote:
+> Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > Greetings all,
+> > 
+> > This patch series converts the LIO-Target fabric module from using a legacy
+> > internal slicing by 1x CRC32C algorithm to the slicing by 1x CRC32C available in
+> > crc32c.ko, as well as initial support for the Nehalem series crc32c-intel.ko
+> > instruction offload available since v2.6.27 in late 2008.
+> > 
+> > So far this series has been lightly tested with a handful of Open-iSCSI client VMs
+> > with the optimized crc32c-intel.ko offload case, and there appears to be some
+> > HeaderDigest failures for one case with RHEL6 B2 x86_64, while Ubuntu i686 on
+> > v2.6.27 and OpenSuse 11.2 x86_64 on v2.6.31 work as expected with HeaderDigest=CRC32C
+> > and DataDigest=CRC32C using the offload on the LIO-Target side.
+> > 
+> > Currently this patch disables the new iSCSI TPG attribute crc32c_x86_offload
+> > to force the crc32c.ko slicing by x1 CRC32C algorithm until these compatibility
+> > issues with existing libcrc32c clients can be properly resolved with the Nehalem
+> > CRC32C offload instructions running on the LIO-Target side.
+> > 
+> Due to a customer issue I had to revisit the CRC32 issue recently.
+> And according to you the main reason for using your own CRC routines
+> had been endianness issues.
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 90cef71..bd01994 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1919,10 +1919,10 @@ static void bnx2i_process_iscsi_error(struct bnx2i_hba *hba,
- {
- 	struct bnx2i_conn *bnx2i_conn;
- 	u32 iscsi_cid;
--	char warn_notice[] = "iscsi_warning";
--	char error_notice[] = "iscsi_error";
-+	static const char warn_notice[] = "iscsi_warning";
-+	static const char error_notice[] = "iscsi_error";
- 	char additional_notice[64];
--	char *message;
-+	const char *message;
- 	int need_recovery;
- 	u64 err_mask64;
- 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index da9ba06..7e61349 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -281,7 +281,7 @@ lpfc_dump_wakeup_param_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
- 	uint32_t prog_id_word;
- 	char dist = ' ';
- 	/* character array used for decoding dist type. */
--	char dist_char[] = "nabx";
-+	static const char dist_char[] = "nabx";
- 
- 	if (pmboxq->u.mb.mbxStatus != MBX_SUCCESS) {
- 		mempool_free(pmboxq, phba->mbox_mem_pool);
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index a7810a1..7eddde3 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -1536,9 +1536,9 @@ megaraid_mbox_build_cmd(adapter_t *adapter, struct scsi_cmnd *scp, int *busy)
- 	mbox64_t		*mbox64;
- 	mbox_t			*mbox;
- 	scb_t			*scb;
--	char			skip[] = "skipping";
--	char			scan[] = "scanning";
--	char			*ss;
-+	static const char	skip[] = "skipping";
-+	static const char	scan[] = "scanning";
-+	const char		*ss;
- 
- 
- 	/*
--- 
-1.7.3.rc1
+Indeed, this has historically been the case for LIO-Target and
+Core-iSCSI.  I noticed the issue with libcrypto while porting the latter
+on a old G4 TI-book waaay back during v2.6.10-rc3 days.
 
+> IE the in-kernel crc32c routines apparently weren't able to
+> calculate the checksum in an endianness-independent manner.
+> So a CRC calculated on a BE machine would fail to be validated by a
+> LE machine and vice versa.
+> 
+> Has this been fixed / verified?
+> 
+
+>From taking a look at crypto/crc32c.c it still appears AFAICT to not be
+big endian safe.  I was planning to test this patch on some powerpc/ppc
+hardware with v2.6.36-rc4 in the next days, but it looks like
+lio-core-2.6.git will need a seperate crypto/crc32c.c patch to function
+properly on big endian arches.
+
+Thanks for mentioning this point Hannes!
+
+--nab
