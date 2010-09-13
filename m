@@ -1,67 +1,53 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: libsas: question and suggested patch for hotplug issue in sas_discover.c
-Date: Mon, 13 Sep 2010 14:08:03 +0800
-Message-ID: <29C34F51E4A74AAB9C9E317960385C10@usish.com.cn>
-References: <E3280858FA94444CA49D2BA02341C9830114B6452A@orsmsx506.amr.corp.intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:50940 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751672Ab0IMGKI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2010 02:10:08 -0400
-In-Reply-To: <E3280858FA94444CA49D2BA02341C9830114B6452A@orsmsx506.amr.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/2] lio-target: Add per iSCSI connection CPU scheduling affinity
+Date: Mon, 13 Sep 2010 00:19:40 -0700
+Message-ID: <1284362380-561-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Philipp Reisner <philipp.reisner@linbit.com>, Florian Haas <florian.haas@linbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Joe Eykholt <jeykholt@cisco.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "'Ciechanowski, Ed'" <ed.ciechanowski@intel.com>, linux-scsi@vger.kernel.org
-Cc: "'Williams, Dan J'" <dan.j.williams@intel.com>, "'Neubauer, Wojciech'" <Wojciech.Neubauer@intel.com>, "'Fan, Haipao'" <haipao.fan@intel.com>, "'Jeppsen, Roger C'" <roger.c.jeppsen@intel.com>, 'James Bottomley' <James.Bottomley@suse.de>
 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-We have found an issue with hot plugging behind an expander - After we
-unplug a drive behind expander, the sas_unregister_dev function is called,
-it then calls sas_rphy_delete to notify the upper layer that the device is
-gone. 
+Grettings all,
 
-However, this sas_rphy_delete is not returning for several minutes later
-after the I/O timeout process is exhausted. Once sas_rphy_delete returns,
-the sas_notify_lldd_dev_gone function is called to notify the lldd driver
-the device is gone.
+This patch series adds support for the automatic setting of CPU scheduling affinity
+for iscsi_ttx and iscsi_trx kernel thread set pairs on a per iSCSI connection context
+basis using a newly defined struct iscsi_conn->conn_cpumask.
 
-The problem we have seen is that the device is not posted after several
-minutes of being unplugged and a then replugged.
- 
-The following change is in ../libsas/sas_discover.c file. By calling the
-sas_notify_lldd_dev_gone function before calling the sas_unregister_dev
-function we can resolve the hot plug drive behind expander issue.
+This code was originally inspiried by a discussion last year at LinuxCon with
+Philipp Reisner about how CPU affinity is determined for asender, worker, receiver
+for each DRBD resource + underlying struct block_device.  This patch series for
+LIO-Target follows a similar model for ensuring that each iSCSI connection's RX / TX
+pair as scheduled to execute on the same CPU to take advantage of hot caching effects
+for shared per iSCSI connection data structures.
 
---- linux-2.6.36-rc3/drivers/scsi/libsas/sas_discover.c.old	2010-09-09
-06:54:05.096757412 -0700
-+++ linux-2.6.36-rc3/drivers/scsi/libsas/sas_discover.c	2010-09-09
-06:56:32.115230046 -0700
-@@ -233,6 +233,7 @@
- {
- 	if (dev->rphy) {
- 		sas_remove_children(&dev->rphy->dev);
-+		sas_notify_lldd_dev_gone(dev);
- 		sas_rphy_delete(dev->rphy);
- 		dev->rphy = NULL;
- 	}
+The first patch adds support for a iscsi_global->ts_bitmap to handle the proper
+atomic allocation of each thread_id using bitmap_find_free_region() and it's release
+with bitmap_release_region().  The important item here is that the lowest available
+thread_id in iscsi_allocate_thread_sets() with iscsi_global->ts_bitmap will always be used.
 
-The above change is to call sas_notify_lldd_dev_gone before calling
-sas_rphy_delete which causes I/O's to abort instead of timeout, so the
-return from calling sas_rphy_delete is more like seconds instead of minutes.
-[Jack] I don't think the patch is OK, the sas_notify_lldd_dev_gone(dev) will
-be
-called twice if you do this: once as you add, once in
-sas_unregister_common_dev.
+The second patch adds the primary iscsi_thread_get_cpumask() and
+iscsi_thread_check_cpumask() callers, and updates the iSCSI login / connection setup
+patch and the main RX / TX processing loops to check for a updated call set_cpus_allowed_ptr().
+This patch also updates the per iSCSI connection release and exeception paths to call
+free_cpumask_var() for struct iscsi_conn->conn_cpumask.
 
-Thanks, 
-ed.ciechanowski@intel.com
+Many thanks again to Philip Reiser and the DRBD/Linbit team for insight into this
+optimization for LIO-Target!
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
+Nicholas Bellinger (2):
+  lio-target: Convert to use bitmap for handling thread_id allocation
+  lio-target: Add support for per iSCSI connection CPU scheduling
+    affinity
+
+ drivers/target/lio-target/iscsi_target.c       |   96 +++++++++++++++++++++++-
+ drivers/target/lio-target/iscsi_target.h       |    1 +
+ drivers/target/lio-target/iscsi_target_core.h  |   12 +++-
+ drivers/target/lio-target/iscsi_target_login.c |   23 ++++++
+ drivers/target/lio-target/iscsi_thread_queue.c |   58 +++++++++++++-
+ drivers/target/lio-target/iscsi_thread_queue.h |    5 +
+ 6 files changed, 184 insertions(+), 11 deletions(-)
