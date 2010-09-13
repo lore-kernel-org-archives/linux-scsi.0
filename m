@@ -1,57 +1,100 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/2] lio-target: Add support for libcrypto crc32c and
-	crc32-intel offload
-Date: Mon, 13 Sep 2010 13:40:06 -0700
-Message-ID: <1284410406.8171.63.camel@haakon2.linux-iscsi.org>
-References: <1284201076-22361-1-git-send-email-nab@linux-iscsi.org>
-	 <4C8DED17.6080801@suse.de>
-	 <1284407432.8171.41.camel@haakon2.linux-iscsi.org>
-	 <4C8E8AF5.5080205@cs.wisc.edu>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bug 18252] spinlock lockup in __make_request <- submit_bio <-
+ ondemand_readahead
+Date: Mon, 13 Sep 2010 14:41:39 -0700
+Message-ID: <20100913144139.b9e18133.akpm@linux-foundation.org>
+References: <bug-18252-4803@https.bugzilla.kernel.org/>
+	<4C8B50F1.4020502@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C8E8AF5.5080205@cs.wisc.edu>
+In-Reply-To: <4C8B50F1.4020502@s5r6.in-berlin.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Vasu Dev <vasu.dev@linux.intel.com>, Joe Eykholt <jeykholt@cisco.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-kernel@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, axboe@kernel.dk, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2010-09-13 at 15:35 -0500, Mike Christie wrote:
-> On 09/13/2010 02:50 PM, Nicholas A. Bellinger wrote:
-> >> IE the in-kernel crc32c routines apparently weren't able to
-> >> calculate the checksum in an endianness-independent manner.
-> >> So a CRC calculated on a BE machine would fail to be validated by a
-> >> LE machine and vice versa.
-> >>
-> >> Has this been fixed / verified?
-> >>
-> >
-> >> From taking a look at crypto/crc32c.c it still appears AFAICT to not be
-> > big endian safe.  I was planning to test this patch on some powerpc/ppc
-> > hardware with v2.6.36-rc4 in the next days, but it looks like
-> > lio-core-2.6.git will need a seperate crypto/crc32c.c patch to function
-> > properly on big endian arches.
-> >
+On Sat, 11 Sep 2010 11:50:41 +0200
+Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+
+> Full quote for lkml:
 > 
-> There was this bug that was fixed a couple years ago:
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=ef19454bd437b2ba14c9cda1de85debd9f383484
-> since then I think we have not had problems.
+> bugzilla-daemon@bugzilla.kernel.org wrote:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=18252
+> > 
+> >            Summary: spinlock lockup in __make_request <- submit_bio <-
+> >                     ondemand_readahead
+> >            Product: IO/Storage
+> >            Version: 2.5
+> >     Kernel Version: 2.6.36-rc3
+> >           Platform: All
+> >         OS/Version: Linux
+> >               Tree: Mainline
+> >             Status: NEW
+> >           Severity: normal
+> >           Priority: P1
+> >          Component: Block Layer
+> >         AssignedTo: axboe@kernel.dk
+> >         ReportedBy: stefanr@s5r6.in-berlin.de
+> >         Regression: No
+> > 
+> > 
+> > Created an attachment (id=29562)
+> >  --> (https://bugzilla.kernel.org/attachment.cgi?id=29562)
+> > BUG screenshot
+> > 
+> > After a week uptime of 2.6.36-rc3 (I ran 2.6.35 before that),
+> 
+> Almost two weeks uptime actually.
+> 
+> > I was greeted by a black screen of death today in the morning:
+> > 
+> > (see screenshot in attachment; partial transcript:)
+> > 
+> > sending NMI to all CPUs:
+> > BUG: soinlock lockup on CPU#0, ktorrent/4313, ffff8802...
+> > PID: 4313, comm: ktorrent Tainted: G  M D W   2.6.36-rc3 #3
+> > Call Trace:
+> >  [...] do_raw_spin_lock+0x118/0x147
+> >  [...] _raw_spin_lock_irq+0x44/0x49
+> >  [...] ? __make_request+0x5c/0x400
+> >  [...] __make_request+0x5c/0x400
+> >  [...] generic_make_request+0x23a/0x2a9
+> >  [...] submit_bio+0xad/b6
+> >  [...] mpage_bio_submit...
+> >  [...] do_mpage_readpage...
+> >  [...] ? get_parent_ip...
+> >  [...] ? sub_preempt_count...
+> >  [...] ? __lru_cache_add...
+> >  [...] mpage_readpages...
+> >  [...] ? ext4_get_block...
+> >  [...] ? __alloc_pages_nodemask...
+> >  [...] ? ext4_get_block...
+> >  [...] ext4_readpages...
+> >  [...] __do_page_cache_readahead...
+> >  [...] ? __do_page_cache_readahead...
+> >  [...] ra_submit...
+> >  [...] ondemand_readahead...
+> > 
+> > This is a system with Phenom II x4 and Radeon graphics.  Since kernel mode
+> > setting is fairly new for radeon, it is possible that the lockup happened with
+> > earlier kernels too but simply ended in a lockup without trace dump to the
+> > screen.  IOW, it is not clear to me whether this is a regression or not.
+> > 
+> > The bug happened while kaffeine wrote an MPEG 2 TS to the same filesystem from
+> > which ktorrent was reading.  Of course this kind of commonplace workload
+> > happened without problem two or three times before during the week in which I
+> > ran 2.6.36-rc3.
+> > 
+> 
+> (The screenshot is a bit large, hence I reported in bugzilla instead of the list.)
+> 
 
-Hi Mike,
+What you've quoted above appears to be just the aftermath. 
+https://bugzilla.kernel.org/attachment.cgi?id=29562 indicates that the
+kernel earlier crashed in scsi code, perhaps under
+scsi_setup_fs_cmnd().
 
-Thanks for the pointer on this, I will give it a shot on powerpc and see
-what happens.
-
-FYI, I was under the assumption that for BIG_ENDIAN that crc32c() still
-needed an bitshift for the returned value.  This is what we had been
-doing with our old internal do_crc() code here:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/target/lio-target/iscsi_crc.c;hb=83559072b27eb8cd92abb9a3fc9be85018c5db06#l138
-
-AFAICT there is still nothing that makes crypto/crc32c.c big endian
-safe, unless I am overlooking something obvious..?
-
-Best,
-
---nab
+The question is: was that actually the first crash, or did an even
+earlier one scroll off?
