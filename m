@@ -1,94 +1,76 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
- MegaRAID SAS driver
-Date: Mon, 13 Sep 2010 07:20:10 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3DC0D5280@cosmail02.lsi.com>
-References: <AANLkTiktJycDkXu+FHQanTNe-djvvTe9V=9KfSkLcXZd@mail.gmail.com>
- <1283709850.15944.1277.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Combined storage tree
+Date: Mon, 13 Sep 2010 11:46:59 -0500
+Message-ID: <1284396419.10388.342.camel@mulgrave.site>
+References: <1284143247.6551.23.camel@mulgrave.site>
+	 <20100911082054.GF705@dastard> <1284213316.2986.7.camel@mulgrave.site>
+	 <20100913025807.GD411@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:44945 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753903Ab0IMNae (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2010 09:30:34 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20100913025807.GD411@dastard>
+Sender: linux-ide-owner@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, linux-fsdevel@vger.kernel.org, dm-devel@redhat.com, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, "Austria, Winston" <Winston.Austria@lsi.com>
 
-SmFtZXMsDQoNCkRpZCB5b3UgYmUgYWJsZSB0byBzdWNjZXNzZnVsbHkgYXBwbHkgdGhlIHBhdGNo
-ZXM/ICBJIGFtIGlkbGluZyBpZiB5b3UgZmVlbCBtb3JlIGNoYW5nZXMgbmVlZGVkLg0KDQpSZWdh
-cmRzLA0KDQpCbyBZYW5nDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBZYW5n
-LCBCbyANClNlbnQ6IFRodXJzZGF5LCBTZXB0ZW1iZXIgMDksIDIwMTAgMToyOSBQTQ0KVG86IFlh
-bmcsIEJvOyAnSmFtZXMgQm90dG9tbGV5JzsgJ2JvIHlhbmcnDQpDYzogJ2xpbnV4LXNjc2lAdmdl
-ci5rZXJuZWwub3JnJzsgJ2FrcG1Ab3NkbC5vcmcnOyAnbGludXgta2VybmVsQHZnZXIua2VybmVs
-Lm9yZyc7IERhZnRhcmRhciwgSmF5YW50DQpTdWJqZWN0OiBSRTogW1BBVENIIDEvNV0gc2NzaTog
-bWVnYXJhaWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlEIFNB
-UyBkcml2ZXINCg0KSmFtZXMsDQoNCkRvIHlvdSBoYXZlIGFueSBmZWVkYmFjayBmb3IgdGhlIHBh
-dGNoZXM/DQoNClRoYW5rcywNCg0KQm8gWWFuZw0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0t
-LQ0KRnJvbTogWWFuZywgQm8gDQpTZW50OiBUdWVzZGF5LCBTZXB0ZW1iZXIgMDcsIDIwMTAgMTox
-MiBQTQ0KVG86IFlhbmcsIEJvOyAnSmFtZXMgQm90dG9tbGV5JzsgJ2JvIHlhbmcnDQpDYzogJ2xp
-bnV4LXNjc2lAdmdlci5rZXJuZWwub3JnJzsgJ2FrcG1Ab3NkbC5vcmcnOyAnbGludXgta2VybmVs
-QHZnZXIua2VybmVsLm9yZyc7IERhZnRhcmRhciwgSmF5YW50DQpTdWJqZWN0OiBSRTogW1BBVENI
-IDEvNV0gc2NzaTogbWVnYXJhaWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRv
-IE1lZ2FSQUlEIFNBUyBkcml2ZXINCg0KSmFtZXMsDQoNClRob3NlIHdlcmUgY29ycmVjdGVkIGFu
-ZCBzdWJtaXR0ZWQuICANCg0KVGhhbmtzLA0KDQpCbyBZYW5nDQoNCi0tLS0tT3JpZ2luYWwgTWVz
-c2FnZS0tLS0tDQpGcm9tOiBZYW5nLCBCbyANClNlbnQ6IFR1ZXNkYXksIFNlcHRlbWJlciAwNywg
-MjAxMCAxMTo1NCBBTQ0KVG86ICdKYW1lcyBCb3R0b21sZXknOyBibyB5YW5nDQpDYzogbGludXgt
-c2NzaUB2Z2VyLmtlcm5lbC5vcmc7IGFrcG1Ab3NkbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtl
-cm5lbC5vcmc7IERhZnRhcmRhciwgSmF5YW50DQpTdWJqZWN0OiBSRTogW1BBVENIIDEvNV0gc2Nz
-aTogbWVnYXJhaWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlE
-IFNBUyBkcml2ZXINCg0KVGhhbmtzIEphbWVzLA0KDQpUaGUgZS1tYWlsIGJyb2tlbiBsaW5lcyBv
-ZiB0aGUgZGVzY3JpcHRpb24uICBJIGFtIGNoYW5naW5nIHRoZSBkZXNjcmlwdGlvbiB0byBhdm9p
-ZCByZS1zdWJtaXQgYWxsIHRoZSBwYXRjaGVzKDUgb2YgdGhlbSkuDQoNCkFsc28gDQoNCj4gIG1l
-Z2FzYXNfY29tcGxldGVfY21kKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5jZSwgc3Ry
-dWN0DQo+IG1lZ2FzYXNfY21kICpjbWQsDQo+ICAJCSAgICAgdTggYWx0X3N0YXR1cyk7DQoNCk5v
-dCBwYXRjaCBsaW5lKGFscmVhZHkgaW4gdGhlIHNyYywgYnV0IG1vcmUgdGhhbiA4MCBjaGFycyku
-DQoNClJlZ2FyZHMsDQoNCkJvIFlhbmcgICAgDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0t
-DQpGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21haWx0bzpKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZV0g
-DQpTZW50OiBTdW5kYXksIFNlcHRlbWJlciAwNSwgMjAxMCAyOjA0IFBNDQpUbzogYm8geWFuZw0K
-Q2M6IFlhbmcsIEJvOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgYWtwbUBvc2RsLm9yZzsg
-bGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgRGFmdGFyZGFyLCBKYXlhbnQNClN1YmplY3Q6
-IFJlOiBbUEFUQ0ggMS81XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBBZGQgT25saW5lIENvbnRyb2xs
-ZXIgUmVzZXQgdG8gTWVnYVJBSUQgU0FTIGRyaXZlcg0KDQpPbiBXZWQsIDIwMTAtMDgtMTEgYXQg
-MTY6NDUgLTA0MDAsIGJvIHlhbmcgd3JvdGU6DQo+IFRvIGFkZCB0aGUgT25saW5lIENvbnRyb2xs
-ZXIgUmVzZXQgIChPQ1IpIHN1cHBvcnQsIGRyaXZlciBuZWVkIHRvIGRvOg0KPiAJCWEpLiByZXNl
-dCB0aGUgY29udHJvbGxlciBjaGlwcyAtLSBYc2NhbGUgYW5kIEdlbjIgd2hpY2ggd2lsbCBjaGFu
-Z2UNCj4gdGhlIGZ1bmN0aW9uIGNhbGxzIGFuZCBhZGQgdGhlIHJlc2V0IGZ1bmN0aW9uDQo+IAkJ
-cmVsYXRlZCB0byB0aGlzIHR3byBjaGlwcy4NCj4gCQkNCj4gCQliKS4gZHVyaW5nIHRoZSByZXNl
-dCwgZHJpdmVyIHdpbGwgc3RvcmUgdGhlIHBlbmRpbmcgY21kcyB3aGljaCBub3QNCj4gcmV0dXJu
-ZWQgYnkgRlcgdG8gZHJpdmVyJ3MgcGVuZGluZyBxdWV1ZS4gIERyaXZlcg0KPiAJCXdpbGwgcmUt
-aXNzdWUgdGhvc2UgcGVuZGluZyBjbWRzIGFnYWluIHRvIEZXIGFmdGVyIHRoZSBPQ1IgZmluaXNo
-ZWQuDQo+IAkJDQo+IAkJYykuIEluIGRyaXZlcidzIHRpbWVvdXQgcm91dGluZSwgZHJpdmVyIHdp
-bGwgcmVwb3J0IHRvIE9TIGFzIHJlc2V0Lg0KPiBBbHNvIGRyaXZlcidzIHF1ZXVlIHJvdXRpbmUg
-d2lsbCBibG9jayB0aGUNCj4gCQljbWRzIHVudGlsIHRoZSBPQ1IgZmluaXNoZWQuDQo+IAkJDQo+
-IAkJZCkuIGluIERyaXZlcidzIElTUiByb3V0aW5lLCBpZiBkcml2ZXIgZ2V0IHRoZSBGVyBzdGF0
-ZSBhcyBzdGF0ZQ0KPiBjaGFuZ2UsIEZXIGluIEZhaWx1cmUgc3RhdHVzIGFuZCBGVyBzdXBwb3J0
-IG9ubGluZSBjb250cm9sbGVyDQo+IAkJcmVzZXQgKE9DUiksIGRyaXZlciB3aWxsIHN0YXJ0IHRv
-IGRvIHRoZSBjb250cm9sbGVyIHJlc2V0Lg0KPiAJCQ0KPiAJCWUpLiBJbiBkcml2ZXIncyBJT0NU
-TCByb3V0aW5lLCB0aGUgYXBwbGljYXRpb24gY21kcyB3aWxsIHdhaXQgZm9yDQo+IHRoZSBPQ1Ig
-dG8gZmluaXNoLCB0aGVuIGlzc3VlIHRoZSBjbWRzIHRvIEZXLg0KPiANCj4gU2lnbmVkLW9mZi1i
-eSBCbyBZYW5nPGJvLnlhbmdAbHNpLmNvbT4NCg0KVGhpcyBwYXRjaCBpcyBmdWxsIG9mIGxpbmUg
-YnJlYWtzIHdoaWNoIHByZXZlbnQgYXBwbGljYXRpb24sIGxpa2UgdGhpcw0Kb25lOg0KDQo+IGRp
-ZmYgLXJ1cE4gb2xkL0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzDQo+
-IG5ldy9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlkX3Nhcw0KPiAtLS0gb2xk
-L0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzCTIwMTAtMDgtMTANCj4g
-MDQ6NTg6MzYuMDAwMDAwMDAwIC0wNDAwDQo+ICsrKyBuZXcvRG9jdW1lbnRhdGlvbi9zY3NpL0No
-YW5nZUxvZy5tZWdhcmFpZF9zYXMJMjAxMC0wOC0xMA0KPiAwNDo1NjozMC4wMDAwMDAwMDAgLTA0
-MDANCj4gQEAgLTEsMyArMSwzNiBAQA0KPiArMSBSZWxlYXNlIERhdGUgICAgOiBUaHVyLiAgTWF5
-IDAzLCAyMDEwIDA5OjEyOjQ1IFBTVCAyMDA5IC0NCj4gKwkJCShlbWFpbGQtaWQ6bWVnYXJhaWRs
-aW51eEBsc2kuY29tKQ0KPiArCQkJQm8gWWFuZw0KW3NuaXBdDQoNCmFuZCB0aGlzIG9uZQ0KPiBk
-aWZmIC1ydXBOIG9sZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMNCj4gbmV3
-L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYw0KPiAtLS0gb2xkL2RyaXZlcnMv
-c2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYwkyMDEwLTA4LTEwIDA0OjU1OjQxLjAwMDAwMDAw
-MCAtMDQwMA0KPiArKysgbmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYwky
-MDEwLTA4LTEwIDA0OjU2OjMwLjAwMDAwMDAwMCAtMDQwMA0KPiBAQCAtMTA3LDYgKzEwNywxMiBA
-QCBzdGF0aWMgdm9pZA0KPiAgbWVnYXNhc19jb21wbGV0ZV9jbWQoc3RydWN0IG1lZ2FzYXNfaW5z
-dGFuY2UgKmluc3RhbmNlLCBzdHJ1Y3QNCj4gbWVnYXNhc19jbWQgKmNtZCwNCj4gIAkJICAgICB1
-OCBhbHRfc3RhdHVzKTsNCg0KU2luY2Ugbm90IGV2ZXJ5IGxvbmcgbGluZSBpcyBicm9rZW4sIHRo
-aXMgbG9va3MgbGlrZSBzb21lIHR5cGUgb2YgY3V0DQphbmQgcGFzdGUgZXJyb3IgLi4uIGFueXdh
-eSwgY291bGQgeW91IGZpeCBpdCB1cCwgcGxlYXNlPw0KDQpUaGFua3MsDQoNCkphbWVzDQoNCg0K
+On Mon, 2010-09-13 at 12:58 +1000, Dave Chinner wrote: 
+> On Sat, Sep 11, 2010 at 08:55:16AM -0500, James Bottomley wrote:
+> > On Sat, 2010-09-11 at 18:20 +1000, Dave Chinner wrote:
+> > > On Fri, Sep 10, 2010 at 01:27:27PM -0500, James Bottomley wrote:
+> > > > One of the requests from LSF10 in August was the production of a
+> > > > combined storage tree.  This is now ready at
+> > > > 
+> > > > git://git.kernel.org/pub/scm/linux/kernel/git/jejb/storage-tree
+> > > > 
+> > > > It's actually a nightly built merge tree consisting of
+> > > > 
+> > > > scsi-misc; scsi-rc-fixes
+> > > > libata#upstream-fixes, libata#upstream
+> > > > block#for-linus, block#for-next
+> > > > and the dm quilt (which is empty at the moment).
+> > > > 
+> > > > I haven't yet added vfs or any of the fs trees, but if necessary, I can.
+> > > > 
+> > > > Note, because it's built nightly, like linux-next, it's hard (but not
+> > > > impossible) to use it as a basis for git trees (it is much easier to use
+> > > > it as a basis for quilts).
+> > > 
+> > > Hmmm. I was kind of hoping for an upstream maintainer tree, kind of
+> > > like the netdev tree.  I really don't see a tree like this getting
+> > > wide use - if I enjoyed the pain of rebasing against throw-away
+> > > merge trees every day, then I'd already be using linux-next....
+> > 
+> > Well, to be honest, that's what people wanted when the issue was raised
+> > at LSF10.  However, unlike net, storage has never had a single
+> > maintainer, so it's a bit more political than just doing that by fiat,
+> 
+> Bah. Technical arguments win here, not politics.
+
+Heh, who runs a tree is both politics and technical.
+
+> Besides, what
+> possible political concern can anyone have about using a different
+> upstream tree for development? A storage maintainer tree would not
+> replace anyone's little fiefdom; what we need is an integration point
+> long before stuff gets to Linus....
+
+For a storage git tree to be usable as a stable base, it has to be the
+upstream tree.  That would mean that, like net, the way upstream would
+be via this tree.  That's quite a shift in the way we currently work.
+
+> > plus not all of the current maintainers with storage trees were there.
+> 
+> If that's the barrier to discussion, then where else but a dedicated
+> storage workshop are you going to get a more representative sample
+> of storage developers in the same room?
+
+This sort of thing doesn't get decided by fiat.  If you can't get all of
+the relevant parties to agree, you have to demonstrate the need.  So
+doing a rollup tree to test how much of the problem is solvable that way
+seems like a reasonable first step.
+
+James
+
+
