@@ -1,255 +1,74 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/2] lio-target: Add support for per iSCSI connection CPU scheduling affinity
-Date: Mon, 13 Sep 2010 00:20:01 -0700
-Message-ID: <1284362401-603-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Philipp Reisner <philipp.reisner@linbit.com>, Florian Haas <florian.haas@linbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Joe Eykholt <jeykholt@cisco.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 0/2] lio-target: Add support for libcrypto crc32c and
+ crc32-intel offload
+Date: Mon, 13 Sep 2010 11:21:27 +0200
+Message-ID: <4C8DED17.6080801@suse.de>
+References: <1284201076-22361-1-git-send-email-nab@linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:33437 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750843Ab0IMJVd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2010 05:21:33 -0400
+In-Reply-To: <1284201076-22361-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>Mike Christie <michaelc@cs.wisc.edu>, Vasu Dev <vasu.dev@linux.intel.com>, Joe Eykholt <jeykholt@cisco.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+>=20
+> Greetings all,
+>=20
+> This patch series converts the LIO-Target fabric module from using a =
+legacy
+> internal slicing by 1x CRC32C algorithm to the slicing by 1x CRC32C a=
+vailable in
+> crc32c.ko, as well as initial support for the Nehalem series crc32c-i=
+ntel.ko
+> instruction offload available since v2.6.27 in late 2008.
+>=20
+> So far this series has been lightly tested with a handful of Open-iSC=
+SI client VMs
+> with the optimized crc32c-intel.ko offload case, and there appears to=
+ be some
+> HeaderDigest failures for one case with RHEL6 B2 x86_64, while Ubuntu=
+ i686 on
+> v2.6.27 and OpenSuse 11.2 x86_64 on v2.6.31 work as expected with Hea=
+derDigest=3DCRC32C
+> and DataDigest=3DCRC32C using the offload on the LIO-Target side.
+>=20
+> Currently this patch disables the new iSCSI TPG attribute crc32c_x86_=
+offload
+> to force the crc32c.ko slicing by x1 CRC32C algorithm until these com=
+patibility
+> issues with existing libcrc32c clients can be properly resolved with =
+the Nehalem
+> CRC32C offload instructions running on the LIO-Target side.
+>=20
+Due to a customer issue I had to revisit the CRC32 issue recently.
+And according to you the main reason for using your own CRC routines
+had been endianness issues.
+IE the in-kernel crc32c routines apparently weren't able to
+calculate the checksum in an endianness-independent manner.
+So a CRC calculated on a BE machine would fail to be validated by a
+LE machine and vice versa.
 
-This patch adds support for a per connection context struct iscsi_conn->conn_cpumask
-which by default will set the CPU scheduling affinity for a RX/TX thread_set
-pair to execute on the same CPU.  It adds a struct iscsi_conn->conn_cpumask, as well
-as conn_rx_reset_cpumask and conn_tx_reset_cpumask used by iscsi_thread_check_cpumask()
-discussed below.
+Has this been fixed / verified?
 
-The first item is iscsi_thread_get_cpumask() that is used to determine which CPU of the
-active online CPUs the struct iscsi_conn threads will be running on.  The logic to
-determine which CPU the two threads of the set will be running on was originally
-inspried by drivers/block/drbd/drbd_main.c:drbd_calc_cpu_mask(), and looks like
-the following in iscsi_thread_get_cpumask():
+Cheers,
 
-	ord = ts->thread_id % cpumask_weight(cpu_online_mask);
-	for_each_online_cpu(cpu) {
-		if (ord-- == 0) {
-			cpumask_set_cpu(cpu, conn->conn_cpumask);
-			return;
-		}
-	}
-
-The code that will notify the scheduler to update the struct iscsi_conn->conn_cpumask
-is located in iscsi_thread_check_cpumask(), which is run once per iteration within the
-primary while loops of iscsi_target_tx_thread() and iscsi_target_rx_thread() to determine
-if set_cpus_allowed_ptr() should be called for a newly updated struct conn->conn_cpumask.
-This patch currently sets conn_rx_reset_cpumask=1 and conn_tx_reset_cpumask=1 within
-iscsi_target_login.c: iscsi_post_login_handler() during the iSCSI loginc process in
-order to signal the initial conn_cpumask generated by iscsi_thread_get_cpumask().
-
-So far this code has been tested on a bare-metal Nehalem 8 CPUID system running
-v2.6.36-rc3, and checking with 'taskset -c -p' to show that each individual
-iscsi_t[r,t]x/$THREAD_ID pair have their CPU affinity set to the same CPU ID based
-on the thread_id generated using bitmap_find_free_region(iscsi_global->ts_bitmap, ...)
-in iscsi_thread_queue.c:iscsi_allocate_thread_sets().
-
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/lio-target/iscsi_target.c       |   85 ++++++++++++++++++++++++
- drivers/target/lio-target/iscsi_target.h       |    1 +
- drivers/target/lio-target/iscsi_target_core.h  |    4 +
- drivers/target/lio-target/iscsi_target_login.c |   23 +++++++
- 4 files changed, 113 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/target/lio-target/iscsi_target.c b/drivers/target/lio-target/iscsi_target.c
-index 9b7c86c..3c47b55 100644
---- a/drivers/target/lio-target/iscsi_target.c
-+++ b/drivers/target/lio-target/iscsi_target.c
-@@ -4441,6 +4441,76 @@ static void iscsi_tx_thread_wait_for_TCP(struct iscsi_conn *conn)
- 	}
- }
- 
-+#ifdef CONFIG_SMP
-+
-+void iscsi_thread_get_cpumask(struct iscsi_conn *conn)
-+{
-+	struct se_thread_set *ts = conn->thread_set;
-+	int ord, cpu;
-+	/*
-+	 * thread_id is assigned from iscsi_global->ts_bitmap from
-+	 * within iscsi_thread_set.c:iscsi_allocate_thread_sets()
-+	 *
-+	 * Here we use thread_id to determine which CPU that this
-+	 * iSCSI connection's se_thread_set will be scheduled to
-+	 * execute upon.
-+	 */
-+	ord = ts->thread_id % cpumask_weight(cpu_online_mask);
-+#if 0
-+	printk(">>>>>>>>>>>>>>>>>>>> Generated ord: %d from thread_id: %d\n",
-+			ord, ts->thread_id);
-+#endif
-+	for_each_online_cpu(cpu) {
-+		if (ord-- == 0) {
-+			cpumask_set_cpu(cpu, conn->conn_cpumask);
-+			return;
-+		}
-+	}
-+	/*
-+	 * This should never be reached..
-+	 */
-+	dump_stack();
-+	cpumask_setall(conn->conn_cpumask);
-+}
-+
-+static inline void iscsi_thread_check_cpumask(
-+	struct iscsi_conn *conn,
-+	struct task_struct *p,
-+	int mode)
-+{
-+	char buf[128];
-+	/*
-+	 * mode == 1 signals iscsi_target_tx_thread() usage.
-+	 * mode == 0 signals iscsi_target_rx_thread() usage.
-+	 */
-+	if (mode == 1) {
-+		if (!(conn->conn_tx_reset_cpumask))
-+			return;
-+		conn->conn_tx_reset_cpumask = 0;
-+	} else {
-+		if (!(conn->conn_rx_reset_cpumask))
-+			return;
-+		conn->conn_rx_reset_cpumask = 0;
-+	}
-+	/*
-+	 * Update the CPU mask for this single kthread so that
-+	 * both TX and RX kthreads are scheduled to run on the
-+	 * same CPU.
-+	 */
-+	memset(buf, 0, 128);
-+	cpumask_scnprintf(buf, 128, conn->conn_cpumask);
-+#if 0
-+	printk(">>>>>>>>>>>>>> Calling set_cpus_allowed_ptr(): %s for %s\n",
-+			buf, p->comm);
-+#endif
-+	set_cpus_allowed_ptr(p, conn->conn_cpumask);
-+}
-+
-+#else
-+#define iscsi_thread_get_cpumask(X) ({})
-+#define iscsi_thread_check_cpumask(X, Y, Z) ({})
-+#endif /* CONFIG_SMP */
-+
- /*	iscsi_target_tx_thread():
-  *
-  *
-@@ -4472,6 +4542,12 @@ restart:
- 	eodr = map_sg = ret = sent_status = use_misc = 0;
- 
- 	while (1) {
-+		/*
-+		 * Ensure that both TX and RX per connection kthreads
-+		 * are scheduled to run on the same CPU.
-+		 */
-+		iscsi_thread_check_cpumask(conn, current, 1);
-+
- 		ret = down_interruptible(&conn->tx_sem);
- 
- 		if ((ts->status == ISCSI_THREAD_SET_RESET) ||
-@@ -4817,6 +4893,12 @@ restart:
- 		goto out;
- 
- 	while (1) {
-+		/*
-+		 * Ensure that both TX and RX per connection kthreads
-+		 * are scheduled to run on the same CPU.
-+		 */
-+		iscsi_thread_check_cpumask(conn, current, 0);
-+
- 		memset((void *)buffer, 0, ISCSI_HDR_LEN);
- 		memset((void *)&iov, 0, sizeof(struct iovec));
- 
-@@ -5141,6 +5223,9 @@ int iscsi_close_connection(
- 	if (conn->conn_tx_hash.tfm)
- 		crypto_free_hash(conn->conn_tx_hash.tfm);
- 
-+	if (conn->conn_cpumask)
-+		free_cpumask_var(conn->conn_cpumask);
-+
- 	kfree(conn->conn_ops);
- 	conn->conn_ops = NULL;
- 
-diff --git a/drivers/target/lio-target/iscsi_target.h b/drivers/target/lio-target/iscsi_target.h
-index 688b22e..c725797 100644
---- a/drivers/target/lio-target/iscsi_target.h
-+++ b/drivers/target/lio-target/iscsi_target.h
-@@ -35,6 +35,7 @@ extern int lio_queue_status(struct se_cmd *);
- extern u16 lio_set_fabric_sense_len(struct se_cmd *, u32);
- extern u16 lio_get_fabric_sense_len(void);
- extern int lio_queue_tm_rsp(struct se_cmd *);
-+extern void iscsi_thread_get_cpumask(struct iscsi_conn *);
- extern int iscsi_target_tx_thread(void *);
- extern int iscsi_target_rx_thread(void *);
- extern int iscsi_close_connection(struct iscsi_conn *);
-diff --git a/drivers/target/lio-target/iscsi_target_core.h b/drivers/target/lio-target/iscsi_target_core.h
-index 733f09f..017558a 100644
---- a/drivers/target/lio-target/iscsi_target_core.h
-+++ b/drivers/target/lio-target/iscsi_target_core.h
-@@ -588,6 +588,10 @@ struct iscsi_conn {
- 	/* libcrypto RX and TX contexts for crc32c */
- 	struct hash_desc	conn_rx_hash;
- 	struct hash_desc	conn_tx_hash;
-+	/* Used for scheduling TX and RX connection kthreads */
-+	cpumask_var_t		conn_cpumask;
-+	int			conn_rx_reset_cpumask:1;
-+	int			conn_tx_reset_cpumask:1;
- 	/* list_head of struct iscsi_cmd for this connection */
- 	struct list_head	conn_cmd_list;
- 	struct list_head	immed_queue_list;
-diff --git a/drivers/target/lio-target/iscsi_target_login.c b/drivers/target/lio-target/iscsi_target_login.c
-index 7c8500d..6fda6fe 100644
---- a/drivers/target/lio-target/iscsi_target_login.c
-+++ b/drivers/target/lio-target/iscsi_target_login.c
-@@ -80,6 +80,11 @@ static int iscsi_login_init_conn(struct iscsi_conn *conn)
- 	spin_lock_init(&conn->response_queue_lock);
- 	spin_lock_init(&conn->state_lock);
- 
-+	if (!(zalloc_cpumask_var(&conn->conn_cpumask, GFP_KERNEL))) {
-+		printk(KERN_ERR "Unable to allocate conn->conn_cpumask\n");
-+		return -ENOMEM;
-+	}
-+
- 	return 0;
- }
- 
-@@ -703,6 +708,14 @@ static int iscsi_post_login_handler(
- 
- 		iscsi_post_login_start_timers(conn);
- 		iscsi_activate_thread_set(conn, ts);
-+		/*
-+		 * Determine CPU mask to ensure connection's RX and TX kthreads
-+		 * are scheduled on the same CPU.
-+		 */
-+		iscsi_thread_get_cpumask(conn);
-+		conn->conn_rx_reset_cpumask = 1;
-+		conn->conn_tx_reset_cpumask = 1;
-+
- 		iscsi_dec_conn_usage_count(conn);
- 		if (stop_timer) {
- 			spin_lock_bh(&se_tpg->session_lock);
-@@ -752,6 +765,13 @@ static int iscsi_post_login_handler(
- 
- 	iscsi_post_login_start_timers(conn);
- 	iscsi_activate_thread_set(conn, ts);
-+	/*
-+	 * Determine CPU mask to ensure connection's RX and TX kthreads
-+	 * are scheduled on the same CPU.
-+	 */
-+	iscsi_thread_get_cpumask(conn);
-+	conn->conn_rx_reset_cpumask = 1;
-+	conn->conn_tx_reset_cpumask = 1;
- 
- 	iscsi_dec_conn_usage_count(conn);
- 
-@@ -1354,6 +1374,9 @@ old_sess_out:
- 	if (conn->conn_tx_hash.tfm)
- 		crypto_free_hash(conn->conn_tx_hash.tfm);
- 
-+	if (conn->conn_cpumask)
-+		free_cpumask_var(conn->conn_cpumask);
-+
- 	kfree(conn->conn_ops);
- 
- 	if (conn->param_list) {
--- 
-1.5.6.5
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
