@@ -1,72 +1,76 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/2] lio-target: Add support for libcrypto crc32c and
-	crc32-intel offload
-Date: Mon, 13 Sep 2010 15:20:55 -0700
-Message-ID: <1284416455.8171.89.camel@haakon2.linux-iscsi.org>
-References: <1284201076-22361-1-git-send-email-nab@linux-iscsi.org>
-	 <4C8DED17.6080801@suse.de>
-	 <1284407432.8171.41.camel@haakon2.linux-iscsi.org>
-	 <4C8E8AF5.5080205@cs.wisc.edu>
-	 <1284410406.8171.63.camel@haakon2.linux-iscsi.org>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 1/3] mpt2sas: Wait for port enable to get complete
+ before reporting devices to OS.
+Date: Mon, 13 Sep 2010 18:45:06 -0600
+Message-ID: <4565AEA676113A449269C2F3A549520F4918AF07@cosmail03.lsi.com>
+References: <20100804083355.GB13442@lsi.com>
+	 <1283704496.15944.1271.camel@mulgrave.site>
+	 <4565AEA676113A449269C2F3A549520F4918A80E@cosmail03.lsi.com>
+ <1284213782.2986.15.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1284410406.8171.63.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>, Vasu Dev <vasu.dev@linux.intel.com>, Joe Eykholt <jeykholt@cisco.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:38205 "EHLO
+	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752003Ab0INApM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Sep 2010 20:45:12 -0400
+In-Reply-To: <1284213782.2986.15.camel@mulgrave.site>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-On Mon, 2010-09-13 at 13:40 -0700, Nicholas A. Bellinger wrote:
-> On Mon, 2010-09-13 at 15:35 -0500, Mike Christie wrote:
-> > On 09/13/2010 02:50 PM, Nicholas A. Bellinger wrote:
-> > >> IE the in-kernel crc32c routines apparently weren't able to
-> > >> calculate the checksum in an endianness-independent manner.
-> > >> So a CRC calculated on a BE machine would fail to be validated by a
-> > >> LE machine and vice versa.
-> > >>
-> > >> Has this been fixed / verified?
-> > >>
-> > >
-> > >> From taking a look at crypto/crc32c.c it still appears AFAICT to not be
-> > > big endian safe.  I was planning to test this patch on some powerpc/ppc
-> > > hardware with v2.6.36-rc4 in the next days, but it looks like
-> > > lio-core-2.6.git will need a seperate crypto/crc32c.c patch to function
-> > > properly on big endian arches.
-> > >
-> > 
-> > There was this bug that was fixed a couple years ago:
-> > http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=ef19454bd437b2ba14c9cda1de85debd9f383484
-> > since then I think we have not had problems.
-> 
-> Hi Mike,
-> 
-> Thanks for the pointer on this, I will give it a shot on powerpc and see
-> what happens.
-> 
-> FYI, I was under the assumption that for BIG_ENDIAN that crc32c() still
-> needed an bitshift for the returned value.  This is what we had been
-> doing with our old internal do_crc() code here:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/target/lio-target/iscsi_crc.c;hb=83559072b27eb8cd92abb9a3fc9be85018c5db06#l138
-> 
-> AFAICT there is still nothing that makes crypto/crc32c.c big endian
-> safe, unless I am overlooking something obvious..?
-> 
-
-Hi Mike and Hannes,
-
-So after a quick test using Open-iSCSI 32-bit x86 VM w/ v2.6.27 and
-LIO-Target 64-bit powerpc w/v2.6.36-rc3 with this libcrypto patch I do
-not see any HeaderDigest or DataDigest failures using the exiting
-slicing by 1x crypto/crc32c.c code on 64-bit BIG_ENDIAN.  While I am at
-it I will also try OpenSuse 11.2 and RHEL6 B2 x86_64 VMs for good
-measure.
-
-So the appropiate endian conversion does occur in chksum_final() and
-__chksum_finup() code.  My apologies for the earier confusion.
-
-Thanks again,
-
---nab
+T24gU2F0dXJkYXksIFNlcHRlbWJlciAxMSwgMjAxMCA4OjAzIEFNLCBKYW1lcyBCb3R0b21sZXkg
+d3JvdGU6DQo+ID4NCj4gPiBJTU8sIHRoaXMgcGF0Y2ggaXMgcmVhbGx5IG5lZWRlZC4gV2l0aG91
+dCBpdCB5b3UgcHJvYmFibHkgd2lsbCBub3QgYmUNCj4gPiBhYmxlIHRvIGJvb3QgYWZ0ZXIgYSBm
+cmVzaCBpbnN0YWxsYXRpb24gb2YgT1Mgd2hlbiB0aGVyZSBhcmUgbXVsdGlwbGUNCj4gPiBkcml2
+ZXMuDQo+IA0KPiBCdXQgdGhhdCdzIGFuIGluc3RhbGxlciBwcm9ibGVtLCBub3QgYSBrZXJuZWwg
+b25lLg0KDQoNClByb2JhYmx5IEknbSBub3QgZXhwbGFpbmluZyBpdCBjbGVhcmx5LiAgSSBwcmV0
+dHkgc3VyZSB0aGlzIGlzIGEgZGV2aWNlIGRyaXZlciBpc3N1ZS4NCg0KVGhlIGluc3RhbGxhdGlv
+biBuZWVkcyB0byBvY2N1ciBvbiB0aGUgc2FtZSBkcml2ZSB3aGljaCBCSU9TIGlzIHBsYW5uaW5n
+IHRvIGJvb3RpbmcgdG8uICAgIA0KDQpJbnN0YWxsZXIgdHlwaWNhbGx5IHVzZSB0aGUgZmlyc3Qg
+cmVwb3J0ZWQgZHJpdmUgdG8gcHV0IHRoZSBPUyBvbi4gIFNpbmNlIExTSSBjb250cm9sbGVyIGZp
+cm13YXJlIGRvZXMgZGlzY292ZXJ5LCB0aGVyZSBpcyBubyBndWFyYW50ZWUgd2hpY2ggaGFyZCBk
+cml2ZSBpcyBnb2luZyB0byBiZSByZXBvcnRlZCBmaXJzdC4gV2hhdCBJJ20gdHJ5aW5nIHRvIHNh
+eSBpcyBkaXNjb3ZlcnkgaXMgcmFuZG9tLCBhbmQgZHJpdmVzIGNhbiBiZSByZXBvcnRlZCBpbiBh
+bnkgb3JkZXIuICAgSWYgeW91IGhhdmUgMTAwIGhhcmQgZHJpdmVzIGluIGFuIGVuY2xvc3VyZSwg
+dGhlbiB0aGUgZmlyc3QgcmVwb3J0ZWQgZHJpdmUgY2FuIGJlIGFueSBvbmUgb2YgdGhlIDEwMCBk
+cml2ZXMuICBJZiB5b3UgbWFkZSBhIG1pc3Rha2UgYW4gZGlkbid0IGdldCBwdXQgT1Mgb250byB0
+aGUgc2FtZSBkcml2ZSBCSU9TIGlzIGJvb3RpbmcgdG8sIHRoZW4geW91ciBzY3Jld2VkIHRoZSBu
+ZXh0IHRpbWUgeW91IGJvb3QgdXAuDQoNClRoZSBib290IGRyaXZlIGluZm8gaXMgcGFzc2VkIGZy
+b20gQklPUyB0byBkcml2ZXIgdmlhIHRoZSBiaW9zIGNvbmZpZ3VyYXRpb24gcGFnZSBJIG1lbnRp
+b25lZCBpbiB0aGUgcHJldmlvdXMgZW1haWwuICBUaGUgZGV2aWNlIGRyaXZlciBtYWtlcyBzdXJl
+IHRoZSBmaXJzdCBoYXJkIGRyaXZlIHJlcG9ydGVkIGlzIGdvaW5nIHRvIHRoZSBkcml2ZSB5b3Vy
+IGJvb3RpbmcgdG8uICBUaHVzIHlvdSBuZWVkIHRvIHdhaXQgZm9yIGRpc2NvdmVyeSB0byBjb21w
+bGV0ZSBpbiBvcmRlciB0byBmaW5kIHRoZSBjb3JyZWN0IGRyaXZlLCB3aGljaCBpcyB3aGF0IHRo
+aXMgcGF0Y2ggaXMgYWxsIGFib3V0Lg0KDQo+IA0KPiA+ICAgVGhlIGlzc3VlIGlzIFJlZCBIYXQg
+b3IgU3VTRSBpcyBnb2luZyB0byBwbGFjZSB0aGUgbmV3IE9TIG9uIHRoZQ0KPiA+IGZpcnN0IHJl
+cG9ydGVkIGRyaXZlLCBlLmcuIC9kZXYvc2RhLiAgVGhpcyBib290IGRyaXZlIGluZm9ybWF0aW9u
+IGlzDQo+ID4gcGFzc2VkIGZyb20gdGhlIEJJT1MgdG8gdGhlIGRyaXZlciB2aWEgYSBjb25maWd1
+cmF0aW9uIHBhZ2UgY2FsbGVkDQo+ID4gYmlvcyBwYWdlIDIuDQo+IA0KPiBJIHRoaW5rIGJvdGgg
+aW5zdGFsbGVycyBhbHJlYWR5IHRha2UgdGhpcyBpbnRvIGFjY291bnQ6IGdydWIgZmluZHMgaXQN
+Cj4gd2hlbiBpdCBidWlsZHMgdGhlIG1hcHBpbmcgdGFibGUgZm9yIHRoZSBmaXJzdCB0aW1lLg0K
+DQpZZXMgaWYgQklPUyBib290cyB0byB0aGUgY29ycmVjdCBkcml2ZSBjb250YWluaW5nIHRoZSBP
+UyBhbmQgZ3J1YiwgdGhlbiBJIGFncmVlIHdpdGggZXZlcnl0aGluZyB5b3VyIHNheWluZy4NCg0K
+DQo+IA0KPiA+ICAgVGhlIGRyaXZlciBuZWVkcyB0byB3YWl0IGZvciBhbGwgZmlybXdhcmUgdG8g
+Y29tcGxldGUgZGlzY292ZXJ5LA0KPiA+IHRoZW4gc2VhcmNoIGZvciBib290IGRldmljZSBhcyBp
+bmRpY2F0ZWQgaW4gdGhlIGNvbmZpZyBwYWdlLCB0aGVuDQo+ID4gcmVwb3J0IGl0IGZpcnN0LiAg
+V2l0aG91dCB0aGUgcGF0Y2gsIHRoZXJlIGlzIG5vIGd1YXJhbnRlZSB3aGljaA0KPiBkcml2ZQ0K
+PiA+IG9yIHJhaWQgdm9sdW1lIGlzIGdldHRpbmcgcmVwb3J0ZWQgZmlyc3QuICBJbiBvdGhlciB3
+b3JkcyB0aGUgZGV2aWNlDQo+ID4gZHJpdmVyIGNvdWxkIG9mIHJlcG9ydGVkIGJpb3MgZHJpdmUg
+bG9jYXRlZCBhdCAweDgzIGFzIC9kZXYvc2RhLA0KPiA+IGluc3RlYWQgb2YgMHg4MCwgdGhlbiB3
+aGVuIHlvdSByZWJvb3QsIHRoZSBCSU9TIGlzIG5vdCBmaW5kaW5nIGJvb3QNCj4gPiBwYXJ0aXRp
+b24uIFRoZSBlbmQgdXNlciBjYW4gc2VsZWN0IHRoZSBib290IGRldmljZSBieSBnb2luZyBpbnRv
+IHRoZQ0KPiA+IEJJT1MgY29uZmlndXJhdGlvbiB1dGlsaXR5OyBlLmcuIGNvbnRyb2wgQy4NCj4g
+DQo+IEJ1dCB5b3UgZG9uJ3QgbmVlZCBpdCB0byBiZSByZXBvcnRlZCBmaXJzdC4gIFRoZSBkZWZh
+dWx0IGluc3RhbGwgb24NCj4gYm90aA0KPiBTTEVTIGFuZCBSSEVMIChhbmQgRmVkb3JhIGFuZCBv
+cGVuU1VTRSkgaXMgYnkgbGFiZWwuICBTbyBvbmNlIHdlIGdldA0KPiB0aGUNCj4gYm9vdCBkcml2
+ZSBmcm9tIHRoZSBtYXBwaW5nLCB3ZSBidWlsZCBpdHMgbGFiZWwgaW50byB0aGUgZ3J1YiBjb25m
+aWcNCj4gYW5kDQo+IGZzdGFiIGZpbGVzIGFuZCB3ZSBhbHdheXMgcnVuIGZyb20gaXQsIHJlZ2Fy
+ZGxlc3Mgb2YgdGhlIG9yZGVyIGl0DQo+IGFwcGVhcnMgaW4gdGhlIGJvb3R1cC4NCj4gDQoNClll
+cyBpZiBCSU9TIGJvb3RzIHRvIHRoZSBjb3JyZWN0IGRyaXZlIGNvbnRhaW5pbmcgdGhlIE9TLCB0
+aGVuIEkgYWdyZWUgdGhhdCBkZXZpY2UgbGFiZWxzLCBpZHMsIHBhdGgsIGFuZCB1dWlkICBhbGwg
+d29yay4NCg0K
