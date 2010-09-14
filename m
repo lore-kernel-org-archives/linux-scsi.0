@@ -1,68 +1,44 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [Bug 18252] spinlock lockup in __make_request <- submit_bio <-
-  ondemand_readahead
-Date: Tue, 14 Sep 2010 08:58:30 +0200
-Message-ID: <4C8F1D16.3040109@kernel.dk>
-References: <bug-18252-4803@https.bugzilla.kernel.org/>	<4C8B50F1.4020502@s5r6.in-berlin.de> <20100913144139.b9e18133.akpm@linux-foundation.org> <4C8F1CAB.7020004@s5r6.in-berlin.de>
+From: David Howells <dhowells@redhat.com>
+Subject: (unknown)
+Date: Tue, 14 Sep 2010 10:14:45 +0100
+Message-ID: <28081.1284455685@redhat.com>
+References: <cover.1284406638.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:44601 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751389Ab0ING6c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Sep 2010 02:58:32 -0400
-In-Reply-To: <4C8F1CAB.7020004@s5r6.in-berlin.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devel-bounces@linuxdriverproject.org>
+In-Reply-To: <cover.1284406638.git.joe@perches.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
+List-Post: <mailto:devel@linuxdriverproject.org>
+List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
+Sender: devel-bounces@linuxdriverproject.org
+Errors-To: devel-bounces@linuxdriverproject.org
+To: Joe Perches <joe@perches.com>
+Cc: Amit Kumar Salecha <amit.salecha@qlogic.com>, linux-fbdev@vger.kernel.org, linux-usb@vger.kernel.org, Karsten Keil <isdn@linux-pingi.de>, James Smart <james.smart@emulex.com>, linux-mips@linux-mips.org, "VMware,
+	Inc." <pv-drivers@vmware.com>, Bruce Allan <bruce.w.allan@intel.com>, PJ Waskiewicz <peter.p.waskiewicz.jr@intel.com>, Shreyas Bhatewara <sbhatewara@vmware.com>, alsa-devel@alsa-project.org, Jaroslav Kysela <perex@perex.cz>, dhowells@redhat.com, "James E.J. Bottomley" <James.Bottomley@suse.de>, Paul Mackerras <paulus@samba.org>, linux-i2c@vger.kernel.org, Brett Rudley <brudley@broadcom.com>, sparclinux@vger.kernel.org, devel@driverdev.osuosl.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, Florian Tobias Schandinat <FlorianSchandinat@gmx.de>, e1000-devel@lists.sourceforge.net, Jesse Brandeburg <jesse.brandeburg@intel.com>, linux-acpi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Florian Mickler <florian@mickler.org>, linux-kernel@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-On 2010-09-14 08:56, Stefan Richter wrote:
-> Andrew Morton wrote:
->>>> https://bugzilla.kernel.org/show_bug.cgi?id=18252
-> ...
->> What you've quoted above appears to be just the aftermath. 
->> https://bugzilla.kernel.org/attachment.cgi?id=29562 indicates that the
->> kernel earlier crashed in scsi code, perhaps under
->> scsi_setup_fs_cmnd().
->>
->> The question is: was that actually the first crash, or did an even
->> earlier one scroll off?
-> 
-> It happened overnight.  The screenshot
-> https://bugzilla.kernel.org/attachment.cgi?id=29562 shows that there was a lot
-> more logged before it.  When I saw it in the morning I assumed that the tail
-> was a repetition of the leading bug trace, but it seems I am mistaken.
-> 
-> Florian Mickler wrote:
->> There was an scsi-related use-after-free OOPS fixed recently and pulled 3 days
->> ago.  
->>
->> On Sat, 11 Sep 2010 19:07:44 +0000
->> James Bottomley <James.Bottomley@suse.de> wrote:
->>
->>> This includes the oops from use after free, a set of qla2xxx fixes, some
->>> misc warning cleanups from the recently introduced printk issue, an hpsa
->>> lockup fix and a medium removal bug in sd introduced by the BKL
->>> pushdown.
->>>
->>> The patch is available here:
->>>
->>> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
->>
->> Maybe you are seeing that?
->>
->> (reacting to the general-protection-fault preceded by scsi_init in the
->> attachment jpg)
-> 
-> Now that you point it out --- perhaps.  Though I haven't looked into the
-> mechanics of the now fixed scsi_ini_io use after free.
+Joe Perches <joe@perches.com> wrote:
 
-It seems the very likely explanation, since I can't see any other way that
-you would deadlock on the queue lock from that call trace if you haven't
-had someone else crash with the lock held already.
+> Using static const char foo[] = "bar" can save some
+> code and text space, so change the places where it's possible.
 
--- 
-Jens Axboe
+That's reasonable.
 
+> Also change the places that use
+> 	char foo[] = "barX";
+> 	...
+> 	foo[3] = value + '0';
+> where X is typically changed
+> 	char foo[sizeof("barX")];
+> 	...
+> 	sprintf(foo, "bar%c", value + '0');
+
+You haven't said what this gains.  I can see what it may cost, though
+(depending on how gcc loads foo[]).
+
+David
