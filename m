@@ -1,82 +1,32 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Blank DVD is not detected / cannot burn
-Date: Tue, 14 Sep 2010 07:40:19 -0500
-Message-ID: <1284468019.20409.14.camel@mulgrave.site>
-References: <4C8F5C3E.80909@canonical.com>
-	 <1284466724.20409.8.camel@mulgrave.site>  <4C8F6C2D.4070200@canonical.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [PATCH 0/17]: New SCSI target framework (SCST) with dev handlers
+ and 2 target drivers
+Date: Tue, 14 Sep 2010 18:36:30 +0400
+Message-ID: <4C8F886E.2080407@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37977 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752307Ab0INMkX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 14 Sep 2010 08:40:23 -0400
-In-Reply-To: <4C8F6C2D.4070200@canonical.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Jones <lee.jones@canonical.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-linux-scsi cc re-added, please don't drop ... others may know more than
-me.
+Hi All,
 
-On Tue, 2010-09-14 at 13:35 +0100, Lee Jones wrote:
-> On 14/09/10 13:18, James Bottomley wrote:
-> > On Tue, 2010-09-14 at 12:27 +0100, Lee Jones wrote:
-> >> A bug as been reported me to where some DVD-RW drives are unable to
-> >> detect blank DVDs. Apparently this is a regression issue, as the
-> >> reporting user is insisting that they used to be able to burn DVDs
-> >> using the same hardware.
-> >>
-> >> The reporting user provided this dmesg output. I believe they tried a
-> >> few different disks to gain this response.
-> > 
-> > You neglected to say what kernel?  I assume 2.6.35
-> 
-> The same results have been seen in 2.6.32 and 2.6.35.
+Please review this second iteration of the patch set of the new (although, perhaps, the oldest) SCSI target framework for Linux SCST with a set of dev handlers and 2 target drivers: for local access (scst_local) and for Infiniband SRP (srpt).
 
-OK, I'd still lay better odds on a burner program problem ... but since
-it's so old, a bisection is likely needed.  Which kernel actually
-worked?
+SCST is the most advanced and features rich SCSI target subsystem for Linux. It allows to build the highest performing devices and clusters delivering millions of IOPS. Many companies are using it as a foundation for their storage products and solutions. List of some of them you can find on http://scst.sourceforge.net/users.html. There are also many other who not yet added there or prefer for some reasons to not be listed on this page.
 
-James
+Detail description of SCST, its drivers and utilities you can find on SCST home page http://scst.sourceforge.net. Detail features list and comparison with other Linux target subsystems you can find on http://scst.sourceforge.net/comparison.html. Description of the SCST processing flow you can find in http://scst.sourceforge.net/scst_pg.html (especially see picture "The commands processing flow").
 
+The previous iteration of the SCST patch set you can find on http://lkml.org/lkml/2010/4/13/146. The first: http://lkml.org/lkml/2008/12/10/245.
 
-> >> I am pasting dmesg output from these attempts:
-> >> [ 3563.989601] sr 5:0:1:0: [sr0] Unhandled sense code
-> >> [ 3563.989606] sr 5:0:1:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> >> [ 3563.989609] sr 5:0:1:0: [sr0] Sense Key : Medium Error [current]
-> >> [ 3563.989614] sr 5:0:1:0: [sr0] ASC=0x10 <<vendor>> ASCQ=0x90
-> >> [ 3563.989621] sr 5:0:1:0: [sr0] CDB: Read(10): 28 00 00 05 6f 60 00 00 02 00
-> >> [ 3563.989629] end_request: I/O error, dev sr0, sector 1424768
-> >> [ 3563.989633] quiet_error: 3 callbacks suppressed
-> >> [ 3563.989636] Buffer I/O error on device sr0, logical block 178096
-> >> [ 3607.084661] sr 5:0:1:0: [sr0] Device not ready
-> >> [ 3607.084665] sr 5:0:1:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> >> [ 3607.084669] sr 5:0:1:0: [sr0] Sense Key : Not Ready [current]
-> >> [ 3607.084673] sr 5:0:1:0: [sr0] Add. Sense: Medium not present
-> >> [ 3607.084677] sr 5:0:1:0: [sr0] CDB: Read(10): 28 00 00 00 00 1e 00 00 02 00
-> >> [ 3607.084685] end_request: I/O error, dev sr0, sector 120
-> >> [ 3607.084690] Buffer I/O error on device sr0, logical block 15
-> >> [ 3607.090021] sr 5:0:1:0: [sr0] Device not ready
-> >> [ 3607.090023] sr 5:0:1:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-> >> [ 3607.090026] sr 5:0:1:0: [sr0] Sense Key : Not Ready [current]
-> >> [ 3607.090029] sr 5:0:1:0: [sr0] Add. Sense: Medium not present
-> >> [ 3607.090032] sr 5:0:1:0: [sr0] CDB: Read(10): 28 00 00 00 00 1e 00 00 02 00
-> >> [ 3607.090039] end_request: I/O error, dev sr0, sector 120
-> > 
-> > So these are all direct pass throughs.  That likely means the problem is
-> > in the setup on the burner.  If there's some filesystem above this,
-> > there was a Read/Write flag error in blk_rq_map_kern ... but that was
-> > introduced in 2.6.36-rc1.
-> > 
-> > The only recent changes to sr were the BLK pushdown and they were post
-> > 2.6.35.
-> > 
-> > James
-> > 
-> > 
-> 
+We believe that this iteration is fully mainline ready. The only piece missed for the drop in replacement for STGT is port of ibmvstgt driver to SCST. Bart Van Assche is working on it. You can find intermediate versions of it in the SCST SVN. You can find instructions how to have access to it on the SCST downloads page http://scst.sourceforge.net/downloads.html.
 
+This iteration for simplicity contains only 2 target drivers: for local access (scst_local) and SRP (ib_srpt). If SCST accepted, we will prepare and submit patches for other target drivers: for iSCSI, FCoE, QLogic Fibre Channel QLA 2xxx, Emulex Fibre Channel and FCoE, Marvell 88SE63xx/64xx/68xx/94xx SAS hardware.
 
+This patchset is for kernel 2.6.35. On request we will rebase it for any other kernel tree. Since SCST is quite self-contained and almost doesn't touch outside kernel code, there are no problems in it.
+
+Thanks,
+Vlad
