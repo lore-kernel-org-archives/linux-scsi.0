@@ -1,55 +1,64 @@
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: Re: [PATCH] SCSI: fix qla4xxx build on PPC
-Date: Tue, 14 Sep 2010 14:14:38 +0200
-Message-ID: <4C8F672E.6050504@suse.cz>
-References: <1284466375-9501-1-git-send-email-jslaby@suse.cz>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Blank DVD is not detected / cannot burn
+Date: Tue, 14 Sep 2010 07:18:44 -0500
+Message-ID: <1284466724.20409.8.camel@mulgrave.site>
+References: <4C8F5C3E.80909@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:63925 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753275Ab0INMOr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Sep 2010 08:14:47 -0400
-In-Reply-To: <1284466375-9501-1-git-send-email-jslaby@suse.cz>
+Received: from cantor.suse.de ([195.135.220.2]:59941 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751252Ab0INMSt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 14 Sep 2010 08:18:49 -0400
+In-Reply-To: <4C8F5C3E.80909@canonical.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Slaby <jslaby@suse.cz>
-Cc: James.Bottomley@suse.de, iscsi-driver@qlogic.com, linux-scsi@vger.kernel.org, jirislaby@gmail.com, linux-kernel@vger.kernel.org, Ravi Anand <ravi.anand@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+To: Lee Jones <lee.jones@canonical.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 09/14/2010 02:12 PM, Jiri Slaby wrote:
-> We use read/write[bslq] but do not include linux/io.h. This causes
-> build failures on PPC. Include that file.
-
-Just in case you want to include the failure:
-drivers/scsi/qla4xxx/ql4_nx.c: In function 'qla4_8xxx_pci_mem_read_direct':
-drivers/scsi/qla4xxx/ql4_nx.c:716:3: error: implicit declaration of
-function 'readq'
-drivers/scsi/qla4xxx/ql4_nx.c: In function 'qla4_8xxx_pci_mem_write_direct':
-drivers/scsi/qla4xxx/ql4_nx.c:787:3: error: implicit declaration of
-function 'writeq'
-
-> Signed-off-by: Jiri Slaby <jslaby@suse.cz>
-> Cc: Ravi Anand <ravi.anand@qlogic.com>
-> Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> ---
->  drivers/scsi/qla4xxx/ql4_nx.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
+On Tue, 2010-09-14 at 12:27 +0100, Lee Jones wrote:
+> A bug as been reported me to where some DVD-RW drives are unable to
+> detect blank DVDs. Apparently this is a regression issue, as the
+> reporting user is insisting that they used to be able to burn DVDs
+> using the same hardware.
 > 
-> diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-> index 5d4a382..449256f 100644
-> --- a/drivers/scsi/qla4xxx/ql4_nx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_nx.c
-> @@ -5,6 +5,7 @@
->   * See LICENSE.qla4xxx for copyright and licensing details.
->   */
->  #include <linux/delay.h>
-> +#include <linux/io.h>
->  #include <linux/pci.h>
->  #include "ql4_def.h"
->  #include "ql4_glbl.h"
+> The reporting user provided this dmesg output. I believe they tried a
+> few different disks to gain this response.
 
-thanks,
--- 
-js
-suse labs
+You neglected to say what kernel?  I assume 2.6.35
+
+> I am pasting dmesg output from these attempts:
+> [ 3563.989601] sr 5:0:1:0: [sr0] Unhandled sense code
+> [ 3563.989606] sr 5:0:1:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> [ 3563.989609] sr 5:0:1:0: [sr0] Sense Key : Medium Error [current]
+> [ 3563.989614] sr 5:0:1:0: [sr0] ASC=0x10 <<vendor>> ASCQ=0x90
+> [ 3563.989621] sr 5:0:1:0: [sr0] CDB: Read(10): 28 00 00 05 6f 60 00 00 02 00
+> [ 3563.989629] end_request: I/O error, dev sr0, sector 1424768
+> [ 3563.989633] quiet_error: 3 callbacks suppressed
+> [ 3563.989636] Buffer I/O error on device sr0, logical block 178096
+> [ 3607.084661] sr 5:0:1:0: [sr0] Device not ready
+> [ 3607.084665] sr 5:0:1:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> [ 3607.084669] sr 5:0:1:0: [sr0] Sense Key : Not Ready [current]
+> [ 3607.084673] sr 5:0:1:0: [sr0] Add. Sense: Medium not present
+> [ 3607.084677] sr 5:0:1:0: [sr0] CDB: Read(10): 28 00 00 00 00 1e 00 00 02 00
+> [ 3607.084685] end_request: I/O error, dev sr0, sector 120
+> [ 3607.084690] Buffer I/O error on device sr0, logical block 15
+> [ 3607.090021] sr 5:0:1:0: [sr0] Device not ready
+> [ 3607.090023] sr 5:0:1:0: [sr0] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+> [ 3607.090026] sr 5:0:1:0: [sr0] Sense Key : Not Ready [current]
+> [ 3607.090029] sr 5:0:1:0: [sr0] Add. Sense: Medium not present
+> [ 3607.090032] sr 5:0:1:0: [sr0] CDB: Read(10): 28 00 00 00 00 1e 00 00 02 00
+> [ 3607.090039] end_request: I/O error, dev sr0, sector 120
+
+So these are all direct pass throughs.  That likely means the problem is
+in the setup on the burner.  If there's some filesystem above this,
+there was a Read/Write flag error in blk_rq_map_kern ... but that was
+introduced in 2.6.36-rc1.
+
+The only recent changes to sr were the BLK pushdown and they were post
+2.6.35.
+
+James
+
+
