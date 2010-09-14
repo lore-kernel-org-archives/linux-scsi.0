@@ -1,80 +1,78 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH next 00/16] treewide: Use static const char * const where
-	possible
-Date: Mon, 13 Sep 2010 21:23:46 -0700
-Message-ID: <cover.1284435709.git.joe@perches.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces@linuxdriverproject.org>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
-List-Post: <mailto:devel@linuxdriverproject.org>
-List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
-	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
-Sender: devel-bounces@linuxdriverproject.org
-Errors-To: devel-bounces@linuxdriverproject.org
+Subject: [PATCH next 10/16] drivers/scsi: Use static const char * const where possible
+Date: Mon, 13 Sep 2010 21:23:56 -0700
+Message-ID: <3507174cc441fe502402e4e85e372eacb01a1f0c.1284435710.git.joe@perches.com>
+References: <cover.1284435709.git.joe@perches.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1284435709.git.joe@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: devel@driverdev.osuosl.org, alsa-devel@alsa-project.org, linux-usb@vger.kernel.org, linux-ia64@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, microblaze-uclinux@itee.uq.edu.au, linux-alpha@vger.kernel.org, linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com, dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-watchdog@vger.kernel.org
+Cc: Jing Huang <huangj@brocade.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, Ravi Anand <ravi.anand@qlogic.com>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, iscsi-driver@qlogic.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Convert the uses that should be const of
-	char *foo[] = {"bar", "baz"};
-to
-	const char * const foo[] = {"bar", "baz"};
-or
-	static const char * const foo[] = {"bar", "baz"};
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/bfa/rport.c        |    4 +++-
+ drivers/scsi/pcmcia/nsp_debug.c |    2 +-
+ drivers/scsi/qla2xxx/qla_nx.c   |    4 ++--
+ drivers/scsi/qla4xxx/ql4_nx.c   |    2 +-
+ 4 files changed, 7 insertions(+), 5 deletions(-)
 
-Joe Perches (16):
-  arch/alpha: Use static const char * const where possible
-  arch/ia64: Use static const char * const where possible
-  arch/microblaze: Use static const char * const where possible
-  arch/x86: Use static const char * const where possible
-  drivers/gpu: Use static const char * const where possible
-  drivers/isdn: Use static const char * const where possible
-  drivers/net: Use static const char * const where possible
-  drivers/net/pcmcia: Use static const char * const where possible
-  drivers/net/wireless: Use static const char * const where possible
-  drivers/scsi: Use static const char * const where possible
-  drivers/staging: Use static const char * const where possible
-  drivers/usb: Use static const char * const where possible
-  drivers/watchdog: Use static const char * const where possible
-  fs: Use static const char * const where possible
-  net/irda: Use static const char * const where possible
-  sound: Use static const char * const where possible
-
- arch/alpha/kernel/err_ev6.c                  |   12 +++++---
- arch/alpha/kernel/err_marvel.c               |   33 ++++++++++++------------
- arch/alpha/kernel/err_titan.c                |   35 ++++++++++++++-----------
- arch/alpha/kernel/osf_sys.c                  |    4 +-
- arch/ia64/kernel/palinfo.c                   |    2 +-
- arch/microblaze/kernel/heartbeat.c           |   10 +++---
- arch/microblaze/kernel/timer.c               |   12 ++++----
- arch/x86/kernel/smpboot.c                    |    2 +-
- arch/x86/kvm/mmu.c                           |    2 +-
- drivers/gpu/drm/ttm/ttm_page_alloc.c         |    4 ++-
- drivers/isdn/pcbit/edss1.c                   |    2 +-
- drivers/isdn/pcbit/edss1.h                   |    2 +-
- drivers/net/3c515.c                          |    4 ++-
- drivers/net/eth16i.c                         |    4 ++-
- drivers/net/pcmcia/3c589_cs.c                |    2 +-
- drivers/net/wireless/rt2x00/rt2x00debug.c    |    2 +-
- drivers/scsi/bfa/rport.c                     |    4 ++-
- drivers/scsi/pcmcia/nsp_debug.c              |    2 +-
- drivers/scsi/qla2xxx/qla_nx.c                |    4 +-
- drivers/scsi/qla4xxx/ql4_nx.c                |    2 +-
- drivers/staging/ath6kl/os/linux/ar6000_drv.c |   14 +++++-----
- drivers/staging/bcm/Debug.c                  |    5 ++-
- drivers/usb/host/oxu210hp-hcd.c              |    2 +-
- drivers/watchdog/machzwd.c                   |    2 +-
- fs/binfmt_flat.c                             |    4 ++-
- include/net/irda/irlan_event.h               |    2 +-
- net/irda/irlan/irlan_event.c                 |    2 +-
- sound/core/misc.c                            |    5 +---
- sound/core/pcm_native.c                      |    2 +-
- 29 files changed, 99 insertions(+), 83 deletions(-)
-
+diff --git a/drivers/scsi/bfa/rport.c b/drivers/scsi/bfa/rport.c
+index 9b4c2c9..803f29e 100644
+--- a/drivers/scsi/bfa/rport.c
++++ b/drivers/scsi/bfa/rport.c
+@@ -2068,7 +2068,9 @@ bfa_fcs_rport_aen_post(struct bfa_fcs_rport_s *rport,
+ 	wwn_t           rpwwn = rport->pwwn;
+ 	char            lpwwn_ptr[BFA_STRING_32];
+ 	char            rpwwn_ptr[BFA_STRING_32];
+-	char           *prio_str[] = { "unknown", "high", "medium", "low" };
++	static const char * const prio_str[] = {
++		"unknown", "high", "medium", "low"
++	};
+ 
+ 	wwn2str(lpwwn_ptr, lpwwn);
+ 	wwn2str(rpwwn_ptr, rpwwn);
+diff --git a/drivers/scsi/pcmcia/nsp_debug.c b/drivers/scsi/pcmcia/nsp_debug.c
+index 3c6ef64..dbd567c 100644
+--- a/drivers/scsi/pcmcia/nsp_debug.c
++++ b/drivers/scsi/pcmcia/nsp_debug.c
+@@ -147,7 +147,7 @@ static void show_phase(struct scsi_cmnd *SCpnt)
+ {
+ 	int i = SCpnt->SCp.phase;
+ 
+-	char *ph[] = {
++	static const char * const ph[] = {
+ 		"PH_UNDETERMINED",
+ 		"PH_ARBSTART",
+ 		"PH_SELSTART",
+diff --git a/drivers/scsi/qla2xxx/qla_nx.c b/drivers/scsi/qla2xxx/qla_nx.c
+index c5ac876..7525e95 100644
+--- a/drivers/scsi/qla2xxx/qla_nx.c
++++ b/drivers/scsi/qla2xxx/qla_nx.c
+@@ -327,8 +327,8 @@ unsigned qla82xx_crb_hub_agt[64] = {
+ };
+ 
+ /* Device states */
+-char *qdev_state[] = {
+-	 "Unknown",
++static const char * const qdev_state[] = {
++	"Unknown",
+ 	"Cold",
+ 	"Initializing",
+ 	"Ready",
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 5d4a382..77ee640 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -332,7 +332,7 @@ static unsigned qla4_8xxx_crb_hub_agt[64] = {
+ };
+ 
+ /* Device states */
+-static char *qdev_state[] = {
++static const char * const qdev_state[] = {
+ 	"Unknown",
+ 	"Cold",
+ 	"Initializing",
 -- 
 1.7.3.rc1
