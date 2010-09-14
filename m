@@ -1,76 +1,80 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH 1/3] mpt2sas: Wait for port enable to get complete
- before reporting devices to OS.
-Date: Mon, 13 Sep 2010 18:45:06 -0600
-Message-ID: <4565AEA676113A449269C2F3A549520F4918AF07@cosmail03.lsi.com>
-References: <20100804083355.GB13442@lsi.com>
-	 <1283704496.15944.1271.camel@mulgrave.site>
-	 <4565AEA676113A449269C2F3A549520F4918A80E@cosmail03.lsi.com>
- <1284213782.2986.15.camel@mulgrave.site>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH next 00/16] treewide: Use static const char * const where
+	possible
+Date: Mon, 13 Sep 2010 21:23:46 -0700
+Message-ID: <cover.1284435709.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:38205 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752003Ab0INApM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Sep 2010 20:45:12 -0400
-In-Reply-To: <1284213782.2986.15.camel@mulgrave.site>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
+List-Post: <mailto:devel@linuxdriverproject.org>
+List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
+Sender: devel-bounces@linuxdriverproject.org
+Errors-To: devel-bounces@linuxdriverproject.org
+To: linux-kernel@vger.kernel.org
+Cc: devel@driverdev.osuosl.org, alsa-devel@alsa-project.org, linux-usb@vger.kernel.org, linux-ia64@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, microblaze-uclinux@itee.uq.edu.au, linux-alpha@vger.kernel.org, linux-wireless@vger.kernel.org, users@rt2x00.serialmonkey.com, dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-watchdog@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-T24gU2F0dXJkYXksIFNlcHRlbWJlciAxMSwgMjAxMCA4OjAzIEFNLCBKYW1lcyBCb3R0b21sZXkg
-d3JvdGU6DQo+ID4NCj4gPiBJTU8sIHRoaXMgcGF0Y2ggaXMgcmVhbGx5IG5lZWRlZC4gV2l0aG91
-dCBpdCB5b3UgcHJvYmFibHkgd2lsbCBub3QgYmUNCj4gPiBhYmxlIHRvIGJvb3QgYWZ0ZXIgYSBm
-cmVzaCBpbnN0YWxsYXRpb24gb2YgT1Mgd2hlbiB0aGVyZSBhcmUgbXVsdGlwbGUNCj4gPiBkcml2
-ZXMuDQo+IA0KPiBCdXQgdGhhdCdzIGFuIGluc3RhbGxlciBwcm9ibGVtLCBub3QgYSBrZXJuZWwg
-b25lLg0KDQoNClByb2JhYmx5IEknbSBub3QgZXhwbGFpbmluZyBpdCBjbGVhcmx5LiAgSSBwcmV0
-dHkgc3VyZSB0aGlzIGlzIGEgZGV2aWNlIGRyaXZlciBpc3N1ZS4NCg0KVGhlIGluc3RhbGxhdGlv
-biBuZWVkcyB0byBvY2N1ciBvbiB0aGUgc2FtZSBkcml2ZSB3aGljaCBCSU9TIGlzIHBsYW5uaW5n
-IHRvIGJvb3RpbmcgdG8uICAgIA0KDQpJbnN0YWxsZXIgdHlwaWNhbGx5IHVzZSB0aGUgZmlyc3Qg
-cmVwb3J0ZWQgZHJpdmUgdG8gcHV0IHRoZSBPUyBvbi4gIFNpbmNlIExTSSBjb250cm9sbGVyIGZp
-cm13YXJlIGRvZXMgZGlzY292ZXJ5LCB0aGVyZSBpcyBubyBndWFyYW50ZWUgd2hpY2ggaGFyZCBk
-cml2ZSBpcyBnb2luZyB0byBiZSByZXBvcnRlZCBmaXJzdC4gV2hhdCBJJ20gdHJ5aW5nIHRvIHNh
-eSBpcyBkaXNjb3ZlcnkgaXMgcmFuZG9tLCBhbmQgZHJpdmVzIGNhbiBiZSByZXBvcnRlZCBpbiBh
-bnkgb3JkZXIuICAgSWYgeW91IGhhdmUgMTAwIGhhcmQgZHJpdmVzIGluIGFuIGVuY2xvc3VyZSwg
-dGhlbiB0aGUgZmlyc3QgcmVwb3J0ZWQgZHJpdmUgY2FuIGJlIGFueSBvbmUgb2YgdGhlIDEwMCBk
-cml2ZXMuICBJZiB5b3UgbWFkZSBhIG1pc3Rha2UgYW4gZGlkbid0IGdldCBwdXQgT1Mgb250byB0
-aGUgc2FtZSBkcml2ZSBCSU9TIGlzIGJvb3RpbmcgdG8sIHRoZW4geW91ciBzY3Jld2VkIHRoZSBu
-ZXh0IHRpbWUgeW91IGJvb3QgdXAuDQoNClRoZSBib290IGRyaXZlIGluZm8gaXMgcGFzc2VkIGZy
-b20gQklPUyB0byBkcml2ZXIgdmlhIHRoZSBiaW9zIGNvbmZpZ3VyYXRpb24gcGFnZSBJIG1lbnRp
-b25lZCBpbiB0aGUgcHJldmlvdXMgZW1haWwuICBUaGUgZGV2aWNlIGRyaXZlciBtYWtlcyBzdXJl
-IHRoZSBmaXJzdCBoYXJkIGRyaXZlIHJlcG9ydGVkIGlzIGdvaW5nIHRvIHRoZSBkcml2ZSB5b3Vy
-IGJvb3RpbmcgdG8uICBUaHVzIHlvdSBuZWVkIHRvIHdhaXQgZm9yIGRpc2NvdmVyeSB0byBjb21w
-bGV0ZSBpbiBvcmRlciB0byBmaW5kIHRoZSBjb3JyZWN0IGRyaXZlLCB3aGljaCBpcyB3aGF0IHRo
-aXMgcGF0Y2ggaXMgYWxsIGFib3V0Lg0KDQo+IA0KPiA+ICAgVGhlIGlzc3VlIGlzIFJlZCBIYXQg
-b3IgU3VTRSBpcyBnb2luZyB0byBwbGFjZSB0aGUgbmV3IE9TIG9uIHRoZQ0KPiA+IGZpcnN0IHJl
-cG9ydGVkIGRyaXZlLCBlLmcuIC9kZXYvc2RhLiAgVGhpcyBib290IGRyaXZlIGluZm9ybWF0aW9u
-IGlzDQo+ID4gcGFzc2VkIGZyb20gdGhlIEJJT1MgdG8gdGhlIGRyaXZlciB2aWEgYSBjb25maWd1
-cmF0aW9uIHBhZ2UgY2FsbGVkDQo+ID4gYmlvcyBwYWdlIDIuDQo+IA0KPiBJIHRoaW5rIGJvdGgg
-aW5zdGFsbGVycyBhbHJlYWR5IHRha2UgdGhpcyBpbnRvIGFjY291bnQ6IGdydWIgZmluZHMgaXQN
-Cj4gd2hlbiBpdCBidWlsZHMgdGhlIG1hcHBpbmcgdGFibGUgZm9yIHRoZSBmaXJzdCB0aW1lLg0K
-DQpZZXMgaWYgQklPUyBib290cyB0byB0aGUgY29ycmVjdCBkcml2ZSBjb250YWluaW5nIHRoZSBP
-UyBhbmQgZ3J1YiwgdGhlbiBJIGFncmVlIHdpdGggZXZlcnl0aGluZyB5b3VyIHNheWluZy4NCg0K
-DQo+IA0KPiA+ICAgVGhlIGRyaXZlciBuZWVkcyB0byB3YWl0IGZvciBhbGwgZmlybXdhcmUgdG8g
-Y29tcGxldGUgZGlzY292ZXJ5LA0KPiA+IHRoZW4gc2VhcmNoIGZvciBib290IGRldmljZSBhcyBp
-bmRpY2F0ZWQgaW4gdGhlIGNvbmZpZyBwYWdlLCB0aGVuDQo+ID4gcmVwb3J0IGl0IGZpcnN0LiAg
-V2l0aG91dCB0aGUgcGF0Y2gsIHRoZXJlIGlzIG5vIGd1YXJhbnRlZSB3aGljaA0KPiBkcml2ZQ0K
-PiA+IG9yIHJhaWQgdm9sdW1lIGlzIGdldHRpbmcgcmVwb3J0ZWQgZmlyc3QuICBJbiBvdGhlciB3
-b3JkcyB0aGUgZGV2aWNlDQo+ID4gZHJpdmVyIGNvdWxkIG9mIHJlcG9ydGVkIGJpb3MgZHJpdmUg
-bG9jYXRlZCBhdCAweDgzIGFzIC9kZXYvc2RhLA0KPiA+IGluc3RlYWQgb2YgMHg4MCwgdGhlbiB3
-aGVuIHlvdSByZWJvb3QsIHRoZSBCSU9TIGlzIG5vdCBmaW5kaW5nIGJvb3QNCj4gPiBwYXJ0aXRp
-b24uIFRoZSBlbmQgdXNlciBjYW4gc2VsZWN0IHRoZSBib290IGRldmljZSBieSBnb2luZyBpbnRv
-IHRoZQ0KPiA+IEJJT1MgY29uZmlndXJhdGlvbiB1dGlsaXR5OyBlLmcuIGNvbnRyb2wgQy4NCj4g
-DQo+IEJ1dCB5b3UgZG9uJ3QgbmVlZCBpdCB0byBiZSByZXBvcnRlZCBmaXJzdC4gIFRoZSBkZWZh
-dWx0IGluc3RhbGwgb24NCj4gYm90aA0KPiBTTEVTIGFuZCBSSEVMIChhbmQgRmVkb3JhIGFuZCBv
-cGVuU1VTRSkgaXMgYnkgbGFiZWwuICBTbyBvbmNlIHdlIGdldA0KPiB0aGUNCj4gYm9vdCBkcml2
-ZSBmcm9tIHRoZSBtYXBwaW5nLCB3ZSBidWlsZCBpdHMgbGFiZWwgaW50byB0aGUgZ3J1YiBjb25m
-aWcNCj4gYW5kDQo+IGZzdGFiIGZpbGVzIGFuZCB3ZSBhbHdheXMgcnVuIGZyb20gaXQsIHJlZ2Fy
-ZGxlc3Mgb2YgdGhlIG9yZGVyIGl0DQo+IGFwcGVhcnMgaW4gdGhlIGJvb3R1cC4NCj4gDQoNClll
-cyBpZiBCSU9TIGJvb3RzIHRvIHRoZSBjb3JyZWN0IGRyaXZlIGNvbnRhaW5pbmcgdGhlIE9TLCB0
-aGVuIEkgYWdyZWUgdGhhdCBkZXZpY2UgbGFiZWxzLCBpZHMsIHBhdGgsIGFuZCB1dWlkICBhbGwg
-d29yay4NCg0K
+Convert the uses that should be const of
+	char *foo[] = {"bar", "baz"};
+to
+	const char * const foo[] = {"bar", "baz"};
+or
+	static const char * const foo[] = {"bar", "baz"};
+
+Joe Perches (16):
+  arch/alpha: Use static const char * const where possible
+  arch/ia64: Use static const char * const where possible
+  arch/microblaze: Use static const char * const where possible
+  arch/x86: Use static const char * const where possible
+  drivers/gpu: Use static const char * const where possible
+  drivers/isdn: Use static const char * const where possible
+  drivers/net: Use static const char * const where possible
+  drivers/net/pcmcia: Use static const char * const where possible
+  drivers/net/wireless: Use static const char * const where possible
+  drivers/scsi: Use static const char * const where possible
+  drivers/staging: Use static const char * const where possible
+  drivers/usb: Use static const char * const where possible
+  drivers/watchdog: Use static const char * const where possible
+  fs: Use static const char * const where possible
+  net/irda: Use static const char * const where possible
+  sound: Use static const char * const where possible
+
+ arch/alpha/kernel/err_ev6.c                  |   12 +++++---
+ arch/alpha/kernel/err_marvel.c               |   33 ++++++++++++------------
+ arch/alpha/kernel/err_titan.c                |   35 ++++++++++++++-----------
+ arch/alpha/kernel/osf_sys.c                  |    4 +-
+ arch/ia64/kernel/palinfo.c                   |    2 +-
+ arch/microblaze/kernel/heartbeat.c           |   10 +++---
+ arch/microblaze/kernel/timer.c               |   12 ++++----
+ arch/x86/kernel/smpboot.c                    |    2 +-
+ arch/x86/kvm/mmu.c                           |    2 +-
+ drivers/gpu/drm/ttm/ttm_page_alloc.c         |    4 ++-
+ drivers/isdn/pcbit/edss1.c                   |    2 +-
+ drivers/isdn/pcbit/edss1.h                   |    2 +-
+ drivers/net/3c515.c                          |    4 ++-
+ drivers/net/eth16i.c                         |    4 ++-
+ drivers/net/pcmcia/3c589_cs.c                |    2 +-
+ drivers/net/wireless/rt2x00/rt2x00debug.c    |    2 +-
+ drivers/scsi/bfa/rport.c                     |    4 ++-
+ drivers/scsi/pcmcia/nsp_debug.c              |    2 +-
+ drivers/scsi/qla2xxx/qla_nx.c                |    4 +-
+ drivers/scsi/qla4xxx/ql4_nx.c                |    2 +-
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c |   14 +++++-----
+ drivers/staging/bcm/Debug.c                  |    5 ++-
+ drivers/usb/host/oxu210hp-hcd.c              |    2 +-
+ drivers/watchdog/machzwd.c                   |    2 +-
+ fs/binfmt_flat.c                             |    4 ++-
+ include/net/irda/irlan_event.h               |    2 +-
+ net/irda/irlan/irlan_event.c                 |    2 +-
+ sound/core/misc.c                            |    5 +---
+ sound/core/pcm_native.c                      |    2 +-
+ 29 files changed, 99 insertions(+), 83 deletions(-)
+
+-- 
+1.7.3.rc1
