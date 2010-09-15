@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 09/33] bfa: (Cleanup Patch) BFA FCS code consolidation / cleanup.
-Date: Wed, 15 Sep 2010 12:00:54 -0700
-Message-ID: <1284577254-16326-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 10/33] bfa: (Cleanup Patch) Remove the per BFA sub-module header files.
+Date: Wed, 15 Sep 2010 12:01:43 -0700
+Message-ID: <1284577303-16815-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57041 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57073 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755215Ab0IOTBy (ORCPT
+	by vger.kernel.org with ESMTP id S1755090Ab0IOTCq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2010 15:01:54 -0400
+	Wed, 15 Sep 2010 15:02:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -19,37 +19,31 @@ From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
 	- This patch is part of the BFA cleanup.
-	- Removing left over BFA FCS related files.
-	- fab.c, loop.c, n2n.c & vfapi.c will be merged to bfa_fcs.c
-	- fcptm.c will be removed.
-	- fcpim.c will be renamed as bfa_fcpim.c
-	- fcbuild.c will be renamed as bfa_fcbuild.c
-	- Removing the files first to make the review easier.
+	- Removing per BFA sub-module (sgpg/fcport/rport/uf/lps/fcxp) header files
+	  will be merging them to bfa_svc.h in the patchset.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/fab.c     |   62 --
- drivers/scsi/bfa/fcbuild.c | 1449 --------------------------------------------
- drivers/scsi/bfa/fcpim.c   |  824 -------------------------
- drivers/scsi/bfa/fcptm.c   |   68 --
- drivers/scsi/bfa/loop.c    |  213 -------
- drivers/scsi/bfa/n2n.c     |  105 ----
- drivers/scsi/bfa/vfapi.c   |  292 ---------
- 7 files changed, 0 insertions(+), 3013 deletions(-)
- delete mode 100644 drivers/scsi/bfa/fab.c
- delete mode 100644 drivers/scsi/bfa/fcbuild.c
- delete mode 100644 drivers/scsi/bfa/fcpim.c
- delete mode 100644 drivers/scsi/bfa/fcptm.c
- delete mode 100644 drivers/scsi/bfa/loop.c
- delete mode 100644 drivers/scsi/bfa/n2n.c
- delete mode 100644 drivers/scsi/bfa/vfapi.c
+ drivers/scsi/bfa/bfa_fcxp_priv.h  |  138 -------------------------------------
+ drivers/scsi/bfa/bfa_lps_priv.h   |   38 ----------
+ drivers/scsi/bfa/bfa_port_priv.h  |   94 -------------------------
+ drivers/scsi/bfa/bfa_rport_priv.h |   45 ------------
+ drivers/scsi/bfa/bfa_sgpg_priv.h  |   79 ---------------------
+ drivers/scsi/bfa/bfa_uf_priv.h    |   47 -------------
+ 6 files changed, 0 insertions(+), 441 deletions(-)
+ delete mode 100644 drivers/scsi/bfa/bfa_fcxp_priv.h
+ delete mode 100644 drivers/scsi/bfa/bfa_lps_priv.h
+ delete mode 100644 drivers/scsi/bfa/bfa_port_priv.h
+ delete mode 100644 drivers/scsi/bfa/bfa_rport_priv.h
+ delete mode 100644 drivers/scsi/bfa/bfa_sgpg_priv.h
+ delete mode 100644 drivers/scsi/bfa/bfa_uf_priv.h
 
-diff --git a/drivers/scsi/bfa/fab.c b/drivers/scsi/bfa/fab.c
+diff --git a/drivers/scsi/bfa/bfa_fcxp_priv.h b/drivers/scsi/bfa/bfa_fcxp_priv.h
 deleted file mode 100644
-index 7e3a4d5..0000000
---- a/drivers/scsi/bfa/fab.c
+index 4cda493..0000000
+--- a/drivers/scsi/bfa/bfa_fcxp_priv.h
 +++ /dev/null
-@@ -1,62 +0,0 @@
+@@ -1,138 +0,0 @@
 -/*
 - * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 - * All rights reserved
@@ -67,2635 +61,277 @@ index 7e3a4d5..0000000
 - * General Public License for more details.
 - */
 -
--#include <bfa.h>
+-#ifndef __BFA_FCXP_PRIV_H__
+-#define __BFA_FCXP_PRIV_H__
+-
+-#include <cs/bfa_sm.h>
+-#include <protocol/fc.h>
 -#include <bfa_svc.h>
--#include "fcs_lport.h"
--#include "fcs_rport.h"
--#include "lport_priv.h"
--
--/**
-- *  fab.c port fab implementation.
-- */
--
--/**
-- *  bfa_fcs_port_fab_public port fab public functions
-- */
--
--/**
-- *   Called by port to initialize fabric services of the base port.
-- */
--void
--bfa_fcs_port_fab_init(struct bfa_fcs_port_s *port)
--{
--	bfa_fcs_port_ns_init(port);
--	bfa_fcs_port_scn_init(port);
--	bfa_fcs_port_ms_init(port);
--}
--
--/**
-- *   Called by port to notify transition to online state.
-- */
--void
--bfa_fcs_port_fab_online(struct bfa_fcs_port_s *port)
--{
--	bfa_fcs_port_ns_online(port);
--	bfa_fcs_port_scn_online(port);
--}
--
--/**
-- *   Called by port to notify transition to offline state.
-- */
--void
--bfa_fcs_port_fab_offline(struct bfa_fcs_port_s *port)
--{
--	bfa_fcs_port_ns_offline(port);
--	bfa_fcs_port_scn_offline(port);
--	bfa_fcs_port_ms_offline(port);
--}
-diff --git a/drivers/scsi/bfa/fcbuild.c b/drivers/scsi/bfa/fcbuild.c
-deleted file mode 100644
-index fee5456..0000000
---- a/drivers/scsi/bfa/fcbuild.c
-+++ /dev/null
-@@ -1,1449 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--/*
-- * fcbuild.c - FC link service frame building and parsing routines
-- */
--
--#include <bfa_os_inc.h>
--#include "fcbuild.h"
--
--/*
-- * static build functions
-- */
--static void fc_els_rsp_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id);
--static void fc_bls_rsp_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id);
--static struct fchs_s   fc_els_req_tmpl;
--static struct fchs_s   fc_els_rsp_tmpl;
--static struct fchs_s   fc_bls_req_tmpl;
--static struct fchs_s   fc_bls_rsp_tmpl;
--static struct fc_ba_acc_s ba_acc_tmpl;
--static struct fc_logi_s plogi_tmpl;
--static struct fc_prli_s prli_tmpl;
--static struct fc_rrq_s rrq_tmpl;
--static struct fchs_s   fcp_fchs_tmpl;
--
--void
--fcbuild_init(void)
--{
--	/*
--	 * fc_els_req_tmpl
--	 */
--	fc_els_req_tmpl.routing = FC_RTG_EXT_LINK;
--	fc_els_req_tmpl.cat_info = FC_CAT_LD_REQUEST;
--	fc_els_req_tmpl.type = FC_TYPE_ELS;
--	fc_els_req_tmpl.f_ctl =
--		bfa_os_hton3b(FCTL_SEQ_INI | FCTL_FS_EXCH | FCTL_END_SEQ |
--			      FCTL_SI_XFER);
--	fc_els_req_tmpl.rx_id = FC_RXID_ANY;
--
--	/*
--	 * fc_els_rsp_tmpl
--	 */
--	fc_els_rsp_tmpl.routing = FC_RTG_EXT_LINK;
--	fc_els_rsp_tmpl.cat_info = FC_CAT_LD_REPLY;
--	fc_els_rsp_tmpl.type = FC_TYPE_ELS;
--	fc_els_rsp_tmpl.f_ctl =
--		bfa_os_hton3b(FCTL_EC_RESP | FCTL_SEQ_INI | FCTL_LS_EXCH |
--			      FCTL_END_SEQ | FCTL_SI_XFER);
--	fc_els_rsp_tmpl.rx_id = FC_RXID_ANY;
--
--	/*
--	 * fc_bls_req_tmpl
--	 */
--	fc_bls_req_tmpl.routing = FC_RTG_BASIC_LINK;
--	fc_bls_req_tmpl.type = FC_TYPE_BLS;
--	fc_bls_req_tmpl.f_ctl = bfa_os_hton3b(FCTL_END_SEQ | FCTL_SI_XFER);
--	fc_bls_req_tmpl.rx_id = FC_RXID_ANY;
--
--	/*
--	 * fc_bls_rsp_tmpl
--	 */
--	fc_bls_rsp_tmpl.routing = FC_RTG_BASIC_LINK;
--	fc_bls_rsp_tmpl.cat_info = FC_CAT_BA_ACC;
--	fc_bls_rsp_tmpl.type = FC_TYPE_BLS;
--	fc_bls_rsp_tmpl.f_ctl =
--		bfa_os_hton3b(FCTL_EC_RESP | FCTL_SEQ_INI | FCTL_LS_EXCH |
--			      FCTL_END_SEQ | FCTL_SI_XFER);
--	fc_bls_rsp_tmpl.rx_id = FC_RXID_ANY;
--
--	/*
--	 * ba_acc_tmpl
--	 */
--	ba_acc_tmpl.seq_id_valid = 0;
--	ba_acc_tmpl.low_seq_cnt = 0;
--	ba_acc_tmpl.high_seq_cnt = 0xFFFF;
--
--	/*
--	 * plogi_tmpl
--	 */
--	plogi_tmpl.csp.verhi = FC_PH_VER_PH_3;
--	plogi_tmpl.csp.verlo = FC_PH_VER_4_3;
--	plogi_tmpl.csp.bbcred = bfa_os_htons(0x0004);
--	plogi_tmpl.csp.ciro = 0x1;
--	plogi_tmpl.csp.cisc = 0x0;
--	plogi_tmpl.csp.altbbcred = 0x0;
--	plogi_tmpl.csp.conseq = bfa_os_htons(0x00FF);
--	plogi_tmpl.csp.ro_bitmap = bfa_os_htons(0x0002);
--	plogi_tmpl.csp.e_d_tov = bfa_os_htonl(2000);
--
--	plogi_tmpl.class3.class_valid = 1;
--	plogi_tmpl.class3.sequential = 1;
--	plogi_tmpl.class3.conseq = 0xFF;
--	plogi_tmpl.class3.ospx = 1;
--
--	/*
--	 * prli_tmpl
--	 */
--	prli_tmpl.command = FC_ELS_PRLI;
--	prli_tmpl.pglen = 0x10;
--	prli_tmpl.pagebytes = bfa_os_htons(0x0014);
--	prli_tmpl.parampage.type = FC_TYPE_FCP;
--	prli_tmpl.parampage.imagepair = 1;
--	prli_tmpl.parampage.servparams.rxrdisab = 1;
--
--	/*
--	 * rrq_tmpl
--	 */
--	rrq_tmpl.els_cmd.els_code = FC_ELS_RRQ;
--
--	/*
--	 * fcp_fchs_tmpl
--	 */
--	fcp_fchs_tmpl.routing = FC_RTG_FC4_DEV_DATA;
--	fcp_fchs_tmpl.cat_info = FC_CAT_UNSOLICIT_CMD;
--	fcp_fchs_tmpl.type = FC_TYPE_FCP;
--	fcp_fchs_tmpl.f_ctl =
--		bfa_os_hton3b(FCTL_FS_EXCH | FCTL_END_SEQ | FCTL_SI_XFER);
--	fcp_fchs_tmpl.seq_id = 1;
--	fcp_fchs_tmpl.rx_id = FC_RXID_ANY;
--}
--
--static void
--fc_gs_fchdr_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u32 ox_id)
--{
--	bfa_os_memset(fchs, 0, sizeof(struct fchs_s));
--
--	fchs->routing = FC_RTG_FC4_DEV_DATA;
--	fchs->cat_info = FC_CAT_UNSOLICIT_CTRL;
--	fchs->type = FC_TYPE_SERVICES;
--	fchs->f_ctl =
--		bfa_os_hton3b(FCTL_SEQ_INI | FCTL_FS_EXCH | FCTL_END_SEQ |
--			      FCTL_SI_XFER);
--	fchs->rx_id = FC_RXID_ANY;
--	fchs->d_id = (d_id);
--	fchs->s_id = (s_id);
--	fchs->ox_id = bfa_os_htons(ox_id);
--
--	/**
--	 * @todo no need to set ox_id for request
--	 *       no need to set rx_id for response
--	 */
--}
--
--void
--fc_els_req_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id)
--{
--	bfa_os_memcpy(fchs, &fc_els_req_tmpl, sizeof(struct fchs_s));
--	fchs->d_id = (d_id);
--	fchs->s_id = (s_id);
--	fchs->ox_id = bfa_os_htons(ox_id);
--}
--
--static void
--fc_els_rsp_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id)
--{
--	bfa_os_memcpy(fchs, &fc_els_rsp_tmpl, sizeof(struct fchs_s));
--	fchs->d_id = d_id;
--	fchs->s_id = s_id;
--	fchs->ox_id = ox_id;
--}
--
--enum fc_parse_status
--fc_els_rsp_parse(struct fchs_s *fchs, int len)
--{
--	struct fc_els_cmd_s   *els_cmd = (struct fc_els_cmd_s *) (fchs + 1);
--	struct fc_ls_rjt_s    *ls_rjt = (struct fc_ls_rjt_s *) els_cmd;
--
--	len = len;
--
--	switch (els_cmd->els_code) {
--	case FC_ELS_LS_RJT:
--		if (ls_rjt->reason_code == FC_LS_RJT_RSN_LOGICAL_BUSY)
--			return FC_PARSE_BUSY;
--		else
--			return FC_PARSE_FAILURE;
--
--	case FC_ELS_ACC:
--		return FC_PARSE_OK;
--	}
--	return FC_PARSE_OK;
--}
--
--static void
--fc_bls_rsp_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id)
--{
--	bfa_os_memcpy(fchs, &fc_bls_rsp_tmpl, sizeof(struct fchs_s));
--	fchs->d_id = d_id;
--	fchs->s_id = s_id;
--	fchs->ox_id = ox_id;
--}
--
--static          u16
--fc_plogi_x_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
--		 u16 ox_id, wwn_t port_name, wwn_t node_name,
--		 u16 pdu_size, u8 els_code)
--{
--	struct fc_logi_s     *plogi = (struct fc_logi_s *) (pld);
--
--	bfa_os_memcpy(plogi, &plogi_tmpl, sizeof(struct fc_logi_s));
--
--	plogi->els_cmd.els_code = els_code;
--	if (els_code == FC_ELS_PLOGI)
--		fc_els_req_build(fchs, d_id, s_id, ox_id);
--	else
--		fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--
--	plogi->csp.rxsz = plogi->class3.rxsz = bfa_os_htons(pdu_size);
--
--	bfa_os_memcpy(&plogi->port_name, &port_name, sizeof(wwn_t));
--	bfa_os_memcpy(&plogi->node_name, &node_name, sizeof(wwn_t));
--
--	return sizeof(struct fc_logi_s);
--}
--
--u16
--fc_flogi_build(struct fchs_s *fchs, struct fc_logi_s *flogi, u32 s_id,
--		u16 ox_id, wwn_t port_name, wwn_t node_name,
--		u16 pdu_size, u8 set_npiv, u8 set_auth,
--		u16 local_bb_credits)
--{
--	u32        d_id = bfa_os_hton3b(FC_FABRIC_PORT);
--	u32 	*vvl_info;
--
--	bfa_os_memcpy(flogi, &plogi_tmpl, sizeof(struct fc_logi_s));
--
--	flogi->els_cmd.els_code = FC_ELS_FLOGI;
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--
--	flogi->csp.rxsz = flogi->class3.rxsz = bfa_os_htons(pdu_size);
--	flogi->port_name = port_name;
--	flogi->node_name = node_name;
--
--	/*
--	 * Set the NPIV Capability Bit ( word 1, bit 31) of Common
--	 * Service Parameters.
--	 */
--	flogi->csp.ciro = set_npiv;
--
--	/* set AUTH capability */
--	flogi->csp.security = set_auth;
--
--	flogi->csp.bbcred = bfa_os_htons(local_bb_credits);
--
--	/* Set brcd token in VVL */
--	vvl_info = (u32 *)&flogi->vvl[0];
--
--	/* set the flag to indicate the presence of VVL */
--	flogi->csp.npiv_supp    = 1; /* @todo. field name is not correct */
--	vvl_info[0]	= bfa_os_htonl(FLOGI_VVL_BRCD);
--
--	return sizeof(struct fc_logi_s);
--}
--
--u16
--fc_flogi_acc_build(struct fchs_s *fchs, struct fc_logi_s *flogi, u32 s_id,
--		   u16 ox_id, wwn_t port_name, wwn_t node_name,
--		   u16 pdu_size, u16 local_bb_credits)
--{
--	u32        d_id = 0;
--
--	bfa_os_memcpy(flogi, &plogi_tmpl, sizeof(struct fc_logi_s));
--	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--
--	flogi->els_cmd.els_code = FC_ELS_ACC;
--	flogi->csp.rxsz = flogi->class3.rxsz = bfa_os_htons(pdu_size);
--	flogi->port_name = port_name;
--	flogi->node_name = node_name;
--
--	flogi->csp.bbcred = bfa_os_htons(local_bb_credits);
--
--	return sizeof(struct fc_logi_s);
--}
--
--u16
--fc_fdisc_build(struct fchs_s *fchs, struct fc_logi_s *flogi, u32 s_id,
--		u16 ox_id, wwn_t port_name, wwn_t node_name,
--		u16 pdu_size)
--{
--	u32        d_id = bfa_os_hton3b(FC_FABRIC_PORT);
--
--	bfa_os_memcpy(flogi, &plogi_tmpl, sizeof(struct fc_logi_s));
--
--	flogi->els_cmd.els_code = FC_ELS_FDISC;
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--
--	flogi->csp.rxsz = flogi->class3.rxsz = bfa_os_htons(pdu_size);
--	flogi->port_name = port_name;
--	flogi->node_name = node_name;
--
--	return sizeof(struct fc_logi_s);
--}
--
--u16
--fc_plogi_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
--	       u16 ox_id, wwn_t port_name, wwn_t node_name,
--	       u16 pdu_size)
--{
--	return fc_plogi_x_build(fchs, pld, d_id, s_id, ox_id, port_name,
--				node_name, pdu_size, FC_ELS_PLOGI);
--}
--
--u16
--fc_plogi_acc_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
--		   u16 ox_id, wwn_t port_name, wwn_t node_name,
--		   u16 pdu_size)
--{
--	return fc_plogi_x_build(fchs, pld, d_id, s_id, ox_id, port_name,
--				node_name, pdu_size, FC_ELS_ACC);
--}
--
--enum fc_parse_status
--fc_plogi_rsp_parse(struct fchs_s *fchs, int len, wwn_t port_name)
--{
--	struct fc_els_cmd_s   *els_cmd = (struct fc_els_cmd_s *) (fchs + 1);
--	struct fc_logi_s     *plogi;
--	struct fc_ls_rjt_s    *ls_rjt;
--
--	switch (els_cmd->els_code) {
--	case FC_ELS_LS_RJT:
--		ls_rjt = (struct fc_ls_rjt_s *) (fchs + 1);
--		if (ls_rjt->reason_code == FC_LS_RJT_RSN_LOGICAL_BUSY)
--			return FC_PARSE_BUSY;
--		else
--			return FC_PARSE_FAILURE;
--	case FC_ELS_ACC:
--		plogi = (struct fc_logi_s *) (fchs + 1);
--		if (len < sizeof(struct fc_logi_s))
--			return FC_PARSE_FAILURE;
--
--		if (!wwn_is_equal(plogi->port_name, port_name))
--			return FC_PARSE_FAILURE;
--
--		if (!plogi->class3.class_valid)
--			return FC_PARSE_FAILURE;
--
--		if (bfa_os_ntohs(plogi->class3.rxsz) < (FC_MIN_PDUSZ))
--			return FC_PARSE_FAILURE;
--
--		return FC_PARSE_OK;
--	default:
--		return FC_PARSE_FAILURE;
--	}
--}
--
--enum fc_parse_status
--fc_plogi_parse(struct fchs_s *fchs)
--{
--	struct fc_logi_s     *plogi = (struct fc_logi_s *) (fchs + 1);
--
--	if (plogi->class3.class_valid != 1)
--		return FC_PARSE_FAILURE;
--
--	if ((bfa_os_ntohs(plogi->class3.rxsz) < FC_MIN_PDUSZ)
--	    || (bfa_os_ntohs(plogi->class3.rxsz) > FC_MAX_PDUSZ)
--	    || (plogi->class3.rxsz == 0))
--		return FC_PARSE_FAILURE;
--
--	return FC_PARSE_OK;
--}
--
--u16
--fc_prli_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
--	      u16 ox_id)
--{
--	struct fc_prli_s      *prli = (struct fc_prli_s *) (pld);
--
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--	bfa_os_memcpy(prli, &prli_tmpl, sizeof(struct fc_prli_s));
--
--	prli->command = FC_ELS_PRLI;
--	prli->parampage.servparams.initiator     = 1;
--	prli->parampage.servparams.retry         = 1;
--	prli->parampage.servparams.rec_support   = 1;
--	prli->parampage.servparams.task_retry_id = 0;
--	prli->parampage.servparams.confirm       = 1;
--
--	return sizeof(struct fc_prli_s);
--}
--
--u16
--fc_prli_acc_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
--		  u16 ox_id, enum bfa_port_role role)
--{
--	struct fc_prli_s      *prli = (struct fc_prli_s *) (pld);
--
--	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--	bfa_os_memcpy(prli, &prli_tmpl, sizeof(struct fc_prli_s));
--
--	prli->command = FC_ELS_ACC;
--
--	if ((role & BFA_PORT_ROLE_FCP_TM) == BFA_PORT_ROLE_FCP_TM)
--		prli->parampage.servparams.target = 1;
--	else
--		prli->parampage.servparams.initiator = 1;
--
--	prli->parampage.rspcode = FC_PRLI_ACC_XQTD;
--
--	return sizeof(struct fc_prli_s);
--}
--
--enum fc_parse_status
--fc_prli_rsp_parse(struct fc_prli_s *prli, int len)
--{
--	if (len < sizeof(struct fc_prli_s))
--		return FC_PARSE_FAILURE;
--
--	if (prli->command != FC_ELS_ACC)
--		return FC_PARSE_FAILURE;
--
--	if ((prli->parampage.rspcode != FC_PRLI_ACC_XQTD)
--	    && (prli->parampage.rspcode != FC_PRLI_ACC_PREDEF_IMG))
--		return FC_PARSE_FAILURE;
--
--	if (prli->parampage.servparams.target != 1)
--		return FC_PARSE_FAILURE;
--
--	return FC_PARSE_OK;
--}
--
--enum fc_parse_status
--fc_prli_parse(struct fc_prli_s *prli)
--{
--	if (prli->parampage.type != FC_TYPE_FCP)
--		return FC_PARSE_FAILURE;
--
--	if (!prli->parampage.imagepair)
--		return FC_PARSE_FAILURE;
--
--	if (!prli->parampage.servparams.initiator)
--		return FC_PARSE_FAILURE;
--
--	return FC_PARSE_OK;
--}
--
--u16
--fc_logo_build(struct fchs_s *fchs, struct fc_logo_s *logo, u32 d_id,
--			u32 s_id, u16 ox_id, wwn_t port_name)
--{
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--
--	memset(logo, '\0', sizeof(struct fc_logo_s));
--	logo->els_cmd.els_code = FC_ELS_LOGO;
--	logo->nport_id = (s_id);
--	logo->orig_port_name = port_name;
--
--	return sizeof(struct fc_logo_s);
--}
--
--static          u16
--fc_adisc_x_build(struct fchs_s *fchs, struct fc_adisc_s *adisc, u32 d_id,
--		 u32 s_id, u16 ox_id, wwn_t port_name,
--		 wwn_t node_name, u8 els_code)
--{
--	memset(adisc, '\0', sizeof(struct fc_adisc_s));
--
--	adisc->els_cmd.els_code = els_code;
--
--	if (els_code == FC_ELS_ADISC)
--		fc_els_req_build(fchs, d_id, s_id, ox_id);
--	else
--		fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--
--	adisc->orig_HA = 0;
--	adisc->orig_port_name = port_name;
--	adisc->orig_node_name = node_name;
--	adisc->nport_id = (s_id);
--
--	return sizeof(struct fc_adisc_s);
--}
--
--u16
--fc_adisc_build(struct fchs_s *fchs, struct fc_adisc_s *adisc, u32 d_id,
--		u32 s_id, u16 ox_id, wwn_t port_name,
--		wwn_t node_name)
--{
--	return fc_adisc_x_build(fchs, adisc, d_id, s_id, ox_id, port_name,
--				node_name, FC_ELS_ADISC);
--}
--
--u16
--fc_adisc_acc_build(struct fchs_s *fchs, struct fc_adisc_s *adisc, u32 d_id,
--		   u32 s_id, u16 ox_id, wwn_t port_name,
--		   wwn_t node_name)
--{
--	return fc_adisc_x_build(fchs, adisc, d_id, s_id, ox_id, port_name,
--				node_name, FC_ELS_ACC);
--}
--
--enum fc_parse_status
--fc_adisc_rsp_parse(struct fc_adisc_s *adisc, int len, wwn_t port_name,
--				 wwn_t node_name)
--{
--
--	if (len < sizeof(struct fc_adisc_s))
--		return FC_PARSE_FAILURE;
--
--	if (adisc->els_cmd.els_code != FC_ELS_ACC)
--		return FC_PARSE_FAILURE;
--
--	if (!wwn_is_equal(adisc->orig_port_name, port_name))
--		return FC_PARSE_FAILURE;
--
--	return FC_PARSE_OK;
--}
--
--enum fc_parse_status
--fc_adisc_parse(struct fchs_s *fchs, void *pld, u32 host_dap,
--		 wwn_t node_name, wwn_t port_name)
--{
--	struct fc_adisc_s     *adisc = (struct fc_adisc_s *) pld;
--
--	if (adisc->els_cmd.els_code != FC_ELS_ACC)
--		return FC_PARSE_FAILURE;
--
--	if ((adisc->nport_id == (host_dap))
--	    && wwn_is_equal(adisc->orig_port_name, port_name)
--	    && wwn_is_equal(adisc->orig_node_name, node_name))
--		return FC_PARSE_OK;
--
--	return FC_PARSE_FAILURE;
--}
--
--enum fc_parse_status
--fc_pdisc_parse(struct fchs_s *fchs, wwn_t node_name, wwn_t port_name)
--{
--	struct fc_logi_s     *pdisc = (struct fc_logi_s *) (fchs + 1);
--
--	if (pdisc->class3.class_valid != 1)
--		return FC_PARSE_FAILURE;
--
--	if ((bfa_os_ntohs(pdisc->class3.rxsz) <
--		 (FC_MIN_PDUSZ - sizeof(struct fchs_s)))
--	    || (pdisc->class3.rxsz == 0))
--		return FC_PARSE_FAILURE;
--
--	if (!wwn_is_equal(pdisc->port_name, port_name))
--		return FC_PARSE_FAILURE;
--
--	if (!wwn_is_equal(pdisc->node_name, node_name))
--		return FC_PARSE_FAILURE;
--
--	return FC_PARSE_OK;
--}
--
--u16
--fc_abts_build(struct fchs_s *fchs, u32 d_id, u32 s_id, u16 ox_id)
--{
--	bfa_os_memcpy(fchs, &fc_bls_req_tmpl, sizeof(struct fchs_s));
--	fchs->cat_info = FC_CAT_ABTS;
--	fchs->d_id = (d_id);
--	fchs->s_id = (s_id);
--	fchs->ox_id = bfa_os_htons(ox_id);
--
--	return sizeof(struct fchs_s);
--}
--
--enum fc_parse_status
--fc_abts_rsp_parse(struct fchs_s *fchs, int len)
--{
--	if ((fchs->cat_info == FC_CAT_BA_ACC)
--	    || (fchs->cat_info == FC_CAT_BA_RJT))
--		return FC_PARSE_OK;
--
--	return FC_PARSE_FAILURE;
--}
--
--u16
--fc_rrq_build(struct fchs_s *fchs, struct fc_rrq_s *rrq, u32 d_id,
--			 u32 s_id, u16 ox_id, u16 rrq_oxid)
--{
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--
--	/*
--	 * build rrq payload
--	 */
--	bfa_os_memcpy(rrq, &rrq_tmpl, sizeof(struct fc_rrq_s));
--	rrq->s_id = (s_id);
--	rrq->ox_id = bfa_os_htons(rrq_oxid);
--	rrq->rx_id = FC_RXID_ANY;
--
--	return sizeof(struct fc_rrq_s);
--}
--
--u16
--fc_logo_acc_build(struct fchs_s *fchs, void *pld, u32 d_id, u32 s_id,
--		  u16 ox_id)
--{
--	struct fc_els_cmd_s   *acc = pld;
--
--	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--
--	memset(acc, 0, sizeof(struct fc_els_cmd_s));
--	acc->els_code = FC_ELS_ACC;
--
--	return sizeof(struct fc_els_cmd_s);
--}
--
--u16
--fc_ls_rjt_build(struct fchs_s *fchs, struct fc_ls_rjt_s *ls_rjt, u32 d_id,
--		u32 s_id, u16 ox_id, u8 reason_code,
--		u8 reason_code_expl)
--{
--	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--	memset(ls_rjt, 0, sizeof(struct fc_ls_rjt_s));
--
--	ls_rjt->els_cmd.els_code = FC_ELS_LS_RJT;
--	ls_rjt->reason_code = reason_code;
--	ls_rjt->reason_code_expl = reason_code_expl;
--	ls_rjt->vendor_unique = 0x00;
--
--	return sizeof(struct fc_ls_rjt_s);
--}
--
--u16
--fc_ba_acc_build(struct fchs_s *fchs, struct fc_ba_acc_s *ba_acc, u32 d_id,
--		u32 s_id, u16 ox_id, u16 rx_id)
--{
--	fc_bls_rsp_build(fchs, d_id, s_id, ox_id);
--
--	bfa_os_memcpy(ba_acc, &ba_acc_tmpl, sizeof(struct fc_ba_acc_s));
--
--	fchs->rx_id = rx_id;
--
--	ba_acc->ox_id = fchs->ox_id;
--	ba_acc->rx_id = fchs->rx_id;
--
--	return sizeof(struct fc_ba_acc_s);
--}
--
--u16
--fc_ls_acc_build(struct fchs_s *fchs, struct fc_els_cmd_s *els_cmd,
--			u32 d_id, u32 s_id, u16 ox_id)
--{
--	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--	memset(els_cmd, 0, sizeof(struct fc_els_cmd_s));
--	els_cmd->els_code = FC_ELS_ACC;
--
--	return sizeof(struct fc_els_cmd_s);
--}
--
--int
--fc_logout_params_pages(struct fchs_s *fc_frame, u8 els_code)
--{
--	int             num_pages = 0;
--	struct fc_prlo_s      *prlo;
--	struct fc_tprlo_s     *tprlo;
--
--	if (els_code == FC_ELS_PRLO) {
--		prlo = (struct fc_prlo_s *) (fc_frame + 1);
--		num_pages = (bfa_os_ntohs(prlo->payload_len) - 4) / 16;
--	} else {
--		tprlo = (struct fc_tprlo_s *) (fc_frame + 1);
--		num_pages = (bfa_os_ntohs(tprlo->payload_len) - 4) / 16;
--	}
--	return num_pages;
--}
--
--u16
--fc_tprlo_acc_build(struct fchs_s *fchs, struct fc_tprlo_acc_s *tprlo_acc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			int num_pages)
--{
--	int             page;
--
--	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--
--	memset(tprlo_acc, 0, (num_pages * 16) + 4);
--	tprlo_acc->command = FC_ELS_ACC;
--
--	tprlo_acc->page_len = 0x10;
--	tprlo_acc->payload_len = bfa_os_htons((num_pages * 16) + 4);
--
--	for (page = 0; page < num_pages; page++) {
--		tprlo_acc->tprlo_acc_params[page].opa_valid = 0;
--		tprlo_acc->tprlo_acc_params[page].rpa_valid = 0;
--		tprlo_acc->tprlo_acc_params[page].fc4type_csp = FC_TYPE_FCP;
--		tprlo_acc->tprlo_acc_params[page].orig_process_assc = 0;
--		tprlo_acc->tprlo_acc_params[page].resp_process_assc = 0;
--	}
--	return bfa_os_ntohs(tprlo_acc->payload_len);
--}
--
--u16
--fc_prlo_acc_build(struct fchs_s *fchs, struct fc_prlo_acc_s *prlo_acc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			int num_pages)
--{
--	int             page;
--
--	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--
--	memset(prlo_acc, 0, (num_pages * 16) + 4);
--	prlo_acc->command = FC_ELS_ACC;
--	prlo_acc->page_len = 0x10;
--	prlo_acc->payload_len = bfa_os_htons((num_pages * 16) + 4);
--
--	for (page = 0; page < num_pages; page++) {
--		prlo_acc->prlo_acc_params[page].opa_valid = 0;
--		prlo_acc->prlo_acc_params[page].rpa_valid = 0;
--		prlo_acc->prlo_acc_params[page].fc4type_csp = FC_TYPE_FCP;
--		prlo_acc->prlo_acc_params[page].orig_process_assc = 0;
--		prlo_acc->prlo_acc_params[page].resp_process_assc = 0;
--	}
--
--	return bfa_os_ntohs(prlo_acc->payload_len);
--}
--
--u16
--fc_rnid_build(struct fchs_s *fchs, struct fc_rnid_cmd_s *rnid, u32 d_id,
--			u32 s_id, u16 ox_id, u32 data_format)
--{
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--
--	memset(rnid, 0, sizeof(struct fc_rnid_cmd_s));
--
--	rnid->els_cmd.els_code = FC_ELS_RNID;
--	rnid->node_id_data_format = data_format;
--
--	return sizeof(struct fc_rnid_cmd_s);
--}
--
--u16
--fc_rnid_acc_build(struct fchs_s *fchs, struct fc_rnid_acc_s *rnid_acc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			u32 data_format,
--			struct fc_rnid_common_id_data_s *common_id_data,
--			struct fc_rnid_general_topology_data_s *gen_topo_data)
--{
--	memset(rnid_acc, 0, sizeof(struct fc_rnid_acc_s));
--
--	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--
--	rnid_acc->els_cmd.els_code = FC_ELS_ACC;
--	rnid_acc->node_id_data_format = data_format;
--	rnid_acc->common_id_data_length =
--			sizeof(struct fc_rnid_common_id_data_s);
--	rnid_acc->common_id_data = *common_id_data;
--
--	if (data_format == RNID_NODEID_DATA_FORMAT_DISCOVERY) {
--		rnid_acc->specific_id_data_length =
--			sizeof(struct fc_rnid_general_topology_data_s);
--		bfa_os_assign(rnid_acc->gen_topology_data, *gen_topo_data);
--		return sizeof(struct fc_rnid_acc_s);
--	} else {
--		return sizeof(struct fc_rnid_acc_s) -
--			sizeof(struct fc_rnid_general_topology_data_s);
--	}
--
--}
--
--u16
--fc_rpsc_build(struct fchs_s *fchs, struct fc_rpsc_cmd_s *rpsc, u32 d_id,
--			u32 s_id, u16 ox_id)
--{
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--
--	memset(rpsc, 0, sizeof(struct fc_rpsc_cmd_s));
--
--	rpsc->els_cmd.els_code = FC_ELS_RPSC;
--	return sizeof(struct fc_rpsc_cmd_s);
--}
--
--u16
--fc_rpsc2_build(struct fchs_s *fchs, struct fc_rpsc2_cmd_s *rpsc2,
--			u32 d_id, u32 s_id, u32 *pid_list,
--			u16 npids)
--{
--	u32 dctlr_id = FC_DOMAIN_CTRLR(bfa_os_hton3b(d_id));
--	int i = 0;
--
--	fc_els_req_build(fchs, bfa_os_hton3b(dctlr_id), s_id, 0);
--
--	memset(rpsc2, 0, sizeof(struct fc_rpsc2_cmd_s));
--
--	rpsc2->els_cmd.els_code = FC_ELS_RPSC;
--	rpsc2->token = bfa_os_htonl(FC_BRCD_TOKEN);
--	rpsc2->num_pids  = bfa_os_htons(npids);
--	for (i = 0; i < npids; i++)
--		rpsc2->pid_list[i].pid = pid_list[i];
--
--	return sizeof(struct fc_rpsc2_cmd_s) + ((npids - 1) *
--			(sizeof(u32)));
--}
--
--u16
--fc_rpsc_acc_build(struct fchs_s *fchs, struct fc_rpsc_acc_s *rpsc_acc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			struct fc_rpsc_speed_info_s *oper_speed)
--{
--	memset(rpsc_acc, 0, sizeof(struct fc_rpsc_acc_s));
--
--	fc_els_rsp_build(fchs, d_id, s_id, ox_id);
--
--	rpsc_acc->command = FC_ELS_ACC;
--	rpsc_acc->num_entries = bfa_os_htons(1);
--
--	rpsc_acc->speed_info[0].port_speed_cap =
--		bfa_os_htons(oper_speed->port_speed_cap);
--
--	rpsc_acc->speed_info[0].port_op_speed =
--		bfa_os_htons(oper_speed->port_op_speed);
--
--	return sizeof(struct fc_rpsc_acc_s);
--
--}
--
--/*
-- * TBD -
-- * . get rid of unnecessary memsets
-- */
--
--u16
--fc_logo_rsp_parse(struct fchs_s *fchs, int len)
--{
--	struct fc_els_cmd_s   *els_cmd = (struct fc_els_cmd_s *) (fchs + 1);
--
--	len = len;
--	if (els_cmd->els_code != FC_ELS_ACC)
--		return FC_PARSE_FAILURE;
--
--	return FC_PARSE_OK;
--}
--
--u16
--fc_pdisc_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id, wwn_t port_name, wwn_t node_name,
--			u16 pdu_size)
--{
--	struct fc_logi_s     *pdisc = (struct fc_logi_s *) (fchs + 1);
--
--	bfa_os_memcpy(pdisc, &plogi_tmpl, sizeof(struct fc_logi_s));
--
--	pdisc->els_cmd.els_code = FC_ELS_PDISC;
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--
--	pdisc->csp.rxsz = pdisc->class3.rxsz = bfa_os_htons(pdu_size);
--	pdisc->port_name = port_name;
--	pdisc->node_name = node_name;
--
--	return sizeof(struct fc_logi_s);
--}
--
--u16
--fc_pdisc_rsp_parse(struct fchs_s *fchs, int len, wwn_t port_name)
--{
--	struct fc_logi_s     *pdisc = (struct fc_logi_s *) (fchs + 1);
--
--	if (len < sizeof(struct fc_logi_s))
--		return FC_PARSE_LEN_INVAL;
--
--	if (pdisc->els_cmd.els_code != FC_ELS_ACC)
--		return FC_PARSE_ACC_INVAL;
--
--	if (!wwn_is_equal(pdisc->port_name, port_name))
--		return FC_PARSE_PWWN_NOT_EQUAL;
--
--	if (!pdisc->class3.class_valid)
--		return FC_PARSE_NWWN_NOT_EQUAL;
--
--	if (bfa_os_ntohs(pdisc->class3.rxsz) < (FC_MIN_PDUSZ))
--		return FC_PARSE_RXSZ_INVAL;
--
--	return FC_PARSE_OK;
--}
--
--u16
--fc_prlo_build(struct fchs_s *fchs, u32 d_id, u32 s_id, u16 ox_id,
--	      int num_pages)
--{
--	struct fc_prlo_s      *prlo = (struct fc_prlo_s *) (fchs + 1);
--	int             page;
--
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--	memset(prlo, 0, (num_pages * 16) + 4);
--	prlo->command = FC_ELS_PRLO;
--	prlo->page_len = 0x10;
--	prlo->payload_len = bfa_os_htons((num_pages * 16) + 4);
--
--	for (page = 0; page < num_pages; page++) {
--		prlo->prlo_params[page].type = FC_TYPE_FCP;
--		prlo->prlo_params[page].opa_valid = 0;
--		prlo->prlo_params[page].rpa_valid = 0;
--		prlo->prlo_params[page].orig_process_assc = 0;
--		prlo->prlo_params[page].resp_process_assc = 0;
--	}
--
--	return bfa_os_ntohs(prlo->payload_len);
--}
--
--u16
--fc_prlo_rsp_parse(struct fchs_s *fchs, int len)
--{
--	struct fc_prlo_acc_s  *prlo = (struct fc_prlo_acc_s *) (fchs + 1);
--	int             num_pages = 0;
--	int             page = 0;
--
--	len = len;
--
--	if (prlo->command != FC_ELS_ACC)
--		return FC_PARSE_FAILURE;
--
--	num_pages = ((bfa_os_ntohs(prlo->payload_len)) - 4) / 16;
--
--	for (page = 0; page < num_pages; page++) {
--		if (prlo->prlo_acc_params[page].type != FC_TYPE_FCP)
--			return FC_PARSE_FAILURE;
--
--		if (prlo->prlo_acc_params[page].opa_valid != 0)
--			return FC_PARSE_FAILURE;
--
--		if (prlo->prlo_acc_params[page].rpa_valid != 0)
--			return FC_PARSE_FAILURE;
--
--		if (prlo->prlo_acc_params[page].orig_process_assc != 0)
--			return FC_PARSE_FAILURE;
--
--		if (prlo->prlo_acc_params[page].resp_process_assc != 0)
--			return FC_PARSE_FAILURE;
--	}
--	return FC_PARSE_OK;
--
--}
--
--u16
--fc_tprlo_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id, int num_pages,
--			enum fc_tprlo_type tprlo_type, u32 tpr_id)
--{
--	struct fc_tprlo_s     *tprlo = (struct fc_tprlo_s *) (fchs + 1);
--	int             page;
--
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--	memset(tprlo, 0, (num_pages * 16) + 4);
--	tprlo->command = FC_ELS_TPRLO;
--	tprlo->page_len = 0x10;
--	tprlo->payload_len = bfa_os_htons((num_pages * 16) + 4);
--
--	for (page = 0; page < num_pages; page++) {
--		tprlo->tprlo_params[page].type = FC_TYPE_FCP;
--		tprlo->tprlo_params[page].opa_valid = 0;
--		tprlo->tprlo_params[page].rpa_valid = 0;
--		tprlo->tprlo_params[page].orig_process_assc = 0;
--		tprlo->tprlo_params[page].resp_process_assc = 0;
--		if (tprlo_type == FC_GLOBAL_LOGO) {
--			tprlo->tprlo_params[page].global_process_logout = 1;
--		} else if (tprlo_type == FC_TPR_LOGO) {
--			tprlo->tprlo_params[page].tpo_nport_valid = 1;
--			tprlo->tprlo_params[page].tpo_nport_id = (tpr_id);
--		}
--	}
--
--	return bfa_os_ntohs(tprlo->payload_len);
--}
--
--u16
--fc_tprlo_rsp_parse(struct fchs_s *fchs, int len)
--{
--	struct fc_tprlo_acc_s *tprlo = (struct fc_tprlo_acc_s *) (fchs + 1);
--	int             num_pages = 0;
--	int             page = 0;
--
--	len = len;
--
--	if (tprlo->command != FC_ELS_ACC)
--		return FC_PARSE_ACC_INVAL;
--
--	num_pages = (bfa_os_ntohs(tprlo->payload_len) - 4) / 16;
--
--	for (page = 0; page < num_pages; page++) {
--		if (tprlo->tprlo_acc_params[page].type != FC_TYPE_FCP)
--			return FC_PARSE_NOT_FCP;
--		if (tprlo->tprlo_acc_params[page].opa_valid != 0)
--			return FC_PARSE_OPAFLAG_INVAL;
--		if (tprlo->tprlo_acc_params[page].rpa_valid != 0)
--			return FC_PARSE_RPAFLAG_INVAL;
--		if (tprlo->tprlo_acc_params[page].orig_process_assc != 0)
--			return FC_PARSE_OPA_INVAL;
--		if (tprlo->tprlo_acc_params[page].resp_process_assc != 0)
--			return FC_PARSE_RPA_INVAL;
--	}
--	return FC_PARSE_OK;
--}
--
--enum fc_parse_status
--fc_rrq_rsp_parse(struct fchs_s *fchs, int len)
--{
--	struct fc_els_cmd_s   *els_cmd = (struct fc_els_cmd_s *) (fchs + 1);
--
--	len = len;
--	if (els_cmd->els_code != FC_ELS_ACC)
--		return FC_PARSE_FAILURE;
--
--	return FC_PARSE_OK;
--}
--
--u16
--fc_ba_rjt_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id, u32 reason_code,
--			u32 reason_expl)
--{
--	struct fc_ba_rjt_s    *ba_rjt = (struct fc_ba_rjt_s *) (fchs + 1);
--
--	fc_bls_rsp_build(fchs, d_id, s_id, ox_id);
--
--	fchs->cat_info = FC_CAT_BA_RJT;
--	ba_rjt->reason_code = reason_code;
--	ba_rjt->reason_expl = reason_expl;
--	return sizeof(struct fc_ba_rjt_s);
--}
--
--static void
--fc_gs_cthdr_build(struct ct_hdr_s *cthdr, u32 s_id, u16 cmd_code)
--{
--	bfa_os_memset(cthdr, 0, sizeof(struct ct_hdr_s));
--	cthdr->rev_id = CT_GS3_REVISION;
--	cthdr->gs_type = CT_GSTYPE_DIRSERVICE;
--	cthdr->gs_sub_type = CT_GSSUBTYPE_NAMESERVER;
--	cthdr->cmd_rsp_code = bfa_os_htons(cmd_code);
--}
--
--static void
--fc_gs_fdmi_cthdr_build(struct ct_hdr_s *cthdr, u32 s_id, u16 cmd_code)
--{
--	bfa_os_memset(cthdr, 0, sizeof(struct ct_hdr_s));
--	cthdr->rev_id = CT_GS3_REVISION;
--	cthdr->gs_type = CT_GSTYPE_MGMTSERVICE;
--	cthdr->gs_sub_type = CT_GSSUBTYPE_HBA_MGMTSERVER;
--	cthdr->cmd_rsp_code = bfa_os_htons(cmd_code);
--}
--
--static void
--fc_gs_ms_cthdr_build(struct ct_hdr_s *cthdr, u32 s_id, u16 cmd_code,
--					 u8 sub_type)
--{
--	bfa_os_memset(cthdr, 0, sizeof(struct ct_hdr_s));
--	cthdr->rev_id = CT_GS3_REVISION;
--	cthdr->gs_type = CT_GSTYPE_MGMTSERVICE;
--	cthdr->gs_sub_type = sub_type;
--	cthdr->cmd_rsp_code = bfa_os_htons(cmd_code);
--}
--
--u16
--fc_gidpn_build(struct fchs_s *fchs, void *pyld, u32 s_id, u16 ox_id,
--	       wwn_t port_name)
--{
--
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_gidpn_req_s *gidpn =
--			(struct fcgs_gidpn_req_s *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, ox_id);
--	fc_gs_cthdr_build(cthdr, s_id, GS_GID_PN);
--
--	bfa_os_memset(gidpn, 0, sizeof(struct fcgs_gidpn_req_s));
--	gidpn->port_name = port_name;
--	return sizeof(struct fcgs_gidpn_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_gpnid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u16 ox_id,
--	       u32 port_id)
--{
--
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	fcgs_gpnid_req_t *gpnid = (fcgs_gpnid_req_t *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, ox_id);
--	fc_gs_cthdr_build(cthdr, s_id, GS_GPN_ID);
--
--	bfa_os_memset(gpnid, 0, sizeof(fcgs_gpnid_req_t));
--	gpnid->dap = port_id;
--	return sizeof(fcgs_gpnid_req_t) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_gnnid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u16 ox_id,
--	       u32 port_id)
--{
--
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	fcgs_gnnid_req_t *gnnid = (fcgs_gnnid_req_t *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, ox_id);
--	fc_gs_cthdr_build(cthdr, s_id, GS_GNN_ID);
--
--	bfa_os_memset(gnnid, 0, sizeof(fcgs_gnnid_req_t));
--	gnnid->dap = port_id;
--	return sizeof(fcgs_gnnid_req_t) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_ct_rsp_parse(struct ct_hdr_s *cthdr)
--{
--	if (bfa_os_ntohs(cthdr->cmd_rsp_code) != CT_RSP_ACCEPT) {
--		if (cthdr->reason_code == CT_RSN_LOGICAL_BUSY)
--			return FC_PARSE_BUSY;
--		else
--			return FC_PARSE_FAILURE;
--	}
--
--	return FC_PARSE_OK;
--}
--
--u16
--fc_scr_build(struct fchs_s *fchs, struct fc_scr_s *scr, u8 set_br_reg,
--			u32 s_id, u16 ox_id)
--{
--	u32        d_id = bfa_os_hton3b(FC_FABRIC_CONTROLLER);
--
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--
--	bfa_os_memset(scr, 0, sizeof(struct fc_scr_s));
--	scr->command = FC_ELS_SCR;
--	scr->reg_func = FC_SCR_REG_FUNC_FULL;
--	if (set_br_reg)
--		scr->vu_reg_func = FC_VU_SCR_REG_FUNC_FABRIC_NAME_CHANGE;
--
--	return sizeof(struct fc_scr_s);
--}
--
--u16
--fc_rscn_build(struct fchs_s *fchs, struct fc_rscn_pl_s *rscn, u32 s_id,
--			u16 ox_id)
--{
--	u32        d_id = bfa_os_hton3b(FC_FABRIC_CONTROLLER);
--	u16        payldlen;
--
--	fc_els_req_build(fchs, d_id, s_id, ox_id);
--	rscn->command = FC_ELS_RSCN;
--	rscn->pagelen = sizeof(rscn->event[0]);
--
--	payldlen = sizeof(u32) + rscn->pagelen;
--	rscn->payldlen = bfa_os_htons(payldlen);
--
--	rscn->event[0].format = FC_RSCN_FORMAT_PORTID;
--	rscn->event[0].portid = s_id;
--
--	return sizeof(struct fc_rscn_pl_s);
--}
--
--u16
--fc_rftid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u16 ox_id,
--	       enum bfa_port_role roles)
--{
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_rftid_req_s *rftid =
--			(struct fcgs_rftid_req_s *) (cthdr + 1);
--	u32        type_value, d_id = bfa_os_hton3b(FC_NAME_SERVER);
--	u8         index;
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, ox_id);
--	fc_gs_cthdr_build(cthdr, s_id, GS_RFT_ID);
--
--	bfa_os_memset(rftid, 0, sizeof(struct fcgs_rftid_req_s));
--
--	rftid->dap = s_id;
--
--	/* By default, FCP FC4 Type is registered */
--	index = FC_TYPE_FCP >> 5;
--	type_value = 1 << (FC_TYPE_FCP % 32);
--	rftid->fc4_type[index] = bfa_os_htonl(type_value);
--
--	if (roles & BFA_PORT_ROLE_FCP_IPFC) {
--		index = FC_TYPE_IP >> 5;
--		type_value = 1 << (FC_TYPE_IP % 32);
--		rftid->fc4_type[index] |= bfa_os_htonl(type_value);
--	}
--
--	return sizeof(struct fcgs_rftid_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_rftid_build_sol(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u16 ox_id, u8 *fc4_bitmap,
--			u32 bitmap_size)
--{
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_rftid_req_s *rftid =
--			(struct fcgs_rftid_req_s *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, ox_id);
--	fc_gs_cthdr_build(cthdr, s_id, GS_RFT_ID);
--
--	bfa_os_memset(rftid, 0, sizeof(struct fcgs_rftid_req_s));
--
--	rftid->dap = s_id;
--	bfa_os_memcpy((void *)rftid->fc4_type, (void *)fc4_bitmap,
--			(bitmap_size < 32 ? bitmap_size : 32));
--
--	return sizeof(struct fcgs_rftid_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_rffid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u16 ox_id,
--	       u8 fc4_type, u8 fc4_ftrs)
--{
--	struct ct_hdr_s         *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_rffid_req_s *rffid =
--			(struct fcgs_rffid_req_s *) (cthdr + 1);
--	u32         d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, ox_id);
--	fc_gs_cthdr_build(cthdr, s_id, GS_RFF_ID);
--
--	bfa_os_memset(rffid, 0, sizeof(struct fcgs_rffid_req_s));
--
--	rffid->dap 		 	= s_id;
--	rffid->fc4ftr_bits  = fc4_ftrs;
--	rffid->fc4_type		= fc4_type;
--
--	return sizeof(struct fcgs_rffid_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_rspnid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u16 ox_id,
--		u8 *name)
--{
--
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_rspnid_req_s *rspnid =
--			(struct fcgs_rspnid_req_s *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, ox_id);
--	fc_gs_cthdr_build(cthdr, s_id, GS_RSPN_ID);
--
--	bfa_os_memset(rspnid, 0, sizeof(struct fcgs_rspnid_req_s));
--
--	rspnid->dap = s_id;
--	rspnid->spn_len = (u8) strlen((char *)name);
--	strncpy((char *)rspnid->spn, (char *)name, rspnid->spn_len);
--
--	return sizeof(struct fcgs_rspnid_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_gid_ft_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u8 fc4_type)
--{
--
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_gidft_req_s *gidft =
--			(struct fcgs_gidft_req_s *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
--
--	fc_gs_cthdr_build(cthdr, s_id, GS_GID_FT);
--
--	bfa_os_memset(gidft, 0, sizeof(struct fcgs_gidft_req_s));
--	gidft->fc4_type = fc4_type;
--	gidft->domain_id = 0;
--	gidft->area_id = 0;
--
--	return sizeof(struct fcgs_gidft_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_rpnid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u32 port_id,
--	       wwn_t port_name)
--{
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_rpnid_req_s *rpnid =
--			(struct fcgs_rpnid_req_s *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
--	fc_gs_cthdr_build(cthdr, s_id, GS_RPN_ID);
--
--	bfa_os_memset(rpnid, 0, sizeof(struct fcgs_rpnid_req_s));
--	rpnid->port_id = port_id;
--	rpnid->port_name = port_name;
--
--	return sizeof(struct fcgs_rpnid_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_rnnid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u32 port_id,
--	       wwn_t node_name)
--{
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_rnnid_req_s *rnnid =
--			(struct fcgs_rnnid_req_s *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
--	fc_gs_cthdr_build(cthdr, s_id, GS_RNN_ID);
--
--	bfa_os_memset(rnnid, 0, sizeof(struct fcgs_rnnid_req_s));
--	rnnid->port_id = port_id;
--	rnnid->node_name = node_name;
--
--	return sizeof(struct fcgs_rnnid_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_rcsid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u32 port_id,
--	       u32 cos)
--{
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_rcsid_req_s *rcsid =
--			(struct fcgs_rcsid_req_s *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
--	fc_gs_cthdr_build(cthdr, s_id, GS_RCS_ID);
--
--	bfa_os_memset(rcsid, 0, sizeof(struct fcgs_rcsid_req_s));
--	rcsid->port_id = port_id;
--	rcsid->cos = cos;
--
--	return sizeof(struct fcgs_rcsid_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_rptid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u32 port_id,
--	       u8 port_type)
--{
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_rptid_req_s *rptid =
--			(struct fcgs_rptid_req_s *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
--	fc_gs_cthdr_build(cthdr, s_id, GS_RPT_ID);
--
--	bfa_os_memset(rptid, 0, sizeof(struct fcgs_rptid_req_s));
--	rptid->port_id = port_id;
--	rptid->port_type = port_type;
--
--	return sizeof(struct fcgs_rptid_req_s) + sizeof(struct ct_hdr_s);
--}
--
--u16
--fc_ganxt_build(struct fchs_s *fchs, void *pyld, u32 s_id, u32 port_id)
--{
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	struct fcgs_ganxt_req_s *ganxt =
--			(struct fcgs_ganxt_req_s *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_NAME_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
--	fc_gs_cthdr_build(cthdr, s_id, GS_GA_NXT);
--
--	bfa_os_memset(ganxt, 0, sizeof(struct fcgs_ganxt_req_s));
--	ganxt->port_id = port_id;
--
--	return sizeof(struct ct_hdr_s) + sizeof(struct fcgs_ganxt_req_s);
--}
--
--/*
-- * Builds fc hdr and ct hdr for FDMI requests.
-- */
--u16
--fc_fdmi_reqhdr_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--		     u16 cmd_code)
--{
--
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	u32        d_id = bfa_os_hton3b(FC_MGMT_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
--	fc_gs_fdmi_cthdr_build(cthdr, s_id, cmd_code);
--
--	return sizeof(struct ct_hdr_s);
--}
--
--/*
-- * Given a FC4 Type, this function returns a fc4 type bitmask
-- */
--void
--fc_get_fc4type_bitmask(u8 fc4_type, u8 *bit_mask)
--{
--	u8         index;
--	u32       *ptr = (u32 *) bit_mask;
--	u32        type_value;
--
--	/*
--	 * @todo : Check for bitmask size
--	 */
--
--	index = fc4_type >> 5;
--	type_value = 1 << (fc4_type % 32);
--	ptr[index] = bfa_os_htonl(type_value);
--
--}
--
--/*
-- * GMAL Request
-- */
--u16
--fc_gmal_req_build(struct fchs_s *fchs, void *pyld, u32 s_id, wwn_t wwn)
--{
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	fcgs_gmal_req_t *gmal = (fcgs_gmal_req_t *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_MGMT_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
--	fc_gs_ms_cthdr_build(cthdr, s_id, GS_FC_GMAL_CMD,
--			CT_GSSUBTYPE_CFGSERVER);
--
--	bfa_os_memset(gmal, 0, sizeof(fcgs_gmal_req_t));
--	gmal->wwn = wwn;
--
--	return sizeof(struct ct_hdr_s) + sizeof(fcgs_gmal_req_t);
--}
--
--/*
-- * GFN (Get Fabric Name) Request
-- */
--u16
--fc_gfn_req_build(struct fchs_s *fchs, void *pyld, u32 s_id, wwn_t wwn)
--{
--	struct ct_hdr_s       *cthdr = (struct ct_hdr_s *) pyld;
--	fcgs_gfn_req_t *gfn = (fcgs_gfn_req_t *) (cthdr + 1);
--	u32        d_id = bfa_os_hton3b(FC_MGMT_SERVER);
--
--	fc_gs_fchdr_build(fchs, d_id, s_id, 0);
--	fc_gs_ms_cthdr_build(cthdr, s_id, GS_FC_GFN_CMD,
--			CT_GSSUBTYPE_CFGSERVER);
--
--	bfa_os_memset(gfn, 0, sizeof(fcgs_gfn_req_t));
--	gfn->wwn = wwn;
--
--	return sizeof(struct ct_hdr_s) + sizeof(fcgs_gfn_req_t);
--}
-diff --git a/drivers/scsi/bfa/fcpim.c b/drivers/scsi/bfa/fcpim.c
-deleted file mode 100644
-index 6b8976a..0000000
---- a/drivers/scsi/bfa/fcpim.c
-+++ /dev/null
-@@ -1,824 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--/**
-- *  fcpim.c - FCP initiator mode i-t nexus state machine
-- */
--
--#include <bfa.h>
--#include <bfa_svc.h>
--#include "fcs_fcpim.h"
--#include "fcs_rport.h"
--#include "fcs_lport.h"
--#include "fcs_trcmod.h"
--#include "fcs_fcxp.h"
--#include "fcs.h"
--#include <fcs/bfa_fcs_fcpim.h>
--#include <fcb/bfa_fcb_fcpim.h>
--#include <aen/bfa_aen_itnim.h>
--
--BFA_TRC_FILE(FCS, FCPIM);
--
--/*
-- * forward declarations
-- */
--static void     bfa_fcs_itnim_timeout(void *arg);
--static void     bfa_fcs_itnim_free(struct bfa_fcs_itnim_s *itnim);
--static void     bfa_fcs_itnim_send_prli(void *itnim_cbarg,
--					struct bfa_fcxp_s *fcxp_alloced);
--static void     bfa_fcs_itnim_prli_response(void *fcsarg,
--					    struct bfa_fcxp_s *fcxp,
--					    void *cbarg,
--					    bfa_status_t req_status,
--					    u32 rsp_len,
--					    u32 resid_len,
--					    struct fchs_s *rsp_fchs);
--static void     bfa_fcs_itnim_aen_post(struct bfa_fcs_itnim_s *itnim,
--				       enum bfa_itnim_aen_event event);
--
--/**
-- *  fcs_itnim_sm FCS itnim state machine events
-- */
--
--enum bfa_fcs_itnim_event {
--	BFA_FCS_ITNIM_SM_ONLINE = 1,	/*  rport online event */
--	BFA_FCS_ITNIM_SM_OFFLINE = 2,	/*  rport offline */
--	BFA_FCS_ITNIM_SM_FRMSENT = 3,	/*  prli frame is sent */
--	BFA_FCS_ITNIM_SM_RSP_OK = 4,	/*  good response */
--	BFA_FCS_ITNIM_SM_RSP_ERROR = 5,	/*  error response */
--	BFA_FCS_ITNIM_SM_TIMEOUT = 6,	/*  delay timeout */
--	BFA_FCS_ITNIM_SM_HCB_OFFLINE = 7,	/*  BFA online callback */
--	BFA_FCS_ITNIM_SM_HCB_ONLINE = 8,	/*  BFA offline callback */
--	BFA_FCS_ITNIM_SM_INITIATOR = 9,	/*  rport is initiator */
--	BFA_FCS_ITNIM_SM_DELETE = 10,	/*  delete event from rport */
--	BFA_FCS_ITNIM_SM_PRLO = 11,	/*  delete event from rport */
+-#include <bfi/bfi_fcxp.h>
+-
+-#define BFA_FCXP_MIN     	(1)
+-#define BFA_FCXP_MAX_IBUF_SZ	(2 * 1024 + 256)
+-#define BFA_FCXP_MAX_LBUF_SZ	(4 * 1024 + 256)
+-
+-struct bfa_fcxp_mod_s {
+-	struct bfa_s      *bfa;		/*  backpointer to BFA */
+-	struct bfa_fcxp_s *fcxp_list;	/*  array of FCXPs */
+-	u16        num_fcxps;	/*  max num FCXP requests */
+-	struct list_head fcxp_free_q;	/*  free FCXPs */
+-	struct list_head fcxp_active_q;	/*  active FCXPs */
+-	void	*req_pld_list_kva;	/*  list of FCXP req pld */
+-	u64 req_pld_list_pa;	/*  list of FCXP req pld */
+-	void *rsp_pld_list_kva;		/*  list of FCXP resp pld */
+-	u64 rsp_pld_list_pa;	/*  list of FCXP resp pld */
+-	struct list_head  wait_q;		/*  wait queue for free fcxp */
+-	u32	req_pld_sz;
+-	u32	rsp_pld_sz;
 -};
 -
--static void     bfa_fcs_itnim_sm_offline(struct bfa_fcs_itnim_s *itnim,
--					 enum bfa_fcs_itnim_event event);
--static void     bfa_fcs_itnim_sm_prli_send(struct bfa_fcs_itnim_s *itnim,
--					   enum bfa_fcs_itnim_event event);
--static void     bfa_fcs_itnim_sm_prli(struct bfa_fcs_itnim_s *itnim,
--				      enum bfa_fcs_itnim_event event);
--static void     bfa_fcs_itnim_sm_prli_retry(struct bfa_fcs_itnim_s *itnim,
--					    enum bfa_fcs_itnim_event event);
--static void     bfa_fcs_itnim_sm_hcb_online(struct bfa_fcs_itnim_s *itnim,
--					    enum bfa_fcs_itnim_event event);
--static void     bfa_fcs_itnim_sm_online(struct bfa_fcs_itnim_s *itnim,
--					enum bfa_fcs_itnim_event event);
--static void     bfa_fcs_itnim_sm_hcb_offline(struct bfa_fcs_itnim_s *itnim,
--					     enum bfa_fcs_itnim_event event);
--static void     bfa_fcs_itnim_sm_initiator(struct bfa_fcs_itnim_s *itnim,
--					   enum bfa_fcs_itnim_event event);
+-#define BFA_FCXP_MOD(__bfa)		(&(__bfa)->modules.fcxp_mod)
+-#define BFA_FCXP_FROM_TAG(__mod, __tag)	(&(__mod)->fcxp_list[__tag])
 -
--static struct bfa_sm_table_s itnim_sm_table[] = {
--	{BFA_SM(bfa_fcs_itnim_sm_offline), BFA_ITNIM_OFFLINE},
--	{BFA_SM(bfa_fcs_itnim_sm_prli_send), BFA_ITNIM_PRLI_SEND},
--	{BFA_SM(bfa_fcs_itnim_sm_prli), BFA_ITNIM_PRLI_SENT},
--	{BFA_SM(bfa_fcs_itnim_sm_prli_retry), BFA_ITNIM_PRLI_RETRY},
--	{BFA_SM(bfa_fcs_itnim_sm_hcb_online), BFA_ITNIM_HCB_ONLINE},
--	{BFA_SM(bfa_fcs_itnim_sm_online), BFA_ITNIM_ONLINE},
--	{BFA_SM(bfa_fcs_itnim_sm_hcb_offline), BFA_ITNIM_HCB_OFFLINE},
--	{BFA_SM(bfa_fcs_itnim_sm_initiator), BFA_ITNIM_INITIATIOR},
+-typedef void    (*fcxp_send_cb_t) (struct bfa_s *ioc, struct bfa_fcxp_s *fcxp,
+-				   void *cb_arg, bfa_status_t req_status,
+-				   u32 rsp_len, u32 resid_len,
+-				   struct fchs_s *rsp_fchs);
+-
+-/**
+- * Information needed for a FCXP request
+- */
+-struct bfa_fcxp_req_info_s {
+-	struct bfa_rport_s *bfa_rport;	/*  Pointer to the bfa rport that was
+-					 *returned from bfa_rport_create().
+-					 *This could be left NULL for WKA or for
+-					 *FCXP interactions before the rport
+-					 *nexus is established
+-					 */
+-	struct fchs_s   fchs;	/*  request FC header structure */
+-	u8 cts;		/*  continous sequence */
+-	u8 class;		/*  FC class for the request/response */
+-	u16 max_frmsz;	/*  max send frame size */
+-	u16 vf_id;		/*  vsan tag if applicable */
+-	u8	lp_tag;		/*  lport tag */
+-	u32 req_tot_len;	/*  request payload total length */
+-};
+-
+-struct bfa_fcxp_rsp_info_s {
+-	struct fchs_s rsp_fchs;		/*  Response frame's FC header will
+-					 * be *sent back in this field */
+-	u8         rsp_timeout;	/*  timeout in seconds, 0-no response
+-					 */
+-	u8         rsvd2[3];
+-	u32        rsp_maxlen;	/*  max response length expected */
+-};
+-
+-struct bfa_fcxp_s {
+-	struct list_head 	qe;		/*  fcxp queue element */
+-	bfa_sm_t        sm;             /*  state machine */
+-	void           	*caller;	/*  driver or fcs */
+-	struct bfa_fcxp_mod_s *fcxp_mod;
+-					/*  back pointer to fcxp mod */
+-	u16        fcxp_tag;	/*  internal tag */
+-	struct bfa_fcxp_req_info_s req_info;
+-					/*  request info */
+-	struct bfa_fcxp_rsp_info_s rsp_info;
+-					/*  response info */
+-	u8 	use_ireqbuf;	/*  use internal req buf */
+-	u8         use_irspbuf;	/*  use internal rsp buf */
+-	u32        nreq_sgles;	/*  num request SGLEs */
+-	u32        nrsp_sgles;	/*  num response SGLEs */
+-	struct list_head req_sgpg_q;	/*  SG pages for request buf */
+-	struct list_head req_sgpg_wqe;	/*  wait queue for req SG page */
+-	struct list_head rsp_sgpg_q;	/*  SG pages for response buf */
+-	struct list_head rsp_sgpg_wqe;	/*  wait queue for rsp SG page */
+-
+-	bfa_fcxp_get_sgaddr_t req_sga_cbfn;
+-					/*  SG elem addr user function */
+-	bfa_fcxp_get_sglen_t req_sglen_cbfn;
+-					/*  SG elem len user function */
+-	bfa_fcxp_get_sgaddr_t rsp_sga_cbfn;
+-					/*  SG elem addr user function */
+-	bfa_fcxp_get_sglen_t rsp_sglen_cbfn;
+-					/*  SG elem len user function */
+-	bfa_cb_fcxp_send_t send_cbfn;   /*  send completion callback */
+-	void		*send_cbarg;	/*  callback arg */
+-	struct bfa_sge_s   req_sge[BFA_FCXP_MAX_SGES];
+-					/*  req SG elems */
+-	struct bfa_sge_s   rsp_sge[BFA_FCXP_MAX_SGES];
+-					/*  rsp SG elems */
+-	u8         rsp_status;	/*  comp: rsp status */
+-	u32        rsp_len;	/*  comp: actual response len */
+-	u32        residue_len;	/*  comp: residual rsp length */
+-	struct fchs_s          rsp_fchs;	/*  comp: response fchs */
+-	struct bfa_cb_qe_s    hcb_qe;	/*  comp: callback qelem */
+-	struct bfa_reqq_wait_s	reqq_wqe;
+-	bfa_boolean_t	reqq_waiting;
+-};
+-
+-#define BFA_FCXP_REQ_PLD(_fcxp) 	(bfa_fcxp_get_reqbuf(_fcxp))
+-
+-#define BFA_FCXP_RSP_FCHS(_fcxp) 	(&((_fcxp)->rsp_info.fchs))
+-#define BFA_FCXP_RSP_PLD(_fcxp) 	(bfa_fcxp_get_rspbuf(_fcxp))
+-
+-#define BFA_FCXP_REQ_PLD_PA(_fcxp)					\
+-	((_fcxp)->fcxp_mod->req_pld_list_pa +				\
+-		((_fcxp)->fcxp_mod->req_pld_sz  * (_fcxp)->fcxp_tag))
+-
+-#define BFA_FCXP_RSP_PLD_PA(_fcxp) 					\
+-	((_fcxp)->fcxp_mod->rsp_pld_list_pa +				\
+-		((_fcxp)->fcxp_mod->rsp_pld_sz * (_fcxp)->fcxp_tag))
+-
+-void	bfa_fcxp_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
+-#endif /* __BFA_FCXP_PRIV_H__ */
+diff --git a/drivers/scsi/bfa/bfa_lps_priv.h b/drivers/scsi/bfa/bfa_lps_priv.h
+deleted file mode 100644
+index d16c6ce..0000000
+--- a/drivers/scsi/bfa/bfa_lps_priv.h
++++ /dev/null
+@@ -1,38 +0,0 @@
+-/*
+- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
+- * All rights reserved
+- * www.brocade.com
+- *
+- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License (GPL) Version 2 as
+- * published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- */
+-
+-#ifndef __BFA_LPS_PRIV_H__
+-#define __BFA_LPS_PRIV_H__
+-
+-#include <bfa_svc.h>
+-
+-struct bfa_lps_mod_s {
+-	struct list_head		lps_free_q;
+-	struct list_head		lps_active_q;
+-	struct bfa_lps_s	*lps_arr;
+-	int			num_lps;
+-};
+-
+-#define BFA_LPS_MOD(__bfa)		(&(__bfa)->modules.lps_mod)
+-#define BFA_LPS_FROM_TAG(__mod, __tag)	(&(__mod)->lps_arr[__tag])
+-
+-/*
+- * external functions
+- */
+-void	bfa_lps_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
+-
+-#endif /* __BFA_LPS_PRIV_H__ */
+diff --git a/drivers/scsi/bfa/bfa_port_priv.h b/drivers/scsi/bfa/bfa_port_priv.h
+deleted file mode 100644
+index c9ebe04..0000000
+--- a/drivers/scsi/bfa/bfa_port_priv.h
++++ /dev/null
+@@ -1,94 +0,0 @@
+-/*
+- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
+- * All rights reserved
+- * www.brocade.com
+- *
+- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License (GPL) Version 2 as
+- * published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- */
+-
+-#ifndef __BFA_PORT_PRIV_H__
+-#define __BFA_PORT_PRIV_H__
+-
+-#include <defs/bfa_defs_pport.h>
+-#include <bfi/bfi_pport.h>
+-#include "bfa_intr_priv.h"
+-
+-/**
+- * Link notification data structure
+- */
+-struct bfa_fcport_ln_s {
+-	struct bfa_fcport_s     *fcport;
+-	bfa_sm_t                sm;
+-	struct bfa_cb_qe_s      ln_qe;  /*  BFA callback queue elem for ln */
+-	enum bfa_pport_linkstate ln_event; /*  ln event for callback */
 -};
 -
 -/**
-- *  fcs_itnim_sm FCS itnim state machine
+- * BFA FC port data structure
 - */
--
--static void
--bfa_fcs_itnim_sm_offline(struct bfa_fcs_itnim_s *itnim,
--			 enum bfa_fcs_itnim_event event)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_trc(itnim->fcs, event);
--
--	switch (event) {
--	case BFA_FCS_ITNIM_SM_ONLINE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
--		itnim->prli_retries = 0;
--		bfa_fcs_itnim_send_prli(itnim, NULL);
--		break;
--
--	case BFA_FCS_ITNIM_SM_OFFLINE:
--		bfa_fcs_rport_itnim_ack(itnim->rport);
--		break;
--
--	case BFA_FCS_ITNIM_SM_INITIATOR:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
--		break;
--
--	case BFA_FCS_ITNIM_SM_DELETE:
--		bfa_fcs_itnim_free(itnim);
--		break;
--
--	default:
--		bfa_sm_fault(itnim->fcs, event);
--	}
--
--}
--
--static void
--bfa_fcs_itnim_sm_prli_send(struct bfa_fcs_itnim_s *itnim,
--			   enum bfa_fcs_itnim_event event)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_trc(itnim->fcs, event);
--
--	switch (event) {
--	case BFA_FCS_ITNIM_SM_FRMSENT:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli);
--		break;
--
--	case BFA_FCS_ITNIM_SM_INITIATOR:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
--		bfa_fcxp_walloc_cancel(itnim->fcs->bfa, &itnim->fcxp_wqe);
--		break;
--
--	case BFA_FCS_ITNIM_SM_OFFLINE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcxp_walloc_cancel(itnim->fcs->bfa, &itnim->fcxp_wqe);
--		bfa_fcs_rport_itnim_ack(itnim->rport);
--		break;
--
--	case BFA_FCS_ITNIM_SM_DELETE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcxp_walloc_cancel(itnim->fcs->bfa, &itnim->fcxp_wqe);
--		bfa_fcs_itnim_free(itnim);
--		break;
--
--	default:
--		bfa_sm_fault(itnim->fcs, event);
--	}
--}
--
--static void
--bfa_fcs_itnim_sm_prli(struct bfa_fcs_itnim_s *itnim,
--		      enum bfa_fcs_itnim_event event)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_trc(itnim->fcs, event);
--
--	switch (event) {
--	case BFA_FCS_ITNIM_SM_RSP_OK:
--		if (itnim->rport->scsi_function == BFA_RPORT_INITIATOR) {
--			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
--		} else {
--			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_hcb_online);
--			bfa_itnim_online(itnim->bfa_itnim, itnim->seq_rec);
--		}
--		break;
--
--	case BFA_FCS_ITNIM_SM_RSP_ERROR:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_retry);
--		bfa_timer_start(itnim->fcs->bfa, &itnim->timer,
--				bfa_fcs_itnim_timeout, itnim,
--				BFA_FCS_RETRY_TIMEOUT);
--		break;
--
--	case BFA_FCS_ITNIM_SM_OFFLINE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcxp_discard(itnim->fcxp);
--		bfa_fcs_rport_itnim_ack(itnim->rport);
--		break;
--
--	case BFA_FCS_ITNIM_SM_INITIATOR:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
--		bfa_fcxp_discard(itnim->fcxp);
--		break;
--
--	case BFA_FCS_ITNIM_SM_DELETE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcxp_discard(itnim->fcxp);
--		bfa_fcs_itnim_free(itnim);
--		break;
--
--	default:
--		bfa_sm_fault(itnim->fcs, event);
--	}
--}
--
--static void
--bfa_fcs_itnim_sm_prli_retry(struct bfa_fcs_itnim_s *itnim,
--			    enum bfa_fcs_itnim_event event)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_trc(itnim->fcs, event);
--
--	switch (event) {
--	case BFA_FCS_ITNIM_SM_TIMEOUT:
--		if (itnim->prli_retries < BFA_FCS_RPORT_MAX_RETRIES) {
--			itnim->prli_retries++;
--			bfa_trc(itnim->fcs, itnim->prli_retries);
--			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
--			bfa_fcs_itnim_send_prli(itnim, NULL);
--		} else {
--			/* invoke target offline */
--			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--			bfa_fcs_rport_logo_imp(itnim->rport);
--		}
--		break;
--
--	case BFA_FCS_ITNIM_SM_OFFLINE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_timer_stop(&itnim->timer);
--		bfa_fcs_rport_itnim_ack(itnim->rport);
--		break;
--
--	case BFA_FCS_ITNIM_SM_INITIATOR:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
--		bfa_timer_stop(&itnim->timer);
--		break;
--
--	case BFA_FCS_ITNIM_SM_DELETE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_timer_stop(&itnim->timer);
--		bfa_fcs_itnim_free(itnim);
--		break;
--
--	default:
--		bfa_sm_fault(itnim->fcs, event);
--	}
--}
--
--static void
--bfa_fcs_itnim_sm_hcb_online(struct bfa_fcs_itnim_s *itnim,
--			    enum bfa_fcs_itnim_event event)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_trc(itnim->fcs, event);
--
--	switch (event) {
--	case BFA_FCS_ITNIM_SM_HCB_ONLINE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_online);
--		bfa_fcb_itnim_online(itnim->itnim_drv);
--		bfa_fcs_itnim_aen_post(itnim, BFA_ITNIM_AEN_ONLINE);
--		break;
--
--	case BFA_FCS_ITNIM_SM_OFFLINE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_itnim_offline(itnim->bfa_itnim);
--		bfa_fcs_rport_itnim_ack(itnim->rport);
--		break;
--
--	case BFA_FCS_ITNIM_SM_DELETE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcs_itnim_free(itnim);
--		break;
--
--	default:
--		bfa_sm_fault(itnim->fcs, event);
--	}
--}
--
--static void
--bfa_fcs_itnim_sm_online(struct bfa_fcs_itnim_s *itnim,
--			enum bfa_fcs_itnim_event event)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_trc(itnim->fcs, event);
--
--	switch (event) {
--	case BFA_FCS_ITNIM_SM_OFFLINE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_hcb_offline);
--		bfa_fcb_itnim_offline(itnim->itnim_drv);
--		bfa_itnim_offline(itnim->bfa_itnim);
--		if (bfa_fcs_port_is_online(itnim->rport->port) == BFA_TRUE)
--			bfa_fcs_itnim_aen_post(itnim, BFA_ITNIM_AEN_DISCONNECT);
--		else
--			bfa_fcs_itnim_aen_post(itnim, BFA_ITNIM_AEN_OFFLINE);
--		break;
--
--	case BFA_FCS_ITNIM_SM_DELETE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcs_itnim_free(itnim);
--		break;
--
--	default:
--		bfa_sm_fault(itnim->fcs, event);
--	}
--}
--
--static void
--bfa_fcs_itnim_sm_hcb_offline(struct bfa_fcs_itnim_s *itnim,
--			     enum bfa_fcs_itnim_event event)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_trc(itnim->fcs, event);
--
--	switch (event) {
--	case BFA_FCS_ITNIM_SM_HCB_OFFLINE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcs_rport_itnim_ack(itnim->rport);
--		break;
--
--	case BFA_FCS_ITNIM_SM_DELETE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcs_itnim_free(itnim);
--		break;
--
--	default:
--		bfa_sm_fault(itnim->fcs, event);
--	}
--}
--
--/*
-- * This state is set when a discovered rport is also in intiator mode.
-- * This ITN is marked as no_op and is not active and will not be truned into
-- * online state.
-- */
--static void
--bfa_fcs_itnim_sm_initiator(struct bfa_fcs_itnim_s *itnim,
--			   enum bfa_fcs_itnim_event event)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_trc(itnim->fcs, event);
--
--	switch (event) {
--	case BFA_FCS_ITNIM_SM_OFFLINE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcs_rport_itnim_ack(itnim->rport);
--		break;
--
--	case BFA_FCS_ITNIM_SM_RSP_ERROR:
--	case BFA_FCS_ITNIM_SM_ONLINE:
--	case BFA_FCS_ITNIM_SM_INITIATOR:
--		break;
--
--	case BFA_FCS_ITNIM_SM_DELETE:
--		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--		bfa_fcs_itnim_free(itnim);
--		break;
--
--	default:
--		bfa_sm_fault(itnim->fcs, event);
--	}
--}
--
--
--
--/**
-- *  itnim_private FCS ITNIM private interfaces
-- */
--
--static void
--bfa_fcs_itnim_aen_post(struct bfa_fcs_itnim_s *itnim,
--		       enum bfa_itnim_aen_event event)
--{
--	struct bfa_fcs_rport_s *rport = itnim->rport;
--	union bfa_aen_data_u aen_data;
--	struct bfa_log_mod_s *logmod = rport->fcs->logm;
--	wwn_t           lpwwn = bfa_fcs_port_get_pwwn(rport->port);
--	wwn_t           rpwwn = rport->pwwn;
--	char            lpwwn_ptr[BFA_STRING_32];
--	char            rpwwn_ptr[BFA_STRING_32];
--
--	/*
--	 * Don't post events for well known addresses
--	 */
--	if (BFA_FCS_PID_IS_WKA(rport->pid))
--		return;
--
--	wwn2str(lpwwn_ptr, lpwwn);
--	wwn2str(rpwwn_ptr, rpwwn);
--
--	bfa_log(logmod, BFA_LOG_CREATE_ID(BFA_AEN_CAT_ITNIM, event),
--		rpwwn_ptr, lpwwn_ptr);
--
--	aen_data.itnim.vf_id = rport->port->fabric->vf_id;
--	aen_data.itnim.ppwwn =
--		bfa_fcs_port_get_pwwn(bfa_fcs_get_base_port(itnim->fcs));
--	aen_data.itnim.lpwwn = lpwwn;
--	aen_data.itnim.rpwwn = rpwwn;
--}
--
--static void
--bfa_fcs_itnim_send_prli(void *itnim_cbarg, struct bfa_fcxp_s *fcxp_alloced)
--{
--	struct bfa_fcs_itnim_s *itnim = itnim_cbarg;
--	struct bfa_fcs_rport_s *rport = itnim->rport;
--	struct bfa_fcs_port_s *port = rport->port;
--	struct fchs_s          fchs;
--	struct bfa_fcxp_s *fcxp;
--	int             len;
--
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--
--	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
--	if (!fcxp) {
--		itnim->stats.fcxp_alloc_wait++;
--		bfa_fcxp_alloc_wait(port->fcs->bfa, &itnim->fcxp_wqe,
--				    bfa_fcs_itnim_send_prli, itnim);
--		return;
--	}
--	itnim->fcxp = fcxp;
--
--	len = fc_prli_build(&fchs, bfa_fcxp_get_reqbuf(fcxp), itnim->rport->pid,
--			    bfa_fcs_port_get_fcid(port), 0);
--
--	bfa_fcxp_send(fcxp, rport->bfa_rport, port->fabric->vf_id, port->lp_tag,
--		      BFA_FALSE, FC_CLASS_3, len, &fchs,
--		      bfa_fcs_itnim_prli_response, (void *)itnim, FC_MAX_PDUSZ,
--		      FC_ELS_TOV);
--
--	itnim->stats.prli_sent++;
--	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_FRMSENT);
--}
--
--static void
--bfa_fcs_itnim_prli_response(void *fcsarg, struct bfa_fcxp_s *fcxp, void *cbarg,
--			    bfa_status_t req_status, u32 rsp_len,
--			    u32 resid_len, struct fchs_s *rsp_fchs)
--{
--	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *)cbarg;
--	struct fc_els_cmd_s   *els_cmd;
--	struct fc_prli_s      *prli_resp;
--	struct fc_ls_rjt_s    *ls_rjt;
--	struct fc_prli_params_s *sparams;
--
--	bfa_trc(itnim->fcs, req_status);
--
--	/*
--	 * Sanity Checks
--	 */
--	if (req_status != BFA_STATUS_OK) {
--		itnim->stats.prli_rsp_err++;
--		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_RSP_ERROR);
--		return;
--	}
--
--	els_cmd = (struct fc_els_cmd_s *) BFA_FCXP_RSP_PLD(fcxp);
--
--	if (els_cmd->els_code == FC_ELS_ACC) {
--		prli_resp = (struct fc_prli_s *) els_cmd;
--
--		if (fc_prli_rsp_parse(prli_resp, rsp_len) != FC_PARSE_OK) {
--			bfa_trc(itnim->fcs, rsp_len);
--			/*
--			 * Check if this  r-port is also in Initiator mode.
--			 * If so, we need to set this ITN as a no-op.
--			 */
--			if (prli_resp->parampage.servparams.initiator) {
--				bfa_trc(itnim->fcs, prli_resp->parampage.type);
--				itnim->rport->scsi_function =
--					BFA_RPORT_INITIATOR;
--				itnim->stats.prli_rsp_acc++;
--				bfa_sm_send_event(itnim,
--						  BFA_FCS_ITNIM_SM_RSP_OK);
--				return;
--			}
--
--			itnim->stats.prli_rsp_parse_err++;
--			return;
--		}
--		itnim->rport->scsi_function = BFA_RPORT_TARGET;
--
--		sparams = &prli_resp->parampage.servparams;
--		itnim->seq_rec = sparams->retry;
--		itnim->rec_support = sparams->rec_support;
--		itnim->task_retry_id = sparams->task_retry_id;
--		itnim->conf_comp = sparams->confirm;
--
--		itnim->stats.prli_rsp_acc++;
--		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_RSP_OK);
--	} else {
--		ls_rjt = (struct fc_ls_rjt_s *) BFA_FCXP_RSP_PLD(fcxp);
--
--		bfa_trc(itnim->fcs, ls_rjt->reason_code);
--		bfa_trc(itnim->fcs, ls_rjt->reason_code_expl);
--
--		itnim->stats.prli_rsp_rjt++;
--		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_RSP_ERROR);
--	}
--}
--
--static void
--bfa_fcs_itnim_timeout(void *arg)
--{
--	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *)arg;
--
--	itnim->stats.timeout++;
--	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_TIMEOUT);
--}
--
--static void
--bfa_fcs_itnim_free(struct bfa_fcs_itnim_s *itnim)
--{
--	bfa_itnim_delete(itnim->bfa_itnim);
--	bfa_fcb_itnim_free(itnim->fcs->bfad, itnim->itnim_drv);
--}
--
--
--
--/**
-- *  itnim_public FCS ITNIM public interfaces
-- */
--
--/**
-- * 	Called by rport when a new rport is created.
-- *
-- * @param[in] rport	-  remote port.
-- */
--struct bfa_fcs_itnim_s *
--bfa_fcs_itnim_create(struct bfa_fcs_rport_s *rport)
--{
--	struct bfa_fcs_port_s *port = rport->port;
--	struct bfa_fcs_itnim_s *itnim;
--	struct bfad_itnim_s *itnim_drv;
--	struct bfa_itnim_s *bfa_itnim;
--
--	/*
--	 * call bfad to allocate the itnim
--	 */
--	bfa_fcb_itnim_alloc(port->fcs->bfad, &itnim, &itnim_drv);
--	if (itnim == NULL) {
--		bfa_trc(port->fcs, rport->pwwn);
--		return NULL;
--	}
--
--	/*
--	 * Initialize itnim
--	 */
--	itnim->rport = rport;
--	itnim->fcs = rport->fcs;
--	itnim->itnim_drv = itnim_drv;
--
--	/*
--	 * call BFA to create the itnim
--	 */
--	bfa_itnim = bfa_itnim_create(port->fcs->bfa, rport->bfa_rport, itnim);
--
--	if (bfa_itnim == NULL) {
--		bfa_trc(port->fcs, rport->pwwn);
--		bfa_fcb_itnim_free(port->fcs->bfad, itnim_drv);
--		bfa_assert(0);
--		return NULL;
--	}
--
--	itnim->bfa_itnim = bfa_itnim;
--	itnim->seq_rec = BFA_FALSE;
--	itnim->rec_support = BFA_FALSE;
--	itnim->conf_comp = BFA_FALSE;
--	itnim->task_retry_id = BFA_FALSE;
--
--	/*
--	 * Set State machine
--	 */
--	bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
--
--	return itnim;
--}
--
--/**
-- * 	Called by rport to delete  the instance of FCPIM.
-- *
-- * @param[in] rport	-  remote port.
-- */
--void
--bfa_fcs_itnim_delete(struct bfa_fcs_itnim_s *itnim)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pid);
--	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_DELETE);
--}
--
--/**
-- * Notification from rport that PLOGI is complete to initiate FC-4 session.
-- */
--void
--bfa_fcs_itnim_rport_online(struct bfa_fcs_itnim_s *itnim)
--{
--	itnim->stats.onlines++;
--
--	if (!BFA_FCS_PID_IS_WKA(itnim->rport->pid)) {
--		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_ONLINE);
--	} else {
--		/*
--		 * For well known addresses, we set the itnim to initiator
--		 * state
--		 */
--		itnim->stats.initiator++;
--		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_INITIATOR);
--	}
--}
--
--/**
-- * Called by rport to handle a remote device offline.
-- */
--void
--bfa_fcs_itnim_rport_offline(struct bfa_fcs_itnim_s *itnim)
--{
--	itnim->stats.offlines++;
--	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_OFFLINE);
--}
--
--/**
-- * Called by rport when remote port is known to be an initiator from
-- * PRLI received.
-- */
--void
--bfa_fcs_itnim_is_initiator(struct bfa_fcs_itnim_s *itnim)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pid);
--	itnim->stats.initiator++;
--	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_INITIATOR);
--}
--
--/**
-- * Called by rport to check if the itnim is online.
-- */
--bfa_status_t
--bfa_fcs_itnim_get_online_state(struct bfa_fcs_itnim_s *itnim)
--{
--	bfa_trc(itnim->fcs, itnim->rport->pid);
--	switch (bfa_sm_to_state(itnim_sm_table, itnim->sm)) {
--	case BFA_ITNIM_ONLINE:
--	case BFA_ITNIM_INITIATIOR:
--		return BFA_STATUS_OK;
--
--	default:
--		return BFA_STATUS_NO_FCPIM_NEXUS;
--
--	}
--}
--
--/**
-- * BFA completion callback for bfa_itnim_online().
-- */
--void
--bfa_cb_itnim_online(void *cbarg)
--{
--	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *)cbarg;
--
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_HCB_ONLINE);
--}
--
--/**
-- * BFA completion callback for bfa_itnim_offline().
-- */
--void
--bfa_cb_itnim_offline(void *cb_arg)
--{
--	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *)cb_arg;
--
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_HCB_OFFLINE);
--}
--
--/**
-- * Mark the beginning of PATH TOV handling. IO completion callbacks
-- * are still pending.
-- */
--void
--bfa_cb_itnim_tov_begin(void *cb_arg)
--{
--	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *)cb_arg;
--
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--}
--
--/**
-- * Mark the end of PATH TOV handling. All pending IOs are already cleaned up.
-- */
--void
--bfa_cb_itnim_tov(void *cb_arg)
--{
--	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *)cb_arg;
--
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_fcb_itnim_tov(itnim->itnim_drv);
--}
--
--/**
-- * 		BFA notification to FCS/driver for second level error recovery.
-- *
-- * Atleast one I/O request has timedout and target is unresponsive to
-- * repeated abort requests. Second level error recovery should be initiated
-- * by starting implicit logout and recovery procedures.
-- */
--void
--bfa_cb_itnim_sler(void *cb_arg)
--{
--	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *)cb_arg;
--
--	itnim->stats.sler++;
--	bfa_trc(itnim->fcs, itnim->rport->pwwn);
--	bfa_fcs_rport_logo_imp(itnim->rport);
--}
--
--struct bfa_fcs_itnim_s *
--bfa_fcs_itnim_lookup(struct bfa_fcs_port_s *port, wwn_t rpwwn)
--{
--	struct bfa_fcs_rport_s *rport;
--	rport = bfa_fcs_rport_lookup(port, rpwwn);
--
--	if (!rport)
--		return NULL;
--
--	bfa_assert(rport->itnim != NULL);
--	return rport->itnim;
--}
--
--bfa_status_t
--bfa_fcs_itnim_attr_get(struct bfa_fcs_port_s *port, wwn_t rpwwn,
--		       struct bfa_itnim_attr_s *attr)
--{
--	struct bfa_fcs_itnim_s *itnim = NULL;
--
--	itnim = bfa_fcs_itnim_lookup(port, rpwwn);
--
--	if (itnim == NULL)
--		return BFA_STATUS_NO_FCPIM_NEXUS;
--
--	attr->state = bfa_sm_to_state(itnim_sm_table, itnim->sm);
--	attr->retry = itnim->seq_rec;
--	attr->rec_support = itnim->rec_support;
--	attr->conf_comp = itnim->conf_comp;
--	attr->task_retry_id = itnim->task_retry_id;
--	bfa_os_memset(&attr->io_latency, 0, sizeof(struct bfa_itnim_latency_s));
--
--	return BFA_STATUS_OK;
--}
--
--bfa_status_t
--bfa_fcs_itnim_stats_get(struct bfa_fcs_port_s *port, wwn_t rpwwn,
--			struct bfa_itnim_stats_s *stats)
--{
--	struct bfa_fcs_itnim_s *itnim = NULL;
--
--	bfa_assert(port != NULL);
--
--	itnim = bfa_fcs_itnim_lookup(port, rpwwn);
--
--	if (itnim == NULL)
--		return BFA_STATUS_NO_FCPIM_NEXUS;
--
--	bfa_os_memcpy(stats, &itnim->stats, sizeof(struct bfa_itnim_stats_s));
--
--	return BFA_STATUS_OK;
--}
--
--bfa_status_t
--bfa_fcs_itnim_stats_clear(struct bfa_fcs_port_s *port, wwn_t rpwwn)
--{
--	struct bfa_fcs_itnim_s *itnim = NULL;
--
--	bfa_assert(port != NULL);
--
--	itnim = bfa_fcs_itnim_lookup(port, rpwwn);
--
--	if (itnim == NULL)
--		return BFA_STATUS_NO_FCPIM_NEXUS;
--
--	bfa_os_memset(&itnim->stats, 0, sizeof(struct bfa_itnim_stats_s));
--	return BFA_STATUS_OK;
--}
--
--void
--bfa_fcs_fcpim_uf_recv(struct bfa_fcs_itnim_s *itnim, struct fchs_s *fchs,
--		      u16 len)
--{
--	struct fc_els_cmd_s   *els_cmd;
--
--	bfa_trc(itnim->fcs, fchs->type);
--
--	if (fchs->type != FC_TYPE_ELS)
--		return;
--
--	els_cmd = (struct fc_els_cmd_s *) (fchs + 1);
--
--	bfa_trc(itnim->fcs, els_cmd->els_code);
--
--	switch (els_cmd->els_code) {
--	case FC_ELS_PRLO:
--		bfa_fcs_rport_prlo(itnim->rport, fchs->ox_id);
--		break;
--
--	default:
--		bfa_assert(0);
--	}
--}
--
--void
--bfa_fcs_itnim_pause(struct bfa_fcs_itnim_s *itnim)
--{
--}
--
--void
--bfa_fcs_itnim_resume(struct bfa_fcs_itnim_s *itnim)
--{
--}
-diff --git a/drivers/scsi/bfa/fcptm.c b/drivers/scsi/bfa/fcptm.c
-deleted file mode 100644
-index 8c8b08c..0000000
---- a/drivers/scsi/bfa/fcptm.c
-+++ /dev/null
-@@ -1,68 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--/**
-- * This file contains dummy FCPTM routines to aid in Initiator Mode only
-- * compilation of OS driver.
-- *
-- */
--
--#include "bfa_os_inc.h"
--#include "fcs_rport.h"
--#include "fcs_fcptm.h"
--#include "fcs/bfa_fcs_rport.h"
--
--struct bfa_fcs_tin_s *
--bfa_fcs_tin_create(struct bfa_fcs_rport_s *rport)
--{
--	return NULL;
--}
--
--void
--bfa_fcs_tin_delete(struct bfa_fcs_tin_s *tin)
--{
--}
--
--void
--bfa_fcs_tin_rport_offline(struct bfa_fcs_tin_s *tin)
--{
--}
--
--void
--bfa_fcs_tin_rport_online(struct bfa_fcs_tin_s *tin)
--{
--}
--
--void
--bfa_fcs_tin_rx_prli(struct bfa_fcs_tin_s *tin, struct fchs_s *fchs, u16 len)
--{
--}
--
--void
--bfa_fcs_fcptm_uf_recv(struct bfa_fcs_tin_s *tin, struct fchs_s *fchs, u16 len)
--{
--}
--
--void
--bfa_fcs_tin_pause(struct bfa_fcs_tin_s *tin)
--{
--}
--
--void
--bfa_fcs_tin_resume(struct bfa_fcs_tin_s *tin)
--{
--}
-diff --git a/drivers/scsi/bfa/loop.c b/drivers/scsi/bfa/loop.c
-deleted file mode 100644
-index f6342ef..0000000
---- a/drivers/scsi/bfa/loop.c
-+++ /dev/null
-@@ -1,213 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--/**
-- *  port_loop.c vport private loop implementation.
-- */
--#include <bfa.h>
--#include <bfa_svc.h>
--#include "fcs_lport.h"
--#include "fcs_rport.h"
--#include "fcs_trcmod.h"
--#include "lport_priv.h"
--
--BFA_TRC_FILE(FCS, LOOP);
--
--/**
-- *   ALPA to LIXA bitmap mapping
-- *
-- *   ALPA 0x00 (Word 0, Bit 30) is invalid for N_Ports. Also Word 0 Bit 31
-- * is for L_bit (login required) and is filled as ALPA 0x00 here.
-- */
--static const u8   port_loop_alpa_map[] = {
--	0xEF, 0xE8, 0xE4, 0xE2, 0xE1, 0xE0, 0xDC, 0xDA,	/* Word 3 Bits 0..7 */
--	0xD9, 0xD6, 0xD5, 0xD4, 0xD3, 0xD2, 0xD1, 0xCE,	/* Word 3 Bits 8..15 */
--	0xCD, 0xCC, 0xCB, 0xCA, 0xC9, 0xC7, 0xC6, 0xC5,	/* Word 3 Bits 16..23 */
--	0xC3, 0xBC, 0xBA, 0xB9, 0xB6, 0xB5, 0xB4, 0xB3,	/* Word 3 Bits 24..31 */
--
--	0xB2, 0xB1, 0xAE, 0xAD, 0xAC, 0xAB, 0xAA, 0xA9,	/* Word 2 Bits 0..7 */
--	0xA7, 0xA6, 0xA5, 0xA3, 0x9F, 0x9E, 0x9D, 0x9B,	/* Word 2 Bits 8..15 */
--	0x98, 0x97, 0x90, 0x8F, 0x88, 0x84, 0x82, 0x81,	/* Word 2 Bits 16..23 */
--	0x80, 0x7C, 0x7A, 0x79, 0x76, 0x75, 0x74, 0x73,	/* Word 2 Bits 24..31 */
--
--	0x72, 0x71, 0x6E, 0x6D, 0x6C, 0x6B, 0x6A, 0x69,	/* Word 1 Bits 0..7 */
--	0x67, 0x66, 0x65, 0x63, 0x5C, 0x5A, 0x59, 0x56,	/* Word 1 Bits 8..15 */
--	0x55, 0x54, 0x53, 0x52, 0x51, 0x4E, 0x4D, 0x4C,	/* Word 1 Bits 16..23 */
--	0x4B, 0x4A, 0x49, 0x47, 0x46, 0x45, 0x43, 0x3C,	/* Word 1 Bits 24..31 */
--
--	0x3A, 0x39, 0x36, 0x35, 0x34, 0x33, 0x32, 0x31,	/* Word 0 Bits 0..7 */
--	0x2E, 0x2D, 0x2C, 0x2B, 0x2A, 0x29, 0x27, 0x26,	/* Word 0 Bits 8..15 */
--	0x25, 0x23, 0x1F, 0x1E, 0x1D, 0x1B, 0x18, 0x17,	/* Word 0 Bits 16..23 */
--	0x10, 0x0F, 0x08, 0x04, 0x02, 0x01, 0x00, 0x00,	/* Word 0 Bits 24..31 */
+-struct bfa_fcport_s {
+-	struct bfa_s 		*bfa;	/*  parent BFA instance */
+-	bfa_sm_t		sm;	/*  port state machine */
+-	wwn_t			nwwn;	/*  node wwn of physical port */
+-	wwn_t			pwwn;	/*  port wwn of physical oprt */
+-	enum bfa_pport_speed speed_sup;
+-					/*  supported speeds */
+-	enum bfa_pport_speed speed;	/*  current speed */
+-	enum bfa_pport_topology topology;	/*  current topology */
+-	u8			myalpa;	/*  my ALPA in LOOP topology */
+-	u8			rsvd[3];
+-	u32             mypid:24;
+-	u32             rsvd_b:8;
+-	struct bfa_pport_cfg_s	cfg;	/*  current port configuration */
+-	struct bfa_qos_attr_s  qos_attr;   /* QoS Attributes */
+-	struct bfa_qos_vc_attr_s qos_vc_attr;  /*  VC info from ELP */
+-	struct bfa_reqq_wait_s	reqq_wait;
+-					/*  to wait for room in reqq */
+-	struct bfa_reqq_wait_s	svcreq_wait;
+-					/*  to wait for room in reqq */
+-	struct bfa_reqq_wait_s	stats_reqq_wait;
+-					/*  to wait for room in reqq (stats) */
+-	void			*event_cbarg;
+-	void			(*event_cbfn) (void *cbarg,
+-						bfa_pport_event_t event);
+-	union {
+-		union bfi_fcport_i2h_msg_u i2hmsg;
+-	} event_arg;
+-	void			*bfad;	/*  BFA driver handle */
+-	struct bfa_fcport_ln_s   ln; /* Link Notification */
+-	struct bfa_cb_qe_s		hcb_qe;	/*  BFA callback queue elem */
+-	struct bfa_timer_s      timer;  /*  timer */
+-	u32		msgtag;	/*  fimrware msg tag for reply */
+-	u8			*stats_kva;
+-	u64		stats_pa;
+-	union bfa_fcport_stats_u *stats;
+-	union bfa_fcport_stats_u *stats_ret; /*  driver stats location */
+-	bfa_status_t            stats_status; /*  stats/statsclr status */
+-	bfa_boolean_t           stats_busy; /*  outstanding stats/statsclr */
+-	bfa_boolean_t           stats_qfull;
+-	u32                	stats_reset_time; /* stats reset time stamp */
+-	bfa_cb_pport_t          stats_cbfn; /*  driver callback function */
+-	void                    *stats_cbarg; /* user callback arg */
+-	bfa_boolean_t           diag_busy; /*  diag busy status */
+-	bfa_boolean_t           beacon; /*  port beacon status */
+-	bfa_boolean_t           link_e2e_beacon; /*  link beacon status */
 -};
 -
+-#define BFA_FCPORT_MOD(__bfa)	(&(__bfa)->modules.fcport)
+-
 -/*
-- * Local Functions
+- * public functions
 - */
--static bfa_status_t bfa_fcs_port_loop_send_plogi(struct bfa_fcs_port_s *port,
--					u8 alpa);
+-void bfa_fcport_init(struct bfa_s *bfa);
+-void bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
 -
--static void bfa_fcs_port_loop_plogi_response(void *fcsarg,
--					struct bfa_fcxp_s *fcxp,
--					void *cbarg,
--					bfa_status_t req_status,
--					u32 rsp_len,
--					u32 resid_len,
--					struct fchs_s *rsp_fchs);
--/**
-- *   Called by port to initializar in provate LOOP topology.
-- */
--void
--bfa_fcs_port_loop_init(struct bfa_fcs_port_s *port)
--{
--}
--
--/**
-- *   Called by port to notify transition to online state.
-- */
--void
--bfa_fcs_port_loop_online(struct bfa_fcs_port_s *port)
--{
--
--	u8         num_alpa = port->port_topo.ploop.num_alpa;
--	u8        *alpa_pos_map = port->port_topo.ploop.alpa_pos_map;
--	struct bfa_fcs_rport_s *r_port;
--	int             ii = 0;
--
--	/*
--	 * If the port role is Initiator Mode, create Rports.
--	 */
--	if (port->port_cfg.roles == BFA_PORT_ROLE_FCP_IM) {
--		/*
--		 * Check if the ALPA positional bitmap is available.
--		 * if not, we send PLOGI to all possible ALPAs.
--		 */
--		if (num_alpa > 0) {
--			for (ii = 0; ii < num_alpa; ii++) {
--				/*
--				 * ignore ALPA of bfa port
--				 */
--				if (alpa_pos_map[ii] != port->pid) {
--					r_port = bfa_fcs_rport_create(port,
--						alpa_pos_map[ii]);
--				}
--			}
--		} else {
--			for (ii = 0; ii < MAX_ALPA_COUNT; ii++) {
--				/*
--				 * ignore ALPA of bfa port
--				 */
--				if ((port_loop_alpa_map[ii] > 0)
--				    && (port_loop_alpa_map[ii] != port->pid))
--					bfa_fcs_port_loop_send_plogi(port,
--						port_loop_alpa_map[ii]);
--				/**TBD */
--			}
--		}
--	} else {
--		/*
--		 * TBD Target Mode ??
--		 */
--	}
--
--}
--
--/**
-- *   Called by port to notify transition to offline state.
-- */
--void
--bfa_fcs_port_loop_offline(struct bfa_fcs_port_s *port)
--{
--
--}
--
--/**
-- *   Called by port to notify a LIP on the loop.
-- */
--void
--bfa_fcs_port_loop_lip(struct bfa_fcs_port_s *port)
--{
--}
--
--/**
-- * Local Functions.
-- */
--static bfa_status_t
--bfa_fcs_port_loop_send_plogi(struct bfa_fcs_port_s *port, u8 alpa)
--{
--	struct fchs_s          fchs;
--	struct bfa_fcxp_s *fcxp = NULL;
--	int             len;
--
--	bfa_trc(port->fcs, alpa);
--
--	fcxp = bfa_fcxp_alloc(NULL, port->fcs->bfa, 0, 0, NULL, NULL, NULL,
--				  NULL);
--	bfa_assert(fcxp);
--
--	len = fc_plogi_build(&fchs, bfa_fcxp_get_reqbuf(fcxp), alpa,
--			     bfa_fcs_port_get_fcid(port), 0,
--			     port->port_cfg.pwwn, port->port_cfg.nwwn,
--				 bfa_fcport_get_maxfrsize(port->fcs->bfa));
--
--	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
--			  FC_CLASS_3, len, &fchs,
--			  bfa_fcs_port_loop_plogi_response, (void *)port,
--			  FC_MAX_PDUSZ, FC_RA_TOV);
--
--	return BFA_STATUS_OK;
--}
--
--/**
-- *   Called by fcxp to notify the Plogi response
-- */
--static void
--bfa_fcs_port_loop_plogi_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
--				 void *cbarg, bfa_status_t req_status,
--				 u32 rsp_len, u32 resid_len,
--				 struct fchs_s *rsp_fchs)
--{
--	struct bfa_fcs_port_s *port = (struct bfa_fcs_port_s *) cbarg;
--	struct fc_logi_s     *plogi_resp;
--	struct fc_els_cmd_s   *els_cmd;
--
--	bfa_trc(port->fcs, req_status);
--
--	/*
--	 * Sanity Checks
--	 */
--	if (req_status != BFA_STATUS_OK) {
--		bfa_trc(port->fcs, req_status);
--		/*
--		 * @todo
--		 * This could mean that the device with this APLA does not
--		 * exist on the loop.
--		 */
--
--		return;
--	}
--
--	els_cmd = (struct fc_els_cmd_s *) BFA_FCXP_RSP_PLD(fcxp);
--	plogi_resp = (struct fc_logi_s *) els_cmd;
--
--	if (els_cmd->els_code == FC_ELS_ACC) {
--		bfa_fcs_rport_start(port, rsp_fchs, plogi_resp);
--	} else {
--		bfa_trc(port->fcs, plogi_resp->els_cmd.els_code);
--		bfa_assert(0);
--	}
--}
-diff --git a/drivers/scsi/bfa/n2n.c b/drivers/scsi/bfa/n2n.c
+-#endif /* __BFA_PORT_PRIV_H__ */
+diff --git a/drivers/scsi/bfa/bfa_rport_priv.h b/drivers/scsi/bfa/bfa_rport_priv.h
 deleted file mode 100644
-index 7354568..0000000
---- a/drivers/scsi/bfa/n2n.c
+index 6490ce2..0000000
+--- a/drivers/scsi/bfa/bfa_rport_priv.h
 +++ /dev/null
-@@ -1,105 +0,0 @@
+@@ -1,45 +0,0 @@
 -/*
 - * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 - * All rights reserved
@@ -2713,100 +349,40 @@ index 7354568..0000000
 - * General Public License for more details.
 - */
 -
--/**
-- *  n2n.c n2n implementation.
-- */
--#include <bfa.h>
+-#ifndef __BFA_RPORT_PRIV_H__
+-#define __BFA_RPORT_PRIV_H__
+-
 -#include <bfa_svc.h>
--#include "fcs_lport.h"
--#include "fcs_rport.h"
--#include "fcs_trcmod.h"
--#include "lport_priv.h"
 -
--BFA_TRC_FILE(FCS, N2N);
+-#define BFA_RPORT_MIN	4
 -
--/**
-- *   Called by fcs/port to initialize N2N topology.
-- */
--void
--bfa_fcs_port_n2n_init(struct bfa_fcs_port_s *port)
--{
--}
+-struct bfa_rport_mod_s {
+-	struct bfa_rport_s *rps_list;	/*  list of rports	*/
+-	struct list_head 	rp_free_q;	/*  free bfa_rports	*/
+-	struct list_head 	rp_active_q;	/*  free bfa_rports 	*/
+-	u16	num_rports;	/*  number of rports	*/
+-};
+-
+-#define BFA_RPORT_MOD(__bfa)	(&(__bfa)->modules.rport_mod)
 -
 -/**
-- *   Called by fcs/port to notify transition to online state.
+- * Convert rport tag to RPORT
 - */
--void
--bfa_fcs_port_n2n_online(struct bfa_fcs_port_s *port)
--{
--	struct bfa_fcs_port_n2n_s *n2n_port = &port->port_topo.pn2n;
--	struct bfa_port_cfg_s *pcfg = &port->port_cfg;
--	struct bfa_fcs_rport_s *rport;
+-#define BFA_RPORT_FROM_TAG(__bfa, _tag)				\
+-	(BFA_RPORT_MOD(__bfa)->rps_list +				\
+-	 ((_tag) & (BFA_RPORT_MOD(__bfa)->num_rports - 1)))
 -
--	bfa_trc(port->fcs, pcfg->pwwn);
--
--	/*
--	 * If our PWWN is > than that of the r-port, we have to initiate PLOGI
--	 * and assign an Address. if not, we need to wait for its PLOGI.
--	 *
--	 * If our PWWN is < than that of the remote port, it will send a PLOGI
--	 * with the PIDs assigned. The rport state machine take care of this
--	 * incoming PLOGI.
--	 */
--	if (memcmp
--	    ((void *)&pcfg->pwwn, (void *)&n2n_port->rem_port_wwn,
--	     sizeof(wwn_t)) > 0) {
--		port->pid = N2N_LOCAL_PID;
--		/**
--		 * First, check if we know the device by pwwn.
--		 */
--		rport = bfa_fcs_port_get_rport_by_pwwn(port,
--						       n2n_port->rem_port_wwn);
--		if (rport) {
--			bfa_trc(port->fcs, rport->pid);
--			bfa_trc(port->fcs, rport->pwwn);
--			rport->pid = N2N_REMOTE_PID;
--			bfa_fcs_rport_online(rport);
--			return;
--		}
--
--		/*
--		 * In n2n there can be only one rport. Delete the old one whose
--		 * pid should be zero, because it is offline.
--		 */
--		if (port->num_rports > 0) {
--			rport = bfa_fcs_port_get_rport_by_pid(port, 0);
--			bfa_assert(rport != NULL);
--			if (rport) {
--				bfa_trc(port->fcs, rport->pwwn);
--				bfa_fcs_rport_delete(rport);
--			}
--		}
--		bfa_fcs_rport_create(port, N2N_REMOTE_PID);
--	}
--}
--
--/**
-- *   Called by fcs/port to notify transition to offline state.
+-/*
+- * external functions
 - */
--void
--bfa_fcs_port_n2n_offline(struct bfa_fcs_port_s *port)
--{
--	struct bfa_fcs_port_n2n_s *n2n_port = &port->port_topo.pn2n;
--
--	bfa_trc(port->fcs, port->pid);
--	port->pid = 0;
--	n2n_port->rem_port_wwn = 0;
--	n2n_port->reply_oxid = 0;
--}
--
--
-diff --git a/drivers/scsi/bfa/vfapi.c b/drivers/scsi/bfa/vfapi.c
+-void	bfa_rport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
+-#endif /* __BFA_RPORT_PRIV_H__ */
+diff --git a/drivers/scsi/bfa/bfa_sgpg_priv.h b/drivers/scsi/bfa/bfa_sgpg_priv.h
 deleted file mode 100644
-index 391a479..0000000
---- a/drivers/scsi/bfa/vfapi.c
+index 9c2a8cb..0000000
+--- a/drivers/scsi/bfa/bfa_sgpg_priv.h
 +++ /dev/null
-@@ -1,292 +0,0 @@
+@@ -1,79 +0,0 @@
 -/*
 - * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 - * All rights reserved
@@ -2825,280 +401,120 @@ index 391a479..0000000
 - */
 -
 -/**
-- *  vfapi.c Fabric module implementation.
+- *  hal_sgpg.h BFA SG page module
 - */
 -
--#include "fcs_fabric.h"
--#include "fcs_trcmod.h"
+-#ifndef __BFA_SGPG_PRIV_H__
+-#define __BFA_SGPG_PRIV_H__
 -
--BFA_TRC_FILE(FCS, VFAPI);
+-#include <cs/bfa_q.h>
+-
+-#define BFA_SGPG_MIN	(16)
 -
 -/**
-- *  fcs_vf_api virtual fabrics API
+- * Alignment macro for SG page allocation
 - */
+-#define BFA_SGPG_ROUNDUP(_l) (((_l) + (sizeof(struct bfi_sgpg_s) - 1)) \
+-			& ~(sizeof(struct bfi_sgpg_s) - 1))
+-
+-struct bfa_sgpg_wqe_s {
+-	struct list_head qe;	/*  queue sg page element	*/
+-	int	nsgpg;		/*  pages to be allocated	*/
+-	int	nsgpg_total;	/*  total pages required	*/
+-	void	(*cbfn) (void *cbarg);
+-				/*  callback function		*/
+-	void	*cbarg;		/*  callback arg		*/
+-	struct list_head sgpg_q;	/*  queue of alloced sgpgs	*/
+-};
+-
+-struct bfa_sgpg_s {
+-	struct list_head 	qe;	/*  queue sg page element	*/
+-	struct bfi_sgpg_s *sgpg; /*  va of SG page		*/
+-	union bfi_addr_u sgpg_pa;/*  pa of SG page		*/
+-};
 -
 -/**
-- * 		Enable VF mode.
-- *
-- * @param[in]		fcs		fcs module instance
-- * @param[in]		vf_id		default vf_id of port, FC_VF_ID_NULL
-- * 					to use standard default vf_id of 1.
-- *
-- * @retval	BFA_STATUS_OK		vf mode is enabled
-- * @retval	BFA_STATUS_BUSY		Port is active. Port must be disabled
-- *					before VF mode can be enabled.
+- * Given number of SG elements, BFA_SGPG_NPAGE() returns the number of
+- * SG pages required.
 - */
--bfa_status_t
--bfa_fcs_vf_mode_enable(struct bfa_fcs_s *fcs, u16 vf_id)
--{
--	return BFA_STATUS_OK;
--}
+-#define BFA_SGPG_NPAGE(_nsges)  (((_nsges) / BFI_SGPG_DATA_SGES) + 1)
 -
--/**
-- * 		Disable VF mode.
+-struct bfa_sgpg_mod_s {
+-	struct bfa_s *bfa;
+-	int		num_sgpgs;	/*  number of SG pages		*/
+-	int		free_sgpgs;	/*  number of free SG pages	*/
+-	struct bfa_sgpg_s *hsgpg_arr;	/*  BFA SG page array	*/
+-	struct bfi_sgpg_s *sgpg_arr;	/*  actual SG page array	*/
+-	u64	sgpg_arr_pa;	/*  SG page array DMA addr	*/
+-	struct list_head sgpg_q;	/*  queue of free SG pages	*/
+-	struct list_head sgpg_wait_q; /*  wait queue for SG pages	*/
+-};
+-#define BFA_SGPG_MOD(__bfa)	(&(__bfa)->modules.sgpg_mod)
+-
+-bfa_status_t	bfa_sgpg_malloc(struct bfa_s *bfa, struct list_head *sgpg_q,
+-								int nsgpgs);
+-void		bfa_sgpg_mfree(struct bfa_s *bfa, struct list_head *sgpg_q,
+-								int nsgpgs);
+-void		bfa_sgpg_winit(struct bfa_sgpg_wqe_s *wqe,
+-				   void (*cbfn) (void *cbarg), void *cbarg);
+-void		bfa_sgpg_wait(struct bfa_s *bfa, struct bfa_sgpg_wqe_s *wqe,
+-								int nsgpgs);
+-void		bfa_sgpg_wcancel(struct bfa_s *bfa, struct bfa_sgpg_wqe_s *wqe);
+-
+-#endif /* __BFA_SGPG_PRIV_H__ */
+diff --git a/drivers/scsi/bfa/bfa_uf_priv.h b/drivers/scsi/bfa/bfa_uf_priv.h
+deleted file mode 100644
+index bcb490f..0000000
+--- a/drivers/scsi/bfa/bfa_uf_priv.h
++++ /dev/null
+@@ -1,47 +0,0 @@
+-/*
+- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
+- * All rights reserved
+- * www.brocade.com
 - *
-- * @param[in]		fcs		fcs module instance
+- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
 - *
-- * @retval	BFA_STATUS_OK		vf mode is disabled
-- * @retval	BFA_STATUS_BUSY		VFs are present and being used. All
-- * 					VFs must be deleted before disabling
-- *					VF mode.
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License (GPL) Version 2 as
+- * published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
 - */
--bfa_status_t
--bfa_fcs_vf_mode_disable(struct bfa_fcs_s *fcs)
--{
--	return BFA_STATUS_OK;
--}
+-#ifndef __BFA_UF_PRIV_H__
+-#define __BFA_UF_PRIV_H__
 -
--/**
-- * 		Create a new VF instance.
-- *
-- *  A new VF is created using the given VF configuration. A VF is identified
-- *  by VF id. No duplicate VF creation is allowed with the same VF id. Once
-- *  a VF is created, VF is automatically started after link initialization
-- *  and EVFP exchange is completed.
-- *
-- * 	param[in] vf		- 	FCS vf data structure. Memory is
-- *					allocated by caller (driver)
-- * 	param[in] fcs 		- 	FCS module
-- * 	param[in] vf_cfg	- 	VF configuration
-- * 	param[in] vf_drv 	- 	Opaque handle back to the driver's
-- *					virtual vf structure
-- *
-- * 	retval BFA_STATUS_OK VF creation is successful
-- * 	retval BFA_STATUS_FAILED VF creation failed
-- * 	retval BFA_STATUS_EEXIST A VF exists with the given vf_id
-- */
--bfa_status_t
--bfa_fcs_vf_create(bfa_fcs_vf_t *vf, struct bfa_fcs_s *fcs, u16 vf_id,
--		  struct bfa_port_cfg_s *port_cfg, struct bfad_vf_s *vf_drv)
--{
--	bfa_trc(fcs, vf_id);
--	return BFA_STATUS_OK;
--}
+-#include <cs/bfa_sm.h>
+-#include <bfa_svc.h>
+-#include <bfi/bfi_uf.h>
 -
--/**
-- *  	Use this function to delete a BFA VF object. VF object should
-- * 		be stopped before this function call.
-- *
-- * 	param[in] vf - pointer to bfa_vf_t.
-- *
-- * 	retval BFA_STATUS_OK	On vf deletion success
-- * 	retval BFA_STATUS_BUSY VF is not in a stopped state
-- * 	retval BFA_STATUS_INPROGRESS VF deletion in in progress
-- */
--bfa_status_t
--bfa_fcs_vf_delete(bfa_fcs_vf_t *vf)
--{
--	bfa_trc(vf->fcs, vf->vf_id);
--	return BFA_STATUS_OK;
--}
+-#define BFA_UF_MIN	(4)
 -
--/**
-- *  	Start participation in VF. This triggers login to the virtual fabric.
-- *
-- * 	param[in] vf - pointer to bfa_vf_t.
-- *
-- * 	return None
-- */
--void
--bfa_fcs_vf_start(bfa_fcs_vf_t *vf)
--{
--	bfa_trc(vf->fcs, vf->vf_id);
--}
+-struct bfa_uf_mod_s {
+-	struct bfa_s *bfa;		/*  back pointer to BFA */
+-	struct bfa_uf_s *uf_list;	/*  array of UFs */
+-	u16	num_ufs;	/*  num unsolicited rx frames */
+-	struct list_head 	uf_free_q;	/*  free UFs */
+-	struct list_head 	uf_posted_q;	/*  UFs posted to IOC */
+-	struct bfa_uf_buf_s *uf_pbs_kva;	/*  list UF bufs request pld */
+-	u64	uf_pbs_pa;	/*  phy addr for UF bufs */
+-	struct bfi_uf_buf_post_s *uf_buf_posts;
+-					/*  pre-built UF post msgs */
+-	bfa_cb_uf_recv_t ufrecv;	/*  uf recv handler function */
+-	void		*cbarg;		/*  uf receive handler arg */
+-};
 -
--/**
-- *  	Logout with the virtual fabric.
-- *
-- * 	param[in] vf - pointer to bfa_vf_t.
-- *
-- * 	retval BFA_STATUS_OK 	On success.
-- * 	retval BFA_STATUS_INPROGRESS VF is being stopped.
-- */
--bfa_status_t
--bfa_fcs_vf_stop(bfa_fcs_vf_t *vf)
--{
--	bfa_trc(vf->fcs, vf->vf_id);
--	return BFA_STATUS_OK;
--}
+-#define BFA_UF_MOD(__bfa)	(&(__bfa)->modules.uf_mod)
 -
--/**
-- *  	Returns attributes of the given VF.
-- *
-- * 	param[in] 	vf			pointer to bfa_vf_t.
-- * 	param[out] vf_attr 	vf attributes returned
-- *
-- * 	return None
-- */
--void
--bfa_fcs_vf_get_attr(bfa_fcs_vf_t *vf, struct bfa_vf_attr_s *vf_attr)
--{
--	bfa_trc(vf->fcs, vf->vf_id);
--}
+-#define ufm_pbs_pa(_ufmod, _uftag)	\
+-	((_ufmod)->uf_pbs_pa + sizeof(struct bfa_uf_buf_s) * (_uftag))
 -
--/**
-- * 		Return statistics associated with the given vf.
-- *
-- * 	param[in] 	vf			pointer to bfa_vf_t.
-- * 	param[out] vf_stats 	vf statistics returned
-- *
-- *  @return None
-- */
--void
--bfa_fcs_vf_get_stats(bfa_fcs_vf_t *vf, struct bfa_vf_stats_s *vf_stats)
--{
--	bfa_os_memcpy(vf_stats, &vf->stats, sizeof(struct bfa_vf_stats_s));
--	return;
--}
+-void	bfa_uf_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
 -
--void
--/**
-- * 		clear statistics associated with the given vf.
-- *
-- * 	param[in] 	vf			pointer to bfa_vf_t.
-- *
-- *  @return None
-- */
--bfa_fcs_vf_clear_stats(bfa_fcs_vf_t *vf)
--{
--	bfa_os_memset(&vf->stats, 0, sizeof(struct bfa_vf_stats_s));
--	return;
--}
--
--/**
-- *  	Returns FCS vf structure for a given vf_id.
-- *
-- * 	param[in] 	vf_id		- VF_ID
-- *
-- * 	return
-- * 		If lookup succeeds, retuns fcs vf object, otherwise returns NULL
-- */
--bfa_fcs_vf_t   *
--bfa_fcs_vf_lookup(struct bfa_fcs_s *fcs, u16 vf_id)
--{
--	bfa_trc(fcs, vf_id);
--	if (vf_id == FC_VF_ID_NULL)
--		return &fcs->fabric;
--
--	/**
--	 * @todo vf support
--	 */
--
--	return NULL;
--}
--
--/**
-- *  	Returns driver VF structure for a given FCS vf.
-- *
-- * 	param[in] 	vf		- pointer to bfa_vf_t
-- *
-- * 	return Driver VF structure
-- */
--struct bfad_vf_s      *
--bfa_fcs_vf_get_drv_vf(bfa_fcs_vf_t *vf)
--{
--	bfa_assert(vf);
--	bfa_trc(vf->fcs, vf->vf_id);
--	return vf->vf_drv;
--}
--
--/**
-- *  	Return the list of VFs configured.
-- *
-- * 	param[in]	fcs	fcs module instance
-- * 	param[out] 	vf_ids	returned list of vf_ids
-- * 	param[in,out] 	nvfs	in:size of vf_ids array,
-- * 				out:total elements present,
-- * 				actual elements returned is limited by the size
-- *
-- * 	return Driver VF structure
-- */
--void
--bfa_fcs_vf_list(struct bfa_fcs_s *fcs, u16 *vf_ids, int *nvfs)
--{
--	bfa_trc(fcs, *nvfs);
--}
--
--/**
-- *  	Return the list of all VFs visible from fabric.
-- *
-- * 	param[in]	fcs	fcs module instance
-- * 	param[out] 	vf_ids	returned list of vf_ids
-- * 	param[in,out] 	nvfs	in:size of vf_ids array,
-- *				out:total elements present,
-- * 				actual elements returned is limited by the size
-- *
-- * 	return Driver VF structure
-- */
--void
--bfa_fcs_vf_list_all(struct bfa_fcs_s *fcs, u16 *vf_ids, int *nvfs)
--{
--	bfa_trc(fcs, *nvfs);
--}
--
--/**
-- * 		Return the list of local logical ports present in the given VF.
-- *
-- * 	param[in]	vf	vf for which logical ports are returned
-- * 	param[out] 	lpwwn	returned logical port wwn list
-- * 	param[in,out] 	nlports	in:size of lpwwn list;
-- *				out:total elements present,
-- * 				actual elements returned is limited by the size
-- *
-- */
--void
--bfa_fcs_vf_get_ports(bfa_fcs_vf_t *vf, wwn_t lpwwn[], int *nlports)
--{
--	struct list_head        *qe;
--	struct bfa_fcs_vport_s *vport;
--	int             i;
--	struct bfa_fcs_s      *fcs;
--
--	if (vf == NULL || lpwwn == NULL || *nlports == 0)
--		return;
--
--	fcs = vf->fcs;
--
--	bfa_trc(fcs, vf->vf_id);
--	bfa_trc(fcs, (u32) *nlports);
--
--	i = 0;
--	lpwwn[i++] = vf->bport.port_cfg.pwwn;
--
--	list_for_each(qe, &vf->vport_q) {
--		if (i >= *nlports)
--			break;
--
--		vport = (struct bfa_fcs_vport_s *) qe;
--		lpwwn[i++] = vport->lport.port_cfg.pwwn;
--	}
--
--	bfa_trc(fcs, i);
--	*nlports = i;
--	return;
--}
--
--
+-#endif /* __BFA_UF_PRIV_H__ */
 -- 
 1.7.3.rc1
 
