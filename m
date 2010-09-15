@@ -1,63 +1,84 @@
-From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Subject: Re: [PATCH 0/17]: New SCSI target framework (SCST) with dev handlers
- and 2 target drivers
-Date: Tue, 14 Sep 2010 22:56:49 -0700
-Message-ID: <20100915055649.GB22219@core.coreip.homeip.net>
-References: <4C8F886E.2080407@vlnb.net>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: [PATCH 0/7] BKL mass-conversion to mutex
+Date: Wed, 15 Sep 2010 19:38:30 +1000
+Message-ID: <20100915193830.27722c3a.sfr@canb.auug.org.au>
+References: <1284494022-7346-1-git-send-email-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C8F886E.2080407@vlnb.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>
+Content-Type: multipart/signed; protocol="application/pgp-signature";
+ micalg="PGP-SHA1";
+ boundary="Signature=_Wed__15_Sep_2010_19_38_30_+1000_x_8PDlRlfK6atX+0"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from chilli.pcug.org.au ([203.10.76.44]:42213 "EHLO smtps.tip.net.au"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750695Ab0IOJii (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2010 05:38:38 -0400
+In-Reply-To: <1284494022-7346-1-git-send-email-arnd@arndb.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, David Woodhouse <David.Woodhouse@intel.com>, linux-mtd@lists.infradead.org, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linuxppc-dev@ozlabs.org, Corey Minyard <minyard@acm.org>, openipmi-developer@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, Jens Axboe <axboe@kernel.dk>
 
-Hi Vladislav,
+--Signature=_Wed__15_Sep_2010_19_38_30_+1000_x_8PDlRlfK6atX+0
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 14, 2010 at 06:36:30PM +0400, Vladislav Bolkhovitin wrote:
-> Hi All,
-> 
-> Please review this second iteration of the patch set of the new
-> (although, perhaps, the oldest) SCSI target framework for Linux SCST
-> with a set of dev handlers and 2 target drivers: for local access
-> (scst_local) and for Infiniband SRP (srpt).
-> 
+Hi Arnd,
 
-I am afraid that the way the code was split into the patches will hinder
-the review process. Normally every patch consists of a usable on its
-own piece of code (or a logically compete change). This way the unit of
-work (coding, testing or reviewing) is clearly defined and easier to
-comprehend.
+On Tue, 14 Sep 2010 21:53:35 +0200 Arnd Bergmann <arnd@arndb.de> wrote:
+>
+> Stephen, please add
+> git+ssh://master.kernel.org/pub/scm/linux/kernel/git/arnd/bkl.git trivial
 
-Your patch series, unfortunately, splits Makefile and Kconfig changes
-separately from the drivers (which will cause build breakages should it
-be applied as is and someone needs to bisect), introduces header files
-in their entirety even when some of the data there is not needed till
-much later, uses facilities (for example sysfs bindings) that have not
-been introduced yet... I am afraid you'd have to rework the splitting
-process.
+Added from today.
 
-Also patch descriptions should be improved:
+Thanks for adding your subsystem tree as a participant of linux-next.  As
+you may know, this is not a judgment of your code.  The purpose of
+linux-next is for integration testing and to lower the impact of
+conflicts between subsystems in the next merge window.=20
 
-"This patch contains SYSFS interface implementation"
+You will need to ensure that the patches/commits in your tree/series have
+been:
+     * submitted under GPL v2 (or later) and include the Contributor's
+	Signed-off-by,
+     * posted to the relevant mailing list,
+     * reviewed by you (or another maintainer of your subsystem tree),
+     * successfully unit tested, and=20
+     * destined for the current or next Linux merge window.
 
-- what are you trying to solve?
-- main points?
-- why offloading of actions to a separate thread?
+Basically, this should be just what you would send to Linus (or ask him
+to fetch).  It is allowed to be rebased if you deem it necessary.
 
-This should be in the patch description.
+--=20
+Cheers,
+Stephen Rothwell=20
+sfr@canb.auug.org.au
 
-BTW, why are you using an exclusive thread instead of exclusive
-workqueue for this?
+Legal Stuff:
+By participating in linux-next, your subsystem tree contributions are
+public and will be included in the linux-next trees.  You may be sent
+e-mail messages indicating errors or other issues when the
+patches/commits from your subsystem tree are merged and tested in
+linux-next.  These messages may also be cross-posted to the linux-next
+mailing list, the linux-kernel mailing list, etc.  The linux-next tree
+project and IBM (my employer) make no warranties regarding the linux-next
+project, the testing procedures, the results, the e-mails, etc.  If you
+don't agree to these ground rules, let me know and I'll remove your tree
+from participation in linux-next.
 
-Also, kobject_del() + kobject_put() == kobject_unregister().
+--Signature=_Wed__15_Sep_2010_19_38_30_+1000_x_8PDlRlfK6atX+0
+Content-Type: application/pgp-signature
 
-And too many "naked returns", I believe common style is to only have
-return for non-void functions.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
-Thanks.
+iQEcBAEBAgAGBQJMkJQWAAoJEDMEi1NhKgbs/qcH/j6Q5d5mYGECz3JtxE/Em3WG
+qO7Bk3/4JfuxCzIjBlDyoz4EpG0a2ghiIiPrCM3kGwg3awScEMf9lFKYJE0KSBsH
+yxGilZjzBDG/XxMa58hGxb/ZmaIr/W5dwA7/XCUuF8lgGiqsvpoP94ncTf7mVQ1/
+KPV+S767DPzqOQK1w8RVMBx+0slO2MEr0qEtyEsbjYFfrfSPCqpUruASJh53GiVi
+SdPkjxstl8yG0YG6VGvGs2FHv1yeWbL5R4kFBARVIf+78ZDAzNYUhn2bgLZolL4Z
+0PboNcLQDByMqUfOQ+Wh7rdjouKzQLeDNqq/2GAfzhWaZCJ16X7kYnBQuvTXwFI=
+=52gd
+-----END PGP SIGNATURE-----
 
--- 
-Dmitry
+--Signature=_Wed__15_Sep_2010_19_38_30_+1000_x_8PDlRlfK6atX+0--
