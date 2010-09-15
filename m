@@ -1,152 +1,86 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/2] tcm_loop: Add DMA_BIDIRECTIONAL CDB support
-Date: Wed, 15 Sep 2010 05:06:52 -0700
-Message-ID: <1284552412-30567-1-git-send-email-nab@linux-iscsi.org>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: [PATCH] mvsas: mvs_lu_reset iterates phy num times when releasing
+ task
+Date: Wed, 15 Sep 2010 08:49:04 -0500
+Message-ID: <4C90CED0.6010109@redhat.com>
+References: <20100806161622.GA8696@localhost.localdomain> <4C5C448C.2040509@gmail.com> <20100903221303.GA9527@localhost.localdomain> <4C876B47.50805@gmail.com> <4C88BBB2.8080309@gmail.com> <4C88EBA0.3000100@redhat.com> <4C8BA6F8.7040807@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.re3.yahoo.com ([66.196.96.84]:46987 "HELO
-	smtp101.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753284Ab0IOMG5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2010 08:06:57 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:64509 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752964Ab0IONtD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2010 09:49:03 -0400
+In-Reply-To: <4C8BA6F8.7040807@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Douglas Gilbert <dgilbert@interlog.com>, Joe Eykholt <jeykholt@cisco.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+Cc: linux-scsi@vger.kernel.org, Wouter Naaktgeboren <wouter_naaktgeboren@xs4all.nl>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Konstantinos Skarlatos wrote:
+>  Unfortunately after some heavy io and use of hddtemp/smartmontools, i 
+> got this:
+> 
+> 
+> ------------[ cut here ]------------
+> WARNING: at drivers/ata/libata-core.c:5124 ata_qc_issue+0x30b/0x320 
+> [libata]()
 
-This patch series adds DMA_BIDIRECTIONAL CDB to the TCM_Loop Virtual SCSI
-LLD module.  This includes the following changes:
+This does look like the same warning from ata_qc_issue(), it is complaining
+that a non-NCQ command is sent down but there is already an active
+NCQ command on the link.
 
-	*) Add call to include/scsi/scsi_cmnd.h:scsi_bidi_cmnd() to set
-	   TCM struct se_cmd internal data_direction in tcm_loop_allocate_core_cmd()
-	*) Update tcm_loop_new_cmd_map() to handle BIDI READ payload from scsi_in()
-	*) Drop DMA_BIDIRECTIONAL usage check from tcm_loop_queuecommand()
-	*) Add tcm_loop_slave_alloc() and tcm_loop_slave_configure() handlers for
-	   struct scsi_host_template to set QUEUE_FLAG_BIDI in the former.
+With the patch ata_scsi_translate would check ata_std_qc_defer (qc_defer)
+which should have deferred the command since it was a non-NCQ and
+there was already an active NCQ command (link->sactive). I thought this
+would definitely prevent this case.
 
-So far this has been tested together with commit 1f8f3eda132c using XDWRITE_READ_10
-via BSG userspace code on a v2.6.36-rc3 kernel.
+Thanks,
+David
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |   48 ++++++++++++++++++------
- 1 files changed, 36 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-index 644f978..c4139d8 100644
---- a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-+++ b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
-@@ -64,6 +64,7 @@ static struct se_cmd *tcm_loop_allocate_core_cmd(
- 	struct tcm_loop_nexus *tl_nexus = tl_hba->tl_nexus;
- 	struct tcm_loop_cmd *tl_cmd;
- 	int sam_task_attr;
-+	enum dma_data_direction data_direction;
- 
- 	if (!(tl_nexus)) {
- 		scmd_printk(KERN_ERR, sc, "TCM_Loop I_T Nexus"
-@@ -81,6 +82,13 @@ static struct se_cmd *tcm_loop_allocate_core_cmd(
- 	 * Save the pointer to struct scsi_cmnd *sc
- 	 */
- 	tl_cmd->sc = sc;
-+	/*
-+	 * Check for scsi_bidi_cmnd() to signal TCM Core for DMA_BIDIRECTIONAL
-+	 */
-+	if (scsi_bidi_cmnd(sc))
-+		data_direction = DMA_BIDIRECTIONAL;
-+	else
-+		data_direction = sc->sc_data_direction;
- 
- 	/*
- 	 * Locate the SAM Task Attr from struct scsi_cmnd *
-@@ -105,7 +113,7 @@ static struct se_cmd *tcm_loop_allocate_core_cmd(
- 	 * Initialize struct se_cmd descriptor from target_core_mod infrastructure
- 	 */
- 	transport_init_se_cmd(se_cmd, se_tpg->se_tpg_tfo, se_sess,
--			scsi_bufflen(sc), sc->sc_data_direction, sam_task_attr,
-+			scsi_bufflen(sc), data_direction, sam_task_attr,
- 			&tl_cmd->tl_sense_buf[0]);
- 	/*
- 	 * Locate the struct se_lun pointer and attach it to struct se_cmd
-@@ -128,14 +136,16 @@ static struct se_cmd *tcm_loop_allocate_core_cmd(
- /*
-  * Called by struct target_core_fabric_ops->new_cmd_map()
-  *
-- * Always called in process context
-+ * Always called in process context.  A non zero return value
-+ * here will signal to handle an exception based on the return code.
-  */
- int tcm_loop_new_cmd_map(struct se_cmd *se_cmd)
- {
- 	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
- 				struct tcm_loop_cmd, tl_se_cmd);
- 	struct scsi_cmnd *sc = tl_cmd->sc;
--	void *mem_ptr;
-+	void *mem_ptr, *mem_bidi_ptr = NULL;
-+	u32 sg_no_bidi = 0;
- 	int ret;
- 	/*
- 	 * Allocate the necessary tasks to complete the received CDB+data
-@@ -163,6 +173,16 @@ int tcm_loop_new_cmd_map(struct se_cmd *se_cmd)
- 	if (scsi_sg_count(sc)) {
- 		se_cmd->se_cmd_flags |= SCF_PASSTHROUGH_SG_TO_MEM;
- 		mem_ptr = (void *)scsi_sglist(sc);
-+		/*
-+		 * For BIDI commands, pass in the extra READ buffer
-+		 * to transport_generic_map_mem_to_cmd() below..
-+		 */
-+		if (se_cmd->data_direction == DMA_BIDIRECTIONAL) {
-+			struct scsi_data_buffer *sdb = scsi_in(sc);
-+
-+			mem_bidi_ptr = (void *)sdb->table.sgl;
-+			sg_no_bidi = sdb->table.nents;
-+		}
- 	} else {
- 		/*
- 		 * Used for DMA_NONE
-@@ -322,15 +342,6 @@ static int tcm_loop_queuecommand(
- 	}
- 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
- 	se_tpg = &tl_tpg->tl_se_tpg;
--
--	if (sc->sc_data_direction == DMA_BIDIRECTIONAL) {
--		spin_lock_irq(host->host_lock);
--		printk(KERN_ERR "Unsupported BIDI sc->sc_data_direction: %d\n",
--			sc->sc_data_direction);	
--		sc->result = host_byte(DID_ERROR);
--		(*done)(sc);
--		return 0;
--	}
- 	/*
- 	 * Determine the SAM Task Attribute and allocate tl_cmd and
- 	 * tl_cmd->tl_se_cmd from TCM infrastructure
-@@ -446,6 +457,17 @@ release:
- 	return ret;
- }
- 
-+static int tcm_loop_slave_alloc(struct scsi_device *sd)
-+{
-+	set_bit(QUEUE_FLAG_BIDI, &sd->request_queue->queue_flags);
-+	return 0;
-+}
-+
-+static int tcm_loop_slave_configure(struct scsi_device *sd)
-+{
-+	return 0;
-+}
-+
- static struct scsi_host_template tcm_loop_driver_template = {
- 	.proc_info		= tcm_loop_proc_info,
- 	.proc_name		= "tcm_loopback",
-@@ -468,6 +490,8 @@ static struct scsi_host_template tcm_loop_driver_template = {
- 	.cmd_per_lun		= TL_SCSI_CMD_PER_LUN,
- 	.max_sectors		= TL_SCSI_MAX_SECTORS,
- 	.use_clustering		= DISABLE_CLUSTERING,
-+	.slave_alloc		= tcm_loop_slave_alloc,
-+	.slave_configure	= tcm_loop_slave_configure,
- 	.module			= THIS_MODULE,
- };
- 
--- 
-1.5.6.5
+> Hardware name:
+> Modules linked in: aufs exportfs ipv6 hwmon_vid jfs cpufreq_powersave 
+> evdev fan usbhid firewire_ohci psmouse serio_raw pcspkr hid 
+> firewire_core button crc_itu_t cpufreq_ondemand thermal skge sg k8temp 
+> powernow_k8 freq_table i2c_nforce2 i2c_core processor mperf edac_core 
+> edac_mce_amd fuse forcedeth rtc_cmos rtc_core rtc_lib ext2 mbcache 
+> dm_crypt dm_mod ses enclosure sd_mod usb_storage mvsas ohci_hcd libsas 
+> sata_sil ehci_hcd scsi_transport_sas sata_nv usbcore pata_amd sata_via 
+> ata_generic pata_via pata_acpi libata scsi_mod
+> Pid: 2592, comm: hddtemp Not tainted 2.6.35-ARCH #1
+> Call Trace:
+>  [<ffffffff8105284a>] warn_slowpath_common+0x7a/0xb0
+>  [<ffffffff81052895>] warn_slowpath_null+0x15/0x20
+>  [<ffffffffa00334fb>] ata_qc_issue+0x30b/0x320 [libata]
+>  [<ffffffffa000828d>] ? scsi_init_sgtable+0x4d/0x90 [scsi_mod]
+>  [<ffffffffa003ae10>] ? ata_scsi_pass_thru+0x0/0x2e0 [libata]
+>  [<ffffffffa0039126>] ata_scsi_translate+0xa6/0x180 [libata]
+>  [<ffffffffa00020f0>] ? scsi_done+0x0/0x90 [scsi_mod]
+>  [<ffffffffa00020f0>] ? scsi_done+0x0/0x90 [scsi_mod]
+>  [<ffffffffa003c390>] ata_sas_queuecmd+0x100/0x270 [libata]
+>  [<ffffffffa013c6f8>] sas_queuecommand+0x98/0x300 [libsas]
+>  [<ffffffffa000296d>] scsi_dispatch_cmd+0xfd/0x320 [scsi_mod]
+>  [<ffffffffa00096d2>] scsi_request_fn+0x322/0x410 [scsi_mod]
+>  [<ffffffff81062a66>] ? lock_timer_base.clone.26+0x36/0x70
+>  [<ffffffff811b8b2e>] __blk_run_queue+0x5e/0x160
+>  [<ffffffff811b2aba>] elv_insert+0x18a/0x270
+>  [<ffffffff811b2c02>] __elv_add_request+0x62/0xc0
+>  [<ffffffff811bd3f0>] blk_execute_rq_nowait+0x60/0xb0
+>  [<ffffffff811bd4c1>] blk_execute_rq+0x81/0xf0
+>  [<ffffffff811bd274>] ? blk_rq_map_user+0x194/0x270
+>  [<ffffffff811c1a9a>] sg_io+0x28a/0x3d0
+>  [<ffffffff811c2245>] scsi_cmd_ioctl+0x255/0x4a0
+>  [<ffffffff811a243a>] ? security_inode_permission+0x1a/0x20
+>  [<ffffffffa0003bdc>] ? scsi_ioctl+0x27c/0x3a0 [scsi_mod]
+>  [<ffffffffa017ee80>] sd_ioctl+0x90/0xe0 [sd_mod]
+>  [<ffffffff811bf0df>] __blkdev_driver_ioctl+0x8f/0xb0
+>  [<ffffffff811bf5c6>] blkdev_ioctl+0x236/0x7f0
+>  [<ffffffff81151fcc>] block_ioctl+0x3c/0x40
+>  [<ffffffff8113351c>] vfs_ioctl+0x3c/0xd0
+>  [<ffffffff81133b1c>] do_vfs_ioctl+0x7c/0x520
+>  [<ffffffff81134041>] sys_ioctl+0x81/0xa0
+>  [<ffffffff81009e82>] system_call_fastpath+0x16/0x1b
+> ---[ end trace fc0747b97329c42f ]---
 
