@@ -1,44 +1,112 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi, fcoe, libfc: drop scsi host_lock use from fc_queuecommand
-Date: Wed, 15 Sep 2010 20:01:32 +0200
-Message-ID: <AANLkTimAkGq7NxPCksBXWwY35+cSE6qf+2NfqxCb0QFj@mail.gmail.com>
-References: <20100903222715.6237.75737.stgit@localhost.localdomain>
-	<AANLkTinVTSboQB=kxyOCQ-eF6hYWqsn9YYJn7bnLeTtW@mail.gmail.com>
-	<1284571877.30345.24.camel@vi2.jf.intel.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+ MegaRAID SAS driver
+Date: Wed, 15 Sep 2010 14:06:24 -0400
+Message-ID: <1284573984.8296.83.camel@mulgrave.site>
+References: <AANLkTineJ0dFcqi5v1h75EYgpBOSqvHsSSTi=VJWsjM0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f46.google.com ([209.85.160.46]:65389 "EHLO
-	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753847Ab0IOSBg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Sep 2010 14:01:36 -0400
-Received: by pwi3 with SMTP id 3so214600pwi.19
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Sep 2010 11:01:36 -0700 (PDT)
-In-Reply-To: <1284571877.30345.24.camel@vi2.jf.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AANLkTineJ0dFcqi5v1h75EYgpBOSqvHsSSTi=VJWsjM0@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: bo yang <boyang1288@gmail.com>
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, bo.yang@lsi.com
 List-Id: linux-scsi@vger.kernel.org
-To: Vasu Dev <vasu.dev@linux.intel.com>
-Cc: Vasu Dev <vasu.dev@intel.com>, linux-scsi@vger.kernel.org
 
-On Wed, Sep 15, 2010 at 7:31 PM, Vasu Dev <vasu.dev@linux.intel.com> wrote:
->
-> On Sun, 2010-09-12 at 18:37 +0200, Bart Van Assche wrote:
-> > On Sat, Sep 4, 2010 at 12:27 AM, Vasu Dev <vasu.dev@intel.com> wrote:
-> > > [ ... ]
-> > After having converted the SRP initiator (ib_srp) to use per-LUN
-> > locking instead of per-host locking and after having enabled
->
-> Per-lun locking looks good idea and should mitigate host lock
-> bottlenecks while lun is not simultaneously used by all host cores, may
-> be some use case would prevent that by limiting lun to VM on specific
-> core. Is this change already upstream or queued for upstream ? Is that
-> change going to eliminate host lock on fast path completely ?
-> [ ... ]
+On Tue, 2010-09-07 at 13:08 -0400, bo yang wrote:
+> Re-Submit:
 
-Yes, that patch eliminates the host lock on the fast patch completely.
-The patch is not yet available upstream - I still have to split it and
-post it for review on the linux-rdma mailing list. But if you want you
-can have a look at that patch here:
-http://sourceforge.net/mailarchive/message.php?msg_name=E1Ova8J-0005Mx-NV%40sfp-svn-4.v30.ch3.sourceforge.com.
+This still doesn't apply:
 
-Bart.
+> To add the OCR support, driver need to do:
+> 		a). reset the controller chips -- Xscale and Gen2 which
+> 		will change the function calls and add the reset function
+> 		related to this two chips.
+> 		
+> 		b). during the reset, driver will store the pending cmds
+> 		which not returned by FW to driver's pending queue.  Driver
+> 		will re-issue those pending cmds again to FW after the OCR
+> 		finished.
+> 		
+> 		c). In driver's timeout routine, driver will report to
+> 		OS as reset. Also driver's queue routine will block the
+> 		cmds until the OCR finished.
+> 		
+> 		d). in Driver's ISR routine, if driver get the FW state as
+> 		state change, FW in Failure status and FW support online controller
+> 		reset (OCR), driver will start to do the controller reset.
+> 		
+> 		e). In driver's IOCTL routine, the application cmds will wait for the
+> 		OCR to finish, then issue the cmds to FW.
+> 
+> Signed-off-by Bo Yang<bo.yang@lsi.com>
+> 
+> ---
+>  Documentation/scsi/ChangeLog.megaraid_sas |   33 +
+>  drivers/scsi/megaraid/megaraid_sas.c      |  761 +++++++++++++++++++++++++++---
+>  drivers/scsi/megaraid/megaraid_sas.h      |   88 +++
+>  3 files changed, 823 insertions(+), 59 deletions(-)
+> diff -rupN old/Documentation/scsi/ChangeLog.megaraid_sas
+> new/Documentation/scsi/ChangeLog.megaraid_sas
+> --- old/Documentation/scsi/ChangeLog.megaraid_sas	2010-09-06
+> 03:13:15.000000000 -0400
+> +++ new/Documentation/scsi/ChangeLog.megaraid_sas	2010-09-06
+> 04:48:10.000000000 -0400
+
+This set of lines is still broken
+
+> @@ -1,3 +1,36 @@
+> +1 Release Date:	Thur.  May 03, 2010 09:12:45 PST 2009 -
+> +			(emaild-id:megaraidlinux@lsi.com)
+> +			Bo Yang
+> +
+> +2 Current Version : 00.00.04.17.1-rc1
+> +3 Older Version   : 00.00.04.17.1-rc1
+> +
+> +1.	Add the Online Controller Reset (OCR) to the Driver.
+> +	OCR is the new feature for megaraid_sas driver which
+> +	will allow the fw to do the chip reset which will not
+> +	affact the OS behavious.
+> +
+> +	To add the OCR support, driver need to do:
+> +		a). reset the controller chips -- Xscale and Gen2 which
+> +		will change the function calls and add the reset function
+> +		related to this two chips.
+> +		
+> +		b). during the reset, driver will store the pending cmds
+> +		which not returned by FW to driver's pending queue.  Driver
+> +		will re-issue those pending cmds again to FW after the OCR
+> +		finished.
+> +		
+> +		c). In driver's timeout routine, driver will report to
+> +		OS as reset. Also driver's queue routine will block the
+> +		cmds until the OCR finished.
+> +		
+> +		d). in Driver's ISR routine, if driver get the FW state as
+> +		state change, FW in Failure status and FW support online controller
+> +		reset (OCR), driver will start to do the controller reset.
+> +		
+> +		e). In driver's IOCTL routine, the application cmds will wait for the
+> +		OCR to finish, then issue the cmds to FW.
+> +		
+>  1 Release Date    : Thur.  Oct 29, 2009 09:12:45 PST 2009 -
+>  			(emaild-id:megaraidlinux@lsi.com)
+>  			Bo Yang
+> diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c
+> new/drivers/scsi/megaraid/megaraid_sas.c
+> --- old/drivers/scsi/megaraid/megaraid_sas.c	2010-09-06 03:13:15.000000000 -0400
+> +++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-09-06 03:17:11.000000000 -0400
+> @@ -104,8 +104,14 @@ static u32 megasas_dbg_lvl;
+>  spinlock_t poll_aen_lock;
+> 
+>  static void
+> -megasas_complete_cmd(struct megasas_instance *instance, struct
+> megasas_cmd *cmd,
+
+As is this.
+
+You can check this yourself: just try to apply the patch you get back
+from the mailing list.
+
+James
