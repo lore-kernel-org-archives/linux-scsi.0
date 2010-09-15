@@ -1,73 +1,63 @@
-From: Madhu Iyengar <madhu.iyengar@qlogic.com>
-Subject: RE: [patch] qla2xxx: locking problem in qla2x00_init_rings()
-Date: Tue, 14 Sep 2010 16:52:15 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA8712925CF9B@AVEXMB1.qlogic.org>
-References: <20100912214033.GF25351@bicker>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH 0/17]: New SCSI target framework (SCST) with dev handlers
+ and 2 target drivers
+Date: Tue, 14 Sep 2010 22:56:49 -0700
+Message-ID: <20100915055649.GB22219@core.coreip.homeip.net>
+References: <4C8F886E.2080407@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:19376 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752474Ab0INXwR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Sep 2010 19:52:17 -0400
-In-Reply-To: <20100912214033.GF25351@bicker>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4C8F886E.2080407@vlnb.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Linux Driver <Linux-Driver@qlogic.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Grant Likely <grant.likely@secretlab.ca>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devicetree-discuss@lists.ozlabs.org" <devicetree-discuss@lists.ozlabs.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Arun Easi <arun.easi@qlogic.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>
 
-Dan,
+Hi Vladislav,
 
-Thanks. We'll test this patch.
+On Tue, Sep 14, 2010 at 06:36:30PM +0400, Vladislav Bolkhovitin wrote:
+> Hi All,
+> 
+> Please review this second iteration of the patch set of the new
+> (although, perhaps, the oldest) SCSI target framework for Linux SCST
+> with a set of dev handlers and 2 target drivers: for local access
+> (scst_local) and for Infiniband SRP (srpt).
+> 
 
-Patch-reviewed-by: Giridhar Malavali <giridhar.malavali@qlogic.com>
-Acked-by: Madhu Iyengar <madhu.iyengar@qlogic.com>
+I am afraid that the way the code was split into the patches will hinder
+the review process. Normally every patch consists of a usable on its
+own piece of code (or a logically compete change). This way the unit of
+work (coding, testing or reviewing) is clearly defined and easier to
+comprehend.
 
-Cheers,
-Madhu
+Your patch series, unfortunately, splits Makefile and Kconfig changes
+separately from the drivers (which will cause build breakages should it
+be applied as is and someone needs to bisect), introduces header files
+in their entirety even when some of the data there is not needed till
+much later, uses facilities (for example sysfs bindings) that have not
+been introduced yet... I am afraid you'd have to rework the splitting
+process.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Dan Carpenter
-Sent: Sunday, September 12, 2010 2:41 PM
-To: Andrew Vasquez
-Cc: Linux Driver; James E.J. Bottomley; Giridhar Malavali; Lalit Chandivade; Grant Likely; linux-scsi@vger.kernel.org; devicetree-discuss@lists.ozlabs.org; kernel-janitors@vger.kernel.org; Arun Easi
-Subject: [patch] qla2xxx: locking problem in qla2x00_init_rings()
+Also patch descriptions should be improved:
 
-IRQs are already disabled here so we don't need to disable them again.
-But more importantly, the spin_lock_irqsave() overwrites "flags" and
-that breaks things when we want to re-enable the IRQs when we call
-spin_unlock_irqrestore(&ha->hardware_lock, flags);
+"This patch contains SYSFS interface implementation"
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
----
-This seems like an important bug.  I don't have this hardware but could
-someone from QLogic test this out and maybe queue it up for 2.6.36?
+- what are you trying to solve?
+- main points?
+- why offloading of actions to a separate thread?
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 9c383ba..9f4ba28 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1787,14 +1787,14 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 		qla2x00_init_response_q_entries(rsp);
- 	}
- 
--	spin_lock_irqsave(&ha->vport_slock, flags);
-+	spin_lock(&ha->vport_slock);
- 	/* Clear RSCN queue. */
- 	list_for_each_entry(vp, &ha->vp_list, list) {
- 		vp->rscn_in_ptr = 0;
- 		vp->rscn_out_ptr = 0;
- 	}
- 
--	spin_unlock_irqrestore(&ha->vport_slock, flags);
-+	spin_unlock(&ha->vport_slock);
- 
- 	ha->isp_ops->config_rings(vha);
- 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This should be in the patch description.
 
+BTW, why are you using an exclusive thread instead of exclusive
+workqueue for this?
+
+Also, kobject_del() + kobject_put() == kobject_unregister().
+
+And too many "naked returns", I believe common style is to only have
+return for non-void functions.
+
+Thanks.
+
+-- 
+Dmitry
