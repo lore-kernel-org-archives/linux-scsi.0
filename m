@@ -1,13 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 4/5] lpfc: prep for fc host dev loss tmo support
-Date: Wed, 15 Sep 2010 16:52:31 -0500
-Message-ID: <1284587552-7617-5-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 3/5] qla2xxx: prep for fc host dev loss tmo support
+Date: Wed, 15 Sep 2010 16:52:30 -0500
+Message-ID: <1284587552-7617-4-git-send-email-michaelc@cs.wisc.edu>
 References: <1284587552-7617-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38496 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:29597 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755000Ab0IOVrL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2010 17:47:11 -0400
+	id S1755000Ab0IOVrM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2010 17:47:12 -0400
 In-Reply-To: <1284587552-7617-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,83 +21,64 @@ callback and just has the driver set the dev loss
 using the fc class fc_host_dev_loss_tmo macro like is
 done for other fc params.
 
-It also adds compat support for the driver's existing
-dev loss and nodev sysfs and modparams.
-
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c |   16 ++++++----------
- drivers/scsi/lpfc/lpfc_init.c |    2 ++
- 2 files changed, 8 insertions(+), 10 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   13 ++-----------
+ 1 files changed, 2 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 87c2b6b..f6efc6f 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2159,6 +2159,11 @@ lpfc_nodev_tmo_set(struct lpfc_vport *vport, int val)
- 	if (val >= LPFC_MIN_DEVLOSS_TMO && val <= LPFC_MAX_DEVLOSS_TMO) {
- 		vport->cfg_nodev_tmo = val;
- 		vport->cfg_devloss_tmo = val;
-+		/*
-+		 * For compat: set the fc_host dev loss so new rports
-+		 * will get the value.
-+		 */
-+		fc_host_dev_loss_tmo(lpfc_shost_from_vport(vport)) = val;
- 		lpfc_update_rport_devloss_tmo(vport);
- 		return 0;
- 	}
-@@ -2208,6 +2213,7 @@ lpfc_devloss_tmo_set(struct lpfc_vport *vport, int val)
- 		vport->cfg_nodev_tmo = val;
- 		vport->cfg_devloss_tmo = val;
- 		vport->dev_loss_tmo_changed = 1;
-+		fc_host_dev_loss_tmo(lpfc_shost_from_vport(vport)) = val;
- 		lpfc_update_rport_devloss_tmo(vport);
- 		return 0;
- 	}
-@@ -4370,14 +4376,6 @@ lpfc_get_starget_port_name(struct scsi_target *starget)
- 		ndlp ? wwn_to_u64(ndlp->nlp_portname.u.wwn) : 0;
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index c978105..029fe6b 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1530,15 +1530,6 @@ qla2x00_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
  }
  
--static void
--lpfc_get_host_def_loss_tmo(struct Scsi_Host *shost)
+ static void
+-qla2x00_get_host_def_loss_tmo(struct Scsi_Host *shost)
 -{
--        struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+-	scsi_qla_host_t *vha = shost_priv(shost);
+-	struct qla_hw_data *ha = vha->hw;
 -
--	fc_host_def_dev_loss_tmo(shost) = vport->cfg_devloss_tmo;
+-	fc_host_def_dev_loss_tmo(shost) = ha->port_down_retry_count;
 -}
 -
- /**
-  * lpfc_set_rport_loss_tmo - Set the rport dev loss tmo
-  * @rport: fc rport address.
-@@ -4486,7 +4484,6 @@ struct fc_function_template lpfc_transport_functions = {
- 	.get_host_fabric_name = lpfc_get_host_fabric_name,
+-static void
+ qla2x00_dev_loss_tmo_callbk(struct fc_rport *rport)
+ {
+ 	struct Scsi_Host *host = rport_to_shost(rport);
+@@ -1785,6 +1776,7 @@ qla24xx_vport_create(struct fc_vport *fc_vport, bool disable)
+ 	}
+ 
+ 	/* initialize attributes */
++	fc_host_dev_loss_tmo(vha->host) = ha->port_down_retry_count;
+ 	fc_host_node_name(vha->host) = wwn_to_u64(vha->node_name);
+ 	fc_host_port_name(vha->host) = wwn_to_u64(vha->port_name);
+ 	fc_host_supported_classes(vha->host) =
+@@ -1912,7 +1904,6 @@ struct fc_function_template qla2xxx_transport_functions = {
  	.show_host_fabric_name = 1,
+ 	.get_host_port_state = qla2x00_get_host_port_state,
+ 	.show_host_port_state = 1,
+-	.get_host_def_dev_loss_tmo = qla2x00_get_host_def_loss_tmo,
  
--	.get_host_def_dev_loss_tmo = lpfc_get_host_def_loss_tmo,
- 	/*
- 	 * The LPFC driver treats linkdown handling as target loss events
- 	 * so there are no sysfs handlers for link_down_tmo.
-@@ -4554,7 +4551,6 @@ struct fc_function_template lpfc_vport_transport_functions = {
- 	.get_host_fabric_name = lpfc_get_host_fabric_name,
+ 	.dd_fcrport_size = sizeof(struct fc_port *),
+ 	.show_rport_supported_classes = 1,
+@@ -1959,7 +1950,6 @@ struct fc_function_template qla2xxx_transport_vport_functions = {
  	.show_host_fabric_name = 1,
+ 	.get_host_port_state = qla2x00_get_host_port_state,
+ 	.show_host_port_state = 1,
+-	.get_host_def_dev_loss_tmo = qla2x00_get_host_def_loss_tmo,
  
--	.get_host_def_dev_loss_tmo = lpfc_get_host_def_loss_tmo,
- 	/*
- 	 * The LPFC driver treats linkdown handling as target loss events
- 	 * so there are no sysfs handlers for link_down_tmo.
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index da9ba06..87a4d09 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -2817,6 +2817,8 @@ void lpfc_host_attrib_init(struct Scsi_Host *shost)
- 		(((uint32_t) vport->fc_sparam.cmn.bbRcvSizeMsb & 0x0F) << 8) |
- 		(uint32_t) vport->fc_sparam.cmn.bbRcvSizeLsb;
+ 	.dd_fcrport_size = sizeof(struct fc_port *),
+ 	.show_rport_supported_classes = 1,
+@@ -1988,6 +1978,7 @@ qla2x00_init_host_attr(scsi_qla_host_t *vha)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	u32 speed = FC_PORTSPEED_UNKNOWN;
  
-+	fc_host_dev_loss_tmo(shost) = vport->cfg_devloss_tmo;
-+
- 	/* This value is also unchanging */
- 	memset(fc_host_active_fc4s(shost), 0,
- 	       sizeof(fc_host_active_fc4s(shost)));
++	fc_host_dev_loss_tmo(vha->host) = ha->port_down_retry_count;
+ 	fc_host_node_name(vha->host) = wwn_to_u64(vha->node_name);
+ 	fc_host_port_name(vha->host) = wwn_to_u64(vha->port_name);
+ 	fc_host_supported_classes(vha->host) = FC_COS_CLASS3;
 -- 
 1.7.2.2
 
