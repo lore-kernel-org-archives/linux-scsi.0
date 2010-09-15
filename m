@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 22/33] bfa: Add back cleaned up bfa to firmware interface header files.
-Date: Wed, 15 Sep 2010 12:12:26 -0700
-Message-ID: <1284577946-20599-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 23/33] bfa: Add cleaned up bfa FCP specifc header files.
+Date: Wed, 15 Sep 2010 12:12:45 -0700
+Message-ID: <1284577965-20658-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34496 "EHLO
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34522 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754115Ab0IOTMv (ORCPT
+	by vger.kernel.org with ESMTP id S1755062Ab0IOTNc (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2010 15:12:51 -0400
+	Wed, 15 Sep 2010 15:13:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -18,28 +18,24 @@ Cc: huangj@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@broc
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- Adding back the cleaned up bfa to firmware interface header files.
-	  bfi.h, bfi_ms.h : Hold the structures for BFA to interact with the firwmare.
-	  bfi_cbreg.h, bfi_ctreg.h: Hold the ASIC specific register information.
+	- Adding cleaned up BFA FCP specific header files.
+	  bfa_fcbuild.h : Contains the FC link service frame building and parsing routines
+	  bfa_fc.h      : Contains FCP related structures.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfi.h       |  579 ++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfi_cbreg.h |  304 +++++++++++++++++
- drivers/scsi/bfa/bfi_ctreg.h |  627 ++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfi_ms.h    |  765 ++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 2275 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/bfa/bfi.h
- create mode 100644 drivers/scsi/bfa/bfi_cbreg.h
- create mode 100644 drivers/scsi/bfa/bfi_ctreg.h
- create mode 100644 drivers/scsi/bfa/bfi_ms.h
+ drivers/scsi/bfa/bfa_fc.h      | 1916 ++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/bfa/bfa_fcbuild.h |  316 +++++++
+ 2 files changed, 2232 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/bfa/bfa_fc.h
+ create mode 100644 drivers/scsi/bfa/bfa_fcbuild.h
 
-diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
 new file mode 100644
-index 0000000..85f2224
+index 0000000..6eff705
 --- /dev/null
-+++ b/drivers/scsi/bfa/bfi.h
-@@ -0,0 +1,579 @@
++++ b/drivers/scsi/bfa/bfa_fc.h
+@@ -0,0 +1,1916 @@
 +/*
 + * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
 + * All rights reserved
@@ -57,1517 +53,1911 @@ index 0000000..85f2224
 + * General Public License for more details.
 + */
 +
-+#ifndef __BFI_H__
-+#define __BFI_H__
++#ifndef __BFA_FC_H__
++#define __BFA_FC_H__
 +
-+#include "bfa_defs.h"
-+#include "bfa_defs_svc.h"
++#include "bfa_os_inc.h"
++
++typedef u64 wwn_t;
++typedef u64 lun_t;
++
++#define WWN_NULL	(0)
++#define FC_SYMNAME_MAX	256	/*  max name server symbolic name size */
++#define FC_ALPA_MAX	128
 +
 +#pragma pack(1)
 +
-+/**
-+ * BFI FW image type
-+ */
-+#define	BFI_FLASH_CHUNK_SZ			256	/*  Flash chunk size */
-+#define	BFI_FLASH_CHUNK_SZ_WORDS	(BFI_FLASH_CHUNK_SZ/sizeof(u32))
-+enum {
-+	BFI_IMAGE_CB_FC,
-+	BFI_IMAGE_CT_FC,
-+	BFI_IMAGE_CT_CNA,
-+	BFI_IMAGE_MAX,
-+};
-+
-+/**
-+ * Msg header common to all msgs
-+ */
-+struct bfi_mhdr_s {
-+	u8		msg_class;	/*  @ref bfi_mclass_t		    */
-+	u8		msg_id;		/*  msg opcode with in the class   */
-+	union {
-+		struct {
-+			u8	rsvd;
-+			u8	lpu_id;	/*  msg destination		    */
-+		} h2i;
-+		u16	i2htok;	/*  token in msgs to host	    */
-+	} mtag;
-+};
-+
-+#define bfi_h2i_set(_mh, _mc, _op, _lpuid) do {		\
-+	(_mh).msg_class		= (_mc);      \
-+	(_mh).msg_id		= (_op);      \
-+	(_mh).mtag.h2i.lpu_id	= (_lpuid);      \
-+} while (0)
-+
-+#define bfi_i2h_set(_mh, _mc, _op, _i2htok) do {		\
-+	(_mh).msg_class		= (_mc);      \
-+	(_mh).msg_id		= (_op);      \
-+	(_mh).mtag.i2htok	= (_i2htok);      \
-+} while (0)
++#define MAC_ADDRLEN	(6)
++struct mac_s { u8 mac[MAC_ADDRLEN]; };
++#define mac_t struct mac_s
 +
 +/*
-+ * Message opcodes: 0-127 to firmware, 128-255 to host
++ * generic SCSI cdb definition
 + */
-+#define BFI_I2H_OPCODE_BASE	128
-+#define BFA_I2HM(_x)		((_x) + BFI_I2H_OPCODE_BASE)
-+
-+/**
-+ ****************************************************************************
-+ *
-+ * Scatter Gather Element and Page definition
-+ *
-+ ****************************************************************************
-+ */
-+
-+#define BFI_SGE_INLINE	1
-+#define BFI_SGE_INLINE_MAX	(BFI_SGE_INLINE + 1)
-+
-+/**
-+ * SG Flags
-+ */
-+enum {
-+	BFI_SGE_DATA		= 0,	/*  data address, not last	     */
-+	BFI_SGE_DATA_CPL	= 1,	/*  data addr, last in current page */
-+	BFI_SGE_DATA_LAST	= 3,	/*  data address, last		     */
-+	BFI_SGE_LINK		= 2,	/*  link address		     */
-+	BFI_SGE_PGDLEN		= 2,	/*  cumulative data length for page */
++#define SCSI_MAX_CDBLEN     16
++struct scsi_cdb_s {
++	u8         scsi_cdb[SCSI_MAX_CDBLEN];
 +};
++#define scsi_cdb_t struct scsi_cdb_s
 +
-+/**
-+ * DMA addresses
++/* ------------------------------------------------------------
++ * SCSI status byte values
++ * ------------------------------------------------------------
 + */
-+union bfi_addr_u {
-+	struct {
-+		u32	addr_lo;
-+		u32	addr_hi;
-+	} a32;
-+};
++#define SCSI_STATUS_GOOD                   0x00
++#define SCSI_STATUS_CHECK_CONDITION        0x02
++#define SCSI_STATUS_CONDITION_MET          0x04
++#define SCSI_STATUS_BUSY                   0x08
++#define SCSI_STATUS_INTERMEDIATE           0x10
++#define SCSI_STATUS_ICM                    0x14 /* intermediate condition met */
++#define SCSI_STATUS_RESERVATION_CONFLICT   0x18
++#define SCSI_STATUS_COMMAND_TERMINATED     0x22
++#define SCSI_STATUS_QUEUE_FULL             0x28
++#define SCSI_STATUS_ACA_ACTIVE             0x30
 +
-+/**
-+ * Scatter Gather Element
++#define SCSI_MAX_ALLOC_LEN      0xFF    /* maximum allocarion length */
++
++/*
++ * Fibre Channel Header Structure (FCHS) definition
 + */
-+struct bfi_sge_s {
++struct fchs_s {
 +#ifdef __BIGENDIAN
-+	u32	flags:2,
-+			rsvd:2,
-+			sg_len:28;
++	u32        routing:4;	/* routing bits */
++	u32        cat_info:4;	/* category info */
 +#else
-+	u32	sg_len:28,
-+			rsvd:2,
-+			flags:2;
++	u32        cat_info:4;	/* category info */
++	u32        routing:4;	/* routing bits */
 +#endif
-+	union bfi_addr_u sga;
++	u32        d_id:24;	/* destination identifier */
++
++	u32        cs_ctl:8;	/* class specific control */
++	u32        s_id:24;	/* source identifier */
++
++	u32        type:8;		/* data structure type */
++	u32        f_ctl:24;	/* initial frame control */
++
++	u8         seq_id;		/* sequence identifier */
++	u8         df_ctl;		/* data field control */
++	u16        seq_cnt;	/* sequence count */
++
++	u16        ox_id;		/* originator exchange ID */
++	u16        rx_id;		/* responder exchange ID */
++
++	u32        ro;		/* relative offset */
 +};
 +
-+/**
-+ * Scatter Gather Page
++#define FC_SOF_LEN		4
++#define FC_EOF_LEN		4
++#define FC_CRC_LEN		4
++
++/*
++ * Fibre Channel BB_E Header Structure
 + */
-+#define BFI_SGPG_DATA_SGES		7
-+#define BFI_SGPG_SGES_MAX		(BFI_SGPG_DATA_SGES + 1)
-+#define BFI_SGPG_RSVD_WD_LEN	8
-+struct bfi_sgpg_s {
-+	struct bfi_sge_s sges[BFI_SGPG_SGES_MAX];
-+	u32	rsvd[BFI_SGPG_RSVD_WD_LEN];
++struct fcbbehs_s {
++	u16	ver_rsvd;
++	u32	rsvd[2];
++	u32	rsvd__sof;
++};
++
++#define FC_SEQ_ID_MAX		256
++
++/*
++ * routing bit definitions
++ */
++enum {
++	FC_RTG_FC4_DEV_DATA	= 0x0,	/* FC-4 Device Data */
++	FC_RTG_EXT_LINK		= 0x2,	/* Extended Link Data */
++	FC_RTG_FC4_LINK_DATA	= 0x3,	/* FC-4 Link Data */
++	FC_RTG_VIDEO_DATA	= 0x4,	/* Video Data */
++	FC_RTG_EXT_HDR		= 0x5,	/* VFT, IFR or Encapsuled */
++	FC_RTG_BASIC_LINK	= 0x8,	/* Basic Link data */
++	FC_RTG_LINK_CTRL	= 0xC,	/* Link Control */
 +};
 +
 +/*
-+ * Large Message structure - 128 Bytes size Msgs
++ * information category for extended link data and FC-4 Link Data
 + */
-+#define BFI_LMSG_SZ		128
-+#define BFI_LMSG_PL_WSZ	\
-+			((BFI_LMSG_SZ - sizeof(struct bfi_mhdr_s)) / 4)
-+
-+struct bfi_msg_s {
-+	struct bfi_mhdr_s mhdr;
-+	u32	pl[BFI_LMSG_PL_WSZ];
++enum {
++	FC_CAT_LD_REQUEST	= 0x2,	/* Request */
++	FC_CAT_LD_REPLY		= 0x3,	/* Reply */
++	FC_CAT_LD_DIAG		= 0xF,	/* for DIAG use only */
 +};
 +
-+/**
-+ * Mailbox message structure
++/*
++ * information category for extended headers (VFT, IFR or encapsulation)
 + */
-+#define BFI_MBMSG_SZ		7
-+struct bfi_mbmsg_s {
-+	struct bfi_mhdr_s	mh;
-+	u32		pl[BFI_MBMSG_SZ];
++enum {
++	FC_CAT_VFT_HDR = 0x0,	/* Virtual fabric tagging header */
++	FC_CAT_IFR_HDR = 0x1,	/* Inter-Fabric routing header */
++	FC_CAT_ENC_HDR = 0x2,	/* Encapsulation header */
 +};
 +
-+/**
-+ * Message Classes
++/*
++ * information category for FC-4 device data
 + */
-+enum bfi_mclass {
-+	BFI_MC_IOC		= 1,	/*  IO Controller (IOC)	    */
-+	BFI_MC_FCPORT		= 5,	/*  FC port			    */
-+	BFI_MC_IOCFC		= 6,	/*  FC - IO Controller (IOC)	    */
-+	BFI_MC_LL               = 7,    /*  Link Layer                      */
-+	BFI_MC_UF		= 8,	/*  Unsolicited frame receive	    */
-+	BFI_MC_FCXP		= 9,	/*  FC Transport		    */
-+	BFI_MC_LPS		= 10,	/*  lport fc login services	    */
-+	BFI_MC_RPORT		= 11,	/*  Remote port		    */
-+	BFI_MC_ITNIM		= 12,	/*  I-T nexus (Initiator mode)	    */
-+	BFI_MC_IOIM_READ	= 13,	/*  read IO (Initiator mode)	    */
-+	BFI_MC_IOIM_WRITE	= 14,	/*  write IO (Initiator mode)	    */
-+	BFI_MC_IOIM_IO		= 15,	/*  IO (Initiator mode)	    */
-+	BFI_MC_IOIM		= 16,	/*  IO (Initiator mode)	    */
-+	BFI_MC_IOIM_IOCOM	= 17,	/*  good IO completion		    */
-+	BFI_MC_TSKIM		= 18,	/*  Initiator Task management	    */
-+	BFI_MC_PORT		= 21,	/*  Physical port		    */
-+	BFI_MC_MAX		= 32
++enum {
++	FC_CAT_UNCATEG_INFO	= 0x0,	/* Uncategorized information */
++	FC_CAT_SOLICIT_DATA	= 0x1,	/* Solicited Data */
++	FC_CAT_UNSOLICIT_CTRL	= 0x2,	/* Unsolicited Control */
++	FC_CAT_SOLICIT_CTRL	= 0x3,	/* Solicited Control */
++	FC_CAT_UNSOLICIT_DATA	= 0x4,	/* Unsolicited Data */
++	FC_CAT_DATA_DESC	= 0x5,	/* Data Descriptor */
++	FC_CAT_UNSOLICIT_CMD	= 0x6,	/* Unsolicited Command */
++	FC_CAT_CMD_STATUS	= 0x7,	/* Command Status */
 +};
 +
-+#define BFI_IOC_MAX_CQS		4
-+#define BFI_IOC_MAX_CQS_ASIC	8
-+#define BFI_IOC_MSGLEN_MAX	32	/* 32 bytes */
-+
-+#define BFI_BOOT_TYPE_OFF		8
-+#define BFI_BOOT_LOADER_OFF		12
-+
-+#define BFI_BOOT_TYPE_NORMAL		0
-+#define	BFI_BOOT_TYPE_FLASH		1
-+#define	BFI_BOOT_TYPE_MEMTEST		2
-+
-+#define BFI_BOOT_LOADER_OS		0
-+#define BFI_BOOT_LOADER_BIOS		1
-+#define BFI_BOOT_LOADER_UEFI		2
-+
-+/**
-+ *----------------------------------------------------------------------
-+ *				IOC
-+ *----------------------------------------------------------------------
++/*
++ * information category for Link Control
 + */
-+
-+enum bfi_ioc_h2i_msgs {
-+	BFI_IOC_H2I_ENABLE_REQ		= 1,
-+	BFI_IOC_H2I_DISABLE_REQ		= 2,
-+	BFI_IOC_H2I_GETATTR_REQ		= 3,
-+	BFI_IOC_H2I_DBG_SYNC		= 4,
-+	BFI_IOC_H2I_DBG_DUMP		= 5,
++enum {
++	FC_CAT_ACK_1		= 0x00,
++	FC_CAT_ACK_0_N		= 0x01,
++	FC_CAT_P_RJT		= 0x02,
++	FC_CAT_F_RJT		= 0x03,
++	FC_CAT_P_BSY		= 0x04,
++	FC_CAT_F_BSY_DATA	= 0x05,
++	FC_CAT_F_BSY_LINK_CTL	= 0x06,
++	FC_CAT_F_LCR		= 0x07,
++	FC_CAT_NTY		= 0x08,
++	FC_CAT_END		= 0x09,
 +};
 +
-+enum bfi_ioc_i2h_msgs {
-+	BFI_IOC_I2H_ENABLE_REPLY	= BFA_I2HM(1),
-+	BFI_IOC_I2H_DISABLE_REPLY	= BFA_I2HM(2),
-+	BFI_IOC_I2H_GETATTR_REPLY	= BFA_I2HM(3),
-+	BFI_IOC_I2H_READY_EVENT		= BFA_I2HM(4),
-+	BFI_IOC_I2H_HBEAT		= BFA_I2HM(5),
-+};
-+
-+/**
-+ * BFI_IOC_H2I_GETATTR_REQ message
++/*
++ * Type Field Definitions. FC-PH Section 18.5 pg. 165
 + */
-+struct bfi_ioc_getattr_req_s {
-+	struct bfi_mhdr_s	mh;
-+	union bfi_addr_u	attr_addr;
++enum {
++	FC_TYPE_BLS		= 0x0,	/* Basic Link Service */
++	FC_TYPE_ELS		= 0x1,	/* Extended Link Service */
++	FC_TYPE_IP		= 0x5,	/* IP */
++	FC_TYPE_FCP		= 0x8,	/* SCSI-FCP */
++	FC_TYPE_GPP		= 0x9,	/* SCSI_GPP */
++	FC_TYPE_SERVICES	= 0x20,	/* Fibre Channel Services */
++	FC_TYPE_FC_FSS		= 0x22,	/* Fabric Switch Services */
++	FC_TYPE_FC_AL		= 0x23,	/* FC-AL */
++	FC_TYPE_FC_SNMP		= 0x24,	/* FC-SNMP */
++	FC_TYPE_FC_SPINFAB	= 0xEE,	/* SPINFAB */
++	FC_TYPE_FC_DIAG		= 0xEF,	/* DIAG */
++	FC_TYPE_MAX		= 256,	/* 256 FC-4 types */
 +};
 +
-+struct bfi_ioc_attr_s {
-+	wwn_t		mfg_pwwn;	/*  Mfg port wwn	   */
-+	wwn_t		mfg_nwwn;	/*  Mfg node wwn	   */
-+	mac_t		mfg_mac;	/*  Mfg mac		   */
-+	u16	rsvd_a;
-+	wwn_t		pwwn;
-+	wwn_t		nwwn;
-+	mac_t		mac;		/*  PBC or Mfg mac	   */
-+	u16	rsvd_b;
-+	mac_t		fcoe_mac;
-+	u16	rsvd_c;
-+	char		brcd_serialnum[STRSZ(BFA_MFG_SERIALNUM_SIZE)];
-+	u8		pcie_gen;
-+	u8		pcie_lanes_orig;
-+	u8		pcie_lanes;
-+	u8		rx_bbcredit;	/*  receive buffer credits */
-+	u32	adapter_prop;	/*  adapter properties     */
-+	u16	maxfrsize;	/*  max receive frame size */
-+	char		asic_rev;
-+	u8		rsvd_d;
-+	char		fw_version[BFA_VERSION_LEN];
-+	char		optrom_version[BFA_VERSION_LEN];
-+	struct		bfa_mfg_vpd_s	vpd;
-+	u32	card_type;	/*  card type			*/
++struct fc_fc4types_s {
++	u8         bits[FC_TYPE_MAX / 8];
 +};
 +
-+/**
-+ * BFI_IOC_I2H_GETATTR_REPLY message
++/*
++ * Frame Control Definitions. FC-PH Table-45. pg. 168
 + */
-+struct bfi_ioc_getattr_reply_s {
-+	struct	bfi_mhdr_s	mh;	/*  Common msg header		*/
-+	u8			status;	/*  cfg reply status		*/
-+	u8			rsvd[3];
++enum {
++	FCTL_EC_ORIG = 0x000000,	/* exchange originator */
++	FCTL_EC_RESP = 0x800000,	/* exchange responder */
++	FCTL_SEQ_INI = 0x000000,	/* sequence initiator */
++	FCTL_SEQ_REC = 0x400000,	/* sequence recipient */
++	FCTL_FS_EXCH = 0x200000,	/* first sequence of xchg */
++	FCTL_LS_EXCH = 0x100000,	/* last sequence of xchg */
++	FCTL_END_SEQ = 0x080000,	/* last frame of sequence */
++	FCTL_SI_XFER = 0x010000,	/* seq initiative transfer */
++	FCTL_RO_PRESENT = 0x000008,	/* relative offset present */
++	FCTL_FILLBYTE_MASK = 0x000003	/* , fill byte mask */
 +};
 +
-+/**
-+ * Firmware memory page offsets
++/*
++ * Fabric Well Known Addresses
 + */
-+#define BFI_IOC_SMEM_PG0_CB	(0x40)
-+#define BFI_IOC_SMEM_PG0_CT	(0x180)
-+
-+/**
-+ * Firmware statistic offset
-+ */
-+#define BFI_IOC_FWSTATS_OFF	(0x6B40)
-+#define BFI_IOC_FWSTATS_SZ	(4096)
-+
-+/**
-+ * Firmware trace offset
-+ */
-+#define BFI_IOC_TRC_OFF		(0x4b00)
-+#define BFI_IOC_TRC_ENTS	256
-+
-+#define BFI_IOC_FW_SIGNATURE	(0xbfadbfad)
-+#define BFI_IOC_MD5SUM_SZ	4
-+struct bfi_ioc_image_hdr_s {
-+	u32	signature;	/*  constant signature */
-+	u32	rsvd_a;
-+	u32	exec;		/*  exec vector	*/
-+	u32	param;		/*  parameters		*/
-+	u32	rsvd_b[4];
-+	u32	md5sum[BFI_IOC_MD5SUM_SZ];
++enum {
++	FC_MIN_WELL_KNOWN_ADDR		= 0xFFFFF0,
++	FC_DOMAIN_CONTROLLER_MASK	= 0xFFFC00,
++	FC_ALIAS_SERVER			= 0xFFFFF8,
++	FC_MGMT_SERVER			= 0xFFFFFA,
++	FC_TIME_SERVER			= 0xFFFFFB,
++	FC_NAME_SERVER			= 0xFFFFFC,
++	FC_FABRIC_CONTROLLER		= 0xFFFFFD,
++	FC_FABRIC_PORT			= 0xFFFFFE,
++	FC_BROADCAST_SERVER		= 0xFFFFFF
 +};
 +
-+/**
-+ *  BFI_IOC_I2H_READY_EVENT message
++/*
++ * domain/area/port defines
 + */
-+struct bfi_ioc_rdy_event_s {
-+	struct bfi_mhdr_s	mh;		/*  common msg header */
-+	u8			init_status;	/*  init event status */
-+	u8			rsvd[3];
-+};
++#define FC_DOMAIN_MASK  0xFF0000
++#define FC_DOMAIN_SHIFT 16
++#define FC_AREA_MASK    0x00FF00
++#define FC_AREA_SHIFT   8
++#define FC_PORT_MASK    0x0000FF
++#define FC_PORT_SHIFT   0
 +
-+struct bfi_ioc_hbeat_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u32	   hb_count;	/*  current heart beat count	*/
-+};
++#define FC_GET_DOMAIN(p)	(((p) & FC_DOMAIN_MASK) >> FC_DOMAIN_SHIFT)
++#define FC_GET_AREA(p)		(((p) & FC_AREA_MASK) >> FC_AREA_SHIFT)
++#define FC_GET_PORT(p)		(((p) & FC_PORT_MASK) >> FC_PORT_SHIFT)
 +
-+/**
-+ * IOC hardware/firmware state
-+ */
-+enum bfi_ioc_state {
-+	BFI_IOC_UNINIT		= 0,	/*  not initialized		     */
-+	BFI_IOC_INITING		= 1,	/*  h/w is being initialized	     */
-+	BFI_IOC_HWINIT		= 2,	/*  h/w is initialized		     */
-+	BFI_IOC_CFG		= 3,	/*  IOC configuration in progress   */
-+	BFI_IOC_OP		= 4,	/*  IOC is operational		     */
-+	BFI_IOC_DISABLING	= 5,	/*  IOC is being disabled	     */
-+	BFI_IOC_DISABLED	= 6,	/*  IOC is disabled		     */
-+	BFI_IOC_CFG_DISABLED	= 7,	/*  IOC is being disabled;transient */
-+	BFI_IOC_FAIL		= 8,	/*  IOC heart-beat failure	     */
-+	BFI_IOC_MEMTEST		= 9,	/*  IOC is doing memtest	     */
-+};
-+
-+#define BFI_IOC_ENDIAN_SIG  0x12345678
++#define FC_DOMAIN_CTRLR(p)	(FC_DOMAIN_CONTROLLER_MASK | (FC_GET_DOMAIN(p)))
 +
 +enum {
-+	BFI_ADAPTER_TYPE_FC	= 0x01,		/*  FC adapters	   */
-+	BFI_ADAPTER_TYPE_MK	= 0x0f0000,	/*  adapter type mask     */
-+	BFI_ADAPTER_TYPE_SH	= 16,	        /*  adapter type shift    */
-+	BFI_ADAPTER_NPORTS_MK	= 0xff00,	/*  number of ports mask  */
-+	BFI_ADAPTER_NPORTS_SH	= 8,	        /*  number of ports shift */
-+	BFI_ADAPTER_SPEED_MK	= 0xff,		/*  adapter speed mask    */
-+	BFI_ADAPTER_SPEED_SH	= 0,	        /*  adapter speed shift   */
-+	BFI_ADAPTER_PROTO	= 0x100000,	/*  prototype adapaters   */
-+	BFI_ADAPTER_TTV		= 0x200000,	/*  TTV debug capable     */
-+	BFI_ADAPTER_UNSUPP	= 0x400000,	/*  unknown adapter type  */
++	FC_RXID_ANY = 0xFFFFU,
 +};
-+
-+#define BFI_ADAPTER_GETP(__prop, __adap_prop)			\
-+	(((__adap_prop) & BFI_ADAPTER_ ## __prop ## _MK) >>	\
-+		BFI_ADAPTER_ ## __prop ## _SH)
-+#define BFI_ADAPTER_SETP(__prop, __val)				\
-+	((__val) << BFI_ADAPTER_ ## __prop ## _SH)
-+#define BFI_ADAPTER_IS_PROTO(__adap_type)			\
-+	((__adap_type) & BFI_ADAPTER_PROTO)
-+#define BFI_ADAPTER_IS_TTV(__adap_type)				\
-+	((__adap_type) & BFI_ADAPTER_TTV)
-+#define BFI_ADAPTER_IS_UNSUPP(__adap_type)			\
-+	((__adap_type) & BFI_ADAPTER_UNSUPP)
-+#define BFI_ADAPTER_IS_SPECIAL(__adap_type)			\
-+	((__adap_type) & (BFI_ADAPTER_TTV | BFI_ADAPTER_PROTO |	\
-+			BFI_ADAPTER_UNSUPP))
-+
-+/**
-+ * BFI_IOC_H2I_ENABLE_REQ & BFI_IOC_H2I_DISABLE_REQ messages
-+ */
-+struct bfi_ioc_ctrl_req_s {
-+	struct bfi_mhdr_s	mh;
-+	u8			ioc_class;
-+	u8			rsvd[3];
-+	u32		tv_sec;
-+};
-+#define bfi_ioc_enable_req_t struct bfi_ioc_ctrl_req_s;
-+#define bfi_ioc_disable_req_t struct bfi_ioc_ctrl_req_s;
-+
-+/**
-+ * BFI_IOC_I2H_ENABLE_REPLY & BFI_IOC_I2H_DISABLE_REPLY messages
-+ */
-+struct bfi_ioc_ctrl_reply_s {
-+	struct bfi_mhdr_s	mh;		/*  Common msg header     */
-+	u8			status;		/*  enable/disable status */
-+	u8			rsvd[3];
-+};
-+#define bfi_ioc_enable_reply_t struct bfi_ioc_ctrl_reply_s;
-+#define bfi_ioc_disable_reply_t struct bfi_ioc_ctrl_reply_s;
-+
-+#define BFI_IOC_MSGSZ   8
-+/**
-+ * H2I Messages
-+ */
-+union bfi_ioc_h2i_msg_u {
-+	struct bfi_mhdr_s		mh;
-+	struct bfi_ioc_ctrl_req_s	enable_req;
-+	struct bfi_ioc_ctrl_req_s	disable_req;
-+	struct bfi_ioc_getattr_req_s	getattr_req;
-+	u32			mboxmsg[BFI_IOC_MSGSZ];
-+};
-+
-+/**
-+ * I2H Messages
-+ */
-+union bfi_ioc_i2h_msg_u {
-+	struct bfi_mhdr_s		mh;
-+	struct bfi_ioc_rdy_event_s	rdy_event;
-+	u32			mboxmsg[BFI_IOC_MSGSZ];
-+};
-+
-+
-+/**
-+ *----------------------------------------------------------------------
-+ *				PBC
-+ *----------------------------------------------------------------------
-+ */
-+
-+#define BFI_PBC_MAX_BLUNS	8
-+#define BFI_PBC_MAX_VPORTS	16
-+
-+/**
-+ * PBC boot lun configuration
-+ */
-+struct bfi_pbc_blun_s {
-+	wwn_t		tgt_pwwn;
-+	lun_t		tgt_lun;
-+};
-+
-+/**
-+ * PBC virtual port configuration
-+ */
-+struct bfi_pbc_vport_s {
-+	wwn_t		vp_pwwn;
-+	wwn_t		vp_nwwn;
-+};
-+
-+/**
-+ * BFI pre-boot configuration information
-+ */
-+struct bfi_pbc_s {
-+	u8		port_enabled;
-+	u8		boot_enabled;
-+	u8		nbluns;
-+	u8		nvports;
-+	u8		port_speed;
-+	u8		rsvd_a;
-+	u16	hss;
-+	wwn_t		pbc_pwwn;
-+	wwn_t		pbc_nwwn;
-+	struct bfi_pbc_blun_s blun[BFI_PBC_MAX_BLUNS];
-+	struct bfi_pbc_vport_s vport[BFI_PBC_MAX_VPORTS];
-+};
-+
-+/**
-+ *----------------------------------------------------------------------
-+ *				MSGQ
-+ *----------------------------------------------------------------------
-+ */
-+#define BFI_MSGQ_FULL(_q)	(((_q->pi + 1) % _q->q_depth) == _q->ci)
-+#define BFI_MSGQ_EMPTY(_q)	(_q->pi == _q->ci)
-+#define BFI_MSGQ_UPDATE_CI(_q)	(_q->ci = (_q->ci + 1) % _q->q_depth)
-+#define BFI_MSGQ_UPDATE_PI(_q)	(_q->pi = (_q->pi + 1) % _q->q_depth)
-+
-+/* q_depth must be power of 2 */
-+#define BFI_MSGQ_FREE_CNT(_q)	((_q->ci - _q->pi - 1) & (_q->q_depth - 1))
-+
-+enum bfi_msgq_h2i_msgs_e {
-+	BFI_MSGQ_H2I_INIT_REQ	= 1,
-+	BFI_MSGQ_H2I_DOORBELL	= 2,
-+	BFI_MSGQ_H2I_SHUTDOWN	= 3,
-+};
-+
-+enum bfi_msgq_i2h_msgs_e {
-+	BFI_MSGQ_I2H_INIT_RSP	= 1,
-+	BFI_MSGQ_I2H_DOORBELL	= 2,
-+};
-+
-+
-+/* Messages(commands/responsed/AENS will have the following header */
-+struct bfi_msgq_mhdr_s {
-+	u8		msg_class;
-+	u8		msg_id;
-+	u16	msg_token;
-+	u16	num_entries;
-+	u8		enet_id;
-+	u8		rsvd[1];
-+};
-+
-+#define bfi_msgq_mhdr_set(_mh, _mc, _mid, _tok, _enet_id) do {        \
-+	(_mh).msg_class		= (_mc);      \
-+	(_mh).msg_id		= (_mid);      \
-+	(_mh).msg_token		= (_tok);      \
-+	(_mh).enet_id		= (_enet_id);      \
-+} while (0)
 +
 +/*
-+ * Mailbox  for messaging interface
-+ *
-+*/
-+#define BFI_MSGQ_CMD_ENTRY_SIZE		(64)    /* TBD */
-+#define BFI_MSGQ_RSP_ENTRY_SIZE		(64)    /* TBD */
-+#define BFI_MSGQ_MSG_SIZE_MAX		(2048)  /* TBD */
-+
-+struct bfi_msgq_s {
-+	union bfi_addr_u addr;
-+	u16 q_depth;     /* Total num of entries in the queue */
-+	u8 rsvd[2];
++ * generic ELS command
++ */
++struct fc_els_cmd_s {
++	u32        els_code:8;	/* ELS Command Code */
++	u32        reserved:24;
 +};
 +
-+/* BFI_ENET_MSGQ_CFG_REQ TBD init or cfg? */
-+struct bfi_msgq_cfg_req_s {
-+	struct bfi_mhdr_s mh;
-+	struct bfi_msgq_s cmdq;
-+	struct bfi_msgq_s rspq;
++/*
++ * ELS Command Codes. FC-PH Table-75. pg. 223
++ */
++enum {
++	FC_ELS_LS_RJT = 0x1,	/* Link Service Reject. */
++	FC_ELS_ACC = 0x02,	/* Accept */
++	FC_ELS_PLOGI = 0x03,	/* N_Port Login. */
++	FC_ELS_FLOGI = 0x04,	/* F_Port Login. */
++	FC_ELS_LOGO = 0x05,	/* Logout. */
++	FC_ELS_ABTX = 0x06,	/* Abort Exchange */
++	FC_ELS_RES = 0x08,	/* Read Exchange status */
++	FC_ELS_RSS = 0x09,	/* Read sequence status block */
++	FC_ELS_RSI = 0x0A,	/* Request Sequence Initiative */
++	FC_ELS_ESTC = 0x0C,	/* Estimate Credit. */
++	FC_ELS_RTV = 0x0E,	/* Read Timeout Value. */
++	FC_ELS_RLS = 0x0F,	/* Read Link Status. */
++	FC_ELS_ECHO = 0x10,	/* Echo */
++	FC_ELS_TEST = 0x11,	/* Test */
++	FC_ELS_RRQ = 0x12,	/* Reinstate Recovery Qualifier. */
++	FC_ELS_REC = 0x13,	/* Add this for TAPE support in FCR */
++	FC_ELS_PRLI = 0x20,	/* Process Login */
++	FC_ELS_PRLO = 0x21,	/* Process Logout. */
++	FC_ELS_SCN = 0x22,	/* State Change Notification. */
++	FC_ELS_TPRLO = 0x24,	/* Third Party Process Logout. */
++	FC_ELS_PDISC = 0x50,	/* Discover N_Port Parameters. */
++	FC_ELS_FDISC = 0x51,	/* Discover F_Port Parameters. */
++	FC_ELS_ADISC = 0x52,	/* Discover Address. */
++	FC_ELS_FARP_REQ = 0x54,	/* FARP Request. */
++	FC_ELS_FARP_REP = 0x55,	/* FARP Reply. */
++	FC_ELS_FAN = 0x60,	/* Fabric Address Notification */
++	FC_ELS_RSCN = 0x61,	/* Reg State Change Notification */
++	FC_ELS_SCR = 0x62,	/* State Change Registration. */
++	FC_ELS_RTIN = 0x77,	/* Mangement server request */
++	FC_ELS_RNID = 0x78,	/* Mangement server request */
++	FC_ELS_RLIR = 0x79,	/* Registered Link Incident Record */
++
++	FC_ELS_RPSC = 0x7D,	/* Report Port Speed Capabilities */
++	FC_ELS_QSA = 0x7E,	/* Query Security Attributes. Ref FC-SP */
++	FC_ELS_E2E_LBEACON = 0x81,
++				/* End-to-End Link Beacon */
++	FC_ELS_AUTH = 0x90,	/* Authentication. Ref FC-SP */
++	FC_ELS_RFCN = 0x97,	/* Request Fabric Change Notification. Ref
++				 *FC-SP */
++
 +};
 +
-+/* BFI_ENET_MSGQ_CFG_RSP */
-+struct bfi_msgq_cfg_rsp_s {
-+	struct bfi_mhdr_s mh;
-+	u8 cmd_status;
-+	u8 rsvd[3];
++/*
++ *  Version numbers for FC-PH standards,
++ *  used in login to indicate what port
++ *  supports. See FC-PH-X table 158.
++ */
++enum {
++	FC_PH_VER_4_3 = 0x09,
++	FC_PH_VER_PH_3 = 0x20,
++};
++
++/*
++ * PDU size defines
++ */
++enum {
++	FC_MIN_PDUSZ = 512,
++	FC_MAX_PDUSZ = 2112,
++};
++
++/*
++ * N_Port PLOGI Common Service Parameters.
++ * FC-PH-x. Figure-76. pg. 308.
++ */
++struct fc_plogi_csp_s {
++	u8         verhi;	/* FC-PH high version */
++	u8         verlo;	/* FC-PH low version */
++	u16        bbcred;	/* BB_Credit */
++
++#ifdef __BIGENDIAN
++	u8         ciro:1,		/* continuously increasing RO */
++			rro:1,		/* random relative offset */
++			npiv_supp:1,	/* NPIV supported */
++			port_type:1,	/* N_Port/F_port */
++			altbbcred:1,	/* alternate BB_Credit */
++			resolution:1,	/* ms/ns ED_TOV resolution */
++			vvl_info:1,	/* VVL Info included */
++			reserved1:1;
++
++	u8         hg_supp:1,
++			query_dbc:1,
++			security:1,
++			sync_cap:1,
++			r_t_tov:1,
++			dh_dup_supp:1,
++			cisc:1,		/* continuously increasing seq count */
++			payload:1;
++#else
++	u8         reserved2:2,
++			resolution:1,	/* ms/ns ED_TOV resolution */
++			altbbcred:1,	/* alternate BB_Credit */
++			port_type:1,	/* N_Port/F_port */
++			npiv_supp:1,	/* NPIV supported */
++			rro:1,		/* random relative offset */
++			ciro:1;		/* continuously increasing RO */
++
++	u8         payload:1,
++			cisc:1,		/* continuously increasing seq count */
++			dh_dup_supp:1,
++			r_t_tov:1,
++			sync_cap:1,
++			security:1,
++			query_dbc:1,
++			hg_supp:1;
++#endif
++
++	u16        rxsz;		/* recieve data_field size */
++
++	u16        conseq;
++	u16        ro_bitmap;
++
++	u32        e_d_tov;
++};
++
++/*
++ * N_Port PLOGI Class Specific Parameters.
++ * FC-PH-x. Figure 78. pg. 318.
++ */
++struct fc_plogi_clp_s {
++#ifdef __BIGENDIAN
++	u32        class_valid:1;
++	u32        intermix:1;	/* class intermix supported if set =1.
++					 * valid only for class1. Reserved for
++					 * class2 & class3
++					 */
++	u32        reserved1:2;
++	u32        sequential:1;
++	u32        reserved2:3;
++#else
++	u32        reserved2:3;
++	u32        sequential:1;
++	u32        reserved1:2;
++	u32        intermix:1;	/* class intermix supported if set =1.
++					 * valid only for class1. Reserved for
++					 * class2 & class3
++					 */
++	u32        class_valid:1;
++#endif
++
++	u32        reserved3:24;
++
++	u32        reserved4:16;
++	u32        rxsz:16;	/* Receive data_field size */
++
++	u32        reserved5:8;
++	u32        conseq:8;
++	u32        e2e_credit:16;	/* end to end credit */
++
++	u32        reserved7:8;
++	u32        ospx:8;
++	u32        reserved8:16;
++};
++
++/* ASCII value for each character in string "BRCD" */
++#define FLOGI_VVL_BRCD    0x42524344
++
++/*
++ * PLOGI els command and reply payload
++ */
++struct fc_logi_s {
++	struct fc_els_cmd_s els_cmd;	/* ELS command code */
++	struct fc_plogi_csp_s csp;		/* common service params */
++	wwn_t           port_name;
++	wwn_t           node_name;
++	struct fc_plogi_clp_s class1;		/* class 1 service parameters */
++	struct fc_plogi_clp_s class2;		/* class 2 service parameters */
++	struct fc_plogi_clp_s class3;		/* class 3 service parameters */
++	struct fc_plogi_clp_s class4;		/* class 4 service parameters */
++	u8         vvl[16];	/* vendor version level */
++};
++
++/*
++ * LOGO els command payload
++ */
++struct fc_logo_s {
++	struct fc_els_cmd_s els_cmd;	/* ELS command code */
++	u32        res1:8;
++	u32        nport_id:24;	/* N_Port identifier of source */
++	wwn_t           orig_port_name;	/* Port name of the LOGO originator */
++};
++
++/*
++ * ADISC els command payload
++ */
++struct fc_adisc_s {
++	struct fc_els_cmd_s els_cmd;	/* ELS command code */
++	u32        res1:8;
++	u32        orig_HA:24;	/* originator hard address */
++	wwn_t           orig_port_name;	/* originator port name */
++	wwn_t           orig_node_name;	/* originator node name */
++	u32        res2:8;
++	u32        nport_id:24;	/* originator NPortID */
++};
++
++/*
++ * Exchange status block
++ */
++struct fc_exch_status_blk_s {
++	u32        oxid:16;
++	u32        rxid:16;
++	u32        res1:8;
++	u32        orig_np:24;	/* originator NPortID */
++	u32        res2:8;
++	u32        resp_np:24;	/* responder NPortID */
++	u32        es_bits;
++	u32        res3;
++	/*
++	 * un modified section of the fields
++	 */
++};
++
++/*
++ * RES els command payload
++ */
++struct fc_res_s {
++	struct fc_els_cmd_s els_cmd;	/* ELS command code */
++	u32        res1:8;
++	u32        nport_id:24;	/* N_Port identifier of source */
++	u32        oxid:16;
++	u32        rxid:16;
++	u8         assoc_hdr[32];
++};
++
++/*
++ * RES els accept payload
++ */
++struct fc_res_acc_s {
++	struct fc_els_cmd_s		els_cmd;	/* ELS command code */
++	struct fc_exch_status_blk_s	fc_exch_blk; /* Exchange status block */
++};
++
++/*
++ * REC els command payload
++ */
++struct fc_rec_s {
++	struct fc_els_cmd_s els_cmd;	/* ELS command code */
++	u32        res1:8;
++	u32        nport_id:24;	/* N_Port identifier of source */
++	u32        oxid:16;
++	u32        rxid:16;
++};
++
++#define FC_REC_ESB_OWN_RSP	0x80000000	/* responder owns */
++#define FC_REC_ESB_SI		0x40000000	/* SI is owned	*/
++#define FC_REC_ESB_COMP		0x20000000	/* exchange is complete	*/
++#define FC_REC_ESB_ENDCOND_ABN	0x10000000	/* abnormal ending	*/
++#define FC_REC_ESB_RQACT	0x04000000	/* recovery qual active	*/
++#define FC_REC_ESB_ERRP_MSK	0x03000000
++#define FC_REC_ESB_OXID_INV	0x00800000	/* invalid OXID		*/
++#define FC_REC_ESB_RXID_INV	0x00400000	/* invalid RXID		*/
++#define FC_REC_ESB_PRIO_INUSE	0x00200000
++
++/*
++ * REC els accept payload
++ */
++struct fc_rec_acc_s {
++	struct fc_els_cmd_s els_cmd;	/* ELS command code */
++	u32        oxid:16;
++	u32        rxid:16;
++	u32        res1:8;
++	u32        orig_id:24;	/* N_Port id of exchange originator */
++	u32        res2:8;
++	u32        resp_id:24;	/* N_Port id of exchange responder */
++	u32        count;		/* data transfer count */
++	u32        e_stat;		/* exchange status */
++};
++
++/*
++ * RSI els payload
++ */
++struct fc_rsi_s {
++	struct fc_els_cmd_s els_cmd;
++	u32        res1:8;
++	u32        orig_sid:24;
++	u32        oxid:16;
++	u32        rxid:16;
++};
++
++/*
++ * structure for PRLI paramater pages, both request & response
++ * see FC-PH-X table 113 & 115 for explanation also FCP table 8
++ */
++struct fc_prli_params_s {
++	u32        reserved:16;
++#ifdef __BIGENDIAN
++	u32        reserved1:5;
++	u32        rec_support:1;
++	u32        task_retry_id:1;
++	u32        retry:1;
++
++	u32        confirm:1;
++	u32        doverlay:1;
++	u32        initiator:1;
++	u32        target:1;
++	u32        cdmix:1;
++	u32        drmix:1;
++	u32        rxrdisab:1;
++	u32        wxrdisab:1;
++#else
++	u32        retry:1;
++	u32        task_retry_id:1;
++	u32        rec_support:1;
++	u32        reserved1:5;
++
++	u32        wxrdisab:1;
++	u32        rxrdisab:1;
++	u32        drmix:1;
++	u32        cdmix:1;
++	u32        target:1;
++	u32        initiator:1;
++	u32        doverlay:1;
++	u32        confirm:1;
++#endif
++};
++
++/*
++ * valid values for rspcode in PRLI ACC payload
++ */
++enum {
++	FC_PRLI_ACC_XQTD = 0x1,		/* request executed */
++	FC_PRLI_ACC_PREDEF_IMG = 0x5,	/* predefined image - no prli needed */
++};
++
++struct fc_prli_params_page_s {
++	u32        type:8;
++	u32        codext:8;
++#ifdef __BIGENDIAN
++	u32        origprocasv:1;
++	u32        rsppav:1;
++	u32        imagepair:1;
++	u32        reserved1:1;
++	u32        rspcode:4;
++#else
++	u32        rspcode:4;
++	u32        reserved1:1;
++	u32        imagepair:1;
++	u32        rsppav:1;
++	u32        origprocasv:1;
++#endif
++	u32        reserved2:8;
++
++	u32        origprocas;
++	u32        rspprocas;
++	struct fc_prli_params_s servparams;
++};
++
++/*
++ * PRLI request and accept payload, FC-PH-X tables 112 & 114
++ */
++struct fc_prli_s {
++	u32        command:8;
++	u32        pglen:8;
++	u32        pagebytes:16;
++	struct fc_prli_params_page_s parampage;
++};
++
++/*
++ * PRLO logout params page
++ */
++struct fc_prlo_params_page_s {
++	u32        type:8;
++	u32        type_ext:8;
++#ifdef __BIGENDIAN
++	u32        opa_valid:1;	/* originator process associator
++					 * valid
++					 */
++	u32        rpa_valid:1;	/* responder process associator valid */
++	u32        res1:14;
++#else
++	u32        res1:14;
++	u32        rpa_valid:1;	/* responder process associator valid */
++	u32        opa_valid:1;	/* originator process associator
++					 * valid
++					 */
++#endif
++	u32        orig_process_assc;
++	u32        resp_process_assc;
++
++	u32        res2;
++};
++
++/*
++ * PRLO els command payload
++ */
++struct fc_prlo_s {
++	u32	command:8;
++	u32	page_len:8;
++	u32	payload_len:16;
++	struct fc_prlo_params_page_s	prlo_params[1];
++};
++
++/*
++ * PRLO Logout response parameter page
++ */
++struct fc_prlo_acc_params_page_s {
++	u32        type:8;
++	u32        type_ext:8;
++
++#ifdef __BIGENDIAN
++	u32        opa_valid:1;	/* originator process associator
++					 * valid
++					 */
++	u32        rpa_valid:1;	/* responder process associator valid */
++	u32        res1:14;
++#else
++	u32        res1:14;
++	u32        rpa_valid:1;	/* responder process associator valid */
++	u32        opa_valid:1;	/* originator process associator
++					 * valid
++					 */
++#endif
++	u32        orig_process_assc;
++	u32        resp_process_assc;
++
++	u32        fc4type_csp;
++};
++
++/*
++ * PRLO els command ACC payload
++ */
++struct fc_prlo_acc_s {
++	u32        command:8;
++	u32        page_len:8;
++	u32        payload_len:16;
++	struct fc_prlo_acc_params_page_s prlo_acc_params[1];
++};
++
++/*
++ * SCR els command payload
++ */
++enum {
++	FC_SCR_REG_FUNC_FABRIC_DETECTED = 0x01,
++	FC_SCR_REG_FUNC_N_PORT_DETECTED = 0x02,
++	FC_SCR_REG_FUNC_FULL = 0x03,
++	FC_SCR_REG_FUNC_CLEAR_REG = 0xFF,
++};
++
++/* SCR VU registrations */
++enum {
++	FC_VU_SCR_REG_FUNC_FABRIC_NAME_CHANGE = 0x01
++};
++
++struct fc_scr_s {
++	u32 command:8;
++	u32 res:24;
++	u32 vu_reg_func:8; /* Vendor Unique Registrations */
++	u32 res1:16;
++	u32 reg_func:8;
++};
++
++/*
++ * Information category for Basic link data
++ */
++enum {
++	FC_CAT_NOP	= 0x0,
++	FC_CAT_ABTS	= 0x1,
++	FC_CAT_RMC	= 0x2,
++	FC_CAT_BA_ACC	= 0x4,
++	FC_CAT_BA_RJT	= 0x5,
++	FC_CAT_PRMT	= 0x6,
++};
++
++/*
++ * LS_RJT els reply payload
++ */
++struct fc_ls_rjt_s {
++	struct fc_els_cmd_s els_cmd;		/* ELS command code */
++	u32        res1:8;
++	u32        reason_code:8;		/* Reason code for reject */
++	u32        reason_code_expl:8;	/* Reason code explanation */
++	u32        vendor_unique:8;	/* Vendor specific */
++};
++
++/*
++ * LS_RJT reason codes
++ */
++enum {
++	FC_LS_RJT_RSN_INV_CMD_CODE	= 0x01,
++	FC_LS_RJT_RSN_LOGICAL_ERROR	= 0x03,
++	FC_LS_RJT_RSN_LOGICAL_BUSY	= 0x05,
++	FC_LS_RJT_RSN_PROTOCOL_ERROR	= 0x07,
++	FC_LS_RJT_RSN_UNABLE_TO_PERF_CMD = 0x09,
++	FC_LS_RJT_RSN_CMD_NOT_SUPP	= 0x0B,
++};
++
++/*
++ * LS_RJT reason code explanation
++ */
++enum {
++	FC_LS_RJT_EXP_NO_ADDL_INFO		= 0x00,
++	FC_LS_RJT_EXP_SPARMS_ERR_OPTIONS	= 0x01,
++	FC_LS_RJT_EXP_SPARMS_ERR_INI_CTL	= 0x03,
++	FC_LS_RJT_EXP_SPARMS_ERR_REC_CTL	= 0x05,
++	FC_LS_RJT_EXP_SPARMS_ERR_RXSZ		= 0x07,
++	FC_LS_RJT_EXP_SPARMS_ERR_CONSEQ		= 0x09,
++	FC_LS_RJT_EXP_SPARMS_ERR_CREDIT		= 0x0B,
++	FC_LS_RJT_EXP_INV_PORT_NAME		= 0x0D,
++	FC_LS_RJT_EXP_INV_NODE_FABRIC_NAME	= 0x0E,
++	FC_LS_RJT_EXP_INV_CSP			= 0x0F,
++	FC_LS_RJT_EXP_INV_ASSOC_HDR		= 0x11,
++	FC_LS_RJT_EXP_ASSOC_HDR_REQD		= 0x13,
++	FC_LS_RJT_EXP_INV_ORIG_S_ID		= 0x15,
++	FC_LS_RJT_EXP_INV_OXID_RXID_COMB	= 0x17,
++	FC_LS_RJT_EXP_CMD_ALREADY_IN_PROG	= 0x19,
++	FC_LS_RJT_EXP_LOGIN_REQUIRED		= 0x1E,
++	FC_LS_RJT_EXP_INVALID_NPORT_ID		= 0x1F,
++	FC_LS_RJT_EXP_INSUFF_RES		= 0x29,
++	FC_LS_RJT_EXP_CMD_NOT_SUPP		= 0x2C,
++	FC_LS_RJT_EXP_INV_PAYLOAD_LEN		= 0x2D,
++};
++
++/*
++ * RRQ els command payload
++ */
++struct fc_rrq_s {
++	struct fc_els_cmd_s els_cmd;	/* ELS command code */
++	u32        res1:8;
++	u32        s_id:24;	/* exchange originator S_ID */
++
++	u32        ox_id:16;	/* originator exchange ID */
++	u32        rx_id:16;	/* responder exchange ID */
++
++	u32        res2[8];	/* optional association header */
++};
++
++/*
++ * ABTS BA_ACC reply payload
++ */
++struct fc_ba_acc_s {
++	u32        seq_id_valid:8;	/* set to 0x00 for Abort Exchange */
++	u32        seq_id:8;	/* invalid for Abort Exchange */
++	u32        res2:16;
++	u32        ox_id:16;	/* OX_ID from ABTS frame */
++	u32        rx_id:16;	/* RX_ID from ABTS frame */
++	u32        low_seq_cnt:16;	/* set to 0x0000 for Abort Exchange */
++	u32        high_seq_cnt:16;/* set to 0xFFFF for Abort Exchange */
++};
++
++/*
++ * ABTS BA_RJT reject payload
++ */
++struct fc_ba_rjt_s {
++	u32        res1:8;		/* Reserved */
++	u32        reason_code:8;	/* reason code for reject */
++	u32        reason_expl:8;	/* reason code explanation */
++	u32        vendor_unique:8;/* vendor unique reason code,set to 0 */
++};
++
++/*
++ * TPRLO logout parameter page
++ */
++struct fc_tprlo_params_page_s {
++u32        type:8;
++u32        type_ext:8;
++
++#ifdef __BIGENDIAN
++	u32        opa_valid:1;
++	u32        rpa_valid:1;
++	u32        tpo_nport_valid:1;
++	u32        global_process_logout:1;
++	u32        res1:12;
++#else
++	u32        res1:12;
++	u32        global_process_logout:1;
++	u32        tpo_nport_valid:1;
++	u32        rpa_valid:1;
++	u32        opa_valid:1;
++#endif
++
++	u32        orig_process_assc;
++	u32        resp_process_assc;
++
++	u32        res2:8;
++	u32        tpo_nport_id;
++};
++
++/*
++ * TPRLO ELS command payload
++ */
++struct fc_tprlo_s {
++	u32        command:8;
++	u32        page_len:8;
++	u32        payload_len:16;
++
++	struct fc_tprlo_params_page_s tprlo_params[1];
++};
++
++enum fc_tprlo_type {
++	FC_GLOBAL_LOGO = 1,
++	FC_TPR_LOGO
++};
++
++/*
++ * TPRLO els command ACC payload
++ */
++struct fc_tprlo_acc_s {
++	u32	command:8;
++	u32	page_len:8;
++	u32	payload_len:16;
++	struct fc_prlo_acc_params_page_s tprlo_acc_params[1];
++};
++
++/*
++ * RSCN els command req payload
++ */
++#define FC_RSCN_PGLEN	0x4
++
++enum fc_rscn_format {
++	FC_RSCN_FORMAT_PORTID	= 0x0,
++	FC_RSCN_FORMAT_AREA	= 0x1,
++	FC_RSCN_FORMAT_DOMAIN	= 0x2,
++	FC_RSCN_FORMAT_FABRIC	= 0x3,
++};
++
++struct fc_rscn_event_s {
++	u32        format:2;
++	u32        qualifier:4;
++	u32        resvd:2;
++	u32        portid:24;
++};
++
++struct fc_rscn_pl_s {
++	u8         command;
++	u8         pagelen;
++	u16        payldlen;
++	struct fc_rscn_event_s event[1];
++};
++
++/*
++ * ECHO els command req payload
++ */
++struct fc_echo_s {
++	struct fc_els_cmd_s els_cmd;
++};
++
++/*
++ * RNID els command
++ */
++
++#define RNID_NODEID_DATA_FORMAT_COMMON			0x00
++#define RNID_NODEID_DATA_FORMAT_FCP3			0x08
++#define RNID_NODEID_DATA_FORMAT_DISCOVERY		0xDF
++
++#define RNID_ASSOCIATED_TYPE_UNKNOWN			0x00000001
++#define RNID_ASSOCIATED_TYPE_OTHER                      0x00000002
++#define RNID_ASSOCIATED_TYPE_HUB                        0x00000003
++#define RNID_ASSOCIATED_TYPE_SWITCH                     0x00000004
++#define RNID_ASSOCIATED_TYPE_GATEWAY                    0x00000005
++#define RNID_ASSOCIATED_TYPE_STORAGE_DEVICE             0x00000009
++#define RNID_ASSOCIATED_TYPE_HOST                       0x0000000A
++#define RNID_ASSOCIATED_TYPE_STORAGE_SUBSYSTEM          0x0000000B
++#define RNID_ASSOCIATED_TYPE_STORAGE_ACCESS_DEVICE      0x0000000E
++#define RNID_ASSOCIATED_TYPE_NAS_SERVER                 0x00000011
++#define RNID_ASSOCIATED_TYPE_BRIDGE                     0x00000002
++#define RNID_ASSOCIATED_TYPE_VIRTUALIZATION_DEVICE      0x00000003
++#define RNID_ASSOCIATED_TYPE_MULTI_FUNCTION_DEVICE      0x000000FF
++
++/*
++ * RNID els command payload
++ */
++struct fc_rnid_cmd_s {
++	struct fc_els_cmd_s els_cmd;
++	u32        node_id_data_format:8;
++	u32        reserved:24;
++};
++
++/*
++ * RNID els response payload
++ */
++
++struct fc_rnid_common_id_data_s {
++	wwn_t           port_name;
++	wwn_t           node_name;
++};
++
++struct fc_rnid_general_topology_data_s {
++	u32        vendor_unique[4];
++	u32        asso_type;
++	u32        phy_port_num;
++	u32        num_attached_nodes;
++	u32        node_mgmt:8;
++	u32        ip_version:8;
++	u32        udp_tcp_port_num:16;
++	u32        ip_address[4];
++	u32        reserved:16;
++	u32        vendor_specific:16;
++};
++
++struct fc_rnid_acc_s {
++	struct fc_els_cmd_s els_cmd;
++	u32        node_id_data_format:8;
++	u32        common_id_data_length:8;
++	u32        reserved:8;
++	u32        specific_id_data_length:8;
++	struct fc_rnid_common_id_data_s common_id_data;
++	struct fc_rnid_general_topology_data_s gen_topology_data;
++};
++
++#define RNID_ASSOCIATED_TYPE_UNKNOWN                    0x00000001
++#define RNID_ASSOCIATED_TYPE_OTHER                      0x00000002
++#define RNID_ASSOCIATED_TYPE_HUB                        0x00000003
++#define RNID_ASSOCIATED_TYPE_SWITCH                     0x00000004
++#define RNID_ASSOCIATED_TYPE_GATEWAY                    0x00000005
++#define RNID_ASSOCIATED_TYPE_STORAGE_DEVICE             0x00000009
++#define RNID_ASSOCIATED_TYPE_HOST                       0x0000000A
++#define RNID_ASSOCIATED_TYPE_STORAGE_SUBSYSTEM          0x0000000B
++#define RNID_ASSOCIATED_TYPE_STORAGE_ACCESS_DEVICE      0x0000000E
++#define RNID_ASSOCIATED_TYPE_NAS_SERVER                 0x00000011
++#define RNID_ASSOCIATED_TYPE_BRIDGE                     0x00000002
++#define RNID_ASSOCIATED_TYPE_VIRTUALIZATION_DEVICE      0x00000003
++#define RNID_ASSOCIATED_TYPE_MULTI_FUNCTION_DEVICE      0x000000FF
++
++enum fc_rpsc_speed_cap {
++	RPSC_SPEED_CAP_1G = 0x8000,
++	RPSC_SPEED_CAP_2G = 0x4000,
++	RPSC_SPEED_CAP_4G = 0x2000,
++	RPSC_SPEED_CAP_10G = 0x1000,
++	RPSC_SPEED_CAP_8G = 0x0800,
++	RPSC_SPEED_CAP_16G = 0x0400,
++
++	RPSC_SPEED_CAP_UNKNOWN = 0x0001,
++};
++
++enum fc_rpsc_op_speed {
++	RPSC_OP_SPEED_1G = 0x8000,
++	RPSC_OP_SPEED_2G = 0x4000,
++	RPSC_OP_SPEED_4G = 0x2000,
++	RPSC_OP_SPEED_10G = 0x1000,
++	RPSC_OP_SPEED_8G = 0x0800,
++	RPSC_OP_SPEED_16G = 0x0400,
++
++	RPSC_OP_SPEED_NOT_EST = 0x0001,	/*! speed not established */
++};
++
++struct fc_rpsc_speed_info_s {
++	u16        port_speed_cap;	/*! see enum fc_rpsc_speed_cap */
++	u16        port_op_speed;	/*! see enum fc_rpsc_op_speed */
++};
++
++enum link_e2e_beacon_subcmd {
++	LINK_E2E_BEACON_ON = 1,
++	LINK_E2E_BEACON_OFF = 2
++};
++
++enum beacon_type {
++	BEACON_TYPE_NORMAL	= 1,	/*! Normal Beaconing. Green */
++	BEACON_TYPE_WARN	= 2,	/*! Warning Beaconing. Yellow/Amber */
++	BEACON_TYPE_CRITICAL	= 3	/*! Critical Beaconing. Red */
++};
++
++struct link_e2e_beacon_param_s {
++	u8         beacon_type;	/* Beacon Type. See enum beacon_type */
++	u8         beacon_frequency;
++					/* Beacon frequency. Number of blinks
++					 * per 10 seconds
++					 */
++	u16        beacon_duration;/* Beacon duration (in Seconds). The
++					 * command operation should be
++					 * terminated at the end of this
++					 * timeout value.
++					 *
++					 * Ignored if diag_sub_cmd is
++					 * LINK_E2E_BEACON_OFF.
++					 *
++					 * If 0, beaconing will continue till a
++					 * BEACON OFF request is received
++					 */
++};
++
++/*
++ * Link E2E beacon request/good response format.
++ * For LS_RJTs use struct fc_ls_rjt_s
++ */
++struct link_e2e_beacon_req_s {
++	u32        ls_code;	/*! FC_ELS_E2E_LBEACON in requests *
++					 *or FC_ELS_ACC in good replies */
++	u32        ls_sub_cmd;	/*! See enum link_e2e_beacon_subcmd */
++	struct link_e2e_beacon_param_s beacon_parm;
++};
++
++/**
++ * If RPSC request is sent to the Domain Controller, the request is for
++ * all the ports within that domain (TODO - I don't think FOS implements
++ * this...).
++ */
++struct fc_rpsc_cmd_s {
++	struct fc_els_cmd_s els_cmd;
++};
++
++/*
++ * RPSC Acc
++ */
++struct fc_rpsc_acc_s {
++	u32        command:8;
++	u32        rsvd:8;
++	u32        num_entries:16;
++
++	struct fc_rpsc_speed_info_s speed_info[1];
++};
++
++/**
++ * If RPSC2 request is sent to the Domain Controller,
++ */
++#define FC_BRCD_TOKEN    0x42524344
++
++struct fc_rpsc2_cmd_s {
++	struct fc_els_cmd_s els_cmd;
++	u32	token;
++	u16	resvd;
++	u16	num_pids;	/* Number of pids in the request */
++	struct  {
++		u32	rsvd1:8;
++		u32	pid:24;		/* port identifier */
++	} pid_list[1];
++};
++
++enum fc_rpsc2_port_type {
++	RPSC2_PORT_TYPE_UNKNOWN = 0,
++	RPSC2_PORT_TYPE_NPORT   = 1,
++	RPSC2_PORT_TYPE_NLPORT  = 2,
++	RPSC2_PORT_TYPE_NPIV_PORT  = 0x5f,
++	RPSC2_PORT_TYPE_NPORT_TRUNK  = 0x6f,
++};
++/*
++ * RPSC2 portInfo entry structure
++ */
++struct fc_rpsc2_port_info_s {
++    u32    pid;        /* PID */
++    u16    resvd1;
++    u16    index;      /* port number / index */
++    u8     resvd2;
++    u8	   type;	/* port type N/NL/... */
++    u16    speed;      /* port Operating Speed */
++};
++
++/*
++ * RPSC2 Accept payload
++ */
++struct fc_rpsc2_acc_s {
++	u8        els_cmd;
++	u8        resvd;
++    u16       num_pids;  /* Number of pids in the request */
++    struct fc_rpsc2_port_info_s port_info[1];    /* port information */
++};
++
++/**
++ * bit fields so that multiple classes can be specified
++ */
++enum fc_cos {
++	FC_CLASS_2	= 0x04,
++	FC_CLASS_3	= 0x08,
++	FC_CLASS_2_3	= 0x0C,
++};
++
++/*
++ * symbolic name
++ */
++struct fc_symname_s {
++	u8         symname[FC_SYMNAME_MAX];
++};
++
++struct fc_alpabm_s {
++	u8         alpa_bm[FC_ALPA_MAX / 8];
++};
++
++/*
++ * protocol default timeout values
++ */
++#define FC_ED_TOV		2
++#define FC_REC_TOV		(FC_ED_TOV + 1)
++#define FC_RA_TOV		10
++#define FC_ELS_TOV		(2 * FC_RA_TOV)
++#define FC_FCCT_TOV		(3 * FC_RA_TOV)
++
++/*
++ * virtual fabric related defines
++ */
++#define FC_VF_ID_NULL    0	/*  must not be used as VF_ID */
++#define FC_VF_ID_MIN     1
++#define FC_VF_ID_MAX     0xEFF
++#define FC_VF_ID_CTL     0xFEF	/*  control VF_ID */
++
++/**
++ * Virtual Fabric Tagging header format
++ * @caution This is defined only in BIG ENDIAN format.
++ */
++struct fc_vft_s {
++	u32        r_ctl:8;
++	u32        ver:2;
++	u32        type:4;
++	u32        res_a:2;
++	u32        priority:3;
++	u32        vf_id:12;
++	u32        res_b:1;
++	u32        hopct:8;
++	u32        res_c:24;
++};
++
++/*
++ * FCP
++ */
++enum {
++	FCP_RJT		= 0x01000000,	/* SRR reject */
++	FCP_SRR_ACCEPT	= 0x02000000,	/* SRR accept */
++	FCP_SRR		= 0x14000000,	/* Sequence Retransmission Request */
++};
++
++/*
++ * SRR FC-4 LS payload
++ */
++struct fc_srr_s {
++	u32	ls_cmd;
++	u32        ox_id:16;	/* ox-id */
++	u32        rx_id:16;	/* rx-id */
++	u32        ro;		/* relative offset */
++	u32        r_ctl:8;		/* R_CTL for I.U. */
++	u32        res:24;
 +};
 +
 +
-+/* BFI_MSGQ_H2I_DOORBELL */
-+struct bfi_msgq_h2i_db_s {
-+	struct bfi_mhdr_s mh;
-+	u16 cmdq_pi;
-+	u16 rspq_ci;
++/*
++ * FCP_CMND definitions
++ */
++#define FCP_CMND_CDB_LEN    16
++#define FCP_CMND_LUN_LEN    8
++
++struct fcp_cmnd_s {
++	lun_t           lun;		/* 64-bit LU number */
++	u8         crn;		/* command reference number */
++#ifdef __BIGENDIAN
++	u8         resvd:1,
++			priority:4,	/* FCP-3: SAM-3 priority */
++			taskattr:3;	/* scsi task attribute */
++#else
++	u8         taskattr:3,	/* scsi task attribute */
++			priority:4,	/* FCP-3: SAM-3 priority */
++			resvd:1;
++#endif
++	u8         tm_flags;	/* task management flags */
++#ifdef __BIGENDIAN
++	u8         addl_cdb_len:6,	/* additional CDB length words */
++			iodir:2;	/* read/write FCP_DATA IUs */
++#else
++	u8         iodir:2,	/* read/write FCP_DATA IUs */
++			addl_cdb_len:6;	/* additional CDB length */
++#endif
++	scsi_cdb_t      cdb;
++
++	/*
++	 * !!! additional cdb bytes follows here!!!
++	 */
++	u32        fcp_dl;	/* bytes to be transferred */
 +};
 +
-+/* BFI_MSGQ_I2H_DOORBELL */
-+struct bfi_msgq_i2h_db_s {
-+	struct bfi_mhdr_s mh;
-+	u16 rspq_pi;
-+	u16 cmdq_ci;
++#define fcp_cmnd_cdb_len(_cmnd) ((_cmnd)->addl_cdb_len * 4 + FCP_CMND_CDB_LEN)
++#define fcp_cmnd_fcpdl(_cmnd)	((&(_cmnd)->fcp_dl)[(_cmnd)->addl_cdb_len])
++
++/*
++ * struct fcp_cmnd_s .iodir field values
++ */
++enum fcp_iodir {
++	FCP_IODIR_NONE	= 0,
++	FCP_IODIR_WRITE = 1,
++	FCP_IODIR_READ	= 2,
++	FCP_IODIR_RW	= 3,
++};
++
++/*
++ * Task attribute field
++ */
++enum {
++	FCP_TASK_ATTR_SIMPLE	= 0,
++	FCP_TASK_ATTR_HOQ	= 1,
++	FCP_TASK_ATTR_ORDERED	= 2,
++	FCP_TASK_ATTR_ACA	= 4,
++	FCP_TASK_ATTR_UNTAGGED	= 5,	/* obsolete in FCP-3 */
++};
++
++/*
++ * Task management flags field - only one bit shall be set
++ */
++enum fcp_tm_cmnd {
++	FCP_TM_ABORT_TASK_SET	= BIT(1),
++	FCP_TM_CLEAR_TASK_SET	= BIT(2),
++	FCP_TM_LUN_RESET	= BIT(4),
++	FCP_TM_TARGET_RESET	= BIT(5),	/* obsolete in FCP-3 */
++	FCP_TM_CLEAR_ACA	= BIT(6),
++};
++
++/*
++ * FCP_XFER_RDY IU defines
++ */
++struct fcp_xfer_rdy_s {
++	u32        data_ro;
++	u32        burst_len;
++	u32        reserved;
++};
++
++/*
++ * FCP_RSP residue flags
++ */
++enum fcp_residue {
++	FCP_NO_RESIDUE = 0,	/* no residue */
++	FCP_RESID_OVER = 1,	/* more data left that was not sent */
++	FCP_RESID_UNDER = 2,	/* less data than requested */
++};
++
++enum {
++	FCP_RSPINFO_GOOD = 0,
++	FCP_RSPINFO_DATALEN_MISMATCH = 1,
++	FCP_RSPINFO_CMND_INVALID = 2,
++	FCP_RSPINFO_ROLEN_MISMATCH = 3,
++	FCP_RSPINFO_TM_NOT_SUPP = 4,
++	FCP_RSPINFO_TM_FAILED = 5,
++};
++
++struct fcp_rspinfo_s {
++	u32        res0:24;
++	u32        rsp_code:8;	/* response code (as above) */
++	u32        res1;
++};
++
++struct fcp_resp_s {
++	u32        reserved[2];	/* 2 words reserved */
++	u16        reserved2;
++#ifdef __BIGENDIAN
++	u8         reserved3:3;
++	u8         fcp_conf_req:1;	/* FCP_CONF is requested */
++	u8         resid_flags:2;	/* underflow/overflow */
++	u8         sns_len_valid:1;/* sense len is valid */
++	u8         rsp_len_valid:1;/* response len is valid */
++#else
++	u8         rsp_len_valid:1;/* response len is valid */
++	u8         sns_len_valid:1;/* sense len is valid */
++	u8         resid_flags:2;	/* underflow/overflow */
++	u8         fcp_conf_req:1;	/* FCP_CONF is requested */
++	u8         reserved3:3;
++#endif
++	u8         scsi_status;	/* one byte SCSI status */
++	u32        residue;	/* residual data bytes */
++	u32        sns_len;	/* length od sense info */
++	u32        rsp_len;	/* length of response info */
++};
++
++#define fcp_snslen(__fcprsp)	((__fcprsp)->sns_len_valid ?		\
++					(__fcprsp)->sns_len : 0)
++#define fcp_rsplen(__fcprsp)	((__fcprsp)->rsp_len_valid ?		\
++					(__fcprsp)->rsp_len : 0)
++#define fcp_rspinfo(__fcprsp)	((struct fcp_rspinfo_s *)((__fcprsp) + 1))
++#define fcp_snsinfo(__fcprsp)	(((u8 *)fcp_rspinfo(__fcprsp)) +	\
++						fcp_rsplen(__fcprsp))
++
++struct fcp_cmnd_fr_s {
++	struct fchs_s fchs;
++	struct fcp_cmnd_s fcp;
++};
++
++/*
++ * CT
++ */
++struct ct_hdr_s {
++	u32	rev_id:8;	/* Revision of the CT */
++	u32	in_id:24;	/* Initiator Id */
++	u32	gs_type:8;	/* Generic service Type */
++	u32	gs_sub_type:8;	/* Generic service sub type */
++	u32	options:8;	/* options */
++	u32	rsvrd:8;	/* reserved */
++	u32	cmd_rsp_code:16;/* ct command/response code */
++	u32	max_res_size:16;/* maximum/residual size */
++	u32	frag_id:8;	/* fragment ID */
++	u32	reason_code:8;	/* reason code */
++	u32	exp_code:8;	/* explanation code */
++	u32	vendor_unq:8;	/* vendor unique */
++};
++
++/*
++ * defines for the Revision
++ */
++enum {
++	CT_GS3_REVISION = 0x01,
++};
++
++/*
++ * defines for gs_type
++ */
++enum {
++	CT_GSTYPE_KEYSERVICE	= 0xF7,
++	CT_GSTYPE_ALIASSERVICE	= 0xF8,
++	CT_GSTYPE_MGMTSERVICE	= 0xFA,
++	CT_GSTYPE_TIMESERVICE	= 0xFB,
++	CT_GSTYPE_DIRSERVICE	= 0xFC,
++};
++
++/*
++ * defines for gs_sub_type for gs type directory service
++ */
++enum {
++	CT_GSSUBTYPE_NAMESERVER = 0x02,
++};
++
++/*
++ * defines for gs_sub_type for gs type management service
++ */
++enum {
++	CT_GSSUBTYPE_CFGSERVER	= 0x01,
++	CT_GSSUBTYPE_UNZONED_NS = 0x02,
++	CT_GSSUBTYPE_ZONESERVER = 0x03,
++	CT_GSSUBTYPE_LOCKSERVER = 0x04,
++	CT_GSSUBTYPE_HBA_MGMTSERVER = 0x10,	/* for FDMI */
++};
++
++/*
++ * defines for CT response code field
++ */
++enum {
++	CT_RSP_REJECT = 0x8001,
++	CT_RSP_ACCEPT = 0x8002,
++};
++
++/*
++ * defintions for CT reason code
++ */
++enum {
++	CT_RSN_INV_CMD		= 0x01,
++	CT_RSN_INV_VER		= 0x02,
++	CT_RSN_LOGIC_ERR	= 0x03,
++	CT_RSN_INV_SIZE		= 0x04,
++	CT_RSN_LOGICAL_BUSY	= 0x05,
++	CT_RSN_PROTO_ERR	= 0x07,
++	CT_RSN_UNABLE_TO_PERF	= 0x09,
++	CT_RSN_NOT_SUPP			= 0x0B,
++	CT_RSN_SERVER_NOT_AVBL  = 0x0D,
++	CT_RSN_SESSION_COULD_NOT_BE_ESTBD = 0x0E,
++	CT_RSN_VENDOR_SPECIFIC  = 0xFF,
++
++};
++
++/*
++ * definitions for explanations code for Name server
++ */
++enum {
++	CT_NS_EXP_NOADDITIONAL	= 0x00,
++	CT_NS_EXP_ID_NOT_REG	= 0x01,
++	CT_NS_EXP_PN_NOT_REG	= 0x02,
++	CT_NS_EXP_NN_NOT_REG	= 0x03,
++	CT_NS_EXP_CS_NOT_REG	= 0x04,
++	CT_NS_EXP_IPN_NOT_REG	= 0x05,
++	CT_NS_EXP_IPA_NOT_REG	= 0x06,
++	CT_NS_EXP_FT_NOT_REG	= 0x07,
++	CT_NS_EXP_SPN_NOT_REG	= 0x08,
++	CT_NS_EXP_SNN_NOT_REG	= 0x09,
++	CT_NS_EXP_PT_NOT_REG	= 0x0A,
++	CT_NS_EXP_IPP_NOT_REG	= 0x0B,
++	CT_NS_EXP_FPN_NOT_REG	= 0x0C,
++	CT_NS_EXP_HA_NOT_REG	= 0x0D,
++	CT_NS_EXP_FD_NOT_REG	= 0x0E,
++	CT_NS_EXP_FF_NOT_REG	= 0x0F,
++	CT_NS_EXP_ACCESSDENIED	= 0x10,
++	CT_NS_EXP_UNACCEPTABLE_ID = 0x11,
++	CT_NS_EXP_DATABASEEMPTY		= 0x12,
++	CT_NS_EXP_NOT_REG_IN_SCOPE	= 0x13,
++	CT_NS_EXP_DOM_ID_NOT_PRESENT	= 0x14,
++	CT_NS_EXP_PORT_NUM_NOT_PRESENT	= 0x15,
++	CT_NS_EXP_NO_DEVICE_ATTACHED	= 0x16
++};
++
++/*
++ * defintions for the explanation code for all servers
++ */
++enum {
++	CT_EXP_AUTH_EXCEPTION			= 0xF1,
++	CT_EXP_DB_FULL					= 0xF2,
++	CT_EXP_DB_EMPTY					= 0xF3,
++	CT_EXP_PROCESSING_REQ			= 0xF4,
++	CT_EXP_UNABLE_TO_VERIFY_CONN	= 0xF5,
++	CT_EXP_DEVICES_NOT_IN_CMN_ZONE  = 0xF6
++};
++
++/*
++ * Command codes for Name server
++ */
++enum {
++	GS_GID_PN	= 0x0121,	/* Get Id on port name */
++	GS_GPN_ID	= 0x0112,	/* Get port name on ID */
++	GS_GNN_ID	= 0x0113,	/* Get node name on ID */
++	GS_GID_FT	= 0x0171,	/* Get Id on FC4 type */
++	GS_GSPN_ID	= 0x0118,	/* Get symbolic PN on ID */
++	GS_RFT_ID	= 0x0217,	/* Register fc4type on ID */
++	GS_RSPN_ID	= 0x0218,	/* Register symbolic PN on ID */
++	GS_RPN_ID	= 0x0212,	/* Register port name */
++	GS_RNN_ID	= 0x0213,	/* Register node name */
++	GS_RCS_ID	= 0x0214,	/* Register class of service */
++	GS_RPT_ID	= 0x021A,	/* Register port type */
++	GS_GA_NXT	= 0x0100,	/* Get all next */
++	GS_RFF_ID	= 0x021F,	/* Register FC4 Feature		*/
++};
++
++struct fcgs_id_req_s{
++	u32 rsvd:8;
++	u32 dap:24; /* port identifier */
++};
++#define fcgs_gpnid_req_t struct fcgs_id_req_s
++#define fcgs_gnnid_req_t struct fcgs_id_req_s
++#define fcgs_gspnid_req_t struct fcgs_id_req_s
++
++struct fcgs_gidpn_req_s {
++	wwn_t	port_name;	/* port wwn */
++};
++
++struct fcgs_gidpn_resp_s {
++	u32	rsvd:8;
++	u32	dap:24;	/* port identifier */
++};
++
++/**
++ * RFT_ID
++ */
++struct fcgs_rftid_req_s {
++	u32	rsvd:8;
++	u32	dap:24;		/* port identifier */
++	u32	fc4_type[8];	/* fc4 types */
++};
++
++/**
++ * RFF_ID : Register FC4 features.
++ */
++
++#define FC_GS_FCP_FC4_FEATURE_INITIATOR  0x02
++#define FC_GS_FCP_FC4_FEATURE_TARGET	 0x01
++
++struct fcgs_rffid_req_s {
++    u32    rsvd:8;
++    u32    dap:24;		/* port identifier	*/
++    u32    rsvd1:16;
++    u32    fc4ftr_bits:8;		/* fc4 feature bits	*/
++    u32    fc4_type:8;		/* corresponding FC4 Type */
++};
++
++/**
++ * GID_FT Request
++ */
++struct fcgs_gidft_req_s {
++	u8	reserved;
++	u8	domain_id;	/* domain, 0 - all fabric */
++	u8	area_id;	/* area, 0 - whole domain */
++	u8	fc4_type;	/* FC_TYPE_FCP for SCSI devices */
++};		/* GID_FT Request */
++
++/**
++ * GID_FT Response
++ */
++struct fcgs_gidft_resp_s {
++	u8		last:1;	/* last port identifier flag */
++	u8		reserved:7;
++	u32	pid:24;	/* port identifier */
++};		/* GID_FT Response */
++
++/**
++ * RSPN_ID
++ */
++struct fcgs_rspnid_req_s {
++	u32	rsvd:8;
++	u32	dap:24;		/* port identifier */
++	u8		spn_len;	/* symbolic port name length */
++	u8		spn[256];	/* symbolic port name */
++};
++
++/**
++ * RPN_ID
++ */
++struct fcgs_rpnid_req_s {
++	u32	rsvd:8;
++	u32	port_id:24;
++	wwn_t		port_name;
++};
++
++/**
++ * RNN_ID
++ */
++struct fcgs_rnnid_req_s {
++	u32	rsvd:8;
++	u32	port_id:24;
++	wwn_t		node_name;
++};
++
++/**
++ * RCS_ID
++ */
++struct fcgs_rcsid_req_s {
++	u32	rsvd:8;
++	u32	port_id:24;
++	u32	cos;
++};
++
++/**
++ * RPT_ID
++ */
++struct fcgs_rptid_req_s {
++	u32	rsvd:8;
++	u32	port_id:24;
++	u32	port_type:8;
++	u32	rsvd1:24;
++};
++
++/**
++ * GA_NXT Request
++ */
++struct fcgs_ganxt_req_s {
++	u32	rsvd:8;
++	u32	port_id:24;
++};
++
++/**
++ * GA_NXT Response
++ */
++struct fcgs_ganxt_rsp_s {
++	u32	port_type:8;	/* Port Type */
++	u32	port_id:24;	/* Port Identifier */
++	wwn_t		port_name;	/* Port Name */
++	u8		spn_len;	/* Length of Symbolic Port Name */
++	char		spn[255];	/* Symbolic Port Name */
++	wwn_t		node_name;	/* Node Name */
++	u8		snn_len;	/* Length of Symbolic Node Name */
++	char		snn[255];	/* Symbolic Node Name */
++	u8		ipa[8];		/* Initial Process Associator */
++	u8		ip[16];		/* IP Address */
++	u32	cos;		/* Class of Service */
++	u32	fc4types[8];	/* FC-4 TYPEs */
++	wwn_t		fabric_port_name;
++					/* Fabric Port Name */
++	u32	rsvd:8;		/* Reserved */
++	u32	hard_addr:24;	/* Hard Address */
++};
++
++/*
++ * Fabric Config Server
++ */
++
++/*
++ * Command codes for Fabric Configuration Server
++ */
++enum {
++	GS_FC_GFN_CMD	= 0x0114,	/* GS FC Get Fabric Name  */
++	GS_FC_GMAL_CMD	= 0x0116,	/* GS FC GMAL  */
++	GS_FC_TRACE_CMD	= 0x0400,	/* GS FC Trace Route */
++	GS_FC_PING_CMD	= 0x0401,	/* GS FC Ping */
++};
++
++/*
++ * Source or Destination Port Tags.
++ */
++enum {
++	GS_FTRACE_TAG_NPORT_ID		= 1,
++	GS_FTRACE_TAG_NPORT_NAME	= 2,
++};
++
++/*
++* Port Value : Could be a Port id or wwn
++ */
++union fcgs_port_val_u {
++	u32	nport_id;
++	wwn_t		nport_wwn;
++};
++
++#define GS_FTRACE_MAX_HOP_COUNT	20
++#define GS_FTRACE_REVISION	1
++
++/*
++ * Ftrace Related Structures.
++ */
++
++/*
++ * STR (Switch Trace) Reject Reason Codes. From FC-SW.
++ */
++enum {
++	GS_FTRACE_STR_CMD_COMPLETED_SUCC	= 0,
++	GS_FTRACE_STR_CMD_NOT_SUPP_IN_NEXT_SWITCH,
++	GS_FTRACE_STR_NO_RESP_FROM_NEXT_SWITCH,
++	GS_FTRACE_STR_MAX_HOP_CNT_REACHED,
++	GS_FTRACE_STR_SRC_PORT_NOT_FOUND,
++	GS_FTRACE_STR_DST_PORT_NOT_FOUND,
++	GS_FTRACE_STR_DEVICES_NOT_IN_COMMON_ZONE,
++	GS_FTRACE_STR_NO_ROUTE_BW_PORTS,
++	GS_FTRACE_STR_NO_ADDL_EXPLN,
++	GS_FTRACE_STR_FABRIC_BUSY,
++	GS_FTRACE_STR_FABRIC_BUILD_IN_PROGRESS,
++	GS_FTRACE_STR_VENDOR_SPECIFIC_ERR_START = 0xf0,
++	GS_FTRACE_STR_VENDOR_SPECIFIC_ERR_END = 0xff,
++};
++
++/*
++ * Ftrace Request
++ */
++struct fcgs_ftrace_req_s {
++	u32	revision;
++	u16	src_port_tag;	/* Source Port tag */
++	u16	src_port_len;	/* Source Port len */
++	union fcgs_port_val_u src_port_val;	/* Source Port value */
++	u16	dst_port_tag;	/* Destination Port tag */
++	u16	dst_port_len;	/* Destination Port len */
++	union fcgs_port_val_u dst_port_val;	/* Destination Port value */
++	u32	token;
++	u8		vendor_id[8];	/* T10 Vendor Identifier */
++	u8		vendor_info[8];	/* Vendor specific Info */
++	u32	max_hop_cnt;	/* Max Hop Count */
++};
++
++/*
++ * Path info structure
++ */
++struct fcgs_ftrace_path_info_s {
++	wwn_t		switch_name;		/* Switch WWN */
++	u32	domain_id;
++	wwn_t		ingress_port_name;	/* Ingress ports wwn */
++	u32	ingress_phys_port_num;	/* Ingress ports physical port
++						 * number
++						 */
++	wwn_t		egress_port_name;	/* Ingress ports wwn */
++	u32	egress_phys_port_num;	/* Ingress ports physical port
++						 * number
++						 */
++};
++
++/*
++ * Ftrace Acc Response
++ */
++struct fcgs_ftrace_resp_s {
++	u32	revision;
++	u32	token;
++	u8		vendor_id[8];		/* T10 Vendor Identifier */
++	u8		vendor_info[8];		/* Vendor specific Info */
++	u32	str_rej_reason_code;	/* STR Reject Reason Code */
++	u32	num_path_info_entries;	/* No. of path info entries */
++	/*
++	 * path info entry/entries.
++	 */
++	struct fcgs_ftrace_path_info_s path_info[1];
++
++};
++
++/*
++* Fabric Config Server : FCPing
++ */
++
++/*
++ * FC Ping Request
++ */
++struct fcgs_fcping_req_s {
++	u32	revision;
++	u16	port_tag;
++	u16	port_len;	/* Port len */
++	union fcgs_port_val_u port_val;	/* Port value */
++	u32	token;
++};
++
++/*
++ * FC Ping Response
++ */
++struct fcgs_fcping_resp_s {
++	u32	token;
++};
++
++/*
++ * Command codes for zone server query.
++ */
++enum {
++	ZS_GZME = 0x0124,	/* Get zone member extended */
++};
++
++/*
++ * ZS GZME request
++ */
++#define ZS_GZME_ZNAMELEN	32
++struct zs_gzme_req_s {
++	u8	znamelen;
++	u8	rsvd[3];
++	u8	zname[ZS_GZME_ZNAMELEN];
++};
++
++enum zs_mbr_type {
++	ZS_MBR_TYPE_PWWN	= 1,
++	ZS_MBR_TYPE_DOMPORT	= 2,
++	ZS_MBR_TYPE_PORTID	= 3,
++	ZS_MBR_TYPE_NWWN	= 4,
++};
++
++struct zs_mbr_wwn_s {
++	u8	mbr_type;
++	u8	rsvd[3];
++	wwn_t	wwn;
++};
++
++struct zs_query_resp_s {
++	u32	nmbrs;	/*  number of zone members */
++	struct zs_mbr_wwn_s	mbr[1];
++};
++
++/*
++ * GMAL Command ( Get ( interconnect Element) Management Address List)
++ * To retrieve the IP Address of a Switch.
++ */
++
++#define CT_GMAL_RESP_PREFIX_TELNET	 "telnet://"
++#define CT_GMAL_RESP_PREFIX_HTTP	 "http://"
++
++/*  GMAL/GFN request */
++struct fcgs_req_s {
++	wwn_t    wwn;   /* PWWN/NWWN */
++};
++
++#define fcgs_gmal_req_t struct fcgs_req_s
++#define fcgs_gfn_req_t struct fcgs_req_s
++
++/* Accept Response to GMAL */
++struct fcgs_gmal_resp_s {
++	u32	ms_len;   /* Num of entries */
++	u8	ms_ma[256];
++};
++
++struct fcgs_gmal_entry_s {
++	u8  len;
++	u8  prefix[7]; /* like "http://" */
++	u8  ip_addr[248];
++};
++
++/*
++ * FDMI
++ */
++/*
++ * FDMI Command Codes
++ */
++#define	FDMI_GRHL		0x0100
++#define	FDMI_GHAT		0x0101
++#define	FDMI_GRPL		0x0102
++#define	FDMI_GPAT		0x0110
++#define	FDMI_RHBA		0x0200
++#define	FDMI_RHAT		0x0201
++#define	FDMI_RPRT		0x0210
++#define	FDMI_RPA		0x0211
++#define	FDMI_DHBA		0x0300
++#define	FDMI_DPRT		0x0310
++
++/*
++ * FDMI reason codes
++ */
++#define	FDMI_NO_ADDITIONAL_EXP		0x00
++#define	FDMI_HBA_ALREADY_REG		0x10
++#define	FDMI_HBA_ATTRIB_NOT_REG		0x11
++#define	FDMI_HBA_ATTRIB_MULTIPLE	0x12
++#define	FDMI_HBA_ATTRIB_LENGTH_INVALID	0x13
++#define	FDMI_HBA_ATTRIB_NOT_PRESENT	0x14
++#define	FDMI_PORT_ORIG_NOT_IN_LIST	0x15
++#define	FDMI_PORT_HBA_NOT_IN_LIST	0x16
++#define	FDMI_PORT_ATTRIB_NOT_REG	0x20
++#define	FDMI_PORT_NOT_REG		0x21
++#define	FDMI_PORT_ATTRIB_MULTIPLE	0x22
++#define	FDMI_PORT_ATTRIB_LENGTH_INVALID	0x23
++#define	FDMI_PORT_ALREADY_REGISTEREED	0x24
++
++/*
++ * FDMI Transmission Speed Mask values
++ */
++#define	FDMI_TRANS_SPEED_1G		0x00000001
++#define	FDMI_TRANS_SPEED_2G		0x00000002
++#define	FDMI_TRANS_SPEED_10G		0x00000004
++#define	FDMI_TRANS_SPEED_4G		0x00000008
++#define	FDMI_TRANS_SPEED_8G		0x00000010
++#define	FDMI_TRANS_SPEED_16G		0x00000020
++#define	FDMI_TRANS_SPEED_UNKNOWN	0x00008000
++
++/*
++ * FDMI HBA attribute types
++ */
++enum fdmi_hba_attribute_type {
++	FDMI_HBA_ATTRIB_NODENAME = 1,	/* 0x0001 */
++	FDMI_HBA_ATTRIB_MANUFACTURER,	/* 0x0002 */
++	FDMI_HBA_ATTRIB_SERIALNUM,	/* 0x0003 */
++	FDMI_HBA_ATTRIB_MODEL,		/* 0x0004 */
++	FDMI_HBA_ATTRIB_MODEL_DESC,	/* 0x0005 */
++	FDMI_HBA_ATTRIB_HW_VERSION,	/* 0x0006 */
++	FDMI_HBA_ATTRIB_DRIVER_VERSION,	/* 0x0007 */
++	FDMI_HBA_ATTRIB_ROM_VERSION,	/* 0x0008 */
++	FDMI_HBA_ATTRIB_FW_VERSION,	/* 0x0009 */
++	FDMI_HBA_ATTRIB_OS_NAME,	/* 0x000A */
++	FDMI_HBA_ATTRIB_MAX_CT,		/* 0x000B */
++
++	FDMI_HBA_ATTRIB_MAX_TYPE
++};
++
++/*
++ * FDMI Port attribute types
++ */
++enum fdmi_port_attribute_type {
++	FDMI_PORT_ATTRIB_FC4_TYPES = 1,	/* 0x0001 */
++	FDMI_PORT_ATTRIB_SUPP_SPEED,	/* 0x0002 */
++	FDMI_PORT_ATTRIB_PORT_SPEED,	/* 0x0003 */
++	FDMI_PORT_ATTRIB_FRAME_SIZE,	/* 0x0004 */
++	FDMI_PORT_ATTRIB_DEV_NAME,	/* 0x0005 */
++	FDMI_PORT_ATTRIB_HOST_NAME,	/* 0x0006 */
++
++	FDMI_PORT_ATTR_MAX_TYPE
++};
++
++/*
++ * FDMI attribute
++ */
++struct fdmi_attr_s {
++	u16        type;
++	u16        len;
++	u8         value[1];
++};
++
++/*
++ * HBA Attribute Block
++ */
++struct fdmi_hba_attr_s {
++	u32        attr_count;	/* # of attributes */
++	struct fdmi_attr_s hba_attr;	/* n attributes */
++};
++
++/*
++ * Registered Port List
++ */
++struct fdmi_port_list_s {
++	u32        num_ports;	/* number Of Port Entries */
++	wwn_t           port_entry;	/* one or more */
++};
++
++/*
++ * Port Attribute Block
++ */
++struct fdmi_port_attr_s {
++	u32        attr_count;	/* # of attributes */
++	struct fdmi_attr_s port_attr;	/* n attributes */
++};
++
++/*
++ * FDMI Register HBA Attributes
++ */
++struct fdmi_rhba_s {
++	wwn_t           hba_id;		/* HBA Identifier */
++	struct fdmi_port_list_s port_list;	/* Registered Port List */
++	struct fdmi_hba_attr_s hba_attr_blk;	/* HBA attribute block */
++};
++
++/*
++ * FDMI Register Port
++ */
++struct fdmi_rprt_s {
++	wwn_t           hba_id;		/* HBA Identifier */
++	wwn_t           port_name;	/* Port wwn */
++	struct fdmi_port_attr_s port_attr_blk;	/* Port Attr Block */
++};
++
++/*
++ * FDMI Register Port Attributes
++ */
++struct fdmi_rpa_s {
++	wwn_t           port_name;	/* port wwn */
++	struct fdmi_port_attr_s port_attr_blk;	/* Port Attr Block */
 +};
 +
 +#pragma pack()
 +
-+/* BFI port specific */
-+#pragma pack(1)
-+
-+enum bfi_port_h2i {
-+	BFI_PORT_H2I_ENABLE_REQ         = (1),
-+	BFI_PORT_H2I_DISABLE_REQ        = (2),
-+	BFI_PORT_H2I_GET_STATS_REQ      = (3),
-+	BFI_PORT_H2I_CLEAR_STATS_REQ    = (4),
-+};
-+
-+enum bfi_port_i2h {
-+	BFI_PORT_I2H_ENABLE_RSP         = BFA_I2HM(1),
-+	BFI_PORT_I2H_DISABLE_RSP        = BFA_I2HM(2),
-+	BFI_PORT_I2H_GET_STATS_RSP      = BFA_I2HM(3),
-+	BFI_PORT_I2H_CLEAR_STATS_RSP    = BFA_I2HM(4),
-+};
-+
-+/**
-+ * Generic REQ type
-+ */
-+struct bfi_port_generic_req_s {
-+	struct bfi_mhdr_s  mh;          /*  msg header		*/
-+	u32     msgtag;         /*  msgtag for reply                */
-+	u32     rsvd;
-+};
-+
-+/**
-+ * Generic RSP type
-+ */
-+struct bfi_port_generic_rsp_s {
-+	struct bfi_mhdr_s  mh;          /*  common msg header               */
-+	u8              status;         /*  port enable status              */
-+	u8              rsvd[3];
-+	u32     msgtag;         /*  msgtag for reply                */
-+};
-+
-+/**
-+ * BFI_PORT_H2I_GET_STATS_REQ
-+ */
-+struct bfi_port_get_stats_req_s {
-+	struct bfi_mhdr_s  mh;          /*  common msg header               */
-+	union bfi_addr_u   dma_addr;
-+};
-+
-+union bfi_port_h2i_msg_u {
-+	struct bfi_mhdr_s               mh;
-+	struct bfi_port_generic_req_s   enable_req;
-+	struct bfi_port_generic_req_s   disable_req;
-+	struct bfi_port_get_stats_req_s getstats_req;
-+	struct bfi_port_generic_req_s   clearstats_req;
-+};
-+
-+union bfi_port_i2h_msg_u {
-+	struct bfi_mhdr_s               mh;
-+	struct bfi_port_generic_rsp_s   enable_rsp;
-+	struct bfi_port_generic_rsp_s   disable_rsp;
-+	struct bfi_port_generic_rsp_s   getstats_rsp;
-+	struct bfi_port_generic_rsp_s   clearstats_rsp;
-+};
-+
-+#pragma pack()
-+
-+#endif /* __BFI_H__ */
-diff --git a/drivers/scsi/bfa/bfi_cbreg.h b/drivers/scsi/bfa/bfi_cbreg.h
++#endif	/* __BFA_FC_H__ */
+diff --git a/drivers/scsi/bfa/bfa_fcbuild.h b/drivers/scsi/bfa/bfa_fcbuild.h
 new file mode 100644
-index 0000000..6f03ed3
+index 0000000..73abd02
 --- /dev/null
-+++ b/drivers/scsi/bfa/bfi_cbreg.h
-@@ -0,0 +1,304 @@
-+
-+/*
-+ * bfi_cbreg.h crossbow host block register definitions
-+ *
-+ * !!! Do not edit. Auto generated. !!!
-+ */
-+
-+#ifndef __BFI_CBREG_H__
-+#define __BFI_CBREG_H__
-+
-+
-+#define HOSTFN0_INT_STATUS               0x00014000
-+#define __HOSTFN0_INT_STATUS_LVL_MK      0x00f00000
-+#define __HOSTFN0_INT_STATUS_LVL_SH      20
-+#define __HOSTFN0_INT_STATUS_LVL(_v)     ((_v) << __HOSTFN0_INT_STATUS_LVL_SH)
-+#define __HOSTFN0_INT_STATUS_P           0x000fffff
-+#define HOSTFN0_INT_MSK                  0x00014004
-+#define HOST_PAGE_NUM_FN0                0x00014008
-+#define __HOST_PAGE_NUM_FN               0x000001ff
-+#define HOSTFN1_INT_STATUS               0x00014100
-+#define __HOSTFN1_INT_STAT_LVL_MK        0x00f00000
-+#define __HOSTFN1_INT_STAT_LVL_SH        20
-+#define __HOSTFN1_INT_STAT_LVL(_v)       ((_v) << __HOSTFN1_INT_STAT_LVL_SH)
-+#define __HOSTFN1_INT_STAT_P             0x000fffff
-+#define HOSTFN1_INT_MSK                  0x00014104
-+#define HOST_PAGE_NUM_FN1                0x00014108
-+#define APP_PLL_400_CTL_REG              0x00014204
-+#define __P_400_PLL_LOCK                 0x80000000
-+#define __APP_PLL_400_SRAM_USE_100MHZ    0x00100000
-+#define __APP_PLL_400_RESET_TIMER_MK     0x000e0000
-+#define __APP_PLL_400_RESET_TIMER_SH     17
-+#define __APP_PLL_400_RESET_TIMER(_v)    ((_v) << __APP_PLL_400_RESET_TIMER_SH)
-+#define __APP_PLL_400_LOGIC_SOFT_RESET   0x00010000
-+#define __APP_PLL_400_CNTLMT0_1_MK       0x0000c000
-+#define __APP_PLL_400_CNTLMT0_1_SH       14
-+#define __APP_PLL_400_CNTLMT0_1(_v)      ((_v) << __APP_PLL_400_CNTLMT0_1_SH)
-+#define __APP_PLL_400_JITLMT0_1_MK       0x00003000
-+#define __APP_PLL_400_JITLMT0_1_SH       12
-+#define __APP_PLL_400_JITLMT0_1(_v)      ((_v) << __APP_PLL_400_JITLMT0_1_SH)
-+#define __APP_PLL_400_HREF               0x00000800
-+#define __APP_PLL_400_HDIV               0x00000400
-+#define __APP_PLL_400_P0_1_MK            0x00000300
-+#define __APP_PLL_400_P0_1_SH            8
-+#define __APP_PLL_400_P0_1(_v)           ((_v) << __APP_PLL_400_P0_1_SH)
-+#define __APP_PLL_400_Z0_2_MK            0x000000e0
-+#define __APP_PLL_400_Z0_2_SH            5
-+#define __APP_PLL_400_Z0_2(_v)           ((_v) << __APP_PLL_400_Z0_2_SH)
-+#define __APP_PLL_400_RSEL200500         0x00000010
-+#define __APP_PLL_400_ENARST             0x00000008
-+#define __APP_PLL_400_BYPASS             0x00000004
-+#define __APP_PLL_400_LRESETN            0x00000002
-+#define __APP_PLL_400_ENABLE             0x00000001
-+#define APP_PLL_212_CTL_REG              0x00014208
-+#define __P_212_PLL_LOCK                 0x80000000
-+#define __APP_PLL_212_RESET_TIMER_MK     0x000e0000
-+#define __APP_PLL_212_RESET_TIMER_SH     17
-+#define __APP_PLL_212_RESET_TIMER(_v)    ((_v) << __APP_PLL_212_RESET_TIMER_SH)
-+#define __APP_PLL_212_LOGIC_SOFT_RESET   0x00010000
-+#define __APP_PLL_212_CNTLMT0_1_MK       0x0000c000
-+#define __APP_PLL_212_CNTLMT0_1_SH       14
-+#define __APP_PLL_212_CNTLMT0_1(_v)      ((_v) << __APP_PLL_212_CNTLMT0_1_SH)
-+#define __APP_PLL_212_JITLMT0_1_MK       0x00003000
-+#define __APP_PLL_212_JITLMT0_1_SH       12
-+#define __APP_PLL_212_JITLMT0_1(_v)      ((_v) << __APP_PLL_212_JITLMT0_1_SH)
-+#define __APP_PLL_212_HREF               0x00000800
-+#define __APP_PLL_212_HDIV               0x00000400
-+#define __APP_PLL_212_P0_1_MK            0x00000300
-+#define __APP_PLL_212_P0_1_SH            8
-+#define __APP_PLL_212_P0_1(_v)           ((_v) << __APP_PLL_212_P0_1_SH)
-+#define __APP_PLL_212_Z0_2_MK            0x000000e0
-+#define __APP_PLL_212_Z0_2_SH            5
-+#define __APP_PLL_212_Z0_2(_v)           ((_v) << __APP_PLL_212_Z0_2_SH)
-+#define __APP_PLL_212_RSEL200500         0x00000010
-+#define __APP_PLL_212_ENARST             0x00000008
-+#define __APP_PLL_212_BYPASS             0x00000004
-+#define __APP_PLL_212_LRESETN            0x00000002
-+#define __APP_PLL_212_ENABLE             0x00000001
-+#define HOST_SEM0_REG                    0x00014230
-+#define __HOST_SEMAPHORE                 0x00000001
-+#define HOST_SEM1_REG                    0x00014234
-+#define HOST_SEM2_REG                    0x00014238
-+#define HOST_SEM3_REG                    0x0001423c
-+#define HOST_SEM0_INFO_REG               0x00014240
-+#define HOST_SEM1_INFO_REG               0x00014244
-+#define HOST_SEM2_INFO_REG               0x00014248
-+#define HOST_SEM3_INFO_REG               0x0001424c
-+#define HOSTFN0_LPU0_CMD_STAT            0x00019000
-+#define __HOSTFN0_LPU0_MBOX_INFO_MK      0xfffffffe
-+#define __HOSTFN0_LPU0_MBOX_INFO_SH      1
-+#define __HOSTFN0_LPU0_MBOX_INFO(_v)     ((_v) << __HOSTFN0_LPU0_MBOX_INFO_SH)
-+#define __HOSTFN0_LPU0_MBOX_CMD_STATUS   0x00000001
-+#define LPU0_HOSTFN0_CMD_STAT            0x00019008
-+#define __LPU0_HOSTFN0_MBOX_INFO_MK      0xfffffffe
-+#define __LPU0_HOSTFN0_MBOX_INFO_SH      1
-+#define __LPU0_HOSTFN0_MBOX_INFO(_v)     ((_v) << __LPU0_HOSTFN0_MBOX_INFO_SH)
-+#define __LPU0_HOSTFN0_MBOX_CMD_STATUS   0x00000001
-+#define HOSTFN1_LPU1_CMD_STAT            0x00019014
-+#define __HOSTFN1_LPU1_MBOX_INFO_MK      0xfffffffe
-+#define __HOSTFN1_LPU1_MBOX_INFO_SH      1
-+#define __HOSTFN1_LPU1_MBOX_INFO(_v)     ((_v) << __HOSTFN1_LPU1_MBOX_INFO_SH)
-+#define __HOSTFN1_LPU1_MBOX_CMD_STATUS   0x00000001
-+#define LPU1_HOSTFN1_CMD_STAT            0x0001901c
-+#define __LPU1_HOSTFN1_MBOX_INFO_MK      0xfffffffe
-+#define __LPU1_HOSTFN1_MBOX_INFO_SH      1
-+#define __LPU1_HOSTFN1_MBOX_INFO(_v)     ((_v) << __LPU1_HOSTFN1_MBOX_INFO_SH)
-+#define __LPU1_HOSTFN1_MBOX_CMD_STATUS   0x00000001
-+#define CPE_Q0_DEPTH                     0x00010014
-+#define CPE_Q0_PI                        0x0001001c
-+#define CPE_Q0_CI                        0x00010020
-+#define CPE_Q1_DEPTH                     0x00010034
-+#define CPE_Q1_PI                        0x0001003c
-+#define CPE_Q1_CI                        0x00010040
-+#define CPE_Q2_DEPTH                     0x00010054
-+#define CPE_Q2_PI                        0x0001005c
-+#define CPE_Q2_CI                        0x00010060
-+#define CPE_Q3_DEPTH                     0x00010074
-+#define CPE_Q3_PI                        0x0001007c
-+#define CPE_Q3_CI                        0x00010080
-+#define CPE_Q4_DEPTH                     0x00010094
-+#define CPE_Q4_PI                        0x0001009c
-+#define CPE_Q4_CI                        0x000100a0
-+#define CPE_Q5_DEPTH                     0x000100b4
-+#define CPE_Q5_PI                        0x000100bc
-+#define CPE_Q5_CI                        0x000100c0
-+#define CPE_Q6_DEPTH                     0x000100d4
-+#define CPE_Q6_PI                        0x000100dc
-+#define CPE_Q6_CI                        0x000100e0
-+#define CPE_Q7_DEPTH                     0x000100f4
-+#define CPE_Q7_PI                        0x000100fc
-+#define CPE_Q7_CI                        0x00010100
-+#define RME_Q0_DEPTH                     0x00011014
-+#define RME_Q0_PI                        0x0001101c
-+#define RME_Q0_CI                        0x00011020
-+#define RME_Q1_DEPTH                     0x00011034
-+#define RME_Q1_PI                        0x0001103c
-+#define RME_Q1_CI                        0x00011040
-+#define RME_Q2_DEPTH                     0x00011054
-+#define RME_Q2_PI                        0x0001105c
-+#define RME_Q2_CI                        0x00011060
-+#define RME_Q3_DEPTH                     0x00011074
-+#define RME_Q3_PI                        0x0001107c
-+#define RME_Q3_CI                        0x00011080
-+#define RME_Q4_DEPTH                     0x00011094
-+#define RME_Q4_PI                        0x0001109c
-+#define RME_Q4_CI                        0x000110a0
-+#define RME_Q5_DEPTH                     0x000110b4
-+#define RME_Q5_PI                        0x000110bc
-+#define RME_Q5_CI                        0x000110c0
-+#define RME_Q6_DEPTH                     0x000110d4
-+#define RME_Q6_PI                        0x000110dc
-+#define RME_Q6_CI                        0x000110e0
-+#define RME_Q7_DEPTH                     0x000110f4
-+#define RME_Q7_PI                        0x000110fc
-+#define RME_Q7_CI                        0x00011100
-+#define PSS_CTL_REG                      0x00018800
-+#define __PSS_I2C_CLK_DIV_MK             0x00030000
-+#define __PSS_I2C_CLK_DIV_SH             16
-+#define __PSS_I2C_CLK_DIV(_v)            ((_v) << __PSS_I2C_CLK_DIV_SH)
-+#define __PSS_LMEM_INIT_DONE             0x00001000
-+#define __PSS_LMEM_RESET                 0x00000200
-+#define __PSS_LMEM_INIT_EN               0x00000100
-+#define __PSS_LPU1_RESET                 0x00000002
-+#define __PSS_LPU0_RESET                 0x00000001
-+#define PSS_ERR_STATUS_REG               0x00018810
-+#define __PSS_LMEM1_CORR_ERR             0x00000800
-+#define __PSS_LMEM0_CORR_ERR             0x00000400
-+#define __PSS_LMEM1_UNCORR_ERR           0x00000200
-+#define __PSS_LMEM0_UNCORR_ERR           0x00000100
-+#define __PSS_BAL_PERR                   0x00000080
-+#define __PSS_DIP_IF_ERR                 0x00000040
-+#define __PSS_IOH_IF_ERR                 0x00000020
-+#define __PSS_TDS_IF_ERR                 0x00000010
-+#define __PSS_RDS_IF_ERR                 0x00000008
-+#define __PSS_SGM_IF_ERR                 0x00000004
-+#define __PSS_LPU1_RAM_ERR               0x00000002
-+#define __PSS_LPU0_RAM_ERR               0x00000001
-+#define ERR_SET_REG                      0x00018818
-+#define __PSS_ERR_STATUS_SET             0x00000fff
-+
-+
-+/*
-+ * These definitions are either in error/missing in spec. Its auto-generated
-+ * from hard coded values in regparse.pl.
-+ */
-+#define __EMPHPOST_AT_4G_MK_FIX          0x0000001c
-+#define __EMPHPOST_AT_4G_SH_FIX          0x00000002
-+#define __EMPHPRE_AT_4G_FIX              0x00000003
-+#define __SFP_TXRATE_EN_FIX              0x00000100
-+#define __SFP_RXRATE_EN_FIX              0x00000080
-+
-+
-+/*
-+ * These register definitions are auto-generated from hard coded values
-+ * in regparse.pl.
-+ */
-+#define HOSTFN0_LPU_MBOX0_0              0x00019200
-+#define HOSTFN1_LPU_MBOX0_8              0x00019260
-+#define LPU_HOSTFN0_MBOX0_0              0x00019280
-+#define LPU_HOSTFN1_MBOX0_8              0x000192e0
-+
-+
-+/*
-+ * These register mapping definitions are auto-generated from mapping tables
-+ * in regparse.pl.
-+ */
-+#define BFA_IOC0_HBEAT_REG               HOST_SEM0_INFO_REG
-+#define BFA_IOC0_STATE_REG               HOST_SEM1_INFO_REG
-+#define BFA_IOC1_HBEAT_REG               HOST_SEM2_INFO_REG
-+#define BFA_IOC1_STATE_REG               HOST_SEM3_INFO_REG
-+#define BFA_FW_USE_COUNT                 HOST_SEM4_INFO_REG
-+
-+#define CPE_Q_DEPTH(__n) \
-+	(CPE_Q0_DEPTH + (__n) * (CPE_Q1_DEPTH - CPE_Q0_DEPTH))
-+#define CPE_Q_PI(__n) \
-+	(CPE_Q0_PI + (__n) * (CPE_Q1_PI - CPE_Q0_PI))
-+#define CPE_Q_CI(__n) \
-+	(CPE_Q0_CI + (__n) * (CPE_Q1_CI - CPE_Q0_CI))
-+#define RME_Q_DEPTH(__n) \
-+	(RME_Q0_DEPTH + (__n) * (RME_Q1_DEPTH - RME_Q0_DEPTH))
-+#define RME_Q_PI(__n) \
-+	(RME_Q0_PI + (__n) * (RME_Q1_PI - RME_Q0_PI))
-+#define RME_Q_CI(__n) \
-+	(RME_Q0_CI + (__n) * (RME_Q1_CI - RME_Q0_CI))
-+
-+#define CPE_Q_NUM(__fn, __q)  (((__fn) << 2) + (__q))
-+#define RME_Q_NUM(__fn, __q)  (((__fn) << 2) + (__q))
-+#define CPE_Q_MASK(__q)  ((__q) & 0x3)
-+#define RME_Q_MASK(__q)  ((__q) & 0x3)
-+
-+
-+/*
-+ * PCI MSI-X vector defines
-+ */
-+enum {
-+    BFA_MSIX_CPE_Q0 = 0,
-+    BFA_MSIX_CPE_Q1 = 1,
-+    BFA_MSIX_CPE_Q2 = 2,
-+    BFA_MSIX_CPE_Q3 = 3,
-+    BFA_MSIX_CPE_Q4 = 4,
-+    BFA_MSIX_CPE_Q5 = 5,
-+    BFA_MSIX_CPE_Q6 = 6,
-+    BFA_MSIX_CPE_Q7 = 7,
-+    BFA_MSIX_RME_Q0 = 8,
-+    BFA_MSIX_RME_Q1 = 9,
-+    BFA_MSIX_RME_Q2 = 10,
-+    BFA_MSIX_RME_Q3 = 11,
-+    BFA_MSIX_RME_Q4 = 12,
-+    BFA_MSIX_RME_Q5 = 13,
-+    BFA_MSIX_RME_Q6 = 14,
-+    BFA_MSIX_RME_Q7 = 15,
-+    BFA_MSIX_ERR_EMC = 16,
-+    BFA_MSIX_ERR_LPU0 = 17,
-+    BFA_MSIX_ERR_LPU1 = 18,
-+    BFA_MSIX_ERR_PSS = 19,
-+    BFA_MSIX_MBOX_LPU0 = 20,
-+    BFA_MSIX_MBOX_LPU1 = 21,
-+    BFA_MSIX_CB_MAX = 22,
-+};
-+
-+/*
-+ * And corresponding host interrupt status bit field defines
-+ */
-+#define __HFN_INT_CPE_Q0                   0x00000001U
-+#define __HFN_INT_CPE_Q1                   0x00000002U
-+#define __HFN_INT_CPE_Q2                   0x00000004U
-+#define __HFN_INT_CPE_Q3                   0x00000008U
-+#define __HFN_INT_CPE_Q4                   0x00000010U
-+#define __HFN_INT_CPE_Q5                   0x00000020U
-+#define __HFN_INT_CPE_Q6                   0x00000040U
-+#define __HFN_INT_CPE_Q7                   0x00000080U
-+#define __HFN_INT_RME_Q0                   0x00000100U
-+#define __HFN_INT_RME_Q1                   0x00000200U
-+#define __HFN_INT_RME_Q2                   0x00000400U
-+#define __HFN_INT_RME_Q3                   0x00000800U
-+#define __HFN_INT_RME_Q4                   0x00001000U
-+#define __HFN_INT_RME_Q5                   0x00002000U
-+#define __HFN_INT_RME_Q6                   0x00004000U
-+#define __HFN_INT_RME_Q7                   0x00008000U
-+#define __HFN_INT_ERR_EMC                  0x00010000U
-+#define __HFN_INT_ERR_LPU0                 0x00020000U
-+#define __HFN_INT_ERR_LPU1                 0x00040000U
-+#define __HFN_INT_ERR_PSS                  0x00080000U
-+#define __HFN_INT_MBOX_LPU0                0x00100000U
-+#define __HFN_INT_MBOX_LPU1                0x00200000U
-+#define __HFN_INT_MBOX1_LPU0               0x00400000U
-+#define __HFN_INT_MBOX1_LPU1               0x00800000U
-+#define __HFN_INT_CPE_MASK                 0x000000ffU
-+#define __HFN_INT_RME_MASK                 0x0000ff00U
-+
-+
-+/*
-+ * crossbow memory map.
-+ */
-+#define PSS_SMEM_PAGE_START	0x8000
-+#define PSS_SMEM_PGNUM(_pg0, _ma)	((_pg0) + ((_ma) >> 15))
-+#define PSS_SMEM_PGOFF(_ma)	((_ma) & 0x7fff)
-+
-+/*
-+ * End of crossbow memory map
-+ */
-+
-+
-+#endif /* __BFI_CBREG_H__ */
-+
-diff --git a/drivers/scsi/bfa/bfi_ctreg.h b/drivers/scsi/bfa/bfi_ctreg.h
-new file mode 100644
-index 0000000..62b86a4
---- /dev/null
-+++ b/drivers/scsi/bfa/bfi_ctreg.h
-@@ -0,0 +1,627 @@
-+
-+/*
-+ * bfi_ctreg.h catapult host block register definitions
-+ *
-+ * !!! Do not edit. Auto generated. !!!
-+ */
-+
-+#ifndef __BFI_CTREG_H__
-+#define __BFI_CTREG_H__
-+
-+
-+#define HOSTFN0_LPU_MBOX0_0		0x00019200
-+#define HOSTFN1_LPU_MBOX0_8		0x00019260
-+#define LPU_HOSTFN0_MBOX0_0		0x00019280
-+#define LPU_HOSTFN1_MBOX0_8		0x000192e0
-+#define HOSTFN2_LPU_MBOX0_0		0x00019400
-+#define HOSTFN3_LPU_MBOX0_8		0x00019460
-+#define LPU_HOSTFN2_MBOX0_0		0x00019480
-+#define LPU_HOSTFN3_MBOX0_8		0x000194e0
-+#define HOSTFN0_INT_STATUS		0x00014000
-+#define __HOSTFN0_HALT_OCCURRED		0x01000000
-+#define __HOSTFN0_INT_STATUS_LVL_MK	0x00f00000
-+#define __HOSTFN0_INT_STATUS_LVL_SH	20
-+#define __HOSTFN0_INT_STATUS_LVL(_v)	((_v) << __HOSTFN0_INT_STATUS_LVL_SH)
-+#define __HOSTFN0_INT_STATUS_P_MK	0x000f0000
-+#define __HOSTFN0_INT_STATUS_P_SH	16
-+#define __HOSTFN0_INT_STATUS_P(_v)	((_v) << __HOSTFN0_INT_STATUS_P_SH)
-+#define __HOSTFN0_INT_STATUS_F		0x0000ffff
-+#define HOSTFN0_INT_MSK			0x00014004
-+#define HOST_PAGE_NUM_FN0		0x00014008
-+#define __HOST_PAGE_NUM_FN		0x000001ff
-+#define HOST_MSIX_ERR_INDEX_FN0		0x0001400c
-+#define __MSIX_ERR_INDEX_FN		0x000001ff
-+#define HOSTFN1_INT_STATUS		0x00014100
-+#define __HOSTFN1_HALT_OCCURRED		0x01000000
-+#define __HOSTFN1_INT_STATUS_LVL_MK	0x00f00000
-+#define __HOSTFN1_INT_STATUS_LVL_SH	20
-+#define __HOSTFN1_INT_STATUS_LVL(_v)	((_v) << __HOSTFN1_INT_STATUS_LVL_SH)
-+#define __HOSTFN1_INT_STATUS_P_MK	0x000f0000
-+#define __HOSTFN1_INT_STATUS_P_SH	16
-+#define __HOSTFN1_INT_STATUS_P(_v)	((_v) << __HOSTFN1_INT_STATUS_P_SH)
-+#define __HOSTFN1_INT_STATUS_F		0x0000ffff
-+#define HOSTFN1_INT_MSK			0x00014104
-+#define HOST_PAGE_NUM_FN1		0x00014108
-+#define HOST_MSIX_ERR_INDEX_FN1		0x0001410c
-+#define APP_PLL_425_CTL_REG		0x00014204
-+#define __P_425_PLL_LOCK		0x80000000
-+#define __APP_PLL_425_SRAM_USE_100MHZ	0x00100000
-+#define __APP_PLL_425_RESET_TIMER_MK	0x000e0000
-+#define __APP_PLL_425_RESET_TIMER_SH	17
-+#define __APP_PLL_425_RESET_TIMER(_v)	((_v) << __APP_PLL_425_RESET_TIMER_SH)
-+#define __APP_PLL_425_LOGIC_SOFT_RESET	0x00010000
-+#define __APP_PLL_425_CNTLMT0_1_MK	0x0000c000
-+#define __APP_PLL_425_CNTLMT0_1_SH	14
-+#define __APP_PLL_425_CNTLMT0_1(_v)	((_v) << __APP_PLL_425_CNTLMT0_1_SH)
-+#define __APP_PLL_425_JITLMT0_1_MK	0x00003000
-+#define __APP_PLL_425_JITLMT0_1_SH	12
-+#define __APP_PLL_425_JITLMT0_1(_v)	((_v) << __APP_PLL_425_JITLMT0_1_SH)
-+#define __APP_PLL_425_HREF		0x00000800
-+#define __APP_PLL_425_HDIV		0x00000400
-+#define __APP_PLL_425_P0_1_MK		0x00000300
-+#define __APP_PLL_425_P0_1_SH		8
-+#define __APP_PLL_425_P0_1(_v)		((_v) << __APP_PLL_425_P0_1_SH)
-+#define __APP_PLL_425_Z0_2_MK		0x000000e0
-+#define __APP_PLL_425_Z0_2_SH		5
-+#define __APP_PLL_425_Z0_2(_v)		((_v) << __APP_PLL_425_Z0_2_SH)
-+#define __APP_PLL_425_RSEL200500	0x00000010
-+#define __APP_PLL_425_ENARST		0x00000008
-+#define __APP_PLL_425_BYPASS		0x00000004
-+#define __APP_PLL_425_LRESETN		0x00000002
-+#define __APP_PLL_425_ENABLE		0x00000001
-+#define APP_PLL_312_CTL_REG		0x00014208
-+#define __P_312_PLL_LOCK		0x80000000
-+#define __ENABLE_MAC_AHB_1		0x00800000
-+#define __ENABLE_MAC_AHB_0		0x00400000
-+#define __ENABLE_MAC_1			0x00200000
-+#define __ENABLE_MAC_0			0x00100000
-+#define __APP_PLL_312_RESET_TIMER_MK	0x000e0000
-+#define __APP_PLL_312_RESET_TIMER_SH	17
-+#define __APP_PLL_312_RESET_TIMER(_v)	((_v) << __APP_PLL_312_RESET_TIMER_SH)
-+#define __APP_PLL_312_LOGIC_SOFT_RESET	0x00010000
-+#define __APP_PLL_312_CNTLMT0_1_MK	0x0000c000
-+#define __APP_PLL_312_CNTLMT0_1_SH	14
-+#define __APP_PLL_312_CNTLMT0_1(_v)	((_v) << __APP_PLL_312_CNTLMT0_1_SH)
-+#define __APP_PLL_312_JITLMT0_1_MK	0x00003000
-+#define __APP_PLL_312_JITLMT0_1_SH	12
-+#define __APP_PLL_312_JITLMT0_1(_v)	((_v) << __APP_PLL_312_JITLMT0_1_SH)
-+#define __APP_PLL_312_HREF		0x00000800
-+#define __APP_PLL_312_HDIV		0x00000400
-+#define __APP_PLL_312_P0_1_MK		0x00000300
-+#define __APP_PLL_312_P0_1_SH		8
-+#define __APP_PLL_312_P0_1(_v)		((_v) << __APP_PLL_312_P0_1_SH)
-+#define __APP_PLL_312_Z0_2_MK		0x000000e0
-+#define __APP_PLL_312_Z0_2_SH		5
-+#define __APP_PLL_312_Z0_2(_v)		((_v) << __APP_PLL_312_Z0_2_SH)
-+#define __APP_PLL_312_RSEL200500	0x00000010
-+#define __APP_PLL_312_ENARST		0x00000008
-+#define __APP_PLL_312_BYPASS		0x00000004
-+#define __APP_PLL_312_LRESETN		0x00000002
-+#define __APP_PLL_312_ENABLE		0x00000001
-+#define MBIST_CTL_REG			0x00014220
-+#define __EDRAM_BISTR_START		0x00000004
-+#define __MBIST_RESET			0x00000002
-+#define __MBIST_START			0x00000001
-+#define MBIST_STAT_REG			0x00014224
-+#define __EDRAM_BISTR_STATUS		0x00000008
-+#define __EDRAM_BISTR_DONE		0x00000004
-+#define __MEM_BIT_STATUS		0x00000002
-+#define __MBIST_DONE			0x00000001
-+#define HOST_SEM0_REG			0x00014230
-+#define __HOST_SEMAPHORE		0x00000001
-+#define HOST_SEM1_REG			0x00014234
-+#define HOST_SEM2_REG			0x00014238
-+#define HOST_SEM3_REG			0x0001423c
-+#define HOST_SEM0_INFO_REG		0x00014240
-+#define HOST_SEM1_INFO_REG		0x00014244
-+#define HOST_SEM2_INFO_REG		0x00014248
-+#define HOST_SEM3_INFO_REG		0x0001424c
-+#define ETH_MAC_SER_REG			0x00014288
-+#define __APP_EMS_CKBUFAMPIN		0x00000020
-+#define __APP_EMS_REFCLKSEL		0x00000010
-+#define __APP_EMS_CMLCKSEL		0x00000008
-+#define __APP_EMS_REFCKBUFEN2		0x00000004
-+#define __APP_EMS_REFCKBUFEN1		0x00000002
-+#define __APP_EMS_CHANNEL_SEL		0x00000001
-+#define HOSTFN2_INT_STATUS		0x00014300
-+#define __HOSTFN2_HALT_OCCURRED		0x01000000
-+#define __HOSTFN2_INT_STATUS_LVL_MK	0x00f00000
-+#define __HOSTFN2_INT_STATUS_LVL_SH	20
-+#define __HOSTFN2_INT_STATUS_LVL(_v)	((_v) << __HOSTFN2_INT_STATUS_LVL_SH)
-+#define __HOSTFN2_INT_STATUS_P_MK	0x000f0000
-+#define __HOSTFN2_INT_STATUS_P_SH	16
-+#define __HOSTFN2_INT_STATUS_P(_v)	((_v) << __HOSTFN2_INT_STATUS_P_SH)
-+#define __HOSTFN2_INT_STATUS_F		0x0000ffff
-+#define HOSTFN2_INT_MSK			0x00014304
-+#define HOST_PAGE_NUM_FN2		0x00014308
-+#define HOST_MSIX_ERR_INDEX_FN2		0x0001430c
-+#define HOSTFN3_INT_STATUS		0x00014400
-+#define __HALT_OCCURRED			0x01000000
-+#define __HOSTFN3_INT_STATUS_LVL_MK	0x00f00000
-+#define __HOSTFN3_INT_STATUS_LVL_SH	20
-+#define __HOSTFN3_INT_STATUS_LVL(_v)	((_v) << __HOSTFN3_INT_STATUS_LVL_SH)
-+#define __HOSTFN3_INT_STATUS_P_MK	0x000f0000
-+#define __HOSTFN3_INT_STATUS_P_SH	16
-+#define __HOSTFN3_INT_STATUS_P(_v)	((_v) << __HOSTFN3_INT_STATUS_P_SH)
-+#define __HOSTFN3_INT_STATUS_F		0x0000ffff
-+#define HOSTFN3_INT_MSK			0x00014404
-+#define HOST_PAGE_NUM_FN3		0x00014408
-+#define HOST_MSIX_ERR_INDEX_FN3		0x0001440c
-+#define FNC_ID_REG			0x00014600
-+#define __FUNCTION_NUMBER		0x00000007
-+#define FNC_PERS_REG			0x00014604
-+#define __F3_FUNCTION_ACTIVE		0x80000000
-+#define __F3_FUNCTION_MODE		0x40000000
-+#define __F3_PORT_MAP_MK		0x30000000
-+#define __F3_PORT_MAP_SH		28
-+#define __F3_PORT_MAP(_v)		((_v) << __F3_PORT_MAP_SH)
-+#define __F3_VM_MODE			0x08000000
-+#define __F3_INTX_STATUS_MK		0x07000000
-+#define __F3_INTX_STATUS_SH		24
-+#define __F3_INTX_STATUS(_v)		((_v) << __F3_INTX_STATUS_SH)
-+#define __F2_FUNCTION_ACTIVE		0x00800000
-+#define __F2_FUNCTION_MODE		0x00400000
-+#define __F2_PORT_MAP_MK		0x00300000
-+#define __F2_PORT_MAP_SH		20
-+#define __F2_PORT_MAP(_v)		((_v) << __F2_PORT_MAP_SH)
-+#define __F2_VM_MODE			0x00080000
-+#define __F2_INTX_STATUS_MK		0x00070000
-+#define __F2_INTX_STATUS_SH		16
-+#define __F2_INTX_STATUS(_v)		((_v) << __F2_INTX_STATUS_SH)
-+#define __F1_FUNCTION_ACTIVE		0x00008000
-+#define __F1_FUNCTION_MODE		0x00004000
-+#define __F1_PORT_MAP_MK		0x00003000
-+#define __F1_PORT_MAP_SH		12
-+#define __F1_PORT_MAP(_v)		((_v) << __F1_PORT_MAP_SH)
-+#define __F1_VM_MODE			0x00000800
-+#define __F1_INTX_STATUS_MK		0x00000700
-+#define __F1_INTX_STATUS_SH		8
-+#define __F1_INTX_STATUS(_v)		((_v) << __F1_INTX_STATUS_SH)
-+#define __F0_FUNCTION_ACTIVE		0x00000080
-+#define __F0_FUNCTION_MODE		0x00000040
-+#define __F0_PORT_MAP_MK		0x00000030
-+#define __F0_PORT_MAP_SH		4
-+#define __F0_PORT_MAP(_v)		((_v) << __F0_PORT_MAP_SH)
-+#define __F0_VM_MODE		0x00000008
-+#define __F0_INTX_STATUS		0x00000007
-+enum {
-+	__F0_INTX_STATUS_MSIX		= 0x0,
-+	__F0_INTX_STATUS_INTA		= 0x1,
-+	__F0_INTX_STATUS_INTB		= 0x2,
-+	__F0_INTX_STATUS_INTC		= 0x3,
-+	__F0_INTX_STATUS_INTD		= 0x4,
-+};
-+#define OP_MODE				0x0001460c
-+#define __APP_ETH_CLK_LOWSPEED		0x00000004
-+#define __GLOBAL_CORECLK_HALFSPEED	0x00000002
-+#define __GLOBAL_FCOE_MODE		0x00000001
-+#define HOST_SEM4_REG			0x00014610
-+#define HOST_SEM5_REG			0x00014614
-+#define HOST_SEM6_REG			0x00014618
-+#define HOST_SEM7_REG			0x0001461c
-+#define HOST_SEM4_INFO_REG		0x00014620
-+#define HOST_SEM5_INFO_REG		0x00014624
-+#define HOST_SEM6_INFO_REG		0x00014628
-+#define HOST_SEM7_INFO_REG		0x0001462c
-+#define HOSTFN0_LPU0_MBOX0_CMD_STAT	0x00019000
-+#define __HOSTFN0_LPU0_MBOX0_INFO_MK	0xfffffffe
-+#define __HOSTFN0_LPU0_MBOX0_INFO_SH	1
-+#define __HOSTFN0_LPU0_MBOX0_INFO(_v)	((_v) << __HOSTFN0_LPU0_MBOX0_INFO_SH)
-+#define __HOSTFN0_LPU0_MBOX0_CMD_STATUS 0x00000001
-+#define HOSTFN0_LPU1_MBOX0_CMD_STAT	0x00019004
-+#define __HOSTFN0_LPU1_MBOX0_INFO_MK	0xfffffffe
-+#define __HOSTFN0_LPU1_MBOX0_INFO_SH	1
-+#define __HOSTFN0_LPU1_MBOX0_INFO(_v)	((_v) << __HOSTFN0_LPU1_MBOX0_INFO_SH)
-+#define __HOSTFN0_LPU1_MBOX0_CMD_STATUS 0x00000001
-+#define LPU0_HOSTFN0_MBOX0_CMD_STAT	0x00019008
-+#define __LPU0_HOSTFN0_MBOX0_INFO_MK	0xfffffffe
-+#define __LPU0_HOSTFN0_MBOX0_INFO_SH	1
-+#define __LPU0_HOSTFN0_MBOX0_INFO(_v)	((_v) << __LPU0_HOSTFN0_MBOX0_INFO_SH)
-+#define __LPU0_HOSTFN0_MBOX0_CMD_STATUS 0x00000001
-+#define LPU1_HOSTFN0_MBOX0_CMD_STAT	0x0001900c
-+#define __LPU1_HOSTFN0_MBOX0_INFO_MK	0xfffffffe
-+#define __LPU1_HOSTFN0_MBOX0_INFO_SH	1
-+#define __LPU1_HOSTFN0_MBOX0_INFO(_v)	((_v) << __LPU1_HOSTFN0_MBOX0_INFO_SH)
-+#define __LPU1_HOSTFN0_MBOX0_CMD_STATUS 0x00000001
-+#define HOSTFN1_LPU0_MBOX0_CMD_STAT	0x00019010
-+#define __HOSTFN1_LPU0_MBOX0_INFO_MK	0xfffffffe
-+#define __HOSTFN1_LPU0_MBOX0_INFO_SH	1
-+#define __HOSTFN1_LPU0_MBOX0_INFO(_v)	((_v) << __HOSTFN1_LPU0_MBOX0_INFO_SH)
-+#define __HOSTFN1_LPU0_MBOX0_CMD_STATUS 0x00000001
-+#define HOSTFN1_LPU1_MBOX0_CMD_STAT	0x00019014
-+#define __HOSTFN1_LPU1_MBOX0_INFO_MK	0xfffffffe
-+#define __HOSTFN1_LPU1_MBOX0_INFO_SH	1
-+#define __HOSTFN1_LPU1_MBOX0_INFO(_v)	((_v) << __HOSTFN1_LPU1_MBOX0_INFO_SH)
-+#define __HOSTFN1_LPU1_MBOX0_CMD_STATUS 0x00000001
-+#define LPU0_HOSTFN1_MBOX0_CMD_STAT	0x00019018
-+#define __LPU0_HOSTFN1_MBOX0_INFO_MK	0xfffffffe
-+#define __LPU0_HOSTFN1_MBOX0_INFO_SH	1
-+#define __LPU0_HOSTFN1_MBOX0_INFO(_v)	((_v) << __LPU0_HOSTFN1_MBOX0_INFO_SH)
-+#define __LPU0_HOSTFN1_MBOX0_CMD_STATUS 0x00000001
-+#define LPU1_HOSTFN1_MBOX0_CMD_STAT	0x0001901c
-+#define __LPU1_HOSTFN1_MBOX0_INFO_MK	0xfffffffe
-+#define __LPU1_HOSTFN1_MBOX0_INFO_SH	1
-+#define __LPU1_HOSTFN1_MBOX0_INFO(_v)	((_v) << __LPU1_HOSTFN1_MBOX0_INFO_SH)
-+#define __LPU1_HOSTFN1_MBOX0_CMD_STATUS 0x00000001
-+#define HOSTFN2_LPU0_MBOX0_CMD_STAT	0x00019150
-+#define __HOSTFN2_LPU0_MBOX0_INFO_MK	0xfffffffe
-+#define __HOSTFN2_LPU0_MBOX0_INFO_SH	1
-+#define __HOSTFN2_LPU0_MBOX0_INFO(_v)	((_v) << __HOSTFN2_LPU0_MBOX0_INFO_SH)
-+#define __HOSTFN2_LPU0_MBOX0_CMD_STATUS 0x00000001
-+#define HOSTFN2_LPU1_MBOX0_CMD_STAT	0x00019154
-+#define __HOSTFN2_LPU1_MBOX0_INFO_MK	0xfffffffe
-+#define __HOSTFN2_LPU1_MBOX0_INFO_SH	1
-+#define __HOSTFN2_LPU1_MBOX0_INFO(_v)	((_v) << __HOSTFN2_LPU1_MBOX0_INFO_SH)
-+#define __HOSTFN2_LPU1_MBOX0BOX0_CMD_STATUS 0x00000001
-+#define LPU0_HOSTFN2_MBOX0_CMD_STAT	0x00019158
-+#define __LPU0_HOSTFN2_MBOX0_INFO_MK	0xfffffffe
-+#define __LPU0_HOSTFN2_MBOX0_INFO_SH	1
-+#define __LPU0_HOSTFN2_MBOX0_INFO(_v)	((_v) << __LPU0_HOSTFN2_MBOX0_INFO_SH)
-+#define __LPU0_HOSTFN2_MBOX0_CMD_STATUS 0x00000001
-+#define LPU1_HOSTFN2_MBOX0_CMD_STAT	0x0001915c
-+#define __LPU1_HOSTFN2_MBOX0_INFO_MK	0xfffffffe
-+#define __LPU1_HOSTFN2_MBOX0_INFO_SH	1
-+#define __LPU1_HOSTFN2_MBOX0_INFO(_v)	((_v) << __LPU1_HOSTFN2_MBOX0_INFO_SH)
-+#define __LPU1_HOSTFN2_MBOX0_CMD_STATUS 0x00000001
-+#define HOSTFN3_LPU0_MBOX0_CMD_STAT	0x00019160
-+#define __HOSTFN3_LPU0_MBOX0_INFO_MK	0xfffffffe
-+#define __HOSTFN3_LPU0_MBOX0_INFO_SH	1
-+#define __HOSTFN3_LPU0_MBOX0_INFO(_v)	((_v) << __HOSTFN3_LPU0_MBOX0_INFO_SH)
-+#define __HOSTFN3_LPU0_MBOX0_CMD_STATUS 0x00000001
-+#define HOSTFN3_LPU1_MBOX0_CMD_STAT	0x00019164
-+#define __HOSTFN3_LPU1_MBOX0_INFO_MK	0xfffffffe
-+#define __HOSTFN3_LPU1_MBOX0_INFO_SH	1
-+#define __HOSTFN3_LPU1_MBOX0_INFO(_v)	((_v) << __HOSTFN3_LPU1_MBOX0_INFO_SH)
-+#define __HOSTFN3_LPU1_MBOX0_CMD_STATUS 0x00000001
-+#define LPU0_HOSTFN3_MBOX0_CMD_STAT	0x00019168
-+#define __LPU0_HOSTFN3_MBOX0_INFO_MK	0xfffffffe
-+#define __LPU0_HOSTFN3_MBOX0_INFO_SH	1
-+#define __LPU0_HOSTFN3_MBOX0_INFO(_v)	((_v) << __LPU0_HOSTFN3_MBOX0_INFO_SH)
-+#define __LPU0_HOSTFN3_MBOX0_CMD_STATUS 0x00000001
-+#define LPU1_HOSTFN3_MBOX0_CMD_STAT	0x0001916c
-+#define __LPU1_HOSTFN3_MBOX0_INFO_MK	0xfffffffe
-+#define __LPU1_HOSTFN3_MBOX0_INFO_SH	1
-+#define __LPU1_HOSTFN3_MBOX0_INFO(_v)	((_v) << __LPU1_HOSTFN3_MBOX0_INFO_SH)
-+#define __LPU1_HOSTFN3_MBOX0_CMD_STATUS	0x00000001
-+#define FW_INIT_HALT_P0			0x000191ac
-+#define __FW_INIT_HALT_P		0x00000001
-+#define FW_INIT_HALT_P1			0x000191bc
-+#define CPE_PI_PTR_Q0			0x00038000
-+#define __CPE_PI_UNUSED_MK		0xffff0000
-+#define __CPE_PI_UNUSED_SH		16
-+#define __CPE_PI_UNUSED(_v)		((_v) << __CPE_PI_UNUSED_SH)
-+#define __CPE_PI_PTR			0x0000ffff
-+#define CPE_PI_PTR_Q1			0x00038040
-+#define CPE_CI_PTR_Q0			0x00038004
-+#define __CPE_CI_UNUSED_MK		0xffff0000
-+#define __CPE_CI_UNUSED_SH		16
-+#define __CPE_CI_UNUSED(_v)		((_v) << __CPE_CI_UNUSED_SH)
-+#define __CPE_CI_PTR			0x0000ffff
-+#define CPE_CI_PTR_Q1			0x00038044
-+#define CPE_DEPTH_Q0			0x00038008
-+#define __CPE_DEPTH_UNUSED_MK		0xf8000000
-+#define __CPE_DEPTH_UNUSED_SH		27
-+#define __CPE_DEPTH_UNUSED(_v)		((_v) << __CPE_DEPTH_UNUSED_SH)
-+#define __CPE_MSIX_VEC_INDEX_MK		0x07ff0000
-+#define __CPE_MSIX_VEC_INDEX_SH		16
-+#define __CPE_MSIX_VEC_INDEX(_v)	((_v) << __CPE_MSIX_VEC_INDEX_SH)
-+#define __CPE_DEPTH			0x0000ffff
-+#define CPE_DEPTH_Q1			0x00038048
-+#define CPE_QCTRL_Q0			0x0003800c
-+#define __CPE_CTRL_UNUSED30_MK		0xfc000000
-+#define __CPE_CTRL_UNUSED30_SH		26
-+#define __CPE_CTRL_UNUSED30(_v)		((_v) << __CPE_CTRL_UNUSED30_SH)
-+#define __CPE_FUNC_INT_CTRL_MK		0x03000000
-+#define __CPE_FUNC_INT_CTRL_SH		24
-+#define __CPE_FUNC_INT_CTRL(_v)		((_v) << __CPE_FUNC_INT_CTRL_SH)
-+enum {
-+	__CPE_FUNC_INT_CTRL_DISABLE		= 0x0,
-+	__CPE_FUNC_INT_CTRL_F2NF		= 0x1,
-+	__CPE_FUNC_INT_CTRL_3QUART		= 0x2,
-+	__CPE_FUNC_INT_CTRL_HALF		= 0x3,
-+};
-+#define __CPE_CTRL_UNUSED20_MK		0x00f00000
-+#define __CPE_CTRL_UNUSED20_SH		20
-+#define __CPE_CTRL_UNUSED20(_v)		((_v) << __CPE_CTRL_UNUSED20_SH)
-+#define __CPE_SCI_TH_MK			0x000f0000
-+#define __CPE_SCI_TH_SH			16
-+#define __CPE_SCI_TH(_v)		((_v) << __CPE_SCI_TH_SH)
-+#define __CPE_CTRL_UNUSED10_MK		0x0000c000
-+#define __CPE_CTRL_UNUSED10_SH		14
-+#define __CPE_CTRL_UNUSED10(_v)		((_v) << __CPE_CTRL_UNUSED10_SH)
-+#define __CPE_ACK_PENDING		0x00002000
-+#define __CPE_CTRL_UNUSED40_MK		0x00001c00
-+#define __CPE_CTRL_UNUSED40_SH		10
-+#define __CPE_CTRL_UNUSED40(_v)		((_v) << __CPE_CTRL_UNUSED40_SH)
-+#define __CPE_PCIEID_MK			0x00000300
-+#define __CPE_PCIEID_SH			8
-+#define __CPE_PCIEID(_v)		((_v) << __CPE_PCIEID_SH)
-+#define __CPE_CTRL_UNUSED00_MK		0x000000fe
-+#define __CPE_CTRL_UNUSED00_SH		1
-+#define __CPE_CTRL_UNUSED00(_v)		((_v) << __CPE_CTRL_UNUSED00_SH)
-+#define __CPE_ESIZE			0x00000001
-+#define CPE_QCTRL_Q1			0x0003804c
-+#define __CPE_CTRL_UNUSED31_MK		0xfc000000
-+#define __CPE_CTRL_UNUSED31_SH		26
-+#define __CPE_CTRL_UNUSED31(_v)		((_v) << __CPE_CTRL_UNUSED31_SH)
-+#define __CPE_CTRL_UNUSED21_MK		0x00f00000
-+#define __CPE_CTRL_UNUSED21_SH		20
-+#define __CPE_CTRL_UNUSED21(_v)		((_v) << __CPE_CTRL_UNUSED21_SH)
-+#define __CPE_CTRL_UNUSED11_MK		0x0000c000
-+#define __CPE_CTRL_UNUSED11_SH		14
-+#define __CPE_CTRL_UNUSED11(_v)		((_v) << __CPE_CTRL_UNUSED11_SH)
-+#define __CPE_CTRL_UNUSED41_MK		0x00001c00
-+#define __CPE_CTRL_UNUSED41_SH		10
-+#define __CPE_CTRL_UNUSED41(_v)		((_v) << __CPE_CTRL_UNUSED41_SH)
-+#define __CPE_CTRL_UNUSED01_MK		0x000000fe
-+#define __CPE_CTRL_UNUSED01_SH		1
-+#define __CPE_CTRL_UNUSED01(_v)		((_v) << __CPE_CTRL_UNUSED01_SH)
-+#define RME_PI_PTR_Q0			0x00038020
-+#define __LATENCY_TIME_STAMP_MK		0xffff0000
-+#define __LATENCY_TIME_STAMP_SH		16
-+#define __LATENCY_TIME_STAMP(_v)	((_v) << __LATENCY_TIME_STAMP_SH)
-+#define __RME_PI_PTR			0x0000ffff
-+#define RME_PI_PTR_Q1			0x00038060
-+#define RME_CI_PTR_Q0			0x00038024
-+#define __DELAY_TIME_STAMP_MK		0xffff0000
-+#define __DELAY_TIME_STAMP_SH		16
-+#define __DELAY_TIME_STAMP(_v)		((_v) << __DELAY_TIME_STAMP_SH)
-+#define __RME_CI_PTR			0x0000ffff
-+#define RME_CI_PTR_Q1			0x00038064
-+#define RME_DEPTH_Q0			0x00038028
-+#define __RME_DEPTH_UNUSED_MK		0xf8000000
-+#define __RME_DEPTH_UNUSED_SH		27
-+#define __RME_DEPTH_UNUSED(_v)		((_v) << __RME_DEPTH_UNUSED_SH)
-+#define __RME_MSIX_VEC_INDEX_MK		0x07ff0000
-+#define __RME_MSIX_VEC_INDEX_SH		16
-+#define __RME_MSIX_VEC_INDEX(_v)	((_v) << __RME_MSIX_VEC_INDEX_SH)
-+#define __RME_DEPTH			0x0000ffff
-+#define RME_DEPTH_Q1			0x00038068
-+#define RME_QCTRL_Q0			0x0003802c
-+#define __RME_INT_LATENCY_TIMER_MK	0xff000000
-+#define __RME_INT_LATENCY_TIMER_SH	24
-+#define __RME_INT_LATENCY_TIMER(_v)	((_v) << __RME_INT_LATENCY_TIMER_SH)
-+#define __RME_INT_DELAY_TIMER_MK	0x00ff0000
-+#define __RME_INT_DELAY_TIMER_SH	16
-+#define __RME_INT_DELAY_TIMER(_v)	((_v) << __RME_INT_DELAY_TIMER_SH)
-+#define __RME_INT_DELAY_DISABLE		0x00008000
-+#define __RME_DLY_DELAY_DISABLE		0x00004000
-+#define __RME_ACK_PENDING		0x00002000
-+#define __RME_FULL_INTERRUPT_DISABLE	0x00001000
-+#define __RME_CTRL_UNUSED10_MK		0x00000c00
-+#define __RME_CTRL_UNUSED10_SH		10
-+#define __RME_CTRL_UNUSED10(_v)		((_v) << __RME_CTRL_UNUSED10_SH)
-+#define __RME_PCIEID_MK			0x00000300
-+#define __RME_PCIEID_SH			8
-+#define __RME_PCIEID(_v)		((_v) << __RME_PCIEID_SH)
-+#define __RME_CTRL_UNUSED00_MK		0x000000fe
-+#define __RME_CTRL_UNUSED00_SH		1
-+#define __RME_CTRL_UNUSED00(_v)		((_v) << __RME_CTRL_UNUSED00_SH)
-+#define __RME_ESIZE			0x00000001
-+#define RME_QCTRL_Q1			0x0003806c
-+#define __RME_CTRL_UNUSED11_MK		0x00000c00
-+#define __RME_CTRL_UNUSED11_SH		10
-+#define __RME_CTRL_UNUSED11(_v)		((_v) << __RME_CTRL_UNUSED11_SH)
-+#define __RME_CTRL_UNUSED01_MK		0x000000fe
-+#define __RME_CTRL_UNUSED01_SH		1
-+#define __RME_CTRL_UNUSED01(_v)		((_v) << __RME_CTRL_UNUSED01_SH)
-+#define PSS_CTL_REG			0x00018800
-+#define __PSS_I2C_CLK_DIV_MK		0x007f0000
-+#define __PSS_I2C_CLK_DIV_SH		16
-+#define __PSS_I2C_CLK_DIV(_v)		((_v) << __PSS_I2C_CLK_DIV_SH)
-+#define __PSS_LMEM_INIT_DONE		0x00001000
-+#define __PSS_LMEM_RESET		0x00000200
-+#define __PSS_LMEM_INIT_EN		0x00000100
-+#define __PSS_LPU1_RESET		0x00000002
-+#define __PSS_LPU0_RESET		0x00000001
-+#define PSS_ERR_STATUS_REG		0x00018810
-+#define __PSS_LPU1_TCM_READ_ERR		0x00200000
-+#define __PSS_LPU0_TCM_READ_ERR		0x00100000
-+#define __PSS_LMEM5_CORR_ERR		0x00080000
-+#define __PSS_LMEM4_CORR_ERR		0x00040000
-+#define __PSS_LMEM3_CORR_ERR		0x00020000
-+#define __PSS_LMEM2_CORR_ERR		0x00010000
-+#define __PSS_LMEM1_CORR_ERR		0x00008000
-+#define __PSS_LMEM0_CORR_ERR		0x00004000
-+#define __PSS_LMEM5_UNCORR_ERR		0x00002000
-+#define __PSS_LMEM4_UNCORR_ERR		0x00001000
-+#define __PSS_LMEM3_UNCORR_ERR		0x00000800
-+#define __PSS_LMEM2_UNCORR_ERR		0x00000400
-+#define __PSS_LMEM1_UNCORR_ERR		0x00000200
-+#define __PSS_LMEM0_UNCORR_ERR		0x00000100
-+#define __PSS_BAL_PERR			0x00000080
-+#define __PSS_DIP_IF_ERR		0x00000040
-+#define __PSS_IOH_IF_ERR		0x00000020
-+#define __PSS_TDS_IF_ERR		0x00000010
-+#define __PSS_RDS_IF_ERR		0x00000008
-+#define __PSS_SGM_IF_ERR		0x00000004
-+#define __PSS_LPU1_RAM_ERR		0x00000002
-+#define __PSS_LPU0_RAM_ERR		0x00000001
-+#define ERR_SET_REG			0x00018818
-+#define __PSS_ERR_STATUS_SET		0x003fffff
-+#define PMM_1T_RESET_REG_P0		0x0002381c
-+#define __PMM_1T_RESET_P		0x00000001
-+#define PMM_1T_RESET_REG_P1		0x00023c1c
-+#define HQM_QSET0_RXQ_DRBL_P0		0x00038000
-+#define __RXQ0_ADD_VECTORS_P		0x80000000
-+#define __RXQ0_STOP_P			0x40000000
-+#define __RXQ0_PRD_PTR_P		0x0000ffff
-+#define HQM_QSET1_RXQ_DRBL_P0		0x00038080
-+#define __RXQ1_ADD_VECTORS_P		0x80000000
-+#define __RXQ1_STOP_P			0x40000000
-+#define __RXQ1_PRD_PTR_P		0x0000ffff
-+#define HQM_QSET0_RXQ_DRBL_P1		0x0003c000
-+#define HQM_QSET1_RXQ_DRBL_P1		0x0003c080
-+#define HQM_QSET0_TXQ_DRBL_P0		0x00038020
-+#define __TXQ0_ADD_VECTORS_P		0x80000000
-+#define __TXQ0_STOP_P			0x40000000
-+#define __TXQ0_PRD_PTR_P		0x0000ffff
-+#define HQM_QSET1_TXQ_DRBL_P0		0x000380a0
-+#define __TXQ1_ADD_VECTORS_P		0x80000000
-+#define __TXQ1_STOP_P			0x40000000
-+#define __TXQ1_PRD_PTR_P		0x0000ffff
-+#define HQM_QSET0_TXQ_DRBL_P1		0x0003c020
-+#define HQM_QSET1_TXQ_DRBL_P1		0x0003c0a0
-+#define HQM_QSET0_IB_DRBL_1_P0		0x00038040
-+#define __IB1_0_ACK_P			0x80000000
-+#define __IB1_0_DISABLE_P		0x40000000
-+#define __IB1_0_COALESCING_CFG_P_MK	0x00ff0000
-+#define __IB1_0_COALESCING_CFG_P_SH	16
-+#define __IB1_0_COALESCING_CFG_P(_v)	((_v) << __IB1_0_COALESCING_CFG_P_SH)
-+#define __IB1_0_NUM_OF_ACKED_EVENTS_P	0x0000ffff
-+#define HQM_QSET1_IB_DRBL_1_P0		0x000380c0
-+#define __IB1_1_ACK_P			0x80000000
-+#define __IB1_1_DISABLE_P		0x40000000
-+#define __IB1_1_COALESCING_CFG_P_MK	0x00ff0000
-+#define __IB1_1_COALESCING_CFG_P_SH	16
-+#define __IB1_1_COALESCING_CFG_P(_v)	((_v) << __IB1_1_COALESCING_CFG_P_SH)
-+#define __IB1_1_NUM_OF_ACKED_EVENTS_P	0x0000ffff
-+#define HQM_QSET0_IB_DRBL_1_P1		0x0003c040
-+#define HQM_QSET1_IB_DRBL_1_P1		0x0003c0c0
-+#define HQM_QSET0_IB_DRBL_2_P0		0x00038060
-+#define __IB2_0_ACK_P			0x80000000
-+#define __IB2_0_DISABLE_P		0x40000000
-+#define __IB2_0_COALESCING_CFG_P_MK	0x00ff0000
-+#define __IB2_0_COALESCING_CFG_P_SH	16
-+#define __IB2_0_COALESCING_CFG_P(_v)	((_v) << __IB2_0_COALESCING_CFG_P_SH)
-+#define __IB2_0_NUM_OF_ACKED_EVENTS_P	0x0000ffff
-+#define HQM_QSET1_IB_DRBL_2_P0		0x000380e0
-+#define __IB2_1_ACK_P			0x80000000
-+#define __IB2_1_DISABLE_P		0x40000000
-+#define __IB2_1_COALESCING_CFG_P_MK	0x00ff0000
-+#define __IB2_1_COALESCING_CFG_P_SH	16
-+#define __IB2_1_COALESCING_CFG_P(_v)	((_v) << __IB2_1_COALESCING_CFG_P_SH)
-+#define __IB2_1_NUM_OF_ACKED_EVENTS_P	0x0000ffff
-+#define HQM_QSET0_IB_DRBL_2_P1		0x0003c060
-+#define HQM_QSET1_IB_DRBL_2_P1		0x0003c0e0
-+
-+
-+/*
-+ * These definitions are either in error/missing in spec. Its auto-generated
-+ * from hard coded values in regparse.pl.
-+ */
-+#define __EMPHPOST_AT_4G_MK_FIX		0x0000001c
-+#define __EMPHPOST_AT_4G_SH_FIX		0x00000002
-+#define __EMPHPRE_AT_4G_FIX		0x00000003
-+#define __SFP_TXRATE_EN_FIX		0x00000100
-+#define __SFP_RXRATE_EN_FIX		0x00000080
-+
-+
-+/*
-+ * These register definitions are auto-generated from hard coded values
-+ * in regparse.pl.
-+ */
-+
-+
-+/*
-+ * These register mapping definitions are auto-generated from mapping tables
-+ * in regparse.pl.
-+ */
-+#define BFA_IOC0_HBEAT_REG		HOST_SEM0_INFO_REG
-+#define BFA_IOC0_STATE_REG		HOST_SEM1_INFO_REG
-+#define BFA_IOC1_HBEAT_REG		HOST_SEM2_INFO_REG
-+#define BFA_IOC1_STATE_REG		HOST_SEM3_INFO_REG
-+#define BFA_FW_USE_COUNT		 HOST_SEM4_INFO_REG
-+
-+#define CPE_DEPTH_Q(__n) \
-+	(CPE_DEPTH_Q0 + (__n) * (CPE_DEPTH_Q1 - CPE_DEPTH_Q0))
-+#define CPE_QCTRL_Q(__n) \
-+	(CPE_QCTRL_Q0 + (__n) * (CPE_QCTRL_Q1 - CPE_QCTRL_Q0))
-+#define CPE_PI_PTR_Q(__n) \
-+	(CPE_PI_PTR_Q0 + (__n) * (CPE_PI_PTR_Q1 - CPE_PI_PTR_Q0))
-+#define CPE_CI_PTR_Q(__n) \
-+	(CPE_CI_PTR_Q0 + (__n) * (CPE_CI_PTR_Q1 - CPE_CI_PTR_Q0))
-+#define RME_DEPTH_Q(__n) \
-+	(RME_DEPTH_Q0 + (__n) * (RME_DEPTH_Q1 - RME_DEPTH_Q0))
-+#define RME_QCTRL_Q(__n) \
-+	(RME_QCTRL_Q0 + (__n) * (RME_QCTRL_Q1 - RME_QCTRL_Q0))
-+#define RME_PI_PTR_Q(__n) \
-+	(RME_PI_PTR_Q0 + (__n) * (RME_PI_PTR_Q1 - RME_PI_PTR_Q0))
-+#define RME_CI_PTR_Q(__n) \
-+	(RME_CI_PTR_Q0 + (__n) * (RME_CI_PTR_Q1 - RME_CI_PTR_Q0))
-+#define HQM_QSET_RXQ_DRBL_P0(__n) (HQM_QSET0_RXQ_DRBL_P0 + (__n) \
-+	* (HQM_QSET1_RXQ_DRBL_P0 - HQM_QSET0_RXQ_DRBL_P0))
-+#define HQM_QSET_TXQ_DRBL_P0(__n) (HQM_QSET0_TXQ_DRBL_P0 + (__n) \
-+	* (HQM_QSET1_TXQ_DRBL_P0 - HQM_QSET0_TXQ_DRBL_P0))
-+#define HQM_QSET_IB_DRBL_1_P0(__n) (HQM_QSET0_IB_DRBL_1_P0 + (__n) \
-+	* (HQM_QSET1_IB_DRBL_1_P0 - HQM_QSET0_IB_DRBL_1_P0))
-+#define HQM_QSET_IB_DRBL_2_P0(__n) (HQM_QSET0_IB_DRBL_2_P0 + (__n) \
-+	* (HQM_QSET1_IB_DRBL_2_P0 - HQM_QSET0_IB_DRBL_2_P0))
-+#define HQM_QSET_RXQ_DRBL_P1(__n) (HQM_QSET0_RXQ_DRBL_P1 + (__n) \
-+	* (HQM_QSET1_RXQ_DRBL_P1 - HQM_QSET0_RXQ_DRBL_P1))
-+#define HQM_QSET_TXQ_DRBL_P1(__n) (HQM_QSET0_TXQ_DRBL_P1 + (__n) \
-+	* (HQM_QSET1_TXQ_DRBL_P1 - HQM_QSET0_TXQ_DRBL_P1))
-+#define HQM_QSET_IB_DRBL_1_P1(__n) (HQM_QSET0_IB_DRBL_1_P1 + (__n) \
-+	* (HQM_QSET1_IB_DRBL_1_P1 - HQM_QSET0_IB_DRBL_1_P1))
-+#define HQM_QSET_IB_DRBL_2_P1(__n) (HQM_QSET0_IB_DRBL_2_P1 + (__n) \
-+	* (HQM_QSET1_IB_DRBL_2_P1 - HQM_QSET0_IB_DRBL_2_P1))
-+
-+#define CPE_Q_NUM(__fn, __q) (((__fn) << 2) + (__q))
-+#define RME_Q_NUM(__fn, __q) (((__fn) << 2) + (__q))
-+#define CPE_Q_MASK(__q) ((__q) & 0x3)
-+#define RME_Q_MASK(__q) ((__q) & 0x3)
-+
-+
-+/*
-+ * PCI MSI-X vector defines
-+ */
-+enum {
-+	BFA_MSIX_CPE_Q0 = 0,
-+	BFA_MSIX_CPE_Q1 = 1,
-+	BFA_MSIX_CPE_Q2 = 2,
-+	BFA_MSIX_CPE_Q3 = 3,
-+	BFA_MSIX_RME_Q0 = 4,
-+	BFA_MSIX_RME_Q1 = 5,
-+	BFA_MSIX_RME_Q2 = 6,
-+	BFA_MSIX_RME_Q3 = 7,
-+	BFA_MSIX_LPU_ERR = 8,
-+	BFA_MSIX_CT_MAX = 9,
-+};
-+
-+/*
-+ * And corresponding host interrupt status bit field defines
-+ */
-+#define __HFN_INT_CPE_Q0		0x00000001U
-+#define __HFN_INT_CPE_Q1		0x00000002U
-+#define __HFN_INT_CPE_Q2		0x00000004U
-+#define __HFN_INT_CPE_Q3		0x00000008U
-+#define __HFN_INT_CPE_Q4		0x00000010U
-+#define __HFN_INT_CPE_Q5		0x00000020U
-+#define __HFN_INT_CPE_Q6		0x00000040U
-+#define __HFN_INT_CPE_Q7		0x00000080U
-+#define __HFN_INT_RME_Q0		0x00000100U
-+#define __HFN_INT_RME_Q1		0x00000200U
-+#define __HFN_INT_RME_Q2		0x00000400U
-+#define __HFN_INT_RME_Q3		0x00000800U
-+#define __HFN_INT_RME_Q4		0x00001000U
-+#define __HFN_INT_RME_Q5		0x00002000U
-+#define __HFN_INT_RME_Q6		0x00004000U
-+#define __HFN_INT_RME_Q7		0x00008000U
-+#define __HFN_INT_ERR_EMC		0x00010000U
-+#define __HFN_INT_ERR_LPU0		0x00020000U
-+#define __HFN_INT_ERR_LPU1		0x00040000U
-+#define __HFN_INT_ERR_PSS		0x00080000U
-+#define __HFN_INT_MBOX_LPU0		0x00100000U
-+#define __HFN_INT_MBOX_LPU1		0x00200000U
-+#define __HFN_INT_MBOX1_LPU0		0x00400000U
-+#define __HFN_INT_MBOX1_LPU1		0x00800000U
-+#define __HFN_INT_LL_HALT		0x01000000U
-+#define __HFN_INT_CPE_MASK		0x000000ffU
-+#define __HFN_INT_RME_MASK		0x0000ff00U
-+
-+
-+/*
-+ * catapult memory map.
-+ */
-+#define LL_PGN_HQM0		0x0096
-+#define LL_PGN_HQM1		0x0097
-+#define PSS_SMEM_PAGE_START	0x8000
-+#define PSS_SMEM_PGNUM(_pg0, _ma)	((_pg0) + ((_ma) >> 15))
-+#define PSS_SMEM_PGOFF(_ma)	((_ma) & 0x7fff)
-+
-+/*
-+ * End of catapult memory map
-+ */
-+
-+
-+#endif /* __BFI_CTREG_H__ */
-diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
-new file mode 100644
-index 0000000..69ac85f
---- /dev/null
-+++ b/drivers/scsi/bfa/bfi_ms.h
-@@ -0,0 +1,765 @@
++++ b/drivers/scsi/bfa/bfa_fcbuild.h
+@@ -0,0 +1,316 @@
 +/*
 + * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
 + * All rights reserved
@@ -1584,755 +1974,306 @@ index 0000000..69ac85f
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 + * General Public License for more details.
 + */
++/*
++ * fcbuild.h - FC link service frame building and parsing routines
++ */
 +
-+#ifndef __BFI_MS_H__
-+#define __BFI_MS_H__
++#ifndef __FCBUILD_H__
++#define __FCBUILD_H__
 +
-+#include "bfi.h"
++#include "bfa_os_inc.h"
 +#include "bfa_fc.h"
-+#include "bfa_defs_svc.h"
-+
-+#pragma pack(1)
-+
-+enum bfi_iocfc_h2i_msgs {
-+	BFI_IOCFC_H2I_CFG_REQ		= 1,
-+	BFI_IOCFC_H2I_SET_INTR_REQ	= 2,
-+	BFI_IOCFC_H2I_UPDATEQ_REQ	= 3,
-+};
-+
-+enum bfi_iocfc_i2h_msgs {
-+	BFI_IOCFC_I2H_CFG_REPLY		= BFA_I2HM(1),
-+	BFI_IOCFC_I2H_UPDATEQ_RSP	= BFA_I2HM(3),
-+};
-+
-+struct bfi_iocfc_cfg_s {
-+	u8	num_cqs;	/*  Number of CQs to be used	*/
-+	u8	 sense_buf_len;	/*  SCSI sense length	    */
-+	u16	rsvd_1;
-+	u32	endian_sig;	/*  endian signature of host     */
-+
-+	/**
-+	 * Request and response circular queue base addresses, size and
-+	 * shadow index pointers.
-+	 */
-+	union bfi_addr_u  req_cq_ba[BFI_IOC_MAX_CQS];
-+	union bfi_addr_u  req_shadow_ci[BFI_IOC_MAX_CQS];
-+	u16    req_cq_elems[BFI_IOC_MAX_CQS];
-+	union bfi_addr_u  rsp_cq_ba[BFI_IOC_MAX_CQS];
-+	union bfi_addr_u  rsp_shadow_pi[BFI_IOC_MAX_CQS];
-+	u16    rsp_cq_elems[BFI_IOC_MAX_CQS];
-+
-+	union bfi_addr_u  stats_addr;	/*  DMA-able address for stats	  */
-+	union bfi_addr_u  cfgrsp_addr;	/*  config response dma address  */
-+	union bfi_addr_u  ioim_snsbase;  /*  IO sense buffer base address */
-+	struct bfa_iocfc_intr_attr_s intr_attr; /*  IOC interrupt attributes */
-+};
-+
-+/**
-+ * Boot target wwn information for this port. This contains either the stored
-+ * or discovered boot target port wwns for the port.
-+ */
-+struct bfi_iocfc_bootwwns {
-+	wwn_t		wwn[BFA_BOOT_BOOTLUN_MAX];
-+	u8		nwwns;
-+	u8		rsvd[7];
-+};
-+
-+struct bfi_iocfc_cfgrsp_s {
-+	struct bfa_iocfc_fwcfg_s	fwcfg;
-+	struct bfa_iocfc_intr_attr_s	intr_attr;
-+	struct bfi_iocfc_bootwwns	bootwwns;
-+	struct bfi_pbc_s		pbc_cfg;
-+};
-+
-+/**
-+ * BFI_IOCFC_H2I_CFG_REQ message
-+ */
-+struct bfi_iocfc_cfg_req_s {
-+	struct bfi_mhdr_s      mh;
-+	union bfi_addr_u      ioc_cfg_dma_addr;
-+};
-+
-+
-+/**
-+ * BFI_IOCFC_I2H_CFG_REPLY message
-+ */
-+struct bfi_iocfc_cfg_reply_s {
-+	struct bfi_mhdr_s  mh;		/*  Common msg header	  */
-+	u8	 cfg_success;	/*  cfg reply status	   */
-+	u8	 lpu_bm;		/*  LPUs assigned for this IOC */
-+	u8	 rsvd[2];
-+};
-+
-+
-+/**
-+ * BFI_IOCFC_H2I_SET_INTR_REQ message
-+ */
-+struct bfi_iocfc_set_intr_req_s {
-+	struct bfi_mhdr_s mh;		/*  common msg header		*/
-+	u8		coalesce;	/*  enable intr coalescing	*/
-+	u8		rsvd[3];
-+	u16	delay;		/*  delay timer 0..1125us	*/
-+	u16	latency;	/*  latency timer 0..225us	*/
-+};
-+
-+
-+/**
-+ * BFI_IOCFC_H2I_UPDATEQ_REQ message
-+ */
-+struct bfi_iocfc_updateq_req_s {
-+	struct bfi_mhdr_s mh;		/*  common msg header		*/
-+	u32 reqq_ba;		/*  reqq base addr		*/
-+	u32 rspq_ba;		/*  rspq base addr		*/
-+	u32 reqq_sci;		/*  reqq shadow ci		*/
-+	u32 rspq_spi;		/*  rspq shadow pi		*/
-+};
-+
-+
-+/**
-+ * BFI_IOCFC_I2H_UPDATEQ_RSP message
-+ */
-+struct bfi_iocfc_updateq_rsp_s {
-+	struct bfi_mhdr_s mh;		/*  common msg header	*/
-+	u8	status;			/*  updateq  status	*/
-+	u8	rsvd[3];
-+};
-+
-+
-+/**
-+ * H2I Messages
-+ */
-+union bfi_iocfc_h2i_msg_u {
-+	struct bfi_mhdr_s		mh;
-+	struct bfi_iocfc_cfg_req_s	cfg_req;
-+	struct bfi_iocfc_updateq_req_s updateq_req;
-+	u32 mboxmsg[BFI_IOC_MSGSZ];
-+};
-+
-+
-+/**
-+ * I2H Messages
-+ */
-+union bfi_iocfc_i2h_msg_u {
-+	struct bfi_mhdr_s		mh;
-+	struct bfi_iocfc_cfg_reply_s	cfg_reply;
-+	struct bfi_iocfc_updateq_rsp_s updateq_rsp;
-+	u32 mboxmsg[BFI_IOC_MSGSZ];
-+};
-+
-+
-+enum bfi_fcport_h2i {
-+	BFI_FCPORT_H2I_ENABLE_REQ		= (1),
-+	BFI_FCPORT_H2I_DISABLE_REQ		= (2),
-+	BFI_FCPORT_H2I_SET_SVC_PARAMS_REQ	= (3),
-+	BFI_FCPORT_H2I_STATS_GET_REQ		= (4),
-+	BFI_FCPORT_H2I_STATS_CLEAR_REQ		= (5),
-+};
-+
-+
-+enum bfi_fcport_i2h {
-+	BFI_FCPORT_I2H_ENABLE_RSP		= BFA_I2HM(1),
-+	BFI_FCPORT_I2H_DISABLE_RSP		= BFA_I2HM(2),
-+	BFI_FCPORT_I2H_SET_SVC_PARAMS_RSP	= BFA_I2HM(3),
-+	BFI_FCPORT_I2H_STATS_GET_RSP		= BFA_I2HM(4),
-+	BFI_FCPORT_I2H_STATS_CLEAR_RSP		= BFA_I2HM(5),
-+	BFI_FCPORT_I2H_EVENT			= BFA_I2HM(6),
-+	BFI_FCPORT_I2H_TRUNK_SCN		= BFA_I2HM(7),
-+	BFI_FCPORT_I2H_ENABLE_AEN		= BFA_I2HM(8),
-+	BFI_FCPORT_I2H_DISABLE_AEN		= BFA_I2HM(9),
-+};
-+
-+
-+/**
-+ * Generic REQ type
-+ */
-+struct bfi_fcport_req_s {
-+	struct bfi_mhdr_s  mh;		/*  msg header			    */
-+	u32	   msgtag;	/*  msgtag for reply		    */
-+};
-+
-+/**
-+ * Generic RSP type
-+ */
-+struct bfi_fcport_rsp_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		    */
-+	u8		   status;	/*  port enable status		    */
-+	u8		   rsvd[3];
-+	u32	   msgtag;	/*  msgtag for reply		    */
-+};
-+
-+/**
-+ * BFI_FCPORT_H2I_ENABLE_REQ
-+ */
-+struct bfi_fcport_enable_req_s {
-+	struct bfi_mhdr_s  mh;		/*  msg header			    */
-+	u32	   rsvd1;
-+	wwn_t		   nwwn;	/*  node wwn of physical port	    */
-+	wwn_t		   pwwn;	/*  port wwn of physical port	    */
-+	struct bfa_port_cfg_s port_cfg; /*  port configuration	    */
-+	union bfi_addr_u   stats_dma_addr; /*  DMA address for stats	    */
-+	u32	   msgtag;	/*  msgtag for reply		    */
-+	u32	   rsvd2;
-+};
-+
-+/**
-+ * BFI_FCPORT_H2I_SET_SVC_PARAMS_REQ
-+ */
-+struct bfi_fcport_set_svc_params_req_s {
-+	struct bfi_mhdr_s  mh;		/*  msg header */
-+	u16	   tx_bbcredit;	/*  Tx credits */
-+	u16	   rsvd;
-+};
-+
-+/**
-+ * BFI_FCPORT_I2H_EVENT
-+ */
-+struct bfi_fcport_event_s {
-+	struct bfi_mhdr_s	mh;	/*  common msg header */
-+	struct bfa_port_link_s	link_state;
-+};
-+
-+/**
-+ * BFI_FCPORT_I2H_TRUNK_SCN
-+ */
-+struct bfi_fcport_trunk_link_s {
-+	wwn_t			trunk_wwn;
-+	u8			fctl;		/* bfa_trunk_link_fctl_t */
-+	u8			state;		/* bfa_trunk_link_state_t */
-+	u8			speed;		/* bfa_port_speed_t */
-+	u8			rsvd;
-+	u32		deskew;
-+};
-+
-+#define BFI_FCPORT_MAX_LINKS	2
-+struct bfi_fcport_trunk_scn_s {
-+	struct bfi_mhdr_s	mh;
-+	u8			trunk_state;	/* bfa_trunk_state_t */
-+	u8			trunk_speed;	/* bfa_port_speed_t */
-+	u8			rsvd_a[2];
-+	struct bfi_fcport_trunk_link_s tlink[BFI_FCPORT_MAX_LINKS];
-+};
-+
-+/**
-+ * fcport H2I message
-+ */
-+union bfi_fcport_h2i_msg_u {
-+	struct bfi_mhdr_s			*mhdr;
-+	struct bfi_fcport_enable_req_s		*penable;
-+	struct bfi_fcport_req_s			*pdisable;
-+	struct bfi_fcport_set_svc_params_req_s	*psetsvcparams;
-+	struct bfi_fcport_req_s			*pstatsget;
-+	struct bfi_fcport_req_s			*pstatsclear;
-+};
-+
-+/**
-+ * fcport I2H message
-+ */
-+union bfi_fcport_i2h_msg_u {
-+	struct bfi_msg_s			*msg;
-+	struct bfi_fcport_rsp_s			*penable_rsp;
-+	struct bfi_fcport_rsp_s			*pdisable_rsp;
-+	struct bfi_fcport_rsp_s			*psetsvcparams_rsp;
-+	struct bfi_fcport_rsp_s			*pstatsget_rsp;
-+	struct bfi_fcport_rsp_s			*pstatsclear_rsp;
-+	struct bfi_fcport_event_s		*event;
-+	struct bfi_fcport_trunk_scn_s		*trunk_scn;
-+};
-+
-+enum bfi_fcxp_h2i {
-+	BFI_FCXP_H2I_SEND_REQ = 1,
-+};
-+
-+enum bfi_fcxp_i2h {
-+	BFI_FCXP_I2H_SEND_RSP = BFA_I2HM(1),
-+};
-+
-+#define BFA_FCXP_MAX_SGES	2
-+
-+/**
-+ * FCXP send request structure
-+ */
-+struct bfi_fcxp_send_req_s {
-+	struct bfi_mhdr_s  mh;		/*  Common msg header		    */
-+	u16	fcxp_tag;	/*  driver request tag		    */
-+	u16	max_frmsz;	/*  max send frame size	    */
-+	u16	vf_id;		/*  vsan tag if applicable	    */
-+	u16	rport_fw_hndl;	/*  FW Handle for the remote port  */
-+	u8	 class;		/*  FC class used for req/rsp	    */
-+	u8	 rsp_timeout;	/*  timeout in secs, 0-no response */
-+	u8	 cts;		/*  continue sequence		    */
-+	u8	 lp_tag;	/*  lport tag			    */
-+	struct fchs_s	fchs;	/*  request FC header structure    */
-+	u32	req_len;	/*  request payload length	    */
-+	u32	rsp_maxlen;	/*  max response length expected   */
-+	struct bfi_sge_s   req_sge[BFA_FCXP_MAX_SGES];	/*  request buf    */
-+	struct bfi_sge_s   rsp_sge[BFA_FCXP_MAX_SGES];	/*  response buf   */
-+};
-+
-+/**
-+ * FCXP send response structure
-+ */
-+struct bfi_fcxp_send_rsp_s {
-+	struct bfi_mhdr_s  mh;		/*  Common msg header		    */
-+	u16	fcxp_tag;	/*  send request tag		    */
-+	u8	 req_status;	/*  request status		    */
-+	u8	 rsvd;
-+	u32	rsp_len;	/*  actual response length	    */
-+	u32	residue_len;	/*  residual response length	    */
-+	struct fchs_s	fchs;	/*  response FC header structure   */
-+};
-+
-+enum bfi_uf_h2i {
-+	BFI_UF_H2I_BUF_POST = 1,
-+};
-+
-+enum bfi_uf_i2h {
-+	BFI_UF_I2H_FRM_RCVD = BFA_I2HM(1),
-+};
-+
-+#define BFA_UF_MAX_SGES	2
-+
-+struct bfi_uf_buf_post_s {
-+	struct bfi_mhdr_s  mh;		/*  Common msg header		*/
-+	u16	buf_tag;	/*  buffer tag			*/
-+	u16	buf_len;	/*  total buffer length	*/
-+	struct bfi_sge_s   sge[BFA_UF_MAX_SGES]; /*  buffer DMA SGEs	*/
-+};
-+
-+struct bfi_uf_frm_rcvd_s {
-+	struct bfi_mhdr_s  mh;		/*  Common msg header		*/
-+	u16	buf_tag;	/*  buffer tag			*/
-+	u16	rsvd;
-+	u16	frm_len;	/*  received frame length	*/
-+	u16	xfr_len;	/*  tranferred length		*/
-+};
-+
-+enum bfi_lps_h2i_msgs {
-+	BFI_LPS_H2I_LOGIN_REQ	= 1,
-+	BFI_LPS_H2I_LOGOUT_REQ	= 2,
-+};
-+
-+enum bfi_lps_i2h_msgs {
-+	BFI_LPS_H2I_LOGIN_RSP	= BFA_I2HM(1),
-+	BFI_LPS_H2I_LOGOUT_RSP	= BFA_I2HM(2),
-+	BFI_LPS_H2I_CVL_EVENT	= BFA_I2HM(3),
-+};
-+
-+struct bfi_lps_login_req_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u8		lp_tag;
-+	u8		alpa;
-+	u16	pdu_size;
-+	wwn_t		pwwn;
-+	wwn_t		nwwn;
-+	u8		fdisc;
-+	u8		auth_en;
-+	u8		rsvd[2];
-+};
-+
-+struct bfi_lps_login_rsp_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u8		lp_tag;
-+	u8		status;
-+	u8		lsrjt_rsn;
-+	u8		lsrjt_expl;
-+	wwn_t		port_name;
-+	wwn_t		node_name;
-+	u16	bb_credit;
-+	u8		f_port;
-+	u8		npiv_en;
-+	u32	lp_pid:24;
-+	u32	auth_req:8;
-+	mac_t		lp_mac;
-+	mac_t		fcf_mac;
-+	u8		ext_status;
-+	u8		brcd_switch;	/*  attached peer is brcd switch */
-+};
-+
-+struct bfi_lps_logout_req_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u8		lp_tag;
-+	u8		rsvd[3];
-+	wwn_t		port_name;
-+};
-+
-+struct bfi_lps_logout_rsp_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u8		lp_tag;
-+	u8		status;
-+	u8		rsvd[2];
-+};
-+
-+struct bfi_lps_cvl_event_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u8		lp_tag;
-+	u8		rsvd[3];
-+};
-+
-+union bfi_lps_h2i_msg_u {
-+	struct bfi_mhdr_s		*msg;
-+	struct bfi_lps_login_req_s	*login_req;
-+	struct bfi_lps_logout_req_s	*logout_req;
-+};
-+
-+union bfi_lps_i2h_msg_u {
-+	struct bfi_msg_s		*msg;
-+	struct bfi_lps_login_rsp_s	*login_rsp;
-+	struct bfi_lps_logout_rsp_s	*logout_rsp;
-+	struct bfi_lps_cvl_event_s	*cvl_event;
-+};
-+
-+enum bfi_rport_h2i_msgs {
-+	BFI_RPORT_H2I_CREATE_REQ = 1,
-+	BFI_RPORT_H2I_DELETE_REQ = 2,
-+	BFI_RPORT_H2I_SET_SPEED_REQ  = 3,
-+};
-+
-+enum bfi_rport_i2h_msgs {
-+	BFI_RPORT_I2H_CREATE_RSP = BFA_I2HM(1),
-+	BFI_RPORT_I2H_DELETE_RSP = BFA_I2HM(2),
-+	BFI_RPORT_I2H_QOS_SCN    = BFA_I2HM(3),
-+};
-+
-+struct bfi_rport_create_req_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u16	bfa_handle;	/*  host rport handle		*/
-+	u16	max_frmsz;	/*  max rcv pdu size		*/
-+	u32	pid:24,	/*  remote port ID		*/
-+		lp_tag:8;	/*  local port tag		*/
-+	u32	local_pid:24,	/*  local port ID		*/
-+		cisc:8;
-+	u8	fc_class;	/*  supported FC classes	*/
-+	u8	vf_en;		/*  virtual fabric enable	*/
-+	u16	vf_id;		/*  virtual fabric ID		*/
-+};
-+
-+struct bfi_rport_create_rsp_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u8		status;		/*  rport creation status	*/
-+	u8		rsvd[3];
-+	u16	bfa_handle;	/*  host rport handle		*/
-+	u16	fw_handle;	/*  firmware rport handle	*/
-+	struct bfa_rport_qos_attr_s qos_attr;  /* QoS Attributes */
-+};
-+
-+struct bfa_rport_speed_req_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u16	fw_handle;	/*  firmware rport handle	*/
-+	u8		speed;		/*  rport's speed via RPSC	*/
-+	u8		rsvd;
-+};
-+
-+struct bfi_rport_delete_req_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u16	fw_handle;	/*  firmware rport handle	*/
-+	u16	rsvd;
-+};
-+
-+struct bfi_rport_delete_rsp_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u16	bfa_handle;	/*  host rport handle		*/
-+	u8		status;		/*  rport deletion status	*/
-+	u8		rsvd;
-+};
-+
-+struct bfi_rport_qos_scn_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		*/
-+	u16	bfa_handle;	/*  host rport handle		*/
-+	u16	rsvd;
-+	struct bfa_rport_qos_attr_s old_qos_attr;  /* Old QoS Attributes */
-+	struct bfa_rport_qos_attr_s new_qos_attr;  /* New QoS Attributes */
-+};
-+
-+union bfi_rport_h2i_msg_u {
-+	struct bfi_msg_s		*msg;
-+	struct bfi_rport_create_req_s	*create_req;
-+	struct bfi_rport_delete_req_s	*delete_req;
-+	struct bfi_rport_speed_req_s	*speed_req;
-+};
-+
-+union bfi_rport_i2h_msg_u {
-+	struct bfi_msg_s		*msg;
-+	struct bfi_rport_create_rsp_s	*create_rsp;
-+	struct bfi_rport_delete_rsp_s	*delete_rsp;
-+	struct bfi_rport_qos_scn_s	*qos_scn_evt;
-+};
++#include "bfa_defs_fcs.h"
 +
 +/*
-+ * Initiator mode I-T nexus interface defines.
++ * Utility Macros/functions
 + */
 +
-+enum bfi_itnim_h2i {
-+	BFI_ITNIM_H2I_CREATE_REQ = 1,	/*  i-t nexus creation */
-+	BFI_ITNIM_H2I_DELETE_REQ = 2,	/*  i-t nexus deletion */
-+};
++#define wwn_is_equal(_wwn1, _wwn2)		\
++	(memcmp(&(_wwn1), &(_wwn2), sizeof(wwn_t)) == 0)
 +
-+enum bfi_itnim_i2h {
-+	BFI_ITNIM_I2H_CREATE_RSP = BFA_I2HM(1),
-+	BFI_ITNIM_I2H_DELETE_RSP = BFA_I2HM(2),
-+	BFI_ITNIM_I2H_SLER_EVENT = BFA_I2HM(3),
-+};
-+
-+struct bfi_itnim_create_req_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		 */
-+	u16	fw_handle;	/*  f/w handle for itnim	 */
-+	u8	class;		/*  FC class for IO		 */
-+	u8	seq_rec;	/*  sequence recovery support	 */
-+	u8	msg_no;		/*  seq id of the msg		 */
-+};
-+
-+struct bfi_itnim_create_rsp_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		 */
-+	u16	bfa_handle;	/*  bfa handle for itnim	 */
-+	u8	status;		/*  fcp request status		 */
-+	u8	seq_id;		/*  seq id of the msg		 */
-+};
-+
-+struct bfi_itnim_delete_req_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		 */
-+	u16	fw_handle;	/*  f/w itnim handle		 */
-+	u8	seq_id;		/*  seq id of the msg		 */
-+	u8	rsvd;
-+};
-+
-+struct bfi_itnim_delete_rsp_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		 */
-+	u16	bfa_handle;	/*  bfa handle for itnim	 */
-+	u8	status;		/*  fcp request status		 */
-+	u8	seq_id;		/*  seq id of the msg		 */
-+};
-+
-+struct bfi_itnim_sler_event_s {
-+	struct bfi_mhdr_s  mh;		/*  common msg header		 */
-+	u16	bfa_handle;	/*  bfa handle for itnim	 */
-+	u16	rsvd;
-+};
-+
-+union bfi_itnim_h2i_msg_u {
-+	struct bfi_itnim_create_req_s *create_req;
-+	struct bfi_itnim_delete_req_s *delete_req;
-+	struct bfi_msg_s	*msg;
-+};
-+
-+union bfi_itnim_i2h_msg_u {
-+	struct bfi_itnim_create_rsp_s *create_rsp;
-+	struct bfi_itnim_delete_rsp_s *delete_rsp;
-+	struct bfi_itnim_sler_event_s *sler_event;
-+	struct bfi_msg_s	*msg;
-+};
++#define fc_roundup(_l, _s) (((_l) + ((_s) - 1)) & ~((_s) - 1))
 +
 +/*
-+ * Initiator mode IO interface defines.
++ * Given the fc response length, this routine will return
++ * the length of the actual payload bytes following the CT header.
++ *
++ * Assumes the input response length does not include the crc, eof, etc.
 + */
-+
-+enum bfi_ioim_h2i {
-+	BFI_IOIM_H2I_IOABORT_REQ = 1,	/*  IO abort request	 */
-+	BFI_IOIM_H2I_IOCLEANUP_REQ = 2,	/*  IO cleanup request	 */
-+};
-+
-+enum bfi_ioim_i2h {
-+	BFI_IOIM_I2H_IO_RSP = BFA_I2HM(1),	/*  non-fp IO response	 */
-+	BFI_IOIM_I2H_IOABORT_RSP = BFA_I2HM(2),	/*  ABORT rsp	 */
-+};
-+
-+/**
-+ * IO command DIF info
-+ */
-+struct bfi_ioim_dif_s {
-+	u32	dif_info[4];
-+};
-+
-+/**
-+ * FCP IO messages overview
-+ *
-+ * @note
-+ * - Max CDB length supported is 64 bytes.
-+ * - SCSI Linked commands and SCSI bi-directional Commands not
-+ *	supported.
-+ *
-+ */
-+struct bfi_ioim_req_s {
-+	struct bfi_mhdr_s  mh;		/*  Common msg header		 */
-+	u16	io_tag;		/*  I/O tag			 */
-+	u16	rport_hdl;	/*  itnim/rport firmware handle */
-+	struct fcp_cmnd_s	cmnd;	/*  IO request info	*/
-+
-+	/**
-+	 * SG elements array within the IO request must be double word
-+	 * aligned. This aligment is required to optimize SGM setup for the IO.
-+	 */
-+	struct bfi_sge_s	sges[BFI_SGE_INLINE_MAX];
-+	u8	io_timeout;
-+	u8	dif_en;
-+	u8	rsvd_a[2];
-+	struct bfi_ioim_dif_s  dif;
-+};
-+
-+/**
-+ *	This table shows various IO status codes from firmware and their
-+ *	meaning. Host driver can use these status codes to further process
-+ *	IO completions.
-+ *
-+ *	BFI_IOIM_STS_OK		: IO completed with error free SCSI &
-+ *					transport status.
-+ *					 io-tag can be reused.
-+ *
-+ *	BFA_IOIM_STS_SCSI_ERR		: IO completed with scsi error.
-+ *	- io-tag can be reused.
-+ *
-+ *	BFI_IOIM_STS_HOST_ABORTED	: IO was aborted successfully due to
-+ *						host request.
-+ *					- io-tag cannot be reused yet.
-+ *
-+ *	BFI_IOIM_STS_ABORTED		: IO was aborted successfully
-+ *						internally by f/w.
-+ *					- io-tag cannot be reused yet.
-+ *
-+ *	BFI_IOIM_STS_TIMEDOUT	: IO timedout and ABTS/RRQ is happening
-+ *					in the firmware and
-+ *					- io-tag cannot be reused yet.
-+ *
-+ *	BFI_IOIM_STS_SQER_NEEDED	: Firmware could not recover the IO
-+ *					  with sequence level error
-+ *	logic and hence host needs to retry
-+ *					  this IO with a different IO tag
-+ *					- io-tag cannot be used yet.
-+ *
-+ *	BFI_IOIM_STS_NEXUS_ABORT	: Second Level Error Recovery from host
-+ *					  is required because 2 consecutive ABTS
-+ *					  timedout and host needs logout and
-+ *					  re-login with the target
-+ *					- io-tag cannot be used yet.
-+ *
-+ *	BFI_IOIM_STS_UNDERRUN	: IO completed with SCSI status good,
-+ *					  but the data tranferred is less than
-+ *					  the fcp data length in the command.
-+ *					  ex. SCSI INQUIRY where transferred
-+ *					  data length and residue count in FCP
-+ *					  response accounts for total fcp-dl
-+ *					  - io-tag can be reused.
-+ *
-+ *	BFI_IOIM_STS_OVERRUN	: IO completed with SCSI status good,
-+ *					  but the data transerred is more than
-+ *					  fcp data length in the command. ex.
-+ *					  TAPE IOs where blocks can of unequal
-+ *					  lengths.
-+ *					- io-tag can be reused.
-+ *
-+ *	BFI_IOIM_STS_RES_FREE	: Firmware has completed using io-tag
-+ *					  during abort process
-+ *					- io-tag can be reused.
-+ *
-+ *	BFI_IOIM_STS_PROTO_ERR	: Firmware detected a protocol error.
-+ *					  ex target sent more data than
-+ *					  requested, or there was data frame
-+ *					  loss and other reasons
-+ *					- io-tag cannot be used yet.
-+ *
-+ *	BFI_IOIM_STS_DIF_ERR	: Firwmare detected DIF error. ex: DIF
-+ *					CRC err or Ref Tag err or App tag err.
-+ *					- io-tag can be reused.
-+ *
-+ *	BFA_IOIM_STS_TSK_MGT_ABORT	: IO was aborted because of Task
-+ *					  Management command from the host
-+ *					  - io-tag can be reused.
-+ *
-+ *	BFI_IOIM_STS_UTAG		: Firmware does not know about this
-+ *					  io_tag.
-+ *					- io-tag can be reused.
-+ */
-+enum bfi_ioim_status {
-+	BFI_IOIM_STS_OK = 0,
-+	BFI_IOIM_STS_HOST_ABORTED = 1,
-+	BFI_IOIM_STS_ABORTED = 2,
-+	BFI_IOIM_STS_TIMEDOUT = 3,
-+	BFI_IOIM_STS_RES_FREE = 4,
-+	BFI_IOIM_STS_SQER_NEEDED = 5,
-+	BFI_IOIM_STS_PROTO_ERR = 6,
-+	BFI_IOIM_STS_UTAG = 7,
-+	BFI_IOIM_STS_PATHTOV = 8,
-+};
-+
-+#define BFI_IOIM_SNSLEN	(256)
-+/**
-+ * I/O response message
-+ */
-+struct bfi_ioim_rsp_s {
-+	struct bfi_mhdr_s	mh;	/*  common msg header		*/
-+	u16	io_tag;		/*  completed IO tag		 */
-+	u16	bfa_rport_hndl;	/*  releated rport handle	 */
-+	u8	io_status;	/*  IO completion status	 */
-+	u8	reuse_io_tag;	/*  IO tag can be reused	*/
-+	u16	abort_tag;	/*  host abort request tag	*/
-+	u8		scsi_status;	/*  scsi status from target	 */
-+	u8		sns_len;	/*  scsi sense length		 */
-+	u8		resid_flags;	/*  IO residue flags		 */
-+	u8		rsvd_a;
-+	u32	residue;	/*  IO residual length in bytes */
-+	u32	rsvd_b[3];
-+};
-+
-+struct bfi_ioim_abort_req_s {
-+	struct bfi_mhdr_s  mh;	/*  Common msg header  */
-+	u16	io_tag;	/*  I/O tag	*/
-+	u16	abort_tag;	/*  unique request tag */
-+};
++static inline   u32
++fc_get_ctresp_pyld_len(u32 resp_len)
++{
++	return resp_len - sizeof(struct ct_hdr_s);
++}
 +
 +/*
-+ * Initiator mode task management command interface defines.
++ * Convert bfa speed to rpsc speed value.
 + */
++static inline  enum bfa_port_speed
++fc_rpsc_operspeed_to_bfa_speed(enum fc_rpsc_op_speed speed)
++{
++	switch (speed) {
 +
-+enum bfi_tskim_h2i {
-+	BFI_TSKIM_H2I_TM_REQ	= 1, /*  task-mgmt command	*/
-+	BFI_TSKIM_H2I_ABORT_REQ = 2, /*  task-mgmt command	*/
++	case RPSC_OP_SPEED_1G:
++		return BFA_PORT_SPEED_1GBPS;
++
++	case RPSC_OP_SPEED_2G:
++		return BFA_PORT_SPEED_2GBPS;
++
++	case RPSC_OP_SPEED_4G:
++		return BFA_PORT_SPEED_4GBPS;
++
++	case RPSC_OP_SPEED_8G:
++		return BFA_PORT_SPEED_8GBPS;
++
++	case RPSC_OP_SPEED_10G:
++		return BFA_PORT_SPEED_10GBPS;
++
++	default:
++		return BFA_PORT_SPEED_UNKNOWN;
++	}
++}
++
++/*
++ * Convert RPSC speed to bfa speed value.
++ */
++static inline   enum fc_rpsc_op_speed
++fc_bfa_speed_to_rpsc_operspeed(enum bfa_port_speed op_speed)
++{
++	switch (op_speed) {
++
++	case BFA_PORT_SPEED_1GBPS:
++		return RPSC_OP_SPEED_1G;
++
++	case BFA_PORT_SPEED_2GBPS:
++		return RPSC_OP_SPEED_2G;
++
++	case BFA_PORT_SPEED_4GBPS:
++		return RPSC_OP_SPEED_4G;
++
++	case BFA_PORT_SPEED_8GBPS:
++		return RPSC_OP_SPEED_8G;
++
++	case BFA_PORT_SPEED_10GBPS:
++		return RPSC_OP_SPEED_10G;
++
++	default:
++		return RPSC_OP_SPEED_NOT_EST;
++	}
++}
++
++enum fc_parse_status {
++	FC_PARSE_OK = 0,
++	FC_PARSE_FAILURE = 1,
++	FC_PARSE_BUSY = 2,
++	FC_PARSE_LEN_INVAL,
++	FC_PARSE_ACC_INVAL,
++	FC_PARSE_PWWN_NOT_EQUAL,
++	FC_PARSE_NWWN_NOT_EQUAL,
++	FC_PARSE_RXSZ_INVAL,
++	FC_PARSE_NOT_FCP,
++	FC_PARSE_OPAFLAG_INVAL,
++	FC_PARSE_RPAFLAG_INVAL,
++	FC_PARSE_OPA_INVAL,
++	FC_PARSE_RPA_INVAL,
++
 +};
 +
-+enum bfi_tskim_i2h {
-+	BFI_TSKIM_I2H_TM_RSP = BFA_I2HM(1),
++struct fc_templates_s {
++	struct fchs_s fc_els_req;
++	struct fchs_s fc_bls_req;
++	struct fc_logi_s plogi;
++	struct fc_rrq_s rrq;
 +};
 +
-+struct bfi_tskim_req_s {
-+	struct bfi_mhdr_s  mh;	/*  Common msg header	*/
-+	u16	tsk_tag;	/*  task management tag	*/
-+	u16	itn_fhdl;	/*  itn firmware handle	*/
-+	lun_t	lun;	/*  LU number	*/
-+	u8	tm_flags;	/*  see enum fcp_tm_cmnd	*/
-+	u8	t_secs;	/*  Timeout value in seconds	*/
-+	u8	rsvd[2];
-+};
++void            fcbuild_init(void);
 +
-+struct bfi_tskim_abortreq_s {
-+	struct bfi_mhdr_s  mh;	/*  Common msg header	*/
-+	u16	tsk_tag;	/*  task management tag	*/
-+	u16	rsvd;
-+};
++u16        fc_flogi_build(struct fchs_s *fchs, struct fc_logi_s *flogi,
++			u32 s_id, u16 ox_id, wwn_t port_name, wwn_t node_name,
++			       u16 pdu_size, u8 set_npiv, u8 set_auth,
++			       u16 local_bb_credits);
 +
-+enum bfi_tskim_status {
-+	/*
-+	 * Following are FCP-4 spec defined status codes,
-+	 * **DO NOT CHANGE THEM **
-+	 */
-+	BFI_TSKIM_STS_OK	= 0,
-+	BFI_TSKIM_STS_NOT_SUPP = 4,
-+	BFI_TSKIM_STS_FAILED	= 5,
++u16        fc_fdisc_build(struct fchs_s *buf, struct fc_logi_s *flogi, u32 s_id,
++			       u16 ox_id, wwn_t port_name, wwn_t node_name,
++			       u16 pdu_size);
 +
-+	/**
-+	 * Defined by BFA
-+	 */
-+	BFI_TSKIM_STS_TIMEOUT  = 10,	/*  TM request timedout	*/
-+	BFI_TSKIM_STS_ABORTED  = 11,	/*  Aborted on host request */
-+};
++u16        fc_flogi_acc_build(struct fchs_s *fchs, struct fc_logi_s *flogi,
++				   u32 s_id, u16 ox_id,
++				   wwn_t port_name, wwn_t node_name,
++				   u16 pdu_size,
++				   u16 local_bb_credits);
 +
-+struct bfi_tskim_rsp_s {
-+	struct bfi_mhdr_s  mh;		/*  Common msg header		 */
-+	u16	tsk_tag;	/*  task mgmt cmnd tag		 */
-+	u8	tsk_status;	/*  @ref bfi_tskim_status */
-+	u8	rsvd;
-+};
++u16        fc_plogi_build(struct fchs_s *fchs, void *pld, u32 d_id,
++			       u32 s_id, u16 ox_id, wwn_t port_name,
++			       wwn_t node_name, u16 pdu_size);
 +
-+#pragma pack()
++enum fc_parse_status fc_plogi_parse(struct fchs_s *fchs);
 +
-+#endif /* __BFI_MS_H__ */
++u16        fc_abts_build(struct fchs_s *buf, u32 d_id, u32 s_id,
++			      u16 ox_id);
++
++enum fc_parse_status fc_abts_rsp_parse(struct fchs_s *buf, int len);
++
++u16        fc_rrq_build(struct fchs_s *buf, struct fc_rrq_s *rrq, u32 d_id,
++			     u32 s_id, u16 ox_id, u16 rrq_oxid);
++enum fc_parse_status fc_rrq_rsp_parse(struct fchs_s *buf, int len);
++
++u16        fc_rspnid_build(struct fchs_s *fchs, void *pld, u32 s_id,
++				u16 ox_id, u8 *name);
++
++u16        fc_rftid_build(struct fchs_s *fchs, void *pld, u32 s_id,
++			       u16 ox_id, enum bfa_lport_role role);
++
++u16       fc_rftid_build_sol(struct fchs_s *fchs, void *pyld, u32 s_id,
++				   u16 ox_id, u8 *fc4_bitmap,
++				   u32 bitmap_size);
++
++u16	fc_rffid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
++			u16 ox_id, u8 fc4_type, u8 fc4_ftrs);
++
++u16        fc_gidpn_build(struct fchs_s *fchs, void *pyld, u32 s_id,
++			       u16 ox_id, wwn_t port_name);
++
++u16        fc_gpnid_build(struct fchs_s *fchs, void *pld, u32 s_id,
++			       u16 ox_id, u32 port_id);
++
++u16        fc_scr_build(struct fchs_s *fchs, struct fc_scr_s *scr,
++			u8 set_br_reg, u32 s_id, u16 ox_id);
++
++u16        fc_plogi_acc_build(struct fchs_s *fchs, void *pld, u32 d_id,
++				   u32 s_id, u16 ox_id,
++				   wwn_t port_name, wwn_t node_name,
++				   u16 pdu_size);
++
++u16        fc_adisc_build(struct fchs_s *fchs, struct fc_adisc_s *adisc,
++			u32 d_id, u32 s_id, u16 ox_id, wwn_t port_name,
++			       wwn_t node_name);
++
++enum fc_parse_status fc_adisc_parse(struct fchs_s *fchs, void *pld,
++			u32 host_dap, wwn_t node_name, wwn_t port_name);
++
++enum fc_parse_status fc_adisc_rsp_parse(struct fc_adisc_s *adisc, int len,
++				 wwn_t port_name, wwn_t node_name);
++
++u16        fc_adisc_acc_build(struct fchs_s *fchs, struct fc_adisc_s *adisc,
++				   u32 d_id, u32 s_id, u16 ox_id,
++				   wwn_t port_name, wwn_t node_name);
++u16        fc_ls_rjt_build(struct fchs_s *fchs, struct fc_ls_rjt_s *ls_rjt,
++				u32 d_id, u32 s_id, u16 ox_id,
++				u8 reason_code, u8 reason_code_expl);
++u16        fc_ls_acc_build(struct fchs_s *fchs, struct fc_els_cmd_s *els_cmd,
++				u32 d_id, u32 s_id, u16 ox_id);
++u16        fc_prli_build(struct fchs_s *fchs, void *pld, u32 d_id,
++			      u32 s_id, u16 ox_id);
++
++enum fc_parse_status fc_prli_rsp_parse(struct fc_prli_s *prli, int len);
++
++u16        fc_prli_acc_build(struct fchs_s *fchs, void *pld, u32 d_id,
++				  u32 s_id, u16 ox_id,
++				  enum bfa_lport_role role);
++
++u16        fc_rnid_build(struct fchs_s *fchs, struct fc_rnid_cmd_s *rnid,
++			      u32 d_id, u32 s_id, u16 ox_id,
++			      u32 data_format);
++
++u16        fc_rnid_acc_build(struct fchs_s *fchs,
++			struct fc_rnid_acc_s *rnid_acc, u32 d_id, u32 s_id,
++			u16 ox_id, u32 data_format,
++			struct fc_rnid_common_id_data_s *common_id_data,
++			struct fc_rnid_general_topology_data_s *gen_topo_data);
++
++u16	fc_rpsc2_build(struct fchs_s *fchs, struct fc_rpsc2_cmd_s *rps2c,
++			u32 d_id, u32 s_id, u32 *pid_list, u16 npids);
++u16        fc_rpsc_build(struct fchs_s *fchs, struct fc_rpsc_cmd_s *rpsc,
++			      u32 d_id, u32 s_id, u16 ox_id);
++u16        fc_rpsc_acc_build(struct fchs_s *fchs,
++			struct fc_rpsc_acc_s *rpsc_acc, u32 d_id, u32 s_id,
++			u16 ox_id, struct fc_rpsc_speed_info_s *oper_speed);
++u16        fc_gid_ft_build(struct fchs_s *fchs, void *pld, u32 s_id,
++				u8 fc4_type);
++
++u16        fc_rpnid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
++			       u32 port_id, wwn_t port_name);
++
++u16        fc_rnnid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
++			       u32 port_id, wwn_t node_name);
++
++u16        fc_rcsid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
++			       u32 port_id, u32 cos);
++
++u16        fc_rptid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
++			       u32 port_id, u8 port_type);
++
++u16        fc_ganxt_build(struct fchs_s *fchs, void *pyld, u32 s_id,
++			       u32 port_id);
++
++u16        fc_logo_build(struct fchs_s *fchs, struct fc_logo_s *logo, u32 d_id,
++			      u32 s_id, u16 ox_id, wwn_t port_name);
++
++u16        fc_logo_acc_build(struct fchs_s *fchs, void *pld, u32 d_id,
++				  u32 s_id, u16 ox_id);
++
++u16        fc_fdmi_reqhdr_build(struct fchs_s *fchs, void *pyld, u32 s_id,
++				     u16 cmd_code);
++u16	fc_gmal_req_build(struct fchs_s *fchs, void *pyld, u32 s_id, wwn_t wwn);
++u16	fc_gfn_req_build(struct fchs_s *fchs, void *pyld, u32 s_id, wwn_t wwn);
++
++void		fc_get_fc4type_bitmask(u8 fc4_type, u8 *bit_mask);
++
++void		fc_els_req_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
++					 u16 ox_id);
++
++enum fc_parse_status	fc_els_rsp_parse(struct fchs_s *fchs, int len);
++
++enum fc_parse_status	fc_plogi_rsp_parse(struct fchs_s *fchs, int len,
++					wwn_t port_name);
++
++enum fc_parse_status	fc_prli_parse(struct fc_prli_s *prli);
++
++enum fc_parse_status	fc_pdisc_parse(struct fchs_s *fchs, wwn_t node_name,
++					wwn_t port_name);
++
++u16 fc_ba_acc_build(struct fchs_s *fchs, struct fc_ba_acc_s *ba_acc, u32 d_id,
++		u32 s_id, u16 ox_id, u16 rx_id);
++
++int fc_logout_params_pages(struct fchs_s *fc_frame, u8 els_code);
++
++u16 fc_tprlo_acc_build(struct fchs_s *fchs, struct fc_tprlo_acc_s *tprlo_acc,
++		u32 d_id, u32 s_id, u16 ox_id, int num_pages);
++
++u16 fc_prlo_acc_build(struct fchs_s *fchs, struct fc_prlo_acc_s *prlo_acc,
++		u32 d_id, u32 s_id, u16 ox_id, int num_pages);
++
++u16 fc_logo_rsp_parse(struct fchs_s *fchs, int len);
++
++u16 fc_pdisc_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
++		u16 ox_id, wwn_t port_name, wwn_t node_name,
++		u16 pdu_size);
++
++u16 fc_pdisc_rsp_parse(struct fchs_s *fchs, int len, wwn_t port_name);
++
++u16 fc_prlo_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
++		u16 ox_id, int num_pages);
++
++u16 fc_prlo_rsp_parse(struct fchs_s *fchs, int len);
++
++u16 fc_tprlo_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
++		u16 ox_id, int num_pages, enum fc_tprlo_type tprlo_type,
++		u32 tpr_id);
++
++u16 fc_tprlo_rsp_parse(struct fchs_s *fchs, int len);
++
++u16 fc_ba_rjt_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
++		u16 ox_id, u32 reason_code, u32 reason_expl);
++
++u16 fc_gnnid_build(struct fchs_s *fchs, void *pyld, u32 s_id, u16 ox_id,
++		u32 port_id);
++
++u16 fc_ct_rsp_parse(struct ct_hdr_s *cthdr);
++
++u16 fc_rscn_build(struct fchs_s *fchs, struct fc_rscn_pl_s *rscn, u32 s_id,
++		u16 ox_id);
++#endif
 -- 
 1.7.3.rc1
 
