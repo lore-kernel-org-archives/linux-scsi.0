@@ -1,84 +1,49 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH 0/7] BKL mass-conversion to mutex
-Date: Wed, 15 Sep 2010 19:38:30 +1000
-Message-ID: <20100915193830.27722c3a.sfr@canb.auug.org.au>
-References: <1284494022-7346-1-git-send-email-arnd@arndb.de>
-Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Wed__15_Sep_2010_19_38_30_+1000_x_8PDlRlfK6atX+0"
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/2] tcm/tcm_loop: Add BIDI support and XDWRITE_READ_10 emulation
+Date: Wed, 15 Sep 2010 05:06:34 -0700
+Message-ID: <1284552394-30525-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:42213 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750695Ab0IOJii (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2010 05:38:38 -0400
-In-Reply-To: <1284494022-7346-1-git-send-email-arnd@arndb.de>
+Received: from smtp111.sbc.mail.mud.yahoo.com ([68.142.198.207]:38606 "HELO
+	smtp111.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752560Ab0IOMGi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2010 08:06:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, David Woodhouse <David.Woodhouse@intel.com>, linux-mtd@lists.infradead.org, Linus Torvalds <torvalds@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, linuxppc-dev@ozlabs.org, Corey Minyard <minyard@acm.org>, openipmi-developer@lists.sourceforge.net, Takashi Iwai <tiwai@suse.de>, Jens Axboe <axboe@kernel.dk>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Douglas Gilbert <dgilbert@interlog.com>, Joe Eykholt <jeykholt@cisco.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
---Signature=_Wed__15_Sep_2010_19_38_30_+1000_x_8PDlRlfK6atX+0
-Content-Type: text/plain; charset=US-ASCII
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi Arnd,
+Greetings Boaz, Tomo-san and Co,
 
-On Tue, 14 Sep 2010 21:53:35 +0200 Arnd Bergmann <arnd@arndb.de> wrote:
->
-> Stephen, please add
-> git+ssh://master.kernel.org/pub/scm/linux/kernel/git/arnd/bkl.git trivial
+This series adds initial support for functional bidirectional CDBs into TCM_Core
+and the TCM_Loop fabric module.  So far this is limited to XDWRITE_READ_10 emulation
+following scsi_debug.c, but everything appears to now be functioning as expected.
 
-Added from today.
+This first patch adds support for BIDI operations and XDWRITE_READ_10 emulation
+into TCM_Core for the individual I/O descriptor setup, memory mapping, callback
+and release codepaths.
 
-Thanks for adding your subsystem tree as a participant of linux-next.  As
-you may know, this is not a judgment of your code.  The purpose of
-linux-next is for integration testing and to lower the impact of
-conflicts between subsystems in the next merge window.=20
+The second patch enables BIDI operations with the TCM_Loop Virtual SCSI LLD
+fabric module using the updated callers.
 
-You will need to ensure that the patches/commits in your tree/series have
-been:
-     * submitted under GPL v2 (or later) and include the Contributor's
-	Signed-off-by,
-     * posted to the relevant mailing list,
-     * reviewed by you (or another maintainer of your subsystem tree),
-     * successfully unit tested, and=20
-     * destined for the current or next Linux merge window.
+So far this has been lightly tested on v2.6.36-rc3 HVM using custom userspace BSG
+code to issue XDWRITE_READ_10 I/O into TCM_Loop LUNs using FILEIO backstores.
+Support for BIDI CDBs will also extend to LIO-Target and other TCM fabric modules
+in the near future.
 
-Basically, this should be just what you would send to Linus (or ask him
-to fetch).  It is allowed to be rebased if you deem it necessary.
+Comments are welcome!
 
---=20
-Cheers,
-Stephen Rothwell=20
-sfr@canb.auug.org.au
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-Legal Stuff:
-By participating in linux-next, your subsystem tree contributions are
-public and will be included in the linux-next trees.  You may be sent
-e-mail messages indicating errors or other issues when the
-patches/commits from your subsystem tree are merged and tested in
-linux-next.  These messages may also be cross-posted to the linux-next
-mailing list, the linux-kernel mailing list, etc.  The linux-next tree
-project and IBM (my employer) make no warranties regarding the linux-next
-project, the testing procedures, the results, the e-mails, etc.  If you
-don't agree to these ground rules, let me know and I'll remove your tree
-from participation in linux-next.
+Nicholas Bellinger (2):
+  tcm: Add support for BIDI operation and XDWRITE_READ_10 emulation
+  tcm_loop: Add DMA_BIDIRECTIONAL CDB support
 
---Signature=_Wed__15_Sep_2010_19_38_30_+1000_x_8PDlRlfK6atX+0
-Content-Type: application/pgp-signature
+ drivers/target/target_core_transport.c         |  282 +++++++++++++++++++++---
+ drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |   48 +++-
+ include/target/target_core_base.h              |    9 +-
+ include/target/target_core_transport.h         |   10 +-
+ 4 files changed, 297 insertions(+), 52 deletions(-)
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQEcBAEBAgAGBQJMkJQWAAoJEDMEi1NhKgbs/qcH/j6Q5d5mYGECz3JtxE/Em3WG
-qO7Bk3/4JfuxCzIjBlDyoz4EpG0a2ghiIiPrCM3kGwg3awScEMf9lFKYJE0KSBsH
-yxGilZjzBDG/XxMa58hGxb/ZmaIr/W5dwA7/XCUuF8lgGiqsvpoP94ncTf7mVQ1/
-KPV+S767DPzqOQK1w8RVMBx+0slO2MEr0qEtyEsbjYFfrfSPCqpUruASJh53GiVi
-SdPkjxstl8yG0YG6VGvGs2FHv1yeWbL5R4kFBARVIf+78ZDAzNYUhn2bgLZolL4Z
-0PboNcLQDByMqUfOQ+Wh7rdjouKzQLeDNqq/2GAfzhWaZCJ16X7kYnBQuvTXwFI=
-=52gd
------END PGP SIGNATURE-----
-
---Signature=_Wed__15_Sep_2010_19_38_30_+1000_x_8PDlRlfK6atX+0--
