@@ -1,12 +1,17 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH v2 1/2] tcm: Add support for BIDI-COMMANDS and XDWRITE_READ_10 emulation
-Date: Wed, 15 Sep 2010 15:41:52 -0700
-Message-ID: <1284590512-6233-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v2 1/2] tcm: Add support for BIDI operation and XDWRITE_READ_10 emulation
+Date: Wed, 15 Sep 2010 15:42:01 -0700
+Message-ID: <1284590521-6254-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp105.sbc.mail.gq1.yahoo.com ([67.195.14.108]:25345 "HELO
+	smtp105.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754811Ab0IOWmF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Sep 2010 18:42:05 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Douglas Gilbert <dgilbert@interlog.com>, Joe Eykholt <jeykholt@cisco.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
@@ -23,8 +28,8 @@ and sets up the new struct se_cmd->transport_xor_callback() completion function
 at transport_xor_callback().  It then updates transport_new_cmd_obj() to handle the
 BIDI READ case.
 
-It also adds support for checking BIDI READ data poaylods in transport_generic_map_mem_to_cmd()
-to signal the allocation of struct se_transport_task->t_mem_bidi_list in the same function.
+It also adds support for DMA_BIDIRECTIONAL to transport_generic_map_mem_to_cmd()
+to setup struct se_transport_task->t_mem_bidi_list for BIDI READ payloads
 
 *) memory mapping:
 
@@ -633,3 +638,4 @@ index ef4c084..20702d7 100644
  extern int transport_generic_do_tmr(struct se_cmd *);
 -- 
 1.5.6.5
+
