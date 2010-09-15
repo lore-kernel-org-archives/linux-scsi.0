@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 13/33] bfa: (Cleanup Patch) BFA header file consolidation / cleanup.
-Date: Wed, 15 Sep 2010 12:06:04 -0700
-Message-ID: <1284577564-18284-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 14/33] bfa: (Cleanup Patch) BFAD header file consolidation / cleanup.
+Date: Wed, 15 Sep 2010 12:06:55 -0700
+Message-ID: <1284577615-18541-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57243 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753314Ab0IOTHB (ORCPT
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34294 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753314Ab0IOTIE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2010 15:07:01 -0400
+	Wed, 15 Sep 2010 15:08:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -19,31 +19,31 @@ From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
 	- This patch is part of the BFA cleanup.
-	- bfa_cb_ioim_macros.h will be renamed to bfa_cb_ioim.h
-	- bfa_fcpim_priv.h will be renamed to bfa_fcpim.h
-	- bfa_modules_priv.h and bfa_priv.h will be merged to bfa_modules.h
-	- fcbuild.h will be renamed to bfa_fcbuild.h in the patchset.
+	- bfad_ipfc.h, bfad_tm.h code will be removed.
+	- bfad_im_compat.h and bfad_trcmod.h cleaned up code will be
+	  merged to bfad_im.h and bfad_drv.h in the patchset.
+	- Removing bfad_attr.h will not be using anymore.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_cb_ioim_macros.h |  181 ---------------------
- drivers/scsi/bfa/bfa_fcpim_priv.h     |  192 ----------------------
- drivers/scsi/bfa/bfa_modules_priv.h   |   43 -----
- drivers/scsi/bfa/bfa_priv.h           |  110 -------------
- drivers/scsi/bfa/fcbuild.h            |  279 ---------------------------------
- 5 files changed, 0 insertions(+), 805 deletions(-)
- delete mode 100644 drivers/scsi/bfa/bfa_cb_ioim_macros.h
- delete mode 100644 drivers/scsi/bfa/bfa_fcpim_priv.h
- delete mode 100644 drivers/scsi/bfa/bfa_modules_priv.h
- delete mode 100644 drivers/scsi/bfa/bfa_priv.h
- delete mode 100644 drivers/scsi/bfa/fcbuild.h
+ drivers/scsi/bfa/bfad_attr.h      |   56 -----------------------------------
+ drivers/scsi/bfa/bfad_im_compat.h |   45 ----------------------------
+ drivers/scsi/bfa/bfad_ipfc.h      |   42 --------------------------
+ drivers/scsi/bfa/bfad_tm.h        |   59 -------------------------------------
+ drivers/scsi/bfa/bfad_trcmod.h    |   52 --------------------------------
+ 5 files changed, 0 insertions(+), 254 deletions(-)
+ delete mode 100644 drivers/scsi/bfa/bfad_attr.h
+ delete mode 100644 drivers/scsi/bfa/bfad_im_compat.h
+ delete mode 100644 drivers/scsi/bfa/bfad_ipfc.h
+ delete mode 100644 drivers/scsi/bfa/bfad_tm.h
+ delete mode 100644 drivers/scsi/bfa/bfad_trcmod.h
 
-diff --git a/drivers/scsi/bfa/bfa_cb_ioim_macros.h b/drivers/scsi/bfa/bfa_cb_ioim_macros.h
+diff --git a/drivers/scsi/bfa/bfad_attr.h b/drivers/scsi/bfa/bfad_attr.h
 deleted file mode 100644
-index 3906ed9..0000000
---- a/drivers/scsi/bfa/bfa_cb_ioim_macros.h
+index bf01020..0000000
+--- a/drivers/scsi/bfa/bfad_attr.h
 +++ /dev/null
-@@ -1,181 +0,0 @@
+@@ -1,56 +0,0 @@
 -/*
 - * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 - * All rights reserved
@@ -61,176 +61,51 @@ index 3906ed9..0000000
 - * General Public License for more details.
 - */
 -
--/**
-- *  bfa_cb_ioim_macros.h BFA IOIM driver interface macros.
-- */
--
--#ifndef __BFA_HCB_IOIM_MACROS_H__
--#define __BFA_HCB_IOIM_MACROS_H__
--
--#include <bfa_os_inc.h>
--/*
-- * #include <linux/dma-mapping.h>
-- *
-- * #include <scsi/scsi.h> #include <scsi/scsi_cmnd.h> #include
-- * <scsi/scsi_device.h> #include <scsi/scsi_host.h>
-- */
--#include "bfad_im_compat.h"
--
--/*
-- * task attribute values in FCP-2 FCP_CMND IU
-- */
--#define SIMPLE_Q    0
--#define HEAD_OF_Q   1
--#define ORDERED_Q   2
--#define ACA_Q       4
--#define UNTAGGED    5
--
--static inline lun_t
--bfad_int_to_lun(u32 luno)
--{
--	union {
--		u16        scsi_lun[4];
--		lun_t           bfa_lun;
--	} lun;
--
--	lun.bfa_lun     = 0;
--	lun.scsi_lun[0] = bfa_os_htons(luno);
--
--	return lun.bfa_lun;
--}
+-#ifndef __BFAD_ATTR_H__
+-#define __BFAD_ATTR_H__
 -
 -/**
-- * Get LUN for the I/O request
+- *  FC_transport_template FC transport template
 - */
--#define bfa_cb_ioim_get_lun(__dio)	\
--	bfad_int_to_lun(((struct scsi_cmnd *)__dio)->device->lun)
+-
+-struct Scsi_Host*
+-bfad_os_dev_to_shost(struct scsi_target *starget);
 -
 -/**
-- * Get CDB for the I/O request
+- * FC transport template entry, get SCSI target port ID.
 - */
--static inline u8 *
--bfa_cb_ioim_get_cdb(struct bfad_ioim_s *dio)
--{
--	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
--
--	return (u8 *) cmnd->cmnd;
--}
+-void
+-bfad_im_get_starget_port_id(struct scsi_target *starget);
 -
 -/**
-- * Get I/O direction (read/write) for the I/O request
+- * FC transport template entry, get SCSI target nwwn.
 - */
--static inline enum fcp_iodir
--bfa_cb_ioim_get_iodir(struct bfad_ioim_s *dio)
--{
--	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
--	enum dma_data_direction dmadir;
--
--	dmadir = cmnd->sc_data_direction;
--	if (dmadir == DMA_TO_DEVICE)
--		return FCP_IODIR_WRITE;
--	else if (dmadir == DMA_FROM_DEVICE)
--		return FCP_IODIR_READ;
--	else
--		return FCP_IODIR_NONE;
--}
+-void
+-bfad_im_get_starget_node_name(struct scsi_target *starget);
 -
 -/**
-- * Get IO size in bytes for the I/O request
+- * FC transport template entry, get SCSI target pwwn.
 - */
--static inline u32
--bfa_cb_ioim_get_size(struct bfad_ioim_s *dio)
--{
--	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
--
--	return scsi_bufflen(cmnd);
--}
+-void
+-bfad_im_get_starget_port_name(struct scsi_target *starget);
 -
 -/**
-- * Get timeout for the I/O request
+- * FC transport template entry, get SCSI host port ID.
 - */
--static inline u8
--bfa_cb_ioim_get_timeout(struct bfad_ioim_s *dio)
--{
--	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
--	/*
--	 * TBD: need a timeout for scsi passthru
--	 */
--	if (cmnd->device->host == NULL)
--		return 4;
+-void
+-bfad_im_get_host_port_id(struct Scsi_Host *shost);
 -
--	return 0;
--}
+-struct Scsi_Host*
+-bfad_os_starget_to_shost(struct scsi_target *starget);
 -
--/**
-- * Get Command Reference Number for the I/O request. 0 if none.
-- */
--static inline u8
--bfa_cb_ioim_get_crn(struct bfad_ioim_s *dio)
--{
--	return 0;
--}
 -
--/**
-- * Get SAM-3 priority for the I/O request. 0 is default.
-- */
--static inline u8
--bfa_cb_ioim_get_priority(struct bfad_ioim_s *dio)
--{
--	return 0;
--}
--
--/**
-- * Get task attributes for the I/O request. Default is FCP_TASK_ATTR_SIMPLE(0).
-- */
--static inline u8
--bfa_cb_ioim_get_taskattr(struct bfad_ioim_s *dio)
--{
--	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
--	u8         task_attr = UNTAGGED;
--
--	if (cmnd->device->tagged_supported) {
--		switch (cmnd->tag) {
--		case HEAD_OF_QUEUE_TAG:
--			task_attr = HEAD_OF_Q;
--			break;
--		case ORDERED_QUEUE_TAG:
--			task_attr = ORDERED_Q;
--			break;
--		default:
--			task_attr = SIMPLE_Q;
--			break;
--		}
--	}
--
--	return task_attr;
--}
--
--/**
-- * Get CDB length in bytes for the I/O request. Default is FCP_CMND_CDB_LEN(16).
-- */
--static inline u8
--bfa_cb_ioim_get_cdblen(struct bfad_ioim_s *dio)
--{
--	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
--
--	return cmnd->cmd_len;
--}
--
--/**
-- * Assign queue to be used for the I/O request. This value depends on whether
-- * the driver wants to use the queues via any specific algorithm. Currently,
-- * this is not supported.
-- */
--#define bfa_cb_ioim_get_reqq(__dio) BFA_FALSE
--
--#endif /* __BFA_HCB_IOIM_MACROS_H__ */
-diff --git a/drivers/scsi/bfa/bfa_fcpim_priv.h b/drivers/scsi/bfa/bfa_fcpim_priv.h
+-#endif /*  __BFAD_ATTR_H__ */
+diff --git a/drivers/scsi/bfa/bfad_im_compat.h b/drivers/scsi/bfa/bfad_im_compat.h
 deleted file mode 100644
-index 762516c..0000000
---- a/drivers/scsi/bfa/bfa_fcpim_priv.h
+index 0a122ab..0000000
+--- a/drivers/scsi/bfa/bfad_im_compat.h
 +++ /dev/null
-@@ -1,192 +0,0 @@
+@@ -1,45 +0,0 @@
 -/*
 - * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 - * All rights reserved
@@ -248,631 +123,205 @@ index 762516c..0000000
 - * General Public License for more details.
 - */
 -
--#ifndef __BFA_FCPIM_PRIV_H__
--#define __BFA_FCPIM_PRIV_H__
+-#ifndef __BFAD_IM_COMPAT_H__
+-#define __BFAD_IM_COMPAT_H__
 -
--#include <bfa_fcpim.h>
--#include <defs/bfa_defs_fcpim.h>
--#include <cs/bfa_wc.h>
--#include "bfa_sgpg_priv.h"
+-extern struct device_attribute *bfad_im_host_attrs[];
+-extern struct device_attribute *bfad_im_vport_attrs[];
 -
--#define BFA_ITNIM_MIN   32
--#define BFA_ITNIM_MAX   1024
+-u32 *bfad_get_firmware_buf(struct pci_dev *pdev);
+-u32 *bfad_read_firmware(struct pci_dev *pdev, u32 **bfi_image,
+-			u32 *bfi_image_size, char *fw_name);
 -
--#define BFA_IOIM_MIN    8
--#define BFA_IOIM_MAX    2000
--
--#define BFA_TSKIM_MIN   4
--#define BFA_TSKIM_MAX   512
--#define BFA_FCPIM_PATHTOV_DEF	(30 * 1000)	/* in millisecs */
--#define BFA_FCPIM_PATHTOV_MAX	(90 * 1000)	/* in millisecs */
--
--#define bfa_fcpim_stats(__fcpim, __stats)   \
--    ((__fcpim)->stats.__stats++)
--
--struct bfa_fcpim_mod_s {
--	struct bfa_s 	*bfa;
--	struct bfa_itnim_s 	*itnim_arr;
--	struct bfa_ioim_s 	*ioim_arr;
--	struct bfa_ioim_sp_s *ioim_sp_arr;
--	struct bfa_tskim_s 	*tskim_arr;
--	struct bfa_dma_s	snsbase;
--	int			num_itnims;
--	int			num_ioim_reqs;
--	int			num_tskim_reqs;
--	u32		path_tov;
--	u16		q_depth;
--	u8              reqq;           /* Request queue to be used */
--	u8		rsvd;
--	struct list_head 	itnim_q;        /*  queue of active itnim    */
--	struct list_head 	ioim_free_q;    /*  free IO resources        */
--	struct list_head 	ioim_resfree_q; /*  IOs waiting for f/w      */
--	struct list_head 	ioim_comp_q;    /*  IO global comp Q         */
--	struct list_head 	tskim_free_q;
--	u32	ios_active;	/*  current active IOs	      */
--	u32	delay_comp;
--	struct bfa_fcpim_stats_s stats;
--	bfa_boolean_t           ioredirect;
--};
--
--struct bfa_ioim_s;
--struct bfa_tskim_s;
--
--/**
-- * BFA IO (initiator mode)
-- */
--struct bfa_ioim_s {
--	struct list_head qe;		/*  queue elememt            */
--	bfa_sm_t		sm; 	/*  BFA ioim state machine   */
--	struct bfa_s 	        *bfa;	/*  BFA module               */
--	struct bfa_fcpim_mod_s	*fcpim;	/*  parent fcpim module      */
--	struct bfa_itnim_s 	*itnim;	/*  i-t-n nexus for this IO  */
--	struct bfad_ioim_s 	*dio;	/*  driver IO handle         */
--	u16	iotag;		/*  FWI IO tag               */
--	u16	abort_tag;	/*  unqiue abort request tag */
--	u16	nsges;		/*  number of SG elements    */
--	u16	nsgpgs;		/*  number of SG pages       */
--	struct bfa_sgpg_s *sgpg;	/*  first SG page            */
--	struct list_head sgpg_q;		/*  allocated SG pages       */
--	struct bfa_cb_qe_s hcb_qe;	/*  bfa callback qelem       */
--	bfa_cb_cbfn_t io_cbfn;		/*  IO completion handler    */
--	struct bfa_ioim_sp_s *iosp;	/*  slow-path IO handling    */
--	u8 reqq;           		/* Request queue for I/O    */
--};
--
--struct bfa_ioim_sp_s {
--	struct bfi_msg_s 	comp_rspmsg;	/*  IO comp f/w response     */
--	u8			*snsinfo;	/*  sense info for this IO   */
--	struct bfa_sgpg_wqe_s sgpg_wqe;	/*  waitq elem for sgpg      */
--	struct bfa_reqq_wait_s reqq_wait;	/*  to wait for room in reqq */
--	bfa_boolean_t		abort_explicit;	/*  aborted by OS            */
--	struct bfa_tskim_s	*tskim;		/*  Relevant TM cmd          */
--};
--
--/**
-- * BFA Task management command (initiator mode)
-- */
--struct bfa_tskim_s {
--	struct list_head          qe;
--	bfa_sm_t		sm;
--	struct bfa_s            *bfa;        /*  BFA module  */
--	struct bfa_fcpim_mod_s  *fcpim;      /*  parent fcpim module      */
--	struct bfa_itnim_s      *itnim;      /*  i-t-n nexus for this IO  */
--	struct bfad_tskim_s         *dtsk;   /*  driver task mgmt cmnd    */
--	bfa_boolean_t        notify;         /*  notify itnim on TM comp  */
--	lun_t                lun;            /*  lun if applicable        */
--	enum fcp_tm_cmnd        tm_cmnd;     /*  task management command  */
--	u16             tsk_tag;        /*  FWI IO tag               */
--	u8              tsecs;          /*  timeout in seconds       */
--	struct bfa_reqq_wait_s  reqq_wait;   /*  to wait for room in reqq */
--	struct list_head              io_q;    /*  queue of affected IOs    */
--	struct bfa_wc_s             wc;      /*  waiting counter          */
--	struct bfa_cb_qe_s	hcb_qe;      /*  bfa callback qelem       */
--	enum bfi_tskim_status   tsk_status;  /*  TM status                */
--};
--
--/**
-- * BFA i-t-n (initiator mode)
-- */
--struct bfa_itnim_s {
--	struct list_head    qe;		/*  queue element               */
--	bfa_sm_t	  sm;		/*  i-t-n im BFA state machine  */
--	struct bfa_s      *bfa;		/*  bfa instance                */
--	struct bfa_rport_s *rport;	/*  bfa rport                   */
--	void           *ditn;		/*  driver i-t-n structure      */
--	struct bfi_mhdr_s      mhdr;	/*  pre-built mhdr              */
--	u8         msg_no;		/*  itnim/rport firmware handle */
--	u8         reqq;		/*  CQ for requests             */
--	struct bfa_cb_qe_s    hcb_qe;	/*  bfa callback qelem          */
--	struct list_head pending_q;	/*  queue of pending IO requests*/
--	struct list_head io_q;		/*  queue of active IO requests */
--	struct list_head io_cleanup_q;	/*  IO being cleaned up         */
--	struct list_head tsk_q;		/*  queue of active TM commands */
--	struct list_head  delay_comp_q;/*  queue of failed inflight cmds */
--	bfa_boolean_t   seq_rec;	/*  SQER supported              */
--	bfa_boolean_t   is_online;	/*  itnim is ONLINE for IO      */
--	bfa_boolean_t   iotov_active;	/*  IO TOV timer is active	 */
--	struct bfa_wc_s        wc;	/*  waiting counter             */
--	struct bfa_timer_s timer;	/*  pending IO TOV		 */
--	struct bfa_reqq_wait_s reqq_wait; /*  to wait for room in reqq */
--	struct bfa_fcpim_mod_s *fcpim;	/*  fcpim module                */
--	struct bfa_itnim_hal_stats_s	stats;
--	struct bfa_itnim_latency_s  io_latency;
--};
--
--#define bfa_itnim_is_online(_itnim) ((_itnim)->is_online)
--#define BFA_FCPIM_MOD(_hal) (&(_hal)->modules.fcpim_mod)
--#define BFA_IOIM_FROM_TAG(_fcpim, _iotag)	\
--	(&fcpim->ioim_arr[_iotag])
--#define BFA_TSKIM_FROM_TAG(_fcpim, _tmtag)                  \
--    (&fcpim->tskim_arr[_tmtag & (fcpim->num_tskim_reqs - 1)])
--
--/*
-- * function prototypes
-- */
--void            bfa_ioim_attach(struct bfa_fcpim_mod_s *fcpim,
--				    struct bfa_meminfo_s *minfo);
--void            bfa_ioim_detach(struct bfa_fcpim_mod_s *fcpim);
--void            bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
--void            bfa_ioim_good_comp_isr(struct bfa_s *bfa,
--					struct bfi_msg_s *msg);
--void            bfa_ioim_cleanup(struct bfa_ioim_s *ioim);
--void            bfa_ioim_cleanup_tm(struct bfa_ioim_s *ioim,
--					struct bfa_tskim_s *tskim);
--void            bfa_ioim_iocdisable(struct bfa_ioim_s *ioim);
--void            bfa_ioim_tov(struct bfa_ioim_s *ioim);
--
--void            bfa_tskim_attach(struct bfa_fcpim_mod_s *fcpim,
--				     struct bfa_meminfo_s *minfo);
--void            bfa_tskim_detach(struct bfa_fcpim_mod_s *fcpim);
--void            bfa_tskim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
--void            bfa_tskim_iodone(struct bfa_tskim_s *tskim);
--void            bfa_tskim_iocdisable(struct bfa_tskim_s *tskim);
--void            bfa_tskim_cleanup(struct bfa_tskim_s *tskim);
--
--void            bfa_itnim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
--				      u32 *dm_len);
--void            bfa_itnim_attach(struct bfa_fcpim_mod_s *fcpim,
--				     struct bfa_meminfo_s *minfo);
--void            bfa_itnim_detach(struct bfa_fcpim_mod_s *fcpim);
--void            bfa_itnim_iocdisable(struct bfa_itnim_s *itnim);
--void            bfa_itnim_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
--void            bfa_itnim_iodone(struct bfa_itnim_s *itnim);
--void            bfa_itnim_tskdone(struct bfa_itnim_s *itnim);
--bfa_boolean_t   bfa_itnim_hold_io(struct bfa_itnim_s *itnim);
--
--#endif /* __BFA_FCPIM_PRIV_H__ */
--
-diff --git a/drivers/scsi/bfa/bfa_modules_priv.h b/drivers/scsi/bfa/bfa_modules_priv.h
-deleted file mode 100644
-index f554c2f..0000000
---- a/drivers/scsi/bfa/bfa_modules_priv.h
-+++ /dev/null
-@@ -1,43 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--#ifndef __BFA_MODULES_PRIV_H__
--#define __BFA_MODULES_PRIV_H__
--
--#include "bfa_uf_priv.h"
--#include "bfa_port_priv.h"
--#include "bfa_rport_priv.h"
--#include "bfa_fcxp_priv.h"
--#include "bfa_lps_priv.h"
--#include "bfa_fcpim_priv.h"
--#include <cee/bfa_cee.h>
--#include <port/bfa_port.h>
--
--
--struct bfa_modules_s {
--	struct bfa_fcport_s	fcport;	/*  fc port module	*/
--	struct bfa_fcxp_mod_s fcxp_mod; /*  fcxp module		*/
--	struct bfa_lps_mod_s lps_mod;   /*  fcxp module		*/
--	struct bfa_uf_mod_s uf_mod;	/*  unsolicited frame module	*/
--	struct bfa_rport_mod_s rport_mod; /*  remote port module	*/
--	struct bfa_fcpim_mod_s fcpim_mod; /*  FCP initiator module	*/
--	struct bfa_sgpg_mod_s sgpg_mod; /*  SG page module		*/
--	struct bfa_cee_s cee;   	/*  CEE Module                 */
--	struct bfa_port_s port;		/*  Physical port module	*/
--};
--
--#endif /* __BFA_MODULES_PRIV_H__ */
-diff --git a/drivers/scsi/bfa/bfa_priv.h b/drivers/scsi/bfa/bfa_priv.h
-deleted file mode 100644
-index bf4939b..0000000
---- a/drivers/scsi/bfa/bfa_priv.h
-+++ /dev/null
-@@ -1,110 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--#ifndef __BFA_PRIV_H__
--#define __BFA_PRIV_H__
--
--#include "bfa_iocfc.h"
--#include "bfa_intr_priv.h"
--#include "bfa_trcmod_priv.h"
--#include "bfa_modules_priv.h"
--#include "bfa_fwimg_priv.h"
--#include <cs/bfa_log.h>
--#include <bfa_timer.h>
--
--/**
-- * Macro to define a new BFA module
-- */
--#define BFA_MODULE(__mod) 						\
--	static void bfa_ ## __mod ## _meminfo(				\
--			struct bfa_iocfc_cfg_s *cfg, u32 *ndm_len,	\
--			u32 *dm_len);      \
--	static void bfa_ ## __mod ## _attach(struct bfa_s *bfa,		\
--			void *bfad, struct bfa_iocfc_cfg_s *cfg, 	\
--			struct bfa_meminfo_s *meminfo,			\
--			struct bfa_pcidev_s *pcidev);      \
--	static void bfa_ ## __mod ## _detach(struct bfa_s *bfa);      \
--	static void bfa_ ## __mod ## _start(struct bfa_s *bfa);      \
--	static void bfa_ ## __mod ## _stop(struct bfa_s *bfa);      \
--	static void bfa_ ## __mod ## _iocdisable(struct bfa_s *bfa);      \
--									\
--	extern struct bfa_module_s hal_mod_ ## __mod;			\
--	struct bfa_module_s hal_mod_ ## __mod = {			\
--		bfa_ ## __mod ## _meminfo,				\
--		bfa_ ## __mod ## _attach,				\
--		bfa_ ## __mod ## _detach,				\
--		bfa_ ## __mod ## _start,				\
--		bfa_ ## __mod ## _stop,					\
--		bfa_ ## __mod ## _iocdisable,				\
--	}
--
--#define BFA_CACHELINE_SZ	(256)
--
--/**
-- * Structure used to interact between different BFA sub modules
-- *
-- * Each sub module needs to implement only the entry points relevant to it (and
-- * can leave entry points as NULL)
-- */
--struct bfa_module_s {
--	void (*meminfo) (struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
--			u32 *dm_len);
--	void (*attach) (struct bfa_s *bfa, void *bfad,
--			struct bfa_iocfc_cfg_s *cfg,
--			struct bfa_meminfo_s *meminfo,
--			struct bfa_pcidev_s *pcidev);
--	void (*detach) (struct bfa_s *bfa);
--	void (*start) (struct bfa_s *bfa);
--	void (*stop) (struct bfa_s *bfa);
--	void (*iocdisable) (struct bfa_s *bfa);
--};
--
--extern struct bfa_module_s *hal_mods[];
--
--struct bfa_s {
--	void			*bfad;		/*  BFA driver instance    */
--	struct bfa_aen_s	*aen;		/*  AEN module		    */
--	struct bfa_plog_s	*plog;		/*  portlog buffer	    */
--	struct bfa_log_mod_s	*logm;		/*  driver logging modulen */
--	struct bfa_trc_mod_s	*trcmod;	/*  driver tracing	    */
--	struct bfa_ioc_s	ioc;		/*  IOC module		    */
--	struct bfa_iocfc_s	iocfc;		/*  IOCFC module	    */
--	struct bfa_timer_mod_s	timer_mod;	/*  timer module	    */
--	struct bfa_modules_s	modules;	/*  BFA modules	    */
--	struct list_head	comp_q;		/*  pending completions    */
--	bfa_boolean_t		rme_process;	/*  RME processing enabled */
--	struct list_head		reqq_waitq[BFI_IOC_MAX_CQS];
--	bfa_boolean_t		fcs;		/*  FCS is attached to BFA */
--	struct bfa_msix_s	msix;
--};
--
--extern bfa_isr_func_t bfa_isrs[BFI_MC_MAX];
--extern bfa_ioc_mbox_mcfunc_t  bfa_mbox_isrs[];
--extern bfa_boolean_t bfa_auto_recover;
--extern struct bfa_module_s hal_mod_flash;
--extern struct bfa_module_s hal_mod_fcdiag;
--extern struct bfa_module_s hal_mod_sgpg;
--extern struct bfa_module_s hal_mod_fcport;
--extern struct bfa_module_s hal_mod_fcxp;
--extern struct bfa_module_s hal_mod_lps;
--extern struct bfa_module_s hal_mod_uf;
--extern struct bfa_module_s hal_mod_rport;
--extern struct bfa_module_s hal_mod_fcpim;
--extern struct bfa_module_s hal_mod_pbind;
--
--#endif /* __BFA_PRIV_H__ */
--
-diff --git a/drivers/scsi/bfa/fcbuild.h b/drivers/scsi/bfa/fcbuild.h
-deleted file mode 100644
-index 981d98d..0000000
---- a/drivers/scsi/bfa/fcbuild.h
-+++ /dev/null
-@@ -1,279 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--/*
-- * fcbuild.h - FC link service frame building and parsing routines
-- */
--
--#ifndef __FCBUILD_H__
--#define __FCBUILD_H__
--
--#include <bfa_os_inc.h>
--#include <protocol/fc.h>
--#include <protocol/fcp.h>
--#include <protocol/ct.h>
--#include <defs/bfa_defs_port.h>
--#include <defs/bfa_defs_pport.h>
--
--/*
-- * Utility Macros/functions
-- */
--
--#define fcif_sof_set(_ifhdr, _sof)	((_ifhdr)->sof = FC_ ## _sof)
--#define fcif_eof_set(_ifhdr, _eof)	((_ifhdr)->eof = FC_ ## _eof)
--
--#define wwn_is_equal(_wwn1, _wwn2)		\
--	(memcmp(&(_wwn1), &(_wwn2), sizeof(wwn_t)) == 0)
--
--#define fc_roundup(_l, _s) (((_l) + ((_s) - 1)) & ~((_s) - 1))
--
--/*
-- * Given the fc response length, this routine will return
-- * the length of the actual payload bytes following the CT header.
-- *
-- * Assumes the input response length does not include the crc, eof, etc.
-- */
--static inline   u32
--fc_get_ctresp_pyld_len(u32 resp_len)
+-static inline u32 *
+-bfad_load_fwimg(struct pci_dev *pdev)
 -{
--	return resp_len - sizeof(struct ct_hdr_s);
+-	return bfad_get_firmware_buf(pdev);
 -}
 -
--/*
-- * Convert bfa speed to rpsc speed value.
-- */
--static inline enum bfa_pport_speed
--fc_rpsc_operspeed_to_bfa_speed(enum fc_rpsc_op_speed_s speed)
+-static inline void
+-bfad_free_fwimg(void)
 -{
--	switch (speed) {
--
--	case RPSC_OP_SPEED_1G:
--		return BFA_PPORT_SPEED_1GBPS;
--
--	case RPSC_OP_SPEED_2G:
--		return BFA_PPORT_SPEED_2GBPS;
--
--	case RPSC_OP_SPEED_4G:
--		return BFA_PPORT_SPEED_4GBPS;
--
--	case RPSC_OP_SPEED_8G:
--		return BFA_PPORT_SPEED_8GBPS;
--
--	case RPSC_OP_SPEED_10G:
--		return BFA_PPORT_SPEED_10GBPS;
--
--	default:
--		return BFA_PPORT_SPEED_UNKNOWN;
--	}
+-	if (bfi_image_ct_fc_size && bfi_image_ct_fc)
+-		vfree(bfi_image_ct_fc);
+-	if (bfi_image_ct_cna_size && bfi_image_ct_cna)
+-		vfree(bfi_image_ct_cna);
+-	if (bfi_image_cb_fc_size && bfi_image_cb_fc)
+-		vfree(bfi_image_cb_fc);
 -}
 -
--/*
-- * Convert RPSC speed to bfa speed value.
-- */
--static inline   enum fc_rpsc_op_speed_s
--fc_bfa_speed_to_rpsc_operspeed(enum bfa_pport_speed op_speed)
--{
--	switch (op_speed) {
--
--	case BFA_PPORT_SPEED_1GBPS:
--		return RPSC_OP_SPEED_1G;
--
--	case BFA_PPORT_SPEED_2GBPS:
--		return RPSC_OP_SPEED_2G;
--
--	case BFA_PPORT_SPEED_4GBPS:
--		return RPSC_OP_SPEED_4G;
--
--	case BFA_PPORT_SPEED_8GBPS:
--		return RPSC_OP_SPEED_8G;
--
--	case BFA_PPORT_SPEED_10GBPS:
--		return RPSC_OP_SPEED_10G;
--
--	default:
--		return RPSC_OP_SPEED_NOT_EST;
--	}
--}
--enum fc_parse_status {
--	FC_PARSE_OK = 0,
--	FC_PARSE_FAILURE = 1,
--	FC_PARSE_BUSY = 2,
--	FC_PARSE_LEN_INVAL,
--	FC_PARSE_ACC_INVAL,
--	FC_PARSE_PWWN_NOT_EQUAL,
--	FC_PARSE_NWWN_NOT_EQUAL,
--	FC_PARSE_RXSZ_INVAL,
--	FC_PARSE_NOT_FCP,
--	FC_PARSE_OPAFLAG_INVAL,
--	FC_PARSE_RPAFLAG_INVAL,
--	FC_PARSE_OPA_INVAL,
--	FC_PARSE_RPA_INVAL,
--
--};
--
--struct fc_templates_s {
--	struct fchs_s          fc_els_req;
--	struct fchs_s          fc_bls_req;
--	struct fc_logi_s      plogi;
--	struct fc_rrq_s        rrq;
--};
--
--void fcbuild_init(void);
--
--u16 fc_flogi_build(struct fchs_s *fchs, struct fc_logi_s *flogi,
--			u32 s_id, u16 ox_id, wwn_t port_name,
--			wwn_t node_name, u16 pdu_size, u8 set_npiv,
--			u8 set_auth, u16 local_bb_credits);
--u16 fc_fdisc_build(struct fchs_s *buf, struct fc_logi_s *flogi,
--			u32 s_id, u16 ox_id, wwn_t port_name,
--			wwn_t node_name, u16 pdu_size);
--u16 fc_flogi_acc_build(struct fchs_s *fchs, struct fc_logi_s *flogi,
--			u32 s_id, u16 ox_id, wwn_t port_name,
--			wwn_t node_name, u16 pdu_size,
--			u16 local_bb_credits);
--u16 fc_plogi_build(struct fchs_s *fchs, void *pld, u32 d_id,
--			u32 s_id, u16 ox_id, wwn_t port_name,
--			wwn_t node_name, u16 pdu_size);
--enum fc_parse_status fc_plogi_parse(struct fchs_s *fchs);
--u16 fc_abts_build(struct fchs_s *buf, u32 d_id, u32 s_id,
--			u16 ox_id);
--enum fc_parse_status fc_abts_rsp_parse(struct fchs_s *buf, int len);
--u16 fc_rrq_build(struct fchs_s *buf, struct fc_rrq_s *rrq, u32 d_id,
--			u32 s_id, u16 ox_id, u16 rrq_oxid);
--enum fc_parse_status fc_rrq_rsp_parse(struct fchs_s *buf, int len);
--u16 fc_rspnid_build(struct fchs_s *fchs, void *pld, u32 s_id,
--			u16 ox_id, u8 *name);
--u16 fc_rftid_build(struct fchs_s *fchs, void *pld, u32 s_id,
--			u16 ox_id, enum bfa_port_role role);
--u16 fc_rftid_build_sol(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u16 ox_id, u8 *fc4_bitmap,
--			u32 bitmap_size);
--u16 fc_rffid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u16 ox_id, u8 fc4_type, u8 fc4_ftrs);
--u16 fc_gidpn_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u16 ox_id, wwn_t port_name);
--u16 fc_gpnid_build(struct fchs_s *fchs, void *pld, u32 s_id,
--			u16 ox_id, u32 port_id);
--u16 fc_scr_build(struct fchs_s *fchs, struct fc_scr_s *scr,
--			u8 set_br_reg, u32 s_id, u16 ox_id);
--u16 fc_plogi_acc_build(struct fchs_s *fchs, void *pld, u32 d_id,
--			u32 s_id, u16 ox_id,
--			wwn_t port_name, wwn_t node_name, u16 pdu_size);
--
--u16 fc_adisc_build(struct fchs_s *fchs, struct fc_adisc_s *adisc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			wwn_t port_name, wwn_t node_name);
--enum fc_parse_status fc_adisc_parse(struct fchs_s *fchs, void *pld,
--			u32 host_dap,
--			wwn_t node_name, wwn_t port_name);
--enum fc_parse_status fc_adisc_rsp_parse(struct fc_adisc_s *adisc, int len,
--			wwn_t port_name, wwn_t node_name);
--u16 fc_adisc_acc_build(struct fchs_s *fchs, struct fc_adisc_s *adisc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			wwn_t port_name, wwn_t node_name);
--u16 fc_ls_rjt_build(struct fchs_s *fchs, struct fc_ls_rjt_s *ls_rjt,
--			u32 d_id, u32 s_id, u16 ox_id,
--			u8 reason_code, u8 reason_code_expl);
--u16 fc_ls_acc_build(struct fchs_s *fchs, struct fc_els_cmd_s *els_cmd,
--			u32 d_id, u32 s_id, u16 ox_id);
--u16 fc_prli_build(struct fchs_s *fchs, void *pld, u32 d_id,
--			u32 s_id, u16 ox_id);
--enum fc_parse_status fc_prli_rsp_parse(struct fc_prli_s *prli, int len);
--
--u16 fc_prli_acc_build(struct fchs_s *fchs, void *pld, u32 d_id,
--			u32 s_id, u16 ox_id,
--			enum bfa_port_role role);
--u16 fc_rnid_build(struct fchs_s *fchs, struct fc_rnid_cmd_s *rnid,
--			u32 d_id, u32 s_id, u16 ox_id,
--			u32 data_format);
--u16 fc_rnid_acc_build(struct fchs_s *fchs, struct fc_rnid_acc_s *rnid_acc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			u32 data_format,
--			struct fc_rnid_common_id_data_s *common_id_data,
--			struct fc_rnid_general_topology_data_s *
--			gen_topo_data);
--u16 fc_rpsc2_build(struct fchs_s *fchs, struct fc_rpsc2_cmd_s *rps2c,
--			u32 d_id, u32 s_id,
--			u32 *pid_list, u16 npids);
--u16 fc_rpsc_build(struct fchs_s *fchs, struct fc_rpsc_cmd_s *rpsc,
--			u32 d_id, u32 s_id, u16 ox_id);
--u16 fc_rpsc_acc_build(struct fchs_s *fchs, struct fc_rpsc_acc_s *rpsc_acc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			struct fc_rpsc_speed_info_s *oper_speed);
--u16 fc_gid_ft_build(struct fchs_s *fchs, void *pld, u32 s_id,
--			u8 fc4_type);
--u16 fc_rpnid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u32 port_id, wwn_t port_name);
--u16 fc_rnnid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u32 port_id, wwn_t node_name);
--u16 fc_rcsid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u32 port_id, u32 cos);
--u16 fc_rptid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u32 port_id, u8 port_type);
--u16 fc_ganxt_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u32 port_id);
--u16 fc_logo_build(struct fchs_s *fchs, struct fc_logo_s *logo,
--			u32 d_id, u32 s_id, u16 ox_id,
--			wwn_t port_name);
--u16 fc_logo_acc_build(struct fchs_s *fchs, void *pld, u32 d_id,
--			u32 s_id, u16 ox_id);
--u16 fc_fdmi_reqhdr_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u16 cmd_code);
--u16 fc_gmal_req_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			wwn_t wwn);
--u16 fc_gfn_req_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			wwn_t wwn);
--void fc_get_fc4type_bitmask(u8 fc4_type, u8 *bit_mask);
--void fc_els_req_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id);
--enum fc_parse_status fc_els_rsp_parse(struct fchs_s *fchs, int len);
--enum fc_parse_status fc_plogi_rsp_parse(struct fchs_s *fchs, int len,
--			 wwn_t port_name);
--enum fc_parse_status fc_prli_parse(struct fc_prli_s *prli);
--enum fc_parse_status fc_pdisc_parse(struct fchs_s *fchs, wwn_t node_name,
--			wwn_t port_name);
--u16 fc_ba_acc_build(struct fchs_s *fchs, struct fc_ba_acc_s *ba_acc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			u16 rx_id);
--int fc_logout_params_pages(struct fchs_s *fc_frame, u8 els_code);
--u16 fc_tprlo_acc_build(struct fchs_s *fchs,
--			struct fc_tprlo_acc_s *tprlo_acc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			int num_pages);
--u16 fc_prlo_acc_build(struct fchs_s *fchs, struct fc_prlo_acc_s *prlo_acc,
--			u32 d_id, u32 s_id, u16 ox_id,
--			int num_pages);
--u16 fc_logo_rsp_parse(struct fchs_s *fchs, int len);
--u16 fc_pdisc_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id, wwn_t port_name, wwn_t node_name,
--			u16 pdu_size);
--u16 fc_pdisc_rsp_parse(struct fchs_s *fchs, int len, wwn_t port_name);
--u16 fc_prlo_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id, int num_pages);
--u16 fc_prlo_rsp_parse(struct fchs_s *fchs, int len);
--u16 fc_tprlo_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id, int num_pages,
--			enum fc_tprlo_type tprlo_type, u32 tpr_id);
--u16 fc_tprlo_rsp_parse(struct fchs_s *fchs, int len);
--u16 fc_ba_rjt_build(struct fchs_s *fchs, u32 d_id, u32 s_id,
--			u16 ox_id, u32 reason_code,
--			u32 reason_expl);
--u16 fc_gnnid_build(struct fchs_s *fchs, void *pyld, u32 s_id,
--			u16 ox_id, u32 port_id);
--u16 fc_ct_rsp_parse(struct ct_hdr_s *cthdr);
--u16 fc_rscn_build(struct fchs_s *fchs, struct fc_rscn_pl_s *rscn,
--			u32 s_id, u16 ox_id);
 -#endif
+diff --git a/drivers/scsi/bfa/bfad_ipfc.h b/drivers/scsi/bfa/bfad_ipfc.h
+deleted file mode 100644
+index 718bc52..0000000
+--- a/drivers/scsi/bfa/bfad_ipfc.h
++++ /dev/null
+@@ -1,42 +0,0 @@
+-/*
+- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
+- * All rights reserved
+- * www.brocade.com
+- *
+- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License (GPL) Version 2 as
+- * published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- */
+-#ifndef __BFA_DRV_IPFC_H__
+-#define __BFA_DRV_IPFC_H__
+-
+-
+-#define IPFC_NAME ""
+-
+-#define bfad_ipfc_module_init(x) do {} while (0)
+-#define bfad_ipfc_module_exit(x) do {} while (0)
+-#define bfad_ipfc_probe(x) do {} while (0)
+-#define bfad_ipfc_probe_undo(x) do {} while (0)
+-#define bfad_ipfc_port_config(x, y) BFA_STATUS_OK
+-#define bfad_ipfc_port_unconfig(x, y) do {} while (0)
+-
+-#define bfad_ipfc_probe_post(x) do {} while (0)
+-#define bfad_ipfc_port_new(x, y, z) BFA_STATUS_OK
+-#define bfad_ipfc_port_delete(x, y) do {} while (0)
+-#define bfad_ipfc_port_online(x, y) do {} while (0)
+-#define bfad_ipfc_port_offline(x, y) do {} while (0)
+-
+-#define bfad_ip_get_attr(x) BFA_STATUS_FAILED
+-#define bfad_ip_reset_drv_stats(x) BFA_STATUS_FAILED
+-#define bfad_ip_get_drv_stats(x, y) BFA_STATUS_FAILED
+-#define bfad_ip_enable_ipfc(x, y, z) BFA_STATUS_FAILED
+-
+-
+-#endif
+diff --git a/drivers/scsi/bfa/bfad_tm.h b/drivers/scsi/bfa/bfad_tm.h
+deleted file mode 100644
+index 4901b1b..0000000
+--- a/drivers/scsi/bfa/bfad_tm.h
++++ /dev/null
+@@ -1,59 +0,0 @@
+-/*
+- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
+- * All rights reserved
+- * www.brocade.com
+- *
+- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License (GPL) Version 2 as
+- * published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- */
+-
+-/*
+- * Brocade Fibre Channel HBA Linux Target Mode Driver
+- */
+-
+-/**
+- *  tm/dummy/bfad_tm.h BFA callback dummy header file for BFA Linux target mode PCI interface module.
+- */
+-
+-#ifndef __BFAD_TM_H__
+-#define __BFAD_TM_H__
+-
+-#include <defs/bfa_defs_status.h>
+-
+-#define FCPT_NAME 		""
+-
+-/*
+- * Called from base Linux driver on (De)Init events
+- */
+-
+-/* attach tgt template with scst */
+-#define bfad_tm_module_init()	do {} while (0)
+-
+-/* detach/release tgt template */
+-#define bfad_tm_module_exit()	do {} while (0)
+-
+-#define bfad_tm_probe(x)	do {} while (0)
+-#define bfad_tm_probe_undo(x)	do {} while (0)
+-#define bfad_tm_probe_post(x)	do {} while (0)
+-
+-/*
+- * Called by base Linux driver but triggered by BFA FCS on config events
+- */
+-#define bfad_tm_port_new(x, y)		BFA_STATUS_OK
+-#define bfad_tm_port_delete(x, y)	do {} while (0)
+-
+-/*
+- * Called by base Linux driver but triggered by BFA FCS on PLOGI/O events
+- */
+-#define bfad_tm_port_online(x, y)	do {} while (0)
+-#define bfad_tm_port_offline(x, y)	do {} while (0)
+-
+-#endif
+diff --git a/drivers/scsi/bfa/bfad_trcmod.h b/drivers/scsi/bfa/bfad_trcmod.h
+deleted file mode 100644
+index 2827b2a..0000000
+--- a/drivers/scsi/bfa/bfad_trcmod.h
++++ /dev/null
+@@ -1,52 +0,0 @@
+-/*
+- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
+- * All rights reserved
+- * www.brocade.com
+- *
+- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License (GPL) Version 2 as
+- * published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- */
+-
+-/**
+- *  bfad_trcmod.h Linux driver trace modules
+- */
+-
+-
+-#ifndef __BFAD_TRCMOD_H__
+-#define __BFAD_TRCMOD_H__
+-
+-#include <cs/bfa_trc.h>
+-
+-/*
+- * !!! Only append to the enums defined here to avoid any versioning
+- * !!! needed between trace utility and driver version
+- */
+-enum {
+-	/* 2.6 Driver */
+-	BFA_TRC_LDRV_BFAD		= 1,
+-	BFA_TRC_LDRV_BFAD_2_6		= 2,
+-	BFA_TRC_LDRV_BFAD_2_6_9		= 3,
+-	BFA_TRC_LDRV_BFAD_2_6_10	= 4,
+-	BFA_TRC_LDRV_INTR		= 5,
+-	BFA_TRC_LDRV_IOCTL		= 6,
+-	BFA_TRC_LDRV_OS			= 7,
+-	BFA_TRC_LDRV_IM			= 8,
+-	BFA_TRC_LDRV_IM_2_6		= 9,
+-	BFA_TRC_LDRV_IM_2_6_9		= 10,
+-	BFA_TRC_LDRV_IM_2_6_10		= 11,
+-	BFA_TRC_LDRV_TM			= 12,
+-	BFA_TRC_LDRV_IPFC		= 13,
+-	BFA_TRC_LDRV_IM_2_4		= 14,
+-	BFA_TRC_LDRV_IM_VMW		= 15,
+-	BFA_TRC_LDRV_IM_LT_2_6_10	= 16,
+-};
+-
+-#endif /* __BFAD_TRCMOD_H__ */
 -- 
 1.7.3.rc1
 
