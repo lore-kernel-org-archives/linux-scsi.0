@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 10/33] bfa: (Cleanup Patch) Remove the per BFA sub-module header files.
-Date: Wed, 15 Sep 2010 12:01:43 -0700
-Message-ID: <1284577303-16815-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 11/33] bfa: (Cleanup Patch) BFA header file consolidation / cleanup.
+Date: Wed, 15 Sep 2010 12:02:41 -0700
+Message-ID: <1284577361-17138-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57073 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755090Ab0IOTCq (ORCPT
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:34186 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754350Ab0IOTFP (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2010 15:02:46 -0400
+	Wed, 15 Sep 2010 15:05:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -19,31 +19,29 @@ From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
 	- This patch is part of the BFA cleanup.
-	- Removing per BFA sub-module (sgpg/fcport/rport/uf/lps/fcxp) header files
-	  will be merging them to bfa_svc.h in the patchset.
+	- bfa_fwimg_priv.h code will be removed.
+	- bfa_callback_priv.h & others will be merged to bfa.h in the patchset.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_fcxp_priv.h  |  138 -------------------------------------
- drivers/scsi/bfa/bfa_lps_priv.h   |   38 ----------
- drivers/scsi/bfa/bfa_port_priv.h  |   94 -------------------------
- drivers/scsi/bfa/bfa_rport_priv.h |   45 ------------
- drivers/scsi/bfa/bfa_sgpg_priv.h  |   79 ---------------------
- drivers/scsi/bfa/bfa_uf_priv.h    |   47 -------------
- 6 files changed, 0 insertions(+), 441 deletions(-)
- delete mode 100644 drivers/scsi/bfa/bfa_fcxp_priv.h
- delete mode 100644 drivers/scsi/bfa/bfa_lps_priv.h
- delete mode 100644 drivers/scsi/bfa/bfa_port_priv.h
- delete mode 100644 drivers/scsi/bfa/bfa_rport_priv.h
- delete mode 100644 drivers/scsi/bfa/bfa_sgpg_priv.h
- delete mode 100644 drivers/scsi/bfa/bfa_uf_priv.h
+ drivers/scsi/bfa/bfa_callback_priv.h |   57 -----------
+ drivers/scsi/bfa/bfa_fwimg_priv.h    |   44 --------
+ drivers/scsi/bfa/bfa_intr_priv.h     |  117 ---------------------
+ drivers/scsi/bfa/bfa_iocfc.h         |  184 ----------------------------------
+ drivers/scsi/bfa/bfa_trcmod_priv.h   |   64 ------------
+ 5 files changed, 0 insertions(+), 466 deletions(-)
+ delete mode 100644 drivers/scsi/bfa/bfa_callback_priv.h
+ delete mode 100644 drivers/scsi/bfa/bfa_fwimg_priv.h
+ delete mode 100644 drivers/scsi/bfa/bfa_intr_priv.h
+ delete mode 100644 drivers/scsi/bfa/bfa_iocfc.h
+ delete mode 100644 drivers/scsi/bfa/bfa_trcmod_priv.h
 
-diff --git a/drivers/scsi/bfa/bfa_fcxp_priv.h b/drivers/scsi/bfa/bfa_fcxp_priv.h
+diff --git a/drivers/scsi/bfa/bfa_callback_priv.h b/drivers/scsi/bfa/bfa_callback_priv.h
 deleted file mode 100644
-index 4cda493..0000000
---- a/drivers/scsi/bfa/bfa_fcxp_priv.h
+index 1e3265c..0000000
+--- a/drivers/scsi/bfa/bfa_callback_priv.h
 +++ /dev/null
-@@ -1,138 +0,0 @@
+@@ -1,57 +0,0 @@
 -/*
 - * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 - * All rights reserved
@@ -61,413 +59,52 @@ index 4cda493..0000000
 - * General Public License for more details.
 - */
 -
--#ifndef __BFA_FCXP_PRIV_H__
--#define __BFA_FCXP_PRIV_H__
--
--#include <cs/bfa_sm.h>
--#include <protocol/fc.h>
--#include <bfa_svc.h>
--#include <bfi/bfi_fcxp.h>
--
--#define BFA_FCXP_MIN     	(1)
--#define BFA_FCXP_MAX_IBUF_SZ	(2 * 1024 + 256)
--#define BFA_FCXP_MAX_LBUF_SZ	(4 * 1024 + 256)
--
--struct bfa_fcxp_mod_s {
--	struct bfa_s      *bfa;		/*  backpointer to BFA */
--	struct bfa_fcxp_s *fcxp_list;	/*  array of FCXPs */
--	u16        num_fcxps;	/*  max num FCXP requests */
--	struct list_head fcxp_free_q;	/*  free FCXPs */
--	struct list_head fcxp_active_q;	/*  active FCXPs */
--	void	*req_pld_list_kva;	/*  list of FCXP req pld */
--	u64 req_pld_list_pa;	/*  list of FCXP req pld */
--	void *rsp_pld_list_kva;		/*  list of FCXP resp pld */
--	u64 rsp_pld_list_pa;	/*  list of FCXP resp pld */
--	struct list_head  wait_q;		/*  wait queue for free fcxp */
--	u32	req_pld_sz;
--	u32	rsp_pld_sz;
--};
--
--#define BFA_FCXP_MOD(__bfa)		(&(__bfa)->modules.fcxp_mod)
--#define BFA_FCXP_FROM_TAG(__mod, __tag)	(&(__mod)->fcxp_list[__tag])
--
--typedef void    (*fcxp_send_cb_t) (struct bfa_s *ioc, struct bfa_fcxp_s *fcxp,
--				   void *cb_arg, bfa_status_t req_status,
--				   u32 rsp_len, u32 resid_len,
--				   struct fchs_s *rsp_fchs);
--
--/**
-- * Information needed for a FCXP request
-- */
--struct bfa_fcxp_req_info_s {
--	struct bfa_rport_s *bfa_rport;	/*  Pointer to the bfa rport that was
--					 *returned from bfa_rport_create().
--					 *This could be left NULL for WKA or for
--					 *FCXP interactions before the rport
--					 *nexus is established
--					 */
--	struct fchs_s   fchs;	/*  request FC header structure */
--	u8 cts;		/*  continous sequence */
--	u8 class;		/*  FC class for the request/response */
--	u16 max_frmsz;	/*  max send frame size */
--	u16 vf_id;		/*  vsan tag if applicable */
--	u8	lp_tag;		/*  lport tag */
--	u32 req_tot_len;	/*  request payload total length */
--};
--
--struct bfa_fcxp_rsp_info_s {
--	struct fchs_s rsp_fchs;		/*  Response frame's FC header will
--					 * be *sent back in this field */
--	u8         rsp_timeout;	/*  timeout in seconds, 0-no response
--					 */
--	u8         rsvd2[3];
--	u32        rsp_maxlen;	/*  max response length expected */
--};
--
--struct bfa_fcxp_s {
--	struct list_head 	qe;		/*  fcxp queue element */
--	bfa_sm_t        sm;             /*  state machine */
--	void           	*caller;	/*  driver or fcs */
--	struct bfa_fcxp_mod_s *fcxp_mod;
--					/*  back pointer to fcxp mod */
--	u16        fcxp_tag;	/*  internal tag */
--	struct bfa_fcxp_req_info_s req_info;
--					/*  request info */
--	struct bfa_fcxp_rsp_info_s rsp_info;
--					/*  response info */
--	u8 	use_ireqbuf;	/*  use internal req buf */
--	u8         use_irspbuf;	/*  use internal rsp buf */
--	u32        nreq_sgles;	/*  num request SGLEs */
--	u32        nrsp_sgles;	/*  num response SGLEs */
--	struct list_head req_sgpg_q;	/*  SG pages for request buf */
--	struct list_head req_sgpg_wqe;	/*  wait queue for req SG page */
--	struct list_head rsp_sgpg_q;	/*  SG pages for response buf */
--	struct list_head rsp_sgpg_wqe;	/*  wait queue for rsp SG page */
--
--	bfa_fcxp_get_sgaddr_t req_sga_cbfn;
--					/*  SG elem addr user function */
--	bfa_fcxp_get_sglen_t req_sglen_cbfn;
--					/*  SG elem len user function */
--	bfa_fcxp_get_sgaddr_t rsp_sga_cbfn;
--					/*  SG elem addr user function */
--	bfa_fcxp_get_sglen_t rsp_sglen_cbfn;
--					/*  SG elem len user function */
--	bfa_cb_fcxp_send_t send_cbfn;   /*  send completion callback */
--	void		*send_cbarg;	/*  callback arg */
--	struct bfa_sge_s   req_sge[BFA_FCXP_MAX_SGES];
--					/*  req SG elems */
--	struct bfa_sge_s   rsp_sge[BFA_FCXP_MAX_SGES];
--					/*  rsp SG elems */
--	u8         rsp_status;	/*  comp: rsp status */
--	u32        rsp_len;	/*  comp: actual response len */
--	u32        residue_len;	/*  comp: residual rsp length */
--	struct fchs_s          rsp_fchs;	/*  comp: response fchs */
--	struct bfa_cb_qe_s    hcb_qe;	/*  comp: callback qelem */
--	struct bfa_reqq_wait_s	reqq_wqe;
--	bfa_boolean_t	reqq_waiting;
--};
--
--#define BFA_FCXP_REQ_PLD(_fcxp) 	(bfa_fcxp_get_reqbuf(_fcxp))
--
--#define BFA_FCXP_RSP_FCHS(_fcxp) 	(&((_fcxp)->rsp_info.fchs))
--#define BFA_FCXP_RSP_PLD(_fcxp) 	(bfa_fcxp_get_rspbuf(_fcxp))
--
--#define BFA_FCXP_REQ_PLD_PA(_fcxp)					\
--	((_fcxp)->fcxp_mod->req_pld_list_pa +				\
--		((_fcxp)->fcxp_mod->req_pld_sz  * (_fcxp)->fcxp_tag))
--
--#define BFA_FCXP_RSP_PLD_PA(_fcxp) 					\
--	((_fcxp)->fcxp_mod->rsp_pld_list_pa +				\
--		((_fcxp)->fcxp_mod->rsp_pld_sz * (_fcxp)->fcxp_tag))
--
--void	bfa_fcxp_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
--#endif /* __BFA_FCXP_PRIV_H__ */
-diff --git a/drivers/scsi/bfa/bfa_lps_priv.h b/drivers/scsi/bfa/bfa_lps_priv.h
-deleted file mode 100644
-index d16c6ce..0000000
---- a/drivers/scsi/bfa/bfa_lps_priv.h
-+++ /dev/null
-@@ -1,38 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--#ifndef __BFA_LPS_PRIV_H__
--#define __BFA_LPS_PRIV_H__
--
--#include <bfa_svc.h>
--
--struct bfa_lps_mod_s {
--	struct list_head		lps_free_q;
--	struct list_head		lps_active_q;
--	struct bfa_lps_s	*lps_arr;
--	int			num_lps;
--};
--
--#define BFA_LPS_MOD(__bfa)		(&(__bfa)->modules.lps_mod)
--#define BFA_LPS_FROM_TAG(__mod, __tag)	(&(__mod)->lps_arr[__tag])
--
--/*
-- * external functions
-- */
--void	bfa_lps_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
--
--#endif /* __BFA_LPS_PRIV_H__ */
-diff --git a/drivers/scsi/bfa/bfa_port_priv.h b/drivers/scsi/bfa/bfa_port_priv.h
-deleted file mode 100644
-index c9ebe04..0000000
---- a/drivers/scsi/bfa/bfa_port_priv.h
-+++ /dev/null
-@@ -1,94 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--#ifndef __BFA_PORT_PRIV_H__
--#define __BFA_PORT_PRIV_H__
--
--#include <defs/bfa_defs_pport.h>
--#include <bfi/bfi_pport.h>
--#include "bfa_intr_priv.h"
--
--/**
-- * Link notification data structure
-- */
--struct bfa_fcport_ln_s {
--	struct bfa_fcport_s     *fcport;
--	bfa_sm_t                sm;
--	struct bfa_cb_qe_s      ln_qe;  /*  BFA callback queue elem for ln */
--	enum bfa_pport_linkstate ln_event; /*  ln event for callback */
--};
--
--/**
-- * BFA FC port data structure
-- */
--struct bfa_fcport_s {
--	struct bfa_s 		*bfa;	/*  parent BFA instance */
--	bfa_sm_t		sm;	/*  port state machine */
--	wwn_t			nwwn;	/*  node wwn of physical port */
--	wwn_t			pwwn;	/*  port wwn of physical oprt */
--	enum bfa_pport_speed speed_sup;
--					/*  supported speeds */
--	enum bfa_pport_speed speed;	/*  current speed */
--	enum bfa_pport_topology topology;	/*  current topology */
--	u8			myalpa;	/*  my ALPA in LOOP topology */
--	u8			rsvd[3];
--	u32             mypid:24;
--	u32             rsvd_b:8;
--	struct bfa_pport_cfg_s	cfg;	/*  current port configuration */
--	struct bfa_qos_attr_s  qos_attr;   /* QoS Attributes */
--	struct bfa_qos_vc_attr_s qos_vc_attr;  /*  VC info from ELP */
--	struct bfa_reqq_wait_s	reqq_wait;
--					/*  to wait for room in reqq */
--	struct bfa_reqq_wait_s	svcreq_wait;
--					/*  to wait for room in reqq */
--	struct bfa_reqq_wait_s	stats_reqq_wait;
--					/*  to wait for room in reqq (stats) */
--	void			*event_cbarg;
--	void			(*event_cbfn) (void *cbarg,
--						bfa_pport_event_t event);
--	union {
--		union bfi_fcport_i2h_msg_u i2hmsg;
--	} event_arg;
--	void			*bfad;	/*  BFA driver handle */
--	struct bfa_fcport_ln_s   ln; /* Link Notification */
--	struct bfa_cb_qe_s		hcb_qe;	/*  BFA callback queue elem */
--	struct bfa_timer_s      timer;  /*  timer */
--	u32		msgtag;	/*  fimrware msg tag for reply */
--	u8			*stats_kva;
--	u64		stats_pa;
--	union bfa_fcport_stats_u *stats;
--	union bfa_fcport_stats_u *stats_ret; /*  driver stats location */
--	bfa_status_t            stats_status; /*  stats/statsclr status */
--	bfa_boolean_t           stats_busy; /*  outstanding stats/statsclr */
--	bfa_boolean_t           stats_qfull;
--	u32                	stats_reset_time; /* stats reset time stamp */
--	bfa_cb_pport_t          stats_cbfn; /*  driver callback function */
--	void                    *stats_cbarg; /* user callback arg */
--	bfa_boolean_t           diag_busy; /*  diag busy status */
--	bfa_boolean_t           beacon; /*  port beacon status */
--	bfa_boolean_t           link_e2e_beacon; /*  link beacon status */
--};
--
--#define BFA_FCPORT_MOD(__bfa)	(&(__bfa)->modules.fcport)
--
--/*
-- * public functions
-- */
--void bfa_fcport_init(struct bfa_s *bfa);
--void bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
--
--#endif /* __BFA_PORT_PRIV_H__ */
-diff --git a/drivers/scsi/bfa/bfa_rport_priv.h b/drivers/scsi/bfa/bfa_rport_priv.h
-deleted file mode 100644
-index 6490ce2..0000000
---- a/drivers/scsi/bfa/bfa_rport_priv.h
-+++ /dev/null
-@@ -1,45 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--#ifndef __BFA_RPORT_PRIV_H__
--#define __BFA_RPORT_PRIV_H__
--
--#include <bfa_svc.h>
--
--#define BFA_RPORT_MIN	4
--
--struct bfa_rport_mod_s {
--	struct bfa_rport_s *rps_list;	/*  list of rports	*/
--	struct list_head 	rp_free_q;	/*  free bfa_rports	*/
--	struct list_head 	rp_active_q;	/*  free bfa_rports 	*/
--	u16	num_rports;	/*  number of rports	*/
--};
--
--#define BFA_RPORT_MOD(__bfa)	(&(__bfa)->modules.rport_mod)
--
--/**
-- * Convert rport tag to RPORT
-- */
--#define BFA_RPORT_FROM_TAG(__bfa, _tag)				\
--	(BFA_RPORT_MOD(__bfa)->rps_list +				\
--	 ((_tag) & (BFA_RPORT_MOD(__bfa)->num_rports - 1)))
--
--/*
-- * external functions
-- */
--void	bfa_rport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
--#endif /* __BFA_RPORT_PRIV_H__ */
-diff --git a/drivers/scsi/bfa/bfa_sgpg_priv.h b/drivers/scsi/bfa/bfa_sgpg_priv.h
-deleted file mode 100644
-index 9c2a8cb..0000000
---- a/drivers/scsi/bfa/bfa_sgpg_priv.h
-+++ /dev/null
-@@ -1,79 +0,0 @@
--/*
-- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
-- * All rights reserved
-- * www.brocade.com
-- *
-- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-- *
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms of the GNU General Public License (GPL) Version 2 as
-- * published by the Free Software Foundation
-- *
-- * This program is distributed in the hope that it will be useful, but
-- * WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-- * General Public License for more details.
-- */
--
--/**
-- *  hal_sgpg.h BFA SG page module
-- */
--
--#ifndef __BFA_SGPG_PRIV_H__
--#define __BFA_SGPG_PRIV_H__
+-#ifndef __BFA_CALLBACK_PRIV_H__
+-#define __BFA_CALLBACK_PRIV_H__
 -
 -#include <cs/bfa_q.h>
 -
--#define BFA_SGPG_MIN	(16)
+-typedef void    (*bfa_cb_cbfn_t) (void *cbarg, bfa_boolean_t complete);
 -
 -/**
-- * Alignment macro for SG page allocation
+- * Generic BFA callback element.
 - */
--#define BFA_SGPG_ROUNDUP(_l) (((_l) + (sizeof(struct bfi_sgpg_s) - 1)) \
--			& ~(sizeof(struct bfi_sgpg_s) - 1))
--
--struct bfa_sgpg_wqe_s {
--	struct list_head qe;	/*  queue sg page element	*/
--	int	nsgpg;		/*  pages to be allocated	*/
--	int	nsgpg_total;	/*  total pages required	*/
--	void	(*cbfn) (void *cbarg);
--				/*  callback function		*/
--	void	*cbarg;		/*  callback arg		*/
--	struct list_head sgpg_q;	/*  queue of alloced sgpgs	*/
+-struct bfa_cb_qe_s {
+-	struct list_head         qe;
+-	bfa_cb_cbfn_t  cbfn;
+-	bfa_boolean_t   once;
+-	u32		rsvd;
+-	void           *cbarg;
 -};
 -
--struct bfa_sgpg_s {
--	struct list_head 	qe;	/*  queue sg page element	*/
--	struct bfi_sgpg_s *sgpg; /*  va of SG page		*/
--	union bfi_addr_u sgpg_pa;/*  pa of SG page		*/
--};
+-#define bfa_cb_queue(__bfa, __hcb_qe, __cbfn, __cbarg) do {		\
+-	(__hcb_qe)->cbfn  = (__cbfn);      \
+-	(__hcb_qe)->cbarg = (__cbarg);      \
+-	list_add_tail(&(__hcb_qe)->qe, &(__bfa)->comp_q);      \
+-} while (0)
 -
--/**
-- * Given number of SG elements, BFA_SGPG_NPAGE() returns the number of
-- * SG pages required.
-- */
--#define BFA_SGPG_NPAGE(_nsges)  (((_nsges) / BFI_SGPG_DATA_SGES) + 1)
+-#define bfa_cb_dequeue(__hcb_qe)	list_del(&(__hcb_qe)->qe)
 -
--struct bfa_sgpg_mod_s {
--	struct bfa_s *bfa;
--	int		num_sgpgs;	/*  number of SG pages		*/
--	int		free_sgpgs;	/*  number of free SG pages	*/
--	struct bfa_sgpg_s *hsgpg_arr;	/*  BFA SG page array	*/
--	struct bfi_sgpg_s *sgpg_arr;	/*  actual SG page array	*/
--	u64	sgpg_arr_pa;	/*  SG page array DMA addr	*/
--	struct list_head sgpg_q;	/*  queue of free SG pages	*/
--	struct list_head sgpg_wait_q; /*  wait queue for SG pages	*/
--};
--#define BFA_SGPG_MOD(__bfa)	(&(__bfa)->modules.sgpg_mod)
+-#define bfa_cb_queue_once(__bfa, __hcb_qe, __cbfn, __cbarg) do {	\
+-	(__hcb_qe)->cbfn  = (__cbfn);      \
+-	(__hcb_qe)->cbarg = (__cbarg);      \
+-	if (!(__hcb_qe)->once) {      \
+-		list_add_tail((__hcb_qe), &(__bfa)->comp_q);      \
+-		(__hcb_qe)->once = BFA_TRUE;				\
+-	}								\
+-} while (0)
 -
--bfa_status_t	bfa_sgpg_malloc(struct bfa_s *bfa, struct list_head *sgpg_q,
--								int nsgpgs);
--void		bfa_sgpg_mfree(struct bfa_s *bfa, struct list_head *sgpg_q,
--								int nsgpgs);
--void		bfa_sgpg_winit(struct bfa_sgpg_wqe_s *wqe,
--				   void (*cbfn) (void *cbarg), void *cbarg);
--void		bfa_sgpg_wait(struct bfa_s *bfa, struct bfa_sgpg_wqe_s *wqe,
--								int nsgpgs);
--void		bfa_sgpg_wcancel(struct bfa_s *bfa, struct bfa_sgpg_wqe_s *wqe);
+-#define bfa_cb_queue_done(__hcb_qe) do {				\
+-	(__hcb_qe)->once = BFA_FALSE;					\
+-} while (0)
 -
--#endif /* __BFA_SGPG_PRIV_H__ */
-diff --git a/drivers/scsi/bfa/bfa_uf_priv.h b/drivers/scsi/bfa/bfa_uf_priv.h
+-#endif /* __BFA_CALLBACK_PRIV_H__ */
+diff --git a/drivers/scsi/bfa/bfa_fwimg_priv.h b/drivers/scsi/bfa/bfa_fwimg_priv.h
 deleted file mode 100644
-index bcb490f..0000000
---- a/drivers/scsi/bfa/bfa_uf_priv.h
+index d33e19e..0000000
+--- a/drivers/scsi/bfa/bfa_fwimg_priv.h
 +++ /dev/null
-@@ -1,47 +0,0 @@
+@@ -1,44 +0,0 @@
 -/*
 - * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
 - * All rights reserved
@@ -484,37 +121,417 @@ index bcb490f..0000000
 - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 - * General Public License for more details.
 - */
--#ifndef __BFA_UF_PRIV_H__
--#define __BFA_UF_PRIV_H__
 -
--#include <cs/bfa_sm.h>
--#include <bfa_svc.h>
--#include <bfi/bfi_uf.h>
+-#ifndef __BFA_FWIMG_PRIV_H__
+-#define __BFA_FWIMG_PRIV_H__
 -
--#define BFA_UF_MIN	(4)
+-#define	BFI_FLASH_CHUNK_SZ		256	/*  Flash chunk size */
+-#define	BFI_FLASH_CHUNK_SZ_WORDS	(BFI_FLASH_CHUNK_SZ/sizeof(u32))
 -
--struct bfa_uf_mod_s {
--	struct bfa_s *bfa;		/*  back pointer to BFA */
--	struct bfa_uf_s *uf_list;	/*  array of UFs */
--	u16	num_ufs;	/*  num unsolicited rx frames */
--	struct list_head 	uf_free_q;	/*  free UFs */
--	struct list_head 	uf_posted_q;	/*  UFs posted to IOC */
--	struct bfa_uf_buf_s *uf_pbs_kva;	/*  list UF bufs request pld */
--	u64	uf_pbs_pa;	/*  phy addr for UF bufs */
--	struct bfi_uf_buf_post_s *uf_buf_posts;
--					/*  pre-built UF post msgs */
--	bfa_cb_uf_recv_t ufrecv;	/*  uf recv handler function */
--	void		*cbarg;		/*  uf receive handler arg */
+-/**
+- * BFI FW image type
+- */
+-enum {
+-	BFI_IMAGE_CB_FC,
+-	BFI_IMAGE_CT_FC,
+-	BFI_IMAGE_CT_CNA,
+-	BFI_IMAGE_MAX,
 -};
 -
--#define BFA_UF_MOD(__bfa)	(&(__bfa)->modules.uf_mod)
+-extern u32 *bfi_image_get_chunk(int type, uint32_t off);
+-extern u32 bfi_image_get_size(int type);
+-extern u32 bfi_image_ct_fc_size;
+-extern u32 bfi_image_ct_cna_size;
+-extern u32 bfi_image_cb_fc_size;
+-extern u32 *bfi_image_ct_fc;
+-extern u32 *bfi_image_ct_cna;
+-extern u32 *bfi_image_cb_fc;
 -
--#define ufm_pbs_pa(_ufmod, _uftag)	\
--	((_ufmod)->uf_pbs_pa + sizeof(struct bfa_uf_buf_s) * (_uftag))
 -
--void	bfa_uf_isr(struct bfa_s *bfa, struct bfi_msg_s *msg);
+-#endif /* __BFA_FWIMG_PRIV_H__ */
+diff --git a/drivers/scsi/bfa/bfa_intr_priv.h b/drivers/scsi/bfa/bfa_intr_priv.h
+deleted file mode 100644
+index 5fc301c..0000000
+--- a/drivers/scsi/bfa/bfa_intr_priv.h
++++ /dev/null
+@@ -1,117 +0,0 @@
+-/*
+- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
+- * All rights reserved
+- * www.brocade.com
+- *
+- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License (GPL) Version 2 as
+- * published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- */
 -
--#endif /* __BFA_UF_PRIV_H__ */
+-#ifndef __BFA_INTR_PRIV_H__
+-#define __BFA_INTR_PRIV_H__
+-
+-/**
+- * Message handler
+- */
+-typedef void (*bfa_isr_func_t) (struct bfa_s *bfa, struct bfi_msg_s *m);
+-void bfa_isr_unhandled(struct bfa_s *bfa, struct bfi_msg_s *m);
+-void bfa_isr_bind(enum bfi_mclass mc, bfa_isr_func_t isr_func);
+-
+-
+-#define bfa_reqq_pi(__bfa, __reqq)	((__bfa)->iocfc.req_cq_pi[__reqq])
+-#define bfa_reqq_ci(__bfa, __reqq)					\
+-	(*(u32 *)((__bfa)->iocfc.req_cq_shadow_ci[__reqq].kva))
+-
+-#define bfa_reqq_full(__bfa, __reqq)				\
+-	(((bfa_reqq_pi(__bfa, __reqq) + 1) &			\
+-	  ((__bfa)->iocfc.cfg.drvcfg.num_reqq_elems - 1)) ==	\
+-	 bfa_reqq_ci(__bfa, __reqq))
+-
+-#define bfa_reqq_next(__bfa, __reqq)				\
+-	(bfa_reqq_full(__bfa, __reqq) ? NULL :			\
+-	 ((void *)((struct bfi_msg_s *)((__bfa)->iocfc.req_cq_ba[__reqq].kva) \
+-			  + bfa_reqq_pi((__bfa), (__reqq)))))
+-
+-#define bfa_reqq_produce(__bfa, __reqq)	do {				\
+-	(__bfa)->iocfc.req_cq_pi[__reqq]++;				\
+-	(__bfa)->iocfc.req_cq_pi[__reqq] &=				\
+-		((__bfa)->iocfc.cfg.drvcfg.num_reqq_elems - 1);      \
+-	bfa_reg_write((__bfa)->iocfc.bfa_regs.cpe_q_pi[__reqq],		\
+-				(__bfa)->iocfc.req_cq_pi[__reqq]);      \
+-	bfa_os_mmiowb();      \
+-} while (0)
+-
+-#define bfa_rspq_pi(__bfa, __rspq)					\
+-	(*(u32 *)((__bfa)->iocfc.rsp_cq_shadow_pi[__rspq].kva))
+-
+-#define bfa_rspq_ci(__bfa, __rspq)	((__bfa)->iocfc.rsp_cq_ci[__rspq])
+-#define bfa_rspq_elem(__bfa, __rspq, __ci)				\
+-	(&((struct bfi_msg_s *)((__bfa)->iocfc.rsp_cq_ba[__rspq].kva))[__ci])
+-
+-#define CQ_INCR(__index, __size) do {					\
+-			(__index)++;					\
+-			(__index) &= ((__size) - 1);      \
+-} while (0)
+-
+-/**
+- * Queue element to wait for room in request queue. FIFO order is
+- * maintained when fullfilling requests.
+- */
+-struct bfa_reqq_wait_s {
+-	struct list_head 	qe;
+-	void		(*qresume) (void *cbarg);
+-	void		*cbarg;
+-};
+-
+-/**
+- * Circular queue usage assignments
+- */
+-enum {
+-	BFA_REQQ_IOC	= 0,	/*  all low-priority IOC msgs	*/
+-	BFA_REQQ_FCXP	= 0,	/*  all FCXP messages		*/
+-	BFA_REQQ_LPS	= 0,	/*  all lport service msgs	*/
+-	BFA_REQQ_PORT	= 0,	/*  all port messages		*/
+-	BFA_REQQ_FLASH	= 0,	/*  for flash module		*/
+-	BFA_REQQ_DIAG	= 0,	/*  for diag module		*/
+-	BFA_REQQ_RPORT	= 0,	/*  all port messages		*/
+-	BFA_REQQ_SBOOT	= 0,	/*  all san boot messages	*/
+-	BFA_REQQ_QOS_LO	= 1,	/*  all low priority IO	*/
+-	BFA_REQQ_QOS_MD	= 2,	/*  all medium priority IO	*/
+-	BFA_REQQ_QOS_HI	= 3,	/*  all high priority IO	*/
+-};
+-
+-static inline void
+-bfa_reqq_winit(struct bfa_reqq_wait_s *wqe, void (*qresume) (void *cbarg),
+-			void *cbarg)
+-{
+-	wqe->qresume = qresume;
+-	wqe->cbarg = cbarg;
+-}
+-
+-#define bfa_reqq(__bfa, __reqq)	(&(__bfa)->reqq_waitq[__reqq])
+-
+-/**
+- * static inline void
+- * bfa_reqq_wait(struct bfa_s *bfa, int reqq, struct bfa_reqq_wait_s *wqe)
+- */
+-#define bfa_reqq_wait(__bfa, __reqq, __wqe) do {			\
+-									\
+-		struct list_head *waitq = bfa_reqq(__bfa, __reqq);      \
+-									\
+-		bfa_assert(((__reqq) < BFI_IOC_MAX_CQS));      \
+-		bfa_assert((__wqe)->qresume && (__wqe)->cbarg);      \
+-									\
+-		list_add_tail(&(__wqe)->qe, waitq);      \
+-} while (0)
+-
+-#define bfa_reqq_wcancel(__wqe)	list_del(&(__wqe)->qe)
+-
+-#endif /* __BFA_INTR_PRIV_H__ */
+diff --git a/drivers/scsi/bfa/bfa_iocfc.h b/drivers/scsi/bfa/bfa_iocfc.h
+deleted file mode 100644
+index 74a6a04..0000000
+--- a/drivers/scsi/bfa/bfa_iocfc.h
++++ /dev/null
+@@ -1,184 +0,0 @@
+-/*
+- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
+- * All rights reserved
+- * www.brocade.com
+- *
+- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License (GPL) Version 2 as
+- * published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- */
+-
+-#ifndef __BFA_IOCFC_H__
+-#define __BFA_IOCFC_H__
+-
+-#include <bfa_ioc.h>
+-#include <bfa.h>
+-#include <bfi/bfi_iocfc.h>
+-#include <bfi/bfi_pbc.h>
+-#include <bfa_callback_priv.h>
+-
+-#define BFA_REQQ_NELEMS_MIN	(4)
+-#define BFA_RSPQ_NELEMS_MIN	(4)
+-
+-struct bfa_iocfc_regs_s {
+-	bfa_os_addr_t   intr_status;
+-	bfa_os_addr_t   intr_mask;
+-	bfa_os_addr_t   cpe_q_pi[BFI_IOC_MAX_CQS];
+-	bfa_os_addr_t   cpe_q_ci[BFI_IOC_MAX_CQS];
+-	bfa_os_addr_t   cpe_q_depth[BFI_IOC_MAX_CQS];
+-	bfa_os_addr_t   cpe_q_ctrl[BFI_IOC_MAX_CQS];
+-	bfa_os_addr_t   rme_q_ci[BFI_IOC_MAX_CQS];
+-	bfa_os_addr_t   rme_q_pi[BFI_IOC_MAX_CQS];
+-	bfa_os_addr_t   rme_q_depth[BFI_IOC_MAX_CQS];
+-	bfa_os_addr_t   rme_q_ctrl[BFI_IOC_MAX_CQS];
+-};
+-
+-/**
+- * MSIX vector handlers
+- */
+-#define BFA_MSIX_MAX_VECTORS	22
+-typedef void (*bfa_msix_handler_t)(struct bfa_s *bfa, int vec);
+-struct bfa_msix_s {
+-	int	nvecs;
+-	bfa_msix_handler_t handler[BFA_MSIX_MAX_VECTORS];
+-};
+-
+-/**
+- * Chip specific interfaces
+- */
+-struct bfa_hwif_s {
+-	void (*hw_reginit)(struct bfa_s *bfa);
+-	void (*hw_reqq_ack)(struct bfa_s *bfa, int reqq);
+-	void (*hw_rspq_ack)(struct bfa_s *bfa, int rspq);
+-	void (*hw_msix_init)(struct bfa_s *bfa, int nvecs);
+-	void (*hw_msix_install)(struct bfa_s *bfa);
+-	void (*hw_msix_uninstall)(struct bfa_s *bfa);
+-	void (*hw_isr_mode_set)(struct bfa_s *bfa, bfa_boolean_t msix);
+-	void (*hw_msix_getvecs)(struct bfa_s *bfa, u32 *vecmap,
+-			u32 *nvecs, u32 *maxvec);
+-	void (*hw_msix_get_rme_range) (struct bfa_s *bfa, u32 *start,
+-			u32 *end);
+-};
+-typedef void (*bfa_cb_iocfc_t) (void *cbarg, enum bfa_status status);
+-
+-struct bfa_iocfc_s {
+-	struct bfa_s 		*bfa;
+-	struct bfa_iocfc_cfg_s 	cfg;
+-	int			action;
+-
+-	u32        	req_cq_pi[BFI_IOC_MAX_CQS];
+-	u32        	rsp_cq_ci[BFI_IOC_MAX_CQS];
+-
+-	struct bfa_cb_qe_s	init_hcb_qe;
+-	struct bfa_cb_qe_s	stop_hcb_qe;
+-	struct bfa_cb_qe_s	dis_hcb_qe;
+-	struct bfa_cb_qe_s	stats_hcb_qe;
+-	bfa_boolean_t		cfgdone;
+-
+-	struct bfa_dma_s	cfg_info;
+-	struct bfi_iocfc_cfg_s *cfginfo;
+-	struct bfa_dma_s	cfgrsp_dma;
+-	struct bfi_iocfc_cfgrsp_s *cfgrsp;
+-	struct bfi_iocfc_cfg_reply_s *cfg_reply;
+-
+-	u8			*stats_kva;
+-	u64		stats_pa;
+-	struct bfa_fw_stats_s 	*fw_stats;
+-	struct bfa_timer_s 	stats_timer;	/*  timer */
+-	struct bfa_iocfc_stats_s *stats_ret;	/*  driver stats location */
+-	bfa_status_t		stats_status;	/*  stats/statsclr status */
+-	bfa_boolean_t   	stats_busy;	/*  outstanding stats */
+-	bfa_cb_ioc_t		stats_cbfn;	/*  driver callback function */
+-	void           		*stats_cbarg;	/*  user callback arg */
+-
+-	struct bfa_dma_s   	req_cq_ba[BFI_IOC_MAX_CQS];
+-	struct bfa_dma_s   	req_cq_shadow_ci[BFI_IOC_MAX_CQS];
+-	struct bfa_dma_s   	rsp_cq_ba[BFI_IOC_MAX_CQS];
+-	struct bfa_dma_s   	rsp_cq_shadow_pi[BFI_IOC_MAX_CQS];
+-	struct bfa_iocfc_regs_s	bfa_regs;	/*  BFA device registers */
+-	struct bfa_hwif_s	hwif;
+-
+-	bfa_cb_iocfc_t		updateq_cbfn; /*  bios callback function */
+-	void			*updateq_cbarg;	/*  bios callback arg */
+-	u32			intr_mask;
+-};
+-
+-#define bfa_lpuid(__bfa)		bfa_ioc_portid(&(__bfa)->ioc)
+-#define bfa_msix_init(__bfa, __nvecs)	\
+-	((__bfa)->iocfc.hwif.hw_msix_init(__bfa, __nvecs))
+-#define bfa_msix_install(__bfa)	\
+-	((__bfa)->iocfc.hwif.hw_msix_install(__bfa))
+-#define bfa_msix_uninstall(__bfa)	\
+-	((__bfa)->iocfc.hwif.hw_msix_uninstall(__bfa))
+-#define bfa_isr_mode_set(__bfa, __msix)	\
+-	((__bfa)->iocfc.hwif.hw_isr_mode_set(__bfa, __msix))
+-#define bfa_msix_getvecs(__bfa, __vecmap, __nvecs, __maxvec)	\
+-	((__bfa)->iocfc.hwif.hw_msix_getvecs(__bfa, __vecmap,	\
+-		 __nvecs, __maxvec))
+-#define bfa_msix_get_rme_range(__bfa, __start, __end)   \
+-	((__bfa)->iocfc.hwif.hw_msix_get_rme_range(__bfa, __start, __end))
+-
+-/*
+- * FC specific IOC functions.
+- */
+-void bfa_iocfc_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
+-		u32 *dm_len);
+-void bfa_iocfc_attach(struct bfa_s *bfa, void *bfad,
+-		struct bfa_iocfc_cfg_s *cfg, struct bfa_meminfo_s *meminfo,
+-		struct bfa_pcidev_s *pcidev);
+-void bfa_iocfc_detach(struct bfa_s *bfa);
+-void bfa_iocfc_init(struct bfa_s *bfa);
+-void bfa_iocfc_start(struct bfa_s *bfa);
+-void bfa_iocfc_stop(struct bfa_s *bfa);
+-void bfa_iocfc_isr(void *bfa, struct bfi_mbmsg_s *msg);
+-void bfa_iocfc_set_snsbase(struct bfa_s *bfa, u64 snsbase_pa);
+-bfa_boolean_t bfa_iocfc_is_operational(struct bfa_s *bfa);
+-void bfa_iocfc_reset_queues(struct bfa_s *bfa);
+-void bfa_iocfc_updateq(struct bfa_s *bfa, u32 reqq_ba, u32 rspq_ba,
+-			u32 reqq_sci, u32 rspq_spi,
+-			bfa_cb_iocfc_t cbfn, void *cbarg);
+-
+-void bfa_msix_all(struct bfa_s *bfa, int vec);
+-void bfa_msix_reqq(struct bfa_s *bfa, int vec);
+-void bfa_msix_rspq(struct bfa_s *bfa, int vec);
+-void bfa_msix_lpu_err(struct bfa_s *bfa, int vec);
+-
+-void bfa_hwcb_reginit(struct bfa_s *bfa);
+-void bfa_hwcb_reqq_ack(struct bfa_s *bfa, int rspq);
+-void bfa_hwcb_rspq_ack(struct bfa_s *bfa, int rspq);
+-void bfa_hwcb_msix_init(struct bfa_s *bfa, int nvecs);
+-void bfa_hwcb_msix_install(struct bfa_s *bfa);
+-void bfa_hwcb_msix_uninstall(struct bfa_s *bfa);
+-void bfa_hwcb_isr_mode_set(struct bfa_s *bfa, bfa_boolean_t msix);
+-void bfa_hwcb_msix_getvecs(struct bfa_s *bfa, u32 *vecmap,
+-			u32 *nvecs, u32 *maxvec);
+-void bfa_hwcb_msix_get_rme_range(struct bfa_s *bfa, u32 *start, u32 *end);
+-void bfa_hwct_reginit(struct bfa_s *bfa);
+-void bfa_hwct_reqq_ack(struct bfa_s *bfa, int rspq);
+-void bfa_hwct_rspq_ack(struct bfa_s *bfa, int rspq);
+-void bfa_hwct_msix_init(struct bfa_s *bfa, int nvecs);
+-void bfa_hwct_msix_install(struct bfa_s *bfa);
+-void bfa_hwct_msix_uninstall(struct bfa_s *bfa);
+-void bfa_hwct_isr_mode_set(struct bfa_s *bfa, bfa_boolean_t msix);
+-void bfa_hwct_msix_getvecs(struct bfa_s *bfa, u32 *vecmap,
+-			u32 *nvecs, u32 *maxvec);
+-void bfa_hwct_msix_get_rme_range(struct bfa_s *bfa, u32 *start, u32 *end);
+-
+-void bfa_com_meminfo(bfa_boolean_t mincfg, u32 *dm_len);
+-void bfa_com_attach(struct bfa_s *bfa, struct bfa_meminfo_s *mi,
+-		bfa_boolean_t mincfg);
+-void bfa_iocfc_get_bootwwns(struct bfa_s *bfa, u8 *nwwns, wwn_t *wwns);
+-void bfa_iocfc_get_pbc_boot_cfg(struct bfa_s *bfa,
+-		struct bfa_boot_pbc_s *pbcfg);
+-int bfa_iocfc_get_pbc_vports(struct bfa_s *bfa,
+-		struct bfi_pbc_vport_s *pbc_vport);
+-
+-#endif /* __BFA_IOCFC_H__ */
+-
+diff --git a/drivers/scsi/bfa/bfa_trcmod_priv.h b/drivers/scsi/bfa/bfa_trcmod_priv.h
+deleted file mode 100644
+index a7a8261..0000000
+--- a/drivers/scsi/bfa/bfa_trcmod_priv.h
++++ /dev/null
+@@ -1,64 +0,0 @@
+-/*
+- * Copyright (c) 2005-2009 Brocade Communications Systems, Inc.
+- * All rights reserved
+- * www.brocade.com
+- *
+- * Linux driver for Brocade Fibre Channel Host Bus Adapter.
+- *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms of the GNU General Public License (GPL) Version 2 as
+- * published by the Free Software Foundation
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- */
+-
+-/**
+- *  hal_trcmod.h BFA trace modules
+- */
+-
+-#ifndef __BFA_TRCMOD_PRIV_H__
+-#define __BFA_TRCMOD_PRIV_H__
+-
+-#include <cs/bfa_trc.h>
+-
+-/*
+- * !!! Only append to the enums defined here to avoid any versioning
+- * !!! needed between trace utility and driver version
+- */
+-enum {
+-	BFA_TRC_HAL_INTR	= 1,
+-	BFA_TRC_HAL_FCXP	= 2,
+-	BFA_TRC_HAL_UF		= 3,
+-	BFA_TRC_HAL_RPORT	= 4,
+-	BFA_TRC_HAL_FCPIM	= 5,
+-	BFA_TRC_HAL_IOIM	= 6,
+-	BFA_TRC_HAL_TSKIM	= 7,
+-	BFA_TRC_HAL_ITNIM	= 8,
+-	BFA_TRC_HAL_FCPORT	= 9,
+-	BFA_TRC_HAL_SGPG	= 10,
+-	BFA_TRC_HAL_FLASH	= 11,
+-	BFA_TRC_HAL_DEBUG	= 12,
+-	BFA_TRC_HAL_WWN		= 13,
+-	BFA_TRC_HAL_FLASH_RAW	= 14,
+-	BFA_TRC_HAL_SBOOT	= 15,
+-	BFA_TRC_HAL_SBOOT_IO	= 16,
+-	BFA_TRC_HAL_SBOOT_INTR	= 17,
+-	BFA_TRC_HAL_SBTEST	= 18,
+-	BFA_TRC_HAL_IPFC	= 19,
+-	BFA_TRC_HAL_IOCFC	= 20,
+-	BFA_TRC_HAL_FCPTM	= 21,
+-	BFA_TRC_HAL_IOTM	= 22,
+-	BFA_TRC_HAL_TSKTM	= 23,
+-	BFA_TRC_HAL_TIN		= 24,
+-	BFA_TRC_HAL_LPS		= 25,
+-	BFA_TRC_HAL_FCDIAG	= 26,
+-	BFA_TRC_HAL_PBIND	= 27,
+-	BFA_TRC_HAL_IOCFC_CT	= 28,
+-	BFA_TRC_HAL_IOCFC_CB	= 29,
+-	BFA_TRC_HAL_IOCFC_Q	= 30,
+-};
+-
+-#endif /* __BFA_TRCMOD_PRIV_H__ */
 -- 
 1.7.3.rc1
 
