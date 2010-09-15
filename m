@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 28/33] bfa: Add back consolidated BFA & FCS FCP(IM) handling definitions.
-Date: Wed, 15 Sep 2010 12:15:54 -0700
-Message-ID: <1284578154-21932-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 29/33] bfa: Add back cleaned up BFA FCS Logical PORT handling.
+Date: Wed, 15 Sep 2010 12:16:16 -0700
+Message-ID: <1284578176-22008-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57601 "EHLO
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:57628 "EHLO
 	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755218Ab0IOTQZ (ORCPT
+	by vger.kernel.org with ESMTP id S1753872Ab0IOTRL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Sep 2010 15:16:25 -0400
+	Wed, 15 Sep 2010 15:17:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -18,3644 +18,20 @@ Cc: huangj@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@broc
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- bfa_fcpim.c : Contains BFA FCPIM sub-module interface entry points for BFA.
-                  : Previous IOIM/ITNIM/TSKIM module handling is merged into
-					bfa_fcpim.c during cleanup.
-
-	- bfa_fcs_fcpim.c: Contains the FCS ITNIM statemachine.
+	- bfa_fcs_lport.c : Contains the BFA logical port handling logic.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_fcpim.c     | 3612 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfa_fcs_fcpim.c |  783 +++++++++
- 2 files changed, 4395 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/bfa/bfa_fcpim.c
- create mode 100644 drivers/scsi/bfa/bfa_fcs_fcpim.c
+ drivers/scsi/bfa/bfa_fcs_lport.c | 5808 ++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 5808 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/bfa/bfa_fcs_lport.c
 
-diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
 new file mode 100644
-index 0000000..33c8dd5
+index 0000000..b522bf3
 --- /dev/null
-+++ b/drivers/scsi/bfa/bfa_fcpim.c
-@@ -0,0 +1,3612 @@
-+/*
-+ * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
-+ * All rights reserved
-+ * www.brocade.com
-+ *
-+ * Linux driver for Brocade Fibre Channel Host Bus Adapter.
-+ *
-+ * This program is free software; you can redistribute it and/or modify it
-+ * under the terms of the GNU General Public License (GPL) Version 2 as
-+ * published by the Free Software Foundation
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ */
-+
-+#include "bfa_modules.h"
-+#include "bfa_cb_ioim.h"
-+
-+BFA_TRC_FILE(HAL, FCPIM);
-+BFA_MODULE(fcpim);
-+
-+
-+#define bfa_fcpim_add_iostats(__l, __r, __stats)	\
-+	(__l->__stats += __r->__stats)
-+
-+
-+/**
-+ *  BFA ITNIM Related definitions
-+ */
-+static void bfa_itnim_update_del_itn_stats(struct bfa_itnim_s *itnim);
-+
-+#define BFA_ITNIM_FROM_TAG(_fcpim, _tag)                                \
-+	(((_fcpim)->itnim_arr + ((_tag) & ((_fcpim)->num_itnims - 1))))
-+
-+#define bfa_fcpim_additn(__itnim)					\
-+	list_add_tail(&(__itnim)->qe, &(__itnim)->fcpim->itnim_q)
-+#define bfa_fcpim_delitn(__itnim)	do {				\
-+	bfa_assert(bfa_q_is_on_q(&(__itnim)->fcpim->itnim_q, __itnim));      \
-+	bfa_itnim_update_del_itn_stats(__itnim);      \
-+	list_del(&(__itnim)->qe);      \
-+	bfa_assert(list_empty(&(__itnim)->io_q));      \
-+	bfa_assert(list_empty(&(__itnim)->io_cleanup_q));      \
-+	bfa_assert(list_empty(&(__itnim)->pending_q));      \
-+} while (0)
-+
-+#define bfa_itnim_online_cb(__itnim) do {				\
-+	if ((__itnim)->bfa->fcs)					\
-+		bfa_cb_itnim_online((__itnim)->ditn);      \
-+	else {								\
-+		bfa_cb_queue((__itnim)->bfa, &(__itnim)->hcb_qe,	\
-+		__bfa_cb_itnim_online, (__itnim));      \
-+	}								\
-+} while (0)
-+
-+#define bfa_itnim_offline_cb(__itnim) do {				\
-+	if ((__itnim)->bfa->fcs)					\
-+		bfa_cb_itnim_offline((__itnim)->ditn);      \
-+	else {								\
-+		bfa_cb_queue((__itnim)->bfa, &(__itnim)->hcb_qe,	\
-+		__bfa_cb_itnim_offline, (__itnim));      \
-+	}								\
-+} while (0)
-+
-+#define bfa_itnim_sler_cb(__itnim) do {					\
-+	if ((__itnim)->bfa->fcs)					\
-+		bfa_cb_itnim_sler((__itnim)->ditn);      \
-+	else {								\
-+		bfa_cb_queue((__itnim)->bfa, &(__itnim)->hcb_qe,	\
-+		__bfa_cb_itnim_sler, (__itnim));      \
-+	}								\
-+} while (0)
-+
-+/**
-+ *  bfa_itnim_sm BFA itnim state machine
-+ */
-+
-+
-+enum bfa_itnim_event {
-+	BFA_ITNIM_SM_CREATE = 1,	/*  itnim is created */
-+	BFA_ITNIM_SM_ONLINE = 2,	/*  itnim is online */
-+	BFA_ITNIM_SM_OFFLINE = 3,	/*  itnim is offline */
-+	BFA_ITNIM_SM_FWRSP = 4,		/*  firmware response */
-+	BFA_ITNIM_SM_DELETE = 5,	/*  deleting an existing itnim */
-+	BFA_ITNIM_SM_CLEANUP = 6,	/*  IO cleanup completion */
-+	BFA_ITNIM_SM_SLER = 7,		/*  second level error recovery */
-+	BFA_ITNIM_SM_HWFAIL = 8,	/*  IOC h/w failure event */
-+	BFA_ITNIM_SM_QRESUME = 9,	/*  queue space available */
-+};
-+
-+/**
-+ *  BFA IOIM related definitions
-+ */
-+#define bfa_ioim_move_to_comp_q(__ioim) do {				\
-+	list_del(&(__ioim)->qe);					\
-+	list_add_tail(&(__ioim)->qe, &(__ioim)->fcpim->ioim_comp_q);	\
-+} while (0)
-+
-+
-+#define bfa_ioim_cb_profile_comp(__fcpim, __ioim) do {			\
-+	if ((__fcpim)->profile_comp)					\
-+		(__fcpim)->profile_comp(__ioim);			\
-+} while (0)
-+
-+#define bfa_ioim_cb_profile_start(__fcpim, __ioim) do {			\
-+	if ((__fcpim)->profile_start)					\
-+		(__fcpim)->profile_start(__ioim);			\
-+} while (0)
-+/**
-+ *  hal_ioim_sm
-+ */
-+
-+/**
-+ * IO state machine events
-+ */
-+enum bfa_ioim_event {
-+	BFA_IOIM_SM_START	= 1,	/*  io start request from host */
-+	BFA_IOIM_SM_COMP_GOOD	= 2,	/*  io good comp, resource free */
-+	BFA_IOIM_SM_COMP	= 3,	/*  io comp, resource is free */
-+	BFA_IOIM_SM_COMP_UTAG	= 4,	/*  io comp, resource is free */
-+	BFA_IOIM_SM_DONE	= 5,	/*  io comp, resource not free */
-+	BFA_IOIM_SM_FREE	= 6,	/*  io resource is freed */
-+	BFA_IOIM_SM_ABORT	= 7,	/*  abort request from scsi stack */
-+	BFA_IOIM_SM_ABORT_COMP	= 8,	/*  abort from f/w */
-+	BFA_IOIM_SM_ABORT_DONE	= 9,	/*  abort completion from f/w */
-+	BFA_IOIM_SM_QRESUME	= 10,	/*  CQ space available to queue IO */
-+	BFA_IOIM_SM_SGALLOCED	= 11,	/*  SG page allocation successful */
-+	BFA_IOIM_SM_SQRETRY	= 12,	/*  sequence recovery retry */
-+	BFA_IOIM_SM_HCB		= 13,	/*  bfa callback complete */
-+	BFA_IOIM_SM_CLEANUP	= 14,	/*  IO cleanup from itnim */
-+	BFA_IOIM_SM_TMSTART	= 15,	/*  IO cleanup from tskim */
-+	BFA_IOIM_SM_TMDONE	= 16,	/*  IO cleanup from tskim */
-+	BFA_IOIM_SM_HWFAIL	= 17,	/*  IOC h/w failure event */
-+	BFA_IOIM_SM_IOTOV	= 18,	/*  ITN offline TOV */
-+};
-+
-+
-+/**
-+ *  BFA TSKIM related definitions
-+ */
-+
-+/**
-+ * task management completion handling
-+ */
-+#define bfa_tskim_qcomp(__tskim, __cbfn) do {				\
-+	bfa_cb_queue((__tskim)->bfa, &(__tskim)->hcb_qe, __cbfn, (__tskim));\
-+	bfa_tskim_notify_comp(__tskim);      \
-+} while (0)
-+
-+#define bfa_tskim_notify_comp(__tskim) do {				\
-+	if ((__tskim)->notify)						\
-+		bfa_itnim_tskdone((__tskim)->itnim);      \
-+} while (0)
-+
-+
-+enum bfa_tskim_event {
-+	BFA_TSKIM_SM_START	= 1,	/*  TM command start		*/
-+	BFA_TSKIM_SM_DONE	= 2,	/*  TM completion		*/
-+	BFA_TSKIM_SM_QRESUME	= 3,	/*  resume after qfull		*/
-+	BFA_TSKIM_SM_HWFAIL	= 5,	/*  IOC h/w failure event	*/
-+	BFA_TSKIM_SM_HCB	= 6,	/*  BFA callback completion	*/
-+	BFA_TSKIM_SM_IOS_DONE	= 7,	/*  IO and sub TM completions	*/
-+	BFA_TSKIM_SM_CLEANUP	= 8,	/*  TM cleanup on ITN offline	*/
-+	BFA_TSKIM_SM_CLEANUP_DONE = 9,	/*  TM abort completion	*/
-+};
-+
-+/**
-+ * forward declaration for BFA ITNIM functions
-+ */
-+static void     bfa_itnim_iocdisable_cleanup(struct bfa_itnim_s *itnim);
-+static bfa_boolean_t bfa_itnim_send_fwcreate(struct bfa_itnim_s *itnim);
-+static bfa_boolean_t bfa_itnim_send_fwdelete(struct bfa_itnim_s *itnim);
-+static void     bfa_itnim_cleanp_comp(void *itnim_cbarg);
-+static void     bfa_itnim_cleanup(struct bfa_itnim_s *itnim);
-+static void     __bfa_cb_itnim_online(void *cbarg, bfa_boolean_t complete);
-+static void     __bfa_cb_itnim_offline(void *cbarg, bfa_boolean_t complete);
-+static void     __bfa_cb_itnim_sler(void *cbarg, bfa_boolean_t complete);
-+static void     bfa_itnim_iotov_online(struct bfa_itnim_s *itnim);
-+static void     bfa_itnim_iotov_cleanup(struct bfa_itnim_s *itnim);
-+static void     bfa_itnim_iotov(void *itnim_arg);
-+static void     bfa_itnim_iotov_start(struct bfa_itnim_s *itnim);
-+static void     bfa_itnim_iotov_stop(struct bfa_itnim_s *itnim);
-+static void     bfa_itnim_iotov_delete(struct bfa_itnim_s *itnim);
-+
-+/**
-+ * forward declaration of ITNIM state machine
-+ */
-+static void     bfa_itnim_sm_uninit(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_created(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_fwcreate(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_delete_pending(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_online(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_sler(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_cleanup_offline(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_cleanup_delete(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_fwdelete(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_offline(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_iocdisable(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_deleting(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_fwcreate_qfull(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_fwdelete_qfull(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+static void     bfa_itnim_sm_deleting_qfull(struct bfa_itnim_s *itnim,
-+					enum bfa_itnim_event event);
-+
-+/**
-+ * forward declaration for BFA IOIM functions
-+ */
-+static bfa_boolean_t	bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim);
-+static bfa_boolean_t	bfa_ioim_sge_setup(struct bfa_ioim_s *ioim);
-+static void		bfa_ioim_sgpg_setup(struct bfa_ioim_s *ioim);
-+static bfa_boolean_t	bfa_ioim_send_abort(struct bfa_ioim_s *ioim);
-+static void		bfa_ioim_notify_cleanup(struct bfa_ioim_s *ioim);
-+static void __bfa_cb_ioim_good_comp(void *cbarg, bfa_boolean_t complete);
-+static void __bfa_cb_ioim_comp(void *cbarg, bfa_boolean_t complete);
-+static void __bfa_cb_ioim_abort(void *cbarg, bfa_boolean_t complete);
-+static void __bfa_cb_ioim_failed(void *cbarg, bfa_boolean_t complete);
-+static void __bfa_cb_ioim_pathtov(void *cbarg, bfa_boolean_t complete);
-+static bfa_boolean_t    bfa_ioim_is_abortable(struct bfa_ioim_s *ioim);
-+
-+
-+/**
-+ * forward declaration of BFA IO state machine
-+ */
-+static void     bfa_ioim_sm_uninit(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_sgalloc(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_active(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_abort(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_cleanup(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_qfull(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_abort_qfull(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_cleanup_qfull(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_hcb(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_hcb_free(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void     bfa_ioim_sm_resfree(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+static void	bfa_ioim_sm_cmnd_retry(struct bfa_ioim_s *ioim,
-+					enum bfa_ioim_event event);
-+
-+/**
-+ * forward declaration for BFA TSKIM functions
-+ */
-+static void     __bfa_cb_tskim_done(void *cbarg, bfa_boolean_t complete);
-+static void     __bfa_cb_tskim_failed(void *cbarg, bfa_boolean_t complete);
-+static bfa_boolean_t bfa_tskim_match_scope(struct bfa_tskim_s *tskim,
-+					lun_t lun);
-+static void     bfa_tskim_gather_ios(struct bfa_tskim_s *tskim);
-+static void     bfa_tskim_cleanp_comp(void *tskim_cbarg);
-+static void     bfa_tskim_cleanup_ios(struct bfa_tskim_s *tskim);
-+static bfa_boolean_t bfa_tskim_send(struct bfa_tskim_s *tskim);
-+static bfa_boolean_t bfa_tskim_send_abort(struct bfa_tskim_s *tskim);
-+static void     bfa_tskim_iocdisable_ios(struct bfa_tskim_s *tskim);
-+
-+
-+/**
-+ * forward declaration of BFA TSKIM state machine
-+ */
-+static void     bfa_tskim_sm_uninit(struct bfa_tskim_s *tskim,
-+					enum bfa_tskim_event event);
-+static void     bfa_tskim_sm_active(struct bfa_tskim_s *tskim,
-+					enum bfa_tskim_event event);
-+static void     bfa_tskim_sm_cleanup(struct bfa_tskim_s *tskim,
-+					enum bfa_tskim_event event);
-+static void     bfa_tskim_sm_iocleanup(struct bfa_tskim_s *tskim,
-+					enum bfa_tskim_event event);
-+static void     bfa_tskim_sm_qfull(struct bfa_tskim_s *tskim,
-+					enum bfa_tskim_event event);
-+static void     bfa_tskim_sm_cleanup_qfull(struct bfa_tskim_s *tskim,
-+					enum bfa_tskim_event event);
-+static void     bfa_tskim_sm_hcb(struct bfa_tskim_s *tskim,
-+					enum bfa_tskim_event event);
-+
-+/**
-+ *  hal_fcpim_mod BFA FCP Initiator Mode module
-+ */
-+
-+/**
-+ *	Compute and return memory needed by FCP(im) module.
-+ */
-+static void
-+bfa_fcpim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
-+		u32 *dm_len)
-+{
-+	bfa_itnim_meminfo(cfg, km_len, dm_len);
-+
-+	/**
-+	 * IO memory
-+	 */
-+	if (cfg->fwcfg.num_ioim_reqs < BFA_IOIM_MIN)
-+		cfg->fwcfg.num_ioim_reqs = BFA_IOIM_MIN;
-+	else if (cfg->fwcfg.num_ioim_reqs > BFA_IOIM_MAX)
-+		cfg->fwcfg.num_ioim_reqs = BFA_IOIM_MAX;
-+
-+	*km_len += cfg->fwcfg.num_ioim_reqs *
-+	  (sizeof(struct bfa_ioim_s) + sizeof(struct bfa_ioim_sp_s));
-+
-+	*dm_len += cfg->fwcfg.num_ioim_reqs * BFI_IOIM_SNSLEN;
-+
-+	/**
-+	 * task management command memory
-+	 */
-+	if (cfg->fwcfg.num_tskim_reqs < BFA_TSKIM_MIN)
-+		cfg->fwcfg.num_tskim_reqs = BFA_TSKIM_MIN;
-+	*km_len += cfg->fwcfg.num_tskim_reqs * sizeof(struct bfa_tskim_s);
-+}
-+
-+
-+static void
-+bfa_fcpim_attach(struct bfa_s *bfa, void *bfad, struct bfa_iocfc_cfg_s *cfg,
-+		struct bfa_meminfo_s *meminfo, struct bfa_pcidev_s *pcidev)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+
-+	bfa_trc(bfa, cfg->drvcfg.path_tov);
-+	bfa_trc(bfa, cfg->fwcfg.num_rports);
-+	bfa_trc(bfa, cfg->fwcfg.num_ioim_reqs);
-+	bfa_trc(bfa, cfg->fwcfg.num_tskim_reqs);
-+
-+	fcpim->bfa		= bfa;
-+	fcpim->num_itnims	= cfg->fwcfg.num_rports;
-+	fcpim->num_ioim_reqs  = cfg->fwcfg.num_ioim_reqs;
-+	fcpim->num_tskim_reqs = cfg->fwcfg.num_tskim_reqs;
-+	fcpim->path_tov		= cfg->drvcfg.path_tov;
-+	fcpim->delay_comp	= cfg->drvcfg.delay_comp;
-+	fcpim->profile_comp = NULL;
-+	fcpim->profile_start = NULL;
-+
-+	bfa_itnim_attach(fcpim, meminfo);
-+	bfa_tskim_attach(fcpim, meminfo);
-+	bfa_ioim_attach(fcpim, meminfo);
-+}
-+
-+static void
-+bfa_fcpim_detach(struct bfa_s *bfa)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+
-+	bfa_ioim_detach(fcpim);
-+	bfa_tskim_detach(fcpim);
-+}
-+
-+static void
-+bfa_fcpim_start(struct bfa_s *bfa)
-+{
-+}
-+
-+static void
-+bfa_fcpim_stop(struct bfa_s *bfa)
-+{
-+}
-+
-+static void
-+bfa_fcpim_iocdisable(struct bfa_s *bfa)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct bfa_itnim_s *itnim;
-+	struct list_head *qe, *qen;
-+
-+	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
-+		itnim = (struct bfa_itnim_s *) qe;
-+		bfa_itnim_iocdisable(itnim);
-+	}
-+}
-+
-+void
-+bfa_fcpim_add_stats(struct bfa_itnim_iostats_s *lstats,
-+		struct bfa_itnim_iostats_s *rstats)
-+{
-+	bfa_fcpim_add_iostats(lstats, rstats, total_ios);
-+	bfa_fcpim_add_iostats(lstats, rstats, qresumes);
-+	bfa_fcpim_add_iostats(lstats, rstats, no_iotags);
-+	bfa_fcpim_add_iostats(lstats, rstats, io_aborts);
-+	bfa_fcpim_add_iostats(lstats, rstats, no_tskims);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_ok);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_underrun);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_overrun);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_aborted);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocomp_timedout);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_nexus_abort);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_proto_err);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_dif_err);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_sqer_needed);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_res_free);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_hostabrts);
-+	bfa_fcpim_add_iostats(lstats, rstats, iocom_utags);
-+	bfa_fcpim_add_iostats(lstats, rstats, io_cleanups);
-+	bfa_fcpim_add_iostats(lstats, rstats, io_tmaborts);
-+	bfa_fcpim_add_iostats(lstats, rstats, onlines);
-+	bfa_fcpim_add_iostats(lstats, rstats, offlines);
-+	bfa_fcpim_add_iostats(lstats, rstats, creates);
-+	bfa_fcpim_add_iostats(lstats, rstats, deletes);
-+	bfa_fcpim_add_iostats(lstats, rstats, create_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, delete_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, sler_events);
-+	bfa_fcpim_add_iostats(lstats, rstats, fw_create);
-+	bfa_fcpim_add_iostats(lstats, rstats, fw_delete);
-+	bfa_fcpim_add_iostats(lstats, rstats, ioc_disabled);
-+	bfa_fcpim_add_iostats(lstats, rstats, cleanup_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_cmnds);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_fw_rsps);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_success);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_failures);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_io_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_qresumes);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_iocdowns);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_cleanups);
-+	bfa_fcpim_add_iostats(lstats, rstats, tm_cleanup_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, io_comps);
-+	bfa_fcpim_add_iostats(lstats, rstats, input_reqs);
-+	bfa_fcpim_add_iostats(lstats, rstats, output_reqs);
-+	bfa_fcpim_add_iostats(lstats, rstats, rd_throughput);
-+	bfa_fcpim_add_iostats(lstats, rstats, wr_throughput);
-+}
-+
-+void
-+bfa_fcpim_path_tov_set(struct bfa_s *bfa, u16 path_tov)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+
-+	fcpim->path_tov = path_tov * 1000;
-+	if (fcpim->path_tov > BFA_FCPIM_PATHTOV_MAX)
-+		fcpim->path_tov = BFA_FCPIM_PATHTOV_MAX;
-+}
-+
-+u16
-+bfa_fcpim_path_tov_get(struct bfa_s *bfa)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+
-+	return fcpim->path_tov / 1000;
-+}
-+
-+bfa_status_t
-+bfa_fcpim_port_iostats(struct bfa_s *bfa, struct bfa_itnim_iostats_s *stats,
-+	u8 lp_tag)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct list_head *qe, *qen;
-+	struct bfa_itnim_s *itnim;
-+
-+	/* accumulate IO stats from itnim */
-+	bfa_os_memset(stats, 0, sizeof(struct bfa_itnim_iostats_s));
-+	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
-+		itnim = (struct bfa_itnim_s *) qe;
-+		if (itnim->rport->rport_info.lp_tag != lp_tag)
-+			continue;
-+		bfa_fcpim_add_stats(stats, &(itnim->stats));
-+	}
-+	return BFA_STATUS_OK;
-+}
-+bfa_status_t
-+bfa_fcpim_get_modstats(struct bfa_s *bfa, struct bfa_itnim_iostats_s *modstats)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct list_head *qe, *qen;
-+	struct bfa_itnim_s *itnim;
-+
-+	/* accumulate IO stats from itnim */
-+	bfa_os_memset(modstats, 0, sizeof(struct bfa_itnim_iostats_s));
-+	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
-+		itnim = (struct bfa_itnim_s *) qe;
-+		bfa_fcpim_add_stats(modstats, &(itnim->stats));
-+	}
-+	return BFA_STATUS_OK;
-+}
-+
-+bfa_status_t
-+bfa_fcpim_get_del_itn_stats(struct bfa_s *bfa,
-+	 struct bfa_fcpim_del_itn_stats_s *modstats)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+
-+	*modstats = fcpim->del_itn_stats;
-+
-+	return BFA_STATUS_OK;
-+}
-+
-+
-+bfa_status_t
-+bfa_fcpim_profile_on(struct bfa_s *bfa, u32 time)
-+{
-+	struct bfa_itnim_s *itnim;
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct list_head *qe, *qen;
-+
-+	/* accumulate IO stats from itnim */
-+	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
-+		itnim = (struct bfa_itnim_s *) qe;
-+		bfa_itnim_clear_stats(itnim);
-+	}
-+	fcpim->io_profile = BFA_TRUE;
-+	fcpim->io_profile_start_time = time;
-+	fcpim->profile_comp = bfa_ioim_profile_comp;
-+	fcpim->profile_start = bfa_ioim_profile_start;
-+
-+	return BFA_STATUS_OK;
-+}
-+bfa_status_t
-+bfa_fcpim_profile_off(struct bfa_s *bfa)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	fcpim->io_profile = BFA_FALSE;
-+	fcpim->io_profile_start_time = 0;
-+	fcpim->profile_comp = NULL;
-+	fcpim->profile_start = NULL;
-+	return BFA_STATUS_OK;
-+}
-+
-+bfa_status_t
-+bfa_fcpim_port_clear_iostats(struct bfa_s *bfa, u8 lp_tag)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct list_head *qe, *qen;
-+	struct bfa_itnim_s *itnim;
-+
-+	/* clear IO stats from all active itnims */
-+	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
-+		itnim = (struct bfa_itnim_s *) qe;
-+		if (itnim->rport->rport_info.lp_tag != lp_tag)
-+			continue;
-+		bfa_itnim_clear_stats(itnim);
-+	}
-+	return BFA_STATUS_OK;
-+
-+}
-+
-+bfa_status_t
-+bfa_fcpim_clr_modstats(struct bfa_s *bfa)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct list_head *qe, *qen;
-+	struct bfa_itnim_s *itnim;
-+
-+	/* clear IO stats from all active itnims */
-+	list_for_each_safe(qe, qen, &fcpim->itnim_q) {
-+		itnim = (struct bfa_itnim_s *) qe;
-+		bfa_itnim_clear_stats(itnim);
-+	}
-+	bfa_os_memset(&fcpim->del_itn_stats, 0,
-+		sizeof(struct bfa_fcpim_del_itn_stats_s));
-+
-+	return BFA_STATUS_OK;
-+}
-+
-+void
-+bfa_fcpim_qdepth_set(struct bfa_s *bfa, u16 q_depth)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+
-+	bfa_assert(q_depth <= BFA_IOCFC_QDEPTH_MAX);
-+
-+	fcpim->q_depth = q_depth;
-+}
-+
-+u16
-+bfa_fcpim_qdepth_get(struct bfa_s *bfa)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+
-+	return fcpim->q_depth;
-+}
-+
-+void
-+bfa_fcpim_update_ioredirect(struct bfa_s *bfa)
-+{
-+	bfa_boolean_t ioredirect;
-+
-+	/*
-+	 * IO redirection is turned off when QoS is enabled and vice versa
-+	 */
-+	ioredirect = bfa_fcport_is_qos_enabled(bfa) ? BFA_FALSE : BFA_TRUE;
-+}
-+
-+void
-+bfa_fcpim_set_ioredirect(struct bfa_s *bfa, bfa_boolean_t state)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	fcpim->ioredirect = state;
-+}
-+
-+
-+
-+/**
-+ *  BFA ITNIM module state machine functions
-+ */
-+
-+/**
-+ *	Beginning/unallocated state - no events expected.
-+ */
-+static void
-+bfa_itnim_sm_uninit(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_CREATE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_created);
-+		itnim->is_online = BFA_FALSE;
-+		bfa_fcpim_additn(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Beginning state, only online event expected.
-+ */
-+static void
-+bfa_itnim_sm_created(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_ONLINE:
-+		if (bfa_itnim_send_fwcreate(itnim))
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwcreate);
-+		else
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwcreate_qfull);
-+		break;
-+
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_uninit);
-+		bfa_fcpim_delitn(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Waiting for itnim create response from firmware.
-+ */
-+static void
-+bfa_itnim_sm_fwcreate(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_FWRSP:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_online);
-+		itnim->is_online = BFA_TRUE;
-+		bfa_itnim_iotov_online(itnim);
-+		bfa_itnim_online_cb(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_delete_pending);
-+		break;
-+
-+	case BFA_ITNIM_SM_OFFLINE:
-+		if (bfa_itnim_send_fwdelete(itnim))
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwdelete);
-+		else
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwdelete_qfull);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+static void
-+bfa_itnim_sm_fwcreate_qfull(struct bfa_itnim_s *itnim,
-+			enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_QRESUME:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_fwcreate);
-+		bfa_itnim_send_fwcreate(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_uninit);
-+		bfa_reqq_wcancel(&itnim->reqq_wait);
-+		bfa_fcpim_delitn(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_offline);
-+		bfa_reqq_wcancel(&itnim->reqq_wait);
-+		bfa_itnim_offline_cb(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		bfa_reqq_wcancel(&itnim->reqq_wait);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Waiting for itnim create response from firmware, a delete is pending.
-+ */
-+static void
-+bfa_itnim_sm_delete_pending(struct bfa_itnim_s *itnim,
-+				enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_FWRSP:
-+		if (bfa_itnim_send_fwdelete(itnim))
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_deleting);
-+		else
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_deleting_qfull);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_uninit);
-+		bfa_fcpim_delitn(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Online state - normal parking state.
-+ */
-+static void
-+bfa_itnim_sm_online(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_cleanup_offline);
-+		itnim->is_online = BFA_FALSE;
-+		bfa_itnim_iotov_start(itnim);
-+		bfa_itnim_cleanup(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_cleanup_delete);
-+		itnim->is_online = BFA_FALSE;
-+		bfa_itnim_cleanup(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_SLER:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_sler);
-+		itnim->is_online = BFA_FALSE;
-+		bfa_itnim_iotov_start(itnim);
-+		bfa_itnim_sler_cb(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		itnim->is_online = BFA_FALSE;
-+		bfa_itnim_iotov_start(itnim);
-+		bfa_itnim_iocdisable_cleanup(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Second level error recovery need.
-+ */
-+static void
-+bfa_itnim_sm_sler(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_cleanup_offline);
-+		bfa_itnim_cleanup(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_cleanup_delete);
-+		bfa_itnim_cleanup(itnim);
-+		bfa_itnim_iotov_delete(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		bfa_itnim_iocdisable_cleanup(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Going offline. Waiting for active IO cleanup.
-+ */
-+static void
-+bfa_itnim_sm_cleanup_offline(struct bfa_itnim_s *itnim,
-+				 enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_CLEANUP:
-+		if (bfa_itnim_send_fwdelete(itnim))
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwdelete);
-+		else
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwdelete_qfull);
-+		break;
-+
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_cleanup_delete);
-+		bfa_itnim_iotov_delete(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		bfa_itnim_iocdisable_cleanup(itnim);
-+		bfa_itnim_offline_cb(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_SLER:
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Deleting itnim. Waiting for active IO cleanup.
-+ */
-+static void
-+bfa_itnim_sm_cleanup_delete(struct bfa_itnim_s *itnim,
-+				enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_CLEANUP:
-+		if (bfa_itnim_send_fwdelete(itnim))
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_deleting);
-+		else
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_deleting_qfull);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		bfa_itnim_iocdisable_cleanup(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ * Rport offline. Fimrware itnim is being deleted - awaiting f/w response.
-+ */
-+static void
-+bfa_itnim_sm_fwdelete(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_FWRSP:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_offline);
-+		bfa_itnim_offline_cb(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_deleting);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		bfa_itnim_offline_cb(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+static void
-+bfa_itnim_sm_fwdelete_qfull(struct bfa_itnim_s *itnim,
-+			enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_QRESUME:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_fwdelete);
-+		bfa_itnim_send_fwdelete(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_deleting_qfull);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		bfa_reqq_wcancel(&itnim->reqq_wait);
-+		bfa_itnim_offline_cb(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Offline state.
-+ */
-+static void
-+bfa_itnim_sm_offline(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_uninit);
-+		bfa_itnim_iotov_delete(itnim);
-+		bfa_fcpim_delitn(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_ONLINE:
-+		if (bfa_itnim_send_fwcreate(itnim))
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwcreate);
-+		else
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwcreate_qfull);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_iocdisable);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	IOC h/w failed state.
-+ */
-+static void
-+bfa_itnim_sm_iocdisable(struct bfa_itnim_s *itnim,
-+				enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_uninit);
-+		bfa_itnim_iotov_delete(itnim);
-+		bfa_fcpim_delitn(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_OFFLINE:
-+		bfa_itnim_offline_cb(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_ONLINE:
-+		if (bfa_itnim_send_fwcreate(itnim))
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwcreate);
-+		else
-+			bfa_sm_set_state(itnim, bfa_itnim_sm_fwcreate_qfull);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Itnim is deleted, waiting for firmware response to delete.
-+ */
-+static void
-+bfa_itnim_sm_deleting(struct bfa_itnim_s *itnim, enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_FWRSP:
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_uninit);
-+		bfa_fcpim_delitn(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+static void
-+bfa_itnim_sm_deleting_qfull(struct bfa_itnim_s *itnim,
-+		enum bfa_itnim_event event)
-+{
-+	bfa_trc(itnim->bfa, itnim->rport->rport_tag);
-+	bfa_trc(itnim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_ITNIM_SM_QRESUME:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_deleting);
-+		bfa_itnim_send_fwdelete(itnim);
-+		break;
-+
-+	case BFA_ITNIM_SM_HWFAIL:
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_uninit);
-+		bfa_reqq_wcancel(&itnim->reqq_wait);
-+		bfa_fcpim_delitn(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Initiate cleanup of all IOs on an IOC failure.
-+ */
-+static void
-+bfa_itnim_iocdisable_cleanup(struct bfa_itnim_s *itnim)
-+{
-+	struct bfa_tskim_s *tskim;
-+	struct bfa_ioim_s *ioim;
-+	struct list_head	*qe, *qen;
-+
-+	list_for_each_safe(qe, qen, &itnim->tsk_q) {
-+		tskim = (struct bfa_tskim_s *) qe;
-+		bfa_tskim_iocdisable(tskim);
-+	}
-+
-+	list_for_each_safe(qe, qen, &itnim->io_q) {
-+		ioim = (struct bfa_ioim_s *) qe;
-+		bfa_ioim_iocdisable(ioim);
-+	}
-+
-+	/**
-+	 * For IO request in pending queue, we pretend an early timeout.
-+	 */
-+	list_for_each_safe(qe, qen, &itnim->pending_q) {
-+		ioim = (struct bfa_ioim_s *) qe;
-+		bfa_ioim_tov(ioim);
-+	}
-+
-+	list_for_each_safe(qe, qen, &itnim->io_cleanup_q) {
-+		ioim = (struct bfa_ioim_s *) qe;
-+		bfa_ioim_iocdisable(ioim);
-+	}
-+}
-+
-+/**
-+ *	IO cleanup completion
-+ */
-+static void
-+bfa_itnim_cleanp_comp(void *itnim_cbarg)
-+{
-+	struct bfa_itnim_s *itnim = itnim_cbarg;
-+
-+	bfa_stats(itnim, cleanup_comps);
-+	bfa_sm_send_event(itnim, BFA_ITNIM_SM_CLEANUP);
-+}
-+
-+/**
-+ *	Initiate cleanup of all IOs.
-+ */
-+static void
-+bfa_itnim_cleanup(struct bfa_itnim_s *itnim)
-+{
-+	struct bfa_ioim_s  *ioim;
-+	struct bfa_tskim_s *tskim;
-+	struct list_head	*qe, *qen;
-+
-+	bfa_wc_init(&itnim->wc, bfa_itnim_cleanp_comp, itnim);
-+
-+	list_for_each_safe(qe, qen, &itnim->io_q) {
-+		ioim = (struct bfa_ioim_s *) qe;
-+
-+		/**
-+		 * Move IO to a cleanup queue from active queue so that a later
-+		 * TM will not pickup this IO.
-+		 */
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &itnim->io_cleanup_q);
-+
-+		bfa_wc_up(&itnim->wc);
-+		bfa_ioim_cleanup(ioim);
-+	}
-+
-+	list_for_each_safe(qe, qen, &itnim->tsk_q) {
-+		tskim = (struct bfa_tskim_s *) qe;
-+		bfa_wc_up(&itnim->wc);
-+		bfa_tskim_cleanup(tskim);
-+	}
-+
-+	bfa_wc_wait(&itnim->wc);
-+}
-+
-+static void
-+__bfa_cb_itnim_online(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_itnim_s *itnim = cbarg;
-+
-+	if (complete)
-+		bfa_cb_itnim_online(itnim->ditn);
-+}
-+
-+static void
-+__bfa_cb_itnim_offline(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_itnim_s *itnim = cbarg;
-+
-+	if (complete)
-+		bfa_cb_itnim_offline(itnim->ditn);
-+}
-+
-+static void
-+__bfa_cb_itnim_sler(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_itnim_s *itnim = cbarg;
-+
-+	if (complete)
-+		bfa_cb_itnim_sler(itnim->ditn);
-+}
-+
-+/**
-+ * Call to resume any I/O requests waiting for room in request queue.
-+ */
-+static void
-+bfa_itnim_qresume(void *cbarg)
-+{
-+	struct bfa_itnim_s *itnim = cbarg;
-+
-+	bfa_sm_send_event(itnim, BFA_ITNIM_SM_QRESUME);
-+}
-+
-+
-+
-+
-+/**
-+ *  bfa_itnim_public
-+ */
-+
-+void
-+bfa_itnim_iodone(struct bfa_itnim_s *itnim)
-+{
-+	bfa_wc_down(&itnim->wc);
-+}
-+
-+void
-+bfa_itnim_tskdone(struct bfa_itnim_s *itnim)
-+{
-+	bfa_wc_down(&itnim->wc);
-+}
-+
-+void
-+bfa_itnim_meminfo(struct bfa_iocfc_cfg_s *cfg, u32 *km_len,
-+		u32 *dm_len)
-+{
-+	/**
-+	 * ITN memory
-+	 */
-+	*km_len += cfg->fwcfg.num_rports * sizeof(struct bfa_itnim_s);
-+}
-+
-+void
-+bfa_itnim_attach(struct bfa_fcpim_mod_s *fcpim, struct bfa_meminfo_s *minfo)
-+{
-+	struct bfa_s	*bfa = fcpim->bfa;
-+	struct bfa_itnim_s *itnim;
-+	int	i, j;
-+
-+	INIT_LIST_HEAD(&fcpim->itnim_q);
-+
-+	itnim = (struct bfa_itnim_s *) bfa_meminfo_kva(minfo);
-+	fcpim->itnim_arr = itnim;
-+
-+	for (i = 0; i < fcpim->num_itnims; i++, itnim++) {
-+		bfa_os_memset(itnim, 0, sizeof(struct bfa_itnim_s));
-+		itnim->bfa = bfa;
-+		itnim->fcpim = fcpim;
-+		itnim->reqq = BFA_REQQ_QOS_LO;
-+		itnim->rport = BFA_RPORT_FROM_TAG(bfa, i);
-+		itnim->iotov_active = BFA_FALSE;
-+		bfa_reqq_winit(&itnim->reqq_wait, bfa_itnim_qresume, itnim);
-+
-+		INIT_LIST_HEAD(&itnim->io_q);
-+		INIT_LIST_HEAD(&itnim->io_cleanup_q);
-+		INIT_LIST_HEAD(&itnim->pending_q);
-+		INIT_LIST_HEAD(&itnim->tsk_q);
-+		INIT_LIST_HEAD(&itnim->delay_comp_q);
-+		for (j = 0; j < BFA_IOBUCKET_MAX; j++)
-+			itnim->ioprofile.io_latency.min[j] = ~0;
-+		bfa_sm_set_state(itnim, bfa_itnim_sm_uninit);
-+	}
-+
-+	bfa_meminfo_kva(minfo) = (u8 *) itnim;
-+}
-+
-+void
-+bfa_itnim_iocdisable(struct bfa_itnim_s *itnim)
-+{
-+	bfa_stats(itnim, ioc_disabled);
-+	bfa_sm_send_event(itnim, BFA_ITNIM_SM_HWFAIL);
-+}
-+
-+static bfa_boolean_t
-+bfa_itnim_send_fwcreate(struct bfa_itnim_s *itnim)
-+{
-+	struct bfi_itnim_create_req_s *m;
-+
-+	itnim->msg_no++;
-+
-+	/**
-+	 * check for room in queue to send request now
-+	 */
-+	m = bfa_reqq_next(itnim->bfa, itnim->reqq);
-+	if (!m) {
-+		bfa_reqq_wait(itnim->bfa, itnim->reqq, &itnim->reqq_wait);
-+		return BFA_FALSE;
-+	}
-+
-+	bfi_h2i_set(m->mh, BFI_MC_ITNIM, BFI_ITNIM_H2I_CREATE_REQ,
-+			bfa_lpuid(itnim->bfa));
-+	m->fw_handle = itnim->rport->fw_handle;
-+	m->class = FC_CLASS_3;
-+	m->seq_rec = itnim->seq_rec;
-+	m->msg_no = itnim->msg_no;
-+	bfa_stats(itnim, fw_create);
-+
-+	/**
-+	 * queue I/O message to firmware
-+	 */
-+	bfa_reqq_produce(itnim->bfa, itnim->reqq);
-+	return BFA_TRUE;
-+}
-+
-+static bfa_boolean_t
-+bfa_itnim_send_fwdelete(struct bfa_itnim_s *itnim)
-+{
-+	struct bfi_itnim_delete_req_s *m;
-+
-+	/**
-+	 * check for room in queue to send request now
-+	 */
-+	m = bfa_reqq_next(itnim->bfa, itnim->reqq);
-+	if (!m) {
-+		bfa_reqq_wait(itnim->bfa, itnim->reqq, &itnim->reqq_wait);
-+		return BFA_FALSE;
-+	}
-+
-+	bfi_h2i_set(m->mh, BFI_MC_ITNIM, BFI_ITNIM_H2I_DELETE_REQ,
-+			bfa_lpuid(itnim->bfa));
-+	m->fw_handle = itnim->rport->fw_handle;
-+	bfa_stats(itnim, fw_delete);
-+
-+	/**
-+	 * queue I/O message to firmware
-+	 */
-+	bfa_reqq_produce(itnim->bfa, itnim->reqq);
-+	return BFA_TRUE;
-+}
-+
-+/**
-+ * Cleanup all pending failed inflight requests.
-+ */
-+static void
-+bfa_itnim_delayed_comp(struct bfa_itnim_s *itnim, bfa_boolean_t iotov)
-+{
-+	struct bfa_ioim_s *ioim;
-+	struct list_head *qe, *qen;
-+
-+	list_for_each_safe(qe, qen, &itnim->delay_comp_q) {
-+		ioim = (struct bfa_ioim_s *)qe;
-+		bfa_ioim_delayed_comp(ioim, iotov);
-+	}
-+}
-+
-+/**
-+ * Start all pending IO requests.
-+ */
-+static void
-+bfa_itnim_iotov_online(struct bfa_itnim_s *itnim)
-+{
-+	struct bfa_ioim_s *ioim;
-+
-+	bfa_itnim_iotov_stop(itnim);
-+
-+	/**
-+	 * Abort all inflight IO requests in the queue
-+	 */
-+	bfa_itnim_delayed_comp(itnim, BFA_FALSE);
-+
-+	/**
-+	 * Start all pending IO requests.
-+	 */
-+	while (!list_empty(&itnim->pending_q)) {
-+		bfa_q_deq(&itnim->pending_q, &ioim);
-+		list_add_tail(&ioim->qe, &itnim->io_q);
-+		bfa_ioim_start(ioim);
-+	}
-+}
-+
-+/**
-+ * Fail all pending IO requests
-+ */
-+static void
-+bfa_itnim_iotov_cleanup(struct bfa_itnim_s *itnim)
-+{
-+	struct bfa_ioim_s *ioim;
-+
-+	/**
-+	 * Fail all inflight IO requests in the queue
-+	 */
-+	bfa_itnim_delayed_comp(itnim, BFA_TRUE);
-+
-+	/**
-+	 * Fail any pending IO requests.
-+	 */
-+	while (!list_empty(&itnim->pending_q)) {
-+		bfa_q_deq(&itnim->pending_q, &ioim);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
-+		bfa_ioim_tov(ioim);
-+	}
-+}
-+
-+/**
-+ * IO TOV timer callback. Fail any pending IO requests.
-+ */
-+static void
-+bfa_itnim_iotov(void *itnim_arg)
-+{
-+	struct bfa_itnim_s *itnim = itnim_arg;
-+
-+	itnim->iotov_active = BFA_FALSE;
-+
-+	bfa_cb_itnim_tov_begin(itnim->ditn);
-+	bfa_itnim_iotov_cleanup(itnim);
-+	bfa_cb_itnim_tov(itnim->ditn);
-+}
-+
-+/**
-+ * Start IO TOV timer for failing back pending IO requests in offline state.
-+ */
-+static void
-+bfa_itnim_iotov_start(struct bfa_itnim_s *itnim)
-+{
-+	if (itnim->fcpim->path_tov > 0) {
-+
-+		itnim->iotov_active = BFA_TRUE;
-+		bfa_assert(bfa_itnim_hold_io(itnim));
-+		bfa_timer_start(itnim->bfa, &itnim->timer,
-+			bfa_itnim_iotov, itnim, itnim->fcpim->path_tov);
-+	}
-+}
-+
-+/**
-+ * Stop IO TOV timer.
-+ */
-+static void
-+bfa_itnim_iotov_stop(struct bfa_itnim_s *itnim)
-+{
-+	if (itnim->iotov_active) {
-+		itnim->iotov_active = BFA_FALSE;
-+		bfa_timer_stop(&itnim->timer);
-+	}
-+}
-+
-+/**
-+ * Stop IO TOV timer.
-+ */
-+static void
-+bfa_itnim_iotov_delete(struct bfa_itnim_s *itnim)
-+{
-+	bfa_boolean_t pathtov_active = BFA_FALSE;
-+
-+	if (itnim->iotov_active)
-+		pathtov_active = BFA_TRUE;
-+
-+	bfa_itnim_iotov_stop(itnim);
-+	if (pathtov_active)
-+		bfa_cb_itnim_tov_begin(itnim->ditn);
-+	bfa_itnim_iotov_cleanup(itnim);
-+	if (pathtov_active)
-+		bfa_cb_itnim_tov(itnim->ditn);
-+}
-+
-+static void
-+bfa_itnim_update_del_itn_stats(struct bfa_itnim_s *itnim)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(itnim->bfa);
-+	fcpim->del_itn_stats.del_itn_iocomp_aborted +=
-+		itnim->stats.iocomp_aborted;
-+	fcpim->del_itn_stats.del_itn_iocomp_timedout +=
-+		itnim->stats.iocomp_timedout;
-+	fcpim->del_itn_stats.del_itn_iocom_sqer_needed +=
-+		itnim->stats.iocom_sqer_needed;
-+	fcpim->del_itn_stats.del_itn_iocom_res_free +=
-+		itnim->stats.iocom_res_free;
-+	fcpim->del_itn_stats.del_itn_iocom_hostabrts +=
-+		itnim->stats.iocom_hostabrts;
-+	fcpim->del_itn_stats.del_itn_total_ios += itnim->stats.total_ios;
-+	fcpim->del_itn_stats.del_io_iocdowns += itnim->stats.io_iocdowns;
-+	fcpim->del_itn_stats.del_tm_iocdowns += itnim->stats.tm_iocdowns;
-+}
-+
-+
-+
-+/**
-+ *  bfa_itnim_public
-+ */
-+
-+/**
-+ *	Itnim interrupt processing.
-+ */
-+void
-+bfa_itnim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	union bfi_itnim_i2h_msg_u msg;
-+	struct bfa_itnim_s *itnim;
-+
-+	bfa_trc(bfa, m->mhdr.msg_id);
-+
-+	msg.msg = m;
-+
-+	switch (m->mhdr.msg_id) {
-+	case BFI_ITNIM_I2H_CREATE_RSP:
-+		itnim = BFA_ITNIM_FROM_TAG(fcpim,
-+						msg.create_rsp->bfa_handle);
-+		bfa_assert(msg.create_rsp->status == BFA_STATUS_OK);
-+		bfa_stats(itnim, create_comps);
-+		bfa_sm_send_event(itnim, BFA_ITNIM_SM_FWRSP);
-+		break;
-+
-+	case BFI_ITNIM_I2H_DELETE_RSP:
-+		itnim = BFA_ITNIM_FROM_TAG(fcpim,
-+						msg.delete_rsp->bfa_handle);
-+		bfa_assert(msg.delete_rsp->status == BFA_STATUS_OK);
-+		bfa_stats(itnim, delete_comps);
-+		bfa_sm_send_event(itnim, BFA_ITNIM_SM_FWRSP);
-+		break;
-+
-+	case BFI_ITNIM_I2H_SLER_EVENT:
-+		itnim = BFA_ITNIM_FROM_TAG(fcpim,
-+						msg.sler_event->bfa_handle);
-+		bfa_stats(itnim, sler_events);
-+		bfa_sm_send_event(itnim, BFA_ITNIM_SM_SLER);
-+		break;
-+
-+	default:
-+		bfa_trc(bfa, m->mhdr.msg_id);
-+		bfa_assert(0);
-+	}
-+}
-+
-+
-+
-+/**
-+ *  bfa_itnim_api
-+ */
-+
-+struct bfa_itnim_s *
-+bfa_itnim_create(struct bfa_s *bfa, struct bfa_rport_s *rport, void *ditn)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct bfa_itnim_s *itnim;
-+
-+	itnim = BFA_ITNIM_FROM_TAG(fcpim, rport->rport_tag);
-+	bfa_assert(itnim->rport == rport);
-+
-+	itnim->ditn = ditn;
-+
-+	bfa_stats(itnim, creates);
-+	bfa_sm_send_event(itnim, BFA_ITNIM_SM_CREATE);
-+
-+	return itnim;
-+}
-+
-+void
-+bfa_itnim_delete(struct bfa_itnim_s *itnim)
-+{
-+	bfa_stats(itnim, deletes);
-+	bfa_sm_send_event(itnim, BFA_ITNIM_SM_DELETE);
-+}
-+
-+void
-+bfa_itnim_online(struct bfa_itnim_s *itnim, bfa_boolean_t seq_rec)
-+{
-+	itnim->seq_rec = seq_rec;
-+	bfa_stats(itnim, onlines);
-+	bfa_sm_send_event(itnim, BFA_ITNIM_SM_ONLINE);
-+}
-+
-+void
-+bfa_itnim_offline(struct bfa_itnim_s *itnim)
-+{
-+	bfa_stats(itnim, offlines);
-+	bfa_sm_send_event(itnim, BFA_ITNIM_SM_OFFLINE);
-+}
-+
-+/**
-+ * Return true if itnim is considered offline for holding off IO request.
-+ * IO is not held if itnim is being deleted.
-+ */
-+bfa_boolean_t
-+bfa_itnim_hold_io(struct bfa_itnim_s *itnim)
-+{
-+	return itnim->fcpim->path_tov && itnim->iotov_active &&
-+		(bfa_sm_cmp_state(itnim, bfa_itnim_sm_fwcreate) ||
-+		 bfa_sm_cmp_state(itnim, bfa_itnim_sm_sler) ||
-+		 bfa_sm_cmp_state(itnim, bfa_itnim_sm_cleanup_offline) ||
-+		 bfa_sm_cmp_state(itnim, bfa_itnim_sm_fwdelete) ||
-+		 bfa_sm_cmp_state(itnim, bfa_itnim_sm_offline) ||
-+		 bfa_sm_cmp_state(itnim, bfa_itnim_sm_iocdisable));
-+}
-+
-+bfa_status_t
-+bfa_itnim_get_ioprofile(struct bfa_itnim_s *itnim,
-+		struct bfa_itnim_ioprofile_s *ioprofile)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(itnim->bfa);
-+	if (!fcpim->io_profile)
-+		return BFA_STATUS_IOPROFILE_OFF;
-+
-+	itnim->ioprofile.index = BFA_IOBUCKET_MAX;
-+	itnim->ioprofile.io_profile_start_time =
-+		bfa_io_profile_start_time(itnim->bfa);
-+	itnim->ioprofile.clock_res_mul = bfa_io_lat_clock_res_mul;
-+	itnim->ioprofile.clock_res_div = bfa_io_lat_clock_res_div;
-+	*ioprofile = itnim->ioprofile;
-+
-+	return BFA_STATUS_OK;
-+}
-+
-+void
-+bfa_itnim_get_stats(struct bfa_itnim_s *itnim,
-+	struct bfa_itnim_iostats_s *stats)
-+{
-+	*stats = itnim->stats;
-+}
-+
-+void
-+bfa_itnim_clear_stats(struct bfa_itnim_s *itnim)
-+{
-+	int j;
-+	bfa_os_memset(&itnim->stats, 0, sizeof(itnim->stats));
-+	bfa_os_memset(&itnim->ioprofile, 0, sizeof(itnim->ioprofile));
-+	for (j = 0; j < BFA_IOBUCKET_MAX; j++)
-+		itnim->ioprofile.io_latency.min[j] = ~0;
-+}
-+
-+/**
-+ *  BFA IO module state machine functions
-+ */
-+
-+/**
-+ *	IO is not started (unallocated).
-+ */
-+static void
-+bfa_ioim_sm_uninit(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc_fp(ioim->bfa, ioim->iotag);
-+	bfa_trc_fp(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_START:
-+		if (!bfa_itnim_is_online(ioim->itnim)) {
-+			if (!bfa_itnim_hold_io(ioim->itnim)) {
-+				bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+				list_del(&ioim->qe);
-+				list_add_tail(&ioim->qe,
-+					&ioim->fcpim->ioim_comp_q);
-+				bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
-+						__bfa_cb_ioim_pathtov, ioim);
-+			} else {
-+				list_del(&ioim->qe);
-+				list_add_tail(&ioim->qe,
-+					&ioim->itnim->pending_q);
-+			}
-+			break;
-+		}
-+
-+		if (ioim->nsges > BFI_SGE_INLINE) {
-+			if (!bfa_ioim_sge_setup(ioim)) {
-+				bfa_sm_set_state(ioim, bfa_ioim_sm_sgalloc);
-+				return;
-+			}
-+		}
-+
-+		if (!bfa_ioim_send_ioreq(ioim)) {
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_qfull);
-+			break;
-+		}
-+
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_active);
-+		break;
-+
-+	case BFA_IOIM_SM_IOTOV:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
-+				__bfa_cb_ioim_pathtov, ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT:
-+		/**
-+		 * IO in pending queue can get abort requests. Complete abort
-+		 * requests immediately.
-+		 */
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_assert(bfa_q_is_on_q(&ioim->itnim->pending_q, ioim));
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
-+				__bfa_cb_ioim_abort, ioim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	IO is waiting for SG pages.
-+ */
-+static void
-+bfa_ioim_sm_sgalloc(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_trc(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_SGALLOCED:
-+		if (!bfa_ioim_send_ioreq(ioim)) {
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_qfull);
-+			break;
-+		}
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_active);
-+		break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_sgpg_wcancel(ioim->bfa, &ioim->iosp->sgpg_wqe);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
-+			      ioim);
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_sgpg_wcancel(ioim->bfa, &ioim->iosp->sgpg_wqe);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_sgpg_wcancel(ioim->bfa, &ioim->iosp->sgpg_wqe);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
-+			      ioim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	IO is active.
-+ */
-+static void
-+bfa_ioim_sm_active(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc_fp(ioim->bfa, ioim->iotag);
-+	bfa_trc_fp(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_COMP_GOOD:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
-+			      __bfa_cb_ioim_good_comp, ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_COMP:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_comp,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_DONE:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_comp,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT:
-+		ioim->iosp->abort_explicit = BFA_TRUE;
-+		ioim->io_cbfn = __bfa_cb_ioim_abort;
-+
-+		if (bfa_ioim_send_abort(ioim))
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_abort);
-+		else {
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_abort_qfull);
-+			bfa_stats(ioim->itnim, qwait);
-+			bfa_reqq_wait(ioim->bfa, ioim->reqq,
-+					  &ioim->iosp->reqq_wait);
-+		}
-+		break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		ioim->iosp->abort_explicit = BFA_FALSE;
-+		ioim->io_cbfn = __bfa_cb_ioim_failed;
-+
-+		if (bfa_ioim_send_abort(ioim))
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_cleanup);
-+		else {
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_cleanup_qfull);
-+			bfa_stats(ioim->itnim, qwait);
-+			bfa_reqq_wait(ioim->bfa, ioim->reqq,
-+					  &ioim->iosp->reqq_wait);
-+		}
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_SQRETRY:
-+		if (bfa_ioim_get_iotag(ioim) != BFA_TRUE) {
-+			/* max retry completed free IO */
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
-+			bfa_ioim_move_to_comp_q(ioim);
-+			bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
-+					__bfa_cb_ioim_failed, ioim);
-+			break;
-+		}
-+		/* waiting for IO tag resource free */
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_cmnd_retry);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+*	IO is retried with new tag.
-+*/
-+static void
-+bfa_ioim_sm_cmnd_retry(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc_fp(ioim->bfa, ioim->iotag);
-+	bfa_trc_fp(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_FREE:
-+		/* abts and rrq done. Now retry the IO with new tag */
-+		if (!bfa_ioim_send_ioreq(ioim)) {
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_qfull);
-+			break;
-+		}
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_active);
-+	break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		ioim->iosp->abort_explicit = BFA_FALSE;
-+		ioim->io_cbfn = __bfa_cb_ioim_failed;
-+
-+		if (bfa_ioim_send_abort(ioim))
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_cleanup);
-+		else {
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_cleanup_qfull);
-+			bfa_stats(ioim->itnim, qwait);
-+			bfa_reqq_wait(ioim->bfa, ioim->reqq,
-+					  &ioim->iosp->reqq_wait);
-+		}
-+	break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
-+			 __bfa_cb_ioim_failed, ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT:
-+		/** in this state IO abort is done.
-+		 * Waiting for IO tag resource free.
-+		 */
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
-+			      ioim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	IO is being aborted, waiting for completion from firmware.
-+ */
-+static void
-+bfa_ioim_sm_abort(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_trc(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_COMP_GOOD:
-+	case BFA_IOIM_SM_COMP:
-+	case BFA_IOIM_SM_DONE:
-+	case BFA_IOIM_SM_FREE:
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT_DONE:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT_COMP:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_COMP_UTAG:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		bfa_assert(ioim->iosp->abort_explicit == BFA_TRUE);
-+		ioim->iosp->abort_explicit = BFA_FALSE;
-+
-+		if (bfa_ioim_send_abort(ioim))
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_cleanup);
-+		else {
-+			bfa_sm_set_state(ioim, bfa_ioim_sm_cleanup_qfull);
-+			bfa_stats(ioim->itnim, qwait);
-+			bfa_reqq_wait(ioim->bfa, ioim->reqq,
-+					  &ioim->iosp->reqq_wait);
-+		}
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
-+			      ioim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ * IO is being cleaned up (implicit abort), waiting for completion from
-+ * firmware.
-+ */
-+static void
-+bfa_ioim_sm_cleanup(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_trc(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_COMP_GOOD:
-+	case BFA_IOIM_SM_COMP:
-+	case BFA_IOIM_SM_DONE:
-+	case BFA_IOIM_SM_FREE:
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT:
-+		/**
-+		 * IO is already being aborted implicitly
-+		 */
-+		ioim->io_cbfn = __bfa_cb_ioim_abort;
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT_DONE:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, ioim->io_cbfn, ioim);
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT_COMP:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, ioim->io_cbfn, ioim);
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_COMP_UTAG:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, ioim->io_cbfn, ioim);
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		/**
-+		 * IO can be in cleanup state already due to TM command.
-+		 * 2nd cleanup request comes from ITN offline event.
-+		 */
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	IO is waiting for room in request CQ
-+ */
-+static void
-+bfa_ioim_sm_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_trc(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_QRESUME:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_active);
-+		bfa_ioim_send_ioreq(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
-+			      ioim);
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
-+			      ioim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Active IO is being aborted, waiting for room in request CQ.
-+ */
-+static void
-+bfa_ioim_sm_abort_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_trc(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_QRESUME:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_abort);
-+		bfa_ioim_send_abort(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		bfa_assert(ioim->iosp->abort_explicit == BFA_TRUE);
-+		ioim->iosp->abort_explicit = BFA_FALSE;
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_cleanup_qfull);
-+		break;
-+
-+	case BFA_IOIM_SM_COMP_GOOD:
-+	case BFA_IOIM_SM_COMP:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_DONE:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
-+		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_abort,
-+			      ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
-+			      ioim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Active IO is being cleaned up, waiting for room in request CQ.
-+ */
-+static void
-+bfa_ioim_sm_cleanup_qfull(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_trc(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_QRESUME:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_cleanup);
-+		bfa_ioim_send_abort(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_ABORT:
-+		/**
-+		 * IO is alraedy being cleaned up implicitly
-+		 */
-+		ioim->io_cbfn = __bfa_cb_ioim_abort;
-+		break;
-+
-+	case BFA_IOIM_SM_COMP_GOOD:
-+	case BFA_IOIM_SM_COMP:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, ioim->io_cbfn, ioim);
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_DONE:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
-+		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, ioim->io_cbfn, ioim);
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		bfa_reqq_wcancel(&ioim->iosp->reqq_wait);
-+		bfa_ioim_move_to_comp_q(ioim);
-+		bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, __bfa_cb_ioim_failed,
-+			      ioim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ * IO bfa callback is pending.
-+ */
-+static void
-+bfa_ioim_sm_hcb(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc_fp(ioim->bfa, ioim->iotag);
-+	bfa_trc_fp(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_HCB:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_uninit);
-+		bfa_ioim_free(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ * IO bfa callback is pending. IO resource cannot be freed.
-+ */
-+static void
-+bfa_ioim_sm_hcb_free(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_trc(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_HCB:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_resfree);
-+		list_del(&ioim->qe);
-+		list_add_tail(&ioim->qe, &ioim->fcpim->ioim_resfree_q);
-+		break;
-+
-+	case BFA_IOIM_SM_FREE:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_hcb);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+/**
-+ * IO is completed, waiting resource free from firmware.
-+ */
-+static void
-+bfa_ioim_sm_resfree(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_trc(ioim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_IOIM_SM_FREE:
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_uninit);
-+		bfa_ioim_free(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_CLEANUP:
-+		bfa_ioim_notify_cleanup(ioim);
-+		break;
-+
-+	case BFA_IOIM_SM_HWFAIL:
-+		break;
-+
-+	default:
-+		bfa_sm_fault(ioim->bfa, event);
-+	}
-+}
-+
-+
-+
-+/**
-+ *  hal_ioim_private
-+ */
-+
-+static void
-+__bfa_cb_ioim_good_comp(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_ioim_s *ioim = cbarg;
-+
-+	if (!complete) {
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_HCB);
-+		return;
-+	}
-+
-+	bfa_cb_ioim_good_comp(ioim->bfa->bfad, ioim->dio);
-+}
-+
-+static void
-+__bfa_cb_ioim_comp(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_ioim_s	*ioim = cbarg;
-+	struct bfi_ioim_rsp_s *m;
-+	u8	*snsinfo = NULL;
-+	u8	sns_len = 0;
-+	s32	residue = 0;
-+
-+	if (!complete) {
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_HCB);
-+		return;
-+	}
-+
-+	m = (struct bfi_ioim_rsp_s *) &ioim->iosp->comp_rspmsg;
-+	if (m->io_status == BFI_IOIM_STS_OK) {
-+		/**
-+		 * setup sense information, if present
-+		 */
-+		if ((m->scsi_status == SCSI_STATUS_CHECK_CONDITION) &&
-+					m->sns_len) {
-+			sns_len = m->sns_len;
-+			snsinfo = ioim->iosp->snsinfo;
-+		}
-+
-+		/**
-+		 * setup residue value correctly for normal completions
-+		 */
-+		if (m->resid_flags == FCP_RESID_UNDER) {
-+			residue = bfa_os_ntohl(m->residue);
-+			bfa_stats(ioim->itnim, iocomp_underrun);
-+		}
-+		if (m->resid_flags == FCP_RESID_OVER) {
-+			residue = bfa_os_ntohl(m->residue);
-+			residue = -residue;
-+			bfa_stats(ioim->itnim, iocomp_overrun);
-+		}
-+	}
-+
-+	bfa_cb_ioim_done(ioim->bfa->bfad, ioim->dio, m->io_status,
-+			  m->scsi_status, sns_len, snsinfo, residue);
-+}
-+
-+static void
-+__bfa_cb_ioim_failed(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_ioim_s *ioim = cbarg;
-+
-+	if (!complete) {
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_HCB);
-+		return;
-+	}
-+
-+	bfa_cb_ioim_done(ioim->bfa->bfad, ioim->dio, BFI_IOIM_STS_ABORTED,
-+			  0, 0, NULL, 0);
-+}
-+
-+static void
-+__bfa_cb_ioim_pathtov(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_ioim_s *ioim = cbarg;
-+
-+	bfa_stats(ioim->itnim, path_tov_expired);
-+	if (!complete) {
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_HCB);
-+		return;
-+	}
-+
-+	bfa_cb_ioim_done(ioim->bfa->bfad, ioim->dio, BFI_IOIM_STS_PATHTOV,
-+			  0, 0, NULL, 0);
-+}
-+
-+static void
-+__bfa_cb_ioim_abort(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_ioim_s *ioim = cbarg;
-+
-+	if (!complete) {
-+		bfa_sm_send_event(ioim, BFA_IOIM_SM_HCB);
-+		return;
-+	}
-+
-+	bfa_cb_ioim_abort(ioim->bfa->bfad, ioim->dio);
-+}
-+
-+static void
-+bfa_ioim_sgpg_alloced(void *cbarg)
-+{
-+	struct bfa_ioim_s *ioim = cbarg;
-+
-+	ioim->nsgpgs = BFA_SGPG_NPAGE(ioim->nsges);
-+	list_splice_tail_init(&ioim->iosp->sgpg_wqe.sgpg_q, &ioim->sgpg_q);
-+	bfa_ioim_sgpg_setup(ioim);
-+	bfa_sm_send_event(ioim, BFA_IOIM_SM_SGALLOCED);
-+}
-+
-+/**
-+ * Send I/O request to firmware.
-+ */
-+static	bfa_boolean_t
-+bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
-+{
-+	struct bfa_itnim_s *itnim = ioim->itnim;
-+	struct bfi_ioim_req_s *m;
-+	static struct fcp_cmnd_s cmnd_z0 = { 0 };
-+	struct bfi_sge_s      *sge;
-+	u32	pgdlen = 0;
-+	u32	fcp_dl;
-+	u64 addr;
-+	struct scatterlist *sg;
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *) ioim->dio;
-+
-+	/**
-+	 * check for room in queue to send request now
-+	 */
-+	m = bfa_reqq_next(ioim->bfa, ioim->reqq);
-+	if (!m) {
-+		bfa_stats(ioim->itnim, qwait);
-+		bfa_reqq_wait(ioim->bfa, ioim->reqq,
-+				  &ioim->iosp->reqq_wait);
-+		return BFA_FALSE;
-+	}
-+
-+	/**
-+	 * build i/o request message next
-+	 */
-+	m->io_tag = bfa_os_htons(ioim->iotag);
-+	m->rport_hdl = ioim->itnim->rport->fw_handle;
-+	m->io_timeout = bfa_cb_ioim_get_timeout(ioim->dio);
-+
-+	/**
-+	 * build inline IO SG element here
-+	 */
-+	sge = &m->sges[0];
-+	if (ioim->nsges) {
-+		sg = (struct scatterlist *)scsi_sglist(cmnd);
-+		addr = bfa_os_sgaddr(sg_dma_address(sg));
-+		sge->sga = *(union bfi_addr_u *) &addr;
-+		pgdlen = sg_dma_len(sg);
-+		sge->sg_len = pgdlen;
-+		sge->flags = (ioim->nsges > BFI_SGE_INLINE) ?
-+					BFI_SGE_DATA_CPL : BFI_SGE_DATA_LAST;
-+		bfa_sge_to_be(sge);
-+		sge++;
-+	}
-+
-+	if (ioim->nsges > BFI_SGE_INLINE) {
-+		sge->sga = ioim->sgpg->sgpg_pa;
-+	} else {
-+		sge->sga.a32.addr_lo = 0;
-+		sge->sga.a32.addr_hi = 0;
-+	}
-+	sge->sg_len = pgdlen;
-+	sge->flags = BFI_SGE_PGDLEN;
-+	bfa_sge_to_be(sge);
-+
-+	/**
-+	 * set up I/O command parameters
-+	 */
-+	bfa_os_assign(m->cmnd, cmnd_z0);
-+	m->cmnd.lun = bfa_cb_ioim_get_lun(ioim->dio);
-+	m->cmnd.iodir = bfa_cb_ioim_get_iodir(ioim->dio);
-+	bfa_os_assign(m->cmnd.cdb,
-+			*(scsi_cdb_t *)bfa_cb_ioim_get_cdb(ioim->dio));
-+	fcp_dl = bfa_cb_ioim_get_size(ioim->dio);
-+	m->cmnd.fcp_dl = bfa_os_htonl(fcp_dl);
-+
-+	/**
-+	 * set up I/O message header
-+	 */
-+	switch (m->cmnd.iodir) {
-+	case FCP_IODIR_READ:
-+		bfi_h2i_set(m->mh, BFI_MC_IOIM_READ, 0, bfa_lpuid(ioim->bfa));
-+		bfa_stats(itnim, input_reqs);
-+		ioim->itnim->stats.rd_throughput += fcp_dl;
-+		break;
-+	case FCP_IODIR_WRITE:
-+		bfi_h2i_set(m->mh, BFI_MC_IOIM_WRITE, 0, bfa_lpuid(ioim->bfa));
-+		bfa_stats(itnim, output_reqs);
-+		ioim->itnim->stats.wr_throughput += fcp_dl;
-+		break;
-+	case FCP_IODIR_RW:
-+		bfa_stats(itnim, input_reqs);
-+		bfa_stats(itnim, output_reqs);
-+	default:
-+		bfi_h2i_set(m->mh, BFI_MC_IOIM_IO, 0, bfa_lpuid(ioim->bfa));
-+	}
-+	if (itnim->seq_rec ||
-+	    (bfa_cb_ioim_get_size(ioim->dio) & (sizeof(u32) - 1)))
-+		bfi_h2i_set(m->mh, BFI_MC_IOIM_IO, 0, bfa_lpuid(ioim->bfa));
-+
-+#ifdef IOIM_ADVANCED
-+	m->cmnd.crn = bfa_cb_ioim_get_crn(ioim->dio);
-+	m->cmnd.priority = bfa_cb_ioim_get_priority(ioim->dio);
-+	m->cmnd.taskattr = bfa_cb_ioim_get_taskattr(ioim->dio);
-+
-+	/**
-+	 * Handle large CDB (>16 bytes).
-+	 */
-+	m->cmnd.addl_cdb_len = (bfa_cb_ioim_get_cdblen(ioim->dio) -
-+					FCP_CMND_CDB_LEN) / sizeof(u32);
-+	if (m->cmnd.addl_cdb_len) {
-+		bfa_os_memcpy(&m->cmnd.cdb + 1, (scsi_cdb_t *)
-+				bfa_cb_ioim_get_cdb(ioim->dio) + 1,
-+				m->cmnd.addl_cdb_len * sizeof(u32));
-+		fcp_cmnd_fcpdl(&m->cmnd) =
-+				bfa_os_htonl(bfa_cb_ioim_get_size(ioim->dio));
-+	}
-+#endif
-+
-+	/**
-+	 * queue I/O message to firmware
-+	 */
-+	bfa_reqq_produce(ioim->bfa, ioim->reqq);
-+	return BFA_TRUE;
-+}
-+
-+/**
-+ * Setup any additional SG pages needed.Inline SG element is setup
-+ * at queuing time.
-+ */
-+static bfa_boolean_t
-+bfa_ioim_sge_setup(struct bfa_ioim_s *ioim)
-+{
-+	u16	nsgpgs;
-+
-+	bfa_assert(ioim->nsges > BFI_SGE_INLINE);
-+
-+	/**
-+	 * allocate SG pages needed
-+	 */
-+	nsgpgs = BFA_SGPG_NPAGE(ioim->nsges);
-+	if (!nsgpgs)
-+		return BFA_TRUE;
-+
-+	if (bfa_sgpg_malloc(ioim->bfa, &ioim->sgpg_q, nsgpgs)
-+	    != BFA_STATUS_OK) {
-+		bfa_sgpg_wait(ioim->bfa, &ioim->iosp->sgpg_wqe, nsgpgs);
-+		return BFA_FALSE;
-+	}
-+
-+	ioim->nsgpgs = nsgpgs;
-+	bfa_ioim_sgpg_setup(ioim);
-+
-+	return BFA_TRUE;
-+}
-+
-+static void
-+bfa_ioim_sgpg_setup(struct bfa_ioim_s *ioim)
-+{
-+	int		sgeid, nsges, i;
-+	struct bfi_sge_s      *sge;
-+	struct bfa_sgpg_s *sgpg;
-+	u32	pgcumsz;
-+	u64        addr;
-+	struct scatterlist *sg;
-+	struct scsi_cmnd *cmnd = (struct scsi_cmnd *) ioim->dio;
-+
-+	sgeid = BFI_SGE_INLINE;
-+	ioim->sgpg = sgpg = bfa_q_first(&ioim->sgpg_q);
-+
-+	sg = scsi_sglist(cmnd);
-+	sg = sg_next(sg);
-+
-+	do {
-+		sge = sgpg->sgpg->sges;
-+		nsges = ioim->nsges - sgeid;
-+		if (nsges > BFI_SGPG_DATA_SGES)
-+			nsges = BFI_SGPG_DATA_SGES;
-+
-+		pgcumsz = 0;
-+		for (i = 0; i < nsges; i++, sge++, sgeid++, sg = sg_next(sg)) {
-+			addr = bfa_os_sgaddr(sg_dma_address(sg));
-+			sge->sga = *(union bfi_addr_u *) &addr;
-+			sge->sg_len = sg_dma_len(sg);
-+			pgcumsz += sge->sg_len;
-+
-+			/**
-+			 * set flags
-+			 */
-+			if (i < (nsges - 1))
-+				sge->flags = BFI_SGE_DATA;
-+			else if (sgeid < (ioim->nsges - 1))
-+				sge->flags = BFI_SGE_DATA_CPL;
-+			else
-+				sge->flags = BFI_SGE_DATA_LAST;
-+
-+			bfa_sge_to_le(sge);
-+		}
-+
-+		sgpg = (struct bfa_sgpg_s *) bfa_q_next(sgpg);
-+
-+		/**
-+		 * set the link element of each page
-+		 */
-+		if (sgeid == ioim->nsges) {
-+			sge->flags = BFI_SGE_PGDLEN;
-+			sge->sga.a32.addr_lo = 0;
-+			sge->sga.a32.addr_hi = 0;
-+		} else {
-+			sge->flags = BFI_SGE_LINK;
-+			sge->sga = sgpg->sgpg_pa;
-+		}
-+		sge->sg_len = pgcumsz;
-+
-+		bfa_sge_to_le(sge);
-+	} while (sgeid < ioim->nsges);
-+}
-+
-+/**
-+ * Send I/O abort request to firmware.
-+ */
-+static	bfa_boolean_t
-+bfa_ioim_send_abort(struct bfa_ioim_s *ioim)
-+{
-+	struct bfi_ioim_abort_req_s *m;
-+	enum bfi_ioim_h2i	msgop;
-+
-+	/**
-+	 * check for room in queue to send request now
-+	 */
-+	m = bfa_reqq_next(ioim->bfa, ioim->reqq);
-+	if (!m)
-+		return BFA_FALSE;
-+
-+	/**
-+	 * build i/o request message next
-+	 */
-+	if (ioim->iosp->abort_explicit)
-+		msgop = BFI_IOIM_H2I_IOABORT_REQ;
-+	else
-+		msgop = BFI_IOIM_H2I_IOCLEANUP_REQ;
-+
-+	bfi_h2i_set(m->mh, BFI_MC_IOIM, msgop, bfa_lpuid(ioim->bfa));
-+	m->io_tag    = bfa_os_htons(ioim->iotag);
-+	m->abort_tag = ++ioim->abort_tag;
-+
-+	/**
-+	 * queue I/O message to firmware
-+	 */
-+	bfa_reqq_produce(ioim->bfa, ioim->reqq);
-+	return BFA_TRUE;
-+}
-+
-+/**
-+ * Call to resume any I/O requests waiting for room in request queue.
-+ */
-+static void
-+bfa_ioim_qresume(void *cbarg)
-+{
-+	struct bfa_ioim_s *ioim = cbarg;
-+
-+	bfa_stats(ioim->itnim, qresumes);
-+	bfa_sm_send_event(ioim, BFA_IOIM_SM_QRESUME);
-+}
-+
-+
-+static void
-+bfa_ioim_notify_cleanup(struct bfa_ioim_s *ioim)
-+{
-+	/**
-+	 * Move IO from itnim queue to fcpim global queue since itnim will be
-+	 * freed.
-+	 */
-+	list_del(&ioim->qe);
-+	list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
-+
-+	if (!ioim->iosp->tskim) {
-+		if (ioim->fcpim->delay_comp && ioim->itnim->iotov_active) {
-+			bfa_cb_dequeue(&ioim->hcb_qe);
-+			list_del(&ioim->qe);
-+			list_add_tail(&ioim->qe, &ioim->itnim->delay_comp_q);
-+		}
-+		bfa_itnim_iodone(ioim->itnim);
-+	} else
-+		bfa_tskim_iodone(ioim->iosp->tskim);
-+}
-+
-+static bfa_boolean_t
-+bfa_ioim_is_abortable(struct bfa_ioim_s *ioim)
-+{
-+	if ((bfa_sm_cmp_state(ioim, bfa_ioim_sm_uninit) &&
-+	    (!bfa_q_is_on_q(&ioim->itnim->pending_q, ioim)))	||
-+	    (bfa_sm_cmp_state(ioim, bfa_ioim_sm_abort))		||
-+	    (bfa_sm_cmp_state(ioim, bfa_ioim_sm_abort_qfull))	||
-+	    (bfa_sm_cmp_state(ioim, bfa_ioim_sm_hcb))		||
-+	    (bfa_sm_cmp_state(ioim, bfa_ioim_sm_hcb_free))	||
-+	    (bfa_sm_cmp_state(ioim, bfa_ioim_sm_resfree)))
-+		return BFA_FALSE;
-+
-+	return BFA_TRUE;
-+}
-+
-+/**
-+ *	or after the link comes back.
-+ */
-+void
-+bfa_ioim_delayed_comp(struct bfa_ioim_s *ioim, bfa_boolean_t iotov)
-+{
-+	/**
-+	 * If path tov timer expired, failback with PATHTOV status - these
-+	 * IO requests are not normally retried by IO stack.
-+	 *
-+	 * Otherwise device cameback online and fail it with normal failed
-+	 * status so that IO stack retries these failed IO requests.
-+	 */
-+	if (iotov)
-+		ioim->io_cbfn = __bfa_cb_ioim_pathtov;
-+	else {
-+		ioim->io_cbfn = __bfa_cb_ioim_failed;
-+		bfa_stats(ioim->itnim, iocom_nexus_abort);
-+	}
-+	bfa_cb_queue(ioim->bfa, &ioim->hcb_qe, ioim->io_cbfn, ioim);
-+
-+	/**
-+	 * Move IO to fcpim global queue since itnim will be
-+	 * freed.
-+	 */
-+	list_del(&ioim->qe);
-+	list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
-+}
-+
-+
-+
-+/**
-+ *  hal_ioim_friend
-+ */
-+
-+/**
-+ * Memory allocation and initialization.
-+ */
-+void
-+bfa_ioim_attach(struct bfa_fcpim_mod_s *fcpim, struct bfa_meminfo_s *minfo)
-+{
-+	struct bfa_ioim_s		*ioim;
-+	struct bfa_ioim_sp_s	*iosp;
-+	u16		i;
-+	u8			*snsinfo;
-+	u32		snsbufsz;
-+
-+	/**
-+	 * claim memory first
-+	 */
-+	ioim = (struct bfa_ioim_s *) bfa_meminfo_kva(minfo);
-+	fcpim->ioim_arr = ioim;
-+	bfa_meminfo_kva(minfo) = (u8 *) (ioim + fcpim->num_ioim_reqs);
-+
-+	iosp = (struct bfa_ioim_sp_s *) bfa_meminfo_kva(minfo);
-+	fcpim->ioim_sp_arr = iosp;
-+	bfa_meminfo_kva(minfo) = (u8 *) (iosp + fcpim->num_ioim_reqs);
-+
-+	/**
-+	 * Claim DMA memory for per IO sense data.
-+	 */
-+	snsbufsz = fcpim->num_ioim_reqs * BFI_IOIM_SNSLEN;
-+	fcpim->snsbase.pa  = bfa_meminfo_dma_phys(minfo);
-+	bfa_meminfo_dma_phys(minfo) += snsbufsz;
-+
-+	fcpim->snsbase.kva = bfa_meminfo_dma_virt(minfo);
-+	bfa_meminfo_dma_virt(minfo) += snsbufsz;
-+	snsinfo = fcpim->snsbase.kva;
-+	bfa_iocfc_set_snsbase(fcpim->bfa, fcpim->snsbase.pa);
-+
-+	/**
-+	 * Initialize ioim free queues
-+	 */
-+	INIT_LIST_HEAD(&fcpim->ioim_free_q);
-+	INIT_LIST_HEAD(&fcpim->ioim_resfree_q);
-+	INIT_LIST_HEAD(&fcpim->ioim_comp_q);
-+
-+	for (i = 0; i < fcpim->num_ioim_reqs;
-+	     i++, ioim++, iosp++, snsinfo += BFI_IOIM_SNSLEN) {
-+		/*
-+		 * initialize IOIM
-+		 */
-+		bfa_os_memset(ioim, 0, sizeof(struct bfa_ioim_s));
-+		ioim->iotag   = i;
-+		ioim->bfa     = fcpim->bfa;
-+		ioim->fcpim   = fcpim;
-+		ioim->iosp    = iosp;
-+		iosp->snsinfo = snsinfo;
-+		INIT_LIST_HEAD(&ioim->sgpg_q);
-+		bfa_reqq_winit(&ioim->iosp->reqq_wait,
-+				   bfa_ioim_qresume, ioim);
-+		bfa_sgpg_winit(&ioim->iosp->sgpg_wqe,
-+				   bfa_ioim_sgpg_alloced, ioim);
-+		bfa_sm_set_state(ioim, bfa_ioim_sm_uninit);
-+
-+		list_add_tail(&ioim->qe, &fcpim->ioim_free_q);
-+	}
-+}
-+
-+/**
-+ * Driver detach time call.
-+ */
-+void
-+bfa_ioim_detach(struct bfa_fcpim_mod_s *fcpim)
-+{
-+}
-+
-+void
-+bfa_ioim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct bfi_ioim_rsp_s *rsp = (struct bfi_ioim_rsp_s *) m;
-+	struct bfa_ioim_s *ioim;
-+	u16	iotag;
-+	enum bfa_ioim_event evt = BFA_IOIM_SM_COMP;
-+
-+	iotag = bfa_os_ntohs(rsp->io_tag);
-+
-+	ioim = BFA_IOIM_FROM_TAG(fcpim, iotag);
-+	bfa_assert(ioim->iotag == iotag);
-+
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_trc(ioim->bfa, rsp->io_status);
-+	bfa_trc(ioim->bfa, rsp->reuse_io_tag);
-+
-+	if (bfa_sm_cmp_state(ioim, bfa_ioim_sm_active))
-+		bfa_os_assign(ioim->iosp->comp_rspmsg, *m);
-+
-+	switch (rsp->io_status) {
-+	case BFI_IOIM_STS_OK:
-+		bfa_stats(ioim->itnim, iocomp_ok);
-+		if (rsp->reuse_io_tag == 0)
-+			evt = BFA_IOIM_SM_DONE;
-+		else
-+			evt = BFA_IOIM_SM_COMP;
-+		break;
-+
-+	case BFI_IOIM_STS_TIMEDOUT:
-+		bfa_stats(ioim->itnim, iocomp_timedout);
-+	case BFI_IOIM_STS_ABORTED:
-+		rsp->io_status = BFI_IOIM_STS_ABORTED;
-+		bfa_stats(ioim->itnim, iocomp_aborted);
-+		if (rsp->reuse_io_tag == 0)
-+			evt = BFA_IOIM_SM_DONE;
-+		else
-+			evt = BFA_IOIM_SM_COMP;
-+		break;
-+
-+	case BFI_IOIM_STS_PROTO_ERR:
-+		bfa_stats(ioim->itnim, iocom_proto_err);
-+		bfa_assert(rsp->reuse_io_tag);
-+		evt = BFA_IOIM_SM_COMP;
-+		break;
-+
-+	case BFI_IOIM_STS_SQER_NEEDED:
-+		bfa_stats(ioim->itnim, iocom_sqer_needed);
-+		bfa_assert(rsp->reuse_io_tag == 0);
-+		evt = BFA_IOIM_SM_SQRETRY;
-+		break;
-+
-+	case BFI_IOIM_STS_RES_FREE:
-+		bfa_stats(ioim->itnim, iocom_res_free);
-+		evt = BFA_IOIM_SM_FREE;
-+		break;
-+
-+	case BFI_IOIM_STS_HOST_ABORTED:
-+		bfa_stats(ioim->itnim, iocom_hostabrts);
-+		if (rsp->abort_tag != ioim->abort_tag) {
-+			bfa_trc(ioim->bfa, rsp->abort_tag);
-+			bfa_trc(ioim->bfa, ioim->abort_tag);
-+			return;
-+		}
-+
-+		if (rsp->reuse_io_tag)
-+			evt = BFA_IOIM_SM_ABORT_COMP;
-+		else
-+			evt = BFA_IOIM_SM_ABORT_DONE;
-+		break;
-+
-+	case BFI_IOIM_STS_UTAG:
-+		bfa_stats(ioim->itnim, iocom_utags);
-+		evt = BFA_IOIM_SM_COMP_UTAG;
-+		break;
-+
-+	default:
-+		bfa_assert(0);
-+	}
-+
-+	bfa_sm_send_event(ioim, evt);
-+}
-+
-+void
-+bfa_ioim_good_comp_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct bfi_ioim_rsp_s *rsp = (struct bfi_ioim_rsp_s *) m;
-+	struct bfa_ioim_s *ioim;
-+	u16	iotag;
-+
-+	iotag = bfa_os_ntohs(rsp->io_tag);
-+
-+	ioim = BFA_IOIM_FROM_TAG(fcpim, iotag);
-+	bfa_assert(ioim->iotag == iotag);
-+
-+	bfa_trc_fp(ioim->bfa, ioim->iotag);
-+	bfa_ioim_cb_profile_comp(fcpim, ioim);
-+
-+	bfa_sm_send_event(ioim, BFA_IOIM_SM_COMP_GOOD);
-+}
-+
-+void
-+bfa_ioim_profile_start(struct bfa_ioim_s *ioim)
-+{
-+	ioim->start_time = bfa_os_get_clock();
-+}
-+
-+void
-+bfa_ioim_profile_comp(struct bfa_ioim_s *ioim)
-+{
-+	u32 fcp_dl = bfa_cb_ioim_get_size(ioim->dio);
-+	u32 index = bfa_ioim_get_index(fcp_dl);
-+	u64 end_time = bfa_os_get_clock();
-+	struct bfa_itnim_latency_s *io_lat =
-+			&(ioim->itnim->ioprofile.io_latency);
-+	u32 val = (u32)(end_time - ioim->start_time);
-+
-+	bfa_itnim_ioprofile_update(ioim->itnim, index);
-+
-+	io_lat->count[index]++;
-+	io_lat->min[index] = (io_lat->min[index] < val) ?
-+		io_lat->min[index] : val;
-+	io_lat->max[index] = (io_lat->max[index] > val) ?
-+		io_lat->max[index] : val;
-+	io_lat->avg[index] += val;
-+}
-+/**
-+ * Called by itnim to clean up IO while going offline.
-+ */
-+void
-+bfa_ioim_cleanup(struct bfa_ioim_s *ioim)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_stats(ioim->itnim, io_cleanups);
-+
-+	ioim->iosp->tskim = NULL;
-+	bfa_sm_send_event(ioim, BFA_IOIM_SM_CLEANUP);
-+}
-+
-+void
-+bfa_ioim_cleanup_tm(struct bfa_ioim_s *ioim, struct bfa_tskim_s *tskim)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_stats(ioim->itnim, io_tmaborts);
-+
-+	ioim->iosp->tskim = tskim;
-+	bfa_sm_send_event(ioim, BFA_IOIM_SM_CLEANUP);
-+}
-+
-+/**
-+ * IOC failure handling.
-+ */
-+void
-+bfa_ioim_iocdisable(struct bfa_ioim_s *ioim)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_stats(ioim->itnim, io_iocdowns);
-+	bfa_sm_send_event(ioim, BFA_IOIM_SM_HWFAIL);
-+}
-+
-+/**
-+ * IO offline TOV popped. Fail the pending IO.
-+ */
-+void
-+bfa_ioim_tov(struct bfa_ioim_s *ioim)
-+{
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+	bfa_sm_send_event(ioim, BFA_IOIM_SM_IOTOV);
-+}
-+
-+
-+
-+/**
-+ *  hal_ioim_api
-+ */
-+
-+/**
-+ * Allocate IOIM resource for initiator mode I/O request.
-+ */
-+struct bfa_ioim_s *
-+bfa_ioim_alloc(struct bfa_s *bfa, struct bfad_ioim_s *dio,
-+		struct bfa_itnim_s *itnim, u16 nsges)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct bfa_ioim_s *ioim;
-+
-+	/**
-+	 * alocate IOIM resource
-+	 */
-+	bfa_q_deq(&fcpim->ioim_free_q, &ioim);
-+	if (!ioim) {
-+		bfa_stats(itnim, no_iotags);
-+		return NULL;
-+	}
-+
-+	ioim->dio = dio;
-+	ioim->itnim = itnim;
-+	ioim->nsges = nsges;
-+	ioim->nsgpgs = 0;
-+
-+	bfa_stats(itnim, total_ios);
-+	fcpim->ios_active++;
-+
-+	list_add_tail(&ioim->qe, &itnim->io_q);
-+	bfa_trc_fp(ioim->bfa, ioim->iotag);
-+
-+	return ioim;
-+}
-+
-+void
-+bfa_ioim_free(struct bfa_ioim_s *ioim)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = ioim->fcpim;
-+
-+	bfa_trc_fp(ioim->bfa, ioim->iotag);
-+	bfa_assert_fp(bfa_sm_cmp_state(ioim, bfa_ioim_sm_uninit));
-+
-+	bfa_assert_fp(list_empty(&ioim->sgpg_q) ||
-+			(ioim->nsges > BFI_SGE_INLINE));
-+
-+	if (ioim->nsgpgs > 0)
-+		bfa_sgpg_mfree(ioim->bfa, &ioim->sgpg_q, ioim->nsgpgs);
-+
-+	bfa_stats(ioim->itnim, io_comps);
-+	fcpim->ios_active--;
-+
-+	list_del(&ioim->qe);
-+	list_add_tail(&ioim->qe, &fcpim->ioim_free_q);
-+}
-+
-+void
-+bfa_ioim_start(struct bfa_ioim_s *ioim)
-+{
-+	bfa_trc_fp(ioim->bfa, ioim->iotag);
-+
-+	bfa_ioim_cb_profile_start(ioim->fcpim, ioim);
-+
-+	/**
-+	 * Obtain the queue over which this request has to be issued
-+	 */
-+	ioim->reqq = bfa_fcpim_ioredirect_enabled(ioim->bfa) ?
-+			bfa_cb_ioim_get_reqq(ioim->dio) :
-+			bfa_itnim_get_reqq(ioim);
-+
-+	bfa_sm_send_event(ioim, BFA_IOIM_SM_START);
-+}
-+
-+/**
-+ * Driver I/O abort request.
-+ */
-+bfa_status_t
-+bfa_ioim_abort(struct bfa_ioim_s *ioim)
-+{
-+
-+	bfa_trc(ioim->bfa, ioim->iotag);
-+
-+	if (!bfa_ioim_is_abortable(ioim))
-+		return BFA_STATUS_FAILED;
-+
-+	bfa_stats(ioim->itnim, io_aborts);
-+	bfa_sm_send_event(ioim, BFA_IOIM_SM_ABORT);
-+
-+	return BFA_STATUS_OK;
-+}
-+
-+
-+/**
-+ *  BFA TSKIM state machine functions
-+ */
-+
-+/**
-+ *	Task management command beginning state.
-+ */
-+static void
-+bfa_tskim_sm_uninit(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
-+{
-+	bfa_trc(tskim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_TSKIM_SM_START:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_active);
-+		bfa_tskim_gather_ios(tskim);
-+
-+		/**
-+		 * If device is offline, do not send TM on wire. Just cleanup
-+		 * any pending IO requests and complete TM request.
-+		 */
-+		if (!bfa_itnim_is_online(tskim->itnim)) {
-+			bfa_sm_set_state(tskim, bfa_tskim_sm_iocleanup);
-+			tskim->tsk_status = BFI_TSKIM_STS_OK;
-+			bfa_tskim_cleanup_ios(tskim);
-+			return;
-+		}
-+
-+		if (!bfa_tskim_send(tskim)) {
-+			bfa_sm_set_state(tskim, bfa_tskim_sm_qfull);
-+			bfa_stats(tskim->itnim, tm_qwait);
-+			bfa_reqq_wait(tskim->bfa, tskim->itnim->reqq,
-+					  &tskim->reqq_wait);
-+		}
-+		break;
-+
-+	default:
-+		bfa_sm_fault(tskim->bfa, event);
-+	}
-+}
-+
-+/**
-+ * brief
-+ *	TM command is active, awaiting completion from firmware to
-+ *	cleanup IO requests in TM scope.
-+ */
-+static void
-+bfa_tskim_sm_active(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
-+{
-+	bfa_trc(tskim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_TSKIM_SM_DONE:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_iocleanup);
-+		bfa_tskim_cleanup_ios(tskim);
-+		break;
-+
-+	case BFA_TSKIM_SM_CLEANUP:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_cleanup);
-+		if (!bfa_tskim_send_abort(tskim)) {
-+			bfa_sm_set_state(tskim, bfa_tskim_sm_cleanup_qfull);
-+			bfa_stats(tskim->itnim, tm_qwait);
-+			bfa_reqq_wait(tskim->bfa, tskim->itnim->reqq,
-+				&tskim->reqq_wait);
-+		}
-+		break;
-+
-+	case BFA_TSKIM_SM_HWFAIL:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_hcb);
-+		bfa_tskim_iocdisable_ios(tskim);
-+		bfa_tskim_qcomp(tskim, __bfa_cb_tskim_failed);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(tskim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	An active TM is being cleaned up since ITN is offline. Awaiting cleanup
-+ *	completion event from firmware.
-+ */
-+static void
-+bfa_tskim_sm_cleanup(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
-+{
-+	bfa_trc(tskim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_TSKIM_SM_DONE:
-+		/**
-+		 * Ignore and wait for ABORT completion from firmware.
-+		 */
-+		break;
-+
-+	case BFA_TSKIM_SM_CLEANUP_DONE:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_iocleanup);
-+		bfa_tskim_cleanup_ios(tskim);
-+		break;
-+
-+	case BFA_TSKIM_SM_HWFAIL:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_hcb);
-+		bfa_tskim_iocdisable_ios(tskim);
-+		bfa_tskim_qcomp(tskim, __bfa_cb_tskim_failed);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(tskim->bfa, event);
-+	}
-+}
-+
-+static void
-+bfa_tskim_sm_iocleanup(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
-+{
-+	bfa_trc(tskim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_TSKIM_SM_IOS_DONE:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_hcb);
-+		bfa_tskim_qcomp(tskim, __bfa_cb_tskim_done);
-+		break;
-+
-+	case BFA_TSKIM_SM_CLEANUP:
-+		/**
-+		 * Ignore, TM command completed on wire.
-+		 * Notify TM conmpletion on IO cleanup completion.
-+		 */
-+		break;
-+
-+	case BFA_TSKIM_SM_HWFAIL:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_hcb);
-+		bfa_tskim_iocdisable_ios(tskim);
-+		bfa_tskim_qcomp(tskim, __bfa_cb_tskim_failed);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(tskim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Task management command is waiting for room in request CQ
-+ */
-+static void
-+bfa_tskim_sm_qfull(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
-+{
-+	bfa_trc(tskim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_TSKIM_SM_QRESUME:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_active);
-+		bfa_tskim_send(tskim);
-+		break;
-+
-+	case BFA_TSKIM_SM_CLEANUP:
-+		/**
-+		 * No need to send TM on wire since ITN is offline.
-+		 */
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_iocleanup);
-+		bfa_reqq_wcancel(&tskim->reqq_wait);
-+		bfa_tskim_cleanup_ios(tskim);
-+		break;
-+
-+	case BFA_TSKIM_SM_HWFAIL:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_hcb);
-+		bfa_reqq_wcancel(&tskim->reqq_wait);
-+		bfa_tskim_iocdisable_ios(tskim);
-+		bfa_tskim_qcomp(tskim, __bfa_cb_tskim_failed);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(tskim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	Task management command is active, awaiting for room in request CQ
-+ *	to send clean up request.
-+ */
-+static void
-+bfa_tskim_sm_cleanup_qfull(struct bfa_tskim_s *tskim,
-+		enum bfa_tskim_event event)
-+{
-+	bfa_trc(tskim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_TSKIM_SM_DONE:
-+		bfa_reqq_wcancel(&tskim->reqq_wait);
-+		/**
-+		 *
-+		 * Fall through !!!
-+		 */
-+
-+	case BFA_TSKIM_SM_QRESUME:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_cleanup);
-+		bfa_tskim_send_abort(tskim);
-+		break;
-+
-+	case BFA_TSKIM_SM_HWFAIL:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_hcb);
-+		bfa_reqq_wcancel(&tskim->reqq_wait);
-+		bfa_tskim_iocdisable_ios(tskim);
-+		bfa_tskim_qcomp(tskim, __bfa_cb_tskim_failed);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(tskim->bfa, event);
-+	}
-+}
-+
-+/**
-+ *	BFA callback is pending
-+ */
-+static void
-+bfa_tskim_sm_hcb(struct bfa_tskim_s *tskim, enum bfa_tskim_event event)
-+{
-+	bfa_trc(tskim->bfa, event);
-+
-+	switch (event) {
-+	case BFA_TSKIM_SM_HCB:
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_uninit);
-+		bfa_tskim_free(tskim);
-+		break;
-+
-+	case BFA_TSKIM_SM_CLEANUP:
-+		bfa_tskim_notify_comp(tskim);
-+		break;
-+
-+	case BFA_TSKIM_SM_HWFAIL:
-+		break;
-+
-+	default:
-+		bfa_sm_fault(tskim->bfa, event);
-+	}
-+}
-+
-+
-+
-+/**
-+ *  hal_tskim_private
-+ */
-+
-+static void
-+__bfa_cb_tskim_done(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_tskim_s *tskim = cbarg;
-+
-+	if (!complete) {
-+		bfa_sm_send_event(tskim, BFA_TSKIM_SM_HCB);
-+		return;
-+	}
-+
-+	bfa_stats(tskim->itnim, tm_success);
-+	bfa_cb_tskim_done(tskim->bfa->bfad, tskim->dtsk, tskim->tsk_status);
-+}
-+
-+static void
-+__bfa_cb_tskim_failed(void *cbarg, bfa_boolean_t complete)
-+{
-+	struct bfa_tskim_s *tskim = cbarg;
-+
-+	if (!complete) {
-+		bfa_sm_send_event(tskim, BFA_TSKIM_SM_HCB);
-+		return;
-+	}
-+
-+	bfa_stats(tskim->itnim, tm_failures);
-+	bfa_cb_tskim_done(tskim->bfa->bfad, tskim->dtsk,
-+				BFI_TSKIM_STS_FAILED);
-+}
-+
-+static	bfa_boolean_t
-+bfa_tskim_match_scope(struct bfa_tskim_s *tskim, lun_t lun)
-+{
-+	switch (tskim->tm_cmnd) {
-+	case FCP_TM_TARGET_RESET:
-+		return BFA_TRUE;
-+
-+	case FCP_TM_ABORT_TASK_SET:
-+	case FCP_TM_CLEAR_TASK_SET:
-+	case FCP_TM_LUN_RESET:
-+	case FCP_TM_CLEAR_ACA:
-+		return (tskim->lun == lun);
-+
-+	default:
-+		bfa_assert(0);
-+	}
-+
-+	return BFA_FALSE;
-+}
-+
-+/**
-+ *	Gather affected IO requests and task management commands.
-+ */
-+static void
-+bfa_tskim_gather_ios(struct bfa_tskim_s *tskim)
-+{
-+	struct bfa_itnim_s *itnim = tskim->itnim;
-+	struct bfa_ioim_s *ioim;
-+	struct list_head	*qe, *qen;
-+
-+	INIT_LIST_HEAD(&tskim->io_q);
-+
-+	/**
-+	 * Gather any active IO requests first.
-+	 */
-+	list_for_each_safe(qe, qen, &itnim->io_q) {
-+		ioim = (struct bfa_ioim_s *) qe;
-+		if (bfa_tskim_match_scope
-+			(tskim, bfa_cb_ioim_get_lun(ioim->dio))) {
-+			list_del(&ioim->qe);
-+			list_add_tail(&ioim->qe, &tskim->io_q);
-+		}
-+	}
-+
-+	/**
-+	 * Failback any pending IO requests immediately.
-+	 */
-+	list_for_each_safe(qe, qen, &itnim->pending_q) {
-+		ioim = (struct bfa_ioim_s *) qe;
-+		if (bfa_tskim_match_scope
-+			(tskim, bfa_cb_ioim_get_lun(ioim->dio))) {
-+			list_del(&ioim->qe);
-+			list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
-+			bfa_ioim_tov(ioim);
-+		}
-+	}
-+}
-+
-+/**
-+ *	IO cleanup completion
-+ */
-+static void
-+bfa_tskim_cleanp_comp(void *tskim_cbarg)
-+{
-+	struct bfa_tskim_s *tskim = tskim_cbarg;
-+
-+	bfa_stats(tskim->itnim, tm_io_comps);
-+	bfa_sm_send_event(tskim, BFA_TSKIM_SM_IOS_DONE);
-+}
-+
-+/**
-+ *	Gather affected IO requests and task management commands.
-+ */
-+static void
-+bfa_tskim_cleanup_ios(struct bfa_tskim_s *tskim)
-+{
-+	struct bfa_ioim_s *ioim;
-+	struct list_head	*qe, *qen;
-+
-+	bfa_wc_init(&tskim->wc, bfa_tskim_cleanp_comp, tskim);
-+
-+	list_for_each_safe(qe, qen, &tskim->io_q) {
-+		ioim = (struct bfa_ioim_s *) qe;
-+		bfa_wc_up(&tskim->wc);
-+		bfa_ioim_cleanup_tm(ioim, tskim);
-+	}
-+
-+	bfa_wc_wait(&tskim->wc);
-+}
-+
-+/**
-+ *	Send task management request to firmware.
-+ */
-+static bfa_boolean_t
-+bfa_tskim_send(struct bfa_tskim_s *tskim)
-+{
-+	struct bfa_itnim_s *itnim = tskim->itnim;
-+	struct bfi_tskim_req_s *m;
-+
-+	/**
-+	 * check for room in queue to send request now
-+	 */
-+	m = bfa_reqq_next(tskim->bfa, itnim->reqq);
-+	if (!m)
-+		return BFA_FALSE;
-+
-+	/**
-+	 * build i/o request message next
-+	 */
-+	bfi_h2i_set(m->mh, BFI_MC_TSKIM, BFI_TSKIM_H2I_TM_REQ,
-+			bfa_lpuid(tskim->bfa));
-+
-+	m->tsk_tag = bfa_os_htons(tskim->tsk_tag);
-+	m->itn_fhdl = tskim->itnim->rport->fw_handle;
-+	m->t_secs = tskim->tsecs;
-+	m->lun = tskim->lun;
-+	m->tm_flags = tskim->tm_cmnd;
-+
-+	/**
-+	 * queue I/O message to firmware
-+	 */
-+	bfa_reqq_produce(tskim->bfa, itnim->reqq);
-+	return BFA_TRUE;
-+}
-+
-+/**
-+ *	Send abort request to cleanup an active TM to firmware.
-+ */
-+static bfa_boolean_t
-+bfa_tskim_send_abort(struct bfa_tskim_s *tskim)
-+{
-+	struct bfa_itnim_s	*itnim = tskim->itnim;
-+	struct bfi_tskim_abortreq_s	*m;
-+
-+	/**
-+	 * check for room in queue to send request now
-+	 */
-+	m = bfa_reqq_next(tskim->bfa, itnim->reqq);
-+	if (!m)
-+		return BFA_FALSE;
-+
-+	/**
-+	 * build i/o request message next
-+	 */
-+	bfi_h2i_set(m->mh, BFI_MC_TSKIM, BFI_TSKIM_H2I_ABORT_REQ,
-+			bfa_lpuid(tskim->bfa));
-+
-+	m->tsk_tag  = bfa_os_htons(tskim->tsk_tag);
-+
-+	/**
-+	 * queue I/O message to firmware
-+	 */
-+	bfa_reqq_produce(tskim->bfa, itnim->reqq);
-+	return BFA_TRUE;
-+}
-+
-+/**
-+ *	Call to resume task management cmnd waiting for room in request queue.
-+ */
-+static void
-+bfa_tskim_qresume(void *cbarg)
-+{
-+	struct bfa_tskim_s *tskim = cbarg;
-+
-+	bfa_stats(tskim->itnim, tm_qresumes);
-+	bfa_sm_send_event(tskim, BFA_TSKIM_SM_QRESUME);
-+}
-+
-+/**
-+ * Cleanup IOs associated with a task mangement command on IOC failures.
-+ */
-+static void
-+bfa_tskim_iocdisable_ios(struct bfa_tskim_s *tskim)
-+{
-+	struct bfa_ioim_s *ioim;
-+	struct list_head	*qe, *qen;
-+
-+	list_for_each_safe(qe, qen, &tskim->io_q) {
-+		ioim = (struct bfa_ioim_s *) qe;
-+		bfa_ioim_iocdisable(ioim);
-+	}
-+}
-+
-+
-+
-+/**
-+ *  hal_tskim_friend
-+ */
-+
-+/**
-+ * Notification on completions from related ioim.
-+ */
-+void
-+bfa_tskim_iodone(struct bfa_tskim_s *tskim)
-+{
-+	bfa_wc_down(&tskim->wc);
-+}
-+
-+/**
-+ * Handle IOC h/w failure notification from itnim.
-+ */
-+void
-+bfa_tskim_iocdisable(struct bfa_tskim_s *tskim)
-+{
-+	tskim->notify = BFA_FALSE;
-+	bfa_stats(tskim->itnim, tm_iocdowns);
-+	bfa_sm_send_event(tskim, BFA_TSKIM_SM_HWFAIL);
-+}
-+
-+/**
-+ * Cleanup TM command and associated IOs as part of ITNIM offline.
-+ */
-+void
-+bfa_tskim_cleanup(struct bfa_tskim_s *tskim)
-+{
-+	tskim->notify = BFA_TRUE;
-+	bfa_stats(tskim->itnim, tm_cleanups);
-+	bfa_sm_send_event(tskim, BFA_TSKIM_SM_CLEANUP);
-+}
-+
-+/**
-+ *	Memory allocation and initialization.
-+ */
-+void
-+bfa_tskim_attach(struct bfa_fcpim_mod_s *fcpim, struct bfa_meminfo_s *minfo)
-+{
-+	struct bfa_tskim_s *tskim;
-+	u16	i;
-+
-+	INIT_LIST_HEAD(&fcpim->tskim_free_q);
-+
-+	tskim = (struct bfa_tskim_s *) bfa_meminfo_kva(minfo);
-+	fcpim->tskim_arr = tskim;
-+
-+	for (i = 0; i < fcpim->num_tskim_reqs; i++, tskim++) {
-+		/*
-+		 * initialize TSKIM
-+		 */
-+		bfa_os_memset(tskim, 0, sizeof(struct bfa_tskim_s));
-+		tskim->tsk_tag = i;
-+		tskim->bfa	= fcpim->bfa;
-+		tskim->fcpim	= fcpim;
-+		tskim->notify  = BFA_FALSE;
-+		bfa_reqq_winit(&tskim->reqq_wait, bfa_tskim_qresume,
-+					tskim);
-+		bfa_sm_set_state(tskim, bfa_tskim_sm_uninit);
-+
-+		list_add_tail(&tskim->qe, &fcpim->tskim_free_q);
-+	}
-+
-+	bfa_meminfo_kva(minfo) = (u8 *) tskim;
-+}
-+
-+void
-+bfa_tskim_detach(struct bfa_fcpim_mod_s *fcpim)
-+{
-+	/**
-+	* @todo
-+	*/
-+}
-+
-+void
-+bfa_tskim_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct bfi_tskim_rsp_s *rsp = (struct bfi_tskim_rsp_s *) m;
-+	struct bfa_tskim_s *tskim;
-+	u16	tsk_tag = bfa_os_ntohs(rsp->tsk_tag);
-+
-+	tskim = BFA_TSKIM_FROM_TAG(fcpim, tsk_tag);
-+	bfa_assert(tskim->tsk_tag == tsk_tag);
-+
-+	tskim->tsk_status = rsp->tsk_status;
-+
-+	/**
-+	 * Firmware sends BFI_TSKIM_STS_ABORTED status for abort
-+	 * requests. All other statuses are for normal completions.
-+	 */
-+	if (rsp->tsk_status == BFI_TSKIM_STS_ABORTED) {
-+		bfa_stats(tskim->itnim, tm_cleanup_comps);
-+		bfa_sm_send_event(tskim, BFA_TSKIM_SM_CLEANUP_DONE);
-+	} else {
-+		bfa_stats(tskim->itnim, tm_fw_rsps);
-+		bfa_sm_send_event(tskim, BFA_TSKIM_SM_DONE);
-+	}
-+}
-+
-+
-+
-+/**
-+ *  hal_tskim_api
-+ */
-+
-+
-+struct bfa_tskim_s *
-+bfa_tskim_alloc(struct bfa_s *bfa, struct bfad_tskim_s *dtsk)
-+{
-+	struct bfa_fcpim_mod_s *fcpim = BFA_FCPIM_MOD(bfa);
-+	struct bfa_tskim_s *tskim;
-+
-+	bfa_q_deq(&fcpim->tskim_free_q, &tskim);
-+
-+	if (tskim)
-+		tskim->dtsk = dtsk;
-+
-+	return tskim;
-+}
-+
-+void
-+bfa_tskim_free(struct bfa_tskim_s *tskim)
-+{
-+	bfa_assert(bfa_q_is_on_q_func(&tskim->itnim->tsk_q, &tskim->qe));
-+	list_del(&tskim->qe);
-+	list_add_tail(&tskim->qe, &tskim->fcpim->tskim_free_q);
-+}
-+
-+/**
-+ *	Start a task management command.
-+ *
-+ * @param[in]	tskim	BFA task management command instance
-+ * @param[in]	itnim	i-t nexus for the task management command
-+ * @param[in]	lun	lun, if applicable
-+ * @param[in]	tm_cmnd	Task management command code.
-+ * @param[in]	t_secs	Timeout in seconds
-+ *
-+ * @return None.
-+ */
-+void
-+bfa_tskim_start(struct bfa_tskim_s *tskim, struct bfa_itnim_s *itnim, lun_t lun,
-+			enum fcp_tm_cmnd tm_cmnd, u8 tsecs)
-+{
-+	tskim->itnim	= itnim;
-+	tskim->lun	= lun;
-+	tskim->tm_cmnd = tm_cmnd;
-+	tskim->tsecs	= tsecs;
-+	tskim->notify  = BFA_FALSE;
-+	bfa_stats(itnim, tm_cmnds);
-+
-+	list_add_tail(&tskim->qe, &itnim->tsk_q);
-+	bfa_sm_send_event(tskim, BFA_TSKIM_SM_START);
-+}
-diff --git a/drivers/scsi/bfa/bfa_fcs_fcpim.c b/drivers/scsi/bfa/bfa_fcs_fcpim.c
-new file mode 100644
-index 0000000..569dfef
---- /dev/null
-+++ b/drivers/scsi/bfa/bfa_fcs_fcpim.c
-@@ -0,0 +1,783 @@
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -0,0 +1,5808 @@
 +/*
 + * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
 + * All rights reserved
@@ -3674,770 +50,5795 @@ index 0000000..569dfef
 + */
 +
 +/**
-+ *  fcpim.c - FCP initiator mode i-t nexus state machine
++ *  bfa_fcs_lport.c BFA FCS port
 + */
 +
 +#include "bfa_fcs.h"
 +#include "bfa_fcbuild.h"
++#include "bfa_fc.h"
 +#include "bfad_drv.h"
-+#include "bfad_im.h"
 +
-+BFA_TRC_FILE(FCS, FCPIM);
++BFA_TRC_FILE(FCS, PORT);
++
++/**
++ * Forward declarations
++ */
++
++static void     bfa_fcs_lport_send_ls_rjt(struct bfa_fcs_lport_s *port,
++					 struct fchs_s *rx_fchs, u8 reason_code,
++					 u8 reason_code_expl);
++static void     bfa_fcs_lport_plogi(struct bfa_fcs_lport_s *port,
++			struct fchs_s *rx_fchs, struct fc_logi_s *plogi);
++static void     bfa_fcs_lport_online_actions(struct bfa_fcs_lport_s *port);
++static void     bfa_fcs_lport_offline_actions(struct bfa_fcs_lport_s *port);
++static void     bfa_fcs_lport_unknown_init(struct bfa_fcs_lport_s *port);
++static void     bfa_fcs_lport_unknown_online(struct bfa_fcs_lport_s *port);
++static void     bfa_fcs_lport_unknown_offline(struct bfa_fcs_lport_s *port);
++static void     bfa_fcs_lport_deleted(struct bfa_fcs_lport_s *port);
++static void     bfa_fcs_lport_echo(struct bfa_fcs_lport_s *port,
++			struct fchs_s *rx_fchs,
++			struct fc_echo_s *echo, u16 len);
++static void     bfa_fcs_lport_rnid(struct bfa_fcs_lport_s *port,
++			struct fchs_s *rx_fchs,
++			struct fc_rnid_cmd_s *rnid, u16 len);
++static void     bfa_fs_port_get_gen_topo_data(struct bfa_fcs_lport_s *port,
++			struct fc_rnid_general_topology_data_s *gen_topo_data);
++
++static void	bfa_fcs_lport_fab_init(struct bfa_fcs_lport_s *port);
++static void	bfa_fcs_lport_fab_online(struct bfa_fcs_lport_s *port);
++static void	bfa_fcs_lport_fab_offline(struct bfa_fcs_lport_s *port);
++
++static void	bfa_fcs_lport_n2n_init(struct bfa_fcs_lport_s *port);
++static void	bfa_fcs_lport_n2n_online(struct bfa_fcs_lport_s *port);
++static void	bfa_fcs_lport_n2n_offline(struct bfa_fcs_lport_s *port);
++
++static struct {
++	void		(*init) (struct bfa_fcs_lport_s *port);
++	void		(*online) (struct bfa_fcs_lport_s *port);
++	void		(*offline) (struct bfa_fcs_lport_s *port);
++} __port_action[] = {
++	{
++	bfa_fcs_lport_unknown_init, bfa_fcs_lport_unknown_online,
++			bfa_fcs_lport_unknown_offline}, {
++	bfa_fcs_lport_fab_init, bfa_fcs_lport_fab_online,
++			bfa_fcs_lport_fab_offline}, {
++	bfa_fcs_lport_n2n_init, bfa_fcs_lport_n2n_online,
++			bfa_fcs_lport_n2n_offline},
++	};
++
++/**
++ *  fcs_port_sm FCS logical port state machine
++ */
++
++enum bfa_fcs_lport_event {
++	BFA_FCS_PORT_SM_CREATE = 1,
++	BFA_FCS_PORT_SM_ONLINE = 2,
++	BFA_FCS_PORT_SM_OFFLINE = 3,
++	BFA_FCS_PORT_SM_DELETE = 4,
++	BFA_FCS_PORT_SM_DELRPORT = 5,
++};
++
++static void     bfa_fcs_lport_sm_uninit(struct bfa_fcs_lport_s *port,
++					enum bfa_fcs_lport_event event);
++static void     bfa_fcs_lport_sm_init(struct bfa_fcs_lport_s *port,
++					enum bfa_fcs_lport_event event);
++static void     bfa_fcs_lport_sm_online(struct bfa_fcs_lport_s *port,
++					enum bfa_fcs_lport_event event);
++static void     bfa_fcs_lport_sm_offline(struct bfa_fcs_lport_s *port,
++					enum bfa_fcs_lport_event event);
++static void     bfa_fcs_lport_sm_deleting(struct bfa_fcs_lport_s *port,
++					enum bfa_fcs_lport_event event);
++
++static void
++bfa_fcs_lport_sm_uninit(
++	struct bfa_fcs_lport_s *port,
++	enum bfa_fcs_lport_event event)
++{
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case BFA_FCS_PORT_SM_CREATE:
++		bfa_sm_set_state(port, bfa_fcs_lport_sm_init);
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_sm_init(struct bfa_fcs_lport_s *port,
++			enum bfa_fcs_lport_event event)
++{
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case BFA_FCS_PORT_SM_ONLINE:
++		bfa_sm_set_state(port, bfa_fcs_lport_sm_online);
++		bfa_fcs_lport_online_actions(port);
++		break;
++
++	case BFA_FCS_PORT_SM_DELETE:
++		bfa_sm_set_state(port, bfa_fcs_lport_sm_uninit);
++		bfa_fcs_lport_deleted(port);
++		break;
++
++	case BFA_FCS_PORT_SM_OFFLINE:
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_sm_online(
++	struct bfa_fcs_lport_s *port,
++	enum bfa_fcs_lport_event event)
++{
++	struct bfa_fcs_rport_s *rport;
++	struct list_head		*qe, *qen;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case BFA_FCS_PORT_SM_OFFLINE:
++		bfa_sm_set_state(port, bfa_fcs_lport_sm_offline);
++		bfa_fcs_lport_offline_actions(port);
++		break;
++
++	case BFA_FCS_PORT_SM_DELETE:
++
++		__port_action[port->fabric->fab_type].offline(port);
++
++		if (port->num_rports == 0) {
++			bfa_sm_set_state(port, bfa_fcs_lport_sm_uninit);
++			bfa_fcs_lport_deleted(port);
++		} else {
++			bfa_sm_set_state(port, bfa_fcs_lport_sm_deleting);
++			list_for_each_safe(qe, qen, &port->rport_q) {
++				rport = (struct bfa_fcs_rport_s *) qe;
++				bfa_fcs_rport_delete(rport);
++			}
++		}
++		break;
++
++	case BFA_FCS_PORT_SM_DELRPORT:
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_sm_offline(
++	struct bfa_fcs_lport_s *port,
++	enum bfa_fcs_lport_event event)
++{
++	struct bfa_fcs_rport_s *rport;
++	struct list_head		*qe, *qen;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case BFA_FCS_PORT_SM_ONLINE:
++		bfa_sm_set_state(port, bfa_fcs_lport_sm_online);
++		bfa_fcs_lport_online_actions(port);
++		break;
++
++	case BFA_FCS_PORT_SM_DELETE:
++		if (port->num_rports == 0) {
++			bfa_sm_set_state(port, bfa_fcs_lport_sm_uninit);
++			bfa_fcs_lport_deleted(port);
++		} else {
++			bfa_sm_set_state(port, bfa_fcs_lport_sm_deleting);
++			list_for_each_safe(qe, qen, &port->rport_q) {
++				rport = (struct bfa_fcs_rport_s *) qe;
++				bfa_fcs_rport_delete(rport);
++			}
++		}
++		break;
++
++	case BFA_FCS_PORT_SM_DELRPORT:
++	case BFA_FCS_PORT_SM_OFFLINE:
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_sm_deleting(
++	struct bfa_fcs_lport_s *port,
++	enum bfa_fcs_lport_event event)
++{
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case BFA_FCS_PORT_SM_DELRPORT:
++		if (port->num_rports == 0) {
++			bfa_sm_set_state(port, bfa_fcs_lport_sm_uninit);
++			bfa_fcs_lport_deleted(port);
++		}
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++/**
++ *  fcs_port_pvt
++ */
++
++/*
++ * Send a LS reject
++ */
++static void
++bfa_fcs_lport_send_ls_rjt(struct bfa_fcs_lport_s *port, struct fchs_s *rx_fchs,
++			 u8 reason_code, u8 reason_code_expl)
++{
++	struct fchs_s	fchs;
++	struct bfa_fcxp_s *fcxp;
++	struct bfa_rport_s *bfa_rport = NULL;
++	int		len;
++
++	bfa_trc(port->fcs, rx_fchs->d_id);
++	bfa_trc(port->fcs, rx_fchs->s_id);
++
++	fcxp = bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp)
++		return;
++
++	len = fc_ls_rjt_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			      rx_fchs->s_id, bfa_fcs_lport_get_fcid(port),
++			      rx_fchs->ox_id, reason_code, reason_code_expl);
++
++	bfa_fcxp_send(fcxp, bfa_rport, port->fabric->vf_id, port->lp_tag,
++			  BFA_FALSE, FC_CLASS_3, len, &fchs, NULL, NULL,
++			  FC_MAX_PDUSZ, 0);
++}
++
++/**
++ * Process incoming plogi from a remote port.
++ */
++static void
++bfa_fcs_lport_plogi(struct bfa_fcs_lport_s *port,
++		struct fchs_s *rx_fchs, struct fc_logi_s *plogi)
++{
++	struct bfa_fcs_rport_s *rport;
++
++	bfa_trc(port->fcs, rx_fchs->d_id);
++	bfa_trc(port->fcs, rx_fchs->s_id);
++
++	/*
++	 * If min cfg mode is enabled, drop any incoming PLOGIs
++	 */
++	if (__fcs_min_cfg(port->fcs)) {
++		bfa_trc(port->fcs, rx_fchs->s_id);
++		return;
++	}
++
++	if (fc_plogi_parse(rx_fchs) != FC_PARSE_OK) {
++		bfa_trc(port->fcs, rx_fchs->s_id);
++		/*
++		 * send a LS reject
++		 */
++		bfa_fcs_lport_send_ls_rjt(port, rx_fchs,
++					FC_LS_RJT_RSN_PROTOCOL_ERROR,
++					FC_LS_RJT_EXP_SPARMS_ERR_OPTIONS);
++		return;
++	}
++
++	/**
++	 * Direct Attach P2P mode : verify address assigned by the r-port.
++	 */
++	if ((!bfa_fcs_fabric_is_switched(port->fabric)) &&
++		(memcmp((void *)&bfa_fcs_lport_get_pwwn(port),
++			   (void *)&plogi->port_name, sizeof(wwn_t)) < 0)) {
++		if (BFA_FCS_PID_IS_WKA(rx_fchs->d_id)) {
++			/* Address assigned to us cannot be a WKA */
++			bfa_fcs_lport_send_ls_rjt(port, rx_fchs,
++					FC_LS_RJT_RSN_PROTOCOL_ERROR,
++					FC_LS_RJT_EXP_INVALID_NPORT_ID);
++			return;
++		}
++		port->pid  = rx_fchs->d_id;
++	}
++
++	/**
++	 * First, check if we know the device by pwwn.
++	 */
++	rport = bfa_fcs_lport_get_rport_by_pwwn(port, plogi->port_name);
++	if (rport) {
++		/**
++		 * Direct Attach P2P mode : handle address assigned by r-port.
++		 */
++		if ((!bfa_fcs_fabric_is_switched(port->fabric)) &&
++			(memcmp((void *)&bfa_fcs_lport_get_pwwn(port),
++			(void *)&plogi->port_name, sizeof(wwn_t)) < 0)) {
++			port->pid  = rx_fchs->d_id;
++			rport->pid = rx_fchs->s_id;
++		}
++		bfa_fcs_rport_plogi(rport, rx_fchs, plogi);
++		return;
++	}
++
++	/**
++	 * Next, lookup rport by PID.
++	 */
++	rport = bfa_fcs_lport_get_rport_by_pid(port, rx_fchs->s_id);
++	if (!rport) {
++		/**
++		 * Inbound PLOGI from a new device.
++		 */
++		bfa_fcs_rport_plogi_create(port, rx_fchs, plogi);
++		return;
++	}
++
++	/**
++	 * Rport is known only by PID.
++	 */
++	if (rport->pwwn) {
++		/**
++		 * This is a different device with the same pid. Old device
++		 * disappeared. Send implicit LOGO to old device.
++		 */
++		bfa_assert(rport->pwwn != plogi->port_name);
++		bfa_fcs_rport_logo_imp(rport);
++
++		/**
++		 * Inbound PLOGI from a new device (with old PID).
++		 */
++		bfa_fcs_rport_plogi_create(port, rx_fchs, plogi);
++		return;
++	}
++
++	/**
++	 * PLOGI crossing each other.
++	 */
++	bfa_assert(rport->pwwn == WWN_NULL);
++	bfa_fcs_rport_plogi(rport, rx_fchs, plogi);
++}
++
++/*
++ * Process incoming ECHO.
++ * Since it does not require a login, it is processed here.
++ */
++static void
++bfa_fcs_lport_echo(struct bfa_fcs_lport_s *port, struct fchs_s *rx_fchs,
++		struct fc_echo_s *echo, u16 rx_len)
++{
++	struct fchs_s		fchs;
++	struct bfa_fcxp_s	*fcxp;
++	struct bfa_rport_s	*bfa_rport = NULL;
++	int			len, pyld_len;
++
++	bfa_trc(port->fcs, rx_fchs->s_id);
++	bfa_trc(port->fcs, rx_fchs->d_id);
++
++	fcxp = bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp)
++		return;
++
++	len = fc_ls_acc_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++				rx_fchs->s_id, bfa_fcs_lport_get_fcid(port),
++				rx_fchs->ox_id);
++
++	/*
++	 * Copy the payload (if any) from the echo frame
++	 */
++	pyld_len = rx_len - sizeof(struct fchs_s);
++	bfa_trc(port->fcs, rx_len);
++	bfa_trc(port->fcs, pyld_len);
++
++	if (pyld_len > len)
++		memcpy(((u8 *) bfa_fcxp_get_reqbuf(fcxp)) +
++			sizeof(struct fc_echo_s), (echo + 1),
++			(pyld_len - sizeof(struct fc_echo_s)));
++
++	bfa_fcxp_send(fcxp, bfa_rport, port->fabric->vf_id, port->lp_tag,
++			BFA_FALSE, FC_CLASS_3, pyld_len, &fchs, NULL, NULL,
++			FC_MAX_PDUSZ, 0);
++}
++
++/*
++ * Process incoming RNID.
++ * Since it does not require a login, it is processed here.
++ */
++static void
++bfa_fcs_lport_rnid(struct bfa_fcs_lport_s *port, struct fchs_s *rx_fchs,
++		struct fc_rnid_cmd_s *rnid, u16 rx_len)
++{
++	struct fc_rnid_common_id_data_s common_id_data;
++	struct fc_rnid_general_topology_data_s gen_topo_data;
++	struct fchs_s	fchs;
++	struct bfa_fcxp_s *fcxp;
++	struct bfa_rport_s *bfa_rport = NULL;
++	u16	len;
++	u32	data_format;
++
++	bfa_trc(port->fcs, rx_fchs->s_id);
++	bfa_trc(port->fcs, rx_fchs->d_id);
++	bfa_trc(port->fcs, rx_len);
++
++	fcxp = bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp)
++		return;
++
++	/*
++	 * Check Node Indentification Data Format
++	 * We only support General Topology Discovery Format.
++	 * For any other requested Data Formats, we return Common Node Id Data
++	 * only, as per FC-LS.
++	 */
++	bfa_trc(port->fcs, rnid->node_id_data_format);
++	if (rnid->node_id_data_format == RNID_NODEID_DATA_FORMAT_DISCOVERY) {
++		data_format = RNID_NODEID_DATA_FORMAT_DISCOVERY;
++		/*
++		 * Get General topology data for this port
++		 */
++		bfa_fs_port_get_gen_topo_data(port, &gen_topo_data);
++	} else {
++		data_format = RNID_NODEID_DATA_FORMAT_COMMON;
++	}
++
++	/*
++	 * Copy the Node Id Info
++	 */
++	common_id_data.port_name = bfa_fcs_lport_get_pwwn(port);
++	common_id_data.node_name = bfa_fcs_lport_get_nwwn(port);
++
++	len = fc_rnid_acc_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++				rx_fchs->s_id, bfa_fcs_lport_get_fcid(port),
++				rx_fchs->ox_id, data_format, &common_id_data,
++				&gen_topo_data);
++
++	bfa_fcxp_send(fcxp, bfa_rport, port->fabric->vf_id, port->lp_tag,
++			BFA_FALSE, FC_CLASS_3, len, &fchs, NULL, NULL,
++			FC_MAX_PDUSZ, 0);
++}
++
++/*
++ *  Fill out General Topolpgy Discovery Data for RNID ELS.
++ */
++static void
++bfa_fs_port_get_gen_topo_data(struct bfa_fcs_lport_s *port,
++			struct fc_rnid_general_topology_data_s *gen_topo_data)
++{
++	bfa_os_memset(gen_topo_data, 0,
++		      sizeof(struct fc_rnid_general_topology_data_s));
++
++	gen_topo_data->asso_type = bfa_os_htonl(RNID_ASSOCIATED_TYPE_HOST);
++	gen_topo_data->phy_port_num = 0;	/* @todo */
++	gen_topo_data->num_attached_nodes = bfa_os_htonl(1);
++}
++
++static void
++bfa_fcs_lport_online_actions(struct bfa_fcs_lport_s *port)
++{
++	struct bfad_s *bfad = (struct bfad_s *)port->fcs->bfad;
++	char	lpwwn_buf[BFA_STRING_32];
++
++	bfa_trc(port->fcs, port->fabric->oper_type);
++
++	__port_action[port->fabric->fab_type].init(port);
++	__port_action[port->fabric->fab_type].online(port);
++
++	wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(port));
++	BFA_LOG(KERN_INFO, bfad, log_level,
++		"Logical port online: WWN = %s Role = %s\n",
++		lpwwn_buf, "Initiator");
++
++	bfad->bfad_flags |= BFAD_PORT_ONLINE;
++}
++
++static void
++bfa_fcs_lport_offline_actions(struct bfa_fcs_lport_s *port)
++{
++	struct list_head	*qe, *qen;
++	struct bfa_fcs_rport_s *rport;
++	struct bfad_s *bfad = (struct bfad_s *)port->fcs->bfad;
++	char    lpwwn_buf[BFA_STRING_32];
++
++	bfa_trc(port->fcs, port->fabric->oper_type);
++
++	__port_action[port->fabric->fab_type].offline(port);
++
++	wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(port));
++	if (bfa_fcs_fabric_is_online(port->fabric) == BFA_TRUE)
++		BFA_LOG(KERN_ERR, bfad, log_level,
++		"Logical port lost fabric connectivity: WWN = %s Role = %s\n",
++		lpwwn_buf, "Initiator");
++	else
++		BFA_LOG(KERN_INFO, bfad, log_level,
++		"Logical port taken offline: WWN = %s Role = %s\n",
++		lpwwn_buf, "Initiator");
++
++	list_for_each_safe(qe, qen, &port->rport_q) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		bfa_fcs_rport_offline(rport);
++	}
++}
++
++static void
++bfa_fcs_lport_unknown_init(struct bfa_fcs_lport_s *port)
++{
++	bfa_assert(0);
++}
++
++static void
++bfa_fcs_lport_unknown_online(struct bfa_fcs_lport_s *port)
++{
++	bfa_assert(0);
++}
++
++static void
++bfa_fcs_lport_unknown_offline(struct bfa_fcs_lport_s *port)
++{
++	bfa_assert(0);
++}
++
++static void
++bfa_fcs_lport_abts_acc(struct bfa_fcs_lport_s *port, struct fchs_s *rx_fchs)
++{
++	struct fchs_s fchs;
++	struct bfa_fcxp_s *fcxp;
++	int		len;
++
++	bfa_trc(port->fcs, rx_fchs->d_id);
++	bfa_trc(port->fcs, rx_fchs->s_id);
++
++	fcxp = bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp)
++		return;
++
++	len = fc_ba_acc_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			rx_fchs->s_id, bfa_fcs_lport_get_fcid(port),
++			rx_fchs->ox_id, 0);
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag,
++			  BFA_FALSE, FC_CLASS_3, len, &fchs, NULL, NULL,
++			  FC_MAX_PDUSZ, 0);
++}
++static void
++bfa_fcs_lport_deleted(struct bfa_fcs_lport_s *port)
++{
++	struct bfad_s *bfad = (struct bfad_s *)port->fcs->bfad;
++	char    lpwwn_buf[BFA_STRING_32];
++
++	wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(port));
++	BFA_LOG(KERN_INFO, bfad, log_level,
++		"Logical port deleted: WWN = %s Role = %s\n",
++		lpwwn_buf, "Initiator");
++
++	/* Base port will be deleted by the OS driver */
++	if (port->vport) {
++		bfa_fcb_lport_delete(port->fcs->bfad, port->port_cfg.roles,
++				port->fabric->vf_drv,
++				port->vport ? port->vport->vport_drv : NULL);
++		bfa_fcs_vport_delete_comp(port->vport);
++	} else {
++		 bfa_fcs_fabric_port_delete_comp(port->fabric);
++	}
++}
++
++
++
++/**
++ *  fcs_lport_api BFA FCS port API
++ */
++/**
++ *   Module initialization
++ */
++void
++bfa_fcs_lport_modinit(struct bfa_fcs_s *fcs)
++{
++
++}
++
++/**
++ *   Module cleanup
++ */
++void
++bfa_fcs_lport_modexit(struct bfa_fcs_s *fcs)
++{
++	bfa_fcs_modexit_comp(fcs);
++}
++
++/**
++ * Unsolicited frame receive handling.
++ */
++void
++bfa_fcs_lport_uf_recv(struct bfa_fcs_lport_s *lport,
++			struct fchs_s *fchs, u16 len)
++{
++	u32	pid = fchs->s_id;
++	struct bfa_fcs_rport_s *rport = NULL;
++	struct fc_els_cmd_s *els_cmd = (struct fc_els_cmd_s *) (fchs + 1);
++
++	bfa_stats(lport, uf_recvs);
++
++	if (!bfa_fcs_lport_is_online(lport)) {
++		bfa_stats(lport, uf_recv_drops);
++		return;
++	}
++
++	/**
++	 * First, handle ELSs that donot require a login.
++	 */
++	/*
++	 * Handle PLOGI first
++	 */
++	if ((fchs->type == FC_TYPE_ELS) &&
++		(els_cmd->els_code == FC_ELS_PLOGI)) {
++		bfa_fcs_lport_plogi(lport, fchs, (struct fc_logi_s *) els_cmd);
++		return;
++	}
++
++	/*
++	 * Handle ECHO separately.
++	 */
++	if ((fchs->type == FC_TYPE_ELS) && (els_cmd->els_code == FC_ELS_ECHO)) {
++		bfa_fcs_lport_echo(lport, fchs,
++				(struct fc_echo_s *)els_cmd, len);
++		return;
++	}
++
++	/*
++	 * Handle RNID separately.
++	 */
++	if ((fchs->type == FC_TYPE_ELS) && (els_cmd->els_code == FC_ELS_RNID)) {
++		bfa_fcs_lport_rnid(lport, fchs,
++			(struct fc_rnid_cmd_s *) els_cmd, len);
++		return;
++	}
++
++	if (fchs->type == FC_TYPE_BLS) {
++		if ((fchs->routing == FC_RTG_BASIC_LINK) &&
++				(fchs->cat_info == FC_CAT_ABTS))
++			bfa_fcs_lport_abts_acc(lport, fchs);
++		return;
++	}
++	/**
++	 * look for a matching remote port ID
++	 */
++	rport = bfa_fcs_lport_get_rport_by_pid(lport, pid);
++	if (rport) {
++		bfa_trc(rport->fcs, fchs->s_id);
++		bfa_trc(rport->fcs, fchs->d_id);
++		bfa_trc(rport->fcs, fchs->type);
++
++		bfa_fcs_rport_uf_recv(rport, fchs, len);
++		return;
++	}
++
++	/**
++	 * Only handles ELS frames for now.
++	 */
++	if (fchs->type != FC_TYPE_ELS) {
++		bfa_trc(lport->fcs, fchs->type);
++		bfa_assert(0);
++		return;
++	}
++
++	bfa_trc(lport->fcs, els_cmd->els_code);
++	if (els_cmd->els_code == FC_ELS_RSCN) {
++		bfa_fcs_lport_scn_process_rscn(lport, fchs, len);
++		return;
++	}
++
++	if (els_cmd->els_code == FC_ELS_LOGO) {
++		/**
++		 * @todo Handle LOGO frames received.
++		 */
++		return;
++	}
++
++	if (els_cmd->els_code == FC_ELS_PRLI) {
++		/**
++		 * @todo Handle PRLI frames received.
++		 */
++		return;
++	}
++
++	/**
++	 * Unhandled ELS frames. Send a LS_RJT.
++	 */
++	bfa_fcs_lport_send_ls_rjt(lport, fchs, FC_LS_RJT_RSN_CMD_NOT_SUPP,
++				 FC_LS_RJT_EXP_NO_ADDL_INFO);
++
++}
++
++/**
++ *   PID based Lookup for a R-Port in the Port R-Port Queue
++ */
++struct bfa_fcs_rport_s *
++bfa_fcs_lport_get_rport_by_pid(struct bfa_fcs_lport_s *port, u32 pid)
++{
++	struct bfa_fcs_rport_s *rport;
++	struct list_head	*qe;
++
++	list_for_each(qe, &port->rport_q) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		if (rport->pid == pid)
++			return rport;
++	}
++
++	bfa_trc(port->fcs, pid);
++	return NULL;
++}
++
++/**
++ *   PWWN based Lookup for a R-Port in the Port R-Port Queue
++ */
++struct bfa_fcs_rport_s *
++bfa_fcs_lport_get_rport_by_pwwn(struct bfa_fcs_lport_s *port, wwn_t pwwn)
++{
++	struct bfa_fcs_rport_s *rport;
++	struct list_head	*qe;
++
++	list_for_each(qe, &port->rport_q) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		if (wwn_is_equal(rport->pwwn, pwwn))
++			return rport;
++	}
++
++	bfa_trc(port->fcs, pwwn);
++	return NULL;
++}
++
++/**
++ *   NWWN based Lookup for a R-Port in the Port R-Port Queue
++ */
++struct bfa_fcs_rport_s *
++bfa_fcs_lport_get_rport_by_nwwn(struct bfa_fcs_lport_s *port, wwn_t nwwn)
++{
++	struct bfa_fcs_rport_s *rport;
++	struct list_head	*qe;
++
++	list_for_each(qe, &port->rport_q) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		if (wwn_is_equal(rport->nwwn, nwwn))
++			return rport;
++	}
++
++	bfa_trc(port->fcs, nwwn);
++	return NULL;
++}
++
++/**
++ * Called by rport module when new rports are discovered.
++ */
++void
++bfa_fcs_lport_add_rport(
++	struct bfa_fcs_lport_s *port,
++	struct bfa_fcs_rport_s *rport)
++{
++	list_add_tail(&rport->qe, &port->rport_q);
++	port->num_rports++;
++}
++
++/**
++ * Called by rport module to when rports are deleted.
++ */
++void
++bfa_fcs_lport_del_rport(
++	struct bfa_fcs_lport_s *port,
++	struct bfa_fcs_rport_s *rport)
++{
++	bfa_assert(bfa_q_is_on_q(&port->rport_q, rport));
++	list_del(&rport->qe);
++	port->num_rports--;
++
++	bfa_sm_send_event(port, BFA_FCS_PORT_SM_DELRPORT);
++}
++
++/**
++ * Called by fabric for base port when fabric login is complete.
++ * Called by vport for virtual ports when FDISC is complete.
++ */
++void
++bfa_fcs_lport_online(struct bfa_fcs_lport_s *port)
++{
++	bfa_sm_send_event(port, BFA_FCS_PORT_SM_ONLINE);
++}
++
++/**
++ * Called by fabric for base port when fabric goes offline.
++ * Called by vport for virtual ports when virtual port becomes offline.
++ */
++void
++bfa_fcs_lport_offline(struct bfa_fcs_lport_s *port)
++{
++	bfa_sm_send_event(port, BFA_FCS_PORT_SM_OFFLINE);
++}
++
++/**
++ * Called by fabric to delete base lport and associated resources.
++ *
++ * Called by vport to delete lport and associated resources. Should call
++ * bfa_fcs_vport_delete_comp() for vports on completion.
++ */
++void
++bfa_fcs_lport_delete(struct bfa_fcs_lport_s *port)
++{
++	bfa_sm_send_event(port, BFA_FCS_PORT_SM_DELETE);
++}
++
++/**
++ * Return TRUE if port is online, else return FALSE
++ */
++bfa_boolean_t
++bfa_fcs_lport_is_online(struct bfa_fcs_lport_s *port)
++{
++	return bfa_sm_cmp_state(port, bfa_fcs_lport_sm_online);
++}
++
++/**
++  * Attach time initialization of logical ports.
++ */
++void
++bfa_fcs_lport_attach(struct bfa_fcs_lport_s *lport, struct bfa_fcs_s *fcs,
++		   u16 vf_id, struct bfa_fcs_vport_s *vport)
++{
++	lport->fcs = fcs;
++	lport->fabric = bfa_fcs_vf_lookup(fcs, vf_id);
++	lport->vport = vport;
++	lport->lp_tag = (vport) ? bfa_lps_get_tag(vport->lps) :
++				  bfa_lps_get_tag(lport->fabric->lps);
++
++	INIT_LIST_HEAD(&lport->rport_q);
++	lport->num_rports = 0;
++}
++
++/**
++ * Logical port initialization of base or virtual port.
++ * Called by fabric for base port or by vport for virtual ports.
++ */
++
++void
++bfa_fcs_lport_init(struct bfa_fcs_lport_s *lport,
++	struct bfa_lport_cfg_s *port_cfg)
++{
++	struct bfa_fcs_vport_s *vport = lport->vport;
++	struct bfad_s *bfad = (struct bfad_s *)lport->fcs->bfad;
++	char    lpwwn_buf[BFA_STRING_32];
++
++	bfa_os_assign(lport->port_cfg, *port_cfg);
++
++	lport->bfad_port = bfa_fcb_lport_new(lport->fcs->bfad, lport,
++					lport->port_cfg.roles,
++					lport->fabric->vf_drv,
++					vport ? vport->vport_drv : NULL);
++
++	wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(lport));
++	BFA_LOG(KERN_INFO, bfad, log_level,
++		"New logical port created: WWN = %s Role = %s\n",
++		lpwwn_buf, "Initiator");
++
++	bfa_sm_set_state(lport, bfa_fcs_lport_sm_uninit);
++	bfa_sm_send_event(lport, BFA_FCS_PORT_SM_CREATE);
++}
++
++/**
++ *  fcs_lport_api
++ */
++
++void
++bfa_fcs_lport_get_attr(
++	struct bfa_fcs_lport_s *port,
++	struct bfa_lport_attr_s *port_attr)
++{
++	if (bfa_sm_cmp_state(port, bfa_fcs_lport_sm_online))
++		port_attr->pid = port->pid;
++	else
++		port_attr->pid = 0;
++
++	port_attr->port_cfg = port->port_cfg;
++
++	if (port->fabric) {
++		port_attr->port_type = bfa_fcs_fabric_port_type(port->fabric);
++		port_attr->loopback = bfa_fcs_fabric_is_loopback(port->fabric);
++		port_attr->authfail =
++			bfa_fcs_fabric_is_auth_failed(port->fabric);
++		port_attr->fabric_name  = bfa_fcs_lport_get_fabric_name(port);
++		memcpy(port_attr->fabric_ip_addr,
++			bfa_fcs_lport_get_fabric_ipaddr(port),
++			BFA_FCS_FABRIC_IPADDR_SZ);
++
++		if (port->vport != NULL) {
++			port_attr->port_type = BFA_PORT_TYPE_VPORT;
++			port_attr->fpma_mac =
++				bfa_lps_get_lp_mac(port->vport->lps);
++		} else {
++			port_attr->fpma_mac =
++				bfa_lps_get_lp_mac(port->fabric->lps);
++		}
++	} else {
++		port_attr->port_type = BFA_PORT_TYPE_UNKNOWN;
++		port_attr->state = BFA_LPORT_UNINIT;
++	}
++}
++
++/**
++ *  bfa_fcs_lport_fab port fab functions
++ */
++
++/**
++ *   Called by port to initialize fabric services of the base port.
++ */
++static void
++bfa_fcs_lport_fab_init(struct bfa_fcs_lport_s *port)
++{
++	bfa_fcs_lport_ns_init(port);
++	bfa_fcs_lport_scn_init(port);
++	bfa_fcs_lport_ms_init(port);
++}
++
++/**
++ *   Called by port to notify transition to online state.
++ */
++static void
++bfa_fcs_lport_fab_online(struct bfa_fcs_lport_s *port)
++{
++	bfa_fcs_lport_ns_online(port);
++	bfa_fcs_lport_scn_online(port);
++}
++
++/**
++ *   Called by port to notify transition to offline state.
++ */
++static void
++bfa_fcs_lport_fab_offline(struct bfa_fcs_lport_s *port)
++{
++	bfa_fcs_lport_ns_offline(port);
++	bfa_fcs_lport_scn_offline(port);
++	bfa_fcs_lport_ms_offline(port);
++}
++
++/**
++ *  bfa_fcs_lport_n2n  functions
++ */
++
++/**
++ *   Called by fcs/port to initialize N2N topology.
++ */
++static void
++bfa_fcs_lport_n2n_init(struct bfa_fcs_lport_s *port)
++{
++}
++
++/**
++ *   Called by fcs/port to notify transition to online state.
++ */
++static void
++bfa_fcs_lport_n2n_online(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_n2n_s *n2n_port = &port->port_topo.pn2n;
++	struct bfa_lport_cfg_s *pcfg = &port->port_cfg;
++	struct bfa_fcs_rport_s *rport;
++
++	bfa_trc(port->fcs, pcfg->pwwn);
++
++	/*
++	 * If our PWWN is > than that of the r-port, we have to initiate PLOGI
++	 * and assign an Address. if not, we need to wait for its PLOGI.
++	 *
++	 * If our PWWN is < than that of the remote port, it will send a PLOGI
++	 * with the PIDs assigned. The rport state machine take care of this
++	 * incoming PLOGI.
++	 */
++	if (memcmp
++	    ((void *)&pcfg->pwwn, (void *)&n2n_port->rem_port_wwn,
++	     sizeof(wwn_t)) > 0) {
++		port->pid = N2N_LOCAL_PID;
++		/**
++		 * First, check if we know the device by pwwn.
++		 */
++		rport = bfa_fcs_lport_get_rport_by_pwwn(port,
++							n2n_port->rem_port_wwn);
++		if (rport) {
++			bfa_trc(port->fcs, rport->pid);
++			bfa_trc(port->fcs, rport->pwwn);
++			rport->pid = N2N_REMOTE_PID;
++			bfa_fcs_rport_online(rport);
++			return;
++		}
++
++		/*
++		 * In n2n there can be only one rport. Delete the old one
++		 * whose pid should be zero, because it is offline.
++		 */
++		if (port->num_rports > 0) {
++			rport = bfa_fcs_lport_get_rport_by_pid(port, 0);
++			bfa_assert(rport != NULL);
++			if (rport) {
++				bfa_trc(port->fcs, rport->pwwn);
++				bfa_fcs_rport_delete(rport);
++			}
++		}
++		bfa_fcs_rport_create(port, N2N_REMOTE_PID);
++	}
++}
++
++/**
++ *   Called by fcs/port to notify transition to offline state.
++ */
++static void
++bfa_fcs_lport_n2n_offline(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_n2n_s *n2n_port = &port->port_topo.pn2n;
++
++	bfa_trc(port->fcs, port->pid);
++	port->pid = 0;
++	n2n_port->rem_port_wwn = 0;
++	n2n_port->reply_oxid = 0;
++}
++
++#define BFA_FCS_FDMI_CMD_MAX_RETRIES 2
 +
 +/*
 + * forward declarations
 + */
-+static void	bfa_fcs_itnim_timeout(void *arg);
-+static void	bfa_fcs_itnim_free(struct bfa_fcs_itnim_s *itnim);
-+static void	bfa_fcs_itnim_send_prli(void *itnim_cbarg,
-+					struct bfa_fcxp_s *fcxp_alloced);
-+static void	bfa_fcs_itnim_prli_response(void *fcsarg,
-+			 struct bfa_fcxp_s *fcxp, void *cbarg,
-+			    bfa_status_t req_status, u32 rsp_len,
-+			    u32 resid_len, struct fchs_s *rsp_fchs);
-+
++static void     bfa_fcs_lport_fdmi_send_rhba(void *fdmi_cbarg,
++					    struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_fdmi_send_rprt(void *fdmi_cbarg,
++					    struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_fdmi_send_rpa(void *fdmi_cbarg,
++					   struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_fdmi_rhba_response(void *fcsarg,
++						struct bfa_fcxp_s *fcxp,
++						void *cbarg,
++						bfa_status_t req_status,
++						u32 rsp_len,
++						u32 resid_len,
++						struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_fdmi_rprt_response(void *fcsarg,
++						struct bfa_fcxp_s *fcxp,
++						void *cbarg,
++						bfa_status_t req_status,
++						u32 rsp_len,
++						u32 resid_len,
++						struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_fdmi_rpa_response(void *fcsarg,
++					       struct bfa_fcxp_s *fcxp,
++					       void *cbarg,
++					       bfa_status_t req_status,
++					       u32 rsp_len,
++					       u32 resid_len,
++					       struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_fdmi_timeout(void *arg);
++static u16 bfa_fcs_lport_fdmi_build_rhba_pyld(struct bfa_fcs_lport_fdmi_s *fdmi,
++						  u8 *pyld);
++static u16 bfa_fcs_lport_fdmi_build_rprt_pyld(struct bfa_fcs_lport_fdmi_s *fdmi,
++						  u8 *pyld);
++static u16 bfa_fcs_lport_fdmi_build_rpa_pyld(struct bfa_fcs_lport_fdmi_s *fdmi,
++						 u8 *pyld);
++static u16 bfa_fcs_lport_fdmi_build_portattr_block(struct bfa_fcs_lport_fdmi_s *
++						       fdmi, u8 *pyld);
++static void	bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
++				 struct bfa_fcs_fdmi_hba_attr_s *hba_attr);
++static void	bfa_fcs_fdmi_get_portattr(struct bfa_fcs_lport_fdmi_s *fdmi,
++				  struct bfa_fcs_fdmi_port_attr_s *port_attr);
 +/**
-+ *  fcs_itnim_sm FCS itnim state machine events
++ *  fcs_fdmi_sm FCS FDMI state machine
 + */
 +
-+enum bfa_fcs_itnim_event {
-+	BFA_FCS_ITNIM_SM_ONLINE = 1,	/*  rport online event */
-+	BFA_FCS_ITNIM_SM_OFFLINE = 2,	/*  rport offline */
-+	BFA_FCS_ITNIM_SM_FRMSENT = 3,	/*  prli frame is sent */
-+	BFA_FCS_ITNIM_SM_RSP_OK = 4,	/*  good response */
-+	BFA_FCS_ITNIM_SM_RSP_ERROR = 5,	/*  error response */
-+	BFA_FCS_ITNIM_SM_TIMEOUT = 6,	/*  delay timeout */
-+	BFA_FCS_ITNIM_SM_HCB_OFFLINE = 7, /*  BFA online callback */
-+	BFA_FCS_ITNIM_SM_HCB_ONLINE = 8, /*  BFA offline callback */
-+	BFA_FCS_ITNIM_SM_INITIATOR = 9,	/*  rport is initiator */
-+	BFA_FCS_ITNIM_SM_DELETE = 10,	/*  delete event from rport */
-+	BFA_FCS_ITNIM_SM_PRLO = 11,	/*  delete event from rport */
-+};
-+
-+static void	bfa_fcs_itnim_sm_offline(struct bfa_fcs_itnim_s *itnim,
-+					 enum bfa_fcs_itnim_event event);
-+static void	bfa_fcs_itnim_sm_prli_send(struct bfa_fcs_itnim_s *itnim,
-+					   enum bfa_fcs_itnim_event event);
-+static void	bfa_fcs_itnim_sm_prli(struct bfa_fcs_itnim_s *itnim,
-+				      enum bfa_fcs_itnim_event event);
-+static void	bfa_fcs_itnim_sm_prli_retry(struct bfa_fcs_itnim_s *itnim,
-+					    enum bfa_fcs_itnim_event event);
-+static void	bfa_fcs_itnim_sm_hcb_online(struct bfa_fcs_itnim_s *itnim,
-+					    enum bfa_fcs_itnim_event event);
-+static void	bfa_fcs_itnim_sm_online(struct bfa_fcs_itnim_s *itnim,
-+					enum bfa_fcs_itnim_event event);
-+static void	bfa_fcs_itnim_sm_hcb_offline(struct bfa_fcs_itnim_s *itnim,
-+					     enum bfa_fcs_itnim_event event);
-+static void	bfa_fcs_itnim_sm_initiator(struct bfa_fcs_itnim_s *itnim,
-+					   enum bfa_fcs_itnim_event event);
-+
-+static struct bfa_sm_table_s itnim_sm_table[] = {
-+	{BFA_SM(bfa_fcs_itnim_sm_offline), BFA_ITNIM_OFFLINE},
-+	{BFA_SM(bfa_fcs_itnim_sm_prli_send), BFA_ITNIM_PRLI_SEND},
-+	{BFA_SM(bfa_fcs_itnim_sm_prli), BFA_ITNIM_PRLI_SENT},
-+	{BFA_SM(bfa_fcs_itnim_sm_prli_retry), BFA_ITNIM_PRLI_RETRY},
-+	{BFA_SM(bfa_fcs_itnim_sm_hcb_online), BFA_ITNIM_HCB_ONLINE},
-+	{BFA_SM(bfa_fcs_itnim_sm_online), BFA_ITNIM_ONLINE},
-+	{BFA_SM(bfa_fcs_itnim_sm_hcb_offline), BFA_ITNIM_HCB_OFFLINE},
-+	{BFA_SM(bfa_fcs_itnim_sm_initiator), BFA_ITNIM_INITIATIOR},
-+};
-+
 +/**
-+ *  fcs_itnim_sm FCS itnim state machine
++ *  FDMI State Machine events
 + */
++enum port_fdmi_event {
++	FDMISM_EVENT_PORT_ONLINE = 1,
++	FDMISM_EVENT_PORT_OFFLINE = 2,
++	FDMISM_EVENT_RSP_OK = 4,
++	FDMISM_EVENT_RSP_ERROR = 5,
++	FDMISM_EVENT_TIMEOUT = 6,
++	FDMISM_EVENT_RHBA_SENT = 7,
++	FDMISM_EVENT_RPRT_SENT = 8,
++	FDMISM_EVENT_RPA_SENT = 9,
++};
 +
++static void     bfa_fcs_lport_fdmi_sm_offline(struct bfa_fcs_lport_fdmi_s *fdmi,
++					     enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_sending_rhba(
++				struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_rhba(struct bfa_fcs_lport_fdmi_s *fdmi,
++					  enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_rhba_retry(
++				struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_sending_rprt(
++				struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_rprt(struct bfa_fcs_lport_fdmi_s *fdmi,
++					  enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_rprt_retry(
++				struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_sending_rpa(
++				struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_rpa(struct bfa_fcs_lport_fdmi_s *fdmi,
++					 enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_rpa_retry(
++				struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_online(struct bfa_fcs_lport_fdmi_s *fdmi,
++					    enum port_fdmi_event event);
++static void     bfa_fcs_lport_fdmi_sm_disabled(
++				struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event);
++/**
++ *	Start in offline state - awaiting MS to send start.
++ */
 +static void
-+bfa_fcs_itnim_sm_offline(struct bfa_fcs_itnim_s *itnim,
-+		 enum bfa_fcs_itnim_event event)
++bfa_fcs_lport_fdmi_sm_offline(struct bfa_fcs_lport_fdmi_s *fdmi,
++			     enum port_fdmi_event event)
 +{
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_trc(itnim->fcs, event);
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	fdmi->retry_cnt = 0;
 +
 +	switch (event) {
-+	case BFA_FCS_ITNIM_SM_ONLINE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
-+		itnim->prli_retries = 0;
-+		bfa_fcs_itnim_send_prli(itnim, NULL);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_OFFLINE:
-+		bfa_fcs_rport_itnim_ack(itnim->rport);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_INITIATOR:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_DELETE:
-+		bfa_fcs_itnim_free(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->fcs, event);
-+	}
-+
-+}
-+
-+static void
-+bfa_fcs_itnim_sm_prli_send(struct bfa_fcs_itnim_s *itnim,
-+		 enum bfa_fcs_itnim_event event)
-+{
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_trc(itnim->fcs, event);
-+
-+	switch (event) {
-+	case BFA_FCS_ITNIM_SM_FRMSENT:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_INITIATOR:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
-+		bfa_fcxp_walloc_cancel(itnim->fcs->bfa, &itnim->fcxp_wqe);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcxp_walloc_cancel(itnim->fcs->bfa, &itnim->fcxp_wqe);
-+		bfa_fcs_rport_itnim_ack(itnim->rport);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcxp_walloc_cancel(itnim->fcs->bfa, &itnim->fcxp_wqe);
-+		bfa_fcs_itnim_free(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->fcs, event);
-+	}
-+}
-+
-+static void
-+bfa_fcs_itnim_sm_prli(struct bfa_fcs_itnim_s *itnim,
-+		 enum bfa_fcs_itnim_event event)
-+{
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_trc(itnim->fcs, event);
-+
-+	switch (event) {
-+	case BFA_FCS_ITNIM_SM_RSP_OK:
-+		if (itnim->rport->scsi_function == BFA_RPORT_INITIATOR) {
-+			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
++	case FDMISM_EVENT_PORT_ONLINE:
++		if (port->vport) {
++			/*
++			 * For Vports, register a new port.
++			 */
++			bfa_sm_set_state(fdmi,
++					 bfa_fcs_lport_fdmi_sm_sending_rprt);
++			bfa_fcs_lport_fdmi_send_rprt(fdmi, NULL);
 +		} else {
-+			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_hcb_online);
-+			bfa_itnim_online(itnim->bfa_itnim, itnim->seq_rec);
++			/*
++			 * For a base port, we should first register the HBA
++			 * atribute. The HBA attribute also contains the base
++			 *  port registration.
++			 */
++			bfa_sm_set_state(fdmi,
++					 bfa_fcs_lport_fdmi_sm_sending_rhba);
++			bfa_fcs_lport_fdmi_send_rhba(fdmi, NULL);
 +		}
 +		break;
 +
-+	case BFA_FCS_ITNIM_SM_RSP_ERROR:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_retry);
-+		bfa_timer_start(itnim->fcs->bfa, &itnim->timer,
-+				bfa_fcs_itnim_timeout, itnim,
-+				BFA_FCS_RETRY_TIMEOUT);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcxp_discard(itnim->fcxp);
-+		bfa_fcs_rport_itnim_ack(itnim->rport);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_INITIATOR:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
-+		bfa_fcxp_discard(itnim->fcxp);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcxp_discard(itnim->fcxp);
-+		bfa_fcs_itnim_free(itnim);
++	case FDMISM_EVENT_PORT_OFFLINE:
 +		break;
 +
 +	default:
-+		bfa_sm_fault(itnim->fcs, event);
++		bfa_sm_fault(port->fcs, event);
 +	}
 +}
 +
 +static void
-+bfa_fcs_itnim_sm_prli_retry(struct bfa_fcs_itnim_s *itnim,
-+			    enum bfa_fcs_itnim_event event)
++bfa_fcs_lport_fdmi_sm_sending_rhba(struct bfa_fcs_lport_fdmi_s *fdmi,
++				  enum port_fdmi_event event)
 +{
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_trc(itnim->fcs, event);
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
 +
 +	switch (event) {
-+	case BFA_FCS_ITNIM_SM_TIMEOUT:
-+		if (itnim->prli_retries < BFA_FCS_RPORT_MAX_RETRIES) {
-+			itnim->prli_retries++;
-+			bfa_trc(itnim->fcs, itnim->prli_retries);
-+			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_prli_send);
-+			bfa_fcs_itnim_send_prli(itnim, NULL);
++	case FDMISM_EVENT_RHBA_SENT:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_rhba);
++		break;
++
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(port),
++					   &fdmi->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_fdmi_sm_rhba(struct bfa_fcs_lport_fdmi_s *fdmi,
++			enum port_fdmi_event event)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case FDMISM_EVENT_RSP_ERROR:
++		/*
++		 * if max retries have not been reached, start timer for a
++		 * delayed retry
++		 */
++		if (fdmi->retry_cnt++ < BFA_FCS_FDMI_CMD_MAX_RETRIES) {
++			bfa_sm_set_state(fdmi,
++					bfa_fcs_lport_fdmi_sm_rhba_retry);
++			bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(port),
++					    &fdmi->timer,
++					    bfa_fcs_lport_fdmi_timeout, fdmi,
++					    BFA_FCS_RETRY_TIMEOUT);
 +		} else {
-+			/* invoke target offline */
-+			bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+			bfa_fcs_rport_logo_imp(itnim->rport);
++			/*
++			 * set state to offline
++			 */
++			bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
 +		}
 +		break;
 +
-+
-+	case BFA_FCS_ITNIM_SM_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_timer_stop(&itnim->timer);
-+		bfa_fcs_rport_itnim_ack(itnim->rport);
++	case FDMISM_EVENT_RSP_OK:
++		/*
++		 * Initiate Register Port Attributes
++		 */
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_sending_rpa);
++		fdmi->retry_cnt = 0;
++		bfa_fcs_lport_fdmi_send_rpa(fdmi, NULL);
 +		break;
 +
-+	case BFA_FCS_ITNIM_SM_INITIATOR:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_initiator);
-+		bfa_timer_stop(&itnim->timer);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_timer_stop(&itnim->timer);
-+		bfa_fcs_itnim_free(itnim);
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_fcxp_discard(fdmi->fcxp);
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
 +		break;
 +
 +	default:
-+		bfa_sm_fault(itnim->fcs, event);
++		bfa_sm_fault(port->fcs, event);
 +	}
 +}
 +
 +static void
-+bfa_fcs_itnim_sm_hcb_online(struct bfa_fcs_itnim_s *itnim,
-+			    enum bfa_fcs_itnim_event event)
++bfa_fcs_lport_fdmi_sm_rhba_retry(struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event)
 +{
-+	struct bfad_s *bfad = (struct bfad_s *)itnim->fcs->bfad;
-+	char	lpwwn_buf[BFA_STRING_32];
-+	char	rpwwn_buf[BFA_STRING_32];
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
 +
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_trc(itnim->fcs, event);
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
 +
 +	switch (event) {
-+	case BFA_FCS_ITNIM_SM_HCB_ONLINE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_online);
-+		bfa_fcb_itnim_online(itnim->itnim_drv);
-+		wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(itnim->rport->port));
-+		wwn2str(rpwwn_buf, itnim->rport->pwwn);
-+		BFA_LOG(KERN_INFO, bfad, log_level,
-+		"Target (WWN = %s) is online for initiator (WWN = %s)\n",
-+		rpwwn_buf, lpwwn_buf);
++	case FDMISM_EVENT_TIMEOUT:
++		/*
++		 * Retry Timer Expired. Re-send
++		 */
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_sending_rhba);
++		bfa_fcs_lport_fdmi_send_rhba(fdmi, NULL);
 +		break;
 +
-+	case BFA_FCS_ITNIM_SM_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_itnim_offline(itnim->bfa_itnim);
-+		bfa_fcs_rport_itnim_ack(itnim->rport);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcs_itnim_free(itnim);
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++		bfa_timer_stop(&fdmi->timer);
 +		break;
 +
 +	default:
-+		bfa_sm_fault(itnim->fcs, event);
-+	}
-+}
-+
-+static void
-+bfa_fcs_itnim_sm_online(struct bfa_fcs_itnim_s *itnim,
-+		 enum bfa_fcs_itnim_event event)
-+{
-+	struct bfad_s *bfad = (struct bfad_s *)itnim->fcs->bfad;
-+	char	lpwwn_buf[BFA_STRING_32];
-+	char	rpwwn_buf[BFA_STRING_32];
-+
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_trc(itnim->fcs, event);
-+
-+	switch (event) {
-+	case BFA_FCS_ITNIM_SM_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_hcb_offline);
-+		bfa_fcb_itnim_offline(itnim->itnim_drv);
-+		bfa_itnim_offline(itnim->bfa_itnim);
-+		wwn2str(lpwwn_buf, bfa_fcs_lport_get_pwwn(itnim->rport->port));
-+		wwn2str(rpwwn_buf, itnim->rport->pwwn);
-+		if (bfa_fcs_lport_is_online(itnim->rport->port) == BFA_TRUE)
-+			BFA_LOG(KERN_ERR, bfad, log_level,
-+			"Target (WWN = %s) connectivity lost for "
-+			"initiator (WWN = %s)\n", rpwwn_buf, lpwwn_buf);
-+		else
-+			BFA_LOG(KERN_INFO, bfad, log_level,
-+			"Target (WWN = %s) offlined by initiator (WWN = %s)\n",
-+			rpwwn_buf, lpwwn_buf);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcs_itnim_free(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->fcs, event);
-+	}
-+}
-+
-+static void
-+bfa_fcs_itnim_sm_hcb_offline(struct bfa_fcs_itnim_s *itnim,
-+			     enum bfa_fcs_itnim_event event)
-+{
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_trc(itnim->fcs, event);
-+
-+	switch (event) {
-+	case BFA_FCS_ITNIM_SM_HCB_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcs_rport_itnim_ack(itnim->rport);
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcs_itnim_free(itnim);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(itnim->fcs, event);
++		bfa_sm_fault(port->fcs, event);
 +	}
 +}
 +
 +/*
-+ * This state is set when a discovered rport is also in intiator mode.
-+ * This ITN is marked as no_op and is not active and will not be truned into
-+ * online state.
++* RPRT : Register Port
 + */
 +static void
-+bfa_fcs_itnim_sm_initiator(struct bfa_fcs_itnim_s *itnim,
-+		 enum bfa_fcs_itnim_event event)
++bfa_fcs_lport_fdmi_sm_sending_rprt(struct bfa_fcs_lport_fdmi_s *fdmi,
++				  enum port_fdmi_event event)
 +{
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_trc(itnim->fcs, event);
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
 +
 +	switch (event) {
-+	case BFA_FCS_ITNIM_SM_OFFLINE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcs_rport_itnim_ack(itnim->rport);
++	case FDMISM_EVENT_RPRT_SENT:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_rprt);
 +		break;
 +
-+	case BFA_FCS_ITNIM_SM_RSP_ERROR:
-+	case BFA_FCS_ITNIM_SM_ONLINE:
-+	case BFA_FCS_ITNIM_SM_INITIATOR:
-+		break;
-+
-+	case BFA_FCS_ITNIM_SM_DELETE:
-+		bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+		bfa_fcs_itnim_free(itnim);
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(port),
++					   &fdmi->fcxp_wqe);
 +		break;
 +
 +	default:
-+		bfa_sm_fault(itnim->fcs, event);
++		bfa_sm_fault(port->fcs, event);
 +	}
 +}
 +
 +static void
-+bfa_fcs_itnim_send_prli(void *itnim_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++bfa_fcs_lport_fdmi_sm_rprt(struct bfa_fcs_lport_fdmi_s *fdmi,
++			enum port_fdmi_event event)
 +{
-+	struct bfa_fcs_itnim_s *itnim = itnim_cbarg;
-+	struct bfa_fcs_rport_s *rport = itnim->rport;
-+	struct bfa_fcs_lport_s *port = rport->port;
-+	struct fchs_s	fchs;
-+	struct bfa_fcxp_s *fcxp;
-+	int		len;
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
 +
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case FDMISM_EVENT_RSP_ERROR:
++		/*
++		 * if max retries have not been reached, start timer for a
++		 * delayed retry
++		 */
++		if (fdmi->retry_cnt++ < BFA_FCS_FDMI_CMD_MAX_RETRIES) {
++			bfa_sm_set_state(fdmi,
++					bfa_fcs_lport_fdmi_sm_rprt_retry);
++			bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(port),
++					    &fdmi->timer,
++					    bfa_fcs_lport_fdmi_timeout, fdmi,
++					    BFA_FCS_RETRY_TIMEOUT);
++
++		} else {
++			/*
++			 * set state to offline
++			 */
++			bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++			fdmi->retry_cnt = 0;
++		}
++		break;
++
++	case FDMISM_EVENT_RSP_OK:
++		fdmi->retry_cnt = 0;
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_online);
++		break;
++
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_fcxp_discard(fdmi->fcxp);
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_fdmi_sm_rprt_retry(struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case FDMISM_EVENT_TIMEOUT:
++		/*
++		 * Retry Timer Expired. Re-send
++		 */
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_sending_rprt);
++		bfa_fcs_lport_fdmi_send_rprt(fdmi, NULL);
++		break;
++
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++		bfa_timer_stop(&fdmi->timer);
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++/*
++ * Register Port Attributes
++ */
++static void
++bfa_fcs_lport_fdmi_sm_sending_rpa(struct bfa_fcs_lport_fdmi_s *fdmi,
++				 enum port_fdmi_event event)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case FDMISM_EVENT_RPA_SENT:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_rpa);
++		break;
++
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(port),
++					   &fdmi->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_fdmi_sm_rpa(struct bfa_fcs_lport_fdmi_s *fdmi,
++			enum port_fdmi_event event)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case FDMISM_EVENT_RSP_ERROR:
++		/*
++		 * if max retries have not been reached, start timer for a
++		 * delayed retry
++		 */
++		if (fdmi->retry_cnt++ < BFA_FCS_FDMI_CMD_MAX_RETRIES) {
++			bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_rpa_retry);
++			bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(port),
++					    &fdmi->timer,
++					    bfa_fcs_lport_fdmi_timeout, fdmi,
++					    BFA_FCS_RETRY_TIMEOUT);
++		} else {
++			/*
++			 * set state to offline
++			 */
++			bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++			fdmi->retry_cnt = 0;
++		}
++		break;
++
++	case FDMISM_EVENT_RSP_OK:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_online);
++		fdmi->retry_cnt = 0;
++		break;
++
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_fcxp_discard(fdmi->fcxp);
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_fdmi_sm_rpa_retry(struct bfa_fcs_lport_fdmi_s *fdmi,
++			       enum port_fdmi_event event)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case FDMISM_EVENT_TIMEOUT:
++		/*
++		 * Retry Timer Expired. Re-send
++		 */
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_sending_rpa);
++		bfa_fcs_lport_fdmi_send_rpa(fdmi, NULL);
++		break;
++
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++		bfa_timer_stop(&fdmi->timer);
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_fdmi_sm_online(struct bfa_fcs_lport_fdmi_s *fdmi,
++				enum port_fdmi_event event)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	switch (event) {
++	case FDMISM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++/**
++ *  FDMI is disabled state.
++ */
++static void
++bfa_fcs_lport_fdmi_sm_disabled(struct bfa_fcs_lport_fdmi_s *fdmi,
++			     enum port_fdmi_event event)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++	bfa_trc(port->fcs, event);
++
++	/* No op State. It can only be enabled at Driver Init. */
++}
++
++/**
++*  RHBA : Register HBA Attributes.
++ */
++static void
++bfa_fcs_lport_fdmi_send_rhba(void *fdmi_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_fdmi_s *fdmi = fdmi_cbarg;
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct fchs_s fchs;
++	int             len, attr_len;
++	struct bfa_fcxp_s *fcxp;
++	u8        *pyld;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
 +
 +	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
 +	if (!fcxp) {
-+		itnim->stats.fcxp_alloc_wait++;
-+		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &itnim->fcxp_wqe,
-+				    bfa_fcs_itnim_send_prli, itnim);
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &fdmi->fcxp_wqe,
++					bfa_fcs_lport_fdmi_send_rhba, fdmi);
 +		return;
 +	}
-+	itnim->fcxp = fcxp;
++	fdmi->fcxp = fcxp;
 +
-+	len = fc_prli_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
-+			    itnim->rport->pid, bfa_fcs_lport_get_fcid(port), 0);
++	pyld = bfa_fcxp_get_reqbuf(fcxp);
++	bfa_os_memset(pyld, 0, FC_MAX_PDUSZ);
 +
-+	bfa_fcxp_send(fcxp, rport->bfa_rport, port->fabric->vf_id, port->lp_tag,
-+		      BFA_FALSE, FC_CLASS_3, len, &fchs,
-+		      bfa_fcs_itnim_prli_response, (void *)itnim,
-+		      FC_MAX_PDUSZ, FC_ELS_TOV);
++	len = fc_fdmi_reqhdr_build(&fchs, pyld, bfa_fcs_lport_get_fcid(port),
++				   FDMI_RHBA);
 +
-+	itnim->stats.prli_sent++;
-+	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_FRMSENT);
++	attr_len =
++		bfa_fcs_lport_fdmi_build_rhba_pyld(fdmi,
++					  (u8 *) ((struct ct_hdr_s *) pyld
++						       + 1));
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, (len + attr_len), &fchs,
++			  bfa_fcs_lport_fdmi_rhba_response, (void *)fdmi,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	bfa_sm_send_event(fdmi, FDMISM_EVENT_RHBA_SENT);
++}
++
++static          u16
++bfa_fcs_lport_fdmi_build_rhba_pyld(struct bfa_fcs_lport_fdmi_s *fdmi, u8 *pyld)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct bfa_fcs_fdmi_hba_attr_s hba_attr;
++	struct bfa_fcs_fdmi_hba_attr_s *fcs_hba_attr = &hba_attr;
++	struct fdmi_rhba_s *rhba = (struct fdmi_rhba_s *) pyld;
++	struct fdmi_attr_s *attr;
++	u8        *curr_ptr;
++	u16        len, count;
++
++	/*
++	 * get hba attributes
++	 */
++	bfa_fcs_fdmi_get_hbaattr(fdmi, fcs_hba_attr);
++
++	rhba->hba_id = bfa_fcs_lport_get_pwwn(port);
++	rhba->port_list.num_ports = bfa_os_htonl(1);
++	rhba->port_list.port_entry = bfa_fcs_lport_get_pwwn(port);
++
++	len = sizeof(rhba->hba_id) + sizeof(rhba->port_list);
++
++	count = 0;
++	len += sizeof(rhba->hba_attr_blk.attr_count);
++
++	/*
++	 * fill out the invididual entries of the HBA attrib Block
++	 */
++	curr_ptr = (u8 *) &rhba->hba_attr_blk.hba_attr;
++
++	/*
++	 * Node Name
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_NODENAME);
++	attr->len = sizeof(wwn_t);
++	memcpy(attr->value, &bfa_fcs_lport_get_nwwn(port), attr->len);
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	count++;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * Manufacturer
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_MANUFACTURER);
++	attr->len = (u16) strlen(fcs_hba_attr->manufacturer);
++	memcpy(attr->value, fcs_hba_attr->manufacturer, attr->len);
++	attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++								 *fields need
++								 *to be 4 byte
++								 *aligned */
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	count++;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * Serial Number
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_SERIALNUM);
++	attr->len = (u16) strlen(fcs_hba_attr->serial_num);
++	memcpy(attr->value, fcs_hba_attr->serial_num, attr->len);
++	attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++								 *fields need
++								 *to be 4 byte
++								 *aligned */
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	count++;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * Model
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_MODEL);
++	attr->len = (u16) strlen(fcs_hba_attr->model);
++	memcpy(attr->value, fcs_hba_attr->model, attr->len);
++	attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++								 *fields need
++								 *to be 4 byte
++								 *aligned */
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	count++;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * Model Desc
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_MODEL_DESC);
++	attr->len = (u16) strlen(fcs_hba_attr->model_desc);
++	memcpy(attr->value, fcs_hba_attr->model_desc, attr->len);
++	attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++							 *fields need
++							 *to be 4 byte
++							 *aligned */
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	count++;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * H/W Version
++	 */
++	if (fcs_hba_attr->hw_version[0] != '\0') {
++		attr = (struct fdmi_attr_s *) curr_ptr;
++		attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_HW_VERSION);
++		attr->len = (u16) strlen(fcs_hba_attr->hw_version);
++		memcpy(attr->value, fcs_hba_attr->hw_version, attr->len);
++		attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++								 *fields need
++								 *to be 4 byte
++								 *aligned */
++		curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++		len += attr->len;
++		count++;
++		attr->len =
++			bfa_os_htons(attr->len + sizeof(attr->type) +
++					 sizeof(attr->len));
++	}
++
++	/*
++	 * Driver Version
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_DRIVER_VERSION);
++	attr->len = (u16) strlen(fcs_hba_attr->driver_version);
++	memcpy(attr->value, fcs_hba_attr->driver_version, attr->len);
++	attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++							 *fields need
++							 *to be 4 byte
++							 *aligned */
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;;
++	count++;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * Option Rom Version
++	 */
++	if (fcs_hba_attr->option_rom_ver[0] != '\0') {
++		attr = (struct fdmi_attr_s *) curr_ptr;
++		attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_ROM_VERSION);
++		attr->len = (u16) strlen(fcs_hba_attr->option_rom_ver);
++		memcpy(attr->value, fcs_hba_attr->option_rom_ver, attr->len);
++		attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++								 *fields need
++								 *to be 4 byte
++								 *aligned */
++		curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++		len += attr->len;
++		count++;
++		attr->len =
++			bfa_os_htons(attr->len + sizeof(attr->type) +
++					 sizeof(attr->len));
++	}
++
++	/*
++	 * f/w Version = driver version
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_FW_VERSION);
++	attr->len = (u16) strlen(fcs_hba_attr->driver_version);
++	memcpy(attr->value, fcs_hba_attr->driver_version, attr->len);
++	attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++							 *fields need
++							 *to be 4 byte
++							 *aligned */
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	count++;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * OS Name
++	 */
++	if (fcs_hba_attr->os_name[0] != '\0') {
++		attr = (struct fdmi_attr_s *) curr_ptr;
++		attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_OS_NAME);
++		attr->len = (u16) strlen(fcs_hba_attr->os_name);
++		memcpy(attr->value, fcs_hba_attr->os_name, attr->len);
++		attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++							     *fields need
++							     *to be 4 byte
++							     *aligned */
++		curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++		len += attr->len;
++		count++;
++		attr->len =
++			bfa_os_htons(attr->len + sizeof(attr->type) +
++					sizeof(attr->len));
++	}
++
++	/*
++	 * MAX_CT_PAYLOAD
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_HBA_ATTRIB_MAX_CT);
++	attr->len = sizeof(fcs_hba_attr->max_ct_pyld);
++	memcpy(attr->value, &fcs_hba_attr->max_ct_pyld, attr->len);
++	len += attr->len;
++	count++;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * Update size of payload
++	 */
++	len += ((sizeof(attr->type) +
++		 sizeof(attr->len)) * count);
++
++	rhba->hba_attr_blk.attr_count = bfa_os_htonl(count);
++	return len;
 +}
 +
 +static void
-+bfa_fcs_itnim_prli_response(void *fcsarg, struct bfa_fcxp_s *fcxp, void *cbarg,
-+			    bfa_status_t req_status, u32 rsp_len,
-+			    u32 resid_len, struct fchs_s *rsp_fchs)
++bfa_fcs_lport_fdmi_rhba_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++				void *cbarg, bfa_status_t req_status,
++				u32 rsp_len, u32 resid_len,
++				struct fchs_s *rsp_fchs)
 +{
-+	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *) cbarg;
-+	struct fc_els_cmd_s *els_cmd;
-+	struct fc_prli_s *prli_resp;
-+	struct fc_ls_rjt_s *ls_rjt;
-+	struct fc_prli_params_s *sparams;
++	struct bfa_fcs_lport_fdmi_s *fdmi =
++				(struct bfa_fcs_lport_fdmi_s *) cbarg;
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct ct_hdr_s *cthdr = NULL;
 +
-+	bfa_trc(itnim->fcs, req_status);
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
 +
 +	/*
 +	 * Sanity Checks
 +	 */
 +	if (req_status != BFA_STATUS_OK) {
-+		itnim->stats.prli_rsp_err++;
-+		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_RSP_ERROR);
++		bfa_trc(port->fcs, req_status);
++		bfa_sm_send_event(fdmi, FDMISM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = bfa_os_ntohs(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		bfa_sm_send_event(fdmi, FDMISM_EVENT_RSP_OK);
++		return;
++	}
++
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++	bfa_sm_send_event(fdmi, FDMISM_EVENT_RSP_ERROR);
++}
++
++/**
++*  RPRT : Register Port
++ */
++static void
++bfa_fcs_lport_fdmi_send_rprt(void *fdmi_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_fdmi_s *fdmi = fdmi_cbarg;
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct fchs_s fchs;
++	u16        len, attr_len;
++	struct bfa_fcxp_s *fcxp;
++	u8        *pyld;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &fdmi->fcxp_wqe,
++					bfa_fcs_lport_fdmi_send_rprt, fdmi);
++		return;
++	}
++	fdmi->fcxp = fcxp;
++
++	pyld = bfa_fcxp_get_reqbuf(fcxp);
++	bfa_os_memset(pyld, 0, FC_MAX_PDUSZ);
++
++	len = fc_fdmi_reqhdr_build(&fchs, pyld, bfa_fcs_lport_get_fcid(port),
++				   FDMI_RPRT);
++
++	attr_len =
++		bfa_fcs_lport_fdmi_build_rprt_pyld(fdmi,
++					  (u8 *) ((struct ct_hdr_s *) pyld
++						       + 1));
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len + attr_len, &fchs,
++			  bfa_fcs_lport_fdmi_rprt_response, (void *)fdmi,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	bfa_sm_send_event(fdmi, FDMISM_EVENT_RPRT_SENT);
++}
++
++/**
++ * This routine builds Port Attribute Block that used in RPA, RPRT commands.
++ */
++static          u16
++bfa_fcs_lport_fdmi_build_portattr_block(struct bfa_fcs_lport_fdmi_s *fdmi,
++				       u8 *pyld)
++{
++	struct bfa_fcs_fdmi_port_attr_s fcs_port_attr;
++	struct fdmi_port_attr_s *port_attrib = (struct fdmi_port_attr_s *) pyld;
++	struct fdmi_attr_s *attr;
++	u8        *curr_ptr;
++	u16        len;
++	u8	count = 0;
++
++	/*
++	 * get port attributes
++	 */
++	bfa_fcs_fdmi_get_portattr(fdmi, &fcs_port_attr);
++
++	len = sizeof(port_attrib->attr_count);
++
++	/*
++	 * fill out the invididual entries
++	 */
++	curr_ptr = (u8 *) &port_attrib->port_attr;
++
++	/*
++	 * FC4 Types
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_PORT_ATTRIB_FC4_TYPES);
++	attr->len = sizeof(fcs_port_attr.supp_fc4_types);
++	memcpy(attr->value, fcs_port_attr.supp_fc4_types, attr->len);
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	++count;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * Supported Speed
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_PORT_ATTRIB_SUPP_SPEED);
++	attr->len = sizeof(fcs_port_attr.supp_speed);
++	memcpy(attr->value, &fcs_port_attr.supp_speed, attr->len);
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	++count;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * current Port Speed
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_PORT_ATTRIB_PORT_SPEED);
++	attr->len = sizeof(fcs_port_attr.curr_speed);
++	memcpy(attr->value, &fcs_port_attr.curr_speed, attr->len);
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	++count;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * max frame size
++	 */
++	attr = (struct fdmi_attr_s *) curr_ptr;
++	attr->type = bfa_os_htons(FDMI_PORT_ATTRIB_FRAME_SIZE);
++	attr->len = sizeof(fcs_port_attr.max_frm_size);
++	memcpy(attr->value, &fcs_port_attr.max_frm_size, attr->len);
++	curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++	len += attr->len;
++	++count;
++	attr->len =
++		bfa_os_htons(attr->len + sizeof(attr->type) +
++			     sizeof(attr->len));
++
++	/*
++	 * OS Device Name
++	 */
++	if (fcs_port_attr.os_device_name[0] != '\0') {
++		attr = (struct fdmi_attr_s *) curr_ptr;
++		attr->type = bfa_os_htons(FDMI_PORT_ATTRIB_DEV_NAME);
++		attr->len = (u16) strlen(fcs_port_attr.os_device_name);
++		memcpy(attr->value, fcs_port_attr.os_device_name, attr->len);
++		attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++							     *fields need
++							     *to be 4 byte
++							     *aligned */
++		curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++		len += attr->len;
++		++count;
++		attr->len =
++			bfa_os_htons(attr->len + sizeof(attr->type) +
++					sizeof(attr->len));
++	}
++	/*
++	 * Host Name
++	 */
++	if (fcs_port_attr.host_name[0] != '\0') {
++		attr = (struct fdmi_attr_s *) curr_ptr;
++		attr->type = bfa_os_htons(FDMI_PORT_ATTRIB_HOST_NAME);
++		attr->len = (u16) strlen(fcs_port_attr.host_name);
++		memcpy(attr->value, fcs_port_attr.host_name, attr->len);
++		attr->len = fc_roundup(attr->len, sizeof(u32));	/* variable
++							     *fields need
++							     *to be 4 byte
++							     *aligned */
++		curr_ptr += sizeof(attr->type) + sizeof(attr->len) + attr->len;
++		len += attr->len;
++		++count;
++		attr->len =
++			bfa_os_htons(attr->len + sizeof(attr->type) +
++				sizeof(attr->len));
++	}
++
++	/*
++	 * Update size of payload
++	 */
++	port_attrib->attr_count = bfa_os_htonl(count);
++	len += ((sizeof(attr->type) +
++		 sizeof(attr->len)) * count);
++	return len;
++}
++
++static          u16
++bfa_fcs_lport_fdmi_build_rprt_pyld(struct bfa_fcs_lport_fdmi_s *fdmi, u8 *pyld)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct fdmi_rprt_s *rprt = (struct fdmi_rprt_s *) pyld;
++	u16        len;
++
++	rprt->hba_id = bfa_fcs_lport_get_pwwn(bfa_fcs_get_base_port(port->fcs));
++	rprt->port_name = bfa_fcs_lport_get_pwwn(port);
++
++	len = bfa_fcs_lport_fdmi_build_portattr_block(fdmi,
++				(u8 *) &rprt->port_attr_blk);
++
++	len += sizeof(rprt->hba_id) + sizeof(rprt->port_name);
++
++	return len;
++}
++
++static void
++bfa_fcs_lport_fdmi_rprt_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++				void *cbarg, bfa_status_t req_status,
++				u32 rsp_len, u32 resid_len,
++				struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_fdmi_s *fdmi =
++			(struct bfa_fcs_lport_fdmi_s *) cbarg;
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct ct_hdr_s *cthdr = NULL;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		bfa_sm_send_event(fdmi, FDMISM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = bfa_os_ntohs(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		bfa_sm_send_event(fdmi, FDMISM_EVENT_RSP_OK);
++		return;
++	}
++
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++	bfa_sm_send_event(fdmi, FDMISM_EVENT_RSP_ERROR);
++}
++
++/**
++*  RPA : Register Port Attributes.
++ */
++static void
++bfa_fcs_lport_fdmi_send_rpa(void *fdmi_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_fdmi_s *fdmi = fdmi_cbarg;
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct fchs_s fchs;
++	u16        len, attr_len;
++	struct bfa_fcxp_s *fcxp;
++	u8        *pyld;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &fdmi->fcxp_wqe,
++					bfa_fcs_lport_fdmi_send_rpa, fdmi);
++		return;
++	}
++	fdmi->fcxp = fcxp;
++
++	pyld = bfa_fcxp_get_reqbuf(fcxp);
++	bfa_os_memset(pyld, 0, FC_MAX_PDUSZ);
++
++	len = fc_fdmi_reqhdr_build(&fchs, pyld, bfa_fcs_lport_get_fcid(port),
++				   FDMI_RPA);
++
++	attr_len =
++		bfa_fcs_lport_fdmi_build_rpa_pyld(fdmi,
++					 (u8 *) ((struct ct_hdr_s *) pyld
++						      + 1));
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len + attr_len, &fchs,
++			  bfa_fcs_lport_fdmi_rpa_response, (void *)fdmi,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	bfa_sm_send_event(fdmi, FDMISM_EVENT_RPA_SENT);
++}
++
++static          u16
++bfa_fcs_lport_fdmi_build_rpa_pyld(struct bfa_fcs_lport_fdmi_s *fdmi, u8 *pyld)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct fdmi_rpa_s *rpa = (struct fdmi_rpa_s *) pyld;
++	u16        len;
++
++	rpa->port_name = bfa_fcs_lport_get_pwwn(port);
++
++	len = bfa_fcs_lport_fdmi_build_portattr_block(fdmi,
++				(u8 *) &rpa->port_attr_blk);
++
++	len += sizeof(rpa->port_name);
++
++	return len;
++}
++
++static void
++bfa_fcs_lport_fdmi_rpa_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++			void *cbarg, bfa_status_t req_status, u32 rsp_len,
++			u32 resid_len, struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_fdmi_s *fdmi =
++				(struct bfa_fcs_lport_fdmi_s *) cbarg;
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct ct_hdr_s *cthdr = NULL;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		bfa_sm_send_event(fdmi, FDMISM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = bfa_os_ntohs(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		bfa_sm_send_event(fdmi, FDMISM_EVENT_RSP_OK);
++		return;
++	}
++
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++	bfa_sm_send_event(fdmi, FDMISM_EVENT_RSP_ERROR);
++}
++
++static void
++bfa_fcs_lport_fdmi_timeout(void *arg)
++{
++	struct bfa_fcs_lport_fdmi_s *fdmi = (struct bfa_fcs_lport_fdmi_s *) arg;
++
++	bfa_sm_send_event(fdmi, FDMISM_EVENT_TIMEOUT);
++}
++
++void
++bfa_fcs_fdmi_get_hbaattr(struct bfa_fcs_lport_fdmi_s *fdmi,
++			 struct bfa_fcs_fdmi_hba_attr_s *hba_attr)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct bfa_fcs_driver_info_s  *driver_info = &port->fcs->driver_info;
++
++	bfa_os_memset(hba_attr, 0, sizeof(struct bfa_fcs_fdmi_hba_attr_s));
++
++	bfa_ioc_get_adapter_manufacturer(&port->fcs->bfa->ioc,
++					hba_attr->manufacturer);
++	bfa_ioc_get_adapter_serial_num(&port->fcs->bfa->ioc,
++					hba_attr->serial_num);
++	bfa_ioc_get_adapter_model(&port->fcs->bfa->ioc,
++					hba_attr->model);
++	bfa_ioc_get_adapter_model(&port->fcs->bfa->ioc,
++					hba_attr->model_desc);
++	bfa_ioc_get_pci_chip_rev(&port->fcs->bfa->ioc,
++					hba_attr->hw_version);
++	bfa_ioc_get_adapter_optrom_ver(&port->fcs->bfa->ioc,
++					hba_attr->option_rom_ver);
++	bfa_ioc_get_adapter_fw_ver(&port->fcs->bfa->ioc,
++					hba_attr->fw_version);
++
++	strncpy(hba_attr->driver_version, (char *)driver_info->version,
++		sizeof(hba_attr->driver_version));
++
++	strncpy(hba_attr->os_name, driver_info->host_os_name,
++		sizeof(hba_attr->os_name));
++
++	/*
++	 * If there is a patch level, append it
++	 * to the os name along with a separator
++	 */
++	if (driver_info->host_os_patch[0] != '\0') {
++		strncat(hba_attr->os_name, BFA_FCS_PORT_SYMBNAME_SEPARATOR,
++			sizeof(BFA_FCS_PORT_SYMBNAME_SEPARATOR));
++		strncat(hba_attr->os_name, driver_info->host_os_patch,
++				sizeof(driver_info->host_os_patch));
++	}
++
++	hba_attr->max_ct_pyld = bfa_os_htonl(FC_MAX_PDUSZ);
++}
++
++void
++bfa_fcs_fdmi_get_portattr(struct bfa_fcs_lport_fdmi_s *fdmi,
++			  struct bfa_fcs_fdmi_port_attr_s *port_attr)
++{
++	struct bfa_fcs_lport_s *port = fdmi->ms->port;
++	struct bfa_fcs_driver_info_s  *driver_info = &port->fcs->driver_info;
++	struct bfa_port_attr_s pport_attr;
++
++	bfa_os_memset(port_attr, 0, sizeof(struct bfa_fcs_fdmi_port_attr_s));
++
++	/*
++	 * get pport attributes from hal
++	 */
++	bfa_fcport_get_attr(port->fcs->bfa, &pport_attr);
++
++	/*
++	 * get FC4 type Bitmask
++	 */
++	fc_get_fc4type_bitmask(FC_TYPE_FCP, port_attr->supp_fc4_types);
++
++	/*
++	 * Supported Speeds
++	 */
++	port_attr->supp_speed = bfa_os_htonl(BFA_FCS_FDMI_SUPORTED_SPEEDS);
++
++	/*
++	 * Current Speed
++	 */
++	port_attr->curr_speed = bfa_os_htonl(pport_attr.speed);
++
++	/*
++	 * Max PDU Size.
++	 */
++	port_attr->max_frm_size = bfa_os_htonl(FC_MAX_PDUSZ);
++
++	/*
++	 * OS device Name
++	 */
++	strncpy(port_attr->os_device_name, (char *)driver_info->os_device_name,
++		sizeof(port_attr->os_device_name));
++
++	/*
++	 * Host name
++	 */
++	strncpy(port_attr->host_name, (char *)driver_info->host_machine_name,
++		sizeof(port_attr->host_name));
++
++}
++
++
++void
++bfa_fcs_lport_fdmi_init(struct bfa_fcs_lport_ms_s *ms)
++{
++	struct bfa_fcs_lport_fdmi_s *fdmi = &ms->fdmi;
++
++	fdmi->ms = ms;
++	if (ms->port->fcs->fdmi_enabled)
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_offline);
++	else
++		bfa_sm_set_state(fdmi, bfa_fcs_lport_fdmi_sm_disabled);
++}
++
++void
++bfa_fcs_lport_fdmi_offline(struct bfa_fcs_lport_ms_s *ms)
++{
++	struct bfa_fcs_lport_fdmi_s *fdmi = &ms->fdmi;
++
++	fdmi->ms = ms;
++	bfa_sm_send_event(fdmi, FDMISM_EVENT_PORT_OFFLINE);
++}
++
++void
++bfa_fcs_lport_fdmi_online(struct bfa_fcs_lport_ms_s *ms)
++{
++	struct bfa_fcs_lport_fdmi_s *fdmi = &ms->fdmi;
++
++	fdmi->ms = ms;
++	bfa_sm_send_event(fdmi, FDMISM_EVENT_PORT_ONLINE);
++}
++
++#define BFA_FCS_MS_CMD_MAX_RETRIES  2
++
++/*
++ * forward declarations
++ */
++static void     bfa_fcs_lport_ms_send_plogi(void *ms_cbarg,
++					   struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_ms_timeout(void *arg);
++static void     bfa_fcs_lport_ms_plogi_response(void *fcsarg,
++					       struct bfa_fcxp_s *fcxp,
++					       void *cbarg,
++					       bfa_status_t req_status,
++					       u32 rsp_len,
++					       u32 resid_len,
++					       struct fchs_s *rsp_fchs);
++
++static void	bfa_fcs_lport_ms_send_gmal(void *ms_cbarg,
++					struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_ms_gmal_response(void *fcsarg,
++					       struct bfa_fcxp_s *fcxp,
++					       void *cbarg,
++					       bfa_status_t req_status,
++					       u32 rsp_len,
++					       u32 resid_len,
++					       struct fchs_s *rsp_fchs);
++static void	bfa_fcs_lport_ms_send_gfn(void *ms_cbarg,
++					struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_ms_gfn_response(void *fcsarg,
++					       struct bfa_fcxp_s *fcxp,
++					       void *cbarg,
++					       bfa_status_t req_status,
++					       u32 rsp_len,
++					       u32 resid_len,
++					       struct fchs_s *rsp_fchs);
++/**
++ *  fcs_ms_sm FCS MS state machine
++ */
++
++/**
++ *  MS State Machine events
++ */
++enum port_ms_event {
++	MSSM_EVENT_PORT_ONLINE = 1,
++	MSSM_EVENT_PORT_OFFLINE = 2,
++	MSSM_EVENT_RSP_OK = 3,
++	MSSM_EVENT_RSP_ERROR = 4,
++	MSSM_EVENT_TIMEOUT = 5,
++	MSSM_EVENT_FCXP_SENT = 6,
++	MSSM_EVENT_PORT_FABRIC_RSCN = 7
++};
++
++static void     bfa_fcs_lport_ms_sm_offline(struct bfa_fcs_lport_ms_s *ms,
++					   enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_plogi_sending(struct bfa_fcs_lport_ms_s *ms,
++						 enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_plogi(struct bfa_fcs_lport_ms_s *ms,
++					 enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_plogi_retry(struct bfa_fcs_lport_ms_s *ms,
++					       enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_gmal_sending(struct bfa_fcs_lport_ms_s *ms,
++						 enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_gmal(struct bfa_fcs_lport_ms_s *ms,
++					 enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_gmal_retry(struct bfa_fcs_lport_ms_s *ms,
++					       enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_gfn_sending(struct bfa_fcs_lport_ms_s *ms,
++						 enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_gfn(struct bfa_fcs_lport_ms_s *ms,
++					 enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_gfn_retry(struct bfa_fcs_lport_ms_s *ms,
++					       enum port_ms_event event);
++static void     bfa_fcs_lport_ms_sm_online(struct bfa_fcs_lport_ms_s *ms,
++					  enum port_ms_event event);
++/**
++ *	Start in offline state - awaiting NS to send start.
++ */
++static void
++bfa_fcs_lport_ms_sm_offline(struct bfa_fcs_lport_ms_s *ms,
++				enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_PORT_ONLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_plogi_sending);
++		bfa_fcs_lport_ms_send_plogi(ms, NULL);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ms_sm_plogi_sending(struct bfa_fcs_lport_ms_s *ms,
++				enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_FCXP_SENT:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_plogi);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ms->port),
++					   &ms->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ms_sm_plogi(struct bfa_fcs_lport_ms_s *ms,
++			enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_RSP_ERROR:
++		/*
++		 * Start timer for a delayed retry
++		 */
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_plogi_retry);
++		ms->port->stats.ms_retries++;
++		bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ms->port),
++				    &ms->timer, bfa_fcs_lport_ms_timeout, ms,
++				    BFA_FCS_RETRY_TIMEOUT);
++		break;
++
++	case MSSM_EVENT_RSP_OK:
++		/*
++		 * since plogi is done, now invoke MS related sub-modules
++		 */
++		bfa_fcs_lport_fdmi_online(ms);
++
++		/**
++		 * if this is a Vport, go to online state.
++		 */
++		if (ms->port->vport) {
++			bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_online);
++			break;
++		}
++
++		/*
++		 * For a base port we need to get the
++		 * switch's IP address.
++		 */
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gmal_sending);
++		bfa_fcs_lport_ms_send_gmal(ms, NULL);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		bfa_fcxp_discard(ms->fcxp);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ms_sm_plogi_retry(struct bfa_fcs_lport_ms_s *ms,
++			enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_TIMEOUT:
++		/*
++		 * Retry Timer Expired. Re-send
++		 */
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_plogi_sending);
++		bfa_fcs_lport_ms_send_plogi(ms, NULL);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		bfa_timer_stop(&ms->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ms_sm_online(struct bfa_fcs_lport_ms_s *ms,
++			enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		break;
++
++	case MSSM_EVENT_PORT_FABRIC_RSCN:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gfn_sending);
++		ms->retry_cnt = 0;
++		bfa_fcs_lport_ms_send_gfn(ms, NULL);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ms_sm_gmal_sending(struct bfa_fcs_lport_ms_s *ms,
++				enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_FCXP_SENT:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gmal);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ms->port),
++					   &ms->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ms_sm_gmal(struct bfa_fcs_lport_ms_s *ms,
++				enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_RSP_ERROR:
++		/*
++		 * Start timer for a delayed retry
++		 */
++		if (ms->retry_cnt++ < BFA_FCS_MS_CMD_MAX_RETRIES) {
++			bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gmal_retry);
++			ms->port->stats.ms_retries++;
++			bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ms->port),
++				&ms->timer, bfa_fcs_lport_ms_timeout, ms,
++				BFA_FCS_RETRY_TIMEOUT);
++		} else {
++			bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gfn_sending);
++			bfa_fcs_lport_ms_send_gfn(ms, NULL);
++			ms->retry_cnt = 0;
++		}
++		break;
++
++	case MSSM_EVENT_RSP_OK:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gfn_sending);
++		bfa_fcs_lport_ms_send_gfn(ms, NULL);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		bfa_fcxp_discard(ms->fcxp);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ms_sm_gmal_retry(struct bfa_fcs_lport_ms_s *ms,
++				enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_TIMEOUT:
++		/*
++		 * Retry Timer Expired. Re-send
++		 */
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gmal_sending);
++		bfa_fcs_lport_ms_send_gmal(ms, NULL);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		bfa_timer_stop(&ms->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++/**
++ *  ms_pvt MS local functions
++ */
++
++static void
++bfa_fcs_lport_ms_send_gmal(void *ms_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ms_s *ms = ms_cbarg;
++	bfa_fcs_lport_t *port = ms->port;
++	struct fchs_s	fchs;
++	int		len;
++	struct bfa_fcxp_s *fcxp;
++
++	bfa_trc(port->fcs, port->pid);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ms->fcxp_wqe,
++					bfa_fcs_lport_ms_send_gmal, ms);
++		return;
++	}
++	ms->fcxp = fcxp;
++
++	len = fc_gmal_req_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			     bfa_fcs_lport_get_fcid(port),
++				 bfa_lps_get_peer_nwwn(port->fabric->lps));
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ms_gmal_response, (void *)ms,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	bfa_sm_send_event(ms, MSSM_EVENT_FCXP_SENT);
++}
++
++static void
++bfa_fcs_lport_ms_gmal_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++				void *cbarg, bfa_status_t req_status,
++				u32 rsp_len, u32 resid_len,
++				struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_ms_s *ms = (struct bfa_fcs_lport_ms_s *) cbarg;
++	bfa_fcs_lport_t *port = ms->port;
++	struct ct_hdr_s		*cthdr = NULL;
++	struct fcgs_gmal_resp_s *gmal_resp;
++	struct fcgs_gmal_entry_s *gmal_entry;
++	u32		num_entries;
++	u8			*rsp_str;
++
++	bfa_trc(port->fcs, req_status);
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		bfa_sm_send_event(ms, MSSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = bfa_os_ntohs(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		gmal_resp = (struct fcgs_gmal_resp_s *)(cthdr + 1);
++
++		num_entries = bfa_os_ntohl(gmal_resp->ms_len);
++		if (num_entries == 0) {
++			bfa_sm_send_event(ms, MSSM_EVENT_RSP_ERROR);
++			return;
++		}
++		/*
++		* The response could contain multiple Entries.
++		* Entries for SNMP interface, etc.
++		* We look for the entry with a telnet prefix.
++		* First "http://" entry refers to IP addr
++		*/
++
++		gmal_entry = (struct fcgs_gmal_entry_s *)gmal_resp->ms_ma;
++		while (num_entries > 0) {
++			if (strncmp(gmal_entry->prefix,
++				CT_GMAL_RESP_PREFIX_HTTP,
++				sizeof(gmal_entry->prefix)) == 0) {
++
++				/*
++				* if the IP address is terminating with a '/',
++				* remove it.
++				* Byte 0 consists of the length of the string.
++				*/
++				rsp_str = &(gmal_entry->prefix[0]);
++				if (rsp_str[gmal_entry->len-1] == '/')
++					rsp_str[gmal_entry->len-1] = 0;
++
++				/* copy IP Address to fabric */
++				strncpy(bfa_fcs_lport_get_fabric_ipaddr(port),
++					gmal_entry->ip_addr,
++					BFA_FCS_FABRIC_IPADDR_SZ);
++				break;
++			} else {
++				--num_entries;
++				++gmal_entry;
++			}
++		}
++
++		bfa_sm_send_event(ms, MSSM_EVENT_RSP_OK);
++		return;
++	}
++
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++	bfa_sm_send_event(ms, MSSM_EVENT_RSP_ERROR);
++}
++
++static void
++bfa_fcs_lport_ms_sm_gfn_sending(struct bfa_fcs_lport_ms_s *ms,
++			enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_FCXP_SENT:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gfn);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ms->port),
++					   &ms->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ms_sm_gfn(struct bfa_fcs_lport_ms_s *ms,
++			enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_RSP_ERROR:
++		/*
++		 * Start timer for a delayed retry
++		 */
++		if (ms->retry_cnt++ < BFA_FCS_MS_CMD_MAX_RETRIES) {
++			bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gfn_retry);
++			ms->port->stats.ms_retries++;
++			bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ms->port),
++				&ms->timer, bfa_fcs_lport_ms_timeout, ms,
++				BFA_FCS_RETRY_TIMEOUT);
++		} else {
++			bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_online);
++			ms->retry_cnt = 0;
++		}
++		break;
++
++	case MSSM_EVENT_RSP_OK:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_online);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		bfa_fcxp_discard(ms->fcxp);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ms_sm_gfn_retry(struct bfa_fcs_lport_ms_s *ms,
++				enum port_ms_event event)
++{
++	bfa_trc(ms->port->fcs, ms->port->port_cfg.pwwn);
++	bfa_trc(ms->port->fcs, event);
++
++	switch (event) {
++	case MSSM_EVENT_TIMEOUT:
++		/*
++		 * Retry Timer Expired. Re-send
++		 */
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_gfn_sending);
++		bfa_fcs_lport_ms_send_gfn(ms, NULL);
++		break;
++
++	case MSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++		bfa_timer_stop(&ms->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ms->port->fcs, event);
++	}
++}
++/**
++ *  ms_pvt MS local functions
++ */
++
++static void
++bfa_fcs_lport_ms_send_gfn(void *ms_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ms_s *ms = ms_cbarg;
++	bfa_fcs_lport_t *port = ms->port;
++	struct fchs_s		fchs;
++	int			len;
++	struct bfa_fcxp_s *fcxp;
++
++	bfa_trc(port->fcs, port->pid);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ms->fcxp_wqe,
++					bfa_fcs_lport_ms_send_gfn, ms);
++		return;
++	}
++	ms->fcxp = fcxp;
++
++	len = fc_gfn_req_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			     bfa_fcs_lport_get_fcid(port),
++				 bfa_lps_get_peer_nwwn(port->fabric->lps));
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ms_gfn_response, (void *)ms,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	bfa_sm_send_event(ms, MSSM_EVENT_FCXP_SENT);
++}
++
++static void
++bfa_fcs_lport_ms_gfn_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++			void *cbarg, bfa_status_t req_status, u32 rsp_len,
++			u32 resid_len, struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_ms_s *ms = (struct bfa_fcs_lport_ms_s *) cbarg;
++	bfa_fcs_lport_t *port = ms->port;
++	struct ct_hdr_s	*cthdr = NULL;
++	wwn_t	       *gfn_resp;
++
++	bfa_trc(port->fcs, req_status);
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		bfa_sm_send_event(ms, MSSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = bfa_os_ntohs(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		gfn_resp = (wwn_t *)(cthdr + 1);
++		/* check if it has actually changed */
++		if ((memcmp((void *)&bfa_fcs_lport_get_fabric_name(port),
++				gfn_resp, sizeof(wwn_t)) != 0)) {
++			bfa_fcs_fabric_set_fabric_name(port->fabric, *gfn_resp);
++		}
++		bfa_sm_send_event(ms, MSSM_EVENT_RSP_OK);
++		return;
++	}
++
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++	bfa_sm_send_event(ms, MSSM_EVENT_RSP_ERROR);
++}
++
++/**
++ *  ms_pvt MS local functions
++ */
++
++static void
++bfa_fcs_lport_ms_send_plogi(void *ms_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ms_s *ms = ms_cbarg;
++	struct bfa_fcs_lport_s *port = ms->port;
++	struct fchs_s	fchs;
++	int	len;
++	struct bfa_fcxp_s *fcxp;
++
++	bfa_trc(port->fcs, port->pid);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		port->stats.ms_plogi_alloc_wait++;
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ms->fcxp_wqe,
++					bfa_fcs_lport_ms_send_plogi, ms);
++		return;
++	}
++	ms->fcxp = fcxp;
++
++	len = fc_plogi_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			     bfa_os_hton3b(FC_MGMT_SERVER),
++			     bfa_fcs_lport_get_fcid(port), 0,
++			     port->port_cfg.pwwn, port->port_cfg.nwwn,
++				 bfa_fcport_get_maxfrsize(port->fcs->bfa));
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ms_plogi_response, (void *)ms,
++			  FC_MAX_PDUSZ, FC_ELS_TOV);
++
++	port->stats.ms_plogi_sent++;
++	bfa_sm_send_event(ms, MSSM_EVENT_FCXP_SENT);
++}
++
++static void
++bfa_fcs_lport_ms_plogi_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++			void *cbarg, bfa_status_t req_status,
++			u32 rsp_len, u32 resid_len, struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_ms_s *ms = (struct bfa_fcs_lport_ms_s *) cbarg;
++	struct bfa_fcs_lport_s *port = ms->port;
++	struct fc_els_cmd_s *els_cmd;
++	struct fc_ls_rjt_s *ls_rjt;
++
++	bfa_trc(port->fcs, req_status);
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		port->stats.ms_plogi_rsp_err++;
++		bfa_trc(port->fcs, req_status);
++		bfa_sm_send_event(ms, MSSM_EVENT_RSP_ERROR);
 +		return;
 +	}
 +
 +	els_cmd = (struct fc_els_cmd_s *) BFA_FCXP_RSP_PLD(fcxp);
 +
-+	if (els_cmd->els_code == FC_ELS_ACC) {
-+		prli_resp = (struct fc_prli_s *) els_cmd;
++	switch (els_cmd->els_code) {
 +
-+		if (fc_prli_rsp_parse(prli_resp, rsp_len) != FC_PARSE_OK) {
-+			bfa_trc(itnim->fcs, rsp_len);
-+			/*
-+			 * Check if this  r-port is also in Initiator mode.
-+			 * If so, we need to set this ITN as a no-op.
-+			 */
-+			if (prli_resp->parampage.servparams.initiator) {
-+				bfa_trc(itnim->fcs, prli_resp->parampage.type);
-+				itnim->rport->scsi_function =
-+					 BFA_RPORT_INITIATOR;
-+				itnim->stats.prli_rsp_acc++;
-+				bfa_sm_send_event(itnim,
-+						  BFA_FCS_ITNIM_SM_RSP_OK);
-+				return;
-+			}
-+
-+			itnim->stats.prli_rsp_parse_err++;
-+			return;
++	case FC_ELS_ACC:
++		if (rsp_len < sizeof(struct fc_logi_s)) {
++			bfa_trc(port->fcs, rsp_len);
++			port->stats.ms_plogi_acc_err++;
++			bfa_sm_send_event(ms, MSSM_EVENT_RSP_ERROR);
++			break;
 +		}
-+		itnim->rport->scsi_function = BFA_RPORT_TARGET;
++		port->stats.ms_plogi_accepts++;
++		bfa_sm_send_event(ms, MSSM_EVENT_RSP_OK);
++		break;
 +
-+		sparams = &prli_resp->parampage.servparams;
-+		itnim->seq_rec	     = sparams->retry;
-+		itnim->rec_support   = sparams->rec_support;
-+		itnim->task_retry_id = sparams->task_retry_id;
-+		itnim->conf_comp     = sparams->confirm;
-+
-+		itnim->stats.prli_rsp_acc++;
-+		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_RSP_OK);
-+	} else {
++	case FC_ELS_LS_RJT:
 +		ls_rjt = (struct fc_ls_rjt_s *) BFA_FCXP_RSP_PLD(fcxp);
 +
-+		bfa_trc(itnim->fcs, ls_rjt->reason_code);
-+		bfa_trc(itnim->fcs, ls_rjt->reason_code_expl);
++		bfa_trc(port->fcs, ls_rjt->reason_code);
++		bfa_trc(port->fcs, ls_rjt->reason_code_expl);
 +
-+		itnim->stats.prli_rsp_rjt++;
-+		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_RSP_ERROR);
-+	}
-+}
-+
-+static void
-+bfa_fcs_itnim_timeout(void *arg)
-+{
-+	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *) arg;
-+
-+	itnim->stats.timeout++;
-+	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_TIMEOUT);
-+}
-+
-+static void
-+bfa_fcs_itnim_free(struct bfa_fcs_itnim_s *itnim)
-+{
-+	bfa_itnim_delete(itnim->bfa_itnim);
-+	bfa_fcb_itnim_free(itnim->fcs->bfad, itnim->itnim_drv);
-+}
-+
-+
-+
-+/**
-+ *  itnim_public FCS ITNIM public interfaces
-+ */
-+
-+/**
-+ *	Called by rport when a new rport is created.
-+ *
-+ * @param[in] rport	-  remote port.
-+ */
-+struct bfa_fcs_itnim_s *
-+bfa_fcs_itnim_create(struct bfa_fcs_rport_s *rport)
-+{
-+	struct bfa_fcs_lport_s *port = rport->port;
-+	struct bfa_fcs_itnim_s *itnim;
-+	struct bfad_itnim_s   *itnim_drv;
-+	struct bfa_itnim_s *bfa_itnim;
-+
-+	/*
-+	 * call bfad to allocate the itnim
-+	 */
-+	bfa_fcb_itnim_alloc(port->fcs->bfad, &itnim, &itnim_drv);
-+	if (itnim == NULL) {
-+		bfa_trc(port->fcs, rport->pwwn);
-+		return NULL;
-+	}
-+
-+	/*
-+	 * Initialize itnim
-+	 */
-+	itnim->rport = rport;
-+	itnim->fcs = rport->fcs;
-+	itnim->itnim_drv = itnim_drv;
-+
-+	/*
-+	 * call BFA to create the itnim
-+	 */
-+	bfa_itnim =
-+		bfa_itnim_create(port->fcs->bfa, rport->bfa_rport, itnim);
-+
-+	if (bfa_itnim == NULL) {
-+		bfa_trc(port->fcs, rport->pwwn);
-+		bfa_fcb_itnim_free(port->fcs->bfad, itnim_drv);
-+		bfa_assert(0);
-+		return NULL;
-+	}
-+
-+	itnim->bfa_itnim     = bfa_itnim;
-+	itnim->seq_rec	     = BFA_FALSE;
-+	itnim->rec_support   = BFA_FALSE;
-+	itnim->conf_comp     = BFA_FALSE;
-+	itnim->task_retry_id = BFA_FALSE;
-+
-+	/*
-+	 * Set State machine
-+	 */
-+	bfa_sm_set_state(itnim, bfa_fcs_itnim_sm_offline);
-+
-+	return itnim;
-+}
-+
-+/**
-+ *	Called by rport to delete  the instance of FCPIM.
-+ *
-+ * @param[in] rport	-  remote port.
-+ */
-+void
-+bfa_fcs_itnim_delete(struct bfa_fcs_itnim_s *itnim)
-+{
-+	bfa_trc(itnim->fcs, itnim->rport->pid);
-+	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_DELETE);
-+}
-+
-+/**
-+ * Notification from rport that PLOGI is complete to initiate FC-4 session.
-+ */
-+void
-+bfa_fcs_itnim_rport_online(struct bfa_fcs_itnim_s *itnim)
-+{
-+	itnim->stats.onlines++;
-+
-+	if (!BFA_FCS_PID_IS_WKA(itnim->rport->pid)) {
-+		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_ONLINE);
-+	} else {
-+		/*
-+		 *  For well known addresses, we set the itnim to initiator
-+		 *  state
-+		 */
-+		itnim->stats.initiator++;
-+		bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_INITIATOR);
-+	}
-+}
-+
-+/**
-+ * Called by rport to handle a remote device offline.
-+ */
-+void
-+bfa_fcs_itnim_rport_offline(struct bfa_fcs_itnim_s *itnim)
-+{
-+	itnim->stats.offlines++;
-+	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_OFFLINE);
-+}
-+
-+/**
-+ * Called by rport when remote port is known to be an initiator from
-+ * PRLI received.
-+ */
-+void
-+bfa_fcs_itnim_is_initiator(struct bfa_fcs_itnim_s *itnim)
-+{
-+	bfa_trc(itnim->fcs, itnim->rport->pid);
-+	itnim->stats.initiator++;
-+	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_INITIATOR);
-+}
-+
-+/**
-+ * Called by rport to check if the itnim is online.
-+ */
-+bfa_status_t
-+bfa_fcs_itnim_get_online_state(struct bfa_fcs_itnim_s *itnim)
-+{
-+	bfa_trc(itnim->fcs, itnim->rport->pid);
-+	switch (bfa_sm_to_state(itnim_sm_table, itnim->sm)) {
-+	case BFA_ITNIM_ONLINE:
-+	case BFA_ITNIM_INITIATIOR:
-+		return BFA_STATUS_OK;
-+
-+	default:
-+		return BFA_STATUS_NO_FCPIM_NEXUS;
-+	}
-+}
-+
-+/**
-+ * BFA completion callback for bfa_itnim_online().
-+ */
-+void
-+bfa_cb_itnim_online(void *cbarg)
-+{
-+	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *) cbarg;
-+
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_HCB_ONLINE);
-+}
-+
-+/**
-+ * BFA completion callback for bfa_itnim_offline().
-+ */
-+void
-+bfa_cb_itnim_offline(void *cb_arg)
-+{
-+	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *) cb_arg;
-+
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_sm_send_event(itnim, BFA_FCS_ITNIM_SM_HCB_OFFLINE);
-+}
-+
-+/**
-+ * Mark the beginning of PATH TOV handling. IO completion callbacks
-+ * are still pending.
-+ */
-+void
-+bfa_cb_itnim_tov_begin(void *cb_arg)
-+{
-+	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *) cb_arg;
-+
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+}
-+
-+/**
-+ * Mark the end of PATH TOV handling. All pending IOs are already cleaned up.
-+ */
-+void
-+bfa_cb_itnim_tov(void *cb_arg)
-+{
-+	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *) cb_arg;
-+	struct bfad_itnim_s *itnim_drv = itnim->itnim_drv;
-+
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	itnim_drv->state = ITNIM_STATE_TIMEOUT;
-+}
-+
-+/**
-+ *		BFA notification to FCS/driver for second level error recovery.
-+ *
-+ * Atleast one I/O request has timedout and target is unresponsive to
-+ * repeated abort requests. Second level error recovery should be initiated
-+ * by starting implicit logout and recovery procedures.
-+ */
-+void
-+bfa_cb_itnim_sler(void *cb_arg)
-+{
-+	struct bfa_fcs_itnim_s *itnim = (struct bfa_fcs_itnim_s *) cb_arg;
-+
-+	itnim->stats.sler++;
-+	bfa_trc(itnim->fcs, itnim->rport->pwwn);
-+	bfa_fcs_rport_logo_imp(itnim->rport);
-+}
-+
-+struct bfa_fcs_itnim_s *
-+bfa_fcs_itnim_lookup(struct bfa_fcs_lport_s *port, wwn_t rpwwn)
-+{
-+	struct bfa_fcs_rport_s *rport;
-+	rport = bfa_fcs_rport_lookup(port, rpwwn);
-+
-+	if (!rport)
-+		return NULL;
-+
-+	bfa_assert(rport->itnim != NULL);
-+	return rport->itnim;
-+}
-+
-+bfa_status_t
-+bfa_fcs_itnim_attr_get(struct bfa_fcs_lport_s *port, wwn_t rpwwn,
-+		       struct bfa_itnim_attr_s *attr)
-+{
-+	struct bfa_fcs_itnim_s *itnim = NULL;
-+
-+	itnim = bfa_fcs_itnim_lookup(port, rpwwn);
-+
-+	if (itnim == NULL)
-+		return BFA_STATUS_NO_FCPIM_NEXUS;
-+
-+	attr->state	    = bfa_sm_to_state(itnim_sm_table, itnim->sm);
-+	attr->retry	    = itnim->seq_rec;
-+	attr->rec_support   = itnim->rec_support;
-+	attr->conf_comp	    = itnim->conf_comp;
-+	attr->task_retry_id = itnim->task_retry_id;
-+	return BFA_STATUS_OK;
-+}
-+
-+bfa_status_t
-+bfa_fcs_itnim_stats_get(struct bfa_fcs_lport_s *port, wwn_t rpwwn,
-+			struct bfa_itnim_stats_s *stats)
-+{
-+	struct bfa_fcs_itnim_s *itnim = NULL;
-+
-+	bfa_assert(port != NULL);
-+
-+	itnim = bfa_fcs_itnim_lookup(port, rpwwn);
-+
-+	if (itnim == NULL)
-+		return BFA_STATUS_NO_FCPIM_NEXUS;
-+
-+	bfa_os_memcpy(stats, &itnim->stats, sizeof(struct bfa_itnim_stats_s));
-+
-+	return BFA_STATUS_OK;
-+}
-+
-+bfa_status_t
-+bfa_fcs_itnim_stats_clear(struct bfa_fcs_lport_s *port, wwn_t rpwwn)
-+{
-+	struct bfa_fcs_itnim_s *itnim = NULL;
-+
-+	bfa_assert(port != NULL);
-+
-+	itnim = bfa_fcs_itnim_lookup(port, rpwwn);
-+
-+	if (itnim == NULL)
-+		return BFA_STATUS_NO_FCPIM_NEXUS;
-+
-+	bfa_os_memset(&itnim->stats, 0, sizeof(struct bfa_itnim_stats_s));
-+	return BFA_STATUS_OK;
-+}
-+
-+void
-+bfa_fcs_fcpim_uf_recv(struct bfa_fcs_itnim_s *itnim,
-+			struct fchs_s *fchs, u16 len)
-+{
-+	struct fc_els_cmd_s *els_cmd;
-+
-+	bfa_trc(itnim->fcs, fchs->type);
-+
-+	if (fchs->type != FC_TYPE_ELS)
-+		return;
-+
-+	els_cmd = (struct fc_els_cmd_s *) (fchs + 1);
-+
-+	bfa_trc(itnim->fcs, els_cmd->els_code);
-+
-+	switch (els_cmd->els_code) {
-+	case FC_ELS_PRLO:
-+		bfa_fcs_rport_prlo(itnim->rport, fchs->ox_id);
++		port->stats.ms_rejects++;
++		bfa_sm_send_event(ms, MSSM_EVENT_RSP_ERROR);
 +		break;
 +
 +	default:
-+		bfa_assert(0);
++		port->stats.ms_plogi_unknown_rsp++;
++		bfa_trc(port->fcs, els_cmd->els_code);
++		bfa_sm_send_event(ms, MSSM_EVENT_RSP_ERROR);
 +	}
++}
++
++static void
++bfa_fcs_lport_ms_timeout(void *arg)
++{
++	struct bfa_fcs_lport_ms_s *ms = (struct bfa_fcs_lport_ms_s *) arg;
++
++	ms->port->stats.ms_timeouts++;
++	bfa_sm_send_event(ms, MSSM_EVENT_TIMEOUT);
++}
++
++
++void
++bfa_fcs_lport_ms_init(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_ms_s *ms = BFA_FCS_GET_MS_FROM_PORT(port);
++
++	ms->port = port;
++	bfa_sm_set_state(ms, bfa_fcs_lport_ms_sm_offline);
++
++	/*
++	 * Invoke init routines of sub modules.
++	 */
++	bfa_fcs_lport_fdmi_init(ms);
++}
++
++void
++bfa_fcs_lport_ms_offline(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_ms_s *ms = BFA_FCS_GET_MS_FROM_PORT(port);
++
++	ms->port = port;
++	bfa_sm_send_event(ms, MSSM_EVENT_PORT_OFFLINE);
++	bfa_fcs_lport_fdmi_offline(ms);
++}
++
++void
++bfa_fcs_lport_ms_online(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_ms_s *ms = BFA_FCS_GET_MS_FROM_PORT(port);
++
++	ms->port = port;
++	bfa_sm_send_event(ms, MSSM_EVENT_PORT_ONLINE);
++}
++void
++bfa_fcs_lport_ms_fabric_rscn(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_ms_s *ms = BFA_FCS_GET_MS_FROM_PORT(port);
++
++	/* todo.  Handle this only  when in Online state */
++	if (bfa_sm_cmp_state(ms, bfa_fcs_lport_ms_sm_online))
++		bfa_sm_send_event(ms, MSSM_EVENT_PORT_FABRIC_RSCN);
++}
++
++/**
++ * @page ns_sm_info VPORT NS State Machine
++ *
++ * @section ns_sm_interactions VPORT NS State Machine Interactions
++ *
++ * @section ns_sm VPORT NS State Machine
++ * img ns_sm.jpg
++ */
++
++/*
++ * forward declarations
++ */
++static void     bfa_fcs_lport_ns_send_plogi(void *ns_cbarg,
++					   struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_ns_send_rspn_id(void *ns_cbarg,
++					     struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_ns_send_rft_id(void *ns_cbarg,
++					    struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_ns_send_rff_id(void *ns_cbarg,
++					    struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_ns_send_gid_ft(void *ns_cbarg,
++					    struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_ns_timeout(void *arg);
++static void     bfa_fcs_lport_ns_plogi_response(void *fcsarg,
++					       struct bfa_fcxp_s *fcxp,
++					       void *cbarg,
++					       bfa_status_t req_status,
++					       u32 rsp_len,
++					       u32 resid_len,
++					       struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_ns_rspn_id_response(void *fcsarg,
++						 struct bfa_fcxp_s *fcxp,
++						 void *cbarg,
++						 bfa_status_t req_status,
++						 u32 rsp_len,
++						 u32 resid_len,
++						 struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_ns_rft_id_response(void *fcsarg,
++						struct bfa_fcxp_s *fcxp,
++						void *cbarg,
++						bfa_status_t req_status,
++						u32 rsp_len,
++						u32 resid_len,
++						struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_ns_rff_id_response(void *fcsarg,
++						struct bfa_fcxp_s *fcxp,
++						void *cbarg,
++						bfa_status_t req_status,
++						u32 rsp_len,
++						u32 resid_len,
++						struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_ns_gid_ft_response(void *fcsarg,
++						struct bfa_fcxp_s *fcxp,
++						void *cbarg,
++						bfa_status_t req_status,
++						u32 rsp_len,
++						u32 resid_len,
++						struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_ns_process_gidft_pids(
++				struct bfa_fcs_lport_s *port,
++				u32 *pid_buf, u32 n_pids);
++
++static void bfa_fcs_lport_ns_boot_target_disc(bfa_fcs_lport_t *port);
++/**
++ *  fcs_ns_sm FCS nameserver interface state machine
++ */
++
++/**
++ * VPort NS State Machine events
++ */
++enum vport_ns_event {
++	NSSM_EVENT_PORT_ONLINE = 1,
++	NSSM_EVENT_PORT_OFFLINE = 2,
++	NSSM_EVENT_PLOGI_SENT = 3,
++	NSSM_EVENT_RSP_OK = 4,
++	NSSM_EVENT_RSP_ERROR = 5,
++	NSSM_EVENT_TIMEOUT = 6,
++	NSSM_EVENT_NS_QUERY = 7,
++	NSSM_EVENT_RSPNID_SENT = 8,
++	NSSM_EVENT_RFTID_SENT = 9,
++	NSSM_EVENT_RFFID_SENT = 10,
++	NSSM_EVENT_GIDFT_SENT = 11,
++};
++
++static void     bfa_fcs_lport_ns_sm_offline(struct bfa_fcs_lport_ns_s *ns,
++					   enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_plogi_sending(struct bfa_fcs_lport_ns_s *ns,
++						 enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_plogi(struct bfa_fcs_lport_ns_s *ns,
++					 enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_plogi_retry(struct bfa_fcs_lport_ns_s *ns,
++					       enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_sending_rspn_id(
++					struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rspn_id(struct bfa_fcs_lport_ns_s *ns,
++					   enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rspn_id_retry(struct bfa_fcs_lport_ns_s *ns,
++						 enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_sending_rft_id(
++					struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rft_id_retry(struct bfa_fcs_lport_ns_s *ns,
++						enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rft_id(struct bfa_fcs_lport_ns_s *ns,
++					  enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_sending_rff_id(
++					struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rff_id_retry(struct bfa_fcs_lport_ns_s *ns,
++						enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_rff_id(struct bfa_fcs_lport_ns_s *ns,
++					  enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_sending_gid_ft(
++					struct bfa_fcs_lport_ns_s *ns,
++					enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_gid_ft(struct bfa_fcs_lport_ns_s *ns,
++					  enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_gid_ft_retry(struct bfa_fcs_lport_ns_s *ns,
++						enum vport_ns_event event);
++static void     bfa_fcs_lport_ns_sm_online(struct bfa_fcs_lport_ns_s *ns,
++					  enum vport_ns_event event);
++/**
++ *	Start in offline state - awaiting linkup
++ */
++static void
++bfa_fcs_lport_ns_sm_offline(struct bfa_fcs_lport_ns_s *ns,
++			enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_PORT_ONLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_plogi_sending);
++		bfa_fcs_lport_ns_send_plogi(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_plogi_sending(struct bfa_fcs_lport_ns_s *ns,
++			enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_PLOGI_SENT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_plogi);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++					   &ns->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_plogi(struct bfa_fcs_lport_ns_s *ns,
++			enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RSP_ERROR:
++		/*
++		 * Start timer for a delayed retry
++		 */
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_plogi_retry);
++		ns->port->stats.ns_retries++;
++		bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++				    &ns->timer, bfa_fcs_lport_ns_timeout, ns,
++				    BFA_FCS_RETRY_TIMEOUT);
++		break;
++
++	case NSSM_EVENT_RSP_OK:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rspn_id);
++		bfa_fcs_lport_ns_send_rspn_id(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_discard(ns->fcxp);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_plogi_retry(struct bfa_fcs_lport_ns_s *ns,
++				enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_TIMEOUT:
++		/*
++		 * Retry Timer Expired. Re-send
++		 */
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_plogi_sending);
++		bfa_fcs_lport_ns_send_plogi(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_timer_stop(&ns->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_sending_rspn_id(struct bfa_fcs_lport_ns_s *ns,
++				   enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RSPNID_SENT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rspn_id);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++					   &ns->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rspn_id(struct bfa_fcs_lport_ns_s *ns,
++			enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RSP_ERROR:
++		/*
++		 * Start timer for a delayed retry
++		 */
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rspn_id_retry);
++		ns->port->stats.ns_retries++;
++		bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++				    &ns->timer, bfa_fcs_lport_ns_timeout, ns,
++				    BFA_FCS_RETRY_TIMEOUT);
++		break;
++
++	case NSSM_EVENT_RSP_OK:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rft_id);
++		bfa_fcs_lport_ns_send_rft_id(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_fcxp_discard(ns->fcxp);
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rspn_id_retry(struct bfa_fcs_lport_ns_s *ns,
++				enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_TIMEOUT:
++		/*
++		 * Retry Timer Expired. Re-send
++		 */
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rspn_id);
++		bfa_fcs_lport_ns_send_rspn_id(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_timer_stop(&ns->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_sending_rft_id(struct bfa_fcs_lport_ns_s *ns,
++				  enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RFTID_SENT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rft_id);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++					   &ns->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rft_id(struct bfa_fcs_lport_ns_s *ns,
++			enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RSP_OK:
++		/* Now move to register FC4 Features */
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rff_id);
++		bfa_fcs_lport_ns_send_rff_id(ns, NULL);
++		break;
++
++	case NSSM_EVENT_RSP_ERROR:
++		/*
++		 * Start timer for a delayed retry
++		 */
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rft_id_retry);
++		ns->port->stats.ns_retries++;
++		bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++				    &ns->timer, bfa_fcs_lport_ns_timeout, ns,
++				    BFA_FCS_RETRY_TIMEOUT);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_discard(ns->fcxp);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rft_id_retry(struct bfa_fcs_lport_ns_s *ns,
++				enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_TIMEOUT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rft_id);
++		bfa_fcs_lport_ns_send_rft_id(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_timer_stop(&ns->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_sending_rff_id(struct bfa_fcs_lport_ns_s *ns,
++				  enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RFFID_SENT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rff_id);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++					   &ns->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rff_id(struct bfa_fcs_lport_ns_s *ns,
++			enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RSP_OK:
++
++		/*
++		 * If min cfg mode is enabled, we donot initiate rport
++		 * discovery with the fabric. Instead, we will retrieve the
++		 * boot targets from HAL/FW.
++		 */
++		if (__fcs_min_cfg(ns->port->fcs)) {
++			bfa_fcs_lport_ns_boot_target_disc(ns->port);
++			bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_online);
++			return;
++		}
++
++		/*
++		 * If the port role is Initiator Mode issue NS query.
++		 * If it is Target Mode, skip this and go to online.
++		 */
++		if (BFA_FCS_VPORT_IS_INITIATOR_MODE(ns->port)) {
++			bfa_sm_set_state(ns,
++				bfa_fcs_lport_ns_sm_sending_gid_ft);
++			bfa_fcs_lport_ns_send_gid_ft(ns, NULL);
++		}
++		/*
++		 * kick off mgmt srvr state machine
++		 */
++		bfa_fcs_lport_ms_online(ns->port);
++		break;
++
++	case NSSM_EVENT_RSP_ERROR:
++		/*
++		 * Start timer for a delayed retry
++		 */
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_rff_id_retry);
++		ns->port->stats.ns_retries++;
++		bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++				    &ns->timer, bfa_fcs_lport_ns_timeout, ns,
++				    BFA_FCS_RETRY_TIMEOUT);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_discard(ns->fcxp);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_rff_id_retry(struct bfa_fcs_lport_ns_s *ns,
++				enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_TIMEOUT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_rff_id);
++		bfa_fcs_lport_ns_send_rff_id(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_timer_stop(&ns->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++static void
++bfa_fcs_lport_ns_sm_sending_gid_ft(struct bfa_fcs_lport_ns_s *ns,
++				  enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_GIDFT_SENT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_gid_ft);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_walloc_cancel(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++					   &ns->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_gid_ft(struct bfa_fcs_lport_ns_s *ns,
++			enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_RSP_OK:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_online);
++		break;
++
++	case NSSM_EVENT_RSP_ERROR:
++		/*
++		 * TBD: for certain reject codes, we don't need to retry
++		 */
++		/*
++		 * Start timer for a delayed retry
++		 */
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_gid_ft_retry);
++		ns->port->stats.ns_retries++;
++		bfa_timer_start(BFA_FCS_GET_HAL_FROM_PORT(ns->port),
++				    &ns->timer, bfa_fcs_lport_ns_timeout, ns,
++				    BFA_FCS_RETRY_TIMEOUT);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_fcxp_discard(ns->fcxp);
++		break;
++
++	case  NSSM_EVENT_NS_QUERY:
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_gid_ft_retry(struct bfa_fcs_lport_ns_s *ns,
++				enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_TIMEOUT:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_sending_gid_ft);
++		bfa_fcs_lport_ns_send_gid_ft(ns, NULL);
++		break;
++
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		bfa_timer_stop(&ns->timer);
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_ns_sm_online(struct bfa_fcs_lport_ns_s *ns,
++			enum vport_ns_event event)
++{
++	bfa_trc(ns->port->fcs, ns->port->port_cfg.pwwn);
++	bfa_trc(ns->port->fcs, event);
++
++	switch (event) {
++	case NSSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++		break;
++
++	case NSSM_EVENT_NS_QUERY:
++		/*
++		 * If the port role is Initiator Mode issue NS query.
++		 * If it is Target Mode, skip this and go to online.
++		 */
++		if (BFA_FCS_VPORT_IS_INITIATOR_MODE(ns->port)) {
++			bfa_sm_set_state(ns,
++				bfa_fcs_lport_ns_sm_sending_gid_ft);
++			bfa_fcs_lport_ns_send_gid_ft(ns, NULL);
++		};
++		break;
++
++	default:
++		bfa_sm_fault(ns->port->fcs, event);
++	}
++}
++
++
++
++/**
++ *  ns_pvt Nameserver local functions
++ */
++
++static void
++bfa_fcs_lport_ns_send_plogi(void *ns_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ns_s *ns = ns_cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct fchs_s fchs;
++	int             len;
++	struct bfa_fcxp_s *fcxp;
++
++	bfa_trc(port->fcs, port->pid);
++
++fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		port->stats.ns_plogi_alloc_wait++;
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ns->fcxp_wqe,
++					bfa_fcs_lport_ns_send_plogi, ns);
++		return;
++	}
++	ns->fcxp = fcxp;
++
++	len = fc_plogi_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			     bfa_os_hton3b(FC_NAME_SERVER),
++			     bfa_fcs_lport_get_fcid(port), 0,
++			     port->port_cfg.pwwn, port->port_cfg.nwwn,
++				 bfa_fcport_get_maxfrsize(port->fcs->bfa));
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ns_plogi_response, (void *)ns,
++			  FC_MAX_PDUSZ, FC_ELS_TOV);
++	port->stats.ns_plogi_sent++;
++
++	bfa_sm_send_event(ns, NSSM_EVENT_PLOGI_SENT);
++}
++
++static void
++bfa_fcs_lport_ns_plogi_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++			void *cbarg, bfa_status_t req_status, u32 rsp_len,
++		       u32 resid_len, struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_ns_s *ns = (struct bfa_fcs_lport_ns_s *) cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	/* struct fc_logi_s *plogi_resp; */
++	struct fc_els_cmd_s *els_cmd;
++	struct fc_ls_rjt_s *ls_rjt;
++
++	bfa_trc(port->fcs, req_status);
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		port->stats.ns_plogi_rsp_err++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	els_cmd = (struct fc_els_cmd_s *) BFA_FCXP_RSP_PLD(fcxp);
++
++	switch (els_cmd->els_code) {
++
++	case FC_ELS_ACC:
++		if (rsp_len < sizeof(struct fc_logi_s)) {
++			bfa_trc(port->fcs, rsp_len);
++			port->stats.ns_plogi_acc_err++;
++			bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++			break;
++		}
++		port->stats.ns_plogi_accepts++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_OK);
++		break;
++
++	case FC_ELS_LS_RJT:
++		ls_rjt = (struct fc_ls_rjt_s *) BFA_FCXP_RSP_PLD(fcxp);
++
++		bfa_trc(port->fcs, ls_rjt->reason_code);
++		bfa_trc(port->fcs, ls_rjt->reason_code_expl);
++
++		port->stats.ns_rejects++;
++
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++		break;
++
++	default:
++		port->stats.ns_plogi_unknown_rsp++;
++		bfa_trc(port->fcs, els_cmd->els_code);
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++	}
++}
++
++/**
++ * Register the symbolic port name.
++ */
++static void
++bfa_fcs_lport_ns_send_rspn_id(void *ns_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ns_s *ns = ns_cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct fchs_s fchs;
++	int             len;
++	struct bfa_fcxp_s *fcxp;
++	u8         symbl[256];
++	u8         *psymbl = &symbl[0];
++
++	bfa_os_memset(symbl, 0, sizeof(symbl));
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		port->stats.ns_rspnid_alloc_wait++;
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ns->fcxp_wqe,
++					bfa_fcs_lport_ns_send_rspn_id, ns);
++		return;
++	}
++	ns->fcxp = fcxp;
++
++	/*
++	 * for V-Port, form a Port Symbolic Name
++	 */
++	if (port->vport) {
++		/**
++		 * For Vports, we append the vport's port symbolic name
++		 * to that of the base port.
++		 */
++
++		strncpy((char *)psymbl,
++			(char *) &
++			(bfa_fcs_lport_get_psym_name
++			 (bfa_fcs_get_base_port(port->fcs))),
++			strlen((char *) &
++			       bfa_fcs_lport_get_psym_name(bfa_fcs_get_base_port
++							  (port->fcs))));
++
++		/* Ensure we have a null terminating string. */
++		((char *)psymbl)[strlen((char *) &
++			bfa_fcs_lport_get_psym_name(bfa_fcs_get_base_port
++						(port->fcs)))] = 0;
++		strncat((char *)psymbl,
++			(char *) &(bfa_fcs_lport_get_psym_name(port)),
++		strlen((char *) &bfa_fcs_lport_get_psym_name(port)));
++	} else {
++		psymbl = (u8 *) &(bfa_fcs_lport_get_psym_name(port));
++	}
++
++	len = fc_rspnid_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			      bfa_fcs_lport_get_fcid(port), 0, psymbl);
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ns_rspn_id_response, (void *)ns,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	port->stats.ns_rspnid_sent++;
++
++	bfa_sm_send_event(ns, NSSM_EVENT_RSPNID_SENT);
++}
++
++static void
++bfa_fcs_lport_ns_rspn_id_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++				 void *cbarg, bfa_status_t req_status,
++				 u32 rsp_len, u32 resid_len,
++				 struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_ns_s *ns = (struct bfa_fcs_lport_ns_s *) cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct ct_hdr_s *cthdr = NULL;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		port->stats.ns_rspnid_rsp_err++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = bfa_os_ntohs(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		port->stats.ns_rspnid_accepts++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_OK);
++		return;
++	}
++
++	port->stats.ns_rspnid_rejects++;
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++	bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++}
++
++/**
++ * Register FC4-Types
++ */
++static void
++bfa_fcs_lport_ns_send_rft_id(void *ns_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ns_s *ns = ns_cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct fchs_s fchs;
++	int             len;
++	struct bfa_fcxp_s *fcxp;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		port->stats.ns_rftid_alloc_wait++;
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ns->fcxp_wqe,
++					bfa_fcs_lport_ns_send_rft_id, ns);
++		return;
++	}
++	ns->fcxp = fcxp;
++
++	len = fc_rftid_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++		     bfa_fcs_lport_get_fcid(port), 0, port->port_cfg.roles);
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ns_rft_id_response, (void *)ns,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	port->stats.ns_rftid_sent++;
++	bfa_sm_send_event(ns, NSSM_EVENT_RFTID_SENT);
++}
++
++static void
++bfa_fcs_lport_ns_rft_id_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++				void *cbarg, bfa_status_t req_status,
++				u32 rsp_len, u32 resid_len,
++				struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_ns_s *ns = (struct bfa_fcs_lport_ns_s *) cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct ct_hdr_s *cthdr = NULL;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		port->stats.ns_rftid_rsp_err++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = bfa_os_ntohs(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		port->stats.ns_rftid_accepts++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_OK);
++		return;
++	}
++
++	port->stats.ns_rftid_rejects++;
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++	bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++}
++
++/**
++ * Register FC4-Features : Should be done after RFT_ID
++ */
++static void
++bfa_fcs_lport_ns_send_rff_id(void *ns_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ns_s *ns = ns_cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct fchs_s fchs;
++	int             len;
++	struct bfa_fcxp_s *fcxp;
++	u8			fc4_ftrs = 0;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		port->stats.ns_rffid_alloc_wait++;
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ns->fcxp_wqe,
++					bfa_fcs_lport_ns_send_rff_id, ns);
++		return;
++	}
++	ns->fcxp = fcxp;
++
++	if (BFA_FCS_VPORT_IS_INITIATOR_MODE(ns->port))
++		fc4_ftrs = FC_GS_FCP_FC4_FEATURE_INITIATOR;
++
++	len = fc_rffid_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			     bfa_fcs_lport_get_fcid(port), 0,
++				 FC_TYPE_FCP, fc4_ftrs);
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ns_rff_id_response, (void *)ns,
++			  FC_MAX_PDUSZ, FC_FCCT_TOV);
++
++	port->stats.ns_rffid_sent++;
++	bfa_sm_send_event(ns, NSSM_EVENT_RFFID_SENT);
++}
++
++static void
++bfa_fcs_lport_ns_rff_id_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++				void *cbarg, bfa_status_t req_status,
++				u32 rsp_len, u32 resid_len,
++				struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_ns_s *ns = (struct bfa_fcs_lport_ns_s *) cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct ct_hdr_s *cthdr = NULL;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		port->stats.ns_rffid_rsp_err++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = bfa_os_ntohs(cthdr->cmd_rsp_code);
++
++	if (cthdr->cmd_rsp_code == CT_RSP_ACCEPT) {
++		port->stats.ns_rffid_accepts++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_OK);
++		return;
++	}
++
++	port->stats.ns_rffid_rejects++;
++	bfa_trc(port->fcs, cthdr->reason_code);
++	bfa_trc(port->fcs, cthdr->exp_code);
++
++	if (cthdr->reason_code == CT_RSN_NOT_SUPP) {
++		/* if this command is not supported, we don't retry */
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_OK);
++	} else
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++}
++/**
++ * Query Fabric for FC4-Types Devices.
++ *
++* TBD : Need to use a local (FCS private) response buffer, since the response
++ * can be larger than 2K.
++ */
++static void
++bfa_fcs_lport_ns_send_gid_ft(void *ns_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_ns_s *ns = ns_cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct fchs_s fchs;
++	int             len;
++	struct bfa_fcxp_s *fcxp;
++
++	bfa_trc(port->fcs, port->pid);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		port->stats.ns_gidft_alloc_wait++;
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &ns->fcxp_wqe,
++					bfa_fcs_lport_ns_send_gid_ft, ns);
++		return;
++	}
++	ns->fcxp = fcxp;
++
++	/*
++	 * This query is only initiated for FCP initiator mode.
++	 */
++	len = fc_gid_ft_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			      ns->port->pid, FC_TYPE_FCP);
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_ns_gid_ft_response, (void *)ns,
++			  bfa_fcxp_get_maxrsp(port->fcs->bfa), FC_FCCT_TOV);
++
++	port->stats.ns_gidft_sent++;
++
++	bfa_sm_send_event(ns, NSSM_EVENT_GIDFT_SENT);
++}
++
++static void
++bfa_fcs_lport_ns_gid_ft_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++				void *cbarg, bfa_status_t req_status,
++				u32 rsp_len, u32 resid_len,
++				struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_ns_s *ns = (struct bfa_fcs_lport_ns_s *) cbarg;
++	struct bfa_fcs_lport_s *port = ns->port;
++	struct ct_hdr_s *cthdr = NULL;
++	u32        n_pids;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		port->stats.ns_gidft_rsp_err++;
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	if (resid_len != 0) {
++		/*
++		 * TBD : we will need to allocate a larger buffer & retry the
++		 * command
++		 */
++		bfa_trc(port->fcs, rsp_len);
++		bfa_trc(port->fcs, resid_len);
++		return;
++	}
++
++	cthdr = (struct ct_hdr_s *) BFA_FCXP_RSP_PLD(fcxp);
++	cthdr->cmd_rsp_code = bfa_os_ntohs(cthdr->cmd_rsp_code);
++
++	switch (cthdr->cmd_rsp_code) {
++
++	case CT_RSP_ACCEPT:
++
++		port->stats.ns_gidft_accepts++;
++		n_pids = (fc_get_ctresp_pyld_len(rsp_len) / sizeof(u32));
++		bfa_trc(port->fcs, n_pids);
++		bfa_fcs_lport_ns_process_gidft_pids(port,
++						   (u32 *) (cthdr + 1),
++						   n_pids);
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_OK);
++		break;
++
++	case CT_RSP_REJECT:
++
++		/*
++		 * Check the reason code  & explanation.
++		 * There may not have been any FC4 devices in the fabric
++		 */
++		port->stats.ns_gidft_rejects++;
++		bfa_trc(port->fcs, cthdr->reason_code);
++		bfa_trc(port->fcs, cthdr->exp_code);
++
++		if ((cthdr->reason_code == CT_RSN_UNABLE_TO_PERF)
++		    && (cthdr->exp_code == CT_NS_EXP_FT_NOT_REG)) {
++
++			bfa_sm_send_event(ns, NSSM_EVENT_RSP_OK);
++		} else {
++			/*
++			 * for all other errors, retry
++			 */
++			bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++		}
++		break;
++
++	default:
++		port->stats.ns_gidft_unknown_rsp++;
++		bfa_trc(port->fcs, cthdr->cmd_rsp_code);
++		bfa_sm_send_event(ns, NSSM_EVENT_RSP_ERROR);
++	}
++}
++
++/**
++ *     This routine will be called by bfa_timer on timer timeouts.
++ *
++ *	param[in]	port - pointer to bfa_fcs_lport_t.
++ *
++ *	return
++ *		void
++ *
++ *	Special Considerations:
++ *
++ *	note
++ */
++static void
++bfa_fcs_lport_ns_timeout(void *arg)
++{
++	struct bfa_fcs_lport_ns_s *ns = (struct bfa_fcs_lport_ns_s *) arg;
++
++	ns->port->stats.ns_timeouts++;
++	bfa_sm_send_event(ns, NSSM_EVENT_TIMEOUT);
++}
++
++/*
++ * Process the PID list in GID_FT response
++ */
++static void
++bfa_fcs_lport_ns_process_gidft_pids(struct bfa_fcs_lport_s *port, u32 *pid_buf,
++				   u32 n_pids)
++{
++	struct fcgs_gidft_resp_s *gidft_entry;
++	struct bfa_fcs_rport_s *rport;
++	u32        ii;
++
++	for (ii = 0; ii < n_pids; ii++) {
++		gidft_entry = (struct fcgs_gidft_resp_s *) &pid_buf[ii];
++
++		if (gidft_entry->pid == port->pid)
++			continue;
++
++		/*
++		 * Check if this rport already exists
++		 */
++		rport = bfa_fcs_lport_get_rport_by_pid(port, gidft_entry->pid);
++		if (rport == NULL) {
++			/*
++			 * this is a new device. create rport
++			 */
++			rport = bfa_fcs_rport_create(port, gidft_entry->pid);
++		} else {
++			/*
++			 * this rport already exists
++			 */
++			bfa_fcs_rport_scn(rport);
++		}
++
++		bfa_trc(port->fcs, gidft_entry->pid);
++
++		/*
++		 * if the last entry bit is set, bail out.
++		 */
++		if (gidft_entry->last)
++			return;
++	}
++}
++
++/**
++ *  fcs_ns_public FCS nameserver public interfaces
++ */
++
++/*
++ * Functions called by port/fab.
++ * These will send relevant Events to the ns state machine.
++ */
++void
++bfa_fcs_lport_ns_init(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_ns_s *ns = BFA_FCS_GET_NS_FROM_PORT(port);
++
++	ns->port = port;
++	bfa_sm_set_state(ns, bfa_fcs_lport_ns_sm_offline);
++}
++
++void
++bfa_fcs_lport_ns_offline(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_ns_s *ns = BFA_FCS_GET_NS_FROM_PORT(port);
++
++	ns->port = port;
++	bfa_sm_send_event(ns, NSSM_EVENT_PORT_OFFLINE);
++}
++
++void
++bfa_fcs_lport_ns_online(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_ns_s *ns = BFA_FCS_GET_NS_FROM_PORT(port);
++
++	ns->port = port;
++	bfa_sm_send_event(ns, NSSM_EVENT_PORT_ONLINE);
++}
++
++void
++bfa_fcs_lport_ns_query(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_ns_s *ns = BFA_FCS_GET_NS_FROM_PORT(port);
++
++	bfa_trc(port->fcs, port->pid);
++	bfa_sm_send_event(ns, NSSM_EVENT_NS_QUERY);
++}
++
++void
++bfa_fcs_lport_ns_boot_target_disc(bfa_fcs_lport_t *port)
++{
++
++	struct bfa_fcs_rport_s *rport;
++	u8 nwwns;
++	wwn_t  wwns[BFA_PREBOOT_BOOTLUN_MAX];
++	int ii;
++
++	bfa_iocfc_get_bootwwns(port->fcs->bfa, &nwwns, wwns);
++
++	for (ii = 0 ; ii < nwwns; ++ii) {
++		rport = bfa_fcs_rport_create_by_wwn(port, wwns[ii]);
++		bfa_assert(rport);
++	}
++}
++
++/**
++ * FCS SCN
++ */
++
++#define FC_QOS_RSCN_EVENT		0x0c
++#define FC_FABRIC_NAME_RSCN_EVENT	0x0d
++
++/*
++ * forward declarations
++ */
++static void     bfa_fcs_lport_scn_send_scr(void *scn_cbarg,
++					  struct bfa_fcxp_s *fcxp_alloced);
++static void     bfa_fcs_lport_scn_scr_response(void *fcsarg,
++					      struct bfa_fcxp_s *fcxp,
++					      void *cbarg,
++					      bfa_status_t req_status,
++					      u32 rsp_len,
++					      u32 resid_len,
++					      struct fchs_s *rsp_fchs);
++static void     bfa_fcs_lport_scn_send_ls_acc(struct bfa_fcs_lport_s *port,
++					     struct fchs_s *rx_fchs);
++static void     bfa_fcs_lport_scn_timeout(void *arg);
++
++/**
++ *  fcs_scm_sm FCS SCN state machine
++ */
++
++/**
++ * VPort SCN State Machine events
++ */
++enum port_scn_event {
++	SCNSM_EVENT_PORT_ONLINE = 1,
++	SCNSM_EVENT_PORT_OFFLINE = 2,
++	SCNSM_EVENT_RSP_OK = 3,
++	SCNSM_EVENT_RSP_ERROR = 4,
++	SCNSM_EVENT_TIMEOUT = 5,
++	SCNSM_EVENT_SCR_SENT = 6,
++};
++
++static void     bfa_fcs_lport_scn_sm_offline(struct bfa_fcs_lport_scn_s *scn,
++					    enum port_scn_event event);
++static void     bfa_fcs_lport_scn_sm_sending_scr(
++					struct bfa_fcs_lport_scn_s *scn,
++					enum port_scn_event event);
++static void     bfa_fcs_lport_scn_sm_scr(struct bfa_fcs_lport_scn_s *scn,
++					enum port_scn_event event);
++static void     bfa_fcs_lport_scn_sm_scr_retry(struct bfa_fcs_lport_scn_s *scn,
++					      enum port_scn_event event);
++static void     bfa_fcs_lport_scn_sm_online(struct bfa_fcs_lport_scn_s *scn,
++					   enum port_scn_event event);
++
++/**
++ *	Starting state - awaiting link up.
++ */
++static void
++bfa_fcs_lport_scn_sm_offline(struct bfa_fcs_lport_scn_s *scn,
++			enum port_scn_event event)
++{
++	switch (event) {
++	case SCNSM_EVENT_PORT_ONLINE:
++		bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_sending_scr);
++		bfa_fcs_lport_scn_send_scr(scn, NULL);
++		break;
++
++	case SCNSM_EVENT_PORT_OFFLINE:
++		break;
++
++	default:
++		bfa_sm_fault(scn->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_scn_sm_sending_scr(struct bfa_fcs_lport_scn_s *scn,
++				enum port_scn_event event)
++{
++	switch (event) {
++	case SCNSM_EVENT_SCR_SENT:
++		bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_scr);
++		break;
++
++	case SCNSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_offline);
++		bfa_fcxp_walloc_cancel(scn->port->fcs->bfa, &scn->fcxp_wqe);
++		break;
++
++	default:
++		bfa_sm_fault(scn->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_scn_sm_scr(struct bfa_fcs_lport_scn_s *scn,
++			enum port_scn_event event)
++{
++	struct bfa_fcs_lport_s *port = scn->port;
++
++	switch (event) {
++	case SCNSM_EVENT_RSP_OK:
++		bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_online);
++		break;
++
++	case SCNSM_EVENT_RSP_ERROR:
++		bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_scr_retry);
++		bfa_timer_start(port->fcs->bfa, &scn->timer,
++				    bfa_fcs_lport_scn_timeout, scn,
++				    BFA_FCS_RETRY_TIMEOUT);
++		break;
++
++	case SCNSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_offline);
++		bfa_fcxp_discard(scn->fcxp);
++		break;
++
++	default:
++		bfa_sm_fault(port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_scn_sm_scr_retry(struct bfa_fcs_lport_scn_s *scn,
++				enum port_scn_event event)
++{
++	switch (event) {
++	case SCNSM_EVENT_TIMEOUT:
++		bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_sending_scr);
++		bfa_fcs_lport_scn_send_scr(scn, NULL);
++		break;
++
++	case SCNSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_offline);
++		bfa_timer_stop(&scn->timer);
++		break;
++
++	default:
++		bfa_sm_fault(scn->port->fcs, event);
++	}
++}
++
++static void
++bfa_fcs_lport_scn_sm_online(struct bfa_fcs_lport_scn_s *scn,
++			enum port_scn_event event)
++{
++	switch (event) {
++	case SCNSM_EVENT_PORT_OFFLINE:
++		bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_offline);
++		break;
++
++	default:
++		bfa_sm_fault(scn->port->fcs, event);
++	}
++}
++
++
++
++/**
++ *  fcs_scn_private FCS SCN private functions
++ */
++
++/**
++ * This routine will be called to send a SCR command.
++ */
++static void
++bfa_fcs_lport_scn_send_scr(void *scn_cbarg, struct bfa_fcxp_s *fcxp_alloced)
++{
++	struct bfa_fcs_lport_scn_s *scn = scn_cbarg;
++	struct bfa_fcs_lport_s *port = scn->port;
++	struct fchs_s fchs;
++	int             len;
++	struct bfa_fcxp_s *fcxp;
++
++	bfa_trc(port->fcs, port->pid);
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	fcxp = fcxp_alloced ? fcxp_alloced : bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp) {
++		bfa_fcs_fcxp_alloc_wait(port->fcs->bfa, &scn->fcxp_wqe,
++					bfa_fcs_lport_scn_send_scr, scn);
++		return;
++	}
++	scn->fcxp = fcxp;
++
++	/* Handle VU registrations for Base port only */
++	if ((!port->vport) && bfa_ioc_get_fcmode(&port->fcs->bfa->ioc)) {
++		len = fc_scr_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++				bfa_lps_is_brcd_fabric(port->fabric->lps),
++							port->pid, 0);
++	} else {
++	    len = fc_scr_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++				    BFA_FALSE,
++				    port->pid, 0);
++	}
++
++	bfa_fcxp_send(fcxp, NULL, port->fabric->vf_id, port->lp_tag, BFA_FALSE,
++			  FC_CLASS_3, len, &fchs,
++			  bfa_fcs_lport_scn_scr_response,
++			  (void *)scn, FC_MAX_PDUSZ, FC_ELS_TOV);
++
++	bfa_sm_send_event(scn, SCNSM_EVENT_SCR_SENT);
++}
++
++static void
++bfa_fcs_lport_scn_scr_response(void *fcsarg, struct bfa_fcxp_s *fcxp,
++			void *cbarg, bfa_status_t req_status, u32 rsp_len,
++			      u32 resid_len, struct fchs_s *rsp_fchs)
++{
++	struct bfa_fcs_lport_scn_s *scn = (struct bfa_fcs_lport_scn_s *) cbarg;
++	struct bfa_fcs_lport_s *port = scn->port;
++	struct fc_els_cmd_s *els_cmd;
++	struct fc_ls_rjt_s *ls_rjt;
++
++	bfa_trc(port->fcs, port->port_cfg.pwwn);
++
++	/*
++	 * Sanity Checks
++	 */
++	if (req_status != BFA_STATUS_OK) {
++		bfa_trc(port->fcs, req_status);
++		bfa_sm_send_event(scn, SCNSM_EVENT_RSP_ERROR);
++		return;
++	}
++
++	els_cmd = (struct fc_els_cmd_s *) BFA_FCXP_RSP_PLD(fcxp);
++
++	switch (els_cmd->els_code) {
++
++	case FC_ELS_ACC:
++		bfa_sm_send_event(scn, SCNSM_EVENT_RSP_OK);
++		break;
++
++	case FC_ELS_LS_RJT:
++
++		ls_rjt = (struct fc_ls_rjt_s *) BFA_FCXP_RSP_PLD(fcxp);
++
++		bfa_trc(port->fcs, ls_rjt->reason_code);
++		bfa_trc(port->fcs, ls_rjt->reason_code_expl);
++
++		bfa_sm_send_event(scn, SCNSM_EVENT_RSP_ERROR);
++		break;
++
++	default:
++		bfa_sm_send_event(scn, SCNSM_EVENT_RSP_ERROR);
++	}
++}
++
++/*
++ * Send a LS Accept
++ */
++static void
++bfa_fcs_lport_scn_send_ls_acc(struct bfa_fcs_lport_s *port,
++				struct fchs_s *rx_fchs)
++{
++	struct fchs_s fchs;
++	struct bfa_fcxp_s *fcxp;
++	struct bfa_rport_s *bfa_rport = NULL;
++	int             len;
++
++	bfa_trc(port->fcs, rx_fchs->s_id);
++
++	fcxp = bfa_fcs_fcxp_alloc(port->fcs);
++	if (!fcxp)
++		return;
++
++	len = fc_ls_acc_build(&fchs, bfa_fcxp_get_reqbuf(fcxp),
++			      rx_fchs->s_id, bfa_fcs_lport_get_fcid(port),
++			      rx_fchs->ox_id);
++
++	bfa_fcxp_send(fcxp, bfa_rport, port->fabric->vf_id, port->lp_tag,
++			  BFA_FALSE, FC_CLASS_3, len, &fchs, NULL, NULL,
++			  FC_MAX_PDUSZ, 0);
++}
++
++/**
++ *     This routine will be called by bfa_timer on timer timeouts.
++ *
++ *	param[in]	vport		- pointer to bfa_fcs_lport_t.
++ *	param[out]	vport_status	- pointer to return vport status in
++ *
++ *	return
++ *		void
++ *
++ *	Special Considerations:
++ *
++ *	note
++ */
++static void
++bfa_fcs_lport_scn_timeout(void *arg)
++{
++	struct bfa_fcs_lport_scn_s *scn = (struct bfa_fcs_lport_scn_s *) arg;
++
++	bfa_sm_send_event(scn, SCNSM_EVENT_TIMEOUT);
++}
++
++
++
++/**
++ *  fcs_scn_public FCS state change notification public interfaces
++ */
++
++/*
++ * Functions called by port/fab
++ */
++void
++bfa_fcs_lport_scn_init(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_scn_s *scn = BFA_FCS_GET_SCN_FROM_PORT(port);
++
++	scn->port = port;
++	bfa_sm_set_state(scn, bfa_fcs_lport_scn_sm_offline);
++}
++
++void
++bfa_fcs_lport_scn_offline(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_scn_s *scn = BFA_FCS_GET_SCN_FROM_PORT(port);
++
++	scn->port = port;
++	bfa_sm_send_event(scn, SCNSM_EVENT_PORT_OFFLINE);
++}
++
++void
++bfa_fcs_lport_scn_online(struct bfa_fcs_lport_s *port)
++{
++	struct bfa_fcs_lport_scn_s *scn = BFA_FCS_GET_SCN_FROM_PORT(port);
++
++	scn->port = port;
++	bfa_sm_send_event(scn, SCNSM_EVENT_PORT_ONLINE);
++}
++
++static void
++bfa_fcs_lport_scn_portid_rscn(struct bfa_fcs_lport_s *port, u32 rpid)
++{
++	struct bfa_fcs_rport_s *rport;
++
++	bfa_trc(port->fcs, rpid);
++
++	/**
++	 * If this is an unknown device, then it just came online.
++	 * Otherwise let rport handle the RSCN event.
++	 */
++	rport = bfa_fcs_lport_get_rport_by_pid(port, rpid);
++	if (rport == NULL) {
++		/*
++		 * If min cfg mode is enabled, we donot need to
++		 * discover any new rports.
++		 */
++		if (!__fcs_min_cfg(port->fcs))
++			rport = bfa_fcs_rport_create(port, rpid);
++	} else
++		bfa_fcs_rport_scn(rport);
++}
++
++/**
++ * rscn format based PID comparison
++ */
++#define __fc_pid_match(__c0, __c1, __fmt)		\
++	(((__fmt) == FC_RSCN_FORMAT_FABRIC) ||		\
++	 (((__fmt) == FC_RSCN_FORMAT_DOMAIN) &&		\
++	  ((__c0)[0] == (__c1)[0])) ||				\
++	 (((__fmt) == FC_RSCN_FORMAT_AREA) &&		\
++	  ((__c0)[0] == (__c1)[0]) &&				\
++	  ((__c0)[1] == (__c1)[1])))
++
++static void
++bfa_fcs_lport_scn_multiport_rscn(struct bfa_fcs_lport_s *port,
++				enum fc_rscn_format format,
++				u32 rscn_pid)
++{
++	struct bfa_fcs_rport_s *rport;
++	struct list_head        *qe, *qe_next;
++	u8        *c0, *c1;
++
++	bfa_trc(port->fcs, format);
++	bfa_trc(port->fcs, rscn_pid);
++
++	c0 = (u8 *) &rscn_pid;
++
++	list_for_each_safe(qe, qe_next, &port->rport_q) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		c1 = (u8 *) &rport->pid;
++		if (__fc_pid_match(c0, c1, format))
++			bfa_fcs_rport_scn(rport);
++	}
++}
++
++
++void
++bfa_fcs_lport_scn_process_rscn(struct bfa_fcs_lport_s *port,
++			struct fchs_s *fchs, u32 len)
++{
++	struct fc_rscn_pl_s *rscn = (struct fc_rscn_pl_s *) (fchs + 1);
++	int             num_entries;
++	u32        rscn_pid;
++	bfa_boolean_t   nsquery = BFA_FALSE, found;
++	int             i = 0, j;
++
++	num_entries =
++		(bfa_os_ntohs(rscn->payldlen) -
++		 sizeof(u32)) / sizeof(rscn->event[0]);
++
++	bfa_trc(port->fcs, num_entries);
++
++	port->stats.num_rscn++;
++
++	bfa_fcs_lport_scn_send_ls_acc(port, fchs);
++
++	for (i = 0; i < num_entries; i++) {
++		rscn_pid = rscn->event[i].portid;
++
++		bfa_trc(port->fcs, rscn->event[i].format);
++		bfa_trc(port->fcs, rscn_pid);
++
++		/* check for duplicate entries in the list */
++		found = BFA_FALSE;
++		for (j = 0; j < i; j++) {
++			if (rscn->event[j].portid == rscn_pid) {
++				found = BFA_TRUE;
++				break;
++			}
++		}
++
++		/* if found in down the list, pid has been already processed */
++		if (found) {
++			bfa_trc(port->fcs, rscn_pid);
++			continue;
++		}
++
++		switch (rscn->event[i].format) {
++		case FC_RSCN_FORMAT_PORTID:
++			if (rscn->event[i].qualifier == FC_QOS_RSCN_EVENT) {
++				/*
++				 * Ignore this event.
++				 * f/w would have processed it
++				 */
++				bfa_trc(port->fcs, rscn_pid);
++			} else {
++				port->stats.num_portid_rscn++;
++				bfa_fcs_lport_scn_portid_rscn(port, rscn_pid);
++			}
++		break;
++
++		case FC_RSCN_FORMAT_FABRIC:
++			if (rscn->event[i].qualifier ==
++					FC_FABRIC_NAME_RSCN_EVENT) {
++				bfa_fcs_lport_ms_fabric_rscn(port);
++				break;
++			}
++			/* !!!!!!!!! Fall Through !!!!!!!!!!!!! */
++
++		case FC_RSCN_FORMAT_AREA:
++		case FC_RSCN_FORMAT_DOMAIN:
++			nsquery = BFA_TRUE;
++			bfa_fcs_lport_scn_multiport_rscn(port,
++							rscn->event[i].format,
++							rscn_pid);
++			break;
++
++
++		default:
++			bfa_assert(0);
++			nsquery = BFA_TRUE;
++		}
++	}
++
++	/**
++	 * If any of area, domain or fabric RSCN is received, do a fresh discovery
++	 * to find new devices.
++	 */
++	if (nsquery)
++		bfa_fcs_lport_ns_query(port);
++}
++
++/**
++ * BFA FCS port
++ */
++/**
++ *  fcs_port_api BFA FCS port API
++ */
++struct bfa_fcs_lport_s *
++bfa_fcs_get_base_port(struct bfa_fcs_s *fcs)
++{
++	return &fcs->fabric.bport;
++}
++
++wwn_t
++bfa_fcs_lport_get_rport(struct bfa_fcs_lport_s *port, wwn_t wwn, int index,
++		int nrports, bfa_boolean_t bwwn)
++{
++	struct list_head	*qh, *qe;
++	struct bfa_fcs_rport_s *rport = NULL;
++	int	i;
++	struct bfa_fcs_s	*fcs;
++
++	if (port == NULL || nrports == 0)
++		return (wwn_t) 0;
++
++	fcs = port->fcs;
++	bfa_trc(fcs, (u32) nrports);
++
++	i = 0;
++	qh = &port->rport_q;
++	qe = bfa_q_first(qh);
++
++	while ((qe != qh) && (i < nrports)) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		if (bfa_os_ntoh3b(rport->pid) > 0xFFF000) {
++			qe = bfa_q_next(qe);
++			bfa_trc(fcs, (u32) rport->pwwn);
++			bfa_trc(fcs, rport->pid);
++			bfa_trc(fcs, i);
++			continue;
++		}
++
++		if (bwwn) {
++			if (!memcmp(&wwn, &rport->pwwn, 8))
++				break;
++		} else {
++			if (i == index)
++				break;
++		}
++
++		i++;
++		qe = bfa_q_next(qe);
++	}
++
++	bfa_trc(fcs, i);
++	if (rport)
++		return rport->pwwn;
++	else
++		return (wwn_t) 0;
++}
++
++void
++bfa_fcs_lport_get_rports(struct bfa_fcs_lport_s *port,
++	 wwn_t rport_wwns[], int *nrports)
++{
++	struct list_head	*qh, *qe;
++	struct bfa_fcs_rport_s *rport = NULL;
++	int	i;
++	struct bfa_fcs_s	*fcs;
++
++	if (port == NULL || rport_wwns == NULL || *nrports == 0)
++		return;
++
++	fcs = port->fcs;
++	bfa_trc(fcs, (u32) *nrports);
++
++	i = 0;
++	qh = &port->rport_q;
++	qe = bfa_q_first(qh);
++
++	while ((qe != qh) && (i < *nrports)) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		if (bfa_os_ntoh3b(rport->pid) > 0xFFF000) {
++			qe = bfa_q_next(qe);
++			bfa_trc(fcs, (u32) rport->pwwn);
++			bfa_trc(fcs, rport->pid);
++			bfa_trc(fcs, i);
++			continue;
++		}
++
++		rport_wwns[i] = rport->pwwn;
++
++		i++;
++		qe = bfa_q_next(qe);
++	}
++
++	bfa_trc(fcs, i);
++	*nrports = i;
++}
++
++/*
++ * Iterate's through all the rport's in the given port to
++ * determine the maximum operating speed.
++ *
++ * !!!! To be used in TRL Functionality only !!!!
++ */
++bfa_port_speed_t
++bfa_fcs_lport_get_rport_max_speed(bfa_fcs_lport_t *port)
++{
++	struct list_head *qh, *qe;
++	struct bfa_fcs_rport_s *rport = NULL;
++	struct bfa_fcs_s	*fcs;
++	bfa_port_speed_t max_speed = 0;
++	struct bfa_port_attr_s port_attr;
++	bfa_port_speed_t port_speed, rport_speed;
++	bfa_boolean_t trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
++
++
++	if (port == NULL)
++		return 0;
++
++	fcs = port->fcs;
++
++	/* Get Physical port's current speed */
++	bfa_fcport_get_attr(port->fcs->bfa, &port_attr);
++	port_speed = port_attr.speed;
++	bfa_trc(fcs, port_speed);
++
++	qh = &port->rport_q;
++	qe = bfa_q_first(qh);
++
++	while (qe != qh) {
++		rport = (struct bfa_fcs_rport_s *) qe;
++		if ((bfa_os_ntoh3b(rport->pid) > 0xFFF000) ||
++			(bfa_fcs_rport_get_state(rport) ==
++			  BFA_RPORT_OFFLINE)) {
++			qe = bfa_q_next(qe);
++			continue;
++		}
++
++		rport_speed = rport->rpf.rpsc_speed;
++		if ((trl_enabled) && (rport_speed ==
++			BFA_PORT_SPEED_UNKNOWN)) {
++			/* Use default ratelim speed setting */
++			rport_speed =
++				bfa_fcport_get_ratelim_speed(port->fcs->bfa);
++		}
++
++		if	((rport_speed  == BFA_PORT_SPEED_8GBPS) ||
++			(rport_speed > port_speed)) {
++			max_speed = rport_speed;
++			break;
++		} else if (rport_speed > max_speed) {
++			max_speed = rport_speed;
++		}
++
++		qe = bfa_q_next(qe);
++	}
++
++	bfa_trc(fcs, max_speed);
++	return max_speed;
++}
++
++struct bfa_fcs_lport_s *
++bfa_fcs_lookup_port(struct bfa_fcs_s *fcs, u16 vf_id, wwn_t lpwwn)
++{
++	struct bfa_fcs_vport_s *vport;
++	bfa_fcs_vf_t   *vf;
++
++	bfa_assert(fcs != NULL);
++
++	vf = bfa_fcs_vf_lookup(fcs, vf_id);
++	if (vf == NULL) {
++		bfa_trc(fcs, vf_id);
++		return NULL;
++	}
++
++	if (!lpwwn || (vf->bport.port_cfg.pwwn == lpwwn))
++		return &vf->bport;
++
++	vport = bfa_fcs_fabric_vport_lookup(vf, lpwwn);
++	if (vport)
++		return &vport->lport;
++
++	return NULL;
++}
++
++/*
++ *  API corresponding to NPIV_VPORT_GETINFO.
++ */
++void
++bfa_fcs_lport_get_info(struct bfa_fcs_lport_s *port,
++	 struct bfa_lport_info_s *port_info)
++{
++
++	bfa_trc(port->fcs, port->fabric->fabric_name);
++
++	if (port->vport == NULL) {
++		/*
++		 * This is a Physical port
++		 */
++		port_info->port_type = BFA_LPORT_TYPE_PHYSICAL;
++
++		/*
++		 * @todo : need to fix the state & reason
++		 */
++		port_info->port_state = 0;
++		port_info->offline_reason = 0;
++
++		port_info->port_wwn = bfa_fcs_lport_get_pwwn(port);
++		port_info->node_wwn = bfa_fcs_lport_get_nwwn(port);
++
++		port_info->max_vports_supp =
++			bfa_lps_get_max_vport(port->fcs->bfa);
++		port_info->num_vports_inuse =
++			bfa_fcs_fabric_vport_count(port->fabric);
++		port_info->max_rports_supp = BFA_FCS_MAX_RPORTS_SUPP;
++		port_info->num_rports_inuse = port->num_rports;
++	} else {
++		/*
++		 * This is a virtual port
++		 */
++		port_info->port_type = BFA_LPORT_TYPE_VIRTUAL;
++
++		/*
++		 * @todo : need to fix the state & reason
++		 */
++		port_info->port_state = 0;
++		port_info->offline_reason = 0;
++
++		port_info->port_wwn = bfa_fcs_lport_get_pwwn(port);
++		port_info->node_wwn = bfa_fcs_lport_get_nwwn(port);
++	}
++}
++
++void
++bfa_fcs_lport_get_stats(struct bfa_fcs_lport_s *fcs_port,
++	 struct bfa_lport_stats_s *port_stats)
++{
++	*port_stats = fcs_port->stats;
++}
++
++void
++bfa_fcs_lport_clear_stats(struct bfa_fcs_lport_s *fcs_port)
++{
++	bfa_os_memset(&fcs_port->stats, 0, sizeof(struct bfa_lport_stats_s));
++}
++
++/**
++ * FCS virtual port state machine
++ */
++
++#define __vport_fcs(__vp)       ((__vp)->lport.fcs)
++#define __vport_pwwn(__vp)      ((__vp)->lport.port_cfg.pwwn)
++#define __vport_nwwn(__vp)      ((__vp)->lport.port_cfg.nwwn)
++#define __vport_bfa(__vp)       ((__vp)->lport.fcs->bfa)
++#define __vport_fcid(__vp)      ((__vp)->lport.pid)
++#define __vport_fabric(__vp)    ((__vp)->lport.fabric)
++#define __vport_vfid(__vp)      ((__vp)->lport.fabric->vf_id)
++
++#define BFA_FCS_VPORT_MAX_RETRIES  5
++/*
++ * Forward declarations
++ */
++static void     bfa_fcs_vport_do_fdisc(struct bfa_fcs_vport_s *vport);
++static void     bfa_fcs_vport_timeout(void *vport_arg);
++static void     bfa_fcs_vport_do_logo(struct bfa_fcs_vport_s *vport);
++static void     bfa_fcs_vport_free(struct bfa_fcs_vport_s *vport);
++
++/**
++ *  fcs_vport_sm FCS virtual port state machine
++ */
++
++/**
++ * VPort State Machine events
++ */
++enum bfa_fcs_vport_event {
++	BFA_FCS_VPORT_SM_CREATE = 1,	/*  vport create event */
++	BFA_FCS_VPORT_SM_DELETE = 2,	/*  vport delete event */
++	BFA_FCS_VPORT_SM_START = 3,	/*  vport start request */
++	BFA_FCS_VPORT_SM_STOP = 4,	/*  stop: unsupported */
++	BFA_FCS_VPORT_SM_ONLINE = 5,	/*  fabric online */
++	BFA_FCS_VPORT_SM_OFFLINE = 6,	/*  fabric offline event */
++	BFA_FCS_VPORT_SM_FRMSENT = 7,	/*  fdisc/logo sent events */
++	BFA_FCS_VPORT_SM_RSP_OK = 8,	/*  good response */
++	BFA_FCS_VPORT_SM_RSP_ERROR = 9,	/*  error/bad response */
++	BFA_FCS_VPORT_SM_TIMEOUT = 10,	/*  delay timer event */
++	BFA_FCS_VPORT_SM_DELCOMP = 11,	/*  lport delete completion */
++	BFA_FCS_VPORT_SM_RSP_DUP_WWN = 12,	/*  Dup wnn error*/
++	BFA_FCS_VPORT_SM_RSP_FAILED = 13,	/*  non-retryable failure */
++};
++
++static void     bfa_fcs_vport_sm_uninit(struct bfa_fcs_vport_s *vport,
++					enum bfa_fcs_vport_event event);
++static void     bfa_fcs_vport_sm_created(struct bfa_fcs_vport_s *vport,
++					 enum bfa_fcs_vport_event event);
++static void     bfa_fcs_vport_sm_offline(struct bfa_fcs_vport_s *vport,
++					 enum bfa_fcs_vport_event event);
++static void     bfa_fcs_vport_sm_fdisc(struct bfa_fcs_vport_s *vport,
++				       enum bfa_fcs_vport_event event);
++static void     bfa_fcs_vport_sm_fdisc_retry(struct bfa_fcs_vport_s *vport,
++					     enum bfa_fcs_vport_event event);
++static void     bfa_fcs_vport_sm_online(struct bfa_fcs_vport_s *vport,
++					enum bfa_fcs_vport_event event);
++static void     bfa_fcs_vport_sm_deleting(struct bfa_fcs_vport_s *vport,
++					  enum bfa_fcs_vport_event event);
++static void     bfa_fcs_vport_sm_cleanup(struct bfa_fcs_vport_s *vport,
++					 enum bfa_fcs_vport_event event);
++static void     bfa_fcs_vport_sm_logo(struct bfa_fcs_vport_s *vport,
++				      enum bfa_fcs_vport_event event);
++static void     bfa_fcs_vport_sm_error(struct bfa_fcs_vport_s *vport,
++				      enum bfa_fcs_vport_event event);
++
++static struct bfa_sm_table_s  vport_sm_table[] = {
++	{BFA_SM(bfa_fcs_vport_sm_uninit), BFA_FCS_VPORT_UNINIT},
++	{BFA_SM(bfa_fcs_vport_sm_created), BFA_FCS_VPORT_CREATED},
++	{BFA_SM(bfa_fcs_vport_sm_offline), BFA_FCS_VPORT_OFFLINE},
++	{BFA_SM(bfa_fcs_vport_sm_fdisc), BFA_FCS_VPORT_FDISC},
++	{BFA_SM(bfa_fcs_vport_sm_fdisc_retry), BFA_FCS_VPORT_FDISC_RETRY},
++	{BFA_SM(bfa_fcs_vport_sm_online), BFA_FCS_VPORT_ONLINE},
++	{BFA_SM(bfa_fcs_vport_sm_deleting), BFA_FCS_VPORT_DELETING},
++	{BFA_SM(bfa_fcs_vport_sm_cleanup), BFA_FCS_VPORT_CLEANUP},
++	{BFA_SM(bfa_fcs_vport_sm_logo), BFA_FCS_VPORT_LOGO},
++	{BFA_SM(bfa_fcs_vport_sm_error), BFA_FCS_VPORT_ERROR}
++};
++
++/**
++ * Beginning state.
++ */
++static void
++bfa_fcs_vport_sm_uninit(struct bfa_fcs_vport_s *vport,
++			enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_CREATE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_created);
++		bfa_fcs_fabric_addvport(__vport_fabric(vport), vport);
++		break;
++
++	default:
++		bfa_sm_fault(__vport_fcs(vport), event);
++	}
++}
++
++/**
++ * Created state - a start event is required to start up the state machine.
++ */
++static void
++bfa_fcs_vport_sm_created(struct bfa_fcs_vport_s *vport,
++			enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_START:
++		if (bfa_fcs_fabric_is_online(__vport_fabric(vport))
++		    && bfa_fcs_fabric_npiv_capable(__vport_fabric(vport))) {
++			bfa_sm_set_state(vport, bfa_fcs_vport_sm_fdisc);
++			bfa_fcs_vport_do_fdisc(vport);
++		} else {
++			/**
++			 * Fabric is offline or not NPIV capable, stay in
++			 * offline state.
++			 */
++			vport->vport_stats.fab_no_npiv++;
++			bfa_sm_set_state(vport, bfa_fcs_vport_sm_offline);
++		}
++		break;
++
++	case BFA_FCS_VPORT_SM_DELETE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_cleanup);
++		bfa_fcs_lport_delete(&vport->lport);
++		break;
++
++	case BFA_FCS_VPORT_SM_ONLINE:
++	case BFA_FCS_VPORT_SM_OFFLINE:
++		/**
++		 * Ignore ONLINE/OFFLINE events from fabric
++		 * till vport is started.
++		 */
++		break;
++
++	default:
++		bfa_sm_fault(__vport_fcs(vport), event);
++	}
++}
++
++/**
++ * Offline state - awaiting ONLINE event from fabric SM.
++ */
++static void
++bfa_fcs_vport_sm_offline(struct bfa_fcs_vport_s *vport,
++			enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_DELETE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_cleanup);
++		bfa_fcs_lport_delete(&vport->lport);
++		break;
++
++	case BFA_FCS_VPORT_SM_ONLINE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_fdisc);
++		vport->fdisc_retries = 0;
++		bfa_fcs_vport_do_fdisc(vport);
++		break;
++
++	case BFA_FCS_VPORT_SM_OFFLINE:
++		/*
++		 * This can happen if the vport couldn't be initialzied
++		 * due the fact that the npiv was not enabled on the switch.
++		 * In that case we will put the vport in offline state.
++		 * However, the link can go down and cause the this event to
++		 * be sent when we are already offline. Ignore it.
++		 */
++		break;
++
++	default:
++		bfa_sm_fault(__vport_fcs(vport), event);
++	}
++}
++
++
++/**
++ * FDISC is sent and awaiting reply from fabric.
++ */
++static void
++bfa_fcs_vport_sm_fdisc(struct bfa_fcs_vport_s *vport,
++			enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_DELETE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_cleanup);
++		bfa_lps_discard(vport->lps);
++		bfa_fcs_lport_delete(&vport->lport);
++		break;
++
++	case BFA_FCS_VPORT_SM_OFFLINE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_offline);
++		bfa_lps_discard(vport->lps);
++		break;
++
++	case BFA_FCS_VPORT_SM_RSP_OK:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_online);
++		bfa_fcs_lport_online(&vport->lport);
++		break;
++
++	case BFA_FCS_VPORT_SM_RSP_ERROR:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_fdisc_retry);
++		bfa_timer_start(__vport_bfa(vport), &vport->timer,
++				    bfa_fcs_vport_timeout, vport,
++				    BFA_FCS_RETRY_TIMEOUT);
++		break;
++
++	case BFA_FCS_VPORT_SM_RSP_FAILED:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_offline);
++		break;
++
++	case BFA_FCS_VPORT_SM_RSP_DUP_WWN:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_error);
++		break;
++
++	default:
++		bfa_sm_fault(__vport_fcs(vport), event);
++	}
++}
++
++/**
++ * FDISC attempt failed - a timer is active to retry FDISC.
++ */
++static void
++bfa_fcs_vport_sm_fdisc_retry(struct bfa_fcs_vport_s *vport,
++			     enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_DELETE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_cleanup);
++		bfa_timer_stop(&vport->timer);
++		bfa_fcs_lport_delete(&vport->lport);
++		break;
++
++	case BFA_FCS_VPORT_SM_OFFLINE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_offline);
++		bfa_timer_stop(&vport->timer);
++		break;
++
++	case BFA_FCS_VPORT_SM_TIMEOUT:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_fdisc);
++		vport->vport_stats.fdisc_retries++;
++		vport->fdisc_retries++;
++		bfa_fcs_vport_do_fdisc(vport);
++		break;
++
++	default:
++		bfa_sm_fault(__vport_fcs(vport), event);
++	}
++}
++
++/**
++ * Vport is online (FDISC is complete).
++ */
++static void
++bfa_fcs_vport_sm_online(struct bfa_fcs_vport_s *vport,
++			enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_DELETE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_deleting);
++		bfa_fcs_lport_delete(&vport->lport);
++		break;
++
++	case BFA_FCS_VPORT_SM_OFFLINE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_offline);
++		bfa_lps_discard(vport->lps);
++		bfa_fcs_lport_offline(&vport->lport);
++		break;
++
++	default:
++		bfa_sm_fault(__vport_fcs(vport), event);
++	}
++}
++
++/**
++ * Vport is being deleted - awaiting lport delete completion to send
++ * LOGO to fabric.
++ */
++static void
++bfa_fcs_vport_sm_deleting(struct bfa_fcs_vport_s *vport,
++			enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_DELETE:
++		break;
++
++	case BFA_FCS_VPORT_SM_DELCOMP:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_logo);
++		bfa_fcs_vport_do_logo(vport);
++		break;
++
++	case BFA_FCS_VPORT_SM_OFFLINE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_cleanup);
++		break;
++
++	default:
++		bfa_sm_fault(__vport_fcs(vport), event);
++	}
++}
++
++/**
++ * Error State.
++ * This state will be set when the Vport Creation fails due
++ * to errors like Dup WWN. In this state only operation allowed
++ * is a Vport Delete.
++ */
++static void
++bfa_fcs_vport_sm_error(struct bfa_fcs_vport_s *vport,
++			enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_DELETE:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_cleanup);
++		bfa_fcs_lport_delete(&vport->lport);
++		break;
++
++	default:
++		bfa_trc(__vport_fcs(vport), event);
++	}
++}
++
++/**
++ * Lport cleanup is in progress since vport is being deleted. Fabric is
++ * offline, so no LOGO is needed to complete vport deletion.
++ */
++static void
++bfa_fcs_vport_sm_cleanup(struct bfa_fcs_vport_s *vport,
++			enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_DELCOMP:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_uninit);
++		bfa_fcs_vport_free(vport);
++		break;
++
++	case BFA_FCS_VPORT_SM_DELETE:
++		break;
++
++	default:
++		bfa_sm_fault(__vport_fcs(vport), event);
++	}
++}
++
++/**
++ * LOGO is sent to fabric. Vport delete is in progress. Lport delete cleanup
++ * is done.
++ */
++static void
++bfa_fcs_vport_sm_logo(struct bfa_fcs_vport_s *vport,
++			enum bfa_fcs_vport_event event)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), event);
++
++	switch (event) {
++	case BFA_FCS_VPORT_SM_OFFLINE:
++		bfa_lps_discard(vport->lps);
++		/*
++		 * !!! fall through !!!
++		 */
++
++	case BFA_FCS_VPORT_SM_RSP_OK:
++	case BFA_FCS_VPORT_SM_RSP_ERROR:
++		bfa_sm_set_state(vport, bfa_fcs_vport_sm_uninit);
++		bfa_fcs_vport_free(vport);
++		break;
++
++	case BFA_FCS_VPORT_SM_DELETE:
++		break;
++
++	default:
++		bfa_sm_fault(__vport_fcs(vport), event);
++	}
++}
++
++
++
++/**
++ *  fcs_vport_private FCS virtual port private functions
++ */
++/**
++ * This routine will be called to send a FDISC command.
++ */
++static void
++bfa_fcs_vport_do_fdisc(struct bfa_fcs_vport_s *vport)
++{
++	bfa_lps_fdisc(vport->lps, vport,
++		bfa_fcport_get_maxfrsize(__vport_bfa(vport)),
++		__vport_pwwn(vport), __vport_nwwn(vport));
++	vport->vport_stats.fdisc_sent++;
++}
++
++static void
++bfa_fcs_vport_fdisc_rejected(struct bfa_fcs_vport_s *vport)
++{
++	u8		lsrjt_rsn = bfa_lps_get_lsrjt_rsn(vport->lps);
++	u8		lsrjt_expl = bfa_lps_get_lsrjt_expl(vport->lps);
++
++	bfa_trc(__vport_fcs(vport), lsrjt_rsn);
++	bfa_trc(__vport_fcs(vport), lsrjt_expl);
++
++	/* For certain reason codes, we don't want to retry. */
++	switch (bfa_lps_get_lsrjt_expl(vport->lps)) {
++	case FC_LS_RJT_EXP_INV_PORT_NAME: /* by brocade */
++	case FC_LS_RJT_EXP_INVALID_NPORT_ID: /* by Cisco */
++		if (vport->fdisc_retries < BFA_FCS_VPORT_MAX_RETRIES)
++			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
++		else
++			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_DUP_WWN);
++		break;
++
++	case FC_LS_RJT_EXP_INSUFF_RES:
++		/*
++		 * This means max logins per port/switch setting on the
++		 * switch was exceeded.
++		 */
++		if (vport->fdisc_retries < BFA_FCS_VPORT_MAX_RETRIES)
++			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
++		else
++			bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_FAILED);
++		break;
++
++	default:
++		bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
++	}
++}
++
++/**
++ *	Called to send a logout to the fabric. Used when a V-Port is
++ *	deleted/stopped.
++ */
++static void
++bfa_fcs_vport_do_logo(struct bfa_fcs_vport_s *vport)
++{
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++
++	vport->vport_stats.logo_sent++;
++	bfa_lps_fdisclogo(vport->lps);
++}
++
++
++/**
++ *     This routine will be called by bfa_timer on timer timeouts.
++ *
++ *	param[in]	vport		- pointer to bfa_fcs_vport_t.
++ *	param[out]	vport_status	- pointer to return vport status in
++ *
++ *	return
++ *		void
++ *
++ *	Special Considerations:
++ *
++ *	note
++ */
++static void
++bfa_fcs_vport_timeout(void *vport_arg)
++{
++	struct bfa_fcs_vport_s *vport = (struct bfa_fcs_vport_s *) vport_arg;
++
++	vport->vport_stats.fdisc_timeouts++;
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_TIMEOUT);
++}
++
++static void
++bfa_fcs_vport_free(struct bfa_fcs_vport_s *vport)
++{
++	struct bfad_vport_s *vport_drv =
++			(struct bfad_vport_s *)vport->vport_drv;
++
++	bfa_fcs_fabric_delvport(__vport_fabric(vport), vport);
++
++	if (vport_drv->comp_del)
++		complete(vport_drv->comp_del);
++
++	bfa_lps_delete(vport->lps);
++}
++
++
++
++/**
++ *  fcs_vport_public FCS virtual port public interfaces
++ */
++
++/**
++ * Online notification from fabric SM.
++ */
++void
++bfa_fcs_vport_online(struct bfa_fcs_vport_s *vport)
++{
++	vport->vport_stats.fab_online++;
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_ONLINE);
++}
++
++/**
++ * Offline notification from fabric SM.
++ */
++void
++bfa_fcs_vport_offline(struct bfa_fcs_vport_s *vport)
++{
++	vport->vport_stats.fab_offline++;
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_OFFLINE);
++}
++
++/**
++ * Cleanup notification from fabric SM on link timer expiry.
++ */
++void
++bfa_fcs_vport_cleanup(struct bfa_fcs_vport_s *vport)
++{
++	vport->vport_stats.fab_cleanup++;
++}
++/**
++ * delete notification from fabric SM. To be invoked from within FCS.
++ */
++void
++bfa_fcs_vport_fcs_delete(struct bfa_fcs_vport_s *vport)
++{
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_DELETE);
++}
++
++/**
++ * Delete completion callback from associated lport
++ */
++void
++bfa_fcs_vport_delete_comp(struct bfa_fcs_vport_s *vport)
++{
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_DELCOMP);
++}
++
++
++
++/**
++ *  fcs_vport_api Virtual port API
++ */
++
++/**
++ *	Use this function to instantiate a new FCS vport object. This
++ *	function will not trigger any HW initialization process (which will be
++ *	done in vport_start() call)
++ *
++ *	param[in] vport	-		pointer to bfa_fcs_vport_t. This space
++ *					needs to be allocated by the driver.
++ *	param[in] fcs		-	FCS instance
++ *	param[in] vport_cfg	-	vport configuration
++ *	param[in] vf_id		-	VF_ID if vport is created within a VF.
++ *					FC_VF_ID_NULL to specify base fabric.
++ *	param[in] vport_drv	-	Opaque handle back to the driver's vport
++ *					structure
++ *
++ *	retval BFA_STATUS_OK - on success.
++ *	retval BFA_STATUS_FAILED - on failure.
++ */
++bfa_status_t
++bfa_fcs_vport_create(struct bfa_fcs_vport_s *vport, struct bfa_fcs_s *fcs,
++		u16 vf_id, struct bfa_lport_cfg_s *vport_cfg,
++		struct bfad_vport_s *vport_drv)
++{
++	if (vport_cfg->pwwn == 0)
++		return BFA_STATUS_INVALID_WWN;
++
++	if (bfa_fcs_lport_get_pwwn(&fcs->fabric.bport) == vport_cfg->pwwn)
++		return BFA_STATUS_VPORT_WWN_BP;
++
++	if (bfa_fcs_vport_lookup(fcs, vf_id, vport_cfg->pwwn) != NULL)
++		return BFA_STATUS_VPORT_EXISTS;
++
++	if (bfa_fcs_fabric_vport_count(&fcs->fabric) ==
++			bfa_lps_get_max_vport(fcs->bfa))
++		return BFA_STATUS_VPORT_MAX;
++
++	vport->lps = bfa_lps_alloc(fcs->bfa);
++	if (!vport->lps)
++		return BFA_STATUS_VPORT_MAX;
++
++	vport->vport_drv = vport_drv;
++	vport_cfg->preboot_vp = BFA_FALSE;
++
++	bfa_sm_set_state(vport, bfa_fcs_vport_sm_uninit);
++	bfa_fcs_lport_attach(&vport->lport, fcs, vf_id, vport);
++	bfa_fcs_lport_init(&vport->lport, vport_cfg);
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_CREATE);
++
++	return BFA_STATUS_OK;
++}
++
++/**
++ *	Use this function to instantiate a new FCS PBC vport object. This
++ *	function will not trigger any HW initialization process (which will be
++ *	done in vport_start() call)
++ *
++ *	param[in] vport	-	pointer to bfa_fcs_vport_t. This space
++ *				needs to be allocated by the driver.
++ *	param[in] fcs	-	FCS instance
++ *	param[in] vport_cfg	-	vport configuration
++ *	param[in] vf_id		-	VF_ID if vport is created within a VF.
++ *					FC_VF_ID_NULL to specify base fabric.
++ *	param[in] vport_drv	-	Opaque handle back to the driver's vport
++ *					structure
++ *
++ *	retval BFA_STATUS_OK - on success.
++ *	retval BFA_STATUS_FAILED - on failure.
++ */
++bfa_status_t
++bfa_fcs_pbc_vport_create(struct bfa_fcs_vport_s *vport, struct bfa_fcs_s *fcs,
++			u16 vf_id, struct bfa_lport_cfg_s *vport_cfg,
++			struct bfad_vport_s *vport_drv)
++{
++	bfa_status_t rc;
++
++	rc = bfa_fcs_vport_create(vport, fcs, vf_id, vport_cfg, vport_drv);
++	vport->lport.port_cfg.preboot_vp = BFA_TRUE;
++
++	return rc;
++}
++
++/**
++ *	Use this function to findout if this is a pbc vport or not.
++ *
++ * @param[in] vport - pointer to bfa_fcs_vport_t.
++ *
++ * @returns None
++ */
++bfa_boolean_t
++bfa_fcs_is_pbc_vport(struct bfa_fcs_vport_s *vport)
++{
++
++	if (vport && (vport->lport.port_cfg.preboot_vp == BFA_TRUE))
++		return BFA_TRUE;
++	else
++		return BFA_FALSE;
++
++}
++
++/**
++ * Use this function initialize the vport.
++ *
++ * @param[in] vport - pointer to bfa_fcs_vport_t.
++ *
++ * @returns None
++ */
++bfa_status_t
++bfa_fcs_vport_start(struct bfa_fcs_vport_s *vport)
++{
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_START);
++
++	return BFA_STATUS_OK;
++}
++
++/**
++ *	Use this function quiese the vport object. This function will return
++ *	immediately, when the vport is actually stopped, the
++ *	bfa_drv_vport_stop_cb() will be called.
++ *
++ *	param[in] vport - pointer to bfa_fcs_vport_t.
++ *
++ *	return None
++ */
++bfa_status_t
++bfa_fcs_vport_stop(struct bfa_fcs_vport_s *vport)
++{
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_STOP);
++
++	return BFA_STATUS_OK;
++}
++
++/**
++ *	Use this function to delete a vport object. Fabric object should
++ *	be stopped before this function call.
++ *
++ *	!!!!!!! Donot invoke this from within FCS  !!!!!!!
++ *
++ *	param[in] vport - pointer to bfa_fcs_vport_t.
++ *
++ *	return     None
++ */
++bfa_status_t
++bfa_fcs_vport_delete(struct bfa_fcs_vport_s *vport)
++{
++
++	if (vport->lport.port_cfg.preboot_vp)
++		return BFA_STATUS_PBC;
++
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_DELETE);
++
++	return BFA_STATUS_OK;
++}
++
++/**
++ *	Use this function to get vport's current status info.
++ *
++ *	param[in] vport		pointer to bfa_fcs_vport_t.
++ *	param[out] attr		pointer to return vport attributes
++ *
++ *	return None
++ */
++void
++bfa_fcs_vport_get_attr(struct bfa_fcs_vport_s *vport,
++			struct bfa_vport_attr_s *attr)
++{
++	if (vport == NULL || attr == NULL)
++		return;
++
++	bfa_os_memset(attr, 0, sizeof(struct bfa_vport_attr_s));
++
++	bfa_fcs_lport_get_attr(&vport->lport, &attr->port_attr);
++	attr->vport_state = bfa_sm_to_state(vport_sm_table, vport->sm);
++}
++
++/**
++ *	Use this function to get vport's statistics.
++ *
++ *	param[in]	vport	pointer to bfa_fcs_vport_t.
++ *	param[out]	stats	pointer to return vport statistics in
++ *
++ *	return None
++ */
++void
++bfa_fcs_vport_get_stats(struct bfa_fcs_vport_s *vport,
++			struct bfa_vport_stats_s *stats)
++{
++	*stats = vport->vport_stats;
++}
++
++/**
++ *	Use this function to clear vport's statistics.
++ *
++ *	param[in]	vport	pointer to bfa_fcs_vport_t.
++ *
++ *	return None
++ */
++void
++bfa_fcs_vport_clr_stats(struct bfa_fcs_vport_s *vport)
++{
++	bfa_os_memset(&vport->vport_stats, 0, sizeof(struct bfa_vport_stats_s));
++}
++
++/**
++ *	Lookup a virtual port. Excludes base port from lookup.
++ */
++struct bfa_fcs_vport_s *
++bfa_fcs_vport_lookup(struct bfa_fcs_s *fcs, u16 vf_id, wwn_t vpwwn)
++{
++	struct bfa_fcs_vport_s *vport;
++	struct bfa_fcs_fabric_s *fabric;
++
++	bfa_trc(fcs, vf_id);
++	bfa_trc(fcs, vpwwn);
++
++	fabric = bfa_fcs_vf_lookup(fcs, vf_id);
++	if (!fabric) {
++		bfa_trc(fcs, vf_id);
++		return NULL;
++	}
++
++	vport = bfa_fcs_fabric_vport_lookup(fabric, vpwwn);
++	return vport;
++}
++
++/**
++ * FDISC Response
++ */
++void
++bfa_cb_lps_fdisc_comp(void *bfad, void *uarg, bfa_status_t status)
++{
++	struct bfa_fcs_vport_s *vport = uarg;
++
++	bfa_trc(__vport_fcs(vport), __vport_pwwn(vport));
++	bfa_trc(__vport_fcs(vport), status);
++
++	switch (status) {
++	case BFA_STATUS_OK:
++		/*
++		 * Initialiaze the V-Port fields
++		 */
++		__vport_fcid(vport) = bfa_lps_get_pid(vport->lps);
++		vport->vport_stats.fdisc_accepts++;
++		bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_OK);
++		break;
++
++	case BFA_STATUS_INVALID_MAC:
++		/* Only for CNA */
++		vport->vport_stats.fdisc_acc_bad++;
++		bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
++
++		break;
++
++	case BFA_STATUS_EPROTOCOL:
++		switch (bfa_lps_get_extstatus(vport->lps)) {
++		case BFA_EPROTO_BAD_ACCEPT:
++			vport->vport_stats.fdisc_acc_bad++;
++			break;
++
++		case BFA_EPROTO_UNKNOWN_RSP:
++			vport->vport_stats.fdisc_unknown_rsp++;
++			break;
++
++		default:
++			break;
++		}
++
++		bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
++		break;
++
++	case BFA_STATUS_FABRIC_RJT:
++		vport->vport_stats.fdisc_rejects++;
++		bfa_fcs_vport_fdisc_rejected(vport);
++		break;
++
++	default:
++		vport->vport_stats.fdisc_rsp_err++;
++		bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_ERROR);
++	}
++}
++
++/**
++ * LOGO response
++ */
++void
++bfa_cb_lps_fdisclogo_comp(void *bfad, void *uarg)
++{
++	struct bfa_fcs_vport_s *vport = uarg;
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_RSP_OK);
++}
++
++/**
++ * Received clear virtual link
++ */
++void
++bfa_cb_lps_cvl_event(void *bfad, void *uarg)
++{
++	struct bfa_fcs_vport_s *vport = uarg;
++
++	/* Send an Offline followed by an ONLINE */
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_OFFLINE);
++	bfa_sm_send_event(vport, BFA_FCS_VPORT_SM_ONLINE);
 +}
 -- 
 1.7.3.rc1
