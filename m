@@ -1,47 +1,69 @@
-From: Tim Chen <tim.c.chen@linux.intel.com>
-Subject: Re: [PATCH] scsi, mptsas : drop scsi_host lock when calling
- mptsas_qcmd
-Date: Thu, 16 Sep 2010 15:26:01 -0700
-Message-ID: <1284675961.7280.96.camel@schen9-DESK>
-References: <1284666254.7280.54.camel@schen9-DESK>
-	 <1284670136.13344.93.camel@haakon2.linux-iscsi.org>
-	 <20100916212530.GA22051@gargoyle.ger.corp.intel.com>
-	 <4C929368.4040903@cisco.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/8] Drop host_lock around LLD SHT->queuecommand() caller
+Date: Thu, 16 Sep 2010 15:35:21 -0700
+Message-ID: <1284676521-10737-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga14.intel.com ([143.182.124.37]:20417 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753665Ab0IPWYv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Sep 2010 18:24:51 -0400
-In-Reply-To: <4C929368.4040903@cisco.com>
+Received: from smtp105.sbc.mail.gq1.yahoo.com ([67.195.14.108]:47712 "HELO
+	smtp105.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754978Ab0IPWfY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Sep 2010 18:35:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Eykholt <jeykholt@cisco.com>
-Cc: Andi Kleen <ak@linux.intel.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Eric Moore <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org, vasu.dev@intel.com, willy@linux.intel.com
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
+Cc: James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Thu, 2010-09-16 at 15:00 -0700, Joe Eykholt wrote:
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-> 
-> It seems to me we can't completely move the host lock down into the
-> drivers since its a shared lock between SCSI and the drivers now.
-> 
-> If we just have SCSI drop the lock and have the LLD reacquire it,
-> that may open up a hole that some LLDs might not tolerate.
-> It also hurts performance for the LLDs that want to keep
-> the lock for the duration of queuecommand() by adding an extra
-> unlock/lock.
+Greetings all,
 
+This series contains the first round of a whole-sale conversion for droping
+struct Scsi_Host->host_lock around struct Scsi_Host->queuecommand() within
+scsi_dispatch_cmd().  So with this first patch the only part of scsi_dispatch_cmd()
+that is protected by host_lock is scsi_cmd_get_serial)_.
 
-It may be even better if we can completely drop the lock in
-scsi_dispatch_cmd.  The other reason host_lock was taken there was to
-serialize the increment and assignment of a scsi command serial number.
-So maybe we can make the serial number counter an atomic.
+The patches #2 -> #8 converts libiscsi, libsas, lpfc, qla4xxx, qla2xxx,
+TCM_Loop, and libfc code to drop their own SHT->queuecommand() internal
+host_lock unlock() + lock() optimization that certain high performance libs
+and LLDs have adopted over the years.  The changes involved here are really
+quite straight forward, but please note that none of this code has been tested
+with actual hardware yet, and is intended for generating comments for the relivent
+SCSI LLD driver maintainers and other interested folks.
 
-We can just let the driver decide if they need a lock to serialize their
-queue command.
+There are probably still be more LLDs which use this optimization, so please
+let me know if there is another piece of SHT->queuecommand() caller code that
+does this legacy optimization and needs to be updated.  I will be sure to
+CC the right driver maintainers and CC linux-scsi as I come across any more
+conversions.
 
-Tim
+Many thanks to Vasu Dev and Tim Chen for their work in this area!!
 
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Nicholas Bellinger (8):
+  scsi: Drop struct Scsi_Host->host_lock around SHT->queuecommand()
+  libiscsi: Remove host_lock unlock() + lock() from
+    iscsi_queuecommand()
+  libsas: Remove host_lock unlock() + lock() from sas_queuecommand()
+  lpfc: Remove host_lock unlock() + lock() from lpfc_queuecommand()
+  qla4xxx: Remove host_lock unlock() + lock() from
+    qla4xxx_queuecommand()
+  qla2xxx: Remove host_lock unlock() + lock() from
+    qla2xxx_queuecommand()
+  tcm_loop: Remove host_lock unlock() + lock() from
+    tcm_loop_queuecommand()
+  libfc: Remove host_lock unlock() + lock() from fc_queuecommand()
+
+ drivers/scsi/libfc/fc_fcp.c                    |    5 +----
+ drivers/scsi/libiscsi.c                        |    4 ----
+ drivers/scsi/libsas/sas_scsi_host.c            |    5 -----
+ drivers/scsi/lpfc/lpfc_scsi.c                  |    2 --
+ drivers/scsi/qla2xxx/qla_os.c                  |    7 ++-----
+ drivers/scsi/qla4xxx/ql4_os.c                  |    8 +-------
+ drivers/scsi/scsi.c                            |    3 ++-
+ drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |    7 -------
+ 8 files changed, 6 insertions(+), 35 deletions(-)
+
+-- 
+1.7.2.3
 
