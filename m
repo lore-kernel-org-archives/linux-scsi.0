@@ -1,50 +1,68 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] lio-target: Enable crc32c_x86_offload=1 by default
-Date: Thu, 16 Sep 2010 13:22:59 -0700
-Message-ID: <1284668579-10260-1-git-send-email-nab@linux-iscsi.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: scsi.h: please rename the status_byte() macro
+Date: Thu, 16 Sep 2010 16:46:21 -0400
+Message-ID: <4C92821D.1000903@interlog.com>
+References: <4C912F14.8000706@interlog.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp102.sbc.mail.ne1.yahoo.com ([98.138.84.213]:27588 "HELO
-	smtp102.sbc.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753907Ab0IPUXE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Sep 2010 16:23:04 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:55003 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754626Ab0IPUqd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Sep 2010 16:46:33 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by smtp.infotech.no (Postfix) with ESMTP id 9C86C31722
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2010 22:46:30 +0200 (CEST)
+Received: from smtp.infotech.no ([127.0.0.1])
+	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id hB6hUKhCflEk for <linux-scsi@vger.kernel.org>;
+	Thu, 16 Sep 2010 22:46:30 +0200 (CEST)
+Received: from [10.7.0.10] (unknown [10.7.0.10])
+	by smtp.infotech.no (Postfix) with ESMTPA id 267A031721
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2010 22:46:29 +0200 (CEST)
+In-Reply-To: <4C912F14.8000706@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes
-Cc: James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Douglas Gilbert <dgilbert@interlog.com>, Joe Eykholt <jeykholt@cisco.com>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: SCSI development list <linux-scsi@vger.kernel.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 10-09-15 04:39 PM, Douglas Gilbert wrote:
+> ... to something like:
+> scsi_status_byte_div2()
+> or:
+> scsi_broken_status_byte()
 
-Greetings all,
+The bug in the bsg driver with its SCSI status byte
+brought this to my attention. If memory serves about
+10 years ago some of us tried to kill the status_byte()
+macro.
 
-This patch enables the default usage of the SSE v4.2 CRC32C instruction
-for iSCSI target HeaderDigests and DataDigests offload using libcrypto and
-the crc32c-intel.ko module on Nehalem systems.  This was originally disabled
-by default in commit 047eeb75ee8f0 due to some issues with HeaderDigests=CRC32C
-that where encountered with the Open-iSCSI initiator shipping with RHEL 6 B1.
-This has now been identified as initiator side breakage, so we go ahead and
-enable crc32c_x86_offload=1 by default when available.
+But it is still there in the kernel's scsi/scsi.h
+ready to trip up another generation of programmers:
+#define status_byte(result) (((result) >> 1) & 0x7f)
 
-Many thanks again to Mike Christie for verifying the Open-iSCSI side issue!
+with no explanation that it does NOT yield the SCSI
+status byte but the right shifted (once) equivalent.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/lio-target/iscsi_target_core.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+The correct macro (or inline function) for obtaining the
+SCSI status byte from the 32 bit "result" from a LLD would
+be:
+#define scsi_status_byte(result) ((result) & 0xff)
 
-diff --git a/drivers/target/lio-target/iscsi_target_core.h b/drivers/target/lio-target/iscsi_target_core.h
-index de962c8..882bd52 100644
---- a/drivers/target/lio-target/iscsi_target_core.h
-+++ b/drivers/target/lio-target/iscsi_target_core.h
-@@ -84,7 +84,7 @@
- /* Disabled by default in production mode w/ explict ACLs */
- #define TA_PROD_MODE_WRITE_PROTECT	0
- /* Disabled by default for the moment for testing... */
--#define TA_CRC32C_X86_OFFLOAD		0
-+#define TA_CRC32C_X86_OFFLOAD		1
- #define TA_CACHE_CORE_NPS		0
- 
- /* struct iscsi_data_count->type */
--- 
-1.5.6.5
+[Long ago (20 years) something silly was put in bit 0
+  so masking with 0xfe would work as well.]
+
+Another thought, these macros are associated with the
+mid-level or a ULD deciding whether a SCSI command has
+succeeded; so scsi_cmnd.h would be a more appropriate
+header.
+
+Happily the version of scsi.h shown to the user space
+(typically /usr/include/scsi/scsi.h) does not include
+these defective macros. So any API breakage is limited
+to the kernel.
+
+Doug Gilbert
+
 
