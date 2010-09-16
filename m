@@ -1,44 +1,88 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/8] Drop host_lock around LLD SHT->queuecommand()
-	caller
-Date: Thu, 16 Sep 2010 16:28:55 -0700
-Message-ID: <1284679735.13344.123.camel@haakon2.linux-iscsi.org>
-References: <1284676521-10737-1-git-send-email-nab@linux-iscsi.org>
-	 <AANLkTi=QXj0Do_PDvFmu5v8Py_tm_uJdDh_PQu_96M2v@mail.gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] bsg: call idr_pre_get() outside the lock.
+Date: Thu, 16 Sep 2010 16:37:35 -0700
+Message-ID: <20100916163735.ed8dbb51.akpm@linux-foundation.org>
+References: <m2eidda6bq.fsf@elisp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AANLkTi=QXj0Do_PDvFmu5v8Py_tm_uJdDh_PQu_96M2v@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chetan Loke <chetanloke@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:59867 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753281Ab0IPXh4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Sep 2010 19:37:56 -0400
+In-Reply-To: <m2eidda6bq.fsf@elisp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Naohiro Aota <naota@elisp.net>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, Jiri Kosina <jkosina@suse.cz>, Greg Kroah-Hartman <gregkh@suse.de>, Daniel Mack <daniel@caiaq.de>, linux-scsi@vger.kernel.org
 
-On Thu, 2010-09-16 at 19:26 -0400, Chetan Loke wrote:
-> On Thu, Sep 16, 2010 at 6:35 PM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
+On Wed, 01 Sep 2010 23:26:01 +0900
+Naohiro Aota <naota@elisp.net> wrote:
+
+> The idr_pre_get() kernel-doc says "This function should be called
+> prior to locking and calling the idr_get_new* functions.", but the
+> idr_pre_get() calling in bsg_register_queue() is put inside
+> mutex_lock(). Let's fix it.
 > 
-> > and LLDs have adopted over the years.  The changes involved here are really
-> > quite straight forward, but please note that none of this code has been tested
-> > with actual hardware yet, and is intended for generating comments for the relivent
-> > SCSI LLD driver maintainers and other interested folks.
-> >
-> 
-> NO. Why not try testing it w/ an abort storm first else we will
-> seriously end up screwing the filesystems....
 
-The only real issue here would be an immediate struct
-Scsi_Host->host_lock dead lock for those LLDs that still use legacy
-unlock() > do_work() -> lock() in their SHT->queuecommand() caller.
-This is *not* going to happen under heavy load with a bunch of
-outstanding WRITEs, but immediate the first couple of times that
-scsi_dispatch_cmd() gets called, so there is really little to no fear of
-filesystem corruption with these patches.
+The idr_pre_get() kerneldoc is wrong.  Or at least, misleading.
 
-Anyways, please feel free to test them yourself with an TMR ABORT storm
-if you so desire..
+The way this all works is that we precharge the tree via idr_pre_get()
+and we do this outside locks so we can use GFP_KERNEL.  Then we take
+the lock (a spinlock!) and then try to add an element to the tree,
+which will consume objects from the pool which was prefilled by
+idr_pre_get().
 
-Best,
+There's an obvious race here where someone else can get in and steal
+objects from the prefilled pool.  We can fix that with a retry loop:
 
---nab
+
+again:
+	if (idr_pre_get(..., GFP_KERNEL) == NULL)
+		return -ENOMEM;		/* We're really out-of-memory */
+	spin_lock(lock);
+	if (idr_get_new(...) == -EAGAIN) {
+		spin_unlock(lock);
+		goto again;		/* Someone stole our preallocation! */
+	}
+	...
+
+this way we avoid the false -ENOMEM which the race would have caused. 
+We only declare -ENOMEM when we're REALLY out of memory.
+
+
+But none of this is needed when a sleeping lock is used (as long as the
+sleeping lock isn't taken on the the VM pageout path, of course).  In
+that case we can use the sleeping lock to prevent the above race.
+
+> diff --git a/block/bsg.c b/block/bsg.c
+> index 82d5882..5fd8dd1 100644
+> --- a/block/bsg.c
+> +++ b/block/bsg.c
+> @@ -1010,13 +1010,11 @@ int bsg_register_queue(struct request_queue *q, struct device *parent,
+>  	bcd = &q->bsg_dev;
+>  	memset(bcd, 0, sizeof(*bcd));
+>  
+> -	mutex_lock(&bsg_mutex);
+> -
+>  	ret = idr_pre_get(&bsg_minor_idr, GFP_KERNEL);
+> -	if (!ret) {
+> -		ret = -ENOMEM;
+> -		goto unlock;
+> -	}
+> +	if (!ret)
+> +		return -ENOMEM;
+> +
+> +	mutex_lock(&bsg_mutex);
+>  
+>  	ret = idr_get_new(&bsg_minor_idr, bcd, &minor);
+>  	if (ret < 0)
+
+So the old code was OK.
+
+The new code, however, is not OK because it is vulnerable to the above
+race wherein another CPU or thread comes in and steals all of this
+thread's preallocation.
+
