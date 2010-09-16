@@ -1,99 +1,50 @@
-From: Tim Chen <tim.c.chen@linux.intel.com>
-Subject: [PATCH] scsi, mptsas : drop scsi_host lock when calling mptsas_qcmd
-Date: Thu, 16 Sep 2010 12:44:14 -0700
-Message-ID: <1284666254.7280.54.camel@schen9-DESK>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] lio-target: Enable crc32c_x86_offload=1 by default
+Date: Thu, 16 Sep 2010 13:22:59 -0700
+Message-ID: <1284668579-10260-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:57346 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754570Ab0IPTnF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Sep 2010 15:43:05 -0400
+Received: from smtp102.sbc.mail.ne1.yahoo.com ([98.138.84.213]:27588 "HELO
+	smtp102.sbc.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753907Ab0IPUXE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Sep 2010 16:23:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <Eric.Moore@lsi.com>, nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org, vasu.dev@intel.com, ak@linux.intel.com, willy@linux.intel.com
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes
+Cc: James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Douglas Gilbert <dgilbert@interlog.com>, Joe Eykholt <jeykholt@cisco.com>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-During testing of FFSB benchmark (configured with 
-128 threaded write to 128 files on 16 SSD), scsi_host lock was 
-heavily contended, accounting for 23.7% of cpu cycles.  There
-are 64 cores in our test system and the JBOD
-is connected with a mptsas HBA.  Taking a similar approach
-as the patch by Vasu (http://permalink.gmane.org/gmane.linux.scsi.open-fcoe.devel/10110)
-for Fiber Channel adapter, the following patch on 2.6.35 kernel 
-avoids taking the scsi host lock when queueing mptsas scsi command. We see
-a big drop in the cpu cycles contending for the lock (from 23.7% to 1.8%).  
-The number of IO per sec increase by 10.6% from 62.9K per sec to 69.6K per sec.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-If there is no good reason to prevent mptsas_qcmd from being 
-executed in parallel, we should remove this lock from the queue 
-command code path.  Other adapters probably can
-benefit in a similar manner.
+Greetings all,
 
+This patch enables the default usage of the SSE v4.2 CRC32C instruction
+for iSCSI target HeaderDigests and DataDigests offload using libcrypto and
+the crc32c-intel.ko module on Nehalem systems.  This was originally disabled
+by default in commit 047eeb75ee8f0 due to some issues with HeaderDigests=CRC32C
+that where encountered with the Open-iSCSI initiator shipping with RHEL 6 B1.
+This has now been identified as initiator side breakage, so we go ahead and
+enable crc32c_x86_offload=1 by default when available.
 
-                        %cpu cycles contending host lock
-                        2.6.35		2.6.35+patch
------------------------------------------------------
-scsi_dispatch_cmd       5.5%		0.44%
-scsi_device_unbusy      6.1%		0.66%
-scsi_request_fn         6.6%		0.35%
-scsi_run_queue          5.5%		0.35%
+Many thanks again to Mike Christie for verifying the Open-iSCSI side issue!
 
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/lio-target/iscsi_target_core.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Tim Chen
-
-
-Signed-off-by: Tim Chen <tim.c.chen@linux.intel.com>
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index ac000e8..ab3aab9 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -4984,6 +4984,8 @@ mptsas_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	sh->max_lun = max_lun;
- 	sh->transportt = mptsas_transport_template;
+diff --git a/drivers/target/lio-target/iscsi_target_core.h b/drivers/target/lio-target/iscsi_target_core.h
+index de962c8..882bd52 100644
+--- a/drivers/target/lio-target/iscsi_target_core.h
++++ b/drivers/target/lio-target/iscsi_target_core.h
+@@ -84,7 +84,7 @@
+ /* Disabled by default in production mode w/ explict ACLs */
+ #define TA_PROD_MODE_WRITE_PROTECT	0
+ /* Disabled by default for the moment for testing... */
+-#define TA_CRC32C_X86_OFFLOAD		0
++#define TA_CRC32C_X86_OFFLOAD		1
+ #define TA_CACHE_CORE_NPS		0
  
-+	sh->unlocked_qcmds = 1;
-+
- 	/* Required entry.
- 	 */
- 	sh->unique_id = ioc->id;
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index ad0ed21..3819d66 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -749,11 +749,16 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	if (unlikely(host->shost_state == SHOST_DEL)) {
- 		cmd->result = (DID_NO_CONNECT << 16);
- 		scsi_done(cmd);
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	} else {
- 		trace_scsi_dispatch_cmd_start(cmd);
-+		if (host->unlocked_qcmds)
-+			spin_unlock_irqrestore(host->host_lock, flags);
- 		rtn = host->hostt->queuecommand(cmd, scsi_done);
-+		if (!host->unlocked_qcmds)
-+			spin_unlock_irqrestore(host->host_lock, flags);
- 	}
--	spin_unlock_irqrestore(host->host_lock, flags);
-+
- 	if (rtn) {
- 		trace_scsi_dispatch_cmd_error(cmd, rtn);
- 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index b7bdecb..1814c51 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -636,6 +636,9 @@ struct Scsi_Host {
- 	/* Asynchronous scan in progress */
- 	unsigned async_scan:1;
- 
-+	/* call queuecommand without Scsi_Host lock held */
-+	unsigned unlocked_qcmds:1;
-+
- 	/*
- 	 * Optional work queue to be utilized by the transport
- 	 */
-
-
+ /* struct iscsi_data_count->type */
+-- 
+1.5.6.5
 
