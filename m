@@ -1,60 +1,58 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 5/8] qla4xxx: Remove host_lock unlock() + lock() from qla4xxx_queuecommand()
-Date: Thu, 16 Sep 2010 15:36:02 -0700
-Message-ID: <1284676562-10835-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp107.sbc.mail.mud.yahoo.com ([68.142.198.105]:42144 "HELO
-	smtp107.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756916Ab0IPWgG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Sep 2010 18:36:06 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 2/8] libiscsi: Remove host_lock unlock() + lock() from iscsi_queuecommand()
+Date: Thu, 16 Sep 2010 15:35:39 -0700
+Message-ID: <1284676539-10778-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
 Cc: James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
 This patch removes the now legacy host_lock unlock() + lock() optimization
-from ql4_os.c:qla4xxx_queuecommand()
+from libiscsi.c:iscsi_queuecommand()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/qla4xxx/ql4_os.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
+ drivers/scsi/libiscsi.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 370d40f..cfbe8b5 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -511,26 +511,20 @@ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
- 	    test_bit(DPC_RESET_HA_FW_CONTEXT, &ha->dpc_flags))
- 		goto qc_host_busy;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 633e090..7e4134e 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1615,7 +1615,6 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
  
--	spin_unlock_irq(ha->host->host_lock);
--
- 	srb = qla4xxx_get_new_srb(ha, ddb_entry, cmd, done);
- 	if (!srb)
--		goto qc_host_busy_lock;
-+		goto qc_host_busy;
+ 	host = sc->device->host;
+ 	ihost = shost_priv(host);
+-	spin_unlock(host->host_lock);
  
- 	rval = qla4xxx_send_command_to_isp(ha, srb);
- 	if (rval != QLA_SUCCESS)
- 		goto qc_host_busy_free_sp;
+ 	cls_session = starget_to_session(scsi_target(sc->device));
+ 	session = cls_session->dd_data;
+@@ -1706,7 +1705,6 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
  
--	spin_lock_irq(ha->host->host_lock);
+ 	session->queued_cmdsn++;
+ 	spin_unlock(&session->lock);
+-	spin_lock(host->host_lock);
  	return 0;
  
- qc_host_busy_free_sp:
- 	qla4xxx_srb_free_dma(ha, srb);
- 	mempool_free(srb, ha->srb_mempool);
+ prepd_reject:
+@@ -1716,7 +1714,6 @@ reject:
+ 	spin_unlock(&session->lock);
+ 	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
+ 			  sc->cmnd[0], reason);
+-	spin_lock(host->host_lock);
+ 	return SCSI_MLQUEUE_TARGET_BUSY;
  
--qc_host_busy_lock:
--	spin_lock_irq(ha->host->host_lock);
--
- qc_host_busy:
- 	return SCSI_MLQUEUE_HOST_BUSY;
- 
+ prepd_fault:
+@@ -1733,7 +1730,6 @@ fault:
+ 		scsi_in(sc)->resid = scsi_in(sc)->length;
+ 	}
+ 	done(sc);
+-	spin_lock(host->host_lock);
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_queuecommand);
 -- 
 1.7.2.3
-
