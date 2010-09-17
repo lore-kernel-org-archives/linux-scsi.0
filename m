@@ -1,41 +1,43 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH] scsi, mptsas : drop scsi_host lock when calling mptsas_qcmd
-Date: Fri, 17 Sep 2010 12:32:11 +0200
-Message-ID: <AANLkTikDSbzqJHLToz9L7VhOtifzUANomYBBbbbEHBwt@mail.gmail.com>
-References: <1284666254.7280.54.camel@schen9-DESK>
-	<1284670136.13344.93.camel@haakon2.linux-iscsi.org>
-	<20100916212530.GA22051@gargoyle.ger.corp.intel.com>
-	<4C929368.4040903@cisco.com>
-	<1284675416.26423.47.camel@mulgrave.site>
-	<20100917071656.GA2644@gargoyle.ger.corp.intel.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 1/8] scsi: Drop struct Scsi_Host->host_lock around
+ SHT->queuecommand()
+Date: Fri, 17 Sep 2010 08:13:12 -0400
+Message-ID: <1284725592.26423.60.camel@mulgrave.site>
+References: <1284676529-10756-1-git-send-email-nab@linux-iscsi.org>
+	 <1284691571.26423.50.camel@mulgrave.site>
+	 <20100917072022.GB2644@gargoyle.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:34147 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751401Ab0IQKcM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2010 06:32:12 -0400
-Received: by iwn5 with SMTP id 5so1885887iwn.19
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2010 03:32:12 -0700 (PDT)
-In-Reply-To: <20100917071656.GA2644@gargoyle.ger.corp.intel.com>
+Received: from cantor.suse.de ([195.135.220.2]:53539 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752867Ab0IQMNa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Sep 2010 08:13:30 -0400
+In-Reply-To: <20100917072022.GB2644@gargoyle.ger.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andi Kleen <ak@linux.intel.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Tim Chen <tim.c.chen@linux.intel.com>, Eric Moore <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org, vasu.dev@intel.com, willy@linux.intel.com
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>
 
-On Fri, Sep 17, 2010 at 9:16 AM, Andi Kleen <ak@linux.intel.com> wrote:
->
-> > Not really ... look at the code path (in scsi.c:scsi_dispatch_cmd()).
-> > We take the lock, then get the serial number (that would likley have to
-> > be replaced with an atomic), check the state, call trace, call
->
-> An atomic unfortunately usually doesn't scale much better than a spinlock.
-> I suspect serials would need to be made optional, e.g.
-> computing them lazily if really needed.
+On Fri, 2010-09-17 at 09:20 +0200, Andi Kleen wrote:
+> > So at least from where I stand, my object is to reduce the number of
+> > times we take and release the lock, which this doesn't do.  As I said
+> > before: we need to figure out the rest, which likely includes an atomic
+> > for the serial number (which is almost unused).  I think the check
+> 
+> If it's unused it should be removed, make optional.
+> Atomics are a scalability problem too and not much cheaper than spinlocks.
 
-We should be careful that the command processing order for commands
-issued by different threads is not altered by removing the host lock,
-at least for those SCSI commands where in-order processing matters.
-There might be better solutions than a serial number though.
+I don't disagree with the idea of removing it, especially as it has so
+few users, but replacing the host lock with an atomic here would still
+vastly reduce the contention, which is the initial complaint.  The
+contention occurs because the host lock is so widely used for other
+things.  The way to reduce that contention is firstly to reduce the
+length of code covered by the lock and also reduce the actual number of
+places where the lock is taken.  Compared with host lock's current vast
+footprint, and atomic here is tiny.
 
-Bart.
+James
+
+
