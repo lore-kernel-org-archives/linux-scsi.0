@@ -1,69 +1,44 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/8] Drop host_lock around LLD SHT->queuecommand()
-	caller
-Date: Fri, 17 Sep 2010 11:24:23 -0700
-Message-ID: <1284747863.13344.167.camel@haakon2.linux-iscsi.org>
-References: <1284676521-10737-1-git-send-email-nab@linux-iscsi.org>
-	 <1284686949.7280.99.camel@schen9-DESK>
-	 <1284687070.13344.135.camel@haakon2.linux-iscsi.org>
-	 <4C93B2BC.8000404@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: libata: SATL error processing: unrecovered read error
+Date: Fri, 17 Sep 2010 14:31:52 -0400
+Message-ID: <4C93B418.8040106@garzik.org>
+References: <4C83BDDC.3020201@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C93B2BC.8000404@garzik.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Tim Chen <tim.c.chen@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C83BDDC.3020201@interlog.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2010-09-17 at 14:26 -0400, Jeff Garzik wrote:
-> On 09/16/2010 09:31 PM, Nicholas A. Bellinger wrote:
-> > On Thu, 2010-09-16 at 18:29 -0700, Tim Chen wrote:
-> >> On Thu, 2010-09-16 at 15:35 -0700, Nicholas A. Bellinger wrote:
-> >>> From: Nicholas Bellinger<nab@linux-iscsi.org>
-> >>>
-> >>> Greetings all,
-> >>>
-> >>> This series contains the first round of a whole-sale conversion for droping
-> >>> struct Scsi_Host->host_lock around struct Scsi_Host->queuecommand() within
-> >>> scsi_dispatch_cmd().  So with this first patch the only part of scsi_dispatch_cmd()
-> >>> that is protected by host_lock is scsi_cmd_get_serial)_.
-> >>>
-> >>
-> >> Maybe we can change the host->cmd_serial_number to atomic and totally
-> >> avoid the need to take host_lock.
-> >
-> > Hmmmm good point, then we would also need an atomic_t for signaling
-> > (shost_state == SHOST_DEL) in scsi_dispatch_cmd() to be able to
-> > completly drop host_lock usage within scsi_dispatch_cmd().
-> >
-> > I can take a look at doing this specific part, if you would be willing
-> > to have a look at the host->cmd_serial_number conversion piece.  ;)
-> 
-> But that raises the familiar tale of:  using multiple atomics (w/ their 
-> locked instructions) may cost more than a spinlock.
+On 09/05/2010 11:57 AM, Douglas Gilbert wrote:
+> While looking at an eSATA connected external disk with
+> a medium error, this sense data appeared:
+>
+> READ cdb: 28 00 96 4a 7a d1 00 00 01 00
+> duration=2816 ms
+> READ: Descriptor format, current; Sense key: Medium Error
+> Additional sense: Unrecovered read error - auto reallocate failed
+> Descriptor type: Information
+> 0x00000000964a7ad1
+> Raw sense data (in hex):
+> 72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
+> 96 4a 7a d1
+>
+> That is pretty close to what I was expecting to see. If anything
+> there is too much information. That "Unrecovered read error -
+> auto reallocate failed" [asc/asq: 11h/04h] should just be
+> "Unrecovered read error" [asc/asq: 11h/0h]. See sat2r09.pdf table
+> 105 or sat3r00.pdf table 105.
 
-So patch #1 in the v2 series just posted uses the following code:
+If any auto-reallocate occurred on the drive's part, it definitely 
+failed at that point.  And auto-reallocate is a possibility.
 
-static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
-{
-        /*
-         * The use of per struct scsi_cmnd->serial_number is disabled by default
-         */
-        if (!(host->use_serial_number))
-                return;
-        /*
-         * Increment the host->cmd_serial_number by 2 so cmd->serial_number
-         * is always odd and wraps to 1 instead of 0.
-         */
-        cmd->serial_number = atomic_add_return(2, &host->cmd_serial_number);
-}
+11h/04h seems to more accurately describe the situation.
+
+	Jeff
 
 
-Note that host->use_serial_number is disabled by default, so for the typical case
-no atomic_t reading (or writing) is required.
 
-Best,
-
---nab
