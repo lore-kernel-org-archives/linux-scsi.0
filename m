@@ -1,47 +1,78 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH v2 11/11] buslogic: Remove host_lock unlock() + lock() from BusLogic_QueueCommand()
-Date: Fri, 17 Sep 2010 11:23:24 -0700
-Message-ID: <1284747804-21052-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/8] scsi: Drop struct Scsi_Host->host_lock around
+	SHT->queuecommand()
+Date: Fri, 17 Sep 2010 11:21:36 -0700
+Message-ID: <1284747696.13344.164.camel@haakon2.linux-iscsi.org>
+References: <1284676529-10756-1-git-send-email-nab@linux-iscsi.org>
+	 <1284691571.26423.50.camel@mulgrave.site>
+	 <20100917072022.GB2644@gargoyle.ger.corp.intel.com>
+	 <1284725592.26423.60.camel@mulgrave.site>
+	 <4C9379AA.4000103@linux.intel.com>
+	 <1284735438.26423.81.camel@mulgrave.site>
+	 <1284741478.13344.154.camel@haakon2.linux-iscsi.org>
+	 <1284741704.13344.157.camel@haakon2.linux-iscsi.org>
+	 <1284745799.7280.155.camel@schen9-DESK>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1284745799.7280.155.camel@schen9-DESK>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
-Cc: James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Tim Chen <tim.c.chen@linux.intel.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Andi Kleen <ak@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Fri, 2010-09-17 at 10:49 -0700, Tim Chen wrote:
+> On Fri, 2010-09-17 at 09:41 -0700, Nicholas A. Bellinger wrote:
+> 
+> > > > 
+> > > > What I was actually thinking of for the atomic is that we'd let it range
+> > > > [1..INT_MAX] so a zero was an indicator of no use of this.  Then the
+> > > > actual code could become
+> > > > 
+> > > > if (atomic_read(x)) {
+> > > > 	do {
+> > > > 		y = atomic_add_return(1, x);
+> > > > 	} while (y == 0);
+> > > > }
+> > > 
+> > > The conversion of struct scsi_cmnd->serial_number to atomic_t and the
+> > > above code for scsi_cmd_get_serial() sounds perfectly reasonable to me.
+> > > 
+> > 
+> > Actually, that should be the conversion of struct
+> > Scsi_Host->cmd_serial_number to an atomic_t.   AFAICT there is no reason
+> > for struct scsi_cmnd->serial_number needing to be an atomic_t.
+> 
+> Just want to verify the hidden assumption we have here when the atomic
+> int Scsi_Host->cmd_serial_number counter overflow after increment. The
+> counter itself then becomes negative.  We are assuming that when we do
+> type conversion back to unsigned long scsi_cmnd->serial_number, we will
+> get the right thing.  
+> 
+> So for 32-bit int, we expect if we start with 0x7fffffff in hex and the
+> expected sequence will be
+> 
+> 	2147483647 (int) -> 2147483647 (unsigned long)  [0x7fffffff]
+> 	+1
+> 	-2147483648 (int) -> 2147483648 (unsigned long) [0x80000000]
+> 	+1
+> 	-2147483647 (int) -> 2147483649 (unsigned long) [0x80000001]
+> 	
+> If there is architecture where the above assumption is not true (which
+> I'm not aware of but just checking), then we should manually wrap the
+> atomic counter to 1 when counter overflow.  
+> 
 
-This patch removes the now legacy host_lock unlock() + lock() optimization
-from buslogic.c:BusLogic_QueueCommand()
+I was thinking about this as well, but I figured since jejb recommended
+it's usage for scsi_cmd_get_serial() that it would not be a problem.
+However I am not sure if he had keeping the struct
+scsi_cmnd->serial_number a 'unsigned long' that is done in the new v2
+patches.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/BusLogic.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+James, is there any other consideration here wrt to atomic_t wrapping
+for scsi_cmd_get_serial() using a astruct Scsi_Host->cmd_serial_number
+assignment to an 'unsigned long' that I need to include in a v3
+series..?
 
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index fc0b4b8..f39b4fc 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -2837,9 +2837,7 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
- 	 */
- 	CCB = BusLogic_AllocateCCB(HostAdapter);
- 	if (CCB == NULL) {
--		spin_unlock_irq(HostAdapter->SCSI_Host->host_lock);
- 		BusLogic_Delay(1);
--		spin_lock_irq(HostAdapter->SCSI_Host->host_lock);
- 		CCB = BusLogic_AllocateCCB(HostAdapter);
- 		if (CCB == NULL) {
- 			Command->result = DID_ERROR << 16;
-@@ -2965,10 +2963,8 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
- 		   error as a Host Adapter Hard Reset should be initiated soon.
- 		 */
- 		if (!BusLogic_WriteOutgoingMailbox(HostAdapter, BusLogic_MailboxStartCommand, CCB)) {
--			spin_unlock_irq(HostAdapter->SCSI_Host->host_lock);
- 			BusLogic_Warning("Unable to write Outgoing Mailbox - " "Pausing for 1 second\n", HostAdapter);
- 			BusLogic_Delay(1);
--			spin_lock_irq(HostAdapter->SCSI_Host->host_lock);
- 			if (!BusLogic_WriteOutgoingMailbox(HostAdapter, BusLogic_MailboxStartCommand, CCB)) {
- 				BusLogic_Warning("Still unable to write Outgoing Mailbox - " "Host Adapter Dead?\n", HostAdapter);
- 				BusLogic_DeallocateCCB(CCB);
--- 
-1.7.2.3
+--nab
