@@ -1,54 +1,48 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH v2 02/11] scsi: Drop struct Scsi_Host->host_lock usage in scsi_dispatch_cmd()
-Date: Fri, 17 Sep 2010 11:21:59 -0700
-Message-ID: <1284747719-20881-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v2 06/11] libata: Remove host_lock unlock() + lock() from ata_scsi_queuecmd()
+Date: Fri, 17 Sep 2010 11:22:36 -0700
+Message-ID: <1284747756-20957-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp104.sbc.mail.re3.yahoo.com ([66.196.96.80]:43423 "HELO
+	smtp104.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754319Ab0IQSWl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Sep 2010 14:22:41 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
 Cc: James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts scsi_dispatch_cmd() to no longer lock() + unlock()
-struct Scsi_Host->host_lock while calling scsi_cmd_get_serial() and
-SHT->queuecommand() dispatcher.  This patch follows commit 5900e428420d
-which means we can now safely call scsi_cmd_get_serial() without the
-host_lock held.
+This patch removes the now legacy host_lock unlock() + lock() optimization
+from libata-scsi.c:ata_scsi_queuecmd()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/scsi.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+ drivers/ata/libata-scsi.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 4724ce7..d1aa209 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -658,7 +658,6 @@ static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd
- int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- {
- 	struct Scsi_Host *host = cmd->device->host;
--	unsigned long flags = 0;
- 	unsigned long timeout;
- 	int rtn = 0;
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index a89172c..33ead2a 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3177,7 +3177,6 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
  
-@@ -744,7 +743,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 		goto out;
+ 	ap = ata_shost_to_port(shost);
+ 
+-	spin_unlock(shost->host_lock);
+ 	spin_lock(ap->lock);
+ 
+ 	ata_scsi_dump_cdb(ap, cmd);
+@@ -3191,7 +3190,6 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
  	}
  
--	spin_lock_irqsave(host->host_lock, flags);
- 	/*
- 	 * AK: unlikely race here: for some reason the timer could
- 	 * expire before the serial number is set up below.
-@@ -760,7 +758,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 		trace_scsi_dispatch_cmd_start(cmd);
- 		rtn = host->hostt->queuecommand(cmd, scsi_done);
- 	}
--	spin_unlock_irqrestore(host->host_lock, flags);
-+
- 	if (rtn) {
- 		trace_scsi_dispatch_cmd_error(cmd, rtn);
- 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
+ 	spin_unlock(ap->lock);
+-	spin_lock(shost->host_lock);
+ 	return rc;
+ }
+ 
 -- 
 1.7.2.3
+
