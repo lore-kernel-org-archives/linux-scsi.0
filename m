@@ -1,70 +1,158 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: libata: SATL error processing: unrecovered read error
-Date: Fri, 17 Sep 2010 15:32:28 -0400
-Message-ID: <4C93C24C.1050302@garzik.org>
-References: <4C83BDDC.3020201@interlog.com> <4C93B418.8040106@garzik.org> <4C93C0D5.2090402@interlog.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v2 01/11] scsi: Convert struct
+	Scsi_Host->cmd_serial_number to atomic_t
+Date: Fri, 17 Sep 2010 12:33:43 -0700
+Message-ID: <1284752023.13344.183.camel@haakon2.linux-iscsi.org>
+References: <1284747709-20862-1-git-send-email-nab@linux-iscsi.org>
+	 <4C93BB8E.2080501@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C93C0D5.2090402@interlog.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp103.sbc.mail.ac4.yahoo.com ([76.13.13.242]:32985 "HELO
+	smtp103.sbc.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751752Ab0IQThy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Sep 2010 15:37:54 -0400
+In-Reply-To: <4C93BB8E.2080501@cisco.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Joe Eykholt <jeykholt@cisco.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
 
-On 09/17/2010 03:26 PM, Douglas Gilbert wrote:
-> On 10-09-17 02:31 PM, Jeff Garzik wrote:
->> On 09/05/2010 11:57 AM, Douglas Gilbert wrote:
->>> While looking at an eSATA connected external disk with
->>> a medium error, this sense data appeared:
->>>
->>> READ cdb: 28 00 96 4a 7a d1 00 00 01 00
->>> duration=2816 ms
->>> READ: Descriptor format, current; Sense key: Medium Error
->>> Additional sense: Unrecovered read error - auto reallocate failed
->>> Descriptor type: Information
->>> 0x00000000964a7ad1
->>> Raw sense data (in hex):
->>> 72 03 11 04 00 00 00 0c 00 0a 80 00 00 00 00 00
->>> 96 4a 7a d1
->>>
->>> That is pretty close to what I was expecting to see. If anything
->>> there is too much information. That "Unrecovered read error -
->>> auto reallocate failed" [asc/asq: 11h/04h] should just be
->>> "Unrecovered read error" [asc/asq: 11h/0h]. See sat2r09.pdf table
->>> 105 or sat3r00.pdf table 105.
->>
->> If any auto-reallocate occurred on the drive's part, it definitely
->> failed at that point. And auto-reallocate is a possibility.
->>
->> 11h/04h seems to more accurately describe the situation.
->
-> Usually if you are implementing a SCSI device (lu) there
-> is some latitude in asc/asq codes. However for a SAT layer
-> they state exactly how to translate ATA errors.
->
-> There is one published SAT standard (ANSI INCITS 431-2007)
-> and there will soon be another one (SAT-2). The compliant
-> response is asc/asq: 11h/0h since in t10 documents additional
-> sense matches by string which is shown in upper case.
+On Fri, 2010-09-17 at 12:03 -0700, Joe Eykholt wrote:
+> On 9/17/10 11:21 AM, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch converts struct Scsi_Host->cmd_serial_number to an atomic_t so that
+> > scsi_cmd_get_serial() can be safely called without struct Scsi_Host->host_lock
+> > in scsi_dispatch_cmd().  This patch also adds a struct Scsi_Host->use_serial_number
+> > to signal serial_number usage, but this is now disabled by default in
+> > scsi_host_alloc().
+> > 
+> > One special item in scsi_cmd_get_serial() recommended by Joe Eykholt is to
+> > start struct Scsi_Host->cmd_serial_number at 1, and increment each serial_number
+> > by 2 so that the serial is odd, and wraps to 1 instead of 0.
+> > 
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  drivers/scsi/hosts.c     |    4 ++++
+> >  drivers/scsi/scsi.c      |   13 ++++++++++---
+> >  include/scsi/scsi_host.h |    8 +++++---
+> >  3 files changed, 19 insertions(+), 6 deletions(-)
+> > 
+> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> > index 8a8f803..aff1c9c 100644
+> > --- a/drivers/scsi/hosts.c
+> > +++ b/drivers/scsi/hosts.c
+> > @@ -380,6 +380,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+> >  	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+> >  	shost->use_clustering = sht->use_clustering;
+> >  	shost->ordered_tag = sht->ordered_tag;
+> > +	/*
+> > +	 * Set the default shost->cmd_serial_number to 1.
+> > +	 */
+> 
+> Comment not necessary.
 
-Fair enough.  Wanna write a patch?  :)
+<nod>
+
+> 
+> > +	atomic_set(&shost->cmd_serial_number, 1);
+> >  
+> >  	if (sht->supported_mode == MODE_UNKNOWN)
+> >  		/* means we didn't set it ... default to INITIATOR */
+> > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> > index ad0ed21..4724ce7 100644
+> > --- a/drivers/scsi/scsi.c
+> > +++ b/drivers/scsi/scsi.c
+> > @@ -636,9 +636,16 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+> >   */
+> >  static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+> >  {
+> > -	cmd->serial_number = host->cmd_serial_number++;
+> > -	if (cmd->serial_number == 0) 
+> > -		cmd->serial_number = host->cmd_serial_number++;
+> > +	/*
+> > +	 * The use of per struct scsi_cmnd->serial_number is disabled by default
+> > +	 */
+> > +	if (!(host->use_serial_number))
+> > +		return;
+> > +	/*
+> > +	 * Increment the host->cmd_serial_number by 2 so cmd->serial_number
+> > +	 * is always odd and wraps to 1 instead of 0.
+> > +	 */
+> > +	cmd->serial_number = atomic_add_return(2, &host->cmd_serial_number);
+> >  }
+> >  
+> >  /**
+> > diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> > index b7bdecb..b08d0f2 100644
+> > --- a/include/scsi/scsi_host.h
+> > +++ b/include/scsi/scsi_host.h
+> > @@ -602,10 +602,9 @@ struct Scsi_Host {
+> >  	short unsigned int max_sectors;
+> >  	unsigned long dma_boundary;
+> >  	/* 
+> > -	 * Used to assign serial numbers to the cmds.
+> > -	 * Protected by the host lock.
+> > +	 * Used to assign serial numbers to the cmds in scsi_cmd_get_serial()
+> >  	 */
+> > -	unsigned long cmd_serial_number;
+> > +	atomic_t cmd_serial_number;
+> >  	
+> >  	unsigned active_mode:2;
+> >  	unsigned unchecked_isa_dma:1;
+> > @@ -636,6 +635,9 @@ struct Scsi_Host {
+> >  	/* Asynchronous scan in progress */
+> >  	unsigned async_scan:1;
+> >  
+> > +	/* Signal usage of per struct scsi_cmnd->serial_number */
+> > +	unsigned use_serial_number:1;
+> > +
+> >  	/*
+> >  	 * Optional work queue to be utilized by the transport
+> >  	 */
+> 
+> Simple code is so much fun to critique!   So here goes:
+> 
+> This patch would break any drivers that care about serial_numbers
+> because it never sets use_serial_number in any drivers.  So that should
+> be done in the same patch so it's bisect-able.
+> 
+
+<nod>
+
+> How about instead of adding use_serial_number, let's just have the
+> drivers that want a serial number call scsi_cmd_get_serial()
+> and stop calling it from scsi_dispatch_cmd()?
+
+This makes sense to me...
+
+>    AFAICT, it's only
+> used in debug messages in some drivers.  I didn't find other usages
+> but didn't do an exhaustive search.
+
+This is the same conclusion that I reached when I had a first glance,
+that ->serial_number is only used for informational purposes in about
+1/2 dozen or so mostly old and semi-obsecure LLDs.
+
+James and Co, would this be acceptable to move scsi_cmd_get_serial()
+directly into LLD SHT->queuecommand() callers for the old drivers that
+still use struct scsi_cmnd->serial_number for whatever purposes..?
+
+>   If the drivers do it themselves,
+> maybe they're already under a lock when they get the serial number
+> and then we wouldn't need the atomic.
+> 
+
+Yeah, not sure on this part yet..
+
+> Thanks for using my increment by 2 idea.
 
 
-> BTW I never understood what asc/asq 11h/04h was about,
-> auto-reallocate is something that should be attempted
-> on a _recovered_ read error. And that in turn might fail
-> if the disk had run out of spare blocks. So in a contorted
-> sort of way, perhaps that is what "Unrecovered read error -
-> auto reallocate failed" means!? If so, you are most
-> likely incorrect on that count as well.
+Thanks Joe!
 
-The ATA disk hits an unrecovered read error, which by virtue of 
-operation implies auto reallocate failed.  What's going on inside seems 
-to match the error text quite closely.
-
-	Jeff
-
+--nab
 
 
