@@ -1,71 +1,70 @@
-From: Tim Chen <tim.c.chen@linux.intel.com>
-Subject: Re: [PATCH 1/8] scsi: Drop struct Scsi_Host->host_lock around
- SHT->queuecommand()
-Date: Fri, 17 Sep 2010 10:49:59 -0700
-Message-ID: <1284745799.7280.155.camel@schen9-DESK>
-References: <1284676529-10756-1-git-send-email-nab@linux-iscsi.org>
-	 <1284691571.26423.50.camel@mulgrave.site>
-	 <20100917072022.GB2644@gargoyle.ger.corp.intel.com>
-	 <1284725592.26423.60.camel@mulgrave.site>
-	 <4C9379AA.4000103@linux.intel.com>
-	 <1284735438.26423.81.camel@mulgrave.site>
-	 <1284741478.13344.154.camel@haakon2.linux-iscsi.org>
-	 <1284741704.13344.157.camel@haakon2.linux-iscsi.org>
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: [PATCH] sr: fix sr_drive_status handling when initialization
+ required
+Date: Fri, 17 Sep 2010 10:19:58 -0500
+Message-ID: <20100917151957.GA20570@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:56979 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754532Ab0IQRsv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Sep 2010 13:48:51 -0400
-In-Reply-To: <1284741704.13344.157.camel@haakon2.linux-iscsi.org>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:56501 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754483Ab0IQR7n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2010 13:59:43 -0400
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
+	by e35.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o8HHnkic031774
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2010 11:49:46 -0600
+Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o8HHxen8162588
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2010 11:59:40 -0600
+Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o8HHxdId032064
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2010 11:59:40 -0600
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Andi Kleen <ak@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2010-09-17 at 09:41 -0700, Nicholas A. Bellinger wrote:
+An sr device that reports sense data with SK/ASC/ASCQ of 2/4/2 (Not ready,
+Logical unit not ready, Initializing command required) will be handled
+in sr_drive_status as (2/4/!1) and assumed to be a 'format in progress'
+which returns CDS_DISC_OK.  The drive will not be made ready in this case.
 
-> > > 
-> > > What I was actually thinking of for the atomic is that we'd let it range
-> > > [1..INT_MAX] so a zero was an indicator of no use of this.  Then the
-> > > actual code could become
-> > > 
-> > > if (atomic_read(x)) {
-> > > 	do {
-> > > 		y = atomic_add_return(1, x);
-> > > 	} while (y == 0);
-> > > }
-> > 
-> > The conversion of struct scsi_cmnd->serial_number to atomic_t and the
-> > above code for scsi_cmd_get_serial() sounds perfectly reasonable to me.
-> > 
-> 
-> Actually, that should be the conversion of struct
-> Scsi_Host->cmd_serial_number to an atomic_t.   AFAICT there is no reason
-> for struct scsi_cmnd->serial_number needing to be an atomic_t.
+Prior to 210ba1d1724f5c4ed87a2ab1a21ca861a915f734 sr_drive_status would
+have returned CDS_TRAY_OPEN and this results in an START_STOP_UNIT to
+close the tray, which resolves the initialization requirement.
 
-Just want to verify the hidden assumption we have here when the atomic
-int Scsi_Host->cmd_serial_number counter overflow after increment. The
-counter itself then becomes negative.  We are assuming that when we do
-type conversion back to unsigned long scsi_cmnd->serial_number, we will
-get the right thing.  
+This patch adds handling for SK/ASC/ASCQ of 2/4/2 where it will return
+CDS_TRAY_OPEN as a means of triggering a START_STOP_UNIT.
 
-So for 32-bit int, we expect if we start with 0x7fffffff in hex and the
-expected sequence will be
+This issue is seen on the IBM POWER platform when using a file-backed,
+virtual optical device.  The device does not support media queries
+through the Get Event Status Notification command which could otherwise
+trigger a START_STOP_UNIT call to close an open tray.
 
-	2147483647 (int) -> 2147483647 (unsigned long)  [0x7fffffff]
-	+1
-	-2147483648 (int) -> 2147483648 (unsigned long) [0x80000000]
-	+1
-	-2147483647 (int) -> 2147483649 (unsigned long) [0x80000001]
-	
-If there is architecture where the above assumption is not true (which
-I'm not aware of but just checking), then we should manually wrap the
-atomic counter to 1 when counter overflow.  
+Signed-off-by: Robert Jennings <rcj@linux.vnet.ibm.com>
 
-Tim
-		
-		
+---
+ drivers/scsi/sr_ioctl.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
 
+Index: b/drivers/scsi/sr_ioctl.c
+===================================================================
+--- a/drivers/scsi/sr_ioctl.c
++++ b/drivers/scsi/sr_ioctl.c
+@@ -325,6 +325,15 @@ int sr_drive_status(struct cdrom_device_
+ 	}
+ 
+ 	/*
++	 * SK/ASC/ASCQ of 2/4/2 means "initialization required"
++	 * Using CD_TRAY_OPEN results in an START_STOP_UNIT to close
++	 * the tray, which resolves the initialization requirement.
++	 */
++	if (scsi_sense_valid(&sshdr) && sshdr.sense_key == NOT_READY
++			&& sshdr.asc == 0x04 && sshdr.ascq == 0x02)
++		return CDS_TRAY_OPEN;
++
++	/*
+ 	 * 0x04 is format in progress .. but there must be a disc present!
+ 	 */
+ 	if (sshdr.sense_key == NOT_READY && sshdr.asc == 0x04)
