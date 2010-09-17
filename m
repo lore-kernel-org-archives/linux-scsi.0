@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH v2 03/11] libiscsi: Remove host_lock unlock() + lock() from iscsi_queuecommand()
-Date: Fri, 17 Sep 2010 11:22:08 -0700
-Message-ID: <1284747728-20900-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH v2 04/11] libsas: Remove host_lock unlock() + lock() from sas_queuecommand()
+Date: Fri, 17 Sep 2010 11:22:17 -0700
+Message-ID: <1284747737-20919-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
@@ -11,48 +11,43 @@ List-Id: linux-scsi@vger.kernel.org
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
 This patch removes the now legacy host_lock unlock() + lock() optimization
-from libiscsi.c:iscsi_queuecommand()
+from sas_scsi_host.c:sas_queuecommand()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/libiscsi.c |    4 ----
- 1 files changed, 0 insertions(+), 4 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 633e090..7e4134e 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1615,7 +1615,6 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index f0cfba9..bc1c97c 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -202,18 +202,14 @@ int sas_queue_up(struct sas_task *task)
+  */
+ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 		     void (*scsi_done)(struct scsi_cmnd *))
+-	__releases(host->host_lock)
+ 	__acquires(dev->sata_dev.ap->lock)
+ 	__releases(dev->sata_dev.ap->lock)
+-	__acquires(host->host_lock)
+ {
+ 	int res = 0;
+ 	struct domain_device *dev = cmd_to_domain_dev(cmd);
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
  
- 	host = sc->device->host;
- 	ihost = shost_priv(host);
--	spin_unlock(host->host_lock);
- 
- 	cls_session = starget_to_session(scsi_target(sc->device));
- 	session = cls_session->dd_data;
-@@ -1706,7 +1705,6 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 
- 	session->queued_cmdsn++;
- 	spin_unlock(&session->lock);
--	spin_lock(host->host_lock);
- 	return 0;
- 
- prepd_reject:
-@@ -1716,7 +1714,6 @@ reject:
- 	spin_unlock(&session->lock);
- 	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
- 			  sc->cmnd[0], reason);
--	spin_lock(host->host_lock);
- 	return SCSI_MLQUEUE_TARGET_BUSY;
- 
- prepd_fault:
-@@ -1733,7 +1730,6 @@ fault:
- 		scsi_in(sc)->resid = scsi_in(sc)->length;
+-	spin_unlock_irq(host->host_lock);
+-
+ 	{
+ 		struct sas_ha_struct *sas_ha = dev->port->ha;
+ 		struct sas_task *task;
+@@ -254,7 +250,6 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 		}
  	}
- 	done(sc);
--	spin_lock(host->host_lock);
- 	return 0;
+ out:
+-	spin_lock_irq(host->host_lock);
+ 	return res;
  }
- EXPORT_SYMBOL_GPL(iscsi_queuecommand);
+ 
 -- 
 1.7.2.3
