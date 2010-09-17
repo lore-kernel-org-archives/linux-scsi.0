@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH v2 10/11] fnic: Remove host_lock unlock() + lock() from fnic_queuecommand()
-Date: Fri, 17 Sep 2010 11:23:13 -0700
-Message-ID: <1284747794-21033-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH v2 11/11] buslogic: Remove host_lock unlock() + lock() from BusLogic_QueueCommand()
+Date: Fri, 17 Sep 2010 11:23:24 -0700
+Message-ID: <1284747804-21052-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
@@ -11,39 +11,37 @@ List-Id: linux-scsi@vger.kernel.org
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
 This patch removes the now legacy host_lock unlock() + lock() optimization
-fnic_scsi.c:fnic_queuecommand()
+from buslogic.c:BusLogic_QueueCommand()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/fnic/fnic_scsi.c |    9 ---------
- 1 files changed, 0 insertions(+), 9 deletions(-)
+ drivers/scsi/BusLogic.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index 198cbab..7cf3372 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -373,13 +373,6 @@ int fnic_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 
--	/*
--	 * Release host lock, use driver resource specific locks from here.
--	 * Don't re-enable interrupts in case they were disabled prior to the
--	 * caller disabling them.
--	 */
--	spin_unlock(lp->host->host_lock);
--
- 	/* Get a new io_req for this SCSI IO */
- 	fnic = lport_priv(lp);
- 
-@@ -452,8 +445,6 @@ int fnic_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
- 		}
- 	}
- out:
--	/* acquire host lock before returning to SCSI */
--	spin_lock(lp->host->host_lock);
- 	return ret;
- }
- 
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index fc0b4b8..f39b4fc 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -2837,9 +2837,7 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
+ 	 */
+ 	CCB = BusLogic_AllocateCCB(HostAdapter);
+ 	if (CCB == NULL) {
+-		spin_unlock_irq(HostAdapter->SCSI_Host->host_lock);
+ 		BusLogic_Delay(1);
+-		spin_lock_irq(HostAdapter->SCSI_Host->host_lock);
+ 		CCB = BusLogic_AllocateCCB(HostAdapter);
+ 		if (CCB == NULL) {
+ 			Command->result = DID_ERROR << 16;
+@@ -2965,10 +2963,8 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
+ 		   error as a Host Adapter Hard Reset should be initiated soon.
+ 		 */
+ 		if (!BusLogic_WriteOutgoingMailbox(HostAdapter, BusLogic_MailboxStartCommand, CCB)) {
+-			spin_unlock_irq(HostAdapter->SCSI_Host->host_lock);
+ 			BusLogic_Warning("Unable to write Outgoing Mailbox - " "Pausing for 1 second\n", HostAdapter);
+ 			BusLogic_Delay(1);
+-			spin_lock_irq(HostAdapter->SCSI_Host->host_lock);
+ 			if (!BusLogic_WriteOutgoingMailbox(HostAdapter, BusLogic_MailboxStartCommand, CCB)) {
+ 				BusLogic_Warning("Still unable to write Outgoing Mailbox - " "Host Adapter Dead?\n", HostAdapter);
+ 				BusLogic_DeallocateCCB(CCB);
 -- 
 1.7.2.3
