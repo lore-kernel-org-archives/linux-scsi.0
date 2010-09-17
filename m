@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH v2 04/11] libsas: Remove host_lock unlock() + lock() from sas_queuecommand()
-Date: Fri, 17 Sep 2010 11:22:17 -0700
-Message-ID: <1284747737-20919-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH v2 05/11] libfc: Remove host_lock unlock() + lock() from fc_queuecommand()
+Date: Fri, 17 Sep 2010 11:22:26 -0700
+Message-ID: <1284747746-20938-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
@@ -11,43 +11,42 @@ List-Id: linux-scsi@vger.kernel.org
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
 This patch removes the now legacy host_lock unlock() + lock() optimization
-from sas_scsi_host.c:sas_queuecommand()
+fc_fcp.c:fc_queuecommand()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/libsas/sas_scsi_host.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index f0cfba9..bc1c97c 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -202,18 +202,14 @@ int sas_queue_up(struct sas_task *task)
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index c797f6b..140cd94 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1751,8 +1751,7 @@ static inline int fc_fcp_lport_queue_ready(struct fc_lport *lport)
+  * @cmd:   The scsi_cmnd to be executed
+  * @done:  The callback function to be called when the scsi_cmnd is complete
+  *
+- * This is the i/o strategy routine, called by the SCSI layer. This routine
+- * is called with the host_lock held.
++ * This is the i/o strategy routine, called by the SCSI layer.
   */
- int sas_queuecommand(struct scsi_cmnd *cmd,
- 		     void (*scsi_done)(struct scsi_cmnd *))
--	__releases(host->host_lock)
- 	__acquires(dev->sata_dev.ap->lock)
- 	__releases(dev->sata_dev.ap->lock)
--	__acquires(host->host_lock)
+ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
  {
- 	int res = 0;
- 	struct domain_device *dev = cmd_to_domain_dev(cmd);
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct sas_internal *i = to_sas_internal(host->transportt);
+@@ -1772,7 +1771,6 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 		done(sc_cmd);
+ 		return 0;
+ 	}
+-	spin_unlock_irq(lport->host->host_lock);
  
--	spin_unlock_irq(host->host_lock);
--
- 	{
- 		struct sas_ha_struct *sas_ha = dev->port->ha;
- 		struct sas_task *task;
-@@ -254,7 +250,6 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
- 		}
+ 	if (!*(struct fc_remote_port **)rport->dd_data) {
+ 		/*
+@@ -1849,7 +1847,6 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
  	}
  out:
--	spin_lock_irq(host->host_lock);
- 	return res;
+-	spin_lock_irq(lport->host->host_lock);
+ 	return rc;
  }
- 
+ EXPORT_SYMBOL(fc_queuecommand);
 -- 
 1.7.2.3
