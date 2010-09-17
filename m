@@ -1,78 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/8] scsi: Drop struct Scsi_Host->host_lock around
-	SHT->queuecommand()
-Date: Fri, 17 Sep 2010 11:21:36 -0700
-Message-ID: <1284747696.13344.164.camel@haakon2.linux-iscsi.org>
-References: <1284676529-10756-1-git-send-email-nab@linux-iscsi.org>
-	 <1284691571.26423.50.camel@mulgrave.site>
-	 <20100917072022.GB2644@gargoyle.ger.corp.intel.com>
-	 <1284725592.26423.60.camel@mulgrave.site>
-	 <4C9379AA.4000103@linux.intel.com>
-	 <1284735438.26423.81.camel@mulgrave.site>
-	 <1284741478.13344.154.camel@haakon2.linux-iscsi.org>
-	 <1284741704.13344.157.camel@haakon2.linux-iscsi.org>
-	 <1284745799.7280.155.camel@schen9-DESK>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 0/8] Drop host_lock around LLD SHT->queuecommand() caller
+Date: Fri, 17 Sep 2010 14:26:04 -0400
+Message-ID: <4C93B2BC.8000404@garzik.org>
+References: <1284676521-10737-1-git-send-email-nab@linux-iscsi.org> <1284686949.7280.99.camel@schen9-DESK> <1284687070.13344.135.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1284745799.7280.155.camel@schen9-DESK>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tim Chen <tim.c.chen@linux.intel.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Andi Kleen <ak@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:51658 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755178Ab0IQS0K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2010 14:26:10 -0400
+In-Reply-To: <1284687070.13344.135.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Tim Chen <tim.c.chen@linux.intel.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>
 
-On Fri, 2010-09-17 at 10:49 -0700, Tim Chen wrote:
-> On Fri, 2010-09-17 at 09:41 -0700, Nicholas A. Bellinger wrote:
-> 
-> > > > 
-> > > > What I was actually thinking of for the atomic is that we'd let it range
-> > > > [1..INT_MAX] so a zero was an indicator of no use of this.  Then the
-> > > > actual code could become
-> > > > 
-> > > > if (atomic_read(x)) {
-> > > > 	do {
-> > > > 		y = atomic_add_return(1, x);
-> > > > 	} while (y == 0);
-> > > > }
-> > > 
-> > > The conversion of struct scsi_cmnd->serial_number to atomic_t and the
-> > > above code for scsi_cmd_get_serial() sounds perfectly reasonable to me.
-> > > 
-> > 
-> > Actually, that should be the conversion of struct
-> > Scsi_Host->cmd_serial_number to an atomic_t.   AFAICT there is no reason
-> > for struct scsi_cmnd->serial_number needing to be an atomic_t.
-> 
-> Just want to verify the hidden assumption we have here when the atomic
-> int Scsi_Host->cmd_serial_number counter overflow after increment. The
-> counter itself then becomes negative.  We are assuming that when we do
-> type conversion back to unsigned long scsi_cmnd->serial_number, we will
-> get the right thing.  
-> 
-> So for 32-bit int, we expect if we start with 0x7fffffff in hex and the
-> expected sequence will be
-> 
-> 	2147483647 (int) -> 2147483647 (unsigned long)  [0x7fffffff]
-> 	+1
-> 	-2147483648 (int) -> 2147483648 (unsigned long) [0x80000000]
-> 	+1
-> 	-2147483647 (int) -> 2147483649 (unsigned long) [0x80000001]
-> 	
-> If there is architecture where the above assumption is not true (which
-> I'm not aware of but just checking), then we should manually wrap the
-> atomic counter to 1 when counter overflow.  
-> 
+On 09/16/2010 09:31 PM, Nicholas A. Bellinger wrote:
+> On Thu, 2010-09-16 at 18:29 -0700, Tim Chen wrote:
+>> On Thu, 2010-09-16 at 15:35 -0700, Nicholas A. Bellinger wrote:
+>>> From: Nicholas Bellinger<nab@linux-iscsi.org>
+>>>
+>>> Greetings all,
+>>>
+>>> This series contains the first round of a whole-sale conversion for droping
+>>> struct Scsi_Host->host_lock around struct Scsi_Host->queuecommand() within
+>>> scsi_dispatch_cmd().  So with this first patch the only part of scsi_dispatch_cmd()
+>>> that is protected by host_lock is scsi_cmd_get_serial)_.
+>>>
+>>
+>> Maybe we can change the host->cmd_serial_number to atomic and totally
+>> avoid the need to take host_lock.
+>
+> Hmmmm good point, then we would also need an atomic_t for signaling
+> (shost_state == SHOST_DEL) in scsi_dispatch_cmd() to be able to
+> completly drop host_lock usage within scsi_dispatch_cmd().
+>
+> I can take a look at doing this specific part, if you would be willing
+> to have a look at the host->cmd_serial_number conversion piece.  ;)
 
-I was thinking about this as well, but I figured since jejb recommended
-it's usage for scsi_cmd_get_serial() that it would not be a problem.
-However I am not sure if he had keeping the struct
-scsi_cmnd->serial_number a 'unsigned long' that is done in the new v2
-patches.
+But that raises the familiar tale of:  using multiple atomics (w/ their 
+locked instructions) may cost more than a spinlock.
 
-James, is there any other consideration here wrt to atomic_t wrapping
-for scsi_cmd_get_serial() using a astruct Scsi_Host->cmd_serial_number
-assignment to an 'unsigned long' that I need to include in a v3
-series..?
+	Jeff
 
---nab
+
+
