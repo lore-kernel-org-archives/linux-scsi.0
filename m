@@ -1,70 +1,97 @@
-From: Robert Jennings <rcj@linux.vnet.ibm.com>
-Subject: [PATCH] sr: fix sr_drive_status handling when initialization
- required
-Date: Fri, 17 Sep 2010 10:19:58 -0500
-Message-ID: <20100917151957.GA20570@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:56501 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754483Ab0IQR7n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2010 13:59:43 -0400
-Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
-	by e35.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o8HHnkic031774
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2010 11:49:46 -0600
-Received: from d03av05.boulder.ibm.com (d03av05.boulder.ibm.com [9.17.195.85])
-	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o8HHxen8162588
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2010 11:59:40 -0600
-Received: from d03av05.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av05.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o8HHxdId032064
-	for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2010 11:59:40 -0600
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH v2 01/11] scsi: Convert struct Scsi_Host->cmd_serial_number to atomic_t
+Date: Fri, 17 Sep 2010 11:21:49 -0700
+Message-ID: <1284747709-20862-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
+Cc: James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
 
-An sr device that reports sense data with SK/ASC/ASCQ of 2/4/2 (Not ready,
-Logical unit not ready, Initializing command required) will be handled
-in sr_drive_status as (2/4/!1) and assumed to be a 'format in progress'
-which returns CDS_DISC_OK.  The drive will not be made ready in this case.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Prior to 210ba1d1724f5c4ed87a2ab1a21ca861a915f734 sr_drive_status would
-have returned CDS_TRAY_OPEN and this results in an START_STOP_UNIT to
-close the tray, which resolves the initialization requirement.
+This patch converts struct Scsi_Host->cmd_serial_number to an atomic_t so that
+scsi_cmd_get_serial() can be safely called without struct Scsi_Host->host_lock
+in scsi_dispatch_cmd().  This patch also adds a struct Scsi_Host->use_serial_number
+to signal serial_number usage, but this is now disabled by default in
+scsi_host_alloc().
 
-This patch adds handling for SK/ASC/ASCQ of 2/4/2 where it will return
-CDS_TRAY_OPEN as a means of triggering a START_STOP_UNIT.
+One special item in scsi_cmd_get_serial() recommended by Joe Eykholt is to
+start struct Scsi_Host->cmd_serial_number at 1, and increment each serial_number
+by 2 so that the serial is odd, and wraps to 1 instead of 0.
 
-This issue is seen on the IBM POWER platform when using a file-backed,
-virtual optical device.  The device does not support media queries
-through the Get Event Status Notification command which could otherwise
-trigger a START_STOP_UNIT call to close an open tray.
-
-Signed-off-by: Robert Jennings <rcj@linux.vnet.ibm.com>
-
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/sr_ioctl.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/hosts.c     |    4 ++++
+ drivers/scsi/scsi.c      |   13 ++++++++++---
+ include/scsi/scsi_host.h |    8 +++++---
+ 3 files changed, 19 insertions(+), 6 deletions(-)
 
-Index: b/drivers/scsi/sr_ioctl.c
-===================================================================
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -325,6 +325,15 @@ int sr_drive_status(struct cdrom_device_
- 	}
- 
- 	/*
-+	 * SK/ASC/ASCQ of 2/4/2 means "initialization required"
-+	 * Using CD_TRAY_OPEN results in an START_STOP_UNIT to close
-+	 * the tray, which resolves the initialization requirement.
-+	 */
-+	if (scsi_sense_valid(&sshdr) && sshdr.sense_key == NOT_READY
-+			&& sshdr.asc == 0x04 && sshdr.ascq == 0x02)
-+		return CDS_TRAY_OPEN;
-+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 8a8f803..aff1c9c 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -380,6 +380,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
 +	/*
- 	 * 0x04 is format in progress .. but there must be a disc present!
++	 * Set the default shost->cmd_serial_number to 1.
++	 */
++	atomic_set(&shost->cmd_serial_number, 1);
+ 
+ 	if (sht->supported_mode == MODE_UNKNOWN)
+ 		/* means we didn't set it ... default to INITIATOR */
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index ad0ed21..4724ce7 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -636,9 +636,16 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+  */
+ static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ {
+-	cmd->serial_number = host->cmd_serial_number++;
+-	if (cmd->serial_number == 0) 
+-		cmd->serial_number = host->cmd_serial_number++;
++	/*
++	 * The use of per struct scsi_cmnd->serial_number is disabled by default
++	 */
++	if (!(host->use_serial_number))
++		return;
++	/*
++	 * Increment the host->cmd_serial_number by 2 so cmd->serial_number
++	 * is always odd and wraps to 1 instead of 0.
++	 */
++	cmd->serial_number = atomic_add_return(2, &host->cmd_serial_number);
+ }
+ 
+ /**
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index b7bdecb..b08d0f2 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -602,10 +602,9 @@ struct Scsi_Host {
+ 	short unsigned int max_sectors;
+ 	unsigned long dma_boundary;
+ 	/* 
+-	 * Used to assign serial numbers to the cmds.
+-	 * Protected by the host lock.
++	 * Used to assign serial numbers to the cmds in scsi_cmd_get_serial()
  	 */
- 	if (sshdr.sense_key == NOT_READY && sshdr.asc == 0x04)
+-	unsigned long cmd_serial_number;
++	atomic_t cmd_serial_number;
+ 	
+ 	unsigned active_mode:2;
+ 	unsigned unchecked_isa_dma:1;
+@@ -636,6 +635,9 @@ struct Scsi_Host {
+ 	/* Asynchronous scan in progress */
+ 	unsigned async_scan:1;
+ 
++	/* Signal usage of per struct scsi_cmnd->serial_number */
++	unsigned use_serial_number:1;
++
+ 	/*
+ 	 * Optional work queue to be utilized by the transport
+ 	 */
+-- 
+1.7.2.3
