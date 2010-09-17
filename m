@@ -1,35 +1,55 @@
-From: john.brace@homecall.co.uk
-Subject: [POSSIBLE SPAM] Direct Deposit /ATM Ready
-Date: Fri, 17 Sep 2010 05:50:24 +0100
-Message-ID: <E1OwSu0-000H4t-ND@mk-webmail-2.b2b.uk.tiscali.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mk-filter-4-a-2.mail.uk.tiscali.com ([212.74.100.51]:4213 "EHLO
-	mk-filter-4-a-2.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753387Ab0IQFAr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Sep 2010 01:00:47 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/3] tcm: Add native 32-byte CDB support
+Date: Thu, 16 Sep 2010 22:34:34 -0700
+Message-ID: <1284701674-18323-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Mi
+Cc: Hannes Reinecke <hare@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Douglas Gilbert <dgilbert@interlog.com>, Joe Eykholt <jeykholt@cisco.com>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Attn:
-Your contract payment that has been hold for long time has been approved to 
-be release via swift card  (ATM CARD) your daily withdrawal is $4,000 This 
-will now enable you either download your payment at any ATM Machine or at 
-your bank. And the total contract amount we are sharing together is 12.5 
-Million Dollars, you are getting 40% while we get 60%  If you have any 
-question or confused about this write me immediately so that I will direct 
-you properly for details, confirm your private phone
-number , Full Legal Name , Home address . The Visa Card Application Form 
-will be
-faxed or email to you as soon as we hear from you . Kindly reply here with 
-your details if not here i won't be able to get your message Email here for 
-quick response : smailen2@aol.com 
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Email : smailen2@aol.com
-Dr Steven Mailen
-Director, Foreign Operations
-ATM Card Dept 
+Greetings jejb, mkp and Co,
 
+This patch series adds support for native 32-byte CDB processing into TCM Core,
+TCM subsystem plugins, and TCM_Loop virtual SCSI LLD.
+
+The first patch adds the new TCM_MAX_COMMAND_SIZE=32 defintion and adds the necessary
+LBA + transfer length extraction and generation methods for 32-byte CDBs following
+SBC-4.  This includes converting FILEIO, IBLOCK, PSCSI, RAMDISK and STGT subsystem
+plugins to use the new TCM_MAX_COMMAND_SIZE value for their own per struct se_task
+context descriptor internal inline CDB size defines.
+
+The second patch adds proper VARIABLE_LENGTH_CMD support together with XDWRITE_READ_32
+emulation following the recent patch adding support for XDWRITE_READ_10.
+
+And the third and final patch updates the TCM_Loop fabric module to signal the
+Linux/SCSI midlayer that we are now capable of processing up to 32-byte CDBs.
+
+Also, I ended up adding support for XDWRITE_READ_32 into Tomo's sgv4-utils.git in
+order to test this series.  Please have look and let me know what you think Tomo!
+
+http://linux-iscsi.org/builds/user/nab/0001-sgv4_xdwriteread-Add-support-for-XDWRITEREAD_32.patch
+
+Many thanks to jejb and mkp for answering my questions about > 16 byte CDB support!
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Nicholas Bellinger (3):
+  tcm: Add native 32-byte CDB support
+  tcm: Add VARIABLE_LENGTH_CMD support w/ XDWRITE_READ_32 emulation
+  tcm_loop: Enable 32-byte CDB support in virtual SCSI LLD
+
+ drivers/target/target_core_file.h       |    2 +-
+ drivers/target/target_core_iblock.h     |    2 +-
+ drivers/target/target_core_pscsi.c      |    2 +-
+ drivers/target/target_core_pscsi.h      |    2 +-
+ drivers/target/target_core_rd.h         |    2 +-
+ drivers/target/target_core_scdb.c       |   38 ++++++++++++
+ drivers/target/target_core_scdb.h       |    2 +
+ drivers/target/target_core_stgt.h       |    2 +-
+ drivers/target/target_core_transport.c  |   94 +++++++++++++++++++++++++++----
+ drivers/target/tcm_loop/tcm_loop_core.h |    2 +-
+ include/target/target_core_base.h       |   13 ++++
+ 11 files changed, 142 insertions(+), 19 deletions(-)
