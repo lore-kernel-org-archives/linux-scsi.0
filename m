@@ -1,63 +1,36 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] bsg: call idr_pre_get() outside the lock.
-Date: Sat, 18 Sep 2010 12:40:14 +0900
-Message-ID: <20100918123721B.fujita.tomonori@lab.ntt.co.jp>
-References: <m2eidda6bq.fsf@elisp.net>
-	<20100916163735.ed8dbb51.akpm@linux-foundation.org>
+Subject: Re: [ANNOUNCE] TCM/LIO v4.0.0-rc4 for 2.6.36-rc4
+Date: Sat, 18 Sep 2010 13:00:25 +0900
+Message-ID: <20100918125729D.fujita.tomonori@lab.ntt.co.jp>
+References: <1284754930.13344.216.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:38957 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:33004 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751934Ab0IRDkv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Sep 2010 23:40:51 -0400
-In-Reply-To: <20100916163735.ed8dbb51.akpm@linux-foundation.org>
+	id S1750698Ab0IRECE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 18 Sep 2010 00:02:04 -0400
+In-Reply-To: <1284754930.13344.216.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: naota@elisp.net, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, axboe@kernel.dk, jkosina@suse.cz, gregkh@suse.de, daniel@caiaq.de, linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@suse.de, fujita.tomonori@lab.ntt.co.jp, michaelc@cs.wisc.edu, bharrosh@panasas.com, konrad@darnok.org, jeykholt@cisco.com, hare@suse.de, hch@lst.de, James.Smart@Emulex.Com, andrew.vasquez@qlogic.com, philipp.reisner@linbit.com, martin.petersen@oracle.com, vasu.dev@linux.intel.com
 
-On Thu, 16 Sep 2010 16:37:35 -0700
-Andrew Morton <akpm@linux-foundation.org> wrote:
+On Fri, 17 Sep 2010 13:22:10 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-> On Wed, 01 Sep 2010 23:26:01 +0900
-> Naohiro Aota <naota@elisp.net> wrote:
-> 
-> > The idr_pre_get() kernel-doc says "This function should be called
-> > prior to locking and calling the idr_get_new* functions.", but the
-> > idr_pre_get() calling in bsg_register_queue() is put inside
-> > mutex_lock(). Let's fix it.
-> > 
-> 
-> The idr_pre_get() kerneldoc is wrong.  Or at least, misleading.
+> It is my great pleasure to announce that TCM/LIO v4.0.0-rc4 for v2.6.36-rc4 has
+> been tagged and pushed into lio-core-2.6.git/lio-4.0.  The last weeks have been
+> really very busy and many gracious thanks go out to all of the individuals who
+> made comments and helped bring together this v4.0.0-rc4 release.  A list of the
+> major changes includes:
 
-Ah, thanks a lot. As usual, seems that there are few reliable
-documents in kernel.
+Have you addressed all the non-SCSI obstacles to mainline inclusion?
+Sorry, I can't track TCM thread but I thought that you got some sysfs
+issues at least?
 
-
-> The way this all works is that we precharge the tree via idr_pre_get()
-> and we do this outside locks so we can use GFP_KERNEL.  Then we take
-> the lock (a spinlock!) and then try to add an element to the tree,
-> which will consume objects from the pool which was prefilled by
-> idr_pre_get().
-> 
-> There's an obvious race here where someone else can get in and steal
-> objects from the prefilled pool.  We can fix that with a retry loop:
-> 
-> 
-> again:
-> 	if (idr_pre_get(..., GFP_KERNEL) == NULL)
-> 		return -ENOMEM;		/* We're really out-of-memory */
-> 	spin_lock(lock);
-> 	if (idr_get_new(...) == -EAGAIN) {
-> 		spin_unlock(lock);
-> 		goto again;		/* Someone stole our preallocation! */
-> 	}
-> 	...
-> 
-> this way we avoid the false -ENOMEM which the race would have caused. 
-> We only declare -ENOMEM when we're REALLY out of memory.
-
-Looks like there are many misuses idr_pre_get and idr_get_new; some
-even calls idr_get_new without any lock (e.g. blk_alloc_devt).
+If so, can you tell me where I can find reviewable patchset? I really
+hope that you drop stuff from the patchset that isn't a must for
+target support (e.g. queuecommand lock stuff). If you keep adding
+something new to tha patchset, it's really difficult to review it.
