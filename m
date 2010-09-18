@@ -1,94 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [ANNOUNCE] TCM/LIO v4.0.0-rc4 for 2.6.36-rc4
-Date: Sat, 18 Sep 2010 13:32:12 -0700
-Message-ID: <1284841932.13344.339.camel@haakon2.linux-iscsi.org>
-References: <1284754930.13344.216.camel@haakon2.linux-iscsi.org>
-	 <20100918125729D.fujita.tomonori@lab.ntt.co.jp>
+From: Mike Snitzer <snitzer@gmail.com>
+Subject: Re: [dm-devel] [PATCH 23/41] dm: implement REQ_FLUSH/FUA support for
+ bio-based dm
+Date: Sat, 18 Sep 2010 16:42:25 -0400
+Message-ID: <AANLkTikQv+NmcwXeWebcCzxjR69YN0qY-en1mLeXS4-n@mail.gmail.com>
+References: <1283509796-1510-1-git-send-email-tj@kernel.org>
+ <1283509796-1510-24-git-send-email-tj@kernel.org> <Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
+ <20100910184652.GA24470@redhat.com> <Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
+ <20100910192403.GA24582@redhat.com> <Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
+ <4C8AC0F5.5080206@kernel.org> <20100911014612.GA26517@redhat.com> <4C94FDB4.7020206@tmr.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20100918125729D.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@suse.de, michaelc@cs.wisc.edu, bharrosh@panasas.com, konrad@darnok.org, jeykholt@cisco.com, hare@suse.de, hch@lst.de, James.Smart@Emulex.Com, andrew.vasquez@qlogic.com, philipp.reisner@linbit.com, martin.petersen@oracle.com, vasu.dev@linux.intel.com, Joel Becker <joel.becker@oracle.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C94FDB4.7020206@tmr.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Bill Davidsen <davidsen@tmr.com>
+Cc: jack@suse.cz, mst@redhat.com, linux-ide@vger.kernel.org, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, hch@lst.de, agk@redhat.com, k-ueda@ct.jp.nec.com, vst@vlnb.net, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, swhiteho@redhat.com, chris.mason@oracle.com, tytso@mit.edu, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2010-09-18 at 13:00 +0900, FUJITA Tomonori wrote:
-> On Fri, 17 Sep 2010 13:22:10 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> > It is my great pleasure to announce that TCM/LIO v4.0.0-rc4 for v2.6.36-rc4 has
-> > been tagged and pushed into lio-core-2.6.git/lio-4.0.  The last weeks have been
-> > really very busy and many gracious thanks go out to all of the individuals who
-> > made comments and helped bring together this v4.0.0-rc4 release.  A list of the
-> > major changes includes:
-> 
-> Have you addressed all the non-SCSI obstacles to mainline inclusion?
-> Sorry, I can't track TCM thread but I thought that you got some sysfs
-> issues at least?
+On Sat, Sep 18, 2010 at 1:58 PM, Bill Davidsen <davidsen@tmr.com> wrote:
+>
+> He is commenting on the process rather than the code, since he tells you
+> that he lacks time to review your complex changes to his work, so your
+> saying that he hasn't found errors in it is muddy thinking as best.
+>
+> He provided a patch and would like it tested properly before you drop a
+> bunch of stuff on top of it, to be sure it gets proper exposure and wider
+> testing. That sounds like sound software development to me. It sounds as
+> though you feel that the inclusion of your additional work is critical and
+> can't possibly wait until the next -rc or release, and I have missed the
+> reason why your stuff can't wait until it can drop on mainline code..
 
-So the only remaining item outside of drivers/target/ code that needs to
-be addressed for .37 is the symlink referencing counting bit.  This is
-the case where a struct config_group with symlinks that use a
-destination that is in a struct config_group *above* where the source
-link struct config_group lives, and currently makes it impossible to
-signal (from theconfigfs consumer perspective) the destination symlink
-that the parent struct config_group is being dropped with rmdir().
+Well that was just completely incoherent yet clearly antagonistic drivel.
 
-Joel and I have been discussing potential resoultions here:
+Seems you're joining multiple peoples' response to this issue and
+attributing that completely misinformed combination to "he".
 
-http://marc.info/?l=linux-fsdevel&m=128414860505481&w=2
+Thanks but we have this completely under control.
 
-but we have yet to come to a resolution, and the ->check_link() patch is
-still in use in lio-core-2.6.git/lio-4.0 code.
-
-The possibilities that have been discussed so far include:
-
-*) Include the original struct config_item_operations->check_link()
-patch and require the configfs customer to be aware of this case when
-fs/configfs/symlink.c:configfs_unlink().  At this point this still works
-OK for me, but I do acknowledge that making the configfs consumer aware
-of this issue is really not the proper right long term solution.
-
-*) Use refcounting for the symlinks inside of the configfs consumer.  I
-asked Joel about how to do this in his last response, but I have not yet
-heard back from him.   Joel, would you be so kind as to elaborate on
-what you meant by this..?
-
-*) Make fs/configfs/symlink.c code handle this specific "destination
-link outside of parent struct config_group" symlink reference count case
-internally instead of requiring configfs consumers be aware of the
-issue.
-
-At this point I am still leaning towards #3 (with Joel's blessing) as
-the cleanest  long term solution, but I am still happy to persue #2 for
-fabric independent configfs handlers target_core_fabric_configfs.c code
-for the .37 merge.  I am still open suggestions (again, with Joel's
-blessing) about how to get this item properly resolved.
-
-> 
-> If so, can you tell me where I can find reviewable patchset?
-
-So the RFC cuts have been going into a seperate tree here:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-4.0.git;a=summary
-
-Mike has requested an RFC v2 for him to review TCM Core and TCM_Loop
-v4.0.0-rc4 changes.  So I will be respinning this tree with the latest
-changes from lio-core-2.6.git/lio-4.0 and re-posting in the next days.
-
-> I really hope that you drop stuff from the patchset that isn't a must for
-> target support (e.g. queuecommand lock stuff). If you keep adding
-> something new to tha patchset, it's really difficult to review it.
-> --
-
-Indeed, I plan to keep the drop-host_lock stuff a logically seperate item,
-and the TCM_Loop ->queuecommand() caller in the upcoming RFC v2 patches
-will still contain the original host_lock unlock() -> do_work() -> lock()
-optimization in use by many mainline LLDs today.  I will plan to send a
-seperate patch to James depending how/when the drop-host_lock stuff is merged.
-
-Many thanks for your comments Tomo-san!
-
---nab
+Mike
