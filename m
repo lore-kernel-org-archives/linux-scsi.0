@@ -1,192 +1,82 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [PATCH 23/41] dm: implement REQ_FLUSH/FUA support
- for bio-based dm
-Date: Sat, 18 Sep 2010 13:58:12 -0400
-Message-ID: <4C94FDB4.7020206@tmr.com>
-References: <1283509796-1510-1-git-send-email-tj@kernel.org>
-	<1283509796-1510-24-git-send-email-tj@kernel.org>
-	<Pine.LNX.4.64.1009101410570.7839@hs20-bc2-1.build.redhat.com>
-	<20100910184652.GA24470@redhat.com>
-	<Pine.LNX.4.64.1009101456220.21834@hs20-bc2-1.build.redhat.com>
-	<20100910192403.GA24582@redhat.com>
-	<Pine.LNX.4.64.1009101554300.5286@hs20-bc2-1.build.redhat.com>
-	<4C8AC0F5.5080206@kernel.org> <20100911014612.GA26517@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v2 01/11] scsi: Convert struct
+	Scsi_Host->cmd_serial_number to atomic_t
+Date: Sat, 18 Sep 2010 12:57:58 -0700
+Message-ID: <1284839878.13344.300.camel@haakon2.linux-iscsi.org>
+References: <1284747709-20862-1-git-send-email-nab@linux-iscsi.org>
+	 <4C93BB8E.2080501@cisco.com>  <4C9427B6.9050404@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1900925141067755275=="
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20100911014612.GA26517@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: jack@suse.cz, mst@redhat.com, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, hch@lst.de, agk@redhat.com, k-ueda@ct.jp.nec.com, vst@vlnb.net, linux-scsi@vger.kernel.org, rusty@rustcorp.com.au, linux-raid@vger.kernel.org, Tejun Heo <tj@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>, swhiteho@redhat.com, chris.mason@oracle.com, tytso@MIT.EDU, jaxboe@fusionio.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, rwheeler@redhat.com
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4C9427B6.9050404@cs.wisc.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Joe Eykholt <jeykholt@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---===============1900925141067755275==
-Content-Type: multipart/alternative;
-	boundary="------------030005010007040705080004"
+On Fri, 2010-09-17 at 21:45 -0500, Mike Christie wrote:
+> On 09/17/2010 02:03 PM, Joe Eykholt wrote:
+> >
+> > How about instead of adding use_serial_number, let's just have the
+> > drivers that want a serial number call scsi_cmd_get_serial()
+> 
+> I think this sounds better.
+> 
 
-This is a multi-part message in MIME format.
---------------030005010007040705080004
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+In that case I will go ahead and add explict scsi_cmd_get_serial() calls
+to the LLDs that use struct scsi_cmnd->serial_number in anything beyond
+an obvious and simple informational purpose.
 
-Mike Snitzer wrote:
-> On Fri, Sep 10 2010 at  7:36pm -0400,
-> Tejun Heo<tj@kernel.org>  wrote:
->
->    
->> On 09/10/2010 10:06 PM, Mikulas Patocka wrote:
->>      
->>> But I have my work rules that I learned: I use no git kernels and no
->>> external patches (except Alasdair's patchset that I want to test). I only
->>> use -rc or final kernels. I need a stable computer --- I don't want to
->>> solve problems like "does it crash because I pulled something or does it
->>> crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and
->>> I'll optimize flushes in dm for -rc2 or -rc3.
->>>        
->> Alright, I'm sorry but this is as far as I would go for dm conversion
->> patches.  If you wanna split it further or do it your way, please feel
->> free to.  I think it would be beneficial to do things now but, hey,
->> you guys are maintaining dm part of the kernel, so it's up to you
->> guys.  But, I think it would be silly for everyone else to wait for
->> the rather special requirement for dm, so if we have to go forward
->> without dm updates, I suppose we will have to.  Jens, please feel free
->> to drop dm conversion patches.
->>      
-> Tejun,
->
-> Mikulas doesn't speak for Alasdair or the rest of the DM developers.  He
-> speaks for himself.  He, like me, is a member of the team that helps
-> maintain DM.  But Alasdair is the upstream DM maintainer.
->
-> Please don't latch on to Mikulas' disruptive stone-walling.  As I shared
-> in my previous reply: your FLUSH+FUA contributions to DM are very much
-> appreciated!  Kiyoshi, Jun'ichi and myself have all worked with you
-> effectively and so far the end result DM conversion has proven quite
-> stable and correct.  Wider testing via linux-next is an important next
-> step.
->
-> Jens, please don't drop the DM FLUSH+FUA conversion patches from your
-> 'for-next' branch.  Mikulas has yet to offer a single substantive
-> criticism of the code in question.
->    
+> You could also convert drivers to the host tagging if you needed a 
+> unique id for each command sent to a host.
 
-He is commenting on the process rather than the code, since he tells you 
-that he lacks time to review your complex changes to his work, so your 
-saying that he hasn't found errors in it is muddy thinking as best.
+Hmmm, what does this entail again..?
 
-He provided a patch and would like it tested properly before you drop a 
-bunch of stuff on top of it, to be sure it gets proper exposure and 
-wider testing. That sounds like sound software development to me. It 
-sounds as though you feel that the inclusion of your additional work is 
-critical and can't possibly wait until the next -rc or release, and I 
-have missed the reason why your stuff can't wait until it can drop on 
-mainline code..
+> 
+> > and stop calling it from scsi_dispatch_cmd()?   AFAICT, it's only
+> > used in debug messages in some drivers.  I didn't find other usages
+> > but didn't do an exhaustive search.
+> 
+> The comments for serial_number say that it is only supposed to be used 
+> for debugging printks and most drivers use it for that.
 
--- 
-Bill Davidsen<davidsen@tmr.com>
-   "We can't solve today's problems by using the same thinking we
-    used in creating them." - Einstein
+So I would suppose it would be OK for those drivers to continue to
+printk serial_number to show the internal serial_number allocation is
+now disabled by default.
 
+> However, it looks like mpt and dpt_i2o are using it for error handling
+> and/or lookup type of operations. I think the mpt* uses are not needed
+> in the abort checks.
+> 
 
---------------030005010007040705080004
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+In that case, then adding an explict scsi_cmd_get_serial() call in mpt*
+and dpt_i20 ->queuecommand() callers would be a good first step.
 
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-<head>
-  <meta content="text/html; charset=ISO-8859-1"
- http-equiv="Content-Type">
-  <title></title>
-</head>
-<body text="#000000" bgcolor="#ffffff">
-Mike Snitzer wrote:
-<blockquote cite="mid:20100911014612.GA26517@redhat.com" type="cite">
-  <pre wrap="">On Fri, Sep 10 2010 at  7:36pm -0400,
-Tejun Heo <a class="moz-txt-link-rfc2396E" href="mailto:tj@kernel.org">&lt;tj@kernel.org&gt;</a> wrote:
+> And eata is using it for ordering and tracking or something. It could 
+> probably be converted to the host tagging if or what you suggested if it 
+> needs the uniqueue id.
 
-  </pre>
-  <blockquote type="cite">
-    <pre wrap="">On 09/10/2010 10:06 PM, Mikulas Patocka wrote:
-    </pre>
-    <blockquote type="cite">
-      <pre wrap="">But I have my work rules that I learned: I use no git kernels and no 
-external patches (except Alasdair's patchset that I want to test). I only 
-use -rc or final kernels. I need a stable computer --- I don't want to 
-solve problems like "does it crash because I pulled something or does it 
-crash because I made a bug in my code?" So, put that into 2.6.37-rc1 and 
-I'll optimize flushes in dm for -rc2 or -rc3.
-      </pre>
-    </blockquote>
-    <pre wrap="">
-Alright, I'm sorry but this is as far as I would go for dm conversion
-patches.  If you wanna split it further or do it your way, please feel
-free to.  I think it would be beneficial to do things now but, hey,
-you guys are maintaining dm part of the kernel, so it's up to you
-guys.  But, I think it would be silly for everyone else to wait for
-the rather special requirement for dm, so if we have to go forward
-without dm updates, I suppose we will have to.  Jens, please feel free
-to drop dm conversion patches.
-    </pre>
-  </blockquote>
-  <pre wrap="">
-Tejun,
+Adding an explict scsi_cmd_get_serial() for eata for now, and we can
+consider LLD canidates for host tag conversion as a future step.
 
-Mikulas doesn't speak for Alasdair or the rest of the DM developers.  He
-speaks for himself.  He, like me, is a member of the team that helps
-maintain DM.  But Alasdair is the upstream DM maintainer.
+> 
+> zfcp looks like it copies it. It does not look like the driver needs it.
+> 
 
-Please don't latch on to Mikulas' disruptive stone-walling.  As I shared
-in my previous reply: your FLUSH+FUA contributions to DM are very much
-appreciated!  Kiyoshi, Jun'ichi and myself have all worked with you
-effectively and so far the end result DM conversion has proven quite
-stable and correct.  Wider testing via linux-next is an important next
-step.
+Ok, I will look at removing it's usage in zfcp or if necessary add an
+the explict scsi_cmd_get_serial() call.
 
-Jens, please don't drop the DM FLUSH+FUA conversion patches from your
-'for-next' branch.  Mikulas has yet to offer a single substantive
-criticism of the code in question.
-  </pre>
-</blockquote>
-<br>
-<font size="+1">He is commenting on the process rather than the code,
-since he tells you that he lacks time to review your complex changes to
-his work, so your saying that he hasn't found errors in it is muddy
-thinking as best.<br>
-<br>
-He provided a patch and would like it tested properly before you drop a
-bunch of stuff on top of it, to be sure it gets proper exposure and
-wider testing. That sounds like sound software development to me. It
-sounds as though you feel that the inclusion of your additional work is
-critical and can't possibly wait until the next -rc or release, and I
-have missed the reason why your stuff can't wait until it can drop on
-mainline code..</font><br>
-<pre class="moz-signature" cols="80">-- 
-Bill Davidsen <a class="moz-txt-link-rfc2396E" href="mailto:davidsen@tmr.com">&lt;davidsen@tmr.com&gt;</a>
-  "We can't solve today's problems by using the same thinking we
-   used in creating them." - Einstein
-</pre>
-</body>
-</html>
+> scsi_error.c uses it in scsi_try_to_abort_cmd to check if a command has 
+> completed, but I think that can be done by checking if REQ_ATOM_COMPLETE 
+> is set.
 
---------------030005010007040705080004--
+Hmmm, good catch here.  Jejb and hch, does this item work for you..?
 
+If so then I will take another peek for any ML uses of a struct
+scsi_cmnd->serial_number that need to be addressed, and include Joe's
+and Mike's recommendations into a v3 series.
 
---===============1900925141067755275==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks for your comments here Mike!
 
-
---===============1900925141067755275==--
+--nab
