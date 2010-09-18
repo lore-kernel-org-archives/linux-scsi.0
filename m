@@ -1,29 +1,63 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v2 01/11] scsi: Convert struct Scsi_Host->cmd_serial_number
- to atomic_t
-Date: Fri, 17 Sep 2010 21:56:29 -0500
-Message-ID: <4C942A5D.5040109@cs.wisc.edu>
-References: <1284747709-20862-1-git-send-email-nab@linux-iscsi.org> <4C93BB8E.2080501@cisco.com> <4C9427B6.9050404@cs.wisc.edu>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] bsg: call idr_pre_get() outside the lock.
+Date: Sat, 18 Sep 2010 12:40:14 +0900
+Message-ID: <20100918123721B.fujita.tomonori@lab.ntt.co.jp>
+References: <m2eidda6bq.fsf@elisp.net>
+	<20100916163735.ed8dbb51.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:44136 "EHLO sabe.cs.wisc.edu"
+Received: from sh.osrg.net ([192.16.179.4]:38957 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753826Ab0IRCvH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Sep 2010 22:51:07 -0400
-In-Reply-To: <4C9427B6.9050404@cs.wisc.edu>
+	id S1751934Ab0IRDkv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Sep 2010 23:40:51 -0400
+In-Reply-To: <20100916163735.ed8dbb51.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Eykholt <jeykholt@cisco.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+To: akpm@linux-foundation.org
+Cc: naota@elisp.net, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, axboe@kernel.dk, jkosina@suse.cz, gregkh@suse.de, daniel@caiaq.de, linux-scsi@vger.kernel.org
 
-On 09/17/2010 09:45 PM, Mike Christie wrote:
-> The comments for serial_number say that it is only supposed to be used
-> for debugging printks and most drivers use it for that. However, it
-> looks like mpt and dpt_i2o are using it for error handling and/or lookup
-> type of operations. I think the mpt* uses are not needed in the abort
-> checks.
+On Thu, 16 Sep 2010 16:37:35 -0700
+Andrew Morton <akpm@linux-foundation.org> wrote:
 
-Oh yeah, forgot to say, for dpt I think you could just replace the 
-serial_number with the host wide tagging.
+> On Wed, 01 Sep 2010 23:26:01 +0900
+> Naohiro Aota <naota@elisp.net> wrote:
+> 
+> > The idr_pre_get() kernel-doc says "This function should be called
+> > prior to locking and calling the idr_get_new* functions.", but the
+> > idr_pre_get() calling in bsg_register_queue() is put inside
+> > mutex_lock(). Let's fix it.
+> > 
+> 
+> The idr_pre_get() kerneldoc is wrong.  Or at least, misleading.
+
+Ah, thanks a lot. As usual, seems that there are few reliable
+documents in kernel.
+
+
+> The way this all works is that we precharge the tree via idr_pre_get()
+> and we do this outside locks so we can use GFP_KERNEL.  Then we take
+> the lock (a spinlock!) and then try to add an element to the tree,
+> which will consume objects from the pool which was prefilled by
+> idr_pre_get().
+> 
+> There's an obvious race here where someone else can get in and steal
+> objects from the prefilled pool.  We can fix that with a retry loop:
+> 
+> 
+> again:
+> 	if (idr_pre_get(..., GFP_KERNEL) == NULL)
+> 		return -ENOMEM;		/* We're really out-of-memory */
+> 	spin_lock(lock);
+> 	if (idr_get_new(...) == -EAGAIN) {
+> 		spin_unlock(lock);
+> 		goto again;		/* Someone stole our preallocation! */
+> 	}
+> 	...
+> 
+> this way we avoid the false -ENOMEM which the race would have caused. 
+> We only declare -ENOMEM when we're REALLY out of memory.
+
+Looks like there are many misuses idr_pre_get and idr_get_new; some
+even calls idr_get_new without any lock (e.g. blk_alloc_devt).
