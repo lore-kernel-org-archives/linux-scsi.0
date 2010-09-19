@@ -1,34 +1,69 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [ANNOUNCE] TCM/LIO v4.0.0-rc4 for 2.6.36-rc4
-Date: Sun, 19 Sep 2010 15:55:16 +0200
-Message-ID: <4C961644.70209@panasas.com>
-References: <1284754930.13344.216.camel@haakon2.linux-iscsi.org>	 <20100918125729D.fujita.tomonori@lab.ntt.co.jp> <1284841932.13344.339.camel@haakon2.linux-iscsi.org>
+From: Dan Carpenter <error27@gmail.com>
+Subject: Re: [PATCH 10/14] scsi: osd: fix device_register() error handling
+Date: Sun, 19 Sep 2010 16:26:53 +0200
+Message-ID: <20100919142653.GF6236@bicker>
+References: <1284900907-24621-1-git-send-email-segooon@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1284841932.13344.339.camel@haakon2.linux-iscsi.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@suse.de, michaelc@cs.wisc.edu, konrad@darnok.org, jeykholt@cisco.com, hare@suse.de, hch@lst.de, James.Smart@Emulex.Com, andrew.vasquez@qlogic.com, philipp.reisner@linbit.com, martin.petersen@oracle.com, vasu.dev@linux.intel.com, Joel Becker <joel.becker@oracle.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1284900907-24621-1-git-send-email-segooon@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vasiliy Kulikov <segooon@gmail.com>
+Cc: kernel-janitors@vger.kernel.org, Boaz Harrosh <bharrosh@panasas.com>, Benny Halevy <bhalevy@panasas.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, cornelia.huck@de.ibm.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/18/2010 10:32 PM, Nicholas A. Bellinger wrote:
-> On Sat, 2010-09-18 at 13:00 +0900, FUJITA Tomonori wrote:
-> So the RFC cuts have been going into a seperate tree here:
+On Sun, Sep 19, 2010 at 04:55:07PM +0400, Vasiliy Kulikov wrote:
+> If device_register() fails then call put_device().
+> See comment to device_register.
 > 
-> http://git.kernel.org/?p=linux/kernel/git/nab/lio-4.0.git;a=summary
+> Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
+> ---
+>  compile tested.
 > 
-
-This is the two weeks ago stuff, right. Where is the lio-core-2.6.git/ ?
-
-> Mike has requested an RFC v2 for him to review TCM Core and TCM_Loop
-> v4.0.0-rc4 changes.  So I will be respinning this tree with the latest
-> changes from lio-core-2.6.git/lio-4.0 and re-posting in the next days.
+>  drivers/scsi/osd/osd_uld.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
 > 
+> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+> index cefb2c0..3e0edc2 100644
+> --- a/drivers/scsi/osd/osd_uld.c
+> +++ b/drivers/scsi/osd/osd_uld.c
+> @@ -474,7 +474,7 @@ static int osd_probe(struct device *dev)
+>  	error = device_register(&oud->class_dev);
+>  	if (error) {
+>  		OSD_ERR("device_register failed => %d\n", error);
+> -		goto err_put_cdev;
+> +		goto err_put_device;
+>  	}
+>  
+>  	get_device(&oud->class_dev);
+> @@ -482,6 +482,8 @@ static int osd_probe(struct device *dev)
+>  	OSD_INFO("osd_probe %s\n", disk->disk_name);
+>  	return 0;
+>  
 
-Me to. And a git tree and a git web, as well. I'll postpone any review
-to that time.
+Hm...  So if device_register() fails then we should always call
+device_put()?  It seems like a lot of existing code does that but I
+hadn't realized until now that that is how it works.
 
-Thanks
-Boaz
+Why can't the device_put() just be added inside the device_register() so
+the unwinding works automatically?
+
+Also if someone add some more stuff to the end of this function, will
+the device_unregister() followed by a device_put() cause problems if we
+unwind like this?
+
++err_free_something:
++	kfree(foo);
++	device_unregister(&oud->class_dev);
+> +err_put_device:
+> +	put_device(&oud->class_dev);
+>  err_put_cdev:
+>  	cdev_del(&oud->cdev);
+>  err_put_disk:
+
+If that's the case then the put_device() should be called infront of the
+goto.
+
+regards,
+dan carpenter
