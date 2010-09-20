@@ -1,64 +1,52 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] SCSI: add check for host busy in scsi_run_queue()
-Date: Mon, 20 Sep 2010 12:56:10 -0500
-Message-ID: <1285005370.2973.272.camel@mulgrave.site>
-References: <AANLkTi=jMYEsMtTQmnMSKxwYNzpwCLLkgsEvHAxWj8ui@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 18862] New: [BUG]Kernel 2.6.36rc4 crash when rmmod pm8001
+Date: Mon, 20 Sep 2010 18:36:55 GMT
+Message-ID: <bug-18862-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52517 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753401Ab0ITR4Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Sep 2010 13:56:16 -0400
-In-Reply-To: <AANLkTi=jMYEsMtTQmnMSKxwYNzpwCLLkgsEvHAxWj8ui@mail.gmail.com>
+Received: from [140.211.167.42] ([140.211.167.42]:50736 "EHLO
+	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753322Ab0ITSgz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Sep 2010 14:36:55 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o8KIatNt011029
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Sep 2010 18:36:55 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: linux-scsi@vger.kernel.org
 
-On Sun, 2010-09-19 at 20:53 +0800, Hillf Danton wrote:
-> It seems that check for host busy is deserved before scanning the starved list.
-> And list operation is simplified.
-> 
-> Signed-off-by: Hillf Danton <dhillf@gmail.com>
-> ---
-> 
-> --- o/linux-2.6.36-rc4/drivers/scsi/scsi_lib.c	2010-09-13
-> 07:07:38.000000000 +0800
-> +++ m/linux-2.6.36-rc4/drivers/scsi/scsi_lib.c	2010-09-19
-> 20:32:34.000000000 +0800
-> @@ -399,18 +399,20 @@ static inline int scsi_host_is_busy(stru
->   */
->  static void scsi_run_queue(struct request_queue *q)
->  {
-> -	struct scsi_device *sdev = q->queuedata;
-> +	struct scsi_device *sdev = q->queuedata, *safe;
->  	struct Scsi_Host *shost = sdev->host;
-> -	LIST_HEAD(starved_list);
->  	unsigned long flags;
-> 
->  	if (scsi_target(sdev)->single_lun)
->  		scsi_single_lun_run(sdev);
-> 
->  	spin_lock_irqsave(shost->host_lock, flags);
-> -	list_splice_init(&shost->starved_list, &starved_list);
-> -
-> -	while (!list_empty(&starved_list)) {
-> +	if (scsi_host_is_busy(shost)) {
-> +		spin_unlock_irqrestore(shost->host_lock, flags);
-> +		return;
-> +	}
+https://bugzilla.kernel.org/show_bug.cgi?id=18862
 
-To be honest, there's no real gain from this micro-optimisation.
-
-> +	list_for_each_entry_safe(sdev, safe, &shost->starved_list,
-> +					starved_entry) {
-
-And this is definitely wrong.  The list is altered in flight so the
-whole purpose of the static copy is to process only what existed before
-we began; otherwise you can get a livelock.
-
-James
+           Summary: [BUG]Kernel 2.6.36rc4 crash when rmmod pm8001
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.36-rc4
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: maciej.rutecki@gmail.com
+                CC: rjw@sisk.pl, maciej.rutecki@gmail.com,
+                    jack_wang@usish.com
+        Regression: Yes
 
 
+Subject    : [BUG]Kernel 2.6.36rc4 crash when rmmod pm8001
+Submitter  : "Jack Wang" <jack_wang@usish.com>
+Date       : 2010-09-17 10:11
+Message-ID : 3219F4D1734640238A632382C50F633E@usish.com.cn
+References : http://marc.info/?l=linux-kernel&m=128471846828998&w=2
+
+This entry is being used for tracking a regression from 2.6.35. Please don't
+close it until the problem is fixed in the mainline.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
