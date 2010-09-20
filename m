@@ -1,200 +1,172 @@
-From: "Chuck Tuffli" <Chuck_Tuffli@pmc-sierra.com>
-Subject: RE: [PATCH v2] libsas: fix bug for vacant phy
-Date: Mon, 20 Sep 2010 11:32:04 -0700
-Message-ID: <BE430C874DBA6841A75E65151DCC6E1C077DA147@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
-References: <BE430C874DBA6841A75E65151DCC6E1C0699F1BA@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <D8666BDF2F024F71B478BDCA08C7833D@usish.com.cn> <BE430C874DBA6841A75E65151DCC6E1C0731F42F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <01B7071A8F0947F38977CA217D833D16@usish.com.cn> <27DA42B50CD244D19895F2FCED2191FD@usish.com.cn>
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: 2.6.36-rc4-git5: Reported regressions from 2.6.35
+Date: Mon, 20 Sep 2010 20:47:53 +0200 (CEST)
+Message-ID: <1fwtoy8sG5H.A.veG.9D7lMB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="iso-2022-jp"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta03.pmc-sierra.com ([216.241.235.118]:54606 "EHLO
-	bby1mta03.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754295Ab0ITTDM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Sep 2010 15:03:12 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <27DA42B50CD244D19895F2FCED2191FD@usish.com.cn>
+Received: from ogre.sisk.pl ([217.79.144.158]:51436 "EHLO ogre.sisk.pl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754896Ab0ITTKH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Sep 2010 15:10:07 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>, James Bottomley <jejb@kernel.org>, linux-scsi@vger.kernel.org
-Cc: lindar_liu <lindar_liu@usish.com>, roy <roy_wang@usish.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Maciej Rutecki <maciej.rutecki@gmail.com>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>
 
-This fixes the issue I was seeing. Thanks!
+This message contains a list of some regressions from 2.6.35,
+for which there are no fixes in the mainline known to the tracking team.
+If any of them have been fixed already, please let us know.
 
------Original Message-----
-From: Jack Wang [mailto:jack_wang@usish.com] 
-Sent: Sunday, September 19, 2010 10:52 PM
-To: 'Jack Wang'; Chuck Tuffli; 'James Bottomley'; linux-scsi@vger.kernel.org
-Cc: 'lindar_liu'; 'roy'
-Subject: [PATCH v2] libsas: fix bug for vacant phy
+If you know of any other unresolved regressions from 2.6.35, please let us
+know either and we'll add them to the list.  Also, please let us know
+if any of the entries below are invalid.
 
-
-Hi, James
-
-Please drop the previous patch and apply this new one.
-Attached patch fix following bugs reported by Chuck.
-
-Chuck
-Could you test if this solve your problem ?
-
-Jack -
-Signed-off-by: Jack Wang <jack_wang@usish.com>
-
-Signed-off-by: Lindar <lindar_liu@usish.com>
----
- sas_expander.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/sas_expander.c b/sas_expander.c
-index d1d86a6..f63dbea 100644
---- a/sas_expander.c
-+++ b/sas_expander.c
-@@ -175,10 +175,10 @@ static void sas_set_ex_phy(struct domain_device *dev,
-int phy_id,
- 	switch (resp->result) {
- 	case SMP_RESP_PHY_VACANT:
- 		phy->phy_state = PHY_VACANT;
--		return;
-+		break;
- 	default:
- 		phy->phy_state = PHY_NOT_PRESENT;
--		return;
-+		break;
- 	case SMP_RESP_FUNC_ACC:
- 		phy->phy_state = PHY_EMPTY; /* do not know yet */
- 		break;
-@@ -209,7 +209,8 @@ static void sas_set_ex_phy(struct domain_device *dev,
-int phy_id,
- 	phy->phy->negotiated_linkrate = phy->linkrate;
- 
- 	if (!rediscover)
--		sas_phy_add(phy->phy);
-+		if (sas_phy_add(phy->phy))
-+			sas_phy_free(phy->phy);
- 
- 	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",
- 		    SAS_ADDR(dev->sas_addr), phy->phy_id,
--- 
-1.7.2.3.msysgit.0
+Each entry from the list will be sent additionally in an automatic reply
+to this message with CCs to the people involved in reporting and handling
+the issue.
 
 
-I finally had a chance to try something more recent (2.6.34) and I still see
-the problem. I posted my findings to linux-scsi
-(http://marc.info/?l=linux-scsi&m=128254243405363&w=2), but no one has
-commented. Do you have any suggestions for approaches to fix this? I'm
-willing to do the work, but am a little unclear where to look. Thanks!
+Listed regressions statistics:
 
------Original Message-----
-From: jack wang [mailto:jack_wang@usish.com] 
-Sent: Thursday, July 08, 2010 6:35 PM
-To: Chuck Tuffli
-Cc: 'lindar_liu'; 'aoqingy'; 'roy'
-Subject: RE: BUG reported during pm8001 driver rmmod
+  Date          Total  Pending  Unresolved
+  ----------------------------------------
+  2010-09-20       38       15          15
+  2010-09-12       28       14          13
+  2010-08-30       21       16          15
 
-Hi Jack.
 
-We have been using your Linux driver for testing and it has been working
-great (thanks!). Today I tested against a new JBOD (HP D2700) and am
-hitting an error when unloading the driver. Note that I don't see this
-error with other JBODs (IBM, USI, etc), only the new one. Have you seen
-anything like this before?
+Unresolved regressions
+----------------------
 
-Chuck
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18872
+Subject		: Radeon KMS r100 and STR problems
+Submitter	: Richard Mittendorfer <delist@gmx.net>
+Date		: 2010-09-17 18:26 (4 days old)
+Message-ID	: <20100917202647.aa4b6300.delist@gmx.net>
+References	: http://marc.info/?l=linux-kernel&m=128474802809779&w=2
 
-[510] uname -srv
-Linux 2.6.31-22-server #60-Ubuntu SMP Thu May 27 03:42:09 UTC 2010
-[511] sudo insmod ./pm8001.ko 
-[512] sudo rmmod pm8001 
-Segmentation fault
-[513] dmesg
-...
-[14131.624620] pm8001 0000:09:00.0: pm8001: driver version 0.1.36
-[14131.630619] pm8001 0000:09:00.0: PCI INT A -> GSI 16 (level, low) ->
-IRQ 16
-[14131.637752] pm8001 0000:09:00.0: setting latency timer to 64
-[14132.541239] scsi4 : pm8001
-[14132.544347]   alloc irq_desc for 97 on node 0
-[14132.548799]   alloc kstat_irqs on node 0
-[14132.552851] pm8001 0000:09:00.0: irq 97 for MSI/MSI-X
-[14248.581889] scsi 4:0:0:0: Direct-Access     HP       DG0300FARVV
-HPD6 PQ: 0 ANSI: 5
-[14248.590706] sd 4:0:0:0: Attached scsi generic sg2 type 0
-[14248.596738] sd 4:0:0:0: [sdb] 585937500 512-byte logical blocks: (300
-GB/279 GiB)
-[14248.605469] sd 4:0:0:0: [sdb] Write Protect is off
-[14248.610371] sd 4:0:0:0: [sdb] Mode Sense: eb 00 10 08
-[14248.616130] sd 4:0:0:0: [sdb] Write cache: disabled, read cache:
-enabled, supports DPO and FUA
-[14248.627080]  sdb: unknown partition table
-[14248.634138] sd 4:0:0:0: [sdb] Attached SCSI disk
-[14248.656076] scsi 4:0:1:0: Enclosure         HP       D2700 SAS AJ941A
-0052 PQ: 0 ANSI: 5
-[14248.667852] scsi 4:0:1:0: Attached scsi generic sg3 type 13
-[14248.945688] ses 4:0:1:0: Attached Enclosure device
-[14288.328616] pm8001 0000:09:00.0: PCI INT A disabled
-[14288.333712] ------------[ cut here ]------------
-[14288.338429] kernel BUG at
-/build/buildd/linux-2.6.31/include/linux/transport_class.h:92!
-[14288.343639] invalid opcode: 0000 [#1] SMP 
-[14288.343639] last sysfs file:
-/sys/devices/pci0000:00/0000:00:1c.0/0000:09:00.0/host4/port-4:0/expande
-r-4:0/port-4:0:36/end_device-4:0:36/target4:0:1/4:0:1:0/type
-[14288.362505] CPU 0 
-[14288.362505] Modules linked in: ses enclosure pm8001(-) nfs lockd
-nfs_acl auth_rpcgss sunrpc radeon ttm drm libsas i2c_algo_bit
-scsi_transport_sas iptable_filter psmouse ip_tables i5400_edac edac_core
-lp x_tables serio_raw i5k_amb shpchp parport floppy igb dca
-[14288.391254] Pid: 1204, comm: rmmod Not tainted 2.6.31-22-server
-#60-Ubuntu X7DW3
-[14288.392505] RIP: 0010:[<ffffffffa00c10c8>]  [<ffffffffa00c10c8>]
-sas_release_transport+0x88/0x90 [scsi_transport_sas]
-[14288.402505] RSP: 0018:ffff88003cdd5eb8  EFLAGS: 00010286
-[14288.412505] RAX: 00000000fffffff0 RBX: ffff88003b698000 RCX:
-01000000000000c1
-[14288.422505] RDX: ffff88003b698700 RSI: ffffffff812782b0 RDI:
-ffffffff817d8fa0
-[14288.422505] RBP: ffff88003cdd5ec8 R08: 0000000000000000 R09:
-0000000000000000
-[14288.432505] R10: 0000000000000000 R11: ffff88003d94d9f4 R12:
-ffffffffa02a6fa0
-[14288.442505] R13: 0000000000000000 R14: 00007fff3e63a700 R15:
-0000000000000001
-[14288.451254] FS:  00007f8dd6c6d6f0(0000) GS:ffff8800019f3000(0000)
-knlGS:0000000000000000
-[14288.452505] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[14288.462505] CR2: 00007fed69a640a0 CR3: 000000003c8ef000 CR4:
-00000000000006f0
-[14288.472505] DR0: 0000000000000000 DR1: 0000000000000000 DR2:
-0000000000000000
-[14288.472505] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7:
-0000000000000400
-[14288.482505] Process rmmod (pid: 1204, threadinfo ffff88003cdd4000,
-task ffff88003ca516b0)
-[14288.492505] Stack:
-[14288.492505]  0000000000000000 0000000000000880 ffff88003cdd5ed8
-ffffffffa029dd20
-[14288.502505] <0> ffff88003cdd5f78 ffffffff8108ed38 ffff88003cdd5ef8
-ffffffff8107c909
-[14288.512505] <0> ffffffffa02a6fa0 ffffffff00000880 ffff88003cdd5f14
-0000000000000014
-[14288.521254] Call Trace:
-[14288.522505]  [<ffffffffa029dd20>] pm8001_exit+0x1c/0x1e [pm8001]
-[14288.522505]  [<ffffffff8108ed38>] sys_delete_module+0x1a8/0x280
-[14288.532505]  [<ffffffff8107c909>] ? up_read+0x9/0x10
-[14288.541254]  [<ffffffff81012042>] system_call_fastpath+0x16/0x1b
-[14288.542505] Code: 0f 6c 26 e1 85 c0 75 13 48 89 df e8 d3 31 05 e1 48
-83 c4 08 5b c9 c3 0f 0b eb fe 0f 0b eb fe 0f 0b eb fe 0f 0b eb fe 0f 0b
-eb fe <0f> 0b eb fe 0f 1f 40 00 55 48 89 e5 41 56 41 55 41 54 53 4c 8b 
-[14288.562505] RIP  [<ffffffffa00c10c8>] sas_release_transport+0x88/0x90
-[scsi_transport_sas]
-[14288.572505]  RSP <ffff88003cdd5eb8>
-[14288.580975] ---[ end trace 0436c237fa6eeca0 ]---
 
-Hi， Chuck
-I haven't seen this bug before and We don't have the HP JBOD to test. It
-seams you hit the bug in linux-2.6.31/include/linux/transport_class.h:92!,
-the problem is transport unresgister the HP Enclosure HP D2700,
-the bug appears. Maybe there something wrong with the ses && enclosure
-modules , could you update to newer kernel to see whether the bug 
-still exists?
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18862
+Subject		: [BUG]Kernel 2.6.36rc4 crash when rmmod pm8001
+Submitter	: Jack Wang <jack_wang@usish.com>
+Date		: 2010-09-17 10:11 (4 days old)
+Message-ID	: <3219F4D1734640238A632382C50F633E@usish.com.cn>
+References	: http://marc.info/?l=linux-kernel&m=128471846828998&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18742
+Subject		: PROBLEM: Kernel panic on 2.6.36-rc4 when loading intel_ips on Core i3 laptop
+Submitter	: infernix <infernix@infernix.net>
+Date		: 2010-09-15 14:35 (6 days old)
+Message-ID	: <4C90D998.6050103@infernix.net>
+References	: http://marc.info/?l=linux-kernel&m=128456187928496&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18692
+Subject		: 2.6.36-rc4/iwl: warning triggered in net/mac80211/scan.c:266
+Submitter	: Michael S. Tsirkin <mst@redhat.com>
+Date		: 2010-09-14 14:28 (7 days old)
+Message-ID	: <20100914142814.GA8744@redhat.com>
+References	: http://marc.info/?l=linux-kernel&m=128447487918792&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18432
+Subject		: radeon kms freezes on boot with video= option
+Submitter	: Jose Marino <braket@hotmail.com>
+Date		: 2010-09-13 22:28 (8 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18402
+Subject		: 2.6.36-rc4 KPs whenever booting on a Pentium 4 HT system
+Submitter	: Michael Marley <michael@michaelmarley.com>
+Date		: 2010-09-13 15:07 (8 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18342
+Subject		: [regression] i915 incorrectly detects bogus LVDS connection instead of LVDS1
+Submitter	: Woody Suwalski <terraluna977@gmail.com>
+Date		: 2010-09-08 15:10 (13 days old)
+Message-ID	: <AANLkTim2mrVRCKg-2couMTFV7krHQp0+2e_cbaiT_KYW@mail.gmail.com>
+References	: http://marc.info/?l=linux-kernel&m=128395866331382&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=18332
+Subject		: [regression] *ERROR* timed out waiting for FORCE_DETECT in 36rc3 on i915
+Submitter	: Andi Kleen <andi@firstfloor.org>
+Date		: 2010-09-08 13:53 (13 days old)
+Message-ID	: <87mxrswddf.fsf@basil.nowhere.org>
+References	: http://marc.info/?l=linux-kernel&m=128395400624946&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17752
+Subject		: 2.6.36-rc3: inconsistent lock state (iprune_sem, shrink_icache_memory)
+Submitter	: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Date		: 2010-09-01 6:37 (20 days old)
+Message-ID	: <tkrat.ed8eda6bc8ffe64e@s5r6.in-berlin.de>
+References	: http://marc.info/?l=linux-kernel&m=128332308528119&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17722
+Subject		: 2.6.36-rc3: WARNING: at net/mac80211/scan.c:269 ieee80211_scan_completed
+Submitter	: Thomas Meyer <thomas@m3y3r.de>
+Date		: 2010-08-31 20:14 (21 days old)
+Message-ID	: <201008312214.52473.thomas@m3y3r.de>
+References	: http://marc.info/?l=linux-kernel&m=128328580504227&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17361
+Subject		: Watchdog detected hard LOCKUP in jbd2_journal_get_write_access
+Submitter	: Christian Casteyde <casteyde.christian@free.fr>
+Date		: 2010-08-29 19:59 (23 days old)
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17341
+Subject		: kdump regression compared to v2.6.35
+Submitter	: CAI Qian <caiqian@redhat.com>
+Date		: 2010-08-27 12:35 (25 days old)
+Message-ID	: <2136707099.1405541282912500148.JavaMail.root@zmail06.collab.prod.int.phx2.redhat.com>
+References	: http://marc.info/?l=linux-kernel&m=128291252612135&w=2
+Handled-By	: Tejun Heo <tj@kernel.org>
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=17061
+Subject		: 2.6.36-rc1 on zaurus: bluetooth regression
+Submitter	: Pavel Machek <pavel@ucw.cz>
+Date		: 2010-08-21 15:24 (31 days old)
+Message-ID	: <20100821152445.GA1536@ucw.cz>
+References	: http://marc.info/?l=linux-kernel&m=128240433828087&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
+Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
+Submitter	: Meelis Roos <mroos@linux.ee>
+Date		: 2010-08-19 21:03 (33 days old)
+Message-ID	: <alpine.SOC.1.00.1008192359310.19654@math.ut.ee>
+References	: http://marc.info/?l=linux-kernel&m=128225184900892&w=2
+
+
+Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16951
+Subject		: hackbench regression with 2.6.36-rc1
+Submitter	: Zhang, Yanmin <yanmin_zhang@linux.intel.com>
+Date		: 2010-08-18 6:18 (34 days old)
+Message-ID	: <1282112318.21202.8.camel@ymzhang.sh.intel.com>
+References	: http://marc.info/?l=linux-kernel&m=128211235904910&w=2
+
+
+For details, please visit the bug entries and follow the links given in
+references.
+
+As you can see, there is a Bugzilla entry for each of the listed regressions.
+There also is a Bugzilla entry used for tracking the regressions from 2.6.35,
+unresolved as well as resolved, at:
+
+http://bugzilla.kernel.org/show_bug.cgi?id=16444
+
+Please let the tracking team know if there are any Bugzilla entries that
+should be added to the list in there.
+
+Thanks!
+
