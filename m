@@ -1,355 +1,114 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/3] tcm: Add native 32-byte CDB support
-Date: Mon, 20 Sep 2010 11:55:36 +0200
-Message-ID: <4C972F98.4050709@panasas.com>
-References: <1284701685-18344-1-git-send-email-nab@linux-iscsi.org>	 <4C95FA26.6040803@panasas.com> <1284972877.13344.439.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 2/3] tcm: Add VARIABLE_LENGTH_CMD support w/	XDWRITE_READ_32
+ emulation
+Date: Mon, 20 Sep 2010 12:14:54 +0200
+Message-ID: <4C97341E.5090501@panasas.com>
+References: <1284701695-18367-1-git-send-email-nab@linux-iscsi.org>	 <4C95FF76.4040005@panasas.com> <1284973101.13344.444.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1284972877.13344.439.camel@haakon2.linux-iscsi.org>
+In-Reply-To: <1284973101.13344.444.camel@haakon2.linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Douglas Gilbert <dgilbert@interlog.com>, Joe Eykholt <jeykholt@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/20/2010 10:54 AM, Nicholas A. Bellinger wrote:
-> On Sun, 2010-09-19 at 13:55 +0200, Boaz Harrosh wrote:
+On 09/20/2010 10:58 AM, Nicholas A. Bellinger wrote:
+> On Sun, 2010-09-19 at 14:17 +0200, Boaz Harrosh wrote:
 >> On 09/17/2010 07:34 AM, Nicholas A. Bellinger wrote:
 >>> From: Nicholas Bellinger <nab@linux-iscsi.org>
 >>>
->>> This patch adds a '#define TCM_MAX_COMMAND_SIZE 32' and converts all
->>> inline TCM core and subsystem CDB size defines to use TCM_MAX_COMMAND_SIZE
->>> instead of the 16-byte MAX_COMMAND_SIZE.  This includes the conversion of
->>> MAX_COMMAND_SIZE in certain places to use include/scsi/scsi.h:scsi_command_size()
->>> to properly extract the size of a received CDB based on opcode.
+>>> This patch updates transport_generic_cmd_sequencer() to properly support
+>>> VARIABLE_LENGTH_CMD w/ service action XDWRITE_READ_32 emulation.  This
+>>> patch follows the original XDWRITE_READ_10 patch, and uses the new 32-byte
+>>> CDB extraction callers from commit 39a347ca2d88.  Note this patch uses the
+>>> same transport_xor_callback() assignment callback as XDWRITE_READ_10.
 >>>
->>> This patch also includes the conversion of the FILEIO, IBLOCK, PSCSI, RAMDISK
->>> and STGT subsystem modules to use TCM_MAX_COMMAND_SIZE for their default
->>> internal inline CDB size.
+>>> Also note that this patch enforces the following > TCM_MAX_COMMAND_SIZE check
+>>> for VARIABLE_LENGTH_CMD CDBs in transport_generic_cmd_sequencer():
 >>>
->>> It also adds transport_lba_64_ext() and transport_get_sectors_32() callers
->>> into target_core_transport.c to be used for extracting a 64-bit logical
->>> block address and 32-bit transfer length (in block) from 32-byte CDBs.
->>> Finally this patch adds split_cdb_XX_32() and split_cdb_XX_32() for handling
->>> the generation of 32-byte CDBs for individual struct se_task.
+>>> 	<SNIP>
+>>>         /*
+>>>          * Check the additional CDB length (+ 8 bytes for header) does
+>>>          * not exceed our TCM_MAX_COMMAND_SIZE.
+>>>          */
+>>>          if ((cdb[7] + 8) > TCM_MAX_COMMAND_SIZE) {
+>>>                 printk(KERN_INFO "Only %u-byte extended CDBs currently"
+>>>                          " supported for VARIABLE_LENGTH_CMD, received:"
+>>>                          " %d for service action: 0x%04x\n",
+>>>                          TCM_MAX_COMMAND_SIZE, cdb[7], service_action);
+>>>                 return TGCS_INVALID_CDB_FIELD;
+>>>          }
+>>> 	<SNIP>
 >>>
 >>> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 >>> ---
->>>  drivers/target/target_core_file.h      |    2 +-
->>>  drivers/target/target_core_iblock.h    |    2 +-
->>>  drivers/target/target_core_pscsi.c     |    2 +-
->>>  drivers/target/target_core_pscsi.h     |    2 +-
->>>  drivers/target/target_core_rd.h        |    2 +-
->>>  drivers/target/target_core_scdb.c      |   38 +++++++++++++++++++++++++++
->>>  drivers/target/target_core_scdb.h      |    2 +
->>>  drivers/target/target_core_stgt.h      |    2 +-
->>>  drivers/target/target_core_transport.c |   44 ++++++++++++++++++++++++++++---
->>>  include/target/target_core_base.h      |   13 +++++++++
->>>  10 files changed, 98 insertions(+), 11 deletions(-)
+>>>  drivers/target/target_core_transport.c |   50 +++++++++++++++++++++++++++----
+>>>  1 files changed, 43 insertions(+), 7 deletions(-)
 >>>
-> 
-> <SNIP>
-> 
->>> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
->>> index 803853d..beca807 100644
->>> --- a/drivers/target/target_core_pscsi.c
->>> +++ b/drivers/target/target_core_pscsi.c
->>> @@ -743,7 +743,7 @@ static inline void pscsi_blk_init_request(
->>>  	 * Load the referenced struct se_task's SCSI CDB into
->>>  	 * include/linux/blkdev.h:struct request->cmd
->>>  	 */
->>> -	pt->pscsi_req->cmd_len = COMMAND_SIZE(pt->pscsi_cdb[0]);
->>> +	pt->pscsi_req->cmd_len = scsi_command_size(pt->pscsi_cdb);
->>>  	memcpy(pt->pscsi_req->cmd, pt->pscsi_cdb, pt->pscsi_req->cmd_len);
->>
->> Boom, only 16 bytes at req->cmd.
->>
->> For larger than 16 bytes commands at the block/scsi-ml level you need to:
->>
->> 	request->cmd = my_buffer_valid_until_complete;
->> 	request->cmd_len = scsi_command_size()
->>
->> if above "my_buffer_valid_until_complet" is always available you can just
->> do this regardless. If you need to dynamically allocate it (and deallocate)
->> then you should do an if > MAX_COMMAND_SIZE
->>
-> 
-> Hi Boaz,
-> 
-> I was pretty there was going to be some more work required on the
-> TCM/PSCSI case for proper > 16 byte support, thanks for spotting this
-> one.
-> 
-> So what I am thinking is that we can get rid of this memcpy() all
-> together and just always use the per struct se_task allocated struct
-> pscsi_plugin_task *pt->pscsi_cdb[] up to the new TCM_MAX_COMMAND_SIZE
-> (32 bytes) for the request->cmd pointer.
-> 
-> Is there anything special that needs to be done in order to singal that
-> struct request->cmd will be using *tp->pscsi_cdb[], and not struct
-> request->__cmd[BLK_MAX_CMD]..?
-
-No that's perfect.
-The tricky part in other places is to keep it allocated through the life
-cycle of the request. (And overriding the completion for de-allocation).
-But here we have no problems, the governing pscsi_plugin_task is available
-until after the request is complete, right?
-
-> 
->>>  	/*
->>>  	 * Setup pointer for outgoing sense data.
->>> diff --git a/drivers/target/target_core_pscsi.h b/drivers/target/target_core_pscsi.h
->>> index db09d6a..086e6f1 100644
->>> --- a/drivers/target/target_core_pscsi.h
->>> +++ b/drivers/target/target_core_pscsi.h
->>> @@ -28,7 +28,7 @@ extern int linux_blockdevice_check(int, int);
->>>  #include <linux/kobject.h>
->>>  
->>>  struct pscsi_plugin_task {
->>> -	unsigned char pscsi_cdb[MAX_COMMAND_SIZE];
->>> +	unsigned char pscsi_cdb[TCM_MAX_COMMAND_SIZE];
->>>  	unsigned char pscsi_sense[SCSI_SENSE_BUFFERSIZE];
->>>  	int	pscsi_direction;
->>>  	int	pscsi_result;
->>
->> pscsi is when you directly Q to a scsi LLD via midlayer right? Note that most
->> scsi LLDs don't support > 16 or 12 bytes. The regular scsi despatch will check
->> this for you and return an error. How are these dispatched? blk_execute_rq* ?
->>
-> 
-> Correct on both points.  So all control path CDBs with PSCSI are treated
-> as a passthrough.  The one special thing about pSCSI and struct request
-> passthrough is wrt SCF_SCSI_DATA_SG_IO_CDB I/Os is that TCM Core will
-> still handle the 1 -> N mapping of TCM struct se_task->task_sg[] across
-> a single struct se_cmd->t_mem_list for received CDB sectors > underying
-> HW max_sectors limitiations reported by pscsi_get_max_sectors().
-> 
->>> diff --git a/drivers/target/target_core_rd.h b/drivers/target/target_core_rd.h
->>> index 8170b41..2008807 100644
->>> --- a/drivers/target/target_core_rd.h
->>> +++ b/drivers/target/target_core_rd.h
->>> @@ -31,7 +31,7 @@ void rd_module_exit(void);
->>>  
->>>  struct rd_request {
->>>  	/* SCSI CDB from iSCSI Command PDU */
->>> -	unsigned char	rd_scsi_cdb[MAX_COMMAND_SIZE];
->>> +	unsigned char	rd_scsi_cdb[TCM_MAX_COMMAND_SIZE];
->>>  	/* Data Direction */
->>>  	u8		rd_data_direction;
->>>  	/* Total length of request */
->>> diff --git a/drivers/target/target_core_scdb.c b/drivers/target/target_core_scdb.c
->>> index 8bcfeaf..76a7de0 100644
->>> --- a/drivers/target/target_core_scdb.c
->>> +++ b/drivers/target/target_core_scdb.c
->>> @@ -28,6 +28,7 @@
->>>  
->>>  #include <linux/net.h>
->>>  #include <linux/string.h>
->>> +#include <scsi/scsi.h>
->>>  
->>>  #include <target/target_core_base.h>
->>>  #include <target/target_core_transport.h>
->>> @@ -147,3 +148,40 @@ void split_cdb_RW_16(
->>>  	cdb[0] = (rw) ? 0x8a : 0x88;
->>>  	split_cdb_XX_16(lba, sectors, &cdb[0]);
->>>  }
->>> +
->>> +/*
->>> + *	split_cdb_XX_32():
->>> + *	
->>> + * 	64-bit LBA w/ 32-bit SECTORS such as READ_32, WRITE_32 and XDWRITEREAD_32
->>> + */
->>> +void split_cdb_XX_32(
->>> +	unsigned long long lba,
->>> +	u32 *sectors,
->>> +	unsigned char *cdb)
->>> +{
->>> +	cdb[12] = (lba >> 56) & 0xff;
->>> +	cdb[13] = (lba >> 48) & 0xff;
->>> +	cdb[14] = (lba >> 40) & 0xff;
->>> +	cdb[15] = (lba >> 32) & 0xff;
->>> +	cdb[16] = (lba >> 24) & 0xff;
->>> +	cdb[17] = (lba >> 16) & 0xff;
->>> +	cdb[18] = (lba >> 8) & 0xff;
->>> +	cdb[19] = lba & 0xff;
->>
->> put_unaligned_be64
-> 
-> Ok, converting all functions these in target_core_scdb.c to use
-> put_unaligned_be*().
-> 
->>
->>> +	cdb[28] = (*sectors >> 24) & 0xff;
->>> +	cdb[29] = (*sectors >> 16) & 0xff;
->>> +	cdb[30] = (*sectors >> 8) & 0xff;
->>> +	cdb[31] = *sectors & 0xff;
->>
->> put_unaligned_be32
-> 
-> <nod>
-> 
 >>> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
->>> index 49d5946..a3016f7 100644
+>>> index a3016f7..a20a4a9 100644
 >>> --- a/drivers/target/target_core_transport.c
 >>> +++ b/drivers/target/target_core_transport.c
->>> @@ -2636,7 +2636,8 @@ static int transport_process_control_sg_transform(
->>>  
->>>  	cdb = TRANSPORT(dev)->get_cdb(task);
->>>  	if (cdb)
->>> -		memcpy(cdb, T_TASK(cmd)->t_task_cdb, MAX_COMMAND_SIZE);
->>> +		memcpy(cdb, T_TASK(cmd)->t_task_cdb,
->>> +			scsi_command_size(T_TASK(cmd)->t_task_cdb));
->>>  
->>>  	task->task_size = cmd->data_length;
->>>  	task->task_sg_num = 1;
->>> @@ -2677,7 +2678,8 @@ static int transport_process_control_nonsg_transform(
->>>  
->>>  	cdb = TRANSPORT(dev)->get_cdb(task);
->>>  	if (cdb)
->>> -		memcpy(cdb, T_TASK(cmd)->t_task_cdb, MAX_COMMAND_SIZE);
->>> +		memcpy(cdb, T_TASK(cmd)->t_task_cdb,
->>> +			scsi_command_size(T_TASK(cmd)->t_task_cdb));
->>>  
->>>  	task->task_size = cmd->data_length;
->>>  	task->task_sg_num = 0;
->>> @@ -2711,7 +2713,8 @@ static int transport_process_non_data_transform(
->>>  
->>>  	cdb = TRANSPORT(dev)->get_cdb(task);
->>>  	if (cdb)
->>> -		memcpy(cdb, T_TASK(cmd)->t_task_cdb, MAX_COMMAND_SIZE);
->>> +		memcpy(cdb, T_TASK(cmd)->t_task_cdb,
->>> +			scsi_command_size(T_TASK(cmd)->t_task_cdb));
->>>  
->>>  	task->task_size = cmd->data_length;
->>>  	task->task_sg_num = 0;
->>> @@ -2902,7 +2905,7 @@ int transport_generic_allocate_tasks(
+>>> @@ -5401,6 +5401,7 @@ static int transport_generic_cmd_sequencer(
+>>>  	struct se_subsystem_dev *su_dev = dev->se_sub_dev;
+>>>  	int ret, sector_ret = 0;
+>>>  	u32 sectors = 0, size = 0, pr_reg_type = 0;
+>>> +	u16 service_action;
+>>>  	u8 alua_ascq = 0;
 >>>  	/*
->>>  	 * Copy the original CDB into T_TASK(cmd).
->>>  	 */
->>> -	memcpy(T_TASK(cmd)->t_task_cdb, cdb, MAX_COMMAND_SIZE);
->>> +	memcpy(T_TASK(cmd)->t_task_cdb, cdb, scsi_command_size(cdb));
+>>>  	 * Check for an existing UNIT ATTENTION condition
+>>> @@ -5572,6 +5573,48 @@ static int transport_generic_cmd_sequencer(
+>>>  		T_TASK(cmd)->t_tasks_fua = (cdb[1] & 0x8);
+>>>  		ret = TGCS_DATA_SG_IO_CDB;
+>>>  		break;
+>>> +	case VARIABLE_LENGTH_CMD:
+>>> +		SET_GENERIC_TRANSPORT_FUNCTIONS(cmd);
+>>> +		service_action = (cdb[8] << 8) | cdb[9];
+>> get_unaligned_be16
+> 
+> Fixed
+> 
+>>> +		/*
+>>> +		 * Check the additional CDB length (+ 8 bytes for header) does
+>>> +		 * not exceed our TCM_MAX_COMMAND_SIZE.
+>>> +		 */
+>>> +		if ((cdb[7] + 8) > TCM_MAX_COMMAND_SIZE) {
 >>
->> scsi_command_size can return up to 260 dependent on command. So you'll
->> need a min() to make sure. I'd do a tsk_cdb_cpy() wrapper that does
->> the proper min() for everyone. Later that wrapper can be made smarter
->> for large commands up to 260.
+>> 		scsi_varlen_cdb_length(cdb)
+>> it's in scsi.h
 > 
-> Hmmm actually, I am wondering if we need a method for the individual
-> backstore to report the maximum supported CDB size on a TCM subsystem
-> plugin basis, say via a caller include/target/target_core_transport.h:
-> struct se_subsystem_api, and fail the extended CDB at TCM level for the
-> pSCSI cases where struct scsi_host->max_cmd_len < scsi_command_size().
+> Fixed
 > 
-> Also wrt to 260 byte CDBs for TCM/pSCSI and really everything received
-> greater than the new default 32 for TCM_MAX_COMMAND_SIZE, this will
-> require the extra allocation by TCM Core at both the
-> T_TASK(cmd)->t_task_cdb[] as well as allowing pSCSI to handle this case.
+>>
+>>> +			printk(KERN_INFO "Only %u-byte extended CDBs currently"
+>>> +				" supported for VARIABLE_LENGTH_CMD, received:"
+>>> +				" %d for service action: 0x%04x\n",
+>>> +				TCM_MAX_COMMAND_SIZE, cdb[7], service_action);
+>>> +			return TGCS_INVALID_CDB_FIELD;
+>>> +		}
+>>> +		switch (service_action) {
+>>> +		case 0x0007: /* XDWRITE_READ_32 */
+>>
+>> Is it about time to define all these service_action codes. I have the OSD defines
+>> in an OSD header. So I'm GUILTY just as much.
+>> (but I do have an enum in a public header, at least)
+>>
 > 
-
-For me, (I'm not sure how hard it is. I still did not look, you know ;-))
-I'd drop the allocation all together and just use a pointer and a size.
-So for instance pSCSI can just pass along it's pointer and size, all the
-way to the end and back. In something like iscsi the fixed 16 bytes can
-just point to the received header, and with an extended cdb spill over
-a buffer should be allocated, then de-allocated once command-response is
-sent.
-So basically allocated once in transport, passed around as pointer.
-(BTW Same for sense buffer)
-
-And by the way, I'd let the target reject un-known commands. It's a big
-boy and it's easiest to add new code. No other places to change. (And
-some fun things can be done, like target filtering). Passing the "size"
-test says nothing, the actual command needs implementing. Just make sure
-Error handling is solid. (The target already as a default: return error
-case)
-
-> I will look at implementing this soon, but I still need a way to test
-> this code with TCM/PSCSI and scsi_debug..  Any ideas on where to look
-> for doing this with > 32 byte CDBs..?
+> Yes, I was being a bit lazy here instead of just adding them to
+> include/scsi/scsi.h, but I will add them into the forth-coming RFCv2
+> series..
+> 
+> Btw, I have not been able to find a definitive list of the service
+> actions of VARIABLE_LENGTH_CMD for TYPE_DISK in the SBC3 spec that need
+> to be added to scsi.h.  Have you come across one in your own readings
+> for these..?
 > 
 
-That's easy. You have decided that TCM_MAX_COMMAND_SIZE == 32 and anything
-bigger needs allocation. So for the duration of the test set
-TCM_MAX_COMMAND_SIZE == 16 and see how these 32s get allocated.
+Sorry, no, I'm only an OSD guy. Perhaps Martin or Matthew
 
-or
-
-How ready is target_core_stgt.h can you pass commands to user-space and
-back. We can send OSD commands.
-
-or
-
-What if we use pscsi_plugin_task to send commands to an iscsi-initiator
-device that's an OSD. A bit stupid as an admin point of view, but a grate
-pass through exercise.
-
-[osd-initiator] --net--> [(iscsi_tcm) - (pscsi_plugin_task) - (iscsi-initiator)] \
-  --net--> [osd-target]
-
-The [osd-initiator] and [osd-target] parts are easy.
+> Thanks!
+> 
 
 Boaz
-
->>
->>>  	/*
->>>  	 * Check for SAM Task Attribute Emulation
->>>  	 */
->>> @@ -3829,6 +3832,19 @@ static inline unsigned long long transport_lba_64(unsigned char *cdb)
->>>  	return ((unsigned long long)__v2) | (unsigned long long)__v1 << 32;
->>>  }
->>>  
->>> +/*
->>> + * For VARIABLE_LENGTH_CDB w/ 32 byte extended CDBs
->>> + */
->>> +static inline unsigned long long transport_lba_64_ext(unsigned char *cdb)
->>> +{
->>> +	unsigned int __v1, __v2;
->>> +
->>> +	__v1 = (cdb[12] << 24) | (cdb[13] << 16) | (cdb[14] << 8) | cdb[15];
->>> +	__v2 = (cdb[16] << 24) | (cdb[17] << 16) | (cdb[18] << 8) | cdb[19];
->>> +
->>> +	return ((unsigned long long)__v2) | (unsigned long long)__v1 << 32;
->>
->> get_unaligned_be64(&cdb[12]);
->>
->> I'd just drop this wrapper
-> 
-> Good point, I believe this is only used in a single location.
-> transport_generic_allocate_tasks().
-> 
->>
->>> +}
->>> +
->>>  /*	transport_set_supported_SAM_opcode():
->>>   *
->>>   *
->>> @@ -4370,6 +4386,23 @@ type_disk:
->>>  		    (cdb[12] << 8) + cdb[13];
->>>  }
->>>  
->>> +/*
->>> + * Used for VARIABLE_LENGTH_CDB WRITE_32 and READ_32 variants
->>> + */
->>> +static inline u32 transport_get_sectors_32(
->>> +	unsigned char *cdb,
->>> +	struct se_cmd *cmd,
->>> +	int *ret)
->>> +{
->>> +	/*
->>> +	 * Assume TYPE_DISK for non struct se_device objects.
->>> +	 * Use 32-bit sector value.
->>> +	 */
->>> +	return (u32)(cdb[28] << 24) + (cdb[29] << 16) +
->>> +		    (cdb[30] << 8) + cdb[31];
->>> +
->>
->> get_unaligned_be32
-> 
-> Ok, there are a few more of these that can be converted to
-> get_unaligned_be*() and friends.
-> 
-> Thanks for your comments Boaz!
-> 
-> --nab
-> 
