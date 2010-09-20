@@ -1,119 +1,128 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: scsi_dh_alua: add missing transitioning state support
-Date: Mon, 20 Sep 2010 11:35:39 -0400
-Message-ID: <20100920153539.GA28284@redhat.com>
-References: <1282071956-391-1-git-send-email-snitzer@redhat.com>
- <1282073039.30453.37.camel@haakon2.linux-iscsi.org>
- <4C7B7B9E.3020002@suse.de>
- <20100831151129.GA18855@redhat.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 10/14] scsi: osd: fix device_register() error handling
+Date: Mon, 20 Sep 2010 17:42:13 +0200
+Message-ID: <4C9780D5.8000804@panasas.com>
+References: <1284900907-24621-1-git-send-email-segooon@gmail.com>	 <20100919142653.GF6236@bicker> <1284983897.2973.11.camel@mulgrave.site>	 <20100920151029.GA25386@suse.de>  <20100920151317.GA25506@suse.de> <1284996062.2973.85.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52952 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752855Ab0ITPfz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Sep 2010 11:35:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20100831151129.GA18855@redhat.com>
+Received: from daytona.panasas.com ([67.152.220.89]:19740 "EHLO
+	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756812Ab0ITPmU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Sep 2010 11:42:20 -0400
+In-Reply-To: <1284996062.2973.85.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Greg KH <gregkh@suse.de>, Dan Carpenter <error27@gmail.com>, Vasiliy Kulikov <segooon@gmail.com>, kernel-janitors@vger.kernel.org, Benny Halevy <bhalevy@panasas.com>, Tejun Heo <tj@kernel.org>, Arnd Bergmann <arnd@arndb.de>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, cornelia.huck@de.ibm.com, linux-kernel@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>
 
-Hi Hannes,
-
-On Tue, Aug 31 2010 at 11:11am -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
-
-> On Mon, Aug 30 2010 at  5:36am -0400,
-> Hannes Reinecke <hare@suse.de> wrote:
+On 09/20/2010 05:21 PM, James Bottomley wrote:
+> On Mon, 2010-09-20 at 08:13 -0700, Greg KH wrote:
+>> On Mon, Sep 20, 2010 at 08:10:29AM -0700, Greg KH wrote:
+>>> On Mon, Sep 20, 2010 at 06:58:17AM -0500, James Bottomley wrote:
+>>>> On Sun, 2010-09-19 at 16:26 +0200, Dan Carpenter wrote:
+>>>>> On Sun, Sep 19, 2010 at 04:55:07PM +0400, Vasiliy Kulikov wrote:
+>>>>>> If device_register() fails then call put_device().
+>>>>>> See comment to device_register.
+>>>>>>
+>>>>>> Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
+>>>>>> ---
+>>>>>>  compile tested.
+>>>>>>
+>>>>>>  drivers/scsi/osd/osd_uld.c |    4 +++-
+>>>>>>  1 files changed, 3 insertions(+), 1 deletions(-)
+>>>>>>
+>>>>>> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
+>>>>>> index cefb2c0..3e0edc2 100644
+>>>>>> --- a/drivers/scsi/osd/osd_uld.c
+>>>>>> +++ b/drivers/scsi/osd/osd_uld.c
+>>>>>> @@ -474,7 +474,7 @@ static int osd_probe(struct device *dev)
+>>>>>>  	error = device_register(&oud->class_dev);
+>>>>>>  	if (error) {
+>>>>>>  		OSD_ERR("device_register failed => %d\n", error);
+>>>>>> -		goto err_put_cdev;
+>>>>>> +		goto err_put_device;
+>>>>>>  	}
+>>>>>>  
+>>>>>>  	get_device(&oud->class_dev);
+>>>>>> @@ -482,6 +482,8 @@ static int osd_probe(struct device *dev)
+>>>>>>  	OSD_INFO("osd_probe %s\n", disk->disk_name);
+>>>>>>  	return 0;
+>>>>>>  
+>>>>>
+>>>>> Hm...  So if device_register() fails then we should always call
+>>>>> device_put()?  It seems like a lot of existing code does that but I
+>>>>> hadn't realized until now that that is how it works.
+>>>>
+>>>> Heh, it wasn't a bug when most of the code was written.  It became a bug
+>>>> when dev_set_name() was added because now the storage allocated for the
+>>>> name has to be freed with a put.  Previous to this, the advice was just
+>>>> to free the device if device_register() failed.
+>>
+>> That was a long time ago.  When the driver core changed, all callers
+>> were audited from what I recall.
+>>
+>>>>> Why can't the device_put() just be added inside the device_register() so
+>>>>> the unwinding works automatically?
+>>>>
+>>>> Since Greg and Kay didn't actually alter any of the device_register()
+>>>> failure paths, this does sound to be the better course of action ... of
+>>>> course, every device_register() introduced after the dev_set_name()
+>>>> change may call put_device() on the cleanup path ... someone needs to
+>>>> check.
+>>>
+>>> Yes, this patch series should not be needed at all.  If there's a
+>>> problem with the driver core here, it should be fixed, not forcing the
+>>> issue to all of the individual callers.
+>>
+>> Nope, I'm wrong, sorry, this is correct.  We can't just free the device
+>> ourselves in the driver core because other parts that the device might
+>> be embedded in need to be cleaned up before it can go away.
 > 
-> > Nicholas A. Bellinger wrote:
-> > > On Tue, 2010-08-17 at 15:05 -0400, Mike Snitzer wrote:
-> > >> Handle transitioning in the prep_fn.
-> > >> Handle transitioning in alua_rtpg's implicit alua code too.
-> > >>
-> > >> These gaps were identified during controller failover testing of an
-> > >> ALUA array.
-> > >>
-> > >> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-> > >> ---
-> > >>  drivers/scsi/device_handler/scsi_dh_alua.c |   10 +++++++---
-> > >>  1 files changed, 7 insertions(+), 3 deletions(-)
-> > >>
-> > >> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> > >> index 1a970a7..c1eedc5 100644
-> > >> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> > >> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> > >> @@ -616,6 +616,9 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
-> > >>  		    h->state == TPGS_STATE_STANDBY)
-> > >>  			/* Useable path if active */
-> > >>  			err = SCSI_DH_OK;
-> > >> +		else if (h->state == TPGS_STATE_TRANSITIONING)
-> > >> +			/* State transition, retry */
-> > >> +			goto retry;
-> > >>  		else
-> > >>  			/* Path unuseable for unavailable/offline */
-> > >>  			err = SCSI_DH_DEV_OFFLINED;
-> > >> @@ -698,13 +701,14 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
-> > >>  	struct alua_dh_data *h = get_alua_data(sdev);
-> > >>  	int ret = BLKPREP_OK;
-> > >>  
-> > >> -	if (h->state != TPGS_STATE_OPTIMIZED &&
-> > >> -	    h->state != TPGS_STATE_NONOPTIMIZED) {
-> > >> +	if (h->state == TPGS_STATE_TRANSITIONING)
-> > >> +		ret = BLKPREP_DEFER;
-> > >> +	else if (h->state != TPGS_STATE_OPTIMIZED &&
-> > >> +		 h->state != TPGS_STATE_NONOPTIMIZED) {
-> > >>  		ret = BLKPREP_KILL;
-> > >>  		req->cmd_flags |= REQ_QUIET;
-> > >>  	}
-> > >>  	return ret;
-> > >> -
-> > >>  }
-> > >>  
-> > > 
-> > > Makes sense to me..
-> > > 
-> > > Acked-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > > 
-> > Not so fast. There are two problems with this approach:
-> > 
-> > The path is retried indefinitely. Arrays are _supposed_ to be in 'transitioning'
-> > only temporary; however, if the array is stuck due to a fw error we're stuck in 'defer',
-> > too.
+> We're not asking you to free it; that would be wrong.  We're discussing
+> doing a put on add fail.  This will free the name allocation and would
+> call the release method if one exists, but most of these devices that
+> use device_register() seem not to have one (being embedded).  The
+> ultimate free would be done either directly in the error path or
+> indirectly via release.
 > 
-> And what is the problem with that?  The IO will eventually time out.
-
-To restate as a question: even though we'll retry in alua_rtpg();
-shouldn't the SCSI command eventually time out (via
-scsi_attempt_requeue_command)?
-
-Note that my proposed change to alua_rtpg() just adds a
-TPGS_STATE_TRANSITIONING handler for implicit ALUA -- explicit ALUA
-already has such a handler.
-
-Allowing implicit ALUA to fall through (as we do currently) causes a
-return alua_rtpg() of SCSI_DH_DEV_OFFLINED -- which isn't the correct
-state.
-
-> > Secondly this path fails with 'directio' multipath checker. Remember that 'directio'
-> > is using 'fs' requests, not block-pc ones. Hence for all I/O the prep_fn() callback
-> > is evaluated, which will return 'DEFER' here once the path is in transitioning.
-> > And the state is never updated as RTPG is never called.
+> This would make the bug you and Kay introduced with the dev_set_name()
+> patch series go away silently.  As I said ... this change would require
+> verification since device_register() calls introduced after that patch
+> series may do the put.
 > 
-> Testing ALUA with directio path checker did not result in such immutable
-> state in the few instances that TPGS_STATE_TRANSITIONING was seen in
-> alua_prep_fn.
-
-I had another look and I see what you're saying.  Thanks for catching this!
-
-> > I'm currently preparing a patch which addressed these situations, too.
+> The question is really which is more effort.  Every device_register() up
+> until the beginning of 2009 has been made buggy by the dev_set_name()
+> patch set.  The chances are at least a few uses added after would be
+> rendered wrong (although most look to use copy and paste from existing
+> uses).
 > 
-> OK, please share.
+> James
+> 
 
-Do you have that patch you were preparing?  I look forward to seeing
-your solution to this.
+I think I have a compromise. If it is indeed the dev_set_name() leak
+then we can just deallocate the name on the error return path. Therefore
+any drivers that have the device embedded and rely on it been freed without
+calling _put will be fine as before. And these calling _put will be fine
+as well.
 
-Thanks,
-Mike
+See below
+Boaz
+---
+git diff --stat -p -M drivers/base/core.c
+ drivers/base/core.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index d1b2c9a..054fac2 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -1068,6 +1068,7 @@ done:
+ 	if (parent)
+ 		put_device(parent);
+ name_error:
++	kfree(dev->kobj.name);
+ 	kfree(dev->p);
+ 	dev->p = NULL;
+ 	goto done;
