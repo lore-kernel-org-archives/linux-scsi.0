@@ -1,48 +1,123 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] mvsas: defer non-NCQ cmds when NCQ cmds are active
-Date: Tue, 21 Sep 2010 15:51:14 -0500
-Message-ID: <1285102274.16440.132.camel@mulgrave.site>
-References: <20100921191701.GA16726@dhcp-10-15-1-70.hsv.redhat.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: scsi_dh_alua: add missing transitioning state support
+Date: Tue, 21 Sep 2010 16:14:14 -0500
+Message-ID: <4C992026.5080402@cs.wisc.edu>
+References: <1282071956-391-1-git-send-email-snitzer@redhat.com> <1282073039.30453.37.camel@haakon2.linux-iscsi.org> <4C7B7B9E.3020002@suse.de> <20100831151129.GA18855@redhat.com> <20100920153539.GA28284@redhat.com> <4C98180F.1020707@cs.wisc.edu> <20100921193320.GA5110@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:45067 "EHLO mx1.suse.de"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:56326 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755609Ab0IUUvT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2010 16:51:19 -0400
-In-Reply-To: <20100921191701.GA16726@dhcp-10-15-1-70.hsv.redhat.com>
+	id S1754115Ab0IUVIi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2010 17:08:38 -0400
+In-Reply-To: <20100921193320.GA5110@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Milburn <dmilburn@redhat.com>
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, k.skarlatos@gmail.com
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On Tue, 2010-09-21 at 14:17 -0500, David Milburn wrote:
-> Non-NCQ commands should run exclusively, ata_qc_issue warns when mixing
-> non-NCQ and NCQ commands.
-> 
-> Signed-off-by: David Milburn <dmilburn@redhat.com>
-> Reported-by: Konstantinos Skarlatos <k.skarlatos@gmail.com>
-> ---
->  drivers/scsi/libsas/sas_ata.c |    1 +
->  1 files changed, 1 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-> index 042153c..ddbade7 100644
-> --- a/drivers/scsi/libsas/sas_ata.c
-> +++ b/drivers/scsi/libsas/sas_ata.c
-> @@ -347,6 +347,7 @@ static int sas_ata_scr_read(struct ata_link *link, unsigned int sc_reg_in,
->  static struct ata_port_operations sas_sata_ops = {
->  	.phy_reset		= sas_ata_phy_reset,
->  	.post_internal_cmd	= sas_ata_post_internal,
-> +	.qc_defer               = ata_std_qc_defer,
+On 09/21/2010 02:33 PM, Mike Snitzer wrote:
+> On Mon, Sep 20 2010 at 10:27pm -0400,
+> Mike Christie<michaelc@cs.wisc.edu>  wrote:
+>
+>> On 09/20/2010 10:35 AM, Mike Snitzer wrote:
+>>> Hi Hannes,
+>>>
+>>> On Tue, Aug 31 2010 at 11:11am -0400,
+>>> Mike Snitzer<snitzer@redhat.com>   wrote:
+>>>
+>>>> On Mon, Aug 30 2010 at  5:36am -0400,
+>>>> Hannes Reinecke<hare@suse.de>   wrote:
+>>>>
+>>>>> Nicholas A. Bellinger wrote:
+>>>>>> On Tue, 2010-08-17 at 15:05 -0400, Mike Snitzer wrote:
+>>>>>>> Handle transitioning in the prep_fn.
+>>>>>>> Handle transitioning in alua_rtpg's implicit alua code too.
+>>>>>>>
+>>>>>>> These gaps were identified during controller failover testing of an
+>>>>>>> ALUA array.
+>>>>>>>
+>>>>>>> Signed-off-by: Mike Snitzer<snitzer@redhat.com>
+>>>>>>> ---
+>>>>>>>   drivers/scsi/device_handler/scsi_dh_alua.c |   10 +++++++---
+>>>>>>>   1 files changed, 7 insertions(+), 3 deletions(-)
+>>>>>>>
+>>>>>>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+>>>>>>> index 1a970a7..c1eedc5 100644
+>>>>>>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>>>>>>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>>>>>>> @@ -616,6 +616,9 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+>>>>>>>   		    h->state == TPGS_STATE_STANDBY)
+>>>>>>>   			/* Useable path if active */
+>>>>>>>   			err = SCSI_DH_OK;
+>>>>>>> +		else if (h->state == TPGS_STATE_TRANSITIONING)
+>>>>>>> +			/* State transition, retry */
+>>>>>>> +			goto retry;
+>>>>>>>   		else
+>>>>>>>   			/* Path unuseable for unavailable/offline */
+>>>>>>>   			err = SCSI_DH_DEV_OFFLINED;
+>>>>>>> @@ -698,13 +701,14 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+>>>>>>>   	struct alua_dh_data *h = get_alua_data(sdev);
+>>>>>>>   	int ret = BLKPREP_OK;
+>>>>>>>
+>>>>>>> -	if (h->state != TPGS_STATE_OPTIMIZED&&
+>>>>>>> -	    h->state != TPGS_STATE_NONOPTIMIZED) {
+>>>>>>> +	if (h->state == TPGS_STATE_TRANSITIONING)
+>>>>>>> +		ret = BLKPREP_DEFER;
+>>>>>>> +	else if (h->state != TPGS_STATE_OPTIMIZED&&
+>>>>>>> +		 h->state != TPGS_STATE_NONOPTIMIZED) {
+>>>>>>>   		ret = BLKPREP_KILL;
+>>>>>>>   		req->cmd_flags |= REQ_QUIET;
+>>>>>>>   	}
+>>>>>>>   	return ret;
+>>>>>>> -
+>>>>>>>   }
+>>>>>>>
+>>>>>>
+>>>>>> Makes sense to me..
+>>>>>>
+>>>>>> Acked-by: Nicholas A. Bellinger<nab@linux-iscsi.org>
+>>>>>>
+>>>>> Not so fast. There are two problems with this approach:
+>>>>>
+>>>>> The path is retried indefinitely. Arrays are _supposed_ to be in 'transitioning'
+>>>>> only temporary; however, if the array is stuck due to a fw error we're stuck in 'defer',
+>>>>> too.
+>>>>
+>>>> And what is the problem with that?  The IO will eventually time out.
+>>>
+>>> To restate as a question: even though we'll retry in alua_rtpg();
+>>> shouldn't the SCSI command eventually time out (via
+>>> scsi_attempt_requeue_command)?
+>>
+>> That function is only in RHEL. Requests that are prepd and sent to
+>> the scsi layer and driver would eventually timeout in
+>> scsi_softirq_done in upstream.
+>>
+>> alua_prep_fn prevents the IO from getting sent to the scsi layer so
+>> we do not hit the check in scsi_softirq_done though.
+>
+> That is only the case if alua_prep_fn were to return BLKPREP_DEFER
+> right?
 
-What does this do on the card that doesn't need it: the aic94xx?  That
-one takes in a pipeline of commands and takes responsibility for getting
-the issue right.  Something like this throttles the pipeline higher than
-the aic94xx is expecting.  However, as long as it's not too much of a
-performance problem, I don't mind applying it.
+Yeah. I misread the email above. Just to clarify..
 
-James
+For the alua case, we will always retry due the prep_fn issue I mentioned.
 
+For the alua_rtpg() retry case you were discussing we will also always 
+retry, because the timer check in 
+scsi_attempt_requeue_command/scsi_softirq_done will break us from 
+retrying forever in that execution of the request started by the 
+submit_rtpg call. However, the added goto retry will would just end up 
+starting a another execution. To handle Hannes comment I think you would 
+want to add some retry/timer checks in alua_rtpg to prevent that from 
+retrying forever.
 
+>
+> 2) the patch also modified alua_rtpg() so implicit ALUA would retry
+>     (just like explicit ALUA currently does) if TPGS_STATE_TRANSITIONING
+>     - so why should we avoid retry for implicit but do it for explicit?
+
+Leaving that for Hannes. I cannot think of a reason. Probably just did 
+not do it.
