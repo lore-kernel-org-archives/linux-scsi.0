@@ -1,163 +1,73 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16547] mptscsih: ioc0: attempting task abort, raid array LUNs
- not detected properly on some boots
-Date: Tue, 21 Sep 2010 08:12:10 GMT
-Message-ID: <201009210812.o8L8CA7s002044@demeter1.kernel.org>
-References: <bug-16547-11613@https.bugzilla.kernel.org/>
+From: Justin Piszcz <jpiszcz@lucidpixels.com>
+Subject: 2.6.35.x: acpi+no_hz+turboboost causing 3ware I/O controller
+ resets
+Date: Tue, 21 Sep 2010 05:30:56 -0400 (EDT)
+Message-ID: <alpine.DEB.2.00.1009210515210.14504@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41127 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755350Ab0IUIML (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Sep 2010 04:12:11 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o8L8CAXP002045
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2010 08:12:10 GMT
-In-Reply-To: <bug-16547-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; format=flowed; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: adam radford <aradford@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16547
+Hello,
 
+There has been discussion going on here:
+http://forums.storagereview.com/index.php/topic/28920-3ware-9650se-controller-resets-under-load-on-linux/page__st__30__gopid__264286&#entry264286
 
+Member JGC posted:
+======================================================================
+I've been stuggling with these reset problems for a year now. Problems started to appear when we upgraded our servers running Debian Etch to Debian Lenny. When we did this upgrade, we changed our kernel from a custom compiled 2.6.24 kernel to 2.6.27. When 2.6.32 was declared as long time supported stable kernel, we switched to this kernel, but problems still appeared.
+Recently I reconfigured the kernel (2.6.32.21) a bit:
+- disable NOHZ
+- disable speedstepping
+- apply two patches from 2.6.35:
+http://git.kernel.or...405aa31bcbb7091
+http://git.kernel.or...e2d9fcf50aa04be
+======================================================================
+After those changes, I haven't seen reset problems anymore. We've seen this bug on several servers and contacted LSI and our vendor about this problem. The vendor doesn't know about the problems, and LSI blames the mainboard of some servers, while they blame the disks for other servers (yes, we have some servers with desktop drives).
 
+I've been stresstesting this kernel with the "stress" utility on a 9690SA and 9650SE-based machine, both work fine with the modified kernel and haven't shown any resets ever since. I could even enable NCQ again without hanging up the servers completely.
+======================================================================
 
+I always have had NO_HZ enabled along with CPU Frequency Scaling so I could
+utilize turbo boost.  However, with 2.6.35, as soon as there was any I/O on
+the system, the system would "freeze," - it would respond to ping, but all
+SSH windows would "lockup" until the controller resets (like below):
 
---- Comment #7 from Martin Steigerwald <ms@teamix.de>  2010-09-21 08:12:01 ---
-(In reply to comment #5)
-> (In reply to comment #3)
-> > Some additional information on the MPT driver version and controller:
-> > 
-> > backend01:~# grep -r "" /proc/mpt/*
-> > /proc/mpt/ioc0/summary:ioc0: LSIFC949E A1, FwRev=01030e00h, Ports=1, MaxQ=1023,
-> > LanAddr=00:06:[...], IRQ=33
-> > /proc/mpt/ioc0/info:ioc0:
-> > /proc/mpt/ioc0/info:  ProductID = 0x1005 (LSIFC949E A1)
-> > /proc/mpt/ioc0/info:  FWVersion = 0x01030e00 (fw_size=190556)
-[...]
-> Your bug is completely different issue. Whatever you are point to redhat
-> bugzilla is with respect to SAS controller.
+[  593.967176] 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
+timed out, resetting card.
+[  730.483812] 3w-9xxx: scsi0: WARNING: (0x06:0x0037): Character ioctl (0x108)
+timed out, resetting card.
 
-I thought it might be related nevertheless. I don't know the inner structure of
-the MPT driver. It also sounded similar, cause in that bug report there is also
-the mention that it worked with 2.6.26, but I AFAIR not with 2.6.27. Maybe its
-a general change in the SCSI layer that triggers the issue.
+However, after disabling:
 
-> In your case it is FC controller.
+[*] Tickless System (Dynamic Ticks)
+<*> Processor or CPU Frequency Scaling
+[*] CPU Frequency scaling
 
-Yes, I know.
+Re-compiling, booting into 2.6.35.4 again (have not changed the kernel
+version).
 
-> You have mentioned that 
-> "Latest kernel known to work: 2.6.26 from Debian Backports"
-> 
-> Can you provide me driver version where things are working fine. 
+I have been running heavy I/O processes that can cause the problem pretty much
+immediately when those CPU options are enabled-- and the problem appears to
+be resolved, there have been no freezing events yet.
 
-Here is the version from a 2.6.26 lenny kernel, which should be the one that
-has been backported to Etch:
+I'll let it run for a while longer but from what I can tell disabling
+turboboost options (tickless/scaling) seems to solve the problem!
 
-pasta:~# modinfo
-/lib/modules/2.6.26-2-amd64/kernel/drivers/message/fusion/mptfc.ko 
-filename:      
-/lib/modules/2.6.26-2-amd64/kernel/drivers/message/fusion/mptfc.ko
-version:        3.04.06
-license:        GPL
-description:    Fusion MPT FC Host driver
-author:         LSI Corporation
-srcversion:     F3D99FE0544BDDD1455BAAA
-alias:          pci:v00001657d00000646sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000646sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000640sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000642sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000626sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000628sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000622sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000624sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000621sv*sd*bc*sc*i*
-depends:        mptscsih,scsi_transport_fc,scsi_mod,mptbase
-vermagic:       2.6.26-2-amd64 SMP mod_unload modversions 
-parm:           mptfc_dev_loss_tmo: Initial time the driver programs the 
-transport to wait for an rport to  return following a device loss event. 
-Default=60. (int)
-parm:           max_lun: max lun, default=16895  (int)
+The next questions are:
 
-The 2.6.32 kernel, where we see described issues has:
+1. what changed with CPU/frequency scaling from 2.6.34 -> 2.6.35?
+2. when disabling the options above, it seems to stop the reset issue, why?
 
-backend01:~# modinfo mptfc
-filename:      
-/lib/modules/2.6.32-bpo.5-amd64/kernel/drivers/message/fusion/mptfc.ko
-version:        3.04.12
-license:        GPL
-description:    Fusion MPT FC Host driver
-author:         LSI Corporation
-srcversion:     92E350C096B75A9714B8B0E
-alias:          pci:v00001657d00000646sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000646sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000640sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000642sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000626sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000628sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000622sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000624sv*sd*bc*sc*i*
-alias:          pci:v00001000d00000621sv*sd*bc*sc*i*
-depends:        mptscsih,mptbase,scsi_transport_fc,scsi_mod
-vermagic:       2.6.32-bpo.5-amd64 SMP mod_unload modversions 
-parm:           mptfc_dev_loss_tmo: Initial time the driver programs the 
-transport to wait for an rport to  return following a device loss event. 
-Default=60. (int)
-parm:           max_lun: max lun, default=16895  (int)
-backend01:~#
+I've had a case (a couple cases open with 3ware/LSI) and they have my
+configuration/etc and have not been able to re-produce the problem; however,
+unless they have a CPU that is turbo-boost capable/matching the hardware,
+I am not sure they will be able to reproduce the problem.
 
-> In case of
-> some working kernel is there, I would like to simply upgrade MPTFUSION driver
-> (do not upgrade a whole kernel). This way I would like to change only one
-> component of the system at a time...
+I'll keep running tests to see if I can re-produce the problem when CPU 
+frequency scaling is turned off, but so far, the problem has not recurred.
 
-Well the old 2.6.26 kernel worked. But actually it does not boot on the new
-servers, cause the old version ata_piix does not talk to the newer onboard SATA
-controller. Thus it would be required to use a newer ata_piix and a newer MPT
-FUSION FC driver with 2.6.26 kernel. I don't know whether thats feasible.
-
-Its a production machine and I need to be careful with testing. I can only test
-with agreement of the customer. But for a defined test case it might be
-workable. Would it be as easy as to replace the directories with the driver
-source with a newer version? From 2.6.26 to 2.6.32 is quite a step.
-
-> This will help to understand where things are broken.
-
-I understand.
-
-> FYI,
-> MPTFC drive is highly in mentionation mode. There are very very minimal changes
-> happened to MPTFC driver since 2008.
-> 
-> Last change went to upstream for MPTFC is 
-> 
-> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=03cb3829e0e5650518ce37e2b4420a35e034dc9e
-
-I don't think that commit has landed in 2.6.32, since Linus released it on 3rd
-december 2009. It also does not seem to be in one of the stable patches:
-
-ms@mango:~/Linux/Kernel/Mainline> ls ChangeLog-2.6.32*
-ChangeLog-2.6.32     ChangeLog-2.6.32.16  ChangeLog-2.6.32.3
-ChangeLog-2.6.32.1   ChangeLog-2.6.32.17  ChangeLog-2.6.32.4
-ChangeLog-2.6.32.10  ChangeLog-2.6.32.18  ChangeLog-2.6.32.5
-ChangeLog-2.6.32.11  ChangeLog-2.6.32.19  ChangeLog-2.6.32.6
-ChangeLog-2.6.32.12  ChangeLog-2.6.32.2   ChangeLog-2.6.32.7
-ChangeLog-2.6.32.13  ChangeLog-2.6.32.20  ChangeLog-2.6.32.8
-ChangeLog-2.6.32.14  ChangeLog-2.6.32.21  ChangeLog-2.6.32.9
-ChangeLog-2.6.32.15  ChangeLog-2.6.32.22
-ms@mango:~/Linux/Kernel/Mainline> grep 03cb3829e0e5650518ce37e2b4420a35e034dc9e
-ChangeLog-2.6.32*
-ms@mango:~/Linux/Kernel/Mainline#1>
-
-Thanks,
-Martin
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are on the CC list for the bug.
-You are watching the assignee of the bug.
+Justin.
