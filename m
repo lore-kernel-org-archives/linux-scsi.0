@@ -1,37 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 18862] [BUG]Kernel 2.6.36rc4 crash when rmmod pm8001
-Date: Tue, 21 Sep 2010 19:07:19 GMT
-Message-ID: <201009211907.o8LJ7JUZ013868@demeter1.kernel.org>
-References: <bug-18862-11613@https.bugzilla.kernel.org/>
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH] mvsas: defer non-NCQ cmds when NCQ cmds are active
+Date: Tue, 21 Sep 2010 14:17:01 -0500
+Message-ID: <20100921191701.GA16726@dhcp-10-15-1-70.hsv.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:41500 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752683Ab0IUTHU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Sep 2010 15:07:20 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o8LJ7JGk013869
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2010 19:07:19 GMT
-In-Reply-To: <bug-18862-11613@https.bugzilla.kernel.org/>
+Received: from mx1.redhat.com ([209.132.183.28]:47629 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754390Ab0IUTQ7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2010 15:16:59 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@suse.de, jeff@garzik.org, k.skarlatos@gmail.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=18862
+Non-NCQ commands should run exclusively, ata_qc_issue warns when mixing
+non-NCQ and NCQ commands.
 
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+Reported-by: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+---
+ drivers/scsi/libsas/sas_ata.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Rafael J. Wysocki <rjw@sisk.pl> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 042153c..ddbade7 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -347,6 +347,7 @@ static int sas_ata_scr_read(struct ata_link *link, unsigned int sc_reg_in,
+ static struct ata_port_operations sas_sata_ops = {
+ 	.phy_reset		= sas_ata_phy_reset,
+ 	.post_internal_cmd	= sas_ata_post_internal,
++	.qc_defer               = ata_std_qc_defer,
+ 	.qc_prep		= ata_noop_qc_prep,
+ 	.qc_issue		= sas_ata_qc_issue,
+ 	.qc_fill_rtf		= sas_ata_qc_fill_rtf,
