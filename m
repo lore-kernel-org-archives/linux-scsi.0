@@ -1,102 +1,96 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: scsi_dh_alua: add missing transitioning state support
-Date: Mon, 20 Sep 2010 21:28:56 -0500
-Message-ID: <4C981868.60801@cs.wisc.edu>
-References: <1282071956-391-1-git-send-email-snitzer@redhat.com> <1282073039.30453.37.camel@haakon2.linux-iscsi.org> <4C7B7B9E.3020002@suse.de> <20100831151129.GA18855@redhat.com> <20100920153539.GA28284@redhat.com> <4C98180F.1020707@cs.wisc.edu>
+From: Alex Deucher <alexdeucher@gmail.com>
+Subject: Re: 2.6.36-rc4-git5: Reported regressions from 2.6.35
+Date: Tue, 21 Sep 2010 00:05:15 -0400
+Message-ID: <AANLkTikNm90F6rpi7u=XUOG-Ga6F0+h=bFwkC-sKaO4j@mail.gmail.com>
+References: <1fwtoy8sG5H.A.veG.9D7lMB@chimera>
+	<AANLkTinLR0Js0ueVOGEkbs27d4FEH14c=1wuhUqPsiHx@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:39514 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752317Ab0IUCXV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Sep 2010 22:23:21 -0400
-In-Reply-To: <4C98180F.1020707@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <AANLkTinLR0Js0ueVOGEkbs27d4FEH14c=1wuhUqPsiHx@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
+To: sedat.dilek@gmail.com
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Florian Mickler <florian@mickler.org>, harn-solo@gmx.de, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On 09/20/2010 09:27 PM, Mike Christie wrote:
-> On 09/20/2010 10:35 AM, Mike Snitzer wrote:
->> Hi Hannes,
->>
->> On Tue, Aug 31 2010 at 11:11am -0400,
->> Mike Snitzer<snitzer@redhat.com> wrote:
->>
->>> On Mon, Aug 30 2010 at 5:36am -0400,
->>> Hannes Reinecke<hare@suse.de> wrote:
->>>
->>>> Nicholas A. Bellinger wrote:
->>>>> On Tue, 2010-08-17 at 15:05 -0400, Mike Snitzer wrote:
->>>>>> Handle transitioning in the prep_fn.
->>>>>> Handle transitioning in alua_rtpg's implicit alua code too.
->>>>>>
->>>>>> These gaps were identified during controller failover testing of an
->>>>>> ALUA array.
->>>>>>
->>>>>> Signed-off-by: Mike Snitzer<snitzer@redhat.com>
->>>>>> ---
->>>>>> drivers/scsi/device_handler/scsi_dh_alua.c | 10 +++++++---
->>>>>> 1 files changed, 7 insertions(+), 3 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
->>>>>> b/drivers/scsi/device_handler/scsi_dh_alua.c
->>>>>> index 1a970a7..c1eedc5 100644
->>>>>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
->>>>>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
->>>>>> @@ -616,6 +616,9 @@ static int alua_rtpg(struct scsi_device *sdev,
->>>>>> struct alua_dh_data *h)
->>>>>> h->state == TPGS_STATE_STANDBY)
->>>>>> /* Useable path if active */
->>>>>> err = SCSI_DH_OK;
->>>>>> + else if (h->state == TPGS_STATE_TRANSITIONING)
->>>>>> + /* State transition, retry */
->>>>>> + goto retry;
->>>>>> else
->>>>>> /* Path unuseable for unavailable/offline */
->>>>>> err = SCSI_DH_DEV_OFFLINED;
->>>>>> @@ -698,13 +701,14 @@ static int alua_prep_fn(struct scsi_device
->>>>>> *sdev, struct request *req)
->>>>>> struct alua_dh_data *h = get_alua_data(sdev);
->>>>>> int ret = BLKPREP_OK;
->>>>>>
->>>>>> - if (h->state != TPGS_STATE_OPTIMIZED&&
->>>>>> - h->state != TPGS_STATE_NONOPTIMIZED) {
->>>>>> + if (h->state == TPGS_STATE_TRANSITIONING)
->>>>>> + ret = BLKPREP_DEFER;
->>>>>> + else if (h->state != TPGS_STATE_OPTIMIZED&&
->>>>>> + h->state != TPGS_STATE_NONOPTIMIZED) {
->>>>>> ret = BLKPREP_KILL;
->>>>>> req->cmd_flags |= REQ_QUIET;
->>>>>> }
->>>>>> return ret;
->>>>>> -
->>>>>> }
->>>>>>
->>>>>
->>>>> Makes sense to me..
->>>>>
->>>>> Acked-by: Nicholas A. Bellinger<nab@linux-iscsi.org>
->>>>>
->>>> Not so fast. There are two problems with this approach:
->>>>
->>>> The path is retried indefinitely. Arrays are _supposed_ to be in
->>>> 'transitioning'
->>>> only temporary; however, if the array is stuck due to a fw error
->>>> we're stuck in 'defer',
->>>> too.
->>>
->>> And what is the problem with that? The IO will eventually time out.
->>
->> To restate as a question: even though we'll retry in alua_rtpg();
->> shouldn't the SCSI command eventually time out (via
->> scsi_attempt_requeue_command)?
+On Mon, Sep 20, 2010 at 3:19 PM, Sedat Dilek <sedat.dilek@googlemail.co=
+m> wrote:
+> Hi Rafael,
 >
-> That function is only in RHEL. Requests that are prepd and sent to the
-> scsi layer and driver would eventually timeout in scsi_softirq_done in
-> upstream.
+> can you please add the following, Thanks in advance.
+>> Bug-Entry =A0 =A0 =A0 : http://bugzilla.kernel.org/show_bug.cgi?id=3D=
+18872
+>> Subject =A0 =A0 =A0 =A0 : Radeon KMS r100 and STR problems
+>> Submitter =A0 =A0 =A0 : Richard Mittendorfer <delist@gmx.net>
+>> Date =A0 =A0 =A0 =A0 =A0 =A0: 2010-09-17 18:26 (4 days old)
+>> Message-ID =A0 =A0 =A0: <20100917202647.aa4b6300.delist@gmx.net>
+>> References =A0 =A0 =A0: http://marc.info/?l=3Dlinux-kernel&m=3D12847=
+4802809779&w=3D2
+>
+> On Mon, Sep 20, 2010 at 8:47 PM, Rafael J. Wysocki <rjw@sisk.pl> wrot=
+e:
+>> This message contains a list of some regressions from 2.6.35,
+>> for which there are no fixes in the mainline known to the tracking t=
+eam.
+>> If any of them have been fixed already, please let us know.
+>>
+>> If you know of any other unresolved regressions from 2.6.35, please =
+let us
+>> know either and we'll add them to the list. =A0Also, please let us k=
+now
+>> if any of the entries below are invalid.
+>>
+>> Each entry from the list will be sent additionally in an automatic r=
+eply
+>> to this message with CCs to the people involved in reporting and han=
+dling
+>> the issue.
+>>
+>>
+>> Listed regressions statistics:
+>>
+>> =A0Date =A0 =A0 =A0 =A0 =A0Total =A0Pending =A0Unresolved
+>> =A0----------------------------------------
+>> =A02010-09-20 =A0 =A0 =A0 38 =A0 =A0 =A0 15 =A0 =A0 =A0 =A0 =A015
+>> =A02010-09-12 =A0 =A0 =A0 28 =A0 =A0 =A0 14 =A0 =A0 =A0 =A0 =A013
+>> =A02010-08-30 =A0 =A0 =A0 21 =A0 =A0 =A0 16 =A0 =A0 =A0 =A0 =A015
+>>
+>>
+>> Unresolved regressions
+>
+> Hi Rafael,
+>
+> can you please add the following Bug, Thanks in advance.
+>
+> Bug-Entry =A0 =A0 =A0 : https://bugzilla.kernel.org/show_bug.cgi?id=3D=
+16140
+> Subject =A0 =A0 =A0 =A0 : Suspend To RAM/ Resume broken - Radeon KMS =
+on RV250
+> Submitter =A0 =A0 =A0 : Michael Long <harn-solo@gmx.de>
+> Date =A0 =A0 =A0 =A0 =A0 =A0: 2010-06-06 09:52
+> Message-ID =A0 =A0 =A0: ???
+> References =A0 =A0 =A0: ???
+>
+> What is with "Regression: =A0 =A0 =A0 No" in the BR? Change?
 
-Did we want to move this check to the block layer btw? If so it could 
-solve the problem.
+This isn't a regression as according to your bug report, s/r has never
+worked on your board with kms.  The kms and ums drm components are
+completely different drivers even though they are compiled into the
+same binary.
 
+Alex
+
+>
+> Regards,
+> - Sedat -
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> http://lists.freedesktop.org/mailman/listinfo/dri-devel
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-acpi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
