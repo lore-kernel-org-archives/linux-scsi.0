@@ -1,56 +1,62 @@
-From: Malahal Naineni <malahal@us.ibm.com>
-Subject: [PATCH] block: set the bounce_pfn to the actual DMA limit rather than
-	to max memory
-Date: Tue, 21 Sep 2010 15:22:30 -0700
-Message-ID: <c9516154fabc03112353.1285107750@malahal>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: [PATCH] mvsas: defer non-NCQ cmds when NCQ cmds are active
+Date: Tue, 21 Sep 2010 19:24:46 -0500
+Message-ID: <4C994CCE.3020607@redhat.com>
+References: <20100921191701.GA16726@dhcp-10-15-1-70.hsv.redhat.com> <1285102274.16440.132.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:35316 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905Ab0IUWXT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Sep 2010 18:23:19 -0400
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by e34.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o8LMDwoV022379
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2010 16:13:58 -0600
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o8LMNH2o077642
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2010 16:23:18 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o8LMNHwq027176
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2010 16:23:17 -0600
+Received: from mx1.redhat.com ([209.132.183.28]:26479 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751620Ab0IVAY2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Sep 2010 20:24:28 -0400
+In-Reply-To: <1285102274.16440.132.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jaxboe@fusionio.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, k.skarlatos@gmail.com
 
-The bounce_pfn of the request queue in 64 bit systems is set to the
-current max_low_pfn. Adding more memory later makes this incorrect.
-Memory allocated beyond this boot time max_low_pfn appear to require
-bounce buffers (bounce buffers are actually not allocated but used in
-calculating segments that may result in "over max segments limit"
-errors).
+James Bottomley wrote:
+> On Tue, 2010-09-21 at 14:17 -0500, David Milburn wrote:
+>> Non-NCQ commands should run exclusively, ata_qc_issue warns when mixing
+>> non-NCQ and NCQ commands.
+>>
+>> Signed-off-by: David Milburn <dmilburn@redhat.com>
+>> Reported-by: Konstantinos Skarlatos <k.skarlatos@gmail.com>
+>> ---
+>>  drivers/scsi/libsas/sas_ata.c |    1 +
+>>  1 files changed, 1 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+>> index 042153c..ddbade7 100644
+>> --- a/drivers/scsi/libsas/sas_ata.c
+>> +++ b/drivers/scsi/libsas/sas_ata.c
+>> @@ -347,6 +347,7 @@ static int sas_ata_scr_read(struct ata_link *link, unsigned int sc_reg_in,
+>>  static struct ata_port_operations sas_sata_ops = {
+>>  	.phy_reset		= sas_ata_phy_reset,
+>>  	.post_internal_cmd	= sas_ata_post_internal,
+>> +	.qc_defer               = ata_std_qc_defer,
+> 
+> What does this do on the card that doesn't need it: the aic94xx?  That
+> one takes in a pipeline of commands and takes responsibility for getting
+> the issue right.  Something like this throttles the pipeline higher than
+> the aic94xx is expecting.  However, as long as it's not too much of a
+> performance problem, I don't mind applying it.
 
-Signed-off-by: Malahal Naineni (malahal@us.ibm.com)
+James,
 
-diff -r 09daf852c1c5 -r c9516154fabc block/blk-settings.c
---- a/block/blk-settings.c	Thu Sep 09 12:10:43 2010 -0700
-+++ b/block/blk-settings.c	Mon Sep 13 10:15:24 2010 -0700
-@@ -214,16 +214,14 @@ void blk_queue_bounce_limit(struct reque
- 	 */
- 	if (b_pfn < (min_t(u64, 0xffffffffUL, BLK_BOUNCE_HIGH) >> PAGE_SHIFT))
- 		dma = 1;
--	q->limits.bounce_pfn = max_low_pfn;
- #else
- 	if (b_pfn < blk_max_low_pfn)
- 		dma = 1;
-+#endif
- 	q->limits.bounce_pfn = b_pfn;
--#endif
- 	if (dma) {
- 		init_emergency_isa_pool();
- 		q->limits.bounce_gfp = GFP_NOIO | GFP_DMA;
--		q->limits.bounce_pfn = b_pfn;
- 	}
- }
- EXPORT_SYMBOL(blk_queue_bounce_limit);
+For any driver using sas_sata_ops, it could effect performance for
+those drivers whose execute_task handles both, though I can't say
+I am real familiar with aic94xx.
+
+Thanks,
+David
+
+
+
+> 
+> James
+> 
+> 
+
