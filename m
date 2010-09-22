@@ -1,244 +1,244 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/3] tcm: Add support for BIDI-COMMAND passthrough
-Date: Tue, 21 Sep 2010 23:08:44 -0700
-Message-ID: <1285135724-8329-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 2/3] tcm/pscsi: Add proper BIDI-COMMAND passthrough to SCSI MidLayer
+Date: Tue, 21 Sep 2010 23:08:52 -0700
+Message-ID: <1285135732-8350-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp105.sbc.mail.ne1.yahoo.com ([98.138.84.183]:42925 "HELO
+	smtp105.sbc.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752613Ab0IVGI4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Sep 2010 02:08:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
 Cc: James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for BIDI-COMMAND passthrough into TCM Core by adding
-new struct se_task->task_sg_bidi[] for the TCM/pSCSI backstore case to setup the
-extra mapping for the SCSI READ payload from T_TASK(cmd)->t_mem_bidi_list.
+This patch updates the TCM/pSCSI plugin to support BIDI-COMMAND passthrough to the
+Linux/SCSI MidLayer using struct se_task->task_sg_bidi[] from commit 2f2e67d85860,
+and the setup of the extra struct request for the BIDI SCSI READ payload.
 
-This patch updates transport_generic_cmd_sequencer() to check for this case
-with TCM/pSCSI plugin backstores and does the exntra task->task_sg_bidi[] allocation
-in transport_calc_sg_num().  It also updates transport_generic_get_cdb_count()
-and transport_do_se_mem_map() to handle the extra task->task_sg_bidi mapping
-with a second call to transport_map_mem_to_sg().
+This patchturns the original pscsi_map_task_SG() into a wrapper call for the
+new __pscsi_map_task_SG() which now accepts struct scatterlist *task_sg and u32 task_sg_num
+for struct se_task -> struct bio allocation, map and blk_make_request() calls.
 
-This nice thing about this patch is that it allows TCM Core to still handle the
-recieved XDWRITEREAD_* transfer length > backstore max_sectors case transparently.
+It also updates pscsi_blk_init_request() which now gets called twice for BIDI-COMMAND
+case.  This includes the pscsi_blk_init_request() change to perform the assignment of
+'req->cmd = &pt->pscsi_cdb[0]' and drop the original CDB memcpy() of pt->pscsi_cdb[]
+into struct request->cmd[] -> struct request->__cmd[MAX_BLK_CDB].
+
+Tested with scsi_debug w/ XDWRITE_READ32 and TCM_Loop w/ TCM/pSCSI backstores
+using 'sgv4_xdwriteread -e'.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |  105 +++++++++++++++++++++++++++----
- include/target/target_core_base.h      |    1 +
- 2 files changed, 92 insertions(+), 14 deletions(-)
+ drivers/target/target_core_pscsi.c |  111 +++++++++++++++++++++++++++--------
+ drivers/target/target_core_pscsi.h |    1 +
+ 2 files changed, 86 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index a20a4a9..e514ffc 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -5399,7 +5399,7 @@ static int transport_generic_cmd_sequencer(
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index beca807..60f825d 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -727,29 +727,37 @@ static void *pscsi_allocate_request(
+ 
+ static inline void pscsi_blk_init_request(
+ 	struct se_task *task,
+-	struct pscsi_plugin_task *pt)
++	struct pscsi_plugin_task *pt,
++	struct request *req,
++	int bidi_read)
  {
- 	struct se_device *dev = SE_DEV(cmd);
- 	struct se_subsystem_dev *su_dev = dev->se_sub_dev;
--	int ret, sector_ret = 0;
-+	int ret, sector_ret = 0, passthrough;
- 	u32 sectors = 0, size = 0, pr_reg_type = 0;
- 	u16 service_action;
- 	u8 alua_ascq = 0;
-@@ -5587,8 +5587,15 @@ static int transport_generic_cmd_sequencer(
- 				TCM_MAX_COMMAND_SIZE, cdb[7], service_action);
- 			return TGCS_INVALID_CDB_FIELD;
- 		}
-+		/*
-+		 * Determine if this is TCM/PSCSI device and we should disable
-+		 * internal emulation for this CDB.
-+		 */
-+		passthrough = (TRANSPORT(dev)->transport_type ==
-+					TRANSPORT_PLUGIN_PHBA_PDEV);
-+
- 		switch (service_action) {
--		case 0x0007: /* XDWRITE_READ_32 */
-+		case XDWRITEREAD_32:
- 			sectors = transport_get_sectors_32(cdb, cmd, &sector_ret);
- 			if (sector_ret)
- 				return TGCS_UNSUPPORTED_CDB;
-@@ -5602,6 +5609,11 @@ static int transport_generic_cmd_sequencer(
- 			cmd->transport_split_cdb = &split_cdb_XX_32;
- 			cmd->transport_get_long_lba = &transport_lba_64_ext;
- 			/*
-+			 * Skip the remaining assignments for TCM/PSCSI passthrough
-+			 */
-+			if (passthrough)
-+				break;
-+			/*
- 			 * Setup BIDI XOR callback to be run during
- 			 * transport_generic_complete_ok()
- 			 */
-@@ -6475,6 +6487,7 @@ void transport_free_dev_tasks(struct se_cmd *cmd)
- 		if (!task->transport_req)
- 			continue;
- 
-+		kfree(task->task_sg_bidi);
- 		kfree(task->task_sg);
- 
- 		spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
-@@ -7056,6 +7069,7 @@ extern u32 transport_calc_sg_num(
- 	u32 task_offset)
- {
- 	struct se_cmd *se_cmd = task->task_se_cmd;
-+	struct se_device *se_dev = SE_DEV(se_cmd);
- 	struct se_mem *se_mem = in_se_mem;
- 	struct target_core_fabric_ops *tfo = CMD_TFO(se_cmd);
- 	u32 sg_length, task_size = task->task_size, task_sg_num_padded;
-@@ -7127,15 +7141,31 @@ next:
- 				" task->task_sg\n");
- 		return 0;
- 	}
--
- 	sg_init_table(&task->task_sg[0], task_sg_num_padded);
  	/*
-+	 * Setup task->task_sg_bidi for SCSI READ payload for
-+	 * TCM/pSCSI passthrough if present for BIDI-COMMAND
-+	 */
-+	if ((T_TASK(se_cmd)->t_mem_bidi_list != NULL) &&
-+	    (TRANSPORT(se_dev)->transport_type == TRANSPORT_PLUGIN_PHBA_PDEV)) {
-+		task->task_sg_bidi = kzalloc(task_sg_num_padded *
-+				sizeof(struct scatterlist), GFP_KERNEL);
-+		if (!(task->task_sg_bidi)) {
-+			printk(KERN_ERR "Unable to allocate memory for"
-+				" task->task_sg_bidi\n");
-+			return 0;
-+		}
-+		sg_init_table(&task->task_sg_bidi[0], task_sg_num_padded);
-+	}
-+	/*
- 	 * For the chaining case, setup the proper end of SGL for the
- 	 * initial submission struct task into struct se_subsystem_api.
- 	 * This will be cleared later by transport_do_task_sg_chain()
+ 	 * Defined as "scsi command" in include/linux/blkdev.h.
  	 */
--	if (task->task_padded_sg)
-+	if (task->task_padded_sg) {
- 		sg_mark_end(&task->task_sg[task->task_sg_num - 1]);
-+		sg_mark_end(&task->task_sg_bidi[task->task_sg_num - 1]);
-+	}
- 
- 	DEBUG_SC("Successfully allocated task->task_sg_num(%u),"
- 		" task_sg_num_padded(%u)\n", task->task_sg_num,
-@@ -7485,17 +7515,34 @@ static int transport_do_se_mem_map(
- 		return ret;
- 	}
+-	pt->pscsi_req->cmd_type = REQ_TYPE_BLOCK_PC;
++	req->cmd_type = REQ_TYPE_BLOCK_PC;
++	/*
++	 * For the extra BIDI-COMMAND READ struct request we do not
++	 * need to setup the remaining structure members
++	 */
++	if (bidi_read)
++		return;
  	/*
--	 * Assume default that transport plugin speaks preallocated
--	 * scatterlists.
-+	 * This is the normal path for all normal non BIDI and BIDI-COMMAND
-+	 * WRITE payloads..  If we need to do BIDI READ passthrough for
-+	 * TCM/pSCSI the first call to transport_do_se_mem_map ->
-+	 * transport_calc_sg_num() -> transport_map_mem_to_sg() will do the
-+	 * allocation for task->task_sg_bidi, and the subsequent call to
-+	 * transport_do_se_mem_map() from transport_generic_get_cdb_count()
+ 	 * Setup the done function pointer for struct request,
+ 	 * also set the end_io_data pointer.to struct se_task.
  	 */
--	if (!(transport_calc_sg_num(task, in_se_mem, task_offset)))
--		return -1;
--	/*
--	 * struct se_task->task_sg now contains the struct scatterlist array.
--	 */
--	return transport_map_mem_to_sg(task, se_mem_list, task->task_sg,
-+	if (!(task->task_sg_bidi)) {
-+		/*
-+		 * Assume default that transport plugin speaks preallocated
-+		 * scatterlists.
-+		 */
-+		if (!(transport_calc_sg_num(task, in_se_mem, task_offset)))
-+			return -1;
-+		/*
-+		 * struct se_task->task_sg now contains the struct scatterlist array.
-+		 */
-+		return transport_map_mem_to_sg(task, se_mem_list, task->task_sg,
- 					in_se_mem, out_se_mem, se_mem_cnt,
- 					task_offset_in);
-+	}
-+	/*
-+	 * Handle the se_mem_list -> struct task->task_sg_bidi
-+	 * memory map for the extra BIDI READ payload
-+	 */
-+	return transport_map_mem_to_sg(task, se_mem_list, task->task_sg_bidi,
-+				in_se_mem, out_se_mem, se_mem_cnt,
-+				task_offset_in);
+-	pt->pscsi_req->end_io = pscsi_req_done;
+-	pt->pscsi_req->end_io_data = (void *)task;
++	req->end_io = pscsi_req_done;
++	req->end_io_data = (void *)task;
+ 	/*
+ 	 * Load the referenced struct se_task's SCSI CDB into
+ 	 * include/linux/blkdev.h:struct request->cmd
+ 	 */
+-	pt->pscsi_req->cmd_len = scsi_command_size(pt->pscsi_cdb);
+-	memcpy(pt->pscsi_req->cmd, pt->pscsi_cdb, pt->pscsi_req->cmd_len);
++	req->cmd_len = scsi_command_size(pt->pscsi_cdb);
++	req->cmd = &pt->pscsi_cdb[0];
+ 	/*
+ 	 * Setup pointer for outgoing sense data.
+ 	 */
+-	pt->pscsi_req->sense = (void *)&pt->pscsi_sense[0];
+-	pt->pscsi_req->sense_len = 0;
++	req->sense = (void *)&pt->pscsi_sense[0];
++	req->sense_len = 0;
  }
  
- u32 transport_generic_get_cdb_count(
-@@ -7509,9 +7556,10 @@ u32 transport_generic_get_cdb_count(
- 	unsigned char *cdb = NULL;
- 	struct se_task *task;
- 	struct se_mem *se_mem = NULL, *se_mem_lout = NULL;
-+	struct se_mem *se_mem_bidi = NULL, *se_mem_bidi_lout = NULL;
- 	struct se_device *dev = SE_DEV(cmd);
- 	int max_sectors_set = 0, ret;
--	u32 task_offset_in = 0, se_mem_cnt = 0, task_cdbs = 0;
-+	u32 task_offset_in = 0, se_mem_cnt = 0, se_mem_bidi_cnt = 0, task_cdbs = 0;
- 	unsigned long long lba;
- 
- 	if (!mem_list) {
-@@ -7526,6 +7574,15 @@ u32 transport_generic_get_cdb_count(
- 	if (!(list_empty(mem_list)))
- 		se_mem = list_entry(mem_list->next, struct se_mem, se_list);
- 	/*
-+	 * Check for extra se_mem_bidi mapping for BIDI-COMMANDs to
-+	 * struct se_task->task_sg_bidi for TCM/pSCSI passthrough operation
-+	 */
-+	if ((T_TASK(cmd)->t_mem_bidi_list != NULL) &&
-+	    !(list_empty(T_TASK(cmd)->t_mem_bidi_list)) &&
-+	    (TRANSPORT(dev)->transport_type == TRANSPORT_PLUGIN_PHBA_PDEV))
-+		se_mem_bidi = list_entry(T_TASK(cmd)->t_mem_bidi_list->next,
-+					struct se_mem, se_list);
-+	/*
- 	 * Locate the start volume segment in which the received LBA will be
- 	 * executed upon.
+ /*
+@@ -771,7 +779,7 @@ static int pscsi_blk_get_request(struct se_task *task)
+ 	 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
+ 	 * and setup rq callback, CDB and sense.
  	 */
-@@ -7573,7 +7630,8 @@ u32 transport_generic_get_cdb_count(
+-	pscsi_blk_init_request(task, pt);
++	pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
+ 	return 0;
+ }
  
- 		/*
- 		 * Perform the SE OBJ plugin and/or Transport plugin specific
--		 * mapping for T_TASK(cmd)->t_mem_list.
-+		 * mapping for T_TASK(cmd)->t_mem_list. And setup the
-+		 * task->task_sg and if necessary task->task_sg_bidi
- 		 */
- 		ret = transport_do_se_mem_map(dev, task, mem_list,
- 				NULL, se_mem, &se_mem_lout, &se_mem_cnt,
-@@ -7582,6 +7640,25 @@ u32 transport_generic_get_cdb_count(
- 			goto out;
+@@ -1051,11 +1059,11 @@ static inline struct bio *pscsi_get_bio(struct pscsi_dev_virt *pdv, int sg_num)
+ #define DEBUG_PSCSI(x...)
+ #endif
  
- 		se_mem = se_mem_lout;
+-/*      pscsi_map_task_SG():
+- *
+- *
+- */
+-static int pscsi_map_task_SG(struct se_task *task)
++static int __pscsi_map_task_SG(
++	struct se_task *task,
++	struct scatterlist *task_sg,
++	u32 task_sg_num,
++	int bidi_read)
+ {
+ 	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
+ 	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) task->se_dev->dev_ptr;
+@@ -1063,7 +1071,7 @@ static int pscsi_map_task_SG(struct se_task *task)
+ 	struct page *page;
+ 	struct scatterlist *sg;
+ 	u32 data_len = task->task_size, i, len, bytes, off;
+-	int nr_pages = (task->task_size + task->task_sg[0].offset +
++	int nr_pages = (task->task_size + task_sg[0].offset +
+ 			PAGE_SIZE - 1) >> PAGE_SHIFT;
+ 	int nr_vecs = 0, ret = 0;
+ 	int rw = (TASK_CMD(task)->data_direction == DMA_TO_DEVICE);
+@@ -1083,7 +1091,7 @@ static int pscsi_map_task_SG(struct se_task *task)
+ 	 */
+ 	DEBUG_PSCSI("PSCSI: nr_pages: %d\n", nr_pages);
+ 
+-	for_each_sg(task->task_sg, sg, task->task_sg_num, i) {
++	for_each_sg(task_sg, sg, task_sg_num, i) {
+ 		page = sg_page(sg);
+ 		off = sg->offset;
+ 		len = sg->length;
+@@ -1155,20 +1163,44 @@ static int pscsi_map_task_SG(struct se_task *task)
+ 		}
+ 	}
+ 	/*
+-	 * Starting with v2.6.31, call blk_make_request() passing in *hbio to
+-	 * allocate the pSCSI task a struct request.
++	 * Setup the primary pt->pscsi_req used for non BIDI and BIDI-COMMAND
++	 * primary SCSI WRITE poayload mapped for struct se_task->task_sg[]
+ 	 */
+-	pt->pscsi_req = blk_make_request(pdv->pdv_sd->request_queue,
+-				hbio, GFP_KERNEL);
+-	if (!(pt->pscsi_req)) {
+-		printk(KERN_ERR "pSCSI: blk_make_request() failed\n");
+-		goto fail;
++	if (!(bidi_read)) {
 +		/*
-+		 * Setup the T_TASK(cmd)->t_mem_bidi_list -> task->task_sg_bidi 
-+		 * mapping for SCSI READ for BIDI-COMMAND passthrough with TCM/pSCSI
-+		 *
-+		 * Note that the first call to transport_do_se_mem_map() above will
-+		 * allocate struct se_task->task_sg_bidi in transport_do_se_mem_map()
-+		 * -> transport_calc_sg_num(), and the second here will do the
-+		 * mapping for SCSI READ for BIDI-COMMAND passthrough with TCM/pSCSI.
++		 * Starting with v2.6.31, call blk_make_request() passing in *hbio to
++		 * allocate the pSCSI task a struct request.
 +		 */
-+		if (task->task_sg_bidi != NULL) {
-+			ret = transport_do_se_mem_map(dev, task,
-+				T_TASK(cmd)->t_mem_bidi_list, NULL,
-+				se_mem_bidi, &se_mem_bidi_lout, &se_mem_bidi_cnt,
-+				&task_offset_in);
-+			if (ret < 0)
-+				goto out;
-+
-+			se_mem_bidi = se_mem_bidi_lout;
++		pt->pscsi_req = blk_make_request(pdv->pdv_sd->request_queue,
++					hbio, GFP_KERNEL);
++		if (!(pt->pscsi_req)) {
++			printk(KERN_ERR "pSCSI: blk_make_request() failed\n");
++			goto fail;
 +		}
- 		task_cdbs++;
++		/*
++		 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
++		 * and setup rq callback, CDB and sense.
++		 */
++		pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
++
++		return task->task_sg_num;
+ 	}
+ 	/*
+-	 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
+-	 * and setup rq callback, CDB and sense.
++	 * Setup the secondary pt->pscsi_req_bidi used for the extra BIDI-COMMAND
++	 * SCSI READ paylaod mapped for struct se_task->task_sg_bidi[]
+ 	 */
+-	pscsi_blk_init_request(task, pt);
++	pt->pscsi_req_bidi = blk_make_request(pdv->pdv_sd->request_queue,
++					hbio, GFP_KERNEL);
++	if (!(pt->pscsi_req_bidi)) {
++		printk(KERN_ERR "pSCSI: blk_make_request() failed for BIDI\n");
++		goto fail;
++	}
++	pscsi_blk_init_request(task, pt, pt->pscsi_req_bidi, 1);
++	/*
++	 * Setup the magic BIDI-COMMAND ->next_req pointer to the original
++	 * pt->pscsi_req.
++	 */	
++	pt->pscsi_req->next_rq = pt->pscsi_req_bidi;
  
- 		DEBUG_VOL("Incremented task_cdbs(%u) task->task_sg_num(%u)\n",
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index b68dea1..b6f3b75 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -471,6 +471,7 @@ struct se_transport_task {
- struct se_task {
- 	unsigned char	task_sense;
- 	struct scatterlist *task_sg;
-+	struct scatterlist *task_sg_bidi;
- 	void		*transport_req;
- 	u8		task_scsi_status;
- 	u8		task_flags;
+ 	return task->task_sg_num;
+ fail:
+@@ -1181,6 +1213,27 @@ fail:
+ 	return ret;
+ }
+ 
++static int pscsi_map_task_SG(struct se_task *task)
++{
++	int ret;
++	/*
++	 * Setup the main struct request for the task->task_sg[] payload
++	 */
++
++	ret = __pscsi_map_task_SG(task, task->task_sg, task->task_sg_num, 0);
++	if (ret < 0)
++		return ret;
++
++	if (!(task->task_sg_bidi))
++		return ret;
++	/*
++	 * If present, set up the extra BIDI-COMMAND SCSI READ
++	 * struct request and payload.
++	 */
++	return __pscsi_map_task_SG(task, task->task_sg_bidi,
++				task->task_sg_num, 1);
++}
++
+ /*	pscsi_map_task_non_SG():
+  *
+  *
+@@ -1438,6 +1491,12 @@ static void pscsi_req_done(struct request *req, int uptodate)
+ 	pt->pscsi_resid = req->resid_len;
+ 
+ 	pscsi_process_SAM_status(task, pt);
++
++	if (req->next_rq != NULL) {
++		__blk_put_request(req->q, req->next_rq);
++		pt->pscsi_req_bidi = NULL;
++	}
++
+ 	__blk_put_request(req->q, req);
+ 	pt->pscsi_req = NULL;
+ }
+diff --git a/drivers/target/target_core_pscsi.h b/drivers/target/target_core_pscsi.h
+index 086e6f1..d3c8972 100644
+--- a/drivers/target/target_core_pscsi.h
++++ b/drivers/target/target_core_pscsi.h
+@@ -34,6 +34,7 @@ struct pscsi_plugin_task {
+ 	int	pscsi_result;
+ 	u32	pscsi_resid;
+ 	struct request *pscsi_req;
++	struct request *pscsi_req_bidi;
+ } ____cacheline_aligned;
+ 
+ #define PDF_HAS_CHANNEL_ID	0x01
 -- 
 1.5.6.5
+
