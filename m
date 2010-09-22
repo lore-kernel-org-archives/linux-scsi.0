@@ -1,50 +1,47 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v2 14/21] tcm: Add FILEIO subsystem plugin
-Date: Wed, 22 Sep 2010 15:50:47 -0700
-Message-ID: <1285195847-11690-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.re3.yahoo.com ([66.196.96.86]:29689 "HELO
-	smtp103.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753795Ab0IVWuw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Sep 2010 18:50:52 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [RFC v2 18/21] tcm: Add generic fabric independent ConfigFS infrastructure
+Date: Wed, 22 Sep 2010 15:51:26 -0700
+Message-ID: <1285195886-11766-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds the O_SYNC FILEIO subsystem plugin for accessing struct file
-using Linux/VFS struct file_operations.  It also includes WriteCache and FUA
-Write Emulation support to struct file using fs/sync.c/vfs_fsync_range()
+This patch adds the v4 fabric independent configfs code that allows modules
+to use a generic set of struct config_item_types and struct config_groups hanging
+off fabric dependent structures, without having to explictly define a configfs layout
+of /sys/kernel/config/target/$FABRIC themselves.  This allows a generic layout to be
+used with fabric dependent attributes using struct config_item_type context specific
+macros in include/target/target_core_fabric_configfs.h.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_file.c | 1197 +++++++++++++++++++++++++++++++++++++
- drivers/target/target_core_file.h |   81 +++
- 2 files changed, 1278 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/target_core_file.c
- create mode 100644 drivers/target/target_core_file.h
+ drivers/target/target_core_fabric_configfs.c | 1001 ++++++++++++++++++++++++++
+ include/target/target_core_fabric_configfs.h |  106 +++
+ 2 files changed, 1107 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/target_core_fabric_configfs.c
+ create mode 100644 include/target/target_core_fabric_configfs.h
 
-diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
 new file mode 100644
-index 0000000..93d3f63
+index 0000000..5d1a81d
 --- /dev/null
-+++ b/drivers/target/target_core_file.c
-@@ -0,0 +1,1197 @@
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -0,0 +1,1001 @@
 +/*******************************************************************************
-+ * Filename:  target_core_file.c
++* Filename: target_core_fabric_configfs.c
 + *
-+ * This file contains the Storage Engine <-> FILEIO transport specific functions
++ * This file contains generic fabric module configfs infrastructure for
++ * TCM v4.x code
 + *
-+ * Copyright (c) 2005 PyX Technologies, Inc.
-+ * Copyright (c) 2005-2006 SBE, Inc.  All Rights Reserved.
-+ * Copyright (c) 2007-2010 Rising Tide Systems
-+ * Copyright (c) 2008-2010 Linux-iSCSI.org
++ * Copyright (c) 2010 Rising Tide Systems
++ * Copyright (c) 2010 Linux-iSCSI.org
 + *
-+ * Nicholas A. Bellinger <nab@kernel.org>
-+ *
++ * Copyright (c) 2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
++*
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
 + * the Free Software Foundation; either version 2 of the License, or
@@ -54,1269 +51,1098 @@ index 0000000..93d3f63
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 + * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ *
-+ ******************************************************************************/
++ ****************************************************************************/
 +
++#include <linux/module.h>
++#include <linux/moduleparam.h>
 +#include <linux/version.h>
-+#include <linux/string.h>
-+#include <linux/timer.h>
-+#include <linux/blkdev.h>
++#include <generated/utsrelease.h>
++#include <linux/utsname.h>
++#include <linux/init.h>
++#include <linux/fs.h>
++#include <linux/namei.h>
 +#include <linux/slab.h>
-+#include <linux/spinlock.h>
-+#include <linux/smp_lock.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_host.h>
++#include <linux/types.h>
++#include <linux/delay.h>
++#include <linux/unistd.h>
++#include <linux/string.h>
++#include <linux/syscalls.h>
++#include <linux/configfs.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_device.h>
++#include <target/target_core_tpg.h>
 +#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_fabric_configfs.h>
++#include <target/target_core_configfs.h>
++#include <target/configfs_macros.h>
 +
-+#include "target_core_file.h"
++#include "target_core_alua.h"
++#include "target_core_hba.h"
++#include "target_core_pr.h"
 +
-+#if 1
-+#define DEBUG_FD_CACHE(x...) printk(x)
-+#else
-+#define DEBUG_FD_CACHE(x...)
-+#endif
-+
-+#if 1
-+#define DEBUG_FD_FUA(x...) printk(x)
-+#else
-+#define DEBUG_FD_FUA(x...)
-+#endif
-+
-+static struct se_subsystem_api fileio_template;
-+
-+static void __fd_get_dev_info(struct fd_dev *, char *, int *);
-+
-+/*	fd_attach_hba(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static int fd_attach_hba(struct se_hba *hba, u32 host_id)
-+{
-+	struct fd_host *fd_host;
-+
-+	fd_host = kzalloc(sizeof(struct fd_host), GFP_KERNEL);
-+	if (!(fd_host)) {
-+		printk(KERN_ERR "Unable to allocate memory for struct fd_host\n");
-+		return -1;
-+	}
-+
-+	fd_host->fd_host_id = host_id;
-+
-+	atomic_set(&hba->left_queue_depth, FD_HBA_QUEUE_DEPTH);
-+	atomic_set(&hba->max_queue_depth, FD_HBA_QUEUE_DEPTH);
-+	hba->hba_ptr = (void *) fd_host;
-+
-+	printk(KERN_INFO "CORE_HBA[%d] - TCM FILEIO HBA Driver %s on Generic"
-+		" Target Core Stack %s\n", hba->hba_id, FD_VERSION,
-+		TARGET_CORE_MOD_VERSION);
-+	printk(KERN_INFO "CORE_HBA[%d] - Attached FILEIO HBA: %u to Generic"
-+		" Target Core with TCQ Depth: %d MaxSectors: %u\n",
-+		hba->hba_id, fd_host->fd_host_id,
-+		atomic_read(&hba->max_queue_depth), FD_MAX_SECTORS);
-+
-+	return 0;
++#define TF_CIT_SETUP(_name, _item_ops, _group_ops, _attrs)		\
++static void target_fabric_setup_##_name##_cit(struct target_fabric_configfs *tf) \
++{									\
++	struct target_fabric_configfs_template *tfc = &tf->tf_cit_tmpl;	\
++	struct config_item_type *cit = &tfc->tfc_##_name##_cit;		\
++									\
++	cit->ct_item_ops = _item_ops;					\
++	cit->ct_group_ops = _group_ops;					\
++	cit->ct_attrs = _attrs;						\
++	cit->ct_owner = tf->tf_module;					\
++	printk("Setup generic %s\n", __stringify(_name));		\
 +}
 +
-+/*	fd_detach_hba(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static int fd_detach_hba(struct se_hba *hba)
++/* Start of tfc_tpg_mappedlun_cit */
++
++static int target_fabric_mappedlun_link(
++	struct config_item *lun_acl_ci,
++	struct config_item *lun_ci)
 +{
-+	struct fd_host *fd_host;
-+
-+	if (!hba->hba_ptr) {
-+		printk(KERN_ERR "hba->hba_ptr is NULL!\n");
-+		return -1;
++	struct se_dev_entry *deve;
++	struct se_lun *lun = container_of(to_config_group(lun_ci),
++			struct se_lun, lun_group);
++	struct se_lun_acl *lacl = container_of(to_config_group(lun_acl_ci),
++			struct se_lun_acl, se_lun_group);
++	struct se_portal_group *se_tpg;
++	struct config_item *nacl_ci, *tpg_ci, *tpg_ci_s, *wwn_ci, *wwn_ci_s;
++	int ret = 0, lun_access;
++	/*
++	 * Ensure that the source port exists
++	 */
++	if (!(lun->lun_sep) || !(lun->lun_sep->sep_tpg)) {
++		printk(KERN_ERR "Source se_lun->lun_sep or lun->lun_sep->sep"
++				"_tpg does not exist\n");
++		return -EINVAL;
 +	}
-+	fd_host = (struct fd_host *) hba->hba_ptr;
++	se_tpg = lun->lun_sep->sep_tpg;
 +
-+	printk(KERN_INFO "CORE_HBA[%d] - Detached FILEIO HBA: %u from Generic"
-+		" Target Core\n", hba->hba_id, fd_host->fd_host_id);
-+
-+	kfree(fd_host);
-+	hba->hba_ptr = NULL;
-+
-+	return 0;
-+}
-+
-+static void *fd_allocate_virtdevice(struct se_hba *hba, const char *name)
-+{
-+	struct fd_dev *fd_dev;
-+	struct fd_host *fd_host = (struct fd_host *) hba->hba_ptr;
-+
-+	fd_dev = kzalloc(sizeof(struct fd_dev), GFP_KERNEL);
-+	if (!(fd_dev)) {
-+		printk(KERN_ERR "Unable to allocate memory for struct fd_dev\n");
-+		return NULL;
++	nacl_ci = &lun_acl_ci->ci_parent->ci_group->cg_item;
++	tpg_ci = &nacl_ci->ci_group->cg_item;
++	wwn_ci = &tpg_ci->ci_group->cg_item;
++	tpg_ci_s = &lun_ci->ci_parent->ci_group->cg_item;
++	wwn_ci_s = &tpg_ci_s->ci_group->cg_item;
++	/*
++	 * Make sure the SymLink is going to the same $FABRIC/$WWN/tpgt_$TPGT
++	 */
++	if (strcmp(config_item_name(wwn_ci), config_item_name(wwn_ci_s))) {
++		printk(KERN_ERR "Illegal Initiator ACL SymLink outside of %s\n",
++			config_item_name(wwn_ci));
++		return -EINVAL;
 +	}
-+
-+	fd_dev->fd_host = fd_host;
-+
-+	printk(KERN_INFO "FILEIO: Allocated fd_dev for %p\n", name);
-+
-+	return fd_dev;
-+}
-+
-+/*	fd_create_virtdevice(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static struct se_device *fd_create_virtdevice(
-+	struct se_hba *hba,
-+	struct se_subsystem_dev *se_dev,
-+	void *p)
-+{
-+	char *dev_p = NULL;
-+	struct se_device *dev;
-+	struct fd_dev *fd_dev = (struct fd_dev *) p;
-+	struct fd_host *fd_host = (struct fd_host *) hba->hba_ptr;
-+	mm_segment_t old_fs;
-+	struct file *file;
-+	struct inode *inode = NULL;
-+	int dev_flags = 0, flags;
-+
-+	old_fs = get_fs();
-+	set_fs(get_ds());
-+	dev_p = getname(fd_dev->fd_dev_name);
-+	set_fs(old_fs);
-+
-+	if (IS_ERR(dev_p)) {
-+		printk(KERN_ERR "getname(%s) failed: %lu\n",
-+			fd_dev->fd_dev_name, IS_ERR(dev_p));
-+		goto fail;
++	if (strcmp(config_item_name(tpg_ci), config_item_name(tpg_ci_s))) {
++		printk(KERN_ERR "Illegal Initiator ACL Symlink outside of %s"
++			" TPGT: %s\n", config_item_name(wwn_ci),
++			config_item_name(tpg_ci));
++		return -EINVAL;
 +	}
-+#if 0
-+	if (di->no_create_file)
-+		flags = O_RDWR | O_LARGEFILE;
++	/*
++	 * If this struct se_node_acl was dynamically generated with
++	 * tpg_1/attrib/generate_node_acls=1, use the existing deve->lun_flags,
++	 * which be will write protected (READ-ONLY) when
++	 * tpg_1/attrib/demo_mode_write_protect=1
++	 */
++	spin_lock_irq(&lacl->se_lun_nacl->device_list_lock);
++	deve = &lacl->se_lun_nacl->device_list[lacl->mapped_lun];
++	if (deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS)
++		lun_access = deve->lun_flags;
 +	else
-+		flags = O_RDWR | O_CREAT | O_LARGEFILE;
-+#else
-+	flags = O_RDWR | O_CREAT | O_LARGEFILE;
-+#endif
-+/*	flags |= O_DIRECT; */
++		lun_access =
++			(TPG_TFO(se_tpg)->tpg_check_prod_mode_write_protect(
++				se_tpg)) ? TRANSPORT_LUNFLAGS_READ_ONLY :
++					   TRANSPORT_LUNFLAGS_READ_WRITE;
++	spin_unlock_irq(&lacl->se_lun_nacl->device_list_lock);
 +	/*
-+	 * If fd_buffered_io=1 has not been set explictly (the default),
-+	 * use O_SYNC to force FILEIO writes to disk.
-+	 */
-+	if (!(fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO))
-+		flags |= O_SYNC;
-+
-+	file = filp_open(dev_p, flags, 0600);
-+
-+	if (IS_ERR(file) || !file || !file->f_dentry) {
-+		printk(KERN_ERR "filp_open(%s) failed\n", dev_p);
-+		goto fail;
-+	}
-+	fd_dev->fd_file = file;
-+	/*
-+	 * If we are claiming a blockend for this struct file, we extract
-+	 * fd_dev->fd_size from struct block_device.
++	 * Determine the actual mapped LUN value user wants..
 +	 *
-+	 * Otherwise, we use the passed fd_size= from configfs
++	 * This value is what the SCSI Initiator actually sees the
++	 * iscsi/$IQN/$TPGT/lun/lun_* as on their SCSI Initiator Ports.
 +	 */
-+	inode = igrab(file->f_mapping->host);
-+	if (!(inode)) {
-+		printk(KERN_ERR "FILEIO: Unable to locate struct inode from"
-+			" struct file\n");
-+		goto fail;
-+	}
-+	/*
-+	 * If struct file is referencing a underlying struct block_device,
-+	 * claim it now.
-+	 */
-+	if (S_ISBLK(inode->i_mode)) {
-+		/*
-+		 * Determine the number of bytes from i_size_read() minus
-+		 * one (1) logical sector from underlying struct block_device
-+		 */
-+		fd_dev->fd_block_size = bdev_logical_block_size(inode->i_bdev);
-+		fd_dev->fd_dev_size = (i_size_read(file->f_mapping->host) -
-+		  		       fd_dev->fd_block_size);
++	ret = core_dev_add_initiator_node_lun_acl(se_tpg, lacl,
++			lun->unpacked_lun, lun_access);
 +
-+		printk(KERN_INFO "FILEIO: Using size: %llu bytes from struct"
-+			" block_device blocks: %llu logical_block_size: %d\n",
-+			fd_dev->fd_dev_size,
-+			div_u64(fd_dev->fd_dev_size, fd_dev->fd_block_size),
-+			fd_dev->fd_block_size);
-+	} else {
-+		if (!(fd_dev->fbd_flags & FBDF_HAS_SIZE)) {
-+			printk(KERN_ERR "FILEIO: Missing fd_dev_size="
-+				" parameter, and no backing struct"
-+				" block_device\n");
-+			goto fail;
-+		}
-+		fd_dev->fd_block_size = FD_BLOCKSIZE;
-+	}
-+	/*
-+	 * Pass dev_flags for linux_blockdevice_claim_bd or
-+	 * linux_blockdevice_claim() from the usage above.
-+	 *
-+	 * Note that transport_add_device_to_core_hba() will call
-+	 * linux_blockdevice_release() internally on failure to
-+	 * call bd_release() on the referenced struct block_device.
-+	 */
-+	dev = transport_add_device_to_core_hba(hba, &fileio_template,
-+				se_dev, dev_flags, (void *)fd_dev);
-+	if (!(dev))
-+		goto fail;
-+
-+	fd_dev->fd_dev_id = fd_host->fd_host_dev_id_count++;
-+	fd_dev->fd_queue_depth = dev->queue_depth;
-+
-+	printk(KERN_INFO "CORE_FILE[%u] - Added TCM FILEIO Device ID: %u at %s,"
-+		" %llu total bytes\n", fd_host->fd_host_id, fd_dev->fd_dev_id,
-+			fd_dev->fd_dev_name, fd_dev->fd_dev_size);
-+
-+	iput(inode);
-+	putname(dev_p);
-+	return dev;
-+fail:
-+	if (fd_dev->fd_file) {
-+		filp_close(fd_dev->fd_file, NULL);
-+		fd_dev->fd_file = NULL;
-+	}
-+	if (inode)
-+		iput(inode);
-+	putname(dev_p);
-+	return NULL;
++	return (ret < 0) ? -EINVAL : 0;
 +}
 +
-+/*	fd_activate_device(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static int fd_activate_device(struct se_device *dev)
++static int target_fabric_mappedlun_unlink(
++	struct config_item *lun_acl_ci,
++	struct config_item *lun_ci)
 +{
-+	struct fd_dev *fd_dev = (struct fd_dev *) dev->dev_ptr;
-+	struct fd_host *fd_host = fd_dev->fd_host;
++	struct se_lun *lun;
++	struct se_lun_acl *lacl = container_of(to_config_group(lun_acl_ci),
++			struct se_lun_acl, se_lun_group);
++	struct se_node_acl *nacl = lacl->se_lun_nacl;
++	struct se_dev_entry *deve = &nacl->device_list[lacl->mapped_lun];
++	struct se_portal_group *se_tpg;
++	/*
++	 * Determine if the underlying MappedLUN has already been released..
++	 */
++	if (!(deve->se_lun))
++		return 0;
 +
-+	printk(KERN_INFO "CORE_FILE[%u] - Activating Device with TCQ: %d at"
-+		" FILEIO Device ID: %d\n", fd_host->fd_host_id,
-+		fd_dev->fd_queue_depth, fd_dev->fd_dev_id);
++	lun = container_of(to_config_group(lun_ci), struct se_lun, lun_group);
++	se_tpg = lun->lun_sep->sep_tpg;
 +
++	core_dev_del_initiator_node_lun_acl(se_tpg, lun, lacl);
 +	return 0;
 +}
 +
-+/*	fd_deactivate_device(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static void fd_deactivate_device(struct se_device *dev)
++CONFIGFS_EATTR_STRUCT(target_fabric_mappedlun, se_lun_acl);
++#define TCM_MAPPEDLUN_ATTR(_name, _mode)				\
++static struct target_fabric_mappedlun_attribute target_fabric_mappedlun_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_fabric_mappedlun_show_##_name,				\
++	target_fabric_mappedlun_store_##_name);
++
++static ssize_t target_fabric_mappedlun_show_write_protect(
++	struct se_lun_acl *lacl,
++	char *page)
 +{
-+	struct fd_dev *fd_dev = (struct fd_dev *) dev->dev_ptr;
-+	struct fd_host *fd_host = fd_dev->fd_host;
++	struct se_node_acl *se_nacl = lacl->se_lun_nacl;
++	struct se_dev_entry *deve;
++	ssize_t len;
 +
-+	printk(KERN_INFO "CORE_FILE[%u] - Deactivating Device with TCQ: %d at"
-+		" FILEIO Device ID: %d\n", fd_host->fd_host_id,
-+		fd_dev->fd_queue_depth, fd_dev->fd_dev_id);
++	spin_lock_irq(&se_nacl->device_list_lock);
++	deve = &se_nacl->device_list[lacl->mapped_lun];
++	len = sprintf(page, "%d\n",
++			(deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY) ?
++			1 : 0);
++	spin_unlock_irq(&se_nacl->device_list_lock);
 +
-+	return;
++	return len;
 +}
 +
-+/*	fd_free_device(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static void fd_free_device(void *p)
++static ssize_t target_fabric_mappedlun_store_write_protect(
++	struct se_lun_acl *lacl,
++	const char *page,
++	size_t count)
 +{
-+	struct fd_dev *fd_dev = (struct fd_dev *) p;
++	struct se_node_acl *se_nacl = lacl->se_lun_nacl;
++	struct se_portal_group *se_tpg = se_nacl->se_tpg;
++	char *endptr;
++	u32 op;
 +
-+	if (fd_dev->fd_file) {
-+		filp_close(fd_dev->fd_file, NULL);
-+		fd_dev->fd_file = NULL;
++	op = simple_strtoul(page, &endptr, 0);
++	if ((op != 1) && (op != 0)) {
++		printk(KERN_ERR "Illegal value for access: %u\n", op);
++		return -EINVAL;
 +	}
++	core_update_device_list_access(lacl->mapped_lun, (op) ?
++			TRANSPORT_LUNFLAGS_READ_ONLY :
++			TRANSPORT_LUNFLAGS_READ_WRITE,
++			lacl->se_lun_nacl);
 +
-+	kfree(fd_dev);
++	printk(KERN_INFO "%s_ConfigFS: Changed Initiator ACL: %s"
++		" Mapped LUN: %u Write Protect bit to %s\n",
++		TPG_TFO(se_tpg)->get_fabric_name(), 
++		lacl->initiatorname, lacl->mapped_lun, (op) ? "ON" : "OFF");
++
++        return count;
++
 +}
 +
-+/*	fd_transport_complete(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static int fd_transport_complete(struct se_task *task)
++TCM_MAPPEDLUN_ATTR(write_protect, S_IRUGO | S_IWUSR);
++
++CONFIGFS_EATTR_OPS(target_fabric_mappedlun, se_lun_acl, se_lun_group);
++
++static struct configfs_attribute *target_fabric_mappedlun_attrs[] = {
++	&target_fabric_mappedlun_write_protect.attr,
++	NULL,
++};
++
++static struct configfs_item_operations target_fabric_mappedlun_item_ops = {
++	.show_attribute		= target_fabric_mappedlun_attr_show,
++	.store_attribute	= target_fabric_mappedlun_attr_store,
++	.allow_link		= target_fabric_mappedlun_link,
++	.drop_link		= target_fabric_mappedlun_unlink,
++};
++
++TF_CIT_SETUP(tpg_mappedlun, &target_fabric_mappedlun_item_ops, NULL,
++		target_fabric_mappedlun_attrs);
++
++/* End of tfc_tpg_mappedlun_cit */
++
++/* Start of tfc_tpg_nacl_attrib_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_attrib, se_node_acl, acl_attrib_group);
++
++static struct configfs_item_operations target_fabric_nacl_attrib_item_ops = {
++	.show_attribute		= target_fabric_nacl_attrib_attr_show,
++	.store_attribute	= target_fabric_nacl_attrib_attr_store,
++};
++
++TF_CIT_SETUP(tpg_nacl_attrib, &target_fabric_nacl_attrib_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_nacl_attrib_cit */
++
++/* Start of tfc_tpg_nacl_auth_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_auth, se_node_acl, acl_auth_group);
++
++static struct configfs_item_operations target_fabric_nacl_auth_item_ops = {
++	.show_attribute		= target_fabric_nacl_auth_attr_show,
++	.store_attribute	= target_fabric_nacl_auth_attr_store,
++};
++
++TF_CIT_SETUP(tpg_nacl_auth, &target_fabric_nacl_auth_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_nacl_auth_cit */
++
++/* Start of tfc_tpg_nacl_param_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_param, se_node_acl, acl_param_group);
++
++static struct configfs_item_operations target_fabric_nacl_param_item_ops = {
++	.show_attribute		= target_fabric_nacl_param_attr_show,
++	.store_attribute	= target_fabric_nacl_param_attr_store,
++};
++
++TF_CIT_SETUP(tpg_nacl_param, &target_fabric_nacl_param_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_nacl_param_cit */
++
++/* Start of tfc_tpg_nacl_base_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_base, se_node_acl, acl_group);
++
++static struct config_group *target_fabric_make_mappedlun(
++	struct config_group *group,
++	const char *name)
 +{
-+	return 0;
-+}
-+
-+/*	fd_allocate_request(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static void *fd_allocate_request(
-+	struct se_task *task,
-+	struct se_device *dev)
-+{
-+	struct fd_request *fd_req;
-+
-+	fd_req = kzalloc(sizeof(struct fd_request), GFP_KERNEL);
-+	if (!(fd_req)) {
-+		printk(KERN_ERR "Unable to allocate struct fd_request\n");
-+		return NULL;
-+	}
-+
-+	fd_req->fd_dev = (struct fd_dev *) dev->dev_ptr;
-+
-+	return (void *)fd_req;
-+}
-+
-+/*	fd_emulate_inquiry():
-+ *
-+ *
-+ */
-+static int fd_emulate_inquiry(struct se_task *task)
-+{
-+	unsigned char prod[64], se_location[128];
-+	struct se_cmd *cmd = TASK_CMD(task);
-+	struct fd_dev *fdev = (struct fd_dev *) task->se_dev->dev_ptr;
-+	struct se_hba *hba = task->se_dev->se_hba;
-+
-+	memset(prod, 0, 64);
-+	memset(se_location, 0, 128);
-+
-+	sprintf(prod, "FILEIO");
-+	sprintf(se_location, "%u_%u", hba->hba_id, fdev->fd_dev_id);
-+
-+	return transport_generic_emulate_inquiry(cmd, TYPE_DISK, prod,
-+		FD_VERSION, se_location);
-+}
-+
-+/*	fd_emulate_read_cap():
-+ *
-+ *
-+ */
-+static int fd_emulate_read_cap(struct se_task *task)
-+{
-+	struct fd_dev *fd_dev = (struct fd_dev *) task->se_dev->dev_ptr;
-+	unsigned long long blocks_long = div_u64(fd_dev->fd_dev_size,
-+				DEV_ATTRIB(task->se_dev)->block_size);
-+	u32 blocks;
-+
-+	if (blocks_long >= 0x00000000ffffffff)
-+		blocks = 0xffffffff;
-+	else
-+		blocks = (u32)blocks_long;
-+
-+	return transport_generic_emulate_readcapacity(TASK_CMD(task), blocks);
-+}
-+
-+static int fd_emulate_read_cap16(struct se_task *task)
-+{
-+	struct fd_dev *fd_dev = (struct fd_dev *) task->se_dev->dev_ptr;
-+	unsigned long long blocks_long = div_u64(fd_dev->fd_dev_size,
-+				  DEV_ATTRIB(task->se_dev)->block_size);
-+
-+	return transport_generic_emulate_readcapacity_16(TASK_CMD(task),
-+		blocks_long);
-+}
-+
-+/*	fd_emulate_scsi_cdb():
-+ *
-+ *
-+ */
-+static int fd_emulate_scsi_cdb(struct se_task *task)
-+{
-+	int ret;
-+	struct se_cmd *cmd = TASK_CMD(task);
-+	struct fd_request *fd_req = (struct fd_request *) task->transport_req;
-+
-+	switch (fd_req->fd_scsi_cdb[0]) {
-+	case INQUIRY:
-+		if (fd_emulate_inquiry(task) < 0)
-+			return PYX_TRANSPORT_INVALID_CDB_FIELD;
-+		break;
-+	case READ_CAPACITY:
-+		ret = fd_emulate_read_cap(task);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	case MODE_SENSE:
-+		ret = transport_generic_emulate_modesense(TASK_CMD(task),
-+				fd_req->fd_scsi_cdb, fd_req->fd_buf, 0,
-+				TYPE_DISK);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	case MODE_SENSE_10:
-+		ret = transport_generic_emulate_modesense(TASK_CMD(task),
-+				fd_req->fd_scsi_cdb, fd_req->fd_buf, 1,
-+				TYPE_DISK);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	case SERVICE_ACTION_IN:
-+		if ((T_TASK(cmd)->t_task_cdb[1] & 0x1f) !=
-+		     SAI_READ_CAPACITY_16) {
-+			printk(KERN_ERR "Unsupported SA: 0x%02x\n",
-+				T_TASK(cmd)->t_task_cdb[1] & 0x1f);
-+			return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
-+		}
-+		ret = fd_emulate_read_cap16(task);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	case REQUEST_SENSE:
-+		ret = transport_generic_emulate_request_sense(cmd,
-+				T_TASK(cmd)->t_task_cdb);
-+		if (ret < 0)
-+			return ret;
-+		break;
-+	case ALLOW_MEDIUM_REMOVAL:
-+	case ERASE:
-+	case REZERO_UNIT:
-+	case SEEK_10:
-+	case SPACE:
-+	case START_STOP:
-+	case SYNCHRONIZE_CACHE:
-+	case TEST_UNIT_READY:
-+	case VERIFY:
-+	case WRITE_FILEMARKS:
-+	case RESERVE:
-+	case RESERVE_10:
-+	case RELEASE:
-+	case RELEASE_10:
-+		break;
-+	default:
-+		printk(KERN_ERR "Unsupported SCSI Opcode: 0x%02x for FILEIO\n",
-+				fd_req->fd_scsi_cdb[0]);
-+		return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
-+	}
-+
-+	task->task_scsi_status = GOOD;
-+	transport_complete_task(task, 1);
-+
-+	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
-+}
-+
-+static inline int fd_iovec_alloc(struct fd_request *req)
-+{
-+	req->fd_iovs = kzalloc(sizeof(struct iovec) * req->fd_sg_count,
-+				GFP_KERNEL);
-+	if (!(req->fd_iovs)) {
-+		printk(KERN_ERR "Unable to allocate req->fd_iovs\n");
-+		return -1;
-+	}
-+
-+	return 0;
-+}
-+
-+static int fd_do_readv(struct fd_request *req, struct se_task *task)
-+{
-+	struct file *fd = req->fd_dev->fd_file;
-+	struct scatterlist *sg = task->task_sg;
-+	struct iovec *iov;
-+	mm_segment_t old_fs;
-+	loff_t pos = (req->fd_lba * DEV_ATTRIB(task->se_dev)->block_size);
-+	int ret = 0, i;
-+
-+	iov = kzalloc(sizeof(struct iovec) * req->fd_sg_count, GFP_KERNEL);
-+	if (!(iov)) {
-+		printk(KERN_ERR "Unable to allocate fd_do_readv iov[]\n");
-+		return -1;
-+	}
-+
-+	for (i = 0; i < req->fd_sg_count; i++) {
-+		iov[i].iov_len = sg[i].length;
-+		iov[i].iov_base = sg_virt(&sg[i]);
-+	}
-+
-+	old_fs = get_fs();
-+	set_fs(get_ds());
-+	ret = vfs_readv(fd, &iov[0], req->fd_sg_count, &pos);
-+	set_fs(old_fs);
-+
-+	kfree(iov);
-+	/*
-+	 * Return zeros and GOOD status even if the READ did not return
-+	 * the expected virt_size for struct file w/o a backing struct
-+	 * block_device.
-+	 */
-+	if (S_ISBLK(fd->f_dentry->d_inode->i_mode)) {
-+		if (ret < 0 || ret != req->fd_size) {
-+			printk(KERN_ERR "vfs_readv() returned %d,"
-+				" expecting %d for S_ISBLK\n", ret,
-+				(int)req->fd_size);
-+			return -1;
-+		}
-+	} else {
-+		if (ret < 0) {
-+			printk(KERN_ERR "vfs_readv() returned %d for non"
-+				" S_ISBLK\n", ret);
-+			return -1;
-+		}
-+	}
-+
-+	return 1;
-+}
-+
-+#if 0
-+
-+static void fd_sendfile_free_DMA(struct se_cmd *cmd)
-+{
-+	printk(KERN_INFO "Release reference to pages now..\n");
-+}
-+
-+static static int fd_sendactor(
-+	read_descriptor_t *desc,
-+	struct page *page,
-+	unsigned long offset,
-+	unsigned long size)
-+{
-+	unsigned long count = desc->count;
-+	struct se_task *task = desc->arg.data;
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+	struct scatterlist *sg = task->task_sg;
-+
-+	printk(KERN_INFO "page: %p offset: %lu size: %lu\n", page,
-+			offset, size);
-+
-+	__free_page(sg[req->fd_cur_offset].page);
-+
-+	printk(KERN_INFO "page_address(page): %p\n", page_address(page));
-+	sg[req->fd_cur_offset].page = page;
-+	sg[req->fd_cur_offset].offset = offset;
-+	sg[req->fd_cur_offset].length = size;
-+
-+	printk(KERN_INFO "sg[%d:%p].page %p length: %d\n", req->fd_cur_offset,
-+		&sg[req->fd_cur_offset], sg[req->fd_cur_offset].page,
-+		sg[req->fd_cur_offset].length);
-+
-+	req->fd_cur_size += size;
-+	printk(KERN_INFO "fd_cur_size: %u\n", req->fd_cur_size);
-+
-+	req->fd_cur_offset++;
-+
-+	desc->count--;
-+	desc->written += size;
-+	return size;
-+}
-+
-+static int fd_do_sendfile(struct fd_request *req, struct se_task *task)
-+{
++	struct se_node_acl *se_nacl = container_of(group,
++			struct se_node_acl, acl_group);
++	struct se_portal_group *se_tpg = se_nacl->se_tpg;
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_lun_acl *lacl;
++	struct config_item *acl_ci;
++	char *buf, *endptr, *ptr;
++	u32 mapped_lun;
 +	int ret = 0;
-+	struct file *fd = req->fd_dev->fd_file;
 +
-+	if (fd_seek(fd, req->fd_lba, DEV_ATTRIB(task->se_dev)->block_size) < 0)
-+		return -1;
-+
-+	TASK_CMD(task)->transport_free_DMA = &fd_sendfile_free_DMA;
-+
-+	ret = fd->f_op->sendfile(fd, &fd->f_pos, req->fd_sg_count,
-+			fd_sendactor, (void *)task);
-+
-+	if (ret < 0) {
-+		printk(KERN_ERR "fd->f_op->sendfile() returned %d\n", ret);
-+		return -1;
++	acl_ci = &group->cg_item;
++	if (!(acl_ci)) {
++		printk(KERN_ERR "Unable to locatel acl_ci\n");
++		return NULL;
 +	}
 +
-+	return 1;
-+}
-+#endif
++	buf = kzalloc(strlen(name) + 1, GFP_KERNEL);
++	if (!(buf)) {
++		printk(KERN_ERR "Unable to allocate memory for name buf\n");
++		return ERR_PTR(-ENOMEM);
++	}
++	snprintf(buf, strlen(name) + 1, "%s", name);
++	/*
++	 * Make sure user is creating iscsi/$IQN/$TPGT/acls/$INITIATOR/lun_$ID.
++	 */
++	ptr = strstr(buf, "lun_");
++	if (!(ptr)) {
++		printk(KERN_ERR "Unable to locate \"lun_\" from buf: %s"
++			" name: %s\n", buf, name);
++		ret = -EINVAL;
++		goto out;
++	}
++	ptr += 3; /* Skip to "_" */
++	*ptr = '\0'; /* Terminate the string */
++	ptr++; /* Advance pointer to next characater */
 +
-+static int fd_do_writev(struct fd_request *req, struct se_task *task)
++	/*
++	 * Determine the Mapped LUN value.  This is what the SCSI Initiator
++	 * Port will actually see.
++	 */
++	mapped_lun = simple_strtoul(ptr, &endptr, 0);
++
++	lacl = core_dev_init_initiator_node_lun_acl(se_tpg, mapped_lun,
++			config_item_name(acl_ci), &ret);
++        if (!(lacl))
++                goto out;
++
++	config_group_init_type_name(&lacl->se_lun_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_mappedlun_cit);		
++
++	kfree(buf);
++	return &lacl->se_lun_group;
++out:
++	kfree(buf);
++	return ERR_PTR(ret);
++}
++
++static void target_fabric_drop_mappedlun(
++	struct config_group *group,
++	struct config_item *item)
 +{
-+	struct file *fd = req->fd_dev->fd_file;
-+	struct scatterlist *sg = task->task_sg;
-+	struct iovec *iov;
-+	mm_segment_t old_fs;
-+	loff_t pos = (req->fd_lba * DEV_ATTRIB(task->se_dev)->block_size);
-+	int ret, i = 0;
++	struct se_lun_acl *lacl = container_of(to_config_group(item),
++			struct se_lun_acl, se_lun_group);
++	struct se_portal_group *se_tpg = lacl->se_lun_nacl->se_tpg; 
 +
-+	iov = kzalloc(sizeof(struct iovec) * req->fd_sg_count, GFP_KERNEL);
-+	if (!(iov)) {
-+		printk(KERN_ERR "Unable to allocate fd_do_writev iov[]\n");
-+		return -1;
-+	}
-+
-+	for (i = 0; i < req->fd_sg_count; i++) {
-+		iov[i].iov_len = sg[i].length;
-+		iov[i].iov_base = sg_virt(&sg[i]);
-+	}
-+
-+	old_fs = get_fs();
-+	set_fs(get_ds());
-+	ret = vfs_writev(fd, &iov[0], req->fd_sg_count, &pos);
-+	set_fs(old_fs);
-+
-+	kfree(iov);
-+
-+	if (ret < 0 || ret != req->fd_size) {
-+		printk(KERN_ERR "vfs_writev() returned %d\n", ret);
-+		return -1;
-+	}
-+
-+	return 1;
++	config_item_put(item);
++	core_dev_free_initiator_node_lun_acl(se_tpg, lacl);
 +}
++
++static struct configfs_item_operations target_fabric_nacl_base_item_ops = {
++	.show_attribute		= target_fabric_nacl_base_attr_show,
++	.store_attribute	= target_fabric_nacl_base_attr_store,
++};
++
++static struct configfs_group_operations target_fabric_nacl_base_group_ops = {
++	.make_group		= target_fabric_make_mappedlun,
++	.drop_item		= target_fabric_drop_mappedlun,
++};
++
++TF_CIT_SETUP(tpg_nacl_base, &target_fabric_nacl_base_item_ops,
++		&target_fabric_nacl_base_group_ops, NULL);
++
++/* End of tfc_tpg_nacl_base_cit */
++
++/* Start of tfc_tpg_nacl_cit */
++
++static struct config_group *target_fabric_make_nodeacl(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++			struct se_portal_group, tpg_acl_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_node_acl *se_nacl;
++	struct config_group *nacl_cg;
++
++	if (!(tf->tf_ops.fabric_make_nodeacl)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_nodeacl is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	se_nacl = tf->tf_ops.fabric_make_nodeacl(se_tpg, group, name);
++	if (IS_ERR(se_nacl))
++		return ERR_PTR(PTR_ERR(se_nacl));	
++
++	nacl_cg = &se_nacl->acl_group;
++	nacl_cg->default_groups = se_nacl->acl_default_groups;
++	nacl_cg->default_groups[0] = &se_nacl->acl_attrib_group;
++	nacl_cg->default_groups[1] = &se_nacl->acl_auth_group; 
++	nacl_cg->default_groups[2] = &se_nacl->acl_param_group;
++	nacl_cg->default_groups[3] = NULL;
++
++	config_group_init_type_name(&se_nacl->acl_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_base_cit);			
++	config_group_init_type_name(&se_nacl->acl_attrib_group, "attrib",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_attrib_cit);
++	config_group_init_type_name(&se_nacl->acl_auth_group, "auth",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_auth_cit);
++	config_group_init_type_name(&se_nacl->acl_param_group, "param",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_param_cit);
++		
++	return &se_nacl->acl_group;
++}
++
++static void target_fabric_drop_nodeacl(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++			struct se_portal_group, tpg_acl_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_node_acl *se_nacl = container_of(to_config_group(item),
++			struct se_node_acl, acl_group);
++	struct config_item *df_item;
++	struct config_group *nacl_cg;
++	int i;
++
++	nacl_cg = &se_nacl->acl_group;
++	for (i = 0; nacl_cg->default_groups[i]; i++) {
++		df_item = &nacl_cg->default_groups[i]->cg_item;
++		nacl_cg->default_groups[i] = NULL;
++		config_item_put(df_item);
++	}
++
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_nodeacl(se_nacl);	
++}
++
++static struct configfs_group_operations target_fabric_nacl_group_ops = {
++	.make_group	= target_fabric_make_nodeacl,
++	.drop_item	= target_fabric_drop_nodeacl,
++};
++
++TF_CIT_SETUP(tpg_nacl, NULL, &target_fabric_nacl_group_ops, NULL);
++
++/* End of tfc_tpg_nacl_cit */
++
++/* Start of tfc_tpg_np_base_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_np_base, se_tpg_np, tpg_np_group);
++
++static struct configfs_item_operations target_fabric_np_base_item_ops = {
++	.show_attribute		= target_fabric_np_base_attr_show,
++	.store_attribute	= target_fabric_np_base_attr_store,
++};
++
++TF_CIT_SETUP(tpg_np_base, &target_fabric_np_base_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_np_base_cit */
++
++/* Start of tfc_tpg_np_cit */
++
++static struct config_group *target_fabric_make_np(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++				struct se_portal_group, tpg_np_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_tpg_np *se_tpg_np;
++
++	if (!(tf->tf_ops.fabric_make_np)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_np is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	se_tpg_np = tf->tf_ops.fabric_make_np(se_tpg, group, name);
++	if (!(se_tpg_np) || IS_ERR(se_tpg_np))
++		return ERR_PTR(-EINVAL);
++
++	config_group_init_type_name(&se_tpg_np->tpg_np_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_np_base_cit);						
++
++	return &se_tpg_np->tpg_np_group;
++}
++
++static void target_fabric_drop_np(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++				struct se_portal_group, tpg_np_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_tpg_np *se_tpg_np = container_of(to_config_group(item),
++				struct se_tpg_np, tpg_np_group);
++
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_np(se_tpg_np);
++}
++
++static struct configfs_group_operations target_fabric_np_group_ops = {
++	.make_group	= &target_fabric_make_np,
++	.drop_item	= &target_fabric_drop_np,
++};
++
++TF_CIT_SETUP(tpg_np, NULL, &target_fabric_np_group_ops, NULL);
++
++/* End of tfc_tpg_np_cit */
++
++/* Start of tfc_tpg_port_cit */
++
++CONFIGFS_EATTR_STRUCT(target_fabric_port, se_lun);
++#define TCM_PORT_ATTR(_name, _mode)					\
++static struct target_fabric_port_attribute target_fabric_port_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_fabric_port_show_attr_##_name,				\
++	target_fabric_port_store_attr_##_name);
++
++#define TCM_PORT_ATTOR_RO(_name)					\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_fabric_port_show_attr_##_name);
 +
 +/*
-+ * Called from transport_generic_synchronize_cache() to flush the entire
-+ * struct file (and possibly backing struct block_device) using vfs_fsync().
++ * alua_tg_pt_gp
 + */
-+static int fd_do_sync_cache(struct se_cmd *cmd, int immed)
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_gp(
++	struct se_lun *lun,
++	char *page)
 +{
-+	struct fd_dev *fd_dev = (struct fd_dev *)cmd->se_dev->dev_ptr;
-+	struct file *fd = fd_dev->fd_file;
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_tg_pt_gp_info(lun->lun_sep, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_gp(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_tg_pt_gp_info(lun->lun_sep, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_gp, S_IRUGO | S_IWUSR);
++
++/*
++ * alua_tg_pt_offline
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_offline(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_offline_bit(lun, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_offline(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_offline_bit(lun, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_offline, S_IRUGO | S_IWUSR);
++
++/*
++ * alua_tg_pt_status
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_status(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_secondary_status(lun, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_status(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_secondary_status(lun, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_status, S_IRUGO | S_IWUSR);
++
++/*
++ * alua_tg_pt_write_md
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_write_md(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_secondary_write_metadata(lun, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_write_md(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_secondary_write_metadata(lun, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_write_md, S_IRUGO | S_IWUSR);
++
++
++static struct configfs_attribute *target_fabric_port_attrs[] = {
++	&target_fabric_port_alua_tg_pt_gp.attr,
++	&target_fabric_port_alua_tg_pt_offline.attr,
++	&target_fabric_port_alua_tg_pt_status.attr,
++	&target_fabric_port_alua_tg_pt_write_md.attr,
++	NULL,
++};
++
++CONFIGFS_EATTR_OPS(target_fabric_port, se_lun, lun_group);
++
++static int target_fabric_port_link(
++	struct config_item *lun_ci,
++	struct config_item *se_dev_ci)
++{
++	struct config_item *tpg_ci;
++	struct se_device *dev;
++	struct se_lun *lun = container_of(to_config_group(lun_ci),
++				struct se_lun, lun_group);
++	struct se_lun *lun_p;
++	struct se_portal_group *se_tpg;
++	struct se_subsystem_dev *se_dev = container_of(
++				to_config_group(se_dev_ci), struct se_subsystem_dev,
++				se_dev_group);
++	struct target_fabric_configfs *tf;
 +	int ret;
 +
-+	ret = vfs_fsync(fd, 0);
-+	if (ret != 0) {
-+		printk(KERN_ERR "FILEIO: vfs_fsync(fd, 0) returned: %d\n", ret);
-+		return ret;
++	tpg_ci = &lun_ci->ci_parent->ci_group->cg_item;
++	se_tpg = container_of(to_config_group(tpg_ci),
++				struct se_portal_group, tpg_group);
++	tf = se_tpg->se_tpg_wwn->wwn_tf;
++
++	if (lun->lun_se_dev!= NULL) {
++		printk(KERN_ERR "Port Symlink already exists\n");
++		return -EEXIST;
 +	}
-+	DEBUG_FD_CACHE("FILEIO: vfs_fsync(fd, 0) called, immed: %d\n", immed);
++	
++	dev = se_dev->se_dev_ptr;
++	if (!(dev)) {
++		printk(KERN_ERR "Unable to locate struct se_device pointer from"
++			" %s\n", config_item_name(se_dev_ci));
++		ret = -ENODEV;
++		goto out;
++	}
++
++	lun_p = core_dev_add_lun(se_tpg, dev->se_hba, dev,
++				lun->unpacked_lun);
++	if ((IS_ERR(lun_p)) || !(lun_p)) {
++		printk(KERN_ERR "core_dev_add_lun() failed\n");
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if (tf->tf_ops.fabric_post_link) {
++		/*
++		 * Call the optional fabric_post_link() to allow a
++		 * fabric module to setup any additional state once
++		 * core_dev_add_lun() has been called..
++		 */
++		tf->tf_ops.fabric_post_link(se_tpg, lun);
++	}
++
++	return 0;
++out:
 +	return ret;
 +}
 +
-+/*
-+ * Called from transport_generic_synchronize_cache() to flush LBA range
-+ */
-+int __fd_do_sync_cache_range(
-+	struct se_cmd *cmd,
-+	unsigned long long lba,
-+	u32 size_in_bytes)
++static int target_fabric_port_unlink(
++	struct config_item *lun_ci,
++	struct config_item *se_dev_ci)
 +{
-+	struct se_device *dev = cmd->se_dev;
-+	struct fd_dev *fd_dev = (struct fd_dev *)dev->dev_ptr;
-+	struct file *fd = fd_dev->fd_file;
-+	loff_t start = (lba * DEV_ATTRIB(dev)->block_size);
-+	loff_t bytes;
-+	int ret, immed = (T_TASK(cmd)->t_task_cdb[1] & 0x2);
-+	/*
-+	 * If the Immediate bit is set, queue up the GOOD response
-+	 * for this SYNCHRONIZE_CACHE op
-+	 */
-+	if (immed)
-+		transport_complete_sync_cache(cmd, 1);
-+	/*
-+	 * Determine if we will be flushing the entire device.
-+	 */
-+	if ((T_TASK(cmd)->t_task_lba == 0) && (cmd->data_length == 0)) {
-+		ret = fd_do_sync_cache(cmd, immed);		
-+		if (!(immed))
-+			transport_complete_sync_cache(cmd, (ret == 0) ? 1 : 0);
-+		return 0;
-+	}
-+	/*
-+	 * If a explict number of bytes fo flush has been provied by
-+	 * the initiator, use this value with vfs_sync_range().  Otherwise
-+	 * bytes = LLONG_MAX (matching fs/sync.c:vfs_fsync().
-+	 */
-+	bytes = (size_in_bytes != 0) ? size_in_bytes : LLONG_MAX;
-+	ret = vfs_fsync_range(fd, start, bytes, 0);
-+	if (ret != 0) {
-+		printk(KERN_ERR "FILEIO: vfs_fsync_range() failed: %d\n", ret);
-+		if (!(immed))
-+			transport_complete_sync_cache(cmd, 0);
-+		return -1;
-+	}
-+	DEBUG_FD_CACHE("FILEIO: vfs_fsync_range(): LBA: %llu Starting offset:"
-+		" %llu, bytes: %llu, immed: %d\n", lba, (unsigned long long)start,
-+		(unsigned long long)bytes, immed);
++	struct se_lun *lun = container_of(to_config_group(lun_ci),
++				struct se_lun, lun_group);
++	struct se_portal_group *se_tpg = lun->lun_sep->sep_tpg;
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
 +
-+	if (!(immed))
-+		transport_complete_sync_cache(cmd, 1);
-+
-+	return 0;
-+}
-+
-+void fd_do_sync_cache_range(
-+	struct se_cmd *cmd,
-+	unsigned long long lba,
-+	u32 size_in_bytes)
-+{
-+	__fd_do_sync_cache_range(cmd, lba, size_in_bytes);	
-+}
-+
-+/*
-+ * Tell TCM Core that we are capable of WriteCache emulation for
-+ * an underlying struct se_device.
-+ */
-+int fd_emulated_write_cache(struct se_device *dev)
-+{
-+	return 1;
-+}
-+
-+int fd_emulated_dpo(struct se_device *dev)
-+{
-+	return 0;
-+}
-+/*
-+ * Tell TCM Core that we will be emulating Forced Unit Access (FUA) for WRITEs
-+ * for TYPE_DISK.
-+ */
-+int fd_emulated_fua_write(struct se_device *dev)
-+{
-+	return 1;
-+}
-+
-+int fd_emulated_fua_read(struct se_device *dev)
-+{
-+	return 0;
-+}
-+
-+/*
-+ * WRITE Force Unit Access (FUA) emulation on a per struct se_task
-+ * LBA range basis..
-+ */
-+static inline int fd_emulate_write_fua(
-+	struct se_cmd *cmd,
-+	struct se_task *task)
-+{
-+	DEBUG_FD_CACHE("FILEIO: FUA WRITE LBA: %llu, bytes: %u\n",
-+			task->task_lba, task->task_size);
-+
-+	return __fd_do_sync_cache_range(cmd, task->task_lba, task->task_size);
-+}
-+
-+static int fd_do_task(struct se_task *task)
-+{
-+	struct se_cmd *cmd = task->task_se_cmd;
-+	struct se_device *dev = cmd->se_dev;
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+	int ret = 0;
-+
-+	if (!(TASK_CMD(task)->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB))
-+		return fd_emulate_scsi_cdb(task);
-+
-+	req->fd_lba = task->task_lba;
-+	req->fd_size = task->task_size;
-+	/*
-+	 * Call vectorized fileio functions to map struct scatterlist
-+	 * physical memory addresses to struct iovec virtual memory.
-+	 */
-+	if (req->fd_data_direction == FD_DATA_READ)
-+		ret = fd_do_readv(req, task);
-+	else
-+		ret = fd_do_writev(req, task);
-+
-+	if (ret < 0)
-+		return ret;
-+
-+	if (ret) {
++	if (tf->tf_ops.fabric_pre_unlink) {
 +		/*
-+		 * Check for Forced Unit Access WRITE emulation
-+		 */
-+		if ((DEV_ATTRIB(dev)->emulate_write_cache > 0) &&
-+		    (DEV_ATTRIB(dev)->emulate_fua_write > 0) &&
-+		    (req->fd_data_direction == FD_DATA_WRITE) &&
-+		    (T_TASK(cmd)->t_tasks_fua)) {
-+			/*
-+			 * We might need to be a bit smarter here
-+			 * and return some sense data to let the initiator
-+			 * know the FUA WRITE cache sync failed..?
-+			 */
-+			ret = fd_emulate_write_fua(cmd, task);
-+			if (ret < 0) {
-+				printk(KERN_ERR "FILEIO: fd_emulate"
-+					"_write_fua() failed\n");
-+			}
-+		}
-+
-+		task->task_scsi_status = GOOD;
-+		transport_complete_task(task, 1);
++		 * Call the optional fabric_pre_unlink() to allow a
++		 * fabric module to release any additional stat before
++		 * core_dev_del_lun() is called.
++		*/
++		tf->tf_ops.fabric_pre_unlink(se_tpg, lun);
 +	}
 +
-+	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
-+}
-+
-+/*	fd_free_task(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static void fd_free_task(struct se_task *task)
-+{
-+	struct fd_request *req;
-+
-+	req = (struct fd_request *) task->transport_req;
-+	kfree(req->fd_iovs);
-+
-+	kfree(req);
-+}
-+
-+static ssize_t fd_set_configfs_dev_params(
-+	struct se_hba *hba,
-+	struct se_subsystem_dev *se_dev,
-+	const char *page, ssize_t count)
-+{
-+	struct fd_dev *fd_dev = (struct fd_dev *) se_dev->se_dev_su_ptr;
-+	char *buf, *cur, *ptr, *ptr2;
-+	int params = 0;
-+
-+	buf = kzalloc(count, GFP_KERNEL);
-+	if (!(buf)) {
-+		printk(KERN_ERR "Unable to allocate memory for"
-+				" temporary buffer\n");
-+		return 0;
-+	}
-+	memcpy(buf, page, count);
-+	cur = buf;
-+
-+	while (cur) {
-+		ptr = strstr(cur, "=");
-+		if (!(ptr))
-+			goto out;
-+
-+		*ptr = '\0';
-+		ptr++;
-+
-+		ptr2 = strstr(cur, "fd_dev_name");
-+		if (ptr2) {
-+			transport_check_dev_params_delim(ptr, &cur);
-+			ptr = strstrip(ptr);
-+			snprintf(fd_dev->fd_dev_name, FD_MAX_DEV_NAME,
-+					"%s", ptr);
-+			printk(KERN_INFO "FILEIO: Referencing Path: %s\n",
-+					fd_dev->fd_dev_name);
-+			fd_dev->fbd_flags |= FBDF_HAS_PATH;
-+			params++;
-+			continue;
-+		}
-+		ptr2 = strstr(cur, "fd_dev_size");
-+		if (ptr2) {
-+			transport_check_dev_params_delim(ptr, &cur);
-+			if (strict_strtoull(ptr, 0, &fd_dev->fd_dev_size) < 0) {
-+				printk(KERN_ERR "strict_strtoull() failed for"
-+						" fd_dev_size=\n");
-+				continue;
-+			}
-+			printk(KERN_INFO "FILEIO: Referencing Size: %llu"
-+					" bytes\n", fd_dev->fd_dev_size);
-+			fd_dev->fbd_flags |= FBDF_HAS_SIZE;
-+			params++;
-+			continue;
-+		}
-+		ptr2 = strstr(cur, "fd_buffered_io");
-+		if (ptr2) {
-+			transport_check_dev_params_delim(ptr, &cur);
-+			if (strncmp(ptr, "1", 1))
-+				continue;
-+
-+			printk(KERN_INFO "FILEIO: Using buffered I/O"
-+				" operations for struct fd_dev\n");
-+
-+			fd_dev->fbd_flags |= FDBD_USE_BUFFERED_IO;
-+			params++;
-+			continue;
-+		} else
-+			cur = NULL;
-+	}
-+
-+out:
-+	kfree(buf);
-+	return (params) ? count : -EINVAL;
-+}
-+
-+static ssize_t fd_check_configfs_dev_params(struct se_hba *hba, struct se_subsystem_dev *se_dev)
-+{
-+	struct fd_dev *fd_dev = (struct fd_dev *) se_dev->se_dev_su_ptr;
-+
-+	if (!(fd_dev->fbd_flags & FBDF_HAS_PATH)) {
-+		printk(KERN_ERR "Missing fd_dev_name=\n");
-+		return -1;
-+	}
-+
++	core_dev_del_lun(se_tpg, lun->unpacked_lun);
 +	return 0;
 +}
 +
-+static ssize_t fd_show_configfs_dev_params(
-+	struct se_hba *hba,
-+	struct se_subsystem_dev *se_dev,
-+	char *page)
-+{
-+	struct fd_dev *fd_dev = (struct fd_dev *) se_dev->se_dev_su_ptr;
-+	int bl = 0;
-+
-+	__fd_get_dev_info(fd_dev, page, &bl);
-+	return (ssize_t)bl;
-+}
-+
-+static void fd_get_plugin_info(void *p, char *b, int *bl)
-+{
-+	*bl += sprintf(b + *bl, "TCM FILEIO Plugin %s\n", FD_VERSION);
-+}
-+
-+static void fd_get_hba_info(struct se_hba *hba, char *b, int *bl)
-+{
-+	struct fd_host *fd_host = (struct fd_host *)hba->hba_ptr;
-+
-+	*bl += sprintf(b + *bl, "SE Host ID: %u  FD Host ID: %u\n",
-+		 hba->hba_id, fd_host->fd_host_id);
-+	*bl += sprintf(b + *bl, "        TCM FILEIO HBA\n");
-+}
-+
-+static void fd_get_dev_info(struct se_device *dev, char *b, int *bl)
-+{
-+	struct fd_dev *fd_dev = (struct fd_dev *) dev->dev_ptr;
-+
-+	__fd_get_dev_info(fd_dev, b, bl);
-+}
-+
-+static void __fd_get_dev_info(struct fd_dev *fd_dev, char *b, int *bl)
-+{
-+	*bl += sprintf(b + *bl, "TCM FILEIO ID: %u", fd_dev->fd_dev_id);
-+	*bl += sprintf(b + *bl, "        File: %s  Size: %llu  Mode: %s\n",
-+		fd_dev->fd_dev_name, fd_dev->fd_dev_size,
-+		(fd_dev->fbd_flags & FDBD_USE_BUFFERED_IO) ?
-+		"Buffered" : "Synchronous");
-+}
-+
-+/*	fd_map_task_non_SG():
-+ *
-+ *
-+ */
-+static void fd_map_task_non_SG(struct se_task *task)
-+{
-+	struct se_cmd *cmd = TASK_CMD(task);
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+
-+	req->fd_bufflen		= task->task_size;
-+	req->fd_buf		= (void *) T_TASK(cmd)->t_task_buf;
-+	req->fd_sg_count	= 0;
-+}
-+
-+/*	fd_map_task_SG():
-+ *
-+ *
-+ */
-+static void fd_map_task_SG(struct se_task *task)
-+{
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+
-+	req->fd_bufflen		= task->task_size;
-+	req->fd_buf		= NULL;
-+	req->fd_sg_count	= task->task_sg_num;
-+}
-+
-+/*      fd_CDB_none():
-+ *
-+ *
-+ */
-+static int fd_CDB_none(struct se_task *task, u32 size)
-+{
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+
-+	req->fd_data_direction	= FD_DATA_NONE;
-+	req->fd_bufflen		= 0;
-+	req->fd_sg_count	= 0;
-+	req->fd_buf		= NULL;
-+
-+	return 0;
-+}
-+
-+/*	fd_CDB_read_non_SG():
-+ *
-+ *
-+ */
-+static int fd_CDB_read_non_SG(struct se_task *task, u32 size)
-+{
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+
-+	req->fd_data_direction = FD_DATA_READ;
-+	fd_map_task_non_SG(task);
-+
-+	return 0;
-+}
-+
-+/*	fd_CDB_read_SG):
-+ *
-+ *
-+ */
-+static int fd_CDB_read_SG(struct se_task *task, u32 size)
-+{
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+
-+	req->fd_data_direction = FD_DATA_READ;
-+	fd_map_task_SG(task);
-+
-+	return req->fd_sg_count;
-+}
-+
-+/*	fd_CDB_write_non_SG():
-+ *
-+ *
-+ */
-+static int fd_CDB_write_non_SG(struct se_task *task, u32 size)
-+{
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+
-+	req->fd_data_direction = FD_DATA_WRITE;
-+	fd_map_task_non_SG(task);
-+
-+	return 0;
-+}
-+
-+/*	fd_CDB_write_SG():
-+ *
-+ *
-+ */
-+static int fd_CDB_write_SG(struct se_task *task, u32 size)
-+{
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+
-+	req->fd_data_direction = FD_DATA_WRITE;
-+	fd_map_task_SG(task);
-+
-+	return req->fd_sg_count;
-+}
-+
-+/*	fd_check_lba():
-+ *
-+ *
-+ */
-+static int fd_check_lba(unsigned long long lba, struct se_device *dev)
-+{
-+	return 0;
-+}
-+
-+/*	fd_check_for_SG(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static int fd_check_for_SG(struct se_task *task)
-+{
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+
-+	return req->fd_sg_count;
-+}
-+
-+/*	fd_get_cdb(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static unsigned char *fd_get_cdb(struct se_task *task)
-+{
-+	struct fd_request *req = (struct fd_request *) task->transport_req;
-+
-+	return req->fd_scsi_cdb;
-+}
-+
-+/*	fd_get_blocksize(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static u32 fd_get_blocksize(struct se_device *dev)
-+{
-+	struct fd_dev *fd_dev = (struct fd_dev *) dev->dev_ptr;
-+
-+	return fd_dev->fd_block_size;
-+}
-+
-+/*	fd_get_device_rev(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static u32 fd_get_device_rev(struct se_device *dev)
-+{
-+	return SCSI_SPC_2; /* Returns SPC-3 in Initiator Data */
-+}
-+
-+/*	fd_get_device_type(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static u32 fd_get_device_type(struct se_device *dev)
-+{
-+	return TYPE_DISK;
-+}
-+
-+/*	fd_get_dma_length(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static u32 fd_get_dma_length(u32 task_size, struct se_device *dev)
-+{
-+	return PAGE_SIZE;
-+}
-+
-+/*	fd_get_max_sectors(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static u32 fd_get_max_sectors(struct se_device *dev)
-+{
-+	return FD_MAX_SECTORS;
-+}
-+
-+/*	fd_get_queue_depth(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static u32 fd_get_queue_depth(struct se_device *dev)
-+{
-+	return FD_DEVICE_QUEUE_DEPTH;
-+}
-+
-+static u32 fd_get_max_queue_depth(struct se_device *dev)
-+{
-+	return FD_MAX_DEVICE_QUEUE_DEPTH;
-+}
-+
-+/*#warning FIXME v2.8: transport_type for FILEIO will need to change
-+  with DIRECT_IO to blockdevs */
-+
-+static struct se_subsystem_api fileio_template = {
-+	.name			= "fileio",
-+	.type			= FILEIO,
-+	.transport_type		= TRANSPORT_PLUGIN_VHBA_PDEV,
-+	.external_submod	= 1,
-+	.attach_hba		= fd_attach_hba,
-+	.detach_hba		= fd_detach_hba,
-+	.cdb_none		= fd_CDB_none,
-+	.cdb_read_non_SG	= fd_CDB_read_non_SG,
-+	.cdb_read_SG		= fd_CDB_read_SG,
-+	.cdb_write_non_SG	= fd_CDB_write_non_SG,
-+	.cdb_write_SG		= fd_CDB_write_SG,
-+	.allocate_virtdevice	= fd_allocate_virtdevice,
-+	.create_virtdevice	= fd_create_virtdevice,
-+	.activate_device	= fd_activate_device,
-+	.deactivate_device	= fd_deactivate_device,
-+	.free_device		= fd_free_device,
-+	.do_sync_cache_range	= fd_do_sync_cache_range,
-+	.dpo_emulated		= fd_emulated_dpo,
-+	.fua_write_emulated	= fd_emulated_fua_write,
-+	.fua_read_emulated	= fd_emulated_fua_read,
-+	.write_cache_emulated	= fd_emulated_write_cache,
-+	.transport_complete	= fd_transport_complete,
-+	.allocate_request	= fd_allocate_request,
-+	.do_task		= fd_do_task,
-+	.free_task		= fd_free_task,
-+	.check_configfs_dev_params = fd_check_configfs_dev_params,
-+	.set_configfs_dev_params = fd_set_configfs_dev_params,
-+	.show_configfs_dev_params = fd_show_configfs_dev_params,
-+	.get_plugin_info	= fd_get_plugin_info,
-+	.get_hba_info		= fd_get_hba_info,
-+	.get_dev_info		= fd_get_dev_info,
-+	.check_lba		= fd_check_lba,
-+	.check_for_SG		= fd_check_for_SG,
-+	.get_cdb		= fd_get_cdb,
-+	.get_blocksize		= fd_get_blocksize,
-+	.get_device_rev		= fd_get_device_rev,
-+	.get_device_type	= fd_get_device_type,
-+	.get_dma_length		= fd_get_dma_length,
-+	.get_max_sectors	= fd_get_max_sectors,
-+	.get_queue_depth	= fd_get_queue_depth,
-+	.get_max_queue_depth	= fd_get_max_queue_depth,
-+	.write_pending		= NULL,
++static struct configfs_item_operations target_fabric_port_item_ops = {
++	.show_attribute		= target_fabric_port_attr_show,
++	.store_attribute	= target_fabric_port_attr_store,
++	.allow_link		= target_fabric_port_link,
++	.drop_link		= target_fabric_port_unlink,
 +};
 +
-+int __init fileio_module_init(void)
++TF_CIT_SETUP(tpg_port, &target_fabric_port_item_ops, NULL, target_fabric_port_attrs);
++
++/* End of tfc_tpg_port_cit */
++
++/* Start of tfc_tpg_lun_cit */
++
++static struct config_group *target_fabric_make_lun(
++	struct config_group *group,
++	const char *name)
 +{
-+	int ret;
++	struct se_lun *lun;
++	struct se_portal_group *se_tpg = container_of(group,
++			struct se_portal_group, tpg_lun_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	
++	char *str, *endptr;
++	u32 unpacked_lun;
 +
-+	INIT_LIST_HEAD(&fileio_template.sub_api_list);
++	str = strstr(name, "_");
++	if (!(str)) {
++		printk(KERN_ERR "Unable to locate \'_\" in"
++				" \"lun_$LUN_NUMBER\"\n");
++		return NULL;
++	}
++	str++; /* Advance over _ delim.. */
++	unpacked_lun = simple_strtoul(str, &endptr, 0);
 +
-+	ret = transport_subsystem_register(&fileio_template, THIS_MODULE);
-+	if (ret < 0)
-+		return ret;
++	lun = core_get_lun_from_tpg(se_tpg, unpacked_lun);
++	if (!(lun))
++		return ERR_PTR(-EINVAL);
++
++	config_group_init_type_name(&lun->lun_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_port_cit);
++
++	return &lun->lun_group;
++}
++
++static void target_fabric_drop_lun(
++	struct config_group *group,
++	struct config_item *item)
++{
++	config_item_put(item);
++}
++
++static struct configfs_group_operations target_fabric_lun_group_ops = {
++	.make_group	= &target_fabric_make_lun,
++	.drop_item	= &target_fabric_drop_lun,
++};
++
++TF_CIT_SETUP(tpg_lun, NULL, &target_fabric_lun_group_ops, NULL);
++
++/* End of tfc_tpg_lun_cit */
++
++/* Start of tfc_tpg_attrib_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_tpg_attrib, se_portal_group, tpg_attrib_group);
++
++static struct configfs_item_operations target_fabric_tpg_attrib_item_ops = {
++	.show_attribute		= target_fabric_tpg_attrib_attr_show,
++	.store_attribute	= target_fabric_tpg_attrib_attr_store,
++};
++
++TF_CIT_SETUP(tpg_attrib, &target_fabric_tpg_attrib_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_attrib_cit */
++
++/* Start of tfc_tpg_param_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_tpg_param, se_portal_group, tpg_param_group);
++
++static struct configfs_item_operations target_fabric_tpg_param_item_ops = {
++	.show_attribute		= target_fabric_tpg_param_attr_show,
++	.store_attribute	= target_fabric_tpg_param_attr_store,
++};
++
++TF_CIT_SETUP(tpg_param, &target_fabric_tpg_param_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_param_cit */
++
++/* Start of tfc_tpg_base_cit */
++/*
++ * For use with TF_TPG_ATTR() and TF_TPG_ATTR_RO()
++ */
++CONFIGFS_EATTR_OPS(target_fabric_tpg, se_portal_group, tpg_group);
++
++static struct configfs_item_operations target_fabric_tpg_base_item_ops = {
++	.show_attribute		= target_fabric_tpg_attr_show,
++	.store_attribute	= target_fabric_tpg_attr_store,
++};
++
++TF_CIT_SETUP(tpg_base, &target_fabric_tpg_base_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_base_cit */
++
++/* Start of tfc_tpg_cit */
++
++static struct config_group *target_fabric_make_tpg(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_wwn *wwn = container_of(group, struct se_wwn, wwn_group);
++	struct target_fabric_configfs *tf = wwn->wwn_tf;
++	struct se_portal_group *se_tpg;
++
++	if (!(tf->tf_ops.fabric_make_tpg)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_tpg is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	se_tpg = tf->tf_ops.fabric_make_tpg(wwn, group, name);
++	if (!(se_tpg) || IS_ERR(se_tpg))
++		return ERR_PTR(-EINVAL);
++	/*
++	 * Setup default groups from pre-allocated se_tpg->tpg_default_groups
++	 */
++	se_tpg->tpg_group.default_groups = se_tpg->tpg_default_groups;
++	se_tpg->tpg_group.default_groups[0] = &se_tpg->tpg_lun_group;
++	se_tpg->tpg_group.default_groups[1] = &se_tpg->tpg_np_group;
++	se_tpg->tpg_group.default_groups[2] = &se_tpg->tpg_acl_group;
++	se_tpg->tpg_group.default_groups[3] = &se_tpg->tpg_attrib_group;
++	se_tpg->tpg_group.default_groups[4] = &se_tpg->tpg_param_group;
++	se_tpg->tpg_group.default_groups[5] = NULL;
++
++	config_group_init_type_name(&se_tpg->tpg_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_base_cit);
++	config_group_init_type_name(&se_tpg->tpg_lun_group, "lun",
++			&TF_CIT_TMPL(tf)->tfc_tpg_lun_cit);
++	config_group_init_type_name(&se_tpg->tpg_np_group, "np",
++			&TF_CIT_TMPL(tf)->tfc_tpg_np_cit);
++	config_group_init_type_name(&se_tpg->tpg_acl_group, "acls",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_cit);
++	config_group_init_type_name(&se_tpg->tpg_attrib_group, "attrib",
++			&TF_CIT_TMPL(tf)->tfc_tpg_attrib_cit);
++	config_group_init_type_name(&se_tpg->tpg_param_group, "param",
++			&TF_CIT_TMPL(tf)->tfc_tpg_param_cit);
++			
++	return &se_tpg->tpg_group;
++}
++
++static void target_fabric_drop_tpg(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_wwn *wwn = container_of(group, struct se_wwn, wwn_group);
++	struct target_fabric_configfs *tf = wwn->wwn_tf;
++	struct se_portal_group *se_tpg = container_of(to_config_group(item),
++				struct se_portal_group, tpg_group);
++	struct config_group *tpg_cg = &se_tpg->tpg_group;
++	struct config_item *df_item;
++	int i;
++	/*
++	 * Release default groups, but do not release tpg_cg->default_groups
++	 * memory as it is statically allocated at se_tpg->tpg_default_groups.
++	 */
++	for (i = 0; tpg_cg->default_groups[i]; i++) {
++		df_item = &tpg_cg->default_groups[i]->cg_item;
++		tpg_cg->default_groups[i] = NULL;
++		config_item_put(df_item);
++	}
++
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_tpg(se_tpg);	
++}
++
++static struct configfs_group_operations target_fabric_tpg_group_ops = {
++	.make_group	= target_fabric_make_tpg,
++	.drop_item	= target_fabric_drop_tpg,
++};
++
++TF_CIT_SETUP(tpg, NULL, &target_fabric_tpg_group_ops, NULL);
++
++/* End of tfc_tpg_cit */
++
++/* Start of tfc_wwn_cit */
++
++static struct config_group *target_fabric_make_wwn(
++	struct config_group *group,
++	const char *name)
++{
++	struct target_fabric_configfs *tf = container_of(group,
++				struct target_fabric_configfs, tf_group);
++	struct se_wwn *wwn;
++
++	if (!(tf->tf_ops.fabric_make_wwn)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_wwn is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	wwn = tf->tf_ops.fabric_make_wwn(tf, group, name);
++	if (!(wwn) || IS_ERR(wwn))
++		return ERR_PTR(-EINVAL);
++
++	wwn->wwn_tf = tf;
++	config_group_init_type_name(&wwn->wwn_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_cit);
++
++	return &wwn->wwn_group;
++}
++
++static void target_fabric_drop_wwn(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct target_fabric_configfs *tf = container_of(group,
++				struct target_fabric_configfs, tf_group);
++	struct se_wwn *wwn = container_of(to_config_group(item),
++				struct se_wwn, wwn_group);
++	
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_wwn(wwn);
++}
++
++static struct configfs_group_operations target_fabric_wwn_group_ops = {
++	.make_group	= target_fabric_make_wwn,
++	.drop_item	= target_fabric_drop_wwn,
++};
++/*
++ * For use with TF_WWN_ATTR() and TF_WWN_ATTR_RO()
++ */
++CONFIGFS_EATTR_OPS(target_fabric_wwn, target_fabric_configfs, tf_group);
++
++static struct configfs_item_operations target_fabric_wwn_item_ops = {
++	.show_attribute		= target_fabric_wwn_attr_show,
++	.store_attribute	= target_fabric_wwn_attr_store,
++};	
++
++TF_CIT_SETUP(wwn, &target_fabric_wwn_item_ops, &target_fabric_wwn_group_ops, NULL);
++
++/* End of tfc_wwn_cit */
++
++/* Start of tfc_discovery_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_discovery, target_fabric_configfs,
++		tf_disc_group);
++
++static struct configfs_item_operations target_fabric_discovery_item_ops = {
++	.show_attribute		= target_fabric_discovery_attr_show,
++	.store_attribute	= target_fabric_discovery_attr_store,
++};
++
++TF_CIT_SETUP(discovery, &target_fabric_discovery_item_ops, NULL, NULL);
++
++/* End of tfc_discovery_cit */
++
++int target_fabric_setup_cits(struct target_fabric_configfs *tf)
++{
++	target_fabric_setup_discovery_cit(tf);
++	target_fabric_setup_wwn_cit(tf);	
++	target_fabric_setup_tpg_cit(tf);
++	target_fabric_setup_tpg_base_cit(tf);
++	target_fabric_setup_tpg_port_cit(tf);
++	target_fabric_setup_tpg_lun_cit(tf);
++	target_fabric_setup_tpg_np_cit(tf);
++	target_fabric_setup_tpg_np_base_cit(tf);
++	target_fabric_setup_tpg_attrib_cit(tf);
++	target_fabric_setup_tpg_param_cit(tf);
++	target_fabric_setup_tpg_nacl_cit(tf);
++	target_fabric_setup_tpg_nacl_base_cit(tf);
++	target_fabric_setup_tpg_nacl_attrib_cit(tf);
++	target_fabric_setup_tpg_nacl_auth_cit(tf);
++	target_fabric_setup_tpg_nacl_param_cit(tf);
++	target_fabric_setup_tpg_mappedlun_cit(tf);
 +
 +	return 0;
 +}
-+
-+void fileio_module_exit(void)
-+{
-+	transport_subsystem_release(&fileio_template);
-+}
-+
-+MODULE_DESCRIPTION("TCM FILEIO subsystem plugin");
-+MODULE_AUTHOR("nab@Linux-iSCSI.org");
-+MODULE_LICENSE("GPL");
-+
-+module_init(fileio_module_init);
-+module_exit(fileio_module_exit);
-diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core_file.h
+diff --git a/include/target/target_core_fabric_configfs.h b/include/target/target_core_fabric_configfs.h
 new file mode 100644
-index 0000000..35726f1
+index 0000000..e48eb7d
 --- /dev/null
-+++ b/drivers/target/target_core_file.h
-@@ -0,0 +1,81 @@
-+#ifndef TARGET_CORE_FILE_H
-+#define TARGET_CORE_FILE_H
++++ b/include/target/target_core_fabric_configfs.h
+@@ -0,0 +1,106 @@
++/*
++ * Used for tfc_wwn_cit attributes
++ */
 +
-+#define FD_VERSION		"4.0"
++#include <target/configfs_macros.h>
 +
-+#define FD_MAX_DEV_NAME		256
-+/* Maximum queuedepth for the FILEIO HBA */
-+#define FD_HBA_QUEUE_DEPTH	256
-+#define FD_DEVICE_QUEUE_DEPTH	32
-+#define FD_MAX_DEVICE_QUEUE_DEPTH 128
-+#define FD_BLOCKSIZE		512
-+#define FD_MAX_SECTORS		1024
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_attrib, se_node_acl);
++#define TF_NACL_ATTRIB_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_attrib_attribute _fabric##_nacl_attrib_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_attrib_show_##_name,				\
++	_fabric##_nacl_attrib_store_##_name);
 +
-+#define FD_DATA_READ		1
-+#define FD_DATA_WRITE		2
-+#define FD_DATA_NONE		3
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_auth, se_node_acl);
++#define TF_NACL_AUTH_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_auth_attribute _fabric##_nacl_auth_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_auth_show_##_name,				\
++	_fabric##_nacl_auth_store_##_name);
 +
-+extern struct se_global *se_global;
-+extern struct block_device *__linux_blockdevice_claim(int, int, void *, int *);
-+extern struct block_device *linux_blockdevice_claim(int, int, void *);
-+extern int linux_blockdevice_release(int, int, struct block_device *);
-+extern int linux_blockdevice_check(int, int);
++#define TF_NACL_AUTH_ATTR_RO(_fabric, _name)				\
++static struct target_fabric_nacl_auth_attribute _fabric##_nacl_auth_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_nacl_auth_show_##_name);
 +
-+#define RRF_EMULATE_CDB		0x01
-+#define RRF_GOT_LBA		0x02
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_param, se_node_acl);
++#define TF_NACL_PARAM_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_param_attribute _fabric##_nacl_param_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_param_show_##_name,				\
++	_fabric##_nacl_param_store_##_name);
 +
-+struct fd_request {
-+	/* SCSI CDB from iSCSI Command PDU */
-+	unsigned char	fd_scsi_cdb[TCM_MAX_COMMAND_SIZE];
-+	/* Data Direction */
-+	u8		fd_data_direction;
-+	/* Total length of request */
-+	u32		fd_bufflen;
-+	/* RD request flags */
-+	u32		fd_req_flags;
-+	/* Offset from start of page */
-+	u32		fd_offset;
-+	u32		fd_cur_size;
-+	u32		fd_cur_offset;
-+	/* Scatterlist count */
-+	u32		fd_sg_count;
-+	/* Logical Block Address */
-+	unsigned long long	fd_lba;
-+	u64		fd_size;
-+	struct kiocb	fd_iocb;
-+	struct iovec	*fd_iovs;
-+	/* Data buffer containing scatterlists(s) or contingous
-+	   memory segments */
-+	void		*fd_buf;
-+	/* FILEIO device */
-+	struct fd_dev	*fd_dev;
-+} ____cacheline_aligned;
++#define TF_NACL_PARAM_ATTR_RO(_fabric, _name)				\
++static struct target_fabric_nacl_param_attribute _fabric##_nacl_param_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_nacl_param_show_##_name);
 +
-+#define FBDF_HAS_PATH		0x01
-+#define FBDF_HAS_SIZE		0x02
-+#define FDBD_USE_BUFFERED_IO	0x04
 +
-+struct fd_dev {
-+	u32		fbd_flags;
-+	unsigned char	fd_dev_name[FD_MAX_DEV_NAME];
-+	/* Unique Ramdisk Device ID in Ramdisk HBA */
-+	u32		fd_dev_id;
-+	/* Number of SG tables in sg_table_array */
-+	u32		fd_table_count;
-+	u32		fd_queue_depth;
-+	u32		fd_block_size;
-+	unsigned long long fd_dev_size;
-+	struct file	*fd_file;
-+	/* FILEIO HBA device is connected to */
-+	struct fd_host *fd_host;
-+	int (*fd_do_read)(struct fd_request *, struct se_task *);
-+	int (*fd_do_write)(struct fd_request *, struct se_task *);
-+} ____cacheline_aligned;
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_base, se_node_acl);
++#define TF_NACL_BASE_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_base_attribute _fabric##_nacl_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_show_##_name,					\
++	_fabric##_nacl_store_##_name);
 +
-+struct fd_host {
-+	u32		fd_host_dev_id_count;
-+	/* Unique FILEIO Host ID */
-+	u32		fd_host_id;
-+} ____cacheline_aligned;
++#define TF_NACL_BASE_ATTR_RO(_fabric, _name)				\
++static struct target_fabric_nacl_base_attribute _fabric##_nacl_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_nacl_show_##_name);
 +
-+#endif /* TARGET_CORE_FILE_H */
++CONFIGFS_EATTR_STRUCT(target_fabric_np_base, se_tpg_np);
++#define TF_NP_BASE_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_np_base_attribute _fabric##_np_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_np_show_##_name,					\
++	_fabric##_np_store_##_name);
++
++CONFIGFS_EATTR_STRUCT(target_fabric_tpg_attrib, se_portal_group);
++#define TF_TPG_ATTRIB_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_tpg_attrib_attribute _fabric##_tpg_attrib_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_tpg_attrib_show_##_name,				\
++	_fabric##_tpg_attrib_store_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_tpg_param, se_portal_group);
++#define TF_TPG_PARAM_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_tpg_param_attribute _fabric##_tpg_param_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_tpg_param_show_##_name,				\
++	_fabric##_tpg_param_store_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_tpg, se_portal_group);
++#define TF_TPG_BASE_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_tpg_attribute _fabric##_tpg_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_tpg_show_##_name,					\
++	_fabric##_tpg_store_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_wwn, target_fabric_configfs);
++#define TF_WWN_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_wwn_attribute _fabric##_wwn_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_wwn_show_attr_##_name,				\
++	_fabric##_wwn_store_attr_##_name);
++
++#define TF_WWN_ATTR_RO(_fabric, _name)					\
++static struct target_fabric_wwn_attribute _fabric##_wwn_##_name =	\
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_wwn_show_attr_##_name);
++
++CONFIGFS_EATTR_STRUCT(target_fabric_discovery, target_fabric_configfs);
++#define TF_DISC_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_discovery_attribute _fabric##_disc_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_disc_show_##_name,					\
++	_fabric##_disc_store_##_name);
++
++#define TF_DISC_ATTR_RO(_fabric, _name)					\
++static struct target_fabric_discovery_attribute _fabric##_disc_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_disc_show_##_name);					
++
++extern int target_fabric_setup_cits(struct target_fabric_configfs *);
 -- 
 1.7.3
-
