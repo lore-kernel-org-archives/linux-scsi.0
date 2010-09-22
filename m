@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v2 15/21] tcm: Add IBLOCK subsystem plugin
-Date: Wed, 22 Sep 2010 15:50:57 -0700
-Message-ID: <1285195857-11709-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC v2 17/21] tcm: Add RAMDISK_DR and RAMDISK_MCP subsystem plugins
+Date: Wed, 22 Sep 2010 15:51:16 -0700
+Message-ID: <1285195876-11747-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp102.sbc.mail.mud.yahoo.com ([68.142.198.201]:45795 "HELO
+Received: from smtp102.sbc.mail.mud.yahoo.com ([68.142.198.201]:45892 "HELO
 	smtp102.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753205Ab0IVWvD (ORCPT
+	by vger.kernel.org with SMTP id S1754000Ab0IVWvV (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Sep 2010 18:51:03 -0400
+	Wed, 22 Sep 2010 18:51:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
@@ -15,29 +15,28 @@ Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds the TCM/IBLOCK subsystem plugin for accessing struct block_device
-with an emulated SPC-3 control path from Linux/BLOCK code using struct bio.  The
-also includes WriteCache and FUA Write emulation to struct block_device using
-block/blk-barrier.c:blkdev_issue_flush()
+This patch adds the RAMDISK_DR (memory map) and RAMDISK_MCP (memcpy) subsystem plugin
+for accessing internally allocated struct scatterlist memory as a TCM storage object.
+Note that this is the only TCM subsystem plugin that is still built into target_core_mod.ko
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_iblock.c | 1173 +++++++++++++++++++++++++++++++++++
- drivers/target/target_core_iblock.h |   44 ++
- 2 files changed, 1217 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/target_core_iblock.c
- create mode 100644 drivers/target/target_core_iblock.h
+ drivers/target/target_core_rd.c | 1555 +++++++++++++++++++++++++++++++++++++++
+ drivers/target/target_core_rd.h |   89 +++
+ 2 files changed, 1644 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/target_core_rd.c
+ create mode 100644 drivers/target/target_core_rd.h
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
 new file mode 100644
-index 0000000..1b148f5
+index 0000000..b1f7f56
 --- /dev/null
-+++ b/drivers/target/target_core_iblock.c
-@@ -0,0 +1,1173 @@
++++ b/drivers/target/target_core_rd.c
+@@ -0,0 +1,1555 @@
 +/*******************************************************************************
-+ * Filename:  target_core_iblock.c
++ * Filename:  target_core_rd.c
 + *
-+ * This file contains the Storage Engine  <-> Linux BlockIO transport
++ * This file contains the Storage Engine <-> Ramdisk transport
 + * specific functions.
 + *
 + * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
@@ -66,446 +65,442 @@ index 0000000..1b148f5
 +#include <linux/version.h>
 +#include <linux/string.h>
 +#include <linux/timer.h>
-+#include <linux/fs.h>
 +#include <linux/blkdev.h>
 +#include <linux/slab.h>
 +#include <linux/spinlock.h>
 +#include <linux/smp_lock.h>
-+#include <linux/bio.h>
-+#include <linux/genhd.h>
-+#include <linux/file.h>
 +#include <scsi/scsi.h>
 +#include <scsi/scsi_host.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_device.h>
 +#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
 +
-+#include "target_core_iblock.h"
++#include "target_core_rd.h"
 +
-+#if 0
-+#define DEBUG_IBLOCK(x...) printk(x)
-+#else
-+#define DEBUG_IBLOCK(x...)
-+#endif
++static struct se_subsystem_api rd_dr_template;
++static struct se_subsystem_api rd_mcp_template;
 +
-+static struct se_subsystem_api iblock_template;
++static void __rd_get_dev_info(struct rd_dev *, char *, int *);
 +
-+static void __iblock_get_dev_info(struct iblock_dev *, char *, int *);
-+static void iblock_bio_done(struct bio *, int);
++/* #define DEBUG_RAMDISK_MCP */
++/* #define DEBUG_RAMDISK_DR */
 +
-+/*	iblock_attach_hba(): (Part of se_subsystem_api_t template)
++/*	rd_attach_hba(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+static int iblock_attach_hba(struct se_hba *hba, u32 host_id)
++static int rd_attach_hba(struct se_hba *hba, u32 host_id)
 +{
-+	struct iblock_hba *ib_host;
++	struct rd_host *rd_host;
 +
-+	ib_host = kzalloc(sizeof(struct iblock_hba), GFP_KERNEL);
-+	if (!(ib_host)) {
-+		printk(KERN_ERR "Unable to allocate memory for"
-+				" struct iblock_hba\n");
++	rd_host = kzalloc(sizeof(struct rd_host), GFP_KERNEL);
++	if (!(rd_host)) {
++		printk(KERN_ERR "Unable to allocate memory for struct rd_host\n");
 +		return -ENOMEM;
 +	}
 +
-+	ib_host->iblock_host_id = host_id;
++	rd_host->rd_host_id = host_id;
 +
-+	atomic_set(&hba->left_queue_depth, IBLOCK_HBA_QUEUE_DEPTH);
-+	atomic_set(&hba->max_queue_depth, IBLOCK_HBA_QUEUE_DEPTH);
-+	hba->hba_ptr = (void *) ib_host;
++	atomic_set(&hba->left_queue_depth, RD_HBA_QUEUE_DEPTH);
++	atomic_set(&hba->max_queue_depth, RD_HBA_QUEUE_DEPTH);
++	hba->hba_ptr = (void *) rd_host;
 +
-+	printk(KERN_INFO "CORE_HBA[%d] - TCM iBlock HBA Driver %s on"
++	printk(KERN_INFO "CORE_HBA[%d] - TCM Ramdisk HBA Driver %s on"
 +		" Generic Target Core Stack %s\n", hba->hba_id,
-+		IBLOCK_VERSION, TARGET_CORE_MOD_VERSION);
-+
-+	printk(KERN_INFO "CORE_HBA[%d] - Attached iBlock HBA: %u to Generic"
-+		" Target Core TCQ Depth: %d\n", hba->hba_id,
-+		ib_host->iblock_host_id, atomic_read(&hba->max_queue_depth));
++		RD_HBA_VERSION, TARGET_CORE_MOD_VERSION);
++	printk(KERN_INFO "CORE_HBA[%d] - Attached Ramdisk HBA: %u to Generic"
++		" Target Core TCQ Depth: %d MaxSectors: %u\n", hba->hba_id,
++		rd_host->rd_host_id, atomic_read(&hba->max_queue_depth),
++		RD_MAX_SECTORS);
 +
 +	return 0;
 +}
 +
-+/*	iblock_detach_hba(): (Part of se_subsystem_api_t template)
++/*	rd_detach_hba(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+static int iblock_detach_hba(struct se_hba *hba)
++static int rd_detach_hba(struct se_hba *hba)
 +{
-+	struct iblock_hba *ib_host;
++	struct rd_host *rd_host;
 +
 +	if (!hba->hba_ptr) {
 +		printk(KERN_ERR "hba->hba_ptr is NULL!\n");
 +		return -1;
 +	}
-+	ib_host = (struct iblock_hba *) hba->hba_ptr;
 +
-+	printk(KERN_INFO "CORE_HBA[%d] - Detached iBlock HBA: %u from Generic"
-+		" Target Core\n", hba->hba_id, ib_host->iblock_host_id);
++	rd_host = (struct rd_host *) hba->hba_ptr;
 +
-+	kfree(ib_host);
++	printk(KERN_INFO "CORE_HBA[%d] - Detached Ramdisk HBA: %u from"
++		" Generic Target Core\n", hba->hba_id, rd_host->rd_host_id);
++
++	kfree(rd_host);
 +	hba->hba_ptr = NULL;
 +
 +	return 0;
 +}
 +
-+static void *iblock_allocate_virtdevice(struct se_hba *hba, const char *name)
++/*	rd_release_device_space():
++ *
++ *
++ */
++static void rd_release_device_space(struct rd_dev *rd_dev)
 +{
-+	struct iblock_dev *ib_dev = NULL;
-+	struct iblock_hba *ib_host = (struct iblock_hba *) hba->hba_ptr;
++	u32 i, j, page_count = 0, sg_per_table;
++	struct rd_dev_sg_table *sg_table;
++	struct page *pg;
++	struct scatterlist *sg;
 +
-+	ib_dev = kzalloc(sizeof(struct iblock_dev), GFP_KERNEL);
-+	if (!(ib_dev)) {
-+		printk(KERN_ERR "Unable to allocate struct iblock_dev\n");
-+		return NULL;
++	if (!rd_dev->sg_table_array || !rd_dev->sg_table_count)
++		return;
++
++	sg_table = rd_dev->sg_table_array;
++
++	for (i = 0; i < rd_dev->sg_table_count; i++) {
++		sg = sg_table[i].sg_table;
++		sg_per_table = sg_table[i].rd_sg_count;
++
++		for (j = 0; j < sg_per_table; j++) {
++			pg = sg_page(&sg[j]);
++			if ((pg)) {
++				__free_page(pg);
++				page_count++;
++			}
++		}
++
++		kfree(sg);
 +	}
-+	ib_dev->ibd_host = ib_host;
 +
-+	printk(KERN_INFO  "IBLOCK: Allocated ib_dev for %s\n", name);
++	printk(KERN_INFO "CORE_RD[%u] - Released device space for Ramdisk"
++		" Device ID: %u, pages %u in %u tables total bytes %lu\n",
++		rd_dev->rd_host->rd_host_id, rd_dev->rd_dev_id, page_count,
++		rd_dev->sg_table_count, (unsigned long)page_count * PAGE_SIZE);
 +
-+	return ib_dev;
++	kfree(sg_table);
++	rd_dev->sg_table_array = NULL;
++	rd_dev->sg_table_count = 0;
 +}
 +
-+static int __iblock_do_sync_cache(struct se_device *);
 +
-+static struct se_device *iblock_create_virtdevice(
++/*	rd_build_device_space():
++ *
++ *
++ */
++static int rd_build_device_space(struct rd_dev *rd_dev)
++{
++	u32 i = 0, j, page_offset = 0, sg_per_table, sg_tables, total_sg_needed;
++	u32 max_sg_per_table = (RD_MAX_ALLOCATION_SIZE /
++				sizeof(struct scatterlist));
++	struct rd_dev_sg_table *sg_table;
++	struct page *pg;
++	struct scatterlist *sg;
++
++	if (rd_dev->rd_page_count <= 0) {
++		printk(KERN_ERR "Illegal page count: %u for Ramdisk device\n",
++			rd_dev->rd_page_count);
++		return -1;
++	}
++	total_sg_needed = rd_dev->rd_page_count;
++
++	sg_tables = (total_sg_needed / max_sg_per_table) + 1;
++
++	sg_table = kzalloc(sg_tables * sizeof(struct rd_dev_sg_table), GFP_KERNEL);
++	if (!(sg_table)) {
++		printk(KERN_ERR "Unable to allocate memory for Ramdisk"
++			" scatterlist tables\n");
++		return -1;
++	}
++
++	rd_dev->sg_table_array = sg_table;
++	rd_dev->sg_table_count = sg_tables;
++
++	while (total_sg_needed) {
++		sg_per_table = (total_sg_needed > max_sg_per_table) ?
++			max_sg_per_table : total_sg_needed;
++
++		sg = kzalloc(sg_per_table * sizeof(struct scatterlist),
++				GFP_KERNEL);
++		if (!(sg)) {
++			printk(KERN_ERR "Unable to allocate scatterlist array"
++				" for struct rd_dev\n");
++			return -1;
++		}
++
++		sg_init_table((struct scatterlist *)&sg[0], sg_per_table);
++
++		sg_table[i].sg_table = sg;
++		sg_table[i].rd_sg_count = sg_per_table;
++		sg_table[i].page_start_offset = page_offset;
++		sg_table[i++].page_end_offset = (page_offset + sg_per_table)
++						- 1;
++
++		for (j = 0; j < sg_per_table; j++) {
++			pg = (struct page *) alloc_pages(
++					GFP_KERNEL, 0);
++			if (!(pg)) {
++				printk(KERN_ERR "Unable to allocate scatterlist"
++					" pages for struct rd_dev_sg_table\n");
++				return -1;
++			}
++			sg_assign_page(&sg[j], pg);
++			sg[j].length = PAGE_SIZE;
++		}
++
++		page_offset += sg_per_table;
++		total_sg_needed -= sg_per_table;
++	}
++
++	printk(KERN_INFO "CORE_RD[%u] - Built Ramdisk Device ID: %u space of"
++		" %u pages in %u tables\n", rd_dev->rd_host->rd_host_id,
++		rd_dev->rd_dev_id, rd_dev->rd_page_count,
++		rd_dev->sg_table_count);
++
++	return 0;
++}
++
++static void *rd_allocate_virtdevice(
++	struct se_hba *hba,
++	const char *name,
++	int rd_direct)
++{
++	struct rd_dev *rd_dev;
++	struct rd_host *rd_host = (struct rd_host *) hba->hba_ptr;
++
++	rd_dev = kzalloc(sizeof(struct rd_dev), GFP_KERNEL);
++	if (!(rd_dev)) {
++		printk(KERN_ERR "Unable to allocate memory for struct rd_dev\n");
++		return NULL;
++	}
++
++	rd_dev->rd_host = rd_host;
++	rd_dev->rd_direct = rd_direct;
++
++	return rd_dev;
++}
++
++static void *rd_DIRECT_allocate_virtdevice(struct se_hba *hba, const char *name)
++{
++	return rd_allocate_virtdevice(hba, name, 1);
++}
++
++static void *rd_MEMCPY_allocate_virtdevice(struct se_hba *hba, const char *name)
++{
++	return rd_allocate_virtdevice(hba, name, 0);
++}
++
++/*	rd_create_virtdevice():
++ *
++ *
++ */
++static struct se_device *rd_create_virtdevice(
++	struct se_hba *hba,
++	struct se_subsystem_dev *se_dev,
++	void *p,
++	int rd_direct)
++{
++	struct se_device *dev;
++	struct rd_dev *rd_dev = (struct rd_dev *) p;
++	struct rd_host *rd_host = (struct rd_host *) hba->hba_ptr;
++	int dev_flags = 0;
++
++	if (rd_dev->rd_direct)
++		dev_flags |= DF_TRANSPORT_DMA_ALLOC;
++
++	if (rd_build_device_space(rd_dev) < 0)
++		goto fail;
++
++	dev = transport_add_device_to_core_hba(hba,
++			(rd_dev->rd_direct) ? &rd_dr_template :
++			&rd_mcp_template, se_dev, dev_flags, (void *)rd_dev);
++	if (!(dev))
++		goto fail;
++
++	rd_dev->rd_dev_id = rd_host->rd_host_dev_id_count++;
++	rd_dev->rd_queue_depth = dev->queue_depth;
++
++	printk(KERN_INFO "CORE_RD[%u] - Added TCM %s Ramdisk Device ID: %u of"
++		" %u pages in %u tables, %lu total bytes\n",
++		rd_host->rd_host_id, (!rd_dev->rd_direct) ? "MEMCPY" :
++		"DIRECT", rd_dev->rd_dev_id, rd_dev->rd_page_count,
++		rd_dev->sg_table_count,
++		(unsigned long)(rd_dev->rd_page_count * PAGE_SIZE));
++
++	return dev;
++
++fail:
++	rd_release_device_space(rd_dev);
++	return NULL;
++}
++
++static struct se_device *rd_DIRECT_create_virtdevice(
 +	struct se_hba *hba,
 +	struct se_subsystem_dev *se_dev,
 +	void *p)
 +{
-+	struct iblock_dev *ib_dev = (struct iblock_dev *) p;
-+	struct se_device *dev;
-+	struct block_device *bd = NULL;
-+	u32 dev_flags = 0;
-+
-+	if (!(ib_dev)) {
-+		printk(KERN_ERR "Unable to locate struct iblock_dev parameter\n");
-+		return 0;
-+	}
-+	/*
-+	 * These settings need to be made tunable..
-+	 */
-+	ib_dev->ibd_bio_set = bioset_create(32, 64);
-+	if (!(ib_dev->ibd_bio_set)) {
-+		printk(KERN_ERR "IBLOCK: Unable to create bioset()\n");
-+		return 0;
-+	}
-+	printk(KERN_INFO "IBLOCK: Created bio_set()\n");
-+	/*
-+	 * Check if we have an open file descritpor passed through configfs
-+	 * $TARGET/iblock_0/some_bd/fd pointing to an underlying.
-+	 * struct block_device.  If so, claim it with the pointer from
-+	 * iblock_create_virtdevice_from_fd()
-+	 *
-+	 * Otherwise, assume that parameters through 'control' attribute
-+	 * have set ib_dev->ibd_[major,minor]
-+	 */
-+	if (ib_dev->ibd_bd) {
-+		printk(KERN_INFO  "IBLOCK: Claiming struct block_device: %p\n",
-+			 ib_dev->ibd_bd);
-+
-+		ib_dev->ibd_major = MAJOR(ib_dev->ibd_bd->bd_dev);
-+		ib_dev->ibd_minor = MINOR(ib_dev->ibd_bd->bd_dev);
-+
-+		bd = linux_blockdevice_claim(ib_dev->ibd_major,
-+				ib_dev->ibd_minor, ib_dev);
-+		if (!(bd)) {
-+			printk(KERN_INFO "IBLOCK: Unable to claim"
-+					" struct block_device\n");
-+			goto failed;
-+		}
-+		dev_flags = DF_CLAIMED_BLOCKDEV;
-+	} else {
-+		/*
-+		 * iblock_check_configfs_dev_params() ensures that
-+		 * ib_dev->ibd_udev_path must already have been set
-+		 * in order for echo 1 > $HBA/$DEV/enable to run.
-+		 */
-+		printk(KERN_INFO  "IBLOCK: Claiming struct block_device: %s\n",
-+				ib_dev->ibd_udev_path);
-+
-+		bd = open_bdev_exclusive(ib_dev->ibd_udev_path,
-+				FMODE_WRITE|FMODE_READ, ib_dev);
-+		if (!(bd))
-+			goto failed;
-+
-+		dev_flags = DF_CLAIMED_BLOCKDEV;
-+		ib_dev->ibd_major = MAJOR(bd->bd_dev);
-+		ib_dev->ibd_minor = MINOR(bd->bd_dev);
-+		ib_dev->ibd_bd = bd;
-+		ib_dev->ibd_flags |= IBDF_BDEV_EXCLUSIVE;
-+	}
-+	/*
-+	 * Pass dev_flags for linux_blockdevice_claim() or
-+	 * linux_blockdevice_claim() from the usage above.
-+	 *
-+	 * Note that transport_add_device_to_core_hba() will call
-+	 * linux_blockdevice_release() internally on failure to
-+	 * call bd_release() on the referenced struct block_device.
-+	 */
-+	dev = transport_add_device_to_core_hba(hba,
-+			&iblock_template, se_dev, dev_flags, (void *)ib_dev);
-+	if (!(dev))
-+		goto failed;
-+
-+	ib_dev->ibd_depth = dev->queue_depth;
-+	/*
-+	 * Check if the underlying struct block_device supports the
-+	 * block/blk-barrier.c:blkdev_issue_flush() call, depending upon
-+	 * which the SCSI mode page bits for WriteCache=1 and DPOFUA=1
-+	 * will be enabled by TCM Core.
-+	 */
-+	if (__iblock_do_sync_cache(dev) == 0)
-+		ib_dev->ibd_flags |= IBDF_BDEV_ISSUE_FLUSH;
-+
-+	return dev;
-+
-+failed:
-+	if (ib_dev->ibd_bio_set) {
-+		bioset_free(ib_dev->ibd_bio_set);
-+		ib_dev->ibd_bio_set = NULL;
-+	}
-+	ib_dev->ibd_bd = NULL;
-+	ib_dev->ibd_major = 0;
-+	ib_dev->ibd_minor = 0;
-+	return NULL;
++	return rd_create_virtdevice(hba, se_dev, p, 1);
 +}
 +
-+/*	iblock_activate_device(): (Part of se_subsystem_api_t template)
++static struct se_device *rd_MEMCPY_create_virtdevice(
++	struct se_hba *hba,
++	struct se_subsystem_dev *se_dev,
++	void *p)
++{
++	return rd_create_virtdevice(hba, se_dev, p, 0);
++}
++
++/*	rd_activate_device(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+static int iblock_activate_device(struct se_device *dev)
++static int rd_activate_device(struct se_device *dev)
 +{
-+	struct iblock_dev *ib_dev = (struct iblock_dev *) dev->dev_ptr;
-+	struct iblock_hba *ib_hba = ib_dev->ibd_host;
++	struct rd_dev *rd_dev = (struct rd_dev *) dev->dev_ptr;
++	struct rd_host *rd_host = rd_dev->rd_host;
 +
-+	printk(KERN_INFO "CORE_iBLOCK[%u] - Activating Device with TCQ: %d at"
-+		" Major: %d Minor %d\n", ib_hba->iblock_host_id,
-+		ib_dev->ibd_depth, ib_dev->ibd_major, ib_dev->ibd_minor);
++	printk(KERN_INFO "CORE_RD[%u] - Activating Device with TCQ: %d at"
++		" Ramdisk Device ID: %d\n", rd_host->rd_host_id,
++		rd_dev->rd_queue_depth, rd_dev->rd_dev_id);
 +
 +	return 0;
 +}
 +
-+/*	iblock_deactivate_device(): (Part of se_subsystem_api_t template)
++/*	rd_deactivate_device(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+static void iblock_deactivate_device(struct se_device *dev)
++static void rd_deactivate_device(struct se_device *dev)
 +{
-+	struct iblock_dev *ib_dev = (struct iblock_dev *) dev->dev_ptr;
-+	struct iblock_hba *ib_hba = ib_dev->ibd_host;
++	struct rd_dev *rd_dev = (struct rd_dev *) dev->dev_ptr;
++	struct rd_host *rd_host = rd_dev->rd_host;
 +
-+	printk(KERN_INFO "CORE_iBLOCK[%u] - Deactivating Device with TCQ: %d"
-+		" at Major: %d Minor %d\n", ib_hba->iblock_host_id,
-+		ib_dev->ibd_depth, ib_dev->ibd_major, ib_dev->ibd_minor);
++	printk(KERN_INFO "CORE_RD[%u] - Deactivating Device with TCQ: %d at"
++		" Ramdisk Device ID: %d\n", rd_host->rd_host_id,
++		rd_dev->rd_queue_depth, rd_dev->rd_dev_id);
 +}
 +
-+static void iblock_free_device(void *p)
++/*	rd_free_device(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static void rd_free_device(void *p)
 +{
-+	struct iblock_dev *ib_dev = (struct iblock_dev *) p;
++	struct rd_dev *rd_dev = (struct rd_dev *) p;
 +
-+	if (ib_dev->ibd_bd) {
-+		printk(KERN_INFO "IBLOCK: Releasing Major:Minor - %d:%d\n",
-+			ib_dev->ibd_major, ib_dev->ibd_minor);
-+
-+		if (ib_dev->ibd_flags & IBDF_BDEV_EXCLUSIVE)
-+			close_bdev_exclusive(ib_dev->ibd_bd,
-+				FMODE_WRITE|FMODE_READ);
-+		else
-+			linux_blockdevice_release(ib_dev->ibd_major,
-+					ib_dev->ibd_minor, ib_dev->ibd_bd);
-+		ib_dev->ibd_bd = NULL;
-+	}
-+
-+	if (ib_dev->ibd_bio_set) {
-+		DEBUG_IBLOCK("Calling bioset_free ib_dev->ibd_bio_set: %p\n",
-+				ib_dev->ibd_bio_set);
-+		bioset_free(ib_dev->ibd_bio_set);
-+	}
-+
-+	kfree(ib_dev);
++	rd_release_device_space(rd_dev);
++	kfree(rd_dev);
 +}
 +
-+static int iblock_transport_complete(struct se_task *task)
++/*	rd_transport_complete(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static int rd_transport_complete(struct se_task *task)
 +{
 +	return 0;
 +}
 +
-+/*	iblock_allocate_request(): (Part of se_subsystem_api_t template)
++/*	rd_allocate_request(): (Part of se_subsystem_api_t template)
 + *
 + *
 + */
-+static void *iblock_allocate_request(
++static void *rd_allocate_request(
 +	struct se_task *task,
 +	struct se_device *dev)
 +{
-+	struct iblock_req *ib_req;
++	struct rd_request *rd_req;
 +
-+	ib_req = kmalloc(sizeof(struct iblock_req), GFP_KERNEL);
-+	if (!(ib_req)) {
-+		printk(KERN_ERR "Unable to allocate memory for struct iblock_req\n");
++	rd_req = kzalloc(sizeof(struct rd_request), GFP_KERNEL);
++	if (!(rd_req)) {
++		printk(KERN_ERR "Unable to allocate struct rd_request\n");
 +		return NULL;
 +	}
++	rd_req->rd_dev = (struct rd_dev *) dev->dev_ptr;
 +
-+	ib_req->ib_dev = (struct iblock_dev *) dev->dev_ptr;
-+	return (void *)ib_req;
++	return (void *)rd_req;
 +}
 +
-+static int iblock_emulate_inquiry(struct se_task *task)
++/*	rd_emulate_inquiry():
++ *
++ *
++ */
++static int rd_emulate_inquiry(struct se_task *task)
 +{
 +	unsigned char prod[64], se_location[128];
++	struct rd_dev *rd_dev = (struct rd_dev *) task->se_dev->dev_ptr;
 +	struct se_cmd *cmd = TASK_CMD(task);
-+	struct iblock_dev *ibd = (struct iblock_dev *) task->se_dev->dev_ptr;
 +	struct se_hba *hba = task->se_dev->se_hba;
 +
 +	memset(prod, 0, 64);
 +	memset(se_location, 0, 128);
 +
-+	sprintf(prod, "IBLOCK");
-+	sprintf(se_location, "%u_%u_%u", hba->hba_id, ibd->ibd_major,
-+		ibd->ibd_minor);
++	sprintf(prod, "RAMDISK-%s", (rd_dev->rd_direct) ? "DR" : "MCP");
++	sprintf(se_location, "%u_%u", hba->hba_id, rd_dev->rd_dev_id);
 +
 +	return transport_generic_emulate_inquiry(cmd, TYPE_DISK, prod,
-+		IBLOCK_VERSION, se_location);
++			(hba->transport->do_se_mem_map) ? RD_DR_VERSION :
++			RD_MCP_VERSION, se_location);
 +}
 +
-+static unsigned long long iblock_emulate_read_cap_with_block_size(
-+	struct se_device *dev,
-+	struct block_device *bd,
-+	struct request_queue *q)
++/*	rd_emulate_read_cap():
++ *
++ *
++ */
++static int rd_emulate_read_cap(struct se_task *task)
 +{
-+	unsigned long long blocks_long = (div_u64(i_size_read(bd->bd_inode), 
-+					bdev_logical_block_size(bd)) - 1);
-+	u32 block_size = bdev_logical_block_size(bd);
++	struct rd_dev *rd_dev = (struct rd_dev *) task->se_dev->dev_ptr;
++	u32 blocks = ((rd_dev->rd_page_count * PAGE_SIZE) /
++		       DEV_ATTRIB(task->se_dev)->block_size) - 1;
 +
-+	if (block_size == DEV_ATTRIB(dev)->block_size)
-+		return blocks_long;
-+
-+	switch (block_size) {
-+	case 4096:
-+		switch (DEV_ATTRIB(dev)->block_size) {
-+		case 2048:
-+			blocks_long <<= 1;
-+			break;
-+		case 1024:
-+			blocks_long <<= 2;
-+			break;
-+		case 512:
-+			blocks_long <<= 3;
-+		default:
-+			break;
-+		}
-+		break;
-+	case 2048:
-+		switch (DEV_ATTRIB(dev)->block_size) {
-+		case 4096:
-+			blocks_long >>= 1;
-+			break;
-+		case 1024:
-+			blocks_long <<= 1;
-+			break;
-+		case 512:
-+			blocks_long <<= 2;
-+			break;
-+		default:
-+			break;
-+		}
-+		break;
-+	case 1024:
-+		switch (DEV_ATTRIB(dev)->block_size) {
-+		case 4096:
-+			blocks_long >>= 2;
-+			break;
-+		case 2048:
-+			blocks_long >>= 1;
-+			break;
-+		case 512:
-+			blocks_long <<= 1;
-+			break;
-+		default:
-+			break;
-+		}
-+		break;
-+	case 512:
-+		switch (DEV_ATTRIB(dev)->block_size) {
-+		case 4096:
-+			blocks_long >>= 3;
-+			break;
-+		case 2048:
-+			blocks_long >>= 2;
-+			break;
-+		case 1024:
-+			blocks_long >>= 1;
-+			break;
-+		default:
-+			break;
-+		}
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return blocks_long;
-+}
-+
-+static int iblock_emulate_read_cap(struct se_task *task)
-+{
-+	struct iblock_dev *ibd = (struct iblock_dev *) task->se_dev->dev_ptr;
-+	struct block_device *bd = ibd->ibd_bd;
-+	struct request_queue *q = bdev_get_queue(bd);
-+	unsigned long long blocks_long = 0;
-+	u32 blocks = 0;
-+
-+	blocks_long = iblock_emulate_read_cap_with_block_size(
-+				task->se_dev, bd, q);
-+	if (blocks_long >= 0x00000000ffffffff)
++	if ((((rd_dev->rd_page_count * PAGE_SIZE) /
++	       DEV_ATTRIB(task->se_dev)->block_size) - 1) >= 0x00000000ffffffff)
 +		blocks = 0xffffffff;
-+	else
-+		blocks = (u32)blocks_long;
 +
 +	return transport_generic_emulate_readcapacity(TASK_CMD(task), blocks);
 +}
 +
-+static int iblock_emulate_read_cap16(struct se_task *task)
++static int rd_emulate_read_cap16(struct se_task *task)
 +{
-+	struct iblock_dev *ibd = (struct iblock_dev *) task->se_dev->dev_ptr;
-+	struct block_device *bd = ibd->ibd_bd;
-+	struct request_queue *q = bdev_get_queue(bd);
-+	unsigned long long blocks_long;
++	struct rd_dev *rd_dev = (struct rd_dev *) task->se_dev->dev_ptr;
++	unsigned long long blocks_long = ((rd_dev->rd_page_count * PAGE_SIZE) /
++				   DEV_ATTRIB(task->se_dev)->block_size) - 1;
 +
-+	blocks_long = iblock_emulate_read_cap_with_block_size(
-+				task->se_dev, bd, q);
-+	return transport_generic_emulate_readcapacity_16(
-+				TASK_CMD(task), blocks_long);
++	return transport_generic_emulate_readcapacity_16(TASK_CMD(task),
++				blocks_long);
 +}
 +
-+static int iblock_emulate_scsi_cdb(struct se_task *task)
++/*	rd_emulate_scsi_cdb():
++ *
++ *
++ */
++static int rd_emulate_scsi_cdb(struct se_task *task)
 +{
 +	int ret;
 +	struct se_cmd *cmd = TASK_CMD(task);
++	struct rd_request *rd_req = (struct rd_request *) task->transport_req;
 +
-+	switch (T_TASK(cmd)->t_task_cdb[0]) {
++	switch (rd_req->rd_scsi_cdb[0]) {
 +	case INQUIRY:
-+		if (iblock_emulate_inquiry(task) < 0)
++		if (rd_emulate_inquiry(task) < 0)
 +			return PYX_TRANSPORT_INVALID_CDB_FIELD;
 +		break;
 +	case READ_CAPACITY:
-+		ret = iblock_emulate_read_cap(task);
++		ret = rd_emulate_read_cap(task);
 +		if (ret < 0)
 +			return ret;
 +		break;
 +	case MODE_SENSE:
 +		ret = transport_generic_emulate_modesense(TASK_CMD(task),
-+				T_TASK(cmd)->t_task_cdb,
-+				T_TASK(cmd)->t_task_buf, 0, TYPE_DISK);
++				rd_req->rd_scsi_cdb, rd_req->rd_buf, 0,
++				TYPE_DISK);
 +		if (ret < 0)
 +			return ret;
 +		break;
 +	case MODE_SENSE_10:
 +		ret = transport_generic_emulate_modesense(TASK_CMD(task),
-+				T_TASK(cmd)->t_task_cdb,
-+			T_TASK(cmd)->t_task_buf, 1, TYPE_DISK);
++				rd_req->rd_scsi_cdb, rd_req->rd_buf, 1,
++				TYPE_DISK);
 +		if (ret < 0)
 +			return ret;
 +		break;
@@ -513,10 +508,10 @@ index 0000000..1b148f5
 +		if ((T_TASK(cmd)->t_task_cdb[1] & 0x1f) !=
 +		     SAI_READ_CAPACITY_16) {
 +			printk(KERN_ERR "Unsupported SA: 0x%02x\n",
-+				T_TASK(cmd)->t_task_cdb[1] & 0x1f);
++					T_TASK(cmd)->t_task_cdb[1] & 0x1f);
 +			return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
 +		}
-+		ret = iblock_emulate_read_cap16(task);
++		ret = rd_emulate_read_cap16(task);
 +		if (ret < 0)
 +			return ret;
 +		break;
@@ -542,8 +537,8 @@ index 0000000..1b148f5
 +	case RELEASE_10:
 +		break;
 +	default:
-+		printk(KERN_ERR "Unsupported SCSI Opcode: 0x%02x for iBlock\n",
-+				T_TASK(cmd)->t_task_cdb[0]);
++		printk(KERN_ERR "Unsupported SCSI Opcode: 0x%02x for"
++			" RAMDISKs\n", rd_req->rd_scsi_cdb[0]);
 +		return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
 +	}
 +
@@ -553,157 +548,649 @@ index 0000000..1b148f5
 +	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
 +}
 +
-+static int __iblock_do_sync_cache(struct se_device *dev)
++/*	rd_get_sg_table():
++ *
++ *
++ */
++static struct rd_dev_sg_table *rd_get_sg_table(struct rd_dev *rd_dev, u32 page)
 +{
-+	struct iblock_dev *ib_dev = (struct iblock_dev *)dev->dev_ptr;
-+	int ret;
++	u32 i;
++	struct rd_dev_sg_table *sg_table;
 +
-+	ret = blkdev_issue_flush(ib_dev->ibd_bd, GFP_KERNEL, NULL,
-+				BLKDEV_IFL_WAIT);
-+	if (ret != 0) {
-+		printk(KERN_ERR "IBLOCK: block_issue_flush() failed: %d\n", ret);
++	for (i = 0; i < rd_dev->sg_table_count; i++) {
++		sg_table = &rd_dev->sg_table_array[i];
++		if ((sg_table->page_start_offset <= page) &&
++		    (sg_table->page_end_offset >= page))
++			return sg_table;
++	}
++
++	printk(KERN_ERR "Unable to locate struct rd_dev_sg_table for page: %u\n",
++			page);
++
++	return NULL;
++}
++
++/*	rd_MEMCPY_read():
++ *
++ *
++ */
++static int rd_MEMCPY_read(struct rd_request *req)
++{
++	struct rd_dev *dev = req->rd_dev;
++	struct rd_dev_sg_table *table;
++	struct scatterlist *sg_d, *sg_s;
++	void *dst, *src;
++	u32 i = 0, j = 0, dst_offset = 0, src_offset = 0;
++	u32 length, page_end = 0, table_sg_end;
++	u32 rd_offset = req->rd_offset;
++
++	table = rd_get_sg_table(dev, req->rd_page);
++	if (!(table))
 +		return -1;
++
++	table_sg_end = (table->page_end_offset - req->rd_page);
++	sg_d = (struct scatterlist *) req->rd_buf;
++	sg_s = &table->sg_table[req->rd_page - table->page_start_offset];
++#ifdef DEBUG_RAMDISK_MCP
++	printk(KERN_INFO "RD[%u]: Read LBA: %llu, Size: %u Page: %u, Offset:"
++		" %u\n", dev->rd_dev_id, req->rd_lba, req->rd_size,
++		req->rd_page, req->rd_offset);
++#endif
++	src_offset = rd_offset;
++
++	while (req->rd_size) {
++		if ((sg_d[i].length - dst_offset) <
++		    (sg_s[j].length - src_offset)) {
++			length = (sg_d[i].length - dst_offset);
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "Step 1 - sg_d[%d]: %p length: %d"
++				" offset: %u sg_s[%d].length: %u\n", i,
++				&sg_d[i], sg_d[i].length, sg_d[i].offset, j,
++				sg_s[j].length);
++			printk(KERN_INFO "Step 1 - length: %u dst_offset: %u"
++				" src_offset: %u\n", length, dst_offset,
++				src_offset);
++#endif
++			if (length > req->rd_size)
++				length = req->rd_size;
++
++			dst = sg_virt(&sg_d[i++]) + dst_offset;
++			if (!dst)
++				BUG();
++
++			src = sg_virt(&sg_s[j]) + src_offset;
++			if (!src)
++				BUG();
++
++			dst_offset = 0;
++			src_offset = length;
++			page_end = 0;
++		} else {
++			length = (sg_s[j].length - src_offset);
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "Step 2 - sg_d[%d]: %p length: %d"
++				" offset: %u sg_s[%d].length: %u\n", i,
++				&sg_d[i], sg_d[i].length, sg_d[i].offset,
++				j, sg_s[j].length);
++			printk(KERN_INFO "Step 2 - length: %u dst_offset: %u"
++				" src_offset: %u\n", length, dst_offset,
++				src_offset);
++#endif
++			if (length > req->rd_size)
++				length = req->rd_size;
++
++			dst = sg_virt(&sg_d[i]) + dst_offset;
++			if (!dst)
++				BUG();
++
++			if (sg_d[i].length == length) {
++				i++;
++				dst_offset = 0;
++			} else
++				dst_offset = length;
++
++			src = sg_virt(&sg_s[j++]) + src_offset;
++			if (!src)
++				BUG();
++
++			src_offset = 0;
++			page_end = 1;
++		}
++
++		memcpy(dst, src, length);
++
++#ifdef DEBUG_RAMDISK_MCP
++		printk(KERN_INFO "page: %u, remaining size: %u, length: %u,"
++			" i: %u, j: %u\n", req->rd_page,
++			(req->rd_size - length), length, i, j);
++#endif
++		req->rd_size -= length;
++		if (!(req->rd_size))
++			return 0;
++
++		if (!page_end)
++			continue;
++
++		if (++req->rd_page <= table->page_end_offset) {
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "page: %u in same page table\n",
++				req->rd_page);
++#endif
++			continue;
++		}
++#ifdef DEBUG_RAMDISK_MCP
++		printk(KERN_INFO "getting new page table for page: %u\n",
++				req->rd_page);
++#endif
++		table = rd_get_sg_table(dev, req->rd_page);
++		if (!(table))
++			return -1;
++
++		sg_s = &table->sg_table[j = 0];
 +	}
-+	DEBUG_IBLOCK("IBLOCK: Called block_issue_flush()\n");
++
 +	return 0;
 +}
 +
-+void iblock_do_sync_cache_range(
-+	struct se_cmd *cmd,
-+	unsigned long long lba,
-+	u32 size_in_bytes)
++/*	rd_MEMCPY_write():
++ *
++ *
++ */
++static int rd_MEMCPY_write(struct rd_request *req)
 +{
-+	int ret, immed = (T_TASK(cmd)->t_task_cdb[1] & 0x2);
-+	/*
-+	 * If the Immediate bit is set, queue up the GOOD response
-+	 * for this SYNCHRONIZE_CACHE op
-+	 */
-+	if (immed)
-+		transport_complete_sync_cache(cmd, 1);
-+	/*
-+	 * block/blk-barrier.c:block_issue_flush() does not support a
-+	 * LBA + Range synchronization method, so for this case we
-+	 * have to flush the entire cache.
-+	 */
-+	ret = __iblock_do_sync_cache(cmd->se_dev);
-+	if (ret < 0) {
-+		if (!(immed))
-+			transport_complete_sync_cache(cmd, 0);
-+		return;
++	struct rd_dev *dev = req->rd_dev;
++	struct rd_dev_sg_table *table;
++	struct scatterlist *sg_d, *sg_s;
++	void *dst, *src;
++	u32 i = 0, j = 0, dst_offset = 0, src_offset = 0;
++	u32 length, page_end = 0, table_sg_end;
++	u32 rd_offset = req->rd_offset;
++
++	table = rd_get_sg_table(dev, req->rd_page);
++	if (!(table))
++		return -1;
++
++	table_sg_end = (table->page_end_offset - req->rd_page);
++	sg_d = &table->sg_table[req->rd_page - table->page_start_offset];
++	sg_s = (struct scatterlist *) req->rd_buf;
++#ifdef DEBUG_RAMDISK_MCP
++	printk(KERN_INFO "RD[%d] Write LBA: %llu, Size: %u, Page: %u,"
++		" Offset: %u\n", dev->rd_dev_id, req->rd_lba, req->rd_size,
++		req->rd_page, req->rd_offset);
++#endif
++	dst_offset = rd_offset;
++
++	while (req->rd_size) {
++		if ((sg_s[i].length - src_offset) <
++		    (sg_d[j].length - dst_offset)) {
++			length = (sg_s[i].length - src_offset);
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "Step 1 - sg_s[%d]: %p length: %d"
++				" offset: %d sg_d[%d].length: %u\n", i,
++				&sg_s[i], sg_s[i].length, sg_s[i].offset,
++				j, sg_d[j].length);
++			printk(KERN_INFO "Step 1 - length: %u src_offset: %u"
++				" dst_offset: %u\n", length, src_offset,
++				dst_offset);
++#endif
++			if (length > req->rd_size)
++				length = req->rd_size;
++
++			src = sg_virt(&sg_s[i++]) + src_offset;
++			if (!src)
++				BUG();
++
++			dst = sg_virt(&sg_d[j]) + dst_offset;
++			if (!dst)
++				BUG();
++
++			src_offset = 0;
++			dst_offset = length;
++			page_end = 0;
++		} else {
++			length = (sg_d[j].length - dst_offset);
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "Step 2 - sg_s[%d]: %p length: %d"
++				" offset: %d sg_d[%d].length: %u\n", i,
++				&sg_s[i], sg_s[i].length, sg_s[i].offset,
++				j, sg_d[j].length);
++			printk(KERN_INFO "Step 2 - length: %u src_offset: %u"
++				" dst_offset: %u\n", length, src_offset,
++				dst_offset);
++#endif
++			if (length > req->rd_size)
++				length = req->rd_size;
++
++			src = sg_virt(&sg_s[i]) + src_offset;
++			if (!src)
++				BUG();
++
++			if (sg_s[i].length == length) {
++				i++;
++				src_offset = 0;
++			} else
++				src_offset = length;
++
++			dst = sg_virt(&sg_d[j++]) + dst_offset;
++			if (!dst)
++				BUG();
++
++			dst_offset = 0;
++			page_end = 1;
++		}
++
++		memcpy(dst, src, length);
++
++#ifdef DEBUG_RAMDISK_MCP
++		printk(KERN_INFO "page: %u, remaining size: %u, length: %u,"
++			" i: %u, j: %u\n", req->rd_page,
++			(req->rd_size - length), length, i, j);
++#endif
++		req->rd_size -= length;
++		if (!(req->rd_size))
++			return 0;
++
++		if (!page_end)
++			continue;
++
++		if (++req->rd_page <= table->page_end_offset) {
++#ifdef DEBUG_RAMDISK_MCP
++			printk(KERN_INFO "page: %u in same page table\n",
++				req->rd_page);
++#endif
++			continue;
++		}
++#ifdef DEBUG_RAMDISK_MCP
++		printk(KERN_INFO "getting new page table for page: %u\n",
++				req->rd_page);
++#endif
++		table = rd_get_sg_table(dev, req->rd_page);
++		if (!(table))
++			return -1;
++
++		sg_d = &table->sg_table[j = 0];
 +	}
 +
-+	if (!(immed))
-+		transport_complete_sync_cache(cmd, 1);
-+}
-+
-+/*
-+ * Tell TCM Core that we are capable of WriteCache emulation for
-+ * an underlying struct se_device.
-+ */
-+int iblock_emulated_write_cache(struct se_device *dev)
-+{
-+	struct iblock_dev *ib_dev = (struct iblock_dev *)dev->dev_ptr;
-+	/*
-+	 * Only return WCE if ISSUE_FLUSH is supported
-+	 */	
-+	return (ib_dev->ibd_flags & IBDF_BDEV_ISSUE_FLUSH) ? 1 : 0;
-+}
-+
-+int iblock_emulated_dpo(struct se_device *dev)
-+{
 +	return 0;
 +}
 +
-+/*
-+ * Tell TCM Core that we will be emulating Forced Unit Access (FUA) for WRITEs
-+ * for TYPE_DISK.
++/*	rd_MEMCPY_do_task(): (Part of se_subsystem_api_t template)
++ *
++ *
 + */
-+int iblock_emulated_fua_write(struct se_device *dev)
++static int rd_MEMCPY_do_task(struct se_task *task)
 +{
-+	struct iblock_dev *ib_dev = (struct iblock_dev *)dev->dev_ptr;
-+	/*
-+	 * Only return FUA WRITE if ISSUE_FLUSH is supported
-+	 */
-+	return (ib_dev->ibd_flags & IBDF_BDEV_ISSUE_FLUSH) ? 1 : 0;
-+}
-+
-+int iblock_emulated_fua_read(struct se_device *dev)
-+{
-+	return 0;
-+}
-+
-+static int iblock_do_task(struct se_task *task)
-+{
-+	struct se_device *dev = task->task_se_cmd->se_dev;
-+	struct iblock_req *req = (struct iblock_req *)task->transport_req;
-+	struct iblock_dev *ibd = (struct iblock_dev *)req->ib_dev;
-+	struct request_queue *q = bdev_get_queue(ibd->ibd_bd);
-+	struct bio *bio = req->ib_bio, *nbio = NULL;
-+	int write = (TASK_CMD(task)->data_direction == DMA_TO_DEVICE);
++	struct se_device *dev = task->se_dev;
++	struct rd_request *req = (struct rd_request *) task->transport_req;
 +	int ret;
 +
 +	if (!(TASK_CMD(task)->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB))
-+		return iblock_emulate_scsi_cdb(task);
++		return rd_emulate_scsi_cdb(task);
 +
-+	while (bio) {
-+		nbio = bio->bi_next;
-+		bio->bi_next = NULL;
-+		DEBUG_IBLOCK("Calling submit_bio() task: %p bio: %p"
-+			" bio->bi_sector: %llu\n", task, bio, bio->bi_sector);
++	req->rd_lba = task->task_lba;
++	req->rd_page = (req->rd_lba * DEV_ATTRIB(dev)->block_size) / PAGE_SIZE;
++	req->rd_offset = (do_div(req->rd_lba,
++			  (PAGE_SIZE / DEV_ATTRIB(dev)->block_size))) *
++			   DEV_ATTRIB(dev)->block_size;
++	req->rd_size = task->task_size;
 +
-+		submit_bio(write, bio);
-+		bio = nbio;
-+	}
++	if (req->rd_data_direction == RD_DATA_READ)
++		ret = rd_MEMCPY_read(req);
++	else
++		ret = rd_MEMCPY_write(req);
 +
-+	if (q->unplug_fn)
-+		q->unplug_fn(q);
-+	/*
-+	 * Check for Forced Unit Access WRITE emulation
-+	 */
-+	if ((DEV_ATTRIB(dev)->emulate_write_cache > 0) &&
-+	    (DEV_ATTRIB(dev)->emulate_fua_write > 0) &&
-+	    write && T_TASK(task->task_se_cmd)->t_tasks_fua) {
-+		/*
-+		 * We might need to be a bit smarter here
-+		 * and return some sense data to let the initiator
-+		 * know the FUA WRITE cache sync failed..?
-+		 */
-+		ret = __iblock_do_sync_cache(dev);
-+		if (ret < 0) {
-+			printk(KERN_ERR "__iblock_do_sync_cache()"
-+				" failed for FUA Write\n");
-+		}
-+	}
++	if (ret != 0)
++		return ret;
++
++	task->task_scsi_status = GOOD;
++	transport_complete_task(task, 1);
 +
 +	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
 +}
 +
-+static void iblock_free_task(struct se_task *task)
++/*	rd_DIRECT_with_offset():
++ *
++ *
++ */
++static int rd_DIRECT_with_offset(
++	struct se_task *task,
++	struct list_head *se_mem_list,
++	u32 *se_mem_cnt,
++	u32 *task_offset)
 +{
-+	struct iblock_req *req = (struct iblock_req *) task->transport_req;
++	struct rd_request *req = (struct rd_request *)task->transport_req;
++	struct rd_dev *dev = req->rd_dev;
++	struct rd_dev_sg_table *table;
++	struct se_mem *se_mem;
++	struct scatterlist *sg_s;
++	u32 j = 0, set_offset = 1;
++	u32 get_next_table = 0, offset_length, table_sg_end;
 +
-+	/*
-+	 * We do not release the bio(s) here associated with this task, as
-+	 * this is handled by bio_put() and iblock_bio_destructor().
-+	 */
++	table = rd_get_sg_table(dev, req->rd_page);
++	if (!(table))
++		return -1;
 +
-+	kfree(req);
-+	task->transport_req = NULL;
++	table_sg_end = (table->page_end_offset - req->rd_page);
++	sg_s = &table->sg_table[req->rd_page - table->page_start_offset];
++#ifdef DEBUG_RAMDISK_DR
++	printk(KERN_INFO "%s DIRECT LBA: %llu, Size: %u Page: %u, Offset: %u\n",
++		(req->rd_data_direction != RD_DATA_READ) ? "Write" : "Read",
++		req->rd_lba, req->rd_size, req->rd_page, req->rd_offset);
++#endif
++	while (req->rd_size) {
++		se_mem = kmem_cache_zalloc(se_mem_cache, GFP_KERNEL);
++		if (!(se_mem)) {
++			printk(KERN_ERR "Unable to allocate struct se_mem\n");
++			return -1;
++		}
++		INIT_LIST_HEAD(&se_mem->se_list);
++
++		if (set_offset) {
++			offset_length = sg_s[j].length - req->rd_offset;
++			if (offset_length > req->rd_size)
++				offset_length = req->rd_size;
++
++			se_mem->se_page = sg_page(&sg_s[j++]);
++			se_mem->se_off = req->rd_offset;
++			se_mem->se_len = offset_length;
++
++			set_offset = 0;
++			get_next_table = (j > table_sg_end);
++			goto check_eot;
++		}
++
++		offset_length = (req->rd_size < req->rd_offset) ?
++			req->rd_size : req->rd_offset;
++
++		se_mem->se_page = sg_page(&sg_s[j]);
++		se_mem->se_len = offset_length;
++
++		set_offset = 1;
++
++check_eot:
++#ifdef DEBUG_RAMDISK_DR
++		printk(KERN_INFO "page: %u, size: %u, offset_length: %u, j: %u"
++			" se_mem: %p, se_page: %p se_off: %u se_len: %u\n",
++			req->rd_page, req->rd_size, offset_length, j, se_mem,
++			se_mem->se_page, se_mem->se_off, se_mem->se_len);
++#endif
++		list_add_tail(&se_mem->se_list, se_mem_list);
++		(*se_mem_cnt)++;
++
++		req->rd_size -= offset_length;
++		if (!(req->rd_size))
++			goto out;
++
++		if (!set_offset && !get_next_table)
++			continue;
++
++		if (++req->rd_page <= table->page_end_offset) {
++#ifdef DEBUG_RAMDISK_DR
++			printk(KERN_INFO "page: %u in same page table\n",
++					req->rd_page);
++#endif
++			continue;
++		}
++#ifdef DEBUG_RAMDISK_DR
++		printk(KERN_INFO "getting new page table for page: %u\n",
++				req->rd_page);
++#endif
++		table = rd_get_sg_table(dev, req->rd_page);
++		if (!(table))
++			return -1;
++
++		sg_s = &table->sg_table[j = 0];
++	}
++
++out:
++	T_TASK(task->task_se_cmd)->t_tasks_se_num += *se_mem_cnt;
++#ifdef DEBUG_RAMDISK_DR
++	printk(KERN_INFO "RD_DR - Allocated %u struct se_mem segments for task\n",
++			*se_mem_cnt);
++#endif
++	return 0;
 +}
 +
-+static ssize_t iblock_set_configfs_dev_params(struct se_hba *hba,
-+					       struct se_subsystem_dev *se_dev,
-+					       const char *page, ssize_t count)
++/*	rd_DIRECT_without_offset():
++ *
++ *
++ */
++static int rd_DIRECT_without_offset(
++	struct se_task *task,
++	struct list_head *se_mem_list,
++	u32 *se_mem_cnt,
++	u32 *task_offset)
 +{
-+	struct iblock_dev *ib_dev = (struct iblock_dev *) se_dev->se_dev_su_ptr;
++	struct rd_request *req = (struct rd_request *)task->transport_req;
++	struct rd_dev *dev = req->rd_dev;
++	struct rd_dev_sg_table *table;
++	struct se_mem *se_mem;
++	struct scatterlist *sg_s;
++	u32 length, j = 0;
++
++	table = rd_get_sg_table(dev, req->rd_page);
++	if (!(table))
++		return -1;
++
++	sg_s = &table->sg_table[req->rd_page - table->page_start_offset];
++#ifdef DEBUG_RAMDISK_DR
++	printk(KERN_INFO "%s DIRECT LBA: %llu, Size: %u, Page: %u\n",
++		(req->rd_data_direction != RD_DATA_READ) ? "Write" : "Read",
++		req->rd_lba, req->rd_size, req->rd_page);
++#endif
++	while (req->rd_size) {
++		se_mem = kmem_cache_zalloc(se_mem_cache, GFP_KERNEL);
++		if (!(se_mem)) {
++			printk(KERN_ERR "Unable to allocate struct se_mem\n");
++			return -1;
++		}
++		INIT_LIST_HEAD(&se_mem->se_list);
++
++		length = (req->rd_size < sg_s[j].length) ?
++			req->rd_size : sg_s[j].length;
++
++		se_mem->se_page = sg_page(&sg_s[j++]);
++		se_mem->se_len = length;
++
++#ifdef DEBUG_RAMDISK_DR
++		printk(KERN_INFO "page: %u, size: %u, j: %u se_mem: %p,"
++			" se_page: %p se_off: %u se_len: %u\n", req->rd_page,
++			req->rd_size, j, se_mem, se_mem->se_page,
++			se_mem->se_off, se_mem->se_len);
++#endif
++		list_add_tail(&se_mem->se_list, se_mem_list);
++		(*se_mem_cnt)++;
++
++		req->rd_size -= length;
++		if (!(req->rd_size))
++			goto out;
++
++		if (++req->rd_page <= table->page_end_offset) {
++#ifdef DEBUG_RAMDISK_DR
++			printk("page: %u in same page table\n",
++				req->rd_page);
++#endif
++			continue;
++		}
++#ifdef DEBUG_RAMDISK_DR
++		printk(KERN_INFO "getting new page table for page: %u\n",
++				req->rd_page);
++#endif
++		table = rd_get_sg_table(dev, req->rd_page);
++		if (!(table))
++			return -1;
++
++		sg_s = &table->sg_table[j = 0];
++	}
++
++out:
++	T_TASK(task->task_se_cmd)->t_tasks_se_num += *se_mem_cnt;
++#ifdef DEBUG_RAMDISK_DR
++	printk(KERN_INFO "RD_DR - Allocated %u struct se_mem segments for task\n",
++			*se_mem_cnt);
++#endif
++	return 0;
++}
++
++/*	rd_DIRECT_do_se_mem_map():
++ *
++ *
++ */
++static int rd_DIRECT_do_se_mem_map(
++	struct se_task *task,
++	struct list_head *se_mem_list,
++	void *in_mem,
++	struct se_mem *in_se_mem,
++	struct se_mem **out_se_mem,
++	u32 *se_mem_cnt,
++	u32 *task_offset_in)
++{
++	struct se_cmd *cmd = task->task_se_cmd;
++	struct rd_request *req = (struct rd_request *) task->transport_req;
++	u32 task_offset = *task_offset_in;
++	int ret;
++
++	req->rd_lba = task->task_lba;
++	req->rd_req_flags = RRF_GOT_LBA;
++	req->rd_page = ((req->rd_lba * DEV_ATTRIB(task->se_dev)->block_size) /
++			PAGE_SIZE);
++	req->rd_offset = (do_div(req->rd_lba,
++			  (PAGE_SIZE / DEV_ATTRIB(task->se_dev)->block_size))) *
++			   DEV_ATTRIB(task->se_dev)->block_size;
++	req->rd_size = task->task_size;
++
++	if (req->rd_offset)
++		ret = rd_DIRECT_with_offset(task, se_mem_list, se_mem_cnt,
++				task_offset_in);
++	else
++		ret = rd_DIRECT_without_offset(task, se_mem_list, se_mem_cnt,
++				task_offset_in);
++
++	if (ret < 0)
++		return ret;
++
++	if (CMD_TFO(cmd)->task_sg_chaining == 0)
++		return 0;
++	/*
++	 * Currently prevent writers from multiple HW fabrics doing
++	 * pci_map_sg() to RD_DR's internal scatterlist memory.
++	 */
++	if (cmd->data_direction == DMA_TO_DEVICE) {
++		printk(KERN_ERR "DMA_TO_DEVICE not supported for"
++				" RAMDISK_DR with task_sg_chaining=1\n");
++		return -1;
++	}
++	/*
++	 * Special case for if task_sg_chaining is enabled, then
++	 * we setup struct se_task->task_sg[], as it will be used by
++	 * transport_do_task_sg_chain() for creating chainged SGLs
++	 * across multiple struct se_task->task_sg[].
++	 *
++	 * Note that kfree(task->task_sg); does not need to be called
++	 * in rd_DIRECT_free_DMA(), because transport_free_dev_tasks()
++	 * will already be taking care of this for all TCM subsystem
++	 * plugins.
++	 */
++	if (!(transport_calc_sg_num(task,
++			list_entry(T_TASK(cmd)->t_mem_list->next,
++				   struct se_mem, se_list),
++			task_offset)))
++		return -1;	
++
++	return transport_map_mem_to_sg(task, se_mem_list, task->task_sg,
++			list_entry(T_TASK(cmd)->t_mem_list->next,
++				   struct se_mem, se_list),
++			out_se_mem, se_mem_cnt, task_offset_in);
++}
++
++/*	rd_DIRECT_free_DMA():
++ *
++ *
++ */
++static void rd_DIRECT_free_DMA(struct se_cmd *cmd)
++{
++	struct se_mem *se_mem, *se_mem_tmp;
++
++	if (!(T_TASK(cmd)->t_mem_list))
++		return;
++	/*
++	 * The scatterlists in the RAMDISK DIRECT case are using the pages
++	 * from the rd_device_t's scatterlist table. They are referencing
++	 * valid memory that is held within the RD transport plugin, so we
++	 * only free the struct se_mem elements.
++	 */
++	list_for_each_entry_safe(se_mem, se_mem_tmp, T_TASK(cmd)->t_mem_list,
++				se_list) {
++		 list_del(&se_mem->se_list);
++		 kmem_cache_free(se_mem_cache, se_mem);
++	}
++	kfree(T_TASK(cmd)->t_mem_list);
++	T_TASK(cmd)->t_mem_list = NULL;
++	T_TASK(cmd)->t_tasks_se_num = 0;
++}
++
++/*	rd_DIRECT_allocate_DMA():
++ *
++ *	Note that rd_DIRECT_do_se_mem_map() actually does the real work.
++ */
++static int rd_DIRECT_allocate_DMA(struct se_cmd *cmd, u32 length, u32 dma_size)
++{
++	T_TASK(cmd)->t_mem_list = kzalloc(sizeof(struct list_head), GFP_KERNEL);
++	if (!(T_TASK(cmd)->t_mem_list)) {
++		printk(KERN_ERR "Unable to allocate memory for T_TASK(cmd)"
++				"->t_mem_list\n");
++		return -1;
++	}
++	INIT_LIST_HEAD(T_TASK(cmd)->t_mem_list);
++
++	return 0;
++}
++
++/*	rd_DIRECT_do_task(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static int rd_DIRECT_do_task(struct se_task *task)
++{
++	if (!(TASK_CMD(task)->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB))
++		return rd_emulate_scsi_cdb(task);
++
++	/*
++	 * At this point the locally allocated RD tables have been mapped
++	 * to struct se_mem elements in rd_DIRECT_do_se_mem_map().
++	 */
++	task->task_scsi_status = GOOD;
++	transport_complete_task(task, 1);
++
++	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
++}
++
++/*	rd_free_task(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static void rd_free_task(struct se_task *task)
++{
++	struct rd_request *req;
++	req = (struct rd_request *) task->transport_req;
++
++	kfree(req);
++}
++
++static ssize_t rd_set_configfs_dev_params(
++	struct se_hba *hba,
++	struct se_subsystem_dev *se_dev,
++	const char *page,
++	ssize_t count)
++{
++	struct rd_dev *rd_dev = (struct rd_dev *) se_dev->se_dev_su_ptr;
 +	char *buf, *cur, *ptr, *ptr2;
-+	unsigned long force;
-+	int params = 0, ret = 0;
++	unsigned long rd_pages;
++	int params = 0, ret;
 +
 +	buf = kzalloc(count, GFP_KERNEL);
 +	if (!(buf)) {
-+		printk(KERN_ERR "Unable to allocate memory for temporary"
-+			" buffer\n");
++		printk(KERN_ERR "Unable to allocate memory for temporary buffer\n");
 +		return 0;
 +	}
 +	memcpy(buf, page, count);
@@ -717,37 +1204,19 @@ index 0000000..1b148f5
 +		*ptr = '\0';
 +		ptr++;
 +
-+		ptr2 = strstr(cur, "udev_path");
++		ptr2 = strstr(cur, "rd_pages");
 +		if ((ptr2)) {
 +			transport_check_dev_params_delim(ptr, &cur);
-+			ptr = strstrip(ptr);
-+			if (ib_dev->ibd_bd) {
-+				printk(KERN_ERR "Unable to set udev_path= while"
-+					" ib_dev->ibd_bd exists\n");
-+				params = 0;
-+				goto out;
-+			}
-+
-+			ret = snprintf(ib_dev->ibd_udev_path, SE_UDEV_PATH_LEN,
-+				"%s", ptr);
-+			printk(KERN_INFO "IBLOCK: Referencing UDEV path: %s\n",
-+					ib_dev->ibd_udev_path);
-+			ib_dev->ibd_flags |= IBDF_HAS_UDEV_PATH;
-+			params++;
-+			continue;
-+		}
-+		ptr2 = strstr(cur, "force");
-+		if ((ptr2)) {
-+			transport_check_dev_params_delim(ptr, &cur);
-+			ret = strict_strtoul(ptr, 0, &force);
++			ret = strict_strtoul(ptr, 0, &rd_pages);
 +			if (ret < 0) {
-+				printk(KERN_ERR "strict_strtoul() failed"
-+					" for force=\n");
++				printk(KERN_ERR "strict_strtoul() failed for"
++					" rd_pages=\n");
 +				break;
 +			}
-+			ib_dev->ibd_force = (int)force;
-+			printk(KERN_INFO "IBLOCK: Set force=%d\n",
-+				ib_dev->ibd_force);
++			rd_dev->rd_page_count = (u32)rd_pages;
++			printk(KERN_INFO "RAMDISK: Referencing Page"
++				" Count: %u\n", rd_dev->rd_page_count);
++			rd_dev->rd_flags |= RDF_HAS_PAGE_COUNT;
 +			params++;
 +		} else
 +			cur = NULL;
@@ -758,505 +1227,462 @@ index 0000000..1b148f5
 +	return (params) ? count : -EINVAL;
 +}
 +
-+static ssize_t iblock_check_configfs_dev_params(
-+	struct se_hba *hba,
-+	struct se_subsystem_dev *se_dev)
++static ssize_t rd_check_configfs_dev_params(struct se_hba *hba, struct se_subsystem_dev *se_dev)
 +{
-+	struct iblock_dev *ibd = (struct iblock_dev *) se_dev->se_dev_su_ptr;
++	struct rd_dev *rd_dev = (struct rd_dev *) se_dev->se_dev_su_ptr;
 +
-+	if (!(ibd->ibd_flags & IBDF_HAS_UDEV_PATH)) {
-+		printk(KERN_ERR "Missing udev_path= parameters for IBLOCK\n");
++	if (!(rd_dev->rd_flags & RDF_HAS_PAGE_COUNT)) {
++		printk(KERN_INFO "Missing rd_pages= parameter\n");
 +		return -1;
 +	}
 +
 +	return 0;
 +}
 +
-+static ssize_t iblock_show_configfs_dev_params(
++static ssize_t rd_show_configfs_dev_params(
 +	struct se_hba *hba,
 +	struct se_subsystem_dev *se_dev,
 +	char *page)
 +{
-+	struct iblock_dev *ibd = (struct iblock_dev *) se_dev->se_dev_su_ptr;
++	struct rd_dev *rd_dev = (struct rd_dev *) se_dev->se_dev_su_ptr;
 +	int bl = 0;
 +
-+	__iblock_get_dev_info(ibd, page, &bl);
++	 __rd_get_dev_info(rd_dev, page, &bl);
 +	return (ssize_t)bl;
 +}
 +
-+static struct se_device *iblock_create_virtdevice_from_fd(
-+	struct se_subsystem_dev *se_dev,
-+	const char *page)
++static void rd_dr_get_plugin_info(void *p, char *b, int *bl)
 +{
-+	struct iblock_dev *ibd = (struct iblock_dev *) se_dev->se_dev_su_ptr;
-+	struct se_device *dev = NULL;
-+	struct file *filp;
-+	struct inode *inode;
-+	char *p = (char *)page;
-+	unsigned long long fd;
-+	int ret;
-+
-+	ret = strict_strtoull(p, 0, (unsigned long long *)&fd);
-+	if (ret < 0) {
-+		printk(KERN_ERR "strict_strtol() failed for fd\n");
-+		return ERR_PTR(-EINVAL);
-+	}
-+	if ((fd < 3 || fd > 7)) {
-+		printk(KERN_ERR "IBLOCK: Illegal value of file descriptor:"
-+				" %llu\n", fd);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	filp = fget(fd);
-+	if (!(filp)) {
-+		printk(KERN_ERR "IBLOCK: Unable to fget() fd: %llu\n", fd);
-+		return ERR_PTR(-EBADF);
-+	}
-+	inode = igrab(filp->f_mapping->host);
-+	if (!(inode)) {
-+		printk(KERN_ERR "IBLOCK: Unable to locate struct inode for"
-+			" struct block_device fd\n");
-+		fput(filp);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	if (!(S_ISBLK(inode->i_mode))) {
-+		printk(KERN_ERR "IBLOCK: S_ISBLK(inode->i_mode) failed for file"
-+				" descriptor: %llu\n", fd);
-+		iput(inode);
-+		fput(filp);
-+		return ERR_PTR(-ENODEV);
-+	}
-+	ibd->ibd_bd = I_BDEV(filp->f_mapping->host);
-+	if (!(ibd->ibd_bd)) {
-+		printk(KERN_ERR "IBLOCK: Unable to locate struct block_device"
-+				" from I_BDEV()\n");
-+		iput(inode);
-+		fput(filp);
-+		return ERR_PTR(-EINVAL);
-+	}
-+	/*
-+	 * iblock_create_virtdevice() will call linux_blockdevice_claim()
-+	 * to claim struct block_device.
-+	 */
-+	dev = iblock_create_virtdevice(se_dev->se_dev_hba, se_dev, (void *)ibd);
-+
-+	iput(inode);
-+	fput(filp);
-+	return dev;
++	*bl += sprintf(b + *bl, "TCM RAMDISK_DR Plugin %s\n", RD_DR_VERSION);
 +}
 +
-+static void iblock_get_plugin_info(void *p, char *b, int *bl)
++static void rd_mcp_get_plugin_info(void *p, char *b, int *bl)
 +{
-+	*bl += sprintf(b + *bl, "TCM iBlock Plugin %s\n", IBLOCK_VERSION);
++	*bl += sprintf(b + *bl, "TCM RAMDISK_MCP Plugin %s\n", RD_MCP_VERSION);
 +}
 +
-+static void iblock_get_hba_info(struct se_hba *hba, char *b, int *bl)
++static void rd_get_hba_info(struct se_hba *hba, char *b, int *bl)
 +{
-+	struct iblock_hba *ib_host = (struct iblock_hba *)hba->hba_ptr;
++	struct rd_host *rd_host = (struct rd_host *)hba->hba_ptr;
 +
-+	*bl += sprintf(b + *bl, "SE Host ID: %u  iBlock Host ID: %u\n",
-+		hba->hba_id, ib_host->iblock_host_id);
-+	*bl += sprintf(b + *bl, "        TCM iBlock HBA\n");
++	*bl += sprintf(b + *bl, "SE Host ID: %u  RD Host ID: %u\n",
++		hba->hba_id, rd_host->rd_host_id);
++	*bl += sprintf(b + *bl, "        TCM RamDisk HBA\n");
 +}
 +
-+static void iblock_get_dev_info(struct se_device *dev, char *b, int *bl)
++static void rd_get_dev_info(struct se_device *dev, char *b, int *bl)
 +{
-+	struct iblock_dev *ibd = (struct iblock_dev *) dev->dev_ptr;
++	struct rd_dev *rd_dev = (struct rd_dev *) dev->dev_ptr;
 +
-+	__iblock_get_dev_info(ibd, b, bl);
++	__rd_get_dev_info(rd_dev, b, bl);
 +}
 +
-+static void __iblock_get_dev_info(struct iblock_dev *ibd, char *b, int *bl)
++static void __rd_get_dev_info(struct rd_dev *rd_dev, char *b, int *bl)
 +{
-+	char buf[BDEVNAME_SIZE];
-+	struct block_device *bd = ibd->ibd_bd;
++	*bl += sprintf(b + *bl, "TCM RamDisk ID: %u  RamDisk Makeup: %s\n",
++			rd_dev->rd_dev_id, (rd_dev->rd_direct) ?
++			"rd_direct" : "rd_mcp");
++	*bl += sprintf(b + *bl, "        PAGES/PAGE_SIZE: %u*%lu"
++			"  SG_table_count: %u\n", rd_dev->rd_page_count,
++			PAGE_SIZE, rd_dev->sg_table_count);
 +
-+	if (bd)
-+		*bl += sprintf(b + *bl, "iBlock device: %s",
-+				bdevname(bd, buf));
-+	if (ibd->ibd_flags & IBDF_HAS_UDEV_PATH) {
-+		*bl += sprintf(b + *bl, "  UDEV PATH: %s\n",
-+				ibd->ibd_udev_path);
-+	} else
-+		*bl += sprintf(b + *bl, "\n");
-+
-+	*bl += sprintf(b + *bl, "        ");
-+	if (bd) {
-+		*bl += sprintf(b + *bl, "Major: %d Minor: %d  %s\n",
-+			ibd->ibd_major, ibd->ibd_minor, (!bd->bd_contains) ?
-+			"" : (bd->bd_holder == (struct iblock_dev *)ibd) ?
-+			"CLAIMED: IBLOCK" : "CLAIMED: OS");
-+	} else {
-+		*bl += sprintf(b + *bl, "Major: %d Minor: %d\n",
-+			ibd->ibd_major, ibd->ibd_minor);
-+	}
++	return;
 +}
 +
-+static void iblock_bio_destructor(struct bio *bio)
++/*	rd_map_task_non_SG():
++ *
++ *
++ */
++static void rd_map_task_non_SG(struct se_task *task)
 +{
-+	struct se_task *task = (struct se_task *)bio->bi_private;
-+	struct iblock_dev *ib_dev = (struct iblock_dev *) task->se_dev->dev_ptr;
++	struct se_cmd *cmd = TASK_CMD(task);
++	struct rd_request *req = (struct rd_request *) task->transport_req;
 +
-+	bio_free(bio, ib_dev->ibd_bio_set);
++	req->rd_bufflen		= task->task_size;
++	req->rd_buf		= (void *) T_TASK(cmd)->t_task_buf;
++	req->rd_sg_count	= 0;
 +}
 +
-+static struct bio *iblock_get_bio(
-+	struct se_task *task,
-+	struct iblock_req *ib_req,
-+	struct iblock_dev *ib_dev,
-+	int *ret,
-+	sector_t lba,
-+	u32 sg_num)
++/*	rd_map_task_SG():
++ *
++ *
++ */
++static void rd_map_task_SG(struct se_task *task)
 +{
-+	struct bio *bio;
++	struct rd_request *req = (struct rd_request *) task->transport_req;
 +
-+	bio = bio_alloc_bioset(GFP_NOIO, sg_num, ib_dev->ibd_bio_set);
-+	if (!(bio)) {
-+		printk(KERN_ERR "Unable to allocate memory for bio\n");
-+		*ret = PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
-+		return NULL;
-+	}
-+
-+	DEBUG_IBLOCK("Allocated bio: %p task_sg_num: %u using ibd_bio_set:"
-+		" %p\n", bio, task->task_sg_num, ib_dev->ibd_bio_set);
-+	DEBUG_IBLOCK("Allocated bio: %p task_size: %u\n", bio, task->task_size);
-+
-+	bio->bi_bdev = ib_dev->ibd_bd;
-+	bio->bi_private = (void *) task;
-+	bio->bi_destructor = iblock_bio_destructor;
-+	bio->bi_end_io = &iblock_bio_done;
-+	bio->bi_sector = lba;
-+	atomic_inc(&ib_req->ib_bio_cnt);
-+
-+	DEBUG_IBLOCK("Set bio->bi_sector: %llu\n", bio->bi_sector);
-+	DEBUG_IBLOCK("Set ib_req->ib_bio_cnt: %d\n",
-+			atomic_read(&ib_req->ib_bio_cnt));
-+	return bio;
++	req->rd_bufflen		= task->task_size;
++	req->rd_buf		= task->task_sg;
++	req->rd_sg_count	= task->task_sg_num;
 +}
 +
-+static int iblock_map_task_SG(struct se_task *task)
++/*      rd_CDB_none():
++ *
++ *
++ */
++static int rd_CDB_none(struct se_task *task, u32 size)
 +{
-+	struct se_cmd *cmd = task->task_se_cmd;
-+	struct se_device *dev = SE_DEV(cmd);
-+	struct iblock_dev *ib_dev = (struct iblock_dev *) task->se_dev->dev_ptr;
-+	struct iblock_req *ib_req = (struct iblock_req *) task->transport_req;
-+	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
-+	struct scatterlist *sg;
-+	int ret = 0;
-+	u32 i, sg_num = task->task_sg_num;
-+	sector_t block_lba;
-+	/*
-+	 * Do starting conversion up from non 512-byte blocksize with
-+	 * struct se_task SCSI blocksize into Linux/Block 512 units for BIO.
-+	 */
-+	if (DEV_ATTRIB(dev)->block_size == 4096)
-+		block_lba = (task->task_lba << 3);
-+	else if (DEV_ATTRIB(dev)->block_size == 2048)
-+		block_lba = (task->task_lba << 2);
-+	else if (DEV_ATTRIB(dev)->block_size == 1024)
-+		block_lba = (task->task_lba << 1);
-+	else if (DEV_ATTRIB(dev)->block_size == 512)
-+		block_lba = task->task_lba;
-+	else {
-+		printk(KERN_ERR "Unsupported SCSI -> BLOCK LBA conversion:"
-+				" %u\n", DEV_ATTRIB(dev)->block_size);
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
-+	}
++	struct rd_request *req = (struct rd_request *) task->transport_req;
 +
-+	atomic_set(&ib_req->ib_bio_cnt, 0);
++	req->rd_data_direction	= RD_DATA_NONE;
++	req->rd_bufflen		= 0;
++	req->rd_sg_count	= 0;
++	req->rd_buf		= NULL;
 +
-+	bio = iblock_get_bio(task, ib_req, ib_dev, &ret, block_lba, sg_num);
-+	if (!(bio))
-+		return ret;
-+
-+	ib_req->ib_bio = bio;
-+	hbio = tbio = bio;
-+	/*
-+	 * Use fs/bio.c:bio_add_pages() to setup the bio_vec maplist
-+	 * from TCM struct se_mem -> task->task_sg -> struct scatterlist memory.
-+	 */
-+	for_each_sg(task->task_sg, sg, task->task_sg_num, i) {
-+		DEBUG_IBLOCK("task: %p bio: %p Calling bio_add_page(): page:"
-+			" %p len: %u offset: %u\n", task, bio, sg_page(sg),
-+				sg->length, sg->offset);
-+again:
-+		ret = bio_add_page(bio, sg_page(sg), sg->length, sg->offset);
-+		if (ret != sg->length) {
-+
-+			DEBUG_IBLOCK("*** Set bio->bi_sector: %llu\n",
-+					bio->bi_sector);
-+			DEBUG_IBLOCK("** task->task_size: %u\n",
-+					task->task_size);
-+			DEBUG_IBLOCK("*** bio->bi_max_vecs: %u\n",
-+					bio->bi_max_vecs);
-+			DEBUG_IBLOCK("*** bio->bi_vcnt: %u\n",
-+					bio->bi_vcnt);
-+
-+			bio = iblock_get_bio(task, ib_req, ib_dev, &ret,
-+						block_lba, sg_num);
-+			if (!(bio))
-+				goto fail;
-+
-+			tbio = tbio->bi_next = bio;
-+			DEBUG_IBLOCK("-----------------> Added +1 bio: %p to"
-+				" list, Going to again\n", bio);
-+			goto again;
-+		}
-+		/* Always in 512 byte units for Linux/Block */
-+		block_lba += sg->length >> IBLOCK_LBA_SHIFT;
-+		sg_num--;
-+		DEBUG_IBLOCK("task: %p bio-add_page() passed!, decremented"
-+			" sg_num to %u\n", task, sg_num);
-+		DEBUG_IBLOCK("task: %p bio_add_page() passed!, increased lba"
-+				" to %llu\n", task, block_lba);
-+		DEBUG_IBLOCK("task: %p bio_add_page() passed!, bio->bi_vcnt:"
-+				" %u\n", task, bio->bi_vcnt);
-+	}
-+
-+	return task->task_sg_num;
-+fail:
-+	while (hbio) {
-+		bio = hbio;
-+		hbio = hbio->bi_next;
-+		bio->bi_next = NULL;
-+		bio_put(bio);
-+	}
-+	return ret;
++	return 0;
 +}
 +
-+static int iblock_CDB_none(struct se_task *task, u32 size)
++/*	rd_CDB_read_non_SG():
++ *
++ *
++ */
++static int rd_CDB_read_non_SG(struct se_task *task, u32 size)
++{
++	struct rd_request *req = (struct rd_request *) task->transport_req;
++
++	req->rd_data_direction = RD_DATA_READ;
++	rd_map_task_non_SG(task);
++
++	return 0;
++}
++
++/*	rd_CDB_read_SG):
++ *
++ *
++ */
++static int rd_CDB_read_SG(struct se_task *task, u32 size)
++{
++	struct rd_request *req = (struct rd_request *) task->transport_req;
++
++	req->rd_data_direction = RD_DATA_READ;
++	rd_map_task_SG(task);
++
++	return req->rd_sg_count;
++}
++
++/*	rd_CDB_write_non_SG():
++ *
++ *
++ */
++static int rd_CDB_write_non_SG(struct se_task *task, u32 size)
++{
++	struct rd_request *req = (struct rd_request *) task->transport_req;
++
++	req->rd_data_direction = RD_DATA_WRITE;
++	rd_map_task_non_SG(task);
++
++	return 0;
++}
++
++/*	d_CDB_write_SG():
++ *
++ *
++ */
++static int rd_CDB_write_SG(struct se_task *task, u32 size)
++{
++	struct rd_request *req = (struct rd_request *) task->transport_req;
++
++	req->rd_data_direction = RD_DATA_WRITE;
++	rd_map_task_SG(task);
++
++	return req->rd_sg_count;
++}
++
++/*	rd_DIRECT_check_lba():
++ *
++ *
++ */
++static int rd_DIRECT_check_lba(unsigned long long lba, struct se_device *dev)
++{
++	return ((do_div(lba, PAGE_SIZE / DEV_ATTRIB(dev)->block_size)) *
++		 DEV_ATTRIB(dev)->block_size) ? 1 : 0;
++}
++
++/*	rd_MEMCPY_check_lba():
++ *
++ *
++ */
++static int rd_MEMCPY_check_lba(unsigned long long lba, struct se_device *dev)
 +{
 +	return 0;
 +}
 +
-+static int iblock_CDB_read_non_SG(struct se_task *task, u32 size)
++/*	rd_check_for_SG(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static int rd_check_for_SG(struct se_task *task)
 +{
-+	return 0;
++	struct rd_request *req = (struct rd_request *) task->transport_req;
++
++	return req->rd_sg_count;
 +}
 +
-+static int iblock_CDB_read_SG(struct se_task *task, u32 size)
++/*	rd_get_cdb(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static unsigned char *rd_get_cdb(struct se_task *task)
 +{
-+	return iblock_map_task_SG(task);
++	struct rd_request *req = (struct rd_request *) task->transport_req;
++
++	return req->rd_scsi_cdb;
 +}
 +
-+static int iblock_CDB_write_non_SG(struct se_task *task, u32 size)
++/*	rd_get_blocksize(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static u32 rd_get_blocksize(struct se_device *dev)
 +{
-+	return 0;
++	return RD_BLOCKSIZE;
 +}
 +
-+static int iblock_CDB_write_SG(struct se_task *task, u32 size)
-+{
-+	return iblock_map_task_SG(task);
-+}
-+
-+static int iblock_check_lba(unsigned long long lba, struct se_device *dev)
-+{
-+	return 0;
-+}
-+
-+static int iblock_check_for_SG(struct se_task *task)
-+{
-+	return task->task_sg_num;
-+}
-+
-+static unsigned char *iblock_get_cdb(struct se_task *task)
-+{
-+	struct iblock_req *req = (struct iblock_req *) task->transport_req;
-+
-+	return req->ib_scsi_cdb;
-+}
-+
-+static u32 iblock_get_blocksize(struct se_device *dev)
-+{
-+	struct iblock_dev *ibd = (struct iblock_dev *) dev->dev_ptr;
-+
-+	return bdev_logical_block_size(ibd->ibd_bd);
-+}
-+
-+static u32 iblock_get_device_rev(struct se_device *dev)
++static u32 rd_get_device_rev(struct se_device *dev)
 +{
 +	return SCSI_SPC_2; /* Returns SPC-3 in Initiator Data */
 +}
 +
-+static u32 iblock_get_device_type(struct se_device *dev)
++static u32 rd_get_device_type(struct se_device *dev)
 +{
 +	return TYPE_DISK;
 +}
 +
-+static u32 iblock_get_dma_length(u32 task_size, struct se_device *dev)
++/*	rd_get_dma_length(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static u32 rd_get_dma_length(u32 task_size, struct se_device *dev)
 +{
 +	return PAGE_SIZE;
 +}
 +
-+static u32 iblock_get_max_sectors(struct se_device *dev)
++/*	rd_get_max_sectors(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static u32 rd_get_max_sectors(struct se_device *dev)
 +{
-+	struct iblock_dev *ibd = (struct iblock_dev *) dev->dev_ptr;
-+	struct request_queue *q = bdev_get_queue(ibd->ibd_bd);
-+
-+	return q->limits.max_sectors;
++	return RD_MAX_SECTORS;
 +}
 +
-+static u32 iblock_get_queue_depth(struct se_device *dev)
++/*	rd_get_queue_depth(): (Part of se_subsystem_api_t template)
++ *
++ *
++ */
++static u32 rd_get_queue_depth(struct se_device *dev)
 +{
-+	return IBLOCK_DEVICE_QUEUE_DEPTH;
++	return RD_DEVICE_QUEUE_DEPTH;
 +}
 +
-+static u32 iblock_get_max_queue_depth(struct se_device *dev)
++static u32 rd_get_max_queue_depth(struct se_device *dev)
 +{
-+	return IBLOCK_MAX_DEVICE_QUEUE_DEPTH;
++	return RD_MAX_DEVICE_QUEUE_DEPTH;
 +}
 +
-+static void iblock_bio_done(struct bio *bio, int err)
-+{
-+	struct se_task *task = (struct se_task *)bio->bi_private;
-+	struct iblock_req *ibr = (struct iblock_req *)task->transport_req;
-+
-+	err = test_bit(BIO_UPTODATE, &bio->bi_flags) ? err : -EIO;
-+	if (err != 0) {
-+		printk(KERN_ERR "test_bit(BIO_UPTODATE) failed for bio: %p,"
-+			" err: %d\n", bio, err);
-+		transport_complete_task(task, 0);
-+		goto out;
-+	}
-+	DEBUG_IBLOCK("done[%p] bio: %p task_lba: %llu bio_lba: %llu err=%d\n",
-+		task, bio, task->task_lba, bio->bi_sector, err);
-+	/*
-+	 * bio_put() will call iblock_bio_destructor() to release the bio back
-+	 * to ibr->ib_bio_set.
-+	 */
-+	bio_put(bio);
-+
-+	/*
-+	 * Wait to complete the task until the last bio as completed.
-+	 */
-+	if (!(atomic_dec_and_test(&ibr->ib_bio_cnt)))
-+		goto out;
-+
-+	ibr->ib_bio = NULL;
-+	transport_complete_task(task, (!err));
-+out:
-+	return;
-+}
-+
-+static struct se_subsystem_api iblock_template = {
-+	.name			= "iblock",
-+	.type			= IBLOCK,
-+	.transport_type		= TRANSPORT_PLUGIN_VHBA_PDEV,
-+	.external_submod	= 1,
-+	.cdb_none		= iblock_CDB_none,
-+	.cdb_read_non_SG	= iblock_CDB_read_non_SG,
-+	.cdb_read_SG		= iblock_CDB_read_SG,
-+	.cdb_write_non_SG	= iblock_CDB_write_non_SG,
-+	.cdb_write_SG		= iblock_CDB_write_SG,
-+	.attach_hba		= iblock_attach_hba,
-+	.detach_hba		= iblock_detach_hba,
-+	.allocate_virtdevice	= iblock_allocate_virtdevice,
-+	.create_virtdevice	= iblock_create_virtdevice,
-+	.activate_device	= iblock_activate_device,
-+	.deactivate_device	= iblock_deactivate_device,
-+	.free_device		= iblock_free_device,
-+	.do_sync_cache_range	= iblock_do_sync_cache_range,
-+	.dpo_emulated		= iblock_emulated_dpo,
-+	.fua_write_emulated	= iblock_emulated_fua_write,
-+	.fua_read_emulated	= iblock_emulated_fua_read,
-+	.write_cache_emulated	= iblock_emulated_write_cache,
-+	.transport_complete	= iblock_transport_complete,
-+	.allocate_request	= iblock_allocate_request,
-+	.do_task		= iblock_do_task,
-+	.free_task		= iblock_free_task,
-+	.check_configfs_dev_params = iblock_check_configfs_dev_params,
-+	.set_configfs_dev_params = iblock_set_configfs_dev_params,
-+	.show_configfs_dev_params = iblock_show_configfs_dev_params,
-+	.create_virtdevice_from_fd = iblock_create_virtdevice_from_fd,
-+	.get_plugin_info	= iblock_get_plugin_info,
-+	.get_hba_info		= iblock_get_hba_info,
-+	.get_dev_info		= iblock_get_dev_info,
-+	.check_lba		= iblock_check_lba,
-+	.check_for_SG		= iblock_check_for_SG,
-+	.get_cdb		= iblock_get_cdb,
-+	.get_blocksize		= iblock_get_blocksize,
-+	.get_device_rev		= iblock_get_device_rev,
-+	.get_device_type	= iblock_get_device_type,
-+	.get_dma_length		= iblock_get_dma_length,
-+	.get_max_sectors	= iblock_get_max_sectors,
-+	.get_queue_depth	= iblock_get_queue_depth,
-+	.get_max_queue_depth	= iblock_get_max_queue_depth,
++static struct se_subsystem_api rd_dr_template = {
++	.name			= "rd_dr",
++	.type			= RAMDISK_DR,
++	.transport_type		= TRANSPORT_PLUGIN_VHBA_VDEV,
++	.external_submod	= 0,
++	.cdb_none		= rd_CDB_none,
++	.cdb_read_non_SG	= rd_CDB_read_non_SG,
++	.cdb_read_SG		= rd_CDB_read_SG,
++	.cdb_write_non_SG	= rd_CDB_write_non_SG,
++	.cdb_write_SG		= rd_CDB_write_SG,
++	.attach_hba		= rd_attach_hba,
++	.detach_hba		= rd_detach_hba,
++	.allocate_virtdevice	= rd_DIRECT_allocate_virtdevice,
++	.create_virtdevice	= rd_DIRECT_create_virtdevice,
++	.activate_device	= rd_activate_device,
++	.deactivate_device	= rd_deactivate_device,
++	.free_device		= rd_free_device,
++	.transport_complete	= rd_transport_complete,
++	.allocate_DMA		= rd_DIRECT_allocate_DMA,
++	.free_DMA		= rd_DIRECT_free_DMA,
++	.allocate_request	= rd_allocate_request,
++	.do_task		= rd_DIRECT_do_task,
++	.free_task		= rd_free_task,
++	.check_configfs_dev_params = rd_check_configfs_dev_params,
++	.set_configfs_dev_params = rd_set_configfs_dev_params,
++	.show_configfs_dev_params = rd_show_configfs_dev_params,
++	.get_plugin_info	= rd_dr_get_plugin_info,
++	.get_hba_info		= rd_get_hba_info,
++	.get_dev_info		= rd_get_dev_info,
++	.check_lba		= rd_DIRECT_check_lba,
++	.check_for_SG		= rd_check_for_SG,
++	.get_cdb		= rd_get_cdb,
++	.get_blocksize		= rd_get_blocksize,
++	.get_device_rev		= rd_get_device_rev,
++	.get_device_type	= rd_get_device_type,
++	.get_dma_length		= rd_get_dma_length,
++	.get_max_sectors	= rd_get_max_sectors,
++	.get_queue_depth	= rd_get_queue_depth,
++	.get_max_queue_depth	= rd_get_max_queue_depth,
++	.do_se_mem_map		= rd_DIRECT_do_se_mem_map,
 +	.write_pending		= NULL,
 +};
 +
-+int __init iblock_module_init(void)
++static struct se_subsystem_api rd_mcp_template = {
++	.name			= "rd_mcp",
++	.type			= RAMDISK_MCP,
++	.transport_type		= TRANSPORT_PLUGIN_VHBA_VDEV,
++	.external_submod	= 0,
++	.cdb_none		= rd_CDB_none,
++	.cdb_read_non_SG	= rd_CDB_read_non_SG,
++	.cdb_read_SG		= rd_CDB_read_SG,
++	.cdb_write_non_SG	= rd_CDB_write_non_SG,
++	.cdb_write_SG		= rd_CDB_write_SG,
++	.attach_hba		= rd_attach_hba,
++	.detach_hba		= rd_detach_hba,
++	.allocate_virtdevice	= rd_MEMCPY_allocate_virtdevice,
++	.create_virtdevice	= rd_MEMCPY_create_virtdevice,
++	.activate_device	= rd_activate_device,
++	.deactivate_device	= rd_deactivate_device,
++	.free_device		= rd_free_device,
++	.transport_complete	= rd_transport_complete,
++	.allocate_request	= rd_allocate_request,
++	.do_task		= rd_MEMCPY_do_task,
++	.free_task		= rd_free_task,
++	.check_configfs_dev_params = rd_check_configfs_dev_params,
++	.set_configfs_dev_params = rd_set_configfs_dev_params,
++	.show_configfs_dev_params = rd_show_configfs_dev_params,
++	.get_plugin_info	= rd_mcp_get_plugin_info,
++	.get_hba_info		= rd_get_hba_info,
++	.get_dev_info		= rd_get_dev_info,
++	.check_lba		= rd_MEMCPY_check_lba,
++	.check_for_SG		= rd_check_for_SG,
++	.get_cdb		= rd_get_cdb,
++	.get_blocksize		= rd_get_blocksize,
++	.get_device_rev		= rd_get_device_rev,
++	.get_device_type	= rd_get_device_type,
++	.get_dma_length		= rd_get_dma_length,
++	.get_max_sectors	= rd_get_max_sectors,
++	.get_queue_depth	= rd_get_queue_depth,
++	.get_max_queue_depth	= rd_get_max_queue_depth,
++	.write_pending		= NULL,
++};
++
++int __init rd_module_init(void)
 +{
 +	int ret;
 +
-+	INIT_LIST_HEAD(&iblock_template.sub_api_list);
++	INIT_LIST_HEAD(&rd_dr_template.sub_api_list);
++	INIT_LIST_HEAD(&rd_mcp_template.sub_api_list);
 +
-+	ret = transport_subsystem_register(&iblock_template, THIS_MODULE);
++	ret = transport_subsystem_register(&rd_dr_template, NULL);
 +	if (ret < 0)
 +		return ret;
++
++	ret = transport_subsystem_register(&rd_mcp_template, NULL);
++	if (ret < 0) {
++		transport_subsystem_release(&rd_dr_template);
++		return ret;
++	}
 +
 +	return 0;
 +}
 +
-+void iblock_module_exit(void)
++void rd_module_exit(void)
 +{
-+	transport_subsystem_release(&iblock_template);
++	transport_subsystem_release(&rd_dr_template);
++	transport_subsystem_release(&rd_mcp_template);
 +}
-+
-+MODULE_DESCRIPTION("TCM IBLOCK subsystem plugin");
-+MODULE_AUTHOR("nab@Linux-iSCSI.org");
-+MODULE_LICENSE("GPL");
-+
-+module_init(iblock_module_init);
-+module_exit(iblock_module_exit);
-diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
+diff --git a/drivers/target/target_core_rd.h b/drivers/target/target_core_rd.h
 new file mode 100644
-index 0000000..3582aac
+index 0000000..2008807
 --- /dev/null
-+++ b/drivers/target/target_core_iblock.h
-@@ -0,0 +1,44 @@
-+#ifndef TARGET_CORE_IBLOCK_H
-+#define TARGET_CORE_IBLOCK_H
++++ b/drivers/target/target_core_rd.h
+@@ -0,0 +1,89 @@
++#ifndef TARGET_CORE_RD_H
++#define TARGET_CORE_RD_H
 +
-+#define IBLOCK_VERSION		"4.0"
++#define RD_HBA_VERSION		"v4.0"
++#define RD_DR_VERSION		"4.0"
++#define RD_MCP_VERSION		"4.0"
 +
-+#define IBLOCK_HBA_QUEUE_DEPTH	512
-+#define IBLOCK_DEVICE_QUEUE_DEPTH	32
-+#define IBLOCK_MAX_DEVICE_QUEUE_DEPTH	128
-+#define IBLOCK_MAX_CDBS		16
-+#define IBLOCK_LBA_SHIFT	9
++/* Largest piece of memory kmalloc can allocate */
++#define RD_MAX_ALLOCATION_SIZE	65536
++/* Maximum queuedepth for the Ramdisk HBA */
++#define RD_HBA_QUEUE_DEPTH	256
++#define RD_DEVICE_QUEUE_DEPTH	32
++#define RD_MAX_DEVICE_QUEUE_DEPTH 128
++#define RD_BLOCKSIZE		512
++#define RD_MAX_SECTORS		1024
++
++#define RD_DATA_READ		1
++#define RD_DATA_WRITE		2
++#define RD_DATA_NONE		3
 +
 +extern struct se_global *se_global;
 +
-+struct iblock_req {
-+	unsigned char ib_scsi_cdb[TCM_MAX_COMMAND_SIZE];
-+	atomic_t ib_bio_cnt;
-+	u32	ib_sg_count;
-+	void	*ib_buf;
-+	struct bio *ib_bio;
-+	struct iblock_dev *ib_dev;
++extern struct kmem_cache *se_mem_cache;
++
++/* Used in target_core_init_configfs() for virtual LUN 0 access */
++int __init rd_module_init(void);
++void rd_module_exit(void);
++
++#define RRF_EMULATE_CDB		0x01
++#define RRF_GOT_LBA		0x02
++
++struct rd_request {
++	/* SCSI CDB from iSCSI Command PDU */
++	unsigned char	rd_scsi_cdb[TCM_MAX_COMMAND_SIZE];
++	/* Data Direction */
++	u8		rd_data_direction;
++	/* Total length of request */
++	u32		rd_bufflen;
++	/* RD request flags */
++	u32		rd_req_flags;
++	/* Offset from start of page */
++	u32		rd_offset;
++	/* Starting page in Ramdisk for request */
++	u32		rd_page;
++	/* Total number of pages needed for request */
++	u32		rd_page_count;
++	/* Scatterlist count */
++	u32		rd_sg_count;
++	u32		rd_size;
++	/* Logical Block Address */
++	unsigned long long	rd_lba;
++	 /* Data buffer containing scatterlists(s) or
++	  * contiguous memory segments */
++	void		*rd_buf;
++	/* Ramdisk device */
++	struct rd_dev	*rd_dev;
 +} ____cacheline_aligned;
 +
-+#define IBDF_HAS_UDEV_PATH		0x01
-+#define IBDF_HAS_FORCE			0x02
-+#define IBDF_BDEV_EXCLUSIVE		0x04
-+#define IBDF_BDEV_ISSUE_FLUSH		0x08
-+
-+struct iblock_dev {
-+	unsigned char ibd_udev_path[SE_UDEV_PATH_LEN];
-+	int	ibd_force;
-+	int	ibd_major;
-+	int	ibd_minor;
-+	u32	ibd_depth;
-+	u32	ibd_flags;
-+	struct bio_set	*ibd_bio_set;
-+	struct block_device *ibd_bd;
-+	struct iblock_hba *ibd_host;
++struct rd_dev_sg_table {
++	u32		page_start_offset;
++	u32		page_end_offset;
++	u32		rd_sg_count;
++	struct scatterlist *sg_table;
 +} ____cacheline_aligned;
 +
-+struct iblock_hba {
-+	int		iblock_host_id;
++#define RDF_HAS_PAGE_COUNT	0x01
++
++struct rd_dev {
++	int		rd_direct;
++	u32		rd_flags;
++	/* Unique Ramdisk Device ID in Ramdisk HBA */
++	u32		rd_dev_id;
++	/* Total page count for ramdisk device */
++	u32		rd_page_count;
++	/* Number of SG tables in sg_table_array */
++	u32		sg_table_count;
++	u32		rd_queue_depth;
++	/* Array of rd_dev_sg_table_t containing scatterlists */
++	struct rd_dev_sg_table *sg_table_array;
++	/* Ramdisk HBA device is connected to */
++	struct rd_host *rd_host;
 +} ____cacheline_aligned;
 +
-+#endif /* TARGET_CORE_IBLOCK_H */
++struct rd_host {
++	u32		rd_host_dev_id_count;
++	u32		rd_host_id;		/* Unique Ramdisk Host ID */
++} ____cacheline_aligned;
++
++#endif /* TARGET_CORE_RD_H */
 -- 
 1.7.3
 
