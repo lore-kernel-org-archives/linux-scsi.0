@@ -1,119 +1,78 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC 02/22] configfs: Add struct
-	configfs_item_operations->check_link() in configfs_unlink()
-Date: Wed, 22 Sep 2010 00:16:42 -0700
-Message-ID: <1285139802.1849.13.camel@haakon2.linux-iscsi.org>
-References: <1283456440.5598.108.camel@haakon2.linux-iscsi.org>
-	 <201009071701.02847.konrad@darnok.org>
-	 <20100907224413.GC21935@mail.oracle.com>
-	 <1283911739.556.420.camel@haakon2.linux-iscsi.org>
-	 <20100908192639.GD29545@mail.oracle.com>
-	 <1283979207.556.510.camel@haakon2.linux-iscsi.org>
-	 <20100910152802.GG885@mail.oracle.com>
-	 <1284145606.19890.68.camel@haakon2.linux-iscsi.org>
-	 <20100910194404.GJ885@mail.oracle.com>
-	 <1284148323.19890.94.camel@haakon2.linux-iscsi.org>
-	 <20100920220633.GC8405@mail.oracle.com>
+Subject: Re: [RFC 15/22] tcm: Add FILEIO subsystem plugin
+Date: Wed, 22 Sep 2010 00:29:26 -0700
+Message-ID: <1285140566.1849.27.camel@haakon2.linux-iscsi.org>
+References: <1283160144-6848-1-git-send-email-nab@linux-iscsi.org>
+	 <AANLkTimPh+SNroYoavomwVtQ5UHsr7Lsq_229Vkbc1CB@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp104.sbc.mail.ac4.yahoo.com ([76.13.13.243]:24081 "HELO
-	smtp104.sbc.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751113Ab0IVHVD (ORCPT
+Received: from smtp102.sbc.mail.re3.yahoo.com ([66.196.96.85]:24824 "HELO
+	smtp102.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753016Ab0IVHdn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Sep 2010 03:21:03 -0400
-In-Reply-To: <20100920220633.GC8405@mail.oracle.com>
+	Wed, 22 Sep 2010 03:33:43 -0400
+In-Reply-To: <AANLkTimPh+SNroYoavomwVtQ5UHsr7Lsq_229Vkbc1CB@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <Joel.Becker@oracle.com>
-Cc: Konrad Rzeszutek Wilk <konrad@darnok.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Fubo Chen <fubo.chen@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>
 
-On Mon, 2010-09-20 at 15:06 -0700, Joel Becker wrote:
-> [Sorry on the delay, I was out of town]
+On Mon, 2010-09-20 at 18:18 +0200, Fubo Chen wrote:
+> On Mon, Aug 30, 2010 at 11:22 AM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> >
+> > This patch adds the O_SYNC FILEIO subsystem plugin for accessing struct file
+> > using Linux/VFS struct file_operations.  It also includes WriteCache and FUA
+> > Write Emulation support to struct file using fs/sync.c/vfs_fsync_range()
+> >
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> >
+> > [ ... ]
+> >
+> > +static int fd_do_writev(struct fd_request *req, struct se_task *task)
+> > +{
+> > +       struct file *fd = req->fd_dev->fd_file;
+> > +       struct scatterlist *sg = task->task_sg;
+> > +       struct iovec iov[req->fd_sg_count];
+> 
+> Kernel stack size is 8 KB. On a 64-bit system struct iovec takes 16
+> bytes. What happens if req->fd_sg_count is large ? Kernel crash ?
 > 
 
-Hi Joel,
+Greetings Fubo,
 
-Many, thanks for your followup on this item, my comments are below.
+So wrt to a potential 8K stack over here for the local scope iov[]
+arrays in fd_do_writev() and fd_do_read()..
 
-> On Fri, Sep 10, 2010 at 12:52:03PM -0700, Nicholas A. Bellinger wrote:
-> > On Fri, 2010-09-10 at 12:44 -0700, Joel Becker wrote:
-> > > 	You can refcount without check_link().
-> > 
-> > So what do you recommend here..?
-> 
-> 	That your ACL object, or whatever it is that considers itself to
-> be refcounted by the number of links, keep track of that and only free
-> itself when all are gone rather than freeing itself when the first goes
-> away.
-> 
+Currently target_core_file.h defines a FD_MAX_SECTORS of 1024, which
+means that each struct se_task *task here will be containing at most a
+1024 sector request.
 
-Ok, I see what you mean by internal refcounting within the configfs
-consumer to handle this case..
+In scatterlist terms for a TCM fabric module like LIO-Target that does
+1:1 struct scatterlist w/ PAGE_SIZE allocations, this would be:
 
-> > The problem is that the 'unlink sub_child/group1/src_0/src_link' can't
-> > signal to the other struct config_group to also call an internal 'unlink
-> > sub_child/group2/dst_0/dst_link' to drop the child link outside of it's
-> > struct config_group.
-> 
-> 	Nor should it.  I'm asking what is so wrong about a world where
-> sub_child/group1/src_0/src_link is gone but
-> sub_child/group2/dst_0/dst_link remains?  Maybe that target object can't
-> work anymore, but the user broke it by breaking the link.
-> 
+	((1024 * block_size) / PAGE_SIZE) * sizeof(struct iovec);
 
-Yes, so trying to avoid the unlink alltogether here was my main
-intention thus far.  
+which for 64-bit uses 2048 bytes of stack for a FD_MAX_SECTORS task.
 
-Actually leaving the sub_child/group2/dst_0/dst_link in the example here
-would be acceptable for the TCM MappedLUN case, because really we never
-expect this case to this unless someone is poking at configfs directly,
-and our userspace code will never do this intentionally.
+For a fabric module like TCM_Loop that maps incoming Linux/SCSI
+scatterlist memory to internal TCM memory points and down to FILEIO
+code, the maximum here is a scatterlist + offset for every block_size
+sector for certain cases like mkfs* and friends, which means:
 
-> > > 	You're still fighting allowing the links to go away.  You
-> > > haven't explained why that is necessary.  You had a problem with a crash
-> > > because you expected one reference to your ACLs and actually have two,
-> > > but you can fix that without modifying configfs.
-> > 
-> > If this is the case then I must be mis-understanding what you mean by
-> > configfs consumer refcounting from allow_link() and drop_link().  Can
-> > you give me a bit more detail where I should be looking..?
-> 
-> 	Here's how I sort of understood things.  First, you create the
-> src_link pointing to $object.  This somehow allocates some sort of ACL
-> structure hanging off of $object.  Then you create dst_link pointing to
-> src_link, which really ends up pointing to the $object.  So now you have
-> src_link and dst_link pointing to $object.
-> 	Finally, someone unlinks src_link.  This triggers $object to
-> free the ACL structure.  When the caller later removes dst_link, it
-> crashes because it was expecting ACL to still be there.  Do I have it
-> right?
+	((1024 * block_size) / block_size) * sizeof(struct iovec);
 
-Correct.
+which for 64-bit uses 16384 bytes for a FD_MAX_SECTORS task with a
+scatterlist entry per 512-byte logical block.
 
-> 	I'm saying that $object should count how many people are
-> pointing to it, so that when you remove src_link, ACL is *not* freed.
-> It will only be freed when both src_link and dst_link are removed.  This
-> way you do not crash.  Perhaps I'm not understanding the ACL object.
-> Perhaps I'm missing the mechanism entirely.  But I don't see why the ACL
-> object must necessarily be freed when one symlink is removed but not the
-> other.
-> 
+For at least for the latter case this is a problem with 8K stacks, so it
+looks these will need to convert to dynamic allocation within the local
+scope.  I will push a patch to fix this shortly.
 
-No, I think your points here make perfect sense.  I will look into a
-patch that leaves the TCM fabric MappedLUNs symlinks in place when the
-underlying TPG fabric LUN symlink is removed without breaking anything,
-but still does the necessary accounting to ensure that shutdown with
-active I/Os still works as expected.  I will plan to drop the
-->check_link() patch from the forthcoming RFC v2 series.
-
-In the end I think his is the best approach for .37, eg: no configfs
-change required.  I am still open to the discussion for resolving this
-within fs/configfs proper, but at this point I don't have a strong
-preference and will follow your direction here.
-
-Many thanks for your invaluable input Joel!
+Many thanks for your astute observation!
 
 --nab
 
