@@ -1,96 +1,93 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 2/3] tcm/pscsi: Add proper BIDI-COMMAND passthrough to
-	SCSI MidLayer
-Date: Wed, 22 Sep 2010 05:21:22 -0700
-Message-ID: <1285158082.1849.72.camel@haakon2.linux-iscsi.org>
-References: <1285135732-8350-1-git-send-email-nab@linux-iscsi.org>
-	 <4C99E4BC.5010301@panasas.com>
-	 <1285155525.1849.55.camel@haakon2.linux-iscsi.org>
-	 <4C99F1B7.4000806@panasas.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: scsi_dh_alua: add missing transitioning state support
+Date: Wed, 22 Sep 2010 08:29:01 -0400
+Message-ID: <20100922122901.GA10218@redhat.com>
+References: <1282071956-391-1-git-send-email-snitzer@redhat.com>
+ <1282073039.30453.37.camel@haakon2.linux-iscsi.org>
+ <4C7B7B9E.3020002@suse.de>
+ <20100831151129.GA18855@redhat.com>
+ <20100920153539.GA28284@redhat.com>
+ <4C98180F.1020707@cs.wisc.edu>
+ <20100921193320.GA5110@redhat.com>
+ <4C992026.5080402@cs.wisc.edu>
+ <4C99D6B3.3090003@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C99F1B7.4000806@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:8725 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753858Ab0IVM3I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Sep 2010 08:29:08 -0400
+Content-Disposition: inline
+In-Reply-To: <4C99D6B3.3090003@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On Wed, 2010-09-22 at 14:08 +0200, Boaz Harrosh wrote:
-> On 09/22/2010 01:38 PM, Nicholas A. Bellinger wrote:
-> > On Wed, 2010-09-22 at 13:13 +0200, Boaz Harrosh wrote:
-> >>
-> >> OK, I'm begining to suspect task->task_size is the size of what?
-> >> See below (below)
+
+
+On Wed, Sep 22 2010 at  6:13am -0400,
+Hannes Reinecke <hare@suse.de> wrote:
+
+> Mike Christie wrote:
+> > On 09/21/2010 02:33 PM, Mike Snitzer wrote:
+> >> 2) the patch also modified alua_rtpg() so implicit ALUA would retry
+> >>     (just like explicit ALUA currently does) if TPGS_STATE_TRANSITIONING
+> >>     - so why should we avoid retry for implicit but do it for explicit?
 > > 
-> > Btw task->task_size is to set to (task->task_sectors * block_size) in
-> > target_core_transport.c:transport_generic_get_cdb_count()
-> > 
+> > Leaving that for Hannes. I cannot think of a reason. Probably just did
+> > not do it.
 > 
-> Maybe you are confused by these XOR functions. But there is no
-> task->task_sectors, only for these TYPE_DISK pesky writes/reads
+> Finally I got around to answering this.
 > 
-> For general SCSI from tapes, scanners, printers to OSD There is
-> in_transfer_length and out_transfer_length. For READ_XXX/WRITE_XXX
-> these happen to be task->task_sectors.
-> 
+> I've attached a patch which I made the other day which seems to work
+> reasonably well.
+> Looks better from my side, so if you agree I'll be sending it
+> upstream properly.
 
-OK, in the current code we do the conversion for TYPE_DISK and non
-TYPE_DISK backstores w/ TCM/pSCSI in transport_set_tasks_sectors_disk()
-and transport_set_tasks_sectors_non_disk().
+Looks good for covering this "2)" change above.
 
-I am pretty sure we do handle this correctly now, but I have not been
-able to test with non TYPE_DISK backstores just yet..
+But "1)" change you had concern with (in my previous patch) was that
+alua_prep_fn would return BLKPREP_DEFER if TPGS_STATE_TRANSITIONING.
+This was bad in that FS requests (like the directio path checker) would
+always call ->prep_fn and that if TPGS_STATE_TRANSITIONING the RTPG
+state would never be reevaluated.. leaving us stuck in BLKPREP_DEFER.
 
-> <snip>
-> 
-> >>>  	return task->task_sg_num;
-> >>
-> >> OK Now I'm sure!
-> >> You have completely missed the fact that bidi entails two sg_list(s)
-> >> two sg_num(s) and two io_byte_count(s).
-> >>
-> >> The use of sg_table will clear that confusion a bit, though I wanted it
-> >> to carry an  io_byte_count as well, but never came to do that.
-> > 
-> > Hmmm, so this patch currently assumes that BIDI-COMMAND WRITE and extra
-> > READ payloads contain the same struct se_task->task_sg_num for both
-> > struct se_task->task_sg[] and struct se_task->task_sg_bidi[].
-> > 
-> > If we need to assume that the internally allocated (LIO-Target iSCSI)
-> 
-> There is no assumption they are completely separate (Even if they happen
-> to be the equal).
-> 
-> The fabric(s) know that. For pSCSI this comes in the scsi_in()->length
-> and the scsi_out()->length (and ->sg_count). For iscsi it has an rlenght
-> AHS header that tells it the transfer length of the bidi_read side.
-> In iSER and I think FB it is completely symmetrical like with the BSG
-> API. (Member for "in" and member for "out")
-> 
-> And so on. Each side is completely orthogonal to the other, in every
-> respect. (They might even execute in parallel)
+Seems I'm missing a new flow that proves this is no longer a concern.
 
-Hmmm, point taken.  I will address this item later today.
+Please advise, thanks.
+Mike
 
+> From d3f02c90db3e3177309b78726d082e17dd772ee2 Mon Sep 17 00:00:00 2001
+> From: Hannes Reinecke <hare@suse.de>
+> Date: Wed, 22 Sep 2010 12:09:07 +0200
+> Subject: [PATCH] scsi_dh_alua: Handle all states correctly
 > 
-> > *or* pre-exiting SGL mapped T_TASK(cmd)->t_mem_list (TCM_Loop Virtual
-> > SCSI LLD) and T_TASK(cmd)->t_mem_bidi_list memory can be mapped
-> > differently, then an seperate second call to transport_calc_sg_num() in
-> > order to determine a struct se_task->task_sg_bidi_num is required.
-> > 
+> For ALUA we should be handling all states, independent of whether
+> is explicit or implicit. For 'Transitioning' we should be retry
+> for a certain amount of time; after that an error should be
+> returned.
 > 
-> Perhaps it would be easier to do, if you convert to use of scsi_data_buffer
-> in current code. Then apply the double instance. You might also need a similar
-> mechanics for your ->t_mem_list and associated members. Group them together
-> then double the handling.
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 > 
-> Down the road you'll need a third one for supporting DIFF
-> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index 1a970a7..c6f57e3 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+...
+> @@ -698,8 +704,11 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
+>  	struct alua_dh_data *h = get_alua_data(sdev);
+>  	int ret = BLKPREP_OK;
+>  
+> -	if (h->state != TPGS_STATE_OPTIMIZED &&
+> -	    h->state != TPGS_STATE_NONOPTIMIZED) {
+> +	if (h->state == TPGS_STATE_TRANSITIONING)
+> +		ret = BLKPREP_DEFER;
+> +	else if (h->state != TPGS_STATE_OPTIMIZED &&
+> +		 h->state != TPGS_STATE_NONOPTIMIZED &&
+> +		 h->state != TPGS_STATE_LBA_DEPENDENT) {
+>  		ret = BLKPREP_KILL;
+>  		req->cmd_flags |= REQ_QUIET;
+>  	}
 
-Hmmm, another good point for scsi_dat_buffer conversion here.
-
-Best,
-
---nab
