@@ -1,1319 +1,492 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v2 20/21] tcm: Add Kbuild and Kconfig for drivers/target, Documentation/target/tcm_mod_builder.py
-Date: Wed, 22 Sep 2010 15:51:46 -0700
-Message-ID: <1285195906-11804-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [RFC v2 11/21] tcm: Add Task Management infrastructure
+Date: Wed, 22 Sep 2010 15:50:19 -0700
+Message-ID: <1285195819-11633-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp128.sbc.mail.sp1.yahoo.com ([69.147.65.187]:35650 "HELO
+	smtp128.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753330Ab0IVWuW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Sep 2010 18:50:22 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Add TCM Kbuild and Kconfig files and update drivers/ to pick up drivers/target.
-Add Docmentation/target/ for tcm_mod_builder.py script for generating new
-TCM v4 fabric modules functional ConfigFS skeletons.
+This patch adds SPC-3 task management infrastructure and functionality for
+LUN_RESET with TASK_ABORTED status (TAS) and in combination with handling
+Persistent Reservation PREEMPT_AND_ABORT service action.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- Documentation/target/tcm_mod_builder.py  | 1039 ++++++++++++++++++++++++++++++
- Documentation/target/tcm_mod_builder.txt |  138 ++++
- drivers/Kconfig                          |    2 +
- drivers/Makefile                         |    1 +
- drivers/target/Kbuild                    |   27 +
- drivers/target/Kconfig                   |   34 +
- 6 files changed, 1241 insertions(+), 0 deletions(-)
- create mode 100755 Documentation/target/tcm_mod_builder.py
- create mode 100644 Documentation/target/tcm_mod_builder.txt
- create mode 100644 drivers/target/Kbuild
- create mode 100644 drivers/target/Kconfig
+ drivers/target/target_core_tmr.c |  405 ++++++++++++++++++++++++++++++++++++++
+ include/target/target_core_tmr.h |   43 ++++
+ 2 files changed, 448 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/target_core_tmr.c
+ create mode 100644 include/target/target_core_tmr.h
 
-diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
-new file mode 100755
-index 0000000..66e63c5
---- /dev/null
-+++ b/Documentation/target/tcm_mod_builder.py
-@@ -0,0 +1,1039 @@
-+#!/usr/bin/python
-+# The TCM v4 multi-protocol fabric module generation script for drivers/target/$NEW_MOD
-+#
-+# Copyright (c) 2010 Rising Tide Systems
-+# Copyright (c) 2010 Linux-iSCSI.org
-+#
-+# Author: nab@kernel.org
-+#
-+import os, sys
-+import subprocess as sub
-+import string
-+import re
-+
-+#global tcm_dir
-+#global fabric_ops_api
-+#global fabric_mod_name
-+#global fabric_mod_dir
-+
-+tcm_dir = "/mnt/sdb/lio-core-2.6.git/"
-+
-+fabric_ops_api = tcm_dir + "include/target/target_core_fabric_ops.h"
-+fabric_ops = []
-+fabric_mod_name = "tcm_nab5000"
-+fabric_mod_dir = tcm_dir + "drivers/target/" + fabric_mod_name
-+fabric_mod_port = ""
-+fabric_mod_init_port = ""
-+
-+def tcm_mod_err(msg):
-+	print msg
-+	sys.exit(1)
-+
-+def tcm_mod_create_module_subdir():
-+	
-+	if os.path.isdir(fabric_mod_dir) == True:
-+		return
-+
-+	print "Creating fabric_mod_dir: " + fabric_mod_dir	
-+	ret = os.mkdir(fabric_mod_dir)
-+	if ret:
-+		tcm_mod_err("Unable to mkdir " + fabric_mod_dir)
-+
-+	return
-+
-+def tcm_mod_build_FC_include():
-+	global fabric_mod_port
-+	global fabric_mod_init_port
-+	buf = ""
-+
-+	f = fabric_mod_dir + "/" + fabric_mod_name + "_base.h"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w');
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "#define " + fabric_mod_name.upper() + "_VERSION	\"v0.1\"\n"
-+	buf += "#define " + fabric_mod_name.upper() + "_NAMELEN	32\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_nacl {\n"
-+	buf += "	/* Binary World Wide unique Port Name for FC Initiator Nport */\n"
-+	buf += "	u64 nport_wwpn;\n"
-+	buf += "	/* ASCII formatted WWPN for FC Initiator Nport */\n"
-+	buf += "	char nport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
-+	buf += "	struct se_node_acl se_node_acl;\n"
-+	buf += "};\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_tpg {\n"
-+	buf += "	/* FC lport target portal group tag for TCM */\n"
-+	buf += "	u16 lport_tpgt;\n"
-+	buf += "	/* Pointer back to " + fabric_mod_name + "_lport */\n"
-+	buf += "	struct " + fabric_mod_name + "_lport *lport;\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tpg() */\n"
-+	buf += "	struct se_portal_group se_tpg;\n"
-+	buf += "};\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_lport {\n"
-+	buf += "	/* SCSI protocol the lport is providing */\n"
-+	buf += "	u8 lport_proto_id;\n"
-+	buf += "	/* Binary World Wide unique Port Name for FC Target Lport */\n"
-+	buf += "	u64 lport_wwpn;\n"
-+	buf += "	/* ASCII formatted WWPN for FC Target Lport */\n"
-+	buf += "	char lport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_lport() */\n"
-+	buf += "	struct se_wwn lport_wwn;\n"
-+	buf += "};\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	fabric_mod_port = "lport"
-+	fabric_mod_init_port = "nport"
-+
-+	return
-+
-+def tcm_mod_build_SAS_include():
-+	global fabric_mod_port
-+	global fabric_mod_init_port
-+	buf = ""
-+
-+	f = fabric_mod_dir + "/" + fabric_mod_name + "_base.h"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w');
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "#define " + fabric_mod_name.upper() + "_VERSION  \"v0.1\"\n"
-+	buf += "#define " + fabric_mod_name.upper() + "_NAMELEN 32\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_nacl {\n"
-+	buf += "	/* Binary World Wide unique Port Name for SAS Initiator port */\n"
-+	buf += "	u64 iport_wwpn;\n"
-+	buf += "	/* ASCII formatted WWPN for Sas Initiator port */\n"
-+	buf += "	char iport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
-+	buf += "	struct se_node_acl se_node_acl;\n"
-+	buf += "};\n\n"
-+	buf += "struct " + fabric_mod_name + "_tpg {\n"
-+	buf += "	/* SAS port target portal group tag for TCM */\n"
-+	buf += "	u16 tport_tpgt;\n"
-+	buf += "	/* Pointer back to " + fabric_mod_name + "_tport */\n"
-+	buf += "	struct " + fabric_mod_name + "_tport *tport;\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tpg() */\n"
-+	buf += "	struct se_portal_group se_tpg;\n"
-+	buf += "};\n\n"
-+	buf += "struct " + fabric_mod_name + "_tport {\n"
-+	buf += "	/* SCSI protocol the tport is providing */\n"
-+	buf += "	u8 tport_proto_id;\n"
-+	buf += "	/* Binary World Wide unique Port Name for SAS Target port */\n"
-+	buf += "	u64 tport_wwpn;\n"
-+	buf += "	/* ASCII formatted WWPN for SAS Target port */\n"
-+	buf += "	char tport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tport() */\n"
-+	buf += "	struct se_wwn tport_wwn;\n"
-+	buf += "};\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	fabric_mod_port = "tport"
-+	fabric_mod_init_port = "iport"
-+
-+	return
-+
-+def tcm_mod_build_iSCSI_include():
-+	global fabric_mod_port
-+	global fabric_mod_init_port
-+	buf = ""
-+
-+	f = fabric_mod_dir + "/" + fabric_mod_name + "_base.h"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w');
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "#define " + fabric_mod_name.upper() + "_VERSION  \"v0.1\"\n"
-+	buf += "#define " + fabric_mod_name.upper() + "_NAMELEN 32\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_nacl {\n"
-+	buf += "	/* ASCII formatted InitiatorName */\n"
-+	buf += "	char iport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
-+	buf += "	struct se_node_acl se_node_acl;\n"
-+	buf += "};\n\n"
-+	buf += "struct " + fabric_mod_name + "_tpg {\n"
-+	buf += "	/* iSCSI target portal group tag for TCM */\n" 
-+	buf += "	u16 tport_tpgt;\n"
-+	buf += "	/* Pointer back to " + fabric_mod_name + "_tport */\n"
-+	buf += "	struct " + fabric_mod_name + "_tport *tport;\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tpg() */\n"
-+	buf += "	struct se_portal_group se_tpg;\n"
-+	buf += "};\n\n"
-+	buf += "struct " + fabric_mod_name + "_tport {\n"
-+	buf += "	/* SCSI protocol the tport is providing */\n"
-+	buf += "	u8 tport_proto_id;\n"
-+	buf += "	/* ASCII formatted TargetName for IQN */\n"
-+	buf += "	char tport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tport() */\n"
-+	buf += "	struct se_wwn tport_wwn;\n"
-+	buf += "};\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	fabric_mod_port = "tport"
-+	fabric_mod_init_port = "iport"
-+
-+	return
-+
-+def tcm_mod_build_base_includes(proto_ident):
-+
-+	if proto_ident == "FC":
-+		tcm_mod_build_FC_include()
-+	elif proto_ident == "SAS":
-+		tcm_mod_build_SAS_include()
-+	elif proto_ident == "iSCSI":
-+		tcm_mod_build_iSCSI_include()
-+	else:
-+		print "Unsupported proto_ident: " + proto_ident
-+		sys.exit(1)
-+
-+	return
-+
-+def tcm_mod_build_configfs(proto_ident):
-+	buf = ""
-+
-+	f = fabric_mod_dir + "/" + fabric_mod_name + "_configfs.c"
-+	print "Writing file: " + f
-+
-+        p = open(f, 'w');
-+        if not p:
-+                tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "#include <linux/module.h>\n"
-+	buf += "#include <linux/moduleparam.h>\n"
-+	buf += "#include <linux/version.h>\n"
-+	buf += "#include <generated/utsrelease.h>\n"
-+	buf += "#include <linux/utsname.h>\n"
-+	buf += "#include <linux/init.h>\n"
-+	buf += "#include <linux/slab.h>\n"
-+	buf += "#include <linux/kthread.h>\n"
-+	buf += "#include <linux/types.h>\n"
-+	buf += "#include <linux/string.h>\n"
-+	buf += "#include <linux/configfs.h>\n"
-+	buf += "#include <linux/ctype.h>\n"
-+	buf += "#include <asm/unaligned.h>\n\n"
-+	buf += "#include <target/target_core_base.h>\n"
-+	buf += "#include <target/target_core_transport.h>\n"
-+	buf += "#include <target/target_core_fabric_ops.h>\n"
-+	buf += "#include <target/target_core_fabric_configfs.h>\n"
-+	buf += "#include <target/target_core_fabric_lib.h>\n"
-+	buf += "#include <target/target_core_device.h>\n"
-+	buf += "#include <target/target_core_tpg.h>\n"
-+	buf += "#include <target/target_core_configfs.h>\n"
-+	buf += "#include <target/target_core_base.h>\n"
-+	buf += "#include <target/configfs_macros.h>\n\n"
-+	buf += "#include <" + fabric_mod_name + "_base.h>\n"
-+	buf += "#include <" + fabric_mod_name + "_fabric.h>\n\n"
-+
-+	buf += "/* Local pointer to allocated TCM configfs fabric module */\n"
-+	buf += "struct target_fabric_configfs *" + fabric_mod_name + "_fabric_configfs;\n\n"
-+
-+	buf += "static struct se_node_acl *" + fabric_mod_name + "_make_nodeacl(\n"
-+	buf += "	struct se_portal_group *se_tpg,\n"
-+	buf += "	struct config_group *group,\n"
-+	buf += "	const char *name)\n"
-+	buf += "{\n"
-+	buf += "	struct se_node_acl *se_nacl, *se_nacl_new;\n"
-+	buf += "	struct " + fabric_mod_name + "_nacl *nacl;\n"
-+
-+	if proto_ident == "FC" or proto_ident == "SAS":
-+		buf += "	u64 wwpn = 0;\n"
-+
-+	buf += "	u32 nexus_depth;\n\n"
-+	buf += "	/* " + fabric_mod_name + "_parse_wwn(name, &wwpn, 1) < 0)\n"
-+	buf += "		return ERR_PTR(-EINVAL); */\n"
-+	buf += "	se_nacl_new = " + fabric_mod_name + "_alloc_fabric_acl(se_tpg);\n"
-+	buf += "	if (!(se_nacl_new))\n"
-+	buf += "		return ERR_PTR(-ENOMEM);\n"
-+	buf += "//#warning FIXME: Hardcoded nexus depth in " + fabric_mod_name + "_make_nodeacl()\n"
-+	buf += "	nexus_depth = 1;\n"
-+	buf += "	/*\n"
-+	buf += "	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()\n"
-+	buf += "	 * when converting a NodeACL from demo mode -> explict\n"
-+	buf += "	 */\n"
-+	buf += "	se_nacl = core_tpg_add_initiator_node_acl(se_tpg, se_nacl_new,\n"
-+	buf += "				name, nexus_depth);\n"
-+	buf += "	if (IS_ERR(se_nacl)) {\n"
-+	buf += "		" + fabric_mod_name + "_release_fabric_acl(se_tpg, se_nacl_new);\n"
-+	buf += "		return se_nacl;\n"
-+	buf += "	}\n"
-+	buf += "	/*\n"
-+	buf += "	 * Locate our struct " + fabric_mod_name + "_nacl and set the FC Nport WWPN\n"
-+	buf += "	 */\n"
-+	buf += "	nacl = container_of(se_nacl, struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
-+
-+	if proto_ident == "FC" or proto_ident == "SAS":
-+		buf += "	nacl->" + fabric_mod_init_port + "_wwpn = wwpn;\n"
-+
-+	buf += "	/* " + fabric_mod_name + "_format_wwn(&nacl->" + fabric_mod_init_port + "_name[0], " + fabric_mod_name.upper() + "_NAMELEN, wwpn); */\n\n"
-+	buf += "	return se_nacl;\n"	
-+	buf += "}\n\n"
-+	buf += "static void " + fabric_mod_name + "_drop_nodeacl(struct se_node_acl *se_acl)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_nacl *nacl = container_of(se_acl,\n"
-+	buf += "				struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
-+	buf += "	kfree(nacl);\n"
-+	buf += "}\n\n"
-+
-+	buf += "static struct se_portal_group *" + fabric_mod_name + "_make_tpg(\n"
-+	buf += "	struct se_wwn *wwn,\n"
-+	buf += "	struct config_group *group,\n"
-+	buf += "	const char *name)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + "*" + fabric_mod_port + " = container_of(wwn,\n"
-+	buf += "			struct " + fabric_mod_name + "_" + fabric_mod_port + ", " + fabric_mod_port + "_wwn);\n\n"
-+	buf += "	struct " + fabric_mod_name + "_tpg *tpg;\n"
-+	buf += "	unsigned long tpgt;\n"
-+	buf += "	int ret;\n\n"
-+	buf += "	if (strstr(name, \"tpgt_\") != name)\n"
-+	buf += "		return ERR_PTR(-EINVAL);\n"
-+	buf += "	if (strict_strtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)\n"
-+	buf += "		return ERR_PTR(-EINVAL);\n\n"
-+	buf += "	tpg = kzalloc(sizeof(struct " + fabric_mod_name + "_tpg), GFP_KERNEL);\n"
-+	buf += "	if (!(tpg)) {\n"
-+	buf += "		printk(KERN_ERR \"Unable to allocate struct " + fabric_mod_name + "_tpg\");\n"
-+	buf += "		return ERR_PTR(-ENOMEM);\n"
-+	buf += "	}\n"
-+	buf += "	tpg->" + fabric_mod_port + " = " + fabric_mod_port + ";\n"
-+	buf += "	tpg->" + fabric_mod_port + "_tpgt = tpgt;\n\n"
-+	buf += "	ret = core_tpg_register(&" + fabric_mod_name + "_fabric_configfs->tf_ops, wwn,\n"
-+	buf += "				&tpg->se_tpg, (void *)tpg,\n"
-+	buf += "				TRANSPORT_TPG_TYPE_NORMAL);\n"
-+	buf += "	if (ret < 0) {\n"
-+	buf += "		kfree(tpg);\n"
-+	buf += "		return NULL;\n"
-+	buf += "	}\n"
-+	buf += "	return &tpg->se_tpg;\n"
-+	buf += "}\n\n"
-+	buf += "static void " + fabric_mod_name + "_drop_tpg(struct se_portal_group *se_tpg)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+	buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n\n"
-+	buf += "	core_tpg_deregister(se_tpg);\n"
-+	buf += "	kfree(tpg);\n"
-+	buf += "}\n\n"
-+
-+	buf += "static struct se_wwn *" + fabric_mod_name + "_make_" + fabric_mod_port + "(\n"
-+	buf += "	struct target_fabric_configfs *tf,\n"
-+	buf += "	struct config_group *group,\n"
-+	buf += "	const char *name)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + ";\n"
-+
-+	if proto_ident == "FC" or proto_ident == "SAS":
-+		buf += "	u64 wwpn = 0;\n\n"
-+
-+	buf += "	/* if (" + fabric_mod_name + "_parse_wwn(name, &wwpn, 1) < 0)\n"
-+	buf += "		return ERR_PTR(-EINVAL); */\n\n"
-+	buf += "	" + fabric_mod_port + " = kzalloc(sizeof(struct " + fabric_mod_name + "_" + fabric_mod_port + "), GFP_KERNEL);\n"
-+	buf += "	if (!(" + fabric_mod_port + ")) {\n"
-+	buf += "		printk(KERN_ERR \"Unable to allocate struct " + fabric_mod_name + "_" + fabric_mod_port + "\");\n"
-+	buf += "		return ERR_PTR(-ENOMEM);\n"
-+	buf += "	}\n"
-+
-+	if proto_ident == "FC" or proto_ident == "SAS":
-+		buf += "	" + fabric_mod_port + "->" + fabric_mod_port + "_wwpn = wwpn;\n"
-+
-+	buf += "	/* " + fabric_mod_name + "_format_wwn(&" + fabric_mod_port + "->" + fabric_mod_port + "_name[0], " + fabric_mod_name.upper() + "__NAMELEN, wwpn); */\n\n"
-+	buf += "	return &" + fabric_mod_port + "->" + fabric_mod_port + "_wwn;\n"
-+	buf += "}\n\n"
-+	buf += "static void " + fabric_mod_name + "_drop_" + fabric_mod_port + "(struct se_wwn *wwn)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = container_of(wwn,\n"
-+	buf += "				struct " + fabric_mod_name + "_" + fabric_mod_port + ", " + fabric_mod_port + "_wwn);\n"
-+	buf += "	kfree(" + fabric_mod_port + ");\n"
-+	buf += "}\n\n"
-+	buf += "static ssize_t " + fabric_mod_name + "_wwn_show_attr_version(\n"
-+	buf += "	struct target_fabric_configfs *tf,\n"
-+	buf += "	char *page)\n"
-+	buf += "{\n"
-+	buf += "	return sprintf(page, \"" + fabric_mod_name.upper() + " fabric module %s on %s/%s\"\n"
-+	buf += "		\"on \"UTS_RELEASE\"\\n\", " + fabric_mod_name.upper() + "_VERSION, utsname()->sysname,\n"
-+	buf += "		utsname()->machine);\n"
-+	buf += "}\n\n"
-+	buf += "TF_WWN_ATTR_RO(" + fabric_mod_name + ", version);\n\n"
-+	buf += "static struct configfs_attribute *" + fabric_mod_name + "_wwn_attrs[] = {\n"
-+	buf += "	&" + fabric_mod_name + "_wwn_version.attr,\n"
-+	buf += "	NULL,\n"
-+	buf += "};\n\n"
-+
-+	buf += "static struct target_core_fabric_ops " + fabric_mod_name + "_ops = {\n"
-+	buf += "	.get_fabric_name		= " + fabric_mod_name + "_get_fabric_name,\n"
-+	buf += "	.get_fabric_proto_ident		= " + fabric_mod_name + "_get_fabric_proto_ident,\n"
-+	buf += "	.tpg_get_wwn			= " + fabric_mod_name + "_get_fabric_wwn,\n"
-+	buf += "	.tpg_get_tag			= " + fabric_mod_name + "_get_tag,\n"
-+	buf += "	.tpg_get_default_depth		= " + fabric_mod_name + "_get_default_depth,\n"
-+	buf += "	.tpg_get_pr_transport_id	= " + fabric_mod_name + "_get_pr_transport_id,\n"
-+	buf += "	.tpg_get_pr_transport_id_len	= " + fabric_mod_name + "_get_pr_transport_id_len,\n"
-+	buf += "	.tpg_parse_pr_out_transport_id	= " + fabric_mod_name + "_parse_pr_out_transport_id,\n"
-+	buf += "	.tpg_check_demo_mode		= " + fabric_mod_name + "_check_false,\n"
-+	buf += "	.tpg_check_demo_mode_cache	= " + fabric_mod_name + "_check_true,\n"
-+	buf += "	.tpg_check_demo_mode_write_protect = " + fabric_mod_name + "_check_true,\n"
-+	buf += "	.tpg_check_prod_mode_write_protect = " + fabric_mod_name + "_check_false,\n"
-+	buf += "	.tpg_alloc_fabric_acl		= " + fabric_mod_name + "_alloc_fabric_acl,\n"
-+	buf += "	.tpg_release_fabric_acl		= " + fabric_mod_name + "_release_fabric_acl,\n"
-+	buf += "	.tpg_get_inst_index		= " + fabric_mod_name + "_tpg_get_inst_index,\n"
-+	buf += "	.release_cmd_to_pool		= " + fabric_mod_name + "_release_cmd,\n"
-+	buf += "	.release_cmd_direct		= " + fabric_mod_name + "_release_cmd,\n"
-+	buf += "	.shutdown_session		= " + fabric_mod_name + "_shutdown_session,\n"
-+	buf += "	.close_session			= " + fabric_mod_name + "_close_session,\n"
-+	buf += "	.stop_session			= " + fabric_mod_name + "_stop_session,\n"
-+	buf += "	.fall_back_to_erl0		= " + fabric_mod_name + "_reset_nexus,\n"
-+	buf += "	.sess_logged_in			= " + fabric_mod_name + "_sess_logged_in,\n"
-+	buf += "	.sess_get_index			= " + fabric_mod_name + "_sess_get_index,\n"
-+	buf += "	.sess_get_initiator_sid		= NULL,\n"
-+	buf += "	.write_pending			= " + fabric_mod_name + "_write_pending,\n"
-+	buf += "	.write_pending_status		= " + fabric_mod_name + "_write_pending_status,\n"
-+	buf += "	.set_default_node_attributes	= " + fabric_mod_name + "_set_default_node_attrs,\n"
-+	buf += "	.get_task_tag			= " + fabric_mod_name + "_get_task_tag,\n"
-+	buf += "	.get_cmd_state			= " + fabric_mod_name + "_get_cmd_state,\n"
-+	buf += "	.new_cmd_failure		= " + fabric_mod_name + "_new_cmd_failure,\n"
-+	buf += "	.queue_data_in			= " + fabric_mod_name + "_queue_data_in,\n"
-+	buf += "	.queue_status			= " + fabric_mod_name + "_queue_status,\n"
-+	buf += "	.queue_tm_rsp			= " + fabric_mod_name + "_queue_tm_rsp,\n"
-+	buf += "	.get_fabric_sense_len		= " + fabric_mod_name + "_get_fabric_sense_len,\n"
-+	buf += "	.set_fabric_sense_len		= " + fabric_mod_name + "_set_fabric_sense_len,\n"
-+	buf += "	.is_state_remove		= " + fabric_mod_name + "_is_state_remove,\n"
-+	buf += "	.pack_lun			= " + fabric_mod_name + "_pack_lun,\n"
-+	buf += "	/*\n"
-+	buf += "	 * Setup function pointers for generic logic in target_core_fabric_configfs.c\n"
-+	buf += "	 */\n"
-+	buf += "	.fabric_make_wwn		= " + fabric_mod_name + "_make_" + fabric_mod_port + ",\n"
-+	buf += "	.fabric_drop_wwn		= " + fabric_mod_name + "_drop_" + fabric_mod_port + ",\n"
-+	buf += "	.fabric_make_tpg		= " + fabric_mod_name + "_make_tpg,\n"
-+	buf += "	.fabric_drop_tpg		= " + fabric_mod_name + "_drop_tpg,\n"
-+	buf += "	.fabric_post_link		= NULL,\n"
-+	buf += "	.fabric_pre_unlink		= NULL,\n"
-+	buf += "	.fabric_make_np			= NULL,\n"
-+	buf += "	.fabric_drop_np			= NULL,\n"
-+	buf += "	.fabric_make_nodeacl		= " + fabric_mod_name + "_make_nodeacl,\n"
-+	buf += "	.fabric_drop_nodeacl		= " + fabric_mod_name + "_drop_nodeacl,\n"
-+	buf += "};\n\n"
-+	
-+	buf += "static int " + fabric_mod_name + "_register_configfs(void)\n"
-+	buf += "{\n"
-+	buf += "	struct target_fabric_configfs *fabric;\n"
-+	buf += "	int ret;\n\n"
-+	buf += "	printk(KERN_INFO \"" + fabric_mod_name.upper() + " fabric module %s on %s/%s\"\n"
-+	buf += "		\" on \"UTS_RELEASE\"\\n\"," + fabric_mod_name.upper() + "_VERSION, utsname()->sysname,\n"
-+	buf += "		utsname()->machine);\n"
-+	buf += "	/*\n"
-+	buf += "	 * Register the top level struct config_item_type with TCM core\n"
-+	buf += "	 */\n"
-+	buf += "	fabric = target_fabric_configfs_init(THIS_MODULE, \"" + fabric_mod_name[4:] + "\");\n"
-+	buf += "	if (!(fabric)) {\n"
-+	buf += "		printk(KERN_ERR \"target_fabric_configfs_init() failed\\n\");\n"
-+	buf += "		return -ENOMEM;\n"
-+	buf += "	}\n"
-+	buf += "	/*\n"
-+	buf += "	 * Setup fabric->tf_ops from our local " + fabric_mod_name + "_ops\n"
-+	buf += "	 */\n"
-+	buf += "	fabric->tf_ops = " + fabric_mod_name + "_ops;\n"
-+	buf += "	/*\n"
-+	buf += "	 * Setup default attribute lists for various fabric->tf_cit_tmpl\n"
-+	buf += "	 */\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = " + fabric_mod_name + "_wwn_attrs;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;\n"
-+	buf += "	/*\n"
-+	buf += "	 * Register the fabric for use within TCM\n"
-+	buf += "	 */\n"
-+	buf += "	ret = target_fabric_configfs_register(fabric);\n"
-+	buf += "	if (ret < 0) {\n"
-+	buf += "		printk(KERN_ERR \"target_fabric_configfs_register() failed\"\n"
-+	buf += "				\" for " + fabric_mod_name.upper() + "\\n\");\n"
-+	buf += "		return ret;\n"
-+	buf += "	}\n"
-+	buf += "	/*\n"
-+	buf += "	 * Setup our local pointer to *fabric\n"
-+	buf += "	 */\n"
-+	buf += "	" + fabric_mod_name + "_fabric_configfs = fabric;\n"
-+	buf += "	printk(KERN_INFO \"" +  fabric_mod_name.upper() + "[0] - Set fabric -> " + fabric_mod_name + "_fabric_configfs\\n\");\n"
-+	buf += "	return 0;\n"
-+	buf += "};\n\n"
-+	buf += "static void " + fabric_mod_name + "_deregister_configfs(void)\n"
-+	buf += "{\n"
-+	buf += "	if (!(" + fabric_mod_name + "_fabric_configfs))\n"
-+	buf += "		return;\n\n"
-+	buf += "	target_fabric_configfs_deregister(" + fabric_mod_name + "_fabric_configfs);\n"
-+	buf += "	" + fabric_mod_name + "_fabric_configfs = NULL;\n"
-+	buf += "	printk(KERN_INFO \"" +  fabric_mod_name.upper() + "[0] - Cleared " + fabric_mod_name + "_fabric_configfs\\n\");\n"
-+	buf += "};\n\n"
-+
-+	buf += "static int __init " + fabric_mod_name + "_init(void)\n"
-+	buf += "{\n"
-+	buf += "	int ret;\n\n"
-+	buf += "	ret = " + fabric_mod_name + "_register_configfs();\n"
-+	buf += "	if (ret < 0)\n"
-+	buf += "		return ret;\n\n"
-+	buf += "	return 0;\n"
-+	buf += "};\n\n"
-+	buf += "static void " + fabric_mod_name + "_exit(void)\n"
-+	buf += "{\n"
-+	buf += "	" + fabric_mod_name + "_deregister_configfs();\n"
-+	buf += "};\n\n"
-+
-+	buf += "#ifdef MODULE\n"
-+	buf += "MODULE_DESCRIPTION(\"" + fabric_mod_name.upper() + " series fabric driver\");\n"
-+	buf += "MODULE_LICENSE(\"GPL\");\n"
-+	buf += "module_init(" + fabric_mod_name + "_init);\n"
-+	buf += "module_exit(" + fabric_mod_name + "_exit);\n"
-+	buf += "#endif\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	return
-+
-+def tcm_mod_scan_fabric_ops():
-+	
-+	print "Using tcm_mod_scan_fabric_ops: " + fabric_ops_api
-+	process_fo = 0;
-+
-+	p = open(fabric_ops_api, 'r')
-+
-+	line = p.readline()
-+	while line:
-+		if process_fo == 0 and re.search('struct target_core_fabric_ops {', line):
-+			line = p.readline()
-+			continue
-+
-+		if process_fo == 0:
-+			process_fo = 1;
-+			line = p.readline()
-+			# Search for function pointer
-+			if not re.search('\(\*', line):
-+				continue
-+
-+			fabric_ops.append(line.rstrip())
-+			continue
-+		
-+		line = p.readline()
-+		# Search for function pointer
-+		if not re.search('\(\*', line):
-+			continue
-+
-+		fabric_ops.append(line.rstrip())
-+
-+	p.close()
-+	return
-+
-+def tcm_mod_dump_fabric_ops(proto_ident):
-+	buf = ""
-+	bufi = ""
-+
-+	f = fabric_mod_dir + "/" + fabric_mod_name + "_fabric.c"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w')
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	fi = fabric_mod_dir + "/" + fabric_mod_name + "_fabric.h"
-+	print "Writing file: " + fi
-+
-+	pi = open(fi, 'w')
-+	if not pi:
-+		tcm_mod_err("Unable to open file: " + fi)
-+
-+	buf = "#include <linux/slab.h>\n"
-+	buf += "#include <linux/kthread.h>\n"
-+	buf += "#include <linux/types.h>\n"
-+	buf += "#include <linux/list.h>\n"
-+	buf += "#include <linux/types.h>\n"
-+	buf += "#include <linux/string.h>\n"
-+	buf += "#include <linux/ctype.h>\n"
-+	buf += "#include <asm/unaligned.h>\n"
-+	buf += "#include <scsi/scsi.h>\n"
-+	buf += "#include <scsi/scsi_host.h>\n"
-+	buf += "#include <scsi/scsi_device.h>\n"
-+	buf += "#include <scsi/scsi_cmnd.h>\n"
-+	buf += "#include <scsi/libfc.h>\n\n"
-+	buf += "#include <target/target_core_base.h>\n"
-+	buf += "#include <target/target_core_transport.h>\n"
-+	buf += "#include <target/target_core_fabric_ops.h>\n"
-+	buf += "#include <target/target_core_fabric_lib.h>\n"
-+	buf += "#include <target/target_core_device.h>\n"
-+	buf += "#include <target/target_core_tpg.h>\n"
-+	buf += "#include <target/target_core_configfs.h>\n"
-+	buf += "#include <" + fabric_mod_name + "_base.h>\n"
-+	buf += "#include <" + fabric_mod_name + "_fabric.h>\n\n"
-+
-+	buf += "int " + fabric_mod_name + "_check_true(struct se_portal_group *se_tpg)\n"
-+	buf += "{\n"
-+	buf += "	return 1;\n"
-+	buf += "}\n\n"
-+	bufi += "int " + fabric_mod_name + "_check_true(struct se_portal_group *);\n"
-+
-+	buf += "int " + fabric_mod_name + "_check_false(struct se_portal_group *se_tpg)\n"
-+	buf += "{\n"
-+	buf += "	return 0;\n"
-+	buf += "}\n\n"
-+	bufi += "int " + fabric_mod_name + "_check_false(struct se_portal_group *);\n"
-+
-+	total_fabric_ops = len(fabric_ops)	
-+	i = 0
-+
-+	while i < total_fabric_ops:
-+		fo = fabric_ops[i]
-+		i += 1
-+#		print "fabric_ops: " + fo
-+		
-+		if re.search('get_fabric_name', fo):
-+			buf += "char *" + fabric_mod_name + "_get_fabric_name(void)\n"
-+			buf += "{\n"
-+			buf += "	return \"" + fabric_mod_name[4:] + "\";\n"
-+			buf += "}\n\n"
-+			bufi += "char *" + fabric_mod_name + "_get_fabric_name(void);\n"
-+			continue
-+
-+		if re.search('get_fabric_proto_ident', fo):
-+			buf += "u8 " + fabric_mod_name + "_get_fabric_proto_ident(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n"
-+			buf += "	u8 proto_id;\n\n"
-+			buf += "	switch (" + fabric_mod_port + "->" + fabric_mod_port + "_proto_id) {\n"
-+			if proto_ident == "FC":
-+				buf += "	case SCSI_PROTOCOL_FCP:\n"
-+				buf += "	default:\n"
-+				buf += "		proto_id = fc_get_fabric_proto_ident(se_tpg);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "SAS":
-+				buf += "	case SCSI_PROTOCOL_SAS:\n"
-+				buf += "	default:\n"
-+				buf += "		proto_id = sas_get_fabric_proto_ident(se_tpg);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "iSCSI":
-+				buf += "	case SCSI_PROTOCOL_ISCSI:\n"
-+				buf += "	default:\n"
-+				buf += "		proto_id = iscsi_get_fabric_proto_ident(se_tpg);\n"
-+				buf += "		break;\n"
-+
-+			buf += "	}\n\n"
-+			buf += "	return proto_id;\n"
-+			buf += "}\n\n"
-+			bufi += "u8 " + fabric_mod_name + "_get_fabric_proto_ident(struct se_portal_group *);\n"
-+
-+		if re.search('get_wwn', fo):
-+			buf += "char *" + fabric_mod_name + "_get_fabric_wwn(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n\n"
-+			buf += "	return &" + fabric_mod_port + "->" + fabric_mod_port + "_name[0];\n"
-+			buf += "}\n\n"
-+			bufi += "char *" + fabric_mod_name + "_get_fabric_wwn(struct se_portal_group *);\n"
-+
-+		if re.search('get_tag', fo):
-+			buf += "u16 " + fabric_mod_name + "_get_tag(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	return tpg->" + fabric_mod_port + "_tpgt;\n"
-+			buf += "}\n\n"
-+			bufi += "u16 " + fabric_mod_name + "_get_tag(struct se_portal_group *);\n"
-+
-+		if re.search('get_default_depth', fo):
-+			buf += "u32 " + fabric_mod_name + "_get_default_depth(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	return 1;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_get_default_depth(struct se_portal_group *);\n"
-+
-+		if re.search('get_pr_transport_id\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_get_pr_transport_id(\n"
-+			buf += "	struct se_portal_group *se_tpg,\n"
-+			buf += "	struct se_node_acl *se_nacl,\n"
-+			buf += "	struct t10_pr_registration *pr_reg,\n"
-+			buf += "	int *format_code,\n"
-+			buf += "	unsigned char *buf)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n"
-+			buf += "	int ret = 0;\n\n"
-+			buf += "	switch (" + fabric_mod_port + "->" + fabric_mod_port + "_proto_id) {\n"
-+			if proto_ident == "FC":
-+				buf += "	case SCSI_PROTOCOL_FCP:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = fc_get_pr_transport_id(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code, buf);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "SAS":
-+				buf += "	case SCSI_PROTOCOL_SAS:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = sas_get_pr_transport_id(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code, buf);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "iSCSI":
-+				buf += "	case SCSI_PROTOCOL_ISCSI:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = iscsi_get_pr_transport_id(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code, buf);\n"
-+				buf += "		break;\n"
-+
-+			buf += "	}\n\n"
-+			buf += "	return ret;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_get_pr_transport_id(struct se_portal_group *,\n"
-+			bufi += "			struct se_node_acl *, struct t10_pr_registration *,\n"
-+			bufi += "			int *, unsigned char *);\n"
-+
-+		if re.search('get_pr_transport_id_len\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_get_pr_transport_id_len(\n"
-+			buf += "	struct se_portal_group *se_tpg,\n"
-+			buf += "	struct se_node_acl *se_nacl,\n"
-+			buf += "	struct t10_pr_registration *pr_reg,\n"
-+			buf += "	int *format_code)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n"
-+			buf += "	int ret = 0;\n\n"
-+			buf += "	switch (" + fabric_mod_port + "->" + fabric_mod_port + "_proto_id) {\n"
-+			if proto_ident == "FC":
-+				buf += "	case SCSI_PROTOCOL_FCP:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = fc_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "SAS":
-+				buf += "	case SCSI_PROTOCOL_SAS:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = sas_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "iSCSI":
-+				buf += "	case SCSI_PROTOCOL_ISCSI:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = iscsi_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code);\n"
-+				buf += "		break;\n"
-+
-+
-+			buf += "	}\n\n"
-+			buf += "	return ret;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_get_pr_transport_id_len(struct se_portal_group *,\n"
-+			bufi += "			struct se_node_acl *, struct t10_pr_registration *,\n"
-+			bufi += "			int *);\n"
-+
-+		if re.search('parse_pr_out_transport_id\)\(', fo):
-+			buf += "char *" + fabric_mod_name + "_parse_pr_out_transport_id(\n"
-+			buf += "	struct se_portal_group *se_tpg,\n"
-+			buf += "	const char *buf,\n"
-+			buf += "	u32 *out_tid_len,\n"
-+			buf += "	char **port_nexus_ptr)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n"
-+			buf += "	char *tid = NULL;\n\n"
-+			buf += "	switch (" + fabric_mod_port + "->" + fabric_mod_port + "_proto_id) {\n"
-+			if proto_ident == "FC":
-+				buf += "	case SCSI_PROTOCOL_FCP:\n"
-+				buf += "	default:\n"
-+				buf += "		tid = fc_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,\n"
-+				buf += "					port_nexus_ptr);\n"
-+			elif proto_ident == "SAS":
-+				buf += "	case SCSI_PROTOCOL_SAS:\n"
-+				buf += "	default:\n"
-+				buf += "		tid = sas_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,\n"
-+				buf += "					port_nexus_ptr);\n"
-+			elif proto_ident == "iSCSI":
-+				buf += "	case SCSI_PROTOCOL_ISCSI:\n"
-+				buf += "	default:\n"
-+				buf += "		tid = iscsi_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,\n"
-+				buf += "					port_nexus_ptr);\n"
-+
-+			buf += "	}\n\n"
-+			buf += "	return tid;\n"
-+			buf += "}\n\n"
-+			bufi += "char *" + fabric_mod_name + "_parse_pr_out_transport_id(struct se_portal_group *,\n"
-+			bufi +=	"			const char *, u32 *, char **);\n"
-+
-+		if re.search('alloc_fabric_acl\)\(', fo):
-+			buf += "struct se_node_acl *" + fabric_mod_name + "_alloc_fabric_acl(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_nacl *nacl;\n\n"
-+			buf += "	nacl = kzalloc(sizeof(struct " + fabric_mod_name + "_nacl), GFP_KERNEL);\n"
-+			buf += "	if (!(nacl)) {\n"
-+			buf += "		printk(KERN_ERR \"Unable to alocate struct " + fabric_mod_name + "_nacl\\n\");\n"
-+			buf += "		return NULL;\n"
-+			buf += "	}\n\n"
-+			buf += "	return &nacl->se_node_acl;\n"
-+			buf += "}\n\n"
-+			bufi += "struct se_node_acl *" + fabric_mod_name + "_alloc_fabric_acl(struct se_portal_group *);\n"
-+	
-+		if re.search('release_fabric_acl\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_release_fabric_acl(\n"
-+			buf += "	struct se_portal_group *se_tpg,\n"
-+			buf += "	struct se_node_acl *se_nacl)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_nacl *nacl = container_of(se_nacl,\n"
-+			buf += "			struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
-+			buf += "	kfree(nacl);\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_release_fabric_acl(struct se_portal_group *,\n"
-+			bufi +=	"			struct se_node_acl *);\n"
-+
-+		if re.search('tpg_get_inst_index\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_tpg_get_inst_index(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	return 1;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_tpg_get_inst_index(struct se_portal_group *);\n"
-+			
-+		if re.search('release_cmd_to_pool', fo):
-+			buf += "void " + fabric_mod_name + "_release_cmd(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_release_cmd(struct se_cmd *);\n"
-+
-+		if re.search('shutdown_session\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_shutdown_session(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_shutdown_session(struct se_session *);\n"
-+
-+		if re.search('close_session\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_close_session(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_close_session(struct se_session *);\n"
-+
-+		if re.search('stop_session\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_stop_session(struct se_session *se_sess, int sess_sleep , int conn_sleep)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_stop_session(struct se_session *, int, int);\n"
-+
-+		if re.search('fall_back_to_erl0\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_reset_nexus(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_reset_nexus(struct se_session *);\n"
-+
-+		if re.search('sess_logged_in\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_sess_logged_in(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_sess_logged_in(struct se_session *);\n"
-+
-+		if re.search('sess_get_index\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_sess_get_index(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_sess_get_index(struct se_session *);\n"
-+		
-+		if re.search('write_pending\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_write_pending(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_write_pending(struct se_cmd *);\n"
-+
-+		if re.search('write_pending_status\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_write_pending_status(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_write_pending_status(struct se_cmd *);\n"
-+
-+		if re.search('set_default_node_attributes\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_set_default_node_attrs(struct se_node_acl *nacl)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_set_default_node_attrs(struct se_node_acl *);\n"
-+
-+		if re.search('get_task_tag\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_get_task_tag(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_get_task_tag(struct se_cmd *);\n"
-+
-+		if re.search('get_cmd_state\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_get_cmd_state(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_get_cmd_state(struct se_cmd *);\n"
-+
-+		if re.search('new_cmd_failure\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_new_cmd_failure(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_new_cmd_failure(struct se_cmd *);\n"
-+
-+		if re.search('queue_data_in\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_queue_data_in(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_queue_data_in(struct se_cmd *);\n"
-+
-+		if re.search('queue_status\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_queue_status(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_queue_status(struct se_cmd *);\n"
-+
-+		if re.search('queue_tm_rsp\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_queue_tm_rsp(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_queue_tm_rsp(struct se_cmd *);\n"
-+			
-+		if re.search('get_fabric_sense_len\)\(', fo):
-+			buf += "u16 " + fabric_mod_name + "_get_fabric_sense_len(void)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "u16 " + fabric_mod_name + "_get_fabric_sense_len(void);\n"
-+
-+		if re.search('set_fabric_sense_len\)\(', fo):
-+			buf += "u16 " + fabric_mod_name + "_set_fabric_sense_len(struct se_cmd *se_cmd, u32 sense_length)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "u16 " + fabric_mod_name + "_set_fabric_sense_len(struct se_cmd *, u32);\n"
-+
-+		if re.search('is_state_remove\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_is_state_remove(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_is_state_remove(struct se_cmd *);\n"
-+
-+		if re.search('pack_lun\)\(', fo):
-+			buf += "u64 " + fabric_mod_name + "_pack_lun(unsigned int lun)\n"
-+			buf += "{\n"
-+			buf += "	WARN_ON(lun >= 256);\n"
-+			buf += "	/* Caller wants this byte-swapped */\n"
-+			buf += "	return cpu_to_le64((lun & 0xff) << 8);\n"
-+			buf += "}\n\n"
-+			bufi += "u64 " + fabric_mod_name + "_pack_lun(unsigned int);\n"
-+
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	ret = pi.write(bufi)
-+	if ret:
-+		tcm_mod_err("Unable to write fi: " + fi)
-+
-+	pi.close()
-+	return
-+
-+def tcm_mod_build_kbuild():
-+
-+	buf = ""
-+	f = fabric_mod_dir + "/Kbuild"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w')
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/include/ -I$(srctree)/drivers/scsi/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/" + fabric_mod_name + "\n\n"
-+	buf += fabric_mod_name + "-objs			:= " + fabric_mod_name + "_fabric.o \\\n"
-+	buf += "					   " + fabric_mod_name + "_configfs.o\n"
-+	buf += "obj-$(CONFIG_" + fabric_mod_name.upper() + ")		+= " + fabric_mod_name + ".o\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+	return
-+
-+def tcm_mod_build_kconfig():
-+	
-+	buf = ""
-+	f = fabric_mod_dir + "/Kconfig"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w')
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+		
-+	buf = "config " + fabric_mod_name.upper() + "\n"
-+	buf += "	tristate \"" + fabric_mod_name.upper() + " fabric module\"\n"
-+	buf += "	depends on TARGET_CORE && CONFIGFS_FS\n"
-+	buf += "	default n\n"
-+	buf += "	---help---\n"
-+	buf += "	Say Y here to enable the " + fabric_mod_name.upper() + " fabric module\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+	return
-+
-+def main():
-+#	proto_ident = "FC"
-+#	proto_ident = "SAS"
-+	proto_ident = "iSCSI"
-+
-+	tcm_mod_create_module_subdir()
-+	tcm_mod_build_base_includes(proto_ident)
-+	tcm_mod_scan_fabric_ops()
-+	tcm_mod_dump_fabric_ops(proto_ident)
-+	tcm_mod_build_configfs(proto_ident)
-+	tcm_mod_build_kbuild()
-+	tcm_mod_build_kconfig()
-+
-+	return
-+
-+if __name__ == "__main__":
-+	main()
-diff --git a/Documentation/target/tcm_mod_builder.txt b/Documentation/target/tcm_mod_builder.txt
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
 new file mode 100644
-index 0000000..a6d4357
+index 0000000..34f53de
 --- /dev/null
-+++ b/Documentation/target/tcm_mod_builder.txt
-@@ -0,0 +1,138 @@
-+>>>>>>>>>> The TCM v4 fabric module script generator <<<<<<<<<<
++++ b/drivers/target/target_core_tmr.c
+@@ -0,0 +1,405 @@
++/*******************************************************************************
++ * Filename:  target_core_tmr.c
++ *
++ * This file contains SPC-3 task management infrastructure
++ *
++ * Copyright (c) 2009,2010 Rising Tide Systems
++ * Copyright (c) 2009,2010 Linux-iSCSI.org
++ *
++ * Nicholas A. Bellinger <nab@kernel.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
++ ******************************************************************************/
 +
-+Greetings all,
++#include <linux/version.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++#include <linux/list.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
 +
-+This document is intended to be a mini-HOWTO for using the tcm_mod_builder.py
-+script to generate a brand new functional TCM v4 fabric .ko module of your very own,
-+that once built can be immediately be loaded to start access the new TCM/ConfigFS
-+fabric skeleton, by simplying using:
++#include <target/target_core_base.h>
++#include <target/target_core_device.h>
++#include <target/target_core_tmr.h>
++#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_configfs.h>
 +
-+	modprobe $TCM_NEW_MOD
-+	mkdir -p /sys/kernel/config/target/$TCM_NEW_MOD
++#include "target_core_alua.h"
++#include "target_core_pr.h"
 +
-+This script will create a new drivers/target/$TCM_NEW_MOD/, and will do the following
++#define DEBUG_LUN_RESET
++#ifdef DEBUG_LUN_RESET
++#define DEBUG_LR(x...) printk(KERN_INFO x)
++#else
++#define DEBUG_LR(x...)
++#endif
 +
-+	*) Generate new API callers for drivers/target/target_core_fabric_configs.c logic
-+	   ->make_nodeacl(), ->drop_nodeacl(), ->make_tpg(), ->drop_tpg()
-+	   ->make_wwn(), ->drop_wwn().  These are created into $TCM_NEW_MOD/$TCM_NEW_MOD_configfs.c
-+	*) Generate basic infrastructure for loading/unloading LKMs and TCM/ConfigFS fabric module
-+	   using a skeleton struct target_core_fabric_ops API template.
-+	*) Based on user defined T10 Proto_Ident for the new fabric module being built,
-+	   the TransportID / Initiator and Target WWPN related handlers for
-+	   SPC-3 persistent reservation are automatically generated in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
-+	   using drivers/target/target_core_fabric_lib.c logic.
-+	*) NOP API calls for all other Data I/O path and fabric dependent attribute logic
-+	   in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
++struct se_tmr_req *core_tmr_alloc_req(
++	struct se_cmd *se_cmd,
++	void *fabric_tmr_ptr,
++	u8 function)
++{
++	struct se_tmr_req *tmr;
 +
-+So far the generation of new functional ConfigFS skeletons supports for FC,
-+SAS and iSCSI proto_idents, which is defined at the top of tcm_mod_builder.py:main().
-+Once proto_ident is selected in main(), and the handful of other global variables at top
-+of tcm_mod_builder.py are correct, actually running the script looks like:
++	tmr = kmem_cache_zalloc(se_tmr_req_cache, GFP_KERNEL);
++	if (!(tmr)) {
++		printk(KERN_ERR "Unable to allocate struct se_tmr_req\n");
++		return ERR_PTR(-ENOMEM);
++	}
++	tmr->task_cmd = se_cmd;
++	tmr->fabric_tmr_ptr = fabric_tmr_ptr;
++	tmr->function = function;
++	INIT_LIST_HEAD(&tmr->tmr_list);
 +
-+target:/mnt/sdb/lio-core-2.6.git/Documentation/target# ./tcm_mod_builder.py 
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000/tcm_nab5000_base.h
-+Using tcm_mod_scan_fabric_ops:
-+/mnt/sdb/lio-core-2.6.git/include/target/target_core_fabric_ops.h
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000/tcm_nab5000_fabric.c
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000/tcm_nab5000_fabric.h
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000/tcm_nab5000_configfs.c
-+Writing file: /mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000/Kbuild
-+Writing file: /mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000/Kconfig
++	return tmr;
++}
++EXPORT_SYMBOL(core_tmr_alloc_req);
 +
-+*) Edit drivers/target/Kbuild and drivers/target/Kconfig before compling
++/*
++ * Called with struct se_device->se_tmr_lock held.
++ */
++void __core_tmr_release_req(
++	struct se_tmr_req *tmr)
++{
++	list_del(&tmr->tmr_list);
++	kmem_cache_free(se_tmr_req_cache, tmr);
++}
 +
-+Add the following line to Kbuild for the newly generated fabric module:
++void core_tmr_release_req(
++	struct se_tmr_req *tmr)
++{
++	struct se_device *dev = tmr->tmr_dev;
 +
-+	obj-$(CONFIG_TCM_NAB5000)       += tcm_nab5000/
++	spin_lock(&dev->se_tmr_lock);
++	__core_tmr_release_req(tmr);
++	spin_unlock(&dev->se_tmr_lock);
++}
 +
-+and the same for Kconfig:
++static void core_tmr_handle_tas_abort(
++	struct se_node_acl *tmr_nacl,
++	struct se_cmd *cmd,
++	int tas,
++	int fe_count)
++{
++	if (!(fe_count)) {
++		transport_cmd_finish_abort(cmd, 1);
++		return;
++	}
++	/*
++	 * TASK ABORTED status (TAS) bit support
++	*/
++	if (((tmr_nacl != NULL) &&
++	     (tmr_nacl == cmd->se_sess->se_node_acl)) || tas)
++		transport_send_task_abort(cmd);
 +
-+	source "drivers/target/tcm_nab5000/Kconfig"
++	transport_cmd_finish_abort(cmd, 0);
++}
 +
-+*) Build using 'make modules', once completed you will have:
++int core_tmr_lun_reset(
++	struct se_device *dev,
++	struct se_tmr_req *tmr,
++	struct list_head *preempt_and_abort_list,
++	struct se_cmd *prout_cmd)
++{
++	struct se_cmd *cmd;
++	struct se_queue_req *qr, *qr_tmp;
++	struct se_node_acl *tmr_nacl = NULL;
++	struct se_portal_group *tmr_tpg = NULL;
++	struct se_queue_obj *qobj = dev->dev_queue_obj;
++	struct se_tmr_req *tmr_p, *tmr_pp;
++	struct se_task *task, *task_tmp;
++	unsigned long flags;
++	int fe_count, state, tas;
++	/*
++	 * TASK_ABORTED status bit, this is configurable via ConfigFS
++	 * struct se_device attributes.  spc4r17 section 7.4.6 Control mode page
++	 *
++	 * A task aborted status (TAS) bit set to zero specifies that aborted
++	 * tasks shall be terminated by the device server without any response
++	 * to the application client. A TAS bit set to one specifies that tasks
++	 * aborted by the actions of an I_T nexus other than the I_T nexus on
++	 * which the command was received shall be completed with TASK ABORTED
++	 * status (see SAM-4).
++	 */
++	tas = DEV_ATTRIB(dev)->emulate_tas;
++	/*
++	 * Determine if this se_tmr is coming from a $FABRIC_MOD
++	 * or struct se_device passthrough..
++	 */
++	if (tmr && tmr->task_cmd && tmr->task_cmd->se_sess) {
++		tmr_nacl = tmr->task_cmd->se_sess->se_node_acl;
++		tmr_tpg = tmr->task_cmd->se_sess->se_tpg;
++		if (tmr_nacl && tmr_tpg) {
++			DEBUG_LR("LUN_RESET: TMR caller fabric: %s"
++				" initiator port %s\n",
++				TPG_TFO(tmr_tpg)->get_fabric_name(),
++				tmr_nacl->initiatorname);
++		}
++	}
++	DEBUG_LR("LUN_RESET: %s starting for [%s], tas: %d\n",
++		(preempt_and_abort_list) ? "Preempt" : "TMR",
++		TRANSPORT(dev)->name, tas);
++	/*
++	 * Release all pending and outgoing TMRs aside from the received
++	 * LUN_RESET tmr..
++	 */
++	spin_lock(&dev->se_tmr_lock);
++	list_for_each_entry_safe(tmr_p, tmr_pp, &dev->dev_tmr_list, tmr_list) {
++		/*
++		 * Allow the received TMR to return with FUNCTION_COMPLETE.
++		 */
++		if (tmr && (tmr_p == tmr))
++			continue;
 +
-+target:/mnt/sdb/lio-core-2.6.git# ls -la drivers/target/tcm_nab5000/
-+total 1292
-+drwxr-xr-x 2 root root   4096 2010-08-24 12:49 .
-+drwxr-xr-x 9 root root   4096 2010-08-24 12:10 ..
-+-rw-r--r-- 1 root root      8 2010-08-24 12:26 built-in.o
-+-rw-r--r-- 1 root root    136 2010-08-24 12:26 .built-in.o.cmd
-+-rw-r--r-- 1 root root    282 2010-08-24 13:06 Kbuild
-+-rw-r--r-- 1 root root    171 2010-08-24 13:06 Kconfig
-+-rw-r--r-- 1 root root     49 2010-08-24 12:49 modules.order
-+-rw-r--r-- 1 root root    738 2010-08-24 13:06 tcm_nab5000_base.h
-+-rw-r--r-- 1 root root   9096 2010-08-24 13:06 tcm_nab5000_configfs.c
-+-rw-r--r-- 1 root root 172584 2010-08-24 12:48 tcm_nab5000_configfs.o
-+-rw-r--r-- 1 root root  38842 2010-08-24 12:48 .tcm_nab5000_configfs.o.cmd
-+-rw-r--r-- 1 root root   5414 2010-08-24 13:06 tcm_nab5000_fabric.c
-+-rw-r--r-- 1 root root   2016 2010-08-24 13:06 tcm_nab5000_fabric.h
-+-rw-r--r-- 1 root root 187244 2010-08-24 12:48 tcm_nab5000_fabric.o
-+-rw-r--r-- 1 root root  40195 2010-08-24 12:48 .tcm_nab5000_fabric.o.cmd
-+-rw-r--r-- 1 root root 379449 2010-08-24 12:49 tcm_nab5000.ko
-+-rw-r--r-- 1 root root    264 2010-08-24 12:49 .tcm_nab5000.ko.cmd
-+-rw-r--r-- 1 root root    459 2010-08-24 12:49 tcm_nab5000.mod.c
-+-rw-r--r-- 1 root root  23780 2010-08-24 12:49 tcm_nab5000.mod.o
-+-rw-r--r-- 1 root root  22475 2010-08-24 12:49 .tcm_nab5000.mod.o.cmd
-+-rw-r--r-- 1 root root 356722 2010-08-24 12:48 tcm_nab5000.o
-+-rw-r--r-- 1 root root    211 2010-08-24 12:48 .tcm_nab5000.o.cmd
++		cmd = tmr_p->task_cmd;
++		if (!(cmd)) {
++			printk(KERN_ERR "Unable to locate struct se_cmd for TMR\n");
++			continue;
++		}
++		/*
++		 * If this function was called with a valid pr_res_key
++		 * parameter (eg: for PROUT PREEMPT_AND_ABORT service action
++		 * skip non regisration key matching TMRs.
++		 */
++		if ((preempt_and_abort_list != NULL) &&
++		    (core_scsi3_check_cdb_abort_and_preempt(
++					preempt_and_abort_list, cmd) != 0))
++			continue;
++		spin_unlock(&dev->se_tmr_lock);
 +
-+*) Load the new module, create a lun_0 configfs group, and add new TCM Core
-+   IBLOCK backstore symlink to port:
++		spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
++		if (!(atomic_read(&T_TASK(cmd)->t_transport_active))) {
++			spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
++			spin_lock(&dev->se_tmr_lock);
++			continue;
++		}
++		if (cmd->t_state == TRANSPORT_ISTATE_PROCESSING) {
++			spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
++			spin_lock(&dev->se_tmr_lock);
++			continue;
++		}
++		DEBUG_LR("LUN_RESET: %s releasing TMR %p Function: 0x%02x,"
++			" Response: 0x%02x, t_state: %d\n",
++			(preempt_and_abort_list) ? "Preempt" : "", tmr_p,
++			tmr_p->function, tmr_p->response, cmd->t_state);
++		spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
 +
-+target:/mnt/sdb/lio-core-2.6.git# insmod drivers/target/tcm_nab5000.ko
-+target:/mnt/sdb/lio-core-2.6.git# mkdir -p /sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0
-+target:/mnt/sdb/lio-core-2.6.git# cd /sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0/
-+target:/sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0# ln -s /sys/kernel/config/target/core/iblock_0/lvm_test0 nab5000_port
++		transport_cmd_finish_abort_tmr(cmd);
++		spin_lock(&dev->se_tmr_lock);
++	}
++	spin_unlock(&dev->se_tmr_lock);
++	/*
++	 * Complete outstanding struct se_task CDBs with TASK_ABORTED SAM status.
++	 * This is following sam4r17, section 5.6 Aborting commands, Table 38
++	 * for TMR LUN_RESET:
++	 *
++	 * a) "Yes" indicates that each command that is aborted on an I_T nexus
++	 * other than the one that caused the SCSI device condition is
++	 * completed with TASK ABORTED status, if the TAS bit is set to one in
++	 * the Control mode page (see SPC-4). "No" indicates that no status is
++	 * returned for aborted commands.
++	 *
++	 * d) If the logical unit reset is caused by a particular I_T nexus
++	 * (e.g., by a LOGICAL UNIT RESET task management function), then "yes"
++	 * (TASK_ABORTED status) applies.
++	 *
++	 * Otherwise (e.g., if triggered by a hard reset), "no"
++	 * (no TASK_ABORTED SAM status) applies.
++	 *
++	 * Note that this seems to be independent of TAS (Task Aborted Status)
++	 * in the Control Mode Page.
++	 */
++	spin_lock_irqsave(&dev->execute_task_lock, flags);
++	list_for_each_entry_safe(task, task_tmp, &dev->state_task_list,
++				t_state_list) {
++		if (!(TASK_CMD(task))) {
++			printk(KERN_ERR "TASK_CMD(task) is NULL!\n");
++			continue;
++		}
++		cmd = TASK_CMD(task);
 +
-+target:/sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0# cd -
-+target:/mnt/sdb/lio-core-2.6.git# tree /sys/kernel/config/target/nab5000/
-+/sys/kernel/config/target/nab5000/
-+|-- discovery_auth
-+|-- iqn.foo
-+|   `-- tpgt_1
-+|       |-- acls
-+|       |-- attrib
-+|       |-- lun
-+|       |   `-- lun_0
-+|       |       |-- alua_tg_pt_gp
-+|       |       |-- alua_tg_pt_offline
-+|       |       |-- alua_tg_pt_status
-+|       |       |-- alua_tg_pt_write_md
-+|	|	`-- nab5000_port -> ../../../../../../target/core/iblock_0/lvm_test0
-+|       |-- np
-+|       `-- param
-+`-- version
++		if (!T_TASK(cmd)) {
++			printk(KERN_ERR "T_TASK(cmd) is NULL for task: %p cmd:"
++				" %p ITT: 0x%08x\n", task, cmd,
++				CMD_TFO(cmd)->get_task_tag(cmd));
++			continue;
++		}
++		/*
++		 * For PREEMPT_AND_ABORT usage, only process commands
++		 * with a matching reservation key.
++		 */
++		if ((preempt_and_abort_list != NULL) &&
++		    (core_scsi3_check_cdb_abort_and_preempt(
++					preempt_and_abort_list, cmd) != 0))
++			continue;
++		/*
++		 * Not aborting PROUT PREEMPT_AND_ABORT CDB..
++		 */
++		if (prout_cmd == cmd)
++			continue;
 +
-+target:/mnt/sdb/lio-core-2.6.git# lsmod
-+Module                  Size  Used by
-+tcm_nab5000             3923  4 
-+iscsi_target_mod      189925  1 
-+tcm_loop               13173  5 
-+target_core_stgt        8049  0 
-+target_core_pscsi      10472  1 
-+target_core_file        7175  2 
-+target_core_iblock      8164  2 
-+target_core_mod       209392  44
-+tcm_nab5000,iscsi_target_mod,tcm_loop,target_core_stgt,target_core_pscsi,target_core_file,target_core_iblock
-+scsi_debug             56768  1 
-+scsi_tgt                8658  1 target_core_stgt
-+configfs               20660  2 target_core_mod
++		list_del(&task->t_state_list);
++		atomic_set(&task->task_state_active, 0);
++		spin_unlock_irqrestore(&dev->execute_task_lock, flags);
 +
-+----------------------------------------------------------------------
++		spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
++		DEBUG_LR("LUN_RESET: %s cmd: %p se_fabric_cmd_ptr: %p task: %p"
++			" ITT/CmdSN: 0x%08x/0x%08x, i_state: %d, t_state/"
++			"def_t_state: %d/%d cdb: 0x%02x\n",
++			(preempt_and_abort_list) ? "Preempt" : "", cmd,
++			cmd->se_fabric_cmd_ptr, task,
++			CMD_TFO(cmd)->get_task_tag(cmd), 0,
++			CMD_TFO(cmd)->get_cmd_state(cmd), cmd->t_state,
++			cmd->deferred_t_state, T_TASK(cmd)->t_task_cdb[0]);
++		DEBUG_LR("LUN_RESET: ITT[0x%08x] - pr_res_key: 0x%016Lx"
++			" t_task_cdbs: %d t_task_cdbs_left: %d"
++			" t_task_cdbs_sent: %d -- t_transport_active: %d"
++			" t_transport_stop: %d t_transport_sent: %d\n",
++			CMD_TFO(cmd)->get_task_tag(cmd), cmd->pr_res_key,
++			T_TASK(cmd)->t_task_cdbs,
++			atomic_read(&T_TASK(cmd)->t_task_cdbs_left),
++			atomic_read(&T_TASK(cmd)->t_task_cdbs_sent),
++			atomic_read(&T_TASK(cmd)->t_transport_active),
++			atomic_read(&T_TASK(cmd)->t_transport_stop),
++			atomic_read(&T_TASK(cmd)->t_transport_sent));
 +
-+Future TODO items:
++		if (atomic_read(&task->task_active)) {
++			atomic_set(&task->task_stop, 1);
++			spin_unlock_irqrestore(
++				&T_TASK(cmd)->t_state_lock, flags);
 +
-+	*) Make global variables in tcm_mod_builder.py accessable as parameters
-+	*) Add more T10 proto_idents 
-+	*) Make tcm_mod_dump_fabric_ops() smater and generate function pointer
-+	   defs directly from include/target/target_core_fabric_ops.h:struct target_core_fabric_ops 
-+	   structure members.
-+	*) Make it optional to add drivers/target/K[build,config] lines in
-+	   order to build new module
++			DEBUG_LR("LUN_RESET: Waiting for task: %p to shutdown"
++				" for dev: %p\n", task, dev);
++			wait_for_completion(&task->task_stop_comp);
++			DEBUG_LR("LUN_RESET Completed task: %p shutdown for"
++				" dev: %p\n", task, dev);
++			spin_lock_irqsave(&T_TASK(cmd)->t_state_lock, flags);
++			atomic_dec(&T_TASK(cmd)->t_task_cdbs_left);
 +
-+August 24th, 2010
-+Nicholas A. Bellinger <nab@linux-iscsi.org>
-diff --git a/drivers/Kconfig b/drivers/Kconfig
-index a2b902f..3002329 100644
---- a/drivers/Kconfig
-+++ b/drivers/Kconfig
-@@ -26,6 +26,8 @@ source "drivers/ata/Kconfig"
- 
- source "drivers/md/Kconfig"
- 
-+source "drivers/target/Kconfig"
++			atomic_set(&task->task_active, 0);
++			atomic_set(&task->task_stop, 0);
++		}
++		__transport_stop_task_timer(task, &flags);
 +
- source "drivers/message/fusion/Kconfig"
- 
- source "drivers/firewire/Kconfig"
-diff --git a/drivers/Makefile b/drivers/Makefile
-index a2aea53..dfb540a 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -45,6 +45,7 @@ obj-y				+= macintosh/
- obj-$(CONFIG_IDE)		+= ide/
- obj-$(CONFIG_SCSI)		+= scsi/
- obj-$(CONFIG_ATA)		+= ata/
-+obj-$(CONFIG_TARGET_CORE)	+= target/
- obj-$(CONFIG_MTD)		+= mtd/
- obj-$(CONFIG_SPI)		+= spi/
- obj-y				+= net/
-diff --git a/drivers/target/Kbuild b/drivers/target/Kbuild
++		if (!(atomic_dec_and_test(&T_TASK(cmd)->t_task_cdbs_ex_left))) {
++			spin_unlock_irqrestore(
++					&T_TASK(cmd)->t_state_lock, flags);
++			DEBUG_LR("LUN_RESET: Skipping task: %p, dev: %p for"
++				" t_task_cdbs_ex_left: %d\n", task, dev,
++				atomic_read(&T_TASK(cmd)->t_task_cdbs_ex_left));
++
++			spin_lock_irqsave(&dev->execute_task_lock, flags);
++			continue;
++		}
++		fe_count = atomic_read(&T_TASK(cmd)->t_fe_count);
++
++		if (atomic_read(&T_TASK(cmd)->t_transport_active)) {
++			DEBUG_LR("LUN_RESET: got t_transport_active = 1 for"
++				" task: %p, t_fe_count: %d dev: %p\n", task,
++				fe_count, dev);
++			spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock,
++						flags);
++			core_tmr_handle_tas_abort(tmr_nacl, cmd, tas, fe_count);
++
++			spin_lock_irqsave(&dev->execute_task_lock, flags);
++			continue;
++		}
++		DEBUG_LR("LUN_RESET: Got t_transport_active = 0 for task: %p,"
++			" t_fe_count: %d dev: %p\n", task, fe_count, dev);
++		spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
++		core_tmr_handle_tas_abort(tmr_nacl, cmd, tas, fe_count);
++
++		spin_lock_irqsave(&dev->execute_task_lock, flags);
++	}
++	spin_unlock_irqrestore(&dev->execute_task_lock, flags);
++	/*
++	 * Release all commands remaining in the struct se_device cmd queue.
++	 *
++	 * This follows the same logic as above for the struct se_device
++	 * struct se_task state list, where commands are returned with
++	 * TASK_ABORTED status, if there is an outstanding $FABRIC_MOD
++	 * reference, otherwise the struct se_cmd is released.
++	 */
++	spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
++	list_for_each_entry_safe(qr, qr_tmp, &qobj->qobj_list, qr_list) {
++		cmd = (struct se_cmd *)qr->cmd;
++		if (!(cmd)) {
++			/*
++			 * Skip these for non PREEMPT_AND_ABORT usage..
++			 */
++			if (preempt_and_abort_list != NULL)
++				continue;
++
++			atomic_dec(&qobj->queue_cnt);
++			list_del(&qr->qr_list);
++			kfree(qr);
++			continue;
++		}
++		/*
++		 * For PREEMPT_AND_ABORT usage, only process commands
++		 * with a matching reservation key.
++		 */
++		if ((preempt_and_abort_list != NULL) &&
++		    (core_scsi3_check_cdb_abort_and_preempt(
++					preempt_and_abort_list, cmd) != 0))
++			continue;
++		/*
++		 * Not aborting PROUT PREEMPT_AND_ABORT CDB..
++		 */
++		if (prout_cmd == cmd)
++			continue;
++
++		atomic_dec(&T_TASK(cmd)->t_transport_queue_active);
++		atomic_dec(&qobj->queue_cnt);
++		list_del(&qr->qr_list);
++		spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
++
++		state = qr->state;
++		kfree(qr);
++
++		DEBUG_LR("LUN_RESET: %s from Device Queue: cmd: %p t_state:"
++			" %d t_fe_count: %d\n", (preempt_and_abort_list) ?
++			"Preempt" : "", cmd, state,
++			atomic_read(&T_TASK(cmd)->t_fe_count));
++
++		core_tmr_handle_tas_abort(tmr_nacl, cmd, tas,
++				atomic_read(&T_TASK(cmd)->t_fe_count));
++		spin_lock_irqsave(&qobj->cmd_queue_lock, flags);
++	}
++	spin_unlock_irqrestore(&qobj->cmd_queue_lock, flags);
++	/*
++	 * Clear any legacy SPC-2 reservation when called during
++	 * LOGICAL UNIT RESET
++	 */
++	if (!(preempt_and_abort_list) &&
++	     (dev->dev_flags & DF_SPC2_RESERVATIONS)) {
++		spin_lock(&dev->dev_reservation_lock);
++		dev->dev_reserved_node_acl = NULL;
++		dev->dev_flags &= ~DF_SPC2_RESERVATIONS;
++		spin_unlock(&dev->dev_reservation_lock);
++		printk(KERN_INFO "LUN_RESET: SCSI-2 Released reservation\n");	
++	}	
++
++	spin_lock(&dev->stats_lock);
++	dev->num_resets++;
++	spin_unlock(&dev->stats_lock);
++
++	DEBUG_LR("LUN_RESET: %s for [%s] Complete\n",
++			(preempt_and_abort_list) ? "Preempt" : "TMR",
++			TRANSPORT(dev)->name);
++	return 0;
++}
+diff --git a/include/target/target_core_tmr.h b/include/target/target_core_tmr.h
 new file mode 100644
-index 0000000..a610f67
+index 0000000..6c8248b
 --- /dev/null
-+++ b/drivers/target/Kbuild
-@@ -0,0 +1,27 @@
-+EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/
++++ b/include/target/target_core_tmr.h
+@@ -0,0 +1,43 @@
++#ifndef TARGET_CORE_TMR_H
++#define TARGET_CORE_TMR_H
 +
-+target_core_mod-y		:= target_core_configfs.o \
-+				   target_core_device.o \
-+				   target_core_fabric_configfs.o \
-+				   target_core_fabric_lib.o \
-+				   target_core_hba.o \
-+				   target_core_pr.o \
-+				   target_core_alua.o \
-+				   target_core_scdb.o \
-+				   target_core_tmr.o \
-+				   target_core_tpg.o \
-+				   target_core_transport.o \
-+				   target_core_ua.o \
-+				   target_core_rd.o \
-+				   target_core_mib.o
++/* task management function values */
++#ifdef ABORT_TASK
++#undef ABORT_TASK
++#endif /* ABORT_TASK */
++#define ABORT_TASK				1
++#ifdef ABORT_TASK_SET
++#undef ABORT_TASK_SET
++#endif /* ABORT_TASK_SET */
++#define ABORT_TASK_SET				2
++#ifdef CLEAR_ACA
++#undef CLEAR_ACA
++#endif /* CLEAR_ACA */
++#define CLEAR_ACA				3
++#ifdef CLEAR_TASK_SET
++#undef CLEAR_TASK_SET
++#endif /* CLEAR_TASK_SET */
++#define CLEAR_TASK_SET				4
++#define LUN_RESET				5
++#define TARGET_WARM_RESET			6
++#define TARGET_COLD_RESET			7
++#define TASK_REASSIGN				8
 +
-+ifdef CONFIG_TCM_DEBUG_DEV
-+EXTRA_CFLAGS			+= -DDEBUG_DEV
-+endif
++/* task management response values */
++#define TMR_FUNCTION_COMPLETE			0
++#define TMR_TASK_DOES_NOT_EXIST			1
++#define TMR_LUN_DOES_NOT_EXIST			2
++#define TMR_TASK_STILL_ALLEGIANT		3
++#define TMR_TASK_FAILOVER_NOT_SUPPORTED		4
++#define TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED	5
++#define TMR_FUNCTION_AUTHORIZATION_FAILED	6
++#define TMR_FUNCTION_REJECTED			255
 +
-+obj-$(CONFIG_TARGET_CORE)	+= target_core_mod.o
++extern struct kmem_cache *se_tmr_req_cache;
 +
-+# Subsystem modules
-+obj-$(CONFIG_TCM_IBLOCK)	+= target_core_iblock.o
-+obj-$(CONFIG_TCM_FILEIO)	+= target_core_file.o
-+obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
-diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
-new file mode 100644
-index 0000000..5c37653
---- /dev/null
-+++ b/drivers/target/Kconfig
-@@ -0,0 +1,34 @@
-+config TARGET_CORE
-+        tristate "Generic Target Core Mod (TCM) and ConfigFS Infrastructure"
-+	select CONFIGFS_FS
-+        default m
-+        ---help---
-+        Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled control path for target_core_mod.  This includes built-in TCM RAMDISK subsystem logic for virtual LUN 0 access
++extern struct se_tmr_req *core_tmr_alloc_req(struct se_cmd *, void *, u8);
++extern void core_tmr_release_req(struct se_tmr_req *);
++extern int core_tmr_lun_reset(struct se_device *, struct se_tmr_req *,
++				struct list_head *, struct se_cmd *);
 +
-+config TCM_DEBUG_DEV
-+	tristate "TCM Debug device code"
-+	depends on TARGET_CORE
-+	default n
-+	---help---
-+	Say Y here to enable the TCM Debug device code
-+
-+config TCM_IBLOCK
-+	tristate "TCM/IBLOCK Subsystem Plugin for Linux/BLOCK"
-+	depends on TARGET_CORE
-+	default y
-+	---help---
-+	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered access to Linux/Block devices using BIO
-+
-+config TCM_FILEIO
-+	tristate "TCM/FILEIO Subsystem Plugin for Linux/VFS"
-+	depends on TARGET_CORE
-+	default y
-+	---help---
-+	Say Y here to enable the TCM/FILEIO subsystem plugin for buffered access to Linux/VFS struct file or struct block_device
-+
-+config TCM_PSCSI
-+	tristate "TCM/pSCSI Subsystem Plugin for Linux/SCSI"
-+	depends on TARGET_CORE
-+	default y
-+	---help---
-+	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered passthrough access to Linux/SCSI device
++#endif /* TARGET_CORE_TMR_H */
 -- 
 1.7.3
+
