@@ -1,21 +1,31 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] cxgbi: bug fixes and code cleanup
-Date: Wed, 22 Sep 2010 15:09:33 -0500
-Message-ID: <4C9A627D.4060800@cs.wisc.edu>
-References: <201009211609.o8LG9HPm014568@localhost.localdomain>
+From: "Karen Xie" <kxie@chelsio.com>
+Subject: RE: [PATCH] cxgbi: bug fixes and code cleanup
+Date: Wed, 22 Sep 2010 13:52:07 -0700
+Message-ID: <8A71B368A89016469F72CD08050AD334086AC20E@maui.asicdesigners.com>
+References: <201009211609.o8LG9HPm014568@localhost.localdomain> <4C9A627D.4060800@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:59389 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752016Ab0IVUDr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Sep 2010 16:03:47 -0400
-In-Reply-To: <201009211609.o8LG9HPm014568@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <netdev-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: netdev-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Rakesh Ranjan <rakesh@chelsio.com>, James.Bottomley@HansenPartnership.com, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
-To: kxie@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, rranjan@chelsio.com, James.Bottomley@HansenPartnership.com, davem@davemloft.net
+
+Thanks, Mike.
+I will fix the patch and break it into per change.
+Karen
+
+-----Original Message-----
+From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
+Sent: Wednesday, September 22, 2010 1:10 PM
+To: Karen Xie
+Cc: netdev@vger.kernel.org; linux-scsi@vger.kernel.org;
+open-iscsi@googlegroups.com; Rakesh Ranjan;
+James.Bottomley@HansenPartnership.com; davem@davemloft.net
+Subject: Re: [PATCH] cxgbi: bug fixes and code cleanup
 
 On 09/21/2010 11:09 AM, kxie@chelsio.com wrote:
 > [PATCH] cxgbi: bug fixes and code cleanup
@@ -34,6 +44,7 @@ Could you break up the patch into a patch per change next time?
 > -				read_lock(&csk->callback_lock);
 >   				dskb = skb_peek(&csk->receive_queue);
 >   				if (!dskb) {
->   					read_unlock(&csk->callback_lock);
+>
+read_unlock(&csk->callback_lock);
 
 I think you also have to remove this read_unlock call.
