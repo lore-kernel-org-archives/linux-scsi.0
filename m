@@ -1,107 +1,51 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/2] tcm: Fix NULL pointer dereference for target_fabric_port_attrs[]
-Date: Wed, 22 Sep 2010 04:19:52 -0700
-Message-ID: <1285154392-6360-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH 2/2] tcm: Remove struct list_head lookup from core_dev_[add,del]_initiator_node_lun_acl()
+Date: Wed, 22 Sep 2010 04:20:03 -0700
+Message-ID: <1285154403-6405-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp127.sbc.mail.sp1.yahoo.com ([69.147.65.186]:28278 "HELO
+	smtp127.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754054Ab0IVLUG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Sep 2010 07:20:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Joel Becker <Joel.Becker@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Joe Eykholt <jeykholt@cisco.com>, Nicholas Bellinger <nab@linux-iscsi.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a NULL pointer dereference in target_fabric_port_attrs[]
-callers when handling the MappedLUN + non existent struct se_lun config_group
-case in commit 036866f50e2.
+This patch removes the usage of core_tpg_get_initiator_node_acl() that contains an
+unnecessary lookup of struct se_node_acl from struct se_portal_group->acl_node_list
+which can be located directly via struct se_lun_acl->se_lun_nacl.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_fabric_configfs.c |   24 ++++++++++++++++++++++++
- 1 files changed, 24 insertions(+), 0 deletions(-)
+ drivers/target/target_core_device.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index c689463..5d1a81d 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -517,6 +517,9 @@ static ssize_t target_fabric_port_show_attr_alua_tg_pt_gp(
- 	struct se_lun *lun,
- 	char *page)
- {
-+	if (!(lun))
-+		return -ENODEV;
-+
- 	if (!(lun->lun_sep))
- 		return -ENODEV;
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 6fe4408..1e8be47 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -1524,7 +1524,7 @@ int core_dev_add_initiator_node_lun_acl(
+ 		return -EINVAL;
+ 	}
  
-@@ -528,6 +531,9 @@ static ssize_t target_fabric_port_store_attr_alua_tg_pt_gp(
- 	const char *page,
- 	size_t count)
- {
-+	if (!(lun))
-+		return -ENODEV;
-+
- 	if (!(lun->lun_sep))
- 		return -ENODEV;
+-	nacl = core_tpg_get_initiator_node_acl(tpg, lacl->initiatorname);
++	nacl = lacl->se_lun_nacl;
+ 	if (!(nacl))
+ 		return -EINVAL;
  
-@@ -543,6 +549,9 @@ static ssize_t target_fabric_port_show_attr_alua_tg_pt_offline(
- 	struct se_lun *lun,
- 	char *page)
+@@ -1569,7 +1569,7 @@ int core_dev_del_initiator_node_lun_acl(
  {
-+	if (!(lun))
-+		return -ENODEV;
-+
- 	if (!(lun->lun_sep))
- 		return -ENODEV;
+ 	struct se_node_acl *nacl;
  
-@@ -554,6 +563,9 @@ static ssize_t target_fabric_port_store_attr_alua_tg_pt_offline(
- 	const char *page,
- 	size_t count)
- {
-+	if (!(lun))
-+		return -ENODEV;
-+
- 	if (!(lun->lun_sep))
- 		return -ENODEV;
- 
-@@ -569,6 +581,9 @@ static ssize_t target_fabric_port_show_attr_alua_tg_pt_status(
- 	struct se_lun *lun,
- 	char *page)
- {
-+	if (!(lun))
-+		return -ENODEV;
-+
- 	if (!(lun->lun_sep))
- 		return -ENODEV;
- 
-@@ -580,6 +595,9 @@ static ssize_t target_fabric_port_store_attr_alua_tg_pt_status(
- 	const char *page,
- 	size_t count)
- {
-+	if (!(lun))
-+		return -ENODEV;
-+
- 	if (!(lun->lun_sep))
- 		return -ENODEV;
- 
-@@ -595,6 +613,9 @@ static ssize_t target_fabric_port_show_attr_alua_tg_pt_write_md(
- 	struct se_lun *lun,
- 	char *page)
- {
-+	if (!(lun))
-+		return -ENODEV;
-+
- 	if (!(lun->lun_sep))
- 		return -ENODEV;
- 
-@@ -606,6 +627,9 @@ static ssize_t target_fabric_port_store_attr_alua_tg_pt_write_md(
- 	const char *page,
- 	size_t count)
- {
-+	if (!(lun))
-+		return -ENODEV;
-+
- 	if (!(lun->lun_sep))
- 		return -ENODEV;
+-	nacl = core_tpg_get_initiator_node_acl(tpg, lacl->initiatorname);
++	nacl = lacl->se_lun_nacl;
+ 	if (!(nacl))
+ 		return -EINVAL;
  
 -- 
 1.5.6.5
+
