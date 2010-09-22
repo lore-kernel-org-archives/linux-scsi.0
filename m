@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v2 00/21] TCM Core and TCM_Loop patches for v2.6.37
-Date: Wed, 22 Sep 2010 15:48:22 -0700
-Message-ID: <1285195702-11421-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC v2 01/21] scsi: Add missing SPC-4 CDB and MAINTENANCE_[IN,OUT] and VARIABLE_LENGTH_CMD service actions
+Date: Wed, 22 Sep 2010 15:48:32 -0700
+Message-ID: <1285195712-11440-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
@@ -10,175 +10,87 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Greetings Tomo-san, hch, jejb, mnc, boaz, jens, konrad, jlbec, joe, and Co,
+This patch adds a handful of missing CDBs defs that are used by TCM
+persistent reservation logic in the SPC-4 defined CDB exclusion table for
+registrations and reservations.
 
-The following is a reviewable series containing TCM Core and TCM_Loop v4.0.0-rc4 +
-very lastest lio-core-2.6.git/lio-4.0 updates against a fresh v2.6.36-rc5 clone who's commit
-log has been broken up to be reviewable rather than historical.  This code is intended
-for mainline v2.6.37 acceptance and is currently going through the final public review.
+This includes a number of missing MI_* and MO_* prefixed service actions defs
+for MAINTENANCE_IN and MAINTENANCE_OUT that are mentioned wrt to persistent
+registration and reservation status for the SCSI Initiator Port.
 
-The RFCv2 tree can be found in lio-4.0.git/rfcv2-for-37 here:
-
-	http://git.kernel.org/?p=linux/kernel/git/nab/lio-4.0.git;a=shortlog;h=refs/heads/rfcv2-for-37
-
-Or can be pulled via:
-
-        git://git.kernel.org/pub/scm/linux/kernel/git/nab/lio-4.0.git rfcv2-for-37
-
-The patches can also be found individually here:
-
-        http://www.kernel.org/pub/linux/kernel/people/nab/TCM-v4-patches-for-v2.6.36-rc5/
-
-The announcement for the changes between v4.0.0-rc3 -> rc4 is available here:
-
-	http://lkml.org/lkml/2010/9/17/284
-
-Note that this series has dropped the original ConfigFS ->check_link() patch, many thanks
-to jlbec for making the case that this really was unnecessary.  Also note that patch #1
-here is the scsi.h defs update that has been posted seperately to linux-scsi:
-
-	http://marc.info/?l=linux-scsi&m=128513469032115&w=2
-
-Please have a look at the code at your earliest convience.  As before, I will be making
-any required changes into lio-core-2.6.git/lio-4.0, and respining this tree as necessary
-for an upstream maintainer pull for v2.6.37.
-
-Many, many thanks again to all of the folks who contributed.  It certainly would not
-be possible without your help!
+Finally it adds the remaining missing VARIABLE_LENGTH_CMD service actions
+XDREAD_32, XDWRITE_32, XPWRITE_32 and XDWRITEREAD_32.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ include/scsi/scsi.h |   28 ++++++++++++++++++++++++++++
+ 1 files changed, 28 insertions(+), 0 deletions(-)
 
-Nicholas Bellinger (21):
-  scsi: Add missing SPC-4 CDB and MAINTENANCE_[IN,OUT] and
-    VARIABLE_LENGTH_CMD service actions
-  tcm: Add ConfigFS extended macro set
-  tcm: Add v4 base data structures and struct target_core_fabric_ops
-  tcm: Add SPC-4 explict and implict Asymmetric Logical Unit Access
-    (ALUA)
-  tcm: Add ConfigFS subsystem backstore infrastructure
-  tcm: Add fabric and subsystem transport engine core
-  tcm: Add HBA core infrastructure
-  tcm: Add device core infrastructure
-  tcm: Add target portal group infrastructure
-  tcm: Add SPC-4 compliant Persistent Reservations (PR)
-  tcm: Add Task Management infrastructure
-  tcm: Add UNIT_ATTENTION infrastructure support
-  tcm: Add SCSI MIB statistics support
-  tcm: Add FILEIO subsystem plugin
-  tcm: Add IBLOCK subsystem plugin
-  tcm: Add PSCSI subsystem plugin
-  tcm: Add RAMDISK_DR and RAMDISK_MCP subsystem plugins
-  tcm: Add generic fabric independent ConfigFS infrastructure
-  tcm: Add generic ProtoID and TransportID fabric handlers for SAS, FC,
-    and iSCSI
-  tcm: Add Kbuild and Kconfig for drivers/target,
-    Documentation/target/tcm_mod_builder.py
-  tcm_loop: Add multi-fabric Linux/SCSI LLD fabric module
-
- Documentation/target/tcm_mod_builder.py        | 1039 +++
- Documentation/target/tcm_mod_builder.txt       |  138 +
- drivers/Kconfig                                |    2 +
- drivers/Makefile                               |    1 +
- drivers/target/Kbuild                          |   30 +
- drivers/target/Kconfig                         |   36 +
- drivers/target/target_core_alua.c              | 1993 ++++++
- drivers/target/target_core_alua.h              |  142 +
- drivers/target/target_core_configfs.c          | 3334 +++++++++
- drivers/target/target_core_device.c            | 1705 +++++
- drivers/target/target_core_fabric_configfs.c   | 1001 +++
- drivers/target/target_core_fabric_lib.c        |  451 ++
- drivers/target/target_core_file.c              | 1197 ++++
- drivers/target/target_core_file.h              |   81 +
- drivers/target/target_core_hba.c               |  211 +
- drivers/target/target_core_hba.h               |   14 +
- drivers/target/target_core_iblock.c            | 1173 ++++
- drivers/target/target_core_iblock.h            |   44 +
- drivers/target/target_core_mib.c               | 1081 +++
- drivers/target/target_core_mib.h               |   31 +
- drivers/target/target_core_pr.c                | 4243 ++++++++++++
- drivers/target/target_core_pr.h                |   67 +
- drivers/target/target_core_pscsi.c             | 1569 +++++
- drivers/target/target_core_pscsi.h             |   69 +
- drivers/target/target_core_rd.c                | 1555 +++++
- drivers/target/target_core_rd.h                |   89 +
- drivers/target/target_core_scdb.c              |  158 +
- drivers/target/target_core_scdb.h              |   15 +
- drivers/target/target_core_tmr.c               |  405 ++
- drivers/target/target_core_tpg.c               |  830 +++
- drivers/target/target_core_transport.c         | 8860 ++++++++++++++++++++++++
- drivers/target/target_core_ua.c                |  332 +
- drivers/target/target_core_ua.h                |   36 +
- drivers/target/tcm_loop/Kbuild                 |   11 +
- drivers/target/tcm_loop/Kconfig                |   13 +
- drivers/target/tcm_loop/tcm_loop_configfs.c    |  649 ++
- drivers/target/tcm_loop/tcm_loop_configfs.h    |    2 +
- drivers/target/tcm_loop/tcm_loop_core.h        |   77 +
- drivers/target/tcm_loop/tcm_loop_fabric.c      |  494 ++
- drivers/target/tcm_loop/tcm_loop_fabric.h      |   43 +
- drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |  618 ++
- drivers/target/tcm_loop/tcm_loop_fabric_scsi.h |   10 +
- include/scsi/scsi.h                            |   28 +
- include/target/configfs_macros.h               |  147 +
- include/target/target_core_base.h              | 1056 +++
- include/target/target_core_configfs.h          |   57 +
- include/target/target_core_device.h            |   66 +
- include/target/target_core_fabric_configfs.h   |  106 +
- include/target/target_core_fabric_lib.h        |   28 +
- include/target/target_core_fabric_ops.h        |  101 +
- include/target/target_core_tmr.h               |   43 +
- include/target/target_core_tpg.h               |   39 +
- include/target/target_core_transport.h         |  570 ++
- 53 files changed, 36090 insertions(+), 0 deletions(-)
- create mode 100755 Documentation/target/tcm_mod_builder.py
- create mode 100644 Documentation/target/tcm_mod_builder.txt
- create mode 100644 drivers/target/Kbuild
- create mode 100644 drivers/target/Kconfig
- create mode 100644 drivers/target/target_core_alua.c
- create mode 100644 drivers/target/target_core_alua.h
- create mode 100644 drivers/target/target_core_configfs.c
- create mode 100644 drivers/target/target_core_device.c
- create mode 100644 drivers/target/target_core_fabric_configfs.c
- create mode 100644 drivers/target/target_core_fabric_lib.c
- create mode 100644 drivers/target/target_core_file.c
- create mode 100644 drivers/target/target_core_file.h
- create mode 100644 drivers/target/target_core_hba.c
- create mode 100644 drivers/target/target_core_hba.h
- create mode 100644 drivers/target/target_core_iblock.c
- create mode 100644 drivers/target/target_core_iblock.h
- create mode 100644 drivers/target/target_core_mib.c
- create mode 100644 drivers/target/target_core_mib.h
- create mode 100644 drivers/target/target_core_pr.c
- create mode 100644 drivers/target/target_core_pr.h
- create mode 100644 drivers/target/target_core_pscsi.c
- create mode 100644 drivers/target/target_core_pscsi.h
- create mode 100644 drivers/target/target_core_rd.c
- create mode 100644 drivers/target/target_core_rd.h
- create mode 100644 drivers/target/target_core_scdb.c
- create mode 100644 drivers/target/target_core_scdb.h
- create mode 100644 drivers/target/target_core_tmr.c
- create mode 100644 drivers/target/target_core_tpg.c
- create mode 100644 drivers/target/target_core_transport.c
- create mode 100644 drivers/target/target_core_ua.c
- create mode 100644 drivers/target/target_core_ua.h
- create mode 100644 drivers/target/tcm_loop/Kbuild
- create mode 100644 drivers/target/tcm_loop/Kconfig
- create mode 100644 drivers/target/tcm_loop/tcm_loop_configfs.c
- create mode 100644 drivers/target/tcm_loop/tcm_loop_configfs.h
- create mode 100644 drivers/target/tcm_loop/tcm_loop_core.h
- create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric.c
- create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric.h
- create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
- create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric_scsi.h
- create mode 100644 include/target/configfs_macros.h
- create mode 100644 include/target/target_core_base.h
- create mode 100644 include/target/target_core_configfs.h
- create mode 100644 include/target/target_core_device.h
- create mode 100644 include/target/target_core_fabric_configfs.h
- create mode 100644 include/target/target_core_fabric_lib.h
- create mode 100644 include/target/target_core_fabric_ops.h
- create mode 100644 include/target/target_core_tmr.h
- create mode 100644 include/target/target_core_tpg.h
- create mode 100644 include/target/target_core_transport.h
-
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 8fcb6e0..c927661 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -107,33 +107,61 @@ struct scsi_cmnd;
+ #define PERSISTENT_RESERVE_OUT 0x5f
+ #define VARIABLE_LENGTH_CMD   0x7f
+ #define REPORT_LUNS           0xa0
++#define SECURITY_PROTOCOL_IN  0xa2
+ #define MAINTENANCE_IN        0xa3
+ #define MAINTENANCE_OUT       0xa4
+ #define MOVE_MEDIUM           0xa5
+ #define EXCHANGE_MEDIUM       0xa6
+ #define READ_12               0xa8
+ #define WRITE_12              0xaa
++#define READ_MEDIA_SERIAL_NUMBER 0xab
+ #define WRITE_VERIFY_12       0xae
+ #define VERIFY_12	      0xaf
+ #define SEARCH_HIGH_12        0xb0
+ #define SEARCH_EQUAL_12       0xb1
+ #define SEARCH_LOW_12         0xb2
++#define SECURITY_PROTOCOL_OUT 0xb5
+ #define READ_ELEMENT_STATUS   0xb8
+ #define SEND_VOLUME_TAG       0xb6
+ #define WRITE_LONG_2          0xea
++#define EXTENDED_COPY         0x83
++#define RECEIVE_COPY_RESULTS  0x84
++#define ACCESS_CONTROL_IN     0x86
++#define ACCESS_CONTROL_OUT    0x87
+ #define READ_16               0x88
+ #define WRITE_16              0x8a
++#define READ_ATTRIBUTE        0x8c
++#define WRITE_ATTRIBUTE	      0x8d
+ #define VERIFY_16	      0x8f
+ #define WRITE_SAME_16	      0x93
+ #define SERVICE_ACTION_IN     0x9e
+ /* values for service action in */
+ #define	SAI_READ_CAPACITY_16  0x10
+ #define SAI_GET_LBA_STATUS    0x12
++/* values for VARIABLE_LENGTH_CMD service action codes
++ * see spc4r17 Section D.3.5, table D.7 and D.8 */
++#define VLC_SA_RECEIVE_CREDENTIAL 0x1800
+ /* values for maintenance in */
++#define MI_REPORT_IDENTIFYING_INFORMATION 0x05
+ #define MI_REPORT_TARGET_PGS  0x0a
++#define MI_REPORT_ALIASES     0x0b
++#define MI_REPORT_SUPPORTED_OPERATION_CODES 0x0c
++#define MI_REPORT_SUPPORTED_TASK_MANAGEMENT_FUNCTIONS 0x0d
++#define MI_REPORT_PRIORITY   0x0e
++#define MI_REPORT_TIMESTAMP  0x0f
++#define MI_MANAGEMENT_PROTOCOL_IN 0x10
+ /* values for maintenance out */
++#define MO_SET_IDENTIFYING_INFORMATION 0x06
+ #define MO_SET_TARGET_PGS     0x0a
++#define MO_CHANGE_ALIASES     0x0b
++#define MO_SET_PRIORITY       0x0e
++#define MO_SET_TIMESTAMP      0x0f
++#define MO_MANAGEMENT_PROTOCOL_OUT 0x10
+ /* values for variable length command */
++#define XDREAD_32	      0x03
++#define XDWRITE_32	      0x04
++#define XPWRITE_32	      0x06
++#define XDWRITEREAD_32	      0x07
+ #define READ_32		      0x09
+ #define VERIFY_32	      0x0a
+ #define WRITE_32	      0x0b
 -- 
 1.7.3
