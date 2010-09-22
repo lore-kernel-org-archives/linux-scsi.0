@@ -1,93 +1,56 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: scsi_dh_alua: add missing transitioning state support
-Date: Wed, 22 Sep 2010 08:29:01 -0400
-Message-ID: <20100922122901.GA10218@redhat.com>
-References: <1282071956-391-1-git-send-email-snitzer@redhat.com>
- <1282073039.30453.37.camel@haakon2.linux-iscsi.org>
- <4C7B7B9E.3020002@suse.de>
- <20100831151129.GA18855@redhat.com>
- <20100920153539.GA28284@redhat.com>
- <4C98180F.1020707@cs.wisc.edu>
- <20100921193320.GA5110@redhat.com>
- <4C992026.5080402@cs.wisc.edu>
- <4C99D6B3.3090003@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16971] qla4xxx compile failure on 32-bit PowerPC: missing readq
+ and writeq
+Date: Wed, 22 Sep 2010 18:04:47 GMT
+Message-ID: <201009221804.o8MI4lkN028342@demeter2.kernel.org>
+References: <bug-16971-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:8725 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753858Ab0IVM3I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Sep 2010 08:29:08 -0400
-Content-Disposition: inline
-In-Reply-To: <4C99D6B3.3090003@suse.de>
+Received: from [140.211.167.42] ([140.211.167.42]:54083 "EHLO
+	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753586Ab0IVSEs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2010 14:04:48 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o8MI4loS028343
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Sep 2010 18:04:47 GMT
+In-Reply-To: <bug-16971-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=16971
 
 
 
-On Wed, Sep 22 2010 at  6:13am -0400,
-Hannes Reinecke <hare@suse.de> wrote:
 
-> Mike Christie wrote:
-> > On 09/21/2010 02:33 PM, Mike Snitzer wrote:
-> >> 2) the patch also modified alua_rtpg() so implicit ALUA would retry
-> >>     (just like explicit ALUA currently does) if TPGS_STATE_TRANSITIONING
-> >>     - so why should we avoid retry for implicit but do it for explicit?
+
+--- Comment #3 from Rafael J. Wysocki <rjw@sisk.pl>  2010-09-22 18:04:46 ---
+On Wednesday, September 22, 2010, Meelis Roos wrote:
+> > > > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
+> > > > Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
+> > > > Submitter	: Meelis Roos <mroos@linux.ee>
+> > > > Date		: 2010-08-19 21:03 (33 days old)
+> > > 
+> > > Still present. The maintainer of the driver has a patch that I have 
+> > > tested, and for quite some time now, but it still does not appear in 
+> > > mainline.
 > > 
-> > Leaving that for Hannes. I cannot think of a reason. Probably just did
-> > not do it.
+> > Do you have a pointer to the maintainer and the patch, so that we can
+> > update the bugzilla entry and ping the maintainer? 
 > 
-> Finally I got around to answering this.
+> The patch was made by Vikas Chaudhary <vikas.chaudhary@qlogic.com> 
+> (CC:d) and sent to me by private me-mail. I was first dubious about 
+> possible endianness problem with qla4xxx private readq and writeq 
+> implementation but he told they forcefully tested it on PPC64 and it 
+> worked.
 > 
-> I've attached a patch which I made the other day which seems to work
-> reasonably well.
-> Looks better from my side, so if you agree I'll be sending it
-> upstream properly.
+> Last I heard from him on September 6th when he wrote he intended to push 
+> the patch upstream together with other patches the same week.
 
-Looks good for covering this "2)" change above.
-
-But "1)" change you had concern with (in my previous patch) was that
-alua_prep_fn would return BLKPREP_DEFER if TPGS_STATE_TRANSITIONING.
-This was bad in that FS requests (like the directio path checker) would
-always call ->prep_fn and that if TPGS_STATE_TRANSITIONING the RTPG
-state would never be reevaluated.. leaving us stuck in BLKPREP_DEFER.
-
-Seems I'm missing a new flow that proves this is no longer a concern.
-
-Please advise, thanks.
-Mike
-
-> From d3f02c90db3e3177309b78726d082e17dd772ee2 Mon Sep 17 00:00:00 2001
-> From: Hannes Reinecke <hare@suse.de>
-> Date: Wed, 22 Sep 2010 12:09:07 +0200
-> Subject: [PATCH] scsi_dh_alua: Handle all states correctly
-> 
-> For ALUA we should be handling all states, independent of whether
-> is explicit or implicit. For 'Transitioning' we should be retry
-> for a certain amount of time; after that an error should be
-> returned.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 1a970a7..c6f57e3 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-...
-> @@ -698,8 +704,11 @@ static int alua_prep_fn(struct scsi_device *sdev, struct request *req)
->  	struct alua_dh_data *h = get_alua_data(sdev);
->  	int ret = BLKPREP_OK;
->  
-> -	if (h->state != TPGS_STATE_OPTIMIZED &&
-> -	    h->state != TPGS_STATE_NONOPTIMIZED) {
-> +	if (h->state == TPGS_STATE_TRANSITIONING)
-> +		ret = BLKPREP_DEFER;
-> +	else if (h->state != TPGS_STATE_OPTIMIZED &&
-> +		 h->state != TPGS_STATE_NONOPTIMIZED &&
-> +		 h->state != TPGS_STATE_LBA_DEPENDENT) {
->  		ret = BLKPREP_KILL;
->  		req->cmd_flags |= REQ_QUIET;
->  	}
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
