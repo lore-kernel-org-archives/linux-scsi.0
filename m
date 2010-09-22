@@ -1,62 +1,54 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: [PATCH] mvsas: defer non-NCQ cmds when NCQ cmds are active
-Date: Tue, 21 Sep 2010 19:24:46 -0500
-Message-ID: <4C994CCE.3020607@redhat.com>
-References: <20100921191701.GA16726@dhcp-10-15-1-70.hsv.redhat.com> <1285102274.16440.132.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/2] scsi/scsi_debug: Add missing scsi.h defs and XDWRITEREAD_32 support
+Date: Tue, 21 Sep 2010 22:50:40 -0700
+Message-ID: <1285134640-7720-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26479 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751620Ab0IVAY2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Sep 2010 20:24:28 -0400
-In-Reply-To: <1285102274.16440.132.camel@mulgrave.site>
+Received: from smtp101.sbc.mail.ne1.yahoo.com ([98.138.84.212]:31562 "HELO
+	smtp101.sbc.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752326Ab0IVFuo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Sep 2010 01:50:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, jeff@garzik.org, k.skarlatos@gmail.com
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Douglas Gilbert <dgilbert@interlog.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-James Bottomley wrote:
-> On Tue, 2010-09-21 at 14:17 -0500, David Milburn wrote:
->> Non-NCQ commands should run exclusively, ata_qc_issue warns when mixing
->> non-NCQ and NCQ commands.
->>
->> Signed-off-by: David Milburn <dmilburn@redhat.com>
->> Reported-by: Konstantinos Skarlatos <k.skarlatos@gmail.com>
->> ---
->>  drivers/scsi/libsas/sas_ata.c |    1 +
->>  1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
->> index 042153c..ddbade7 100644
->> --- a/drivers/scsi/libsas/sas_ata.c
->> +++ b/drivers/scsi/libsas/sas_ata.c
->> @@ -347,6 +347,7 @@ static int sas_ata_scr_read(struct ata_link *link, unsigned int sc_reg_in,
->>  static struct ata_port_operations sas_sata_ops = {
->>  	.phy_reset		= sas_ata_phy_reset,
->>  	.post_internal_cmd	= sas_ata_post_internal,
->> +	.qc_defer               = ata_std_qc_defer,
-> 
-> What does this do on the card that doesn't need it: the aic94xx?  That
-> one takes in a pipeline of commands and takes responsibility for getting
-> the issue right.  Something like this throttles the pipeline higher than
-> the aic94xx is expecting.  However, as long as it's not too much of a
-> performance problem, I don't mind applying it.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-James,
+Hi Doug and James,
 
-For any driver using sas_sata_ops, it could effect performance for
-those drivers whose execute_task handles both, though I can't say
-I am real familiar with aic94xx.
+Attached are two patches for Linux/SCSI that I ended up needing to allow the
+simple XDWRITEREAD_32 passthrough into TCM/pSCSI -> struct request -> SCSI Midlayer
+in recent lio-core-2.6.git/lio-4.0 commits.
 
-Thanks,
-David
+The first adds some missing SPC-4 CDB and MAINTENANCE_[IN,OUT] +
+VARIABLE_LENGTH_CMD service actions to include/scsi/scsi.h.  These
+are used by TCM Core code and pieces of this patch have been posted
+here for the RFC before:
 
+http://marc.info/?l=linux-scsi&m=128316041105964&w=2
 
+The second adds XDWRITEREAD_32 emulation to scsi_debug, which
+is pretty quite simple because everything we need is already
+handled by XDWRITEREAD_10.  8-)
 
-> 
-> James
-> 
-> 
+This has been tested using 'sgv4_xdwriteread -e' with TCM_Loop ->
+TCM/pSCSI -> scsi_debug 32-byte BIDI-COMMAND CDB passthrough on
+v2.6.36-rc4.
+
+Thanks!
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Nicholas Bellinger (2):
+  scsi: Add missing SPC-4 CDB and MAINTENANCE_[IN,OUT] and
+    VARIABLE_LENGTH_CMD service actions
+  scsi_debug: Add XDWRITEREAD_32 support
+
+ drivers/scsi/scsi_debug.c |    3 +++
+ include/scsi/scsi.h       |   28 ++++++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 0 deletions(-)
+
+-- 
+1.7.3
 
