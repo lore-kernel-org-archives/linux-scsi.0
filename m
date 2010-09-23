@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v3 07/15] qla4xxx: Remove host_lock unlock() + lock() from qla4xxx_queuecommand()
-Date: Thu, 23 Sep 2010 16:38:29 -0700
-Message-ID: <1285285109-16471-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC v3 03/15] libsas: Remove host_lock unlock() + lock() from sas_queuecommand()
+Date: Thu, 23 Sep 2010 16:37:53 -0700
+Message-ID: <1285285073-16391-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
@@ -11,44 +11,43 @@ List-Id: linux-scsi@vger.kernel.org
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
 This patch removes the now legacy host_lock unlock() + lock() optimization
-from ql4_os.c:qla4xxx_queuecommand()
+from sas_scsi_host.c:sas_queuecommand()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/qla4xxx/ql4_os.c |    8 +-------
- 1 files changed, 1 insertions(+), 7 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c |    5 -----
+ 1 files changed, 0 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 370d40f..cfbe8b5 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -511,26 +511,20 @@ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
- 	    test_bit(DPC_RESET_HA_FW_CONTEXT, &ha->dpc_flags))
- 		goto qc_host_busy;
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index f0cfba9..bc1c97c 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -202,18 +202,14 @@ int sas_queue_up(struct sas_task *task)
+  */
+ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 		     void (*scsi_done)(struct scsi_cmnd *))
+-	__releases(host->host_lock)
+ 	__acquires(dev->sata_dev.ap->lock)
+ 	__releases(dev->sata_dev.ap->lock)
+-	__acquires(host->host_lock)
+ {
+ 	int res = 0;
+ 	struct domain_device *dev = cmd_to_domain_dev(cmd);
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
  
--	spin_unlock_irq(ha->host->host_lock);
+-	spin_unlock_irq(host->host_lock);
 -
- 	srb = qla4xxx_get_new_srb(ha, ddb_entry, cmd, done);
- 	if (!srb)
--		goto qc_host_busy_lock;
-+		goto qc_host_busy;
- 
- 	rval = qla4xxx_send_command_to_isp(ha, srb);
- 	if (rval != QLA_SUCCESS)
- 		goto qc_host_busy_free_sp;
- 
--	spin_lock_irq(ha->host->host_lock);
- 	return 0;
- 
- qc_host_busy_free_sp:
- 	qla4xxx_srb_free_dma(ha, srb);
- 	mempool_free(srb, ha->srb_mempool);
- 
--qc_host_busy_lock:
--	spin_lock_irq(ha->host->host_lock);
--
- qc_host_busy:
- 	return SCSI_MLQUEUE_HOST_BUSY;
+ 	{
+ 		struct sas_ha_struct *sas_ha = dev->port->ha;
+ 		struct sas_task *task;
+@@ -254,7 +250,6 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 		}
+ 	}
+ out:
+-	spin_lock_irq(host->host_lock);
+ 	return res;
+ }
  
 -- 
 1.7.3
