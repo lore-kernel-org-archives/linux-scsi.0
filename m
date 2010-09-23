@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v3 05/15] libata: Remove host_lock unlock() + lock() from ata_scsi_queuecmd()
-Date: Thu, 23 Sep 2010 16:38:09 -0700
-Message-ID: <1285285089-16431-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC v3 04/15] libfc: Remove host_lock unlock() + lock() from fc_queuecommand()
+Date: Thu, 23 Sep 2010 16:38:00 -0700
+Message-ID: <1285285080-16411-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
@@ -11,32 +11,42 @@ List-Id: linux-scsi@vger.kernel.org
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
 This patch removes the now legacy host_lock unlock() + lock() optimization
-from libata-scsi.c:ata_scsi_queuecmd()
+fc_fcp.c:fc_queuecommand()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/ata/libata-scsi.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a89172c..33ead2a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3177,7 +3177,6 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- 
- 	ap = ata_shost_to_port(shost);
- 
--	spin_unlock(shost->host_lock);
- 	spin_lock(ap->lock);
- 
- 	ata_scsi_dump_cdb(ap, cmd);
-@@ -3191,7 +3190,6 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index c797f6b..140cd94 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1751,8 +1751,7 @@ static inline int fc_fcp_lport_queue_ready(struct fc_lport *lport)
+  * @cmd:   The scsi_cmnd to be executed
+  * @done:  The callback function to be called when the scsi_cmnd is complete
+  *
+- * This is the i/o strategy routine, called by the SCSI layer. This routine
+- * is called with the host_lock held.
++ * This is the i/o strategy routine, called by the SCSI layer.
+  */
+ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ {
+@@ -1772,7 +1771,6 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 		done(sc_cmd);
+ 		return 0;
  	}
+-	spin_unlock_irq(lport->host->host_lock);
  
- 	spin_unlock(ap->lock);
--	spin_lock(shost->host_lock);
+ 	if (!*(struct fc_remote_port **)rport->dd_data) {
+ 		/*
+@@ -1849,7 +1847,6 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ out:
+-	spin_lock_irq(lport->host->host_lock);
  	return rc;
  }
- 
+ EXPORT_SYMBOL(fc_queuecommand);
 -- 
 1.7.3
