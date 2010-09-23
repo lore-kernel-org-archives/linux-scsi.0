@@ -1,93 +1,91 @@
-From: bo yang <boyang1288@gmail.com>
-Subject: [PATCH 5/5] scsi: megaraid_sas - Version and documentation update
-Date: Wed, 22 Sep 2010 23:11:50 -0400
-Message-ID: <AANLkTi=praySm1B3dhU+LxhWK2yUccZkzWpd6-6UERYa@mail.gmail.com>
+From: Joel Becker <Joel.Becker@oracle.com>
+Subject: Re: [RFC 02/22] configfs: Add struct
+ configfs_item_operations->check_link() in configfs_unlink()
+Date: Wed, 22 Sep 2010 20:59:17 -0700
+Message-ID: <20100923035916.GA11202@mail.oracle.com>
+References: <20100907224413.GC21935@mail.oracle.com>
+ <1283911739.556.420.camel@haakon2.linux-iscsi.org>
+ <20100908192639.GD29545@mail.oracle.com>
+ <1283979207.556.510.camel@haakon2.linux-iscsi.org>
+ <20100910152802.GG885@mail.oracle.com>
+ <1284145606.19890.68.camel@haakon2.linux-iscsi.org>
+ <20100910194404.GJ885@mail.oracle.com>
+ <1284148323.19890.94.camel@haakon2.linux-iscsi.org>
+ <20100920220633.GC8405@mail.oracle.com>
+ <1285139802.1849.13.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=000e0cd32e4285a4fa0490e49f2e
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, James.Bottomley@suse.de, bo.yang@lsi.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:49102 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750709Ab0IWEBJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Sep 2010 00:01:09 -0400
+Content-Disposition: inline
+In-Reply-To: <1285139802.1849.13.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Konrad Rzeszutek Wilk <konrad@darnok.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, Boaz Harrosh <bharrosh@panasas.com>, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
---000e0cd32e4285a4fa0490e49f2e
-Content-Type: text/plain; charset=ISO-8859-1
+On Wed, Sep 22, 2010 at 12:16:42AM -0700, Nicholas A. Bellinger wrote:
+> On Mon, 2010-09-20 at 15:06 -0700, Joel Becker wrote:
+> > [Sorry on the delay, I was out of town]
+> > 
+> 
+> Many, thanks for your followup on this item, my comments are below.
 
-Update the version and documentation.
+	No problem.  I'm sorry I was so busy that we couldn't iron this
+out a few months ago.  I'm glad we're getting somewhere.
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+> > On Fri, Sep 10, 2010 at 12:52:03PM -0700, Nicholas A. Bellinger wrote:
+> > > On Fri, 2010-09-10 at 12:44 -0700, Joel Becker wrote:
+> 
+> Actually leaving the sub_child/group2/dst_0/dst_link in the example here
+> would be acceptable for the TCM MappedLUN case, because really we never
+> expect this case to this unless someone is poking at configfs directly,
+> and our userspace code will never do this intentionally.
 
----
- Documentation/scsi/ChangeLog.megaraid_sas |   47 ++++++++++++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas.c      |    2 -
- drivers/scsi/megaraid/megaraid_sas.h      |    6 +--
- 3 files changed, 51 insertions(+), 4 deletions(-)
+	Right.  If someone pokes around and makes it stop working,
+that's their fault.  What we (configfs and TCM) must guarantee is that
+user poking doesn't cause a crash or put things in an unrecoverable
+state.  "Remove all TCM mappins" is a valid recovery state, though
+"Recreate the symlink and it works again" is a better one.
 
---000e0cd32e4285a4fa0490e49f2e
-Content-Type: application/octet-stream; name="megasas-version.patch"
-Content-Disposition: attachment; filename="megasas-version.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gef1pyje0
+> > 	I'm saying that $object should count how many people are
+> > pointing to it, so that when you remove src_link, ACL is *not* freed.
+> > It will only be freed when both src_link and dst_link are removed.  This
+> > way you do not crash.  Perhaps I'm not understanding the ACL object.
+> > Perhaps I'm missing the mechanism entirely.  But I don't see why the ACL
+> > object must necessarily be freed when one symlink is removed but not the
+> > other.
+> > 
+> 
+> No, I think your points here make perfect sense.  I will look into a
+> patch that leaves the TCM fabric MappedLUNs symlinks in place when the
+> underlying TPG fabric LUN symlink is removed without breaking anything,
+> but still does the necessary accounting to ensure that shutdown with
+> active I/Os still works as expected.  I will plan to drop the
+> ->check_link() patch from the forthcoming RFC v2 series.
 
-ZGlmZiAtcnVwTiBvbGQvRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMg
-bmV3L0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzCi0tLSBvbGQvRG9j
-dW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMJMjAxMC0wOS0xNyAwMjoxOTo0
-Ni4wMDAwMDAwMDAgLTA0MDAKKysrIG5ldy9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1l
-Z2FyYWlkX3NhcwkyMDEwLTA5LTE3IDAyOjE5OjQ2LjAwMDAwMDAwMCAtMDQwMApAQCAtMSwzICsx
-LDUwIEBACisxIFJlbGVhc2UgRGF0ZSAgICA6IFRodXIuICBNYXkgMDMsIDIwMTAgMDk6MTI6NDUg
-UFNUIDIwMDkgLQorCQkJKGVtYWlsZC1pZDptZWdhcmFpZGxpbnV4QGxzaS5jb20pCisJCQlCbyBZ
-YW5nCisKKzIgQ3VycmVudCBWZXJzaW9uIDogMDAuMDAuMDQuMzEtcmMxCiszIE9sZGVyIFZlcnNp
-b24gICA6IDAwLjAwLjA0LjE3LjEtcmMxCisKKzEuCUFkZCB0aGUgT25saW5lIENvbnRyb2xsZXIg
-UmVzZXQgKE9DUikgdG8gdGhlIERyaXZlci4KKwlPQ1IgaXMgdGhlIG5ldyBmZWF0dXJlIGZvciBt
-ZWdhcmFpZF9zYXMgZHJpdmVyIHdoaWNoCisJd2lsbCBhbGxvdyB0aGUgZncgdG8gZG8gdGhlIGNo
-aXAgcmVzZXQgd2hpY2ggd2lsbCBub3QKKwlhZmZhY3QgdGhlIE9TIGJlaGF2aW91cy4KKworCVRv
-IGFkZCB0aGUgT0NSIHN1cHBvcnQsIGRyaXZlciBuZWVkIHRvIGRvOiAKKwkJYSkuIHJlc2V0IHRo
-ZSBjb250cm9sbGVyIGNoaXBzIC0tIFhzY2FsZSBhbmQgR2VuMiB3aGljaAorCQl3aWxsIGNoYW5n
-ZSB0aGUgZnVuY3Rpb24gY2FsbHMgYW5kIGFkZCB0aGUgcmVzZXQgZnVuY3Rpb24KKwkJcmVsYXRl
-ZCB0byB0aGlzIHR3byBjaGlwcy4KKwkJCisJCWIpLiBkdXJpbmcgdGhlIHJlc2V0LCBkcml2ZXIg
-d2lsbCBzdG9yZSB0aGUgcGVuZGluZyBjbWRzCisJCXdoaWNoIG5vdCByZXR1cm5lZCBieSBGVyB0
-byBkcml2ZXIncyBwZW5kaW5nIHF1ZXVlLiAgRHJpdmVyCisJCXdpbGwgcmUtaXNzdWUgdGhvc2Ug
-cGVuZGluZyBjbWRzIGFnYWluIHRvIEZXIGFmdGVyIHRoZSBPQ1IKKwkJZmluaXNoZWQuCisJCQor
-CQljKS4gSW4gZHJpdmVyJ3MgdGltZW91dCByb3V0aW5lLCBkcml2ZXIgd2lsbCByZXBvcnQgdG8K
-KwkJT1MgYXMgcmVzZXQuIEFsc28gZHJpdmVyJ3MgcXVldWUgcm91dGluZSB3aWxsIGJsb2NrIHRo
-ZQorCQljbWRzIHVudGlsIHRoZSBPQ1IgZmluaXNoZWQuCisJCQorCQlkKS4gaW4gRHJpdmVyJ3Mg
-SVNSIHJvdXRpbmUsIGlmIGRyaXZlciBnZXQgdGhlIEZXIHN0YXRlIGFzCisJCXN0YXRlIGNoYW5n
-ZSwgRlcgaW4gRmFpbHVyZSBzdGF0dXMgYW5kIEZXIHN1cHBvcnQgb25saW5lIGNvbnRyb2xsZXIK
-KwkJcmVzZXQgKE9DUiksIGRyaXZlciB3aWxsIHN0YXJ0IHRvIGRvIHRoZSBjb250cm9sbGVyIHJl
-c2V0LgorCQkKKwkJZSkuIEluIGRyaXZlcidzIElPQ1RMIHJvdXRpbmUsIHRoZSBhcHBsaWNhdGlv
-biBjbWRzIHdpbGwgd2FpdCBmb3IgdGhlCisJCU9DUiB0byBmaW5pc2gsIHRoZW4gaXNzdWUgdGhl
-IGNtZHMgdG8gRlcuCisJCSAKKwkJZikuIEJlZm9yZSBkcml2ZXIga2lsbCBhZGFwdGVyLCBkcml2
-ZXIgd2lsbCBkbyBsYXN0IGNoYW5jZSBvZgorCQlPQ1IgdG8gc2VlIGlmIGRyaXZlciBjYW4gYnJp
-bmcgYmFjayB0aGUgRlcuICAgICAgCisKKzIuCUFkZCB0aGUgc3VwcG9ydCB1cGRhdGUgZmxhZyB0
-byB0aGUgZHJpdmVyIHRvIHRlbGwgTFNJIG1lZ2FyYWlkX3NhcworCWFwcGxpY2F0aW9uIHdoaWNo
-IGRyaXZlciB3aWxsIHN1cHBvcnQgdGhlIGRldmljZSB1cGRhdGUuICBTbyBhcHBsaWNhdGlvbgor
-CXdpbGwgbm90IG5lZWQgdG8gZG8gdGhlIGRldmljZSB1cGRhdGUgYWZ0ZXIgYXBwbGljYXRpb24g
-YWRkL2RlbCB0aGUgZGV2aWNlCisJZnJvbSB0aGUgc3lzdGVtLgorMy4JSW4gZHJpdmVyJ3MgdGlt
-ZW91dCByb3V0aW5lLCBkcml2ZXIgd2lsbCBkbyB0aHJlZSB0aW1lIHJlc2V0IGlmIGZ3IGlzIGlu
-IAorCWZhaWxlZCBzdGF0ZS4gIERyaXZlciB3aWxsIGtpbGwgYWRhcHRlciBpZiBjYW4ndCBicmlu
-ZyBiYWNrIEZXIGFmdGVyIHRoZQorCXRoaXMgdGhyZWUgdGltZXMgcmVzZXQuCis0LglBZGQgdGhl
-IGlucHV0IHBhcmFtZXRlciBtYXhfc2VjdG9ycyB0byAxTUIgc3VwcG9ydCB0byBvdXIgR0VOMiBj
-b250cm9sbGVyLgorCWN1c3RvbWVyIGNhbiB1c2UgdGhlIGlucHV0IHBhcmFtZW50ZXIgbWF4X3Nl
-Y3RvcnMgdG8gYWRkIDFNQiBzdXBwb3J0IHRvIEdFTjIKKwljb250cm9sbGVyLgorCiAxIFJlbGVh
-c2UgRGF0ZSAgICA6IFRodXIuICBPY3QgMjksIDIwMDkgMDk6MTI6NDUgUFNUIDIwMDkgLQogCQkJ
-KGVtYWlsZC1pZDptZWdhcmFpZGxpbnV4QGxzaS5jb20pCiAJCQlCbyBZYW5nCmRpZmYgLXJ1cE4g
-b2xkL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYyBuZXcvZHJpdmVycy9zY3Np
-L21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jCi0tLSBvbGQvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21l
-Z2FyYWlkX3Nhcy5jCTIwMTAtMDktMTcgMDM6Mjk6MjkuMDAwMDAwMDAwIC0wNDAwCisrKyBuZXcv
-ZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jCTIwMTAtMDktMTggMDg6Mjc6MDIu
-MDAwMDAwMDAwIC0wNDAwCkBAIC0xMCw3ICsxMCw3IEBACiAgKgkgICAyIG9mIHRoZSBMaWNlbnNl
-LCBvciAoYXQgeW91ciBvcHRpb24pIGFueSBsYXRlciB2ZXJzaW9uLgogICoKICAqIEZJTEUJCTog
-bWVnYXJhaWRfc2FzLmMKLSAqIFZlcnNpb24gICAgIDogdjAwLjAwLjA0LjE3LjEtcmMxCisgKiBW
-ZXJzaW9uICAgICA6IHYwMC4wMC4wNC4zMS1yYzEKICAqCiAgKiBBdXRob3JzOgogICoJKGVtYWls
-LWlkIDogbWVnYXJhaWRsaW51eEBsc2kuY29tKQpkaWZmIC1ydXBOIG9sZC9kcml2ZXJzL3Njc2kv
-bWVnYXJhaWQvbWVnYXJhaWRfc2FzLmggbmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
-ZF9zYXMuaAotLS0gb2xkL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAkyMDEw
-LTA5LTE3IDAyOjE5OjQ2LjAwMDAwMDAwMCAtMDQwMAorKysgbmV3L2RyaXZlcnMvc2NzaS9tZWdh
-cmFpZC9tZWdhcmFpZF9zYXMuaAkyMDEwLTA5LTE3IDAyOjE5OjQ2LjAwMDAwMDAwMCAtMDQwMApA
-QCAtMTgsOSArMTgsOSBAQAogLyoKICAqIE1lZ2FSQUlEIFNBUyBEcml2ZXIgbWV0YSBkYXRhCiAg
-Ki8KLSNkZWZpbmUgTUVHQVNBU19WRVJTSU9OCQkJIjAwLjAwLjA0LjE3LjEtcmMxIgotI2RlZmlu
-ZSBNRUdBU0FTX1JFTERBVEUJCQkiT2N0LiAyOSwgMjAwOSIKLSNkZWZpbmUgTUVHQVNBU19FWFRf
-VkVSU0lPTgkJIlRodS4gT2N0LiAyOSwgMTE6NDE6NTEgUFNUIDIwMDkiCisjZGVmaW5lIE1FR0FT
-QVNfVkVSU0lPTgkJCSIwMC4wMC4wNC4zMS1yYzEiCisjZGVmaW5lIE1FR0FTQVNfUkVMREFURQkJ
-CSJNYXkgMywgMjAxMCIKKyNkZWZpbmUgTUVHQVNBU19FWFRfVkVSU0lPTgkJIk1vbi4gTWF5IDMs
-IDExOjQxOjUxIFBTVCAyMDEwIgogCiAvKgogICogRGV2aWNlIElEcwo=
---000e0cd32e4285a4fa0490e49f2e--
+	This sounds like a good plan for initial inclusion.
+
+> In the end I think his is the best approach for .37, eg: no configfs
+> change required.  I am still open to the discussion for resolving this
+> within fs/configfs proper, but at this point I don't have a strong
+> preference and will follow your direction here.
+
+	I think we can revisit this as necessary.
+
+Joel
+
+-- 
+
+Life's Little Instruction Book #313
+
+	"Never underestimate the power of love."
+
+Joel Becker
+Consulting Software Developer
+Oracle
+E-mail: joel.becker@oracle.com
+Phone: (650) 506-8127
