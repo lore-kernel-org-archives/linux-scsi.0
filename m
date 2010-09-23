@@ -1,40 +1,60 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v3 15/15] u14-34f: Add scsi_cmd_get_serial() call
-Date: Thu, 23 Sep 2010 16:39:42 -0700
-Message-ID: <1285285182-16646-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
-Cc: James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, "eata.c maintainer" <dario.ballabio@inwind.it>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: "blocked for more than 120 secs" --> a valid situation, how to prevent?
+Date: Thu, 23 Sep 2010 19:41:28 -0400
+Message-ID: <4C9BE5A8.1090002@teksavvy.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+What's the purpose of this stack dump,
+and how can it be prevented in this NORMAL situation??
 
-This patch adds a scsi_cmd_get_serial() call in u14_34f_queuecommand()
-to setup a valid struct scsi_cmnd->serial_number because reorder() still
-depends upon this being set.
+The command was "hdparm --security-erase NULL /dev/sdb",
+which takes about 66 minutes to complete on this particular drive.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/u14-34f.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+I don't see any obvious way for the task to mark itself
+as needing longer than 120 secs to complete the operation.
 
-diff --git a/drivers/scsi/u14-34f.c b/drivers/scsi/u14-34f.c
-index 5d9fdee..ea20906 100644
---- a/drivers/scsi/u14-34f.c
-+++ b/drivers/scsi/u14-34f.c
-@@ -1255,6 +1255,12 @@ static int u14_34f_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scs
-    /* j is the board number */
-    j = ((struct hostdata *) SCpnt->device->host->hostdata)->board_number;
- 
-+   /*
-+    * Call scsi_cmd_get_serial() because we need a valid serial number
-+    * for reorder().
-+    */
-+   scsi_cmd_get_serial(SCpnt);
-+
-    if (SCpnt->host_scribble)
-       panic("%s: qcomm, pid %ld, SCpnt %p already active.\n",
-             BN(j), SCpnt->serial_number, SCpnt);
--- 
-1.7.3
+Thanks.
+
+[ 1800.373281] INFO: task hdparm:1979 blocked for more than 120 seconds.
+[ 1800.373288] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[ 1800.373294] hdparm        D f64a4c00     0  1979   1718 0x00000000
+[ 1800.373303]  f3065c38 00200086 c11be0e3 f64a4c00 c1439ac0 c1439ac0 c1439ac0 c1439ac0
+[ 1800.373317]  f571bdb8 c1439ac0 c1439ac0 dbdc5ec7 00000163 dbdb0cfb 00000163 f571bb60
+[ 1800.373329]  00000001 f3065d18 7fffffff f571bb60 f3065c64 c1270527 f684ca50 f684ca50
+[ 1800.373341] Call Trace:
+[ 1800.373355]  [<c11be0e3>] ? ata_scsi_queuecmd+0x6a/0x73
+[ 1800.373366]  [<c1270527>] schedule_timeout+0x16/0xa5
+[ 1800.373376]  [<c111a4a2>] ? __blk_run_queue+0x3d/0x5e
+[ 1800.373383]  [<c1118626>] ? elv_insert+0x67/0x18f
+[ 1800.373389]  [<c126fd6a>] wait_for_common+0x8a/0xd9
+[ 1800.373399]  [<c1028b75>] ? default_wake_function+0x0/0xd
+[ 1800.373406]  [<c126fe3a>] wait_for_completion+0x12/0x14
+[ 1800.373413]  [<c111d02f>] blk_execute_rq+0x76/0x8f
+[ 1800.373420]  [<c111cf1c>] ? blk_end_sync_rq+0x0/0x28
+[ 1800.373428]  [<c111cc3f>] ? blk_rq_append_bio+0x14/0x3b
+[ 1800.373434]  [<c111ce95>] ? blk_rq_map_user+0x12e/0x1b5
+[ 1800.373442]  [<c11201f8>] sg_io+0x269/0x343
+[ 1800.373450]  [<c11204be>] scsi_cmd_ioctl+0x1ec/0x396
+[ 1800.373457]  [<c11993cf>] ? get_device+0x13/0x18
+[ 1800.373464]  [<c11aeabd>] ? sd_open+0x45/0x104
+[ 1800.373472]  [<c11aea0e>] sd_ioctl+0x6b/0x8c
+[ 1800.373479]  [<c111e2fe>] __blkdev_driver_ioctl+0x66/0x87
+[ 1800.373486]  [<c111ebb2>] blkdev_ioctl+0x5fe/0x62c
+[ 1800.373495]  [<c1061e3f>] ? filemap_fault+0xb5/0x2fc
+[ 1800.373503]  [<c10a7bde>] block_ioctl+0x2a/0x32
+[ 1800.373509]  [<c10a7bde>] ? block_ioctl+0x2a/0x32
+[ 1800.373518]  [<c109345a>] vfs_ioctl+0x27/0x91
+[ 1800.373524]  [<c10a7bb4>] ? block_ioctl+0x0/0x32
+[ 1800.373531]  [<c109398d>] do_vfs_ioctl+0x42a/0x45b
+[ 1800.373538]  [<c10727b7>] ? handle_mm_fault+0x3d8/0x7c2
+[ 1800.373547]  [<c1088e98>] ? fsnotify_modify+0x4f/0x5a
+[ 1800.373555]  [<c101b8f9>] ? do_page_fault+0x1e4/0x243
+[ 1800.373562]  [<c10939ec>] sys_ioctl+0x2e/0x48
+[ 1800.373570]  [<c1002750>] sysenter_do_call+0x12/0x26
+
