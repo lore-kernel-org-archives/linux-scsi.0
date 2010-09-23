@@ -1,60 +1,216 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: "blocked for more than 120 secs" --> a valid situation, how to prevent?
-Date: Thu, 23 Sep 2010 19:41:28 -0400
-Message-ID: <4C9BE5A8.1090002@teksavvy.com>
+From: kxie@chelsio.com
+Subject: [PATCH 3/4] cxgb3i: fixed connection over vlan
+Date: Thu, 23 Sep 2010 16:43:23 -0700
+Message-ID: <201009232343.o8NNhN9e006465@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+Cc: rranjan@chelsio.com, kxie@chelsio.com, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
 
-What's the purpose of this stack dump,
-and how can it be prevented in this NORMAL situation??
+[PATCH 3/4] cxgb3i: fixed connection over vlan
+          
+From: Karen Xie <kxie@chelsio.com>
+          
+This patch fixed the problem of connecting over VLAN.
 
-The command was "hdparm --security-erase NULL /dev/sdb",
-which takes about 66 minutes to complete on this particular drive.
+Signed-off-by: Karen Xie <kxie@chelsio.com>
+---
 
-I don't see any obvious way for the task to mark itself
-as needing longer than 120 secs to complete the operation.
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.c |   47 +++++++++++++++++++++++++++++++-----
+ drivers/scsi/cxgbi/libcxgbi.c      |   37 ++++++----------------------
+ drivers/scsi/cxgbi/libcxgbi.h      |    1 +
+ 3 files changed, 49 insertions(+), 36 deletions(-)
 
-Thanks.
 
-[ 1800.373281] INFO: task hdparm:1979 blocked for more than 120 seconds.
-[ 1800.373288] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[ 1800.373294] hdparm        D f64a4c00     0  1979   1718 0x00000000
-[ 1800.373303]  f3065c38 00200086 c11be0e3 f64a4c00 c1439ac0 c1439ac0 c1439ac0 c1439ac0
-[ 1800.373317]  f571bdb8 c1439ac0 c1439ac0 dbdc5ec7 00000163 dbdb0cfb 00000163 f571bb60
-[ 1800.373329]  00000001 f3065d18 7fffffff f571bb60 f3065c64 c1270527 f684ca50 f684ca50
-[ 1800.373341] Call Trace:
-[ 1800.373355]  [<c11be0e3>] ? ata_scsi_queuecmd+0x6a/0x73
-[ 1800.373366]  [<c1270527>] schedule_timeout+0x16/0xa5
-[ 1800.373376]  [<c111a4a2>] ? __blk_run_queue+0x3d/0x5e
-[ 1800.373383]  [<c1118626>] ? elv_insert+0x67/0x18f
-[ 1800.373389]  [<c126fd6a>] wait_for_common+0x8a/0xd9
-[ 1800.373399]  [<c1028b75>] ? default_wake_function+0x0/0xd
-[ 1800.373406]  [<c126fe3a>] wait_for_completion+0x12/0x14
-[ 1800.373413]  [<c111d02f>] blk_execute_rq+0x76/0x8f
-[ 1800.373420]  [<c111cf1c>] ? blk_end_sync_rq+0x0/0x28
-[ 1800.373428]  [<c111cc3f>] ? blk_rq_append_bio+0x14/0x3b
-[ 1800.373434]  [<c111ce95>] ? blk_rq_map_user+0x12e/0x1b5
-[ 1800.373442]  [<c11201f8>] sg_io+0x269/0x343
-[ 1800.373450]  [<c11204be>] scsi_cmd_ioctl+0x1ec/0x396
-[ 1800.373457]  [<c11993cf>] ? get_device+0x13/0x18
-[ 1800.373464]  [<c11aeabd>] ? sd_open+0x45/0x104
-[ 1800.373472]  [<c11aea0e>] sd_ioctl+0x6b/0x8c
-[ 1800.373479]  [<c111e2fe>] __blkdev_driver_ioctl+0x66/0x87
-[ 1800.373486]  [<c111ebb2>] blkdev_ioctl+0x5fe/0x62c
-[ 1800.373495]  [<c1061e3f>] ? filemap_fault+0xb5/0x2fc
-[ 1800.373503]  [<c10a7bde>] block_ioctl+0x2a/0x32
-[ 1800.373509]  [<c10a7bde>] ? block_ioctl+0x2a/0x32
-[ 1800.373518]  [<c109345a>] vfs_ioctl+0x27/0x91
-[ 1800.373524]  [<c10a7bb4>] ? block_ioctl+0x0/0x32
-[ 1800.373531]  [<c109398d>] do_vfs_ioctl+0x42a/0x45b
-[ 1800.373538]  [<c10727b7>] ? handle_mm_fault+0x3d8/0x7c2
-[ 1800.373547]  [<c1088e98>] ? fsnotify_modify+0x4f/0x5a
-[ 1800.373555]  [<c101b8f9>] ? do_page_fault+0x1e4/0x243
-[ 1800.373562]  [<c10939ec>] sys_ioctl+0x2e/0x48
-[ 1800.373570]  [<c1002750>] sysenter_do_call+0x12/0x26
-
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+index a2c207f..a129a17 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
+@@ -589,9 +589,10 @@ static int do_act_open_rpl(struct t3cdev *tdev, struct sk_buff *skb, void *ctx)
+ 	struct cxgbi_sock *csk = ctx;
+ 	struct cpl_act_open_rpl *rpl = cplhdr(skb);
+ 
+-	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
+-		"csk 0x%p,%u,0x%lx,%u, status %u.\n",
+-		csk, csk->state, csk->flags, csk->atid, rpl->status);
++	pr_info("csk 0x%p,%u,0x%lx,%u, status %u, %pI4:%u-%pI4:%u.\n",
++		csk, csk->state, csk->flags, csk->atid, rpl->status,
++		&csk->saddr.sin_addr.s_addr, ntohs(csk->saddr.sin_port),
++		&csk->daddr.sin_addr.s_addr, ntohs(csk->daddr.sin_port));
+ 
+ 	if (rpl->status != CPL_ERR_TCAM_FULL &&
+ 	    rpl->status != CPL_ERR_CONN_EXIST &&
+@@ -662,8 +663,7 @@ static int abort_status_to_errno(struct cxgbi_sock *csk, int abort_reason,
+ 	switch (abort_reason) {
+ 	case CPL_ERR_BAD_SYN: /* fall through */
+ 	case CPL_ERR_CONN_RESET:
+-		return csk->state > CTP_ESTABLISHED ?
+-			-EPIPE : -ECONNRESET;
++		return csk->state > CTP_ESTABLISHED ? -EPIPE : -ECONNRESET;
+ 	case CPL_ERR_XMIT_TIMEDOUT:
+ 	case CPL_ERR_PERSIST_TIMEDOUT:
+ 	case CPL_ERR_FINWAIT2_TIMEDOUT:
+@@ -945,17 +945,44 @@ static void release_offload_resources(struct cxgbi_sock *csk)
+ 	csk->cdev = NULL;
+ }
+ 
++static void update_address(struct cxgbi_hba *chba)
++{
++	if (chba->ipv4addr) {
++		if (chba->vdev &&
++		    chba->ipv4addr != cxgb3i_get_private_ipv4addr(chba->vdev)) {
++			cxgb3i_set_private_ipv4addr(chba->vdev, chba->ipv4addr);
++			cxgb3i_set_private_ipv4addr(chba->ndev, 0);
++			pr_info("%s set %pI4.\n",
++				chba->vdev->name, &chba->ipv4addr);
++		} else if (chba->ipv4addr !=
++				cxgb3i_get_private_ipv4addr(chba->ndev)) {
++			cxgb3i_set_private_ipv4addr(chba->ndev, chba->ipv4addr);
++			pr_info("%s set %pI4.\n",
++				chba->ndev->name, &chba->ipv4addr);
++		}
++	} else if (cxgb3i_get_private_ipv4addr(chba->ndev)) {
++		if (chba->vdev)
++			cxgb3i_set_private_ipv4addr(chba->vdev, 0);
++		cxgb3i_set_private_ipv4addr(chba->ndev, 0);
++	}
++}
++
+ static int init_act_open(struct cxgbi_sock *csk)
+ {
+ 	struct dst_entry *dst = csk->dst;
+ 	struct cxgbi_device *cdev = csk->cdev;
+ 	struct t3cdev *t3dev = (struct t3cdev *)cdev->lldev;
+ 	struct net_device *ndev = cdev->ports[csk->port_id];
++	struct cxgbi_hba *chba = cdev->hbas[csk->port_id];
+ 	struct sk_buff *skb = NULL;
+ 
+ 	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
+ 		"csk 0x%p,%u,0x%lx.\n", csk, csk->state, csk->flags);
+ 
++	update_address(chba);
++	if (chba->ipv4addr)
++		csk->saddr.sin_addr.s_addr = chba->ipv4addr;
++
+ 	csk->rss_qid = 0;
+ 	csk->l2t = t3_l2t_get(t3dev, dst->neighbour, ndev);
+ 	if (!csk->l2t) {
+@@ -984,6 +1011,12 @@ static int init_act_open(struct cxgbi_sock *csk)
+ 	cxgbi_sock_reset_wr_list(csk);
+ 	csk->err = 0;
+ 
++	log_debug(1 << CXGBI_DBG_TOE | 1 << CXGBI_DBG_SOCK,
++		"csk 0x%p,%u,0x%lx, %pI4:%u-%pI4:%u.\n",
++		csk, csk->state, csk->flags,
++		&csk->saddr.sin_addr.s_addr, ntohs(csk->saddr.sin_port),
++		&csk->daddr.sin_addr.s_addr, ntohs(csk->daddr.sin_port));
++
+ 	cxgbi_sock_set_state(csk, CTP_ACTIVE_OPEN);
+ 	send_act_open_req(csk, skb, csk->l2t);
+ 	return 0;
+@@ -1143,9 +1176,9 @@ static int ddp_alloc_gl_skb(struct cxgbi_ddp_info *ddp, int idx,
+ 	for (i = 0; i < cnt; i++) {
+ 		struct sk_buff *skb = alloc_wr(sizeof(struct ulp_mem_io) +
+ 						PPOD_SIZE, 0, gfp);
+-		if (skb) {
++		if (skb)
+ 			ddp->gl_skb[idx + i] = skb;
+-		} else {
++		else {
+ 			ddp_free_gl_skb(ddp, idx, i);
+ 			return -ENOMEM;
+ 		}
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 7136fb2..f3fab74 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -195,16 +195,22 @@ EXPORT_SYMBOL_GPL(cxgbi_device_find_by_lldev);
+ static struct cxgbi_device *cxgbi_device_find_by_netdev(struct net_device *ndev,
+ 							int *port)
+ {
++	struct net_device *vdev = NULL;
+ 	struct cxgbi_device *cdev, *tmp;
+ 	int i;
+ 
+-	if (ndev->priv_flags & IFF_802_1Q_VLAN)
++	if (ndev->priv_flags & IFF_802_1Q_VLAN) {
++		vdev = ndev;
+ 		ndev = vlan_dev_real_dev(ndev);
++		log_debug(1 << CXGBI_DBG_DEV,
++			"vlan dev %s -> %s.\n", vdev->name, ndev->name);
++	}
+ 
+ 	mutex_lock(&cdev_mutex);
+ 	list_for_each_entry_safe(cdev, tmp, &cdev_list, list_head) {
+ 		for (i = 0; i < cdev->nports; i++) {
+ 			if (ndev == cdev->ports[i]) {
++				cdev->hbas[i]->vdev = vdev;
+ 				mutex_unlock(&cdev_mutex);
+ 				if (port)
+ 					*port = i;
+@@ -218,24 +224,6 @@ static struct cxgbi_device *cxgbi_device_find_by_netdev(struct net_device *ndev,
+ 	return NULL;
+ }
+ 
+-struct cxgbi_hba *cxgbi_hba_find_by_netdev(struct net_device *dev,
+-					struct cxgbi_device *cdev)
+-{
+-	int i;
+-
+-	if (dev->priv_flags & IFF_802_1Q_VLAN)
+-		dev = vlan_dev_real_dev(dev);
+-
+-	for (i = 0; i < cdev->nports; i++) {
+-		if (cdev->hbas[i]->ndev == dev)
+-			return cdev->hbas[i];
+-	}
+-	log_debug(1 << CXGBI_DBG_DEV,
+-		"ndev 0x%p, %s, cdev 0x%p, NO match found.\n",
+-		dev, dev->name, cdev);
+-	return NULL;
+-}
+-
+ void cxgbi_hbas_remove(struct cxgbi_device *cdev)
+ {
+ 	int i;
+@@ -532,12 +520,6 @@ static struct cxgbi_sock *cxgbi_check_route(struct sockaddr *dst_addr)
+ 			dst->neighbour->dev->name, ndev->name, mtu);
+ 	}
+ 
+-	if (ndev->priv_flags & IFF_802_1Q_VLAN) {
+-		ndev = vlan_dev_real_dev(ndev);
+-		pr_info("rt dev %s, vlan -> %s.\n",
+-			dst->neighbour->dev->name, ndev->name);
+-	}
+-
+ 	cdev = cxgbi_device_find_by_netdev(ndev, &port);
+ 	if (!cdev) {
+ 		pr_info("dst %pI4, %s, NOT cxgbi device.\n",
+@@ -561,10 +543,7 @@ static struct cxgbi_sock *cxgbi_check_route(struct sockaddr *dst_addr)
+ 	csk->dst = dst;
+ 	csk->daddr.sin_addr.s_addr = daddr->sin_addr.s_addr;
+ 	csk->daddr.sin_port = daddr->sin_port;
+-	if (cdev->hbas[port]->ipv4addr)
+-		csk->saddr.sin_addr.s_addr = cdev->hbas[port]->ipv4addr;
+-	else
+-		csk->saddr.sin_addr.s_addr = rt->rt_src;
++	csk->saddr.sin_addr.s_addr = rt->rt_src;
+ 
+ 	return csk;
+ 
+diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
+index 48e6d62..43025b7 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.h
++++ b/drivers/scsi/cxgbi/libcxgbi.h
+@@ -500,6 +500,7 @@ void cxgbi_sock_free_cpl_skbs(struct cxgbi_sock *);
+ 
+ struct cxgbi_hba {
+ 	struct net_device *ndev;
++	struct net_device *vdev;	/* vlan dev */
+ 	struct Scsi_Host *shost;
+ 	struct cxgbi_device *cdev;
+ 	__be32 ipv4addr;
