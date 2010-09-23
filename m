@@ -1,89 +1,143 @@
 From: bo yang <boyang1288@gmail.com>
-Subject: [PATCH 2/5] scsi: megaraid_sas - support devices update flag
-Date: Wed, 22 Sep 2010 22:50:24 -0400
-Message-ID: <AANLkTim3OKvhov1uCj5g6YgmOzR1rDogLmtJMTkbYq5V@mail.gmail.com>
+Subject: [PATCH 4/5] scsi: megaraid_sas - Add three times Online controller reset
+Date: Wed, 22 Sep 2010 23:08:07 -0400
+Message-ID: <AANLkTi=YBxP2QGgtPdnnnW3xRJ=ESv3EqvV6rYO7s1Wh@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pw0-f66.google.com ([209.85.160.66]:44797 "EHLO
-	mail-pw0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751391Ab0IWDHt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2010 23:07:49 -0400
+Received: from mail-pw0-f46.google.com ([209.85.160.46]:47887 "EHLO
+	mail-pw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752066Ab0IWDIH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2010 23:08:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bo.yang@lsi.com, linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, James.Bottomley@suse.de
+To: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, James.Bottomley@suse.de, bo.yang@lsi.com
 
-Driver added the Device update flag to tell LSI application driver
-will do the device Update.  LSI MegaRAID SAS application will check
-this flag to decide if it is need to update the Device or not.
+If fw didn't raise the interrupt with the fw state change to driver
+and fw goes to failure state, driver Will check the FW state in
+driver's timeout routine and issue the reset if need.  Driver will do
+the OCR upto three times until kill adapter.  Also driver will issue
+OCR before driver kill adapter even if fw in operational state.
 
 Signed-off-by Bo Yang<bo.yang@lsi.com>
 
 ---
- drivers/scsi/megaraid/megaraid_sas.c |   24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ drivers/scsi/megaraid/megaraid_sas.c |   70 ++++++++++++++++++++++++++++++++++-
+ 1 file changed, 69 insertions(+), 1 deletion(-)
 
 diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c
 new/drivers/scsi/megaraid/megaraid_sas.c
---- old/drivers/scsi/megaraid/megaraid_sas.c	2010-09-17 03:00:15.000000000 -0400
-+++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-09-17 03:03:22.000000000 -0400
-@@ -104,6 +104,7 @@ static int megasas_poll_wait_aen;
- static DECLARE_WAIT_QUEUE_HEAD(megasas_poll_wait);
- static u32 support_poll_for_event;
- static u32 megasas_dbg_lvl;
-+static u32 support_device_change;
+--- old/drivers/scsi/megaraid/megaraid_sas.c	2010-09-17 03:25:35.000000000 -0400
++++ new/drivers/scsi/megaraid/megaraid_sas.c	2010-09-17 03:25:06.000000000 -0400
+@@ -729,6 +729,10 @@ static int
+ megasas_check_reset_gen2(struct megasas_instance *instance,
+ 		struct megasas_register_set __iomem *regs)
+ {
++	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
++		return 1;
++	}
++
+ 	return 0;
+ }
 
- /* define lock for aen poll */
- spinlock_t poll_aen_lock;
-@@ -4659,6 +4660,15 @@ megasas_sysfs_show_support_poll_for_even
- static DRIVER_ATTR(support_poll_for_event, S_IRUGO,
- 			megasas_sysfs_show_support_poll_for_event, NULL);
+@@ -941,6 +945,7 @@ megasas_make_sgl_skinny(struct megasas_i
+ 			mfi_sgl->sge_skinny[i].length = sg_dma_len(os_sgl);
+ 			mfi_sgl->sge_skinny[i].phys_addr =
+ 						sg_dma_address(os_sgl);
++			mfi_sgl->sge_skinny[i].flag = 0;
+ 		}
+ 	}
+ 	return sge_count;
+@@ -1568,6 +1573,28 @@ static void megasas_complete_cmd_dpc(uns
+ 	}
+ }
 
-+ static ssize_t
-+megasas_sysfs_show_support_device_change(struct device_driver *dd, char *buf)
++static void
++megasas_internal_reset_defer_cmds(struct megasas_instance *instance);
++
++static void
++process_fw_state_change_wq(struct work_struct *work);
++
++void megasas_do_ocr(struct megasas_instance *instance)
 +{
-+	return sprintf(buf, "%u\n", support_device_change);
++	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1064R) ||
++	(instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5) ||
++	(instance->pdev->device == PCI_DEVICE_ID_LSI_VERDE_ZCR)) {
++		*instance->consumer     = MEGASAS_ADPRESET_INPROG_SIGN;
++	}
++	instance->instancet->disable_intr(instance->reg_set);
++	instance->adprecovery   = MEGASAS_ADPRESET_SM_INFAULT;
++	instance->issuepend_done = 0;
++
++	atomic_set(&instance->fw_outstanding, 0);
++	megasas_internal_reset_defer_cmds(instance);
++	process_fw_state_change_wq(&instance->work_init);
 +}
 +
-+static DRIVER_ATTR(support_device_change, S_IRUGO,
-+			megasas_sysfs_show_support_device_change, NULL);
+ /**
+  * megasas_wait_for_outstanding -	Wait for all outstanding cmds
+  * @instance:				Adapter soft state
+@@ -1585,6 +1612,8 @@ static int megasas_wait_for_outstanding(
+ 	unsigned long flags;
+ 	struct list_head clist_local;
+ 	struct megasas_cmd *reset_cmd;
++	u32 fw_state;
++	u8 kill_adapter_flag;
+
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+ 	adprecovery = instance->adprecovery;
+@@ -1670,7 +1699,45 @@ static int megasas_wait_for_outstanding(
+ 		msleep(1000);
+ 	}
+
+-	if (atomic_read(&instance->fw_outstanding)) {
++	i = 0;
++	kill_adapter_flag = 0;
++	do {
++		fw_state = instance->instancet->read_fw_status_reg(
++					instance->reg_set) & MFI_STATE_MASK;
++		if ((fw_state == MFI_STATE_FAULT) &&
++			(instance->disableOnlineCtrlReset == 0)) {
++			if (i == 3) {
++				kill_adapter_flag = 2;
++				break;
++			}
++			megasas_do_ocr(instance);
++			kill_adapter_flag = 1;
 +
- static ssize_t
- megasas_sysfs_show_dbg_lvl(struct device_driver *dd, char *buf)
- {
-@@ -4979,6 +4989,7 @@ static int __init megasas_init(void)
- 	       MEGASAS_EXT_VERSION);
-
- 	support_poll_for_event = 2;
-+	support_device_change = 1;
-
- 	memset(&megasas_mgmt_info, 0, sizeof(megasas_mgmt_info));
-
-@@ -5027,8 +5038,17 @@ static int __init megasas_init(void)
- 	if (rval)
- 		goto err_dcf_poll_mode_io;
-
-+	rval = driver_create_file(&megasas_pci_driver.driver,
-+				&driver_attr_support_device_change);
-+	if (rval)
-+		goto err_dcf_support_device_change;
++			/* wait for 1 secs to let FW finish the pending cmds */
++			msleep(1000);
++		}
++		i++;
++	} while (i <= 3);
 +
- 	return rval;
-
-+err_dcf_support_device_change:
-+	driver_remove_file(&megasas_pci_driver.driver,
-+		  &driver_attr_poll_mode_io);
++	if (atomic_read(&instance->fw_outstanding) &&
++					!kill_adapter_flag) {
++		if (instance->disableOnlineCtrlReset == 0) {
 +
- err_dcf_poll_mode_io:
- 	driver_remove_file(&megasas_pci_driver.driver,
- 			   &driver_attr_dbg_lvl);
-@@ -5059,6 +5079,10 @@ static void __exit megasas_exit(void)
- 	driver_remove_file(&megasas_pci_driver.driver,
- 			   &driver_attr_dbg_lvl);
- 	driver_remove_file(&megasas_pci_driver.driver,
-+			&driver_attr_support_poll_for_event);
-+	driver_remove_file(&megasas_pci_driver.driver,
-+			&driver_attr_support_device_change);
-+	driver_remove_file(&megasas_pci_driver.driver,
- 			   &driver_attr_release_date);
- 	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
++			megasas_do_ocr(instance);
++
++			/* wait for 5 secs to let FW finish the pending cmds */
++			for (i = 0; i < wait_time; i++) {
++				int outstanding =
++					atomic_read(&instance->fw_outstanding);
++				if (!outstanding)
++					return SUCCESS;
++				msleep(1000);
++			}
++		}
++	}
++
++	if (atomic_read(&instance->fw_outstanding) ||
++					(kill_adapter_flag == 2)) {
+ 		printk(KERN_NOTICE "megaraid_sas: pending cmds after reset\n");
+ 		/*
+ 		* Send signal to FW to stop processing any pending cmds.
+@@ -2680,6 +2747,7 @@ static int megasas_create_frame_pool(str
+ 			return -ENOMEM;
+ 		}
+
++		memset(cmd->frame, 0, total_sz);
+ 		cmd->frame->io.context = cmd->index;
+ 		cmd->frame->io.pad_0 = 0;
+ 	}
