@@ -1,38 +1,36 @@
-From: Kyle McMartin <kyle@mcmartin.ca>
+From: Mark Lord <kernel@teksavvy.com>
 Subject: Re: "blocked for more than 120 secs" --> a valid situation, how to
  prevent?
-Date: Thu, 23 Sep 2010 22:08:46 -0400
-Message-ID: <20100924020846.GI13116@bombadil.infradead.org>
-References: <4C9BE5A8.1090002@teksavvy.com>
+Date: Thu, 23 Sep 2010 22:53:18 -0400
+Message-ID: <4C9C129E.5050504@teksavvy.com>
+References: <4C9BE5A8.1090002@teksavvy.com> <4C9BEB49.2060208@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C9BE5A8.1090002@teksavvy.com>
+In-Reply-To: <4C9BEB49.2060208@interlog.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
+To: dgilbert@interlog.com
 Cc: Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 23, 2010 at 07:41:28PM -0400, Mark Lord wrote:
-> What's the purpose of this stack dump,
-> and how can it be prevented in this NORMAL situation??
-> 
-> The command was "hdparm --security-erase NULL /dev/sdb",
-> which takes about 66 minutes to complete on this particular drive.
-> 
-> I don't see any obvious way for the task to mark itself
-> as needing longer than 120 secs to complete the operation.
-> 
+On 10-09-23 08:05 PM, Douglas Gilbert wrote:
+> Mark,
+> If you issued the SG_IO ioctl with a timeout of at
+> least 66 minutes (expressed in milliseconds) then
+> it looks like ata_scsi_queuecmd() has a problem.
+..
 
-It's an excellent question, a large number of bug reports I see against
-Fedora are the result of this firing on some long-running task (like a
-huge 'sync') and the user getting scared by the message assuming the
-universe was imploding and reporting a bug.
+Mmm.. more like  blk_execute_rq() perhaps.
+That's where the wait_for_completion(&wait) call is at.
 
-I'd suggest we add a new task_struct flag for it, but we appear to be
-out of bits! Perhaps we can abuse one of the other ones (PF_FROZEN seems
-the likely choice since the watchdog bails out if it sees it, but that
-likely has other ramifications.)
+Perhaps I should change it to wait in smaller increments,
+so that the lockup detection doesn't trigger on it..
 
---Kyle
+Doing that seems rather wasteful, though.
+
+Note that this is the ATA "SECURITY ERASE" command,
+which doesn't have an "immed" bit to toggle.
+So one must wait for it to complete.
+
+cheers
