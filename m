@@ -1,25 +1,36 @@
-From: Kyle McMartin <kyle@mcmartin.ca>
+From: Maxim Levitsky <maximlevitsky@gmail.com>
 Subject: Re: "blocked for more than 120 secs" --> a valid situation, how to
  prevent?
-Date: Thu, 23 Sep 2010 21:37:48 -0400
-Message-ID: <20100924013748.GH13116@bombadil.infradead.org>
+Date: Fri, 24 Sep 2010 03:58:13 +0200
+Message-ID: <1285293493.17998.2.camel@maxim-laptop>
 References: <4C9BE5A8.1090002@teksavvy.com>
- <4C9BF624.7090906@hardwarefreak.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4C9BF624.7090906@hardwarefreak.com>
+In-Reply-To: <4C9BE5A8.1090002@teksavvy.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Mark Lord <kernel@teksavvy.com>, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 23, 2010 at 07:51:48PM -0500, Stan Hoeppner wrote:
-> ~$ man hdparm
+On Thu, 2010-09-23 at 19:41 -0400, Mark Lord wrote:
+> What's the purpose of this stack dump,
+> and how can it be prevented in this NORMAL situation??
 > 
+> The command was "hdparm --security-erase NULL /dev/sdb",
+> which takes about 66 minutes to complete on this particular drive.
+> 
+> I don't see any obvious way for the task to mark itself
+> as needing longer than 120 secs to complete the operation.
 
-kyle@dreadnought ~ $ hdparm
-hdparm - get/set hard disk parameters - version v9.27, by Mark Lord.
-                                                       ^^^^^^^^^^^^
-[...]
+There is other valid user case.
+If application calls sys_sync and at same time the filesystem is written
+by an other application, the sync can easily take more that 2 minutes.
+Or if block device is slow (as it was with some flash cards).
+
+Indeed it would be good to have a kind of touch_softlockup_watchdog().
+
+Best regards,
+	Maxim Levitsky
+
