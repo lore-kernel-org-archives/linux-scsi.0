@@ -1,47 +1,62 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: "blocked for more than 120 secs" --> a valid situation, how to
-  prevent?
-Date: Fri, 24 Sep 2010 11:12:29 +0200
-Message-ID: <4C9C6B7D.1060805@kernel.dk>
-References: <4C9BE5A8.1090002@teksavvy.com> <4C9BEB49.2060208@interlog.com> <4C9C129E.5050504@teksavvy.com> <4C9C2039.8050903@teksavvy.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [RFC v3 01/15] scsi: Drop struct Scsi_Host->host_lock usage in
+ scsi_dispatch_cmd()
+Date: Fri, 24 Sep 2010 08:41:20 -0500
+Message-ID: <4C9CAA80.1030702@linux.vnet.ibm.com>
+References: <1285285052-16351-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4C9C2039.8050903@teksavvy.com>
+In-Reply-To: <1285285052-16351-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: dgilbert@interlog.com, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Joel Becker <joel.becker@oracle.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, "eata.c maintainer" <dario.ballabio@inwind.it>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2010-09-24 05:51, Mark Lord wrote:
-> On 10-09-23 10:53 PM, Mark Lord wrote:
->> On 10-09-23 08:05 PM, Douglas Gilbert wrote:
->>> Mark,
->>> If you issued the SG_IO ioctl with a timeout of at
->>> least 66 minutes (expressed in milliseconds) then
->>> it looks like ata_scsi_queuecmd() has a problem.
->> ..
->>
->> Mmm.. more like blk_execute_rq() perhaps.
->> That's where the wait_for_completion(&wait) call is at.
->>
->> Perhaps I should change it to wait in smaller increments,
->> so that the lockup detection doesn't trigger on it..
-> ..
+On 09/23/2010 06:37 PM, Nicholas A. Bellinger wrote:
+> @@ -651,7 +655,6 @@ static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd
+>  int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+>  {
+>  	struct Scsi_Host *host = cmd->device->host;
+> -	unsigned long flags = 0;
+>  	unsigned long timeout;
+>  	int rtn = 0;
 > 
-> This patch (below) seems to work.
+> @@ -736,15 +739,11 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+>  		scsi_done(cmd);
+>  		goto out;
+>  	}
+> -
+> -	spin_lock_irqsave(host->host_lock, flags);
+>  	/*
+> -	 * AK: unlikely race here: for some reason the timer could
+> -	 * expire before the serial number is set up below.
+> -	 *
+> -	 * TODO: kill serial or move to blk layer
+> +	 * Note that scsi_cmd_get_serial() used to be called here, but
+> +	 * now we expect the legacy SCSI LLDs that actually need this
+> +	 * to call it directly within their SHT->queuecommand() caller.
+>  	 */
+> -	scsi_cmd_get_serial(host, cmd); 
 > 
-> Does this look kosher enough for me to roll it up
-> as a proper patch submission?   Jens?  Joel?
+>  	if (unlikely(host->shost_state == SHOST_DEL)) {
+>  		cmd->result = (DID_NO_CONNECT << 16);
+> @@ -753,7 +752,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+>  		trace_scsi_dispatch_cmd_start(cmd);
+>  		rtn = host->hostt->queuecommand(cmd, scsi_done);
+>  	}
+> -	spin_unlock_irqrestore(host->host_lock, flags);
+> +
+>  	if (rtn) {
+>  		trace_scsi_dispatch_cmd_error(cmd, rtn);
+>  		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
 
-Ideally it would be nice to just pass the info down that it should not
-complain, since waiting > 120 seconds (or whatever the timeout is set
-to) is expected by the caller in some cases.
-
-But your patch is simple enough and it gets the job done. I will queue
-it up for .37 if you send a properly formatted and signed-off-by
-version.
+Are you planning a future revision that moves the acquiring of the host lock
+into the LLDD's queuecommand for all the other drivers you don't currently
+touch in this patch set?
 
 -- 
-Jens Axboe
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
