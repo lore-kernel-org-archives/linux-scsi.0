@@ -1,62 +1,55 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [RFC v3 01/15] scsi: Drop struct Scsi_Host->host_lock usage in
- scsi_dispatch_cmd()
-Date: Fri, 24 Sep 2010 08:41:20 -0500
-Message-ID: <4C9CAA80.1030702@linux.vnet.ibm.com>
-References: <1285285052-16351-1-git-send-email-nab@linux-iscsi.org>
+From: Mark Lord <kernel@teksavvy.com>
+Subject: [PATCH] block: Prevent hang_check firing during long I/O
+Date: Fri, 24 Sep 2010 09:51:13 -0400
+Message-ID: <1285336273.9259.2.camel@corey>
+References: <4C9BE5A8.1090002@teksavvy.com> <4C9BEB49.2060208@interlog.com>
+	 <4C9C129E.5050504@teksavvy.com> <4C9C2039.8050903@teksavvy.com>
+	 <4C9C6B7D.1060805@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1285285052-16351-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, "eata.c maintainer" <dario.ballabio@inwind.it>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C9C6B7D.1060805@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: dgilbert@interlog.com, Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Joel Becker <joel.becker@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/23/2010 06:37 PM, Nicholas A. Bellinger wrote:
-> @@ -651,7 +655,6 @@ static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd
->  int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->  {
->  	struct Scsi_Host *host = cmd->device->host;
-> -	unsigned long flags = 0;
->  	unsigned long timeout;
->  	int rtn = 0;
-> 
-> @@ -736,15 +739,11 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->  		scsi_done(cmd);
->  		goto out;
->  	}
-> -
-> -	spin_lock_irqsave(host->host_lock, flags);
->  	/*
-> -	 * AK: unlikely race here: for some reason the timer could
-> -	 * expire before the serial number is set up below.
-> -	 *
-> -	 * TODO: kill serial or move to blk layer
-> +	 * Note that scsi_cmd_get_serial() used to be called here, but
-> +	 * now we expect the legacy SCSI LLDs that actually need this
-> +	 * to call it directly within their SHT->queuecommand() caller.
->  	 */
-> -	scsi_cmd_get_serial(host, cmd); 
-> 
->  	if (unlikely(host->shost_state == SHOST_DEL)) {
->  		cmd->result = (DID_NO_CONNECT << 16);
-> @@ -753,7 +752,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
->  		trace_scsi_dispatch_cmd_start(cmd);
->  		rtn = host->hostt->queuecommand(cmd, scsi_done);
->  	}
-> -	spin_unlock_irqrestore(host->host_lock, flags);
-> +
->  	if (rtn) {
->  		trace_scsi_dispatch_cmd_error(cmd, rtn);
->  		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
+During long I/O operations, the hang_check timer may fire,
+trigger stack dumps that unnecessarily alarm the user.
 
-Are you planning a future revision that moves the acquiring of the host lock
-into the LLDD's queuecommand for all the other drivers you don't currently
-touch in this patch set?
+Eg.  hdparm --security-erase NULL /dev/sdb  ## can take *hours* to complete
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+So, if hang_check is armed, we should wake up periodically
+to prevent it from triggering.  This patch uses a wake-up interval
+equal to half the hang_check timer period, which keeps overhead low enough.
+
+Signed-off-by: Mark Lord <mlord@pobox.com>
+
+--- old/block/blk-exec.c	2010-09-20 19:56:53.000000000 -0400
++++ linux/block/blk-exec.c	2010-09-24 09:43:32.342604574 -0400
+@@ -80,6 +80,7 @@
+ 	DECLARE_COMPLETION_ONSTACK(wait);
+ 	char sense[SCSI_SENSE_BUFFERSIZE];
+ 	int err = 0;
++	unsigned long hang_check;
+ 
+ 	/*
+ 	 * we need an extra reference to the request, so we can look at
+@@ -95,7 +96,13 @@
+ 
+ 	rq->end_io_data = &wait;
+ 	blk_execute_rq_nowait(q, bd_disk, rq, at_head, blk_end_sync_rq);
+-	wait_for_completion(&wait);
++
++	/* Prevent hang_check timer from firing at us during very long I/O */
++	hang_check = sysctl_hung_task_timeout_secs;
++	if (hang_check)
++		while (!wait_for_completion_timeout(&wait, hang_check * (HZ/2)));
++	else
++		wait_for_completion(&wait);
+ 
+ 	if (rq->errors)
+ 		err = -EIO;
+
+
