@@ -1,40 +1,43 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH] block: set the bounce_pfn to the actual DMA limit   rather
- than to max memory
-Date: Fri, 24 Sep 2010 21:26:03 +0200
-Message-ID: <4C9CFB4B.10404@fusionio.com>
-References: <c9516154fabc03112353.1285107750@malahal> <4C9CAE68.4060706@fusionio.com> <20100924170532.GA29071@us.ibm.com> <4C9CEDE5.902@fusionio.com> <20100924192059.GA550@us.ibm.com>
+From: Jiri Slaby <jslaby@suse.cz>
+Subject: Re: Why is AHA152X_CS !64BIT?
+Date: Fri, 24 Sep 2010 22:55:34 +0300
+Message-ID: <4C9D0236.2030803@suse.cz>
+References: <4C72D310.4040004@suse.cz>	<4C7B924D.6030703@panasas.com>	<201009071712.54867.konrad@darnok.org>	<4C86B1A4.8030308@oracle.com>	<4C86B320.8090709@oracle.com>	<4C86B860.1070105@suse.cz>	<20100908080557.511d307b@basil.nowhere.org>	<1283959823.29920.172.camel@mulgrave.site> <20100909085033.78eb4f64@basil.nowhere.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.fusionio.com ([64.244.102.30]:58887 "EHLO mx1.fusionio.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756482Ab0IXT0I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Sep 2010 15:26:08 -0400
-In-Reply-To: <20100924192059.GA550@us.ibm.com>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:37546 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754751Ab0IXTzk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Sep 2010 15:55:40 -0400
+Received: by fxm3 with SMTP id 3so949999fxm.19
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2010 12:55:39 -0700 (PDT)
+In-Reply-To: <20100909085033.78eb4f64@basil.nowhere.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Malahal Naineni <malahal@us.ibm.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Andi Kleen <andi@firstfloor.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Randy Dunlap <randy.dunlap@oracle.com>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, fischer@linux-buechse.de, linux-scsi@vger.kernel.org
 
-On 2010-09-24 21:20, Malahal Naineni wrote:
-> Jens Axboe [jaxboe@fusionio.com] wrote:
->>> This patch also _fixed_ our problem. So we are fine with either patch,
->>> but this patch is preferred as it enables more request merges. Also,
->>> both patches maybe needed for some configurations.
->>
->> Plus it doesn't needlessly bounce, that's the real problem you want to
->> fix. I have applied this thread patch to for-2.6.37/core, thanks.
-> 
-> There is a shortcut check in blk_queue_bounce() that uses blk_max_pfn to
-> return without doing anything.  blk_max_pfn is not updated when we do
-> hot-plug memory add, so bounce buffers are NOT really used in our case
-> (thankfully)! 
+On 09/09/2010 09:50 AM, Andi Kleen wrote:
+>> OK ... let's try it.  Ji=C5=99=C3=AD send a patch ... and if it brea=
+ks I'm
+>> handing you the pieces ...
+>=20
+> You mean reenable it? Why? Do you have any indication the user base
+> of this thing (especially on 64bit) is > 0?=20
 
-Any reason we can't just add a hot mem add notifier and update the block
-copies when we need to?
+Yeah, I know of two people who upgraded to 64-bit recently and had been
+using that driver before (the one for scanner). They both report it's
+working if non-64bit condition is removed. So I will post a patch to
+enable it back again...
 
--- 
-Jens Axboe
-
+regards,
+--=20
+js
+suse labs
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
