@@ -1,32 +1,136 @@
-From: Mark Lord <kernel@teksavvy.com>
-Subject: hdparm-9.32 released: recommended upgrade
-Date: Fri, 24 Sep 2010 02:30:37 -0400
-Message-ID: <4C9C458D.3080703@teksavvy.com>
-References: <4C9BE5A8.1090002@teksavvy.com> <4C9BF624.7090906@hardwarefreak.com> <20100924013748.GH13116@bombadil.infradead.org> <4C9C1F95.5000509@hardwarefreak.com> <4C9C37B7.7060204@teksavvy.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v2 01/11] scsi: Convert struct  Scsi_Host->cmd_serial_number
+ to atomic_t
+Date: Fri, 24 Sep 2010 08:32:36 +0200
+Message-ID: <4C9C4604.1020804@kernel.dk>
+References: <1284747709-20862-1-git-send-email-nab@linux-iscsi.org>	 <4C93BB8E.2080501@cisco.com>  <4C9427B6.9050404@cs.wisc.edu>	 <1284839878.13344.300.camel@haakon2.linux-iscsi.org> <1285278389.1849.199.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.183]:2079 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751137Ab0IXGaj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Sep 2010 02:30:39 -0400
-In-Reply-To: <4C9C37B7.7060204@teksavvy.com>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:49745 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751849Ab0IXGdB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Sep 2010 02:33:01 -0400
+In-Reply-To: <1285278389.1849.199.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: IDE/ATA development list <linux-ide@vger.kernel.org>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Joe Eykholt <jeykholt@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
 
-On 10-09-24 01:31 AM, Mark Lord wrote:
+On 2010-09-23 23:46, Nicholas A. Bellinger wrote:
+> On Sat, 2010-09-18 at 12:58 -0700, Nicholas A. Bellinger wrote:
+>> On Fri, 2010-09-17 at 21:45 -0500, Mike Christie wrote:
+>>> On 09/17/2010 02:03 PM, Joe Eykholt wrote:
+>>>>
+>>>> How about instead of adding use_serial_number, let's just have the
+>>>> drivers that want a serial number call scsi_cmd_get_serial()
+>>>
+>>> I think this sounds better.
+>>>
+>>
+>> In that case I will go ahead and add explict scsi_cmd_get_serial() calls
+>> to the LLDs that use struct scsi_cmnd->serial_number in anything beyond
+>> an obvious and simple informational purpose.
+>>
+>>> You could also convert drivers to the host tagging if you needed a 
+>>> unique id for each command sent to a host.
+>>
+>> Hmmm, what does this entail again..?
+>>
+>>>
+>>>> and stop calling it from scsi_dispatch_cmd()?   AFAICT, it's only
+>>>> used in debug messages in some drivers.  I didn't find other usages
+>>>> but didn't do an exhaustive search.
+>>>
+>>> The comments for serial_number say that it is only supposed to be used 
+>>> for debugging printks and most drivers use it for that.
+>>
+>> So I would suppose it would be OK for those drivers to continue to
+>> printk serial_number to show the internal serial_number allocation is
+>> now disabled by default.
+>>
+>>> However, it looks like mpt and dpt_i2o are using it for error handling
+>>> and/or lookup type of operations. I think the mpt* uses are not needed
+>>> in the abort checks.
+>>>
+>>
+>> In that case, then adding an explict scsi_cmd_get_serial() call in mpt*
+>> and dpt_i20 ->queuecommand() callers would be a good first step.
+>>
+>>> And eata is using it for ordering and tracking or something. It could 
+>>> probably be converted to the host tagging if or what you suggested if it 
+>>> needs the uniqueue id.
+>>
+>> Adding an explict scsi_cmd_get_serial() for eata for now, and we can
+>> consider LLD canidates for host tag conversion as a future step.
+>>
+>>>
+>>> zfcp looks like it copies it. It does not look like the driver needs it.
+>>>
+>>
+>> Ok, I will look at removing it's usage in zfcp or if necessary add an
+>> the explict scsi_cmd_get_serial() call.
+>>
+>>> scsi_error.c uses it in scsi_try_to_abort_cmd to check if a command has 
+>>> completed, but I think that can be done by checking if REQ_ATOM_COMPLETE 
+>>> is set.
+>>
+>> Hmmm, good catch here.  Jejb and hch, does this item work for you..?
+>>
+>> If so then I will take another peek for any ML uses of a struct
+>> scsi_cmnd->serial_number that need to be addressed, and include Joe's
+>> and Mike's recommendations into a v3 series.
+>>
+> 
+> Greetings Mike and Co,
+> 
+> I was doing some followup on these items for a v3 series and started
+> with a patch following mnc's recommendations for dropping the
+> scsi_error.c codes depending upon struct scsi_cmnd->serial_number:
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 1de30eb..f35c127 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -644,11 +644,7 @@ static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
+>   */
+>  static int scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
+>  {
+> -       /*
+> -        * scsi_done was called just after the command timed out and before
+> -        * we had a chance to process it. (db)
+> -        */
+> -       if (scmd->serial_number == 0)
+> +       if (test_bit(REQ_ATOM_COMPLETE, &scmd->request->atomic_flags))
+>                 return SUCCESS;
+>         return __scsi_try_to_abort_cmd(scmd);
+>  }
+> 
+> and while building I noticed that the simple single enum
+> REQ_ATOM_COMPLETE=0 is
 
-> hdparm-9.31 is now released, with some fixes to --security,
-> and with the nasty warnings mostly removed.
+> currently located in block/blk.h and along with blk_mark_rq_complete()
+> and blk_clear_rq_complete() for setting this bit within struct
+> request->atomic_flags.
+> 
+> jens, hch, tejun, and co, do you guys have a preference how this
+> should be handled so that scsi_try_to_abort_cmd() can use proper
+> atomic struct request bits here and we can get rid of this (racy..?)
+> method of using struct scsi_cmnd->serial_number for anything wrt to
+> per struct scsi_cmnd context timeout handling.
 
-And quickly followed by hdparm-9.32.  Upgrade is RECOMMENDED.
+Just add a
 
-Apparently a number of commands in hdparm have been b0rked since 9.27+,
-but nobody bothered to email me about them.  Doh!
+static inline int blk_test_rq_complete(struct request *rq)
+{
+        return test_bit(REQ_ATOM_COMPLETE, &rq->atomic_flags);
+}
 
-Fixed.
+in block/blk.h
 
-(but the libata/libahci AHCI result_tf problem is still an issue).
+I need this too for some lockless completion patches I am playing with.
+
+-- 
+Jens Axboe
+
