@@ -1,93 +1,199 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: "blocked for more than 120 secs" --> a valid situation, how to
- prevent?
-Date: Thu, 23 Sep 2010 20:05:29 -0400
-Message-ID: <4C9BEB49.2060208@interlog.com>
-References: <4C9BE5A8.1090002@teksavvy.com>
-Reply-To: dgilbert@interlog.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4C9BE5A8.1090002@teksavvy.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [RFC v3 01/15] scsi: Drop struct Scsi_Host->host_lock usage in scsi_dispatch_cmd()
+Date: Thu, 23 Sep 2010 17:46:04 -0700
+Message-ID: <1285289164-16890-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
+Cc: James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, "eata.c maintainer" <dario.ballabio@inwind.it>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Mark,
-If you issued the SG_IO ioctl with a timeout of at
-least 66 minutes (expressed in milliseconds) then
-it looks like ata_scsi_queuecmd() has a problem.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-The SCSI FORMAT UNIT command can take a long time.
-It has an IMMED bit which when set will return
-after the command and its parameters have been
-received. The progress of the format can then be
-polled by other commands. With the IMMED bit clear
-the FORMAT UNIT returns when the format completes
-(i.e. after an hour or so). Either way, setting the
-timeout on the SG_IO ioctl works as expected.
+Hi Guys,
 
-Doug Gilbert
+This is a quick re-spin of patch #1 that was missing the hosts.c:scsi_host_alloc()
+initialization of struct Scsi_Host->cmd_serial_number.  Thanks to Joe for
+spotting this.
 
+--------------------------------------------------------------------------------
 
-On 10-09-23 07:41 PM, Mark Lord wrote:
-> What's the purpose of this stack dump,
-> and how can it be prevented in this NORMAL situation??
->
-> The command was "hdparm --security-erase NULL /dev/sdb",
-> which takes about 66 minutes to complete on this particular drive.
->
-> I don't see any obvious way for the task to mark itself
-> as needing longer than 120 secs to complete the operation.
->
-> Thanks.
->
-> [ 1800.373281] INFO: task hdparm:1979 blocked for more than 120 seconds.
-> [ 1800.373288] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
-> disables this message.
-> [ 1800.373294] hdparm D f64a4c00 0 1979 1718 0x00000000
-> [ 1800.373303] f3065c38 00200086 c11be0e3 f64a4c00 c1439ac0 c1439ac0
-> c1439ac0 c1439ac0
-> [ 1800.373317] f571bdb8 c1439ac0 c1439ac0 dbdc5ec7 00000163 dbdb0cfb
-> 00000163 f571bb60
-> [ 1800.373329] 00000001 f3065d18 7fffffff f571bb60 f3065c64 c1270527
-> f684ca50 f684ca50
-> [ 1800.373341] Call Trace:
-> [ 1800.373355] [<c11be0e3>] ? ata_scsi_queuecmd+0x6a/0x73
-> [ 1800.373366] [<c1270527>] schedule_timeout+0x16/0xa5
-> [ 1800.373376] [<c111a4a2>] ? __blk_run_queue+0x3d/0x5e
-> [ 1800.373383] [<c1118626>] ? elv_insert+0x67/0x18f
-> [ 1800.373389] [<c126fd6a>] wait_for_common+0x8a/0xd9
-> [ 1800.373399] [<c1028b75>] ? default_wake_function+0x0/0xd
-> [ 1800.373406] [<c126fe3a>] wait_for_completion+0x12/0x14
-> [ 1800.373413] [<c111d02f>] blk_execute_rq+0x76/0x8f
-> [ 1800.373420] [<c111cf1c>] ? blk_end_sync_rq+0x0/0x28
-> [ 1800.373428] [<c111cc3f>] ? blk_rq_append_bio+0x14/0x3b
-> [ 1800.373434] [<c111ce95>] ? blk_rq_map_user+0x12e/0x1b5
-> [ 1800.373442] [<c11201f8>] sg_io+0x269/0x343
-> [ 1800.373450] [<c11204be>] scsi_cmd_ioctl+0x1ec/0x396
-> [ 1800.373457] [<c11993cf>] ? get_device+0x13/0x18
-> [ 1800.373464] [<c11aeabd>] ? sd_open+0x45/0x104
-> [ 1800.373472] [<c11aea0e>] sd_ioctl+0x6b/0x8c
-> [ 1800.373479] [<c111e2fe>] __blkdev_driver_ioctl+0x66/0x87
-> [ 1800.373486] [<c111ebb2>] blkdev_ioctl+0x5fe/0x62c
-> [ 1800.373495] [<c1061e3f>] ? filemap_fault+0xb5/0x2fc
-> [ 1800.373503] [<c10a7bde>] block_ioctl+0x2a/0x32
-> [ 1800.373509] [<c10a7bde>] ? block_ioctl+0x2a/0x32
-> [ 1800.373518] [<c109345a>] vfs_ioctl+0x27/0x91
-> [ 1800.373524] [<c10a7bb4>] ? block_ioctl+0x0/0x32
-> [ 1800.373531] [<c109398d>] do_vfs_ioctl+0x42a/0x45b
-> [ 1800.373538] [<c10727b7>] ? handle_mm_fault+0x3d8/0x7c2
-> [ 1800.373547] [<c1088e98>] ? fsnotify_modify+0x4f/0x5a
-> [ 1800.373555] [<c101b8f9>] ? do_page_fault+0x1e4/0x243
-> [ 1800.373562] [<c10939ec>] sys_ioctl+0x2e/0x48
-> [ 1800.373570] [<c1002750>] sysenter_do_call+0x12/0x26
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
+This patch converts scsi_dispatch_cmd() drop the struct Scsi_Host->host_lock
+legacy usage so that SHT->queuecommand() can be called without this lock held
+softirq interrupts disabled via spin_lock_irq()
 
+This patch drops the usage of scsi_cmd_get_serial() in scsi_dispatch_cmd()
+and assumes the legacy SCSI LLDs that depend upon struct scsi_cmnd->serial_number
+will call the now EXPORT_SYMBOL()'ed scsi_cmd_get_serial() call.
+
+This patch also updates scsi_error.c:scsi_try_to_abort_cmd() to use:
+
+        if (test_bit(REQ_ATOM_COMPLETE, &scmd->request->atomic_flags))
+                return SUCCESS;
+
+instead of checking for (scmd->serial_number == 0) following a recommendation
+by Mike Christie.
+
+This patch also converts the remaining struct Scsi_Host->cmd_serial_number to
+atomic_t following a recommedation by Joe Eykholt to start struct Scsi_Host->
+cmd_serial_number at 1, and increment each serial_number by 2 so that the
+serial is odd, and wraps to 1 instead of 0.  struct Scsi_Host->cmd_serial_number
+is initialized to '1' in drivers/scsi/hosts.c:scsi_host_alloc().
+
+Many thanks to Vasu Dev, Tim Chen, Mike and Joe for their help with particular
+series!
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/hosts.c      |    4 ++++
+ drivers/scsi/scsi.c       |   29 ++++++++++++++---------------
+ drivers/scsi/scsi_error.c |   10 +++++++---
+ include/scsi/scsi_cmnd.h  |    1 +
+ include/scsi/scsi_host.h  |    5 ++---
+ 5 files changed, 28 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 8a8f803..aff1c9c 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -380,6 +380,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
++	/*
++	 * Set the default shost->cmd_serial_number to 1.
++	 */
++	atomic_set(&shost->cmd_serial_number, 1);
+ 
+ 	if (sht->supported_mode == MODE_UNKNOWN)
+ 		/* means we didn't set it ... default to INITIATOR */
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index ad0ed21..84dbe76 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -628,18 +628,22 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+ 
+ /**
+  * scsi_cmd_get_serial - Assign a serial number to a command
+- * @host: the scsi host
+  * @cmd: command to assign serial number to
+  *
+  * Description: a serial number identifies a request for error recovery
+- * and debugging purposes.  Protected by the Host_Lock of host.
++ * and debugging purposes.  Called directly by SCSI LLDs that have a
++ * legacy requirement for struct scsi_cmnd->serial_number.
+  */
+-static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
++void scsi_cmd_get_serial(struct scsi_cmnd *cmd)
+ {
+-	cmd->serial_number = host->cmd_serial_number++;
+-	if (cmd->serial_number == 0) 
+-		cmd->serial_number = host->cmd_serial_number++;
++	struct Scsi_Host *host = cmd->device->host;
++	/*
++	 * Increment the host->cmd_serial_number by 2 so cmd->serial_number
++	 * is always odd and wraps to 1 instead of 0.
++	 */
++	cmd->serial_number = atomic_add_return(2, &host->cmd_serial_number);
+ }
++EXPORT_SYMBOL(scsi_cmd_get_serial);
+ 
+ /**
+  * scsi_dispatch_command - Dispatch a command to the low-level driver.
+@@ -651,7 +655,6 @@ static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd
+ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+-	unsigned long flags = 0;
+ 	unsigned long timeout;
+ 	int rtn = 0;
+ 
+@@ -736,15 +739,11 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		scsi_done(cmd);
+ 		goto out;
+ 	}
+-
+-	spin_lock_irqsave(host->host_lock, flags);
+ 	/*
+-	 * AK: unlikely race here: for some reason the timer could
+-	 * expire before the serial number is set up below.
+-	 *
+-	 * TODO: kill serial or move to blk layer
++	 * Note that scsi_cmd_get_serial() used to be called here, but
++	 * now we expect the legacy SCSI LLDs that actually need this
++	 * to call it directly within their SHT->queuecommand() caller.
+ 	 */
+-	scsi_cmd_get_serial(host, cmd); 
+ 
+ 	if (unlikely(host->shost_state == SHOST_DEL)) {
+ 		cmd->result = (DID_NO_CONNECT << 16);
+@@ -753,7 +752,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		trace_scsi_dispatch_cmd_start(cmd);
+ 		rtn = host->hostt->queuecommand(cmd, scsi_done);
+ 	}
+-	spin_unlock_irqrestore(host->host_lock, flags);
++
+ 	if (rtn) {
+ 		trace_scsi_dispatch_cmd_error(cmd, rtn);
+ 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1de30eb..34a4fce 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -39,6 +39,8 @@
+ #include "scsi_logging.h"
+ #include "scsi_transport_api.h"
+ 
++#include <../block/blk.h> /* For REQ_ATOM_COMPLETE */
++
+ #include <trace/events/scsi.h>
+ 
+ #define SENSE_TIMEOUT		(10*HZ)
+@@ -645,11 +647,13 @@ static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
+ static int scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
+ {
+ 	/*
+-	 * scsi_done was called just after the command timed out and before
+-	 * we had a chance to process it. (db)
++	 * Use the struct request atomic_flags here to check if
++	 * block/blk.h:blk_mark_rq_complete() has already been called
++	 * from the block softirq
+ 	 */
+-	if (scmd->serial_number == 0)
++	if (test_bit(REQ_ATOM_COMPLETE, &scmd->request->atomic_flags))
+ 		return SUCCESS;
++
+ 	return __scsi_try_to_abort_cmd(scmd);
+ }
+ 
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index a5e885a..bbba4fa 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -136,6 +136,7 @@ extern struct scsi_cmnd *__scsi_get_command(struct Scsi_Host *, gfp_t);
+ extern void scsi_put_command(struct scsi_cmnd *);
+ extern void __scsi_put_command(struct Scsi_Host *, struct scsi_cmnd *,
+ 			       struct device *);
++extern void scsi_cmd_get_serial(struct scsi_cmnd *);
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
+ 
+ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index b7bdecb..1b69511 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -602,10 +602,9 @@ struct Scsi_Host {
+ 	short unsigned int max_sectors;
+ 	unsigned long dma_boundary;
+ 	/* 
+-	 * Used to assign serial numbers to the cmds.
+-	 * Protected by the host lock.
++	 * Used to assign serial numbers to the cmds in scsi_cmd_get_serial()
+ 	 */
+-	unsigned long cmd_serial_number;
++	atomic_t cmd_serial_number;
+ 	
+ 	unsigned active_mode:2;
+ 	unsigned unchecked_isa_dma:1;
+-- 
+1.7.3
