@@ -1,78 +1,68 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: [PATCH] SCSI: remove noop in fc_remote_port_add()
-Date: Fri, 24 Sep 2010 22:24:42 +0800
-Message-ID: <AANLkTik-pmP9_ovxiX+SBD2AvxtsWbtj2F-RJbL3w+AY@mail.gmail.com>
+From: Malahal Naineni <malahal@us.ibm.com>
+Subject: Re: [PATCH] block: set the bounce_pfn to the actual DMA limit
+ rather than to max memory
+Date: Fri, 24 Sep 2010 10:05:32 -0700
+Message-ID: <20100924170532.GA29071@us.ibm.com>
+References: <c9516154fabc03112353.1285107750@malahal>
+ <4C9CAE68.4060706@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:43647 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752723Ab0IXOcJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Sep 2010 10:32:09 -0400
-Received: by wyb28 with SMTP id 28so1956144wyb.19
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2010 07:32:08 -0700 (PDT)
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:50161 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754413Ab0IXRFf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Sep 2010 13:05:35 -0400
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id o8OGoZsf032758
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2010 12:50:35 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o8OH5XuI106274
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2010 13:05:33 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o8OH5Xkv004381
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2010 14:05:33 -0300
+Content-Disposition: inline
+In-Reply-To: <4C9CAE68.4060706@fusionio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <James.>
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-For a deleted scsi target marked as FC_PORTSTATE_BLOCKED,  rescanning
-it looks fine.
+Jens Axboe [jaxboe@fusionio.com] wrote:
+> On 2010-09-22 00:22, Malahal Naineni wrote:
+> > The bounce_pfn of the request queue in 64 bit systems is set to the
+> > current max_low_pfn. Adding more memory later makes this incorrect.
+> 
+> Clearly correct.
+> 
+> > Memory allocated beyond this boot time max_low_pfn appear to require
+> > bounce buffers (bounce buffers are actually not allocated but used in
+> > calculating segments that may result in "over max segments limit"
+> > errors).
+> 
+> But I can't quite convince myself that the change is fully correct. You
+> don't really explain in your own words what the patch does, just what it
+> fixes.
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
----
+OK, the problem is we get "over max segments limit" errors from
+blk_rq_check_limits() after adding memory. The actual bug is in
+blk_phys_contig_segment() where it doesn't check for possibility of
+bounce buffers. This results in merging more requests in
+ll_merge_requests_fn(). Later, blk_recalc_rq_segments() call from
+blk_rq_check_limits() actually uses the possibility of bounce buffers,
+so the calculated number of segments exceed q's max_segments resulting
+in the above error.
 
---- o/linux-2.6.36-rc4/drivers/scsi/scsi_transport_fc.c	2010-09-13
-07:07:38.000000000 +0800
-+++ m/linux-2.6.36-rc4/drivers/scsi/scsi_transport_fc.c	2010-09-24
-22:16:26.000000000 +0800
-@@ -50,7 +50,6 @@ static int fc_vport_setup(struct Scsi_Ho
- static int fc_bsg_hostadd(struct Scsi_Host *, struct fc_host_attrs *);
- static int fc_bsg_rportadd(struct Scsi_Host *, struct fc_rport *);
- static void fc_bsg_remove(struct request_queue *);
--static void fc_bsg_goose_queue(struct fc_rport *);
+Fix for the actual problem is posted here:
+http://permalink.gmane.org/gmane.linux.kernel.device-mapper.devel/12426
 
- /*
-  * Redefine so that we can have same named attributes in the
-@@ -2737,8 +2736,6 @@ fc_remote_port_add(struct Scsi_Host *sho
- 					spin_unlock_irqrestore(shost->host_lock,
- 							flags);
+So clearly the bug should manifest only when 'bounce buffers' are
+involved!  Applying the above patch indeed_fixed_ the problem, but I
+know there shouldn't be any need for bounce buffers on our system, and
+further investigation revealed that DMA limit is not set correctly.
 
--				fc_bsg_goose_queue(rport);
--
- 				return rport;
- 			}
- 		}
-@@ -3753,33 +3750,6 @@ fail_host_msg:
- }
+This patch also _fixed_ our problem. So we are fine with either patch,
+but this patch is preferred as it enables more request merges. Also,
+both patches maybe needed for some configurations.
 
-
--/*
-- * fc_bsg_goose_queue - restart rport queue in case it was stopped
-- * @rport:	rport to be restarted
-- */
--static void
--fc_bsg_goose_queue(struct fc_rport *rport)
--{
--	int flagset;
--	unsigned long flags;
--
--	if (!rport->rqst_q)
--		return;
--
--	get_device(&rport->dev);
--
--	spin_lock_irqsave(rport->rqst_q->queue_lock, flags);
--	flagset = test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags) &&
--		  !test_bit(QUEUE_FLAG_REENTER, &rport->rqst_q->queue_flags);
--	if (flagset)
--		queue_flag_set(QUEUE_FLAG_REENTER, rport->rqst_q);
--	__blk_run_queue(rport->rqst_q);
--	if (flagset)
--		queue_flag_clear(QUEUE_FLAG_REENTER, rport->rqst_q);
--	spin_unlock_irqrestore(rport->rqst_q->queue_lock, flags);
--
--	put_device(&rport->dev);
--}
-
-
- /**
+Thanks, Malahal.
