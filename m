@@ -1,241 +1,93 @@
-From: kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
-Subject: [PATCH 2/4] libcxgbi: pdu read fixes
-Date: Thu, 23 Sep 2010 16:43:23 -0700
-Message-ID: <201009232343.o8NNhNhw006463@localhost.localdomain>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: "blocked for more than 120 secs" --> a valid situation, how to
+ prevent?
+Date: Thu, 23 Sep 2010 20:05:29 -0400
+Message-ID: <4C9BEB49.2060208@interlog.com>
+References: <4C9BE5A8.1090002@teksavvy.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncCNvLk8fsDxCmzO_kBBoEi8W44Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Cc: rranjan-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4C9BE5A8.1090002@teksavvy.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mark Lord <kernel@teksavvy.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-[PATCH 2/4] libcxgbi: pdu read fixes
-          
-From: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-          
-This patch
-- fixed the locking and releasing skb in the case of error in the pdu read path, and
-- added define iscsi_task_cxgbi_data to access the private data inside the iscsi_task.
+Mark,
+If you issued the SG_IO ioctl with a timeout of at
+least 66 minutes (expressed in milliseconds) then
+it looks like ata_scsi_queuecmd() has a problem.
 
-Signed-off-by: Karen Xie <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
----
+The SCSI FORMAT UNIT command can take a long time.
+It has an IMMED bit which when set will return
+after the command and its parameters have been
+received. The progress of the format can then be
+polled by other commands. With the IMMED bit clear
+the FORMAT UNIT returns when the format completes
+(i.e. after an hour or so). Either way, setting the
+timeout on the SG_IO ioctl works as expected.
 
- drivers/scsi/cxgbi/libcxgbi.c |   79 ++++++++++++++++++++++++++---------------
- drivers/scsi/cxgbi/libcxgbi.h |    2 +
- 2 files changed, 53 insertions(+), 28 deletions(-)
+Doug Gilbert
 
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index db9d08a..7136fb2 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -593,11 +593,11 @@ static void cxgbi_inform_iscsi_conn_closing(struct cxgbi_sock *csk)
- 		csk, csk->state, csk->flags, csk->user_data);
- 
- 	if (csk->state != CTP_ESTABLISHED) {
--		read_lock(&csk->callback_lock);
-+		read_lock_bh(&csk->callback_lock);
- 		if (csk->user_data)
- 			iscsi_conn_failure(csk->user_data,
- 					ISCSI_ERR_CONN_FAILED);
--		read_unlock(&csk->callback_lock);
-+		read_unlock_bh(&csk->callback_lock);
- 	}
- }
- 
-@@ -1712,12 +1712,10 @@ void cxgbi_conn_pdu_ready(struct cxgbi_sock *csk)
- 			"csk 0x%p, conn 0x%p, id %d, suspend_rx %lu!\n",
- 			csk, conn, conn ? conn->id : 0xFF,
- 			conn ? conn->suspend_rx : 0xFF);
--		read_unlock(&csk->callback_lock);
- 		return;
- 	}
- 
- 	while (!err) {
--		read_lock(&csk->callback_lock);
- 		skb = skb_peek(&csk->receive_queue);
- 		if (!skb ||
- 		    !(cxgbi_skcb_test_flag(skb, SKCBF_RX_STATUS))) {
-@@ -1725,11 +1723,9 @@ void cxgbi_conn_pdu_ready(struct cxgbi_sock *csk)
- 				log_debug(1 << CXGBI_DBG_PDU_RX,
- 					"skb 0x%p, NOT ready 0x%lx.\n",
- 					skb, cxgbi_skcb_flags(skb));
--			read_unlock(&csk->callback_lock);
- 			break;
- 		}
- 		__skb_unlink(skb, &csk->receive_queue);
--		read_unlock(&csk->callback_lock);
- 
- 		read += cxgbi_skcb_rx_pdulen(skb);
- 		log_debug(1 << CXGBI_DBG_PDU_RX,
-@@ -1739,37 +1735,66 @@ void cxgbi_conn_pdu_ready(struct cxgbi_sock *csk)
- 
- 		if (cxgbi_skcb_test_flag(skb, SKCBF_RX_COALESCED)) {
- 			err = skb_read_pdu_bhs(conn, skb);
--			if (err < 0)
--				break;
-+			if (err < 0) {
-+				pr_err("coalesced bhs, csk 0x%p, skb 0x%p,%u, "
-+					"f 0x%lx, plen %u.\n",
-+					csk, skb, skb->len,
-+					cxgbi_skcb_flags(skb),
-+					cxgbi_skcb_rx_pdulen(skb));
-+				goto skb_done;
-+			}
- 			err = skb_read_pdu_data(conn, skb, skb,
- 						err + cdev->skb_rx_extra);
-+			if (err < 0)
-+				pr_err("coalesced data, csk 0x%p, skb 0x%p,%u, "
-+					"f 0x%lx, plen %u.\n",
-+					csk, skb, skb->len,
-+					cxgbi_skcb_flags(skb),
-+					cxgbi_skcb_rx_pdulen(skb));
- 		} else {
- 			err = skb_read_pdu_bhs(conn, skb);
--			if (err < 0)
--				break;
-+			if (err < 0) {
-+				pr_err("bhs, csk 0x%p, skb 0x%p,%u, "
-+					"f 0x%lx, plen %u.\n",
-+					csk, skb, skb->len,
-+					cxgbi_skcb_flags(skb),
-+					cxgbi_skcb_rx_pdulen(skb));
-+				goto skb_done;
-+			}
-+
- 			if (cxgbi_skcb_test_flag(skb, SKCBF_RX_DATA)) {
- 				struct sk_buff *dskb;
- 
--				read_lock(&csk->callback_lock);
- 				dskb = skb_peek(&csk->receive_queue);
- 				if (!dskb) {
--					read_unlock(&csk->callback_lock);
--					pr_err("csk 0x%p, NO data.\n", csk);
--					err = -EAGAIN;
--					break;
-+					pr_err("csk 0x%p, skb 0x%p,%u, f 0x%lx,"
-+						" plen %u, NO data.\n",
-+						csk, skb, skb->len,
-+						cxgbi_skcb_flags(skb),
-+						cxgbi_skcb_rx_pdulen(skb));
-+					err = -EIO;
-+					goto skb_done;
- 				}
- 				__skb_unlink(dskb, &csk->receive_queue);
--				read_unlock(&csk->callback_lock);
- 
- 				err = skb_read_pdu_data(conn, skb, dskb, 0);
-+				if (err < 0)
-+					pr_err("data, csk 0x%p, skb 0x%p,%u, "
-+						"f 0x%lx, plen %u, dskb 0x%p,"
-+						"%u.\n",
-+						csk, skb, skb->len,
-+						cxgbi_skcb_flags(skb),
-+						cxgbi_skcb_rx_pdulen(skb),
-+						dskb, dskb->len);
- 				__kfree_skb(dskb);
- 			} else
- 				err = skb_read_pdu_data(conn, skb, skb, 0);
- 		}
-+skb_done:
-+		__kfree_skb(skb);
-+
- 		if (err < 0)
- 			break;
--
--		__kfree_skb(skb);
- 	}
- 
- 	log_debug(1 << CXGBI_DBG_PDU_RX, "csk 0x%p, read %u.\n", csk, read);
-@@ -1780,7 +1805,8 @@ void cxgbi_conn_pdu_ready(struct cxgbi_sock *csk)
- 	}
- 
- 	if (err < 0) {
--		pr_info("csk 0x%p, 0x%p, rx failed %d.\n", csk, conn, err);
-+		pr_info("csk 0x%p, 0x%p, rx failed %d, read %u.\n",
-+			csk, conn, err, read);
- 		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
- 	}
- }
-@@ -1861,7 +1887,7 @@ int cxgbi_conn_alloc_pdu(struct iscsi_task *task, u8 opcode)
- 	struct cxgbi_device *cdev = cconn->chba->cdev;
- 	struct iscsi_conn *conn = task->conn;
- 	struct iscsi_tcp_task *tcp_task = task->dd_data;
--	struct cxgbi_task_data *tdata = task->dd_data + sizeof(*tcp_task);
-+	struct cxgbi_task_data *tdata = iscsi_task_cxgbi_data(task);
- 	struct scsi_cmnd *sc = task->sc;
- 	int headroom = SKB_TX_ISCSI_PDU_HEADER_MAX;
- 
-@@ -1916,8 +1942,7 @@ int cxgbi_conn_init_pdu(struct iscsi_task *task, unsigned int offset,
- 			      unsigned int count)
- {
- 	struct iscsi_conn *conn = task->conn;
--	struct iscsi_tcp_task *tcp_task = task->dd_data;
--	struct cxgbi_task_data *tdata = tcp_task->dd_data;
-+	struct cxgbi_task_data *tdata = iscsi_task_cxgbi_data(task);
- 	struct sk_buff *skb = tdata->skb;
- 	unsigned int datalen = count;
- 	int i, padlen = iscsi_padding(count);
-@@ -2019,8 +2044,7 @@ int cxgbi_conn_xmit_pdu(struct iscsi_task *task)
- {
- 	struct iscsi_tcp_conn *tcp_conn = task->conn->dd_data;
- 	struct cxgbi_conn *cconn = tcp_conn->dd_data;
--	struct iscsi_tcp_task *tcp_task = task->dd_data;
--	struct cxgbi_task_data *tdata = tcp_task->dd_data;
-+	struct cxgbi_task_data *tdata = iscsi_task_cxgbi_data(task);
- 	struct sk_buff *skb = tdata->skb;
- 	unsigned int datalen;
- 	int err;
-@@ -2072,8 +2096,7 @@ EXPORT_SYMBOL_GPL(cxgbi_conn_xmit_pdu);
- 
- void cxgbi_cleanup_task(struct iscsi_task *task)
- {
--	struct cxgbi_task_data *tdata = task->dd_data +
--				sizeof(struct iscsi_tcp_task);
-+	struct cxgbi_task_data *tdata = iscsi_task_cxgbi_data(task);
- 
- 	log_debug(1 << CXGBI_DBG_ISCSI,
- 		"task 0x%p, skb 0x%p, itt 0x%x.\n",
-@@ -2290,12 +2313,12 @@ int cxgbi_bind_conn(struct iscsi_cls_session *cls_session,
- 	/*  calculate the tag idx bits needed for this conn based on cmds_max */
- 	cconn->task_idx_bits = (__ilog2_u32(conn->session->cmds_max - 1)) + 1;
- 
--	write_lock(&csk->callback_lock);
-+	write_lock_bh(&csk->callback_lock);
- 	csk->user_data = conn;
- 	cconn->chba = cep->chba;
- 	cconn->cep = cep;
- 	cep->cconn = cconn;
--	write_unlock(&csk->callback_lock);
-+	write_unlock_bh(&csk->callback_lock);
- 
- 	cxgbi_conn_max_xmit_dlength(conn);
- 	cxgbi_conn_max_recv_dlength(conn);
-diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
-index 2f2485b..48e6d62 100644
---- a/drivers/scsi/cxgbi/libcxgbi.h
-+++ b/drivers/scsi/cxgbi/libcxgbi.h
-@@ -592,6 +592,8 @@ struct cxgbi_task_data {
- 	unsigned int count;
- 	unsigned int sgoffset;
- };
-+#define iscsi_task_cxgbi_data(task) \
-+	((task)->dd_data + sizeof(struct iscsi_tcp_task))
- 
- static inline int cxgbi_is_ddp_tag(struct cxgbi_tag_format *tformat, u32 tag)
- {
+On 10-09-23 07:41 PM, Mark Lord wrote:
+> What's the purpose of this stack dump,
+> and how can it be prevented in this NORMAL situation??
+>
+> The command was "hdparm --security-erase NULL /dev/sdb",
+> which takes about 66 minutes to complete on this particular drive.
+>
+> I don't see any obvious way for the task to mark itself
+> as needing longer than 120 secs to complete the operation.
+>
+> Thanks.
+>
+> [ 1800.373281] INFO: task hdparm:1979 blocked for more than 120 seconds.
+> [ 1800.373288] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs"
+> disables this message.
+> [ 1800.373294] hdparm D f64a4c00 0 1979 1718 0x00000000
+> [ 1800.373303] f3065c38 00200086 c11be0e3 f64a4c00 c1439ac0 c1439ac0
+> c1439ac0 c1439ac0
+> [ 1800.373317] f571bdb8 c1439ac0 c1439ac0 dbdc5ec7 00000163 dbdb0cfb
+> 00000163 f571bb60
+> [ 1800.373329] 00000001 f3065d18 7fffffff f571bb60 f3065c64 c1270527
+> f684ca50 f684ca50
+> [ 1800.373341] Call Trace:
+> [ 1800.373355] [<c11be0e3>] ? ata_scsi_queuecmd+0x6a/0x73
+> [ 1800.373366] [<c1270527>] schedule_timeout+0x16/0xa5
+> [ 1800.373376] [<c111a4a2>] ? __blk_run_queue+0x3d/0x5e
+> [ 1800.373383] [<c1118626>] ? elv_insert+0x67/0x18f
+> [ 1800.373389] [<c126fd6a>] wait_for_common+0x8a/0xd9
+> [ 1800.373399] [<c1028b75>] ? default_wake_function+0x0/0xd
+> [ 1800.373406] [<c126fe3a>] wait_for_completion+0x12/0x14
+> [ 1800.373413] [<c111d02f>] blk_execute_rq+0x76/0x8f
+> [ 1800.373420] [<c111cf1c>] ? blk_end_sync_rq+0x0/0x28
+> [ 1800.373428] [<c111cc3f>] ? blk_rq_append_bio+0x14/0x3b
+> [ 1800.373434] [<c111ce95>] ? blk_rq_map_user+0x12e/0x1b5
+> [ 1800.373442] [<c11201f8>] sg_io+0x269/0x343
+> [ 1800.373450] [<c11204be>] scsi_cmd_ioctl+0x1ec/0x396
+> [ 1800.373457] [<c11993cf>] ? get_device+0x13/0x18
+> [ 1800.373464] [<c11aeabd>] ? sd_open+0x45/0x104
+> [ 1800.373472] [<c11aea0e>] sd_ioctl+0x6b/0x8c
+> [ 1800.373479] [<c111e2fe>] __blkdev_driver_ioctl+0x66/0x87
+> [ 1800.373486] [<c111ebb2>] blkdev_ioctl+0x5fe/0x62c
+> [ 1800.373495] [<c1061e3f>] ? filemap_fault+0xb5/0x2fc
+> [ 1800.373503] [<c10a7bde>] block_ioctl+0x2a/0x32
+> [ 1800.373509] [<c10a7bde>] ? block_ioctl+0x2a/0x32
+> [ 1800.373518] [<c109345a>] vfs_ioctl+0x27/0x91
+> [ 1800.373524] [<c10a7bb4>] ? block_ioctl+0x0/0x32
+> [ 1800.373531] [<c109398d>] do_vfs_ioctl+0x42a/0x45b
+> [ 1800.373538] [<c10727b7>] ? handle_mm_fault+0x3d8/0x7c2
+> [ 1800.373547] [<c1088e98>] ? fsnotify_modify+0x4f/0x5a
+> [ 1800.373555] [<c101b8f9>] ? do_page_fault+0x1e4/0x243
+> [ 1800.373562] [<c10939ec>] sys_ioctl+0x2e/0x48
+> [ 1800.373570] [<c1002750>] sysenter_do_call+0x12/0x26
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
