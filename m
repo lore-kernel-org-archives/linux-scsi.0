@@ -1,48 +1,61 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v2 01/11] scsi: Convert struct Scsi_Host->cmd_serial_number
- to atomic_t
-Date: Fri, 24 Sep 2010 21:31:52 -0500
-Message-ID: <4C9D5F18.8080809@cs.wisc.edu>
-References: <1284747709-20862-1-git-send-email-nab@linux-iscsi.org> <4C93BB8E.2080501@cisco.com> <4C9427B6.9050404@cs.wisc.edu> <1284839878.13344.300.camel@haakon2.linux-iscsi.org> <1285278389.1849.199.camel@haakon2.linux-iscsi.org> <4C9C4604.1020804@kernel.dk> <20100924183305.GA15128@linux.vnet.ibm.com>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: [PATCH] SCSI: fix racing operations in fc_remote_port_add()
+Date: Sat, 25 Sep 2010 22:20:42 +0800
+Message-ID: <AANLkTi=ecOXEcQgq=OD4x9Rr+QWMmhpPLXMBsNZdiFCa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43334 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750746Ab0IYC1M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Sep 2010 22:27:12 -0400
-In-Reply-To: <20100924183305.GA15128@linux.vnet.ibm.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:42887 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944Ab0IYOUu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Sep 2010 10:20:50 -0400
+Received: by wwj40 with SMTP id 40so14587wwj.1
+        for <linux-scsi@vger.kernel.org>; Sat, 25 Sep 2010 07:20:48 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Joe Eykholt <jeykholt@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>
+To: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <James.>
 
-On 09/24/2010 01:33 PM, Mike Anderson wrote:
-> In reviewing the current code paths wasn't the serial_number also used to
-> avoid calling __scsi_try_to_abort_cmd for START_UNIT case also.
+After its state is changed from FC_PORTSTATE_BLOCKED to FC_PORTSTATE_ONLINE,
+operations on rport that was scsi target_id but is not shown by new
+role seem racing with
+the operations in the dev_loss_work of rport.
+And new rport should be created for the sake of adding rport.
 
-You mean from scsi_eh_try_stu....->__scsi_try_to_abort_cmd? How does it 
-work for that case or what is the code path? Is it when it is called 
-from the sas code through scsi_eh_ready_devs?
+Signed-off-by: Hillf Danton <dhillf@gmail.com>
+---
 
+--- o/linux-2.6.36-rc4/drivers/scsi/scsi_transport_fc.c	2010-09-13
+07:07:38.000000000 +0800
++++ m/linux-2.6.36-rc4/drivers/scsi/scsi_transport_fc.c	2010-09-25
+22:25:12.000000000 +0800
+@@ -2672,7 +2672,17 @@ fc_remote_port_add(struct Scsi_Host *sho
+ 			}
 
->
-> If we skip __scsi_try_to_abort_cmd when REQ_ATOM_COMPLETE is set it would
-> be correct for the scsi_decide_disposition cases but it would appear this
-> would stop __scsi_try_to_abort_cmd from being called in the time out
-> case as REQ_ATOM_COMPLETE is set prior to calling blk_rq_timed_out.
->
-> 1.) Request timed out path to scsi_eh_scmd_add.
->
-> blk_rq_timed_out_timer
-> 	...
-> 	if (blk_mark_rq_complete(rq))
-> 		continue;
-> 	blk_rq_timed_out
-> 		q->rq_timed_out_fn "scsi_times_out"
-> 			scsi_times_out
-> 				scsi_eh_scmd_add
->
+ 			if (match) {
+-
++				if (rport->scsi_target_id != -1 &&
++				    !(ids->roles & FC_PORT_ROLE_FCP_TARGET)) {
++					/*
++					 * rport will be torn down by timer,
++					 * and we have to create it.
++					 */
++					spin_unlock_irqrestore(
++						shost->host_lock, flags);
++					return fc_rport_create(shost,
++								channel, ids);
++				}
+ 				memcpy(&rport->node_name, &ids->node_name,
+ 					sizeof(rport->node_name));
+ 				memcpy(&rport->port_name, &ids->port_name,
+@@ -2781,6 +2791,11 @@ fc_remote_port_add(struct Scsi_Host *sho
+ 		}
 
-You are right.
+ 		if (match) {
++			if (!(ids->roles & FC_PORT_ROLE_FCP_TARGET)) {
++				spin_unlock_irqrestore(shost->host_lock,
++							flags);
++				return fc_rport_create(shost, channel, ids);
++			}
+ 			memcpy(&rport->node_name, &ids->node_name,
+ 				sizeof(rport->node_name));
+ 			memcpy(&rport->port_name, &ids->port_name,
