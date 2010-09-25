@@ -1,61 +1,73 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: [PATCH] SCSI: fix racing operations in fc_remote_port_add()
-Date: Sat, 25 Sep 2010 22:20:42 +0800
-Message-ID: <AANLkTi=ecOXEcQgq=OD4x9Rr+QWMmhpPLXMBsNZdiFCa@mail.gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH] scsi, fcoe, libfc: drop scsi host_lock use from fc_queuecommand
+Date: Sat, 25 Sep 2010 18:55:15 +0200
+Message-ID: <AANLkTi=Y3WnG8rRf4PAaTev+ZS0SifeZLSoKekNMg2L6@mail.gmail.com>
+References: <20100903222715.6237.75737.stgit@localhost.localdomain>
+ <AANLkTinVTSboQB=kxyOCQ-eF6hYWqsn9YYJn7bnLeTtW@mail.gmail.com> <4C9C47FC.5080304@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:42887 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944Ab0IYOUu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Sep 2010 10:20:50 -0400
-Received: by wwj40 with SMTP id 40so14587wwj.1
-        for <linux-scsi@vger.kernel.org>; Sat, 25 Sep 2010 07:20:48 -0700 (PDT)
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:47443 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750839Ab0IYQzh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 25 Sep 2010 12:55:37 -0400
+Received: by iwn5 with SMTP id 5so3332971iwn.19
+        for <linux-scsi@vger.kernel.org>; Sat, 25 Sep 2010 09:55:37 -0700 (PDT)
+In-Reply-To: <4C9C47FC.5080304@fusionio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <James.>
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Vasu Dev <vasu.dev@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-After its state is changed from FC_PORTSTATE_BLOCKED to FC_PORTSTATE_ONLINE,
-operations on rport that was scsi target_id but is not shown by new
-role seem racing with
-the operations in the dev_loss_work of rport.
-And new rport should be created for the sake of adding rport.
+On Fri, Sep 24, 2010 at 8:41 AM, Jens Axboe <jaxboe@fusionio.com> wrote:
+>
+> [ ... ]
+>
+> Bart, can you try with this patchset added:
+>
+> git://git.kernel.dk/linux-2.6-block.git blk-alloc-optimize
+>
+> It's a work in progress and not suitable for general consumption yet,
+> but it's tested working at least. There will be more built on top of
+> this, but at least even this simple stuff is making a big difference
+> for IOPS testing for me.
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
----
+Hello Jens,
 
---- o/linux-2.6.36-rc4/drivers/scsi/scsi_transport_fc.c	2010-09-13
-07:07:38.000000000 +0800
-+++ m/linux-2.6.36-rc4/drivers/scsi/scsi_transport_fc.c	2010-09-25
-22:25:12.000000000 +0800
-@@ -2672,7 +2672,17 @@ fc_remote_port_add(struct Scsi_Host *sho
- 			}
+Thanks for the feedback. I see a nice 10% speedup after having applied
+the four block layer optimization patches from the blk-alloc-optimize
+branch on an already patched 2.6.35.5 SRP initiator.
 
- 			if (match) {
--
-+				if (rport->scsi_target_id != -1 &&
-+				    !(ids->roles & FC_PORT_ROLE_FCP_TARGET)) {
-+					/*
-+					 * rport will be torn down by timer,
-+					 * and we have to create it.
-+					 */
-+					spin_unlock_irqrestore(
-+						shost->host_lock, flags);
-+					return fc_rport_create(shost,
-+								channel, ids);
-+				}
- 				memcpy(&rport->node_name, &ids->node_name,
- 					sizeof(rport->node_name));
- 				memcpy(&rport->port_name, &ids->port_name,
-@@ -2781,6 +2791,11 @@ fc_remote_port_add(struct Scsi_Host *sho
- 		}
+Note: according to the output of perf record -g, most spinlock calls
+still originate from the block layer. This is what the perf tool
+reported for a fio run using libaio with small blocks (512 bytes):
 
- 		if (match) {
-+			if (!(ids->roles & FC_PORT_ROLE_FCP_TARGET)) {
-+				spin_unlock_irqrestore(shost->host_lock,
-+							flags);
-+				return fc_rport_create(shost, channel, ids);
-+			}
- 			memcpy(&rport->node_name, &ids->node_name,
- 				sizeof(rport->node_name));
- 			memcpy(&rport->port_name, &ids->port_name,
+Event: cycles
+-      7.06%    fio  [kernel.kallsyms]  [k] _raw_spin_lock_irqsave
+   - _raw_spin_lock_irqsave
+      + 19.51% blk_run_queue
+      + 13.71% blk_end_bidi_request
+      + 10.04% mlx4_ib_poll_cq
+      + 4.68% lock_timer_base
+      + 4.22% aio_complete
+      + 3.97% srp_send_completion
+      + 3.71% srp_queuecommand
+      + 3.55% dio_bio_end_aio
+      + 3.37% __srp_get_tx_iu
+      + 3.14% srp_recv_completion
+      + 3.00% scsi_device_unbusy
+      + 2.87% __scsi_put_command
+      + 2.82% __blockdev_direct_IO_newtrunc
+      + 2.76% scsi_put_command
+      + 2.69% scsi_run_queue
+      + 2.65% dio_bio_submit
+      + 2.54% srp_remove_req
+      + 2.46% mlx4_ib_post_send
+      + 2.33% scsi_get_command
+      + 1.95% mlx4_ib_post_recv
+[ ... ]
+
+The script I used to generate a patched kernel can be found here
+(r2271): https://scst.svn.sourceforge.net/svnroot/scst/trunk/scripts/generate-kernel-with-srp-patches.
+
+Bart.
