@@ -1,21 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: I/O topology fixes for big physical block size
-Date: Mon, 27 Sep 2010 12:41:02 -0400
-Message-ID: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:62076 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759829Ab0I0Qlw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2010 12:41:52 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Justin P. Mattock" <justinmattock@gmail.com>
+Subject: Re: [RFC v4]update broken web addresses in the kernel.
+Date: Mon, 27 Sep 2010 09:49:19 -0700
+Message-ID: <4CA0CB0F.3060303@gmail.com>
+References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>  <20100927151005.GC11086@tuxdriver.com> <1285603383.1732.106.camel@Joe-Laptop>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1285603383.1732.106.camel@Joe-Laptop>
+Sender: linux-ide-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: "John W. Linville" <linville@tuxdriver.com>, trivial@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Finn Thain <fthain@telegraphics.com.au>, Randy Dunlap <rdunlap@xenotime.net>, Matt Turner <mattst88@gmail.com>, Dimitry Torokhov <dmitry.torokhov@gmail.com>, Mike Frysinger <vapier.adi@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, linux-scsi@vger.kernel.org
 
-Mike Snitzer reported that he has access to a device that supports thin
-provisioning but does not use the Block Limits VPD page to indicate
-discard granularity. Instead it reports a huge (1MB) physical block
-size. That caused a bit of fallout in the topology stack which assumed a
-physical block size of 4KiB or less.
+On 09/27/2010 09:03 AM, Joe Perches wrote:
+> On Mon, 2010-09-27 at 11:10 -0400, John W. Linville wrote:
+>> On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
+>>> Below is an updated patch from the original fixing broken web addresses in the kernel.
+>>> Thanks for all the help and info on this to everybody..
+>>> Hopefully I didnt miss any of them(if so let me know, and I'll resend).
+>> Changing a URL for a relocated page is one thing, but removing links
+>> isn't necessarily a great idea.  Even if the site is technically
+>> gone, it may be possible to find information e.g through the Internet
+>> Archive Wayback Machine.
+>
+> Perhaps it'd be better to scrape the contents of the various
+> web pages, collect them somewhere like wiki.kernel.org and
+> encourage others to put new contributions in that site.
+>
+>
+>
+>
 
-[PATCH 1/2] block: Ensure physical block size is unsigned int
-[PATCH 2/2] sd: Fix overflow with big physical blocks
+
+yeah I think somebody was saying something about having a separate file, 
+with all the web addresses in them or something...In any case, up to you 
+guys..
+
+Justin P. Mattock
