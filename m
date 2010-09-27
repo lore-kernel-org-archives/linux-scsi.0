@@ -1,42 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Jens Axboe <jaxboe@fusionio.com>
 Subject: Re: I/O topology fixes for big physical block size
-Date: Mon, 27 Sep 2010 18:14:52 -0400
-Message-ID: <yq1hbhadear.fsf@sermon.lab.mkp.net>
-References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
-	<4CA0CC38.5010804@fusionio.com> <20100927172309.GA13874@redhat.com>
-	<1285624684.2888.120.camel@mulgrave.site>
-	<4CA114A3.4010202@fusionio.com>
+Date: Tue, 28 Sep 2010 07:21:51 +0900
+Message-ID: <4CA118FF.1080100@fusionio.com>
+References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>	<4CA0CC38.5010804@fusionio.com> <yq1pqvzcddq.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:42323 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756026Ab0I0WQF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2010 18:16:05 -0400
-In-Reply-To: <4CA114A3.4010202@fusionio.com> (Jens Axboe's message of "Tue, 28
-	Sep 2010 07:03:15 +0900")
+Received: from mx1.fusionio.com ([64.244.102.30]:35862 "EHLO mx1.fusionio.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750913Ab0I0WVz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Sep 2010 18:21:55 -0400
+In-Reply-To: <yq1pqvzcddq.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Mike Snitzer <snitzer@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Jens" == Jens Axboe <jaxboe@fusionio.com> writes:
+On 2010-09-28 02:20, Martin K. Petersen wrote:
+>>>>>> "Jens" == Jens Axboe <jaxboe@fusionio.com> writes:
+> 
+> Jens> Fixing the overflow aside, I question the validity of setting the
+> Jens> physical block size to something larger than PAGE_SIZE as there's
+> Jens> no way that that could really work in the current kernel.
+> 
+> Jens> I would suggest doing something similar as we do with other
+> Jens> 'invalid' settings that we cannot honor, print a warning and drop
+> Jens> the queue limits to PAGE_SIZE.
+> 
+> Mike and I have been bouncing this back and forth on this the last
+> couple of days.
+> 
+> I totally agree with enforcing hard limits like the logical blocks size
+> inside the kernel. We have to. But the physical block size is just an
+> I/O hint. And consequently I prefer mkfs to do sanity checking in this
+> case and not the kernel. We report the topology truthfully and then
+> userland can treat the data as it sees fit.
 
-Jens> Yes, from a correctness point of view it doesn't matter, but when
-Jens> people go looking up fixes for whatever reason, it's much better
-Jens> to include such a fix in the original patch so it's not missed.
+So it's just the hint, not the actual hardware sector size. The naming
+is pretty bad on that, physical and logic... So that does look better,
+but in that case I don't think that sd should dump a warning.
 
-I have talked to a few standards people today. They are of the opinion
-that the device's usage of the physical block exponent is incorrect. And
-that the device must provide the Block Limits and the TP VPD if thin
-provisioning is enabled.
-
-However, devices with 8KiB physical blocks are shipping and 16KiB ditto
-are right around the corner.  Which says to me that it's important to
-report the correct thing to userland so we can cause allocators to align
-on the right boundaries, etc. If we artificially clamp the physical
-block size parameter in the kernel we are losing information. Note that
-there are no kernel users of the physical block size parameter at all.
+Does mkfs do the right thing?
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Jens Axboe
+
