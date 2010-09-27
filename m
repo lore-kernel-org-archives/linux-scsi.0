@@ -1,116 +1,56 @@
-From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: fix array error logging
-Date: Mon, 27 Sep 2010 10:45:28 -0700
-Message-ID: <4CA0D838.20209@linux.vnet.ibm.com>
-References: <20100927165904.645771561@linux.vnet.ibm.com> <4CA0CEE4.1050104@linux.vnet.ibm.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH] block: eliminate potential for infinite loop in
+ blkdev_issue_discard
+Date: Mon, 27 Sep 2010 14:13:22 -0400
+Message-ID: <20100927181321.GC14180@redhat.com>
+References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
+ <1285605664-27027-3-git-send-email-martin.petersen@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e38.co.us.ibm.com ([32.97.110.159]:57443 "EHLO
-	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754443Ab0I0Rpf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2010 13:45:35 -0400
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
-	by e38.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id o8RHbkMm001318
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Sep 2010 11:37:46 -0600
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o8RHjUlP114060
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Sep 2010 11:45:30 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o8RHjTv7032680
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Sep 2010 11:45:30 -0600
-In-Reply-To: <4CA0CEE4.1050104@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56802 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751502Ab0I0SNc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Sep 2010 14:13:32 -0400
+Content-Disposition: inline
+In-Reply-To: <1285605664-27027-3-git-send-email-martin.petersen@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-The original patch was broken.  Here's the correct patch.
+Due to the recently identified overflow in read_capacity_16() it was
+possible for max_discard_sectors to be zero but still have discards
+enabled on the associated device's queue.
 
+Eliminate the possibility for blkdev_issue_discard to infinitely loop.
+
+Interestingly this issue wasn't identified until a device, whose
+discard_granularity was 0 due to read_capacity_16 overflow, was consumed
+by blk_stack_limits() to construct limits for a higher-level DM
+multipath device.  The multipath device's resulting limits never had the
+discard limits stacked because blk_stack_limits() will only do so if
+the bottom device's discard_granularity != 0.  This resulted in the
+multipath device's limits.max_discard_sectors being 0.
+
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 ---
+ block/blk-lib.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-The structure definitions for reporting array errors did not have the correct
-size for the Array WWID field.  This patch fixes those definitions.  It also
-fixes part of the output formatting that did not have newlines and fixes size
-calculations.
-
-Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
----
-
- drivers/scsi/ipr.c |   10 +++++-----
- drivers/scsi/ipr.h |    9 +++++++--
- 2 files changed, 12 insertions(+), 7 deletions(-)
-
-Index: b/drivers/scsi/ipr.c
-===================================================================
---- a/drivers/scsi/ipr.c	2010-09-23 09:33:27.000000000 -0700
-+++ b/drivers/scsi/ipr.c	2010-09-27 10:43:00.000000000 -0700
-@@ -1671,7 +1671,7 @@ static void ipr_log_enhanced_array_error
-
- 	array_entry = error->array_member;
- 	num_entries = min_t(u32, be32_to_cpu(error->num_entries),
--			    sizeof(error->array_member));
-+			    ARRAY_SIZE(error->array_member));
-
- 	for (i = 0; i < num_entries; i++, array_entry++) {
- 		if (!memcmp(array_entry->vpd.vpd.sn, zero_sn, IPR_SERIAL_NUM_LEN))
-@@ -2152,8 +2152,8 @@ static void ipr_log_sis64_array_error(st
- 	ipr_err_separator;
-
- 	array_entry = error->array_member;
--	num_entries = min_t(u32, be32_to_cpu(error->num_entries),
--			    sizeof(error->array_member));
-+	num_entries = min_t(u32, error->num_entries,
-+			    ARRAY_SIZE(error->array_member));
-
- 	for (i = 0; i < num_entries; i++, array_entry++) {
-
-@@ -2167,10 +2167,10 @@ static void ipr_log_sis64_array_error(st
-
- 		ipr_err("Array Member %d:\n", i);
- 		ipr_log_ext_vpd(&array_entry->vpd);
--		ipr_err("Current Location: %s",
-+		ipr_err("Current Location: %s\n",
- 			 ipr_format_res_path(array_entry->res_path, buffer,
- 					     sizeof(buffer)));
--		ipr_err("Expected Location: %s",
-+		ipr_err("Expected Location: %s\n",
- 			 ipr_format_res_path(array_entry->expected_res_path,
- 					     buffer, sizeof(buffer)));
-
-Index: b/drivers/scsi/ipr.h
-===================================================================
---- a/drivers/scsi/ipr.h	2010-09-23 09:33:29.000000000 -0700
-+++ b/drivers/scsi/ipr.h	2010-09-23 12:03:59.000000000 -0700
-@@ -319,6 +319,11 @@ struct ipr_ext_vpd {
- 	__be32 wwid[2];
- }__attribute__((packed));
-
-+struct ipr_ext_vpd64 {
-+	struct ipr_vpd vpd;
-+	__be32 wwid[4];
-+}__attribute__((packed));
-+
- struct ipr_std_inq_data {
- 	u8 peri_qual_dev_type;
- #define IPR_STD_INQ_PERI_QUAL(peri) ((peri) >> 5)
-@@ -395,7 +400,7 @@ struct ipr_config_table_entry64 {
- 	__be64 res_path;
- 	struct ipr_std_inq_data std_inq_data;
- 	u8 reserved2[4];
--	__be64 reserved3[2]; // description text
-+	__be64 reserved3[2];
- 	u8 reserved4[8];
- }__attribute__ ((packed, aligned (8)));
-
-@@ -914,7 +919,7 @@ struct ipr_hostrcb_type_24_error {
- 	u8 array_id;
- 	u8 last_res_path[8];
- 	u8 protection_level[8];
--	struct ipr_ext_vpd array_vpd;
-+	struct ipr_ext_vpd64 array_vpd;
- 	u8 description[16];
- 	u8 reserved2[3];
- 	u8 num_entries;
-
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index c392029..186f249 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -56,7 +56,10 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 	 * granularity
+ 	 */
+ 	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
+-	if (q->limits.discard_granularity) {
++	if (unlikely(!max_discard_sectors)) {
++		/* Avoid infinite loop (below) */
++		return -EOPNOTSUPP;
++	} else if (q->limits.discard_granularity) {
+ 		unsigned int disc_sects = q->limits.discard_granularity >> 9;
+ 
+ 		max_discard_sectors &= ~(disc_sects - 1);
