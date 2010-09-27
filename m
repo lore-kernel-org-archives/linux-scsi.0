@@ -1,49 +1,64 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: [RFC v4]update broken web addresses in the kernel.
-Date: Mon, 27 Sep 2010 09:39:12 -0700
-Message-ID: <4CA0C8B0.9020209@gmail.com>
-References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com> <20100927151005.GC11086@tuxdriver.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20100927151005.GC11086@tuxdriver.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Finn Thain <fthain@telegraphics.com.au>, Randy Dunlap <rdunlap@xenotime.net>, Matt Turner <mattst88@gmail.com>, Dimitry Torokhov <dmitry.torokhov@gmail.com>, Mike Frysinger <vapier.adi@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH 1/2] block: Ensure physical block size is unsigned int
+Date: Mon, 27 Sep 2010 12:41:03 -0400
+Message-ID: <1285605664-27027-2-git-send-email-martin.petersen@oracle.com>
+References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:61851 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759801Ab0I0Qlm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2010 12:41:42 -0400
+In-Reply-To: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, snitzer@redhat.com, linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On 09/27/2010 08:10 AM, John W. Linville wrote:
-> On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
->> Below is an updated patch from the original fixing broken web addresses in the kernel.
->> Thanks for all the help and info on this to everybody..
->> Hopefully I didnt miss any of them(if so let me know, and I'll resend).
->
-> Changing a URL for a relocated page is one thing, but removing links
-> isn't necessarily a great idea.  Even if the site is technically
-> gone, it may be possible to find information e.g through the Internet
-> Archive Wayback Machine.
->
->> diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
->> index e8e2d0f..ba10b07 100644
->> --- a/drivers/net/wireless/orinoco/main.c
->> +++ b/drivers/net/wireless/orinoco/main.c
->> @@ -17,7 +17,6 @@
->>    *
->>    * Portions based on wvlan_cs.c 1.0.6, Copyright Andreas Neuhaus<andy
->>    * AT fasta.fh-dortmund.de>
->> - *      http://www.stud.fh-dortmund.de/~andy/wvlan/
->>    *
->>    * The contents of this file are subject to the Mozilla Public License
->>    * Version 1.1 (the "License"); you may not use this file except in
->
-> http://web.archive.org/web/20070716051348/http://www.stud.fh-dortmund.de/~andy/wvlan/
->
+Physical block size was declared unsigned int to accomodate the maximum
+size reported by READ CAPACITY(16).  Make sure we use the right type in
+the related functions.
 
-most of the urls that are not removed that are still broken work with 
-the wayback machine..(from what I remember this one would give me a 
-server error(reason for removing), but it doesn't look so).
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ block/blk-settings.c   |    2 +-
+ include/linux/blkdev.h |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks for this, I'll change that up.
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index a234f4b..450577d 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -343,7 +343,7 @@ EXPORT_SYMBOL(blk_queue_logical_block_size);
+  *   hardware can operate on without reverting to read-modify-write
+  *   operations.
+  */
+-void blk_queue_physical_block_size(struct request_queue *q, unsigned short size)
++void blk_queue_physical_block_size(struct request_queue *q, unsigned int size)
+ {
+ 	q->limits.physical_block_size = size;
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 2c54906..9e443b9 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -851,7 +851,7 @@ extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
+ extern void blk_queue_max_discard_sectors(struct request_queue *q,
+ 		unsigned int max_discard_sectors);
+ extern void blk_queue_logical_block_size(struct request_queue *, unsigned short);
+-extern void blk_queue_physical_block_size(struct request_queue *, unsigned short);
++extern void blk_queue_physical_block_size(struct request_queue *, unsigned int);
+ extern void blk_queue_alignment_offset(struct request_queue *q,
+ 				       unsigned int alignment);
+ extern void blk_limits_io_min(struct queue_limits *limits, unsigned int min);
+@@ -1004,7 +1004,7 @@ static inline unsigned int queue_physical_block_size(struct request_queue *q)
+ 	return q->limits.physical_block_size;
+ }
+ 
+-static inline int bdev_physical_block_size(struct block_device *bdev)
++static inline unsigned int bdev_physical_block_size(struct block_device *bdev)
+ {
+ 	return queue_physical_block_size(bdev_get_queue(bdev));
+ }
+-- 
+1.7.2.2
 
-Justin P. Mattock
