@@ -1,44 +1,56 @@
-From: Jens Axboe <jaxboe@fusionio.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: I/O topology fixes for big physical block size
-Date: Tue, 28 Sep 2010 07:24:10 +0900
-Message-ID: <4CA1198A.2050004@fusionio.com>
-References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>	<4CA0CC38.5010804@fusionio.com> <20100927172309.GA13874@redhat.com>	<1285624684.2888.120.camel@mulgrave.site>	<4CA114A3.4010202@fusionio.com> <yq1hbhadear.fsf@sermon.lab.mkp.net>
+Date: Mon, 27 Sep 2010 18:36:24 -0400
+Message-ID: <yq18w2mddav.fsf@sermon.lab.mkp.net>
+References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
+	<4CA0CC38.5010804@fusionio.com> <yq1pqvzcddq.fsf@sermon.lab.mkp.net>
+	<4CA118FF.1080100@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.fusionio.com ([64.244.102.31]:33126 "EHLO mx2.fusionio.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751752Ab0I0WYO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Sep 2010 18:24:14 -0400
-In-Reply-To: <yq1hbhadear.fsf@sermon.lab.mkp.net>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:22232 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932558Ab0I0Wgn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2010 18:36:43 -0400
+In-Reply-To: <4CA118FF.1080100@fusionio.com> (Jens Axboe's message of "Tue, 28
+	Sep 2010 07:21:51 +0900")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Mike Snitzer <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 2010-09-28 07:14, Martin K. Petersen wrote:
->>>>>> "Jens" == Jens Axboe <jaxboe@fusionio.com> writes:
-> 
-> Jens> Yes, from a correctness point of view it doesn't matter, but when
-> Jens> people go looking up fixes for whatever reason, it's much better
-> Jens> to include such a fix in the original patch so it's not missed.
-> 
-> I have talked to a few standards people today. They are of the opinion
-> that the device's usage of the physical block exponent is incorrect. And
-> that the device must provide the Block Limits and the TP VPD if thin
-> provisioning is enabled.
-> 
-> However, devices with 8KiB physical blocks are shipping and 16KiB ditto
-> are right around the corner.  Which says to me that it's important to
-> report the correct thing to userland so we can cause allocators to align
-> on the right boundaries, etc. If we artificially clamp the physical
-> block size parameter in the kernel we are losing information. Note that
-> there are no kernel users of the physical block size parameter at all.
+>>>>> "Jens" == Jens Axboe <jaxboe@fusionio.com> writes:
 
-With the revised understanding that this is purely the IO hint, then yes
-I agree we should not clamp it.
+Jens> So it's just the hint, not the actual hardware sector size. The
+Jens> naming is pretty bad on that, physical and logic... 
+
+This is the official T10/T13 terminology. Logical block size is the unit
+used when talking to the device via ACS/SBC. Physical block size is the
+unit used by the device internally. There's a pretty vague description
+of what that means in SBC. But it was obviously conceived mainly to
+handle disk drives with 512-byte logical and 4096-byte physical
+(hardware) sectors.
+
+The notion of using the physical block size as an indicator of erase
+block size is something this unknown vendor came up with. And 1MB is
+quite the ways out of range for what we expect in this field.
+
+But my point is that devices with physical block sizes bigger than the
+system page size are already out there.  So we need to do the right
+thing here. And since this is not something affecting runtime behavior
+I'm in favor of deferring the decision what to do about it to userland.
+
+
+Jens> So that does look better, but in that case I don't think that sd
+Jens> should dump a warning.
+
+That's fine by me.
+
+
+Jens> Does mkfs do the right thing?
+
+Depends on which mkfs it is. Mike has tested things and can chip in
+here...
 
 -- 
-Jens Axboe
-
+Martin K. Petersen	Oracle Linux Engineering
