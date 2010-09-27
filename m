@@ -1,84 +1,47 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [RFC v3 01/15] scsi: Drop struct Scsi_Host->host_lock usage in
- scsi_dispatch_cmd()
-Date: Mon, 27 Sep 2010 16:19:23 +0200
-Message-ID: <20100927141923.GC8473@schmichrtp.mainz.de.ibm.com>
-References: <1285285052-16351-1-git-send-email-nab@linux-iscsi.org>
- <4C9CAA80.1030702@linux.vnet.ibm.com>
- <1285361040.1849.235.camel@haakon2.linux-iscsi.org>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [RFC v4]update broken web addresses in the kernel.
+Date: Mon, 27 Sep 2010 11:10:06 -0400
+Message-ID: <20100927151005.GC11086@tuxdriver.com>
+References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.uk.ibm.com ([194.196.100.167]:33628 "EHLO
-	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759023Ab0I0OTa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2010 10:19:30 -0400
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:60274 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755632Ab0I0POq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2010 11:14:46 -0400
 Content-Disposition: inline
-In-Reply-To: <1285361040.1849.235.camel@haakon2.linux-iscsi.org>
+In-Reply-To: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, "eata.c maintainer" <dario.ballabio@inwind.it>
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Finn Thain <fthain@telegraphics.com.au>, Randy Dunlap <rdunlap@xenotime.net>, Matt Turner <mattst88@gmail.com>, Dimitry Torokhov <dmitry.torokhov@gmail.com>, Mike Frysinger <vapier.adi@gmail.com>
 
-On Fri, Sep 24, 2010 at 01:44:00PM -0700, Nicholas A. Bellinger wrote:
-> On Fri, 2010-09-24 at 08:41 -0500, Brian King wrote:
-> > On 09/23/2010 06:37 PM, Nicholas A. Bellinger wrote:
-> > > @@ -651,7 +655,6 @@ static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd
-> > >  int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
-> > >  {
-> > >  	struct Scsi_Host *host = cmd->device->host;
-> > > -	unsigned long flags = 0;
-> > >  	unsigned long timeout;
-> > >  	int rtn = 0;
-> > > 
-> > > @@ -736,15 +739,11 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
-> > >  		scsi_done(cmd);
-> > >  		goto out;
-> > >  	}
-> > > -
-> > > -	spin_lock_irqsave(host->host_lock, flags);
-> > >  	/*
-> > > -	 * AK: unlikely race here: for some reason the timer could
-> > > -	 * expire before the serial number is set up below.
-> > > -	 *
-> > > -	 * TODO: kill serial or move to blk layer
-> > > +	 * Note that scsi_cmd_get_serial() used to be called here, but
-> > > +	 * now we expect the legacy SCSI LLDs that actually need this
-> > > +	 * to call it directly within their SHT->queuecommand() caller.
-> > >  	 */
-> > > -	scsi_cmd_get_serial(host, cmd); 
-> > > 
-> > >  	if (unlikely(host->shost_state == SHOST_DEL)) {
-> > >  		cmd->result = (DID_NO_CONNECT << 16);
-> > > @@ -753,7 +752,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
-> > >  		trace_scsi_dispatch_cmd_start(cmd);
-> > >  		rtn = host->hostt->queuecommand(cmd, scsi_done);
-> > >  	}
-> > > -	spin_unlock_irqrestore(host->host_lock, flags);
-> > > +
-> > >  	if (rtn) {
-> > >  		trace_scsi_dispatch_cmd_error(cmd, rtn);
-> > >  		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
-> > 
-> > Are you planning a future revision that moves the acquiring of the host lock
-> > into the LLDD's queuecommand for all the other drivers you don't currently
-> > touch in this patch set?
-> > 
-> 
-> Hi Brian,
-> 
-> I was under the impression that this would be unnecessary for the vast
-> majority of existing LLD drivers, but if you are aware of specific LLDs
-> that would still need the struct Scsi_Host->host_lock held in their
-> SHT->queuecommand() for whaterver reason please let me know and I would
-> be happy to include this into an RFCv4.
-> 
-> Thanks for your comments!
+On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
+> Below is an updated patch from the original fixing broken web addresses in the kernel.
+> Thanks for all the help and info on this to everybody..
+> Hopefully I didnt miss any of them(if so let me know, and I'll resend).
 
-zfcp relies on having the interrupts disabled when calling
-queuecommand. Without the spin_lock_irqsave in scsi_dispatch_cmd, the
-locking in zfcp_fsf_send_fcp_command_task has to be changed from
-spin_lock(&qdio->req_q_lock) to spin_lock_irqsave. It is a simple
-change, but other drivers might have similar requirements.
+Changing a URL for a relocated page is one thing, but removing links
+isn't necessarily a great idea.  Even if the site is technically
+gone, it may be possible to find information e.g through the Internet
+Archive Wayback Machine.
 
-Christof
+> diff --git a/drivers/net/wireless/orinoco/main.c b/drivers/net/wireless/orinoco/main.c
+> index e8e2d0f..ba10b07 100644
+> --- a/drivers/net/wireless/orinoco/main.c
+> +++ b/drivers/net/wireless/orinoco/main.c
+> @@ -17,7 +17,6 @@
+>   *
+>   * Portions based on wvlan_cs.c 1.0.6, Copyright Andreas Neuhaus <andy
+>   * AT fasta.fh-dortmund.de>
+> - *      http://www.stud.fh-dortmund.de/~andy/wvlan/
+>   *
+>   * The contents of this file are subject to the Mozilla Public License
+>   * Version 1.1 (the "License"); you may not use this file except in
+
+http://web.archive.org/web/20070716051348/http://www.stud.fh-dortmund.de/~andy/wvlan/
+
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
