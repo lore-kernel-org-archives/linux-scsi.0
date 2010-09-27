@@ -1,95 +1,84 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [PATCH v2 01/11] scsi: Convert struct
- Scsi_Host->cmd_serial_number to atomic_t
-Date: Mon, 27 Sep 2010 16:05:51 +0200
-Message-ID: <20100927140551.GB8473@schmichrtp.mainz.de.ibm.com>
-References: <1284747709-20862-1-git-send-email-nab@linux-iscsi.org>
- <4C93BB8E.2080501@cisco.com>
- <4C9427B6.9050404@cs.wisc.edu>
- <1284839878.13344.300.camel@haakon2.linux-iscsi.org>
+Subject: Re: [RFC v3 01/15] scsi: Drop struct Scsi_Host->host_lock usage in
+ scsi_dispatch_cmd()
+Date: Mon, 27 Sep 2010 16:19:23 +0200
+Message-ID: <20100927141923.GC8473@schmichrtp.mainz.de.ibm.com>
+References: <1285285052-16351-1-git-send-email-nab@linux-iscsi.org>
+ <4C9CAA80.1030702@linux.vnet.ibm.com>
+ <1285361040.1849.235.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate7.uk.ibm.com ([194.196.100.167]:33628 "EHLO
+	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759023Ab0I0OTa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2010 10:19:30 -0400
 Content-Disposition: inline
-In-Reply-To: <1284839878.13344.300.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Joe Eykholt <jeykholt@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+In-Reply-To: <1285361040.1849.235.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Brian King <brking@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, "eata.c maintainer" <dario.ballabio@inwind.it>
 
-On Sat, Sep 18, 2010 at 12:57:58PM -0700, Nicholas A. Bellinger wrote:
-> On Fri, 2010-09-17 at 21:45 -0500, Mike Christie wrote:
-> > On 09/17/2010 02:03 PM, Joe Eykholt wrote:
-> > >
-> > > How about instead of adding use_serial_number, let's just have the
-> > > drivers that want a serial number call scsi_cmd_get_serial()
+On Fri, Sep 24, 2010 at 01:44:00PM -0700, Nicholas A. Bellinger wrote:
+> On Fri, 2010-09-24 at 08:41 -0500, Brian King wrote:
+> > On 09/23/2010 06:37 PM, Nicholas A. Bellinger wrote:
+> > > @@ -651,7 +655,6 @@ static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd
+> > >  int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+> > >  {
+> > >  	struct Scsi_Host *host = cmd->device->host;
+> > > -	unsigned long flags = 0;
+> > >  	unsigned long timeout;
+> > >  	int rtn = 0;
+> > > 
+> > > @@ -736,15 +739,11 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+> > >  		scsi_done(cmd);
+> > >  		goto out;
+> > >  	}
+> > > -
+> > > -	spin_lock_irqsave(host->host_lock, flags);
+> > >  	/*
+> > > -	 * AK: unlikely race here: for some reason the timer could
+> > > -	 * expire before the serial number is set up below.
+> > > -	 *
+> > > -	 * TODO: kill serial or move to blk layer
+> > > +	 * Note that scsi_cmd_get_serial() used to be called here, but
+> > > +	 * now we expect the legacy SCSI LLDs that actually need this
+> > > +	 * to call it directly within their SHT->queuecommand() caller.
+> > >  	 */
+> > > -	scsi_cmd_get_serial(host, cmd); 
+> > > 
+> > >  	if (unlikely(host->shost_state == SHOST_DEL)) {
+> > >  		cmd->result = (DID_NO_CONNECT << 16);
+> > > @@ -753,7 +752,7 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+> > >  		trace_scsi_dispatch_cmd_start(cmd);
+> > >  		rtn = host->hostt->queuecommand(cmd, scsi_done);
+> > >  	}
+> > > -	spin_unlock_irqrestore(host->host_lock, flags);
+> > > +
+> > >  	if (rtn) {
+> > >  		trace_scsi_dispatch_cmd_error(cmd, rtn);
+> > >  		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
 > > 
-> > I think this sounds better.
-> > 
-> 
-> In that case I will go ahead and add explict scsi_cmd_get_serial() calls
-> to the LLDs that use struct scsi_cmnd->serial_number in anything beyond
-> an obvious and simple informational purpose.
-> 
-> > You could also convert drivers to the host tagging if you needed a 
-> > unique id for each command sent to a host.
-> 
-> Hmmm, what does this entail again..?
-> 
-> > 
-> > > and stop calling it from scsi_dispatch_cmd()?   AFAICT, it's only
-> > > used in debug messages in some drivers.  I didn't find other usages
-> > > but didn't do an exhaustive search.
-> > 
-> > The comments for serial_number say that it is only supposed to be used 
-> > for debugging printks and most drivers use it for that.
-> 
-> So I would suppose it would be OK for those drivers to continue to
-> printk serial_number to show the internal serial_number allocation is
-> now disabled by default.
-> 
-> > However, it looks like mpt and dpt_i2o are using it for error handling
-> > and/or lookup type of operations. I think the mpt* uses are not needed
-> > in the abort checks.
-> > 
-> 
-> In that case, then adding an explict scsi_cmd_get_serial() call in mpt*
-> and dpt_i20 ->queuecommand() callers would be a good first step.
-> 
-> > And eata is using it for ordering and tracking or something. It could 
-> > probably be converted to the host tagging if or what you suggested if it 
-> > needs the uniqueue id.
-> 
-> Adding an explict scsi_cmd_get_serial() for eata for now, and we can
-> consider LLD canidates for host tag conversion as a future step.
-> 
-> > 
-> > zfcp looks like it copies it. It does not look like the driver needs it.
+> > Are you planning a future revision that moves the acquiring of the host lock
+> > into the LLDD's queuecommand for all the other drivers you don't currently
+> > touch in this patch set?
 > > 
 > 
-> Ok, I will look at removing it's usage in zfcp or if necessary add an
-> the explict scsi_cmd_get_serial() call.
+> Hi Brian,
+> 
+> I was under the impression that this would be unnecessary for the vast
+> majority of existing LLD drivers, but if you are aware of specific LLDs
+> that would still need the struct Scsi_Host->host_lock held in their
+> SHT->queuecommand() for whaterver reason please let me know and I would
+> be happy to include this into an RFCv4.
+> 
+> Thanks for your comments!
 
-In zfcp, the serial_number is only accessed for writing it to debug
-traces. With the change that the driver has to request the serial
-number through use_serial_number, simply remove the serial number from
-zfcp.
-
-Thanks,
+zfcp relies on having the interrupts disabled when calling
+queuecommand. Without the spin_lock_irqsave in scsi_dispatch_cmd, the
+locking in zfcp_fsf_send_fcp_command_task has to be changed from
+spin_lock(&qdio->req_q_lock) to spin_lock_irqsave. It is a simple
+change, but other drivers might have similar requirements.
 
 Christof
-
-> 
-> > scsi_error.c uses it in scsi_try_to_abort_cmd to check if a command has 
-> > completed, but I think that can be done by checking if REQ_ATOM_COMPLETE 
-> > is set.
-> 
-> Hmmm, good catch here.  Jejb and hch, does this item work for you..?
-> 
-> If so then I will take another peek for any ML uses of a struct
-> scsi_cmnd->serial_number that need to be addressed, and include Joe's
-> and Mike's recommendations into a v3 series.
-> 
-> Thanks for your comments here Mike!
-> 
-> --nab
