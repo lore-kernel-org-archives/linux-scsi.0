@@ -1,56 +1,52 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH] block: eliminate potential for infinite loop in
- blkdev_issue_discard
-Date: Mon, 27 Sep 2010 14:13:22 -0400
-Message-ID: <20100927181321.GC14180@redhat.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: I/O topology fixes for big physical block size
+Date: Tue, 28 Sep 2010 06:58:04 +0900
+Message-ID: <1285624684.2888.120.camel@mulgrave.site>
 References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
- <1285605664-27027-3-git-send-email-martin.petersen@oracle.com>
+	 <4CA0CC38.5010804@fusionio.com>  <20100927172309.GA13874@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56802 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:44382 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751502Ab0I0SNc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Sep 2010 14:13:32 -0400
-Content-Disposition: inline
-In-Reply-To: <1285605664-27027-3-git-send-email-martin.petersen@oracle.com>
+	id S1750780Ab0I0V6R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Sep 2010 17:58:17 -0400
+In-Reply-To: <20100927172309.GA13874@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Jens Axboe <jaxboe@fusionio.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Due to the recently identified overflow in read_capacity_16() it was
-possible for max_discard_sectors to be zero but still have discards
-enabled on the associated device's queue.
+On Mon, 2010-09-27 at 13:23 -0400, Mike Snitzer wrote:
+> On Mon, Sep 27 2010 at 12:54pm -0400,
+> Jens Axboe <jaxboe@fusionio.com> wrote:
+> 
+> > On 2010-09-28 01:41, Martin K. Petersen wrote:
+> > > Mike Snitzer reported that he has access to a device that supports thin
+> > > provisioning but does not use the Block Limits VPD page to indicate
+> > > discard granularity. Instead it reports a huge (1MB) physical block
+> > > size. That caused a bit of fallout in the topology stack which assumed a
+> > > physical block size of 4KiB or less.
+> > 
+> > Fixing the overflow aside, I question the validity of setting the physical
+> > block size to something larger than PAGE_SIZE as there's no way that that
+> > could really work in the current kernel.
+> > 
+> > I would suggest doing something similar as we do with other 'invalid'
+> > settings that we cannot honor, print a warning and drop the queue
+> > limits to PAGE_SIZE.
+> 
+> I'm inclined to agree.  Doesn't make a whole lot of sense.
+> 
+> But could this cap of PAGE_SIZE be enforced with a follow-on patch?  Or
+> would you rather see it be dealt with in a single revised 2/2 patch?
 
-Eliminate the possibility for blkdev_issue_discard to infinitely loop.
+It's up to Jens, but I'd prefer, unless there's a very good reason, that
+the patches we put into the kernel be right first time around, since
+that generates a cleaner history and a better example should anyone go
+looking for one in the tree.
 
-Interestingly this issue wasn't identified until a device, whose
-discard_granularity was 0 due to read_capacity_16 overflow, was consumed
-by blk_stack_limits() to construct limits for a higher-level DM
-multipath device.  The multipath device's resulting limits never had the
-discard limits stacked because blk_stack_limits() will only do so if
-the bottom device's discard_granularity != 0.  This resulted in the
-multipath device's limits.max_discard_sectors being 0.
+James
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- block/blk-lib.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index c392029..186f249 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -56,7 +56,10 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	 * granularity
- 	 */
- 	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
--	if (q->limits.discard_granularity) {
-+	if (unlikely(!max_discard_sectors)) {
-+		/* Avoid infinite loop (below) */
-+		return -EOPNOTSUPP;
-+	} else if (q->limits.discard_granularity) {
- 		unsigned int disc_sects = q->limits.discard_granularity >> 9;
- 
- 		max_discard_sectors &= ~(disc_sects - 1);
