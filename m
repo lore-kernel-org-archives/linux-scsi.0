@@ -1,56 +1,47 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v4 15/19] mpt2sas: Add scsi_cmd_get_serial() call
-Date: Mon, 27 Sep 2010 19:07:41 -0700
-Message-ID: <1285639661-7505-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp106.sbc.mail.mud.yahoo.com ([68.142.198.104]:34049 "HELO
-	smtp106.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933683Ab0I1CHq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Sep 2010 22:07:46 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [RFC v4 14/19] buslogic: Remove host_lock unlock() + lock() from BusLogic_QueueCommand()
+Date: Mon, 27 Sep 2010 19:07:31 -0700
+Message-ID: <1285639651-7485-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
 Cc: James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, "eata.c maintainer" <dario.ballabio@inwind.it>, Luben Tuikov <ltuikov@yahoo.com>, mvsas maintainer <kewei@marvell.com>, pm8001 maintainer Jack Wang <jack_wang@usish.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds a scsi_cmd_get_serial() call in _scsih_qcmd() to setup a
-valid struct scsi_cmnd->serial_number because mpt2sas_scsih_issue_tm()
-still depends upon this being set.
-
-This also includes setting the SHT->unlocked_qcmd=1 for host_lock less mpt2sas
-_scsih_qcmd() operation.
+This patch removes the now legacy host_lock unlock() + lock() optimization
+from buslogic.c:BusLogic_QueueCommand()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/scsi/BusLogic.c |    4 ----
+ 1 files changed, 0 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 16e99b6..4bedbf2 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -3325,6 +3325,11 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 	u16 smid;
- 
- 	scmd->scsi_done = done;
-+	/*
-+	 * Call scsi_cmd_get_serial() because we need a valid serial number
-+	 * in mpt2sas_scsih_issue_tm()
-+	 */
-+	scsi_cmd_get_serial(scmd);
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
- 		scmd->result = DID_NO_CONNECT << 16;
-@@ -6464,6 +6469,7 @@ static struct scsi_host_template scsih_driver_template = {
- 	.eh_host_reset_handler		= _scsih_host_reset,
- 	.bios_param			= _scsih_bios_param,
- 	.can_queue			= 1,
-+	.unlocked_qcmd			= 1,
- 	.this_id			= -1,
- 	.sg_tablesize			= MPT2SAS_SG_DEPTH,
- 	.max_sectors			= 8192,
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index fc0b4b8..f39b4fc 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -2837,9 +2837,7 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
+ 	 */
+ 	CCB = BusLogic_AllocateCCB(HostAdapter);
+ 	if (CCB == NULL) {
+-		spin_unlock_irq(HostAdapter->SCSI_Host->host_lock);
+ 		BusLogic_Delay(1);
+-		spin_lock_irq(HostAdapter->SCSI_Host->host_lock);
+ 		CCB = BusLogic_AllocateCCB(HostAdapter);
+ 		if (CCB == NULL) {
+ 			Command->result = DID_ERROR << 16;
+@@ -2965,10 +2963,8 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
+ 		   error as a Host Adapter Hard Reset should be initiated soon.
+ 		 */
+ 		if (!BusLogic_WriteOutgoingMailbox(HostAdapter, BusLogic_MailboxStartCommand, CCB)) {
+-			spin_unlock_irq(HostAdapter->SCSI_Host->host_lock);
+ 			BusLogic_Warning("Unable to write Outgoing Mailbox - " "Pausing for 1 second\n", HostAdapter);
+ 			BusLogic_Delay(1);
+-			spin_lock_irq(HostAdapter->SCSI_Host->host_lock);
+ 			if (!BusLogic_WriteOutgoingMailbox(HostAdapter, BusLogic_MailboxStartCommand, CCB)) {
+ 				BusLogic_Warning("Still unable to write Outgoing Mailbox - " "Host Adapter Dead?\n", HostAdapter);
+ 				BusLogic_DeallocateCCB(CCB);
 -- 
 1.7.3
-
