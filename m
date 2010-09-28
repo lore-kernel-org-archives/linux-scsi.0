@@ -1,95 +1,49 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [PATCH 2/2] Add UAS driver
-Date: Tue, 28 Sep 2010 11:52:36 -0700
-Message-ID: <20100928185236.GF25677@one-eyed-alien.net>
-References: <1285668896-6356-1-git-send-email-willy@linux.intel.com> <1285668896-6356-2-git-send-email-willy@linux.intel.com> <20100928175122.GE25677@one-eyed-alien.net> <20100928181134.GA17657@kroah.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: I/O topology fixes for big physical block size
+Date: Tue, 28 Sep 2010 14:54:57 -0400
+Message-ID: <20100928185457.GA13438@redhat.com>
+References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
+ <4CA0CC38.5010804@fusionio.com>
+ <20100927172309.GA13874@redhat.com>
+ <1285624684.2888.120.camel@mulgrave.site>
+ <4CA114A3.4010202@fusionio.com>
+ <yq1hbhadear.fsf@sermon.lab.mkp.net>
+ <4CA1198A.2050004@fusionio.com>
+ <yq1wrq5aels.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/i8j2F0k9BYX4qLc"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:38563
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756820Ab0I1Swl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2010 14:52:41 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:55947 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757145Ab0I1SzH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Sep 2010 14:55:07 -0400
 Content-Disposition: inline
-In-Reply-To: <20100928181134.GA17657@kroah.com>
+In-Reply-To: <yq1wrq5aels.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Matthew Wilcox <willy@linux.intel.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, sarah.a.sharp@linux.intel.com, Matthew Wilcox <matthew.r.wilcox@intel.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Jens Axboe <jaxboe@fusionio.com>, James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On Tue, Sep 28 2010 at  2:48pm -0400,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
---/i8j2F0k9BYX4qLc
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> >>>>> "Jens" == Jens Axboe <jaxboe@fusionio.com> writes:
+> 
+> Jens> With the revised understanding that this is purely the IO hint,
+> Jens> then yes I agree we should not clamp it.
+> 
+> Ok, here's an updated sd patch that does not print a warning...
+> 
+> 
+> sd: Fix overflow with big physical blocks
+> 
+> The hw_sector_size variable could overflow if a device reported huge
+> physical blocks.  Switch to the more accurate physical_block_size
+> terminology and make sure we use an unsigned int to match the range
+> permitted by READ CAPACITY(16).
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-On Tue, Sep 28, 2010 at 11:11:34AM -0700, Greg KH wrote:
-> On Tue, Sep 28, 2010 at 10:51:22AM -0700, Matthew Dharm wrote:
-> > On Tue, Sep 28, 2010 at 06:14:56AM -0400, Matthew Wilcox wrote:
-> > > From: Matthew Wilcox <matthew.r.wilcox@intel.com>
-> > >=20
-> > > USB Attached SCSI is a new protocol specified jointly by the SCSI T10
-> > > committee and the USB Implementors Forum.
-> > >=20
-> > > Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> > > ---
-> > >  MAINTAINERS                  |    8 +
-> > >  drivers/usb/storage/Kconfig  |   13 +
-> > >  drivers/usb/storage/Makefile |    1 +
-> > >  drivers/usb/storage/uas.c    |  751 ++++++++++++++++++++++++++++++++=
-++++++++++
-> > >  4 files changed, 773 insertions(+), 0 deletions(-)
-> > >  create mode 100644 drivers/usb/storage/uas.c
-> >=20
-> > Given that this is distinctly not usb-storage, and it is entirely conta=
-ined
-> > within a single file, does it really belong in the drivers/usb/storage
-> > directory?
-> >=20
-> > That just seems like a plan for confusion.  The fact that there is a big
-> > "this is not usb-storage" message in the comments of uas.c would seem to
-> > support this position.
-> >=20
-> > Given that it is a single file, I would put it in drivers/usb directly.=
-  If
-> > you wanted your own directory for possible future refactoring into mult=
-iple
-> > files or addid other files (like usb-storage did to support oddball
-> > devices), then maybe create a drivers/usb/uas directory.
->=20
-> What about drivers/usb/class/ where a number of other USB class drivers
-> live.  That would make more sense, right?
+Acked-by: Mike Snitzer <snitzer@redhat.com>
 
-No argument from me.  Heck, maybe someone wants to move usb-storage into
-that directory also?
-
-My main point is that it doesn't belong in the same directory as
-usb-storage.  There are lots of good alternatives.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-It's not that hard.  No matter what the problem is, tell the customer=20
-to reinstall Windows.
-					-- Nurse
-User Friendly, 3/22/1998
-
---/i8j2F0k9BYX4qLc
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFMojl03gL8qCooyc4RAht7AJ9JZhI9kP+PlKGSZXDgqETZ9bIWoACcDLd4
-HrGg+AHtd8Ur+dE55FHyKBc=
-=gCJQ
------END PGP SIGNATURE-----
-
---/i8j2F0k9BYX4qLc--
+Thanks Martin.
