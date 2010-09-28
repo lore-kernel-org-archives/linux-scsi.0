@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v4 03/19] libsas: Remove host_lock unlock() + lock() from sas_queuecommand()
-Date: Mon, 27 Sep 2010 19:05:31 -0700
-Message-ID: <1285639531-7264-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC v4 04/19] aic94xx: Set SHT->unlocked_qcmd=1 for libsas queuecommand()
+Date: Mon, 27 Sep 2010 19:05:41 -0700
+Message-ID: <1285639541-7284-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.re3.yahoo.com ([66.196.96.84]:33547 "HELO
-	smtp101.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933227Ab0I1CFh (ORCPT
+Received: from smtp104.sbc.mail.mud.yahoo.com ([68.142.198.203]:33700 "HELO
+	smtp104.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933315Ab0I1CFr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Sep 2010 22:05:37 -0400
+	Mon, 27 Sep 2010 22:05:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
@@ -15,45 +15,28 @@ Cc: James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch removes the now legacy host_lock unlock() + lock() optimization
-from sas_scsi_host.c:sas_queuecommand()
+This patch updates aic94xx to set struct scsi_host_template->unlocked_qcmd=1
+because it is using generic libsas sas_queuecommand() code which now can be
+run without struct Scsi_Host->host_lock held following the original
+host_lock unlock -> do_work() -> lock optimization in sas_queuecommand().
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/libsas/sas_scsi_host.c |    5 -----
- 1 files changed, 0 insertions(+), 5 deletions(-)
+ drivers/scsi/aic94xx/aic94xx_init.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index f0cfba9..bc1c97c 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -202,18 +202,14 @@ int sas_queue_up(struct sas_task *task)
-  */
- int sas_queuecommand(struct scsi_cmnd *cmd,
- 		     void (*scsi_done)(struct scsi_cmnd *))
--	__releases(host->host_lock)
- 	__acquires(dev->sata_dev.ap->lock)
- 	__releases(dev->sata_dev.ap->lock)
--	__acquires(host->host_lock)
- {
- 	int res = 0;
- 	struct domain_device *dev = cmd_to_domain_dev(cmd);
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct sas_internal *i = to_sas_internal(host->transportt);
- 
--	spin_unlock_irq(host->host_lock);
--
- 	{
- 		struct sas_ha_struct *sas_ha = dev->port->ha;
- 		struct sas_task *task;
-@@ -254,7 +250,6 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
- 		}
- 	}
- out:
--	spin_lock_irq(host->host_lock);
- 	return res;
- }
- 
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index 3b7e83d..b236d720 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -77,6 +77,7 @@ static struct scsi_host_template aic94xx_sht = {
+ 	.can_queue		= 1,
+ 	.cmd_per_lun		= 1,
+ 	.this_id		= -1,
++	.unlocked_qcmd		= 1,
+ 	.sg_tablesize		= SG_ALL,
+ 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
+ 	.use_clustering		= ENABLE_CLUSTERING,
 -- 
 1.7.3
 
