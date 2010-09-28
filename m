@@ -1,32 +1,32 @@
-From: Greg KH <greg@kroah.com>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] UAS driver
-Date: Mon, 27 Sep 2010 22:55:49 -0700
-Message-ID: <20100928055549.GA8922@kroah.com>
+Date: Mon, 27 Sep 2010 22:56:49 -0700
+Message-ID: <20100928055649.GB8922@kroah.com>
 References: <20100928050733.GB3799@linux.intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:43794 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758087Ab0I1F7R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2010 01:59:17 -0400
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20100928050733.GB3799@linux.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20100928050733.GB3799-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sarah Sharp <sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Sarah Sharp <sarah.a.sharp@linux.intel.com>
 
 On Tue, Sep 28, 2010 at 01:07:34AM -0400, Matthew Wilcox wrote:
-> 
-> Per Greg's request, here is the current UAS driver.  It works quite well,
-> and the remaining bugs can be fixed in-tree.
-> 
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> +static struct usb_device_id uas_usb_ids[] = {
+> +	{ USB_INTERFACE_INFO(8, 6, 0x50) },
+> +	{ USB_INTERFACE_INFO(8, 6, 0x62) },
+> +	{ USB_INTERFACE_INFO(8, 6, 0xaa) }, /* A prototype */
+> +	{ }
 
-That's not a changelog comment, please resend with the proper
-information here so that I can apply it.
+Don't we have the proper #defines in the usb/ch9.h file that you can use
+here?  If not, please add them so that we don't have "magic" numbers.
 
 thanks,
 
 greg k-h
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
