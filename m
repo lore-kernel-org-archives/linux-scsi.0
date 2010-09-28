@@ -1,62 +1,46 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 3/3] tcm/fileio: Add UNMAP / Block DISCARD support
-Date: Tue, 28 Sep 2010 23:06:22 +0200
-Message-ID: <201009282306.23514.eike-kernel@sf-tec.de>
-References: <1285627910-6492-1-git-send-email-nab@linux-iscsi.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: I/O topology fixes for big physical block size
+Date: Tue, 28 Sep 2010 17:24:56 -0400
+Message-ID: <yq162xpa7dj.fsf@sermon.lab.mkp.net>
+References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
+	<4CA0CC38.5010804@fusionio.com> <yq1pqvzcddq.fsf@sermon.lab.mkp.net>
+	<4CA118FF.1080100@fusionio.com> <yq18w2mddav.fsf@sermon.lab.mkp.net>
+	<20100927231551.GA15653@redhat.com> <4CA16F6A.1090904@fusionio.com>
+	<4CA17B13.7080801@redhat.com> <20100928141545.GA21587@redhat.com>
+	<20100928205741.GA22257@thunk.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1384148.rnYdPORNX9";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:56957 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752855Ab0I1VG3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2010 17:06:29 -0400
-In-Reply-To: <1285627910-6492-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <20100928205741.GA22257@thunk.org> (Ted Ts'o's message of "Tue,
+	28 Sep 2010 16:57:41 -0400")
+Sender: linux-ext4-owner@vger.kernel.org
+To: Ted Ts'o <tytso@mit.edu>
+Cc: Mike Snitzer <snitzer@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Jens Axboe <axboe@kernel.dk>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>
 
---nextPart1384148.rnYdPORNX9
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+>>>>> "Ted" == Ted Ts'o <tytso@mit.edu> writes:
 
-Nicholas A. Bellinger wrote:
+Ted> Can we decide soon what the right thing should be?  I'm about to
+Ted> release e2fsrogs 1.41.13, and if I should put in some sanity
+Ted> checking code so mke2fs does something sane when it sees a 1M
+Ted> physical block size, I can do that.
 
-> @@ -433,6 +448,42 @@ static int fd_emulate_scsi_cdb(struct se_task *task)
->  		if (ret < 0)
->  			return ret;
->  		break;
-> +	case UNMAP:
-> +		i = igrab(f->f_mapping->host);
-> +		if (!(i)) {
+I don't think it's entirely clear what the "right thing" would be.
 
-.....
+Let's ignore the 1MB block size for now. That's clearly a fluke and a
+buggy device. But there are SSDs that will advertise an 8KiB physical
+block size. And apparently 16KiB devices are in the pipeline.
 
-> +		if (!(S_ISBLK(i->i_mode))) {
+How do we want to handle these devices? Allowing blocks bigger than the
+page size is going to be painful.
 
-.....
+So the question is whether we can tweak the filesystem layout in a way
+that would alleviate the pain without having to change the filesystem
+block size in the traditional sense.
 
-> +		if (!(bd)) {
+At least we're talking about SSDs and arrays here. I assume the partial
+block write penalty for these devices would be smaller than it is for
+rotating media.
 
-Is this LISP or what? ;)
-
-Eike
-
---nextPart1384148.rnYdPORNX9
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAkyiWM8ACgkQXKSJPmm5/E7KkQCgglTnTW8gFujWZfXnnB02k8SQ
-SNYAoIgVZr4uyPQKirWkOEW9VEE43Vuc
-=1/fv
------END PGP SIGNATURE-----
-
---nextPart1384148.rnYdPORNX9--
+-- 
+Martin K. Petersen	Oracle Linux Engineering
