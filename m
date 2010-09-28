@@ -1,342 +1,188 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [RFC v4]update broken web addresses in the kernel.
-Date: Tue, 28 Sep 2010 12:59:17 +1000 (EST)
-Message-ID: <alpine.OSX.2.00.1009271114330.275@localhost>
-References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>
+From: Matthew Wilcox <willy@linux.intel.com>
+Subject: Re: [PATCH v2 01/11] scsi: Convert struct
+ Scsi_Host->cmd_serial_number to atomic_t
+Date: Mon, 27 Sep 2010 23:14:29 -0400
+Message-ID: <20100928031429.GA9523@linux.intel.com>
+References: <1284747709-20862-1-git-send-email-nab@linux-iscsi.org>
+ <4C93BB8E.2080501@cisco.com>
+ <4C9427B6.9050404@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www.telegraphics.com.au ([204.15.192.19]:62054 "EHLO
-	mail.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757960Ab0I1C7X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2010 22:59:23 -0400
-In-Reply-To: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>
-Content-ID: <alpine.OSX.2.00.1009271218431.396@localhost>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4C9427B6.9050404@cs.wisc.edu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Joe Eykholt <jeykholt@cisco.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Randy Dunlap <rdunlap@xenotime.net>, Matt Turner <mattst88@gmail.com>, Dimitry Torokhov <dmitry.torokhov@gmail.com>, Mike Frysinger <vapier.adi@gmail.com>
 
-
-On Sun, 26 Sep 2010, Justin P. Mattock wrote:
-
-> diff --git a/drivers/char/apm-emulation.c b/drivers/char/apm-emulation.c
-> index 033e150..d7d9a78 100644
-> --- a/drivers/char/apm-emulation.c
-> +++ b/drivers/char/apm-emulation.c
-> @@ -8,7 +8,7 @@
->   *   (APM) BIOS Interface Specification, Revision 1.2, February 1996.
->   *
->   * [This document is available from Microsoft at:
-> - *    http://www.microsoft.com/hwdev/busbios/amp_12.htm]
-> + *    http://www.microsoft.com/whdc/archive/amp_12.mspx]
->   */
-
-
-Can we lose the brackets?
-
-
->  #include <linux/module.h>
->  #include <linux/poll.h>
-
-> diff --git a/drivers/firmware/Kconfig b/drivers/firmware/Kconfig
-> index 280c9b5..b2bd5fb 100644
-> --- a/drivers/firmware/Kconfig
-> +++ b/drivers/firmware/Kconfig
-> @@ -73,8 +73,8 @@ config EFI_PCDP
->  	  on how the driver discovers devices.
->  
->  	  You must also enable the appropriate drivers (serial, VGA, etc.)
-> -
-> -	  See <http://www.dig64.org/specifications/DIG64_HCDPv20_042804.pdf>
-> +	  See [DIG64_HCDPv20_042804.pdf] available from
-
-
-What are the square brackets for?
-
-
-> +	  <http://www.dig64.org/specifications/>
->  
->  config DELL_RBU
->  	tristate "BIOS update support for DELL systems via sysfs"
-
-> diff --git a/drivers/firmware/pcdp.h b/drivers/firmware/pcdp.h
-> index ce910d6..777d928 100644
-> --- a/drivers/firmware/pcdp.h
-> +++ b/drivers/firmware/pcdp.h
-> @@ -1,8 +1,8 @@
->  /*
->   * Definitions for PCDP-defined console devices
->   *
-> - * v1.0a: http://www.dig64.org/specifications/DIG64_HCDPv10a_01.pdf
-> - * v2.0:  http://www.dig64.org/specifications/DIG64_PCDPv20.pdf
-> + * For [v1.0a: DIG64_HCDPv10a_01.pdf] [v2.0: DIG64_PCDPv20.pdf] 
-
-
-For DIG64_HCDPv10a_01.pdf and DIG64_PCDPv20.pdf (v10.a and v2.0 resp.), 
-
-
-> + * Please see <http://www.dig64.org/specifications/>
-
-
-please see <http://www.dig64.org/specifications/>
-
-
->   *
->   * (c) Copyright 2002, 2004 Hewlett-Packard Development Company, L.P.
->   *	Khalid Aziz <khalid.aziz@hp.com>
-> diff --git a/drivers/gpu/drm/README.drm b/drivers/gpu/drm/README.drm
-> index b5b3327..bf29068 100644
-> --- a/drivers/gpu/drm/README.drm
-> +++ b/drivers/gpu/drm/README.drm
-> @@ -28,7 +28,7 @@ ways:
->  Documentation on the DRI is available from:
->      http://dri.freedesktop.org/wiki/Documentation
->      http://sourceforge.net/project/showfiles.php?group_id=387
-> -    http://dri.sourceforge.net/doc/
-> +    http://dri.sourceforge.net/doc/DRIuserguide.html 
-
-
-http://dri.freedesktop.org/wiki/Documentation
-
-
->  
->  For specific information about kernel-level support, see:
->  
-
-> diff --git a/drivers/input/mouse/touchkit_ps2.c b/drivers/input/mouse/touchkit_ps2.c
-> index 88121c5..e74753e 100644
-> --- a/drivers/input/mouse/touchkit_ps2.c
-> +++ b/drivers/input/mouse/touchkit_ps2.c
-> @@ -22,7 +22,7 @@
->   * Based upon touchkitusb.c
->   *
->   * Vendor documentation is available in support section of:
-> - * http://www.egalax.com.tw/
-> + * http://home.eeti.com.tw/web20/drivers/Software%20Programming%20Guide_v2.0.pdf 
-
-
-The comment text needs to be fixed also.
-
-
->   */
->  
->  #include <linux/kernel.h>
-
-> diff --git a/drivers/media/dvb/frontends/mt312.c b/drivers/media/dvb/frontends/mt312.c
-> index 472907d..08023f1 100644
-> --- a/drivers/media/dvb/frontends/mt312.c
-> +++ b/drivers/media/dvb/frontends/mt312.c
-> @@ -20,8 +20,9 @@
->      Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
->  
->      References:
-> -    http://products.zarlink.com/product_profiles/MT312.htm
-> -    http://products.zarlink.com/product_profiles/SL1935.htm
-> +    http://www.zarlink.com/zarlink/hs/71.htm
-> +    http://www.chipcatalog.com/Zarlink/MT312.htm
-> +    http://www.chipcatalog.com/Zarlink/SL1935.htm
-
-
-There's no need for links to chipcatalog.com. As I said in the previous 
-review, we have search engines for finding datasheets. Besides, the old 
-links are in the web archive (complete with PDFs) so there's no need to 
-remove them.
-
-
->  */
->  
->  #include <linux/delay.h>
-> diff --git a/drivers/media/dvb/frontends/mt312.h b/drivers/media/dvb/frontends/mt312.h
-> index 29e3bb5..6d32e3f 100644
-> --- a/drivers/media/dvb/frontends/mt312.h
-> +++ b/drivers/media/dvb/frontends/mt312.h
-> @@ -19,8 +19,9 @@
->      Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
->  
->      References:
-> -    http://products.zarlink.com/product_profiles/MT312.htm
-> -    http://products.zarlink.com/product_profiles/SL1935.htm
-> +    http://www.zarlink.com/zarlink/hs/71.htm
-> +    http://www.chipcatalog.com/Zarlink/MT312.htm
-> +    http://www.chipcatalog.com/Zarlink/SL1935.htm
-
-
-Same here.
-
-
->  */
->  
->  #ifndef MT312_H
-
-> --- a/drivers/media/video/gspca/gspca.c
-> +++ b/drivers/media/video/gspca/gspca.c
-> @@ -2338,7 +2338,7 @@ EXPORT_SYMBOL(gspca_resume);
->  
->  /* auto gain and exposure algorithm based on the knee algorithm described here:
->     http://ytse.tricolour.net/docs/LowLightOptimization.html
-> -
-> +   http://81.209.78.62:8080/docs/LowLightOptimization.html
-
-
-This is in the web archive.
-
-
->     Returns 0 if no changes were made, 1 if the gain and or exposure settings
->     where changed. */
->  int gspca_auto_gain_n_exposure(struct gspca_dev *gspca_dev, int avg_lum,
-
-> index 701d942..142efd2 100644
-> --- a/drivers/mtd/maps/Kconfig
-> +++ b/drivers/mtd/maps/Kconfig
-> @@ -256,8 +256,7 @@ config MTD_DILNETPC
->  	depends on X86 && MTD_CONCAT && MTD_PARTITIONS && MTD_CFI_INTELEXT && BROKEN
->  	help
->  	  MTD map driver for SSV DIL/Net PC Boards "DNP" and "ADNP".
-> -	  For details, see <http://www.ssv-embedded.de/ssv/pc104/p169.htm>
-> - 	  and <http://www.ssv-embedded.de/ssv/pc104/p170.htm>
-> +	  For details, see <http://www.dilnetpc.com/>
-
-
-This is in the web archive. This removes information.
-
-
->  
->  config MTD_DILNETPC_BOOTSIZE
->  	hex "Size of DIL/Net PC flash boot partition"
-
-> diff --git a/drivers/mtd/maps/dilnetpc.c b/drivers/mtd/maps/dilnetpc.c
-> index 0713e3a..114899b 100644
-> --- a/drivers/mtd/maps/dilnetpc.c
-> +++ b/drivers/mtd/maps/dilnetpc.c
-> @@ -19,8 +19,7 @@
->   * board: DNP/1486 and ADNP/1486. The DNP version has 2 megs of flash
->   * ROM (Intel 28F016S3) and 8 megs of DRAM, the ADNP version has 4 megs
->   * flash and 16 megs of RAM.
-> - * For details, see http://www.ssv-embedded.de/ssv/pc104/p169.htm
-> - * and http://www.ssv-embedded.de/ssv/pc104/p170.htm
-> + * For details, see http://www.dilnetpc.com/ 
-
-
-Same.
-
-
->   */
->  
->  #include <linux/module.h>
-
-> index 49aac70..f4523cd 100644
-> --- a/drivers/net/hamachi.c
-> +++ b/drivers/net/hamachi.c
-> @@ -20,9 +20,6 @@
->  
->  	Support and updates available at
->  	http://www.scyld.com/network/hamachi.html
-> -	[link no longer provides useful info -jgarzik]
-> -	or
-> -	http://www.parl.clemson.edu/~keithu/hamachi.html
-
-
-Why?
-
-
->  
->  */
->  
-
-> index 6af6c83..0723c9f 100644
-> --- a/drivers/staging/comedi/drivers/daqboard2000.c
-> +++ b/drivers/staging/comedi/drivers/daqboard2000.c
-> @@ -51,7 +51,7 @@ Configuration options:
->     for the card, and here are the findings so far.
->  
->     1. A good document that describes the PCI interface chip is found at:
-> -      http://plx.plxtech.com/download/9080/databook/9080db-106.pdf
-> +      [9080db-106.pdf] http://www.plxtech.com/products/io/pci9080 
-
-
-Comments are supposed to be human readable text. Square brackets don't 
-quote filenames by any convention I'm aware of (?)
-I'd suggest:
-
-      A good document that describes the PCI interface chip is 9080db-106.pdf
-      available from http://www.plxtech.com/products/io/pci9080
-
-
->  
->     2. The initialization done so far is:
->          a. program the FPGA (windows code sans a lot of error messages)
-
-> diff --git a/drivers/video/vga16fb.c b/drivers/video/vga16fb.c
-> index 28ccab4..fc853a5 100644
-> --- a/drivers/video/vga16fb.c
-> +++ b/drivers/video/vga16fb.c
-> @@ -2,7 +2,7 @@
->   * linux/drivers/video/vga16.c -- VGA 16-color framebuffer driver
->   * 
->   * Copyright 1999 Ben Pfaff <pfaffben@debian.org> and Petr Vandrovec <VANDROVE@vc.cvut.cz>
-> - * Based on VGA info at http://www.goodnet.com/~tinara/FreeVGA/home.htm
-> + * Based on VGA info at http://www.osdever.net/FreeVGA/home.htm 
-
-
-The old link is in the web archive, you needn't remove it. Add the new one 
-if you wish.
-
-
->   * Based on VESA framebuffer (c) 1998 Gerd Knorr <kraxel@goldbach.in-berlin.de>
->   *
->   * This file is subject to the terms and conditions of the GNU General
-> diff --git a/drivers/video/vgastate.c b/drivers/video/vgastate.c
-> index b91c466..f4043f8 100644
-> --- a/drivers/video/vgastate.c
-> +++ b/drivers/video/vgastate.c
-> @@ -5,7 +5,7 @@
->   * 
->   * Copyright history from vga16fb.c:
->   *	Copyright 1999 Ben Pfaff and Petr Vandrovec
-> - *	Based on VGA info at http://www.goodnet.com/~tinara/FreeVGA/home.htm
-> + *	Based on VGA info at http://www.osdever.net/FreeVGA/home.htm 
-
-
-Same.
-
-
->   *	Based on VESA framebuffer (c) 1998 Gerd Knorr
->   *
->   * This file is subject to the terms and conditions of the GNU General
-> diff --git a/include/linux/ixjuser.h b/include/linux/ixjuser.h
-> index 88b4589..39ef699 100644
-> --- a/include/linux/ixjuser.h
-> +++ b/include/linux/ixjuser.h
-> @@ -25,7 +25,7 @@
->   *                  Mike Preston, <mpreston@quicknet.net>
->   *
->   * More information about the hardware related to this driver can be found
-> - * at our website:    http://www.quicknet.net
-> + * at our website:   http://blemings.org/hugh/keyspan.html 
-
-
-This appears to have been fat-fingered. No patch needed.
-
-
->   *
->   * Fixes:
->   *
-
-> diff --git a/include/video/vga.h b/include/video/vga.h
-> index b49a512..2b8691f 100644
-> --- a/include/video/vga.h
-> +++ b/include/video/vga.h
-> @@ -5,7 +5,7 @@
->   * 
->   * Copyright history from vga16fb.c:
->   *	Copyright 1999 Ben Pfaff and Petr Vandrovec
-> - *	Based on VGA info at http://www.goodnet.com/~tinara/FreeVGA/home.htm
-> + *	Based on VGA info at http://www.osdever.net/FreeVGA/home.htm 
-
-
-See above.
-
-Thanks.
-
-Finn
+On Fri, Sep 17, 2010 at 09:45:10PM -0500, Mike Christie wrote:
+> You could also convert drivers to the host tagging if you needed a
+> unique id for each command sent to a host.
+
+I just wanted to make people aware of a problem with the host tagging
+-- scsi_cmnd->tag is always 0!
+
+Watch this:
+
+scsi_prep_fn:
+		ret = scsi_setup_blk_pc_cmnd(sdev, req);
+
+scsi_setup_blk_pc_cmnd:
+	cmd = scsi_get_cmd_from_req(sdev, req);
+
+scsi_get_cmd_from_req:
+	cmd->tag = req->tag;
+
+scsi_request_fn:
+		if (!(blk_queue_tagged(q) && !blk_queue_start_tag(q, req)))
+			blk_start_request(req);
+
+blk_queue_start_tag
+	rq->tag = tag;
+
+(and yes, they're called in this order)
+
+I encountered this while writing the UAS driver, and decided to just
+use the rq->tag directly instead.  I would favour deleting scmd->tag in
+order to save others the confusion.
+
+In fact, looking at the users of scmd->tag, it appears there is a common
+misconception that it contains the tag type (HEAD / SIMPLE / ORDERED).  I
+have no idea where this comes from, but it means the following patch to
+delete scmd's ->tag is almost certainly wrong ... but it preserves the
+existing behaviour!
+
+
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 5d2f148..37ff654 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -1531,7 +1531,6 @@ part2:
+ 	tmp[0] = IDENTIFY(((instance->irq == SCSI_IRQ_NONE) ? 0 : 1), cmd->device->lun);
+ 
+ 	len = 1;
+-	cmd->tag = 0;
+ 
+ 	/* Send message(s) */
+ 	data = tmp;
+@@ -2240,7 +2239,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance) {
+ 					}
+ 					initialize_SCp(cmd->next_link);
+ 					/* The next command is still part of this process */
+-					cmd->next_link->tag = cmd->tag;
++					cmd->next_link->tag = 0;
+ 					cmd->result = cmd->SCp.Status | (cmd->SCp.Message << 8);
+ 					dprintk(NDEBUG_LINKED, ("scsi%d : target %d lun %d linked request done, calling scsi_done().\n", instance->host_no, cmd->device->id, cmd->device->lun));
+ 					collect_stats(hostdata, cmd);
+@@ -2604,7 +2603,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance) {
+ 		do_abort(instance);
+ 	} else {
+ 		hostdata->connected = tmp;
+-		dprintk(NDEBUG_RESELECTION, ("scsi%d : nexus established, target = %d, lun = %d, tag = %d\n", instance->host_no, tmp->target, tmp->lun, tmp->tag));
++		dprintk(NDEBUG_RESELECTION, ("scsi%d : nexus established, target = %d, lun = %d, tag = %d\n", instance->host_no, tmp->target, tmp->lun, 0));
+ 	}
+ }
+ 
+@@ -2789,7 +2788,7 @@ static int NCR5380_abort(Scsi_Cmnd * cmd) {
+ 		if (cmd == tmp) {
+ 			dprintk(NDEBUG_ABORT, ("scsi%d : aborting disconnected command.\n", instance->host_no));
+ 
+-			if (NCR5380_select(instance, cmd, (int) cmd->tag))
++			if (NCR5380_select(instance, cmd, 0))
+ 				return FAILED;
+ 			dprintk(NDEBUG_ABORT, ("scsi%d : nexus reestablished.\n", instance->host_no));
+ 
+diff --git a/drivers/scsi/bfa/bfa_cb_ioim_macros.h b/drivers/scsi/bfa/bfa_cb_ioim_macros.h
+index 3906ed9..57f2f7d 100644
+--- a/drivers/scsi/bfa/bfa_cb_ioim_macros.h
++++ b/drivers/scsi/bfa/bfa_cb_ioim_macros.h
+@@ -143,19 +143,8 @@ bfa_cb_ioim_get_taskattr(struct bfad_ioim_s *dio)
+ 	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+ 	u8         task_attr = UNTAGGED;
+ 
+-	if (cmnd->device->tagged_supported) {
+-		switch (cmnd->tag) {
+-		case HEAD_OF_QUEUE_TAG:
+-			task_attr = HEAD_OF_Q;
+-			break;
+-		case ORDERED_QUEUE_TAG:
+-			task_attr = ORDERED_Q;
+-			break;
+-		default:
+-			task_attr = SIMPLE_Q;
+-			break;
+-		}
+-	}
++	if (cmnd->device->tagged_supported)
++		task_attr = SIMPLE_Q;
+ 
+ 	return task_attr;
+ }
+diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
+index ff6a28c..f506970 100644
+--- a/drivers/scsi/libsrp.c
++++ b/drivers/scsi/libsrp.c
+@@ -431,7 +431,7 @@ int srp_cmd_queue(struct Scsi_Host *shost, struct srp_cmd *cmd, void *info,
+ 	memcpy(sc->cmnd, cmd->cdb, MAX_COMMAND_SIZE);
+ 	sc->sdb.length = len;
+ 	sc->sdb.table.sgl = (void *) (unsigned long) addr;
+-	sc->tag = tag;
++	sc->request->tag = tag;
+ 	err = scsi_tgt_queue_command(sc, itn_id, (struct scsi_lun *)&cmd->lun,
+ 				     cmd->tag);
+ 	if (err)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ee02d38..42e40de 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1031,8 +1031,6 @@ static struct scsi_cmnd *scsi_get_cmd_from_req(struct scsi_device *sdev,
+ 		cmd = req->special;
+ 	}
+ 
+-	/* pull a tag out of the request if we have one */
+-	cmd->tag = req->tag;
+ 	cmd->request = req;
+ 
+ 	cmd->cmnd = req->cmd;
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+index a87e21c..c00e363 100644
+--- a/drivers/scsi/scsi_tgt_if.c
++++ b/drivers/scsi/scsi_tgt_if.c
+@@ -117,7 +117,7 @@ int scsi_tgt_uspace_send_cmd(struct scsi_cmnd *cmd, u64 itn_id,
+ 	ev.p.cmd_req.data_len = scsi_bufflen(cmd);
+ 	memcpy(ev.p.cmd_req.scb, cmd->cmnd, sizeof(ev.p.cmd_req.scb));
+ 	memcpy(ev.p.cmd_req.lun, lun, sizeof(ev.p.cmd_req.lun));
+-	ev.p.cmd_req.attribute = cmd->tag;
++	ev.p.cmd_req.attribute = 0;
+ 	ev.p.cmd_req.tag = tag;
+ 
+ 	dprintk("%p %d %u %x %llx\n", cmd, shost->host_no,
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 2689445..39cae91 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -665,10 +665,6 @@ static int pvscsi_queue_ring(struct pvscsi_adapter *adapter,
+ 	memcpy(e->cdb, cmd->cmnd, e->cdbLen);
+ 
+ 	e->tag = SIMPLE_QUEUE_TAG;
+-	if (sdev->tagged_supported &&
+-	    (cmd->tag == HEAD_OF_QUEUE_TAG ||
+-	     cmd->tag == ORDERED_QUEUE_TAG))
+-		e->tag = cmd->tag;
+ 
+ 	if (cmd->sc_data_direction == DMA_FROM_DEVICE)
+ 		e->flags = PVSCSI_FLAG_CMD_DIR_TOHOST;
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index a5e885a..829e341 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -127,8 +127,6 @@ struct scsi_cmnd {
+ 					 * to be at an address < 16Mb). */
+ 
+ 	int result;		/* Status code from lower level driver */
+-
+-	unsigned char tag;	/* SCSI-II queued command tag */
+ };
+ 
+ extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
