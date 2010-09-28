@@ -1,48 +1,50 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: Re: [RFC v4]update broken web addresses in the kernel.
-Date: Mon, 27 Sep 2010 21:21:40 -0700
-Message-ID: <4CA16D54.2030502@gmail.com>
-References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com> <alpine.OSX.2.00.1009271114330.275@localhost> <4CA15FA6.3040702@gmail.com> <alpine.OSX.2.00.1009281409040.276@localhost>
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: I/O topology fixes for big physical block size
+Date: Tue, 28 Sep 2010 13:30:34 +0900
+Message-ID: <4CA16F6A.1090904@fusionio.com>
+References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com> <4CA0CC38.5010804@fusionio.com> <yq1pqvzcddq.fsf@sermon.lab.mkp.net> <4CA118FF.1080100@fusionio.com> <yq18w2mddav.fsf@sermon.lab.mkp.net> <20100927231551.GA15653@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="ISO-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <alpine.OSX.2.00.1009281409040.276@localhost>
-Sender: linux-ide-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: trivial@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Randy Dunlap <rdunlap@xenotime.net>, Matt Turner <mattst88@gmail.com>, Dimitry Torokhov <dmitry.torokhov@gmail.com>, Mike Frysinger <vapier.adi@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.fusionio.com ([64.244.102.31]:34578 "EHLO mx2.fusionio.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750767Ab0I1EgA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Sep 2010 00:36:00 -0400
+In-Reply-To: <20100927231551.GA15653@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-On 09/27/2010 09:15 PM, Finn Thain wrote:
->
-> On Mon, 27 Sep 2010, Justin P. Mattock wrote:
->
->> alright.. I'll redu this... remove the brackets, and fix up the rest..
->> one note is:
->> http://dri.freedesktop.org/wiki/Documentation
->> this address is already there..
->
-> Right you are.
->
->> probably best to just leave the sourceforge
->> address and use the webarchive and/or if theirs a
->> proper address for the sourceforge dri..
->
-> I didn't find a sensible address for the sourceforge stuff now that
-> indexes are turned off for /doc/.
->
-> I agree, best just to leave it as is, since it is in the archive.
->
-> Finn
->
+On 2010-09-28 08:15, Mike Snitzer wrote:
+> On Mon, Sep 27 2010 at  6:36pm -0400,
+> Martin K. Petersen <martin.petersen@oracle.com> wrote:
+> 
+>>>>>>> "Jens" == Jens Axboe <jaxboe@fusionio.com> writes:
+>> Jens> Does mkfs do the right thing?
 >>
->> Justin P. Mattock
->>
->>
->
+>> Depends on which mkfs it is. Mike has tested things and can chip in
+>> here...
+> 
+> I haven't test all mkfs.* but...
+> 
+> mkfs.xfs just works with 1M physical_block_size.
+> 
+> mkfs.ext4 won't by default but -F "fixes" that:
+> 
+> # mkfs.ext4 -b 4096 -F /dev/mapper/20017380023360006
+> mke2fs 1.41.12 (17-May-2010)
+> Warning: specified blocksize 4096 is less than device physical sectorsize 1048576, forced to continue
 
+OK, so that's not exactly doing the right thing, but at least you can
+work around it with a parameter. So I'd say that is good enough.
 
-alright... resent, hopefully I didnt miss any of them...
-eyes are going out of whack over here..
+> I'll check fdisk and parted tomorrow (I know lvm2 doesn't look at
+> physical_block_size).
 
-Justin P. Mattock
+Thanks!
+
+-- 
+Jens Axboe
+
