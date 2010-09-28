@@ -1,104 +1,97 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] zfcp: Remove scsi_cmnd->serial_number from debug traces
-Date: Wed, 29 Sep 2010 00:52:59 -0700
-Message-ID: <1285746779.18417.34.camel@haakon2.linux-iscsi.org>
-References: <1284747709-20862-1-git-send-email-nab@linux-iscsi.org>
-	 <4C93BB8E.2080501@cisco.com> <4C9427B6.9050404@cs.wisc.edu>
-	 <1284839878.13344.300.camel@haakon2.linux-iscsi.org>
-	 <20100927140551.GB8473@schmichrtp.mainz.de.ibm.com>
-	 <1285628548.8880.64.camel@haakon2.linux-iscsi.org>
-	 <20100928081103.GA3790@schmichrtp.mainz.de.ibm.com>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH v2] libsas: fix bug for vacant phy
+Date: Tue, 28 Sep 2010 16:01:59 +0800
+Message-ID: <22F7A59E497F4737B292FEA765ED0D85@usish.com.cn>
+References: <BE430C874DBA6841A75E65151DCC6E1C0699F1BA@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <D8666BDF2F024F71B478BDCA08C7833D@usish.com.cn> <BE430C874DBA6841A75E65151DCC6E1C0731F42F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <01B7071A8F0947F38977CA217D833D16@usish.com.cn> <27DA42B50CD244D19895F2FCED2191FD@usish.com.cn> <BE430C874DBA6841A75E65151DCC6E1C077DA147@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <4CA2E901.9040908@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp126.sbc.mail.sp1.yahoo.com ([69.147.65.185]:34524 "HELO
-	smtp126.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753191Ab0I2H5Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 29 Sep 2010 03:57:16 -0400
-In-Reply-To: <20100928081103.GA3790@schmichrtp.mainz.de.ibm.com>
+Received: from sr-smtp.usish.com ([210.5.144.203]:59358 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752540Ab0I2H7m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2010 03:59:42 -0400
+In-Reply-To: <4CA2E901.9040908@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Joe Eykholt <jeykholt@cisco.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+To: 'Hannes Reinecke' <hare@suse.de>, 'Chuck Tuffli' <Chuck_Tuffli@pmc-sierra.com>
+Cc: 'James Bottomley' <jejb@kernel.org>, linux-scsi@vger.kernel.org, 'lindar_liu' <lindar_liu@usish.com>, 'roy' <roy_wang@usish.com>
 
-On Tue, 2010-09-28 at 10:11 +0200, Christof Schmitt wrote:
-> From: Christof Schmitt <christof.schmitt@de.ibm.com>
+
+Chuck Tuffli wrote:
+> This fixes the issue I was seeing. Thanks!
 > 
-> With the change that drivers have to explicitly request the serial
-> number for SCSI commands, this field should not be part of the zfcp
-> traces. It is not worth the effort to request the serial number only
-> for tracing purposes, so simply remove this field from the debug
-> traces.
+> -----Original Message-----
+> From: Jack Wang [mailto:jack_wang@usish.com] 
+> Sent: Sunday, September 19, 2010 10:52 PM
+> To: 'Jack Wang'; Chuck Tuffli; 'James Bottomley';
+linux-scsi@vger.kernel.org
+> Cc: 'lindar_liu'; 'roy'
+> Subject: [PATCH v2] libsas: fix bug for vacant phy
 > 
-> Reviewed-by: Swen Schillig <swen@vnet.ibm.com>
-> Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+> 
+> Hi, James
+> 
+> Please drop the previous patch and apply this new one.
+> Attached patch fix following bugs reported by Chuck.
+> 
+> Chuck
+> Could you test if this solve your problem ?
+> 
+> Jack -
+> Signed-off-by: Jack Wang <jack_wang@usish.com>
+> 
+> Signed-off-by: Lindar <lindar_liu@usish.com>
 > ---
-
-Hi Christof,
-
-This patch has been commited into the drop-host_lock-v5 branch and will
-be included in the next RFC posting.
-
-Thanks!
-
---nab
-
->  drivers/s390/scsi/zfcp_dbf.c |    4 ----
->  drivers/s390/scsi/zfcp_dbf.h |    2 --
->  2 files changed, 6 deletions(-)
+>  sas_expander.c |    7 ++++---
+>  1 files changed, 4 insertions(+), 3 deletions(-)
 > 
-> --- a/drivers/s390/scsi/zfcp_dbf.c
-> +++ b/drivers/s390/scsi/zfcp_dbf.c
-> @@ -154,7 +154,6 @@ void _zfcp_dbf_hba_fsf_response(const ch
->  		scsi_cmnd = (struct scsi_cmnd *)fsf_req->data;
->  		if (scsi_cmnd) {
->  			response->u.fcp.cmnd = (unsigned long)scsi_cmnd;
-> -			response->u.fcp.serial = scsi_cmnd->serial_number;
->  			response->u.fcp.data_dir =
->  				qtcb->bottom.io.data_direction;
->  		}
-> @@ -330,7 +329,6 @@ static void zfcp_dbf_hba_view_response(c
->  			break;
->  		zfcp_dbf_out(p, "data_direction", "0x%04x", r->u.fcp.data_dir);
->  		zfcp_dbf_out(p, "scsi_cmnd", "0x%0Lx", r->u.fcp.cmnd);
-> -		zfcp_dbf_out(p, "scsi_serial", "0x%016Lx", r->u.fcp.serial);
->  		*p += sprintf(*p, "\n");
+> diff --git a/sas_expander.c b/sas_expander.c
+> index d1d86a6..f63dbea 100644
+> --- a/sas_expander.c
+> +++ b/sas_expander.c
+> @@ -175,10 +175,10 @@ static void sas_set_ex_phy(struct domain_device
+*dev,
+> int phy_id,
+>  	switch (resp->result) {
+>  	case SMP_RESP_PHY_VACANT:
+>  		phy->phy_state = PHY_VACANT;
+> -		return;
+> +		break;
+>  	default:
+>  		phy->phy_state = PHY_NOT_PRESENT;
+> -		return;
+> +		break;
+>  	case SMP_RESP_FUNC_ACC:
+>  		phy->phy_state = PHY_EMPTY; /* do not know yet */
 >  		break;
+> @@ -209,7 +209,8 @@ static void sas_set_ex_phy(struct domain_device *dev,
+> int phy_id,
+>  	phy->phy->negotiated_linkrate = phy->linkrate;
 >  
-> @@ -881,7 +879,6 @@ void _zfcp_dbf_scsi(const char *tag, con
->  				}
->  				rec->scsi_result = scsi_cmnd->result;
->  				rec->scsi_cmnd = (unsigned long)scsi_cmnd;
-> -				rec->scsi_serial = scsi_cmnd->serial_number;
->  				memcpy(rec->scsi_opcode, scsi_cmnd->cmnd,
->  					min((int)scsi_cmnd->cmd_len,
->  						ZFCP_DBF_SCSI_OPCODE));
-> @@ -950,7 +947,6 @@ static int zfcp_dbf_scsi_view_format(deb
->  	zfcp_dbf_out(&p, "scsi_lun", "0x%08x", r->scsi_lun);
->  	zfcp_dbf_out(&p, "scsi_result", "0x%08x", r->scsi_result);
->  	zfcp_dbf_out(&p, "scsi_cmnd", "0x%0Lx", r->scsi_cmnd);
-> -	zfcp_dbf_out(&p, "scsi_serial", "0x%016Lx", r->scsi_serial);
->  	zfcp_dbf_outd(&p, "scsi_opcode", r->scsi_opcode, ZFCP_DBF_SCSI_OPCODE,
->  		      0, ZFCP_DBF_SCSI_OPCODE);
->  	zfcp_dbf_out(&p, "scsi_retries", "0x%02x", r->scsi_retries);
-> --- a/drivers/s390/scsi/zfcp_dbf.h
-> +++ b/drivers/s390/scsi/zfcp_dbf.h
-> @@ -110,7 +110,6 @@ struct zfcp_dbf_hba_record_response {
->  	union {
->  		struct {
->  			u64 cmnd;
-> -			u64 serial;
->  			u32 data_dir;
->  		} fcp;
->  		struct {
-> @@ -206,7 +205,6 @@ struct zfcp_dbf_scsi_record {
->  	u32 scsi_lun;
->  	u32 scsi_result;
->  	u64 scsi_cmnd;
-> -	u64 scsi_serial;
->  #define ZFCP_DBF_SCSI_OPCODE	16
->  	u8 scsi_opcode[ZFCP_DBF_SCSI_OPCODE];
->  	u8 scsi_retries;
+>  	if (!rediscover)
+> -		sas_phy_add(phy->phy);
+> +		if (sas_phy_add(phy->phy))
+> +			sas_phy_free(phy->phy);
+>  
+>  	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",
+>  		    SAS_ADDR(dev->sas_addr), phy->phy_id,
+Hmm. Shouldn't you avoid the message here if you entered the error
+path? I guess the SAS phy isn't actually attached then.
+So maybe the above statement should read:
+
+
+if (!rediscover)
+        if (sas_phy_add(phy->phy)) {
+                sas_phy_free(phy->phy);
+		return;
+	}
+
+
+Cheers,
+
+Hannes
+[Jack] Yes, you're right. I'll update the patch soon. Thanks for review.
+
 
