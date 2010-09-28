@@ -1,28 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/3] tcm: Add Thin Provisioning / UNMAP emulation and Block Limits VPD page
-Date: Tue, 28 Sep 2010 14:55:30 -0400
-Message-ID: <yq1sk0taeal.fsf@sermon.lab.mkp.net>
-References: <1285627889-6450-1-git-send-email-nab@linux-iscsi.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 14831] mptsas - Use of ATA command pass-through results in
+ unreliable operation - drive / controller resets
+Date: Tue, 28 Sep 2010 19:07:15 GMT
+Message-ID: <201009281907.o8SJ7F1g001513@demeter1.kernel.org>
+References: <bug-14831-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:20382 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757420Ab0I1S5C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Sep 2010 14:57:02 -0400
-In-Reply-To: <1285627889-6450-1-git-send-email-nab@linux-iscsi.org> (Nicholas
-	A. Bellinger's message of "Mon, 27 Sep 2010 15:51:28 -0700")
+Received: from demeter.kernel.org ([140.211.167.39]:47192 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756046Ab0I1THQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Sep 2010 15:07:16 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o8SJ7Fnc001514
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2010 19:07:15 GMT
+In-Reply-To: <bug-14831-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Jens Axboe <axboe@kernel.dk>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Boaz Harrosh <bharrosh@panasas.com>, Richard Sharpe <realrichardsharpe@gmail.com>
+To: linux-scsi@vger.kernel.org
 
->>>>> "nab" == Nicholas A Bellinger <nab@linux-iscsi.org> writes:
+https://bugzilla.kernel.org/show_bug.cgi?id=14831
 
-nab> This patch also adds the Block Limits VPD (0xb0) page
 
-You should add the Thin Provisioning VPD page as well and set TPU and/or
-TPWS.
+Benjamin ESTRABAUD <be@mpstor.com> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |be@mpstor.com
+
+
+
+
+--- Comment #43 from starlight@binnacle.cx  2010-08-31 08:17:07 ---
+Above recent activity reported by me assigned as new bug 17551 as it's
+apparently not related to the 'smartd' failure.
+
+--- Comment #44 from Benjamin ESTRABAUD <be@mpstor.com>  2010-09-28 19:07:00 ---
+Is the fix suggested in previous comment #15
+(http://lkml.org/lkml/2010/4/26/335) not the same as a proposed commit from
+Yuri Tikonov in september 09?
+
+reference: (https://kerneltrap.org/mailarchive/linux-scsi/2009/9/1/6371653)
+
+Is the one suggested in mptscsih.c more 'global' than the one suggested in
+mptsas.c by Yuri? Or are they complementary/redundant/different?
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
