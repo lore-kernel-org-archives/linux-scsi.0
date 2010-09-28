@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v4 09/19] libata: Remove host_lock unlock() + lock() from ata_scsi_queuecmd()
-Date: Mon, 27 Sep 2010 19:06:41 -0700
-Message-ID: <1285639601-7385-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC v4 10/19] lpfc: Remove host_lock unlock() + lock() from lpfc_queuecommand()
+Date: Mon, 27 Sep 2010 19:06:52 -0700
+Message-ID: <1285639612-7405-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
@@ -11,55 +11,45 @@ List-Id: linux-scsi@vger.kernel.org
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
 This patch removes the now legacy host_lock unlock() + lock() optimization
-from libata-scsi.c:ata_scsi_queuecmd().  This also includes setting the
-of SHT->unlocked_qcmd=1 for libata ata_scsi_queuecmd().
+from lpfc_scsi.c:lpfc_queuecommand().  This also includes setting the
+SHT->unlocked_qcmd=1 for host_lock less lpfc lpfc_queuecommand() operation.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/ata/libata-scsi.c |    4 +---
- include/linux/libata.h    |    1 +
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index a89172c..acb6669 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3161,7 +3161,7 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
-  *	ATA and ATAPI devices appearing as SCSI devices.
-  *
-  *	LOCKING:
-- *	Releases scsi-layer-held lock, and obtains host lock.
-+ *	None
-  *
-  *	RETURNS:
-  *	Return value from __ata_scsi_queuecmd() if @cmd can be queued,
-@@ -3177,7 +3177,6 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- 
- 	ap = ata_shost_to_port(shost);
- 
--	spin_unlock(shost->host_lock);
- 	spin_lock(ap->lock);
- 
- 	ata_scsi_dump_cdb(ap, cmd);
-@@ -3191,7 +3190,6 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 2e51aa6..69fe31e 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -3023,11 +3023,9 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 		goto out_host_busy_free_buf;
  	}
+ 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
+-		spin_unlock(shost->host_lock);
+ 		lpfc_sli_handle_fast_ring_event(phba,
+ 			&phba->sli.ring[LPFC_FCP_RING], HA_R0RE_REQ);
  
- 	spin_unlock(ap->lock);
--	spin_lock(shost->host_lock);
- 	return rc;
- }
- 
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 45fb296..c08a0b9 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1171,6 +1171,7 @@ extern struct device_attribute *ata_common_sdev_attrs[];
- 	.queuecommand		= ata_scsi_queuecmd,		\
- 	.can_queue		= ATA_DEF_QUEUE,		\
- 	.this_id		= ATA_SHT_THIS_ID,		\
-+	.unlocked_qcmd		= 1,				\
- 	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,		\
- 	.emulated		= ATA_SHT_EMULATED,		\
- 	.use_clustering		= ATA_SHT_USE_CLUSTERING,	\
+-		spin_lock(shost->host_lock);
+ 		if (phba->cfg_poll & DISABLE_FCP_RING_INT)
+ 			lpfc_poll_rearm_timer(phba);
+ 	}
+@@ -3723,6 +3721,7 @@ struct scsi_host_template lpfc_template = {
+ 	.slave_destroy		= lpfc_slave_destroy,
+ 	.scan_finished		= lpfc_scan_finished,
+ 	.this_id		= -1,
++	.unlocked_qcmd		= 1,
+ 	.sg_tablesize		= LPFC_DEFAULT_SG_SEG_CNT,
+ 	.cmd_per_lun		= LPFC_CMD_PER_LUN,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+@@ -3746,6 +3745,7 @@ struct scsi_host_template lpfc_vport_template = {
+ 	.slave_destroy		= lpfc_slave_destroy,
+ 	.scan_finished		= lpfc_scan_finished,
+ 	.this_id		= -1,
++	.unlocked_qcmd		= 1,
+ 	.sg_tablesize		= LPFC_DEFAULT_SG_SEG_CNT,
+ 	.cmd_per_lun		= LPFC_CMD_PER_LUN,
+ 	.use_clustering		= ENABLE_CLUSTERING,
 -- 
 1.7.3
