@@ -1,50 +1,69 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: I/O topology fixes for big physical block size
-Date: Tue, 28 Sep 2010 13:30:34 +0900
-Message-ID: <4CA16F6A.1090904@fusionio.com>
-References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com> <4CA0CC38.5010804@fusionio.com> <yq1pqvzcddq.fsf@sermon.lab.mkp.net> <4CA118FF.1080100@fusionio.com> <yq18w2mddav.fsf@sermon.lab.mkp.net> <20100927231551.GA15653@redhat.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [RFC v4 10/19] lpfc: Remove host_lock unlock() + lock() from
+ lpfc_queuecommand()
+Date: Tue, 28 Sep 2010 00:04:58 -0500
+Message-ID: <4CA1777A.2050606@cs.wisc.edu>
+References: <1285639612-7405-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.fusionio.com ([64.244.102.31]:34578 "EHLO mx2.fusionio.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750767Ab0I1EgA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Sep 2010 00:36:00 -0400
-In-Reply-To: <20100927231551.GA15653@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1285639612-7405-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <jaxboe@fusionio.com>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, "eata.c maintainer" <dario.ballabio@inwind.it>, Luben Tuikov <ltuikov@yahoo.com>, mvsas maintainer <kewei@marvell.com>, pm8001 maintainer Jack Wang <jack_wang@usish.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-On 2010-09-28 08:15, Mike Snitzer wrote:
-> On Mon, Sep 27 2010 at  6:36pm -0400,
-> Martin K. Petersen <martin.petersen@oracle.com> wrote:
-> 
->>>>>>> "Jens" == Jens Axboe <jaxboe@fusionio.com> writes:
->> Jens> Does mkfs do the right thing?
->>
->> Depends on which mkfs it is. Mike has tested things and can chip in
->> here...
-> 
-> I haven't test all mkfs.* but...
-> 
-> mkfs.xfs just works with 1M physical_block_size.
-> 
-> mkfs.ext4 won't by default but -F "fixes" that:
-> 
-> # mkfs.ext4 -b 4096 -F /dev/mapper/20017380023360006
-> mke2fs 1.41.12 (17-May-2010)
-> Warning: specified blocksize 4096 is less than device physical sectorsize 1048576, forced to continue
+On 09/27/2010 09:06 PM, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger<nab@linux-iscsi.org>
+>
+> This patch removes the now legacy host_lock unlock() + lock() optimization
+> from lpfc_scsi.c:lpfc_queuecommand().  This also includes setting the
+> SHT->unlocked_qcmd=1 for host_lock less lpfc lpfc_queuecommand() operation.
+>
+> Signed-off-by: Nicholas A. Bellinger<nab@linux-iscsi.org>
+> ---
+>   drivers/scsi/lpfc/lpfc_scsi.c |    4 ++--
+>   1 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+> index 2e51aa6..69fe31e 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -3023,11 +3023,9 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+>   		goto out_host_busy_free_buf;
+>   	}
+>   	if (phba->cfg_poll&  ENABLE_FCP_RING_POLLING) {
+> -		spin_unlock(shost->host_lock);
+>   		lpfc_sli_handle_fast_ring_event(phba,
+>   			&phba->sli.ring[LPFC_FCP_RING], HA_R0RE_REQ);
+>
+> -		spin_lock(shost->host_lock);
+>   		if (phba->cfg_poll&  DISABLE_FCP_RING_INT)
+>   			lpfc_poll_rearm_timer(phba);
+>   	}
+> @@ -3723,6 +3721,7 @@ struct scsi_host_template lpfc_template = {
+>   	.slave_destroy		= lpfc_slave_destroy,
+>   	.scan_finished		= lpfc_scan_finished,
+>   	.this_id		= -1,
+> +	.unlocked_qcmd		= 1,
+>   	.sg_tablesize		= LPFC_DEFAULT_SG_SEG_CNT,
+>   	.cmd_per_lun		= LPFC_CMD_PER_LUN,
+>   	.use_clustering		= ENABLE_CLUSTERING,
+> @@ -3746,6 +3745,7 @@ struct scsi_host_template lpfc_vport_template = {
+>   	.slave_destroy		= lpfc_slave_destroy,
+>   	.scan_finished		= lpfc_scan_finished,
+>   	.this_id		= -1,
+> +	.unlocked_qcmd		= 1,
+>   	.sg_tablesize		= LPFC_DEFAULT_SG_SEG_CNT,
+>   	.cmd_per_lun		= LPFC_CMD_PER_LUN,
+>   	.use_clustering		= ENABLE_CLUSTERING,
 
-OK, so that's not exactly doing the right thing, but at least you can
-work around it with a parameter. So I'd say that is good enough.
-
-> I'll check fdisk and parted tomorrow (I know lvm2 doesn't look at
-> physical_block_size).
-
-Thanks!
-
--- 
-Jens Axboe
-
+The FC class sets the rport state and bits with the host lock held. 
+Drivers were then calling fc_remote_port_chkready from the queuecommand 
+with the host lock held. If we remove the host lock from queuecommand is 
+it possible that the on one proc the fc class calls fc_remote_port_add 
+to re-add a rport, this sets the rport state to online, it unblocks the 
+devices, but then on some other processor we start calling queuecommand 
+and see that the rport is not online (maybe blocked with 
+FC_RPORT_FAST_FAIL_TIMEDOUT set) and so we end up failing the IO?
