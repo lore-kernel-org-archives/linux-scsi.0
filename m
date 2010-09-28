@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC v4 00/19] scsi: Add optional host_lock less scsi_dispatch_cmd()
-Date: Mon, 27 Sep 2010 19:04:59 -0700
-Message-ID: <1285639499-7204-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC v4 01/19] scsi: Add SHT->unlocked_qcmd for host_lock less SHT->queuecommand() dispatch
+Date: Mon, 27 Sep 2010 19:05:12 -0700
+Message-ID: <1285639512-7224-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux>
@@ -10,118 +10,280 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Greetings all,
+This patch adds scsi_dispatch_cmd_unlocked() and scsi_dispatch_cmd_locked()
+which are now called directly from scsi_dispatch_cmd() depending upon what
+is reported by SHT->unlocked_qcmd on a per driver basis.  Note that by default
+unlocked_qcmd is disabled, and all LLDs not defining a SHT->unlocked_qcmd will
+be using the legacy scsi_dispatch_cmd_locked().
 
-This is the forth RFC for allowing an optional struct Scsi_Host->host_lock
-less bit for high performance LLDs who where originaly dropping and reaquiring
-host_lock from within their own SHT->queuecommand() callers in order to increase
-performance.  This series includes the wholesale conversion of existing libraries
-and all other SCSI LLD ->queuecommand() callers that use the now extinct host_lock
-optimization of:
+This patch also drops the usage of scsi_cmd_get_serial() in scsi_dispatch_cmd()
+and assumes the legacy SCSI LLDs that depend upon struct scsi_cmnd->serial_number
+will call the now EXPORT_SYMBOL()'ed scsi_cmd_get_serial() call.
 
-        unlock() ; do_some_lld_work() ; lock() -> return from ->mylld_queuecommand()
+This patch also adds a Jen's recommended blk_test_rq_complete(), which is used
+by scsi_error.c:scsi_try_to_abort_cmd() here:
 
-This series includes patches to drop this historical optimization (and prevent a
-sure-fire deadlock w/ host_lock here) in libiscsi, libsas, libfc, libata and in
-lpfc, qla4xxx, qla2xxx, fnic, and buslogic SCSI LLDs.
+	if (blk_test_rq_complete(scmd->request))
+                return SUCCESS;
 
-This patch also converts the scsi_cmd_get_serial() call to a counting by 2 odd
-counter that is no longer used directly and by default for LLDs in scsi_dispatch_cmd(),
-but is still required for mpt-fusion, mpt2sas, and a handful of old LLDs.
+instead of checking for the legacy (scmd->serial_number == 0).
 
-For this case we add explict scsi_cmd_get_serial() calls into SHT->queuecommand()
-callers for mpt2sas, mpt/fusion, dpt_i2o, eata and u14-34f.  There are other
-SCSI LLDs that use struct scsi_cmnd->serial_number informationally, but no other
-ones (AFAICT) actually depend on having ->serial_number set to function properly.
+Finally, this patch also converts the remaining struct Scsi_Host->cmd_serial_number
+to atomic_t following a recommedation by Joe Eykholt to start struct Scsi_Host->
+cmd_serial_number at 1, and increment each serial_number by 2 so that the
+serial is odd, and wraps to 1 instead of 0.  struct Scsi_Host->cmd_serial_number
+is initialized to '1' in drivers/scsi/hosts.c:scsi_host_alloc().
 
-So if anyone else knows if any SCSI LLDs that either:
-
-        *) drop and request struct Scsi_Host->host_lock in their SHT->queuecommand()
-           to prevent dead-lock
-
-        *) or depend upon struct scsi_cmnd->serial_number for some reason to prevent
-           any other old/obsecure LLDs from having problems with a zero ->serial_number.
-
-please let me know and I will queue a follow up patches to address any other issues.
-
-Please note that this patch has a bug wrt to scsi_error.c usage mentioned by
-Mike Anderson, and will be addressed in a RFC v5 series.
-
-Changes from RFC v3 -> v4 include:
-
-	*) Use scsi_dispatch_cmd_locked() by default when LLD is not registering
-	   it's struct scsi_host_template with SHT->unlocked_qcmd=1
-	*) Update aic94xx, mvsas, pm8001 and other LLDs included in RFCv3 to use
-	   new SHT->unlocked_qcmd=1 who where already using the ->queuecommand()
-	   'optimization' discussed above.
-
-Many thanks go out to the linux.intel.com team (Vasu Dev, Tim Chen, Andi Kleen, Matthew Wilcox)
-Joe Eykholt (Cisco), Mike Christie (RHAT), James Bottomley (Suse.de), Mike Anderson + Brian King
-(linux.vnet.ibm.com) and Christof Schmitt (de.ibm.com) for their invaluable input towards
-the whole-sale conversion of drivers/scsi to an optional host_lock less SHT->queuecommand()
-dispatcher!
-
-Thank you!
+Many thanks to Vasu Dev, Tim Chen, Mike Christie, Joe Eykholt, Mike Anderson,
+Christof Schmitt, Brian King and Jens Axboe for their help with this series!
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ block/blk.h               |    4 ++
+ drivers/scsi/hosts.c      |    5 +++
+ drivers/scsi/scsi.c       |   89 ++++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/scsi_error.c |   10 ++++--
+ include/scsi/scsi_cmnd.h  |    1 +
+ include/scsi/scsi_host.h  |   16 +++++++--
+ 6 files changed, 98 insertions(+), 27 deletions(-)
 
-Nicholas Bellinger (19):
-  scsi: Add SHT->unlocked_qcmd for host_lock less SHT->queuecommand()
-    dispatch
-  libiscsi: Remove host_lock unlock() + lock() from
-    iscsi_queuecommand()
-  libsas: Remove host_lock unlock() + lock() from sas_queuecommand()
-  aic94xx: Set SHT->unlocked_qcmd=1 for libsas queuecommand()
-  mvsas: Set SHT->unlocked_qcmd=1 for libsas queuecommand()
-  pm8001: Set SHT->unlocked_qcmd=1 for libsas queuecommand()
-  libfc: Remove host_lock unlock() + lock() from fc_queuecommand()
-  fcoe: Set SHT->unlocked_qcmd=1 for libfc fc_queuecommand()
-  libata: Remove host_lock unlock() + lock() from ata_scsi_queuecmd()
-  lpfc: Remove host_lock unlock() + lock() from lpfc_queuecommand()
-  qla4xxx: Remove host_lock unlock() + lock() from
-    qla4xxx_queuecommand()
-  qla2xxx: Remove host_lock unlock() + lock() from
-    qla2xxx_queuecommand()
-  fnic: Remove host_lock unlock() + lock() from fnic_queuecommand()
-  buslogic: Remove host_lock unlock() + lock() from
-    BusLogic_QueueCommand()
-  mpt2sas: Add scsi_cmd_get_serial() call
-  mpt/fusion: Add scsi_cmd_get_serial() call
-  dpt_i2o: Add scsi_cmd_get_serial() call
-  eata: Add scsi_cmd_get_serial() call
-  u14-34f: Add scsi_cmd_get_serial() call
-
- block/blk.h                          |    4 ++
- drivers/ata/libata-scsi.c            |    4 +-
- drivers/message/fusion/mptfc.c       |    1 +
- drivers/message/fusion/mptsas.c      |    1 +
- drivers/message/fusion/mptscsih.c    |    5 ++
- drivers/message/fusion/mptspi.c      |    1 +
- drivers/scsi/BusLogic.c              |    4 --
- drivers/scsi/aic94xx/aic94xx_init.c  |    1 +
- drivers/scsi/dpt_i2o.c               |    5 ++
- drivers/scsi/eata.c                  |    5 ++
- drivers/scsi/fcoe/fcoe.c             |    1 +
- drivers/scsi/fnic/fnic_main.c        |    1 +
- drivers/scsi/fnic/fnic_scsi.c        |    9 ----
- drivers/scsi/hosts.c                 |    5 ++
- drivers/scsi/iscsi_tcp.c             |    1 +
- drivers/scsi/libfc/fc_fcp.c          |    5 +--
- drivers/scsi/libiscsi.c              |    4 --
- drivers/scsi/libsas/sas_scsi_host.c  |    5 --
- drivers/scsi/lpfc/lpfc_scsi.c        |    4 +-
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 ++
- drivers/scsi/mvsas/mv_init.c         |    1 +
- drivers/scsi/pm8001/pm8001_init.c    |    1 +
- drivers/scsi/qla2xxx/qla_os.c        |    8 +--
- drivers/scsi/qla4xxx/ql4_os.c        |    9 +---
- drivers/scsi/scsi.c                  |   89 ++++++++++++++++++++++++++--------
- drivers/scsi/scsi_error.c            |   10 +++-
- drivers/scsi/u14-34f.c               |    6 ++
- include/linux/libata.h               |    1 +
- include/scsi/scsi_cmnd.h             |    1 +
- include/scsi/scsi_host.h             |   16 +++++-
- 30 files changed, 144 insertions(+), 70 deletions(-)
-
+diff --git a/block/blk.h b/block/blk.h
+index d6b911a..6f3ca9c 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -46,6 +46,10 @@ static inline void blk_clear_rq_complete(struct request *rq)
+ 	clear_bit(REQ_ATOM_COMPLETE, &rq->atomic_flags);
+ }
+ 
++static inline int blk_test_rq_complete(struct request *rq)
++{
++	return test_bit(REQ_ATOM_COMPLETE, &rq->atomic_flags);
++}
+ /*
+  * Internal elevator interface
+  */
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 8a8f803..1ca6bce 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -380,6 +380,11 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
++	shost->unlocked_qcmd = sht->unlocked_qcmd;
++	/*
++	 * Set the default shost->cmd_serial_number to 1.
++	 */
++	atomic_set(&shost->cmd_serial_number, 1);
+ 
+ 	if (sht->supported_mode == MODE_UNKNOWN)
+ 		/* means we didn't set it ... default to INITIATOR */
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index ad0ed21..abd3fa5 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -628,17 +628,69 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+ 
+ /**
+  * scsi_cmd_get_serial - Assign a serial number to a command
+- * @host: the scsi host
+  * @cmd: command to assign serial number to
+  *
+  * Description: a serial number identifies a request for error recovery
+- * and debugging purposes.  Protected by the Host_Lock of host.
++ * and debugging purposes.  Called directly by SCSI LLDs that have a
++ * legacy requirement for struct scsi_cmnd->serial_number.
+  */
+-static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
++void scsi_cmd_get_serial(struct scsi_cmnd *cmd)
+ {
+-	cmd->serial_number = host->cmd_serial_number++;
+-	if (cmd->serial_number == 0) 
+-		cmd->serial_number = host->cmd_serial_number++;
++	struct Scsi_Host *host = cmd->device->host;
++	/*
++	 * Increment the host->cmd_serial_number by 2 so cmd->serial_number
++	 * is always odd and wraps to 1 instead of 0.
++	 */
++	cmd->serial_number = atomic_add_return(2, &host->cmd_serial_number);
++}
++EXPORT_SYMBOL(scsi_cmd_get_serial);
++
++/*
++ * scsi_dispatch_cmd_unlocked() - Dispatch a cmd w/o host_lock
++ * @cmd: command to dispatch.
++ * @host: SCSI host of the passed command
++ *
++ * Description: Used by modern SCSI LLDs that do not require that
++ * struct Scsi_Host->host_lock is held during a dispatch call to
++ * SHT->queuecommand().
++ */
++
++static inline int scsi_dispatch_cmd_unlocked(struct scsi_cmnd *cmd,
++					struct Scsi_Host *host)
++{
++	int rtn = 0;
++
++	if (unlikely(host->shost_state == SHOST_DEL)) {
++		cmd->result = (DID_NO_CONNECT << 16);
++		scsi_done(cmd);
++	} else {
++		trace_scsi_dispatch_cmd_start(cmd);
++		rtn = host->hostt->queuecommand(cmd, scsi_done);
++	}
++
++	return rtn;
++}
++
++/*
++ * scsi_dispatch_cmd_locked() - Dispatch a cmd w/ host_lock
++ * @cmd: command to dispatch.
++ * @host: SCSI host of the passed command
++ *
++ * Description: Used by kegacy SCSI LLDs that require that
++ * struct Scsi_Host->host_lock is held during a dispatch call to
++ * SHT->queuecommand().
++ */
++static inline int scsi_dispatch_cmd_locked(struct scsi_cmnd *cmd,
++					struct Scsi_Host *host)
++{
++	unsigned long flags;
++	int rtn = 0;
++
++	spin_lock_irqsave(host->host_lock, flags);
++	rtn = scsi_dispatch_cmd_unlocked(cmd, host);
++	spin_unlock_irqrestore(host->host_lock, flags);
++
++	return rtn;
+ }
+ 
+ /**
+@@ -651,7 +703,6 @@ static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd
+ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+-	unsigned long flags = 0;
+ 	unsigned long timeout;
+ 	int rtn = 0;
+ 
+@@ -736,24 +787,20 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		scsi_done(cmd);
+ 		goto out;
+ 	}
+-
+-	spin_lock_irqsave(host->host_lock, flags);
+ 	/*
+-	 * AK: unlikely race here: for some reason the timer could
+-	 * expire before the serial number is set up below.
++	 * Note that scsi_cmd_get_serial() used to be called here, but
++	 * now we expect the legacy SCSI LLDs that actually need this
++	 * to call it directly within their SHT->queuecommand() caller.
+ 	 *
+-	 * TODO: kill serial or move to blk layer
++	 * Also check for the new unlocked_qcmd bit to signal that the
++	 * underlying LLD SHT->queuecommand() code is safe to run w/o
++	 * struct Scsi_Host->host_lock held.
+ 	 */
+-	scsi_cmd_get_serial(host, cmd); 
++	if (host->unlocked_qcmd)
++		rtn = scsi_dispatch_cmd_unlocked(cmd, host);
++	else
++		rtn = scsi_dispatch_cmd_locked(cmd, host);
+ 
+-	if (unlikely(host->shost_state == SHOST_DEL)) {
+-		cmd->result = (DID_NO_CONNECT << 16);
+-		scsi_done(cmd);
+-	} else {
+-		trace_scsi_dispatch_cmd_start(cmd);
+-		rtn = host->hostt->queuecommand(cmd, scsi_done);
+-	}
+-	spin_unlock_irqrestore(host->host_lock, flags);
+ 	if (rtn) {
+ 		trace_scsi_dispatch_cmd_error(cmd, rtn);
+ 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1de30eb..6e496c3 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -39,6 +39,8 @@
+ #include "scsi_logging.h"
+ #include "scsi_transport_api.h"
+ 
++#include <../block/blk.h> /* For REQ_ATOM_COMPLETE */
++
+ #include <trace/events/scsi.h>
+ 
+ #define SENSE_TIMEOUT		(10*HZ)
+@@ -645,11 +647,13 @@ static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
+ static int scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
+ {
+ 	/*
+-	 * scsi_done was called just after the command timed out and before
+-	 * we had a chance to process it. (db)
++	 * Use the struct request atomic_flags here to check if
++	 * block/blk.h:blk_mark_rq_complete() has already been called
++	 * from the block softirq
+ 	 */
+-	if (scmd->serial_number == 0)
++	if (blk_test_rq_complete(scmd->request))
+ 		return SUCCESS;
++
+ 	return __scsi_try_to_abort_cmd(scmd);
+ }
+ 
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index a5e885a..bbba4fa 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -136,6 +136,7 @@ extern struct scsi_cmnd *__scsi_get_command(struct Scsi_Host *, gfp_t);
+ extern void scsi_put_command(struct scsi_cmnd *);
+ extern void __scsi_put_command(struct Scsi_Host *, struct scsi_cmnd *,
+ 			       struct device *);
++extern void scsi_cmd_get_serial(struct scsi_cmnd *);
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
+ 
+ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index b7bdecb..f9ddf94 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -460,6 +460,12 @@ struct scsi_host_template {
+ 	 */
+ 	unsigned ordered_tag:1;
+ 
++        /*
++	 * True if the LLD allows for unlocked struct Scsi_Host->host_lock
++	 * SHT->queuecommand() calls to increase performance.
++	 */
++	unsigned unlocked_qcmd:1;
++
+ 	/*
+ 	 * Countdown for host blocking with no commands outstanding.
+ 	 */
+@@ -602,10 +608,9 @@ struct Scsi_Host {
+ 	short unsigned int max_sectors;
+ 	unsigned long dma_boundary;
+ 	/* 
+-	 * Used to assign serial numbers to the cmds.
+-	 * Protected by the host lock.
++	 * Used to assign serial numbers to the cmds in scsi_cmd_get_serial()
+ 	 */
+-	unsigned long cmd_serial_number;
++	atomic_t cmd_serial_number;
+ 	
+ 	unsigned active_mode:2;
+ 	unsigned unchecked_isa_dma:1;
+@@ -630,6 +635,11 @@ struct Scsi_Host {
+ 	 */
+ 	unsigned ordered_tag:1;
+ 
++	/*
++	 * Unlocked scsi_dispatch_cmd() -> SHT->queuecommand() support
++	 */
++	unsigned unlocked_qcmd:1;
++
+ 	/* Task mgmt function in progress */
+ 	unsigned tmf_in_progress:1;
+ 
 -- 
 1.7.3
