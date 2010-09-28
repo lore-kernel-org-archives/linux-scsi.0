@@ -1,81 +1,58 @@
-From: Sean Thomson <psthomso@hotmail.com>
-Subject: RE: [RFC] libsas: modifying libsas port creation
-Date: Mon, 27 Sep 2010 17:47:09 -0700
-Message-ID: <SNT126-W423EB4A9F109822A4B728CCE660@phx.gbl>
-References: <86810401A1B22346A09CBA649BE561E90133F6445B@azsmsx505.amr.corp.intel.com>,<AANLkTinnh4=7sT+Jhx7px-mK37CZ17J-_bYEsSyKOoKC@mail.gmail.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [RFC v4]update broken web addresses in the kernel.
+Date: Tue, 28 Sep 2010 11:37:57 +1000 (EST)
+Message-ID: <alpine.OSX.2.00.1009281119570.276@localhost>
+References: <1285525875-9920-1-git-send-email-justinmattock@gmail.com>  <20100927151005.GC11086@tuxdriver.com> <1285603383.1732.106.camel@Joe-Laptop> <4CA0CB0F.3060303@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from snt0-omc2-s37.snt0.hotmail.com ([65.55.90.112]:13996 "EHLO
-	snt0-omc2-s37.snt0.hotmail.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754244Ab0I1AxT convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 27 Sep 2010 20:53:19 -0400
-In-Reply-To: <AANLkTinnh4=7sT+Jhx7px-mK37CZ17J-_bYEsSyKOoKC@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4CA0CB0F.3060303@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: Joe Perches <joe@perches.com>, "John W. Linville" <linville@tuxdriver.com>, trivial@kernel.org, linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org, alsa-devel@alsa-project.org, dri-devel@lists.freedesktop.org, linux-ide@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Randy Dunlap <rdunlap@xenotime.net>, Matt Turner <mattst88@gmail.com>, Dimitry Torokhov <dmitry.torokhov@gmail.com>, Mike Frysinger <vapier.adi@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dan.j.williams@intel.com, Pat Thomson <patrick.s.thomson@intel.com>
-Cc: linux-scsi@vger.kernel.org, ed.ciechanowski@intel.com, nathan.marushak@intel.com, jeffrey.d.skirvin@intel.com, roger.c.jeppsen@intel.com
 
 
-> > I'm working on a SAS driver for Intel's Patsburg chipset and ran across a problem (for me) when libsas creates a port. Specifically, it 
-appears that libsas will use only use the attached sas address when creating a port, instead of the sas address on each side of the link. What I'd like to propose is to modify port creation such that, based on a flag stored in struct sas_ha_struct, that the SAS address on the initiator side can be taken into account. If the flag is not set, then the original behavior is in force.
-> >
-> > The main point is that the original behavior is the default, and if anyone wants to use the modified port creation, they call sas_ha_struct.notify_libsas_config() right after sas_ha_register during module init.
-> >
-> 
-> Shouldn't this just be the default without a configuration option?
-> For cases where port->sas_addr != phy->sas_addr I assume you would
-> always want this new behavior regardless of the flag??
-> 
+On Mon, 27 Sep 2010, Justin P. Mattock wrote:
 
-Ideally, yes, because a port should take into account the sas address on each side of the link, but, thats not how its been working. I'm expecting that somewhere, someone knows the behavoir and coded around it (or took advantage of it). There is an advantage to the current default, on a single level expander, you don't see multipath if the port configurations on each side don't match. 
+> On 09/27/2010 09:03 AM, Joe Perches wrote:
+> > On Mon, 2010-09-27 at 11:10 -0400, John W. Linville wrote:
+> > > On Sun, Sep 26, 2010 at 11:31:15AM -0700, Justin P. Mattock wrote:
+> > > > Below is an updated patch from the original fixing broken web 
+> > > > addresses in the kernel. Thanks for all the help and info on this 
+> > > > to everybody.. Hopefully I didnt miss any of them(if so let me 
+> > > > know, and I'll resend).
+> > > Changing a URL for a relocated page is one thing, but removing links 
+> > > isn't necessarily a great idea.  Even if the site is technically 
+> > > gone, it may be possible to find information e.g through the 
+> > > Internet Archive Wayback Machine.
+> > 
+> > Perhaps it'd be better to scrape the contents of the various web 
+> > pages, collect them somewhere like wiki.kernel.org and encourage 
+> > others to put new contributions in that site.
 
-Honestly, I haven't gone back to find out if the way it is, is intentional or a misunderstanding.
+The copyright problem aside, this might be a good idea for material not 
+already archived but I don't think it makes sense to start a new 
+archive when archive.org (or other) has the information.
 
-> > Thanks!
-> > Pat Thomson
-> >
-> > diff -Nau old/include/scsi/libsas.h new/include/scsi/libsas.h
-> > --- old/include/scsi/libsas.h 2010-09-27 14:23:14.142380393 -0700
-> > +++ new/include/scsi/libsas.h 2010-09-27 15:26:38.040818779 -0700
-> > @@ -89,6 +89,11 @@
-> > DISC_NUM_EVENTS = 3,
-> > };
-> >
-> > +enum cfg_state {
-> > + CFGE_USE_HOST_TARGET_SAS = 0U, /* struct sas_ha_struct.use_host_phy_addr */
-> > + CFGE_USE_ONLY_TARGET_SAS = 1, /* struct sas_ha_struct.use_host_phy_addr */
-> > +};
-> > +
-> > /* ---------- Expander Devices ---------- */
-> >
-> > #define to_dom_device(_obj) container_of(_obj, struct domain_device, dev_obj)
-> > @@ -344,6 +349,9 @@
-> >
-> > struct scsi_core core;
-> >
-> > + spinlock_t libsas_config_lock;
-> > + unsigned int use_host_phy_addr; /* defaults to 0 */
-> > +
-> 
-> Reading an int is assumed atomic so we wouldn't need a lock to set or
-> clear this flag. Something like this would be better done at init
-> time. Maybe if you needed it for ordering you could do something like
-> 
-> use_host_phy_addr=1
-> spin_lock();
-> spin_unlock();
-> 
-> ...but that does not appear to be the case here.
- 
-I don't need it for ordering, and I had forgotten about the atomicity. I'd be just has happy to be rid of it.
+And which version(s) do you scrape? I discussed some problems with 
+changing URLs in another thread: http://lkml.org/lkml/2010/9/22/22
+
+Anyway, without knowing what future archive(s) would be available or 
+relevant to any given URL in the future, I think the best we might do is a 
+"Retrieved on YYYY-MM-DD" qualification for new URLs.
 
 > 
-> --
-> Dan
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at http://vger.kernel.org/majordomo-info.html 		 	   		  
+> 
+> yeah I think somebody was saying something about having a separate file, 
+> with all the web addresses in them or something...In any case, up to you 
+> guys..
+
+I don't see how moving the addresses would help.
+And would it not make the information harder to find?
+
+Finn
+
+> 
+> Justin P. Mattock
+> 
