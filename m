@@ -1,7 +1,7 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 4/6] lpfc 8.3.17: SCSI fixes
-Date: Wed, 29 Sep 2010 11:19:08 -0400
-Message-ID: <1285773548.25110.12.camel@wookie>
+Subject: [PATCH 3/6] lpfc 8.3.17: BSG fixes
+Date: Wed, 29 Sep 2010 11:19:00 -0400
+Message-ID: <1285773540.25110.11.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,90 +9,124 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:16094 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752661Ab0I2PTU (ORCPT
+	with ESMTP id S1751386Ab0I2PTU (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2010 11:19:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-- Fail I/Os with incomplete data that complete with SCSI Check condition.
-- Complete aborted I/Os with host_scribble equal to NULL with success.
-- Initialize context1 field of iocbq in the new_scsi_buf routines.
+- Add support for bsg MBX_SLI4_CONFIG.
+- Multiply linkup timeout in loopback test code by 100.
+- Set iocb_stat to 0 in the lpfcdiag_loop_get_xri function.
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_scsi.c |   30 ++++++++++++++++++++++++------
- 1 file changed, 24 insertions(+), 6 deletions(-)
+ lpfc_bsg.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 66 insertions(+), 2 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-09-08 12:08:03.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2010-09-29 10:20:25.000000000 -0400
-@@ -599,6 +599,7 @@ lpfc_new_scsi_buf_s3(struct lpfc_vport *
- 		iocb->ulpClass = CLASS3;
- 		psb->status = IOSTAT_SUCCESS;
- 		/* Put it back into the SCSI buffer list */
-+		psb->cur_iocbq.context1  = psb;
- 		lpfc_release_scsi_buf_s3(phba, psb);
+diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+--- a/drivers/scsi/lpfc/lpfc_bsg.c	2010-09-29 10:07:22.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_bsg.c	2010-09-29 10:20:01.000000000 -0400
+@@ -1518,7 +1518,7 @@ lpfc_bsg_diag_mode(struct fc_bsg_job *jo
+ 	loopback_mode = (struct diag_mode_set *)
+ 		job->request->rqst_data.h_vendor.vendor_cmd;
+ 	link_flags = loopback_mode->type;
+-	timeout = loopback_mode->timeout;
++	timeout = loopback_mode->timeout * 100;
  
- 	}
-@@ -849,6 +850,7 @@ lpfc_new_scsi_buf_s4(struct lpfc_vport *
- 		iocb->ulpBdeCount = 1;
- 		iocb->ulpLe = 1;
- 		iocb->ulpClass = CLASS3;
-+		psb->cur_iocbq.context1  = psb;
- 		if (phba->cfg_sg_dma_buf_size > SGL_PAGE_SIZE)
- 			pdma_phys_bpl1 = pdma_phys_bpl + SGL_PAGE_SIZE;
- 		else
-@@ -2276,15 +2278,24 @@ lpfc_handle_fcp_err(struct lpfc_vport *v
- 	 * Check SLI validation that all the transfer was actually done
- 	 * (fcpi_parm should be zero). Apply check only to reads.
- 	 */
--	} else if ((scsi_status == SAM_STAT_GOOD) && fcpi_parm &&
--			(cmnd->sc_data_direction == DMA_FROM_DEVICE)) {
-+	} else if (fcpi_parm && (cmnd->sc_data_direction == DMA_FROM_DEVICE)) {
- 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_FCP | LOG_FCP_ERROR,
- 				 "9029 FCP Read Check Error Data: "
--				 "x%x x%x x%x x%x\n",
-+				 "x%x x%x x%x x%x x%x\n",
- 				 be32_to_cpu(fcpcmd->fcpDl),
- 				 be32_to_cpu(fcprsp->rspResId),
--				 fcpi_parm, cmnd->cmnd[0]);
--		host_status = DID_ERROR;
-+				 fcpi_parm, cmnd->cmnd[0], scsi_status);
-+		switch (scsi_status) {
-+		case SAM_STAT_GOOD:
-+		case SAM_STAT_CHECK_CONDITION:
-+			/* Fabric dropped a data frame. Fail any successful
-+			 * command in which we detected dropped frames.
-+			 * A status of good or some check conditions could
-+			 * be considered a successful command.
+ 	if ((phba->link_state == LPFC_HBA_ERROR) ||
+ 	    (psli->sli_flag & LPFC_BLOCK_MGMT_IO) ||
+@@ -1732,7 +1732,7 @@ static int lpfcdiag_loop_get_xri(struct 
+ 	struct lpfc_sli_ct_request *ctreq = NULL;
+ 	int ret_val = 0;
+ 	int time_left;
+-	int iocb_stat;
++	int iocb_stat = 0;
+ 	unsigned long flags;
+ 
+ 	*txxri = 0;
+@@ -2473,6 +2473,17 @@ lpfc_bsg_wake_mbox_wait(struct lpfc_hba 
+ 			to += sizeof(MAILBOX_t);
+ 			size = pmboxq->u.mb.un.varWords[5];
+ 			memcpy(to, from, size);
++		} else if ((phba->sli_rev == LPFC_SLI_REV4) &&
++			(pmboxq->u.mb.mbxCommand == MBX_SLI4_CONFIG)) {
++			struct lpfc_mbx_nembed_cmd *nembed_sge =
++				(struct lpfc_mbx_nembed_cmd *)
++				&pmboxq->u.mb.un.varWords[0];
++
++			from = (uint8_t *)dd_data->context_un.mbox.dmp->dma.
++						virt;
++			to += sizeof(MAILBOX_t);
++			size = nembed_sge->sge[0].length;
++			memcpy(to, from, size);
+ 		} else if (pmboxq->u.mb.mbxCommand == MBX_READ_EVENT_LOG) {
+ 			from = (uint8_t *)dd_data->context_un.
+ 						mbox.dmp->dma.virt;
+@@ -2914,6 +2925,59 @@ lpfc_bsg_issue_mbox(struct lpfc_hba *phb
+ 			from += sizeof(MAILBOX_t);
+ 			memcpy((uint8_t *)dmp->dma.virt, from,
+ 				bde->tus.f.bdeSize);
++		} else if (pmb->mbxCommand == MBX_SLI4_CONFIG) {
++			struct lpfc_mbx_nembed_cmd *nembed_sge;
++			struct mbox_header *header;
++			uint32_t receive_length;
++
++			/* rebuild the command for sli4 using our own buffers
++			* like we do for biu diags
++			*/
++			header = (struct mbox_header *)&pmb->un.varWords[0];
++			nembed_sge = (struct lpfc_mbx_nembed_cmd *)
++				&pmb->un.varWords[0];
++			receive_length = nembed_sge->sge[0].length;
++
++			/* receive length cannot be greater than mailbox
++			 * extension size
 +			 */
-+			host_status = DID_ERROR;
-+			break;
-+		}
- 		scsi_set_resid(cmnd, scsi_bufflen(cmnd));
++			if ((receive_length == 0) ||
++				(receive_length > MAILBOX_EXT_SIZE)) {
++				rc = -ERANGE;
++				goto job_done;
++			}
++
++			rxbmp = kmalloc(sizeof(struct lpfc_dmabuf), GFP_KERNEL);
++			if (!rxbmp) {
++				rc = -ENOMEM;
++				goto job_done;
++			}
++
++			rxbmp->virt = lpfc_mbuf_alloc(phba, 0, &rxbmp->phys);
++			if (!rxbmp->virt) {
++				rc = -ENOMEM;
++				goto job_done;
++			}
++
++			INIT_LIST_HEAD(&rxbmp->list);
++			rxbpl = (struct ulp_bde64 *) rxbmp->virt;
++			dmp = diag_cmd_data_alloc(phba, rxbpl, receive_length,
++						0);
++			if (!dmp) {
++				rc = -ENOMEM;
++				goto job_done;
++			}
++
++			INIT_LIST_HEAD(&dmp->dma.list);
++			nembed_sge->sge[0].pa_hi = putPaddrHigh(dmp->dma.phys);
++			nembed_sge->sge[0].pa_lo = putPaddrLow(dmp->dma.phys);
++			/* copy the transmit data found in the mailbox
++			 * extension area
++			 */
++			from = (uint8_t *)mb;
++			from += sizeof(MAILBOX_t);
++			memcpy((uint8_t *)dmp->dma.virt, from,
++				header->cfg_mhdr.payload_length);
+ 		}
  	}
  
-@@ -3072,7 +3083,14 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 	if (ret)
- 		return ret;
- 	lpfc_cmd = (struct lpfc_scsi_buf *)cmnd->host_scribble;
--	BUG_ON(!lpfc_cmd);
-+	if (!lpfc_cmd) {
-+		lpfc_printf_vlog(vport, KERN_WARNING, LOG_FCP,
-+			 "2873 SCSI Layer I/O Abort Request IO CMPL Status "
-+			 "x%x ID %d "
-+			 "LUN %d snum %#lx\n", ret, cmnd->device->id,
-+			 cmnd->device->lun, cmnd->serial_number);
-+		return SUCCESS;
-+	}
- 
- 	/*
- 	 * If pCmd field of the corresponding lpfc_scsi_buf structure
 
 
