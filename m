@@ -1,87 +1,64 @@
-From: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
-Subject: Re: [Patch] scsi_dh_rdac: retry IO for 06/3f/03 in
- rdac_check_sense fn
-Date: Wed, 29 Sep 2010 22:09:08 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED704B593B6@inbmail01.lsi.com>
-References: <1281404858.23351.6.camel@chandra-lucid.beaverton.ibm.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Oliver Neukum <oliver-GvhC2dPhHPQdnm+yROfE0A@public.gmane.org>
+Subject: Re: [PATCH 2/2] Add UAS driver
+Date: Wed, 29 Sep 2010 22:20:56 +0200
+Message-ID: <201009292220.56799.oliver@neukum.org>
+References: <1285668896-6356-1-git-send-email-willy@linux.intel.com> <201009281513.53869.oliver@neukum.org> <20100929005413.GB4689@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1281404858.23351.6.camel@chandra-lucid.beaverton.ibm.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "sekharan@us.ibm.com" <sekharan@us.ibm.com>, James Bottomley <James.Bottomley@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20100929005413.GB4689-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
+Cc: greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, sarah.a.sharp-VuQAYsv1563Yd54FQh9/CA@public.gmane.org, Matthew Wilcox <matthew.r.wilcox-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi James,
-
-For 06/3f/03 scsi sense, SUCCESS status is returned by scsi_check_sense. scsi_io_completion fn should have retried this check condition but some how it is not happening. IMO, command should be either retried by scsi or scsi dh rather than failing it (for this check condition). Can you please comment on this patch.  
-
-Thanks,
-Vijay
-
------Original Message-----
-From: Chandra Seetharaman [mailto:sekharan@us.ibm.com] 
-Sent: Tuesday, August 10, 2010 7:18 AM
-To: Chauhan, Vijay; James Bottomley
-Cc: device-mapper development; linux-scsi@vger.kernel.org
-Subject: Re: [Patch] scsi_dh_rdac: retry IO for 06/3f/03 in 
-rdac_check_sense fn
-
-Vijay,
-
-Since it has to be handled at SCSI (and it is a SCSI sense), shouldn't
-we be retrying it at SCSI level. James, what is your opinion ?
-
-It looks good to me as the effect is local to LSI rdac storage.
-
-chandra
-
-On Mon, 2010-08-02 at 13:07 +0530, Chauhan, Vijay wrote:
-> Hi,
+Am Mittwoch, 29. September 2010, 02:54:13 schrieb Matthew Wilcox:
 > 
-> This patch adds retry for the IO returned with 
-06/3f/03((INQUIRY_DATA_CHANGED)) sense code  in 
-rdac_check_sense(). IO returned with 06/3f/03 from controller 
-are currently failed by scsi mid layer, as a reason momentarily 
-path failure is noticed by DM multipath. 
+> [Could you trim a little when replying?]
+
+Sorry.
 > 
-> Signed-off-by: Vijay Chauhan<vijay.chauhan@lsi.com>
-> Reviewed-by: Babu Moger <babu.moger@lsi.com>
-> Reviewed-by: Bob Stankey <Robert.stankey@lsi.com>
-> ---
+> On Tue, Sep 28, 2010 at 03:13:53PM +0200, Oliver Neukum wrote:
+> > Am Dienstag, 28. September 2010, 12:14:56 schrieb Matthew Wilcox:
+> > > +static void uas_do_work(struct work_struct *work)
+> > > +{
+> > > +	struct uas_cmd_info *cmdinfo;
+> > > +	struct list_head list;
+> > > +
+> > > +	spin_lock_irq(&uas_work_lock);
+> > > +	list_replace_init(&uas_work_list, &list);
+> > > +	spin_unlock_irq(&uas_work_lock);
+> > > +
+> > > +	list_for_each_entry(cmdinfo, &list, list) {
+> > > +		struct scsi_pointer *scp = (void *)cmdinfo;
+> > > +		struct scsi_cmnd *cmnd = container_of(scp,
+> > > +							struct scsi_cmnd, SCp);
+> > > +		uas_submit_urbs(cmnd, cmnd->device->hostdata, GFP_KERNEL);
+> > 
+> > Deadlocky, use GFP_NOIO
 > 
-> diff -uprN 
-linux-2.6.35-rc6-orig/drivers/scsi/device_handler/scsi_dh_rdac.c
- linux-2.6.35-rc6/drivers/scsi/device_handler/scsi_dh_rdac.c
-> --- 
-linux-2.6.35-rc6-orig/drivers/scsi/device_handler/scsi_dh
-_rdac.c	2010-07-22 15:13:38.000000000 -0400
-> +++ 
-linux-2.6.35-rc6/drivers/scsi/device_handler/scsi_dh_rdac.c	
-2010-07-27 12:13:58.000000000 -0400
-> @@ -738,6 +738,11 @@ static int rdac_check_sense(struct scsi_
->  			 * Quiescence in progress , just retry.
->  			 */
->  			return ADD_TO_MLQUEUE;
-> +		if (sense_hdr->asc == 0x3f && sense_hdr->ascq == 0x03)
-> +			/*
-> +			 * INQUIRY DATA has changed, retry again.
-> +			 */
-> +			return ADD_TO_MLQUEUE;
->  		break;
->  	}
->  	/* success just means we do not care what scsi-ml does */
+> ACK.  I thought I'd fixed this already.
+
+Upon firther thought I think you need a dedicated work queue. Not only
+need you use GFP_NOIO, but you need to make sure that no work scheduled
+before your work on the same queue uses GFP_KERNEL.
+
+> > > +	cmnd->result = sense_iu->status;
+> > > +	if (sdev->current_cmnd)
+> > > +		sdev->current_cmnd = NULL;
+> > 
+> > the condition is absolutely senseless
 > 
-> --
+> That's not true.  Avoiding dirtying a cacheline is important for
+> performance.
+
+This is subtle. Do you need to play compiler tricks here?
+
+	Regards
+		Oliver
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
