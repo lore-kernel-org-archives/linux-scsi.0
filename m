@@ -1,69 +1,103 @@
-From: Malahal Naineni <malahal@us.ibm.com>
-Subject: Re: [PATCH] block: set the bounce_pfn to the actual DMA limit
- rather than to max memory
-Date: Tue, 28 Sep 2010 22:55:39 -0700
-Message-ID: <20100929055539.GA17499@us.ibm.com>
-References: <4ca2688f17705a0195@agluck-desktop.sc.intel.com>
- <20100928225936.GA8993@us.ibm.com>
- <987664A83D2D224EAE907B061CE93D5301605546A7@orsmsx505.amr.corp.intel.com>
- <20100929004213.GA9978@us.ibm.com>
- <987664A83D2D224EAE907B061CE93D530160554805@orsmsx505.amr.corp.intel.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2] libsas: fix bug for vacant phy
+Date: Wed, 29 Sep 2010 09:21:37 +0200
+Message-ID: <4CA2E901.9040908@suse.de>
+References: <BE430C874DBA6841A75E65151DCC6E1C0699F1BA@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <D8666BDF2F024F71B478BDCA08C7833D@usish.com.cn> <BE430C874DBA6841A75E65151DCC6E1C0731F42F@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca> <01B7071A8F0947F38977CA217D833D16@usish.com.cn> <27DA42B50CD244D19895F2FCED2191FD@usish.com.cn> <BE430C874DBA6841A75E65151DCC6E1C077DA147@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-next-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <987664A83D2D224EAE907B061CE93D530160554805@orsmsx505.amr.corp.intel.com>
-Sender: linux-next-owner@vger.kernel.org
-To: "Luck, Tony" <tony.luck@intel.com>
-Cc: Jens Axboe <jaxboe@fusionio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:41234 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753336Ab0I2HVm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2010 03:21:42 -0400
+In-Reply-To: <BE430C874DBA6841A75E65151DCC6E1C077DA147@BBY1EXM11.pmc_nt.nt.pmc-sierra.bc.ca>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Chuck Tuffli <Chuck_Tuffli@pmc-sierra.com>
+Cc: Jack Wang <jack_wang@usish.com>, James Bottomley <jejb@kernel.org>, linux-scsi@vger.kernel.org, lindar_liu <lindar_liu@usish.com>, roy <roy_wang@usish.com>
 
-Luck, Tony [tony.luck@intel.com] wrote:
-> >What is the USB host controller's PCI device and vendor IDs? I see
-> >ehci-ps3.c  and ohci-ps3.c setting it to DMA_BIT_rMASK(32). That may
-> >present another bug???
-> e
-> I have a pair of ehci devices:
-> 
-> 00:1a.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB2 EHCI Controller #2 (prog-if 20 [EHCI])
->         Subsystem: Platform Technologies, Inc. Device 6249
-> 
-> 00:1d.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB2 EHCI Controller #1 (prog-if 20 [EHCI])
->         Subsystem: Device 2920:0034
-> 
-> >I don't know USB much, but someone seems to be lying that they can't do
-> >DMA beyond 4GB!
-> 
-> The drivers may be confused about this.  ia64 systems support DMA to
-> all addresses - either because they have an IOMMU that makes DMA
-> possible to any address, or because they use swiotlb to pretend
-> that they can.
+Chuck Tuffli wrote:
+> This fixes the issue I was seeing. Thanks!
+>=20
+> -----Original Message-----
+> From: Jack Wang [mailto:jack_wang@usish.com]=20
+> Sent: Sunday, September 19, 2010 10:52 PM
+> To: 'Jack Wang'; Chuck Tuffli; 'James Bottomley'; linux-scsi@vger.ker=
+nel.org
+> Cc: 'lindar_liu'; 'roy'
+> Subject: [PATCH v2] libsas: fix bug for vacant phy
+>=20
+>=20
+> Hi, James
+>=20
+> Please drop the previous patch and apply this new one.
+> Attached patch fix following bugs reported by Chuck.
+>=20
+> Chuck
+> Could you test if this solve your problem ?
+>=20
+> Jack -
+> Signed-off-by: Jack Wang <jack_wang@usish.com>
+>=20
+> Signed-off-by: Lindar <lindar_liu@usish.com>
+> ---
+>  sas_expander.c |    7 ++++---
+>  1 files changed, 4 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/sas_expander.c b/sas_expander.c
+> index d1d86a6..f63dbea 100644
+> --- a/sas_expander.c
+> +++ b/sas_expander.c
+> @@ -175,10 +175,10 @@ static void sas_set_ex_phy(struct domain_device=
+ *dev,
+> int phy_id,
+>  	switch (resp->result) {
+>  	case SMP_RESP_PHY_VACANT:
+>  		phy->phy_state =3D PHY_VACANT;
+> -		return;
+> +		break;
+>  	default:
+>  		phy->phy_state =3D PHY_NOT_PRESENT;
+> -		return;
+> +		break;
+>  	case SMP_RESP_FUNC_ACC:
+>  		phy->phy_state =3D PHY_EMPTY; /* do not know yet */
+>  		break;
+> @@ -209,7 +209,8 @@ static void sas_set_ex_phy(struct domain_device *=
+dev,
+> int phy_id,
+>  	phy->phy->negotiated_linkrate =3D phy->linkrate;
+> =20
+>  	if (!rediscover)
+> -		sas_phy_add(phy->phy);
+> +		if (sas_phy_add(phy->phy))
+> +			sas_phy_free(phy->phy);
+> =20
+>  	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",
+>  		    SAS_ADDR(dev->sas_addr), phy->phy_id,
+Hmm. Shouldn't you avoid the message here if you entered the error
+path? I guess the SAS phy isn't actually attached then.
+So maybe the above statement should read:
 
-That makes sense! This patch should work and considers the above
-behaviour just as the old code. Please revert the commit and apply this
-patch instead. Please let me know if this works.
+
+if (!rediscover)
+        if (sas_phy_add(phy->phy)) {
+                sas_phy_free(phy->phy);
+		return;
+	}
 
 
-block: set the bounce_pfn to the actual DMA limit rather than to max memory
+Cheers,
 
-The bounce_pfn of the request queue in 64 bit systems is set to the
-current max_low_pfn. Adding more memory later makes this incorrect.
-Memory allocated beyond this boot time max_low_pfn appear to require
-bounce buffers (bounce buffers are actually not allocated but used in
-calculating segments that may result in "over max segments limit"
-errors).
-
-Signed-off-by: Malahal Naineni (malahal@us.ibm.com)
-
-diff -r 09daf852c1c5 block/blk-settings.c
---- a/block/blk-settings.c	Thu Sep 09 12:10:43 2010 -0700
-+++ b/block/blk-settings.c	Tue Sep 28 22:43:40 2010 -0700
-@@ -214,7 +214,7 @@ void blk_queue_bounce_limit(struct reque
- 	 */
- 	if (b_pfn < (min_t(u64, 0xffffffffUL, BLK_BOUNCE_HIGH) >> PAGE_SHIFT))
- 		dma = 1;
--	q->limits.bounce_pfn = max_low_pfn;
-+	q->limits.bounce_pfn = max(max_low_pfn, b_pfn);
- #else
- 	if (b_pfn < blk_max_low_pfn)
- 		dma = 1;
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
