@@ -1,49 +1,44 @@
-From: "Luck, Tony" <tony.luck@intel.com>
-Subject: RE: [PATCH] block: set the bounce_pfn to the actual DMA limit
- rather than to max memory
-Date: Tue, 28 Sep 2010 21:47:00 -0700
-Message-ID: <987664A83D2D224EAE907B061CE93D530160554805@orsmsx505.amr.corp.intel.com>
-References: <4ca2688f17705a0195@agluck-desktop.sc.intel.com>
- <20100928225936.GA8993@us.ibm.com>
- <987664A83D2D224EAE907B061CE93D5301605546A7@orsmsx505.amr.corp.intel.com>
- <20100929004213.GA9978@us.ibm.com>
+From: Sarah Sharp <sarah.a.sharp@linux.intel.com>
+Subject: Re: [PATCH 2/2] Add UAS driver
+Date: Wed, 29 Sep 2010 00:47:29 -0400
+Message-ID: <20100929044729.GA4967@xanatos>
+References: <1285668896-6356-1-git-send-email-willy@linux.intel.com>
+ <1285668896-6356-2-git-send-email-willy@linux.intel.com>
+ <201009281513.53869.oliver@neukum.org>
+ <20100929005413.GB4689@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20100929004213.GA9978@us.ibm.com>
-Content-Language: en-US
-Sender: linux-next-owner@vger.kernel.org
-To: Malahal Naineni <malahal@us.ibm.com>
-Cc: Jens Axboe <jaxboe@fusionio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:42767 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750717Ab0I2Erc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 29 Sep 2010 00:47:32 -0400
+Content-Disposition: inline
+In-Reply-To: <20100929005413.GB4689@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <willy@linux.intel.com>
+Cc: Oliver Neukum <oliver@neukum.org>, greg@kroah.com, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew.r.wilcox@intel.com>
 
->What is the USB host controller's PCI device and vendor IDs? I see
->ehci-ps3.c  and ohci-ps3.c setting it to DMA_BIT_MASK(32). That may
->present another bug???
+On Tue, Sep 28, 2010 at 08:54:13PM -0400, Matthew Wilcox wrote:
+> 
+> [Could you trim a little when replying?]
+> 
+> On Tue, Sep 28, 2010 at 03:13:53PM +0200, Oliver Neukum wrote:
+> > Am Dienstag, 28. September 2010, 12:14:56 schrieb Matthew Wilcox:
+> > > +	usb_free_streams(intf, eps, 3, GFP_KERNEL);
+> > 
+> > This implies that this can fail due to a lack of memory.
+> > Then what?
+> 
+> Uhh.  I think I'll have to get Sarah to answer that question.  We probably
+> end up resetting the endpoints instead of telling the endpoint to stop
+> doing streams.
 
-I have a pair of ehci devices:
+Sorry Oliver, the usb_free_streams() calls into the xHCI driver, which
+doesn't actually do anything with the memory flags.  Alan Stern already
+noted it should be removed.  Freeing streams doesn't rely on memory
+allocation (a command is pre-allocated when streams are enabled, and a
+TRB is reserved on the command ring).
 
-00:1a.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB2 EHCI Controller #2 (prog-if 20 [EHCI])
-        Subsystem: Platform Technologies, Inc. Device 6249
-
-00:1d.7 USB Controller: Intel Corporation 82801JI (ICH10 Family) USB2 EHCI Controller #1 (prog-if 20 [EHCI])
-        Subsystem: Device 2920:0034
-
->I don't know USB much, but someone seems to be lying that they can't do
->DMA beyond 4GB!
-
-The drivers may be confused about this.  ia64 systems support DMA to
-all addresses - either because they have an IOMMU that makes DMA
-possible to any address, or because they use swiotlb to pretend
-that they can.
-
-You are probably correct that this is the real source of the bug.
-Your patch just stopped the block layer from hiding the problem.
-
->How much memory you have on the system? This probably doesn't matter but
->good to know.
-
-This is a little machine - just 16GB.
-
--Tony
+Sarah Sharp
