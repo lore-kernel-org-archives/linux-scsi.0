@@ -1,43 +1,37 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 6/6] lpfc 8.3.17: Update lpfc driver version to 8.3.17
-Date: Wed, 29 Sep 2010 11:19:22 -0400
-Message-ID: <1285773562.25110.14.camel@wookie>
-Reply-To: james.smart@emulex.com
+From: "Luck, Tony" <tony.luck@intel.com>
+Subject: RE: [PATCH] block: set the bounce_pfn to the actual DMA limit
+ rather than to max memory
+Date: Wed, 29 Sep 2010 09:00:09 -0700
+Message-ID: <987664A83D2D224EAE907B061CE93D5301605549DA@orsmsx505.amr.corp.intel.com>
+References: <4ca2688f17705a0195@agluck-desktop.sc.intel.com>
+ <20100928225936.GA8993@us.ibm.com>
+ <987664A83D2D224EAE907B061CE93D5301605546A7@orsmsx505.amr.corp.intel.com>
+ <20100929004213.GA9978@us.ibm.com>
+ <987664A83D2D224EAE907B061CE93D530160554805@orsmsx505.amr.corp.intel.com>
+ <20100929055539.GA17499@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:16109 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751372Ab0I2PTo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2010 11:19:44 -0400
+Received: from mga02.intel.com ([134.134.136.20]:46901 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751469Ab0I2QAL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2010 12:00:11 -0400
+In-Reply-To: <20100929055539.GA17499@us.ibm.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Malahal Naineni <malahal@us.ibm.com>
+Cc: Jens Axboe <jaxboe@fusionio.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
 
+> That makes sense! This patch should work and considers the above
+> behaviour just as the old code. Please revert the commit and apply this
+> patch instead. Please let me know if this works.
 
-Update lpfc driver version to 8.3.17
+Yes, this new version works.
 
- Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
- Signed-off-by: James Smart <james.smart@emulex.com>
+Tested-by: Tony Luck <tony.luck@intel.com>
 
- ---
+Thanks
 
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2010-08-09 09:30:14.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2010-09-29 10:20:58.000000000 -0400
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "8.3.16"
-+#define LPFC_DRIVER_VERSION "8.3.17"
- #define LPFC_DRIVER_NAME		"lpfc"
- #define LPFC_SP_DRIVER_HANDLER_NAME	"lpfc:sp"
- #define LPFC_FP_DRIVER_HANDLER_NAME	"lpfc:fp"
-
-
+-Tony
