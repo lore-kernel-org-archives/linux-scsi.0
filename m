@@ -1,7 +1,7 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [PATCH 1/19]: Integration of SCST into the Linux kernel tree
-Date: Sat, 02 Oct 2010 01:36:20 +0400
-Message-ID: <4CA65454.9060108@vlnb.net>
+Subject: [PATCH 2/19]: SCST core's Makefile and Kconfig
+Date: Sat, 02 Oct 2010 01:36:52 +0400
+Message-ID: <4CA65474.1050400@vlnb.net>
 References: <4CA653F0.1010008@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -13,35 +13,274 @@ To: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch contains changes in drivers/Kconfig and drivers/Makefile
-to integrate SCST into the Linux kernel tree.
+This patch contains SCST core's Makefile and Kconfig.
 
 Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
 ---
- Kconfig  |    2 ++
- Makefile |    1 +
- 2 files changed, 3 insertions(+)
+ Kconfig  |  244 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ Makefile |   11 ++
+ 2 files changed, 255 insertions(+)
 
-diff -upkr -X linux-2.6.35/Documentation/dontdiff linux-2.6.35/drivers/Kconfig linux-2.6.35/drivers/Kconfig
---- orig/linux-2.6.35/drivers/Kconfig 01:51:29.000000000 +0400
-+++ linux-2.6.35/drivers/Kconfig 14:14:46.000000000 +0400
-@@ -22,6 +22,8 @@ source "drivers/ide/Kconfig"
- 
- source "drivers/scsi/Kconfig"
- 
-+source "drivers/scst/Kconfig"
+diff -uprN orig/linux-2.6.35/drivers/scst/Kconfig linux-2.6.35/drivers/scst/Kconfig
+--- orig/linux-2.6.35/drivers/scst/Kconfig
++++ linux-2.6.35/drivers/scst/Kconfig
+@@ -0,0 +1,244 @@
++menu "SCSI target (SCST) support"
 +
- source "drivers/ata/Kconfig"
- 
- source "drivers/md/Kconfig"
-diff -upkr -X linux-2.6.35/Documentation/dontdiff linux-2.6.35/drivers/Makefile linux-2.6.35/drivers/Makefile
---- orig/linux-2.6.35/drivers/Makefile 01:51:29.000000000 +0400
-+++ linux-2.6.35/drivers/Makefile 14:15:29.000000000 +0400
-@@ -43,6 +43,7 @@ obj-$(CONFIG_ATM)		+= atm/
- obj-y				+= macintosh/
- obj-$(CONFIG_IDE)		+= ide/
- obj-$(CONFIG_SCSI)		+= scsi/
-+obj-$(CONFIG_SCST)		+= scst/
- obj-$(CONFIG_ATA)		+= ata/
- obj-y				+= net/
- obj-$(CONFIG_ATM)		+= atm/
++config SCST
++	tristate "SCSI target (SCST) support"
++	depends on SCSI
++	help
++	  SCSI target (SCST) is designed to provide unified, consistent
++	  interface between SCSI target drivers and Linux kernel and
++	  simplify target drivers development as much as possible. Visit
++	  http://scst.sourceforge.net for more info about it.
++
++config SCST_DISK
++	tristate "SCSI target disk support"
++	default SCST
++	depends on SCSI && SCST
++	help
++	  SCST pass-through device handler for disk device.
++
++config SCST_TAPE
++	tristate "SCSI target tape support"
++	default SCST
++	depends on SCSI && SCST
++	help
++	  SCST pass-through device handler for tape device.
++
++config SCST_CDROM
++	tristate "SCSI target CDROM support"
++	default SCST
++	depends on SCSI && SCST
++	help
++	  SCST pass-through device handler for CDROM device.
++
++config SCST_MODISK
++	tristate "SCSI target MO disk support"
++	default SCST
++	depends on SCSI && SCST
++	help
++	  SCST pass-through device handler for MO disk device.
++
++config SCST_CHANGER
++	tristate "SCSI target changer support"
++	default SCST
++	depends on SCSI && SCST
++	help
++	  SCST pass-through device handler for changer device.
++
++config SCST_PROCESSOR
++	tristate "SCSI target processor support"
++	default SCST
++	depends on SCSI && SCST
++	help
++	  SCST pass-through device handler for processor device.
++
++config SCST_RAID
++	tristate "SCSI target storage array controller (RAID) support"
++	default SCST
++	depends on SCSI && SCST
++	help
++	  SCST pass-through device handler for raid storage array controller (RAID) device.
++
++config SCST_VDISK
++	tristate "SCSI target virtual disk and/or CDROM support"
++	default SCST
++	depends on SCSI && SCST
++	help
++	  SCST device handler for virtual disk and/or CDROM device.
++
++config SCST_STRICT_SERIALIZING
++	bool "Strict serialization"
++	depends on SCST
++	help
++	  Enable strict SCSI command serialization. When enabled, SCST sends
++	  all SCSI commands to the underlying SCSI device synchronously, one
++	  after one. This makes task management more reliable, at the cost of
++	  a performance penalty. This is most useful for stateful SCSI devices
++	  like tapes, where the result of the execution of a command
++	  depends on the device settings configured by previous commands. Disk
++	  and RAID devices are stateless in most cases. The current SCSI core
++	  in Linux doesn't allow to abort all commands reliably if they have
++	  been sent asynchronously to a stateful device.
++	  Enable this option if you use stateful device(s) and need as much
++	  error recovery reliability as possible.
++
++	  If unsure, say "N".
++
++config SCST_STRICT_SECURITY
++	bool "Strict security"
++	depends on SCST
++	help
++	  Makes SCST clear (zero-fill) allocated data buffers. Note: this has a
++	  significant performance penalty.
++
++	  If unsure, say "N".
++
++config SCST_TEST_IO_IN_SIRQ
++	bool "Allow test I/O from soft-IRQ context"
++	depends on SCST
++	help
++	  Allows SCST to submit selected SCSI commands (TUR and
++	  READ/WRITE) from soft-IRQ context (tasklets). Enabling it will
++	  decrease amount of context switches and slightly improve
++	  performance. The goal of this option is to be able to measure
++	  overhead of the context switches. See more info about it in
++	  README.scst.
++
++	  WARNING! Improperly used, this option can lead you to a kernel crash!
++
++	  If unsure, say "N".
++
++config SCST_ABORT_CONSIDER_FINISHED_TASKS_AS_NOT_EXISTING
++	bool "Send back UNKNOWN TASK when an already finished task is aborted"
++	depends on SCST
++	help
++	  Controls which response is sent by SCST to the initiator in case
++	  the initiator attempts to abort (ABORT TASK) an already finished
++	  request. If this option is enabled, the response UNKNOWN TASK is
++	  sent back to the initiator. However, some initiators, particularly
++	  the VMware iSCSI initiator, interpret the UNKNOWN TASK response as
++	  if the target got crazy and try to RESET it. Then sometimes the
++	  initiator gets crazy itself.
++
++	  If unsure, say "N".
++
++config SCST_USE_EXPECTED_VALUES
++	bool "Prefer initiator-supplied SCSI command attributes"
++	depends on SCST
++	help
++	  When SCST receives a SCSI command from an initiator, such a SCSI
++	  command has both data transfer length and direction attributes.
++	  There are two possible sources for these attributes: either the
++	  values computed by SCST from its internal command translation table
++	  or the values supplied by the initiator. The former are used by
++	  default because of security reasons. Invalid initiator-supplied
++	  attributes can crash the target, especially in pass-through mode.
++	  Only consider enabling this option when SCST logs the following
++	  message: "Unknown opcode XX for YY. Should you update
++	  scst_scsi_op_table?" and when the initiator complains. Please
++	  report any unrecognized commands to scst-devel@lists.sourceforge.net.
++
++	  If unsure, say "N".
++
++config SCST_EXTRACHECKS
++	bool "Extra consistency checks"
++	depends on SCST
++	help
++	  Enable additional consistency checks in the SCSI middle level target
++	  code. This may be helpful for SCST developers. Enable it if you have
++	  any problems.
++
++	  If unsure, say "N".
++
++config SCST_TRACING
++	bool "Tracing support"
++	depends on SCST
++	default y
++	help
++	  Enable SCSI middle level tracing support. Tracing can be controlled
++	  dynamically via sysfs interface. The traced information
++	  is sent to the kernel log and may be very helpful when analyzing
++	  the cause of a communication problem between initiator and target.
++
++	  If unsure, say "Y".
++
++config SCST_DEBUG
++	bool "Debugging support"
++	depends on SCST
++	select DEBUG_BUGVERBOSE
++	help
++	  Enables support for debugging SCST. This may be helpful for SCST
++	  developers.
++
++	  If unsure, say "N".
++
++config SCST_DEBUG_OOM
++	bool "Out-of-memory debugging support"
++	depends on SCST
++	help
++	  Let SCST's internal memory allocation function
++	  (scst_alloc_sg_entries()) fail about once in every 10000 calls, at
++	  least if the flag __GFP_NOFAIL has not been set. This allows SCST
++	  developers to test the behavior of SCST in out-of-memory conditions.
++	  This may be helpful for SCST developers.
++
++	  If unsure, say "N".
++
++config SCST_DEBUG_RETRY
++	bool "SCSI command retry debugging support"
++	depends on SCST
++	help
++	  Let SCST's internal SCSI command transfer function
++	  (scst_rdy_to_xfer()) fail about once in every 100 calls. This allows
++	  SCST developers to test the behavior of SCST when SCSI queues fill
++	  up. This may be helpful for SCST developers.
++
++	  If unsure, say "N".
++
++config SCST_DEBUG_SN
++	bool "SCSI sequence number debugging support"
++	depends on SCST
++	help
++	  Allows to test SCSI command ordering via sequence numbers by
++	  randomly changing the type of SCSI commands into
++	  SCST_CMD_QUEUE_ORDERED, SCST_CMD_QUEUE_HEAD_OF_QUEUE or
++	  SCST_CMD_QUEUE_SIMPLE for about one in 300 SCSI commands.
++	  This may be helpful for SCST developers.
++
++	  If unsure, say "N".
++
++config SCST_DEBUG_TM
++	bool "Task management debugging support"
++	depends on SCST_DEBUG
++	help
++	  Enables support for debugging of SCST's task management functions.
++	  When enabled, some of the commands on LUN 0 in the default access
++	  control group will be delayed for about 60 seconds. This will
++	  cause the remote initiator send SCSI task management functions,
++	  e.g. ABORT TASK and TARGET RESET.
++
++	  If unsure, say "N".
++
++config SCST_TM_DBG_GO_OFFLINE
++	bool "Let devices become completely unresponsive"
++	depends on SCST_DEBUG_TM
++	help
++	  Enable this option if you want that the device eventually becomes
++	  completely unresponsive. When disabled, the device will receive
++	  ABORT and RESET commands.
++
++config SCST_MEASURE_LATENCY
++	bool "Commands processing latency measurement facility"
++	depends on SCST
++	help
++	  This option enables commands processing latency measurement
++	  facility in SCST. It will provide in the sysfs interface
++	  average commands processing latency statistics. You can clear
++	  already measured results by writing 0 in the corresponding sysfs file.
++	  Note, you need a non-preemtible kernel to have correct results.
++
++	  If unsure, say "N".
++
++source "drivers/scst/scst_local/Kconfig"
++source "drivers/scst/srpt/Kconfig"
++
++endmenu
+diff -uprN orig/linux-2.6.35/drivers/scst/Makefile linux-2.6.35/drivers/scst/Makefile
+--- orig/linux-2.6.35/drivers/scst/Makefile
++++ linux-2.6.35/drivers/scst/Makefile
+@@ -0,0 +1,11 @@
++ccflags-y += -Wno-unused-parameter
++
++scst-y        += scst_main.o
++scst-y        += scst_pres.o
++scst-y        += scst_targ.o
++scst-y        += scst_lib.o
++scst-y        += scst_sysfs.o
++scst-y        += scst_mem.o
++scst-y        += scst_debug.o
++
++obj-$(CONFIG_SCST)   += scst.o dev_handlers/ srpt/ scst_local/
