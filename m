@@ -1,7 +1,7 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Sat, 02 Oct 2010 01:46:21 +0400
-Message-ID: <4CA656AD.8020408@vlnb.net>
+Subject: [PATCH 10/19]: SCST SGV cache
+Date: Sat, 02 Oct 2010 01:48:17 +0400
+Message-ID: <4CA65721.30004@vlnb.net>
 References: <4CA653F0.1010008@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -10,156 +10,169 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <4CA653F0.1010008@vlnb.net>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
+Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch contains SYSFS interface implementation.
+This patch contains SCST SGV cache.
 
-This interface provides possibility for a user to configure his/her SCST
-server configuration: add/delete/manage target drivers, targets, dev handlers,
-virtual devices and access control to them as well as it allows to see current
-SCST configuration with necessary statistical and debug info (e.g. SGV cache
-statistics).
+SCST SGV cache is a memory management subsystem in SCST. One can call it
+a "memory pool", but Linux kernel already have a mempool interface,
+which serves different purposes. SGV cache provides to SCST core, target
+drivers and backend dev handlers facilities to allocate, build and cache
+SG vectors for data buffers. The main advantage of it is the caching
+facility, when it doesn't free to the system each vector, which is not
+used anymore, but keeps it for a while (possibly indefinitely) to let it
+be reused by the next consecutive command. This allows to:
 
-For some management events processing is redirected to dedicated thread for
-2 reasons:
+ - Reduce commands processing latencies and, hence, improve performance;
 
-1. It naturally serializes all SYSFS management operations, so allows to
-simplify locking in target drivers and dev handlers. For instance, it allows
-in add_target() callback don't worry if del_target() or another add_target()
-for the same target name called simultaneously.
+ - Make commands processing latencies predictable, which is essential
+   for RT applications.
 
-2. To make processing be done outside of the internal SYSFS locking.
+The freed SG vectors are kept by the SGV cache either for some (possibly
+indefinite) time, or, optionally, until the system needs more memory and
+asks to free some using the set_shrinker() interface. Also the SGV cache
+allows to:
 
-All internal SCST management is done for simplicity under scst_mutex.
-It's simple, robust and worked well even under the highest load for ages.
-But in 2.6.35 sysfs was improved to make lockdep to check s_active related
-deadlocks and we discovered potential circular locking dependency
-between scst_mutex and s_active. On some management operations lockdep triggered
-output like:
+  - Cluster pages together. "Cluster" means merging adjacent pages in a
+single SG entry. It allows to have less SG entries in the resulting SG
+vector, hence improve performance handling it as well as allow to
+work with bigger buffers on hardware with limited SG capabilities.
 
-[ 2036.926891] =======================================================
-[ 2036.927670] [ INFO: possible circular locking dependency detected ]
-[ 2036.927670] 2.6.35-scst-dbg #15
-[ 2036.927670] -------------------------------------------------------
-[ 2036.927670] rmmod/4715 is trying to acquire lock:
-[ 2036.927670]  (s_active#230){++++.+}, at: [<78240a24>] sysfs_hash_and_remove+0x63/0x67
-[ 2036.927670] 
-[ 2036.927670] but task is already holding lock:
-[ 2036.927670]  (&scst_mutex){+.+.+.}, at: [<fefd7fe2>] scst_unregister_virtual_device+0x58/0x216 [scst]
-[ 2036.927670] 
-[ 2036.927670] which lock already depends on the new lock.
-[ 2036.927670] 
-[ 2036.927670] 
-[ 2036.927670] the existing dependency chain (in reverse order) is:
-[ 2036.927670] 
-[ 2036.927670] -> #2 (&scst_mutex){+.+.+.}:
-[ 2036.927670]        [<78168d67>] lock_acquire+0x76/0x129
-[ 2036.927670]        [<78467619>] __mutex_lock_common+0x58/0x3fc
-[ 2036.927670]        [<78467a6d>] mutex_lock_nested+0x36/0x3d
-[ 2036.927670]        [<f8ecec91>] vcdrom_change+0x1b9/0x500 [scst_vdisk]
-[ 2036.927670]        [<f8ecf030>] vcdrom_sysfs_filename_store+0x58/0xd8 [scst_vdisk]
-[ 2036.927670]        [<feffd139>] scst_dev_attr_store+0x44/0x5d [scst]
-[ 2036.927670]        [<7824104f>] sysfs_write_file+0x9e/0xe8
-[ 2036.927670]        [<781ee836>] vfs_write+0x91/0x17e
-[ 2036.927670]        [<781ef213>] sys_write+0x42/0x69
-[ 2036.927670]        [<78102d13>] sysenter_do_call+0x12/0x32
-[ 2036.927670] 
-[ 2036.927670] -> #1 (&virt_dev->vdev_sysfs_mutex){+.+.+.}:
-[ 2036.927670]        [<78168d67>] lock_acquire+0x76/0x129
-[ 2036.927670]        [<78467619>] __mutex_lock_common+0x58/0x3fc
-[ 2036.927670]        [<784679f3>] mutex_lock_interruptible_nested+0x36/0x3d
-[ 2036.927670]        [<f8ecebd6>] vcdrom_change+0xfe/0x500 [scst_vdisk]
-[ 2036.927670]        [<f8ecf030>] vcdrom_sysfs_filename_store+0x58/0xd8 [scst_vdisk]
-[ 2036.927670]        [<feffd139>] scst_dev_attr_store+0x44/0x5d [scst]
-[ 2036.927670]        [<7824104f>] sysfs_write_file+0x9e/0xe8
-[ 2036.927670]        [<781ee836>] vfs_write+0x91/0x17e
-[ 2036.927670]        [<781ef213>] sys_write+0x42/0x69
-[ 2036.927670]        [<78102d13>] sysenter_do_call+0x12/0x32
-[ 2036.927670] 
-[ 2036.927670] -> #0 (s_active#230){++++.+}:
-[ 2036.927670]        [<78168af4>] __lock_acquire+0x1013/0x1210
-[ 2036.927670]        [<78168d67>] lock_acquire+0x76/0x129
-[ 2036.927670]        [<78242417>] sysfs_addrm_finish+0x100/0x150
-[ 2036.927670]        [<78240a24>] sysfs_hash_and_remove+0x63/0x67
-[ 2036.927670]        [<782415b6>] sysfs_remove_file+0x14/0x16
-[ 2036.927670]        [<feffdb29>] scst_devt_dev_sysfs_put+0x75/0x133 [scst]
-[ 2036.927670]        [<fefd6410>] scst_assign_dev_handler+0x109/0x5b6 [scst]
-[ 2036.927670]        [<fefd80ce>] scst_unregister_virtual_device+0x144/0x216 [scst]
-[ 2036.927670]        [<f8ed06f3>] vdev_del_device+0x47/0xd4 [scst_vdisk]
-[ 2036.927670]        [<f8ed6701>] exit_scst_vdisk+0x60/0xe6 [scst_vdisk]
-[ 2036.927670]        [<f8ed67b1>] exit_scst_vdisk_driver+0x12/0x46 [scst_vdisk]
-[ 2036.927670]        [<7817253a>] sys_delete_module+0x139/0x214
-[ 2036.927670]        [<78102d13>] sysenter_do_call+0x12/0x32
-[ 2036.927670] 
-[ 2036.927670] other info that might help us debug this:
-[ 2036.927670] 
-[ 2036.927670] 2 locks held by rmmod/4715:
-[ 2036.927670]  #0:  (scst_vdisk_mutex){+.+.+.}, at: [<f8ed66f0>] exit_scst_vdisk+0x4f/0xe6 [scst_vdisk]
-[ 2036.927670]  #1:  (&scst_mutex){+.+.+.}, at: [<fefd7fe2>] scst_unregister_virtual_device+0x58/0x216 [scst]
-[ 2036.927670] 
-[ 2036.927670] stack backtrace:
-[ 2036.927670] Pid: 4715, comm: rmmod Not tainted 2.6.35-scst-dbg #15
-[ 2036.927670] Call Trace:
-[ 2036.927670]  [<784660a3>] ? printk+0x2d/0x32
-[ 2036.927670]  [<78166cbc>] print_circular_bug+0xb4/0xb9
-[ 2036.927670]  [<78168af4>] __lock_acquire+0x1013/0x1210
-[ 2036.927670]  [<78168d67>] lock_acquire+0x76/0x129
-[ 2036.927670]  [<78240a24>] ? sysfs_hash_and_remove+0x63/0x67
-[ 2036.927670]  [<78242417>] sysfs_addrm_finish+0x100/0x150
-[ 2036.927670]  [<78240a24>] ? sysfs_hash_and_remove+0x63/0x67
-[ 2036.927670]  [<78240a24>] sysfs_hash_and_remove+0x63/0x67
-[ 2036.927670]  [<782415b6>] sysfs_remove_file+0x14/0x16
-[ 2036.927670]  [<feffdb29>] scst_devt_dev_sysfs_put+0x75/0x133 [scst]
-[ 2036.927670]  [<fefd5b20>] ? scst_stop_dev_threads+0x77/0x111 [scst]
-[ 2036.927670]  [<f8ece3c2>] ? vdisk_detach+0x88/0x133 [scst_vdisk]
-[ 2036.927670]  [<fefd6410>] scst_assign_dev_handler+0x109/0x5b6 [scst]
-[ 2036.927670]  [<ff007368>] ? scst_pr_clear_dev+0x8e/0xfc [scst]
-[ 2036.927670]  [<fefd80ce>] scst_unregister_virtual_device+0x144/0x216 [scst]
-[ 2036.927670]  [<f8ed06f3>] vdev_del_device+0x47/0xd4 [scst_vdisk]
-[ 2036.927670]  [<f8ed6701>] exit_scst_vdisk+0x60/0xe6 [scst_vdisk]
-[ 2036.927670]  [<f8ed67b1>] exit_scst_vdisk_driver+0x12/0x46 [scst_vdisk]
-[ 2036.927670]  [<7817253a>] sys_delete_module+0x139/0x214
-[ 2036.927670]  [<7846c87e>] ? sub_preempt_count+0x7e/0xad
-[ 2036.927670]  [<78102d42>] ? sysenter_exit+0xf/0x1a
-[ 2036.927670]  [<7816789d>] ? trace_hardirqs_on_caller+0x10c/0x14d
-[ 2036.927670]  [<78102d13>] sysenter_do_call+0x12/0x32
-[ 2036.927670]  [<7846007b>] ? init_intel_cacheinfo+0x317/0x38b
+  - Set custom page allocator functions. For instance, scst_user device
+handler uses this facility to eliminate unneeded mapping/unmapping of
+user space pages and avoid unneeded IOCTL calls for buffers allocations.
+In fileio_tgt application, which uses a regular malloc() function to
+allocate data buffers, this facility allows ~30% less CPU load and
+considerable performance increase.
 
-It is caused by a chicken and egg problem: SCST objects, including their sysfs hierarchy
-(kobjects) are created under scst_mutex, but for some of them (ACGs and their names
-attributes, ACNs, are the most problematic objects) the creation is triggered from
-inside the SYSFS.
+ - Prevent each initiator or all initiators altogether to allocate too
+much memory and DoS the target. Consider 10 initiators, which can have
+access to 10 devices each. Any of them can queue up to 64 commands, each
+can transfer up to 1MB of data. So, all of them in a peak can allocate
+up to 10*10*64 = ~6.5GB of memory for data buffers. This amount must be
+limited somehow and the SGV cache performs this function.
 
-I spent a LOT of time trying to rule out this problem in an acceptable manner.
-Particularly, I analyzed splitting creation of SCST objects and their kobjects, so the
-latter would be created outside of scst_mutex, and making a fine grain locking for
-the SCST management instead of the single scst_mutex, but all the options lead to
-unacceptably complicated code. So, I have chosen the use of the separate thread for all
-the SYSFS management operation with scst_mutex/s_active deadlock detecting (see
-scst_sysfs_queue_wait_work()) and, if the deadlock possibility detected, returning EAGAIN
-asking the user space to poll completion of the command using last_sysfs_mgmt_res
-attribute. It is documented in the README and scstadmin is doing that. It, definitely,
-isn't a piece of beauty, but it's simple and works, so, I believe, good enough. User space,
-anyway, is supposes to hide all the complexities of the direct SYSFS manipulations under
-higher level management tools like scstadmin.
+More info about it you can find in the documentation in this patch.
 
-Signed-off-by: Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
 Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
 ---
- scst_sysfs.c | 5194 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 5194 insertions(+)
+ Documentation/scst/sgv_cache.txt |  234 +++++
+ drivers/scst/scst_mem.c          | 1815 +++++++++++++++++++++++++++++++++++++++
+ drivers/scst/scst_mem.h          |  150 +++
+ include/scst/scst_sgv.h          |   97 ++
+ 4 files changed, 2296 insertions(+)
 
-diff -uprN orig/linux-2.6.35/drivers/scst/scst_sysfs.c linux-2.6.35/drivers/scst/scst_sysfs.c
---- orig/linux-2.6.35/drivers/scst/scst_sysfs.c
-+++ linux-2.6.35/drivers/scst/scst_sysfs.c
-@@ -0,0 +1,5194 @@
+diff -uprN orig/linux-2.6.35/include/scst/scst_sgv.h linux-2.6.35/include/scst/scst_sgv.h
+--- orig/linux-2.6.35/include/scst/scst_sgv.h
++++ linux-2.6.35/include/scst/scst_sgv.h
+@@ -0,0 +1,97 @@
 +/*
-+ *  scst_sysfs.c
++ *  include/scst_sgv.h
 + *
-+ *  Copyright (C) 2009 Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
-+ *  Copyright (C) 2009 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2009 - 2010 ID7 Ltd.
++ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
++ *  Copyright (C) 2007 - 2010 ID7 Ltd.
++ *
++ *  Include file for SCST SGV cache.
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation, version 2
++ *  of the License.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ *  GNU General Public License for more details.
++ */
++#ifndef __SCST_SGV_H
++#define __SCST_SGV_H
++
++/** SGV pool routines and flag bits **/
++
++/* Set if the allocated object must be not from the cache */
++#define SGV_POOL_ALLOC_NO_CACHED		1
++
++/* Set if there should not be any memory allocations on a cache miss */
++#define SGV_POOL_NO_ALLOC_ON_CACHE_MISS		2
++
++/* Set an object should be returned even if it doesn't have SG vector built */
++#define SGV_POOL_RETURN_OBJ_ON_ALLOC_FAIL	4
++
++/*
++ * Set if the allocated object must be a new one, i.e. from the cache,
++ * but not cached
++ */
++#define SGV_POOL_ALLOC_GET_NEW			8
++
++struct sgv_pool_obj;
++struct sgv_pool;
++
++/*
++ * Structure to keep a memory limit for an SCST object
++ */
++struct scst_mem_lim {
++	/* How much memory allocated under this object */
++	atomic_t alloced_pages;
++
++	/*
++	 * How much memory allowed to allocated under this object. Put here
++	 * mostly to save a possible cache miss accessing scst_max_dev_cmd_mem.
++	 */
++	int max_allowed_pages;
++};
++
++/* Types of clustering */
++enum sgv_clustering_types {
++	/* No clustering performed */
++	sgv_no_clustering = 0,
++
++	/*
++	 * A page will only be merged with the latest previously allocated
++	 * page, so the order of pages in the SG will be preserved.
++	 */
++	sgv_tail_clustering,
++
++	/*
++	 * Free merging of pages at any place in the SG is allowed. This mode
++	 * usually provides the best merging rate.
++	 */
++	sgv_full_clustering,
++};
++
++struct sgv_pool *sgv_pool_create(const char *name,
++	enum sgv_clustering_types clustered, int single_alloc_pages,
++	bool shared, int purge_interval);
++void sgv_pool_del(struct sgv_pool *pool);
++
++void sgv_pool_get(struct sgv_pool *pool);
++void sgv_pool_put(struct sgv_pool *pool);
++
++void sgv_pool_flush(struct sgv_pool *pool);
++
++void sgv_pool_set_allocator(struct sgv_pool *pool,
++	struct page *(*alloc_pages_fn)(struct scatterlist *, gfp_t, void *),
++	void (*free_pages_fn)(struct scatterlist *, int, void *));
++
++struct scatterlist *sgv_pool_alloc(struct sgv_pool *pool, unsigned int size,
++	gfp_t gfp_mask, int flags, int *count,
++	struct sgv_pool_obj **sgv, struct scst_mem_lim *mem_lim, void *priv);
++void sgv_pool_free(struct sgv_pool_obj *sgv, struct scst_mem_lim *mem_lim);
++
++void *sgv_get_priv(struct sgv_pool_obj *sgv);
++
++void scst_init_mem_lim(struct scst_mem_lim *mem_lim);
++
++#endif /* __SCST_SGV_H */
+diff -uprN orig/linux-2.6.35/drivers/scst/scst_mem.h linux-2.6.35/drivers/scst/scst_mem.h
+--- orig/linux-2.6.35/drivers/scst/scst_mem.h
++++ linux-2.6.35/drivers/scst/scst_mem.h
+@@ -0,0 +1,150 @@
++/*
++ *  scst_mem.h
++ *
++ *  Copyright (C) 2006 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
++ *  Copyright (C) 2007 - 2010 ID7 Ltd.
 + *
 + *  This program is free software; you can redistribute it and/or
 + *  modify it under the terms of the GNU General Public License
@@ -172,5179 +185,2193 @@ diff -uprN orig/linux-2.6.35/drivers/scst/scst_sysfs.c linux-2.6.35/drivers/scst
 + *  GNU General Public License for more details.
 + */
 +
-+#include <linux/kobject.h>
-+#include <linux/string.h>
-+#include <linux/sysfs.h>
-+#include <linux/module.h>
++#include <linux/scatterlist.h>
++#include <linux/workqueue.h>
++
++#define SGV_POOL_ELEMENTS	11
++
++/*
++ * sg_num is indexed by the page number, pg_count is indexed by the sg number.
++ * Made in one entry to simplify the code (eg all sizeof(*) parts) and save
++ * some CPU cache for non-clustered case.
++ */
++struct trans_tbl_ent {
++	unsigned short sg_num;
++	unsigned short pg_count;
++};
++
++/*
++ * SGV pool object
++ */
++struct sgv_pool_obj {
++	int cache_num;
++	int pages;
++
++	/* jiffies, protected by sgv_pool_lock */
++	unsigned long time_stamp;
++
++	struct list_head recycling_list_entry;
++	struct list_head sorted_recycling_list_entry;
++
++	struct sgv_pool *owner_pool;
++	int orig_sg;
++	int orig_length;
++	int sg_count;
++	void *allocator_priv;
++	struct trans_tbl_ent *trans_tbl;
++	struct scatterlist *sg_entries;
++	struct scatterlist sg_entries_data[0];
++};
++
++/*
++ * SGV pool statistics accounting structure
++ */
++struct sgv_pool_cache_acc {
++	atomic_t total_alloc, hit_alloc;
++	atomic_t merged;
++};
++
++/*
++ * SGV pool allocation functions
++ */
++struct sgv_pool_alloc_fns {
++	struct page *(*alloc_pages_fn)(struct scatterlist *sg, gfp_t gfp_mask,
++		void *priv);
++	void (*free_pages_fn)(struct scatterlist *sg, int sg_count,
++		void *priv);
++};
++
++/*
++ * SGV pool
++ */
++struct sgv_pool {
++	enum sgv_clustering_types clustering_type;
++	int single_alloc_pages;
++	int max_cached_pages;
++
++	struct sgv_pool_alloc_fns alloc_fns;
++
++	/* <=4K, <=8, <=16, <=32, <=64, <=128, <=256, <=512, <=1024, <=2048 */
++	struct kmem_cache *caches[SGV_POOL_ELEMENTS];
++
++	spinlock_t sgv_pool_lock; /* outer lock for sgv_pools_lock! */
++
++	int purge_interval;
++
++	/* Protected by sgv_pool_lock, if necessary */
++	unsigned int purge_work_scheduled:1;
++
++	/* Protected by sgv_pool_lock */
++	struct list_head sorted_recycling_list;
++
++	int inactive_cached_pages; /* protected by sgv_pool_lock */
++
++	/* Protected by sgv_pool_lock */
++	struct list_head recycling_lists[SGV_POOL_ELEMENTS];
++
++	int cached_pages, cached_entries; /* protected by sgv_pool_lock */
++
++	struct sgv_pool_cache_acc cache_acc[SGV_POOL_ELEMENTS];
++
++	struct delayed_work sgv_purge_work;
++
++	struct list_head sgv_active_pools_list_entry;
++
++	atomic_t big_alloc, big_pages, big_merged;
++	atomic_t other_alloc, other_pages, other_merged;
++
++	atomic_t sgv_pool_ref;
++
++	int max_caches;
++
++	/* SCST_MAX_NAME + few more bytes to match scst_user expectations */
++	char cache_names[SGV_POOL_ELEMENTS][SCST_MAX_NAME + 10];
++	char name[SCST_MAX_NAME + 10];
++
++	struct mm_struct *owner_mm;
++
++	struct list_head sgv_pools_list_entry;
++
++	struct kobject sgv_kobj;
++
++	/* sysfs release completion */
++	struct completion sgv_kobj_release_cmpl;
++};
++
++static inline struct scatterlist *sgv_pool_sg(struct sgv_pool_obj *obj)
++{
++	return obj->sg_entries;
++}
++
++int scst_sgv_pools_init(unsigned long mem_hwmark, unsigned long mem_lwmark);
++void scst_sgv_pools_deinit(void);
++
++ssize_t sgv_sysfs_stat_show(struct kobject *kobj,
++	struct kobj_attribute *attr, char *buf);
++ssize_t sgv_sysfs_stat_reset(struct kobject *kobj,
++	struct kobj_attribute *attr, const char *buf, size_t count);
++ssize_t sgv_sysfs_global_stat_show(struct kobject *kobj,
++	struct kobj_attribute *attr, char *buf);
++ssize_t sgv_sysfs_global_stat_reset(struct kobject *kobj,
++	struct kobj_attribute *attr, const char *buf, size_t count);
++
++void scst_sgv_pool_use_norm(struct scst_tgt_dev *tgt_dev);
++void scst_sgv_pool_use_norm_clust(struct scst_tgt_dev *tgt_dev);
++void scst_sgv_pool_use_dma(struct scst_tgt_dev *tgt_dev);
+diff -uprN orig/linux-2.6.35/drivers/scst/scst_mem.c linux-2.6.35/drivers/scst/scst_mem.c
+--- orig/linux-2.6.35/drivers/scst/scst_mem.c
++++ linux-2.6.35/drivers/scst/scst_mem.c
+@@ -0,0 +1,1815 @@
++/*
++ *  scst_mem.c
++ *
++ *  Copyright (C) 2006 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
++ *  Copyright (C) 2007 - 2010 ID7 Ltd.
++ *
++ *  This program is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU General Public License
++ *  as published by the Free Software Foundation, version 2
++ *  of the License.
++ *
++ *  This program is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++ *  GNU General Public License for more details.
++ */
++
 +#include <linux/init.h>
-+#include <linux/ctype.h>
++#include <linux/kernel.h>
++#include <linux/errno.h>
++#include <linux/list.h>
++#include <linux/spinlock.h>
 +#include <linux/slab.h>
-+#include <linux/kthread.h>
++#include <linux/sched.h>
++#include <linux/mm.h>
++#include <linux/unistd.h>
++#include <linux/string.h>
 +
 +#include <scst/scst.h>
 +#include "scst_priv.h"
 +#include "scst_mem.h"
-+#include "scst_pres.h"
 +
-+static DECLARE_COMPLETION(scst_sysfs_root_release_completion);
++#define SGV_DEFAULT_PURGE_INTERVAL	(60 * HZ)
++#define SGV_MIN_SHRINK_INTERVAL		(1 * HZ)
 +
-+static struct kobject scst_sysfs_root_kobj;
-+static struct kobject *scst_targets_kobj;
-+static struct kobject *scst_devices_kobj;
-+static struct kobject *scst_sgv_kobj;
-+static struct kobject *scst_handlers_kobj;
++/* Max pages freed from a pool per shrinking iteration */
++#define MAX_PAGES_PER_POOL	50
 +
-+static const char *scst_dev_handler_types[] = {
-+    "Direct-access device (e.g., magnetic disk)",
-+    "Sequential-access device (e.g., magnetic tape)",
-+    "Printer device",
-+    "Processor device",
-+    "Write-once device (e.g., some optical disks)",
-+    "CD-ROM device",
-+    "Scanner device (obsolete)",
-+    "Optical memory device (e.g., some optical disks)",
-+    "Medium changer device (e.g., jukeboxes)",
-+    "Communications device (obsolete)",
-+    "Defined by ASC IT8 (Graphic arts pre-press devices)",
-+    "Defined by ASC IT8 (Graphic arts pre-press devices)",
-+    "Storage array controller device (e.g., RAID)",
-+    "Enclosure services device",
-+    "Simplified direct-access device (e.g., magnetic disk)",
-+    "Optical card reader/writer device"
-+};
++static struct sgv_pool *sgv_norm_clust_pool, *sgv_norm_pool, *sgv_dma_pool;
 +
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
++static atomic_t sgv_pages_total = ATOMIC_INIT(0);
 +
-+static DEFINE_MUTEX(scst_log_mutex);
++/* Both read-only */
++static int sgv_hi_wmk;
++static int sgv_lo_wmk;
 +
-+static struct scst_trace_log scst_trace_tbl[] = {
-+    { TRACE_OUT_OF_MEM,		"out_of_mem" },
-+    { TRACE_MINOR,		"minor" },
-+    { TRACE_SG_OP,		"sg" },
-+    { TRACE_MEMORY,		"mem" },
-+    { TRACE_BUFF,		"buff" },
-+    { TRACE_PID,		"pid" },
-+    { TRACE_LINE,		"line" },
-+    { TRACE_FUNCTION,		"function" },
-+    { TRACE_DEBUG,		"debug" },
-+    { TRACE_SPECIAL,		"special" },
-+    { TRACE_SCSI,		"scsi" },
-+    { TRACE_MGMT,		"mgmt" },
-+    { TRACE_MGMT_DEBUG,		"mgmt_dbg" },
-+    { TRACE_FLOW_CONTROL,	"flow_control" },
-+    { TRACE_PRES,		"pr" },
-+    { 0,			NULL }
-+};
++static int sgv_max_local_pages, sgv_max_trans_pages;
 +
-+static struct scst_trace_log scst_local_trace_tbl[] = {
-+    { TRACE_RTRY,		"retry" },
-+    { TRACE_SCSI_SERIALIZING,	"scsi_serializing" },
-+    { TRACE_RCV_BOT,		"recv_bot" },
-+    { TRACE_SND_BOT,		"send_bot" },
-+    { TRACE_RCV_TOP,		"recv_top" },
-+    { TRACE_SND_TOP,		"send_top" },
-+    { 0,			NULL }
-+};
++static DEFINE_SPINLOCK(sgv_pools_lock); /* inner lock for sgv_pool_lock! */
++static DEFINE_MUTEX(sgv_pools_mutex);
 +
-+static ssize_t scst_trace_level_show(const struct scst_trace_log *local_tbl,
-+	unsigned long log_level, char *buf, const char *help);
-+static int scst_write_trace(const char *buf, size_t length,
-+	unsigned long *log_level, unsigned long default_level,
-+	const char *name, const struct scst_trace_log *tbl);
++/* Both protected by sgv_pools_lock */
++static struct sgv_pool *sgv_cur_purge_pool;
++static LIST_HEAD(sgv_active_pools_list);
 +
-+#endif /* defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING) */
++static atomic_t sgv_releases_on_hiwmk = ATOMIC_INIT(0);
++static atomic_t sgv_releases_on_hiwmk_failed = ATOMIC_INIT(0);
 +
-+static ssize_t scst_luns_mgmt_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_luns_mgmt_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_tgt_addr_method_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_tgt_addr_method_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_tgt_io_grouping_type_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_tgt_io_grouping_type_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_tgt_cpu_mask_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_tgt_cpu_mask_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_ini_group_mgmt_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_ini_group_mgmt_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_rel_tgt_id_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_rel_tgt_id_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_acg_luns_mgmt_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_acg_ini_mgmt_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_acg_ini_mgmt_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_acg_addr_method_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_acg_addr_method_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_acg_io_grouping_type_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_acg_io_grouping_type_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_acg_cpu_mask_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf);
-+static ssize_t scst_acg_cpu_mask_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count);
-+static ssize_t scst_acn_file_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf);
++static atomic_t sgv_other_total_alloc = ATOMIC_INIT(0);
 +
-+/**
-+ ** Sysfs work
-+ **/
-+
-+static DEFINE_SPINLOCK(sysfs_work_lock);
-+static LIST_HEAD(sysfs_work_list);
-+static DECLARE_WAIT_QUEUE_HEAD(sysfs_work_waitQ);
-+static int active_sysfs_works;
-+static int last_sysfs_work_res;
-+static struct task_struct *sysfs_work_thread;
-+
-+/**
-+ * scst_alloc_sysfs_work() - allocates a sysfs work
-+ */
-+int scst_alloc_sysfs_work(int (*sysfs_work_fn)(struct scst_sysfs_work_item *),
-+	bool read_only_action, struct scst_sysfs_work_item **res_work)
-+{
-+	int res = 0;
-+	struct scst_sysfs_work_item *work;
-+
-+	if (sysfs_work_fn == NULL) {
-+		PRINT_ERROR("%s", "sysfs_work_fn is NULL");
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	*res_work = NULL;
-+
-+	work = kzalloc(sizeof(*work), GFP_KERNEL);
-+	if (work == NULL) {
-+		PRINT_ERROR("Unable to alloc sysfs work (size %zd)",
-+			sizeof(*work));
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+
-+	work->read_only_action = read_only_action;
-+	kref_init(&work->sysfs_work_kref);
-+	init_completion(&work->sysfs_work_done);
-+	work->sysfs_work_fn = sysfs_work_fn;
-+
-+	*res_work = work;
-+
-+out:
-+	return res;
-+}
-+EXPORT_SYMBOL(scst_alloc_sysfs_work);
-+
-+static void scst_sysfs_work_release(struct kref *kref)
-+{
-+	struct scst_sysfs_work_item *work;
-+
-+	work = container_of(kref, struct scst_sysfs_work_item,
-+			sysfs_work_kref);
-+
-+	TRACE_DBG("Freeing sysfs work %p (buf %p)", work, work->buf);
-+
-+	kfree(work->buf);
-+	kfree(work->res_buf);
-+	kfree(work);
-+	return;
-+}
-+
-+/**
-+ * scst_sysfs_work_get() - increases ref counter of the sysfs work
-+ */
-+void scst_sysfs_work_get(struct scst_sysfs_work_item *work)
-+{
-+	kref_get(&work->sysfs_work_kref);
-+}
-+EXPORT_SYMBOL(scst_sysfs_work_get);
-+
-+/**
-+ * scst_sysfs_work_put() - decreases ref counter of the sysfs work
-+ */
-+void scst_sysfs_work_put(struct scst_sysfs_work_item *work)
-+{
-+	kref_put(&work->sysfs_work_kref, scst_sysfs_work_release);
-+}
-+EXPORT_SYMBOL(scst_sysfs_work_put);
-+
-+/**
-+ * scst_sysfs_queue_wait_work() - waits for the work to complete
-+ *
-+ * Returnes status of the completed work or -EAGAIN if the work not
-+ * completed before timeout. In the latter case a user should poll
-+ * last_sysfs_mgmt_res until it returns the result of the processing.
-+ */
-+int scst_sysfs_queue_wait_work(struct scst_sysfs_work_item *work)
-+{
-+	int res = 0, rc;
-+	unsigned long timeout = 15*HZ;
-+
-+	spin_lock(&sysfs_work_lock);
-+
-+	TRACE_DBG("Adding sysfs work %p to the list", work);
-+	list_add_tail(&work->sysfs_work_list_entry, &sysfs_work_list);
-+
-+	active_sysfs_works++;
-+
-+	spin_unlock(&sysfs_work_lock);
-+
-+	kref_get(&work->sysfs_work_kref);
-+
-+	wake_up(&sysfs_work_waitQ);
-+
-+	while (1) {
-+		rc = wait_for_completion_interruptible_timeout(
-+			&work->sysfs_work_done, timeout);
-+		if (rc == 0) {
-+			if (!mutex_is_locked(&scst_mutex)) {
-+				TRACE_DBG("scst_mutex not locked, continue "
-+					"waiting (work %p)", work);
-+				timeout = 5*HZ;
-+				continue;
-+			}
-+			TRACE_MGMT_DBG("Time out waiting for work %p",
-+				work);
-+			res = -EAGAIN;
-+			goto out_put;
-+		} else if (rc < 0) {
-+			res = rc;
-+			goto out_put;
-+		}
-+		break;
-+	}
-+
-+	res = work->work_res;
-+
-+out_put:
-+	kref_put(&work->sysfs_work_kref, scst_sysfs_work_release);
-+	return res;
-+}
-+EXPORT_SYMBOL(scst_sysfs_queue_wait_work);
-+
-+/* Called under sysfs_work_lock and drops/reaquire it inside */
-+static void scst_process_sysfs_works(void)
-+{
-+	struct scst_sysfs_work_item *work;
-+
-+	while (!list_empty(&sysfs_work_list)) {
-+		work = list_entry(sysfs_work_list.next,
-+			struct scst_sysfs_work_item, sysfs_work_list_entry);
-+		list_del(&work->sysfs_work_list_entry);
-+		spin_unlock(&sysfs_work_lock);
-+
-+		TRACE_DBG("Sysfs work %p", work);
-+
-+		work->work_res = work->sysfs_work_fn(work);
-+
-+		spin_lock(&sysfs_work_lock);
-+		if (!work->read_only_action)
-+			last_sysfs_work_res = work->work_res;
-+		active_sysfs_works--;
-+		spin_unlock(&sysfs_work_lock);
-+
-+		complete_all(&work->sysfs_work_done);
-+		kref_put(&work->sysfs_work_kref, scst_sysfs_work_release);
-+
-+		spin_lock(&sysfs_work_lock);
-+	}
-+	return;
-+}
-+
-+static inline int test_sysfs_work_list(void)
-+{
-+	int res = !list_empty(&sysfs_work_list) ||
-+		  unlikely(kthread_should_stop());
-+	return res;
-+}
-+
-+static int sysfs_work_thread_fn(void *arg)
-+{
-+
-+	PRINT_INFO("User interface thread started, PID %d", current->pid);
-+
-+	current->flags |= PF_NOFREEZE;
-+
-+	set_user_nice(current, -10);
-+
-+	spin_lock(&sysfs_work_lock);
-+	while (!kthread_should_stop()) {
-+		wait_queue_t wait;
-+		init_waitqueue_entry(&wait, current);
-+
-+		if (!test_sysfs_work_list()) {
-+			add_wait_queue_exclusive(&sysfs_work_waitQ, &wait);
-+			for (;;) {
-+				set_current_state(TASK_INTERRUPTIBLE);
-+				if (test_sysfs_work_list())
-+					break;
-+				spin_unlock(&sysfs_work_lock);
-+				schedule();
-+				spin_lock(&sysfs_work_lock);
-+			}
-+			set_current_state(TASK_RUNNING);
-+			remove_wait_queue(&sysfs_work_waitQ, &wait);
-+		}
-+
-+		scst_process_sysfs_works();
-+	}
-+	spin_unlock(&sysfs_work_lock);
-+
-+	/*
-+	 * If kthread_should_stop() is true, we are guaranteed to be
-+	 * on the module unload, so both lists must be empty.
-+	 */
-+	BUG_ON(!list_empty(&sysfs_work_list));
-+
-+	PRINT_INFO("User interface thread PID %d finished", current->pid);
-+	return 0;
-+}
-+
-+/* No locks */
-+static int scst_check_grab_tgtt_ptr(struct scst_tgt_template *tgtt)
-+{
-+	int res = 0;
-+	struct scst_tgt_template *tt;
-+
-+	mutex_lock(&scst_mutex);
-+
-+	list_for_each_entry(tt, &scst_template_list, scst_template_list_entry) {
-+		if (tt == tgtt) {
-+			tgtt->tgtt_active_sysfs_works_count++;
-+			goto out_unlock;
-+		}
-+	}
-+
-+	TRACE_DBG("Tgtt %p not found", tgtt);
-+	res = -ENOENT;
-+
-+out_unlock:
-+	mutex_unlock(&scst_mutex);
-+	return res;
-+}
-+
-+/* No locks */
-+static void scst_ungrab_tgtt_ptr(struct scst_tgt_template *tgtt)
-+{
-+
-+	mutex_lock(&scst_mutex);
-+	tgtt->tgtt_active_sysfs_works_count--;
-+	mutex_unlock(&scst_mutex);
-+	return;
-+}
-+
-+/* scst_mutex supposed to be locked */
-+static int scst_check_tgt_acg_ptrs(struct scst_tgt *tgt, struct scst_acg *acg)
-+{
-+	int res = 0;
-+	struct scst_tgt_template *tgtt;
-+
-+	list_for_each_entry(tgtt, &scst_template_list, scst_template_list_entry) {
-+		struct scst_tgt *t;
-+		list_for_each_entry(t, &tgtt->tgt_list, tgt_list_entry) {
-+			if (t == tgt) {
-+				struct scst_acg *a;
-+				if (acg == NULL)
-+					goto out;
-+				if (acg == tgt->default_acg)
-+					goto out;
-+				list_for_each_entry(a, &tgt->tgt_acg_list,
-+							acg_list_entry) {
-+					if (a == acg)
-+						goto out;
-+				}
-+			}
-+		}
-+	}
-+
-+	TRACE_DBG("Tgt %p/ACG %p not found", tgt, acg);
-+	res = -ENOENT;
-+
-+out:
-+	return res;
-+}
-+
-+/* scst_mutex supposed to be locked */
-+static int scst_check_devt_ptr(struct scst_dev_type *devt,
-+	struct list_head *list)
-+{
-+	int res = 0;
-+	struct scst_dev_type *dt;
-+
-+	list_for_each_entry(dt, list, dev_type_list_entry) {
-+		if (dt == devt)
-+			goto out;
-+	}
-+
-+	TRACE_DBG("Devt %p not found", devt);
-+	res = -ENOENT;
-+
-+out:
-+	return res;
-+}
-+
-+/* scst_mutex supposed to be locked */
-+static int scst_check_dev_ptr(struct scst_device *dev)
-+{
-+	int res = 0;
-+	struct scst_device *d;
-+
-+	list_for_each_entry(d, &scst_dev_list, dev_list_entry) {
-+		if (d == dev)
-+			goto out;
-+	}
-+
-+	TRACE_DBG("Dev %p not found", dev);
-+	res = -ENOENT;
-+
-+out:
-+	return res;
-+}
-+
-+/* No locks */
-+static int scst_check_grab_devt_ptr(struct scst_dev_type *devt,
-+	struct list_head *list)
-+{
-+	int res = 0;
-+	struct scst_dev_type *dt;
-+
-+	mutex_lock(&scst_mutex);
-+
-+	list_for_each_entry(dt, list, dev_type_list_entry) {
-+		if (dt == devt) {
-+			devt->devt_active_sysfs_works_count++;
-+			goto out_unlock;
-+		}
-+	}
-+
-+	TRACE_DBG("Devt %p not found", devt);
-+	res = -ENOENT;
-+
-+out_unlock:
-+	mutex_unlock(&scst_mutex);
-+	return res;
-+}
-+
-+/* No locks */
-+static void scst_ungrab_devt_ptr(struct scst_dev_type *devt)
-+{
-+
-+	mutex_lock(&scst_mutex);
-+	devt->devt_active_sysfs_works_count--;
-+	mutex_unlock(&scst_mutex);
-+	return;
-+}
-+
-+/**
-+ ** Regular SCST sysfs ops
-+ **/
-+static ssize_t scst_show(struct kobject *kobj, struct attribute *attr,
-+			 char *buf)
-+{
-+	struct kobj_attribute *kobj_attr;
-+	kobj_attr = container_of(attr, struct kobj_attribute, attr);
-+
-+	return kobj_attr->show(kobj, kobj_attr, buf);
-+}
-+
-+static ssize_t scst_store(struct kobject *kobj, struct attribute *attr,
-+			  const char *buf, size_t count)
-+{
-+	struct kobj_attribute *kobj_attr;
-+	kobj_attr = container_of(attr, struct kobj_attribute, attr);
-+
-+	if (kobj_attr->store)
-+		return kobj_attr->store(kobj, kobj_attr, buf, count);
-+	else
-+		return -EIO;
-+}
-+
-+static const struct sysfs_ops scst_sysfs_ops = {
-+	.show = scst_show,
-+	.store = scst_store,
-+};
-+
-+const struct sysfs_ops *scst_sysfs_get_sysfs_ops(void)
-+{
-+	return &scst_sysfs_ops;
-+}
-+EXPORT_SYMBOL_GPL(scst_sysfs_get_sysfs_ops);
-+
-+/**
-+ ** Target Template
-+ **/
-+
-+static void scst_tgtt_release(struct kobject *kobj)
-+{
-+	struct scst_tgt_template *tgtt;
-+
-+	tgtt = container_of(kobj, struct scst_tgt_template, tgtt_kobj);
-+	complete_all(&tgtt->tgtt_kobj_release_cmpl);
-+	return;
-+}
-+
-+static struct kobj_type tgtt_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_tgtt_release,
-+};
-+
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+
-+static ssize_t scst_tgtt_trace_level_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_tgt_template *tgtt;
-+
-+	tgtt = container_of(kobj, struct scst_tgt_template, tgtt_kobj);
-+
-+	return scst_trace_level_show(tgtt->trace_tbl,
-+		tgtt->trace_flags ? *tgtt->trace_flags : 0, buf,
-+		tgtt->trace_tbl_help);
-+}
-+
-+static ssize_t scst_tgtt_trace_level_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_tgt_template *tgtt;
-+
-+	tgtt = container_of(kobj, struct scst_tgt_template, tgtt_kobj);
-+
-+	if (mutex_lock_interruptible(&scst_log_mutex) != 0) {
-+		res = -EINTR;
-+		goto out;
-+	}
-+
-+	res = scst_write_trace(buf, count, tgtt->trace_flags,
-+		tgtt->default_trace_flags, tgtt->name, tgtt->trace_tbl);
-+
-+	mutex_unlock(&scst_log_mutex);
-+
-+out:
-+	return res;
-+}
-+
-+static struct kobj_attribute tgtt_trace_attr =
-+	__ATTR(trace_level, S_IRUGO | S_IWUSR,
-+	       scst_tgtt_trace_level_show, scst_tgtt_trace_level_store);
-+
-+#endif /* #if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING) */
-+
-+static ssize_t scst_tgtt_mgmt_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+char *help = "Usage: echo \"add_target target_name [parameters]\" "
-+				">mgmt\n"
-+		     "       echo \"del_target target_name\" >mgmt\n"
-+		     "%s%s"
-+		     "%s"
-+		     "\n"
-+		     "where parameters are one or more "
-+		     "param_name=value pairs separated by ';'\n\n"
-+		     "%s%s%s%s%s%s%s%s\n";
-+		struct scst_tgt_template *tgtt;
-+
-+	tgtt = container_of(kobj, struct scst_tgt_template, tgtt_kobj);
-+
-+	return scnprintf(buf, SCST_SYSFS_BLOCK_SIZE, help,
-+		(tgtt->tgtt_optional_attributes != NULL) ?
-+			"       echo \"add_attribute <attribute> <value>\" >mgmt\n"
-+			"       echo \"del_attribute <attribute> <value>\" >mgmt\n" : "",
-+		(tgtt->tgt_optional_attributes != NULL) ?
-+			"       echo \"add_target_attribute target_name <attribute> <value>\" >mgmt\n"
-+			"       echo \"del_target_attribute target_name <attribute> <value>\" >mgmt\n" : "",
-+		(tgtt->mgmt_cmd_help) ? tgtt->mgmt_cmd_help : "",
-+		(tgtt->add_target_parameters != NULL) ?
-+			"The following parameters available: " : "",
-+		(tgtt->add_target_parameters != NULL) ?
-+			tgtt->add_target_parameters : "",
-+		(tgtt->tgtt_optional_attributes != NULL) ?
-+			"The following target driver attributes available: " : "",
-+		(tgtt->tgtt_optional_attributes != NULL) ?
-+			tgtt->tgtt_optional_attributes : "",
-+		(tgtt->tgtt_optional_attributes != NULL) ? "\n" : "",
-+		(tgtt->tgt_optional_attributes != NULL) ?
-+			"The following target attributes available: " : "",
-+		(tgtt->tgt_optional_attributes != NULL) ?
-+			tgtt->tgt_optional_attributes : "",
-+		(tgtt->tgt_optional_attributes != NULL) ? "\n" : "");
-+}
-+
-+static int scst_process_tgtt_mgmt_store(char *buffer,
-+	struct scst_tgt_template *tgtt)
-+{
-+	int res = 0;
-+	char *p, *pp, *target_name;
-+
-+	TRACE_DBG("buffer %s", buffer);
-+
-+	/* Check if our pointer is still alive and, if yes, grab it */
-+	if (scst_check_grab_tgtt_ptr(tgtt) != 0)
-+		goto out;
-+
-+	pp = buffer;
-+	if (pp[strlen(pp) - 1] == '\n')
-+		pp[strlen(pp) - 1] = '\0';
-+
-+	p = scst_get_next_lexem(&pp);
-+
-+	if (strcasecmp("add_target", p) == 0) {
-+		target_name = scst_get_next_lexem(&pp);
-+		if (*target_name == '\0') {
-+			PRINT_ERROR("%s", "Target name required");
-+			res = -EINVAL;
-+			goto out_ungrab;
-+		}
-+		res = tgtt->add_target(target_name, pp);
-+	} else if (strcasecmp("del_target", p) == 0) {
-+		target_name = scst_get_next_lexem(&pp);
-+		if (*target_name == '\0') {
-+			PRINT_ERROR("%s", "Target name required");
-+			res = -EINVAL;
-+			goto out_ungrab;
-+		}
-+
-+		p = scst_get_next_lexem(&pp);
-+		if (*p != '\0')
-+			goto out_syntax_err;
-+
-+		res = tgtt->del_target(target_name);
-+	} else if (tgtt->mgmt_cmd != NULL) {
-+		scst_restore_token_str(p, pp);
-+		res = tgtt->mgmt_cmd(buffer);
-+	} else {
-+		PRINT_ERROR("Unknown action \"%s\"", p);
-+		res = -EINVAL;
-+		goto out_ungrab;
-+	}
-+
-+out_ungrab:
-+	scst_ungrab_tgtt_ptr(tgtt);
-+
-+out:
-+	return res;
-+
-+out_syntax_err:
-+	PRINT_ERROR("Syntax error on \"%s\"", p);
-+	res = -EINVAL;
-+	goto out_ungrab;
-+}
-+
-+static int scst_tgtt_mgmt_store_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return scst_process_tgtt_mgmt_store(work->buf, work->tgtt);
-+}
-+
-+static ssize_t scst_tgtt_mgmt_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	char *buffer;
-+	struct scst_sysfs_work_item *work;
-+	struct scst_tgt_template *tgtt;
-+
-+	tgtt = container_of(kobj, struct scst_tgt_template, tgtt_kobj);
-+
-+	buffer = kzalloc(count+1, GFP_KERNEL);
-+	if (buffer == NULL) {
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+	memcpy(buffer, buf, count);
-+	buffer[count] = '\0';
-+
-+	res = scst_alloc_sysfs_work(scst_tgtt_mgmt_store_work_fn, false, &work);
-+	if (res != 0)
-+		goto out_free;
-+
-+	work->buf = buffer;
-+	work->tgtt = tgtt;
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+
-+out_free:
-+	kfree(buffer);
-+	goto out;
-+}
-+
-+static struct kobj_attribute scst_tgtt_mgmt =
-+	__ATTR(mgmt, S_IRUGO | S_IWUSR, scst_tgtt_mgmt_show,
-+	       scst_tgtt_mgmt_store);
-+
-+int scst_tgtt_sysfs_create(struct scst_tgt_template *tgtt)
-+{
-+	int res = 0;
-+	const struct attribute **pattr;
-+
-+	init_completion(&tgtt->tgtt_kobj_release_cmpl);
-+
-+	res = kobject_init_and_add(&tgtt->tgtt_kobj, &tgtt_ktype,
-+			scst_targets_kobj, tgtt->name);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add tgtt %s to sysfs", tgtt->name);
-+		goto out;
-+	}
-+
-+	if (tgtt->add_target != NULL) {
-+		res = sysfs_create_file(&tgtt->tgtt_kobj,
-+				&scst_tgtt_mgmt.attr);
-+		if (res != 0) {
-+			PRINT_ERROR("Can't add mgmt attr for target driver %s",
-+				tgtt->name);
-+			goto out_del;
-+		}
-+	}
-+
-+	pattr = tgtt->tgtt_attrs;
-+	if (pattr != NULL) {
-+		while (*pattr != NULL) {
-+			TRACE_DBG("Creating attr %s for target driver %s",
-+				(*pattr)->name, tgtt->name);
-+			res = sysfs_create_file(&tgtt->tgtt_kobj, *pattr);
-+			if (res != 0) {
-+				PRINT_ERROR("Can't add attr %s for target "
-+					"driver %s", (*pattr)->name,
-+					tgtt->name);
-+				goto out_del;
-+			}
-+			pattr++;
-+		}
-+	}
-+
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	if (tgtt->trace_flags != NULL) {
-+		res = sysfs_create_file(&tgtt->tgtt_kobj,
-+				&tgtt_trace_attr.attr);
-+		if (res != 0) {
-+			PRINT_ERROR("Can't add trace_flag for target "
-+				"driver %s", tgtt->name);
-+			goto out_del;
-+		}
-+	}
-+#endif
-+
-+out:
-+	return res;
-+
-+out_del:
-+	scst_tgtt_sysfs_del(tgtt);
-+	goto out;
-+}
++static struct shrinker sgv_shrinker;
 +
 +/*
-+ * Must not be called under scst_mutex, due to possible deadlock with
-+ * sysfs ref counting in sysfs works (it is waiting for the last put, but
-+ * the last ref counter holder is waiting for scst_mutex)
++ * Protected by sgv_pools_mutex AND sgv_pools_lock for writes,
++ * either one for reads.
 + */
-+void scst_tgtt_sysfs_del(struct scst_tgt_template *tgtt)
++static LIST_HEAD(sgv_pools_list);
++
++static inline bool sgv_pool_clustered(const struct sgv_pool *pool)
 +{
-+	int rc;
++	return pool->clustering_type != sgv_no_clustering;
++}
 +
-+	kobject_del(&tgtt->tgtt_kobj);
-+	kobject_put(&tgtt->tgtt_kobj);
++void scst_sgv_pool_use_norm(struct scst_tgt_dev *tgt_dev)
++{
++	tgt_dev->gfp_mask = __GFP_NOWARN;
++	tgt_dev->pool = sgv_norm_pool;
++	clear_bit(SCST_TGT_DEV_CLUST_POOL, &tgt_dev->tgt_dev_flags);
++}
 +
-+	rc = wait_for_completion_timeout(&tgtt->tgtt_kobj_release_cmpl, HZ);
-+	if (rc == 0) {
-+		PRINT_INFO("Waiting for releasing sysfs entry "
-+			"for target template %s (%d refs)...", tgtt->name,
-+			atomic_read(&tgtt->tgtt_kobj.kref.refcount));
-+		wait_for_completion(&tgtt->tgtt_kobj_release_cmpl);
-+		PRINT_INFO("Done waiting for releasing sysfs "
-+			"entry for target template %s", tgtt->name);
++void scst_sgv_pool_use_norm_clust(struct scst_tgt_dev *tgt_dev)
++{
++	TRACE_MEM("%s", "Use clustering");
++	tgt_dev->gfp_mask = __GFP_NOWARN;
++	tgt_dev->pool = sgv_norm_clust_pool;
++	set_bit(SCST_TGT_DEV_CLUST_POOL, &tgt_dev->tgt_dev_flags);
++}
++
++void scst_sgv_pool_use_dma(struct scst_tgt_dev *tgt_dev)
++{
++	TRACE_MEM("%s", "Use ISA DMA memory");
++	tgt_dev->gfp_mask = __GFP_NOWARN | GFP_DMA;
++	tgt_dev->pool = sgv_dma_pool;
++	clear_bit(SCST_TGT_DEV_CLUST_POOL, &tgt_dev->tgt_dev_flags);
++}
++
++/* Must be no locks */
++static void sgv_dtor_and_free(struct sgv_pool_obj *obj)
++{
++	struct sgv_pool *pool = obj->owner_pool;
++
++	TRACE_MEM("Destroying sgv obj %p", obj);
++
++	if (obj->sg_count != 0) {
++		pool->alloc_fns.free_pages_fn(obj->sg_entries,
++			obj->sg_count, obj->allocator_priv);
 +	}
++	if (obj->sg_entries != obj->sg_entries_data) {
++		if (obj->trans_tbl !=
++		    (struct trans_tbl_ent *)obj->sg_entries_data) {
++			/* kfree() handles NULL parameter */
++			kfree(obj->trans_tbl);
++			obj->trans_tbl = NULL;
++		}
++		kfree(obj->sg_entries);
++	}
++
++	kmem_cache_free(pool->caches[obj->cache_num], obj);
 +	return;
 +}
 +
-+/**
-+ ** Target directory implementation
-+ **/
-+
-+static void scst_tgt_release(struct kobject *kobj)
++/* Might be called under sgv_pool_lock */
++static inline void sgv_del_from_active(struct sgv_pool *pool)
 +{
-+	struct scst_tgt *tgt;
++	struct list_head *next;
 +
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+	complete_all(&tgt->tgt_kobj_release_cmpl);
-+	return;
-+}
++	TRACE_MEM("Deleting sgv pool %p from the active list", pool);
 +
-+static struct kobj_type tgt_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_tgt_release,
-+};
++	spin_lock_bh(&sgv_pools_lock);
 +
-+static void scst_acg_release(struct kobject *kobj)
-+{
-+	struct scst_acg *acg;
++	next = pool->sgv_active_pools_list_entry.next;
++	list_del(&pool->sgv_active_pools_list_entry);
 +
-+	acg = container_of(kobj, struct scst_acg, acg_kobj);
-+	complete_all(&acg->acg_kobj_release_cmpl);
-+	return;
-+}
++	if (sgv_cur_purge_pool == pool) {
++		TRACE_MEM("Sgv pool %p is sgv cur purge pool", pool);
 +
-+static struct kobj_type acg_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_acg_release,
-+};
++		if (next == &sgv_active_pools_list)
++			next = next->next;
 +
-+static struct kobj_attribute scst_luns_mgmt =
-+	__ATTR(mgmt, S_IRUGO | S_IWUSR, scst_luns_mgmt_show,
-+	       scst_luns_mgmt_store);
-+
-+static struct kobj_attribute scst_acg_luns_mgmt =
-+	__ATTR(mgmt, S_IRUGO | S_IWUSR, scst_luns_mgmt_show,
-+	       scst_acg_luns_mgmt_store);
-+
-+static struct kobj_attribute scst_acg_ini_mgmt =
-+	__ATTR(mgmt, S_IRUGO | S_IWUSR, scst_acg_ini_mgmt_show,
-+	       scst_acg_ini_mgmt_store);
-+
-+static struct kobj_attribute scst_ini_group_mgmt =
-+	__ATTR(mgmt, S_IRUGO | S_IWUSR, scst_ini_group_mgmt_show,
-+	       scst_ini_group_mgmt_store);
-+
-+static struct kobj_attribute scst_tgt_addr_method =
-+	__ATTR(addr_method, S_IRUGO | S_IWUSR, scst_tgt_addr_method_show,
-+	       scst_tgt_addr_method_store);
-+
-+static struct kobj_attribute scst_tgt_io_grouping_type =
-+	__ATTR(io_grouping_type, S_IRUGO | S_IWUSR,
-+	       scst_tgt_io_grouping_type_show,
-+	       scst_tgt_io_grouping_type_store);
-+
-+static struct kobj_attribute scst_tgt_cpu_mask =
-+	__ATTR(cpu_mask, S_IRUGO | S_IWUSR,
-+	       scst_tgt_cpu_mask_show,
-+	       scst_tgt_cpu_mask_store);
-+
-+static struct kobj_attribute scst_rel_tgt_id =
-+	__ATTR(rel_tgt_id, S_IRUGO | S_IWUSR, scst_rel_tgt_id_show,
-+	       scst_rel_tgt_id_store);
-+
-+static struct kobj_attribute scst_acg_addr_method =
-+	__ATTR(addr_method, S_IRUGO | S_IWUSR, scst_acg_addr_method_show,
-+		scst_acg_addr_method_store);
-+
-+static struct kobj_attribute scst_acg_io_grouping_type =
-+	__ATTR(io_grouping_type, S_IRUGO | S_IWUSR,
-+	       scst_acg_io_grouping_type_show,
-+	       scst_acg_io_grouping_type_store);
-+
-+static struct kobj_attribute scst_acg_cpu_mask =
-+	__ATTR(cpu_mask, S_IRUGO | S_IWUSR,
-+	       scst_acg_cpu_mask_show,
-+	       scst_acg_cpu_mask_store);
-+
-+static ssize_t scst_tgt_enable_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_tgt *tgt;
-+	int res;
-+	bool enabled;
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+
-+	enabled = tgt->tgtt->is_target_enabled(tgt);
-+
-+	res = sprintf(buf, "%d\n", enabled ? 1 : 0);
-+	return res;
-+}
-+
-+static int scst_process_tgt_enable_store(struct scst_tgt *tgt, bool enable)
-+{
-+	int res;
-+
-+	/* Tgt protected by kobject reference */
-+
-+	TRACE_DBG("tgt %s, enable %d", tgt->tgt_name, enable);
-+
-+	if (enable) {
-+		if (tgt->rel_tgt_id == 0) {
-+			res = gen_relative_target_port_id(&tgt->rel_tgt_id);
-+			if (res != 0)
-+				goto out_put;
-+			PRINT_INFO("Using autogenerated rel ID %d for target "
-+				"%s", tgt->rel_tgt_id, tgt->tgt_name);
++		if (next == &sgv_active_pools_list) {
++			sgv_cur_purge_pool = NULL;
++			TRACE_MEM("%s", "Sgv active list now empty");
 +		} else {
-+			if (!scst_is_relative_target_port_id_unique(
-+					    tgt->rel_tgt_id, tgt)) {
-+				PRINT_ERROR("Relative port id %d is not unique",
-+					tgt->rel_tgt_id);
-+				res = -EBADSLT;
-+				goto out_put;
-+			}
++			sgv_cur_purge_pool = list_entry(next, typeof(*pool),
++				sgv_active_pools_list_entry);
++			TRACE_MEM("New sgv cur purge pool %p",
++				sgv_cur_purge_pool);
 +		}
 +	}
 +
-+	res = tgt->tgtt->enable_target(tgt, enable);
-+
-+out_put:
-+	kobject_put(&tgt->tgt_kobj);
-+	return res;
-+}
-+
-+static int scst_tgt_enable_store_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return scst_process_tgt_enable_store(work->tgt, work->enable);
-+}
-+
-+static ssize_t scst_tgt_enable_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_tgt *tgt;
-+	bool enable;
-+	struct scst_sysfs_work_item *work;
-+
-+	if (buf == NULL) {
-+		PRINT_ERROR("%s: NULL buffer?", __func__);
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+
-+	switch (buf[0]) {
-+	case '0':
-+		enable = false;
-+		break;
-+	case '1':
-+		enable = true;
-+		break;
-+	default:
-+		PRINT_ERROR("%s: Requested action not understood: %s",
-+		       __func__, buf);
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	res = scst_alloc_sysfs_work(scst_tgt_enable_store_work_fn, false,
-+					&work);
-+	if (res != 0)
-+		goto out;
-+
-+	work->tgt = tgt;
-+	work->enable = enable;
-+
-+	kobject_get(&tgt->tgt_kobj);
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+}
-+
-+static struct kobj_attribute tgt_enable_attr =
-+	__ATTR(enabled, S_IRUGO | S_IWUSR,
-+	       scst_tgt_enable_show, scst_tgt_enable_store);
-+
-+/*
-+ * Supposed to be called under scst_mutex. In case of error will drop,
-+ * then reacquire it.
-+ */
-+int scst_tgt_sysfs_create(struct scst_tgt *tgt)
-+{
-+	int res;
-+	const struct attribute **pattr;
-+
-+	init_completion(&tgt->tgt_kobj_release_cmpl);
-+
-+	res = kobject_init_and_add(&tgt->tgt_kobj, &tgt_ktype,
-+			&tgt->tgtt->tgtt_kobj, tgt->tgt_name);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add tgt %s to sysfs", tgt->tgt_name);
-+		goto out;
-+	}
-+
-+	if ((tgt->tgtt->enable_target != NULL) &&
-+	    (tgt->tgtt->is_target_enabled != NULL)) {
-+		res = sysfs_create_file(&tgt->tgt_kobj,
-+				&tgt_enable_attr.attr);
-+		if (res != 0) {
-+			PRINT_ERROR("Can't add attr %s to sysfs",
-+				tgt_enable_attr.attr.name);
-+			goto out_err;
-+		}
-+	}
-+
-+	tgt->tgt_sess_kobj = kobject_create_and_add("sessions", &tgt->tgt_kobj);
-+	if (tgt->tgt_sess_kobj == NULL) {
-+		PRINT_ERROR("Can't create sess kobj for tgt %s", tgt->tgt_name);
-+		goto out_nomem;
-+	}
-+
-+	tgt->tgt_luns_kobj = kobject_create_and_add("luns", &tgt->tgt_kobj);
-+	if (tgt->tgt_luns_kobj == NULL) {
-+		PRINT_ERROR("Can't create luns kobj for tgt %s", tgt->tgt_name);
-+		goto out_nomem;
-+	}
-+
-+	res = sysfs_create_file(tgt->tgt_luns_kobj, &scst_luns_mgmt.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add attribute %s for tgt %s",
-+			scst_luns_mgmt.attr.name, tgt->tgt_name);
-+		goto out_err;
-+	}
-+
-+	tgt->tgt_ini_grp_kobj = kobject_create_and_add("ini_groups",
-+					&tgt->tgt_kobj);
-+	if (tgt->tgt_ini_grp_kobj == NULL) {
-+		PRINT_ERROR("Can't create ini_grp kobj for tgt %s",
-+			tgt->tgt_name);
-+		goto out_nomem;
-+	}
-+
-+	res = sysfs_create_file(tgt->tgt_ini_grp_kobj,
-+			&scst_ini_group_mgmt.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add attribute %s for tgt %s",
-+			scst_ini_group_mgmt.attr.name, tgt->tgt_name);
-+		goto out_err;
-+	}
-+
-+	res = sysfs_create_file(&tgt->tgt_kobj,
-+			&scst_rel_tgt_id.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add attribute %s for tgt %s",
-+			scst_rel_tgt_id.attr.name, tgt->tgt_name);
-+		goto out_err;
-+	}
-+
-+	res = sysfs_create_file(&tgt->tgt_kobj,
-+			&scst_tgt_addr_method.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add attribute %s for tgt %s",
-+			scst_tgt_addr_method.attr.name, tgt->tgt_name);
-+		goto out_err;
-+	}
-+
-+	res = sysfs_create_file(&tgt->tgt_kobj,
-+			&scst_tgt_io_grouping_type.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add attribute %s for tgt %s",
-+			scst_tgt_io_grouping_type.attr.name, tgt->tgt_name);
-+		goto out_err;
-+	}
-+
-+	res = sysfs_create_file(&tgt->tgt_kobj, &scst_tgt_cpu_mask.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add attribute %s for tgt %s",
-+			scst_tgt_cpu_mask.attr.name, tgt->tgt_name);
-+		goto out_err;
-+	}
-+
-+	pattr = tgt->tgtt->tgt_attrs;
-+	if (pattr != NULL) {
-+		while (*pattr != NULL) {
-+			TRACE_DBG("Creating attr %s for tgt %s", (*pattr)->name,
-+				tgt->tgt_name);
-+			res = sysfs_create_file(&tgt->tgt_kobj, *pattr);
-+			if (res != 0) {
-+				PRINT_ERROR("Can't add tgt attr %s for tgt %s",
-+					(*pattr)->name, tgt->tgt_name);
-+				goto out_err;
-+			}
-+			pattr++;
-+		}
-+	}
-+
-+out:
-+	return res;
-+
-+out_nomem:
-+	res = -ENOMEM;
-+
-+out_err:
-+	mutex_unlock(&scst_mutex);
-+	scst_tgt_sysfs_del(tgt);
-+	mutex_lock(&scst_mutex);
-+	goto out;
-+}
-+
-+/*
-+ * Must not be called under scst_mutex, due to possible deadlock with
-+ * sysfs ref counting in sysfs works (it is waiting for the last put, but
-+ * the last ref counter holder is waiting for scst_mutex)
-+ */
-+void scst_tgt_sysfs_del(struct scst_tgt *tgt)
-+{
-+	int rc;
-+
-+	kobject_del(tgt->tgt_sess_kobj);
-+	kobject_put(tgt->tgt_sess_kobj);
-+
-+	kobject_del(tgt->tgt_luns_kobj);
-+	kobject_put(tgt->tgt_luns_kobj);
-+
-+	kobject_del(tgt->tgt_ini_grp_kobj);
-+	kobject_put(tgt->tgt_ini_grp_kobj);
-+
-+	kobject_del(&tgt->tgt_kobj);
-+	kobject_put(&tgt->tgt_kobj);
-+
-+	rc = wait_for_completion_timeout(&tgt->tgt_kobj_release_cmpl, HZ);
-+	if (rc == 0) {
-+		PRINT_INFO("Waiting for releasing sysfs entry "
-+			"for target %s (%d refs)...", tgt->tgt_name,
-+			atomic_read(&tgt->tgt_kobj.kref.refcount));
-+		wait_for_completion(&tgt->tgt_kobj_release_cmpl);
-+		PRINT_INFO("Done waiting for releasing sysfs "
-+			"entry for target %s", tgt->tgt_name);
-+	}
++	spin_unlock_bh(&sgv_pools_lock);
 +	return;
 +}
 +
-+/**
-+ ** Devices directory implementation
-+ **/
-+
-+static ssize_t scst_dev_sysfs_type_show(struct kobject *kobj,
-+			    struct kobj_attribute *attr, char *buf)
++/* Must be called under sgv_pool_lock held */
++static void sgv_dec_cached_entries(struct sgv_pool *pool, int pages)
 +{
-+	int pos = 0;
++	pool->cached_entries--;
++	pool->cached_pages -= pages;
 +
-+	struct scst_device *dev;
++	if (pool->cached_entries == 0)
++		sgv_del_from_active(pool);
 +
-+	dev = container_of(kobj, struct scst_device, dev_kobj);
-+
-+	pos = sprintf(buf, "%d - %s\n", dev->type,
-+		(unsigned)dev->type > ARRAY_SIZE(scst_dev_handler_types) ?
-+		      "unknown" : scst_dev_handler_types[dev->type]);
-+
-+	return pos;
-+}
-+
-+static struct kobj_attribute dev_type_attr =
-+	__ATTR(type, S_IRUGO, scst_dev_sysfs_type_show, NULL);
-+
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+
-+static ssize_t scst_dev_sysfs_dump_prs(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	struct scst_device *dev;
-+
-+	dev = container_of(kobj, struct scst_device, dev_kobj);
-+
-+	scst_pr_dump_prs(dev, true);
-+	return count;
-+}
-+
-+static struct kobj_attribute dev_dump_prs_attr =
-+	__ATTR(dump_prs, S_IWUSR, NULL, scst_dev_sysfs_dump_prs);
-+
-+#endif /* defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING) */
-+
-+static int scst_process_dev_sysfs_threads_data_store(
-+	struct scst_device *dev, int threads_num,
-+	enum scst_dev_type_threads_pool_type threads_pool_type)
-+{
-+	int res = 0;
-+	int oldtn = dev->threads_num;
-+	enum scst_dev_type_threads_pool_type oldtt = dev->threads_pool_type;
-+
-+	TRACE_DBG("dev %p, threads_num %d, threads_pool_type %d", dev,
-+		threads_num, threads_pool_type);
-+
-+	res = scst_suspend_activity(true);
-+	if (res != 0)
-+		goto out;
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out_resume;
-+	}
-+
-+	/* Check if our pointer is still alive */
-+	if (scst_check_dev_ptr(dev) != 0)
-+		goto out_unlock;
-+
-+	scst_stop_dev_threads(dev);
-+
-+	dev->threads_num = threads_num;
-+	dev->threads_pool_type = threads_pool_type;
-+
-+	res = scst_create_dev_threads(dev);
-+	if (res != 0)
-+		goto out_unlock;
-+
-+	if (oldtn != dev->threads_num)
-+		PRINT_INFO("Changed cmd threads num to %d", dev->threads_num);
-+	else if (oldtt != dev->threads_pool_type)
-+		PRINT_INFO("Changed cmd threads pool type to %d",
-+			dev->threads_pool_type);
-+
-+out_unlock:
-+	mutex_unlock(&scst_mutex);
-+
-+out_resume:
-+	scst_resume_activity();
-+
-+out:
-+	return res;
-+}
-+
-+static int scst_dev_sysfs_threads_data_store_work_fn(
-+	struct scst_sysfs_work_item *work)
-+{
-+	return scst_process_dev_sysfs_threads_data_store(work->dev,
-+		work->new_threads_num, work->new_threads_pool_type);
-+}
-+
-+static ssize_t scst_dev_sysfs_check_threads_data(
-+	struct scst_device *dev, int threads_num,
-+	enum scst_dev_type_threads_pool_type threads_pool_type, bool *stop)
-+{
-+	int res = 0;
-+
-+	*stop = false;
-+
-+	if (dev->threads_num < 0) {
-+		PRINT_ERROR("Threads pool disabled for device %s",
-+			dev->virt_name);
-+		res = -EPERM;
-+		goto out;
-+	}
-+
-+	if ((threads_num == dev->threads_num) &&
-+	    (threads_pool_type == dev->threads_pool_type)) {
-+		*stop = true;
-+		goto out;
-+	}
-+
-+out:
-+	return res;
-+}
-+
-+static ssize_t scst_dev_sysfs_threads_num_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	int pos = 0;
-+	struct scst_device *dev;
-+
-+	dev = container_of(kobj, struct scst_device, dev_kobj);
-+
-+	pos = sprintf(buf, "%d\n%s", dev->threads_num,
-+		(dev->threads_num != dev->handler->threads_num) ?
-+			SCST_SYSFS_KEY_MARK "\n" : "");
-+	return pos;
-+}
-+
-+static ssize_t scst_dev_sysfs_threads_num_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_device *dev;
-+	long newtn;
-+	bool stop;
-+	struct scst_sysfs_work_item *work;
-+
-+	dev = container_of(kobj, struct scst_device, dev_kobj);
-+
-+	res = strict_strtol(buf, 0, &newtn);
-+	if (res != 0) {
-+		PRINT_ERROR("strict_strtol() for %s failed: %d ", buf, res);
-+		goto out;
-+	}
-+	if (newtn < 0) {
-+		PRINT_ERROR("Illegal threads num value %ld", newtn);
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	res = scst_dev_sysfs_check_threads_data(dev, newtn,
-+		dev->threads_pool_type, &stop);
-+	if ((res != 0) || stop)
-+		goto out;
-+
-+	res = scst_alloc_sysfs_work(scst_dev_sysfs_threads_data_store_work_fn,
-+					false, &work);
-+	if (res != 0)
-+		goto out;
-+
-+	work->dev = dev;
-+	work->new_threads_num = newtn;
-+	work->new_threads_pool_type = dev->threads_pool_type;
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+}
-+
-+static struct kobj_attribute dev_threads_num_attr =
-+	__ATTR(threads_num, S_IRUGO | S_IWUSR,
-+		scst_dev_sysfs_threads_num_show,
-+		scst_dev_sysfs_threads_num_store);
-+
-+static ssize_t scst_dev_sysfs_threads_pool_type_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	int pos = 0;
-+	struct scst_device *dev;
-+
-+	dev = container_of(kobj, struct scst_device, dev_kobj);
-+
-+	if (dev->threads_num == 0) {
-+		pos = sprintf(buf, "Async\n");
-+		goto out;
-+	} else if (dev->threads_num < 0) {
-+		pos = sprintf(buf, "Not valid\n");
-+		goto out;
-+	}
-+
-+	switch (dev->threads_pool_type) {
-+	case SCST_THREADS_POOL_PER_INITIATOR:
-+		pos = sprintf(buf, "%s\n%s", SCST_THREADS_POOL_PER_INITIATOR_STR,
-+			(dev->threads_pool_type != dev->handler->threads_pool_type) ?
-+				SCST_SYSFS_KEY_MARK "\n" : "");
-+		break;
-+	case SCST_THREADS_POOL_SHARED:
-+		pos = sprintf(buf, "%s\n%s", SCST_THREADS_POOL_SHARED_STR,
-+			(dev->threads_pool_type != dev->handler->threads_pool_type) ?
-+				SCST_SYSFS_KEY_MARK "\n" : "");
-+		break;
-+	default:
-+		pos = sprintf(buf, "Unknown\n");
-+		break;
-+	}
-+
-+out:
-+	return pos;
-+}
-+
-+static ssize_t scst_dev_sysfs_threads_pool_type_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_device *dev;
-+	enum scst_dev_type_threads_pool_type newtpt;
-+	struct scst_sysfs_work_item *work;
-+	bool stop;
-+
-+	dev = container_of(kobj, struct scst_device, dev_kobj);
-+
-+	newtpt = scst_parse_threads_pool_type(buf, count);
-+	if (newtpt == SCST_THREADS_POOL_TYPE_INVALID) {
-+		PRINT_ERROR("Illegal threads pool type %s", buf);
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	TRACE_DBG("buf %s, count %zd, newtpt %d", buf, count, newtpt);
-+
-+	res = scst_dev_sysfs_check_threads_data(dev, dev->threads_num,
-+		newtpt, &stop);
-+	if ((res != 0) || stop)
-+		goto out;
-+
-+	res = scst_alloc_sysfs_work(scst_dev_sysfs_threads_data_store_work_fn,
-+					false, &work);
-+	if (res != 0)
-+		goto out;
-+
-+	work->dev = dev;
-+	work->new_threads_num = dev->threads_num;
-+	work->new_threads_pool_type = newtpt;
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+}
-+
-+static struct kobj_attribute dev_threads_pool_type_attr =
-+	__ATTR(threads_pool_type, S_IRUGO | S_IWUSR,
-+		scst_dev_sysfs_threads_pool_type_show,
-+		scst_dev_sysfs_threads_pool_type_store);
-+
-+static struct attribute *scst_dev_attrs[] = {
-+	&dev_type_attr.attr,
-+	NULL,
-+};
-+
-+static void scst_sysfs_dev_release(struct kobject *kobj)
-+{
-+	struct scst_device *dev;
-+
-+	dev = container_of(kobj, struct scst_device, dev_kobj);
-+	complete_all(&dev->dev_kobj_release_cmpl);
 +	return;
 +}
 +
-+int scst_devt_dev_sysfs_create(struct scst_device *dev)
++/* Must be called under sgv_pool_lock held */
++static void __sgv_purge_from_cache(struct sgv_pool_obj *obj)
 +{
-+	int res = 0;
-+	const struct attribute **pattr;
++	int pages = obj->pages;
++	struct sgv_pool *pool = obj->owner_pool;
 +
-+	if (dev->handler == &scst_null_devtype)
-+		goto out;
++	TRACE_MEM("Purging sgv obj %p from pool %p (new cached_entries %d)",
++		obj, pool, pool->cached_entries-1);
 +
-+	res = sysfs_create_link(&dev->dev_kobj,
-+			&dev->handler->devt_kobj, "handler");
-+	if (res != 0) {
-+		PRINT_ERROR("Can't create handler link for dev %s",
-+			dev->virt_name);
-+		goto out;
-+	}
++	list_del(&obj->sorted_recycling_list_entry);
++	list_del(&obj->recycling_list_entry);
 +
-+	res = sysfs_create_link(&dev->handler->devt_kobj,
-+			&dev->dev_kobj, dev->virt_name);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't create handler link for dev %s",
-+			dev->virt_name);
-+		goto out_err;
-+	}
++	pool->inactive_cached_pages -= pages;
++	sgv_dec_cached_entries(pool, pages);
 +
-+	if (dev->handler->threads_num >= 0) {
-+		res = sysfs_create_file(&dev->dev_kobj,
-+				&dev_threads_num_attr.attr);
-+		if (res != 0) {
-+			PRINT_ERROR("Can't add dev attr %s for dev %s",
-+				dev_threads_num_attr.attr.name,
-+				dev->virt_name);
-+			goto out_err;
-+		}
-+		res = sysfs_create_file(&dev->dev_kobj,
-+				&dev_threads_pool_type_attr.attr);
-+		if (res != 0) {
-+			PRINT_ERROR("Can't add dev attr %s for dev %s",
-+				dev_threads_pool_type_attr.attr.name,
-+				dev->virt_name);
-+			goto out_err;
-+		}
-+	}
++	atomic_sub(pages, &sgv_pages_total);
 +
-+	pattr = dev->handler->dev_attrs;
-+	if (pattr != NULL) {
-+		while (*pattr != NULL) {
-+			res = sysfs_create_file(&dev->dev_kobj, *pattr);
-+			if (res != 0) {
-+				PRINT_ERROR("Can't add dev attr %s for dev %s",
-+					(*pattr)->name, dev->virt_name);
-+				goto out_err;
-+			}
-+			pattr++;
-+		}
-+	}
-+
-+out:
-+	return res;
-+
-+out_err:
-+	scst_devt_dev_sysfs_del(dev);
-+	goto out;
-+}
-+
-+void scst_devt_dev_sysfs_del(struct scst_device *dev)
-+{
-+	const struct attribute **pattr;
-+
-+	if (dev->handler == &scst_null_devtype)
-+		goto out;
-+
-+	pattr = dev->handler->dev_attrs;
-+	if (pattr != NULL) {
-+		while (*pattr != NULL) {
-+			sysfs_remove_file(&dev->dev_kobj, *pattr);
-+			pattr++;
-+		}
-+	}
-+
-+	sysfs_remove_link(&dev->dev_kobj, "handler");
-+	sysfs_remove_link(&dev->handler->devt_kobj, dev->virt_name);
-+
-+	if (dev->handler->threads_num >= 0) {
-+		sysfs_remove_file(&dev->dev_kobj,
-+			&dev_threads_num_attr.attr);
-+		sysfs_remove_file(&dev->dev_kobj,
-+			&dev_threads_pool_type_attr.attr);
-+	}
-+
-+out:
 +	return;
 +}
 +
-+static struct kobj_type scst_dev_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_sysfs_dev_release,
-+	.default_attrs = scst_dev_attrs,
-+};
-+
-+/*
-+ * Must not be called under scst_mutex, because it can call
-+ * scst_dev_sysfs_del()
-+ */
-+int scst_dev_sysfs_create(struct scst_device *dev)
++/* Must be called under sgv_pool_lock held */
++static bool sgv_purge_from_cache(struct sgv_pool_obj *obj, int min_interval,
++	unsigned long cur_time)
 +{
-+	int res = 0;
++	EXTRACHECKS_BUG_ON(min_interval < 0);
 +
-+	init_completion(&dev->dev_kobj_release_cmpl);
++	TRACE_MEM("Checking if sgv obj %p should be purged (cur time %ld, "
++		"obj time %ld, time to purge %ld)", obj, cur_time,
++		obj->time_stamp, obj->time_stamp + min_interval);
 +
-+	res = kobject_init_and_add(&dev->dev_kobj, &scst_dev_ktype,
-+				      scst_devices_kobj, dev->virt_name);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add device %s to sysfs", dev->virt_name);
++	if (time_after_eq(cur_time, (obj->time_stamp + min_interval))) {
++		__sgv_purge_from_cache(obj);
++		return true;
++	}
++	return false;
++}
++
++/* No locks */
++static int sgv_shrink_pool(struct sgv_pool *pool, int nr, int min_interval,
++	unsigned long cur_time)
++{
++	int freed = 0;
++
++	TRACE_MEM("Trying to shrink pool %p (nr %d, min_interval %d)",
++		pool, nr, min_interval);
++
++	if (pool->purge_interval < 0) {
++		TRACE_MEM("Not shrinkable pool %p, skipping", pool);
 +		goto out;
 +	}
 +
-+	dev->dev_exp_kobj = kobject_create_and_add("exported",
-+						   &dev->dev_kobj);
-+	if (dev->dev_exp_kobj == NULL) {
-+		PRINT_ERROR("Can't create exported link for device %s",
-+			dev->virt_name);
-+		res = -ENOMEM;
-+		goto out_del;
-+	}
-+
-+	if (dev->scsi_dev != NULL) {
-+		res = sysfs_create_link(&dev->dev_kobj,
-+			&dev->scsi_dev->sdev_dev.kobj, "scsi_device");
-+		if (res != 0) {
-+			PRINT_ERROR("Can't create scsi_device link for dev %s",
-+				dev->virt_name);
-+			goto out_del;
-+		}
-+	}
-+
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	if (dev->scsi_dev == NULL) {
-+		res = sysfs_create_file(&dev->dev_kobj,
-+				&dev_dump_prs_attr.attr);
-+		if (res != 0) {
-+			PRINT_ERROR("Can't create attr %s for dev %s",
-+				dev_dump_prs_attr.attr.name, dev->virt_name);
-+			goto out_del;
-+		}
-+	}
-+#endif
-+
-+out:
-+	return res;
-+
-+out_del:
-+	scst_dev_sysfs_del(dev);
-+	goto out;
-+}
-+
-+/*
-+ * Must not be called under scst_mutex, due to possible deadlock with
-+ * sysfs ref counting in sysfs works (it is waiting for the last put, but
-+ * the last ref counter holder is waiting for scst_mutex)
-+ */
-+void scst_dev_sysfs_del(struct scst_device *dev)
-+{
-+	int rc;
-+
-+	kobject_del(dev->dev_exp_kobj);
-+	kobject_put(dev->dev_exp_kobj);
-+
-+	kobject_del(&dev->dev_kobj);
-+	kobject_put(&dev->dev_kobj);
-+
-+	rc = wait_for_completion_timeout(&dev->dev_kobj_release_cmpl, HZ);
-+	if (rc == 0) {
-+		PRINT_INFO("Waiting for releasing sysfs entry "
-+			"for device %s (%d refs)...", dev->virt_name,
-+			atomic_read(&dev->dev_kobj.kref.refcount));
-+		wait_for_completion(&dev->dev_kobj_release_cmpl);
-+		PRINT_INFO("Done waiting for releasing sysfs "
-+			"entry for device %s", dev->virt_name);
-+	}
-+	return;
-+}
-+
-+/**
-+ ** Tgt_dev's directory implementation
-+ **/
-+
-+#ifdef CONFIG_SCST_MEASURE_LATENCY
-+
-+static char *scst_io_size_names[] = {
-+	"<=8K  ",
-+	"<=32K ",
-+	"<=128K",
-+	"<=512K",
-+	">512K "
-+};
-+
-+static ssize_t scst_tgt_dev_latency_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buffer)
-+{
-+	int res = 0, i;
-+	char buf[50];
-+	struct scst_tgt_dev *tgt_dev;
-+
-+	tgt_dev = container_of(kobj, struct scst_tgt_dev, tgt_dev_kobj);
-+
-+	for (i = 0; i < SCST_LATENCY_STATS_NUM; i++) {
-+		uint64_t scst_time_wr, tgt_time_wr, dev_time_wr;
-+		unsigned int processed_cmds_wr;
-+		uint64_t scst_time_rd, tgt_time_rd, dev_time_rd;
-+		unsigned int processed_cmds_rd;
-+		struct scst_ext_latency_stat *latency_stat;
-+
-+		latency_stat = &tgt_dev->dev_latency_stat[i];
-+		scst_time_wr = latency_stat->scst_time_wr;
-+		scst_time_rd = latency_stat->scst_time_rd;
-+		tgt_time_wr = latency_stat->tgt_time_wr;
-+		tgt_time_rd = latency_stat->tgt_time_rd;
-+		dev_time_wr = latency_stat->dev_time_wr;
-+		dev_time_rd = latency_stat->dev_time_rd;
-+		processed_cmds_wr = latency_stat->processed_cmds_wr;
-+		processed_cmds_rd = latency_stat->processed_cmds_rd;
-+
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			 "%-5s %-9s %-15lu ", "Write", scst_io_size_names[i],
-+			(unsigned long)processed_cmds_wr);
-+		if (processed_cmds_wr == 0)
-+			processed_cmds_wr = 1;
-+
-+		do_div(scst_time_wr, processed_cmds_wr);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_scst_time_wr,
-+			(unsigned long)scst_time_wr,
-+			(unsigned long)latency_stat->max_scst_time_wr,
-+			(unsigned long)latency_stat->scst_time_wr);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s", buf);
-+
-+		do_div(tgt_time_wr, processed_cmds_wr);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_tgt_time_wr,
-+			(unsigned long)tgt_time_wr,
-+			(unsigned long)latency_stat->max_tgt_time_wr,
-+			(unsigned long)latency_stat->tgt_time_wr);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s", buf);
-+
-+		do_div(dev_time_wr, processed_cmds_wr);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_dev_time_wr,
-+			(unsigned long)dev_time_wr,
-+			(unsigned long)latency_stat->max_dev_time_wr,
-+			(unsigned long)latency_stat->dev_time_wr);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s\n", buf);
-+
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-5s %-9s %-15lu ", "Read", scst_io_size_names[i],
-+			(unsigned long)processed_cmds_rd);
-+		if (processed_cmds_rd == 0)
-+			processed_cmds_rd = 1;
-+
-+		do_div(scst_time_rd, processed_cmds_rd);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_scst_time_rd,
-+			(unsigned long)scst_time_rd,
-+			(unsigned long)latency_stat->max_scst_time_rd,
-+			(unsigned long)latency_stat->scst_time_rd);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s", buf);
-+
-+		do_div(tgt_time_rd, processed_cmds_rd);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_tgt_time_rd,
-+			(unsigned long)tgt_time_rd,
-+			(unsigned long)latency_stat->max_tgt_time_rd,
-+			(unsigned long)latency_stat->tgt_time_rd);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s", buf);
-+
-+		do_div(dev_time_rd, processed_cmds_rd);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_dev_time_rd,
-+			(unsigned long)dev_time_rd,
-+			(unsigned long)latency_stat->max_dev_time_rd,
-+			(unsigned long)latency_stat->dev_time_rd);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s\n", buf);
-+	}
-+	return res;
-+}
-+
-+static struct kobj_attribute tgt_dev_latency_attr =
-+	__ATTR(latency, S_IRUGO,
-+		scst_tgt_dev_latency_show, NULL);
-+
-+#endif /* CONFIG_SCST_MEASURE_LATENCY */
-+
-+static ssize_t scst_tgt_dev_active_commands_show(struct kobject *kobj,
-+			    struct kobj_attribute *attr, char *buf)
-+{
-+	int pos = 0;
-+	struct scst_tgt_dev *tgt_dev;
-+
-+	tgt_dev = container_of(kobj, struct scst_tgt_dev, tgt_dev_kobj);
-+
-+	pos = sprintf(buf, "%d\n", atomic_read(&tgt_dev->tgt_dev_cmd_count));
-+
-+	return pos;
-+}
-+
-+static struct kobj_attribute tgt_dev_active_commands_attr =
-+	__ATTR(active_commands, S_IRUGO,
-+		scst_tgt_dev_active_commands_show, NULL);
-+
-+static struct attribute *scst_tgt_dev_attrs[] = {
-+	&tgt_dev_active_commands_attr.attr,
-+#ifdef CONFIG_SCST_MEASURE_LATENCY
-+	&tgt_dev_latency_attr.attr,
-+#endif
-+	NULL,
-+};
-+
-+static void scst_sysfs_tgt_dev_release(struct kobject *kobj)
-+{
-+	struct scst_tgt_dev *tgt_dev;
-+
-+	tgt_dev = container_of(kobj, struct scst_tgt_dev, tgt_dev_kobj);
-+	complete_all(&tgt_dev->tgt_dev_kobj_release_cmpl);
-+	return;
-+}
-+
-+static struct kobj_type scst_tgt_dev_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_sysfs_tgt_dev_release,
-+	.default_attrs = scst_tgt_dev_attrs,
-+};
-+
-+int scst_tgt_dev_sysfs_create(struct scst_tgt_dev *tgt_dev)
-+{
-+	int res = 0;
-+
-+	init_completion(&tgt_dev->tgt_dev_kobj_release_cmpl);
-+
-+	res = kobject_init_and_add(&tgt_dev->tgt_dev_kobj, &scst_tgt_dev_ktype,
-+			      &tgt_dev->sess->sess_kobj, "lun%lld",
-+			      (unsigned long long)tgt_dev->lun);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add tgt_dev %lld to sysfs",
-+			(unsigned long long)tgt_dev->lun);
-+		goto out;
-+	}
-+
-+out:
-+	return res;
-+}
-+
-+/*
-+ * Called with scst_mutex held.
-+ *
-+ * !! No sysfs works must use kobject_get() to protect tgt_dev, due to possible
-+ * !! deadlock with scst_mutex (it is waiting for the last put, but
-+ * !! the last ref counter holder is waiting for scst_mutex)
-+ */
-+void scst_tgt_dev_sysfs_del(struct scst_tgt_dev *tgt_dev)
-+{
-+	int rc;
-+
-+	kobject_del(&tgt_dev->tgt_dev_kobj);
-+	kobject_put(&tgt_dev->tgt_dev_kobj);
-+
-+	rc = wait_for_completion_timeout(
-+			&tgt_dev->tgt_dev_kobj_release_cmpl, HZ);
-+	if (rc == 0) {
-+		PRINT_INFO("Waiting for releasing sysfs entry "
-+			"for tgt_dev %lld (%d refs)...",
-+			(unsigned long long)tgt_dev->lun,
-+			atomic_read(&tgt_dev->tgt_dev_kobj.kref.refcount));
-+		wait_for_completion(&tgt_dev->tgt_dev_kobj_release_cmpl);
-+		PRINT_INFO("Done waiting for releasing sysfs entry for "
-+			"tgt_dev %lld", (unsigned long long)tgt_dev->lun);
-+	}
-+	return;
-+}
-+
-+/**
-+ ** Sessions subdirectory implementation
-+ **/
-+
-+#ifdef CONFIG_SCST_MEASURE_LATENCY
-+
-+static ssize_t scst_sess_latency_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buffer)
-+{
-+	ssize_t res = 0;
-+	struct scst_session *sess;
-+	int i;
-+	char buf[50];
-+	uint64_t scst_time, tgt_time, dev_time;
-+	unsigned int processed_cmds;
-+
-+	sess = container_of(kobj, struct scst_session, sess_kobj);
-+
-+	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		"%-15s %-15s %-46s %-46s %-46s\n",
-+		"T-L names", "Total commands", "SCST latency",
-+		"Target latency", "Dev latency (min/avg/max/all ns)");
-+
-+	spin_lock_bh(&sess->lat_lock);
-+
-+	for (i = 0; i < SCST_LATENCY_STATS_NUM ; i++) {
-+		uint64_t scst_time_wr, tgt_time_wr, dev_time_wr;
-+		unsigned int processed_cmds_wr;
-+		uint64_t scst_time_rd, tgt_time_rd, dev_time_rd;
-+		unsigned int processed_cmds_rd;
-+		struct scst_ext_latency_stat *latency_stat;
-+
-+		latency_stat = &sess->sess_latency_stat[i];
-+		scst_time_wr = latency_stat->scst_time_wr;
-+		scst_time_rd = latency_stat->scst_time_rd;
-+		tgt_time_wr = latency_stat->tgt_time_wr;
-+		tgt_time_rd = latency_stat->tgt_time_rd;
-+		dev_time_wr = latency_stat->dev_time_wr;
-+		dev_time_rd = latency_stat->dev_time_rd;
-+		processed_cmds_wr = latency_stat->processed_cmds_wr;
-+		processed_cmds_rd = latency_stat->processed_cmds_rd;
-+
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-5s %-9s %-15lu ",
-+			"Write", scst_io_size_names[i],
-+			(unsigned long)processed_cmds_wr);
-+		if (processed_cmds_wr == 0)
-+			processed_cmds_wr = 1;
-+
-+		do_div(scst_time_wr, processed_cmds_wr);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_scst_time_wr,
-+			(unsigned long)scst_time_wr,
-+			(unsigned long)latency_stat->max_scst_time_wr,
-+			(unsigned long)latency_stat->scst_time_wr);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s", buf);
-+
-+		do_div(tgt_time_wr, processed_cmds_wr);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_tgt_time_wr,
-+			(unsigned long)tgt_time_wr,
-+			(unsigned long)latency_stat->max_tgt_time_wr,
-+			(unsigned long)latency_stat->tgt_time_wr);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s", buf);
-+
-+		do_div(dev_time_wr, processed_cmds_wr);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_dev_time_wr,
-+			(unsigned long)dev_time_wr,
-+			(unsigned long)latency_stat->max_dev_time_wr,
-+			(unsigned long)latency_stat->dev_time_wr);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s\n", buf);
-+
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-5s %-9s %-15lu ",
-+			"Read", scst_io_size_names[i],
-+			(unsigned long)processed_cmds_rd);
-+		if (processed_cmds_rd == 0)
-+			processed_cmds_rd = 1;
-+
-+		do_div(scst_time_rd, processed_cmds_rd);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_scst_time_rd,
-+			(unsigned long)scst_time_rd,
-+			(unsigned long)latency_stat->max_scst_time_rd,
-+			(unsigned long)latency_stat->scst_time_rd);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s", buf);
-+
-+		do_div(tgt_time_rd, processed_cmds_rd);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_tgt_time_rd,
-+			(unsigned long)tgt_time_rd,
-+			(unsigned long)latency_stat->max_tgt_time_rd,
-+			(unsigned long)latency_stat->tgt_time_rd);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s", buf);
-+
-+		do_div(dev_time_rd, processed_cmds_rd);
-+		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+			(unsigned long)latency_stat->min_dev_time_rd,
-+			(unsigned long)dev_time_rd,
-+			(unsigned long)latency_stat->max_dev_time_rd,
-+			(unsigned long)latency_stat->dev_time_rd);
-+		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+			"%-47s\n", buf);
-+	}
-+
-+	scst_time = sess->scst_time;
-+	tgt_time = sess->tgt_time;
-+	dev_time = sess->dev_time;
-+	processed_cmds = sess->processed_cmds;
-+
-+	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		"\n%-15s %-16d", "Overall ", processed_cmds);
-+
-+	if (processed_cmds == 0)
-+		processed_cmds = 1;
-+
-+	do_div(scst_time, processed_cmds);
-+	snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+		(unsigned long)sess->min_scst_time,
-+		(unsigned long)scst_time,
-+		(unsigned long)sess->max_scst_time,
-+		(unsigned long)sess->scst_time);
-+	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		"%-47s", buf);
-+
-+	do_div(tgt_time, processed_cmds);
-+	snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+		(unsigned long)sess->min_tgt_time,
-+		(unsigned long)tgt_time,
-+		(unsigned long)sess->max_tgt_time,
-+		(unsigned long)sess->tgt_time);
-+	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		"%-47s", buf);
-+
-+	do_div(dev_time, processed_cmds);
-+	snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-+		(unsigned long)sess->min_dev_time,
-+		(unsigned long)dev_time,
-+		(unsigned long)sess->max_dev_time,
-+		(unsigned long)sess->dev_time);
-+	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		"%-47s\n\n", buf);
-+
-+	spin_unlock_bh(&sess->lat_lock);
-+	return res;
-+}
-+
-+static int scst_sess_zero_latency(struct scst_sysfs_work_item *work)
-+{
-+	int res = 0, t;
-+	struct scst_session *sess = work->sess;
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out_put;
-+	}
-+
-+	PRINT_INFO("Zeroing latency statistics for initiator "
-+		"%s", sess->initiator_name);
-+
-+	spin_lock_bh(&sess->lat_lock);
-+
-+	sess->scst_time = 0;
-+	sess->tgt_time = 0;
-+	sess->dev_time = 0;
-+	sess->min_scst_time = 0;
-+	sess->min_tgt_time = 0;
-+	sess->min_dev_time = 0;
-+	sess->max_scst_time = 0;
-+	sess->max_tgt_time = 0;
-+	sess->max_dev_time = 0;
-+	sess->processed_cmds = 0;
-+	memset(sess->sess_latency_stat, 0,
-+		sizeof(sess->sess_latency_stat));
-+
-+	for (t = SESS_TGT_DEV_LIST_HASH_SIZE-1; t >= 0; t--) {
-+		struct list_head *head = &sess->sess_tgt_dev_list[t];
-+		struct scst_tgt_dev *tgt_dev;
-+		list_for_each_entry(tgt_dev, head, sess_tgt_dev_list_entry) {
-+			tgt_dev->scst_time = 0;
-+			tgt_dev->tgt_time = 0;
-+			tgt_dev->dev_time = 0;
-+			tgt_dev->processed_cmds = 0;
-+			memset(tgt_dev->dev_latency_stat, 0,
-+				sizeof(tgt_dev->dev_latency_stat));
-+		}
-+	}
-+
-+	spin_unlock_bh(&sess->lat_lock);
-+
-+	mutex_unlock(&scst_mutex);
-+
-+out_put:
-+	kobject_put(&sess->sess_kobj);
-+	return res;
-+}
-+
-+static ssize_t scst_sess_latency_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_session *sess;
-+	struct scst_sysfs_work_item *work;
-+
-+	sess = container_of(kobj, struct scst_session, sess_kobj);
-+
-+	res = scst_alloc_sysfs_work(scst_sess_zero_latency, false, &work);
-+	if (res != 0)
-+		goto out;
-+
-+	work->sess = sess;
-+
-+	kobject_get(&sess->sess_kobj);
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+}
-+
-+static struct kobj_attribute session_latency_attr =
-+	__ATTR(latency, S_IRUGO | S_IWUSR, scst_sess_latency_show,
-+	       scst_sess_latency_store);
-+
-+#endif /* CONFIG_SCST_MEASURE_LATENCY */
-+
-+static ssize_t scst_sess_sysfs_commands_show(struct kobject *kobj,
-+			    struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_session *sess;
-+
-+	sess = container_of(kobj, struct scst_session, sess_kobj);
-+
-+	return sprintf(buf, "%i\n", atomic_read(&sess->sess_cmd_count));
-+}
-+
-+static struct kobj_attribute session_commands_attr =
-+	__ATTR(commands, S_IRUGO, scst_sess_sysfs_commands_show, NULL);
-+
-+static int scst_sysfs_sess_get_active_commands(struct scst_session *sess)
-+{
-+	int res;
-+	int active_cmds = 0, t;
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out_put;
-+	}
-+
-+	for (t = SESS_TGT_DEV_LIST_HASH_SIZE-1; t >= 0; t--) {
-+		struct list_head *head = &sess->sess_tgt_dev_list[t];
-+		struct scst_tgt_dev *tgt_dev;
-+		list_for_each_entry(tgt_dev, head, sess_tgt_dev_list_entry) {
-+			active_cmds += atomic_read(&tgt_dev->tgt_dev_cmd_count);
-+		}
-+	}
-+
-+	mutex_unlock(&scst_mutex);
-+
-+	res = active_cmds;
-+
-+out_put:
-+	kobject_put(&sess->sess_kobj);
-+	return res;
-+}
-+
-+static int scst_sysfs_sess_get_active_commands_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return scst_sysfs_sess_get_active_commands(work->sess);
-+}
-+
-+static ssize_t scst_sess_sysfs_active_commands_show(struct kobject *kobj,
-+			    struct kobj_attribute *attr, char *buf)
-+{
-+	int res;
-+	struct scst_session *sess;
-+	struct scst_sysfs_work_item *work;
-+
-+	sess = container_of(kobj, struct scst_session, sess_kobj);
-+
-+	res = scst_alloc_sysfs_work(scst_sysfs_sess_get_active_commands_work_fn,
-+			true, &work);
-+	if (res != 0)
-+		goto out;
-+
-+	work->sess = sess;
-+
-+	kobject_get(&sess->sess_kobj);
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res != -EAGAIN)
-+		res = sprintf(buf, "%i\n", res);
-+
-+out:
-+	return res;
-+}
-+
-+static struct kobj_attribute session_active_commands_attr =
-+	__ATTR(active_commands, S_IRUGO, scst_sess_sysfs_active_commands_show,
-+		NULL);
-+
-+static ssize_t scst_sess_sysfs_initiator_name_show(struct kobject *kobj,
-+			    struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_session *sess;
-+
-+	sess = container_of(kobj, struct scst_session, sess_kobj);
-+
-+	return scnprintf(buf, SCST_SYSFS_BLOCK_SIZE, "%s\n",
-+		sess->initiator_name);
-+}
-+
-+static struct kobj_attribute session_initiator_name_attr =
-+	__ATTR(initiator_name, S_IRUGO, scst_sess_sysfs_initiator_name_show, NULL);
-+
-+static struct attribute *scst_session_attrs[] = {
-+	&session_commands_attr.attr,
-+	&session_active_commands_attr.attr,
-+	&session_initiator_name_attr.attr,
-+#ifdef CONFIG_SCST_MEASURE_LATENCY
-+	&session_latency_attr.attr,
-+#endif /* CONFIG_SCST_MEASURE_LATENCY */
-+	NULL,
-+};
-+
-+static void scst_sysfs_session_release(struct kobject *kobj)
-+{
-+	struct scst_session *sess;
-+
-+	sess = container_of(kobj, struct scst_session, sess_kobj);
-+	complete_all(&sess->sess_kobj_release_cmpl);
-+	return;
-+}
-+
-+static struct kobj_type scst_session_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_sysfs_session_release,
-+	.default_attrs = scst_session_attrs,
-+};
-+
-+static int scst_create_sess_luns_link(struct scst_session *sess)
-+{
-+	int res;
-+
-+	/*
-+	 * No locks are needed, because sess supposed to be in acg->acg_sess_list
-+	 * and tgt->sess_list, so blocking them from disappearing.
-+	 */
-+
-+	if (sess->acg == sess->tgt->default_acg)
-+		res = sysfs_create_link(&sess->sess_kobj,
-+				sess->tgt->tgt_luns_kobj, "luns");
-+	else
-+		res = sysfs_create_link(&sess->sess_kobj,
-+				sess->acg->luns_kobj, "luns");
-+
-+	if (res != 0)
-+		PRINT_ERROR("Can't create luns link for initiator %s",
-+			sess->initiator_name);
-+
-+	return res;
-+}
-+
-+int scst_recreate_sess_luns_link(struct scst_session *sess)
-+{
-+	sysfs_remove_link(&sess->sess_kobj, "luns");
-+	return scst_create_sess_luns_link(sess);
-+}
-+
-+/* Supposed to be called under scst_mutex */
-+int scst_sess_sysfs_create(struct scst_session *sess)
-+{
-+	int res = 0;
-+	struct scst_session *s;
-+	const struct attribute **pattr;
-+	char *name = (char *)sess->initiator_name;
-+	int len = strlen(name) + 1, n = 1;
-+
-+restart:
-+	list_for_each_entry(s, &sess->tgt->sess_list, sess_list_entry) {
-+		if (!s->sess_kobj_ready)
-+			continue;
-+
-+		if (strcmp(name, kobject_name(&s->sess_kobj)) == 0) {
-+			if (s == sess)
-+				continue;
-+
-+			TRACE_DBG("Dublicated session from the same initiator "
-+				"%s found", name);
-+
-+			if (name == sess->initiator_name) {
-+				len = strlen(sess->initiator_name);
-+				len += 20;
-+				name = kmalloc(len, GFP_KERNEL);
-+				if (name == NULL) {
-+					PRINT_ERROR("Unable to allocate a "
-+						"replacement name (size %d)",
-+						len);
-+				}
-+			}
-+
-+			snprintf(name, len, "%s_%d", sess->initiator_name, n);
-+			n++;
-+			goto restart;
-+		}
-+	}
-+
-+	init_completion(&sess->sess_kobj_release_cmpl);
-+
-+	TRACE_DBG("Adding session %s to sysfs", name);
-+
-+	res = kobject_init_and_add(&sess->sess_kobj, &scst_session_ktype,
-+			      sess->tgt->tgt_sess_kobj, name);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add session %s to sysfs", name);
-+		goto out_free;
-+	}
-+
-+	sess->sess_kobj_ready = 1;
-+
-+	pattr = sess->tgt->tgtt->sess_attrs;
-+	if (pattr != NULL) {
-+		while (*pattr != NULL) {
-+			res = sysfs_create_file(&sess->sess_kobj, *pattr);
-+			if (res != 0) {
-+				PRINT_ERROR("Can't add sess attr %s for sess "
-+					"for initiator %s", (*pattr)->name,
-+					name);
-+				goto out_free;
-+			}
-+			pattr++;
-+		}
-+	}
-+
-+	res = scst_create_sess_luns_link(sess);
-+
-+out_free:
-+	if (name != sess->initiator_name)
-+		kfree(name);
-+	return res;
-+}
-+
-+/*
-+ * Must not be called under scst_mutex, due to possible deadlock with
-+ * sysfs ref counting in sysfs works (it is waiting for the last put, but
-+ * the last ref counter holder is waiting for scst_mutex)
-+ */
-+void scst_sess_sysfs_del(struct scst_session *sess)
-+{
-+	int rc;
-+
-+	if (!sess->sess_kobj_ready)
-+		goto out;
-+
-+	TRACE_DBG("Deleting session %s from sysfs",
-+		kobject_name(&sess->sess_kobj));
-+
-+	kobject_del(&sess->sess_kobj);
-+	kobject_put(&sess->sess_kobj);
-+
-+	rc = wait_for_completion_timeout(&sess->sess_kobj_release_cmpl, HZ);
-+	if (rc == 0) {
-+		PRINT_INFO("Waiting for releasing sysfs entry "
-+			"for session from %s (%d refs)...", sess->initiator_name,
-+			atomic_read(&sess->sess_kobj.kref.refcount));
-+		wait_for_completion(&sess->sess_kobj_release_cmpl);
-+		PRINT_INFO("Done waiting for releasing sysfs "
-+			"entry for session %s", sess->initiator_name);
-+	}
-+
-+out:
-+	return;
-+}
-+
-+/**
-+ ** Target luns directory implementation
-+ **/
-+
-+static void scst_acg_dev_release(struct kobject *kobj)
-+{
-+	struct scst_acg_dev *acg_dev;
-+
-+	acg_dev = container_of(kobj, struct scst_acg_dev, acg_dev_kobj);
-+	complete_all(&acg_dev->acg_dev_kobj_release_cmpl);
-+	return;
-+}
-+
-+static ssize_t scst_lun_rd_only_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf)
-+{
-+	struct scst_acg_dev *acg_dev;
-+
-+	acg_dev = container_of(kobj, struct scst_acg_dev, acg_dev_kobj);
-+
-+	if (acg_dev->rd_only || acg_dev->dev->rd_only)
-+		return sprintf(buf, "%d\n%s\n", 1, SCST_SYSFS_KEY_MARK);
-+	else
-+		return sprintf(buf, "%d\n", 0);
-+}
-+
-+static struct kobj_attribute lun_options_attr =
-+	__ATTR(read_only, S_IRUGO, scst_lun_rd_only_show, NULL);
-+
-+static struct attribute *lun_attrs[] = {
-+	&lun_options_attr.attr,
-+	NULL,
-+};
-+
-+static struct kobj_type acg_dev_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_acg_dev_release,
-+	.default_attrs = lun_attrs,
-+};
-+
-+/*
-+ * Called with scst_mutex held.
-+ *
-+ * !! No sysfs works must use kobject_get() to protect acg_dev, due to possible
-+ * !! deadlock with scst_mutex (it is waiting for the last put, but
-+ * !! the last ref counter holder is waiting for scst_mutex)
-+ */
-+void scst_acg_dev_sysfs_del(struct scst_acg_dev *acg_dev)
-+{
-+	int rc;
-+
-+	if (acg_dev->dev != NULL) {
-+		sysfs_remove_link(acg_dev->dev->dev_exp_kobj,
-+			acg_dev->acg_dev_link_name);
-+		kobject_put(&acg_dev->dev->dev_kobj);
-+	}
-+
-+	kobject_del(&acg_dev->acg_dev_kobj);
-+	kobject_put(&acg_dev->acg_dev_kobj);
-+
-+	rc = wait_for_completion_timeout(&acg_dev->acg_dev_kobj_release_cmpl, HZ);
-+	if (rc == 0) {
-+		PRINT_INFO("Waiting for releasing sysfs entry "
-+			"for acg_dev %p (%d refs)...", acg_dev,
-+			atomic_read(&acg_dev->acg_dev_kobj.kref.refcount));
-+		wait_for_completion(&acg_dev->acg_dev_kobj_release_cmpl);
-+		PRINT_INFO("Done waiting for releasing sysfs "
-+			"entry for acg_dev %p", acg_dev);
-+	}
-+	return;
-+}
-+
-+int scst_acg_dev_sysfs_create(struct scst_acg_dev *acg_dev,
-+	struct kobject *parent)
-+{
-+	int res;
-+
-+	init_completion(&acg_dev->acg_dev_kobj_release_cmpl);
-+
-+	res = kobject_init_and_add(&acg_dev->acg_dev_kobj, &acg_dev_ktype,
-+				      parent, "%u", acg_dev->lun);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add acg_dev %p to sysfs", acg_dev);
-+		goto out;
-+	}
-+
-+	kobject_get(&acg_dev->dev->dev_kobj);
-+
-+	snprintf(acg_dev->acg_dev_link_name, sizeof(acg_dev->acg_dev_link_name),
-+		"export%u", acg_dev->dev->dev_exported_lun_num++);
-+
-+	res = sysfs_create_link(acg_dev->dev->dev_exp_kobj,
-+			   &acg_dev->acg_dev_kobj, acg_dev->acg_dev_link_name);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't create acg %s LUN link",
-+			acg_dev->acg->acg_name);
-+		goto out_del;
-+	}
-+
-+	res = sysfs_create_link(&acg_dev->acg_dev_kobj,
-+			&acg_dev->dev->dev_kobj, "device");
-+	if (res != 0) {
-+		PRINT_ERROR("Can't create acg %s device link",
-+			acg_dev->acg->acg_name);
-+		goto out_del;
-+	}
-+
-+out:
-+	return res;
-+
-+out_del:
-+	scst_acg_dev_sysfs_del(acg_dev);
-+	goto out;
-+}
-+
-+static int __scst_process_luns_mgmt_store(char *buffer,
-+	struct scst_tgt *tgt, struct scst_acg *acg, bool tgt_kobj)
-+{
-+	int res, read_only = 0, action;
-+	char *p, *e = NULL;
-+	unsigned int virt_lun;
-+	struct scst_acg_dev *acg_dev = NULL, *acg_dev_tmp;
-+	struct scst_device *d, *dev = NULL;
-+
-+#define SCST_LUN_ACTION_ADD	1
-+#define SCST_LUN_ACTION_DEL	2
-+#define SCST_LUN_ACTION_REPLACE	3
-+#define SCST_LUN_ACTION_CLEAR	4
-+
-+	TRACE_DBG("buffer %s", buffer);
-+
-+	p = buffer;
-+	if (p[strlen(p) - 1] == '\n')
-+		p[strlen(p) - 1] = '\0';
-+	if (strncasecmp("add", p, 3) == 0) {
-+		p += 3;
-+		action = SCST_LUN_ACTION_ADD;
-+	} else if (strncasecmp("del", p, 3) == 0) {
-+		p += 3;
-+		action = SCST_LUN_ACTION_DEL;
-+	} else if (!strncasecmp("replace", p, 7)) {
-+		p += 7;
-+		action = SCST_LUN_ACTION_REPLACE;
-+	} else if (!strncasecmp("clear", p, 5)) {
-+		p += 5;
-+		action = SCST_LUN_ACTION_CLEAR;
-+	} else {
-+		PRINT_ERROR("Unknown action \"%s\"", p);
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	res = scst_suspend_activity(true);
-+	if (res != 0)
-+		goto out;
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out_resume;
-+	}
-+
-+	/* Check if tgt and acg not already freed while we were coming here */
-+	if (scst_check_tgt_acg_ptrs(tgt, acg) != 0)
-+		goto out_unlock;
-+
-+	if ((action != SCST_LUN_ACTION_CLEAR) &&
-+	    (action != SCST_LUN_ACTION_DEL)) {
-+		if (!isspace(*p)) {
-+			PRINT_ERROR("%s", "Syntax error");
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+
-+		while (isspace(*p) && *p != '\0')
-+			p++;
-+		e = p; /* save p */
-+		while (!isspace(*e) && *e != '\0')
-+			e++;
-+		*e = '\0';
-+
-+		list_for_each_entry(d, &scst_dev_list, dev_list_entry) {
-+			if (!strcmp(d->virt_name, p)) {
-+				dev = d;
-+				TRACE_DBG("Device %p (%s) found", dev, p);
-+				break;
-+			}
-+		}
-+		if (dev == NULL) {
-+			PRINT_ERROR("Device '%s' not found", p);
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+	}
-+
-+	switch (action) {
-+	case SCST_LUN_ACTION_ADD:
-+	case SCST_LUN_ACTION_REPLACE:
-+	{
-+		bool dev_replaced = false;
-+
-+		e++;
-+		while (isspace(*e) && *e != '\0')
-+			e++;
-+		virt_lun = simple_strtoul(e, &e, 0);
-+
-+		while (isspace(*e) && *e != '\0')
-+			e++;
-+
-+		while (1) {
-+			char *pp;
-+			unsigned long val;
-+			char *param = scst_get_next_token_str(&e);
-+			if (param == NULL)
-+				break;
-+
-+			p = scst_get_next_lexem(&param);
-+			if (*p == '\0') {
-+				PRINT_ERROR("Syntax error at %s (device %s)",
-+					param, dev->virt_name);
-+				res = -EINVAL;
-+				goto out_unlock;
-+			}
-+
-+			pp = scst_get_next_lexem(&param);
-+			if (*pp == '\0') {
-+				PRINT_ERROR("Parameter %s value missed for device %s",
-+					p, dev->virt_name);
-+				res = -EINVAL;
-+				goto out_unlock;
-+			}
-+
-+			if (scst_get_next_lexem(&param)[0] != '\0') {
-+				PRINT_ERROR("Too many parameter's %s values (device %s)",
-+					p, dev->virt_name);
-+				res = -EINVAL;
-+				goto out_unlock;
-+			}
-+
-+			res = strict_strtoul(pp, 0, &val);
-+			if (res != 0) {
-+				PRINT_ERROR("strict_strtoul() for %s failed: %d "
-+					"(device %s)", pp, res, dev->virt_name);
-+				goto out_unlock;
-+			}
-+
-+			if (!strcasecmp("read_only", p)) {
-+				read_only = val;
-+				TRACE_DBG("READ ONLY %d", read_only);
-+			} else {
-+				PRINT_ERROR("Unknown parameter %s (device %s)",
-+					p, dev->virt_name);
-+				res = -EINVAL;
-+				goto out_unlock;
-+			}
-+		}
-+
-+		acg_dev = NULL;
-+		list_for_each_entry(acg_dev_tmp, &acg->acg_dev_list,
-+				    acg_dev_list_entry) {
-+			if (acg_dev_tmp->lun == virt_lun) {
-+				acg_dev = acg_dev_tmp;
-+				break;
-+			}
-+		}
-+
-+		if (acg_dev != NULL) {
-+			if (action == SCST_LUN_ACTION_ADD) {
-+				PRINT_ERROR("virt lun %d already exists in "
-+					"group %s", virt_lun, acg->acg_name);
-+				res = -EEXIST;
-+				goto out_unlock;
-+			} else {
-+				/* Replace */
-+				res = scst_acg_del_lun(acg, acg_dev->lun,
-+						false);
-+				if (res != 0)
-+					goto out_unlock;
-+
-+				dev_replaced = true;
-+			}
-+		}
-+
-+		res = scst_acg_add_lun(acg,
-+			tgt_kobj ? tgt->tgt_luns_kobj : acg->luns_kobj,
-+			dev, virt_lun, read_only, !dev_replaced, NULL);
-+		if (res != 0)
-+			goto out_unlock;
-+
-+		if (dev_replaced) {
-+			struct scst_tgt_dev *tgt_dev;
-+
-+			list_for_each_entry(tgt_dev, &dev->dev_tgt_dev_list,
-+				dev_tgt_dev_list_entry) {
-+				if ((tgt_dev->acg_dev->acg == acg) &&
-+				    (tgt_dev->lun == virt_lun)) {
-+					TRACE_MGMT_DBG("INQUIRY DATA HAS CHANGED"
-+						" on tgt_dev %p", tgt_dev);
-+					scst_gen_aen_or_ua(tgt_dev,
-+						SCST_LOAD_SENSE(scst_sense_inquery_data_changed));
-+				}
-+			}
-+		}
-+
-+		break;
-+	}
-+	case SCST_LUN_ACTION_DEL:
-+		while (isspace(*p) && *p != '\0')
-+			p++;
-+		virt_lun = simple_strtoul(p, &p, 0);
-+
-+		res = scst_acg_del_lun(acg, virt_lun, true);
-+		if (res != 0)
-+			goto out_unlock;
-+		break;
-+	case SCST_LUN_ACTION_CLEAR:
-+		PRINT_INFO("Removed all devices from group %s",
-+			acg->acg_name);
-+		list_for_each_entry_safe(acg_dev, acg_dev_tmp,
-+					 &acg->acg_dev_list,
-+					 acg_dev_list_entry) {
-+			res = scst_acg_del_lun(acg, acg_dev->lun,
-+				list_is_last(&acg_dev->acg_dev_list_entry,
-+					     &acg->acg_dev_list));
-+			if (res)
-+				goto out_unlock;
-+		}
-+		break;
-+	}
-+
-+	res = 0;
-+
-+out_unlock:
-+	mutex_unlock(&scst_mutex);
-+
-+out_resume:
-+	scst_resume_activity();
-+
-+out:
-+	return res;
-+
-+#undef SCST_LUN_ACTION_ADD
-+#undef SCST_LUN_ACTION_DEL
-+#undef SCST_LUN_ACTION_REPLACE
-+#undef SCST_LUN_ACTION_CLEAR
-+}
-+
-+static int scst_luns_mgmt_store_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return __scst_process_luns_mgmt_store(work->buf, work->tgt, work->acg,
-+			work->is_tgt_kobj);
-+}
-+
-+static ssize_t __scst_acg_mgmt_store(struct scst_acg *acg,
-+	const char *buf, size_t count, bool is_tgt_kobj,
-+	int (*sysfs_work_fn)(struct scst_sysfs_work_item *))
-+{
-+	int res;
-+	char *buffer;
-+	struct scst_sysfs_work_item *work;
-+
-+	buffer = kzalloc(count+1, GFP_KERNEL);
-+	if (buffer == NULL) {
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+	memcpy(buffer, buf, count);
-+	buffer[count] = '\0';
-+
-+	res = scst_alloc_sysfs_work(sysfs_work_fn, false, &work);
-+	if (res != 0)
-+		goto out_free;
-+
-+	work->buf = buffer;
-+	work->tgt = acg->tgt;
-+	work->acg = acg;
-+	work->is_tgt_kobj = is_tgt_kobj;
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+
-+out_free:
-+	kfree(buffer);
-+	goto out;
-+}
-+
-+static ssize_t __scst_luns_mgmt_store(struct scst_acg *acg,
-+	bool tgt_kobj, const char *buf, size_t count)
-+{
-+	return __scst_acg_mgmt_store(acg, buf, count, tgt_kobj,
-+			scst_luns_mgmt_store_work_fn);
-+}
-+
-+static ssize_t scst_luns_mgmt_show(struct kobject *kobj,
-+				   struct kobj_attribute *attr,
-+				   char *buf)
-+{
-+	static char *help = "Usage: echo \"add|del H:C:I:L lun [parameters]\" >mgmt\n"
-+			    "       echo \"add VNAME lun [parameters]\" >mgmt\n"
-+			    "       echo \"del lun\" >mgmt\n"
-+			    "       echo \"replace H:C:I:L lun [parameters]\" >mgmt\n"
-+			    "       echo \"replace VNAME lun [parameters]\" >mgmt\n"
-+			    "       echo \"clear\" >mgmt\n"
-+			    "\n"
-+			    "where parameters are one or more "
-+			    "param_name=value pairs separated by ';'\n"
-+			    "\nThe following parameters available: read_only.";
-+
-+	return sprintf(buf, "%s", help);
-+}
-+
-+static ssize_t scst_luns_mgmt_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_acg *acg;
-+	struct scst_tgt *tgt;
-+
-+	tgt = container_of(kobj->parent, struct scst_tgt, tgt_kobj);
-+	acg = tgt->default_acg;
-+
-+	res = __scst_luns_mgmt_store(acg, true, buf, count);
-+	return res;
-+}
-+
-+static ssize_t __scst_acg_addr_method_show(struct scst_acg *acg, char *buf)
-+{
-+	int res;
-+
-+	switch (acg->addr_method) {
-+	case SCST_LUN_ADDR_METHOD_FLAT:
-+		res = sprintf(buf, "FLAT\n%s\n", SCST_SYSFS_KEY_MARK);
-+		break;
-+	case SCST_LUN_ADDR_METHOD_PERIPHERAL:
-+		res = sprintf(buf, "PERIPHERAL\n");
-+		break;
-+	default:
-+		res = sprintf(buf, "UNKNOWN\n");
-+		break;
-+	}
-+
-+	return res;
-+}
-+
-+static ssize_t __scst_acg_addr_method_store(struct scst_acg *acg,
-+	const char *buf, size_t count)
-+{
-+	int res = count;
-+
-+	if (strncasecmp(buf, "FLAT", min_t(int, 4, count)) == 0)
-+		acg->addr_method = SCST_LUN_ADDR_METHOD_FLAT;
-+	else if (strncasecmp(buf, "PERIPHERAL", min_t(int, 10, count)) == 0)
-+		acg->addr_method = SCST_LUN_ADDR_METHOD_PERIPHERAL;
-+	else {
-+		PRINT_ERROR("Unknown address method %s", buf);
-+		res = -EINVAL;
-+	}
-+
-+	TRACE_DBG("acg %p, addr_method %d", acg, acg->addr_method);
-+
-+	return res;
-+}
-+
-+static ssize_t scst_tgt_addr_method_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_acg *acg;
-+	struct scst_tgt *tgt;
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+	acg = tgt->default_acg;
-+
-+	return __scst_acg_addr_method_show(acg, buf);
-+}
-+
-+static ssize_t scst_tgt_addr_method_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_acg *acg;
-+	struct scst_tgt *tgt;
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+	acg = tgt->default_acg;
-+
-+	res = __scst_acg_addr_method_store(acg, buf, count);
-+	return res;
-+}
-+
-+static ssize_t __scst_acg_io_grouping_type_show(struct scst_acg *acg, char *buf)
-+{
-+	int res;
-+
-+	switch (acg->acg_io_grouping_type) {
-+	case SCST_IO_GROUPING_AUTO:
-+		res = sprintf(buf, "%s\n", SCST_IO_GROUPING_AUTO_STR);
-+		break;
-+	case SCST_IO_GROUPING_THIS_GROUP_ONLY:
-+		res = sprintf(buf, "%s\n%s\n",
-+			SCST_IO_GROUPING_THIS_GROUP_ONLY_STR,
-+			SCST_SYSFS_KEY_MARK);
-+		break;
-+	case SCST_IO_GROUPING_NEVER:
-+		res = sprintf(buf, "%s\n%s\n", SCST_IO_GROUPING_NEVER_STR,
-+			SCST_SYSFS_KEY_MARK);
-+		break;
-+	default:
-+		res = sprintf(buf, "%d\n%s\n", acg->acg_io_grouping_type,
-+			SCST_SYSFS_KEY_MARK);
-+		break;
-+	}
-+
-+	return res;
-+}
-+
-+static int __scst_acg_process_io_grouping_type_store(struct scst_tgt *tgt,
-+	struct scst_acg *acg, int io_grouping_type)
-+{
-+	int res = 0;
-+	struct scst_acg_dev *acg_dev;
-+
-+	TRACE_DBG("tgt %p, acg %p, io_grouping_type %d", tgt, acg,
-+		io_grouping_type);
-+
-+	res = scst_suspend_activity(true);
-+	if (res != 0)
-+		goto out;
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out_resume;
-+	}
-+
-+	/* Check if tgt and acg not already freed while we were coming here */
-+	if (scst_check_tgt_acg_ptrs(tgt, acg) != 0)
-+		goto out_unlock;
-+
-+	acg->acg_io_grouping_type = io_grouping_type;
-+
-+	list_for_each_entry(acg_dev, &acg->acg_dev_list, acg_dev_list_entry) {
-+		int rc;
-+
-+		scst_stop_dev_threads(acg_dev->dev);
-+
-+		rc = scst_create_dev_threads(acg_dev->dev);
-+		if (rc != 0)
-+			res = rc;
-+	}
-+
-+out_unlock:
-+	mutex_unlock(&scst_mutex);
-+
-+out_resume:
-+	scst_resume_activity();
-+
-+out:
-+	return res;
-+}
-+
-+static int __scst_acg_io_grouping_type_store_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return __scst_acg_process_io_grouping_type_store(work->tgt, work->acg,
-+			work->io_grouping_type);
-+}
-+
-+static ssize_t __scst_acg_io_grouping_type_store(struct scst_acg *acg,
-+	const char *buf, size_t count)
-+{
-+	int res = 0;
-+	int prev = acg->acg_io_grouping_type;
-+	long io_grouping_type;
-+	struct scst_sysfs_work_item *work;
-+
-+	if (strncasecmp(buf, SCST_IO_GROUPING_AUTO_STR,
-+			min_t(int, strlen(SCST_IO_GROUPING_AUTO_STR), count)) == 0)
-+		io_grouping_type = SCST_IO_GROUPING_AUTO;
-+	else if (strncasecmp(buf, SCST_IO_GROUPING_THIS_GROUP_ONLY_STR,
-+			min_t(int, strlen(SCST_IO_GROUPING_THIS_GROUP_ONLY_STR), count)) == 0)
-+		io_grouping_type = SCST_IO_GROUPING_THIS_GROUP_ONLY;
-+	else if (strncasecmp(buf, SCST_IO_GROUPING_NEVER_STR,
-+			min_t(int, strlen(SCST_IO_GROUPING_NEVER_STR), count)) == 0)
-+		io_grouping_type = SCST_IO_GROUPING_NEVER;
-+	else {
-+		res = strict_strtol(buf, 0, &io_grouping_type);
-+		if ((res != 0) || (io_grouping_type <= 0)) {
-+			PRINT_ERROR("Unknown or not allowed I/O grouping type "
-+				"%s", buf);
-+			res = -EINVAL;
-+			goto out;
-+		}
-+	}
-+
-+	if (prev == io_grouping_type)
-+		goto out;
-+
-+	res = scst_alloc_sysfs_work(__scst_acg_io_grouping_type_store_work_fn,
-+					false, &work);
-+	if (res != 0)
-+		goto out;
-+
-+	work->tgt = acg->tgt;
-+	work->acg = acg;
-+	work->io_grouping_type = io_grouping_type;
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+
-+out:
-+	return res;
-+}
-+
-+static ssize_t scst_tgt_io_grouping_type_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_acg *acg;
-+	struct scst_tgt *tgt;
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+	acg = tgt->default_acg;
-+
-+	return __scst_acg_io_grouping_type_show(acg, buf);
-+}
-+
-+static ssize_t scst_tgt_io_grouping_type_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_acg *acg;
-+	struct scst_tgt *tgt;
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+	acg = tgt->default_acg;
-+
-+	res = __scst_acg_io_grouping_type_store(acg, buf, count);
-+	if (res != 0)
-+		goto out;
-+
-+	res = count;
-+
-+out:
-+	return res;
-+}
-+
-+static ssize_t __scst_acg_cpu_mask_show(struct scst_acg *acg, char *buf)
-+{
-+	int res;
-+
-+	res = cpumask_scnprintf(buf, SCST_SYSFS_BLOCK_SIZE,
-+		&acg->acg_cpu_mask);
-+	if (!cpus_equal(acg->acg_cpu_mask, default_cpu_mask))
-+		res += sprintf(&buf[res], "\n%s\n", SCST_SYSFS_KEY_MARK);
-+
-+	return res;
-+}
-+
-+static int __scst_acg_process_cpu_mask_store(struct scst_tgt *tgt,
-+	struct scst_acg *acg, cpumask_t *cpu_mask)
-+{
-+	int res = 0;
-+	struct scst_session *sess;
-+
-+	TRACE_DBG("tgt %p, acg %p", tgt, acg);
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out;
-+	}
-+
-+	/* Check if tgt and acg not already freed while we were coming here */
-+	if (scst_check_tgt_acg_ptrs(tgt, acg) != 0)
-+		goto out_unlock;
-+
-+	cpumask_copy(&acg->acg_cpu_mask, cpu_mask);
-+
-+	list_for_each_entry(sess, &acg->acg_sess_list, acg_sess_list_entry) {
-+		int i;
-+		for (i = 0; i < SESS_TGT_DEV_LIST_HASH_SIZE; i++) {
-+			struct scst_tgt_dev *tgt_dev;
-+			struct list_head *head = &sess->sess_tgt_dev_list[i];
-+			list_for_each_entry(tgt_dev, head,
-+						sess_tgt_dev_list_entry) {
-+				struct scst_cmd_thread_t *thr;
-+				if (tgt_dev->active_cmd_threads != &tgt_dev->tgt_dev_cmd_threads)
-+					continue;
-+				list_for_each_entry(thr,
-+						&tgt_dev->active_cmd_threads->threads_list,
-+						thread_list_entry) {
-+					int rc;
-+					rc = set_cpus_allowed_ptr(thr->cmd_thread, cpu_mask);
-+					if (rc != 0)
-+						PRINT_ERROR("Setting CPU "
-+							"affinity failed: %d", rc);
-+				}
-+			}
-+		}
-+		if (tgt->tgtt->report_aen != NULL) {
-+			struct scst_aen *aen;
-+			int rc;
-+
-+			aen = scst_alloc_aen(sess, 0);
-+			if (aen == NULL) {
-+				PRINT_ERROR("Unable to notify target driver %s "
-+					"about cpu_mask change", tgt->tgt_name);
-+				continue;
-+			}
-+
-+			aen->event_fn = SCST_AEN_CPU_MASK_CHANGED;
-+
-+			TRACE_DBG("Calling target's %s report_aen(%p)",
-+				tgt->tgtt->name, aen);
-+			rc = tgt->tgtt->report_aen(aen);
-+			TRACE_DBG("Target's %s report_aen(%p) returned %d",
-+				tgt->tgtt->name, aen, rc);
-+			if (rc != SCST_AEN_RES_SUCCESS)
-+				scst_free_aen(aen);
-+		}
-+	}
-+
-+out_unlock:
-+	mutex_unlock(&scst_mutex);
-+
-+out:
-+	return res;
-+}
-+
-+static int __scst_acg_cpu_mask_store_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return __scst_acg_process_cpu_mask_store(work->tgt, work->acg,
-+			&work->cpu_mask);
-+}
-+
-+static ssize_t __scst_acg_cpu_mask_store(struct scst_acg *acg,
-+	const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_sysfs_work_item *work;
-+
-+	/* cpumask might be too big for stack */
-+
-+	res = scst_alloc_sysfs_work(__scst_acg_cpu_mask_store_work_fn,
-+					false, &work);
-+	if (res != 0)
-+		goto out;
-+
-+	/*
-+	 * We can't use cpumask_parse_user() here, because it expects
-+	 * buffer in the user space.
-+	 */
-+	res = __bitmap_parse(buf, count, 0, cpumask_bits(&work->cpu_mask),
-+				nr_cpumask_bits);
-+	if (res != 0) {
-+		PRINT_ERROR("__bitmap_parse() failed: %d", res);
-+		goto out_release;
-+	}
-+
-+	if (cpus_equal(acg->acg_cpu_mask, work->cpu_mask))
-+		goto out;
-+
-+	work->tgt = acg->tgt;
-+	work->acg = acg;
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+
-+out:
-+	return res;
-+
-+out_release:
-+	scst_sysfs_work_release(&work->sysfs_work_kref);
-+	goto out;
-+}
-+
-+static ssize_t scst_tgt_cpu_mask_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_acg *acg;
-+	struct scst_tgt *tgt;
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+	acg = tgt->default_acg;
-+
-+	return __scst_acg_cpu_mask_show(acg, buf);
-+}
-+
-+static ssize_t scst_tgt_cpu_mask_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_acg *acg;
-+	struct scst_tgt *tgt;
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+	acg = tgt->default_acg;
-+
-+	res = __scst_acg_cpu_mask_store(acg, buf, count);
-+	if (res != 0)
-+		goto out;
-+
-+	res = count;
-+
-+out:
-+	return res;
-+}
-+
-+/*
-+ * Called with scst_mutex held.
-+ *
-+ * !! No sysfs works must use kobject_get() to protect acg, due to possible
-+ * !! deadlock with scst_mutex (it is waiting for the last put, but
-+ * !! the last ref counter holder is waiting for scst_mutex)
-+ */
-+void scst_acg_sysfs_del(struct scst_acg *acg)
-+{
-+	int rc;
-+
-+	kobject_del(acg->luns_kobj);
-+	kobject_put(acg->luns_kobj);
-+
-+	kobject_del(acg->initiators_kobj);
-+	kobject_put(acg->initiators_kobj);
-+
-+	kobject_del(&acg->acg_kobj);
-+	kobject_put(&acg->acg_kobj);
-+
-+	rc = wait_for_completion_timeout(&acg->acg_kobj_release_cmpl, HZ);
-+	if (rc == 0) {
-+		PRINT_INFO("Waiting for releasing sysfs entry "
-+			"for acg %s (%d refs)...", acg->acg_name,
-+			atomic_read(&acg->acg_kobj.kref.refcount));
-+		wait_for_completion(&acg->acg_kobj_release_cmpl);
-+		PRINT_INFO("Done waiting for releasing sysfs "
-+			"entry for acg %s", acg->acg_name);
-+	}
-+	return;
-+}
-+
-+int scst_acg_sysfs_create(struct scst_tgt *tgt,
-+	struct scst_acg *acg)
-+{
-+	int res = 0;
-+
-+	init_completion(&acg->acg_kobj_release_cmpl);
-+
-+	res = kobject_init_and_add(&acg->acg_kobj, &acg_ktype,
-+		tgt->tgt_ini_grp_kobj, acg->acg_name);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add acg '%s' to sysfs", acg->acg_name);
-+		goto out;
-+	}
-+
-+	acg->luns_kobj = kobject_create_and_add("luns", &acg->acg_kobj);
-+	if (acg->luns_kobj == NULL) {
-+		PRINT_ERROR("Can't create luns kobj for tgt %s",
-+			tgt->tgt_name);
-+		res = -ENOMEM;
-+		goto out_del;
-+	}
-+
-+	res = sysfs_create_file(acg->luns_kobj, &scst_acg_luns_mgmt.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add tgt attr %s for tgt %s",
-+			scst_acg_luns_mgmt.attr.name, tgt->tgt_name);
-+		goto out_del;
-+	}
-+
-+	acg->initiators_kobj = kobject_create_and_add("initiators",
-+					&acg->acg_kobj);
-+	if (acg->initiators_kobj == NULL) {
-+		PRINT_ERROR("Can't create initiators kobj for tgt %s",
-+			tgt->tgt_name);
-+		res = -ENOMEM;
-+		goto out_del;
-+	}
-+
-+	res = sysfs_create_file(acg->initiators_kobj,
-+			&scst_acg_ini_mgmt.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add tgt attr %s for tgt %s",
-+			scst_acg_ini_mgmt.attr.name, tgt->tgt_name);
-+		goto out_del;
-+	}
-+
-+	res = sysfs_create_file(&acg->acg_kobj, &scst_acg_addr_method.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add tgt attr %s for tgt %s",
-+			scst_acg_addr_method.attr.name, tgt->tgt_name);
-+		goto out_del;
-+	}
-+
-+	res = sysfs_create_file(&acg->acg_kobj, &scst_acg_io_grouping_type.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add tgt attr %s for tgt %s",
-+			scst_acg_io_grouping_type.attr.name, tgt->tgt_name);
-+		goto out_del;
-+	}
-+
-+	res = sysfs_create_file(&acg->acg_kobj, &scst_acg_cpu_mask.attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add tgt attr %s for tgt %s",
-+			scst_acg_cpu_mask.attr.name, tgt->tgt_name);
-+		goto out_del;
-+	}
-+
-+out:
-+	return res;
-+
-+out_del:
-+	scst_acg_sysfs_del(acg);
-+	goto out;
-+}
-+
-+static ssize_t scst_acg_addr_method_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_acg *acg;
-+
-+	acg = container_of(kobj, struct scst_acg, acg_kobj);
-+
-+	return __scst_acg_addr_method_show(acg, buf);
-+}
-+
-+static ssize_t scst_acg_addr_method_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_acg *acg;
-+
-+	acg = container_of(kobj, struct scst_acg, acg_kobj);
-+
-+	res = __scst_acg_addr_method_store(acg, buf, count);
-+	return res;
-+}
-+
-+static ssize_t scst_acg_io_grouping_type_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_acg *acg;
-+
-+	acg = container_of(kobj, struct scst_acg, acg_kobj);
-+
-+	return __scst_acg_io_grouping_type_show(acg, buf);
-+}
-+
-+static ssize_t scst_acg_io_grouping_type_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_acg *acg;
-+
-+	acg = container_of(kobj, struct scst_acg, acg_kobj);
-+
-+	res = __scst_acg_io_grouping_type_store(acg, buf, count);
-+	if (res != 0)
-+		goto out;
-+
-+	res = count;
-+
-+out:
-+	return res;
-+}
-+
-+static ssize_t scst_acg_cpu_mask_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_acg *acg;
-+
-+	acg = container_of(kobj, struct scst_acg, acg_kobj);
-+
-+	return __scst_acg_cpu_mask_show(acg, buf);
-+}
-+
-+static ssize_t scst_acg_cpu_mask_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_acg *acg;
-+
-+	acg = container_of(kobj, struct scst_acg, acg_kobj);
-+
-+	res = __scst_acg_cpu_mask_store(acg, buf, count);
-+	if (res != 0)
-+		goto out;
-+
-+	res = count;
-+
-+out:
-+	return res;
-+}
-+
-+static ssize_t scst_ini_group_mgmt_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	static char *help = "Usage: echo \"create GROUP_NAME\" >mgmt\n"
-+			    "       echo \"del GROUP_NAME\" >mgmt\n";
-+
-+	return sprintf(buf, "%s", help);
-+}
-+
-+static int scst_process_ini_group_mgmt_store(char *buffer,
-+	struct scst_tgt *tgt)
-+{
-+	int res, action;
-+	int len;
-+	char *name;
-+	char *p, *e = NULL;
-+	struct scst_acg *a, *acg = NULL;
-+
-+#define SCST_INI_GROUP_ACTION_CREATE	1
-+#define SCST_INI_GROUP_ACTION_DEL	2
-+
-+	TRACE_DBG("tgt %p, buffer %s", tgt, buffer);
-+
-+	p = buffer;
-+	if (p[strlen(p) - 1] == '\n')
-+		p[strlen(p) - 1] = '\0';
-+	if (strncasecmp("create ", p, 7) == 0) {
-+		p += 7;
-+		action = SCST_INI_GROUP_ACTION_CREATE;
-+	} else if (strncasecmp("del ", p, 4) == 0) {
-+		p += 4;
-+		action = SCST_INI_GROUP_ACTION_DEL;
-+	} else {
-+		PRINT_ERROR("Unknown action \"%s\"", p);
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	res = scst_suspend_activity(true);
-+	if (res != 0)
-+		goto out;
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out_resume;
-+	}
-+
-+	/* Check if our pointer is still alive */
-+	if (scst_check_tgt_acg_ptrs(tgt, NULL) != 0)
-+		goto out_unlock;
-+
-+	while (isspace(*p) && *p != '\0')
-+		p++;
-+	e = p;
-+	while (!isspace(*e) && *e != '\0')
-+		e++;
-+	*e = '\0';
-+
-+	if (p[0] == '\0') {
-+		PRINT_ERROR("%s", "Group name required");
-+		res = -EINVAL;
-+		goto out_unlock;
-+	}
-+
-+	list_for_each_entry(a, &tgt->tgt_acg_list, acg_list_entry) {
-+		if (strcmp(a->acg_name, p) == 0) {
-+			TRACE_DBG("group (acg) %p %s found",
-+				  a, a->acg_name);
-+			acg = a;
++	spin_lock_bh(&pool->sgv_pool_lock);
++
++	while (!list_empty(&pool->sorted_recycling_list) &&
++			(atomic_read(&sgv_pages_total) > sgv_lo_wmk)) {
++		struct sgv_pool_obj *obj = list_entry(
++			pool->sorted_recycling_list.next,
++			struct sgv_pool_obj, sorted_recycling_list_entry);
++
++		if (sgv_purge_from_cache(obj, min_interval, cur_time)) {
++			int pages = obj->pages;
++
++			freed += pages;
++			nr -= pages;
++
++			TRACE_MEM("%d pages purged from pool %p (nr left %d, "
++				"total freed %d)", pages, pool, nr, freed);
++
++			spin_unlock_bh(&pool->sgv_pool_lock);
++			sgv_dtor_and_free(obj);
++			spin_lock_bh(&pool->sgv_pool_lock);
++		} else
++			break;
++
++		if ((nr <= 0) || (freed >= MAX_PAGES_PER_POOL)) {
++			if (freed >= MAX_PAGES_PER_POOL)
++				TRACE_MEM("%d pages purged from pool %p, "
++					"leaving", freed, pool);
 +			break;
 +		}
 +	}
 +
-+	switch (action) {
-+	case SCST_INI_GROUP_ACTION_CREATE:
-+		TRACE_DBG("Creating group '%s'", p);
-+		if (acg != NULL) {
-+			PRINT_ERROR("acg name %s exist", p);
-+			res = -EINVAL;
-+			goto out_unlock;
++	spin_unlock_bh(&pool->sgv_pool_lock);
++
++out:
++	return nr;
++}
++
++/* No locks */
++static int __sgv_shrink(int nr, int min_interval)
++{
++	struct sgv_pool *pool;
++	unsigned long cur_time = jiffies;
++	int prev_nr = nr;
++	bool circle = false;
++
++	TRACE_MEM("Trying to shrink %d pages from all sgv pools "
++		"(min_interval %d)", nr, min_interval);
++
++	while (nr > 0) {
++		struct list_head *next;
++
++		spin_lock_bh(&sgv_pools_lock);
++
++		pool = sgv_cur_purge_pool;
++		if (pool == NULL) {
++			if (list_empty(&sgv_active_pools_list)) {
++				TRACE_MEM("%s", "Active pools list is empty");
++				goto out_unlock;
++			}
++
++			pool = list_entry(sgv_active_pools_list.next,
++					typeof(*pool),
++					sgv_active_pools_list_entry);
++		}
++		sgv_pool_get(pool);
++
++		next = pool->sgv_active_pools_list_entry.next;
++		if (next == &sgv_active_pools_list) {
++			if (circle && (prev_nr == nr)) {
++				TRACE_MEM("Full circle done, but no progress, "
++					"leaving (nr %d)", nr);
++				goto out_unlock_put;
++			}
++			circle = true;
++			prev_nr = nr;
++
++			next = next->next;
 +		}
 +
-+		len = strlen(p) + 1;
-+		name = kmalloc(len, GFP_KERNEL);
-+		if (name == NULL) {
-+			PRINT_ERROR("%s", "Allocation of name failed");
++		sgv_cur_purge_pool = list_entry(next, typeof(*pool),
++			sgv_active_pools_list_entry);
++		TRACE_MEM("New cur purge pool %p", sgv_cur_purge_pool);
++
++		spin_unlock_bh(&sgv_pools_lock);
++
++		nr = sgv_shrink_pool(pool, nr, min_interval, cur_time);
++
++		sgv_pool_put(pool);
++	}
++
++out:
++	return nr;
++
++out_unlock:
++	spin_unlock_bh(&sgv_pools_lock);
++	goto out;
++
++out_unlock_put:
++	spin_unlock_bh(&sgv_pools_lock);
++	sgv_pool_put(pool);
++	goto out;
++}
++
++static int sgv_shrink(struct shrinker *shrinker, int nr, gfp_t gfpm)
++{
++
++	if (nr > 0) {
++		nr = __sgv_shrink(nr, SGV_MIN_SHRINK_INTERVAL);
++		TRACE_MEM("Left %d", nr);
++	} else {
++		struct sgv_pool *pool;
++		int inactive_pages = 0;
++
++		spin_lock_bh(&sgv_pools_lock);
++		list_for_each_entry(pool, &sgv_active_pools_list,
++				sgv_active_pools_list_entry) {
++			if (pool->purge_interval > 0)
++				inactive_pages += pool->inactive_cached_pages;
++		}
++		spin_unlock_bh(&sgv_pools_lock);
++
++		nr = max((int)0, inactive_pages - sgv_lo_wmk);
++		TRACE_MEM("Can free %d (total %d)", nr,
++			atomic_read(&sgv_pages_total));
++	}
++	return nr;
++}
++
++static void sgv_purge_work_fn(struct delayed_work *work)
++{
++	unsigned long cur_time = jiffies;
++	struct sgv_pool *pool = container_of(work, struct sgv_pool,
++					sgv_purge_work);
++
++	TRACE_MEM("Purge work for pool %p", pool);
++
++	spin_lock_bh(&pool->sgv_pool_lock);
++
++	pool->purge_work_scheduled = false;
++
++	while (!list_empty(&pool->sorted_recycling_list)) {
++		struct sgv_pool_obj *obj = list_entry(
++			pool->sorted_recycling_list.next,
++			struct sgv_pool_obj, sorted_recycling_list_entry);
++
++		if (sgv_purge_from_cache(obj, pool->purge_interval, cur_time)) {
++			spin_unlock_bh(&pool->sgv_pool_lock);
++			sgv_dtor_and_free(obj);
++			spin_lock_bh(&pool->sgv_pool_lock);
++		} else {
++			/*
++			 * Let's reschedule it for full period to not get here
++			 * too often. In the worst case we have shrinker
++			 * to reclaim buffers quickier.
++			 */
++			TRACE_MEM("Rescheduling purge work for pool %p (delay "
++				"%d HZ/%d sec)", pool, pool->purge_interval,
++				pool->purge_interval/HZ);
++			schedule_delayed_work(&pool->sgv_purge_work,
++				pool->purge_interval);
++			pool->purge_work_scheduled = true;
++			break;
++		}
++	}
++
++	spin_unlock_bh(&pool->sgv_pool_lock);
++
++	TRACE_MEM("Leaving purge work for pool %p", pool);
++	return;
++}
++
++static int sgv_check_full_clustering(struct scatterlist *sg, int cur, int hint)
++{
++	int res = -1;
++	int i = hint;
++	unsigned long pfn_cur = page_to_pfn(sg_page(&sg[cur]));
++	int len_cur = sg[cur].length;
++	unsigned long pfn_cur_next = pfn_cur + (len_cur >> PAGE_SHIFT);
++	int full_page_cur = (len_cur & (PAGE_SIZE - 1)) == 0;
++	unsigned long pfn, pfn_next;
++	bool full_page;
++
++#if 0
++	TRACE_MEM("pfn_cur %ld, pfn_cur_next %ld, len_cur %d, full_page_cur %d",
++		pfn_cur, pfn_cur_next, len_cur, full_page_cur);
++#endif
++
++	/* check the hint first */
++	if (i >= 0) {
++		pfn = page_to_pfn(sg_page(&sg[i]));
++		pfn_next = pfn + (sg[i].length >> PAGE_SHIFT);
++		full_page = (sg[i].length & (PAGE_SIZE - 1)) == 0;
++
++		if ((pfn == pfn_cur_next) && full_page_cur)
++			goto out_head;
++
++		if ((pfn_next == pfn_cur) && full_page)
++			goto out_tail;
++	}
++
++	/* ToDo: implement more intelligent search */
++	for (i = cur - 1; i >= 0; i--) {
++		pfn = page_to_pfn(sg_page(&sg[i]));
++		pfn_next = pfn + (sg[i].length >> PAGE_SHIFT);
++		full_page = (sg[i].length & (PAGE_SIZE - 1)) == 0;
++
++		if ((pfn == pfn_cur_next) && full_page_cur)
++			goto out_head;
++
++		if ((pfn_next == pfn_cur) && full_page)
++			goto out_tail;
++	}
++
++out:
++	return res;
++
++out_tail:
++	TRACE_MEM("SG segment %d will be tail merged with segment %d", cur, i);
++	sg[i].length += len_cur;
++	sg_clear(&sg[cur]);
++	res = i;
++	goto out;
++
++out_head:
++	TRACE_MEM("SG segment %d will be head merged with segment %d", cur, i);
++	sg_assign_page(&sg[i], sg_page(&sg[cur]));
++	sg[i].length += len_cur;
++	sg_clear(&sg[cur]);
++	res = i;
++	goto out;
++}
++
++static int sgv_check_tail_clustering(struct scatterlist *sg, int cur, int hint)
++{
++	int res = -1;
++	unsigned long pfn_cur = page_to_pfn(sg_page(&sg[cur]));
++	int len_cur = sg[cur].length;
++	int prev;
++	unsigned long pfn_prev;
++	bool full_page;
++
++#ifdef SCST_HIGHMEM
++	if (page >= highmem_start_page) {
++		TRACE_MEM("%s", "HIGHMEM page allocated, no clustering")
++		goto out;
++	}
++#endif
++
++#if 0
++	TRACE_MEM("pfn_cur %ld, pfn_cur_next %ld, len_cur %d, full_page_cur %d",
++		pfn_cur, pfn_cur_next, len_cur, full_page_cur);
++#endif
++
++	if (cur == 0)
++		goto out;
++
++	prev = cur - 1;
++	pfn_prev = page_to_pfn(sg_page(&sg[prev])) +
++			(sg[prev].length >> PAGE_SHIFT);
++	full_page = (sg[prev].length & (PAGE_SIZE - 1)) == 0;
++
++	if ((pfn_prev == pfn_cur) && full_page) {
++		TRACE_MEM("SG segment %d will be tail merged with segment %d",
++			cur, prev);
++		sg[prev].length += len_cur;
++		sg_clear(&sg[cur]);
++		res = prev;
++	}
++
++out:
++	return res;
++}
++
++static void sgv_free_sys_sg_entries(struct scatterlist *sg, int sg_count,
++	void *priv)
++{
++	int i;
++
++	TRACE_MEM("sg=%p, sg_count=%d", sg, sg_count);
++
++	for (i = 0; i < sg_count; i++) {
++		struct page *p = sg_page(&sg[i]);
++		int len = sg[i].length;
++		int pages =
++			(len >> PAGE_SHIFT) + ((len & ~PAGE_MASK) != 0);
++
++		TRACE_MEM("page %lx, len %d, pages %d",
++			(unsigned long)p, len, pages);
++
++		while (pages > 0) {
++			int order = 0;
++
++/*
++ * __free_pages() doesn't like freeing pages with not that order with
++ * which they were allocated, so disable this small optimization.
++ */
++#if 0
++			if (len > 0) {
++				while (((1 << order) << PAGE_SHIFT) < len)
++					order++;
++				len = 0;
++			}
++#endif
++			TRACE_MEM("free_pages(): order %d, page %lx",
++				order, (unsigned long)p);
++
++			__free_pages(p, order);
++
++			pages -= 1 << order;
++			p += 1 << order;
++		}
++	}
++}
++
++static struct page *sgv_alloc_sys_pages(struct scatterlist *sg,
++	gfp_t gfp_mask, void *priv)
++{
++	struct page *page = alloc_pages(gfp_mask, 0);
++
++	sg_set_page(sg, page, PAGE_SIZE, 0);
++	TRACE_MEM("page=%p, sg=%p, priv=%p", page, sg, priv);
++	if (page == NULL) {
++		TRACE(TRACE_OUT_OF_MEM, "%s", "Allocation of "
++			"sg page failed");
++	}
++	return page;
++}
++
++static int sgv_alloc_sg_entries(struct scatterlist *sg, int pages,
++	gfp_t gfp_mask, enum sgv_clustering_types clustering_type,
++	struct trans_tbl_ent *trans_tbl,
++	const struct sgv_pool_alloc_fns *alloc_fns, void *priv)
++{
++	int sg_count = 0;
++	int pg, i, j;
++	int merged = -1;
++
++	TRACE_MEM("pages=%d, clustering_type=%d", pages, clustering_type);
++
++#if 0
++	gfp_mask |= __GFP_COLD;
++#endif
++#ifdef CONFIG_SCST_STRICT_SECURITY
++	gfp_mask |= __GFP_ZERO;
++#endif
++
++	for (pg = 0; pg < pages; pg++) {
++		void *rc;
++#ifdef CONFIG_SCST_DEBUG_OOM
++		if (((gfp_mask & __GFP_NOFAIL) != __GFP_NOFAIL) &&
++		    ((scst_random() % 10000) == 55))
++			rc = NULL;
++		else
++#endif
++			rc = alloc_fns->alloc_pages_fn(&sg[sg_count], gfp_mask,
++				priv);
++		if (rc == NULL)
++			goto out_no_mem;
++
++		/*
++		 * This code allows compiler to see full body of the clustering
++		 * functions and gives it a chance to generate better code.
++		 * At least, the resulting code is smaller, comparing to
++		 * calling them using a function pointer.
++		 */
++		if (clustering_type == sgv_full_clustering)
++			merged = sgv_check_full_clustering(sg, sg_count, merged);
++		else if (clustering_type == sgv_tail_clustering)
++			merged = sgv_check_tail_clustering(sg, sg_count, merged);
++		else
++			merged = -1;
++
++		if (merged == -1)
++			sg_count++;
++
++		TRACE_MEM("pg=%d, merged=%d, sg_count=%d", pg, merged,
++			sg_count);
++	}
++
++	if ((clustering_type != sgv_no_clustering) && (trans_tbl != NULL)) {
++		pg = 0;
++		for (i = 0; i < pages; i++) {
++			int n = (sg[i].length >> PAGE_SHIFT) +
++				((sg[i].length & ~PAGE_MASK) != 0);
++			trans_tbl[i].pg_count = pg;
++			for (j = 0; j < n; j++)
++				trans_tbl[pg++].sg_num = i+1;
++			TRACE_MEM("i=%d, n=%d, pg_count=%d", i, n,
++				trans_tbl[i].pg_count);
++		}
++	}
++
++out:
++	TRACE_MEM("sg_count=%d", sg_count);
++	return sg_count;
++
++out_no_mem:
++	alloc_fns->free_pages_fn(sg, sg_count, priv);
++	sg_count = 0;
++	goto out;
++}
++
++static int sgv_alloc_arrays(struct sgv_pool_obj *obj,
++	int pages_to_alloc, gfp_t gfp_mask)
++{
++	int sz, tsz = 0;
++	int res = 0;
++
++	sz = pages_to_alloc * sizeof(obj->sg_entries[0]);
++
++	obj->sg_entries = kmalloc(sz, gfp_mask);
++	if (unlikely(obj->sg_entries == NULL)) {
++		TRACE(TRACE_OUT_OF_MEM, "Allocation of sgv_pool_obj "
++			"SG vector failed (size %d)", sz);
++		res = -ENOMEM;
++		goto out;
++	}
++
++	sg_init_table(obj->sg_entries, pages_to_alloc);
++
++	if (sgv_pool_clustered(obj->owner_pool)) {
++		if (pages_to_alloc <= sgv_max_trans_pages) {
++			obj->trans_tbl =
++				(struct trans_tbl_ent *)obj->sg_entries_data;
++			/*
++			 * No need to clear trans_tbl, if needed, it will be
++			 * fully rewritten in sgv_alloc_sg_entries()
++			 */
++		} else {
++			tsz = pages_to_alloc * sizeof(obj->trans_tbl[0]);
++			obj->trans_tbl = kzalloc(tsz, gfp_mask);
++			if (unlikely(obj->trans_tbl == NULL)) {
++				TRACE(TRACE_OUT_OF_MEM, "Allocation of "
++					"trans_tbl failed (size %d)", tsz);
++				res = -ENOMEM;
++				goto out_free;
++			}
++		}
++	}
++
++	TRACE_MEM("pages_to_alloc %d, sz %d, tsz %d, obj %p, sg_entries %p, "
++		"trans_tbl %p", pages_to_alloc, sz, tsz, obj, obj->sg_entries,
++		obj->trans_tbl);
++
++out:
++	return res;
++
++out_free:
++	kfree(obj->sg_entries);
++	obj->sg_entries = NULL;
++	goto out;
++}
++
++static struct sgv_pool_obj *sgv_get_obj(struct sgv_pool *pool, int cache_num,
++	int pages, gfp_t gfp_mask, bool get_new)
++{
++	struct sgv_pool_obj *obj;
++
++	spin_lock_bh(&pool->sgv_pool_lock);
++
++	if (unlikely(get_new)) {
++		/* Used only for buffers preallocation */
++		goto get_new;
++	}
++
++	if (likely(!list_empty(&pool->recycling_lists[cache_num]))) {
++		obj = list_entry(pool->recycling_lists[cache_num].next,
++			 struct sgv_pool_obj, recycling_list_entry);
++
++		list_del(&obj->sorted_recycling_list_entry);
++		list_del(&obj->recycling_list_entry);
++
++		pool->inactive_cached_pages -= pages;
++
++		spin_unlock_bh(&pool->sgv_pool_lock);
++		goto out;
++	}
++
++get_new:
++	if (pool->cached_entries == 0) {
++		TRACE_MEM("Adding pool %p to the active list", pool);
++		spin_lock_bh(&sgv_pools_lock);
++		list_add_tail(&pool->sgv_active_pools_list_entry,
++			&sgv_active_pools_list);
++		spin_unlock_bh(&sgv_pools_lock);
++	}
++
++	pool->cached_entries++;
++	pool->cached_pages += pages;
++
++	spin_unlock_bh(&pool->sgv_pool_lock);
++
++	TRACE_MEM("New cached entries %d (pool %p)", pool->cached_entries,
++		pool);
++
++	obj = kmem_cache_alloc(pool->caches[cache_num],
++		gfp_mask & ~(__GFP_HIGHMEM|GFP_DMA));
++	if (likely(obj)) {
++		memset(obj, 0, sizeof(*obj));
++		obj->cache_num = cache_num;
++		obj->pages = pages;
++		obj->owner_pool = pool;
++	} else {
++		spin_lock_bh(&pool->sgv_pool_lock);
++		sgv_dec_cached_entries(pool, pages);
++		spin_unlock_bh(&pool->sgv_pool_lock);
++	}
++
++out:
++	return obj;
++}
++
++static void sgv_put_obj(struct sgv_pool_obj *obj)
++{
++	struct sgv_pool *pool = obj->owner_pool;
++	struct list_head *entry;
++	struct list_head *list = &pool->recycling_lists[obj->cache_num];
++	int pages = obj->pages;
++
++	spin_lock_bh(&pool->sgv_pool_lock);
++
++	TRACE_MEM("sgv %p, cache num %d, pages %d, sg_count %d", obj,
++		obj->cache_num, pages, obj->sg_count);
++
++	if (sgv_pool_clustered(pool)) {
++		/* Make objects with less entries more preferred */
++		__list_for_each(entry, list) {
++			struct sgv_pool_obj *tmp = list_entry(entry,
++				struct sgv_pool_obj, recycling_list_entry);
++
++			TRACE_MEM("tmp %p, cache num %d, pages %d, sg_count %d",
++				tmp, tmp->cache_num, tmp->pages, tmp->sg_count);
++
++			if (obj->sg_count <= tmp->sg_count)
++				break;
++		}
++		entry = entry->prev;
++	} else
++		entry = list;
++
++	TRACE_MEM("Adding in %p (list %p)", entry, list);
++	list_add(&obj->recycling_list_entry, entry);
++
++	list_add_tail(&obj->sorted_recycling_list_entry,
++		&pool->sorted_recycling_list);
++
++	obj->time_stamp = jiffies;
++
++	pool->inactive_cached_pages += pages;
++
++	if (!pool->purge_work_scheduled) {
++		TRACE_MEM("Scheduling purge work for pool %p", pool);
++		pool->purge_work_scheduled = true;
++		schedule_delayed_work(&pool->sgv_purge_work,
++			pool->purge_interval);
++	}
++
++	spin_unlock_bh(&pool->sgv_pool_lock);
++	return;
++}
++
++/* No locks */
++static int sgv_hiwmk_check(int pages_to_alloc)
++{
++	int res = 0;
++	int pages = pages_to_alloc;
++
++	pages += atomic_read(&sgv_pages_total);
++
++	if (unlikely(pages > sgv_hi_wmk)) {
++		pages -= sgv_hi_wmk;
++		atomic_inc(&sgv_releases_on_hiwmk);
++
++		pages = __sgv_shrink(pages, 0);
++		if (pages > 0) {
++			TRACE(TRACE_OUT_OF_MEM, "Requested amount of "
++			    "memory (%d pages) for being executed "
++			    "commands together with the already "
++			    "allocated memory exceeds the allowed "
++			    "maximum %d. Should you increase "
++			    "scst_max_cmd_mem?", pages_to_alloc,
++			   sgv_hi_wmk);
++			atomic_inc(&sgv_releases_on_hiwmk_failed);
 +			res = -ENOMEM;
 +			goto out_unlock;
 +		}
-+		strlcpy(name, p, len);
-+
-+		acg = scst_alloc_add_acg(tgt, name, true);
-+		kfree(name);
-+		if (acg == NULL)
-+			goto out_unlock;
-+		break;
-+	case SCST_INI_GROUP_ACTION_DEL:
-+		TRACE_DBG("Deleting group '%s'", p);
-+		if (acg == NULL) {
-+			PRINT_ERROR("Group %s not found", p);
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+		if (!scst_acg_sess_is_empty(acg)) {
-+			PRINT_ERROR("Group %s is not empty", acg->acg_name);
-+			res = -EBUSY;
-+			goto out_unlock;
-+		}
-+		scst_del_free_acg(acg);
-+		break;
 +	}
 +
-+	res = 0;
++	atomic_add(pages_to_alloc, &sgv_pages_total);
 +
 +out_unlock:
-+	mutex_unlock(&scst_mutex);
++	TRACE_MEM("pages_to_alloc %d, new total %d", pages_to_alloc,
++		atomic_read(&sgv_pages_total));
 +
-+out_resume:
-+	scst_resume_activity();
-+
-+out:
-+	return res;
-+
-+#undef SCST_LUN_ACTION_CREATE
-+#undef SCST_LUN_ACTION_DEL
-+}
-+
-+static int scst_ini_group_mgmt_store_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return scst_process_ini_group_mgmt_store(work->buf, work->tgt);
-+}
-+
-+static ssize_t scst_ini_group_mgmt_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	char *buffer;
-+	struct scst_tgt *tgt;
-+	struct scst_sysfs_work_item *work;
-+
-+	tgt = container_of(kobj->parent, struct scst_tgt, tgt_kobj);
-+
-+	buffer = kzalloc(count+1, GFP_KERNEL);
-+	if (buffer == NULL) {
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+	memcpy(buffer, buf, count);
-+	buffer[count] = '\0';
-+
-+	res = scst_alloc_sysfs_work(scst_ini_group_mgmt_store_work_fn, false,
-+					&work);
-+	if (res != 0)
-+		goto out_free;
-+
-+	work->buf = buffer;
-+	work->tgt = tgt;
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+
-+out_free:
-+	kfree(buffer);
-+	goto out;
-+}
-+
-+static ssize_t scst_rel_tgt_id_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_tgt *tgt;
-+	int res;
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+
-+	res = sprintf(buf, "%d\n%s", tgt->rel_tgt_id,
-+		(tgt->rel_tgt_id != 0) ? SCST_SYSFS_KEY_MARK "\n" : "");
 +	return res;
 +}
 +
-+static int scst_process_rel_tgt_id_store(struct scst_sysfs_work_item *work)
++/* No locks */
++static void sgv_hiwmk_uncheck(int pages)
 +{
-+	int res = 0;
-+	struct scst_tgt *tgt = work->tgt;
-+	unsigned long rel_tgt_id = work->l;
-+
-+	/* tgt protected by kobject_get() */
-+
-+	TRACE_DBG("Trying to set relative target port id %d",
-+		(uint16_t)rel_tgt_id);
-+
-+	if (tgt->tgtt->is_target_enabled(tgt) &&
-+	    rel_tgt_id != tgt->rel_tgt_id) {
-+		if (!scst_is_relative_target_port_id_unique(rel_tgt_id, tgt)) {
-+			PRINT_ERROR("Relative port id %d is not unique",
-+				(uint16_t)rel_tgt_id);
-+			res = -EBADSLT;
-+			goto out_put;
-+		}
-+	}
-+
-+	if (rel_tgt_id < SCST_MIN_REL_TGT_ID ||
-+	    rel_tgt_id > SCST_MAX_REL_TGT_ID) {
-+		if ((rel_tgt_id == 0) && !tgt->tgtt->is_target_enabled(tgt))
-+			goto set;
-+
-+		PRINT_ERROR("Invalid relative port id %d",
-+			(uint16_t)rel_tgt_id);
-+		res = -EINVAL;
-+		goto out_put;
-+	}
-+
-+set:
-+	tgt->rel_tgt_id = (uint16_t)rel_tgt_id;
-+
-+out_put:
-+	kobject_put(&tgt->tgt_kobj);
-+	return res;
-+}
-+
-+static ssize_t scst_rel_tgt_id_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res = 0;
-+	struct scst_tgt *tgt;
-+	unsigned long rel_tgt_id;
-+	struct scst_sysfs_work_item *work;
-+
-+	if (buf == NULL)
-+		goto out;
-+
-+	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-+
-+	res = strict_strtoul(buf, 0, &rel_tgt_id);
-+	if (res != 0) {
-+		PRINT_ERROR("%s", "Wrong rel_tgt_id");
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	res = scst_alloc_sysfs_work(scst_process_rel_tgt_id_store, false,
-+					&work);
-+	if (res != 0)
-+		goto out;
-+
-+	work->tgt = tgt;
-+	work->l = rel_tgt_id;
-+
-+	kobject_get(&tgt->tgt_kobj);
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+}
-+
-+int scst_acn_sysfs_create(struct scst_acn *acn)
-+{
-+	int res = 0;
-+	int len;
-+	struct scst_acg *acg = acn->acg;
-+	struct kobj_attribute *attr = NULL;
-+#ifdef CONFIG_DEBUG_LOCK_ALLOC
-+	static struct lock_class_key __key;
-+#endif
-+
-+	acn->acn_attr = NULL;
-+
-+	attr = kzalloc(sizeof(struct kobj_attribute), GFP_KERNEL);
-+	if (attr == NULL) {
-+		PRINT_ERROR("Unable to allocate attributes for initiator '%s'",
-+			acn->name);
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+
-+	len = strlen(acn->name) + 1;
-+	attr->attr.name = kzalloc(len, GFP_KERNEL);
-+	if (attr->attr.name == NULL) {
-+		PRINT_ERROR("Unable to allocate attributes for initiator '%s'",
-+			acn->name);
-+		res = -ENOMEM;
-+		goto out_free;
-+	}
-+	strlcpy((char *)attr->attr.name, acn->name, len);
-+
-+	attr->attr.owner = THIS_MODULE;
-+#ifdef CONFIG_DEBUG_LOCK_ALLOC
-+	attr->attr.key = &__key;
-+#endif
-+
-+	attr->attr.mode = S_IRUGO;
-+	attr->show = scst_acn_file_show;
-+	attr->store = NULL;
-+
-+	res = sysfs_create_file(acg->initiators_kobj, &attr->attr);
-+	if (res != 0) {
-+		PRINT_ERROR("Unable to create acn '%s' for group '%s'",
-+			acn->name, acg->acg_name);
-+		kfree(attr->attr.name);
-+		goto out_free;
-+	}
-+
-+	acn->acn_attr = attr;
-+
-+out:
-+	return res;
-+
-+out_free:
-+	kfree(attr);
-+	goto out;
-+}
-+
-+void scst_acn_sysfs_del(struct scst_acn *acn)
-+{
-+	struct scst_acg *acg = acn->acg;
-+
-+	if (acn->acn_attr != NULL) {
-+		sysfs_remove_file(acg->initiators_kobj,
-+			&acn->acn_attr->attr);
-+		kfree(acn->acn_attr->attr.name);
-+		kfree(acn->acn_attr);
-+	}
++	atomic_sub(pages, &sgv_pages_total);
++	TRACE_MEM("pages %d, new total %d", pages,
++		atomic_read(&sgv_pages_total));
 +	return;
 +}
 +
-+static ssize_t scst_acn_file_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
++/* No locks */
++static bool sgv_check_allowed_mem(struct scst_mem_lim *mem_lim, int pages)
 +{
-+	return scnprintf(buf, SCST_SYSFS_BLOCK_SIZE, "%s\n",
-+		attr->attr.name);
-+}
++	int alloced;
++	bool res = true;
 +
-+static ssize_t scst_acg_luns_mgmt_store(struct kobject *kobj,
-+				    struct kobj_attribute *attr,
-+				    const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_acg *acg;
++	alloced = atomic_add_return(pages, &mem_lim->alloced_pages);
++	if (unlikely(alloced > mem_lim->max_allowed_pages)) {
++		TRACE(TRACE_OUT_OF_MEM, "Requested amount of memory "
++			"(%d pages) for being executed commands on a device "
++			"together with the already allocated memory exceeds "
++			"the allowed maximum %d. Should you increase "
++			"scst_max_dev_cmd_mem?", pages,
++			mem_lim->max_allowed_pages);
++		atomic_sub(pages, &mem_lim->alloced_pages);
++		res = false;
++	}
 +
-+	acg = container_of(kobj->parent, struct scst_acg, acg_kobj);
-+	res = __scst_luns_mgmt_store(acg, false, buf, count);
++	TRACE_MEM("mem_lim %p, pages %d, res %d, new alloced %d", mem_lim,
++		pages, res, atomic_read(&mem_lim->alloced_pages));
++
 +	return res;
 +}
 +
-+static ssize_t scst_acg_ini_mgmt_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
++/* No locks */
++static void sgv_uncheck_allowed_mem(struct scst_mem_lim *mem_lim, int pages)
 +{
-+	static char *help = "Usage: echo \"add INITIATOR_NAME\" "
-+					">mgmt\n"
-+			    "       echo \"del INITIATOR_NAME\" "
-+					">mgmt\n"
-+			    "       echo \"move INITIATOR_NAME DEST_GROUP_NAME\" "
-+					">mgmt\n"
-+			    "       echo \"clear\" "
-+					">mgmt\n";
++	atomic_sub(pages, &mem_lim->alloced_pages);
 +
-+	return sprintf(buf, "%s", help);
-+}
-+
-+static int scst_process_acg_ini_mgmt_store(char *buffer,
-+	struct scst_tgt *tgt, struct scst_acg *acg)
-+{
-+	int res, action;
-+	char *p, *e = NULL;
-+	char *name = NULL, *group = NULL;
-+	struct scst_acg *acg_dest = NULL;
-+	struct scst_acn *acn = NULL, *acn_tmp;
-+
-+#define SCST_ACG_ACTION_INI_ADD		1
-+#define SCST_ACG_ACTION_INI_DEL		2
-+#define SCST_ACG_ACTION_INI_CLEAR	3
-+#define SCST_ACG_ACTION_INI_MOVE	4
-+
-+	TRACE_DBG("tgt %p, acg %p, buffer %s", tgt, acg, buffer);
-+
-+	p = buffer;
-+	if (p[strlen(p) - 1] == '\n')
-+		p[strlen(p) - 1] = '\0';
-+
-+	if (strncasecmp("add", p, 3) == 0) {
-+		p += 3;
-+		action = SCST_ACG_ACTION_INI_ADD;
-+	} else if (strncasecmp("del", p, 3) == 0) {
-+		p += 3;
-+		action = SCST_ACG_ACTION_INI_DEL;
-+	} else if (strncasecmp("clear", p, 5) == 0) {
-+		p += 5;
-+		action = SCST_ACG_ACTION_INI_CLEAR;
-+	} else if (strncasecmp("move", p, 4) == 0) {
-+		p += 4;
-+		action = SCST_ACG_ACTION_INI_MOVE;
-+	} else {
-+		PRINT_ERROR("Unknown action \"%s\"", p);
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (action != SCST_ACG_ACTION_INI_CLEAR)
-+		if (!isspace(*p)) {
-+			PRINT_ERROR("%s", "Syntax error");
-+			res = -EINVAL;
-+			goto out;
-+		}
-+
-+	res = scst_suspend_activity(true);
-+	if (res != 0)
-+		goto out;
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out_resume;
-+	}
-+
-+	/* Check if tgt and acg not already freed while we were coming here */
-+	if (scst_check_tgt_acg_ptrs(tgt, acg) != 0)
-+		goto out_unlock;
-+
-+	if (action != SCST_ACG_ACTION_INI_CLEAR)
-+		while (isspace(*p) && *p != '\0')
-+			p++;
-+
-+	switch (action) {
-+	case SCST_ACG_ACTION_INI_ADD:
-+		e = p;
-+		while (!isspace(*e) && *e != '\0')
-+			e++;
-+		*e = '\0';
-+		name = p;
-+
-+		if (name[0] == '\0') {
-+			PRINT_ERROR("%s", "Invalid initiator name");
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+
-+		res = scst_acg_add_acn(acg, name);
-+		if (res != 0)
-+			goto out_unlock;
-+		break;
-+	case SCST_ACG_ACTION_INI_DEL:
-+		e = p;
-+		while (!isspace(*e) && *e != '\0')
-+			e++;
-+		*e = '\0';
-+		name = p;
-+
-+		if (name[0] == '\0') {
-+			PRINT_ERROR("%s", "Invalid initiator name");
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+
-+		acn = scst_find_acn(acg, name);
-+		if (acn == NULL) {
-+			PRINT_ERROR("Unable to find "
-+				"initiator '%s' in group '%s'",
-+				name, acg->acg_name);
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+		scst_del_free_acn(acn, true);
-+		break;
-+	case SCST_ACG_ACTION_INI_CLEAR:
-+		list_for_each_entry_safe(acn, acn_tmp, &acg->acn_list,
-+				acn_list_entry) {
-+			scst_del_free_acn(acn, false);
-+		}
-+		scst_check_reassign_sessions();
-+		break;
-+	case SCST_ACG_ACTION_INI_MOVE:
-+		e = p;
-+		while (!isspace(*e) && *e != '\0')
-+			e++;
-+		if (*e == '\0') {
-+			PRINT_ERROR("%s", "Too few parameters");
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+		*e = '\0';
-+		name = p;
-+
-+		if (name[0] == '\0') {
-+			PRINT_ERROR("%s", "Invalid initiator name");
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+
-+		e++;
-+		p = e;
-+		while (!isspace(*e) && *e != '\0')
-+			e++;
-+		*e = '\0';
-+		group = p;
-+
-+		if (group[0] == '\0') {
-+			PRINT_ERROR("%s", "Invalid group name");
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+
-+		TRACE_DBG("Move initiator '%s' to group '%s'",
-+			name, group);
-+
-+		acn = scst_find_acn(acg, name);
-+		if (acn == NULL) {
-+			PRINT_ERROR("Unable to find "
-+				"initiator '%s' in group '%s'",
-+				name, acg->acg_name);
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+		acg_dest = scst_tgt_find_acg(tgt, group);
-+		if (acg_dest == NULL) {
-+			PRINT_ERROR("Unable to find group '%s' in target '%s'",
-+				group, tgt->tgt_name);
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+		if (scst_find_acn(acg_dest, name) != NULL) {
-+			PRINT_ERROR("Initiator '%s' already exists in group '%s'",
-+				name, acg_dest->acg_name);
-+			res = -EEXIST;
-+			goto out_unlock;
-+		}
-+		scst_del_free_acn(acn, false);
-+
-+		res = scst_acg_add_acn(acg_dest, name);
-+		if (res != 0)
-+			goto out_unlock;
-+		break;
-+	}
-+
-+	res = 0;
-+
-+out_unlock:
-+	mutex_unlock(&scst_mutex);
-+
-+out_resume:
-+	scst_resume_activity();
-+
-+out:
-+	return res;
-+
-+#undef SCST_ACG_ACTION_INI_ADD
-+#undef SCST_ACG_ACTION_INI_DEL
-+#undef SCST_ACG_ACTION_INI_CLEAR
-+#undef SCST_ACG_ACTION_INI_MOVE
-+}
-+
-+static int scst_acg_ini_mgmt_store_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return scst_process_acg_ini_mgmt_store(work->buf, work->tgt, work->acg);
-+}
-+
-+static ssize_t scst_acg_ini_mgmt_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	struct scst_acg *acg;
-+
-+	acg = container_of(kobj->parent, struct scst_acg, acg_kobj);
-+
-+	return __scst_acg_mgmt_store(acg, buf, count, false,
-+		scst_acg_ini_mgmt_store_work_fn);
-+}
-+
-+/**
-+ ** SGV directory implementation
-+ **/
-+
-+static struct kobj_attribute sgv_stat_attr =
-+	__ATTR(stats, S_IRUGO | S_IWUSR, sgv_sysfs_stat_show,
-+		sgv_sysfs_stat_reset);
-+
-+static struct attribute *sgv_attrs[] = {
-+	&sgv_stat_attr.attr,
-+	NULL,
-+};
-+
-+static void sgv_kobj_release(struct kobject *kobj)
-+{
-+	struct sgv_pool *pool;
-+
-+	pool = container_of(kobj, struct sgv_pool, sgv_kobj);
-+	complete_all(&pool->sgv_kobj_release_cmpl);
-+	return;
-+}
-+
-+static struct kobj_type sgv_pool_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = sgv_kobj_release,
-+	.default_attrs = sgv_attrs,
-+};
-+
-+int scst_sgv_sysfs_create(struct sgv_pool *pool)
-+{
-+	int res;
-+
-+	init_completion(&pool->sgv_kobj_release_cmpl);
-+
-+	res = kobject_init_and_add(&pool->sgv_kobj, &sgv_pool_ktype,
-+			scst_sgv_kobj, pool->name);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add sgv pool %s to sysfs", pool->name);
-+		goto out;
-+	}
-+
-+out:
-+	return res;
-+}
-+
-+void scst_sgv_sysfs_del(struct sgv_pool *pool)
-+{
-+	int rc;
-+
-+	kobject_del(&pool->sgv_kobj);
-+	kobject_put(&pool->sgv_kobj);
-+
-+	rc = wait_for_completion_timeout(&pool->sgv_kobj_release_cmpl, HZ);
-+	if (rc == 0) {
-+		PRINT_INFO("Waiting for releasing sysfs entry "
-+			"for SGV pool %s (%d refs)...", pool->name,
-+			atomic_read(&pool->sgv_kobj.kref.refcount));
-+		wait_for_completion(&pool->sgv_kobj_release_cmpl);
-+		PRINT_INFO("Done waiting for releasing sysfs "
-+			"entry for SGV pool %s", pool->name);
-+	}
-+	return;
-+}
-+
-+static struct kobj_attribute sgv_global_stat_attr =
-+	__ATTR(global_stats, S_IRUGO | S_IWUSR, sgv_sysfs_global_stat_show,
-+		sgv_sysfs_global_stat_reset);
-+
-+static struct attribute *sgv_default_attrs[] = {
-+	&sgv_global_stat_attr.attr,
-+	NULL,
-+};
-+
-+static void scst_sysfs_release(struct kobject *kobj)
-+{
-+	kfree(kobj);
-+}
-+
-+static struct kobj_type sgv_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_sysfs_release,
-+	.default_attrs = sgv_default_attrs,
-+};
-+
-+/**
-+ ** SCST sysfs root directory implementation
-+ **/
-+
-+static ssize_t scst_threads_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	int count;
-+
-+	count = sprintf(buf, "%d\n%s", scst_main_cmd_threads.nr_threads,
-+		(scst_main_cmd_threads.nr_threads != scst_threads) ?
-+			SCST_SYSFS_KEY_MARK "\n" : "");
-+	return count;
-+}
-+
-+static int scst_process_threads_store(int newtn)
-+{
-+	int res;
-+	long oldtn, delta;
-+
-+	TRACE_DBG("newtn %d", newtn);
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out;
-+	}
-+
-+	oldtn = scst_main_cmd_threads.nr_threads;
-+
-+	delta = newtn - oldtn;
-+	if (delta < 0)
-+		scst_del_threads(&scst_main_cmd_threads, -delta);
-+	else {
-+		res = scst_add_threads(&scst_main_cmd_threads, NULL, NULL, delta);
-+		if (res != 0)
-+			goto out_up;
-+	}
-+
-+	PRINT_INFO("Changed cmd threads num: old %ld, new %d", oldtn, newtn);
-+
-+out_up:
-+	mutex_unlock(&scst_mutex);
-+
-+out:
-+	return res;
-+}
-+
-+static int scst_threads_store_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return scst_process_threads_store(work->new_threads_num);
-+}
-+
-+static ssize_t scst_threads_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	long newtn;
-+	struct scst_sysfs_work_item *work;
-+
-+	res = strict_strtol(buf, 0, &newtn);
-+	if (res != 0) {
-+		PRINT_ERROR("strict_strtol() for %s failed: %d ", buf, res);
-+		goto out;
-+	}
-+	if (newtn <= 0) {
-+		PRINT_ERROR("Illegal threads num value %ld", newtn);
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	res = scst_alloc_sysfs_work(scst_threads_store_work_fn, false, &work);
-+	if (res != 0)
-+		goto out;
-+
-+	work->new_threads_num = newtn;
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+}
-+
-+static ssize_t scst_setup_id_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	int count;
-+
-+	count = sprintf(buf, "0x%x\n%s\n", scst_setup_id,
-+		(scst_setup_id == 0) ? "" : SCST_SYSFS_KEY_MARK);
-+	return count;
-+}
-+
-+static ssize_t scst_setup_id_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	unsigned long val;
-+
-+	res = strict_strtoul(buf, 0, &val);
-+	if (res != 0) {
-+		PRINT_ERROR("strict_strtoul() for %s failed: %d ", buf, res);
-+		goto out;
-+	}
-+
-+	scst_setup_id = val;
-+	PRINT_INFO("Changed scst_setup_id to %x", scst_setup_id);
-+
-+	res = count;
-+
-+out:
-+	return res;
-+}
-+
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+
-+static void scst_read_trace_tlb(const struct scst_trace_log *tbl, char *buf,
-+	unsigned long log_level, int *pos)
-+{
-+	const struct scst_trace_log *t = tbl;
-+
-+	if (t == NULL)
-+		goto out;
-+
-+	while (t->token) {
-+		if (log_level & t->val) {
-+			*pos += sprintf(&buf[*pos], "%s%s",
-+					(*pos == 0) ? "" : " | ",
-+					t->token);
-+		}
-+		t++;
-+	}
-+out:
-+	return;
-+}
-+
-+static ssize_t scst_trace_level_show(const struct scst_trace_log *local_tbl,
-+	unsigned long log_level, char *buf, const char *help)
-+{
-+	int pos = 0;
-+
-+	scst_read_trace_tlb(scst_trace_tbl, buf, log_level, &pos);
-+	scst_read_trace_tlb(local_tbl, buf, log_level, &pos);
-+
-+	pos += sprintf(&buf[pos], "\n\n\nUsage:\n"
-+		"	echo \"all|none|default\" >trace_level\n"
-+		"	echo \"value DEC|0xHEX|0OCT\" >trace_level\n"
-+		"	echo \"add|del TOKEN\" >trace_level\n"
-+		"\nwhere TOKEN is one of [debug, function, line, pid,\n"
-+		"		       buff, mem, sg, out_of_mem,\n"
-+		"		       special, scsi, mgmt, minor,\n"
-+		"		       mgmt_dbg, scsi_serializing,\n"
-+		"		       retry, recv_bot, send_bot, recv_top, pr,\n"
-+		"		       send_top%s]", help != NULL ? help : "");
-+
-+	return pos;
-+}
-+
-+static ssize_t scst_main_trace_level_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	return scst_trace_level_show(scst_local_trace_tbl, trace_flag,
-+			buf, NULL);
-+}
-+
-+static int scst_write_trace(const char *buf, size_t length,
-+	unsigned long *log_level, unsigned long default_level,
-+	const char *name, const struct scst_trace_log *tbl)
-+{
-+	int res = length;
-+	int action;
-+	unsigned long level = 0, oldlevel;
-+	char *buffer, *p, *e;
-+	const struct scst_trace_log *t;
-+
-+#define SCST_TRACE_ACTION_ALL		1
-+#define SCST_TRACE_ACTION_NONE		2
-+#define SCST_TRACE_ACTION_DEFAULT	3
-+#define SCST_TRACE_ACTION_ADD		4
-+#define SCST_TRACE_ACTION_DEL		5
-+#define SCST_TRACE_ACTION_VALUE		6
-+
-+	if ((buf == NULL) || (length == 0)) {
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	buffer = kmalloc(length+1, GFP_KERNEL);
-+	if (buffer == NULL) {
-+		PRINT_ERROR("Unable to alloc intermediate buffer (size %zd)",
-+			length+1);
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+	memcpy(buffer, buf, length);
-+	buffer[length] = '\0';
-+
-+	TRACE_DBG("buffer %s", buffer);
-+
-+	p = buffer;
-+	if (!strncasecmp("all", p, 3)) {
-+		action = SCST_TRACE_ACTION_ALL;
-+	} else if (!strncasecmp("none", p, 4) || !strncasecmp("null", p, 4)) {
-+		action = SCST_TRACE_ACTION_NONE;
-+	} else if (!strncasecmp("default", p, 7)) {
-+		action = SCST_TRACE_ACTION_DEFAULT;
-+	} else if (!strncasecmp("add", p, 3)) {
-+		p += 3;
-+		action = SCST_TRACE_ACTION_ADD;
-+	} else if (!strncasecmp("del", p, 3)) {
-+		p += 3;
-+		action = SCST_TRACE_ACTION_DEL;
-+	} else if (!strncasecmp("value", p, 5)) {
-+		p += 5;
-+		action = SCST_TRACE_ACTION_VALUE;
-+	} else {
-+		if (p[strlen(p) - 1] == '\n')
-+			p[strlen(p) - 1] = '\0';
-+		PRINT_ERROR("Unknown action \"%s\"", p);
-+		res = -EINVAL;
-+		goto out_free;
-+	}
-+
-+	switch (action) {
-+	case SCST_TRACE_ACTION_ADD:
-+	case SCST_TRACE_ACTION_DEL:
-+	case SCST_TRACE_ACTION_VALUE:
-+		if (!isspace(*p)) {
-+			PRINT_ERROR("%s", "Syntax error");
-+			res = -EINVAL;
-+			goto out_free;
-+		}
-+	}
-+
-+	switch (action) {
-+	case SCST_TRACE_ACTION_ALL:
-+		level = TRACE_ALL;
-+		break;
-+	case SCST_TRACE_ACTION_DEFAULT:
-+		level = default_level;
-+		break;
-+	case SCST_TRACE_ACTION_NONE:
-+		level = TRACE_NULL;
-+		break;
-+	case SCST_TRACE_ACTION_ADD:
-+	case SCST_TRACE_ACTION_DEL:
-+		while (isspace(*p) && *p != '\0')
-+			p++;
-+		e = p;
-+		while (!isspace(*e) && *e != '\0')
-+			e++;
-+		*e = 0;
-+		if (tbl) {
-+			t = tbl;
-+			while (t->token) {
-+				if (!strcasecmp(p, t->token)) {
-+					level = t->val;
-+					break;
-+				}
-+				t++;
-+			}
-+		}
-+		if (level == 0) {
-+			t = scst_trace_tbl;
-+			while (t->token) {
-+				if (!strcasecmp(p, t->token)) {
-+					level = t->val;
-+					break;
-+				}
-+				t++;
-+			}
-+		}
-+		if (level == 0) {
-+			PRINT_ERROR("Unknown token \"%s\"", p);
-+			res = -EINVAL;
-+			goto out_free;
-+		}
-+		break;
-+	case SCST_TRACE_ACTION_VALUE:
-+		while (isspace(*p) && *p != '\0')
-+			p++;
-+		res = strict_strtoul(p, 0, &level);
-+		if (res != 0) {
-+			PRINT_ERROR("Invalid trace value \"%s\"", p);
-+			res = -EINVAL;
-+			goto out_free;
-+		}
-+		break;
-+	}
-+
-+	oldlevel = *log_level;
-+
-+	switch (action) {
-+	case SCST_TRACE_ACTION_ADD:
-+		*log_level |= level;
-+		break;
-+	case SCST_TRACE_ACTION_DEL:
-+		*log_level &= ~level;
-+		break;
-+	default:
-+		*log_level = level;
-+		break;
-+	}
-+
-+	PRINT_INFO("Changed trace level for \"%s\": old 0x%08lx, new 0x%08lx",
-+		name, oldlevel, *log_level);
-+
-+out_free:
-+	kfree(buffer);
-+out:
-+	return res;
-+
-+#undef SCST_TRACE_ACTION_ALL
-+#undef SCST_TRACE_ACTION_NONE
-+#undef SCST_TRACE_ACTION_DEFAULT
-+#undef SCST_TRACE_ACTION_ADD
-+#undef SCST_TRACE_ACTION_DEL
-+#undef SCST_TRACE_ACTION_VALUE
-+}
-+
-+static ssize_t scst_main_trace_level_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+
-+	if (mutex_lock_interruptible(&scst_log_mutex) != 0) {
-+		res = -EINTR;
-+		goto out;
-+	}
-+
-+	res = scst_write_trace(buf, count, &trace_flag,
-+		SCST_DEFAULT_LOG_FLAGS, "scst", scst_local_trace_tbl);
-+
-+	mutex_unlock(&scst_log_mutex);
-+
-+out:
-+	return res;
-+}
-+
-+#endif /* defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING) */
-+
-+static ssize_t scst_version_show(struct kobject *kobj,
-+				 struct kobj_attribute *attr,
-+				 char *buf)
-+{
-+
-+	sprintf(buf, "%s\n", SCST_VERSION_STRING);
-+
-+#ifdef CONFIG_SCST_STRICT_SERIALIZING
-+	strcat(buf, "STRICT_SERIALIZING\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_EXTRACHECKS
-+	strcat(buf, "EXTRACHECKS\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_TRACING
-+	strcat(buf, "TRACING\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_DEBUG
-+	strcat(buf, "DEBUG\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_DEBUG_TM
-+	strcat(buf, "DEBUG_TM\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_DEBUG_RETRY
-+	strcat(buf, "DEBUG_RETRY\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_DEBUG_OOM
-+	strcat(buf, "DEBUG_OOM\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_DEBUG_SN
-+	strcat(buf, "DEBUG_SN\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_USE_EXPECTED_VALUES
-+	strcat(buf, "USE_EXPECTED_VALUES\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_TEST_IO_IN_SIRQ
-+	strcat(buf, "TEST_IO_IN_SIRQ\n");
-+#endif
-+
-+#ifdef CONFIG_SCST_STRICT_SECURITY
-+	strcat(buf, "STRICT_SECURITY\n");
-+#endif
-+	return strlen(buf);
-+}
-+
-+static ssize_t scst_last_sysfs_mgmt_res_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	int res;
-+
-+	spin_lock(&sysfs_work_lock);
-+	TRACE_DBG("active_sysfs_works %d", active_sysfs_works);
-+	if (active_sysfs_works > 0)
-+		res = -EAGAIN;
-+	else
-+		res = sprintf(buf, "%d\n", last_sysfs_work_res);
-+	spin_unlock(&sysfs_work_lock);
-+	return res;
-+}
-+
-+static struct kobj_attribute scst_threads_attr =
-+	__ATTR(threads, S_IRUGO | S_IWUSR, scst_threads_show,
-+	       scst_threads_store);
-+
-+static struct kobj_attribute scst_setup_id_attr =
-+	__ATTR(setup_id, S_IRUGO | S_IWUSR, scst_setup_id_show,
-+	       scst_setup_id_store);
-+
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+static struct kobj_attribute scst_trace_level_attr =
-+	__ATTR(trace_level, S_IRUGO | S_IWUSR, scst_main_trace_level_show,
-+	       scst_main_trace_level_store);
-+#endif
-+
-+static struct kobj_attribute scst_version_attr =
-+	__ATTR(version, S_IRUGO, scst_version_show, NULL);
-+
-+static struct kobj_attribute scst_last_sysfs_mgmt_res_attr =
-+	__ATTR(last_sysfs_mgmt_res, S_IRUGO,
-+		scst_last_sysfs_mgmt_res_show, NULL);
-+
-+static struct attribute *scst_sysfs_root_default_attrs[] = {
-+	&scst_threads_attr.attr,
-+	&scst_setup_id_attr.attr,
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	&scst_trace_level_attr.attr,
-+#endif
-+	&scst_version_attr.attr,
-+	&scst_last_sysfs_mgmt_res_attr.attr,
-+	NULL,
-+};
-+
-+static void scst_sysfs_root_release(struct kobject *kobj)
-+{
-+	complete_all(&scst_sysfs_root_release_completion);
-+}
-+
-+static struct kobj_type scst_sysfs_root_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_sysfs_root_release,
-+	.default_attrs = scst_sysfs_root_default_attrs,
-+};
-+
-+/**
-+ ** Dev handlers
-+ **/
-+
-+static void scst_devt_release(struct kobject *kobj)
-+{
-+	struct scst_dev_type *devt;
-+
-+	devt = container_of(kobj, struct scst_dev_type, devt_kobj);
-+	complete_all(&devt->devt_kobj_release_compl);
-+	return;
-+}
-+
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+
-+static ssize_t scst_devt_trace_level_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	struct scst_dev_type *devt;
-+
-+	devt = container_of(kobj, struct scst_dev_type, devt_kobj);
-+
-+	return scst_trace_level_show(devt->trace_tbl,
-+		devt->trace_flags ? *devt->trace_flags : 0, buf,
-+		devt->trace_tbl_help);
-+}
-+
-+static ssize_t scst_devt_trace_level_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	int res;
-+	struct scst_dev_type *devt;
-+
-+	devt = container_of(kobj, struct scst_dev_type, devt_kobj);
-+
-+	if (mutex_lock_interruptible(&scst_log_mutex) != 0) {
-+		res = -EINTR;
-+		goto out;
-+	}
-+
-+	res = scst_write_trace(buf, count, devt->trace_flags,
-+		devt->default_trace_flags, devt->name, devt->trace_tbl);
-+
-+	mutex_unlock(&scst_log_mutex);
-+
-+out:
-+	return res;
-+}
-+
-+static struct kobj_attribute devt_trace_attr =
-+	__ATTR(trace_level, S_IRUGO | S_IWUSR,
-+	       scst_devt_trace_level_show, scst_devt_trace_level_store);
-+
-+#endif /* #if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING) */
-+
-+static ssize_t scst_devt_type_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	int pos;
-+	struct scst_dev_type *devt;
-+
-+	devt = container_of(kobj, struct scst_dev_type, devt_kobj);
-+
-+	pos = sprintf(buf, "%d - %s\n", devt->type,
-+		(unsigned)devt->type > ARRAY_SIZE(scst_dev_handler_types) ?
-+			"unknown" : scst_dev_handler_types[devt->type]);
-+
-+	return pos;
-+}
-+
-+static struct kobj_attribute scst_devt_type_attr =
-+	__ATTR(type, S_IRUGO, scst_devt_type_show, NULL);
-+
-+static struct attribute *scst_devt_default_attrs[] = {
-+	&scst_devt_type_attr.attr,
-+	NULL,
-+};
-+
-+static struct kobj_type scst_devt_ktype = {
-+	.sysfs_ops = &scst_sysfs_ops,
-+	.release = scst_devt_release,
-+	.default_attrs = scst_devt_default_attrs,
-+};
-+
-+static ssize_t scst_devt_mgmt_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	char *help = "Usage: echo \"add_device device_name [parameters]\" "
-+				">mgmt\n"
-+		     "       echo \"del_device device_name\" >mgmt\n"
-+		     "%s%s"
-+		     "%s"
-+		     "\n"
-+		     "where parameters are one or more "
-+		     "param_name=value pairs separated by ';'\n\n"
-+		     "%s%s%s%s%s%s%s%s\n";
-+	struct scst_dev_type *devt;
-+
-+	devt = container_of(kobj, struct scst_dev_type, devt_kobj);
-+
-+	return scnprintf(buf, SCST_SYSFS_BLOCK_SIZE, help,
-+		(devt->devt_optional_attributes != NULL) ?
-+			"       echo \"add_attribute <attribute> <value>\" >mgmt\n"
-+			"       echo \"del_attribute <attribute> <value>\" >mgmt\n" : "",
-+		(devt->dev_optional_attributes != NULL) ?
-+			"       echo \"add_device_attribute device_name <attribute> <value>\" >mgmt"
-+			"       echo \"del_device_attribute device_name <attribute> <value>\" >mgmt\n" : "",
-+		(devt->mgmt_cmd_help) ? devt->mgmt_cmd_help : "",
-+		(devt->add_device_parameters != NULL) ?
-+			"The following parameters available: " : "",
-+		(devt->add_device_parameters != NULL) ?
-+			devt->add_device_parameters : "",
-+		(devt->devt_optional_attributes != NULL) ?
-+			"The following dev handler attributes available: " : "",
-+		(devt->devt_optional_attributes != NULL) ?
-+			devt->devt_optional_attributes : "",
-+		(devt->devt_optional_attributes != NULL) ? "\n" : "",
-+		(devt->dev_optional_attributes != NULL) ?
-+			"The following device attributes available: " : "",
-+		(devt->dev_optional_attributes != NULL) ?
-+			devt->dev_optional_attributes : "",
-+		(devt->dev_optional_attributes != NULL) ? "\n" : "");
-+}
-+
-+static int scst_process_devt_mgmt_store(char *buffer,
-+	struct scst_dev_type *devt)
-+{
-+	int res = 0;
-+	char *p, *pp, *dev_name;
-+
-+	/* Check if our pointer is still alive and, if yes, grab it */
-+	if (scst_check_grab_devt_ptr(devt, &scst_virtual_dev_type_list) != 0)
-+		goto out;
-+
-+	TRACE_DBG("devt %p, buffer %s", devt, buffer);
-+
-+	pp = buffer;
-+	if (pp[strlen(pp) - 1] == '\n')
-+		pp[strlen(pp) - 1] = '\0';
-+
-+	p = scst_get_next_lexem(&pp);
-+
-+	if (strcasecmp("add_device", p) == 0) {
-+		dev_name = scst_get_next_lexem(&pp);
-+		if (*dev_name == '\0') {
-+			PRINT_ERROR("%s", "Device name required");
-+			res = -EINVAL;
-+			goto out_ungrab;
-+		}
-+		res = devt->add_device(dev_name, pp);
-+	} else if (strcasecmp("del_device", p) == 0) {
-+		dev_name = scst_get_next_lexem(&pp);
-+		if (*dev_name == '\0') {
-+			PRINT_ERROR("%s", "Device name required");
-+			res = -EINVAL;
-+			goto out_ungrab;
-+		}
-+
-+		p = scst_get_next_lexem(&pp);
-+		if (*p != '\0')
-+			goto out_syntax_err;
-+
-+		res = devt->del_device(dev_name);
-+	} else if (devt->mgmt_cmd != NULL) {
-+		scst_restore_token_str(p, pp);
-+		res = devt->mgmt_cmd(buffer);
-+	} else {
-+		PRINT_ERROR("Unknown action \"%s\"", p);
-+		res = -EINVAL;
-+		goto out_ungrab;
-+	}
-+
-+out_ungrab:
-+	scst_ungrab_devt_ptr(devt);
-+
-+out:
-+	return res;
-+
-+out_syntax_err:
-+	PRINT_ERROR("Syntax error on \"%s\"", p);
-+	res = -EINVAL;
-+	goto out_ungrab;
-+}
-+
-+static int scst_devt_mgmt_store_work_fn(struct scst_sysfs_work_item *work)
-+{
-+	return scst_process_devt_mgmt_store(work->buf, work->devt);
-+}
-+
-+static ssize_t __scst_devt_mgmt_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count,
-+	int (*sysfs_work_fn)(struct scst_sysfs_work_item *work))
-+{
-+	int res;
-+	char *buffer;
-+	struct scst_dev_type *devt;
-+	struct scst_sysfs_work_item *work;
-+
-+	devt = container_of(kobj, struct scst_dev_type, devt_kobj);
-+
-+	buffer = kzalloc(count+1, GFP_KERNEL);
-+	if (buffer == NULL) {
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+	memcpy(buffer, buf, count);
-+	buffer[count] = '\0';
-+
-+	res = scst_alloc_sysfs_work(sysfs_work_fn, false, &work);
-+	if (res != 0)
-+		goto out_free;
-+
-+	work->buf = buffer;
-+	work->devt = devt;
-+
-+	res = scst_sysfs_queue_wait_work(work);
-+	if (res == 0)
-+		res = count;
-+
-+out:
-+	return res;
-+
-+out_free:
-+	kfree(buffer);
-+	goto out;
-+}
-+
-+static ssize_t scst_devt_mgmt_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	return __scst_devt_mgmt_store(kobj, attr, buf, count,
-+		scst_devt_mgmt_store_work_fn);
-+}
-+
-+static struct kobj_attribute scst_devt_mgmt =
-+	__ATTR(mgmt, S_IRUGO | S_IWUSR, scst_devt_mgmt_show,
-+	       scst_devt_mgmt_store);
-+
-+static ssize_t scst_devt_pass_through_mgmt_show(struct kobject *kobj,
-+	struct kobj_attribute *attr, char *buf)
-+{
-+	char *help = "Usage: echo \"add_device H:C:I:L\" >mgmt\n"
-+		     "       echo \"del_device H:C:I:L\" >mgmt\n";
-+	return sprintf(buf, "%s", help);
-+}
-+
-+static int scst_process_devt_pass_through_mgmt_store(char *buffer,
-+	struct scst_dev_type *devt)
-+{
-+	int res = 0;
-+	char *p, *pp, *action;
-+	unsigned long host, channel, id, lun;
-+	struct scst_device *d, *dev = NULL;
-+
-+	TRACE_DBG("devt %p, buffer %s", devt, buffer);
-+
-+	pp = buffer;
-+	if (pp[strlen(pp) - 1] == '\n')
-+		pp[strlen(pp) - 1] = '\0';
-+
-+	action = scst_get_next_lexem(&pp);
-+	p = scst_get_next_lexem(&pp);
-+	if (*p == '\0') {
-+		PRINT_ERROR("%s", "Device required");
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	if (*scst_get_next_lexem(&pp) != '\0') {
-+		PRINT_ERROR("%s", "Too many parameters");
-+		res = -EINVAL;
-+		goto out_syntax_err;
-+	}
-+
-+	host = simple_strtoul(p, &p, 0);
-+	if ((host == ULONG_MAX) || (*p != ':'))
-+		goto out_syntax_err;
-+	p++;
-+	channel = simple_strtoul(p, &p, 0);
-+	if ((channel == ULONG_MAX) || (*p != ':'))
-+		goto out_syntax_err;
-+	p++;
-+	id = simple_strtoul(p, &p, 0);
-+	if ((channel == ULONG_MAX) || (*p != ':'))
-+		goto out_syntax_err;
-+	p++;
-+	lun = simple_strtoul(p, &p, 0);
-+	if (lun == ULONG_MAX)
-+		goto out_syntax_err;
-+
-+	TRACE_DBG("Dev %ld:%ld:%ld:%ld", host, channel, id, lun);
-+
-+	if (mutex_lock_interruptible(&scst_mutex) != 0) {
-+		res = -EINTR;
-+		goto out;
-+	}
-+
-+	/* Check if devt not be already freed while we were coming here */
-+	if (scst_check_devt_ptr(devt, &scst_dev_type_list) != 0)
-+		goto out_unlock;
-+
-+	list_for_each_entry(d, &scst_dev_list, dev_list_entry) {
-+		if ((d->virt_id == 0) &&
-+		    d->scsi_dev->host->host_no == host &&
-+		    d->scsi_dev->channel == channel &&
-+		    d->scsi_dev->id == id &&
-+		    d->scsi_dev->lun == lun) {
-+			dev = d;
-+			TRACE_DBG("Dev %p (%ld:%ld:%ld:%ld) found",
-+				  dev, host, channel, id, lun);
-+			break;
-+		}
-+	}
-+	if (dev == NULL) {
-+		PRINT_ERROR("Device %ld:%ld:%ld:%ld not found",
-+			       host, channel, id, lun);
-+		res = -EINVAL;
-+		goto out_unlock;
-+	}
-+
-+	if (dev->scsi_dev->type != devt->type) {
-+		PRINT_ERROR("Type %d of device %s differs from type "
-+			"%d of dev handler %s", dev->type,
-+			dev->virt_name, devt->type, devt->name);
-+		res = -EINVAL;
-+		goto out_unlock;
-+	}
-+
-+	if (strcasecmp("add_device", action) == 0) {
-+		res = scst_assign_dev_handler(dev, devt);
-+		if (res == 0)
-+			PRINT_INFO("Device %s assigned to dev handler %s",
-+				dev->virt_name, devt->name);
-+	} else if (strcasecmp("del_device", action) == 0) {
-+		if (dev->handler != devt) {
-+			PRINT_ERROR("Device %s is not assigned to handler %s",
-+				dev->virt_name, devt->name);
-+			res = -EINVAL;
-+			goto out_unlock;
-+		}
-+		res = scst_assign_dev_handler(dev, &scst_null_devtype);
-+		if (res == 0)
-+			PRINT_INFO("Device %s unassigned from dev handler %s",
-+				dev->virt_name, devt->name);
-+	} else {
-+		PRINT_ERROR("Unknown action \"%s\"", action);
-+		res = -EINVAL;
-+		goto out_unlock;
-+	}
-+
-+out_unlock:
-+	mutex_unlock(&scst_mutex);
-+
-+out:
-+	return res;
-+
-+out_syntax_err:
-+	PRINT_ERROR("Syntax error on \"%s\"", p);
-+	res = -EINVAL;
-+	goto out;
-+}
-+
-+static int scst_devt_pass_through_mgmt_store_work_fn(
-+	struct scst_sysfs_work_item *work)
-+{
-+	return scst_process_devt_pass_through_mgmt_store(work->buf, work->devt);
-+}
-+
-+static ssize_t scst_devt_pass_through_mgmt_store(struct kobject *kobj,
-+	struct kobj_attribute *attr, const char *buf, size_t count)
-+{
-+	return __scst_devt_mgmt_store(kobj, attr, buf, count,
-+		scst_devt_pass_through_mgmt_store_work_fn);
-+}
-+
-+static struct kobj_attribute scst_devt_pass_through_mgmt =
-+	__ATTR(mgmt, S_IRUGO | S_IWUSR, scst_devt_pass_through_mgmt_show,
-+	       scst_devt_pass_through_mgmt_store);
-+
-+int scst_devt_sysfs_create(struct scst_dev_type *devt)
-+{
-+	int res;
-+	struct kobject *parent;
-+	const struct attribute **pattr;
-+
-+	init_completion(&devt->devt_kobj_release_compl);
-+
-+	if (devt->parent != NULL)
-+		parent = &devt->parent->devt_kobj;
-+	else
-+		parent = scst_handlers_kobj;
-+
-+	res = kobject_init_and_add(&devt->devt_kobj, &scst_devt_ktype,
-+			parent, devt->name);
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add devt %s to sysfs", devt->name);
-+		goto out;
-+	}
-+
-+	if (devt->add_device != NULL) {
-+		res = sysfs_create_file(&devt->devt_kobj,
-+				&scst_devt_mgmt.attr);
-+	} else {
-+		res = sysfs_create_file(&devt->devt_kobj,
-+				&scst_devt_pass_through_mgmt.attr);
-+	}
-+	if (res != 0) {
-+		PRINT_ERROR("Can't add mgmt attr for dev handler %s",
-+			devt->name);
-+		goto out_err;
-+	}
-+
-+	pattr = devt->devt_attrs;
-+	if (pattr != NULL) {
-+		while (*pattr != NULL) {
-+			res = sysfs_create_file(&devt->devt_kobj, *pattr);
-+			if (res != 0) {
-+				PRINT_ERROR("Can't add devt attr %s for dev "
-+					"handler %s", (*pattr)->name,
-+					devt->name);
-+				goto out_err;
-+			}
-+			pattr++;
-+		}
-+	}
-+
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	if (devt->trace_flags != NULL) {
-+		res = sysfs_create_file(&devt->devt_kobj,
-+				&devt_trace_attr.attr);
-+		if (res != 0) {
-+			PRINT_ERROR("Can't add devt trace_flag for dev "
-+				"handler %s", devt->name);
-+			goto out_err;
-+		}
-+	}
-+#endif
-+
-+out:
-+	return res;
-+
-+out_err:
-+	scst_devt_sysfs_del(devt);
-+	goto out;
-+}
-+
-+void scst_devt_sysfs_del(struct scst_dev_type *devt)
-+{
-+	int rc;
-+
-+	kobject_del(&devt->devt_kobj);
-+	kobject_put(&devt->devt_kobj);
-+
-+	rc = wait_for_completion_timeout(&devt->devt_kobj_release_compl, HZ);
-+	if (rc == 0) {
-+		PRINT_INFO("Waiting for releasing of sysfs entry "
-+			"for dev handler template %s (%d refs)...", devt->name,
-+			atomic_read(&devt->devt_kobj.kref.refcount));
-+		wait_for_completion(&devt->devt_kobj_release_compl);
-+		PRINT_INFO("Done waiting for releasing sysfs entry "
-+			"for dev handler template %s", devt->name);
-+	}
++	TRACE_MEM("mem_lim %p, pages %d, new alloced %d", mem_lim,
++		pages, atomic_read(&mem_lim->alloced_pages));
 +	return;
 +}
 +
 +/**
-+ ** Sysfs user info
-+ **/
-+
-+static DEFINE_MUTEX(scst_sysfs_user_info_mutex);
-+
-+/* All protected by scst_sysfs_user_info_mutex */
-+static LIST_HEAD(scst_sysfs_user_info_list);
-+static uint32_t scst_sysfs_info_cur_cookie;
-+
-+/* scst_sysfs_user_info_mutex supposed to be held */
-+static struct scst_sysfs_user_info *scst_sysfs_user_find_info(uint32_t cookie)
-+{
-+	struct scst_sysfs_user_info *info, *res = NULL;
-+
-+	list_for_each_entry(info, &scst_sysfs_user_info_list,
-+			info_list_entry) {
-+		if (info->info_cookie == cookie) {
-+			res = info;
-+			break;
-+		}
-+	}
-+	return res;
-+}
-+
-+/**
-+ * scst_sysfs_user_get_info() - get user_info
++ * sgv_pool_alloc - allocate an SG vector from the SGV pool
++ * @pool:	the cache to alloc from
++ * @size:	size of the resulting SG vector in bytes
++ * @gfp_mask:	the allocation mask
++ * @flags:	the allocation flags
++ * @count:	the resulting count of SG entries in the resulting SG vector
++ * @sgv:	the resulting SGV object
++ * @mem_lim:	memory limits
++ * @priv:	pointer to private for this allocation data
 + *
-+ * Finds the user_info based on cookie and mark it as received the reply by
-+ * setting for it flag info_being_executed.
-+ *
-+ * Returns found entry or NULL.
++ * Description:
++ *    Allocate an SG vector from the SGV pool and returns pointer to it or
++ *    NULL in case of any error. See the SGV pool documentation for more details.
 + */
-+struct scst_sysfs_user_info *scst_sysfs_user_get_info(uint32_t cookie)
++struct scatterlist *sgv_pool_alloc(struct sgv_pool *pool, unsigned int size,
++	gfp_t gfp_mask, int flags, int *count,
++	struct sgv_pool_obj **sgv, struct scst_mem_lim *mem_lim, void *priv)
 +{
-+	struct scst_sysfs_user_info *res = NULL;
++	struct sgv_pool_obj *obj;
++	int cache_num, pages, cnt;
++	struct scatterlist *res = NULL;
++	int pages_to_alloc;
++	int no_cached = flags & SGV_POOL_ALLOC_NO_CACHED;
++	bool allowed_mem_checked = false, hiwmk_checked = false;
 +
-+	mutex_lock(&scst_sysfs_user_info_mutex);
-+
-+	res = scst_sysfs_user_find_info(cookie);
-+	if (res != NULL) {
-+		if (!res->info_being_executed)
-+			res->info_being_executed = 1;
-+	}
-+
-+	mutex_unlock(&scst_sysfs_user_info_mutex);
-+	return res;
-+}
-+EXPORT_SYMBOL_GPL(scst_sysfs_user_get_info);
-+
-+/**
-+ ** Helper functionality to help target drivers and dev handlers support
-+ ** sending events to user space and wait for their completion in a safe
-+ ** manner. See samples how to use it in iscsi-scst or scst_user.
-+ **/
-+
-+/**
-+ * scst_sysfs_user_add_info() - create and add user_info in the global list
-+ *
-+ * Creates an info structure and adds it in the info_list.
-+ * Returns 0 and out_info on success, error code otherwise.
-+ */
-+int scst_sysfs_user_add_info(struct scst_sysfs_user_info **out_info)
-+{
-+	int res = 0;
-+	struct scst_sysfs_user_info *info;
-+
-+	info = kzalloc(sizeof(*info), GFP_KERNEL);
-+	if (info == NULL) {
-+		PRINT_ERROR("Unable to allocate sysfs user info (size %zd)",
-+			sizeof(*info));
-+		res = -ENOMEM;
++	if (unlikely(size == 0))
 +		goto out;
++
++	EXTRACHECKS_BUG_ON((gfp_mask & __GFP_NOFAIL) == __GFP_NOFAIL);
++
++	pages = ((size + PAGE_SIZE - 1) >> PAGE_SHIFT);
++	if (pool->single_alloc_pages == 0) {
++		int pages_order = get_order(size);
++		cache_num = pages_order;
++		pages_to_alloc = (1 << pages_order);
++	} else {
++		cache_num = 0;
++		pages_to_alloc = max(pool->single_alloc_pages, pages);
 +	}
 +
-+	mutex_lock(&scst_sysfs_user_info_mutex);
++	TRACE_MEM("size=%d, pages=%d, pages_to_alloc=%d, cache num=%d, "
++		"flags=%x, no_cached=%d, *sgv=%p", size, pages,
++		pages_to_alloc, cache_num, flags, no_cached, *sgv);
 +
-+	while ((info->info_cookie == 0) ||
-+	       (scst_sysfs_user_find_info(info->info_cookie) != NULL))
-+		info->info_cookie = scst_sysfs_info_cur_cookie++;
++	if (*sgv != NULL) {
++		obj = *sgv;
 +
-+	init_completion(&info->info_completion);
++		TRACE_MEM("Supplied obj %p, cache num %d", obj, obj->cache_num);
 +
-+	list_add_tail(&info->info_list_entry, &scst_sysfs_user_info_list);
-+	info->info_in_list = 1;
++		EXTRACHECKS_BUG_ON(obj->sg_count != 0);
 +
-+	*out_info = info;
++		if (unlikely(!sgv_check_allowed_mem(mem_lim, pages_to_alloc)))
++			goto out_fail_free_sg_entries;
++		allowed_mem_checked = true;
 +
-+	mutex_unlock(&scst_sysfs_user_info_mutex);
++		if (unlikely(sgv_hiwmk_check(pages_to_alloc) != 0))
++			goto out_fail_free_sg_entries;
++		hiwmk_checked = true;
++	} else if ((pages_to_alloc <= pool->max_cached_pages) && !no_cached) {
++		if (unlikely(!sgv_check_allowed_mem(mem_lim, pages_to_alloc)))
++			goto out_fail;
++		allowed_mem_checked = true;
++
++		obj = sgv_get_obj(pool, cache_num, pages_to_alloc, gfp_mask,
++			flags & SGV_POOL_ALLOC_GET_NEW);
++		if (unlikely(obj == NULL)) {
++			TRACE(TRACE_OUT_OF_MEM, "Allocation of "
++				"sgv_pool_obj failed (size %d)", size);
++			goto out_fail;
++		}
++
++		if (obj->sg_count != 0) {
++			TRACE_MEM("Cached obj %p", obj);
++			atomic_inc(&pool->cache_acc[cache_num].hit_alloc);
++			goto success;
++		}
++
++		if (flags & SGV_POOL_NO_ALLOC_ON_CACHE_MISS) {
++			if (!(flags & SGV_POOL_RETURN_OBJ_ON_ALLOC_FAIL))
++				goto out_fail_free;
++		}
++
++		TRACE_MEM("Brand new obj %p", obj);
++
++		if (pages_to_alloc <= sgv_max_local_pages) {
++			obj->sg_entries = obj->sg_entries_data;
++			sg_init_table(obj->sg_entries, pages_to_alloc);
++			TRACE_MEM("sg_entries %p", obj->sg_entries);
++			if (sgv_pool_clustered(pool)) {
++				obj->trans_tbl = (struct trans_tbl_ent *)
++					(obj->sg_entries + pages_to_alloc);
++				TRACE_MEM("trans_tbl %p", obj->trans_tbl);
++				/*
++				 * No need to clear trans_tbl, if needed, it
++				 * will be fully rewritten in
++				 * sgv_alloc_sg_entries().
++				 */
++			}
++		} else {
++			if (unlikely(sgv_alloc_arrays(obj, pages_to_alloc,
++					gfp_mask) != 0))
++				goto out_fail_free;
++		}
++
++		if ((flags & SGV_POOL_NO_ALLOC_ON_CACHE_MISS) &&
++		    (flags & SGV_POOL_RETURN_OBJ_ON_ALLOC_FAIL))
++			goto out_return;
++
++		obj->allocator_priv = priv;
++
++		if (unlikely(sgv_hiwmk_check(pages_to_alloc) != 0))
++			goto out_fail_free_sg_entries;
++		hiwmk_checked = true;
++	} else {
++		int sz;
++
++		pages_to_alloc = pages;
++
++		if (unlikely(!sgv_check_allowed_mem(mem_lim, pages_to_alloc)))
++			goto out_fail;
++		allowed_mem_checked = true;
++
++		if (flags & SGV_POOL_NO_ALLOC_ON_CACHE_MISS)
++			goto out_return2;
++
++		sz = sizeof(*obj) + pages * sizeof(obj->sg_entries[0]);
++
++		obj = kmalloc(sz, gfp_mask);
++		if (unlikely(obj == NULL)) {
++			TRACE(TRACE_OUT_OF_MEM, "Allocation of "
++				"sgv_pool_obj failed (size %d)", size);
++			goto out_fail;
++		}
++		memset(obj, 0, sizeof(*obj));
++
++		obj->owner_pool = pool;
++		cache_num = -1;
++		obj->cache_num = cache_num;
++		obj->pages = pages_to_alloc;
++		obj->allocator_priv = priv;
++
++		obj->sg_entries = obj->sg_entries_data;
++		sg_init_table(obj->sg_entries, pages);
++
++		if (unlikely(sgv_hiwmk_check(pages_to_alloc) != 0))
++			goto out_fail_free_sg_entries;
++		hiwmk_checked = true;
++
++		TRACE_MEM("Big or no_cached obj %p (size %d)", obj, sz);
++	}
++
++	obj->sg_count = sgv_alloc_sg_entries(obj->sg_entries,
++		pages_to_alloc, gfp_mask, pool->clustering_type,
++		obj->trans_tbl, &pool->alloc_fns, priv);
++	if (unlikely(obj->sg_count <= 0)) {
++		obj->sg_count = 0;
++		if ((flags & SGV_POOL_RETURN_OBJ_ON_ALLOC_FAIL) &&
++		    (cache_num >= 0))
++			goto out_return1;
++		else
++			goto out_fail_free_sg_entries;
++	}
++
++	if (cache_num >= 0) {
++		atomic_add(pages_to_alloc - obj->sg_count,
++			&pool->cache_acc[cache_num].merged);
++	} else {
++		if (no_cached) {
++			atomic_add(pages_to_alloc,
++				&pool->other_pages);
++			atomic_add(pages_to_alloc - obj->sg_count,
++				&pool->other_merged);
++		} else {
++			atomic_add(pages_to_alloc,
++				&pool->big_pages);
++			atomic_add(pages_to_alloc - obj->sg_count,
++				&pool->big_merged);
++		}
++	}
++
++success:
++	if (cache_num >= 0) {
++		int sg;
++		atomic_inc(&pool->cache_acc[cache_num].total_alloc);
++		if (sgv_pool_clustered(pool))
++			cnt = obj->trans_tbl[pages-1].sg_num;
++		else
++			cnt = pages;
++		sg = cnt-1;
++		obj->orig_sg = sg;
++		obj->orig_length = obj->sg_entries[sg].length;
++		if (sgv_pool_clustered(pool)) {
++			obj->sg_entries[sg].length =
++				(pages - obj->trans_tbl[sg].pg_count) << PAGE_SHIFT;
++		}
++	} else {
++		cnt = obj->sg_count;
++		if (no_cached)
++			atomic_inc(&pool->other_alloc);
++		else
++			atomic_inc(&pool->big_alloc);
++	}
++
++	*count = cnt;
++	res = obj->sg_entries;
++	*sgv = obj;
++
++	if (size & ~PAGE_MASK)
++		obj->sg_entries[cnt-1].length -=
++			PAGE_SIZE - (size & ~PAGE_MASK);
++
++	TRACE_MEM("obj=%p, sg_entries %p (size=%d, pages=%d, sg_count=%d, "
++		"count=%d, last_len=%d)", obj, obj->sg_entries, size, pages,
++		obj->sg_count, *count, obj->sg_entries[obj->orig_sg].length);
 +
 +out:
 +	return res;
++
++out_return:
++	obj->allocator_priv = priv;
++	obj->owner_pool = pool;
++
++out_return1:
++	*sgv = obj;
++	TRACE_MEM("Returning failed obj %p (count %d)", obj, *count);
++
++out_return2:
++	*count = pages_to_alloc;
++	res = NULL;
++	goto out_uncheck;
++
++out_fail_free_sg_entries:
++	if (obj->sg_entries != obj->sg_entries_data) {
++		if (obj->trans_tbl !=
++			(struct trans_tbl_ent *)obj->sg_entries_data) {
++			/* kfree() handles NULL parameter */
++			kfree(obj->trans_tbl);
++			obj->trans_tbl = NULL;
++		}
++		kfree(obj->sg_entries);
++		obj->sg_entries = NULL;
++	}
++
++out_fail_free:
++	if (cache_num >= 0) {
++		spin_lock_bh(&pool->sgv_pool_lock);
++		sgv_dec_cached_entries(pool, pages_to_alloc);
++		spin_unlock_bh(&pool->sgv_pool_lock);
++
++		kmem_cache_free(pool->caches[obj->cache_num], obj);
++	} else
++		kfree(obj);
++
++out_fail:
++	res = NULL;
++	*count = 0;
++	*sgv = NULL;
++	TRACE_MEM("%s", "Allocation failed");
++
++out_uncheck:
++	if (hiwmk_checked)
++		sgv_hiwmk_uncheck(pages_to_alloc);
++	if (allowed_mem_checked)
++		sgv_uncheck_allowed_mem(mem_lim, pages_to_alloc);
++	goto out;
 +}
-+EXPORT_SYMBOL_GPL(scst_sysfs_user_add_info);
++EXPORT_SYMBOL_GPL(sgv_pool_alloc);
 +
 +/**
-+ * scst_sysfs_user_del_info - delete and frees user_info
++ * sgv_get_priv - return the private allocation data
++ *
++ * Allows to get the allocation private data for this SGV
++ * cache object. The private data supposed to be set by sgv_pool_alloc().
 + */
-+void scst_sysfs_user_del_info(struct scst_sysfs_user_info *info)
++void *sgv_get_priv(struct sgv_pool_obj *obj)
 +{
-+
-+	mutex_lock(&scst_sysfs_user_info_mutex);
-+
-+	if (info->info_in_list)
-+		list_del(&info->info_list_entry);
-+
-+	mutex_unlock(&scst_sysfs_user_info_mutex);
-+
-+	kfree(info);
-+	return;
++	return obj->allocator_priv;
 +}
-+EXPORT_SYMBOL_GPL(scst_sysfs_user_del_info);
++EXPORT_SYMBOL_GPL(sgv_get_priv);
++
++/**
++ * sgv_pool_free - free previously allocated SG vector
++ * @sgv:	the SGV object to free
++ * @mem_lim:	memory limits
++ *
++ * Description:
++ *    Frees previously allocated SG vector and updates memory limits
++ */
++void sgv_pool_free(struct sgv_pool_obj *obj, struct scst_mem_lim *mem_lim)
++{
++	int pages = (obj->sg_count != 0) ? obj->pages : 0;
++
++	TRACE_MEM("Freeing obj %p, cache num %d, pages %d, sg_entries %p, "
++		"sg_count %d, allocator_priv %p", obj, obj->cache_num, pages,
++		obj->sg_entries, obj->sg_count, obj->allocator_priv);
 +
 +/*
-+ * Returns true if the reply received and being processed by another part of
-+ * the kernel, false otherwise. Also removes the user_info from the list to
-+ * fix for the user space that it missed the timeout.
-+ */
-+static bool scst_sysfs_user_info_executing(struct scst_sysfs_user_info *info)
-+{
-+	bool res;
-+
-+	mutex_lock(&scst_sysfs_user_info_mutex);
-+
-+	res = info->info_being_executed;
-+
-+	if (info->info_in_list) {
-+		list_del(&info->info_list_entry);
-+		info->info_in_list = 0;
-+	}
-+
-+	mutex_unlock(&scst_sysfs_user_info_mutex);
-+	return res;
-+}
-+
-+/**
-+ * scst_wait_info_completion() - wait an user space event's completion
++ * Enable it if you are investigating a data corruption and want to make
++ * sure that target or dev handler didn't leave the pages mapped somewhere and,
++ * hence, provoked a data corruption.
 + *
-+ * Waits for the info request been completed by user space at most timeout
-+ * jiffies. If the reply received before timeout and being processed by
-+ * another part of the kernel, i.e. scst_sysfs_user_info_executing()
-+ * returned true, waits for it to complete indefinitely.
-+ *
-+ * Returns status of the request completion.
++ * Make sure the check value for _count is set correctly. In most cases, 1 is
++ * correct, but, e.g., iSCSI-SCST can call it with value 2, because
++ * it frees the corresponding cmd before the last put_page() call from
++ * net_put_page() for the last page in the SG. Also, user space dev handlers
++ * usually have their memory mapped in their address space.
 + */
-+int scst_wait_info_completion(struct scst_sysfs_user_info *info,
-+	unsigned long timeout)
-+{
-+	int res, rc;
-+
-+	TRACE_DBG("Waiting for info %p completion", info);
-+
-+	while (1) {
-+		rc = wait_for_completion_interruptible_timeout(
-+			&info->info_completion, timeout);
-+		if (rc > 0) {
-+			TRACE_DBG("Waiting for info %p finished with %d",
-+				info, rc);
-+			break;
-+		} else if (rc == 0) {
-+			if (!scst_sysfs_user_info_executing(info)) {
-+				PRINT_ERROR("Timeout waiting for user "
-+					"space event %p", info);
-+				res = -EBUSY;
-+				goto out;
-+			} else {
-+				/* Req is being executed in the kernel */
-+				TRACE_DBG("Keep waiting for info %p completion",
-+					info);
-+				wait_for_completion(&info->info_completion);
-+				break;
++#if 0
++	{
++		struct scatterlist *sg = obj->sg_entries;
++		int i;
++		for (i = 0; i < obj->sg_count; i++) {
++			struct page *p = sg_page(&sg[i]);
++			int len = sg[i].length;
++			int pages = (len >> PAGE_SHIFT) + ((len & ~PAGE_MASK) != 0);
++			while (pages > 0) {
++				if (atomic_read(&p->_count) != 1) {
++					PRINT_WARNING("Freeing page %p with "
++						"additional owners (_count %d). "
++						"Data corruption possible!",
++						p, atomic_read(&p->_count));
++					WARN_ON(1);
++				}
++				pages--;
++				p++;
 +			}
-+		} else if (rc != -ERESTARTSYS) {
-+				res = rc;
-+				PRINT_ERROR("wait_for_completion() failed: %d",
-+					res);
-+				goto out;
-+		} else {
-+			TRACE_DBG("Waiting for info %p finished with %d, "
-+				"retrying", info, rc);
 +		}
 +	}
++#endif
 +
-+	TRACE_DBG("info %p, status %d", info, info->info_status);
-+	res = info->info_status;
++	if (obj->cache_num >= 0) {
++		obj->sg_entries[obj->orig_sg].length = obj->orig_length;
++		sgv_put_obj(obj);
++	} else {
++		obj->owner_pool->alloc_fns.free_pages_fn(obj->sg_entries,
++			obj->sg_count, obj->allocator_priv);
++		kfree(obj);
++		sgv_hiwmk_uncheck(pages);
++	}
++
++	sgv_uncheck_allowed_mem(mem_lim, pages);
++	return;
++}
++EXPORT_SYMBOL_GPL(sgv_pool_free);
++
++/**
++ * scst_alloc() - allocates an SG vector
++ *
++ * Allocates and returns pointer to SG vector with data size "size".
++ * In *count returned the count of entries in the vector.
++ * Returns NULL for failure.
++ */
++struct scatterlist *scst_alloc(int size, gfp_t gfp_mask, int *count)
++{
++	struct scatterlist *res;
++	int pages = (size >> PAGE_SHIFT) + ((size & ~PAGE_MASK) != 0);
++	struct sgv_pool_alloc_fns sys_alloc_fns = {
++		sgv_alloc_sys_pages, sgv_free_sys_sg_entries };
++	int no_fail = ((gfp_mask & __GFP_NOFAIL) == __GFP_NOFAIL);
++
++	atomic_inc(&sgv_other_total_alloc);
++
++	if (unlikely(sgv_hiwmk_check(pages) != 0)) {
++		if (!no_fail) {
++			res = NULL;
++			goto out;
++		} else {
++			/*
++			 * Update active_pages_total since alloc can't fail.
++			 * If it wasn't updated then the counter would cross 0
++			 * on free again.
++			 */
++			sgv_hiwmk_uncheck(-pages);
++		 }
++	}
++
++	res = kmalloc(pages*sizeof(*res), gfp_mask);
++	if (res == NULL) {
++		TRACE(TRACE_OUT_OF_MEM, "Unable to allocate sg for %d pages",
++			pages);
++		goto out_uncheck;
++	}
++
++	sg_init_table(res, pages);
++
++	/*
++	 * If we allow use clustering here, we will have troubles in
++	 * scst_free() to figure out how many pages are in the SG vector.
++	 * So, always don't use clustering.
++	 */
++	*count = sgv_alloc_sg_entries(res, pages, gfp_mask, sgv_no_clustering,
++			NULL, &sys_alloc_fns, NULL);
++	if (*count <= 0)
++		goto out_free;
 +
 +out:
++	TRACE_MEM("Alloced sg %p (count %d) \"no fail\" %d", res, *count, no_fail);
 +	return res;
++
++out_free:
++	kfree(res);
++	res = NULL;
++
++out_uncheck:
++	if (!no_fail)
++		sgv_hiwmk_uncheck(pages);
++	goto out;
 +}
-+EXPORT_SYMBOL_GPL(scst_wait_info_completion);
++EXPORT_SYMBOL_GPL(scst_alloc);
 +
-+int __init scst_sysfs_init(void)
++/**
++ * scst_free() - frees SG vector
++ *
++ * Frees SG vector returned by scst_alloc().
++ */
++void scst_free(struct scatterlist *sg, int count)
 +{
-+	int res = 0;
++	TRACE_MEM("Freeing sg=%p", sg);
 +
-+	sysfs_work_thread = kthread_run(sysfs_work_thread_fn,
-+		NULL, "scst_uid");
-+	if (IS_ERR(sysfs_work_thread)) {
-+		res = PTR_ERR(sysfs_work_thread);
-+		PRINT_ERROR("kthread_run() for user interface thread "
-+			"failed: %d", res);
-+		sysfs_work_thread = NULL;
++	sgv_hiwmk_uncheck(count);
++
++	sgv_free_sys_sg_entries(sg, count, NULL);
++	kfree(sg);
++	return;
++}
++EXPORT_SYMBOL_GPL(scst_free);
++
++/* Must be called under sgv_pools_mutex */
++static void sgv_pool_init_cache(struct sgv_pool *pool, int cache_num)
++{
++	int size;
++	int pages;
++	struct sgv_pool_obj *obj;
++
++	atomic_set(&pool->cache_acc[cache_num].total_alloc, 0);
++	atomic_set(&pool->cache_acc[cache_num].hit_alloc, 0);
++	atomic_set(&pool->cache_acc[cache_num].merged, 0);
++
++	if (pool->single_alloc_pages == 0)
++		pages = 1 << cache_num;
++	else
++		pages = pool->single_alloc_pages;
++
++	if (pages <= sgv_max_local_pages) {
++		size = sizeof(*obj) + pages *
++			(sizeof(obj->sg_entries[0]) +
++			 ((pool->clustering_type != sgv_no_clustering) ?
++				sizeof(obj->trans_tbl[0]) : 0));
++	} else if (pages <= sgv_max_trans_pages) {
++		/*
++		 * sg_entries is allocated outside object,
++		 * but trans_tbl is still embedded.
++		 */
++		size = sizeof(*obj) + pages *
++			(((pool->clustering_type != sgv_no_clustering) ?
++				sizeof(obj->trans_tbl[0]) : 0));
++	} else {
++		size = sizeof(*obj);
++		/* both sgv and trans_tbl are kmalloc'ed() */
++	}
++
++	TRACE_MEM("pages=%d, size=%d", pages, size);
++
++	scnprintf(pool->cache_names[cache_num],
++		sizeof(pool->cache_names[cache_num]),
++		"%s-%uK", pool->name, (pages << PAGE_SHIFT) >> 10);
++	pool->caches[cache_num] = kmem_cache_create(
++		pool->cache_names[cache_num], size, 0, SCST_SLAB_FLAGS, NULL
++		);
++	return;
++}
++
++/* Must be called under sgv_pools_mutex */
++static int sgv_pool_init(struct sgv_pool *pool, const char *name,
++	enum sgv_clustering_types clustering_type, int single_alloc_pages,
++	int purge_interval)
++{
++	int res = -ENOMEM;
++	int i;
++
++	if (single_alloc_pages < 0) {
++		PRINT_ERROR("Wrong single_alloc_pages value %d",
++			single_alloc_pages);
++		res = -EINVAL;
 +		goto out;
 +	}
 +
-+	res = kobject_init_and_add(&scst_sysfs_root_kobj,
-+			&scst_sysfs_root_ktype, kernel_kobj, "%s", "scst_tgt");
++	memset(pool, 0, sizeof(*pool));
++
++	atomic_set(&pool->big_alloc, 0);
++	atomic_set(&pool->big_pages, 0);
++	atomic_set(&pool->big_merged, 0);
++	atomic_set(&pool->other_alloc, 0);
++	atomic_set(&pool->other_pages, 0);
++	atomic_set(&pool->other_merged, 0);
++
++	pool->clustering_type = clustering_type;
++	pool->single_alloc_pages = single_alloc_pages;
++	if (purge_interval != 0) {
++		pool->purge_interval = purge_interval;
++		if (purge_interval < 0) {
++			/* Let's pretend that it's always scheduled */
++			pool->purge_work_scheduled = 1;
++		}
++	} else
++		pool->purge_interval = SGV_DEFAULT_PURGE_INTERVAL;
++	if (single_alloc_pages == 0) {
++		pool->max_caches = SGV_POOL_ELEMENTS;
++		pool->max_cached_pages = 1 << (SGV_POOL_ELEMENTS - 1);
++	} else {
++		pool->max_caches = 1;
++		pool->max_cached_pages = single_alloc_pages;
++	}
++	pool->alloc_fns.alloc_pages_fn = sgv_alloc_sys_pages;
++	pool->alloc_fns.free_pages_fn = sgv_free_sys_sg_entries;
++
++	TRACE_MEM("name %s, sizeof(*obj)=%zd, clustering_type=%d, "
++		"single_alloc_pages=%d, max_caches=%d, max_cached_pages=%d",
++		name, sizeof(struct sgv_pool_obj), clustering_type,
++		single_alloc_pages, pool->max_caches, pool->max_cached_pages);
++
++	strlcpy(pool->name, name, sizeof(pool->name)-1);
++
++	pool->owner_mm = current->mm;
++
++	for (i = 0; i < pool->max_caches; i++) {
++		sgv_pool_init_cache(pool, i);
++		if (pool->caches[i] == NULL) {
++			TRACE(TRACE_OUT_OF_MEM, "Allocation of sgv_pool "
++				"cache %s(%d) failed", name, i);
++			goto out_free;
++		}
++	}
++
++	atomic_set(&pool->sgv_pool_ref, 1);
++	spin_lock_init(&pool->sgv_pool_lock);
++	INIT_LIST_HEAD(&pool->sorted_recycling_list);
++	for (i = 0; i < pool->max_caches; i++)
++		INIT_LIST_HEAD(&pool->recycling_lists[i]);
++
++	INIT_DELAYED_WORK(&pool->sgv_purge_work,
++		(void (*)(struct work_struct *))sgv_purge_work_fn);
++
++	spin_lock_bh(&sgv_pools_lock);
++	list_add_tail(&pool->sgv_pools_list_entry, &sgv_pools_list);
++	spin_unlock_bh(&sgv_pools_lock);
++
++	res = scst_sgv_sysfs_create(pool);
 +	if (res != 0)
-+		goto sysfs_root_add_error;
++		goto out_del;
 +
-+	scst_targets_kobj = kobject_create_and_add("targets",
-+				&scst_sysfs_root_kobj);
-+	if (scst_targets_kobj == NULL)
-+		goto targets_kobj_error;
-+
-+	scst_devices_kobj = kobject_create_and_add("devices",
-+				&scst_sysfs_root_kobj);
-+	if (scst_devices_kobj == NULL)
-+		goto devices_kobj_error;
-+
-+	scst_sgv_kobj = kzalloc(sizeof(*scst_sgv_kobj), GFP_KERNEL);
-+	if (scst_sgv_kobj == NULL)
-+		goto sgv_kobj_error;
-+
-+	res = kobject_init_and_add(scst_sgv_kobj, &sgv_ktype,
-+			&scst_sysfs_root_kobj, "%s", "sgv");
-+	if (res != 0)
-+		goto sgv_kobj_add_error;
-+
-+	scst_handlers_kobj = kobject_create_and_add("handlers",
-+					&scst_sysfs_root_kobj);
-+	if (scst_handlers_kobj == NULL)
-+		goto handlers_kobj_error;
++	res = 0;
 +
 +out:
 +	return res;
 +
-+handlers_kobj_error:
-+	kobject_del(scst_sgv_kobj);
++out_del:
++	spin_lock_bh(&sgv_pools_lock);
++	list_del(&pool->sgv_pools_list_entry);
++	spin_unlock_bh(&sgv_pools_lock);
 +
-+sgv_kobj_add_error:
-+	kobject_put(scst_sgv_kobj);
-+
-+sgv_kobj_error:
-+	kobject_del(scst_devices_kobj);
-+	kobject_put(scst_devices_kobj);
-+
-+devices_kobj_error:
-+	kobject_del(scst_targets_kobj);
-+	kobject_put(scst_targets_kobj);
-+
-+targets_kobj_error:
-+	kobject_del(&scst_sysfs_root_kobj);
-+
-+sysfs_root_add_error:
-+	kobject_put(&scst_sysfs_root_kobj);
-+
-+	kthread_stop(sysfs_work_thread);
-+
-+	if (res == 0)
-+		res = -EINVAL;
-+
++out_free:
++	for (i = 0; i < pool->max_caches; i++) {
++		if (pool->caches[i]) {
++			kmem_cache_destroy(pool->caches[i]);
++			pool->caches[i] = NULL;
++		} else
++			break;
++	}
 +	goto out;
 +}
 +
-+void scst_sysfs_cleanup(void)
++static void sgv_evaluate_local_max_pages(void)
 +{
++	int space4sgv_ttbl = PAGE_SIZE - sizeof(struct sgv_pool_obj);
 +
-+	PRINT_INFO("%s", "Exiting SCST sysfs hierarchy...");
++	sgv_max_local_pages = space4sgv_ttbl /
++		  (sizeof(struct trans_tbl_ent) + sizeof(struct scatterlist));
 +
-+	kobject_del(scst_sgv_kobj);
-+	kobject_put(scst_sgv_kobj);
++	sgv_max_trans_pages =  space4sgv_ttbl / sizeof(struct trans_tbl_ent);
 +
-+	kobject_del(scst_devices_kobj);
-+	kobject_put(scst_devices_kobj);
-+
-+	kobject_del(scst_targets_kobj);
-+	kobject_put(scst_targets_kobj);
-+
-+	kobject_del(scst_handlers_kobj);
-+	kobject_put(scst_handlers_kobj);
-+
-+	kobject_del(&scst_sysfs_root_kobj);
-+	kobject_put(&scst_sysfs_root_kobj);
-+
-+	wait_for_completion(&scst_sysfs_root_release_completion);
-+	/*
-+	 * There is a race, when in the release() schedule happens just after
-+	 * calling complete(), so if we exit and unload scst module immediately,
-+	 * there will be oops there. So let's give it a chance to quit
-+	 * gracefully. Unfortunately, current kobjects implementation
-+	 * doesn't allow better ways to handle it.
-+	 */
-+	msleep(3000);
-+
-+	if (sysfs_work_thread)
-+		kthread_stop(sysfs_work_thread);
-+
-+	PRINT_INFO("%s", "Exiting SCST sysfs hierarchy done");
++	TRACE_MEM("sgv_max_local_pages %d, sgv_max_trans_pages %d",
++		sgv_max_local_pages, sgv_max_trans_pages);
 +	return;
 +}
++
++/**
++ * sgv_pool_flush - flushe the SGV pool
++ *
++ * Flushes, i.e. frees, all the cached entries in the SGV pool.
++ */
++void sgv_pool_flush(struct sgv_pool *pool)
++{
++	int i;
++
++	for (i = 0; i < pool->max_caches; i++) {
++		struct sgv_pool_obj *obj;
++
++		spin_lock_bh(&pool->sgv_pool_lock);
++
++		while (!list_empty(&pool->recycling_lists[i])) {
++			obj = list_entry(pool->recycling_lists[i].next,
++				struct sgv_pool_obj, recycling_list_entry);
++
++			__sgv_purge_from_cache(obj);
++
++			spin_unlock_bh(&pool->sgv_pool_lock);
++
++			EXTRACHECKS_BUG_ON(obj->owner_pool != pool);
++			sgv_dtor_and_free(obj);
++
++			spin_lock_bh(&pool->sgv_pool_lock);
++		}
++		spin_unlock_bh(&pool->sgv_pool_lock);
++	}
++	return;
++}
++EXPORT_SYMBOL_GPL(sgv_pool_flush);
++
++static void sgv_pool_destroy(struct sgv_pool *pool)
++{
++	int i;
++
++	cancel_delayed_work_sync(&pool->sgv_purge_work);
++
++	sgv_pool_flush(pool);
++
++	mutex_lock(&sgv_pools_mutex);
++	spin_lock_bh(&sgv_pools_lock);
++	list_del(&pool->sgv_pools_list_entry);
++	spin_unlock_bh(&sgv_pools_lock);
++	mutex_unlock(&sgv_pools_mutex);
++
++	scst_sgv_sysfs_del(pool);
++
++	for (i = 0; i < pool->max_caches; i++) {
++		if (pool->caches[i])
++			kmem_cache_destroy(pool->caches[i]);
++		pool->caches[i] = NULL;
++	}
++
++	kfree(pool);
++	return;
++}
++
++/**
++ * sgv_pool_set_allocator - set custom pages allocator
++ * @pool:	the cache
++ * @alloc_pages_fn: pages allocation function
++ * @free_pages_fn: pages freeing function
++ *
++ * Description:
++ *    Allows to set custom pages allocator for the SGV pool.
++ *    See the SGV pool documentation for more details.
++ */
++void sgv_pool_set_allocator(struct sgv_pool *pool,
++	struct page *(*alloc_pages_fn)(struct scatterlist *, gfp_t, void *),
++	void (*free_pages_fn)(struct scatterlist *, int, void *))
++{
++	pool->alloc_fns.alloc_pages_fn = alloc_pages_fn;
++	pool->alloc_fns.free_pages_fn = free_pages_fn;
++	return;
++}
++EXPORT_SYMBOL_GPL(sgv_pool_set_allocator);
++
++/**
++ * sgv_pool_create - creates and initializes an SGV pool
++ * @name:	the name of the SGV pool
++ * @clustered:	sets type of the pages clustering.
++ * @single_alloc_pages:	if 0, then the SGV pool will work in the set of
++ *		power 2 size buffers mode. If >0, then the SGV pool will
++ *		work in the fixed size buffers mode. In this case
++ *		single_alloc_pages sets the size of each buffer in pages.
++ * @shared:	sets if the SGV pool can be shared between devices or not.
++ *		The cache sharing allowed only between devices created inside
++ *		the same address space. If an SGV pool is shared, each
++ *		subsequent call of sgv_pool_create() with the same cache name
++ *		will not create a new cache, but instead return a reference
++ *		to it.
++ * @purge_interval: sets the cache purging interval. I.e., an SG buffer
++ *		will be freed if it's unused for time t
++ *		purge_interval <= t < 2*purge_interval. If purge_interval
++ *		is 0, then the default interval will be used (60 seconds).
++ *		If purge_interval <0, then the automatic purging will be
++ *		disabled.
++ *
++ * Description:
++ *    Returns the resulting SGV pool or NULL in case of any error.
++ */
++struct sgv_pool *sgv_pool_create(const char *name,
++	enum sgv_clustering_types clustering_type,
++	int single_alloc_pages, bool shared, int purge_interval)
++{
++	struct sgv_pool *pool;
++	int rc;
++
++	mutex_lock(&sgv_pools_mutex);
++
++	list_for_each_entry(pool, &sgv_pools_list, sgv_pools_list_entry) {
++		if (strcmp(pool->name, name) == 0) {
++			if (shared) {
++				if (pool->owner_mm != current->mm) {
++					PRINT_ERROR("Attempt of a shared use "
++						"of SGV pool %s with "
++						"different MM", name);
++					goto out_unlock;
++				}
++				sgv_pool_get(pool);
++				goto out_unlock;
++			} else {
++				PRINT_ERROR("SGV pool %s already exists", name);
++				pool = NULL;
++				goto out_unlock;
++			}
++		}
++	}
++
++	pool = kzalloc(sizeof(*pool), GFP_KERNEL);
++	if (pool == NULL) {
++		TRACE(TRACE_OUT_OF_MEM, "%s", "Allocation of sgv_pool failed");
++		goto out_unlock;
++	}
++
++	rc = sgv_pool_init(pool, name, clustering_type, single_alloc_pages,
++				purge_interval);
++	if (rc != 0)
++		goto out_free;
++
++out_unlock:
++	mutex_unlock(&sgv_pools_mutex);
++	return pool;
++
++out_free:
++	kfree(pool);
++	goto out_unlock;
++}
++EXPORT_SYMBOL_GPL(sgv_pool_create);
++
++/**
++ * sgv_pool_get - increase ref counter for the corresponding SGV pool
++ *
++ * Increases ref counter for the corresponding SGV pool
++ */
++void sgv_pool_get(struct sgv_pool *pool)
++{
++	atomic_inc(&pool->sgv_pool_ref);
++	TRACE_MEM("Incrementing sgv pool %p ref (new value %d)",
++		pool, atomic_read(&pool->sgv_pool_ref));
++	return;
++}
++EXPORT_SYMBOL_GPL(sgv_pool_get);
++
++/**
++ * sgv_pool_put - decrease ref counter for the corresponding SGV pool
++ *
++ * Decreases ref counter for the corresponding SGV pool. If the ref
++ * counter reaches 0, the cache will be destroyed.
++ */
++void sgv_pool_put(struct sgv_pool *pool)
++{
++	TRACE_MEM("Decrementing sgv pool %p ref (new value %d)",
++		pool, atomic_read(&pool->sgv_pool_ref)-1);
++	if (atomic_dec_and_test(&pool->sgv_pool_ref))
++		sgv_pool_destroy(pool);
++	return;
++}
++EXPORT_SYMBOL_GPL(sgv_pool_put);
++
++/**
++ * sgv_pool_del - deletes the corresponding SGV pool
++ * @pool:	the cache to delete.
++ *
++ * Description:
++ *    If the cache is shared, it will decrease its reference counter.
++ *    If the reference counter reaches 0, the cache will be destroyed.
++ */
++void sgv_pool_del(struct sgv_pool *pool)
++{
++
++	sgv_pool_put(pool);
++	return;
++}
++EXPORT_SYMBOL_GPL(sgv_pool_del);
++
++/* Both parameters in pages */
++int scst_sgv_pools_init(unsigned long mem_hwmark, unsigned long mem_lwmark)
++{
++	int res = 0;
++
++	sgv_hi_wmk = mem_hwmark;
++	sgv_lo_wmk = mem_lwmark;
++
++	sgv_evaluate_local_max_pages();
++
++	sgv_norm_pool = sgv_pool_create("sgv", sgv_no_clustering, 0, false, 0);
++	if (sgv_norm_pool == NULL)
++		goto out_err;
++
++	sgv_norm_clust_pool = sgv_pool_create("sgv-clust",
++		sgv_full_clustering, 0, false, 0);
++	if (sgv_norm_clust_pool == NULL)
++		goto out_free_norm;
++
++	sgv_dma_pool = sgv_pool_create("sgv-dma", sgv_no_clustering, 0,
++				false, 0);
++	if (sgv_dma_pool == NULL)
++		goto out_free_clust;
++
++	sgv_shrinker.shrink = sgv_shrink;
++	sgv_shrinker.seeks = DEFAULT_SEEKS;
++	register_shrinker(&sgv_shrinker);
++
++out:
++	return res;
++
++out_free_clust:
++	sgv_pool_destroy(sgv_norm_clust_pool);
++
++out_free_norm:
++	sgv_pool_destroy(sgv_norm_pool);
++
++out_err:
++	res = -ENOMEM;
++	goto out;
++}
++
++void scst_sgv_pools_deinit(void)
++{
++
++	unregister_shrinker(&sgv_shrinker);
++
++	sgv_pool_destroy(sgv_dma_pool);
++	sgv_pool_destroy(sgv_norm_pool);
++	sgv_pool_destroy(sgv_norm_clust_pool);
++
++	flush_scheduled_work();
++	return;
++}
++
++ssize_t sgv_sysfs_stat_show(struct kobject *kobj,
++	struct kobj_attribute *attr, char *buf)
++{
++	struct sgv_pool *pool;
++	int i, total = 0, hit = 0, merged = 0, allocated = 0;
++	int oa, om, res;
++
++	pool = container_of(kobj, struct sgv_pool, sgv_kobj);
++
++	for (i = 0; i < SGV_POOL_ELEMENTS; i++) {
++		int t;
++
++		hit += atomic_read(&pool->cache_acc[i].hit_alloc);
++		total += atomic_read(&pool->cache_acc[i].total_alloc);
++
++		t = atomic_read(&pool->cache_acc[i].total_alloc) -
++			atomic_read(&pool->cache_acc[i].hit_alloc);
++		allocated += t * (1 << i);
++		merged += atomic_read(&pool->cache_acc[i].merged);
++	}
++
++	res = sprintf(buf, "%-30s %-11s %-11s %-11s %-11s", "Name", "Hit", "Total",
++		"% merged", "Cached (P/I/O)");
++
++	res += sprintf(&buf[res], "\n%-30s %-11d %-11d %-11d %d/%d/%d\n",
++		pool->name, hit, total,
++		(allocated != 0) ? merged*100/allocated : 0,
++		pool->cached_pages, pool->inactive_cached_pages,
++		pool->cached_entries);
++
++	for (i = 0; i < SGV_POOL_ELEMENTS; i++) {
++		int t = atomic_read(&pool->cache_acc[i].total_alloc) -
++			atomic_read(&pool->cache_acc[i].hit_alloc);
++		allocated = t * (1 << i);
++		merged = atomic_read(&pool->cache_acc[i].merged);
++
++		res += sprintf(&buf[res], "  %-28s %-11d %-11d %d\n",
++			pool->cache_names[i],
++			atomic_read(&pool->cache_acc[i].hit_alloc),
++			atomic_read(&pool->cache_acc[i].total_alloc),
++			(allocated != 0) ? merged*100/allocated : 0);
++	}
++
++	allocated = atomic_read(&pool->big_pages);
++	merged = atomic_read(&pool->big_merged);
++	oa = atomic_read(&pool->other_pages);
++	om = atomic_read(&pool->other_merged);
++
++	res += sprintf(&buf[res], "  %-40s %d/%-9d %d/%d\n", "big/other",
++		atomic_read(&pool->big_alloc), atomic_read(&pool->other_alloc),
++		(allocated != 0) ? merged*100/allocated : 0,
++		(oa != 0) ? om/oa : 0);
++
++	return res;
++}
++
++ssize_t sgv_sysfs_stat_reset(struct kobject *kobj,
++	struct kobj_attribute *attr, const char *buf, size_t count)
++{
++	struct sgv_pool *pool;
++	int i;
++
++	pool = container_of(kobj, struct sgv_pool, sgv_kobj);
++
++	for (i = 0; i < SGV_POOL_ELEMENTS; i++) {
++		atomic_set(&pool->cache_acc[i].hit_alloc, 0);
++		atomic_set(&pool->cache_acc[i].total_alloc, 0);
++		atomic_set(&pool->cache_acc[i].merged, 0);
++	}
++
++	atomic_set(&pool->big_pages, 0);
++	atomic_set(&pool->big_merged, 0);
++	atomic_set(&pool->big_alloc, 0);
++	atomic_set(&pool->other_pages, 0);
++	atomic_set(&pool->other_merged, 0);
++	atomic_set(&pool->other_alloc, 0);
++
++	PRINT_INFO("Statistics for SGV pool %s resetted", pool->name);
++	return count;
++}
++
++ssize_t sgv_sysfs_global_stat_show(struct kobject *kobj,
++	struct kobj_attribute *attr, char *buf)
++{
++	struct sgv_pool *pool;
++	int inactive_pages = 0, res;
++
++	spin_lock_bh(&sgv_pools_lock);
++	list_for_each_entry(pool, &sgv_active_pools_list,
++			sgv_active_pools_list_entry) {
++		inactive_pages += pool->inactive_cached_pages;
++	}
++	spin_unlock_bh(&sgv_pools_lock);
++
++	res = sprintf(buf, "%-42s %d/%d\n%-42s %d/%d\n%-42s %d/%d\n"
++		"%-42s %-11d\n",
++		"Inactive/active pages", inactive_pages,
++		atomic_read(&sgv_pages_total) - inactive_pages,
++		"Hi/lo watermarks [pages]", sgv_hi_wmk, sgv_lo_wmk,
++		"Hi watermark releases/failures",
++		atomic_read(&sgv_releases_on_hiwmk),
++		atomic_read(&sgv_releases_on_hiwmk_failed),
++		"Other allocs", atomic_read(&sgv_other_total_alloc));
++	return res;
++}
++
++ssize_t sgv_sysfs_global_stat_reset(struct kobject *kobj,
++	struct kobj_attribute *attr, const char *buf, size_t count)
++{
++
++	atomic_set(&sgv_releases_on_hiwmk, 0);
++	atomic_set(&sgv_releases_on_hiwmk_failed, 0);
++	atomic_set(&sgv_other_total_alloc, 0);
++
++	PRINT_INFO("%s", "Global SGV pool statistics resetted");
++	return count;
++}
++
+diff -uprN orig/linux-2.6.35/Documentation/scst/sgv_cache.txt linux-2.6.35/Documentation/scst/sgv_cache.txt
+--- orig/linux-2.6.35/Documentation/scst/sgv_cache.txt
++++ linux-2.6.35/Documentation/scst/sgv_cache.txt
+@@ -0,0 +1,234 @@
++			SCST SGV CACHE.
++
++		PROGRAMMING INTERFACE DESCRIPTION.
++
++		     For SCST version 1.0.2
++
++SCST SGV cache is a memory management subsystem in SCST. One can call it
++a "memory pool", but Linux kernel already have a mempool interface,
++which serves different purposes. SGV cache provides to SCST core, target
++drivers and backend dev handlers facilities to allocate, build and cache
++SG vectors for data buffers. The main advantage of it is the caching
++facility, when it doesn't free to the system each vector, which is not
++used anymore, but keeps it for a while (possibly indefinitely) to let it
++be reused by the next consecutive command. This allows to:
++
++ - Reduce commands processing latencies and, hence, improve performance;
++
++ - Make commands processing latencies predictable, which is essential
++   for RT applications.
++
++The freed SG vectors are kept by the SGV cache either for some (possibly
++indefinite) time, or, optionally, until the system needs more memory and
++asks to free some using the set_shrinker() interface. Also the SGV cache
++allows to:
++
++  - Cluster pages together. "Cluster" means merging adjacent pages in a
++single SG entry. It allows to have less SG entries in the resulting SG
++vector, hence improve performance handling it as well as allow to
++work with bigger buffers on hardware with limited SG capabilities.
++
++  - Set custom page allocator functions. For instance, scst_user device
++handler uses this facility to eliminate unneeded mapping/unmapping of
++user space pages and avoid unneeded IOCTL calls for buffers allocations.
++In fileio_tgt application, which uses a regular malloc() function to
++allocate data buffers, this facility allows ~30% less CPU load and
++considerable performance increase.
++
++ - Prevent each initiator or all initiators altogether to allocate too
++much memory and DoS the target. Consider 10 initiators, which can have
++access to 10 devices each. Any of them can queue up to 64 commands, each
++can transfer up to 1MB of data. So, all of them in a peak can allocate
++up to 10*10*64 = ~6.5GB of memory for data buffers. This amount must be
++limited somehow and the SGV cache performs this function.
++
++From implementation POV the SGV cache is a simple extension of the kmem
++cache. It can work in 2 modes:
++
++1. With fixed size buffers.
++
++2. With a set of power 2 size buffers. In this mode each SGV cache
++(struct sgv_pool) has SGV_POOL_ELEMENTS (11 currently) of kmem caches.
++Each of those kmem caches keeps SGV cache objects (struct sgv_pool_obj)
++corresponding to SG vectors with size of order X pages. For instance,
++request to allocate 4 pages will be served from kmem cache[2], since the
++order of the of number of requested pages is 2. If later request to
++allocate 11KB comes, the same SG vector with 4 pages will be reused (see
++below). This mode is in average allows less memory overhead comparing
++with the fixed size buffers mode.
++
++Consider how the SGV cache works in the set of buffers mode. When a
++request to allocate new SG vector comes, sgv_pool_alloc() via
++sgv_get_obj() checks if there is already a cached vector with that
++order. If yes, then that vector will be reused and its length, if
++necessary, will be modified to match the requested size. In the above
++example request for 11KB buffer, 4 pages vector will be reused and
++modified using trans_tbl to contain 3 pages and the last entry will be
++modified to contain the requested length - 2*PAGE_SIZE. If there is no
++cached object, then a new sgv_pool_obj will be allocated from the
++corresponding kmem cache, chosen by the order of number of requested
++pages. Then that vector will be filled by pages and returned.
++
++In the fixed size buffers mode the SGV cache works similarly, except
++that it always allocate buffer with the predefined fixed size. I.e.
++even for 4K request the whole buffer with predefined size, say, 1MB,
++will be used.
++
++In both modes, if size of a request exceeds the maximum allowed for
++caching buffer size, the requested buffer will be allocated, but not
++cached.
++
++Freed cached sgv_pool_obj objects are actually freed to the system
++either by the purge work, which is scheduled once in 60 seconds, or in
++sgv_shrink() called by system, when it's asking for memory.
++
++
++			Interface.
++
++struct sgv_pool *sgv_pool_create(const char *name,
++	enum sgv_clustering_types clustered, int single_alloc_pages,
++	bool shared, int purge_interval)
++
++This function creates and initializes an SGV cache. It has the following
++arguments:
++
++ - name - the name of the SGV cache
++
++ - clustered - sets type of the pages clustering. The type can be:
++
++     * sgv_no_clustering - no clustering performed.
++
++     * sgv_tail_clustering - a page will only be merged with the latest
++       previously allocated page, so the order of pages in the SG will be
++       preserved
++
++     * sgv_full_clustering - free merging of pages at any place in
++       the SG is allowed. This mode usually provides the best merging
++       rate.
++
++ - single_alloc_pages - if 0, then the SGV cache will work in the set of
++   power 2 size buffers mode. If >0, then the SGV cache will work in the
++   fixed size buffers mode. In this case single_alloc_pages sets the
++   size of each buffer in pages.
++
++ - shared - sets if the SGV cache can be shared between devices or not.
++   The cache sharing allowed only between devices created inside the same
++   address space. If an SGV cache is shared, each subsequent call of
++   sgv_pool_create() with the same cache name will not create a new cache,
++   but instead return a reference to it.
++
++ - purge_interval - sets the cache purging interval. I.e. an SG buffer
++   will be freed if it's unused for time t purge_interval <= t <
++   2*purge_interval. If purge_interval is 0, then the default interval
++   will be used (60 seconds). If purge_interval <0, then the automatic
++   purging will be disabled. Shrinking by the system's demand will also
++   be disabled.
++
++Returns the resulting SGV cache or NULL in case of any error.
++
++
++void sgv_pool_del(struct sgv_pool *pool)
++
++This function deletes the corresponding SGV cache. If the cache is
++shared, it will decrease its reference counter. If the reference counter
++reaches 0, the cache will be destroyed.
++
++
++void sgv_pool_flush(struct sgv_pool *pool)
++
++This function flushes, i.e. frees, all the cached entries in the SGV
++cache.
++
++
++void sgv_pool_set_allocator(struct sgv_pool *pool,
++	struct page *(*alloc_pages_fn)(struct scatterlist *sg, gfp_t gfp, void *priv),
++	void (*free_pages_fn)(struct scatterlist *sg, int sg_count, void *priv));
++
++This function allows to set for the SGV cache a custom pages allocator. For
++instance, scst_user uses such function to supply to the cache mapped from
++user space pages.
++
++alloc_pages_fn() has the following parameters:
++
++ - sg - SG entry, to which the allocated page should be added.
++
++ - gfp - the allocation GFP flags
++
++ - priv - pointer to a private data supplied to sgv_pool_alloc()
++
++This function should return the allocated page or NULL, if no page was
++allocated.
++
++
++free_pages_fn() has the following parameters:
++
++ - sg - SG vector to free
++
++ - sg_count - number of SG entries in the sg
++
++ - priv - pointer to a private data supplied to the corresponding sgv_pool_alloc()
++
++
++struct scatterlist *sgv_pool_alloc(struct sgv_pool *pool, unsigned int size,
++	gfp_t gfp_mask, int flags, int *count,
++	struct sgv_pool_obj **sgv, struct scst_mem_lim *mem_lim, void *priv)
++
++This function allocates an SG vector from the SGV cache. It has the
++following parameters:
++
++ - pool - the cache to alloc from
++
++ - size - size of the resulting SG vector in bytes
++
++ - gfp_mask - the allocation mask
++
++ - flags - the allocation flags. The following flags are possible and
++   can be set using OR operation:
++
++     * SGV_POOL_ALLOC_NO_CACHED - the SG vector must not be cached.
++
++     * SGV_POOL_NO_ALLOC_ON_CACHE_MISS - don't do an allocation on a
++       cache miss.
++
++     * SGV_POOL_RETURN_OBJ_ON_ALLOC_FAIL - return an empty SGV object,
++       i.e. without the SG vector, if the allocation can't be completed.
++       For instance, because SGV_POOL_NO_ALLOC_ON_CACHE_MISS flag set.
++
++ - count - the resulting count of SG entries in the resulting SG vector.
++
++ - sgv - the resulting SGV object. It should be used to free the
++   resulting SG vector.
++
++ - mem_lim - memory limits, see below.
++
++ - priv - pointer to private for this allocation data. This pointer will
++   be supplied to alloc_pages_fn() and free_pages_fn() and can be
++   retrieved by sgv_get_priv().
++
++This function returns pointer to the resulting SG vector or NULL in case
++of any error.
++
++
++void sgv_pool_free(struct sgv_pool_obj *sgv, struct scst_mem_lim *mem_lim)
++
++This function frees previously allocated SG vector, referenced by SGV
++cache object sgv.
++
++
++void *sgv_get_priv(struct sgv_pool_obj *sgv)
++
++This function allows to get the allocation private data for this SGV
++cache object sgv. The private data are set by sgv_pool_alloc().
++
++
++void scst_init_mem_lim(struct scst_mem_lim *mem_lim)
++
++This function initializes memory limits structure mem_lim according to
++the current system configuration. This structure should be latter used
++to track and limit allocated by one or more SGV caches memory.
++
++
++		Runtime information and statistics.
++
++Runtime information and statistics is available in /sys/kernel/scst_tgt/sgv.
++
