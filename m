@@ -1,7 +1,7 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [PATCH 14/19]: SCST pass-through dev handlers
-Date: Sat, 02 Oct 2010 01:51:58 +0400
-Message-ID: <4CA657FE.1020600@vlnb.net>
+Subject: [PATCH 15/19]: Implementation of blk_rq_map_kern_sg()
+Date: Sat, 02 Oct 2010 01:53:40 +0400
+Message-ID: <4CA65864.2080902@vlnb.net>
 References: <4CA653F0.1010008@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
@@ -10,2186 +10,564 @@ Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <4CA653F0.1010008@vlnb.net>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>
+Cc: linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Jens Axboe <jaxboe@fusionio.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch contains SCST pass-through dev handlers.
+This patch implements function blk_rq_map_kern_sg(), which allows to
+map a kernel-originated SG vector to a block request. It is necessary
+to execute SCSI commands with from the kernel going SG buffer. SCST needs
+this functionality, because its target drivers, which are, basically,
+SCSI drivers, can deal only with SGs, not with BIOs.
 
-Those handlers allows to export local SCSI-capable devices to remote
-initiators. 1:many relationship with remote initiators is supported,
-i.e. many initiators can connect to single exported local SCSI-capable
-device at the same time.
+Highlight of this implementations:
 
-It is possible, because SCST core emulates necessary functionality of
-SCSI host adapter. Such emulation is needed, because from remote initiators'
-point of view a SCSI target acts as a SCSI host with its own devices. You can
-find more deep elaboration why it is needed in
-http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg06911.html.
+ - It uses BIOs chaining instead of kmalloc()'ing the whole bio, which is
+more reliable.
 
-Some of the emulated functions are:
+ - It uses SGs chaining instead of kmalloc()'ing one big SG in case if
+direct mapping failed (e.g. because of DMA alignment or padding), which is
+also more reliable.
 
- * Generation of necessary UNIT ATTENTIONs, their storage and delivery to all
-   connected remote initiators.
+ - When needed, copy_page() is used instead of memcpy() to copy the
+whole pages faster.
 
- * RESERVE/RELEASE functionality.
+Also this patch adds and exports function sg_copy(), which copies
+one SG vector to another.
 
- * All types of RESETs and other task management functions.
+This patch has already been reviewed in LKML/linux-scsi in
+http://lkml.org/lkml/2009/8/12/304. Since then it was only been updated for
+2.6.35.
 
- * REPORT LUNS command as well as SCSI address space management in order to have
-   consistent address space on all remote initiators, since local SCSI devices
-   could not know about each other to report via REPORT LUNS command.
+All this functionality can be a part of the internal SCST library, but looks
+like a better place will be in the common place near similar routines.
 
 Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
 ---
- scst_cdrom.c       |  245 ++++++++++++++++++++
- scst_changer.c     |  167 +++++++++++++
- scst_dev_handler.h |   27 ++
- scst_disk.c        |  647 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scst_modisk.c      |  328 ++++++++++++++++++++++++++
- scst_processor.c   |  167 +++++++++++++
- scst_raid.c        |  168 +++++++++++++
- scst_tape.c        |  361 +++++++++++++++++++++++++++++
- 8 files changed, 2110 insertions(+)
+ block/blk-map.c             |  334 ++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h      |    3 
+ include/linux/scatterlist.h |    5 
+ lib/scatterlist.c           |  129 ++++++++++++++++
+ 4 files changed, 471 insertions(+)
 
-diff -uprN orig/linux-2.6.35/drivers/scst/dev_handlers/scst_cdrom.c linux-2.6.35/drivers/scst/dev_handlers/scst_cdrom.c
---- orig/linux-2.6.35/drivers/scst/dev_handlers/scst_cdrom.c
-+++ linux-2.6.35/drivers/scst/dev_handlers/scst_cdrom.c
-@@ -0,0 +1,245 @@
-+/*
-+ *  scst_cdrom.c
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2007 - 2010 ID7 Ltd.
-+ *
-+ *  SCSI CDROM (type 5) dev handler
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation, version 2
-+ *  of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+
-+#include <linux/cdrom.h>
-+#include <scsi/scsi_host.h>
+diff -upkr linux-2.6.35/block/blk-map.c linux-2.6.35/block/blk-map.c
+--- linux-2.6.35/block/blk-map.c	2010-05-17 01:17:36.000000000 +0400
++++ linux-2.6.35/block/blk-map.c	2010-05-24 15:19:49.000000000 +0400
+@@ -5,6 +5,8 @@
+ #include <linux/module.h>
+ #include <linux/bio.h>
+ #include <linux/blkdev.h>
++#include <linux/scatterlist.h>
 +#include <linux/slab.h>
-+
-+#define LOG_PREFIX	"dev_cdrom"
-+
-+#include <scst/scst.h>
-+#include "scst_dev_handler.h"
-+
-+#define CDROM_NAME	"dev_cdrom"
-+
-+#define CDROM_DEF_BLOCK_SHIFT	11
-+
-+struct cdrom_params {
-+	int block_shift;
+ #include <scsi/sg.h>		/* for struct sg_iovec */
+ 
+ #include "blk.h"
+@@ -271,6 +273,338 @@ int blk_rq_unmap_user(struct bio *bio)
+ }
+ EXPORT_SYMBOL(blk_rq_unmap_user);
+ 
++struct blk_kern_sg_work {
++	atomic_t bios_inflight;
++	struct sg_table sg_table;
++	struct scatterlist *src_sgl;
 +};
 +
-+static int cdrom_attach(struct scst_device *);
-+static void cdrom_detach(struct scst_device *);
-+static int cdrom_parse(struct scst_cmd *);
-+static int cdrom_done(struct scst_cmd *);
-+
-+static struct scst_dev_type cdrom_devtype = {
-+	.name =			CDROM_NAME,
-+	.type =			TYPE_ROM,
-+	.threads_num =		1,
-+	.parse_atomic =		1,
-+	.dev_done_atomic =	1,
-+	.attach =		cdrom_attach,
-+	.detach =		cdrom_detach,
-+	.parse =		cdrom_parse,
-+	.dev_done =		cdrom_done,
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags =	SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags =		&trace_flag,
-+#endif
-+};
-+
-+static int cdrom_attach(struct scst_device *dev)
++static void blk_free_kern_sg_work(struct blk_kern_sg_work *bw)
 +{
-+	int res, rc;
-+	uint8_t cmd[10];
-+	const int buffer_size = 512;
-+	uint8_t *buffer = NULL;
-+	int retries;
-+	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
-+	enum dma_data_direction data_dir;
-+	struct cdrom_params *params;
++	sg_free_table(&bw->sg_table);
++	kfree(bw);
++	return;
++}
 +
-+	if (dev->scsi_dev == NULL ||
-+	    dev->scsi_dev->type != dev->type) {
-+		PRINT_ERROR("%s", "SCSI device not define or illegal type");
-+		res = -ENODEV;
-+		goto out;
-+	}
++static void blk_bio_map_kern_endio(struct bio *bio, int err)
++{
++	struct blk_kern_sg_work *bw = bio->bi_private;
 +
-+	params = kzalloc(sizeof(*params), GFP_KERNEL);
-+	if (params == NULL) {
-+		TRACE(TRACE_OUT_OF_MEM, "%s",
-+		      "Unable to allocate struct cdrom_params");
-+		res = -ENOMEM;
-+		goto out;
-+	}
++	if (bw != NULL) {
++		/* Decrement the bios in processing and, if zero, free */
++		BUG_ON(atomic_read(&bw->bios_inflight) <= 0);
++		if (atomic_dec_and_test(&bw->bios_inflight)) {
++			if ((bio_data_dir(bio) == READ) && (err == 0)) {
++				unsigned long flags;
 +
-+	buffer = kmalloc(buffer_size, GFP_KERNEL);
-+	if (!buffer) {
-+		TRACE(TRACE_OUT_OF_MEM, "%s", "Memory allocation failure");
-+		res = -ENOMEM;
-+		goto out_free_params;
-+	}
-+
-+	/* Clear any existing UA's and get cdrom capacity (cdrom block size) */
-+	memset(cmd, 0, sizeof(cmd));
-+	cmd[0] = READ_CAPACITY;
-+	cmd[1] = (dev->scsi_dev->scsi_level <= SCSI_2) ?
-+	    ((dev->scsi_dev->lun << 5) & 0xe0) : 0;
-+	retries = SCST_DEV_UA_RETRIES;
-+	while (1) {
-+		memset(buffer, 0, buffer_size);
-+		memset(sense_buffer, 0, sizeof(sense_buffer));
-+		data_dir = SCST_DATA_READ;
-+
-+		TRACE_DBG("%s", "Doing READ_CAPACITY");
-+		rc = scsi_execute(dev->scsi_dev, cmd, data_dir, buffer,
-+				   buffer_size, sense_buffer,
-+				   SCST_GENERIC_CDROM_REG_TIMEOUT, 3, 0
-+				   , NULL
-+				  );
-+
-+		TRACE_DBG("READ_CAPACITY done: %x", rc);
-+
-+		if ((rc == 0) ||
-+		    !scst_analyze_sense(sense_buffer,
-+				sizeof(sense_buffer), SCST_SENSE_KEY_VALID,
-+				UNIT_ATTENTION, 0, 0))
-+			break;
-+
-+		if (!--retries) {
-+			PRINT_ERROR("UA not cleared after %d retries",
-+				SCST_DEV_UA_RETRIES);
-+			params->block_shift = CDROM_DEF_BLOCK_SHIFT;
-+			res = -ENODEV;
-+			goto out_free_buf;
++				local_irq_save(flags);	/* to protect KMs */
++				sg_copy(bw->src_sgl, bw->sg_table.sgl, 0, 0,
++					KM_BIO_DST_IRQ, KM_BIO_SRC_IRQ);
++				local_irq_restore(flags);
++			}
++			blk_free_kern_sg_work(bw);
 +		}
 +	}
 +
-+	if (rc == 0) {
-+		int sector_size = ((buffer[4] << 24) | (buffer[5] << 16) |
-+				      (buffer[6] << 8) | (buffer[7] << 0));
-+		if (sector_size == 0)
-+			params->block_shift = CDROM_DEF_BLOCK_SHIFT;
-+		else
-+			params->block_shift =
-+				scst_calc_block_shift(sector_size);
-+		TRACE_DBG("Sector size is %i scsi_level %d(SCSI_2 %d)",
-+			sector_size, dev->scsi_dev->scsi_level, SCSI_2);
-+	} else {
-+		params->block_shift = CDROM_DEF_BLOCK_SHIFT;
-+		TRACE(TRACE_MINOR, "Read capacity failed: %x, using default "
-+			"sector size %d", rc, params->block_shift);
-+		PRINT_BUFF_FLAG(TRACE_MINOR, "Returned sense", sense_buffer,
-+			sizeof(sense_buffer));
-+	}
-+
-+	res = scst_obtain_device_parameters(dev);
-+	if (res != 0) {
-+		PRINT_ERROR("Failed to obtain control parameters for device "
-+			"%s", dev->virt_name);
-+		goto out_free_buf;
-+	}
-+
-+out_free_buf:
-+	kfree(buffer);
-+
-+out_free_params:
-+	if (res == 0)
-+		dev->dh_priv = params;
-+	else
-+		kfree(params);
-+
-+out:
-+	return res;
-+}
-+
-+static void cdrom_detach(struct scst_device *dev)
-+{
-+	struct cdrom_params *params =
-+		(struct cdrom_params *)dev->dh_priv;
-+
-+	kfree(params);
-+	dev->dh_priv = NULL;
++	bio_put(bio);
 +	return;
 +}
 +
-+static int cdrom_get_block_shift(struct scst_cmd *cmd)
++static int blk_rq_copy_kern_sg(struct request *rq, struct scatterlist *sgl,
++			       int nents, struct blk_kern_sg_work **pbw,
++			       gfp_t gfp, gfp_t page_gfp)
 +{
-+	struct cdrom_params *params = (struct cdrom_params *)cmd->dev->dh_priv;
++	int res = 0, i;
++	struct scatterlist *sg;
++	struct scatterlist *new_sgl;
++	int new_sgl_nents;
++	size_t len = 0, to_copy;
++	struct blk_kern_sg_work *bw;
++
++	bw = kzalloc(sizeof(*bw), gfp);
++	if (bw == NULL)
++		goto out;
++
++	bw->src_sgl = sgl;
++
++	for_each_sg(sgl, sg, nents, i)
++		len += sg->length;
++	to_copy = len;
++
++	new_sgl_nents = PFN_UP(len);
++
++	res = sg_alloc_table(&bw->sg_table, new_sgl_nents, gfp);
++	if (res != 0)
++		goto out_free_bw;
++
++	new_sgl = bw->sg_table.sgl;
++
++	for_each_sg(new_sgl, sg, new_sgl_nents, i) {
++		struct page *pg;
++
++		pg = alloc_page(page_gfp);
++		if (pg == NULL)
++			goto err_free_new_sgl;
++
++		sg_assign_page(sg, pg);
++		sg->length = min_t(size_t, PAGE_SIZE, len);
++
++		len -= PAGE_SIZE;
++	}
++
++	if (rq_data_dir(rq) == WRITE) {
++		/*
++		 * We need to limit amount of copied data to to_copy, because
++		 * sgl might have the last element in sgl not marked as last in
++		 * SG chaining.
++		 */
++		sg_copy(new_sgl, sgl, 0, to_copy,
++			KM_USER0, KM_USER1);
++	}
++
++	*pbw = bw;
 +	/*
-+	 * No need for locks here, since *_detach() can not be
-+	 * called, when there are existing commands.
++	 * REQ_COPY_USER name is misleading. It should be something like
++	 * REQ_HAS_TAIL_SPACE_FOR_PADDING.
 +	 */
-+	return params->block_shift;
-+}
-+
-+static int cdrom_parse(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	scst_cdrom_generic_parse(cmd, cdrom_get_block_shift);
-+
-+	cmd->retries = SCST_PASSTHROUGH_RETRIES;
-+
-+	return res;
-+}
-+
-+static void cdrom_set_block_shift(struct scst_cmd *cmd, int block_shift)
-+{
-+	struct cdrom_params *params = (struct cdrom_params *)cmd->dev->dh_priv;
-+	/*
-+	 * No need for locks here, since *_detach() can not be
-+	 * called, when there are existing commands.
-+	 */
-+	if (block_shift != 0)
-+		params->block_shift = block_shift;
-+	else
-+		params->block_shift = CDROM_DEF_BLOCK_SHIFT;
-+	return;
-+}
-+
-+static int cdrom_done(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	res = scst_block_generic_dev_done(cmd, cdrom_set_block_shift);
-+	return res;
-+}
-+
-+static int __init cdrom_init(void)
-+{
-+	int res = 0;
-+
-+	cdrom_devtype.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&cdrom_devtype);
-+	if (res < 0)
-+		goto out;
++	rq->cmd_flags |= REQ_COPY_USER;
 +
 +out:
 +	return res;
 +
-+}
-+
-+static void __exit cdrom_exit(void)
-+{
-+	scst_unregister_dev_driver(&cdrom_devtype);
-+	return;
-+}
-+
-+module_init(cdrom_init);
-+module_exit(cdrom_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Vladislav Bolkhovitin & Leonid Stoljar");
-+MODULE_DESCRIPTION("SCSI CDROM (type 5) dev handler for SCST");
-+MODULE_VERSION(SCST_VERSION_STRING);
-diff -uprN orig/linux-2.6.35/drivers/scst/dev_handlers/scst_changer.c linux-2.6.35/drivers/scst/dev_handlers/scst_changer.c
---- orig/linux-2.6.35/drivers/scst/dev_handlers/scst_changer.c
-+++ linux-2.6.35/drivers/scst/dev_handlers/scst_changer.c
-@@ -0,0 +1,167 @@
-+/*
-+ *  scst_changer.c
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2007 - 2010 ID7 Ltd.
-+ *
-+ *  SCSI medium changer (type 8) dev handler
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation, version 2
-+ *  of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+
-+#include <scsi/scsi_host.h>
-+#include <linux/slab.h>
-+
-+#define LOG_PREFIX      "dev_changer"
-+
-+#include <scst/scst.h>
-+#include "scst_dev_handler.h"
-+
-+#define CHANGER_NAME	"dev_changer"
-+
-+#define CHANGER_RETRIES       2
-+
-+static int changer_attach(struct scst_device *);
-+/* static void changer_detach(struct scst_device *); */
-+static int changer_parse(struct scst_cmd *);
-+/* static int changer_done(struct scst_cmd *); */
-+
-+static struct scst_dev_type changer_devtype = {
-+	.name =	CHANGER_NAME,
-+	.type =	TYPE_MEDIUM_CHANGER,
-+	.threads_num =	1,
-+	.parse_atomic =	1,
-+/*	.dev_done_atomic =	1, */
-+	.attach =	changer_attach,
-+/*	.detach =	changer_detach, */
-+	.parse =	changer_parse,
-+/*	.dev_done =	changer_done */
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags =	SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags =		&trace_flag,
-+#endif
-+};
-+
-+static int changer_attach(struct scst_device *dev)
-+{
-+	int res, rc;
-+	int retries;
-+
-+	if (dev->scsi_dev == NULL ||
-+	    dev->scsi_dev->type != dev->type) {
-+		PRINT_ERROR("%s", "SCSI device not define or illegal type");
-+		res = -ENODEV;
-+		goto out;
++err_free_new_sgl:
++	for_each_sg(new_sgl, sg, new_sgl_nents, i) {
++		struct page *pg = sg_page(sg);
++		if (pg == NULL)
++			break;
++		__free_page(pg);
 +	}
++	sg_free_table(&bw->sg_table);
 +
-+	/*
-+	 * If the device is offline, don't try to read capacity or any
-+	 * of the other stuff
-+	 */
-+	if (dev->scsi_dev->sdev_state == SDEV_OFFLINE) {
-+		TRACE_DBG("%s", "Device is offline");
-+		res = -ENODEV;
-+		goto out;
-+	}
-+
-+	retries = SCST_DEV_UA_RETRIES;
-+	do {
-+		TRACE_DBG("%s", "Doing TEST_UNIT_READY");
-+		rc = scsi_test_unit_ready(dev->scsi_dev,
-+			SCST_GENERIC_CHANGER_TIMEOUT, CHANGER_RETRIES
-+					  , NULL);
-+		TRACE_DBG("TEST_UNIT_READY done: %x", rc);
-+	} while ((--retries > 0) && rc);
-+
-+	if (rc) {
-+		PRINT_WARNING("Unit not ready: %x", rc);
-+		/* Let's try not to be too smart and continue processing */
-+	}
-+
-+	res = scst_obtain_device_parameters(dev);
-+	if (res != 0) {
-+		PRINT_ERROR("Failed to obtain control parameters for device "
-+			"%s", dev->virt_name);
-+		goto out;
-+	}
-+
-+out:
-+	return res;
-+}
-+
-+#if 0
-+void changer_detach(struct scst_device *dev)
-+{
-+	return;
-+}
-+#endif
-+
-+static int changer_parse(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	scst_changer_generic_parse(cmd, NULL);
-+
-+	cmd->retries = SCST_PASSTHROUGH_RETRIES;
-+
-+	return res;
-+}
-+
-+#if 0
-+int changer_done(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	/*
-+	 * SCST sets good defaults for cmd->is_send_status and
-+	 * cmd->resp_data_len based on cmd->status and cmd->data_direction,
-+	 * therefore change them only if necessary
-+	 */
-+
-+#if 0
-+	switch (cmd->cdb[0]) {
-+	default:
-+		/* It's all good */
-+		break;
-+	}
-+#endif
-+	return res;
-+}
-+#endif
-+
-+static int __init changer_init(void)
-+{
-+	int res = 0;
-+
-+	changer_devtype.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&changer_devtype);
-+	if (res < 0)
-+		goto out;
-+
-+out:
-+	return res;
-+}
-+
-+static void __exit changer_exit(void)
-+{
-+	scst_unregister_dev_driver(&changer_devtype);
-+	return;
-+}
-+
-+module_init(changer_init);
-+module_exit(changer_exit);
-+
-+MODULE_AUTHOR("Vladislav Bolkhovitin & Leonid Stoljar");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("SCSI medium changer (type 8) dev handler for SCST");
-+MODULE_VERSION(SCST_VERSION_STRING);
-diff -uprN orig/linux-2.6.35/drivers/scst/dev_handlers/scst_dev_handler.h linux-2.6.35/drivers/scst/dev_handlers/scst_dev_handler.h
---- orig/linux-2.6.35/drivers/scst/dev_handlers/scst_dev_handler.h
-+++ linux-2.6.35/drivers/scst/dev_handlers/scst_dev_handler.h
-@@ -0,0 +1,27 @@
-+#ifndef __SCST_DEV_HANDLER_H
-+#define __SCST_DEV_HANDLER_H
-+
-+#include <linux/module.h>
-+#include <scsi/scsi_eh.h>
-+#include <scst/scst_debug.h>
-+
-+#define SCST_DEV_UA_RETRIES 5
-+#define SCST_PASSTHROUGH_RETRIES	0
-+
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+
-+#ifdef CONFIG_SCST_DEBUG
-+#define SCST_DEFAULT_DEV_LOG_FLAGS (TRACE_OUT_OF_MEM | TRACE_PID | \
-+	TRACE_LINE | TRACE_FUNCTION | TRACE_MGMT | TRACE_MINOR | \
-+	TRACE_MGMT_DEBUG | TRACE_SPECIAL)
-+#else
-+#define SCST_DEFAULT_DEV_LOG_FLAGS (TRACE_OUT_OF_MEM | TRACE_MGMT | \
-+	TRACE_SPECIAL)
-+#endif
-+
-+static unsigned long dh_trace_flag = SCST_DEFAULT_DEV_LOG_FLAGS;
-+#define trace_flag dh_trace_flag
-+
-+#endif /* defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING) */
-+
-+#endif /* __SCST_DEV_HANDLER_H */
-diff -uprN orig/linux-2.6.35/drivers/scst/dev_handlers/scst_disk.c linux-2.6.35/drivers/scst/dev_handlers/scst_disk.c
---- orig/linux-2.6.35/drivers/scst/dev_handlers/scst_disk.c
-+++ linux-2.6.35/drivers/scst/dev_handlers/scst_disk.c
-@@ -0,0 +1,647 @@
-+/*
-+ *  scst_disk.c
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2007 - 2010 ID7 Ltd.
-+ *
-+ *  SCSI disk (type 0) dev handler
-+ *  &
-+ *  SCSI disk (type 0) "performance" device handler (skip all READ and WRITE
-+ *   operations).
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation, version 2
-+ *  of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <scsi/scsi_host.h>
-+#include <linux/slab.h>
-+#include <asm/unaligned.h>
-+
-+#define LOG_PREFIX           "dev_disk"
-+
-+#include <scst/scst.h>
-+#include "scst_dev_handler.h"
-+
-+# define DISK_NAME           "dev_disk"
-+# define DISK_PERF_NAME      "dev_disk_perf"
-+
-+#define DISK_DEF_BLOCK_SHIFT	9
-+
-+struct disk_params {
-+	int block_shift;
-+};
-+
-+static int disk_attach(struct scst_device *dev);
-+static void disk_detach(struct scst_device *dev);
-+static int disk_parse(struct scst_cmd *cmd);
-+static int disk_perf_exec(struct scst_cmd *cmd);
-+static int disk_done(struct scst_cmd *cmd);
-+static int disk_exec(struct scst_cmd *cmd);
-+static bool disk_on_sg_tablesize_low(struct scst_cmd *cmd);
-+
-+static struct scst_dev_type disk_devtype = {
-+	.name =			DISK_NAME,
-+	.type =			TYPE_DISK,
-+	.threads_num =		1,
-+	.parse_atomic =		1,
-+	.dev_done_atomic =	1,
-+	.attach =		disk_attach,
-+	.detach =		disk_detach,
-+	.parse =		disk_parse,
-+	.exec =			disk_exec,
-+	.on_sg_tablesize_low = disk_on_sg_tablesize_low,
-+	.dev_done =		disk_done,
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags = SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags = &trace_flag,
-+#endif
-+};
-+
-+static struct scst_dev_type disk_devtype_perf = {
-+	.name =			DISK_PERF_NAME,
-+	.type =			TYPE_DISK,
-+	.parse_atomic =		1,
-+	.dev_done_atomic =	1,
-+	.attach =		disk_attach,
-+	.detach =		disk_detach,
-+	.parse =		disk_parse,
-+	.exec =			disk_perf_exec,
-+	.dev_done =		disk_done,
-+	.on_sg_tablesize_low = disk_on_sg_tablesize_low,
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags =	SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags =		&trace_flag,
-+#endif
-+};
-+
-+static int __init init_scst_disk_driver(void)
-+{
-+	int res = 0;
-+
-+	disk_devtype.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&disk_devtype);
-+	if (res < 0)
-+		goto out;
-+
-+	disk_devtype_perf.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&disk_devtype_perf);
-+	if (res < 0)
-+		goto out_unreg;
-+
-+out:
-+	return res;
-+
-+out_unreg:
-+	scst_unregister_dev_driver(&disk_devtype);
++out_free_bw:
++	kfree(bw);
++	res = -ENOMEM;
 +	goto out;
 +}
 +
-+static void __exit exit_scst_disk_driver(void)
-+{
-+
-+	scst_unregister_dev_driver(&disk_devtype_perf);
-+	scst_unregister_dev_driver(&disk_devtype);
-+	return;
-+}
-+
-+module_init(init_scst_disk_driver);
-+module_exit(exit_scst_disk_driver);
-+
-+static int disk_attach(struct scst_device *dev)
-+{
-+	int res, rc;
-+	uint8_t cmd[10];
-+	const int buffer_size = 512;
-+	uint8_t *buffer = NULL;
-+	int retries;
-+	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
-+	enum dma_data_direction data_dir;
-+	struct disk_params *params;
-+
-+	if (dev->scsi_dev == NULL ||
-+	    dev->scsi_dev->type != dev->type) {
-+		PRINT_ERROR("%s", "SCSI device not define or illegal type");
-+		res = -ENODEV;
-+		goto out;
-+	}
-+
-+	params = kzalloc(sizeof(*params), GFP_KERNEL);
-+	if (params == NULL) {
-+		TRACE(TRACE_OUT_OF_MEM, "%s",
-+		      "Unable to allocate struct disk_params");
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+
-+	buffer = kmalloc(buffer_size, GFP_KERNEL);
-+	if (!buffer) {
-+		TRACE(TRACE_OUT_OF_MEM, "%s", "Memory allocation failure");
-+		res = -ENOMEM;
-+		goto out_free_params;
-+	}
-+
-+	/* Clear any existing UA's and get disk capacity (disk block size) */
-+	memset(cmd, 0, sizeof(cmd));
-+	cmd[0] = READ_CAPACITY;
-+	cmd[1] = (dev->scsi_dev->scsi_level <= SCSI_2) ?
-+	    ((dev->scsi_dev->lun << 5) & 0xe0) : 0;
-+	retries = SCST_DEV_UA_RETRIES;
-+	while (1) {
-+		memset(buffer, 0, buffer_size);
-+		memset(sense_buffer, 0, sizeof(sense_buffer));
-+		data_dir = SCST_DATA_READ;
-+
-+		TRACE_DBG("%s", "Doing READ_CAPACITY");
-+		rc = scsi_execute(dev->scsi_dev, cmd, data_dir, buffer,
-+				   buffer_size, sense_buffer,
-+				   SCST_GENERIC_DISK_REG_TIMEOUT, 3, 0
-+				   , NULL
-+				  );
-+
-+		TRACE_DBG("READ_CAPACITY done: %x", rc);
-+
-+		if ((rc == 0) ||
-+		    !scst_analyze_sense(sense_buffer,
-+				sizeof(sense_buffer), SCST_SENSE_KEY_VALID,
-+				UNIT_ATTENTION, 0, 0))
-+			break;
-+		if (!--retries) {
-+			PRINT_ERROR("UA not clear after %d retries",
-+				SCST_DEV_UA_RETRIES);
-+			res = -ENODEV;
-+			goto out_free_buf;
-+		}
-+	}
-+	if (rc == 0) {
-+		int sector_size = ((buffer[4] << 24) | (buffer[5] << 16) |
-+				     (buffer[6] << 8) | (buffer[7] << 0));
-+		if (sector_size == 0)
-+			params->block_shift = DISK_DEF_BLOCK_SHIFT;
-+		else
-+			params->block_shift =
-+				scst_calc_block_shift(sector_size);
-+	} else {
-+		params->block_shift = DISK_DEF_BLOCK_SHIFT;
-+		TRACE(TRACE_MINOR, "Read capacity failed: %x, using default "
-+			"sector size %d", rc, params->block_shift);
-+		PRINT_BUFF_FLAG(TRACE_MINOR, "Returned sense", sense_buffer,
-+			sizeof(sense_buffer));
-+	}
-+
-+	res = scst_obtain_device_parameters(dev);
-+	if (res != 0) {
-+		PRINT_ERROR("Failed to obtain control parameters for device "
-+			"%s", dev->virt_name);
-+		goto out_free_buf;
-+	}
-+
-+out_free_buf:
-+	kfree(buffer);
-+
-+out_free_params:
-+	if (res == 0)
-+		dev->dh_priv = params;
-+	else
-+		kfree(params);
-+
-+out:
-+	return res;
-+}
-+
-+static void disk_detach(struct scst_device *dev)
-+{
-+	struct disk_params *params =
-+		(struct disk_params *)dev->dh_priv;
-+
-+	kfree(params);
-+	dev->dh_priv = NULL;
-+	return;
-+}
-+
-+static int disk_get_block_shift(struct scst_cmd *cmd)
-+{
-+	struct disk_params *params = (struct disk_params *)cmd->dev->dh_priv;
-+	/*
-+	 * No need for locks here, since *_detach() can not be
-+	 * called, when there are existing commands.
-+	 */
-+	return params->block_shift;
-+}
-+
-+static int disk_parse(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	scst_sbc_generic_parse(cmd, disk_get_block_shift);
-+
-+	cmd->retries = SCST_PASSTHROUGH_RETRIES;
-+
-+	return res;
-+}
-+
-+static void disk_set_block_shift(struct scst_cmd *cmd, int block_shift)
-+{
-+	struct disk_params *params = (struct disk_params *)cmd->dev->dh_priv;
-+	/*
-+	 * No need for locks here, since *_detach() can not be
-+	 * called, when there are existing commands.
-+	 */
-+	if (block_shift != 0)
-+		params->block_shift = block_shift;
-+	else
-+		params->block_shift = DISK_DEF_BLOCK_SHIFT;
-+	return;
-+}
-+
-+static int disk_done(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	res = scst_block_generic_dev_done(cmd, disk_set_block_shift);
-+	return res;
-+}
-+
-+static bool disk_on_sg_tablesize_low(struct scst_cmd *cmd)
-+{
-+	bool res;
-+
-+	switch (cmd->cdb[0]) {
-+	case WRITE_6:
-+	case READ_6:
-+	case WRITE_10:
-+	case READ_10:
-+	case WRITE_VERIFY:
-+	case WRITE_12:
-+	case READ_12:
-+	case WRITE_VERIFY_12:
-+	case WRITE_16:
-+	case READ_16:
-+	case WRITE_VERIFY_16:
-+		res = true;
-+		/* See comment in disk_exec */
-+		cmd->inc_expected_sn_on_done = 1;
-+		break;
-+	default:
-+		res = false;
-+		break;
-+	}
-+	return res;
-+}
-+
-+struct disk_work {
-+	struct scst_cmd *cmd;
-+	struct completion disk_work_cmpl;
-+	volatile int result;
-+	unsigned int left;
-+	uint64_t save_lba;
-+	unsigned int save_len;
-+	struct scatterlist *save_sg;
-+	int save_sg_cnt;
-+};
-+
-+static int disk_cdb_get_transfer_data(const uint8_t *cdb,
-+	uint64_t *out_lba, unsigned int *out_length)
++static int __blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
++	int nents, struct blk_kern_sg_work *bw, gfp_t gfp)
 +{
 +	int res;
-+	uint64_t lba;
-+	unsigned int len;
++	struct request_queue *q = rq->q;
++	int rw = rq_data_dir(rq);
++	int max_nr_vecs, i;
++	size_t tot_len;
++	bool need_new_bio;
++	struct scatterlist *sg, *prev_sg = NULL;
++	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
++	int bios;
 +
-+	switch (cdb[0]) {
-+	case WRITE_6:
-+	case READ_6:
-+		lba = be16_to_cpu(get_unaligned((__be16 *)&cdb[2]));
-+		len = cdb[4];
-+		break;
-+	case WRITE_10:
-+	case READ_10:
-+	case WRITE_VERIFY:
-+		lba = be32_to_cpu(get_unaligned((__be32 *)&cdb[2]));
-+		len = be16_to_cpu(get_unaligned((__be16 *)&cdb[7]));
-+		break;
-+	case WRITE_12:
-+	case READ_12:
-+	case WRITE_VERIFY_12:
-+		lba = be32_to_cpu(get_unaligned((__be32 *)&cdb[2]));
-+		len = be32_to_cpu(get_unaligned((__be32 *)&cdb[6]));
-+		break;
-+	case WRITE_16:
-+	case READ_16:
-+	case WRITE_VERIFY_16:
-+		lba = be64_to_cpu(get_unaligned((__be64 *)&cdb[2]));
-+		len = be32_to_cpu(get_unaligned((__be32 *)&cdb[10]));
-+		break;
-+	default:
++	if (unlikely((sgl == NULL) || (sgl->length == 0) || (nents <= 0))) {
++		WARN_ON(1);
 +		res = -EINVAL;
 +		goto out;
 +	}
 +
-+	res = 0;
-+	*out_lba = lba;
-+	*out_length = len;
-+
-+	TRACE_DBG("LBA %lld, length %d", (unsigned long long)lba, len);
-+
-+out:
-+	return res;
-+}
-+
-+static int disk_cdb_set_transfer_data(uint8_t *cdb,
-+	uint64_t lba, unsigned int len)
-+{
-+	int res;
-+
-+	switch (cdb[0]) {
-+	case WRITE_6:
-+	case READ_6:
-+		put_unaligned(cpu_to_be16(lba), (__be16 *)&cdb[2]);
-+		cdb[4] = len;
-+		break;
-+	case WRITE_10:
-+	case READ_10:
-+	case WRITE_VERIFY:
-+		put_unaligned(cpu_to_be32(lba), (__be32 *)&cdb[2]);
-+		put_unaligned(cpu_to_be16(len), (__be16 *)&cdb[7]);
-+		break;
-+	case WRITE_12:
-+	case READ_12:
-+	case WRITE_VERIFY_12:
-+		put_unaligned(cpu_to_be32(lba), (__be32 *)&cdb[2]);
-+		put_unaligned(cpu_to_be32(len), (__be32 *)&cdb[6]);
-+		break;
-+	case WRITE_16:
-+	case READ_16:
-+	case WRITE_VERIFY_16:
-+		put_unaligned(cpu_to_be64(lba), (__be64 *)&cdb[2]);
-+		put_unaligned(cpu_to_be32(len), (__be32 *)&cdb[10]);
-+		break;
-+	default:
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	res = 0;
-+
-+	TRACE_DBG("LBA %lld, length %d", (unsigned long long)lba, len);
-+	TRACE_BUFFER("New CDB", cdb, SCST_MAX_CDB_SIZE);
-+
-+out:
-+	return res;
-+}
-+
-+static void disk_restore_sg(struct disk_work *work)
-+{
-+	disk_cdb_set_transfer_data(work->cmd->cdb, work->save_lba, work->save_len);
-+	work->cmd->sg = work->save_sg;
-+	work->cmd->sg_cnt = work->save_sg_cnt;
-+	return;
-+}
-+
-+static void disk_cmd_done(void *data, char *sense, int result, int resid)
-+{
-+	struct disk_work *work = data;
-+
-+	TRACE_DBG("work %p, cmd %p, left %d, result %d, sense %p, resid %d",
-+		work, work->cmd, work->left, result, sense, resid);
-+
-+	if (result == SAM_STAT_GOOD)
-+		goto out_complete;
-+
-+	work->result = result;
-+
-+	disk_restore_sg(work);
-+
-+	scst_pass_through_cmd_done(work->cmd, sense, result, resid + work->left);
-+
-+out_complete:
-+	complete_all(&work->disk_work_cmpl);
-+	return;
-+}
-+
-+/* Executes command and split CDB, if necessary */
-+static int disk_exec(struct scst_cmd *cmd)
-+{
-+	int res, rc;
-+	struct disk_params *params = (struct disk_params *)cmd->dev->dh_priv;
-+	struct disk_work work;
-+	unsigned int offset, cur_len; /* in blocks */
-+	struct scatterlist *sg, *start_sg;
-+	int cur_sg_cnt;
-+	int sg_tablesize = cmd->dev->scsi_dev->host->sg_tablesize;
-+	int max_sectors = cmd->dev->scsi_dev->host->max_sectors;
-+	int num, j;
-+
-+	if (unlikely(((max_sectors << params->block_shift) & ~PAGE_MASK) != 0)) {
-+		int mlen = max_sectors << params->block_shift;
-+		int pg = ((mlen >> PAGE_SHIFT) + ((mlen & ~PAGE_MASK) != 0)) - 1;
-+		int adj_len = pg << PAGE_SHIFT;
-+		max_sectors = adj_len >> params->block_shift;
-+		if (max_sectors == 0) {
-+			PRINT_ERROR("Too low max sectors %d",
-+				cmd->dev->scsi_dev->host->max_sectors);
-+			goto out_error;
-+		}
-+	}
-+
-+	if (unlikely((cmd->bufflen >> params->block_shift) > max_sectors)) {
-+		if ((cmd->out_bufflen >> params->block_shift) > max_sectors) {
-+			PRINT_ERROR("Too limited max_sectors %d for "
-+				"bidirectional cmd %x (out_bufflen %d)",
-+				max_sectors, cmd->cdb[0], cmd->out_bufflen);
-+			/* Let lower level handle it */
-+			res = SCST_EXEC_NOT_COMPLETED;
-+			goto out;
-+		}
-+		goto split;
-+	}
-+
-+	if (likely(cmd->sg_cnt <= sg_tablesize)) {
-+		res = SCST_EXEC_NOT_COMPLETED;
-+		goto out;
-+	}
-+
-+split:
-+	BUG_ON(cmd->out_sg_cnt > sg_tablesize);
-+	BUG_ON((cmd->out_bufflen >> params->block_shift) > max_sectors);
-+
 +	/*
-+	 * We don't support changing BIDI CDBs (see disk_on_sg_tablesize_low()),
-+	 * so use only sg_cnt
++	 * Let's keep each bio allocation inside a single page to decrease
++	 * probability of failure.
 +	 */
++	max_nr_vecs =  min_t(size_t,
++		((PAGE_SIZE - sizeof(struct bio)) / sizeof(struct bio_vec)),
++		BIO_MAX_PAGES);
 +
-+	memset(&work, 0, sizeof(work));
-+	work.cmd = cmd;
-+	work.save_sg = cmd->sg;
-+	work.save_sg_cnt = cmd->sg_cnt;
-+	rc = disk_cdb_get_transfer_data(cmd->cdb, &work.save_lba,
-+		&work.save_len);
-+	if (rc != 0)
-+		goto out_error;
++	need_new_bio = true;
++	tot_len = 0;
++	bios = 0;
++	for_each_sg(sgl, sg, nents, i) {
++		struct page *page = sg_page(sg);
++		void *page_addr = page_address(page);
++		size_t len = sg->length, l;
++		size_t offset = sg->offset;
 +
-+	rc = scst_check_local_events(cmd);
-+	if (unlikely(rc != 0))
-+		goto out_done;
++		tot_len += len;
++		prev_sg = sg;
 +
-+	cmd->status = 0;
-+	cmd->msg_status = 0;
-+	cmd->host_status = DID_OK;
-+	cmd->driver_status = 0;
-+
-+	TRACE_DBG("cmd %p, save_sg %p, save_sg_cnt %d, save_lba %lld, "
-+		"save_len %d (sg_tablesize %d, max_sectors %d, block_shift %d, "
-+		"sizeof(*sg) 0x%zx)", cmd, work.save_sg, work.save_sg_cnt,
-+		(unsigned long long)work.save_lba, work.save_len,
-+		sg_tablesize, max_sectors, params->block_shift, sizeof(*sg));
-+
-+	/*
-+	 * If we submit all chunks async'ly, it will be very not trivial what
-+	 * to do if several of them finish with sense or residual. So, let's
-+	 * do it synchronously.
-+	 */
-+
-+	num = 1;
-+	j = 0;
-+	offset = 0;
-+	cur_len = 0;
-+	sg = work.save_sg;
-+	start_sg = sg;
-+	cur_sg_cnt = 0;
-+	while (1) {
-+		unsigned int l;
-+
-+		if (unlikely(sg_is_chain(&sg[j]))) {
-+			bool reset_start_sg = (start_sg == &sg[j]);
-+			sg = sg_chain_ptr(&sg[j]);
-+			j = 0;
-+			if (reset_start_sg)
-+				start_sg = sg;
-+		}
-+
-+		l = sg[j].length >> params->block_shift;
-+		cur_len += l;
-+		cur_sg_cnt++;
-+
-+		TRACE_DBG("l %d, j %d, num %d, offset %d, cur_len %d, "
-+			"cur_sg_cnt %d, start_sg %p", l, j, num, offset,
-+			cur_len, cur_sg_cnt, start_sg);
-+
-+		if (((num % sg_tablesize) == 0) ||
-+		     (num == work.save_sg_cnt) ||
-+		     (cur_len >= max_sectors)) {
-+			TRACE_DBG("%s", "Execing...");
-+
-+			disk_cdb_set_transfer_data(cmd->cdb,
-+				work.save_lba + offset, cur_len);
-+			cmd->sg = start_sg;
-+			cmd->sg_cnt = cur_sg_cnt;
-+
-+			work.left = work.save_len - (offset + cur_len);
-+			init_completion(&work.disk_work_cmpl);
-+
-+			rc = scst_scsi_exec_async(cmd, &work, disk_cmd_done);
-+			if (unlikely(rc != 0)) {
-+				PRINT_ERROR("scst_scsi_exec_async() failed: %d",
-+					rc);
-+				goto out_err_restore;
-+			}
-+
-+			wait_for_completion(&work.disk_work_cmpl);
-+
-+			if (work.result != SAM_STAT_GOOD) {
-+				/* cmd can be already dead */
-+				res = SCST_EXEC_COMPLETED;
-+				goto out;
-+			}
-+
-+			offset += cur_len;
-+			cur_len = 0;
-+			cur_sg_cnt = 0;
-+			start_sg = &sg[j+1];
-+
-+			if (num == work.save_sg_cnt)
-+				break;
-+		}
-+		num++;
-+		j++;
-+	}
-+
-+	cmd->completed = 1;
-+
-+out_restore:
-+	disk_restore_sg(&work);
-+
-+out_done:
-+	res = SCST_EXEC_COMPLETED;
-+	cmd->scst_cmd_done(cmd, SCST_CMD_STATE_DEFAULT, SCST_CONTEXT_SAME);
-+
-+out:
-+	return res;
-+
-+out_err_restore:
-+	scst_set_cmd_error(cmd, SCST_LOAD_SENSE(scst_sense_hardw_error));
-+	goto out_restore;
-+
-+out_error:
-+	scst_set_cmd_error(cmd, SCST_LOAD_SENSE(scst_sense_hardw_error));
-+	goto out_done;
-+}
-+
-+static int disk_perf_exec(struct scst_cmd *cmd)
-+{
-+	int res, rc;
-+	int opcode = cmd->cdb[0];
-+
-+	rc = scst_check_local_events(cmd);
-+	if (unlikely(rc != 0))
-+		goto out_done;
-+
-+	cmd->status = 0;
-+	cmd->msg_status = 0;
-+	cmd->host_status = DID_OK;
-+	cmd->driver_status = 0;
-+
-+	switch (opcode) {
-+	case WRITE_6:
-+	case WRITE_10:
-+	case WRITE_12:
-+	case WRITE_16:
-+	case READ_6:
-+	case READ_10:
-+	case READ_12:
-+	case READ_16:
-+	case WRITE_VERIFY:
-+	case WRITE_VERIFY_12:
-+	case WRITE_VERIFY_16:
-+		goto out_complete;
-+	}
-+
-+	res = SCST_EXEC_NOT_COMPLETED;
-+
-+out:
-+	return res;
-+
-+out_complete:
-+	cmd->completed = 1;
-+
-+out_done:
-+	res = SCST_EXEC_COMPLETED;
-+	cmd->scst_cmd_done(cmd, SCST_CMD_STATE_DEFAULT, SCST_CONTEXT_SAME);
-+	goto out;
-+}
-+
-+MODULE_AUTHOR("Vladislav Bolkhovitin & Leonid Stoljar");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("SCSI disk (type 0) dev handler for SCST");
-+MODULE_VERSION(SCST_VERSION_STRING);
-+
-diff -uprN orig/linux-2.6.35/drivers/scst/dev_handlers/scst_modisk.c linux-2.6.35/drivers/scst/dev_handlers/scst_modisk.c
---- orig/linux-2.6.35/drivers/scst/dev_handlers/scst_modisk.c
-+++ linux-2.6.35/drivers/scst/dev_handlers/scst_modisk.c
-@@ -0,0 +1,328 @@
-+/*
-+ *  scst_modisk.c
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2007 - 2010 ID7 Ltd.
-+ *
-+ *  SCSI MO disk (type 7) dev handler
-+ *  &
-+ *  SCSI MO disk (type 7) "performance" device handler (skip all READ and WRITE
-+ *   operations).
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation, version 2
-+ *  of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <scsi/scsi_host.h>
-+#include <linux/slab.h>
-+
-+#define LOG_PREFIX             "dev_modisk"
-+
-+#include <scst/scst.h>
-+#include "scst_dev_handler.h"
-+
-+# define MODISK_NAME           "dev_modisk"
-+# define MODISK_PERF_NAME      "dev_modisk_perf"
-+
-+#define MODISK_DEF_BLOCK_SHIFT    10
-+
-+struct modisk_params {
-+	int block_shift;
-+};
-+
-+static int modisk_attach(struct scst_device *);
-+static void modisk_detach(struct scst_device *);
-+static int modisk_parse(struct scst_cmd *);
-+static int modisk_done(struct scst_cmd *);
-+static int modisk_perf_exec(struct scst_cmd *);
-+
-+static struct scst_dev_type modisk_devtype = {
-+	.name =			MODISK_NAME,
-+	.type =			TYPE_MOD,
-+	.threads_num =		1,
-+	.parse_atomic =		1,
-+	.dev_done_atomic =	1,
-+	.attach =		modisk_attach,
-+	.detach =		modisk_detach,
-+	.parse =		modisk_parse,
-+	.dev_done =		modisk_done,
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags =	SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags =		&trace_flag,
-+#endif
-+};
-+
-+static struct scst_dev_type modisk_devtype_perf = {
-+	.name =			MODISK_PERF_NAME,
-+	.type =			TYPE_MOD,
-+	.parse_atomic =		1,
-+	.dev_done_atomic =	1,
-+	.attach =		modisk_attach,
-+	.detach =		modisk_detach,
-+	.parse =		modisk_parse,
-+	.dev_done =		modisk_done,
-+	.exec =			modisk_perf_exec,
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags =	SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags =		&trace_flag,
-+#endif
-+};
-+
-+static int __init init_scst_modisk_driver(void)
-+{
-+	int res = 0;
-+
-+	modisk_devtype.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&modisk_devtype);
-+	if (res < 0)
-+		goto out;
-+
-+	modisk_devtype_perf.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&modisk_devtype_perf);
-+	if (res < 0)
-+		goto out_unreg;
-+
-+out:
-+	return res;
-+
-+out_unreg:
-+	scst_unregister_dev_driver(&modisk_devtype);
-+	goto out;
-+}
-+
-+static void __exit exit_scst_modisk_driver(void)
-+{
-+
-+	scst_unregister_dev_driver(&modisk_devtype_perf);
-+	scst_unregister_dev_driver(&modisk_devtype);
-+	return;
-+}
-+
-+module_init(init_scst_modisk_driver);
-+module_exit(exit_scst_modisk_driver);
-+
-+static int modisk_attach(struct scst_device *dev)
-+{
-+	int res, rc;
-+	uint8_t cmd[10];
-+	const int buffer_size = 512;
-+	uint8_t *buffer = NULL;
-+	int retries;
-+	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
-+	enum dma_data_direction data_dir;
-+	struct modisk_params *params;
-+
-+	if (dev->scsi_dev == NULL ||
-+	    dev->scsi_dev->type != dev->type) {
-+		PRINT_ERROR("%s", "SCSI device not define or illegal type");
-+		res = -ENODEV;
-+		goto out;
-+	}
-+
-+	params = kzalloc(sizeof(*params), GFP_KERNEL);
-+	if (params == NULL) {
-+		TRACE(TRACE_OUT_OF_MEM, "%s",
-+		      "Unable to allocate struct modisk_params");
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+	params->block_shift = MODISK_DEF_BLOCK_SHIFT;
-+
-+	/*
-+	 * If the device is offline, don't try to read capacity or any
-+	 * of the other stuff
-+	 */
-+	if (dev->scsi_dev->sdev_state == SDEV_OFFLINE) {
-+		TRACE_DBG("%s", "Device is offline");
-+		res = -ENODEV;
-+		goto out_free_params;
-+	}
-+
-+	buffer = kmalloc(buffer_size, GFP_KERNEL);
-+	if (!buffer) {
-+		TRACE(TRACE_OUT_OF_MEM, "%s", "Memory allocation failure");
-+		res = -ENOMEM;
-+		goto out_free_params;
-+	}
-+
-+	/*
-+	 * Clear any existing UA's and get modisk capacity (modisk block
-+	 * size).
-+	 */
-+	memset(cmd, 0, sizeof(cmd));
-+	cmd[0] = READ_CAPACITY;
-+	cmd[1] = (dev->scsi_dev->scsi_level <= SCSI_2) ?
-+	    ((dev->scsi_dev->lun << 5) & 0xe0) : 0;
-+	retries = SCST_DEV_UA_RETRIES;
-+	while (1) {
-+		memset(buffer, 0, buffer_size);
-+		memset(sense_buffer, 0, sizeof(sense_buffer));
-+		data_dir = SCST_DATA_READ;
-+
-+		TRACE_DBG("%s", "Doing READ_CAPACITY");
-+		rc = scsi_execute(dev->scsi_dev, cmd, data_dir, buffer,
-+				   buffer_size, sense_buffer,
-+				   SCST_GENERIC_MODISK_REG_TIMEOUT, 3, 0
-+				   , NULL
-+				  );
-+
-+		TRACE_DBG("READ_CAPACITY done: %x", rc);
-+
-+		if (!rc || !scst_analyze_sense(sense_buffer,
-+				sizeof(sense_buffer), SCST_SENSE_KEY_VALID,
-+				UNIT_ATTENTION, 0, 0))
-+			break;
-+
-+		if (!--retries) {
-+			PRINT_ERROR("UA not cleared after %d retries",
-+				    SCST_DEV_UA_RETRIES);
-+			res = -ENODEV;
-+			goto out_free_buf;
-+		}
-+	}
-+
-+	if (rc == 0) {
-+		int sector_size = ((buffer[4] << 24) | (buffer[5] << 16) |
-+				       (buffer[6] << 8) | (buffer[7] << 0));
-+		if (sector_size == 0)
-+			params->block_shift = MODISK_DEF_BLOCK_SHIFT;
++		/*
++		 * Each segment must be aligned on DMA boundary and
++		 * not on stack. The last one may have unaligned
++		 * length as long as the total length is aligned to
++		 * DMA padding alignment.
++		 */
++		if (i == nents - 1)
++			l = 0;
 +		else
-+			params->block_shift =
-+				scst_calc_block_shift(sector_size);
-+		TRACE_DBG("Sector size is %i scsi_level %d(SCSI_2 %d)",
-+		      sector_size, dev->scsi_dev->scsi_level, SCSI_2);
-+	} else {
-+		params->block_shift = MODISK_DEF_BLOCK_SHIFT;
-+		TRACE(TRACE_MINOR, "Read capacity failed: %x, using default "
-+			"sector size %d", rc, params->block_shift);
-+		PRINT_BUFF_FLAG(TRACE_MINOR, "Returned sense", sense_buffer,
-+			sizeof(sense_buffer));
-+	}
-+
-+	res = scst_obtain_device_parameters(dev);
-+	if (res != 0) {
-+		PRINT_ERROR("Failed to obtain control parameters for device "
-+			"%s: %x", dev->virt_name, res);
-+		goto out_free_buf;
-+	}
-+
-+out_free_buf:
-+	kfree(buffer);
-+
-+out_free_params:
-+	if (res == 0)
-+		dev->dh_priv = params;
-+	else
-+		kfree(params);
-+
-+out:
-+	return res;
-+}
-+
-+static void modisk_detach(struct scst_device *dev)
-+{
-+	struct modisk_params *params =
-+		(struct modisk_params *)dev->dh_priv;
-+
-+	kfree(params);
-+	dev->dh_priv = NULL;
-+	return;
-+}
-+
-+static int modisk_get_block_shift(struct scst_cmd *cmd)
-+{
-+	struct modisk_params *params =
-+		(struct modisk_params *)cmd->dev->dh_priv;
-+	/*
-+	 * No need for locks here, since *_detach() can not be
-+	 * called, when there are existing commands.
-+	 */
-+	return params->block_shift;
-+}
-+
-+static int modisk_parse(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	scst_modisk_generic_parse(cmd, modisk_get_block_shift);
-+
-+	cmd->retries = SCST_PASSTHROUGH_RETRIES;
-+
-+	return res;
-+}
-+
-+static void modisk_set_block_shift(struct scst_cmd *cmd, int block_shift)
-+{
-+	struct modisk_params *params =
-+		(struct modisk_params *)cmd->dev->dh_priv;
-+	/*
-+	 * No need for locks here, since *_detach() can not be
-+	 * called, when there are existing commands.
-+	 */
-+	if (block_shift != 0)
-+		params->block_shift = block_shift;
-+	else
-+		params->block_shift = MODISK_DEF_BLOCK_SHIFT;
-+	return;
-+}
-+
-+static int modisk_done(struct scst_cmd *cmd)
-+{
-+	int res;
-+
-+	res = scst_block_generic_dev_done(cmd, modisk_set_block_shift);
-+	return res;
-+}
-+
-+static int modisk_perf_exec(struct scst_cmd *cmd)
-+{
-+	int res = SCST_EXEC_NOT_COMPLETED, rc;
-+	int opcode = cmd->cdb[0];
-+
-+	rc = scst_check_local_events(cmd);
-+	if (unlikely(rc != 0))
-+		goto out_done;
-+
-+	cmd->status = 0;
-+	cmd->msg_status = 0;
-+	cmd->host_status = DID_OK;
-+	cmd->driver_status = 0;
-+
-+	switch (opcode) {
-+	case WRITE_6:
-+	case WRITE_10:
-+	case WRITE_12:
-+	case WRITE_16:
-+	case READ_6:
-+	case READ_10:
-+	case READ_12:
-+	case READ_16:
-+		cmd->completed = 1;
-+		goto out_done;
-+	}
-+
-+out:
-+	return res;
-+
-+out_done:
-+	res = SCST_EXEC_COMPLETED;
-+	cmd->scst_cmd_done(cmd, SCST_CMD_STATE_DEFAULT, SCST_CONTEXT_SAME);
-+	goto out;
-+}
-+
-+MODULE_AUTHOR("Vladislav Bolkhovitin & Leonid Stoljar");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("SCSI MO disk (type 7) dev handler for SCST");
-+MODULE_VERSION(SCST_VERSION_STRING);
-diff -uprN orig/linux-2.6.35/drivers/scst/dev_handlers/scst_processor.c linux-2.6.35/drivers/scst/dev_handlers/scst_processor.c
---- orig/linux-2.6.35/drivers/scst/dev_handlers/scst_processor.c
-+++ linux-2.6.35/drivers/scst/dev_handlers/scst_processor.c
-@@ -0,0 +1,167 @@
-+/*
-+ *  scst_processor.c
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2007 - 2010 ID7 Ltd.
-+ *
-+ *  SCSI medium processor (type 3) dev handler
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation, version 2
-+ *  of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+
-+#include <scsi/scsi_host.h>
-+#include <linux/slab.h>
-+
-+#define LOG_PREFIX "dev_processor"
-+
-+#include <scst/scst.h>
-+#include "scst_dev_handler.h"
-+
-+#define PROCESSOR_NAME	"dev_processor"
-+
-+#define PROCESSOR_RETRIES	2
-+
-+static int processor_attach(struct scst_device *);
-+/*static void processor_detach(struct scst_device *);*/
-+static int processor_parse(struct scst_cmd *);
-+/*static int processor_done(struct scst_cmd *);*/
-+
-+static struct scst_dev_type processor_devtype = {
-+	.name =			PROCESSOR_NAME,
-+	.type =			TYPE_PROCESSOR,
-+	.threads_num =		1,
-+	.parse_atomic =		1,
-+/*	.dev_done_atomic =	1,*/
-+	.attach =		processor_attach,
-+/*	.detach =		processor_detach,*/
-+	.parse =		processor_parse,
-+/*	.dev_done =		processor_done*/
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags =	SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags =		&trace_flag,
-+#endif
-+};
-+
-+static int processor_attach(struct scst_device *dev)
-+{
-+	int res, rc;
-+	int retries;
-+
-+	if (dev->scsi_dev == NULL ||
-+	    dev->scsi_dev->type != dev->type) {
-+		PRINT_ERROR("%s", "SCSI device not define or illegal type");
-+		res = -ENODEV;
-+		goto out;
-+	}
-+
-+	/*
-+	 * If the device is offline, don't try to read capacity or any
-+	 * of the other stuff
-+	 */
-+	if (dev->scsi_dev->sdev_state == SDEV_OFFLINE) {
-+		TRACE_DBG("%s", "Device is offline");
-+		res = -ENODEV;
-+		goto out;
-+	}
-+
-+	retries = SCST_DEV_UA_RETRIES;
-+	do {
-+		TRACE_DBG("%s", "Doing TEST_UNIT_READY");
-+		rc = scsi_test_unit_ready(dev->scsi_dev,
-+			SCST_GENERIC_PROCESSOR_TIMEOUT, PROCESSOR_RETRIES
-+					  , NULL);
-+		TRACE_DBG("TEST_UNIT_READY done: %x", rc);
-+	} while ((--retries > 0) && rc);
-+
-+	if (rc) {
-+		PRINT_WARNING("Unit not ready: %x", rc);
-+		/* Let's try not to be too smart and continue processing */
-+	}
-+
-+	res = scst_obtain_device_parameters(dev);
-+	if (res != 0) {
-+		PRINT_ERROR("Failed to obtain control parameters for device "
-+			"%s", dev->virt_name);
-+		goto out;
-+	}
-+
-+out:
-+	return res;
-+}
-+
-+#if 0
-+void processor_detach(struct scst_device *dev)
-+{
-+	return;
-+}
-+#endif
-+
-+static int processor_parse(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	scst_processor_generic_parse(cmd, NULL);
-+
-+	cmd->retries = SCST_PASSTHROUGH_RETRIES;
-+
-+	return res;
-+}
-+
-+#if 0
-+int processor_done(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	/*
-+	 * SCST sets good defaults for cmd->is_send_status and
-+	 * cmd->resp_data_len based on cmd->status and cmd->data_direction,
-+	 * therefore change them only if necessary.
-+	 */
-+
-+#if 0
-+	switch (cmd->cdb[0]) {
-+	default:
-+		/* It's all good */
-+		break;
-+	}
-+#endif
-+	return res;
-+}
-+#endif
-+
-+static int __init processor_init(void)
-+{
-+	int res = 0;
-+
-+	processor_devtype.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&processor_devtype);
-+	if (res < 0)
-+		goto out;
-+
-+out:
-+	return res;
-+}
-+
-+static void __exit processor_exit(void)
-+{
-+	scst_unregister_dev_driver(&processor_devtype);
-+	return;
-+}
-+
-+module_init(processor_init);
-+module_exit(processor_exit);
-+
-+MODULE_AUTHOR("Vladislav Bolkhovitin & Leonid Stoljar");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("SCSI medium processor (type 3) dev handler for SCST");
-+MODULE_VERSION(SCST_VERSION_STRING);
-diff -uprN orig/linux-2.6.35/drivers/scst/dev_handlers/scst_raid.c linux-2.6.35/drivers/scst/dev_handlers/scst_raid.c
---- orig/linux-2.6.35/drivers/scst/dev_handlers/scst_raid.c
-+++ linux-2.6.35/drivers/scst/dev_handlers/scst_raid.c
-@@ -0,0 +1,168 @@
-+/*
-+ *  scst_raid.c
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2007 - 2010 ID7 Ltd.
-+ *
-+ *  SCSI raid(controller) (type 0xC) dev handler
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation, version 2
-+ *  of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+
-+#define LOG_PREFIX      "dev_raid"
-+
-+#include <scsi/scsi_host.h>
-+#include <linux/slab.h>
-+
-+#include <scst/scst.h>
-+#include "scst_dev_handler.h"
-+
-+#define RAID_NAME	"dev_raid"
-+
-+#define RAID_RETRIES		2
-+
-+static int raid_attach(struct scst_device *);
-+/* static void raid_detach(struct scst_device *); */
-+static int raid_parse(struct scst_cmd *);
-+/* static int raid_done(struct scst_cmd *); */
-+
-+static struct scst_dev_type raid_devtype = {
-+	.name =			RAID_NAME,
-+	.type =			TYPE_RAID,
-+	.threads_num =		1,
-+	.parse_atomic =		1,
-+/*	.dev_done_atomic =	1,*/
-+	.attach =		raid_attach,
-+/*	.detach =		raid_detach,*/
-+	.parse =		raid_parse,
-+/*	.dev_done =		raid_done,*/
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags =	SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags =		&trace_flag,
-+#endif
-+};
-+
-+static int raid_attach(struct scst_device *dev)
-+{
-+	int res, rc;
-+	int retries;
-+
-+	if (dev->scsi_dev == NULL ||
-+	    dev->scsi_dev->type != dev->type) {
-+		PRINT_ERROR("%s", "SCSI device not define or illegal type");
-+		res = -ENODEV;
-+		goto out;
-+	}
-+
-+	/*
-+	 * If the device is offline, don't try to read capacity or any
-+	 * of the other stuff
-+	 */
-+	if (dev->scsi_dev->sdev_state == SDEV_OFFLINE) {
-+		TRACE_DBG("%s", "Device is offline");
-+		res = -ENODEV;
-+		goto out;
-+	}
-+
-+	retries = SCST_DEV_UA_RETRIES;
-+	do {
-+		TRACE_DBG("%s", "Doing TEST_UNIT_READY");
-+		rc = scsi_test_unit_ready(dev->scsi_dev,
-+			SCST_GENERIC_RAID_TIMEOUT, RAID_RETRIES
-+					  , NULL);
-+		TRACE_DBG("TEST_UNIT_READY done: %x", rc);
-+	} while ((--retries > 0) && rc);
-+
-+	if (rc) {
-+		PRINT_WARNING("Unit not ready: %x", rc);
-+		/* Let's try not to be too smart and continue processing */
-+	}
-+
-+	res = scst_obtain_device_parameters(dev);
-+	if (res != 0) {
-+		PRINT_ERROR("Failed to obtain control parameters for device "
-+			"%s", dev->virt_name);
-+		goto out;
-+	}
-+
-+out:
-+	return res;
-+}
-+
-+#if 0
-+void raid_detach(struct scst_device *dev)
-+{
-+	return;
-+}
-+#endif
-+
-+static int raid_parse(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	scst_raid_generic_parse(cmd, NULL);
-+
-+	cmd->retries = SCST_PASSTHROUGH_RETRIES;
-+
-+	return res;
-+}
-+
-+#if 0
-+int raid_done(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	/*
-+	 * SCST sets good defaults for cmd->is_send_status and
-+	 * cmd->resp_data_len based on cmd->status and cmd->data_direction,
-+	 * therefore change them only if necessary.
-+	 */
-+
-+#if 0
-+	switch (cmd->cdb[0]) {
-+	default:
-+		/* It's all good */
-+		break;
-+	}
-+#endif
-+	return res;
-+}
-+#endif
-+
-+static int __init raid_init(void)
-+{
-+	int res = 0;
-+
-+	raid_devtype.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&raid_devtype);
-+	if (res < 0)
-+		goto out;
-+
-+out:
-+	return res;
-+
-+}
-+
-+static void __exit raid_exit(void)
-+{
-+	scst_unregister_dev_driver(&raid_devtype);
-+	return;
-+}
-+
-+module_init(raid_init);
-+module_exit(raid_exit);
-+
-+MODULE_AUTHOR("Vladislav Bolkhovitin & Leonid Stoljar");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("SCSI raid(controller) (type 0xC) dev handler for SCST");
-+MODULE_VERSION(SCST_VERSION_STRING);
-diff -uprN orig/linux-2.6.35/drivers/scst/dev_handlers/scst_tape.c linux-2.6.35/drivers/scst/dev_handlers/scst_tape.c
---- orig/linux-2.6.35/drivers/scst/dev_handlers/scst_tape.c
-+++ linux-2.6.35/drivers/scst/dev_handlers/scst_tape.c
-@@ -0,0 +1,361 @@
-+/*
-+ *  scst_tape.c
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2007 - 2010 ID7 Ltd.
-+ *
-+ *  SCSI tape (type 1) dev handler
-+ *  &
-+ *  SCSI tape (type 1) "performance" device handler (skip all READ and WRITE
-+ *   operations).
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation, version 2
-+ *  of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <scsi/scsi_host.h>
-+#include <linux/slab.h>
-+
-+#define LOG_PREFIX           "dev_tape"
-+
-+#include <scst/scst.h>
-+#include "scst_dev_handler.h"
-+
-+# define TAPE_NAME           "dev_tape"
-+# define TAPE_PERF_NAME      "dev_tape_perf"
-+
-+#define TAPE_RETRIES		2
-+
-+#define TAPE_DEF_BLOCK_SIZE	512
-+
-+/* The fixed bit in READ/WRITE/VERIFY */
-+#define SILI_BIT		2
-+
-+struct tape_params {
-+	int block_size;
-+};
-+
-+static int tape_attach(struct scst_device *);
-+static void tape_detach(struct scst_device *);
-+static int tape_parse(struct scst_cmd *);
-+static int tape_done(struct scst_cmd *);
-+static int tape_perf_exec(struct scst_cmd *);
-+
-+static struct scst_dev_type tape_devtype = {
-+	.name =			TAPE_NAME,
-+	.type =			TYPE_TAPE,
-+	.threads_num =		1,
-+	.parse_atomic =		1,
-+	.dev_done_atomic =	1,
-+	.attach =		tape_attach,
-+	.detach =		tape_detach,
-+	.parse =		tape_parse,
-+	.dev_done =		tape_done,
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags =	SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags =		&trace_flag,
-+#endif
-+};
-+
-+static struct scst_dev_type tape_devtype_perf = {
-+	.name =			TAPE_PERF_NAME,
-+	.type =			TYPE_TAPE,
-+	.parse_atomic =		1,
-+	.dev_done_atomic =	1,
-+	.attach =		tape_attach,
-+	.detach =		tape_detach,
-+	.parse =		tape_parse,
-+	.dev_done =		tape_done,
-+	.exec =			tape_perf_exec,
-+#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
-+	.default_trace_flags =	SCST_DEFAULT_DEV_LOG_FLAGS,
-+	.trace_flags =		&trace_flag,
-+#endif
-+};
-+
-+static int __init init_scst_tape_driver(void)
-+{
-+	int res = 0;
-+
-+	tape_devtype.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&tape_devtype);
-+	if (res < 0)
-+		goto out;
-+
-+	tape_devtype_perf.module = THIS_MODULE;
-+
-+	res = scst_register_dev_driver(&tape_devtype_perf);
-+	if (res < 0)
-+		goto out_unreg;
-+
-+out:
-+	return res;
-+
-+out_unreg:
-+	scst_unregister_dev_driver(&tape_devtype);
-+	goto out;
-+}
-+
-+static void __exit exit_scst_tape_driver(void)
-+{
-+
-+	scst_unregister_dev_driver(&tape_devtype_perf);
-+	scst_unregister_dev_driver(&tape_devtype);
-+	return;
-+}
-+
-+module_init(init_scst_tape_driver);
-+module_exit(exit_scst_tape_driver);
-+
-+static int tape_attach(struct scst_device *dev)
-+{
-+	int res, rc;
-+	int retries;
-+	struct scsi_mode_data data;
-+	const int buffer_size = 512;
-+	uint8_t *buffer = NULL;
-+	struct tape_params *params;
-+
-+	if (dev->scsi_dev == NULL ||
-+	    dev->scsi_dev->type != dev->type) {
-+		PRINT_ERROR("%s", "SCSI device not define or illegal type");
-+		res = -ENODEV;
-+		goto out;
-+	}
-+
-+	params = kzalloc(sizeof(*params), GFP_KERNEL);
-+	if (params == NULL) {
-+		TRACE(TRACE_OUT_OF_MEM, "%s",
-+		      "Unable to allocate struct tape_params");
-+		res = -ENOMEM;
-+		goto out;
-+	}
-+
-+	params->block_size = TAPE_DEF_BLOCK_SIZE;
-+
-+	buffer = kmalloc(buffer_size, GFP_KERNEL);
-+	if (!buffer) {
-+		TRACE(TRACE_OUT_OF_MEM, "%s", "Memory allocation failure");
-+		res = -ENOMEM;
-+		goto out_free_req;
-+	}
-+
-+	retries = SCST_DEV_UA_RETRIES;
-+	do {
-+		TRACE_DBG("%s", "Doing TEST_UNIT_READY");
-+		rc = scsi_test_unit_ready(dev->scsi_dev,
-+			SCST_GENERIC_TAPE_SMALL_TIMEOUT, TAPE_RETRIES
-+					  , NULL);
-+		TRACE_DBG("TEST_UNIT_READY done: %x", rc);
-+	} while ((--retries > 0) && rc);
-+
-+	if (rc) {
-+		PRINT_WARNING("Unit not ready: %x", rc);
-+		/* Let's try not to be too smart and continue processing */
-+		goto obtain;
-+	}
-+
-+	TRACE_DBG("%s", "Doing MODE_SENSE");
-+	rc = scsi_mode_sense(dev->scsi_dev,
-+			      ((dev->scsi_dev->scsi_level <= SCSI_2) ?
-+			       ((dev->scsi_dev->lun << 5) & 0xe0) : 0),
-+			      0 /* Mode Page 0 */,
-+			      buffer, buffer_size,
-+			      SCST_GENERIC_TAPE_SMALL_TIMEOUT, TAPE_RETRIES,
-+			      &data, NULL);
-+	TRACE_DBG("MODE_SENSE done: %x", rc);
-+
-+	if (rc == 0) {
-+		int medium_type, mode, speed, density;
-+		if (buffer[3] == 8) {
-+			params->block_size = ((buffer[9] << 16) |
-+					    (buffer[10] << 8) |
-+					    (buffer[11] << 0));
-+		} else
-+			params->block_size = TAPE_DEF_BLOCK_SIZE;
-+		medium_type = buffer[1];
-+		mode = (buffer[2] & 0x70) >> 4;
-+		speed = buffer[2] & 0x0f;
-+		density = buffer[4];
-+		TRACE_DBG("Tape: lun %d. bs %d. type 0x%02x mode 0x%02x "
-+		      "speed 0x%02x dens 0x%02x", dev->scsi_dev->lun,
-+		      params->block_size, medium_type, mode, speed, density);
-+	} else {
-+		PRINT_ERROR("MODE_SENSE failed: %x", rc);
-+		res = -ENODEV;
-+		goto out_free_buf;
-+	}
-+
-+obtain:
-+	res = scst_obtain_device_parameters(dev);
-+	if (res != 0) {
-+		PRINT_ERROR("Failed to obtain control parameters for device "
-+			"%s", dev->virt_name);
-+		goto out_free_buf;
-+	}
-+
-+out_free_buf:
-+	kfree(buffer);
-+
-+out_free_req:
-+	if (res == 0)
-+		dev->dh_priv = params;
-+	else
-+		kfree(params);
-+
-+out:
-+	return res;
-+}
-+
-+static void tape_detach(struct scst_device *dev)
-+{
-+	struct tape_params *params =
-+		(struct tape_params *)dev->dh_priv;
-+
-+	kfree(params);
-+	dev->dh_priv = NULL;
-+	return;
-+}
-+
-+static int tape_get_block_size(struct scst_cmd *cmd)
-+{
-+	struct tape_params *params = (struct tape_params *)cmd->dev->dh_priv;
-+	/*
-+	 * No need for locks here, since *_detach() can not be called,
-+	 * when there are existing commands.
-+	 */
-+	return params->block_size;
-+}
-+
-+static int tape_parse(struct scst_cmd *cmd)
-+{
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	scst_tape_generic_parse(cmd, tape_get_block_size);
-+
-+	cmd->retries = SCST_PASSTHROUGH_RETRIES;
-+
-+	return res;
-+}
-+
-+static void tape_set_block_size(struct scst_cmd *cmd, int block_size)
-+{
-+	struct tape_params *params = (struct tape_params *)cmd->dev->dh_priv;
-+	/*
-+	 * No need for locks here, since *_detach() can not be called, when
-+	 * there are existing commands.
-+	 */
-+	params->block_size = block_size;
-+	return;
-+}
-+
-+static int tape_done(struct scst_cmd *cmd)
-+{
-+	int opcode = cmd->cdb[0];
-+	int status = cmd->status;
-+	int res = SCST_CMD_STATE_DEFAULT;
-+
-+	if ((status == SAM_STAT_GOOD) || (status == SAM_STAT_CONDITION_MET))
-+		res = scst_tape_generic_dev_done(cmd, tape_set_block_size);
-+	else if ((status == SAM_STAT_CHECK_CONDITION) &&
-+		   SCST_SENSE_VALID(cmd->sense)) {
-+		struct tape_params *params;
-+
-+		TRACE_DBG("Extended sense %x", cmd->sense[0] & 0x7F);
-+
-+		if ((cmd->sense[0] & 0x7F) != 0x70) {
-+			PRINT_ERROR("Sense format 0x%x is not supported",
-+				cmd->sense[0] & 0x7F);
-+			scst_set_cmd_error(cmd,
-+				SCST_LOAD_SENSE(scst_sense_hardw_error));
-+			goto out;
++			l = len;
++		if (((sg->offset | l) & queue_dma_alignment(q)) ||
++		    (page_addr && object_is_on_stack(page_addr + sg->offset))) {
++			res = -EINVAL;
++			goto out_free_bios;
 +		}
 +
-+		if (opcode == READ_6 && !(cmd->cdb[1] & SILI_BIT) &&
-+		    (cmd->sense[2] & 0xe0)) {
-+			/* EOF, EOM, or ILI */
-+			int TransferLength, Residue = 0;
-+			if ((cmd->sense[2] & 0x0f) == BLANK_CHECK)
-+				/* No need for EOM in this case */
-+				cmd->sense[2] &= 0xcf;
-+			TransferLength = ((cmd->cdb[2] << 16) |
-+					  (cmd->cdb[3] << 8) | cmd->cdb[4]);
-+			/* Compute the residual count */
-+			if ((cmd->sense[0] & 0x80) != 0) {
-+				Residue = ((cmd->sense[3] << 24) |
-+					   (cmd->sense[4] << 16) |
-+					   (cmd->sense[5] << 8) |
-+					   cmd->sense[6]);
-+			}
-+			TRACE_DBG("Checking the sense key "
-+				"sn[2]=%x cmd->cdb[0,1]=%x,%x TransLen/Resid"
-+				" %d/%d", (int)cmd->sense[2], cmd->cdb[0],
-+				cmd->cdb[1], TransferLength, Residue);
-+			if (TransferLength > Residue) {
-+				int resp_data_len = TransferLength - Residue;
-+				if (cmd->cdb[1] & SCST_TRANSFER_LEN_TYPE_FIXED) {
-+					/*
-+					 * No need for locks here, since
-+					 * *_detach() can not be called, when
-+					 * there are existing commands.
-+					 */
-+					params = (struct tape_params *)
-+						 cmd->dev->dh_priv;
-+					resp_data_len *= params->block_size;
++		while (len > 0) {
++			size_t bytes;
++			int rc;
++
++			if (need_new_bio) {
++				bio = bio_kmalloc(gfp, max_nr_vecs);
++				if (bio == NULL) {
++					res = -ENOMEM;
++					goto out_free_bios;
 +				}
-+				scst_set_resp_data_len(cmd, resp_data_len);
++
++				if (rw == WRITE)
++					bio->bi_rw |= 1 << BIO_RW;
++
++				bios++;
++				bio->bi_private = bw;
++				bio->bi_end_io = blk_bio_map_kern_endio;
++
++				if (hbio == NULL)
++					hbio = tbio = bio;
++				else
++					tbio = tbio->bi_next = bio;
 +			}
++
++			bytes = min_t(size_t, len, PAGE_SIZE - offset);
++
++			rc = bio_add_pc_page(q, bio, page, bytes, offset);
++			if (rc < bytes) {
++				if (unlikely(need_new_bio || (rc < 0))) {
++					if (rc < 0)
++						res = rc;
++					else
++						res = -EIO;
++					goto out_free_bios;
++				} else {
++					need_new_bio = true;
++					len -= rc;
++					offset += rc;
++					continue;
++				}
++			}
++
++			need_new_bio = false;
++			offset = 0;
++			len -= bytes;
++			page = nth_page(page, 1);
 +		}
 +	}
 +
-+out:
-+	TRACE_DBG("cmd->is_send_status=%x, cmd->resp_data_len=%d, "
-+	      "res=%d", cmd->is_send_status, cmd->resp_data_len, res);
-+	return res;
-+}
-+
-+static int tape_perf_exec(struct scst_cmd *cmd)
-+{
-+	int res = SCST_EXEC_NOT_COMPLETED, rc;
-+	int opcode = cmd->cdb[0];
-+
-+	rc = scst_check_local_events(cmd);
-+	if (unlikely(rc != 0))
-+		goto out_done;
-+
-+	cmd->status = 0;
-+	cmd->msg_status = 0;
-+	cmd->host_status = DID_OK;
-+	cmd->driver_status = 0;
-+
-+	switch (opcode) {
-+	case WRITE_6:
-+	case READ_6:
-+		cmd->completed = 1;
-+		goto out_done;
++	if (hbio == NULL) {
++		res = -EINVAL;
++		goto out_free_bios;
 +	}
 +
++	/* Total length must be aligned on DMA padding alignment */
++	if ((tot_len & q->dma_pad_mask) &&
++	    !(rq->cmd_flags & REQ_COPY_USER)) {
++		res = -EINVAL;
++		goto out_free_bios;
++	}
++
++	if (bw != NULL)
++		atomic_set(&bw->bios_inflight, bios);
++
++	while (hbio != NULL) {
++		bio = hbio;
++		hbio = hbio->bi_next;
++		bio->bi_next = NULL;
++
++		blk_queue_bounce(q, &bio);
++
++		res = blk_rq_append_bio(q, rq, bio);
++		if (unlikely(res != 0)) {
++			bio->bi_next = hbio;
++			hbio = bio;
++			/* We can have one or more bios bounced */
++			goto out_unmap_bios;
++		}
++	}
++
++	res = 0;
++
++	rq->buffer = NULL;
 +out:
 +	return res;
 +
-+out_done:
-+	res = SCST_EXEC_COMPLETED;
-+	cmd->scst_cmd_done(cmd, SCST_CMD_STATE_DEFAULT, SCST_CONTEXT_SAME);
++out_free_bios:
++	while (hbio != NULL) {
++		bio = hbio;
++		hbio = hbio->bi_next;
++		bio_put(bio);
++	}
++	goto out;
++
++out_unmap_bios:
++	blk_rq_unmap_kern_sg(rq, res);
 +	goto out;
 +}
 +
-+MODULE_AUTHOR("Vladislav Bolkhovitin & Leonid Stoljar");
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("SCSI tape (type 1) dev handler for SCST");
-+MODULE_VERSION(SCST_VERSION_STRING);
++/**
++ * blk_rq_map_kern_sg - map kernel data to a request, for REQ_TYPE_BLOCK_PC
++ * @rq:		request to fill
++ * @sgl:	area to map
++ * @nents:	number of elements in @sgl
++ * @gfp:	memory allocation flags
++ *
++ * Description:
++ *    Data will be mapped directly if possible. Otherwise a bounce
++ *    buffer will be used.
++ */
++int blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
++		       int nents, gfp_t gfp)
++{
++	int res;
++
++	res = __blk_rq_map_kern_sg(rq, sgl, nents, NULL, gfp);
++	if (unlikely(res != 0)) {
++		struct blk_kern_sg_work *bw = NULL;
++
++		res = blk_rq_copy_kern_sg(rq, sgl, nents, &bw,
++				gfp, rq->q->bounce_gfp | gfp);
++		if (unlikely(res != 0))
++			goto out;
++
++		res = __blk_rq_map_kern_sg(rq, bw->sg_table.sgl,
++				bw->sg_table.nents, bw, gfp);
++		if (res != 0) {
++			blk_free_kern_sg_work(bw);
++			goto out;
++		}
++	}
++
++	rq->buffer = NULL;
++
++out:
++	return res;
++}
++EXPORT_SYMBOL(blk_rq_map_kern_sg);
++
++/**
++ * blk_rq_unmap_kern_sg - unmap a request with kernel sg
++ * @rq:		request to unmap
++ * @err:	non-zero error code
++ *
++ * Description:
++ *    Unmap a rq previously mapped by blk_rq_map_kern_sg(). Must be called
++ *    only in case of an error!
++ */
++void blk_rq_unmap_kern_sg(struct request *rq, int err)
++{
++	struct bio *bio = rq->bio;
++
++	while (bio) {
++		struct bio *b = bio;
++		bio = bio->bi_next;
++		b->bi_end_io(b, err);
++	}
++	rq->bio = NULL;
++
++	return;
++}
++EXPORT_SYMBOL(blk_rq_unmap_kern_sg);
++
+ /**
+  * blk_rq_map_kern - map kernel data to a request, for REQ_TYPE_BLOCK_PC usage
+  * @q:		request queue where request should be inserted
+diff -upkr linux-2.6.35/include/linux/blkdev.h linux-2.6.35/include/linux/blkdev.h
+--- linux-2.6.35/include/linux/blkdev.h	2010-05-17 01:17:36.000000000 +0400
++++ linux-2.6.35/include/linux/blkdev.h	2010-05-24 14:51:22.000000000 +0400
+@@ -832,6 +834,9 @@ extern int blk_rq_map_kern(struct reques
+ extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
+ 			       struct rq_map_data *, struct sg_iovec *, int,
+ 			       unsigned int, gfp_t);
++extern int blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
++			      int nents, gfp_t gfp);
++extern void blk_rq_unmap_kern_sg(struct request *rq, int err);
+ extern int blk_execute_rq(struct request_queue *, struct gendisk *,
+ 			  struct request *, int);
+ extern void blk_execute_rq_nowait(struct request_queue *, struct gendisk *,
+diff -upkr linux-2.6.35/include/linux/scatterlist.h linux-2.6.35/include/linux/scatterlist.h
+--- linux-2.6.35/include/linux/scatterlist.h	2010-05-17 01:17:36.000000000 +0400
++++ linux-2.6.35/include/linux/scatterlist.h	2010-05-24 14:51:22.000000000 +0400
+@@ -3,6 +3,7 @@
+ 
+ #include <asm/types.h>
+ #include <asm/scatterlist.h>
++#include <asm/kmap_types.h>
+ #include <linux/mm.h>
+ #include <linux/string.h>
+ #include <asm/io.h>
+@@ -218,6 +219,10 @@ size_t sg_copy_from_buffer(struct scatte
+ size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			 void *buf, size_t buflen);
+ 
++int sg_copy(struct scatterlist *dst_sg, struct scatterlist *src_sg,
++	    int nents_to_copy, size_t copy_len,
++	    enum km_type d_km_type, enum km_type s_km_type);
++
+ /*
+  * Maximum number of entries that will be allocated in one piece, if
+  * a list larger than this is required then chaining will be utilized.
+diff -upkr linux-2.6.35/lib/scatterlist.c linux-2.6.35/lib/scatterlist.c
+--- linux-2.6.35/lib/scatterlist.c	2010-05-17 01:17:36.000000000 +0400
++++ linux-2.6.35/lib/scatterlist.c	2010-05-24 14:51:22.000000000 +0400
+@@ -494,3 +494,132 @@ size_t sg_copy_to_buffer(struct scatterl
+ 	return sg_copy_buffer(sgl, nents, buf, buflen, 1);
+ }
+ EXPORT_SYMBOL(sg_copy_to_buffer);
++
++/*
++ * Can switch to the next dst_sg element, so, to copy to strictly only
++ * one dst_sg element, it must be either last in the chain, or
++ * copy_len == dst_sg->length.
++ */
++static int sg_copy_elem(struct scatterlist **pdst_sg, size_t *pdst_len,
++			size_t *pdst_offs, struct scatterlist *src_sg,
++			size_t copy_len,
++			enum km_type d_km_type, enum km_type s_km_type)
++{
++	int res = 0;
++	struct scatterlist *dst_sg;
++	size_t src_len, dst_len, src_offs, dst_offs;
++	struct page *src_page, *dst_page;
++
++	dst_sg = *pdst_sg;
++	dst_len = *pdst_len;
++	dst_offs = *pdst_offs;
++	dst_page = sg_page(dst_sg);
++
++	src_page = sg_page(src_sg);
++	src_len = src_sg->length;
++	src_offs = src_sg->offset;
++
++	do {
++		void *saddr, *daddr;
++		size_t n;
++
++		saddr = kmap_atomic(src_page +
++					 (src_offs >> PAGE_SHIFT), s_km_type) +
++				    (src_offs & ~PAGE_MASK);
++		daddr = kmap_atomic(dst_page +
++					(dst_offs >> PAGE_SHIFT), d_km_type) +
++				    (dst_offs & ~PAGE_MASK);
++
++		if (((src_offs & ~PAGE_MASK) == 0) &&
++		    ((dst_offs & ~PAGE_MASK) == 0) &&
++		    (src_len >= PAGE_SIZE) && (dst_len >= PAGE_SIZE) &&
++		    (copy_len >= PAGE_SIZE)) {
++			copy_page(daddr, saddr);
++			n = PAGE_SIZE;
++		} else {
++			n = min_t(size_t, PAGE_SIZE - (dst_offs & ~PAGE_MASK),
++					  PAGE_SIZE - (src_offs & ~PAGE_MASK));
++			n = min(n, src_len);
++			n = min(n, dst_len);
++			n = min_t(size_t, n, copy_len);
++			memcpy(daddr, saddr, n);
++		}
++		dst_offs += n;
++		src_offs += n;
++
++		kunmap_atomic(saddr, s_km_type);
++		kunmap_atomic(daddr, d_km_type);
++
++		res += n;
++		copy_len -= n;
++		if (copy_len == 0)
++			goto out;
++
++		src_len -= n;
++		dst_len -= n;
++		if (dst_len == 0) {
++			dst_sg = sg_next(dst_sg);
++			if (dst_sg == NULL)
++				goto out;
++			dst_page = sg_page(dst_sg);
++			dst_len = dst_sg->length;
++			dst_offs = dst_sg->offset;
++		}
++	} while (src_len > 0);
++
++out:
++	*pdst_sg = dst_sg;
++	*pdst_len = dst_len;
++	*pdst_offs = dst_offs;
++	return res;
++}
++
++/**
++ * sg_copy - copy one SG vector to another
++ * @dst_sg:	destination SG
++ * @src_sg:	source SG
++ * @nents_to_copy: maximum number of entries to copy
++ * @copy_len:	maximum amount of data to copy. If 0, then copy all.
++ * @d_km_type:	kmap_atomic type for the destination SG
++ * @s_km_type:	kmap_atomic type for the source SG
++ *
++ * Description:
++ *    Data from the source SG vector will be copied to the destination SG
++ *    vector. End of the vectors will be determined by sg_next() returning
++ *    NULL. Returns number of bytes copied.
++ */
++int sg_copy(struct scatterlist *dst_sg, struct scatterlist *src_sg,
++	    int nents_to_copy, size_t copy_len,
++	    enum km_type d_km_type, enum km_type s_km_type)
++{
++	int res = 0;
++	size_t dst_len, dst_offs;
++
++	if (copy_len == 0)
++		copy_len = 0x7FFFFFFF; /* copy all */
++
++	if (nents_to_copy == 0)
++		nents_to_copy = 0x7FFFFFFF; /* copy all */
++
++	dst_len = dst_sg->length;
++	dst_offs = dst_sg->offset;
++
++	do {
++		int copied = sg_copy_elem(&dst_sg, &dst_len, &dst_offs,
++				src_sg, copy_len, d_km_type, s_km_type);
++		copy_len -= copied;
++		res += copied;
++		if ((copy_len == 0) || (dst_sg == NULL))
++			goto out;
++
++		nents_to_copy--;
++		if (nents_to_copy == 0)
++			goto out;
++
++		src_sg = sg_next(src_sg);
++	} while (src_sg != NULL);
++
++out:
++	return res;
++}
++EXPORT_SYMBOL(sg_copy);
