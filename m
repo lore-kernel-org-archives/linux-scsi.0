@@ -1,67 +1,58 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: Re: [PATCH] qla4xxx: Fix build on some architectures lacking 64-bit I/O
-Date: Fri, 1 Oct 2010 17:56:33 +0530
-Message-ID: <CE8118C7-79A1-4778-A691-A3EA047FE4E1@qlogic.com>
-References: <1285902667.3916.62.camel@localhost>
-Mime-Version: 1.0 (Apple Message framework v936)
-Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: [PATCH] block: set the bounce_pfn to the actual DMA limit  rather
+ than to max memory
+Date: Fri, 01 Oct 2010 14:46:10 +0200
+Message-ID: <4CA5D812.9040809@fusionio.com>
+References: <c9516154fabc03112353.1285107750@malahal> <4C9CAE68.4060706@fusionio.com> <20100924170532.GA29071@us.ibm.com> <4C9CEDE5.902@fusionio.com> <20100924192059.GA550@us.ibm.com> <4C9CFB4B.10404@fusionio.com> <20101001023024.GA1828@us.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:52168 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752786Ab0JAM0l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2010 08:26:41 -0400
-In-Reply-To: <1285902667.3916.62.camel@localhost>
+Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:46328 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932069Ab0JAMqK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Oct 2010 08:46:10 -0400
+In-Reply-To: <20101001023024.GA1828@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Ravi Anand <ravi.anand@qlogic.com>, Dept_iscsi_driver <iscsi-driver@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, "598503@bugs.debian.org" <598503@bugs.debian.org>
+To: Malahal Naineni <malahal@us.ibm.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
+On 2010-10-01 04:30, Malahal Naineni wrote:
+> Jens Axboe [jaxboe@fusionio.com] wrote:
+>> On 2010-09-24 21:20, Malahal Naineni wrote:
+>>> Jens Axboe [jaxboe@fusionio.com] wrote:
+>>>>> This patch also _fixed_ our problem. So we are fine with either patch,
+>>>>> but this patch is preferred as it enables more request merges. Also,
+>>>>> both patches maybe needed for some configurations.
+>>>>
+>>>> Plus it doesn't needlessly bounce, that's the real problem you want to
+>>>> fix. I have applied this thread patch to for-2.6.37/core, thanks.
+>>>
+>>> There is a shortcut check in blk_queue_bounce() that uses blk_max_pfn to
+>>> return without doing anything.  blk_max_pfn is not updated when we do
+>>> hot-plug memory add, so bounce buffers are NOT really used in our case
+>>> (thankfully)! 
+>>
+>> Any reason we can't just add a hot mem add notifier and update the block
+>> copies when we need to?
+> 
+> Actually it is quite simple, but power arch guys decided not to update
+> max_pfn and max_low_pfn when someone adds or removes memory. They do
+> seem to indicate that it is not an over sight! On the other hand, x86
+> arch does update those.
+> 
+> Another approach would be defining max_possible_pfn (maximum allowable
+> memory) which would be constant (based on architecture) and hopefully
+> adapters that we care still take the short-cut.
+> 
+> Also, this patch broke some USB hosts. Can you please back out this
+> patch and apply the one below instead:
+> 
+> http://thread.gmane.org/gmane.linux.kernel.next/14158
 
-On Oct 1, 2010, at 8:41 AM, Ben Hutchings wrote:
+Done, thanks.
 
-> readq() and writeq() are not defined on all archictectures.  Where
-> they are missing, define fallback implementations (copied from
-> qla2xxx).
->
-> Reference: http://bugs.debian.org/598503
-> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
-> ---
-> This is a regression from 2.6.35, so please include this fix in  
-> 2.6.36.
->
-> Ben.
->
-> drivers/scsi/qla4xxx/ql4_nx.h |   15 +++++++++++++++
-> 1 files changed, 15 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/scsi/qla4xxx/ql4_nx.h b/drivers/scsi/qla4xxx/ 
-> ql4_nx.h
-> index 931ad3f..85fe6cf 100644
-> --- a/drivers/scsi/qla4xxx/ql4_nx.h
-> +++ b/drivers/scsi/qla4xxx/ql4_nx.h
-> @@ -776,4 +776,19 @@ struct crb_addr_pair {
-> #define MIU_TEST_AGT_WRDATA_UPPER_LO	(0x0b0)
-> #define	MIU_TEST_AGT_WRDATA_UPPER_HI	(0x0b4)
->
-> +#ifndef readq
-> +static inline u64 readq(void __iomem *addr)
-> +{
-> +	return readl(addr) | (((u64) readl(addr + 4)) << 32LL);
-> +}
-> +#endif
-> +
-> +#ifndef writeq
-> +static inline void writeq(u64 val, void __iomem *addr)
-> +{
-> +	writel(((u32) (val)), (addr));
-> +	writel(((u32) (val >> 32)), (addr + 4));
-> +}
-> +#endif
-> +
-> #endif
-> -- 
-> 1.7.1
->
+-- 
+Jens Axboe
 
-Ack-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
