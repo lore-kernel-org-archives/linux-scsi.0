@@ -1,42 +1,117 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] sd: improve logic and efficiecy of media-change detection
-Date: Fri, 1 Oct 2010 16:26:39 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1010011622590.1813-100000@iolanthe.rowland.org>
-References: <Pine.LNX.4.44L0.1009071142100.1848-100000@iolanthe.rowland.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] libsas: Don't issue commands to devices that have been
+	hot-removed
+Date: Fri, 01 Oct 2010 13:55:47 -0700
+Message-ID: <20101001205547.30032.38448.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:45152 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751414Ab0JAU0k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2010 16:26:40 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1009071142100.1848-100000@iolanthe.rowland.org>
+Received: from mga01.intel.com ([192.55.52.88]:56286 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752141Ab0JAUy7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Oct 2010 16:54:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: james.bottomley@suse.de
+Cc: Haipao Fan <haipao.fan@intel.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Maciej Trela <maciej.trela@intel.com>, Patrick Thomson <patrick.s.thomson@intel.com>, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, Brian King <brking@linux.vnet.ibm.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 
-James:
+From: Darrick J. Wong <djwong@us.ibm.com>
 
-I'm still awaiting some feedback on this patch submission:
+sd will get hung up issuing commands to flush write cache if a SAS
+device behind the expander is unplugged without warning.  Change libsas
+to reject commands to domain devices that have already gone away.
 
-	http://marc.info/?l=linux-scsi&m=128387424521838&w=2
+[maciej.trela@intel.com: removed setting ->gone in sas_deform_port() to
+ permit sync cache commands at module removal]
 
-> This patch (as1415) improves the formerly incomprehensible logic in
-> sd_media_changed() (the current code refers to "changed" as a state,
-> whereas in fact it is a relation between two states).  It also adds a
-> big comment so that everyone can understand what is really going on.
-> 
-> The patch also improves efficiency by not reporting a media change
-> when no medium was ever present.  If no medium was present the last
-> time we checked and there's still no medium, it's not necessary to
-> tell the caller that a change occurred.  Doing so merely causes the
-> caller to attempt to revalidate a non-existent disk, which is a waste
-> of time.
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+linux-scsi-reference: <20071204223516.GA6767@tree.beaverton.ibm.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Cc: Patrick Thomson <patrick.s.thomson@intel.com>
+Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+Tested-by: Haipao Fan <haipao.fan@intel.com>
+Signed-off-by: Maciej Trela <maciej.trela@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/libsas/sas_ata.c       |    4 ++++
+ drivers/scsi/libsas/sas_expander.c  |    3 +++
+ drivers/scsi/libsas/sas_scsi_host.c |    7 +++++++
+ include/scsi/libsas.h               |    1 +
+ 4 files changed, 15 insertions(+), 0 deletions(-)
 
-While not critically important, it does fix a bug: It gets rid of 
-excess I/O (attempts to probe a drive with no medium currently 
-generate two TEST UNIT READY commands, but only one is needed).
-
-Alan Stern
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 042153c..da2e740 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -162,6 +162,10 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	unsigned int xfer = 0;
+ 	unsigned int si;
+ 
++	/* If the device fell off, no sense in issuing commands */
++	if (dev->gone)
++		return AC_ERR_SYSTEM;
++
+ 	task = sas_alloc_task(GFP_ATOMIC);
+ 	if (!task)
+ 		return AC_ERR_SYSTEM;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 83dd507..61d81f8 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -1724,6 +1724,7 @@ static void sas_unregister_ex_tree(struct domain_device *dev)
+ 	struct domain_device *child, *n;
+ 
+ 	list_for_each_entry_safe(child, n, &ex->children, siblings) {
++		child->gone = 1;
+ 		if (child->dev_type == EDGE_DEV ||
+ 		    child->dev_type == FANOUT_DEV)
+ 			sas_unregister_ex_tree(child);
+@@ -1744,6 +1745,7 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
+ 			&ex_dev->children, siblings) {
+ 			if (SAS_ADDR(child->sas_addr) ==
+ 			    SAS_ADDR(phy->attached_sas_addr)) {
++				child->gone = 1;
+ 				if (child->dev_type == EDGE_DEV ||
+ 				    child->dev_type == FANOUT_DEV)
+ 					sas_unregister_ex_tree(child);
+@@ -1752,6 +1754,7 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
+ 				break;
+ 			}
+ 		}
++		parent->gone = 1;
+ 		sas_disable_routing(parent, phy->attached_sas_addr);
+ 	}
+ 	memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index f0cfba9..1787bd2 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -228,6 +228,13 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 			goto out;
+ 		}
+ 
++		/* If the device fell off, no sense in issuing commands */
++		if (dev->gone) {
++			cmd->result = DID_BAD_TARGET << 16;
++			scsi_done(cmd);
++			goto out;
++		}
++
+ 		res = -ENOMEM;
+ 		task = sas_create_task(cmd, dev, GFP_ATOMIC);
+ 		if (!task)
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index d06e13b..3dec194 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -205,6 +205,7 @@ struct domain_device {
+         };
+ 
+         void *lldd_dev;
++	int gone;
+ };
+ 
+ struct sas_discovery_event {
 
