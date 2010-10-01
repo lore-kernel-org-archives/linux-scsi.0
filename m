@@ -1,58 +1,99 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH] block: set the bounce_pfn to the actual DMA limit  rather
- than to max memory
-Date: Fri, 01 Oct 2010 14:46:10 +0200
-Message-ID: <4CA5D812.9040809@fusionio.com>
-References: <c9516154fabc03112353.1285107750@malahal> <4C9CAE68.4060706@fusionio.com> <20100924170532.GA29071@us.ibm.com> <4C9CEDE5.902@fusionio.com> <20100924192059.GA550@us.ibm.com> <4C9CFB4B.10404@fusionio.com> <20101001023024.GA1828@us.ibm.com>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: Drop srb reference before waiting for
+ completion
+Date: Fri, 1 Oct 2010 10:02:11 -0700
+Message-ID: <C8CB6223.9D55%giridhar.malavali@qlogic.com>
+References: <20101001121844.4ABF3353A8@ochil.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:46328 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932069Ab0JAMqK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Oct 2010 08:46:10 -0400
-In-Reply-To: <20101001023024.GA1828@us.ibm.com>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:12936 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753039Ab0JARCZ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2010 13:02:25 -0400
+In-Reply-To: <20101001121844.4ABF3353A8@ochil.suse.de>
+Content-Language: en
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Malahal Naineni <malahal@us.ibm.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>
+Cc: LinuxSCSI <linux-scsi@vger.kernel.org>
 
-On 2010-10-01 04:30, Malahal Naineni wrote:
-> Jens Axboe [jaxboe@fusionio.com] wrote:
->> On 2010-09-24 21:20, Malahal Naineni wrote:
->>> Jens Axboe [jaxboe@fusionio.com] wrote:
->>>>> This patch also _fixed_ our problem. So we are fine with either patch,
->>>>> but this patch is preferred as it enables more request merges. Also,
->>>>> both patches maybe needed for some configurations.
->>>>
->>>> Plus it doesn't needlessly bounce, that's the real problem you want to
->>>> fix. I have applied this thread patch to for-2.6.37/core, thanks.
->>>
->>> There is a shortcut check in blk_queue_bounce() that uses blk_max_pfn to
->>> return without doing anything.  blk_max_pfn is not updated when we do
->>> hot-plug memory add, so bounce buffers are NOT really used in our case
->>> (thankfully)! 
->>
->> Any reason we can't just add a hot mem add notifier and update the block
->> copies when we need to?
-> 
-> Actually it is quite simple, but power arch guys decided not to update
-> max_pfn and max_low_pfn when someone adds or removes memory. They do
-> seem to indicate that it is not an over sight! On the other hand, x86
-> arch does update those.
-> 
-> Another approach would be defining max_possible_pfn (maximum allowable
-> memory) which would be constant (based on architecture) and hopefully
-> adapters that we care still take the short-cut.
-> 
-> Also, this patch broke some USB hosts. Can you please back out this
-> patch and apply the one below instead:
-> 
-> http://thread.gmane.org/gmane.linux.kernel.next/14158
 
-Done, thanks.
 
--- 
-Jens Axboe
+
+On 10/1/10 5:18 AM, "Hannes Reinecke" <hare@suse.de> wrote:
+
+> 
+> 
+> This patch fixes a regression introduced by commit
+> 083a469db4ecf3b286a96b5b722c37fc1affe0be
+> 
+> qla2xxx_eh_wait_on_command() is waiting for an srb to
+> complete, which will never happen as the routine took
+> a reference to the srb previously and will only drop it
+> after this function. So every command abort will fail.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 1e4bff6..0af7549 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -883,6 +883,9 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+>         }
+>         spin_unlock_irqrestore(&ha->hardware_lock, flags);
+> 
+> +       if (got_ref)
+> +               qla2x00_sp_compl(ha, sp);
+> +
+>         /* Wait for the command to be returned. */
+>         if (wait) {
+>                 if (qla2x00_eh_wait_on_command(cmd) != QLA_SUCCESS) {
+> @@ -893,9 +896,6 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+>                 }
+>         }
+> 
+> -       if (got_ref)
+> -               qla2x00_sp_compl(ha, sp);
+> -
+>         qla_printk(KERN_INFO, ha,
+>             "scsi(%ld:%d:%d): Abort command issued -- %d %lx %x.\n",
+>             vha->host_no, id, lun, wait, serial, ret);
+
+void
+qla2x00_sp_compl(struct qla_hw_data *ha, srb_t *sp)
+{
+        if (atomic_read(&sp->ref_count) == 0) {
+                DEBUG2(qla_printk(KERN_WARNING, ha,
+                    "SP reference-count to ZERO -- sp=%p\n", sp));
+                DEBUG2(BUG());
+                return;
+        }
+        if (!atomic_dec_and_test(&sp->ref_count))
+                return;
+        qla2x00_sp_final_compl(ha, sp);
+}
+
+All completions will check for reference count going to zero before
+releasing the sp structure. Since the ref count is incremented by the
+eh_abort hanlder, I don't see sp getting released unless ref count goes to
+0. I could not see any other places where sp is getting released. Do you
+have any stack trace or logs so that I can analyze more.
+
+-- Giri
+
+
+
+ 
+
+
+
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
