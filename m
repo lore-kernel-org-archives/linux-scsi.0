@@ -1,53 +1,68 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [PATCH] SCSI: remove noop in fc_remote_port_add()
-Date: Fri, 1 Oct 2010 10:26:23 +0800
-Message-ID: <AANLkTim7Y_yDBEoCan_hZYLQ98vGMQUNiw4F7R0kq6hF@mail.gmail.com>
-References: <AANLkTik-pmP9_ovxiX+SBD2AvxtsWbtj2F-RJbL3w+AY@mail.gmail.com>
-	<4CA0433C.8070301@suse.de>
+From: Malahal Naineni <malahal@us.ibm.com>
+Subject: Re: [PATCH] block: set the bounce_pfn to the actual DMA limit
+ rather than to max memory
+Date: Thu, 30 Sep 2010 19:30:24 -0700
+Message-ID: <20101001023024.GA1828@us.ibm.com>
+References: <c9516154fabc03112353.1285107750@malahal>
+ <4C9CAE68.4060706@fusionio.com>
+ <20100924170532.GA29071@us.ibm.com>
+ <4C9CEDE5.902@fusionio.com>
+ <20100924192059.GA550@us.ibm.com>
+ <4C9CFB4B.10404@fusionio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:35627 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751410Ab0JAC0Z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Sep 2010 22:26:25 -0400
-Received: by wwj40 with SMTP id 40so719017wwj.1
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Sep 2010 19:26:23 -0700 (PDT)
-In-Reply-To: <4CA0433C.8070301@suse.de>
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:44417 "EHLO e7.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751542Ab0JACa1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Sep 2010 22:30:27 -0400
+Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
+	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id o912FEYb013885
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Sep 2010 22:15:14 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o912UQBq1998986
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Sep 2010 22:30:26 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o912UPfn025964
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Sep 2010 22:30:26 -0400
+Content-Disposition: inline
+In-Reply-To: <4C9CFB4B.10404@fusionio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Sep 27, 2010 at 3:09 PM, Hannes Reinecke <hare@suse.de> wrote:
-> Hillf Danton wrote:
->> For a deleted scsi target marked as FC_PORTSTATE_BLOCKED, =C2=A0resc=
-anning
->> it looks fine.
->>
-> Note that there has been an earlier patch by Christof Schmitt, which
-> does exactly the same thing plus a slightly more in-depth analysis.
-> Check for 'scsi: Remove QUEUE_FLAG_REENTER from SCSI code'.
->
-What is patched by Christof Schmitt looks better, and
-it seems that the queue flag should not be touched outside block core.
+Jens Axboe [jaxboe@fusionio.com] wrote:
+> On 2010-09-24 21:20, Malahal Naineni wrote:
+> > Jens Axboe [jaxboe@fusionio.com] wrote:
+> >>> This patch also _fixed_ our problem. So we are fine with either patch,
+> >>> but this patch is preferred as it enables more request merges. Also,
+> >>> both patches maybe needed for some configurations.
+> >>
+> >> Plus it doesn't needlessly bounce, that's the real problem you want to
+> >> fix. I have applied this thread patch to for-2.6.37/core, thanks.
+> > 
+> > There is a shortcut check in blk_queue_bounce() that uses blk_max_pfn to
+> > return without doing anything.  blk_max_pfn is not updated when we do
+> > hot-plug memory add, so bounce buffers are NOT really used in our case
+> > (thankfully)! 
+> 
+> Any reason we can't just add a hot mem add notifier and update the block
+> copies when we need to?
 
-> James, comments?
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 zSeries & Storage
-> hare@suse.de =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0+49 911 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Actually it is quite simple, but power arch guys decided not to update
+max_pfn and max_low_pfn when someone adds or removes memory. They do
+seem to indicate that it is not an over sight! On the other hand, x86
+arch does update those.
+
+Another approach would be defining max_possible_pfn (maximum allowable
+memory) which would be constant (based on architecture) and hopefully
+adapters that we care still take the short-cut.
+
+Also, this patch broke some USB hosts. Can you please back out this
+patch and apply the one below instead:
+
+http://thread.gmane.org/gmane.linux.kernel.next/14158
+
+Thank you very much,
+Malahal.
