@@ -1,58 +1,67 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH] qla2xxx: Drop srb reference before waiting for completion
-Date: Fri, 01 Oct 2010 14:18:44 +0200
-Message-ID: <20101001121844.4ABF3353A8@ochil.suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: Re: [PATCH] qla4xxx: Fix build on some architectures lacking 64-bit I/O
+Date: Fri, 1 Oct 2010 17:56:33 +0530
+Message-ID: <CE8118C7-79A1-4778-A691-A3EA047FE4E1@qlogic.com>
+References: <1285902667.3916.62.camel@localhost>
+Mime-Version: 1.0 (Apple Message framework v936)
+Content-Type: text/plain; charset="US-ASCII"; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:49346 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753643Ab0JAMSp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Oct 2010 08:18:45 -0400
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id 8D036945D6
-	for <linux-scsi@vger.kernel.org>; Fri,  1 Oct 2010 14:18:44 +0200 (CEST)
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:52168 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752786Ab0JAM0l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2010 08:26:41 -0400
+In-Reply-To: <1285902667.3916.62.camel@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Ben Hutchings <ben@decadent.org.uk>
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, Ravi Anand <ravi.anand@qlogic.com>, Dept_iscsi_driver <iscsi-driver@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, "598503@bugs.debian.org" <598503@bugs.debian.org>
 
 
-This patch fixes a regression introduced by commit
-083a469db4ecf3b286a96b5b722c37fc1affe0be
+On Oct 1, 2010, at 8:41 AM, Ben Hutchings wrote:
 
-qla2xxx_eh_wait_on_command() is waiting for an srb to
-complete, which will never happen as the routine took
-a reference to the srb previously and will only drop it
-after this function. So every command abort will fail.
+> readq() and writeq() are not defined on all archictectures.  Where
+> they are missing, define fallback implementations (copied from
+> qla2xxx).
+>
+> Reference: http://bugs.debian.org/598503
+> Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
+> ---
+> This is a regression from 2.6.35, so please include this fix in  
+> 2.6.36.
+>
+> Ben.
+>
+> drivers/scsi/qla4xxx/ql4_nx.h |   15 +++++++++++++++
+> 1 files changed, 15 insertions(+), 0 deletions(-)
+>
+> diff --git a/drivers/scsi/qla4xxx/ql4_nx.h b/drivers/scsi/qla4xxx/ 
+> ql4_nx.h
+> index 931ad3f..85fe6cf 100644
+> --- a/drivers/scsi/qla4xxx/ql4_nx.h
+> +++ b/drivers/scsi/qla4xxx/ql4_nx.h
+> @@ -776,4 +776,19 @@ struct crb_addr_pair {
+> #define MIU_TEST_AGT_WRDATA_UPPER_LO	(0x0b0)
+> #define	MIU_TEST_AGT_WRDATA_UPPER_HI	(0x0b4)
+>
+> +#ifndef readq
+> +static inline u64 readq(void __iomem *addr)
+> +{
+> +	return readl(addr) | (((u64) readl(addr + 4)) << 32LL);
+> +}
+> +#endif
+> +
+> +#ifndef writeq
+> +static inline void writeq(u64 val, void __iomem *addr)
+> +{
+> +	writel(((u32) (val)), (addr));
+> +	writel(((u32) (val >> 32)), (addr + 4));
+> +}
+> +#endif
+> +
+> #endif
+> -- 
+> 1.7.1
+>
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 1e4bff6..0af7549 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -883,6 +883,9 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 	}
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
-+	if (got_ref)
-+		qla2x00_sp_compl(ha, sp);
-+
- 	/* Wait for the command to be returned. */
- 	if (wait) {
- 		if (qla2x00_eh_wait_on_command(cmd) != QLA_SUCCESS) {
-@@ -893,9 +896,6 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
- 		}
- 	}
- 
--	if (got_ref)
--		qla2x00_sp_compl(ha, sp);
--
- 	qla_printk(KERN_INFO, ha,
- 	    "scsi(%ld:%d:%d): Abort command issued -- %d %lx %x.\n",
- 	    vha->host_no, id, lun, wait, serial, ret);
+Ack-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
