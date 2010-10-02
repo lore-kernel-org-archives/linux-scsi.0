@@ -1,36 +1,44 @@
-From: Ted Ts'o <tytso@mit.edu>
-Subject: Re: I/O topology fixes for big physical block size
-Date: Fri, 1 Oct 2010 22:31:13 -0400
-Message-ID: <20101002023113.GJ21129@thunk.org>
-References: <4CA17B13.7080801@redhat.com>
- <20100928141545.GA21587@redhat.com>
- <20100928205741.GA22257@thunk.org>
- <yq162xpa7dj.fsf@sermon.lab.mkp.net>
- <4CA25FEA.6040505@redhat.com>
- <20100930163047.GA4098@thunk.org>
- <4CA4C3B6.9000104@redhat.com>
- <20100930173342.GB31945@redhat.com>
- <20101001142441.GF21129@thunk.org>
- <yq1y6ah4kuu.fsf@sermon.lab.mkp.net>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCHv4 0/19]: New SCSI target framework (SCST) with dev
+ handlers and 2 target drivers
+Date: Sat, 2 Oct 2010 09:40:21 +0200
+Message-ID: <AANLkTi=bfGuL-wrdjYotQFH3x5e+-3H7jzmic9YNppbx@mail.gmail.com>
+References: <4CA653F0.1010008@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ext4-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1y6ah4kuu.fsf@sermon.lab.mkp.net>
-Sender: linux-ext4-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:53919 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751722Ab0JBHkn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Oct 2010 03:40:43 -0400
+Received: by iwn5 with SMTP id 5so4708704iwn.19
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Oct 2010 00:40:43 -0700 (PDT)
+In-Reply-To: <4CA653F0.1010008@vlnb.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, James Smart <James.Smart@emulex.com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>
 
-On Fri, Oct 01, 2010 at 06:19:21PM -0400, Martin K. Petersen wrote:
-> Since not all drives guarantee that read-modify-write cycle on a 4 KiB
-> physical block won't clobber adjacent 512-byte logical blocks it may be
-> a good idea to look at physical block size if there are atomicity
-> concerns.  I.e. filesystems that depend on atomic journal writes may
-> want to look at the reported physical block size.
+On Fri, Oct 1, 2010 at 11:34 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+>
+> Hi All,
+>
+> Please review the next iteration of the patch set of the new (although,
+> in fact, the oldest) SCSI target framework for Linux SCST with a set of
+> dev handlers and 3 target drivers: for local access (scst_local), for
+> Infiniband SRP (srpt) and IBM POWER Virtual SCSI .
+>
+> [ ... ]
 
-OK, but what do we do when we start seeing devices with 8k or 16k
-physical block sizes?  The VM doesn't deal well with block sizes >
-page size.
+Note: as far as I know currently SCST is the first and only in-kernel
+target storage framework that satisfies both criteria (1) and (2) as
+defined during the LSF 2010 summit storage track (see also
+http://lwn.net/Articles/400589/):
 
-					- Ted
+1. Being a drop in replacement for STGT (the current in-kernel target
+mode driver).
+2. Using a modern sysfs based control and configuration plane.
+
+Regarding criterion (3), that the code was reviewed as clean enough
+for inclusion: any feedback is welcome.
+
+Bart.
