@@ -1,56 +1,40 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 2/4] drivers/message/fusion/mptctl.c: Add missing error handling code
-Date: Sat,  2 Oct 2010 15:59:16 +0200
-Message-ID: <1286027958-7333-2-git-send-email-julia@diku.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Eric Moore <Eric.Moore@lsi.com>
-Cc: kernel-janitors@vger.kernel.org, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15341] Load goes up very high when we traverse the large tree
+Date: Sat, 2 Oct 2010 20:59:50 GMT
+Message-ID: <201010022059.o92KxomP021094@demeter2.kernel.org>
+References: <bug-15341-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [140.211.167.42] ([140.211.167.42]:47801 "EHLO
+	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751785Ab0JBU7v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Oct 2010 16:59:51 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o92KxohJ021123
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 2 Oct 2010 20:59:50 GMT
+In-Reply-To: <bug-15341-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-karg is allocated using kmalloc and is completely local to this function.
-It should thus be freed before exiting the function in an error case.
+https://bugzilla.kernel.org/show_bug.cgi?id=15341
 
-A simplified version of the sematic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
 
-// <smpl>
-@r exists@
-@r@
-statement S1,S2,S3;
-constant C1,C2,C3;
-@@
+Florian Mickler <florian@mickler.org> changed:
 
-*if (...)
- {... S1 return -C1;}
-...
-*if (...)
- {... when != S1
-    return -C2;}
-...
-*if (...)
- {... S1 return -C3;}
-// </smpl>
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |florian@mickler.org
 
-Signed-off-by: Julia Lawall <julia@diku.dk>
 
----
- drivers/message/fusion/mptctl.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index a3856ed..1dcc13a 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -1307,8 +1307,10 @@ mptctl_getiocinfo (unsigned long arg, unsigned int data_size)
- 	else
- 		karg->adapterType = MPT_IOCTL_INTERFACE_SCSI;
- 
--	if (karg->hdr.port > 1)
-+	if (karg->hdr.port > 1) {
-+		kfree(karg);
- 		return -EINVAL;
-+	}
- 	port = karg->hdr.port;
- 
- 	karg->port = port;
+
+--- Comment #18 from Florian Mickler <florian@mickler.org>  2010-10-02 20:59:44 ---
+Were you able to finish the bisection?
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
