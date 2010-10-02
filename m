@@ -1,44 +1,56 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCHv4 0/19]: New SCSI target framework (SCST) with dev
- handlers and 2 target drivers
-Date: Sat, 2 Oct 2010 09:40:21 +0200
-Message-ID: <AANLkTi=bfGuL-wrdjYotQFH3x5e+-3H7jzmic9YNppbx@mail.gmail.com>
-References: <4CA653F0.1010008@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:53919 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751722Ab0JBHkn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Oct 2010 03:40:43 -0400
-Received: by iwn5 with SMTP id 5so4708704iwn.19
-        for <linux-scsi@vger.kernel.org>; Sat, 02 Oct 2010 00:40:43 -0700 (PDT)
-In-Reply-To: <4CA653F0.1010008@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Julia Lawall <julia@diku.dk>
+Subject: [PATCH 2/4] drivers/message/fusion/mptctl.c: Add missing error handling code
+Date: Sat,  2 Oct 2010 15:59:16 +0200
+Message-ID: <1286027958-7333-2-git-send-email-julia@diku.dk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Eric Moore <Eric.Moore@lsi.com>
+Cc: kernel-janitors@vger.kernel.org, support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, Vladislav Bolkhovitin <vst@vlnb.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, James Smart <James.Smart@emulex.com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>
 
-On Fri, Oct 1, 2010 at 11:34 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
->
-> Hi All,
->
-> Please review the next iteration of the patch set of the new (although,
-> in fact, the oldest) SCSI target framework for Linux SCST with a set of
-> dev handlers and 3 target drivers: for local access (scst_local), for
-> Infiniband SRP (srpt) and IBM POWER Virtual SCSI .
->
-> [ ... ]
+karg is allocated using kmalloc and is completely local to this function.
+It should thus be freed before exiting the function in an error case.
 
-Note: as far as I know currently SCST is the first and only in-kernel
-target storage framework that satisfies both criteria (1) and (2) as
-defined during the LSF 2010 summit storage track (see also
-http://lwn.net/Articles/400589/):
+A simplified version of the sematic match that finds this problem is as
+follows: (http://coccinelle.lip6.fr/)
 
-1. Being a drop in replacement for STGT (the current in-kernel target
-mode driver).
-2. Using a modern sysfs based control and configuration plane.
+// <smpl>
+@r exists@
+@r@
+statement S1,S2,S3;
+constant C1,C2,C3;
+@@
 
-Regarding criterion (3), that the code was reviewed as clean enough
-for inclusion: any feedback is welcome.
+*if (...)
+ {... S1 return -C1;}
+...
+*if (...)
+ {... when != S1
+    return -C2;}
+...
+*if (...)
+ {... S1 return -C3;}
+// </smpl>
 
-Bart.
+Signed-off-by: Julia Lawall <julia@diku.dk>
+
+---
+ drivers/message/fusion/mptctl.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index a3856ed..1dcc13a 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -1307,8 +1307,10 @@ mptctl_getiocinfo (unsigned long arg, unsigned int data_size)
+ 	else
+ 		karg->adapterType = MPT_IOCTL_INTERFACE_SCSI;
+ 
+-	if (karg->hdr.port > 1)
++	if (karg->hdr.port > 1) {
++		kfree(karg);
+ 		return -EINVAL;
++	}
+ 	port = karg->hdr.port;
+ 
+ 	karg->port = port;
