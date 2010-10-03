@@ -1,29 +1,59 @@
-From: "George Spelvin" <linux@horizon.com>
-Subject: Re: [Bug 19642] 2.6.36-rc6 BUG at drivers/scsi/scsi_lib.c:1113
-Date: 4 Oct 2010 21:24:23 -0400
-Message-ID: <20101005012423.31548.qmail@science.horizon.com>
-References: <1286237419.18417.306.camel@haakon2.linux-iscsi.org>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH] libsas: fix definition of wideport, include local sas address
+Date: Mon, 4 Oct 2010 07:47:08 +0800
+Message-ID: <803C0CAF9ECC49B1B53C41064DE42DF0@usish.com.cn>
+References: <20101001205552.30032.87278.stgit@localhost.localdomain><35DEA0DE11CB42F8B788D1C3C4E7BBA0@usish.com.cn> <AANLkTi=rM=7r6tnxCrc42q=e6r0U2LKPyoUa-D5j3MKa@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from science.horizon.com ([71.41.210.146]:51636 "HELO
-	science.horizon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756118Ab0JEBYZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2010 21:24:25 -0400
-In-Reply-To: <1286237419.18417.306.camel@haakon2.linux-iscsi.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:46756 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753096Ab0JEBxl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2010 21:53:41 -0400
+In-Reply-To: <AANLkTi=rM=7r6tnxCrc42q=e6r0U2LKPyoUa-D5j3MKa@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@kernel.org
-Cc: bugzilla-daemon@bugzilla.kernel.org, linux@horizon.com, linux-scsi@vger.kernel.org
+To: 'Dan Williams' <dan.j.williams@intel.com>
+Cc: james.bottomley@suse.de, 'Jeff Skirvin' <jeffrey.d.skirvin@intel.com>, 'Patrick Thomson' <patrick.s.thomson@intel.com>, linux-scsi@vger.kernel.org
 
-> Would you be able to 'git bisect' on your system with Linus'es
-> linux-2.6.git tree from commit 9fe6206f400646a (v2.6.35) to HEAD at
-> v2.6.36-rc6 to help us pinpoint which commit the breakage was
-> introduced..?
+Re: [PATCH] libsas: fix definition of wideport, include local sas addre=
+ss
 
-It's tedious, but I can, HOWEVER...
-any advice avoiding false positives from
-https://bugzilla.kernel.org/show_bug.cgi?id=16275
-introduced in 74450be123b6f3cb480c358a056be398cce6aa6e
-and fixed in 2c7d46ec192e4f2b350f67a0e185b9bce646cd6b?
+On Sat, Oct 2, 2010 at 6:55 PM, Jack Wang <jack_wang@usish.com> wrote:
+>
+> To date libsas has only looked at the attached sas address when
+> determining the formation of wide ports. =A0The specification and som=
+e
+> hardware expects that phys with different addresses will not form a w=
+ide
+> port unless the local peer phys also match each other. =A0Introduce a=
+ flag
+> to select stricter behavior at sas_register_ha() time. =A0The flag ca=
+n be
+> dropped once it is known that all libsas users expect the same behavi=
+or.
+>
+> Current drivers just initialize this field to zero and get the
+> traditional behavior.
+> [Jack] I prefer to use the new definition of wideport to the default.
 
-I suppose I could cherry-pick the latter when in the
-vulnerable range...
+Ok, when mvsas and aic94xx are also ready for this change we can just
+make this the default and kill the flag.
+
+> [Jack] I cann't find where to judge the flag to chose which definitio=
+n to
+> use?
+
+I am not clear on the question.  phy_is_wideport_member() should be
+the only location that needs to read this flag.  The driver just sets
+it to 1 before calling sas_register_ha() and then assumes the strict
+definition is in effect for the lifetime of the driver instance.
+[Jack] Ohh, I miss something in the patch. It's ok for me. Thanks for
+Explanation.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
