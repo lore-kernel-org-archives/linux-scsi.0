@@ -1,63 +1,127 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: Re: 2.6.36-rc6-git2: Reported regressions from 2.6.35
-Date: Sun, 03 Oct 2010 23:27:51 +0100
-Message-ID: <1286144871.3916.185.camel@localhost>
-References: <-jYMINoCtaK.A.F5.8CPqMB@chimera>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [PATCH] libsas: Don't issue commands to devices that have beenhot-removed
+Date: Sun, 3 Oct 2010 09:49:19 +0800
+Message-ID: <F7E470F880E7484FB0B89C9042473E86@usish.com.cn>
+References: <20101001205547.30032.38448.stgit@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-fBUJNKuSza/4ej1qR+F2"
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <-jYMINoCtaK.A.F5.8CPqMB@chimera>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Meelis Roos <mroos@linux.ee>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:41081 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751041Ab0JDBrY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Oct 2010 21:47:24 -0400
+In-Reply-To: <20101001205547.30032.38448.stgit@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Dan Williams' <dan.j.williams@intel.com>, james.bottomley@suse.de
+Cc: 'Haipao Fan' <haipao.fan@intel.com>, linux-scsi@vger.kernel.org, 'Jeff Garzik' <jeff@garzik.org>, 'Maciej Trela' <maciej.trela@intel.com>, 'Patrick Thomson' <patrick.s.thomson@intel.com>, 'Jeff Skirvin' <jeffrey.d.skirvin@intel.com>, 'Brian King' <brking@linux.vnet.ibm.com>, "'Darrick J. Wong'" <djwong@us.ibm.com>
 
+[PATCH] libsas: Don't issue commands to devices that have beenhot-removed
 
---=-fBUJNKuSza/4ej1qR+F2
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: Darrick J. Wong <djwong@us.ibm.com>
 
-On Sun, 2010-10-03 at 23:15 +0200, Rafael J. Wysocki wrote:
-[...]
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=3D16971
-> Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and w=
-riteq
-> Submitter	: Meelis Roos <mroos@linux.ee>
-> Date		: 2010-08-19 21:03 (46 days old)
-> Message-ID	: <alpine.SOC.1.00.1008192359310.19654@math.ut.ee>
-> References	: http://marc.info/?l=3Dlinux-kernel&m=3D128225184900892&w=3D2
-[...]
+sd will get hung up issuing commands to flush write cache if a SAS
+device behind the expander is unplugged without warning.  Change libsas
+to reject commands to domain devices that have already gone away.
 
-A patch is available:
+[maciej.trela@intel.com: removed setting ->gone in sas_deform_port() to
+ permit sync cache commands at module removal]
 
-http://thread.gmane.org/gmane.linux.scsi/62561
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+linux-scsi-reference: <20071204223516.GA6767@tree.beaverton.ibm.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Cc: Patrick Thomson <patrick.s.thomson@intel.com>
+Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
+Tested-by: Haipao Fan <haipao.fan@intel.com>
+Signed-off-by: Maciej Trela <maciej.trela@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/libsas/sas_ata.c       |    4 ++++
+ drivers/scsi/libsas/sas_expander.c  |    3 +++
+ drivers/scsi/libsas/sas_scsi_host.c |    7 +++++++
+ include/scsi/libsas.h               |    1 +
+ 4 files changed, 15 insertions(+), 0 deletions(-)
 
-Ben.
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 042153c..da2e740 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -162,6 +162,10 @@ static unsigned int sas_ata_qc_issue(struct
+ata_queued_cmd *qc)
+ 	unsigned int xfer = 0;
+ 	unsigned int si;
+ 
++	/* If the device fell off, no sense in issuing commands */
++	if (dev->gone)
++		return AC_ERR_SYSTEM;
++
+ 	task = sas_alloc_task(GFP_ATOMIC);
+ 	if (!task)
+ 		return AC_ERR_SYSTEM;
+diff --git a/drivers/scsi/libsas/sas_expander.c
+b/drivers/scsi/libsas/sas_expander.c
+index 83dd507..61d81f8 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -1724,6 +1724,7 @@ static void sas_unregister_ex_tree(struct
+domain_device *dev)
+ 	struct domain_device *child, *n;
+ 
+ 	list_for_each_entry_safe(child, n, &ex->children, siblings) {
++		child->gone = 1;
+ 		if (child->dev_type == EDGE_DEV ||
+ 		    child->dev_type == FANOUT_DEV)
+ 			sas_unregister_ex_tree(child);
+@@ -1744,6 +1745,7 @@ static void sas_unregister_devs_sas_addr(struct
+domain_device *parent,
+ 			&ex_dev->children, siblings) {
+ 			if (SAS_ADDR(child->sas_addr) ==
+ 			    SAS_ADDR(phy->attached_sas_addr)) {
++				child->gone = 1;
+ 				if (child->dev_type == EDGE_DEV ||
+ 				    child->dev_type == FANOUT_DEV)
+ 					sas_unregister_ex_tree(child);
+@@ -1752,6 +1754,7 @@ static void sas_unregister_devs_sas_addr(struct
+domain_device *parent,
+ 				break;
+ 			}
+ 		}
++		parent->gone = 1;
+ 		sas_disable_routing(parent, phy->attached_sas_addr);
+ 	}
+ 	memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+b/drivers/scsi/libsas/sas_scsi_host.c
+index f0cfba9..1787bd2 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -228,6 +228,13 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 			goto out;
+ 		}
+ 
++		/* If the device fell off, no sense in issuing commands */
++		if (dev->gone) {
++			cmd->result = DID_BAD_TARGET << 16;
++			scsi_done(cmd);
++			goto out;
++		}
++
+ 		res = -ENOMEM;
+ 		task = sas_create_task(cmd, dev, GFP_ATOMIC);
+ 		if (!task)
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index d06e13b..3dec194 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -205,6 +205,7 @@ struct domain_device {
+         };
+ 
+         void *lldd_dev;
++	int gone;
+ };
+ 
+[Jack]This one looks good to me! Thanks
 
---=20
-Ben Hutchings
-Once a job is fouled up, anything done to improve it makes it worse.
-
---=-fBUJNKuSza/4ej1qR+F2
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iQIVAwUATKkDYue/yOyVhhEJAQKblBAAjncdfMylRLqk6G6EN0CQsT6IevllWggW
-BkxJYAyuQZFB3CxYGxXwebXBE5Kg88dFbQGY28oYV23mWZ5ZFmp1MxThcG3Si3bH
-V1Jd1thw2917fcJMA3TGaMr4Fg1WbmJeKUfdBUSpGjPq0/xuljkrWLPYYVbFNISl
-wse4+LMyuuOecd4lUJ6J8Dzl2qbXw1X3F73NcEmiBJeinxiDfHezCB47gFRtPAcb
-Da2YpNEqaTm1JljEz3Z3d0Lhf6mLMukJ5uLe2IuWG+Ga5oetVOzypYXlwvjRkiCY
-Dk794Ueirudmp3SS/WjQeTF9dKrDSGmBRXJ5KCufe5ntwdwpmBQ2ymXLKSKYWZE+
-k2o3vwljZh1OvDBOx7L4/jy1gb3Q+kEjtNprKmWPErV1zvQlaJfyeZvbj1Zl0wLa
-MAp6taMX/FsIrkhq8ZE13XRqT+vS4OqSKOTQygxp0hio5ko5oKOqxyJt/1xdYVOr
-8I+/n+hzVni2e3fYJsg8RN+En+aidT4gFVl6GualpxuYXuAcs33fZ7618bexAN1g
-BHRn4kZ/M/cSQqL7QVx81vElE5+lvnXVVPsKLx3Ri72NC5mqvd9a9FRajNU7hXhJ
-8GET3xASMunXPFzV0B0fuFWvQNxeUCx8Kx6W1Lv9AilpV+6HYuNDv0MLinZMLLwT
-r9gcajv5zHU=
-=qFxZ
------END PGP SIGNATURE-----
-
---=-fBUJNKuSza/4ej1qR+F2--
