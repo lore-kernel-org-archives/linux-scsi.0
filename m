@@ -1,127 +1,103 @@
 From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH] libsas: Don't issue commands to devices that have beenhot-removed
-Date: Sun, 3 Oct 2010 09:49:19 +0800
-Message-ID: <F7E470F880E7484FB0B89C9042473E86@usish.com.cn>
-References: <20101001205547.30032.38448.stgit@localhost.localdomain>
+Subject: RE: [PATCH] libsas: fix definition of wideport, include local sas address
+Date: Sun, 3 Oct 2010 09:55:34 +0800
+Message-ID: <35DEA0DE11CB42F8B788D1C3C4E7BBA0@usish.com.cn>
+References: <20101001205552.30032.87278.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:41081 "EHLO
+Received: from sr-smtp.usish.com ([210.5.144.203]:35254 "EHLO
 	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751041Ab0JDBrY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Oct 2010 21:47:24 -0400
-In-Reply-To: <20101001205547.30032.38448.stgit@localhost.localdomain>
+	with ESMTP id S1750931Ab0JDBxd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Oct 2010 21:53:33 -0400
+In-Reply-To: <20101001205552.30032.87278.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 'Dan Williams' <dan.j.williams@intel.com>, james.bottomley@suse.de
-Cc: 'Haipao Fan' <haipao.fan@intel.com>, linux-scsi@vger.kernel.org, 'Jeff Garzik' <jeff@garzik.org>, 'Maciej Trela' <maciej.trela@intel.com>, 'Patrick Thomson' <patrick.s.thomson@intel.com>, 'Jeff Skirvin' <jeffrey.d.skirvin@intel.com>, 'Brian King' <brking@linux.vnet.ibm.com>, "'Darrick J. Wong'" <djwong@us.ibm.com>
+Cc: 'Jeff Skirvin' <jeffrey.d.skirvin@intel.com>, 'Patrick Thomson' <patrick.s.thomson@intel.com>, linux-scsi@vger.kernel.org
 
-[PATCH] libsas: Don't issue commands to devices that have beenhot-removed
 
-From: Darrick J. Wong <djwong@us.ibm.com>
+To date libsas has only looked at the attached sas address when
+determining the formation of wide ports.  The specification and some
+hardware expects that phys with different addresses will not form a wide
+port unless the local peer phys also match each other.  Introduce a flag
+to select stricter behavior at sas_register_ha() time.  The flag can be
+dropped once it is known that all libsas users expect the same behavior.
 
-sd will get hung up issuing commands to flush write cache if a SAS
-device behind the expander is unplugged without warning.  Change libsas
-to reject commands to domain devices that have already gone away.
-
-[maciej.trela@intel.com: removed setting ->gone in sas_deform_port() to
- permit sync cache commands at module removal]
-
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-linux-scsi-reference: <20071204223516.GA6767@tree.beaverton.ibm.com>
-Cc: Jeff Garzik <jeff@garzik.org>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: Patrick Thomson <patrick.s.thomson@intel.com>
+Current drivers just initialize this field to zero and get the
+traditional behavior.
+[Jack] I prefer to use the new definition of wideport to the default. 
+Reported-by: Patrick Thomson <patrick.s.thomson@intel.com>
 Cc: Jeff Skirvin <jeffrey.d.skirvin@intel.com>
-Tested-by: Haipao Fan <haipao.fan@intel.com>
-Signed-off-by: Maciej Trela <maciej.trela@intel.com>
+Cc: Jack Wang <jack_wang@usish.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/libsas/sas_ata.c       |    4 ++++
- drivers/scsi/libsas/sas_expander.c  |    3 +++
- drivers/scsi/libsas/sas_scsi_host.c |    7 +++++++
- include/scsi/libsas.h               |    1 +
- 4 files changed, 15 insertions(+), 0 deletions(-)
+ drivers/scsi/libsas/sas_port.c |   18 +++++++++++++-----
+ include/scsi/libsas.h          |    2 ++
+ 2 files changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 042153c..da2e740 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -162,6 +162,10 @@ static unsigned int sas_ata_qc_issue(struct
-ata_queued_cmd *qc)
- 	unsigned int xfer = 0;
- 	unsigned int si;
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index fe8b74c..5257fdf 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -28,6 +28,17 @@
+ #include <scsi/scsi_transport_sas.h>
+ #include "../scsi_sas_internal.h"
  
-+	/* If the device fell off, no sense in issuing commands */
-+	if (dev->gone)
-+		return AC_ERR_SYSTEM;
++static bool phy_is_wideport_member(struct asd_sas_port *port, struct
+asd_sas_phy *phy)
++{
++	struct sas_ha_struct *sas_ha = phy->ha;
 +
- 	task = sas_alloc_task(GFP_ATOMIC);
- 	if (!task)
- 		return AC_ERR_SYSTEM;
-diff --git a/drivers/scsi/libsas/sas_expander.c
-b/drivers/scsi/libsas/sas_expander.c
-index 83dd507..61d81f8 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1724,6 +1724,7 @@ static void sas_unregister_ex_tree(struct
-domain_device *dev)
- 	struct domain_device *child, *n;
- 
- 	list_for_each_entry_safe(child, n, &ex->children, siblings) {
-+		child->gone = 1;
- 		if (child->dev_type == EDGE_DEV ||
- 		    child->dev_type == FANOUT_DEV)
- 			sas_unregister_ex_tree(child);
-@@ -1744,6 +1745,7 @@ static void sas_unregister_devs_sas_addr(struct
-domain_device *parent,
- 			&ex_dev->children, siblings) {
- 			if (SAS_ADDR(child->sas_addr) ==
- 			    SAS_ADDR(phy->attached_sas_addr)) {
-+				child->gone = 1;
- 				if (child->dev_type == EDGE_DEV ||
- 				    child->dev_type == FANOUT_DEV)
- 					sas_unregister_ex_tree(child);
-@@ -1752,6 +1754,7 @@ static void sas_unregister_devs_sas_addr(struct
-domain_device *parent,
- 				break;
- 			}
- 		}
-+		parent->gone = 1;
- 		sas_disable_routing(parent, phy->attached_sas_addr);
- 	}
- 	memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c
-b/drivers/scsi/libsas/sas_scsi_host.c
-index f0cfba9..1787bd2 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -228,6 +228,13 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
- 			goto out;
- 		}
- 
-+		/* If the device fell off, no sense in issuing commands */
-+		if (dev->gone) {
-+			cmd->result = DID_BAD_TARGET << 16;
-+			scsi_done(cmd);
-+			goto out;
-+		}
++	if (memcmp(port->attached_sas_addr, phy->attached_sas_addr,
++		   SAS_ADDR_SIZE) != 0 || (sas_ha->strict_wide_ports &&
++	     memcmp(port->sas_addr, phy->sas_addr, SAS_ADDR_SIZE) != 0))
++		return false;
++	return true;
++}
 +
- 		res = -ENOMEM;
- 		task = sas_create_task(cmd, dev, GFP_ATOMIC);
- 		if (!task)
+ /**
+  * sas_form_port -- add this phy to a port
+  * @phy: the phy of interest
+@@ -45,8 +56,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
+ 	unsigned long flags;
+ 
+ 	if (port) {
+-		if (memcmp(port->attached_sas_addr, phy->attached_sas_addr,
+-			   SAS_ADDR_SIZE) != 0)
++		if (!phy_is_wideport_member(port, phy))
+ 			sas_deform_port(phy);
+ 		else {
+ 			SAS_DPRINTK("%s: phy%d belongs to port%d
+already(%d)!\n",
+@@ -62,9 +72,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
+ 		port = sas_ha->sas_port[i];
+ 		spin_lock(&port->phy_list_lock);
+ 		if (*(u64 *) port->sas_addr &&
+-		    memcmp(port->attached_sas_addr,
+-			   phy->attached_sas_addr, SAS_ADDR_SIZE) == 0 &&
+-		    port->num_phys > 0) {
++		    phy_is_wideport_member(port, phy) && port->num_phys > 0)
+{
+ 			/* wide port */
+ 			SAS_DPRINTK("phy%d matched wide port%d\n", phy->id,
+ 				    port->id);
 diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index d06e13b..3dec194 100644
+index 3dec194..5173bba 100644
 --- a/include/scsi/libsas.h
 +++ b/include/scsi/libsas.h
-@@ -205,6 +205,7 @@ struct domain_device {
-         };
+@@ -361,6 +361,8 @@ struct sas_ha_struct {
+ 	/* The class calls this to send a task for execution. */
+ 	int lldd_max_execute_num;
+ 	int lldd_queue_size;
++	int strict_wide_ports; /* both sas_addr and attached_sas_addr must
+match
++				* their siblings when forming wide ports */
  
-         void *lldd_dev;
-+	int gone;
- };
- 
-[Jack]This one looks good to me! Thanks
+ 	/* LLDD calls these to notify the class of an event. */
+ 	void (*notify_ha_event)(struct sas_ha_struct *, enum ha_event);
+[Jack] I cann't find where to judge the flag to chose which definition to
+use?
 
