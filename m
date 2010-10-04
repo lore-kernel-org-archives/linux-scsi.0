@@ -1,48 +1,52 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: I/O topology fixes for big physical block size
-Date: Mon, 04 Oct 2010 15:49:11 -0400
-Message-ID: <yq1sk0l3fig.fsf@sermon.lab.mkp.net>
-References: <4CA17B13.7080801@redhat.com> <20100928141545.GA21587@redhat.com>
-	<20100928205741.GA22257@thunk.org>
-	<yq162xpa7dj.fsf@sermon.lab.mkp.net> <4CA25FEA.6040505@redhat.com>
-	<20100930163047.GA4098@thunk.org> <4CA4C3B6.9000104@redhat.com>
-	<20100930173342.GB31945@redhat.com> <20101001142441.GF21129@thunk.org>
-	<yq1y6ah4kuu.fsf@sermon.lab.mkp.net>
-	<20101002023113.GJ21129@thunk.org>
+From: "Microsoft Email Promo Team" <information@microsoft.com>
+Subject: You have won (Congratulations)
+Date: Mon, 4 Oct 2010 20:07:04 -0200 (FNT)
+Message-ID: <35519.41.220.68.3.1286230024.squirrel__41856.6167275005$1286233480$gmane$org@41.220.68.3>
+Reply-To: glenn.bradley0134@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:63595 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756539Ab0JDTvB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2010 15:51:01 -0400
-In-Reply-To: <20101002023113.GJ21129@thunk.org> (Ted Ts'o's message of "Fri, 1
-	Oct 2010 22:31:13 -0400")
+Received: from mail.avellaneda-ba.gov.ar ([200.71.230.2]:37146 "EHLO
+	ns2.avellaneda-ba.gov.ar" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756766Ab0JDXD4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2010 19:03:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ted Ts'o <tytso@mit.edu>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Eric Sandeen <sandeen@redhat.com>, Jens Axboe <jaxboe@fusionio.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
->>>>> "Ted" == Ted Ts'o <tytso@mit.edu> writes:
+You have won (Congratulations)
 
-Ted,
+The MICROSOFT EMAIL PROMO TEAM is glad to announce that
+after a successful completion of the PROMO DRAWS held on the 3rd Octobe=
+r
+2010,your e-mail address,attached to winning
+numbers:(11) (80) (12)(96) (09) (43) won in the Tenth
+lottery category.
 
-Ted> OK, but what do we do when we start seeing devices with 8k or 16k
-Ted> physical block sizes?  The VM doesn't deal well with block sizes >
-Ted> page size.
+You have therefore been approved to claim a total sum of
+=A3450,000,00 Pounds Sterling in cash credited to REF NO:MICRO-L/2009-E=
+ND10.
+All participants were selected through our Microsoft computer ballot
+system drawn from 167,000 Names,as part of our International  "E-MAIL"
+Promotion Program for our prominent MS-WORD users all over the world an=
+d
+for the continuous use of the internet. You are advised to contact the
+claims
+processor with the details below via his e-mail address :
 
-I don't think we're going to see devices reporting logical blocks bigger
-than 4KiB anytime soon.  Too much pain for everybody in the industry
-(most other operating systems can't even deal with 4KiB logical blocks
-yet).  Eventually we will have to do the required page cache surgery to
-support filesystem block sizes bigger than the page size.  But I don't
-think that's something we'll have to deal with in the immediate future.
+NAME:  Glenn Bradley
+EMAIL: glennbradley1@yahoo.com.hk
 
-In the meantime, however, the question is whether there is something we
-can do in the allocators to mitigate effects of devices reporting
-physical blocks bigger than PAGE_CACHE_SIZE.  Obviously this would be in
-the I/O hint/alignment category and not something which would guarantee
-that all writes would be aligned multiples of that physical block size.
+PLEASE NOTE YOU ARE TO SEND THE FOLLOWING INFORMATION TO CLAIM YOUR PRI=
+ZE:
+1.Full Name:... 2.Address:... 3.Phone:... 4.Country:... 5.Sex/Gender:..=
+=2E
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+YOURS SINCERELY,
+Eileen Quincy.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
