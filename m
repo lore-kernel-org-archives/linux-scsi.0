@@ -1,59 +1,36 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] libsas: fix definition of wideport, include local sas address
-Date: Mon, 4 Oct 2010 09:44:11 -0700
-Message-ID: <AANLkTi=rM=7r6tnxCrc42q=e6r0U2LKPyoUa-D5j3MKa@mail.gmail.com>
-References: <20101001205552.30032.87278.stgit@localhost.localdomain>
-	<35DEA0DE11CB42F8B788D1C3C4E7BBA0@usish.com.cn>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.36-rc6-git2: Reported regressions 2.6.34 -> 2.6.35
+Date: Mon, 4 Oct 2010 20:01:00 +0200
+Message-ID: <AANLkTi=ZwaH6ZL1g4d1jhfSXtQJGMGu-=YN+vTm+=UgS@mail.gmail.com>
+References: <OjxVjYbf_EJ.A.ReC.pTPqMB@chimera>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-px0-f174.google.com ([209.85.212.174]:41513 "EHLO
-	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201Ab0JDQoL convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2010 12:44:11 -0400
-Received: by pxi10 with SMTP id 10so1382581pxi.19
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Oct 2010 09:44:11 -0700 (PDT)
-In-Reply-To: <35DEA0DE11CB42F8B788D1C3C4E7BBA0@usish.com.cn>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <OjxVjYbf_EJ.A.ReC.pTPqMB@chimera>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>
+Cc: Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: james.bottomley@suse.de, Jeff Skirvin <jeffrey.d.skirvin@intel.com>, Patrick Thomson <patrick.s.thomson@intel.com>, linux-scsi@vger.kernel.org
 
-On Sat, Oct 2, 2010 at 6:55 PM, Jack Wang <jack_wang@usish.com> wrote:
->
-> To date libsas has only looked at the attached sas address when
-> determining the formation of wide ports. =A0The specification and som=
-e
-> hardware expects that phys with different addresses will not form a w=
-ide
-> port unless the local peer phys also match each other. =A0Introduce a=
- flag
-> to select stricter behavior at sas_register_ha() time. =A0The flag ca=
-n be
-> dropped once it is known that all libsas users expect the same behavi=
-or.
->
-> Current drivers just initialize this field to zero and get the
-> traditional behavior.
-> [Jack] I prefer to use the new definition of wideport to the default.
+2010/10/3 Rafael J. Wysocki <rjw-KKrjLPT3xs0@public.gmane.org>:
+> Bug-Entry =C2=A0 =C2=A0 =C2=A0 : http://bugzilla.kernel.org/show_bug.=
+cgi?id=3D19302
+> Subject =C2=A0 =C2=A0 =C2=A0 =C2=A0 : PROBLEM: kernel crash on USB-mo=
+dem (Huawei E1750) hangup.
+> Submitter =C2=A0 =C2=A0 =C2=A0 : O01eg <O01eg-o+MxOtu4lMCHXe+LvDLADg@public.gmane.org>
+> Date =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0: 2010-09-26 19:50 (8 d=
+ays old)
+> Message-ID =C2=A0 =C2=A0 =C2=A0: <op.vjnn1up1yohvy1@localhost>
+> References =C2=A0 =C2=A0 =C2=A0: http://marc.info/?l=3Dlinux-kernel&m=
+=3D128553111709569&w=3D2
 
-Ok, when mvsas and aic94xx are also ready for this change we can just
-make this the default and kill the flag.
+Comment from bugzilla:
+> I got this bug at 2.6.34-gentoo-r6 and 2.6.36-rc5. Other kernels were=
+ not
+> checked.
 
-> [Jack] I cann't find where to judge the flag to chose which definitio=
-n to
-> use?
+Doesn't sound like regression.
 
-I am not clear on the question.  phy_is_wideport_member() should be
-the only location that needs to read this flag.  The driver just sets
-it to 1 before calling sas_register_ha() and then assumes the strict
-definition is in effect for the lifetime of the driver instance.
-
---
-Dan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--=20
+Rafa=C5=82
