@@ -1,72 +1,75 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: [PATCH]SCSI:Do not block suspend for abandoned devices
-Date: Tue, 5 Oct 2010 17:21:25 +0200
-Message-ID: <201010051721.25431.oneukum@suse.de>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: Drop srb reference before waiting for
+ completion
+Date: Tue, 5 Oct 2010 08:42:03 -0700
+Message-ID: <C8D0955B.9DF5%giridhar.malavali@qlogic.com>
+References: <4CA64E3D.7080207@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:53000 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754216Ab0JEPU1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2010 11:20:27 -0400
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:50601 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754457Ab0JEPmH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2010 11:42:07 -0400
+In-Reply-To: <4CA64E3D.7080207@cs.wisc.edu>
+Content-Language: en
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, hare@suse.de
+To: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@suse.de>, LinuxSCSI <linux-scsi@vger.kernel.org>
 
->From d0e0b88a5b271a45f00ab8ae9f22b992d5d090ba Mon Sep 17 00:00:00 2001
-From: Oliver Neukum <oliver@neukum.org>
-Date: Tue, 5 Oct 2010 17:06:46 +0200
-Subject: [PATCH] SCSI:Do not block suspend for abandoned devices
 
-If a device becomes inaccessible while a suspension
-is carried out, the device is gone anyhow. There's
-no need to block the suspension, as we'd ignore the
-devices on later attempts anyway.
 
-Signed-off-by: Oliver Neukum <oneukum@suse.de>
----
- drivers/scsi/scsi_pm.c |   18 +++++++++++++++---
- 1 files changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index d70e91a..396a60c 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -17,16 +17,28 @@
- static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
- {
- 	struct device_driver *drv;
--	int err;
-+	struct scsi_device *sdev;
-+	int err, state;
- 
--	err = scsi_device_quiesce(to_scsi_device(dev));
-+	sdev = to_scsi_device(dev);
-+	err = scsi_device_quiesce(sdev);
- 	if (err == 0) {
- 		drv = dev->driver;
- 		if (drv && drv->suspend)
- 			err = drv->suspend(dev, msg);
- 	}
- 	dev_dbg(dev, "scsi suspend: %d\n", err);
--	return err;
-+	
-+	state = sdev->sdev_state;
-+	switch (state) {
-+	case SDEV_OFFLINE:
-+	case SDEV_CANCEL:
-+	case SDEV_DEL:
-+		/* the device is dead, we can ignore the problem */
-+		return 0;
-+	default:
-+		return err;
-+	}
- }
- 
- static int scsi_dev_type_resume(struct device *dev)
--- 
-1.7.1
+On 10/1/10 2:10 PM, "Mike Christie" <michaelc@cs.wisc.edu> wrote:
+
+> On 10/01/2010 04:01 PM, Mike Christie wrote:
+>> On 10/01/2010 07:18 AM, Hannes Reinecke wrote:
+>>> 
+>>> This patch fixes a regression introduced by commit
+>>> 083a469db4ecf3b286a96b5b722c37fc1affe0be
+>>> 
+>>> qla2xxx_eh_wait_on_command() is waiting for an srb to
+>>> complete, which will never happen as the routine took
+>>> a reference to the srb previously and will only drop it
+>>> after this function. So every command abort will fail.
+>>> 
+>>> Signed-off-by: Hannes Reinecke<hare@suse.de>
+>>> Cc: Andrew Vasquez<andrew.vasquez@qlogic.com>
+>>> 
+>>> diff --git a/drivers/scsi/qla2xxx/qla_os.c
+>>> b/drivers/scsi/qla2xxx/qla_os.c
+>>> index 1e4bff6..0af7549 100644
+>>> --- a/drivers/scsi/qla2xxx/qla_os.c
+>>> +++ b/drivers/scsi/qla2xxx/qla_os.c
+>>> @@ -883,6 +883,9 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+>>> }
+>>> spin_unlock_irqrestore(&ha->hardware_lock, flags);
+>>> 
+>>> + if (got_ref)
+>>> + qla2x00_sp_compl(ha, sp);
+>>> +
+>> 
+>> You can just get rid of got_ref, because if you just move the compl call
+>> up a little more you know that in that code path we always get a ref.
+>> And there is no need to hold the ref to where it is above. See attached
+>> patch.
+>> 
+> 
+> Sorry. Last patch had some other iscsi dev loss stuff in there. See this
+> patch.
+
+Mike,
+
+The whole purpose of completing the command after the delay is to give
+sufficient time for firmware to complete the original command and abort
+command issued through interrupt. This makes sure that commands of concern
+are no longer with firmware/hardware before completing it to upper layers. I
+feel it is better to call qla2x00_sp_compl after waiting.
+
+-- Giri
+
 
 
 
