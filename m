@@ -1,122 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC v2 20/21] tcm: Add Kbuild and Kconfig for drivers/target,
-	Documentation/target/tcm_mod_builder.py
-Date: Tue, 05 Oct 2010 03:51:28 -0700
-Message-ID: <1286275888.20824.37.camel@haakon2.linux-iscsi.org>
-References: <1285195906-11804-1-git-send-email-nab@linux-iscsi.org>
-	 <20101005163323P.fujita.tomonori@lab.ntt.co.jp>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: [PATCH]SCSI: don't return errors for failures in sd_suspend()
+Date: Tue, 5 Oct 2010 16:28:21 +0200
+Message-ID: <201010051628.21414.oneukum@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101005163323P.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:51729 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753291Ab0JEO1X convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2010 10:27:23 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, hare@suse.de
 
-On Tue, 2010-10-05 at 16:38 +0900, FUJITA Tomonori wrote:
-> On Wed, 22 Sep 2010 15:51:46 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Add TCM Kbuild and Kconfig files and update drivers/ to pick up drivers/target.
-> > Add Docmentation/target/ for tcm_mod_builder.py script for generating new
-> > TCM v4 fabric modules functional ConfigFS skeletons.
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > ---
-> >  Documentation/target/tcm_mod_builder.py  | 1039 ++++++++++++++++++++++++++++++
-> >  Documentation/target/tcm_mod_builder.txt |  138 ++++
-> >  drivers/Kconfig                          |    2 +
-> >  drivers/Makefile                         |    1 +
-> >  drivers/target/Kbuild                    |   27 +
-> >  drivers/target/Kconfig                   |   34 +
-> >  6 files changed, 1241 insertions(+), 0 deletions(-)
-> >  create mode 100755 Documentation/target/tcm_mod_builder.py
-> >  create mode 100644 Documentation/target/tcm_mod_builder.txt
-> >  create mode 100644 drivers/target/Kbuild
-> >  create mode 100644 drivers/target/Kconfig
-> 
-> > +++ b/Documentation/target/tcm_mod_builder.txt
-> > @@ -0,0 +1,138 @@
-> > +>>>>>>>>>> The TCM v4 fabric module script generator <<<<<<<<<<
-> > +
-> > +Greetings all,
-> > +
-> > +This document is intended to be a mini-HOWTO for using the tcm_mod_builder.py
-> > +script to generate a brand new functional TCM v4 fabric .ko module of your very own,
-> > +that once built can be immediately be loaded to start access the new TCM/ConfigFS
-> > +fabric skeleton, by simplying using:
-> > +
-> > +	modprobe $TCM_NEW_MOD
-> > +	mkdir -p /sys/kernel/config/target/$TCM_NEW_MOD
-> > +
-> > +This script will create a new drivers/target/$TCM_NEW_MOD/, and will do the following
-> > +
-> > +	*) Generate new API callers for drivers/target/target_core_fabric_configs.c logic
-> > +	   ->make_nodeacl(), ->drop_nodeacl(), ->make_tpg(), ->drop_tpg()
-> > +	   ->make_wwn(), ->drop_wwn().  These are created into $TCM_NEW_MOD/$TCM_NEW_MOD_configfs.c
-> > +	*) Generate basic infrastructure for loading/unloading LKMs and TCM/ConfigFS fabric module
-> > +	   using a skeleton struct target_core_fabric_ops API template.
-> > +	*) Based on user defined T10 Proto_Ident for the new fabric module being built,
-> > +	   the TransportID / Initiator and Target WWPN related handlers for
-> > +	   SPC-3 persistent reservation are automatically generated in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
-> > +	   using drivers/target/target_core_fabric_lib.c logic.
-> > +	*) NOP API calls for all other Data I/O path and fabric dependent attribute logic
-> > +	   in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
-> > +
-> > +So far the generation of new functional ConfigFS skeletons supports for FC,
-> > +SAS and iSCSI proto_idents, which is defined at the top of tcm_mod_builder.py:main().
-> > +Once proto_ident is selected in main(), and the handful of other global variables at top
-> > +of tcm_mod_builder.py are correct, actually running the script looks like:
-> > +
-> > +target:/mnt/sdb/lio-core-2.6.git/Documentation/target# ./tcm_mod_builder.py 
-> > +Writing file:
-> > +/mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000/tcm_nab5000_base.h
-> > +Using tcm_mod_scan_fabric_ops:
-> 
-> I thought that I can use this to write IBM vscsi target driver but I
-> got:
-> 
-> fujita@rose:~/git/linux-next/Documentation/target$ ./tcm_mod_builder.py
-> Creating fabric_mod_dir: /mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000
-> Traceback (most recent call last):
->   File "./tcm_mod_builder.py", line 1039, in <module>
->     main()
->   File "./tcm_mod_builder.py", line 1028, in main
->     tcm_mod_create_module_subdir()
->   File "./tcm_mod_builder.py", line 38, in tcm_mod_create_module_subdir
->     ret = os.mkdir(fabric_mod_dir)
-> OSError: [Errno 2] No such file or directory: '/mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000'
-> 
-> 
-> And looks like tcm_dir isn't configurable.
+>From f4eee84ae76a303f8ceca761f0d9e3813b4d45cb Mon Sep 17 00:00:00 2001
+From: Oliver Neukum <oliver@neukum.org>
+Date: Tue, 5 Oct 2010 16:10:30 +0200
+Subject: [PATCH] SCSI: don't return errors for failures in sd_suspend()
 
-Hi Tomo,
+If an uncoorectable error happens during the suspension
+of an sd device, the device is unsalvageable. The error
+can be ignored, as offlined devices will be ignored in
+the future anyway.
 
-I just pushed some updates into lio-core-2.6.git/lio-4.0 to allow:
+Signed-off-by: Oliver Neukum <oneukum@suse.de>
+---
+ drivers/scsi/sd.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-	 './tcm_mod_builder.py -p $PROTO_IDENT -m $TCM_MOD_NAME' 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ffa0689..5bda210 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2526,7 +2526,8 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ 
+ done:
+ 	scsi_disk_put(sdkp);
+-	return ret;
++	sd_printk(KERN_ERR, sdkp, "Error %d suspending device\n", ret);
++	return 0;
+ }
+ 
+ static int sd_resume(struct device *dev)
+-- 
+1.7.1
 
-to be called instead of the original hardcoded values used when
-generating a new TCM fabric module configfs skeleton.  The commitdiff is
-here:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=b9509f44b2fdcd95499e4276349ac3c6cd8407cf
-
-The tcm_mod_builder.txt mini-HOWTO has also been updated here:
-
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=Documentation/target/tcm_mod_builder.txt;hb=refs/heads/lio-4.0
-
-So from there, you should be able to call:
-
-	./tcm_mod_builder.py -p SAS -m tcm_ibmvtgt'
-
-to generate drivers/target/tcm_ibmvtgt/ with the default SAS (or FC or
-iSCSI) protocol ident handlers.
-
-Thanks!
-
---nab
