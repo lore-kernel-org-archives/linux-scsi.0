@@ -1,31 +1,20 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: Re: [PATCH]SCSI: don't return errors for failures in sd_suspend()
-Date: Tue, 5 Oct 2010 17:10:57 +0200
-Message-ID: <201010051710.57278.oneukum@suse.de>
-References: <201010051628.21414.oneukum@suse.de> <1286289497.6661.8.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [patch 0/3] zfcp fixes for scsi-misc
+Date: Tue, 05 Oct 2010 17:12:52 +0200
+Message-ID: <20101005151252.217141720@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49210 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752441Ab0JEPJ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 5 Oct 2010 11:09:58 -0400
-In-Reply-To: <1286289497.6661.8.camel@mulgrave.site>
+Received: from mtagate7.de.ibm.com ([195.212.17.167]:35967 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752861Ab0JEPOC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2010 11:14:02 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, hare@suse.de
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com
 
-Am Dienstag, 5. Oktober 2010, 16:38:17 schrieb James Bottomley:
+James,
 
-> The most likely cause of error is cache sync failure so at the point of
-> power off for suspend, we'll lose data.  This might not be an
-> uncorrectable error either; it could be memory allocation failure or a
-> host of other transient reasons.
+here are three small zfcp bug fixes for the scsi-misc tree.
 
-OK, then I'll come up with something ultraconservative.
-
-	Regards
-		Oliver 
+--
+Christof
