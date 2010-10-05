@@ -1,59 +1,93 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH] libsas: fix definition of wideport, include local sas address
-Date: Mon, 4 Oct 2010 07:47:08 +0800
-Message-ID: <803C0CAF9ECC49B1B53C41064DE42DF0@usish.com.cn>
-References: <20101001205552.30032.87278.stgit@localhost.localdomain><35DEA0DE11CB42F8B788D1C3C4E7BBA0@usish.com.cn> <AANLkTi=rM=7r6tnxCrc42q=e6r0U2LKPyoUa-D5j3MKa@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC v2 20/21] tcm: Add Kbuild and Kconfig for drivers/target,
+ Documentation/target/tcm_mod_builder.py
+Date: Tue, 5 Oct 2010 16:38:20 +0900
+Message-ID: <20101005163323P.fujita.tomonori@lab.ntt.co.jp>
+References: <1285195906-11804-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:46756 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753096Ab0JEBxl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2010 21:53:41 -0400
-In-Reply-To: <AANLkTi=rM=7r6tnxCrc42q=e6r0U2LKPyoUa-D5j3MKa@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1285195906-11804-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com
 List-Id: linux-scsi@vger.kernel.org
-To: 'Dan Williams' <dan.j.williams@intel.com>
-Cc: james.bottomley@suse.de, 'Jeff Skirvin' <jeffrey.d.skirvin@intel.com>, 'Patrick Thomson' <patrick.s.thomson@intel.com>, linux-scsi@vger.kernel.org
 
-Re: [PATCH] libsas: fix definition of wideport, include local sas addre=
-ss
+On Wed, 22 Sep 2010 15:51:46 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-On Sat, Oct 2, 2010 at 6:55 PM, Jack Wang <jack_wang@usish.com> wrote:
->
-> To date libsas has only looked at the attached sas address when
-> determining the formation of wide ports. =A0The specification and som=
-e
-> hardware expects that phys with different addresses will not form a w=
-ide
-> port unless the local peer phys also match each other. =A0Introduce a=
- flag
-> to select stricter behavior at sas_register_ha() time. =A0The flag ca=
-n be
-> dropped once it is known that all libsas users expect the same behavi=
-or.
->
-> Current drivers just initialize this field to zero and get the
-> traditional behavior.
-> [Jack] I prefer to use the new definition of wideport to the default.
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> Add TCM Kbuild and Kconfig files and update drivers/ to pick up drivers/target.
+> Add Docmentation/target/ for tcm_mod_builder.py script for generating new
+> TCM v4 fabric modules functional ConfigFS skeletons.
+> 
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> ---
+>  Documentation/target/tcm_mod_builder.py  | 1039 ++++++++++++++++++++++++++++++
+>  Documentation/target/tcm_mod_builder.txt |  138 ++++
+>  drivers/Kconfig                          |    2 +
+>  drivers/Makefile                         |    1 +
+>  drivers/target/Kbuild                    |   27 +
+>  drivers/target/Kconfig                   |   34 +
+>  6 files changed, 1241 insertions(+), 0 deletions(-)
+>  create mode 100755 Documentation/target/tcm_mod_builder.py
+>  create mode 100644 Documentation/target/tcm_mod_builder.txt
+>  create mode 100644 drivers/target/Kbuild
+>  create mode 100644 drivers/target/Kconfig
 
-Ok, when mvsas and aic94xx are also ready for this change we can just
-make this the default and kill the flag.
+> +++ b/Documentation/target/tcm_mod_builder.txt
+> @@ -0,0 +1,138 @@
+> +>>>>>>>>>> The TCM v4 fabric module script generator <<<<<<<<<<
+> +
+> +Greetings all,
+> +
+> +This document is intended to be a mini-HOWTO for using the tcm_mod_builder.py
+> +script to generate a brand new functional TCM v4 fabric .ko module of your very own,
+> +that once built can be immediately be loaded to start access the new TCM/ConfigFS
+> +fabric skeleton, by simplying using:
+> +
+> +	modprobe $TCM_NEW_MOD
+> +	mkdir -p /sys/kernel/config/target/$TCM_NEW_MOD
+> +
+> +This script will create a new drivers/target/$TCM_NEW_MOD/, and will do the following
+> +
+> +	*) Generate new API callers for drivers/target/target_core_fabric_configs.c logic
+> +	   ->make_nodeacl(), ->drop_nodeacl(), ->make_tpg(), ->drop_tpg()
+> +	   ->make_wwn(), ->drop_wwn().  These are created into $TCM_NEW_MOD/$TCM_NEW_MOD_configfs.c
+> +	*) Generate basic infrastructure for loading/unloading LKMs and TCM/ConfigFS fabric module
+> +	   using a skeleton struct target_core_fabric_ops API template.
+> +	*) Based on user defined T10 Proto_Ident for the new fabric module being built,
+> +	   the TransportID / Initiator and Target WWPN related handlers for
+> +	   SPC-3 persistent reservation are automatically generated in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
+> +	   using drivers/target/target_core_fabric_lib.c logic.
+> +	*) NOP API calls for all other Data I/O path and fabric dependent attribute logic
+> +	   in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
+> +
+> +So far the generation of new functional ConfigFS skeletons supports for FC,
+> +SAS and iSCSI proto_idents, which is defined at the top of tcm_mod_builder.py:main().
+> +Once proto_ident is selected in main(), and the handful of other global variables at top
+> +of tcm_mod_builder.py are correct, actually running the script looks like:
+> +
+> +target:/mnt/sdb/lio-core-2.6.git/Documentation/target# ./tcm_mod_builder.py 
+> +Writing file:
+> +/mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000/tcm_nab5000_base.h
+> +Using tcm_mod_scan_fabric_ops:
 
-> [Jack] I cann't find where to judge the flag to chose which definitio=
-n to
-> use?
+I thought that I can use this to write IBM vscsi target driver but I
+got:
 
-I am not clear on the question.  phy_is_wideport_member() should be
-the only location that needs to read this flag.  The driver just sets
-it to 1 before calling sas_register_ha() and then assumes the strict
-definition is in effect for the lifetime of the driver instance.
-[Jack] Ohh, I miss something in the patch. It's ok for me. Thanks for
-Explanation.
+fujita@rose:~/git/linux-next/Documentation/target$ ./tcm_mod_builder.py
+Creating fabric_mod_dir: /mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000
+Traceback (most recent call last):
+  File "./tcm_mod_builder.py", line 1039, in <module>
+    main()
+  File "./tcm_mod_builder.py", line 1028, in main
+    tcm_mod_create_module_subdir()
+  File "./tcm_mod_builder.py", line 38, in tcm_mod_create_module_subdir
+    ret = os.mkdir(fabric_mod_dir)
+OSError: [Errno 2] No such file or directory: '/mnt/sdb/lio-core-2.6.git/drivers/target/tcm_nab5000'
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+And looks like tcm_dir isn't configurable.
