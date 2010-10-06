@@ -1,85 +1,43 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [RFC v2 00/21] TCM Core and TCM_Loop patches for v2.6.37
-Date: Wed, 6 Oct 2010 16:09:29 +0900
-Message-ID: <20101006160434M.fujita.tomonori@lab.ntt.co.jp>
-References: <1285195702-11421-1-git-send-email-nab@linux-iscsi.org>
-	<20101006111621O.fujita.tomonori@lab.ntt.co.jp>
-	<1286340405.5685.93.camel@haakon2.linux-iscsi.org>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: Re: [PATCH]SCSI:Do not block suspend for abandoned devices
+Date: Wed, 6 Oct 2010 09:22:45 +0200
+Message-ID: <201010060922.45191.oneukum@suse.de>
+References: <201010051721.25431.oneukum@suse.de> <1286299186.6661.20.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:47382 "EHLO sh.osrg.net"
+Received: from cantor.suse.de ([195.135.220.2]:46951 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758637Ab0JFHOp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 6 Oct 2010 03:14:45 -0400
-In-Reply-To: <1286340405.5685.93.camel@haakon2.linux-iscsi.org>
+	id S932112Ab0JFHVq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Oct 2010 03:21:46 -0400
+In-Reply-To: <1286299186.6661.20.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com, jeff@garzik.org, tj@kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, hare@suse.de
 
-On Tue, 05 Oct 2010 21:46:45 -0700
-"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-
-> On Wed, 2010-10-06 at 11:21 +0900, FUJITA Tomonori wrote:
-> > On Wed, 22 Sep 2010 15:48:22 -0700
-> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+Am Dienstag, 5. Oktober 2010, 19:19:46 schrieb James Bottomley:
+> On Tue, 2010-10-05 at 17:21 +0200, Oliver Neukum wrote:
+> > From d0e0b88a5b271a45f00ab8ae9f22b992d5d090ba Mon Sep 17 00:00:00 2001
+> > From: Oliver Neukum <oliver@neukum.org>
+> > Date: Tue, 5 Oct 2010 17:06:46 +0200
+> > Subject: [PATCH] SCSI:Do not block suspend for abandoned devices
 > > 
-> > >  drivers/Kconfig                                |    2 +
-> > >  drivers/Makefile                               |    1 +
-> > >  drivers/target/Kbuild                          |   30 +
-> > >  drivers/target/Kconfig                         |   36 +
-> > 
-> > Why do we need a new place for the target stuff? This could be used
-> > for non scsi protocl?
-> > 
+> > If a device becomes inaccessible while a suspension
+> > is carried out, the device is gone anyhow. There's
+> > no need to block the suspension, as we'd ignore the
+> > devices on later attempts anyway.
 > 
-> Yes, I have envisioned the princaple pieces of TCM/ConfigFS design being
-> very much SCSI fabric independent from the start of v3.0 development,
-> and I think the v4.0 virtual HBA/DEV abstraction now present in
-> target_core_configfs.c and fabric module independent control plane in
-> target_core_fabric_configfs.c does demonstrate this design feature.
-> 
-> Of course doing 'SCSI-less' target mode this would still involve some
-> work to target_core_transport.c to add ATA specific
-> emulation/passthrough and disable others for the default SPC-3 emulation
-> logic currently in place.  However, I do believe the TCM subsystem
-> plugin API in target_core_transport.h for pSCSI, iBLOCK, FILEIO, etc is
-> already more or less SCSI fabric independent and adding a libata
-> subsystem plugin (eg: with it's own set of TCM fabric modules) minus
-> current libata-scsi.c glue code would be possible if the libata folks
-> would like to entertain that discussion..
+> So this clarifies what you're trying to do; thanks.  However, I still
+> think the premise is wrong: if we get a failure for any reason (whether
+> memory allocation or disk) we probably haven't flushed the disk cache
+> and our next action in suspend (whether to ram or disk) will power the
+> drive down and lose the cache data.  I really don't think blocking
+> suspend and informing the user is inappropriate here.
 
-I like to hear the opinions of SCSI maintainer and ATA folks.
+I see. It seems to me that this is true for SDEV_OFFLINE only.
 
-Even if the target feature is SCSI independent, the SCSI drivers
-should go to under driver/scsi. As I explained, at least, it's a
-cleaner solution for ibmvscsi target driver.
-
-
-> > We had the similar discussion when I put stgt to mainline but we
-> > concluded that under drivers/scsi is the best place.
-> > 
-> > I don't like to put ibmvscsi driver under something like
-> > drivers/target/tcm_ibmvscsit because ibmvscsi needs to include some
-> > files under drivers/scsi/ibmvscsi/. It's more reasonable to put the
-> > driver there.
-> > 
-> > Can we change the name, TCM (Target Core Mod), to something more
-> > informative? I think that "Core Mod" is really pointless.
-> > 
-> > This will be the mainline scsi target feature so why can't we name
-> > the files and modules in more appropriate way?
-> 
-> Honestly, I tend not to care very much about naming and things, but that
-> said I would really hate to have to rename actual TCM code at this point
-> for .37 (other than say directory location/layout and file names) while
-> the drivers/target/lio-target -> iscsi_proto.h conversion is still on
-> our TODO list.
-
-I'm not sure this goes for .37 (up to James) but anyway I think that
-we need to take care about the module names now. Once we put stuff
-into mainline, it's not good to change the module names. File and
-directory names and layout can be changed any time.
-
+	Regards
+		Oliver
