@@ -1,134 +1,107 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: [PATCH v3] libsas: fix bug for vacant phy
-Date: Wed, 6 Oct 2010 16:05:35 +0800
-Message-ID: <CD6A000CF99C4DF2AEAF5EDC2F2E362E@usish.com.cn>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] scsi: Unblock devices in state SDEV_CANCEL
+Date: Wed, 06 Oct 2010 03:10:59 -0500
+Message-ID: <4CAC2F13.60901@cs.wisc.edu>
+References: <20100902110540.GB4097@schmichrtp.mainz.de.ibm.com> <4C83DC70.5030304@cs.wisc.edu> <20100906104742.GA23653@schmichrtp.mainz.de.ibm.com> <20100906105938.GB23653@schmichrtp.mainz.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0000_01CB6570.5737D350"
+ boundary="------------060102050608020600020405"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:54812 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755290Ab0JFICV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2010 04:02:21 -0400
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:55035 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753771Ab0JFILc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 6 Oct 2010 04:11:32 -0400
+In-Reply-To: <20100906105938.GB23653@schmichrtp.mainz.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <jejb@kernel.org>, james.bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org, 'lindar_liu' <lindar_liu@usish.com>, 'roy' <roy_wang@usish.com>, 'Chuck Tuffli' <Chuck_Tuffli@pmc-sierra.com>, 'Hannes Reinecke' <hare@suse.de>
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
 This is a multi-part message in MIME format.
+--------------060102050608020600020405
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-------=_NextPart_000_0000_01CB6570.5737D350
+On 09/06/2010 05:59 AM, Christof Schmitt wrote:
+> Deleting a SCSI device on a blocked fc_remote_port (before
+> fast_io_fail_tmo fires) results in a hanging thread:
+>
+>    STACK:
+>    0 schedule+1108 [0x5cac48]
+>    1 schedule_timeout+528 [0x5cb7fc]
+>    2 wait_for_common+266 [0x5ca6be]
+>    3 blk_execute_rq+160 [0x354054]
+>    4 scsi_execute+324 [0x3b7ef4]
+>    5 scsi_execute_req+162 [0x3b80ca]
+>    6 sd_sync_cache+138 [0x3cf662]
+>    7 sd_shutdown+138 [0x3cf91a]
+>    8 sd_remove+112 [0x3cfe4c]
+>    9 __device_release_driver+124 [0x3a08b8]
+> 10 device_release_driver+60 [0x3a0a5c]
+> 11 bus_remove_device+266 [0x39fa76]
+> 12 device_del+340 [0x39d818]
+> 13 __scsi_remove_device+204 [0x3bcc48]
+> 14 scsi_remove_device+66 [0x3bcc8e]
+> 15 sysfs_schedule_callback_work+50 [0x260d66]
+> 16 worker_thread+622 [0x162326]
+> 17 kthread+160 [0x1680b0]
+> 18 kernel_thread_starter+6 [0x10aaea]
+>
+> During the delete, the SCSI device is in moved to SDEV_CANCEL.  When
+> the FC transport class later calls scsi_target_unblock, this has no
+> effect, since scsi_internal_device_unblock ignores SCSI devics in this
+> state.
+>
+> Fix this by also accepting SDEV_CANCEL in
+> scsi_internal_device_unblock.
+>
+> Signed-off-by: Christof Schmitt<christof.schmitt@de.ibm.com>
+> ---
+>   drivers/scsi/scsi_lib.c |    2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2428,7 +2428,7 @@ scsi_internal_device_unblock(struct scsi
+>   		sdev->sdev_state = SDEV_RUNNING;
+>   	else if (sdev->sdev_state == SDEV_CREATED_BLOCK)
+>   		sdev->sdev_state = SDEV_CREATED;
+> -	else
+> +	else if (sdev->sdev_state != SDEV_CANCEL)
+>   		return -EINVAL;
+>
+>   	spin_lock_irqsave(q->queue_lock, flags);
+
+
+If the device goes from block to offline then the IO gets stuck in the 
+queue and we can hang like above. The attached patch just modifies your 
+patch to also handle the offline case.
+
+It looks like all these are regressions caused by:
+5c10e63c943b4c67561ddc6bf61e01d4141f881f
+[SCSI] limit state transitions in scsi_internal_device_unblock
+so maybe this should go to stable?
+
+--------------060102050608020600020405
 Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-
-Hi=EF=BC=8C James
-
-This patch fix bug reported by Chuck. And this new version incorporate =
-comments
-from Hannes. Please consider to include it into mainline.=09
-
-Jack.                                                        =20
-From: Jack Wang <jack_wang@usish.com>
-Date: Wed, 15 Sep 2010 16:43:03 +0800
-Subject: [PATCH] fix bug for vacant phy
-
-Signed-off-by: Jack Wang <jack_wang@usish.com>
-Signed-off-by: Lindar Liu <lindar_liu@usish.com>
-Tested-by: Chuck Tuffli <Chuck_Tuffli@pmc-sierra.com>
-
----
- sas_expander.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/sas_expander.c b/sas_expander.c
-index d1d86a6..f282234 100644
---- a/sas_expander.c
-+++ b/sas_expander.c
-@@ -175,10 +175,10 @@ static void sas_set_ex_phy(struct domain_device =
-*dev, int phy_id,
- 	switch (resp->result) {
- 	case SMP_RESP_PHY_VACANT:
- 		phy->phy_state =3D PHY_VACANT;
--		return;
-+		break;
- 	default:
- 		phy->phy_state =3D PHY_NOT_PRESENT;
--		return;
-+		break;
- 	case SMP_RESP_FUNC_ACC:
- 		phy->phy_state =3D PHY_EMPTY; /* do not know yet */
- 		break;
-@@ -209,7 +209,10 @@ static void sas_set_ex_phy(struct domain_device =
-*dev, int phy_id,
- 	phy->phy->negotiated_linkrate =3D phy->linkrate;
-=20
- 	if (!rediscover)
--		sas_phy_add(phy->phy);
-+		if (sas_phy_add(phy->phy)) {
-+			sas_phy_free(phy->phy);
-+			return;
-+		}
-=20
- 	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",
- 		    SAS_ADDR(dev->sas_addr), phy->phy_id,
---=20
-1.7.2.3.msysgit.0
-
-------=_NextPart_000_0000_01CB6570.5737D350
-Content-Type: application/octet-stream;
-	name="0001-fix-bug-for-vacant-phy.patch"
-Content-Transfer-Encoding: quoted-printable
+ name="scsi-unblock-fix-state-check.patch"
+Content-Transfer-Encoding: 7bit
 Content-Disposition: attachment;
-	filename="0001-fix-bug-for-vacant-phy.patch"
+ filename="scsi-unblock-fix-state-check.patch"
 
->From 57f6f219f378624628d2c31090de934ad5a772eb Mon Sep 17 00:00:00 2001=0A=
-From: Jack Wang <jack_wang@usish.com>=0A=
-Date: Wed, 15 Sep 2010 16:43:03 +0800=0A=
-Subject: [PATCH] fix bug for vacant phy=0A=
-=0A=
-Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
-Signed-off-by: Lindar Liu <lindar_liu@usish.com>=0A=
-Tested-by: Chuck Tuffli <Chuck_Tuffli@pmc-sierra.com>=0A=
-=0A=
----=0A=
- sas_expander.c |    9 ++++++---=0A=
- 1 files changed, 6 insertions(+), 3 deletions(-)=0A=
-=0A=
-diff --git a/sas_expander.c b/sas_expander.c=0A=
-index d1d86a6..f282234 100644=0A=
---- a/sas_expander.c=0A=
-+++ b/sas_expander.c=0A=
-@@ -175,10 +175,10 @@ static void sas_set_ex_phy(struct domain_device =
-*dev, int phy_id,=0A=
- 	switch (resp->result) {=0A=
- 	case SMP_RESP_PHY_VACANT:=0A=
- 		phy->phy_state =3D PHY_VACANT;=0A=
--		return;=0A=
-+		break;=0A=
- 	default:=0A=
- 		phy->phy_state =3D PHY_NOT_PRESENT;=0A=
--		return;=0A=
-+		break;=0A=
- 	case SMP_RESP_FUNC_ACC:=0A=
- 		phy->phy_state =3D PHY_EMPTY; /* do not know yet */=0A=
- 		break;=0A=
-@@ -209,7 +209,10 @@ static void sas_set_ex_phy(struct domain_device =
-*dev, int phy_id,=0A=
- 	phy->phy->negotiated_linkrate =3D phy->linkrate;=0A=
- =0A=
- 	if (!rediscover)=0A=
--		sas_phy_add(phy->phy);=0A=
-+		if (sas_phy_add(phy->phy)) {=0A=
-+			sas_phy_free(phy->phy);=0A=
-+			return;=0A=
-+		}=0A=
- =0A=
- 	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",=0A=
- 		    SAS_ADDR(dev->sas_addr), phy->phy_id,=0A=
--- =0A=
-1.7.2.3.msysgit.0=0A=
-=0A=
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ee02d38..7f2f652 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2428,7 +2431,8 @@ scsi_internal_device_unblock(struct scsi_device *sdev)
+ 		sdev->sdev_state = SDEV_RUNNING;
+ 	else if (sdev->sdev_state == SDEV_CREATED_BLOCK)
+ 		sdev->sdev_state = SDEV_CREATED;
+-	else
++	else if (sdev->sdev_state != SDEV_CANCEL &&
++		 sdev->sdev_state != SDEV_OFFLINE)
+ 		return -EINVAL;
+ 
+ 	spin_lock_irqsave(q->queue_lock, flags);
 
-------=_NextPart_000_0000_01CB6570.5737D350--
-
+--------------060102050608020600020405--
