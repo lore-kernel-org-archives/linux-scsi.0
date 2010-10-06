@@ -1,24 +1,46 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: Re: [RFC v2 05/21] tcm: Add ConfigFS subsystem backstore
 	infrastructure
-Date: Wed, 6 Oct 2010 16:43:46 +0900
-Message-ID: <20101006163859Y.fujita.tomonori@lab.ntt.co.jp>
-References: <1286339442.5685.76.camel@haakon2.linux-iscsi.org>
-	<20101006155833G.fujita.tomonori@lab.ntt.co.jp>
-	<1286349730.5685.113.camel@haakon2.linux-iscsi.org>
+Date: Wed, 06 Oct 2010 00:43:37 -0700
+Message-ID: <1286351017.5685.137.camel@haakon2.linux-iscsi.org>
+References: <20101006091219Q.fujita.tomonori@lab.ntt.co.jp>
+	 <1286339442.5685.76.camel@haakon2.linux-iscsi.org>
+	 <20101006155833G.fujita.tomonori@lab.ntt.co.jp>
+	 <20101006162018R.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1286349730.5685.113.camel@haakon2.linux-iscsi.org>
+In-Reply-To: <20101006162018R.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-kernel-owner@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com, joel.becker@oracle.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com, Joel Becker <joel.becker@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 06 Oct 2010 00:22:10 -0700
-"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-
+On Wed, 2010-10-06 at 16:25 +0900, FUJITA Tomonori wrote:
+> On Wed, 6 Oct 2010 16:09:26 +0900
+> FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> 
+> > On Tue, 05 Oct 2010 21:30:42 -0700
+> > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+> > 
+> > > I have been thinking about something similar that is needed for the WIP
+> > > TCM HW target mode drivers when a:
+> > > 
+> > > 	mkdir -p /sys/kernel/config/target/$TCM_MOD/$LPORT_WWPN/tpgt_1
+> > > 
+> > > happens the WWPN is coming from HW.  This currently looks like something
+> > > along the lines of the following for tcm_lpfc:
+> > > 
+> > > http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/target/tcm_lpfc/tcm_lpfc_configfs.c;hb=tcm_lpfc#l227
+> > 
+> > The above link doesn't work for me so I'm not sure.
+> > 
+> > But I guess that you are talking about the problem that
+> > tcm_lpfc_make_lport() can accept proper hardware port addresses. We
+> > are on the same page if so.
+> > 
+> > 
 > > > The main issue here is that the user still needs to know the $LPORT_WWPN
 > > > before hand (either from looking at a sticker on the card, or via
 > > > another method) in order to preform the initial TFO->fabric_make_wwn()
@@ -37,43 +59,50 @@ On Wed, 06 Oct 2010 00:22:10 -0700
 > > 
 > > I want the driver to create necessary target directories in
 > > /sys/kernel/config/target/ibmvscsit/ automatically.
-> > 
-> > 
 > 
-> Hmmmm, well configfs is entirely driven by userspace syscalls, so we
-
-I think that we really want to configure things by kernel space too
-because the scsi target stuff need to handle hardware.
-
-Need to load the module and create the module name directory by name?
-
-Need to read the content in sysfs to get the hardware info and create
-the directories appropriate for the hardware by hand?
-
-Looks strange and inconvenient interface to me. Why can't the kernel
-just create the directory layout that suits to the hardware for users?
-
-
-> want to try to avoid doing this (jlbec CC'ed).  We want userspace code
-> to parse a list of these values from sysfs+configfs and use these
-> individual HW WWPN value(s) as the directory/group names for the
-> mkdir(2) mentioned above.
+> In addition, I also think that /sys/kernel/config/target/$TCM_MOD
+> should show up automatically when I load the module.
 > 
-> > And 'hw_ports' looks unnecessary because fc drivers already provide
-> > such information under /sys/class/, I think.
-> > --
+> vine:/home/fujita# modprobe iscsi_target_mod
 > 
-> Well, it really depends on what is required for individual target fabric
-> modules I think, and perhaps could contain some other useful information
-> about target mode HW specific available resources.  For the HW FC +
-> libfc case, as long as the LLD continues to register TARGET_MODE capable
-> HW ports in /sys/class, I think we should be good to go.
+> Then why do I need to create iscsi directory by hand?
+
+Because configfs is driven by completely userspace syscalls.  8-)
+
 > 
-> --nab
+> vine:/home/fujita# mkdir /sys/kernel/config/target/iscsi
 > 
+
+Actually, these is an LKM autoload feature for LIO-Target and TCM_Loop
+currently in place when:
+
+	mkdir /sys/kernel/config/target/[iscsi,loopback]
+
+occurs and propigates through target_Core_configfs.c code into
+target_core_register_fabric() here:
+
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/target/target_core_configfs.c;hb=lio-4.0#l144
+
+Other than these two hardcoded cases (I plan to add these as new modules
+are merged into mainline), the userspace code is expected to:
+
+	 modprobe $TCM_FAB_MOD ;
+	 mkdir /sys/kernel/config/target/$FAB_MOD
+
+in order to access the top level generic fabric directory/group in
+target_core_fabric_configfs.c code.
+
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> btw, 'iscsi' needs to renamed to iscsi_tcp or something like that?
+
+I was thinking here to keep the default software iSCSI LIO-Target code
+to use 'iscsi' and use add a seperate iSCSI HW target mode with a iscsi_
+$HWNAME prefix as necessary for the existing iSCSI HW TOE cases.  
+
+However there is a certain flavour of iSCSI HW target offload silicon
+currently in development that I am considering to integrate directly
+into LIO-Target code in order to function transparently with existing
+LIO kernel code, along with some new fabric configfs attribute knobs for
+tuning, debugging, etc.
+
+--nab
