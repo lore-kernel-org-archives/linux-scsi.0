@@ -1,56 +1,71 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [RFC v2 05/21] tcm: Add ConfigFS subsystem backstore infrastructure
-Date: Wed, 06 Oct 2010 16:13:55 +0400
-Message-ID: <4CAC6803.9070609@vlnb.net>
-References: <20101006091219Q.fujita.tomonori@lab.ntt.co.jp>	<1286339442.5685.76.camel@haakon2.linux-iscsi.org>	<20101006155833G.fujita.tomonori@lab.ntt.co.jp> <20101006162018R.fujita.tomonori@lab.ntt.co.jp>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: [PATCH]SCSI: No sleep stop for devices in disconnection
+Date: Wed, 6 Oct 2010 15:45:17 +0200
+Message-ID: <201010061545.18215.oneukum@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101006162018R.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com
+Content-Type: Text/Plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:57973 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932343Ab0JFNoT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2010 09:44:19 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, hare@suse.de
 
-FUJITA Tomonori, on 10/06/2010 11:25 AM wrote:
->>> The main issue here is that the user still needs to know the $LPORT_WWPN
->>> before hand (either from looking at a sticker on the card, or via
->>> another method) in order to preform the initial TFO->fabric_make_wwn()
->>> -> $TCM_MOD_make_wwn() operation.  So what we need is a configfs attrib
->>> at the top level TCM fabric group in order to see a list of the
->>> available hardware ports from the specific $TCM_MOD.  What I was
->>> thinking for TCM HW fabric module ports would be to have something like:
->>>
->>> 	/sys/kernel/config/target/$TCM_MOD/hw_ports
->>>
->>> that would walk the struct pci_dev looking for fabric module specific HW
->>> target mode capabilities.  I assume this is what you had in mind for
->>> drivers/scsi/ibmvscsi as well, yes..?
->>
->> Doesn't sound so.
->>
->> I want the driver to create necessary target directories in
->> /sys/kernel/config/target/ibmvscsit/ automatically.
-> 
-> In addition, I also think that /sys/kernel/config/target/$TCM_MOD
-> should show up automatically when I load the module.
-> 
-> vine:/home/fujita# modprobe iscsi_target_mod
-> 
-> Then why do I need to create iscsi directory by hand?
+>From 75de5ee7afc17322c61a1188b21e59b13b4a2bdb Mon Sep 17 00:00:00 2001
+From: Oliver Neukum <oliver@neukum.org>
+Date: Wed, 6 Oct 2010 15:33:37 +0200
+Subject: [PATCH] SCSI: No sleep stop for devices in disconnection
 
-Hello Tomonori,
+If the system is going to sleep while a device is being
+disconnected, the commands send during preparation for
+sleep are likely to fail. However if that happens it
+can be ignored as the devices are going away anyway.
+This can happen with eSATA because it takes long to
+process a disconnection.
 
-Welcome to the world of configfs-based SCSI target configuration
-infrastructure!
+Signed-off-by: Oliver Neukum <oneukum@suse.de>
+---
+ drivers/scsi/scsi_pm.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
-Configfs is user space driven and only by user space. This is the main
-reason why I from the very beginning have writing that it isn't suitable
-for managing SCSI targets.
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d70e91a..9285726 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -17,16 +17,27 @@
+ static int scsi_dev_type_suspend(struct device *dev, pm_message_t msg)
+ {
+ 	struct device_driver *drv;
+-	int err;
++	struct scsi_device *sdev;
++	int err, state;
+ 
+-	err = scsi_device_quiesce(to_scsi_device(dev));
++	sdev = to_scsi_device(dev);
++	err = scsi_device_quiesce(sdev);
+ 	if (err == 0) {
+ 		drv = dev->driver;
+ 		if (drv && drv->suspend)
+ 			err = drv->suspend(dev, msg);
+ 	}
+ 	dev_dbg(dev, "scsi suspend: %d\n", err);
+-	return err;
++	
++	state = sdev->sdev_state;
++	switch (state) {
++	case SDEV_CANCEL:
++	case SDEV_DEL:
++		/* lost a race against a disconnection handler */
++		return 0;
++	default:
++		return err;
++	}
+ }
+ 
+ static int scsi_dev_type_resume(struct device *dev)
+-- 
+1.7.1
 
-Needless to say that SCST's sysfs-based configuration infrastructure
-doesn't suffer from this limitation and allows creation of entries from
-both kernel and user spaces.
-
-Vlad
