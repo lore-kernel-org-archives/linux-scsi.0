@@ -1,82 +1,134 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC v2 05/21] tcm: Add ConfigFS subsystem backstore
-	infrastructure
-Date: Wed, 06 Oct 2010 00:51:27 -0700
-Message-ID: <1286351487.5685.145.camel@haakon2.linux-iscsi.org>
-References: <1286339442.5685.76.camel@haakon2.linux-iscsi.org>
-	 <20101006155833G.fujita.tomonori@lab.ntt.co.jp>
-	 <1286349730.5685.113.camel@haakon2.linux-iscsi.org>
-	 <20101006163859Y.fujita.tomonori@lab.ntt.co.jp>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: [PATCH v3] libsas: fix bug for vacant phy
+Date: Wed, 6 Oct 2010 16:05:35 +0800
+Message-ID: <CD6A000CF99C4DF2AEAF5EDC2F2E362E@usish.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0000_01CB6570.5737D350"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.gq1.yahoo.com ([67.195.15.60]:36996 "HELO
-	smtp101.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757121Ab0JFH4H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2010 03:56:07 -0400
-In-Reply-To: <20101006163859Y.fujita.tomonori@lab.ntt.co.jp>
+Received: from sr-smtp.usish.com ([210.5.144.203]:54812 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755290Ab0JFICV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2010 04:02:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com, joel.becker@oracle.com, Linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: 'James Bottomley' <jejb@kernel.org>, james.bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org, 'lindar_liu' <lindar_liu@usish.com>, 'roy' <roy_wang@usish.com>, 'Chuck Tuffli' <Chuck_Tuffli@pmc-sierra.com>, 'Hannes Reinecke' <hare@suse.de>
 
-On Wed, 2010-10-06 at 16:43 +0900, FUJITA Tomonori wrote:
-> On Wed, 06 Oct 2010 00:22:10 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> > > > The main issue here is that the user still needs to know the $LPORT_WWPN
-> > > > before hand (either from looking at a sticker on the card, or via
-> > > > another method) in order to preform the initial TFO->fabric_make_wwn()
-> > > > -> $TCM_MOD_make_wwn() operation.  So what we need is a configfs attrib
-> > > > at the top level TCM fabric group in order to see a list of the
-> > > > available hardware ports from the specific $TCM_MOD.  What I was
-> > > > thinking for TCM HW fabric module ports would be to have something like:
-> > > > 
-> > > > 	/sys/kernel/config/target/$TCM_MOD/hw_ports
-> > > > 
-> > > > that would walk the struct pci_dev looking for fabric module specific HW
-> > > > target mode capabilities.  I assume this is what you had in mind for
-> > > > drivers/scsi/ibmvscsi as well, yes..?
-> > > 
-> > > Doesn't sound so.
-> > > 
-> > > I want the driver to create necessary target directories in
-> > > /sys/kernel/config/target/ibmvscsit/ automatically.
-> > > 
-> > > 
-> > 
-> > Hmmmm, well configfs is entirely driven by userspace syscalls, so we
-> 
-> I think that we really want to configure things by kernel space too
-> because the scsi target stuff need to handle hardware.
-> 
-> Need to load the module and create the module name directory by name?
-> 
-> Need to read the content in sysfs to get the hardware info and create
-> the directories appropriate for the hardware by hand?
-> 
-> Looks strange and inconvenient interface to me. Why can't the kernel
-> just create the directory layout that suits to the hardware for users?
-> 
-> 
+This is a multi-part message in MIME format.
 
-Actually, I already had some code that could simulate mkdir(2) and
-rmdir(2) to do exactly what you are talking about here for doing
-configfs groups ops from kernel space in 2008 in to assist with the
-IOCTL -> configfs v3.0 conversion work.  Joel gave this a big NACK back
-then, and I removed the code from target_core_configfs.c shortly
-thereafter.  
+------=_NextPart_000_0000_01CB6570.5737D350
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-But really, pushing this logic into userspace and making
-python/perl/shell code do these type of things IMHO makes the kernel
-level target code cleaner.
+Hi=EF=BC=8C James
 
-Of course I think having something to create configfs groups from
-kernelspace is very useful for debugging and ProcFS/SysFS/NetLink/IOCTL
--> ConfigFS conversion purposes, but I will have to defer to Joel for
-his reasons of not allowing configfs consumers to do this. (CC'ing
-linux-fsdevel)
+This patch fix bug reported by Chuck. And this new version incorporate =
+comments
+from Hannes. Please consider to include it into mainline.=09
 
---nab
+Jack.                                                        =20
+From: Jack Wang <jack_wang@usish.com>
+Date: Wed, 15 Sep 2010 16:43:03 +0800
+Subject: [PATCH] fix bug for vacant phy
+
+Signed-off-by: Jack Wang <jack_wang@usish.com>
+Signed-off-by: Lindar Liu <lindar_liu@usish.com>
+Tested-by: Chuck Tuffli <Chuck_Tuffli@pmc-sierra.com>
+
+---
+ sas_expander.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/sas_expander.c b/sas_expander.c
+index d1d86a6..f282234 100644
+--- a/sas_expander.c
++++ b/sas_expander.c
+@@ -175,10 +175,10 @@ static void sas_set_ex_phy(struct domain_device =
+*dev, int phy_id,
+ 	switch (resp->result) {
+ 	case SMP_RESP_PHY_VACANT:
+ 		phy->phy_state =3D PHY_VACANT;
+-		return;
++		break;
+ 	default:
+ 		phy->phy_state =3D PHY_NOT_PRESENT;
+-		return;
++		break;
+ 	case SMP_RESP_FUNC_ACC:
+ 		phy->phy_state =3D PHY_EMPTY; /* do not know yet */
+ 		break;
+@@ -209,7 +209,10 @@ static void sas_set_ex_phy(struct domain_device =
+*dev, int phy_id,
+ 	phy->phy->negotiated_linkrate =3D phy->linkrate;
+=20
+ 	if (!rediscover)
+-		sas_phy_add(phy->phy);
++		if (sas_phy_add(phy->phy)) {
++			sas_phy_free(phy->phy);
++			return;
++		}
+=20
+ 	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",
+ 		    SAS_ADDR(dev->sas_addr), phy->phy_id,
+--=20
+1.7.2.3.msysgit.0
+
+------=_NextPart_000_0000_01CB6570.5737D350
+Content-Type: application/octet-stream;
+	name="0001-fix-bug-for-vacant-phy.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="0001-fix-bug-for-vacant-phy.patch"
+
+>From 57f6f219f378624628d2c31090de934ad5a772eb Mon Sep 17 00:00:00 2001=0A=
+From: Jack Wang <jack_wang@usish.com>=0A=
+Date: Wed, 15 Sep 2010 16:43:03 +0800=0A=
+Subject: [PATCH] fix bug for vacant phy=0A=
+=0A=
+Signed-off-by: Jack Wang <jack_wang@usish.com>=0A=
+Signed-off-by: Lindar Liu <lindar_liu@usish.com>=0A=
+Tested-by: Chuck Tuffli <Chuck_Tuffli@pmc-sierra.com>=0A=
+=0A=
+---=0A=
+ sas_expander.c |    9 ++++++---=0A=
+ 1 files changed, 6 insertions(+), 3 deletions(-)=0A=
+=0A=
+diff --git a/sas_expander.c b/sas_expander.c=0A=
+index d1d86a6..f282234 100644=0A=
+--- a/sas_expander.c=0A=
++++ b/sas_expander.c=0A=
+@@ -175,10 +175,10 @@ static void sas_set_ex_phy(struct domain_device =
+*dev, int phy_id,=0A=
+ 	switch (resp->result) {=0A=
+ 	case SMP_RESP_PHY_VACANT:=0A=
+ 		phy->phy_state =3D PHY_VACANT;=0A=
+-		return;=0A=
++		break;=0A=
+ 	default:=0A=
+ 		phy->phy_state =3D PHY_NOT_PRESENT;=0A=
+-		return;=0A=
++		break;=0A=
+ 	case SMP_RESP_FUNC_ACC:=0A=
+ 		phy->phy_state =3D PHY_EMPTY; /* do not know yet */=0A=
+ 		break;=0A=
+@@ -209,7 +209,10 @@ static void sas_set_ex_phy(struct domain_device =
+*dev, int phy_id,=0A=
+ 	phy->phy->negotiated_linkrate =3D phy->linkrate;=0A=
+ =0A=
+ 	if (!rediscover)=0A=
+-		sas_phy_add(phy->phy);=0A=
++		if (sas_phy_add(phy->phy)) {=0A=
++			sas_phy_free(phy->phy);=0A=
++			return;=0A=
++		}=0A=
+ =0A=
+ 	SAS_DPRINTK("ex %016llx phy%02d:%c attached: %016llx\n",=0A=
+ 		    SAS_ADDR(dev->sas_addr), phy->phy_id,=0A=
+-- =0A=
+1.7.2.3.msysgit.0=0A=
+=0A=
+
+------=_NextPart_000_0000_01CB6570.5737D350--
 
