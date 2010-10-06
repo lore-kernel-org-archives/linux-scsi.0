@@ -1,15 +1,15 @@
 From: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 Subject: be2iscsi: Fixes
-Date: Wed, 6 Oct 2010 23:38:11 +0530
-Message-ID: <20101006180811.GA25689@emulex.com>
+Date: Wed, 6 Oct 2010 23:44:06 +0530
+Message-ID: <20101006181406.GA25721@emulex.com>
 Reply-To: Jayamohan Kallickal <jayamohan.kallickal@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:45158 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:45164 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759526Ab0JFSOx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2010 14:14:53 -0400
+	with ESMTP id S1759526Ab0JFSPc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2010 14:15:32 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
