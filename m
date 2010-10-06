@@ -1,74 +1,73 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC v2 00/21] TCM Core and TCM_Loop patches for v2.6.37
-Date: Tue, 05 Oct 2010 21:46:45 -0700
-Message-ID: <1286340405.5685.93.camel@haakon2.linux-iscsi.org>
-References: <1285195702-11421-1-git-send-email-nab@linux-iscsi.org>
-	 <20101006111621O.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [RFC v2 06/21] tcm: Add fabric and subsystem transport engine
+	core
+Date: Tue, 05 Oct 2010 21:54:47 -0700
+Message-ID: <1286340887.5685.102.camel@haakon2.linux-iscsi.org>
+References: <1285195763-11535-1-git-send-email-nab@linux-iscsi.org>
+	 <20101006113150S.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp108.sbc.mail.mud.yahoo.com ([68.142.198.106]:41338 "HELO
-	smtp108.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753019Ab0JFEv0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2010 00:51:26 -0400
-In-Reply-To: <20101006111621O.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101006113150S.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-kernel-owner@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com
+List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2010-10-06 at 11:21 +0900, FUJITA Tomonori wrote:
-> On Wed, 22 Sep 2010 15:48:22 -0700
+On Wed, 2010-10-06 at 11:36 +0900, FUJITA Tomonori wrote:
+> On Wed, 22 Sep 2010 15:49:23 -0700
 > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 > 
-> >  drivers/Kconfig                                |    2 +
-> >  drivers/Makefile                               |    1 +
-> >  drivers/target/Kbuild                          |   30 +
-> >  drivers/target/Kconfig                         |   36 +
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > The patch adds core generic target engine functionality including processing of struct se_cmd
+> > generation of N struct se_task, control CDB emulation, sense data, memory allocation, and
+> > and mapping from fabric module allocated memory using linked list struct scatterlist
+> > style memory based on the limitiations of the underlying TCM HBA and Device backstores.
+> > 
+> > The TCM layer sits is above Linux/SCSI, Linux/BLOCK and Linux/VFS subsystems, and
+> > communicates with these subsystems (and local RAMDISK plugins) using an API of function
+> > pointers in se_subsystem_api_t.  It provides processing capabilties and emulation for SCSI
+> > logic and CDBs in a generic manner to storage object LUNs provided from Linux storage
+> > subsystems backend storage devices.
+> > 
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  drivers/target/target_core_scdb.c      |  158 +
+> >  drivers/target/target_core_scdb.h      |   15 +
+> >  drivers/target/target_core_transport.c | 8860 ++++++++++++++++++++++++++++++++
+> >  include/target/target_core_transport.h |  570 ++
+> >  4 files changed, 9603 insertions(+), 0 deletions(-)
+> >  create mode 100644 drivers/target/target_core_scdb.c
+> >  create mode 100644 drivers/target/target_core_scdb.h
+> >  create mode 100644 drivers/target/target_core_transport.c
+> >  create mode 100644 include/target/target_core_transport.h
 > 
-> Why do we need a new place for the target stuff? This could be used
-> for non scsi protocl?
+> Can a driver cleanly overwrite cmd->transport_emulate_cdb? ibmvscsi
+> target driver needs to the specific responses for INQUIRY and
+> REPORT_LUNS.
 > 
 
-Yes, I have envisioned the princaple pieces of TCM/ConfigFS design being
-very much SCSI fabric independent from the start of v3.0 development,
-and I think the v4.0 virtual HBA/DEV abstraction now present in
-target_core_configfs.c and fabric module independent control plane in
-target_core_fabric_configfs.c does demonstrate this design feature.
+Hmmmmmm..  Currently the optional cmd->transport_emulate_cdb()
+assignment is done from TCM internal code for things like PR and ALUA
+CDB emulation, but I cannot see a reason why something similar could not
+be exported out into TCM fabric module code with a bit of work.
 
-Of course doing 'SCSI-less' target mode this would still involve some
-work to target_core_transport.c to add ATA specific
-emulation/passthrough and disable others for the default SPC-3 emulation
-logic currently in place.  However, I do believe the TCM subsystem
-plugin API in target_core_transport.h for pSCSI, iBLOCK, FILEIO, etc is
-already more or less SCSI fabric independent and adding a libata
-subsystem plugin (eg: with it's own set of TCM fabric modules) minus
-current libata-scsi.c glue code would be possible if the libata folks
-would like to entertain that discussion..
+> I guess that the driver can ignore the response buffer from tcm and
+> create the own but it would be nice if the driver can do cleanly.
+> --
 
-> We had the similar discussion when I put stgt to mainline but we
-> concluded that under drivers/scsi is the best place.
-> 
-> I don't like to put ibmvscsi driver under something like
-> drivers/target/tcm_ibmvscsit because ibmvscsi needs to include some
-> files under drivers/scsi/ibmvscsi/. It's more reasonable to put the
-> driver there.
-> 
-> Can we change the name, TCM (Target Core Mod), to something more
-> informative? I think that "Core Mod" is really pointless.
-> 
-> This will be the mainline scsi target feature so why can't we name
-> the files and modules in more appropriate way?
+<nod>, makes perfect sense to me..
 
-Honestly, I tend not to care very much about naming and things, but that
-said I would really hate to have to rename actual TCM code at this point
-for .37 (other than say directory location/layout and file names) while
-the drivers/target/lio-target -> iscsi_proto.h conversion is still on
-our TODO list.
+Also just FYI, hch has been prodding me to unify the current per
+subsystem backstore logic for [iblock,fd,rd,stgt]_emulate_scsi_cdb() and
+make any specific CDB emulation that requires non generic code use a CDB
+specific struct se_subsystem_api function pointer.  I will be looking at
+doing this in the next days, and I will see what what can be done for an
+patch w/ example case for TCM_Loop to allow CDB context emulation to be
+done via the TCM fabric module struct target_core_fabric_ops API.
 
-Best,
+Thanks Tomo-san!
 
 --nab
-
-
