@@ -1,123 +1,51 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 06/15] qla4xxx: Do not wait for the outstanding commands
- to complete
-Date: Thu, 07 Oct 2010 21:46:28 -0500
-Message-ID: <4CAE8604.1020702@cs.wisc.edu>
-References: <5E4F49720D0BAD499EE1F01232234BA87129406789@AVEXMB1.qlogic.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] SCSI tape: add MTWEOFI to write filemarks without
+ flushing drive buffer
+Date: Thu, 07 Oct 2010 17:54:47 -0400
+Message-ID: <1286488487.23573.1.camel@mulgrave.site>
+References: <alpine.LNX.2.00.1008291828080.8430@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060806040501080001090307"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43590 "EHLO sabe.cs.wisc.edu"
+Received: from cantor.suse.de ([195.135.220.2]:36708 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751042Ab0JHCkN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 7 Oct 2010 22:40:13 -0400
-In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA87129406789@AVEXMB1.qlogic.org>
+	id S1751042Ab0JHFBx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Oct 2010 01:01:53 -0400
+In-Reply-To: <alpine.LNX.2.00.1008291828080.8430@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Nilesh Javali <nilesh.javali@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------060806040501080001090307
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Sun, 2010-08-29 at 18:45 +0300, Kai Makisara wrote:
+> This patch adds a new MTIOCTOP operation MTWEOFI that writes filemarks with
+> immediate bit set. This means that the drive does not flush its buffer and the
+> next file can be started immediately. This speeds up writing in applications
+> that have to write multiple small files.
 
-On 10/07/2010 12:49 AM, Vikas Chaudhary wrote:
-> From: Nilesh Javali<nilesh.javali@qlogic.com>
->
-> Do not wait for the outstanding commands to complete in case
-> of firmware hang.
->
-> Signed-off-by: Nilesh Javali<nilesh.javali@qlogic.com>
-> Signed-off-by: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
-> Signed-off-by: Ravi Anand<ravi.anand@qlogic.com>
-> ---
->   drivers/scsi/qla4xxx/ql4_os.c |    6 ++++--
->   1 files changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-> index 56962e5..a6455fb 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -1102,7 +1102,8 @@ static int qla4xxx_recover_adapter(struct scsi_qla_host *ha)
->   		    ha->host_no, __func__));
->   		status = ha->isp_ops->reset_firmware(ha);
->   		if (status == QLA_SUCCESS) {
-> -			qla4xxx_cmd_wait(ha);
-> +			if (!test_bit(AF_FW_RECOVERY,&ha->flags))
-> +				qla4xxx_cmd_wait(ha);
->   			ha->isp_ops->disable_intrs(ha);
->   			qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
->   			qla4xxx_abort_active_cmds(ha, DID_RESET<<  16);
-> @@ -1119,7 +1120,8 @@ static int qla4xxx_recover_adapter(struct scsi_qla_host *ha)
->   	 * or if stop_firmware fails for ISP-82xx.
->   	 * This is the default case for ISP-4xxx */
->   	if (!is_qla8022(ha) || reset_chip) {
-> -		qla4xxx_cmd_wait(ha);
-> +		if (!test_bit(AF_FW_RECOVERY,&ha->flags))
-> +			qla4xxx_cmd_wait(ha);
->   		qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
->   		qla4xxx_abort_active_cmds(ha, DID_RESET<<  16);
->   		DEBUG2(ql4_printk(KERN_INFO, ha,
+This patch is rejecting massively ... could you respin it against
+scsi-misc, please?
 
-If we go from qla4xxx_eh_host_reset->qla4xxx_recover_adapter and you do 
-not wait, is is possible for the driver to be accessing scsi commands 
-after qla4xxx_eh_host_reset returns? If so I think there is a problem 
-where the scsi eh will fail or retry the cmd so the memory for the scsi 
-command could be reallocated/freed.
+jejb@mulgrave:~/git/scsi-misc-2.6> patch -p1 < ~/tmp.mail
+patching file drivers/scsi/st.c
+Hunk #1 FAILED at 9.
+Hunk #2 succeeded at 17 with fuzz 2.
+Hunk #3 FAILED at 2696.
+Hunk #4 FAILED at 2883.
+Hunk #5 FAILED at 2901.
+4 out of 5 hunks FAILED -- saving rejects to file drivers/scsi/st.c.rej
+patching file include/linux/mtio.h
+Hunk #1 FAILED at 63.
+1 out of 1 hunk FAILED -- saving rejects to file include/linux/mtio.h.rej
+patching file Documentation/scsi/st.txt
+Hunk #1 succeeded at 2 with fuzz 2.
+Hunk #2 FAILED at 85.
+Hunk #3 FAILED at 301.
+2 out of 3 hunks FAILED -- saving rejects to file Documentation/scsi/st.txt.rej
 
-On a related note, has qla4xxx_eh_host_reset ever returned SUCCESS? I 
-think there is a problem in qla4xxx_cmd_wait when the scsi eh is 
-running. At that time blk_finish_request->blk_queue_end_tag is not going 
-to be run, because if the driver were to call scsi_done the block layer 
-would do blk_complete_request and the blk_mark_rq_complete would fail 
-(this is because the scsi/block eh timeout could has already marked it 
-complete).
+Thanks,
 
-I think you need the attached patch.
+James
 
 
---------------060806040501080001090307
-Content-Type: text/plain;
- name="qla4xxx-fix-cmd-wait-cmd-check.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="qla4xxx-fix-cmd-wait-cmd-check.patch"
-
-qla4xxx: Fix cmd check in qla4xxx_cmd_wait
-
-If the command has timedout then the block layer has called
-blk_mark_rq_complete. If qla4xxx_cmd_wait is then called
-from qla4xxx_eh_host_reset, we will always fail, because if
-the driver calls scsi_done then the the block layer will fail
-at blk_complete_request's blk_mark_rq_complete call instead of
-calling the normal completion path including the function,
-blk_queue_end_tag, which releases the tag.
-
-Patch is not tested.
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-
-
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 370d40f..97f6d68 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -885,7 +885,13 @@ static int qla4xxx_cmd_wait(struct scsi_qla_host *ha)
- 		/* Find a command that hasn't completed. */
- 		for (index = 0; index < ha->host->can_queue; index++) {
- 			cmd = scsi_host_find_tag(ha->host, index);
--			if (cmd != NULL)
-+			/*
-+			 * We cannot just check if the index is valid,
-+			 * becase if we are run from the scsi eh, then
-+			 * the scsi/block layer is going to prevent
-+			 * the tag from being released.
-+			 */ 
-+			if (cmd != NULL && CMD_SP(cmd))
- 				break;
- 		}
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-
---------------060806040501080001090307--
