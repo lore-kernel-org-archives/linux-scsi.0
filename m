@@ -1,41 +1,37 @@
-From: iscsi learner <iscsilearner@gmail.com>
-Subject: linux-scsi on a iSCSI target mode PCIe HBA
-Date: Thu, 7 Oct 2010 11:02:00 -0700
-Message-ID: <AANLkTin0ssMxhgoYssxK3z0qYhZ0Rhjay9VPz-L9piOm@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 15341] Load goes up very high when we traverse the large tree
+Date: Thu, 7 Oct 2010 19:58:15 GMT
+Message-ID: <201010071958.o97JwF6l027760@demeter2.kernel.org>
+References: <bug-15341-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:35831 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751180Ab0JGSCC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2010 14:02:02 -0400
-Received: by fxm4 with SMTP id 4so93100fxm.19
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2010 11:02:00 -0700 (PDT)
+Received: from [140.211.167.42] ([140.211.167.42]:49480 "EHLO
+	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1754684Ab0JGT6R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2010 15:58:17 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o97JwGOC027761
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 7 Oct 2010 19:58:17 GMT
+In-Reply-To: <bug-15341-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hi
-I have a target mode iSCSI (and linux 2.6.27)   running on a PCIe HBA.
-  This target mode HBA  will completely offload  iSCSI
-from  storage server to  itself. Storage server will receive only SCSI
-CDB (from this PCIe target HBA) and pass it to attached disk backend.
-
-Over the PCIe interface only the  SCSI  command-response/data is  exchanged.
-
-Experts,   please clear my doubt  about the work/design   to make it work-
-
-I think I should  register myself as  SCSI Mid Layer LLD and  then all
-the  SCSI command/data  received by target-mode-iSCSI-stack will be
-available in  queuecommand interface of  SCSI Mid layer.  Is that the
-right assumption and the  best approach?
-
-In my case the LLD  will then pass that SCSI command/data across the
-PCIe to storage server.   To be more clear this LLD will be running
-ON a PCIe HBA
-
-The target mode iSCSI stack can be any one of the popular linux iSCSI
-target stacks.
+https://bugzilla.kernel.org/show_bug.cgi?id=15341
 
 
-Thanks much in advance
+Florian Mickler <florian@mickler.org> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|NEW                         |NEEDINFO
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
