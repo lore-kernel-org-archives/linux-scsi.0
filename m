@@ -1,167 +1,85 @@
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 12/15] qla4xxx: update AER support for ISP82XX
-Date: Wed, 6 Oct 2010 22:50:56 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA8712940678F@AVEXMB1.qlogic.org>
+Subject: [PATCH 13/15] qla4xxx: remove unwanted check for bad spd
+Date: Wed, 6 Oct 2010 22:51:09 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA87129406790@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:39119 "EHLO
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:39130 "EHLO
 	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754396Ab0JGFu7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2010 01:50:59 -0400
+	with ESMTP id S1754396Ab0JGFvL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2010 01:51:11 -0400
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
-
-* Cleanup qla4xxx_pci_mmio_enabled():
-  don't want to return PCI_ERS_NEED_RESET if firmware hung.
-  IDC will take care of it.
-* Request irq after initialize_adapter() in qla82xx_error_recovery().
-* Return all active commands from qla4xxx_pci_error_detected().
-* Cleanup ql4_def.h
+Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Saurav Kashyap <saurav.kashyap@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
 
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Signed-off-by: Saurav Kashyap <saurav.kashyap@qlogic.com>
 Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_def.h |   19 +----------------
- drivers/scsi/qla4xxx/ql4_os.c  |   45 ++++++++++++++++++++++++---------------
- 2 files changed, 29 insertions(+), 35 deletions(-)
+ drivers/scsi/qla4xxx/ql4_nx.c |   17 -----------------
+ drivers/scsi/qla4xxx/ql4_nx.h |    3 ---
+ 2 files changed, 0 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index f595ab1..0f3bfc3 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -24,6 +24,7 @@
- #include <linux/delay.h>
- #include <linux/interrupt.h>
- #include <linux/mutex.h>
-+#include <linux/aer.h>
- 
- #include <net/tcp.h>
- #include <scsi/scsi.h>
-@@ -36,24 +37,6 @@
- #include "ql4_dbg.h"
- #include "ql4_nx.h"
- 
--#if defined(CONFIG_PCIEAER)
--#include <linux/aer.h>
--#else
--/* AER releated */
--static inline int pci_enable_pcie_error_reporting(struct pci_dev *dev)
--{
--	return -EINVAL;
--}
--static inline int pci_disable_pcie_error_reporting(struct pci_dev *dev)
--{
--	return -EINVAL;
--}
--static inline int pci_cleanup_aer_uncorrect_error_status(struct pci_dev *dev)
--{
--	return -EINVAL;
--}
--#endif
--
- #ifndef PCI_DEVICE_ID_QLOGIC_ISP4010
- #define PCI_DEVICE_ID_QLOGIC_ISP4010	0x4010
- #endif
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 779745f..4b6cdb6 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -2252,6 +2252,8 @@ qla4xxx_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
- 		qla4xxx_mailbox_premature_completion(ha);
- 		qla4xxx_free_irqs(ha);
- 		pci_disable_device(pdev);
-+		/* Return back all IOs */
-+		qla4xxx_abort_active_cmds(ha, DID_RESET << 16);
- 		return PCI_ERS_RESULT_NEED_RESET;
- 	case pci_channel_io_perm_failure:
- 		set_bit(AF_EEH_BUSY, &ha->flags);
-@@ -2275,17 +2277,13 @@ qla4xxx_pci_mmio_enabled(struct pci_dev *pdev)
- 	if (!is_aer_supported(ha))
- 		return PCI_ERS_RESULT_NONE;
- 
--	if (test_bit(AF_FW_RECOVERY, &ha->flags)) {
--		ql4_printk(KERN_WARNING, ha, "scsi%ld: %s: firmware hang  -- "
--		    "mmio_enabled\n", ha->host_no, __func__);
--		return PCI_ERS_RESULT_NEED_RESET;
--	} else
--		return PCI_ERS_RESULT_RECOVERED;
-+	return PCI_ERS_RESULT_RECOVERED;
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 66946d8..2dd4d4c 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -1080,21 +1080,6 @@ qla4_8xxx_pinit_from_rom(struct scsi_qla_host *ha, int verbose)
+ 	return 0;
  }
  
--uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
-+static uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
- {
- 	uint32_t rval = QLA_ERROR;
-+	uint32_t ret = 0;
- 	int fn;
- 	struct pci_dev *other_pdev = NULL;
- 
-@@ -2297,7 +2295,6 @@ uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
- 		clear_bit(AF_ONLINE, &ha->flags);
- 		qla4xxx_mark_all_devices_missing(ha);
- 		qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
--		qla4xxx_abort_active_cmds(ha, DID_RESET << 16);
- 	}
- 
- 	fn = PCI_FUNC(ha->pdev->devfn);
-@@ -2360,7 +2357,16 @@ uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
- 			/* Clear driver state register */
- 			qla4_8xxx_wr_32(ha, QLA82XX_CRB_DRV_STATE, 0);
- 			qla4_8xxx_set_drv_active(ha);
--			ha->isp_ops->enable_intrs(ha);
-+			ret = qla4xxx_request_irqs(ha);
-+			if (ret) {
-+				ql4_printk(KERN_WARNING, ha, "Failed to "
-+				    "reserve interrupt %d already in use.\n",
-+				    ha->pdev->irq);
-+				rval = QLA_ERROR;
-+			} else {
-+				ha->isp_ops->enable_intrs(ha);
-+				rval = QLA_SUCCESS;
-+			}
- 		}
- 		qla4_8xxx_idc_unlock(ha);
- 	} else {
-@@ -2372,8 +2378,18 @@ uint32_t qla4_8xxx_error_recovery(struct scsi_qla_host *ha)
- 			clear_bit(AF_FW_RECOVERY, &ha->flags);
- 			rval = qla4xxx_initialize_adapter(ha,
- 			    PRESERVE_DDB_LIST);
--			if (rval == QLA_SUCCESS)
--				ha->isp_ops->enable_intrs(ha);
-+			if (rval == QLA_SUCCESS) {
-+				ret = qla4xxx_request_irqs(ha);
-+				if (ret) {
-+					ql4_printk(KERN_WARNING, ha, "Failed to"
-+					    " reserve interrupt %d already in"
-+					    " use.\n", ha->pdev->irq);
-+					rval = QLA_ERROR;
-+				} else {
-+					ha->isp_ops->enable_intrs(ha);
-+					rval = QLA_SUCCESS;
-+				}
-+			}
- 			qla4_8xxx_idc_lock(ha);
- 			qla4_8xxx_set_drv_active(ha);
- 			qla4_8xxx_idc_unlock(ha);
-@@ -2415,12 +2431,7 @@ qla4xxx_pci_slot_reset(struct pci_dev *pdev)
- 		goto exit_slot_reset;
- 	}
- 
--	ret = qla4xxx_request_irqs(ha);
--	if (ret) {
--		ql4_printk(KERN_WARNING, ha, "Failed to reserve interrupt %d"
--		    " already in use.\n", pdev->irq);
--		goto exit_slot_reset;
+-static int qla4_8xxx_check_for_bad_spd(struct scsi_qla_host *ha)
+-{
+-	u32 val = 0;
+-	val = qla4_8xxx_rd_32(ha, BOOT_LOADER_DIMM_STATUS) ;
+-	val &= QLA82XX_BOOT_LOADER_MN_ISSUE;
+-	if (val & QLA82XX_PEG_TUNE_MN_SPD_ZEROED) {
+-		printk("Memory DIMM SPD not programmed.  Assumed valid.\n");
+-		return 1;
+-	} else if (val) {
+-		printk("Memory DIMM type incorrect.  Info:%08X.\n", val);
+-		return 2;
 -	}
-+	ha->isp_ops->disable_intrs(ha);
+-	return 0;
+-}
+-
+ static int
+ qla4_8xxx_load_from_flash(struct scsi_qla_host *ha, uint32_t image_start)
+ {
+@@ -1379,8 +1364,6 @@ static int qla4_8xxx_cmdpeg_ready(struct scsi_qla_host *ha, int pegtune_val)
  
- 	if (is_qla8022(ha)) {
- 		if (qla4_8xxx_error_recovery(ha) == QLA_SUCCESS) {
+ 		} while (--retries);
+ 
+-		qla4_8xxx_check_for_bad_spd(ha);
+-
+ 		if (!retries) {
+ 			pegtune_val = qla4_8xxx_rd_32(ha,
+ 				QLA82XX_ROMUSB_GLB_PEGTUNE_DONE);
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.h b/drivers/scsi/qla4xxx/ql4_nx.h
+index 429df5e..a0f7782 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.h
++++ b/drivers/scsi/qla4xxx/ql4_nx.h
+@@ -24,7 +24,6 @@
+ 
+ #define CRB_CMDPEG_STATE		QLA82XX_REG(0x50)
+ #define CRB_RCVPEG_STATE		QLA82XX_REG(0x13c)
+-#define BOOT_LOADER_DIMM_STATUS		QLA82XX_REG(0x54)
+ #define CRB_DMA_SHIFT			QLA82XX_REG(0xcc)
+ 
+ #define QLA82XX_HW_H0_CH_HUB_ADR	0x05
+@@ -529,8 +528,6 @@
+ # define QLA82XX_CAM_RAM_BASE	(QLA82XX_CRB_CAM + 0x02000)
+ # define QLA82XX_CAM_RAM(reg)	(QLA82XX_CAM_RAM_BASE + (reg))
+ 
+-#define QLA82XX_PEG_TUNE_MN_SPD_ZEROED	0x80000000
+-#define QLA82XX_BOOT_LOADER_MN_ISSUE	0xff00ffff
+ #define QLA82XX_PORT_MODE_ADDR		(QLA82XX_CAM_RAM(0x24))
+ #define QLA82XX_PEG_HALT_STATUS1	(QLA82XX_CAM_RAM(0xa8))
+ #define QLA82XX_PEG_HALT_STATUS2	(QLA82XX_CAM_RAM(0xac))
 -- 
 1.6.6
 
