@@ -1,50 +1,34 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] SCSI tape: add MTWEOFI to write filemarks without
- flushing drive buffer
-Date: Thu, 07 Oct 2010 17:54:47 -0400
-Message-ID: <1286488487.23573.1.camel@mulgrave.site>
-References: <alpine.LNX.2.00.1008291828080.8430@kai.makisara.local>
+Subject: Re: [PATCH 2/5] scsi: megaraid_sas - support devices update flag
+Date: Thu, 07 Oct 2010 17:35:47 -0500
+Message-ID: <1286490947.23573.3.camel@mulgrave.site>
+References: <AANLkTim3OKvhov1uCj5g6YgmOzR1rDogLmtJMTkbYq5V@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:36708 "EHLO mx1.suse.de"
+Received: from cantor.suse.de ([195.135.220.2]:36715 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751042Ab0JHFBx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Oct 2010 01:01:53 -0400
-In-Reply-To: <alpine.LNX.2.00.1008291828080.8430@kai.makisara.local>
+	id S1751153Ab0JHFCH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Oct 2010 01:02:07 -0400
+In-Reply-To: <AANLkTim3OKvhov1uCj5g6YgmOzR1rDogLmtJMTkbYq5V@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: bo yang <boyang1288@gmail.com>
+Cc: bo.yang@lsi.com, linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
 
-On Sun, 2010-08-29 at 18:45 +0300, Kai Makisara wrote:
-> This patch adds a new MTIOCTOP operation MTWEOFI that writes filemarks with
-> immediate bit set. This means that the drive does not flush its buffer and the
-> next file can be started immediately. This speeds up writing in applications
-> that have to write multiple small files.
+On Wed, 2010-09-22 at 22:50 -0400, bo yang wrote:
+> Driver added the Device update flag to tell LSI application driver
+> will do the device Update.  LSI MegaRAID SAS application will check
+> this flag to decide if it is need to update the Device or not.
 
-This patch is rejecting massively ... could you respin it against
-scsi-misc, please?
+Well, the good news is I've got the Online Controller reset update. The
+bad news is that this patch now fails to apply: looks like an attachment
+problem again:
 
-jejb@mulgrave:~/git/scsi-misc-2.6> patch -p1 < ~/tmp.mail
-patching file drivers/scsi/st.c
-Hunk #1 FAILED at 9.
-Hunk #2 succeeded at 17 with fuzz 2.
-Hunk #3 FAILED at 2696.
-Hunk #4 FAILED at 2883.
-Hunk #5 FAILED at 2901.
-4 out of 5 hunks FAILED -- saving rejects to file drivers/scsi/st.c.rej
-patching file include/linux/mtio.h
-Hunk #1 FAILED at 63.
-1 out of 1 hunk FAILED -- saving rejects to file include/linux/mtio.h.rej
-patching file Documentation/scsi/st.txt
-Hunk #1 succeeded at 2 with fuzz 2.
-Hunk #2 FAILED at 85.
-Hunk #3 FAILED at 301.
-2 out of 3 hunks FAILED -- saving rejects to file Documentation/scsi/st.txt.rej
-
-Thanks,
+Applying: megaraid_sas: support devices update flag
+fatal: corrupt patch at line 70
+Patch failed at 0001 megaraid_sas: support devices update flag
 
 James
 
