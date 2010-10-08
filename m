@@ -1,92 +1,69 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 2/5] scsi: megaraid_sas - support devices update flag
-Date: Fri, 08 Oct 2010 18:02:40 +0200
-Message-ID: <4CAF40A0.5020506@redhat.com>
-References: <AANLkTim3OKvhov1uCj5g6YgmOzR1rDogLmtJMTkbYq5V@mail.gmail.com> <1286490947.23573.3.camel@mulgrave.site> <4B6A08C587958942AA3002690DD4F8C30100F54C90@cosmail02.lsi.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+ MegaRAID SAS drive
+Date: Fri, 08 Oct 2010 11:39:14 -0500
+Message-ID: <1286555954.2985.110.camel@mulgrave.site>
+References: <AANLkTin53S+C_+QzF-drs5BUAx=k7YeiHrTaQGTFSc_a@mail.gmail.com>
+	 <4CAF3E04.1050304@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30100F54C90@cosmail02.lsi.com>
+In-Reply-To: <4CAF3E04.1050304@redhat.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: bo yang <boyang1288@gmail.com>, linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, bo.yang@lsi.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/08/2010 03:47 PM, Yang, Bo wrote:
-> James,
->
-> Thanks for getting the online controller reset in.  I downloaded patc=
-h 2/5 from  http://marc.info/?l=3Dlinux-scsi&m=3D128521127203199&w=3D2 =
-and I can apply it without errors.
->
-> Can you try it again?  otherwise I need to re-attach it.
->  =20
-I've tried it (http://marc.info/?l=3Dlinux-scsi&m=3D128521127203199&w=3D=
-2) and it is broken.
-If you look at the end of the patche there should be 3 lines of the ori=
-ginal code after=20
-the last + sign.
+On Fri, 2010-10-08 at 17:51 +0200, Tomas Henzl wrote:
+> On 09/23/2010 04:36 AM, bo yang wrote:
+> > This patch is too big.  I am using attachment to submit.  Please
+> > use attached file to apply.  Also let me know if it can't be accepted.
+> >
+> > To add the Online controller reset support, driver need to do:
+> > a). reset the controller chips -- Xscale and Gen2 which will change
+> > the function calls and add the reset function related to this two
+> > chips.
+> > b). during the reset, driver will store the pending cmds which not
+> > returned by FW to driver's pending queue.  Driver will re-issue those
+> > pending cmds again to FW after the OCR finished.
+> > c). In driver's timeout routine, driver will report to OS as reset.
+> > Also driver's queue routine will block the cmds until the OCR
+> > finished.
+> > d). in Driver's ISR routine, if driver get the FW state as state
+> > change, FW in Failure status and FW support online controller
+> > reset (OCR), driver will start to do the controller reset.
+> > e). In driver's IOCTL routine, the application cmds will wait for the
+> > OCR to finish, then issue the cmds to FW.
+> >
+> > Signed-off-by Bo Yang<bo.yang@lsi.com>
+> >
+> > ---
+> >  drivers/scsi/megaraid/megaraid_sas.c |  756 ++++++++++++++++++++++++++++++++---
+> >  drivers/scsi/megaraid/megaraid_sas.h |   88 +++-
+> >  2 files changed, 787 insertions(+), 57 deletions(-)
+> Hi Bo,
+> in the workqueue function you sleep for 30s,
+> it's scheduled here - schedule_work(&instance->work_init);
+> 
+> +process_fw_state_change_wq(struct work_struct *work)
+> +{
+> ...
+> +		/*waitting for about 20 second before start the second init*/
+> +		for (wait = 0; wait < 30; wait++) {
+> +			msleep(1000);
+> +		}
 
-tomash
+this lot should be ssleep(20) if you want a 20 sec sleep.
 
-Broken:
-+	driver_remove_file(&megasas_pci_driver.driver,
- 			   &driver_attr_release_date);
- 	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+> 
+> - this is not a good practice to sleep for a so long time I think
+> - you should use in your exit function some synchronization 
+>   for example 'cancel_work_sync', without that if someone rmmods your 
+>   module, it could then lead to a memory corruption
 
-Works for me:
-+	driver_remove_file(&megasas_pci_driver.driver,
- 			   &driver_attr_release_date);
- 	driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
- <- this line is missing in your patch
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
+Actually flush_scheduled_work() should be fine ... it will force the
+module removal to wait for completion ... cancellation can be error
+prone, so just forcing the wait sounds easier.
 
-
-
-> Thanks,
->
-> Bo Yang   =20
->
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@suse.de]=20
-> Sent: Thursday, October 07, 2010 6:36 PM
-> To: bo yang
-> Cc: Yang, Bo; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel=
-@vger.kernel.org
-> Subject: Re: [PATCH 2/5] scsi: megaraid_sas - support devices update =
-flag
->
-> On Wed, 2010-09-22 at 22:50 -0400, bo yang wrote:
->  =20
->> Driver added the Device update flag to tell LSI application driver
->> will do the device Update.  LSI MegaRAID SAS application will check
->> this flag to decide if it is need to update the Device or not.
->>    =20
-> Well, the good news is I've got the Online Controller reset update. T=
-he
-> bad news is that this patch now fails to apply: looks like an attachm=
-ent
-> problem again:
->
-> Applying: megaraid_sas: support devices update flag
-> fatal: corrupt patch at line 70
-> Patch failed at 0001 megaraid_sas: support devices update flag
->
-> James
->
->
-> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
-=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
-=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
-=EF=BF=BD=EF=BF=BD"=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD,j=07=EF=
-=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD=
-z=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=BF=BD=
-=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=BD=EF=
-=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ+=EF=BF=
-=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD!tml=3D
+James
