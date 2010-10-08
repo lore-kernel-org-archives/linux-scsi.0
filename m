@@ -1,44 +1,29 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] gdth: integer overflow in ioctl
-Date: Fri, 8 Oct 2010 09:03:07 +0200
-Message-ID: <20101008070307.GF11681@bicker>
+From: Oliver Neukum <oneukum@suse.de>
+Subject: [PATCH 0/2]error handling in sd_suspend()
+Date: Fri, 8 Oct 2010 15:31:25 +0200
+Message-ID: <201010081531.25724.oneukum@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Achim Leubner <achim_leubner@adaptec.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:51854 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753683Ab0JHNbd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Oct 2010 09:31:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, hare@suse.de, Alan Stern <stern@rowland.harvard.edu>, teheo@suse.de, linux-scsi@vger.kernel.org
 
-gdth_ioctl_alloc() takes the size variable as an int.
-copy_from_user() takes the size variable as an unsigned long.
-gen.data_len and gen.sense_len are unsigned longs.
-On x86_64 longs are 64 bit and ints are 32 bit.
+Hi,
 
-We could pass in a very large number and the allocation would truncate
-the size to 32 bits and allocate a small buffer.  Then when we do the
-copy_from_user(), it would result in a memory corruption.
+I've encountered a problem when sd_suspend() races disconnect
+handling of SATA. This race can lead to needlessly aborted suspensions.
+To avoid this problem. I suggest evaluating the error returns from the lower
+layers, to tell us whether a problem is transient or totally unrecoverable.
+If a transient problem occurs we should not go to sleep and in some
+cases suggest that the upper layer retry. An unrecoverable error, such
+as a device going away can be ignored.
 
-CC: stable@kernel.org
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index b860d65..4cf7ffa 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -4175,6 +4175,14 @@ static int ioc_general(void __user *arg, char *cmnd)
-     ha = gdth_find_ha(gen.ionode);
-     if (!ha)
-         return -EFAULT;
-+
-+    if (gen.data_len > INT_MAX)
-+        return -EINVAL;
-+    if (gen.sense_len > INT_MAX)
-+        return -EINVAL;
-+    if (gen.data_len + gen.sense_len > INT_MAX)
-+        return -EINVAL;
-+
-     if (gen.data_len + gen.sense_len != 0) {
-         if (!(buf = gdth_ioctl_alloc(ha, gen.data_len + gen.sense_len,
-                                      FALSE, &paddr)))
+	Regards
+		Oliver
