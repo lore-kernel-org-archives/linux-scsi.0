@@ -1,35 +1,37 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 2/5] scsi: megaraid_sas - support devices update flag
-Date: Thu, 07 Oct 2010 17:35:47 -0500
-Message-ID: <1286490947.23573.3.camel@mulgrave.site>
-References: <AANLkTim3OKvhov1uCj5g6YgmOzR1rDogLmtJMTkbYq5V@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/2] block: Ensure physical block size is unsigned int
+Date: Fri, 08 Oct 2010 01:15:57 -0400
+Message-ID: <yq1hbgxs1rm.fsf@sermon.lab.mkp.net>
+References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
+	<1285605664-27027-2-git-send-email-martin.petersen@oracle.com>
+	<20100927174052.GA14180@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:36715 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751153Ab0JHFCH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Oct 2010 01:02:07 -0400
-In-Reply-To: <AANLkTim3OKvhov1uCj5g6YgmOzR1rDogLmtJMTkbYq5V@mail.gmail.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:28158 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628Ab0JHFSM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Oct 2010 01:18:12 -0400
+In-Reply-To: <20100927174052.GA14180@redhat.com> (Mike Snitzer's message of
+	"Mon, 27 Sep 2010 13:40:52 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bo yang <boyang1288@gmail.com>
-Cc: bo.yang@lsi.com, linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
+To: jaxboe@fusionio.com, James.Bottomley@hansenpartnership.com
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org
 
-On Wed, 2010-09-22 at 22:50 -0400, bo yang wrote:
-> Driver added the Device update flag to tell LSI application driver
-> will do the device Update.  LSI MegaRAID SAS application will check
-> this flag to decide if it is need to update the Device or not.
+>>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
 
-Well, the good news is I've got the Online Controller reset update. The
-bad news is that this patch now fails to apply: looks like an attachment
-problem again:
+>> Physical block size was declared unsigned int to accomodate the
+>> maximum size reported by READ CAPACITY(16).  Make sure we use the
+>> right type in the related functions.
+>> 
+>> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-Applying: megaraid_sas: support devices update flag
-fatal: corrupt patch at line 70
-Patch failed at 0001 megaraid_sas: support devices update flag
+Mike> Acked-by: Mike Snitzer <snitzer@redhat.com>
 
-James
+Jens, ping on the block fix.
 
+James, ping on the sd ditto.
 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
