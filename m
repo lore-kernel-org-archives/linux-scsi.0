@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 12/13] hpsa: use usleep_range not msleep for small sleeps
-Date: Fri, 08 Oct 2010 15:07:03 -0500
-Message-ID: <20101008200703.24279.96566.stgit@beardog.cce.hp.com>
+Subject: [PATCH 09/13] cciss: use usleep_range not msleep for small sleeps
+Date: Fri, 08 Oct 2010 15:06:47 -0500
+Message-ID: <20101008200647.24279.76464.stgit@beardog.cce.hp.com>
 References: <20101008200453.24279.6638.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -17,17 +17,17 @@ From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    2 +-
+ drivers/block/cciss.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a68dba7..c36427d 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3594,7 +3594,7 @@ static void __devinit hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
- 		if (!doorbell_value & CFGTBL_ChangeReq)
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 08cbee8..7d2959c 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -3769,7 +3769,7 @@ static void __devinit cciss_wait_for_mode_change_ack(ctlr_info_t *h)
+ 	for (i = 0; i < MAX_CONFIG_WAIT; i++) {
+ 		if (!(readl(h->vaddr + SA5_DOORBELL) & CFGTBL_ChangeReq))
  			break;
- 		/* delay and try again */
 -		msleep(10);
 +		usleep_range(10000, 20000);
  	}
