@@ -1,8 +1,8 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 10/13] hpsa: take the adapter lock in
-	hpsa_wait_for_mode_change_ack
-Date: Fri, 08 Oct 2010 15:06:52 -0500
-Message-ID: <20101008200652.24279.82954.stgit@beardog.cce.hp.com>
+Subject: [PATCH 13/13] hpsa: defend against zero sized buffers in passthru
+	ioctls
+Date: Fri, 08 Oct 2010 15:07:08 -0500
+Message-ID: <20101008200708.24279.8723.stgit@beardog.cce.hp.com>
 References: <20101008200453.24279.6638.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -16,53 +16,84 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Need to take the lock while accessing the register to check to
-see if config table changes have taken effect.
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
+ drivers/scsi/hpsa.c |   36 ++++++++++++++++--------------------
+ 1 files changed, 16 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index d618432..ffc5f74 100644
+index c36427d..cba5bf4 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3576,13 +3576,18 @@ static inline void hpsa_p600_dma_prefetch_quirk(struct ctlr_info *h)
- static void __devinit hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
- {
- 	int i;
-+	u32 doorbell_value;
-+	unsigned long flags;
- 
- 	/* under certain very rare conditions, this can take awhile.
- 	 * (e.g.: hot replace a failed 144GB drive in a RAID 5 set right
- 	 * as we enter this code.)
- 	 */
- 	for (i = 0; i < MAX_CONFIG_WAIT; i++) {
--		if (!(readl(h->vaddr + SA5_DOORBELL) & CFGTBL_ChangeReq))
-+		spin_lock_irqsave(&h->lock, flags);
-+		doorbell_value = readl(h->vaddr + SA5_DOORBELL);
-+		spin_unlock_irqrestore(&h->lock, flags);
-+		if (!doorbell_value & CFGTBL_ChangeReq)
- 			break;
- 		/* delay and try again */
- 		msleep(10);
-@@ -3754,6 +3759,8 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
- 	h->busy_initializing = 1;
- 	INIT_HLIST_HEAD(&h->cmpQ);
- 	INIT_HLIST_HEAD(&h->reqQ);
-+	spin_lock_init(&h->lock);
-+	spin_lock_init(&h->scan_lock);
- 	rc = hpsa_pci_init(h);
- 	if (rc != 0)
- 		goto clean1;
-@@ -3813,8 +3820,6 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+@@ -2458,15 +2458,17 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		buff = kmalloc(iocommand.buf_size, GFP_KERNEL);
+ 		if (buff == NULL)
+ 			return -EFAULT;
+-	}
+-	if (iocommand.Request.Type.Direction == XFER_WRITE) {
+-		/* Copy the data into the buffer we created */
+-		if (copy_from_user(buff, iocommand.buf, iocommand.buf_size)) {
+-			kfree(buff);
+-			return -EFAULT;
++		if (iocommand.Request.Type.Direction == XFER_WRITE) {
++			/* Copy the data into the buffer we created */
++			if (copy_from_user(buff, iocommand.buf,
++				iocommand.buf_size)) {
++				kfree(buff);
++				return -EFAULT;
++			}
++		} else {
++			memset(buff, 0, iocommand.buf_size);
+ 		}
+-	} else
+-		memset(buff, 0, iocommand.buf_size);
++	}
+ 	c = cmd_special_alloc(h);
+ 	if (c == NULL) {
+ 		kfree(buff);
+@@ -2512,8 +2514,8 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		cmd_special_free(h, c);
+ 		return -EFAULT;
  	}
- 	if (hpsa_allocate_sg_chain_blocks(h))
- 		goto clean4;
--	spin_lock_init(&h->lock);
--	spin_lock_init(&h->scan_lock);
- 	init_waitqueue_head(&h->scan_wait_queue);
- 	h->scan_finished = 1; /* no scan currently in progress */
- 
+-
+-	if (iocommand.Request.Type.Direction == XFER_READ) {
++	if (iocommand.Request.Type.Direction == XFER_READ &&
++		iocommand.buf_size > 0) {
+ 		/* Copy the data out of the buffer we created */
+ 		if (copy_to_user(iocommand.buf, buff, iocommand.buf_size)) {
+ 			kfree(buff);
+@@ -2606,14 +2608,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 	}
+ 	c->cmd_type = CMD_IOCTL_PEND;
+ 	c->Header.ReplyQueue = 0;
+-
+-	if (ioc->buf_size > 0) {
+-		c->Header.SGList = sg_used;
+-		c->Header.SGTotal = sg_used;
+-	} else {
+-		c->Header.SGList = 0;
+-		c->Header.SGTotal = 0;
+-	}
++	c->Header.SGList = c->Header.SGTotal = sg_used;
+ 	memcpy(&c->Header.LUN, &ioc->LUN_info, sizeof(c->Header.LUN));
+ 	c->Header.Tag.lower = c->busaddr;
+ 	memcpy(&c->Request, &ioc->Request, sizeof(c->Request));
+@@ -2630,7 +2625,8 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		}
+ 	}
+ 	hpsa_scsi_do_simple_cmd_core(h, c);
+-	hpsa_pci_unmap(h->pdev, c, sg_used, PCI_DMA_BIDIRECTIONAL);
++	if (sg_used)
++		hpsa_pci_unmap(h->pdev, c, sg_used, PCI_DMA_BIDIRECTIONAL);
+ 	check_ioctl_unit_attention(h, c);
+ 	/* Copy the error information out */
+ 	memcpy(&ioc->error_info, c->err_info, sizeof(ioc->error_info));
+@@ -2639,7 +2635,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		status = -EFAULT;
+ 		goto cleanup1;
+ 	}
+-	if (ioc->Request.Type.Direction == XFER_READ) {
++	if (ioc->Request.Type.Direction == XFER_READ && ioc->buf_size > 0) {
+ 		/* Copy the data out of the buffer we created */
+ 		BYTE __user *ptr = ioc->buf;
+ 		for (i = 0; i < sg_used; i++) {
