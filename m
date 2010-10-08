@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 01/13] cciss: remove controllers supported by hpsa
-Date: Fri, 08 Oct 2010 15:06:06 -0500
-Message-ID: <20101008200606.24279.37953.stgit@beardog.cce.hp.com>
+Subject: [PATCH 02/13] hpsa: fix board status waiting code
+Date: Fri, 08 Oct 2010 15:06:11 -0500
+Message-ID: <20101008200611.24279.34840.stgit@beardog.cce.hp.com>
 References: <20101008200453.24279.6638.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,86 +15,118 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-We would prefer not to have any overlap between the two drivers.
-Remove the cciss_allow_hpsa option, as it it is no longer needed.
+After a reset, we should first wait for the board to become "not ready",
+and then wait for it to become "ready", instead of immediately
+waiting for it to become "ready", and do this waiting *after*
+restoring PCI config space registers.  Also, only wait 10 secs
+for board to become "not ready" after a reset (it should quickly
+become not ready.)
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/block/cciss.c |   38 +-------------------------------------
- 1 files changed, 1 insertions(+), 37 deletions(-)
+ drivers/scsi/hpsa.c |   44 ++++++++++++++++++++++++++++++++++++--------
+ drivers/scsi/hpsa.h |    4 ++++
+ 2 files changed, 40 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 5e4fadc..ca900ea 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -66,12 +66,6 @@ MODULE_SUPPORTED_DEVICE("HP Smart Array Controllers");
- MODULE_VERSION("3.6.26");
- MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index c5d0606..030a880 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -181,6 +181,10 @@ static int __devinit hpsa_find_cfg_addrs(struct pci_dev *pdev,
+ static int __devinit hpsa_pci_find_memory_BAR(struct pci_dev *pdev,
+ 	unsigned long *memory_bar);
+ static int __devinit hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id);
++static int __devinit hpsa_wait_for_board_state(struct pci_dev *pdev,
++	void __iomem *vaddr, int wait_for_ready);
++#define BOARD_NOT_READY 0
++#define BOARD_READY 1
  
--static int cciss_allow_hpsa;
--module_param(cciss_allow_hpsa, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(cciss_allow_hpsa,
--	"Prevent cciss driver from accessing hardware known to be "
--	" supported by the hpsa driver");
--
- #include "cciss_cmd.h"
- #include "cciss.h"
- #include <linux/cciss_ioctl.h>
-@@ -98,18 +92,6 @@ static const struct pci_device_id cciss_pci_device_id[] = {
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3215},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3237},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x323D},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3241},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3243},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3245},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3247},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3249},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324A},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324B},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3250},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3251},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3252},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3253},
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3254},
- 	{0,}
- };
+ static DEVICE_ATTR(raid_level, S_IRUGO, raid_level_show, NULL);
+ static DEVICE_ATTR(lunid, S_IRUGO, lunid_show, NULL);
+@@ -3260,6 +3264,20 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
+ 	   need a little pause here */
+ 	msleep(HPSA_POST_RESET_PAUSE_MSECS);
  
-@@ -137,23 +119,9 @@ static struct board_type products[] = {
- 	{0x3214103C, "Smart Array E200i", &SA5_access},
- 	{0x3215103C, "Smart Array E200i", &SA5_access},
- 	{0x3237103C, "Smart Array E500", &SA5_access},
--/* controllers below this line are also supported by the hpsa driver. */
--#define HPSA_BOUNDARY 0x3223103C
- 	{0x3223103C, "Smart Array P800", &SA5_access},
- 	{0x3234103C, "Smart Array P400", &SA5_access},
- 	{0x323D103C, "Smart Array P700m", &SA5_access},
--	{0x3241103C, "Smart Array P212", &SA5_access},
--	{0x3243103C, "Smart Array P410", &SA5_access},
--	{0x3245103C, "Smart Array P410i", &SA5_access},
--	{0x3247103C, "Smart Array P411", &SA5_access},
--	{0x3249103C, "Smart Array P812", &SA5_access},
--	{0x324A103C, "Smart Array P712m", &SA5_access},
--	{0x324B103C, "Smart Array P711m", &SA5_access},
--	{0x3250103C, "Smart Array", &SA5_access},
--	{0x3251103C, "Smart Array", &SA5_access},
--	{0x3252103C, "Smart Array", &SA5_access},
--	{0x3253103C, "Smart Array", &SA5_access},
--	{0x3254103C, "Smart Array", &SA5_access},
- };
- 
- /* How long to wait (in milliseconds) for board to go into simple mode */
-@@ -3985,13 +3953,9 @@ static int __devinit cciss_lookup_board_id(struct pci_dev *pdev, u32 *board_id)
- 	*board_id = ((subsystem_device_id << 16) & 0xffff0000) |
- 			subsystem_vendor_id;
- 
--	for (i = 0; i < ARRAY_SIZE(products); i++) {
--		/* Stand aside for hpsa driver on request */
--		if (cciss_allow_hpsa && products[i].board_id == HPSA_BOUNDARY)
--			return -ENODEV;
-+	for (i = 0; i < ARRAY_SIZE(products); i++)
- 		if (*board_id == products[i].board_id)
- 			return i;
--	}
- 	dev_warn(&pdev->dev, "unrecognized board ID: 0x%08x, ignoring.\n",
- 		*board_id);
++	/* Wait for board to become not ready, then ready. */
++	dev_info(&pdev->dev, "Waiting for board to become ready.\n");
++	rc = hpsa_wait_for_board_state(pdev, vaddr, BOARD_NOT_READY);
++	if (rc)
++		dev_warn(&pdev->dev,
++			"failed waiting for board to become not ready\n");
++	rc = hpsa_wait_for_board_state(pdev, vaddr, BOARD_READY);
++	if (rc) {
++		dev_warn(&pdev->dev,
++			"failed waiting for board to become ready\n");
++		goto unmap_cfgtable;
++	}
++	dev_info(&pdev->dev, "board ready.\n");
++
+ 	/* Controller should be in simple mode at this point.  If it's not,
+ 	 * It means we're on one of those controllers which doesn't support
+ 	 * the doorbell reset method and on which the PCI power management reset
+@@ -3455,18 +3473,28 @@ static int __devinit hpsa_pci_find_memory_BAR(struct pci_dev *pdev,
  	return -ENODEV;
+ }
+ 
+-static int __devinit hpsa_wait_for_board_ready(struct ctlr_info *h)
++static int __devinit hpsa_wait_for_board_state(struct pci_dev *pdev,
++	void __iomem *vaddr, int wait_for_ready)
+ {
+-	int i;
++	int i, iterations;
+ 	u32 scratchpad;
++	if (wait_for_ready)
++		iterations = HPSA_BOARD_READY_ITERATIONS;
++	else
++		iterations = HPSA_BOARD_NOT_READY_ITERATIONS;
+ 
+-	for (i = 0; i < HPSA_BOARD_READY_ITERATIONS; i++) {
+-		scratchpad = readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
+-		if (scratchpad == HPSA_FIRMWARE_READY)
+-			return 0;
++	for (i = 0; i < iterations; i++) {
++		scratchpad = readl(vaddr + SA5_SCRATCHPAD_OFFSET);
++		if (wait_for_ready) {
++			if (scratchpad == HPSA_FIRMWARE_READY)
++				return 0;
++		} else {
++			if (scratchpad != HPSA_FIRMWARE_READY)
++				return 0;
++		}
+ 		msleep(HPSA_BOARD_READY_POLL_INTERVAL_MSECS);
+ 	}
+-	dev_warn(&h->pdev->dev, "board not ready, timed out.\n");
++	dev_warn(&pdev->dev, "board not ready, timed out.\n");
+ 	return -ENODEV;
+ }
+ 
+@@ -3658,7 +3686,7 @@ static int __devinit hpsa_pci_init(struct ctlr_info *h)
+ 		err = -ENOMEM;
+ 		goto err_out_free_res;
+ 	}
+-	err = hpsa_wait_for_board_ready(h);
++	err = hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_READY);
+ 	if (err)
+ 		goto err_out_free_res;
+ 	err = hpsa_find_cfgtables(h);
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index a203ef6..9595c57 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -155,12 +155,16 @@ struct ctlr_info {
+  * HPSA_BOARD_READY_ITERATIONS are derived from those.
+  */
+ #define HPSA_BOARD_READY_WAIT_SECS (120)
++#define HPSA_BOARD_NOT_READY_WAIT_SECS (10)
+ #define HPSA_BOARD_READY_POLL_INTERVAL_MSECS (100)
+ #define HPSA_BOARD_READY_POLL_INTERVAL \
+ 	((HPSA_BOARD_READY_POLL_INTERVAL_MSECS * HZ) / 1000)
+ #define HPSA_BOARD_READY_ITERATIONS \
+ 	((HPSA_BOARD_READY_WAIT_SECS * 1000) / \
+ 		HPSA_BOARD_READY_POLL_INTERVAL_MSECS)
++#define HPSA_BOARD_NOT_READY_ITERATIONS \
++	((HPSA_BOARD_NOT_READY_WAIT_SECS * 1000) / \
++		HPSA_BOARD_READY_POLL_INTERVAL_MSECS)
+ #define HPSA_POST_RESET_PAUSE_MSECS (3000)
+ #define HPSA_POST_RESET_NOOP_RETRIES (12)
+ 
