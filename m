@@ -1,55 +1,51 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 1/8] libfc: fix setting of rport dev loss
-Date: Fri, 08 Oct 2010 17:12:10 -0700
-Message-ID: <20101009001210.7744.83712.stgit@localhost.localdomain>
+Subject: [PATCH 2/8] libfc: use DID_TRANSPORT_DISRUPTED while lport not ready
+Date: Fri, 08 Oct 2010 17:12:15 -0700
+Message-ID: <20101009001215.7744.35788.stgit@localhost.localdomain>
 References: <20101009001204.7744.21642.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:50434 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:9939 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752063Ab0JIAML (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Oct 2010 20:12:11 -0400
+	id S1752063Ab0JIAMQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Oct 2010 20:12:16 -0400
 In-Reply-To: <20101009001204.7744.21642.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Vasu Dev <vasu.dev@intel.com>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: Vasu Dev <vasu.dev@intel.com>
 
-There does not seem to be a reason why libfc adds a 5
-second delay to the user requested value for the dev loss
-tmo. There also does not seem to be a reason to allow
-setting it to 0 (or really close).
+This is per Mile Christie feedback since in this case IO
+could get retried for tape devices and therefore DID_REQUEUE
+cannot be used, more details in this thread.
 
-This patch removes the extra 5 sec delay, and for 0 it
-sets it to 1 like other fc drivers. We should actually
-be able to set it to 0 since the queue_delayed_work API
-will just call queue_work, but other drivers set it to 1 in
-that case.
+http://marc.info/?l=linux-scsi&m=127970522630136&w=2
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_rport.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index b9f2286..a84ef13 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -196,9 +196,9 @@ static const char *fc_rport_state(struct fc_rport_priv *rdata)
- void fc_set_rport_loss_tmo(struct fc_rport *rport, u32 timeout)
- {
- 	if (timeout)
--		rport->dev_loss_tmo = timeout + 5;
-+		rport->dev_loss_tmo = timeout;
- 	else
--		rport->dev_loss_tmo = 30;
-+		rport->dev_loss_tmo = 1;
- }
- EXPORT_SYMBOL(fc_set_rport_loss_tmo);
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index c797f6b..43866e6 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1971,10 +1971,8 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 		break;
+ 	}
  
+-	if (lport->state != LPORT_ST_READY && fsp->status_code != FC_COMPLETE) {
+-		sc_cmd->result = (DID_REQUEUE << 16);
+-		FC_FCP_DBG(fsp, "Returning DID_REQUEUE to scsi-ml\n");
+-	}
++	if (lport->state != LPORT_ST_READY && fsp->status_code != FC_COMPLETE)
++		sc_cmd->result = (DID_TRANSPORT_DISRUPTED << 16);
+ 
+ 	spin_lock_irqsave(&si->scsi_queue_lock, flags);
+ 	list_del(&fsp->list);
 
