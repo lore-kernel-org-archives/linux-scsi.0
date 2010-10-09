@@ -1,133 +1,118 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 8/8] fcoe: Fix broken NPIV with correction to MAC validation
-Date: Fri, 08 Oct 2010 17:12:46 -0700
-Message-ID: <20101009001246.7744.57021.stgit@localhost.localdomain>
-References: <20101009001204.7744.21642.stgit@localhost.localdomain>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+ MegaRAID SAS drive
+Date: Sat, 09 Oct 2010 22:38:07 +0200
+Message-ID: <4CB0D2AF.7080609@redhat.com>
+References: <AANLkTin53S+C_+QzF-drs5BUAx=k7YeiHrTaQGTFSc_a@mail.gmail.com>	 <4CAF3E04.1050304@redhat.com> <1286555954.2985.110.camel@mulgrave.site> <4CAF70CD.6020307@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:30302 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:24491 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752063Ab0JIAMr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Oct 2010 20:12:47 -0400
-In-Reply-To: <20101009001204.7744.21642.stgit@localhost.localdomain>
+	id S1757136Ab0JIUiY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 9 Oct 2010 16:38:24 -0400
+In-Reply-To: <4CAF70CD.6020307@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: bo yang <boyang1288@gmail.com>, linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, bo.yang@lsi.com
 
-A previous patch attempted to validate the destination
-MAC address of a FCoE frame by checking that MAC
-address against the received port's MAC address. The
-implementation seems fine on the surface, but any
-VN_Ports added using the NPIV feature will have their
-own MAC addresses and these MACs were not being checked,
-which prevented any NPIV VN_Ports from receiving frames.
+On 10/08/2010 09:28 PM, Tomas Henzl wrote:
+> On 10/08/2010 06:39 PM, James Bottomley wrote:
+>   
+>> On Fri, 2010-10-08 at 17:51 +0200, Tomas Henzl wrote:
+>>   
+>>     
+>>> On 09/23/2010 04:36 AM, bo yang wrote:
+>>>     
+>>>       
+>>>> This patch is too big.  I am using attachment to submit.  Please
+>>>> use attached file to apply.  Also let me know if it can't be accepted.
+>>>>
+>>>> To add the Online controller reset support, driver need to do:
+>>>> a). reset the controller chips -- Xscale and Gen2 which will change
+>>>> the function calls and add the reset function related to this two
+>>>> chips.
+>>>> b). during the reset, driver will store the pending cmds which not
+>>>> returned by FW to driver's pending queue.  Driver will re-issue those
+>>>> pending cmds again to FW after the OCR finished.
+>>>> c). In driver's timeout routine, driver will report to OS as reset.
+>>>> Also driver's queue routine will block the cmds until the OCR
+>>>> finished.
+>>>> d). in Driver's ISR routine, if driver get the FW state as state
+>>>> change, FW in Failure status and FW support online controller
+>>>> reset (OCR), driver will start to do the controller reset.
+>>>> e). In driver's IOCTL routine, the application cmds will wait for the
+>>>> OCR to finish, then issue the cmds to FW.
+>>>>
+>>>> Signed-off-by Bo Yang<bo.yang@lsi.com>
+>>>>
+>>>> ---
+>>>>  drivers/scsi/megaraid/megaraid_sas.c |  756 ++++++++++++++++++++++++++++++++---
+>>>>  drivers/scsi/megaraid/megaraid_sas.h |   88 +++-
+>>>>  2 files changed, 787 insertions(+), 57 deletions(-)
+>>>>       
+>>>>         
+>>> Hi Bo,
+>>> in the workqueue function you sleep for 30s,
+>>> it's scheduled here - schedule_work(&instance->work_init);
+>>>
+>>> +process_fw_state_change_wq(struct work_struct *work)
+>>> +{
+>>> ...
+>>> +		/*waitting for about 20 second before start the second init*/
+>>> +		for (wait = 0; wait < 30; wait++) {
+>>> +			msleep(1000);
+>>> +		}
+>>>     
+>>>       
+>> this lot should be ssleep(20) if you want a 20 sec sleep.
+>>   
+>>     
+> please do that on every place where you use the 
+> "for (wait = 0; wait < n; wait++) msleep(1000);" construction
+>
+>   
+>>> - this is not a good practice to sleep for a so long time I think
+>>>     
+>>>       
+> this long sleep might might be ok, if the workqueue is used only rarely
+> is it so?
+>
+>   
+>>> - you should use in your exit function some synchronization 
+>>>   for example 'cancel_work_sync', without that if someone rmmods your 
+>>>   module, it could then lead to a memory corruption
+>>>     
+>>>       
+>> Actually flush_scheduled_work() should be fine ... it will force the
+>> module removal to wait for completion ... cancellation can be error
+>> prone, so just forcing the wait sounds easier.
+>>   
+>>     
+Another correction - flush_scheduled_work is already present in megass_detach_one
+it only should be moved away from the if statement.
 
-In other words, the following patch has broken NPIV.
 
-519e5135e2537c9dbc1cbcc0891b0a936ff5dcd2
- [SCSI] fcoe: adds src and dest mac address
-              checking for fcoe frames
+> someone told that cancel_work_sync is safer then flush_scheduled_work
+> but I'm not an expert, so ok 
+>
+> Tomas
+>
+>   
+>> James
+>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>   
+>>     
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>   
 
-Part of the offending patch is correct, but the part
-that broke NPIV was attempting to satisfy FC-BB-5
-section D.5, 2.1-
-
-(discard frames that) "contain a destination MAC
-address/destination N_Port_ID pair that was not
-assigned by an FCF to one of the VN_Ports on the ENode"
-
-The language does _not_ say to compare the destination
-=46C-MAP/destination N_Port_ID, but instead to compare
-the destination MAC address/destination N_Port_ID.
-
->From the FC-BB-5 specification,
-
-"A properly formed FPMA is one in which the 24 most
-significant bits equal the Fabric=E2=80=99s FC-MAP value and
-the least significant 24 bits equal the N_Port_ID
-assigned to the VN_Port by the FCF."
-
-This means that we need to compare the FC Frame's
-destination FCID against the embedded FCID in the
-destination MAC address. This patch checks the lower
-24 bits of the destination MAC address against
-destination FCID in the Fibre Channel frame.
-
-=46or MAC validation the first line of defense is the
-hardware MAC filtering. Each VN_Port will have a
-unicast MAC addresses added to the hardware's
-filtering table. The Ethernet driver should drop any
-MACs not destined for a programmed MAC. This patch
-adds a second line of defense that very specfically
-compares an element in the FC frame against an element
-in the Ethernet header, which is appropriate for the
-=46CoE layer.
-
-Many alternative approaches were considered, including
-a LLD callback from libfc. The second most reasonable
-approach seemed to be walking the list of NPIV ports
-and check each of their MAC addresses against the
-destination MAC address of the received frame. The
-problem with this approach was that it is likely that
-performance would suffer with the more NPIV ports added
-to the system since every received frame would need to
-walk this list, comparing each entry's MAC.
-
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- drivers/scsi/fcoe/fcoe.c |   16 ++++++----------
- 1 files changed, 6 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 8225b82..d23a538 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1243,7 +1243,6 @@ int fcoe_rcv(struct sk_buff *skb, struct net_devi=
-ce *netdev,
- 	struct fcoe_interface *fcoe;
- 	struct fc_frame_header *fh;
- 	struct fcoe_percpu_s *fps;
--	struct fcoe_port *port;
- 	struct ethhdr *eh;
- 	unsigned int cpu;
-=20
-@@ -1262,16 +1261,7 @@ int fcoe_rcv(struct sk_buff *skb, struct net_dev=
-ice *netdev,
- 			skb_tail_pointer(skb), skb_end_pointer(skb),
- 			skb->csum, skb->dev ? skb->dev->name : "<NULL>");
-=20
--	/* check for mac addresses */
- 	eh =3D eth_hdr(skb);
--	port =3D lport_priv(lport);
--	if (compare_ether_addr(eh->h_dest, port->data_src_addr) &&
--	    compare_ether_addr(eh->h_dest, fcoe->ctlr.ctl_src_addr) &&
--	    compare_ether_addr(eh->h_dest, (u8[6])FC_FCOE_FLOGI_MAC)) {
--		FCOE_NETDEV_DBG(netdev, "wrong destination mac address:%pM\n",
--				eh->h_dest);
--		goto err;
--	}
-=20
- 	if (is_fip_mode(&fcoe->ctlr) &&
- 	    compare_ether_addr(eh->h_source, fcoe->ctlr.dest_addr)) {
-@@ -1291,6 +1281,12 @@ int fcoe_rcv(struct sk_buff *skb, struct net_dev=
-ice *netdev,
- 	skb_set_transport_header(skb, sizeof(struct fcoe_hdr));
- 	fh =3D (struct fc_frame_header *) skb_transport_header(skb);
-=20
-+	if (ntoh24(&eh->h_dest[3]) !=3D ntoh24(fh->fh_d_id)) {
-+		FCOE_NETDEV_DBG(netdev, "FC frame d_id mismatch with MAC:%pM\n",
-+				eh->h_dest);
-+		goto err;
-+	}
-+
- 	fr =3D fcoe_dev_from_skb(skb);
- 	fr->fr_dev =3D lport;
- 	fr->ptype =3D ptype;
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
