@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 3/8] libfc: adds flogi retry in case DID is zero in RJT
-Date: Fri, 08 Oct 2010 17:12:20 -0700
-Message-ID: <20101009001220.7744.39944.stgit@localhost.localdomain>
+Subject: [PATCH 4/8] fcoe: set default FIP mode as FIP_MODE_FABRIC
+Date: Fri, 08 Oct 2010 17:12:25 -0700
+Message-ID: <20101009001225.7744.69433.stgit@localhost.localdomain>
 References: <20101009001204.7744.21642.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:53792 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:18948 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752063Ab0JIAMV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 8 Oct 2010 20:12:21 -0400
+	id S1752063Ab0JIAM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 8 Oct 2010 20:12:26 -0400
 In-Reply-To: <20101009001204.7744.21642.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,47 +19,31 @@ Cc: Vasu Dev <vasu.dev@intel.com>
 
 From: Vasu Dev <vasu.dev@intel.com>
 
-Sometimes switch in NPV mode rejects flogi request with DID
-zero and in that case flogi is not tried again and port
-remains offline, so this patch validates DID for non zero
-along with only ACC response to allow flogi retry
-for RJT with DID=0 also succeed FLOGI in next try.
+Since sometimes current FIP_MODE_AUTO mode falls back to non-FIP
+mode while DCB link still getting ready in fabric mode with
+its peer switch, it falls back after few libfc flogi retries
+and that is not we want while working with FIP enabled
+switches in FABRIC mode, therefore sets default as FIP_MODE_FABRIC
+as discussed and agreed before in this mail thread
+http://www.open-fcoe.org/pipermail/devel/2010-August/010511.html
 
 Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_lport.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index d9b6e11..9be63ed 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -1447,13 +1447,7 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	}
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 844d618..8225b82 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -117,7 +117,7 @@ static void fcoe_recv_frame(struct sk_buff *skb);
  
- 	did = fc_frame_did(fp);
--
--	if (!did) {
--		FC_LPORT_DBG(lport, "Bad FLOGI response\n");
--		goto out;
--	}
--
--	if (fc_frame_payload_op(fp) == ELS_LS_ACC) {
-+	if (fc_frame_payload_op(fp) == ELS_LS_ACC && did) {
- 		flp = fc_frame_payload_get(fp, sizeof(*flp));
- 		if (flp) {
- 			mfs = ntohs(flp->fl_csp.sp_bb_data) &
-@@ -1492,8 +1486,10 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 				fc_lport_enter_dns(lport);
- 			}
- 		}
--	} else
-+	} else {
-+		FC_LPORT_DBG(lport, "FLOGI RJT or bad response\n");
- 		fc_lport_error(lport, fp);
-+	}
+ static void fcoe_get_lesb(struct fc_lport *, struct fc_els_lesb *);
  
- out:
- 	fc_frame_free(fp);
+-module_param_call(create, fcoe_create, NULL, (void *)FIP_MODE_AUTO, S_IWUSR);
++module_param_call(create, fcoe_create, NULL, (void *)FIP_MODE_FABRIC, S_IWUSR);
+ __MODULE_PARM_TYPE(create, "string");
+ MODULE_PARM_DESC(create, " Creates fcoe instance on a ethernet interface");
+ module_param_call(create_vn2vn, fcoe_create, NULL,
 
