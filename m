@@ -1,59 +1,57 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Sat, 9 Oct 2010 14:20:47 -0700
-Message-ID: <20101009212047.GB27180@kroah.com>
-References: <4CA653F0.1010008@vlnb.net> <4CA656AD.8020408@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:56574 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757185Ab0JIVaX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 Oct 2010 17:30:23 -0400
-Content-Disposition: inline
-In-Reply-To: <4CA656AD.8020408@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/4] tcm: Unify virtual subsystem plugin emulation code
+Date: Sat,  9 Oct 2010 20:48:18 -0700
+Message-ID: <1286682498-4821-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
 
-On Sat, Oct 02, 2010 at 01:46:21AM +0400, Vladislav Bolkhovitin wrote:
-> This patch contains SYSFS interface implementation.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Nice, but you forgot to document it.  All sysfs changes need to be
-documented in Documentation/ABI/
+Greetings all,
 
-Please add a file to this patch that does so.
+This series contains patches to unify TCM virtual subsystem plugin emulation
+logic into generic TCM code, and to provide a method of emulation for control
+CDBs that are emulated generically across subsystem plugin code or that may
+require CDB specific context in the new struct se_subsystem_api_cdb set of
+subsystem dependent CDB callers.
 
-> +static void scst_tgtt_release(struct kobject *kobj)
-> +{
-> +	struct scst_tgt_template *tgtt;
-> +
-> +	tgtt = container_of(kobj, struct scst_tgt_template, tgtt_kobj);
-> +	complete_all(&tgtt->tgtt_kobj_release_cmpl);
-> +	return;
+The first patch adds a generic function transport_emulate_control_cdb()
+which is intended used by virtual subsystem plugin code.  This includes
+the primary list of CDBs handled in this manner from existing IBLOCK,
+FILEIO and RAMDISK *_emulate_scsi_cdb() subsystem dependent code, and the
+struct se_subsystem_api_cdb define described above.
 
-Don't you also need to free the memory of your kobject here?
+Thse second patch converts IBLOCK, FILEIO and RAMDISK subsystem code to use
+the new ->emulate_inquiry(), ->emulate_read_cap(), ->emulate_read_cap16() and
+->emulate_unmap() callers their respective existing subsystem dependent logic.
 
-> +static void scst_tgt_release(struct kobject *kobj)
-> +{
-> +	struct scst_tgt *tgt;
-> +
-> +	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-> +	complete_all(&tgt->tgt_kobj_release_cmpl);
-> +	return;
+The third and forth patches move WRITE_SAME_* and SYNCHRONIZE_CACHE_* CDB
+emulation logic into transport_emulate_control_cdb() for these two originally
+specially handled cases with IBLOCK and FILEIO subsystem code.
 
-Same here, no kfree?
+So far this code has been tested on TCM_Loop SCSI LUN with IBLOCK, FILEIO and
+IBLOCK backstores with TPU=1, TPWS=1 and WCE=1 on v2.6.36-rc6.
 
-> +static void scst_acg_release(struct kobject *kobj)
-> +{
-> +	struct scst_acg *acg;
-> +
-> +	acg = container_of(kobj, struct scst_acg, acg_kobj);
-> +	complete_all(&acg->acg_kobj_release_cmpl);
+Many thanks go out to Christoph for a bit of friendly prodding to finally make
+this conversion happen.  Thanks hch!
 
-And here.
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-thanks,
+Nicholas Bellinger (4):
+  tcm: Unify subsystem plugin control CDB emulation
+  tcm: Convert IBLOCK, FILEIO and RAMDISK subsystem code to
+    transport_emulate_control_cdb()
+  tcm: Move WRITE_SAME_* emulation into transport_emulate_control_cdb()
+  tcm: Move SYNCHRONIZE_CACHE_* emulation into
+    transport_emulate_control_cdb()
 
-greg k-h
+ drivers/target/target_core_file.c      |  163 ++++++++------------------
+ drivers/target/target_core_iblock.c    |  102 +++-------------
+ drivers/target/target_core_rd.c        |   91 ++-------------
+ drivers/target/target_core_transport.c |  200 ++++++++++++++++++++++----------
+ include/target/target_core_base.h      |    4 +-
+ include/target/target_core_transport.h |   26 +++-
+ 6 files changed, 237 insertions(+), 349 deletions(-)
