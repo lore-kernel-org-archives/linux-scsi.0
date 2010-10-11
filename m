@@ -1,72 +1,98 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Mon, 11 Oct 2010 14:32:35 -0700
-Message-ID: <20101011213235.GA11489@kroah.com>
-References: <4CA653F0.1010008@vlnb.net> <4CA656AD.8020408@vlnb.net> <20101009212047.GB27180@kroah.com> <4CB36592.6060909@vlnb.net>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: RE: [PATCH] add cpu on/offline support in Fibre Channel exchange
+ and sequence handling
+Date: Mon, 11 Oct 2010 15:03:17 -0700
+Message-ID: <7C88852EF6F99F4EB538472FCFEBE222014698EF1F@orsmsx509.amr.corp.intel.com>
+References: <AANLkTi=ViAo=uYK0JwK597WkV1x78mntFqU-Cn4u0Dju@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:57457 "EHLO coco.kroah.org"
+Received: from mga01.intel.com ([192.55.52.88]:25705 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756301Ab0JKVcH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2010 17:32:07 -0400
-Content-Disposition: inline
-In-Reply-To: <4CB36592.6060909@vlnb.net>
+	id S1756513Ab0JKWDY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Oct 2010 18:03:24 -0400
+In-Reply-To: <AANLkTi=ViAo=uYK0JwK597WkV1x78mntFqU-Cn4u0Dju@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
+To: Hillf Danton <dhillf@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>, "Love, Robert W" <robert.w.love@intel.com>
+Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Oct 11, 2010 at 11:29:22PM +0400, Vladislav Bolkhovitin wrote:
-> Greg KH, on 10/10/2010 01:20 AM wrote:
-> > On Sat, Oct 02, 2010 at 01:46:21AM +0400, Vladislav Bolkhovitin wrote:
-> >> +static void scst_tgtt_release(struct kobject *kobj)
-> >> +{
-> >> +	struct scst_tgt_template *tgtt;
-> >> +
-> >> +	tgtt = container_of(kobj, struct scst_tgt_template, tgtt_kobj);
-> >> +	complete_all(&tgtt->tgtt_kobj_release_cmpl);
-> >> +	return;
-> > 
-> > Don't you also need to free the memory of your kobject here?
-> > 
-> >> +static void scst_tgt_release(struct kobject *kobj)
-> >> +{
-> >> +	struct scst_tgt *tgt;
-> >> +
-> >> +	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
-> >> +	complete_all(&tgt->tgt_kobj_release_cmpl);
-> >> +	return;
-> > 
-> > Same here, no kfree?
-> > 
-> >> +static void scst_acg_release(struct kobject *kobj)
-> >> +{
-> >> +	struct scst_acg *acg;
-> >> +
-> >> +	acg = container_of(kobj, struct scst_acg, acg_kobj);
-> >> +	complete_all(&acg->acg_kobj_release_cmpl);
-> > 
-> > And here.
-> 
-> Thanks for the review. In all those functions kobjects for simplicity
-> are embedded into the outer objects, so they will be freed as part of
-> the outer objects free. Hence, kfree() for the kobjects in the release
-> functions are not needed.
-
-Sweet, you now have opened yourself up to public ridicule as per the
-documentation in the kernel for how to use kobjects!
-
-Nice job :)
-
-Seriously, you CAN NOT DO THIS!  If you embed a kobject in a different
-structure, then you have to rely on the kobject to handle the reference
-counting for that larger structure.  To do ANYTHING else is a bug and
-wrong.
-
-Please read the kobject documentation and fix this code up before
-submitting it again.
-
-thanks,
-
-greg k-h
+PiANCj4gRmlicmUgQ2hhbm5lbCBleGNoYW5nZSBwb29sIGlzIHNldHVwIGluIGEgcGVyIGNwdSB3
+YXkgdGhhdA0KPiBlbnRpcmUgZXhjaGFuZ2UgaWQgcmFuZ2UgaXMgZGl2aWRlZCBlcXVhbGx5IGFj
+cm9zcyBhbGwgY3B1cy4NCj4gDQo+IFdoZW4gY3B1IGdvZXMgb2ZmbGluZSwgdGhlIGNvcnJlc3Bv
+bmRpbmcgcmFuZ2Ugb2YgZXhjaGcgaWQNCj4gYmVjb21lcyB1bmF2YWlsYWJsZSB1bnRpbCBpdCBp
+cyBvbmxpbmUgYWdhaW4uDQo+IA0KPiBUaGlzIHdvcmsgdHJpZXMgdG8gZml4IHRoZSB1bmF2YWls
+YWJpbGl0eSBiYXNlZCBvbiBub3RpZmllcl9ibG9jay4NClRoaXMgbGluZSBkb2VzIG5vdCB0ZWxs
+IGV4YWN0bHkgaG93IHlvdSd2ZSBmaXhlZCB0aGUgdW5hdmFpbGFiaWxpdHksDQp3aGljaCBJIGFt
+IGd1ZXNzaW5nIGJ5ICJib3Jyb3dpbmcgZXhjaGFuZ2UgaWQgZnJvbSB0aGUgb2ZmbGluZSBDUFVz
+Jw0KZXhjaGFuZ2UgaWQgcG9vbD8iDQoNCkkgdGhpbmsgeW91IGFsc28gbmVlZCB0byBwb2ludCBv
+dXQgdGhpcyB3b3VsZCBicmVhayB0aGUgYXNzdW1lZCBJL08NCkFsaWdubWVudCBvbiBDUFUgYmFz
+ZWQgb24gdGhlIHBlciBjcHUgeGlkIHBvb2wsIEkgZ3Vlc3MgaXQncyBiZXR0ZXINCnRoYW4gbm8g
+eGlkIGF0IGFsbC4gDQoNClNvbWUgbW9yZSBjb21tZW50cyBpbmxpbmUgYmVsb3cuDQoNCg0KPiAN
+Cj4gU2lnbmVkLW9mZi1ieTogSGlsbGYgRGFudG9uIDxkaGlsbGZAZ21haWwuY29tPg0KPiAtLS0N
+Cj4gDQo+IC0tLSBvL2xpbnV4LTIuNi4zNi1yYzQvZHJpdmVycy9zY3NpL2xpYmZjL2ZjX2V4Y2gu
+YwkyMDEwLTA5LTEzDQo+IDA3OjA3OjM4LjAwMDAwMDAwMCArMDgwMA0KPiArKysgbS9saW51eC0y
+LjYuMzYtcmM0L2RyaXZlcnMvc2NzaS9saWJmYy9mY19leGNoLmMJMjAxMC0xMC0wOA0KPiAyMjoy
+NDo0OC4wMDAwMDAwMDAgKzA4MDANCj4gQEAgLTI2LDYgKzI2LDkgQEANCj4gICNpbmNsdWRlIDxs
+aW51eC90aW1lci5oPg0KPiAgI2luY2x1ZGUgPGxpbnV4L3NsYWIuaD4NCj4gICNpbmNsdWRlIDxs
+aW51eC9lcnIuaD4NCj4gKyNpbmNsdWRlIDxsaW51eC9ub3RpZmllci5oPg0KPiArI2luY2x1ZGUg
+PGxpbnV4L2NwdS5oPg0KPiArI2luY2x1ZGUgPGxpbnV4L2NwdW1hc2suaD4NCj4gDQo+ICAjaW5j
+bHVkZSA8c2NzaS9mYy9mY19mYzIuaD4NCj4gDQo+IEBAIC00MCw2ICs0Myw4IEBAIHN0YXRpYyB1
+MTYJZmNfY3B1X29yZGVyOwkvKiAyJ3MgcG93ZXIgdG8NCj4gIHN0YXRpYyBzdHJ1Y3Qga21lbV9j
+YWNoZSAqZmNfZW1fY2FjaGVwOwkgICAgICAgLyogY2FjaGUgZm9yIGV4Y2hhbmdlcw0KPiAqLw0K
+PiAgc3RydWN0IHdvcmtxdWV1ZV9zdHJ1Y3QgKmZjX2V4Y2hfd29ya3F1ZXVlOw0KPiANCj4gK3N0
+YXRpYyBjcHVtYXNrX3QgZmNfb2ZmbGluZV9jcHVfbWFzayA9IENQVV9NQVNLX05PTkU7DQo+ICsN
+Cj4gIC8qDQo+ICAgKiBTdHJ1Y3R1cmUgYW5kIGZ1bmN0aW9uIGRlZmluaXRpb25zIGZvciBtYW5h
+Z2luZyBGaWJyZSBDaGFubmVsDQo+IEV4Y2hhbmdlcw0KPiAgICogYW5kIFNlcXVlbmNlcy4NCj4g
+QEAgLTY2Niw2ICs2NzEsNyBAQCBzdGF0aWMgc3RydWN0IGZjX2V4Y2ggKmZjX2V4Y2hfZW1fYWxs
+b2MoDQo+ICAJdW5zaWduZWQgaW50IGNwdTsNCj4gIAl1MTYgaW5kZXg7DQo+ICAJc3RydWN0IGZj
+X2V4Y2hfcG9vbCAqcG9vbDsNCj4gKwl1bnNpZ25lZCBpbnQgaW5kZXggPSAtMTsNCj4gDQo+ICAJ
+LyogYWxsb2NhdGUgbWVtb3J5IGZvciBleGNoYW5nZSAqLw0KPiAgCWVwID0gbWVtcG9vbF9hbGxv
+YyhtcC0+ZXBfcG9vbCwgR0ZQX0FUT01JQyk7DQo+IEBAIC02NzksNiArNjg1LDcgQEAgc3RhdGlj
+IHN0cnVjdCBmY19leGNoICpmY19leGNoX2VtX2FsbG9jKA0KPiAgCXBvb2wgPSBwZXJfY3B1X3B0
+cihtcC0+cG9vbCwgY3B1KTsNCj4gIAlzcGluX2xvY2tfYmgoJnBvb2wtPmxvY2spOw0KPiAgCXB1
+dF9jcHUoKTsNCj4gK2FnYWluOg0KPiAgCWluZGV4ID0gcG9vbC0+bmV4dF9pbmRleDsNCj4gIAkv
+KiBhbGxvY2F0ZSBuZXcgZXhjaCBmcm9tIHBvb2wgKi8NCj4gIAl3aGlsZSAoZmNfZXhjaF9wdHJf
+Z2V0KHBvb2wsIGluZGV4KSkgew0KPiBAQCAtNzE5LDYgKzcyNiwxNyBAQCBvdXQ6DQo+ICBlcnI6
+DQo+ICAJc3Bpbl91bmxvY2tfYmgoJnBvb2wtPmxvY2spOw0KPiAgCWF0b21pY19pbmMoJm1wLT5z
+dGF0cy5ub19mcmVlX2V4Y2hfeGlkKTsNCj4gKw0KPiArCWNwdSA9IGluZGV4ID0gY3B1bWFza19u
+ZXh0KGluZGV4LCAmZmNfb2ZmbGluZV9jcHVfbWFzayk7DQoNCklzIGluZGV4IG5lZWRlZCBoZXJl
+PyBXaHkgbm90IGp1c3Q6DQoNCgljcHUgPSBjcHVtYXNrX25leHQoY3B1LCAmZmNfb2ZmbGluZV9j
+cHVfbWFzayk7DQoNCkluZGV4IGhlcmUgcmVmZXJzIHRvIHRoZSBuZXh0IGF2YWlsYWJsZSBleGNo
+YW5nZSBpZCBpbiB0aGUgcG9vbC4NCkV4Y2hhbmdlIGlkLiANCg0KDQo+ICsJaWYgKGNwdSA8IG5y
+X2NwdV9pZHMpIHsNCj4gKwkJLyoNCj4gKwkJICogdHJ5IHRvIHRha2UgdGhlIHNoYXJlIG9mIG9m
+ZmxpbmUgY3B1cw0KPiArCQkgKi8NCj4gKwkJcG9vbCA9IHBlcl9jcHVfcHRyKG1wLT5wb29sLCBj
+cHUpOw0KPiArCQlzcGluX2xvY2tfYmgoJnBvb2wtPmxvY2spOw0KPiArCQlnb3RvIGFnYWluOw0K
+DQpXaWxsIHdlIGV2ZXIgZ2V0IHN0dWNrIGhlcmUgaWYgdGhlIGNwdSBpcyB0b2dnbGVkIG9ubGlu
+ZS9vZmZsaW5lDQpyZXBlYXRlZGx5PyBIZXJlIG5vdGhpbmcgcHJvdGVjdHMgZmNfb2ZmbGluZV9j
+cHVfbWFzaywgc28gaXQgbWF5DQpiZSBiYWNrIG9ubGluZSB3aGlsZSB5b3UgYXJlIHRyeWluZyB0
+byBib3Jyb3cgeGlkIGZyb20gaXRzIHBvb2wsDQp3aGljaCBJIHRoaW5rIG1heSBiZSBhbHJpZ2h0
+Lg0KDQoNCi0geWkNCg0KPiArCX0NCj4gKw0KPiAgCW1lbXBvb2xfZnJlZShlcCwgbXAtPmVwX3Bv
+b2wpOw0KPiAgCXJldHVybiBOVUxMOw0KPiAgfQ0KPiBAQCAtMjMyMiw2ICsyMzQwLDM0IEBAIGlu
+dCBmY19leGNoX2luaXQoc3RydWN0IGZjX2xwb3J0ICpscG9ydCkNCj4gIH0NCj4gIEVYUE9SVF9T
+WU1CT0woZmNfZXhjaF9pbml0KTsNCj4gDQo+ICsvKg0KPiArICogY3B1IG9uL29mZmxpbmUgc3Vw
+cG9ydA0KPiArICoqLw0KPiArDQo+ICtzdGF0aWMgaW50IGZjX2NwdV9jYWxsYmFjayhzdHJ1Y3Qg
+bm90aWZpZXJfYmxvY2sgKm5iLA0KPiArCQkJICAgdW5zaWduZWQgbG9uZyBldmVudCwNCj4gKwkJ
+CSAgIHZvaWQgKl9jcHUpDQo+ICt7DQo+ICsJaW50IGNwdSA9ICh1bnNpZ25lZCBsb25nKV9jcHU7
+DQo+ICsNCj4gKwlzd2l0Y2ggKGV2ZW50KSB7DQo+ICsJY2FzZSBDUFVfT05MSU5FOg0KPiArCWNh
+c2UgQ1BVX09OTElORV9GUk9aRU46DQo+ICsJCWNwdW1hc2tfY2xlYXJfY3B1KGNwdSwgJmZjX29m
+ZmxpbmVfY3B1X21hc2spOw0KPiArCQlicmVhazsNCj4gKwljYXNlIENQVV9ERUFEOg0KPiArCWNh
+c2UgQ1BVX0RFQURfRlJPWkVOOg0KPiArCQljcHVtYXNrX3NldF9jcHUoY3B1LCAmZmNfb2ZmbGlu
+ZV9jcHVfbWFzayk7DQo+ICsJCWJyZWFrOw0KPiArIAl9DQo+ICsNCj4gKwlyZXR1cm4gTk9USUZZ
+X09LOw0KPiArfQ0KPiArDQo+ICtzdGF0aWMgc3RydWN0IG5vdGlmaWVyX2Jsb2NrIGZjX25iID0g
+ew0KPiArCS5ub3RpZmllcl9jYWxsID0gZmNfY3B1X2NhbGxiYWNrLA0KPiArfTsNCj4gKw0KPiAg
+LyoqDQo+ICAgKiBmY19zZXR1cF9leGNoX21ncigpIC0gU2V0dXAgYW4gZXhjaGFuZ2UgbWFuYWdl
+cg0KPiAgICovDQo+IEBAIC0yMzU3LDYgKzI0MDMsOSBAQCBpbnQgZmNfc2V0dXBfZXhjaF9tZ3Io
+KQ0KPiAgCWZjX2V4Y2hfd29ya3F1ZXVlID0NCj4gY3JlYXRlX3NpbmdsZXRocmVhZF93b3JrcXVl
+dWUoImZjX2V4Y2hfd29ya3F1ZXVlIik7DQo+ICAJaWYgKCFmY19leGNoX3dvcmtxdWV1ZSkNCj4g
+IAkJcmV0dXJuIC1FTk9NRU07DQo+ICsNCj4gKwlyZWdpc3Rlcl9jcHVfbm90aWZpZXIoJmZjX25i
+KTsNCj4gKw0KPiAgCXJldHVybiAwOw0KPiAgfQ0KPiANCj4gQEAgLTIzNjcsNCArMjQxNiw1IEBA
+IHZvaWQgZmNfZGVzdHJveV9leGNoX21ncigpDQo+ICB7DQo+ICAJZGVzdHJveV93b3JrcXVldWUo
+ZmNfZXhjaF93b3JrcXVldWUpOw0KPiAgCWttZW1fY2FjaGVfZGVzdHJveShmY19lbV9jYWNoZXAp
+Ow0KPiArCXVucmVnaXN0ZXJfY3B1X25vdGlmaWVyKCZmY19uYik7DQo+ICB9DQo+IC0tDQo+IFRv
+IHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBs
+aW51eC1zY3NpIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIu
+a2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwu
+b3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
