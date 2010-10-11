@@ -1,81 +1,72 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 20112] New: dmesg spam: "scsi host5: __pm_runtime_resume()
- returns 1" (DVD writer)
-Date: Mon, 11 Oct 2010 21:21:02 GMT
-Message-ID: <bug-20112-11613@https.bugzilla.kernel.org/>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Mon, 11 Oct 2010 14:32:35 -0700
+Message-ID: <20101011213235.GA11489@kroah.com>
+References: <4CA653F0.1010008@vlnb.net> <4CA656AD.8020408@vlnb.net> <20101009212047.GB27180@kroah.com> <4CB36592.6060909@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:50897 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756208Ab0JKVVD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Oct 2010 17:21:03 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o9BLL2iV013298
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Oct 2010 21:21:02 GMT
+Received: from kroah.org ([198.145.64.141]:57457 "EHLO coco.kroah.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756301Ab0JKVcH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Oct 2010 17:32:07 -0400
+Content-Disposition: inline
+In-Reply-To: <4CB36592.6060909@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=20112
+On Mon, Oct 11, 2010 at 11:29:22PM +0400, Vladislav Bolkhovitin wrote:
+> Greg KH, on 10/10/2010 01:20 AM wrote:
+> > On Sat, Oct 02, 2010 at 01:46:21AM +0400, Vladislav Bolkhovitin wrote:
+> >> +static void scst_tgtt_release(struct kobject *kobj)
+> >> +{
+> >> +	struct scst_tgt_template *tgtt;
+> >> +
+> >> +	tgtt = container_of(kobj, struct scst_tgt_template, tgtt_kobj);
+> >> +	complete_all(&tgtt->tgtt_kobj_release_cmpl);
+> >> +	return;
+> > 
+> > Don't you also need to free the memory of your kobject here?
+> > 
+> >> +static void scst_tgt_release(struct kobject *kobj)
+> >> +{
+> >> +	struct scst_tgt *tgt;
+> >> +
+> >> +	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
+> >> +	complete_all(&tgt->tgt_kobj_release_cmpl);
+> >> +	return;
+> > 
+> > Same here, no kfree?
+> > 
+> >> +static void scst_acg_release(struct kobject *kobj)
+> >> +{
+> >> +	struct scst_acg *acg;
+> >> +
+> >> +	acg = container_of(kobj, struct scst_acg, acg_kobj);
+> >> +	complete_all(&acg->acg_kobj_release_cmpl);
+> > 
+> > And here.
+> 
+> Thanks for the review. In all those functions kobjects for simplicity
+> are embedded into the outer objects, so they will be freed as part of
+> the outer objects free. Hence, kfree() for the kobjects in the release
+> functions are not needed.
 
-           Summary: dmesg spam: "scsi host5: __pm_runtime_resume() returns
-                    1" (DVD writer)
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: Linux version 2.6.36-rc7-blueyed-00145-g50c6dc9
-                    (root@base) (gcc version 4.4.5 (Ubuntu/Linaro
-                    4.4.4-14ubuntu5) ) #2 SMP PREEMPT Mon Oct 11 21:53:45
-                    CEST 2010
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: Other
-        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
-        ReportedBy: linux-bugs@thequod.de
-        Regression: No
+Sweet, you now have opened yourself up to public ridicule as per the
+documentation in the kernel for how to use kobjects!
 
+Nice job :)
 
-The system log gets spammed via dmesg with several of the following errors per
-second:
+Seriously, you CAN NOT DO THIS!  If you embed a kobject in a different
+structure, then you have to rely on the kobject to handle the reference
+counting for that larger structure.  To do ANYTHING else is a bug and
+wrong.
 
-Oct 11 22:53:39 base kernel: [ 2147.766956] scsi host5: __pm_runtime_resume()!
-Oct 11 22:53:39 base kernel: [ 2147.766962] scsi host5: __pm_runtime_resume()
-returns 1!
+Please read the kobject documentation and fix this code up before
+submitting it again.
 
-Apparently this refers to my DVD drive, according to the /proc files:
+thanks,
 
->From /proc/scsi/scsi:
-Host: scsi5 Channel: 00 Id: 01 Lun: 00
-  Vendor: HL-DT-ST Model: DVDRAM GSA-4163B Rev: A100
-  Type:   CD-ROM                           ANSI  SCSI revision: 05
-
-% cat /proc/scsi/sg/devices 
-[...]
-5       0       1       0       5       1       1       0       1
-
-% cat /proc/scsi/sg/device_strs 
-[...]
-HL-DT-ST        DVDRAM GSA-4163B        A100
-
-This might be caused by CONFIG_PM_DEBUG=y, and might actually be expected.
-In this case, please excuse this report then - but consider making it less
-verbose.
-
-My /proc/config.gz unzipped: http://pastebin.com/knXt8nmw
-lspci -vvv: http://pastebin.com/iMWbaUPC
-
-Might this be related to the writer failing to detect rewritable media? (which
-might be a regression I still would have to investigate deeper into)
-
-(This might be related to https://bugzilla.kernel.org/show_bug.cgi?id=19712 -
-where only a "__pm_runtime_resume()!" is posted repeatedly.)
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+greg k-h
