@@ -1,37 +1,92 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 20072] tapeinfo reports MaxBlock: 16777215  but writes with
- blocksize >2M fail
-Date: Mon, 11 Oct 2010 10:20:06 GMT
-Message-ID: <201010111020.o9BAK6uK008866@demeter2.kernel.org>
-References: <bug-20072-11613@https.bugzilla.kernel.org/>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+ MegaRAID SAS drive
+Date: Mon, 11 Oct 2010 06:55:38 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30100F5506B@cosmail02.lsi.com>
+References: <AANLkTin53S+C_+QzF-drs5BUAx=k7YeiHrTaQGTFSc_a@mail.gmail.com>
+	 <4CAF3E04.1050304@redhat.com> <1286555954.2985.110.camel@mulgrave.site>
+ <4CAF70CD.6020307@redhat.com> <4CB0D2AF.7080609@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [140.211.167.42] ([140.211.167.42]:45332 "EHLO
-	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751304Ab0JKKUH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Oct 2010 06:20:07 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9BAK6Im008867
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Oct 2010 10:20:07 GMT
-In-Reply-To: <bug-20072-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CB0D2AF.7080609@redhat.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, James Bottomley <James.Bottomley@suse.de>
+Cc: bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=20072
-
-
-
-
-
---- Comment #1 from lkolbe@techfak.uni-bielefeld.de  2010-10-11 10:20:06 ---
-Created an attachment (id=33232)
- --> (https://bugzilla.kernel.org/attachment.cgi?id=33232)
-lspci -vvvn of system
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+VG9tYXMsDQoNCj5Bbm90aGVyIGNvcnJlY3Rpb24gLSBmbHVzaF9zY2hlZHVsZWRfd29yayBpcyBh
+bHJlYWR5IHByZXNlbnQgaW4gbWVnYXNzX2RldGFjaF9vbmUNCj5pdCBvbmx5IHNob3VsZCBiZSBt
+b3ZlZCBhd2F5IGZyb20gdGhlIGlmIHN0YXRlbWVudC4NCg0KVGhlIGZsdXNoX3NjaGVkdWxlZF93
+b3JrIGlzIGZvciBzY2hlZHVsZV9kZWxheWVkX3dvcmsoKS4gIFdlIG5lZWQgdG8gZmx1c2ggaXQg
+YW5kIHJlbW92ZS4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IFRvbWFzIEhl
+bnpsIFttYWlsdG86dGhlbnpsQHJlZGhhdC5jb21dIA0KU2VudDogU2F0dXJkYXksIE9jdG9iZXIg
+MDksIDIwMTAgNDozOCBQTQ0KVG86IEphbWVzIEJvdHRvbWxleQ0KQ2M6IGJvIHlhbmc7IGxpbnV4
+LXNjc2lAdmdlci5rZXJuZWwub3JnOyBha3BtQG9zZGwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5r
+ZXJuZWwub3JnOyBZYW5nLCBCbw0KU3ViamVjdDogUmU6IFBBVENIIDEvNV0gc2NzaTogbWVnYXJh
+aWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlEIFNBUyBkcml2
+ZQ0KDQpPbiAxMC8wOC8yMDEwIDA5OjI4IFBNLCBUb21hcyBIZW56bCB3cm90ZToNCj4gT24gMTAv
+MDgvMjAxMCAwNjozOSBQTSwgSmFtZXMgQm90dG9tbGV5IHdyb3RlOg0KPiAgIA0KPj4gT24gRnJp
+LCAyMDEwLTEwLTA4IGF0IDE3OjUxICswMjAwLCBUb21hcyBIZW56bCB3cm90ZToNCj4+ICAgDQo+
+PiAgICAgDQo+Pj4gT24gMDkvMjMvMjAxMCAwNDozNiBBTSwgYm8geWFuZyB3cm90ZToNCj4+PiAg
+ICAgDQo+Pj4gICAgICAgDQo+Pj4+IFRoaXMgcGF0Y2ggaXMgdG9vIGJpZy4gIEkgYW0gdXNpbmcg
+YXR0YWNobWVudCB0byBzdWJtaXQuICBQbGVhc2UNCj4+Pj4gdXNlIGF0dGFjaGVkIGZpbGUgdG8g
+YXBwbHkuICBBbHNvIGxldCBtZSBrbm93IGlmIGl0IGNhbid0IGJlIGFjY2VwdGVkLg0KPj4+Pg0K
+Pj4+PiBUbyBhZGQgdGhlIE9ubGluZSBjb250cm9sbGVyIHJlc2V0IHN1cHBvcnQsIGRyaXZlciBu
+ZWVkIHRvIGRvOg0KPj4+PiBhKS4gcmVzZXQgdGhlIGNvbnRyb2xsZXIgY2hpcHMgLS0gWHNjYWxl
+IGFuZCBHZW4yIHdoaWNoIHdpbGwgY2hhbmdlDQo+Pj4+IHRoZSBmdW5jdGlvbiBjYWxscyBhbmQg
+YWRkIHRoZSByZXNldCBmdW5jdGlvbiByZWxhdGVkIHRvIHRoaXMgdHdvDQo+Pj4+IGNoaXBzLg0K
+Pj4+PiBiKS4gZHVyaW5nIHRoZSByZXNldCwgZHJpdmVyIHdpbGwgc3RvcmUgdGhlIHBlbmRpbmcg
+Y21kcyB3aGljaCBub3QNCj4+Pj4gcmV0dXJuZWQgYnkgRlcgdG8gZHJpdmVyJ3MgcGVuZGluZyBx
+dWV1ZS4gIERyaXZlciB3aWxsIHJlLWlzc3VlIHRob3NlDQo+Pj4+IHBlbmRpbmcgY21kcyBhZ2Fp
+biB0byBGVyBhZnRlciB0aGUgT0NSIGZpbmlzaGVkLg0KPj4+PiBjKS4gSW4gZHJpdmVyJ3MgdGlt
+ZW91dCByb3V0aW5lLCBkcml2ZXIgd2lsbCByZXBvcnQgdG8gT1MgYXMgcmVzZXQuDQo+Pj4+IEFs
+c28gZHJpdmVyJ3MgcXVldWUgcm91dGluZSB3aWxsIGJsb2NrIHRoZSBjbWRzIHVudGlsIHRoZSBP
+Q1INCj4+Pj4gZmluaXNoZWQuDQo+Pj4+IGQpLiBpbiBEcml2ZXIncyBJU1Igcm91dGluZSwgaWYg
+ZHJpdmVyIGdldCB0aGUgRlcgc3RhdGUgYXMgc3RhdGUNCj4+Pj4gY2hhbmdlLCBGVyBpbiBGYWls
+dXJlIHN0YXR1cyBhbmQgRlcgc3VwcG9ydCBvbmxpbmUgY29udHJvbGxlcg0KPj4+PiByZXNldCAo
+T0NSKSwgZHJpdmVyIHdpbGwgc3RhcnQgdG8gZG8gdGhlIGNvbnRyb2xsZXIgcmVzZXQuDQo+Pj4+
+IGUpLiBJbiBkcml2ZXIncyBJT0NUTCByb3V0aW5lLCB0aGUgYXBwbGljYXRpb24gY21kcyB3aWxs
+IHdhaXQgZm9yIHRoZQ0KPj4+PiBPQ1IgdG8gZmluaXNoLCB0aGVuIGlzc3VlIHRoZSBjbWRzIHRv
+IEZXLg0KPj4+Pg0KPj4+PiBTaWduZWQtb2ZmLWJ5IEJvIFlhbmc8Ym8ueWFuZ0Bsc2kuY29tPg0K
+Pj4+Pg0KPj4+PiAtLS0NCj4+Pj4gIGRyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMu
+YyB8ICA3NTYgKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKystLS0NCj4+Pj4gIGRyaXZl
+cnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaCB8ICAgODggKysrLQ0KPj4+PiAgMiBmaWxl
+cyBjaGFuZ2VkLCA3ODcgaW5zZXJ0aW9ucygrKSwgNTcgZGVsZXRpb25zKC0pDQo+Pj4+ICAgICAg
+IA0KPj4+PiAgICAgICAgIA0KPj4+IEhpIEJvLA0KPj4+IGluIHRoZSB3b3JrcXVldWUgZnVuY3Rp
+b24geW91IHNsZWVwIGZvciAzMHMsDQo+Pj4gaXQncyBzY2hlZHVsZWQgaGVyZSAtIHNjaGVkdWxl
+X3dvcmsoJmluc3RhbmNlLT53b3JrX2luaXQpOw0KPj4+DQo+Pj4gK3Byb2Nlc3NfZndfc3RhdGVf
+Y2hhbmdlX3dxKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCj4+PiArew0KPj4+IC4uLg0KPj4+
+ICsJCS8qd2FpdHRpbmcgZm9yIGFib3V0IDIwIHNlY29uZCBiZWZvcmUgc3RhcnQgdGhlIHNlY29u
+ZCBpbml0Ki8NCj4+PiArCQlmb3IgKHdhaXQgPSAwOyB3YWl0IDwgMzA7IHdhaXQrKykgew0KPj4+
+ICsJCQltc2xlZXAoMTAwMCk7DQo+Pj4gKwkJfQ0KPj4+ICAgICANCj4+PiAgICAgICANCj4+IHRo
+aXMgbG90IHNob3VsZCBiZSBzc2xlZXAoMjApIGlmIHlvdSB3YW50IGEgMjAgc2VjIHNsZWVwLg0K
+Pj4gICANCj4+ICAgICANCj4gcGxlYXNlIGRvIHRoYXQgb24gZXZlcnkgcGxhY2Ugd2hlcmUgeW91
+IHVzZSB0aGUgDQo+ICJmb3IgKHdhaXQgPSAwOyB3YWl0IDwgbjsgd2FpdCsrKSBtc2xlZXAoMTAw
+MCk7IiBjb25zdHJ1Y3Rpb24NCj4NCj4gICANCj4+PiAtIHRoaXMgaXMgbm90IGEgZ29vZCBwcmFj
+dGljZSB0byBzbGVlcCBmb3IgYSBzbyBsb25nIHRpbWUgSSB0aGluaw0KPj4+ICAgICANCj4+PiAg
+ICAgICANCj4gdGhpcyBsb25nIHNsZWVwIG1pZ2h0IG1pZ2h0IGJlIG9rLCBpZiB0aGUgd29ya3F1
+ZXVlIGlzIHVzZWQgb25seSByYXJlbHkNCj4gaXMgaXQgc28/DQo+DQo+ICAgDQo+Pj4gLSB5b3Ug
+c2hvdWxkIHVzZSBpbiB5b3VyIGV4aXQgZnVuY3Rpb24gc29tZSBzeW5jaHJvbml6YXRpb24gDQo+
+Pj4gICBmb3IgZXhhbXBsZSAnY2FuY2VsX3dvcmtfc3luYycsIHdpdGhvdXQgdGhhdCBpZiBzb21l
+b25lIHJtbW9kcyB5b3VyIA0KPj4+ICAgbW9kdWxlLCBpdCBjb3VsZCB0aGVuIGxlYWQgdG8gYSBt
+ZW1vcnkgY29ycnVwdGlvbg0KPj4+ICAgICANCj4+PiAgICAgICANCj4+IEFjdHVhbGx5IGZsdXNo
+X3NjaGVkdWxlZF93b3JrKCkgc2hvdWxkIGJlIGZpbmUgLi4uIGl0IHdpbGwgZm9yY2UgdGhlDQo+
+PiBtb2R1bGUgcmVtb3ZhbCB0byB3YWl0IGZvciBjb21wbGV0aW9uIC4uLiBjYW5jZWxsYXRpb24g
+Y2FuIGJlIGVycm9yDQo+PiBwcm9uZSwgc28ganVzdCBmb3JjaW5nIHRoZSB3YWl0IHNvdW5kcyBl
+YXNpZXIuDQo+PiAgIA0KPj4gICAgIA0KQW5vdGhlciBjb3JyZWN0aW9uIC0gZmx1c2hfc2NoZWR1
+bGVkX3dvcmsgaXMgYWxyZWFkeSBwcmVzZW50IGluIG1lZ2Fzc19kZXRhY2hfb25lDQppdCBvbmx5
+IHNob3VsZCBiZSBtb3ZlZCBhd2F5IGZyb20gdGhlIGlmIHN0YXRlbWVudC4NCg0KDQo+IHNvbWVv
+bmUgdG9sZCB0aGF0IGNhbmNlbF93b3JrX3N5bmMgaXMgc2FmZXIgdGhlbiBmbHVzaF9zY2hlZHVs
+ZWRfd29yaw0KPiBidXQgSSdtIG5vdCBhbiBleHBlcnQsIHNvIG9rIA0KPg0KPiBUb21hcw0KPg0K
+PiAgIA0KPj4gSmFtZXMNCj4+DQo+Pg0KPj4gLS0NCj4+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhp
+cyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBpbg0KPj4gdGhl
+IGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4+IE1vcmUg
+bWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8u
+aHRtbA0KPj4gICANCj4+ICAgICANCj4gLS0NCj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxp
+c3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+IHRoZSBib2R5
+IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnDQo+IE1vcmUgbWFqb3Jk
+b21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0K
+PiAgIA0KDQo=
