@@ -1,98 +1,131 @@
-From: "Zou, Yi" <yi.zou@intel.com>
-Subject: RE: [PATCH] add cpu on/offline support in Fibre Channel exchange
- and sequence handling
-Date: Mon, 11 Oct 2010 15:03:17 -0700
-Message-ID: <7C88852EF6F99F4EB538472FCFEBE222014698EF1F@orsmsx509.amr.corp.intel.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: [Open-FCoE] [PATCH] add cpu on/offline support in Fibre
+ Channel exchange and sequence handling
+Date: Mon, 11 Oct 2010 15:08:08 -0700
+Message-ID: <1286834888.13422.1572.camel@fritz>
 References: <AANLkTi=ViAo=uYK0JwK597WkV1x78mntFqU-Cn4u0Dju@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:25705 "EHLO mga01.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:64540 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756513Ab0JKWDY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2010 18:03:24 -0400
+	id S1756463Ab0JKWIJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Oct 2010 18:08:09 -0400
 In-Reply-To: <AANLkTi=ViAo=uYK0JwK597WkV1x78mntFqU-Cn4u0Dju@mail.gmail.com>
-Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>, "Love, Robert W" <robert.w.love@intel.com>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hillf Danton <dhillf@gmail.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-PiANCj4gRmlicmUgQ2hhbm5lbCBleGNoYW5nZSBwb29sIGlzIHNldHVwIGluIGEgcGVyIGNwdSB3
-YXkgdGhhdA0KPiBlbnRpcmUgZXhjaGFuZ2UgaWQgcmFuZ2UgaXMgZGl2aWRlZCBlcXVhbGx5IGFj
-cm9zcyBhbGwgY3B1cy4NCj4gDQo+IFdoZW4gY3B1IGdvZXMgb2ZmbGluZSwgdGhlIGNvcnJlc3Bv
-bmRpbmcgcmFuZ2Ugb2YgZXhjaGcgaWQNCj4gYmVjb21lcyB1bmF2YWlsYWJsZSB1bnRpbCBpdCBp
-cyBvbmxpbmUgYWdhaW4uDQo+IA0KPiBUaGlzIHdvcmsgdHJpZXMgdG8gZml4IHRoZSB1bmF2YWls
-YWJpbGl0eSBiYXNlZCBvbiBub3RpZmllcl9ibG9jay4NClRoaXMgbGluZSBkb2VzIG5vdCB0ZWxs
-IGV4YWN0bHkgaG93IHlvdSd2ZSBmaXhlZCB0aGUgdW5hdmFpbGFiaWxpdHksDQp3aGljaCBJIGFt
-IGd1ZXNzaW5nIGJ5ICJib3Jyb3dpbmcgZXhjaGFuZ2UgaWQgZnJvbSB0aGUgb2ZmbGluZSBDUFVz
-Jw0KZXhjaGFuZ2UgaWQgcG9vbD8iDQoNCkkgdGhpbmsgeW91IGFsc28gbmVlZCB0byBwb2ludCBv
-dXQgdGhpcyB3b3VsZCBicmVhayB0aGUgYXNzdW1lZCBJL08NCkFsaWdubWVudCBvbiBDUFUgYmFz
-ZWQgb24gdGhlIHBlciBjcHUgeGlkIHBvb2wsIEkgZ3Vlc3MgaXQncyBiZXR0ZXINCnRoYW4gbm8g
-eGlkIGF0IGFsbC4gDQoNClNvbWUgbW9yZSBjb21tZW50cyBpbmxpbmUgYmVsb3cuDQoNCg0KPiAN
-Cj4gU2lnbmVkLW9mZi1ieTogSGlsbGYgRGFudG9uIDxkaGlsbGZAZ21haWwuY29tPg0KPiAtLS0N
-Cj4gDQo+IC0tLSBvL2xpbnV4LTIuNi4zNi1yYzQvZHJpdmVycy9zY3NpL2xpYmZjL2ZjX2V4Y2gu
-YwkyMDEwLTA5LTEzDQo+IDA3OjA3OjM4LjAwMDAwMDAwMCArMDgwMA0KPiArKysgbS9saW51eC0y
-LjYuMzYtcmM0L2RyaXZlcnMvc2NzaS9saWJmYy9mY19leGNoLmMJMjAxMC0xMC0wOA0KPiAyMjoy
-NDo0OC4wMDAwMDAwMDAgKzA4MDANCj4gQEAgLTI2LDYgKzI2LDkgQEANCj4gICNpbmNsdWRlIDxs
-aW51eC90aW1lci5oPg0KPiAgI2luY2x1ZGUgPGxpbnV4L3NsYWIuaD4NCj4gICNpbmNsdWRlIDxs
-aW51eC9lcnIuaD4NCj4gKyNpbmNsdWRlIDxsaW51eC9ub3RpZmllci5oPg0KPiArI2luY2x1ZGUg
-PGxpbnV4L2NwdS5oPg0KPiArI2luY2x1ZGUgPGxpbnV4L2NwdW1hc2suaD4NCj4gDQo+ICAjaW5j
-bHVkZSA8c2NzaS9mYy9mY19mYzIuaD4NCj4gDQo+IEBAIC00MCw2ICs0Myw4IEBAIHN0YXRpYyB1
-MTYJZmNfY3B1X29yZGVyOwkvKiAyJ3MgcG93ZXIgdG8NCj4gIHN0YXRpYyBzdHJ1Y3Qga21lbV9j
-YWNoZSAqZmNfZW1fY2FjaGVwOwkgICAgICAgLyogY2FjaGUgZm9yIGV4Y2hhbmdlcw0KPiAqLw0K
-PiAgc3RydWN0IHdvcmtxdWV1ZV9zdHJ1Y3QgKmZjX2V4Y2hfd29ya3F1ZXVlOw0KPiANCj4gK3N0
-YXRpYyBjcHVtYXNrX3QgZmNfb2ZmbGluZV9jcHVfbWFzayA9IENQVV9NQVNLX05PTkU7DQo+ICsN
-Cj4gIC8qDQo+ICAgKiBTdHJ1Y3R1cmUgYW5kIGZ1bmN0aW9uIGRlZmluaXRpb25zIGZvciBtYW5h
-Z2luZyBGaWJyZSBDaGFubmVsDQo+IEV4Y2hhbmdlcw0KPiAgICogYW5kIFNlcXVlbmNlcy4NCj4g
-QEAgLTY2Niw2ICs2NzEsNyBAQCBzdGF0aWMgc3RydWN0IGZjX2V4Y2ggKmZjX2V4Y2hfZW1fYWxs
-b2MoDQo+ICAJdW5zaWduZWQgaW50IGNwdTsNCj4gIAl1MTYgaW5kZXg7DQo+ICAJc3RydWN0IGZj
-X2V4Y2hfcG9vbCAqcG9vbDsNCj4gKwl1bnNpZ25lZCBpbnQgaW5kZXggPSAtMTsNCj4gDQo+ICAJ
-LyogYWxsb2NhdGUgbWVtb3J5IGZvciBleGNoYW5nZSAqLw0KPiAgCWVwID0gbWVtcG9vbF9hbGxv
-YyhtcC0+ZXBfcG9vbCwgR0ZQX0FUT01JQyk7DQo+IEBAIC02NzksNiArNjg1LDcgQEAgc3RhdGlj
-IHN0cnVjdCBmY19leGNoICpmY19leGNoX2VtX2FsbG9jKA0KPiAgCXBvb2wgPSBwZXJfY3B1X3B0
-cihtcC0+cG9vbCwgY3B1KTsNCj4gIAlzcGluX2xvY2tfYmgoJnBvb2wtPmxvY2spOw0KPiAgCXB1
-dF9jcHUoKTsNCj4gK2FnYWluOg0KPiAgCWluZGV4ID0gcG9vbC0+bmV4dF9pbmRleDsNCj4gIAkv
-KiBhbGxvY2F0ZSBuZXcgZXhjaCBmcm9tIHBvb2wgKi8NCj4gIAl3aGlsZSAoZmNfZXhjaF9wdHJf
-Z2V0KHBvb2wsIGluZGV4KSkgew0KPiBAQCAtNzE5LDYgKzcyNiwxNyBAQCBvdXQ6DQo+ICBlcnI6
-DQo+ICAJc3Bpbl91bmxvY2tfYmgoJnBvb2wtPmxvY2spOw0KPiAgCWF0b21pY19pbmMoJm1wLT5z
-dGF0cy5ub19mcmVlX2V4Y2hfeGlkKTsNCj4gKw0KPiArCWNwdSA9IGluZGV4ID0gY3B1bWFza19u
-ZXh0KGluZGV4LCAmZmNfb2ZmbGluZV9jcHVfbWFzayk7DQoNCklzIGluZGV4IG5lZWRlZCBoZXJl
-PyBXaHkgbm90IGp1c3Q6DQoNCgljcHUgPSBjcHVtYXNrX25leHQoY3B1LCAmZmNfb2ZmbGluZV9j
-cHVfbWFzayk7DQoNCkluZGV4IGhlcmUgcmVmZXJzIHRvIHRoZSBuZXh0IGF2YWlsYWJsZSBleGNo
-YW5nZSBpZCBpbiB0aGUgcG9vbC4NCkV4Y2hhbmdlIGlkLiANCg0KDQo+ICsJaWYgKGNwdSA8IG5y
-X2NwdV9pZHMpIHsNCj4gKwkJLyoNCj4gKwkJICogdHJ5IHRvIHRha2UgdGhlIHNoYXJlIG9mIG9m
-ZmxpbmUgY3B1cw0KPiArCQkgKi8NCj4gKwkJcG9vbCA9IHBlcl9jcHVfcHRyKG1wLT5wb29sLCBj
-cHUpOw0KPiArCQlzcGluX2xvY2tfYmgoJnBvb2wtPmxvY2spOw0KPiArCQlnb3RvIGFnYWluOw0K
-DQpXaWxsIHdlIGV2ZXIgZ2V0IHN0dWNrIGhlcmUgaWYgdGhlIGNwdSBpcyB0b2dnbGVkIG9ubGlu
-ZS9vZmZsaW5lDQpyZXBlYXRlZGx5PyBIZXJlIG5vdGhpbmcgcHJvdGVjdHMgZmNfb2ZmbGluZV9j
-cHVfbWFzaywgc28gaXQgbWF5DQpiZSBiYWNrIG9ubGluZSB3aGlsZSB5b3UgYXJlIHRyeWluZyB0
-byBib3Jyb3cgeGlkIGZyb20gaXRzIHBvb2wsDQp3aGljaCBJIHRoaW5rIG1heSBiZSBhbHJpZ2h0
-Lg0KDQoNCi0geWkNCg0KPiArCX0NCj4gKw0KPiAgCW1lbXBvb2xfZnJlZShlcCwgbXAtPmVwX3Bv
-b2wpOw0KPiAgCXJldHVybiBOVUxMOw0KPiAgfQ0KPiBAQCAtMjMyMiw2ICsyMzQwLDM0IEBAIGlu
-dCBmY19leGNoX2luaXQoc3RydWN0IGZjX2xwb3J0ICpscG9ydCkNCj4gIH0NCj4gIEVYUE9SVF9T
-WU1CT0woZmNfZXhjaF9pbml0KTsNCj4gDQo+ICsvKg0KPiArICogY3B1IG9uL29mZmxpbmUgc3Vw
-cG9ydA0KPiArICoqLw0KPiArDQo+ICtzdGF0aWMgaW50IGZjX2NwdV9jYWxsYmFjayhzdHJ1Y3Qg
-bm90aWZpZXJfYmxvY2sgKm5iLA0KPiArCQkJICAgdW5zaWduZWQgbG9uZyBldmVudCwNCj4gKwkJ
-CSAgIHZvaWQgKl9jcHUpDQo+ICt7DQo+ICsJaW50IGNwdSA9ICh1bnNpZ25lZCBsb25nKV9jcHU7
-DQo+ICsNCj4gKwlzd2l0Y2ggKGV2ZW50KSB7DQo+ICsJY2FzZSBDUFVfT05MSU5FOg0KPiArCWNh
-c2UgQ1BVX09OTElORV9GUk9aRU46DQo+ICsJCWNwdW1hc2tfY2xlYXJfY3B1KGNwdSwgJmZjX29m
-ZmxpbmVfY3B1X21hc2spOw0KPiArCQlicmVhazsNCj4gKwljYXNlIENQVV9ERUFEOg0KPiArCWNh
-c2UgQ1BVX0RFQURfRlJPWkVOOg0KPiArCQljcHVtYXNrX3NldF9jcHUoY3B1LCAmZmNfb2ZmbGlu
-ZV9jcHVfbWFzayk7DQo+ICsJCWJyZWFrOw0KPiArIAl9DQo+ICsNCj4gKwlyZXR1cm4gTk9USUZZ
-X09LOw0KPiArfQ0KPiArDQo+ICtzdGF0aWMgc3RydWN0IG5vdGlmaWVyX2Jsb2NrIGZjX25iID0g
-ew0KPiArCS5ub3RpZmllcl9jYWxsID0gZmNfY3B1X2NhbGxiYWNrLA0KPiArfTsNCj4gKw0KPiAg
-LyoqDQo+ICAgKiBmY19zZXR1cF9leGNoX21ncigpIC0gU2V0dXAgYW4gZXhjaGFuZ2UgbWFuYWdl
-cg0KPiAgICovDQo+IEBAIC0yMzU3LDYgKzI0MDMsOSBAQCBpbnQgZmNfc2V0dXBfZXhjaF9tZ3Io
-KQ0KPiAgCWZjX2V4Y2hfd29ya3F1ZXVlID0NCj4gY3JlYXRlX3NpbmdsZXRocmVhZF93b3JrcXVl
-dWUoImZjX2V4Y2hfd29ya3F1ZXVlIik7DQo+ICAJaWYgKCFmY19leGNoX3dvcmtxdWV1ZSkNCj4g
-IAkJcmV0dXJuIC1FTk9NRU07DQo+ICsNCj4gKwlyZWdpc3Rlcl9jcHVfbm90aWZpZXIoJmZjX25i
-KTsNCj4gKw0KPiAgCXJldHVybiAwOw0KPiAgfQ0KPiANCj4gQEAgLTIzNjcsNCArMjQxNiw1IEBA
-IHZvaWQgZmNfZGVzdHJveV9leGNoX21ncigpDQo+ICB7DQo+ICAJZGVzdHJveV93b3JrcXVldWUo
-ZmNfZXhjaF93b3JrcXVldWUpOw0KPiAgCWttZW1fY2FjaGVfZGVzdHJveShmY19lbV9jYWNoZXAp
-Ow0KPiArCXVucmVnaXN0ZXJfY3B1X25vdGlmaWVyKCZmY19uYik7DQo+ICB9DQo+IC0tDQo+IFRv
-IHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBs
-aW51eC1zY3NpIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIu
-a2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwu
-b3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
+On Fri, 2010-10-08 at 22:57 +0800, Hillf Danton wrote:
+
+Hi Hillf,
+
+Can you please prefix the libfc patches with "libfc: <title>"? Also, fo=
+r
+your other patches that have a "SCSI" prefix, I think James' system add=
+s
+the "[SCSI]" prefix when he applies patches so you don't need to add it=
+=2E
+
+> Fibre Channel exchange pool is setup in a per cpu way that
+> entire exchange id range is divided equally across all cpus.
+>=20
+> When cpu goes offline, the corresponding range of exchg id
+> becomes unavailable until it is online again.
+>=20
+> This work tries to fix the unavailability based on notifier_block.
+>=20
+> Signed-off-by: Hillf Danton <dhillf@gmail.com>
+> ---
+>=20
+> --- o/linux-2.6.36-rc4/drivers/scsi/libfc/fc_exch.c	2010-09-13
+> 07:07:38.000000000 +0800
+> +++ m/linux-2.6.36-rc4/drivers/scsi/libfc/fc_exch.c	2010-10-08
+> 22:24:48.000000000 +0800
+
+Most patches I've seen on the various mailing lists are created by
+diffing the files within the kernel directory, so that you don't have
+the "/linux-2.6.36-rc/" in each hunk. It's the difference between using
+'patch -p1' or 'patch -p2' when applying the patch.
+
+I think this is preventing git-am from applying the patches. To import
+them I ended up having git-am fail and then manually using the 'patch
+-p2' command, so that I could get both the commit message from git-am
+and then the patch itself from 'patch'. I don't know about anyone else,
+but if you post patches without the kernel directory in the diff line i=
+t
+would help me out. Thanks.
+
+> @@ -26,6 +26,9 @@
+>  #include <linux/timer.h>
+>  #include <linux/slab.h>
+>  #include <linux/err.h>
+> +#include <linux/notifier.h>
+> +#include <linux/cpu.h>
+> +#include <linux/cpumask.h>
+>=20
+>  #include <scsi/fc/fc_fc2.h>
+>=20
+> @@ -40,6 +43,8 @@ static u16	fc_cpu_order;	/* 2's power to
+>  static struct kmem_cache *fc_em_cachep;	       /* cache for exchange=
+s */
+>  struct workqueue_struct *fc_exch_workqueue;
+>=20
+> +static cpumask_t fc_offline_cpu_mask =3D CPU_MASK_NONE;
+> +
+>  /*
+>   * Structure and function definitions for managing Fibre Channel Exc=
+hanges
+>   * and Sequences.
+> @@ -666,6 +671,7 @@ static struct fc_exch *fc_exch_em_alloc(
+>  	unsigned int cpu;
+>  	u16 index;
+>  	struct fc_exch_pool *pool;
+> +	unsigned int index =3D -1;
+
+This patch doesn't compile:
+
+drivers/scsi/libfc/fc_exch.c: In function =E2=80=98fc_exch_em_alloc=E2=80=
+=99:
+drivers/scsi/libfc/fc_exch.c:674: error: conflicting types for =E2=80=98=
+index=E2=80=99
+drivers/scsi/libfc/fc_exch.c:672: note: previous declaration of =E2=80=98=
+index=E2=80=99
+was here
+make[3]: *** [drivers/scsi/libfc/fc_exch.o] Error 1
+
+In general I think the idea is fine. I haven't run into any
+circumstances where the per-CPU pools are exhausted. I know others have
+when using NPIV, but there were other ways to fix those issues.
+
+>=20
+>  	/* allocate memory for exchange */
+>  	ep =3D mempool_alloc(mp->ep_pool, GFP_ATOMIC);
+> @@ -679,6 +685,7 @@ static struct fc_exch *fc_exch_em_alloc(
+>  	pool =3D per_cpu_ptr(mp->pool, cpu);
+>  	spin_lock_bh(&pool->lock);
+>  	put_cpu();
+> +again:
+>  	index =3D pool->next_index;
+>  	/* allocate new exch from pool */
+>  	while (fc_exch_ptr_get(pool, index)) {
+> @@ -719,6 +726,17 @@ out:
+>  err:
+>  	spin_unlock_bh(&pool->lock);
+>  	atomic_inc(&mp->stats.no_free_exch_xid);
+
+I think this should be moved below the offline pool check, when we've
+really failed to allocate an exchange. It's not a per-CPU pool stat,
+it's an overall resource allocation failure stat, which you're now
+helping to happen less frequently. With the current placement we'll be
+bumping up the counter even though we have allocated an exchange.
+
+Thanks, //Rob
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
