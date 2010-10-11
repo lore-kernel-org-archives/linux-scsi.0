@@ -1,91 +1,121 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: RE: [PATCH 06/15] qla4xxx: Do not wait for the outstanding commands
- to complete
-Date: Mon, 11 Oct 2010 02:24:40 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA87129406BE7@AVEXMB1.qlogic.org>
-References: <5E4F49720D0BAD499EE1F01232234BA87129406789@AVEXMB1.qlogic.org>
- <4CAE8604.1020702@cs.wisc.edu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 20072] New: tapeinfo reports MaxBlock: 16777215  but writes
+ with blocksize >2M fail
+Date: Mon, 11 Oct 2010 10:19:43 GMT
+Message-ID: <bug-20072-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:45206 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753519Ab0JKJYp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Oct 2010 05:24:45 -0400
-In-Reply-To: <4CAE8604.1020702@cs.wisc.edu>
-Content-Language: en-US
+Received: from [140.211.167.42] ([140.211.167.42]:45300 "EHLO
+	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304Ab0JKKTn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Oct 2010 06:19:43 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9BAJhAb008330
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Oct 2010 10:19:43 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Nilesh Javali <nilesh.javali@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
->-----Original Message-----
->From: Mike Christie [mailto:michaelc@cs.wisc.edu]
->Sent: Friday, October 08, 2010 8:16 AM
->To: Vikas Chaudhary
->Cc: James.Bottomley@suse.de; linux-scsi@vger.kernel.org; Nilesh Javali;
->Ravi Anand
->Subject: Re: [PATCH 06/15] qla4xxx: Do not wait for the outstanding
->commands to complete
->
->On 10/07/2010 12:49 AM, Vikas Chaudhary wrote:
->> From: Nilesh Javali<nilesh.javali@qlogic.com>
->>
->> Do not wait for the outstanding commands to complete in case of
->> firmware hang.
->>
->> Signed-off-by: Nilesh Javali<nilesh.javali@qlogic.com>
->> Signed-off-by: Vikas Chaudhary<vikas.chaudhary@qlogic.com>
->> Signed-off-by: Ravi Anand<ravi.anand@qlogic.com>
->> ---
->>   drivers/scsi/qla4xxx/ql4_os.c |    6 ++++--
->>   1 files changed, 4 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/qla4xxx/ql4_os.c
->> b/drivers/scsi/qla4xxx/ql4_os.c index 56962e5..a6455fb 100644
->> --- a/drivers/scsi/qla4xxx/ql4_os.c
->> +++ b/drivers/scsi/qla4xxx/ql4_os.c
->> @@ -1102,7 +1102,8 @@ static int qla4xxx_recover_adapter(struct
->scsi_qla_host *ha)
->>   		    ha->host_no, __func__));
->>   		status = ha->isp_ops->reset_firmware(ha);
->>   		if (status == QLA_SUCCESS) {
->> -			qla4xxx_cmd_wait(ha);
->> +			if (!test_bit(AF_FW_RECOVERY,&ha->flags))
->> +				qla4xxx_cmd_wait(ha);
->>   			ha->isp_ops->disable_intrs(ha);
->>   			qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
->>   			qla4xxx_abort_active_cmds(ha, DID_RESET<<  16); @@ -
->1119,7
->> +1120,8 @@ static int qla4xxx_recover_adapter(struct scsi_qla_host *ha)
->>   	 * or if stop_firmware fails for ISP-82xx.
->>   	 * This is the default case for ISP-4xxx */
->>   	if (!is_qla8022(ha) || reset_chip) {
->> -		qla4xxx_cmd_wait(ha);
->> +		if (!test_bit(AF_FW_RECOVERY,&ha->flags))
->> +			qla4xxx_cmd_wait(ha);
->>   		qla4xxx_process_aen(ha, FLUSH_DDB_CHANGED_AENS);
->>   		qla4xxx_abort_active_cmds(ha, DID_RESET<<  16);
->>   		DEBUG2(ql4_printk(KERN_INFO, ha,
->
->If we go from qla4xxx_eh_host_reset->qla4xxx_recover_adapter and you do not
->wait, is is possible for the driver to be accessing scsi commands after
->qla4xxx_eh_host_reset returns? If so I think there is a problem where the
->scsi eh will fail or retry the cmd so the memory for the scsi command could
->be reallocated/freed.
->
+https://bugzilla.kernel.org/show_bug.cgi?id=20072
 
-We do not access command after qla4xxx_eh_host_reset returns.
+           Summary: tapeinfo reports MaxBlock: 16777215  but writes with
+                    blocksize >2M fail
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.32.21
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: lkolbe@techfak.uni-bielefeld.de
+                CC: sfrey@techfak.uni-bielefeld.de
+        Regression: No
 
->On a related note, has qla4xxx_eh_host_reset ever returned SUCCESS? I think
->there is a problem in qla4xxx_cmd_wait when the scsi eh is running. At that
->time blk_finish_request->blk_queue_end_tag is not going to be run, because
->if the driver were to call scsi_done the block layer would do
->blk_complete_request and the blk_mark_rq_complete would fail (this is
->because the scsi/block eh timeout could has already marked it complete).
->
->I think you need the attached patch.
 
-Yes. We need attached patch. I am doing some testing with this patch.
-I will send out this patch for inclusion soon.
+Created an attachment (id=33222)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=33222)
+lsscsi of system
+
+As subject says, tapeinfo reports the tape drives (IBM ULTRIUM-HH4) support 16M
+Blocksize, but writing in blocksizes bigger than 2M fail 
+
+root@shepherd:~# tapeinfo -f /dev/nst0
+Product Type: Tape Drive
+Vendor ID: 'IBM     '
+Product ID: 'ULTRIUM-HH4     '
+Revision: '85V3'
+Attached Changer API: No
+SerialNumber: '1K10014452'
+MinBlock: 1
+MaxBlock: 16777215
+SCSI ID: 0
+SCSI LUN: 0
+Ready: yes
+BufferedMode: yes
+Medium Type: 0x48
+Density Code: 0x46
+BlockSize: 0
+DataCompEnabled: yes
+DataCompCapable: yes
+DataDeCompEnabled: yes
+CompType: 0x1
+DeCompType: 0x1
+BOP: yes
+Block Position: 0
+Partition 0 Remaining Kbytes: -1
+Partition 0 Size in Kbytes: -1
+ActivePartition: 0
+EarlyWarningSize: 0
+
+dd tests:
+root@shepherd:~# dd if=/dev/zero of=/dev/nst0 bs=2M count=4
+4+0 records in
+4+0 records out
+8388608 bytes (8.4 MB) copied, 7.52488 s, 1.1 MB/s
+root@shepherd:~# dd if=/dev/zero of=/dev/nst0 bs=4M count=4
+dd: writing `/dev/nst0': Device or resource busy
+1+0 records in
+0+0 records out
+0 bytes (0 B) copied, 1.84202 s, 0.0 kB/s
+root@shepherd:~# dd if=/dev/zero of=/dev/nst0 bs=8M count=4
+dd: writing `/dev/nst0': Device or resource busy
+1+0 records in
+0+0 records out
+0 bytes (0 B) copied, 1.76087 s, 0.0 kB/s
+root@shepherd:~# dd if=/dev/zero of=/dev/nst0 bs=16M count=4
+dd: writing `/dev/nst0': Invalid argument
+1+0 records in
+0+0 records out
+0 bytes (0 B) copied, 0.00986913 s, 0.0 kB/s
+root@shepherd:~# dd if=/dev/zero of=/dev/nst0 bs=15M count=4
+dd: writing `/dev/nst0': Value too large for defined data type
+1+0 records in
+0+0 records out
+0 bytes (0 B) copied, 0.00954276 s, 0.0 kB/s
+root@shepherd:~# dd if=/dev/zero of=/dev/nst0 bs=16777215 count=4
+dd: writing `/dev/nst0': Value too large for defined data type
+1+0 records in
+0+0 records out
+0 bytes (0 B) copied, 0.0102587 s, 0.0 kB/s
+root@shepherd:~# dd if=/dev/zero of=/dev/nst0 bs=16777214 count=4
+dd: writing `/dev/nst0': Value too large for defined data type
+1+0 records in
+0+0 records out
+0 bytes (0 B) copied, 0.0100916 s, 0.0 kB/s
+root@shepherd:~# dd if=/dev/zero of=/dev/nst0 bs=2M count=4
+4+0 records in
+4+0 records out
+8388608 bytes (8.4 MB) copied, 1.76435 s, 4.8 MB/s
+
+lspci -vvvn and lsscsi -v are attached; do you need more info?
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
