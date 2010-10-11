@@ -1,60 +1,130 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC v2 00/21] TCM Core and TCM_Loop patches for v2.6.37
-Date: Mon, 11 Oct 2010 16:18:23 +0200
-Message-ID: <4CB31CAF.7020808@kernel.org>
-References: <1285195702-11421-1-git-send-email-nab@linux-iscsi.org>	 <20101006111621O.fujita.tomonori@lab.ntt.co.jp>	 <1286340405.5685.93.camel@haakon2.linux-iscsi.org>	 <20101006160434M.fujita.tomonori@lab.ntt.co.jp> <1286349898.5685.117.camel@haakon2.linux-iscsi.org> <4CAC833F.2010108@kernel.org> <4CACAE56.6090209@vlnb.net>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+ MegaRAID SAS drive
+Date: Mon, 11 Oct 2010 09:37:27 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30100FF9C58@cosmail02.lsi.com>
+References: <AANLkTin53S+C_+QzF-drs5BUAx=k7YeiHrTaQGTFSc_a@mail.gmail.com>
+	 <4CAF3E04.1050304@redhat.com> <1286555954.2985.110.camel@mulgrave.site>
+ <4CAF70CD.6020307@redhat.com> <4CB0D2AF.7080609@redhat.com>
+ <4B6A08C587958942AA3002690DD4F8C30100F5506B@cosmail02.lsi.com>
+ <4CB30F27.9090009@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:45610 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754713Ab0JKOTH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2010 10:19:07 -0400
-In-Reply-To: <4CACAE56.6090209@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CB30F27.9090009@redhat.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com, jeff@garzik.org
 
-Hello,
-
-On 10/06/2010 07:13 PM, Vladislav Bolkhovitin wrote:
-> Tejun Heo, on 10/06/2010 06:10 PM wrote:
->> On 10/06/2010 09:24 AM, Nicholas A. Bellinger wrote:
->>>> I like to hear the opinions of SCSI maintainer and ATA folks.
->>>
->>> jejb, jgarzik, tejun and co..?  Any thoughts here..?
->>
->> I frankly have no idea whatsoever.  Is there something I can read to
->> educate myself on the subject?
-> 
-> General information about a SCSI target subsystem you can find in
-> http://scst.sourceforge.net. More internal details about implementation
-> in http://scst.sourceforge.net/scst_pg.html. Features which are
-> implemented in http://scst.sourceforge.net/comparison.html.
-> 
-> Directly on the subject you can find some considerations in
-> http://lkml.org/lkml/2010/10/1/140 (second half of the message).
-> 
-> My opinion is that in ideal the SCSI initiator subsystem should be
-> drivers/scsi/initiator and the target subsystem - drivers/scsi/target
-> with shared code in drivers/scsi/. But in reality such big
-> reorganization is unlikely possible, so it's better to leave SCSI
-> initiator subsystem in drivers/scsi and the target subsystem - in the
-> separate directory in drivers/ (drivers/scst for SCST).
-
-Thanks for the pointers.  Yeah, it would be pretty interesting to have
-ATA support there too and for ATA I don't really see why anyone would
-mix the initiator and target driver implementations.  They may share
-protocol constants and some utility functions but that will be about
-it, so it will mostly be a completely separate subsystem and I think
-it probably is better to put it somewhere separate too.  I think it
-would be best if we can keep the two subsystems clearly separated.
-They're targeting very different and most likely disjoint audiences
-after all.
-
-Thanks.
-
--- 
-tejun
+VG9tYXMsDQoNClRoZSByZWFzb24gdGhlIGRyaXZlciBkb2VzIGZsdXNoX3NjaGVkdWxlZF93b3Jr
+KCkgaXMgZHJpdmVyIGRpZCBjYW5jZWxfZGVsYXllZF93b3JrKCkuICBJIGFtIG5vdCBzdXJlIGRy
+aXZlciBuZWVkIHRvIGNhbGwgZmx1c2hfc2NoZWR1bGVkX3dvcmsoKSBpZiB0aGUgc2NoZWR1bGVk
+IHdvcmsgYWxyZWFkeSBkb25lLCBidXQgSSB3aWxsIHRlc3QgdGhpcyBjaGFuZ2VzIGFuZCBzdWJt
+aXQgYW5vdGhlciBwYXRjaCBhcyBzb29uIGFzIGl0IHdvcmtzIGZpbmUuICANCg0KVGhpcyBjaGFu
+Z2Ugc2hvdWxkIG5vdCBiZSB0aGUgcGFydCBvZiB0aGlzIHBhdGNoLCB3ZSB3b3VsZCBoYXZlIHRo
+ZSBuZXcgcGF0Y2ggc3VibWl0IGFmdGVyIHRoZSB2ZXJpZmljYXRpb24uIA0KDQpSZWdhcmRzLA0K
+DQpCbyBZYW5nICAgDQogDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogVG9tYXMg
+SGVuemwgW21haWx0bzp0aGVuemxAcmVkaGF0LmNvbV0gDQpTZW50OiBNb25kYXksIE9jdG9iZXIg
+MTEsIDIwMTAgOToyMSBBTQ0KVG86IFlhbmcsIEJvDQpDYzogSmFtZXMgQm90dG9tbGV5OyBibyB5
+YW5nOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgYWtwbUBvc2RsLm9yZzsgbGludXgta2Vy
+bmVsQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFBBVENIIDEvNV0gc2NzaTogbWVnYXJh
+aWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlEIFNBUyBkcml2
+ZQ0KDQpPbiAxMC8xMS8yMDEwIDAyOjU1IFBNLCBZYW5nLCBCbyB3cm90ZToNCj4gVG9tYXMsDQo+
+DQo+ICAgDQo+PiBBbm90aGVyIGNvcnJlY3Rpb24gLSBmbHVzaF9zY2hlZHVsZWRfd29yayBpcyBh
+bHJlYWR5IHByZXNlbnQgaW4gbWVnYXNzX2RldGFjaF9vbmUNCj4+IGl0IG9ubHkgc2hvdWxkIGJl
+IG1vdmVkIGF3YXkgZnJvbSB0aGUgaWYgc3RhdGVtZW50Lg0KPj4gICAgIA0KPiBUaGUgZmx1c2hf
+c2NoZWR1bGVkX3dvcmsgaXMgZm9yIHNjaGVkdWxlX2RlbGF5ZWRfd29yaygpLiAgV2UgbmVlZCB0
+byBmbHVzaCBpdCBhbmQgcmVtb3ZlLg0KPiAgIA0KSSdtIG5vdCBzYXlpbmcgaXQgc2hvdWxkIGJl
+IHJlbW92ZWQsIEkgdGhpbmsgYSBtb3ZlIG91dHNpZGUgZnJvbSB0aGUgJ2lmJyBibG9jaw0KbWFr
+ZXMgaXQgd29yayBmb3IgZXYtPmhvdHBsdWdfd29yayBhbmQgZm9yIHRoZSBuZXdseSBhZGRlZCBp
+bnN0YW5jZS0+d29ya19pbml0DQoNCg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9tZWdhcmFp
+ZC9tZWdhcmFpZF9zYXMuYyBiL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYw0K
+aW5kZXggNTU5NTFmNC4uNzc3MzcwNyAxMDA2NDQNCi0tLSBhL2RyaXZlcnMvc2NzaS9tZWdhcmFp
+ZC9tZWdhcmFpZF9zYXMuYw0KKysrIGIvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nh
+cy5jDQpAQCAtNDA4OCw5ICs0MDg4LDkgQEAgc3RhdGljIHZvaWQgX19kZXZleGl0IG1lZ2FzYXNf
+ZGV0YWNoX29uZShzdHJ1Y3QgcGNpX2RldiAqcGRldikNCiAJCXN0cnVjdCBtZWdhc2FzX2Flbl9l
+dmVudCAqZXYgPSBpbnN0YW5jZS0+ZXY7DQogCQljYW5jZWxfZGVsYXllZF93b3JrKA0KIAkJCShz
+dHJ1Y3QgZGVsYXllZF93b3JrICopJmV2LT5ob3RwbHVnX3dvcmspOw0KLQkJZmx1c2hfc2NoZWR1
+bGVkX3dvcmsoKTsNCi0JCWluc3RhbmNlLT5ldiA9IE5VTEw7DQogCX0NCisJZmx1c2hfc2NoZWR1
+bGVkX3dvcmsoKTsNCisJaW5zdGFuY2UtPmV2ID0gTlVMTDsNCiANCiAJdGFza2xldF9raWxsKCZp
+bnN0YW5jZS0+aXNyX3Rhc2tsZXQpOw0KIA0KLS0NCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2Ut
+LS0tLQ0KPiBGcm9tOiBUb21hcyBIZW56bCBbbWFpbHRvOnRoZW56bEByZWRoYXQuY29tXSANCj4g
+U2VudDogU2F0dXJkYXksIE9jdG9iZXIgMDksIDIwMTAgNDozOCBQTQ0KPiBUbzogSmFtZXMgQm90
+dG9tbGV5DQo+IENjOiBibyB5YW5nOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgYWtwbUBv
+c2RsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgWWFuZywgQm8NCj4gU3ViamVj
+dDogUmU6IFBBVENIIDEvNV0gc2NzaTogbWVnYXJhaWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9s
+bGVyIFJlc2V0IHRvIE1lZ2FSQUlEIFNBUyBkcml2ZQ0KPg0KPiBPbiAxMC8wOC8yMDEwIDA5OjI4
+IFBNLCBUb21hcyBIZW56bCB3cm90ZToNCj4gICANCj4+IE9uIDEwLzA4LzIwMTAgMDY6MzkgUE0s
+IEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4+ICAgDQo+PiAgICAgDQo+Pj4gT24gRnJpLCAyMDEw
+LTEwLTA4IGF0IDE3OjUxICswMjAwLCBUb21hcyBIZW56bCB3cm90ZToNCj4+PiAgIA0KPj4+ICAg
+ICANCj4+PiAgICAgICANCj4+Pj4gT24gMDkvMjMvMjAxMCAwNDozNiBBTSwgYm8geWFuZyB3cm90
+ZToNCj4+Pj4gICAgIA0KPj4+PiAgICAgICANCj4+Pj4gICAgICAgICANCj4+Pj4+IFRoaXMgcGF0
+Y2ggaXMgdG9vIGJpZy4gIEkgYW0gdXNpbmcgYXR0YWNobWVudCB0byBzdWJtaXQuICBQbGVhc2UN
+Cj4+Pj4+IHVzZSBhdHRhY2hlZCBmaWxlIHRvIGFwcGx5LiAgQWxzbyBsZXQgbWUga25vdyBpZiBp
+dCBjYW4ndCBiZSBhY2NlcHRlZC4NCj4+Pj4+DQo+Pj4+PiBUbyBhZGQgdGhlIE9ubGluZSBjb250
+cm9sbGVyIHJlc2V0IHN1cHBvcnQsIGRyaXZlciBuZWVkIHRvIGRvOg0KPj4+Pj4gYSkuIHJlc2V0
+IHRoZSBjb250cm9sbGVyIGNoaXBzIC0tIFhzY2FsZSBhbmQgR2VuMiB3aGljaCB3aWxsIGNoYW5n
+ZQ0KPj4+Pj4gdGhlIGZ1bmN0aW9uIGNhbGxzIGFuZCBhZGQgdGhlIHJlc2V0IGZ1bmN0aW9uIHJl
+bGF0ZWQgdG8gdGhpcyB0d28NCj4+Pj4+IGNoaXBzLg0KPj4+Pj4gYikuIGR1cmluZyB0aGUgcmVz
+ZXQsIGRyaXZlciB3aWxsIHN0b3JlIHRoZSBwZW5kaW5nIGNtZHMgd2hpY2ggbm90DQo+Pj4+PiBy
+ZXR1cm5lZCBieSBGVyB0byBkcml2ZXIncyBwZW5kaW5nIHF1ZXVlLiAgRHJpdmVyIHdpbGwgcmUt
+aXNzdWUgdGhvc2UNCj4+Pj4+IHBlbmRpbmcgY21kcyBhZ2FpbiB0byBGVyBhZnRlciB0aGUgT0NS
+IGZpbmlzaGVkLg0KPj4+Pj4gYykuIEluIGRyaXZlcidzIHRpbWVvdXQgcm91dGluZSwgZHJpdmVy
+IHdpbGwgcmVwb3J0IHRvIE9TIGFzIHJlc2V0Lg0KPj4+Pj4gQWxzbyBkcml2ZXIncyBxdWV1ZSBy
+b3V0aW5lIHdpbGwgYmxvY2sgdGhlIGNtZHMgdW50aWwgdGhlIE9DUg0KPj4+Pj4gZmluaXNoZWQu
+DQo+Pj4+PiBkKS4gaW4gRHJpdmVyJ3MgSVNSIHJvdXRpbmUsIGlmIGRyaXZlciBnZXQgdGhlIEZX
+IHN0YXRlIGFzIHN0YXRlDQo+Pj4+PiBjaGFuZ2UsIEZXIGluIEZhaWx1cmUgc3RhdHVzIGFuZCBG
+VyBzdXBwb3J0IG9ubGluZSBjb250cm9sbGVyDQo+Pj4+PiByZXNldCAoT0NSKSwgZHJpdmVyIHdp
+bGwgc3RhcnQgdG8gZG8gdGhlIGNvbnRyb2xsZXIgcmVzZXQuDQo+Pj4+PiBlKS4gSW4gZHJpdmVy
+J3MgSU9DVEwgcm91dGluZSwgdGhlIGFwcGxpY2F0aW9uIGNtZHMgd2lsbCB3YWl0IGZvciB0aGUN
+Cj4+Pj4+IE9DUiB0byBmaW5pc2gsIHRoZW4gaXNzdWUgdGhlIGNtZHMgdG8gRlcuDQo+Pj4+Pg0K
+Pj4+Pj4gU2lnbmVkLW9mZi1ieSBCbyBZYW5nPGJvLnlhbmdAbHNpLmNvbT4NCj4+Pj4+DQo+Pj4+
+PiAtLS0NCj4+Pj4+ICBkcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMgfCAgNzU2
+ICsrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0tDQo+Pj4+PiAgZHJpdmVycy9zY3Np
+L21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oIHwgICA4OCArKystDQo+Pj4+PiAgMiBmaWxlcyBjaGFu
+Z2VkLCA3ODcgaW5zZXJ0aW9ucygrKSwgNTcgZGVsZXRpb25zKC0pDQo+Pj4+PiAgICAgICANCj4+
+Pj4+ICAgICAgICAgDQo+Pj4+PiAgICAgICAgICAgDQo+Pj4+IEhpIEJvLA0KPj4+PiBpbiB0aGUg
+d29ya3F1ZXVlIGZ1bmN0aW9uIHlvdSBzbGVlcCBmb3IgMzBzLA0KPj4+PiBpdCdzIHNjaGVkdWxl
+ZCBoZXJlIC0gc2NoZWR1bGVfd29yaygmaW5zdGFuY2UtPndvcmtfaW5pdCk7DQo+Pj4+DQo+Pj4+
+ICtwcm9jZXNzX2Z3X3N0YXRlX2NoYW5nZV93cShzdHJ1Y3Qgd29ya19zdHJ1Y3QgKndvcmspDQo+
+Pj4+ICt7DQo+Pj4+IC4uLg0KPj4+PiArCQkvKndhaXR0aW5nIGZvciBhYm91dCAyMCBzZWNvbmQg
+YmVmb3JlIHN0YXJ0IHRoZSBzZWNvbmQgaW5pdCovDQo+Pj4+ICsJCWZvciAod2FpdCA9IDA7IHdh
+aXQgPCAzMDsgd2FpdCsrKSB7DQo+Pj4+ICsJCQltc2xlZXAoMTAwMCk7DQo+Pj4+ICsJCX0NCj4+
+Pj4gICAgIA0KPj4+PiAgICAgICANCj4+Pj4gICAgICAgICANCj4+PiB0aGlzIGxvdCBzaG91bGQg
+YmUgc3NsZWVwKDIwKSBpZiB5b3Ugd2FudCBhIDIwIHNlYyBzbGVlcC4NCj4+PiAgIA0KPj4+ICAg
+ICANCj4+PiAgICAgICANCj4+IHBsZWFzZSBkbyB0aGF0IG9uIGV2ZXJ5IHBsYWNlIHdoZXJlIHlv
+dSB1c2UgdGhlIA0KPj4gImZvciAod2FpdCA9IDA7IHdhaXQgPCBuOyB3YWl0KyspIG1zbGVlcCgx
+MDAwKTsiIGNvbnN0cnVjdGlvbg0KPj4NCj4+ICAgDQo+PiAgICAgDQo+Pj4+IC0gdGhpcyBpcyBu
+b3QgYSBnb29kIHByYWN0aWNlIHRvIHNsZWVwIGZvciBhIHNvIGxvbmcgdGltZSBJIHRoaW5rDQo+
+Pj4+ICAgICANCj4+Pj4gICAgICAgDQo+Pj4+ICAgICAgICAgDQo+PiB0aGlzIGxvbmcgc2xlZXAg
+bWlnaHQgbWlnaHQgYmUgb2ssIGlmIHRoZSB3b3JrcXVldWUgaXMgdXNlZCBvbmx5IHJhcmVseQ0K
+Pj4gaXMgaXQgc28/DQo+Pg0KPj4gICANCj4+ICAgICANCj4+Pj4gLSB5b3Ugc2hvdWxkIHVzZSBp
+biB5b3VyIGV4aXQgZnVuY3Rpb24gc29tZSBzeW5jaHJvbml6YXRpb24gDQo+Pj4+ICAgZm9yIGV4
+YW1wbGUgJ2NhbmNlbF93b3JrX3N5bmMnLCB3aXRob3V0IHRoYXQgaWYgc29tZW9uZSBybW1vZHMg
+eW91ciANCj4+Pj4gICBtb2R1bGUsIGl0IGNvdWxkIHRoZW4gbGVhZCB0byBhIG1lbW9yeSBjb3Jy
+dXB0aW9uDQo+Pj4+ICAgICANCj4+Pj4gICAgICAgDQo+Pj4+ICAgICAgICAgDQo+Pj4gQWN0dWFs
+bHkgZmx1c2hfc2NoZWR1bGVkX3dvcmsoKSBzaG91bGQgYmUgZmluZSAuLi4gaXQgd2lsbCBmb3Jj
+ZSB0aGUNCj4+PiBtb2R1bGUgcmVtb3ZhbCB0byB3YWl0IGZvciBjb21wbGV0aW9uIC4uLiBjYW5j
+ZWxsYXRpb24gY2FuIGJlIGVycm9yDQo+Pj4gcHJvbmUsIHNvIGp1c3QgZm9yY2luZyB0aGUgd2Fp
+dCBzb3VuZHMgZWFzaWVyLg0KPj4+ICAgDQo+Pj4gICAgIA0KPj4+ICAgICAgIA0KPiBBbm90aGVy
+IGNvcnJlY3Rpb24gLSBmbHVzaF9zY2hlZHVsZWRfd29yayBpcyBhbHJlYWR5IHByZXNlbnQgaW4g
+bWVnYXNzX2RldGFjaF9vbmUNCj4gaXQgb25seSBzaG91bGQgYmUgbW92ZWQgYXdheSBmcm9tIHRo
+ZSBpZiBzdGF0ZW1lbnQuDQo+DQo+DQo+ICAgDQo+PiBzb21lb25lIHRvbGQgdGhhdCBjYW5jZWxf
+d29ya19zeW5jIGlzIHNhZmVyIHRoZW4gZmx1c2hfc2NoZWR1bGVkX3dvcmsNCj4+IGJ1dCBJJ20g
+bm90IGFuIGV4cGVydCwgc28gb2sgDQo+Pg0KPj4gVG9tYXMNCj4+DQo+PiAgIA0KPj4gICAgIA0K
+Pj4+IEphbWVzDQo+Pj4NCj4+Pg0KPj4+IC0tDQo+Pj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlz
+IGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+Pj4gdGhl
+IGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4+PiBNb3Jl
+IG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZv
+Lmh0bWwNCj4+PiAgIA0KPj4+ICAgICANCj4+PiAgICAgICANCj4+IC0tDQo+PiBUbyB1bnN1YnNj
+cmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtc2Nz
+aSIgaW4NCj4+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwu
+b3JnDQo+PiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21h
+am9yZG9tby1pbmZvLmh0bWwNCj4+ICAgDQo+PiAgICAgDQo+IE7vv73vv73vv73vv73vv71y77+9
+77+9ee+/ve+/ve+/vWLvv71Y77+977+9x6d277+9Xu+/vSneunsubu+/vSvvv73vv73vv73vv717
+77+977+977+9Iu+/vXthee+/vR3Kh9qZ77+9LGoN77+977+9Zu+/ve+/ve+/vWjvv73vv73vv716
+77+9Hu+/vXfvv73vv73vv70NCu+/ve+/ve+/vWo6K3bvv73vv73vv71377+9au+/vW3vv73vv73v
+v73vv70N77+977+977+977+9elor77+977+93aJqIu+/ve+/vSF0bWw9DQoNCg==
