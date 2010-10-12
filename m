@@ -1,210 +1,155 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
  MegaRAID SAS drive
-Date: Tue, 12 Oct 2010 16:28:45 +0200
-Message-ID: <4CB4709D.7020407@redhat.com>
-References: <AANLkTin53S+C_+QzF-drs5BUAx=k7YeiHrTaQGTFSc_a@mail.gmail.com>	 <4CAF3E04.1050304@redhat.com> <1286555954.2985.110.camel@mulgrave.site> <4CAF70CD.6020307@redhat.com> <4CB0D2AF.7080609@redhat.com> <4B6A08C587958942AA3002690DD4F8C30100F5506B@cosmail02.lsi.com> <4CB30F27.9090009@redhat.com> <4B6A08C587958942AA3002690DD4F8C30100FF9C58@cosmail02.lsi.com>
+Date: Tue, 12 Oct 2010 08:57:50 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30100FFA030@cosmail02.lsi.com>
+References: <AANLkTin53S+C_+QzF-drs5BUAx=k7YeiHrTaQGTFSc_a@mail.gmail.com>
+	 <4CAF3E04.1050304@redhat.com> <1286555954.2985.110.camel@mulgrave.site>
+ <4CAF70CD.6020307@redhat.com> <4CB0D2AF.7080609@redhat.com>
+ <4B6A08C587958942AA3002690DD4F8C30100F5506B@cosmail02.lsi.com>
+ <4CB30F27.9090009@redhat.com>
+ <4B6A08C587958942AA3002690DD4F8C30100FF9C58@cosmail02.lsi.com>
+ <4CB4709D.7020407@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41068 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753317Ab0JLO3c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Oct 2010 10:29:32 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30100FF9C58@cosmail02.lsi.com>
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:37764 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757502Ab0JLO6x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Oct 2010 10:58:53 -0400
+In-Reply-To: <4CB4709D.7020407@redhat.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
+To: Tomas Henzl <thenzl@redhat.com>
 Cc: James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-On 10/11/2010 05:37 PM, Yang, Bo wrote:
-> Tomas,
->
-> The reason the driver does flush_scheduled_work() is driver did cancel_delayed_work().  I am not sure driver need to call flush_scheduled_work() if the scheduled work already done, but I will test this changes and submit another patch as soon as it works fine.  
->   
-Driver needs to call flush_scheduled_work() because you are adding in this patch a new workqueue:
-INIT_WORK(&instance->work_init, process_fw_state_change_wq); so calling the flush_scheduled_work()
-only if a certain condition is met is the problem. If the condition comes true for both workqueues
-then it would be fine, but I think that it isn't so.
-With this patch we could have a started workqueue (with a long 30 sec sleep) and when the module
-is removed then probably a memory corruption etc. 
-
-
-> This change should not be the part of this patch, we would have the new patch submit after the verification. 
->   
-I would prefer to have it in one patch, but if it is for you easier, then do it as you wish.
-
-Tomas
-
-
-> Regards,
->
-> Bo Yang   
->  
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com] 
-> Sent: Monday, October 11, 2010 9:21 AM
-> To: Yang, Bo
-> Cc: James Bottomley; bo yang; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org
-> Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to MegaRAID SAS drive
->
-> On 10/11/2010 02:55 PM, Yang, Bo wrote:
->   
->> Tomas,
->>
->>   
->>     
->>> Another correction - flush_scheduled_work is already present in megass_detach_one
->>> it only should be moved away from the if statement.
->>>     
->>>       
->> The flush_scheduled_work is for schedule_delayed_work().  We need to flush it and remove.
->>   
->>     
-> I'm not saying it should be removed, I think a move outside from the 'if' block
-> makes it work for ev->hotplug_work and for the newly added instance->work_init
->
->
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
-> index 55951f4..7773707 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas.c
-> @@ -4088,9 +4088,9 @@ static void __devexit megasas_detach_one(struct pci_dev *pdev)
->  		struct megasas_aen_event *ev = instance->ev;
->  		cancel_delayed_work(
->  			(struct delayed_work *)&ev->hotplug_work);
-> -		flush_scheduled_work();
-> -		instance->ev = NULL;
->  	}
-> +	flush_scheduled_work();
-> +	instance->ev = NULL;
->  
->  	tasklet_kill(&instance->isr_tasklet);
->  
-> --
->
->   
->> -----Original Message-----
->> From: Tomas Henzl [mailto:thenzl@redhat.com] 
->> Sent: Saturday, October 09, 2010 4:38 PM
->> To: James Bottomley
->> Cc: bo yang; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org; Yang, Bo
->> Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to MegaRAID SAS drive
->>
->> On 10/08/2010 09:28 PM, Tomas Henzl wrote:
->>   
->>     
->>> On 10/08/2010 06:39 PM, James Bottomley wrote:
->>>   
->>>     
->>>       
->>>> On Fri, 2010-10-08 at 17:51 +0200, Tomas Henzl wrote:
->>>>   
->>>>     
->>>>       
->>>>         
->>>>> On 09/23/2010 04:36 AM, bo yang wrote:
->>>>>     
->>>>>       
->>>>>         
->>>>>           
->>>>>> This patch is too big.  I am using attachment to submit.  Please
->>>>>> use attached file to apply.  Also let me know if it can't be accepted.
->>>>>>
->>>>>> To add the Online controller reset support, driver need to do:
->>>>>> a). reset the controller chips -- Xscale and Gen2 which will change
->>>>>> the function calls and add the reset function related to this two
->>>>>> chips.
->>>>>> b). during the reset, driver will store the pending cmds which not
->>>>>> returned by FW to driver's pending queue.  Driver will re-issue those
->>>>>> pending cmds again to FW after the OCR finished.
->>>>>> c). In driver's timeout routine, driver will report to OS as reset.
->>>>>> Also driver's queue routine will block the cmds until the OCR
->>>>>> finished.
->>>>>> d). in Driver's ISR routine, if driver get the FW state as state
->>>>>> change, FW in Failure status and FW support online controller
->>>>>> reset (OCR), driver will start to do the controller reset.
->>>>>> e). In driver's IOCTL routine, the application cmds will wait for the
->>>>>> OCR to finish, then issue the cmds to FW.
->>>>>>
->>>>>> Signed-off-by Bo Yang<bo.yang@lsi.com>
->>>>>>
->>>>>> ---
->>>>>>  drivers/scsi/megaraid/megaraid_sas.c |  756 ++++++++++++++++++++++++++++++++---
->>>>>>  drivers/scsi/megaraid/megaraid_sas.h |   88 +++-
->>>>>>  2 files changed, 787 insertions(+), 57 deletions(-)
->>>>>>       
->>>>>>         
->>>>>>           
->>>>>>             
->>>>> Hi Bo,
->>>>> in the workqueue function you sleep for 30s,
->>>>> it's scheduled here - schedule_work(&instance->work_init);
->>>>>
->>>>> +process_fw_state_change_wq(struct work_struct *work)
->>>>> +{
->>>>> ...
->>>>> +		/*waitting for about 20 second before start the second init*/
->>>>> +		for (wait = 0; wait < 30; wait++) {
->>>>> +			msleep(1000);
->>>>> +		}
->>>>>     
->>>>>       
->>>>>         
->>>>>           
->>>> this lot should be ssleep(20) if you want a 20 sec sleep.
->>>>   
->>>>     
->>>>       
->>>>         
->>> please do that on every place where you use the 
->>> "for (wait = 0; wait < n; wait++) msleep(1000);" construction
->>>
->>>   
->>>     
->>>       
->>>>> - this is not a good practice to sleep for a so long time I think
->>>>>     
->>>>>       
->>>>>         
->>>>>           
->>> this long sleep might might be ok, if the workqueue is used only rarely
->>> is it so?
->>>
->>>   
->>>     
->>>       
->>>>> - you should use in your exit function some synchronization 
->>>>>   for example 'cancel_work_sync', without that if someone rmmods your 
->>>>>   module, it could then lead to a memory corruption
->>>>>     
->>>>>       
->>>>>         
->>>>>           
->>>> Actually flush_scheduled_work() should be fine ... it will force the
->>>> module removal to wait for completion ... cancellation can be error
->>>> prone, so just forcing the wait sounds easier.
->>>>   
->>>>     
->>>>       
->>>>         
->> Another correction - flush_scheduled_work is already present in megass_detach_one
->> it only should be moved away from the if statement.
->>
->>
->>   
->>     
->>> someone told that cancel_work_sync is safer then flush_scheduled_work
->>> but I'm not an expert, so ok 
->>>
->>> Tomas
->>>
->>>   
->>>     
->>>       
->>>> James
->>>>
->>>>
->>>>         
-
+VG9tYXMsDQoNClRoaXMgY2hhbmdlIHdpbGwgbm90IGJlIGluIHRoZSBwYXJ0IG9mIHBhdGNoIDEv
+NS4gIEJ1dCB3ZSBjYW4gc3VibWl0IGFub3RoZXIgbmV3IHBhdGNoIGZvciB0aGlzIGNoYW5nZSBh
+ZnRlciBvdXIgdGVzdGluZyB0ZWFtIGRpZCB0aGUgdmVyaWZpY2F0aW9uLg0KDQpBbHNvIGRpZCB5
+b3UgZ2V0IHRoZSBjaGFuY2UgdG8gbG9vayBhdCB0aGUgcGF0Y2hlcyAyLzUgdG8gNS81PyAgSnVz
+dCBnaXZlIG1lIHRoZSBmZWVkYmFjay4NCg0KVGhhbmtzLA0KDQpCbyBZYW5nICAgDQogDQotLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogVG9tYXMgSGVuemwgW21haWx0bzp0aGVuemxA
+cmVkaGF0LmNvbV0gDQpTZW50OiBUdWVzZGF5LCBPY3RvYmVyIDEyLCAyMDEwIDEwOjI5IEFNDQpU
+bzogWWFuZywgQm8NCkNjOiBKYW1lcyBCb3R0b21sZXk7IGJvIHlhbmc7IGxpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnOyBha3BtQG9zZGwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3Jn
+OyBEYWZ0YXJkYXIsIEpheWFudA0KU3ViamVjdDogUmU6IFBBVENIIDEvNV0gc2NzaTogbWVnYXJh
+aWRfc2FzIC0gQWRkIE9ubGluZSBDb250cm9sbGVyIFJlc2V0IHRvIE1lZ2FSQUlEIFNBUyBkcml2
+ZQ0KDQpPbiAxMC8xMS8yMDEwIDA1OjM3IFBNLCBZYW5nLCBCbyB3cm90ZToNCj4gVG9tYXMsDQo+
+DQo+IFRoZSByZWFzb24gdGhlIGRyaXZlciBkb2VzIGZsdXNoX3NjaGVkdWxlZF93b3JrKCkgaXMg
+ZHJpdmVyIGRpZCBjYW5jZWxfZGVsYXllZF93b3JrKCkuICBJIGFtIG5vdCBzdXJlIGRyaXZlciBu
+ZWVkIHRvIGNhbGwgZmx1c2hfc2NoZWR1bGVkX3dvcmsoKSBpZiB0aGUgc2NoZWR1bGVkIHdvcmsg
+YWxyZWFkeSBkb25lLCBidXQgSSB3aWxsIHRlc3QgdGhpcyBjaGFuZ2VzIGFuZCBzdWJtaXQgYW5v
+dGhlciBwYXRjaCBhcyBzb29uIGFzIGl0IHdvcmtzIGZpbmUuICANCj4gICANCkRyaXZlciBuZWVk
+cyB0byBjYWxsIGZsdXNoX3NjaGVkdWxlZF93b3JrKCkgYmVjYXVzZSB5b3UgYXJlIGFkZGluZyBp
+biB0aGlzIHBhdGNoIGEgbmV3IHdvcmtxdWV1ZToNCklOSVRfV09SSygmaW5zdGFuY2UtPndvcmtf
+aW5pdCwgcHJvY2Vzc19md19zdGF0ZV9jaGFuZ2Vfd3EpOyBzbyBjYWxsaW5nIHRoZSBmbHVzaF9z
+Y2hlZHVsZWRfd29yaygpDQpvbmx5IGlmIGEgY2VydGFpbiBjb25kaXRpb24gaXMgbWV0IGlzIHRo
+ZSBwcm9ibGVtLiBJZiB0aGUgY29uZGl0aW9uIGNvbWVzIHRydWUgZm9yIGJvdGggd29ya3F1ZXVl
+cw0KdGhlbiBpdCB3b3VsZCBiZSBmaW5lLCBidXQgSSB0aGluayB0aGF0IGl0IGlzbid0IHNvLg0K
+V2l0aCB0aGlzIHBhdGNoIHdlIGNvdWxkIGhhdmUgYSBzdGFydGVkIHdvcmtxdWV1ZSAod2l0aCBh
+IGxvbmcgMzAgc2VjIHNsZWVwKSBhbmQgd2hlbiB0aGUgbW9kdWxlDQppcyByZW1vdmVkIHRoZW4g
+cHJvYmFibHkgYSBtZW1vcnkgY29ycnVwdGlvbiBldGMuIA0KDQoNCj4gVGhpcyBjaGFuZ2Ugc2hv
+dWxkIG5vdCBiZSB0aGUgcGFydCBvZiB0aGlzIHBhdGNoLCB3ZSB3b3VsZCBoYXZlIHRoZSBuZXcg
+cGF0Y2ggc3VibWl0IGFmdGVyIHRoZSB2ZXJpZmljYXRpb24uIA0KPiAgIA0KSSB3b3VsZCBwcmVm
+ZXIgdG8gaGF2ZSBpdCBpbiBvbmUgcGF0Y2gsIGJ1dCBpZiBpdCBpcyBmb3IgeW91IGVhc2llciwg
+dGhlbiBkbyBpdCBhcyB5b3Ugd2lzaC4NCg0KVG9tYXMNCg0KDQo+IFJlZ2FyZHMsDQo+DQo+IEJv
+IFlhbmcgICANCj4gIA0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBUb21h
+cyBIZW56bCBbbWFpbHRvOnRoZW56bEByZWRoYXQuY29tXSANCj4gU2VudDogTW9uZGF5LCBPY3Rv
+YmVyIDExLCAyMDEwIDk6MjEgQU0NCj4gVG86IFlhbmcsIEJvDQo+IENjOiBKYW1lcyBCb3R0b21s
+ZXk7IGJvIHlhbmc7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBha3BtQG9zZGwub3JnOyBs
+aW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBQQVRDSCAxLzVdIHNj
+c2k6IG1lZ2FyYWlkX3NhcyAtIEFkZCBPbmxpbmUgQ29udHJvbGxlciBSZXNldCB0byBNZWdhUkFJ
+RCBTQVMgZHJpdmUNCj4NCj4gT24gMTAvMTEvMjAxMCAwMjo1NSBQTSwgWWFuZywgQm8gd3JvdGU6
+DQo+ICAgDQo+PiBUb21hcywNCj4+DQo+PiAgIA0KPj4gICAgIA0KPj4+IEFub3RoZXIgY29ycmVj
+dGlvbiAtIGZsdXNoX3NjaGVkdWxlZF93b3JrIGlzIGFscmVhZHkgcHJlc2VudCBpbiBtZWdhc3Nf
+ZGV0YWNoX29uZQ0KPj4+IGl0IG9ubHkgc2hvdWxkIGJlIG1vdmVkIGF3YXkgZnJvbSB0aGUgaWYg
+c3RhdGVtZW50Lg0KPj4+ICAgICANCj4+PiAgICAgICANCj4+IFRoZSBmbHVzaF9zY2hlZHVsZWRf
+d29yayBpcyBmb3Igc2NoZWR1bGVfZGVsYXllZF93b3JrKCkuICBXZSBuZWVkIHRvIGZsdXNoIGl0
+IGFuZCByZW1vdmUuDQo+PiAgIA0KPj4gICAgIA0KPiBJJ20gbm90IHNheWluZyBpdCBzaG91bGQg
+YmUgcmVtb3ZlZCwgSSB0aGluayBhIG1vdmUgb3V0c2lkZSBmcm9tIHRoZSAnaWYnIGJsb2NrDQo+
+IG1ha2VzIGl0IHdvcmsgZm9yIGV2LT5ob3RwbHVnX3dvcmsgYW5kIGZvciB0aGUgbmV3bHkgYWRk
+ZWQgaW5zdGFuY2UtPndvcmtfaW5pdA0KPg0KPg0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
+L21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jIGIvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlk
+X3Nhcy5jDQo+IGluZGV4IDU1OTUxZjQuLjc3NzM3MDcgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMv
+c2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvbWVnYXJh
+aWQvbWVnYXJhaWRfc2FzLmMNCj4gQEAgLTQwODgsOSArNDA4OCw5IEBAIHN0YXRpYyB2b2lkIF9f
+ZGV2ZXhpdCBtZWdhc2FzX2RldGFjaF9vbmUoc3RydWN0IHBjaV9kZXYgKnBkZXYpDQo+ICAJCXN0
+cnVjdCBtZWdhc2FzX2Flbl9ldmVudCAqZXYgPSBpbnN0YW5jZS0+ZXY7DQo+ICAJCWNhbmNlbF9k
+ZWxheWVkX3dvcmsoDQo+ICAJCQkoc3RydWN0IGRlbGF5ZWRfd29yayAqKSZldi0+aG90cGx1Z193
+b3JrKTsNCj4gLQkJZmx1c2hfc2NoZWR1bGVkX3dvcmsoKTsNCj4gLQkJaW5zdGFuY2UtPmV2ID0g
+TlVMTDsNCj4gIAl9DQo+ICsJZmx1c2hfc2NoZWR1bGVkX3dvcmsoKTsNCj4gKwlpbnN0YW5jZS0+
+ZXYgPSBOVUxMOw0KPiAgDQo+ICAJdGFza2xldF9raWxsKCZpbnN0YW5jZS0+aXNyX3Rhc2tsZXQp
+Ow0KPiAgDQo+IC0tDQo+DQo+ICAgDQo+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPj4g
+RnJvbTogVG9tYXMgSGVuemwgW21haWx0bzp0aGVuemxAcmVkaGF0LmNvbV0gDQo+PiBTZW50OiBT
+YXR1cmRheSwgT2N0b2JlciAwOSwgMjAxMCA0OjM4IFBNDQo+PiBUbzogSmFtZXMgQm90dG9tbGV5
+DQo+PiBDYzogYm8geWFuZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IGFrcG1Ab3NkbC5v
+cmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IFlhbmcsIEJvDQo+PiBTdWJqZWN0OiBS
+ZTogUEFUQ0ggMS81XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBBZGQgT25saW5lIENvbnRyb2xsZXIg
+UmVzZXQgdG8gTWVnYVJBSUQgU0FTIGRyaXZlDQo+Pg0KPj4gT24gMTAvMDgvMjAxMCAwOToyOCBQ
+TSwgVG9tYXMgSGVuemwgd3JvdGU6DQo+PiAgIA0KPj4gICAgIA0KPj4+IE9uIDEwLzA4LzIwMTAg
+MDY6MzkgUE0sIEphbWVzIEJvdHRvbWxleSB3cm90ZToNCj4+PiAgIA0KPj4+ICAgICANCj4+PiAg
+ICAgICANCj4+Pj4gT24gRnJpLCAyMDEwLTEwLTA4IGF0IDE3OjUxICswMjAwLCBUb21hcyBIZW56
+bCB3cm90ZToNCj4+Pj4gICANCj4+Pj4gICAgIA0KPj4+PiAgICAgICANCj4+Pj4gICAgICAgICAN
+Cj4+Pj4+IE9uIDA5LzIzLzIwMTAgMDQ6MzYgQU0sIGJvIHlhbmcgd3JvdGU6DQo+Pj4+PiAgICAg
+DQo+Pj4+PiAgICAgICANCj4+Pj4+ICAgICAgICAgDQo+Pj4+PiAgICAgICAgICAgDQo+Pj4+Pj4g
+VGhpcyBwYXRjaCBpcyB0b28gYmlnLiAgSSBhbSB1c2luZyBhdHRhY2htZW50IHRvIHN1Ym1pdC4g
+IFBsZWFzZQ0KPj4+Pj4+IHVzZSBhdHRhY2hlZCBmaWxlIHRvIGFwcGx5LiAgQWxzbyBsZXQgbWUg
+a25vdyBpZiBpdCBjYW4ndCBiZSBhY2NlcHRlZC4NCj4+Pj4+Pg0KPj4+Pj4+IFRvIGFkZCB0aGUg
+T25saW5lIGNvbnRyb2xsZXIgcmVzZXQgc3VwcG9ydCwgZHJpdmVyIG5lZWQgdG8gZG86DQo+Pj4+
+Pj4gYSkuIHJlc2V0IHRoZSBjb250cm9sbGVyIGNoaXBzIC0tIFhzY2FsZSBhbmQgR2VuMiB3aGlj
+aCB3aWxsIGNoYW5nZQ0KPj4+Pj4+IHRoZSBmdW5jdGlvbiBjYWxscyBhbmQgYWRkIHRoZSByZXNl
+dCBmdW5jdGlvbiByZWxhdGVkIHRvIHRoaXMgdHdvDQo+Pj4+Pj4gY2hpcHMuDQo+Pj4+Pj4gYiku
+IGR1cmluZyB0aGUgcmVzZXQsIGRyaXZlciB3aWxsIHN0b3JlIHRoZSBwZW5kaW5nIGNtZHMgd2hp
+Y2ggbm90DQo+Pj4+Pj4gcmV0dXJuZWQgYnkgRlcgdG8gZHJpdmVyJ3MgcGVuZGluZyBxdWV1ZS4g
+IERyaXZlciB3aWxsIHJlLWlzc3VlIHRob3NlDQo+Pj4+Pj4gcGVuZGluZyBjbWRzIGFnYWluIHRv
+IEZXIGFmdGVyIHRoZSBPQ1IgZmluaXNoZWQuDQo+Pj4+Pj4gYykuIEluIGRyaXZlcidzIHRpbWVv
+dXQgcm91dGluZSwgZHJpdmVyIHdpbGwgcmVwb3J0IHRvIE9TIGFzIHJlc2V0Lg0KPj4+Pj4+IEFs
+c28gZHJpdmVyJ3MgcXVldWUgcm91dGluZSB3aWxsIGJsb2NrIHRoZSBjbWRzIHVudGlsIHRoZSBP
+Q1INCj4+Pj4+PiBmaW5pc2hlZC4NCj4+Pj4+PiBkKS4gaW4gRHJpdmVyJ3MgSVNSIHJvdXRpbmUs
+IGlmIGRyaXZlciBnZXQgdGhlIEZXIHN0YXRlIGFzIHN0YXRlDQo+Pj4+Pj4gY2hhbmdlLCBGVyBp
+biBGYWlsdXJlIHN0YXR1cyBhbmQgRlcgc3VwcG9ydCBvbmxpbmUgY29udHJvbGxlcg0KPj4+Pj4+
+IHJlc2V0IChPQ1IpLCBkcml2ZXIgd2lsbCBzdGFydCB0byBkbyB0aGUgY29udHJvbGxlciByZXNl
+dC4NCj4+Pj4+PiBlKS4gSW4gZHJpdmVyJ3MgSU9DVEwgcm91dGluZSwgdGhlIGFwcGxpY2F0aW9u
+IGNtZHMgd2lsbCB3YWl0IGZvciB0aGUNCj4+Pj4+PiBPQ1IgdG8gZmluaXNoLCB0aGVuIGlzc3Vl
+IHRoZSBjbWRzIHRvIEZXLg0KPj4+Pj4+DQo+Pj4+Pj4gU2lnbmVkLW9mZi1ieSBCbyBZYW5nPGJv
+LnlhbmdAbHNpLmNvbT4NCj4+Pj4+Pg0KPj4+Pj4+IC0tLQ0KPj4+Pj4+ICBkcml2ZXJzL3Njc2kv
+bWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMgfCAgNzU2ICsrKysrKysrKysrKysrKysrKysrKysrKysr
+KysrKysrLS0tDQo+Pj4+Pj4gIGRyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaCB8
+ICAgODggKysrLQ0KPj4+Pj4+ICAyIGZpbGVzIGNoYW5nZWQsIDc4NyBpbnNlcnRpb25zKCspLCA1
+NyBkZWxldGlvbnMoLSkNCj4+Pj4+PiAgICAgICANCj4+Pj4+PiAgICAgICAgIA0KPj4+Pj4+ICAg
+ICAgICAgICANCj4+Pj4+PiAgICAgICAgICAgICANCj4+Pj4+IEhpIEJvLA0KPj4+Pj4gaW4gdGhl
+IHdvcmtxdWV1ZSBmdW5jdGlvbiB5b3Ugc2xlZXAgZm9yIDMwcywNCj4+Pj4+IGl0J3Mgc2NoZWR1
+bGVkIGhlcmUgLSBzY2hlZHVsZV93b3JrKCZpbnN0YW5jZS0+d29ya19pbml0KTsNCj4+Pj4+DQo+
+Pj4+PiArcHJvY2Vzc19md19zdGF0ZV9jaGFuZ2Vfd3Eoc3RydWN0IHdvcmtfc3RydWN0ICp3b3Jr
+KQ0KPj4+Pj4gK3sNCj4+Pj4+IC4uLg0KPj4+Pj4gKwkJLyp3YWl0dGluZyBmb3IgYWJvdXQgMjAg
+c2Vjb25kIGJlZm9yZSBzdGFydCB0aGUgc2Vjb25kIGluaXQqLw0KPj4+Pj4gKwkJZm9yICh3YWl0
+ID0gMDsgd2FpdCA8IDMwOyB3YWl0KyspIHsNCj4+Pj4+ICsJCQltc2xlZXAoMTAwMCk7DQo+Pj4+
+PiArCQl9DQo+Pj4+PiAgICAgDQo+Pj4+PiAgICAgICANCj4+Pj4+ICAgICAgICAgDQo+Pj4+PiAg
+ICAgICAgICAgDQo+Pj4+IHRoaXMgbG90IHNob3VsZCBiZSBzc2xlZXAoMjApIGlmIHlvdSB3YW50
+IGEgMjAgc2VjIHNsZWVwLg0KPj4+PiAgIA0KPj4+PiAgICAgDQo+Pj4+ICAgICAgIA0KPj4+PiAg
+ICAgICAgIA0KPj4+IHBsZWFzZSBkbyB0aGF0IG9uIGV2ZXJ5IHBsYWNlIHdoZXJlIHlvdSB1c2Ug
+dGhlIA0KPj4+ICJmb3IgKHdhaXQgPSAwOyB3YWl0IDwgbjsgd2FpdCsrKSBtc2xlZXAoMTAwMCk7
+IiBjb25zdHJ1Y3Rpb24NCj4+Pg0KPj4+ICAgDQo+Pj4gICAgIA0KPj4+ICAgICAgIA0KPj4+Pj4g
+LSB0aGlzIGlzIG5vdCBhIGdvb2QgcHJhY3RpY2UgdG8gc2xlZXAgZm9yIGEgc28gbG9uZyB0aW1l
+IEkgdGhpbmsNCj4+Pj4+ICAgICANCj4+Pj4+ICAgICAgIA0KPj4+Pj4gICAgICAgICANCj4+Pj4+
+ICAgICAgICAgICANCj4+PiB0aGlzIGxvbmcgc2xlZXAgbWlnaHQgbWlnaHQgYmUgb2ssIGlmIHRo
+ZSB3b3JrcXVldWUgaXMgdXNlZCBvbmx5IHJhcmVseQ0KPj4+IGlzIGl0IHNvPw0KPj4+DQo+Pj4g
+ICANCj4+PiAgICAgDQo+Pj4gICAgICAgDQo+Pj4+PiAtIHlvdSBzaG91bGQgdXNlIGluIHlvdXIg
+ZXhpdCBmdW5jdGlvbiBzb21lIHN5bmNocm9uaXphdGlvbiANCj4+Pj4+ICAgZm9yIGV4YW1wbGUg
+J2NhbmNlbF93b3JrX3N5bmMnLCB3aXRob3V0IHRoYXQgaWYgc29tZW9uZSBybW1vZHMgeW91ciAN
+Cj4+Pj4+ICAgbW9kdWxlLCBpdCBjb3VsZCB0aGVuIGxlYWQgdG8gYSBtZW1vcnkgY29ycnVwdGlv
+bg0KPj4+Pj4gICAgIA0KPj4+Pj4gICAgICAgDQo+Pj4+PiAgICAgICAgIA0KPj4+Pj4gICAgICAg
+ICAgIA0KPj4+PiBBY3R1YWxseSBmbHVzaF9zY2hlZHVsZWRfd29yaygpIHNob3VsZCBiZSBmaW5l
+IC4uLiBpdCB3aWxsIGZvcmNlIHRoZQ0KPj4+PiBtb2R1bGUgcmVtb3ZhbCB0byB3YWl0IGZvciBj
+b21wbGV0aW9uIC4uLiBjYW5jZWxsYXRpb24gY2FuIGJlIGVycm9yDQo+Pj4+IHByb25lLCBzbyBq
+dXN0IGZvcmNpbmcgdGhlIHdhaXQgc291bmRzIGVhc2llci4NCj4+Pj4gICANCj4+Pj4gICAgIA0K
+Pj4+PiAgICAgICANCj4+Pj4gICAgICAgICANCj4+IEFub3RoZXIgY29ycmVjdGlvbiAtIGZsdXNo
+X3NjaGVkdWxlZF93b3JrIGlzIGFscmVhZHkgcHJlc2VudCBpbiBtZWdhc3NfZGV0YWNoX29uZQ0K
+Pj4gaXQgb25seSBzaG91bGQgYmUgbW92ZWQgYXdheSBmcm9tIHRoZSBpZiBzdGF0ZW1lbnQuDQo+
+Pg0KPj4NCj4+ICAgDQo+PiAgICAgDQo+Pj4gc29tZW9uZSB0b2xkIHRoYXQgY2FuY2VsX3dvcmtf
+c3luYyBpcyBzYWZlciB0aGVuIGZsdXNoX3NjaGVkdWxlZF93b3JrDQo+Pj4gYnV0IEknbSBub3Qg
+YW4gZXhwZXJ0LCBzbyBvayANCj4+Pg0KPj4+IFRvbWFzDQo+Pj4NCj4+PiAgIA0KPj4+ICAgICAN
+Cj4+PiAgICAgICANCj4+Pj4gSmFtZXMNCj4+Pj4NCj4+Pj4NCj4+Pj4gICAgICAgICANCg0K
