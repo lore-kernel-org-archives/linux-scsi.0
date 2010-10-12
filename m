@@ -1,109 +1,210 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 5/5] scsi: megaraid_sas - Version and documentation update
-Date: Tue, 12 Oct 2010 07:21:59 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C30100FF9FBB@cosmail02.lsi.com>
-References: <AANLkTi=praySm1B3dhU+LxhWK2yUccZkzWpd6-6UERYa@mail.gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+ MegaRAID SAS drive
+Date: Tue, 12 Oct 2010 16:28:45 +0200
+Message-ID: <4CB4709D.7020407@redhat.com>
+References: <AANLkTin53S+C_+QzF-drs5BUAx=k7YeiHrTaQGTFSc_a@mail.gmail.com>	 <4CAF3E04.1050304@redhat.com> <1286555954.2985.110.camel@mulgrave.site> <4CAF70CD.6020307@redhat.com> <4CB0D2AF.7080609@redhat.com> <4B6A08C587958942AA3002690DD4F8C30100F5506B@cosmail02.lsi.com> <4CB30F27.9090009@redhat.com> <4B6A08C587958942AA3002690DD4F8C30100FF9C58@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_4B6A08C587958942AA3002690DD4F8C30100FF9FBBcosmail02lsic_"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:34550 "EHLO
-	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932287Ab0JLNWP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Oct 2010 09:22:15 -0400
-In-Reply-To: <AANLkTi=praySm1B3dhU+LxhWK2yUccZkzWpd6-6UERYa@mail.gmail.com>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:41068 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753317Ab0JLO3c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Oct 2010 10:29:32 -0400
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30100FF9C58@cosmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.or>
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
---_002_4B6A08C587958942AA3002690DD4F8C30100FF9FBBcosmail02lsic_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On 10/11/2010 05:37 PM, Yang, Bo wrote:
+> Tomas,
+>
+> The reason the driver does flush_scheduled_work() is driver did cancel_delayed_work().  I am not sure driver need to call flush_scheduled_work() if the scheduled work already done, but I will test this changes and submit another patch as soon as it works fine.  
+>   
+Driver needs to call flush_scheduled_work() because you are adding in this patch a new workqueue:
+INIT_WORK(&instance->work_init, process_fw_state_change_wq); so calling the flush_scheduled_work()
+only if a certain condition is met is the problem. If the condition comes true for both workqueues
+then it would be fine, but I think that it isn't so.
+With this patch we could have a started workqueue (with a long 30 sec sleep) and when the module
+is removed then probably a memory corruption etc. 
 
-Re-Submit:
 
-Update the version and documentation.
+> This change should not be the part of this patch, we would have the new patch submit after the verification. 
+>   
+I would prefer to have it in one patch, but if it is for you easier, then do it as you wish.
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+Tomas
 
----
- Documentation/scsi/ChangeLog.megaraid_sas |   47 +++++++++++++++++++++++++=
-+++++
- drivers/scsi/megaraid/megaraid_sas.c      |    2 -
- drivers/scsi/megaraid/megaraid_sas.h      |    6 +--
- 3 files changed, 51 insertions(+), 4 deletions(-)
 
---_002_4B6A08C587958942AA3002690DD4F8C30100FF9FBBcosmail02lsic_
-Content-Type: application/octet-stream; name="megasas-version.patch"
-Content-Description: megasas-version.patch
-Content-Disposition: attachment; filename="megasas-version.patch"; size=3518;
-	creation-date="Sun, 19 Sep 2010 14:09:34 GMT";
-	modification-date="Sat, 18 Sep 2010 06:27:53 GMT"
-Content-Transfer-Encoding: base64
+> Regards,
+>
+> Bo Yang   
+>  
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com] 
+> Sent: Monday, October 11, 2010 9:21 AM
+> To: Yang, Bo
+> Cc: James Bottomley; bo yang; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org
+> Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to MegaRAID SAS drive
+>
+> On 10/11/2010 02:55 PM, Yang, Bo wrote:
+>   
+>> Tomas,
+>>
+>>   
+>>     
+>>> Another correction - flush_scheduled_work is already present in megass_detach_one
+>>> it only should be moved away from the if statement.
+>>>     
+>>>       
+>> The flush_scheduled_work is for schedule_delayed_work().  We need to flush it and remove.
+>>   
+>>     
+> I'm not saying it should be removed, I think a move outside from the 'if' block
+> makes it work for ev->hotplug_work and for the newly added instance->work_init
+>
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+> index 55951f4..7773707 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas.c
+> @@ -4088,9 +4088,9 @@ static void __devexit megasas_detach_one(struct pci_dev *pdev)
+>  		struct megasas_aen_event *ev = instance->ev;
+>  		cancel_delayed_work(
+>  			(struct delayed_work *)&ev->hotplug_work);
+> -		flush_scheduled_work();
+> -		instance->ev = NULL;
+>  	}
+> +	flush_scheduled_work();
+> +	instance->ev = NULL;
+>  
+>  	tasklet_kill(&instance->isr_tasklet);
+>  
+> --
+>
+>   
+>> -----Original Message-----
+>> From: Tomas Henzl [mailto:thenzl@redhat.com] 
+>> Sent: Saturday, October 09, 2010 4:38 PM
+>> To: James Bottomley
+>> Cc: bo yang; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org; Yang, Bo
+>> Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to MegaRAID SAS drive
+>>
+>> On 10/08/2010 09:28 PM, Tomas Henzl wrote:
+>>   
+>>     
+>>> On 10/08/2010 06:39 PM, James Bottomley wrote:
+>>>   
+>>>     
+>>>       
+>>>> On Fri, 2010-10-08 at 17:51 +0200, Tomas Henzl wrote:
+>>>>   
+>>>>     
+>>>>       
+>>>>         
+>>>>> On 09/23/2010 04:36 AM, bo yang wrote:
+>>>>>     
+>>>>>       
+>>>>>         
+>>>>>           
+>>>>>> This patch is too big.  I am using attachment to submit.  Please
+>>>>>> use attached file to apply.  Also let me know if it can't be accepted.
+>>>>>>
+>>>>>> To add the Online controller reset support, driver need to do:
+>>>>>> a). reset the controller chips -- Xscale and Gen2 which will change
+>>>>>> the function calls and add the reset function related to this two
+>>>>>> chips.
+>>>>>> b). during the reset, driver will store the pending cmds which not
+>>>>>> returned by FW to driver's pending queue.  Driver will re-issue those
+>>>>>> pending cmds again to FW after the OCR finished.
+>>>>>> c). In driver's timeout routine, driver will report to OS as reset.
+>>>>>> Also driver's queue routine will block the cmds until the OCR
+>>>>>> finished.
+>>>>>> d). in Driver's ISR routine, if driver get the FW state as state
+>>>>>> change, FW in Failure status and FW support online controller
+>>>>>> reset (OCR), driver will start to do the controller reset.
+>>>>>> e). In driver's IOCTL routine, the application cmds will wait for the
+>>>>>> OCR to finish, then issue the cmds to FW.
+>>>>>>
+>>>>>> Signed-off-by Bo Yang<bo.yang@lsi.com>
+>>>>>>
+>>>>>> ---
+>>>>>>  drivers/scsi/megaraid/megaraid_sas.c |  756 ++++++++++++++++++++++++++++++++---
+>>>>>>  drivers/scsi/megaraid/megaraid_sas.h |   88 +++-
+>>>>>>  2 files changed, 787 insertions(+), 57 deletions(-)
+>>>>>>       
+>>>>>>         
+>>>>>>           
+>>>>>>             
+>>>>> Hi Bo,
+>>>>> in the workqueue function you sleep for 30s,
+>>>>> it's scheduled here - schedule_work(&instance->work_init);
+>>>>>
+>>>>> +process_fw_state_change_wq(struct work_struct *work)
+>>>>> +{
+>>>>> ...
+>>>>> +		/*waitting for about 20 second before start the second init*/
+>>>>> +		for (wait = 0; wait < 30; wait++) {
+>>>>> +			msleep(1000);
+>>>>> +		}
+>>>>>     
+>>>>>       
+>>>>>         
+>>>>>           
+>>>> this lot should be ssleep(20) if you want a 20 sec sleep.
+>>>>   
+>>>>     
+>>>>       
+>>>>         
+>>> please do that on every place where you use the 
+>>> "for (wait = 0; wait < n; wait++) msleep(1000);" construction
+>>>
+>>>   
+>>>     
+>>>       
+>>>>> - this is not a good practice to sleep for a so long time I think
+>>>>>     
+>>>>>       
+>>>>>         
+>>>>>           
+>>> this long sleep might might be ok, if the workqueue is used only rarely
+>>> is it so?
+>>>
+>>>   
+>>>     
+>>>       
+>>>>> - you should use in your exit function some synchronization 
+>>>>>   for example 'cancel_work_sync', without that if someone rmmods your 
+>>>>>   module, it could then lead to a memory corruption
+>>>>>     
+>>>>>       
+>>>>>         
+>>>>>           
+>>>> Actually flush_scheduled_work() should be fine ... it will force the
+>>>> module removal to wait for completion ... cancellation can be error
+>>>> prone, so just forcing the wait sounds easier.
+>>>>   
+>>>>     
+>>>>       
+>>>>         
+>> Another correction - flush_scheduled_work is already present in megass_detach_one
+>> it only should be moved away from the if statement.
+>>
+>>
+>>   
+>>     
+>>> someone told that cancel_work_sync is safer then flush_scheduled_work
+>>> but I'm not an expert, so ok 
+>>>
+>>> Tomas
+>>>
+>>>   
+>>>     
+>>>       
+>>>> James
+>>>>
+>>>>
+>>>>         
 
-ZGlmZiAtcnVwTiBvbGQvRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMg
-bmV3L0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzCi0tLSBvbGQvRG9j
-dW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMJMjAxMC0wOS0xNyAwMjoxOTo0
-Ni4wMDAwMDAwMDAgLTA0MDAKKysrIG5ldy9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1l
-Z2FyYWlkX3NhcwkyMDEwLTA5LTE3IDAyOjE5OjQ2LjAwMDAwMDAwMCAtMDQwMApAQCAtMSwzICsx
-LDUwIEBACisxIFJlbGVhc2UgRGF0ZSAgICA6IFRodXIuICBNYXkgMDMsIDIwMTAgMDk6MTI6NDUg
-UFNUIDIwMDkgLQorCQkJKGVtYWlsZC1pZDptZWdhcmFpZGxpbnV4QGxzaS5jb20pCisJCQlCbyBZ
-YW5nCisKKzIgQ3VycmVudCBWZXJzaW9uIDogMDAuMDAuMDQuMzEtcmMxCiszIE9sZGVyIFZlcnNp
-b24gICA6IDAwLjAwLjA0LjE3LjEtcmMxCisKKzEuCUFkZCB0aGUgT25saW5lIENvbnRyb2xsZXIg
-UmVzZXQgKE9DUikgdG8gdGhlIERyaXZlci4KKwlPQ1IgaXMgdGhlIG5ldyBmZWF0dXJlIGZvciBt
-ZWdhcmFpZF9zYXMgZHJpdmVyIHdoaWNoCisJd2lsbCBhbGxvdyB0aGUgZncgdG8gZG8gdGhlIGNo
-aXAgcmVzZXQgd2hpY2ggd2lsbCBub3QKKwlhZmZhY3QgdGhlIE9TIGJlaGF2aW91cy4KKworCVRv
-IGFkZCB0aGUgT0NSIHN1cHBvcnQsIGRyaXZlciBuZWVkIHRvIGRvOiAKKwkJYSkuIHJlc2V0IHRo
-ZSBjb250cm9sbGVyIGNoaXBzIC0tIFhzY2FsZSBhbmQgR2VuMiB3aGljaAorCQl3aWxsIGNoYW5n
-ZSB0aGUgZnVuY3Rpb24gY2FsbHMgYW5kIGFkZCB0aGUgcmVzZXQgZnVuY3Rpb24KKwkJcmVsYXRl
-ZCB0byB0aGlzIHR3byBjaGlwcy4KKwkJCisJCWIpLiBkdXJpbmcgdGhlIHJlc2V0LCBkcml2ZXIg
-d2lsbCBzdG9yZSB0aGUgcGVuZGluZyBjbWRzCisJCXdoaWNoIG5vdCByZXR1cm5lZCBieSBGVyB0
-byBkcml2ZXIncyBwZW5kaW5nIHF1ZXVlLiAgRHJpdmVyCisJCXdpbGwgcmUtaXNzdWUgdGhvc2Ug
-cGVuZGluZyBjbWRzIGFnYWluIHRvIEZXIGFmdGVyIHRoZSBPQ1IKKwkJZmluaXNoZWQuCisJCQor
-CQljKS4gSW4gZHJpdmVyJ3MgdGltZW91dCByb3V0aW5lLCBkcml2ZXIgd2lsbCByZXBvcnQgdG8K
-KwkJT1MgYXMgcmVzZXQuIEFsc28gZHJpdmVyJ3MgcXVldWUgcm91dGluZSB3aWxsIGJsb2NrIHRo
-ZQorCQljbWRzIHVudGlsIHRoZSBPQ1IgZmluaXNoZWQuCisJCQorCQlkKS4gaW4gRHJpdmVyJ3Mg
-SVNSIHJvdXRpbmUsIGlmIGRyaXZlciBnZXQgdGhlIEZXIHN0YXRlIGFzCisJCXN0YXRlIGNoYW5n
-ZSwgRlcgaW4gRmFpbHVyZSBzdGF0dXMgYW5kIEZXIHN1cHBvcnQgb25saW5lIGNvbnRyb2xsZXIK
-KwkJcmVzZXQgKE9DUiksIGRyaXZlciB3aWxsIHN0YXJ0IHRvIGRvIHRoZSBjb250cm9sbGVyIHJl
-c2V0LgorCQkKKwkJZSkuIEluIGRyaXZlcidzIElPQ1RMIHJvdXRpbmUsIHRoZSBhcHBsaWNhdGlv
-biBjbWRzIHdpbGwgd2FpdCBmb3IgdGhlCisJCU9DUiB0byBmaW5pc2gsIHRoZW4gaXNzdWUgdGhl
-IGNtZHMgdG8gRlcuCisJCSAKKwkJZikuIEJlZm9yZSBkcml2ZXIga2lsbCBhZGFwdGVyLCBkcml2
-ZXIgd2lsbCBkbyBsYXN0IGNoYW5jZSBvZgorCQlPQ1IgdG8gc2VlIGlmIGRyaXZlciBjYW4gYnJp
-bmcgYmFjayB0aGUgRlcuICAgICAgCisKKzIuCUFkZCB0aGUgc3VwcG9ydCB1cGRhdGUgZmxhZyB0
-byB0aGUgZHJpdmVyIHRvIHRlbGwgTFNJIG1lZ2FyYWlkX3NhcworCWFwcGxpY2F0aW9uIHdoaWNo
-IGRyaXZlciB3aWxsIHN1cHBvcnQgdGhlIGRldmljZSB1cGRhdGUuICBTbyBhcHBsaWNhdGlvbgor
-CXdpbGwgbm90IG5lZWQgdG8gZG8gdGhlIGRldmljZSB1cGRhdGUgYWZ0ZXIgYXBwbGljYXRpb24g
-YWRkL2RlbCB0aGUgZGV2aWNlCisJZnJvbSB0aGUgc3lzdGVtLgorMy4JSW4gZHJpdmVyJ3MgdGlt
-ZW91dCByb3V0aW5lLCBkcml2ZXIgd2lsbCBkbyB0aHJlZSB0aW1lIHJlc2V0IGlmIGZ3IGlzIGlu
-IAorCWZhaWxlZCBzdGF0ZS4gIERyaXZlciB3aWxsIGtpbGwgYWRhcHRlciBpZiBjYW4ndCBicmlu
-ZyBiYWNrIEZXIGFmdGVyIHRoZQorCXRoaXMgdGhyZWUgdGltZXMgcmVzZXQuCis0LglBZGQgdGhl
-IGlucHV0IHBhcmFtZXRlciBtYXhfc2VjdG9ycyB0byAxTUIgc3VwcG9ydCB0byBvdXIgR0VOMiBj
-b250cm9sbGVyLgorCWN1c3RvbWVyIGNhbiB1c2UgdGhlIGlucHV0IHBhcmFtZW50ZXIgbWF4X3Nl
-Y3RvcnMgdG8gYWRkIDFNQiBzdXBwb3J0IHRvIEdFTjIKKwljb250cm9sbGVyLgorCiAxIFJlbGVh
-c2UgRGF0ZSAgICA6IFRodXIuICBPY3QgMjksIDIwMDkgMDk6MTI6NDUgUFNUIDIwMDkgLQogCQkJ
-KGVtYWlsZC1pZDptZWdhcmFpZGxpbnV4QGxzaS5jb20pCiAJCQlCbyBZYW5nCmRpZmYgLXJ1cE4g
-b2xkL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuYyBuZXcvZHJpdmVycy9zY3Np
-L21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jCi0tLSBvbGQvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21l
-Z2FyYWlkX3Nhcy5jCTIwMTAtMDktMTcgMDM6Mjk6MjkuMDAwMDAwMDAwIC0wNDAwCisrKyBuZXcv
-ZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jCTIwMTAtMDktMTggMDg6Mjc6MDIu
-MDAwMDAwMDAwIC0wNDAwCkBAIC0xMCw3ICsxMCw3IEBACiAgKgkgICAyIG9mIHRoZSBMaWNlbnNl
-LCBvciAoYXQgeW91ciBvcHRpb24pIGFueSBsYXRlciB2ZXJzaW9uLgogICoKICAqIEZJTEUJCTog
-bWVnYXJhaWRfc2FzLmMKLSAqIFZlcnNpb24gICAgIDogdjAwLjAwLjA0LjE3LjEtcmMxCisgKiBW
-ZXJzaW9uICAgICA6IHYwMC4wMC4wNC4zMS1yYzEKICAqCiAgKiBBdXRob3JzOgogICoJKGVtYWls
-LWlkIDogbWVnYXJhaWRsaW51eEBsc2kuY29tKQpkaWZmIC1ydXBOIG9sZC9kcml2ZXJzL3Njc2kv
-bWVnYXJhaWQvbWVnYXJhaWRfc2FzLmggbmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
-ZF9zYXMuaAotLS0gb2xkL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAkyMDEw
-LTA5LTE3IDAyOjE5OjQ2LjAwMDAwMDAwMCAtMDQwMAorKysgbmV3L2RyaXZlcnMvc2NzaS9tZWdh
-cmFpZC9tZWdhcmFpZF9zYXMuaAkyMDEwLTA5LTE3IDAyOjE5OjQ2LjAwMDAwMDAwMCAtMDQwMApA
-QCAtMTgsOSArMTgsOSBAQAogLyoKICAqIE1lZ2FSQUlEIFNBUyBEcml2ZXIgbWV0YSBkYXRhCiAg
-Ki8KLSNkZWZpbmUgTUVHQVNBU19WRVJTSU9OCQkJIjAwLjAwLjA0LjE3LjEtcmMxIgotI2RlZmlu
-ZSBNRUdBU0FTX1JFTERBVEUJCQkiT2N0LiAyOSwgMjAwOSIKLSNkZWZpbmUgTUVHQVNBU19FWFRf
-VkVSU0lPTgkJIlRodS4gT2N0LiAyOSwgMTE6NDE6NTEgUFNUIDIwMDkiCisjZGVmaW5lIE1FR0FT
-QVNfVkVSU0lPTgkJCSIwMC4wMC4wNC4zMS1yYzEiCisjZGVmaW5lIE1FR0FTQVNfUkVMREFURQkJ
-CSJNYXkgMywgMjAxMCIKKyNkZWZpbmUgTUVHQVNBU19FWFRfVkVSU0lPTgkJIk1vbi4gTWF5IDMs
-IDExOjQxOjUxIFBTVCAyMDEwIgogCiAvKgogICogRGV2aWNlIElEcwo=
-
---_002_4B6A08C587958942AA3002690DD4F8C30100FF9FBBcosmail02lsic_--
