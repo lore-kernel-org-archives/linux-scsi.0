@@ -1,56 +1,89 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: linux-next: Tree for October 12 (scsi/bfa)
-Date: Tue, 12 Oct 2010 10:15:12 -0700
-Message-ID: <4CB497A0.6080307@oracle.com>
-References: <20101012163552.7306165b.sfr@canb.auug.org.au> <20101012101414.045f62d5.randy.dunlap@oracle.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Tue, 12 Oct 2010 22:53:45 +0400
+Message-ID: <4CB4AEB9.30501@vlnb.net>
+References: <4CA653F0.1010008@vlnb.net> <4CA656AD.8020408@vlnb.net> <20101009212047.GB27180@kroah.com> <4CB36592.6060909@vlnb.net> <20101011213235.GA11489@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20101012101414.045f62d5.randy.dunlap@oracle.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jing Huang <huangj@brocade.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101011213235.GA11489@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/12/10 10:14, Randy Dunlap wrote:
-> On Tue, 12 Oct 2010 16:35:52 +1100 Stephen Rothwell wrote:
-> 
->> Hi all,
+Greg KH, on 10/12/2010 01:32 AM wrote:
+> On Mon, Oct 11, 2010 at 11:29:22PM +0400, Vladislav Bolkhovitin wrote:
+>> Greg KH, on 10/10/2010 01:20 AM wrote:
+>>> On Sat, Oct 02, 2010 at 01:46:21AM +0400, Vladislav Bolkhovitin wrote:
+>>>> +static void scst_tgtt_release(struct kobject *kobj)
+>>>> +{
+>>>> +	struct scst_tgt_template *tgtt;
+>>>> +
+>>>> +	tgtt = container_of(kobj, struct scst_tgt_template, tgtt_kobj);
+>>>> +	complete_all(&tgtt->tgtt_kobj_release_cmpl);
+>>>> +	return;
+>>>
+>>> Don't you also need to free the memory of your kobject here?
+>>>
+>>>> +static void scst_tgt_release(struct kobject *kobj)
+>>>> +{
+>>>> +	struct scst_tgt *tgt;
+>>>> +
+>>>> +	tgt = container_of(kobj, struct scst_tgt, tgt_kobj);
+>>>> +	complete_all(&tgt->tgt_kobj_release_cmpl);
+>>>> +	return;
+>>>
+>>> Same here, no kfree?
+>>>
+>>>> +static void scst_acg_release(struct kobject *kobj)
+>>>> +{
+>>>> +	struct scst_acg *acg;
+>>>> +
+>>>> +	acg = container_of(kobj, struct scst_acg, acg_kobj);
+>>>> +	complete_all(&acg->acg_kobj_release_cmpl);
+>>>
+>>> And here.
 >>
->> Changes since 20101011:
+>> Thanks for the review. In all those functions kobjects for simplicity
+>> are embedded into the outer objects, so they will be freed as part of
+>> the outer objects free. Hence, kfree() for the kobjects in the release
+>> functions are not needed.
 > 
+> Sweet, you now have opened yourself up to public ridicule as per the
+> documentation in the kernel for how to use kobjects!
 > 
-> bfa has one function that probably uses too much stack space and a few
-> others that might be a problem.
-> 
-> With CONFIG_FRAME_WARN=1024:
-> 
-> drivers/scsi/bfa/bfad_im.c:939: warning: the frame size of 1604 bytes is larger than 1024 bytes
+> Nice job :)
 
-BTW, these are on i386 builds.
+Thanks :)
 
+> Seriously, you CAN NOT DO THIS!  If you embed a kobject in a different
+> structure, then you have to rely on the kobject to handle the reference
+> counting for that larger structure.  To do ANYTHING else is a bug and
+> wrong.
+> 
+> Please read the kobject documentation and fix this code up before
+> submitting it again.
 
-> and with CONFIG_FRAME_WARN=512:
-> 
-> 
-> drivers/scsi/bfa/bfad.c: In function 'bfad_fcs_port_cfg':
-> drivers/scsi/bfa/bfad.c:900: warning: the frame size of 676 bytes is larger than 512 bytes
-> drivers/scsi/bfa/bfad_im.c: In function 'bfad_im_supported_speeds':
-> drivers/scsi/bfa/bfad_im.c:939: warning: the frame size of 1604 bytes is larger than 512 bytes
-> drivers/scsi/bfa/bfad_im.c: In function 'bfad_os_fc_host_init':
-> drivers/scsi/bfa/bfad_im.c:976: warning: the frame size of 736 bytes is larger than 512 bytes
-> drivers/scsi/bfa/bfa_fcs_lport.c: In function 'bfa_fcs_lport_fdmi_build_portattr_block':
-> drivers/scsi/bfa/bfa_fcs_lport.c:2010: warning: the frame size of 572 bytes is larger than 512 bytes
-> drivers/scsi/bfa/bfa_fcs_lport.c: In function 'bfa_fcs_lport_fdmi_build_rhba_pyld':
-> drivers/scsi/bfa/bfa_fcs_lport.c:1803: warning: the frame size of 784 bytes is larger than 512 bytes
-> 
-> 
-> Also, there are many comment blocks that begin with "/**", which means "beginning
-> of kernel-doc comment block" for Linux kernel code.  :(
-> 
-> ---
+Sure, I have read it and we rely on the kobject to handle the reference
+counting for the larger structure. It's only done not in a
+straightforward way, because the way it is implemented is simpler for us
++ for some other reasons.
 
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+For instance, for structure scst_tgt it is done using
+tgt_kobj_release_cmpl completion. When a target driver calls
+scst_unregister_target(), scst_unregister_target() in the end calls
+scst_tgt_sysfs_del(), which calls kobject_put(&tgt->tgt_kobj) and wait
+for tgt_kobj_release_cmpl to complete. At this point tgt_kobj can be
+taken only by the SYSFS. Scst_tgt_sysfs_del() can wait as much as needed
+until the SYSFS code released it. As far as I can see, it can't be
+forever, so it's OK. Then, after scst_tgt_sysfs_del() returned,
+scst_unregister_target() will free scst_tgt together with embedded tgt_kobj.
+
+Sure, if you insist, I can convert tgt_kobj and other similar kobjects
+to pointers, but it would be just a formal code introducing additional
+kmalloc()/kfree() pair per each kobject without changing any logic anywhere.
+
+Thanks,
+Vlad
