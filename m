@@ -1,245 +1,257 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 1/3] mpt2sas: Wait for port enable to get complete
- before reporting devices to OS.
-Date: Tue, 12 Oct 2010 20:29:31 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED704BAA8A3@inbmail01.lsi.com>
-References: <20100804083355.GB13442@lsi.com>
-	 <1283704496.15944.1271.camel@mulgrave.site>
-	 <4565AEA676113A449269C2F3A549520F4918A80E@cosmail03.lsi.com>
- <1284213782.2986.15.camel@mulgrave.site>
- <4565AEA676113A449269C2F3A549520F4918AF07@cosmail03.lsi.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to
+ MegaRAID SAS drive
+Date: Tue, 12 Oct 2010 17:33:04 +0200
+Message-ID: <4CB47FB0.5070207@redhat.com>
+References: <AANLkTin53S+C_+QzF-drs5BUAx=k7YeiHrTaQGTFSc_a@mail.gmail.com>	 <4CAF3E04.1050304@redhat.com> <1286555954.2985.110.camel@mulgrave.site> <4CAF70CD.6020307@redhat.com> <4CB0D2AF.7080609@redhat.com> <4B6A08C587958942AA3002690DD4F8C30100F5506B@cosmail02.lsi.com> <4CB30F27.9090009@redhat.com> <4B6A08C587958942AA3002690DD4F8C30100FF9C58@cosmail02.lsi.com> <4CB4709D.7020407@redhat.com> <4B6A08C587958942AA3002690DD4F8C30100FFA030@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_B2FD678A64EAAD45B089B123FDFC3ED704BAA8A3inbmail01lsicom_"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog107.obsmtp.com ([74.125.149.197]:41475 "EHLO
-	na3sys009aog107.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752034Ab0JLPPH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Oct 2010 11:15:07 -0400
-In-Reply-To: <4565AEA676113A449269C2F3A549520F4918AF07@cosmail03.lsi.com>
-Content-Language: en-US
+Received: from mx1.redhat.com ([209.132.183.28]:41230 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751589Ab0JLPdV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Oct 2010 11:33:21 -0400
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30100FFA030@cosmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
---_002_B2FD678A64EAAD45B089B123FDFC3ED704BAA8A3inbmail01lsicom_
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+On 10/12/2010 04:57 PM, Yang, Bo wrote:
+> Tomas,
+>
+> This change will not be in the part of patch 1/5.  But we can submit another new patch for this change after our testing team did the verification.
+>   
+I'm fine with every approach.
 
-SmFtZXMsIA0KDQpXZSBoYWQgaW50ZXJuYWwgZGlzY3Vzc2lvbiBhZ2FpbiBhZnRlciB5b3VyIGlu
-cHV0LiBIZXJlIGlzIHN1bW1hcnkgb2YgZGlzY3Vzc2lvbiBhbmQgd2UgYXJlIGFncmVlZCBub3Qg
-dG8gcHVzaCB0aGlzIHBhdGNoc2V0IGZvciB1cHN0cmVhbS4NClBsZWFzZSByZWplY3QgdGhpcyBz
-dWJtaXNzaW9uLiAgSSBoYXZlIHByb3ZpZGVkIHN1bW1hcnkganVzdCBmb3IgaW5mb3JtYXRpb24g
-cG9pbnQgb2Ygdmlldy4NCg0KUGF0Y2gxOiBXYWl0IGZvciBkaXNjb3ZlcnkgdG8gY29tcGxldGUu
-DQoNCiJUaGlzIHBhdGNoIGlzIG9ubHkgcmVxdWlyZWQgd2hlbiBmcmVzaCBpbnN0YWxsYXRpb24g
-aXMgaGFwcGVuaW5nLiBOZXh0IHJlYm9vdCBvbndhcmRzIHRoYXQgcGFydCBvZiBjb2RlIGRvZXMg
-bm90IHBsYXkgYW55IHJvbGUiDQpUaGF0IGlzIHdoYXQgYSBjb25jZXJuIG9mIEphbWVzLiBKYW1l
-cyBzdWdnZXN0ZWQgZG8gbm90IHdhaXQgZm9yIHdob2xlIHRvcG9sb2d5IHRvIGRpc2NvdmVyLiBM
-ZXQncyBzdGFydCBib290IEFTQVAgcG9zc2libGUgb25jZSBncnViIGlzIGRldGVjdGVkIGJ5IEJJ
-T1MuDQoNCklzc3VlIHNvbHZlIGJ5IHRoaXMgcGF0Y2g6IFdoaWxlIGluc3RhbGxhdGlvbiB1c2Vy
-IGNhbm5vdCBpZGVudGlmeSBlbmQtZGV2aWNlIG9uIHdoaWNoIHRoZXkgd2FudCB0byBpbnN0YWxs
-IE9TLg0KDQpQcm9zIG9mIHRoaXMgcGF0Y2ggOiANCkl0IHNvbHZlcyBpbnN0YWxsYXRpb24gcHJv
-YmxlbSB3aGVyZSB3ZSBoYXZlIGh1Z2UgdG9wb2xvZ3kgYXR0YWNoZWQgdG8gdGhlIHN5c3RlbS4g
-DQpJdCB3aWxsIHJlcG9ydCAvZGV2L3NkYSB3aGljaCBpcyBtYXJrZWQgYXMgInByZWZlcnJlZCBi
-b290IGRldmljZSBpbiBCSU9TIHBhZ2U4Ii4gVGhpcyB3YXkgdXNlciBjYW4gYWx3YXlzIG1ha2Ug
-c3VyZSAvZGV2L3NkYSBpcyBhIGRldmljZSB3aGVyZSB0aGV5IHdhbnQgdG8gaW5zdGFsbCBPUy4N
-Cg0KQ29ucyBvZiB0aGlzIHBhdGNoIDoNCkFmdGVyIEluc3RhbGxhdGlvbiwgY29kZSBwcm92aWRl
-ZCBpbiB0aGlzIHBhdGNoIGlzIG5vdCByZXF1aXJlZC4gVGhlcmUgaXMgYSBubyBuZWVkIHRvIGFs
-d2F5cyBwcm92aWRlIC9kZXYvc2RhIHNjc2kgZGV2aWNlIG5hbWUgdG8gcHJlZmVycmVkIGJvb3Qg
-ZGV2aWNlLg0KRGVmYXVsdCBSSEVMIGFuZCBTTEVTIGluc3RhbGxhdGlvbiBpcyBiYXNlZCBvbiBM
-QUJFTC4gKFRoaXMgaXMgcGFydCBvZiB1ZGV2KS4gVXNpbmcgdGhpcyBwYXRjaCBkcml2ZXIgd2ls
-bCB3YWl0IGZvciBkaXNjb3ZlcnkgdG8gYmUgY29tcGxldGVkIGJ5IGZpcm13YXJlIGxhdGVyIGl0
-IHdpbGwgcmVwb3J0IHByZWZlciBib290IGRldmljZSBmaXJzdCB0byB0aGUgU01MLiANCg0KV29y
-a2Fyb3VuZDogDQpXaXRob3V0IHRoaXMgcGF0Y2ggY3VzdG9tZXIgY2FuIHN0aWxsIHNvbHZlIHJl
-YWwtdGltZSBpbnN0YWxsYXRpb24gaXNzdWUuIFRoZXkgY2FuIG9wdCBmb3IgcmVkdWNlZCB0b3Bv
-bG9neSB3aGVuIGdvaW5nIGZvciBPUyBpbnN0YWxsYXRpb24uDQplLmEgaWYgdGhleSBhcmUgMTAw
-IGRyaXZlcnMgaW4gdG9wb2xvZ3ksIHRoZXkgY2FuIGRpc2Nvbm5lY3QgOTkgZHJpdmVycyBmb3Ig
-dGltZSBiZWluZyBhbmQgb25seSBjb25uZWN0IDEgZHJpdmVyIG9uIHdoaWNoIHRoZXkgd2FudCB0
-byBpbnN0YWxsIE9TLg0KT25jZSBPUyBpbnN0YWxsYXRpb24gaXMgZG9uZSwgY29ubmVjdCB0aG9z
-ZSA5OSBkZXZpY2VzIGJhY2sgdG8gdG9wb2xvZ3kuDQoNCg0KUGF0Y2ggMjogQWN0dWFsIGVudW1l
-cmF0aW9uIGxvZ2ljLg0KDQpUaGlzIHBhdGNoIGlzIGFnYWluIGFuIGFncmVlbWVudCBvZiBzYW1l
-IC9kZXYvc2RYIGZvciBwcmVmZXJyZWQgYm9vdCBkZXZpY2UsIHdoaWNoIGlzIGFscmVhZHkga25v
-d24gdG8gdXBzdHJlYW0gYW5kIG9ubHkgc29sdXRpb24sIGlzIHVkZXYuIExTSSBhZ3JlZWQgd2l0
-aCBKYW1lcyBjb21tZW50Lg0KQXR0YWNoZWQgaXMgamFtZXMgbGFzdCBjb21tZW50IGZvciByZWZl
-cmVuY2UuDQoNCg0KVGhhbmtzLCBLYXNoeWFwDQoNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2Ut
-LS0tLQ0KPiBGcm9tOiBNb29yZSwgRXJpYw0KPiBTZW50OiBUdWVzZGF5LCBTZXB0ZW1iZXIgMTQs
-IDIwMTAgNjoxNSBBTQ0KPiBUbzogSmFtZXMgQm90dG9tbGV5DQo+IENjOiBEZXNhaSwgS2FzaHlh
-cDsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IFByYWthc2gsIFNhdGh5YQ0KPiBTdWJqZWN0
-OiBSRTogW1BBVENIIDEvM10gbXB0MnNhczogV2FpdCBmb3IgcG9ydCBlbmFibGUgdG8gZ2V0IGNv
-bXBsZXRlDQo+IGJlZm9yZSByZXBvcnRpbmcgZGV2aWNlcyB0byBPUy4NCj4gDQo+IE9uIFNhdHVy
-ZGF5LCBTZXB0ZW1iZXIgMTEsIDIwMTAgODowMyBBTSwgSmFtZXMgQm90dG9tbGV5IHdyb3RlOg0K
-PiA+ID4NCj4gPiA+IElNTywgdGhpcyBwYXRjaCBpcyByZWFsbHkgbmVlZGVkLiBXaXRob3V0IGl0
-IHlvdSBwcm9iYWJseSB3aWxsIG5vdA0KPiBiZQ0KPiA+ID4gYWJsZSB0byBib290IGFmdGVyIGEg
-ZnJlc2ggaW5zdGFsbGF0aW9uIG9mIE9TIHdoZW4gdGhlcmUgYXJlDQo+IG11bHRpcGxlDQo+ID4g
-PiBkcml2ZXMuDQo+ID4NCj4gPiBCdXQgdGhhdCdzIGFuIGluc3RhbGxlciBwcm9ibGVtLCBub3Qg
-YSBrZXJuZWwgb25lLg0KPiANCj4gDQo+IFByb2JhYmx5IEknbSBub3QgZXhwbGFpbmluZyBpdCBj
-bGVhcmx5LiAgSSBwcmV0dHkgc3VyZSB0aGlzIGlzIGEgZGV2aWNlDQo+IGRyaXZlciBpc3N1ZS4N
-Cj4gDQo+IFRoZSBpbnN0YWxsYXRpb24gbmVlZHMgdG8gb2NjdXIgb24gdGhlIHNhbWUgZHJpdmUg
-d2hpY2ggQklPUyBpcw0KPiBwbGFubmluZyB0byBib290aW5nIHRvLg0KPiANCj4gSW5zdGFsbGVy
-IHR5cGljYWxseSB1c2UgdGhlIGZpcnN0IHJlcG9ydGVkIGRyaXZlIHRvIHB1dCB0aGUgT1Mgb24u
-DQo+IFNpbmNlIExTSSBjb250cm9sbGVyIGZpcm13YXJlIGRvZXMgZGlzY292ZXJ5LCB0aGVyZSBp
-cyBubyBndWFyYW50ZWUNCj4gd2hpY2ggaGFyZCBkcml2ZSBpcyBnb2luZyB0byBiZSByZXBvcnRl
-ZCBmaXJzdC4gV2hhdCBJJ20gdHJ5aW5nIHRvIHNheQ0KPiBpcyBkaXNjb3ZlcnkgaXMgcmFuZG9t
-LCBhbmQgZHJpdmVzIGNhbiBiZSByZXBvcnRlZCBpbiBhbnkgb3JkZXIuICAgSWYNCj4geW91IGhh
-dmUgMTAwIGhhcmQgZHJpdmVzIGluIGFuIGVuY2xvc3VyZSwgdGhlbiB0aGUgZmlyc3QgcmVwb3J0
-ZWQgZHJpdmUNCj4gY2FuIGJlIGFueSBvbmUgb2YgdGhlIDEwMCBkcml2ZXMuICBJZiB5b3UgbWFk
-ZSBhIG1pc3Rha2UgYW4gZGlkbid0IGdldA0KPiBwdXQgT1Mgb250byB0aGUgc2FtZSBkcml2ZSBC
-SU9TIGlzIGJvb3RpbmcgdG8sIHRoZW4geW91ciBzY3Jld2VkIHRoZQ0KPiBuZXh0IHRpbWUgeW91
-IGJvb3QgdXAuDQo+IA0KPiANCj4gVGhlIGJvb3QgZHJpdmUgaW5mbyBpcyBwYXNzZWQgZnJvbSBC
-SU9TIHRvIGRyaXZlciB2aWEgdGhlIGJpb3MNCj4gY29uZmlndXJhdGlvbiBwYWdlIEkgbWVudGlv
-bmVkIGluIHRoZSBwcmV2aW91cyBlbWFpbC4gIFRoZSBkZXZpY2UNCj4gZHJpdmVyIG1ha2VzIHN1
-cmUgdGhlIGZpcnN0IGhhcmQgZHJpdmUgcmVwb3J0ZWQgaXMgZ29pbmcgdG8gdGhlIGRyaXZlDQo+
-IHlvdXIgYm9vdGluZyB0by4gIFRodXMgeW91IG5lZWQgdG8gd2FpdCBmb3IgZGlzY292ZXJ5IHRv
-IGNvbXBsZXRlIGluDQo+IG9yZGVyIHRvIGZpbmQgdGhlIGNvcnJlY3QgZHJpdmUsIHdoaWNoIGlz
-IHdoYXQgdGhpcyBwYXRjaCBpcyBhbGwgYWJvdXQuDQo+IA0KPiA+DQo+ID4gPiAgIFRoZSBpc3N1
-ZSBpcyBSZWQgSGF0IG9yIFN1U0UgaXMgZ29pbmcgdG8gcGxhY2UgdGhlIG5ldyBPUyBvbiB0aGUN
-Cj4gPiA+IGZpcnN0IHJlcG9ydGVkIGRyaXZlLCBlLmcuIC9kZXYvc2RhLiAgVGhpcyBib290IGRy
-aXZlIGluZm9ybWF0aW9uDQo+IGlzDQo+ID4gPiBwYXNzZWQgZnJvbSB0aGUgQklPUyB0byB0aGUg
-ZHJpdmVyIHZpYSBhIGNvbmZpZ3VyYXRpb24gcGFnZSBjYWxsZWQNCj4gPiA+IGJpb3MgcGFnZSAy
-Lg0KPiA+DQo+ID4gSSB0aGluayBib3RoIGluc3RhbGxlcnMgYWxyZWFkeSB0YWtlIHRoaXMgaW50
-byBhY2NvdW50OiBncnViIGZpbmRzIGl0DQo+ID4gd2hlbiBpdCBidWlsZHMgdGhlIG1hcHBpbmcg
-dGFibGUgZm9yIHRoZSBmaXJzdCB0aW1lLg0KPiANCj4gWWVzIGlmIEJJT1MgYm9vdHMgdG8gdGhl
-IGNvcnJlY3QgZHJpdmUgY29udGFpbmluZyB0aGUgT1MgYW5kIGdydWIsIHRoZW4NCj4gSSBhZ3Jl
-ZSB3aXRoIGV2ZXJ5dGhpbmcgeW91ciBzYXlpbmcuDQo+IA0KPiANCj4gPg0KPiA+ID4gICBUaGUg
-ZHJpdmVyIG5lZWRzIHRvIHdhaXQgZm9yIGFsbCBmaXJtd2FyZSB0byBjb21wbGV0ZSBkaXNjb3Zl
-cnksDQo+ID4gPiB0aGVuIHNlYXJjaCBmb3IgYm9vdCBkZXZpY2UgYXMgaW5kaWNhdGVkIGluIHRo
-ZSBjb25maWcgcGFnZSwgdGhlbg0KPiA+ID4gcmVwb3J0IGl0IGZpcnN0LiAgV2l0aG91dCB0aGUg
-cGF0Y2gsIHRoZXJlIGlzIG5vIGd1YXJhbnRlZSB3aGljaA0KPiA+IGRyaXZlDQo+ID4gPiBvciBy
-YWlkIHZvbHVtZSBpcyBnZXR0aW5nIHJlcG9ydGVkIGZpcnN0LiAgSW4gb3RoZXIgd29yZHMgdGhl
-DQo+IGRldmljZQ0KPiA+ID4gZHJpdmVyIGNvdWxkIG9mIHJlcG9ydGVkIGJpb3MgZHJpdmUgbG9j
-YXRlZCBhdCAweDgzIGFzIC9kZXYvc2RhLA0KPiA+ID4gaW5zdGVhZCBvZiAweDgwLCB0aGVuIHdo
-ZW4geW91IHJlYm9vdCwgdGhlIEJJT1MgaXMgbm90IGZpbmRpbmcgYm9vdA0KPiA+ID4gcGFydGl0
-aW9uLiBUaGUgZW5kIHVzZXIgY2FuIHNlbGVjdCB0aGUgYm9vdCBkZXZpY2UgYnkgZ29pbmcgaW50
-bw0KPiB0aGUNCj4gPiA+IEJJT1MgY29uZmlndXJhdGlvbiB1dGlsaXR5OyBlLmcuIGNvbnRyb2wg
-Qy4NCj4gPg0KPiA+IEJ1dCB5b3UgZG9uJ3QgbmVlZCBpdCB0byBiZSByZXBvcnRlZCBmaXJzdC4g
-IFRoZSBkZWZhdWx0IGluc3RhbGwgb24NCj4gPiBib3RoDQo+ID4gU0xFUyBhbmQgUkhFTCAoYW5k
-IEZlZG9yYSBhbmQgb3BlblNVU0UpIGlzIGJ5IGxhYmVsLiAgU28gb25jZSB3ZSBnZXQNCj4gPiB0
-aGUNCj4gPiBib290IGRyaXZlIGZyb20gdGhlIG1hcHBpbmcsIHdlIGJ1aWxkIGl0cyBsYWJlbCBp
-bnRvIHRoZSBncnViIGNvbmZpZw0KPiA+IGFuZA0KPiA+IGZzdGFiIGZpbGVzIGFuZCB3ZSBhbHdh
-eXMgcnVuIGZyb20gaXQsIHJlZ2FyZGxlc3Mgb2YgdGhlIG9yZGVyIGl0DQo+ID4gYXBwZWFycyBp
-biB0aGUgYm9vdHVwLg0KPiA+DQo+IA0KPiBZZXMgaWYgQklPUyBib290cyB0byB0aGUgY29ycmVj
-dCBkcml2ZSBjb250YWluaW5nIHRoZSBPUywgdGhlbiBJIGFncmVlDQo+IHRoYXQgZGV2aWNlIGxh
-YmVscywgaWRzLCBwYXRoLCBhbmQgdXVpZCAgYWxsIHdvcmsuDQoNCg==
+> Also did you get the chance to look at the patches 2/5 to 5/5?  Just give me the feedback.
+>   
+I just briefly looked at 2-5/5 and haven't found anything obvious.
 
---_002_B2FD678A64EAAD45B089B123FDFC3ED704BAA8A3inbmail01lsicom_
-Content-Type: message/rfc822
+> Thanks,
+>
+> Bo Yang   
+>  
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com] 
+> Sent: Tuesday, October 12, 2010 10:29 AM
+> To: Yang, Bo
+> Cc: James Bottomley; bo yang; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org; Daftardar, Jayant
+> Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to MegaRAID SAS drive
+>
+> On 10/11/2010 05:37 PM, Yang, Bo wrote:
+>   
+>> Tomas,
+>>
+>> The reason the driver does flush_scheduled_work() is driver did cancel_delayed_work().  I am not sure driver need to call flush_scheduled_work() if the scheduled work already done, but I will test this changes and submit another patch as soon as it works fine.  
+>>   
+>>     
+> Driver needs to call flush_scheduled_work() because you are adding in this patch a new workqueue:
+> INIT_WORK(&instance->work_init, process_fw_state_change_wq); so calling the flush_scheduled_work()
+> only if a certain condition is met is the problem. If the condition comes true for both workqueues
+> then it would be fine, but I think that it isn't so.
+> With this patch we could have a started workqueue (with a long 30 sec sleep) and when the module
+> is removed then probably a memory corruption etc. 
+>
+>
+>   
+>> This change should not be the part of this patch, we would have the new patch submit after the verification. 
+>>   
+>>     
+> I would prefer to have it in one patch, but if it is for you easier, then do it as you wish.
+>
+> Tomas
+>
+>
+>   
+>> Regards,
+>>
+>> Bo Yang   
+>>  
+>> -----Original Message-----
+>> From: Tomas Henzl [mailto:thenzl@redhat.com] 
+>> Sent: Monday, October 11, 2010 9:21 AM
+>> To: Yang, Bo
+>> Cc: James Bottomley; bo yang; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org
+>> Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to MegaRAID SAS drive
+>>
+>> On 10/11/2010 02:55 PM, Yang, Bo wrote:
+>>   
+>>     
+>>> Tomas,
+>>>
+>>>   
+>>>     
+>>>       
+>>>> Another correction - flush_scheduled_work is already present in megass_detach_one
+>>>> it only should be moved away from the if statement.
+>>>>     
+>>>>       
+>>>>         
+>>> The flush_scheduled_work is for schedule_delayed_work().  We need to flush it and remove.
+>>>   
+>>>     
+>>>       
+>> I'm not saying it should be removed, I think a move outside from the 'if' block
+>> makes it work for ev->hotplug_work and for the newly added instance->work_init
+>>
+>>
+>> diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+>> index 55951f4..7773707 100644
+>> --- a/drivers/scsi/megaraid/megaraid_sas.c
+>> +++ b/drivers/scsi/megaraid/megaraid_sas.c
+>> @@ -4088,9 +4088,9 @@ static void __devexit megasas_detach_one(struct pci_dev *pdev)
+>>  		struct megasas_aen_event *ev = instance->ev;
+>>  		cancel_delayed_work(
+>>  			(struct delayed_work *)&ev->hotplug_work);
+>> -		flush_scheduled_work();
+>> -		instance->ev = NULL;
+>>  	}
+>> +	flush_scheduled_work();
+>> +	instance->ev = NULL;
+>>  
+>>  	tasklet_kill(&instance->isr_tasklet);
+>>  
+>> --
+>>
+>>   
+>>     
+>>> -----Original Message-----
+>>> From: Tomas Henzl [mailto:thenzl@redhat.com] 
+>>> Sent: Saturday, October 09, 2010 4:38 PM
+>>> To: James Bottomley
+>>> Cc: bo yang; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org; Yang, Bo
+>>> Subject: Re: PATCH 1/5] scsi: megaraid_sas - Add Online Controller Reset to MegaRAID SAS drive
+>>>
+>>> On 10/08/2010 09:28 PM, Tomas Henzl wrote:
+>>>   
+>>>     
+>>>       
+>>>> On 10/08/2010 06:39 PM, James Bottomley wrote:
+>>>>   
+>>>>     
+>>>>       
+>>>>         
+>>>>> On Fri, 2010-10-08 at 17:51 +0200, Tomas Henzl wrote:
+>>>>>   
+>>>>>     
+>>>>>       
+>>>>>         
+>>>>>           
+>>>>>> On 09/23/2010 04:36 AM, bo yang wrote:
+>>>>>>     
+>>>>>>       
+>>>>>>         
+>>>>>>           
+>>>>>>             
+>>>>>>> This patch is too big.  I am using attachment to submit.  Please
+>>>>>>> use attached file to apply.  Also let me know if it can't be accepted.
+>>>>>>>
+>>>>>>> To add the Online controller reset support, driver need to do:
+>>>>>>> a). reset the controller chips -- Xscale and Gen2 which will change
+>>>>>>> the function calls and add the reset function related to this two
+>>>>>>> chips.
+>>>>>>> b). during the reset, driver will store the pending cmds which not
+>>>>>>> returned by FW to driver's pending queue.  Driver will re-issue those
+>>>>>>> pending cmds again to FW after the OCR finished.
+>>>>>>> c). In driver's timeout routine, driver will report to OS as reset.
+>>>>>>> Also driver's queue routine will block the cmds until the OCR
+>>>>>>> finished.
+>>>>>>> d). in Driver's ISR routine, if driver get the FW state as state
+>>>>>>> change, FW in Failure status and FW support online controller
+>>>>>>> reset (OCR), driver will start to do the controller reset.
+>>>>>>> e). In driver's IOCTL routine, the application cmds will wait for the
+>>>>>>> OCR to finish, then issue the cmds to FW.
+>>>>>>>
+>>>>>>> Signed-off-by Bo Yang<bo.yang@lsi.com>
+>>>>>>>
+>>>>>>> ---
+>>>>>>>  drivers/scsi/megaraid/megaraid_sas.c |  756 ++++++++++++++++++++++++++++++++---
+>>>>>>>  drivers/scsi/megaraid/megaraid_sas.h |   88 +++-
+>>>>>>>  2 files changed, 787 insertions(+), 57 deletions(-)
+>>>>>>>       
+>>>>>>>         
+>>>>>>>           
+>>>>>>>             
+>>>>>>>               
+>>>>>> Hi Bo,
+>>>>>> in the workqueue function you sleep for 30s,
+>>>>>> it's scheduled here - schedule_work(&instance->work_init);
+>>>>>>
+>>>>>> +process_fw_state_change_wq(struct work_struct *work)
+>>>>>> +{
+>>>>>> ...
+>>>>>> +		/*waitting for about 20 second before start the second init*/
+>>>>>> +		for (wait = 0; wait < 30; wait++) {
+>>>>>> +			msleep(1000);
+>>>>>> +		}
+>>>>>>     
+>>>>>>       
+>>>>>>         
+>>>>>>           
+>>>>>>             
+>>>>> this lot should be ssleep(20) if you want a 20 sec sleep.
+>>>>>   
+>>>>>     
+>>>>>       
+>>>>>         
+>>>>>           
+>>>> please do that on every place where you use the 
+>>>> "for (wait = 0; wait < n; wait++) msleep(1000);" construction
+>>>>
+>>>>   
+>>>>     
+>>>>       
+>>>>         
+>>>>>> - this is not a good practice to sleep for a so long time I think
+>>>>>>     
+>>>>>>       
+>>>>>>         
+>>>>>>           
+>>>>>>             
+>>>> this long sleep might might be ok, if the workqueue is used only rarely
+>>>> is it so?
+>>>>
+>>>>   
+>>>>     
+>>>>       
+>>>>         
+>>>>>> - you should use in your exit function some synchronization 
+>>>>>>   for example 'cancel_work_sync', without that if someone rmmods your 
+>>>>>>   module, it could then lead to a memory corruption
+>>>>>>     
+>>>>>>       
+>>>>>>         
+>>>>>>           
+>>>>>>             
+>>>>> Actually flush_scheduled_work() should be fine ... it will force the
+>>>>> module removal to wait for completion ... cancellation can be error
+>>>>> prone, so just forcing the wait sounds easier.
+>>>>>   
+>>>>>     
+>>>>>       
+>>>>>         
+>>>>>           
+>>> Another correction - flush_scheduled_work is already present in megass_detach_one
+>>> it only should be moved away from the if statement.
+>>>
+>>>
+>>>   
+>>>     
+>>>       
+>>>> someone told that cancel_work_sync is safer then flush_scheduled_work
+>>>> but I'm not an expert, so ok 
+>>>>
+>>>> Tomas
+>>>>
+>>>>   
+>>>>     
+>>>>       
+>>>>         
+>>>>> James
+>>>>>
+>>>>>
+>>>>>         
+>>>>>           
 
-Received: from coscas01.lsi.com (172.21.36.60) by inbexch02.lsi.com
- (135.36.98.40) with Microsoft SMTP Server (TLS) id 8.2.254.0; Sun, 5 Sep 2010
- 22:06:39 +0530
-Received: from milmhbs0.lsil.com (147.145.1.30) by coscas01.lsi.com
- (172.21.36.60) with Microsoft SMTP Server id 8.2.254.0; Sun, 5 Sep 2010
- 10:36:35 -0600
-Received: from mail2.lsil.com (mail2.lsil.com [147.145.40.22])	by
- milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id o85GacHP003848;	Sun, 5 Sep
- 2010 09:36:38 -0700
-Received: from psmtp.com (na3sys009amx251.postini.com [74.125.149.135])	by
- mail2.lsil.com (8.12.11/8.12.11) with SMTP id o85GTb05011919;	Sun, 5 Sep 2010
- 09:29:37 -0700 (PDT)
-Received: from source ([66.63.167.143]) by na3sys009amx251.postini.com
- ([74.125.148.14]) with SMTP;	Sun, 05 Sep 2010 09:36:34 PDT
-Received: from localhost (localhost [127.0.0.1])	by
- bedivere.hansenpartnership.com (Postfix) with ESMTP id 034EC8EE135;	Sun,  5
- Sep 2010 09:36:34 -0700 (PDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])	by localhost
- (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)	with
- ESMTP id np1DXVvAx1wq; Sun,  5 Sep 2010 09:36:33 -0700 (PDT)
-Received: from [201.86.120.34] (unknown [201.86.120.34])	by
- bedivere.hansenpartnership.com (Postfix) with ESMTPSA id DBEF98EE100;	Sun,  5
- Sep 2010 09:36:32 -0700 (PDT)
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric"
-	<Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Date: Sun, 5 Sep 2010 22:06:29 +0530
-Subject: Re: [PATCH 2/3] mpt2sas: Adding enclosure/slot sorting logic
-Thread-Topic: [PATCH 2/3] mpt2sas: Adding enclosure/slot sorting logic
-Thread-Index: ActNGIN7/aWQb6WTSJqB1aUqyc8JtQ==
-Message-ID: <1283704589.15944.1273.camel@mulgrave.site>
-References: <20100804083531.GC13442@lsi.com>
-In-Reply-To: <20100804083531.GC13442@lsi.com>
-X-MS-Exchange-Organization-AuthAs: Anonymous
-X-MS-Exchange-Organization-AuthSource: coscas01.lsi.com
-X-MS-Has-Attach: 
-X-Message-Flag: Follow up
-X-MS-TNEF-Correlator: 
-x-scanned-by: MIMEDefang 2.39
-x-pstn-neptune: 0/0/0.00/0
-x-pstn-levels: (S:63.01517/99.90000 CV:99.9000 FC:95.5390 LC:95.5390
- R:95.9108 P:95.9108 M:97.0282 C:98.6951 )
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-
-T24gV2VkLCAyMDEwLTA4LTA0IGF0IDE0OjA1ICswNTMwLCBLYXNoeWFwLCBEZXNhaSB3cm90ZToN
-Cj4gQWRkaW5nIHNvcnRpbmcgc3VwcG9ydCB0byBkcml2ZXIgc28gdGhhdCBkdXJpbmcgZHJpdmVy
-IGxvYWQgdGltZSBpdCB3aWxsDQo+IHNvcnQgZGV2aWNlcyB1c2luZyBlbmNsb3N1cmUvc2xvdCBt
-YXBwaW5nIGFsZ29yaXRobSBwcmlvciB0byByZXBvcnRpbmcNCj4gZGV2aWNlcyB0byBPUy4gIFRo
-aXMgaXMgb25seSBkb25lIHdoZW4gaW9jIHBhZ2UgOCBzYXlzIHRvIHNvcnQNCj4gZW5jbG9zdXJl
-L3Nsb3QgbW9kZS4gIFRoZSBkcml2ZXIgd2lsbCBoYW5kbGUgc29ydGluZyBieSBlbmNsb3N1cmUg
-aGFuZGxlDQo+IGFuZCBzbG90IHdoZW4gYXZhaWxhYmxlLiBJZiB0aGF0IGlzIG5vdCBhdmFpbGFi
-bGUsIHRoZW4gaXQgd2lsbCBzb3J0IGJ5DQo+IHBhcmVudCBkZXZpY2UgaGFuZGxlIGFuZCBwaHkg
-bnVtYmVyLiBGb3IgcGVyc2lzdGVudCBkZXZpY2UgbWFwcGluZyBtb2RlDQo+IHRoZSBkcml2ZXIg
-d2lsbCBub3Qgc29ydC4NCj4gDQo+IFRoaXMgcGF0Y2ggaXMgZm9yIHNvcnRpbmcgZGV2aWNlcy4g
-VGhlIGN1c3RvbWVyIGRlc2lyZSBpcyBmb3IgZGV2aWNlcyB0byBiZQ0KPiByZXBvcnRlZCB0byBP
-UyB0byBiZSBjb25zaXN0ZW50IG1hbm5lciBhY3Jvc3MgcmVib290cyBhbmQgYWNyb3NzIG11bHRp
-cGxlDQo+IHN5c3RlbXMgd2l0aCBzaW1pbGFyIHRvcG9sb2d5LiBDdXJyZW50IGRlc2lnbiBpbiB0
-aGUgZHJpdmVyIGlzIHRvIHJlcG9ydA0KPiBkZXZpY2VzIGluIHRoZSBvcmRlciBvZiBmaXJtd2Fy
-ZSBkaXNjb3ZlcnksIHdoaWNoIGNhbiBjaGFuZ2UgZHVlIHRvDQo+IHZhcmlhdGlvbnMgaW4gZGV2
-aWNlIHNwaW4gdXAgdGltZS4gVGhlIHN1Z2dlc3RlZCBjaGFuZ2UgaW4gdGhlIGRyaXZlciBpcyB0
-bw0KPiBwcmVwYXJlIGEgc29ydGVkIGxpc3QgcHJpb3IgdG8gcmVwb3J0aW5nIGRldmljZXMgdG8g
-dGhlIE9TLiBUaGlzIGFsZ29yaXRobQ0KPiB3aWxsIGJlIGJhc2VkIG9uIEVuY2xvc3VyZS9TbG90
-IG9yZGVyIGFsZ29yaXRobS4NCj4gDQo+IEZvciB0aGlzIGFsZ29yaXRobSB0byBiZSBpbXBsZW1l
-bnRlZCBpbiB0aGUgY29udHJvbGxlciBmaXJtd2FyZSwgdGhlDQo+IGZpcm13YXJlIG5lZWRzIG1l
-bW9yeSBzcGFjZSB0byBhY2NvdW50IGZvciBzZXZlcmFsIGh1bmRyZWRzIG9mIGRldmljZXMNCj4g
-dGhhdCBjb3VsZCBwb3RlbnRpYWxseSBiZSBzdXBwb3J0ZWQuICBUaGlzIHNwZWNpZmljIHZlcnNp
-b24gb2YgdGhlDQo+IGNvbnRyb2xsZXIgaGFyZHdhcmUgZG9lcyBub3QgaGF2ZSB0aGUgbmVjZXNz
-YXJ5IG1lbW9yeSB0byBpbXBsZW1lbnQNCj4gdGhpcyBsb2dpYy4gIEhlbmNlIHRoZSBsb2dpYyBp
-cyBpbXBsZW1lbnRlZCBpbiB0aGUgZHJpdmVyLg0KPiANCj4gSGVyZSBpcyBvdmVydmlldyBvZiB0
-aGlzIHBhdGNoOg0KPiANCj4gKGEpIENoZWNrIElPQyBQYWdlIDguIElmIHRoZSBNUEkyX0lPQ1BB
-R0U4X0ZMQUdTX0VOQ0xPU1VSRV9TTE9UX01BUFBJTkcgYml0DQo+IGlzIG5vdCBzZXQgaW4gdGhl
-IGZsYWdzIGZpZWxkLCB0aGVuIGRvbid0IHNvcnQgZGV2aWNlcy4gV2hlbiB0aGUgZmxhZyBpcw0K
-PiBjbGVhcmVkLCB0aGVuIGRldmljZXMgYXJlIGFkZGVkIHRvIGxpc3QgaW4gdGhlIG9yZGVyIG9m
-IGNvbnRyb2xsZXIgZGlzY292ZXJ5Lg0KPiANCj4gKGIpIElmIHRoZSBFbmNsb3N1cmUvU2xvdCBt
-YXBwaW5nIGJpdCBpcyBzZXQsIHRoZW4gcHJvY2VlZCB0byBzb3J0IGRldmljZXMNCj4gYXMgZm9s
-bG93cy4NCj4gDQo+IFRoaXMgaXMgdGhlIEVuY2xvc3VyZS9TbG90SUQgbWFwcGluZyBhbGdvcml0
-aG06DQo+IA0KPiAoMSlJZiB0aGUgbGlzdCBpcyBlbXB0eSwgYWRkIHRoZSBmaXJzdCBkZXZpY2Uu
-DQo+IA0KPiAoMilJZiB0aGUgbmV3IGRldmljZSBoYXMgYSBFbmNsb3N1cmUgSGFuZGxlIHNldCB0
-byB6ZXJvLCB0aGVuIHByb2NlZWQgdG8gdGhlDQo+IEV4cGFuZGVyIC9QaHkgTnVtYmVyIG1hcHBp
-bmcgYWxnb3JpdGhtIChzZWUgbmV4dCBzZWN0aW9uKS4NCj4gDQo+ICgzKVRyYXZlcnNlIHRocm91
-Z2ggdGhlIGxpc3QuIElmIHRoZSBFbmNsb3N1cmUgSGFuZGxlIGlzIHplcm8sIGxvb3AgdG8gdGhl
-DQo+IG5leHQgZGV2aWNlLiBJZiB3ZSBtYWRlIGl0IHRocnUgdGhlIGVudGlyZSBsaXN0IGFuZCBk
-aWRuJ3QgaW5zZXJ0IHRoZSBuZXcNCj4gZGV2aWNlIGFuZCB0aGVuIHByb2NlZWQgdG8gdGhlIEV4
-cGFuZGVyIC9QaHkgTnVtYmVyIG1hcHBpbmcgYWxnb3JpdGhtLiAoc2VlDQo+IG5leHQgc2VjdGlv
-bikNCj4gDQo+ICg0KUlmIEVuY2xvc3VyZSBIYW5kbGUgbGVzcyB0aGFuIHRoZSBzZWFyY2hlZCBF
-bmNsb3N1cmUgSGFuZGxlLCB0aGVuIGluc2VydA0KPiBuZXcgZGV2aWNlIGJlZm9yZSB0aGUgc2Vh
-cmNoZWQgZGV2aWNlLg0KPiANCj4gKDUpSWYgdGhlIEVuY2xvc3VyZSBIYW5kbGUgaXMgdGhlIHNh
-bWUgYXMgdGhlIHNlYXJjaGVkIGRldmljZSBFbmNsb3N1cmUNCj4gSGFuZGxlLCB0aGVuIGNoZWNr
-IHRoZSBTbG90IElELiBJZiB0aGUgU2xvdCBJRCBpcyBzbWFsbGVyIHRoYW4gdGhlIHNlYXJjaGVk
-DQo+IFNsb3QgSUQsIHRoZW4gaW5zZXJ0IG5ldyBkZXZpY2UgYmVmb3JlIHRoZSBzZWFyY2hlZCBk
-ZXZpY2UuDQo+IA0KPiAoNilJZiBib3RoIEVuY2xvc3VyZSBIYW5kbGUgYW5kIFNsb3QgSUQgYXJl
-IHRoZSBzYW1lIGFzIHNlYXJjaGVkIGRldmljZXMsDQo+IHRoZW4gY2hlY2sgUGh5IE51bWJlci4g
-SWYgdGhlIFBoeU51bWJlciBpcyBzbWFsbGVyIHRoYW4gdGhlIHNlYXJjaGVkIGRldmljZQ0KPiBQ
-aHlOdW1iZXIsIHRoZW4gaW5zZXJ0IG5ldyBkZXZpY2UgYmVmb3JlIHRoZSBzZWFyY2hlZCBkZXZp
-Y2UuDQo+IA0KPiAoNylJZiB3ZSBoaXQgdGhlIGxhc3QgZW50cnkgaW4gdGhlIGxpc3QsIHRoZW4g
-YXBwZW5kIG5ldyBkZXZpY2UgdG8gdGhlIHRhaWwuDQo+IA0KPiANCj4gVGhpcyBpcyB0aGUgRXhw
-YW5kZXIgL1BoeSBOdW1iZXIgbWFwcGluZyBhbGdvcml0aG06DQo+IA0KPiAoMSlUcmF2ZXJzZSB0
-aHJvdWdoIHRoZSBsaXN0IGZyb20gdGhlIHN0YXJ0LiBJZiB0aGUgUGFyZW50IEhhbmRsZSBpcyBs
-ZXNzDQo+IHRoYW4gdGhlIHNlYXJjaCBQYXJlbnQgSGFuZGxlLCB0aGVuIGluc2VydCBuZXcgZGV2
-aWNlIGJlZm9yZSB0aGUgc2VhcmNoZWQNCj4gZGV2aWNlLiBQbGVhc2Ugbm90ZSB0aGF0IHRoZSBQ
-YXJlbnQgSGFuZGxlIGlzIHBhcmVudCBvZiB0aGUgYXR0YWNoZWQgZGV2aWNlLA0KPiBpdCB3b3Vs
-ZCBiZSBlaXRoZXIgYW4gaG9zdCBjb250cm9sbGVyIG9yIGV4cGFuZGVyLg0KPiANCj4gKDIpSWYg
-dGhlIFBhcmVudCBIYW5kbGUgaXMgdGhlIHNhbWUgYXMgdGhlIHNlYXJjaGVkIGRldmljZSBQYXJl
-bnQgSGFuZGxlLA0KPiB0aGVuIGNoZWNrIFBoeU51bWJlci4gSWYgdGhlIFBoeU51bWJlciBpcyBs
-ZXNzIHRoYW4gdGhlIHNlYXJjaGVkIFBoeU51bWJlciwNCj4gdGhlbiBpbnNlcnQgdGhlIG5ldyBk
-ZXZpY2UgYmVmb3JlIHRoZSBzZWFyY2hlZCBkZXZpY2UuDQo+IA0KPiAoMylJZiB3ZSBtYWRlIGl0
-IHRocm91Z2ggdGhlIGVudGlyZSBsaXN0IHdpdGhvdXQgYWRkaW5nIHRoZSBuZXcgZGV2aWNlLCB0
-aGVuDQo+IGFwcGVuZCBuZXcgZGV2aWNlIHRvIHRhaWwgb2YgdGhlIGxpc3QuDQoNClRoaXMgcmVh
-bGx5IGRvZXNuJ3QgbG9vayBsaWtlIGEgZ29vZCBpZGVhLiAgSWYgeW91IHdhbnQgc2xvdCBtYXBw
-aW5nIHdoeQ0Kbm90IGp1c3QgYWRkIGEgdWRldiBydWxlIHRvIGdldCBpdCAob3IgdXNlIHNlcyk/
-ICBUcnlpbmcgdG8gd2FpdCBhbmQNCnNvcnQgaW4gdGhlIGRyaXZlciBpcyBmcmFnaWxlIGFuZCBh
-bHNvIGEgYml0IHBvaW50bGVzcy4NCg0KSmFtZXMNCg0KDQo=
-
---_002_B2FD678A64EAAD45B089B123FDFC3ED704BAA8A3inbmail01lsicom_--
