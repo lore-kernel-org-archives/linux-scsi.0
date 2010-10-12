@@ -1,19 +1,19 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: linux-next: Tree for October 12 (scsi/bfa)
-Date: Tue, 12 Oct 2010 15:44:44 -0700
-Message-ID: <E5313AF6F2BFD14293E5FD0F94750F86A5CF75DA53@HQ1-EXCH01.corp.brocade.com>
-References: <20101012163552.7306165b.sfr@canb.auug.org.au>
- <20101012101414.045f62d5.randy.dunlap@oracle.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: linux-next: Tree for October 12 (scsi/bfa)
+Date: Tue, 12 Oct 2010 15:55:49 -0700 (PDT)
+Message-ID: <dac0cbc8-0509-46eb-812f-3ef8ec9e037e@default>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20101012101414.045f62d5.randy.dunlap@oracle.com>
-Content-Language: en-US
-Sender: linux-next-owner@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>
-Cc: "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Krishna Gudipati <kgudipat@Brocade.com>, Maggie Zhang <xmzhang@Brocade.COM>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: huangj@Brocade.COM
+Cc: sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, kgudipat@Brocade.COM, linux-kernel@vger.kernel.org, xmzhang@Brocade.COM, linux-next@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+
+Hi,
+
 
 >bfa has one function that probably uses too much stack space and a few
 >others that might be a problem.
@@ -44,12 +44,20 @@ List-Id: linux-scsi@vger.kernel.org
 >than 512 bytes
 >
 
-For these specific cases, we declare some big data structures in the stack, which is not good
-and I will fix them. But is general, is passing 512 stack size check a requirement? This seems
-too strict for me since the default stack size is 8k.
+| For these specific cases, we declare some big data structures in the stack, which is not good
+| and I will fix them. But is general, is passing 512 stack size check a requirement? This seems
+| too strict for me since the default stack size is 8k.
+
+Fixing the warnings for frame size exceeding 1024 is OK IMO.
+The 512 test was just for more info.
+
+Ah, I see, 8 KB stack is default on X86_32.
+
 
 >Also, there are many comment blocks that begin with "/**", which means "beginning
 >of kernel-doc comment block" for Linux kernel code.  :(
 >
 
-Not aware of this convention. I will fix them. Thanks.
+| Not aware of this convention. I will fix them. Thanks.
+
+Thanks.
