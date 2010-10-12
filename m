@@ -1,93 +1,88 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: Re: [Open-FCoE] [PATCH] add cpu on/offline support in Fibre
-	Channel exchange and sequence handling
-Date: Mon, 11 Oct 2010 16:23:39 -0700
-Message-ID: <1286839419.13422.1581.camel@fritz>
-References: <AANLkTi=ViAo=uYK0JwK597WkV1x78mntFqU-Cn4u0Dju@mail.gmail.com>
-	 <1286834888.13422.1572.camel@fritz>
-	 <1286837386.20358.106.camel@haakon2.linux-iscsi.org>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: [PATCH 3/5] scsi: megaraid_sas - Add input parameter for max_sectors
+Date: Tue, 12 Oct 2010 07:18:50 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30100FF9FB4@cosmail02.lsi.com>
+References: <AANLkTimpuAfRw85ECVQ+FJxFpNaPC=zHCL1i0Y6AjiAf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="_002_4B6A08C587958942AA3002690DD4F8C30100FF9FB4cosmail02lsic_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10558 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753434Ab0JKXXj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 11 Oct 2010 19:23:39 -0400
-In-Reply-To: <1286837386.20358.106.camel@haakon2.linux-iscsi.org>
+Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:34862 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757326Ab0JLNTD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 12 Oct 2010 09:19:03 -0400
+In-Reply-To: <AANLkTimpuAfRw85ECVQ+FJxFpNaPC=zHCL1i0Y6AjiAf@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Hillf Danton <dhillf@gmail.com>, linux-scsi@vger.kernel.org, devel@open-fcoe.org
+To: bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.or>
 
-On Mon, 2010-10-11 at 15:49 -0700, Nicholas A. Bellinger wrote:
-> On Mon, 2010-10-11 at 15:08 -0700, Robert Love wrote:
-> > On Fri, 2010-10-08 at 22:57 +0800, Hillf Danton wrote:
-> > 
-> > Hi Hillf,
-> > 
-> > Can you please prefix the libfc patches with "libfc: <title>"? Also, for
-> > your other patches that have a "SCSI" prefix, I think James' system adds
-> > the "[SCSI]" prefix when he applies patches so you don't need to add it.
-> > 
-> > > Fibre Channel exchange pool is setup in a per cpu way that
-> > > entire exchange id range is divided equally across all cpus.
-> > > 
-> > > When cpu goes offline, the corresponding range of exchg id
-> > > becomes unavailable until it is online again.
-> > > 
-> > > This work tries to fix the unavailability based on notifier_block.
-> > > 
-> > > Signed-off-by: Hillf Danton <dhillf@gmail.com>
-> > > ---
-> > > 
-> > > --- o/linux-2.6.36-rc4/drivers/scsi/libfc/fc_exch.c	2010-09-13
-> > > 07:07:38.000000000 +0800
-> > > +++ m/linux-2.6.36-rc4/drivers/scsi/libfc/fc_exch.c	2010-10-08
-> > > 22:24:48.000000000 +0800
-> > 
-> > Most patches I've seen on the various mailing lists are created by
-> > diffing the files within the kernel directory, so that you don't have
-> > the "/linux-2.6.36-rc/" in each hunk. It's the difference between using
-> > 'patch -p1' or 'patch -p2' when applying the patch.
-> > 
-> > I think this is preventing git-am from applying the patches. To import
-> > them I ended up having git-am fail and then manually using the 'patch
-> > -p2' command, so that I could get both the commit message from git-am
-> > and then the patch itself from 'patch'. I don't know about anyone else,
-> > but if you post patches without the kernel directory in the diff line it
-> > would help me out. Thanks.
-> > 
-> 
-> Hmmm, I am not sure about how to do this with git-am, but when I do this
-> between lio-core-2.6.git/lio-4.0 -> lio-core-backports.git patches, I
-> use:
-> 
-> 	'git-apply --index --verbose --directory=$DIR_PREFIX'
-> 
-> which is described in the git-apply manual here:
-> 
-> --directory=<root>
->         
->         Prepend <root> to all filenames. If a "-p" argument was also
->         passed, it is applied before prepending the new root.
->         
->         For example, a patch that talks about updating a/git-gui.sh to
->         b/git-gui.sh can be applied to the file in the working tree
->         modules/git-gui/git-gui.sh by running git apply
->         --directory=modules/git-gui.
->         
+--_002_4B6A08C587958942AA3002690DD4F8C30100FF9FB4cosmail02lsic_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Thanks nab. While looking at '--directory' I just found that there is a
-'-p' option to both git-am and git-apply. It seems like it should do the
-trick. Unfortunately even with that flag it still doesn't apply.
+Re-submit: I am re-attaching the patch (3/5)=20
 
-fatal: patch fragment without header at line 7: @@ -26,6 +26,9 @@
+Driver add the input parameters support for max_sectors for megaraid
+sas gen2 chip.  Customer can set the max_sectors support to 1MB for
+gen2 chip during the driver load.
 
-I think the problem is with the timestamp after the path that describes
-the affected file. If I remove that timestamp I can get it to apply with
-'git-am -p2'.
+Signed-off-by Bo Yang<bo.yang@lsi.com>
 
-//Rob
+---
+ drivers/scsi/megaraid/megaraid_sas.c |   30 ++++++++++++++++++++++++++++++
+ drivers/scsi/megaraid/megaraid_sas.h |    1 +
+ 2 files changed, 31 insertions(+)
 
 
+--_002_4B6A08C587958942AA3002690DD4F8C30100FF9FB4cosmail02lsic_
+Content-Type: application/octet-stream; name="megasas-max_sector.patch"
+Content-Description: megasas-max_sector.patch
+Content-Disposition: attachment; filename="megasas-max_sector.patch";
+	size=2252; creation-date="Sun, 19 Sep 2010 14:09:34 GMT";
+	modification-date="Fri, 17 Sep 2010 01:21:38 GMT"
+Content-Transfer-Encoding: base64
+
+ZGlmZiAtcnVwTiBvbGQvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jIG5ldy9k
+cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMKLS0tIG9sZC9kcml2ZXJzL3Njc2kv
+bWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMJMjAxMC0wOS0xNyAwMzoxOTozMS4wMDAwMDAwMDAgLTA0
+MDAKKysrIG5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMJMjAxMC0wOS0x
+NyAwMzoyMDo0OS4wMDAwMDAwMDAgLTA0MDAKQEAgLTU3LDYgKzU3LDE1IEBAIG1vZHVsZV9wYXJh
+bV9uYW1lZChwb2xsX21vZGVfaW8sIHBvbGxfbW8KIE1PRFVMRV9QQVJNX0RFU0MocG9sbF9tb2Rl
+X2lvLAogCSJDb21wbGV0ZSBjbWRzIGZyb20gSU8gcGF0aCwgKGRlZmF1bHQ9MCkiKTsKIAorLyoK
+KyAqIE51bWJlciBvZiBzZWN0b3JzIHBlciBJTyBjb21tYW5kCisgKiBXaWxsIGJlIHNldCBpbiBt
+ZWdhc2FzX2luaXRfbWZpIGlmIHVzZXIgZG9lcyBub3QgcHJvdmlkZQorICovCitzdGF0aWMgdW5z
+aWduZWQgaW50IG1heF9zZWN0b3JzOworbW9kdWxlX3BhcmFtX25hbWVkKG1heF9zZWN0b3JzLCBt
+YXhfc2VjdG9ycywgaW50LCAwKTsKK01PRFVMRV9QQVJNX0RFU0MobWF4X3NlY3RvcnMsCisJIk1h
+eGltdW0gbnVtYmVyIG9mIHNlY3RvcnMgcGVyIElPIGNvbW1hbmQiKTsKKwogTU9EVUxFX0xJQ0VO
+U0UoIkdQTCIpOwogTU9EVUxFX1ZFUlNJT04oTUVHQVNBU19WRVJTSU9OKTsKIE1PRFVMRV9BVVRI
+T1IoIm1lZ2FyYWlkbGludXhAbHNpLmNvbSIpOwpAQCAtMzU4Nyw2ICszNTk2LDI3IEBAIHN0YXRp
+YyBpbnQgbWVnYXNhc19pb19hdHRhY2goc3RydWN0IG1lZ2EKIAkJCWluc3RhbmNlLT5tYXhfZndf
+Y21kcyAtIE1FR0FTQVNfSU5UX0NNRFM7CiAJaG9zdC0+dGhpc19pZCA9IGluc3RhbmNlLT5pbml0
+X2lkOwogCWhvc3QtPnNnX3RhYmxlc2l6ZSA9IGluc3RhbmNlLT5tYXhfbnVtX3NnZTsKKwkvKgor
+CSAqIENoZWNrIGlmIHRoZSBtb2R1bGUgcGFyYW1ldGVyIHZhbHVlIGZvciBtYXhfc2VjdG9ycyBj
+YW4gYmUgdXNlZAorCSAqLworCWlmIChtYXhfc2VjdG9ycyAmJiBtYXhfc2VjdG9ycyA8IGluc3Rh
+bmNlLT5tYXhfc2VjdG9yc19wZXJfcmVxKQorCQlpbnN0YW5jZS0+bWF4X3NlY3RvcnNfcGVyX3Jl
+cSA9IG1heF9zZWN0b3JzOworCWVsc2UgeworCQlpZiAobWF4X3NlY3RvcnMpIHsKKwkJCWlmICgo
+KGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0KKwkJCQlQQ0lfREVWSUNFX0lEX0xTSV9TQVMxMDc4
+R0VOMikgfHwKKwkJCQkoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PQorCQkJCVBDSV9ERVZJQ0Vf
+SURfTFNJX1NBUzAwNzlHRU4yKSkgJiYKKwkJCQkobWF4X3NlY3RvcnMgPD0gTUVHQVNBU19NQVhf
+U0VDVE9SUykpIHsKKwkJCQlpbnN0YW5jZS0+bWF4X3NlY3RvcnNfcGVyX3JlcSA9IG1heF9zZWN0
+b3JzOworCQkJfSBlbHNlIHsKKwkJCXByaW50ayhLRVJOX0lORk8gIm1lZ2FzYXM6IG1heF9zZWN0
+b3JzIHNob3VsZCBiZSA+IDAiCisJCQkJImFuZCA8PSAlZCAob3IgPCAxTUIgZm9yIEdFTjIgY29u
+dHJvbGxlcilcbiIsCisJCQkJaW5zdGFuY2UtPm1heF9zZWN0b3JzX3Blcl9yZXEpOworCQkJfQor
+CQl9CisJfQorCiAJaG9zdC0+bWF4X3NlY3RvcnMgPSBpbnN0YW5jZS0+bWF4X3NlY3RvcnNfcGVy
+X3JlcTsKIAlob3N0LT5jbWRfcGVyX2x1biA9IDEyODsKIAlob3N0LT5tYXhfY2hhbm5lbCA9IE1F
+R0FTQVNfTUFYX0NIQU5ORUxTIC0gMTsKZGlmZiAtcnVwTiBvbGQvZHJpdmVycy9zY3NpL21lZ2Fy
+YWlkL21lZ2FyYWlkX3Nhcy5oIG5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2Fz
+LmgKLS0tIG9sZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmgJMjAxMC0wOS0x
+NyAwMjoxOTo0Ni4wMDAwMDAwMDAgLTA0MDAKKysrIG5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQv
+bWVnYXJhaWRfc2FzLmgJMjAxMC0wOS0xNyAwMjoxOTo0Ni4wMDAwMDAwMDAgLTA0MDAKQEAgLTcw
+Niw2ICs3MDYsNyBAQCBzdHJ1Y3QgbWVnYXNhc19jdHJsX2luZm8gewogI2RlZmluZSBNRUdBU0FT
+X01BWF9MRF9JRFMJCQkoTUVHQVNBU19NQVhfTERfQ0hBTk5FTFMgKiBcCiAJCQkJCQlNRUdBU0FT
+X01BWF9ERVZfUEVSX0NIQU5ORUwpCiAKKyNkZWZpbmUgTUVHQVNBU19NQVhfU0VDVE9SUyAgICAg
+ICAgICAgICAgICAgICAgKDIqMTAyNCkKICNkZWZpbmUgTUVHQVNBU19EQkdfTFZMCQkJCTEKIAog
+I2RlZmluZSBNRUdBU0FTX0ZXX0JVU1kJCQkJMQo=
+
+--_002_4B6A08C587958942AA3002690DD4F8C30100FF9FB4cosmail02lsic_--
