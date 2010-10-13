@@ -1,63 +1,44 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: linux-next: Tree for October 12 (scsi/bfa)
-Date: Tue, 12 Oct 2010 15:55:49 -0700 (PDT)
-Message-ID: <dac0cbc8-0509-46eb-812f-3ef8ec9e037e@default>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 18652] mptscsih: ioc0: attempting task abort when heavy disk
+ operations on MPT SAS
+Date: Wed, 13 Oct 2010 07:31:37 GMT
+Message-ID: <201010130731.o9D7VbpQ000426@demeter2.kernel.org>
+References: <bug-18652-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: huangj@Brocade.COM
-Cc: sfr@canb.auug.org.au, linux-scsi@vger.kernel.org, kgudipat@Brocade.COM, linux-kernel@vger.kernel.org, xmzhang@Brocade.COM, linux-next@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [140.211.167.42] ([140.211.167.42]:46971 "EHLO
+	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752940Ab0JMHbi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2010 03:31:38 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9D7Vbem000427
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Oct 2010 07:31:37 GMT
+In-Reply-To: <bug-18652-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi,
-
-
->bfa has one function that probably uses too much stack space and a few
->others that might be a problem.
->
->With CONFIG_FRAME_WARN=1024:
->
->drivers/scsi/bfa/bfad_im.c:939: warning: the frame size of 1604 bytes is larger than
->1024 bytes
->
->and with CONFIG_FRAME_WARN=512:
->
->
->drivers/scsi/bfa/bfad.c: In function 'bfad_fcs_port_cfg':
->drivers/scsi/bfa/bfad.c:900: warning: the frame size of 676 bytes is larger than 512
->bytes
->drivers/scsi/bfa/bfad_im.c: In function 'bfad_im_supported_speeds':
->drivers/scsi/bfa/bfad_im.c:939: warning: the frame size of 1604 bytes is larger than
->512 bytes
->drivers/scsi/bfa/bfad_im.c: In function 'bfad_os_fc_host_init':
->drivers/scsi/bfa/bfad_im.c:976: warning: the frame size of 736 bytes is larger than
->512 bytes
->drivers/scsi/bfa/bfa_fcs_lport.c: In function
->'bfa_fcs_lport_fdmi_build_portattr_block':
->drivers/scsi/bfa/bfa_fcs_lport.c:2010: warning: the frame size of 572 bytes is larger
->than 512 bytes
->drivers/scsi/bfa/bfa_fcs_lport.c: In function 'bfa_fcs_lport_fdmi_build_rhba_pyld':
->drivers/scsi/bfa/bfa_fcs_lport.c:1803: warning: the frame size of 784 bytes is larger
->than 512 bytes
->
-
-| For these specific cases, we declare some big data structures in the stack, which is not good
-| and I will fix them. But is general, is passing 512 stack size check a requirement? This seems
-| too strict for me since the default stack size is 8k.
-
-Fixing the warnings for frame size exceeding 1024 is OK IMO.
-The 512 test was just for more info.
-
-Ah, I see, 8 KB stack is default on X86_32.
+https://bugzilla.kernel.org/show_bug.cgi?id=18652
 
 
->Also, there are many comment blocks that begin with "/**", which means "beginning
->of kernel-doc comment block" for Linux kernel code.  :(
->
+pipa.tk <bigplum@gmail.com> changed:
 
-| Not aware of this convention. I will fix them. Thanks.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bigplum@gmail.com
 
-Thanks.
+
+
+
+--- Comment #1 from pipa.tk <bigplum@gmail.com>  2010-10-13 07:31:36 ---
+I have the same issue, and I am testing the patch from
+http://lkml.org/lkml/2010/4/26/335
+
+It seems resolved, try it.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
