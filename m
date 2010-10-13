@@ -1,52 +1,43 @@
-From: Jens Axboe <jaxboe@fusionio.com>
-Subject: Re: [PATCH 1/2] block: Ensure physical block size is unsigned int
-Date: Wed, 13 Oct 2010 21:15:54 +0200
-Message-ID: <4CB6056A.2040002@fusionio.com>
-References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com> <1285605664-27027-2-git-send-email-martin.petersen@oracle.com> <20100927174052.GA14180@redhat.com> <yq1hbgxs1rm.fsf@sermon.lab.mkp.net> <20101013191258.GA3172@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16971] qla4xxx compile failure on 32-bit PowerPC: missing readq
+ and writeq
+Date: Wed, 13 Oct 2010 20:19:56 GMT
+Message-ID: <201010132019.o9DKJuF2007002@demeter2.kernel.org>
+References: <bug-16971-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:58225 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750798Ab0JMTQF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2010 15:16:05 -0400
-In-Reply-To: <20101013191258.GA3172@redhat.com>
+Received: from [140.211.167.42] ([140.211.167.42]:47042 "EHLO
+	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752611Ab0JMUT5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2010 16:19:57 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9DKJuDZ007003
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Oct 2010 20:19:56 GMT
+In-Reply-To: <bug-16971-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 2010-10-13 21:12, Mike Snitzer wrote:
-> On Fri, Oct 08 2010 at  1:15am -0400,
-> Martin K. Petersen <martin.petersen@oracle.com> wrote:
-> 
->>>>>>> "Mike" == Mike Snitzer <snitzer@redhat.com> writes:
->>
->>>> Physical block size was declared unsigned int to accomodate the
->>>> maximum size reported by READ CAPACITY(16).  Make sure we use the
->>>> right type in the related functions.
->>>>
->>>> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
->>
->> Mike> Acked-by: Mike Snitzer <snitzer@redhat.com>
->>
->> Jens, ping on the block fix.
->>
->> James, ping on the sd ditto.
-> 
-> Hi Jens,
-> 
-> James had added the sd fix to his scsi-misc-2.6 tree:
-> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=526f7c7950b
-> 
-> Any chance you can stage the block fix for-2.6.37?
-> 
-> (guess its too late for 2.6.36... maybe cc: stable when adding to the
-> block fix to your tree?  with a requires on the sd fix?)
+https://bugzilla.kernel.org/show_bug.cgi?id=16971
 
-Yep will do, and mark for stable.
+
+
+
+
+--- Comment #4 from Rafael J. Wysocki <rjw@sisk.pl>  2010-10-13 20:19:53 ---
+On Wednesday, October 13, 2010, Meelis Roos wrote:
+> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
+> > Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
+> > Submitter	: Meelis Roos <mroos@linux.ee>
+> > Date		: 2010-08-19 21:03 (53 days old)
+> > Message-ID	: <alpine.SOC.1.00.1008192359310.19654@math.ut.ee>
+> 
+> Still present.
 
 -- 
-Jens Axboe
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
