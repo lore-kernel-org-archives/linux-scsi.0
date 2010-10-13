@@ -1,43 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16971] qla4xxx compile failure on 32-bit PowerPC: missing readq
- and writeq
-Date: Wed, 13 Oct 2010 20:19:56 GMT
-Message-ID: <201010132019.o9DKJuF2007002@demeter2.kernel.org>
-References: <bug-16971-11613@https.bugzilla.kernel.org/>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 2/5] tcm: Unify INQUIRY subsystem plugin handling
+Date: Wed, 13 Oct 2010 13:19:49 -0700
+Message-ID: <1287001189.7334.47.camel@haakon2.linux-iscsi.org>
+References: <1286959681-3445-1-git-send-email-nab@linux-iscsi.org>
+	 <20101013110653.GA26366@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [140.211.167.42] ([140.211.167.42]:47042 "EHLO
-	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752611Ab0JMUT5 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2010 16:19:57 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9DKJuDZ007003
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Oct 2010 20:19:56 GMT
-In-Reply-To: <bug-16971-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101013110653.GA26366@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16971
-
-
-
-
-
---- Comment #4 from Rafael J. Wysocki <rjw@sisk.pl>  2010-10-13 20:19:53 ---
-On Wednesday, October 13, 2010, Meelis Roos wrote:
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
-> > Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
-> > Submitter	: Meelis Roos <mroos@linux.ee>
-> > Date		: 2010-08-19 21:03 (53 days old)
-> > Message-ID	: <alpine.SOC.1.00.1008192359310.19654@math.ut.ee>
+On Wed, 2010-10-13 at 13:06 +0200, Christoph Hellwig wrote:
+> On Wed, Oct 13, 2010 at 01:48:01AM -0700, Nicholas A. Bellinger wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch adds the following two struct se_subsystem_api function pointer
+> > ops for INQUIRY emulation reponse payload Product and Product Rev:
 > 
-> Still present.
+> FYI, I'd wonder if it wouldn't be easier to store this and the number
+> of blocks data directly in struct se_device instead of adding methods.
+> 
+> That means they just need to be initialized once at device creation time
+> and the code in the backends becomes simpler again.  This also applies
+> to many of the get_ prefix methods, e.g. get_max_cdb_len, get_blocksize,
+> etc.
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+I should point out that the majority of values mentioned here (other
+than the two INQUIRY strings) are already present in struct
+se_dev_attrib and which appear as configfs attributes under
+under /sys/kernel/config/target/core/$HBA/$DEV/attrib/.  This means that
+the struct se_subsystem_api calls only really used by during init
+target_core_device.c:se_dev_set_default_attribs() and
+DEV_ATTRIB(dev)->block_size, etc are used in TCM Core code.
+
+I am happy to include the two INQUIRY strings needed for emulation into
+struct se_subsystem_api directly, but I would still prefer to keep the
+function pointers for extracting values from subsystem specific code for
+the initial device attribute setup.
+
+--nab
