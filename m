@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 4/5] tcm: Unify UNMAP and WRITE_SAME w/ UNMAP=1 subsystem plugin handling
-Date: Wed, 13 Oct 2010 01:48:20 -0700
-Message-ID: <1286959700-3489-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 5/5] tcm: Unify SYNCHRONIZE_CACHE_* subsystem plugin handling
+Date: Wed, 13 Oct 2010 01:48:29 -0700
+Message-ID: <1286959709-3510-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
@@ -11,234 +11,150 @@ List-Id: linux-scsi@vger.kernel.org
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
 This patch adds the following struct se_subsystem_api function pointer
-op for UNMAP and WRITE_SAME w/ UNMAP=1 handling mapped to Linux/Block
-layer generic Discard to underlying SCSI *_UNMAP and ATA TRIM operation:
+op for SYNCHRONIZE_CACHE and SYNCHRONIZE_CACHE_16 handling an explict
+WriteCacheEnabled (WCE=1) flush:
 
        /*
-        * Used by virtual subsystem plugins IBLOCK and FILEIO to emulate
-        * UNMAP and WRITE_SAME_* w/ UNMAP=1 <-> Linux/Block Discard
+        * Used  by virtual subsystem plugins IBLOCK and FILEIO to emulate
+        * SYNCHRONIZE_CACHE_* <-> Linux/Block blkdev_issue_flush()
         */
-       int (*do_discard)(struct se_task *, enum blk_discard_type);
+       void (*do_sync_cache)(struct se_task *);
 
-and updates IBLOCK and FILEIO to execute their respective -> Linux/Block
-DISCARD ops based on the passed blk_discard_type.
+and updates IBLOCK and FILEIO to execute -> Linux/Block blkdev_issue_flush()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 Reported-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/target/target_core_file.c      |   17 +++++++++++++++--
- drivers/target/target_core_iblock.c    |   30 +++++++++++++++++++-----------
- drivers/target/target_core_rd.c        |    6 ------
- drivers/target/target_core_transport.c |   12 ++++++------
- include/target/target_core_transport.h |   12 ++++++++++--
- 5 files changed, 50 insertions(+), 27 deletions(-)
+ drivers/target/target_core_file.c      |    6 +-----
+ drivers/target/target_core_iblock.c    |    6 +-----
+ drivers/target/target_core_transport.c |    5 ++---
+ include/target/target_core_transport.h |   18 +++++-------------
+ 4 files changed, 9 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
-index dd7abef..adac070 100644
+index adac070..3a68932 100644
 --- a/drivers/target/target_core_file.c
 +++ b/drivers/target/target_core_file.c
-@@ -774,6 +774,20 @@ static int fd_do_task(struct se_task *task)
- 	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
- }
- 
-+static int fd_do_discard(struct se_task *task, enum blk_discard_type type)
-+{
-+	if (type == DISCARD_UNMAP)
-+		return fd_emulate_unmap(task);
-+	else if (type == DISCARD_WRITE_SAME_UNMAP)
-+		return fd_emulate_write_same_unmap(task);
-+	else {
-+		printk(KERN_ERR "Unsupported discard_type_t: %d\n", type);
-+		return -ENOSYS;
-+	}
-+
-+	return -ENOSYS;
-+}
-+
- /*	fd_free_task(): (Part of se_subsystem_api_t template)
-  *
-  *
-@@ -1158,6 +1172,7 @@ static struct se_subsystem_api fileio_template = {
- 	.transport_complete	= fd_transport_complete,
+@@ -1173,6 +1173,7 @@ static struct se_subsystem_api fileio_template = {
  	.allocate_request	= fd_allocate_request,
  	.do_task		= fd_do_task,
-+	.do_discard		= fd_do_discard,
+ 	.do_discard		= fd_do_discard,
++	.do_sync_cache		= fd_emulate_sync_cache,
  	.free_task		= fd_free_task,
  	.check_configfs_dev_params = fd_check_configfs_dev_params,
  	.set_configfs_dev_params = fd_set_configfs_dev_params,
-@@ -1183,8 +1198,6 @@ static struct se_subsystem_api fileio_template = {
- };
- 
- static struct se_subsystem_api_cdb fileio_cdb_template = {
--	.emulate_unmap		= fd_emulate_unmap,
--	.emulate_write_same	= fd_emulate_write_same_unmap,
- 	.emulate_sync_cache	= fd_emulate_sync_cache,
- };
- 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index cb53fbf..e1d945f 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -419,15 +419,6 @@ static unsigned long long iblock_emulate_read_cap_with_block_size(
- 	return blocks_long;
- }
- 
--static int iblock_emulate_unmap(struct se_task *task)
--{
--	struct iblock_dev *ibd = task->se_dev->dev_ptr;
--	struct block_device *bd = ibd->ibd_bd;
--	struct se_cmd *cmd = TASK_CMD(task);
--	
--	return transport_generic_unmap(cmd, bd);
--}
--
- static int iblock_emulate_write_same_unmap(struct se_task *task)
- {
- 	struct iblock_dev *ibd = task->se_dev->dev_ptr;
-@@ -568,6 +559,24 @@ static int iblock_do_task(struct se_task *task)
- 	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
- }
- 
-+static int iblock_do_discard(struct se_task *task, enum blk_discard_type type)
-+{
-+	struct iblock_dev *ibd = task->se_dev->dev_ptr;
-+	struct block_device *bd = ibd->ibd_bd;
-+	struct se_cmd *cmd = TASK_CMD(task);
-+
-+	if (type == DISCARD_UNMAP)
-+		return transport_generic_unmap(cmd, bd);	
-+	else if (type == DISCARD_WRITE_SAME_UNMAP)
-+		return iblock_emulate_write_same_unmap(task);	
-+	else {
-+		printk(KERN_ERR "Unsupported discard_type_t: %d\n", type);
-+		return -ENOSYS;
-+	}
-+
-+	return -ENOSYS;
-+}
-+
- static void iblock_free_task(struct se_task *task)
- {
- 	struct iblock_req *req = task->transport_req;
-@@ -1078,6 +1087,7 @@ static struct se_subsystem_api iblock_template = {
- 	.transport_complete	= iblock_transport_complete,
- 	.allocate_request	= iblock_allocate_request,
- 	.do_task		= iblock_do_task,
-+	.do_discard		= iblock_do_discard,
- 	.free_task		= iblock_free_task,
- 	.check_configfs_dev_params = iblock_check_configfs_dev_params,
- 	.set_configfs_dev_params = iblock_set_configfs_dev_params,
-@@ -1104,8 +1114,6 @@ static struct se_subsystem_api iblock_template = {
- };
- 
- static struct se_subsystem_api_cdb iblock_cdb_template = {
--	.emulate_unmap		= iblock_emulate_unmap,
--	.emulate_write_same	= iblock_emulate_write_same_unmap,
- 	.emulate_sync_cache	= iblock_emulate_sync_cache,
- };
- 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index c84213f..61f4a1c 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -1433,18 +1433,12 @@ static struct se_subsystem_api rd_mcp_template = {
+@@ -1197,16 +1198,11 @@ static struct se_subsystem_api fileio_template = {
  	.write_pending		= NULL,
  };
  
--static struct se_subsystem_api_cdb rd_cdb_template = {
--	.emulate_unmap		= NULL,
+-static struct se_subsystem_api_cdb fileio_cdb_template = {
+-	.emulate_sync_cache	= fd_emulate_sync_cache,
 -};
 -
- int __init rd_module_init(void)
+ int __init fileio_module_init(void)
  {
  	int ret;
  
- 	INIT_LIST_HEAD(&rd_dr_template.sub_api_list);
--	rd_dr_template.sub_cdb = &rd_cdb_template;
- 	INIT_LIST_HEAD(&rd_mcp_template.sub_api_list);
--	rd_mcp_template.sub_cdb = &rd_cdb_template;
+ 	INIT_LIST_HEAD(&fileio_template.sub_api_list);
+-	fileio_template.sub_cdb = &fileio_cdb_template;
  
- 	ret = transport_subsystem_register(&rd_dr_template, NULL);
+ 	ret = transport_subsystem_register(&fileio_template, THIS_MODULE);
+ 	if (ret < 0)
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index e1d945f..5e810ea 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -1088,6 +1088,7 @@ static struct se_subsystem_api iblock_template = {
+ 	.allocate_request	= iblock_allocate_request,
+ 	.do_task		= iblock_do_task,
+ 	.do_discard		= iblock_do_discard,
++	.do_sync_cache		= iblock_emulate_sync_cache,
+ 	.free_task		= iblock_free_task,
+ 	.check_configfs_dev_params = iblock_check_configfs_dev_params,
+ 	.set_configfs_dev_params = iblock_set_configfs_dev_params,
+@@ -1113,16 +1114,11 @@ static struct se_subsystem_api iblock_template = {
+ 	.write_pending		= NULL,
+ };
+ 
+-static struct se_subsystem_api_cdb iblock_cdb_template = {
+-	.emulate_sync_cache	= iblock_emulate_sync_cache,
+-};
+-
+ int __init iblock_module_init(void)
+ {
+ 	int ret;
+ 
+ 	INIT_LIST_HEAD(&iblock_template.sub_api_list);
+-	iblock_template.sub_cdb = &iblock_cdb_template;
+ 
+ 	ret = transport_subsystem_register(&iblock_template, THIS_MODULE);
  	if (ret < 0)
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 3fb56d5..469f46f 100644
+index 469f46f..4a30fb9 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -5606,22 +5606,22 @@ int transport_emulate_control_cdb(struct se_task *task)
- 			return ret;
+@@ -5547,7 +5547,6 @@ int transport_emulate_control_cdb(struct se_task *task)
+ {
+ 	struct se_cmd *cmd = TASK_CMD(task);
+ 	struct se_device *dev = SE_DEV(cmd);
+-	struct se_subsystem_api_cdb *api_cdb = TRANSPORT(dev)->sub_cdb;
+ 	sector_t blocks_long;
+ 	unsigned int blocks;
+ 	int ret;
+@@ -5646,12 +5645,12 @@ int transport_emulate_control_cdb(struct se_task *task)
  		break;
- 	case UNMAP:
--		if (!(api_cdb->emulate_unmap)) {
-+		if (!(TRANSPORT(dev)->do_discard)) {
- 			printk(KERN_ERR "UNMAP emulation not supported for: %s\n",
- 					TRANSPORT(dev)->name);
- 			return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
- 		}
--		ret = api_cdb->emulate_unmap(task);
-+		ret = TRANSPORT(dev)->do_discard(task, DISCARD_UNMAP);
- 		if (ret < 0)
- 			return ret;
- 		break;
- 	case WRITE_SAME_16:
--		if (!(api_cdb->emulate_write_same)) {
-+		if (!(TRANSPORT(dev)->do_discard)) {
- 			printk(KERN_ERR "WRITE_SAME_16 emulation not supported"
+ 	case SYNCHRONIZE_CACHE:
+ 	case 0x91: /* SYNCHRONIZE_CACHE_16: */
+-		if (!(api_cdb->emulate_sync_cache)) {
++		if (!(TRANSPORT(dev)->do_sync_cache)) {
+ 			printk(KERN_ERR "SYNCHRONIZE_CACHE emulation not supported"
  					" for: %s\n", TRANSPORT(dev)->name);
  			return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
  		}
--		ret = api_cdb->emulate_write_same(task);
-+		ret = TRANSPORT(dev)->do_discard(task, DISCARD_WRITE_SAME_UNMAP);
- 		if (ret < 0)
- 			return ret;
+-		api_cdb->emulate_sync_cache(task);
++		TRANSPORT(dev)->do_sync_cache(task);
  		break;
-@@ -5629,12 +5629,12 @@ int transport_emulate_control_cdb(struct se_task *task)
- 		service_action = get_unaligned_be16(&T_TASK(cmd)->t_task_cdb[8]);
- 		switch (service_action) {
- 		case WRITE_SAME_32:
--			if (!(api_cdb->emulate_write_same)) {
-+			if (!(TRANSPORT(dev)->do_discard)) {
- 				printk(KERN_ERR "WRITE_SAME_32 SA emulation not"
- 					" supported for: %s\n", TRANSPORT(dev)->name);
- 				return PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
- 			}
--			ret = api_cdb->emulate_write_same(task);
-+			ret = TRANSPORT(dev)->do_discard(task, DISCARD_WRITE_SAME_UNMAP);
- 			if (ret < 0)
- 				return ret;
- 			break;
+ 	case ALLOW_MEDIUM_REMOVAL:
+ 	case ERASE:
 diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 1c62d8c..dd0448b 100644
+index dd0448b..b8182e3 100644
 --- a/include/target/target_core_transport.h
 +++ b/include/target/target_core_transport.h
-@@ -127,6 +127,11 @@
+@@ -319,14 +319,6 @@ struct se_mem {
+ } ____cacheline_aligned;
  
- #define MOD_MAX_SECTORS(ms, bs)			(ms % (PAGE_SIZE / bs))
- 
-+enum blk_discard_type {
-+	DISCARD_UNMAP,
-+	DISCARD_WRITE_SAME_UNMAP,
-+};
-+
- struct se_mem;
- struct se_subsystem_api;
- 
-@@ -318,8 +323,6 @@ struct se_mem {
-  * subsystem plugins.for those CDBs that cannot be emulated generically.
+ /*
+- * Used as a minimal template for per CDB specific emulation into TCM
+- * subsystem plugins.for those CDBs that cannot be emulated generically.
+- */
+-struct se_subsystem_api_cdb {
+-	void (*emulate_sync_cache)(struct se_task *);
+-};
+-
+-/*
+  * 	Each type of disk transport supported MUST have a template defined
+  *	within its .h file.
   */
- struct se_subsystem_api_cdb {
--	int (*emulate_unmap)(struct se_task *);
--	int (*emulate_write_same)(struct se_task *);
- 	void (*emulate_sync_cache)(struct se_task *);
- };
- 
-@@ -478,6 +481,11 @@ struct se_subsystem_api {
+@@ -352,11 +344,6 @@ struct se_subsystem_api {
  	 */
- 	int (*do_task)(struct se_task *);
+ 	struct module *sub_owner;
  	/*
-+	 * Used by virtual subsystem plugins IBLOCK and FILEIO to emulate
-+	 * UNMAP and WRITE_SAME_* w/ UNMAP=1 <-> Linux/Block Discard
+-	 * Set of function pointers use for per CDB context emulation
+-	 * by virtual IBLOCK, FILEIO, and RAMDISK subsystem plugins.
+-	 */
+-	struct se_subsystem_api_cdb *sub_cdb;
+-	/*
+ 	 * Counter for struct se_hba reference
+ 	 */
+ 	atomic_t sub_api_hba_cnt;
+@@ -486,6 +473,11 @@ struct se_subsystem_api {
+ 	 */
+ 	int (*do_discard)(struct se_task *, enum blk_discard_type);
+ 	/*
++	 * Used  by virtual subsystem plugins IBLOCK and FILEIO to emulate
++	 * SYNCHRONIZE_CACHE_* <-> Linux/Block blkdev_issue_flush()
 +	 */
-+	int (*do_discard)(struct se_task *, enum blk_discard_type);
++	void (*do_sync_cache)(struct se_task *);
 +	/*
  	 * free_task():
  	 */
