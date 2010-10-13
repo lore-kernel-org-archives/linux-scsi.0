@@ -1,43 +1,93 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] Check return value of fc_block_scsi_eh()
-Date: Wed, 13 Oct 2010 15:37:57 -0500
-Message-ID: <4CB618A5.8030108@cs.wisc.edu>
-References: <20101013114228.96669354D8@ochil.suse.de>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 4/5] tcm: Unify UNMAP and WRITE_SAME w/ UNMAP=1
+	subsystem plugin handling
+Date: Wed, 13 Oct 2010 13:56:08 -0700
+Message-ID: <1287003368.7334.64.camel@haakon2.linux-iscsi.org>
+References: <1286959700-3489-1-git-send-email-nab@linux-iscsi.org>
+	 <20101013111920.GB26366@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:43037 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753294Ab0JMUbY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Oct 2010 16:31:24 -0400
-In-Reply-To: <20101013114228.96669354D8@ochil.suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101013111920.GB26366@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Richard Sharpe <realrichardsharpe@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On 10/13/2010 06:42 AM, Hannes Reinecke wrote:
->
-> fc_block_scsi_eh() might return with status FAST_IO_FAIL
-> indicating I/O has been terminated due to fast_io_fail timeout.
-> In this case the rport is still blocked, so any error recovery
-> will be failing on this port.
-> Hence each driver needs to check if the return value from
-> fc_block_scsi_eh() is something other than SUCCESS, in which
-> case it should just return with that status.
-> And we need to update the error handler to deal with a
-> status of FAST_IO_FAIL, too.
-> And fc_block_scsi_eh() should return SUCCESS on success,
-> not 0. Otherwise the calling routine will become confused
-> when reusing that value.
->
+On Wed, 2010-10-13 at 13:19 +0200, Christoph Hellwig wrote:
+> > +static int iblock_do_discard(struct se_task *task, enum blk_discard_type type)
+> > +{
+> > +	struct iblock_dev *ibd = task->se_dev->dev_ptr;
+> > +	struct block_device *bd = ibd->ibd_bd;
+> > +	struct se_cmd *cmd = TASK_CMD(task);
+> > +
+> > +	if (type == DISCARD_UNMAP)
+> > +		return transport_generic_unmap(cmd, bd);	
+> > +	else if (type == DISCARD_WRITE_SAME_UNMAP)
+> > +		return iblock_emulate_write_same_unmap(task);	
+> > +	else {
+> > +		printk(KERN_ERR "Unsupported discard_type_t: %d\n", type);
+> > +		return -ENOSYS;
+> > +	}
+> > +
+> > +	return -ENOSYS;
+> > +}
+> > +
+> 
+> I don't think the discard code is quite, nor nicely structured.
+> 
+> The parsing of the WRITE SAME and UNMAP CDBs is something the generic
+> CDB parsing code should do,
 
-Is this patch supposed to fix the problem I described or is there more 
-patches to follow or do you think I am being too paranoid? It seems the 
-patch alone is going to make the problem worse in the drivers you are 
-speeding up failure in. In the drivers now checking fc_block_scsi_eh and 
-returning when fast io fail is returned then the scsi eh 
-scsi_eh_flush_done_q's scsi_finish_command/scsi_queue_insert processing 
-is going to get done faster and more likely to conflict with the 
-termiante_rport_io callback processing, right?
+Ok, so you are thinking about a seperate transport_emulate_write_same()
+and transport_emulate_unmap() called from
+transport_emulate_control_cdb(), right..?
+
+>  and just give a range of lists of lba/len
+> pairs to the ->discard method in the backed.
+
+Yes, these are already available from the passed struct
+se_task->task_lba and ->task_size values.
+
+>  Also your generic
+> discard helpers aren't actually generic - they require a block device
+> and thus should be only in iblock.c.  While your hack in the file
+> backend to use it if we're using a block device as backing file
+> works it's rather gross.  Having the file backend general enough to
+> work with a block devices is fine, but adding special hacks that
+> only work on block device while having a fully working bio based backed
+> is a bit gross.
+
+Yes, so the problem of trying to make this code generic (eg: outside of
+TCM subsystem plugins) is that blk_issue_discard() takes struct
+block_device, which means we the subsystem plugin has to locate struct
+block_device inside of non generic cide.
+
+So, then the main issue becomes FILEIO + block level discard and how to
+issue an blk_issue_discard() from struct fileio in the most sane way.
+If there is no sane way then I will just drop this bit, or just do the
+file level 'hole punch' that you are speaking about.
+
+> Btw, at least on XFS you can implement discard using
+> hole punch operations, although that can lead to quite bad fragmentation
+> in cases.  Just as block-level discards can lead to quite bad
+> performance - I'd suggest to not enable them by default.
+> 
+
+Ok, I will disable these by default for IBLOCK and FILEIO, and require
+an explict override from user with the emulate_tpu and emulate_tpws
+values in /sys/kernel/config/target/core/$HBA/$DEV/attrib/
+
+> One other thing I noticed is that you use igrab a lot.  In general
+> drivers have absolutely no need for a igrab.  If you have a reference
+> to the file behind an inode you keep the inode in core and there's no
+> need at all to grab a second reference to it.
+
+The igrab() and iput() usage in FILEIO code are used for locating the
+struct block_device for blk_issue_discard().  If this is the case then I
+will remove these from FILEIO.
+
+Thanks!
+
+--nab
