@@ -1,76 +1,66 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: [GIT PULL] SCSI bug fixes for 2.6.36-rc7
-Date: Wed, 13 Oct 2010 09:45:51 -0400
-Message-ID: <1286977551.2969.22.camel@mulgrave.site>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [Bug 20072] tapeinfo reports MaxBlock: 16777215  but writes with
+ blocksize >2M fail
+Date: Wed, 13 Oct 2010 20:57:41 +0300 (EEST)
+Message-ID: <alpine.LNX.2.00.1010132027110.5344@kai.makisara.local>
+References: <bug-20072-11613@https.bugzilla.kernel.org/> <201010130950.o9D9oSY0018761@demeter1.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vs12.mail.saunalahti.fi ([195.197.172.107]:43411 "EHLO
+	vs12.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363Ab0JMR7A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2010 13:59:00 -0400
+In-Reply-To: <201010130950.o9D9oSY0018761@demeter1.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-This patch set fixes a couple of longstanding bugs in SCSI.  The VPD
-patch fix a possible buffer overrun in the VPD code (only tripped if the
-device has a huge number of VPD pages).  The other is where the status
-return code on our BSG interface is wrongly right shifted one place.
+On Wed, 13 Oct 2010, bugzilla-daemon@bugzilla.kernel.org wrote:
 
-The patch is available here:
+> https://bugzilla.kernel.org/show_bug.cgi?id=20072
+> 
+> 
+> 
+> 
+> 
+> --- Comment #2 from lkolbe@techfak.uni-bielefeld.de  2010-10-11 11:25:15 ---
+> This is what dmesg has to say about the earlier tries to write to the device
+> with higher than 2MiB blocksizes:
+> 
+> [92315.076956] st0: Block limits 1 - 16777215 bytes.
+> [92445.438048] st0: Can't allocate 15728640 byte tape buffer.
+> [92457.973733] st0: Can't allocate 16777215 byte tape buffer.
+> [92460.990589] st0: Can't allocate 16777214 byte tape buffer.
+> 
+> --- Comment #3 from lkolbe@techfak.uni-bielefeld.de  2010-10-13 09:50:22 ---
+> When instructing bacula to use the advertised tape blocksize of 16M, we get the
+> following errors everytime it tries to access the tape:
+> 
+> 13-Oct 11:48 sd1.techfak JobId 2692: Error: block.c:1002 Read error on fd=5 at
+> file:blk 0:0 on device "drv2" (/dev/nst0). ERR=Cannot allocate memory.
+> 
+> Is there some limit/sysctl we might have to adapt to the native tape drive
+> blocksize of 16M?
+> 
+There is a limit that comes from physical constraints and memory 
+fragmentation. Because of fragmentation, it is often not possible to find 
+larger chunks of free memory than one page (e.g., 4 kB). The SCSI HBA 
+supports often only a certain number of scatter/gather segments. Let's 
+assume that this limit is 256. This means that the largest possible SCSI 
+data buffer is 256 x 4 kB = 1 MB. This limits the possible block size. 
+Depending on the state of fragmentation, the actual limit may be larger 
+but this is the limit of the block size you can always use.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+The st driver (with defaults) first tries to map the user buffer to the 
+number of available scatter/gather segments. If this fails, the driver 
+tries to allocate a local buffer using as large chunks of memory as it can 
+get. If this succeeds, the request may still fail because of SCSI midlevel 
+limits (I don't know what the limits currently are, but, if there are 
+limits, they are tunable).
 
-The short changelog is:
+I have been able to read and write 16MB-1 blocks with my system. What you 
+can actually reach depends on the things above.
 
-FUJITA Tomonori (1):
-      bsg: fix incorrect device_status value
-
-Martin K. Petersen (1):
-      Fix VPD inquiry page wrapper
-
-
-The diffstat is:
-
- block/bsg.c         |    2 +-
- drivers/scsi/scsi.c |    4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-And the full diff is below.
-
-James
-
----
-
-diff --git a/block/bsg.c b/block/bsg.c
-index 82d5882..5974682 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -426,7 +426,7 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
- 	/*
- 	 * fill in all the output members
- 	 */
--	hdr->device_status = status_byte(rq->errors);
-+	hdr->device_status = rq->errors && 0xff;
- 	hdr->transport_status = host_byte(rq->errors);
- 	hdr->driver_status = driver_byte(rq->errors);
- 	hdr->info = 0;
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index ad0ed21..348fba0 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -1046,13 +1046,13 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
- 
- 	/* If the user actually wanted this page, we can skip the rest */
- 	if (page == 0)
--		return -EINVAL;
-+		return 0;
- 
- 	for (i = 0; i < min((int)buf[3], buf_len - 4); i++)
- 		if (buf[i + 4] == page)
- 			goto found;
- 
--	if (i < buf[3] && i > buf_len)
-+	if (i < buf[3] && i >= buf_len - 4)
- 		/* ran off the end of the buffer, give us benefit of doubt */
- 		goto found;
- 	/* The device claims it doesn't support the requested page */
+Kai
