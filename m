@@ -1,82 +1,83 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [GIT PULL] SCSI bug fixes for 2.6.36-rc7
-Date: Thu, 14 Oct 2010 15:36:41 +0900
-Message-ID: <20101014153641E.fujita.tomonori@lab.ntt.co.jp>
-References: <AANLkTimUT37LfmnU8Rc0+K8r+owCp9e_VyriDHRyuuhr@mail.gmail.com>
-	<1287015899.10264.394.camel@mulgrave.site>
-	<1287016477.10264.418.camel@mulgrave.site>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] Check return value of fc_block_scsi_eh()
+Date: Thu, 14 Oct 2010 08:45:38 +0200
+Message-ID: <4CB6A712.3090705@suse.de>
+References: <20101013114228.96669354D8@ochil.suse.de> <4CB618A5.8030108@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:34624 "EHLO
-	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753372Ab0JNGiw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Oct 2010 02:38:52 -0400
-In-Reply-To: <1287016477.10264.418.camel@mulgrave.site>
+Received: from cantor.suse.de ([195.135.220.2]:38733 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753430Ab0JNGpl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Oct 2010 02:45:41 -0400
+In-Reply-To: <4CB618A5.8030108@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-On Wed, 13 Oct 2010 20:34:37 -0400
-James Bottomley <James.Bottomley@suse.de> wrote:
+Mike Christie wrote:
+> On 10/13/2010 06:42 AM, Hannes Reinecke wrote:
+>>
+>> fc_block_scsi_eh() might return with status FAST_IO_FAIL
+>> indicating I/O has been terminated due to fast_io_fail timeout.
+>> In this case the rport is still blocked, so any error recovery
+>> will be failing on this port.
+>> Hence each driver needs to check if the return value from
+>> fc_block_scsi_eh() is something other than SUCCESS, in which
+>> case it should just return with that status.
+>> And we need to update the error handler to deal with a
+>> status of FAST_IO_FAIL, too.
+>> And fc_block_scsi_eh() should return SUCCESS on success,
+>> not 0. Otherwise the calling routine will become confused
+>> when reusing that value.
+>>
+>=20
+> Is this patch supposed to fix the problem I described or is there mor=
+e
+> patches to follow or do you think I am being too paranoid? It seems t=
+he
+> patch alone is going to make the problem worse in the drivers you are
+> speeding up failure in. In the drivers now checking fc_block_scsi_eh =
+and
+> returning when fast io fail is returned then the scsi eh
+> scsi_eh_flush_done_q's scsi_finish_command/scsi_queue_insert processi=
+ng
+> is going to get done faster and more likely to conflict with the
+> termiante_rport_io callback processing, right?
 
-> On Wed, 2010-10-13 at 20:24 -0400, James Bottomley wrote:
-> > On Wed, 2010-10-13 at 16:49 -0700, Linus Torvalds wrote:
-> > > On Wed, Oct 13, 2010 at 6:45 AM, James Bottomley
-> > > <James.Bottomley@suse.de> wrote:
-> > > > This patch set fixes a couple of longstanding bugs in SCSI.  The VPD
-> > > > patch fix a possible buffer overrun in the VPD code (only tripped if the
-> > > > device has a huge number of VPD pages).  The other is where the status
-> > > > return code on our BSG interface is wrongly right shifted one place.
-> > > 
-> > > Umm. That other patch seems to be utter crap.
-> > > 
-> > > > -       hdr->device_status = status_byte(rq->errors);
-> > > > +       hdr->device_status = rq->errors && 0xff;
-> > > 
-> > > That's pure shit. Please look at it for one second, and don't send me
-> > > crap like this.
-> > 
-> > What's wrong with it? device_status() is an ancient SCSI-1 macro that
-> > dates from the time the status was left shifted by 1, which makes the
-> > value wrong according to the sg interface spec.  We should really remove
-> > it, but there's still a few ancient drivers using it.  the SG interface
-> > requires the full status byte, which is what the bottom most byte of
-> > req_errors is ... hence the change.
-> 
-> OK, right ... several people pointed out in private email that it was &&
-> not & ... I'll fix it when I'm slightly less jet lagged.
+No, this patch does _not_ fix the race you've described, it just
+fixes the problem of fc_block_scsi_eh() returning FAST_IO_FAIL,
+which screws the error handler in drivers not checking the return value=
+=2E
+So it's partially covered by your patchset.
 
-Really sorry about that.
+However, in your patchset you're missing two issues:
+- The current implementation of fc_block_scsi_eh() return '0' on
+  success. This screws over drivers which re-uses this value;
+  check eg. lpfc_abort_handler(). So we should be returning
+  'SUCCESS' here.
+- scsi_error needs to be fixed up to handle FAST_IO_FAIL.
+  Any of the functions called from scsi_abort_eh_cmnd() can return
+  FAST_IO_FAIL, in which case escalating to the next function
+  becomes pointless.
 
-=
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] bsg: fix incorrect device_status value
+I guess it would make sense to merge these two patchsets, either
+having two patchsets (one for the FAST_IO_FAIL changes and one for
+the rport race) or indeed merge them both into one.
+I'm okay with either of it.
 
-bsg incorrectly returns sg's masked_status value for device_status.
+Cheers,
 
-Reported-by: Douglas Gilbert <dgilbert@interlog.com>
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- block/bsg.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index 82d5882..0c00870 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -426,7 +426,7 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
- 	/*
- 	 * fill in all the output members
- 	 */
--	hdr->device_status = status_byte(rq->errors);
-+	hdr->device_status = rq->errors & 0xff;
- 	hdr->transport_status = host_byte(rq->errors);
- 	hdr->driver_status = driver_byte(rq->errors);
- 	hdr->info = 0;
--- 
-1.7.1
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
