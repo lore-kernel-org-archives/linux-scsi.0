@@ -1,75 +1,51 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: block: eliminate potential for infinite loop in
- blkdev_issue_discard
-Date: Thu, 14 Oct 2010 17:37:44 -0400
-Message-ID: <20101014213744.GA24959@redhat.com>
-References: <1285605664-27027-1-git-send-email-martin.petersen@oracle.com>
- <1285605664-27027-3-git-send-email-martin.petersen@oracle.com>
- <20100927181321.GC14180@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 18652] mptscsih: ioc0: attempting task abort when heavy disk
+ operations on MPT SAS
+Date: Fri, 15 Oct 2010 01:10:39 GMT
+Message-ID: <201010150110.o9F1AdUJ010619@demeter2.kernel.org>
+References: <bug-18652-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:9353 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756126Ab0JNVhy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Oct 2010 17:37:54 -0400
-Content-Disposition: inline
-In-Reply-To: <20100927181321.GC14180@redhat.com>
+Received: from [140.211.167.42] ([140.211.167.42]:42670 "EHLO
+	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1753539Ab0JOBKk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Oct 2010 21:10:40 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9F1Adht010621
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Oct 2010 01:10:39 GMT
+In-Reply-To: <bug-18652-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jaxboe@fusionio.com
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Sep 27 2010 at  2:13pm -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=18652
 
-> Due to the recently identified overflow in read_capacity_16() it was
-> possible for max_discard_sectors to be zero but still have discards
-> enabled on the associated device's queue.
-> 
-> Eliminate the possibility for blkdev_issue_discard to infinitely loop.
-> 
-> Interestingly this issue wasn't identified until a device, whose
-> discard_granularity was 0 due to read_capacity_16 overflow, was consumed
-> by blk_stack_limits() to construct limits for a higher-level DM
-> multipath device.  The multipath device's resulting limits never had the
-> discard limits stacked because blk_stack_limits() will only do so if
-> the bottom device's discard_granularity != 0.  This resulted in the
-> multipath device's limits.max_discard_sectors being 0.
 
-Hi Jens,
 
-This patch would only serve as a future safety-net now that the
-elimination of the overflow in read_capacity_16() has been staged for
-2.6.37.  Defensive programming and all...
 
-What do you (and others) think about this patch?
 
-Thanks,
-Mike
+--- Comment #3 from pipa.tk <bigplum@gmail.com>  2010-10-15 01:10:37 ---
 
-> ---
->  block/blk-lib.c |    5 ++++-
->  1 files changed, 4 insertions(+), 1 deletions(-)
-> 
-> diff --git a/block/blk-lib.c b/block/blk-lib.c
-> index c392029..186f249 100644
-> --- a/block/blk-lib.c
-> +++ b/block/blk-lib.c
-> @@ -56,7 +56,10 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
->  	 * granularity
->  	 */
->  	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
-> -	if (q->limits.discard_granularity) {
-> +	if (unlikely(!max_discard_sectors)) {
-> +		/* Avoid infinite loop (below) */
-> +		return -EOPNOTSUPP;
-> +	} else if (q->limits.discard_granularity) {
->  		unsigned int disc_sects = q->limits.discard_granularity >> 9;
->  
->  		max_discard_sectors &= ~(disc_sects - 1);
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+Yes, this patch not functioned completely. After I apply this patch with
+2.6.18.8-xen and run for 2 days, IO still hang every 1~3 hours. It's more less
+than before. The message shows: 
+
+mptscsih: ioc0: attempting task abort! (sc=ffff88028efdcb40)
+sd 4:0:6:0:
+        command: Synchronize Cache(10): 35 00 00 00 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, Code={IO Executed},
+SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff88028efdcb40)
+mptscsih: ioc0: attempting task abort! (sc=ffff88028f12e080)
+sd 4:0:6:0:
+        command: Synchronize Cache(10): 35 00 00 00 00 00 00 00 00 00
+mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, Code={IO Executed},
+SubCode(0x0000)
+mptscsih: ioc0: task abort: SUCCESS (sc=ffff88028f12e080)
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
