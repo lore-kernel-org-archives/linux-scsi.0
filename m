@@ -1,141 +1,157 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 02/12] qla2xxx: Remove port down retry count.
-Date: Fri, 15 Oct 2010 11:27:39 -0700
-Message-ID: <1287167269-8034-3-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 07/12] qla2xxx: Remove scsi_cmnd->serial_number from debug traces
+Date: Fri, 15 Oct 2010 11:27:44 -0700
+Message-ID: <1287167269-8034-8-git-send-email-madhu.iyengar@qlogic.com>
 References: <1287167269-8034-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:36963 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:36968 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1756360Ab0JOSg3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Oct 2010 14:36:29 -0400
+	id S1756532Ab0JOSga (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 15 Oct 2010 14:36:30 -0400
 In-Reply-To: <1287167269-8034-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 
-From: Chad Dupuis <chad.dupuis@qlogic.com>
+From: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 
-This patch removes the use of the port down retry counter as a mechanism to
-update a fcport state. The internal driver counter is a residual carry-over
-from pre-FC-transport aware driver inteaction. The ql2xport_down_retry module
-parameter and NVRAM set ha->port_down_retry_count remain in order to seed the
-fc-host's default dev-loss-tmo.
+This patch cleans up any printk or debug tracing of the the
+serial_number field in the qla2xxx driver.
 
-Signed-off-by: Chad Dupuis <chad.dupuis@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |    4 ++++
- drivers/scsi/qla2xxx/qla_def.h  |    2 --
- drivers/scsi/qla2xxx/qla_init.c |    8 --------
- drivers/scsi/qla2xxx/qla_os.c   |   30 ------------------------------
- 4 files changed, 4 insertions(+), 40 deletions(-)
+ drivers/scsi/qla2xxx/qla_iocb.c |    4 ++--
+ drivers/scsi/qla2xxx/qla_isr.c  |    9 ++++-----
+ drivers/scsi/qla2xxx/qla_os.c   |   18 ++++++------------
+ 3 files changed, 12 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 2ff4342..a9ceb39 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1547,6 +1547,10 @@ qla2x00_dev_loss_tmo_callbk(struct fc_rport *rport)
- 	*((fc_port_t **)rport->dd_data) = NULL;
- 	spin_unlock_irq(host->host_lock);
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 579f028..5f94430 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -992,8 +992,8 @@ qla24xx_build_scsi_crc_2_iocbs(srb_t *sp, struct cmd_type_crc_2 *cmd_pkt,
+ 	ha = vha->hw;
  
-+	/* Now that the rport has been deleted, set the fcport state to
-+	   FCS_DEVICE_DEAD */
-+	atomic_set(&fcport->state, FCS_DEVICE_DEAD);
-+
- 	if (test_bit(ABORT_ISP_ACTIVE, &fcport->vha->dpc_flags))
- 		return;
+ 	DEBUG18(printk(KERN_DEBUG
+-	    "%s(%ld): Executing cmd sp %p, pid=%ld, prot_op=%u.\n", __func__,
+-	    vha->host_no, sp, cmd->serial_number, scsi_get_prot_op(sp->cmd)));
++	    "%s(%ld): Executing cmd sp %p, prot_op=%u.\n", __func__,
++	    vha->host_no, sp, scsi_get_prot_op(sp->cmd)));
  
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index e1d3ad4..3a22eff 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1700,9 +1700,7 @@ typedef struct fc_port {
- 	atomic_t state;
- 	uint32_t flags;
+ 	cmd_pkt->vp_index = sp->fcport->vp_idx;
  
--	int port_login_retry_count;
- 	int login_retry;
--	atomic_t port_down_timer;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 55870a3..a47a38f 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1431,9 +1431,8 @@ qla2x00_handle_sense(srb_t *sp, uint8_t *sense_data, uint32_t par_sense_len,
+ 		rsp->status_srb = sp;
  
- 	struct fc_rport *rport, *drport;
- 	u32 supported_classes;
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index c8d0b12..8c48660 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -2916,20 +2916,12 @@ qla2x00_reg_remote_port(scsi_qla_host_t *vha, fc_port_t *fcport)
- void
- qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- {
--	struct qla_hw_data *ha = vha->hw;
--
- 	fcport->vha = vha;
- 	fcport->login_retry = 0;
--	fcport->port_login_retry_count = ha->port_down_retry_count *
--	    PORT_RETRY_TIME;
--	atomic_set(&fcport->port_down_timer, ha->port_down_retry_count *
--	    PORT_RETRY_TIME);
- 	fcport->flags &= ~(FCF_LOGIN_NEEDED | FCF_ASYNC_SENT);
- 
- 	qla2x00_iidma_fcport(vha, fcport);
--
- 	atomic_set(&fcport->state, FCS_ONLINE);
--
- 	qla2x00_reg_remote_port(vha, fcport);
+ 	DEBUG5(printk("%s(): Check condition Sense data, scsi(%ld:%d:%d:%d) "
+-	    "cmd=%p pid=%ld\n", __func__, sp->fcport->vha->host_no,
+-	    cp->device->channel, cp->device->id, cp->device->lun, cp,
+-	    cp->serial_number));
++	    "cmd=%p\n", __func__, sp->fcport->vha->host_no,
++	    cp->device->channel, cp->device->id, cp->device->lun, cp));
+ 	if (sense_len)
+ 		DEBUG5(qla2x00_dump_buffer(cp->sense_buffer, sense_len));
  }
+@@ -1799,10 +1798,10 @@ out:
+ 	if (logit)
+ 		DEBUG2(qla_printk(KERN_INFO, ha,
+ 		    "scsi(%ld:%d:%d) FCP command status: 0x%x-0x%x (0x%x) "
+-		    "oxid=0x%x ser=0x%lx cdb=%02x%02x%02x len=0x%x "
++		    "oxid=0x%x cdb=%02x%02x%02x len=0x%x "
+ 		    "rsp_info=0x%x resid=0x%x fw_resid=0x%x\n", vha->host_no,
+ 		    cp->device->id, cp->device->lun, comp_status, scsi_status,
+-		    cp->result, ox_id, cp->serial_number, cp->cmnd[0],
++		    cp->result, ox_id, cp->cmnd[0],
+ 		    cp->cmnd[1], cp->cmnd[2], scsi_bufflen(cp), rsp_info_len,
+ 		    resid_len, fw_resid_len));
  
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 318235f..9d248d0 100644
+index 85bd0a8..fb18f43 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3547,11 +3547,9 @@ void
- qla2x00_timer(scsi_qla_host_t *vha)
- {
- 	unsigned long	cpu_flags = 0;
--	fc_port_t	*fcport;
- 	int		start_dpc = 0;
- 	int		index;
- 	srb_t		*sp;
--	int		t;
- 	uint16_t        w;
+@@ -831,7 +831,6 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 	srb_t *sp;
+ 	int ret, i;
+ 	unsigned int id, lun;
+-	unsigned long serial;
+ 	unsigned long flags;
+ 	int wait = 0;
  	struct qla_hw_data *ha = vha->hw;
- 	struct req_que *req;
-@@ -3567,34 +3565,6 @@ qla2x00_timer(scsi_qla_host_t *vha)
- 	/* Hardware read to raise pending EEH errors during mailbox waits. */
- 	if (!pci_channel_offline(ha->pdev))
- 		pci_read_config_word(ha->pdev, PCI_VENDOR_ID, &w);
--	/*
--	 * Ports - Port down timer.
--	 *
--	 * Whenever, a port is in the LOST state we start decrementing its port
--	 * down timer every second until it reaches zero. Once  it reaches zero
--	 * the port it marked DEAD.
--	 */
--	t = 0;
--	list_for_each_entry(fcport, &vha->vp_fcports, list) {
--		if (fcport->port_type != FCT_TARGET)
--			continue;
--
--		if (atomic_read(&fcport->state) == FCS_DEVICE_LOST) {
--
--			if (atomic_read(&fcport->port_down_timer) == 0)
--				continue;
--
--			if (atomic_dec_and_test(&fcport->port_down_timer) != 0)
--				atomic_set(&fcport->state, FCS_DEVICE_DEAD);
--
--			DEBUG(printk("scsi(%ld): fcport-%d - port retry count: "
--			    "%d remaining\n",
--			    vha->host_no,
--			    t, atomic_read(&fcport->port_down_timer)));
--		}
--		t++;
--	} /* End of for fcport  */
--
+@@ -848,7 +847,6 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
  
- 	/* Loop down handler. */
- 	if (atomic_read(&vha->loop_down_timer) > 0 &&
+ 	id = cmd->device->id;
+ 	lun = cmd->device->lun;
+-	serial = cmd->serial_number;
+ 	spt = (srb_t *) CMD_SP(cmd);
+ 	if (!spt)
+ 		return SUCCESS;
+@@ -866,8 +864,8 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 		if (sp->cmd != cmd)
+ 			continue;
+ 
+-		DEBUG2(printk("%s(%ld): aborting sp %p from RISC."
+-		" pid=%ld.\n", __func__, vha->host_no, sp, serial));
++		DEBUG2(printk("%s(%ld): aborting sp %p from RISC.",
++		    __func__, vha->host_no, sp));
+ 
+ 		/* Get a reference to the sp and drop the lock.*/
+ 		sp_get(sp);
+@@ -892,8 +890,8 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 	if (wait) {
+ 		if (qla2x00_eh_wait_on_command(cmd) != QLA_SUCCESS) {
+ 			qla_printk(KERN_ERR, ha,
+-			    "scsi(%ld:%d:%d): Abort handler timed out -- %lx "
+-			    "%x.\n", vha->host_no, id, lun, serial, ret);
++			    "scsi(%ld:%d:%d): Abort handler timed out -- %x.\n",
++			    vha->host_no, id, lun, ret);
+ 			ret = FAILED;
+ 		}
+ 	}
+@@ -902,8 +900,8 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ 		qla2x00_sp_compl(ha, sp);
+ 
+ 	qla_printk(KERN_INFO, ha,
+-	    "scsi(%ld:%d:%d): Abort command issued -- %d %lx %x.\n",
+-	    vha->host_no, id, lun, wait, serial, ret);
++	    "scsi(%ld:%d:%d): Abort command issued -- %d %x.\n",
++	    vha->host_no, id, lun, wait, ret);
+ 
+ 	return ret;
+ }
+@@ -1048,13 +1046,11 @@ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+ 	int ret = FAILED;
+ 	unsigned int id, lun;
+-	unsigned long serial;
+ 
+ 	fc_block_scsi_eh(cmd);
+ 
+ 	id = cmd->device->id;
+ 	lun = cmd->device->lun;
+-	serial = cmd->serial_number;
+ 
+ 	if (!fcport)
+ 		return ret;
+@@ -1109,14 +1105,12 @@ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	int ret = FAILED;
+ 	unsigned int id, lun;
+-	unsigned long serial;
+ 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+ 
+ 	fc_block_scsi_eh(cmd);
+ 
+ 	id = cmd->device->id;
+ 	lun = cmd->device->lun;
+-	serial = cmd->serial_number;
+ 
+ 	if (!fcport)
+ 		return ret;
 -- 
 1.6.0.2
 
