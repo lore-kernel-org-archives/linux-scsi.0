@@ -1,40 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 20712] mpt2sas and SATA drives
-Date: Mon, 18 Oct 2010 19:58:21 GMT
-Message-ID: <201010181958.o9IJwLE2014695@demeter2.kernel.org>
-References: <bug-20712-11613@https.bugzilla.kernel.org/>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 1/1] cciss: fix PCI IDs for new Smart Array controllers
+Date: Mon, 18 Oct 2010 21:14:57 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A77887D0D850CD6@GVW0547EXC.americas.hpqcorp.net>
+References: <20101018185307.GA11223@beardog.cce.hp.com>
+ <20101018125545.908d97d4.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [140.211.167.42] ([140.211.167.42]:37692 "EHLO
-	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1757653Ab0JRT6X (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2010 15:58:23 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9IJwMcD014697
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Oct 2010 19:58:22 GMT
-In-Reply-To: <bug-20712-11613@https.bugzilla.kernel.org/>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:14000 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754873Ab0JRVQ6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2010 17:16:58 -0400
+In-Reply-To: <20101018125545.908d97d4.akpm@linux-foundation.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jens Axboe <axboe@kernel.dk>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=20712
+ 
 
+> -----Original Message-----
+> From: Andrew Morton [mailto:akpm@linux-foundation.org] 
+> Sent: Monday, October 18, 2010 2:56 PM
+> To: Miller, Mike (OS Dev)
+> Cc: Jens Axboe; LKML; LKML-scsi
+> Subject: Re: [PATCH 1/1] cciss: fix PCI IDs for new Smart 
+> Array controllers
+> 
+> On Mon, 18 Oct 2010 13:53:07 -0500
+> Mike Miller <mike.miller@hp.com> wrote:
+> 
+> > Patch 1 of 1
+> > cciss: fix PCI IDs for new controllers
+> > 
+> > This patch fixes the botched up PCI IDs of new controllers. Please 
+> > consider this patch for inclusion.
+> > 
+> 
+> What was botched up about it?
+> 
+> What are the runtime effects of this change?
+> 
+The PCI subsystem ID's were wrong. They were 3250 to 3254. They should have been 335x. I also added another new controller that just popped up.
 
+The runtime effects are the boards will not be recognized without this fix.
 
-
-
---- Comment #2 from David Zeuthen <zeuthen@gmail.com>  2010-10-18 19:58:19 ---
-(In reply to comment #1)
-> timeout=2000,
-
-Btw, bumping the timeout doesn't fix the problem (bumping the timeout from
-2000ms would probably be a good idea regardless). We could retry sending the
-command.. but my understanding is that we shouldn't have to do this, right?
-Thanks for any insight.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+-- mikem
