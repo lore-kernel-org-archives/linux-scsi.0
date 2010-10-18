@@ -1,93 +1,59 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 4/5] tcm: Unify UNMAP and WRITE_SAME w/ UNMAP=1
-	subsystem plugin handling
-Date: Sun, 17 Oct 2010 13:53:45 -0700
-Message-ID: <1287348825.14039.10.camel@haakon2.linux-iscsi.org>
-References: <1286959700-3489-1-git-send-email-nab@linux-iscsi.org>
-	 <20101013111920.GB26366@lst.de>
-	 <1287003368.7334.64.camel@haakon2.linux-iscsi.org>
-	 <20101014000341.GA15583@lst.de>  <4CBB1BD2.9080702@panasas.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] fix id computation in scsi_eh_target_reset()
+Date: Mon, 18 Oct 2010 00:33:13 -0500
+Message-ID: <4CBBDC19.1090806@cs.wisc.edu>
+References: <AANLkTin-Tkj3Ab312usO2FWE57m3St2iG2oz881F-Zhw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4CBB1BD2.9080702@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen" <martin.petersen@oracle.com>, Douglas Gilbert <dgilbert@interlog.com>, Richard Sharpe <realrichardsharpe@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37837 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750922Ab0JRFdr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Oct 2010 01:33:47 -0400
+In-Reply-To: <AANLkTin-Tkj3Ab312usO2FWE57m3St2iG2oz881F-Zhw@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hillf Danton <dhillf@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2010-10-17 at 17:52 +0200, Boaz Harrosh wrote:
-> On 10/13/2010 08:03 PM, Christoph Hellwig wrote:
-> > On Wed, Oct 13, 2010 at 01:56:08PM -0700, Nicholas A. Bellinger wrote:
-> >>> The parsing of the WRITE SAME and UNMAP CDBs is something the generic
-> >>> CDB parsing code should do,
-> >>
-> >> Ok, so you are thinking about a seperate transport_emulate_write_same()
-> >> and transport_emulate_unmap() called from
-> >> transport_emulate_control_cdb(), right..?
-> > 
-> > More or less yes.
-> > 
-> >>>  and just give a range of lists of lba/len
-> >>> pairs to the ->discard method in the backed.
-> >>
-> >> Yes, these are already available from the passed struct
-> >> se_task->task_lba and ->task_size values.
-> > 
-> > Not for UNMAP.  WRITE SAME in it's various incarnations uses the
-> > standard LBA/LEN encoding and you seem to parse it nicely.  But for
-> > UNMAP the lba/len pairs are in the command payload.  To support things
-> > genericly you'd need a standard way to pass them.  If you want to
-> > limit yourself to one lba/len pair for one the scheme could work,
-> > though.
-> > 
-> >> Yes, so the problem of trying to make this code generic (eg: outside of
-> >> TCM subsystem plugins) is that blk_issue_discard() takes struct
-> >> block_device, which means we the subsystem plugin has to locate struct
-> >> block_device inside of non generic cide.
-> > 
-> > blk_issue_discard is in no way generic.  It's 100% iblock code and
-> > really doesn't belong into any other backend.  And btw,
-> > blk_issue_discard is rather suboptimal even in iblock - it's a
-> > synchronous function that will stall progress of the thread handling it.
-> > If you want better performance you'll need to opencode the content of
-> > it to allow an asynchronous completion handler.  But given that discard
-> > isn't really a critical feature at this point this could easily be
-> > left for later with a comment.
-> > 
-> >> So, then the main issue becomes FILEIO + block level discard and how to
-> >> issue an blk_issue_discard() from struct fileio in the most sane way.
-> >> If there is no sane way then I will just drop this bit, or just do the
-> >> file level 'hole punch' that you are speaking about.
-> > 
-> > Right now there is no good way to do a block device discard or file
-> > hole punch at the level where the file backend operates.
-> > 
-> 
-> Nick why don't you let User-mode (With configfs everything is user mode
-> right?)
+On 10/14/2010 09:04 AM, Hillf Danton wrote:
+> There seems that the id of the tgtr_scmd processed by
+> scsi_try_target_reset() does not match the id in case that
+> SUCCESS is returned by scsi_try_target_reset().
+>
+> The mismatch is fixed, and the loop to find the next highest
+> is also simplified.
+>
+> Signed-off-by: Hillf Danton<dhillf@gmail.com>
+> ---
+>
+> --- a/drivers/scsi/scsi_error.c	2010-09-13 07:07:38.000000000 +0800
+> +++ b/drivers/scsi/scsi_error.c	2010-10-14 21:45:56.000000000 +0800
+> @@ -1173,14 +1173,19 @@ static int scsi_eh_target_reset(struct S
+>   			list_for_each_entry(scmd, work_q, eh_entry) {
+>   				if (scmd_id(scmd)>  id&&
+>   				(!tgtr_scmd ||
+> -				     scmd_id(tgtr_scmd)>  scmd_id(scmd)))
+> +				     scmd_id(tgtr_scmd)>  scmd_id(scmd))) {
+>   						tgtr_scmd = scmd;
+> +						if (1 + id == scmd_id(scmd))
+> +							break;
+> +				}
+>   			}
+>   		}
+>   		if (!tgtr_scmd)
+>   			/* no more commands, that's it */
+>   			break;
+>
+> +		id = scmd_id(tgtr_scmd);
+> +
+>   		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending target reset "
+>   						  "to target %d\n",
+>   						  current->comm, id));
 
-Correct, everything is driven by user-mode code -> syscalls and
-translated into kernel level operations using Linux/VFS to represent
-struct config_group dependencies between parent/child directory layout
-and inter module symlinks.
 
-> look into the file set for FILEIO and if found to be a block
-> device then set iblock instead. Then you can surly assume in FILEIO that
-> you only have FS files at hand.
-> 
+Thanks. Fixes the extra target resets I have been seeing and commands 
+not getting cleaned up properly.
 
-Yes, I don't think we ever want to do that type of auto-configuration at
-the kernel level because using interpreted userspace code to drive
-configfs is oh so much easier to develop and maintain for the long run.
-
-> Christoph.
-> has xfs an IOCTL to punch holes in files? would it be desirable to make
-> that generic with a ->punch() vectror FS(s) can implement. It's the 3rd
-> project that's looking for a generic punch().
-> 
-
-This sounds really interesting, any thoughts hch..?
-
---nab
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
