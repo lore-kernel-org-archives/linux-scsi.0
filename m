@@ -1,132 +1,135 @@
-From: Michal Ludvig <mludvig@logix.net.nz>
-Subject: scsi_wait_scan doesn't wait
-Date: Mon, 18 Oct 2010 22:16:31 +1300
-Message-ID: <4CBC106F.1090103@logix.net.nz>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [ANNOUNCE] TCM/LIO v4.0.0-rc5 for 2.6.36-rc8
+Date: Mon, 18 Oct 2010 03:04:28 -0700
+Message-ID: <1287396268.14039.120.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from maxipes.logix.cz ([93.89.80.122]:53191 "EHLO maxipes.logix.cz"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752900Ab0JRJlr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Oct 2010 05:41:47 -0400
-Received: from [IPv6:2001:e20:2000:401:21a:73ff:fee5:5006] (unknown [IPv6:2001:e20:2000:401:21a:73ff:fee5:5006])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by maxipes.logix.cz (Postfix) with ESMTP id 018435B433A
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Oct 2010 22:12:13 +1300 (NZDT)
+Received: from smtp104.sbc.mail.re3.yahoo.com ([66.196.96.80]:38518 "HELO
+	smtp104.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753910Ab0JRKJR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Oct 2010 06:09:17 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Joel Becker <joel.becker@oracle.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
 
-  Hi there,
+Greetings all,
 
-I'm having a problem with 2.6.36-rc8+ on HP PARISC machine (HP 9000 
-RP3410) where I intend to wait for SCSI enumeration during boot before 
-LVM2 kicks in and attempts to activate the root volume. I modprobe 
-scsi_wait_scan in the initramdisk before lvm2 script is run. However the 
-modprobe doesn't wait. I'm on Debian testing, fwiw.
+It is my honor to announce that TCM/LIO v4.0.0-rc5 for v2.6.36-rc8 has
+been tagged and pushed into lio-core-2.6.git/lio-4.0 on kernel.org.  It
+has been almost exactly one month since v4.0.0-rc4 was released, and
+development has continued to be quite busy as some of the new v4.0
+emulation features are been shaken out on linux-scsi.  This released
+includes the following major items:
 
-[...]
-[    2.368000] Freeing unused kernel memory: 252k freed
-Loading, please wait...
-[    3.028000] udev: starting version 160
-[    4.104000] SCSI subsystem initialized
-[    4.592000] sym0: <1010-66> rev 0x1 at pci 0000:20:01.0 irq 69
-[    4.668000] sym0: No NVRAM, ID 7, Fast-80, LVD, parity checking
-[    4.700000] sym0: SCSI BUS has been reset.
-[    4.708000] scsi0 : sym-2.2.3
-[    4.868000] sym1: <1010-66> rev 0x1 at pci 0000:20:01.1 irq 70
-[    4.868000] sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
-[    4.904000] sym1: SCSI BUS has been reset.
-[    4.908000] scsi1 : sym-2.2.3
-[    5.068000] sym2: <1010-66> rev 0x1 at pci 0000:80:01.0 irq 72
-[    5.072000] sym2: No NVRAM, ID 7, Fast-80, LVD, parity checking
-[    5.108000] sym2: SCSI BUS has been reset.
-[    5.112000] scsi2 : sym-2.2.3
-[    5.276000] sym3: <1010-66> rev 0x1 at pci 0000:80:01.1 irq 73
-[    5.276000] sym3: No NVRAM, ID 7, Fast-80, LVD, parity checking
-[    5.312000] sym3: SCSI BUS has been reset.
-[    5.316000] scsi3 : sym-2.2.3
-Begin: Loading essential drivers ... done.
-Begin: Running /scripts/init-premount ... SCSI: Waiting to settle...
+	*) Add proper TCM/pSCSI BIDI-COMMAND passthrough (Boaz Harrosh assist)
+	*) Allow MappedLUNs with non existent struct se_lun, which allowed
+	   us to drop the struct config_group_operations->check_link() call
+	   alltogether (Joel Becker assist)
+	*) Add UNMAP and Block Limits VPD page support (Martin Petersen assist)
+	*) Add Thin Provisioning VPD page emulation (Martin Petersen assist)
+	*) Add proper extended CDB support with by default 32-bit CDBs.
+	   (Martin Petersen and Boaz Harrosh assist)
+	*) Add WRITE_SAME_16 and WRITE_SAME_32 w/ UNMAP-1 support (Martin Petersen assist)
+	*) Add target_fabric_tf_ops_check() sanity checks at TCM fabric module
+	   registration time
+	*) Unify TCM subsysystem CDB emulation for INQUIRY, READ_CAPACITY*, UNMAP,
+	   WRITE_SAME_* and SYNCHRONIZE_CACHE (Christoph Hellwig assist)
+	*) Add struct se_dev_limits for subsystem ->create_virtdevice()
+	   (Christoph Hellwig assist)
 
-######### here comes modprobe scsi_wait_scan #########
+At this point I will be accepting bugfixes and other cleanups recommened
+by community members to v4.0 for .37 mainline in the next two weeks, and
+will be pushing new features bits into v4.1 for .38 as the remaining .37
+items are resolved.
 
-SCSI: done
-done.
-Begin: Mounting root file system ... Begin: Running /scripts/local-top 
-... [    6.496000] device-mapper: uevent: version 1.0.3
-[    6.496000] device-mapper: ioctl: 4.18.0-ioctl (2010-06-29) 
-initialised: dm-devel@redhat.com
-   Volume group "lethal" not found
-   Skipping volume group lethal
-Unable to find LVM volume lethal/root
-done.
-Begin: Waiting for root file system ... [    7.728000] scsi 0:0:0:0: 
-Direct-Access     HP 36.4G ST336754LC       HPC2 PQ: 0 ANSI: 3
-[    7.728000] scsi target0:0:0: tagged command queuing enabled, command 
-queue depth 16.
-[    7.728000] scsi target0:0:0: Beginning Domain Validation
-[    7.740000] scsi target0:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 
-ns, offset 31)
-[    7.748000] scsi target0:0:0: Ending Domain Validation
-[    7.752000] scsi 0:0:1:0: Direct-Access     HP 36.4G MAS3367NC        
-HPC3 PQ: 0 ANSI: 3
-[    7.752000] scsi target0:0:1: tagged command queuing enabled, command 
-queue depth 16.
-[    7.760000] scsi target0:0:1: Beginning Domain Validation
-[    7.764000] scsi target0:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 
-ns, offset 31)
-[    7.772000] scsi target0:0:1: Ending Domain Validation
-[   11.864000] sd 0:0:0:0: [sda] 71132960 512-byte logical blocks: (36.4 
-GB/33.9 GiB)
-[   11.864000] sd 0:0:1:0: [sdb] 71132960 512-byte logical blocks: (36.4 
-GB/33.9 GiB)
-[   11.868000] sd 0:0:0:0: [sda] Write Protect is off
-[   11.892000] sd 0:0:1:0: [sdb] Write Protect is off
-[   11.900000] sd 0:0:0:0: [sda] Write cache: enabled, read cache: 
-enabled, supports DPO and FUA
-[   11.900000] sd 0:0:1:0: [sdb] Write cache: enabled, read cache: 
-enabled, supports DPO and FUA
-[   11.924000]  sda: unknown partition table
-[   11.940000]  sdb: sdb1 sdb2 sdb3
-[   11.944000] sd 0:0:0:0: [sda] Attached SCSI disk
-[   11.964000] sd 0:0:1:0: [sdb] Attached SCSI disk
-done.
-Gave up waiting for root device.  Common problems:
-  - Boot args (cat /proc/cmdline)
-    - Check rootdelay= (did the system wait long enough?)
-    - Check root= (did the system wait for the right device?)
-  - Missing modules (cat /proc/modules; ls /dev)
-ALERT!  /dev/mapper/lethal-root does not exist.  Dropping to a shell!
+Once again, a big thanks go out to the community members involved in
+this release.  Thank you!
 
-Apparently /dev/sda and /dev/sdb were discovered long after 
-scsi_wait_scan was loaded.
+--nab
 
-Here are the relevant modules:
-[...]
-ext3                  203543  2
-jbd                    63990  1 ext3
-dm_mod                112954  9
-scsi_wait_scan           983  0
-zalon7xx               38131  0
-lasi700                 2427  0
-53c700                 39777  1 lasi700
-hilkbd                  5901  0
-sd_mod                 49383  3
-crc_t10dif              1564  1 sd_mod
-sym53c8xx             104303  2
-scsi_transport_spi     34731  3 zalon7xx,53c700,sym53c8xx
-scsi_mod              193802  7 
-libata,zalon7xx,lasi700,53c700,sd_mod,sym53c8xx,scsi_transport_spi
+Nicholas Bellinger (48):
+  tcm: Convert split CDB code to put_unaligned_be*
+  tcm: Add support for BIDI-COMMAND passthrough
+  tcm/pscsi: Add proper BIDI-COMMAND passthrough to SCSI MidLayer
+  tcm: Add XDWRITEREAD_10 passthrough support
+  tcm: Convert VARIABLE_LENGTH_CMD to use scsi_varlen_cdb_length()
+  tcm/fileio: Convert to iov allocations for fd_do_readv() and
+    fd_do_writev()
+  tcm: Allow MappedLUNs with non existent struct se_lun
+  tcm: Drop unused target_fabric_port_check_link()
+  tcm: Fix NULL pointer dereference for target_fabric_port_attrs[]
+  tcm: Remove struct list_head lookup from
+    core_dev_[add,del]_initiator_node_lun_acl()
+  tcm: Add Thin Provisioning / UNMAP emulation and Block Limits VPD
+    page
+  tcm/iblock: Add UNMAP / Block DISCARD support
+  tcm/fileio: Add UNMAP / Block DISCARD support
+  tcm: Remove unnecessary typecasts in FILEIO, IBLOCK, pSCSI, RAMDISK
+    and STGT subsystem plugins
+  tcm: Fix incorrect data_length checks for Block Limits VPD page
+    emulation
+  tcm: Rename device attribute emulate_tpe to emulate_tpu
+  tcm: Add Thin Provisioning VPD page emulation
+  tcm/iblock,fileio: Fill in remaining Block Limits VPD from rq->limits
+  tcm: Fix BIDI-Command bug with pSCSI passthrough
+  tcm: Add support for CDBs greater than TCM_MAX_COMMAND_SIZE bytes
+  tcm: Fix bug in *_subsystem set_configfs_dev_params() buffer copy
+  tcm: Add WRITE_SAME_16 emulation and passthrough support
+  tcm/iblock,fileio: Add WRITE_SAME_16 w/ UNMAP=1 bit support
+  tcm: Minor cleanups for UNMAP debugging code
+  tcm: Add support for SA WRITE_SAME_32
+  tcm: Add missing TGCS_DATA_SG_IO_CDB assignment for XDWRITEREAD_32
+  tcm: Remove legacy struct se_device->dev_generate_cdb()
+  tcm: Remove unused struct target_core_fabric_ops->dev_del_lun()
+  tcm: Add target_fabric_tf_ops_check() sanity checks
+  tcm_loop: Add missing NOPs for struct target_core_fabric_ops
+  tcm: Fix hardcoded size bug for struct
+    se_transport_task->__t_task_cdb[]
+  tcm: Unify subsystem plugin control CDB emulation
+  tcm: Convert IBLOCK, FILEIO and RAMDISK subsystem code to
+    transport_emulate_control_cdb()
+  tcm: Move WRITE_SAME_* emulation into transport_emulate_control_cdb()
+  tcm: Move SYNCHRONIZE_CACHE_* emulation into
+    transport_emulate_control_cdb()
+  tcm: Fix printk() + sector_t conversion spec build warning:
+  tcm: Move transport_emulate_control_cdb() into
+    __transport_execute_tasks()
+  tcm: Unify INQUIRY subsystem plugin handling
+  tcm: Unify READ_CAPACITY_* subsystem plugin handling
+  tcm: Unify UNMAP and WRITE_SAME w/ UNMAP=1 subsystem plugin handling
+  tcm: Unify SYNCHRONIZE_CACHE_* subsystem plugin handling
+  tcm: Drop struct se_subsystem_api->create_virtdevice_from_fd()
+  tcm: Convert UNMAP + WRITE_SAME_* to IBLOCK only support
+  tcm/fileio: Drop igrab() and iput() usage
+  tcm: Preload virtual backstore INQUIRY Product Model and Revision
+  tcm/fileio: Drop unnecessary inode assignment conditional
+  tcm: Add struct se_dev_limits for subsystem ->create_virtdevice()
+  lio-core v4.0.0-rc5
 
-When I unset CONFIG_SCSI_SCAN_ASYNC it works just fine and all the disks 
-are found in time for LVM.
+ drivers/target/lio-target/iscsi_target_version.h |    2 +-
+ drivers/target/target_core_configfs.c            |  259 ++++++--
+ drivers/target/target_core_device.c              |  197 +++++--
+ drivers/target/target_core_fabric_configfs.c     |   50 +-
+ drivers/target/target_core_file.c                |  297 +++------
+ drivers/target/target_core_iblock.c              |  380 +++--------
+ drivers/target/target_core_pscsi.c               |  297 ++++++----
+ drivers/target/target_core_pscsi.h               |    7 +-
+ drivers/target/target_core_rd.c                  |  255 ++------
+ drivers/target/target_core_scdb.c                |   57 +--
+ drivers/target/target_core_stgt.c                |  107 +--
+ drivers/target/target_core_tpg.c                 |    8 -
+ drivers/target/target_core_transport.c           |  767 ++++++++++++++++++----
+ drivers/target/tcm_loop/tcm_loop_configfs.c      |   10 +-
+ drivers/target/tcm_loop/tcm_loop_fabric.c        |   23 +-
+ drivers/target/tcm_loop/tcm_loop_fabric.h        |    9 +-
+ include/target/target_core_base.h                |   31 +-
+ include/target/target_core_device.h              |    9 +-
+ include/target/target_core_fabric_ops.h          |    1 -
+ include/target/target_core_transport.h           |   61 +-
+ 20 files changed, 1595 insertions(+), 1232 deletions(-)
 
-Is that a bug in the SCSI driver? Or am I doing something wrong? It's 
-not a recent regression, at least 2.6.35 behaves the same on that machine.
 
-Thanks!
-
-Michal
