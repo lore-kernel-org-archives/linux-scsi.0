@@ -1,54 +1,47 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFCv3 19/21] tcm: Add generic ProtoID and TransportID fabric handlers for SAS, FC, and iSCSI
-Date: Mon, 18 Oct 2010 15:39:11 -0700
-Message-ID: <1287441551-20109-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp107.sbc.mail.mud.yahoo.com ([68.142.198.105]:29919 "HELO
-	smtp107.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933610Ab0JRWjO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Oct 2010 18:39:14 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [RFCv3 18/21] tcm: Add generic fabric independent ConfigFS infrastructure
+Date: Mon, 18 Oct 2010 15:39:02 -0700
+Message-ID: <1287441542-20089-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Cc: Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds a set of generic SAS, FC and iSCSI handlers into target_core_fabric_lib.c
-that contain fabric dependent logic for ProtocolID (PIV) and TransportID processing
-releated to >= SPC-3 persistent reservation SCSI Initiator and Target Port WWNs.  These
-generic handlers follow SPC-4 and are based on protocol dependent code in TCM_Loop, TCM_FC
-and LIO-Target modules.
-
-This a patch also allows TCM fabric modules to optionally support more than a single SCSI protcol
-on a per fabric target endpoint (WWN+TPGT) context basis.
+This patch adds the v4 fabric independent configfs code that allows modules
+to use a generic set of struct config_item_types and struct config_groups hanging
+off fabric dependent structures, without having to explictly define a configfs layout
+of /sys/kernel/config/target/$FABRIC themselves.  This allows a generic layout to be
+used with fabric dependent attributes using struct config_item_type context specific
+macros in include/target/target_core_fabric_configfs.h.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_fabric_lib.c |  451 +++++++++++++++++++++++++++++++
- include/target/target_core_fabric_lib.h |   28 ++
- 2 files changed, 479 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/target_core_fabric_lib.c
- create mode 100644 include/target/target_core_fabric_lib.h
+ drivers/target/target_core_fabric_configfs.c | 1001 ++++++++++++++++++++++++++
+ include/target/target_core_fabric_configfs.h |  106 +++
+ 2 files changed, 1107 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/target_core_fabric_configfs.c
+ create mode 100644 include/target/target_core_fabric_configfs.h
 
-diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
 new file mode 100644
-index 0000000..f4b34d3
+index 0000000..5d1a81d
 --- /dev/null
-+++ b/drivers/target/target_core_fabric_lib.c
-@@ -0,0 +1,451 @@
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -0,0 +1,1001 @@
 +/*******************************************************************************
-+ * Filename:  target_core_fabric_lib.c
++* Filename: target_core_fabric_configfs.c
 + *
-+ * This file contains generic high level protocol identifier and PR
-+ * handlers for TCM fabric modules
++ * This file contains generic fabric module configfs infrastructure for
++ * TCM v4.x code
 + *
-+ * Copyright (c) 2010 Rising Tide Systems, Inc.
++ * Copyright (c) 2010 Rising Tide Systems
 + * Copyright (c) 2010 Linux-iSCSI.org
 + *
-+ * Nicholas A. Bellinger <nab@linux-iscsi.org>
-+ *
++ * Copyright (c) 2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
++*
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
 + * the Free Software Foundation; either version 2 of the License, or
@@ -58,471 +51,1098 @@ index 0000000..f4b34d3
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 + * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ *
-+ ******************************************************************************/
++ ****************************************************************************/
 +
++#include <linux/module.h>
++#include <linux/moduleparam.h>
++#include <linux/version.h>
++#include <generated/utsrelease.h>
++#include <linux/utsname.h>
++#include <linux/init.h>
++#include <linux/fs.h>
++#include <linux/namei.h>
++#include <linux/slab.h>
++#include <linux/types.h>
++#include <linux/delay.h>
++#include <linux/unistd.h>
 +#include <linux/string.h>
-+#include <linux/ctype.h>
-+#include <linux/spinlock.h>
-+#include <linux/smp_lock.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
++#include <linux/syscalls.h>
++#include <linux/configfs.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_device.h>
++#include <target/target_core_tpg.h>
 +#include <target/target_core_transport.h>
 +#include <target/target_core_fabric_ops.h>
++#include <target/target_core_fabric_configfs.h>
 +#include <target/target_core_configfs.h>
++#include <target/configfs_macros.h>
 +
++#include "target_core_alua.h"
 +#include "target_core_hba.h"
 +#include "target_core_pr.h"
 +
-+/*
-+ * Handlers for Serial Attached SCSI (SAS)
-+ */
-+u8 sas_get_fabric_proto_ident(struct se_portal_group *se_tpg)
-+{
-+	/*
-+	 * Return a SAS Serial SCSI Protocol identifier for loopback operations
-+	 * This is defined in  section 7.5.1 Table 362 in spc4r17
-+	 */
-+	return 0x6;
++#define TF_CIT_SETUP(_name, _item_ops, _group_ops, _attrs)		\
++static void target_fabric_setup_##_name##_cit(struct target_fabric_configfs *tf) \
++{									\
++	struct target_fabric_configfs_template *tfc = &tf->tf_cit_tmpl;	\
++	struct config_item_type *cit = &tfc->tfc_##_name##_cit;		\
++									\
++	cit->ct_item_ops = _item_ops;					\
++	cit->ct_group_ops = _group_ops;					\
++	cit->ct_attrs = _attrs;						\
++	cit->ct_owner = tf->tf_module;					\
++	printk("Setup generic %s\n", __stringify(_name));		\
 +}
-+EXPORT_SYMBOL(sas_get_fabric_proto_ident);
 +
-+u32 sas_get_pr_transport_id(
-+	struct se_portal_group *se_tpg,
-+	struct se_node_acl *se_nacl,
-+	struct t10_pr_registration *pr_reg,
-+	int *format_code,
-+	unsigned char *buf)
++/* Start of tfc_tpg_mappedlun_cit */
++
++static int target_fabric_mappedlun_link(
++	struct config_item *lun_acl_ci,
++	struct config_item *lun_ci)
 +{
-+	unsigned char binary, *ptr;
-+	int i;
-+	u32 off = 4;
++	struct se_dev_entry *deve;
++	struct se_lun *lun = container_of(to_config_group(lun_ci),
++			struct se_lun, lun_group);
++	struct se_lun_acl *lacl = container_of(to_config_group(lun_acl_ci),
++			struct se_lun_acl, se_lun_group);
++	struct se_portal_group *se_tpg;
++	struct config_item *nacl_ci, *tpg_ci, *tpg_ci_s, *wwn_ci, *wwn_ci_s;
++	int ret = 0, lun_access;
 +	/*
-+	 * Set PROTOCOL IDENTIFIER to 6h for SAS
++	 * Ensure that the source port exists
 +	 */
-+	buf[0] = 0x06;
-+	/*
-+	 * From spc4r17, 7.5.4.7 TransportID for initiator ports using SCSI
-+	 * over SAS Serial SCSI Protocol
-+	 */
-+	ptr = &se_nacl->initiatorname[4]; /* Skip over 'naa. prefix */
++	if (!(lun->lun_sep) || !(lun->lun_sep->sep_tpg)) {
++		printk(KERN_ERR "Source se_lun->lun_sep or lun->lun_sep->sep"
++				"_tpg does not exist\n");
++		return -EINVAL;
++	}
++	se_tpg = lun->lun_sep->sep_tpg;
 +
-+	for (i = 0; i < 16; i += 2) {
-+		binary = transport_asciihex_to_binaryhex(&ptr[i]);
-+		buf[off++] = binary;
++	nacl_ci = &lun_acl_ci->ci_parent->ci_group->cg_item;
++	tpg_ci = &nacl_ci->ci_group->cg_item;
++	wwn_ci = &tpg_ci->ci_group->cg_item;
++	tpg_ci_s = &lun_ci->ci_parent->ci_group->cg_item;
++	wwn_ci_s = &tpg_ci_s->ci_group->cg_item;
++	/*
++	 * Make sure the SymLink is going to the same $FABRIC/$WWN/tpgt_$TPGT
++	 */
++	if (strcmp(config_item_name(wwn_ci), config_item_name(wwn_ci_s))) {
++		printk(KERN_ERR "Illegal Initiator ACL SymLink outside of %s\n",
++			config_item_name(wwn_ci));
++		return -EINVAL;
++	}
++	if (strcmp(config_item_name(tpg_ci), config_item_name(tpg_ci_s))) {
++		printk(KERN_ERR "Illegal Initiator ACL Symlink outside of %s"
++			" TPGT: %s\n", config_item_name(wwn_ci),
++			config_item_name(tpg_ci));
++		return -EINVAL;
 +	}
 +	/*
-+	 * The SAS Transport ID is a hardcoded 24-byte length
++	 * If this struct se_node_acl was dynamically generated with
++	 * tpg_1/attrib/generate_node_acls=1, use the existing deve->lun_flags,
++	 * which be will write protected (READ-ONLY) when
++	 * tpg_1/attrib/demo_mode_write_protect=1
 +	 */
-+	return 24;
-+}
-+EXPORT_SYMBOL(sas_get_pr_transport_id);
-+
-+u32 sas_get_pr_transport_id_len(
-+	struct se_portal_group *se_tpg,
-+	struct se_node_acl *se_nacl,
-+	struct t10_pr_registration *pr_reg,
-+	int *format_code)
-+{
-+	*format_code = 0;
++	spin_lock_irq(&lacl->se_lun_nacl->device_list_lock);
++	deve = &lacl->se_lun_nacl->device_list[lacl->mapped_lun];
++	if (deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS)
++		lun_access = deve->lun_flags;
++	else
++		lun_access =
++			(TPG_TFO(se_tpg)->tpg_check_prod_mode_write_protect(
++				se_tpg)) ? TRANSPORT_LUNFLAGS_READ_ONLY :
++					   TRANSPORT_LUNFLAGS_READ_WRITE;
++	spin_unlock_irq(&lacl->se_lun_nacl->device_list_lock);
 +	/*
-+	 * From spc4r17, 7.5.4.7 TransportID for initiator ports using SCSI
-+	 * over SAS Serial SCSI Protocol
++	 * Determine the actual mapped LUN value user wants..
 +	 *
-+	 * The SAS Transport ID is a hardcoded 24-byte length
++	 * This value is what the SCSI Initiator actually sees the
++	 * iscsi/$IQN/$TPGT/lun/lun_* as on their SCSI Initiator Ports.
 +	 */
-+	return 24;
++	ret = core_dev_add_initiator_node_lun_acl(se_tpg, lacl,
++			lun->unpacked_lun, lun_access);
++
++	return (ret < 0) ? -EINVAL : 0;
 +}
-+EXPORT_SYMBOL(sas_get_pr_transport_id_len);
 +
-+/*
-+ * Used for handling SCSI fabric dependent TransportIDs in SPC-3 and above
-+ * Persistent Reservation SPEC_I_PT=1 and PROUT REGISTER_AND_MOVE operations.
-+ */
-+char *sas_parse_pr_out_transport_id(
-+	struct se_portal_group *se_tpg,
-+	const char *buf,
-+	u32 *out_tid_len,
-+	char **port_nexus_ptr)
++static int target_fabric_mappedlun_unlink(
++	struct config_item *lun_acl_ci,
++	struct config_item *lun_ci)
 +{
++	struct se_lun *lun;
++	struct se_lun_acl *lacl = container_of(to_config_group(lun_acl_ci),
++			struct se_lun_acl, se_lun_group);
++	struct se_node_acl *nacl = lacl->se_lun_nacl;
++	struct se_dev_entry *deve = &nacl->device_list[lacl->mapped_lun];
++	struct se_portal_group *se_tpg;
 +	/*
-+	 * Assume the FORMAT CODE 00b from spc4r17, 7.5.4.7 TransportID
-+	 * for initiator ports using SCSI over SAS Serial SCSI Protocol
-+	 *
-+	 * The TransportID for a SAS Initiator Port is of fixed size of
-+	 * 24 bytes, and SAS does not contain a I_T nexus identifier,
-+	 * so we return the **port_nexus_ptr set to NULL.
++	 * Determine if the underlying MappedLUN has already been released..
 +	 */
-+	*port_nexus_ptr = NULL;
-+	*out_tid_len = 24;
++	if (!(deve->se_lun))
++		return 0;
 +
-+	return (char *)&buf[4];
++	lun = container_of(to_config_group(lun_ci), struct se_lun, lun_group);
++	se_tpg = lun->lun_sep->sep_tpg;
++
++	core_dev_del_initiator_node_lun_acl(se_tpg, lun, lacl);
++	return 0;
 +}
-+EXPORT_SYMBOL(sas_parse_pr_out_transport_id);
 +
-+/*
-+ * Handlers for Fibre Channel Protocol (FCP)
-+ */
-+u8 fc_get_fabric_proto_ident(struct se_portal_group *se_tpg)
++CONFIGFS_EATTR_STRUCT(target_fabric_mappedlun, se_lun_acl);
++#define TCM_MAPPEDLUN_ATTR(_name, _mode)				\
++static struct target_fabric_mappedlun_attribute target_fabric_mappedlun_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_fabric_mappedlun_show_##_name,				\
++	target_fabric_mappedlun_store_##_name);
++
++static ssize_t target_fabric_mappedlun_show_write_protect(
++	struct se_lun_acl *lacl,
++	char *page)
 +{
-+	return 0x0;	/* 0 = fcp-2 per SPC4 section 7.5.1 */
-+}
-+EXPORT_SYMBOL(fc_get_fabric_proto_ident);
++	struct se_node_acl *se_nacl = lacl->se_lun_nacl;
++	struct se_dev_entry *deve;
++	ssize_t len;
 +
-+u32 fc_get_pr_transport_id_len(
-+	struct se_portal_group *se_tpg,
-+	struct se_node_acl *se_nacl,
-+	struct t10_pr_registration *pr_reg,
-+	int *format_code)
-+{
-+        *format_code = 0;
-+	/*
-+	 * The FC Transport ID is a hardcoded 24-byte length
-+	 */
-+	return 24;
-+}
-+EXPORT_SYMBOL(fc_get_pr_transport_id_len);
-+
-+u32 fc_get_pr_transport_id(
-+	struct se_portal_group *se_tpg,
-+	struct se_node_acl *se_nacl,
-+	struct t10_pr_registration *pr_reg,
-+	int *format_code,
-+	unsigned char *buf)
-+{
-+	unsigned char binary, *ptr;
-+	int i;
-+	u32 off = 8;
-+	/*
-+	 * PROTOCOL IDENTIFIER is 0h for FCP-2
-+	 * 
-+	 * From spc4r17, 7.5.4.2 TransportID for initiator ports using
-+	 * SCSI over Fibre Channel
-+	 *
-+	 * We convert the ASCII formatted N Port name into a binary
-+	 * encoded TransportID.
-+	 */
-+	ptr = &se_nacl->initiatorname[0];
-+
-+	for (i = 0; i < 24; ) {
-+		if (!(strncmp(&ptr[i], ":", 1))) {
-+			i++;
-+			continue;
-+		}
-+		binary = transport_asciihex_to_binaryhex(&ptr[i]);
-+		buf[off++] = binary;	
-+		i += 2;
-+	}
-+	/*
-+	 * The FC Transport ID is a hardcoded 24-byte length
-+	 */
-+	return 24;
-+}
-+EXPORT_SYMBOL(fc_get_pr_transport_id);
-+
-+char *fc_parse_pr_out_transport_id(
-+	struct se_portal_group *se_tpg,
-+	const char *buf,
-+	u32 *out_tid_len,
-+	char **port_nexus_ptr)
-+{
-+	/*
-+	 * The TransportID for a FC N Port is of fixed size of
-+	 * 24 bytes, and FC does not contain a I_T nexus identifier,
-+	 * so we return the **port_nexus_ptr set to NULL.
-+	 */
-+	*port_nexus_ptr = NULL;
-+	*out_tid_len = 24;
-+
-+	 return (char *)&buf[8];
-+}
-+EXPORT_SYMBOL(fc_parse_pr_out_transport_id);
-+
-+/*
-+ * Handlers for Internet Small Computer Systems Interface (iSCSI)
-+ */
-+
-+u8 iscsi_get_fabric_proto_ident(struct se_portal_group *se_tpg)
-+{
-+	/*
-+	 * This value is defined for "Internet SCSI (iSCSI)"
-+	 * in spc4r17 section 7.5.1 Table 362
-+	 */
-+	return 0x5;
-+}
-+EXPORT_SYMBOL(iscsi_get_fabric_proto_ident);
-+
-+u32 iscsi_get_pr_transport_id(
-+	struct se_portal_group *se_tpg,
-+	struct se_node_acl *se_nacl,
-+	struct t10_pr_registration *pr_reg,
-+	int *format_code,
-+	unsigned char *buf)
-+{
-+	u32 off = 4, padding = 0;
-+	u16 len = 0;
-+
-+	spin_lock(&se_nacl->nacl_sess_lock);
-+	/*
-+	 * Set PROTOCOL IDENTIFIER to 5h for iSCSI
-+	*/
-+	buf[0] = 0x05;
-+	/*
-+	 * From spc4r17 Section 7.5.4.6: TransportID for initiator
-+	 * ports using SCSI over iSCSI.
-+	 *
-+	 * The null-terminated, null-padded (see 4.4.2) ISCSI NAME field
-+	 * shall contain the iSCSI name of an iSCSI initiator node (see
-+	 * RFC 3720). The first ISCSI NAME field byte containing an ASCII
-+	 * null character terminates the ISCSI NAME field without regard for
-+	 * the specified length of the iSCSI TransportID or the contents of
-+	 * the ADDITIONAL LENGTH field.
-+	 */
-+	len = sprintf(&buf[off], "%s", se_nacl->initiatorname);
-+	/*
-+	 * Add Extra byte for NULL terminator
-+	 */
-+	len++;
-+	/*
-+	 * If there is ISID present with the registration and *format code == 1
-+	 * 1, use iSCSI Initiator port TransportID format.
-+	 *
-+	 * Otherwise use iSCSI Initiator device TransportID format that
-+	 * does not contain the ASCII encoded iSCSI Initiator iSID value
-+	 * provied by the iSCSi Initiator during the iSCSI login process.
-+	 */
-+	if ((*format_code == 1) && (pr_reg->isid_present_at_reg)) {
-+		/*
-+		 * Set FORMAT CODE 01b for iSCSI Initiator port TransportID
-+		 * format.
-+		 */
-+		buf[0] |= 0x40;
-+		/*
-+		 * From spc4r17 Section 7.5.4.6: TransportID for initiator
-+		 * ports using SCSI over iSCSI.  Table 390
-+		 *
-+		 * The SEPARATOR field shall contain the five ASCII
-+		 * characters ",i,0x".
-+		 *
-+		 * The null-terminated, null-padded ISCSI INITIATOR SESSION ID
-+		 * field shall contain the iSCSI initiator session identifier
-+		 * (see RFC 3720) in the form of ASCII characters that are the
-+		 * hexadecimal digits converted from the binary iSCSI initiator
-+		 * session identifier value. The first ISCSI INITIATOR SESSION
-+		 * ID field byte containing an ASCII null character
-+		 */
-+		buf[off+len] = 0x2c; off++; /* ASCII Character: "," */
-+		buf[off+len] = 0x69; off++; /* ASCII Character: "i" */
-+		buf[off+len] = 0x2c; off++; /* ASCII Character: "," */
-+		buf[off+len] = 0x30; off++; /* ASCII Character: "0" */
-+		buf[off+len] = 0x78; off++; /* ASCII Character: "x" */
-+		len += 5;
-+		buf[off+len] = pr_reg->pr_reg_isid[0]; off++;
-+		buf[off+len] = pr_reg->pr_reg_isid[1]; off++;
-+		buf[off+len] = pr_reg->pr_reg_isid[2]; off++;
-+		buf[off+len] = pr_reg->pr_reg_isid[3]; off++;
-+		buf[off+len] = pr_reg->pr_reg_isid[4]; off++;
-+		buf[off+len] = pr_reg->pr_reg_isid[5]; off++;
-+		buf[off+len] = '\0'; off++;
-+		len += 7;
-+	}
-+	spin_unlock(&se_nacl->nacl_sess_lock);
-+	/*
-+	 * The ADDITIONAL LENGTH field specifies the number of bytes that follow
-+	 * in the TransportID. The additional length shall be at least 20 and
-+	 * shall be a multiple of four.
-+	*/
-+	padding = ((-len) & 3);
-+	if (padding != 0)
-+		len += padding;
-+
-+	buf[2] = ((len >> 8) & 0xff);
-+	buf[3] = (len & 0xff);
-+	/*
-+	 * Increment value for total payload + header length for
-+	 * full status descriptor
-+	 */
-+	len += 4;
++	spin_lock_irq(&se_nacl->device_list_lock);
++	deve = &se_nacl->device_list[lacl->mapped_lun];
++	len = sprintf(page, "%d\n",
++			(deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY) ?
++			1 : 0);
++	spin_unlock_irq(&se_nacl->device_list_lock);
 +
 +	return len;
 +}
-+EXPORT_SYMBOL(iscsi_get_pr_transport_id);
 +
-+u32 iscsi_get_pr_transport_id_len(
-+	struct se_portal_group *se_tpg,
-+	struct se_node_acl *se_nacl,
-+	struct t10_pr_registration *pr_reg,
-+	int *format_code)
++static ssize_t target_fabric_mappedlun_store_write_protect(
++	struct se_lun_acl *lacl,
++	const char *page,
++	size_t count)
 +{
-+	u32 len = 0, padding = 0;
++	struct se_node_acl *se_nacl = lacl->se_lun_nacl;
++	struct se_portal_group *se_tpg = se_nacl->se_tpg;
++	char *endptr;
++	u32 op;
 +
-+	spin_lock(&se_nacl->nacl_sess_lock);
-+	len = strlen(se_nacl->initiatorname);
-+	/*
-+	 * Add extra byte for NULL terminator
-+	 */
-+	len++;
-+	/*
-+	 * If there is ISID present with the registration, use format code:
-+	 * 01b: iSCSI Initiator port TransportID format
-+	 *
-+	 * If there is not an active iSCSI session, use format code:
-+	 * 00b: iSCSI Initiator device TransportID format
-+	 */
-+	if (pr_reg->isid_present_at_reg) {
-+		len += 5; /* For ",i,0x" ASCII seperator */
-+		len += 7; /* For iSCSI Initiator Session ID + Null terminator */
-+		*format_code = 1;
-+	} else
-+		*format_code = 0;
-+	spin_unlock(&se_nacl->nacl_sess_lock);
-+	/*
-+	 * The ADDITIONAL LENGTH field specifies the number of bytes that follow
-+	 * in the TransportID. The additional length shall be at least 20 and
-+	 * shall be a multiple of four.
-+	 */
-+	padding = ((-len) & 3);
-+	if (padding != 0)
-+		len += padding;
-+	/*
-+	 * Increment value for total payload + header length for
-+	 * full status descriptor
-+	 */
-+	len += 4;
++	op = simple_strtoul(page, &endptr, 0);
++	if ((op != 1) && (op != 0)) {
++		printk(KERN_ERR "Illegal value for access: %u\n", op);
++		return -EINVAL;
++	}
++	core_update_device_list_access(lacl->mapped_lun, (op) ?
++			TRANSPORT_LUNFLAGS_READ_ONLY :
++			TRANSPORT_LUNFLAGS_READ_WRITE,
++			lacl->se_lun_nacl);
 +
-+	return len;
++	printk(KERN_INFO "%s_ConfigFS: Changed Initiator ACL: %s"
++		" Mapped LUN: %u Write Protect bit to %s\n",
++		TPG_TFO(se_tpg)->get_fabric_name(), 
++		lacl->initiatorname, lacl->mapped_lun, (op) ? "ON" : "OFF");
++
++        return count;
++
 +}
-+EXPORT_SYMBOL(iscsi_get_pr_transport_id_len);
 +
-+char *iscsi_parse_pr_out_transport_id(
-+	struct se_portal_group *se_tpg,
-+	const char *buf,
-+	u32 *out_tid_len,
-+	char **port_nexus_ptr)
++TCM_MAPPEDLUN_ATTR(write_protect, S_IRUGO | S_IWUSR);
++
++CONFIGFS_EATTR_OPS(target_fabric_mappedlun, se_lun_acl, se_lun_group);
++
++static struct configfs_attribute *target_fabric_mappedlun_attrs[] = {
++	&target_fabric_mappedlun_write_protect.attr,
++	NULL,
++};
++
++static struct configfs_item_operations target_fabric_mappedlun_item_ops = {
++	.show_attribute		= target_fabric_mappedlun_attr_show,
++	.store_attribute	= target_fabric_mappedlun_attr_store,
++	.allow_link		= target_fabric_mappedlun_link,
++	.drop_link		= target_fabric_mappedlun_unlink,
++};
++
++TF_CIT_SETUP(tpg_mappedlun, &target_fabric_mappedlun_item_ops, NULL,
++		target_fabric_mappedlun_attrs);
++
++/* End of tfc_tpg_mappedlun_cit */
++
++/* Start of tfc_tpg_nacl_attrib_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_attrib, se_node_acl, acl_attrib_group);
++
++static struct configfs_item_operations target_fabric_nacl_attrib_item_ops = {
++	.show_attribute		= target_fabric_nacl_attrib_attr_show,
++	.store_attribute	= target_fabric_nacl_attrib_attr_store,
++};
++
++TF_CIT_SETUP(tpg_nacl_attrib, &target_fabric_nacl_attrib_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_nacl_attrib_cit */
++
++/* Start of tfc_tpg_nacl_auth_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_auth, se_node_acl, acl_auth_group);
++
++static struct configfs_item_operations target_fabric_nacl_auth_item_ops = {
++	.show_attribute		= target_fabric_nacl_auth_attr_show,
++	.store_attribute	= target_fabric_nacl_auth_attr_store,
++};
++
++TF_CIT_SETUP(tpg_nacl_auth, &target_fabric_nacl_auth_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_nacl_auth_cit */
++
++/* Start of tfc_tpg_nacl_param_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_param, se_node_acl, acl_param_group);
++
++static struct configfs_item_operations target_fabric_nacl_param_item_ops = {
++	.show_attribute		= target_fabric_nacl_param_attr_show,
++	.store_attribute	= target_fabric_nacl_param_attr_store,
++};
++
++TF_CIT_SETUP(tpg_nacl_param, &target_fabric_nacl_param_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_nacl_param_cit */
++
++/* Start of tfc_tpg_nacl_base_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_base, se_node_acl, acl_group);
++
++static struct config_group *target_fabric_make_mappedlun(
++	struct config_group *group,
++	const char *name)
 +{
-+	char *p;
-+	u32 tid_len, padding;
-+	int i;
-+	u16 add_len;
-+	u8 format_code = (buf[0] & 0xc0);
-+	/*
-+	 * Check for FORMAT CODE 00b or 01b from spc4r17, section 7.5.4.6:
-+	 *
-+	 *       TransportID for initiator ports using SCSI over iSCSI,
-+	 *       from Table 388 -- iSCSI TransportID formats.
-+	 *
-+	 *    00b     Initiator port is identified using the world wide unique
-+	 *            SCSI device name of the iSCSI initiator
-+	 *            device containing the initiator port (see table 389).
-+	 *    01b     Initiator port is identified using the world wide unique
-+	 *            initiator port identifier (see table 390).10b to 11b
-+	 *            Reserved
-+	 */
-+	if ((format_code != 0x00) && (format_code != 0x40)) {
-+		printk(KERN_ERR "Illegal format code: 0x%02x for iSCSI"
-+			" Initiator Transport ID\n", format_code);
++	struct se_node_acl *se_nacl = container_of(group,
++			struct se_node_acl, acl_group);
++	struct se_portal_group *se_tpg = se_nacl->se_tpg;
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_lun_acl *lacl;
++	struct config_item *acl_ci;
++	char *buf, *endptr, *ptr;
++	u32 mapped_lun;
++	int ret = 0;
++
++	acl_ci = &group->cg_item;
++	if (!(acl_ci)) {
++		printk(KERN_ERR "Unable to locatel acl_ci\n");
 +		return NULL;
 +	}
-+	/*
-+	 * If the caller wants the TransportID Length, we set that value for the
-+	 * entire iSCSI Tarnsport ID now.
-+	 */
-+	 if (out_tid_len != NULL) {
-+		add_len = ((buf[2] >> 8) & 0xff);
-+		add_len |= (buf[3] & 0xff);
 +
-+		tid_len = strlen((char *)&buf[4]);
-+		tid_len += 4; /* Add four bytes for iSCSI Transport ID header */
-+		tid_len += 1; /* Add one byte for NULL terminator */
-+		padding = ((-tid_len) & 3);
-+		if (padding != 0)
-+			tid_len += padding;
-+
-+		if ((add_len + 4) != tid_len) {
-+			printk(KERN_INFO "LIO-Target Extracted add_len: %hu "
-+				"does not match calculated tid_len: %u,"
-+				" using tid_len instead\n", add_len+4, tid_len);
-+			*out_tid_len = tid_len;
-+		} else
-+			*out_tid_len = (add_len + 4);
++	buf = kzalloc(strlen(name) + 1, GFP_KERNEL);
++	if (!(buf)) {
++		printk(KERN_ERR "Unable to allocate memory for name buf\n");
++		return ERR_PTR(-ENOMEM);
 +	}
++	snprintf(buf, strlen(name) + 1, "%s", name);
 +	/*
-+	 * Check for ',i,0x' seperator between iSCSI Name and iSCSI Initiator
-+	 * Session ID as defined in Table 390 - iSCSI initiator port TransportID
-+	 * format.
++	 * Make sure user is creating iscsi/$IQN/$TPGT/acls/$INITIATOR/lun_$ID.
 +	 */
-+	if (format_code == 0x40) {
-+		p = strstr((char *)&buf[4], ",i,0x");
-+		if (!(p)) {
-+			printk(KERN_ERR "Unable to locate \",i,0x\" seperator"
-+				" for Initiator port identifier: %s\n",
-+				(char *)&buf[4]);
-+			return NULL;
-+		}
-+		*p = '\0'; /* Terminate iSCSI Name */
-+		p += 5; /* Skip over ",i,0x" seperator */
-+
-+		*port_nexus_ptr = p;
-+		/*
-+		 * Go ahead and do the lower case conversion of the received
-+		 * 12 ASCII characters representing the ISID in the TransportID
-+		 * for comparision against the running iSCSI session's ISID from
-+		 * iscsi_target.c:lio_sess_get_initiator_sid()
-+		 */
-+		for (i = 0; i < 12; i++) {
-+			if (isdigit(*p)) {
-+				p++;
-+				continue;
-+			}
-+			*p = tolower(*p);
-+			p++;
-+		}
++	ptr = strstr(buf, "lun_");
++	if (!(ptr)) {
++		printk(KERN_ERR "Unable to locate \"lun_\" from buf: %s"
++			" name: %s\n", buf, name);
++		ret = -EINVAL;
++		goto out;
 +	}
++	ptr += 3; /* Skip to "_" */
++	*ptr = '\0'; /* Terminate the string */
++	ptr++; /* Advance pointer to next characater */
 +
-+	return (char *)&buf[4];
++	/*
++	 * Determine the Mapped LUN value.  This is what the SCSI Initiator
++	 * Port will actually see.
++	 */
++	mapped_lun = simple_strtoul(ptr, &endptr, 0);
++
++	lacl = core_dev_init_initiator_node_lun_acl(se_tpg, mapped_lun,
++			config_item_name(acl_ci), &ret);
++        if (!(lacl))
++                goto out;
++
++	config_group_init_type_name(&lacl->se_lun_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_mappedlun_cit);		
++
++	kfree(buf);
++	return &lacl->se_lun_group;
++out:
++	kfree(buf);
++	return ERR_PTR(ret);
 +}
-+EXPORT_SYMBOL(iscsi_parse_pr_out_transport_id);
-diff --git a/include/target/target_core_fabric_lib.h b/include/target/target_core_fabric_lib.h
++
++static void target_fabric_drop_mappedlun(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_lun_acl *lacl = container_of(to_config_group(item),
++			struct se_lun_acl, se_lun_group);
++	struct se_portal_group *se_tpg = lacl->se_lun_nacl->se_tpg; 
++
++	config_item_put(item);
++	core_dev_free_initiator_node_lun_acl(se_tpg, lacl);
++}
++
++static struct configfs_item_operations target_fabric_nacl_base_item_ops = {
++	.show_attribute		= target_fabric_nacl_base_attr_show,
++	.store_attribute	= target_fabric_nacl_base_attr_store,
++};
++
++static struct configfs_group_operations target_fabric_nacl_base_group_ops = {
++	.make_group		= target_fabric_make_mappedlun,
++	.drop_item		= target_fabric_drop_mappedlun,
++};
++
++TF_CIT_SETUP(tpg_nacl_base, &target_fabric_nacl_base_item_ops,
++		&target_fabric_nacl_base_group_ops, NULL);
++
++/* End of tfc_tpg_nacl_base_cit */
++
++/* Start of tfc_tpg_nacl_cit */
++
++static struct config_group *target_fabric_make_nodeacl(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++			struct se_portal_group, tpg_acl_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_node_acl *se_nacl;
++	struct config_group *nacl_cg;
++
++	if (!(tf->tf_ops.fabric_make_nodeacl)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_nodeacl is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	se_nacl = tf->tf_ops.fabric_make_nodeacl(se_tpg, group, name);
++	if (IS_ERR(se_nacl))
++		return ERR_PTR(PTR_ERR(se_nacl));	
++
++	nacl_cg = &se_nacl->acl_group;
++	nacl_cg->default_groups = se_nacl->acl_default_groups;
++	nacl_cg->default_groups[0] = &se_nacl->acl_attrib_group;
++	nacl_cg->default_groups[1] = &se_nacl->acl_auth_group; 
++	nacl_cg->default_groups[2] = &se_nacl->acl_param_group;
++	nacl_cg->default_groups[3] = NULL;
++
++	config_group_init_type_name(&se_nacl->acl_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_base_cit);			
++	config_group_init_type_name(&se_nacl->acl_attrib_group, "attrib",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_attrib_cit);
++	config_group_init_type_name(&se_nacl->acl_auth_group, "auth",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_auth_cit);
++	config_group_init_type_name(&se_nacl->acl_param_group, "param",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_param_cit);
++		
++	return &se_nacl->acl_group;
++}
++
++static void target_fabric_drop_nodeacl(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++			struct se_portal_group, tpg_acl_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_node_acl *se_nacl = container_of(to_config_group(item),
++			struct se_node_acl, acl_group);
++	struct config_item *df_item;
++	struct config_group *nacl_cg;
++	int i;
++
++	nacl_cg = &se_nacl->acl_group;
++	for (i = 0; nacl_cg->default_groups[i]; i++) {
++		df_item = &nacl_cg->default_groups[i]->cg_item;
++		nacl_cg->default_groups[i] = NULL;
++		config_item_put(df_item);
++	}
++
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_nodeacl(se_nacl);	
++}
++
++static struct configfs_group_operations target_fabric_nacl_group_ops = {
++	.make_group	= target_fabric_make_nodeacl,
++	.drop_item	= target_fabric_drop_nodeacl,
++};
++
++TF_CIT_SETUP(tpg_nacl, NULL, &target_fabric_nacl_group_ops, NULL);
++
++/* End of tfc_tpg_nacl_cit */
++
++/* Start of tfc_tpg_np_base_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_np_base, se_tpg_np, tpg_np_group);
++
++static struct configfs_item_operations target_fabric_np_base_item_ops = {
++	.show_attribute		= target_fabric_np_base_attr_show,
++	.store_attribute	= target_fabric_np_base_attr_store,
++};
++
++TF_CIT_SETUP(tpg_np_base, &target_fabric_np_base_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_np_base_cit */
++
++/* Start of tfc_tpg_np_cit */
++
++static struct config_group *target_fabric_make_np(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++				struct se_portal_group, tpg_np_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_tpg_np *se_tpg_np;
++
++	if (!(tf->tf_ops.fabric_make_np)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_np is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	se_tpg_np = tf->tf_ops.fabric_make_np(se_tpg, group, name);
++	if (!(se_tpg_np) || IS_ERR(se_tpg_np))
++		return ERR_PTR(-EINVAL);
++
++	config_group_init_type_name(&se_tpg_np->tpg_np_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_np_base_cit);						
++
++	return &se_tpg_np->tpg_np_group;
++}
++
++static void target_fabric_drop_np(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++				struct se_portal_group, tpg_np_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_tpg_np *se_tpg_np = container_of(to_config_group(item),
++				struct se_tpg_np, tpg_np_group);
++
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_np(se_tpg_np);
++}
++
++static struct configfs_group_operations target_fabric_np_group_ops = {
++	.make_group	= &target_fabric_make_np,
++	.drop_item	= &target_fabric_drop_np,
++};
++
++TF_CIT_SETUP(tpg_np, NULL, &target_fabric_np_group_ops, NULL);
++
++/* End of tfc_tpg_np_cit */
++
++/* Start of tfc_tpg_port_cit */
++
++CONFIGFS_EATTR_STRUCT(target_fabric_port, se_lun);
++#define TCM_PORT_ATTR(_name, _mode)					\
++static struct target_fabric_port_attribute target_fabric_port_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_fabric_port_show_attr_##_name,				\
++	target_fabric_port_store_attr_##_name);
++
++#define TCM_PORT_ATTOR_RO(_name)					\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_fabric_port_show_attr_##_name);
++
++/*
++ * alua_tg_pt_gp
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_gp(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_tg_pt_gp_info(lun->lun_sep, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_gp(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_tg_pt_gp_info(lun->lun_sep, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_gp, S_IRUGO | S_IWUSR);
++
++/*
++ * alua_tg_pt_offline
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_offline(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_offline_bit(lun, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_offline(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_offline_bit(lun, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_offline, S_IRUGO | S_IWUSR);
++
++/*
++ * alua_tg_pt_status
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_status(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_secondary_status(lun, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_status(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_secondary_status(lun, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_status, S_IRUGO | S_IWUSR);
++
++/*
++ * alua_tg_pt_write_md
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_write_md(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_secondary_write_metadata(lun, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_write_md(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_secondary_write_metadata(lun, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_write_md, S_IRUGO | S_IWUSR);
++
++
++static struct configfs_attribute *target_fabric_port_attrs[] = {
++	&target_fabric_port_alua_tg_pt_gp.attr,
++	&target_fabric_port_alua_tg_pt_offline.attr,
++	&target_fabric_port_alua_tg_pt_status.attr,
++	&target_fabric_port_alua_tg_pt_write_md.attr,
++	NULL,
++};
++
++CONFIGFS_EATTR_OPS(target_fabric_port, se_lun, lun_group);
++
++static int target_fabric_port_link(
++	struct config_item *lun_ci,
++	struct config_item *se_dev_ci)
++{
++	struct config_item *tpg_ci;
++	struct se_device *dev;
++	struct se_lun *lun = container_of(to_config_group(lun_ci),
++				struct se_lun, lun_group);
++	struct se_lun *lun_p;
++	struct se_portal_group *se_tpg;
++	struct se_subsystem_dev *se_dev = container_of(
++				to_config_group(se_dev_ci), struct se_subsystem_dev,
++				se_dev_group);
++	struct target_fabric_configfs *tf;
++	int ret;
++
++	tpg_ci = &lun_ci->ci_parent->ci_group->cg_item;
++	se_tpg = container_of(to_config_group(tpg_ci),
++				struct se_portal_group, tpg_group);
++	tf = se_tpg->se_tpg_wwn->wwn_tf;
++
++	if (lun->lun_se_dev!= NULL) {
++		printk(KERN_ERR "Port Symlink already exists\n");
++		return -EEXIST;
++	}
++	
++	dev = se_dev->se_dev_ptr;
++	if (!(dev)) {
++		printk(KERN_ERR "Unable to locate struct se_device pointer from"
++			" %s\n", config_item_name(se_dev_ci));
++		ret = -ENODEV;
++		goto out;
++	}
++
++	lun_p = core_dev_add_lun(se_tpg, dev->se_hba, dev,
++				lun->unpacked_lun);
++	if ((IS_ERR(lun_p)) || !(lun_p)) {
++		printk(KERN_ERR "core_dev_add_lun() failed\n");
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if (tf->tf_ops.fabric_post_link) {
++		/*
++		 * Call the optional fabric_post_link() to allow a
++		 * fabric module to setup any additional state once
++		 * core_dev_add_lun() has been called..
++		 */
++		tf->tf_ops.fabric_post_link(se_tpg, lun);
++	}
++
++	return 0;
++out:
++	return ret;
++}
++
++static int target_fabric_port_unlink(
++	struct config_item *lun_ci,
++	struct config_item *se_dev_ci)
++{
++	struct se_lun *lun = container_of(to_config_group(lun_ci),
++				struct se_lun, lun_group);
++	struct se_portal_group *se_tpg = lun->lun_sep->sep_tpg;
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++
++	if (tf->tf_ops.fabric_pre_unlink) {
++		/*
++		 * Call the optional fabric_pre_unlink() to allow a
++		 * fabric module to release any additional stat before
++		 * core_dev_del_lun() is called.
++		*/
++		tf->tf_ops.fabric_pre_unlink(se_tpg, lun);
++	}
++
++	core_dev_del_lun(se_tpg, lun->unpacked_lun);
++	return 0;
++}
++
++static struct configfs_item_operations target_fabric_port_item_ops = {
++	.show_attribute		= target_fabric_port_attr_show,
++	.store_attribute	= target_fabric_port_attr_store,
++	.allow_link		= target_fabric_port_link,
++	.drop_link		= target_fabric_port_unlink,
++};
++
++TF_CIT_SETUP(tpg_port, &target_fabric_port_item_ops, NULL, target_fabric_port_attrs);
++
++/* End of tfc_tpg_port_cit */
++
++/* Start of tfc_tpg_lun_cit */
++
++static struct config_group *target_fabric_make_lun(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_lun *lun;
++	struct se_portal_group *se_tpg = container_of(group,
++			struct se_portal_group, tpg_lun_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	
++	char *str, *endptr;
++	u32 unpacked_lun;
++
++	str = strstr(name, "_");
++	if (!(str)) {
++		printk(KERN_ERR "Unable to locate \'_\" in"
++				" \"lun_$LUN_NUMBER\"\n");
++		return NULL;
++	}
++	str++; /* Advance over _ delim.. */
++	unpacked_lun = simple_strtoul(str, &endptr, 0);
++
++	lun = core_get_lun_from_tpg(se_tpg, unpacked_lun);
++	if (!(lun))
++		return ERR_PTR(-EINVAL);
++
++	config_group_init_type_name(&lun->lun_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_port_cit);
++
++	return &lun->lun_group;
++}
++
++static void target_fabric_drop_lun(
++	struct config_group *group,
++	struct config_item *item)
++{
++	config_item_put(item);
++}
++
++static struct configfs_group_operations target_fabric_lun_group_ops = {
++	.make_group	= &target_fabric_make_lun,
++	.drop_item	= &target_fabric_drop_lun,
++};
++
++TF_CIT_SETUP(tpg_lun, NULL, &target_fabric_lun_group_ops, NULL);
++
++/* End of tfc_tpg_lun_cit */
++
++/* Start of tfc_tpg_attrib_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_tpg_attrib, se_portal_group, tpg_attrib_group);
++
++static struct configfs_item_operations target_fabric_tpg_attrib_item_ops = {
++	.show_attribute		= target_fabric_tpg_attrib_attr_show,
++	.store_attribute	= target_fabric_tpg_attrib_attr_store,
++};
++
++TF_CIT_SETUP(tpg_attrib, &target_fabric_tpg_attrib_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_attrib_cit */
++
++/* Start of tfc_tpg_param_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_tpg_param, se_portal_group, tpg_param_group);
++
++static struct configfs_item_operations target_fabric_tpg_param_item_ops = {
++	.show_attribute		= target_fabric_tpg_param_attr_show,
++	.store_attribute	= target_fabric_tpg_param_attr_store,
++};
++
++TF_CIT_SETUP(tpg_param, &target_fabric_tpg_param_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_param_cit */
++
++/* Start of tfc_tpg_base_cit */
++/*
++ * For use with TF_TPG_ATTR() and TF_TPG_ATTR_RO()
++ */
++CONFIGFS_EATTR_OPS(target_fabric_tpg, se_portal_group, tpg_group);
++
++static struct configfs_item_operations target_fabric_tpg_base_item_ops = {
++	.show_attribute		= target_fabric_tpg_attr_show,
++	.store_attribute	= target_fabric_tpg_attr_store,
++};
++
++TF_CIT_SETUP(tpg_base, &target_fabric_tpg_base_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_base_cit */
++
++/* Start of tfc_tpg_cit */
++
++static struct config_group *target_fabric_make_tpg(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_wwn *wwn = container_of(group, struct se_wwn, wwn_group);
++	struct target_fabric_configfs *tf = wwn->wwn_tf;
++	struct se_portal_group *se_tpg;
++
++	if (!(tf->tf_ops.fabric_make_tpg)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_tpg is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	se_tpg = tf->tf_ops.fabric_make_tpg(wwn, group, name);
++	if (!(se_tpg) || IS_ERR(se_tpg))
++		return ERR_PTR(-EINVAL);
++	/*
++	 * Setup default groups from pre-allocated se_tpg->tpg_default_groups
++	 */
++	se_tpg->tpg_group.default_groups = se_tpg->tpg_default_groups;
++	se_tpg->tpg_group.default_groups[0] = &se_tpg->tpg_lun_group;
++	se_tpg->tpg_group.default_groups[1] = &se_tpg->tpg_np_group;
++	se_tpg->tpg_group.default_groups[2] = &se_tpg->tpg_acl_group;
++	se_tpg->tpg_group.default_groups[3] = &se_tpg->tpg_attrib_group;
++	se_tpg->tpg_group.default_groups[4] = &se_tpg->tpg_param_group;
++	se_tpg->tpg_group.default_groups[5] = NULL;
++
++	config_group_init_type_name(&se_tpg->tpg_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_base_cit);
++	config_group_init_type_name(&se_tpg->tpg_lun_group, "lun",
++			&TF_CIT_TMPL(tf)->tfc_tpg_lun_cit);
++	config_group_init_type_name(&se_tpg->tpg_np_group, "np",
++			&TF_CIT_TMPL(tf)->tfc_tpg_np_cit);
++	config_group_init_type_name(&se_tpg->tpg_acl_group, "acls",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_cit);
++	config_group_init_type_name(&se_tpg->tpg_attrib_group, "attrib",
++			&TF_CIT_TMPL(tf)->tfc_tpg_attrib_cit);
++	config_group_init_type_name(&se_tpg->tpg_param_group, "param",
++			&TF_CIT_TMPL(tf)->tfc_tpg_param_cit);
++			
++	return &se_tpg->tpg_group;
++}
++
++static void target_fabric_drop_tpg(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_wwn *wwn = container_of(group, struct se_wwn, wwn_group);
++	struct target_fabric_configfs *tf = wwn->wwn_tf;
++	struct se_portal_group *se_tpg = container_of(to_config_group(item),
++				struct se_portal_group, tpg_group);
++	struct config_group *tpg_cg = &se_tpg->tpg_group;
++	struct config_item *df_item;
++	int i;
++	/*
++	 * Release default groups, but do not release tpg_cg->default_groups
++	 * memory as it is statically allocated at se_tpg->tpg_default_groups.
++	 */
++	for (i = 0; tpg_cg->default_groups[i]; i++) {
++		df_item = &tpg_cg->default_groups[i]->cg_item;
++		tpg_cg->default_groups[i] = NULL;
++		config_item_put(df_item);
++	}
++
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_tpg(se_tpg);	
++}
++
++static struct configfs_group_operations target_fabric_tpg_group_ops = {
++	.make_group	= target_fabric_make_tpg,
++	.drop_item	= target_fabric_drop_tpg,
++};
++
++TF_CIT_SETUP(tpg, NULL, &target_fabric_tpg_group_ops, NULL);
++
++/* End of tfc_tpg_cit */
++
++/* Start of tfc_wwn_cit */
++
++static struct config_group *target_fabric_make_wwn(
++	struct config_group *group,
++	const char *name)
++{
++	struct target_fabric_configfs *tf = container_of(group,
++				struct target_fabric_configfs, tf_group);
++	struct se_wwn *wwn;
++
++	if (!(tf->tf_ops.fabric_make_wwn)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_wwn is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	wwn = tf->tf_ops.fabric_make_wwn(tf, group, name);
++	if (!(wwn) || IS_ERR(wwn))
++		return ERR_PTR(-EINVAL);
++
++	wwn->wwn_tf = tf;
++	config_group_init_type_name(&wwn->wwn_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_cit);
++
++	return &wwn->wwn_group;
++}
++
++static void target_fabric_drop_wwn(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct target_fabric_configfs *tf = container_of(group,
++				struct target_fabric_configfs, tf_group);
++	struct se_wwn *wwn = container_of(to_config_group(item),
++				struct se_wwn, wwn_group);
++	
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_wwn(wwn);
++}
++
++static struct configfs_group_operations target_fabric_wwn_group_ops = {
++	.make_group	= target_fabric_make_wwn,
++	.drop_item	= target_fabric_drop_wwn,
++};
++/*
++ * For use with TF_WWN_ATTR() and TF_WWN_ATTR_RO()
++ */
++CONFIGFS_EATTR_OPS(target_fabric_wwn, target_fabric_configfs, tf_group);
++
++static struct configfs_item_operations target_fabric_wwn_item_ops = {
++	.show_attribute		= target_fabric_wwn_attr_show,
++	.store_attribute	= target_fabric_wwn_attr_store,
++};	
++
++TF_CIT_SETUP(wwn, &target_fabric_wwn_item_ops, &target_fabric_wwn_group_ops, NULL);
++
++/* End of tfc_wwn_cit */
++
++/* Start of tfc_discovery_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_discovery, target_fabric_configfs,
++		tf_disc_group);
++
++static struct configfs_item_operations target_fabric_discovery_item_ops = {
++	.show_attribute		= target_fabric_discovery_attr_show,
++	.store_attribute	= target_fabric_discovery_attr_store,
++};
++
++TF_CIT_SETUP(discovery, &target_fabric_discovery_item_ops, NULL, NULL);
++
++/* End of tfc_discovery_cit */
++
++int target_fabric_setup_cits(struct target_fabric_configfs *tf)
++{
++	target_fabric_setup_discovery_cit(tf);
++	target_fabric_setup_wwn_cit(tf);	
++	target_fabric_setup_tpg_cit(tf);
++	target_fabric_setup_tpg_base_cit(tf);
++	target_fabric_setup_tpg_port_cit(tf);
++	target_fabric_setup_tpg_lun_cit(tf);
++	target_fabric_setup_tpg_np_cit(tf);
++	target_fabric_setup_tpg_np_base_cit(tf);
++	target_fabric_setup_tpg_attrib_cit(tf);
++	target_fabric_setup_tpg_param_cit(tf);
++	target_fabric_setup_tpg_nacl_cit(tf);
++	target_fabric_setup_tpg_nacl_base_cit(tf);
++	target_fabric_setup_tpg_nacl_attrib_cit(tf);
++	target_fabric_setup_tpg_nacl_auth_cit(tf);
++	target_fabric_setup_tpg_nacl_param_cit(tf);
++	target_fabric_setup_tpg_mappedlun_cit(tf);
++
++	return 0;
++}
+diff --git a/include/target/target_core_fabric_configfs.h b/include/target/target_core_fabric_configfs.h
 new file mode 100644
-index 0000000..c2f8d0e
+index 0000000..e48eb7d
 --- /dev/null
-+++ b/include/target/target_core_fabric_lib.h
-@@ -0,0 +1,28 @@
-+#ifndef TARGET_CORE_FABRIC_LIB_H
-+#define TARGET_CORE_FABRIC_LIB_H
++++ b/include/target/target_core_fabric_configfs.h
+@@ -0,0 +1,106 @@
++/*
++ * Used for tfc_wwn_cit attributes
++ */
 +
-+extern u8 sas_get_fabric_proto_ident(struct se_portal_group *);
-+extern u32 sas_get_pr_transport_id(struct se_portal_group *, struct se_node_acl *,
-+			struct t10_pr_registration *, int *, unsigned char *);
-+extern u32 sas_get_pr_transport_id_len(struct se_portal_group *, struct se_node_acl *,
-+			struct t10_pr_registration *, int *);
-+extern char *sas_parse_pr_out_transport_id(struct se_portal_group *,
-+			const char *, u32 *, char **);
++#include <target/configfs_macros.h>
 +
-+extern u8 fc_get_fabric_proto_ident(struct se_portal_group *);
-+extern u32 fc_get_pr_transport_id(struct se_portal_group *, struct se_node_acl *,
-+			struct t10_pr_registration *, int *, unsigned char *);
-+extern u32 fc_get_pr_transport_id_len(struct se_portal_group *, struct se_node_acl *,
-+			struct t10_pr_registration *, int *);
-+extern char *fc_parse_pr_out_transport_id(struct se_portal_group *,
-+			const char *, u32 *, char **);
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_attrib, se_node_acl);
++#define TF_NACL_ATTRIB_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_attrib_attribute _fabric##_nacl_attrib_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_attrib_show_##_name,				\
++	_fabric##_nacl_attrib_store_##_name);
 +
-+extern u8 iscsi_get_fabric_proto_ident(struct se_portal_group *);
-+extern u32 iscsi_get_pr_transport_id(struct se_portal_group *, struct se_node_acl *,
-+			struct t10_pr_registration *, int *, unsigned char *);
-+extern u32 iscsi_get_pr_transport_id_len(struct se_portal_group *, struct se_node_acl *,
-+			struct t10_pr_registration *, int *);
-+extern char *iscsi_parse_pr_out_transport_id(struct se_portal_group *,
-+			const char *, u32 *, char **);
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_auth, se_node_acl);
++#define TF_NACL_AUTH_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_auth_attribute _fabric##_nacl_auth_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_auth_show_##_name,				\
++	_fabric##_nacl_auth_store_##_name);
 +
-+#endif /* TARGET_CORE_FABRIC_LIB_H */
++#define TF_NACL_AUTH_ATTR_RO(_fabric, _name)				\
++static struct target_fabric_nacl_auth_attribute _fabric##_nacl_auth_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_nacl_auth_show_##_name);
++
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_param, se_node_acl);
++#define TF_NACL_PARAM_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_param_attribute _fabric##_nacl_param_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_param_show_##_name,				\
++	_fabric##_nacl_param_store_##_name);
++
++#define TF_NACL_PARAM_ATTR_RO(_fabric, _name)				\
++static struct target_fabric_nacl_param_attribute _fabric##_nacl_param_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_nacl_param_show_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_base, se_node_acl);
++#define TF_NACL_BASE_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_base_attribute _fabric##_nacl_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_show_##_name,					\
++	_fabric##_nacl_store_##_name);
++
++#define TF_NACL_BASE_ATTR_RO(_fabric, _name)				\
++static struct target_fabric_nacl_base_attribute _fabric##_nacl_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_nacl_show_##_name);
++
++CONFIGFS_EATTR_STRUCT(target_fabric_np_base, se_tpg_np);
++#define TF_NP_BASE_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_np_base_attribute _fabric##_np_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_np_show_##_name,					\
++	_fabric##_np_store_##_name);
++
++CONFIGFS_EATTR_STRUCT(target_fabric_tpg_attrib, se_portal_group);
++#define TF_TPG_ATTRIB_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_tpg_attrib_attribute _fabric##_tpg_attrib_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_tpg_attrib_show_##_name,				\
++	_fabric##_tpg_attrib_store_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_tpg_param, se_portal_group);
++#define TF_TPG_PARAM_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_tpg_param_attribute _fabric##_tpg_param_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_tpg_param_show_##_name,				\
++	_fabric##_tpg_param_store_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_tpg, se_portal_group);
++#define TF_TPG_BASE_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_tpg_attribute _fabric##_tpg_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_tpg_show_##_name,					\
++	_fabric##_tpg_store_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_wwn, target_fabric_configfs);
++#define TF_WWN_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_wwn_attribute _fabric##_wwn_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_wwn_show_attr_##_name,				\
++	_fabric##_wwn_store_attr_##_name);
++
++#define TF_WWN_ATTR_RO(_fabric, _name)					\
++static struct target_fabric_wwn_attribute _fabric##_wwn_##_name =	\
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_wwn_show_attr_##_name);
++
++CONFIGFS_EATTR_STRUCT(target_fabric_discovery, target_fabric_configfs);
++#define TF_DISC_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_discovery_attribute _fabric##_disc_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_disc_show_##_name,					\
++	_fabric##_disc_store_##_name);
++
++#define TF_DISC_ATTR_RO(_fabric, _name)					\
++static struct target_fabric_discovery_attribute _fabric##_disc_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_disc_show_##_name);					
++
++extern int target_fabric_setup_cits(struct target_fabric_configfs *);
 -- 
 1.7.3.1
-
