@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFCv3 20/21] tcm: Add Kbuild and Kconfig for drivers/target and Documentation/target/
-Date: Mon, 18 Oct 2010 15:39:19 -0700
-Message-ID: <1287441559-20129-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFCv3 21/21] tcm_loop: Add multi-fabric Linux/SCSI LLD fabric module
+Date: Mon, 18 Oct 2010 15:39:28 -0700
+Message-ID: <1287441568-20149-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
@@ -10,1372 +10,2028 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Add TCM Kbuild and Kconfig files and update drivers/ to pick up drivers/target.
-Add Docmentation/target/ for tcm_mod_builder.py script for generating new
-TCM v4 fabric modules functional ConfigFS skeletons.
+This patch adds the TCM_Loop Linux/SCSI LLD fabric module for accessing TCM device
+backstores as locally accessable SCSI LUNs in virtual SAS, FC, and iSCSI Target ports
+using the generic fabric TransportID and Target Port WWN naming handlers from TCM's
+target_core_fabric_lib.c  The TCM_Loop module uses the generic fabric configfs infratructure
+provided by target_core_fabric_configfs.c and adds a module dependent attribute for the
+creation/release of the virtual I_T Nexus connected the TCM_Loop Target and Initiator Ports.
+
+TCM_Loop can also be used with the scsi-generic driver so that STGT userspace
+fabric modules, QEMU-KVM and other hypervisor SCSI passthrough support can
+access TCM device backstore and control CDB emulation.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- Documentation/target/tcm_mod_builder.py  | 1094 ++++++++++++++++++++++++++++++
- Documentation/target/tcm_mod_builder.txt |  145 ++++
- drivers/Kconfig                          |    2 +
- drivers/Makefile                         |    1 +
- drivers/target/Kbuild                    |   27 +
- drivers/target/Kconfig                   |   34 +
- 6 files changed, 1303 insertions(+), 0 deletions(-)
- create mode 100755 Documentation/target/tcm_mod_builder.py
- create mode 100644 Documentation/target/tcm_mod_builder.txt
- create mode 100644 drivers/target/Kbuild
- create mode 100644 drivers/target/Kconfig
+ drivers/target/Kbuild                          |    3 +
+ drivers/target/Kconfig                         |    2 +
+ drivers/target/tcm_loop/Kbuild                 |   11 +
+ drivers/target/tcm_loop/Kconfig                |   13 +
+ drivers/target/tcm_loop/tcm_loop_configfs.c    |  647 ++++++++++++++++++++++++
+ drivers/target/tcm_loop/tcm_loop_configfs.h    |    2 +
+ drivers/target/tcm_loop/tcm_loop_core.h        |   77 +++
+ drivers/target/tcm_loop/tcm_loop_fabric.c      |  495 ++++++++++++++++++
+ drivers/target/tcm_loop/tcm_loop_fabric.h      |   40 ++
+ drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |  618 ++++++++++++++++++++++
+ drivers/target/tcm_loop/tcm_loop_fabric_scsi.h |   10 +
+ 11 files changed, 1918 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/tcm_loop/Kbuild
+ create mode 100644 drivers/target/tcm_loop/Kconfig
+ create mode 100644 drivers/target/tcm_loop/tcm_loop_configfs.c
+ create mode 100644 drivers/target/tcm_loop/tcm_loop_configfs.h
+ create mode 100644 drivers/target/tcm_loop/tcm_loop_core.h
+ create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric.c
+ create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric.h
+ create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
+ create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric_scsi.h
 
-diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
-new file mode 100755
-index 0000000..a97cedb
---- /dev/null
-+++ b/Documentation/target/tcm_mod_builder.py
-@@ -0,0 +1,1094 @@
-+#!/usr/bin/python
-+# The TCM v4 multi-protocol fabric module generation script for drivers/target/$NEW_MOD
-+#
-+# Copyright (c) 2010 Rising Tide Systems
-+# Copyright (c) 2010 Linux-iSCSI.org
-+#
-+# Author: nab@kernel.org
-+#
-+import os, sys
-+import subprocess as sub
-+import string
-+import re
-+import optparse
-+
-+tcm_dir = ""
-+
-+fabric_ops = []
-+fabric_mod_dir = ""
-+fabric_mod_port = ""
-+fabric_mod_init_port = ""
-+
-+def tcm_mod_err(msg):
-+	print msg
-+	sys.exit(1)
-+
-+def tcm_mod_create_module_subdir(fabric_mod_dir_var):
-+	
-+	if os.path.isdir(fabric_mod_dir_var) == True:
-+		return 1
-+
-+	print "Creating fabric_mod_dir: " + fabric_mod_dir_var
-+	ret = os.mkdir(fabric_mod_dir_var)
-+	if ret:
-+		tcm_mod_err("Unable to mkdir " + fabric_mod_dir_var)
-+
-+	return
-+
-+def tcm_mod_build_FC_include(fabric_mod_dir_var, fabric_mod_name):
-+	global fabric_mod_port
-+	global fabric_mod_init_port
-+	buf = ""
-+
-+	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_base.h"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w');
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "#define " + fabric_mod_name.upper() + "_VERSION	\"v0.1\"\n"
-+	buf += "#define " + fabric_mod_name.upper() + "_NAMELEN	32\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_nacl {\n"
-+	buf += "	/* Binary World Wide unique Port Name for FC Initiator Nport */\n"
-+	buf += "	u64 nport_wwpn;\n"
-+	buf += "	/* ASCII formatted WWPN for FC Initiator Nport */\n"
-+	buf += "	char nport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
-+	buf += "	struct se_node_acl se_node_acl;\n"
-+	buf += "};\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_tpg {\n"
-+	buf += "	/* FC lport target portal group tag for TCM */\n"
-+	buf += "	u16 lport_tpgt;\n"
-+	buf += "	/* Pointer back to " + fabric_mod_name + "_lport */\n"
-+	buf += "	struct " + fabric_mod_name + "_lport *lport;\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tpg() */\n"
-+	buf += "	struct se_portal_group se_tpg;\n"
-+	buf += "};\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_lport {\n"
-+	buf += "	/* SCSI protocol the lport is providing */\n"
-+	buf += "	u8 lport_proto_id;\n"
-+	buf += "	/* Binary World Wide unique Port Name for FC Target Lport */\n"
-+	buf += "	u64 lport_wwpn;\n"
-+	buf += "	/* ASCII formatted WWPN for FC Target Lport */\n"
-+	buf += "	char lport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_lport() */\n"
-+	buf += "	struct se_wwn lport_wwn;\n"
-+	buf += "};\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	fabric_mod_port = "lport"
-+	fabric_mod_init_port = "nport"
-+
-+	return
-+
-+def tcm_mod_build_SAS_include(fabric_mod_dir_var, fabric_mod_name):
-+	global fabric_mod_port
-+	global fabric_mod_init_port
-+	buf = ""
-+
-+	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_base.h"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w');
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "#define " + fabric_mod_name.upper() + "_VERSION  \"v0.1\"\n"
-+	buf += "#define " + fabric_mod_name.upper() + "_NAMELEN 32\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_nacl {\n"
-+	buf += "	/* Binary World Wide unique Port Name for SAS Initiator port */\n"
-+	buf += "	u64 iport_wwpn;\n"
-+	buf += "	/* ASCII formatted WWPN for Sas Initiator port */\n"
-+	buf += "	char iport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
-+	buf += "	struct se_node_acl se_node_acl;\n"
-+	buf += "};\n\n"
-+	buf += "struct " + fabric_mod_name + "_tpg {\n"
-+	buf += "	/* SAS port target portal group tag for TCM */\n"
-+	buf += "	u16 tport_tpgt;\n"
-+	buf += "	/* Pointer back to " + fabric_mod_name + "_tport */\n"
-+	buf += "	struct " + fabric_mod_name + "_tport *tport;\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tpg() */\n"
-+	buf += "	struct se_portal_group se_tpg;\n"
-+	buf += "};\n\n"
-+	buf += "struct " + fabric_mod_name + "_tport {\n"
-+	buf += "	/* SCSI protocol the tport is providing */\n"
-+	buf += "	u8 tport_proto_id;\n"
-+	buf += "	/* Binary World Wide unique Port Name for SAS Target port */\n"
-+	buf += "	u64 tport_wwpn;\n"
-+	buf += "	/* ASCII formatted WWPN for SAS Target port */\n"
-+	buf += "	char tport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tport() */\n"
-+	buf += "	struct se_wwn tport_wwn;\n"
-+	buf += "};\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	fabric_mod_port = "tport"
-+	fabric_mod_init_port = "iport"
-+
-+	return
-+
-+def tcm_mod_build_iSCSI_include(fabric_mod_dir_var, fabric_mod_name):
-+	global fabric_mod_port
-+	global fabric_mod_init_port
-+	buf = ""
-+
-+	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_base.h"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w');
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "#define " + fabric_mod_name.upper() + "_VERSION  \"v0.1\"\n"
-+	buf += "#define " + fabric_mod_name.upper() + "_NAMELEN 32\n"
-+	buf += "\n"
-+	buf += "struct " + fabric_mod_name + "_nacl {\n"
-+	buf += "	/* ASCII formatted InitiatorName */\n"
-+	buf += "	char iport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
-+	buf += "	struct se_node_acl se_node_acl;\n"
-+	buf += "};\n\n"
-+	buf += "struct " + fabric_mod_name + "_tpg {\n"
-+	buf += "	/* iSCSI target portal group tag for TCM */\n" 
-+	buf += "	u16 tport_tpgt;\n"
-+	buf += "	/* Pointer back to " + fabric_mod_name + "_tport */\n"
-+	buf += "	struct " + fabric_mod_name + "_tport *tport;\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tpg() */\n"
-+	buf += "	struct se_portal_group se_tpg;\n"
-+	buf += "};\n\n"
-+	buf += "struct " + fabric_mod_name + "_tport {\n"
-+	buf += "	/* SCSI protocol the tport is providing */\n"
-+	buf += "	u8 tport_proto_id;\n"
-+	buf += "	/* ASCII formatted TargetName for IQN */\n"
-+	buf += "	char tport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
-+	buf += "	/* Returned by " + fabric_mod_name + "_make_tport() */\n"
-+	buf += "	struct se_wwn tport_wwn;\n"
-+	buf += "};\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	fabric_mod_port = "tport"
-+	fabric_mod_init_port = "iport"
-+
-+	return
-+
-+def tcm_mod_build_base_includes(proto_ident, fabric_mod_dir_val, fabric_mod_name):
-+
-+	if proto_ident == "FC":
-+		tcm_mod_build_FC_include(fabric_mod_dir_val, fabric_mod_name)
-+	elif proto_ident == "SAS":
-+		tcm_mod_build_SAS_include(fabric_mod_dir_val, fabric_mod_name)
-+	elif proto_ident == "iSCSI":
-+		tcm_mod_build_iSCSI_include(fabric_mod_dir_val, fabric_mod_name)
-+	else:
-+		print "Unsupported proto_ident: " + proto_ident
-+		sys.exit(1)
-+
-+	return
-+
-+def tcm_mod_build_configfs(proto_ident, fabric_mod_dir_var, fabric_mod_name):
-+	buf = ""
-+
-+	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_configfs.c"
-+	print "Writing file: " + f
-+
-+        p = open(f, 'w');
-+        if not p:
-+                tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "#include <linux/module.h>\n"
-+	buf += "#include <linux/moduleparam.h>\n"
-+	buf += "#include <linux/version.h>\n"
-+	buf += "#include <generated/utsrelease.h>\n"
-+	buf += "#include <linux/utsname.h>\n"
-+	buf += "#include <linux/init.h>\n"
-+	buf += "#include <linux/slab.h>\n"
-+	buf += "#include <linux/kthread.h>\n"
-+	buf += "#include <linux/types.h>\n"
-+	buf += "#include <linux/string.h>\n"
-+	buf += "#include <linux/configfs.h>\n"
-+	buf += "#include <linux/ctype.h>\n"
-+	buf += "#include <asm/unaligned.h>\n\n"
-+	buf += "#include <target/target_core_base.h>\n"
-+	buf += "#include <target/target_core_transport.h>\n"
-+	buf += "#include <target/target_core_fabric_ops.h>\n"
-+	buf += "#include <target/target_core_fabric_configfs.h>\n"
-+	buf += "#include <target/target_core_fabric_lib.h>\n"
-+	buf += "#include <target/target_core_device.h>\n"
-+	buf += "#include <target/target_core_tpg.h>\n"
-+	buf += "#include <target/target_core_configfs.h>\n"
-+	buf += "#include <target/target_core_base.h>\n"
-+	buf += "#include <target/configfs_macros.h>\n\n"
-+	buf += "#include <" + fabric_mod_name + "_base.h>\n"
-+	buf += "#include <" + fabric_mod_name + "_fabric.h>\n\n"
-+
-+	buf += "/* Local pointer to allocated TCM configfs fabric module */\n"
-+	buf += "struct target_fabric_configfs *" + fabric_mod_name + "_fabric_configfs;\n\n"
-+
-+	buf += "static struct se_node_acl *" + fabric_mod_name + "_make_nodeacl(\n"
-+	buf += "	struct se_portal_group *se_tpg,\n"
-+	buf += "	struct config_group *group,\n"
-+	buf += "	const char *name)\n"
-+	buf += "{\n"
-+	buf += "	struct se_node_acl *se_nacl, *se_nacl_new;\n"
-+	buf += "	struct " + fabric_mod_name + "_nacl *nacl;\n"
-+
-+	if proto_ident == "FC" or proto_ident == "SAS":
-+		buf += "	u64 wwpn = 0;\n"
-+
-+	buf += "	u32 nexus_depth;\n\n"
-+	buf += "	/* " + fabric_mod_name + "_parse_wwn(name, &wwpn, 1) < 0)\n"
-+	buf += "		return ERR_PTR(-EINVAL); */\n"
-+	buf += "	se_nacl_new = " + fabric_mod_name + "_alloc_fabric_acl(se_tpg);\n"
-+	buf += "	if (!(se_nacl_new))\n"
-+	buf += "		return ERR_PTR(-ENOMEM);\n"
-+	buf += "//#warning FIXME: Hardcoded nexus depth in " + fabric_mod_name + "_make_nodeacl()\n"
-+	buf += "	nexus_depth = 1;\n"
-+	buf += "	/*\n"
-+	buf += "	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()\n"
-+	buf += "	 * when converting a NodeACL from demo mode -> explict\n"
-+	buf += "	 */\n"
-+	buf += "	se_nacl = core_tpg_add_initiator_node_acl(se_tpg, se_nacl_new,\n"
-+	buf += "				name, nexus_depth);\n"
-+	buf += "	if (IS_ERR(se_nacl)) {\n"
-+	buf += "		" + fabric_mod_name + "_release_fabric_acl(se_tpg, se_nacl_new);\n"
-+	buf += "		return se_nacl;\n"
-+	buf += "	}\n"
-+	buf += "	/*\n"
-+	buf += "	 * Locate our struct " + fabric_mod_name + "_nacl and set the FC Nport WWPN\n"
-+	buf += "	 */\n"
-+	buf += "	nacl = container_of(se_nacl, struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
-+
-+	if proto_ident == "FC" or proto_ident == "SAS":
-+		buf += "	nacl->" + fabric_mod_init_port + "_wwpn = wwpn;\n"
-+
-+	buf += "	/* " + fabric_mod_name + "_format_wwn(&nacl->" + fabric_mod_init_port + "_name[0], " + fabric_mod_name.upper() + "_NAMELEN, wwpn); */\n\n"
-+	buf += "	return se_nacl;\n"	
-+	buf += "}\n\n"
-+	buf += "static void " + fabric_mod_name + "_drop_nodeacl(struct se_node_acl *se_acl)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_nacl *nacl = container_of(se_acl,\n"
-+	buf += "				struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
-+	buf += "	kfree(nacl);\n"
-+	buf += "}\n\n"
-+
-+	buf += "static struct se_portal_group *" + fabric_mod_name + "_make_tpg(\n"
-+	buf += "	struct se_wwn *wwn,\n"
-+	buf += "	struct config_group *group,\n"
-+	buf += "	const char *name)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + "*" + fabric_mod_port + " = container_of(wwn,\n"
-+	buf += "			struct " + fabric_mod_name + "_" + fabric_mod_port + ", " + fabric_mod_port + "_wwn);\n\n"
-+	buf += "	struct " + fabric_mod_name + "_tpg *tpg;\n"
-+	buf += "	unsigned long tpgt;\n"
-+	buf += "	int ret;\n\n"
-+	buf += "	if (strstr(name, \"tpgt_\") != name)\n"
-+	buf += "		return ERR_PTR(-EINVAL);\n"
-+	buf += "	if (strict_strtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)\n"
-+	buf += "		return ERR_PTR(-EINVAL);\n\n"
-+	buf += "	tpg = kzalloc(sizeof(struct " + fabric_mod_name + "_tpg), GFP_KERNEL);\n"
-+	buf += "	if (!(tpg)) {\n"
-+	buf += "		printk(KERN_ERR \"Unable to allocate struct " + fabric_mod_name + "_tpg\");\n"
-+	buf += "		return ERR_PTR(-ENOMEM);\n"
-+	buf += "	}\n"
-+	buf += "	tpg->" + fabric_mod_port + " = " + fabric_mod_port + ";\n"
-+	buf += "	tpg->" + fabric_mod_port + "_tpgt = tpgt;\n\n"
-+	buf += "	ret = core_tpg_register(&" + fabric_mod_name + "_fabric_configfs->tf_ops, wwn,\n"
-+	buf += "				&tpg->se_tpg, (void *)tpg,\n"
-+	buf += "				TRANSPORT_TPG_TYPE_NORMAL);\n"
-+	buf += "	if (ret < 0) {\n"
-+	buf += "		kfree(tpg);\n"
-+	buf += "		return NULL;\n"
-+	buf += "	}\n"
-+	buf += "	return &tpg->se_tpg;\n"
-+	buf += "}\n\n"
-+	buf += "static void " + fabric_mod_name + "_drop_tpg(struct se_portal_group *se_tpg)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+	buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n\n"
-+	buf += "	core_tpg_deregister(se_tpg);\n"
-+	buf += "	kfree(tpg);\n"
-+	buf += "}\n\n"
-+
-+	buf += "static struct se_wwn *" + fabric_mod_name + "_make_" + fabric_mod_port + "(\n"
-+	buf += "	struct target_fabric_configfs *tf,\n"
-+	buf += "	struct config_group *group,\n"
-+	buf += "	const char *name)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + ";\n"
-+
-+	if proto_ident == "FC" or proto_ident == "SAS":
-+		buf += "	u64 wwpn = 0;\n\n"
-+
-+	buf += "	/* if (" + fabric_mod_name + "_parse_wwn(name, &wwpn, 1) < 0)\n"
-+	buf += "		return ERR_PTR(-EINVAL); */\n\n"
-+	buf += "	" + fabric_mod_port + " = kzalloc(sizeof(struct " + fabric_mod_name + "_" + fabric_mod_port + "), GFP_KERNEL);\n"
-+	buf += "	if (!(" + fabric_mod_port + ")) {\n"
-+	buf += "		printk(KERN_ERR \"Unable to allocate struct " + fabric_mod_name + "_" + fabric_mod_port + "\");\n"
-+	buf += "		return ERR_PTR(-ENOMEM);\n"
-+	buf += "	}\n"
-+
-+	if proto_ident == "FC" or proto_ident == "SAS":
-+		buf += "	" + fabric_mod_port + "->" + fabric_mod_port + "_wwpn = wwpn;\n"
-+
-+	buf += "	/* " + fabric_mod_name + "_format_wwn(&" + fabric_mod_port + "->" + fabric_mod_port + "_name[0], " + fabric_mod_name.upper() + "__NAMELEN, wwpn); */\n\n"
-+	buf += "	return &" + fabric_mod_port + "->" + fabric_mod_port + "_wwn;\n"
-+	buf += "}\n\n"
-+	buf += "static void " + fabric_mod_name + "_drop_" + fabric_mod_port + "(struct se_wwn *wwn)\n"
-+	buf += "{\n"
-+	buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = container_of(wwn,\n"
-+	buf += "				struct " + fabric_mod_name + "_" + fabric_mod_port + ", " + fabric_mod_port + "_wwn);\n"
-+	buf += "	kfree(" + fabric_mod_port + ");\n"
-+	buf += "}\n\n"
-+	buf += "static ssize_t " + fabric_mod_name + "_wwn_show_attr_version(\n"
-+	buf += "	struct target_fabric_configfs *tf,\n"
-+	buf += "	char *page)\n"
-+	buf += "{\n"
-+	buf += "	return sprintf(page, \"" + fabric_mod_name.upper() + " fabric module %s on %s/%s\"\n"
-+	buf += "		\"on \"UTS_RELEASE\"\\n\", " + fabric_mod_name.upper() + "_VERSION, utsname()->sysname,\n"
-+	buf += "		utsname()->machine);\n"
-+	buf += "}\n\n"
-+	buf += "TF_WWN_ATTR_RO(" + fabric_mod_name + ", version);\n\n"
-+	buf += "static struct configfs_attribute *" + fabric_mod_name + "_wwn_attrs[] = {\n"
-+	buf += "	&" + fabric_mod_name + "_wwn_version.attr,\n"
-+	buf += "	NULL,\n"
-+	buf += "};\n\n"
-+
-+	buf += "static struct target_core_fabric_ops " + fabric_mod_name + "_ops = {\n"
-+	buf += "	.get_fabric_name		= " + fabric_mod_name + "_get_fabric_name,\n"
-+	buf += "	.get_fabric_proto_ident		= " + fabric_mod_name + "_get_fabric_proto_ident,\n"
-+	buf += "	.tpg_get_wwn			= " + fabric_mod_name + "_get_fabric_wwn,\n"
-+	buf += "	.tpg_get_tag			= " + fabric_mod_name + "_get_tag,\n"
-+	buf += "	.tpg_get_default_depth		= " + fabric_mod_name + "_get_default_depth,\n"
-+	buf += "	.tpg_get_pr_transport_id	= " + fabric_mod_name + "_get_pr_transport_id,\n"
-+	buf += "	.tpg_get_pr_transport_id_len	= " + fabric_mod_name + "_get_pr_transport_id_len,\n"
-+	buf += "	.tpg_parse_pr_out_transport_id	= " + fabric_mod_name + "_parse_pr_out_transport_id,\n"
-+	buf += "	.tpg_check_demo_mode		= " + fabric_mod_name + "_check_false,\n"
-+	buf += "	.tpg_check_demo_mode_cache	= " + fabric_mod_name + "_check_true,\n"
-+	buf += "	.tpg_check_demo_mode_write_protect = " + fabric_mod_name + "_check_true,\n"
-+	buf += "	.tpg_check_prod_mode_write_protect = " + fabric_mod_name + "_check_false,\n"
-+	buf += "	.tpg_alloc_fabric_acl		= " + fabric_mod_name + "_alloc_fabric_acl,\n"
-+	buf += "	.tpg_release_fabric_acl		= " + fabric_mod_name + "_release_fabric_acl,\n"
-+	buf += "	.tpg_get_inst_index		= " + fabric_mod_name + "_tpg_get_inst_index,\n"
-+	buf += "	.release_cmd_to_pool		= " + fabric_mod_name + "_release_cmd,\n"
-+	buf += "	.release_cmd_direct		= " + fabric_mod_name + "_release_cmd,\n"
-+	buf += "	.shutdown_session		= " + fabric_mod_name + "_shutdown_session,\n"
-+	buf += "	.close_session			= " + fabric_mod_name + "_close_session,\n"
-+	buf += "	.stop_session			= " + fabric_mod_name + "_stop_session,\n"
-+	buf += "	.fall_back_to_erl0		= " + fabric_mod_name + "_reset_nexus,\n"
-+	buf += "	.sess_logged_in			= " + fabric_mod_name + "_sess_logged_in,\n"
-+	buf += "	.sess_get_index			= " + fabric_mod_name + "_sess_get_index,\n"
-+	buf += "	.sess_get_initiator_sid		= NULL,\n"
-+	buf += "	.write_pending			= " + fabric_mod_name + "_write_pending,\n"
-+	buf += "	.write_pending_status		= " + fabric_mod_name + "_write_pending_status,\n"
-+	buf += "	.set_default_node_attributes	= " + fabric_mod_name + "_set_default_node_attrs,\n"
-+	buf += "	.get_task_tag			= " + fabric_mod_name + "_get_task_tag,\n"
-+	buf += "	.get_cmd_state			= " + fabric_mod_name + "_get_cmd_state,\n"
-+	buf += "	.new_cmd_failure		= " + fabric_mod_name + "_new_cmd_failure,\n"
-+	buf += "	.queue_data_in			= " + fabric_mod_name + "_queue_data_in,\n"
-+	buf += "	.queue_status			= " + fabric_mod_name + "_queue_status,\n"
-+	buf += "	.queue_tm_rsp			= " + fabric_mod_name + "_queue_tm_rsp,\n"
-+	buf += "	.get_fabric_sense_len		= " + fabric_mod_name + "_get_fabric_sense_len,\n"
-+	buf += "	.set_fabric_sense_len		= " + fabric_mod_name + "_set_fabric_sense_len,\n"
-+	buf += "	.is_state_remove		= " + fabric_mod_name + "_is_state_remove,\n"
-+	buf += "	.pack_lun			= " + fabric_mod_name + "_pack_lun,\n"
-+	buf += "	/*\n"
-+	buf += "	 * Setup function pointers for generic logic in target_core_fabric_configfs.c\n"
-+	buf += "	 */\n"
-+	buf += "	.fabric_make_wwn		= " + fabric_mod_name + "_make_" + fabric_mod_port + ",\n"
-+	buf += "	.fabric_drop_wwn		= " + fabric_mod_name + "_drop_" + fabric_mod_port + ",\n"
-+	buf += "	.fabric_make_tpg		= " + fabric_mod_name + "_make_tpg,\n"
-+	buf += "	.fabric_drop_tpg		= " + fabric_mod_name + "_drop_tpg,\n"
-+	buf += "	.fabric_post_link		= NULL,\n"
-+	buf += "	.fabric_pre_unlink		= NULL,\n"
-+	buf += "	.fabric_make_np			= NULL,\n"
-+	buf += "	.fabric_drop_np			= NULL,\n"
-+	buf += "	.fabric_make_nodeacl		= " + fabric_mod_name + "_make_nodeacl,\n"
-+	buf += "	.fabric_drop_nodeacl		= " + fabric_mod_name + "_drop_nodeacl,\n"
-+	buf += "};\n\n"
-+	
-+	buf += "static int " + fabric_mod_name + "_register_configfs(void)\n"
-+	buf += "{\n"
-+	buf += "	struct target_fabric_configfs *fabric;\n"
-+	buf += "	int ret;\n\n"
-+	buf += "	printk(KERN_INFO \"" + fabric_mod_name.upper() + " fabric module %s on %s/%s\"\n"
-+	buf += "		\" on \"UTS_RELEASE\"\\n\"," + fabric_mod_name.upper() + "_VERSION, utsname()->sysname,\n"
-+	buf += "		utsname()->machine);\n"
-+	buf += "	/*\n"
-+	buf += "	 * Register the top level struct config_item_type with TCM core\n"
-+	buf += "	 */\n"
-+	buf += "	fabric = target_fabric_configfs_init(THIS_MODULE, \"" + fabric_mod_name[4:] + "\");\n"
-+	buf += "	if (!(fabric)) {\n"
-+	buf += "		printk(KERN_ERR \"target_fabric_configfs_init() failed\\n\");\n"
-+	buf += "		return -ENOMEM;\n"
-+	buf += "	}\n"
-+	buf += "	/*\n"
-+	buf += "	 * Setup fabric->tf_ops from our local " + fabric_mod_name + "_ops\n"
-+	buf += "	 */\n"
-+	buf += "	fabric->tf_ops = " + fabric_mod_name + "_ops;\n"
-+	buf += "	/*\n"
-+	buf += "	 * Setup default attribute lists for various fabric->tf_cit_tmpl\n"
-+	buf += "	 */\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = " + fabric_mod_name + "_wwn_attrs;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;\n"
-+	buf += "	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;\n"
-+	buf += "	/*\n"
-+	buf += "	 * Register the fabric for use within TCM\n"
-+	buf += "	 */\n"
-+	buf += "	ret = target_fabric_configfs_register(fabric);\n"
-+	buf += "	if (ret < 0) {\n"
-+	buf += "		printk(KERN_ERR \"target_fabric_configfs_register() failed\"\n"
-+	buf += "				\" for " + fabric_mod_name.upper() + "\\n\");\n"
-+	buf += "		return ret;\n"
-+	buf += "	}\n"
-+	buf += "	/*\n"
-+	buf += "	 * Setup our local pointer to *fabric\n"
-+	buf += "	 */\n"
-+	buf += "	" + fabric_mod_name + "_fabric_configfs = fabric;\n"
-+	buf += "	printk(KERN_INFO \"" +  fabric_mod_name.upper() + "[0] - Set fabric -> " + fabric_mod_name + "_fabric_configfs\\n\");\n"
-+	buf += "	return 0;\n"
-+	buf += "};\n\n"
-+	buf += "static void " + fabric_mod_name + "_deregister_configfs(void)\n"
-+	buf += "{\n"
-+	buf += "	if (!(" + fabric_mod_name + "_fabric_configfs))\n"
-+	buf += "		return;\n\n"
-+	buf += "	target_fabric_configfs_deregister(" + fabric_mod_name + "_fabric_configfs);\n"
-+	buf += "	" + fabric_mod_name + "_fabric_configfs = NULL;\n"
-+	buf += "	printk(KERN_INFO \"" +  fabric_mod_name.upper() + "[0] - Cleared " + fabric_mod_name + "_fabric_configfs\\n\");\n"
-+	buf += "};\n\n"
-+
-+	buf += "static int __init " + fabric_mod_name + "_init(void)\n"
-+	buf += "{\n"
-+	buf += "	int ret;\n\n"
-+	buf += "	ret = " + fabric_mod_name + "_register_configfs();\n"
-+	buf += "	if (ret < 0)\n"
-+	buf += "		return ret;\n\n"
-+	buf += "	return 0;\n"
-+	buf += "};\n\n"
-+	buf += "static void " + fabric_mod_name + "_exit(void)\n"
-+	buf += "{\n"
-+	buf += "	" + fabric_mod_name + "_deregister_configfs();\n"
-+	buf += "};\n\n"
-+
-+	buf += "#ifdef MODULE\n"
-+	buf += "MODULE_DESCRIPTION(\"" + fabric_mod_name.upper() + " series fabric driver\");\n"
-+	buf += "MODULE_LICENSE(\"GPL\");\n"
-+	buf += "module_init(" + fabric_mod_name + "_init);\n"
-+	buf += "module_exit(" + fabric_mod_name + "_exit);\n"
-+	buf += "#endif\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	return
-+
-+def tcm_mod_scan_fabric_ops(tcm_dir):
-+
-+	fabric_ops_api = tcm_dir + "include/target/target_core_fabric_ops.h"
-+	
-+	print "Using tcm_mod_scan_fabric_ops: " + fabric_ops_api
-+	process_fo = 0;
-+
-+	p = open(fabric_ops_api, 'r')
-+
-+	line = p.readline()
-+	while line:
-+		if process_fo == 0 and re.search('struct target_core_fabric_ops {', line):
-+			line = p.readline()
-+			continue
-+
-+		if process_fo == 0:
-+			process_fo = 1;
-+			line = p.readline()
-+			# Search for function pointer
-+			if not re.search('\(\*', line):
-+				continue
-+
-+			fabric_ops.append(line.rstrip())
-+			continue
-+		
-+		line = p.readline()
-+		# Search for function pointer
-+		if not re.search('\(\*', line):
-+			continue
-+
-+		fabric_ops.append(line.rstrip())
-+
-+	p.close()
-+	return
-+
-+def tcm_mod_dump_fabric_ops(proto_ident, fabric_mod_dir_var, fabric_mod_name):
-+	buf = ""
-+	bufi = ""
-+
-+	f = fabric_mod_dir_var + "/" + fabric_mod_name + "_fabric.c"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w')
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	fi = fabric_mod_dir_var + "/" + fabric_mod_name + "_fabric.h"
-+	print "Writing file: " + fi
-+
-+	pi = open(fi, 'w')
-+	if not pi:
-+		tcm_mod_err("Unable to open file: " + fi)
-+
-+	buf = "#include <linux/slab.h>\n"
-+	buf += "#include <linux/kthread.h>\n"
-+	buf += "#include <linux/types.h>\n"
-+	buf += "#include <linux/list.h>\n"
-+	buf += "#include <linux/types.h>\n"
-+	buf += "#include <linux/string.h>\n"
-+	buf += "#include <linux/ctype.h>\n"
-+	buf += "#include <asm/unaligned.h>\n"
-+	buf += "#include <scsi/scsi.h>\n"
-+	buf += "#include <scsi/scsi_host.h>\n"
-+	buf += "#include <scsi/scsi_device.h>\n"
-+	buf += "#include <scsi/scsi_cmnd.h>\n"
-+	buf += "#include <scsi/libfc.h>\n\n"
-+	buf += "#include <target/target_core_base.h>\n"
-+	buf += "#include <target/target_core_transport.h>\n"
-+	buf += "#include <target/target_core_fabric_ops.h>\n"
-+	buf += "#include <target/target_core_fabric_lib.h>\n"
-+	buf += "#include <target/target_core_device.h>\n"
-+	buf += "#include <target/target_core_tpg.h>\n"
-+	buf += "#include <target/target_core_configfs.h>\n"
-+	buf += "#include <" + fabric_mod_name + "_base.h>\n"
-+	buf += "#include <" + fabric_mod_name + "_fabric.h>\n\n"
-+
-+	buf += "int " + fabric_mod_name + "_check_true(struct se_portal_group *se_tpg)\n"
-+	buf += "{\n"
-+	buf += "	return 1;\n"
-+	buf += "}\n\n"
-+	bufi += "int " + fabric_mod_name + "_check_true(struct se_portal_group *);\n"
-+
-+	buf += "int " + fabric_mod_name + "_check_false(struct se_portal_group *se_tpg)\n"
-+	buf += "{\n"
-+	buf += "	return 0;\n"
-+	buf += "}\n\n"
-+	bufi += "int " + fabric_mod_name + "_check_false(struct se_portal_group *);\n"
-+
-+	total_fabric_ops = len(fabric_ops)	
-+	i = 0
-+
-+	while i < total_fabric_ops:
-+		fo = fabric_ops[i]
-+		i += 1
-+#		print "fabric_ops: " + fo
-+		
-+		if re.search('get_fabric_name', fo):
-+			buf += "char *" + fabric_mod_name + "_get_fabric_name(void)\n"
-+			buf += "{\n"
-+			buf += "	return \"" + fabric_mod_name[4:] + "\";\n"
-+			buf += "}\n\n"
-+			bufi += "char *" + fabric_mod_name + "_get_fabric_name(void);\n"
-+			continue
-+
-+		if re.search('get_fabric_proto_ident', fo):
-+			buf += "u8 " + fabric_mod_name + "_get_fabric_proto_ident(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n"
-+			buf += "	u8 proto_id;\n\n"
-+			buf += "	switch (" + fabric_mod_port + "->" + fabric_mod_port + "_proto_id) {\n"
-+			if proto_ident == "FC":
-+				buf += "	case SCSI_PROTOCOL_FCP:\n"
-+				buf += "	default:\n"
-+				buf += "		proto_id = fc_get_fabric_proto_ident(se_tpg);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "SAS":
-+				buf += "	case SCSI_PROTOCOL_SAS:\n"
-+				buf += "	default:\n"
-+				buf += "		proto_id = sas_get_fabric_proto_ident(se_tpg);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "iSCSI":
-+				buf += "	case SCSI_PROTOCOL_ISCSI:\n"
-+				buf += "	default:\n"
-+				buf += "		proto_id = iscsi_get_fabric_proto_ident(se_tpg);\n"
-+				buf += "		break;\n"
-+
-+			buf += "	}\n\n"
-+			buf += "	return proto_id;\n"
-+			buf += "}\n\n"
-+			bufi += "u8 " + fabric_mod_name + "_get_fabric_proto_ident(struct se_portal_group *);\n"
-+
-+		if re.search('get_wwn', fo):
-+			buf += "char *" + fabric_mod_name + "_get_fabric_wwn(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n\n"
-+			buf += "	return &" + fabric_mod_port + "->" + fabric_mod_port + "_name[0];\n"
-+			buf += "}\n\n"
-+			bufi += "char *" + fabric_mod_name + "_get_fabric_wwn(struct se_portal_group *);\n"
-+
-+		if re.search('get_tag', fo):
-+			buf += "u16 " + fabric_mod_name + "_get_tag(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	return tpg->" + fabric_mod_port + "_tpgt;\n"
-+			buf += "}\n\n"
-+			bufi += "u16 " + fabric_mod_name + "_get_tag(struct se_portal_group *);\n"
-+
-+		if re.search('get_default_depth', fo):
-+			buf += "u32 " + fabric_mod_name + "_get_default_depth(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	return 1;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_get_default_depth(struct se_portal_group *);\n"
-+
-+		if re.search('get_pr_transport_id\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_get_pr_transport_id(\n"
-+			buf += "	struct se_portal_group *se_tpg,\n"
-+			buf += "	struct se_node_acl *se_nacl,\n"
-+			buf += "	struct t10_pr_registration *pr_reg,\n"
-+			buf += "	int *format_code,\n"
-+			buf += "	unsigned char *buf)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n"
-+			buf += "	int ret = 0;\n\n"
-+			buf += "	switch (" + fabric_mod_port + "->" + fabric_mod_port + "_proto_id) {\n"
-+			if proto_ident == "FC":
-+				buf += "	case SCSI_PROTOCOL_FCP:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = fc_get_pr_transport_id(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code, buf);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "SAS":
-+				buf += "	case SCSI_PROTOCOL_SAS:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = sas_get_pr_transport_id(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code, buf);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "iSCSI":
-+				buf += "	case SCSI_PROTOCOL_ISCSI:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = iscsi_get_pr_transport_id(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code, buf);\n"
-+				buf += "		break;\n"
-+
-+			buf += "	}\n\n"
-+			buf += "	return ret;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_get_pr_transport_id(struct se_portal_group *,\n"
-+			bufi += "			struct se_node_acl *, struct t10_pr_registration *,\n"
-+			bufi += "			int *, unsigned char *);\n"
-+
-+		if re.search('get_pr_transport_id_len\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_get_pr_transport_id_len(\n"
-+			buf += "	struct se_portal_group *se_tpg,\n"
-+			buf += "	struct se_node_acl *se_nacl,\n"
-+			buf += "	struct t10_pr_registration *pr_reg,\n"
-+			buf += "	int *format_code)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n"
-+			buf += "	int ret = 0;\n\n"
-+			buf += "	switch (" + fabric_mod_port + "->" + fabric_mod_port + "_proto_id) {\n"
-+			if proto_ident == "FC":
-+				buf += "	case SCSI_PROTOCOL_FCP:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = fc_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "SAS":
-+				buf += "	case SCSI_PROTOCOL_SAS:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = sas_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code);\n"
-+				buf += "		break;\n"
-+			elif proto_ident == "iSCSI":
-+				buf += "	case SCSI_PROTOCOL_ISCSI:\n"
-+				buf += "	default:\n"
-+				buf += "		ret = iscsi_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,\n"
-+				buf += "					format_code);\n"
-+				buf += "		break;\n"
-+
-+
-+			buf += "	}\n\n"
-+			buf += "	return ret;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_get_pr_transport_id_len(struct se_portal_group *,\n"
-+			bufi += "			struct se_node_acl *, struct t10_pr_registration *,\n"
-+			bufi += "			int *);\n"
-+
-+		if re.search('parse_pr_out_transport_id\)\(', fo):
-+			buf += "char *" + fabric_mod_name + "_parse_pr_out_transport_id(\n"
-+			buf += "	struct se_portal_group *se_tpg,\n"
-+			buf += "	const char *buf,\n"
-+			buf += "	u32 *out_tid_len,\n"
-+			buf += "	char **port_nexus_ptr)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_tpg *tpg = container_of(se_tpg,\n"
-+			buf += "				struct " + fabric_mod_name + "_tpg, se_tpg);\n"
-+			buf += "	struct " + fabric_mod_name + "_" + fabric_mod_port + " *" + fabric_mod_port + " = tpg->" + fabric_mod_port + ";\n"
-+			buf += "	char *tid = NULL;\n\n"
-+			buf += "	switch (" + fabric_mod_port + "->" + fabric_mod_port + "_proto_id) {\n"
-+			if proto_ident == "FC":
-+				buf += "	case SCSI_PROTOCOL_FCP:\n"
-+				buf += "	default:\n"
-+				buf += "		tid = fc_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,\n"
-+				buf += "					port_nexus_ptr);\n"
-+			elif proto_ident == "SAS":
-+				buf += "	case SCSI_PROTOCOL_SAS:\n"
-+				buf += "	default:\n"
-+				buf += "		tid = sas_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,\n"
-+				buf += "					port_nexus_ptr);\n"
-+			elif proto_ident == "iSCSI":
-+				buf += "	case SCSI_PROTOCOL_ISCSI:\n"
-+				buf += "	default:\n"
-+				buf += "		tid = iscsi_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,\n"
-+				buf += "					port_nexus_ptr);\n"
-+
-+			buf += "	}\n\n"
-+			buf += "	return tid;\n"
-+			buf += "}\n\n"
-+			bufi += "char *" + fabric_mod_name + "_parse_pr_out_transport_id(struct se_portal_group *,\n"
-+			bufi +=	"			const char *, u32 *, char **);\n"
-+
-+		if re.search('alloc_fabric_acl\)\(', fo):
-+			buf += "struct se_node_acl *" + fabric_mod_name + "_alloc_fabric_acl(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_nacl *nacl;\n\n"
-+			buf += "	nacl = kzalloc(sizeof(struct " + fabric_mod_name + "_nacl), GFP_KERNEL);\n"
-+			buf += "	if (!(nacl)) {\n"
-+			buf += "		printk(KERN_ERR \"Unable to alocate struct " + fabric_mod_name + "_nacl\\n\");\n"
-+			buf += "		return NULL;\n"
-+			buf += "	}\n\n"
-+			buf += "	return &nacl->se_node_acl;\n"
-+			buf += "}\n\n"
-+			bufi += "struct se_node_acl *" + fabric_mod_name + "_alloc_fabric_acl(struct se_portal_group *);\n"
-+	
-+		if re.search('release_fabric_acl\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_release_fabric_acl(\n"
-+			buf += "	struct se_portal_group *se_tpg,\n"
-+			buf += "	struct se_node_acl *se_nacl)\n"
-+			buf += "{\n"
-+			buf += "	struct " + fabric_mod_name + "_nacl *nacl = container_of(se_nacl,\n"
-+			buf += "			struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
-+			buf += "	kfree(nacl);\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_release_fabric_acl(struct se_portal_group *,\n"
-+			bufi +=	"			struct se_node_acl *);\n"
-+
-+		if re.search('tpg_get_inst_index\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_tpg_get_inst_index(struct se_portal_group *se_tpg)\n"
-+			buf += "{\n"
-+			buf += "	return 1;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_tpg_get_inst_index(struct se_portal_group *);\n"
-+			
-+		if re.search('release_cmd_to_pool', fo):
-+			buf += "void " + fabric_mod_name + "_release_cmd(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_release_cmd(struct se_cmd *);\n"
-+
-+		if re.search('shutdown_session\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_shutdown_session(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_shutdown_session(struct se_session *);\n"
-+
-+		if re.search('close_session\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_close_session(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_close_session(struct se_session *);\n"
-+
-+		if re.search('stop_session\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_stop_session(struct se_session *se_sess, int sess_sleep , int conn_sleep)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_stop_session(struct se_session *, int, int);\n"
-+
-+		if re.search('fall_back_to_erl0\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_reset_nexus(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_reset_nexus(struct se_session *);\n"
-+
-+		if re.search('sess_logged_in\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_sess_logged_in(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_sess_logged_in(struct se_session *);\n"
-+
-+		if re.search('sess_get_index\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_sess_get_index(struct se_session *se_sess)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_sess_get_index(struct se_session *);\n"
-+		
-+		if re.search('write_pending\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_write_pending(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_write_pending(struct se_cmd *);\n"
-+
-+		if re.search('write_pending_status\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_write_pending_status(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_write_pending_status(struct se_cmd *);\n"
-+
-+		if re.search('set_default_node_attributes\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_set_default_node_attrs(struct se_node_acl *nacl)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_set_default_node_attrs(struct se_node_acl *);\n"
-+
-+		if re.search('get_task_tag\)\(', fo):
-+			buf += "u32 " + fabric_mod_name + "_get_task_tag(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "u32 " + fabric_mod_name + "_get_task_tag(struct se_cmd *);\n"
-+
-+		if re.search('get_cmd_state\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_get_cmd_state(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_get_cmd_state(struct se_cmd *);\n"
-+
-+		if re.search('new_cmd_failure\)\(', fo):
-+			buf += "void " + fabric_mod_name + "_new_cmd_failure(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return;\n"
-+			buf += "}\n\n"
-+			bufi += "void " + fabric_mod_name + "_new_cmd_failure(struct se_cmd *);\n"
-+
-+		if re.search('queue_data_in\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_queue_data_in(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_queue_data_in(struct se_cmd *);\n"
-+
-+		if re.search('queue_status\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_queue_status(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_queue_status(struct se_cmd *);\n"
-+
-+		if re.search('queue_tm_rsp\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_queue_tm_rsp(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_queue_tm_rsp(struct se_cmd *);\n"
-+			
-+		if re.search('get_fabric_sense_len\)\(', fo):
-+			buf += "u16 " + fabric_mod_name + "_get_fabric_sense_len(void)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "u16 " + fabric_mod_name + "_get_fabric_sense_len(void);\n"
-+
-+		if re.search('set_fabric_sense_len\)\(', fo):
-+			buf += "u16 " + fabric_mod_name + "_set_fabric_sense_len(struct se_cmd *se_cmd, u32 sense_length)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "u16 " + fabric_mod_name + "_set_fabric_sense_len(struct se_cmd *, u32);\n"
-+
-+		if re.search('is_state_remove\)\(', fo):
-+			buf += "int " + fabric_mod_name + "_is_state_remove(struct se_cmd *se_cmd)\n"
-+			buf += "{\n"
-+			buf += "	return 0;\n"
-+			buf += "}\n\n"
-+			bufi += "int " + fabric_mod_name + "_is_state_remove(struct se_cmd *);\n"
-+
-+		if re.search('pack_lun\)\(', fo):
-+			buf += "u64 " + fabric_mod_name + "_pack_lun(unsigned int lun)\n"
-+			buf += "{\n"
-+			buf += "	WARN_ON(lun >= 256);\n"
-+			buf += "	/* Caller wants this byte-swapped */\n"
-+			buf += "	return cpu_to_le64((lun & 0xff) << 8);\n"
-+			buf += "}\n\n"
-+			bufi += "u64 " + fabric_mod_name + "_pack_lun(unsigned int);\n"
-+
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+
-+	ret = pi.write(bufi)
-+	if ret:
-+		tcm_mod_err("Unable to write fi: " + fi)
-+
-+	pi.close()
-+	return
-+
-+def tcm_mod_build_kbuild(fabric_mod_dir_var, fabric_mod_name):
-+
-+	buf = ""
-+	f = fabric_mod_dir_var + "/Kbuild"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w')
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+
-+	buf = "EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/include/ -I$(srctree)/drivers/scsi/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/" + fabric_mod_name + "\n\n"
-+	buf += fabric_mod_name + "-objs			:= " + fabric_mod_name + "_fabric.o \\\n"
-+	buf += "					   " + fabric_mod_name + "_configfs.o\n"
-+	buf += "obj-$(CONFIG_" + fabric_mod_name.upper() + ")		+= " + fabric_mod_name + ".o\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+	return
-+
-+def tcm_mod_build_kconfig(fabric_mod_dir_var, fabric_mod_name):
-+	
-+	buf = ""
-+	f = fabric_mod_dir_var + "/Kconfig"
-+	print "Writing file: " + f
-+
-+	p = open(f, 'w')
-+	if not p:
-+		tcm_mod_err("Unable to open file: " + f)
-+		
-+	buf = "config " + fabric_mod_name.upper() + "\n"
-+	buf += "	tristate \"" + fabric_mod_name.upper() + " fabric module\"\n"
-+	buf += "	depends on TARGET_CORE && CONFIGFS_FS\n"
-+	buf += "	default n\n"
-+	buf += "	---help---\n"
-+	buf += "	Say Y here to enable the " + fabric_mod_name.upper() + " fabric module\n"
-+
-+	ret = p.write(buf)
-+	if ret:
-+		tcm_mod_err("Unable to write f: " + f)
-+
-+	p.close()
-+	return
-+
-+def tcm_mod_add_kbuild(tcm_dir, fabric_mod_name):
-+	buf = "obj-$(CONFIG_" + fabric_mod_name.upper() + ")	+= " + fabric_mod_name.lower() + "/\n"
-+	kbuild = tcm_dir + "/drivers/target/Kbuild"
-+
-+	f = open(kbuild, 'a')
-+	f.write(buf)
-+	f.close()
-+	return
-+
-+def tcm_mod_add_kconfig(tcm_dir, fabric_mod_name):
-+	buf = "source \"drivers/target/" + fabric_mod_name.lower() + "/Kconfig\"\n"
-+	kconfig = tcm_dir + "/drivers/target/Kconfig"
-+
-+	f = open(kconfig, 'a')
-+	f.write(buf)
-+	f.close()
-+	return
-+
-+def main(modname, proto_ident):
-+#	proto_ident = "FC"
-+#	proto_ident = "SAS"
-+#	proto_ident = "iSCSI"
-+
-+	tcm_dir = os.getcwd();
-+	tcm_dir += "/../../"
-+	print "tcm_dir: " + tcm_dir
-+	fabric_mod_name = modname
-+	fabric_mod_dir = tcm_dir + "drivers/target/" + fabric_mod_name
-+	print "Set fabric_mod_name: " + fabric_mod_name
-+	print "Set fabric_mod_dir: " + fabric_mod_dir
-+	print "Using proto_ident: " + proto_ident
-+
-+	if proto_ident != "FC" and proto_ident != "SAS" and proto_ident != "iSCSI":
-+		print "Unsupported proto_ident: " + proto_ident
-+		sys.exit(1)
-+
-+	ret = tcm_mod_create_module_subdir(fabric_mod_dir)
-+	if ret:
-+		print "tcm_mod_create_module_subdir() failed because module already exists!"
-+		sys.exit(1)
-+
-+	tcm_mod_build_base_includes(proto_ident, fabric_mod_dir, fabric_mod_name)
-+	tcm_mod_scan_fabric_ops(tcm_dir)
-+	tcm_mod_dump_fabric_ops(proto_ident, fabric_mod_dir, fabric_mod_name)
-+	tcm_mod_build_configfs(proto_ident, fabric_mod_dir, fabric_mod_name)
-+	tcm_mod_build_kbuild(fabric_mod_dir, fabric_mod_name)
-+	tcm_mod_build_kconfig(fabric_mod_dir, fabric_mod_name)
-+
-+	input = raw_input("Would you like to add " + fabric_mod_name + "to drivers/target/Kbuild..? [yes,no]: ")
-+	if input == "yes" or input == "y":
-+		tcm_mod_add_kbuild(tcm_dir, fabric_mod_name)
-+
-+	input = raw_input("Would you like to add " + fabric_mod_name + "to drivers/target/Kconfig..? [yes,no]: ")
-+	if input == "yes" or input == "y":
-+		tcm_mod_add_kconfig(tcm_dir, fabric_mod_name)
-+
-+	return
-+
-+parser = optparse.OptionParser()
-+parser.add_option('-m', '--modulename', help='Module name', dest='modname',
-+		action='store', nargs=1, type='string')
-+parser.add_option('-p', '--protoident', help='Protocol Ident', dest='protoident',
-+		action='store', nargs=1, type='string')
-+
-+(opts, args) = parser.parse_args()
-+
-+mandatories = ['modname', 'protoident']
-+for m in mandatories:
-+	if not opts.__dict__[m]:
-+		print "mandatory option is missing\n"
-+		parser.print_help()
-+		exit(-1)
-+
-+if __name__ == "__main__":
-+
-+	main(str(opts.modname), opts.protoident)
-diff --git a/Documentation/target/tcm_mod_builder.txt b/Documentation/target/tcm_mod_builder.txt
-new file mode 100644
-index 0000000..b829e83
---- /dev/null
-+++ b/Documentation/target/tcm_mod_builder.txt
-@@ -0,0 +1,145 @@
-+>>>>>>>>>> The TCM v4 fabric module script generator <<<<<<<<<<
-+
-+Greetings all,
-+
-+This document is intended to be a mini-HOWTO for using the tcm_mod_builder.py
-+script to generate a brand new functional TCM v4 fabric .ko module of your very own,
-+that once built can be immediately be loaded to start access the new TCM/ConfigFS
-+fabric skeleton, by simplying using:
-+
-+	modprobe $TCM_NEW_MOD
-+	mkdir -p /sys/kernel/config/target/$TCM_NEW_MOD
-+
-+This script will create a new drivers/target/$TCM_NEW_MOD/, and will do the following
-+
-+	*) Generate new API callers for drivers/target/target_core_fabric_configs.c logic
-+	   ->make_nodeacl(), ->drop_nodeacl(), ->make_tpg(), ->drop_tpg()
-+	   ->make_wwn(), ->drop_wwn().  These are created into $TCM_NEW_MOD/$TCM_NEW_MOD_configfs.c
-+	*) Generate basic infrastructure for loading/unloading LKMs and TCM/ConfigFS fabric module
-+	   using a skeleton struct target_core_fabric_ops API template.
-+	*) Based on user defined T10 Proto_Ident for the new fabric module being built,
-+	   the TransportID / Initiator and Target WWPN related handlers for
-+	   SPC-3 persistent reservation are automatically generated in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
-+	   using drivers/target/target_core_fabric_lib.c logic.
-+	*) NOP API calls for all other Data I/O path and fabric dependent attribute logic
-+	   in $TCM_NEW_MOD/$TCM_NEW_MOD_fabric.c
-+
-+tcm_mod_builder.py depends upon the mandatory '-p $PROTO_IDENT' and '-m
-+$FABRIC_MOD_name' paramters, and actually running the script looks like:
-+
-+target:/mnt/sdb/lio-core-2.6.git/Documentation/target# python tcm_mod_builder.py -p iSCSI -m tcm_nab5000
-+tcm_dir: /mnt/sdb/lio-core-2.6.git/Documentation/target/../../
-+Set fabric_mod_name: tcm_nab5000
-+Set fabric_mod_dir:
-+/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000
-+Using proto_ident: iSCSI
-+Creating fabric_mod_dir:
-+/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_base.h
-+Using tcm_mod_scan_fabric_ops:
-+/mnt/sdb/lio-core-2.6.git/Documentation/target/../../include/target/target_core_fabric_ops.h
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_fabric.c
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_fabric.h
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/tcm_nab5000_configfs.c
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/Kbuild
-+Writing file:
-+/mnt/sdb/lio-core-2.6.git/Documentation/target/../../drivers/target/tcm_nab5000/Kconfig
-+Would you like to add tcm_nab5000to drivers/target/Kbuild..? [yes,no]: yes
-+Would you like to add tcm_nab5000to drivers/target/Kconfig..? [yes,no]: yes
-+
-+At the end of tcm_mod_builder.py. the script will ask to add the following
-+line for to drivers/target/Kbuild:
-+
-+	obj-$(CONFIG_TCM_NAB5000)       += tcm_nab5000/
-+
-+and the same for drivers/target/Kconfig:
-+
-+	source "drivers/target/tcm_nab5000/Kconfig"
-+
-+*) Run 'make menuconfig' and select the new CONFIG_TCM_NAB5000 item:
-+
-+	<M>   TCM_NAB5000 fabric module                   
-+
-+*) Build using 'make modules', once completed you will have:
-+
-+target:/mnt/sdb/lio-core-2.6.git# ls -la drivers/target/tcm_nab5000/
-+total 1348
-+drwxr-xr-x 2 root root   4096 2010-10-05 03:23 .
-+drwxr-xr-x 9 root root   4096 2010-10-05 03:22 ..
-+-rw-r--r-- 1 root root    282 2010-10-05 03:22 Kbuild
-+-rw-r--r-- 1 root root    171 2010-10-05 03:22 Kconfig
-+-rw-r--r-- 1 root root     49 2010-10-05 03:23 modules.order
-+-rw-r--r-- 1 root root    738 2010-10-05 03:22 tcm_nab5000_base.h
-+-rw-r--r-- 1 root root   9096 2010-10-05 03:22 tcm_nab5000_configfs.c
-+-rw-r--r-- 1 root root 191200 2010-10-05 03:23 tcm_nab5000_configfs.o
-+-rw-r--r-- 1 root root  40504 2010-10-05 03:23 .tcm_nab5000_configfs.o.cmd
-+-rw-r--r-- 1 root root   5414 2010-10-05 03:22 tcm_nab5000_fabric.c
-+-rw-r--r-- 1 root root   2016 2010-10-05 03:22 tcm_nab5000_fabric.h
-+-rw-r--r-- 1 root root 190932 2010-10-05 03:23 tcm_nab5000_fabric.o
-+-rw-r--r-- 1 root root  40713 2010-10-05 03:23 .tcm_nab5000_fabric.o.cmd
-+-rw-r--r-- 1 root root 401861 2010-10-05 03:23 tcm_nab5000.ko
-+-rw-r--r-- 1 root root    265 2010-10-05 03:23 .tcm_nab5000.ko.cmd
-+-rw-r--r-- 1 root root    459 2010-10-05 03:23 tcm_nab5000.mod.c
-+-rw-r--r-- 1 root root  23896 2010-10-05 03:23 tcm_nab5000.mod.o
-+-rw-r--r-- 1 root root  22655 2010-10-05 03:23 .tcm_nab5000.mod.o.cmd
-+-rw-r--r-- 1 root root 379022 2010-10-05 03:23 tcm_nab5000.o
-+-rw-r--r-- 1 root root    211 2010-10-05 03:23 .tcm_nab5000.o.cmd
-+
-+*) Load the new module, create a lun_0 configfs group, and add new TCM Core
-+   IBLOCK backstore symlink to port:
-+
-+target:/mnt/sdb/lio-core-2.6.git# insmod drivers/target/tcm_nab5000.ko
-+target:/mnt/sdb/lio-core-2.6.git# mkdir -p /sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0
-+target:/mnt/sdb/lio-core-2.6.git# cd /sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0/
-+target:/sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0# ln -s /sys/kernel/config/target/core/iblock_0/lvm_test0 nab5000_port
-+
-+target:/sys/kernel/config/target/nab5000/iqn.foo/tpgt_1/lun/lun_0# cd -
-+target:/mnt/sdb/lio-core-2.6.git# tree /sys/kernel/config/target/nab5000/
-+/sys/kernel/config/target/nab5000/
-+|-- discovery_auth
-+|-- iqn.foo
-+|   `-- tpgt_1
-+|       |-- acls
-+|       |-- attrib
-+|       |-- lun
-+|       |   `-- lun_0
-+|       |       |-- alua_tg_pt_gp
-+|       |       |-- alua_tg_pt_offline
-+|       |       |-- alua_tg_pt_status
-+|       |       |-- alua_tg_pt_write_md
-+|	|	`-- nab5000_port -> ../../../../../../target/core/iblock_0/lvm_test0
-+|       |-- np
-+|       `-- param
-+`-- version
-+
-+target:/mnt/sdb/lio-core-2.6.git# lsmod
-+Module                  Size  Used by
-+tcm_nab5000             3935  4 
-+iscsi_target_mod      193211  0 
-+target_core_stgt        8090  0 
-+target_core_pscsi      11122  1 
-+target_core_file        9172  2 
-+target_core_iblock      9280  1 
-+target_core_mod       228575  31
-+tcm_nab5000,iscsi_target_mod,target_core_stgt,target_core_pscsi,target_core_file,target_core_iblock
-+libfc                  73681  0 
-+scsi_debug             56265  0 
-+scsi_tgt                8666  1 target_core_stgt
-+configfs               20644  2 target_core_mod
-+
-+----------------------------------------------------------------------
-+
-+Future TODO items:
-+
-+	*) Add more T10 proto_idents 
-+	*) Make tcm_mod_dump_fabric_ops() smater and generate function pointer
-+	   defs directly from include/target/target_core_fabric_ops.h:struct target_core_fabric_ops 
-+	   structure members.
-+
-+October 5th, 2010
-+Nicholas A. Bellinger <nab@linux-iscsi.org>
-diff --git a/drivers/Kconfig b/drivers/Kconfig
-index a2b902f..3002329 100644
---- a/drivers/Kconfig
-+++ b/drivers/Kconfig
-@@ -26,6 +26,8 @@ source "drivers/ata/Kconfig"
- 
- source "drivers/md/Kconfig"
- 
-+source "drivers/target/Kconfig"
-+
- source "drivers/message/fusion/Kconfig"
- 
- source "drivers/firewire/Kconfig"
-diff --git a/drivers/Makefile b/drivers/Makefile
-index a2aea53..dfb540a 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -45,6 +45,7 @@ obj-y				+= macintosh/
- obj-$(CONFIG_IDE)		+= ide/
- obj-$(CONFIG_SCSI)		+= scsi/
- obj-$(CONFIG_ATA)		+= ata/
-+obj-$(CONFIG_TARGET_CORE)	+= target/
- obj-$(CONFIG_MTD)		+= mtd/
- obj-$(CONFIG_SPI)		+= spi/
- obj-y				+= net/
 diff --git a/drivers/target/Kbuild b/drivers/target/Kbuild
-new file mode 100644
-index 0000000..a610f67
---- /dev/null
+index a610f67..6d41a95 100644
+--- a/drivers/target/Kbuild
 +++ b/drivers/target/Kbuild
-@@ -0,0 +1,27 @@
-+EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/
+@@ -25,3 +25,6 @@ obj-$(CONFIG_TARGET_CORE)	+= target_core_mod.o
+ obj-$(CONFIG_TCM_IBLOCK)	+= target_core_iblock.o
+ obj-$(CONFIG_TCM_FILEIO)	+= target_core_file.o
+ obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
 +
-+target_core_mod-y		:= target_core_configfs.o \
-+				   target_core_device.o \
-+				   target_core_fabric_configfs.o \
-+				   target_core_fabric_lib.o \
-+				   target_core_hba.o \
-+				   target_core_pr.o \
-+				   target_core_alua.o \
-+				   target_core_scdb.o \
-+				   target_core_tmr.o \
-+				   target_core_tpg.o \
-+				   target_core_transport.o \
-+				   target_core_ua.o \
-+				   target_core_rd.o \
-+				   target_core_mib.o
-+
-+ifdef CONFIG_TCM_DEBUG_DEV
-+EXTRA_CFLAGS			+= -DDEBUG_DEV
-+endif
-+
-+obj-$(CONFIG_TARGET_CORE)	+= target_core_mod.o
-+
-+# Subsystem modules
-+obj-$(CONFIG_TCM_IBLOCK)	+= target_core_iblock.o
-+obj-$(CONFIG_TCM_FILEIO)	+= target_core_file.o
-+obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
++# Fabric modules
++obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop/
 diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
-new file mode 100644
-index 0000000..5c37653
---- /dev/null
+index 5c37653..55975fc 100644
+--- a/drivers/target/Kconfig
 +++ b/drivers/target/Kconfig
-@@ -0,0 +1,34 @@
-+config TARGET_CORE
-+        tristate "Generic Target Core Mod (TCM) and ConfigFS Infrastructure"
-+	select CONFIGFS_FS
-+        default m
-+        ---help---
-+        Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled control path for target_core_mod.  This includes built-in TCM RAMDISK subsystem logic for virtual LUN 0 access
+@@ -32,3 +32,5 @@ config TCM_PSCSI
+ 	default y
+ 	---help---
+ 	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered passthrough access to Linux/SCSI device
 +
-+config TCM_DEBUG_DEV
-+	tristate "TCM Debug device code"
-+	depends on TARGET_CORE
++source "drivers/target/tcm_loop/Kconfig"
+diff --git a/drivers/target/tcm_loop/Kbuild b/drivers/target/tcm_loop/Kbuild
+new file mode 100644
+index 0000000..f2c633a
+--- /dev/null
++++ b/drivers/target/tcm_loop/Kbuild
+@@ -0,0 +1,11 @@
++EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/tcm_loop/
++
++tcm_loop-objs			:= tcm_loop_fabric.o \
++				   tcm_loop_fabric_scsi.o \
++				   tcm_loop_configfs.o \
++
++obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop.o
++
++ifdef CONFIG_TCM_LOOP_CDB_DEBUG
++EXTRA_CFLAGS			+= -DTCM_LOOP_CDB_DEBUG
++endif
+diff --git a/drivers/target/tcm_loop/Kconfig b/drivers/target/tcm_loop/Kconfig
+new file mode 100644
+index 0000000..7520a6d
+--- /dev/null
++++ b/drivers/target/tcm_loop/Kconfig
+@@ -0,0 +1,13 @@
++config TCM_LOOP_FABRIC
++        tristate "TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module "
++        depends on TARGET_CORE && CONFIGFS_FS
++        default n
++        ---help---
++        Say Y here to enable the TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module
++
++config TCM_LOOP_CDB_DEBUG
++	tristate "TCM loopback fabric module CDB debug code"
++	depends on TARGET_CORE && CONFIGFS_FS && TCM_LOOP_FABRIC
 +	default n
 +	---help---
-+	Say Y here to enable the TCM Debug device code
++	Say Y here to enable the TCM loopback fabric module CDB debug code
+diff --git a/drivers/target/tcm_loop/tcm_loop_configfs.c b/drivers/target/tcm_loop/tcm_loop_configfs.c
+new file mode 100644
+index 0000000..b4bd282
+--- /dev/null
++++ b/drivers/target/tcm_loop/tcm_loop_configfs.c
+@@ -0,0 +1,647 @@
++/*******************************************************************************
++ * Filename:  tcm_loop_configfs.c
++ *
++ * This file contains configfs implemenation for initiator and target
++ * side CDB level emulation of SAS, FC and iSCSI ports to Linux/SCSI LUNs.
++ *
++ * Copyright (c) 2009, 2010 Rising Tide, Inc.
++ * Copyright (c) 2009, 2010 Linux-iSCSI.org
++ *
++ * Copyright (c) 2009, 2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ ****************************************************************************/
 +
-+config TCM_IBLOCK
-+	tristate "TCM/IBLOCK Subsystem Plugin for Linux/BLOCK"
-+	depends on TARGET_CORE
-+	default y
-+	---help---
-+	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered access to Linux/Block devices using BIO
++#include <linux/module.h>
++#include <linux/moduleparam.h>
++#include <linux/version.h>
++#include <generated/utsrelease.h>
++#include <linux/utsname.h>
++#include <linux/init.h>
++#include <linux/slab.h>
++#include <linux/kthread.h>
++#include <linux/types.h>
++#include <linux/string.h>
++#include <linux/configfs.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_cmnd.h>
 +
-+config TCM_FILEIO
-+	tristate "TCM/FILEIO Subsystem Plugin for Linux/VFS"
-+	depends on TARGET_CORE
-+	default y
-+	---help---
-+	Say Y here to enable the TCM/FILEIO subsystem plugin for buffered access to Linux/VFS struct file or struct block_device
++#include <target/target_core_base.h>
++#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_fabric_configfs.h>
++#include <target/target_core_fabric_lib.h>
++#include <target/target_core_device.h>
++#include <target/target_core_tpg.h>
++#include <target/target_core_configfs.h>
++#include <target/target_core_base.h>
++#include <target/configfs_macros.h>
 +
-+config TCM_PSCSI
-+	tristate "TCM/pSCSI Subsystem Plugin for Linux/SCSI"
-+	depends on TARGET_CORE
-+	default y
-+	---help---
-+	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered passthrough access to Linux/SCSI device
++#include <tcm_loop_core.h>
++#include <tcm_loop_configfs.h>
++#include <tcm_loop_fabric.h>
++#include <tcm_loop_fabric_scsi.h>
++
++/* Local pointer to allocated TCM configfs fabric module */
++struct target_fabric_configfs *tcm_loop_fabric_configfs;
++
++static int tcm_loop_hba_no_cnt;
++
++static char *tcm_loop_dump_proto_id(struct tcm_loop_hba *tl_hba)
++{
++	switch (tl_hba->tl_proto_id) {
++	case SCSI_PROTOCOL_SAS:
++		return "SAS";
++	case SCSI_PROTOCOL_FCP:
++		return "FCP";
++	case SCSI_PROTOCOL_ISCSI:
++		return "iSCSI";
++	default:
++		break;
++	}
++
++	return "Unknown";
++}
++
++/* Start items for tcm_loop_port_cit */
++
++int tcm_loop_port_link(
++	struct se_portal_group *se_tpg,
++	struct se_lun *lun)
++{
++	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
++				struct tcm_loop_tpg, tl_se_tpg);
++	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
++
++	atomic_inc(&tl_tpg->tl_tpg_port_count);
++	smp_mb__after_atomic_inc();
++	/*
++	 * Add Linux/SCSI struct scsi_device by HCTL
++	 */
++	scsi_add_device(tl_hba->sh, 0, tl_tpg->tl_tpgt, lun->unpacked_lun);
++
++	printk(KERN_INFO "TCM_Loop_ConfigFS: Port Link Successful\n");
++	return 0;
++}
++
++void tcm_loop_port_unlink(
++	struct se_portal_group *se_tpg,
++	struct se_lun *se_lun)
++{
++	struct scsi_device *sd;
++	struct tcm_loop_hba *tl_hba;
++	struct tcm_loop_tpg *tl_tpg;
++
++	tl_tpg = container_of(se_tpg, struct tcm_loop_tpg, tl_se_tpg);
++	tl_hba = tl_tpg->tl_hba;	
++
++	sd = scsi_device_lookup(tl_hba->sh, 0, tl_tpg->tl_tpgt,
++				se_lun->unpacked_lun);
++	if (!(sd)) {
++		printk(KERN_ERR "Unable to locate struct scsi_device for %d:%d:"
++			"%d\n", 0, tl_tpg->tl_tpgt, se_lun->unpacked_lun);
++		return;
++	}
++	/*
++	 * Remove Linux/SCSI struct scsi_device by HCTL
++	 */
++	scsi_remove_device(sd);	
++	scsi_device_put(sd);
++	
++	atomic_dec(&tl_tpg->tl_tpg_port_count);
++	smp_mb__after_atomic_dec();
++
++	printk(KERN_INFO "TCM_Loop_ConfigFS: Port Unlink Successful\n");
++}
++
++/* End items for tcm_loop_port_cit */
++
++/* Start items for tcm_loop_nexus_cit */
++
++static int tcm_loop_make_nexus(
++	struct tcm_loop_tpg *tl_tpg,
++	const char *name)
++{
++	struct se_portal_group *se_tpg;
++	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
++	struct tcm_loop_nexus *tl_nexus;
++
++	if (tl_tpg->tl_hba->tl_nexus) {
++		printk(KERN_INFO "tl_tpg->tl_hba->tl_nexus already exists\n");
++		return -EEXIST;
++	}
++	se_tpg = &tl_tpg->tl_se_tpg;
++
++	tl_nexus = kzalloc(sizeof(struct tcm_loop_nexus), GFP_KERNEL);
++	if (!(tl_nexus)) {
++		printk(KERN_ERR "Unable to allocate struct tcm_loop_nexus\n");
++		return -ENOMEM;
++	}
++	/*
++	 * Initialize the struct se_session pointer
++	 */
++	tl_nexus->se_sess = transport_init_session();
++	if (!(tl_nexus->se_sess))
++		goto out;
++	/*
++	 * Since we are running in 'demo mode' this call with generate a
++	 * struct se_node_acl for the tcm_loop struct se_portal_group with the SCSI
++	 * Initiator port name of the passed configfs group 'name'.
++	 */	
++	tl_nexus->se_sess->se_node_acl = core_tpg_check_initiator_node_acl(
++				se_tpg, (unsigned char *)name);
++	if (!(tl_nexus->se_sess->se_node_acl)) {
++		transport_free_session(tl_nexus->se_sess);
++		goto out;
++	}
++	/*
++	 * Now, register the SAS I_T Nexus as active with the call to
++	 * transport_register_session()
++	 */
++	__transport_register_session(se_tpg, tl_nexus->se_sess->se_node_acl,
++			tl_nexus->se_sess, (void *)tl_nexus);
++	tl_tpg->tl_hba->tl_nexus = tl_nexus;
++	printk(KERN_INFO "TCM_Loop_ConfigFS: Established I_T Nexus to emulated"
++		" %s Initiator Port: %s\n", tcm_loop_dump_proto_id(tl_hba),
++		name);
++	return 0;
++
++out:
++	kfree(tl_nexus);	
++	return -ENOMEM;
++}
++
++static int tcm_loop_drop_nexus(
++	struct tcm_loop_tpg *tpg)
++{
++	struct se_session *se_sess;
++	struct tcm_loop_nexus *tl_nexus;
++	struct tcm_loop_hba *tl_hba = tpg->tl_hba;
++
++	tl_nexus = tpg->tl_hba->tl_nexus;
++	if (!(tl_nexus))
++		return -ENODEV;
++
++	se_sess = tl_nexus->se_sess;
++	if (!(se_sess))
++		return -ENODEV;
++
++	if (atomic_read(&tpg->tl_tpg_port_count)) {
++		printk(KERN_ERR "Unable to remove TCM_Loop I_T Nexus with"
++			" active TPG port count: %d\n",
++			atomic_read(&tpg->tl_tpg_port_count));
++		return -EPERM;
++	}
++
++	printk(KERN_INFO "TCM_Loop_ConfigFS: Removing I_T Nexus to emulated"
++		" %s Initiator Port: %s\n", tcm_loop_dump_proto_id(tl_hba),
++		tl_nexus->se_sess->se_node_acl->initiatorname);
++	/*
++	 * Release the SCSI I_T Nexus to the emulated SAS Target Port
++	 */
++	transport_deregister_session(tl_nexus->se_sess);
++	tpg->tl_hba->tl_nexus = NULL;
++	kfree(tl_nexus);
++	return 0;
++}
++
++/* End items for tcm_loop_nexus_cit */
++
++static ssize_t tcm_loop_tpg_show_nexus(
++	struct se_portal_group *se_tpg,
++	char *page)
++{
++	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
++			struct tcm_loop_tpg, tl_se_tpg);
++	struct tcm_loop_nexus *tl_nexus;
++	ssize_t ret;
++
++	tl_nexus = tl_tpg->tl_hba->tl_nexus;
++	if (!(tl_nexus))
++		return -ENODEV;
++
++	ret = snprintf(page, PAGE_SIZE, "%s\n",
++		tl_nexus->se_sess->se_node_acl->initiatorname);
++
++	return ret;
++}
++
++static ssize_t tcm_loop_tpg_store_nexus(
++	struct se_portal_group *se_tpg,
++	const char *page,
++	size_t count)
++{
++	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
++			struct tcm_loop_tpg, tl_se_tpg);
++	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
++	unsigned char i_port[TL_WWN_ADDR_LEN], *ptr, *port_ptr;
++	int ret;
++	/*
++	 * Shutdown the active I_T nexus if 'NULL' is passed..
++	 */
++	if (!(strncmp(page, "NULL", 4))) {
++		ret = tcm_loop_drop_nexus(tl_tpg);
++		return (!ret) ? count : ret;
++	}
++	/*
++	 * Otherwise make sure the passed virtual Initiator port WWN matches
++	 * the fabric protocol_id set in tcm_loop_make_scsi_hba(), and call
++	 * tcm_loop_make_nexus()
++	 */
++	if (strlen(page) > TL_WWN_ADDR_LEN) {
++		printk(KERN_ERR "Emulated NAA Sas Address: %s, exceeds"
++				" max: %d\n", page, TL_WWN_ADDR_LEN);
++		return -EINVAL;
++	}
++	snprintf(&i_port[0], TL_WWN_ADDR_LEN, "%s", page);
++
++	ptr = strstr(i_port, "naa.");
++	if (ptr) {
++		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_SAS) {
++			printk(KERN_ERR "Passed SAS Initiator Port %s does not"
++				" match target port protoid: %s\n", i_port,
++				tcm_loop_dump_proto_id(tl_hba));
++			return -EINVAL;
++		}
++		port_ptr = &i_port[0];
++		goto check_newline;
++	}
++	ptr = strstr(i_port, "fc.");
++	if (ptr) {
++		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_FCP) {
++			printk(KERN_ERR "Passed FCP Initiator Port %s does not"
++				" match target port protoid: %s\n", i_port,
++				tcm_loop_dump_proto_id(tl_hba));
++			return -EINVAL;
++		}
++		port_ptr = &i_port[3]; /* Skip over "fc." */
++		goto check_newline;
++	}
++	ptr = strstr(i_port, "iqn.");
++	if (ptr) {
++		if (tl_hba->tl_proto_id != SCSI_PROTOCOL_ISCSI) {
++			printk(KERN_ERR "Passed iSCSI Initiator Port %s does not"
++				" match target port protoid: %s\n", i_port,
++				tcm_loop_dump_proto_id(tl_hba));
++			return -EINVAL;
++		}
++		port_ptr = &i_port[0];
++		goto check_newline;
++	}
++	printk(KERN_ERR "Unable to locate prefix for emulated Initiator Port:"
++			" %s\n", i_port);
++	return -EINVAL;
++	/*
++	 * Clear any trailing newline for the NAA WWN
++	 */
++check_newline:
++	if (i_port[strlen(i_port)-1] == '\n')
++		i_port[strlen(i_port)-1] = '\0';
++		
++	ret = tcm_loop_make_nexus(tl_tpg, port_ptr);
++	if (ret < 0)
++		return ret;
++
++	return count;
++}
++
++TF_TPG_BASE_ATTR(tcm_loop, nexus, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *tcm_loop_tpg_attrs[] = {
++	&tcm_loop_tpg_nexus.attr,
++	NULL,
++};
++
++/* Start items for tcm_loop_naa_cit */
++
++struct se_portal_group *tcm_loop_make_naa_tpg(
++	struct se_wwn *wwn,
++	struct config_group *group,
++	const char *name)
++{
++	struct tcm_loop_hba *tl_hba = container_of(wwn,
++			struct tcm_loop_hba, tl_hba_wwn);
++	struct tcm_loop_tpg *tl_tpg;
++	char *tpgt_str, *end_ptr;
++	int ret;
++	unsigned short int tpgt;
++
++	tpgt_str = strstr(name, "tpgt_");
++	if (!(tpgt_str)) {
++		printk(KERN_ERR "Unable to locate \"tpgt_#\" directory"
++				" group\n");
++		return ERR_PTR(-EINVAL);
++	}
++	tpgt_str += 5; /* Skip ahead of "tpgt_" */
++	tpgt = (unsigned short int) simple_strtoul(tpgt_str, &end_ptr, 0);
++
++	if (tpgt > TL_TPGS_PER_HBA) {
++		printk(KERN_ERR "Passed tpgt: %hu exceeds TL_TPGS_PER_HBA:"
++				" %u\n", tpgt, TL_TPGS_PER_HBA);
++		return ERR_PTR(-EINVAL);
++	}
++	tl_tpg = &tl_hba->tl_hba_tpgs[tpgt];
++	tl_tpg->tl_hba = tl_hba;
++	tl_tpg->tl_tpgt = tpgt;
++	/*
++	 * Register the tl_tpg as a emulated SAS TCM Target Endpoint
++	 */
++	ret = core_tpg_register(&tcm_loop_fabric_configfs->tf_ops,
++			wwn, &tl_tpg->tl_se_tpg, (void *)tl_tpg,
++			TRANSPORT_TPG_TYPE_NORMAL);
++	if (ret < 0)
++		return ERR_PTR(-ENOMEM);
++
++	printk(KERN_INFO "TCM_Loop_ConfigFS: Allocated Emulated %s"
++		" Target Port %s,t,0x%04x\n", tcm_loop_dump_proto_id(tl_hba),
++		config_item_name(&wwn->wwn_group.cg_item), tpgt);
++
++	return &tl_tpg->tl_se_tpg;
++}
++
++void tcm_loop_drop_naa_tpg(
++	struct se_portal_group *se_tpg)
++{
++	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
++	struct tcm_loop_tpg *tl_tpg = container_of(se_tpg,
++				struct tcm_loop_tpg, tl_se_tpg);
++	struct tcm_loop_hba *tl_hba;
++	unsigned short tpgt;
++
++	tl_hba = tl_tpg->tl_hba;
++	tpgt = tl_tpg->tl_tpgt;
++	/*
++	 * Release the I_T Nexus for the Virtual SAS link if present
++	 */
++	tcm_loop_drop_nexus(tl_tpg);
++	/*
++	 * Deregister the tl_tpg as a emulated SAS TCM Target Endpoint
++	 */
++	core_tpg_deregister(se_tpg);
++
++	printk(KERN_INFO "TCM_Loop_ConfigFS: Deallocated Emulated %s"
++		" Target Port %s,t,0x%04x\n", tcm_loop_dump_proto_id(tl_hba),
++		config_item_name(&wwn->wwn_group.cg_item), tpgt);
++}
++
++/* End items for tcm_loop_naa_cit */
++
++/* Start items for tcm_loop_cit */
++
++struct se_wwn *tcm_loop_make_scsi_hba(
++	struct target_fabric_configfs *tf,
++	struct config_group *group,
++	const char *name)
++{
++	struct tcm_loop_hba *tl_hba;
++	struct Scsi_Host *sh;
++	char *ptr;
++	int ret, off = 0;
++
++	tl_hba = kzalloc(sizeof(struct tcm_loop_hba), GFP_KERNEL);
++	if (!(tl_hba)) {
++		printk(KERN_ERR "Unable to allocate struct tcm_loop_hba\n");
++                return ERR_PTR(-ENOMEM);
++        }
++	/*
++	 * Determine the emulated Protocol Identifier and Target Port Name
++	 * based on the incoming configfs directory name.
++	 */
++	ptr = strstr(name, "naa.");
++	if (ptr) {
++		tl_hba->tl_proto_id = SCSI_PROTOCOL_SAS;
++		goto check_len;
++	}
++	ptr = strstr(name, "fc.");      
++	if (ptr) {
++		tl_hba->tl_proto_id = SCSI_PROTOCOL_FCP;
++		off = 3; /* Skip over "fc." */
++		goto check_len;
++	}
++	ptr = strstr(name, "iqn.");
++	if (ptr) {
++		tl_hba->tl_proto_id = SCSI_PROTOCOL_ISCSI;
++		goto check_len;
++	}
++
++	printk(KERN_ERR "Unable to locate prefix for emulated Target Port:"
++			" %s\n", name);
++	return ERR_PTR(-EINVAL);
++
++check_len:
++	if (strlen(name) > TL_WWN_ADDR_LEN) {
++		printk(KERN_ERR "Emulated NAA %s Address: %s, exceeds"
++			" max: %d\n", name, tcm_loop_dump_proto_id(tl_hba),
++			TL_WWN_ADDR_LEN);
++		kfree(tl_hba);
++		return ERR_PTR(-EINVAL);
++	}
++	snprintf(&tl_hba->tl_wwn_address[0], TL_WWN_ADDR_LEN, "%s", &name[off]);
++
++	/*
++	 * Call device_register(tl_hba->dev) to register the emulated
++	 * Linux/SCSI LLD of type struct Scsi_Host at tl_hba->sh after
++	 * device_register() callbacks in tcm_loop_driver_probe()
++	 */
++	ret = tcm_loop_setup_hba_bus(tl_hba, tcm_loop_hba_no_cnt);
++	if (ret) 
++		goto out;
++
++	sh = tl_hba->sh;
++	tcm_loop_hba_no_cnt++;
++	printk(KERN_INFO "TCM_Loop_ConfigFS: Allocated emulated Target"
++		" %s Address: %s at Linux/SCSI Host ID: %d\n",
++		tcm_loop_dump_proto_id(tl_hba), name, sh->host_no);
++
++	return &tl_hba->tl_hba_wwn;
++out:
++	kfree(tl_hba);
++	return ERR_PTR(ret);
++}
++
++void tcm_loop_drop_scsi_hba(
++	struct se_wwn *wwn)
++{
++	struct tcm_loop_hba *tl_hba = container_of(wwn,
++				struct tcm_loop_hba, tl_hba_wwn);
++	int host_no = tl_hba->sh->host_no;
++	/*
++	 * Call device_unregister() on the original tl_hba->dev.
++	 * tcm_loop_fabric_scsi.c:tcm_loop_release_adapter() will
++	 * release *tl_hba;
++	 */
++	device_unregister(&tl_hba->dev);
++
++	printk(KERN_INFO "TCM_Loop_ConfigFS: Deallocated emulated Target"
++		" SAS Address: %s at Linux/SCSI Host ID: %d\n",
++		config_item_name(&wwn->wwn_group.cg_item), host_no);
++}
++
++/* Start items for tcm_loop_cit */
++static ssize_t tcm_loop_wwn_show_attr_version(
++	struct target_fabric_configfs *tf,
++	char *page)
++{
++	return sprintf(page, "TCM Loopback Fabric module %s on %s/%s"
++		" on "UTS_RELEASE"\n", TCM_LOOP_VERSION, utsname()->sysname,
++		utsname()->machine);
++}
++
++TF_WWN_ATTR_RO(tcm_loop, version);
++
++static struct configfs_attribute *tcm_loop_wwn_attrs[] = {
++	&tcm_loop_wwn_version.attr,
++	NULL,
++};
++
++/* End items for tcm_loop_cit */
++
++int tcm_loop_register_configfs(void)
++{
++	struct target_fabric_configfs *fabric;
++	struct config_group *tf_cg;
++	int ret;
++	/*
++	 * Set the TCM Loop HBA counter to zero
++	 */
++	tcm_loop_hba_no_cnt = 0;
++	/*
++	 * Register the top level struct config_item_type with TCM core
++	 */
++	fabric = target_fabric_configfs_init(THIS_MODULE, "loopback");
++	if (!(fabric)) {
++		printk(KERN_ERR "tcm_loop_register_configfs() failed!\n");
++		return -1;
++	}
++	/*
++	 * Setup the fabric API of function pointers used by target_core_mod
++	 */
++	fabric->tf_ops.get_fabric_name = &tcm_loop_get_fabric_name;
++	fabric->tf_ops.get_fabric_proto_ident = &tcm_loop_get_fabric_proto_ident;
++	fabric->tf_ops.tpg_get_wwn = &tcm_loop_get_endpoint_wwn;
++	fabric->tf_ops.tpg_get_tag = &tcm_loop_get_tag;
++	fabric->tf_ops.tpg_get_default_depth = &tcm_loop_get_default_depth;
++	fabric->tf_ops.tpg_get_pr_transport_id = &tcm_loop_get_pr_transport_id;
++	fabric->tf_ops.tpg_get_pr_transport_id_len =
++					&tcm_loop_get_pr_transport_id_len;
++	fabric->tf_ops.tpg_parse_pr_out_transport_id =
++					&tcm_loop_parse_pr_out_transport_id;
++	fabric->tf_ops.tpg_check_demo_mode = &tcm_loop_check_demo_mode;
++	fabric->tf_ops.tpg_check_demo_mode_cache =
++					&tcm_loop_check_demo_mode_cache;
++	fabric->tf_ops.tpg_check_demo_mode_write_protect =
++					&tcm_loop_check_demo_mode_write_protect;
++	fabric->tf_ops.tpg_check_prod_mode_write_protect =
++					&tcm_loop_check_prod_mode_write_protect;
++	/*
++	 * The TCM loopback fabric module runs in demo-mode to a local
++	 * virtual SCSI device, so fabric dependent initator ACLs are
++	 * not required.
++	 */
++	fabric->tf_ops.tpg_alloc_fabric_acl = &tcm_loop_tpg_alloc_fabric_acl;
++	fabric->tf_ops.tpg_release_fabric_acl =
++					&tcm_loop_tpg_release_fabric_acl;
++	fabric->tf_ops.tpg_get_inst_index = &tcm_loop_get_inst_index;
++	/*
++	 * Since tcm_loop is mapping physical memory from Linux/SCSI
++	 * struct scatterlist arrays for each struct scsi_cmnd I/O,
++	 * we do not need TCM to allocate a iovec array for
++	 * virtual memory address mappings
++	 */
++	fabric->tf_ops.alloc_cmd_iovecs = NULL;
++	/*
++	 * Used for setting up remaining TCM resources in process context
++	 */
++	fabric->tf_ops.new_cmd_map = &tcm_loop_new_cmd_map;
++	fabric->tf_ops.check_stop_free = &tcm_loop_check_stop_free;
++	fabric->tf_ops.release_cmd_to_pool = &tcm_loop_deallocate_core_cmd;
++	fabric->tf_ops.release_cmd_direct = &tcm_loop_deallocate_core_cmd;
++	fabric->tf_ops.shutdown_session = &tcm_loop_shutdown_session; 
++	fabric->tf_ops.close_session = &tcm_loop_close_session;
++	fabric->tf_ops.stop_session = &tcm_loop_stop_session;
++	fabric->tf_ops.fall_back_to_erl0 = &tcm_loop_fall_back_to_erl0;
++	fabric->tf_ops.sess_logged_in = &tcm_loop_sess_logged_in;
++	fabric->tf_ops.sess_get_index = &tcm_loop_sess_get_index;
++	fabric->tf_ops.sess_get_initiator_sid = NULL;
++	fabric->tf_ops.write_pending = &tcm_loop_write_pending;
++	fabric->tf_ops.write_pending_status = &tcm_loop_write_pending_status;
++	/*
++	 * Not used for TCM loopback
++	 */
++	fabric->tf_ops.set_default_node_attributes =
++					&tcm_loop_set_default_node_attributes;
++	fabric->tf_ops.get_task_tag = &tcm_loop_get_task_tag;
++	fabric->tf_ops.get_cmd_state = &tcm_loop_get_cmd_state;
++	fabric->tf_ops.new_cmd_failure = &tcm_loop_new_cmd_failure;
++	fabric->tf_ops.queue_data_in = &tcm_loop_queue_data_in;
++	fabric->tf_ops.queue_status = &tcm_loop_queue_status;
++	fabric->tf_ops.queue_tm_rsp = &tcm_loop_queue_tm_rsp;
++	fabric->tf_ops.set_fabric_sense_len = &tcm_loop_set_fabric_sense_len;
++	fabric->tf_ops.get_fabric_sense_len = &tcm_loop_get_fabric_sense_len;
++	fabric->tf_ops.is_state_remove = &tcm_loop_is_state_remove;
++	fabric->tf_ops.pack_lun = &tcm_loop_pack_lun;
++
++	tf_cg = &fabric->tf_group;
++	/*
++	 * Setup function pointers for generic logic in target_core_fabric_configfs.c
++	 */
++	fabric->tf_ops.fabric_make_wwn = &tcm_loop_make_scsi_hba;
++	fabric->tf_ops.fabric_drop_wwn = &tcm_loop_drop_scsi_hba;
++	fabric->tf_ops.fabric_make_tpg = &tcm_loop_make_naa_tpg;
++	fabric->tf_ops.fabric_drop_tpg = &tcm_loop_drop_naa_tpg;
++	/*
++	 * fabric_post_link() and fabric_pre_unlink() are used for
++	 * registration and release of TCM Loop Virtual SCSI LUNs.
++	 */
++	fabric->tf_ops.fabric_post_link = &tcm_loop_port_link;
++	fabric->tf_ops.fabric_pre_unlink = &tcm_loop_port_unlink;
++	fabric->tf_ops.fabric_make_np = NULL;
++	fabric->tf_ops.fabric_drop_np = NULL;
++	/*
++	 * Setup default attribute lists for various fabric->tf_cit_tmpl
++	 */
++	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = tcm_loop_wwn_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = tcm_loop_tpg_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
++	/*
++	 * Once fabric->tf_ops has been setup, now register the fabric for
++	 * use within TCM
++	 */
++	ret = target_fabric_configfs_register(fabric);
++	if (ret < 0) {
++		printk(KERN_ERR "target_fabric_configfs_register() for"
++				" TCM_Loop failed!\n");
++		target_fabric_configfs_free(fabric);
++		return -1;
++	}
++	/*
++	 * Setup our local pointer to *fabric.
++	 */
++	tcm_loop_fabric_configfs = fabric;
++	printk(KERN_INFO "TCM_LOOP[0] - Set fabric ->"
++			" tcm_loop_fabric_configfs\n");
++	return 0;
++}
++
++void tcm_loop_deregister_configfs(void)
++{
++	if (!(tcm_loop_fabric_configfs))
++		return;
++
++	target_fabric_configfs_deregister(tcm_loop_fabric_configfs);
++	tcm_loop_fabric_configfs = NULL;
++	printk(KERN_INFO "TCM_LOOP[0] - Cleared"
++				" tcm_loop_fabric_configfs\n");
++}	
+diff --git a/drivers/target/tcm_loop/tcm_loop_configfs.h b/drivers/target/tcm_loop/tcm_loop_configfs.h
+new file mode 100644
+index 0000000..f46aa4b
+--- /dev/null
++++ b/drivers/target/tcm_loop/tcm_loop_configfs.h
+@@ -0,0 +1,2 @@
++extern int tcm_loop_register_configfs(void);
++extern void tcm_loop_deregister_configfs(void);
+diff --git a/drivers/target/tcm_loop/tcm_loop_core.h b/drivers/target/tcm_loop/tcm_loop_core.h
+new file mode 100644
+index 0000000..5e218a7
+--- /dev/null
++++ b/drivers/target/tcm_loop/tcm_loop_core.h
+@@ -0,0 +1,77 @@
++#define TCM_LOOP_VERSION		"v2.0"
++#define TL_WWN_ADDR_LEN			256
++#define TL_TPGS_PER_HBA			32
++/*
++ * Defaults for struct scsi_host_template tcm_loop_driver_template
++ *
++ * We use large can_queue and cmd_per_lun here and let TCM enforce
++ * the underlying se_device_t->queue_depth.
++ */
++#define TL_SCSI_CAN_QUEUE		1024
++#define TL_SCSI_CMD_PER_LUN		1024
++#define TL_SCSI_MAX_SECTORS		1024
++#define TL_SCSI_SG_TABLESIZE		256
++/*
++ * Used in tcm_loop_driver_probe() for struct Scsi_Host->max_cmd_len
++ */
++#define TL_SCSI_MAX_CMD_LEN		32
++
++#ifdef TCM_LOOP_CDB_DEBUG
++# define TL_CDB_DEBUG(x...)		printk(KERN_INFO x)
++#else
++# define TL_CDB_DEBUG(x...)
++#endif
++
++struct tcm_loop_cmd {
++	/* State of Linux/SCSI CDB+Data descriptor */
++	u32 sc_cmd_state;
++	/* Pointer to the CDB+Data descriptor from Linux/SCSI subsystem */
++	struct scsi_cmnd *sc;
++	struct list_head *tl_cmd_list;
++	/* The TCM I/O descriptor that is accessed via container_of() */
++	struct se_cmd tl_se_cmd;
++	/* Sense buffer that will be mapped into outgoing status */
++	unsigned char tl_sense_buf[TRANSPORT_SENSE_BUFFER];
++};
++
++struct tcm_loop_tmr {
++	atomic_t tmr_complete;
++	wait_queue_head_t tl_tmr_wait;
++};
++
++struct tcm_loop_nexus {
++	int it_nexus_active;
++	/*
++	 * Pointer to Linux/SCSI HBA from linux/include/scsi_host.h
++	 */
++	struct scsi_host *sh;
++	/*
++	 * Pointer to TCM session for I_T Nexus
++	 */
++	struct se_session *se_sess;
++};
++
++struct tcm_loop_nacl {
++	struct se_node_acl se_node_acl;
++};
++
++struct tcm_loop_tpg {
++	unsigned short tl_tpgt;
++	atomic_t tl_tpg_port_count;
++	struct se_portal_group tl_se_tpg;
++	struct tcm_loop_hba *tl_hba;
++};
++
++struct tcm_loop_hba {
++	u8 tl_proto_id;
++	unsigned char tl_wwn_address[TL_WWN_ADDR_LEN];
++	struct se_hba_s *se_hba;
++	struct se_lun *tl_hba_lun;
++	struct se_port *tl_hba_lun_sep;
++	struct se_device_s *se_dev_hba_ptr;
++	struct tcm_loop_nexus *tl_nexus;
++	struct device dev;
++	struct Scsi_Host *sh;
++	struct tcm_loop_tpg tl_hba_tpgs[TL_TPGS_PER_HBA];
++	struct se_wwn tl_hba_wwn;
++};
+diff --git a/drivers/target/tcm_loop/tcm_loop_fabric.c b/drivers/target/tcm_loop/tcm_loop_fabric.c
+new file mode 100644
+index 0000000..2ac551b
+--- /dev/null
++++ b/drivers/target/tcm_loop/tcm_loop_fabric.c
+@@ -0,0 +1,495 @@
++/*******************************************************************************
++ * Filename:  tcm_loop_fabric.c
++ *
++ * This file contains the TCM loopback fabric module for initiator and target
++ * side CDB level emulation of SAS, FC and iSCSI ports to Linux/SCSI LUNs.
++ *
++ * Copyright (c) 2009, 2010 Rising Tide, Inc.
++ * Copyright (c) 2009, 2010 Linux-iSCSI.org
++ *
++ * Copyright (c) 2009, 2010  Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ ****************************************************************************/
++
++#include <linux/module.h>
++#include <linux/moduleparam.h>
++#include <linux/init.h>
++#include <linux/slab.h>
++#include <linux/kthread.h>
++#include <linux/types.h>
++#include <linux/list.h>
++#include <linux/string.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_cmnd.h>
++
++#include <target/target_core_base.h>
++#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_fabric_lib.h>
++#include <target/target_core_device.h>
++#include <target/target_core_tpg.h>
++#include <target/target_core_configfs.h>
++
++#include <tcm_loop_core.h>
++#include <tcm_loop_configfs.h>
++#include <tcm_loop_fabric_scsi.h>
++
++struct kmem_cache *tcm_loop_cmd_cache;
++
++char *tcm_loop_get_fabric_name(void)
++{
++	return "loopback";
++}
++
++u8 tcm_loop_get_fabric_proto_ident(struct se_portal_group *se_tpg)
++{
++	struct tcm_loop_tpg *tl_tpg =
++			(struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;
++	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
++	/*
++	 * tl_proto_id is set at tcm_loop_configfs.c:tcm_loop_make_scsi_hba()
++	 * time based on the protocol dependent prefix of the passed configfs group.
++	 *
++	 * Based upon tl_proto_id, TCM_Loop emulates the requested fabric
++	 * ProtocolID using target_core_fabric_lib.c symbols.
++	 */
++	switch (tl_hba->tl_proto_id) {
++	case SCSI_PROTOCOL_SAS:
++		return sas_get_fabric_proto_ident(se_tpg);
++	case SCSI_PROTOCOL_FCP:
++		return fc_get_fabric_proto_ident(se_tpg);
++	case SCSI_PROTOCOL_ISCSI:
++		return iscsi_get_fabric_proto_ident(se_tpg);
++	default:
++		printk(KERN_ERR "Unknown tl_proto_id: 0x%02x, using"
++			" SAS emulation\n", tl_hba->tl_proto_id);
++		break;
++	}
++
++	return sas_get_fabric_proto_ident(se_tpg);
++}
++
++char *tcm_loop_get_endpoint_wwn(struct se_portal_group *se_tpg)
++{
++	struct tcm_loop_tpg *tl_tpg =
++		(struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;	
++	/*
++	 * Return the passed NAA identifier for the SAS Target Port
++	 */
++	return &tl_tpg->tl_hba->tl_wwn_address[0];
++}
++
++u16 tcm_loop_get_tag(struct se_portal_group *se_tpg)
++{
++	struct tcm_loop_tpg *tl_tpg =
++		(struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;
++	/*
++	 * This Tag is used when forming SCSI Name identifier in EVPD=1 0x83
++	 * to represent the SCSI Target Port.
++	 */
++	return tl_tpg->tl_tpgt;
++}
++
++u32 tcm_loop_get_default_depth(struct se_portal_group *se_tpg)
++{
++	return 1;
++}
++
++
++u32 tcm_loop_get_pr_transport_id(
++	struct se_portal_group *se_tpg,
++	struct se_node_acl *se_nacl,
++	struct t10_pr_registration *pr_reg,
++	int *format_code,
++	unsigned char *buf)
++{
++	struct tcm_loop_tpg *tl_tpg =
++			(struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;
++	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
++
++	switch (tl_hba->tl_proto_id) {
++	case SCSI_PROTOCOL_SAS:
++		return sas_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
++					format_code, buf);
++	case SCSI_PROTOCOL_FCP:
++		return fc_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
++					format_code, buf);
++	case SCSI_PROTOCOL_ISCSI:
++		return iscsi_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
++					format_code, buf);
++	default:
++		printk(KERN_ERR "Unknown tl_proto_id: 0x%02x, using"
++			" SAS emulation\n", tl_hba->tl_proto_id);
++		break;
++	}
++
++	return sas_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
++			format_code, buf);
++}
++
++u32 tcm_loop_get_pr_transport_id_len(
++	struct se_portal_group *se_tpg,
++	struct se_node_acl *se_nacl,
++	struct t10_pr_registration *pr_reg,
++	int *format_code)
++{
++	struct tcm_loop_tpg *tl_tpg =
++			(struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;
++	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
++
++	switch (tl_hba->tl_proto_id) {
++	case SCSI_PROTOCOL_SAS:
++		return sas_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
++					format_code);
++	case SCSI_PROTOCOL_FCP:
++		return fc_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
++					format_code);
++	case SCSI_PROTOCOL_ISCSI:
++		return iscsi_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
++					format_code);
++	default:
++		printk(KERN_ERR "Unknown tl_proto_id: 0x%02x, using"
++			" SAS emulation\n", tl_hba->tl_proto_id);
++		break;
++	}
++
++	return sas_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
++			format_code);
++}
++
++/*
++ * Used for handling SCSI fabric dependent TransportIDs in SPC-3 and above
++ * Persistent Reservation SPEC_I_PT=1 and PROUT REGISTER_AND_MOVE operations.
++ */
++char *tcm_loop_parse_pr_out_transport_id(
++	struct se_portal_group *se_tpg,
++	const char *buf,
++	u32 *out_tid_len,
++	char **port_nexus_ptr)
++{
++	struct tcm_loop_tpg *tl_tpg =
++			(struct tcm_loop_tpg *)se_tpg->se_tpg_fabric_ptr;
++	struct tcm_loop_hba *tl_hba = tl_tpg->tl_hba;
++
++	switch (tl_hba->tl_proto_id) {
++	case SCSI_PROTOCOL_SAS:
++		return sas_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
++					port_nexus_ptr);
++	case SCSI_PROTOCOL_FCP:
++		return fc_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
++					port_nexus_ptr);
++	case SCSI_PROTOCOL_ISCSI:
++		return iscsi_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
++					port_nexus_ptr);
++	default:
++		printk(KERN_ERR "Unknown tl_proto_id: 0x%02x, using"
++			" SAS emulation\n", tl_hba->tl_proto_id);
++		break;
++	}
++
++	return sas_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
++			port_nexus_ptr);
++}
++
++/*
++ * Returning (1) here allows for target_core_mod struct se_node_acl to be generated
++ * based upon the incoming fabric dependent SCSI Initiator Port
++ */
++int tcm_loop_check_demo_mode(struct se_portal_group *se_tpg)
++{
++	return 1;
++}
++
++int tcm_loop_check_demo_mode_cache(struct se_portal_group *se_tpg)
++{
++	return 0;
++}
++
++/*
++ * Allow I_T Nexus full READ-WRITE access without explict Initiator Node ACLs for
++ * local virtual Linux/SCSI LLD passthrough into VM hypervisor guest
++ */
++int tcm_loop_check_demo_mode_write_protect(struct se_portal_group *se_tpg)
++{
++	return 0;
++}
++
++/*
++ * Because TCM_Loop does not use explict ACLs and MappedLUNs, this will
++ * never be called for TCM_Loop by target_core_fabric_configfs.c code.
++ * It has been added here as a nop for target_fabric_tf_ops_check()
++ */
++int tcm_loop_check_prod_mode_write_protect(struct se_portal_group *se_tpg)
++{
++	return 0;
++}
++
++struct se_node_acl *tcm_loop_tpg_alloc_fabric_acl(
++	struct se_portal_group *se_tpg)
++{
++	struct tcm_loop_nacl *tl_nacl;
++
++	tl_nacl = kzalloc(sizeof( struct tcm_loop_nacl), GFP_KERNEL);
++	if (!(tl_nacl)) {
++		printk(KERN_ERR "Unable to allocate struct tcm_loop_nacl\n");
++		return NULL;
++	}
++
++	return &tl_nacl->se_node_acl;
++}
++
++void tcm_loop_tpg_release_fabric_acl(
++	struct se_portal_group *se_tpg,
++	struct se_node_acl *se_nacl)
++{
++	struct tcm_loop_nacl *tl_nacl = container_of(se_nacl,
++				struct tcm_loop_nacl, se_node_acl);
++
++	kfree(tl_nacl);
++}
++
++u32 tcm_loop_get_inst_index(struct se_portal_group *se_tpg)
++{
++	return 1;
++}
++
++void tcm_loop_new_cmd_failure(struct se_cmd *se_cmd)
++{
++	/*
++	 * Since TCM_loop is already passing struct scatterlist data from
++	 * struct scsi_cmnd, no more Linux/SCSI failure dependent state need
++	 * to be handled here.
++	 */
++	return;
++}
++
++int tcm_loop_is_state_remove(struct se_cmd *se_cmd)
++{
++	/*
++	 * Assume struct scsi_cmnd is not in remove state..
++	 */
++	return 0;
++}
++
++int tcm_loop_sess_logged_in(struct se_session *se_sess)
++{
++	/*
++	 * Assume that TL Nexus is always active
++	 */
++	return 1;
++}
++
++u32 tcm_loop_sess_get_index(struct se_session *se_sess)
++{
++	return 1;
++}
++
++void tcm_loop_set_default_node_attributes(struct se_node_acl *se_acl)
++{
++	return;
++}
++
++u32 tcm_loop_get_task_tag(struct se_cmd *se_cmd)
++{
++	return 1;
++}
++
++int tcm_loop_get_cmd_state(struct se_cmd *se_cmd)
++{
++	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
++			struct tcm_loop_cmd, tl_se_cmd);
++
++	return tl_cmd->sc_cmd_state;
++}
++
++int tcm_loop_shutdown_session(struct se_session *se_sess)
++{
++	return 0;
++}
++
++void tcm_loop_close_session(struct se_session *se_sess)
++{
++	return;
++};
++
++
++void tcm_loop_stop_session(
++	struct se_session *se_sess,
++	int sess_sleep,
++	int conn_sleep)
++{
++	return;
++}
++
++
++void tcm_loop_fall_back_to_erl0(struct se_session *se_sess)
++{
++	return;
++}
++
++int tcm_loop_write_pending(struct se_cmd *se_cmd)
++{
++	/*
++	 * Since Linux/SCSI has already sent down a struct scsi_cmnd
++	 * sc->sc_data_direction of DMA_TO_DEVICE with struct scatterlist array
++	 * memory, and memory has already been mapped to struct se_cmd->t_mem_list
++	 * format with transport_generic_map_mem_to_cmd().
++	 *
++	 * For the TCM control CDBs using a contiguous buffer, do the memcpy
++	 * from the passed Linux/SCSI struct scatterlist located at
++	 * T_TASK(se_cmd)->t_task_pt_buf to the contiguous buffer at
++	 * T_TASK(se_cmd)->t_task_buf.
++	 */
++	if (se_cmd->se_cmd_flags & SCF_PASSTHROUGH_CONTIG_TO_SG) {
++		TL_CDB_DEBUG("Calling transport_memcpy_read_contig()"
++				" for SCF_PASSTHROUGH_CONTIG_TO_SG\n");
++		transport_memcpy_read_contig(se_cmd,
++				T_TASK(se_cmd)->t_task_buf,
++				T_TASK(se_cmd)->t_task_pt_buf);
++	}
++	/*
++	 * We now tell TCM to add this WRITE CDB directly into the TCM storage
++	 * object execution queue.
++	 */
++	transport_generic_process_write(se_cmd);
++	return 0;
++}
++
++int tcm_loop_write_pending_status(struct se_cmd *se_cmd)
++{
++	return 0;
++}
++
++int tcm_loop_queue_data_in(struct se_cmd *se_cmd)
++{
++	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
++				struct tcm_loop_cmd, tl_se_cmd);
++	struct scsi_cmnd *sc = tl_cmd->sc;
++
++	TL_CDB_DEBUG( "tcm_loop_queue_data_in() called for scsi_cmnd: %p"
++			" cdb: 0x%02x\n", sc, sc->cmnd[0]);
++
++	if (se_cmd->se_cmd_flags & SCF_PASSTHROUGH_CONTIG_TO_SG) {
++		TL_CDB_DEBUG("Calling transport_memcpy_write_contig()"
++			" for SCF_PASSTHROUGH_CONTIG_TO_SG\n");
++		transport_memcpy_write_contig(se_cmd,
++			T_TASK(se_cmd)->t_task_pt_buf,
++			T_TASK(se_cmd)->t_task_buf);
++	}
++
++	sc->result = host_byte(DID_OK) | SAM_STAT_GOOD;
++	(*sc->scsi_done)(sc);
++	return 0;
++}
++
++int tcm_loop_queue_status(struct se_cmd *se_cmd)
++{
++	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
++				struct tcm_loop_cmd, tl_se_cmd);
++	struct scsi_cmnd *sc = tl_cmd->sc;
++
++	TL_CDB_DEBUG("tcm_loop_queue_status() called for scsi_cmnd: %p"
++			" cdb: 0x%02x\n", sc, sc->cmnd[0]);
++
++	if (se_cmd->sense_buffer &&
++	   ((se_cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE) ||
++	    (se_cmd->se_cmd_flags & SCF_EMULATED_TASK_SENSE))) {
++
++		memcpy((void *)sc->sense_buffer, (void *)se_cmd->sense_buffer,
++				SCSI_SENSE_BUFFERSIZE);	
++		sc->result = host_byte(DID_OK) | driver_byte(DRIVER_SENSE) |
++				SAM_STAT_CHECK_CONDITION;
++	} else
++		sc->result = host_byte(DID_OK) | se_cmd->scsi_status;
++
++	(*sc->scsi_done)(sc);
++	return 0;
++}
++
++int tcm_loop_queue_tm_rsp(struct se_cmd *se_cmd)
++{
++	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
++	struct tcm_loop_tmr *tl_tmr = (struct tcm_loop_tmr *)se_tmr->fabric_tmr_ptr;
++	/*
++	 * The SCSI EH thread will be sleeping on se_tmr->tl_tmr_wait, go ahead
++	 * and wake up the wait_queue_head_t in tcm_loop_device_reset()
++	 */
++	atomic_set(&tl_tmr->tmr_complete, 1);
++	wake_up(&tl_tmr->tl_tmr_wait);
++	return 0;
++}
++
++u16 tcm_loop_set_fabric_sense_len(struct se_cmd *se_cmd, u32 sense_length)
++{
++	return 0;
++}
++
++u16 tcm_loop_get_fabric_sense_len(void)
++{
++	return 0;
++}
++
++u64 tcm_loop_pack_lun(unsigned int lun)
++{
++	u64 result;
++
++	/* LSB of lun into byte 1 big-endian */
++	result = ((lun & 0xff) << 8);
++	/* use flat space addressing method */
++	result |= 0x40 | ((lun >> 8) & 0x3f);
++
++	return cpu_to_le64(result);
++}
++
++static int __init tcm_loop_fabric_init(void)
++{
++	int ret;
++
++	tcm_loop_cmd_cache = kmem_cache_create("tcm_loop_cmd_cache",
++				sizeof(struct tcm_loop_cmd),
++				__alignof__(struct tcm_loop_cmd),
++				0, NULL);
++	if (!(tcm_loop_cmd_cache)) {
++		printk(KERN_ERR "kmem_cache_create() for"
++				" tcm_loop_cmd_cache failed\n");
++		return -1;
++	}
++
++	ret = tcm_loop_alloc_core_bus();
++	if (ret)
++		return ret;
++
++	ret = tcm_loop_register_configfs();
++	if (ret) {
++		tcm_loop_release_core_bus();
++		return ret;
++	}
++
++	return 0;
++}
++
++static void tcm_loop_fabric_exit(void)
++{
++	tcm_loop_deregister_configfs();
++	tcm_loop_release_core_bus();
++	kmem_cache_destroy(tcm_loop_cmd_cache);
++}
++
++#ifdef MODULE
++MODULE_DESCRIPTION("TCM loopback virtual Linux/SCSI fabric module");
++MODULE_AUTHOR("Nicholas A. Bellinger <nab@Linux-iSCSI.org>");
++MODULE_LICENSE("GPL");
++module_init(tcm_loop_fabric_init);
++module_exit(tcm_loop_fabric_exit);
++#endif /* MODULE */
++
+diff --git a/drivers/target/tcm_loop/tcm_loop_fabric.h b/drivers/target/tcm_loop/tcm_loop_fabric.h
+new file mode 100644
+index 0000000..45af1f9
+--- /dev/null
++++ b/drivers/target/tcm_loop/tcm_loop_fabric.h
+@@ -0,0 +1,40 @@
++extern char *tcm_loop_get_fabric_name(void);
++extern u8 tcm_loop_get_fabric_proto_ident(struct se_portal_group *);
++extern char *tcm_loop_get_endpoint_wwn(struct se_portal_group *);
++extern u16 tcm_loop_get_tag(struct se_portal_group *);
++extern u32 tcm_loop_get_default_depth(struct se_portal_group *);
++extern u32 tcm_loop_get_pr_transport_id(struct se_portal_group *, struct se_node_acl *,
++				struct t10_pr_registration *, int *,
++				unsigned char *);
++extern u32 tcm_loop_get_pr_transport_id_len(struct se_portal_group *,
++				struct se_node_acl *, struct t10_pr_registration *,
++				int *);
++extern char *tcm_loop_parse_pr_out_transport_id(struct se_portal_group *,
++				const char *, u32 *, char **);
++extern int tcm_loop_check_demo_mode(struct se_portal_group *);
++extern int tcm_loop_check_demo_mode_cache(struct se_portal_group *);
++extern int tcm_loop_check_demo_mode_write_protect(struct se_portal_group *);
++extern int tcm_loop_check_prod_mode_write_protect(struct se_portal_group *);
++extern struct se_node_acl *tcm_loop_tpg_alloc_fabric_acl(
++				struct se_portal_group *);
++void tcm_loop_tpg_release_fabric_acl(struct se_portal_group *, struct se_node_acl *);
++extern u32 tcm_loop_get_inst_index(struct se_portal_group *);
++extern void tcm_loop_new_cmd_failure(struct se_cmd *);
++extern int tcm_loop_is_state_remove(struct se_cmd *);
++extern int tcm_loop_sess_logged_in(struct se_session *);
++extern u32 tcm_loop_sess_get_index(struct se_session *);
++extern void tcm_loop_set_default_node_attributes(struct se_node_acl *);
++extern u32 tcm_loop_get_task_tag(struct se_cmd *);
++extern int tcm_loop_get_cmd_state(struct se_cmd *);
++extern int tcm_loop_shutdown_session(struct se_session *);
++extern void tcm_loop_close_session(struct se_session *);
++extern void tcm_loop_stop_session(struct se_session *, int, int);
++extern void tcm_loop_fall_back_to_erl0(struct se_session *);
++extern int tcm_loop_write_pending(struct se_cmd *);
++extern int tcm_loop_write_pending_status(struct se_cmd *);
++extern int tcm_loop_queue_data_in(struct se_cmd *);
++extern int tcm_loop_queue_status(struct se_cmd *);
++extern int tcm_loop_queue_tm_rsp(struct se_cmd *);
++extern u16 tcm_loop_set_fabric_sense_len(struct se_cmd *, u32);
++extern u16 tcm_loop_get_fabric_sense_len(void);
++extern u64 tcm_loop_pack_lun(unsigned int);
+diff --git a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
+new file mode 100644
+index 0000000..b95ed03
+--- /dev/null
++++ b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
+@@ -0,0 +1,618 @@
++/*******************************************************************************
++ * Filename:  tcm_loop_fabric_scsi.c
++ *
++ * This file contains the Linux/SCSI LLD virtual SCSI initiator driver
++ * for emulated SAS initiator ports
++ *
++ * Copyright (c) 2009-2010 Rising Tide, Inc.
++ * Copyright (c) 2009-2010 Linux-iSCSI.org
++ *
++ * Copyright (c) 2009-2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ ****************************************************************************/
++
++#include <linux/module.h>
++#include <linux/moduleparam.h>
++#include <linux/version.h>
++#include <generated/utsrelease.h>
++#include <linux/utsname.h>
++#include <linux/init.h>
++#include <linux/slab.h>
++#include <linux/types.h>
++#include <linux/string.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_tcq.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/libsas.h> /* For TASK_ATTR_* */
++
++#include <target/target_core_base.h>
++#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_device.h>
++#include <target/target_core_tpg.h>
++#include <target/target_core_tmr.h>
++
++#include <tcm_loop_core.h>
++#include <tcm_loop_fabric.h>
++#include <tcm_loop_fabric_scsi.h>
++
++#define to_tcm_loop_hba(hba)	container_of(hba, struct tcm_loop_hba, dev)
++
++/* 
++ * Allocate a tcm_loop cmd descriptor from target_core_mod code
++ *
++ * Can be called from interrupt context in tcm_loop_queuecommand() below
++ */
++static struct se_cmd *tcm_loop_allocate_core_cmd(
++	struct tcm_loop_hba *tl_hba,
++	struct se_portal_group *se_tpg,
++	struct scsi_cmnd *sc)
++{
++	struct se_cmd *se_cmd;
++	struct se_session *se_sess;
++	struct tcm_loop_nexus *tl_nexus = tl_hba->tl_nexus;
++	struct tcm_loop_cmd *tl_cmd;
++	int sam_task_attr;
++
++	if (!(tl_nexus)) {
++		scmd_printk(KERN_ERR, sc, "TCM_Loop I_T Nexus"
++				" does not exist\n");
++		return NULL;
++	}
++	se_sess = tl_nexus->se_sess;
++
++	tl_cmd = kmem_cache_zalloc(tcm_loop_cmd_cache, GFP_ATOMIC);
++	if (!(tl_cmd)) {
++		printk(KERN_ERR "Unable to allocate struct tcm_loop_cmd\n");
++		return NULL;
++	}
++	se_cmd = &tl_cmd->tl_se_cmd;
++	/*
++	 * Save the pointer to struct scsi_cmnd *sc
++	 */
++	tl_cmd->sc = sc;
++	/*
++	 * Locate the SAM Task Attr from struct scsi_cmnd *
++	 */
++	if (sc->device->tagged_supported) {
++		switch (sc->tag) {
++		case HEAD_OF_QUEUE_TAG:
++			sam_task_attr = TASK_ATTR_HOQ;
++			break;
++		case ORDERED_QUEUE_TAG:
++			sam_task_attr = TASK_ATTR_ORDERED;
++			break;
++		default:
++			sam_task_attr = TASK_ATTR_SIMPLE;
++			break;
++		}
++	} else
++		sam_task_attr = TASK_ATTR_SIMPLE;
++
++	/*
++	 * Initialize struct se_cmd descriptor from target_core_mod infrastructure
++	 */
++	transport_init_se_cmd(se_cmd, se_tpg->se_tpg_tfo, se_sess,
++			scsi_bufflen(sc), sc->sc_data_direction, sam_task_attr,
++			&tl_cmd->tl_sense_buf[0]);
++
++	/*
++	 * Signal BIDI usage with T_TASK(cmd)->t_tasks_bidi
++	 */
++	if (scsi_bidi_cmnd(sc))
++		T_TASK(se_cmd)->t_tasks_bidi = 1;
++	/*
++	 * Locate the struct se_lun pointer and attach it to struct se_cmd
++	 */
++	if (transport_get_lun_for_cmd(se_cmd, NULL,
++				tl_cmd->sc->device->lun) < 0) {
++		/* NON_EXISTENT_LUN */
++		transport_send_check_condition_and_sense(se_cmd,
++				se_cmd->scsi_sense_reason, 0);
++		return 0;
++	}
++	/*
++	 * Make early call to setup se_cmd->transport_add_cmd_to_queue() pointer
++	 */
++	transport_device_setup_cmd(se_cmd);
++
++	return se_cmd;
++}
++
++/*
++ * Called by struct target_core_fabric_ops->new_cmd_map()
++ *
++ * Always called in process context.  A non zero return value
++ * here will signal to handle an exception based on the return code.
++ */
++int tcm_loop_new_cmd_map(struct se_cmd *se_cmd)
++{
++	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
++				struct tcm_loop_cmd, tl_se_cmd);
++	struct scsi_cmnd *sc = tl_cmd->sc;
++	void *mem_ptr, *mem_bidi_ptr = NULL;
++	u32 sg_no_bidi = 0;
++	int ret;
++	/*
++	 * Allocate the necessary tasks to complete the received CDB+data
++	 */
++	ret = transport_generic_allocate_tasks(se_cmd, tl_cmd->sc->cmnd);
++	if (ret == -1) {
++		/* Out of Resources */
++		return PYX_TRANSPORT_LU_COMM_FAILURE;
++	} else if (ret == -2) {
++		/*
++		 * Handle case for SAM_STAT_RESERVATION_CONFLICT
++		 */
++		if (se_cmd->se_cmd_flags & SCF_SCSI_RESERVATION_CONFLICT)
++			return PYX_TRANSPORT_RESERVATION_CONFLICT;
++		/*
++		 * Otherwise, return SAM_STAT_CHECK_CONDITION and return
++		 * sense data.
++		 */
++		return PYX_TRANSPORT_USE_SENSE_REASON;
++	}
++	/*
++	 * Setup the struct scatterlist memory from the received
++	 * struct scsi_cmnd.
++	 */
++	if (scsi_sg_count(sc)) {
++		se_cmd->se_cmd_flags |= SCF_PASSTHROUGH_SG_TO_MEM;
++		mem_ptr = (void *)scsi_sglist(sc);
++		/*
++		 * For BIDI commands, pass in the extra READ buffer
++		 * to transport_generic_map_mem_to_cmd() below..
++		 */
++		if (T_TASK(se_cmd)->t_tasks_bidi) {
++			struct scsi_data_buffer *sdb = scsi_in(sc);
++
++			mem_bidi_ptr = (void *)sdb->table.sgl;
++			sg_no_bidi = sdb->table.nents;
++		}
++	} else {
++		/*
++		 * Used for DMA_NONE
++		 */
++                mem_ptr = NULL;
++        }
++	/*
++	 * Map the SG memory into struct se_mem->page linked list using the same
++	 * physical memory at sg->page_link.
++	 */
++	ret = transport_generic_map_mem_to_cmd(se_cmd, mem_ptr,
++			scsi_sg_count(sc), mem_bidi_ptr, sg_no_bidi);
++	if (ret < 0)
++		return PYX_TRANSPORT_LU_COMM_FAILURE;
++
++	return 0;
++}
++
++/*
++ * Called from struct target_core_fabric_ops->check_stop_free()
++ */
++void tcm_loop_check_stop_free(struct se_cmd *se_cmd)
++{
++	/*
++	 * Do not release struct se_cmd's containing a valid TMR
++	 * pointer.  These will be released directly in tcm_loop_device_reset()
++	 * with transport_generic_free_cmd().
++	 */
++	if (se_cmd->se_tmr_req)
++		return;
++	/*
++	 * Release the struct se_cmd, which will make a callback to release
++	 * struct tcm_loop_cmd * in tcm_loop_deallocate_core_cmd()
++	 */
++	transport_generic_free_cmd(se_cmd, 0, 1, 0);
++}
++
++/*
++ * Called from struct target_core_fabric_ops->release_cmd_to_pool()
++ */
++void tcm_loop_deallocate_core_cmd(struct se_cmd *se_cmd)
++{
++	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
++				struct tcm_loop_cmd, tl_se_cmd);
++
++	kmem_cache_free(tcm_loop_cmd_cache, tl_cmd);
++}
++
++void tcm_loop_scsi_forget_host(struct Scsi_Host *shost)
++{
++        struct scsi_device *sdev, *tmp;
++        unsigned long flags;
++
++        spin_lock_irqsave(shost->host_lock, flags);
++        list_for_each_entry_safe(sdev, tmp, &shost->__devices, siblings) {
++                spin_unlock_irqrestore(shost->host_lock, flags);
++                scsi_remove_device(sdev);
++                spin_lock_irqsave(shost->host_lock, flags);
++        }
++        spin_unlock_irqrestore(shost->host_lock, flags);
++}
++
++static int tcm_loop_proc_info(struct Scsi_Host *host, char *buffer,
++				char **start, off_t offset,
++				int length, int inout)
++{
++	return sprintf(buffer, "tcm_loop_proc_info()\n");
++}
++
++static int tcm_loop_driver_probe(struct device *);
++static int tcm_loop_driver_remove(struct device *);
++
++static int pseudo_lld_bus_match(struct device *dev,
++				struct device_driver *dev_driver)
++{
++	return 1;
++}
++
++static struct bus_type tcm_loop_lld_bus = {
++	.name			= "tcm_loop_bus",
++	.match			= pseudo_lld_bus_match,
++	.probe			= tcm_loop_driver_probe,
++	.remove			= tcm_loop_driver_remove,
++};
++
++static struct device_driver tcm_loop_driverfs = {
++	.name			= "tcm_loop",
++	.bus			= &tcm_loop_lld_bus,
++};
++/*
++ * Used with root_device_register() in tcm_loop_alloc_core_bus() below
++ */
++struct device *tcm_loop_primary;
++
++/*
++ * Copied from drivers/scsi/libfc/fc_fcp.c:fc_change_queue_depth() and
++ * drivers/scsi/libiscsi.c:iscsi_change_queue_depth()
++ */
++static int tcm_loop_change_queue_depth(
++	struct scsi_device *sdev,
++	int depth,
++	int reason)
++{
++	switch (reason) {
++	case SCSI_QDEPTH_DEFAULT:
++		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
++		break;
++	case SCSI_QDEPTH_QFULL:
++		scsi_track_queue_full(sdev, depth);
++		break;
++	case SCSI_QDEPTH_RAMP_UP:
++		scsi_adjust_queue_depth(sdev, scsi_get_tag_type(sdev), depth);
++		break;
++	default:
++		return -EOPNOTSUPP;
++	}
++	return sdev->queue_depth;
++}
++
++static inline struct tcm_loop_hba *tcm_loop_get_hba(struct scsi_cmnd *sc)
++{
++	return (struct tcm_loop_hba *)sc->device->host->hostdata[0];
++}
++
++/*
++ * Main entry point from struct scsi_host_template for incoming SCSI CDB+Data
++ * from Linux/SCSI subsystem for SCSI low level device drivers (LLDs)
++ */
++static int tcm_loop_queuecommand(
++	struct scsi_cmnd *sc,
++	void (*done)(struct scsi_cmnd *))
++{
++	struct se_cmd *se_cmd;
++	struct se_portal_group *se_tpg;
++	struct Scsi_Host *host = sc->device->host;
++	struct tcm_loop_hba *tl_hba;
++	struct tcm_loop_tpg *tl_tpg;
++
++	sc->scsi_done = done;
++
++	TL_CDB_DEBUG("tcm_loop_queuecommand() %d:%d:%d:%d got CDB: 0x%02x"
++		" scsi_buf_len: %u\n", sc->device->host->host_no,
++		sc->device->id, sc->device->channel, sc->device->lun,
++		sc->cmnd[0], scsi_bufflen(sc));
++
++	spin_unlock_irq(host->host_lock);
++	/*
++	 * Locate the tcm_loop_hba_t pointer 
++	 */
++	tl_hba = tcm_loop_get_hba(sc);
++	if (!(tl_hba)) {
++		printk(KERN_ERR "Unable to locate struct tcm_loop_hba from"
++				" struct scsi_cmnd\n");
++		sc->result = host_byte(DID_ERROR);
++		(*done)(sc);
++		return 0;	
++	}
++	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
++	se_tpg = &tl_tpg->tl_se_tpg;
++	/*
++	 * Determine the SAM Task Attribute and allocate tl_cmd and
++	 * tl_cmd->tl_se_cmd from TCM infrastructure
++	 */
++	se_cmd = tcm_loop_allocate_core_cmd(tl_hba, se_tpg, sc);
++	if (!(se_cmd)) {
++		spin_lock_irq(host->host_lock);
++		sc->result = host_byte(DID_ERROR);
++		(*done)(sc);
++		return 0;
++	}
++	/*
++	 * Queue up the newly allocated to be processed in TCM thread context.
++	*/
++	se_cmd->transport_add_cmd_to_queue(se_cmd, TRANSPORT_NEW_CMD_MAP);
++	/*
++	 * Reaquire the the struct scsi_host->host_lock before returning
++	 */
++	spin_lock_irq(host->host_lock);
++	return 0;
++}
++
++/*
++ * Called from SCSI EH process context to issue a LUN_RESET TMR
++ * to struct scsi_device
++ */
++static int tcm_loop_device_reset(struct scsi_cmnd *sc)
++{
++	struct se_cmd *se_cmd = NULL;
++	struct se_portal_group *se_tpg;
++	struct se_session *se_sess;
++	struct tcm_loop_cmd *tl_cmd = NULL;
++	struct tcm_loop_hba *tl_hba;
++	struct tcm_loop_nexus *tl_nexus;
++	struct tcm_loop_tmr *tl_tmr = NULL;
++	struct tcm_loop_tpg *tl_tpg;
++	int ret = FAILED;
++	/*
++	 * Locate the tcm_loop_hba_t pointer 
++	 */
++	tl_hba = tcm_loop_get_hba(sc);
++	if (!(tl_hba)) {
++		printk(KERN_ERR "Unable to locate struct tcm_loop_hba from"
++				" struct scsi_cmnd\n");
++		return FAILED;
++	}
++	/*
++	 * Locate the tl_nexus and se_sess pointers
++	 */
++	tl_nexus = tl_hba->tl_nexus;
++	if (!(tl_nexus)) {
++		printk(KERN_ERR "Unable to perform device reset without"
++				" active I_T Nexus\n");
++		return FAILED;
++	}
++	se_sess = tl_nexus->se_sess;
++	/*
++	 * Locate the tl_tpg and se_tpg pointers from TargetID in sc->device->id
++	 */
++	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
++	se_tpg = &tl_tpg->tl_se_tpg;
++
++	tl_cmd = kmem_cache_zalloc(tcm_loop_cmd_cache, GFP_KERNEL);
++	if (!(tl_cmd)) {
++		printk(KERN_ERR "Unable to allocate memory for tl_cmd\n");
++		return FAILED;
++	}
++
++	tl_tmr = kzalloc(sizeof(struct tcm_loop_tmr), GFP_KERNEL);
++	if (!(tl_tmr)) {
++		printk(KERN_ERR "Unable to allocate memory for tl_tmr\n");
++		goto release;
++	}
++	init_waitqueue_head(&tl_tmr->tl_tmr_wait);
++
++	se_cmd = &tl_cmd->tl_se_cmd;
++	/*
++	 * Initialize struct se_cmd descriptor from target_core_mod infrastructure
++	 */
++	transport_init_se_cmd(se_cmd, se_tpg->se_tpg_tfo, se_sess, 0,
++				DMA_NONE, TASK_ATTR_SIMPLE,
++				&tl_cmd->tl_sense_buf[0]);
++	/*
++	 * Allocate the LUN_RESET TMR
++	 */
++	se_cmd->se_tmr_req = core_tmr_alloc_req(se_cmd, (void *)tl_tmr,
++				LUN_RESET);
++	if (!(se_cmd->se_tmr_req))
++		goto release;
++	/*
++	 * Locate the underlying TCM struct se_lun from sc->device->lun
++	 */
++	if (transport_get_lun_for_tmr(se_cmd, sc->device->lun) < 0)
++		goto release;
++	/*
++	 * Queue the TMR to TCM Core and sleep waiting for tcm_loop_queue_tm_rsp()
++	 * to wake us up.
++	 */
++	transport_generic_handle_tmr(se_cmd);	
++	wait_event(tl_tmr->tl_tmr_wait, atomic_read(&tl_tmr->tmr_complete));
++	/*
++	 * The TMR LUN_RESET has completed, check the response status and
++	 * then release allocations.
++	 */
++	ret = (se_cmd->se_tmr_req->response == TMR_FUNCTION_COMPLETE) ?
++		SUCCESS : FAILED;
++release:
++	if (se_cmd)
++		transport_generic_free_cmd(se_cmd, 1, 1, 0);
++	else
++		kmem_cache_free(tcm_loop_cmd_cache, tl_cmd);
++	kfree(tl_tmr);
++	return ret;
++}
++
++static int tcm_loop_slave_alloc(struct scsi_device *sd)
++{
++	set_bit(QUEUE_FLAG_BIDI, &sd->request_queue->queue_flags);
++	return 0;
++}
++
++static int tcm_loop_slave_configure(struct scsi_device *sd)
++{
++	return 0;
++}
++
++static struct scsi_host_template tcm_loop_driver_template = {
++	.proc_info		= tcm_loop_proc_info,
++	.proc_name		= "tcm_loopback",
++	.name			= "TCM_Loopback",
++	.info			= NULL,
++	.slave_alloc		= NULL,
++	.slave_configure	= NULL,
++	.slave_destroy		= NULL,
++	.ioctl			= NULL,
++	.queuecommand		= tcm_loop_queuecommand,
++	.change_queue_depth	= tcm_loop_change_queue_depth,
++	.eh_abort_handler	= NULL,
++	.eh_bus_reset_handler	= NULL,
++	.eh_device_reset_handler = tcm_loop_device_reset,
++	.eh_host_reset_handler	= NULL,
++	.bios_param		= NULL,
++	.can_queue		= TL_SCSI_CAN_QUEUE,
++	.this_id		= -1,
++	.sg_tablesize		= TL_SCSI_SG_TABLESIZE,
++	.cmd_per_lun		= TL_SCSI_CMD_PER_LUN,
++	.max_sectors		= TL_SCSI_MAX_SECTORS,
++	.use_clustering		= DISABLE_CLUSTERING,
++	.slave_alloc		= tcm_loop_slave_alloc,
++	.slave_configure	= tcm_loop_slave_configure,
++	.module			= THIS_MODULE,
++};
++
++static int tcm_loop_driver_probe(struct device *dev)
++{
++	struct tcm_loop_hba *tl_hba;
++	struct Scsi_Host *sh;
++	int error;
++
++	tl_hba = to_tcm_loop_hba(dev);
++
++	sh = scsi_host_alloc(&tcm_loop_driver_template,
++			sizeof(struct tcm_loop_hba));
++	if (!(sh)) {
++		printk(KERN_ERR "Unable to allocate struct scsi_host\n");
++		return -ENODEV;
++	}
++	tl_hba->sh = sh;
++
++	/*
++	 * Assign the struct tcm_loop_hba pointer to struct Scsi_Host->hostdata
++	 */
++	sh->hostdata[0] = (unsigned long)tl_hba;
++	/*
++	 * Setup single ID, Channel and LUN for now..
++	 */
++	sh->max_id = 2;
++	sh->max_lun = 0;
++	sh->max_channel = 0;
++	sh->max_cmd_len = TL_SCSI_MAX_CMD_LEN;
++
++	error = scsi_add_host(sh, &tl_hba->dev);
++	if (error) {
++		printk(KERN_ERR "%s: scsi_add_host failed\n", __func__);
++		scsi_host_put(sh);
++		return -ENODEV;
++	}
++	return 0;
++}
++
++static int tcm_loop_driver_remove(struct device *dev)
++{
++	struct tcm_loop_hba *tl_hba;
++	struct Scsi_Host *sh;
++
++	tl_hba = to_tcm_loop_hba(dev);
++	sh = tl_hba->sh;
++
++	scsi_remove_host(sh);
++	scsi_host_put(sh);
++	return 0;
++}
++
++static void tcm_loop_release_adapter(struct device *dev)
++{
++	struct tcm_loop_hba *tl_hba = to_tcm_loop_hba(dev);
++
++	kfree(tl_hba);
++}
++
++/*
++ * Called from tcm_loop_make_scsi_hba() in tcm_loop_configfs.c
++ */
++int tcm_loop_setup_hba_bus(struct tcm_loop_hba *tl_hba, int tcm_loop_host_id)
++{
++	int ret;
++
++	tl_hba->dev.bus = &tcm_loop_lld_bus;
++	tl_hba->dev.parent = tcm_loop_primary;
++	tl_hba->dev.release = &tcm_loop_release_adapter;
++	dev_set_name(&tl_hba->dev, "tcm_loop_adapter_%d", tcm_loop_host_id);
++
++	ret = device_register(&tl_hba->dev);
++	if (ret) {
++		printk(KERN_ERR "device_register() failed for"
++				" tl_hba->dev: %d\n", ret);
++		return -ENODEV;
++	}
++
++	return 0;
++}
++
++/*
++ * Called from tcm_loop_fabric_init() in tcl_loop_fabric.c to load the emulated
++ * tcm_loop SCSI bus.
++ */
++int tcm_loop_alloc_core_bus(void)
++{
++	int ret;
++
++	tcm_loop_primary = root_device_register("tcm_loop_0");
++	if (IS_ERR(tcm_loop_primary)) {
++		printk(KERN_ERR "Unable to allocate tcm_loop_primary\n");
++		return PTR_ERR(tcm_loop_primary);
++	}
++	
++	ret = bus_register(&tcm_loop_lld_bus);
++	if (ret) {
++		printk(KERN_ERR "bus_register() failed for tcm_loop_lld_bus\n");
++		goto dev_unreg;
++	}
++
++	ret = driver_register(&tcm_loop_driverfs);
++	if (ret) {
++		printk(KERN_ERR "driver_register() failed for"
++				"tcm_loop_driverfs\n");
++		goto bus_unreg;
++	}
++
++	printk(KERN_INFO "Initialized TCM Loop Core Bus\n");
++	return ret;
++
++bus_unreg:
++	bus_unregister(&tcm_loop_lld_bus);
++dev_unreg:
++	root_device_unregister(tcm_loop_primary);
++	return ret;
++}
++
++void tcm_loop_release_core_bus(void)
++{
++	driver_unregister(&tcm_loop_driverfs);
++	bus_unregister(&tcm_loop_lld_bus);
++	root_device_unregister(tcm_loop_primary);
++
++	printk(KERN_INFO "Releasing TCM Loop Core BUS\n");
++}
+diff --git a/drivers/target/tcm_loop/tcm_loop_fabric_scsi.h b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.h
+new file mode 100644
+index 0000000..bcba89b
+--- /dev/null
++++ b/drivers/target/tcm_loop/tcm_loop_fabric_scsi.h
+@@ -0,0 +1,10 @@
++extern struct kmem_cache *tcm_loop_cmd_cache;
++
++extern int tcm_loop_new_cmd_map(struct se_cmd *);
++extern void tcm_loop_check_stop_free(struct se_cmd *);
++extern void tcm_loop_deallocate_core_cmd(struct se_cmd *);
++extern void tcm_loop_scsi_forget_host(struct Scsi_Host *);
++extern void tcm_loop_deallocate_core_cmd(struct se_cmd *);
++extern int tcm_loop_setup_hba_bus(struct tcm_loop_hba *, int);
++extern int tcm_loop_alloc_core_bus(void);
++extern void tcm_loop_release_core_bus(void);
 -- 
 1.7.3.1
