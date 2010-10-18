@@ -1,67 +1,94 @@
-From: Nicolas Kaiser <nikai@nikai.net>
-Subject: [PATCH] fusion: fix module parameter descriptions
-Date: Mon, 18 Oct 2010 12:19:34 +0200
-Message-ID: <20101018121934.3c01bb55@absol.kitzblitz>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [RFC] training mpath to discern between SCSI errors
+Date: Mon, 18 Oct 2010 13:55:26 +0200
+Message-ID: <4CBC35AE.9050002@suse.de>
+References: <20100825155918.GB8509@redhat.com>	<4C7B984E.4070802@suse.de>	<4C7B9F14.9080900@mvista.com>	<4C7BA670.2060303@suse.de> <4C7BC5B4.3010707@suse.de> <4CBC00B3.7090603@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from webhosting01.bon.m2soft.com ([195.38.20.32]:34256 "EHLO
-	webhosting01.bon.m2soft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754827Ab0JRKWt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Oct 2010 06:22:49 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4CBC00B3.7090603@ce.jp.nec.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Cc: device-mapper development <dm-devel@redhat.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, jack@suse.cz, vst@vlnb.net, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@suse.de, chris.mason@oracle.com, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, Sergei Shtylyov <sshtylyov@mvista.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Moore <Eric.Moore@lsi.com>
-Cc: support@lsi.com, DL-MPTFusionLinux@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Fix module parameter descriptions that line wrap within quotes.
+On 10/18/2010 10:09 AM, Jun'ichi Nomura wrote:
+> Hi Hannes,
+>=20
+> Thank you for working on this issue and sorry for very late reply...
+>=20
+> (08/30/10 23:52), Hannes Reinecke wrote:
+>> From: Hannes Reinecke <hare@suse.de>
+>> Date: Mon, 30 Aug 2010 16:21:10 +0200
+>> Subject: [RFC][PATCH] scsi: Detailed I/O errors
+>>
+>> Instead of just passing 'EIO' for any I/O errors we should be
+>> notifying the upper layers with some more details about the cause
+>> of this error.
+>> This patch updates the possible I/O errors to:
+>>
+>> - ENOLINK: Link failure between host and target
+>> - EIO: Retryable I/O error
+>> - EREMOTEIO: Non-retryable I/O error
+>>
+>> 'Retryable' in this context means that an I/O error _might_ be
+>> restricted to the I_T_L nexus (vulgo: path), so retrying on another
+>> nexus / path might succeed.
+>=20
+> Does 'retryable' of EIO mean retryable in multipath layer?
+> If so, what is the difference between EIO and ENOLINK?
+>=20
+Yes, EIO is intended for errors which should be retried at the
+multipath layer. This does _not_ include transport errors, which are
+signalled by ENOLINK.
 
-Signed-off-by: Nicolas Kaiser <nikai@nikai.net>
----
- drivers/message/fusion/mptbase.c |   16 ++++++++--------
- 1 files changed, 8 insertions(+), 8 deletions(-)
+Basically, ENOLINK is a transport error, and EIO just means
+something is wrong and we weren't able to classify it properly.
+If we were, it'd be either ENOLINK or EREMOTEIO.
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 6837a8e..2b3519d 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -83,18 +83,18 @@ MODULE_VERSION(my_VERSION);
- 
- static int mpt_msi_enable_spi;
- module_param(mpt_msi_enable_spi, int, 0);
--MODULE_PARM_DESC(mpt_msi_enable_spi, " Enable MSI Support for SPI \
--		controllers (default=0)");
-+MODULE_PARM_DESC(mpt_msi_enable_spi, " Enable MSI Support for SPI"
-+		" controllers (default=0)");
- 
- static int mpt_msi_enable_fc;
- module_param(mpt_msi_enable_fc, int, 0);
--MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC \
--		controllers (default=0)");
-+MODULE_PARM_DESC(mpt_msi_enable_fc, " Enable MSI Support for FC"
-+		" controllers (default=0)");
- 
- static int mpt_msi_enable_sas;
- module_param(mpt_msi_enable_sas, int, 0);
--MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS \
--		controllers (default=0)");
-+MODULE_PARM_DESC(mpt_msi_enable_sas, " Enable MSI Support for SAS"
-+		" controllers (default=0)");
- 
- 
- static int mpt_channel_mapping;
-@@ -105,8 +105,8 @@ static int mpt_debug_level;
- static int mpt_set_debug_level(const char *val, struct kernel_param *kp);
- module_param_call(mpt_debug_level, mpt_set_debug_level, param_get_int,
- 		  &mpt_debug_level, 0600);
--MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h \
--	- (default=0)");
-+MODULE_PARM_DESC(mpt_debug_level, " debug level - refer to mptdebug.h"
-+	" - (default=0)");
- 
- int mpt_fwfault_debug;
- EXPORT_SYMBOL(mpt_fwfault_debug);
--- 
-1.7.2.2
+> I've heard of a case where just retrying within path-group is
+> preferred to (relatively costly) switching group.
+> So, if EIO (or other error code) can be used to indicate such type
+> of errors, it's nice.
+>=20
+Yes, that was one of the intention.
+
+>=20
+> Also (although this might be a bit off topic from your patch),
+> can we expand such a distinction to what should be logged?
+> Currently, it's difficult to distinguish important SCSI/block errors
+> and less important ones in kernel log.
+> For example, when I get a link failure on sda, kernel prints somethin=
+g
+> like below, regardless of whether the I/O is recovered by multipathin=
+g or not:
+>   end_request: I/O error, dev sda, sector XXXXX
+>=20
+Indeed, when using the above we could be modifying the above
+message, eg by
+
+end_request: transport error, dev sda, sector XXXXX
+
+or
+
+end_request: target error, dev sda, sector XXXXX
+
+which would improve the output noticeable.
+
+> Setting REQ_QUIET in dm-multipath could mask the message
+> but also other important ones in SCSI.
+>=20
+Hmm. Not sure about that, but I think the above modifications will
+be useful already.
+
+I'll be sending an updated patch.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
