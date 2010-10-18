@@ -1,39 +1,132 @@
-From: "Chauhan, Vijay" <Vijay.Chauhan@lsi.com>
-Subject: [PATCH] scsi_dh_rdac: Add two new SUN devices to
-	rdac_dev_list
-Date: Mon, 18 Oct 2010 14:07:24 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED704BAACC6@inbmail01.lsi.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Michal Ludvig <mludvig@logix.net.nz>
+Subject: scsi_wait_scan doesn't wait
+Date: Mon, 18 Oct 2010 22:16:31 +1300
+Message-ID: <4CBC106F.1090103@logix.net.nz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from maxipes.logix.cz ([93.89.80.122]:53191 "EHLO maxipes.logix.cz"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752900Ab0JRJlr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Oct 2010 05:41:47 -0400
+Received: from [IPv6:2001:e20:2000:401:21a:73ff:fee5:5006] (unknown [IPv6:2001:e20:2000:401:21a:73ff:fee5:5006])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by maxipes.logix.cz (Postfix) with ESMTP id 018435B433A
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Oct 2010 22:12:13 +1300 (NZDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This patch adds two new SUN vendor/model in rdac device handlers.
-Signed-off-by: Vijay Chauhan <vijay.chauhan@lsi.com>
----
---- scsi_dh_rdac.c.orig	2010-10-11 23:23:42.000000000 +0530
-+++ scsi_dh_rdac.c	2010-10-11 23:25:31.000000000 +0530
-@@ -773,6 +773,8 @@ static const struct scsi_dh_devlist rdac
- 	{"ENGENIO", "INF-01-00"},
- 	{"STK", "FLEXLINE 380"},
- 	{"SUN", "CSM100_R_FC"},
-+	{"SUN", "STK6580_6780"},
-+	{"SUN", "SUN_6180"},
- 	{NULL, NULL},
- };
- 
---
+  Hi there,
+
+I'm having a problem with 2.6.36-rc8+ on HP PARISC machine (HP 9000 
+RP3410) where I intend to wait for SCSI enumeration during boot before 
+LVM2 kicks in and attempts to activate the root volume. I modprobe 
+scsi_wait_scan in the initramdisk before lvm2 script is run. However the 
+modprobe doesn't wait. I'm on Debian testing, fwiw.
+
+[...]
+[    2.368000] Freeing unused kernel memory: 252k freed
+Loading, please wait...
+[    3.028000] udev: starting version 160
+[    4.104000] SCSI subsystem initialized
+[    4.592000] sym0: <1010-66> rev 0x1 at pci 0000:20:01.0 irq 69
+[    4.668000] sym0: No NVRAM, ID 7, Fast-80, LVD, parity checking
+[    4.700000] sym0: SCSI BUS has been reset.
+[    4.708000] scsi0 : sym-2.2.3
+[    4.868000] sym1: <1010-66> rev 0x1 at pci 0000:20:01.1 irq 70
+[    4.868000] sym1: No NVRAM, ID 7, Fast-80, LVD, parity checking
+[    4.904000] sym1: SCSI BUS has been reset.
+[    4.908000] scsi1 : sym-2.2.3
+[    5.068000] sym2: <1010-66> rev 0x1 at pci 0000:80:01.0 irq 72
+[    5.072000] sym2: No NVRAM, ID 7, Fast-80, LVD, parity checking
+[    5.108000] sym2: SCSI BUS has been reset.
+[    5.112000] scsi2 : sym-2.2.3
+[    5.276000] sym3: <1010-66> rev 0x1 at pci 0000:80:01.1 irq 73
+[    5.276000] sym3: No NVRAM, ID 7, Fast-80, LVD, parity checking
+[    5.312000] sym3: SCSI BUS has been reset.
+[    5.316000] scsi3 : sym-2.2.3
+Begin: Loading essential drivers ... done.
+Begin: Running /scripts/init-premount ... SCSI: Waiting to settle...
+
+######### here comes modprobe scsi_wait_scan #########
+
+SCSI: done
+done.
+Begin: Mounting root file system ... Begin: Running /scripts/local-top 
+... [    6.496000] device-mapper: uevent: version 1.0.3
+[    6.496000] device-mapper: ioctl: 4.18.0-ioctl (2010-06-29) 
+initialised: dm-devel@redhat.com
+   Volume group "lethal" not found
+   Skipping volume group lethal
+Unable to find LVM volume lethal/root
+done.
+Begin: Waiting for root file system ... [    7.728000] scsi 0:0:0:0: 
+Direct-Access     HP 36.4G ST336754LC       HPC2 PQ: 0 ANSI: 3
+[    7.728000] scsi target0:0:0: tagged command queuing enabled, command 
+queue depth 16.
+[    7.728000] scsi target0:0:0: Beginning Domain Validation
+[    7.740000] scsi target0:0:0: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 
+ns, offset 31)
+[    7.748000] scsi target0:0:0: Ending Domain Validation
+[    7.752000] scsi 0:0:1:0: Direct-Access     HP 36.4G MAS3367NC        
+HPC3 PQ: 0 ANSI: 3
+[    7.752000] scsi target0:0:1: tagged command queuing enabled, command 
+queue depth 16.
+[    7.760000] scsi target0:0:1: Beginning Domain Validation
+[    7.764000] scsi target0:0:1: FAST-80 WIDE SCSI 160.0 MB/s DT (12.5 
+ns, offset 31)
+[    7.772000] scsi target0:0:1: Ending Domain Validation
+[   11.864000] sd 0:0:0:0: [sda] 71132960 512-byte logical blocks: (36.4 
+GB/33.9 GiB)
+[   11.864000] sd 0:0:1:0: [sdb] 71132960 512-byte logical blocks: (36.4 
+GB/33.9 GiB)
+[   11.868000] sd 0:0:0:0: [sda] Write Protect is off
+[   11.892000] sd 0:0:1:0: [sdb] Write Protect is off
+[   11.900000] sd 0:0:0:0: [sda] Write cache: enabled, read cache: 
+enabled, supports DPO and FUA
+[   11.900000] sd 0:0:1:0: [sdb] Write cache: enabled, read cache: 
+enabled, supports DPO and FUA
+[   11.924000]  sda: unknown partition table
+[   11.940000]  sdb: sdb1 sdb2 sdb3
+[   11.944000] sd 0:0:0:0: [sda] Attached SCSI disk
+[   11.964000] sd 0:0:1:0: [sdb] Attached SCSI disk
+done.
+Gave up waiting for root device.  Common problems:
+  - Boot args (cat /proc/cmdline)
+    - Check rootdelay= (did the system wait long enough?)
+    - Check root= (did the system wait for the right device?)
+  - Missing modules (cat /proc/modules; ls /dev)
+ALERT!  /dev/mapper/lethal-root does not exist.  Dropping to a shell!
+
+Apparently /dev/sda and /dev/sdb were discovered long after 
+scsi_wait_scan was loaded.
+
+Here are the relevant modules:
+[...]
+ext3                  203543  2
+jbd                    63990  1 ext3
+dm_mod                112954  9
+scsi_wait_scan           983  0
+zalon7xx               38131  0
+lasi700                 2427  0
+53c700                 39777  1 lasi700
+hilkbd                  5901  0
+sd_mod                 49383  3
+crc_t10dif              1564  1 sd_mod
+sym53c8xx             104303  2
+scsi_transport_spi     34731  3 zalon7xx,53c700,sym53c8xx
+scsi_mod              193802  7 
+libata,zalon7xx,lasi700,53c700,sd_mod,sym53c8xx,scsi_transport_spi
+
+When I unset CONFIG_SCSI_SCAN_ASYNC it works just fine and all the disks 
+are found in time for LVM.
+
+Is that a bug in the SCSI driver? Or am I doing something wrong? It's 
+not a recent regression, at least 2.6.35 behaves the same on that machine.
+
+Thanks!
+
+Michal
