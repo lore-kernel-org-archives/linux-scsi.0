@@ -1,56 +1,94 @@
-From: "Zou, Yi" <yi.zou@intel.com>
-Subject: RE: [PATCH] libfc: fix mem leak in fc_seq_assign()
-Date: Tue, 19 Oct 2010 08:08:32 -0700
-Message-ID: <7C88852EF6F99F4EB538472FCFEBE2220146CC7FFE@orsmsx509.amr.corp.intel.com>
-References: <AANLkTimLBm2z=nWb_Q3MsyzFo_r6omMMQKnZ9FD2rtwW@mail.gmail.com>
+From: Madhu Iyengar <madhu.iyengar-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+Subject: RE: [PATCH 1/4] drivers/scsi/qla2xxx/qla_init.c: convert nested
+	spin_lock_irqsave to spin_lock
+Date: Tue, 19 Oct 2010 09:21:05 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA871294F61E8@AVEXMB1.qlogic.org>
+References: <1287481436-26656-1-git-send-email-julia@diku.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:56699 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753250Ab0JSPIf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Oct 2010 11:08:35 -0400
-In-Reply-To: <AANLkTimLBm2z=nWb_Q3MsyzFo_r6omMMQKnZ9FD2rtwW@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
+In-Reply-To: <1287481436-26656-1-git-send-email-julia-dAYI7NvHqcQ@public.gmane.org>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+List-Unsubscribe: <https://lists.ozlabs.org/options/devicetree-discuss>,
+	<mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/devicetree-discuss>
+List-Post: <mailto:devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
+List-Help: <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/devicetree-discuss>,
+	<mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=subscribe>
+Sender: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+Errors-To: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+To: Julia Lawall <julia-dAYI7NvHqcQ@public.gmane.org>, Andrew Vasquez <andrew.vasquez-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Madhu Iyengar <madhu.iyengar-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Giridhar Malavali <giridhar.malavali-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org" <devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>, "kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "James E.J. Bottomley" <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Linux Driver <Linux-Driver-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-PiANCj4gVGhlcmUgc2VlbXMgZXhjaHMgc2hvdWxkIGdldCByZWxlYXNlZCBpbiBjYXNlcyB0aGF0
-IEZDX1JKVF9OT05FIGlzDQo+IHJldHVybmVkLCBvciB0aGV5IHdpbGwgbm8gbG9uZ2VyIGdldCBm
-cmVlZC4NCj4gDQo+IEl0IGFsc28gbG9va3MgYSB0eXBvIGxpa2UgdGhlIGZvbGxvd2luZywNCj4g
-DQo+IC0JCSAgICBmY19zZXFfbG9va3VwX3JlY2lwKGxwb3J0LCBlbWEtPm1wLCBmcCkgIT0gRkNf
-UkpUX05PTkUpDQo+ICsJCSAgICBmY19zZXFfbG9va3VwX3JlY2lwKGxwb3J0LCBlbWEtPm1wLCBm
-cCkgPT0gRkNfUkpUX05PTkUpDQo+IA0KPiBidXQgSSBhbSBub3Qgc3VyZS4NCj4gDQo+IFNpZ25l
-ZC1vZmYtYnk6IEhpbGxmIERhbnRvbiA8ZGhpbGxmQGdtYWlsLmNvbT4NCj4gLS0tDQo+IA0KPiAt
-LS0gYS9kcml2ZXJzL3Njc2kvbGliZmMvZmNfZXhjaC5jCTIwMTAtMDktMTMgMDc6MDc6MzguMDAw
-MDAwMDAwICswODAwDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS9saWJmYy9mY19leGNoLmMJMjAxMC0x
-MC0xOSAyMTo0ODoyMi4wMDAwMDAwMDAgKzA4MDANCj4gQEAgLTMsNiArMyw5IEBADQo+ICAgKiBD
-b3B5cmlnaHQoYykgMjAwOCBSZWQgSGF0LCBJbmMuICBBbGwgcmlnaHRzIHJlc2VydmVkLg0KPiAg
-ICogQ29weXJpZ2h0KGMpIDIwMDggTWlrZSBDaHJpc3RpZQ0KPiAgICoNCj4gKyAqIENvcHlyaWdo
-dChjKSBPY3QgMTksIDIwMTAJSGlsbGYgRGFudG9uDQo+ICsgKgkJCQltaW5vciBmaXggb2YgbWVt
-b3J5IGxlYWthZ2UNCj4gKyAqDQo+ICAgKiBUaGlzIHByb2dyYW0gaXMgZnJlZSBzb2Z0d2FyZTsg
-eW91IGNhbiByZWRpc3RyaWJ1dGUgaXQgYW5kL29yIG1vZGlmeQ0KPiBpdA0KPiAgICogdW5kZXIg
-dGhlIHRlcm1zIGFuZCBjb25kaXRpb25zIG9mIHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5z
-ZSwNCj4gICAqIHZlcnNpb24gMiwgYXMgcHVibGlzaGVkIGJ5IHRoZSBGcmVlIFNvZnR3YXJlIEZv
-dW5kYXRpb24uDQo+IEBAIC0xMjQ2LDkgKzEyNDksMTYgQEAgc3RhdGljIHN0cnVjdCBmY19zZXEg
-KmZjX3NlcV9hc3NpZ24oc3RydQ0KPiAgCWZyX3NlcShmcCkgPSBOVUxMOw0KPiANCj4gIAlsaXN0
-X2Zvcl9lYWNoX2VudHJ5KGVtYSwgJmxwb3J0LT5lbWFfbGlzdCwgZW1hX2xpc3QpDQo+IC0JCWlm
-ICgoIWVtYS0+bWF0Y2ggfHwgZW1hLT5tYXRjaChmcCkpICYmDQo+IC0JCSAgICBmY19zZXFfbG9v
-a3VwX3JlY2lwKGxwb3J0LCBlbWEtPm1wLCBmcCkgIT0gRkNfUkpUX05PTkUpDQo+IC0JCQlicmVh
-azsNCj4gKwkJaWYgKCEgZW1hLT5tYXRjaCB8fCBlbWEtPm1hdGNoKGZwKSkNCj4gKwkJCWlmIChm
-Y19zZXFfbG9va3VwX3JlY2lwKGxwb3J0LCBlbWEtPm1wLCBmcCkgIT0NCj4gKwkJCQlGQ19SSlRf
-Tk9ORSkNCj4gKwkJCQlicmVhazsNClRoaXMgbG9va3MgbW9yZSB0byBiZSBhICc9PScgaGVyZSBh
-cyB5b3UgcG9pbnRlZCBvdXQgc2luY2UgeW91IGVpdGhlciANCmdldCBhIHJlamVjdGlvbiBjb2Rl
-IG9yIGhhdmUgZm91bmQvYWxsb2NhdGVkIGV4Y2hhbmdlIHZpYSB0aGUgbG9va3VwX3JlY2lwKCkN
-CmhlcmUuIFdoZW4gbm90IFJKVF9OT05FLCB0cnkgbmV4dCBlbSBpbiB0aGUgbGlzdCwgaG93ZXZl
-ciwgZG9lcyBub3QgbG9vaw0KbGlrZSBhbnl3aGVyZSB0aGUgUkpUIGlzIHNlbnQgYmFjayB3aGVu
-IG5vdCBSSlRfTk9ORS4gUHJvYmFibHkgdGhlIGNhbGxlcg0Kd291bGQgY2hlY2sgaWYgdGhlIHJl
-dHVybiBiZWluZyBOVUxMIHRoZW4gc2VuZCBpdHMgb3duIHJlamVjdGlvbiBjb2RlLg0KDQo+ICsJ
-CQllbHNlIHsNCj4gKwkJCQlzdHJ1Y3QgZmNfc2VxICpzZXEgPSBmcl9zZXEoZnApOw0KPiArCQkJ
-CXN0cnVjdCBmY19leGNoICpleGNoID0gZmNfc2VxX2V4Y2goc2VxKTsNCj4gKwkJCQlmY19leGNo
-X3JlbGVhc2UoZXhjaCk7DQo+ICsJCQl9DQo+ICsNCkkgYmVsaWV2ZSB5b3Ugd2FudCB0byBob2xk
-IHRoZSBleGNoIGhlcmUgaWYgeW91IGZpbmQgb25lLg0KDQo+ICAJcmV0dXJuIGZyX3NlcShmcCk7
-DQo+ICB9DQoNCg0K
+Julia,
+
+We've submitted this patch upstream to scsi-misc already on Oct 15th (Dan Carpenter had flagged this). Here's the submission info (patch (01/12) or item #12 in the link below:
+
+http://marc.info/?l=linux-scsi&w=2&r=1&s=qla2xxx&q=b
+
+Thanks,
+Madhu
+
+-----Original Message-----
+From: linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org [mailto:linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org] On Behalf Of Julia Lawall
+Sent: Tuesday, October 19, 2010 2:44 AM
+To: Andrew Vasquez
+Cc: kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Linux Driver; James E.J. Bottomley; Grant Likely; linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
+Subject: [PATCH 1/4] drivers/scsi/qla2xxx/qla_init.c: convert nested spin_lock_irqsave to spin_lock
+
+From: Julia Lawall <julia-dAYI7NvHqcQ@public.gmane.org>
+
+If spin_lock_irqsave is called twice in a row with the same second
+argument, the interrupt state at the point of the second call overwrites
+the value saved by the first call.  Indeed, the second call does not need
+to save the interrupt state, so it is changed to a simple spin_lock.
+
+The semantic match that finds this problem is as follows:
+(http://coccinelle.lip6.fr/)
+
+// <smpl>
+@@
+expression lock1,lock2;
+expression flags;
+@@
+
+*spin_lock_irqsave(lock1,flags)
+... when != flags
+*spin_lock_irqsave(lock2,flags)
+// </smpl>
+
+Signed-off-by: Julia Lawall <julia-dAYI7NvHqcQ@public.gmane.org>
+
+---
+ drivers/scsi/qla2xxx/qla_init.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 3cafbef..c8d0b12 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1818,14 +1818,14 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 		qla2x00_init_response_q_entries(rsp);
+ 	}
+ 
+-	spin_lock_irqsave(&ha->vport_slock, flags);
++	spin_lock(&ha->vport_slock);
+ 	/* Clear RSCN queue. */
+ 	list_for_each_entry(vp, &ha->vp_list, list) {
+ 		vp->rscn_in_ptr = 0;
+ 		vp->rscn_out_ptr = 0;
+ 	}
+ 
+-	spin_unlock_irqrestore(&ha->vport_slock, flags);
++	spin_unlock(&ha->vport_slock);
+ 
+ 	ha->isp_ops->config_rings(vha);
+ 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
