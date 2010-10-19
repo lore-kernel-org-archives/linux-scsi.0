@@ -1,117 +1,87 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 4/4] libosd: write/read_sg_kern API
-Date: Tue, 19 Oct 2010 14:22:42 +0200
-Message-ID: <1287490962-24013-1-git-send-email-bharrosh@panasas.com>
-References: <4CBD8CAB.2030207@panasas.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH 1/2] scsi: remove bogus use of struct execute_work in sg
+Date: Tue, 19 Oct 2010 14:57:36 +0200
+Message-ID: <4CBD95C0.6060302@kernel.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og105.obsmtp.com ([64.18.0.180]:50195 "HELO
-	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754904Ab0JSMWp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Oct 2010 08:22:45 -0400
-In-Reply-To: <4CBD8CAB.2030207@panasas.com>
+Received: from hera.kernel.org ([140.211.167.34]:47345 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754657Ab0JSM5z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Oct 2010 08:57:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, open-osd <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: "John A. Chandy" <john.chandy@uconn.edu>
+To: Linux SCSI List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, lkml <linux-kernel@vger.kernel.org>
 
-From: John A. Chandy <john.chandy@uconn.edu>
+execute_work usage in sg is bogus.  execute_in_process_context() is
+never used and ew is used purely as wrapper around work_struct which
+is superflous.  Use work_struct directly.
 
-This is a trivial addition to the SG API that can receive kernel
-pointers. It is only used by the out-of-tree test module. So
-it's immediate need is questionable. For maintenance ease it might
-just get in, as it's very small.
-
-John.
-do you need this in the Kernel, or is it only for osd_ktest.ko?
-
-Signed-off-by: John A. Chandy <john.chandy@uconn.edu>
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: Tejun Heo <tj@kernel.org>
 ---
- drivers/scsi/osd/osd_initiator.c |   71 ++++++++++++++++++++++++++++++++++++++
- 1 files changed, 71 insertions(+), 0 deletions(-)
+ drivers/scsi/sg.c |   16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index f5b5735..0433ea6 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -1015,6 +1015,77 @@ int osd_req_read_sg(struct osd_request *or,
- }
- EXPORT_SYMBOL(osd_req_read_sg);
- 
-+/* SG-list write/read Kern API
-+ *
-+ * osd_req_{write,read}_sg_kern takes an array of @buff pointers and an array
-+ * of sg_entries. @numentries indicates how many pointers and sg_entries there
-+ * are.  By requiring an array of buff pointers. This allows a caller to do a
-+ * single write/read and scatter into multiple buffers.
-+ * NOTE: Each buffer + len should not cross a page boundary.
-+ */
-+static struct bio *_create_sg_bios(struct osd_request *or,
-+	void **buff, const struct osd_sg_entry *sglist, unsigned numentries)
-+{
-+	struct request_queue *q = osd_request_queue(or->osd_dev);
-+	struct bio *bio;
-+	unsigned i;
-+
-+	bio = bio_kmalloc(GFP_KERNEL, numentries);
-+	if (unlikely(!bio)) {
-+		OSD_DEBUG("Faild to allocate BIO size=%u\n", numentries);
-+		return ERR_PTR(-ENOMEM);
-+	}
-+
-+	for (i = 0; i < numentries; i++) {
-+		unsigned offset = offset_in_page(buff[i]);
-+		struct page *page = virt_to_page(buff[i]);
-+		unsigned len = sglist[i].len;
-+		unsigned added_len;
-+
-+		BUG_ON(offset + len > PAGE_SIZE);
-+		added_len = bio_add_pc_page(q, bio, page, len, offset);
-+		if (unlikely(len != added_len)) {
-+			OSD_DEBUG("bio_add_pc_page len(%d) != added_len(%d)\n",
-+				  len, added_len);
-+			bio_put(bio);
-+			return ERR_PTR(-ENOMEM);
-+		}
-+	}
-+
-+	return bio;
-+}
-+
-+int osd_req_write_sg_kern(struct osd_request *or,
-+	const struct osd_obj_id *obj, void **buff,
-+	const struct osd_sg_entry *sglist, unsigned numentries)
-+{
-+	struct bio *bio = _create_sg_bios(or, buff, sglist, numentries);
-+	if (IS_ERR(bio))
-+		return PTR_ERR(bio);
-+
-+	bio->bi_rw |= REQ_WRITE;
-+	osd_req_write_sg(or, obj, bio, sglist, numentries);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(osd_req_write_sg_kern);
-+
-+int osd_req_read_sg_kern(struct osd_request *or,
-+	const struct osd_obj_id *obj, void **buff,
-+	const struct osd_sg_entry *sglist, unsigned numentries)
-+{
-+	struct bio *bio = _create_sg_bios(or, buff, sglist, numentries);
-+	if (IS_ERR(bio))
-+		return PTR_ERR(bio);
-+
-+	osd_req_read_sg(or, obj, bio, sglist, numentries);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL(osd_req_read_sg_kern);
-+
-+
-+
- void osd_req_get_attributes(struct osd_request *or,
- 	const struct osd_obj_id *obj)
+Index: work/drivers/scsi/sg.c
+===================================================================
+--- work.orig/drivers/scsi/sg.c
++++ work/drivers/scsi/sg.c
+@@ -137,7 +137,7 @@ typedef struct sg_request {	/* SG_MAX_QU
+ 	volatile char done;	/* 0->before bh, 1->before read, 2->read */
+ 	struct request *rq;
+ 	struct bio *bio;
+-	struct execute_work ew;
++	struct work_struct work;
+ } Sg_request;
+
+ typedef struct sg_fd {		/* holds the state of a file descriptor */
+@@ -160,7 +160,7 @@ typedef struct sg_fd {		/* holds the sta
+ 	char keep_orphan;	/* 0 -> drop orphan (def), 1 -> keep for read() */
+ 	char mmap_called;	/* 0 -> mmap() never called on this fd */
+ 	struct kref f_ref;
+-	struct execute_work ew;
++	struct work_struct work;
+ } Sg_fd;
+
+ typedef struct sg_device { /* holds the state of each scsi generic device */
+@@ -1246,7 +1246,7 @@ sg_mmap(struct file *filp, struct vm_are
+
+ static void sg_rq_end_io_usercontext(struct work_struct *work)
  {
--- 
-1.7.2.3
+-	struct sg_request *srp = container_of(work, struct sg_request, ew.work);
++	struct sg_request *srp = container_of(work, struct sg_request, work);
+ 	struct sg_fd *sfp = srp->parentfp;
 
+ 	sg_finish_rem_req(srp);
+@@ -1333,8 +1333,8 @@ static void sg_rq_end_io(struct request
+ 		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
+ 		kref_put(&sfp->f_ref, sg_remove_sfp);
+ 	} else {
+-		INIT_WORK(&srp->ew.work, sg_rq_end_io_usercontext);
+-		schedule_work(&srp->ew.work);
++		INIT_WORK(&srp->work, sg_rq_end_io_usercontext);
++		schedule_work(&srp->work);
+ 	}
+ }
+
+@@ -2086,7 +2086,7 @@ sg_add_sfp(Sg_device * sdp, int dev)
+
+ static void sg_remove_sfp_usercontext(struct work_struct *work)
+ {
+-	struct sg_fd *sfp = container_of(work, struct sg_fd, ew.work);
++	struct sg_fd *sfp = container_of(work, struct sg_fd, work);
+ 	struct sg_device *sdp = sfp->parentdp;
+
+ 	/* Cleanup any responses which were never read(). */
+@@ -2123,8 +2123,8 @@ static void sg_remove_sfp(struct kref *k
+ 	write_unlock_irqrestore(&sg_index_lock, iflags);
+ 	wake_up_interruptible(&sdp->o_excl_wait);
+
+-	INIT_WORK(&sfp->ew.work, sg_remove_sfp_usercontext);
+-	schedule_work(&sfp->ew.work);
++	INIT_WORK(&sfp->work, sg_remove_sfp_usercontext);
++	schedule_work(&sfp->work);
+ }
+
+ static int
