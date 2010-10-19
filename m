@@ -1,94 +1,94 @@
-From: Madhu Iyengar <madhu.iyengar-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
-Subject: RE: [PATCH 1/4] drivers/scsi/qla2xxx/qla_init.c: convert nested
-	spin_lock_irqsave to spin_lock
-Date: Tue, 19 Oct 2010 09:21:05 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA871294F61E8@AVEXMB1.qlogic.org>
-References: <1287481436-26656-1-git-send-email-julia@diku.dk>
+From: Joe Eykholt <jeykholt@cisco.com>
+Subject: Re: [PATCH] libfc: fix mem leak in fc_seq_assign()
+Date: Tue, 19 Oct 2010 10:29:29 -0700
+Message-ID: <4CBDD579.2010101@cisco.com>
+References: <AANLkTimLBm2z=nWb_Q3MsyzFo_r6omMMQKnZ9FD2rtwW@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-In-Reply-To: <1287481436-26656-1-git-send-email-julia-dAYI7NvHqcQ@public.gmane.org>
-Content-Language: en-US
-List-Unsubscribe: <https://lists.ozlabs.org/options/devicetree-discuss>,
-	<mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/devicetree-discuss>
-List-Post: <mailto:devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>
-List-Help: <mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/devicetree-discuss>,
-	<mailto:devicetree-discuss-request-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org?subject=subscribe>
-Sender: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-Errors-To: devicetree-discuss-bounces+gldd-devicetree-discuss=m.gmane.org-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-To: Julia Lawall <julia-dAYI7NvHqcQ@public.gmane.org>, Andrew Vasquez <andrew.vasquez-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Madhu Iyengar <madhu.iyengar-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Giridhar Malavali <giridhar.malavali-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
-Cc: "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org" <devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org>, "kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "James E.J. Bottomley" <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Linux Driver <Linux-Driver-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-5.cisco.com ([171.68.10.87]:63386 "EHLO
+	sj-iport-5.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755419Ab0JSR3a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Oct 2010 13:29:30 -0400
+In-Reply-To: <AANLkTimLBm2z=nWb_Q3MsyzFo_r6omMMQKnZ9FD2rtwW@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hillf Danton <dhillf@gmail.com>
+Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-Julia,
 
-We've submitted this patch upstream to scsi-misc already on Oct 15th (Dan Carpenter had flagged this). Here's the submission info (patch (01/12) or item #12 in the link below:
+On 10/19/10 7:17 AM, Hillf Danton wrote:
+> There seems exchs should get released in cases that FC_RJT_NONE is
+> returned, or they will no longer get freed.
+> 
+> It also looks a typo like the following,
+> 
+> -		    fc_seq_lookup_recip(lport, ema->mp, fp) != FC_RJT_NONE)
+> +		    fc_seq_lookup_recip(lport, ema->mp, fp) == FC_RJT_NONE)
 
-http://marc.info/?l=linux-scsi&w=2&r=1&s=qla2xxx&q=b
+True.
 
-Thanks,
-Madhu
+> 
+> but I am not sure.
+> 
+> Signed-off-by: Hillf Danton <dhillf@gmail.com>
+> ---
+> 
+> --- a/drivers/scsi/libfc/fc_exch.c	2010-09-13 07:07:38.000000000 +0800
+> +++ b/drivers/scsi/libfc/fc_exch.c	2010-10-19 21:48:22.000000000 +0800
+> @@ -3,6 +3,9 @@
+>   * Copyright(c) 2008 Red Hat, Inc.  All rights reserved.
+>   * Copyright(c) 2008 Mike Christie
+>   *
+> + * Copyright(c) Oct 19, 2010	Hillf Danton
+> + *				minor fix of memory leakage
+> + *
 
------Original Message-----
-From: linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org [mailto:linux-scsi-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org] On Behalf Of Julia Lawall
-Sent: Tuesday, October 19, 2010 2:44 AM
-To: Andrew Vasquez
-Cc: kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; Linux Driver; James E.J. Bottomley; Grant Likely; linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org; devicetree-discuss-uLR06cmDAlY/bJ5BZ2RsiQ@public.gmane.org
-Subject: [PATCH 1/4] drivers/scsi/qla2xxx/qla_init.c: convert nested spin_lock_irqsave to spin_lock
+Thanks for fixing the bug, but I don't think you should add a copyright.
+I didn't add a copyright when I created the bug.
 
-From: Julia Lawall <julia-dAYI7NvHqcQ@public.gmane.org>
+>   * This program is free software; you can redistribute it and/or modify it
+>   * under the terms and conditions of the GNU General Public License,
+>   * version 2, as published by the Free Software Foundation.
+> @@ -1246,9 +1249,16 @@ static struct fc_seq *fc_seq_assign(stru
+>  	fr_seq(fp) = NULL;
+> 
+>  	list_for_each_entry(ema, &lport->ema_list, ema_list)
+> -		if ((!ema->match || ema->match(fp)) &&
+> -		    fc_seq_lookup_recip(lport, ema->mp, fp) != FC_RJT_NONE)
+> -			break;
+> +		if (! ema->match || ema->match(fp))
+> +			if (fc_seq_lookup_recip(lport, ema->mp, fp) !=
+> +				FC_RJT_NONE)
 
-If spin_lock_irqsave is called twice in a row with the same second
-argument, the interrupt state at the point of the second call overwrites
-the value saved by the first call.  Indeed, the second call does not need
-to save the interrupt state, so it is changed to a simple spin_lock.
+Should continue in this case ... we hope to find the exchange in another
+exchange manager.
 
-The semantic match that finds this problem is as follows:
-(http://coccinelle.lip6.fr/)
+> +				break;
+> +			else {
+> +				struct fc_seq *seq = fr_seq(fp);
+> +				struct fc_exch *exch = fc_seq_exch(seq);
+> +				fc_exch_release(exch);
 
-// <smpl>
-@@
-expression lock1,lock2;
-expression flags;
-@@
+I want the sequence to be held by the frame, so don't do the release.
+In this case we should break, since we found the frame.
 
-*spin_lock_irqsave(lock1,flags)
-... when != flags
-*spin_lock_irqsave(lock2,flags)
-// </smpl>
+This function is currently only used by target modules.  A later
+patch exposes a release so they can release the sequence/exchange.
 
-Signed-off-by: Julia Lawall <julia-dAYI7NvHqcQ@public.gmane.org>
+So, my original code was right except for the != vs == bug.
+That turns out not to cause major problems if the first exchange
+manager assigns the exchange, which is why I didn't see the bug.
 
----
- drivers/scsi/qla2xxx/qla_init.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> +			}
+> +
+>  	return fr_seq(fp);
+>  }
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 3cafbef..c8d0b12 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1818,14 +1818,14 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 		qla2x00_init_response_q_entries(rsp);
- 	}
- 
--	spin_lock_irqsave(&ha->vport_slock, flags);
-+	spin_lock(&ha->vport_slock);
- 	/* Clear RSCN queue. */
- 	list_for_each_entry(vp, &ha->vp_list, list) {
- 		vp->rscn_in_ptr = 0;
- 		vp->rscn_out_ptr = 0;
- 	}
- 
--	spin_unlock_irqrestore(&ha->vport_slock, flags);
-+	spin_unlock(&ha->vport_slock);
- 
- 	ha->isp_ops->config_rings(vha);
- 
+By the way, I think patches to libfc, libfcoe, and fcoe should go to
+the open-fcoe list only, not to SCSI.  Robert Love as the open-fcoe
+maintainer will forward them after testing to the SCSI list.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	Regards,
+	Joe
