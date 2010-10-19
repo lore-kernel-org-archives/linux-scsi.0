@@ -1,68 +1,35 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 20712] mpt2sas and SATA drives
-Date: Tue, 19 Oct 2010 18:21:13 GMT
-Message-ID: <201010191821.o9JILDqr001124@demeter1.kernel.org>
-References: <bug-20712-11613@https.bugzilla.kernel.org/>
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: [PATCH 2/6] bfa: replace endian swap macros with the ones
+ provided by linux
+Date: Tue, 19 Oct 2010 13:14:53 -0700
+Message-ID: <E5313AF6F2BFD14293E5FD0F94750F86A5CF75E89A@HQ1-EXCH01.corp.brocade.com>
+References: <1287447050-27777-1-git-send-email-huangj@brocade.com>
+ <20101019140920.GA13348@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:56983 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751531Ab0JSSVO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Oct 2010 14:21:14 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o9JILEVo001125
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Oct 2010 18:21:14 GMT
-In-Reply-To: <bug-20712-11613@https.bugzilla.kernel.org/>
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:44407 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752686Ab0JSUPJ convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Oct 2010 16:15:09 -0400
+In-Reply-To: <20101019140920.GA13348@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=20712
+>Is this enough that
+>
+>	make C=2 CF="-D__CHECK_ENDIAN__"
+>
+>gives you clean enough output to actually verify all the endiness
+>conversions?
 
+Thanks for reviewing the patch. I tried sparse endianess checking and saw a lot of warnings, mostly
+because the structure members are still declared as unsigned int instead of using endianess annotated
+types such as __le16, __be16 and etc. Are issues like this must be fixed? I tried some other drivers
+and saw a lot of similar issues also.
 
-David Zeuthen <zeuthen@gmail.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |OBSOLETE
-
-
-
-
---- Comment #3 from David Zeuthen <zeuthen@gmail.com>  2010-10-19 18:21:11 ---
-(In reply to comment #2)
-> Oct 18 15:25:55 rhea kernel: mpt2sas0: LSISAS2116: FWVersion(03.00.00.00),
-ChipRevision(0x01), BiosVersion(07.01.00.00)
-
-OK, inspired by James' reply here
-
- http://www.spinics.net/lists/linux-scsi/msg42367.html
-
-specifically
-
-  So this is likely a firmware bug inside the mpt2sas.  All of the mpt
-  cards use a fat firmware model meaning they take in pure SCSI commands
-  and do the translation to SATA if necessary all within the firmware, so
-  the first step would be to make sure your card has the latest firmware.
-
-I've updated the card to the latest firmware
-
- Oct 19 14:11:45 rhea kernel: mpt2sas0: LSISAS2116: FWVersion(07.00.00.00),
-ChipRevision(0x01), BiosVersion(07.01.00.00)
-
-e.g. from version 03.00.00.00 to version 07.00.00.00 and suddenly all the
-problems go away. So I'm closing this bug.
-
-(And I also note that there's a lot of low-hanging fruit here - we really
-should make it easy for users to a) know that there is a firmware update; b)
-make it easy update the firmware... could maybe do this in the
-udisks/palimpsest stack -maybe start by just support a couple of vendors. I
-don't know.)
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
