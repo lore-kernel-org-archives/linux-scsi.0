@@ -1,82 +1,97 @@
-From: "=?iso-8859-9?B?R0FSIFRyYW5zcG9ydCBMdGQu3nRpLg==?=" <info@gartr.com>
-Subject: (unknown)
-Date: Sun, 17 Oct 2010 08:22:58 +0300
-Message-ID: <af3c2efbaa6981a2166240452be82a61@gartr.com>
-Reply-To: gar@gartrans.com
+From: Oliver Neukum <oneukum@suse.de>
+Subject: [PATCH] SCSI: sd_suspend: evaluate lower layers' returns
+Date: Tue, 19 Oct 2010 13:10:00 +0200
+Message-ID: <201010191310.00930.oneukum@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-9
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 94-73-134-170.cizgi.net.tr ([94.73.134.170]:1388 "EHLO
-	mail.localhost.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752498Ab0JSJtY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Oct 2010 05:49:24 -0400
-Subject: 
+Received: from cantor.suse.de ([195.135.220.2]:44305 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933947Ab0JSLJ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Oct 2010 07:09:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>, hare@suse.de, Alan Stern <stern@rowland.harvard.edu>, linux-scsi@vger.kernel.org
 
-Yeni haftan=FDn hepimize saglik, mutluluk ve bol kazan=E7li gecmesi dil=
-egiyle.
-GAR TRANSPORT ailesi olarak T=DCM AVRUPA ve BOSNA, SIRBISTAN, HIRVAT=DD=
-STAN, BULGARISTAN, ROMANYA, T=DCRKI CUMHURIYETLER, IRAN KOMPLE TASIMALA=
-RINDA SIZ DEGERLI M=DCSTERILERIMIZIN HIZMETINDEYIZ.
+commit 867780e1bbc4c9deed13397fbd80119f431d557f
+Author: Oliver Neukum <oliver@neukum.org>
+Date:   Mon Oct 18 19:09:26 2010 +0200
 
-IHRACAT PARSIYEL ARAC CIKIS PROGRAMIMIZ ASAGIDA BILGINIZE SUNULMUSTUR.
+    SCSI: sd_suspend: evaluate lower layers' returns
+    
+    sd_suspend() sends down commands that may fail.
+    Depending on the reason of failure the failures
+    can be ignored, the suspension retried or aborted.
+    This patch evaluates the error returns from the lower
+    layers to do so.
+    
+    Signed-off-by: Oliver Neukum <oneukum@suse.de>
 
-Carsamba &Cumartesi : Plovdiv - Sofya
-                               : Bukres
-                               : Belgrad
-                               : Saraybosna
-                               : Zagreb
-		        : Bak=FC
-                               : Kazakistan
-                               : Ozbekistan
-                               : Turkmenistan
-
-** Vsyaka sedmitsa ot sklada ni v istanbul imame redovni grupaji, koito=
- se karat viv vsyaka tochka na BUGARIA. Shte chakame vashite obajdaniya=
- za sivmestna rabota blagodarim vi predvaritelno.
-
-* =DDhracat depomuz YENIBOSNA'da dir.
-* Firmam=FDz=FDn parsiyel tas=FDma yapmakta oldugu =FClkelerde hizmet o=
-fisi ve acentesi bulunmaktadir.
-* Firmam=FDz=FDn ayn=FD hatlarda kompel ve proze tas=FDma hzimeti sunma=
-ktadir.
-
-M=DDSYONUMUZ ; yalnizca y=FCk=FCn=FCz=FC degil , =E7ogu zaman y=FCk=FCn=
-=FCzden agir olan y=FCk=FCml=FCl=FCklerinizi de =FCstlenmektir.
-
-NOT : BG i=E7in grupaj =E7ikisimiz yukarida belirtilen ana g=FCzergah o=
-lup diger vari=FE destinasyonlari i=E7in PLOVDIV merkezimizden i=E7 tas=
-ima ara=E7larimiz ile aktarma yapilmaktadir.
-
-DEPO ADRESIMIZ : CEMAL ULUSOY CAD. BASIN EKSPRES YOLU NO: 5
-TEL : +90 555 974 60 99
-YETKILI : Seyithan Bey
-
-Talep etmeniz halinde Istanbul g=FCmr=FCklerinde Ihracat ve Ithalat G=DC=
-MR=DCKLEME hizmeti tarafimizdan verilmektedir.
-
-Ibrahim Hilmi CINDIK=20
-GAR Transportation OOD
-PLOVDIV / BULGARIA
-TEL   : +359 878 336 028
-e-mail : ibrahim@gartrans.com
-*********************************
-GAR Transport Ltd.Sti.
-ISTANBUL / TURKEY
-Tel  . +90 216 321 31 26
-=46ax  . +90 216 321 63 50
-e-mail : gar@gartrans.com
-************************************
-www.gartrans.com
-
-
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ffa0689..fa695c4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1081,11 +1081,32 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+ 		sd_print_result(sdkp, res);
+ 		if (driver_byte(res) & DRIVER_SENSE)
+ 			sd_print_sense_hdr(sdkp, &sshdr);
+-	}
+ 
+-	if (res)
+-		return -EIO;
+-	return 0;
++		/* we need to evaluate the error return  */
++		if ((scsi_sense_valid(&sshdr) &&
++			/* 0x3a is medium not present */
++			sshdr.asc == 0x3a))
++			/* this is no error here */
++			return 0;
++
++		switch (host_byte(res)) {
++		/* ignore errors due to racing a disconnection */
++		case DID_BAD_TARGET:
++		case DID_NO_CONNECT:	
++			return 0;
++		/* signal the upper layer it might try again */
++		case DID_BUS_BUSY:
++		case DID_ABORT:
++		case DID_RESET:
++		case DID_IMM_RETRY:
++		case DID_SOFT_ERROR:
++			return -EBUSY;
++		default:
++			return -EIO;
++		}
++	} else {
++		return 0;
++	}
+ }
+ 
+ static void sd_rescan(struct device *dev)
+@@ -2474,9 +2495,13 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ 		sd_print_result(sdkp, res);
+ 		if (driver_byte(res) & DRIVER_SENSE)
+ 			sd_print_sense_hdr(sdkp, &sshdr);
++		/* no medium -> nobody cares */
++		if (scsi_sense_valid(&sshdr) && sshdr.asc == 0x3a)
++			return 0;
+ 	}
+ 
+-	return res;
++	/* error returns should conform what the pm core expects */
++	return res ? -EIO : 0;
+ }
+ 
+ /*
+@@ -2522,6 +2547,9 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
+ 	if ((mesg.event & PM_EVENT_SLEEP) && sdkp->device->manage_start_stop) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		ret = sd_start_stop_device(sdkp, 0);
++		/* an error is not worth aborting a system sleep */
++		if (!(mesg.event & PM_EVENT_AUTO))
++			ret = 0;
+ 	}
+ 
+ done:
