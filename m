@@ -1,37 +1,32 @@
-From: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] libfc: fix mem leak in fc_exch_recv_seq_resp()
-Date: Tue, 19 Oct 2010 22:02:01 +0800
-Message-ID: <AANLkTinfFm7J40LexHWjR90N4pCO2F58PhGaCxkFoBB9@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/6] bfa: replace endian swap macros with the ones
+ provided by linux
+Date: Tue, 19 Oct 2010 10:09:21 -0400
+Message-ID: <20101019140920.GA13348@infradead.org>
+References: <1287447050-27777-1-git-send-email-huangj@brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://www.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:40377 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984Ab0JSOJX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Oct 2010 10:09:23 -0400
+Content-Disposition: inline
+In-Reply-To: <1287447050-27777-1-git-send-email-huangj@brocade.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jing Huang <huangj@brocade.com>
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, adapter_linux_open_src_team@brocade.com
 
-There seems that ep should get released, or it will no longer get freed.
+On Mon, Oct 18, 2010 at 05:10:50PM -0700, Jing Huang wrote:
+> This patch replaces endian swap macros with the ones provided by the linux.
+> 
+> Signed-off-by: Jing Huang <huangj@brocade.com>
 
-Signed-off-by: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
----
+Is this enough that
 
---- a/drivers/scsi/libfc/fc_exch.c	2010-09-13 07:07:38.000000000 +0800
-+++ b/drivers/scsi/libfc/fc_exch.c	2010-10-19 21:36:16.000000000 +0800
-@@ -1343,7 +1343,7 @@ static void fc_exch_recv_seq_resp(struct
- 	}
- 	if (ep->esb_stat & ESB_ST_COMPLETE) {
- 		atomic_inc(&mp->stats.xid_not_found);
--		goto out;
-+		goto rel;
- 	}
- 	if (ep->rxid == FC_XID_UNKNOWN)
- 		ep->rxid = ntohs(fh->fh_rx_id);
+	make C=2 CF="-D__CHECK_ENDIAN__"
+
+gives you clean enough output to actually verify all the endiness
+conversions?
+
