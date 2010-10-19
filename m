@@ -1,8 +1,7 @@
 From: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] libfc: fix handling of fc frame in
-	fc_exch_recv_bls()
-Date: Tue, 19 Oct 2010 21:55:20 +0800
-Message-ID: <AANLkTikQYBNsV2vbAfG+xe+ruJq+vfFTvJPOMUXAApXT@mail.gmail.com>
+Subject: [PATCH] libfc: fix mem leak in fc_exch_recv_seq_resp()
+Date: Tue, 19 Oct 2010 22:02:01 +0800
+Message-ID: <AANLkTinfFm7J40LexHWjR90N4pCO2F58PhGaCxkFoBB9@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -20,24 +19,19 @@ To: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-There seems that fp should get freed if exch is unavailable.
+There seems that ep should get released, or it will no longer get freed.
 
 Signed-off-by: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 ---
 
 --- a/drivers/scsi/libfc/fc_exch.c	2010-09-13 07:07:38.000000000 +0800
-+++ b/drivers/scsi/libfc/fc_exch.c	2010-10-19 21:35:08.000000000 +0800
-@@ -1564,8 +1564,11 @@ static void fc_exch_recv_bls(struct fc_e
- 				fc_frame_free(fp);
- 			break;
- 		case FC_RCTL_BA_ABTS:
--			fc_exch_recv_abts(ep, fp);
--			break;
-+			if (ep) {
-+				fc_exch_recv_abts(ep, fp);
-+				break;
-+			}
-+			/* fall thru */
- 		default:			/* ignore junk */
- 			fc_frame_free(fp);
- 			break;
++++ b/drivers/scsi/libfc/fc_exch.c	2010-10-19 21:36:16.000000000 +0800
+@@ -1343,7 +1343,7 @@ static void fc_exch_recv_seq_resp(struct
+ 	}
+ 	if (ep->esb_stat & ESB_ST_COMPLETE) {
+ 		atomic_inc(&mp->stats.xid_not_found);
+-		goto out;
++		goto rel;
+ 	}
+ 	if (ep->rxid == FC_XID_UNKNOWN)
+ 		ep->rxid = ntohs(fh->fh_rx_id);
