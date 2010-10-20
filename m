@@ -1,47 +1,34 @@
-From: Benjamin LaHaise <bcrl@kvack.org>
-Subject: [RFC/PATCH] add PCI id for HighPoint RocketRAID 2720 to mvsas
-Date: Wed, 20 Oct 2010 18:31:10 -0400
-Message-ID: <20101020223110.GT2315@kvack.org>
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: [PATCH 3/6] bfa: remove os wrapper functions and macros
+Date: Wed, 20 Oct 2010 16:16:09 -0700
+Message-ID: <E5313AF6F2BFD14293E5FD0F94750F86A5CF813105@HQ1-EXCH01.corp.brocade.com>
+References: <1287447149-28678-1-git-send-email-huangj@brocade.com>
+ <4CBF09DF.8000308@redhat.com> <4CBF6A38.7060502@cs.wisc.edu>
+ <4CBF7569.90708@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kanga.kvack.org ([205.233.56.17]:33224 "EHLO kanga.kvack.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750762Ab0JTXFD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2010 19:05:03 -0400
-Content-Disposition: inline
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:42035 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753467Ab0JTXRD convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Oct 2010 19:17:03 -0400
+In-Reply-To: <4CBF7569.90708@cisco.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Joe Eykholt <jeykholt@cisco.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Rob Evers <revers@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi folks,
+>It's in <scsi/fc_frame.h> as hton24() / ntoh24().  It's written in
+>an endian-independent way.   I don't know of patches to move them to
+>a better place.
+>
+>	Joe
 
-I recently built a system using the HighPoint 2720 SAS controller, which 
-is based on the Marvell 88SE9485.  In my limited testing (read: it boots), 
-the following patch is needed to get mvsas to recognize the board.  With 
-this patch, the system boots without issue and SATA passthrough seems to 
-work.  Note that I have not tested the board with any SAS drives, as I 
-only have SATA drives at present.  Any thoughts/comments on if anything 
-further is needed for this board?
+Yes I noticed these two functions for this round of cleanup, but they cannot be used directly
+to replace the macros we are currently using in bfa driver without changing the parameters passed in.
 
-Signed-off-by: Benjamin LaHaise <bcrl@kvack.org>
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 19ad34f..4590faa 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -648,6 +648,15 @@ static struct pci_device_id __devinitdata mvs_pci_table[] = {
- 	{ PCI_VDEVICE(MARVELL, 0x6320), chip_6320 },
- 	{ PCI_VDEVICE(MARVELL, 0x6340), chip_6440 },
-+	{	/* HighPoint RocketRAID 2720 */
-+		.vendor 	= 0x1103,
-+		.device 	= 0x2720,
-+		.subvendor	= PCI_ANY_ID,
-+		.subdevice	= 0x0000,
-+		.class		= 0,
-+		.class_mask	= 0,
-+		.driver_data	= chip_1320,
-+	},
- 	{
- 		.vendor 	= PCI_VENDOR_ID_MARVELL,
- 		.device 	= 0x6440,
- 		.subvendor	= PCI_ANY_ID,
+Thanks
+Jing
