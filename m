@@ -1,46 +1,36 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 5/5] scsi: megaraid_sas - Version and documentation
- update
-Date: Wed, 20 Oct 2010 09:31:10 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3010108B405@cosmail02.lsi.com>
-References: <AANLkTi=praySm1B3dhU+LxhWK2yUccZkzWpd6-6UERYa@mail.gmail.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] ipr: add definitions for a new adapter
+Date: Wed, 20 Oct 2010 11:04:23 -0500
+Message-ID: <4CBF1307.8000603@linux.vnet.ibm.com>
+References: <20101019032228.745607494@linux.vnet.ibm.com> <4CBD0F72.6090202@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:36983 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753599Ab0JTPbk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2010 11:31:40 -0400
-Content-Language: en-US
+Received: from e1.ny.us.ibm.com ([32.97.182.141]:41658 "EHLO e1.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751906Ab0JTQE3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Oct 2010 12:04:29 -0400
+Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
+	by e1.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id o9KFvE7Q026957
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2010 11:57:14 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o9KG4Rc21933348
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2010 12:04:27 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o9KG4Ppq022480
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2010 14:04:27 -0200
+In-Reply-To: <4CBD0F72.6090202@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, linux-kernel@vger.kernel.org
-Cc: "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-James,
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-Did you get the chance to apply megaraid sas driver 2/5 to 5/5 patches?
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
-Thanks,
 
-Bo Yang
-
------Original Message-----
-From: Yang, Bo 
-Sent: Tuesday, October 12, 2010 9:22 AM
-To: 'bo yang'; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org; James.Bottomley@suse.de
-Subject: [PATCH 5/5] scsi: megaraid_sas - Version and documentation update
-
-Re-Submit:
-
-Update the version and documentation.
-
-Signed-off-by Bo Yang<bo.yang@lsi.com>
-
----
- Documentation/scsi/ChangeLog.megaraid_sas |   47 ++++++++++++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas.c      |    2 -
- drivers/scsi/megaraid/megaraid_sas.h      |    6 +--
- 3 files changed, 51 insertions(+), 4 deletions(-)
