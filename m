@@ -1,103 +1,46 @@
-From: Rob Evers <revers@redhat.com>
-Subject: Re: [PATCH 3/6] bfa: remove os wrapper functions and macros
-Date: Wed, 20 Oct 2010 11:25:19 -0400
-Message-ID: <4CBF09DF.8000308@redhat.com>
-References: <1287447149-28678-1-git-send-email-huangj@brocade.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 5/5] scsi: megaraid_sas - Version and documentation
+ update
+Date: Wed, 20 Oct 2010 09:31:10 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3010108B405@cosmail02.lsi.com>
+References: <AANLkTi=praySm1B3dhU+LxhWK2yUccZkzWpd6-6UERYa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43089 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811Ab0JTPZV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2010 11:25:21 -0400
-In-Reply-To: <1287447149-28678-1-git-send-email-huangj@brocade.com>
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:36983 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753599Ab0JTPbk convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Oct 2010 11:31:40 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jing Huang <huangj@brocade.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Yang, Bo" <Bo.Yang@lsi.com>, bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, linux-kernel@vger.kernel.org
+Cc: "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
+James,
 
-Hi Jing,
+Did you get the chance to apply megaraid sas driver 2/5 to 5/5 patches?
 
-A few more potential issues I noticed after looking through this patch.  
-These are not necessarily problems with this patch, but are highlighted 
-by the patch.  Perhaps these could be addressed in a subsequent patch or 
-patch set?
+Thanks,
 
-Rob
+Bo Yang
 
-> diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-> index 71c0b5a..d60e472 100644
-> --- a/drivers/scsi/bfa/bfa_ioc.h
-> +++ b/drivers/scsi/bfa/bfa_ioc.h
-> @@ -62,9 +62,9 @@ struct bfa_sge_s {
->  };
->  
->  #define bfa_sge_word_swap(__sge) do {					     \
-> -	((u32 *)(__sge))[0] = bfa_os_swap32(((u32 *)(__sge))[0]);      \
-> -	((u32 *)(__sge))[1] = bfa_os_swap32(((u32 *)(__sge))[1]);      \
-> -	((u32 *)(__sge))[2] = bfa_os_swap32(((u32 *)(__sge))[2]);      \
-> +	((u32 *)(__sge))[0] = swab32(((u32 *)(__sge))[0]);      \
-> +	((u32 *)(__sge))[1] = swab32(((u32 *)(__sge))[1]);      \
-> +	((u32 *)(__sge))[2] = swab32(((u32 *)(__sge))[2]);      \
->  } while (0)
->   
+-----Original Message-----
+From: Yang, Bo 
+Sent: Tuesday, October 12, 2010 9:22 AM
+To: 'bo yang'; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org; James.Bottomley@suse.de
+Subject: [PATCH 5/5] scsi: megaraid_sas - Version and documentation update
 
-Is bfa_sge_word_swap used anywhere?  I didn't see it.
+Re-Submit:
 
-snip
+Update the version and documentation.
 
-> +#define bfa_mem_read(_raddr, _off)	swab32(readl(((_raddr) + (_off))))
->   
->  #define bfa_mem_write(_raddr, _off, _val)	\
-> -					bfa_os_mem_write(_raddr, _off, _val)
-> +			writel(swab32((_val)), ((_raddr) + (_off)))
->   
+Signed-off-by Bo Yang<bo.yang@lsi.com>
 
-Do bfa_mem_read/write() belong here after your cleanup?  Could you 
-explain these a bit if they are required?
-
-snip
-
-> diff --git a/drivers/scsi/bfa/bfa_os_inc.h b/drivers/scsi/bfa/bfa_os_inc.h
-> index d928dca..f9edc75 100644
-> --- a/drivers/scsi/bfa/bfa_os_inc.h
-> +++ b/drivers/scsi/bfa/bfa_os_inc.h
-> @@ -65,12 +65,6 @@ do {									\
->  	((_x) & 0x00ff00) |			\
->  	(((_x) & 0xff0000) >> 16))
->  
-> -#define bfa_os_swap32(_x)			\
-> -	((((_x) & 0xff) << 24)		|	\
-> -	(((_x) & 0x0000ff00) << 8)	|	\
-> -	(((_x) & 0x00ff0000) >> 8)	|	\
-> -	(((_x) & 0xff000000) >> 24))
-> -
->  #define bfa_os_swap_sgaddr(_x)  ((u64)(                                 \
->  	(((u64)(_x) & (u64)0x00000000000000ffull) << 32)        |       \
->  	(((u64)(_x) & (u64)0x000000000000ff00ull) << 32)        |       \
-> @@ -82,7 +76,7 @@ do {									\
->  	(((u64)(_x) & (u64)0xff00000000000000ull) >> 32)))
->   
-
-The sg byte swapping code above lead me to look at the sg code in the 
-bfa driver and I saw that bfa doesn't use scsi_for_each_sg() from what I 
-can tell.
-
-Is scsi_for_each_sg() use pretty standard for mass storage drivers these 
-days?
-
-Is the byte swapping required if the more traditional sg implementation 
-is used?
-
->  
->  #ifndef __BIGENDIAN
-> -#define bfa_os_hton3b(_x)	bfa_swap_3b(_x)
-> +#define bfa_os_hton3b(_x)  bfa_swap_3b(_x)
->   
-
-Should bfa_os_hton3b and related functionality be relocated 
-appropriately and implemented in common form to the other common byte 
-swapping code?
-
-
+---
+ Documentation/scsi/ChangeLog.megaraid_sas |   47 ++++++++++++++++++++++++++++++
+ drivers/scsi/megaraid/megaraid_sas.c      |    2 -
+ drivers/scsi/megaraid/megaraid_sas.h      |    6 +--
+ 3 files changed, 51 insertions(+), 4 deletions(-)
