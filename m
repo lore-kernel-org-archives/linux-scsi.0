@@ -1,36 +1,78 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: add definitions for a new adapter
-Date: Wed, 20 Oct 2010 11:04:23 -0500
-Message-ID: <4CBF1307.8000603@linux.vnet.ibm.com>
-References: <20101019032228.745607494@linux.vnet.ibm.com> <4CBD0F72.6090202@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: [GIT re-PULL] SCSI bug fixes for 2.6.36-rc8
+Date: Wed, 20 Oct 2010 10:41:18 -0700
+Message-ID: <1287596478.16330.21.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:41658 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751906Ab0JTQE3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2010 12:04:29 -0400
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by e1.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id o9KFvE7Q026957
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2010 11:57:14 -0400
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id o9KG4Rc21933348
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2010 12:04:27 -0400
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id o9KG4Ppq022480
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2010 14:04:27 -0200
-In-Reply-To: <4CBD0F72.6090202@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Wayne Boyer <wayneb@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+This patch set fixes a couple of longstanding bugs in SCSI.  The VPD
+patch fix a possible buffer overrun in the VPD code (only tripped if the
+device has a huge number of VPD pages).  The other is where the status
+return code on our BSG interface is wrongly right shifted one place.
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+I've had several reviewers over this one just to make sure I don't have
+any more stupid bugs in there
 
+The respun patch is available here:
 
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+
+The short changelog is:
+
+FUJITA Tomonori (1):
+      bsg: fix incorrect device_status value
+
+Martin K. Petersen (1):
+      Fix VPD inquiry page wrapper
+
+And the diffstat:
+
+ block/bsg.c         |    2 +-
+ drivers/scsi/scsi.c |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+The full diff is below.
+
+James
+
+---
+
+diff --git a/block/bsg.c b/block/bsg.c
+index 82d5882..0c00870 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -426,7 +426,7 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+ 	/*
+ 	 * fill in all the output members
+ 	 */
+-	hdr->device_status = status_byte(rq->errors);
++	hdr->device_status = rq->errors & 0xff;
+ 	hdr->transport_status = host_byte(rq->errors);
+ 	hdr->driver_status = driver_byte(rq->errors);
+ 	hdr->info = 0;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index ad0ed21..348fba0 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -1046,13 +1046,13 @@ int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+ 
+ 	/* If the user actually wanted this page, we can skip the rest */
+ 	if (page == 0)
+-		return -EINVAL;
++		return 0;
+ 
+ 	for (i = 0; i < min((int)buf[3], buf_len - 4); i++)
+ 		if (buf[i + 4] == page)
+ 			goto found;
+ 
+-	if (i < buf[3] && i > buf_len)
++	if (i < buf[3] && i >= buf_len - 4)
+ 		/* ran off the end of the buffer, give us benefit of doubt */
+ 		goto found;
+ 	/* The device claims it doesn't support the requested page */
