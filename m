@@ -1,59 +1,39 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] mpt2sas: Fix missing reference tag seed with Type 2 devices
-Date: Thu, 21 Oct 2010 14:19:27 -0400
-Message-ID: <yq17hhbquhc.fsf@sermon.lab.mkp.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 20112] dmesg spam: "scsi host5: __pm_runtime_resume() returns
+ 1" (DVD writer)
+Date: Thu, 21 Oct 2010 18:31:25 GMT
+Message-ID: <201010211831.o9LIVPW6012318@demeter2.kernel.org>
+References: <bug-20112-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:24982 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756474Ab0JUSUB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Oct 2010 14:20:01 -0400
+Received: from [140.211.167.42] ([140.211.167.42]:59341 "EHLO
+	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1754974Ab0JUSb0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Oct 2010 14:31:26 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9LIVPmw012319
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2010 18:31:25 GMT
+In-Reply-To: <bug-20112-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com, James.Bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=20112
 
 
-Eric,
-
-I just pulled 2.6.36 and discovered Type 2 devices were not
-working. Turns out you tweaked my mpt2sas Type 2 patch a bit before
-submitting it to James. Your change left the initial reference tag unset
-in the Type 2 case, causing all I/O to fail. The following patch fixes
-things up.
 
 
-[PATCH] mpt2sas: Fix missing reference tag seed with Type 2 devices
 
-Ensure that the initial reference tag is passed on to the HBA firmware
-for DIF Type 2 devices.
+--- Comment #1 from Daniel Hahler <linux-bugs@thequod.de>  2010-10-21 18:31:24 ---
+This is related to CONFIG_PM_VERBOSE=y, unsetting it does not cause this
+message spam.
 
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Is this intentional?
+Does it indicate some bug or broken hardware?
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 16e99b6..f423fe9 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -3230,6 +3230,7 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
- 
- 	switch (prot_type) {
- 	case SCSI_PROT_DIF_TYPE1:
-+	case SCSI_PROT_DIF_TYPE2:
- 
- 		/*
- 		* enable ref/guard checking
-@@ -3242,13 +3243,6 @@ _scsih_setup_eedp(struct scsi_cmnd *scmd, Mpi2SCSIIORequest_t *mpi_request)
- 		    cpu_to_be32(scsi_get_lba(scmd));
- 		break;
- 
--	case SCSI_PROT_DIF_TYPE2:
--
--		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
--		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
--		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
--		break;
--
- 	case SCSI_PROT_DIF_TYPE3:
- 
- 		/*
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
