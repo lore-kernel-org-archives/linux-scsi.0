@@ -1,34 +1,157 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: [PATCH 3/6] bfa: remove os wrapper functions and macros
-Date: Wed, 20 Oct 2010 16:48:18 -0700
-Message-ID: <E5313AF6F2BFD14293E5FD0F94750F86A5CF81311C@HQ1-EXCH01.corp.brocade.com>
-References: <1287447149-28678-1-git-send-email-huangj@brocade.com>
- <4CBF09DF.8000308@redhat.com> <4CBF6A38.7060502@cs.wisc.edu>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: Re: [ANNOUNCE] Status of unlocked_qcmds=1 operation for .37
+Date: Wed, 20 Oct 2010 17:30:31 -0700
+Message-ID: <C8E4D7B7.A1F4%giridhar.malavali@qlogic.com>
+References: <1287616745.10283.141.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59732 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752053Ab0JTXsk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 20 Oct 2010 19:48:40 -0400
-In-Reply-To: <4CBF6A38.7060502@cs.wisc.edu>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1287616745.10283.141.camel@haakon2.linux-iscsi.org>
+Content-Language: en
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, LinuxSCSI <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, Rob Evers <revers@redhat.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
 
->On 10/20/2010 10:25 AM, Rob Evers wrote:
->> Is scsi_for_each_sg() use pretty standard for mass storage drivers these
->> days?
->
->Yes, the driver should be using it.
->
 
-We are not using the scsi_for_each_sg because currently we setup the scsi data buffers in two separate steps.
-The reason of doing that is we allow one buffer being inlined in the IO request, while the remaining buffers 
-in sg pages. The sg elements in the IO request and sgpg have different format per ASIC spec, we hence think
-It is logically clearer to set them up in two different functions.
 
+
+On 10/20/10 4:19 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+
+> On Wed, 2010-10-20 at 15:37 -0700, Giridhar Malavali wrote:
+>> 
+>> 
+> 
+> <Trimming long CC'list>
+> 
+> Hi Giri,
+> 
+>> On 10/20/10 1:49 PM, "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+>> 
+>>> Greetings all,
+>>> 
+>>> So as we get closer to the .37 merge window, I wanted to take this
+>>> oppourtunity to recap the current status of the drop-host_lock /
+>>> unlocked_qcmds=1 patches, and what is required for the next RFCv5 and
+>>> hopefully a merge into .37.  The last RFCv4 was posted here:
+>>> 
+>>> http://marc.info/?l=linux-kernel=128563953114561=2
+>>> <http://marc.info/?l=linux-kernel=128563953114561=2
+>>> <http://marc.info/?l=linux-kernel&m=128563953114561&w=2> >
+>>> 
+>>> Since then, Christof Schmitt has sent a patch to drop struct
+>>> scsi_cmnd->serial_number usage in zfcp, and Tim Chen has sent an
+>>> important fix to drop an extra host_lock access that I originally missed
+>>> in qla2xxx SHT->queuecommand() that certainly would have deadlocked a
+>>> running machine.   Many thanks to Christof and Tim for your
+>>> contributions and review!
+>>> 
+>>> So at this point in the game the current score sits at:
+>>> 
+>>> *) core drivers/scsi remaining issue(s):
+>>> 
+>>> The issue raised by andmike during RFCv4 described as:
+>>> 
+>>> "If we skip __scsi_try_to_abort_cmd when REQ_ATOM_COMPLETE is set it
+>>> would be correct for the scsi_decide_disposition cases but it would
+>>> appear this would stop __scsi_try_to_abort_cmd from being called in the
+>>> time out case as REQ_ATOM_COMPLETE is set prior to calling
+>>> blk_rq_timed_out."
+>>> 
+>>> The complete discussion is here:
+>>> 
+>>> http://marc.info/?l=linux-scsi=128535319915212=2
+>>> <http://marc.info/?l=linux-scsi=128535319915212=2
+>>> <http://marc.info/?l=linux-scsi&m=128535319915212&w=2> >
+>>> 
+>>> We still need folks with experience to dig into this code, so you know
+>>> the scsi_error.c code please jump in!
+>>> 
+>>> *) LLD libraries running by default w/ unlocked_qcmds=1
+>>> 
+>>> libiscsi: need ack from mnc
+>>> libsas: need ack from jejb
+>>> libfc: remaining rport state + host_lock less issue.  Need more input
+>>>        from mnc for James Smart and Joe on this...
+>>> libata: jgarzik thinks this should be OK, review and ack from tejun
+>>>         would also be very helpful.
+>>> 
+>>> The main issue remaining here is the audit of libfc rport (and other..?)
+>>> code that assumes host_lock is held to protect state.  mnc, do you have
+>>> any more thoughts for James Smart and Joe here..?
+>>> 
+>>> *) Individual LLDs running by default w/ unlocked_qcmds=1
+>>> 
+>>> aic94xx: need ack maintainer at adaptec..?)
+>>> mvsas: need ack maintainer at marvell..?)
+>>> pm8001: need ack Jang Wang
+>>> qla4xxx, qla2xxx: need ack Andrew Vasquez
+>>> fnic:  need ack Joe Eykholt
+>> 
+>> The qla2xxx driver is modified not to depend on the host_lock and also to
+>> drop usage of scsi_cmnd->serial_number. Both the patches are submitted to
+>> linux-scsi and you can find more information at
+>> 
+>> http://marc.info/?l=linux-scsi=128716779923700=2
+>> <http://marc.info/?l=linux-scsi&m=128716779923700&w=2>
+> 
+> Sure, but for the new fast unlocked_qcmds=1 operation in
+> qla2xxx_queuecommand(), the host_lock access needs to be complete
+> removed from SHT->queuecommand().   The above patch just moves the
+> vha->host->host_lock unlock up in queuecommand(),  right..?
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index b0c7139..77203b0 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -545,6 +545,7 @@ qla2xxx_queuecommand(struct scsi_cmnd *cmd, void
+> (*done)(struct scsi_cmnd *))
+>         srb_t *sp;
+>         int rval;
+> 
+> +       spin_unlock_irq(vha->host->host_lock);
+>         if (ha->flags.eeh_busy) {
+>                 if (ha->flags.pci_channel_io_perm_failure)
+>                         cmd->result = DID_NO_CONNECT << 16;
+> 
+> <SNIP>
+> 
+> @@ -603,9 +599,11 @@ qc24_host_busy_lock:
+>         return SCSI_MLQUEUE_HOST_BUSY;
+> 
+>  qc24_target_busy:
+> +       spin_lock_irq(vha->host->host_lock);
+>         return SCSI_MLQUEUE_TARGET_BUSY;
+> 
+>  qc24_fail_command:
+> +       spin_lock_irq(vha->host->host_lock);
+>         done(cmd);
+> 
+>         return 0;
+> 
+>> http://marc.info/?l=linux-scsi=128716779623683=2
+>> <http://marc.info/?l=linux-scsi&m=128716779623683&w=2>
+>> 
+> 
+> <nod> I had been only updating LLDs that actually used ->serial_number
+> beyond a simple informational purposes for error recovery.  Thanks for
+> removing this one preemptively!  8-)
+> 
+> Best,
+> 
+> --nab
+> 
+
+Hi Nicholas,
+
+Yes, I understand. I was thinking that you are going to submit the patches
+for all LLD with your final submission.
+
+I will submit the patch which removes host_lock in queuecommand routine
+completely then. 
+
+-- Giri
+
+> 
+> 
