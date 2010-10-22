@@ -1,16 +1,16 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 04/10] hpsa: do not reset unknown boards on reset_devices
-Date: Fri, 22 Oct 2010 14:27:40 -0500
-Message-ID: <20101022192740.25694.15068.stgit@beardog.cce.hp.com>
+Subject: [PATCH 07/10] hpsa: use usleep_range not msleep for small sleeps
+Date: Fri, 22 Oct 2010 14:27:55 -0500
+Message-ID: <20101022192755.25694.82762.stgit@beardog.cce.hp.com>
 References: <20101022192315.25694.28983.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0027.austin.hp.com ([15.216.28.34]:27292 "EHLO
-	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753083Ab0JVT1m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Oct 2010 15:27:42 -0400
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:5648 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759133Ab0JVT14 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Oct 2010 15:27:56 -0400
 In-Reply-To: <20101022192315.25694.28983.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,29 +19,22 @@ Cc: akpm@linux-foundation.org, thenzl@redhat.com, mike.miller@hp.com, linux-scsi
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-This is to prevent hpsa from resetting older boards
-which the cciss driver may be controlling.
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/scsi/hpsa.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ba2becc..d618432 100644
+index a68dba7..c36427d 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3163,7 +3163,11 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	 * likely not be happy.  Just forbid resetting this conjoined mess.
- 	 * The 640x isn't really supported by hpsa anyway.
- 	 */
--	hpsa_lookup_board_id(pdev, &board_id);
-+	rc = hpsa_lookup_board_id(pdev, &board_id);
-+	if (rc < 0) {
-+		dev_warn(&pdev->dev, "Not resetting device.\n");
-+		return -ENODEV;
-+	}
- 	if (board_id == 0x409C0E11 || board_id == 0x409D0E11)
- 		return -ENOTSUPP;
+@@ -3594,7 +3594,7 @@ static void __devinit hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
+ 		if (!doorbell_value & CFGTBL_ChangeReq)
+ 			break;
+ 		/* delay and try again */
+-		msleep(10);
++		usleep_range(10000, 20000);
+ 	}
+ }
  
 
