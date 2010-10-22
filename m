@@ -1,42 +1,48 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH] [USB] Allow retrieval of the Caching mode page
-Date: Thu, 21 Oct 2010 21:06:47 -0700 (PDT)
-Message-ID: <965283.41083.qm@web31805.mail.mud.yahoo.com>
-References: <20101022000405.GC25431@one-eyed-alien.net>
-Reply-To: ltuikov@yahoo.com
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 2/2] scsi: don't use execute_in_process_context()
+Date: Fri, 22 Oct 2010 19:03:30 +0900
+Message-ID: <20101022185701H.fujita.tomonori@lab.ntt.co.jp>
+References: <4CBD95C0.6060302@kernel.org>
+	<4CBD95DC.8000001@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31805.mail.mud.yahoo.com ([68.142.207.68]:40777 "HELO
-	web31805.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751899Ab0JVEGs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2010 00:06:48 -0400
-In-Reply-To: <20101022000405.GC25431@one-eyed-alien.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CBD95DC.8000001@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Cc: Greg KH <greg@kroah.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
---- On Thu, 10/21/10, Matthew Dharm <mdharm-kernel@one-eyed-alien.net> wrote:
-> If you remove this, there are several devices which will
-> stop working.
-> They will simply go out-to-lunch when the sd_mod driver
-> sends a request for
-> Mode Page 8.
+On Tue, 19 Oct 2010 14:58:04 +0200
+Tejun Heo <tj@kernel.org> wrote:
 
-That's true. But it seems unfair to punish good devices which do support
-the Caching mode page.
+> SCSI is the only subsystem which uses execute_in_process_context().
+> With the recent workqueue updates, unconditionally using work wouldn't
+> cause deadlocks around execution resources and the two places where
+> SCSI uses them are cold paths where using work unconditionally
+> wouldn't make any difference.  Drop execute_in_process_context() and
+> use work directly.
+> 
+> * scsi_device->ew is replaced with release_work.  scsi_target->ew is
+>   replaced with reap_work.
+> 
+> * Both works are initialized with the respective release/reap function
+>   during device/target init.  scsi_target_reap_usercontext() is moved
+>   upwards to avoid needing forward declaration.
+> 
+> * scsi_alloc_target() now explicitly flushes the reap_work of the
+>   found dying target before putting it instead of depending on
+>   flush_scheduled_work().
+> 
+> This is in preparation of deprecation of flush_scheduled_work() and
+> execute_in_process_context().
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  drivers/scsi/scsi_scan.c   |   26 +++++++++++++-------------
+>  drivers/scsi/scsi_sysfs.c  |    8 +++++---
+>  include/scsi/scsi_device.h |    4 ++--
+>  3 files changed, 20 insertions(+), 18 deletions(-)
 
-sd_revalidate_disk() calls in succession sd_read_write_protect_flag(),
-sd_read_cache_type() and sd_read_app_tag_own().  The first, asks for all
-pages by setting the page code to 0x3F. Surely if the device server
-supports the Caching mode page, it will be returned. The second call, asks
-only for the Caching mode page, and here is where some (few?) broken
-devices fail.
-
-If the skip_ms_page_8 is set, why not request all pages, and see if the
-Caching mode page is part of the parameter data.
-
-Anyone willing to code that up in sd_read_cache_type()?
-
+Looks fine to me.
