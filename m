@@ -1,17 +1,17 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 05/10] hpsa: take the adapter lock in
-	hpsa_wait_for_mode_change_ack
-Date: Fri, 22 Oct 2010 14:27:45 -0500
-Message-ID: <20101022192745.25694.48612.stgit@beardog.cce.hp.com>
+Subject: [PATCH 06/10] hpsa: allow driver to put controller in either simple
+	or performant mode
+Date: Fri, 22 Oct 2010 14:27:50 -0500
+Message-ID: <20101022192750.25694.85825.stgit@beardog.cce.hp.com>
 References: <20101022192315.25694.28983.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:5594 "EHLO
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:5622 "EHLO
 	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759266Ab0JVT1u (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Oct 2010 15:27:50 -0400
+	with ESMTP id S1759288Ab0JVT1v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Oct 2010 15:27:51 -0400
 In-Reply-To: <20101022192315.25694.28983.stgit@beardog.cce.hp.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,54 +20,52 @@ Cc: akpm@linux-foundation.org, thenzl@redhat.com, mike.miller@hp.com, linux-scsi
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Need to take the lock while accessing the register to check to
-see if config table changes have taken effect.
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   11 ++++++++---
- 1 files changed, 8 insertions(+), 3 deletions(-)
+ Documentation/scsi/hpsa.txt |    6 ++++++
+ drivers/scsi/hpsa.c         |    7 +++++++
+ 2 files changed, 13 insertions(+), 0 deletions(-)
 
+diff --git a/Documentation/scsi/hpsa.txt b/Documentation/scsi/hpsa.txt
+index dca6583..b14e6ee 100644
+--- a/Documentation/scsi/hpsa.txt
++++ b/Documentation/scsi/hpsa.txt
+@@ -28,6 +28,12 @@ boot parameter "hpsa_allow_any=1" is specified, however these are not tested
+ nor supported by HP with this driver.  For older Smart Arrays, the cciss
+ driver should still be used.
+ 
++The "hpsa_simple_mode=1" boot parameter may be used to prevent the driver from
++putting the controller into "performant" mode.  The difference is that with simple
++mode, each command completion requires an interrupt, while with "performant mode"
++(the default, and ordinarily better performing) it is possible to have multiple
++command completions indicated by a single interrupt.
++
+ HPSA specific entries in /sys
+ -----------------------------
+ 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index d618432..ffc5f74 100644
+index ffc5f74..a68dba7 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3576,13 +3576,18 @@ static inline void hpsa_p600_dma_prefetch_quirk(struct ctlr_info *h)
- static void __devinit hpsa_wait_for_mode_change_ack(struct ctlr_info *h)
+@@ -75,6 +75,10 @@ static int hpsa_allow_any;
+ module_param(hpsa_allow_any, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(hpsa_allow_any,
+ 		"Allow hpsa driver to access unknown HP Smart Array hardware");
++static int hpsa_simple_mode;
++module_param(hpsa_simple_mode, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(hpsa_simple_mode,
++	"Use 'simple mode' rather than 'performant mode'");
+ 
+ /* define the PCI info for the cards we can control */
+ static const struct pci_device_id hpsa_pci_device_id[] = {
+@@ -4061,6 +4065,9 @@ static __devinit void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
  {
- 	int i;
-+	u32 doorbell_value;
-+	unsigned long flags;
+ 	u32 trans_support;
  
- 	/* under certain very rare conditions, this can take awhile.
- 	 * (e.g.: hot replace a failed 144GB drive in a RAID 5 set right
- 	 * as we enter this code.)
- 	 */
- 	for (i = 0; i < MAX_CONFIG_WAIT; i++) {
--		if (!(readl(h->vaddr + SA5_DOORBELL) & CFGTBL_ChangeReq))
-+		spin_lock_irqsave(&h->lock, flags);
-+		doorbell_value = readl(h->vaddr + SA5_DOORBELL);
-+		spin_unlock_irqrestore(&h->lock, flags);
-+		if (!doorbell_value & CFGTBL_ChangeReq)
- 			break;
- 		/* delay and try again */
- 		msleep(10);
-@@ -3754,6 +3759,8 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
- 	h->busy_initializing = 1;
- 	INIT_HLIST_HEAD(&h->cmpQ);
- 	INIT_HLIST_HEAD(&h->reqQ);
-+	spin_lock_init(&h->lock);
-+	spin_lock_init(&h->scan_lock);
- 	rc = hpsa_pci_init(h);
- 	if (rc != 0)
- 		goto clean1;
-@@ -3813,8 +3820,6 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
- 	}
- 	if (hpsa_allocate_sg_chain_blocks(h))
- 		goto clean4;
--	spin_lock_init(&h->lock);
--	spin_lock_init(&h->scan_lock);
- 	init_waitqueue_head(&h->scan_wait_queue);
- 	h->scan_finished = 1; /* no scan currently in progress */
- 
++	if (hpsa_simple_mode)
++		return;
++
+ 	trans_support = readl(&(h->cfgtable->TransportSupport));
+ 	if (!(trans_support & PERFORMANT_MODE))
+ 		return;
 
