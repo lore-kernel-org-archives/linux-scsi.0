@@ -1,68 +1,48 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Fri, 22 Oct 2010 11:54:37 -0700
-Message-ID: <20101022185437.GA9103@kroah.com>
-References: <20101009212047.GB27180@kroah.com>
- <4CB36592.6060909@vlnb.net>
- <20101011213235.GA11489@kroah.com>
- <4CB4AEB9.30501@vlnb.net>
- <20101012190345.GA25737@kroah.com>
- <4CB75E81.7000208@vlnb.net>
- <20101014200413.GA30831@kroah.com>
- <4CC1CA4D.1090609@vlnb.net>
- <20101022175624.GA13640@kroah.com>
- <4CC1DAA2.7030602@vlnb.net>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 00/10] hpsa updates, kdump fixes, PCI ID corrections and more
+Date: Fri, 22 Oct 2010 14:27:19 -0500
+Message-ID: <20101022192315.25694.28983.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:33891 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759175Ab0JVSzw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2010 14:55:52 -0400
-Content-Disposition: inline
-In-Reply-To: <4CC1DAA2.7030602@vlnb.net>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:27130 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759106Ab0JVT1a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Oct 2010 15:27:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
+To: james.bottomley@hansenpartnership.com
+Cc: akpm@linux-foundation.org, thenzl@redhat.com, mike.miller@hp.com, linux-scsi@vger.kernel.org, smcameron@yahoo.com
 
-On Fri, Oct 22, 2010 at 10:40:34PM +0400, Vladislav Bolkhovitin wrote:
-> Greg KH, on 10/22/2010 09:56 PM wrote:
-> > On Fri, Oct 22, 2010 at 09:30:53PM +0400, Vladislav Bolkhovitin wrote:
-> >> +	unsigned int tgt_kobj_initialized:1;
-> > 
-> > It's the middle of the merge window, and I'm about to go on vacation, so
-> > I didn't read this patch after this line.
-> > 
-> > It's obvious that this patch is wrong, you shouldn't need to worry about
-> > this.  And even if you did, you don't need this flag.
-> > 
-> > Why are you trying to do something that no one else needs?  Why make
-> > things harder than they have to be.
-> 
-> I tried to explain that to you in http://lkml.org/lkml/2010/10/14/291
-> and mentioned there the need to create this flag to track
-> half-initialized kobjects. You agreed
-> (http://lkml.org/lkml/2010/10/14/299) that don't return half-initialized
-> objects is a regular kernel practice, but then requested to strictly
-> bound the larger object freeing to its kobject release(), which means
-> that all SYSFS creating functions now have to return half-initialized
-> SYSFS hierarchy in case of any error. Hence the flag to track it.
+* The following series implements fixes to the board reset code used
+  when the reset_devices kernel parameter is used (typically, kdump).
+* Fixes some incorrect PCI IDs
+* Also allows boards to be run in "simple" mode as well as the default
+  "performant" mode.
+* Adds a "commands_outstanding" entry in /sys for the scsi host controller.
+* Add needed locking in hpsa_wait_for_mode_change_ack()
+* Use usleep_range instead of msleep for small sleeps.
 
-I agreed that you needed to do something about it, not that this is the
-correct way to do it.
+---
 
-Think for a second as to why your code path looks different from EVERY
-other kobject user in the kernel.  Perhaps it is incorrect?  You don't
-need all this completion mess, in fact, it's wrong.
+Stephen M. Cameron (10):
+      hpsa: fix board status waiting code
+      hpsa: Use kernel provided PCI state save and restore functions
+      hpsa: limit commands allocated on reset_devices
+      hpsa: do not reset unknown boards on reset_devices
+      hpsa: take the adapter lock in hpsa_wait_for_mode_change_ack
+      hpsa: allow driver to put controller in either simple or performant mode
+      hpsa: use usleep_range not msleep for small sleeps
+      hpsa: defend against zero sized buffers in passthru ioctls
+      hpsa: Add a per controller commands_outstanding entry in /sys
+      hpsa: fix some incorrect PCI IDs.
 
-Just do what everyone else does please, as that is the simpler, and
-correct, way to do it.
 
-Oh, and why are you using a kobject at all anyway?  Shouldn't you be
-using a 'struct device'?
+ Documentation/scsi/hpsa.txt |    6 +
+ drivers/scsi/hpsa.c         |  216 ++++++++++++++++++++++---------------------
+ drivers/scsi/hpsa.h         |    4 +
+ 3 files changed, 122 insertions(+), 104 deletions(-)
 
-Anyway, I don't have time for this anymore for the next 2 weeks, good
-luck.
-
-greg k-h
+--
+-- steve
