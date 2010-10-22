@@ -1,33 +1,33 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
 Subject: Re: [PATCH] [USB] Use normalized sense when emulating autosense
-Date: Fri, 22 Oct 2010 14:13:53 -0700 (PDT)
-Message-ID: <177615.57592.qm@web31810.mail.mud.yahoo.com>
-References: <Pine.LNX.4.44L0.1010221029430.1529-100000@iolanthe.rowland.org>
-Reply-To: ltuikov@yahoo.com
+Date: Fri, 22 Oct 2010 17:28:04 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1010221726530.4510-100000@iolanthe.rowland.org>
+References: <177615.57592.qm@web31810.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:37995 "HELO
-	web31810.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753444Ab0JVVNy convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2010 17:13:54 -0400
-In-Reply-To: <Pine.LNX.4.44L0.1010221029430.1529-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <177615.57592.qm-Nmn3xtWrocavuULXzWHTWIglqE1Y4D90QQ4Iyu8u01E@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Greg KH <greg@kroah.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
---- On Fri, 10/22/10, Alan Stern <stern@rowland.harvard.edu> wrote:
-> What about the Filemark and ILI tests?=A0 You mustn't
-> get rid of them;=20
-> they are needed for tape drives.
+On Fri, 22 Oct 2010, Luben Tuikov wrote:
 
-I've resubmitted the patch.
+> --- On Fri, 10/22/10, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
+> > What about the Filemark and ILI tests?=A0 You mustn't
+> > get rid of them;=20
+> > they are needed for tape drives.
+>=20
+> I've resubmitted the patch.
+
+Yeah, the new one is better.  I would have preferred to see fm_ili=20
+explained in a comment, but this is okay.
+
+Alan Stern
 
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
