@@ -1,48 +1,110 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 10/10] hpsa: fix some incorrect PCI IDs.
-Date: Fri, 22 Oct 2010 14:28:11 -0500
-Message-ID: <20101022192811.25694.46946.stgit@beardog.cce.hp.com>
-References: <20101022192315.25694.28983.stgit@beardog.cce.hp.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: [PATCH take 2] [USB] Use normalized sense when emulating autosense
+Date: Fri, 22 Oct 2010 14:12:51 -0700 (PDT)
+Message-ID: <985163.58416.qm@web31807.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:47258 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758595Ab0JVT2L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Oct 2010 15:28:11 -0400
-In-Reply-To: <20101022192315.25694.28983.stgit@beardog.cce.hp.com>
+Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:27527 "HELO
+	web31807.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758387Ab0JVVMx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 22 Oct 2010 17:12:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: akpm@linux-foundation.org, thenzl@redhat.com, mike.miller@hp.com, linux-scsi@vger.kernel.org, smcameron@yahoo.com
+To: Greg KH <greg@kroah.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+This patch solves two things:
+1) Enables autosense emulation code to correctly
+interpret descriptor format sense data, and
+2) Fixes a bug whereby the autosense emulation
+code would overwrite descriptor format sense data
+with SENSE KEY HARDWARE ERROR in fixed format, to
+incorrectly look like this:
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+Oct 21 14:11:07 localhost kernel: sd 7:0:0:0: [sdc]  Sense Key : Recovered Error [current] [descriptor]
+Oct 21 14:11:07 localhost kernel: Descriptor sense data with sense descriptors (in hex):
+Oct 21 14:11:07 localhost kernel:        72 01 04 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
+Oct 21 14:11:07 localhost kernel:        00 4f 00 c2 00 50
+Oct 21 14:11:07 localhost kernel: sd 7:0:0:0: [sdc]  ASC=0x4 ASCQ=0x1d
+
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
 ---
- drivers/scsi/hpsa.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/usb/storage/transport.c |   34 +++++++++++++++++++---------------
+ 1 files changed, 19 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 862b0ae..d5bca36 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -120,11 +120,11 @@ static struct board_type products[] = {
- 	{0x324b103C, "Smart Array P711m", &SA5_access},
- 	{0x3233103C, "StorageWorks P1210m", &SA5_access},
- 	{0x333F103C, "StorageWorks P1210m", &SA5_access},
--	{0x3250103C, "Smart Array", &SA5_access},
--	{0x3250113C, "Smart Array", &SA5_access},
--	{0x3250123C, "Smart Array", &SA5_access},
--	{0x3250133C, "Smart Array", &SA5_access},
--	{0x3250143C, "Smart Array", &SA5_access},
-+	{0x3350103C, "Smart Array", &SA5_access},
-+	{0x3351103C, "Smart Array", &SA5_access},
-+	{0x3352103C, "Smart Array", &SA5_access},
-+	{0x3353103C, "Smart Array", &SA5_access},
-+	{0x3354103C, "Smart Array", &SA5_access},
- 	{0xFFFF103C, "Unknown Smart Array", &SA5_access},
- };
+diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
+index 64ec073..cb04664 100644
+--- a/drivers/usb/storage/transport.c
++++ b/drivers/usb/storage/transport.c
+@@ -691,6 +691,9 @@ void usb_stor_invoke_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 		int temp_result;
+ 		struct scsi_eh_save ses;
+ 		int sense_size = US_SENSE_SIZE;
++		struct scsi_sense_hdr sshdr;
++		const u8 *scdd;
++		u8 fm_ili;
  
+ 		/* device supports and needs bigger sense buffer */
+ 		if (us->fflags & US_FL_SANE_SENSE)
+@@ -774,32 +777,30 @@ Retry_Sense:
+ 			srb->sense_buffer[7] = (US_SENSE_SIZE - 8);
+ 		}
+ 
++		scsi_normalize_sense(srb->sense_buffer, SCSI_SENSE_BUFFERSIZE,
++				     &sshdr);
++
+ 		US_DEBUGP("-- Result from auto-sense is %d\n", temp_result);
+ 		US_DEBUGP("-- code: 0x%x, key: 0x%x, ASC: 0x%x, ASCQ: 0x%x\n",
+-			  srb->sense_buffer[0],
+-			  srb->sense_buffer[2] & 0xf,
+-			  srb->sense_buffer[12], 
+-			  srb->sense_buffer[13]);
++			  sshdr.response_code, sshdr.sense_key,
++			  sshdr.asc, sshdr.ascq);
+ #ifdef CONFIG_USB_STORAGE_DEBUG
+-		usb_stor_show_sense(
+-			  srb->sense_buffer[2] & 0xf,
+-			  srb->sense_buffer[12], 
+-			  srb->sense_buffer[13]);
++		usb_stor_show_sense(sshdr.sense_key, sshdr.asc, sshdr.ascq);
+ #endif
+ 
+ 		/* set the result so the higher layers expect this data */
+ 		srb->result = SAM_STAT_CHECK_CONDITION;
+ 
++		scdd = scsi_sense_desc_find(srb->sense_buffer,
++					    SCSI_SENSE_BUFFERSIZE, 4);
++		fm_ili = (scdd ? scdd[3] : srb->sense_buffer[2]) & 0xA0;
++
+ 		/* We often get empty sense data.  This could indicate that
+ 		 * everything worked or that there was an unspecified
+ 		 * problem.  We have to decide which.
+ 		 */
+-		if (	/* Filemark 0, ignore EOM, ILI 0, no sense */
+-				(srb->sense_buffer[2] & 0xaf) == 0 &&
+-			/* No ASC or ASCQ */
+-				srb->sense_buffer[12] == 0 &&
+-				srb->sense_buffer[13] == 0) {
+-
++		if (sshdr.sense_key == 0 && sshdr.asc == 0 && sshdr.ascq == 0 &&
++		    fm_ili == 0) {
+ 			/* If things are really okay, then let's show that.
+ 			 * Zero out the sense buffer so the higher layers
+ 			 * won't realize we did an unsolicited auto-sense.
+@@ -814,7 +815,10 @@ Retry_Sense:
+ 			 */
+ 			} else {
+ 				srb->result = DID_ERROR << 16;
+-				srb->sense_buffer[2] = HARDWARE_ERROR;
++				if ((sshdr.response_code & 0x72) == 0x72)
++					srb->sense_buffer[1] = HARDWARE_ERROR;
++				else
++					srb->sense_buffer[2] = HARDWARE_ERROR;
+ 			}
+ 		}
+ 	}
+-- 
+1.7.0.1
 
