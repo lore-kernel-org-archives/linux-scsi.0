@@ -1,65 +1,195 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [GIT PULL] first round of SCSI updates for the merge window
-Date: Fri, 22 Oct 2010 17:48:35 -0700
-Message-ID: <AANLkTikZ-vePH+Wvf9S0-0PG1h+rRNByKEmXC2XENH1=@mail.gmail.com>
-References: <1287764862.8930.220.camel@mulgrave.site>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: [PATCH] [SCSI] Retrieve the Caching mode page
+Date: Fri, 22 Oct 2010 21:24:36 -0700 (PDT)
+Message-ID: <479061.81478.qm@web31812.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:42377 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752626Ab0JWAs7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Oct 2010 20:48:59 -0400
-In-Reply-To: <1287764862.8930.220.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Fri, Oct 22, 2010 at 9:27 AM, James Bottomley
-<James.Bottomley@suse.de> wrote:
-> This represents the usual assortment of driver updates (bnx2i, zfcp,
-> qla, lpfc, ipr ..) plus several libfc and fcoe updates and a partial bfa
-> cleanup.
+Some kernel transport drivers unconditionally disable
+retrieval of the Caching mode page. One such for example is
+the BBB/CBI transport over USB.=A0 Such a restraint is too
+harsh as some devices do support the Caching mode
+page. Unconditionally enabling the retrieval of this mode
+page over those transports at their transport code level may
+result in some devices failing and becoming unusable.
 
-Why do you say "bfa cleanup"?
+This patch implements a method of retrieving the Caching
+mode page without unconditionally enabling it in the
+transports which unconditionally disable it. The idea is to
+ask for all supported pages, page code 0x3F, and then search
+for the Caching mode page in the mode parameter data
+returned. The sd driver already asks for all the mode pages
+supported by the attached device by setting the page code to
+0x3F in order to find out if the media is write protected by
+reading the WP bit in the Device Specific Parameter
+field. It then attempts to retrieve only the Caching mode
+page by setting the page code to 8 and actually attempting
+to retrieve it if and only if the transport allows it.
 
-There's a _single_ commit that looks like this:
+The method implemented here is that if the transport doesn't
+allow retrieval of the Caching mode page and the device is
+not RBC, then we ask for all pages supported by setting the
+page code to 0x3F (similarly to how the WP bit is retrieved
+above), and then we search for the Caching mode page in the
+mode parameter data returned.
 
- 220 files changed, 34823 insertions(+), 43478 deletions(-)
+With this patch, devices over SATA, report this (no change):
 
-and which apparently rewrites the whole f*cking driver, with no
-explanations, no nothing. Why should anything like this be considered
-acceptable?
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] 976773168 512-byte =
+logical blocks: (500 GB/465 GiB)
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: Attached scsi generic sg0=
+ type 0
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] Write Protect is of=
+f
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 0=
+0 00
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] Write cache: enable=
+d, read cache: enabled, doesn't support DPO or FUA
 
-I'm going to pull it this once, because let's face it, nobody sane
-cares about that idiotic driver to begin with (and it does remove a
-lot more lines than it adds). But really, if I see something like that
-again, I will just tell you to go away and not send me crap like this
-again.
+Smart devices report their Caching mode page. This is a
+change where we'd previously see the kernel making
+assumption about the device's cache being write-through:
 
-If it's that kind of crap, it should go into staging, or it shouldn't
-have been merged into the kernel in the first place.
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: Attached scsi generic sg2=
+ type 0
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] 610472646 4096-byte=
+ logical blocks: (2.50 TB/2.27 TiB)
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] Write Protect is of=
+f
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] Mode Sense: 47 00 1=
+0 08
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] Write cache: enable=
+d, read cache: enabled, supports DPO and FUA
 
-Seriously. You need to start showing better taste. I realize that most
-of SCSI is crazy specialty hardware that is used by just a few people,
-but if you don't start pushing back on those vendors and make them do
-proper changes in small pieces and with actual commentary, then _I_ am
-going to push back at you. Hard. By simply not pulling crap.
+And "dumb" devices over BBB, are correctly shown not to
+support reporting the Caching mode page:
 
-This is not the first time I've been disgusted with the SCSI tree. And
-quite frankly, drivers like BFA are so totally irrelevant to anything,
-that I will have absolutely no problems with just saying "screw it, if
-they can't behave, they get removed from the kernel".
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] 15663104 512-byte l=
+ogical blocks: (8.01 GB/7.46 GiB)
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] Write Protect is of=
+f
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] Mode Sense: 23 00 0=
+0 00
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] No Caching mode pag=
+e present
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] Assuming drive cach=
+e: write through
 
-And don't blame it on bad vendors that won't do a good job. If they
-don't do a good job, then STOP TAKING THEIR CRAP. Make them understand
-that they need to work with the process, not do some kind of random
-"change everything, with no actual explanations". Blame me if you
-can't grow the balls to stand up to them. Tell them that I simply
-won't take it unless they clean up their act.
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+---
+ drivers/scsi/sd.c |   63 +++++++++++++++++++++++++++++++++++++++------=
+-------
+ 1 files changed, 47 insertions(+), 16 deletions(-)
 
-Because I really won't.
+A note on the patch: I've removed the "len +=3D ..." statement,
+since "data.length" already includes the mode parameter header length
+and the block descriptor length. If the device returns correctly
+formatted mode parameter data then this statement would most certainly
+add those two lengths to the data twice resulting in an incorrect "len"
+length.
 
-                        Linus
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ffa0689..81e83d7 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1867,10 +1867,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsi=
+gned char *buffer)
+ 	int old_rcd =3D sdkp->RCD;
+ 	int old_dpofua =3D sdkp->DPOFUA;
+=20
+-	if (sdp->skip_ms_page_8)
+-		goto defaults;
+-
+-	if (sdp->type =3D=3D TYPE_RBC) {
++	if (sdp->skip_ms_page_8) {
++		if (sdp->type =3D=3D TYPE_RBC)
++			goto defaults;
++		else {
++			modepage =3D 0x3F;
++			dbd =3D 0;
++		}
++	} else if (sdp->type =3D=3D TYPE_RBC) {
+ 		modepage =3D 6;
+ 		dbd =3D 8;
+ 	} else {
+@@ -1898,13 +1902,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsi=
+gned char *buffer)
+ 	 */
+ 	if (len < 3)
+ 		goto bad_sense;
+-	if (len > 20)
+-		len =3D 20;
+-
+-	/* Take headers and block descriptors into account */
+-	len +=3D data.header_length + data.block_descriptor_length;
+-	if (len > SD_BUF_SIZE)
+-		goto bad_sense;
++	else if (len > SD_BUF_SIZE) {
++		sd_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
++			  "data from %d to %d bytes\n", len, SD_BUF_SIZE);
++		len =3D SD_BUF_SIZE;
++	}
+=20
+ 	/* Get the data */
+ 	res =3D sd_do_mode_sense(sdp, dbd, modepage, buffer, len, &data, &ssh=
+dr);
+@@ -1912,16 +1914,45 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsi=
+gned char *buffer)
+ 	if (scsi_status_is_good(res)) {
+ 		int offset =3D data.header_length + data.block_descriptor_length;
+=20
+-		if (offset >=3D SD_BUF_SIZE - 2) {
+-			sd_printk(KERN_ERR, sdkp, "Malformed MODE SENSE response\n");
+-			goto defaults;
++		while (offset < len) {
++			u8 page_code =3D buffer[offset] & 0x3F;
++			u8 spf       =3D buffer[offset] & 0x40;
++
++			if (page_code =3D=3D 8 || page_code =3D=3D 6) {
++				/* We're interested only in the first 3 bytes.
++				 */
++				if (len - offset <=3D 2) {
++					sd_printk(KERN_ERR, sdkp, "Incomplete "
++						  "mode parameter data\n");
++					goto defaults;
++				} else {
++					modepage =3D page_code;
++					goto Page_found;
++				}
++			} else {
++				/* Go to the next page */
++				if (spf && len - offset > 3)
++					offset +=3D 4 + (buffer[offset+2] << 8) +
++						buffer[offset+3];
++				else if (!spf && len - offset > 1)
++					offset +=3D 2 + buffer[offset+1];
++				else {
++					sd_printk(KERN_ERR, sdkp, "Incomplete "
++						  "mode parameter data\n");
++					goto defaults;
++				}
++			}
+ 		}
+=20
+-		if ((buffer[offset] & 0x3f) !=3D modepage) {
++		if (modepage =3D=3D 0x3F) {
++			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
++				  "present\n");
++			goto defaults;
++		} else if ((buffer[offset] & 0x3f) !=3D modepage) {
+ 			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
+ 			goto defaults;
+ 		}
+-
++	Page_found:
+ 		if (modepage =3D=3D 8) {
+ 			sdkp->WCE =3D ((buffer[offset + 2] & 0x04) !=3D 0);
+ 			sdkp->RCD =3D ((buffer[offset + 2] & 0x01) !=3D 0);
+--=20
+1.7.0.1
