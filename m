@@ -1,80 +1,40 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [Open-FCoE] [PATCH] libfc: fix error handling in fc_exch_rrq_resp()
-Date: Sat, 23 Oct 2010 15:56:50 +0800
-Message-ID: <AANLkTi=K=1hE4-D0gsTsSRAj3bE0Y+=B1BQH3AH7DW8m@mail.gmail.com>
-References: <AANLkTik3GbuiEGVPigGZp+=RH7qRMarn0cdZJ49Toso7@mail.gmail.com>
-	<4CC1DEAF.50403@cisco.com>
+From: Ron Pitts <aussieron@gmail.com>
+Subject: Re: Problem with RR3520 (HighPoint Raid) - Fedora -
+Date: Sat, 23 Oct 2010 22:48:59 +1100
+Message-ID: <AANLkTinK1-xJF+VxtC_w0wbCJAJbyjDisVy6dT+JxwJS@mail.gmail.com>
+References: <AANLkTimVsA-_Z=LgL4pOVc1uY7bB1nwDSbRMZwdWZNpy@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:34619 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752234Ab0JWH4x convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Oct 2010 03:56:53 -0400
-Received: by wwe15 with SMTP id 15so1730801wwe.1
-        for <linux-scsi@vger.kernel.org>; Sat, 23 Oct 2010 00:56:52 -0700 (PDT)
-In-Reply-To: <4CC1DEAF.50403@cisco.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:36073 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755502Ab0JWLs7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Oct 2010 07:48:59 -0400
+Received: by iwn34 with SMTP id 34so2058658iwn.19
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Oct 2010 04:48:59 -0700 (PDT)
+In-Reply-To: <AANLkTimVsA-_Z=LgL4pOVc1uY7bB1nwDSbRMZwdWZNpy@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Eykholt <jeykholt@cisco.com>
-Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sat, Oct 23, 2010 at 2:57 AM, Joe Eykholt <jeykholt@cisco.com> wrote=
-:
->
->
-> On 10/22/10 8:21 AM, Hillf Danton wrote:
->> There seems no cleanup left when FC_EX_CLOSED encountered, which may
->> be from fc_exch_reset().
->
-> Are you sure? =C2=A0It seems that the RRQ exchange has a hold on anot=
-her
-> exchange, the one that's the subject of the RRQ. =C2=A0That exchange
+I'm trying to load the hptiop driver within Fedora V13 and its
+currently returning scsi11: firmware not ready.
 
-In case of fc_exch_pool_reset(), each exch on ex_list is delivered to
-fc_exch_reset(),  so "another" and "that" exch are treated in same way.
+ I've located the section of code below:
 
-After cleanup, then the resp handler, if attached, is issued with FC_EX=
-_CLOSED,
-so no more work left for the resp handler.
+ =A0 hptiop.c
 
-If still needed, overwork occurs before calling resp handler.
+=A0if (hba->ops->iop_wait_ready(hba, 20000)) {
+> 1017=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 printk(KERN_ERR =
+"scsi%d: firmware not ready\n",
+> 1018=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hba->host->host_no);
+> 1019=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 goto unmap_pci_b=
+ar;
+> 1020=A0=A0=A0=A0=A0=A0=A0=A0 }
 
-> still needs to be released. =C2=A0I could be wrong, it's been a while=
-=2E
->
->> Signed-off-by: Hillf Danton <dhillf@gmail.com>
->> ---
->>
->> --- a/drivers/scsi/libfc/fc_exch.c =C2=A0 =C2=A02010-09-13 07:07:38.=
-000000000 +0800
->> +++ b/drivers/scsi/libfc/fc_exch.c =C2=A0 =C2=A02010-10-22 23:17:50.=
-000000000 +0800
->> @@ -1827,7 +1827,9 @@ static void fc_exch_rrq_resp(struct fc_s
->> =C2=A0 =C2=A0 =C2=A0 if (IS_ERR(fp)) {
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 int err =3D PTR_ERR=
-(fp);
->>
->> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (err =3D=3D -FC_EX_CL=
-OSED || err =3D=3D -FC_EX_TIMEOUT)
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (err =3D=3D -FC_EX_CL=
-OSED)
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 return;
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (err =3D=3D -FC_EX_TI=
-MEOUT)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 goto cleanup;
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 FC_EXCH_DBG(aborted=
-_ep, "Cannot process RRQ, "
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 "frame error %d\n", err);
->> _______________________________________________
->> devel mailing list
->> devel@open-fcoe.org
->> http://www.open-fcoe.org/mailman/listinfo/devel
->
+ What does this mean?=A0 Faulty raid card?
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
