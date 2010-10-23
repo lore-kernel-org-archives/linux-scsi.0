@@ -1,42 +1,26 @@
-From: Ron Pitts <aussieron@gmail.com>
-Subject: Re: Problem with RR3520 (HighPoint Raid) - Fedora -
-Date: Sat, 23 Oct 2010 22:48:59 +1100
-Message-ID: <AANLkTinK1-xJF+VxtC_w0wbCJAJbyjDisVy6dT+JxwJS@mail.gmail.com>
-References: <AANLkTimVsA-_Z=LgL4pOVc1uY7bB1nwDSbRMZwdWZNpy@mail.gmail.com>
+From: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
+Subject: using a PERC6/i (MegaRaid SAS 1078) in JBOD mode?
+Date: Sat, 23 Oct 2010 11:58:16 +0200
+Message-ID: <20101023095816.GA19791@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:36073 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755502Ab0JWLs7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Oct 2010 07:48:59 -0400
-Received: by iwn34 with SMTP id 34so2058658iwn.19
-        for <linux-scsi@vger.kernel.org>; Sat, 23 Oct 2010 04:48:59 -0700 (PDT)
-In-Reply-To: <AANLkTimVsA-_Z=LgL4pOVc1uY7bB1nwDSbRMZwdWZNpy@mail.gmail.com>
+Received: from zenon.apartia.fr ([82.66.93.83]:44092 "EHLO zenon.apartia.fr"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757336Ab0JWO6I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 23 Oct 2010 10:58:08 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-I'm trying to load the hptiop driver within Fedora V13 and its
-currently returning scsi11: firmware not ready.
+Hi,
 
- I've located the section of code below:
+On a Dell PowerEdge 2900 III I have a PERC6/i (MegaRaid SAS 1078). From
+the controller bios is seems I have to create a "raid0 virtual drive"
+for each physical disk or in order for them to appear in Linux.
 
- =A0 hptiop.c
+As I intend to use none of that controller's raid features, is it at all
+possible to switch it to plain JBOD mode?
 
-=A0if (hba->ops->iop_wait_ready(hba, 20000)) {
-> 1017=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 printk(KERN_ERR =
-"scsi%d: firmware not ready\n",
-> 1018=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hba->host->host_no);
-> 1019=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 goto unmap_pci_b=
-ar;
-> 1020=A0=A0=A0=A0=A0=A0=A0=A0 }
-
- What does this mean?=A0 Faulty raid card?
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks,
