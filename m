@@ -1,68 +1,66 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [GIT PULL] first round of SCSI updates for the merge window
-Date: Sun, 24 Oct 2010 00:12:36 -0500
-Message-ID: <1287897156.3003.373.camel@mulgrave.site>
-References: <1287764862.8930.220.camel@mulgrave.site>
-	 <AANLkTikZ-vePH+Wvf9S0-0PG1h+rRNByKEmXC2XENH1=@mail.gmail.com>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: [PATCH] libfc: add stats info against memory leakage in exchange pool
+Date: Sun, 24 Oct 2010 17:30:06 +0800
+Message-ID: <AANLkTimzeO6Hou9ob4Z79twUY8RjwH6NP6ndKmoOUrEH@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikZ-vePH+Wvf9S0-0PG1h+rRNByKEmXC2XENH1=@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:43137 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932311Ab0JXJaH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2010 05:30:07 -0400
+Received: by wyf28 with SMTP id 28so2341066wyf.19
+        for <linux-scsi@vger.kernel.org>; Sun, 24 Oct 2010 02:30:06 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: devel@open-fcoe.org
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2010-10-22 at 17:48 -0700, Linus Torvalds wrote:
-> On Fri, Oct 22, 2010 at 9:27 AM, James Bottomley
-> <James.Bottomley@suse.de> wrote:
-> > This represents the usual assortment of driver updates (bnx2i, zfcp,
-> > qla, lpfc, ipr ..) plus several libfc and fcoe updates and a partial bfa
-> > cleanup.
-> 
-> Why do you say "bfa cleanup"?
-> 
-> There's a _single_ commit that looks like this:
-> 
->  220 files changed, 34823 insertions(+), 43478 deletions(-)
-> 
-> and which apparently rewrites the whole f*cking driver, with no
-> explanations, no nothing. Why should anything like this be considered
-> acceptable?
-> 
-> I'm going to pull it this once, because let's face it, nobody sane
-> cares about that idiotic driver to begin with (and it does remove a
-> lot more lines than it adds). But really, if I see something like that
-> again, I will just tell you to go away and not send me crap like this
-> again.
-> 
-> If it's that kind of crap, it should go into staging, or it shouldn't
-> have been merged into the kernel in the first place.
-> 
-> Seriously. You need to start showing better taste. I realize that most
-> of SCSI is crazy specialty hardware that is used by just a few people,
-> but if you don't start pushing back on those vendors and make them do
-> proper changes in small pieces and with actual commentary, then _I_ am
-> going to push back at you. Hard. By simply not pulling crap.
-> 
-> This is not the first time I've been disgusted with the SCSI tree. And
-> quite frankly, drivers like BFA are so totally irrelevant to anything,
-> that I will have absolutely no problems with just saying "screw it, if
-> they can't behave, they get removed from the kernel".
-> 
-> And don't blame it on bad vendors that won't do a good job. If they
-> don't do a good job, then STOP TAKING THEIR CRAP. Make them understand
-> that they need to work with the process, not do some kind of random
-> "change everything, with no actual explanations". Blame me if you
-> can't grow the balls to stand up to them. Tell them that I simply
-> won't take it unless they clean up their act.
-> 
-> Because I really won't.
+There seems stats info needed if mem leak is concerned.
 
-OK, so message received and understood.   The warning has already been
-conveyed to the bfa maintainers (over a month ago). All of us appreciate
-the one time grace.  I think this driver will finally start moving in
-the right direction.
+Signed-off-by: Hillf Danton <dhillf@gmail.com>
+---
 
-James
+--- a/drivers/scsi/libfc/fc_exch.c	2010-09-13 07:07:38.000000000 +0800
++++ b/drivers/scsi/libfc/fc_exch.c	2010-10-24 17:10:08.000000000 +0800
+@@ -67,6 +67,11 @@ struct workqueue_struct *fc_exch_workque
+ struct fc_exch_pool {
+ 	u16		 next_index;
+ 	u16		 total_exches;
++
++	/* stats info against memory leakage */
++	atomic_t	 allocated;
++	atomic_t	 released;
++
+ 	spinlock_t	 lock;
+ 	struct list_head ex_list;
+ };
+@@ -405,6 +410,8 @@ static void fc_exch_delete(struct fc_exc
+ 	fc_exch_ptr_set(pool, (ep->xid - ep->em->min_xid) >> fc_cpu_order,
+ 			NULL);
+ 	list_del(&ep->ex_list);
++	if (1 == atomic_read(&ep->ex_refcnt))
++		atomic_inc(&pool->released);
+ 	spin_unlock_bh(&pool->lock);
+ 	fc_exch_release(ep);	/* drop hold for exch in mp */
+ }
+@@ -689,6 +696,7 @@ static struct fc_exch *fc_exch_em_alloc(
+ 	pool->next_index = index == mp->pool_max_index ? 0 : index + 1;
+
+ 	fc_exch_hold(ep);	/* hold for exch in mp */
++	atomic_inc(&pool->allocated);
+ 	spin_lock_init(&ep->ex_lock);
+ 	/*
+ 	 * Hold exch lock for caller to prevent fc_exch_reset()
+@@ -1699,6 +1707,12 @@ restart:
+ 			goto restart;
+ 		}
+ 	}
++	if (atomic_read(&pool->allocated) != atomic_read(&pool->released))
++		printk(KERN_WARNING "libfc: host %u exch pool %p "
++			"allocated %d released %d\n",
++			lport->host->host_no, pool,
++			atomic_read(&pool->allocated),
++			atomic_read(&pool->released));
+ 	spin_unlock_bh(&pool->lock);
+ }
