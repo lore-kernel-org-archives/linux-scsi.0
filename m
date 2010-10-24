@@ -1,42 +1,34 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 4/4 ver2] libosd: write/read_sg_kern API
-Date: Sun, 24 Oct 2010 11:55:30 +0200
-Message-ID: <4CC40292.3090500@panasas.com>
-References: <4CBD8CAB.2030207@panasas.com> <1287490962-24013-1-git-send-email-bharrosh@panasas.com> <4CBDA79E.8080006@panasas.com> <4CC1CA91.1080003@vlnb.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Hubert Tonneau <hubert.tonneau@fullpliant.org>
+Subject: MPT2SAS deadlocking on failed disk
+Date: Sun, 24 Oct 2010 11:36:18 GMT
+Message-ID: <0AF91KJ@briare1.fullpliant.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og111.obsmtp.com ([64.18.0.22]:49756 "HELO
-	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932152Ab0JXJze (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2010 05:55:34 -0400
-In-Reply-To: <4CC1CA91.1080003@vlnb.net>
+Received: from briare1.fullpliant.org ([78.227.24.35]:42458 "HELO
+	briare1.fullpliant.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932440Ab0JXKpb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2010 06:45:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: James Bottomley <James.Bottomley@suse.de>, John Chandy <john.chandy@uconn.edu>, open-osd <osd-dev@open-osd.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: DL-MPTFusionLinux@lsi.com
+Cc: linux-scsi@vger.kernel.org
 
-On 10/22/2010 07:32 PM, Vladislav Bolkhovitin wrote:
-> Boaz Harrosh, on 10/19/2010 06:13 PM wrote:
->> This is a trivial addition to the SG API that can receive kernel
->> pointers. It is only used by the out-of-tree test module. So
->> it's immediate need is questionable. For maintenance ease it might
->> just get in, as it's very small.
-> 
-> This patch doesn't handle queue's restrictions (DMA, etc.).
-> 
+Hi,
 
-Please for give me. I know that the name is misleading. The
-Scatter-List here is the osd scatter-list. Which describes
-extents on the object, not of the memory. The proper name would
-be extents API. The reason we named it SG is because this is the
-way the OSD standard names it. We keep very close with the STD
-naming convention, so it ended up this way.
+In stock Linux 2.6.35.7 kernel,
+with mpt2sas driver connected to two disks (no raid at controler level),
+and Linux MD software RAID1,
 
-> Here is a complete patch for reading/writing SG lists from the kernel:
-> http://lkml.org/lkml/2010/9/14/201
-> 
-> Vlad
+if I hot unplug one of the disks,
+instead of the failed disk beeing removed from the MD raid set,
+I get locked disk subsystem with all applications trying to write to
+the disks beeing locked. No kernel message related to disks, only
+to applications beeing locked.
 
-Boaz
+This bug is probably not related specificaly to kernel 2.6.35.7
+because I had not used LSI controlers for years.
+
+Regards,
+Hubert Tonneau
+
