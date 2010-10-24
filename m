@@ -1,34 +1,24 @@
-From: Hubert Tonneau <hubert.tonneau@fullpliant.org>
-Subject: MPT2SAS deadlocking on failed disk
-Date: Sun, 24 Oct 2010 11:36:18 GMT
-Message-ID: <0AF91KJ@briare1.fullpliant.org>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] block: remove REQ_HARDBARRIER
+Date: Sun, 24 Oct 2010 13:58:37 +0200
+Message-ID: <20101024115837.GA25644@lst.de>
+References: <1281977523-19335-1-git-send-email-tj@kernel.org> <201008241745.35242.philipp.reisner@linbit.com> <20101022083511.GA7853@lst.de> <201010231318.33517.philipp.reisner@linbit.com> <4CC311D5.9040904@fusionio.com> <20101023165924.GA1395@lst.de> <4CC3326E.5020009@fusionio.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from briare1.fullpliant.org ([78.227.24.35]:42458 "HELO
-	briare1.fullpliant.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932440Ab0JXKpb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2010 06:45:31 -0400
+Received: from verein.lst.de ([213.95.11.210]:35061 "EHLO verein.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932443Ab0JXL6k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 24 Oct 2010 07:58:40 -0400
+Content-Disposition: inline
+In-Reply-To: <4CC3326E.5020009@fusionio.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: DL-MPTFusionLinux@lsi.com
-Cc: linux-scsi@vger.kernel.org
+To: Jens Axboe <jaxboe@fusionio.com>
+Cc: Christoph Hellwig <hch@lst.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi,
+On Sat, Oct 23, 2010 at 09:07:26PM +0200, Jens Axboe wrote:
+> Thanks Christoph, applied for 2.6.37 (but with a few days of brewing).
 
-In stock Linux 2.6.35.7 kernel,
-with mpt2sas driver connected to two disks (no raid at controler level),
-and Linux MD software RAID1,
-
-if I hot unplug one of the disks,
-instead of the failed disk beeing removed from the MD raid set,
-I get locked disk subsystem with all applications trying to write to
-the disks beeing locked. No kernel message related to disks, only
-to applications beeing locked.
-
-This bug is probably not related specificaly to kernel 2.6.35.7
-because I had not used LSI controlers for years.
-
-Regards,
-Hubert Tonneau
-
+Btw, in case it wasn't clear - this needs to be applied only after the
+drbd patches that remove the drbd use of REQ_HARDBARRIER.
