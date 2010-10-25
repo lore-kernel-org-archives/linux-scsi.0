@@ -1,157 +1,239 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] fix id computation in scsi_eh_target_reset()
-Date: Mon, 25 Oct 2010 15:53:41 -0500
-Message-ID: <1288040021.5487.826.camel@mulgrave.site>
-References: <AANLkTin-Tkj3Ab312usO2FWE57m3St2iG2oz881F-Zhw@mail.gmail.com>
-	 <4CBBDC19.1090806@cs.wisc.edu>
+From: scameron@beardog.cce.hp.com
+Subject: Re: [PATCH 01/13] cciss: remove controllers supported by hpsa
+Date: Mon, 25 Oct 2010 17:04:30 -0500
+Message-ID: <20101025220430.GA28059@beardog.cce.hp.com>
+References: <20101008200453.24279.6638.stgit@beardog.cce.hp.com> <20101008200606.24279.37953.stgit@beardog.cce.hp.com> <1288037360.5487.730.camel@mulgrave.site> <0F5B06BAB751E047AB5C87D1F77A77887D0E280BD9@GVW0547EXC.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45468 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751995Ab0JYUxp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Oct 2010 16:53:45 -0400
-In-Reply-To: <4CBBDC19.1090806@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <0F5B06BAB751E047AB5C87D1F77A77887D0E280BD9@GVW0547EXC.americas.hpqcorp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Benesh, Scott" <scott.benesh@hp.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "thenzl@redhat.com" <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, scameron@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Hillf Danton <dhillf@gmail.com>, linux-scsi@vger.kernel.org
 
-On Mon, 2010-10-18 at 00:33 -0500, Mike Christie wrote:
-> On 10/14/2010 09:04 AM, Hillf Danton wrote:
-> > There seems that the id of the tgtr_scmd processed by
-> > scsi_try_target_reset() does not match the id in case that
-> > SUCCESS is returned by scsi_try_target_reset().
-> >
-> > The mismatch is fixed, and the loop to find the next highest
-> > is also simplified.
-> >
-> > Signed-off-by: Hillf Danton<dhillf@gmail.com>
-> > ---
-> >
-> > --- a/drivers/scsi/scsi_error.c	2010-09-13 07:07:38.000000000 +0800
-> > +++ b/drivers/scsi/scsi_error.c	2010-10-14 21:45:56.000000000 +0800
-> > @@ -1173,14 +1173,19 @@ static int scsi_eh_target_reset(struct S
-> >   			list_for_each_entry(scmd, work_q, eh_entry) {
-> >   				if (scmd_id(scmd)>  id&&
-> >   				(!tgtr_scmd ||
-> > -				     scmd_id(tgtr_scmd)>  scmd_id(scmd)))
-> > +				     scmd_id(tgtr_scmd)>  scmd_id(scmd))) {
-> >   						tgtr_scmd = scmd;
-> > +						if (1 + id == scmd_id(scmd))
-> > +							break;
-> > +				}
-> >   			}
-> >   		}
-> >   		if (!tgtr_scmd)
-> >   			/* no more commands, that's it */
-> >   			break;
-> >
-> > +		id = scmd_id(tgtr_scmd);
-> > +
-> >   		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending target reset "
-> >   						  "to target %d\n",
-> >   						  current->comm, id));
+On Mon, Oct 25, 2010 at 08:26:54PM +0000, Miller, Mike (OS Dev) wrote:
 > 
 > 
-> Thanks. Fixes the extra target resets I have been seeing and commands 
-> not getting cleaned up properly.
+> > -----Original Message-----
+> > From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]
+> > Sent: Monday, October 25, 2010 3:09 PM
+> > To: Stephen M. Cameron
+> > Cc: axboe@kernel.dk; akpm@linux-foundation.org; thenzl@redhat.com;
+> > Miller, Mike (OS Dev); linux-scsi@vger.kernel.org; linux-
+> > kernel@vger.kernel.org
+> > Subject: Re: [PATCH 01/13] cciss: remove controllers supported by hpsa
+> > 
+> > On Fri, 2010-10-08 at 15:06 -0500, Stephen M. Cameron wrote:
+> > > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > >
+> > > We would prefer not to have any overlap between the two drivers.
+> > > Remove the cciss_allow_hpsa option, as it it is no longer needed.
+> > >
+> > > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+> > > ---
+> > >  drivers/block/cciss.c |   38 +-------------------------------------
+> > >  1 files changed, 1 insertions(+), 37 deletions(-)
+> > >
+> > > diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+> > > index 5e4fadc..ca900ea 100644
+> > > --- a/drivers/block/cciss.c
+> > > +++ b/drivers/block/cciss.c
+> > > @@ -66,12 +66,6 @@ MODULE_SUPPORTED_DEVICE("HP Smart Array
+> > Controllers");
+> > >  MODULE_VERSION("3.6.26");
+> > >  MODULE_LICENSE("GPL");
+> > >
+> > > -static int cciss_allow_hpsa;
+> > > -module_param(cciss_allow_hpsa, int, S_IRUGO|S_IWUSR);
+> > > -MODULE_PARM_DESC(cciss_allow_hpsa,
+> > > -	"Prevent cciss driver from accessing hardware known to be "
+> > > -	" supported by the hpsa driver");
+> > > -
+> > >  #include "cciss_cmd.h"
+> > >  #include "cciss.h"
+> > >  #include <linux/cciss_ioctl.h>
+> > > @@ -98,18 +92,6 @@ static const struct pci_device_id
+> > cciss_pci_device_id[] = {
+> > >  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C,
+> > 0x3215},
+> > >  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C,
+> > 0x3237},
+> > >  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C,
+> > 0x323D},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3241},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3243},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3245},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3247},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3249},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x324A},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x324B},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3250},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3251},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3252},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3253},
+> > > -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> > 0x3254},
+> > 
+> > This hunk conflicts with the update Mike Miller sent
+> > 
+> > commit 6362beea8914cbd4630ccde3617d944aeca2d48f
+> > Author: Mike Miller <mike.miller@hp.com>
+> > Date:   Tue Oct 19 09:40:34 2010 +0200
+> > 
+> >     cciss: fix PCI IDs for new Smart Array controllers
+> > 
+> > And which is now mainline.
+> > 
+> > James
 > 
-> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+> I guess I'm the one who jumped the gun on the patch I sent to correct those
+> PCI IDs. I suppose it would be preferable to have no overlapping support
+> between cciss and hpsa. With the distros it's a little easier to draw a line in
+> the sand (or is it?). On some distros it seems migration is impossible, on
+> others it's fairly simple.  
+> 
+> I guess my point is what do users want? Does a significant number want to use
+> upstream kernels but they still require cciss? Should we force them to go to
+> hpsa? Or should they just add whatever ID they want and go on with life?  
+> 
+> Maybe if we broke out the PCI IDs into a separate include file for both
+> drivers??? Does that help? Probably not. I saw this coming long ago but I still
+> don't know the answer. Any ideas, comments, suggestions, flames?  > 
 
-The routine is still a bit fiendishly complicated, though.  What about
-unwinding all of the id processing? it's only required if we want to do
-target resets in numerical order (a number which has no real meaning on
-a hot plug bus anyway).
+I don't think we want to open this can of worms.  We want disjoint
+sets if at all possible.  The only reason they weren't disjoint
+sets from the get go was because at the time, nobody had any of
+the newer boards, and we needed something to test hpsa on.
 
-What about just a simple list processor that chunks down the work_q,
-resets the target and pulls all equal targets out, like this?
+>From what I've seen of newer distro betas, the udev stuff does seem to
+behave pretty nicely nowadays and one can transparently boot up and mount
+filesystems and so on despite swapping out cciss for hpsa or vice
+versa without any need to fix anything up.  However, there are
+issues.  For example, with the newer distro betas I've seen, The module
+load order is not deterministic, and esp. tends to differ in the
+kdump initrd case vs. the "normal" initrd kernel case.  If you're
+running cciss and hpsa with hpsa_allow_any=1 -- or have other
+overlapping device support -- then this means you
+can't be certain which driver will get which hardware on any given
+boot, which, even though udev makes it mostly work transparently,
+it's a bit disconcerting if you aren't expecting it to see all your
+filesystems suddenly mounted from strange places, to say the least.
+In particular, with overlapping device support, I noticed things
+likely to swap around when kdump kernel was loading, with the result
+being that the kdump didn't work, because the kdump initrd is a bit
+stripped down and lacking in features (I forget now *exactly* what
+went wrong, but it was due to some diff between kdump initrd and
+the normal initrd in the distro I was looking at.)
 
-James
+All this is avoided if there's no overlapping device support
+by default.
 
----
+I was trying to make things match what we have in our (HP's) variant
+of the driver.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 1de30eb..484b128 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1156,51 +1156,40 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- 				struct list_head *work_q,
- 				struct list_head *done_q)
- {
--	struct scsi_cmnd *scmd, *tgtr_scmd, *next;
--	unsigned int id = 0;
--	int rtn;
-+	LIST_HEAD(tmp_list);
- 
--	do {
--		tgtr_scmd = NULL;
--		list_for_each_entry(scmd, work_q, eh_entry) {
--			if (id == scmd_id(scmd)) {
--				tgtr_scmd = scmd;
--				break;
--			}
--		}
--		if (!tgtr_scmd) {
--			/* not one exactly equal; find the next highest */
--			list_for_each_entry(scmd, work_q, eh_entry) {
--				if (scmd_id(scmd) > id &&
--				    (!tgtr_scmd ||
--				     scmd_id(tgtr_scmd) > scmd_id(scmd)))
--						tgtr_scmd = scmd;
--			}
--		}
--		if (!tgtr_scmd)
--			/* no more commands, that's it */
--			break;
-+	list_splice(work_q, &tmp_list);
-+
-+	while (!list_empty(&tmp_list)) {
-+		struct scsi_cmnd *next, *scmd; 
-+		int rtn;
-+		unsigned int id;
-+
-+		scmd = list_entry(tmp_list.next, struct scsi_cmnd, eh_entry);
-+		id = scmd_id(scmd);
- 
- 		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending target reset "
- 						  "to target %d\n",
- 						  current->comm, id));
--		rtn = scsi_try_target_reset(tgtr_scmd);
--		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
--			list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
--				if (id == scmd_id(scmd))
--					if (!scsi_device_online(scmd->device) ||
--					    rtn == FAST_IO_FAIL ||
--					    !scsi_eh_tur(tgtr_scmd))
--						scsi_eh_finish_cmd(scmd,
--								   done_q);
--			}
--		} else
-+		rtn = scsi_try_target_reset(scmd);
-+		if (rtn != SUCCESS && rtn != FAST_IO_FAIL)
- 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Target reset"
- 							  " failed target: "
- 							  "%d\n",
- 							  current->comm, id));
--		id++;
--	} while(id != 0);
-+		list_for_each_entry_safe(scmd, next, &tmp_list, eh_entry) {
-+			if (scmd_id(scmd) != id)
-+				continue;
-+
-+			if ((rtn == SUCCESS || rtn == FAST_IO_FAIL)
-+			    && (!scsi_device_online(scmd->device) ||
-+				 rtn == FAST_IO_FAIL || !scsi_eh_tur(scmd)))
-+				scsi_eh_finish_cmd(scmd, done_q);
-+			else
-+				/* push back on work queue for further processing */
-+				list_move(&scmd->eh_entry, work_q);
-+		}
-+	}
- 
- 	return list_empty(work_q);
- }
+Which is to say, cciss should contain:
+
+        {PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISS,  0x0E11, 0x4070},
+        {PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSB, 0x0E11, 0x4080},
+        {PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSB, 0x0E11, 0x4082},
+        {PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSB, 0x0E11, 0x4083},
+        {PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSC, 0x0E11, 0x4091},
+        {PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSC, 0x0E11, 0x409A},
+        {PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSC, 0x0E11, 0x409B},
+        {PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSC, 0x0E11, 0x409C},
+        {PCI_VENDOR_ID_COMPAQ, PCI_DEVICE_ID_COMPAQ_CISSC, 0x0E11, 0x409D},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSA,     0x103C, 0x3225},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3223},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3234},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3235},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3211},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3212},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3213},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3214},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSD,     0x103C, 0x3215},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x3237},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSC,     0x103C, 0x323D},
+	{0,}
+
+and
+
+        {0x40700E11, "Smart Array 5300", &SA5_access},
+        {0x40800E11, "Smart Array 5i", &SA5B_access},
+        {0x40820E11, "Smart Array 532", &SA5B_access},
+        {0x40830E11, "Smart Array 5312", &SA5B_access},
+        {0x409A0E11, "Smart Array 641", &SA5_access},
+        {0x409B0E11, "Smart Array 642", &SA5_access},
+        {0x409C0E11, "Smart Array 6400", &SA5_access},
+        {0x409D0E11, "Smart Array 6400 EM", &SA5_access},
+        {0x40910E11, "Smart Array 6i", &SA5_access},
+        {0x3225103C, "Smart Array P600", &SA5_access},
+        {0x3223103C, "Smart Array P800", &SA5_access},
+        {0x3234103C, "Smart Array P400", &SA5_access},
+        {0x3235103C, "Smart Array P400i", &SA5_access},
+        {0x3211103C, "Smart Array E200i", &SA5_access},
+        {0x3212103C, "Smart Array E200", &SA5_access},
+        {0x3213103C, "Smart Array E200i", &SA5_access},
+        {0x3214103C, "Smart Array E200i", &SA5_access},
+        {0x3215103C, "Smart Array E200i", &SA5_access},
+        {0x3237103C, "Smart Array E500", &SA5_access},
+        {0x323d103c, "Smart Array P700M", &SA5_access},
+
+and hpsa should contain:
+
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3241},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3243},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3245},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3247},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3249},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324a},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x324b},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3233},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSG,     0x103C, 0x3350},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSG,     0x103C, 0x3351},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSG,     0x103C, 0x3352},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSG,     0x103C, 0x3353},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSG,     0x103C, 0x3354},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSG,     0x103C, 0x3355},
+        {PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x333F},
+        {PCI_VENDOR_ID_HP,     PCI_ANY_ID,             PCI_ANY_ID, PCI_ANY_ID,
+                PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
+        {PCI_VENDOR_ID_COMPAQ,     PCI_ANY_ID,             PCI_ANY_ID, PCI_ANY_ID,
+                PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
+        {0,}
+
+and
+
+        {0x3241103C, "Smart Array P212", &SA5_access},
+        {0x3243103C, "Smart Array P410", &SA5_access},
+        {0x3245103C, "Smart Array P410i", &SA5_access},
+        {0x3247103C, "Smart Array P411", &SA5_access},
+        {0x3249103C, "Smart Array P812", &SA5_access},
+        {0x324a103C, "Smart Array P712m", &SA5_access},
+        {0x324b103C, "Smart Array P711m", &SA5_access},
+        {0x3233103C, "StorageWorks P1210m", &SA5_access},
+        {0x333F103C, "StorageWorks P1210m", &SA5_access},
+        {0x3350103C, "Smart Array", &SA5_access},
+        {0x3351103C, "Smart Array", &SA5_access},
+        {0x3352103C, "Smart Array", &SA5_access},
+        {0x3353103C, "Smart Array", &SA5_access},
+        {0x3354103C, "Smart Array", &SA5_access},
+        {0x3355103C, "Smart Array", &SA5_access},
 
 
+Of course patches to this kind of code tend to be fragile and not have
+much of a shelf life.  Sounds like mine had already rotted. 
+
+-- steve
