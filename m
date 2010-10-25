@@ -1,7 +1,7 @@
-From: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
-Subject: Re: using a PERC6/i (MegaRaid SAS 1078) in JBOD mode?
-Date: Mon, 25 Oct 2010 16:25:59 +0200
-Message-ID: <20101025142559.GA25269@apartia.fr>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: using a PERC6/i (MegaRaid SAS 1078) in JBOD mode?
+Date: Mon, 25 Oct 2010 08:27:42 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3010111F799@cosmail02.lsi.com>
 References: <20101023095816.GA19791@apartia.fr>
  <4B6A08C587958942AA3002690DD4F8C3010111F73E@cosmail02.lsi.com>
  <20101025131937.GA6605@apartia.fr>
@@ -10,21 +10,29 @@ References: <20101023095816.GA19791@apartia.fr>
  <4B6A08C587958942AA3002690DD4F8C3010111F771@cosmail02.lsi.com>
  <20101025140905.GA20569@apartia.fr>
  <4B6A08C587958942AA3002690DD4F8C3010111F783@cosmail02.lsi.com>
+ <20101025142559.GA25269@apartia.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zenon.apartia.fr ([82.66.93.83]:54104 "EHLO zenon.apartia.fr"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755834Ab0JYO0B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Oct 2010 10:26:01 -0400
-Received: from sylla.apartia.fr (sylla.apartia.fr [10.0.3.3])
-	by zenon.apartia.fr (Postfix) with ESMTP id 06D0E424A6009
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2010 16:25:59 +0200 (CEST)
-Content-Disposition: inline
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3010111F783@cosmail02.lsi.com>
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:39712 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755834Ab0JYO2F convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Oct 2010 10:28:05 -0400
+In-Reply-To: <20101025142559.GA25269@apartia.fr>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+
+You are right.  Ctrl-R for PERC... and ctrl-H for LSI.
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Louis-David Mitterrand
+Sent: Monday, October 25, 2010 10:26 AM
+To: linux-scsi@vger.kernel.org
+Subject: Re: using a PERC6/i (MegaRaid SAS 1078) in JBOD mode?
 
 On Mon, Oct 25, 2010 at 08:11:14AM -0600, Yang, Bo wrote:
 > Does the ctrl^H work for you?
@@ -35,3 +43,7 @@ Oh, you mean Ctrl-H, not the usual Ctrl-R.
 Is that a secret cheat code (like in Doom :-) ?
 
 I'll try it a soon as my raid6 partition finishes resync'ing.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
