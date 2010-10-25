@@ -1,59 +1,66 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Louis-David Mitterrand <vindex+lists-linux-scsi@apartia.org>
 Subject: Re: using a PERC6/i (MegaRaid SAS 1078) in JBOD mode?
-Date: Mon, 25 Oct 2010 16:30:27 +0200
-Message-ID: <4CC59483.3070201@suse.de>
-References: <20101023095816.GA19791@apartia.fr> <4B6A08C587958942AA3002690DD4F8C3010111F73E@cosmail02.lsi.com> <20101025131937.GA6605@apartia.fr> <20101025154705.73d49860@harpe.intellique.com> <20101025135647.GA14302@apartia.fr> <4B6A08C587958942AA3002690DD4F8C3010111F771@cosmail02.lsi.com> <20101025140905.GA20569@apartia.fr>
+Date: Mon, 25 Oct 2010 17:01:46 +0200
+Message-ID: <20101025150146.GA477@apartia.fr>
+References: <20101023095816.GA19791@apartia.fr>
+ <4B6A08C587958942AA3002690DD4F8C3010111F73E@cosmail02.lsi.com>
+ <20101025131937.GA6605@apartia.fr>
+ <20101025154705.73d49860@harpe.intellique.com>
+ <20101025135647.GA14302@apartia.fr>
+ <4B6A08C587958942AA3002690DD4F8C3010111F771@cosmail02.lsi.com>
+ <20101025140905.GA20569@apartia.fr>
+ <4B6A08C587958942AA3002690DD4F8C3010111F783@cosmail02.lsi.com>
+ <20101025142559.GA25269@apartia.fr>
+ <4B6A08C587958942AA3002690DD4F8C3010111F799@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:33602 "EHLO mx2.suse.de"
+Received: from zenon.apartia.fr ([82.66.93.83]:54140 "EHLO zenon.apartia.fr"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751414Ab0JYO3q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Oct 2010 10:29:46 -0400
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	by mx2.suse.de (Postfix) with ESMTP id 8A0B28730A
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2010 16:29:45 +0200 (CEST)
-In-Reply-To: <20101025140905.GA20569@apartia.fr>
+	id S1756133Ab0JYPBs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Oct 2010 11:01:48 -0400
+Received: from sylla.apartia.fr (sylla.apartia.fr [10.0.3.3])
+	by zenon.apartia.fr (Postfix) with ESMTP id 21A3542497004
+	for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2010 17:01:47 +0200 (CEST)
+Content-Disposition: inline
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3010111F799@cosmail02.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 10/25/2010 04:09 PM, Louis-David Mitterrand wrote:
-> On Mon, Oct 25, 2010 at 08:02:22AM -0600, Yang, Bo wrote:
->> You also can use ctrl^H during the controller post to configure the =
-JBOD. =20
->=20
-> Unfortuntely I found no way to configure disks in JBOD mode through t=
-he
-> adapter bios. A google search seems to indicate other users have the
-> same problem.
->=20
-> Apparently a firmware change (to "initiator and target" mode) is
-> required to turn that adapter's into a simple non-raid SATA controlle=
-r
-> but I couldn't find it anywhere.
->=20
-Bzzt. Nope.
-IT firmware is for the 'plain' mptsas (LSI SAS 1078) only.
-PERC6/i is based upon the 'Megaraid' SAS 1078, which is using the
-same SAS chip but has an additional (hardware) RAID controller.
+On Mon, Oct 25, 2010 at 08:27:42AM -0600, Yang, Bo wrote:
+> You are right.  Ctrl-R for PERC... and ctrl-H for LSI.
 
-You cannot change the firmware here.
+OK, I tried Ctrl-H during adapter post and nothing (apparently)
+happened.
 
-And yes, megacli is notoriously tricky to invoke.
-It really needs to get used to.
+However my syslog has:
 
-Cheers,
+	scsi2 : LSI SAS based MegaRAID driver
+	Oct 25 14:48:27 grml kernel: [    1.956381] scsi 2:0:0:0: Direct-Access     ATA      Hitachi HDS72101 A70M PQ: 0 ANSI: 5
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Does that "Direct-Access" mean I'm now in JBOD mode?
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Louis-David Mitterrand
+> Sent: Monday, October 25, 2010 10:26 AM
+> To: linux-scsi@vger.kernel.org
+> Subject: Re: using a PERC6/i (MegaRaid SAS 1078) in JBOD mode?
+> 
+> On Mon, Oct 25, 2010 at 08:11:14AM -0600, Yang, Bo wrote:
+> > Does the ctrl^H work for you?
+> > 
+> 
+> Oh, you mean Ctrl-H, not the usual Ctrl-R.
+> 
+> Is that a secret cheat code (like in Doom :-) ?
+> 
+> I'll try it a soon as my raid6 partition finishes resync'ing.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
