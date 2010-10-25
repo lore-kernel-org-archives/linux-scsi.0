@@ -1,91 +1,157 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 01/13] cciss: remove controllers supported by hpsa
-Date: Mon, 25 Oct 2010 20:26:54 +0000
-Message-ID: <0F5B06BAB751E047AB5C87D1F77A77887D0E280BD9@GVW0547EXC.americas.hpqcorp.net>
-References: <20101008200453.24279.6638.stgit@beardog.cce.hp.com>
-	 <20101008200606.24279.37953.stgit@beardog.cce.hp.com>
- <1288037360.5487.730.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] fix id computation in scsi_eh_target_reset()
+Date: Mon, 25 Oct 2010 15:53:41 -0500
+Message-ID: <1288040021.5487.826.camel@mulgrave.site>
+References: <AANLkTin-Tkj3Ab312usO2FWE57m3St2iG2oz881F-Zhw@mail.gmail.com>
+	 <4CBBDC19.1090806@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0016.houston.hp.com ([15.201.24.19]:17631 "EHLO
-	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757863Ab0JYU1s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Oct 2010 16:27:48 -0400
-In-Reply-To: <1288037360.5487.730.camel@mulgrave.site>
-Content-Language: en-US
+Received: from cantor2.suse.de ([195.135.220.15]:45468 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751995Ab0JYUxp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Oct 2010 16:53:45 -0400
+In-Reply-To: <4CBBDC19.1090806@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "Benesh, Scott" <scott.benesh@hp.com>
-Cc: "axboe@kernel.dk" <axboe@kernel.dk>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "thenzl@redhat.com" <thenzl@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Hillf Danton <dhillf@gmail.com>, linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-TW9uZGF5LCBPY3RvYmVyIDI1LCAyMDEwIDM6MDkgUE0NCj4gVG86IFN0ZXBoZW4gTS4gQ2FtZXJv
-bg0KPiBDYzogYXhib2VAa2VybmVsLmRrOyBha3BtQGxpbnV4LWZvdW5kYXRpb24ub3JnOyB0aGVu
-emxAcmVkaGF0LmNvbTsNCj4gTWlsbGVyLCBNaWtlIChPUyBEZXYpOyBsaW51eC1zY3NpQHZnZXIu
-a2VybmVsLm9yZzsgbGludXgtDQo+IGtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDog
-UmU6IFtQQVRDSCAwMS8xM10gY2Npc3M6IHJlbW92ZSBjb250cm9sbGVycyBzdXBwb3J0ZWQgYnkg
-aHBzYQ0KPiANCj4gT24gRnJpLCAyMDEwLTEwLTA4IGF0IDE1OjA2IC0wNTAwLCBTdGVwaGVuIE0u
-IENhbWVyb24gd3JvdGU6DQo+ID4gRnJvbTogU3RlcGhlbiBNLiBDYW1lcm9uIDxzY2FtZXJvbkBi
-ZWFyZG9nLmNjZS5ocC5jb20+DQo+ID4NCj4gPiBXZSB3b3VsZCBwcmVmZXIgbm90IHRvIGhhdmUg
-YW55IG92ZXJsYXAgYmV0d2VlbiB0aGUgdHdvIGRyaXZlcnMuDQo+ID4gUmVtb3ZlIHRoZSBjY2lz
-c19hbGxvd19ocHNhIG9wdGlvbiwgYXMgaXQgaXQgaXMgbm8gbG9uZ2VyIG5lZWRlZC4NCj4gPg0K
-PiA+IFNpZ25lZC1vZmYtYnk6IFN0ZXBoZW4gTS4gQ2FtZXJvbiA8c2NhbWVyb25AYmVhcmRvZy5j
-Y2UuaHAuY29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL2Jsb2NrL2NjaXNzLmMgfCAgIDM4ICst
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ID4gIDEgZmlsZXMgY2hhbmdl
-ZCwgMSBpbnNlcnRpb25zKCspLCAzNyBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYgLS1naXQg
-YS9kcml2ZXJzL2Jsb2NrL2NjaXNzLmMgYi9kcml2ZXJzL2Jsb2NrL2NjaXNzLmMNCj4gPiBpbmRl
-eCA1ZTRmYWRjLi5jYTkwMGVhIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvYmxvY2svY2Npc3Mu
-Yw0KPiA+ICsrKyBiL2RyaXZlcnMvYmxvY2svY2Npc3MuYw0KPiA+IEBAIC02NiwxMiArNjYsNiBA
-QCBNT0RVTEVfU1VQUE9SVEVEX0RFVklDRSgiSFAgU21hcnQgQXJyYXkNCj4gQ29udHJvbGxlcnMi
-KTsNCj4gPiAgTU9EVUxFX1ZFUlNJT04oIjMuNi4yNiIpOw0KPiA+ICBNT0RVTEVfTElDRU5TRSgi
-R1BMIik7DQo+ID4NCj4gPiAtc3RhdGljIGludCBjY2lzc19hbGxvd19ocHNhOw0KPiA+IC1tb2R1
-bGVfcGFyYW0oY2Npc3NfYWxsb3dfaHBzYSwgaW50LCBTX0lSVUdPfFNfSVdVU1IpOw0KPiA+IC1N
-T0RVTEVfUEFSTV9ERVNDKGNjaXNzX2FsbG93X2hwc2EsDQo+ID4gLQkiUHJldmVudCBjY2lzcyBk
-cml2ZXIgZnJvbSBhY2Nlc3NpbmcgaGFyZHdhcmUga25vd24gdG8gYmUgIg0KPiA+IC0JIiBzdXBw
-b3J0ZWQgYnkgdGhlIGhwc2EgZHJpdmVyIik7DQo+ID4gLQ0KPiA+ICAjaW5jbHVkZSAiY2Npc3Nf
-Y21kLmgiDQo+ID4gICNpbmNsdWRlICJjY2lzcy5oIg0KPiA+ICAjaW5jbHVkZSA8bGludXgvY2Np
-c3NfaW9jdGwuaD4NCj4gPiBAQCAtOTgsMTggKzkyLDYgQEAgc3RhdGljIGNvbnN0IHN0cnVjdCBw
-Y2lfZGV2aWNlX2lkDQo+IGNjaXNzX3BjaV9kZXZpY2VfaWRbXSA9IHsNCj4gPiAgCXtQQ0lfVkVO
-RE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRCwgICAgIDB4MTAzQywNCj4gMHgz
-MjE1fSwNCj4gPiAgCXtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNT
-QywgICAgIDB4MTAzQywNCj4gMHgzMjM3fSwNCj4gPiAgCXtQQ0lfVkVORE9SX0lEX0hQLCAgICAg
-UENJX0RFVklDRV9JRF9IUF9DSVNTQywgICAgIDB4MTAzQywNCj4gMHgzMjNEfSwNCj4gPiAtCXtQ
-Q0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRSwgICAgIDB4MTAzQywN
-Cj4gMHgzMjQxfSwNCj4gPiAtCXtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9I
-UF9DSVNTRSwgICAgIDB4MTAzQywNCj4gMHgzMjQzfSwNCj4gPiAtCXtQQ0lfVkVORE9SX0lEX0hQ
-LCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRSwgICAgIDB4MTAzQywNCj4gMHgzMjQ1fSwNCj4g
-PiAtCXtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRSwgICAgIDB4
-MTAzQywNCj4gMHgzMjQ3fSwNCj4gPiAtCXtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklD
-RV9JRF9IUF9DSVNTRSwgICAgIDB4MTAzQywNCj4gMHgzMjQ5fSwNCj4gPiAtCXtQQ0lfVkVORE9S
-X0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRSwgICAgIDB4MTAzQywNCj4gMHgzMjRB
-fSwNCj4gPiAtCXtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRSwg
-ICAgIDB4MTAzQywNCj4gMHgzMjRCfSwNCj4gPiAtCXtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJ
-X0RFVklDRV9JRF9IUF9DSVNTRSwgICAgIDB4MTAzQywNCj4gMHgzMjUwfSwNCj4gPiAtCXtQQ0lf
-VkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRSwgICAgIDB4MTAzQywNCj4g
-MHgzMjUxfSwNCj4gPiAtCXtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9D
-SVNTRSwgICAgIDB4MTAzQywNCj4gMHgzMjUyfSwNCj4gPiAtCXtQQ0lfVkVORE9SX0lEX0hQLCAg
-ICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRSwgICAgIDB4MTAzQywNCj4gMHgzMjUzfSwNCj4gPiAt
-CXtQQ0lfVkVORE9SX0lEX0hQLCAgICAgUENJX0RFVklDRV9JRF9IUF9DSVNTRSwgICAgIDB4MTAz
-QywNCj4gMHgzMjU0fSwNCj4gDQo+IFRoaXMgaHVuayBjb25mbGljdHMgd2l0aCB0aGUgdXBkYXRl
-IE1pa2UgTWlsbGVyIHNlbnQNCj4gDQo+IGNvbW1pdCA2MzYyYmVlYTg5MTRjYmQ0NjMwY2NkZTM2
-MTdkOTQ0YWVjYTJkNDhmDQo+IEF1dGhvcjogTWlrZSBNaWxsZXIgPG1pa2UubWlsbGVyQGhwLmNv
-bT4NCj4gRGF0ZTogICBUdWUgT2N0IDE5IDA5OjQwOjM0IDIwMTAgKzAyMDANCj4gDQo+ICAgICBj
-Y2lzczogZml4IFBDSSBJRHMgZm9yIG5ldyBTbWFydCBBcnJheSBjb250cm9sbGVycw0KPiANCj4g
-QW5kIHdoaWNoIGlzIG5vdyBtYWlubGluZS4NCj4gDQo+IEphbWVzDQoNCkkgZ3Vlc3MgSSdtIHRo
-ZSBvbmUgd2hvIGp1bXBlZCB0aGUgZ3VuIG9uIHRoZSBwYXRjaCBJIHNlbnQgdG8gY29ycmVjdCB0
-aG9zZSBQQ0kgSURzLiBJIHN1cHBvc2UgaXQgd291bGQgYmUgcHJlZmVyYWJsZSB0byBoYXZlIG5v
-IG92ZXJsYXBwaW5nIHN1cHBvcnQgYmV0d2VlbiBjY2lzcyBhbmQgaHBzYS4gV2l0aCB0aGUgZGlz
-dHJvcyBpdCdzIGEgbGl0dGxlIGVhc2llciB0byBkcmF3IGEgbGluZSBpbiB0aGUgc2FuZCAob3Ig
-aXMgaXQ/KS4gT24gc29tZSBkaXN0cm9zIGl0IHNlZW1zIG1pZ3JhdGlvbiBpcyBpbXBvc3NpYmxl
-LCBvbiBvdGhlcnMgaXQncyBmYWlybHkgc2ltcGxlLg0KDQpJIGd1ZXNzIG15IHBvaW50IGlzIHdo
-YXQgZG8gdXNlcnMgd2FudD8gRG9lcyBhIHNpZ25pZmljYW50IG51bWJlciB3YW50IHRvIHVzZSB1
-cHN0cmVhbSBrZXJuZWxzIGJ1dCB0aGV5IHN0aWxsIHJlcXVpcmUgY2Npc3M/IFNob3VsZCB3ZSBm
-b3JjZSB0aGVtIHRvIGdvIHRvIGhwc2E/IE9yIHNob3VsZCB0aGV5IGp1c3QgYWRkIHdoYXRldmVy
-IElEIHRoZXkgd2FudCBhbmQgZ28gb24gd2l0aCBsaWZlPw0KDQpNYXliZSBpZiB3ZSBicm9rZSBv
-dXQgdGhlIFBDSSBJRHMgaW50byBhIHNlcGFyYXRlIGluY2x1ZGUgZmlsZSBmb3IgYm90aCBkcml2
-ZXJzPz8/IERvZXMgdGhhdCBoZWxwPyBQcm9iYWJseSBub3QuIEkgc2F3IHRoaXMgY29taW5nIGxv
-bmcgYWdvIGJ1dCBJIHN0aWxsIGRvbid0IGtub3cgdGhlIGFuc3dlci4gQW55IGlkZWFzLCBjb21t
-ZW50cywgc3VnZ2VzdGlvbnMsIGZsYW1lcz8NCg0KLS0gbWlrZW0NCg0KPiANCg0K
+On Mon, 2010-10-18 at 00:33 -0500, Mike Christie wrote:
+> On 10/14/2010 09:04 AM, Hillf Danton wrote:
+> > There seems that the id of the tgtr_scmd processed by
+> > scsi_try_target_reset() does not match the id in case that
+> > SUCCESS is returned by scsi_try_target_reset().
+> >
+> > The mismatch is fixed, and the loop to find the next highest
+> > is also simplified.
+> >
+> > Signed-off-by: Hillf Danton<dhillf@gmail.com>
+> > ---
+> >
+> > --- a/drivers/scsi/scsi_error.c	2010-09-13 07:07:38.000000000 +0800
+> > +++ b/drivers/scsi/scsi_error.c	2010-10-14 21:45:56.000000000 +0800
+> > @@ -1173,14 +1173,19 @@ static int scsi_eh_target_reset(struct S
+> >   			list_for_each_entry(scmd, work_q, eh_entry) {
+> >   				if (scmd_id(scmd)>  id&&
+> >   				(!tgtr_scmd ||
+> > -				     scmd_id(tgtr_scmd)>  scmd_id(scmd)))
+> > +				     scmd_id(tgtr_scmd)>  scmd_id(scmd))) {
+> >   						tgtr_scmd = scmd;
+> > +						if (1 + id == scmd_id(scmd))
+> > +							break;
+> > +				}
+> >   			}
+> >   		}
+> >   		if (!tgtr_scmd)
+> >   			/* no more commands, that's it */
+> >   			break;
+> >
+> > +		id = scmd_id(tgtr_scmd);
+> > +
+> >   		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending target reset "
+> >   						  "to target %d\n",
+> >   						  current->comm, id));
+> 
+> 
+> Thanks. Fixes the extra target resets I have been seeing and commands 
+> not getting cleaned up properly.
+> 
+> Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+
+The routine is still a bit fiendishly complicated, though.  What about
+unwinding all of the id processing? it's only required if we want to do
+target resets in numerical order (a number which has no real meaning on
+a hot plug bus anyway).
+
+What about just a simple list processor that chunks down the work_q,
+resets the target and pulls all equal targets out, like this?
+
+James
+
+---
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 1de30eb..484b128 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1156,51 +1156,40 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
+ 				struct list_head *work_q,
+ 				struct list_head *done_q)
+ {
+-	struct scsi_cmnd *scmd, *tgtr_scmd, *next;
+-	unsigned int id = 0;
+-	int rtn;
++	LIST_HEAD(tmp_list);
+ 
+-	do {
+-		tgtr_scmd = NULL;
+-		list_for_each_entry(scmd, work_q, eh_entry) {
+-			if (id == scmd_id(scmd)) {
+-				tgtr_scmd = scmd;
+-				break;
+-			}
+-		}
+-		if (!tgtr_scmd) {
+-			/* not one exactly equal; find the next highest */
+-			list_for_each_entry(scmd, work_q, eh_entry) {
+-				if (scmd_id(scmd) > id &&
+-				    (!tgtr_scmd ||
+-				     scmd_id(tgtr_scmd) > scmd_id(scmd)))
+-						tgtr_scmd = scmd;
+-			}
+-		}
+-		if (!tgtr_scmd)
+-			/* no more commands, that's it */
+-			break;
++	list_splice(work_q, &tmp_list);
++
++	while (!list_empty(&tmp_list)) {
++		struct scsi_cmnd *next, *scmd; 
++		int rtn;
++		unsigned int id;
++
++		scmd = list_entry(tmp_list.next, struct scsi_cmnd, eh_entry);
++		id = scmd_id(scmd);
+ 
+ 		SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Sending target reset "
+ 						  "to target %d\n",
+ 						  current->comm, id));
+-		rtn = scsi_try_target_reset(tgtr_scmd);
+-		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+-			list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+-				if (id == scmd_id(scmd))
+-					if (!scsi_device_online(scmd->device) ||
+-					    rtn == FAST_IO_FAIL ||
+-					    !scsi_eh_tur(tgtr_scmd))
+-						scsi_eh_finish_cmd(scmd,
+-								   done_q);
+-			}
+-		} else
++		rtn = scsi_try_target_reset(scmd);
++		if (rtn != SUCCESS && rtn != FAST_IO_FAIL)
+ 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Target reset"
+ 							  " failed target: "
+ 							  "%d\n",
+ 							  current->comm, id));
+-		id++;
+-	} while(id != 0);
++		list_for_each_entry_safe(scmd, next, &tmp_list, eh_entry) {
++			if (scmd_id(scmd) != id)
++				continue;
++
++			if ((rtn == SUCCESS || rtn == FAST_IO_FAIL)
++			    && (!scsi_device_online(scmd->device) ||
++				 rtn == FAST_IO_FAIL || !scsi_eh_tur(scmd)))
++				scsi_eh_finish_cmd(scmd, done_q);
++			else
++				/* push back on work queue for further processing */
++				list_move(&scmd->eh_entry, work_q);
++		}
++	}
+ 
+ 	return list_empty(work_q);
+ }
+
+
