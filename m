@@ -1,45 +1,35 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] block: remove REQ_HARDBARRIER
-Date: Mon, 25 Oct 2010 10:54:42 +0200
-Message-ID: <4CC545D2.9020303@kernel.org>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <201008241745.35242.philipp.reisner@linbit.com> <20101022083511.GA7853@lst.de> <201010231318.33517.philipp.reisner@linbit.com> <4CC311D5.9040904@fusionio.com> <20101023165924.GA1395@lst.de>
+From: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH 1/2] libfc: fix mem leak in fc_tm_done()
+Date: Mon, 25 Oct 2010 20:37:19 +0800
+Message-ID: <AANLkTinAOy9+WPuKGro09Cu=xiLF+QMQ+JkioHNZao9n@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hera.kernel.org ([140.211.167.34]:38648 "EHLO hera.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751103Ab0JYIyt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Oct 2010 04:54:49 -0400
-In-Reply-To: <20101023165924.GA1395@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://www.open-fcoe.org/pipermail/devel>
+List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
+	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+To: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <jaxboe@fusionio.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 10/23/2010 06:59 PM, Christoph Hellwig wrote:
-> REQ_HARDBARRIER is dead now, so remove the leftovers.  What's left
-> at this point is:
-> 
->  - various checks inside the block layer.
->  - sanity checks in bio based drivers.
->  - now unused bio_empty_barrier helper.
->  - Xen blockfront use of BLKIF_OP_WRITE_BARRIER - it's dead for a while,
->    but Xen really needs to sort out it's barrier situaton.
->  - setting of ordered tags in uas - dead code copied from old scsi
->    drivers.
->  - scsi different retry for barriers - it's dead and should have been
->    removed when flushes were converted to FS requests.
->  - blktrace handling of barriers - removed.  Someone who knows blktrace
->    better should add support for REQ_FLUSH and REQ_FUA, though.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+There seems frame should get freed against memory leakage.
 
-Looks good to me.
+Signed-off-by: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+---
 
-Reviewed-by: Tejun Heo <tj@kernel.org>
-
-Thanks.
-
--- 
-tejun
+--- a/drivers/scsi/libfc/fc_fcp.c	2010-09-13 07:07:38.000000000 +0800
++++ b/drivers/scsi/libfc/fc_fcp.c	2010-10-25 20:31:04.000000000 +0800
+@@ -1294,6 +1294,7 @@ static void fc_tm_done(struct fc_seq *se
+ 	 */
+ 	if (!fsp->seq_ptr || !fsp->wait_for_comp) {
+ 		spin_unlock_bh(&fsp->scsi_pkt_lock);
++		fc_frame_free(fp);
+ 		return;
+ 	}
