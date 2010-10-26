@@ -1,50 +1,90 @@
-From: Julia Lawall <julia@diku.dk>
-Subject: [PATCH 13/14] drivers/scsi/be2iscsi/be_main.c: delete double assignment
-Date: Tue, 26 Oct 2010 12:25:42 +0200
-Message-ID: <1288088743-3725-14-git-send-email-julia@diku.dk>
-References: <1288088743-3725-1-git-send-email-julia@diku.dk>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1288088743-3725-1-git-send-email-julia@diku.dk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jayamohan Kallickal <jayamohank@serverengines.com>
-Cc: kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: RE: [PATCH 06/15] qla4xxx: Do not wait for the outstanding commands
+ to complete
+Date: Tue, 26 Oct 2010 05:44:45 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA871295C2779@AVEXMB1.qlogic.org>
+References: <5E4F49720D0BAD499EE1F01232234BA87129406789@AVEXMB1.qlogic.org>
+	 <4CAE8604.1020702@cs.wisc.edu>
+	 <5E4F49720D0BAD499EE1F01232234BA87129406BE7@AVEXMB1.qlogic.org>
+ <1288036610.5487.704.camel@mulgrave.site>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:40910 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757791Ab0JZMow (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 08:44:52 -0400
+In-Reply-To: <1288036610.5487.704.camel@mulgrave.site>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Nilesh Javali <nilesh.javali@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
 
-From: Julia Lawall <julia@diku.dk>
-
-Delete successive assignments to the same location.  Initialize the
-pwrb_handle field instead of initializing the psgl_handle field twice.
-
-A simplified version of the semantic match that finds this problem is as
-follows: (http://coccinelle.lip6.fr/)
-
-// <smpl>
-@@
-expression i;
-@@
-
-*i = ...;
- i = ...;
-// </smpl>
-
-Signed-off-by: Julia Lawall <julia@diku.dk>
-
----
-This changes the semantics and has not been tested.
-
- drivers/scsi/be2iscsi/be_main.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 75a85aa..9e1878f 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3794,7 +3794,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 
- 	task->hdr = (struct iscsi_hdr *)&io_task->cmd_bhs->iscsi_hdr;
- 	task->hdr_max = sizeof(struct be_cmd_bhs);
--	io_task->psgl_handle = NULL;
-+	io_task->pwrb_handle = NULL;
- 	io_task->psgl_handle = NULL;
- 
- 	if (task->sc) {
+Pi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+RnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWls
+dG86SmFtZXMuQm90dG9tbGV5QHN1c2UuZGVdDQo+U2VudDogVHVlc2RheSwgT2N0b2JlciAyNiwg
+MjAxMCAxOjI3IEFNDQo+VG86IFZpa2FzIENoYXVkaGFyeQ0KPkNjOiBNaWtlIENocmlzdGllOyBs
+aW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgTmlsZXNoIEphdmFsaTsgUmF2aSBBbmFuZA0KPlN1
+YmplY3Q6IFJFOiBbUEFUQ0ggMDYvMTVdIHFsYTR4eHg6IERvIG5vdCB3YWl0IGZvciB0aGUgb3V0
+c3RhbmRpbmcNCj5jb21tYW5kcyB0byBjb21wbGV0ZQ0KPg0KPk9uIE1vbiwgMjAxMC0xMC0xMSBh
+dCAwMjoyNCAtMDcwMCwgVmlrYXMgQ2hhdWRoYXJ5IHdyb3RlOg0KPj4gPi0tLS0tT3JpZ2luYWwg
+TWVzc2FnZS0tLS0tDQo+PiA+RnJvbTogTWlrZSBDaHJpc3RpZSBbbWFpbHRvOm1pY2hhZWxjQGNz
+Lndpc2MuZWR1XQ0KPj4gPlNlbnQ6IEZyaWRheSwgT2N0b2JlciAwOCwgMjAxMCA4OjE2IEFNDQo+
+PiA+VG86IFZpa2FzIENoYXVkaGFyeQ0KPj4gPkNjOiBKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZTsg
+bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IE5pbGVzaCBKYXZhbGk7DQo+PiA+UmF2aSBBbmFu
+ZA0KPj4gPlN1YmplY3Q6IFJlOiBbUEFUQ0ggMDYvMTVdIHFsYTR4eHg6IERvIG5vdCB3YWl0IGZv
+ciB0aGUgb3V0c3RhbmRpbmcNCj4+ID5jb21tYW5kcyB0byBjb21wbGV0ZQ0KPj4gPg0KPj4gPk9u
+IDEwLzA3LzIwMTAgMTI6NDkgQU0sIFZpa2FzIENoYXVkaGFyeSB3cm90ZToNCj4+ID4+IEZyb206
+IE5pbGVzaCBKYXZhbGk8bmlsZXNoLmphdmFsaUBxbG9naWMuY29tPg0KPj4gPj4NCj4+ID4+IERv
+IG5vdCB3YWl0IGZvciB0aGUgb3V0c3RhbmRpbmcgY29tbWFuZHMgdG8gY29tcGxldGUgaW4gY2Fz
+ZSBvZg0KPj4gPj4gZmlybXdhcmUgaGFuZy4NCj4+ID4+DQo+PiA+PiBTaWduZWQtb2ZmLWJ5OiBO
+aWxlc2ggSmF2YWxpPG5pbGVzaC5qYXZhbGlAcWxvZ2ljLmNvbT4NCj4+ID4+IFNpZ25lZC1vZmYt
+Ynk6IFZpa2FzIENoYXVkaGFyeTx2aWthcy5jaGF1ZGhhcnlAcWxvZ2ljLmNvbT4NCj4+ID4+IFNp
+Z25lZC1vZmYtYnk6IFJhdmkgQW5hbmQ8cmF2aS5hbmFuZEBxbG9naWMuY29tPg0KPj4gPj4gLS0t
+DQo+PiA+PiAgIGRyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9vcy5jIHwgICAgNiArKysrLS0NCj4+
+ID4+ICAgMSBmaWxlcyBjaGFuZ2VkLCA0IGluc2VydGlvbnMoKyksIDIgZGVsZXRpb25zKC0pDQo+
+PiA+Pg0KPj4gPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9vcy5jDQo+
+PiA+PiBiL2RyaXZlcnMvc2NzaS9xbGE0eHh4L3FsNF9vcy5jIGluZGV4IDU2OTYyZTUuLmE2NDU1
+ZmIgMTAwNjQ0DQo+PiA+PiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhNHh4eC9xbDRfb3MuYw0KPj4g
+Pj4gKysrIGIvZHJpdmVycy9zY3NpL3FsYTR4eHgvcWw0X29zLmMNCj4+ID4+IEBAIC0xMTAyLDcg
+KzExMDIsOCBAQCBzdGF0aWMgaW50IHFsYTR4eHhfcmVjb3Zlcl9hZGFwdGVyKHN0cnVjdA0KPj4g
+PnNjc2lfcWxhX2hvc3QgKmhhKQ0KPj4gPj4gICAJCSAgICBoYS0+aG9zdF9ubywgX19mdW5jX18p
+KTsNCj4+ID4+ICAgCQlzdGF0dXMgPSBoYS0+aXNwX29wcy0+cmVzZXRfZmlybXdhcmUoaGEpOw0K
+Pj4gPj4gICAJCWlmIChzdGF0dXMgPT0gUUxBX1NVQ0NFU1MpIHsNCj4+ID4+IC0JCQlxbGE0eHh4
+X2NtZF93YWl0KGhhKTsNCj4+ID4+ICsJCQlpZiAoIXRlc3RfYml0KEFGX0ZXX1JFQ09WRVJZLCZo
+YS0+ZmxhZ3MpKQ0KPj4gPj4gKwkJCQlxbGE0eHh4X2NtZF93YWl0KGhhKTsNCj4+ID4+ICAgCQkJ
+aGEtPmlzcF9vcHMtPmRpc2FibGVfaW50cnMoaGEpOw0KPj4gPj4gICAJCQlxbGE0eHh4X3Byb2Nl
+c3NfYWVuKGhhLCBGTFVTSF9EREJfQ0hBTkdFRF9BRU5TKTsNCj4+ID4+ICAgCQkJcWxhNHh4eF9h
+Ym9ydF9hY3RpdmVfY21kcyhoYSwgRElEX1JFU0VUPDwgIDE2KTsgQEANCj4tDQo+PiA+MTExOSw3
+DQo+PiA+PiArMTEyMCw4IEBAIHN0YXRpYyBpbnQgcWxhNHh4eF9yZWNvdmVyX2FkYXB0ZXIoc3Ry
+dWN0IHNjc2lfcWxhX2hvc3QNCj4qaGEpDQo+PiA+PiAgIAkgKiBvciBpZiBzdG9wX2Zpcm13YXJl
+IGZhaWxzIGZvciBJU1AtODJ4eC4NCj4+ID4+ICAgCSAqIFRoaXMgaXMgdGhlIGRlZmF1bHQgY2Fz
+ZSBmb3IgSVNQLTR4eHggKi8NCj4+ID4+ICAgCWlmICghaXNfcWxhODAyMihoYSkgfHwgcmVzZXRf
+Y2hpcCkgew0KPj4gPj4gLQkJcWxhNHh4eF9jbWRfd2FpdChoYSk7DQo+PiA+PiArCQlpZiAoIXRl
+c3RfYml0KEFGX0ZXX1JFQ09WRVJZLCZoYS0+ZmxhZ3MpKQ0KPj4gPj4gKwkJCXFsYTR4eHhfY21k
+X3dhaXQoaGEpOw0KPj4gPj4gICAJCXFsYTR4eHhfcHJvY2Vzc19hZW4oaGEsIEZMVVNIX0REQl9D
+SEFOR0VEX0FFTlMpOw0KPj4gPj4gICAJCXFsYTR4eHhfYWJvcnRfYWN0aXZlX2NtZHMoaGEsIERJ
+RF9SRVNFVDw8ICAxNik7DQo+PiA+PiAgIAkJREVCVUcyKHFsNF9wcmludGsoS0VSTl9JTkZPLCBo
+YSwNCj4+ID4NCj4+ID5JZiB3ZSBnbyBmcm9tIHFsYTR4eHhfZWhfaG9zdF9yZXNldC0+cWxhNHh4
+eF9yZWNvdmVyX2FkYXB0ZXIgYW5kIHlvdSBkbw0KPm5vdA0KPj4gPndhaXQsIGlzIGlzIHBvc3Np
+YmxlIGZvciB0aGUgZHJpdmVyIHRvIGJlIGFjY2Vzc2luZyBzY3NpIGNvbW1hbmRzIGFmdGVyDQo+
+PiA+cWxhNHh4eF9laF9ob3N0X3Jlc2V0IHJldHVybnM/IElmIHNvIEkgdGhpbmsgdGhlcmUgaXMg
+YSBwcm9ibGVtIHdoZXJlDQo+dGhlDQo+PiA+c2NzaSBlaCB3aWxsIGZhaWwgb3IgcmV0cnkgdGhl
+IGNtZCBzbyB0aGUgbWVtb3J5IGZvciB0aGUgc2NzaSBjb21tYW5kDQo+Y291bGQNCj4+ID5iZSBy
+ZWFsbG9jYXRlZC9mcmVlZC4NCj4+ID4NCj4+DQo+PiBXZSBkbyBub3QgYWNjZXNzIGNvbW1hbmQg
+YWZ0ZXIgcWxhNHh4eF9laF9ob3N0X3Jlc2V0IHJldHVybnMuDQo+Pg0KPj4gPk9uIGEgcmVsYXRl
+ZCBub3RlLCBoYXMgcWxhNHh4eF9laF9ob3N0X3Jlc2V0IGV2ZXIgcmV0dXJuZWQgU1VDQ0VTUz8g
+SQ0KPnRoaW5rDQo+PiA+dGhlcmUgaXMgYSBwcm9ibGVtIGluIHFsYTR4eHhfY21kX3dhaXQgd2hl
+biB0aGUgc2NzaSBlaCBpcyBydW5uaW5nLiBBdA0KPnRoYXQNCj4+ID50aW1lIGJsa19maW5pc2hf
+cmVxdWVzdC0+YmxrX3F1ZXVlX2VuZF90YWcgaXMgbm90IGdvaW5nIHRvIGJlIHJ1biwNCj5iZWNh
+dXNlDQo+PiA+aWYgdGhlIGRyaXZlciB3ZXJlIHRvIGNhbGwgc2NzaV9kb25lIHRoZSBibG9jayBs
+YXllciB3b3VsZCBkbw0KPj4gPmJsa19jb21wbGV0ZV9yZXF1ZXN0IGFuZCB0aGUgYmxrX21hcmtf
+cnFfY29tcGxldGUgd291bGQgZmFpbCAodGhpcyBpcw0KPj4gPmJlY2F1c2UgdGhlIHNjc2kvYmxv
+Y2sgZWggdGltZW91dCBjb3VsZCBoYXMgYWxyZWFkeSBtYXJrZWQgaXQgY29tcGxldGUpLg0KPj4g
+Pg0KPj4gPkkgdGhpbmsgeW91IG5lZWQgdGhlIGF0dGFjaGVkIHBhdGNoLg0KPj4NCj4+IFllcy4g
+V2UgbmVlZCBhdHRhY2hlZCBwYXRjaC4gSSBhbSBkb2luZyBzb21lIHRlc3Rpbmcgd2l0aCB0aGlz
+IHBhdGNoLg0KPj4gSSB3aWxsIHNlbmQgb3V0IHRoaXMgcGF0Y2ggZm9yIGluY2x1c2lvbiBzb29u
+Lg0KPg0KPklzIHRoZXJlIGFuIHVwZGF0ZSBvbiB0aGlzPyAgSXQgd291bGQgYmUgbmljZSB0byBp
+bmNsdWRlIGl0IGJlZm9yZSB0aGUNCj5tZXJnZSB3aW5kb3cgY2xvc2VzLg0KPg0KDQpJIGFtIHNl
+bmRpbmcgdXBkYXRlIHBhdGNoIGluIG5leHQgZW1haWwuDQoNClRoYW5rcywNClZpa2FzLg0KDQo=
