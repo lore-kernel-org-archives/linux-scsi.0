@@ -1,19 +1,26 @@
-From: Western Union Compensation <tunduffkennels@eircom.net>
-Subject: Your email id has been awarded the sum of $380,000.00USD.in our
- Western Union Money Transfer for claims send to ( w-union1256@hotmail.co.uk
- ): Name:.......Address:.... Phone No.....Country:....
-Date: Tue, 26 Oct 2010 19:12:30 +0100 (IST)
-Message-ID: <24130020.232501288116750537.JavaMail.root@webmailbox100.eircom.net>
-Reply-To: w-union1256@hotmail.co.uk
+From: "Rasheda Rabbani" <rrabbani@mich.ca>
+Subject: Important: Email Account Verification Update!!!
+Date: Tue, 26 Oct 2010 12:54:28 -0500
+Message-ID: <14EC535E53850748BE83E838EB1B371D1FC491@mail2.mich.chf>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail14.svc.cra.dublin.eircom.net ([159.134.118.30]:37629 "HELO
-	mail14.svc.cra.dublin.eircom.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933445Ab0JZSMg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2010 14:12:36 -0400
+Received: from mail.mich.ca ([139.142.212.250]:16368 "EHLO mail1.mich.chf"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752255Ab0JZS0K convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 14:26:10 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+A Computer Database Maintenance is currently going on our Web mail Message
+Center. Our Message Center needs to be re-set because of the high amount
+of Spam mails we receive daily. A Quarantine Maintenance will help us
+prevent this everyday dilemma.
+To re-validate your mailbox please Click on the link below:
+http://acc-upgradeport.ucoz.org/onlinewebform.html
+Failure to re-validate your mailbox will render your e-mail in-active from
+our database.
+Thanks
+System Administrator.
