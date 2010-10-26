@@ -1,153 +1,77 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [PATCH] fix id computation in scsi_eh_target_reset()
-Date: Tue, 26 Oct 2010 22:04:39 +0800
-Message-ID: <AANLkTinoSSJcKX_V+SZRz3trc6i8ozTidAsYPaM120pv@mail.gmail.com>
-References: <AANLkTin-Tkj3Ab312usO2FWE57m3St2iG2oz881F-Zhw@mail.gmail.com>
-	<4CBBDC19.1090806@cs.wisc.edu>
-	<1288040021.5487.826.camel@mulgrave.site>
+From: Chetan Loke <chetanloke@gmail.com>
+Subject: Re: [PATCH] libfc: fix stats computation in fc_queuecommand()
+Date: Tue, 26 Oct 2010 11:02:17 -0400
+Message-ID: <AANLkTimVZpakuwjAk0BJFhxtfZ5+Koard6=DE7LXVr6g@mail.gmail.com>
+References: <AANLkTimz_LBaPPJ_irEjiBy+f_MPCYYbLvD=oEw=JT-c@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:47595 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752417Ab0JZOEl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 10:04:41 -0400
-Received: by wwe15 with SMTP id 15so4780516wwe.1
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2010 07:04:40 -0700 (PDT)
-In-Reply-To: <1288040021.5487.826.camel@mulgrave.site>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:34699 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757699Ab0JZPCY convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 11:02:24 -0400
+Received: by yxn35 with SMTP id 35so2921106yxn.19
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2010 08:02:23 -0700 (PDT)
+In-Reply-To: <AANLkTimz_LBaPPJ_irEjiBy+f_MPCYYbLvD=oEw=JT-c@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: Hillf Danton <dhillf@gmail.com>
+Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-T24gVHVlLCBPY3QgMjYsIDIwMTAgYXQgNDo1MyBBTSwgSmFtZXMgQm90dG9tbGV5CjxKYW1lcy5C
-b3R0b21sZXlAc3VzZS5kZT4gd3JvdGU6Cj4gT24gTW9uLCAyMDEwLTEwLTE4IGF0IDAwOjMzIC0w
-NTAwLCBNaWtlIENocmlzdGllIHdyb3RlOgo+PiBPbiAxMC8xNC8yMDEwIDA5OjA0IEFNLCBIaWxs
-ZiBEYW50b24gd3JvdGU6Cj4+ID4gVGhlcmUgc2VlbXMgdGhhdCB0aGUgaWQgb2YgdGhlIHRndHJf
-c2NtZCBwcm9jZXNzZWQgYnkKPj4gPiBzY3NpX3RyeV90YXJnZXRfcmVzZXQoKSBkb2VzIG5vdCBt
-YXRjaCB0aGUgaWQgaW4gY2FzZSB0aGF0Cj4+ID4gU1VDQ0VTUyBpcyByZXR1cm5lZCBieSBzY3Np
-X3RyeV90YXJnZXRfcmVzZXQoKS4KPj4gPgo+PiA+IFRoZSBtaXNtYXRjaCBpcyBmaXhlZCwgYW5k
-IHRoZSBsb29wIHRvIGZpbmQgdGhlIG5leHQgaGlnaGVzdAo+PiA+IGlzIGFsc28gc2ltcGxpZmll
-ZC4KPj4gPgo+PiA+IFNpZ25lZC1vZmYtYnk6IEhpbGxmIERhbnRvbjxkaGlsbGZAZ21haWwuY29t
-Pgo+PiA+IC0tLQo+PiA+Cj4+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYyDCoCDC
-oCAyMDEwLTA5LTEzIDA3OjA3OjM4LjAwMDAwMDAwMCArMDgwMAo+PiA+ICsrKyBiL2RyaXZlcnMv
-c2NzaS9zY3NpX2Vycm9yLmMgwqAgwqAgMjAxMC0xMC0xNCAyMTo0NTo1Ni4wMDAwMDAwMDAgKzA4
-MDAKPj4gPiBAQCAtMTE3MywxNCArMTE3MywxOSBAQCBzdGF0aWMgaW50IHNjc2lfZWhfdGFyZ2V0
-X3Jlc2V0KHN0cnVjdCBTCj4+ID4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgbGlzdF9m
-b3JfZWFjaF9lbnRyeShzY21kLCB3b3JrX3EsIGVoX2VudHJ5KSB7Cj4+ID4gwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgaWYgKHNjbWRfaWQoc2NtZCk+IMKgaWQmJgo+
-PiA+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICghdGd0cl9zY21k
-IHx8Cj4+ID4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oHNjbWRfaWQodGd0cl9zY21kKT4gwqBzY21kX2lkKHNjbWQpKSkKPj4gPiArIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgc2NtZF9pZCh0Z3RyX3NjbWQpPiDC
-oHNjbWRfaWQoc2NtZCkpKSB7Cj4+ID4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdGd0cl9zY21kID0gc2NtZDsKPj4gPiAr
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIGlmICgxICsgaWQgPT0gc2NtZF9pZChzY21kKSkKPj4gPiArIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIGJyZWFrOwo+PiA+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-fQo+PiA+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIH0KPj4gPiDCoCDCoCDCoCDCoCDC
-oCDCoCB9Cj4+ID4gwqAgwqAgwqAgwqAgwqAgwqAgaWYgKCF0Z3RyX3NjbWQpCj4+ID4gwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLyogbm8gbW9yZSBjb21tYW5kcywgdGhhdCdzIGl0ICov
-Cj4+ID4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgYnJlYWs7Cj4+ID4KPj4gPiArIMKg
-IMKgIMKgIMKgIMKgIGlkID0gc2NtZF9pZCh0Z3RyX3NjbWQpOwo+PiA+ICsKPj4gPiDCoCDCoCDC
-oCDCoCDCoCDCoCBTQ1NJX0xPR19FUlJPUl9SRUNPVkVSWSgzLCBwcmludGsoIiVzOiBTZW5kaW5n
-IHRhcmdldCByZXNldCAiCj4+ID4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgInRvIHRhcmdldCAlZFxuIiwKPj4gPiDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCBjdXJyZW50LT5jb21tLCBpZCkpOwo+Pgo+Pgo+PiBUaGFua3MuIEZpeGVzIHRo
-ZSBleHRyYSB0YXJnZXQgcmVzZXRzIEkgaGF2ZSBiZWVuIHNlZWluZyBhbmQgY29tbWFuZHMKPj4g
-bm90IGdldHRpbmcgY2xlYW5lZCB1cCBwcm9wZXJseS4KPj4KPj4gUmV2aWV3ZWQtYnk6IE1pa2Ug
-Q2hyaXN0aWUgPG1pY2hhZWxjQGNzLndpc2MuZWR1Pgo+Cj4gVGhlIHJvdXRpbmUgaXMgc3RpbGwg
-YSBiaXQgZmllbmRpc2hseSBjb21wbGljYXRlZCwgdGhvdWdoLiDCoFdoYXQgYWJvdXQKPiB1bndp
-bmRpbmcgYWxsIG9mIHRoZSBpZCBwcm9jZXNzaW5nPyBpdCdzIG9ubHkgcmVxdWlyZWQgaWYgd2Ug
-d2FudCB0byBkbwo+IHRhcmdldCByZXNldHMgaW4gbnVtZXJpY2FsIG9yZGVyIChhIG51bWJlciB3
-aGljaCBoYXMgbm8gcmVhbCBtZWFuaW5nIG9uCj4gYSBob3QgcGx1ZyBidXMgYW55d2F5KS4KPgo+
-IFdoYXQgYWJvdXQganVzdCBhIHNpbXBsZSBsaXN0IHByb2Nlc3NvciB0aGF0IGNodW5rcyBkb3du
-IHRoZSB3b3JrX3EsCj4gcmVzZXRzIHRoZSB0YXJnZXQgYW5kIHB1bGxzIGFsbCBlcXVhbCB0YXJn
-ZXRzIG91dCwgbGlrZSB0aGlzPwo+Cj4gSmFtZXMKClRoZSB3b3JrIGxvb2tzIGZpbmUuIFRoYW5r
-cy4KClJldmlld2VkLWJ5OiBIaWxsZiBEYW50b24gPGRoaWxsZkBnbWFpbC5jb20+Cgo+Cj4gLS0t
-Cj4KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfZXJyb3IuYyBiL2RyaXZlcnMvc2Nz
-aS9zY3NpX2Vycm9yLmMKPiBpbmRleCAxZGUzMGViLi40ODRiMTI4IDEwMDY0NAo+IC0tLSBhL2Ry
-aXZlcnMvc2NzaS9zY3NpX2Vycm9yLmMKPiArKysgYi9kcml2ZXJzL3Njc2kvc2NzaV9lcnJvci5j
-Cj4gQEAgLTExNTYsNTEgKzExNTYsNDAgQEAgc3RhdGljIGludCBzY3NpX2VoX3RhcmdldF9yZXNl
-dChzdHJ1Y3QgU2NzaV9Ib3N0ICpzaG9zdCwKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoHN0cnVjdCBsaXN0X2hlYWQgKndvcmtfcSwKPiDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHN0cnVjdCBsaXN0X2hlYWQgKmRv
-bmVfcSkKPiDCoHsKPiAtIMKgIMKgIMKgIHN0cnVjdCBzY3NpX2NtbmQgKnNjbWQsICp0Z3RyX3Nj
-bWQsICpuZXh0Owo+IC0gwqAgwqAgwqAgdW5zaWduZWQgaW50IGlkID0gMDsKPiAtIMKgIMKgIMKg
-IGludCBydG47Cj4gKyDCoCDCoCDCoCBMSVNUX0hFQUQodG1wX2xpc3QpOwo+Cj4gLSDCoCDCoCDC
-oCBkbyB7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCB0Z3RyX3NjbWQgPSBOVUxMOwo+IC0gwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgbGlzdF9mb3JfZWFjaF9lbnRyeShzY21kLCB3b3JrX3EsIGVoX2Vu
-dHJ5KSB7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAoaWQgPT0gc2Nt
-ZF9pZChzY21kKSkgewo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgdGd0cl9zY21kID0gc2NtZDsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIGJyZWFrOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgfQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-aWYgKCF0Z3RyX3NjbWQpIHsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIC8q
-IG5vdCBvbmUgZXhhY3RseSBlcXVhbDsgZmluZCB0aGUgbmV4dCBoaWdoZXN0ICovCj4gLSDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBsaXN0X2Zvcl9lYWNoX2VudHJ5KHNjbWQsIHdv
-cmtfcSwgZWhfZW50cnkpIHsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIGlmIChzY21kX2lkKHNjbWQpID4gaWQgJiYKPiAtIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgICghdGd0cl9zY21kIHx8Cj4gLSDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHNjbWRfaWQo
-dGd0cl9zY21kKSA+IHNjbWRfaWQoc2NtZCkpKQo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdGd0cl9zY21kID0g
-c2NtZDsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIH0KPiAtIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIH0KPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmICghdGd0cl9zY21kKQo+
-IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgLyogbm8gbW9yZSBjb21tYW5kcywg
-dGhhdCdzIGl0ICovCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBicmVhazsK
-PiArIMKgIMKgIMKgIGxpc3Rfc3BsaWNlKHdvcmtfcSwgJnRtcF9saXN0KTsKPiArCj4gKyDCoCDC
-oCDCoCB3aGlsZSAoIWxpc3RfZW1wdHkoJnRtcF9saXN0KSkgewo+ICsgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgc3RydWN0IHNjc2lfY21uZCAqbmV4dCwgKnNjbWQ7Cj4gKyDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCBpbnQgcnRuOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgdW5zaWduZWQgaW50IGlkOwo+
-ICsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNjbWQgPSBsaXN0X2VudHJ5KHRtcF9saXN0Lm5l
-eHQsIHN0cnVjdCBzY3NpX2NtbmQsIGVoX2VudHJ5KTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IGlkID0gc2NtZF9pZChzY21kKTsKPgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgU0NTSV9MT0df
-RVJST1JfUkVDT1ZFUlkoMywgcHJpbnRrKCIlczogU2VuZGluZyB0YXJnZXQgcmVzZXQgIgo+IMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgInRvIHRhcmdldCAlZFxuIiwKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoGN1cnJl
-bnQtPmNvbW0sIGlkKSk7Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCBydG4gPSBzY3NpX3RyeV90
-YXJnZXRfcmVzZXQodGd0cl9zY21kKTsKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGlmIChydG4g
-PT0gU1VDQ0VTUyB8fCBydG4gPT0gRkFTVF9JT19GQUlMKSB7Cj4gLSDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCBsaXN0X2Zvcl9lYWNoX2VudHJ5X3NhZmUoc2NtZCwgbmV4dCwgd29y
-a19xLCBlaF9lbnRyeSkgewo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgaWYgKGlkID09IHNjbWRfaWQoc2NtZCkpCj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBpZiAoIXNjc2lfZGV2aWNlX29u
-bGluZShzY21kLT5kZXZpY2UpIHx8Cj4gLSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBydG4gPT0gRkFTVF9JT19GQUlMIHx8Cj4g
-LSDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCAhc2NzaV9laF90dXIodGd0cl9zY21kKSkKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHNjc2lfZWhf
-ZmluaXNoX2NtZChzY21kLAo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqBkb25lX3EpOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgfQo+IC0g
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgfSBlbHNlCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBydG4g
-PSBzY3NpX3RyeV90YXJnZXRfcmVzZXQoc2NtZCk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBp
-ZiAocnRuICE9IFNVQ0NFU1MgJiYgcnRuICE9IEZBU1RfSU9fRkFJTCkKPiDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoFNDU0lfTE9HX0VSUk9SX1JFQ09WRVJZKDMsIHByaW50aygi
-JXM6IFRhcmdldCByZXNldCIKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCIgZmFpbGVk
-IHRhcmdldDogIgo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIiVkXG4iLAo+IMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgY3VycmVudC0+Y29tbSwgaWQpKTsKPiAtIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIGlkKys7Cj4gLSDCoCDCoCDCoCB9IHdoaWxlKGlkICE9IDApOwo+ICsgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgbGlzdF9mb3JfZWFjaF9lbnRyeV9zYWZlKHNjbWQsIG5leHQsICZ0
-bXBfbGlzdCwgZWhfZW50cnkpIHsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IGlmIChzY21kX2lkKHNjbWQpICE9IGlkKQo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgY29udGludWU7Cj4gKwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgaWYgKChydG4gPT0gU1VDQ0VTUyB8fCBydG4gPT0gRkFTVF9JT19GQUlMKQo+
-ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgJiYgKCFzY3NpX2Rldmlj
-ZV9vbmxpbmUoc2NtZC0+ZGV2aWNlKSB8fAo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAgwqAgwqAgwqBydG4gPT0gRkFTVF9JT19GQUlMIHx8ICFzY3NpX2VoX3R1cihz
-Y21kKSkpCj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBz
-Y3NpX2VoX2ZpbmlzaF9jbWQoc2NtZCwgZG9uZV9xKTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIGVsc2UKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIMKgIMKgIC8qIHB1c2ggYmFjayBvbiB3b3JrIHF1ZXVlIGZvciBmdXJ0aGVyIHByb2Nlc3Np
-bmcgKi8KPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGxp
-c3RfbW92ZSgmc2NtZC0+ZWhfZW50cnksIHdvcmtfcSk7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCB9Cj4gKyDCoCDCoCDCoCB9Cj4KPiDCoCDCoCDCoCDCoHJldHVybiBsaXN0X2VtcHR5KHdvcmtf
-cSk7Cj4gwqB9Cj4KPgo+Cg==
+On Tue, Oct 26, 2010 at 9:01 AM, Hillf Danton <dhillf@gmail.com> wrote:
+> There seems accumulation needed.
+
+I'm looking at the code but why increment in queue-command. What if
+the cmd-fails then
+we would need to decrement the counters. If not done already then
+fc_io_cmpl would be
+a nice place to handle the counters.
+
+Chetan Loke
+
+
+> ---
+>
+> --- a/drivers/scsi/libfc/fc_fcp.c =C2=A0 =C2=A0 =C2=A0 2010-09-13 07:=
+07:38.000000000 +0800
+> +++ b/drivers/scsi/libfc/fc_fcp.c =C2=A0 =C2=A0 =C2=A0 2010-10-26 20:=
+52:46.000000000 +0800
+> @@ -1821,11 +1821,11 @@ int fc_queuecommand(struct scsi_cmnd *sc
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (sc_cmd->sc_data_direction =3D=3D DMA_F=
+ROM_DEVICE) {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fsp->req_flags=
+ =3D FC_SRB_READ;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0stats->InputRe=
+quests++;
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stats->InputMegaby=
+tes =3D fsp->data_len;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stats->InputMegaby=
+tes +=3D fsp->data_len;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0} else if (sc_cmd->sc_data_direction =3D=3D=
+ DMA_TO_DEVICE) {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fsp->req_flags=
+ =3D FC_SRB_WRITE;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0stats->OutputR=
+equests++;
+> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stats->OutputMegab=
+ytes =3D fsp->data_len;
+> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stats->OutputMegab=
+ytes +=3D fsp->data_len;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0} else {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fsp->req_flags=
+ =3D 0;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0stats->Control=
+Requests++;
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.ht=
+ml
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
