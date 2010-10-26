@@ -1,71 +1,65 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 5/5] scsi: megaraid_sas - Version and documentation
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 5/5] scsi: megaraid_sas - Version and documentation
  update
-Date: Tue, 26 Oct 2010 11:12:23 -0500
-Message-ID: <1288109543.8283.139.camel@mulgrave.site>
+Date: Tue, 26 Oct 2010 11:15:08 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3010119E798@cosmail02.lsi.com>
 References: <AANLkTi=praySm1B3dhU+LxhWK2yUccZkzWpd6-6UERYa@mail.gmail.com>
 	 <4B6A08C587958942AA3002690DD4F8C30100FF9FBB@cosmail02.lsi.com>
+ <1288109543.8283.139.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:36525 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759910Ab0JZQM3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2010 12:12:29 -0400
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30100FF9FBB@cosmail02.lsi.com>
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:45981 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758203Ab0JZRPi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Oct 2010 13:15:38 -0400
+In-Reply-To: <1288109543.8283.139.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
+To: James Bottomley <James.Bottomley@suse.de>
 Cc: bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Tue, 2010-10-12 at 07:21 -0600, Yang, Bo wrote:
-> Re-Submit:
-> 
-> Update the version and documentation.
-
-This has an impressive set of checkpatch failures:
-
-ERROR: trailing whitespace
-#26: FILE: Documentation/scsi/ChangeLog.megaraid_sas:13:
-+^ITo add the OCR support, driver need to do: $
-
-ERROR: trailing whitespace
-#30: FILE: Documentation/scsi/ChangeLog.megaraid_sas:17:
-+^I^I$
-
-ERROR: trailing whitespace
-#35: FILE: Documentation/scsi/ChangeLog.megaraid_sas:22:
-+^I^I$
-
-ERROR: trailing whitespace
-#39: FILE: Documentation/scsi/ChangeLog.megaraid_sas:26:
-+^I^I$
-
-ERROR: trailing whitespace
-#43: FILE: Documentation/scsi/ChangeLog.megaraid_sas:30:
-+^I^I$
-
-ERROR: trailing whitespace
-#46: FILE: Documentation/scsi/ChangeLog.megaraid_sas:33:
-+^I^I $
-
-ERROR: trailing whitespace
-#48: FILE: Documentation/scsi/ChangeLog.megaraid_sas:35:
-+^I^IOCR to see if driver can bring back the FW.      $
-
-ERROR: trailing whitespace
-#54: FILE: Documentation/scsi/ChangeLog.megaraid_sas:41:
-+3.^IIn driver's timeout routine, driver will do three time reset if fw
-is in $
-
-total: 8 errors, 0 warnings, 70 lines checked
-
-I've fixed it up this time, but could you run it through checkpatch.pl
-next time?
-
-Thanks,
-
-James
-
-
+SmFtZXMsDQoNClRoYW5rcyBmb3IgY29ycmVjdGluZyB0aGF0LiBEaWQgeW91IGFsc28gYXBwbGll
+ZCAyLzUsIDMvNSBhbmQgNC81IHBhdGNoZXM/DQoNCkJ5IHRoZSB3YXksIEkgYWx3YXlzIHVzZSBj
+aGVja3BhdGNoLnBsIHRvIGNoZWNrIHRoZSBwYXRjaCBiZWZvcmUgSSBhdHRhY2ggdGhlIHBhdGNo
+IHRvIHRoZSBlLW1haWwuICBBbHNvIEkganVzdCB3ZW50IHRvIHRoZSA1LzUgcGF0Y2ggdG8gdmVy
+aWZ5IHRoZSBwYXRjaDogdGhlIHN0ZXBzOg0KDQoxLiBnbyB0byAgaHR0cDovL21hcmMuaW5mby8/
+bD1saW51eC1zY3NpJm09MTI4Njg4OTc0MjAxMjAxJnc9MiANCjIuIGNsaWNrOiBbIm1lZ2FzYXMt
+dmVyc2lvbi5wYXRjaCIgKGFwcGxpY2F0aW9uL29jdGV0LXN0cmVhbSldIHRvIGRvd25sb2FkIHRo
+aXMgcGF0Y2guICANCjMuIFVzZWQgdGhlIGNoZWNrcGF0Y2gucGwgdG8gY2hlY2sgKEkgdXNlZCB0
+aGUgY21kOiAiY2hlY2twYXRjaC5wbCAtLW5vLXRyZWUgbWVnYXNhcy12ZXJzaW9uLnBhdGNoIikg
+DQoNCkl0IGxvb2tzIE9LIGZvciBtZSAobm8gZXJyb3JzKS4gIEl0IGlzIG1heWJlIHRoZSBjaGVj
+a3BhdGNoLnBsIEkgdXNlZCBkb2VzIG5vdCBnZXQgdXBkYXRlZCBvciBzb21lIHN0ZXBzIGFyZSBu
+b3QgY29ycmVjdC4gIEkgd2lsbCBmaW5kIG91dCB0aGUgdXBkYXRlZCBvbmUgdG8gdHJ5IGFuZCBm
+aW5kIG91dCB0aGUgcmVhc29ucy4gICANCg0KDQpUaGFua3MsDQoNCkJvIFlhbmcNCg0KDQotLS0t
+LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWlsdG86SmFt
+ZXMuQm90dG9tbGV5QHN1c2UuZGVdIA0KU2VudDogVHVlc2RheSwgT2N0b2JlciAyNiwgMjAxMCAx
+MjoxMiBQTQ0KVG86IFlhbmcsIEJvDQpDYzogYm8geWFuZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5l
+bC5vcmc7IGFrcG1Ab3NkbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNClN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggNS81XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBWZXJzaW9uIGFuZCBkb2N1
+bWVudGF0aW9uIHVwZGF0ZQ0KDQpPbiBUdWUsIDIwMTAtMTAtMTIgYXQgMDc6MjEgLTA2MDAsIFlh
+bmcsIEJvIHdyb3RlOg0KPiBSZS1TdWJtaXQ6DQo+IA0KPiBVcGRhdGUgdGhlIHZlcnNpb24gYW5k
+IGRvY3VtZW50YXRpb24uDQoNClRoaXMgaGFzIGFuIGltcHJlc3NpdmUgc2V0IG9mIGNoZWNrcGF0
+Y2ggZmFpbHVyZXM6DQoNCkVSUk9SOiB0cmFpbGluZyB3aGl0ZXNwYWNlDQojMjY6IEZJTEU6IERv
+Y3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzOjEzOg0KK15JVG8gYWRkIHRo
+ZSBPQ1Igc3VwcG9ydCwgZHJpdmVyIG5lZWQgdG8gZG86ICQNCg0KRVJST1I6IHRyYWlsaW5nIHdo
+aXRlc3BhY2UNCiMzMDogRklMRTogRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFp
+ZF9zYXM6MTc6DQorXkleSSQNCg0KRVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UNCiMzNTogRklM
+RTogRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXM6MjI6DQorXkleSSQN
+Cg0KRVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UNCiMzOTogRklMRTogRG9jdW1lbnRhdGlvbi9z
+Y3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXM6MjY6DQorXkleSSQNCg0KRVJST1I6IHRyYWlsaW5n
+IHdoaXRlc3BhY2UNCiM0MzogRklMRTogRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdh
+cmFpZF9zYXM6MzA6DQorXkleSSQNCg0KRVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UNCiM0Njog
+RklMRTogRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXM6MzM6DQorXkle
+SSAkDQoNCkVSUk9SOiB0cmFpbGluZyB3aGl0ZXNwYWNlDQojNDg6IEZJTEU6IERvY3VtZW50YXRp
+b24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzOjM1Og0KK15JXklPQ1IgdG8gc2VlIGlmIGRy
+aXZlciBjYW4gYnJpbmcgYmFjayB0aGUgRlcuICAgICAgJA0KDQpFUlJPUjogdHJhaWxpbmcgd2hp
+dGVzcGFjZQ0KIzU0OiBGSUxFOiBEb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlk
+X3Nhczo0MToNCiszLl5JSW4gZHJpdmVyJ3MgdGltZW91dCByb3V0aW5lLCBkcml2ZXIgd2lsbCBk
+byB0aHJlZSB0aW1lIHJlc2V0IGlmIGZ3DQppcyBpbiAkDQoNCnRvdGFsOiA4IGVycm9ycywgMCB3
+YXJuaW5ncywgNzAgbGluZXMgY2hlY2tlZA0KDQpJJ3ZlIGZpeGVkIGl0IHVwIHRoaXMgdGltZSwg
+YnV0IGNvdWxkIHlvdSBydW4gaXQgdGhyb3VnaCBjaGVja3BhdGNoLnBsDQpuZXh0IHRpbWU/DQoN
+ClRoYW5rcywNCg0KSmFtZXMNCg0KDQo=
