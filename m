@@ -1,69 +1,61 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [PATCH] libfc: add stats info against memory leakage in exchange pool
-Date: Tue, 26 Oct 2010 21:24:44 +0800
-Message-ID: <AANLkTi=QbmJM7qCFnAvdVXcE=4sprA7MtMzMLvHvtxmd@mail.gmail.com>
-References: <AANLkTimzeO6Hou9ob4Z79twUY8RjwH6NP6ndKmoOUrEH@mail.gmail.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 5/5] scsi: megaraid_sas - Version and documentation
+ update
+Date: Tue, 26 Oct 2010 07:49:33 -0600
+Message-ID: <4B6A08C587958942AA3002690DD4F8C3010111FBB8@cosmail02.lsi.com>
+References: <AANLkTi=praySm1B3dhU+LxhWK2yUccZkzWpd6-6UERYa@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:36682 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932116Ab0JZNYq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 09:24:46 -0400
-Received: by wwe15 with SMTP id 15so4739835wwe.1
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2010 06:24:45 -0700 (PDT)
-In-Reply-To: <AANLkTimzeO6Hou9ob4Z79twUY8RjwH6NP6ndKmoOUrEH@mail.gmail.com>
+Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:60572 "EHLO
+	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933177Ab0JZNtp convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Oct 2010 09:49:45 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: devel@open-fcoe.org
-Cc: linux-scsi@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>, bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, linux-kernel@vger.kernel.org
+Cc: "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-This is the second version, with a fault in the previous version fixed.
+James,
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
+We are waiting for your feedback for patches 2/5 - 5/5.  Did you get the chances to apply them?
+
+Thanks,
+
+Bo Yang
+
+-----Original Message-----
+From: Yang, Bo 
+Sent: Wednesday, October 20, 2010 11:31 AM
+To: Yang, Bo; 'bo yang'; 'linux-scsi@vger.kernel.org'; 'akpm@osdl.org'; 'linux-kernel@vger.kernel.org'; 'James.Bottomley@suse.de'
+Cc: Daftardar, Jayant
+Subject: RE: [PATCH 5/5] scsi: megaraid_sas - Version and documentation update
+
+James,
+
+Did you get the chance to apply megaraid sas driver 2/5 to 5/5 patches?
+
+Thanks,
+
+Bo Yang
+
+-----Original Message-----
+From: Yang, Bo 
+Sent: Tuesday, October 12, 2010 9:22 AM
+To: 'bo yang'; linux-scsi@vger.kernel.org; akpm@osdl.org; linux-kernel@vger.kernel.org; James.Bottomley@suse.de
+Subject: [PATCH 5/5] scsi: megaraid_sas - Version and documentation update
+
+Re-Submit:
+
+Update the version and documentation.
+
+Signed-off-by Bo Yang<bo.yang@lsi.com>
+
 ---
-
---- a/drivers/scsi/libfc/fc_exch.c	2010-09-13 07:07:38.000000000 +0800
-+++ b/drivers/scsi/libfc/fc_exch.c	2010-10-26 21:24:22.000000000 +0800
-@@ -67,6 +67,11 @@ struct workqueue_struct *fc_exch_workque
- struct fc_exch_pool {
- 	u16		 next_index;
- 	u16		 total_exches;
-+
-+	/* stats info against memory leakage */
-+	atomic_t         allocated;
-+	atomic_t         released;
-+
- 	spinlock_t	 lock;
- 	struct list_head ex_list;
- };
-@@ -326,6 +331,7 @@ static void fc_exch_release(struct fc_ex
- 	struct fc_exch_mgr *mp;
-
- 	if (atomic_dec_and_test(&ep->ex_refcnt)) {
-+		atomic_inc(&ep->pool->released);
- 		mp = ep->em;
- 		if (ep->destructor)
- 			ep->destructor(&ep->seq, ep->arg);
-@@ -688,6 +694,7 @@ static struct fc_exch *fc_exch_em_alloc(
- 	}
- 	pool->next_index = index == mp->pool_max_index ? 0 : index + 1;
-
-+	atomic_inc(&pool->allocated);
- 	fc_exch_hold(ep);	/* hold for exch in mp */
- 	spin_lock_init(&ep->ex_lock);
- 	/*
-@@ -1699,6 +1706,14 @@ restart:
- 			goto restart;
- 		}
- 	}
-+
-+	if (atomic_read(&pool->allocated) != atomic_read(&pool->released))
-+		printk(KERN_WARNING "libfc: host %u exch pool %p "
-+			"allocated %d released %d\n",
-+			lport->host->host_no, pool,
-+			atomic_read(&pool->allocated),
-+			atomic_read(&pool->released));
-+
- 	spin_unlock_bh(&pool->lock);
- }
+ Documentation/scsi/ChangeLog.megaraid_sas |   47 ++++++++++++++++++++++++++++++
+ drivers/scsi/megaraid/megaraid_sas.c      |    2 -
+ drivers/scsi/megaraid/megaraid_sas.h      |    6 +--
+ 3 files changed, 51 insertions(+), 4 deletions(-)
