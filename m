@@ -1,65 +1,49 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 5/5] scsi: megaraid_sas - Version and documentation
- update
-Date: Tue, 26 Oct 2010 11:15:08 -0600
-Message-ID: <4B6A08C587958942AA3002690DD4F8C3010119E798@cosmail02.lsi.com>
-References: <AANLkTi=praySm1B3dhU+LxhWK2yUccZkzWpd6-6UERYa@mail.gmail.com>
-	 <4B6A08C587958942AA3002690DD4F8C30100FF9FBB@cosmail02.lsi.com>
- <1288109543.8283.139.camel@mulgrave.site>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: PATCH[1/1] pmcraid driver fix to remove duplicate struct member
+Date: Tue, 26 Oct 2010 19:39:05 +0200
+Message-ID: <20101026173905.GE29961@basil.fritz.box>
+References: <alpine.LNX.1.10.1010251536390.29896@rslab235.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:45981 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758203Ab0JZRPi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2010 13:15:38 -0400
-In-Reply-To: <1288109543.8283.139.camel@mulgrave.site>
-Content-Language: en-US
+Received: from one.firstfloor.org ([213.235.205.2]:35161 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932464Ab0JZRjM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 13:39:12 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.1.10.1010251536390.29896@rslab235.pmc-sierra.bc.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: bo yang <boyang1288@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "akpm@osdl.org" <akpm@osdl.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, andi@firstfloor.org
 
-SmFtZXMsDQoNClRoYW5rcyBmb3IgY29ycmVjdGluZyB0aGF0LiBEaWQgeW91IGFsc28gYXBwbGll
-ZCAyLzUsIDMvNSBhbmQgNC81IHBhdGNoZXM/DQoNCkJ5IHRoZSB3YXksIEkgYWx3YXlzIHVzZSBj
-aGVja3BhdGNoLnBsIHRvIGNoZWNrIHRoZSBwYXRjaCBiZWZvcmUgSSBhdHRhY2ggdGhlIHBhdGNo
-IHRvIHRoZSBlLW1haWwuICBBbHNvIEkganVzdCB3ZW50IHRvIHRoZSA1LzUgcGF0Y2ggdG8gdmVy
-aWZ5IHRoZSBwYXRjaDogdGhlIHN0ZXBzOg0KDQoxLiBnbyB0byAgaHR0cDovL21hcmMuaW5mby8/
-bD1saW51eC1zY3NpJm09MTI4Njg4OTc0MjAxMjAxJnc9MiANCjIuIGNsaWNrOiBbIm1lZ2FzYXMt
-dmVyc2lvbi5wYXRjaCIgKGFwcGxpY2F0aW9uL29jdGV0LXN0cmVhbSldIHRvIGRvd25sb2FkIHRo
-aXMgcGF0Y2guICANCjMuIFVzZWQgdGhlIGNoZWNrcGF0Y2gucGwgdG8gY2hlY2sgKEkgdXNlZCB0
-aGUgY21kOiAiY2hlY2twYXRjaC5wbCAtLW5vLXRyZWUgbWVnYXNhcy12ZXJzaW9uLnBhdGNoIikg
-DQoNCkl0IGxvb2tzIE9LIGZvciBtZSAobm8gZXJyb3JzKS4gIEl0IGlzIG1heWJlIHRoZSBjaGVj
-a3BhdGNoLnBsIEkgdXNlZCBkb2VzIG5vdCBnZXQgdXBkYXRlZCBvciBzb21lIHN0ZXBzIGFyZSBu
-b3QgY29ycmVjdC4gIEkgd2lsbCBmaW5kIG91dCB0aGUgdXBkYXRlZCBvbmUgdG8gdHJ5IGFuZCBm
-aW5kIG91dCB0aGUgcmVhc29ucy4gICANCg0KDQpUaGFua3MsDQoNCkJvIFlhbmcNCg0KDQotLS0t
-LU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWlsdG86SmFt
-ZXMuQm90dG9tbGV5QHN1c2UuZGVdIA0KU2VudDogVHVlc2RheSwgT2N0b2JlciAyNiwgMjAxMCAx
-MjoxMiBQTQ0KVG86IFlhbmcsIEJvDQpDYzogYm8geWFuZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5l
-bC5vcmc7IGFrcG1Ab3NkbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNClN1Ympl
-Y3Q6IFJlOiBbUEFUQ0ggNS81XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBWZXJzaW9uIGFuZCBkb2N1
-bWVudGF0aW9uIHVwZGF0ZQ0KDQpPbiBUdWUsIDIwMTAtMTAtMTIgYXQgMDc6MjEgLTA2MDAsIFlh
-bmcsIEJvIHdyb3RlOg0KPiBSZS1TdWJtaXQ6DQo+IA0KPiBVcGRhdGUgdGhlIHZlcnNpb24gYW5k
-IGRvY3VtZW50YXRpb24uDQoNClRoaXMgaGFzIGFuIGltcHJlc3NpdmUgc2V0IG9mIGNoZWNrcGF0
-Y2ggZmFpbHVyZXM6DQoNCkVSUk9SOiB0cmFpbGluZyB3aGl0ZXNwYWNlDQojMjY6IEZJTEU6IERv
-Y3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzOjEzOg0KK15JVG8gYWRkIHRo
-ZSBPQ1Igc3VwcG9ydCwgZHJpdmVyIG5lZWQgdG8gZG86ICQNCg0KRVJST1I6IHRyYWlsaW5nIHdo
-aXRlc3BhY2UNCiMzMDogRklMRTogRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFp
-ZF9zYXM6MTc6DQorXkleSSQNCg0KRVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UNCiMzNTogRklM
-RTogRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXM6MjI6DQorXkleSSQN
-Cg0KRVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UNCiMzOTogRklMRTogRG9jdW1lbnRhdGlvbi9z
-Y3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXM6MjY6DQorXkleSSQNCg0KRVJST1I6IHRyYWlsaW5n
-IHdoaXRlc3BhY2UNCiM0MzogRklMRTogRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdh
-cmFpZF9zYXM6MzA6DQorXkleSSQNCg0KRVJST1I6IHRyYWlsaW5nIHdoaXRlc3BhY2UNCiM0Njog
-RklMRTogRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXM6MzM6DQorXkle
-SSAkDQoNCkVSUk9SOiB0cmFpbGluZyB3aGl0ZXNwYWNlDQojNDg6IEZJTEU6IERvY3VtZW50YXRp
-b24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzOjM1Og0KK15JXklPQ1IgdG8gc2VlIGlmIGRy
-aXZlciBjYW4gYnJpbmcgYmFjayB0aGUgRlcuICAgICAgJA0KDQpFUlJPUjogdHJhaWxpbmcgd2hp
-dGVzcGFjZQ0KIzU0OiBGSUxFOiBEb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1lZ2FyYWlk
-X3Nhczo0MToNCiszLl5JSW4gZHJpdmVyJ3MgdGltZW91dCByb3V0aW5lLCBkcml2ZXIgd2lsbCBk
-byB0aHJlZSB0aW1lIHJlc2V0IGlmIGZ3DQppcyBpbiAkDQoNCnRvdGFsOiA4IGVycm9ycywgMCB3
-YXJuaW5ncywgNzAgbGluZXMgY2hlY2tlZA0KDQpJJ3ZlIGZpeGVkIGl0IHVwIHRoaXMgdGltZSwg
-YnV0IGNvdWxkIHlvdSBydW4gaXQgdGhyb3VnaCBjaGVja3BhdGNoLnBsDQpuZXh0IHRpbWU/DQoN
-ClRoYW5rcywNCg0KSmFtZXMNCg0KDQo=
+On Mon, Oct 25, 2010 at 03:41:54PM -0700, Anil Ravindranath wrote:
+> 
+> The following patch fixes removal of a duplicate struct member definition.
+> 
+> Signed-off-by: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
+
+Thanks. This fixes the problem for me.
+
+Acked-by: Andi Kleen <ak@linux.intel.com>
+
+-Andi
+
+> 
+> pmcraid.h |    1 -
+>  1 file changed, 1 deletion(-)
+> 
+> --- scsi-misc-2.6.orig/drivers/scsi/pmcraid.h	2010-10-25 17:24:23.000000000 -0700
+> +++ scsi-misc-2.6/drivers/scsi/pmcraid.h	2010-10-25 17:23:51.000000000 -0700
+> @@ -568,7 +568,6 @@
+>  	struct pmcraid_control_block *ioa_cb;
+>  	dma_addr_t ioa_cb_bus_addr;
+>  	dma_addr_t dma_handle;
+> -	u8 *sense_buffer;
+>  
+>  	/* pointer to mid layer structure of SCSI commands */
+>  	struct scsi_cmnd *scsi_cmd;
+> 
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
