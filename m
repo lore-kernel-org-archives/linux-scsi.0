@@ -1,84 +1,92 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] fix id computation in scsi_eh_target_reset()
-Date: Tue, 26 Oct 2010 15:10:24 -0500
-Message-ID: <1288123824.8283.524.camel@mulgrave.site>
-References: <AANLkTin-Tkj3Ab312usO2FWE57m3St2iG2oz881F-Zhw@mail.gmail.com>
-	 <4CBBDC19.1090806@cs.wisc.edu>	<1288040021.5487.826.camel@mulgrave.site>
-	 <AANLkTinoSSJcKX_V+SZRz3trc6i8ozTidAsYPaM120pv@mail.gmail.com>
-	 <4CC7366B.8080203@cs.wisc.edu>
+From: <Shyam_Iyer@Dell.com>
+Subject: RE: [dm-devel] [RESUBMIT][Patch] scsi_dh_rdac: retry IO for
+ 06/3f/03 in rdac_check_sense fn
+Date: Tue, 26 Oct 2010 13:27:21 -0700
+Message-ID: <DBFB1B45AF80394ABD1C807E9F28D1570262E39FBB@BLRX7MCDC203.AMER.DELL.COM>
+References: <B2FD678A64EAAD45B089B123FDFC3ED704BFE578@inbmail01.lsi.com>
+	 <4CC7299E.2030508@cs.wisc.edu> <1288120911.8283.441.camel@mulgrave.site>
+	 <DBFB1B45AF80394ABD1C807E9F28D1570262E39FAA@BLRX7MCDC203.AMER.DELL.COM>
+ <1288123139.8283.509.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53623 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751529Ab0JZUK2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2010 16:10:28 -0400
-In-Reply-To: <4CC7366B.8080203@cs.wisc.edu>
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:24013 "EHLO
+	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758971Ab0JZU1m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 16:27:42 -0400
+In-Reply-To: <1288123139.8283.509.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Hillf Danton <dhillf@gmail.com>, linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: michaelc@cs.wisc.edu, dm-devel@redhat.com, Vijay.Chauhan@lsi.com, jejb@kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2010-10-26 at 15:13 -0500, Mike Christie wrote:
-> I was not sure if you are in a rush to get this in.
-
-No real rush ... although technically it's an enhancement rather than a
-bug fix ...
-
->  I have been testing 
-> it, but am hitting a bug below. This does not seem to be related to your 
-> patch. I am hitting it with or without your patch.
-> 
-> Your patch looks ok, and it seems to work.
-> 
-> 
-> Oct 27 07:51:11 noisymax kernel: ------------[ cut here ]------------
-> Oct 27 07:51:11 noisymax kernel: WARNING: at lib/list_debug.c:30 
-> __list_add+0x8f/0xa0()
-> Oct 27 07:51:11 noisymax kernel: Hardware name: X7DB8
-> Oct 27 07:51:11 noisymax kernel: list_add corruption. prev->next should 
-> be next (ffff88013e86be50), but was ffff88012b7d2518. 
-> (prev=ffff88012b7d2518).
-> Oct 27 07:51:11 noisymax kernel: Modules linked in: bnx2i cnic uio 
-> autofs4 fcoe libfcoe libfc ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 
-> iptable_filter ip_tables ip6t_REJECT xt_tcpudp nf_conntrack_ipv6 
-> nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables x_tables 
-> ipv6 ib_mthca ib_mad ib_core e1000e be2iscsi iscsi_boot_sysfs libiscsi 
-> scsi_transport_iscsi bnx2x crc32c libcrc32c mdio be2net 8250_pnp 8250 
-> serial_core shpchp button lpfc qla2xxx scsi_transport_fc [last unloaded: 
-> mperf]
-> Oct 27 07:51:11 noisymax kernel: Pid: 3076, comm: scsi_eh_12 Not tainted 
-> 2.6.36+ #2
-> Oct 27 07:51:11 noisymax kernel: Call Trace:
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff8104103a>] 
-> warn_slowpath_common+0x7a/0xb0
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff81041111>] 
-> warn_slowpath_fmt+0x41/0x50
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff812bf180>] ? dev_printk+0x40/0x50
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff8122e6df>] __list_add+0x8f/0xa0
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff812d2bd6>] 
-> scsi_eh_finish_cmd+0x36/0x40
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff812d3600>] 
-> scsi_eh_ready_devs+0x320/0x860
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff812d41c4>] 
-> scsi_error_handler+0x4a4/0x640
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff812d3d20>] ? 
-> scsi_error_handler+0x0/0x640
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff81062af6>] kthread+0x96/0xa0
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff81003bd4>] 
-> kernel_thread_helper+0x4/0x10
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff813ed180>] ? 
-> restore_args+0x0/0x30
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff81062a60>] ? kthread+0x0/0xa0
-> Oct 27 07:51:11 noisymax kernel: [<ffffffff81003bd0>] ? 
-> kernel_thread_helper+0x0/0x10
-> Oct 27 07:51:11 noisymax kernel: ---[ end trace 74b14fae9ff067be ]---
-
-This looks like it could possibly be a removal race error (like the one
-there's a fix in scsi-misc for) ... what was going on on the box at the
-time?
-
-James
-
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
+aWx0bzpKYW1lcy5Cb3R0b21sZXlAc3VzZS5kZV0NCj4gU2VudDogVHVlc2RheSwgT2N0b2JlciAy
+NiwgMjAxMCAzOjU5IFBNDQo+IFRvOiBJeWVyLCBTaHlhbQ0KPiBDYzogbWljaGFlbGNAY3Mud2lz
+Yy5lZHU7IGRtLWRldmVsQHJlZGhhdC5jb207IFZpamF5LkNoYXVoYW5AbHNpLmNvbTsgamVqYkBr
+ZXJuZWwub3JnOyBsaW51eC0NCj4gc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUkU6
+IFtkbS1kZXZlbF0gW1JFU1VCTUlUXVtQYXRjaF0gc2NzaV9kaF9yZGFjOiByZXRyeSBJTyBmb3Ig
+MDYvM2YvMDMgaW4gcmRhY19jaGVja19zZW5zZSBmbg0KPiANCj4gT24gV2VkLCAyMDEwLTEwLTI3
+IGF0IDAxOjAyICswNTMwLCBTaHlhbV9JeWVyQERlbGwuY29tIHdyb3RlOg0KPiA+IC0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2Vy
+bmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhh
+bGYgT2YNCj4gSmFtZXMNCj4gPiA+IEJvdHRvbWxleQ0KPiA+ID4gU2VudDogVHVlc2RheSwgT2N0
+b2JlciAyNiwgMjAxMCAzOjIyIFBNDQo+ID4gPiBUbzogTWlrZSBDaHJpc3RpZQ0KPiA+ID4gQ2M6
+IGRldmljZS1tYXBwZXIgZGV2ZWxvcG1lbnQ7IENoYXVoYW4sIFZpamF5OyBKYW1lcyBCb3R0b21s
+ZXk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQo+ID4gPiBTdWJqZWN0OiBSZTogW2RtLWRl
+dmVsXSBbUkVTVUJNSVRdW1BhdGNoXSBzY3NpX2RoX3JkYWM6IHJldHJ5IElPIGZvciAwNi8zZi8w
+MyBpbiByZGFjX2NoZWNrX3NlbnNlDQo+IGZuDQo+ID4gPg0KPiA+ID4gT24gVHVlLCAyMDEwLTEw
+LTI2IGF0IDE0OjE4IC0wNTAwLCBNaWtlIENocmlzdGllIHdyb3RlOg0KPiA+ID4gPiBPbiAxMC8y
+Ni8yMDEwIDA4OjUzIEFNLCBDaGF1aGFuLCBWaWpheSB3cm90ZToNCj4gPiA+ID4gPiBSZXN1Ym1p
+dHRpbmcgdGhpcyBwYXRjaCB0byBnZXQgdGhlIGF0dGVudGlvbi4NCj4gPiA+ID4gPg0KPiA+ID4g
+PiA+IFRoaXMgcGF0Y2ggYWRkcyByZXRyeSBmb3IgdGhlIElPIHJldHVybmVkIHdpdGggMDYvM2Yv
+MDMoKElOUVVJUllfREFUQV9DSEFOR0VEKSkgc2Vuc2UgY29kZSAgaW4NCj4gPiA+IHJkYWNfY2hl
+Y2tfc2Vuc2UoKS4gSU8gcmV0dXJuZWQgd2l0aCAwNi8zZi8wMyBmcm9tIGNvbnRyb2xsZXIgYXJl
+IGN1cnJlbnRseSBmYWlsZWQgYnkgc2NzaSBtaWQNCj4gbGF5ZXIsDQo+ID4gPiBhcyBhIHJlYXNv
+biBtb21lbnRhcmlseSBwYXRoIGZhaWx1cmUgaXMgbm90aWNlZCBieSBETSBtdWx0aXBhdGguDQo+
+ID4gPiA+ID4NCj4gPiA+ID4NCj4gPiA+ID4gSXMgaXQgZ2V0dGluZyBmYWlsZWQgYnkgYWNjaWRl
+bnQ/IEluIHNjc2lfaW9fY29tcGxldGlvbiB3ZSBjaGVjayBmb3IgVUFzDQo+ID4gPiA+IGFuZCB3
+aWxsIHJldHJ5IGlmIHRoZSByZW1vdmFibGUgYml0IGlzIG5vdCBzZXQuIFRoYXQgY2hlY2sgaXMg
+YWZ0ZXINCj4gPiA+ID4gc2NzaV9lbmRfcmVxdWVzdCB0aG91Z2ggKGlzIHRoZSBzY3NpX2VuZF9y
+ZXF1ZXN0IGNhbGwgZmFpbGluZyB0aGUgSU8pLg0KPiA+ID4gPg0KPiA+ID4gPiBEaWQgeW91IGd1
+eXMgYWxzbyB3YW50IFJFUE9SVEVEX0xVTlNfREFUQV9IQVNfQ0hBTkdFRCB0byBiZSByZXRyaWVk
+IHRvby4NCj4gPiA+ID4gSSB0aGluayBzY3NpX2RoX2FsdWEncyBSRVBPUlRFRF9MVU5TX0RBVEFf
+SEFTX0NIQU5HRUQgbWF5YmUgc2hvdWxkIGJlDQo+ID4gPiA+IGdlbmVyaWNseSByZXRyaWVkLCBi
+ZWNhdXNlIGl0IHNlZW1zIGZvciBib3RoIGVycm9ycyB3ZSB3aWxsIHdhbnQgdG8NCj4gPiA+ID4g
+cmV0cnkgZm9yIGFsbCBkZXZpY2VzLg0KPiA+ID4NCj4gPiA+IFNvIG15IHByaW1hcnkgd29ycnkg
+YWJvdXQgcGF0Y2hlcyBsaWtlIHRoaXMgaXMgdGhhdCBpdCBlYXRzIEFFTnMgLi4uDQo+ID4gPiB0
+aGlzIGlzIGZpbmUgYmVjYXVzZSwgYXMgTWlrZSBzYXlzLCB3ZSBzaG91bGQganVzdCBpZ25vcmUg
+dGhlbS4NCj4gPiA+DQo+ID4gPiBIb3dldmVyLCB0aGUgbW9tZW50IHdlIHN0YXJ0IHByb2Nlc3Np
+bmcgQUVOcyAoYXMgYW5vdGhlciBzZXQgb2YgZG0NCj4gPiA+IHBlb3BsZSBwcm9taXNlIHRoZXkg
+aGF2ZSBpbiBwcm9jZXNzKSB3ZSdsbCBsb3NlIHRoZW0gZnJvbSByZGFjIGFycmF5cw0KPiA+ID4g
+YW5kIHBlb3BsZSB3aWxsIGdldCB1bmhhcHB5Lg0KPiA+ID4NCj4gPiA+IElmIHRoZSBnZW5lcmlj
+IFVBIHJldHJ5IGlzbid0IHdvcmtpbmcsIGxldCdzIGZpeCBpdCB0aGVyZSByYXRoZXIgdGhhbg0K
+PiA+ID4gdGhlc2UgaGFja3MgdGhhdCB3b3VsZCBiZSBoYXJkIHRvIHNwb3QgYW5kIHB1bGwgb3V0
+IHdoZW4gKGlmKSB3ZSBldmVyDQo+ID4gPiBnZXQgYSBnZW5lcmljIEFFTiBpbmZyYXN0cnVjdHVy
+ZS4NCj4gPiA+DQo+ID4gPiBKYW1lcw0KPiA+DQo+ID4gU29tZXRpbWVzIHRoZSBkZWZhdWx0IHdh
+eSB0byBoYW5kbGUgYSBVQSBtYXkgYmUgbm90IHRoZSBjb3JyZWN0IG9uZS4NCj4gPiBPbmUgYXJy
+YXlzIGltcGxlbWVudGF0aW9uIHRvIHJlc3BvbmQgdG8gdGhlIFVBIGNvdWxkIGJlIGRpZmZlcmVu
+dCBmcm9tDQo+ID4gYW5vdGhlciBhcnJheS4NCj4gDQo+IEkgZG9uJ3QgcXVpdGUgdW5kZXJzdGFu
+ZCB0aGlzIG9ic2VydmF0aW9uIGluIHRoZSBjb250ZXh0IG9mIHRoaXMgcGF0Y2guDQo+IFdoYXQg
+dGhlIHBhdGNoIGRvZXMgaXMgcmV0cnkgdGhlIGNvbW1hbmQgKGkuZS4gaWdub3JlIHRoZSBVQSkg
+d2hpY2gNCj4gc2hvdWxkIHByZXR0eSBtdWNoIGJlIG91ciBkZWZhdWx0IHJlc3BvbnNlLg0KPiAN
+Cg0KT2JzZXJ2YXRpb24gaW4gdGhpcyBjb250ZXh0IGlzIGJhc2VkIG9uIHRoZSBtb3ZlIGhlcmUg
+dG8gbWFrZSBVQSBoYW5kbGluZyBnZW5lcmljLg0KIA0KPiA+IEV4YW1wbGU6IEEgdGhpbiBwcm92
+aXNpb25pbmcgdGhyZXNob2xkIGV4Y2VlZCBjaGVjayBjb25kaXRpb24uIFRoZQ0KPiA+IGRldmlj
+ZSBoYW5kbGVyIGluZnJhc3RydWN0dXJlIGNhbiBiZSBhIHNhdmlvciB3aXRoIHN1Y2ggaGFja3Mu
+Lg0KPiANCj4gSSdtIGdvaW5nIHRvIHJlZ3JldCBhc2tpbmcgdGhpcyAoZXNwZWNpYWxseSBnaXZl
+biBhbGwgdGhlIG5vaXNlIHRoZXJlJ3MNCj4gYmVlbiBvbiB0aGluIHByb3Zpc2lvbmluZyB0aHJl
+c2hvbGRzKTogIFdoaWNoIGFycmF5cyBkb24ndCBhY3R1YWxseQ0KPiBpc3N1ZSB0aGVtIGNvcnJl
+Y3RseT8NCj4gDQoNCg0KSXRzIG5vdCBhIHF1ZXN0aW9uIG9mIGNvcnJlY3QgdnMgaW5jb3JyZWN0
+LiBUaGUgaW1wbGVtZW50YXRpb24gZGV0YWlsIG9mIGhvdyBhIHRoaW4gcHJvdmlzaW9uaW5nIHRo
+cmVzaG9sZCBVQSBzaG91bGQgYmUgaGFuZGxlZCBpcyBvdXRzaWRlIHRoZSBzY29wZSBvZiBUMTAg
+YW5kIHNvIHRoZXJlIGFyZSBkaWZmZXJlbnQgYXJjaGl0ZWN0dXJlcyB3aGljaCBkZWFsIHdpdGgg
+dGhpcyBzaXR1YXRpb24gZGlmZmVyZW50bHkuIFZpZXdpbmcgdGhlbSBhbGwgd2l0aCB0aGUgc2Ft
+ZSBwcmlzbSBtYXkgY2F1c2UgaXNzdWVzLg0KDQpUaGUgc3BlYyBvbmx5IHNheXMgaXQgc2hvdWxk
+IGJlIHJldHJpZWQuLiBhbmQgbm8gbW9yZS4gV2hhdCBhZG1pbmlzdHJhdGl2ZSBhY3Rpb25zIG5l
+ZWQgdG8gYmUgdGFrZW4gYmFzZWQgb24gdGhlIGV2ZW50IGlzIG91dHNpZGUgdGhlIHNjb3BlIG9m
+IFQxMC4uLg0KDQpJdCBpcyBtb3JlIG9mIGEgZmxleGliaWxpdHkgdG8gaGFuZGxlIHRoZSByZXRy
+aWVzIGJhc2VkIG9uIHRoZSBhcnJheSBhcmNoaXRlY3R1cmUuLg0KDQoNClNoeWFtDQoNCj4gSmFt
+ZXMNCj4gDQoNCg==
