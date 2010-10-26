@@ -1,49 +1,130 @@
-From: Andi Kleen <andi@firstfloor.org>
-Subject: Re: PATCH[1/1] pmcraid driver fix to remove duplicate struct member
-Date: Tue, 26 Oct 2010 19:39:05 +0200
-Message-ID: <20101026173905.GE29961@basil.fritz.box>
-References: <alpine.LNX.1.10.1010251536390.29896@rslab235.pmc-sierra.bc.ca>
+From: Mike Waychison <mikew@google.com>
+Subject: Re: 2.6.36: Dropped interrupts in ata_piix
+Date: Tue, 26 Oct 2010 11:08:10 -0700
+Message-ID: <4CC7190A.8080500@google.com>
+References: <4CC5C8C4.8010602@google.com> <4CC6A653.4070701@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:35161 "EHLO
-	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932464Ab0JZRjM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 13:39:12 -0400
-Content-Disposition: inline
-In-Reply-To: <alpine.LNX.1.10.1010251536390.29896@rslab235.pmc-sierra.bc.ca>
+Received: from smtp-out.google.com ([74.125.121.35]:39475 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933308Ab0JZSIQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 14:08:16 -0400
+Received: from kpbe14.cbf.corp.google.com (kpbe14.cbf.corp.google.com [172.25.105.78])
+	by smtp-out.google.com with ESMTP id o9QI8DiG000432
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2010 11:08:14 -0700
+Received: from pxi10 (pxi10.prod.google.com [10.243.27.10])
+	by kpbe14.cbf.corp.google.com with ESMTP id o9QI8C5g008716
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2010 11:08:12 -0700
+Received: by pxi10 with SMTP id 10so1961847pxi.15
+        for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2010 11:08:12 -0700 (PDT)
+In-Reply-To: <4CC6A653.4070701@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, andi@firstfloor.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
 
-On Mon, Oct 25, 2010 at 03:41:54PM -0700, Anil Ravindranath wrote:
+Tejun Heo wrote:
+> (cc'ing linux-ide)
 > 
-> The following patch fixes removal of a duplicate struct member definition.
+> Hello,
 > 
-> Signed-off-by: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
+> On 10/25/2010 08:13 PM, Mike Waychison wrote:
+>> I'm having problems reliably booting 2.6.36 on one of my development
+>> systems whereby it looks like the ata_piix driver isn't
+>> acknowledging interrupts.
+> 
+> Why do you think ata_piix isn't ack'ing IRQs?
 
-Thanks. This fixes the problem for me.
-
-Acked-by: Andi Kleen <ak@linux.intel.com>
-
--Andi
+Well, it's the only thing in the logs marked up as using IRQ 20.
 
 > 
-> pmcraid.h |    1 -
->  1 file changed, 1 deletion(-)
+>> I went through a bit of the recent history here, and it seems that
+>> things clear up for me if I revert the following two commits in my
+>> tree:
+>>
+>> 1c5afdf7 "libata-sff: separate out BMDMA init"
+>> c3b28894 "libata-sff: separate out BMDMA irq handler"
 > 
-> --- scsi-misc-2.6.orig/drivers/scsi/pmcraid.h	2010-10-25 17:24:23.000000000 -0700
-> +++ scsi-misc-2.6/drivers/scsi/pmcraid.h	2010-10-25 17:23:51.000000000 -0700
-> @@ -568,7 +568,6 @@
->  	struct pmcraid_control_block *ioa_cb;
->  	dma_addr_t ioa_cb_bus_addr;
->  	dma_addr_t dma_handle;
-> -	u8 *sense_buffer;
->  
->  	/* pointer to mid layer structure of SCSI commands */
->  	struct scsi_cmnd *scsi_cmd;
-> 
+> Those commits look scary but they're code refactoring in nature and
+> unless I screwed up (definitely possible) things shouldn't break over
+> them.  Another thing is that they have been in mainline for quite some
+> time and even shipped with ubuntu 10.10 and this is the first report,
+> so I'm a bit skeptical they actually are the culprit.
 
--- 
-ak@linux.intel.com -- Speaking for myself only.
+Ya, I don't see how they change anything either, but I can't pretend to 
+really understand what is going on in this code either :(
+
+> 
+>> I usually don't get a trace, but I did get this blurted out once on
+>> the console:
+>>
+>> kinit: Mounted root (ext2 filesystem) readonly.
+>> INIT: version 2.78 booting
+>> [    5.419165] irq 20: nobody cared (try booting with the "irqpoll" option)
+>> [    5.420140] Pid: 0, comm: kworker/0:1 Not tainted 2.6.36-smp-mikew #5gca29cdd
+>> [    5.420140] Call Trace:
+>> [    5.420140]  <IRQ>  [<ffffffff810b207f>] __report_bad_irq+0x3d/0x8c
+>> [    5.420140]  [<ffffffff810b21e6>] note_interrupt+0x118/0x17e
+>> [    5.420140]  [<ffffffff810b29be>] handle_fasteoi_irq+0xa7/0xcc
+>> [    5.420140]  [<ffffffff81032da5>] handle_irq+0x24/0x2f
+>> [    5.420140]  [<ffffffff81453744>] do_IRQ+0x5c/0xc3
+>> [    5.420140]  [<ffffffff8144d853>] ret_from_intr+0x0/0xa
+>> [    5.420140]  <EOI>  [<ffffffff81037a64>] ? mwait_idle+0x93/0x9b
+>> [    5.420140]  [<ffffffff81037a0a>] ? mwait_idle+0x39/0x9b
+>> [    5.420140]  [<ffffffff8102faee>] cpu_idle+0x63/0xd5
+>> [    5.420140]  [<ffffffff8193d340>] start_secondary+0x192/0x196
+>> [    5.420140] handlers:
+>> [    5.420140] [<ffffffff812e26e6>] (ata_bmdma_interrupt+0x0/0x17)
+>> [    5.420140] Disabling IRQ #20
+>> [   34.720103] ata1: lost interrupt (Status 0x51)
+>> [   34.724569] ata1.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+>> [   34.731612] ata1.00: BMDMA stat 0x26, BMDMA stat 0x0, BMDMA stat 0x0, BMDMA stat 0x0, BMDMA stat 0x0
+>> [   34.740750] ata1.00: failed command: READ DMA
+>> [   34.745115] ata1.00: cmd c8/00:a0:f7:78:09/00:00:00:00:00/e0 tag 0 dma 81920 in
+>> [   34.745116]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask 0x24 (host bus error)
+> 
+> Hmm... this is interesting.  The IRQ storm happened while a read
+> command was in progress.  BMDMA indicates that host bus error occurred
+> (the DMA controller experienced transfer failure on the PCI side while
+> trying to write to main memory).  It's curious why the interrupt
+> handler thought the IRQ wasn't its.  ata_bmdma_port_intr() should have
+> noticed ATA_DMA_INTR and the command should have been completed
+> immediately, weird.
+
+To be clear, usually all I see on the console when hanging is:
+
+[   15.411337] Disabling IRQ #20
+
+I've only ever had the above call trace make it out to console once.
+
+Sometimes this happens while mounting the root filesystem, mounting the 
+second filesystem (on the same disk) or while loading modules.  I don't 
+think the failure is tied to any particular sector.
+
+I don't have any trouble with previous kernels (2.6.34 was fine), and 
+backing out the above two commits makes the symptom go away.
+
+> 
+>> [   34.760490] ata1.00: status: { DRDY }
+>> [   34.764180] ata1: soft resetting link
+>> [   35.143059] ata1.00: configured for UDMA/133
+>> [   35.147332] ata1.00: device reported invalid CHS sector 0
+>> [   35.152730] ata1: EH complete
+>>
+>> As you can see above, something looks to be wrong with ata_bmdma_interrupt.
+>>
+>> Have you seen this problem before?
+> 
+> No, this is the first time and your hardware seems to be developing an
+> interesting issue.  I suggest trying a different PSU if you have one
+> available.  That said, it would still be useful to track down why the
+> error handling isn't working as expected.  How reliably can you
+> reproduce the problem?
+
+
+I can reproduce very reliably on this machine in particular.  I have 
+other machines of similar type that seem to be fine (though I need to 
+dig into the test result database to be sure).  I'd be happy to try any 
+suggestions on this machine.
