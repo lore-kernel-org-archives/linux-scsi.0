@@ -1,39 +1,61 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] libsas: do not return error for table2table link
-Date: Tue, 26 Oct 2010 14:34:34 -0500
-Message-ID: <1288121674.8283.476.camel@mulgrave.site>
-References: <646EF126DF5645B48AF69E3E459A1CB7@usish.com.cn>
+From: <Shyam_Iyer@Dell.com>
+Subject: RE: [dm-devel] [RESUBMIT][Patch] scsi_dh_rdac: retry IO for
+ 06/3f/03 in rdac_check_sense fn
+Date: Wed, 27 Oct 2010 01:02:41 +0530
+Message-ID: <DBFB1B45AF80394ABD1C807E9F28D1570262E39FAA@BLRX7MCDC203.AMER.DELL.COM>
+References: <B2FD678A64EAAD45B089B123FDFC3ED704BFE578@inbmail01.lsi.com>
+	 <4CC7299E.2030508@cs.wisc.edu> <1288120911.8283.441.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:52809 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752893Ab0JZTeo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Oct 2010 15:34:44 -0400
-In-Reply-To: <646EF126DF5645B48AF69E3E459A1CB7@usish.com.cn>
+Received: from ausxipps301.us.dell.com ([143.166.148.223]:55491 "EHLO
+	ausxipps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752893Ab0JZTeq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2010 15:34:46 -0400
+In-Reply-To: <1288120911.8283.441.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jack Wang <jack_wang@usish.com>
-Cc: 'tom_peng' <tom_peng@usish.com>, 'lindar_liu' <lindar_liu@usish.com>, 'roy' <roy_wang@usish.com>, linux-scsi@vger.kernel.org, "'Darrick J. Wong'" <djwong@us.ibm.com>
+To: James.Bottomley@suse.de, michaelc@cs.wisc.edu
+Cc: dm-devel@redhat.com, Vijay.Chauhan@lsi.com, jejb@kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2010-10-06 at 17:13 +0800, Jack Wang wrote:
-> Hi, all
-> 
-> In SAS2 spec table to table link is allowed and useful in self-configurable
-> topology, so we should not return error for this.
-> 
-> Jack
-
-So I'm not against this type of patch in principle ... we do need to add
-support for SAS-2 expanders.  However, the table to table configuration
-is illegal and non-functional for SAS-1 expanders, so we can't just drop
-it globally; it's also optional in SAS-2 not mandatory.  We can tell if
-an expander supports table to table routing from byte 10 in the report
-general response ... this type of check should be keyed off that.  [As
-should probably a whole host of other things, such as not trying to
-construct the routing table if the expander is self configuring].
-
-James
-
-
+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGxpbnV4LXNjc2ktb3duZXJAdmdl
+ci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtc2NzaS1vd25lckB2Z2VyLmtlcm5lbC5vcmddIE9u
+IEJlaGFsZiBPZiBKYW1lcw0KPiBCb3R0b21sZXkNCj4gU2VudDogVHVlc2RheSwgT2N0b2JlciAy
+NiwgMjAxMCAzOjIyIFBNDQo+IFRvOiBNaWtlIENocmlzdGllDQo+IENjOiBkZXZpY2UtbWFwcGVy
+IGRldmVsb3BtZW50OyBDaGF1aGFuLCBWaWpheTsgSmFtZXMgQm90dG9tbGV5OyBsaW51eC1zY3Np
+QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZTogW2RtLWRldmVsXSBbUkVTVUJNSVRdW1Bh
+dGNoXSBzY3NpX2RoX3JkYWM6IHJldHJ5IElPIGZvciAwNi8zZi8wMyBpbiByZGFjX2NoZWNrX3Nl
+bnNlIGZuDQo+IA0KPiBPbiBUdWUsIDIwMTAtMTAtMjYgYXQgMTQ6MTggLTA1MDAsIE1pa2UgQ2hy
+aXN0aWUgd3JvdGU6DQo+ID4gT24gMTAvMjYvMjAxMCAwODo1MyBBTSwgQ2hhdWhhbiwgVmlqYXkg
+d3JvdGU6DQo+ID4gPiBSZXN1Ym1pdHRpbmcgdGhpcyBwYXRjaCB0byBnZXQgdGhlIGF0dGVudGlv
+bi4NCj4gPiA+DQo+ID4gPiBUaGlzIHBhdGNoIGFkZHMgcmV0cnkgZm9yIHRoZSBJTyByZXR1cm5l
+ZCB3aXRoIDA2LzNmLzAzKChJTlFVSVJZX0RBVEFfQ0hBTkdFRCkpIHNlbnNlIGNvZGUgIGluDQo+
+IHJkYWNfY2hlY2tfc2Vuc2UoKS4gSU8gcmV0dXJuZWQgd2l0aCAwNi8zZi8wMyBmcm9tIGNvbnRy
+b2xsZXIgYXJlIGN1cnJlbnRseSBmYWlsZWQgYnkgc2NzaSBtaWQgbGF5ZXIsDQo+IGFzIGEgcmVh
+c29uIG1vbWVudGFyaWx5IHBhdGggZmFpbHVyZSBpcyBub3RpY2VkIGJ5IERNIG11bHRpcGF0aC4N
+Cj4gPiA+DQo+ID4NCj4gPiBJcyBpdCBnZXR0aW5nIGZhaWxlZCBieSBhY2NpZGVudD8gSW4gc2Nz
+aV9pb19jb21wbGV0aW9uIHdlIGNoZWNrIGZvciBVQXMNCj4gPiBhbmQgd2lsbCByZXRyeSBpZiB0
+aGUgcmVtb3ZhYmxlIGJpdCBpcyBub3Qgc2V0LiBUaGF0IGNoZWNrIGlzIGFmdGVyDQo+ID4gc2Nz
+aV9lbmRfcmVxdWVzdCB0aG91Z2ggKGlzIHRoZSBzY3NpX2VuZF9yZXF1ZXN0IGNhbGwgZmFpbGlu
+ZyB0aGUgSU8pLg0KPiA+DQo+ID4gRGlkIHlvdSBndXlzIGFsc28gd2FudCBSRVBPUlRFRF9MVU5T
+X0RBVEFfSEFTX0NIQU5HRUQgdG8gYmUgcmV0cmllZCB0b28uDQo+ID4gSSB0aGluayBzY3NpX2Ro
+X2FsdWEncyBSRVBPUlRFRF9MVU5TX0RBVEFfSEFTX0NIQU5HRUQgbWF5YmUgc2hvdWxkIGJlDQo+
+ID4gZ2VuZXJpY2x5IHJldHJpZWQsIGJlY2F1c2UgaXQgc2VlbXMgZm9yIGJvdGggZXJyb3JzIHdl
+IHdpbGwgd2FudCB0bw0KPiA+IHJldHJ5IGZvciBhbGwgZGV2aWNlcy4NCj4gDQo+IFNvIG15IHBy
+aW1hcnkgd29ycnkgYWJvdXQgcGF0Y2hlcyBsaWtlIHRoaXMgaXMgdGhhdCBpdCBlYXRzIEFFTnMg
+Li4uDQo+IHRoaXMgaXMgZmluZSBiZWNhdXNlLCBhcyBNaWtlIHNheXMsIHdlIHNob3VsZCBqdXN0
+IGlnbm9yZSB0aGVtLg0KPiANCj4gSG93ZXZlciwgdGhlIG1vbWVudCB3ZSBzdGFydCBwcm9jZXNz
+aW5nIEFFTnMgKGFzIGFub3RoZXIgc2V0IG9mIGRtDQo+IHBlb3BsZSBwcm9taXNlIHRoZXkgaGF2
+ZSBpbiBwcm9jZXNzKSB3ZSdsbCBsb3NlIHRoZW0gZnJvbSByZGFjIGFycmF5cw0KPiBhbmQgcGVv
+cGxlIHdpbGwgZ2V0IHVuaGFwcHkuDQo+IA0KPiBJZiB0aGUgZ2VuZXJpYyBVQSByZXRyeSBpc24n
+dCB3b3JraW5nLCBsZXQncyBmaXggaXQgdGhlcmUgcmF0aGVyIHRoYW4NCj4gdGhlc2UgaGFja3Mg
+dGhhdCB3b3VsZCBiZSBoYXJkIHRvIHNwb3QgYW5kIHB1bGwgb3V0IHdoZW4gKGlmKSB3ZSBldmVy
+DQo+IGdldCBhIGdlbmVyaWMgQUVOIGluZnJhc3RydWN0dXJlLg0KPiANCj4gSmFtZXMNCg0KU29t
+ZXRpbWVzIHRoZSBkZWZhdWx0IHdheSB0byBoYW5kbGUgYSBVQSBtYXkgYmUgbm90IHRoZSBjb3Jy
+ZWN0IG9uZS4gT25lIGFycmF5cyBpbXBsZW1lbnRhdGlvbiB0byByZXNwb25kIHRvIHRoZSBVQSBj
+b3VsZCBiZSBkaWZmZXJlbnQgZnJvbSBhbm90aGVyIGFycmF5Lg0KDQpFeGFtcGxlOiBBIHRoaW4g
+cHJvdmlzaW9uaW5nIHRocmVzaG9sZCBleGNlZWQgY2hlY2sgY29uZGl0aW9uLiBUaGUgZGV2aWNl
+IGhhbmRsZXIgaW5mcmFzdHJ1Y3R1cmUgY2FuIGJlIGEgc2F2aW9yIHdpdGggc3VjaCBoYWNrcy4u
+IA0KDQotU2h5YW0NCg==
