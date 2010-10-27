@@ -1,147 +1,73 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: sym53c8xx_2 data corruption
-Date: Wed, 27 Oct 2010 11:37:16 -0500
-Message-ID: <1288197436.6886.3.camel@mulgrave.site>
-References: <20101027012932.3CB6E4FB4@hiauly1.hia.nrc.ca>
-	 <1288155041.19649.354.camel@mulgrave.site>
-	 <alpine.DEB.1.10.1010271059230.31946@artax.karlin.mff.cuni.cz>
-	 <1288190807.4692.30.camel@mulgrave.site>
-	 <alpine.DEB.1.10.1010271803010.18202@artax.karlin.mff.cuni.cz>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [ANNOUNCE] Status of unlocked_qcmds=1 operation for .37
+Date: Wed, 27 Oct 2010 11:03:34 -0700
+Message-ID: <1288202614.5169.197.camel@haakon2.linux-iscsi.org>
+References: <1287607774.10283.78.camel@haakon2.linux-iscsi.org>
+	 <20101021150840.GA24309@linux.vnet.ibm.com>
+	 <1288130914.5169.97.camel@haakon2.linux-iscsi.org>
+	 <1288132071.8283.689.camel@mulgrave.site>
+	 <1288132464.5169.112.camel@haakon2.linux-iscsi.org>
+	 <1288133450.8283.723.camel@mulgrave.site>
+	 <1288134048.5169.132.camel@haakon2.linux-iscsi.org>
+	 <1288134713.19649.11.camel@mulgrave.site>
+	 <1288135918.5169.149.camel@haakon2.linux-iscsi.org>
+	 <20101027075349.GA32585@gargoyle.fritz.box>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:48122 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751591Ab0J0QhS (ORCPT
+Received: from nm8.bullet.mail.ac4.yahoo.com ([98.139.52.205]:44915 "HELO
+	nm8.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754126Ab0J0SId (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Oct 2010 12:37:18 -0400
-In-Reply-To: <alpine.DEB.1.10.1010271803010.18202@artax.karlin.mff.cuni.cz>
+	Wed, 27 Oct 2010 14:08:33 -0400
+In-Reply-To: <20101027075349.GA32585@gargoyle.fritz.box>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-Cc: linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, matthew@wil.cx
+To: Andi Kleen <ak@linux.intel.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Mike Anderson <andmike@linux.vnet.ibm.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "H. Peter Anvin" <hpa@zytor.com>
 
-On Wed, 2010-10-27 at 18:19 +0200, Mikulas Patocka wrote:
+On Wed, 2010-10-27 at 09:53 +0200, Andi Kleen wrote:
+> > This sounds like a pretty reasonable compromise that I think is slightly
+> > less risky for the LLDs with the ghosts and cob-webs hanging off of
+> > them.
 > 
-> On Wed, 27 Oct 2010, James Bottomley wrote:
+> They won't get tested either next release cycle. Essentially
+> near nobody uses them.
 > 
-> > On Wed, 2010-10-27 at 11:04 +0200, Mikulas Patocka wrote:
-> > > Hi
-> > > 
-> > > I sent this about twice to linux-scsi and got no reseponse, neither from 
-> > > conference nor from Matthew. So I'm sending it here, James, you are the 
-> > > maintainer of SCSI, could you please look at the patch and incorporate it 
-> > > to the kernel in this cycle?
-> > > 
-> > > The problem is that if the disk returns QUEUE FULL, the requests are 
-> > > aborted with DID_SOFT_ERROR (rather than DID_REQUEUE), which results in 
-> > > too few retries and premature errors. The errors happen mostly on writes, 
-> > > resulting in data corruption.
-> > > 
-> > > Mikulas
-> > > 
-> > > ---
-> > > 
-> > > sym53c8xx_2: Set DID_REQUEUE return code when aborting squeue.
-> > > 
-> > > When the controller encounters an error (including QUEUE FULL or BUSY status),
-> > > it aborts all not yet submitted requests in the function
-> > > sym_dequeue_from_squeue.
-> > > 
-> > > This function aborts them with DID_SOFT_ERROR.
-> > > 
-> > > If the disk has a full tag queue, the request that caused the overflow is
-> > > aborted with QUEUE FULL status (and the scsi midlayer properly retries it
-> > > until it is accepted by the disk), but other requests are aborted with
-> > > DID_SOFT_ERROR --- for them, the midlayer does just a few retries and then
-> > > signals the error up to sd.
-> > > 
-> > > The result is that disk returning QUEUE FULL causes request failures.
-> > > 
-> > > The error was reproduced on 53c895 with COMPAQ BD03685A24 disk (rebranded
-> > > ST336607LC) with command queue 48 or 64 tags. The disk has 64 tags, but
-> > > under some access patterns it return QUEUE FULL when there are less than
-> > > 64 pending tags. The SCSI specification allows returning QUEUE FULL
-> > > anytime and it is up to the host to retry.
+
+This is exactly my point.  Using this series does not introduce
+distruptive changes into LLDs that will be getting little or no testing
+wrt the changes to enable lock-less operation with the modern LLDs that
+we actually care about.  When running with the default of
+SHT->unlocked_qcmd=0, the legacy LLDs will continue to function
+*exactly* the same, minus those that are now using the explict
+scsi_cmd_get_serial() call because they use cmd->serial_number for
+something beyond simple informational purposes.
+
 > > 
-> > So the description isn't really complete.  the function is
-> > dequeue_from_squeue which is used to requeue all unissued scbs when the
-> > sequencer is restarted.  This doesn't just affect QUEUE_FULL, it affects
-> > everything.  As long as the pushback is done before the status is
-> > returned (which it looks like it is), I think the patch after fixing
-> > looks fine.
-> >
-> > The problem isn't the actual command which returns queue full ... it's
-> > that the sequencer accepts and queues a pile of commands and then
-> > returns all of them on the first queue full ... that means that deeply
-> > queued commands in the sequencer issue queue can get returned >5 times
-> > on multiple QUEUE_FULL conditions which would cause a failure.
+> > What do you think..?
 > 
-> Sure, that's how I understood it from the code and debug prints. You can 
-> add this to the description.
+> Standard linux practice is to simply push the locks down. That's a pretty
+> mechanical operation and shouldn't be too risky
 > 
-> That QUEUE_FULL command is actually retired fine, the following commands 
-> are problematic.
-> 
-> > > Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> > > 
-> > > ---
-> > >  drivers/scsi/sym53c8xx_2/sym_hipd.c |    4 ++++
-> > >  1 file changed, 4 insertions(+)
-> > > 
-> > > Index: linux-2.6.36-rc5-fast/drivers/scsi/sym53c8xx_2/sym_hipd.c
-> > > ===================================================================
-> > > --- linux-2.6.36-rc5-fast.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2010-09-27 10:25:59.000000000 +0200
-> > > +++ linux-2.6.36-rc5-fast/drivers/scsi/sym53c8xx_2/sym_hipd.c	2010-09-27 10:26:27.000000000 +0200
-> > > @@ -3000,7 +3000,11 @@ sym_dequeue_from_squeue(struct sym_hcb *
-> > >  		if ((target == -1 || cp->target == target) &&
-> > >  		    (lun    == -1 || cp->lun    == lun)    &&
-> > >  		    (task   == -1 || cp->tag    == task)) {
-> > > +#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
-> > >  			sym_set_cam_status(cp->cmd, DID_SOFT_ERROR);
-> > > +#else
-> > > +			sym_set_cam_status(cp->cmd, DID_REQUEUE);
-> > > +#endif
-> > 
-> > So the ifdef is definitely wrong.  SYM_OPT_HANDLE_DEVICE_QUEUEING is a
-> > leftover from when the driver did explicit internal queueing. Just make
-> > this do DID_REQUEUE and I *think* everything will be OK.
-> 
-> When I tried to enable SYM_OPT_HANDLE_DEVICE_QUEUEING, it didn't work, it 
-> crashed on something --- it is leftover from some other operating system 
-> that didn't handle requeuing in the midlayer.
-> 
-> When looking at the other parts of code that handles this driver-internal 
-> requeueing, it expects DID_SOFT_ERROR there. But it doesn't matter, that 
-> code is useless for Linux and broken anyway.
-> 
-> > There's a danger in that DID_REQUEUE will requeue forever, so this
-> > working depends on the original failing command being returned with the
-> > correct code (which I think it is, but more eyes looking at this would
-> > be helpful).
-> 
-> Requeuing forever is dangerous anyway, a device returning QUEUE_FULL 
-> constantly could deadlock the system. Question: is it better to risk a 
-> deadlock with a broken device or to risk a false timeout under high load? 
-> --- I don't know --- maybe there are valid cases where the device is 
-> returning QUEUE_FULL for long time (some raid reconfiguration?) ... do you 
-> know about them?
-> 
-> Anyway, if sym_dequeue_from_squeue was called from some other error that 
-> causes limited retry or command abort, I think it is still valid to use 
-> DID_REQUEUE for the following commands --- it can't deadlock with 
-> DID_REQUEUE, because on that error, the first command is aborted or has 
-> its retry count decremented --- so the first command must be eventually 
-> completed, and the second command (which was being retried with 
-> DID_REQUEUE) becomes the first --- and once it's first, it cannot loop 
-> forever. So with induction you can prove that every command completes in 
-> finite time.
 
-As long as we see the QUEUE_FULL return, there's no danger.  The mid
-layer has a timeout beyond which it won't allow a QUEUE_FULL return to
-be retried.
+No disagreements here whatsoever, as I think that pushing the locks
+approach does make alot sense as the final goal.  The question is if
+starting with this series is less disruptive and less error prone than
+adding a new host_lock -> lock() and unlock() in SHT->queuecommand() of
+every single legacy LLD and every single failure path for that legacy
+code.
 
-James
+The benfits on this series is having to add less LOC, not having to
+touch lots legacy LLD code ->queuecommand() that will get little or no
+testing, and the 'by default' setting of using SHT->unlocked_qcmd=0 (eg:
+legacy mode).  I believe it makes sense that merging this approach first
+and then transitioning to pushing the locks in per LLDs specific
+SHT->queuecommand() would be the most logical two steps for a graceful
+transition to optional host_lock less scsi_dispatch_cmd().
 
+Best,
+
+--nab
 
