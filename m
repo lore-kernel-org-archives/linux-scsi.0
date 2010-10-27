@@ -1,90 +1,100 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] scsi: Add SHT->unlocked_qcmd for host_lock less
-	SHT->queuecommand() dispatch
-Date: Wed, 27 Oct 2010 12:48:57 -0700
-Message-ID: <1288208937.5169.206.camel@haakon2.linux-iscsi.org>
-References: <1288139559-12019-1-git-send-email-nab@linux-iscsi.org>
-	 <4CC86E36.8060102@cs.wisc.edu>
+Subject: Re: [ANNOUNCE] Status of unlocked_qcmds=1 operation for .37
+Date: Wed, 27 Oct 2010 12:55:18 -0700
+Message-ID: <1288209318.5169.213.camel@haakon2.linux-iscsi.org>
+References: <1288130914.5169.97.camel@haakon2.linux-iscsi.org>
+	 <1288132071.8283.689.camel@mulgrave.site>
+	 <1288132464.5169.112.camel@haakon2.linux-iscsi.org>
+	 <1288133450.8283.723.camel@mulgrave.site>
+	 <1288134048.5169.132.camel@haakon2.linux-iscsi.org>
+	 <1288134713.19649.11.camel@mulgrave.site>
+	 <1288135918.5169.149.camel@haakon2.linux-iscsi.org>
+	 <20101027075349.GA32585@gargoyle.fritz.box>
+	 <1288189658.4692.13.camel@mulgrave.site>
+	 <1288202802.5169.202.camel@haakon2.linux-iscsi.org>
+	 <20101027192025.GA1349@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm2.bullet.mail.ac4.yahoo.com ([98.139.52.199]:35758 "HELO
-	nm2.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751680Ab0J0Tx4 (ORCPT
+Received: from nm2-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.66]:48895 "HELO
+	nm2-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932088Ab0J0UAR (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Oct 2010 15:53:56 -0400
-In-Reply-To: <4CC86E36.8060102@cs.wisc.edu>
+	Wed, 27 Oct 2010 16:00:17 -0400
+In-Reply-To: <20101027192025.GA1349@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <jaxboe@fusionio.com>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, "eata.c maintainer" <dario.ballabio@inwind.it>, Luben Tuikov <ltuikov@yahoo.com>, mvsas maintainer <kewei@marvell.com>, pm8001 maintainer Jack Wang <jack_wang@usish.com>
+To: Mike Anderson <andmike@linux.vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Andi Kleen <ak@linux.intel.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "H. Peter Anvin" <hpa@zytor.com>
 
-On Wed, 2010-10-27 at 13:23 -0500, Mike Christie wrote:
-> On 10/26/2010 07:32 PM, Nicholas A. Bellinger wrote:
-> > diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> > index fec47de..f5933dd 100644
-> > --- a/drivers/scsi/iscsi_tcp.c
-> > +++ b/drivers/scsi/iscsi_tcp.c
-> > @@ -882,6 +882,7 @@ static struct scsi_host_template iscsi_sw_tcp_sht = {
-> >   	.target_alloc		= iscsi_target_alloc,
-> >   	.proc_name		= "iscsi_tcp",
-> >   	.this_id		= -1,
-> > +	.unlocked_qcmd		= 1,
-> >   };
-> >
-> >   static struct iscsi_transport iscsi_sw_tcp_transport = {
-> > diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> > index 633e090..7e4134e 100644
-> > --- a/drivers/scsi/libiscsi.c
-> > +++ b/drivers/scsi/libiscsi.c
-> > @@ -1615,7 +1615,6 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
-> >
-> >   	host = sc->device->host;
-> >   	ihost = shost_priv(host);
-> > -	spin_unlock(host->host_lock);
-> >
-> >   	cls_session = starget_to_session(scsi_target(sc->device));
-> >   	session = cls_session->dd_data;
-> > @@ -1706,7 +1705,6 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
-> >
-> >   	session->queued_cmdsn++;
-> >   	spin_unlock(&session->lock);
-> > -	spin_lock(host->host_lock);
-> >   	return 0;
-> >
-> >   prepd_reject:
-> > @@ -1716,7 +1714,6 @@ reject:
-> >   	spin_unlock(&session->lock);
-> >   	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
-> >   			  sc->cmnd[0], reason);
-> > -	spin_lock(host->host_lock);
-> >   	return SCSI_MLQUEUE_TARGET_BUSY;
-> >
-> >   prepd_fault:
-> > @@ -1733,7 +1730,6 @@ fault:
-> >   		scsi_in(sc)->resid = scsi_in(sc)->length;
-> >   	}
-> >   	done(sc);
-> > -	spin_lock(host->host_lock);
-> >   	return 0;
-> >   }
-> >   EXPORT_SYMBOL_GPL(iscsi_queuecommand);
+On Wed, 2010-10-27 at 12:20 -0700, Mike Anderson wrote:
+> Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
+> > On Wed, 2010-10-27 at 09:27 -0500, James Bottomley wrote:
+> > > On Wed, 2010-10-27 at 09:53 +0200, Andi Kleen wrote:
+> > > > > This sounds like a pretty reasonable compromise that I think is slightly
+> > > > > less risky for the LLDs with the ghosts and cob-webs hanging off of
+> > > > > them.
+> > > > 
+> > > > They won't get tested either next release cycle. Essentially
+> > > > near nobody uses them.
+> > > > 
+> > > > > 
+> > > > > What do you think..?
+> > > > 
+> > > > Standard linux practice is to simply push the locks down. That's a pretty
+> > > > mechanical operation and shouldn't be too risky
+> > > > 
+> > > > With some luck you could even do it with coccinelle.
+> > > 
+> > > Precisely ... if we can do the push down now as a mechanical
+> > > transformation we can put it in the current merge window as a low risk
+> > > API change.
+> > 
+> > I disagree that touching every single legacy LLD's SHT->queuecommand()
+> > and failure paths in that code is a low rist change.
+> > 
+> > >   This gives us optimal exposure to the rc sequence to sort
+> > > out any problems that arise (or drivers that got missed) with the lowest
+> > > risk of such problems actually arising.
+> > 
+> > Yes, 
+> > 
+> > > Given the corner cases and the
+> > > late arrival of fixes, the serial number changes are just too risky for
+> > > the current merge window.
+> > 
+> > I think with andmike's testing and ACKs for the necessary scsi_error.c
+> > changes this would be an acceptable risk.
+> > 
 > 
+> Adding SCSI_EH_SOFTIRQ_DONE in scsi_softirq_done is not going to provide
+> value in scsi_try_to_abort_cmd. scsi_softirq_done calls scsi_eh_scmd_add
+> without the SCSI_EH_CANCEL_CMD flag set which will stop
+> scsi_try_to_abort_cmd from being called.
 > 
-> Hey,
+> Removing the serial_number check in scsi_try_to_abort_cmd and not
+> replacing it may be the correct action as we should be relying on the
+> block complete checking. That said what James has indicated about
+> splitting the serial number change out seems like the lower risk approach
+> at this time.
 > 
-> iscsi_tcp, drivers/infiniband/ulp/iser/ib_iser, drivers/scsi/cxgb3i, 
-> drivers/scsi/bnx2i, and drivers/scsi/be2iscsi use libiscsi's 
-> iscsi_queuecommand function, so they should all use the same setting 
-> unlocked_qcmd=1.
 
+Hmm, that is unfortuate..
 
-Hmmm, that is what I was thinking too.. Thanks for confirming this.
-Respinning again to include this LLDs w/ the new
-SHT->queuecommad_unlocked() usage.
+So in this case it would make sense to drop the explict LLD usage of
+scsi_cmd_get_serial(), and re-include this into scsi_dispatch_cmd() for
+all LLDs and have to deal with a per scsi_host atomic_t serial_number
+counter.  Anyways, I will go ahead an respin another series to follow
+this logic shortly.
 
-Thanks Mike!
+The other question that was mentioned in my email yesterday would be if
+the clearing of a non atomic_t cmd->serial_number from
+scsi_softirq_done() -> scsi_try_to_abort_cmd() is safe to begin with..?
+Does this need to be converted to an atomic_t as well to present a
+subtle race outside of any of the host_lock-less series of patches..?
 
 --nab
+
+
 
