@@ -1,131 +1,58 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: Re: [Open-FCoE] [PATCH] libfc: tune fc_exch_em_alloc() to be O(2)
-Date: Wed, 27 Oct 2010 14:36:14 -0700
-Message-ID: <1288215374.1431.21729.camel@fritz>
-References: <AANLkTinpHyH31BsBKTHEg8CpbBYL1x7G3tMVu-1KGpy5@mail.gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [ANNOUNCE] Status of unlocked_qcmds=1 operation for .37
+Date: Wed, 27 Oct 2010 19:28:33 -0400
+Message-ID: <4CC8B5A1.6080703@garzik.org>
+References: <1287607774.10283.78.camel@haakon2.linux-iscsi.org> <20101021150840.GA24309@linux.vnet.ibm.com> <1288130914.5169.97.camel@haakon2.linux-iscsi.org> <1288132071.8283.689.camel@mulgrave.site> <1288132464.5169.112.camel@haakon2.linux-iscsi.org> <1288133450.8283.723.camel@mulgrave.site> <1288134048.5169.132.camel@haakon2.linux-iscsi.org> <1288134713.19649.11.camel@mulgrave.site> <1288135918.5169.149.camel@haakon2.linux-iscsi.org> <20101027075349.GA32585@gargoyle.fritz.box> <1288189658.4692.13.camel@mulgrave.site> <1288202802.5169.202.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:60481 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932447Ab0J0VgP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Oct 2010 17:36:15 -0400
-In-Reply-To: <AANLkTinpHyH31BsBKTHEg8CpbBYL1x7G3tMVu-1KGpy5@mail.gmail.com>
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:45385 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751737Ab0J0X2k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Oct 2010 19:28:40 -0400
+In-Reply-To: <1288202802.5169.202.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>
-Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Andi Kleen <ak@linux.intel.com>, Mike Anderson <andmike@linux.vnet.ibm.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "H. Peter Anvin" <hpa@zytor.com>
 
-On Fri, 2010-10-22 at 20:20 +0800, Hillf Danton wrote:
-> For allocating new exch from pool,  scanning for free slot in exch
-> array fluctuates when exch pool is close to exhaustion.
-> 
-> The fluctuation is smoothed, and the scan looks to be O(2).
-> 
-Hi Hillf,
+On 10/27/2010 02:06 PM, Nicholas A. Bellinger wrote:
+> On Wed, 2010-10-27 at 09:27 -0500, James Bottomley wrote:
+>> On Wed, 2010-10-27 at 09:53 +0200, Andi Kleen wrote:
+>>>> This sounds like a pretty reasonable compromise that I think is slightly
+>>>> less risky for the LLDs with the ghosts and cob-webs hanging off of
+>>>> them.
+>>>
+>>> They won't get tested either next release cycle. Essentially
+>>> near nobody uses them.
+>>>
+>>>>
+>>>> What do you think..?
+>>>
+>>> Standard linux practice is to simply push the locks down. That's a pretty
+>>> mechanical operation and shouldn't be too risky
+>>>
+>>> With some luck you could even do it with coccinelle.
+>>
+>> Precisely ... if we can do the push down now as a mechanical
+>> transformation we can put it in the current merge window as a low risk
+>> API change.
+>
+> I disagree that touching every single legacy LLD's SHT->queuecommand()
+> and failure paths in that code is a low rist change.
 
-   I think this patch is fine, aside from a few minor nits below. I'm
-not sure how much this benefits us though. I don't think that it will
-hurt us, but I'd like to leave it in the fcoe-next tree a bit to make
-sure there aren't any adverse effects. I will fix the two issues I
-mention below and check it into fcoe-next, unless there are objections.
+Think of changes like steps in a math proof.  You want to make a series 
+of equivalent transformations such that, each transformation takes the 
+code (proof) one step closer to your goal.
 
-Have you done any profiling with this patch to show the improvement?
+unlocked_qcmds does nothing but increase complexity, as opposed to an 
+equivalent-transformation mechanical code change much more easily 
+provable as correct (or broken). unlocked_qcmds is the type of 
+transition step you always want to avoid if possible.  Conditional 
+locking logic tends to be complexity at its worst... and in this case, 
+it's all avoidable.
 
-> Signed-off-by: Hillf Danton <dhillf@gmail.com>
-> ---
-> 
-> --- a/drivers/scsi/libfc/fc_exch.c	2010-09-13 07:07:38.000000000 +0800
-> +++ b/drivers/scsi/libfc/fc_exch.c	2010-10-22 20:02:54.000000000 +0800
-> @@ -67,6 +67,11 @@ struct workqueue_struct *fc_exch_workque
->  struct fc_exch_pool {
->  	u16		 next_index;
->  	u16		 total_exches;
-> +
-> +	/* two cache of free slot in exch array */
-> +	u16		 left;
-> +	u16		 right;
-> +
->  	spinlock_t	 lock;
->  	struct list_head ex_list;
->  };
-> @@ -397,13 +402,26 @@ static inline void fc_exch_ptr_set(struc
->  static void fc_exch_delete(struct fc_exch *ep)
->  {
->  	struct fc_exch_pool *pool;
-> +	u16 index;
-> 
->  	pool = ep->pool;
->  	spin_lock_bh(&pool->lock);
->  	WARN_ON(pool->total_exches <= 0);
->  	pool->total_exches--;
-> -	fc_exch_ptr_set(pool, (ep->xid - ep->em->min_xid) >> fc_cpu_order,
-> -			NULL);
-> +
-> +	/* update cache of free slot */
-> +	index = (ep->xid - ep->em->min_xid) >> fc_cpu_order;
-> +	if (pool->left == FC_XID_UNKNOWN)
-> +		pool->left = index;
-> +	else if (pool->right == FC_XID_UNKNOWN)
-> +		pool->right = index;
-> +	else
-> +		/* XXX
-> +		 * next = entropy(index, left, right);
-> +		 **/
-
-We can remove this comment, right?
-
-> +		pool->next_index = index;
-> +
-> +	fc_exch_ptr_set(pool, index, NULL);
->  	list_del(&ep->ex_list);
->  	spin_unlock_bh(&pool->lock);
->  	fc_exch_release(ep);	/* drop hold for exch in mp */
-> @@ -679,6 +697,19 @@ static struct fc_exch *fc_exch_em_alloc(
->  	pool = per_cpu_ptr(mp->pool, cpu);
->  	spin_lock_bh(&pool->lock);
->  	put_cpu();
-> +
-> +	/* peek cache of free slot */
-> +	if (pool->left != FC_XID_UNKNOWN) {
-> +		index = pool->left;
-> +		pool->left = FC_XID_UNKNOWN;
-> +		goto hit;
-> +	}
-> +	if (pool->right != FC_XID_UNKNOWN) {
-> +		index = pool->right;
-> +		pool->right = FC_XID_UNKNOWN;
-> +		goto hit;
-> +	}
-> +
->  	index = pool->next_index;
->  	/* allocate new exch from pool */
->  	while (fc_exch_ptr_get(pool, index)) {
-> @@ -687,7 +718,7 @@ static struct fc_exch *fc_exch_em_alloc(
->  			goto err;
->  	}
->  	pool->next_index = index == mp->pool_max_index ? 0 : index + 1;
-> -
-> +hit:
->  	fc_exch_hold(ep);	/* hold for exch in mp */
->  	spin_lock_init(&ep->ex_lock);
->  	/*
-> @@ -2181,6 +2212,8 @@ struct fc_exch_mgr *fc_exch_mgr_alloc(st
->  		goto free_mempool;
->  	for_each_possible_cpu(cpu) {
->  		pool = per_cpu_ptr(mp->pool, cpu);
-> +		pool->left  =
-
-I think we should initialize this without relying on the following line.
-
-> +		pool->right = FC_XID_UNKNOWN;
->  		spin_lock_init(&pool->lock);
->  		INIT_LIST_HEAD(&pool->ex_list);
->  	}
-> _______________________________________________
-> devel mailing list
-> devel@open-fcoe.org
-> http://www.open-fcoe.org/mailman/listinfo/devel
+	Jeff
 
 
