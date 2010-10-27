@@ -1,100 +1,61 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [ANNOUNCE] Status of unlocked_qcmds=1 operation for .37
-Date: Wed, 27 Oct 2010 12:55:18 -0700
-Message-ID: <1288209318.5169.213.camel@haakon2.linux-iscsi.org>
-References: <1288130914.5169.97.camel@haakon2.linux-iscsi.org>
-	 <1288132071.8283.689.camel@mulgrave.site>
-	 <1288132464.5169.112.camel@haakon2.linux-iscsi.org>
-	 <1288133450.8283.723.camel@mulgrave.site>
-	 <1288134048.5169.132.camel@haakon2.linux-iscsi.org>
-	 <1288134713.19649.11.camel@mulgrave.site>
-	 <1288135918.5169.149.camel@haakon2.linux-iscsi.org>
-	 <20101027075349.GA32585@gargoyle.fritz.box>
-	 <1288189658.4692.13.camel@mulgrave.site>
-	 <1288202802.5169.202.camel@haakon2.linux-iscsi.org>
-	 <20101027192025.GA1349@linux.vnet.ibm.com>
+From: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH] [USB] UAS: Use kzalloc instead of kmalloc
+Date: Wed, 27 Oct 2010 13:22:22 -0700 (PDT)
+Message-ID: <628096.54960.qm@web31807.mail.mud.yahoo.com>
+Reply-To: ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm2-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.66]:48895 "HELO
-	nm2-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932088Ab0J0UAR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Oct 2010 16:00:17 -0400
-In-Reply-To: <20101027192025.GA1349@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Andi Kleen <ak@linux.intel.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "H. Peter Anvin" <hpa@zytor.com>
 
-On Wed, 2010-10-27 at 12:20 -0700, Mike Anderson wrote:
-> Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
-> > On Wed, 2010-10-27 at 09:27 -0500, James Bottomley wrote:
-> > > On Wed, 2010-10-27 at 09:53 +0200, Andi Kleen wrote:
-> > > > > This sounds like a pretty reasonable compromise that I think is slightly
-> > > > > less risky for the LLDs with the ghosts and cob-webs hanging off of
-> > > > > them.
-> > > > 
-> > > > They won't get tested either next release cycle. Essentially
-> > > > near nobody uses them.
-> > > > 
-> > > > > 
-> > > > > What do you think..?
-> > > > 
-> > > > Standard linux practice is to simply push the locks down. That's a pretty
-> > > > mechanical operation and shouldn't be too risky
-> > > > 
-> > > > With some luck you could even do it with coccinelle.
-> > > 
-> > > Precisely ... if we can do the push down now as a mechanical
-> > > transformation we can put it in the current merge window as a low risk
-> > > API change.
-> > 
-> > I disagree that touching every single legacy LLD's SHT->queuecommand()
-> > and failure paths in that code is a low rist change.
-> > 
-> > >   This gives us optimal exposure to the rc sequence to sort
-> > > out any problems that arise (or drivers that got missed) with the lowest
-> > > risk of such problems actually arising.
-> > 
-> > Yes, 
-> > 
-> > > Given the corner cases and the
-> > > late arrival of fixes, the serial number changes are just too risky for
-> > > the current merge window.
-> > 
-> > I think with andmike's testing and ACKs for the necessary scsi_error.c
-> > changes this would be an acceptable risk.
-> > 
-> 
-> Adding SCSI_EH_SOFTIRQ_DONE in scsi_softirq_done is not going to provide
-> value in scsi_try_to_abort_cmd. scsi_softirq_done calls scsi_eh_scmd_add
-> without the SCSI_EH_CANCEL_CMD flag set which will stop
-> scsi_try_to_abort_cmd from being called.
-> 
-> Removing the serial_number check in scsi_try_to_abort_cmd and not
-> replacing it may be the correct action as we should be relying on the
-> block complete checking. That said what James has indicated about
-> splitting the serial number change out seems like the lower risk approach
-> at this time.
-> 
+"Be conservative in what you send, liberal in what
+you accept." -- In the spirit of this adage, don't
+send Command IUs with randomly filled in data in
+the reserved fields. (Yes, this shows up on the
+wire.)
 
-Hmm, that is unfortuate..
+Signed-off-by: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+---
+ drivers/usb/storage/uas.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-So in this case it would make sense to drop the explict LLD usage of
-scsi_cmd_get_serial(), and re-include this into scsi_dispatch_cmd() for
-all LLDs and have to deal with a per scsi_host atomic_t serial_number
-counter.  Anyways, I will go ahead an respin another series to follow
-this logic shortly.
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 2054b1e..17e1820 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -294,7 +294,7 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 	if (!urb)
+ 		goto out;
+ 
+-	iu = kmalloc(sizeof(*iu), gfp);
++	iu = kzalloc(sizeof(*iu), gfp);
+ 	if (!iu)
+ 		goto free;
+ 
+@@ -325,7 +325,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 	if (len < 0)
+ 		len = 0;
+ 	len = ALIGN(len, 4);
+-	iu = kmalloc(sizeof(*iu) + len, gfp);
++	iu = kzalloc(sizeof(*iu) + len, gfp);
+ 	if (!iu)
+ 		goto free;
+ 
+@@ -660,7 +660,7 @@ static int uas_probe(struct usb_interface *intf, const struct usb_device_id *id)
+ 			return -ENODEV;
+ 	}
+ 
+-	devinfo = kmalloc(sizeof(struct uas_dev_info), GFP_KERNEL);
++	devinfo = kzalloc(sizeof(struct uas_dev_info), GFP_KERNEL);
+ 	if (!devinfo)
+ 		return -ENOMEM;
+ 
+-- 
+1.7.0.1
 
-The other question that was mentioned in my email yesterday would be if
-the clearing of a non atomic_t cmd->serial_number from
-scsi_softirq_done() -> scsi_try_to_abort_cmd() is safe to begin with..?
-Does this need to be converted to an atomic_t as well to present a
-subtle race outside of any of the host_lock-less series of patches..?
-
---nab
-
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
