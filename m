@@ -1,103 +1,82 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] fix id computation in scsi_eh_target_reset()
-Date: Wed, 27 Oct 2010 13:18:29 -0500
-Message-ID: <4CC86CF5.1080204@cs.wisc.edu>
-References: <AANLkTin-Tkj3Ab312usO2FWE57m3St2iG2oz881F-Zhw@mail.gmail.com>	 <4CBBDC19.1090806@cs.wisc.edu> <1288040021.5487.826.camel@mulgrave.site>	 <4CC75F42.9030603@cs.wisc.edu> <1288134569.19649.5.camel@mulgrave.site>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [ANNOUNCE] Status of unlocked_qcmds=1 operation for .37
+Date: Wed, 27 Oct 2010 11:06:42 -0700
+Message-ID: <1288202802.5169.202.camel@haakon2.linux-iscsi.org>
+References: <1287607774.10283.78.camel@haakon2.linux-iscsi.org>
+	 <20101021150840.GA24309@linux.vnet.ibm.com>
+	 <1288130914.5169.97.camel@haakon2.linux-iscsi.org>
+	 <1288132071.8283.689.camel@mulgrave.site>
+	 <1288132464.5169.112.camel@haakon2.linux-iscsi.org>
+	 <1288133450.8283.723.camel@mulgrave.site>
+	 <1288134048.5169.132.camel@haakon2.linux-iscsi.org>
+	 <1288134713.19649.11.camel@mulgrave.site>
+	 <1288135918.5169.149.camel@haakon2.linux-iscsi.org>
+	 <20101027075349.GA32585@gargoyle.fritz.box>
+	 <1288189658.4692.13.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:39468 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753622Ab0J0SLa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Oct 2010 14:11:30 -0400
-In-Reply-To: <1288134569.19649.5.camel@mulgrave.site>
+Received: from smtp104.sbc.mail.gq1.yahoo.com ([67.195.15.63]:24444 "HELO
+	smtp104.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754201Ab0J0SLj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Oct 2010 14:11:39 -0400
+In-Reply-To: <1288189658.4692.13.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
-Cc: Hillf Danton <dhillf@gmail.com>, linux-scsi@vger.kernel.org
+Cc: Andi Kleen <ak@linux.intel.com>, Mike Anderson <andmike@linux.vnet.ibm.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "H. Peter Anvin" <hpa@zytor.com>
 
-On 10/26/2010 06:09 PM, James Bottomley wrote:
-> On Tue, 2010-10-26 at 18:07 -0500, Mike Christie wrote:
->> On 10/25/2010 03:53 PM, James Bottomley wrote:
->>>
->>> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->>> index 1de30eb..484b128 100644
->>> --- a/drivers/scsi/scsi_error.c
->>> +++ b/drivers/scsi/scsi_error.c
->>> @@ -1156,51 +1156,40 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
->>>    				struct list_head *work_q,
->>>    				struct list_head *done_q)
->>>    {
->>> -	struct scsi_cmnd *scmd, *tgtr_scmd, *next;
->>> -	unsigned int id = 0;
->>> -	int rtn;
->>> +	LIST_HEAD(tmp_list);
->>>
->>> -	do {
->>> -		tgtr_scmd = NULL;
->>> -		list_for_each_entry(scmd, work_q, eh_entry) {
->>> -			if (id == scmd_id(scmd)) {
->>> -				tgtr_scmd = scmd;
->>> -				break;
->>> -			}
->>> -		}
->>> -		if (!tgtr_scmd) {
->>> -			/* not one exactly equal; find the next highest */
->>> -			list_for_each_entry(scmd, work_q, eh_entry) {
->>> -				if (scmd_id(scmd)>   id&&
->>> -				    (!tgtr_scmd ||
->>> -				     scmd_id(tgtr_scmd)>   scmd_id(scmd)))
->>> -						tgtr_scmd = scmd;
->>> -			}
->>> -		}
->>> -		if (!tgtr_scmd)
->>> -			/* no more commands, that's it */
->>> -			break;
->>> +	list_splice(work_q,&tmp_list);
->>
->>
->> I think I am hitting multiple bugs. One might be with this patch, but
->> strangely they both hit __list_add bugs in the scsi eh. I think this
->> needs to be list_splice_init().
->
-> I think that's exactly right ... I keep getting tripped up by the _init
-> requirements for reusing lists (and list_heads).
->
->>> +		list_for_each_entry_safe(scmd, next,&tmp_list, eh_entry) {
->>> +			if (scmd_id(scmd) != id)
->>> +				continue;
->>> +
->>> +			if ((rtn == SUCCESS || rtn == FAST_IO_FAIL)
->>> +			&&   (!scsi_device_online(scmd->device) ||
->>> +				 rtn == FAST_IO_FAIL || !scsi_eh_tur(scmd)))
->>> +				scsi_eh_finish_cmd(scmd, done_q);
->>
->> Because if the target resets work and move all the commands to the
->> done_q here.
->>
->>
->>> +			else
->>> +				/* push back on work queue for further processing */
->>> +				list_move(&scmd->eh_entry, work_q);
->>> +		}
->>>
->>>    	return list_empty(work_q);
->>>    }
->>
->>
->> Then this work_q is showing garbage in it from the splice I think.
->> Without the list_splice_init I get that trace I cut and pasted in the
->> other mail when I just force the scsi eh to run the target reset code.
->>
->> In the test, the target reset succeeds. The scsi_eh_finish_cmd call
->> above moves all the cmds to the done_q. But the work_q still has junk in
->> it, and so we return that we need to do more work and eventually we end
->> up running scsi_eh_offline_sdevs which calls scsi_eh_finish_cmd on a
->> command we already moved to the done_q.
->
-> So does changing to the _init version fix at least the junk done_q
-> problem?
->
+On Wed, 2010-10-27 at 09:27 -0500, James Bottomley wrote:
+> On Wed, 2010-10-27 at 09:53 +0200, Andi Kleen wrote:
+> > > This sounds like a pretty reasonable compromise that I think is slightly
+> > > less risky for the LLDs with the ghosts and cob-webs hanging off of
+> > > them.
+> > 
+> > They won't get tested either next release cycle. Essentially
+> > near nobody uses them.
+> > 
+> > > 
+> > > What do you think..?
+> > 
+> > Standard linux practice is to simply push the locks down. That's a pretty
+> > mechanical operation and shouldn't be too risky
+> > 
+> > With some luck you could even do it with coccinelle.
+> 
+> Precisely ... if we can do the push down now as a mechanical
+> transformation we can put it in the current merge window as a low risk
+> API change.
 
-Yeah.
+I disagree that touching every single legacy LLD's SHT->queuecommand()
+and failure paths in that code is a low rist change.
+
+>   This gives us optimal exposure to the rc sequence to sort
+> out any problems that arise (or drivers that got missed) with the lowest
+> risk of such problems actually arising.
+
+Yes, 
+
+> Given the corner cases and the
+> late arrival of fixes, the serial number changes are just too risky for
+> the current merge window.
+
+I think with andmike's testing and ACKs for the necessary scsi_error.c
+changes this would be an acceptable risk.
+
+> Having an API that changes depending on a
+> flag is also a high risk process because it's prone to further sources
+> of error.
+> 
+
+I think this would be considered high risk if the setting of the flag
+explictly was required to obtain the default legacy operation.  With
+this series that is not the case, as the default SHT->unlocked_qcmd=0
+will allow legacy LLDs to function exactly the manner they expect, while
+allowing modern LLDs to run in host_lock-less mode.
+
+Best,
+
+--nab
+
