@@ -1,106 +1,48 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: sym53c8xx_2 data corruption
-Date: Wed, 27 Oct 2010 09:46:47 -0500
-Message-ID: <1288190807.4692.30.camel@mulgrave.site>
-References: <20101027012932.3CB6E4FB4@hiauly1.hia.nrc.ca>
-	 <1288155041.19649.354.camel@mulgrave.site>
-	 <alpine.DEB.1.10.1010271059230.31946@artax.karlin.mff.cuni.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Vasiliy Kulikov <segooon@gmail.com>
+Subject: [PATCH] scsi: hpsa: fix information leak to userland
+Date: Wed, 27 Oct 2010 19:40:54 +0400
+Message-ID: <1288194054-9276-1-git-send-email-segooon@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:51266 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933264Ab0J0OrI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Oct 2010 10:47:08 -0400
-In-Reply-To: <alpine.DEB.1.10.1010271059230.31946@artax.karlin.mff.cuni.cz>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:64860 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756815Ab0J0Pk7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Oct 2010 11:40:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-Cc: linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, matthew@wil.cx
+To: kernel-janitors@vger.kernel.org
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Mike Miller <mike.miller@hp.com>, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2010-10-27 at 11:04 +0200, Mikulas Patocka wrote:
-> Hi
-> 
-> I sent this about twice to linux-scsi and got no reseponse, neither from 
-> conference nor from Matthew. So I'm sending it here, James, you are the 
-> maintainer of SCSI, could you please look at the patch and incorporate it 
-> to the kernel in this cycle?
-> 
-> The problem is that if the disk returns QUEUE FULL, the requests are 
-> aborted with DID_SOFT_ERROR (rather than DID_REQUEUE), which results in 
-> too few retries and premature errors. The errors happen mostly on writes, 
-> resulting in data corruption.
-> 
-> Mikulas
-> 
-> ---
-> 
-> sym53c8xx_2: Set DID_REQUEUE return code when aborting squeue.
-> 
-> When the controller encounters an error (including QUEUE FULL or BUSY status),
-> it aborts all not yet submitted requests in the function
-> sym_dequeue_from_squeue.
-> 
-> This function aborts them with DID_SOFT_ERROR.
-> 
-> If the disk has a full tag queue, the request that caused the overflow is
-> aborted with QUEUE FULL status (and the scsi midlayer properly retries it
-> until it is accepted by the disk), but other requests are aborted with
-> DID_SOFT_ERROR --- for them, the midlayer does just a few retries and then
-> signals the error up to sd.
-> 
-> The result is that disk returning QUEUE FULL causes request failures.
-> 
-> The error was reproduced on 53c895 with COMPAQ BD03685A24 disk (rebranded
-> ST336607LC) with command queue 48 or 64 tags. The disk has 64 tags, but
-> under some access patterns it return QUEUE FULL when there are less than
-> 64 pending tags. The SCSI specification allows returning QUEUE FULL
-> anytime and it is up to the host to retry.
+Structure IOCTL_Command_struct is copied to userland with
+some padding fields at the end of the struct unitialized.
+It leads to leaking of contents of kernel stack memory.
 
-So the description isn't really complete.  the function is
-dequeue_from_squeue which is used to requeue all unissued scbs when the
-sequencer is restarted.  This doesn't just affect QUEUE_FULL, it affects
-everything.  As long as the pushback is done before the status is
-returned (which it looks like it is), I think the patch after fixing
-looks fine.
+Signed-off-by: Vasiliy Kulikov <segooon@gmail.com>
+---
+ Compile tested.
 
-The problem isn't the actual command which returns queue full ... it's
-that the sequencer accepts and queues a pile of commands and then
-returns all of them on the first queue full ... that means that deeply
-queued commands in the sequencer issue queue can get returned >5 times
-on multiple QUEUE_FULL conditions which would cause a failure.
+ drivers/scsi/hpsa.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> 
-> ---
->  drivers/scsi/sym53c8xx_2/sym_hipd.c |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> Index: linux-2.6.36-rc5-fast/drivers/scsi/sym53c8xx_2/sym_hipd.c
-> ===================================================================
-> --- linux-2.6.36-rc5-fast.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2010-09-27 10:25:59.000000000 +0200
-> +++ linux-2.6.36-rc5-fast/drivers/scsi/sym53c8xx_2/sym_hipd.c	2010-09-27 10:26:27.000000000 +0200
-> @@ -3000,7 +3000,11 @@ sym_dequeue_from_squeue(struct sym_hcb *
->  		if ((target == -1 || cp->target == target) &&
->  		    (lun    == -1 || cp->lun    == lun)    &&
->  		    (task   == -1 || cp->tag    == task)) {
-> +#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
->  			sym_set_cam_status(cp->cmd, DID_SOFT_ERROR);
-> +#else
-> +			sym_set_cam_status(cp->cmd, DID_REQUEUE);
-> +#endif
-
-So the ifdef is definitely wrong.  SYM_OPT_HANDLE_DEVICE_QUEUEING is a
-leftover from when the driver did explicit internal queueing. Just make
-this do DID_REQUEUE and I *think* everything will be OK.
-
-There's a danger in that DID_REQUEUE will requeue forever, so this
-working depends on the original failing command being returned with the
-correct code (which I think it is, but more eyes looking at this would
-be helpful).
-
-James
-
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index c5d0606..641a38c 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2298,6 +2298,7 @@ static int hpsa_ioctl32_passthru(struct scsi_device *dev, int cmd, void *arg)
+ 	int err;
+ 	u32 cp;
+ 
++	memset(&arg64, 0, sizeof(arg64));
+ 	err = 0;
+ 	err |= copy_from_user(&arg64.LUN_info, &arg32->LUN_info,
+ 			   sizeof(arg64.LUN_info));
+@@ -2334,6 +2335,7 @@ static int hpsa_ioctl32_big_passthru(struct scsi_device *dev,
+ 	int err;
+ 	u32 cp;
+ 
++	memset(&arg64, 0, sizeof(arg64));
+ 	err = 0;
+ 	err |= copy_from_user(&arg64.LUN_info, &arg32->LUN_info,
+ 			   sizeof(arg64.LUN_info));
+-- 
+1.7.0.4
 
