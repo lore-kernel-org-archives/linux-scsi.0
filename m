@@ -1,75 +1,61 @@
-From: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-Subject: sym53c8xx_2 data corruption
-Date: Wed, 27 Oct 2010 11:04:40 +0200 (CEST)
-Message-ID: <alpine.DEB.1.10.1010271059230.31946@artax.karlin.mff.cuni.cz>
-References: <20101027012932.3CB6E4FB4@hiauly1.hia.nrc.ca> <1288155041.19649.354.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-parisc-owner@vger.kernel.org>
-In-Reply-To: <1288155041.19649.354.camel@mulgrave.site>
-Sender: linux-parisc-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-parisc@vger.kernel.org, linux-scsi@vger.kernel.org, matthew@wil.cx
+From: Hubert Tonneau <hubert.tonneau@fullpliant.org>
+Subject: Re: MD RAID1 deadlock on failed disk
+Date: Wed, 27 Oct 2010 10:44:02 GMT
+Message-ID: <0AFEJ5E11@briare1.fullpliant.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from briare1.fullpliant.org ([78.227.24.35]:34339 "HELO
+	briare1.fullpliant.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752651Ab0J0Jio (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Oct 2010 05:38:44 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Neil Brown <neilb@suse.de>
 
-Hi
+Hi,
 
-I sent this about twice to linux-scsi and got no reseponse, neither from 
-conference nor from Matthew. So I'm sending it here, James, you are the 
-maintainer of SCSI, could you please look at the patch and incorporate it 
-to the kernel in this cycle?
+The configuration is:
+Perc H200 controller configured with no RAID (mpt2sas driver),
+2 SATA disks (sda and sdb),
+Linux MD Sofware RAID1 (md0),
+stock Linux 2.6.35.7 kernel.
 
-The problem is that if the disk returns QUEUE FULL, the requests are 
-aborted with DID_SOFT_ERROR (rather than DID_REQUEUE), which results in 
-too few retries and premature errors. The errors happen mostly on writes, 
-resulting in data corruption.
+I hotunplug the second (sdb) disk, and the result is:
+. as expected, I can read sda device,
+. as expected, any read to sdb device fails,
+. unexpectedly, any read to md0 never returns.
 
-Mikulas
+No oops or thing like that in the kernel log.
+I did not try the same with other kernel releases.
 
----
+2.6.32.24 kernel worked fine.
 
-sym53c8xx_2: Set DID_REQUEUE return code when aborting squeue.
+Neil Brown asked for /proc/sysrq-trigger ouput,
+and concluded that the problem is related to 'fw_event0'.
+See his answer bellow.
 
-When the controller encounters an error (including QUEUE FULL or BUSY status),
-it aborts all not yet submitted requests in the function
-sym_dequeue_from_squeue.
+Regards,
+Hubert Tonneau
 
-This function aborts them with DID_SOFT_ERROR.
 
-If the disk has a full tag queue, the request that caused the overflow is
-aborted with QUEUE FULL status (and the scsi midlayer properly retries it
-until it is accepted by the disk), but other requests are aborted with
-DID_SOFT_ERROR --- for them, the midlayer does just a few retries and then
-signals the error up to sd.
-
-The result is that disk returning QUEUE FULL causes request failures.
-
-The error was reproduced on 53c895 with COMPAQ BD03685A24 disk (rebranded
-ST336607LC) with command queue 48 or 64 tags. The disk has 64 tags, but
-under some access patterns it return QUEUE FULL when there are less than
-64 pending tags. The SCSI specification allows returning QUEUE FULL
-anytime and it is up to the host to retry.
-
-Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-
----
- drivers/scsi/sym53c8xx_2/sym_hipd.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-Index: linux-2.6.36-rc5-fast/drivers/scsi/sym53c8xx_2/sym_hipd.c
-===================================================================
---- linux-2.6.36-rc5-fast.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2010-09-27 10:25:59.000000000 +0200
-+++ linux-2.6.36-rc5-fast/drivers/scsi/sym53c8xx_2/sym_hipd.c	2010-09-27 10:26:27.000000000 +0200
-@@ -3000,7 +3000,11 @@ sym_dequeue_from_squeue(struct sym_hcb *
- 		if ((target == -1 || cp->target == target) &&
- 		    (lun    == -1 || cp->lun    == lun)    &&
- 		    (task   == -1 || cp->tag    == task)) {
-+#ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
- 			sym_set_cam_status(cp->cmd, DID_SOFT_ERROR);
-+#else
-+			sym_set_cam_status(cp->cmd, DID_REQUEUE);
-+#endif
- 			sym_remque(&cp->link_ccbq);
- 			sym_insque_tail(&cp->link_ccbq, &np->comp_ccbq);
- 		}
+Neil Brown wrote:
+>
+> The fw_event0 process is interesting.
+> It seems to be hung trying to 'sync' the drive that has just been pulled.
+> If that is somehow causing some IO request from the md/raid1 to be delayed
+> then that would certainly hang the array.
+> 
+> There is a section in the middle of the trace which is missing - presumably
+> the sysrq-trigger output overflowed a buffer - that isn't uncommon.
+> 
+> So I cannot see all the timing clearly.
+> How long after pulling the drive was this trace taken?
+> 
+> I suspect that you need to post this to linux-scsi@vger.kernel.org
+> and ask about that fw_event0 thread - whether that should happen, whether it
+> has been fixed, and whether it could delay pending IO requests.
+> 
+> NeilBrown
 
