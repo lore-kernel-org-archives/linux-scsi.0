@@ -1,56 +1,42 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13602] some HFS CD-ROM's can't be read
-Date: Thu, 28 Oct 2010 16:06:50 GMT
-Message-ID: <201010281606.o9SG6oYl014817@demeter1.kernel.org>
-References: <bug-13602-11613@https.bugzilla.kernel.org/>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Subject: [RFC 0/3] Add fc_rport attributes to further populate
+ HBAAPIv2 HBAPortAttributes for discovered ports.
+Date: Thu, 28 Oct 2010 12:14:18 -0400
+Message-ID: <alpine.LFD.2.00.1010281212441.2885@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; format=flowed; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:37559 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757152Ab0J1QGv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2010 12:06:51 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o9SG6oNr014818
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2010 16:06:50 GMT
-In-Reply-To: <bug-13602-11613@https.bugzilla.kernel.org/>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:17540 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753683Ab0J1QOV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2010 12:14:21 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=13602
+Hi All,
 
+This small patch set adds 7 new attributes to the fc_rport struct so that application libraries who export HBAAPI v2 discovered port attributes can populate the HBA_PORTATTRIBUTES structure more fully.  The new fc_rport attributes,
+which would be exported via the /sys/class/fc_remote_port/rport-x:y-z directory, are:
 
+- supported_fc4s
+- supported_speed
+- port_type
+- speed
+- active_fc4s
+- symbolic_name
+- fabric_name
 
+These attributes would be fixed-attributes which would mean that they would be set before the call to fc_remote_port_rolechg() but then once the role of the port has been established they would not change.
 
+There are two patches in this RFC:
 
---- Comment #4 from Anonymous Emailer <anonymous@kernel-bugs.osdl.org>  2010-10-28 16:06:44 ---
-Reply-To: James.Bottomley@suse.de
+Patch #1 - scsi_transport_fc: Add HBAAPI v2 attributes to fc_rport structure.
 
-On Thu, 2010-10-28 at 12:53 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://bugzilla.kernel.org/show_bug.cgi?id=13602
-> 
-> 
-> Christoph Hellwig <hch@lst.de> changed:
-> 
->            What    |Removed                     |Added
-> ----------------------------------------------------------------------------
->           Component|HFS/HFSPLUS                 |SCSI
->          AssignedTo|hch@lst.de                  |linux-scsi@vger.kernel.org
->             Product|File System                 |IO/Storage
+This patch adds the definitions for the new fc_rport attributes, sets up the show functions and assigns default nominal values to the attributes.
 
-Why is this actually a bug?  Linux has never supported filesystem block
-sizes smaller than device ones ... we don't have the necessary RMW code
-for it.  The sr driver supports 512 byte sectors but *only* if the CD
-was burned with them (which isn't always possible depending on CD
-burner) and the reader supports them.  I'd need the dmesgs to be sure
-but i'd guess READ_CAPACITY on this cd returns 2048 as the block size.
+Patch #2 - qla2xxx: Add name and management server queries to fill in new fc_rport attributes.
 
-James
+This patch adds the necessary name and management server calls to the SAN fabric services to obtain the information needed to fill in the new fc_rport attributes.  The patch also assigns the attributes before calling
+fc_remote_port_rolechg().
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
