@@ -1,27 +1,22 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: Re: [PATCH v8] scsi: Push down host_lock into legacy LLD
 	SHT->queuecommand()
-Date: Thu, 28 Oct 2010 01:30:50 -0700
-Message-ID: <1288254650.5169.242.camel@haakon2.linux-iscsi.org>
+Date: Thu, 28 Oct 2010 01:41:09 -0700
+Message-ID: <1288255269.5169.250.camel@haakon2.linux-iscsi.org>
 References: <1288249268-17734-1-git-send-email-nab@linux-iscsi.org>
 	 <4CC9329F.40303@garzik.org>
 	 <1288254332.5169.239.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.mud.yahoo.com ([68.142.198.200]:24027 "HELO
-	smtp101.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933300Ab0J1Ifr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Oct 2010 04:35:47 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1288254332.5169.239.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, "H. Peter Anvin" <hpa@zytor.com>, Tejun Heo <tj@kernel.org>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, "H. Peter Anvin" <hpa@zytor.com>, Tejun Heo <tj@kernel.org>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
+List-Id: linux-scsi@vger.kernel.org
 
-     A. On Thu, 2010-10-28 at 01:25 -0700, Nicholas A. Bellinger wrote:
+On Thu, 2010-10-28 at 01:25 -0700, Nicholas A. Bellinger wrote:
 > On Thu, 2010-10-28 at 04:21 -0400, Jeff Garzik wrote:
 > > On 10/28/2010 03:01 AM, Nicholas A. Bellinger wrote:
 > > > Following yet another round of convincing discussions from jgarzik and jejb
@@ -101,43 +96,15 @@ Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.ker
 > held and include these into lio-4.0.git/host_lock-less-for-37-v9.
 > 
 
-Here is the proposed patch for libata:
+Ok, so originally libiscsi, fnic, and lpfc where using
+spin_unlock(host->host_lock) -> spin_lock(host->host_lock)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index d050e07..55a24bb 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3174,7 +3174,7 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
-  *     ATA and ATAPI devices appearing as SCSI devices.
-  *
-  *     LOCKING:
-- *     Releases scsi-layer-held lock, and obtains host lock.
-+ *     None
-  *
-  *     RETURNS:
-  *     Return value from __ata_scsi_queuecmd() if @cmd can be queued,
-@@ -3186,12 +3186,12 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
-        struct ata_device *dev;
-        struct scsi_device *scsidev = cmd->device;
-        struct Scsi_Host *shost = scsidev->host;
-+       unsigned long flags;
-        int rc = 0;
+And libsas, qla2xxx, qla4xxx where using
+spin_unlock_irq(host->host_lock) -> spin_lock_irq(host->host_lock)
 
-        ap = ata_shost_to_port(shost);
+Just to verify, you are thinking that those *not* using spin_unlock_irq
++ spin_lock_irq() for the legacy optimization dispath should have their
+per LLD host lock converted to spin_lock_irqsave() +
+spin_unlock_irqrestore(), right..?
 
--       spin_unlock(shost->host_lock);
--       spin_lock(ap->lock);
-+       spin_lock_irqsave(ap->lock, flags);
-
-        ata_scsi_dump_cdb(ap, cmd);
-
-@@ -3203,8 +3203,7 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
-                done(cmd);
-        }
-
--       spin_unlock(ap->lock);
--       spin_lock(shost->host_lock);
-+       spin_unlock_irqrestore(ap->lock, flags);
-        return rc;
- }
-
+--nab
