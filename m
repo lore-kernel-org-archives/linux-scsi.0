@@ -1,47 +1,90 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [RFC 0/2] Add fc_rport attributes to further populate HBAAPIv2
- HBAPortAttributes for discovered ports.
-Date: Thu, 28 Oct 2010 12:22:19 -0400
-Message-ID: <alpine.LFD.2.00.1010281220230.2885@localhost.localdomain>
-References: <alpine.LFD.2.00.1010281212441.2885@localhost.localdomain>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13602] some HFS CD-ROM's can't be read
+Date: Thu, 28 Oct 2010 16:40:35 GMT
+Message-ID: <201010281640.o9SGeZ4d018797@demeter1.kernel.org>
+References: <bug-13602-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:17811 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758760Ab0J1QWW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2010 12:22:22 -0400
-In-Reply-To: <alpine.LFD.2.00.1010281212441.2885@localhost.localdomain>
+Received: from demeter.kernel.org ([140.211.167.39]:58190 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759319Ab0J1Qkg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2010 12:40:36 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o9SGeZ9B018799
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2010 16:40:35 GMT
+In-Reply-To: <bug-13602-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+
+https://bugzilla.kernel.org/show_bug.cgi?id=13602
 
 
-Changed subject line as this RFC only has two patches.
+Bill McGonigle <bill-osdl.org-bugzilla@bfccomputing.com> changed:
 
-> Hi All,
->
-> This small patch set adds 7 new attributes to the fc_rport struct so that application libraries who export HBAAPI v2 discovered port attributes can populate the HBA_PORTATTRIBUTES structure more fully.  The new fc_rport attributes,
-> which would be exported via the /sys/class/fc_remote_port/rport-x:y-z directory, are:
->
-> - supported_fc4s
-> - supported_speed
-> - port_type
-> - speed
-> - active_fc4s
-> - symbolic_name
-> - fabric_name
->
-> These attributes would be fixed-attributes which would mean that they would be set before the call to fc_remote_port_rolechg() but then once the role of the port has been established they would not change.
->
-> There are two patches in this RFC:
->
-> Patch #1 - scsi_transport_fc: Add HBAAPI v2 attributes to fc_rport structure.
->
-> This patch adds the definitions for the new fc_rport attributes, sets up the show functions and assigns default nominal values to the attributes.
->
-> Patch #2 - qla2xxx: Add name and management server queries to fill in new fc_rport attributes.
->
-> This patch adds the necessary name and management server calls to the SAN fabric services to obtain the information needed to fill in the new fc_rport attributes.  The patch also assigns the attributes before calling
-> fc_remote_port_rolechg().
->
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+     Kernel Version|2.6.29.4-167.fc11.i586      |2.6.34.7-56.fc13.x86_64
+
+
+
+
+--- Comment #5 from Bill McGonigle <bill-osdl.org-bugzilla@bfccomputing.com>  2010-10-28 16:40:30 ---
+@Christoph: good workaround.  I can losetup my /dev/sr0 and mount the discs
+(tested 1 anyway).  I need to omit the session=1 option on the loopback but it
+does mount that way.  Just to be sure, I confirmed sr0 won't mount without the
+session option.  Not sure what would happen if the data were on session=2.
+
+For the HFS vs. SCSI question, I'm not clear why 22 out of 25 discs in this set
+work OK but the remaining 3 would not.  They're factory-stamped discs, no idea
+how they were mastered.
+
+The only dmesg I get is:
+
+ hfs: unable to set blocksize to 512
+ hfs: can't find a HFS filesystem on dev sr0.
+
+This is now kernel 2.6.34.7-56.fc13.x86_64.
+
+Not sure if it's helpful, but here are the /sys sizes:
+
+[bfccomputing@zpm sr0]$ more `pwd`/queue/*size
+::::::::::::::
+/sys/block/sr0/queue/hw_sector_size
+::::::::::::::
+2048
+::::::::::::::
+/sys/block/sr0/queue/logical_block_size
+::::::::::::::
+2048
+::::::::::::::
+/sys/block/sr0/queue/max_segment_size
+::::::::::::::
+65536
+::::::::::::::
+/sys/block/sr0/queue/minimum_io_size
+::::::::::::::
+2048
+::::::::::::::
+/sys/block/sr0/queue/optimal_io_size
+::::::::::::::
+0
+::::::::::::::
+/sys/block/sr0/queue/physical_block_size
+::::::::::::::
+2048
+
+I can't even say this is a feature implemented in MacOSX for compatibility that
+linux lacks - for all I know, they do some sort of loopback mount automagically
+if certain kinds of discs are detected.
+
+I don't know if there are any linux equivalents for doing something similar by
+the kernel; one could imagine userland machinations that could do the right
+thing, though perhaps costly.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
