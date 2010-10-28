@@ -1,29 +1,39 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 1/1] cciss: remove overlapping PCI IDs
-Date: Thu, 28 Oct 2010 06:33:44 -0600
-Message-ID: <4CC96DA8.70609@kernel.dk>
-References: <20101026204829.GA31295@beardog.cce.hp.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13602] some HFS CD-ROM's can't be read
+Date: Thu, 28 Oct 2010 12:53:06 GMT
+Message-ID: <201010281253.o9SCr5d8024479@demeter1.kernel.org>
+References: <bug-13602-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 0122700014.0.fullrate.dk ([95.166.99.235]:44835 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754324Ab0J1Mdw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Oct 2010 08:33:52 -0400
-In-Reply-To: <20101026204829.GA31295@beardog.cce.hp.com>
+Received: from demeter.kernel.org ([140.211.167.39]:43949 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752585Ab0J1MxH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2010 08:53:07 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id o9SCr6SQ024480
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2010 12:53:06 GMT
+In-Reply-To: <bug-13602-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, iss_storagedev@hp.com
+To: linux-scsi@vger.kernel.org
 
-On 2010-10-26 14:48, Mike Miller wrote:
-> Patch 1 of 1
-> 
-> cciss: remove overlapping PCI IDs
+https://bugzilla.kernel.org/show_bug.cgi?id=13602
 
-Thanks Mike, applied.
+
+Christoph Hellwig <hch@lst.de> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+          Component|HFS/HFSPLUS                 |SCSI
+         AssignedTo|hch@lst.de                  |linux-scsi@vger.kernel.org
+            Product|File System                 |IO/Storage
+
+
+
 
 -- 
-Jens Axboe
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
