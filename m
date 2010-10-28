@@ -1,191 +1,484 @@
 From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: [RFC 1/2] scsi_transport_fc: Add HBAAPI v2 attributes to fc_rport
- structure.
-Date: Thu, 28 Oct 2010 12:15:53 -0400
-Message-ID: <alpine.LFD.2.00.1010281215020.2885@localhost.localdomain>
+Subject: [RFC 2/2] qla2xxx: Add name and management server queries to fill
+ in new fc_rport attributes.
+Date: Thu, 28 Oct 2010 12:17:03 -0400
+Message-ID: <alpine.LFD.2.00.1010281216021.2885@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; format=flowed; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:17594 "EHLO
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:17644 "EHLO
 	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753683Ab0J1QP4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2010 12:15:56 -0400
+	with ESMTP id S1753683Ab0J1QRG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2010 12:17:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-This patch adds the following fc_rport attributes so that the FC transport
-will export more attributes which can be read by HBAAPI compatible libraries:
+This patch adds in the name server and mangement server queries to the qla2xxx
+driver to get the needed information from the fabric to fill in the new
+fc_rport attributes exported for HBAAPI v2 user space libraries:
 
-- active_fc4s
-- fabric_name
-- maxframe_size
-- port_type
-- speed
-- supported_fc4s
-- supported_speeds
-- symbolic_name
+Get Port Type (GPT)
+Get FC-4 Types (GFT_ID)
+Get Symbolic Port Name (GSPN)
+Get Fabric Name (GFN)
 
-These attributes are fixed attributes and would be set by the low-level device
-driver before it calls fc_remote_port_rolechg().
+If the name server or management server query succeeds then the fc_rport
+attribute is assigned before fc_remote_port_rolechng() is called.  Otherwise,
+the default fc_rport attribute is left alone.
 ---
-  drivers/scsi/scsi_transport_fc.c |   67 +++++++++++++++++++++++++++++++++++++-
-  include/scsi/scsi_transport_fc.h |   25 +++++++++++---
-  2 files changed, 86 insertions(+), 6 deletions(-)
+  drivers/scsi/qla2xxx/qla_def.h  |   67 +++++++++++
+  drivers/scsi/qla2xxx/qla_gbl.h  |    4 +
+  drivers/scsi/qla2xxx/qla_gs.c   |  241 +++++++++++++++++++++++++++++++++++++++
+  drivers/scsi/qla2xxx/qla_init.c |   38 ++++++-
+  4 files changed, 349 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 998c01b..6af4602 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -311,7 +311,7 @@ static void fc_scsi_scan_rport(struct work_struct *work);
-   * Increase these values if you add attributes
-   */
-  #define FC_STARGET_NUM_ATTRS 	3
--#define FC_RPORT_NUM_ATTRS	10
-+#define FC_RPORT_NUM_ATTRS	17
-  #define FC_VPORT_NUM_ATTRS	9
-  #define FC_HOST_NUM_ATTRS	22
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 6168628..79f1d4a 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -1658,6 +1658,7 @@ typedef struct {
+  	uint8_t fabric_port_name[WWN_SIZE];
+  	uint16_t fp_speed;
+  	uint8_t fc4_type;
++	uint32_t supported_speeds;
+  } sw_info_t;
 
-@@ -826,6 +826,57 @@ show_fc_rport_supported_classes (struct device *dev,
-  static FC_DEVICE_ATTR(rport, supported_classes, S_IRUGO,
-  		show_fc_rport_supported_classes, NULL);
+  /* FCP-4 types */
+@@ -1707,6 +1708,15 @@ typedef struct fc_port {
 
-+static ssize_t
-+show_fc_rport_supported_fc4s(struct device *dev,
-+			     struct device_attribute *attr, char *buf)
-+{
-+	struct fc_rport *rport = transport_class_to_rport(dev);
-+	return (ssize_t)show_fc_fc4s(buf, rport->supported_fc4s);
-+}
-+static FC_DEVICE_ATTR(rport, supported_fc4s, S_IRUGO,
-+		show_fc_rport_supported_fc4s, NULL);
+  	uint16_t vp_idx;
+  	uint8_t fc4_type;
 +
-+static ssize_t
-+show_fc_rport_supported_speeds(struct device *dev,
-+			       struct device_attribute *attr, char *buf)
-+{
-+	struct fc_rport *rport = transport_class_to_rport(dev);
-+
-+	if (rport->supported_speeds  == FC_PORTSPEED_UNKNOWN)
-+		return snprintf(buf, 20, "unknown\n");
-+
-+	return get_fc_port_speed_names(rport->supported_speeds, buf);
-+}
-+static FC_DEVICE_ATTR(rport, supported_speeds, S_IRUGO,
-+		show_fc_rport_supported_speeds, NULL);
-+
-+static ssize_t
-+show_fc_rport_speed(struct device *dev, struct device_attribute *attr,
-+		    char *buf)
-+{
-+	struct fc_rport *rport = transport_class_to_rport(dev);
-+
-+	if (rport->speed == FC_PORTSPEED_UNKNOWN)
-+		return snprintf(buf, 20, "unknown\n");
-+
-+	return get_fc_port_speed_names(rport->speed, buf);
-+}
-+static FC_DEVICE_ATTR(rport, speed, S_IRUGO, show_fc_rport_speed, NULL);
-+
-+static ssize_t
-+show_fc_rport_active_fc4s(struct device *dev, struct device_attribute *attr,
-+			  char *buf)
-+{
-+	struct fc_rport *rport = transport_class_to_rport(dev);
-+	return (ssize_t)show_fc_fc4s(buf, rport->active_fc4s);
-+}
-+static FC_DEVICE_ATTR(rport, active_fc4s, S_IRUGO, show_fc_rport_active_fc4s,
-+		NULL);
-+
-+fc_private_rport_rd_enum_attr(port_type, FC_PORTTYPE_MAX_NAMELEN);
-+fc_private_rport_rd_attr(symbolic_name, "%s\n", FC_SYMBOLIC_NAME_SIZE);
-+fc_private_rport_rd_attr_cast(fabric_name, "0x%llx\n", 20, unsigned long long);
-+
-  /* Dynamic Remote Port Attributes */
-
-  /*
-@@ -2239,6 +2290,13 @@ fc_attach_transport(struct fc_function_template *ft)
-  	count=0;
-  	SETUP_RPORT_ATTRIBUTE_RD(maxframe_size);
-  	SETUP_RPORT_ATTRIBUTE_RD(supported_classes);
-+	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(supported_fc4s);
-+	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(supported_speeds);
-+	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(speed);
-+	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(active_fc4s);
-+	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(port_type);
-+	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(symbolic_name);
-+	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(fabric_name);
-  	SETUP_RPORT_ATTRIBUTE_RW(dev_loss_tmo);
-  	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(node_name);
-  	SETUP_PRIVATE_RPORT_ATTRIBUTE_RD(port_name);
-@@ -2581,6 +2639,13 @@ fc_rport_create(struct Scsi_Host *shost, int channel,
-
-  	rport->maxframe_size = -1;
-  	rport->supported_classes = FC_COS_UNSPECIFIED;
-+	memset(rport->supported_fc4s, 0, sizeof(rport->supported_fc4s));
-+	rport->supported_speeds = FC_PORTSPEED_UNKNOWN;
-+	rport->port_type = FC_PORTTYPE_UNKNOWN;
-+	rport->speed = FC_PORTSPEED_UNKNOWN;
-+	memset(rport->active_fc4s, 0, sizeof(rport->active_fc4s));
-+	memset(rport->symbolic_name, 0, sizeof(rport->symbolic_name));
-+	rport->fabric_name = -1;
-  	rport->dev_loss_tmo = fc_host->dev_loss_tmo;
-  	memcpy(&rport->node_name, &ids->node_name, sizeof(rport->node_name));
-  	memcpy(&rport->port_name, &ids->port_name, sizeof(rport->port_name));
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 59816fe..33cf3df 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -320,10 +320,23 @@ struct device_attribute dev_attr_rport_##_name = 	\
-   * managed by the transport w/o driver interaction.
-   */
-
-+/* Size arguments used for rport and host attributes */
-+#define FC_FC4_LIST_SIZE		32
-+#define FC_SYMBOLIC_NAME_SIZE		256
-+#define FC_VERSION_STRING_SIZE		64
-+#define FC_SERIAL_NUMBER_SIZE		80
-+
-  struct fc_rport {	/* aka fc_starget_attrs */
-  	/* Fixed Attributes */
-  	u32 maxframe_size;
-  	u32 supported_classes;
++	/* Additional HBAAPI information */
 +	u8  supported_fc4s[FC_FC4_LIST_SIZE];
 +	u32 supported_speeds;
-+	enum fc_port_type port_type;
++	enum fc_port_type rport_type; /* Stores HBAAPI port_type */
 +	u32 speed;
 +	u8  active_fc4s[FC_FC4_LIST_SIZE];
 +	char symbolic_name[FC_SYMBOLIC_NAME_SIZE];
-+	u64 fabric_name;
++	uint8_t fabric_name[8];
+  } fc_port_t;
 
-  	/* Dynamic Attributes */
-  	u32 dev_loss_tmo;	/* Remote Port loss timeout in seconds. */
-@@ -470,11 +483,6 @@ enum fc_host_event_code  {
-   * managed by the transport w/o driver interaction.
+  /*
+@@ -1793,6 +1803,30 @@ typedef struct fc_port {
+  #define GFF_ID_REQ_SIZE	(16 + 4)
+  #define GFF_ID_RSP_SIZE (16 + 128)
+
++#define GSPN_SYM_NAME_SIZE	255
++#define GSPN_ID_CMD		0x0118
++#define GSPN_ID_REQ_SIZE	(16 + 4)
++#define GSPN_ID_RSP_SIZE	(16 + 1 + GSPN_SYM_NAME_SIZE)
++
++#define GFN_CMD		0x0114
++#define GFN_REQ_SIZE	(16 + 8)
++#define GFN_RSP_SIZE	(16 + 8)
++
++/* Possible port types reported by GPT_ID */
++#define GPT_PT_UNIDENTIFIED	0x00
++#define GPT_PT_N_PORT		0x01
++#define GPT_PT_NL_PORT		0x02
++#define GPT_PT_F_NL_PORT	0x03
++#define GPT_PT_NX_PORT		0x7F
++#define GPT_PT_F_PORT		0x81
++#define GPT_PT_FL_PORT		0x82
++#define GPT_PT_E_PORT		0x84
++#define GPT_PT_B_PORT		0x85
++
++#define GPT_ID_CMD	0x011A
++#define GPT_ID_REQ_SIZE	(16 + 1 + 3)
++#define GPT_ID_RSP_SIZE	(16 + 1 + 3)
++
+  /*
+   * HBA attribute types.
    */
+@@ -1998,6 +2032,25 @@ struct ct_sns_req {
+  			uint8_t reserved;
+  			uint8_t port_name[3];
+  		} gff_id;
++
++		struct {
++			uint8_t reserved;
++			uint8_t port_name[3];
++		} gspn_id;
++
++		struct {
++			uint8_t element_name[8];
++		} gfn;
++
++		struct {
++			uint8_t reserved;
++			uint8_t port_name[3];
++		} gft_id;
++
++		struct {
++			uint8_t reserved;
++			uint8_t port_name[3];
++		} gpt_id;
+  	} req;
+  };
 
--#define FC_FC4_LIST_SIZE		32
--#define FC_SYMBOLIC_NAME_SIZE		256
--#define FC_VERSION_STRING_SIZE		64
--#define FC_SERIAL_NUMBER_SIZE		80
--
-  struct fc_host_attrs {
-  	/* Fixed Attributes */
-  	u64 node_name;
-@@ -680,6 +688,13 @@ struct fc_function_template {
-  	/* remote port fixed attributes */
-  	unsigned long	show_rport_maxframe_size:1;
-  	unsigned long	show_rport_supported_classes:1;
-+	unsigned long	show_rport_supported_fc4s:1;
-+	unsigned long	show_rport_supported_speeds:1;
-+	unsigned long	show_rport_port_type:1;
-+	unsigned long   show_rport_speed:1;
-+	unsigned long   show_rport_active_fc4s:1;
-+	unsigned long   show_rport_symbolic_name:1;
-+	unsigned long	show_rport_fabric_name:1;
-  	unsigned long   show_rport_dev_loss_tmo:1;
+@@ -2075,6 +2128,20 @@ struct ct_sns_rsp {
+  		struct {
+  			uint8_t fc4_features[128];
+  		} gff_id;
++
++		struct {
++			uint8_t length;
++			uint8_t symbolic_name[GSPN_SYM_NAME_SIZE];
++		} gspn_id;
++
++		struct {
++			uint8_t fabric_name[8];
++		} gfn;
++
++		struct {
++			uint8_t port_type;
++			uint8_t reserved[3];
++		} gpt_id;
+  	} rsp;
+  };
 
-  	/*
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 1370f05..01cf0a4 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -457,6 +457,10 @@ extern int qla2x00_fdmi_register(scsi_qla_host_t *);
+  extern int qla2x00_gfpn_id(scsi_qla_host_t *, sw_info_t *);
+  extern int qla2x00_gpsc(scsi_qla_host_t *, sw_info_t *);
+  extern void qla2x00_get_sym_node_name(scsi_qla_host_t *, uint8_t *);
++extern int qla2x00_gspn_id(scsi_qla_host_t *, fc_port_t *);
++extern int qla2x00_gfn(scsi_qla_host_t *, fc_port_t *);
++extern int qla2x00_gft_id(scsi_qla_host_t *, fc_port_t *);
++extern int qla2x00_gpt_id(scsi_qla_host_t *, fc_port_t *);
+
+  /*
+   * Global Function Prototypes in qla_attr.c source file.
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 4c08392..14f54ee 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -1891,6 +1891,10 @@ qla2x00_gpsc(scsi_qla_host_t *vha, sw_info_t *list)
+  				break;
+  			}
+
++			/* Save the supported speeds bit mask */
++			list[i].supported_speeds =
++				be16_to_cpu(ct_rsp->rsp.gpsc.speeds);
++
+  			DEBUG2_3(printk("scsi(%ld): GPSC ext entry - "
+  			    "fpn %02x%02x%02x%02x%02x%02x%02x%02x speeds=%04x "
+  			    "speed=%04x.\n", vha->host_no,
+@@ -1985,3 +1989,240 @@ qla2x00_gff_id(scsi_qla_host_t *vha, sw_info_t *list)
+  			break;
+  	}
+  }
++
++
++/* SNS Get Symbolic Port Name (GSPN_ID) query */
++int
++qla2x00_gspn_id(scsi_qla_host_t *vha, fc_port_t *fcport)
++{
++	int             rval;
++	ms_iocb_entry_t *ms_pkt;
++	struct ct_sns_req       *ct_req;
++	struct ct_sns_rsp       *ct_rsp;
++	struct qla_hw_data *ha = vha->hw;
++
++	/* Prepare common MS IOCB */
++	ms_pkt = ha->isp_ops->prep_ms_iocb(vha, GSPN_ID_REQ_SIZE,
++	    GSPN_ID_RSP_SIZE);
++
++	/* Prepare CT request */
++	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, GSPN_ID_CMD,
++	    GSPN_ID_RSP_SIZE);
++	ct_rsp = &ha->ct_sns->p.rsp;
++
++	/* Prepare CT arguments -- port_id */
++	ct_req->req.port_id.port_id[0] = fcport->d_id.b.domain;
++	ct_req->req.port_id.port_id[1] = fcport->d_id.b.area;
++	ct_req->req.port_id.port_id[2] = fcport->d_id.b.al_pa;
++
++	/* Execute MS IOCB */
++	rval = qla2x00_issue_iocb(vha, ha->ms_iocb, ha->ms_iocb_dma,
++	    sizeof(ms_iocb_entry_t));
++
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3(printk(KERN_INFO
++		    "scsi(%ld): GSPN_ID issue IOCB failed "
++		    "(%d).\n", vha->host_no, rval));
++	} else if (qla2x00_chk_ms_status(vha, ms_pkt, ct_rsp,
++		       "GSPN_ID") != QLA_SUCCESS) {
++		DEBUG2_3(printk(KERN_INFO
++		    "scsi(%ld): GSPN_ID IOCB status had a "
++		    "failure status code\n", vha->host_no));
++		rval = QLA_FUNCTION_FAILED;
++	} else {
++		/* Copy the symbolic port name data */
++		if (ct_rsp->rsp.gspn_id.length <= GSPN_SYM_NAME_SIZE) {
++			memcpy(fcport->symbolic_name,
++			    ct_rsp->rsp.gspn_id.symbolic_name,
++			    ct_rsp->rsp.gspn_id.length);
++		}
++	}
++
++	return rval;
++}
++
++/* Management Server Get Interconnect Element Fabric Name (GFN) query */
++int
++qla2x00_gfn(scsi_qla_host_t *vha, fc_port_t *fcport)
++{
++	int		rval;
++	struct qla_hw_data *ha = vha->hw;
++	ms_iocb_entry_t	*ms_pkt;
++	struct ct_sns_req	*ct_req;
++	struct ct_sns_rsp	*ct_rsp;
++
++	if (!IS_FWI2_CAPABLE(ha))
++		return QLA_FUNCTION_FAILED;
++
++	/* Login into the management server on the switch.  This can be called
++	 * even ifwe are logged into the management server as the function
++	 * simply returns QLA_SUCCESS if we are already logged in */
++	rval = qla2x00_mgmt_svr_login(vha);
++	if (rval)
++		return rval;
++
++	/* Prepare common MS IOCB */
++	ms_pkt = qla24xx_prep_ms_fm_iocb(vha, GFN_REQ_SIZE, GFN_RSP_SIZE);
++
++	/* Prepare CT request */
++	ct_req = qla24xx_prep_ct_fm_req(&ha->ct_sns->p.req, GFN_CMD,
++	    GFN_RSP_SIZE);
++	ct_rsp = &ha->ct_sns->p.rsp;
++
++	/* Prepare CT arguments */
++	memcpy(ct_req->req.gfn.element_name, fcport->fabric_port_name,
++	     WWN_SIZE);
++
++	/* Execute MS IOCB */
++	rval = qla2x00_issue_iocb(vha, ha->ms_iocb, ha->ms_iocb_dma,
++	    sizeof(ms_iocb_entry_t));
++
++	/* Check the return status of the IOCB and the management server
++	 * command. If both are good then parse the response data */
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3(printk("scsi(%ld): GFN issue IOCB "
++		    "failed (%d).\n", vha->host_no, rval));
++	} else if (qla2x00_chk_ms_status(vha, ms_pkt, ct_rsp,
++	    "GFN") != QLA_SUCCESS) {
++		/* FM command unsupported? */
++		if (rval == QLA_INVALID_COMMAND &&
++		    (ct_rsp->header.reason_code ==
++		    CT_REASON_INVALID_COMMAND_CODE ||
++		    ct_rsp->header.reason_code ==
++		    CT_REASON_COMMAND_UNSUPPORTED)) {
++			DEBUG2(printk("scsi(%ld): GFN command "
++			    "unsupportedy...\n",
++			    vha->host_no));
++		}
++		rval = QLA_FUNCTION_FAILED;
++	} else {
++		memcpy(fcport->fabric_name, ct_rsp->rsp.gfn.fabric_name,
++		    WWN_SIZE);
++	}
++
++	return rval;
++}
++
++/* SNS Get FC-4 Types (GFT_ID) query */
++int
++qla2x00_gft_id(scsi_qla_host_t *vha, fc_port_t *fcport)
++{
++	int rval;
++	int i = 0;
++	ms_iocb_entry_t *ms_pkt;
++	struct ct_sns_req *ct_req;
++	struct ct_sns_rsp *ct_rsp;
++	struct qla_hw_data *ha = vha->hw;
++
++	/* Prepare common MS IOCB */
++	ms_pkt = ha->isp_ops->prep_ms_iocb(vha, GFT_ID_REQ_SIZE,
++	    GFT_ID_RSP_SIZE);
++
++	/* Prepare CT request */
++	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, GFT_ID_CMD,
++	    GFT_ID_RSP_SIZE);
++	ct_rsp = &ha->ct_sns->p.rsp;
++
++	/* Prepare CT arguments -- port_id */
++	ct_req->req.port_id.port_id[0] = fcport->d_id.b.domain;
++	ct_req->req.port_id.port_id[1] = fcport->d_id.b.area;
++	ct_req->req.port_id.port_id[2] = fcport->d_id.b.al_pa;
++
++	/* Execute MS IOCB */
++	rval = qla2x00_issue_iocb(vha, ha->ms_iocb, ha->ms_iocb_dma,
++	    sizeof(ms_iocb_entry_t));
++
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3(printk(KERN_INFO
++		    "scsi(%ld): GFT_ID issue IOCB failed "
++		    "(%d).\n", vha->host_no, rval));
++	} else if (qla2x00_chk_ms_status(vha, ms_pkt,
++	    ct_rsp, "GFT_ID") != QLA_SUCCESS) {
++		DEBUG2_3(printk(KERN_INFO
++		    "scsi(%ld): GFT_ID IOCB status had a "
++		    "failure status code\n", vha->host_no));
++		rval = QLA_FUNCTION_FAILED;
++	} else {
++		DEBUG2_3(
++			for (i = 0; i < 32; i++) {
++				printk(KERN_INFO "scsi(%ld): GFT_ID "
++				    "fc4_types[%d]=%d\n", vha->host_no, i,
++				    ct_rsp->rsp.gft_id.fc4_types[i]);
++			}
++		);
++
++		memcpy(fcport->supported_fc4s, ct_rsp->rsp.gft_id.fc4_types,
++		    sizeof(fcport->supported_fc4s));
++	}
++
++	return rval;
++}
++
++/* SNS Get Port Type (GPT_ID) query */
++int
++qla2x00_gpt_id(scsi_qla_host_t *vha, fc_port_t *fcport)
++{
++	int rval;
++	ms_iocb_entry_t *ms_pkt;
++	struct ct_sns_req *ct_req;
++	struct ct_sns_rsp *ct_rsp;
++	struct qla_hw_data *ha = vha->hw;
++
++	/* Prepare common MS IOCB */
++	ms_pkt = ha->isp_ops->prep_ms_iocb(vha, GPT_ID_REQ_SIZE,
++	    GPT_ID_RSP_SIZE);
++
++	/* Prepare CT request */
++	ct_req = qla2x00_prep_ct_req(&ha->ct_sns->p.req, GFT_ID_CMD,
++	    GFT_ID_RSP_SIZE);
++	ct_rsp = &ha->ct_sns->p.rsp;
++
++	/* Prepare CT arguments -- port_id */
++	ct_req->req.port_id.port_id[0] = fcport->d_id.b.domain;
++	ct_req->req.port_id.port_id[1] = fcport->d_id.b.area;
++	ct_req->req.port_id.port_id[2] = fcport->d_id.b.al_pa;
++
++	/* Execute MS IOCB */
++	rval = qla2x00_issue_iocb(vha, ha->ms_iocb, ha->ms_iocb_dma,
++	    sizeof(ms_iocb_entry_t));
++
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3(printk(KERN_INFO
++		    "scsi(%ld): GPT_ID issue IOCB failed "
++		    "(%d).\n", vha->host_no, rval));
++	} else if (qla2x00_chk_ms_status(vha, ms_pkt, ct_rsp,
++	    "GPT_ID") != QLA_SUCCESS) {
++		DEBUG2_3(printk(KERN_INFO
++		    "scsi(%ld): GPT_ID IOCB status had a "
++		    "failure status code\n", vha->host_no));
++		rval = QLA_FUNCTION_FAILED;
++	} else {
++		DEBUG2_3(printk(KERN_INFO
++		    "scsi(%ld): GPT_ID "
++		    "port_type=x%02x\n", vha->host_no,
++		    ct_rsp->rsp.gpt_id.port_type));
++
++		switch (ct_rsp->rsp.gpt_id.port_type) {
++		case GPT_PT_N_PORT:
++		case GPT_PT_NX_PORT:
++			fcport->rport_type = FC_PORTTYPE_NPORT;
++			break;
++		case GPT_PT_NL_PORT:
++			fcport->rport_type = FC_PORTTYPE_NLPORT;
++			break;
++		case GPT_PT_F_NL_PORT:
++		case GPT_PT_F_PORT:
++		case GPT_PT_FL_PORT:
++		case GPT_PT_E_PORT:
++		case GPT_PT_B_PORT:
++			fcport->rport_type = FC_PORTTYPE_OTHER;
++			break;
++		case GPT_PT_UNIDENTIFIED:
++		default:
++			fcport->rport_type = FC_PORTTYPE_UNKNOWN;
++			break;
++		}
++	}
++
++	return rval;
++}
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index e9b800e..6094ce6 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2535,6 +2535,13 @@ qla2x00_alloc_fcport(scsi_qla_host_t *vha, gfp_t flags)
+  	fcport->loop_id = FC_NO_LOOP_ID;
+  	atomic_set(&fcport->state, FCS_UNCONFIGURED);
+  	fcport->supported_classes = FC_COS_UNSPECIFIED;
++	memset(fcport->supported_fc4s, 0, sizeof(fcport->supported_fc4s));
++	fcport->supported_speeds = FC_PORTSPEED_UNKNOWN;
++	fcport->rport_type = FC_PORTTYPE_UNKNOWN;
++	fcport->speed = FC_PORTSPEED_UNKNOWN;
++	memset(fcport->active_fc4s, 0, sizeof(fcport->active_fc4s));
++	memset(fcport->symbolic_name, 0, sizeof(fcport->symbolic_name));
++	memset(fcport->fabric_name, 0, sizeof(fcport->fabric_name));
+
+  	return fcport;
+  }
+@@ -2872,6 +2879,33 @@ qla2x00_iidma_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+  }
+
+  static void
++qla2x00_update_rport_attrs(scsi_qla_host_t *vha, fc_port_t *fcport,
++	struct fc_rport *rport)
++{
++	rport->supported_classes = fcport->supported_classes;
++	rport->maxframe_size = vha->hw->init_cb->frame_payload_size;
++	rport->supported_speeds = fcport->supported_speeds;
++	rport->speed = fcport->speed;
++
++	qla2x00_gft_id(vha, fcport);
++	memcpy(rport->supported_fc4s, fcport->supported_fc4s,
++	    sizeof(rport->supported_fc4s));
++	/* For now just use the information from gft_id for active_fc4s */
++	memcpy(rport->active_fc4s, fcport->supported_fc4s,
++	    sizeof(rport->active_fc4s));
++
++	qla2x00_gpt_id(vha, fcport);
++	rport->port_type = fcport->rport_type;
++
++	qla2x00_gspn_id(vha, fcport);
++	memcpy(rport->symbolic_name, fcport->symbolic_name,
++	    sizeof(rport->symbolic_name));
++
++	qla2x00_gfn(vha, fcport);
++	memcpy(&rport->fabric_name, fcport->fabric_name, 8);
++}
++
++static void
+  qla2x00_reg_remote_port(scsi_qla_host_t *vha, fc_port_t *fcport)
+  {
+  	struct fc_rport_identifiers rport_ids;
+@@ -2895,7 +2929,7 @@ qla2x00_reg_remote_port(scsi_qla_host_t *vha, fc_port_t *fcport)
+  	*((fc_port_t **)rport->dd_data) = fcport;
+  	spin_unlock_irq(fcport->vha->host->host_lock);
+
+-	rport->supported_classes = fcport->supported_classes;
++	qla2x00_update_rport_attrs(vha, fcport, rport);
+
+  	rport_ids.roles = FC_RPORT_ROLE_UNKNOWN;
+  	if (fcport->port_type == FCT_INITIATOR)
+@@ -3224,6 +3258,8 @@ qla2x00_find_all_fabric_devs(scsi_qla_host_t *vha,
+  				    swl[swl_idx].fabric_port_name, WWN_SIZE);
+  				new_fcport->fp_speed = swl[swl_idx].fp_speed;
+  				new_fcport->fc4_type = swl[swl_idx].fc4_type;
++				new_fcport->supported_speeds =
++				    swl[swl_idx].supported_speeds;
+
+  				if (swl[swl_idx].d_id.b.rsvd_1 != 0) {
+  					last_dev = 1;
 -- 
 1.6.4.2
-
