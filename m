@@ -1,90 +1,49 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [PATCH] libfc: fix stats computation in fc_queuecommand()
-Date: Thu, 28 Oct 2010 22:24:05 +0800
-Message-ID: <AANLkTi=shB6dQb9q1R=V=Cr7fFV5GUSabn3drjg-d3V+@mail.gmail.com>
-References: <AANLkTimz_LBaPPJ_irEjiBy+f_MPCYYbLvD=oEw=JT-c@mail.gmail.com>
-	<AANLkTimVZpakuwjAk0BJFhxtfZ5+Koard6=DE7LXVr6g@mail.gmail.com>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: RE: [Open-FCoE] [PATCH 1/2] libfc: fix mem leak in fc_tm_done()
+Date: Thu, 28 Oct 2010 07:56:04 -0700
+Message-ID: <7C88852EF6F99F4EB538472FCFEBE2220146F9C51A@orsmsx509.amr.corp.intel.com>
+References: <AANLkTinAOy9+WPuKGro09Cu=xiLF+QMQ+JkioHNZao9n@mail.gmail.com>
+	<1288229055.1431.46.camel@fritz> <4CC8D7FD.3070608@cs.wisc.edu>
+ <AANLkTinwg2OrP1fLLWzJuuuJc8H7RcOppkzYyBP5pAr0@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:64242 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648Ab0J1OYI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2010 10:24:08 -0400
-Received: by wwi18 with SMTP id 18so2938117wwi.1
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2010 07:24:06 -0700 (PDT)
-In-Reply-To: <AANLkTimVZpakuwjAk0BJFhxtfZ5+Koard6=DE7LXVr6g@mail.gmail.com>
+Received: from mga14.intel.com ([143.182.124.37]:13975 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933494Ab0J1O4H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Oct 2010 10:56:07 -0400
+In-Reply-To: <AANLkTinwg2OrP1fLLWzJuuuJc8H7RcOppkzYyBP5pAr0@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chetan Loke <chetanloke@gmail.com>
-Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
+To: Hillf Danton <dhillf@gmail.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Oct 26, 2010 at 11:02 PM, Chetan Loke <chetanloke@gmail.com> wr=
-ote:
-> On Tue, Oct 26, 2010 at 9:01 AM, Hillf Danton <dhillf@gmail.com> wrot=
-e:
->> There seems accumulation needed.
->
-> I'm looking at the code but why increment in queue-command. What if
-> the cmd-fails then
-> we would need to decrement the counters. If not done already then
-> fc_io_cmpl would be
-> a nice place to handle the counters.
-
-It is fixed for clear display somewhere else.
-
-Though what you concern is out of the scope of this patch, patch is wel=
-come.
-
-Please patch the counters //Hillf
-
->
-> Chetan Loke
->
->
->> ---
->>
->> --- a/drivers/scsi/libfc/fc_fcp.c =C2=A0 =C2=A0 =C2=A0 2010-09-13 07=
-:07:38.000000000 +0800
->> +++ b/drivers/scsi/libfc/fc_fcp.c =C2=A0 =C2=A0 =C2=A0 2010-10-26 20=
-:52:46.000000000 +0800
->> @@ -1821,11 +1821,11 @@ int fc_queuecommand(struct scsi_cmnd *sc
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (sc_cmd->sc_data_direction =3D=3D DMA_=
-=46ROM_DEVICE) {
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fsp->req_flag=
-s =3D FC_SRB_READ;
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0stats->InputR=
-equests++;
->> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stats->InputMegab=
-ytes =3D fsp->data_len;
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stats->InputMegab=
-ytes +=3D fsp->data_len;
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0} else if (sc_cmd->sc_data_direction =3D=3D=
- DMA_TO_DEVICE) {
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fsp->req_flag=
-s =3D FC_SRB_WRITE;
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0stats->Output=
-Requests++;
->> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stats->OutputMega=
-bytes =3D fsp->data_len;
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 stats->OutputMega=
-bytes +=3D fsp->data_len;
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0} else {
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0fsp->req_flag=
-s =3D 0;
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0stats->Contro=
-lRequests++;
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
->>
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+PiBPbiBUaHUsIE9jdCAyOCwgMjAxMCBhdCA5OjU1IEFNLCBNaWtlIENocmlzdGllIDxtaWNoYWVs
+Y0Bjcy53aXNjLmVkdT4NCj4gd3JvdGU6DQo+ID4gT24gMTAvMjcvMjAxMCAwODoyNCBQTSwgUm9i
+ZXJ0IExvdmUgd3JvdGU6DQo+ID4+DQo+ID4+IE9uIE1vbiwgMjAxMC0xMC0yNSBhdCAyMDozNyAr
+MDgwMCwgSGlsbGYgRGFudG9uIHdyb3RlOg0KPiA+Pj4NCj4gPj4+IFRoZXJlIHNlZW1zIGZyYW1l
+IHNob3VsZCBnZXQgZnJlZWQgYWdhaW5zdCBtZW1vcnkgbGVha2FnZS4NCj4gPj4+DQo+ID4+PiBT
+aWduZWQtb2ZmLWJ5OiBIaWxsZiBEYW50b248ZGhpbGxmQGdtYWlsLmNvbT4NCj4gPj4+IC0tLQ0K
+PiA+Pj4NCj4gPj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9saWJmYy9mY19mY3AuYyDCoCDCoCDCoCAy
+MDEwLTA5LTEzIDA3OjA3OjM4LjAwMDAwMDAwMA0KPiA+Pj4gKzA4MDANCj4gPj4+ICsrKyBiL2Ry
+aXZlcnMvc2NzaS9saWJmYy9mY19mY3AuYyDCoCDCoCDCoCAyMDEwLTEwLTI1IDIwOjMxOjA0LjAw
+MDAwMDAwMA0KPiA+Pj4gKzA4MDANCj4gPj4+IEBAIC0xMjk0LDYgKzEyOTQsNyBAQCBzdGF0aWMg
+dm9pZCBmY190bV9kb25lKHN0cnVjdCBmY19zZXEgKnNlDQo+ID4+PiDCoCDCoCDCoCDCoCAqLw0K
+PiA+Pj4gwqAgwqAgwqAgwqBpZiAoIWZzcC0+c2VxX3B0ciB8fCAhZnNwLT53YWl0X2Zvcl9jb21w
+KSB7DQo+ID4+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHNwaW5fdW5sb2NrX2JoKCZmc3AtPnNj
+c2lfcGt0X2xvY2spOw0KPiA+Pg0KPiA+PiBJIHdvbmRlciBpZiB0aGlzIHNob3VsZCBiZSBhIGZj
+X2ZjcF91bmxvY2tfcGt0KGZzcCkgc2luY2Ugd2UgZ2V0IHRoZQ0KPiA+PiBsb2NrIHdpdGggdGhl
+IGZjX2ZjcF9sb2NrX3BrdChmc3ApIGNhbGwgYWJvdmUuDQo+ID4+DQo+IEFjY29yZGluZyB0byBv
+bmUgcXVlc3Rpb24gYSBwYXRjaCwgdHdvIHdlcmUgZGVsaXZlcmVkLCBwbGVhc2UgY2hlY2sgdGhl
+bS4NCj4gDQo+IEhlcmUgSSB3YW50IGZyYW1lIGdldCBmcmVlZC4gLy9IaWxsZg0KPiANCj4gPg0K
+PiA+IERpZCBJIGRvIHRoYXQuIEkgdGhpbmsgeW91IGFyZSByaWdodC4gTm90IHN1cmUgd2hhdCBo
+YXBwZW5lZCBpZiBpdCB3YXMNCj4gbWUuDQo+ID4NCg0KSSB3b3VsZCB0aGluayBmY19mcmFtZV9m
+cmVlKCkgYmUgY2FsbGVkIG9uIGFsbCB0aGUgaWYgKCkgeyAuLnJldHVybiB9IGNhc2VzLCB0aGUN
+CmNhbGxlciB3b24ndCBkbyB0aGF0IGZyb20gZmNfZXhjaF9yZWN2KCksIGFsc28sIGZyYW1lIHNo
+b3VsZCBiZSBmcmVlZCBhZnRlciB1bmxvY2sNCnRoZSBmc3A6DQp7DQoJaWYgKElTX0VSUihmcCkp
+IA0KCQlnb3RvIG91dDsNCglpZiAoZmNfZmNwX2xvY2tfcGt0KGZzcCkpDQoJCWdvdG8gb3V0Ow0K
+CWlmICghZnNwLT5zZXFfcHRyIHx8ICFmc3AtPndhaXRfZm9yX2NvbXApDQoJCWdvdG8gb3V0X3Vu
+bG9jazsNCg0KCS4uLg0KDQpvdXRfdW5sb2NrOg0KCWZjX2ZjcF91bmxvY2tfcGt0KGZzcCk7DQpv
+dXQ6DQoJZmNfZnJhbWVfZnJlZShmcCk7DQoJICAgICAgIA0KfQ0KDQp5aQ0K
