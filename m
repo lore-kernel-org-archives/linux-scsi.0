@@ -1,122 +1,230 @@
-From: "Zou, Yi" <yi.zou@intel.com>
-Subject: RE: [Open-FCoE] [PATCH] libfc: tune fc_exch_em_alloc() to be O(2)
-Date: Thu, 28 Oct 2010 08:04:20 -0700
-Message-ID: <7C88852EF6F99F4EB538472FCFEBE2220146F9C539@orsmsx509.amr.corp.intel.com>
-References: <AANLkTinpHyH31BsBKTHEg8CpbBYL1x7G3tMVu-1KGpy5@mail.gmail.com>
-	<1288215374.1431.21729.camel@fritz>
- <AANLkTi=gT1CZyaq1AsTDo3_DVVzrF6c0JLJaYKr+A85r@mail.gmail.com>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Full hostlock pushdown available
+Date: Thu, 28 Oct 2010 17:05:09 +0200
+Message-ID: <20101028150508.GA2385@basil.fritz.box>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:54633 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751420Ab0J1PEX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Oct 2010 11:04:23 -0400
-In-Reply-To: <AANLkTi=gT1CZyaq1AsTDo3_DVVzrF6c0JLJaYKr+A85r@mail.gmail.com>
-Content-Language: en-US
+Received: from one.firstfloor.org ([213.235.205.2]:37638 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736Ab0J1PFP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2010 11:05:15 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>, "Love, Robert W" <robert.w.love@intel.com>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-PiBPbiBUaHUsIE9jdCAyOCwgMjAxMCBhdCA1OjM2IEFNLCBSb2JlcnQgTG92ZSA8cm9iZXJ0Lncu
-bG92ZUBpbnRlbC5jb20+DQo+IHdyb3RlOg0KPiA+IE9uIEZyaSwgMjAxMC0xMC0yMiBhdCAyMDoy
-MCArMDgwMCwgSGlsbGYgRGFudG9uIHdyb3RlOg0KPiA+PiBGb3IgYWxsb2NhdGluZyBuZXcgZXhj
-aCBmcm9tIHBvb2wsIMKgc2Nhbm5pbmcgZm9yIGZyZWUgc2xvdCBpbiBleGNoDQo+ID4+IGFycmF5
-IGZsdWN0dWF0ZXMgd2hlbiBleGNoIHBvb2wgaXMgY2xvc2UgdG8gZXhoYXVzdGlvbi4NCj4gPj4N
-Cj4gPj4gVGhlIGZsdWN0dWF0aW9uIGlzIHNtb290aGVkLCBhbmQgdGhlIHNjYW4gbG9va3MgdG8g
-YmUgTygyKS4NCj4gPj4NCj4gPiBIaSBIaWxsZiwNCj4gPg0KPiA+IMKgIEkgdGhpbmsgdGhpcyBw
-YXRjaCBpcyBmaW5lLCBhc2lkZSBmcm9tIGEgZmV3IG1pbm9yIG5pdHMgYmVsb3cuIEknbQ0KPiA+
-IG5vdCBzdXJlIGhvdyBtdWNoIHRoaXMgYmVuZWZpdHMgdXMgdGhvdWdoLiBJIGRvbid0IHRoaW5r
-IHRoYXQgaXQgd2lsbA0KPiA+IGh1cnQgdXMsIGJ1dCBJJ2QgbGlrZSB0byBsZWF2ZSBpdCBpbiB0
-aGUgZmNvZS1uZXh0IHRyZWUgYSBiaXQgdG8gbWFrZQ0KPiA+IHN1cmUgdGhlcmUgYXJlbid0IGFu
-eSBhZHZlcnNlIGVmZmVjdHMuIEkgd2lsbCBmaXggdGhlIHR3byBpc3N1ZXMgSQ0KPiA+IG1lbnRp
-b24gYmVsb3cgYW5kIGNoZWNrIGl0IGludG8gZmNvZS1uZXh0LCB1bmxlc3MgdGhlcmUgYXJlIG9i
-amVjdGlvbnMuDQo+ID4NCj4gPiBIYXZlIHlvdSBkb25lIGFueSBwcm9maWxpbmcgd2l0aCB0aGlz
-IHBhdGNoIHRvIHNob3cgdGhlIGltcHJvdmVtZW50Pw0KPiANCj4gSXQgaXMgTygxKSB3aGVuIGxv
-b2tpbmcgdXAgZXhjaC4gVmVyeSBjb29sLg0KPiBJbiBhbGxvY2F0aW5nIE8oMSkgd2FzIHRyaWVk
-IGJ1dCBmYWlsZWQuDQo+IA0KSG93IG11Y2ggZmx1Y3R1YXRpb24gaGF2ZSB5b3Ugb2JzZXJ2ZWQ/
-IFlvdXIgcGF0Y2ggbG9va3MgcmVhc29uYWJsZSB0byBtZQ0KdG8gY2FjaGUgdGhlIGZyZWVkIHhp
-ZCBhbmQgcmV1c2UgaXQgaW5zdGVhZCBvZiBzY2FubmluZyB0aGUgYXJyYXkuIEN1cnJlbnRseSwN
-CmFzIHdlIGluY3JlbWVudGFsbHkgYWxsb2NhdGUgbmV3IHhpZCwgZWFybGllciBhbGxvY2F0ZWQg
-eGlkcyBhcmUgZXhwZWN0ZWQgdG8NCmJlIGZyZWVkIGVhcmxpZXIsIEkgd291bGQgdGhpbmsgc28g
-dGhlIGRpc3RhbmNlIHRvIHNjYW4gd291bGQgbm90IGJlIHJlYWxseQ0KdGhhdCBiYWQuIA0KDQpB
-bHNvLCBvbiBsb3cgdXNlLCB3ZSB3aWxsIHByb2JhYmx5IG9ubHkgc2VlIHhpZHMgb2YgbGVmdCBh
-bmQgcmlnaHQsIHdoaWNoIEkNCmd1ZXNzIGl0J3MgZmluZSwgZG9uJ3QgcmVjYWxsIGlmIHRoZXJl
-J3MgcmVxdWlyZW1lbnQgb24gY29uc2VjdXRpdmUgeGlkIGJlaW5nDQphcGFydCBmcm9tIGVhY2gg
-b3RoZXIgZnJvbSB0aGUgc3BlYywgYnV0IEkgYW0gbm90IHN1cmUuDQoNCnlpDQoNCj4gPg0KPiA+
-PiBTaWduZWQtb2ZmLWJ5OiBIaWxsZiBEYW50b24gPGRoaWxsZkBnbWFpbC5jb20+DQo+ID4+IC0t
-LQ0KPiA+Pg0KPiA+PiAtLS0gYS9kcml2ZXJzL3Njc2kvbGliZmMvZmNfZXhjaC5jIMKgIMKgMjAx
-MC0wOS0xMyAwNzowNzozOC4wMDAwMDAwMDANCj4gKzA4MDANCj4gPj4gKysrIGIvZHJpdmVycy9z
-Y3NpL2xpYmZjL2ZjX2V4Y2guYyDCoCDCoDIwMTAtMTAtMjIgMjA6MDI6NTQuMDAwMDAwMDAwDQo+
-ICswODAwDQo+ID4+IEBAIC02Nyw2ICs2NywxMSBAQCBzdHJ1Y3Qgd29ya3F1ZXVlX3N0cnVjdCAq
-ZmNfZXhjaF93b3JrcXVlDQo+ID4+IMKgc3RydWN0IGZjX2V4Y2hfcG9vbCB7DQo+ID4+IMKgIMKg
-IMKgIHUxNiDCoCDCoCDCoCDCoCDCoCDCoCDCoG5leHRfaW5kZXg7DQo+ID4+IMKgIMKgIMKgIHUx
-NiDCoCDCoCDCoCDCoCDCoCDCoCDCoHRvdGFsX2V4Y2hlczsNCj4gPj4gKw0KPiA+PiArIMKgIMKg
-IC8qIHR3byBjYWNoZSBvZiBmcmVlIHNsb3QgaW4gZXhjaCBhcnJheSAqLw0KPiA+PiArIMKgIMKg
-IHUxNiDCoCDCoCDCoCDCoCDCoCDCoCDCoGxlZnQ7DQo+ID4+ICsgwqAgwqAgdTE2IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgcmlnaHQ7DQo+ID4+ICsNCj4gPj4gwqAgwqAgwqAgc3BpbmxvY2tfdCDCoCDC
-oCDCoCBsb2NrOw0KPiA+PiDCoCDCoCDCoCBzdHJ1Y3QgbGlzdF9oZWFkIGV4X2xpc3Q7DQo+ID4+
-IMKgfTsNCj4gPj4gQEAgLTM5NywxMyArNDAyLDI2IEBAIHN0YXRpYyBpbmxpbmUgdm9pZCBmY19l
-eGNoX3B0cl9zZXQoc3RydWMNCj4gPj4gwqBzdGF0aWMgdm9pZCBmY19leGNoX2RlbGV0ZShzdHJ1
-Y3QgZmNfZXhjaCAqZXApDQo+ID4+IMKgew0KPiA+PiDCoCDCoCDCoCBzdHJ1Y3QgZmNfZXhjaF9w
-b29sICpwb29sOw0KPiA+PiArIMKgIMKgIHUxNiBpbmRleDsNCj4gPj4NCj4gPj4gwqAgwqAgwqAg
-cG9vbCA9IGVwLT5wb29sOw0KPiA+PiDCoCDCoCDCoCBzcGluX2xvY2tfYmgoJnBvb2wtPmxvY2sp
-Ow0KPiA+PiDCoCDCoCDCoCBXQVJOX09OKHBvb2wtPnRvdGFsX2V4Y2hlcyA8PSAwKTsNCj4gPj4g
-wqAgwqAgwqAgcG9vbC0+dG90YWxfZXhjaGVzLS07DQo+ID4+IC0gwqAgwqAgZmNfZXhjaF9wdHJf
-c2V0KHBvb2wsIChlcC0+eGlkIC0gZXAtPmVtLT5taW5feGlkKSA+PiBmY19jcHVfb3JkZXIsDQo+
-ID4+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgTlVMTCk7DQo+ID4+ICsNCj4gPj4g
-KyDCoCDCoCAvKiB1cGRhdGUgY2FjaGUgb2YgZnJlZSBzbG90ICovDQo+ID4+ICsgwqAgwqAgaW5k
-ZXggPSAoZXAtPnhpZCAtIGVwLT5lbS0+bWluX3hpZCkgPj4gZmNfY3B1X29yZGVyOw0KPiA+PiAr
-IMKgIMKgIGlmIChwb29sLT5sZWZ0ID09IEZDX1hJRF9VTktOT1dOKQ0KPiA+PiArIMKgIMKgIMKg
-IMKgIMKgIMKgIHBvb2wtPmxlZnQgPSBpbmRleDsNCj4gPj4gKyDCoCDCoCBlbHNlIGlmIChwb29s
-LT5yaWdodCA9PSBGQ19YSURfVU5LTk9XTikNCj4gPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCBwb29s
-LT5yaWdodCA9IGluZGV4Ow0KPiA+PiArIMKgIMKgIGVsc2UNCj4gPj4gKyDCoCDCoCDCoCDCoCDC
-oCDCoCAvKiBYWFgNCj4gPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCogbmV4dCA9IGVudHJvcHko
-aW5kZXgsIGxlZnQsIHJpZ2h0KTsNCj4gPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCoqLw0KPiA+
-DQo+ID4gV2UgY2FuIHJlbW92ZSB0aGlzIGNvbW1lbnQsIHJpZ2h0Pw0KPiANCj4gTm9kZS4NCj4g
-DQo+ID4NCj4gPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCBwb29sLT5uZXh0X2luZGV4ID0gaW5kZXg7
-DQo+ID4+ICsNCj4gPj4gKyDCoCDCoCBmY19leGNoX3B0cl9zZXQocG9vbCwgaW5kZXgsIE5VTEwp
-Ow0KPiA+PiDCoCDCoCDCoCBsaXN0X2RlbCgmZXAtPmV4X2xpc3QpOw0KPiA+PiDCoCDCoCDCoCBz
-cGluX3VubG9ja19iaCgmcG9vbC0+bG9jayk7DQo+ID4+IMKgIMKgIMKgIGZjX2V4Y2hfcmVsZWFz
-ZShlcCk7IMKgIMKgLyogZHJvcCBob2xkIGZvciBleGNoIGluIG1wICovDQo+ID4+IEBAIC02Nzks
-NiArNjk3LDE5IEBAIHN0YXRpYyBzdHJ1Y3QgZmNfZXhjaCAqZmNfZXhjaF9lbV9hbGxvYygNCj4g
-Pj4gwqAgwqAgwqAgcG9vbCA9IHBlcl9jcHVfcHRyKG1wLT5wb29sLCBjcHUpOw0KPiA+PiDCoCDC
-oCDCoCBzcGluX2xvY2tfYmgoJnBvb2wtPmxvY2spOw0KPiA+PiDCoCDCoCDCoCBwdXRfY3B1KCk7
-DQo+ID4+ICsNCj4gPj4gKyDCoCDCoCAvKiBwZWVrIGNhY2hlIG9mIGZyZWUgc2xvdCAqLw0KPiA+
-PiArIMKgIMKgIGlmIChwb29sLT5sZWZ0ICE9IEZDX1hJRF9VTktOT1dOKSB7DQo+ID4+ICsgwqAg
-wqAgwqAgwqAgwqAgwqAgaW5kZXggPSBwb29sLT5sZWZ0Ow0KPiA+PiArIMKgIMKgIMKgIMKgIMKg
-IMKgIHBvb2wtPmxlZnQgPSBGQ19YSURfVU5LTk9XTjsNCj4gPj4gKyDCoCDCoCDCoCDCoCDCoCDC
-oCBnb3RvIGhpdDsNCj4gPj4gKyDCoCDCoCB9DQo+ID4+ICsgwqAgwqAgaWYgKHBvb2wtPnJpZ2h0
-ICE9IEZDX1hJRF9VTktOT1dOKSB7DQo+ID4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgaW5kZXggPSBw
-b29sLT5yaWdodDsNCj4gPj4gKyDCoCDCoCDCoCDCoCDCoCDCoCBwb29sLT5yaWdodCA9IEZDX1hJ
-RF9VTktOT1dOOw0KPiA+PiArIMKgIMKgIMKgIMKgIMKgIMKgIGdvdG8gaGl0Ow0KPiA+PiArIMKg
-IMKgIH0NCj4gPj4gKw0KPiA+PiDCoCDCoCDCoCBpbmRleCA9IHBvb2wtPm5leHRfaW5kZXg7DQo+
-ID4+IMKgIMKgIMKgIC8qIGFsbG9jYXRlIG5ldyBleGNoIGZyb20gcG9vbCAqLw0KPiA+PiDCoCDC
-oCDCoCB3aGlsZSAoZmNfZXhjaF9wdHJfZ2V0KHBvb2wsIGluZGV4KSkgew0KPiA+PiBAQCAtNjg3
-LDcgKzcxOCw3IEBAIHN0YXRpYyBzdHJ1Y3QgZmNfZXhjaCAqZmNfZXhjaF9lbV9hbGxvYygNCj4g
-Pj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgZ290byBlcnI7DQo+ID4+IMKgIMKg
-IMKgIH0NCj4gPj4gwqAgwqAgwqAgcG9vbC0+bmV4dF9pbmRleCA9IGluZGV4ID09IG1wLT5wb29s
-X21heF9pbmRleCA/IDAgOiBpbmRleCArIDE7DQo+ID4+IC0NCj4gPj4gK2hpdDoNCj4gPj4gwqAg
-wqAgwqAgZmNfZXhjaF9ob2xkKGVwKTsgwqAgwqAgwqAgLyogaG9sZCBmb3IgZXhjaCBpbiBtcCAq
-Lw0KPiA+PiDCoCDCoCDCoCBzcGluX2xvY2tfaW5pdCgmZXAtPmV4X2xvY2spOw0KPiA+PiDCoCDC
-oCDCoCAvKg0KPiA+PiBAQCAtMjE4MSw2ICsyMjEyLDggQEAgc3RydWN0IGZjX2V4Y2hfbWdyICpm
-Y19leGNoX21ncl9hbGxvYyhzdA0KPiA+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCBnb3RvIGZyZWVf
-bWVtcG9vbDsNCj4gPj4gwqAgwqAgwqAgZm9yX2VhY2hfcG9zc2libGVfY3B1KGNwdSkgew0KPiA+
-PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCBwb29sID0gcGVyX2NwdV9wdHIobXAtPnBvb2wsIGNwdSk7
-DQo+ID4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgcG9vbC0+bGVmdCDCoD0NCj4gPg0KPiA+IEkgdGhp
-bmsgd2Ugc2hvdWxkIGluaXRpYWxpemUgdGhpcyB3aXRob3V0IHJlbHlpbmcgb24gdGhlIGZvbGxv
-d2luZyBsaW5lLg0KPiANCj4gSXQgbG9va3MgbGlrZSwNCj4gDQo+ICAgICAgICAgICAgICAgICAg
-ICAgcG9vbC0+bGVmdCA9IHBvb2wtPnJpZ2h0ID0gRkNfWElEX1VOS05PV047DQo+IHJpZ2h0Pw0K
-PiANCj4gSSB3YW50IGNhY2hlIHBsYXkgaXRzIHJvbGUgYWZ0ZXIgd2FybS11cC4NCj4gDQo+IHRo
-YW5rcyAvL0hpbGxmDQo+IA0KPiA+DQo+ID4+ICsgwqAgwqAgwqAgwqAgwqAgwqAgcG9vbC0+cmln
-aHQgPSBGQ19YSURfVU5LTk9XTjsNCj4gPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgc3Bpbl9sb2Nr
-X2luaXQoJnBvb2wtPmxvY2spOw0KPiA+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCBJTklUX0xJU1Rf
-SEVBRCgmcG9vbC0+ZXhfbGlzdCk7DQo+ID4+IMKgIMKgIMKgIH0NCj4gPj4gX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCj4gPj4gZGV2ZWwgbWFpbGluZyBs
-aXN0DQo+ID4+IGRldmVsQG9wZW4tZmNvZS5vcmcNCj4gPj4gaHR0cDovL3d3dy5vcGVuLWZjb2Uu
-b3JnL21haWxtYW4vbGlzdGluZm8vZGV2ZWwNCj4gPg0KPiA+DQo+ID4NCj4gX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCj4gZGV2ZWwgbWFpbGluZyBsaXN0
-DQo+IGRldmVsQG9wZW4tZmNvZS5vcmcNCj4gaHR0cDovL3d3dy5vcGVuLWZjb2Uub3JnL21haWxt
-YW4vbGlzdGluZm8vZGV2ZWwNCg==
+
+Here's the promised attempt to do a full host_lock pushdown. This
+was done using coccinelle and some manual adjustments.
+
+This is just a dumb pushdown of host lock and serial number into
+the driver, no attempt to remove any locks yet.
+
+Currently lightly tested, but compiles with allmodconfig on 32bit x86.
+
+I made no attempt to automatically add maintainers to Cc.
+
+I'm not posting the patches because they are numerous and boring,
+but it's available in git.
+
+This will likely bitrot quickly so if it's decided to do it this
+way I would prefer if this was merged quickly.
+
+Issues found:
+- I found a clear deadlock in aha1740, not sure if that driver ever
+worked since host_lock was introduced. Anyways I attempted to work
+around it. But if it's really that unused it may be better to 
+simply drop it.
+- I'm not sure how to compile cciss_scsi, is it even used?
+
+-Andi
+
+The following changes since commit 39764981e772adc832d8a96e6540be346a830ca2:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6 (2010-10-27 20:54:34 +0200)
+
+are available in the git repository at:
+
+  ssh://master.kernel.org/pub/scm/linux/kernel/git/ak/linux-misc-2.6.git hostlock
+
+Andi Kleen (87):
+      SCSI: Remove hostlock for queuecommand
+      SCSI: ibmmca: hostlock pushdown
+      SCSI: ipr: hostlock pushdown
+      SCSI: ultrastor: hostlock pushdown
+      SCSI: aha1740: hostlock pushdown
+      SCSI: ia64 simscsi: hostlock pushdown
+      SCSI: sun3_NCR5380: pushdown of hostlock
+      SCSI: staging/hv/storvsc_drv: pushdown of hostlock
+      SCSI: s390/zfcp_scsi: hostlock pushdown
+      SCSI: libiscsi: hostlock pushdown
+      SCSI: libiscsi: remove hostlock drop
+      SCSI: NCR5380: hostlock pushdown
+      SCSI: libsas: hostlock pushdown
+      SCSI: stex: hostlock pushdown
+      SCSI: wd33c93: hostlock pushdown
+      SCSI: aha152x: hostlock pushdown
+      SCSI: microtek: hostlock pushdown
+      SCSI: scsiglue: hostlock pushdown
+      SCSI: uas: hostlock pushdown
+      SCSI: i2o_scsi: hostlock pushdown
+      SCSI: mptspi: hostlock pushdown
+      SCSI: mptsas: hostlock pushdown
+      SCSI: mptfc: hostlock pushdown
+      SCSI: sbp2: hostlock pushdown
+      SCSI: ib_srp: hostlock pushdown
+      SCSI: mesh: hostlock pushdown
+      SCSI: fd_mcs: hostlock pushdown
+      SCSI: fnic_main: hostlock pushdown
+      SCSI: gdth: hostlock pushdown
+      SCSI: ppa: hostlock pushdown
+      SCSI: qlogicpti: hostlock pushdown
+      SCSI: 3w-sas: hostlock pushdown
+      SCSI: 3w-9xxx: hostlock pushdown
+      SCSI: fcoe: hostlock pushdown
+      SCSI: ips: hostlock pushdown
+      SCSI: sym_glue: hostlock pushdown
+      SCSI: ql4_os: hostlock pushdown
+      SCSI: mpt2sas_scsih: hostlock pushdown
+      SCSI: fdomain: hostlock pushdown
+      SCSI: initio: hostlock pushdown
+      SCSI: in2000: hostlock pushdown
+      SCSI: nsp32: hostlock pushdown
+      SCSI: megaraid_sas: hostlock pushdown
+      SCSI: megaraid_mbox: hostlock pushdown
+      SCSI: BusLogic: hostlock pushdown
+      SCSI: dpt_i2o: hostlock pushdown
+      SCSI: 3w-xxxx: hostlock pushdown
+      SCSI: atp870u: hostlock pushdown
+      SCSI: qlogicfas: hostlock pushdown
+      SCSI: qla1280: hostlock pushdown
+      SCSI: dc395x: hostlock pushdown
+      SCSI: linit: hostlock pushdown
+      SCSI: ibmvfc: hostlock pushdown
+      SCSI: ibmvscsi: hostlock pushdown
+      SCSI: lpfc_scsi: hostlock pushdown
+      SCSI: ps3rom: hostlock pushdown
+      SCSI: pmcraid: hostlock pushdown
+      SCSI: eata: hostlock pushdown
+      SCSI: tmscsim: hostlock pushdown
+      SCSI: imm: hostlock pushdown
+      SCSI: wd7000: hostlock pushdown
+      SCSI: sym53c416: hostlock pushdown
+      SCSI: aic7xxx_old: hostlock pushdown
+      SCSI: megaraid: hostlock pushdown
+      SCSI: aha1542: hostlock pushdown
+      SCSI: eata_pio: hostlock pushdown
+      SCSI: esp_scsi: hostlock pushdown
+      SCSI: a100u2w: hostlock pushdown
+      SCSI: hpsa: hostlock pushdown
+      SCSI: NCR53c406a: hostlock pushdown
+      SCSI: mac53c94: hostlock pushdown
+      SCSI: vmw_pvscsi: hostlock pushdown
+      SCSI: 53c700: hostlock pushdown
+      SCSI: u14-34f: hostlock pushdown
+      SCSI: ncr53c8xx: hostlock pushdown
+      SCSI: advansys: hostlock pushdown
+      SCSI: hptiop: hostlock pushdown
+      SCSI: arcmsr_hba: hostlock pushdown
+      SCSI: aic79xx_osm: hostlock pushdown
+      SCSI: aic7xxx_osm: hostlock pushdown
+      SCSI: arm: hostlock pushdown
+      SCSI: qla_os: hostlock pushdown
+      SCSI: nsp_cs: hostlock pushdown
+      SCSI: sym53c500_cs: hostlock pushdown
+      SCSI: bfad_im: hostlock pushdown
+      SCSI: cciss_scsi: hostlock pushdown
+      SCSI: aha1740: Avoid instant deadlock
+
+ arch/ia64/hp/sim/simscsi.c            |    7 +++++++
+ drivers/block/cciss_scsi.c            |    6 ++++++
+ drivers/firewire/sbp2.c               |    5 +++++
+ drivers/infiniband/ulp/srp/ib_srp.c   |    6 ++++++
+ drivers/message/fusion/mptfc.c        |    6 ++++++
+ drivers/message/fusion/mptsas.c       |    8 +++++++-
+ drivers/message/fusion/mptspi.c       |    5 +++++
+ drivers/message/i2o/i2o_scsi.c        |    5 +++++
+ drivers/s390/scsi/zfcp_scsi.c         |    8 ++++++++
+ drivers/scsi/3w-9xxx.c                |    4 ++++
+ drivers/scsi/3w-sas.c                 |    4 ++++
+ drivers/scsi/3w-xxxx.c                |    4 ++++
+ drivers/scsi/53c700.c                 |    6 ++++++
+ drivers/scsi/BusLogic.c               |    5 +++++
+ drivers/scsi/NCR5380.c                |    6 ++++++
+ drivers/scsi/NCR53c406a.c             |    4 ++++
+ drivers/scsi/a100u2w.c                |    9 ++++++++-
+ drivers/scsi/aacraid/linit.c          |   10 ++++++++--
+ drivers/scsi/advansys.c               |    4 ++++
+ drivers/scsi/aha152x.c                |   10 +++++++++-
+ drivers/scsi/aha1542.c                |   12 ++++++++++--
+ drivers/scsi/aha1740.c                |   11 +++++++++++
+ drivers/scsi/aic7xxx/aic79xx_osm.c    |    4 ++++
+ drivers/scsi/aic7xxx/aic7xxx_osm.c    |    4 ++++
+ drivers/scsi/aic7xxx_old.c            |    5 +++++
+ drivers/scsi/arcmsr/arcmsr_hba.c      |   18 +++++++++++++++---
+ drivers/scsi/arm/acornscsi.c          |    6 ++++++
+ drivers/scsi/arm/fas216.c             |    8 ++++++++
+ drivers/scsi/atp870u.c                |    8 ++++++++
+ drivers/scsi/bfa/bfad_im.c            |   11 ++++++++++-
+ drivers/scsi/dc395x.c                 |    6 ++++++
+ drivers/scsi/dpt_i2o.c                |    9 +++++++++
+ drivers/scsi/eata.c                   |    7 +++++++
+ drivers/scsi/eata_pio.c               |    5 +++++
+ drivers/scsi/esp_scsi.c               |    8 +++++++-
+ drivers/scsi/fd_mcs.c                 |    4 ++++
+ drivers/scsi/fdomain.c                |    4 ++++
+ drivers/scsi/fnic/fnic_scsi.c         |    9 ++++++++-
+ drivers/scsi/gdth.c                   |    4 ++++
+ drivers/scsi/hpsa.c                   |    7 +++++++
+ drivers/scsi/hptiop.c                 |    6 ++++++
+ drivers/scsi/ibmmca.c                 |   12 ++++++++++++
+ drivers/scsi/ibmvscsi/ibmvfc.c        |   12 ++++++++++--
+ drivers/scsi/ibmvscsi/ibmvscsi.c      |    9 ++++++++-
+ drivers/scsi/imm.c                    |    4 ++++
+ drivers/scsi/in2000.c                 |    4 ++++
+ drivers/scsi/initio.c                 |    8 +++++++-
+ drivers/scsi/ipr.c                    |   17 ++++++++++++++---
+ drivers/scsi/ips.c                    |   18 ++++++++++++++++--
+ drivers/scsi/libfc/fc_fcp.c           |    5 +++++
+ drivers/scsi/libiscsi.c               |   10 ++++++----
+ drivers/scsi/libsas/sas_scsi_host.c   |    7 +++++--
+ drivers/scsi/lpfc/lpfc_scsi.c         |    6 ++++++
+ drivers/scsi/mac53c94.c               |    4 ++++
+ drivers/scsi/megaraid.c               |    4 ++++
+ drivers/scsi/megaraid/megaraid_mbox.c |    5 +++++
+ drivers/scsi/megaraid/megaraid_sas.c  |   14 ++++++++++++--
+ drivers/scsi/mesh.c                   |    4 ++++
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c  |   17 +++++++++++++++--
+ drivers/scsi/ncr53c8xx.c              |    4 ++++
+ drivers/scsi/nsp32.c                  |    8 ++++++++
+ drivers/scsi/pcmcia/nsp_cs.c          |    6 ++++++
+ drivers/scsi/pcmcia/sym53c500_cs.c    |    4 ++++
+ drivers/scsi/pmcraid.c                |   11 ++++++++++-
+ drivers/scsi/ppa.c                    |    4 ++++
+ drivers/scsi/ps3rom.c                 |    4 ++++
+ drivers/scsi/qla1280.c                |    4 ++++
+ drivers/scsi/qla2xxx/qla_os.c         |    7 +++++++
+ drivers/scsi/qla4xxx/ql4_os.c         |    7 +++++++
+ drivers/scsi/qlogicfas408.c           |    4 ++++
+ drivers/scsi/qlogicpti.c              |    5 +++++
+ drivers/scsi/scsi.c                   |   15 +++------------
+ drivers/scsi/stex.c                   |   20 ++++++++++++++++++--
+ drivers/scsi/sun3_NCR5380.c           |    8 ++++++++
+ drivers/scsi/sym53c416.c              |    4 ++++
+ drivers/scsi/sym53c8xx_2/sym_glue.c   |   12 ++++++++++--
+ drivers/scsi/tmscsim.c                |    5 +++++
+ drivers/scsi/u14-34f.c                |    7 +++++++
+ drivers/scsi/ultrastor.c              |    7 +++++++
+ drivers/scsi/vmw_pvscsi.c             |    5 +++++
+ drivers/scsi/wd33c93.c                |    6 +++++-
+ drivers/scsi/wd7000.c                 |    4 ++++
+ drivers/staging/hv/storvsc_drv.c      |    8 ++++++++
+ drivers/usb/image/microtek.c          |    4 ++++
+ drivers/usb/storage/scsiglue.c        |    6 ++++++
+ drivers/usb/storage/uas.c             |    9 ++++++++-
+ include/scsi/scsi_host.h              |    1 +
+ 87 files changed, 576 insertions(+), 51 deletions(-)
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
