@@ -1,126 +1,143 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Subject: Re: [PATCH v8] scsi: Push down host_lock into legacy LLD
 	SHT->queuecommand()
-Date: Thu, 28 Oct 2010 01:17:57 -0700
-Message-ID: <1288253877.5169.232.camel@haakon2.linux-iscsi.org>
+Date: Thu, 28 Oct 2010 01:30:50 -0700
+Message-ID: <1288254650.5169.242.camel@haakon2.linux-iscsi.org>
 References: <1288249268-17734-1-git-send-email-nab@linux-iscsi.org>
-	 <20101028080950.GA3290@schmichrtp.mainz.de.ibm.com>
+	 <4CC9329F.40303@garzik.org>
+	 <1288254332.5169.239.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101028080950.GA3290@schmichrtp.mainz.de.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, "H. Peter Anvin" <hpa@zytor.com>, Jeff Garzik <jeff@garzik.org>, Tejun Heo <tj@kernel.org>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, "Love, Robert W" <robert.w.love@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp101.sbc.mail.mud.yahoo.com ([68.142.198.200]:24027 "HELO
+	smtp101.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933300Ab0J1Ifr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Oct 2010 04:35:47 -0400
+In-Reply-To: <1288254332.5169.239.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, "H. Peter Anvin" <hpa@zytor.com>, Tejun Heo <tj@kernel.org>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>
 
-On Thu, 2010-10-28 at 10:09 +0200, Christof Schmitt wrote:
-> On Thu, Oct 28, 2010 at 12:01:08AM -0700, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+     A. On Thu, 2010-10-28 at 01:25 -0700, Nicholas A. Bellinger wrote:
+> On Thu, 2010-10-28 at 04:21 -0400, Jeff Garzik wrote:
+> > On 10/28/2010 03:01 AM, Nicholas A. Bellinger wrote:
+> > > Following yet another round of convincing discussions from jgarzik and jejb
+> > > this afternoon, this RFCv8 patch series follows their recommendation and does a
+> > > SCSI subsystem wide 'push down' of struct Scsi_Host->host_lock usage from
+> > > scsi_dispatch_cmd() into legacy LLDs that require (or we are not sure about)
+> > > the host_lock held while SHT->queuecommand() I/O dispatch occurs.
 > > 
-> > Following yet another round of convincing discussions from jgarzik and jejb
-> > this afternoon, this RFCv8 patch series follows their recommendation and does a
-> > SCSI subsystem wide 'push down' of struct Scsi_Host->host_lock usage from
-> > scsi_dispatch_cmd() into legacy LLDs that require (or we are not sure about)
-> > the host_lock held while SHT->queuecommand() I/O dispatch occurs.
+> > Great!
 > > 
-> > This patch still calls scsi_cmd_get_serial() for all LLDs within scsi_dispatch_cmd()
-> > to perform struct scsi_cmnd->serial_number assignment using the new atomic_t
-> > struct Scsi_Host->cmd_serial_number counter.  This counter follows a recommedation by
-> > Joe Eykholt to increment each serial_number by 2 so that the serial is odd, and wraps
-> > to 1 instead of 0.
 > > 
-> > Finally this patch also changes modern LLDs originally using the SHT->queuecommand() ->
-> > unlock() -> do_some_lld_work() -> lock() -> return from lld_queuecommand()
-> > optimization to now run by default in the 'host_lock-less' mode.  This also
-> > includes a handful of other LLDs that folks have tested in unlocked mode and
-> > appear to be functioning as expected.
-> [...]
-> > diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-> > index 50286d8..0ca1bd3 100644
-> > --- a/drivers/s390/scsi/zfcp_scsi.c
-> > +++ b/drivers/s390/scsi/zfcp_scsi.c
-> > @@ -82,8 +82,11 @@ static int zfcp_scsi_queuecommand(struct scsi_cmnd *scpnt,
-> >  	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
-> >  	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
-> >  	struct fc_rport *rport = starget_to_rport(scsi_target(scpnt->device));
-> > +	unsigned long hflags;
-> >  	int    status, scsi_result, ret;
+> > > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> > > index d050e07..672a8c9 100644
+> > > --- a/drivers/ata/libata-scsi.c
+> > > +++ b/drivers/ata/libata-scsi.c
+> > > @@ -3174,7 +3174,7 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+> > >    *	ATA and ATAPI devices appearing as SCSI devices.
+> > >    *
+> > >    *	LOCKING:
+> > > - *	Releases scsi-layer-held lock, and obtains host lock.
+> > > + *	None
+> > >    *
+> > >    *	RETURNS:
+> > >    *	Return value from __ata_scsi_queuecmd() if @cmd can be queued,
+> > > @@ -3190,7 +3190,6 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+> > >
+> > >   	ap = ata_shost_to_port(shost);
+> > >
+> > > -	spin_unlock(shost->host_lock);
+> > >   	spin_lock(ap->lock);
+> > >
+> > >   	ata_scsi_dump_cdb(ap, cmd);
+> > > @@ -3204,7 +3203,6 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+> > >   	}
+> > >
+> > >   	spin_unlock(ap->lock);
+> > > -	spin_lock(shost->host_lock);
+> > >   	return rc;
+> > >   }
+> > >
 > > 
-> > +	spin_lock_irqsave(scpnt->device->host->host_lock, hflags);
-> > +
-> >  	/* reset the status for this request */
-> >  	scpnt->result = 0;
-> >  	scpnt->host_scribble = NULL;
-> > @@ -94,6 +97,7 @@ static int zfcp_scsi_queuecommand(struct scsi_cmnd *scpnt,
-> >  		scpnt->result = scsi_result;
-> >  		zfcp_dbf_scsi_fail_send(adapter->dbf, scpnt);
-> >  		scpnt->scsi_done(scpnt);
-> > +		spin_unlock_irqrestore(scpnt->device->host->host_lock, hflags);
-> >  		return 0;
-> >  	}
+> > This is not an equivalent transformation, because we just lost _irqsave 
+> > and _irqstore.
 > > 
-> > @@ -104,6 +108,7 @@ static int zfcp_scsi_queuecommand(struct scsi_cmnd *scpnt,
-> >  		/* only LUN access denied, but port is good
-> >  		 * not covered by FC transport, have to fail here */
-> >  		zfcp_scsi_command_fail(scpnt, DID_ERROR);
-> > +		spin_unlock_irqrestore(scpnt->device->host->host_lock, hflags);
-> >  		return 0;
-> >  	}
-> > 
-> > @@ -115,15 +120,20 @@ static int zfcp_scsi_queuecommand(struct scsi_cmnd *scpnt,
-> >  		 * 	fc_remote_port_chkready until rport is BLOCKED
-> >  		 */
-> >  		zfcp_scsi_command_fail(scpnt, DID_IMM_RETRY);
-> > +		spin_unlock_irqrestore(scpnt->device->host->host_lock, hflags);
-> >  		return 0;
-> >  	}
-> > 
-> >  	ret = zfcp_fsf_fcp_cmnd(scpnt);
-> > -	if (unlikely(ret == -EBUSY))
-> > +	if (unlikely(ret == -EBUSY)) {
-> > +		spin_unlock_irqrestore(scpnt->device->host->host_lock, hflags);
-> >  		return SCSI_MLQUEUE_DEVICE_BUSY;
-> > -	else if (unlikely(ret < 0))
-> > +	} else if (unlikely(ret < 0)) {
-> > +		spin_unlock_irqrestore(scpnt->device->host->host_lock, hflags);
-> >  		return SCSI_MLQUEUE_HOST_BUSY;
-> > +	}
-> > 
-> > +	spin_unlock_irqrestore(scpnt->device->host->host_lock, hflags);
-> >  	return ret;
-> >  }
-> > 
+> > You might want to double-check to ensure this problem is not replicated 
+> > in other non-legacy drivers.
 > 
-> For the zfcp part:
-> Acked-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+> Understood, so for libata this will need to turn into the equivilent
+> spin_lock_irqsave() + spin_unlock_irqrestore() for ap->lock, right..?
 > 
-
-Added to forthcoming lio-4.0.git/host_lock-less-for-37-v9
-
-> What is now the strategy for fc_remote_port_chkready? This function
-> requires the host_lock to be held for protecting the
-> rport->port_state.  I am working on a patch to reduce the time where
-> the host_lock is being held in the zfcp driver. But it looks like the
-> FC LLDs have to keep something like this for now:
+> So apart from libata that leaves the following LLDs running in host_lock
+> less mode:
 > 
-> spin_lock_irqsave(scpnt->device->host->host_lock, hflags);
-> scsi_result = fc_remote_port_chkready(rport);
-> spin_unlock_irqrestore(scpnt->device->host->host_lock, hflags);
+> drivers/infiniband/ulp/iser/iscsi_iser.c: Running in host_lock less mode (libiscsi)
+> drivers/message/fusion/mptscsih.c: Running in host_lock less mode (internal)
+> drivers/message/fusion/mptfc.c: Running in host_lock less mode (internal)
+> drivers/message/fusion/mptsas.c: Running in host_lock less mode (internal)
+> drivers/message/fusion/mptspi.c: Running in host_lock less mode (internal)
+> drivers/scsi/aic94xx/aic94xx_init.c: Running in host_lock less mode (libsas)
+> drivers/scsi/be2iscsi/be_main.c: Running in host_lock less mode (libiscsi)
+> drivers/scsi/bnx2i/bnx2i_iscsi.c: Running in host_lock less mode (libiscsi)
+> drivers/scsi/fnic/fnic_main.c: Running in host_lock less mode (internal)
+> drivers/scsi/iscsi_tcp.c: Running in host_lock less mode (libiscsi)
+> drivers/scsi/lpfc/lpfc_scsi.c: Running in host_lock less mode (internal)
+> drivers/scsi/mpt2sas/mpt2sas_scsih.c: Running in host_lock less mode (internal)
+> drivers/scsi/mvsas/mv_init.c: Running in host_lock less mode (libsas)
+> drivers/scsi/pm8001/pm8001_init.c: Running in host_lock less mode (libsas)
+> drivers/scsi/qla2xxx/qla_os.c: Running in host_lock less mode (internal)
+> drivers/scsi/qla4xxx/ql4_os.c: Running in host_lock less mode (internal)
+> drivers/scsi/scsi_debug.c: Running in host_lock less mode (internal)
+> drivers/scsi/cxgbi/cxgb3i/cxgb3i.c: Running in host_lock less mode (libiscsi)
+> drivers/scsi/cxgbi/cxgb4i/cxgb4i.c: Running in host_lock less mode (libiscsi)
 > 
-> Are there any plans to change this for the rport->port_state?
+> I will take another look and make sure any LLD specific locks that are
+> obtained in SHT->queuecommand() from the host_lock-less drivers are
+> assuming they need to call internal locks with _irqsave + _irqrestore
+> held and include these into lio-4.0.git/host_lock-less-for-37-v9.
 > 
 
-This was an item that Mike Christie had originally mentioned, with the
-current status being we are 'not sure' and awaiting a deeper review from
-James Smart, Joe Eykholt, Robert Love, or someone else fimilar with the
-libfc -> fcoe usage of rport w/ the legacy host_lock held.
+Here is the proposed patch for libata:
 
-So libfc folks, please let me know if what needs to be changed in order
-to enable host_lock-less operation for libfc -> fcoe code for this round
-of if we will need to defer for .38.
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d050e07..55a24bb 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3174,7 +3174,7 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+  *     ATA and ATAPI devices appearing as SCSI devices.
+  *
+  *     LOCKING:
+- *     Releases scsi-layer-held lock, and obtains host lock.
++ *     None
+  *
+  *     RETURNS:
+  *     Return value from __ata_scsi_queuecmd() if @cmd can be queued,
+@@ -3186,12 +3186,12 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+        struct ata_device *dev;
+        struct scsi_device *scsidev = cmd->device;
+        struct Scsi_Host *shost = scsidev->host;
++       unsigned long flags;
+        int rc = 0;
 
-Thank you for your comments Christof!
+        ap = ata_shost_to_port(shost);
 
---nab
+-       spin_unlock(shost->host_lock);
+-       spin_lock(ap->lock);
++       spin_lock_irqsave(ap->lock, flags);
+
+        ata_scsi_dump_cdb(ap, cmd);
+
+@@ -3203,8 +3203,7 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+                done(cmd);
+        }
+
+-       spin_unlock(ap->lock);
+-       spin_lock(shost->host_lock);
++       spin_unlock_irqrestore(ap->lock, flags);
+        return rc;
+ }
+
