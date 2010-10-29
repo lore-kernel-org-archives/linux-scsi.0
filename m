@@ -1,72 +1,74 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [Open-FCoE] [PATCH] libfc: fix mem leak in fc_fcp_srr_resp()
-Date: Fri, 29 Oct 2010 23:14:16 +0800
-Message-ID: <AANLkTikSkLWU+Pf_dO9kBb0JYUMSFkj3AkOdXce2-rDN@mail.gmail.com>
-References: <AANLkTik9+jAwcs0G9v2Nbwh-GfFc61V4=n7wYn0CaSc-@mail.gmail.com>
-	<1288301999.1431.187.camel@fritz>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: Subject: [RFC 0/3] Add fc_rport attributes to further populate
+ HBAAPIv2 HBAPortAttributes for discovered ports.
+Date: Fri, 29 Oct 2010 15:35:41 -0400
+Message-ID: <alpine.LFD.2.00.1010291532220.3526@localhost.localdomain>
+References: <alpine.LFD.2.00.1010281212441.2885@localhost.localdomain> <20101029104515.GA15522@schmichrtp.mainz.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="US-ASCII"; format=flowed
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:57442 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757923Ab0J2POS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Oct 2010 11:14:18 -0400
-Received: by eye27 with SMTP id 27so2192845eye.19
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2010 08:14:17 -0700 (PDT)
-In-Reply-To: <1288301999.1431.187.camel@fritz>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:2701 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756902Ab0J2Tfq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Oct 2010 15:35:46 -0400
+In-Reply-To: <20101029104515.GA15522@schmichrtp.mainz.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Oct 29, 2010 at 5:39 AM, Robert Love <robert.w.love@intel.com> =
-wrote:
-> On Mon, 2010-10-25 at 20:47 +0800, Hillf Danton wrote:
->> There seems frame should be freed against memory leakage.
+
+
+On Fri, 29 Oct 2010, Christof Schmitt wrote:
+
+> On Thu, Oct 28, 2010 at 12:14:18PM -0400, Chad Dupuis wrote:
+>> Hi All,
 >>
->> Signed-off-by: Hillf Danton <dhillf@gmail.com>
->> ---
+>> This small patch set adds 7 new attributes to the fc_rport struct so that application libraries who export HBAAPI v2 discovered port attributes can populate the HBA_PORTATTRIBUTES structure more fully.  The new fc_rport attributes,
+>> which would be exported via the /sys/class/fc_remote_port/rport-x:y-z directory, are:
 >>
->> --- a/drivers/scsi/libfc/fc_fcp.c =C2=A0 =C2=A0 2010-09-13 07:07:38.=
-000000000 +0800
->> +++ b/drivers/scsi/libfc/fc_fcp.c =C2=A0 =C2=A0 2010-10-25 20:33:58.=
-000000000 +0800
->> @@ -1685,6 +1685,7 @@ static void fc_fcp_srr_resp(struct fc_se
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0*/
->> =C2=A0 =C2=A0 =C2=A0 if (fh->fh_type =3D=3D FC_TYPE_BLS) {
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 fc_fcp_unlock_pkt(f=
-sp);
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 fc_frame_free(fp);
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return;
->> =C2=A0 =C2=A0 =C2=A0 }
+>> - supported_fc4s
+>> - supported_speed
+>> - port_type
+>> - speed
+>> - active_fc4s
+>> - symbolic_name
+>> - fabric_name
+>>
+>> These attributes would be fixed-attributes which would mean that they would be set before the call to fc_remote_port_rolechg() but then once the role of the port has been established they would not change.
+>>
+>> There are two patches in this RFC:
+>>
+>> Patch #1 - scsi_transport_fc: Add HBAAPI v2 attributes to fc_rport structure.
+>>
+>> This patch adds the definitions for the new fc_rport attributes, sets up the show functions and assigns default nominal values to the attributes.
+>>
+>> Patch #2 - qla2xxx: Add name and management server queries to fill in new fc_rport attributes.
+>>
+>> This patch adds the necessary name and management server calls to the SAN fabric services to obtain the information needed to fill in the new fc_rport attributes.  The patch also assigns the attributes before calling
+>> fc_remote_port_rolechg().
 >
-> My first thought was that we need to do a fc_fcp_pkt_release here sin=
-ce
-> we're doing a fc_fcp_pkt_hold in fc_fcp_srr, but on further
+> It looks like this mechanism only queries data from the FC nameserver.
+> It would be useful to have the same data available for all FC drivers.
+> The FC BSG interface already allows sending CT requests to the FC
+> nameserver. Could this be implemented by creating the request in
+> common code and issue the requests through the FC BSG interface? If
 
-Yes, the pkt hold should get dropped.
+We considered using bsg as the means for getting the information to and
+from user space but deciced that exporting the information through
+/sys/class/fc_remote_ports was easier and probably more appropriate as
+other attributes relating to rports are currently exported there.
 
-> consideration I think this BLS check is unnecessary. fc_exch_recv che=
-cks
-> for BLS frames before calling any of the response handlers.
+> the data is used by the HBAAPI, the userspace HBAAPI could create the
+> FC requests and issue them through the /dev/bsg/... device files.
 
-If BLS encountered there is a chance in fc_exch_abts_resp() to call
-response handler.
-And fix looks like,
+I think this would be a little too low level for a user level library.
+Normally for user space I would assume we want to hide the mechanism
+(which is very hardare dependent) that is used to get the information 
+and rather just expose the information itself.
 
-	if (fh->fh_type =3D=3D FC_TYPE_BLS) {
-		fc_fcp_unlock_pkt(fsp);
-+		fc_frame_free(fp);
-+		fc_fcp_pkt_release(fsp);
-		return;
-	}
-
-right?
-
-//Hillf
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> --
+> Christof
+>
+>
