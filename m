@@ -1,267 +1,264 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: [GIT PATCH] final SCSI updates for the merge window.
-Date: Sun, 31 Oct 2010 09:46:03 -0500
-Message-ID: <1288536363.3056.7.camel@mulgrave.site>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: mvsas errors in 2.6.36
+Date: Sun, 31 Oct 2010 09:11:45 -0600
+Message-ID: <201010310911.45738.thomas@fjellstrom.ca>
+References: <201010290650.32892.thomas@fjellstrom.ca>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38518 "EHLO mx2.suse.de"
+Received: from tomasu.net ([64.85.170.234]:40933 "EHLO mail.tomasu.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755733Ab0JaOqJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Oct 2010 10:46:09 -0400
+	id S1755137Ab0JaPLv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 31 Oct 2010 11:11:51 -0400
+In-Reply-To: <201010290650.32892.thomas@fjellstrom.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Linux Kernel List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-The main pieces of this are qla2xxx, qla4xxx, lpfc megaraid_sas, and
-fcoe driver updates.  Plus some well documented bfa cleanups and a
-couple of assorted bug fixes.
+On October 29, 2010, Thomas Fjellstrom wrote:
+> Good news and bad news, the current mvsas driver in 2.6.36 seems to work
+> better than older kernels with my setup (2 port sas + 5 SATA disks). But I
+> gotten the following messages so far:
+> 
+> [  213.856050] drivers/scsi/mvsas/mv_sas.c 1703:<7>mv_abort_task()
+> mvi=ffff880123200000 task=ffff880122545a40 slot=ffff880123226628
+> slot_idx=x3 [  213.856064] drivers/scsi/mvsas/mv_sas.c
+> 1632:mvs_query_task:rc= 5 [  213.856094] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 0 ctrl sts=0x89800. [  213.856100] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 0 irq sts = 0x1001 [  213.856111] drivers/scsi/mvsas/mv_sas.c
+> 2111:phy0 Unplug Notice [  213.866069] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 0 ctrl sts=0x199800. [  213.866078] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 0 irq sts = 0x1081 [  213.887617] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 0 ctrl sts=0x199800. [  213.887625] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 0 irq sts = 0x10000 [  213.887632] drivers/scsi/mvsas/mv_sas.c
+> 2138:notify plug in on phy[0] [  213.991191] drivers/scsi/mvsas/mv_sas.c
+> 1224:port 0 attach dev info is 0 [  213.991191]
+> drivers/scsi/mvsas/mv_sas.c 1226:port 0 attach sas addr is 0 [ 
+> 213.995701] drivers/scsi/mvsas/mv_sas.c 378:phy 0 byte dmaded.
+> [  216.064032] drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for
+> device[0]:rc= 0 [  216.064049] ata9: translated ATA stat/err 0x01/04 to
+> SCSI SK/ASC/ASCQ 0xb/00/00 [  216.064647] ata9.00: device reported invalid
+> CHS sector 0
+> [  216.065226] ata9: status=0x01 { Error }
+> [  216.065815] ata9: error=0x04 { DriveStatusError }
+> [ 1519.840061] drivers/scsi/mvsas/mv_sas.c 1703:<7>mv_abort_task()
+> mvi=ffff880123200000 task=ffff88011f944700 slot=ffff880123226680
+> slot_idx=x4 [ 1519.840075] drivers/scsi/mvsas/mv_sas.c
+> 1632:mvs_query_task:rc= 5 [ 1519.840107] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 3 ctrl sts=0x89800. [ 1519.840113] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 3 irq sts = 0x1001 [ 1519.840124] drivers/scsi/mvsas/mv_sas.c
+> 2111:phy3 Unplug Notice [ 1519.850080] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 3 ctrl sts=0x199800. [ 1519.850086] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 3 irq sts = 0x1081 [ 1519.854247] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 3 ctrl sts=0x199800. [ 1519.854250] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 3 irq sts = 0x10000 [ 1519.854252] drivers/scsi/mvsas/mv_sas.c
+> 2138:notify plug in on phy[3] [ 1519.951698] drivers/scsi/mvsas/mv_sas.c
+> 1224:port 3 attach dev info is 2000000 [ 1519.951698]
+> drivers/scsi/mvsas/mv_sas.c 1226:port 3 attach sas addr is 3 [
+> 1519.963251] drivers/scsi/mvsas/mv_sas.c 378:phy 3 byte dmaded.
+> [ 1522.048039] drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for
+> device[3]:rc= 0 [ 1522.048056] ata12: translated ATA stat/err 0x01/04 to
+> SCSI SK/ASC/ASCQ 0xb/00/00 [ 1522.048679] ata12.00: device reported
+> invalid CHS sector 0
+> [ 1522.049268] ata12: status=0x01 { Error }
+> [ 1522.049856] ata12: error=0x04 { DriveStatusError }
+> [ 1558.816044] drivers/scsi/mvsas/mv_sas.c 1703:<7>mv_abort_task()
+> mvi=ffff880123200000 task=ffff880124d89500 slot=ffff880123226680
+> slot_idx=x4 [ 1558.816058] drivers/scsi/mvsas/mv_sas.c
+> 1632:mvs_query_task:rc= 5 [ 1558.816086] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 3 ctrl sts=0x89800. [ 1558.816092] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 3 irq sts = 0x1001 [ 1558.816103] drivers/scsi/mvsas/mv_sas.c
+> 2111:phy3 Unplug Notice [ 1558.826059] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 3 ctrl sts=0x199800. [ 1558.826066] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 3 irq sts = 0x1081 [ 1558.829663] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 3 ctrl sts=0x199800. [ 1558.829670] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 3 irq sts = 0x10000 [ 1558.829677] drivers/scsi/mvsas/mv_sas.c
+> 2138:notify plug in on phy[3] [ 1558.904494] drivers/scsi/mvsas/mv_sas.c
+> 1224:port 3 attach dev info is 2000000 [ 1558.904494]
+> drivers/scsi/mvsas/mv_sas.c 1226:port 3 attach sas addr is 3 [
+> 1558.938424] drivers/scsi/mvsas/mv_sas.c 378:phy 3 byte dmaded.
+> [ 1561.024027] drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for
+> device[3]:rc= 0 [ 1561.024044] ata12: translated ATA stat/err 0x01/04 to
+> SCSI SK/ASC/ASCQ 0xb/00/00 [ 1561.024652] ata12.00: device reported
+> invalid CHS sector 0
+> [ 1561.025242] ata12: status=0x01 { Error }
+> [ 1561.025834] ata12: error=0x04 { DriveStatusError }
+> [ 1594.800036] drivers/scsi/mvsas/mv_sas.c 1703:<7>mv_abort_task()
+> mvi=ffff880123200000 task=ffff88011f945a40 slot=ffff880123226680
+> slot_idx=x4 [ 1594.800051] drivers/scsi/mvsas/mv_sas.c
+> 1632:mvs_query_task:rc= 5 [ 1594.800077] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 3 ctrl sts=0x89800. [ 1594.800083] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 3 irq sts = 0x1001 [ 1594.800094] drivers/scsi/mvsas/mv_sas.c
+> 2111:phy3 Unplug Notice [ 1594.810048] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 3 ctrl sts=0x199800. [ 1594.810055] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 3 irq sts = 0x1081 [ 1594.814327] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 3 ctrl sts=0x199800. [ 1594.814330] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 3 irq sts = 0x10000 [ 1594.814332] drivers/scsi/mvsas/mv_sas.c
+> 2138:notify plug in on phy[3] [ 1594.882000] drivers/scsi/mvsas/mv_sas.c
+> 1224:port 3 attach dev info is 2000000 [ 1594.882000]
+> drivers/scsi/mvsas/mv_sas.c 1226:port 3 attach sas addr is 3 [
+> 1594.923382] drivers/scsi/mvsas/mv_sas.c 378:phy 3 byte dmaded.
+> [ 1597.008031] drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for
+> device[3]:rc= 0 [ 1597.008048] ata12: translated ATA stat/err 0x01/04 to
+> SCSI SK/ASC/ASCQ 0xb/00/00 [ 1597.008675] ata12.00: device reported
+> invalid CHS sector 0
+> [ 1597.009271] ata12: status=0x01 { Error }
+> [ 1597.009871] ata12: error=0x04 { DriveStatusError }
+> [ 2193.824051] drivers/scsi/mvsas/mv_sas.c 1703:<7>mv_abort_task()
+> mvi=ffff880123200000 task=ffff880009c7c540 slot=ffff8801232265d0
+> slot_idx=x2 [ 2193.824065] drivers/scsi/mvsas/mv_sas.c
+> 1632:mvs_query_task:rc= 5 [ 2193.824092] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 0 ctrl sts=0x89800. [ 2193.824099] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 0 irq sts = 0x1001001 [ 2193.824109] drivers/scsi/mvsas/mv_sas.c
+> 2111:phy0 Unplug Notice [ 2193.834062] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 0 ctrl sts=0x199800. [ 2193.834067] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 0 irq sts = 0x1001081 [ 2193.855272] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 0 ctrl sts=0x199800. [ 2193.855279] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 0 irq sts = 0x10000 [ 2193.855286] drivers/scsi/mvsas/mv_sas.c
+> 2138:notify plug in on phy[0] [ 2193.859234] drivers/scsi/mvsas/mv_sas.c
+> 1224:port 0 attach dev info is 0 [ 2193.859234]
+> drivers/scsi/mvsas/mv_sas.c 1226:port 0 attach sas addr is 0 [
+> 2193.959270] drivers/scsi/mvsas/mv_sas.c 378:phy 0 byte dmaded.
+> [ 2196.032026] drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for
+> device[0]:rc= 0 [ 2196.032045] ata9: translated ATA stat/err 0x01/04 to
+> SCSI SK/ASC/ASCQ 0xb/00/00 [ 2196.032676] ata9: status=0x01 { Error }
+> [ 2196.033274] ata9: error=0x04 { DriveStatusError }
+> [ 2440.800047] drivers/scsi/mvsas/mv_sas.c 1703:<7>mv_abort_task()
+> mvi=ffff880123200000 task=ffff880010f36700 slot=ffff880123226628
+> slot_idx=x3 [ 2440.800061] drivers/scsi/mvsas/mv_sas.c
+> 1632:mvs_query_task:rc= 5 [ 2440.800090] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 7 ctrl sts=0x89800. [ 2440.800096] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 7 irq sts = 0x1001 [ 2440.800107] drivers/scsi/mvsas/mv_sas.c
+> 2111:phy7 Unplug Notice [ 2440.810060] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 7 ctrl sts=0x199800. [ 2440.810065] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 7 irq sts = 0x1081 [ 2440.831453] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 7 ctrl sts=0x199800. [ 2440.831460] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 7 irq sts = 0x10000 [ 2440.831467] drivers/scsi/mvsas/mv_sas.c
+> 2138:notify plug in on phy[7] [ 2440.880053] drivers/scsi/mvsas/mv_sas.c
+> 1224:port 7 attach dev info is 4000000 [ 2440.880053]
+> drivers/scsi/mvsas/mv_sas.c 1226:port 7 attach sas addr is 7 [
+> 2440.940497] drivers/scsi/mvsas/mv_sas.c 378:phy 7 byte dmaded.
+> [ 2443.008033] drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for
+> device[4]:rc= 0 [ 2443.008052] ata13: translated ATA stat/err 0x01/04 to
+> SCSI SK/ASC/ASCQ 0xb/00/00 [ 2443.008685] ata13: status=0x01 { Error }
+> [ 2443.009295] ata13: error=0x04 { DriveStatusError }
+> [ 2675.808044] drivers/scsi/mvsas/mv_sas.c 1703:<7>mv_abort_task()
+> mvi=ffff880123200000 task=ffff88011aae3500 slot=ffff880123226578
+> slot_idx=x1 [ 2675.808058] drivers/scsi/mvsas/mv_sas.c
+> 1632:mvs_query_task:rc= 5 [ 2675.808088] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 2 ctrl sts=0x89800. [ 2675.808094] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 2 irq sts = 0x1001 [ 2675.808104] drivers/scsi/mvsas/mv_sas.c
+> 2111:phy2 Unplug Notice [ 2675.818051] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 2 ctrl sts=0x199800. [ 2675.818057] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 2 irq sts = 0x1081 [ 2675.839505] drivers/scsi/mvsas/mv_sas.c
+> 2083:port 2 ctrl sts=0x199800. [ 2675.839513] drivers/scsi/mvsas/mv_sas.c
+> 2085:Port 2 irq sts = 0x10000 [ 2675.839519] drivers/scsi/mvsas/mv_sas.c
+> 2138:notify plug in on phy[2] [ 2675.874139] drivers/scsi/mvsas/mv_sas.c
+> 1224:port 2 attach dev info is 4 [ 2675.874139]
+> drivers/scsi/mvsas/mv_sas.c 1226:port 2 attach sas addr is 2 [
+> 2675.936683] drivers/scsi/mvsas/mv_sas.c 378:phy 2 byte dmaded.
+> [ 2678.016055] drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for
+> device[2]:rc= 0 [ 2678.016075] ata11: translated ATA stat/err 0x01/04 to
+> SCSI SK/ASC/ASCQ 0xb/00/00 [ 2678.016706] ata11: status=0x01 { Error }
+> [ 2678.017315] ata11: error=0x04 { DriveStatusError }
+> [ 2678.017964] ata9: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ
+> 0xb/00/00 [ 2678.018573] ata9: status=0x01 { Error }
+> [ 2678.019175] ata9: error=0x04 { DriveStatusError }
+> 
+> I did not unplug a disk, the errors seem to be spurious.
+> 
+> Otherwise though things seem to be working. At least so far. The
+> mv_abort_task part is very familiar, the older version of this driver
+> would do it right after attempting to build/activate the md raid5 array
+> that lives on this controller. Except the controller would lock up, and
+> all drives would become inaccessible.
+> 
+> I'm going to attempt to grow this array today, so long as the xfs_fsr that
+> I started doesn't cause the array to fail.
+> 
+> If I keep getting mv_abort_task errors, I'll have to back down to the copy
+> of the driver I got from Andy Yan. I've managed to patch it up to compile
+> for 2.6.36 just now, I just hope it'll work at least as well as it did
+> with 2.6.34. At the very least I didn't get these errors.
+> 
+> Some background, the disks attached to the card are (5) Seagate 7200.12 1TB
+> disks, using SAS->SATA cables. Machine is a amd64 Phenom II X4 810 w/4G
+> ram running debian sid and a vanila 2.6.36 kernel. The card is a
+> AOC-SASLP-MV8, according to lspci:
+> 
+> 04:00.0 SCSI storage controller: Marvell Technology Group Ltd.
+> MV64460/64461/64462 System Controller, Revision B (rev 01)
+> 
+> according to dmesg:
+> 
+> [    2.819325] mvsas 0000:04:00.0: mvsas: driver version 0.8.2
+> [    2.819394] mvsas 0000:04:00.0: PCI INT A -> GSI 19 (level, low) -> IRQ
+> 19 [    2.819454] mvsas 0000:04:00.0: setting latency timer to 64
+> [    2.820952] mvsas 0000:04:00.0: mvsas: PCI-E x4, Bandwidth Usage: 2.5
+> Gbps [    7.203222] drivers/scsi/mvsas/mv_sas.c 1224:port 0 attach dev
+> info is 0 [    7.203225] drivers/scsi/mvsas/mv_sas.c 1226:port 0 attach
+> sas addr is 0 [    7.403220] drivers/scsi/mvsas/mv_sas.c 1224:port 1
+> attach dev info is 0 [    7.403223] drivers/scsi/mvsas/mv_sas.c 1226:port
+> 1 attach sas addr is 1 [    7.603221] drivers/scsi/mvsas/mv_sas.c
+> 1224:port 2 attach dev info is 4 [    7.603223]
+> drivers/scsi/mvsas/mv_sas.c 1226:port 2 attach sas addr is 2 [   
+> 7.803221] drivers/scsi/mvsas/mv_sas.c 1224:port 3 attach dev info is
+> 2000000 [    7.803224] drivers/scsi/mvsas/mv_sas.c 1226:port 3 attach sas
+> addr is 3 [    7.904015] drivers/scsi/mvsas/mv_sas.c 1224:port 4 attach
+> dev info is 0 [    7.904018] drivers/scsi/mvsas/mv_sas.c 1226:port 4
+> attach sas addr is 0 [    8.008014] drivers/scsi/mvsas/mv_sas.c 1224:port
+> 5 attach dev info is 0 [    8.008017] drivers/scsi/mvsas/mv_sas.c
+> 1226:port 5 attach sas addr is 0 [    8.112014]
+> drivers/scsi/mvsas/mv_sas.c 1224:port 6 attach dev info is 0 [   
+> 8.112016] drivers/scsi/mvsas/mv_sas.c 1226:port 6 attach sas addr is 0 [  
+>  8.315223] drivers/scsi/mvsas/mv_sas.c 1224:port 7 attach dev info is
+> 4000000 [    8.315226] drivers/scsi/mvsas/mv_sas.c 1226:port 7 attach sas
+> addr is 7 [    8.315230] scsi8 : mvsas
+> [    8.315620] drivers/scsi/mvsas/mv_sas.c 378:phy 0 byte dmaded.
+> [    8.315624] drivers/scsi/mvsas/mv_sas.c 378:phy 1 byte dmaded.
+> [    8.315628] drivers/scsi/mvsas/mv_sas.c 378:phy 2 byte dmaded.
+> [    8.315632] drivers/scsi/mvsas/mv_sas.c 378:phy 3 byte dmaded.
+> [    8.315636] drivers/scsi/mvsas/mv_sas.c 378:phy 7 byte dmaded.
+> [    8.316762] drivers/scsi/mvsas/mv_sas.c 1388:found dev[0:5] is gone.
+> [    8.384626] drivers/scsi/mvsas/mv_sas.c 1388:found dev[1:5] is gone.
+> [    8.452444] drivers/scsi/mvsas/mv_sas.c 1388:found dev[2:5] is gone.
+> [    8.520181] drivers/scsi/mvsas/mv_sas.c 1388:found dev[3:5] is gone.
+> [    8.523810] drivers/scsi/mvsas/mv_sas.c 1388:found dev[4:5] is gone.
+> 
+> I just hope the raid5 reshape I'm about to do doesn't crap its pants
+> because of the errors above.
+> 
+> I'd like to help test any fixes or changes if needed. Let me know.
+> 
+> Thanks again.
 
-Also, I'd like to do a queuecommand API change in -rc1.  I'd like to
-push the queue lock out of the mid layer and into the drivers'
-queuecommand routine which will eliminate a spurious lock and unlock for
-drivers that don't need it (should improve latency for multicore) Andi
-Kleen has a coccinelle script to do this mechanically, so it will be a
-big bang single commit for all drivers.  We'll do the optimisations as
-part of the usual enhancements in the next merge window, but I'd like
-the mechanical API change to go in last when the tree is getting stable.
+After a couple days of uptime, the messages are still happening:
 
-The current patch is available here:
+[175665.888045] drivers/scsi/mvsas/mv_sas.c 1703:<7>mv_abort_task() mvi=ffff880123b00000 task=ffff88010e77e000 slot=ffff880123b26680 slot_idx=x4
+[175665.888059] drivers/scsi/mvsas/mv_sas.c 1632:mvs_query_task:rc= 5
+[175665.888086] drivers/scsi/mvsas/mv_sas.c 2083:port 0 ctrl sts=0x89800.
+[175665.888092] drivers/scsi/mvsas/mv_sas.c 2085:Port 0 irq sts = 0x1001
+[175665.888103] drivers/scsi/mvsas/mv_sas.c 2111:phy0 Unplug Notice
+[175665.898053] drivers/scsi/mvsas/mv_sas.c 2083:port 0 ctrl sts=0x199800.
+[175665.898061] drivers/scsi/mvsas/mv_sas.c 2085:Port 0 irq sts = 0x1081
+[175665.919498] drivers/scsi/mvsas/mv_sas.c 2083:port 0 ctrl sts=0x199800.
+[175665.919501] drivers/scsi/mvsas/mv_sas.c 2085:Port 0 irq sts = 0x10000
+[175665.919503] drivers/scsi/mvsas/mv_sas.c 2138:notify plug in on phy[0]
+[175666.018302] drivers/scsi/mvsas/mv_sas.c 1224:port 0 attach dev info is 0
+[175666.018302] drivers/scsi/mvsas/mv_sas.c 1226:port 0 attach sas addr is 0
+[175666.028291] drivers/scsi/mvsas/mv_sas.c 378:phy 0 byte dmaded.
+[175668.096048] drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for device[0]:rc= 0
+[175668.096066] ata9: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ 0xb/00/00
+[175668.096739] ata9.00: device reported invalid CHS sector 0
+[175668.097379] ata9: status=0x01 { Error }
+[175668.098022] ata9: error=0x04 { DriveStatusError }
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+No fatal errors yet.
 
-The Short Changelog is:
-
-Andrew Vasquez (2):
-      qla2xxx: Correct PRLI failure response code handling.
-      qla2xxx: Initialize the vport_slock spinlock.
-
-Anil Ravindranath (2):
-      pmcraid: add support for set timestamp command and other fixes
-      pmcraid: remove duplicate struct member
-
-Bhanu Prakash Gollapudi (1):
-      libfc: Do not let disc work cancel itself
-
-Boaz Harrosh (4):
-      libosd: write/read_sg_kern API
-      libosd: Support for scatter gather write/read commands
-      libosd: Free resources in reverse order of allocation
-      libosd: Fix bug in attr_page handling
-
-Chad Dupuis (4):
-      qla2xxx: Group CS_RESET return status with other link level event statuses.
-      qla2xxx: Change del_timer_sync() to del_timer() in qla2x00_ctx_sp_free().
-      qla2xxx: Add module parameter to enable/disable GFF_ID device type check.
-      qla2xxx: Remove port down retry count.
-
-Chauhan, Vijay (1):
-      scsi_dh_rdac: Add two new SUN devices to rdac_dev_list
-
-Christof Schmitt (3):
-      Fix race when removing SCSI devices
-      zfcp: Use correct length for FCP_RSP_INFO
-      zfcp: Call get_device on port before calling put_device
-
-Dan Carpenter (2):
-      qla2xxx: locking problem in qla2x00_init_rings()
-      gdth: integer overflow in ioctl
-
-Giridhar Malavali (1):
-      qla2xxx: Avoid depending on SCSI host_lock in queuecommand function.
-
-Harish Zunjarrao (1):
-      qla2xxx: Add flash read/update support using BSG interface
-
-James Smart (7):
-      lpfc 8.3.18: Update lpfc driver version to 8.3.18
-      lpfc 8.3.18: Add new WQE support
-      lpfc 8.3.18: Fix critical errors
-      lpfc 8.3.18: Adapter Shutdown and Unregistration cleanup
-      lpfc 8.3.18: Add logic to detect last devloss timeout
-      lpfc 8.3.18: Add support of received ELS commands
-      lpfc 8.3.18: FC/FCoE Discovery fixes
-
-Jing Huang (6):
-      bfa: fix comments for c files
-      bfa: fix comments for header files
-      bfa: fix frame size over 1024 compile warning
-      bfa: remove os wrapper functions and macros
-      bfa: replace endian swap macros with the ones provided by linux
-      bfa: remove os wrapper and unused functions
-
-Karen Higgins (1):
-      qla4xxx: dump mailbox registers on System Error
-
-Karen Xie (1):
-      cxgb4i: ignore informational act-open-rpl message
-
-Kiran Patil (1):
-      libfcoe: VN2VN connection setup causing stack memory corruption.
-
-Lalit Chandivade (1):
-      qla4xxx: Reset seconds_since_last_heartbeat correctly.
-
-Madhuranath Iyengar (2):
-      qla2xxx: Addition of shutdown callback handler.
-      qla2xxx: Remove scsi_cmnd->serial_number from debug traces
-
-Martin K. Petersen (1):
-      sd: Export effective protection mode in sysfs
-
-Mike Christie (5):
-      qla4xxx: Fix cmd check in qla4xxx_cmd_wait
-      qla2xxx: Drop srb reference before waiting for completion.
-      libfc: fix setting of rport dev loss
-      qla4xxx: grab hardware_lock in eh_abort before accessing srb
-      Fix regressions in scsi_internal_device_block
-
-Nilesh Javali (1):
-      qla4xxx: On firmware hang do not wait for the outstanding commands to complete
-
-Robert Jennings (1):
-      sr: fix sr_drive_status handling when initialization required
-
-Robert Love (1):
-      fcoe: Fix broken NPIV with correction to MAC validation
-
-Shyam Sundar (3):
-      qla4xxx: Clear the rom lock if the firmware died while holding it.
-      qla4xxx: use CRB Register for Request Queue in-pointer
-      qla4xxx: Add support for 8130/8131 AENs.
-
-Swen Schillig (1):
-      zfcp: Fix adapter activation on link down
-
-Vasu Dev (4):
-      libfc: possible race could panic system due to NULL fsp->cmd
-      fcoe: set default FIP mode as FIP_MODE_FABRIC
-      libfc: adds flogi retry in case DID is zero in RJT
-      libfc: use DID_TRANSPORT_DISRUPTED while lport not ready
-
-Vikas Chaudhary (8):
-      qla4xxx: Update driver version to 5.02.00-k4
-      qla4xxx: remove unwanted check for bad spd
-      qla4xxx: update AER support for ISP82XX
-      qla4xxx: free_irqs on failed initialize_adapter
-      qla4xxx: correct data type of sense_len in qla4xxx_status_cont_entry
-      qla4xxx: remove "ha->retry_reset_ha_cnt" from wait_for_hba_online
-      qla4xxx: honor return status of qla4xxx_hw_reset
-      qla4xxx: Trivial cleanup
-
-Wayne Boyer (1):
-      ipr: add definitions for a new adapter
-
-Yang, Bo (4):
-      megaraid_sas: Version and documentation update
-      megaraid_sas: Add three times Online controller reset
-      megaraid_sas: Add input parameter for max_sectors
-      megaraid_sas: support devices update flag
-
-And the diffstat:
-
- Documentation/scsi/ChangeLog.megaraid_sas  |   47 ++
- drivers/s390/scsi/zfcp_fc.h                |    2 
- drivers/s390/scsi/zfcp_fsf.c               |    3 
- drivers/s390/scsi/zfcp_unit.c              |    4 
- drivers/scsi/bfa/bfa.h                     |   48 +-
- drivers/scsi/bfa/bfa_cb_ioim.h             |   22 -
- drivers/scsi/bfa/bfa_core.c                |  178 +++++-----
- drivers/scsi/bfa/bfa_cs.h                  |   24 -
- drivers/scsi/bfa/bfa_defs.h                |   54 +--
- drivers/scsi/bfa/bfa_defs_fcs.h            |   48 +-
- drivers/scsi/bfa/bfa_defs_svc.h            |   82 ++--
- drivers/scsi/bfa/bfa_drv.c                 |    6 
- drivers/scsi/bfa/bfa_fc.h                  |   30 -
- drivers/scsi/bfa/bfa_fcbuild.c             |  196 +++++------
- drivers/scsi/bfa/bfa_fcpim.c               |  351 ++++++++++----------
- drivers/scsi/bfa/bfa_fcpim.h               |   18 -
- drivers/scsi/bfa/bfa_fcs.c                 |  335 +++----------------
- drivers/scsi/bfa/bfa_fcs.h                 |   43 --
- drivers/scsi/bfa/bfa_fcs_fcpim.c           |   34 -
- drivers/scsi/bfa/bfa_fcs_lport.c           |  468 +++++++++++---------------
- drivers/scsi/bfa/bfa_fcs_rport.c           |  198 +++++------
- drivers/scsi/bfa/bfa_hw_cb.c               |   16 
- drivers/scsi/bfa/bfa_hw_ct.c               |   22 -
- drivers/scsi/bfa/bfa_ioc.c                 |  397 +++++++++++-----------
- drivers/scsi/bfa/bfa_ioc.h                 |  108 +++---
- drivers/scsi/bfa/bfa_ioc_cb.c              |   90 ++---
- drivers/scsi/bfa/bfa_ioc_ct.c              |  167 ++++-----
- drivers/scsi/bfa/bfa_modules.h             |    6 
- drivers/scsi/bfa/bfa_os_inc.h              |   82 ----
- drivers/scsi/bfa/bfa_port.c                |   40 +-
- drivers/scsi/bfa/bfa_svc.c                 |  504 ++++++++++++++---------------
- drivers/scsi/bfa/bfa_svc.h                 |   41 +-
- drivers/scsi/bfa/bfad.c                    |   73 ----
- drivers/scsi/bfa/bfad_attr.c               |   38 +-
- drivers/scsi/bfa/bfad_debugfs.c            |    4 
- drivers/scsi/bfa/bfad_drv.h                |    5 
- drivers/scsi/bfa/bfad_im.c                 |   71 ++--
- drivers/scsi/bfa/bfi.h                     |   58 +--
- drivers/scsi/bfa/bfi_ms.h                  |   50 +-
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c         |    3 
- drivers/scsi/device_handler/scsi_dh_rdac.c |    2 
- drivers/scsi/fcoe/fcoe.c                   |   18 -
- drivers/scsi/fcoe/libfcoe.c                |    2 
- drivers/scsi/gdth.c                        |    8 
- drivers/scsi/ipr.c                         |    2 
- drivers/scsi/ipr.h                         |    1 
- drivers/scsi/libfc/fc_disc.c               |    5 
- drivers/scsi/libfc/fc_fcp.c                |   24 -
- drivers/scsi/libfc/fc_lport.c              |   12 
- drivers/scsi/libfc/fc_rport.c              |    4 
- drivers/scsi/lpfc/lpfc.h                   |   12 
- drivers/scsi/lpfc/lpfc_attr.c              |    7 
- drivers/scsi/lpfc/lpfc_bsg.c               |    4 
- drivers/scsi/lpfc/lpfc_crtn.h              |    4 
- drivers/scsi/lpfc/lpfc_els.c               |  439 +++++++++++++++++++++----
- drivers/scsi/lpfc/lpfc_hbadisc.c           |  437 ++++++++++++++++++-------
- drivers/scsi/lpfc/lpfc_hw.h                |   41 ++
- drivers/scsi/lpfc/lpfc_hw4.h               |  167 ++++-----
- drivers/scsi/lpfc/lpfc_init.c              |  102 ++++-
- drivers/scsi/lpfc/lpfc_mbox.c              |   28 +
- drivers/scsi/lpfc/lpfc_scsi.c              |    9 
- drivers/scsi/lpfc/lpfc_sli.c               |  458 +++++++++++++++-----------
- drivers/scsi/lpfc/lpfc_sli4.h              |    9 
- drivers/scsi/lpfc/lpfc_version.h           |    2 
- drivers/scsi/megaraid/megaraid_sas.c       |  126 +++++++
- drivers/scsi/megaraid/megaraid_sas.h       |    7 
- drivers/scsi/osd/osd_initiator.c           |  244 +++++++++++++-
- drivers/scsi/pmcraid.c                     |  129 ++++++-
- drivers/scsi/pmcraid.h                     |   23 +
- drivers/scsi/qla2xxx/qla_attr.c            |    4 
- drivers/scsi/qla2xxx/qla_bsg.c             |  125 +++++++
- drivers/scsi/qla2xxx/qla_bsg.h             |    2 
- drivers/scsi/qla2xxx/qla_def.h             |    2 
- drivers/scsi/qla2xxx/qla_gbl.h             |    1 
- drivers/scsi/qla2xxx/qla_init.c            |   28 -
- drivers/scsi/qla2xxx/qla_iocb.c            |    4 
- drivers/scsi/qla2xxx/qla_isr.c             |   21 -
- drivers/scsi/qla2xxx/qla_os.c              |  207 +++++------
- drivers/scsi/qla4xxx/ql4_dbg.c             |  101 +++++
- drivers/scsi/qla4xxx/ql4_def.h             |   20 -
- drivers/scsi/qla4xxx/ql4_fw.h              |    3 
- drivers/scsi/qla4xxx/ql4_glbl.h            |    1 
- drivers/scsi/qla4xxx/ql4_init.c            |   10 
- drivers/scsi/qla4xxx/ql4_iocb.c            |   10 
- drivers/scsi/qla4xxx/ql4_isr.c             |   16 
- drivers/scsi/qla4xxx/ql4_mbx.c             |   11 
- drivers/scsi/qla4xxx/ql4_nx.c              |   89 ++---
- drivers/scsi/qla4xxx/ql4_nx.h              |    5 
- drivers/scsi/qla4xxx/ql4_os.c              |  109 +++---
- drivers/scsi/qla4xxx/ql4_version.h         |    2 
- drivers/scsi/scsi_lib.c                    |    3 
- drivers/scsi/scsi_sysfs.c                  |    3 
- drivers/scsi/sd.c                          |   23 +
- drivers/scsi/sr_ioctl.c                    |    9 
- include/scsi/libfc.h                       |    2 
- include/scsi/osd_initiator.h               |   16 
- include/scsi/osd_protocol.h                |   42 ++
- include/scsi/osd_types.h                   |    5 
- 98 files changed, 4160 insertions(+), 3006 deletions(-)
-
-James
-
-
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
