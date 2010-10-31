@@ -1,42 +1,36 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 13602] some HFS CD-ROM's can't be read
-Date: Sun, 31 Oct 2010 21:17:57 GMT
-Message-ID: <201010312117.o9VLHvpb009435@demeter2.kernel.org>
-References: <bug-13602-11613@https.bugzilla.kernel.org/>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 0/4] Fix k.alloc switched arguments
+Date: Sun, 31 Oct 2010 15:33:52 -0700
+Message-ID: <cover.1288555098.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [140.211.167.42] ([140.211.167.42]:56099 "EHLO
-	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752253Ab0JaVR6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Oct 2010 17:17:58 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9VLHwDe009443
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2010 21:17:58 GMT
-In-Reply-To: <bug-13602-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
+List-Post: <mailto:devel@linuxdriverproject.org>
+List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
+Sender: devel-bounces@linuxdriverproject.org
+Errors-To: devel-bounces@linuxdriverproject.org
+To: linux-kernel@vger.kernel.org
+Cc: devel@driverdev.osuosl.org, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, linux-scsi@vger.kernel.org, David Airlie <airlied@linux.ie>, Greg Kroah-Hartman <gregkh@suse.de>, dri-devel@lists.freedesktop.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Andy Whitcroft <apw@canonical.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=13602
+Joe Perches (4):
+  drivers/gpu/drm/vmwgfx: Fix k.alloc switched arguments
+  drivers/scsi/pmcraid.c: Fix k.alloc switched arguments
+  drivers/staging/udlfb/udlfb.c: Fix k.alloc switched arguments
+  scripts/checkpatch.pl: Add check for k.alloc GFP as first argument
 
-
-
-
-
---- Comment #6 from Christoph Hellwig <hch@lst.de>  2010-10-31 21:17:53 ---
-Old SGI, SUN and apparently mac systems did support CDROMs with 512 byte
-sectors.  In MMC5 there is only a vague reference to them beeing supported by
-the deprecated block descriptors taken from older SPC specs in some drives.
-
-Searching on the internet implies you need very specific CDROM drives to use
-the SGI/SUN 512 byte sector CDROMs.
-
-I think we safely say there is no way to properly support this in Linux and we
-we can close this bug.
+ drivers/gpu/drm/vmwgfx/vmwgfx_ldu.c     |    2 +-
+ drivers/gpu/drm/vmwgfx/vmwgfx_overlay.c |    2 +-
+ drivers/scsi/pmcraid.c                  |    4 ++--
+ drivers/staging/udlfb/udlfb.c           |    2 +-
+ scripts/checkpatch.pl                   |    5 +++++
+ 5 files changed, 10 insertions(+), 5 deletions(-)
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+1.7.3.1.g432b3.dirty
