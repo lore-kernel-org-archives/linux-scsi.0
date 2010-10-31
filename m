@@ -1,42 +1,42 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 20112] dmesg spam: "scsi host5: __pm_runtime_resume() returns
- 1" (DVD writer)
-Date: Sun, 31 Oct 2010 20:48:57 GMT
-Message-ID: <201010312048.o9VKmvu2026429@demeter2.kernel.org>
-References: <bug-20112-11613@https.bugzilla.kernel.org/>
+Subject: [Bug 13602] some HFS CD-ROM's can't be read
+Date: Sun, 31 Oct 2010 21:17:57 GMT
+Message-ID: <201010312117.o9VLHvpb009435@demeter2.kernel.org>
+References: <bug-13602-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [140.211.167.42] ([140.211.167.42]:50263 "EHLO
+Received: from [140.211.167.42] ([140.211.167.42]:56099 "EHLO
 	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1756768Ab0JaUtA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Oct 2010 16:49:00 -0400
+	with ESMTP id S1752253Ab0JaVR6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Oct 2010 17:17:58 -0400
 Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9VKmwv1026430
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id o9VLHwDe009443
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2010 20:48:58 GMT
-In-Reply-To: <bug-20112-11613@https.bugzilla.kernel.org/>
+	for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2010 21:17:58 GMT
+In-Reply-To: <bug-13602-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=20112
-
-
-Nix <nix@esperi.org.uk> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |nix@esperi.org.uk
+https://bugzilla.kernel.org/show_bug.cgi?id=13602
 
 
 
 
---- Comment #2 from Nix <nix@esperi.org.uk>  2010-10-31 20:48:55 ---
-I can confirm this logspam. In my case it relates to SCSI host 3, "CDDVDW
-SH-S223F", a DVD writer. (The writer contains no media.)
+
+--- Comment #6 from Christoph Hellwig <hch@lst.de>  2010-10-31 21:17:53 ---
+Old SGI, SUN and apparently mac systems did support CDROMs with 512 byte
+sectors.  In MMC5 there is only a vague reference to them beeing supported by
+the deprecated block descriptors taken from older SPC specs in some drives.
+
+Searching on the internet implies you need very specific CDROM drives to use
+the SGI/SUN 512 byte sector CDROMs.
+
+I think we safely say there is no way to properly support this in Linux and we
+we can close this bug.
 
 -- 
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
 ------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+You are the assignee for the bug.
