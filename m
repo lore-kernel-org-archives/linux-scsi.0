@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] ibmvscsis: Move to struct ibmvscsis_vdev usage in fabric configfs handlers
-Date: Sat, 30 Oct 2010 16:13:54 -0700
-Message-ID: <1288480434-29670-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH] ibmvscsis: Add initial TCM I/O path handoff logic
+Date: Sat, 30 Oct 2010 20:13:50 -0700
+Message-ID: <1288494830-30416-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp102.sbc.mail.gq1.yahoo.com ([67.195.15.61]:28181 "HELO
-	smtp102.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752888Ab0J3XN7 (ORCPT
+Received: from nm17-vm0.bullet.mail.ne1.yahoo.com ([98.138.91.58]:20758 "HELO
+	nm17-vm0.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753738Ab0JaDOD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 30 Oct 2010 19:13:59 -0400
+	Sat, 30 Oct 2010 23:14:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
@@ -15,1115 +15,792 @@ Cc: Brian King <brking@linux.vnet.ibm.com>, Linda Xie <lxie@us.ibm.com>, Robert 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch takes tomo-san original commit 94fdb0196151 and changes a handful
-of important items wrt to the fabric configfs logic.
+Greetings Tomo-san and Co,
 
-Firstly, this patch introduces struct ibmvscsis_vdev and converts the
-VIO ibmvscsis_probe() and ibmvscsi_remove() callers to allocate/free
-struct ibmvscsis_vdev instead of the original usage of struct ibmvscsis_tpg
-which is intended to be allocated/freed respectively in ibmvscsis_make_tpg()
-and ibmvscsis_drop_tpg() fabric configfs handlers.
+This patch adds initial support for TCM I/O path logic in tcm_queuecommand()
+using proper struct target_core_fabric_ops callbacks using TRANSPORT_NEW_CMD_MAP
+-> ibmvscsis_new_cmd_map() for setup in TCM process context and the normal
+TFO completion callbacks.
 
-Secondly, this patch changes the metadata that is used to determine the
-fabric WWN and TPGT (collectively the TCM VIO SRP endpoint) layout for
-/sys/kernel/config/target/ibmvscsis/$WWN/tpgt_$TPGT/.  This patch will
-now use struct vio_dev->unit_address for $WWN, and dev_name(vio_dev->dev)
-for $TPGT.  The values passed in via configff for $WWN and $TPGT must match
-in ibmvscsis_make_tport() and ibmvscsis_make_tpg() against what has been
-automatically setup for each struct ibmvscsis_vdev in the VIO ibmvscsis_probe()
-callback.
+This includes introducing struct ibmvscsis_cmd I/O desciptor containing
+struct scsi_cmnd and struct se_cmd members used by IBMVSCSIS to interact
+with libsrp and TCM respective.  The allocation of struct ibmvscsis_cmd
+is performed in ibmvscsis_queuecommand() for both internal and TCM CDB
+handling cases.  This patch also adds the explict TFO->check_stop_free
+caller to release each struct ibmvscsis in ibmvscsis_release_cmd().
 
-And thirdly, this patch converts ibmvscsis to use 'demo-mode' instead of explict
-struct se_node_acls.  This change follows TCM_Loop convention for an emulated
-I_T Nexus, and adds an configfs attribute at:
+Also in ibmvscsis_queuecommand(), this patch removes the now unnecessary
+START_STOP, READ_CAPACITY and READ_6 internal CDB emulation, and leaves the
+internal INQUIRY, REPORT_LUNS and MODE_SENSE CDB emulation being handled by
+ibmvscsis_queuecommand().
 
-	echo $VIO_SRP_INITIATOR_WWPN > \
-		/sys/kernel/config/target/ibmvscsis/$UNIT_ADDRESS/tpgt_$DEV_NAME/nexus
+Inside of the ibmvscsis_write_pending() and ibmvscsis_queue_data_in() TFO
+callers, the struct ibmvscsis->sc (struct scsi_cmnd) is used by libsrp ->
+srp_transfer_data(), and this code uses transport_do_task_sg_chain() for
+a single walkable SGL list or T_TASK(se_cmd)->t_tasks_sg_bounce for
+non SG/IO cases.  For the SCSI WRITE case transport_generic_process_write()
+is called to execute the underlying struct se_tasks, and for SCSI READ our
+fabric callback will call ibmvscsis_cmd_done() to post our struct scsi_cmnd back to
+libsrp and VIO LPAR logic.
 
-Note this code does not currently enforce strict SRP Initiator WWPN naming
-for the VIO Initiator Port, but this is something that will be added as the
-PR transportID handlers are filled in.
+Finally, this path adds the ibmvscsis_queue_status() callback that also
+sets up our struct scsi_cmnd to be posted back to libsrp via
+ibmvscsis_cmd_done().  It also copies any present SENSE data into
+struct scsi_cmnd->sense_buffer and sets the approach sc->result for the
+ibmvscsis_cmd_done() -> libsrp callback.
 
-Finally, this patch temporarily disables the per CDB emulation in
-ibmvscsis_queuecommand() that still uses struct ibmvscsis_tpg instead of
-struct ibmvscsis_vdev.  This is being fixed is a subsequent patch for the
-I/O path <-> TCM code hookup.
+So far this has been compile tested, but I think should be pretty close to
+functional on real hardware.
+
+Thanks!
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/ibmvscsi/ibmvscsis.c |  629 ++++++++++++++++++++++++-------------
- 1 files changed, 410 insertions(+), 219 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvscsis.c |  479 +++++++++++++++++++++++++++---------
+ 1 files changed, 359 insertions(+), 120 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvscsis.c b/drivers/scsi/ibmvscsi/ibmvscsis.c
-index 5dfd31a..396de44 100644
+index 396de44..b4735a8 100644
 --- a/drivers/scsi/ibmvscsi/ibmvscsis.c
 +++ b/drivers/scsi/ibmvscsi/ibmvscsis.c
-@@ -58,38 +58,24 @@ static char system_id[64] = "";
+@@ -1,3 +1,30 @@
++/*
++ * IBM eServer i/pSeries Virtual SCSI Target Driver
++ *
++ * Copyright (C) 2005-2006, 2010 FUJITA Tomonori <tomof@acm.org>
++ * Copyright (C) 2010 Nicholas A. Bellinger <nab@kernel.org>
++ *
++ * Based on ibmvstgt.c by:
++ * Copyright (C) 2003-2005 Dave Boutcher (boutcher@us.ibm.com) IBM Corp.
++ * 			   Santiago Leon (santil@us.ibm.com) IBM Corp.
++ *			   Linda Xie (lxie@us.ibm.com) IBM Corp.
++ * 
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
++ * USA
++ */
++
+ #include <linux/slab.h>
+ #include <linux/kthread.h>
+ #include <linux/types.h>
+@@ -13,6 +40,7 @@
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/libsrp.h>
++#include <scsi/libsas.h> /* For TASK_ATTR_* */
+ #include <generated/utsrelease.h>
+ 
+ #include <target/target_core_base.h>
+@@ -34,6 +62,7 @@
+ 
+ #define IBMVSCSIS_VERSION  "v0.1"
+ #define IBMVSCSIS_NAMELEN 32
++#define IBMVSCSIS_TPGS_PER_TPORT 32
+ 
+ #define	INITIAL_SRP_LIMIT	16
+ #define	DEFAULT_MAX_SECTORS	256
+@@ -58,9 +87,20 @@ static char system_id[64] = "";
  static char partition_name[97] = "UNKNOWN";
  static unsigned int partition_number = -1;
  
--static LIST_HEAD(tpg_list);
--static DEFINE_SPINLOCK(tpg_lock);
-+static LIST_HEAD(tcm_vdev_list);
-+static DEFINE_SPINLOCK(tcm_vdev_lock);
++struct kmem_cache *ibmvscsis_cmd_cache;
++
+ static LIST_HEAD(tcm_vdev_list);
+ static DEFINE_SPINLOCK(tcm_vdev_lock);
  
--struct ibmvscsis_nacl {
-+struct ibmvscsis_nexus {
++struct ibmvscsis_cmd {
++	/* Used for libsrp processing callbacks */
++	struct scsi_cmnd sc;
++	/* Used for TCM Core operations */
++	struct se_cmd se_cmd;
++	/* Sense buffer that will be mapped into outgoing status */
++	unsigned char sense_buf[TRANSPORT_SENSE_BUFFER];
++};
++
+ struct ibmvscsis_nexus {
  	/* Binary World Wide unique Port Name for SRP Initiator port */
  	u64 iport_wwpn;
- 	/* ASCII formatted WWPN for Sas Initiator port */
- 	char iport_name[IBMVSCSIS_NAMELEN];
--	/* Returned by ibmvscsis_make_nodeacl() */
--	struct se_node_acl se_node_acl;
--};
--
--struct ibmvscsis_tpg {
--	struct vio_dev *dma_dev;
--	struct list_head siblings;
+@@ -91,6 +131,8 @@ struct ibmvscsis_tport {
+ 	struct ibmvscsis_nexus *tport_nexus;
+ 	struct ibmvscsis_vdev *tport_vdev;
  
-+	struct ibmvscsis_tpg *parent_tpg;
- 	struct se_session *se_sess;
-+};
- 
--	struct crq_queue crq_queue;
--
--	struct work_struct crq_work;
--
--	unsigned long liobn;
--	unsigned long riobn;
--
--	/* todo: remove */
--	struct srp_target srpt;
--
--	/* SRP port target portal group tag for TCM */
--	unsigned int tport_tpgt;
--	/* Pointer back to ibmvscsis_tport */
--	struct ibmvscsis_tport *tport;
-+struct ibmvscsis_tpg {
-+	unsigned short tpgt;
-+	/* Used to ensure VIO I_T Nexus remains active while active port/LUNs exist  */
-+	atomic_t tpg_port_count;
-+	struct ibmvscsis_tport *tpg_tport;
- 	/* Returned by ibmvscsis_make_tpg() */
- 	struct se_portal_group se_tpg;
- };
-@@ -101,10 +87,38 @@ struct ibmvscsis_tport {
- 	u64 tport_wwpn;
- 	/* ASCII formatted WWPN for SRP Target port */
- 	char tport_name[IBMVSCSIS_NAMELEN];
-+
-+	struct ibmvscsis_nexus *tport_nexus;
-+	struct ibmvscsis_vdev *tport_vdev;
++	struct ibmvscsis_tpg tport_tpgs[IBMVSCSIS_TPGS_PER_TPORT];
 +
  	/* Returned by ibmvscsis_make_tport() */
  	struct se_wwn tport_wwn;
  };
+@@ -119,6 +161,11 @@ struct ibmvscsis_vdev {
+ 	struct srp_target srpt;
+ };
  
-+/*
-+ * Allocated during VIO ibmvscsis_probe() calls for an individual SRP endpoint,
-+ * and will be mapped back to an individual struct ibmvscsis_tport TCM 1WWPN
-+ * at ->vio_tport.
-+ */
-+struct ibmvscsis_vdev {
-+	/* Defs required for VIO SRP STGT endpoint */
-+	struct vio_dev *dma_dev;
-+	struct list_head siblings;
-+	struct crq_queue crq_queue;
-+	struct work_struct crq_work;
-+	unsigned long liobn;
-+	unsigned long riobn;
-+	/* SRP port target portal group tag for TCM report by struct vio_dev->dev */
-+	unsigned int vio_tpgt;
-+	/* Set to SRP by default for POWER5 VIO Firmware Ops */
-+	int proto_id;
-+
-+	struct ibmvscsis_tport *vio_tport;
-+
-+	/* todo: remove */
-+	struct srp_target srpt;
-+};
++static inline union viosrp_iu *vio_iu(struct iu_entry *iue)
++{
++	return (union viosrp_iu *) (iue->sbuf->buf);
++}
 +
  static int ibmvscsis_check_true(struct se_portal_group *se_tpg)
  {
  	return 1;
-@@ -122,12 +136,13 @@ static char *ibmvscsis_get_fabric_name(void)
- 
- static u8 ibmvscsis_get_fabric_proto_ident(struct se_portal_group *se_tpg)
- {
--	struct ibmvscsis_tpg *tpg = container_of(se_tpg,
--				struct ibmvscsis_tpg, se_tpg);
--	struct ibmvscsis_tport *tport = tpg->tport;
-+	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
-+	struct ibmvscsis_tport *tport = container_of(wwn,
-+				struct ibmvscsis_tport, tport_wwn);
-+	struct ibmvscsis_vdev *vdev = tport->tport_vdev;
- 	u8 proto_id = 0;
- 
--	switch (tport->tport_proto_id) {
-+	switch (vdev->proto_id) {
- 	case SCSI_PROTOCOL_SRP:
- 	default:
- #warning FIXME: Add srp_get_fabric_proto_ident()
-@@ -142,18 +157,21 @@ static u8 ibmvscsis_get_fabric_proto_ident(struct se_portal_group *se_tpg)
- 
- static char *ibmvscsis_get_fabric_wwn(struct se_portal_group *se_tpg)
- {
--	struct ibmvscsis_tpg *tpg = container_of(se_tpg,
--				struct ibmvscsis_tpg, se_tpg);
--	struct ibmvscsis_tport *tport = tpg->tport;
-+	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
-+	struct ibmvscsis_tport *tport = container_of(wwn,
-+				struct ibmvscsis_tport, tport_wwn);
- 
- 	return tport->tport_name;
- }
- 
- static u16 ibmvscsis_get_tag(struct se_portal_group *se_tpg)
- {
--	struct ibmvscsis_tpg *tpg = container_of(se_tpg,
--				struct ibmvscsis_tpg, se_tpg);
--	return tpg->tport_tpgt;
-+	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
-+	struct ibmvscsis_tport *tport = container_of(wwn,
-+				struct ibmvscsis_tport, tport_wwn);
-+	struct ibmvscsis_vdev *vdev = tport->tport_vdev;
-+
-+	return vdev->vio_tpgt;
- }
- 
- static u32 ibmvscsis_get_default_depth(struct se_portal_group *se_tpg)
-@@ -167,12 +185,13 @@ static u32 ibmvscsis_get_pr_transport_id(struct se_portal_group *se_tpg,
- 					 int *format_code,
- 					 unsigned char *buf)
- {
--	struct ibmvscsis_tpg *tpg =
--		container_of(se_tpg, struct ibmvscsis_tpg, se_tpg);
--	struct ibmvscsis_tport *tport = tpg->tport;
-+	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
-+	struct ibmvscsis_tport *tport = container_of(wwn,
-+				struct ibmvscsis_tport, tport_wwn);
-+	struct ibmvscsis_vdev *vdev = tport->tport_vdev;
- 	int ret = 0;
- 
--	switch (tport->tport_proto_id) {
-+	switch (vdev->proto_id) {
- 	case SCSI_PROTOCOL_SRP:
- 	default:
- #warning FIXME: Add srp_get_pr_transport_id()
-@@ -191,12 +210,13 @@ static u32 ibmvscsis_get_pr_transport_id_len(struct se_portal_group *se_tpg,
- 					     struct t10_pr_registration *pr_reg,
- 					     int *format_code)
- {
--	struct ibmvscsis_tpg *tpg =
--		container_of(se_tpg, struct ibmvscsis_tpg, se_tpg);
--	struct ibmvscsis_tport *tport = tpg->tport;
-+	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
-+	struct ibmvscsis_tport *tport = container_of(wwn,
-+				struct ibmvscsis_tport, tport_wwn);
-+	struct ibmvscsis_vdev *vdev = tport->tport_vdev;
- 	int ret = 0;
- 
--	switch (tport->tport_proto_id) {
-+	switch (vdev->proto_id) {
- 	case SCSI_PROTOCOL_SRP:
- 	default:
- #warning FIXME: Add srp_get_pr_transport_id_len()
-@@ -215,12 +235,13 @@ static char *ibmvscsis_parse_pr_out_transport_id(struct se_portal_group *se_tpg,
- 						 u32 *out_tid_len,
- 						 char **port_nexus_ptr)
- {
--	struct ibmvscsis_tpg *tpg =
--		container_of(se_tpg, struct ibmvscsis_tpg, se_tpg);
--	struct ibmvscsis_tport *tport = tpg->tport;
-+	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
-+	struct ibmvscsis_tport *tport = container_of(wwn,
-+				struct ibmvscsis_tport, tport_wwn);
-+	struct ibmvscsis_vdev *vdev = tport->tport_vdev;
- 	char *tid = NULL;
- 
--	switch (tport->tport_proto_id) {
-+	switch (vdev->proto_id) {
- 	case SCSI_PROTOCOL_SRP:
- 	default:
- #warning FIXME: Add srp_parse_pr_out_transport_id()
-@@ -234,25 +255,20 @@ static char *ibmvscsis_parse_pr_out_transport_id(struct se_portal_group *se_tpg,
- 	return tid;
+@@ -276,9 +323,34 @@ static u32 ibmvscsis_tpg_get_inst_index(struct se_portal_group *se_tpg)
+ 	return 1;
  }
  
 +/*
-+ * Note that ibmvscsis_alloc_fabric_acl() and ibmvscsis_release_fabric_acl()
-+ * are NOPs as IBMVSCSIS code is running in 'demo-mode', so adding explict
-+ * configfs level struct se_node_acls is currently not required.
++ * Called from struct target_core_fabric_ops->check_stop_free()
 + */
- static struct se_node_acl *ibmvscsis_alloc_fabric_acl(struct se_portal_group *se_tpg)
- {
--	struct ibmvscsis_nacl *nacl;
--
--	nacl = kzalloc(sizeof(struct ibmvscsis_nacl), GFP_KERNEL);
--	if (!(nacl)) {
--		printk(KERN_ERR "Unable to alocate struct ibmvscsis_nacl\n");
--		return NULL;
--	}
--
--	return &nacl->se_node_acl;
-+	return NULL;
- }
- 
- static void ibmvscsis_release_fabric_acl(struct se_portal_group *se_tpg,
--					 struct se_node_acl *se_nacl)
-+					struct se_node_acl *se_nacl)
- {
--	struct ibmvscsis_nacl *nacl = container_of(se_nacl,
--			struct ibmvscsis_nacl, se_node_acl);
--	kfree(nacl);
-+	return;
- }
- 
- static u32 ibmvscsis_tpg_get_inst_index(struct se_portal_group *se_tpg)
-@@ -366,153 +382,296 @@ static u64 ibmvscsis_pack_lun(unsigned int lun)
- /* Local pointer to allocated TCM configfs fabric module */
- static struct target_fabric_configfs *ibmvscsis_fabric_configfs;
- 
--static struct se_node_acl *ibmvscsis_make_nodeacl(
-+int ibmvscsis_port_link(
-+	struct se_portal_group *se_tpg,
-+	struct se_lun *lun)
++static void ibmvscsis_check_stop_free(struct se_cmd *se_cmd)
 +{
-+	struct ibmvscsis_tpg *tpg = container_of(se_tpg,
-+				struct ibmvscsis_tpg, se_tpg);
-+
-+	atomic_inc(&tpg->tpg_port_count);
-+	smp_mb__after_atomic_inc();
-+
-+	printk(KERN_INFO "IBMVSCSI_ConfigFS: Port Link Successful\n");
-+	return 0;
++	/*
++	 * Do not release struct se_cmd's containing a valid TMR
++	 * pointer.  These will be released directly in tcm_loop_device_reset()
++	 * with transport_generic_free_cmd().
++	 */
++	if (se_cmd->se_tmr_req)
++		return;
++	/*
++	 * Release the struct se_cmd, which will make a callback to release
++	 * struct ibmvscsis_cmd * in ibmvscsis_release_cmd()
++	 */
++	transport_generic_free_cmd(se_cmd, 0, 1, 0);
 +}
 +
-+void ibmvscsis_port_unlink(
- 	struct se_portal_group *se_tpg,
--	struct config_group *group,
-+	struct se_lun *se_lun)
-+{
-+	struct ibmvscsis_tpg *tpg = container_of(se_tpg,
-+				struct ibmvscsis_tpg, se_tpg);
-+
-+	atomic_dec(&tpg->tpg_port_count);
-+	smp_mb__after_atomic_dec();
-+
-+	printk(KERN_INFO "IBMVSCSI_ConfigFS: Port  Unlink Successful\n");
-+}
-+
-+static int ibmvscsis_make_nexus(
-+	struct ibmvscsis_tpg *tpg,
- 	const char *name)
++/*
++ * Called from struct target_core_fabric_ops->release_cmd_to_pool()
++ */
+ static void ibmvscsis_release_cmd(struct se_cmd *se_cmd)
  {
--	struct se_node_acl *se_nacl, *se_nacl_new;
--	struct ibmvscsis_nacl *nacl;
--	u64 wwpn = 0;
--	u32 nexus_depth;
-+	struct se_portal_group *se_tpg;
-+	struct ibmvscsis_tport *tport = tpg->tpg_tport;
-+	struct ibmvscsis_nexus *nexus;
+-	return;
++	struct ibmvscsis_cmd *cmd = container_of(se_cmd,
++			struct ibmvscsis_cmd, se_cmd);
++
++	kmem_cache_free(ibmvscsis_cmd_cache, cmd);
+ }
  
--	printk("%s %d: %s\n", __func__, __LINE__, name);
-+	if (tport->tport_nexus) {
-+		printk(KERN_INFO "tport->tport_nexus already exists\n");
-+		return -EEXIST;
+ static int ibmvscsis_shutdown_session(struct se_session *se_sess)
+@@ -312,8 +384,56 @@ static u32 ibmvscsis_sess_get_index(struct se_session *se_sess)
+ 	return 0;
+ }
+ 
++int ibmvscsis_cmd_done(struct scsi_cmnd *, int);
++int ibmvscsis_rdma(struct scsi_cmnd *, struct scatterlist *, int nsg,
++		struct srp_direct_buf *, int, enum dma_data_direction,
++		unsigned int);
++
+ static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
+ {
++	struct ibmvscsis_cmd *cmd = container_of(se_cmd,
++			struct ibmvscsis_cmd, se_cmd);
++	struct scsi_cmnd *sc = &cmd->sc;
++	struct iu_entry *iue = (struct iu_entry *) sc->SCp.ptr;
++	int ret;
++
++	sc->sdb.length = se_cmd->data_length;
++	/*
++	 * Setup the struct se_task->task_sg[] chained SG list
++	 */
++	if ((se_cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) ||
++	    (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB)) {
++		transport_do_task_sg_chain(se_cmd);
++
++		sc->sdb.table.nents = T_TASK(se_cmd)->t_tasks_sg_chained_no;
++		sc->sdb.table.sgl = T_TASK(se_cmd)->t_tasks_sg_chained;
++	} else if (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
++		/*
++		 * Use T_TASK(se_cmd)->t_tasks_sg_bounce for control CDBs
++		 * using a contigious buffer
++		 */
++		sg_init_table(&T_TASK(se_cmd)->t_tasks_sg_bounce, 1);
++		sg_set_buf(&T_TASK(se_cmd)->t_tasks_sg_bounce,
++			T_TASK(se_cmd)->t_task_buf, se_cmd->data_length);
++
++		sc->sdb.table.nents = 1;
++		sc->sdb.table.sgl = &T_TASK(se_cmd)->t_tasks_sg_bounce;
 +	}
-+	se_tpg = &tpg->se_tpg;
++	/*
++	 * Perform the SCSI WRITE data transfer from VIO LPAR memory into
++	 * sc->sdb.table.  This will occur via libsrp in the
++	 * ibmvscsis_rdma() callback
++	 */
++	ret = srp_transfer_data(sc, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma, 1, 1);
++	if (ret) {
++		printk(KERN_ERR "srp_transfer_data() failed: %d\n", ret);
++		return PYX_TRANSPORT_LU_COMM_FAILURE;
++	}
++	/*
++	 * We now tell TCM to add this WRITE CDB directly into the TCM storage
++	 * object execution queue.
++	 */
++	transport_generic_process_write(se_cmd);
+ 	return 0;
+ }
  
--	se_nacl_new = ibmvscsis_alloc_fabric_acl(se_tpg);
--	if (!(se_nacl_new))
+@@ -344,11 +464,83 @@ static void ibmvscsis_new_cmd_failure(struct se_cmd *se_cmd)
+ 
+ static int ibmvscsis_queue_data_in(struct se_cmd *se_cmd)
+ {
++	struct ibmvscsis_cmd *cmd = container_of(se_cmd,
++			struct ibmvscsis_cmd, se_cmd);
++	struct scsi_cmnd *sc = &cmd->sc;
++	struct iu_entry *iue = (struct iu_entry *) sc->SCp.ptr;
++	int ret;
++	/*
++	 * Check for overflow residual count
++	 */
++	if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT)
++		scsi_set_resid(sc, se_cmd->residual_count);
++
++	sc->sdb.length = se_cmd->data_length;
++	/*
++	 * Setup the struct se_task->task_sg[] chained SG list
++	 */
++	if ((se_cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) ||
++	    (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB)) {
++		transport_do_task_sg_chain(se_cmd);
++
++		sc->sdb.table.nents = T_TASK(se_cmd)->t_tasks_sg_chained_no;
++		sc->sdb.table.sgl = T_TASK(se_cmd)->t_tasks_sg_chained;
++	} else if (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
++		/*
++		 * Use T_TASK(se_cmd)->t_tasks_sg_bounce for control CDBs
++		 * using a contigious buffer
++		 */             
++		sg_init_table(&T_TASK(se_cmd)->t_tasks_sg_bounce, 1);
++		sg_set_buf(&T_TASK(se_cmd)->t_tasks_sg_bounce,
++			T_TASK(se_cmd)->t_task_buf, se_cmd->data_length);
++
++		sc->sdb.table.nents = 1;
++		sc->sdb.table.sgl = &T_TASK(se_cmd)->t_tasks_sg_bounce;
++	}
++	/*
++	 * Perform the SCSI READ data transfer from sc->sdb.table into
++	 * VIO LPAR memory.  This will occur via libsrp in the
++	 * ibmvscsis_rdma() callback
++	 */
++	ret = srp_transfer_data(sc, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma, 1, 1);
++	if (ret) {
++		printk(KERN_ERR "srp_transfer_data() failed: %d, returning"
++				" DID_ERROR\n", ret);
++		sc->result = host_byte(DID_ERROR) | se_cmd->scsi_status;
++	} else
++		sc->result = host_byte(DID_OK) | se_cmd->scsi_status;
++	/*
++	 * This will call srp_transfer_data() and post the response
++	 * to VIO via libsrp.
++	 */
++	ibmvscsis_cmd_done(sc, 1);
+ 	return 0;
+ }
+ 
+ static int ibmvscsis_queue_status(struct se_cmd *se_cmd)
+ {
++	struct ibmvscsis_cmd *cmd = container_of(se_cmd,
++			struct ibmvscsis_cmd, se_cmd);
++	struct scsi_cmnd *sc = &cmd->sc;
++	/*
++	 * Copy any generated SENSE data into sc->sense_buffer and
++	 * set the appropiate sc->result to be translated by
++	 * ibmvscsis_cmd_done()
++	 */
++	if (se_cmd->sense_buffer &&
++	   ((se_cmd->se_cmd_flags & SCF_TRANSPORT_TASK_SENSE) ||
++	    (se_cmd->se_cmd_flags & SCF_EMULATED_TASK_SENSE))) {
++		
++		memcpy((void *)sc->sense_buffer, (void *)se_cmd->sense_buffer,
++				SCSI_SENSE_BUFFERSIZE);
++		sc->result = host_byte(DID_OK) | driver_byte(DRIVER_SENSE) |
++				SAM_STAT_CHECK_CONDITION;
++	} else
++		sc->result = host_byte(DID_OK) | se_cmd->scsi_status;
++	/*
++	 * Finally post the response to VIO via libsrp.
++	 */
++	ibmvscsis_cmd_done(sc, 1);
+ 	return 0;
+ }
+ 
+@@ -578,20 +770,20 @@ static struct se_portal_group *ibmvscsis_make_tpg(struct se_wwn *wwn,
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 
+-	tpg = kzalloc(sizeof(*tpg), GFP_KERNEL);
+-	if (!(tpg))
 -		return ERR_PTR(-ENOMEM);
--//#warning FIXME: Hardcoded nexus depth in ibmvscsis_make_nodeacl()
--	nexus_depth = 1;
-+	nexus = kzalloc(sizeof(struct ibmvscsis_nexus), GFP_KERNEL);
-+	if (!(nexus))
-+		return -ENOMEM;
-+	/*
-+	 * Initialize the struct se_session pointer
-+	 */
-+	nexus->se_sess = transport_init_session();
-+	if (!(nexus->se_sess))
-+		goto out;
-+	/*
-+	 * Since we are running in 'demo mode' this call with generate a
-+	 * struct se_node_acl for the ibmvscsi struct se_portal_group with
-+	 * the SCSI Initiator port name of the passed configfs group 'name'.
-+	 */
-+	nexus->se_sess->se_node_acl = core_tpg_check_initiator_node_acl(
-+				se_tpg, (unsigned char *)name);
-+	if (!(nexus->se_sess->se_node_acl)) {
-+		transport_free_session(nexus->se_sess);
-+		goto out;
-+	}
- 	/*
--	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()
--	 * when converting a NodeACL from demo mode -> explict
-+	 * Now, register the VIO SRP I_T Nexus as active with the call to
-+	 * transport_register_session()
- 	 */
--	se_nacl = core_tpg_add_initiator_node_acl(se_tpg, se_nacl_new,
--				name, nexus_depth);
--	if (IS_ERR(se_nacl)) {
--		ibmvscsis_release_fabric_acl(se_tpg, se_nacl_new);
--		return se_nacl;
-+	__transport_register_session(se_tpg, nexus->se_sess->se_node_acl,
-+				nexus->se_sess, (void *)nexus);
-+	tport->tport_nexus = nexus;
-+	printk(KERN_INFO "IBMVSCSI_ConfigFS: Established I_T Nexus to"
-+			" VIO Initiator Port: %s\n", name);
-+	return 0;
-+out:
-+	kfree(nexus);
-+	return -ENOMEM;
-+}
-+
-+static int ibmvscsis_drop_nexus(
-+	struct ibmvscsis_tpg *tpg)
-+{
-+	struct ibmvscsis_tport *tport = tpg->tpg_tport;
-+	struct se_session *se_sess;
-+	struct ibmvscsis_nexus *nexus;
-+
-+	nexus = tport->tport_nexus;
-+	if (!(nexus))
-+		return -ENODEV;
-+
-+	se_sess = nexus->se_sess;
-+	if (!(se_sess))
-+		return -ENODEV;
-+
-+	if (atomic_read(&tpg->tpg_port_count)) {
-+		 printk(KERN_ERR "Unable to remove VIO I_T Nexus with"
-+			" active TPG port count: %d\n",
-+			atomic_read(&tpg->tpg_port_count));
-+		return -EPERM;
- 	}
-+
-+	printk(KERN_INFO "IBMVSCSI_ConfigFS: Removing I_T Nexus to VIO Initiator"
-+		" Port: %s\n", nexus->se_sess->se_node_acl->initiatorname);
- 	/*
--	 * Locate our struct ibmvscsis_nacl and set the FC Nport WWPN
-+	 * Release the SCSI I_T Nexus to the emulated SRP target port
- 	 */
--	nacl = container_of(se_nacl, struct ibmvscsis_nacl, se_node_acl);
--	nacl->iport_wwpn = wwpn;
--	/* ibmvscsis_format_wwn(&nacl->iport_name[0], IBMVSCSIS_NAMELEN, wwpn); */
-+	transport_deregister_session(nexus->se_sess);
-+	tport->tport_nexus = NULL;
-+	kfree(nexus);
- 
--	return se_nacl;
-+	return 0;
- }
- 
--static void ibmvscsis_drop_nodeacl(struct se_node_acl *se_acl)
-+static ssize_t ibmvscsis_tpg_show_nexus(
-+	struct se_portal_group *se_tpg,
-+	char *page)
- {
--	struct ibmvscsis_nacl *nacl = container_of(se_acl,
--				struct ibmvscsis_nacl, se_node_acl);
--	kfree(nacl);
-+	struct ibmvscsis_tpg *tpg = container_of(se_tpg,
-+			struct ibmvscsis_tpg, se_tpg);
-+	struct ibmvscsis_nexus *nexus;
-+
-+	nexus = tpg->tpg_tport->tport_nexus;
-+	if (!(nexus)) 
-+		return -ENODEV;
-+
-+	return snprintf(page, PAGE_SIZE, "%s\n",
-+		nexus->se_sess->se_node_acl->initiatorname);
- }
- 
-+static ssize_t ibmvscsis_tpg_store_nexus(
-+	struct se_portal_group *se_tpg,
-+	const char *page,
-+	size_t count)
-+{
-+	struct ibmvscsis_tpg *tpg = container_of(se_tpg,
-+			struct ibmvscsis_tpg, se_tpg);
-+	unsigned char i_port[IBMVSCSIS_NAMELEN], *port_ptr;
-+	int ret;		
-+	/*
-+	 * Shutdown the active I_T nexus if 'NULL' is passed..
-+	 */
-+	if (!(strncmp(page, "NULL", 4))) {
-+		ret = ibmvscsis_drop_nexus(tpg);
-+		return (!ret) ? count : ret;
-+	}
-+
-+	if (strlen(page) > IBMVSCSIS_NAMELEN) {
-+		printk(KERN_ERR "VIO SRP Address: %s exceeds max: %d\n",
-+				page, IBMVSCSIS_NAMELEN);
-+		return -EINVAL;
-+	}
-+	snprintf(&i_port[0], IBMVSCSIS_NAMELEN, "%s", page);
-+	port_ptr = &i_port[0];	
-+
-+#warning FIXME: Check for explict srp. for emulated VIO Initiator WWPN
-+	/*
-+	 * Clear any trailing newline for the VIO Initiator WWPN
-+	 */
-+	if (i_port[strlen(i_port)-1] == '\n')
-+		i_port[strlen(i_port)-1] = '\0';
-+
-+	ret = ibmvscsis_make_nexus(tpg, port_ptr);
-+	
-+	return (ret < 0) ? ret : count;
-+}
-+	
-+
-+TF_TPG_BASE_ATTR(ibmvscsis, nexus, S_IRUGO | S_IWUSR);
-+
-+static struct configfs_attribute *ibmvscsis_tpg_attrs[] = {
-+	&ibmvscsis_tpg_nexus.attr,
-+	NULL,
-+};
-+
- static struct se_portal_group *ibmvscsis_make_tpg(struct se_wwn *wwn,
- 						  struct config_group *group,
- 						  const char *name)
- {
--	struct ibmvscsis_tport*tport = container_of(wwn,
-+	struct ibmvscsis_tport *tport = container_of(wwn,
- 			struct ibmvscsis_tport, tport_wwn);
 -
-+	struct ibmvscsis_vdev *vdev = tport->tport_vdev;
- 	struct ibmvscsis_tpg *tpg;
- 	unsigned long tpgt;
- 	int ret;
--	unsigned long flags;
- 
- 	if (strstr(name, "tpgt_") != name)
- 		return ERR_PTR(-EINVAL);
- 	if (strict_strtoul(name + 5, 10, &tpgt) || tpgt > UINT_MAX)
- 		return ERR_PTR(-EINVAL);
--
--	spin_lock_irqsave(&tpg_lock, flags);
--	list_for_each_entry(tpg, &tpg_list, siblings) {
--		printk("%s %d: %s %u, %lu\n", __func__, __LINE__,
--		       dev_name(&tpg->dma_dev->dev),
--		       tpg->tport_tpgt, tpgt);
--
--		if (tpgt == tpg->tport_tpgt)
--			goto found;
--	}
--	printk("%s %d: can't find %s\n", __func__, __LINE__, name);
--	ret = -EINVAL;
--	goto unlock;
--found:
--	if (tpg->tport) {
--		printk("%s %d: already bind %s\n", __func__, __LINE__, name);
--		ret = -EINVAL;
--		goto unlock;
-+	/*
-+	 * Compare the configfs passed tpgt against the vdev->vio_tpgt
-+	 * detrmined by dev_name(&dev->dev) in ibmvscsis_probe().
-+	 */
-+	if (vdev->vio_tpgt != (unsigned int)tpgt) {
-+		printk(KERN_ERR "Passed configfs tpgt: %lu does not match VIO"
-+			" presented tpgt: %u\n", tpgt, vdev->vio_tpgt);
++	if (tpgt > IBMVSCSIS_TPGS_PER_TPORT) {
++		printk(KERN_ERR "Passed tpgt: %lu exceeds IBMVSCSIS_TPGS_PER_TPORT:"
++			" %u\n", tpgt, IBMVSCSIS_TPGS_PER_TPORT);
 +		return ERR_PTR(-EINVAL);
- 	}
- 
--	tpg->tport = tport;
-+	tpg = kzalloc(sizeof(*tpg), GFP_KERNEL);
-+	if (!(tpg))
-+		return ERR_PTR(-ENOMEM);
- 
--	spin_unlock_irqrestore(&tpg_lock, flags);
-+	tpg->tpg_tport = tport;
-+	tpg->tpgt = (unsigned short)tpgt;
++	}
++	tpg = &tport->tport_tpgs[tpgt];
+ 	tpg->tpg_tport = tport;
+ 	tpg->tpgt = (unsigned short)tpgt;
  
  	ret = core_tpg_register(&ibmvscsis_fabric_configfs->tf_ops, wwn,
  				&tpg->se_tpg, (void *)tpg,
  				TRANSPORT_TPG_TYPE_NORMAL);
--	if (ret)
--		return ERR_PTR(-ENOMEM);
--
--	printk("%s %d: %d\n", __func__, __LINE__, ret);
--
--	tpg->se_sess = transport_init_session();
--	if (!tpg->se_sess) {
--		core_tpg_deregister(&tpg->se_tpg);
-+	if (ret) {
-+		kfree(tpg);
+-	if (ret) {
+-		kfree(tpg);
++	if (ret)
  		return ERR_PTR(-ENOMEM);
- 	}
+-	}
  
--	printk("%s %d\n", __func__, __LINE__);
+ 	printk(KERN_INFO "IBMVSCSI_ConfigFS: Allocated VIO Target Port"
+ 		" %s,t,0x%04x\n", config_item_name(&wwn->wwn_group.cg_item),
+@@ -617,8 +809,6 @@ static void ibmvscsis_drop_tpg(struct se_portal_group *se_tpg)
+ 	printk(KERN_INFO "IBMVSCSI_ConfigFS: Deallocated VIO Target Port"
+ 		" %s,t,0x%04x\n", config_item_name(&wwn->wwn_group.cg_item),
+ 		tpg->tpgt);
 -
--	tpg->se_sess->se_node_acl =
--		core_tpg_check_initiator_node_acl(&tpg->se_tpg,
--						  (unsigned char*)dev_name(&tpg->dma_dev->dev));
--
--	transport_register_session(&tpg->se_tpg, tpg->se_sess->se_node_acl,
--				   tpg->se_sess, tpg);
--
--	printk("%s %d: %p %p\n", __func__, __LINE__, tpg, &tpg->se_tpg);
-+	printk(KERN_INFO "IBMVSCSI_ConfigFS: Allocated VIO Target Port"
-+		" %s,t,0x%04x\n", config_item_name(&wwn->wwn_group.cg_item),
-+		(unsigned short)tpg->tpgt);
- 
- 	return &tpg->se_tpg;
--unlock:
--	spin_unlock_irqrestore(&tpg_lock, flags);
--	return ERR_PTR(ret);
+-	kfree(tpg);
  }
  
- static void ibmvscsis_drop_tpg(struct se_portal_group *se_tpg)
+ /*
+@@ -696,7 +886,7 @@ static ssize_t ibmvscsis_wwn_show_attr_version(struct target_fabric_configfs *tf
+ 					       char *page)
  {
-+	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
- 	struct ibmvscsis_tpg *tpg = container_of(se_tpg,
- 				struct ibmvscsis_tpg, se_tpg);
--	unsigned long flags;
--
--
--	transport_deregister_session_configfs(tpg->se_sess);
--	transport_free_session(tpg->se_sess);
-+	/*
-+	 * Release the I_T Nexus for the Virtual SRP link if present
-+	 */
-+	ibmvscsis_drop_nexus(tpg);
-+	/*
-+	 * Deregister the tpg as a emulated SRP TCM Target Endpoint
-+	 */
- 	core_tpg_deregister(se_tpg);
- 
--	spin_lock_irqsave(&tpg_lock, flags);
--	tpg->tport = NULL;
--	tpg->se_sess = NULL;
--	spin_unlock_irqrestore(&tpg_lock, flags);
-+	printk(KERN_INFO "IBMVSCSI_ConfigFS: Deallocated VIO Target Port"
-+		" %s,t,0x%04x\n", config_item_name(&wwn->wwn_group.cg_item),
-+		tpg->tpgt);
-+
-+	kfree(tpg);
+ 	return sprintf(page, "IBMVSCSIS fabric module %s on %s/%s"
+-		"on "UTS_RELEASE"\n", IBMVSCSIS_VERSION, utsname()->sysname,
++		" on "UTS_RELEASE"\n", IBMVSCSIS_VERSION, utsname()->sysname,
+ 		utsname()->machine);
  }
  
-+/*
-+ * Called by target_core_fabric_configfs.c:target_fabric_make_wwn*() to
-+ * look for a matching struct ibmvscsis_vdev setup by ibmvscsis_probe()
-+ * below
-+ */
- static struct se_wwn *ibmvscsis_make_tport(struct target_fabric_configfs *tf,
- 					   struct config_group *group,
- 					   const char *name)
- {
-+	struct ibmvscsis_vdev *vdev;
- 	struct ibmvscsis_tport *tport;
-+	unsigned long flags, vio_unit_address;
-+	int ret;
- 
- 	printk("%s %d: create %s\n", __func__, __LINE__, name);
- 
-+	ret = strict_strtoul(name, 0, &vio_unit_address);
-+	if (ret < 0) {
-+		printk(KERN_ERR "strict_strtoul() failed with"
-+			" ret: %d\n", ret);
-+		return ERR_PTR(-EINVAL);
-+	}
-+
- 	tport = kzalloc(sizeof(*tport), GFP_KERNEL);
- 	if (!(tport)) {
- 		printk(KERN_ERR "Unable to allocate struct tcm_ibmvscsis_tport");
- 		return ERR_PTR(-ENOMEM);
- 	}
--	/* tport->tport_wwpn = wwpn; */
- 
-+	spin_lock_irqsave(&tcm_vdev_lock, flags);
-+	list_for_each_entry(vdev, &tcm_vdev_list, siblings) {
-+		if (vdev->dma_dev->unit_address == (u32)vio_unit_address)
-+			goto found;
-+	}
-+
-+	printk(KERN_ERR "Unable to locate VIO SRP Endpoint with configfs passed"
-+			" vio_unit_address: 0x%08x\n", (u32)vio_unit_address);
-+	spin_unlock_irqrestore(&tcm_vdev_lock, flags);
-+	return ERR_PTR(-EINVAL);
-+
-+found:
-+	tport->tport_wwpn = (u32)vdev->dma_dev->unit_address;
-+	tport->tport_vdev = vdev;
-+	vdev->vio_tport = tport;
-+
-+	printk(KERN_ERR "IBMVSCSI_ConfigFS: Allocated TPORT WWPN <-> VDEV"
-+		" for vio_dev->unit_address: 0x%08x vio_tpgt: %u VIO Initiator"
-+		" WWPN: %s\n", vdev->dma_dev->unit_address, vdev->vio_tpgt,
-+		dev_name(&vdev->dma_dev->dev));
-+
-+	spin_unlock_irqrestore(&tcm_vdev_lock, flags);
- 	return &tport->tport_wwn;
- }
- 
-@@ -520,6 +679,16 @@ static void ibmvscsis_drop_tport(struct se_wwn *wwn)
- {
- 	struct ibmvscsis_tport *tport = container_of(wwn,
- 				struct ibmvscsis_tport, tport_wwn);
-+	struct ibmvscsis_vdev *vdev = tport->tport_vdev;
-+
-+	vdev->vio_tport = NULL;
-+	tport->tport_vdev = NULL;
-+
-+	printk(KERN_ERR "IBMVSCSI_ConfigFS: Deallocated TPORT WWPN <-> VDEV "
-+		" for vio_dev->unit_address: 0x%08x vio_tpgt: %u VIO Initiator"
-+		" WWPN: %s\n", vdev->dma_dev->unit_address, vdev->vio_tpgt,
-+		dev_name(&vdev->dma_dev->dev));
-+
- 	kfree(tport);
- }
- 
-@@ -587,8 +756,8 @@ static struct target_core_fabric_ops ibmvscsis_ops = {
- 	.fabric_pre_unlink		= NULL,
- 	.fabric_make_np			= NULL,
- 	.fabric_drop_np			= NULL,
--	.fabric_make_nodeacl		= ibmvscsis_make_nodeacl,
--	.fabric_drop_nodeacl		= ibmvscsis_drop_nodeacl,
-+	.fabric_make_nodeacl		= NULL,
-+	.fabric_drop_nodeacl		= NULL,
+@@ -707,6 +897,8 @@ static struct configfs_attribute *ibmvscsis_wwn_attrs[] = {
+ 	NULL,
  };
  
- static inline union viosrp_iu *vio_iu(struct iu_entry *iue)
-@@ -599,7 +768,7 @@ static inline union viosrp_iu *vio_iu(struct iu_entry *iue)
++int ibmvscsis_new_cmd_map(struct se_cmd *);
++
+ static struct target_core_fabric_ops ibmvscsis_ops = {
+ 	.get_fabric_name		= ibmvscsis_get_fabric_name,
+ 	.get_fabric_proto_ident		= ibmvscsis_get_fabric_proto_ident,
+@@ -723,6 +915,8 @@ static struct target_core_fabric_ops ibmvscsis_ops = {
+ 	.tpg_alloc_fabric_acl		= ibmvscsis_alloc_fabric_acl,
+ 	.tpg_release_fabric_acl		= ibmvscsis_release_fabric_acl,
+ 	.tpg_get_inst_index		= ibmvscsis_tpg_get_inst_index,
++	.new_cmd_map			= ibmvscsis_new_cmd_map,
++	.check_stop_free		= ibmvscsis_check_stop_free,
+ 	.release_cmd_to_pool		= ibmvscsis_release_cmd,
+ 	.release_cmd_direct		= ibmvscsis_release_cmd,
+ 	.shutdown_session		= ibmvscsis_shutdown_session,
+@@ -760,11 +954,6 @@ static struct target_core_fabric_ops ibmvscsis_ops = {
+ 	.fabric_drop_nodeacl		= NULL,
+ };
+ 
+-static inline union viosrp_iu *vio_iu(struct iu_entry *iue)
+-{
+-	return (union viosrp_iu *) (iue->sbuf->buf);
+-}
+-
  static int send_iu(struct iu_entry *iue, u64 length, u8 format)
  {
  	struct srp_target *target = iue->target;
--	struct ibmvscsis_tpg *tpg = target->ldata;
-+	struct ibmvscsis_vdev *vdev = target->ldata;
- 	long rc, rc1;
- 	union {
- 		struct viosrp_crq cooked;
-@@ -607,8 +776,8 @@ static int send_iu(struct iu_entry *iue, u64 length, u8 format)
- 	} crq;
+@@ -1092,45 +1281,59 @@ static inline struct viosrp_crq *next_crq(struct crq_queue *queue)
+ 	return crq;
+ }
  
- 	/* First copy the SRP */
--	rc = h_copy_rdma(length, tpg->liobn, iue->sbuf->dma,
--			 tpg->riobn, iue->remote_token);
-+	rc = h_copy_rdma(length, vdev->liobn, iue->sbuf->dma,
-+			 vdev->riobn, iue->remote_token);
- 
- 	if (rc)
- 		printk(KERN_ERR "Error %ld transferring data\n", rc);
-@@ -625,7 +794,7 @@ static int send_iu(struct iu_entry *iue, u64 length, u8 format)
- 	else
- 		crq.cooked.status = 0x00;
- 
--	rc1 = h_send_crq(tpg->dma_dev->unit_address, crq.raw[0], crq.raw[1]);
-+	rc1 = h_send_crq(vdev->dma_dev->unit_address, crq.raw[0], crq.raw[1]);
- 
- 	if (rc1) {
- 		printk(KERN_ERR "%ld sending response\n", rc1);
-@@ -695,12 +864,12 @@ static int send_adapter_info(struct iu_entry *iue,
- 			     dma_addr_t remote_buffer, u16 length)
+-#if 0
+-static int srp_queuecommand(struct ibmvscsis_tpg *tpg,
++/*
++ * Used to setup and queue CMD descriptors headed for TCM Core processing
++ */
++static int tcm_queuecommand(struct ibmvscsis_tpg *tpg,
++			    struct ibmvscsis_cmd *vcmd,
+ 			    struct srp_cmd *cmd)
  {
- 	struct srp_target *target = iue->target;
--	struct ibmvscsis_tpg *tpg = target->ldata;
-+	struct ibmvscsis_vdev *vdev = target->ldata;
- 	dma_addr_t data_token;
- 	struct mad_adapter_info_data *info;
- 	int err;
+-	struct se_cmd *se_cmd;
++	struct se_cmd *se_cmd = &vcmd->se_cmd;
++	struct se_portal_group *se_tpg = &tpg->se_tpg;
++	struct se_session *se_sess;
++	struct ibmvscsis_nexus *nexus;
+ 	int attr;
+ 	int data_len;
+ 	int ret;
++	/*
++	 * Locate our active struct ibmvscsis_nexus setup before hand in
++	 * ibmvscsis_tpg_store_nexus()
++	 */
++	nexus = tpg->tpg_tport->tport_nexus;
++	if (!(nexus)) {
++		printk(KERN_ERR "Unable to locate struct ibmvscsis_nexus *\n");
++		return -EINVAL;
++	}
++	se_sess = nexus->se_sess;
  
--	info = dma_alloc_coherent(&tpg->dma_dev->dev, sizeof(*info), &data_token,
-+	info = dma_alloc_coherent(&vdev->dma_dev->dev, sizeof(*info), &data_token,
- 				  GFP_KERNEL);
- 	if (!info) {
- 		printk(KERN_ERR "bad dma_alloc_coherent %p\n", target);
-@@ -708,8 +877,8 @@ static int send_adapter_info(struct iu_entry *iue,
+-	/* TODO: pre-allocate */
+-	vcmd = kzalloc(sizeof(*vcmd), GFP_ATOMIC);
+-	if (!vcmd)
+-		return -ENOMEM;
+-
++	/*
++	 * Locate the SAM Task Attr from struct srp_cmd
++	 */
+ 	switch (cmd->task_attr) {
+ 	case SRP_SIMPLE_TASK:
+-		attr = MSG_SIMPLE_TAG;
++		attr = TASK_ATTR_SIMPLE;
+ 		break;
+ 	case SRP_ORDERED_TASK:
+-		attr = MSG_ORDERED_TAG;
++		attr = TASK_ATTR_ORDERED;
+ 		break;
+ 	case SRP_HEAD_TASK:
+-		attr = MSG_HEAD_TAG;
++		attr = TASK_ATTR_HOQ;
+ 		break;
+ 	default:
+ 		printk(KERN_WARNING "Task attribute %d not supported\n",
+ 		       cmd->task_attr);
+-		attr = MSG_SIMPLE_TAG;
++		attr = TASK_ATTR_SIMPLE;
  	}
+-
++	/*
++	 * Initialize struct se_cmd descriptor from target_core_mod infrastructure
++	 */
+ 	data_len = srp_data_length(cmd, srp_cmd_direction(cmd));
+-
+-	se_cmd = &vcmd->se_cmd;
+-
+-	transport_init_se_cmd(se_cmd,
+-			      &ibmvscsis_fabric_configfs->tf_ops,
+-			      tpg->se_sess, data_len, srp_cmd_direction(cmd),
+-			      attr, vcmd->sense);
+-
++	transport_init_se_cmd(se_cmd, se_tpg->se_tpg_tfo, se_sess,
++				data_len, srp_cmd_direction(cmd), attr,
++				&vcmd->sense_buf[0]);
++	/*
++	 * Locate the struct se_lun pointer and attach it to struct se_cmd
++	 */
+ 	ret = transport_get_lun_for_cmd(se_cmd, NULL, cmd->lun);
+ 	if (ret) {
+ 		printk(KERN_ERR "invalid lun %lu\n", (unsigned long)cmd->lun);
+@@ -1139,14 +1342,56 @@ static int srp_queuecommand(struct ibmvscsis_tpg *tpg,
+ 							 0);
+ 		return ret;
+ 	}
+-
++	/*
++	 * Make early call to setup se_cmd->transport_add_cmd_to_queue() pointer
++	 */
+ 	transport_device_setup_cmd(se_cmd);
+-
++	/*
++	 * Queue up the se_cmd to be processed by TCM Core, calling with
++	 * TRANSPORT_NEW_CMD_MAP means that ibmvscsis_new_cmd_map() will
++	 * be called in TCM thread process context to complete the setup.
++	 */
+ 	se_cmd->transport_add_cmd_to_queue(se_cmd, TRANSPORT_NEW_CMD_MAP);
++	return 0;
++}
++
++/*
++ * Called by struct target_core_fabric_ops->new_cmd_map()
++ *
++ * Always called in process context.  A non zero return value
++ * here will signal to handle an exception based on the return code.
++ */
++int ibmvscsis_new_cmd_map(struct se_cmd *se_cmd)
++{
++	struct ibmvscsis_cmd *cmd = container_of(se_cmd,
++			struct ibmvscsis_cmd, se_cmd);
++	struct scsi_cmnd *sc = &cmd->sc;
++	struct iu_entry *iue = (struct iu_entry *)sc->SCp.ptr;
++	int ret;
++	/*
++	 * Allocate the necessary tasks to complete the received CDB+data
++	 */
++	ret = transport_generic_allocate_tasks(se_cmd,
++			(unsigned char *)&vio_iu(iue)->srp.cmd);
++	if (ret == -1) {
++		/* Out of Resources */
++		return PYX_TRANSPORT_LU_COMM_FAILURE;
++	} else if (ret == -2) {
++		/*
++		 * Handle case for SAM_STAT_RESERVATION_CONFLICT
++		 */
++		if (se_cmd->se_cmd_flags & SCF_SCSI_RESERVATION_CONFLICT)
++			return PYX_TRANSPORT_RESERVATION_CONFLICT;
++		/*
++		 * Otherwise, return SAM_STAT_CHECK_CONDITION and return
++		 * sense data
++		 */
++		return PYX_TRANSPORT_USE_SENSE_REASON;
++	}
  
- 	/* Get remote info */
--	err = h_copy_rdma(sizeof(*info), tpg->riobn, remote_buffer,
--			  tpg->liobn, data_token);
-+	err = h_copy_rdma(sizeof(*info), vdev->riobn, remote_buffer,
-+			  vdev->liobn, data_token);
- 	if (err == H_SUCCESS) {
- 		printk(KERN_INFO "Client connect: %s (%d)\n",
- 		       info->partition_name, info->partition_number);
-@@ -726,10 +895,10 @@ static int send_adapter_info(struct iu_entry *iue,
- 	info->port_max_txu[0] = DEFAULT_MAX_SECTORS << 9;
+ 	return 0;
+ }
+-#endif
++
  
- 	/* Send our info to remote */
--	err = h_copy_rdma(sizeof(*info), tpg->liobn, data_token,
--			  tpg->riobn, remote_buffer);
-+	err = h_copy_rdma(sizeof(*info), vdev->liobn, data_token,
-+			  vdev->riobn, remote_buffer);
- 
--	dma_free_coherent(&tpg->dma_dev->dev, sizeof(*info), info, data_token);
-+	dma_free_coherent(&vdev->dma_dev->dev, sizeof(*info), info, data_token);
- 
- 	if (err != H_SUCCESS) {
- 		printk(KERN_INFO "Error sending adapter info %d\n", err);
-@@ -831,13 +1000,13 @@ static int process_srp_iu(struct iu_entry *iue)
- 	return done;
+ #define GETTARGET(x) ((int)((((u64)(x)) >> 56) & 0x003f))
+ #define GETBUS(x) ((int)((((u64)(x)) >> 53) & 0x0007))
+@@ -1318,37 +1563,10 @@ done:
+ 	return SAM_STAT_CHECK_CONDITION;
  }
  
--static void process_iu(struct viosrp_crq *crq, struct ibmvscsis_tpg *tpg)
-+static void process_iu(struct viosrp_crq *crq, struct ibmvscsis_vdev *vdev)
+-static int ibmvscsis_read_capacity(struct ibmvscsis_tpg *tpg,
+-				   struct srp_cmd *cmd, char *data)
+-{
+-	struct se_portal_group *se_tpg = &tpg->se_tpg;
+-	u64 unpacked_lun;
+-	struct se_lun *lun;
+-	u32 blocks;
+-
+-	unpacked_lun = scsi_lun_to_int(cmd->lun);
+-
+-	spin_lock(&se_tpg->tpg_lun_lock);
+-
+-	lun = &se_tpg->tpg_lun_list[unpacked_lun];
+-
+-	blocks = TRANSPORT(lun->lun_se_dev)->get_blocks(lun->lun_se_dev);
+-
+-	printk(KERN_INFO "%s %d: %p %u\n",
+-	       __func__, __LINE__, se_tpg, blocks);
+-
+-	put_unaligned_be32(blocks - 1, data);
+-	put_unaligned_be32(512, data + 4);
+-
+-	spin_unlock(&se_tpg->tpg_lun_lock);
+-
+-	return 8;
+-}
+-
+ static int ibmvscsis_mode_sense(struct ibmvscsis_tpg *tpg,
+ 				   struct srp_cmd *cmd, char *mode)
  {
- 	struct iu_entry *iue;
- 	long err;
- 	int done = 1;
- 
--	iue = srp_iu_get(&tpg->srpt);
-+	iue = srp_iu_get(&vdev->srpt);
- 	if (!iue) {
- 		printk(KERN_ERR "Error getting IU from pool\n");
- 		return;
-@@ -845,8 +1014,8 @@ static void process_iu(struct viosrp_crq *crq, struct ibmvscsis_tpg *tpg)
- 
- 	iue->remote_token = crq->IU_data_ptr;
- 
--	err = h_copy_rdma(crq->IU_length, tpg->riobn,
--			  iue->remote_token, tpg->liobn, iue->sbuf->dma);
-+	err = h_copy_rdma(crq->IU_length, vdev->riobn,
-+			  iue->remote_token, vdev->liobn, iue->sbuf->dma);
- 
- 	if (err != H_SUCCESS) {
- 		printk(KERN_ERR "%ld transferring data error %p\n", err, iue);
-@@ -862,17 +1031,17 @@ out:
- 		srp_iu_put(iue);
- }
- 
--static void process_crq(struct viosrp_crq *crq,	struct ibmvscsis_tpg *tpg)
-+static void process_crq(struct viosrp_crq *crq,	struct ibmvscsis_vdev *vdev)
- {
- 	/* printk(KERN_INFO "%s: %p %x %x\n", __func__, */
--	/*        tpg, crq->valid, crq->format); */
-+	/*        vdev, crq->valid, crq->format); */
- 
- 	switch (crq->valid) {
- 	case 0xC0:
- 		/* initialization */
- 		switch (crq->format) {
- 		case 0x01:
--			h_send_crq(tpg->dma_dev->unit_address,
-+			h_send_crq(vdev->dma_dev->unit_address,
- 				   0xC002000000000000, 0);
- 			break;
- 		case 0x02:
-@@ -889,7 +1058,7 @@ static void process_crq(struct viosrp_crq *crq,	struct ibmvscsis_tpg *tpg)
- 		switch (crq->format) {
- 		case VIOSRP_SRP_FORMAT:
- 		case VIOSRP_MAD_FORMAT:
--			process_iu(crq, tpg);
-+			process_iu(crq, vdev);
- 			break;
- 		case VIOSRP_OS400_FORMAT:
- 		case VIOSRP_AIX_FORMAT:
-@@ -1023,6 +1192,7 @@ static int ibmvscsis_inquery(struct ibmvscsis_tpg *tpg,
- 			      struct srp_cmd *cmd, char *data)
- {
+-	int bytes;
++	int bytes = 0;
  	struct se_portal_group *se_tpg = &tpg->se_tpg;
-+	
- 	struct inquiry_data *id = (struct inquiry_data *)data;
- 	u64 unpacked_lun, lun = cmd->lun;
- 	u8 *cdb = cmd->cdb;
-@@ -1064,7 +1234,7 @@ static int ibmvscsis_inquery(struct ibmvscsis_tpg *tpg,
- 			 "IBM-VSCSI-%s-P%d-%x-%d-%d-%d\n",
- 			 system_id,
- 			 partition_number,
--			 tpg->dma_dev->unit_address,
-+			 tpg->tpg_tport->tport_vdev->dma_dev->unit_address,
- 			 GETBUS(lun),
- 			 GETTARGET(lun),
- 			 GETLUN(lun));
-@@ -1254,7 +1424,7 @@ static int ibmvscsis_rdma(struct scsi_cmnd *sc, struct scatterlist *sg, int nsg,
+ 	u64 unpacked_lun;
+ 	struct se_lun *lun;
+@@ -1418,9 +1636,9 @@ static int ibmvscsis_mode_sense(struct ibmvscsis_tpg *tpg,
+ 	return bytes;
+ }
+ 
+-static int ibmvscsis_rdma(struct scsi_cmnd *sc, struct scatterlist *sg, int nsg,
+-			  struct srp_direct_buf *md, int nmd,
+-			  enum dma_data_direction dir, unsigned int rest)
++int ibmvscsis_rdma(struct scsi_cmnd *sc, struct scatterlist *sg, int nsg,
++		  struct srp_direct_buf *md, int nmd,
++		  enum dma_data_direction dir, unsigned int rest)
  {
  	struct iu_entry *iue = (struct iu_entry *) sc->SCp.ptr;
  	struct srp_target *target = iue->target;
--	struct ibmvscsis_tpg *tpg = target->ldata;
-+	struct ibmvscsis_vdev *vdev = target->ldata;
- 	dma_addr_t token;
- 	long err;
- 	unsigned int done = 0;
-@@ -1275,15 +1445,15 @@ static int ibmvscsis_rdma(struct scsi_cmnd *sc, struct scatterlist *sg, int nsg,
- 
- 			if (dir == DMA_TO_DEVICE)
- 				err = h_copy_rdma(slen,
--						  tpg->riobn,
-+						  vdev->riobn,
- 						  md[i].va + mdone,
--						  tpg->liobn,
-+						  vdev->liobn,
- 						  token + soff);
- 			else
- 				err = h_copy_rdma(slen,
--						  tpg->liobn,
-+						  vdev->liobn,
- 						  token + soff,
--						  tpg->riobn,
-+						  vdev->riobn,
- 						  md[i].va + mdone);
- 
- 			if (err != H_SUCCESS) {
-@@ -1344,7 +1514,7 @@ static int ibmvscsis_cmd_done(struct scsi_cmnd *sc)
+@@ -1485,7 +1703,10 @@ static int ibmvscsis_rdma(struct scsi_cmnd *sc, struct scatterlist *sg, int nsg,
  	return 0;
  }
  
--static int ibmvscsis_queuecommand(struct ibmvscsis_tpg *tpg,
-+static int ibmvscsis_queuecommand(struct ibmvscsis_vdev *vdev,
+-static int ibmvscsis_cmd_done(struct scsi_cmnd *sc)
++/*
++ * Callback to complete I/O descriptor back into libsrp.
++ */
++int ibmvscsis_cmd_done(struct scsi_cmnd *sc, int async)
+ {
+ 	unsigned long flags;
+ 	struct iu_entry *iue = (struct iu_entry *) sc->SCp.ptr;
+@@ -1495,7 +1716,12 @@ static int ibmvscsis_cmd_done(struct scsi_cmnd *sc)
+ 	/* printk(KERN_INFO "%p %p %x %u\n", iue, target, vio_iu(iue)->srp.cmd.cdb[0], */
+ 	/*        scsi_sg_count(sc)); */
+ 
+-	if (scsi_sg_count(sc))
++	/*
++	 * For descriptors being completed by ibmvscsis_queuecommand() context,
++	 * we call srp_transfer_data() directly.  Otherwise this logic will be called
++	 * directly from asynchronous completion callbacks.
++	 */
++	if (!(async) && scsi_sg_count(sc))
+ 		err = srp_transfer_data(sc, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma, 1, 1);
+ 
+ 	spin_lock_irqsave(&target->lock, flags);
+@@ -1517,59 +1743,66 @@ static int ibmvscsis_cmd_done(struct scsi_cmnd *sc)
+ static int ibmvscsis_queuecommand(struct ibmvscsis_vdev *vdev,
  				  struct iu_entry *iue)
  {
- 	int data_len;
-@@ -1358,11 +1528,13 @@ static int ibmvscsis_queuecommand(struct ibmvscsis_tpg *tpg,
+-	int data_len;
+ 	struct srp_cmd *cmd = iue->sbuf->buf;
++	struct ibmvscsis_cmd *vcmd;
+ 	struct scsi_cmnd *sc;
++	struct ibmvscsis_tport *tport = vdev->vio_tport;
++	struct ibmvscsis_tpg *tpg;
++	struct se_portal_group *se_tpg;
+ 	struct page *pg;
+-
++	int data_len, ret = 0;
++	/*
++	 * Locate the struct ibmvscsis_tpg pointer based on the reported
++	 * vdev->vio_tpgt used by ibmvscsis_make_tpg().
++	 */
++	tpg = &tport->tport_tpgs[vdev->vio_tpgt];
++	se_tpg = &tpg->se_tpg;
++	
+ 	data_len = srp_data_length(cmd, srp_cmd_direction(cmd));
+ 
+ 	printk("%s %d: %x %u %u %lu\n",
  	       __func__, __LINE__, cmd->cdb[0], data_len,
  	       srp_cmd_direction(cmd), (unsigned long)cmd->lun);
  
-+#warning Use ibmvscsis_cmd->sc descriptor
- 	sc = kzalloc(sizeof(*sc), GFP_KERNEL);
+-#warning Use ibmvscsis_cmd->sc descriptor
+-	sc = kzalloc(sizeof(*sc), GFP_KERNEL);
++	vcmd = kmem_cache_zalloc(ibmvscsis_cmd_cache, GFP_KERNEL);
++	if (!(vcmd))
++		return -ENOMEM;
++	/*
++	 * Setup the struct scsi_cmnd required for libsrp operations
++	 * and save struct iu_entry *iue pointer
++	 */
++	sc = &vcmd->sc;
  	sc->cmnd = cmd->cdb;
  	sc->SCp.ptr = (char *)iue;
- 
+-
++	/*
++	 * The INQUIRY, REPORT_LUNS and MODE_SENSE CDB emulation currently
++	 * requires internal handling in order to make legacy non Linux VIO
++	 * Initiator guest cases 'just work'.
++	 *
++	 * For everything else we setup a proper struct se_cmd and perform
++	 * the struct se_lun association and hand it off to finish up
++	 * setup in TCM thread process context.
++	 */
  	switch (cmd->cdb[0]) {
-+#if 0
+-#if 0
  	case INQUIRY:
  		sg_alloc_table(&sc->sdb.table, 1, GFP_KERNEL);
  		pg = alloc_page(GFP_KERNEL|__GFP_ZERO);
-@@ -1421,6 +1593,7 @@ static int ibmvscsis_queuecommand(struct ibmvscsis_tpg *tpg,
+ 		sc->sdb.length = ibmvscsis_inquery(tpg, cmd, page_address(pg));
+ 		sg_set_page(sc->sdb.table.sgl, pg, sc->sdb.length, 0);
+-		ibmvscsis_cmd_done(sc);
++		ibmvscsis_cmd_done(sc, 0);
+ 		sg_free_table(&sc->sdb.table);
  		__free_page(pg);
- 		kfree(sc);
+-		kfree(sc);
++		ibmvscsis_release_cmd(&vcmd->se_cmd);
  		break;
-+#endif
- 	default:
+ 	case REPORT_LUNS:
+ 		sg_alloc_table(&sc->sdb.table, 1, GFP_KERNEL);
+ 		pg = alloc_page(GFP_KERNEL|__GFP_ZERO);
+ 		sc->sdb.length = ibmvscsis_report_luns(tpg, cmd, page_address(pg));
+ 		sg_set_page(sc->sdb.table.sgl, pg, sc->sdb.length, 0);
+-		ibmvscsis_cmd_done(sc);
++		ibmvscsis_cmd_done(sc, 0);
+ 		sg_free_table(&sc->sdb.table);
+ 		__free_page(pg);
+-		kfree(sc);
+-		break;
+-	case START_STOP:
+-		/* fixme: needs to use tcm */
+-		ibmvscsis_cmd_done(sc);
+-		kfree(sc);
+-		break;
+-	case READ_CAPACITY:
+-		/* fixme: needs to use tcm */
+-		sg_alloc_table(&sc->sdb.table, 1, GFP_KERNEL);
+-		pg = alloc_page(GFP_KERNEL|__GFP_ZERO);
+-		sc->sdb.length = ibmvscsis_read_capacity(tpg, cmd, page_address(pg));
+-		sg_set_page(sc->sdb.table.sgl, pg, sc->sdb.length, 0);
+-		ibmvscsis_cmd_done(sc);
+-		sg_free_table(&sc->sdb.table);
+-		__free_page(pg);
+-		kfree(sc);
++		ibmvscsis_release_cmd(&vcmd->se_cmd);
+ 		break;
+ 	case MODE_SENSE:
  		/* fixme: needs to use tcm */
- 		sc->result = COMMAND_TERMINATED;
-@@ -1432,9 +1605,9 @@ static int ibmvscsis_queuecommand(struct ibmvscsis_tpg *tpg,
- 	return 0;
+@@ -1577,39 +1810,30 @@ static int ibmvscsis_queuecommand(struct ibmvscsis_vdev *vdev,
+ 		pg = alloc_page(GFP_KERNEL|__GFP_ZERO);
+ 		sc->sdb.length = ibmvscsis_mode_sense(tpg, cmd, page_address(pg));
+ 		sg_set_page(sc->sdb.table.sgl, pg, sc->sdb.length, 0);
+-		ibmvscsis_cmd_done(sc);
+-		sg_free_table(&sc->sdb.table);
+-		__free_page(pg);
+-		kfree(sc);
+-		break;
+-	case READ_6:
+-		/* fixme: needs to use tcm */
+-		sg_alloc_table(&sc->sdb.table, 1, GFP_KERNEL);
+-		pg = alloc_page(GFP_KERNEL|__GFP_ZERO);
+-		sc->sdb.length = data_len;
+-		sg_set_page(sc->sdb.table.sgl, pg, data_len, 0);
+-		ibmvscsis_cmd_done(sc);
++		ibmvscsis_cmd_done(sc, 0);
+ 		sg_free_table(&sc->sdb.table);
+ 		__free_page(pg);
+-		kfree(sc);
++		ibmvscsis_release_cmd(&vcmd->se_cmd);
+ 		break;
+-#endif
+ 	default:
+-		/* fixme: needs to use tcm */
+-		sc->result = COMMAND_TERMINATED;
+-		ibmvscsis_cmd_done(sc);
+-		kfree(sc);
++		/*
++		 * By default we will pass along incoming struct srp_cmd ->
++		 * struct ibmvscsis_cmd descriptors into TCM Core.  This
++		 * completion will happen asynchronously via TFO->queue_data_in()
++		 * and TFO->queue_status() callbacks.
++		 */
++		ret = tcm_queuecommand(tpg, vcmd, cmd);
+ 		break;
+ 	}
+ 
+-	return 0;
++	return ret;
  }
  
--static void handle_cmd_queue(struct ibmvscsis_tpg *tpg)
-+static void handle_cmd_queue(struct ibmvscsis_vdev *vdev)
+ static void handle_cmd_queue(struct ibmvscsis_vdev *vdev)
  {
--	struct srp_target *target = &tpg->srpt;
-+	struct srp_target *target = &vdev->srpt;
+ 	struct srp_target *target = &vdev->srpt;
  	struct iu_entry *iue;
- 	struct srp_cmd *cmd;
+-	struct srp_cmd *cmd;
++	struct srp_cmd *cmd = NULL;
  	unsigned long flags;
-@@ -1446,7 +1619,7 @@ retry:
- 	list_for_each_entry(iue, &target->cmd_queue, ilist) {
- 		if (!test_and_set_bit(V_FLYING, &iue->flags)) {
- 			spin_unlock_irqrestore(&target->lock, flags);
--			err = ibmvscsis_queuecommand(tpg, iue);
-+			err = ibmvscsis_queuecommand(vdev, iue);
- 			if (err) {
- 				printk(KERN_ERR "cannot queue cmd %p %d\n", cmd, err);
- 				srp_iu_put(iue);
-@@ -1460,45 +1633,45 @@ retry:
- 
- static void handle_crq(struct work_struct *work)
- {
--	struct ibmvscsis_tpg *tpg =
--		container_of(work, struct ibmvscsis_tpg, crq_work);
-+	struct ibmvscsis_vdev *vdev =
-+		container_of(work, struct ibmvscsis_vdev, crq_work);
- 	struct viosrp_crq *crq;
- 	int done = 0;
- 
- 	while (!done) {
--		while ((crq = next_crq(&tpg->crq_queue)) != NULL) {
--			process_crq(crq, tpg);
-+		while ((crq = next_crq(&vdev->crq_queue)) != NULL) {
-+			process_crq(crq, vdev);
- 			crq->valid = 0x00;
- 		}
- 
--		vio_enable_interrupts(tpg->dma_dev);
-+		vio_enable_interrupts(vdev->dma_dev);
- 
--		crq = next_crq(&tpg->crq_queue);
-+		crq = next_crq(&vdev->crq_queue);
- 		if (crq) {
--			vio_disable_interrupts(tpg->dma_dev);
--			process_crq(crq, tpg);
-+			vio_disable_interrupts(vdev->dma_dev);
-+			process_crq(crq, vdev);
- 			crq->valid = 0x00;
- 		} else
- 			done = 1;
- 	}
- 
--	handle_cmd_queue(tpg);
-+	handle_cmd_queue(vdev);
- }
- 
- static irqreturn_t ibmvscsis_interrupt(int dummy, void *data)
- {
--	struct ibmvscsis_tpg *tpg = data;
-+	struct ibmvscsis_vdev *vdev = data;
- 
--	vio_disable_interrupts(tpg->dma_dev);
--	schedule_work(&tpg->crq_work);
-+	vio_disable_interrupts(vdev->dma_dev);
-+	schedule_work(&vdev->crq_work);
- 
- 	return IRQ_HANDLED;
- }
- 
--static int crq_queue_create(struct crq_queue *queue, struct ibmvscsis_tpg *tpg)
-+static int crq_queue_create(struct crq_queue *queue, struct ibmvscsis_vdev *tcm_vdev)
- {
- 	int err;
--	struct vio_dev *vdev = tpg->dma_dev;
-+	struct vio_dev *vdev = tcm_vdev->dma_dev;
- 
- 	queue->msgs = (struct viosrp_crq *) get_zeroed_page(GFP_KERNEL);
- 	if (!queue->msgs)
-@@ -1533,7 +1706,7 @@ static int crq_queue_create(struct crq_queue *queue, struct ibmvscsis_tpg *tpg)
- 	}
- 
- 	err = request_irq(vdev->irq, &ibmvscsis_interrupt,
--			  IRQF_DISABLED, "ibmvscsis", tpg);
-+			  IRQF_DISABLED, "ibmvscsis", tcm_vdev);
- 	if (err)
- 		goto req_irq_failed;
- 
-@@ -1561,85 +1734,103 @@ malloc_failed:
- 	return -ENOMEM;
- }
- 
--static void crq_queue_destroy(struct ibmvscsis_tpg *tpg)
-+static void crq_queue_destroy(struct ibmvscsis_vdev *vdev)
- {
--	struct crq_queue *queue = &tpg->crq_queue;
-+	struct crq_queue *queue = &vdev->crq_queue;
  	int err;
  
--	free_irq(tpg->dma_dev->irq, tpg);
-+	free_irq(vdev->dma_dev->irq, vdev);
- 	do {
--		err = h_free_crq(tpg->dma_dev->unit_address);
-+		err = h_free_crq(vdev->dma_dev->unit_address);
- 	} while (err == H_BUSY || H_IS_LONG_BUSY(err));
+@@ -1950,9 +2174,23 @@ static int __init ibmvscsis_init(void)
+ 	if (ret)
+ 		return ret;
  
--	dma_unmap_single(&tpg->dma_dev->dev, queue->msg_token,
-+	dma_unmap_single(&vdev->dma_dev->dev, queue->msg_token,
- 			 queue->size * sizeof(*queue->msgs), DMA_BIDIRECTIONAL);
- 
- 	free_page((unsigned long)queue->msgs);
- }
- 
-+/*
-+ * Called by arch/powerpc/kernel/vio.c:vio_bus_probe() once a VIO SRP T/I Nexus
-+ * has been detected to start the target port endpoint registration process
-+ * within TCM.
-+ */
- static int ibmvscsis_probe(struct vio_dev *dev, const struct vio_device_id *id)
- {
-+	struct ibmvscsis_vdev *vdev;
- 	unsigned int *dma, dma_size;
- 	unsigned long flags;
- 	int ret;
--	struct ibmvscsis_tpg *tpg;
- 
- 	printk("%s: %s %s %x\n", __func__, dev->name, dev_name(&dev->dev),
- 	       dev->unit_address);
- 
--	tpg = kzalloc(sizeof(*tpg), GFP_KERNEL);
--	if (!tpg)
-+	vdev = kzalloc(sizeof(*vdev), GFP_KERNEL);
-+	if (!vdev)
- 		return -ENOMEM;
- 
--	tpg->dma_dev = dev;
-+	vdev->dma_dev = dev;
- 
--	printk("%s %d: %p %p\n", __func__, __LINE__, tpg, &tpg->se_tpg);
-+	printk("%s %d: %p\n", __func__, __LINE__, vdev);
- 
- 	dma = (unsigned int *)vio_get_attribute(dev, "ibm,my-dma-window",
- 						&dma_size);
- 	if (!dma || dma_size != 40) {
- 		printk(KERN_ERR "Couldn't get window property %d\n", dma_size);
--		kfree(tpg);
-+		kfree(vdev);
- 		return -EIO;
- 	}
-+	/*
-+	 * Assume VIO POWER5 SRP firmware..
-+	 */
-+	vdev->proto_id = SCSI_PROTOCOL_SRP;
-+	vdev->liobn = dma[0];
-+	vdev->riobn = dma[5];
-+	vdev->vio_tpgt = simple_strtoul(dev_name(&dev->dev), NULL, 10);
- 
--	tpg->liobn = dma[0];
--	tpg->riobn = dma[5];
--	tpg->tport_tpgt = simple_strtoul(dev_name(&dev->dev), NULL, 10);
--
--	spin_lock_irqsave(&tpg_lock, flags);
--	list_add(&tpg->siblings, &tpg_list);
--	spin_unlock_irqrestore(&tpg_lock, flags);
-+	spin_lock_irqsave(&tcm_vdev_lock, flags);
-+	list_add(&vdev->siblings, &tcm_vdev_list);
-+	spin_unlock_irqrestore(&tcm_vdev_lock, flags);
- 
--	INIT_WORK(&tpg->crq_work, handle_crq);
-+	INIT_WORK(&vdev->crq_work, handle_crq);
- 
--	dev_set_drvdata(&dev->dev, tpg);
-+	dev_set_drvdata(&dev->dev, vdev);
- 
--	ret = srp_target_alloc(&tpg->srpt, &dev->dev, INITIAL_SRP_LIMIT,
-+	ret = srp_target_alloc(&vdev->srpt, &dev->dev, INITIAL_SRP_LIMIT,
- 			       SRP_MAX_IU_LEN);
- 
--	tpg->srpt.ldata = tpg;
-+	vdev->srpt.ldata = vdev;
- 
--	ret = crq_queue_create(&tpg->crq_queue, tpg);
-+	ret = crq_queue_create(&vdev->crq_queue, vdev);
- 
--	printk("%s %d: %d\n", __func__, __LINE__, ret);
-+	printk(KERN_INFO "%s %d: Detected VIO TGT vio_dev->unit_address: 0x%08x,"
-+		" dev_name: %s vio_tpgt: %u \n", __func__, __LINE__,
-+		dev->unit_address, dev_name(&dev->dev), vdev->vio_tpgt);
++	ibmvscsis_cmd_cache = kmem_cache_create("ibmvscsis_cmd_cache",
++				sizeof(struct ibmvscsis_cmd),
++				__alignof__(struct ibmvscsis_cmd),
++				0, NULL);
++	if (!(ibmvscsis_cmd_cache)) {
++		printk(KERN_ERR "kmem_cache_create() for"
++			" ibmvscsis_cmd_cache failed\n");
++		vio_unregister_driver(&ibmvscsis_driver);
++		return -ENOMEM;
++	}
++
+ 	ret = ibmvscsis_register_configfs();
+-	if (ret < 0)
++	if (ret < 0) {
++		vio_unregister_driver(&ibmvscsis_driver);
++		kmem_cache_destroy(ibmvscsis_cmd_cache);
+ 		return ret;
++	}
  
  	return 0;
- }
- 
-+/*
-+ * Called by arch/powerpc/kernel/vio.c:vio_bus_remove() to shutdown a previously
-+ * registered struct vio_dev and struct ibmvscsis_vdev *.
-+ */
- static int ibmvscsis_remove(struct vio_dev *dev)
+ };
+@@ -1960,6 +2198,7 @@ static int __init ibmvscsis_init(void)
+ static void ibmvscsis_exit(void)
  {
--	struct ibmvscsis_tpg *tpg = dev_get_drvdata(&dev->dev);
-+	struct ibmvscsis_vdev *vdev = dev_get_drvdata(&dev->dev);
- 	unsigned long flags;
+ 	vio_unregister_driver(&ibmvscsis_driver);
++	kmem_cache_destroy(ibmvscsis_cmd_cache);
+ 	ibmvscsis_deregister_configfs();
+ };
  
--	spin_lock_irqsave(&tpg_lock, flags);
--	list_del(&tpg->siblings);
--	spin_unlock_irqrestore(&tpg_lock, flags);
--	srp_target_free(&tpg->srpt);
-+	spin_lock_irqsave(&tcm_vdev_lock, flags);
-+	list_del(&vdev->siblings);
-+	spin_unlock_irqrestore(&tcm_vdev_lock, flags);
- 
--	crq_queue_destroy(tpg);
-+	printk(KERN_INFO "%s %d: Releasing VIO TGT vio_dev->unit_address: 0x%08x,"
-+		" ev_name: %s vio_tpgt: %u\n", __func__, __LINE__, dev->unit_address,
-+		dev_name(&dev->dev), vdev->vio_tpgt);
-+	
-+	srp_target_free(&vdev->srpt);
-+	crq_queue_destroy(vdev);
- 
--	kfree(tpg);
-+	kfree(vdev);
- 	return 0;
- }
- 
-@@ -1711,7 +1902,7 @@ static int ibmvscsis_register_configfs(void)
- 	 * Setup default attribute lists for various fabric->tf_cit_tmpl
- 	 */
- 	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = ibmvscsis_wwn_attrs;
--	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = NULL;
-+	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = ibmvscsis_tpg_attrs;
- 	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
- 	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
- 	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
 -- 
 1.5.6
 
