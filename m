@@ -1,40 +1,44 @@
-From: Andi Kleen <ak@linux.intel.com>
-Subject: Re: [ANNOUNCE] Status of unlocked_qcmds=1 operation for .37
-Date: Mon, 1 Nov 2010 12:45:06 +0100
-Message-ID: <20101101114506.GB21905@gargoyle.globalsuite.net>
-References: <1288133450.8283.723.camel@mulgrave.site>
- <1288134048.5169.132.camel@haakon2.linux-iscsi.org>
- <1288134713.19649.11.camel@mulgrave.site>
- <1288135918.5169.149.camel@haakon2.linux-iscsi.org>
- <20101027075349.GA32585@gargoyle.fritz.box>
- <1288189658.4692.13.camel@mulgrave.site>
- <20101028091020.GA7906@gargoyle.fritz.box>
- <4CC95BE8.3000909@panasas.com>
- <20101028182610.GA4592@gargoyle.fritz.box>
- <4CCD5DA4.9090806@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: tcm IBMVSCSIS driver
+Date: Mon, 1 Nov 2010 21:56:29 +0900
+Message-ID: <20101101215109E.fujita.tomonori@lab.ntt.co.jp>
+References: <20101029143536R.fujita.tomonori@lab.ntt.co.jp>
+	<1288479943.21870.55.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:18763 "EHLO mga11.intel.com"
+Received: from sh.osrg.net ([192.16.179.4]:38681 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754914Ab0KAKmj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Nov 2010 06:42:39 -0400
-Content-Disposition: inline
-In-Reply-To: <4CCD5DA4.9090806@panasas.com>
+	id S1756039Ab0KAM45 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Nov 2010 08:56:57 -0400
+In-Reply-To: <1288479943.21870.55.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Matthew Wilcox <willy@linux.intel.com>, Mike Christie <michaelc@cs.wisc.edu>, Jens Axboe <jaxboe@fusionio.com>, James Smart <james.smart@emulex.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Joe Eykholt <jeykholt@cisco.com>, Christoph Hellwig <hch@lst.de>, Jon Hawley <warthog9@kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, "H. Peter Anvin" <hpa@zytor.com>, julia@diku.d
+To: nab@linux-iscsi.org
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, lxie@us.ibm.com, rcjenn@us.ibm.com, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, joel.becker@oracle.com
 
-> + XXX_queue_command(...
-> + {
-> + 	return SCSI_LOCKED_QUEUECOMMAND(XXX_queue_command_unlocked, ...);
-> + }
-> > -Andi
+On Sat, 30 Oct 2010 16:05:43 -0700
+"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+
+> One final question in that regard is in your ibmvscsis_queuecommand()
+> code, only INQUIRY, REPORT_LUNS, and MODE_SENSE need to be handled
+> specially for other non Linux VIO SRP Initiator guests on the other
+> end..
+
+INQUIRY and REPORT_LUNS need the special responses. Otherwise the
+initiators can't see the logical units.
+
+
+> I would like to break this out (if possible) into individual
+> specialized CDB fields / bits if possible so these special cases so we
+> can drop excess emulation code in ibmvscsis.c.  This means we could
+> (eventually) allow TCM/IBMVSCSIS to utilize the SPC-3+ emulation bits in
+> INQUIRY for high level PR/ALUA emulation using SCSI_PROTOCOL_SRP for the
+> EVPD=0x83 case.
 > 
-> But since I'm only blabing, the one that "do", gets to decide ;-) .
-> Perhaps next time.
-
-With semantics patches "do"ing is actually not that much effort ...
-
--Andi
+> So then perhaps this is more a question for brking and the POWER IBM
+> folks.  Of the three CDBs in IBMVSCSIS (INQUIRY, REPORT_LUNS, and
+> MODE_SENSE) that we are expecting to be done internally to fabric module
+> code, are there any other specific bits you need set..?  Are there in
+> any bits/fields in the code below that can not *not* be set..?
