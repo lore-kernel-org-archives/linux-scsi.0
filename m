@@ -1,43 +1,33 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 2/4] drivers/scsi/pmcraid.c: Fix k.alloc switched arguments
-Date: Sun, 31 Oct 2010 15:33:54 -0700
-Message-ID: <d72ee65c9a3bb1987a2fef5b6924d48a17350894.1288555098.git.joe@perches.com>
-References: <cover.1288555098.git.joe@perches.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Full hostlock pushdown available
+Date: Sun, 31 Oct 2010 22:34:05 -0400
+Message-ID: <4CCE271D.7040400@garzik.org>
+References: <20101028150508.GA2385@basil.fritz.box> <4CCD5F7F.8020808@panasas.com> <tkrat.c4793af298337eff@s5r6.in-berlin.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.perches.com ([173.55.12.10]:3904 "EHLO mail.perches.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756819Ab0JaWeB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 31 Oct 2010 18:34:01 -0400
-In-Reply-To: <cover.1288555098.git.joe@perches.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:46277 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753816Ab0KACeN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Oct 2010 22:34:13 -0400
+Received: by vws13 with SMTP id 13so3059804vws.19
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2010 19:34:12 -0700 (PDT)
+In-Reply-To: <tkrat.c4793af298337eff@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-And a typo fix of faile to failed.
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/pmcraid.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+>> On 10/28/2010 05:05 PM, Andi Kleen wrote:
+>>> >> The following changes since commit 39764981e772adc832d8a96e6540be346a830ca2:
+>>> >>
+>>> >>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6 (2010-10-27 20:54:34 +0200)
+>>> >>
+>>> >> are available in the git repository at:
+>>> >>
+>>> >>   ssh://master.kernel.org/pub/scm/linux/kernel/git/ak/linux-misc-2.6.git hostlock
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 4b87657..e5a694a 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4094,10 +4094,10 @@ static long pmcraid_chr_ioctl(
- 	struct pmcraid_ioctl_header *hdr = NULL;
- 	int retval = -ENOTTY;
- 
--	hdr = kmalloc(GFP_KERNEL, sizeof(struct pmcraid_ioctl_header));
-+	hdr = kmalloc(sizeof(struct pmcraid_ioctl_header), GFP_KERNEL);
- 
- 	if (!hdr) {
--		pmcraid_err("faile to allocate memory for ioctl header\n");
-+		pmcraid_err("failed to allocate memory for ioctl header\n");
- 		return -ENOMEM;
- 	}
- 
--- 
-1.7.3.1.g432b3.dirty
+Missing drivers/ata/libata-scsi.c modification?
 
