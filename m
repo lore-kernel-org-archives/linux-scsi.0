@@ -1,272 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 2/7] block: move register_disk() and del_gendisk() to block/genhd.c
-Date: Mon,  1 Nov 2010 19:44:36 +0100
-Message-ID: <1288637081-5183-3-git-send-email-tj@kernel.org>
-References: <1288637081-5183-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1288637081-5183-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
-Cc: Tejun Heo <tj@kernel.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Full hostlock pushdown available
+Date: Mon, 01 Nov 2010 14:59:10 -0400
+Message-ID: <4CCF0DFE.4050106@garzik.org>
+References: <20101028150508.GA2385@basil.fritz.box> <4CCD5F7F.8020808@panasas.com> <tkrat.c4793af298337eff@s5r6.in-berlin.de> <4CCE271D.7040400@garzik.org> <20101101135338.GA25817@basil.fritz.box> <4CCEE33F.5030300@garzik.org> <20101101175742.GG25817@basil.fritz.box>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:55878 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755300Ab0KAS7O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2010 14:59:14 -0400
+In-Reply-To: <20101101175742.GG25817@basil.fritz.box>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
 
-There's no reason register_disk() and del_gendisk() should be in
-fs/partitions/check.c and it forces unnecessary global functions.
-Move both to genhd.c.  While at it, collapse unlink_gendisk(), which
-was artificially in a separate function due to genhd.c/check.c split,
-into del_gendisk().
+On 11/01/2010 01:57 PM, Andi Kleen wrote:
+> @@ -3186,11 +3186,14 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done
+>         struct ata_device *dev;
+>         struct scsi_device *scsidev = cmd->device;
+>         struct Scsi_Host *shost = scsidev->host;
+> +       unsigned long irqflags;
+>         int rc = 0;
+>
+>         ap = ata_shost_to_port(shost);
+>
+> -       spin_unlock(shost->host_lock);
+> +       spin_lock_irqsave(shost->host_lock, irqflags);
+> +       scsi_cmd_get_serial(shost, cmd);
+> +
+>         spin_lock(ap->lock);
+>
+>         ata_scsi_dump_cdb(ap, cmd);
+> @@ -3205,6 +3208,7 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(
+>
+>         spin_unlock(ap->lock);
+>         spin_lock(shost->host_lock);
+> +       spin_unlock_irqrestore(shost->host_lock, irqflags);
+>         return rc;
+>  }
+>
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
----
- block/genhd.c          |   90 ++++++++++++++++++++++++++++++++++++++++++++++--
- fs/partitions/check.c  |   89 -----------------------------------------------
- include/linux/blkdev.h |    1 -
- include/linux/genhd.h  |    1 -
- 4 files changed, 87 insertions(+), 94 deletions(-)
+It's a bit disappointing that libata's lock profile in this patch is 
+quite different than that of current upstream: with your patch, libata 
+holds the scsi host lock for a considerably longer period of time, while 
+also holding the ATA port/host spinlock.
 
-diff --git a/block/genhd.c b/block/genhd.c
-index 0905ab2..2e5e4c0 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -502,6 +502,64 @@ static int exact_lock(dev_t devt, void *data)
- 	return 0;
- }
- 
-+void register_disk(struct gendisk *disk)
-+{
-+	struct device *ddev = disk_to_dev(disk);
-+	struct block_device *bdev;
-+	struct disk_part_iter piter;
-+	struct hd_struct *part;
-+	int err;
-+
-+	ddev->parent = disk->driverfs_dev;
-+
-+	dev_set_name(ddev, disk->disk_name);
-+
-+	/* delay uevents, until we scanned partition table */
-+	dev_set_uevent_suppress(ddev, 1);
-+
-+	if (device_add(ddev))
-+		return;
-+	if (!sysfs_deprecated) {
-+		err = sysfs_create_link(block_depr, &ddev->kobj,
-+					kobject_name(&ddev->kobj));
-+		if (err) {
-+			device_del(ddev);
-+			return;
-+		}
-+	}
-+	disk->part0.holder_dir = kobject_create_and_add("holders", &ddev->kobj);
-+	disk->slave_dir = kobject_create_and_add("slaves", &ddev->kobj);
-+
-+	/* No minors to use for partitions */
-+	if (!disk_partitionable(disk))
-+		goto exit;
-+
-+	/* No such device (e.g., media were just removed) */
-+	if (!get_capacity(disk))
-+		goto exit;
-+
-+	bdev = bdget_disk(disk, 0);
-+	if (!bdev)
-+		goto exit;
-+
-+	bdev->bd_invalidated = 1;
-+	err = blkdev_get(bdev, FMODE_READ, NULL);
-+	if (err < 0)
-+		goto exit;
-+	blkdev_put(bdev, FMODE_READ);
-+
-+exit:
-+	/* announce disk after possible partitions are created */
-+	dev_set_uevent_suppress(ddev, 0);
-+	kobject_uevent(&ddev->kobj, KOBJ_ADD);
-+
-+	/* announce possible partitions */
-+	disk_part_iter_init(&piter, disk, 0);
-+	while ((part = disk_part_iter_next(&piter)))
-+		kobject_uevent(&part_to_dev(part)->kobj, KOBJ_ADD);
-+	disk_part_iter_exit(&piter);
-+}
-+
- /**
-  * add_disk - add partitioning information to kernel list
-  * @disk: per-device partitioning information
-@@ -552,17 +610,43 @@ void add_disk(struct gendisk *disk)
- 				   "bdi");
- 	WARN_ON(retval);
- }
--
- EXPORT_SYMBOL(add_disk);
--EXPORT_SYMBOL(del_gendisk);	/* in partitions/check.c */
- 
--void unlink_gendisk(struct gendisk *disk)
-+void del_gendisk(struct gendisk *disk)
- {
-+	struct disk_part_iter piter;
-+	struct hd_struct *part;
-+
-+	/* invalidate stuff */
-+	disk_part_iter_init(&piter, disk,
-+			     DISK_PITER_INCL_EMPTY | DISK_PITER_REVERSE);
-+	while ((part = disk_part_iter_next(&piter))) {
-+		invalidate_partition(disk, part->partno);
-+		delete_partition(disk, part->partno);
-+	}
-+	disk_part_iter_exit(&piter);
-+
-+	invalidate_partition(disk, 0);
-+	blk_free_devt(disk_to_dev(disk)->devt);
-+	set_capacity(disk, 0);
-+	disk->flags &= ~GENHD_FL_UP;
-+
- 	sysfs_remove_link(&disk_to_dev(disk)->kobj, "bdi");
- 	bdi_unregister(&disk->queue->backing_dev_info);
- 	blk_unregister_queue(disk);
- 	blk_unregister_region(disk_devt(disk), disk->minors);
-+
-+	part_stat_set_all(&disk->part0, 0);
-+	disk->part0.stamp = 0;
-+
-+	kobject_put(disk->part0.holder_dir);
-+	kobject_put(disk->slave_dir);
-+	disk->driverfs_dev = NULL;
-+	if (!sysfs_deprecated)
-+		sysfs_remove_link(block_depr, dev_name(disk_to_dev(disk)));
-+	device_del(disk_to_dev(disk));
- }
-+EXPORT_SYMBOL(del_gendisk);
- 
- /**
-  * get_gendisk - get partitioning information for a given device
-diff --git a/fs/partitions/check.c b/fs/partitions/check.c
-index 2e6501d..e4afbac 100644
---- a/fs/partitions/check.c
-+++ b/fs/partitions/check.c
-@@ -507,65 +507,6 @@ out_put:
- 	return ERR_PTR(err);
- }
- 
--/* Not exported, helper to add_disk(). */
--void register_disk(struct gendisk *disk)
--{
--	struct device *ddev = disk_to_dev(disk);
--	struct block_device *bdev;
--	struct disk_part_iter piter;
--	struct hd_struct *part;
--	int err;
--
--	ddev->parent = disk->driverfs_dev;
--
--	dev_set_name(ddev, disk->disk_name);
--
--	/* delay uevents, until we scanned partition table */
--	dev_set_uevent_suppress(ddev, 1);
--
--	if (device_add(ddev))
--		return;
--	if (!sysfs_deprecated) {
--		err = sysfs_create_link(block_depr, &ddev->kobj,
--					kobject_name(&ddev->kobj));
--		if (err) {
--			device_del(ddev);
--			return;
--		}
--	}
--	disk->part0.holder_dir = kobject_create_and_add("holders", &ddev->kobj);
--	disk->slave_dir = kobject_create_and_add("slaves", &ddev->kobj);
--
--	/* No minors to use for partitions */
--	if (!disk_partitionable(disk))
--		goto exit;
--
--	/* No such device (e.g., media were just removed) */
--	if (!get_capacity(disk))
--		goto exit;
--
--	bdev = bdget_disk(disk, 0);
--	if (!bdev)
--		goto exit;
--
--	bdev->bd_invalidated = 1;
--	err = blkdev_get(bdev, FMODE_READ, NULL);
--	if (err < 0)
--		goto exit;
--	blkdev_put(bdev, FMODE_READ);
--
--exit:
--	/* announce disk after possible partitions are created */
--	dev_set_uevent_suppress(ddev, 0);
--	kobject_uevent(&ddev->kobj, KOBJ_ADD);
--
--	/* announce possible partitions */
--	disk_part_iter_init(&piter, disk, 0);
--	while ((part = disk_part_iter_next(&piter)))
--		kobject_uevent(&part_to_dev(part)->kobj, KOBJ_ADD);
--	disk_part_iter_exit(&piter);
--}
--
- static bool disk_unlock_native_capacity(struct gendisk *disk)
- {
- 	const struct block_device_operations *bdops = disk->fops;
-@@ -728,33 +669,3 @@ fail:
- }
- 
- EXPORT_SYMBOL(read_dev_sector);
--
--void del_gendisk(struct gendisk *disk)
--{
--	struct disk_part_iter piter;
--	struct hd_struct *part;
--
--	/* invalidate stuff */
--	disk_part_iter_init(&piter, disk,
--			     DISK_PITER_INCL_EMPTY | DISK_PITER_REVERSE);
--	while ((part = disk_part_iter_next(&piter))) {
--		invalidate_partition(disk, part->partno);
--		delete_partition(disk, part->partno);
--	}
--	disk_part_iter_exit(&piter);
--
--	invalidate_partition(disk, 0);
--	blk_free_devt(disk_to_dev(disk)->devt);
--	set_capacity(disk, 0);
--	disk->flags &= ~GENHD_FL_UP;
--	unlink_gendisk(disk);
--	part_stat_set_all(&disk->part0, 0);
--	disk->part0.stamp = 0;
--
--	kobject_put(disk->part0.holder_dir);
--	kobject_put(disk->slave_dir);
--	disk->driverfs_dev = NULL;
--	if (!sysfs_deprecated)
--		sysfs_remove_link(block_depr, dev_name(disk_to_dev(disk)));
--	device_del(disk_to_dev(disk));
--}
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 5027a59..c6f9e3c 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -644,7 +644,6 @@ static inline void rq_flush_dcache_pages(struct request *rq)
- 
- extern int blk_register_queue(struct gendisk *disk);
- extern void blk_unregister_queue(struct gendisk *disk);
--extern void register_disk(struct gendisk *dev);
- extern void generic_make_request(struct bio *bio);
- extern void blk_rq_init(struct request_queue *q, struct request *rq);
- extern void blk_put_request(struct request *);
-diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 5e4e692..56e17ed 100644
---- a/include/linux/genhd.h
-+++ b/include/linux/genhd.h
-@@ -394,7 +394,6 @@ extern void part_round_stats(int cpu, struct hd_struct *part);
- /* block/genhd.c */
- extern void add_disk(struct gendisk *disk);
- extern void del_gendisk(struct gendisk *gp);
--extern void unlink_gendisk(struct gendisk *gp);
- extern struct gendisk *get_gendisk(dev_t dev, int *partno);
- extern struct block_device *bdget_disk(struct gendisk *disk, int partno);
- 
--- 
-1.7.1
+IOW, it's doing the exact opposite of what the previous code did 
+(release the scsi host lock, before acquiring the ATA port/host 
+spinlock), not at all an equivalent transformation.
+
+The following sequence would seem to better preserve the existing lock 
+profile, correct?
+
+	local_irq_save(flags)
+
+	spin_lock(shost->host_lock)
+	scsi_cmd_get_serial()
+	spin_unlock(shost->host_lock)
+
+	spin_lock(ap->lock)
+	...
+	spin_unlock(ap->lock)
+
+	local_irq_restore(flags)
+
+Regards,
+
+	Jeff
+
+
