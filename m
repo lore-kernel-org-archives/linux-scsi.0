@@ -1,94 +1,101 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Full hostlock pushdown available
-Date: Mon, 01 Nov 2010 14:06:19 -0700
-Message-ID: <1288645579.7708.10.camel@haakon2.linux-iscsi.org>
-References: <20101028150508.GA2385@basil.fritz.box>
-	 <4CCD5F7F.8020808@panasas.com> <tkrat.c4793af298337eff@s5r6.in-berlin.de>
-	 <4CCE271D.7040400@garzik.org> <20101101135338.GA25817@basil.fritz.box>
-	 <4CCEE33F.5030300@garzik.org> <20101101175742.GG25817@basil.fritz.box>
-	 <4CCF0DFE.4050106@garzik.org>
+Subject: Re: [PATCH] ibmvscsis: Move to struct ibmvscsis_vdev usage in
+	fabric configfs handlers
+Date: Mon, 01 Nov 2010 14:37:42 -0700
+Message-ID: <1288647462.7708.31.camel@haakon2.linux-iscsi.org>
+References: <1288480434-29670-1-git-send-email-nab@linux-iscsi.org>
+	 <20101102060030Z.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:45657 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:36606 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751755Ab0KAVLb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2010 17:11:31 -0400
-In-Reply-To: <4CCF0DFE.4050106@garzik.org>
+	with ESMTP id S1750754Ab0KAVmt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2010 17:42:49 -0400
+In-Reply-To: <20101102060030Z.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andi Kleen <andi@firstfloor.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, lxie@us.ibm.com, rcjenn@us.ibm.com, michaelc@cs.wisc.edu, James.Bottomley@suse.de, Joel Becker <joel.becker@oracle.com>
 
-On Mon, 2010-11-01 at 14:59 -0400, Jeff Garzik wrote:
-> On 11/01/2010 01:57 PM, Andi Kleen wrote:
-> > @@ -3186,11 +3186,14 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done
-> >         struct ata_device *dev;
-> >         struct scsi_device *scsidev = cmd->device;
-> >         struct Scsi_Host *shost = scsidev->host;
-> > +       unsigned long irqflags;
-> >         int rc = 0;
-> >
-> >         ap = ata_shost_to_port(shost);
-> >
-> > -       spin_unlock(shost->host_lock);
-> > +       spin_lock_irqsave(shost->host_lock, irqflags);
-> > +       scsi_cmd_get_serial(shost, cmd);
-> > +
-> >         spin_lock(ap->lock);
-> >
-> >         ata_scsi_dump_cdb(ap, cmd);
-> > @@ -3205,6 +3208,7 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(
-> >
-> >         spin_unlock(ap->lock);
-> >         spin_lock(shost->host_lock);
-> > +       spin_unlock_irqrestore(shost->host_lock, irqflags);
-> >         return rc;
-> >  }
-> >
+On Tue, 2010-11-02 at 06:05 +0900, FUJITA Tomonori wrote:
+> On Sat, 30 Oct 2010 16:13:54 -0700
+> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 > 
-> It's a bit disappointing that libata's lock profile in this patch is 
-> quite different than that of current upstream: with your patch, libata 
-> holds the scsi host lock for a considerably longer period of time, while 
-> also holding the ATA port/host spinlock.
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > 
+> > This patch takes tomo-san original commit 94fdb0196151 and changes a handful
+> > of important items wrt to the fabric configfs logic.
+> > 
+> > Firstly, this patch introduces struct ibmvscsis_vdev and converts the
+> > VIO ibmvscsis_probe() and ibmvscsi_remove() callers to allocate/free
+> > struct ibmvscsis_vdev instead of the original usage of struct ibmvscsis_tpg
+> > which is intended to be allocated/freed respectively in ibmvscsis_make_tpg()
+> > and ibmvscsis_drop_tpg() fabric configfs handlers.
 > 
-> IOW, it's doing the exact opposite of what the previous code did 
-> (release the scsi host lock, before acquiring the ATA port/host 
-> spinlock), not at all an equivalent transformation.
-> 
-> The following sequence would seem to better preserve the existing lock 
-> profile, correct?
-> 
-> 	local_irq_save(flags)
-> 
-> 	spin_lock(shost->host_lock)
-> 	scsi_cmd_get_serial()
-> 	spin_unlock(shost->host_lock)
-> 
-> 	spin_lock(ap->lock)
-> 	...
-> 	spin_unlock(ap->lock)
-> 
-> 	local_irq_restore(flags)
+> What happens if an initiator sends a crq command before an user
+> creates a tpg? Or what happens if an initiator sends a crq command
+> after removing a tpg?
 > 
 
-Hmmmmm yes..   Along with Andi's generated patches I think we should
-strongly consider including the atomic_t Scsi_Host->cmd_serial_number
-patch here as well for scsi_cmd_get_serial() (which needs EXPORT_SYMBOL)
+Hmmm, good point.  So this would require ibmvscsis_queuecommand() to
+check internal some ibmvscsi_tpg state to determine availability, and
+reject incoming I/O otherwise.  The other operation would be to just
+move crq queue creation/release for individual ibmvscsi_vdev into
+ibmvscsis_make_tpg() and ibmvscsis_drop_tpg().
 
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-4.0.git;a=commitdiff;h=c047a53c52ee6c90daf048b045750e18173fd011#patch68
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-4.0.git;a=commitdiff;h=c047a53c52ee6c90daf048b045750e18173fd011#patch37
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-4.0.git;a=commitdiff;h=c047a53c52ee6c90daf048b045750e18173fd011#patch82
+I am suspecting the latter would bit slightly cleaner..
 
-This ends up being a very simple change, and would allow libata to
-immediately go host_lock less for scsi_cmd_dispatch() operation.
+> 
+> > Secondly, this patch changes the metadata that is used to determine the
+> > fabric WWN and TPGT (collectively the TCM VIO SRP endpoint) layout for
+> > /sys/kernel/config/target/ibmvscsis/$WWN/tpgt_$TPGT/.  This patch will
+> > now use struct vio_dev->unit_address for $WWN, and dev_name(vio_dev->dev)
+> > for $TPGT.
+> 
+> I don't care much about this but vio_dev->unit_address ==
+> dev_name(vio_dev->dev), I think. See vio_register_device_node() in
+> arch/powerpc/kernel/vio.c. So it's odd a bit.
+> 
 
-FYI, the current scoreboard for the global push down is available in
-lio-core-4.0.git/host_lock-less-for-37-v9 at the top of the above
-commit..  I think Andi is missing a few LLDs outside of /drivers/scsi/
+Hmmmm..
 
-Best,
+> ibmvscsis model doesn't strictly follow the SRP SCSI model; no port,
+> wwpn, etc. 
+> 
+
+Correct, which means we need to find a value to build a WWPN that is
+both unique to the individual POWER machine, and is persisent across
+reports..
+
+brking and Co, does the struct vio_dev->unit_address meet these two
+criteria for a TCM WWPN..?  If not, is there anything else we could use
+(say the system_id + guest specific ID) to emulate this..?
+
+> 
+> >  The values passed in via configff for $WWN and $TPGT must match
+> > in ibmvscsis_make_tport() and ibmvscsis_make_tpg() against what has been
+> > automatically setup for each struct ibmvscsis_vdev in the VIO ibmvscsis_probe()
+> > callback.
+> 
+> As I said before, it's much better to create them automatically
+> instead of creating them via sysfs. The driver knows all nexuses to
+> handle.
+
+Point well taken here, but as discussed there is not a sane way within
+configfs to do this and I really do not think we loose anything by
+driving the configuration via entirely in userspace.
+
+>From the perspective of the enduser of this code we will ultimately want
+to hide all these multiple userspace driven configfs ops.  Eg, present a
+list to enduser of the available struct vio_devs through either current
+sysfs attributes or /sys/kernel/config/target/ibvscsis/available_vdevs
+that intrepreted userspace code, and is able to explictly enable the
+specific TCM subsystem backend storage for each target mode VIO LPAR
+regision for TCM/ibmvscsis operation.
+
+Thanks!
 
 --nab
 
