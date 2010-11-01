@@ -1,53 +1,43 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] fix scsi cmnd retries in error handling
-Date: Mon, 01 Nov 2010 09:38:35 -0400
-Message-ID: <1288618715.3056.21.camel@mulgrave.site>
-References: <AANLkTikYv-4STgVob=7j70Mo2fuLOR=zc3=WTD7x3Kig@mail.gmail.com>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: [PATCH] add yielding cpu in scsi_error_handler()
+Date: Mon, 1 Nov 2010 21:41:57 +0800
+Message-ID: <AANLkTinU0iZ9jdOKmAQX2gdKb6VHxsHNDRyMqv=UX3GA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36972 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757877Ab0KANij (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Nov 2010 09:38:39 -0400
-In-Reply-To: <AANLkTikYv-4STgVob=7j70Mo2fuLOR=zc3=WTD7x3Kig@mail.gmail.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50860 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757756Ab0KANl6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2010 09:41:58 -0400
+Received: by wyf28 with SMTP id 28so5519122wyf.19
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Nov 2010 06:41:57 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2010-11-01 at 21:02 +0800, Hillf Danton wrote:
-> There are two instances of increment and test of retries of scsi cmnd
-> in functions scsi_decide_disposition() and scsi_eh_flush_done_q()
-> respectively.
+In cases that it is not ready to unjam host, the operation could be
+deferred by yielding cpu since busy testing earns little help.
 
-This analysis is incomplete.  Those two functions are called in
-completely separate paths, so you can't remove the increment from one
-and expect the other to compensate.
+Signed-off-by: Hillf Danton <dhillf@gmail.com>
+---
 
-James
+--- a/drivers/scsi/scsi_error.c	2010-09-13 07:07:38.000000000 +0800
++++ b/drivers/scsi/scsi_error.c	2010-11-01 20:56:36.000000000 +0800
+@@ -1765,6 +1765,7 @@ int scsi_error_handler(void *data)
+ 			SCSI_LOG_ERROR_RECOVERY(1,
+ 				printk("Error handler scsi_eh_%d sleeping\n",
+ 					shost->host_no));
++	yield:
+ 			schedule();
+ 			set_current_state(TASK_INTERRUPTIBLE);
+ 			continue;
+@@ -1785,7 +1786,8 @@ int scsi_error_handler(void *data)
+ 				printk(KERN_ERR "Error handler scsi_eh_%d "
+ 						"unable to autoresume\n",
+ 						shost->host_no));
+-			continue;
++			set_current_state(TASK_INTERRUPTIBLE);
++			goto yield;
+ 		}
 
-> One of the increments is overwork when the corresponding cmnds are same.
-> The overwork is fixed in scsi_decide_disposition().
-> 
-> Signed-off-by: Hillf Danton <dhillf@gmail.com>
-> ---
-> 
-> --- a/drivers/scsi/scsi_error.c	2010-09-13 07:07:38.000000000 +0800
-> +++ b/drivers/scsi/scsi_error.c	2010-11-01 20:39:38.000000000 +0800
-> @@ -1541,7 +1541,7 @@ int scsi_decide_disposition(struct scsi_
->  	 * the request was not marked fast fail.  Note that above,
->  	 * even if the request is marked fast fail, we still requeue
->  	 * for queue congestion conditions (QUEUE_FULL or BUSY) */
-> -	if ((++scmd->retries) <= scmd->allowed
-> +	if (scmd->retries < scmd->allowed
->  	    && !scsi_noretry_cmd(scmd)) {
->  		return NEEDS_RETRY;
->  	} else {
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+ 		if (shost->transportt->eh_strategy_handler)
