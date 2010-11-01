@@ -1,77 +1,238 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [PATCH] fix scsi cmnd retries in error handling
-Date: Mon, 1 Nov 2010 21:53:28 +0800
-Message-ID: <AANLkTikgNf=+7cWH0L3uUA5jMH88q4hEp3G+GWRdnyLm@mail.gmail.com>
-References: <AANLkTikYv-4STgVob=7j70Mo2fuLOR=zc3=WTD7x3Kig@mail.gmail.com>
-	<1288618715.3056.21.camel@mulgrave.site>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Full hostlock pushdown available
+Date: Mon, 1 Nov 2010 14:53:38 +0100
+Message-ID: <20101101135338.GA25817@basil.fritz.box>
+References: <20101028150508.GA2385@basil.fritz.box>
+ <4CCD5F7F.8020808@panasas.com>
+ <tkrat.c4793af298337eff@s5r6.in-berlin.de>
+ <4CCE271D.7040400@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:43515 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757873Ab0KANx3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2010 09:53:29 -0400
-Received: by wyf28 with SMTP id 28so5534283wyf.19
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Nov 2010 06:53:28 -0700 (PDT)
-In-Reply-To: <1288618715.3056.21.camel@mulgrave.site>
+Received: from one.firstfloor.org ([213.235.205.2]:57916 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756390Ab0KANxo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2010 09:53:44 -0400
+Content-Disposition: inline
+In-Reply-To: <4CCE271D.7040400@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andi Kleen <andi@firstfloor.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-On Mon, Nov 1, 2010 at 9:38 PM, James Bottomley <James.Bottomley@suse.d=
-e> wrote:
-> On Mon, 2010-11-01 at 21:02 +0800, Hillf Danton wrote:
->> There are two instances of increment and test of retries of scsi cmn=
-d
->> in functions scsi_decide_disposition() and scsi_eh_flush_done_q()
->> respectively.
->
-> This analysis is incomplete. =C2=A0Those two functions are called in
+On Sun, Oct 31, 2010 at 10:34:05PM -0400, Jeff Garzik wrote:
+> 
+> >>On 10/28/2010 05:05 PM, Andi Kleen wrote:
+> >>>>> The following changes since commit 39764981e772adc832d8a96e6540be346a830ca2:
+> >>>>>
+> >>>>>   Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6 (2010-10-27 20:54:34 +0200)
+> >>>>>
+> >>>>> are available in the git repository at:
+> >>>>>
+> >>>>>   ssh://master.kernel.org/pub/scm/linux/kernel/git/ak/linux-misc-2.6.git hostlock
+> 
+> Missing drivers/ata/libata-scsi.c modification?
 
-Though incomplete, there is chance they could be threaded up by
-scsi_unjam_host(). //Hillf
+Ah thanks for noticing. I missed that because it defined queuecommand
+in a header plus a macro. Fixed in the tree. I also did another grep to make
+sure there a no other occurrences. And fixed some documentation.
 
-> completely separate paths, so you can't remove the increment from one
-> and expect the other to compensate.
->
-> James
->
->> One of the increments is overwork when the corresponding cmnds are s=
-ame.
->> The overwork is fixed in scsi_decide_disposition().
->>
->> Signed-off-by: Hillf Danton <dhillf@gmail.com>
->> ---
->>
->> --- a/drivers/scsi/scsi_error.c =C2=A0 =C2=A0 =C2=A0 2010-09-13 07:0=
-7:38.000000000 +0800
->> +++ b/drivers/scsi/scsi_error.c =C2=A0 =C2=A0 =C2=A0 2010-11-01 20:3=
-9:38.000000000 +0800
->> @@ -1541,7 +1541,7 @@ int scsi_decide_disposition(struct scsi_
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0* the request was not marked fast fail. =C2=
-=A0Note that above,
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0* even if the request is marked fast fail=
-, we still requeue
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0* for queue congestion conditions (QUEUE_=
-=46ULL or BUSY) */
->> - =C2=A0 =C2=A0 if ((++scmd->retries) <=3D scmd->allowed
->> + =C2=A0 =C2=A0 if (scmd->retries < scmd->allowed
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 && !scsi_noretry_cmd(scmd)) {
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return NEEDS_RETRY;
->> =C2=A0 =C2=A0 =C2=A0 } else {
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
-" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
->
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Updated tree
+
+-Andi
+
+
+
+The following changes since commit 39764981e772adc832d8a96e6540be346a830ca2:
+
+  Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6 (2010-10-27 20:54:34 +0200)
+
+are available in the git repository at:
+
+  ssh://master.kernel.org/pub/scm/linux/kernel/git/ak/linux-misc-2.6 hostlock
+
+Andi Kleen (90):
+      SCSI: Remove hostlock for queuecommand
+      SCSI: ibmmca: hostlock pushdown
+      SCSI: ipr: hostlock pushdown
+      SCSI: ultrastor: hostlock pushdown
+      SCSI: aha1740: hostlock pushdown
+      SCSI: ia64 simscsi: hostlock pushdown
+      SCSI: sun3_NCR5380: pushdown of hostlock
+      SCSI: staging/hv/storvsc_drv: pushdown of hostlock
+      SCSI: s390/zfcp_scsi: hostlock pushdown
+      SCSI: libiscsi: hostlock pushdown
+      SCSI: libiscsi: remove hostlock drop
+      SCSI: NCR5380: hostlock pushdown
+      SCSI: libsas: hostlock pushdown
+      SCSI: stex: hostlock pushdown
+      SCSI: wd33c93: hostlock pushdown
+      SCSI: aha152x: hostlock pushdown
+      SCSI: microtek: hostlock pushdown
+      SCSI: scsiglue: hostlock pushdown
+      SCSI: uas: hostlock pushdown
+      SCSI: i2o_scsi: hostlock pushdown
+      SCSI: mptspi: hostlock pushdown
+      SCSI: mptsas: hostlock pushdown
+      SCSI: mptfc: hostlock pushdown
+      SCSI: sbp2: hostlock pushdown
+      SCSI: ib_srp: hostlock pushdown
+      SCSI: mesh: hostlock pushdown
+      SCSI: fd_mcs: hostlock pushdown
+      SCSI: fnic_main: hostlock pushdown
+      SCSI: gdth: hostlock pushdown
+      SCSI: ppa: hostlock pushdown
+      SCSI: qlogicpti: hostlock pushdown
+      SCSI: 3w-sas: hostlock pushdown
+      SCSI: 3w-9xxx: hostlock pushdown
+      SCSI: fcoe: hostlock pushdown
+      SCSI: ips: hostlock pushdown
+      SCSI: sym_glue: hostlock pushdown
+      SCSI: ql4_os: hostlock pushdown
+      SCSI: mpt2sas_scsih: hostlock pushdown
+      SCSI: fdomain: hostlock pushdown
+      SCSI: initio: hostlock pushdown
+      SCSI: in2000: hostlock pushdown
+      SCSI: nsp32: hostlock pushdown
+      SCSI: megaraid_sas: hostlock pushdown
+      SCSI: megaraid_mbox: hostlock pushdown
+      SCSI: BusLogic: hostlock pushdown
+      SCSI: dpt_i2o: hostlock pushdown
+      SCSI: 3w-xxxx: hostlock pushdown
+      SCSI: atp870u: hostlock pushdown
+      SCSI: qlogicfas: hostlock pushdown
+      SCSI: qla1280: hostlock pushdown
+      SCSI: dc395x: hostlock pushdown
+      SCSI: linit: hostlock pushdown
+      SCSI: ibmvfc: hostlock pushdown
+      SCSI: ibmvscsi: hostlock pushdown
+      SCSI: lpfc_scsi: hostlock pushdown
+      SCSI: ps3rom: hostlock pushdown
+      SCSI: pmcraid: hostlock pushdown
+      SCSI: eata: hostlock pushdown
+      SCSI: tmscsim: hostlock pushdown
+      SCSI: imm: hostlock pushdown
+      SCSI: wd7000: hostlock pushdown
+      SCSI: sym53c416: hostlock pushdown
+      SCSI: aic7xxx_old: hostlock pushdown
+      SCSI: megaraid: hostlock pushdown
+      SCSI: aha1542: hostlock pushdown
+      SCSI: eata_pio: hostlock pushdown
+      SCSI: esp_scsi: hostlock pushdown
+      SCSI: a100u2w: hostlock pushdown
+      SCSI: hpsa: hostlock pushdown
+      SCSI: NCR53c406a: hostlock pushdown
+      SCSI: mac53c94: hostlock pushdown
+      SCSI: vmw_pvscsi: hostlock pushdown
+      SCSI: 53c700: hostlock pushdown
+      SCSI: u14-34f: hostlock pushdown
+      SCSI: ncr53c8xx: hostlock pushdown
+      SCSI: advansys: hostlock pushdown
+      SCSI: hptiop: hostlock pushdown
+      SCSI: arcmsr_hba: hostlock pushdown
+      SCSI: aic79xx_osm: hostlock pushdown
+      SCSI: aic7xxx_osm: hostlock pushdown
+      SCSI: arm: hostlock pushdown
+      SCSI: qla_os: hostlock pushdown
+      SCSI: nsp_cs: hostlock pushdown
+      SCSI: sym53c500_cs: hostlock pushdown
+      SCSI: bfad_im: hostlock pushdown
+      SCSI: cciss_scsi: hostlock pushdown
+      SCSI: aha1740: Avoid instant deadlock
+      SCSI: Fix ps3rom
+      SCSI: libata-scsi: hostlock pushdown
+      SCSI: Fix documentation for queuecommand for new locking
+
+ Documentation/scsi/scsi_mid_low_api.txt |    8 ++++++--
+ arch/ia64/hp/sim/simscsi.c              |    7 +++++++
+ drivers/ata/libata-scsi.c               |    8 ++++++--
+ drivers/block/cciss_scsi.c              |    6 ++++++
+ drivers/firewire/sbp2.c                 |    5 +++++
+ drivers/infiniband/ulp/srp/ib_srp.c     |    6 ++++++
+ drivers/message/fusion/mptfc.c          |    6 ++++++
+ drivers/message/fusion/mptsas.c         |    8 +++++++-
+ drivers/message/fusion/mptspi.c         |    5 +++++
+ drivers/message/i2o/i2o_scsi.c          |    5 +++++
+ drivers/s390/scsi/zfcp_scsi.c           |    8 ++++++++
+ drivers/scsi/3w-9xxx.c                  |    4 ++++
+ drivers/scsi/3w-sas.c                   |    4 ++++
+ drivers/scsi/3w-xxxx.c                  |    4 ++++
+ drivers/scsi/53c700.c                   |    6 ++++++
+ drivers/scsi/BusLogic.c                 |    5 +++++
+ drivers/scsi/NCR5380.c                  |    6 ++++++
+ drivers/scsi/NCR53c406a.c               |    4 ++++
+ drivers/scsi/a100u2w.c                  |    9 ++++++++-
+ drivers/scsi/aacraid/linit.c            |   10 ++++++++--
+ drivers/scsi/advansys.c                 |    4 ++++
+ drivers/scsi/aha152x.c                  |   10 +++++++++-
+ drivers/scsi/aha1542.c                  |   12 ++++++++++--
+ drivers/scsi/aha1740.c                  |   11 +++++++++++
+ drivers/scsi/aic7xxx/aic79xx_osm.c      |    4 ++++
+ drivers/scsi/aic7xxx/aic7xxx_osm.c      |    4 ++++
+ drivers/scsi/aic7xxx_old.c              |    5 +++++
+ drivers/scsi/arcmsr/arcmsr_hba.c        |   18 +++++++++++++++---
+ drivers/scsi/arm/acornscsi.c            |    6 ++++++
+ drivers/scsi/arm/fas216.c               |    8 ++++++++
+ drivers/scsi/atp870u.c                  |    8 ++++++++
+ drivers/scsi/bfa/bfad_im.c              |   11 ++++++++++-
+ drivers/scsi/dc395x.c                   |    6 ++++++
+ drivers/scsi/dpt_i2o.c                  |    9 +++++++++
+ drivers/scsi/eata.c                     |    7 +++++++
+ drivers/scsi/eata_pio.c                 |    5 +++++
+ drivers/scsi/esp_scsi.c                 |    8 +++++++-
+ drivers/scsi/fd_mcs.c                   |    4 ++++
+ drivers/scsi/fdomain.c                  |    4 ++++
+ drivers/scsi/fnic/fnic_scsi.c           |    9 ++++++++-
+ drivers/scsi/gdth.c                     |    4 ++++
+ drivers/scsi/hpsa.c                     |    7 +++++++
+ drivers/scsi/hptiop.c                   |    6 ++++++
+ drivers/scsi/ibmmca.c                   |   12 ++++++++++++
+ drivers/scsi/ibmvscsi/ibmvfc.c          |   12 ++++++++++--
+ drivers/scsi/ibmvscsi/ibmvscsi.c        |    9 ++++++++-
+ drivers/scsi/imm.c                      |    4 ++++
+ drivers/scsi/in2000.c                   |    4 ++++
+ drivers/scsi/initio.c                   |    8 +++++++-
+ drivers/scsi/ipr.c                      |   17 ++++++++++++++---
+ drivers/scsi/ips.c                      |   18 ++++++++++++++++--
+ drivers/scsi/libfc/fc_fcp.c             |    5 +++++
+ drivers/scsi/libiscsi.c                 |   10 ++++++----
+ drivers/scsi/libsas/sas_scsi_host.c     |    7 +++++--
+ drivers/scsi/lpfc/lpfc_scsi.c           |    6 ++++++
+ drivers/scsi/mac53c94.c                 |    4 ++++
+ drivers/scsi/megaraid.c                 |    4 ++++
+ drivers/scsi/megaraid/megaraid_mbox.c   |    5 +++++
+ drivers/scsi/megaraid/megaraid_sas.c    |   14 ++++++++++++--
+ drivers/scsi/mesh.c                     |    4 ++++
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c    |   17 +++++++++++++++--
+ drivers/scsi/ncr53c8xx.c                |    4 ++++
+ drivers/scsi/nsp32.c                    |    8 ++++++++
+ drivers/scsi/pcmcia/nsp_cs.c            |    6 ++++++
+ drivers/scsi/pcmcia/sym53c500_cs.c      |    4 ++++
+ drivers/scsi/pmcraid.c                  |   11 ++++++++++-
+ drivers/scsi/ppa.c                      |    4 ++++
+ drivers/scsi/ps3rom.c                   |    4 ++++
+ drivers/scsi/qla1280.c                  |    4 ++++
+ drivers/scsi/qla2xxx/qla_os.c           |    7 +++++++
+ drivers/scsi/qla4xxx/ql4_os.c           |    7 +++++++
+ drivers/scsi/qlogicfas408.c             |    4 ++++
+ drivers/scsi/qlogicpti.c                |    5 +++++
+ drivers/scsi/scsi.c                     |   15 +++------------
+ drivers/scsi/stex.c                     |   20 ++++++++++++++++++--
+ drivers/scsi/sun3_NCR5380.c             |    8 ++++++++
+ drivers/scsi/sym53c416.c                |    4 ++++
+ drivers/scsi/sym53c8xx_2/sym_glue.c     |   12 ++++++++++--
+ drivers/scsi/tmscsim.c                  |    5 +++++
+ drivers/scsi/u14-34f.c                  |    7 +++++++
+ drivers/scsi/ultrastor.c                |    7 +++++++
+ drivers/scsi/vmw_pvscsi.c               |    5 +++++
+ drivers/scsi/wd33c93.c                  |    6 +++++-
+ drivers/scsi/wd7000.c                   |    4 ++++
+ drivers/staging/hv/storvsc_drv.c        |    8 ++++++++
+ drivers/usb/image/microtek.c            |    4 ++++
+ drivers/usb/storage/scsiglue.c          |    6 ++++++
+ drivers/usb/storage/uas.c               |    9 ++++++++-
+ include/scsi/scsi_host.h                |    1 +
+ 89 files changed, 588 insertions(+), 55 deletions(-)
+
+-- 
+ak@linux.intel.com -- Speaking for myself only.
