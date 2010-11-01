@@ -1,7 +1,7 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 4/7] cdrom: add ->check_events() support
-Date: Mon,  1 Nov 2010 19:44:38 +0100
-Message-ID: <1288637081-5183-5-git-send-email-tj@kernel.org>
+Subject: [PATCH 6/7] sr: implement sr_check_events()
+Date: Mon,  1 Nov 2010 19:44:40 +0100
+Message-ID: <1288637081-5183-7-git-send-email-tj@kernel.org>
 References: <1288637081-5183-1-git-send-email-tj@kernel.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1288637081-5183-1-git-send-email-tj@kernel.org>
@@ -10,135 +10,262 @@ To: axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, k
 Cc: Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-In principle, cdrom just needs to pass through ->check_events() but
-CDROM_MEDIA_CHANGED ioctl makes things a bit more complex.  Just as
-with ->media_changed() support, cdrom code needs to buffer the events
-and serve them to ioctl and vfs as requested.  It may be a good idea
-to deprecate CDROM_MEDIA_CHANGED ioctl in the long run.
+Replace sr_media_change() with sr_check_events().  It normally only
+uses GET_EVENT_STATUS_NOTIFICATION to check both media change and
+eject request.  If @clearing includes DISK_EVENT_MEDIA_CHANGE, it
+issues TUR and compares whether media presence has changed.  The SCSI
+specific media change uevent is kept for compatibility.
+
+sr_media_change() was doing both media change check and revalidation.
+The revalidation part is split into sr_block_revalidate_disk().
 
 Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Kay Sievers <kay.sievers@vrfy.org>
 ---
- drivers/cdrom/cdrom.c |   55 ++++++++++++++++++++++++++++++++++++++++++++++--
- include/linux/cdrom.h |    6 +++++
- 2 files changed, 58 insertions(+), 3 deletions(-)
+ drivers/scsi/sr.c   |  149 +++++++++++++++++++++++++++++++++------------------
+ drivers/scsi/sr.h   |    2 +-
+ include/scsi/scsi.h |    1 +
+ 3 files changed, 98 insertions(+), 54 deletions(-)
 
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index af13c62..1ea8f8d 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -1348,7 +1348,10 @@ static int cdrom_select_disc(struct cdrom_device_info *cdi, int slot)
- 	if (!CDROM_CAN(CDC_SELECT_DISC))
- 		return -EDRIVE_CANT_DO_THIS;
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 63cdbc6..edda30d 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -104,14 +104,15 @@ static void sr_release(struct cdrom_device_info *);
+ static void get_sectorsize(struct scsi_cd *);
+ static void get_capabilities(struct scsi_cd *);
  
--	(void) cdi->ops->media_changed(cdi, slot);
-+	if (cdi->ops->check_events)
-+		cdi->ops->check_events(cdi, 0, slot);
-+	else
-+		cdi->ops->media_changed(cdi, slot);
+-static int sr_media_change(struct cdrom_device_info *, int);
++static unsigned int sr_check_events(struct cdrom_device_info *cdi,
++				    unsigned int clearing, int slot);
+ static int sr_packet(struct cdrom_device_info *, struct packet_command *);
  
- 	if (slot == CDSL_NONE) {
- 		/* set media changed bits, on both queues */
-@@ -1392,6 +1395,41 @@ static int cdrom_select_disc(struct cdrom_device_info *cdi, int slot)
- 	return slot;
+ static struct cdrom_device_ops sr_dops = {
+ 	.open			= sr_open,
+ 	.release	 	= sr_release,
+ 	.drive_status	 	= sr_drive_status,
+-	.media_changed		= sr_media_change,
++	.check_events		= sr_check_events,
+ 	.tray_move		= sr_tray_move,
+ 	.lock_door		= sr_lock_door,
+ 	.select_speed		= sr_select_speed,
+@@ -165,65 +166,90 @@ static void scsi_cd_put(struct scsi_cd *cd)
+ 	mutex_unlock(&sr_ref_mutex);
  }
  
-+/*
-+ * As cdrom implements an extra ioctl consumer for media changed
-+ * event, it needs to buffer ->check_events() output, such that event
-+ * is not lost for both the usual VFS and ioctl paths.
-+ * cdi->{vfs|ioctl}_events are used to buffer pending events for each
-+ * path.
-+ *
-+ * XXX: Locking is non-existent.  cdi->ops->check_events() can be
-+ * called in parallel and buffering fields are accessed without any
-+ * exclusion.  The original media_changed code had the same problem.
-+ * It might be better to simply deprecate CDROM_MEDIA_CHANGED ioctl
-+ * and remove this cruft altogether.  It doesn't have much usefulness
-+ * at this point.
-+ */
-+static void cdrom_update_events(struct cdrom_device_info *cdi,
-+				unsigned int clearing)
++static unsigned int sr_get_events(struct scsi_device *sdev)
 +{
-+	unsigned int events;
++	u8 buf[8];
++	u8 cmd[] = { GET_EVENT_STATUS_NOTIFICATION,
++		     1,			/* polled */
++		     0, 0,		/* reserved */
++		     1 << 4,		/* notification class: media */
++		     0, 0,		/* reserved */
++		     0, sizeof(buf),	/* allocation length */
++		     0,			/* control */
++	};
++	struct event_header *eh = (void *)buf;
++	struct media_event_desc *med = (void *)(buf + 4);
++	struct scsi_sense_hdr sshdr;
++	int result;
 +
-+	events = cdi->ops->check_events(cdi, clearing, CDSL_CURRENT);
-+	cdi->vfs_events |= events;
-+	cdi->ioctl_events |= events;
++	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, sizeof(buf),
++				  &sshdr, SR_TIMEOUT, MAX_RETRIES, NULL);
++	if (scsi_sense_valid(&sshdr) && sshdr.sense_key == UNIT_ATTENTION)
++		return DISK_EVENT_MEDIA_CHANGE;
++
++	if (result || be16_to_cpu(eh->data_len) < sizeof(*med))
++		return 0;
++
++	if (eh->nea || eh->notification_class != 0x4)
++		return 0;
++
++	if (med->media_event_code == 1)
++		return DISK_EVENT_EJECT_REQUEST;
++	else if (med->media_event_code == 2)
++		return DISK_EVENT_MEDIA_CHANGE;
++	return 0;
 +}
 +
-+unsigned int cdrom_check_events(struct cdrom_device_info *cdi,
-+				unsigned int clearing)
-+{
-+	unsigned int events;
-+
-+	cdrom_update_events(cdi, clearing);
-+	events = cdi->vfs_events;
-+	cdi->vfs_events = 0;
-+	return events;
-+}
-+
- /* We want to make media_changed accessible to the user through an
-  * ioctl. The main problem now is that we must double-buffer the
-  * low-level implementation, to assure that the VFS and the user both
-@@ -1403,15 +1441,26 @@ int media_changed(struct cdrom_device_info *cdi, int queue)
+ /*
+- * This function checks to see if the media has been changed in the
+- * CDROM drive.  It is possible that we have already sensed a change,
+- * or the drive may have sensed one and not yet reported it.  We must
+- * be ready for either case. This function always reports the current
+- * value of the changed bit.  If flag is 0, then the changed bit is reset.
+- * This function could be done as an ioctl, but we would need to have
+- * an inode for that to work, and we do not always have one.
++ * This function checks to see if the media has been changed or eject
++ * button has been pressed.  It is possible that we have already
++ * sensed a change, or the drive may have sensed one and not yet
++ * reported it.  The past events are accumulated in sdev->changed and
++ * returned together with the current state.
+  */
+-
+-static int sr_media_change(struct cdrom_device_info *cdi, int slot)
++static unsigned int sr_check_events(struct cdrom_device_info *cdi,
++				    unsigned int clearing, int slot)
  {
- 	unsigned int mask = (1 << (queue & 1));
- 	int ret = !!(cdi->mc_flags & mask);
-+	bool changed;
+ 	struct scsi_cd *cd = cdi->handle;
+-	int retval;
+-	struct scsi_sense_hdr *sshdr;
++	bool last_present;
++	struct scsi_sense_hdr sshdr;
++	unsigned int events;
++	int ret;
  
- 	if (!CDROM_CAN(CDC_MEDIA_CHANGED))
--	    return ret;
-+		return ret;
+-	if (CDSL_CURRENT != slot) {
+-		/* no changer support */
+-		return -EINVAL;
+-	}
++	/* no changer support */
++	if (CDSL_CURRENT != slot)
++		return 0;
+ 
+-	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
+-	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES,
+-				      sshdr);
+-	if (host_byte(retval) || (scsi_sense_valid(sshdr) &&
+-				  /* ASC 0x3a is medium not present */
+-				  sshdr->asc == 0x3a)) {
+-		/* Media not present or unable to test, unit probably not
+-		 * ready. This usually means there is no disc in the drive.
+-		 * Mark as changed, and we will figure it out later once
+-		 * the drive is available again.
+-		 */
+-		cd->device->changed = 1;
+-		/* This will force a flush, if called from check_disk_change */
+-		retval = 1;
+-		goto out;
+-	};
++	events = sr_get_events(cd->device);
+ 
+-	retval = cd->device->changed;
+-	cd->device->changed = 0;
+-	/* If the disk changed, the capacity will now be different,
+-	 * so we force a re-read of this information */
+-	if (retval) {
+-		/* check multisession offset etc */
+-		sr_cd_check(cdi);
+-		get_sectorsize(cd);
++	/*
++	 * GET_EVENT_STATUS_NOTIFICATION is enough unless MEDIA_CHANGE
++	 * is being cleared.  Note that there are devices which hang
++	 * if asked to execute TUR repeatedly.
++	 */
++	if (!(clearing & DISK_EVENT_MEDIA_CHANGE))
++		goto skip_tur;
 +
- 	/* changed since last call? */
--	if (cdi->ops->media_changed(cdi, CDSL_CURRENT)) {
-+	if (cdi->ops->check_events) {
-+		BUG_ON(!queue);	/* shouldn't be called from VFS path */
-+		cdrom_update_events(cdi, DISK_EVENT_MEDIA_CHANGE);
-+		changed = cdi->ioctl_events & DISK_EVENT_MEDIA_CHANGE;
-+		cdi->ioctl_events = 0;
-+	} else
-+		changed = cdi->ops->media_changed(cdi, CDSL_CURRENT);
-+
-+	if (changed) {
- 		cdi->mc_flags = 0x3;    /* set bit on both queues */
- 		ret |= 1;
- 		cdi->media_written = 0;
++	/* let's see whether the media is there with TUR */
++	last_present = cd->media_present;
++	ret = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr);
++	cd->media_present = !(host_byte(ret) || (scsi_sense_valid(&sshdr) &&
++						 sshdr.asc == 0x3a));
++	if (last_present != cd->media_present)
++		events |= DISK_EVENT_MEDIA_CHANGE;
++skip_tur:
++	if (cd->device->changed) {
++		events |= DISK_EVENT_MEDIA_CHANGE;
++		cd->device->changed = 0;
  	}
+ 
+-out:
+-	/* Notify userspace, that media has changed. */
+-	if (retval != cd->previous_state)
++	/* for backward compatibility */
++	if (events & DISK_EVENT_MEDIA_CHANGE)
+ 		sdev_evt_send_simple(cd->device, SDEV_EVT_MEDIA_CHANGE,
+ 				     GFP_KERNEL);
+-	cd->previous_state = retval;
+-	kfree(sshdr);
+-
+-	return retval;
++	return events;
+ }
+- 
 +
- 	cdi->mc_flags &= ~mask;         /* clear bit */
+ /*
+  * sr_done is the interrupt routine for the device driver.
+  *
+@@ -508,10 +534,25 @@ out:
  	return ret;
  }
-diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index 78e9047..35eae4b 100644
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -946,6 +946,8 @@ struct cdrom_device_info {
- /* device-related storage */
- 	unsigned int options	: 30;	/* options flags */
- 	unsigned mc_flags	: 2;	/* media change buffer flags */
-+	unsigned int vfs_events;	/* cached events for vfs path */
-+	unsigned int ioctl_events;	/* cached events for ioctl path */
-     	int use_count;                  /* number of times device opened */
-     	char name[20];                  /* name of the device type */
- /* per-device flags */
-@@ -965,6 +967,8 @@ struct cdrom_device_ops {
- 	int (*open) (struct cdrom_device_info *, int);
- 	void (*release) (struct cdrom_device_info *);
- 	int (*drive_status) (struct cdrom_device_info *, int);
-+	unsigned int (*check_events) (struct cdrom_device_info *cdi,
-+				      unsigned int clearing, int slot);
- 	int (*media_changed) (struct cdrom_device_info *, int);
- 	int (*tray_move) (struct cdrom_device_info *, int);
- 	int (*lock_door) (struct cdrom_device_info *, int);
-@@ -993,6 +997,8 @@ extern int cdrom_open(struct cdrom_device_info *cdi, struct block_device *bdev,
- extern void cdrom_release(struct cdrom_device_info *cdi, fmode_t mode);
- extern int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
- 		       fmode_t mode, unsigned int cmd, unsigned long arg);
-+extern unsigned int cdrom_check_events(struct cdrom_device_info *cdi,
-+				       unsigned int clearing);
- extern int cdrom_media_changed(struct cdrom_device_info *);
  
- extern int register_cdrom(struct cdrom_device_info *cdi);
+-static int sr_block_media_changed(struct gendisk *disk)
++static unsigned int sr_block_check_events(struct gendisk *disk,
++					  unsigned int clearing)
+ {
+ 	struct scsi_cd *cd = scsi_cd(disk);
+-	return cdrom_media_changed(&cd->cdi);
++	return cdrom_check_events(&cd->cdi, clearing);
++}
++
++static int sr_block_revalidate_disk(struct gendisk *disk)
++{
++	struct scsi_cd *cd = scsi_cd(disk);
++	struct scsi_sense_hdr sshdr;
++
++	/* if the unit is not ready, nothing more to do */
++	if (scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr))
++		return 0;
++
++	sr_cd_check(&cd->cdi);
++	get_sectorsize(cd);
++	return 0;
+ }
+ 
+ static const struct block_device_operations sr_bdops =
+@@ -520,7 +561,8 @@ static const struct block_device_operations sr_bdops =
+ 	.open		= sr_block_open,
+ 	.release	= sr_block_release,
+ 	.ioctl		= sr_block_ioctl,
+-	.media_changed	= sr_block_media_changed,
++	.check_events	= sr_block_check_events,
++	.revalidate_disk = sr_block_revalidate_disk,
+ 	/* 
+ 	 * No compat_ioctl for now because sr_block_ioctl never
+ 	 * seems to pass arbitary ioctls down to host drivers.
+@@ -593,6 +635,7 @@ static int sr_probe(struct device *dev)
+ 	sprintf(disk->disk_name, "sr%d", minor);
+ 	disk->fops = &sr_bdops;
+ 	disk->flags = GENHD_FL_CD;
++	disk->events = DISK_EVENT_MEDIA_CHANGE | DISK_EVENT_EJECT_REQUEST;
+ 
+ 	blk_queue_rq_timeout(sdev->request_queue, SR_TIMEOUT);
+ 
+@@ -602,7 +645,7 @@ static int sr_probe(struct device *dev)
+ 	cd->disk = disk;
+ 	cd->capacity = 0x1fffff;
+ 	cd->device->changed = 1;	/* force recheck CD type */
+-	cd->previous_state = 1;
++	cd->media_present = 0;
+ 	cd->use = 1;
+ 	cd->readcd_known = 0;
+ 	cd->readcd_cdda = 0;
+diff --git a/drivers/scsi/sr.h b/drivers/scsi/sr.h
+index 81fbc0b..e036f1d 100644
+--- a/drivers/scsi/sr.h
++++ b/drivers/scsi/sr.h
+@@ -40,7 +40,7 @@ typedef struct scsi_cd {
+ 	unsigned xa_flag:1;	/* CD has XA sectors ? */
+ 	unsigned readcd_known:1;	/* drive supports READ_CD (0xbe) */
+ 	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
+-	unsigned previous_state:1;	/* media has changed */
++	unsigned media_present:1;	/* media is present */
+ 	struct cdrom_device_info cdi;
+ 	/* We hold gendisk and scsi_device references on probe and use
+ 	 * the refs on this kref to decide when to release them */
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 216af85..8675861 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -104,6 +104,7 @@ struct scsi_cmnd;
+ #define UNMAP		      0x42
+ #define READ_TOC              0x43
+ #define READ_HEADER           0x44
++#define GET_EVENT_STATUS_NOTIFICATION 0x4a
+ #define LOG_SELECT            0x4c
+ #define LOG_SENSE             0x4d
+ #define XDWRITEREAD_10        0x53
 -- 
 1.7.1
