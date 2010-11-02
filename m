@@ -1,1781 +1,3421 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC v2 16/21] tcm: Add PSCSI subsystem plugin
-Date: Tue, 02 Nov 2010 16:23:30 +0200
-Message-ID: <4CD01EE2.20705@panasas.com>
-References: <1285195867-11728-1-git-send-email-nab@linux-iscsi.org>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: Full hostlock pushdown available
+Date: Tue, 2 Nov 2010 16:05:50 +0100
+Message-ID: <20101102150550.GE27428@basil.fritz.box>
+References: <20101028150508.GA2385@basil.fritz.box>
+ <4CCD5F7F.8020808@panasas.com>
+ <tkrat.c4793af298337eff@s5r6.in-berlin.de>
+ <4CCE271D.7040400@garzik.org>
+ <20101101135338.GA25817@basil.fritz.box>
+ <4CCEE33F.5030300@garzik.org>
+ <20101101175742.GG25817@basil.fritz.box>
+ <4CCF0A0C.3070209@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og108.obsmtp.com ([64.18.0.186]:44629 "HELO
-	exprod5og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753378Ab0KBOXg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2010 10:23:36 -0400
-In-Reply-To: <1285195867-11728-1-git-send-email-nab@linux-iscsi.org>
+Received: from one.firstfloor.org ([213.235.205.2]:55111 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752717Ab0KBPF6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2010 11:05:58 -0400
+Content-Disposition: inline
+In-Reply-To: <4CCF0A0C.3070209@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andi Kleen <andi@firstfloor.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-On 09/23/2010 12:51 AM, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Mon, Nov 01, 2010 at 02:42:20PM -0400, Jeff Garzik wrote:
+> On 11/01/2010 01:57 PM, Andi Kleen wrote:
+> >ssh://master.kernel.org/pub/scm/linux/kernel/git/ak/linux-misc-2.6 hostlock2
 > 
-> This patch adds the PSCSI subsystem plugin for accessing struct scsi_device
-> using struct request from upstream Linux/SCSI code.  This subsystem plugin
-> follows a passthrough design, and does not provide and control CDB emulation
-> for the registered struct scsi_device backstores.  This subsystem plugin also
-> allows the export of both TYPE_DISk and non TYPE_DISK struct scsi_devices.
-> 
-> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/target_core_pscsi.c | 1569 ++++++++++++++++++++++++++++++++++++
->  drivers/target/target_core_pscsi.h |   69 ++
->  2 files changed, 1638 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/target/target_core_pscsi.c
->  create mode 100644 drivers/target/target_core_pscsi.h
-> 
-> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-> new file mode 100644
-> index 0000000..60f825d
-> --- /dev/null
-> +++ b/drivers/target/target_core_pscsi.c
-> @@ -0,0 +1,1569 @@
-> +/*******************************************************************************
-> + * Filename:  target_core_pscsi.c
-> + *
-> + * This file contains the generic target mode <-> Linux SCSI subsystem plugin.
-> + *
-> + * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-> + * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-> + * Copyright (c) 2007-2010 Rising Tide Systems
-> + * Copyright (c) 2008-2010 Linux-iSCSI.org
-> + *
-> + * Nicholas A. Bellinger <nab@kernel.org>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation; either version 2 of the License, or
-> + * (at your option) any later version.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write to the Free Software
-> + * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-> + *
-> + ******************************************************************************/
-> +
-> +#include <linux/version.h>
-> +#include <linux/string.h>
-> +#include <linux/timer.h>
-> +#include <linux/blkdev.h>
-> +#include <linux/blk_types.h>
-> +#include <linux/slab.h>
-> +#include <linux/spinlock.h>
-> +#include <linux/smp_lock.h>
-> +#include <linux/genhd.h>
-> +#include <linux/cdrom.h>
-> +#include <linux/file.h>
-> +#include <scsi/scsi.h>
-> +#include <scsi/scsi_device.h>
-> +#include <scsi/scsi_cmnd.h>
-> +#include <scsi/scsi_host.h>
-> +
-> +#include <target/target_core_base.h>
-> +#include <target/target_core_device.h>
-> +#include <target/target_core_transport.h>
-> +
-> +#include "target_core_pscsi.h"
-> +
-> +#define ISPRINT(a)  ((a >= ' ') && (a <= '~'))
-> +
-> +static struct se_subsystem_api pscsi_template;
-> +
-> +static void pscsi_req_done(struct request *, int);
-> +static void __pscsi_get_dev_info(struct pscsi_dev_virt *, char *, int *);
-> +
-> +/*	pscsi_get_sh():
-> + *
-> + *
-> + */
-> +static struct Scsi_Host *pscsi_get_sh(u32 host_no)
-> +{
-> +	struct Scsi_Host *sh = NULL;
-> +
-> +	sh = scsi_host_lookup(host_no);
-> +	if (IS_ERR(sh)) {
-> +		printk(KERN_ERR "Unable to locate SCSI HBA with Host ID:"
-> +				" %u\n", host_no);
-> +		return NULL;
-> +	}
-> +
-> +	return sh;
-> +}
-> +
-> +/*	pscsi_attach_hba():
-> + *
-> + * 	pscsi_get_sh() used scsi_host_lookup() to locate struct Scsi_Host.
-> + *	from the passed SCSI Host ID.
-> + */
-> +static int pscsi_attach_hba(struct se_hba *hba, u32 host_id)
-> +{
-> +	int hba_depth;
-> +	struct pscsi_hba_virt *phv;
-> +
-> +	phv = kzalloc(sizeof(struct pscsi_hba_virt), GFP_KERNEL);
-> +	if (!(phv)) {
-> +		printk(KERN_ERR "Unable to allocate struct pscsi_hba_virt\n");
-> +		return -1;
-> +	}
-> +	phv->phv_host_id = host_id;
-> +	phv->phv_mode = PHV_VIRUTAL_HOST_ID;
-> +	hba_depth = PSCSI_VIRTUAL_HBA_DEPTH;
-> +	atomic_set(&hba->left_queue_depth, hba_depth);
-> +	atomic_set(&hba->max_queue_depth, hba_depth);
-> +
-> +	hba->hba_ptr = (void *)phv;
-> +
-> +	printk(KERN_INFO "CORE_HBA[%d] - TCM SCSI HBA Driver %s on"
-> +		" Generic Target Core Stack %s\n", hba->hba_id,
-> +		PSCSI_VERSION, TARGET_CORE_MOD_VERSION);
-> +	printk(KERN_INFO "CORE_HBA[%d] - Attached SCSI HBA to Generic"
-> +		" Target Core with TCQ Depth: %d\n", hba->hba_id,
-> +		atomic_read(&hba->max_queue_depth));
-> +
-> +	return 0;
-> +}
-> +
-> +/*	pscsi_detach_hba(): (Part of se_subsystem_api_t template)
-> + *
-> + *
-> + */
-> +static int pscsi_detach_hba(struct se_hba *hba)
-> +{
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)hba->hba_ptr;
-> +	struct Scsi_Host *scsi_host = phv->phv_lld_host;
-> +
-> +	if (scsi_host) {
-> +		scsi_host_put(scsi_host);
-> +
-> +		printk(KERN_INFO "CORE_HBA[%d] - Detached SCSI HBA: %s from"
-> +			" Generic Target Core\n", hba->hba_id,
-> +			(scsi_host->hostt->name) ? (scsi_host->hostt->name) :
-> +			"Unknown");
-> +	} else
-> +		printk(KERN_INFO "CORE_HBA[%d] - Detached Virtual SCSI HBA"
-> +			" from Generic Target Core\n", hba->hba_id);
-> +
-> +	kfree(phv);
-> +	hba->hba_ptr = NULL;
-> +
-> +	return 0;
-> +}
-> +
-> +static int pscsi_pmode_enable_hba(struct se_hba *hba, unsigned long mode_flag)
-> +{
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)hba->hba_ptr;
-> +	struct Scsi_Host *sh = phv->phv_lld_host;
-> +	int hba_depth = PSCSI_VIRTUAL_HBA_DEPTH;
-> +	/*
-> +	 * Release the struct Scsi_Host
-> +	 */
-> +	if (!(mode_flag)) {
-> +		if (!(sh))
-> +			return 0;
-> +
-> +		phv->phv_lld_host = NULL;
-> +		phv->phv_mode = PHV_VIRUTAL_HOST_ID;
-> +		atomic_set(&hba->left_queue_depth, hba_depth);
-> +		atomic_set(&hba->max_queue_depth, hba_depth);
-> +
-> +		printk(KERN_INFO "CORE_HBA[%d] - Disabled pSCSI HBA Passthrough"
-> +			" %s\n", hba->hba_id, (sh->hostt->name) ?
-> +			(sh->hostt->name) : "Unknown");
-> +
-> +		scsi_host_put(sh);
-> +		return 0;
-> +	}
-> +	/*
-> +	 * Otherwise, locate struct Scsi_Host from the original passed
-> +	 * pSCSI Host ID and enable for phba mode
-> +	 */
-> +	sh = pscsi_get_sh(phv->phv_host_id);
-> +	if (!(sh)) {
-> +		printk(KERN_ERR "pSCSI: Unable to locate SCSI Host for"
-> +			" phv_host_id: %d\n", phv->phv_host_id);
-> +		return -1;
-> +	}
-> +	/*
-> +	 * Usually the SCSI LLD will use the hostt->can_queue value to define
-> +	 * its HBA TCQ depth.  Some other drivers (like 2.6 megaraid) don't set
-> +	 * this at all and set sh->can_queue at runtime.
-> +	 */
-> +	hba_depth = (sh->hostt->can_queue > sh->can_queue) ?
-> +		sh->hostt->can_queue : sh->can_queue;
-> +
-> +	atomic_set(&hba->left_queue_depth, hba_depth);
-> +	atomic_set(&hba->max_queue_depth, hba_depth);
-> +
-> +	phv->phv_lld_host = sh;
-> +	phv->phv_mode = PHV_LLD_SCSI_HOST_NO;
-> +
-> +	printk(KERN_INFO "CORE_HBA[%d] - Enabled pSCSI HBA Passthrough %s\n",
-> +		hba->hba_id, (sh->hostt->name) ? (sh->hostt->name) : "Unknown");
-> +
-> +	return 1;
-> +}
-> +
-> +/*	pscsi_add_device_to_list():
-> + *
-> + *
-> + */
-> +static struct se_device *pscsi_add_device_to_list(
-> +	struct se_hba *hba,
-> +	struct se_subsystem_dev *se_dev,
-> +	struct pscsi_dev_virt *pdv,
-> +	struct scsi_device *sd,
-> +	int dev_flags)
-> +{
-> +	struct se_device *dev;
-> +
-> +	/*
-> +	 * Some pseudo SCSI HBAs do not fill in sector_size
-> +	 * correctly. (See ide-scsi.c)  So go ahead and setup sane
-> +	 * values.
-> +	 */
-> +	if (!sd->sector_size) {
-> +		switch (sd->type) {
-> +		case TYPE_DISK:
-> +			sd->sector_size = 512;
-> +			break;
-> +		case TYPE_ROM:
-> +			sd->sector_size = 2048;
-> +			break;
-> +		case TYPE_TAPE: /* The Tape may not be in the drive */
-> +			break;
-> +		case TYPE_MEDIUM_CHANGER: /* Control CDBs only */
-> +			break;
-> +		default:
-> +			printk(KERN_ERR "Unable to set sector_size for %d\n",
-> +					sd->type);
-> +			return NULL;
+> FYI there is a merge conflict, when pulling this into current upstream:
 
-What about sector-less devices? OSD, Scanners, printers ...
-+		default:
-+			break;
 
-> +		}
-> +
-> +		if (sd->sector_size) {
-> +			printk(KERN_ERR "Set broken SCSI Device"
-> +				" %d:%d:%d sector_size to %d\n", sd->channel,
-> +				sd->id, sd->lun, sd->sector_size);
-> +		}
-> +	}
-> +
-> +	if (!sd->queue_depth) {
-> +		sd->queue_depth = PSCSI_DEFAULT_QUEUEDEPTH;
-> +
-> +		printk(KERN_ERR "Set broken SCSI Device %d:%d:%d"
-> +			" queue_depth to %d\n", sd->channel, sd->id,
-> +				sd->lun, sd->queue_depth);
-> +	}
-> +	/*
-> +	 * Set the pointer pdv->pdv_sd to from passed struct scsi_device,
-> +	 * which has already been referenced with Linux SCSI code with
-> +	 * scsi_device_get() in this file's pscsi_create_virtdevice().
-> +	 *
-> +	 * The passthrough operations called by the transport_add_device_*
-> +	 * function below will require this pointer to be set for passthroug
-> +	 *  ops.
-> +	 *
-> +	 * For the shutdown case in pscsi_free_device(), this struct
-> +	 * scsi_device  reference is released with Linux SCSI code
-> +	 * scsi_device_put() and the pdv->pdv_sd cleared.
-> +	 */
-> +	pdv->pdv_sd = sd;
-> +
-> +	dev = transport_add_device_to_core_hba(hba, &pscsi_template,
-> +				se_dev, dev_flags, (void *)pdv);
-> +	if (!(dev)) {
-> +		pdv->pdv_sd = NULL;
-> +		return NULL;
-> +	}
-> +
-> +	/*
-> +	 * For TYPE_TAPE, attempt to determine blocksize with MODE_SENSE.
-> +	 */
-> +	if (sd->type == TYPE_TAPE) {
+Good catch. I pushed out a new tree latest with Linus' latest.
+Pull and patch appended again.
 
-Just as a future note:
-One of the things I'm missing from LIO is the notion of SCSI_TYPE or SCSI
-class. So things like this can be done in a plugin manner as per TYPE
-Like in the Kernel we have the ULDs for that.
+-Andi
 
-> +		unsigned char *buf = NULL, cdb[MAX_COMMAND_SIZE];
-> +		struct se_cmd *cmd;
-> +		u32 blocksize;
-> +
-> +		memset(cdb, 0, MAX_COMMAND_SIZE);
-> +		cdb[0] = MODE_SENSE;
-> +		cdb[4] = 0x0c; /* 12 bytes */
-> +
-> +		cmd = transport_allocate_passthrough(&cdb[0],
-> +				DMA_FROM_DEVICE, 0, NULL, 0, 12, dev);
-> +		if (!(cmd)) {
-> +			printk(KERN_ERR "Unable to determine blocksize for"
-> +				" TYPE_TAPE\n");
-> +			goto out;
-> +		}
-> +
-> +		if (transport_generic_passthrough(cmd) < 0) {
-> +			printk(KERN_ERR "Unable to determine blocksize for"
-> +				" TYPE_TAPE\n");
-> +			goto out;
-> +		}
-> +
-> +		buf = (unsigned char *)T_TASK(cmd)->t_task_buf;
-> +		blocksize = (buf[9] << 16) | (buf[10] << 8) | (buf[11]);
-> +
-> +		/*
-> +		 * If MODE_SENSE still returns zero, set the default value
-> +		 * to 1024.
-> +		 */
-> +		sd->sector_size = blocksize;
-> +		if (!(sd->sector_size))
-> +			sd->sector_size = 1024;
-> +
-> +		transport_passthrough_release(cmd);
-> +	}
-> +out:
-> +	return dev;
-> +}
-> +
-> +static void *pscsi_allocate_virtdevice(struct se_hba *hba, const char *name)
-> +{
-> +	struct pscsi_dev_virt *pdv;
-> +
-> +	pdv = kzalloc(sizeof(struct pscsi_dev_virt), GFP_KERNEL);
-> +	if (!(pdv)) {
-> +		printk(KERN_ERR "Unable to allocate memory for struct pscsi_dev_virt\n");
-> +		return NULL;
-> +	}
-> +	pdv->pdv_se_hba = hba;
-> +
-> +	printk(KERN_INFO "PSCSI: Allocated pdv: %p for %s\n", pdv, name);
-> +	return (void *)pdv;
-> +}
-> +
-> +/*
-> + * Called with struct Scsi_Host->host_lock called.
-> + */
-> +static struct se_device *pscsi_create_type_disk(
-> +	struct scsi_device *sd,
-> +	struct pscsi_dev_virt *pdv,
-> +	struct se_subsystem_dev *se_dev,
-> +	struct se_hba *hba)
-> +{
-> +	struct se_device *dev;
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)pdv->pdv_se_hba->hba_ptr;
-> +	struct Scsi_Host *sh = sd->host;
-> +	struct block_device *bd;
-> +	u32 dev_flags = 0;
-> +
-> +	if (scsi_device_get(sd)) {
-> +		printk(KERN_ERR "scsi_device_get() failed for %d:%d:%d:%d\n",
-> +			sh->host_no, sd->channel, sd->id, sd->lun);
-> +		spin_unlock_irq(sh->host_lock);
-> +		return NULL;
-> +	}
-> +	spin_unlock_irq(sh->host_lock);
-> +	/*
-> +	 * Claim exclusive struct block_device access to struct scsi_device
-> +	 * for TYPE_DISK using supplied udev_path
-> +	 */
-> +	bd = open_bdev_exclusive(se_dev->se_dev_udev_path,
-> +				FMODE_WRITE|FMODE_READ, pdv);
-> +	if (!(bd)) {
-> +		printk("pSCSI: open_bdev_exclusive() failed\n");
-> +		scsi_device_put(sd);
-> +		return NULL;
-> +	}
-> +	pdv->pdv_bd = bd;
-> +
-> +	dev = pscsi_add_device_to_list(hba, se_dev, pdv, sd, dev_flags);
-> +	if (!(dev)) {
-> +		close_bdev_exclusive(pdv->pdv_bd, FMODE_WRITE|FMODE_READ);
-> +		scsi_device_put(sd);
-> +		return NULL;
-> +	}
-> +	printk(KERN_INFO "CORE_PSCSI[%d] - Added TYPE_DISK for %d:%d:%d:%d\n",
-> +		phv->phv_host_id, sh->host_no, sd->channel, sd->id, sd->lun);
-> +
-> +	return dev;
-> +}
-> +
-> +/*
-> + * Called with struct Scsi_Host->host_lock called.
-> + */
-> +static struct se_device *pscsi_create_type_rom(
-> +	struct scsi_device *sd,
-> +	struct pscsi_dev_virt *pdv,
-> +	struct se_subsystem_dev *se_dev,
-> +	struct se_hba *hba)
-> +{
-> +	struct se_device *dev;
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)pdv->pdv_se_hba->hba_ptr;
-> +	struct Scsi_Host *sh = sd->host;
-> +	u32 dev_flags = 0;
-> +
-> +	if (scsi_device_get(sd)) {
-> +		printk(KERN_ERR "scsi_device_get() failed for %d:%d:%d:%d\n",
-> +			sh->host_no, sd->channel, sd->id, sd->lun);
-> +		spin_unlock_irq(sh->host_lock);
-> +		return NULL;
-> +	}
-> +	spin_unlock_irq(sh->host_lock);
-> +
-> +	dev = pscsi_add_device_to_list(hba, se_dev, pdv, sd, dev_flags);
-> +	if (!(dev)) {
-> +		scsi_device_put(sd);
-> +		return NULL;
-> +	}
-> +	printk(KERN_INFO "CORE_PSCSI[%d] - Added Type: %s for %d:%d:%d:%d\n",
-> +		phv->phv_host_id, scsi_device_type(sd->type), sh->host_no,
-> +		sd->channel, sd->id, sd->lun);
-> +
-> +	return dev;
-> +}
-> +
-> +/*
-> + *Called with struct Scsi_Host->host_lock called.
-> + */
-> +static struct se_device *pscsi_create_type_other(
-> +	struct scsi_device *sd,
-> +	struct pscsi_dev_virt *pdv,
-> +	struct se_subsystem_dev *se_dev,
-> +	struct se_hba *hba)
-> +{
-> +	struct se_device *dev;
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)pdv->pdv_se_hba->hba_ptr;
-> +	struct Scsi_Host *sh = sd->host;
-> +	u32 dev_flags = 0;
-> +
-> +	spin_unlock_irq(sh->host_lock);
-> +	dev = pscsi_add_device_to_list(hba, se_dev, pdv, sd, dev_flags);
-> +	if (!(dev))
-> +		return NULL;
-> +
-> +	printk(KERN_INFO "CORE_PSCSI[%d] - Added Type: %s for %d:%d:%d:%d\n",
-> +		phv->phv_host_id, scsi_device_type(sd->type), sh->host_no,
-> +		sd->channel, sd->id, sd->lun);
-> +
-> +	return dev;
-> +}
-> +
-> +static struct se_device *pscsi_create_virtdevice(
-> +	struct se_hba *hba,
-> +	struct se_subsystem_dev *se_dev,
-> +	void *p)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *)p;
-> +	struct se_device *dev;
-> +	struct scsi_device *sd;
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)hba->hba_ptr;
-> +	struct Scsi_Host *sh = phv->phv_lld_host;
-> +	int legacy_mode_enable = 0;
-> +
-> +	if (!(pdv)) {
-> +		printk(KERN_ERR "Unable to locate struct pscsi_dev_virt"
-> +				" parameter\n");
-> +		return NULL;
-> +	}
-> +	/*
-> +	 * If not running in PHV_LLD_SCSI_HOST_NO mode, locate the
-> +	 * struct Scsi_Host we will need to bring the TCM/pSCSI object online
-> +	 */
-> +	if (!(sh)) {
-> +		if (phv->phv_mode == PHV_LLD_SCSI_HOST_NO) {
-> +			printk(KERN_ERR "pSCSI: Unable to locate struct"
-> +				" Scsi_Host for PHV_LLD_SCSI_HOST_NO\n");
-> +			return NULL;
-> +		}
-> +		/*
-> +		 * For the newer PHV_VIRUTAL_HOST_ID struct scsi_device
-> +		 * reference, we enforce that udev_path has been set
-> +		 */
-> +		if (!(se_dev->su_dev_flags & SDF_USING_UDEV_PATH)) {
-> +			printk(KERN_ERR "pSCSI: udev_path attribute has not"
-> +				" been set before ENABLE=1\n");
-> +			return NULL;
-> +		}
-> +		/*
-> +		 * If no scsi_host_id= was passed for PHV_VIRUTAL_HOST_ID,
-> +		 * use the original TCM hba ID to reference Linux/SCSI Host No
-> +		 * and enable for PHV_LLD_SCSI_HOST_NO mode.
-> +		 */
-> +		if (!(pdv->pdv_flags & PDF_HAS_VIRT_HOST_ID)) {
-> +			spin_lock(&hba->device_lock);
-> +			if (!(list_empty(&hba->hba_dev_list))) {
-> +				printk(KERN_ERR "pSCSI: Unable to set hba_mode"
-> +					" with active devices\n");
-> +				spin_unlock(&hba->device_lock);
-> +				return NULL;
-> +			}
-> +			spin_unlock(&hba->device_lock);
-> +
-> +			if (pscsi_pmode_enable_hba(hba, 1) != 1)
-> +				return NULL;
-> +
-> +			legacy_mode_enable = 1;
-> +			hba->hba_flags |= HBA_FLAGS_PSCSI_MODE;
-> +			sh = phv->phv_lld_host;
-> +		} else {
-> +			sh = pscsi_get_sh(pdv->pdv_host_id);
-> +			if (!(sh)) {
-> +				printk(KERN_ERR "pSCSI: Unable to locate"
-> +					" pdv_host_id: %d\n", pdv->pdv_host_id);
-> +				return NULL;
-> +			}
-> +		}
-> +	} else {
-> +		if (phv->phv_mode == PHV_VIRUTAL_HOST_ID) {
-> +			printk(KERN_ERR "pSCSI: PHV_VIRUTAL_HOST_ID set while"
-> +				" struct Scsi_Host exists\n");
-> +			return NULL;
-> +		}
-> +	}
-> +
-> +	spin_lock_irq(sh->host_lock);
-> +	list_for_each_entry(sd, &sh->__devices, siblings) {
-> +		if ((pdv->pdv_channel_id != sd->channel) ||
-> +		    (pdv->pdv_target_id != sd->id) ||
-> +		    (pdv->pdv_lun_id != sd->lun))
-> +			continue;
-> +		/*
-> +		 * Functions will release the held struct scsi_host->host_lock
-> +		 * before calling calling pscsi_add_device_to_list() to register
-> +		 * struct scsi_device with target_core_mod.
-> +		 */
-> +		switch (sd->type) {
-> +		case TYPE_DISK:
-> +			dev = pscsi_create_type_disk(sd, pdv, se_dev, hba);
-> +			break;
-> +		case TYPE_ROM:
-> +			dev = pscsi_create_type_rom(sd, pdv, se_dev, hba);
-> +			break;
-> +		default:
-> +			dev = pscsi_create_type_other(sd, pdv, se_dev, hba);
-> +			break;
-> +		}
-> +
-> +		if (!(dev)) {
-> +			if (phv->phv_mode == PHV_VIRUTAL_HOST_ID)
-> +				scsi_host_put(sh);
-> +			else if (legacy_mode_enable) {
-> +				pscsi_pmode_enable_hba(hba, 0);
-> +				hba->hba_flags &= ~HBA_FLAGS_PSCSI_MODE;
-> +			}
-> +			pdv->pdv_sd = NULL;
-> +			return NULL;
-> +		}
-> +		return dev;
-> +	}
-> +	spin_unlock_irq(sh->host_lock);
-> +
-> +	printk(KERN_ERR "pSCSI: Unable to locate %d:%d:%d:%d\n", sh->host_no,
-> +		pdv->pdv_channel_id,  pdv->pdv_target_id, pdv->pdv_lun_id);
-> +
-> +	if (phv->phv_mode == PHV_VIRUTAL_HOST_ID)
-> +		scsi_host_put(sh);
-> +	else if (legacy_mode_enable) {
-> +		pscsi_pmode_enable_hba(hba, 0);
-> +		hba->hba_flags &= ~HBA_FLAGS_PSCSI_MODE;
-> +	}
-> +
-> +	return NULL;
-> +}
-> +
-> +/*	pscsi_activate_device(): (Part of se_subsystem_api_t template)
-> + *
-> + *
-> + */
-> +static int pscsi_activate_device(struct se_device *dev)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) dev->dev_ptr;
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *) pdv->pdv_se_hba->hba_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +	struct Scsi_Host *sh = sd->host;
-> +
-> +	printk(KERN_INFO "CORE_PSCSI[%d] - Activating Device with TCQ: %d at"
-> +		" SCSI Location (Host/Channel/Target/LUN) %d/%d/%d/%d\n",
-> +		phv->phv_host_id, sd->queue_depth, sh->host_no, sd->channel,
-> +		sd->id, sd->lun);
-> +
-> +	return 0;
-> +}
-> +
-> +/*	pscsi_deactivate_device(): (Part of se_subsystem_api_t template)
-> + *
-> + *
-> + */
-> +static void pscsi_deactivate_device(struct se_device *dev)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) dev->dev_ptr;
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *) pdv->pdv_se_hba->hba_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +	struct Scsi_Host *sh = sd->host;
-> +
-> +	printk(KERN_INFO "CORE_PSCSI[%d] - Deactivating Device with TCQ: %d at"
-> +		" SCSI Location (Host/Channel/Target/LUN) %d/%d/%d/%d\n",
-> +		phv->phv_host_id, sd->queue_depth, sh->host_no, sd->channel,
-> +		sd->id, sd->lun);
-> +}
-> +
-> +/*	pscsi_free_device(): (Part of se_subsystem_api_t template)
-> + *
-> + *
-> + */
-> +static void pscsi_free_device(void *p)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) p;
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *) pdv->pdv_se_hba->hba_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +
-> +	if (sd) {
-> +		/*
-> +		 * Release exclusive pSCSI internal struct block_device claim for
-> +		 * struct scsi_device with TYPE_DISK from pscsi_create_type_disk()
-> +		 */
-> +		if ((sd->type == TYPE_DISK) && pdv->pdv_bd) {
-> +        		close_bdev_exclusive(pdv->pdv_bd,
-> +					FMODE_WRITE|FMODE_READ);
-> +			pdv->pdv_bd = NULL;
-> +		}
-> +		/*
-> +		 * For HBA mode PHV_LLD_SCSI_HOST_NO, release the reference
-> +		 * to struct Scsi_Host now.
-> +		 */
-> +		if ((phv->phv_mode == PHV_LLD_SCSI_HOST_NO) &&
-> +		    (phv->phv_lld_host != NULL))
-> +			scsi_host_put(phv->phv_lld_host);
-> +
-> +		if ((sd->type == TYPE_DISK) || (sd->type == TYPE_ROM))
-> +			scsi_device_put(sd);
-> +
-> +		pdv->pdv_sd = NULL;
-> +	}
-> +
-> +	kfree(pdv);
-> +}
-> +
-> +/*	pscsi_transport_complete():
-> + *
-> + *
-> + */
-> +static int pscsi_transport_complete(struct se_task *task)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) task->se_dev->dev_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +	int result;
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +	unsigned char *cdb = &pt->pscsi_cdb[0];
-> +
-> +	result = pt->pscsi_result;
-> +	/*
-> +	 * Hack to make sure that Write-Protect modepage is set if R/O mode is
-> +	 * forced.
-> +	 */
-> +	if (((cdb[0] == MODE_SENSE) || (cdb[0] == MODE_SENSE_10)) &&
-> +	     (status_byte(result) << 1) == SAM_STAT_GOOD) {
-> +		if (!TASK_CMD(task)->se_deve)
-> +			goto after_mode_sense;
-> +
-> +		if (TASK_CMD(task)->se_deve->lun_flags &
-> +				TRANSPORT_LUNFLAGS_READ_ONLY) {
-> +			unsigned char *buf = (unsigned char *)
-> +				T_TASK(task->task_se_cmd)->t_task_buf;
-> +
-> +			if (cdb[0] == MODE_SENSE_10) {
-> +				if (!(buf[3] & 0x80))
-> +					buf[3] |= 0x80;
-> +			} else {
-> +				if (!(buf[2] & 0x80))
-> +					buf[2] |= 0x80;
-> +			}
-> +		}
-> +	}
-> +after_mode_sense:
-> +
-> +	if (sd->type != TYPE_TAPE)
-> +		goto after_mode_select;
-> +
-> +	/*
-> +	 * Hack to correctly obtain the initiator requested blocksize for
-> +	 * TYPE_TAPE.  Since this value is dependent upon each tape media,
-> +	 * struct scsi_device->sector_size will not contain the correct value
-> +	 * by default, so we go ahead and set it so
-> +	 * TRANSPORT(dev)->get_blockdev() returns the correct value to the
-> +	 * storage engine.
-> +	 */
-> +	if (((cdb[0] == MODE_SELECT) || (cdb[0] == MODE_SELECT_10)) &&
-> +	      (status_byte(result) << 1) == SAM_STAT_GOOD) {
-> +		unsigned char *buf;
-> +		struct scatterlist *sg = task->task_sg;
-> +		u16 bdl;
-> +		u32 blocksize;
-> +
-> +		buf = sg_virt(&sg[0]);
-> +		if (!(buf)) {
-> +			printk(KERN_ERR "Unable to get buf for scatterlist\n");
-> +			goto after_mode_select;
-> +		}
-> +
-> +		if (cdb[0] == MODE_SELECT)
-> +			bdl = (buf[3]);
-> +		else
-> +			bdl = (buf[6] << 8) | (buf[7]);
-> +
-> +		if (!bdl)
-> +			goto after_mode_select;
-> +
-> +		if (cdb[0] == MODE_SELECT)
-> +			blocksize = (buf[9] << 16) | (buf[10] << 8) |
-> +					(buf[11]);
-> +		else
-> +			blocksize = (buf[13] << 16) | (buf[14] << 8) |
-> +					(buf[15]);
-> +
-> +		sd->sector_size = blocksize;
-> +	}
-> +after_mode_select:
-> +
-> +	if (status_byte(result) & CHECK_CONDITION)
-> +		return 1;
-> +
-> +	return 0;
-> +}
-> +
-> +/*	pscsi_allocate_request(): (Part of se_subsystem_api_t template)
-> + *
-> + *
-> + */
-> +static void *pscsi_allocate_request(
-> +	struct se_task *task,
-> +	struct se_device *dev)
-> +{
-> +	struct pscsi_plugin_task *pt;
-> +
-> +	pt = kzalloc(sizeof(struct pscsi_plugin_task), GFP_KERNEL);
-> +	if (!(pt)) {
-> +		printk(KERN_ERR "Unable to allocate struct pscsi_plugin_task\n");
-> +		return NULL;
-> +	}
-> +
-> +	return pt;
-> +}
-> +
-> +static inline void pscsi_blk_init_request(
-> +	struct se_task *task,
-> +	struct pscsi_plugin_task *pt,
-> +	struct request *req,
-> +	int bidi_read)
-> +{
-> +	/*
-> +	 * Defined as "scsi command" in include/linux/blkdev.h.
-> +	 */
-> +	req->cmd_type = REQ_TYPE_BLOCK_PC;
-> +	/*
-> +	 * For the extra BIDI-COMMAND READ struct request we do not
-> +	 * need to setup the remaining structure members
-> +	 */
-> +	if (bidi_read)
-> +		return;
-> +	/*
-> +	 * Setup the done function pointer for struct request,
-> +	 * also set the end_io_data pointer.to struct se_task.
-> +	 */
-> +	req->end_io = pscsi_req_done;
-> +	req->end_io_data = (void *)task;
-> +	/*
-> +	 * Load the referenced struct se_task's SCSI CDB into
-> +	 * include/linux/blkdev.h:struct request->cmd
-> +	 */
-> +	req->cmd_len = scsi_command_size(pt->pscsi_cdb);
-> +	req->cmd = &pt->pscsi_cdb[0];
 
-Here!   req->cmd = TASK_CMD(task)->t_task_cdb;
+The following changes since commit 7fe19da4ca38fc20cdbc7020fcf2eca8fc756410:
 
-I don't see in this patch the actual memcpy of TASK_CMD(task)->t_task_cdb into
-pt->pscsi_cdb, which I suspect is done in Generic code through the use of
-->get_cdb(struct se_task *);?
+  preempt: fix kernel build with !CONFIG_BKL (2010-11-02 08:39:13 -0400)
 
-If so then it means all the plugins have their own copy of the CDB? Now I finally
-understand the get_max_cdb_len().
+are available in the git repository at:
+  ssh://master.kernel.org/pub/scm/linux/kernel/git/ak/linux-misc-2.6 hostlock2
 
-All that could be totally clean. All plugins use the TASK_CMD(task)->t_task_cdb
-directly. Then get_max_cdb_len(), get_cdb(), the memcpy() and all these extra buffers
-just magically go away.
+Andi Kleen (2):
+      SCSI: The great hostlock pushdown
+      SCSI: aha1740: Avoid instant deadlock
 
-> +	/*
-> +	 * Setup pointer for outgoing sense data.
-> +	 */
-> +	req->sense = (void *)&pt->pscsi_sense[0];
+ Documentation/scsi/scsi_mid_low_api.txt |    8 ++++++--
+ arch/ia64/hp/sim/simscsi.c              |    7 +++++++
+ drivers/ata/libata-scsi.c               |    6 +++++-
+ drivers/block/cciss_scsi.c              |    6 ++++++
+ drivers/firewire/sbp2.c                 |    6 ++++++
+ drivers/infiniband/ulp/srp/ib_srp.c     |    6 ++++++
+ drivers/message/fusion/mptfc.c          |    7 +++++++
+ drivers/message/fusion/mptsas.c         |    9 ++++++++-
+ drivers/message/fusion/mptspi.c         |    6 ++++++
+ drivers/message/i2o/i2o_scsi.c          |    5 +++++
+ drivers/s390/scsi/zfcp_scsi.c           |    8 ++++++++
+ drivers/scsi/3w-9xxx.c                  |    4 ++++
+ drivers/scsi/3w-sas.c                   |    4 ++++
+ drivers/scsi/3w-xxxx.c                  |    4 ++++
+ drivers/scsi/53c700.c                   |    7 +++++++
+ drivers/scsi/BusLogic.c                 |    7 +++++++
+ drivers/scsi/NCR5380.c                  |    6 ++++++
+ drivers/scsi/NCR53c406a.c               |    4 ++++
+ drivers/scsi/a100u2w.c                  |    9 ++++++++-
+ drivers/scsi/aacraid/linit.c            |   15 ++++++++++++---
+ drivers/scsi/advansys.c                 |    4 ++++
+ drivers/scsi/aha152x.c                  |   10 +++++++++-
+ drivers/scsi/aha1542.c                  |   12 ++++++++++--
+ drivers/scsi/aha1740.c                  |   11 +++++++++++
+ drivers/scsi/aic7xxx/aic79xx_osm.c      |    4 ++++
+ drivers/scsi/aic7xxx/aic7xxx_osm.c      |    4 ++++
+ drivers/scsi/aic7xxx_old.c              |    5 +++++
+ drivers/scsi/arcmsr/arcmsr_hba.c        |   19 ++++++++++++++++---
+ drivers/scsi/arm/acornscsi.c            |    6 ++++++
+ drivers/scsi/arm/fas216.c               |    8 ++++++++
+ drivers/scsi/atp870u.c                  |    8 ++++++++
+ drivers/scsi/bfa/bfad_im.c              |   11 ++++++++++-
+ drivers/scsi/dc395x.c                   |    7 +++++++
+ drivers/scsi/dpt_i2o.c                  |    9 +++++++++
+ drivers/scsi/eata.c                     |    7 +++++++
+ drivers/scsi/eata_pio.c                 |    5 +++++
+ drivers/scsi/esp_scsi.c                 |    8 +++++++-
+ drivers/scsi/fd_mcs.c                   |    4 ++++
+ drivers/scsi/fdomain.c                  |    4 ++++
+ drivers/scsi/fnic/fnic_scsi.c           |    9 ++++++++-
+ drivers/scsi/gdth.c                     |    4 ++++
+ drivers/scsi/hpsa.c                     |    7 +++++++
+ drivers/scsi/hptiop.c                   |    6 ++++++
+ drivers/scsi/ibmmca.c                   |   12 ++++++++++++
+ drivers/scsi/ibmvscsi/ibmvfc.c          |   13 +++++++++++--
+ drivers/scsi/ibmvscsi/ibmvscsi.c        |    9 ++++++++-
+ drivers/scsi/imm.c                      |    5 +++++
+ drivers/scsi/in2000.c                   |    4 ++++
+ drivers/scsi/initio.c                   |    8 +++++++-
+ drivers/scsi/ipr.c                      |   17 ++++++++++++++---
+ drivers/scsi/ips.c                      |   18 ++++++++++++++++--
+ drivers/scsi/libfc/fc_fcp.c             |    5 +++++
+ drivers/scsi/libiscsi.c                 |    7 +++++++
+ drivers/scsi/libsas/sas_scsi_host.c     |    4 ++++
+ drivers/scsi/lpfc/lpfc_scsi.c           |    7 +++++++
+ drivers/scsi/mac53c94.c                 |    4 ++++
+ drivers/scsi/megaraid.c                 |    4 ++++
+ drivers/scsi/megaraid/megaraid_mbox.c   |    5 +++++
+ drivers/scsi/megaraid/megaraid_sas.c    |   14 ++++++++++++--
+ drivers/scsi/mesh.c                     |    4 ++++
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c    |   17 +++++++++++++++--
+ drivers/scsi/ncr53c8xx.c                |    4 ++++
+ drivers/scsi/nsp32.c                    |    8 ++++++++
+ drivers/scsi/pcmcia/nsp_cs.c            |    6 ++++++
+ drivers/scsi/pcmcia/sym53c500_cs.c      |    4 ++++
+ drivers/scsi/pmcraid.c                  |   11 ++++++++++-
+ drivers/scsi/ppa.c                      |    5 +++++
+ drivers/scsi/ps3rom.c                   |    4 ++++
+ drivers/scsi/qla1280.c                  |    4 ++++
+ drivers/scsi/qla2xxx/qla_os.c           |    7 +++++++
+ drivers/scsi/qla4xxx/ql4_os.c           |    7 +++++++
+ drivers/scsi/qlogicfas408.c             |    4 ++++
+ drivers/scsi/qlogicpti.c                |    5 +++++
+ drivers/scsi/scsi.c                     |   15 +++------------
+ drivers/scsi/stex.c                     |   20 ++++++++++++++++++--
+ drivers/scsi/sun3_NCR5380.c             |    8 ++++++++
+ drivers/scsi/sym53c416.c                |    4 ++++
+ drivers/scsi/sym53c8xx_2/sym_glue.c     |   12 ++++++++++--
+ drivers/scsi/tmscsim.c                  |    5 +++++
+ drivers/scsi/u14-34f.c                  |    7 +++++++
+ drivers/scsi/ultrastor.c                |    7 +++++++
+ drivers/scsi/vmw_pvscsi.c               |    5 +++++
+ drivers/scsi/wd33c93.c                  |    6 +++++-
+ drivers/scsi/wd7000.c                   |    4 ++++
+ drivers/staging/hv/storvsc_drv.c        |    8 ++++++++
+ drivers/usb/image/microtek.c            |    4 ++++
+ drivers/usb/storage/scsiglue.c          |    6 ++++++
+ drivers/usb/storage/uas.c               |    9 ++++++++-
+ include/scsi/scsi_host.h                |    1 +
+ 89 files changed, 604 insertions(+), 49 deletions(-)
 
-What about sense Surly that is generic just as cdb is. Could you use the
-task's sense?
 
-> +	req->sense_len = 0;
-> +}
-> +
-> +/*
-> + * Used for pSCSI data payloads for all *NON* SCF_SCSI_DATA_SG_IO_CDB
-> +*/
-> +static int pscsi_blk_get_request(struct se_task *task)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) task->se_dev->dev_ptr;
-> +
-> +	pt->pscsi_req = blk_get_request(pdv->pdv_sd->request_queue,
-> +			(pt->pscsi_direction == DMA_TO_DEVICE), GFP_KERNEL);
-> +	if (!(pt->pscsi_req) || IS_ERR(pt->pscsi_req)) {
-> +		printk(KERN_ERR "PSCSI: blk_get_request() failed: %ld\n",
-> +				IS_ERR(pt->pscsi_req));
-> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
-> +	}
-> +	/*
-> +	 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
-> +	 * and setup rq callback, CDB and sense.
-> +	 */
-> +	pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
-> +	return 0;
-> +}
-> +
-> +/*      pscsi_do_task(): (Part of se_subsystem_api_t template)
-> + *
-> + *
-> + */
-> +static int pscsi_do_task(struct se_task *task)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) task->se_dev->dev_ptr;
-> +	/*
-> +	 * Set the struct request->timeout value based on peripheral
-> +	 * device type from SCSI.
-> +	 */
-> +	if (pdv->pdv_sd->type == TYPE_DISK)
-> +		pt->pscsi_req->timeout = PS_TIMEOUT_DISK;
-> +	else
-> +		pt->pscsi_req->timeout = PS_TIMEOUT_OTHER;
-> +
-> +	pt->pscsi_req->retries = PS_RETRY;
-> +	/*
-> +	 * Queue the struct request into the struct scsi_device->request_queue.
-> +	 */
-> +	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, NULL,
-> +			      pt->pscsi_req, 1, pscsi_req_done);
-> +
+>From 3e8b6ea8f4ad49f820f4cf7a1be28a8f71e9cfc0 Mon Sep 17 00:00:00 2001
+From: Andi Kleen <ak@linux.intel.com>
+Date: Thu, 28 Oct 2010 12:02:20 +0200
+Subject: [PATCH] SCSI: The great hostlock pushdown
 
-/**
- * blk_execute_rq_nowait - insert a request into queue for execution
- * @q:		queue to insert the request in
- * @bd_disk:	matching gendisk
- * @rq:		request to insert
- * @at_head:    insert request at head or tail of queue
- * @done:	I/O completion handler
- *
+This patch globally pushes down the host_lock taking and the
+serial number setup into SCSI driver's queuecommand
 
-Surly you did not mean to use at_head==1? That is a very bad BUG. I bet
-this plugin was never heavily used.
+This is all done in a global atomic patchkit to allow bisectability.
 
-> +	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
-> +}
-> +
-> +/*	pscsi_free_task(): (Part of se_subsystem_api_t template)
-> + *
-> + *
-> + */
-> +static void pscsi_free_task(struct se_task *task)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *)task->transport_req;
-> +	/*
-> +	 * We do not release the bio(s) here associated with this task, as
-> +	 * this is handled by bio_put() and pscsi_bi_endio().
-> +	 */
-> +	kfree(pt);
-> +}
-> +
-> +static ssize_t pscsi_set_configfs_dev_params(struct se_hba *hba,
-> +	struct se_subsystem_dev *se_dev,
-> +	const char *page,
-> +	ssize_t count)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) se_dev->se_dev_su_ptr;
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)hba->hba_ptr;
-> +	char *buf, *cur, *ptr, *ptr2;
-> +	unsigned long scsi_host_id, scsi_channel_id;
-> +	unsigned long scsi_target_id, scsi_lun_id;
-> +	int params = 0, ret;
-> +
-> +	buf = kzalloc(count, GFP_KERNEL);
-> +	if (!(buf)) {
-> +		printk(KERN_ERR "Unable to allocate memory for temporary"
-> +				" buffer\n");
-> +		return -ENOMEM;
-> +	}
-> +	memcpy(buf, page, count);
-> +	cur = buf;
-> +
-> +	while (cur) {
-> +		ptr = strstr(cur, "=");
-> +		if (!(ptr))
-> +			goto out;
-> +
-> +		*ptr = '\0';
-> +		ptr++;
-> +
-> +		ptr2 = strstr(cur, "scsi_host_id");
-> +		if ((ptr2)) {
-> +			transport_check_dev_params_delim(ptr, &cur);
-> +			if (phv->phv_mode == PHV_LLD_SCSI_HOST_NO) {
-> +				printk(KERN_ERR "PSCSI[%d]: Unable to accept"
-> +					" scsi_host_id while phv_mode =="
-> +					" PHV_LLD_SCSI_HOST_NO\n",
-> +					phv->phv_host_id);
-> +				break;
-> +			}
-> +			ret = strict_strtoul(ptr, 0, &scsi_host_id);
-> +			if (ret < 0) {
-> +				printk(KERN_ERR "strict_strtoul() failed for"
-> +					" scsi_hostl_id=\n");
-> +				break;
-> +			}
-> +			pdv->pdv_host_id = (int)scsi_host_id;
-> +			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI Host ID:"
-> +				" %d\n", phv->phv_host_id, pdv->pdv_host_id);
-> +			pdv->pdv_flags |= PDF_HAS_VIRT_HOST_ID;
-> +			params++;
-> +			continue;
-> +		}
-> +		ptr2 = strstr(cur, "scsi_channel_id");
-> +		if ((ptr2)) {
-> +			transport_check_dev_params_delim(ptr, &cur);
-> +			ret = strict_strtoul(ptr, 0, &scsi_channel_id);
-> +			if (ret < 0) {
-> +				printk(KERN_ERR "strict_strtoul() failed for"
-> +					" scsi_channel_id=\n");
-> +				break;
-> +			}
-> +			pdv->pdv_channel_id = (int)scsi_channel_id;
-> +			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI Channel"
-> +				" ID: %d\n",  phv->phv_host_id,
-> +				pdv->pdv_channel_id);
-> +			pdv->pdv_flags |= PDF_HAS_CHANNEL_ID;
-> +			params++;
-> +			continue;
-> +		}
-> +		ptr2 = strstr(cur, "scsi_target_id");
-> +		if ((ptr2)) {
-> +			transport_check_dev_params_delim(ptr, &cur);
-> +			ret = strict_strtoul(ptr, 0, &scsi_target_id);
-> +			if (ret < 0) {
-> +				printk("strict_strtoul() failed for"
-> +					" strict_strtoul()\n");
-> +				break;
-> +			}
-> +			pdv->pdv_target_id = (int)scsi_target_id;
-> +			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI Target"
-> +				" ID: %d\n", phv->phv_host_id,
-> +				pdv->pdv_target_id);
-> +			pdv->pdv_flags |= PDF_HAS_TARGET_ID;
-> +			params++;
-> +			continue;
-> +		}
-> +		ptr2 = strstr(cur, "scsi_lun_id");
-> +		if ((ptr2)) {
-> +			transport_check_dev_params_delim(ptr, &cur);
-> +			ret = strict_strtoul(ptr, 0, &scsi_lun_id);
-> +			if (ret < 0) {
-> +				printk("strict_strtoul() failed for"
-> +					" scsi_lun_id=\n");
-> +				break;
-> +			}
-> +			pdv->pdv_lun_id = (int)scsi_lun_id;
-> +			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI LUN ID:"
-> +				" %d\n", phv->phv_host_id, pdv->pdv_lun_id);
-> +			pdv->pdv_flags |= PDF_HAS_LUN_ID;
-> +			params++;
-> +		} else
-> +			cur = NULL;
-> +	}
-> +
-> +out:
-> +	kfree(buf);
-> +	return (params) ? count : -EINVAL;
-> +}
-> +
-> +static ssize_t pscsi_check_configfs_dev_params(
-> +	struct se_hba *hba,
-> +	struct se_subsystem_dev *se_dev)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) se_dev->se_dev_su_ptr;
-> +
-> +	if (!(pdv->pdv_flags & PDF_HAS_CHANNEL_ID) ||
-> +	    !(pdv->pdv_flags & PDF_HAS_TARGET_ID) ||
-> +	    !(pdv->pdv_flags & PDF_HAS_LUN_ID)) {
-> +		printk(KERN_ERR "Missing scsi_channel_id=, scsi_target_id= and"
-> +			" scsi_lun_id= parameters\n");
-> +		return -1;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
-> +static ssize_t pscsi_show_configfs_dev_params(
-> +	struct se_hba *hba,
-> +	struct se_subsystem_dev *se_dev,
-> +	char *page)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) se_dev->se_dev_su_ptr;
-> +	int bl = 0;
-> +
-> +	__pscsi_get_dev_info(pdv, page, &bl);
-> +	return (ssize_t)bl;
-> +}
-> +
-> +static void pscsi_get_plugin_info(void *p, char *b, int *bl)
-> +{
-> +	*bl += sprintf(b + *bl, "TCM SCSI Plugin %s\n", PSCSI_VERSION);
-> +}
-> +
-> +static void pscsi_get_hba_info(struct se_hba *hba, char *b, int *bl)
-> +{
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)hba->hba_ptr;
-> +	struct Scsi_Host *sh = phv->phv_lld_host;
-> +
-> +	*bl += sprintf(b + *bl, "Core Host ID: %u  PHV Host ID: %u\n",
-> +		 hba->hba_id, phv->phv_host_id);
-> +	if (sh)
-> +		*bl += sprintf(b + *bl, "        SCSI HBA ID %u: %s  <local>\n",
-> +			sh->host_no, (sh->hostt->name) ?
-> +			(sh->hostt->name) : "Unknown");
-> +}
-> +
-> +static void pscsi_get_dev_info(struct se_device *dev, char *b, int *bl)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) dev->dev_ptr;
-> +
-> +	__pscsi_get_dev_info(pdv, b, bl);
-> +}
-> +
-> +static void __pscsi_get_dev_info(struct pscsi_dev_virt *pdv, char *b, int *bl)
-> +{
-> +	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *) pdv->pdv_se_hba->hba_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +	unsigned char host_id[16];
-> +	int i;
-> +
-> +	if (phv->phv_mode == PHV_VIRUTAL_HOST_ID)
-> +		snprintf(host_id, 16, "%d", pdv->pdv_host_id);
-> +	else
-> +		snprintf(host_id, 16, "PHBA Mode");
-> +
-> +	*bl += sprintf(b + *bl, "SCSI Device Bus Location:"
-> +		" Channel ID: %d Target ID: %d LUN: %d Host ID: %s\n",
-> +		pdv->pdv_channel_id, pdv->pdv_target_id, pdv->pdv_lun_id,
-> +		host_id);
-> +
-> +	if (sd) {
-> +		*bl += sprintf(b + *bl, "        ");
-> +		*bl += sprintf(b + *bl, "Vendor: ");
-> +		for (i = 0; i < 8; i++) {
-> +			if (ISPRINT(sd->vendor[i]))   /* printable character? */
-> +				*bl += sprintf(b + *bl, "%c", sd->vendor[i]);
-> +			else
-> +				*bl += sprintf(b + *bl, " ");
-> +		}
-> +		*bl += sprintf(b + *bl, " Model: ");
-> +		for (i = 0; i < 16; i++) {
-> +			if (ISPRINT(sd->model[i]))   /* printable character ? */
-> +				*bl += sprintf(b + *bl, "%c", sd->model[i]);
-> +			else
-> +				*bl += sprintf(b + *bl, " ");
-> +		}
-> +		*bl += sprintf(b + *bl, " Rev: ");
-> +		for (i = 0; i < 4; i++) {
-> +			if (ISPRINT(sd->rev[i]))   /* printable character ? */
-> +				*bl += sprintf(b + *bl, "%c", sd->rev[i]);
-> +			else
-> +				*bl += sprintf(b + *bl, " ");
-> +		}
-> +		*bl += sprintf(b + *bl, "\n");
-> +	}
-> +}
-> +
-> +static void pscsi_bi_endio(struct bio *bio, int error)
-> +{
-> +	bio_put(bio);
-> +}
-> +
-> +static inline struct bio *pscsi_get_bio(struct pscsi_dev_virt *pdv, int sg_num)
-> +{
-> +	struct bio *bio;
-> +	/*
-> +	 * Use bio_malloc() following the comment in for bio -> struct request
-> +	 * in block/blk-core.c:blk_make_request()
-> +	 */
-> +	bio = bio_kmalloc(GFP_KERNEL, sg_num);
-> +	if (!(bio)) {
-> +		printk(KERN_ERR "PSCSI: bio_kmalloc() failed\n");
-> +		return NULL;
-> +	}
-> +	bio->bi_end_io = pscsi_bi_endio;
-> +
-> +	return bio;
-> +}
-> +
-> +#if 0
-> +#define DEBUG_PSCSI(x...) printk(x)
-> +#else
-> +#define DEBUG_PSCSI(x...)
-> +#endif
-> +
-> +static int __pscsi_map_task_SG(
-> +	struct se_task *task,
-> +	struct scatterlist *task_sg,
-> +	u32 task_sg_num,
-> +	int bidi_read)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) task->se_dev->dev_ptr;
-> +	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
-> +	struct page *page;
-> +	struct scatterlist *sg;
-> +	u32 data_len = task->task_size, i, len, bytes, off;
-> +	int nr_pages = (task->task_size + task_sg[0].offset +
+This is just a dumb pushdown, no real improvements in scalability.
+Since it is very mechanic some of the resulting code immediately
+takes and then drops the lock. This can be addressed in future
+patches.
 
-Please forgive me I must be looking at an old patch but this is what I could find
-in my mail box. 
+The driver changes follow this semantic patch:
 
-	task->task_size? there must be two of them one for write/uni one for bidi_read
+@ rule1 @
+struct scsi_host_template t;
+identifier qc;
+@@
+t.queuecommand = qc;
 
-> +			PAGE_SIZE - 1) >> PAGE_SHIFT;
-> +	int nr_vecs = 0, ret = 0;
-> +	int rw = (TASK_CMD(task)->data_direction == DMA_TO_DEVICE);
-> +
-> +	if (!task->task_size)
+@@
+identifier rule1.qc;
+identifier cmnd;
+expression E, E2;
+statement S, S2;
+typedef Scsi_Cmnd;
+@@
+int qc(Scsi_Cmnd *cmnd, ...)
+{
+	... when != S
++	unsigned long irqflags;
 
-dito
++	spin_lock_irqsave(cmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmnd->device->host, cmnd);
+(
+	if (...) {
+		...
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+		return E2;
+	}
+|
+	S2
+)
+	...
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+	return E;
+}
 
-> +		return 0;
-> +	/*
-> +	 * For SCF_SCSI_DATA_SG_IO_CDB, Use fs/bio.c:bio_add_page() to setup
-> +	 * the bio_vec maplist from TC< struct se_mem -> task->task_sg ->
-> +	 * struct scatterlist memory.  The struct se_task->task_sg[] currently needs
-> +	 * to be attached to struct bios for submission to Linux/SCSI using
-> +	 * struct request to struct scsi_device->request_queue.
-> +	 *
-> +	 * Note that this will be changing post v2.6.28 as Target_Core_Mod/pSCSI
-> +	 * is ported to upstream SCSI passthrough functionality that accepts
-> +	 * struct scatterlist->page_link or struct page as a paraemeter.
-> +	 */
-> +	DEBUG_PSCSI("PSCSI: nr_pages: %d\n", nr_pages);
-> +
-> +	for_each_sg(task_sg, sg, task_sg_num, i) {
+@@
+identifier rule1.qc;
+identifier cmnd;
+expression E, E2;
+statement S, S2;
+@@
+int qc(struct scsi_cmnd *cmnd, ...)
+{
+	... when != S
++	unsigned long irqflags;
 
-Good received from caller
++	spin_lock_irqsave(cmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmnd->device->host, cmnd);
+(
+	if (...) {
+		...
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+		return E2;
+	}
+|
+	S2
+)
+	...
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+	return E;
+}
 
-> +		page = sg_page(sg);
-> +		off = sg->offset;
-> +		len = sg->length;
-> +
-> +		DEBUG_PSCSI("PSCSI: i: %d page: %p len: %d off: %d\n", i,
-> +			page, len, off);
-> +
-> +		while (len > 0 && data_len > 0) {
-> +			bytes = min_t(unsigned int, len, PAGE_SIZE - off);
-> +			bytes = min(bytes, data_len);
-> +
-> +			if (!(bio)) {
-> +				nr_vecs = min_t(int, BIO_MAX_PAGES, nr_pages);
-> +				nr_pages -= nr_vecs;
-> +				/*
-> +				 * Calls bio_kmalloc() and sets bio->bi_end_io()
-> +				 */
-> +				bio = pscsi_get_bio(pdv, nr_vecs);
-> +				if (!(bio))
-> +					goto fail;
-> +
-> +				if (rw)
-> +					bio->bi_rw |= REQ_WRITE;
-> +
-> +				DEBUG_PSCSI("PSCSI: Allocated bio: %p,"
-> +					" dir: %s nr_vecs: %d\n", bio,
-> +					(rw) ? "rw" : "r", nr_vecs);
-> +				/*
-> +				 * Set *hbio pointer to handle the case:
-> +				 * nr_pages > BIO_MAX_PAGES, where additional
-> +				 * bios need to be added to complete a given
-> +				 * struct se_task
-> +				 */
-> +				if (!hbio)
-> +					hbio = tbio = bio;
-> +				else
-> +					tbio = tbio->bi_next = bio;
-> +			}
-> +
-> +			DEBUG_PSCSI("PSCSI: Calling bio_add_pc_page() i: %d"
-> +				" bio: %p page: %p len: %d off: %d\n", i, bio,
-> +				page, len, off);
-> +
-> +			ret = bio_add_pc_page(pdv->pdv_sd->request_queue,
-> +					bio, page, bytes, off);
-> +			if (ret != bytes)
-> +				goto fail;
-> +
-> +			DEBUG_PSCSI("PSCSI: bio->bi_vcnt: %d nr_vecs: %d\n",
-> +				bio->bi_vcnt, nr_vecs);
-> +
-> +			if (bio->bi_vcnt > nr_vecs) {
-> +				DEBUG_PSCSI("PSCSI: Reached bio->bi_vcnt max:"
-> +					" %d i: %d bio: %p, allocating another"
-> +					" bio\n", bio->bi_vcnt, i, bio);
-> +				/*
-> +				 * Clear the pointer so that another bio will
-> +				 * be allocated with pscsi_get_bio() above, the
-> +				 * current bio has already been set *tbio and
-> +				 * bio->bi_next.
-> +				 */
-> +				bio = NULL;
-> +			}
-> +
-> +			page++;
-> +			len -= bytes;
-> +			data_len -= bytes;
-> +			off = 0;
-> +		}
-> +	}
-> +	/*
-> +	 * Setup the primary pt->pscsi_req used for non BIDI and BIDI-COMMAND
-> +	 * primary SCSI WRITE poayload mapped for struct se_task->task_sg[]
-> +	 */
-> +	if (!(bidi_read)) {
-> +		/*
-> +		 * Starting with v2.6.31, call blk_make_request() passing in *hbio to
-> +		 * allocate the pSCSI task a struct request.
-> +		 */
-> +		pt->pscsi_req = blk_make_request(pdv->pdv_sd->request_queue,
-> +					hbio, GFP_KERNEL);
-> +		if (!(pt->pscsi_req)) {
-> +			printk(KERN_ERR "pSCSI: blk_make_request() failed\n");
-> +			goto fail;
-> +		}
-> +		/*
-> +		 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
-> +		 * and setup rq callback, CDB and sense.
-> +		 */
-> +		pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
-> +
-> +		return task->task_sg_num;
-		return task_sg_num ??
-> +	}
-> +	/*
-> +	 * Setup the secondary pt->pscsi_req_bidi used for the extra BIDI-COMMAND
-> +	 * SCSI READ paylaod mapped for struct se_task->task_sg_bidi[]
-> +	 */
-> +	pt->pscsi_req_bidi = blk_make_request(pdv->pdv_sd->request_queue,
-> +					hbio, GFP_KERNEL);
-> +	if (!(pt->pscsi_req_bidi)) {
-> +		printk(KERN_ERR "pSCSI: blk_make_request() failed for BIDI\n");
-> +		goto fail;
-> +	}
-> +	pscsi_blk_init_request(task, pt, pt->pscsi_req_bidi, 1);
-> +	/*
-> +	 * Setup the magic BIDI-COMMAND ->next_req pointer to the original
-> +	 * pt->pscsi_req.
-> +	 */	
-> +	pt->pscsi_req->next_rq = pt->pscsi_req_bidi;
-> +
-> +	return task->task_sg_num;
+Signed-off-by: Andi Kleen <ak@linux.intel.com>
 
-	return task_sg_num ??
-
-> +fail:
-> +	while (hbio) {
-> +		bio = hbio;
-> +		hbio = hbio->bi_next;
-> +		bio->bi_next = NULL;
-> +		bio_endio(bio, 0);
-> +	}
-> +	return ret;
-> +}
-> +
-> +static int pscsi_map_task_SG(struct se_task *task)
-> +{
-> +	int ret;
-> +	/*
-> +	 * Setup the main struct request for the task->task_sg[] payload
-> +	 */
-> +
-> +	ret = __pscsi_map_task_SG(task, task->task_sg, task->task_sg_num, 0);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	if (!(task->task_sg_bidi))
-> +		return ret;
-> +	/*
-> +	 * If present, set up the extra BIDI-COMMAND SCSI READ
-> +	 * struct request and payload.
-> +	 */
-> +	return __pscsi_map_task_SG(task, task->task_sg_bidi,
-> +				task->task_sg_num, 1);
-
-The second __pscsi_map_task_SG can fail. Do you make sure to free
-the successful first __pscsi_map_task_SG? 
-
-> +}
-> +
-> +/*	pscsi_map_task_non_SG():
-> + *
-> + *
-> + */
-> +static int pscsi_map_task_non_SG(struct se_task *task)
-> +{
-> +	struct se_cmd *cmd = TASK_CMD(task);
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) task->se_dev->dev_ptr;
-> +	int ret = 0;
-> +
-> +	if (!task->task_size)
-> +		return 0;
-> +
-> +	ret = blk_rq_map_kern(pdv->pdv_sd->request_queue,
-> +			pt->pscsi_req, T_TASK(cmd)->t_task_buf,
-> +			task->task_size, GFP_KERNEL);
-> +	if (ret < 0) {
-> +		printk(KERN_ERR "PSCSI: blk_rq_map_kern() failed: %d\n", ret);
-> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
-> +	}
-> +	return 0;
-> +}
-> +
-> +static int pscsi_CDB_none(struct se_task *task, u32 size)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +
-> +	pt->pscsi_direction = DMA_NONE;
-> +
-> +	return pscsi_blk_get_request(task);
-> +}
-> +
-> +/*	pscsi_CDB_read_non_SG():
-> + *
-> + *
-> + */
-> +static int pscsi_CDB_read_non_SG(struct se_task *task, u32 size)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +
-> +	pt->pscsi_direction = DMA_FROM_DEVICE;
-> +
-> +	if (pscsi_blk_get_request(task) < 0)
-> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
-> +
-> +	return pscsi_map_task_non_SG(task);
-> +}
-> +
-> +/*	pscsi_CDB_read_SG():
-> + *
-> + *
-> + */
-> +static int pscsi_CDB_read_SG(struct se_task *task, u32 size)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +
-> +	pt->pscsi_direction = DMA_FROM_DEVICE;
-> +	/*
-> +	 * pscsi_map_task_SG() calls block/blk-core.c:blk_make_request()
-> +	 * for >= v2.6.31 pSCSI
-> +	 */
-> +	if (pscsi_map_task_SG(task) < 0)
-> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
-> +
-> +	return task->task_sg_num;
-> +}
-> +
-> +/*	pscsi_CDB_write_non_SG():
-> + *
-> + *
-> + */
-> +static int pscsi_CDB_write_non_SG(struct se_task *task, u32 size)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +
-> +	pt->pscsi_direction = DMA_TO_DEVICE;
-> +
-> +	if (pscsi_blk_get_request(task) < 0)
-> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
-> +
-> +	return pscsi_map_task_non_SG(task);
-> +}
-> +
-> +/*	pscsi_CDB_write_SG():
-> + *
-> + *
-> + */
-> +static int pscsi_CDB_write_SG(struct se_task *task, u32 size)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +
-> +	pt->pscsi_direction = DMA_TO_DEVICE;
-> +	/*
-> +	 * pscsi_map_task_SG() calls block/blk-core.c:blk_make_request()
-> +	 * for >= v2.6.31 pSCSI
-> +	 */
-> +	if (pscsi_map_task_SG(task) < 0)
-> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
-> +
-> +	return task->task_sg_num;
-> +}
-> +
-> +/*	pscsi_check_lba():
-> + *
-> + *
-> + */
-> +static int pscsi_check_lba(unsigned long long lba, struct se_device *dev)
-> +{
-> +	return 0;
-> +}
-> +
-> +/*	pscsi_check_for_SG():
-> + *
-> + *
-> + */
-> +static int pscsi_check_for_SG(struct se_task *task)
-> +{
-> +	return task->task_sg_num;
-> +}
-> +
-> +/*	pscsi_get_cdb():
-> + *
-> + *
-> + */
-> +static unsigned char *pscsi_get_cdb(struct se_task *task)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-> +
-> +	return pt->pscsi_cdb;
-> +}
-> +
-> +/*	pscsi_get_sense_buffer():
-> + *
-> + *
-> + */
-> +static unsigned char *pscsi_get_sense_buffer(struct se_task *task)
-> +{
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-
-All over these. Don't cast a void pointer.
-
-> +
-> +	return (unsigned char *)&pt->pscsi_sense[0];
-> +}
-> +
-> +/*	pscsi_get_blocksize():
-> + *
-> + *
-> + */
-> +static u32 pscsi_get_blocksize(struct se_device *dev)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) dev->dev_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +
-> +	return sd->sector_size;
-> +}
-> +
-> +/*	pscsi_get_device_rev():
-> + *
-> + *
-> + */
-> +static u32 pscsi_get_device_rev(struct se_device *dev)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) dev->dev_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +
-> +	return (sd->scsi_level - 1) ? sd->scsi_level - 1 : 1;
-> +}
-> +
-> +/*	pscsi_get_device_type():
-> + *
-> + *
-> + */
-> +static u32 pscsi_get_device_type(struct se_device *dev)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) dev->dev_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +
-> +	return sd->type;
-> +}
-> +
-> +/*	pscsi_get_dma_length():
-> + *
-> + *
-> + */
-> +static u32 pscsi_get_dma_length(u32 task_size, struct se_device *dev)
-> +{
-> +	return PAGE_SIZE;
-
-??
-
-> +}
-> +
-> +/*	pscsi_get_max_sectors():
-> + *
-> + *
-> + */
-> +static u32 pscsi_get_max_sectors(struct se_device *dev)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) dev->dev_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +
-> +	return (sd->host->max_sectors > sd->request_queue->limits.max_sectors) ?
-> +		sd->request_queue->limits.max_sectors : sd->host->max_sectors;
-> +}
-> +
-> +/*	pscsi_get_queue_depth():
-> + *
-> + *
-> + */
-> +static u32 pscsi_get_queue_depth(struct se_device *dev)
-> +{
-> +	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *) dev->dev_ptr;
-> +	struct scsi_device *sd = (struct scsi_device *) pdv->pdv_sd;
-> +
-> +	return sd->queue_depth;
-> +}
-> +
-> +/*	pscsi_handle_SAM_STATUS_failures():
-> + *
-> + *
-> + */
-> +static inline void pscsi_process_SAM_status(
-> +	struct se_task *task,
-> +	struct pscsi_plugin_task *pt)
-> +{
-> +	task->task_scsi_status = status_byte(pt->pscsi_result);
-> +	if ((task->task_scsi_status)) {
-> +		task->task_scsi_status <<= 1;
-> +		printk(KERN_INFO "PSCSI Status Byte exception at task: %p CDB:"
-> +			" 0x%02x Result: 0x%08x\n", task, pt->pscsi_cdb[0],
-> +			pt->pscsi_result);
-> +	}
-> +
-> +	switch (host_byte(pt->pscsi_result)) {
-> +	case DID_OK:
-> +		transport_complete_task(task, (!task->task_scsi_status));
-> +		break;
-> +	default:
-> +		printk(KERN_INFO "PSCSI Host Byte exception at task: %p CDB:"
-> +			" 0x%02x Result: 0x%08x\n", task, pt->pscsi_cdb[0],
-> +			pt->pscsi_result);
-> +		task->task_scsi_status = SAM_STAT_CHECK_CONDITION;
-> +		task->task_error_status = PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
-> +		TASK_CMD(task)->transport_error_status =
-> +					PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
-> +		transport_complete_task(task, 0);
-> +		break;
-> +	}
-> +
-> +	return;
-> +}
-> +
-> +static void pscsi_req_done(struct request *req, int uptodate)
-> +{
-> +	struct se_task *task = (struct se_task *)req->end_io_data;
-> +	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *)task->transport_req;
-> +
-> +	pt->pscsi_result = req->errors;
-> +	pt->pscsi_resid = req->resid_len;
-> +
-> +	pscsi_process_SAM_status(task, pt);
-> +
-> +	if (req->next_rq != NULL) {
-> +		__blk_put_request(req->q, req->next_rq);
-> +		pt->pscsi_req_bidi = NULL;
-
-		req->next_rq = NULL
-
-Actually pt->pscsi_req_bidi is never used, it's set and reset
-only req->next_rq is used. You are fine without it. You have
-pt->pscsi_req and pt->pscsi_req->next_rq;
-
-> +	}
-> +
-> +	__blk_put_request(req->q, req);
-> +	pt->pscsi_req = NULL;
-> +}
-> +
-> +static struct se_subsystem_api pscsi_template = {
-> +	.name			= "pscsi",
-> +	.type			= PSCSI,
-> +	.transport_type		= TRANSPORT_PLUGIN_PHBA_PDEV,
-> +	.external_submod	= 1,
-> +	.cdb_none		= pscsi_CDB_none,
-> +	.cdb_read_non_SG	= pscsi_CDB_read_non_SG,
-> +	.cdb_read_SG		= pscsi_CDB_read_SG,
-> +	.cdb_write_non_SG	= pscsi_CDB_write_non_SG,
-> +	.cdb_write_SG		= pscsi_CDB_write_SG,
-> +	.attach_hba		= pscsi_attach_hba,
-> +	.detach_hba		= pscsi_detach_hba,
-> +	.pmode_enable_hba	= pscsi_pmode_enable_hba,
-> +	.activate_device	= pscsi_activate_device,
-> +	.deactivate_device	= pscsi_deactivate_device,
-> +	.allocate_virtdevice	= pscsi_allocate_virtdevice,
-> +	.create_virtdevice	= pscsi_create_virtdevice,
-> +	.free_device		= pscsi_free_device,
-> +	.transport_complete	= pscsi_transport_complete,
-> +	.allocate_request	= pscsi_allocate_request,
-> +	.do_task		= pscsi_do_task,
-> +	.free_task		= pscsi_free_task,
-> +	.check_configfs_dev_params = pscsi_check_configfs_dev_params,
-> +	.set_configfs_dev_params = pscsi_set_configfs_dev_params,
-> +	.show_configfs_dev_params = pscsi_show_configfs_dev_params,
-> +	.create_virtdevice_from_fd = NULL,
-> +	.get_plugin_info	= pscsi_get_plugin_info,
-> +	.get_hba_info		= pscsi_get_hba_info,
-> +	.get_dev_info		= pscsi_get_dev_info,
-> +	.check_lba		= pscsi_check_lba,
-> +	.check_for_SG		= pscsi_check_for_SG,
-> +	.get_cdb		= pscsi_get_cdb,
-> +	.get_sense_buffer	= pscsi_get_sense_buffer,
-> +	.get_blocksize		= pscsi_get_blocksize,
-> +	.get_device_rev		= pscsi_get_device_rev,
-> +	.get_device_type	= pscsi_get_device_type,
-> +	.get_dma_length		= pscsi_get_dma_length,
-> +	.get_max_sectors	= pscsi_get_max_sectors,
-> +	.get_queue_depth	= pscsi_get_queue_depth,
-> +	.write_pending		= NULL,
-> +};
-> +
-> +int __init pscsi_module_init(void)
-> +{
-> +	int ret;
-> +
-> +	INIT_LIST_HEAD(&pscsi_template.sub_api_list);
-> +
-> +	ret = transport_subsystem_register(&pscsi_template, THIS_MODULE);
-> +	if (ret < 0)
-> +		return ret;
-> +
-> +	return 0;
-> +}
-> +
-> +void pscsi_module_exit(void)
-> +{
-> +	transport_subsystem_release(&pscsi_template);
-> +}
-> +
-> +MODULE_DESCRIPTION("TCM PSCSI subsystem plugin");
-> +MODULE_AUTHOR("nab@Linux-iSCSI.org");
-> +MODULE_LICENSE("GPL");
-> +
-> +module_init(pscsi_module_init);
-> +module_exit(pscsi_module_exit);
-> diff --git a/drivers/target/target_core_pscsi.h b/drivers/target/target_core_pscsi.h
-> new file mode 100644
-> index 0000000..d3c8972
-> --- /dev/null
-> +++ b/drivers/target/target_core_pscsi.h
-> @@ -0,0 +1,69 @@
-> +#ifndef TARGET_CORE_PSCSI_H
-> +#define TARGET_CORE_PSCSI_H
-> +
-> +#define PSCSI_VERSION		"v4.0"
-> +#define PSCSI_VIRTUAL_HBA_DEPTH	2048
-> +
-> +/* used in pscsi_find_alloc_len() */
-> +#ifndef INQUIRY_DATA_SIZE
-> +#define INQUIRY_DATA_SIZE	0x24
-> +#endif
-> +
-> +/* used in pscsi_add_device_to_list() */
-> +#define PSCSI_DEFAULT_QUEUEDEPTH	1
-> +
-> +#define PS_RETRY		5
-> +#define PS_TIMEOUT_DISK		(15*HZ)
-> +#define PS_TIMEOUT_OTHER	(500*HZ)
-> +
-> +extern struct se_global *se_global;
-> +extern struct block_device *linux_blockdevice_claim(int, int, void *);
-> +extern int linux_blockdevice_release(int, int, struct block_device *);
-> +extern int linux_blockdevice_check(int, int);
-> +
-> +#include <linux/device.h>
-> +#include <scsi/scsi_driver.h>
-> +#include <scsi/scsi_device.h>
-> +#include <linux/kref.h>
-> +#include <linux/kobject.h>
-> +
-> +struct pscsi_plugin_task {
-> +	unsigned char pscsi_cdb[TCM_MAX_COMMAND_SIZE];
-> +	unsigned char pscsi_sense[SCSI_SENSE_BUFFERSIZE];
-> +	int	pscsi_direction;
-> +	int	pscsi_result;
-> +	u32	pscsi_resid;
-
-Scsi has two residual results. One inside each request. 
-
-> +	struct request *pscsi_req;
-> +	struct request *pscsi_req_bidi;
-> +} ____cacheline_aligned;
-> +
-> +#define PDF_HAS_CHANNEL_ID	0x01
-> +#define PDF_HAS_TARGET_ID	0x02
-> +#define PDF_HAS_LUN_ID		0x04
-> +#define PDF_HAS_VPD_UNIT_SERIAL 0x08
-> +#define PDF_HAS_VPD_DEV_IDENT	0x10
-> +#define PDF_HAS_VIRT_HOST_ID	0x20	
-> +
-> +struct pscsi_dev_virt {
-> +	int	pdv_flags;
-> +	int	pdv_host_id;
-> +	int	pdv_channel_id;
-> +	int	pdv_target_id;
-> +	int	pdv_lun_id;
-> +	struct block_device *pdv_bd;
-> +	struct scsi_device *pdv_sd;
-> +	struct se_hba *pdv_se_hba;
-> +} ____cacheline_aligned;
-> +
-> +typedef enum phv_modes {
-> +	PHV_VIRUTAL_HOST_ID,
-> +	PHV_LLD_SCSI_HOST_NO
-> +} phv_modes_t;
-> +
-> +struct pscsi_hba_virt {
-> +	int			phv_host_id;
-> +	phv_modes_t		phv_mode;
-> +	struct Scsi_Host	*phv_lld_host;
-> +} ____cacheline_aligned;
-> +
-> +#endif   /*** TARGET_CORE_PSCSI_H ***/
-
-Nic all over these patches you have
-+	struct pscsi_plugin_task *pt = (struct pscsi_plugin_task *) task->transport_req;
-Don't cast void pointers, please. That would be a big fat change just search for transport_req.
-
-OK So I'm stopping to review from email and will next go to the gitweb URL you sent me. Because
-in all my mailbox patches I cannot find where the task->transport_req is set, which means I'm
-missing some of them. The thing I wanted to know is if there is a 1-to-1 lifetime association
-between a plugin task like  pscsi_plugin_task and the task-> which holds it. (On ->transport_req)
-If yes, you might consider an embedded se_task in each plugin_task and the use of container_of.
-Faster, more robust and cleans code considerably.
-
-But I'll have a look at the latest code later.
-
-Thanks
-Boaz
-
+diff --git a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
+index 570ef2b..9dabc7f 100644
+--- a/Documentation/scsi/scsi_mid_low_api.txt
++++ b/Documentation/scsi/scsi_mid_low_api.txt
+@@ -1087,11 +1087,15 @@ Details:
+  *      non-zero return, it must not execute the command's done
+  *      callback at any time.
+  *
+- *      Locks: struct Scsi_Host::host_lock held on entry (with "irqsave")
+- *             and is expected to be held on return.
++ *	Locks: No locks are hold. If host_lock is needed this function
++ *	needs to take it by itself.
+  *
+  *      Calling context: in interrupt (soft irq) or process context
+  *
++ *	When this function needs a serial number in the SCSI command
++ *	it needs to call scsi_cmd_get_serial with the lock hold
++ *	to get it. Usually it's not needed.
++ *
+  *      Notes: This function should be relatively fast. Normally it will
+  *      not wait for IO to complete. Hence the 'done' callback is invoked 
+  *      (often directly from an interrupt service routine) some time after
+diff --git a/arch/ia64/hp/sim/simscsi.c b/arch/ia64/hp/sim/simscsi.c
+index 3a078ad..ce32f2c 100644
+--- a/arch/ia64/hp/sim/simscsi.c
++++ b/arch/ia64/hp/sim/simscsi.c
+@@ -209,6 +209,8 @@ simscsi_queuecommand (struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 	size_t disk_size;
+ 	char *buf;
+ 	char localbuf[36];
++	unsigned long irqflags;
++
+ #if DEBUG_SIMSCSI
+ 	register long sp asm ("sp");
+ 
+@@ -217,6 +219,9 @@ simscsi_queuecommand (struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 		       target_id, sc->cmnd[0], sc->serial_number, sp, done);
+ #endif
+ 
++	spin_lock_irqsave(sc->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(sc->device->host);
++
+ 	sc->result = DID_BAD_TARGET << 16;
+ 	sc->scsi_done = done;
+ 	if (target_id <= 15 && sc->device->lun == 0) {
+@@ -323,6 +328,8 @@ simscsi_queuecommand (struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 	wr = (wr + 1) % SIMSCSI_REQ_QUEUE_LEN;
+ 
+ 	tasklet_schedule(&simscsi_tasklet);
++
++	spin_unlock_irqrestore(sc->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d050e07..3e2f3e3 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3186,11 +3186,14 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ 	struct ata_device *dev;
+ 	struct scsi_device *scsidev = cmd->device;
+ 	struct Scsi_Host *shost = scsidev->host;
++	unsigned long irqflags;
+ 	int rc = 0;
+ 
+ 	ap = ata_shost_to_port(shost);
+ 
+-	spin_unlock(shost->host_lock);
++	spin_lock_irqsave(shost->host_lock, irqflags);
++	scsi_cmd_get_serial(shost, cmd);
++
+ 	spin_lock(ap->lock);
+ 
+ 	ata_scsi_dump_cdb(ap, cmd);
+@@ -3205,6 +3208,7 @@ int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ 
+ 	spin_unlock(ap->lock);
+ 	spin_lock(shost->host_lock);
++	spin_unlock_irqrestore(shost->host_lock, irqflags);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
+index 575495f..4122788 100644
+--- a/drivers/block/cciss_scsi.c
++++ b/drivers/block/cciss_scsi.c
+@@ -1413,9 +1413,12 @@ cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd
+ 	unsigned char scsi3addr[8];
+ 	CommandList_struct *c;
+ 	unsigned long flags;
++	unsigned long irqflags;
+ 
+ 	// Get the ptr to our adapter structure (hba[i]) out of cmd->host.
+ 	// We violate cmd->host privacy here.  (Is there another way?)
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	h = (ctlr_info_t *) cmd->device->host->hostdata[0];
+ 
+ 	rc = lookup_scsi3addr(h, cmd->device->channel, cmd->device->id,
+@@ -1427,6 +1430,7 @@ cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd
+ 		done(cmd);
+ 		/* we might want to think about registering controller itself
+ 		   as a processor device on the bus so sg binds to it. */
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -1441,6 +1445,7 @@ cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd
+ 		/* FIXME: next 3 lines are -> BAD! <- */
+ 		cmd->result = DID_NO_CONNECT << 16;
+ 		done(cmd);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -1501,6 +1506,7 @@ cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd
+ 	cciss_scatter_gather(h, c, cmd);
+ 	enqueue_cmd_and_start_io(h, c);
+ 	/* the cmd'll come back via intr handler in complete_scsi_command()  */
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/firewire/sbp2.c b/drivers/firewire/sbp2.c
+index bfae4b3..23266fc 100644
+--- a/drivers/firewire/sbp2.c
++++ b/drivers/firewire/sbp2.c
+@@ -1474,21 +1474,26 @@ static int sbp2_scsi_queuecommand(struct scsi_cmnd *cmd, scsi_done_fn_t done)
+ 	struct fw_device *device = target_device(lu->tgt);
+ 	struct sbp2_command_orb *orb;
+ 	int generation, retval = SCSI_MLQUEUE_HOST_BUSY;
++	unsigned long irqflags;
+ 
+ 	/*
+ 	 * Bidirectional commands are not yet implemented, and unknown
+ 	 * transfer direction not handled.
+ 	 */
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	if (cmd->sc_data_direction == DMA_BIDIRECTIONAL) {
+ 		fw_error("Can't handle DMA_BIDIRECTIONAL, rejecting command\n");
+ 		cmd->result = DID_ERROR << 16;
+ 		done(cmd);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	orb = kzalloc(sizeof(*orb), GFP_ATOMIC);
+ 	if (orb == NULL) {
+ 		fw_notify("failed to alloc orb\n");
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -1531,6 +1536,7 @@ static int sbp2_scsi_queuecommand(struct scsi_cmnd *cmd, scsi_done_fn_t done)
+ 	retval = 0;
+  out:
+ 	kref_put(&orb->base.kref, free_orb);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return retval;
+ }
+ 
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index cfc1d65..52c9d2e 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -1132,7 +1132,10 @@ static int srp_queuecommand(struct scsi_cmnd *scmnd,
+ 	struct srp_cmd *cmd;
+ 	struct ib_device *dev;
+ 	int len;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(scmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scmnd->device->host, scmnd);
+ 	if (target->state == SRP_TARGET_CONNECTING)
+ 		goto err;
+ 
+@@ -1140,6 +1143,7 @@ static int srp_queuecommand(struct scsi_cmnd *scmnd,
+ 	    target->state == SRP_TARGET_REMOVED) {
+ 		scmnd->result = DID_BAD_TARGET << 16;
+ 		done(scmnd);
++		spin_unlock_irqrestore(scmnd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -1187,12 +1191,14 @@ static int srp_queuecommand(struct scsi_cmnd *scmnd,
+ 
+ 	list_move_tail(&req->list, &target->req_queue);
+ 
++	spin_unlock_irqrestore(scmnd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+ err_unmap:
+ 	srp_unmap_data(scmnd, target, req);
+ 
+ err:
++	spin_unlock_irqrestore(scmnd->device->host->host_lock, irqflags);
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ }
+ 
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index e15220f..6e5a2b0 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -656,10 +656,14 @@ mptfc_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	struct fc_rport	*rport = starget_to_rport(scsi_target(SCpnt->device));
+ 	int		err;
+ 	VirtDevice	*vdevice = SCpnt->device->hostdata;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	if (!vdevice || !vdevice->vtarget) {
+ 		SCpnt->result = DID_NO_CONNECT << 16;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -667,6 +671,7 @@ mptfc_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	if (unlikely(err)) {
+ 		SCpnt->result = err;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -675,9 +680,11 @@ mptfc_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	if (unlikely(!ri)) {
+ 		SCpnt->result = DID_IMM_RETRY << 16;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return mptscsih_qcmd(SCpnt,done);
+ }
+ 
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 83a5115..7e9fcf5 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1894,22 +1894,29 @@ mptsas_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	MPT_SCSI_HOST	*hd;
+ 	MPT_ADAPTER	*ioc;
+ 	VirtDevice	*vdevice = SCpnt->device->hostdata;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	if (!vdevice || !vdevice->vtarget || vdevice->vtarget->deleted) {
+ 		SCpnt->result = DID_NO_CONNECT << 16;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	hd = shost_priv(SCpnt->device->host);
+ 	ioc = hd->ioc;
+ 
+-	if (ioc->sas_discovery_quiesce_io)
++	if (ioc->sas_discovery_quiesce_io) {
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	if (ioc->debug_level & MPT_DEBUG_SCSI)
+ 		scsi_print_command(SCpnt);
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return mptscsih_qcmd(SCpnt,done);
+ }
+ 
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+index 0e28031..2a75e9a 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -785,10 +785,14 @@ mptspi_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	struct _MPT_SCSI_HOST *hd = shost_priv(SCpnt->device->host);
+ 	VirtDevice	*vdevice = SCpnt->device->hostdata;
+ 	MPT_ADAPTER *ioc = hd->ioc;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	if (!vdevice || !vdevice->vtarget) {
+ 		SCpnt->result = DID_NO_CONNECT << 16;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -796,12 +800,14 @@ mptspi_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 		mptscsih_is_phys_disk(ioc, 0, SCpnt->device->id) == 0) {
+ 		SCpnt->result = DID_NO_CONNECT << 16;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	if (spi_dv_pending(scsi_target(SCpnt->device)))
+ 		ddvprintk(ioc, scsi_print_command(SCpnt));
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return mptscsih_qcmd(SCpnt,done);
+ }
+ 
+diff --git a/drivers/message/i2o/i2o_scsi.c b/drivers/message/i2o/i2o_scsi.c
+index ea6b219..21056dd 100644
+--- a/drivers/message/i2o/i2o_scsi.c
++++ b/drivers/message/i2o/i2o_scsi.c
+@@ -527,6 +527,9 @@ static int i2o_scsi_queuecommand(struct scsi_cmnd *SCpnt,
+ 	/*
+ 	 *      Do the incoming paperwork
+ 	 */
++	unsigned long irqflags;
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	i2o_dev = SCpnt->device->hostdata;
+ 
+ 	SCpnt->scsi_done = done;
+@@ -680,6 +683,7 @@ static int i2o_scsi_queuecommand(struct scsi_cmnd *SCpnt,
+ 
+ 	osm_debug("Issued %ld\n", SCpnt->serial_number);
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+       nomem:
+@@ -687,6 +691,7 @@ static int i2o_scsi_queuecommand(struct scsi_cmnd *SCpnt,
+ 	i2o_msg_nop(c, msg);
+ 
+       exit:
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return rc;
+ };
+ 
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 50286d8..c28e5fe 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -83,6 +83,10 @@ static int zfcp_scsi_queuecommand(struct scsi_cmnd *scpnt,
+ 	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(scpnt->device));
+ 	int    status, scsi_result, ret;
++	unsigned long irqflags;
++
++	spin_lock_irqsave(scpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scpnt->device->host, scpnt);
+ 
+ 	/* reset the status for this request */
+ 	scpnt->result = 0;
+@@ -94,6 +98,7 @@ static int zfcp_scsi_queuecommand(struct scsi_cmnd *scpnt,
+ 		scpnt->result = scsi_result;
+ 		zfcp_dbf_scsi_fail_send(adapter->dbf, scpnt);
+ 		scpnt->scsi_done(scpnt);
++		spin_unlock_irqrestore(scpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -104,6 +109,7 @@ static int zfcp_scsi_queuecommand(struct scsi_cmnd *scpnt,
+ 		/* only LUN access denied, but port is good
+ 		 * not covered by FC transport, have to fail here */
+ 		zfcp_scsi_command_fail(scpnt, DID_ERROR);
++		spin_unlock_irqrestore(scpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -115,10 +121,12 @@ static int zfcp_scsi_queuecommand(struct scsi_cmnd *scpnt,
+ 		 * 	fc_remote_port_chkready until rport is BLOCKED
+ 		 */
+ 		zfcp_scsi_command_fail(scpnt, DID_IMM_RETRY);
++		spin_unlock_irqrestore(scpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	ret = zfcp_fsf_fcp_cmnd(scpnt);
++	spin_unlock_irqrestore(scpnt->device->host->host_lock, irqflags);
+ 	if (unlikely(ret == -EBUSY))
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	else if (unlikely(ret < 0))
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index fcf08b3..3ad0f51 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -1769,7 +1769,10 @@ static int twa_scsi_queue(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd
+ {
+ 	int request_id, retval;
+ 	TW_Device_Extension *tw_dev = (TW_Device_Extension *)SCpnt->device->host->hostdata;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	/* If we are resetting due to timed out ioctl, report as busy */
+ 	if (test_bit(TW_IN_RESET, &tw_dev->flags)) {
+ 		retval = SCSI_MLQUEUE_HOST_BUSY;
+@@ -1809,6 +1812,7 @@ static int twa_scsi_queue(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd
+ 		retval = 0;
+ 	}
+ out:
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return retval;
+ } /* End twa_scsi_queue() */
+ 
+diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+index 6a95d11..de5d845 100644
+--- a/drivers/scsi/3w-sas.c
++++ b/drivers/scsi/3w-sas.c
+@@ -1505,7 +1505,10 @@ static int twl_scsi_queue(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd
+ {
+ 	int request_id, retval;
+ 	TW_Device_Extension *tw_dev = (TW_Device_Extension *)SCpnt->device->host->hostdata;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	/* If we are resetting due to timed out ioctl, report as busy */
+ 	if (test_bit(TW_IN_RESET, &tw_dev->flags)) {
+ 		retval = SCSI_MLQUEUE_HOST_BUSY;
+@@ -1533,6 +1536,7 @@ static int twl_scsi_queue(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd
+ 		retval = 0;
+ 	}
+ out:
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return retval;
+ } /* End twl_scsi_queue() */
+ 
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index b112534..6812acc 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -1953,7 +1953,10 @@ static int tw_scsi_queue(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd
+ 	int request_id = 0;
+ 	int retval = 1;
+ 	TW_Device_Extension *tw_dev = (TW_Device_Extension *)SCpnt->device->host->hostdata;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	/* If we are resetting due to timed out ioctl, report as busy */
+ 	if (test_bit(TW_IN_RESET, &tw_dev->flags))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -2020,6 +2023,7 @@ static int tw_scsi_queue(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd
+ 		done(SCpnt);
+ 		retval = 0;
+ 	}
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return retval;
+ } /* End tw_scsi_queue() */
+ 
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index 89fc1c8..6bd1c22 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -1757,11 +1757,15 @@ NCR_700_queuecommand(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *))
+ 	__u32 move_ins;
+ 	enum dma_data_direction direction;
+ 	struct NCR_700_command_slot *slot;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCp->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCp->device->host, SCp);
+ 	if(hostdata->command_slot_count >= NCR_700_COMMAND_SLOTS_PER_HOST) {
+ 		/* We're over our allocation, this should never happen
+ 		 * since we report the max allocation to the mid layer */
+ 		printk(KERN_WARNING "scsi%d: Command depth has gone over queue depth\n", SCp->device->host->host_no);
++		spin_unlock_irqrestore(SCp->device->host->host_lock, irqflags);
+ 		return 1;
+ 	}
+ 	/* check for untagged commands.  We cannot have any outstanding
+@@ -1775,11 +1779,13 @@ NCR_700_queuecommand(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *))
+ 	       || !blk_rq_tagged(SCp->request))) {
+ 		CDEBUG(KERN_ERR, SCp, "has non zero depth %d\n",
+ 		       NCR_700_get_depth(SCp->device));
++		spin_unlock_irqrestore(SCp->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	}
+ 	if(NCR_700_get_depth(SCp->device) >= SCp->device->queue_depth) {
+ 		CDEBUG(KERN_ERR, SCp, "has max tag depth %d\n",
+ 		       NCR_700_get_depth(SCp->device));
++		spin_unlock_irqrestore(SCp->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	}
+ 	NCR_700_set_depth(SCp->device, NCR_700_get_depth(SCp->device) + 1);
+@@ -1901,6 +1907,7 @@ NCR_700_queuecommand(struct scsi_cmnd *SCp, void (*done)(struct scsi_cmnd *))
+ 	slot->pCmd = dma_map_single(hostdata->dev, SCp->cmnd,
+ 				    MAX_COMMAND_SIZE, DMA_TO_DEVICE);
+ 	NCR_700_start_command(SCp);
++	spin_unlock_irqrestore(SCp->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index fc0b4b8..10ce6fb 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -2819,14 +2819,19 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
+ 	int BufferLength = scsi_bufflen(Command);
+ 	int Count;
+ 	struct BusLogic_CCB *CCB;
++	unsigned long irqflags;
+ 	/*
+ 	   SCSI REQUEST_SENSE commands will be executed automatically by the Host
+ 	   Adapter for any errors, so they should not be executed explicitly unless
+ 	   the Sense Data is zero indicating that no error occurred.
+ 	 */
++
++	spin_lock_irqsave(Command->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(Command->device->host, Command);
+ 	if (CDB[0] == REQUEST_SENSE && Command->sense_buffer[0] != 0) {
+ 		Command->result = DID_OK << 16;
+ 		CompletionRoutine(Command);
++		spin_unlock_irqrestore(Command->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	/*
+@@ -2844,6 +2849,7 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
+ 		if (CCB == NULL) {
+ 			Command->result = DID_ERROR << 16;
+ 			CompletionRoutine(Command);
++			spin_unlock_irqrestore(Command->device->host->host_lock, irqflags);
+ 			return 0;
+ 		}
+ 	}
+@@ -2991,6 +2997,7 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
+ 		if (CCB->Status == BusLogic_CCB_Completed)
+ 			BusLogic_ProcessCompletedCCBs(HostAdapter);
+ 	}
++	spin_unlock_irqrestore(Command->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 5d2f148..f4bd889 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -957,6 +957,10 @@ static int NCR5380_queue_command(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 	struct Scsi_Host *instance = cmd->device->host;
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ 	Scsi_Cmnd *tmp;
++	unsigned long irqflags;
++
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 
+ #if (NDEBUG & NDEBUG_NO_WRITE)
+ 	switch (cmd->cmnd[0]) {
+@@ -965,6 +969,7 @@ static int NCR5380_queue_command(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 		printk("scsi%d : WRITE attempted with NO_WRITE debugging flag set\n", instance->host_no);
+ 		cmd->result = (DID_ERROR << 16);
+ 		done(cmd);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ #endif				/* (NDEBUG & NDEBUG_NO_WRITE) */
+@@ -1018,6 +1023,7 @@ static int NCR5380_queue_command(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 	/* Run the coroutine if it isn't already running. */
+ 	/* Kick off command processing */
+ 	schedule_delayed_work(&hostdata->coroutine, 0);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/NCR53c406a.c b/drivers/scsi/NCR53c406a.c
+index 6961f78..b84bfe6 100644
+--- a/drivers/scsi/NCR53c406a.c
++++ b/drivers/scsi/NCR53c406a.c
+@@ -696,7 +696,10 @@ static void wait_intr(void)
+ static int NCR53c406a_queue(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ {
+ 	int i;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	VDEB(printk("NCR53c406a_queue called\n"));
+ 	DEB(printk("cmd=%02x, cmd_len=%02x, target=%02x, lun=%02x, bufflen=%d\n", SCpnt->cmnd[0], SCpnt->cmd_len, SCpnt->target, SCpnt->lun, scsi_bufflen(SCpnt)));
+ 
+@@ -723,6 +726,7 @@ static int NCR53c406a_queue(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ 	outb(SELECT_NO_ATN, CMD_REG);
+ 
+ 	rtrc(1);
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
+index dbbc601..1aa33f0 100644
+--- a/drivers/scsi/a100u2w.c
++++ b/drivers/scsi/a100u2w.c
+@@ -915,18 +915,25 @@ static int inia100_queue(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd
+ {
+ 	struct orc_scb *scb;
+ 	struct orc_host *host;		/* Point to Host adapter control block */
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	host = (struct orc_host *) cmd->device->host->hostdata;
+ 	cmd->scsi_done = done;
+ 	/* Get free SCSI control block  */
+-	if ((scb = orc_alloc_scb(host)) == NULL)
++	if ((scb = orc_alloc_scb(host)) == NULL) {
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	if (inia100_build_scb(host, scb, cmd)) {
+ 		orc_release_scb(host, scb);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 	orc_exec_scb(host, scb);	/* Start execute SCB            */
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 29c0ed1..1736fa2 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -253,6 +253,11 @@ static int aac_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct aac_dev *dev = (struct aac_dev *)host->hostdata;
+ 	u32 count = 0;
++	unsigned long irqflags;
++	int ret;
++
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	cmd->scsi_done = done;
+ 	for (; count < (host->can_queue + AAC_NUM_MGT_FIB); ++count) {
+ 		struct fib * fib = &dev->fibs[count];
+@@ -260,11 +265,15 @@ static int aac_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
+ 		if (fib->hw_fib_va->header.XferState &&
+ 		    ((command = fib->callback_data)) &&
+ 		    (command == cmd) &&
+-		    (cmd->SCp.phase == AAC_OWNER_FIRMWARE))
+-			return 0; /* Already owned by Adapter */
++		    (cmd->SCp.phase == AAC_OWNER_FIRMWARE)) {
++		    	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
++		    	return 0;
++		    } /* Already owned by Adapter */
+ 	}
+ 	cmd->SCp.phase = AAC_OWNER_LOWLEVEL;
+-	return (aac_scsi_cmd(cmd) ? FAILED : 0);
++	ret = (aac_scsi_cmd(cmd) ? FAILED : 0);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
++	return ret;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 0ec3da6..cb5e7c2 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -9504,7 +9504,10 @@ advansys_queuecommand(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
+ {
+ 	struct Scsi_Host *shost = scp->device->host;
+ 	int asc_res, result = 0;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(scp->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scp->device->host, scp);
+ 	ASC_STATS(shost, queuecommand);
+ 	scp->scsi_done = done;
+ 
+@@ -9522,6 +9525,7 @@ advansys_queuecommand(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
+ 		break;
+ 	}
+ 
++	spin_unlock_irqrestore(scp->device->host->host_lock, irqflags);
+ 	return result;
+ }
+ 
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index 8eab858..055e953 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -1058,6 +1058,12 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
+  */
+ static int aha152x_queue(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
+ {
++	unsigned long irqflags;
++	int ret;
++
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
++
+ #if 0
+ 	if(*SCpnt->cmnd == REQUEST_SENSE) {
+ 		SCpnt->result = 0;
+@@ -1067,7 +1073,9 @@ static int aha152x_queue(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
+ 	}
+ #endif
+ 
+-	return aha152x_internal_queue(SCpnt, NULL, 0, done);
++	ret = aha152x_internal_queue(SCpnt, NULL, 0, done);
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
++	return ret;
+ }
+ 
+ 
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 4f785f2..f33b417 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -570,7 +570,10 @@ static int aha1542_queuecommand(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ 	int mbo;
+ 	struct mailbox *mb;
+ 	struct ccb *ccb;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	DEB(int i);
+ 
+ 	mb = HOSTDATA(SCpnt->device->host)->mb;
+@@ -593,6 +596,7 @@ static int aha1542_queuecommand(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ #endif
+ 		SCpnt->result = 0;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ #ifdef DEBUG
+@@ -611,8 +615,10 @@ static int aha1542_queuecommand(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ 	for (i = 0; i < SCpnt->cmd_len; i++)
+ 		printk("%02x ", cmd[i]);
+ 	printk("\n");
+-	if (*cmd == WRITE_10 || *cmd == WRITE_6)
+-		return 0;	/* we are still testing, so *don't* write */
++	if (*cmd == WRITE_10 || *cmd == WRITE_6) {
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
++		return 0;
++	}	/* we are still testing, so *don't* write */
+ #endif
+ 	/* Use the outgoing mailboxes in a round-robin fashion, because this
+ 	   is how the host adapter will scan for them */
+@@ -671,6 +677,7 @@ static int aha1542_queuecommand(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ 		if (cptr == NULL) {
+ 			/* free the claimed mailbox slot */
+ 			HOSTDATA(SCpnt->device->host)->SCint[mbo] = NULL;
++			spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 			return SCSI_MLQUEUE_HOST_BUSY;
+ 		}
+ 		scsi_for_each_sg(SCpnt, sg, sg_count, i) {
+@@ -715,6 +722,7 @@ static int aha1542_queuecommand(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ 	} else
+ 		printk("aha1542_queuecommand: done can't be NULL\n");
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
+index 0107a4c..d5486cf 100644
+--- a/drivers/scsi/aha1740.c
++++ b/drivers/scsi/aha1740.c
+@@ -331,6 +331,7 @@ static irqreturn_t aha1740_intr_handle(int irq, void *dev_id)
+ 	return IRQ_RETVAL(handled);
+ }
+ 
++/* AK: Did this driver ever work? */
+ static int aha1740_queuecommand(Scsi_Cmnd * SCpnt, void (*done)(Scsi_Cmnd *))
+ {
+ 	unchar direction;
+@@ -341,11 +342,16 @@ static int aha1740_queuecommand(Scsi_Cmnd * SCpnt, void (*done)(Scsi_Cmnd *))
+ 	dma_addr_t sg_dma;
+ 	struct aha1740_sg *sgptr;
+ 	int ecbno, nseg;
++	unsigned long irqflags;
+ 	DEB(int i);
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
++
+ 	if(*cmd == REQUEST_SENSE) {
+ 		SCpnt->result = 0;
+ 		done(SCpnt); 
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -364,6 +370,7 @@ static int aha1740_queuecommand(Scsi_Cmnd * SCpnt, void (*done)(Scsi_Cmnd *))
+ #endif
+ 
+ 	/* locate an available ecb */
++	/* AK: deadlock?!? */
+ 	spin_lock_irqsave(SCpnt->device->host->host_lock, flags);
+ 	ecbno = host->last_ecb_used + 1; /* An optimization */
+ 	if (ecbno >= AHA1740_ECBS)
+@@ -406,6 +413,7 @@ static int aha1740_queuecommand(Scsi_Cmnd * SCpnt, void (*done)(Scsi_Cmnd *))
+ 						   &sg_dma, GFP_ATOMIC);
+ 	if(SCpnt->host_scribble == NULL) {
+ 		printk(KERN_WARNING "aha1740: out of memory in queuecommand!\n");
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 1;
+ 	}
+ 	sgptr = (struct aha1740_sg *) SCpnt->host_scribble;
+@@ -500,6 +508,8 @@ static int aha1740_queuecommand(Scsi_Cmnd * SCpnt, void (*done)(Scsi_Cmnd *))
+ 		DEB(printk("aha1740[%d] request queued.\n",ecbno));
+ 	} else
+ 		printk(KERN_ALERT "aha1740_queuecommand: done can't be NULL\n");
++
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 88ad848..93e1070 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -578,13 +578,17 @@ ahd_linux_queue(struct scsi_cmnd * cmd, void (*scsi_done) (struct scsi_cmnd *))
+ 	struct	 ahd_softc *ahd;
+ 	struct	 ahd_linux_device *dev = scsi_transport_device_data(cmd->device);
+ 	int rtn = SCSI_MLQUEUE_HOST_BUSY;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	ahd = *(struct ahd_softc **)cmd->device->host->hostdata;
+ 
+ 	cmd->scsi_done = scsi_done;
+ 	cmd->result = CAM_REQ_INPROG << 16;
+ 	rtn = ahd_linux_run_command(ahd, dev, cmd);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return rtn;
+ }
+ 
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index aeea7a6..198390a 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -534,7 +534,10 @@ ahc_linux_queue(struct scsi_cmnd * cmd, void (*scsi_done) (struct scsi_cmnd *))
+ 	struct	 ahc_linux_device *dev = scsi_transport_device_data(cmd->device);
+ 	int rtn = SCSI_MLQUEUE_HOST_BUSY;
+ 	unsigned long flags;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	ahc = *(struct ahc_softc **)cmd->device->host->hostdata;
+ 
+ 	ahc_lock(ahc, &flags);
+@@ -545,6 +548,7 @@ ahc_linux_queue(struct scsi_cmnd * cmd, void (*scsi_done) (struct scsi_cmnd *))
+ 	}
+ 	ahc_unlock(ahc, &flags);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return rtn;
+ }
+ 
+diff --git a/drivers/scsi/aic7xxx_old.c b/drivers/scsi/aic7xxx_old.c
+index aee73fa..97c4efc 100644
+--- a/drivers/scsi/aic7xxx_old.c
++++ b/drivers/scsi/aic7xxx_old.c
+@@ -10239,7 +10239,10 @@ static int aic7xxx_queue(struct scsi_cmnd *cmd, void (*fn)(struct scsi_cmnd *))
+   struct aic7xxx_host *p;
+   struct aic7xxx_scb *scb;
+   struct aic_dev_data *aic_dev;
++  unsigned long irqflags;
+ 
++  spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++  scsi_cmd_get_serial(cmd->device->host, cmd);
+   p = (struct aic7xxx_host *) cmd->device->host->hostdata;
+ 
+   aic_dev = cmd->device->hostdata;  
+@@ -10262,6 +10265,7 @@ static int aic7xxx_queue(struct scsi_cmnd *cmd, void (*fn)(struct scsi_cmnd *))
+     {
+       printk(WARN_LEAD "Couldn't get a free SCB.\n", p->host_no,
+              CTL_OF_CMD(cmd));
++      spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+       return 1;
+     }
+   }
+@@ -10289,6 +10293,7 @@ static int aic7xxx_queue(struct scsi_cmnd *cmd, void (*fn)(struct scsi_cmnd *))
+ 
+   scbq_insert_tail(&p->waiting_scbs, scb);
+   aic7xxx_run_waiting_queues(p);
++  spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+   return (0);
+ }
+ 
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 05a78e5..8cddef3 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2090,6 +2090,10 @@ static int arcmsr_queue_command(struct scsi_cmnd *cmd,
+ 	int target = cmd->device->id;
+ 	int lun = cmd->device->lun;
+ 	uint8_t scsicmd = cmd->cmnd[0];
++	unsigned long irqflags;
++
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	cmd->scsi_done = done;
+ 	cmd->host_scribble = NULL;
+ 	cmd->result = 0;
+@@ -2098,29 +2102,38 @@ static int arcmsr_queue_command(struct scsi_cmnd *cmd,
+     			cmd->result = (DID_NO_CONNECT << 16);
+ 		}
+ 		cmd->scsi_done(cmd);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	if (target == 16) {
+ 		/* virtual device for iop message transfer */
+ 		arcmsr_handle_virtual_command(acb, cmd);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	if (atomic_read(&acb->ccboutstandingcount) >=
+-			ARCMSR_MAX_OUTSTANDING_CMD)
+-		return SCSI_MLQUEUE_HOST_BUSY;
++			ARCMSR_MAX_OUTSTANDING_CMD) {
++				spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
++				return SCSI_MLQUEUE_HOST_BUSY;
++			}
+ 	if ((scsicmd == SCSI_CMD_ARECA_SPECIFIC)) {
+ 		printk(KERN_NOTICE "Receiveing SCSI_CMD_ARECA_SPECIFIC command..\n");
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	ccb = arcmsr_get_freeccb(acb);
+-	if (!ccb)
++	if (!ccb) {
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 	if (arcmsr_build_ccb( acb, ccb, cmd ) == FAILED) {
+ 		cmd->result = (DID_ERROR << 16) | (RESERVATION_CONFLICT << 1);
+ 		cmd->scsi_done(cmd);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	arcmsr_post_ccb(acb, ccb);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index 918ccf8..6f1049e 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -2515,7 +2515,10 @@ int acornscsi_queuecmd(struct scsi_cmnd *SCpnt,
+ 		       void (*done)(struct scsi_cmnd *))
+ {
+     AS_Host *host = (AS_Host *)SCpnt->device->host->hostdata;
++    unsigned long irqflags;
+ 
++    spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++    scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+     if (!done) {
+ 	/* there should be some way of rejecting errors like this without panicing... */
+ 	panic("scsi%d: queuecommand called with NULL done function [cmd=%p]",
+@@ -2529,6 +2532,7 @@ int acornscsi_queuecmd(struct scsi_cmnd *SCpnt,
+ 	    host->host->host_no, '0' + SCpnt->device->id);
+ 	SCpnt->result = DID_NO_CONNECT << 16;
+ 	done(SCpnt);
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+     }
+ #endif
+@@ -2551,6 +2555,7 @@ int acornscsi_queuecmd(struct scsi_cmnd *SCpnt,
+ 	if (!queue_add_cmd_ordered(&host->queues.issue, SCpnt)) {
+ 	    SCpnt->result = DID_ERROR << 16;
+ 	    done(SCpnt);
++	    spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	    return 0;
+ 	}
+ 	local_irq_save(flags);
+@@ -2558,6 +2563,7 @@ int acornscsi_queuecmd(struct scsi_cmnd *SCpnt,
+ 	    acornscsi_kick(host);
+ 	local_irq_restore(flags);
+     }
++    spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+     return 0;
+ }
+ 
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 9e71ac6..8cd9311 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -2203,7 +2203,10 @@ int fas216_queue_command(struct scsi_cmnd *SCpnt,
+ {
+ 	FAS216_Info *info = (FAS216_Info *)SCpnt->device->host->hostdata;
+ 	int result;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	fas216_checkmagic(info);
+ 
+ 	fas216_log_command(info, LOG_CONNECT, SCpnt,
+@@ -2237,6 +2240,7 @@ int fas216_queue_command(struct scsi_cmnd *SCpnt,
+ 	fas216_log_target(info, LOG_CONNECT, -1, "queue %s",
+ 		result ? "failure" : "success");
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return result;
+ }
+ 
+@@ -2267,7 +2271,10 @@ int fas216_noqueue_command(struct scsi_cmnd *SCpnt,
+ 			   void (*done)(struct scsi_cmnd *))
+ {
+ 	FAS216_Info *info = (FAS216_Info *)SCpnt->device->host->hostdata;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	fas216_checkmagic(info);
+ 
+ 	/*
+@@ -2307,6 +2314,7 @@ int fas216_noqueue_command(struct scsi_cmnd *SCpnt,
+ 
+ 	done(SCpnt);
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
+index ab5bdda..0ec5c9d 100644
+--- a/drivers/scsi/atp870u.c
++++ b/drivers/scsi/atp870u.c
+@@ -612,7 +612,10 @@ static int atp870u_queuecommand(struct scsi_cmnd * req_p,
+ 	unsigned int tmport,m;	
+ 	struct atp_unit *dev;
+ 	struct Scsi_Host *host;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(req_p->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(req_p->device->host, req_p);
+ 	c = scmd_channel(req_p);
+ 	req_p->sense_buffer[0]=0;
+ 	scsi_set_resid(req_p, 0);
+@@ -622,6 +625,7 @@ static int atp870u_queuecommand(struct scsi_cmnd * req_p,
+ #ifdef ED_DBGP		
+ 		printk("atp870u_queuecommand : req_p->device->channel > 1\n");	
+ #endif			
++		spin_unlock_irqrestore(req_p->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -640,6 +644,7 @@ static int atp870u_queuecommand(struct scsi_cmnd * req_p,
+ 	if ((m & dev->active_id[c]) == 0) {
+ 		req_p->result = 0x00040000;
+ 		done(req_p);
++		spin_unlock_irqrestore(req_p->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -651,6 +656,7 @@ static int atp870u_queuecommand(struct scsi_cmnd * req_p,
+ #endif		
+ 		req_p->result = 0;
+ 		done(req_p);
++		spin_unlock_irqrestore(req_p->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	
+@@ -675,6 +681,7 @@ static int atp870u_queuecommand(struct scsi_cmnd * req_p,
+ 		dev->quend[c]--;
+ 		req_p->result = 0x00020000;
+ 		done(req_p);	
++		spin_unlock_irqrestore(req_p->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	dev->quereq[c][dev->quend[c]] = req_p;
+@@ -691,6 +698,7 @@ static int atp870u_queuecommand(struct scsi_cmnd * req_p,
+ #ifdef ED_DBGP	
+ 	printk("atp870u_queuecommand : exit\n");
+ #endif	
++	spin_unlock_irqrestore(req_p->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 8daa716..38dac19 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -1132,17 +1132,23 @@ bfad_im_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 	int             rc;
+ 	int       sg_cnt = 0;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmnd->device->host, cmnd);
+ 	rc = fc_remote_port_chkready(rport);
+ 	if (rc) {
+ 		cmnd->result = rc;
+ 		done(cmnd);
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	sg_cnt = scsi_dma_map(cmnd);
+-	if (sg_cnt < 0)
++	if (sg_cnt < 0) {
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	cmnd->scsi_done = done;
+ 
+@@ -1168,6 +1174,7 @@ bfad_im_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 		printk(KERN_WARNING "hal_io failure\n");
+ 		spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 		scsi_dma_unmap(cmnd);
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -1176,6 +1183,7 @@ bfad_im_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 	bfa_ioim_start(hal_io);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+ out_fail_cmd:
+@@ -1184,6 +1192,7 @@ out_fail_cmd:
+ 	if (done)
+ 		done(cmnd);
+ 
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 54f50b0..891614a 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -1086,6 +1086,10 @@ static int dc395x_queue_command(struct scsi_cmnd *cmd, void (*done)(struct scsi_
+ 	struct ScsiReqBlk *srb;
+ 	struct AdapterCtlBlk *acb =
+ 	    (struct AdapterCtlBlk *)cmd->device->host->hostdata;
++	unsigned long irqflags;
++
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	dprintkdbg(DBG_0, "queue_command: (pid#%li) <%02i-%i> cmnd=0x%02x\n",
+ 		cmd->serial_number, cmd->device->id, cmd->device->lun, cmd->cmnd[0]);
+ 
+@@ -1127,6 +1131,7 @@ static int dc395x_queue_command(struct scsi_cmnd *cmd, void (*done)(struct scsi_
+ 		 * point in time.
+ 		 */
+ 		dprintkdbg(DBG_0, "queue_command: No free srb's\n");
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 1;
+ 	}
+ 
+@@ -1141,6 +1146,7 @@ static int dc395x_queue_command(struct scsi_cmnd *cmd, void (*done)(struct scsi_
+ 		send_srb(acb, srb);
+ 	}
+ 	dprintkdbg(DBG_1, "queue_command: (pid#%li) done\n", cmd->serial_number);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+ complete:
+@@ -1151,6 +1157,7 @@ complete:
+ 	 * devices.
+ 	 */
+ 	done(cmd);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 23dec00..901f952 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -427,7 +427,10 @@ static int adpt_queue(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd *))
+ {
+ 	adpt_hba* pHba = NULL;
+ 	struct adpt_device* pDev = NULL;	/* dpt per device information */
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	cmd->scsi_done = done;
+ 	/*
+ 	 * SCSI REQUEST_SENSE commands will be executed automatically by the 
+@@ -439,11 +442,13 @@ static int adpt_queue(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd *))
+ 	if ((cmd->cmnd[0] == REQUEST_SENSE) && (cmd->sense_buffer[0] != 0)) {
+ 		cmd->result = (DID_OK << 16);
+ 		cmd->scsi_done(cmd);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	pHba = (adpt_hba*)cmd->device->host->hostdata[0];
+ 	if (!pHba) {
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return FAILED;
+ 	}
+ 
+@@ -459,6 +464,7 @@ static int adpt_queue(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd *))
+ 	if(((pHba->state) & DPTI_STATE_IOCTL) || ((pHba->state) & DPTI_STATE_RESET)) {
+ 		pHba->host->last_reset = jiffies;
+ 		pHba->host->resetting = 1;
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 1;
+ 	}
+ 
+@@ -475,6 +481,7 @@ static int adpt_queue(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd *))
+ 			// with type 7F (for all luns less than the max for this bus,id) so the lun scan will continue.
+ 			cmd->result = (DID_NO_CONNECT << 16);
+ 			cmd->scsi_done(cmd);
++			spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 			return 0;
+ 		}
+ 		cmd->device->hostdata = pDev;
+@@ -486,8 +493,10 @@ static int adpt_queue(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd *))
+ 	 * delay processing of the command until later.
+ 	 */
+ 	if (pDev->state & DPTI_DEV_RESET ) {
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return FAILED;
+ 	}
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return adpt_scsi_to_i2o(pHba, cmd, pDev);
+ }
+ 
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index d1c3137..6761716 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -1765,7 +1765,10 @@ static int eata2x_queuecommand(struct scsi_cmnd *SCpnt,
+ 	struct hostdata *ha = (struct hostdata *)shost->hostdata;
+ 	unsigned int i, k;
+ 	struct mscp *cpp;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	if (SCpnt->host_scribble)
+ 		panic("%s: qcomm, pid %ld, SCpnt %p already active.\n",
+ 		      ha->board_name, SCpnt->serial_number, SCpnt);
+@@ -1785,6 +1788,7 @@ static int eata2x_queuecommand(struct scsi_cmnd *SCpnt,
+ 
+ 	if (k == shost->can_queue) {
+ 		printk("%s: qcomm, no free mailbox.\n", ha->board_name);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 1;
+ 	}
+ 
+@@ -1827,6 +1831,7 @@ static int eata2x_queuecommand(struct scsi_cmnd *SCpnt,
+ 	    && TLDEV(SCpnt->device->type)) {
+ 		ha->cp_stat[i] = READY;
+ 		flush_dev(SCpnt->device, blk_rq_pos(SCpnt->request), ha, 0);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -1836,10 +1841,12 @@ static int eata2x_queuecommand(struct scsi_cmnd *SCpnt,
+ 		SCpnt->host_scribble = NULL;
+ 		scmd_printk(KERN_INFO, SCpnt,
+ 			"qcomm, pid %ld, adapter busy.\n", SCpnt->serial_number);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 1;
+ 	}
+ 
+ 	ha->cp_stat[i] = IN_USE;
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/eata_pio.c b/drivers/scsi/eata_pio.c
+index 60886c1..72de26e 100644
+--- a/drivers/scsi/eata_pio.c
++++ b/drivers/scsi/eata_pio.c
+@@ -344,7 +344,10 @@ static int eata_pio_queue(struct scsi_cmnd *cmd,
+ 	hostdata *hd;
+ 	struct Scsi_Host *sh;
+ 	struct eata_ccb *cp;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	queue_counter++;
+ 
+ 	hd = HD(cmd);
+@@ -421,6 +424,7 @@ static int eata_pio_queue(struct scsi_cmnd *cmd,
+ 			"returning DID_BUS_BUSY, done.\n", cmd->serial_number);
+ 		done(cmd);
+ 		cp->status = FREE;
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	/* FIXME: timeout */
+@@ -435,6 +439,7 @@ static int eata_pio_queue(struct scsi_cmnd *cmd,
+ 		"Queued base %#.4lx pid: %ld "
+ 		"slot %d irq %d\n", sh->base, cmd->serial_number, y, sh->irq));
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index e2bc779..c70efde 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -922,10 +922,15 @@ static int esp_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
+ 	struct esp *esp = shost_priv(dev->host);
+ 	struct esp_cmd_priv *spriv;
+ 	struct esp_cmd_entry *ent;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	ent = esp_get_ent(esp);
+-	if (!ent)
++	if (!ent) {
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	ent->cmd = cmd;
+ 
+@@ -938,6 +943,7 @@ static int esp_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd
+ 
+ 	esp_maybe_execute_command(esp);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/fd_mcs.c b/drivers/scsi/fd_mcs.c
+index 2ad95aa..dc61481 100644
+--- a/drivers/scsi/fd_mcs.c
++++ b/drivers/scsi/fd_mcs.c
+@@ -1075,7 +1075,10 @@ static int fd_mcs_release(struct Scsi_Host *shpnt)
+ static int fd_mcs_queue(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ {
+ 	struct Scsi_Host *shpnt = SCpnt->device->host;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	if (in_command) {
+ 		panic("fd_mcs: fd_mcs_queue() NOT REENTRANT!\n");
+ 	}
+@@ -1119,6 +1122,7 @@ static int fd_mcs_queue(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ 	outb(0x20, Interrupt_Cntl_port);
+ 	outb(0x14 | PARITY_MASK, TMC_Cntl_port);	/* Start arbitration */
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
+index e296bcc..153bb64 100644
+--- a/drivers/scsi/fdomain.c
++++ b/drivers/scsi/fdomain.c
+@@ -1422,6 +1422,9 @@ static irqreturn_t do_fdomain_16x0_intr(int irq, void *dev_id)
+ static int fdomain_16x0_queue(struct scsi_cmnd *SCpnt,
+ 		void (*done)(struct scsi_cmnd *))
+ {
++   unsigned long irqflags;
++   spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++   scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+    if (in_command) {
+       panic( "scsi: <fdomain> fdomain_16x0_queue() NOT REENTRANT!\n" );
+    }
+@@ -1466,6 +1469,7 @@ static int fdomain_16x0_queue(struct scsi_cmnd *SCpnt,
+    outb(0x20, port_base + Interrupt_Cntl);
+    outb(0x14 | PARITY_MASK, port_base + TMC_Cntl); /* Start arbitration */
+ 
++   spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+    return 0;
+ }
+ 
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 198cbab..2e4f40b 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -360,18 +360,24 @@ int fnic_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 	int sg_count;
+ 	unsigned long flags;
+ 	unsigned long ptr;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(sc->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(sc->device->host, sc);
+ 	rport = starget_to_rport(scsi_target(sc->device));
+ 	ret = fc_remote_port_chkready(rport);
+ 	if (ret) {
+ 		sc->result = ret;
+ 		done(sc);
++		spin_unlock_irqrestore(sc->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	lp = shost_priv(sc->device->host);
+-	if (lp->state != LPORT_ST_READY || !(lp->link_up))
++	if (lp->state != LPORT_ST_READY || !(lp->link_up)) {
++		spin_unlock_irqrestore(sc->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	/*
+ 	 * Release host lock, use driver resource specific locks from here.
+@@ -454,6 +460,7 @@ int fnic_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ out:
+ 	/* acquire host lock before returning to SCSI */
+ 	spin_lock(lp->host->host_lock);
++	spin_unlock_irqrestore(sc->device->host->host_lock, irqflags);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 8411018..08a8f14 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -4009,7 +4009,10 @@ static int gdth_queuecommand(struct scsi_cmnd *scp,
+ {
+     gdth_ha_str *ha = shost_priv(scp->device->host);
+     struct gdth_cmndinfo *cmndinfo;
++    unsigned long irqflags;
+ 
++    spin_lock_irqsave(scp->device->host->host_lock, irqflags);
++    scsi_cmd_get_serial(scp->device->host, scp);
+     TRACE(("gdth_queuecommand() cmd 0x%x\n", scp->cmnd[0]));
+ 
+     cmndinfo = gdth_get_cmndinfo(ha);
+@@ -4019,6 +4022,7 @@ static int gdth_queuecommand(struct scsi_cmnd *scp,
+     cmndinfo->timeout_count = 0;
+     cmndinfo->priority = DEFAULT_PRI;
+ 
++    spin_unlock_irqrestore(scp->device->host->host_lock, irqflags);
+     return __gdth_queuecommand(ha, scp, cmndinfo);
+ }
+ 
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index c5d0606..8d0f51d 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -1934,13 +1934,17 @@ static int hpsa_scsi_queue_command(struct scsi_cmnd *cmd,
+ 	unsigned char scsi3addr[8];
+ 	struct CommandList *c;
+ 	unsigned long flags;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	/* Get the ptr to our adapter structure out of cmd->host. */
+ 	h = sdev_to_hba(cmd->device);
+ 	dev = cmd->device->hostdata;
+ 	if (!dev) {
+ 		cmd->result = DID_NO_CONNECT << 16;
+ 		done(cmd);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
+@@ -1951,6 +1955,7 @@ static int hpsa_scsi_queue_command(struct scsi_cmnd *cmd,
+ 	spin_unlock_irqrestore(&h->lock, flags);
+ 	if (c == NULL) {			/* trouble... */
+ 		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -2013,10 +2018,12 @@ static int hpsa_scsi_queue_command(struct scsi_cmnd *cmd,
+ 
+ 	if (hpsa_scatter_gather(h, c, cmd) < 0) { /* Fill SG list */
+ 		cmd_free(h, c);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 	enqueue_cmd_and_start_io(h, c);
+ 	/* the cmd'll come back via intr handler in complete_scsi_command()  */
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index 0729f15..04903e4 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -759,13 +759,17 @@ static int hptiop_queuecommand(struct scsi_cmnd *scp,
+ 	struct hpt_iop_request_scsi_command *req;
+ 	int sg_count = 0;
+ 	struct hptiop_request *_req;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(scp->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scp->device->host, scp);
+ 	BUG_ON(!done);
+ 	scp->scsi_done = done;
+ 
+ 	_req = get_req(hba);
+ 	if (_req == NULL) {
+ 		dprintk("hptiop_queuecmd : no free req\n");
++		spin_unlock_irqrestore(scp->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -811,11 +815,13 @@ static int hptiop_queuecommand(struct scsi_cmnd *scp,
+ 
+ 	memcpy(req->cdb, scp->cmnd, sizeof(req->cdb));
+ 	hba->ops->post_req(hba, _req);
++	spin_unlock_irqrestore(scp->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+ cmd_done:
+ 	dprintk("scsi_done(scp=%p)\n", scp);
+ 	scp->scsi_done(scp);
++	spin_unlock_irqrestore(scp->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/ibmmca.c b/drivers/scsi/ibmmca.c
+index 9a4b69d..65595e2 100644
+--- a/drivers/scsi/ibmmca.c
++++ b/drivers/scsi/ibmmca.c
+@@ -1703,6 +1703,10 @@ static int ibmmca_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 	int max_pun;
+ 	int i;
+ 	struct scatterlist *sg;
++	unsigned long irqflags;
++
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 
+ 	shpnt = cmd->device->host;
+ 
+@@ -1721,6 +1725,8 @@ static int ibmmca_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 		cmd->result = DID_NO_CONNECT << 16;
+ 		if (done)
+ 			done(cmd);
++
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -1743,6 +1749,8 @@ static int ibmmca_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 					cmd->result = DID_NO_CONNECT << 16;	/* return no connect */
+ 					if (done)
+ 						done(cmd);
++
++					spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 					return 0;
+ 				}
+ 			}
+@@ -1804,6 +1812,8 @@ static int ibmmca_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 			cmd->result = DID_BAD_TARGET << 16;
+ 			if (done)
+ 				done(cmd);
++
++			spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 			return 0;
+ 		}
+ 	}
+@@ -1993,6 +2003,8 @@ static int ibmmca_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 		issue_cmd(shpnt, isa_virt_to_bus(scb), IM_SCB | ldn);
+ 		IBM_DS(shpnt).scbs++;
+ 	}
++
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 00d08b2..fb1e719 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1615,11 +1615,15 @@ static int ibmvfc_queuecommand(struct scsi_cmnd *cmnd,
+ 	struct ibmvfc_event *evt;
+ 	u8 tag[2];
+ 	int rc;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmnd->device->host, cmnd);
+ 	if (unlikely((rc = fc_remote_port_chkready(rport))) ||
+ 	    unlikely((rc = ibmvfc_host_chkready(vhost)))) {
+ 		cmnd->result = rc;
+ 		done(cmnd);
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -1656,12 +1660,16 @@ static int ibmvfc_queuecommand(struct scsi_cmnd *cmnd,
+ 		};
+ 	}
+ 
+-	if (likely(!(rc = ibmvfc_map_sg_data(cmnd, evt, vfc_cmd, vhost->dev))))
++	if (likely(!(rc = ibmvfc_map_sg_data(cmnd, evt, vfc_cmd, vhost->dev)))) {
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 		return ibmvfc_send_event(evt, vhost, 0);
++	}
+ 
+ 	ibmvfc_free_event(evt);
+-	if (rc == -ENOMEM)
++	if (rc == -ENOMEM) {
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	if (vhost->log_level > IBMVFC_DEFAULT_LOG_LEVEL)
+ 		scmd_printk(KERN_ERR, cmnd,
+@@ -1669,6 +1677,7 @@ static int ibmvfc_queuecommand(struct scsi_cmnd *cmnd,
+ 
+ 	cmnd->result = DID_ERROR << 16;
+ 	done(cmnd);
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 67f78a4..81be256 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -722,11 +722,16 @@ static int ibmvscsi_queuecommand(struct scsi_cmnd *cmnd,
+ 	struct ibmvscsi_host_data *hostdata = shost_priv(cmnd->device->host);
+ 	u16 lun = lun_from_dev(cmnd->device);
+ 	u8 out_fmt, in_fmt;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmnd->device->host, cmnd);
+ 	cmnd->result = (DID_OK << 16);
+ 	evt_struct = get_event_struct(&hostdata->pool);
+-	if (!evt_struct)
++	if (!evt_struct) {
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	/* Set up the actual SRP IU */
+ 	srp_cmd = &evt_struct->iu.srp.cmd;
+@@ -740,6 +745,7 @@ static int ibmvscsi_queuecommand(struct scsi_cmnd *cmnd,
+ 			sdev_printk(KERN_ERR, cmnd->device,
+ 			            "couldn't convert cmd to srp_cmd\n");
+ 		free_event_struct(&hostdata->pool, evt_struct);
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -763,6 +769,7 @@ static int ibmvscsi_queuecommand(struct scsi_cmnd *cmnd,
+ 			offsetof(struct srp_indirect_buf, desc_list);
+ 	}
+ 
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 	return ibmvscsi_send_srp_event(evt_struct, hostdata, 0);
+ }
+ 
+diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+index 4734ab0..be88999 100644
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -930,9 +930,13 @@ static int imm_queuecommand(struct scsi_cmnd *cmd,
+ 		void (*done)(struct scsi_cmnd *))
+ {
+ 	imm_struct *dev = imm_dev(cmd->device->host);
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	if (dev->cur_cmd) {
+ 		printk("IMM: bug in imm_queuecommand\n");
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	dev->failed = 0;
+@@ -946,6 +950,7 @@ static int imm_queuecommand(struct scsi_cmnd *cmd,
+ 
+ 	imm_pb_claim(dev);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/in2000.c b/drivers/scsi/in2000.c
+index 52bdc6d..2339bb3 100644
+--- a/drivers/scsi/in2000.c
++++ b/drivers/scsi/in2000.c
+@@ -339,7 +339,10 @@ static int in2000_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 	struct Scsi_Host *instance;
+ 	struct IN2000_hostdata *hostdata;
+ 	Scsi_Cmnd *tmp;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	instance = cmd->device->host;
+ 	hostdata = (struct IN2000_hostdata *) instance->hostdata;
+ 
+@@ -428,6 +431,7 @@ static int in2000_queuecommand(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 	in2000_execute(cmd->device->host);
+ 
+ 	DB(DB_QUEUE_COMMAND, printk(")Q-%ld ", cmd->serial_number))
++	    spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	    return 0;
+ }
+ 
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 1087977..0ef119e 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -2644,15 +2644,21 @@ static int i91u_queuecommand(struct scsi_cmnd *cmd,
+ {
+ 	struct initio_host *host = (struct initio_host *) cmd->device->host->hostdata;
+ 	struct scsi_ctrl_blk *cmnd;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	cmd->scsi_done = done;
+ 
+ 	cmnd = initio_alloc_scb(host);
+-	if (!cmnd)
++	if (!cmnd) {
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	initio_build_scb(host, cmnd, cmd);
+ 	initio_exec_scb(host, cmnd);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index fa60d7d..68b921c 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -5717,7 +5717,10 @@ static int ipr_queuecommand(struct scsi_cmnd *scsi_cmd,
+ 	struct ipr_ioarcb *ioarcb;
+ 	struct ipr_cmnd *ipr_cmd;
+ 	int rc = 0;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(&scsi_cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scsi_cmd->device->host, scsi_cmd);
+ 	scsi_cmd->scsi_done = done;
+ 	ioa_cfg = (struct ipr_ioa_cfg *)scsi_cmd->device->host->hostdata;
+ 	res = scsi_cmd->device->hostdata;
+@@ -5728,8 +5731,10 @@ static int ipr_queuecommand(struct scsi_cmnd *scsi_cmd,
+ 	 * We have told the host to stop giving us new requests, but
+ 	 * ERP ops don't count. FIXME
+ 	 */
+-	if (unlikely(!ioa_cfg->allow_cmds && !ioa_cfg->ioa_is_dead))
++	if (unlikely(!ioa_cfg->allow_cmds && !ioa_cfg->ioa_is_dead)) {
++		spin_unlock_irqrestore(&scsi_cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	/*
+ 	 * FIXME - Create scsi_set_host_offline interface
+@@ -5739,11 +5744,15 @@ static int ipr_queuecommand(struct scsi_cmnd *scsi_cmd,
+ 		memset(scsi_cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+ 		scsi_cmd->result = (DID_NO_CONNECT << 16);
+ 		scsi_cmd->scsi_done(scsi_cmd);
++		spin_unlock_irqrestore(&scsi_cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+-	if (ipr_is_gata(res) && res->sata_port)
+-		return ata_sas_queuecmd(scsi_cmd, done, res->sata_port->ap);
++	if (ipr_is_gata(res) && res->sata_port) {
++		rc = ata_sas_queuecmd(scsi_cmd, done, res->sata_port->ap);
++		spin_unlock_irqrestore(&scsi_cmd->device->host->host_lock, irqflags);
++		return rc;
++	}
+ 
+ 	ipr_cmd = ipr_get_free_ipr_cmnd(ioa_cfg);
+ 	ioarcb = &ipr_cmd->ioarcb;
+@@ -5786,9 +5795,11 @@ static int ipr_queuecommand(struct scsi_cmnd *scsi_cmd,
+ 		ipr_send_command(ipr_cmd);
+ 	} else {
+ 		 list_move_tail(&ipr_cmd->queue, &ioa_cfg->free_q);
++		 spin_unlock_irqrestore(&scsi_cmd->device->host->host_lock, irqflags);
+ 		 return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
++	spin_unlock_irqrestore(&scsi_cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index f83a116..cd83a25 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -1050,28 +1050,37 @@ static int ips_queue(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *))
+ {
+ 	ips_ha_t *ha;
+ 	ips_passthru_t *pt;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SC->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SC->device->host, SC);
+ 	METHOD_TRACE("ips_queue", 1);
+ 
+ 	ha = (ips_ha_t *) SC->device->host->hostdata;
+ 
+-	if (!ha)
++	if (!ha) {
++		spin_unlock_irqrestore(SC->device->host->host_lock, irqflags);
+ 		return (1);
++	}
+ 
+-	if (!ha->active)
++	if (!ha->active) {
++		spin_unlock_irqrestore(SC->device->host->host_lock, irqflags);
+ 		return (DID_ERROR);
++	}
+ 
+ 	if (ips_is_passthru(SC)) {
+ 		if (ha->copp_waitlist.count == IPS_MAX_IOCTL_QUEUE) {
+ 			SC->result = DID_BUS_BUSY << 16;
+ 			done(SC);
+ 
++			spin_unlock_irqrestore(SC->device->host->host_lock, irqflags);
+ 			return (0);
+ 		}
+ 	} else if (ha->scb_waitlist.count == IPS_MAX_QUEUE) {
+ 		SC->result = DID_BUS_BUSY << 16;
+ 		done(SC);
+ 
++		spin_unlock_irqrestore(SC->device->host->host_lock, irqflags);
+ 		return (0);
+ 	}
+ 
+@@ -1089,6 +1098,7 @@ static int ips_queue(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *))
+ 		SC->result = DID_NO_CONNECT << 16;
+ 		done(SC);
+ 
++		spin_unlock_irqrestore(SC->device->host->host_lock, irqflags);
+ 		return (0);
+ 	}
+ 
+@@ -1105,12 +1115,14 @@ static int ips_queue(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *))
+ 			if (ha->scb_activelist.count != 0) {
+ 				SC->result = DID_BUS_BUSY << 16;
+ 				done(SC);
++				spin_unlock_irqrestore(SC->device->host->host_lock, irqflags);
+ 				return (0);
+ 			}
+ 			ha->ioctl_reset = 1;	/* This reset request is from an IOCTL */
+ 			__ips_eh_reset(SC);
+ 			SC->result = DID_OK << 16;
+ 			SC->scsi_done(SC);
++			spin_unlock_irqrestore(SC->device->host->host_lock, irqflags);
+ 			return (0);
+ 		}
+ 
+@@ -1121,6 +1133,7 @@ static int ips_queue(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *))
+ 			SC->result = DID_ERROR << 16;
+ 			done(SC);
+ 
++			spin_unlock_irqrestore(SC->device->host->host_lock, irqflags);
+ 			return (0);
+ 		}
+ 
+@@ -1134,6 +1147,7 @@ static int ips_queue(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *))
+ 
+ 	ips_next(ha, IPS_INTR_IORL);
+ 
++	spin_unlock_irqrestore(SC->device->host->host_lock, irqflags);
+ 	return (0);
+ }
+ 
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index e340373..a697c99 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1762,13 +1762,17 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 	int rval;
+ 	int rc = 0;
+ 	struct fcoe_dev_stats *stats;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(sc_cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(sc_cmd->device->host, sc_cmd);
+ 	lport = shost_priv(sc_cmd->device->host);
+ 
+ 	rval = fc_remote_port_chkready(rport);
+ 	if (rval) {
+ 		sc_cmd->result = rval;
+ 		done(sc_cmd);
++		spin_unlock_irqrestore(sc_cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	spin_unlock_irq(lport->host->host_lock);
+@@ -1849,6 +1853,7 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
+ 	}
+ out:
+ 	spin_lock_irq(lport->host->host_lock);
++	spin_unlock_irqrestore(sc_cmd->device->host->host_lock, irqflags);
+ 	return rc;
+ }
+ EXPORT_SYMBOL(fc_queuecommand);
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 633e090..444488d 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1608,6 +1608,10 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 	struct iscsi_session *session;
+ 	struct iscsi_conn *conn;
+ 	struct iscsi_task *task = NULL;
++	unsigned long irqflags;
++
++	spin_lock_irqsave(sc->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(sc->device->host, sc);
+ 
+ 	sc->scsi_done = done;
+ 	sc->result = 0;
+@@ -1707,6 +1711,7 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 	session->queued_cmdsn++;
+ 	spin_unlock(&session->lock);
+ 	spin_lock(host->host_lock);
++	spin_unlock_irqrestore(sc->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+ prepd_reject:
+@@ -1717,6 +1722,7 @@ reject:
+ 	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
+ 			  sc->cmnd[0], reason);
+ 	spin_lock(host->host_lock);
++	spin_unlock_irqrestore(sc->device->host->host_lock, irqflags);
+ 	return SCSI_MLQUEUE_TARGET_BUSY;
+ 
+ prepd_fault:
+@@ -1734,6 +1740,7 @@ fault:
+ 	}
+ 	done(sc);
+ 	spin_lock(host->host_lock);
++	spin_unlock_irqrestore(sc->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_queuecommand);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 55f09e9..28375e2 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -200,7 +200,10 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 	struct domain_device *dev = cmd_to_domain_dev(cmd);
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct sas_internal *i = to_sas_internal(host->transportt);
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	spin_unlock_irq(host->host_lock);
+ 
+ 	{
+@@ -251,6 +254,7 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 	}
+ out:
+ 	spin_lock_irq(host->host_lock);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return res;
+ }
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index f64b65a..0487e15 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -2910,6 +2910,10 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
+ 	int err;
+ 
++	unsigned long irqflags;
++
++	spin_lock_irqsave(cmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmnd->device->host, cmnd);
+ 	err = fc_remote_port_chkready(rport);
+ 	if (err) {
+ 		cmnd->result = err;
+@@ -3047,16 +3051,19 @@ lpfc_queuecommand(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 			lpfc_poll_rearm_timer(phba);
+ 	}
+ 
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+  out_host_busy_free_buf:
+ 	lpfc_scsi_unprep_dma_buf(phba, lpfc_cmd);
+ 	lpfc_release_scsi_buf(phba, lpfc_cmd);
+  out_host_busy:
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ 
+  out_fail_command:
+ 	done(cmnd);
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
+index 3ddb4dc..37b01bd 100644
+--- a/drivers/scsi/mac53c94.c
++++ b/drivers/scsi/mac53c94.c
+@@ -82,6 +82,9 @@ static int mac53c94_queue(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *
+ 	}
+ #endif
+ 
++	unsigned long irqflags;
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	cmd->scsi_done = done;
+ 	cmd->host_scribble = NULL;
+ 
+@@ -96,6 +99,7 @@ static int mac53c94_queue(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *
+ 	if (state->phase == idle)
+ 		mac53c94_start(state);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 7ceb5cf..070fdd0 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -372,7 +372,10 @@ megaraid_queue(Scsi_Cmnd *scmd, void (*done)(Scsi_Cmnd *))
+ 	scb_t	*scb;
+ 	int	busy=0;
+ 	unsigned long flags;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(scmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scmd->device->host, scmd);
+ 	adapter = (adapter_t *)scmd->device->host->hostdata;
+ 
+ 	scmd->scsi_done = done;
+@@ -406,6 +409,7 @@ megaraid_queue(Scsi_Cmnd *scmd, void (*done)(Scsi_Cmnd *))
+ 	busy = 0;
+  out:
+ 	spin_unlock_irqrestore(&adapter->lock, flags);
++	spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 	return busy;
+ }
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index a7810a1..07ade30 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -1489,7 +1489,10 @@ megaraid_queue_command(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
+ 	adapter_t	*adapter;
+ 	scb_t		*scb;
+ 	int		if_busy;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(scp->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scp->device->host, scp);
+ 	adapter		= SCP2ADAPTER(scp);
+ 	scp->scsi_done	= done;
+ 	scp->result	= 0;
+@@ -1506,10 +1509,12 @@ megaraid_queue_command(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
+ 	scb = megaraid_mbox_build_cmd(adapter, scp, &if_busy);
+ 	if (!scb) {	// command already completed
+ 		done(scp);
++		spin_unlock_irqrestore(scp->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	megaraid_mbox_runpendq(adapter, scb);
++	spin_unlock_irqrestore(scp->device->host->host_lock, irqflags);
+ 	return if_busy;
+ }
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+index eb29d50..00fce48 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.c
++++ b/drivers/scsi/megaraid/megaraid_sas.c
+@@ -1340,16 +1340,22 @@ megasas_queue_command(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd *))
+ 	struct megasas_cmd *cmd;
+ 	struct megasas_instance *instance;
+ 	unsigned long flags;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(scmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scmd->device->host, scmd);
+ 	instance = (struct megasas_instance *)
+ 	    scmd->device->host->hostdata;
+ 
+-	if (instance->issuepend_done == 0)
++	if (instance->issuepend_done == 0) {
++		spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+ 	if (instance->adprecovery != MEGASAS_HBA_OPERATIONAL) {
+ 		spin_unlock_irqrestore(&instance->hba_lock, flags);
++		spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -1377,8 +1383,10 @@ megasas_queue_command(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd *))
+ 	}
+ 
+ 	cmd = megasas_get_cmd(instance);
+-	if (!cmd)
++	if (!cmd) {
++		spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	/*
+ 	 * Logical drive command
+@@ -1408,12 +1416,14 @@ megasas_queue_command(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd *))
+ 		tasklet_schedule(&instance->isr_tasklet);
+ 
+ 
++	spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+  out_return_cmd:
+ 	megasas_return_cmd(instance, cmd);
+  out_done:
+ 	done(scmd);
++	spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
+index 1f784fd..93e6596 100644
+--- a/drivers/scsi/mesh.c
++++ b/drivers/scsi/mesh.c
+@@ -1630,7 +1630,10 @@ static void cmd_complete(struct mesh_state *ms)
+ static int mesh_queue(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ {
+ 	struct mesh_state *ms;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	cmd->scsi_done = done;
+ 	cmd->host_scribble = NULL;
+ 
+@@ -1645,6 +1648,7 @@ static int mesh_queue(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ 	if (ms->phase == idle)
+ 		mesh_start(ms);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 16e99b6..e849aa2 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -3323,18 +3323,23 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 	Mpi2SCSIIORequest_t *mpi_request;
+ 	u32 mpi_control;
+ 	u16 smid;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(scmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scmd->device->host, scmd);
+ 	scmd->scsi_done = done;
+ 	sas_device_priv_data = scmd->device->hostdata;
+ 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
++		spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	if (ioc->pci_error_recovery) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
++		spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -3343,19 +3348,25 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 	if (sas_target_priv_data->handle == MPT2SAS_INVALID_DEVICE_HANDLE) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
++		spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	/* host recovery or link resets sent via IOCTLs */
+-	if (ioc->shost_recovery || ioc->ioc_link_reset_in_progress)
++	if (ioc->shost_recovery || ioc->ioc_link_reset_in_progress) {
++		spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 	/* device busy with task management */
+-	else if (sas_device_priv_data->block || sas_target_priv_data->tm_busy)
++	else if (sas_device_priv_data->block || sas_target_priv_data->tm_busy) {
++		spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
++	}
+ 	/* device has been deleted */
+ 	else if (sas_target_priv_data->deleted) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
++		spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -3435,9 +3446,11 @@ _scsih_qcmd(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+ 		    sas_device_priv_data->sas_target->handle);
+ 	else
+ 		mpt2sas_base_put_smid_default(ioc, smid);
++	spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+  out:
++	spin_unlock_irqrestore(scmd->device->host->host_lock, irqflags);
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ }
+ 
+diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
+index d013a2a..00a8b1e 100644
+--- a/drivers/scsi/ncr53c8xx.c
++++ b/drivers/scsi/ncr53c8xx.c
+@@ -8034,7 +8034,10 @@ static int ncr53c8xx_queue_command (struct scsi_cmnd *cmd, void (* done)(struct
+      struct ncb *np = ((struct host_data *) cmd->device->host->hostdata)->ncb;
+      unsigned long flags;
+      int sts;
++     unsigned long irqflags;
+ 
++     spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++     scsi_cmd_get_serial(cmd->device->host, cmd);
+ #ifdef DEBUG_NCR53C8XX
+ printk("ncr53c8xx_queue_command\n");
+ #endif
+@@ -8065,6 +8068,7 @@ printk("ncr53c8xx : command successfully queued\n");
+ 	  sts = 0;
+      }
+ 
++     spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+      return sts;
+ }
+ 
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 4c1e545..42864e2 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -915,7 +915,10 @@ static int nsp32_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
+ 	nsp32_target *target;
+ 	nsp32_lunt   *cur_lunt;
+ 	int ret;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	nsp32_dbg(NSP32_DEBUG_QUEUECOMMAND,
+ 		  "enter. target: 0x%x LUN: 0x%x cmnd: 0x%x cmndlen: 0x%x "
+ 		  "use_sg: 0x%x reqbuf: 0x%lx reqlen: 0x%x",
+@@ -927,6 +930,7 @@ static int nsp32_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
+ 		data->CurrentSC = NULL;
+ 		SCpnt->result   = DID_NO_CONNECT << 16;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -935,6 +939,7 @@ static int nsp32_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
+ 		nsp32_dbg(NSP32_DEBUG_QUEUECOMMAND, "terget==host???");
+ 		SCpnt->result = DID_BAD_TARGET << 16;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -943,6 +948,7 @@ static int nsp32_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
+ 		nsp32_dbg(NSP32_DEBUG_QUEUECOMMAND, "no more lun");
+ 		SCpnt->result = DID_BAD_TARGET << 16;
+ 		done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -975,6 +981,7 @@ static int nsp32_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
+ 		nsp32_msg(KERN_ERR, "SGT fail");
+ 		SCpnt->result = DID_ERROR << 16;
+ 		nsp32_scsi_done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -1047,6 +1054,7 @@ static int nsp32_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_
+ 		nsp32_scsi_done(SCpnt);
+ 	}
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index 9326c2c..6c4277d 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -193,7 +193,10 @@ static int nsp_queuecommand(struct scsi_cmnd *SCpnt,
+ 	unsigned char target = scmd_id(SCpnt);
+ #endif
+ 	nsp_hw_data *data = (nsp_hw_data *)SCpnt->device->host->hostdata;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	nsp_dbg(NSP_DEBUG_QUEUECOMMAND,
+ 		"SCpnt=0x%p target=%d lun=%d sglist=0x%p bufflen=%d sg_count=%d",
+ 		SCpnt, target, SCpnt->device->lun, scsi_sglist(SCpnt),
+@@ -206,6 +209,7 @@ static int nsp_queuecommand(struct scsi_cmnd *SCpnt,
+ 		nsp_msg(KERN_DEBUG, "CurrentSC!=NULL this can't be happen");
+ 		SCpnt->result   = DID_BAD_TARGET << 16;
+ 		nsp_scsi_done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -253,6 +257,7 @@ static int nsp_queuecommand(struct scsi_cmnd *SCpnt,
+ 		nsp_dbg(NSP_DEBUG_QUEUECOMMAND, "selection fail");
+ 		SCpnt->result   = DID_BUS_BUSY << 16;
+ 		nsp_scsi_done(SCpnt);
++		spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -261,6 +266,7 @@ static int nsp_queuecommand(struct scsi_cmnd *SCpnt,
+ #ifdef NSP_DEBUG
+ 	data->CmdId++;
+ #endif
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
+index 0ae27cb..5f926bb 100644
+--- a/drivers/scsi/pcmcia/sym53c500_cs.c
++++ b/drivers/scsi/pcmcia/sym53c500_cs.c
+@@ -553,7 +553,10 @@ SYM53C500_queue(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	int port_base = SCpnt->device->host->io_port;
+ 	struct sym53c500_data *data =
+ 	    (struct sym53c500_data *)SCpnt->device->host->hostdata;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	VDEB(printk("SYM53C500_queue called\n"));
+ 
+ 	DEB(printk("cmd=%02x, cmd_len=%02x, target=%02x, lun=%02x, bufflen=%d\n", 
+@@ -580,6 +583,7 @@ SYM53C500_queue(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	}
+ 	outb(SELECT_NO_ATN, port_base + CMD_REG);
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index cf89091..c6800eb 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -3489,7 +3489,10 @@ static int pmcraid_queuecommand(
+ 	struct pmcraid_cmd *cmd;
+ 	u32 fw_version;
+ 	int rc = 0;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(scsi_cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scsi_cmd->device->host, scsi_cmd);
+ 	pinstance =
+ 		(struct pmcraid_instance *)scsi_cmd->device->host->hostdata;
+ 	fw_version = be16_to_cpu(pinstance->inq_data->fw_version);
+@@ -3504,12 +3507,15 @@ static int pmcraid_queuecommand(
+ 		pmcraid_info("IOA is dead, but queuecommand is scheduled\n");
+ 		scsi_cmd->result = (DID_NO_CONNECT << 16);
+ 		scsi_cmd->scsi_done(scsi_cmd);
++		spin_unlock_irqrestore(scsi_cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+ 	/* If IOA reset is in progress, can't queue the commands */
+-	if (pinstance->ioa_reset_in_progress)
++	if (pinstance->ioa_reset_in_progress) {
++		spin_unlock_irqrestore(scsi_cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	/* Firmware doesn't support SYNCHRONIZE_CACHE command (0x35), complete
+ 	 * the command here itself with success return
+@@ -3517,6 +3523,7 @@ static int pmcraid_queuecommand(
+ 	if (scsi_cmd->cmnd[0] == SYNCHRONIZE_CACHE) {
+ 		pmcraid_info("SYNC_CACHE(0x35), completing in driver itself\n");
+ 		scsi_cmd->scsi_done(scsi_cmd);
++		spin_unlock_irqrestore(scsi_cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -3525,6 +3532,7 @@ static int pmcraid_queuecommand(
+ 
+ 	if (cmd == NULL) {
+ 		pmcraid_err("free command block is not available\n");
++		spin_unlock_irqrestore(scsi_cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -3581,6 +3589,7 @@ static int pmcraid_queuecommand(
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
++	spin_unlock_irqrestore(scsi_cmd->device->host->host_lock, irqflags);
+ 	return rc;
+ }
+ 
+diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
+index 7bc2d79..8f03631 100644
+--- a/drivers/scsi/ppa.c
++++ b/drivers/scsi/ppa.c
+@@ -802,9 +802,13 @@ static int ppa_queuecommand(struct scsi_cmnd *cmd,
+ 		void (*done) (struct scsi_cmnd *))
+ {
+ 	ppa_struct *dev = ppa_dev(cmd->device->host);
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	if (dev->cur_cmd) {
+ 		printk(KERN_ERR "PPA: bug in ppa_queuecommand\n");
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	dev->failed = 0;
+@@ -818,6 +822,7 @@ static int ppa_queuecommand(struct scsi_cmnd *cmd,
+ 
+ 	ppa_pb_claim(dev);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+index 92ffbb5..9cb6ad3 100644
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -218,7 +218,10 @@ static int ps3rom_queuecommand(struct scsi_cmnd *cmd,
+ 	struct ps3_storage_device *dev = priv->dev;
+ 	unsigned char opcode;
+ 	int res;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ #ifdef DEBUG
+ 	scsi_print_command(cmd);
+ #endif
+@@ -257,6 +260,7 @@ static int ps3rom_queuecommand(struct scsi_cmnd *cmd,
+ 		cmd->scsi_done(cmd);
+ 	}
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index b8166ec..ca34ed1 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -733,7 +733,10 @@ qla1280_queuecommand(struct scsi_cmnd *cmd, void (*fn)(struct scsi_cmnd *))
+ 	struct scsi_qla_host *ha = (struct scsi_qla_host *)host->hostdata;
+ 	struct srb *sp = (struct srb *)CMD_SP(cmd);
+ 	int status;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	cmd->scsi_done = fn;
+ 	sp->cmd = cmd;
+ 	sp->flags = 0;
+@@ -753,6 +756,7 @@ qla1280_queuecommand(struct scsi_cmnd *cmd, void (*fn)(struct scsi_cmnd *))
+ #else
+ 	status = qla1280_32bit_start_scsi(ha, sp);
+ #endif
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return status;
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 1830e6e..53bf2a6 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -544,7 +544,10 @@ qla2xxx_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
+ 	srb_t *sp;
+ 	int rval;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	spin_unlock_irq(vha->host->host_lock);
+ 	if (ha->flags.eeh_busy) {
+ 		if (ha->flags.pci_channel_io_perm_failure)
+@@ -588,6 +591,7 @@ qla2xxx_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ 
+ 	spin_lock_irq(vha->host->host_lock);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+ qc24_host_busy_free_sp:
+@@ -596,16 +600,19 @@ qc24_host_busy_free_sp:
+ 
+ qc24_host_busy_lock:
+ 	spin_lock_irq(vha->host->host_lock);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ 
+ qc24_target_busy:
+ 	spin_lock_irq(vha->host->host_lock);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return SCSI_MLQUEUE_TARGET_BUSY;
+ 
+ qc24_fail_command:
+ 	spin_lock_irq(vha->host->host_lock);
+ 	done(cmd);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index f4cd846..7d55b1d 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -472,7 +472,10 @@ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
+ 	struct iscsi_cls_session *sess = ddb_entry->sess;
+ 	struct srb *srb;
+ 	int rval;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	if (test_bit(AF_EEH_BUSY, &ha->flags)) {
+ 		if (test_bit(AF_PCI_CHANNEL_IO_PERM_FAILURE, &ha->flags))
+ 			cmd->result = DID_NO_CONNECT << 16;
+@@ -497,6 +500,7 @@ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
+ 			cmd->result = DID_NO_CONNECT << 16;
+ 			goto qc_fail_command;
+ 		}
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_TARGET_BUSY;
+ 	}
+ 
+@@ -520,6 +524,7 @@ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
+ 		goto qc_host_busy_free_sp;
+ 
+ 	spin_lock_irq(ha->host->host_lock);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+ qc_host_busy_free_sp:
+@@ -530,11 +535,13 @@ qc_host_busy_lock:
+ 	spin_lock_irq(ha->host->host_lock);
+ 
+ qc_host_busy:
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ 
+ qc_fail_command:
+ 	done(cmd);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
+index 1ad5155..4146a5f 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -443,6 +443,9 @@ int qlogicfas408_queuecommand(struct scsi_cmnd *cmd,
+ 			      void (*done) (struct scsi_cmnd *))
+ {
+ 	struct qlogicfas408_priv *priv = get_priv_by_cmd(cmd);
++	unsigned long irqflags;
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	if (scmd_id(cmd) == priv->qinitid) {
+ 		cmd->result = DID_BAD_TARGET << 16;
+ 		done(cmd);
+@@ -456,6 +459,7 @@ int qlogicfas408_queuecommand(struct scsi_cmnd *cmd,
+ 		cpu_relax();
+ 	}
+ 	ql_icmd(cmd);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index f8c561c..e1491e5 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -1010,7 +1010,10 @@ static int qlogicpti_queuecommand(struct scsi_cmnd *Cmnd, void (*done)(struct sc
+ 	struct Command_Entry *cmd;
+ 	u_int out_ptr;
+ 	int in_ptr;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(Cmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(Cmnd->device->host, Cmnd);
+ 	Cmnd->scsi_done = done;
+ 
+ 	in_ptr = qpti->req_in_ptr;
+@@ -1037,6 +1040,7 @@ static int qlogicpti_queuecommand(struct scsi_cmnd *Cmnd, void (*done)(struct sc
+ 
+ 	update_can_queue(host, in_ptr, out_ptr);
+ 
++	spin_unlock_irqrestore(Cmnd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+ toss_command:
+@@ -1049,6 +1053,7 @@ toss_command:
+ 	 */
+ 	Cmnd->result = DID_BUS_BUSY;
+ 	done(Cmnd);
++	spin_unlock_irqrestore(Cmnd->device->host->host_lock, irqflags);
+ 	return 1;
+ }
+ 
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 348fba0..d6d3c50 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -634,13 +634,15 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+  * Description: a serial number identifies a request for error recovery
+  * and debugging purposes.  Protected by the Host_Lock of host.
+  */
+-static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
++void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ {
+ 	cmd->serial_number = host->cmd_serial_number++;
+ 	if (cmd->serial_number == 0) 
+ 		cmd->serial_number = host->cmd_serial_number++;
+ }
+ 
++EXPORT_SYMBOL(scsi_cmd_get_serial);
++
+ /**
+  * scsi_dispatch_command - Dispatch a command to the low-level driver.
+  * @cmd: command block we are dispatching.
+@@ -651,7 +653,6 @@ static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd
+ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+-	unsigned long flags = 0;
+ 	unsigned long timeout;
+ 	int rtn = 0;
+ 
+@@ -737,15 +738,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		goto out;
+ 	}
+ 
+-	spin_lock_irqsave(host->host_lock, flags);
+-	/*
+-	 * AK: unlikely race here: for some reason the timer could
+-	 * expire before the serial number is set up below.
+-	 *
+-	 * TODO: kill serial or move to blk layer
+-	 */
+-	scsi_cmd_get_serial(host, cmd); 
+-
+ 	if (unlikely(host->shost_state == SHOST_DEL)) {
+ 		cmd->result = (DID_NO_CONNECT << 16);
+ 		scsi_done(cmd);
+@@ -753,7 +745,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		trace_scsi_dispatch_cmd_start(cmd);
+ 		rtn = host->hostt->queuecommand(cmd, scsi_done);
+ 	}
+-	spin_unlock_irqrestore(host->host_lock, flags);
+ 	if (rtn) {
+ 		trace_scsi_dispatch_cmd_error(cmd, rtn);
+ 		if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 9c73dbd..351872e 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -579,14 +579,19 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
+ 	unsigned int id, lun;
+ 	struct req_msg *req;
+ 	u16 tag;
++	unsigned long irqflags;
+ 
+ 	host = cmd->device->host;
++	spin_lock_irqsave(host->host_lock, irqflags);
++	scsi_cmd_get_serial(host, cmd);
+ 	id = cmd->device->id;
+ 	lun = cmd->device->lun;
+ 	hba = (struct st_hba *) &host->hostdata[0];
+ 
+-	if (unlikely(hba->mu_status == MU_STATE_RESETTING))
++	if (unlikely(hba->mu_status == MU_STATE_RESETTING)) {
++		spin_unlock_irqrestore(host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	switch (cmd->cmnd[0]) {
+ 	case MODE_SENSE_10:
+@@ -603,6 +608,8 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
+ 			done(cmd);
+ 		} else
+ 			stex_invalid_field(cmd, done);
++
++		spin_unlock_irqrestore(host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 	case REPORT_LUNS:
+@@ -613,6 +620,8 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
+ 		 */
+ 		if (hba->cardtype == st_shasta || id == host->max_id - 1) {
+ 			stex_invalid_field(cmd, done);
++
++			spin_unlock_irqrestore(host->host_lock, irqflags);
+ 			return 0;
+ 		}
+ 		break;
+@@ -620,6 +629,7 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
+ 		if (id == host->max_id - 1) {
+ 			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+ 			done(cmd);
++			spin_unlock_irqrestore(host->host_lock, irqflags);
+ 			return 0;
+ 		}
+ 		break;
+@@ -627,6 +637,7 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
+ 		if (lun >= host->max_lun) {
+ 			cmd->result = DID_NO_CONNECT << 16;
+ 			done(cmd);
++			spin_unlock_irqrestore(host->host_lock, irqflags);
+ 			return 0;
+ 		}
+ 		if (id != host->max_id - 1)
+@@ -639,6 +650,7 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
+ 			done(cmd);
+ 		} else
+ 			stex_invalid_field(cmd, done);
++		spin_unlock_irqrestore(host->host_lock, irqflags);
+ 		return 0;
+ 	case PASSTHRU_CMD:
+ 		if (cmd->cmnd[1] == PASSTHRU_GET_DRVVER) {
+@@ -657,6 +669,7 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
+ 				DID_OK << 16 | COMMAND_COMPLETE << 8 :
+ 				DID_ERROR << 16 | COMMAND_COMPLETE << 8;
+ 			done(cmd);
++			spin_unlock_irqrestore(host->host_lock, irqflags);
+ 			return 0;
+ 		}
+ 	default:
+@@ -667,8 +680,10 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
+ 
+ 	tag = cmd->request->tag;
+ 
+-	if (unlikely(tag >= host->can_queue))
++	if (unlikely(tag >= host->can_queue)) {
++		spin_unlock_irqrestore(host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	req = hba->alloc_rq(hba);
+ 
+@@ -695,6 +710,7 @@ stex_queuecommand(struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd *))
+ 	}
+ 
+ 	hba->send(hba, req, tag);
++	spin_unlock_irqrestore(host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/sun3_NCR5380.c b/drivers/scsi/sun3_NCR5380.c
+index 713620e..82eaa21 100644
+--- a/drivers/scsi/sun3_NCR5380.c
++++ b/drivers/scsi/sun3_NCR5380.c
+@@ -914,6 +914,10 @@ static int NCR5380_queue_command(struct scsi_cmnd *cmd,
+     SETUP_HOSTDATA(cmd->device->host);
+     struct scsi_cmnd *tmp;
+     unsigned long flags;
++    unsigned long irqflags;
++
++    spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++    scsi_cmd_get_serial(cmd->device->host);
+ 
+ #if (NDEBUG & NDEBUG_NO_WRITE)
+     switch (cmd->cmnd[0]) {
+@@ -923,6 +927,8 @@ static int NCR5380_queue_command(struct scsi_cmnd *cmd,
+ 	       H_NO(cmd));
+ 	cmd->result = (DID_ERROR << 16);
+ 	done(cmd);
++
++        spin_lock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+     }
+ #endif /* (NDEBUG & NDEBUG_NO_WRITE) */
+@@ -1016,6 +1022,8 @@ static int NCR5380_queue_command(struct scsi_cmnd *cmd,
+ 	queue_main();
+     else
+ 	NCR5380_main(NULL);
++
++    spin_lock_irqrestore(cmd->device->host->host_lock, irqflags);
+     return 0;
+ }
+ 
+diff --git a/drivers/scsi/sym53c416.c b/drivers/scsi/sym53c416.c
+index e5c369b..28e24d2 100644
+--- a/drivers/scsi/sym53c416.c
++++ b/drivers/scsi/sym53c416.c
+@@ -739,7 +739,10 @@ int sym53c416_queuecommand(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
+ 	int base;
+ 	unsigned long flags = 0;
+ 	int i;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	/* Store base register as we can have more than one controller in the system */
+ 	base = SCpnt->device->host->io_port;
+ 	current_command = SCpnt;                  /* set current command                */
+@@ -758,6 +761,7 @@ int sym53c416_queuecommand(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
+ 	outb(SEL_WITHOUT_ATN_SEQ, base + COMMAND_REG);
+ 	/* Now an interrupt will be generated which we will catch in out interrupt routine */
+ 	spin_unlock_irqrestore(&sym53c416_lock, flags);
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index 8b955b5..eb0734a 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -511,7 +511,10 @@ static int sym53c8xx_queue_command(struct scsi_cmnd *cmd,
+ 	struct sym_hcb *np = SYM_SOFTC_PTR(cmd);
+ 	struct sym_ucmd *ucp = SYM_UCMD_PTR(cmd);
+ 	int sts = 0;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	cmd->scsi_done = done;
+ 	memset(ucp, 0, sizeof(*ucp));
+ 
+@@ -527,12 +530,17 @@ static int sym53c8xx_queue_command(struct scsi_cmnd *cmd,
+ 		}
+ 	}
+ 
+-	if (np->s.settle_time_valid)
++	if (np->s.settle_time_valid) {
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	sts = sym_queue_command(np, cmd);
+-	if (sts)
++	if (sts) {
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+index 27866b0..fca1761 100644
+--- a/drivers/scsi/tmscsim.c
++++ b/drivers/scsi/tmscsim.c
+@@ -1890,7 +1890,10 @@ static int DC390_queuecommand(struct scsi_cmnd *cmd,
+ 	struct dc390_acb *acb = (struct dc390_acb *)sdev->host->hostdata;
+ 	struct dc390_dcb *dcb = sdev->hostdata;
+ 	struct dc390_srb *srb;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	if (sdev->queue_depth <= dcb->GoingSRBCnt)
+ 		goto device_busy;
+ 	if (acb->pActiveDCB)
+@@ -1935,9 +1938,11 @@ static int DC390_queuecommand(struct scsi_cmnd *cmd,
+ 
+ 	dc390_Going_append(dcb, srb);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ 
+  host_busy:
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ 
+  device_busy:
+diff --git a/drivers/scsi/u14-34f.c b/drivers/scsi/u14-34f.c
+index 5d9fdee..2345891 100644
+--- a/drivers/scsi/u14-34f.c
++++ b/drivers/scsi/u14-34f.c
+@@ -1251,7 +1251,10 @@ static void scsi_to_dev_dir(unsigned int i, unsigned int j) {
+ static int u14_34f_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *)) {
+    unsigned int i, j, k;
+    struct mscp *cpp;
++   unsigned long irqflags;
+ 
++   spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++   scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+    /* j is the board number */
+    j = ((struct hostdata *) SCpnt->device->host->hostdata)->board_number;
+ 
+@@ -1275,6 +1278,7 @@ static int u14_34f_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scs
+ 
+    if (k == sh[j]->can_queue) {
+       printk("%s: qcomm, no free mailbox.\n", BN(j));
++      spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+       return 1;
+       }
+ 
+@@ -1308,6 +1312,7 @@ static int u14_34f_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scs
+                                      && TLDEV(SCpnt->device->type)) {
+       HD(j)->cp_stat[i] = READY;
+       flush_dev(SCpnt->device, blk_rq_pos(SCpnt->request), j, FALSE);
++      spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+       return 0;
+       }
+ 
+@@ -1316,6 +1321,7 @@ static int u14_34f_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scs
+       SCpnt->host_scribble = NULL;
+       scmd_printk(KERN_INFO, SCpnt,
+       		"qcomm, pid %ld, adapter busy.\n", SCpnt->serial_number);
++      spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+       return 1;
+       }
+ 
+@@ -1326,6 +1332,7 @@ static int u14_34f_queuecommand(struct scsi_cmnd *SCpnt, void (*done)(struct scs
+    outb(CMD_OGM_INTR, sh[j]->io_port + REG_LCL_INTR);
+ 
+    HD(j)->cp_stat[i] = IN_USE;
++   spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+    return 0;
+ }
+ 
+diff --git a/drivers/scsi/ultrastor.c b/drivers/scsi/ultrastor.c
+index 27aa40f..d3b968f 100644
+--- a/drivers/scsi/ultrastor.c
++++ b/drivers/scsi/ultrastor.c
+@@ -708,6 +708,10 @@ static int ultrastor_queuecommand(struct scsi_cmnd *SCpnt,
+     int mscp_index;
+ #endif
+     unsigned int status;
++    unsigned long irqflags;
++
++    spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++    scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 
+     /* Next test is for debugging; "can't happen" */
+     if ((config.mscp_free & ((1U << ULTRASTOR_MAX_CMDS) - 1)) == 0)
+@@ -800,8 +804,10 @@ retry:
+ #if ULTRASTOR_MAX_CMDS > 1
+ 	SCpnt->result = status;
+ 	done(SCpnt);
++        spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ #else
++        spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return status;
+ #endif
+     }
+@@ -822,6 +828,7 @@ retry:
+     printk("USx4F: queuecommand: returning\n");
+ #endif
+ 
++    spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+     return 0;
+ }
+ 
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 2689445..bfb85b0 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -696,7 +696,10 @@ static int pvscsi_queue(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ 	struct pvscsi_adapter *adapter = shost_priv(host);
+ 	struct pvscsi_ctx *ctx;
+ 	unsigned long flags;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	spin_lock_irqsave(&adapter->hw_lock, flags);
+ 
+ 	ctx = pvscsi_acquire_context(adapter, cmd);
+@@ -704,6 +707,7 @@ static int pvscsi_queue(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ 		if (ctx)
+ 			pvscsi_release_context(adapter, ctx);
+ 		spin_unlock_irqrestore(&adapter->hw_lock, flags);
++		spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -716,6 +720,7 @@ static int pvscsi_queue(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ 
+ 	pvscsi_kick_io(adapter, cmd->cmnd[0]);
+ 
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
+index b701bf2..d552930 100644
+--- a/drivers/scsi/wd33c93.c
++++ b/drivers/scsi/wd33c93.c
+@@ -377,7 +377,10 @@ wd33c93_queuecommand(struct scsi_cmnd *cmd,
+ {
+ 	struct WD33C93_hostdata *hostdata;
+ 	struct scsi_cmnd *tmp;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmd->device->host, cmd);
+ 	hostdata = (struct WD33C93_hostdata *) cmd->device->host->hostdata;
+ 
+ 	DB(DB_QUEUE_COMMAND,
+@@ -464,7 +467,8 @@ wd33c93_queuecommand(struct scsi_cmnd *cmd,
+ 
+ 	DB(DB_QUEUE_COMMAND, printk(")Q-%ld ", cmd->serial_number))
+ 
+-	spin_unlock_irq(&hostdata->lock);
++	spin_unlock(&hostdata->lock);
++	spin_unlock_irqrestore(cmd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/wd7000.c b/drivers/scsi/wd7000.c
+index 333580b..70ff71b 100644
+--- a/drivers/scsi/wd7000.c
++++ b/drivers/scsi/wd7000.c
+@@ -1092,7 +1092,10 @@ static int wd7000_queuecommand(struct scsi_cmnd *SCpnt,
+ 	short cdblen;
+ 	int nseg;
+ 	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(SCpnt->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(SCpnt->device->host, SCpnt);
+ 	cdblen = SCpnt->cmd_len;
+ 	idlun = ((SCpnt->device->id << 5) & 0xe0) | (SCpnt->device->lun & 7);
+ 	SCpnt->scsi_done = done;
+@@ -1136,6 +1139,7 @@ static int wd7000_queuecommand(struct scsi_cmnd *SCpnt,
+ 	while (!mail_out(host, scb))
+ 		cpu_relax();	/* keep trying */
+ 
++	spin_unlock_irqrestore(SCpnt->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/staging/hv/storvsc_drv.c b/drivers/staging/hv/storvsc_drv.c
+index 41d9acf..d89d132 100644
+--- a/drivers/staging/hv/storvsc_drv.c
++++ b/drivers/staging/hv/storvsc_drv.c
+@@ -614,6 +614,10 @@ static int storvsc_queuecommand(struct scsi_cmnd *scmnd,
+ 	int i;
+ 	struct scatterlist *sgl;
+ 	unsigned int sg_count = 0;
++	unsigned long irqflags;
++
++	spin_lock_irqsave(scmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(scmnd->device->host, scmnd);
+ 
+ 	DPRINT_DBG(STORVSC_DRV, "scmnd %p dir %d, use_sg %d buf %p len %d "
+ 		   "queue depth %d tagged %d", scmnd, scmnd->sc_data_direction,
+@@ -646,6 +650,8 @@ static int storvsc_queuecommand(struct scsi_cmnd *scmnd,
+ 		DPRINT_ERR(STORVSC_DRV, "scmnd (%p) - unable to allocate "
+ 			   "storvsc_cmd_request...marking queue busy", scmnd);
+ 		scmnd->scsi_done = NULL;
++
++		spin_unlock_irqrestore(scmnd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 	}
+ 
+@@ -716,6 +722,7 @@ static int storvsc_queuecommand(struct scsi_cmnd *scmnd,
+ 				kmem_cache_free(host_device_ctx->request_pool,
+ 						cmd_request);
+ 
++				spin_unlock_irqrestore(scmnd->device->host->host_lock, irqflags);
+ 				return SCSI_MLQUEUE_HOST_BUSY;
+ 			}
+ 
+@@ -780,6 +787,7 @@ retry_request:
+ 		ret = SCSI_MLQUEUE_DEVICE_BUSY;
+ 	}
+ 
++	spin_unlock_irqrestore(scmnd->device->host->host_lock, irqflags);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
+index 5a47805..7543420 100644
+--- a/drivers/usb/image/microtek.c
++++ b/drivers/usb/image/microtek.c
+@@ -578,7 +578,10 @@ mts_scsi_queuecommand(struct scsi_cmnd *srb, mts_scsi_cmnd_callback callback)
+ 	struct mts_desc* desc = (struct mts_desc*)(srb->device->host->hostdata[0]);
+ 	int err = 0;
+ 	int res;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(srb->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(srb->device->host, srb);
+ 	MTS_DEBUG_GOT_HERE();
+ 	mts_show_command(srb);
+ 	mts_debug_dump(desc);
+@@ -623,6 +626,7 @@ mts_scsi_queuecommand(struct scsi_cmnd *srb, mts_scsi_cmnd_callback callback)
+ 
+ 	}
+ out:
++	spin_unlock_irqrestore(srb->device->host->host_lock, irqflags);
+ 	return err;
+ }
+ 
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index a688b1e..f1b0aa9 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -289,13 +289,17 @@ static int queuecommand(struct scsi_cmnd *srb,
+ 			void (*done)(struct scsi_cmnd *))
+ {
+ 	struct us_data *us = host_to_us(srb->device->host);
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(srb->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(srb->device->host, srb);
+ 	US_DEBUGP("%s called\n", __func__);
+ 
+ 	/* check for state-transition errors */
+ 	if (us->srb != NULL) {
+ 		printk(KERN_ERR USB_STORAGE "Error in %s: us->srb = %p\n",
+ 			__func__, us->srb);
++		spin_unlock_irqrestore(srb->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ 
+@@ -304,6 +308,7 @@ static int queuecommand(struct scsi_cmnd *srb,
+ 		US_DEBUGP("Fail command during disconnect\n");
+ 		srb->result = DID_NO_CONNECT << 16;
+ 		done(srb);
++		spin_unlock_irqrestore(srb->device->host->host_lock, irqflags);
+ 		return 0;
+ 	}
+ 
+@@ -312,6 +317,7 @@ static int queuecommand(struct scsi_cmnd *srb,
+ 	us->srb = srb;
+ 	complete(&us->cmnd_ready);
+ 
++	spin_unlock_irqrestore(srb->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 2054b1e..d00db31 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -440,11 +440,16 @@ static int uas_queuecommand(struct scsi_cmnd *cmnd,
+ 	struct uas_dev_info *devinfo = sdev->hostdata;
+ 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+ 	int err;
++	unsigned long irqflags;
+ 
++	spin_lock_irqsave(cmnd->device->host->host_lock, irqflags);
++	scsi_cmd_get_serial(cmnd->device->host, cmnd);
+ 	BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
+ 
+-	if (!cmdinfo->sense_urb && sdev->current_cmnd)
++	if (!cmdinfo->sense_urb && sdev->current_cmnd) {
++		spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
++	}
+ 
+ 	if (blk_rq_tagged(cmnd->request)) {
+ 		cmdinfo->stream = cmnd->request->tag + 1;
+@@ -480,6 +485,7 @@ static int uas_queuecommand(struct scsi_cmnd *cmnd,
+ 		/* If we did nothing, give up now */
+ 		if (cmdinfo->state & SUBMIT_SENSE_URB) {
+ 			usb_free_urb(cmdinfo->sense_urb);
++			spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 			return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		}
+ 		spin_lock(&uas_work_lock);
+@@ -488,6 +494,7 @@ static int uas_queuecommand(struct scsi_cmnd *cmnd,
+ 		schedule_work(&uas_work);
+ 	}
+ 
++	spin_unlock_irqrestore(cmnd->device->host->host_lock, irqflags);
+ 	return 0;
+ }
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index d0a6a84..99a2da7 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -881,5 +881,6 @@ static inline unsigned char scsi_host_get_guard(struct Scsi_Host *shost)
+ extern struct Scsi_Host *scsi_register(struct scsi_host_template *, int);
+ extern void scsi_unregister(struct Scsi_Host *);
+ extern int scsi_host_set_state(struct Scsi_Host *, enum scsi_host_state);
++extern void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd);
+ 
+ #endif /* _SCSI_SCSI_HOST_H */
