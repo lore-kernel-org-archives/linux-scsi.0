@@ -1,73 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Full hostlock pushdown available
-Date: Tue, 02 Nov 2010 14:13:20 -0400
-Message-ID: <4CD054C0.4010309@garzik.org>
-References: <20101028150508.GA2385@basil.fritz.box> <4CCD5F7F.8020808@panasas.com> <tkrat.c4793af298337eff@s5r6.in-berlin.de> <4CCE271D.7040400@garzik.org> <20101101135338.GA25817@basil.fritz.box> <4CCEE33F.5030300@garzik.org> <20101101175742.GG25817@basil.fritz.box> <4CCF0DFE.4050106@garzik.org> <20101102092111.GK25817@basil.fritz.box> <4CD03578.3050801@garzik.org> <20101102175336.GA2167@basil.fritz.box>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: 2.6.36 Crash/Panik in scsi_eh
+Date: Tue, 02 Nov 2010 14:36:44 -0400
+Message-ID: <1288723004.3056.473.camel@mulgrave.site>
+References: <87fwvkm215.fsf@gerlin1.hsp-law.de>
+	 <1288710413.3056.256.camel@mulgrave.site>
+	 <87pqunwszm.fsf@gerlin1.hsp-law.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20101102175336.GA2167@basil.fritz.box>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:58156 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754803Ab0KBSgu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Nov 2010 14:36:50 -0400
+In-Reply-To: <87pqunwszm.fsf@gerlin1.hsp-law.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ralf Gerbig <rge@quengel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 11/02/2010 01:53 PM, Andi Kleen wrote:
->> Boaz' approach is OBVIOUSLY mechanical, correct and bisectable.
->> Yours is not.
->
-> Sorry Jeff, but my patch has 100% the same locking order as Boaz.
-> The only difference is in which function it is.
+On Tue, 2010-11-02 at 18:11 +0100, Ralf Gerbig wrote:
+> >> Nov  2 10:40:57 gerlin1 kernel: [45977.560407] RIP: 0010:[<ffffffff811d2290>]  [<ffffffff811d2290>] scsi_dispatch_cmd+0x92/0x22e
+> 
+> > This is the faulting location ... could you run addr2line on this
+> > address to map it to a line of source code?
+> 
+> addr2line id only say ??:0
+> 
+> I recompiled vmlinux with debugging symbols, and gdb says:
+> 
+> Reading symbols from /usr/src/linux-git/linux-2.6/vmlinux...done.
+> (gdb) l *(scsi_dispatch_cmd + 0x92)
+> 0xffffffff811d2290 is in scsi_dispatch_cmd (drivers/scsi/scsi.c:707).
+> 702              * We will wait MIN_RESET_DELAY clock ticks after the
+> last reset so
+> 703              * we can avoid the drive not being ready.
+> 704              */
+> 705             timeout = host->last_reset + MIN_RESET_DELAY;
+> 706
+> 707             if (host->resetting && time_before(jiffies, timeout)) {
+> 708                     int ticks_remaining = timeout - jiffies;
+> 709                     /*
+> 710                      * NOTE: This may be executed from within an interrupt
+> 711                      * handler!  This is bad, but for now, it'll do. The irq
 
-Incorrect.  Please re-read your own code.
+Um, that's bad.  It's saying the junk pointer is host on line 707 but
+when it was dereferenced on line 705 it was fine.  This is most likely
+to indicate either memory corruption (another thread overwrote the host
+location or even a hardware fault).
 
-Your code eliminates the drop+reacquire of the host_lock, choosing 
-instead a brand new, untested, unreviewing locking scheme of holding the 
-host_lock for the entirety of libata's queuecommand run.
-
-In contrast, Boaz' proposed pattern of adding stub functions such as
-
-	int queuecmd_unlocked(scsi_cmd cmd, callback done)
-	{
-		lock_irqsave
-		get serial
-
-		call driver's existing queuecommand
-
-		unlock_irqrestore
-	}
-
-does not change libata's locking at all, because it does not modify a 
-driver's queuecommand at all.  It is obviously correct.
-
-Or to restate another way,
-
-	Current libata locking
-	----------------------
-	spin_lock_irqsave(host_lock)
-	spin_unlock(host_lock)
-	spin_lock(ap lock)
-	...
-	spin_unlock(ap lock)
-	spin_lock(host_lock)
-	spin_unlock_irqrestore(host_lock)
-
-
-	Andi's brand new locking scheme
-	(missing the release of host lock)
-	----------------------------------
-	spin_lock_irqsave(host_lock)
-	spin_lock(ap lock)
-	...
-	spin_unlock(ap lock)
-	spin_unlock_irqrestore(host_lock)
-
-The two versions are quite obviously NOT equivalent in any way, because 
-you have ADDED the holding of host_lock for the duration of libata's 
-queuecommand.
-
-	Jeff
-
-
+James
+ 
 
