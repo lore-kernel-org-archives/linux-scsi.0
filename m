@@ -1,44 +1,140 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Full hostlock pushdown available
-Date: Tue, 02 Nov 2010 11:59:52 -0400
-Message-ID: <4CD03578.3050801@garzik.org>
-References: <20101028150508.GA2385@basil.fritz.box> <4CCD5F7F.8020808@panasas.com> <tkrat.c4793af298337eff@s5r6.in-berlin.de> <4CCE271D.7040400@garzik.org> <20101101135338.GA25817@basil.fritz.box> <4CCEE33F.5030300@garzik.org> <20101101175742.GG25817@basil.fritz.box> <4CCF0DFE.4050106@garzik.org> <20101102092111.GK25817@basil.fritz.box>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: Subject: [RFC 0/3] Add fc_rport attributes to further populate
+ HBAAPIv2 HBAPortAttributes for discovered ports.
+Date: Tue, 2 Nov 2010 17:47:00 +0100
+Message-ID: <20101102164659.GA28056@schmichrtp.mainz.de.ibm.com>
+References: <alpine.LFD.2.00.1010281212441.2885@localhost.localdomain>
+ <20101029104515.GA15522@schmichrtp.mainz.de.ibm.com>
+ <alpine.LFD.2.00.1010291532220.3526@localhost.localdomain>
+ <4CD02F77.5090607@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20101102092111.GK25817@basil.fritz.box>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Boaz Harrosh <bharrosh@panasas.com>, James.Bottomley@suse.de, nab@linux-iscsi.org, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate5.uk.ibm.com ([194.196.100.165]:49177 "EHLO
+	mtagate5.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752094Ab0KBQrC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2010 12:47:02 -0400
+Received: from d06nrmr1707.portsmouth.uk.ibm.com (d06nrmr1707.portsmouth.uk.ibm.com [9.149.39.225])
+	by mtagate5.uk.ibm.com (8.13.1/8.13.1) with ESMTP id oA2Gl175020821
+	for <linux-scsi@vger.kernel.org>; Tue, 2 Nov 2010 16:47:01 GMT
+Received: from d06av08.portsmouth.uk.ibm.com (d06av08.portsmouth.uk.ibm.com [9.149.37.249])
+	by d06nrmr1707.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id oA2Gl1d73240140
+	for <linux-scsi@vger.kernel.org>; Tue, 2 Nov 2010 16:47:01 GMT
+Received: from d06av08.portsmouth.uk.ibm.com (loopback [127.0.0.1])
+	by d06av08.portsmouth.uk.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id oA2Gl0hp028435
+	for <linux-scsi@vger.kernel.org>; Tue, 2 Nov 2010 16:47:00 GMT
+Content-Disposition: inline
+In-Reply-To: <4CD02F77.5090607@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@emulex.com>
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/02/2010 05:21 AM, Andi Kleen wrote:
->> IOW, it's doing the exact opposite of what the previous code did
->> (release the scsi host lock, before acquiring the ATA port/host
->> spinlock), not at all an equivalent transformation.
->>
->> The following sequence would seem to better preserve the existing
->> lock profile, correct?
->
-> Possibly, but it's not a mechanic change.
+On Tue, Nov 02, 2010 at 11:34:15AM -0400, James Smart wrote:
+> 
+> 
+> On 10/29/2010 3:35 PM, Chad Dupuis wrote:
+> >On Fri, 29 Oct 2010, Christof Schmitt wrote:
+> >>On Thu, Oct 28, 2010 at 12:14:18PM -0400, Chad Dupuis wrote:
+> >>>Hi All,
+> >>>
+> >>>This small patch set adds 7 new attributes to the fc_rport struct so that application libraries who export HBAAPI v2 discovered port attributes can populate the HBA_PORTATTRIBUTES structure more fully.  The new fc_rport attributes,
+> >>>which would be exported via the /sys/class/fc_remote_port/rport-x:y-z directory, are:
+> >>>
+> >>>- supported_fc4s
+> >>>- supported_speed
+> >>>- port_type
+> >>>- speed
+> >>>- active_fc4s
+> >>>- symbolic_name
+> >>>- fabric_name
+> >>>
+> >>>These attributes would be fixed-attributes which would mean that they would be set before the call to fc_remote_port_rolechg() but then once the role of the port has been established they would not change.
+> >>>
+> >>>There are two patches in this RFC:
+> >>>
+> >>>Patch #1 - scsi_transport_fc: Add HBAAPI v2 attributes to fc_rport structure.
+> >>>
+> >>>This patch adds the definitions for the new fc_rport attributes, sets up the show functions and assigns default nominal values to the attributes.
+> >>>
+> >>>Patch #2 - qla2xxx: Add name and management server queries to fill in new fc_rport attributes.
+> >>>
+> >>>This patch adds the necessary name and management server calls to the SAN fabric services to obtain the information needed to fill in the new fc_rport attributes.  The patch also assigns the attributes before calling
+> >>>fc_remote_port_rolechg().
+> >>
+> >>It looks like this mechanism only queries data from the FC nameserver.
+> >>It would be useful to have the same data available for all FC drivers.
+> 
+> I second this statement from Christof.  There is nothing in this
+> that is driver-specific, so the queries should be placed in a common
+> place (transport or in the hbaapi library).
+> 
+> I'm also not a fan of the "must query for the data before calling
+> fc_remote_port_rolechg()".  This stuff is informational, so I would
+> prefer the queries be done after or independent of the rolechg()
+> call.
+> 
+> 
+> >>The FC BSG interface already allows sending CT requests to the FC
+> >>nameserver. Could this be implemented by creating the request in
+> >>common code and issue the requests through the FC BSG interface? If
+> >
+> >We considered using bsg as the means for getting the information to and
+> >from user space but deciced that exporting the information through
+> >/sys/class/fc_remote_ports was easier and probably more appropriate as
+> >other attributes relating to rports are currently exported there.
+> 
+> I'm 50/50 on this....  I do like to see all the info via sysfs files
+> w/o the need for additional tools.   However, I don't like all the
+> extra inodes we create for all the attributes (especially as rports
+> should be many, and replicated per host path to the rport). And, I'm
+> unsure where we really should start to draw the line for what's in
+> sysfs vs what do you go to a tool to find out.
+> 
+> Anyone else with an opinion ?
 
-Oh come on.  Anybody can run a script.  It's not a mechanical change if 
-you failed to create an equivalent transformation, fail to maintain 
-existing lock order, _inverting_ the existing locking.
+The currently available attributes are from the plogi data where the
+LLD has to be involved; the newly proposed attributes have to be
+queried from the FC nameserver. I would draw the line here: Put the
+data that the LLD has to see anyway in sysfs and use a tool for
+querying additional information. 
 
-Have you done any analysis on the correctness of this new locking?
-
-
-> The goal here is not really what comes out of this patch,
-> but dropping the host lock completely. This is just the first step.
-
-That doesn't excuse lack of analysis or correctness.
-
-Boaz' approach is OBVIOUSLY mechanical, correct and bisectable.  Yours 
-is not.
-
-	Jeff
-
-
-
+> >>the data is used by the HBAAPI, the userspace HBAAPI could create the
+> >>FC requests and issue them through the /dev/bsg/... device files.
+> >
+> >I think this would be a little too low level for a user level library.
+> >Normally for user space I would assume we want to hide the mechanism
+> >(which is very hardare dependent) that is used to get the information
+> >and rather just expose the information itself.
+> >
+> 
+> Actually, this is exactly the kind of detail that should be in a
+> user-level library.  It's an FC-centric library, and making
+> FC-centric queries makes sense.  The whole purpose of the library is
+> to hide mechanism (is it from sysfs, from directory tires, from
+> sgio, from bsg, from netlink, etc) from the consumer of the library.
+> 
+> The only advantage for keeping it out of the library - is to display
+> it under sysfs w/o the use of a tool.
+> 
+> The 2 options in my mind are:
+> a) the CT queries are issued by the fc_transport after
+> fc_remote_port_add() and fc_remote_port_rolechg() calls - to
+> populate the rport sysfs data.  (no need to involve the LLDD for
+> anything other than the CT queries)
+> or
+> b) move the items and CT queries to the library. Ultimately, the
+> library should be refreshing data in sync with the
+> fc_remote_port_add/rolechg()calls, so we should post async events at
+> those points, and have them handled by the library.  I don't
+> remember if HBAAPI is actually geared for async event updates, as I
+> thought the consumer had to periodically call in to refresh. This
+> would need to be worked out.
+> 
+> 
+> -- james s
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
