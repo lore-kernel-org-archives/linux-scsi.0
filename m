@@ -1,65 +1,54 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: block: QUEUE_FLAG_CLUSTER and no_cluster are NOT in sync
-Date: Tue, 2 Nov 2010 16:21:59 -0400
-Message-ID: <20101102202159.GC23680@redhat.com>
-References: <5e7598cf7714083ffd84.1283104752@malahal>
- <20100829203149.GC24466@us.ibm.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 21852] New: BUG: unable to handle kernel NULL pointer
+ dereference at 0000000c (elv_quiesce_start)
+Date: Tue, 2 Nov 2010 20:40:14 GMT
+Message-ID: <bug-21852-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26876 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752688Ab0KBUWH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Nov 2010 16:22:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20100829203149.GC24466@us.ibm.com>
+Received: from demeter.kernel.org ([140.211.167.39]:34559 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752704Ab0KBUkP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2010 16:40:15 -0400
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id oA2KeE86002706
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 2 Nov 2010 20:40:14 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Malahal Naineni <malahal@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, jaxboe@fusionio.com, dm-devel@redhat.com
+To: linux-scsi@vger.kernel.org
 
-Malahal,
+https://bugzilla.kernel.org/show_bug.cgi?id=21852
 
-This patch should go through the scsi tree.  Please update the patch (so
-it includes the patch header) and repost to linux-scsi.
+           Summary: BUG: unable to handle kernel NULL pointer dereference
+                    at 0000000c (elv_quiesce_start)
+           Product: IO/Storage
+           Version: 2.5
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: maciej.rutecki@gmail.com
+                CC: rjw@sisk.pl, maciej.rutecki@gmail.com,
+                    fabio.comolli@gmail.com
+        Regression: Yes
 
-Thanks,
-Mike
 
-On Sun, Aug 29 2010 at  4:31pm -0400,
-Malahal Naineni <malahal@us.ibm.com> wrote:
+Subject    : BUG: unable to handle kernel NULL pointer dereference at 0000000c
+(elv_quiesce_start)
+Submitter  : Fabio Comolli <fabio.comolli@gmail.com>
+Date       : 2010-10-23 17:39
+Message-ID : AANLkTi=C4QpqAir0uf5tKbb_ZNo5BAuV3TAtY2mMu6bs@mail.gmail.com
+References : http://marc.info/?l=linux-kernel&m=128785556619362&w=2
 
-> Here is the missing header:
-> 
-> no_cluster is used by device mapper (may be others) resulting in
-> multipath devices setting QUEUE_FLAG_CLUSTER flag even though the
-> underlying devices (e.g. open iscsi virtual adapter) don't support it.
-> 
-> Signed-off-by: Malahal Naineni (malahal@us.ibm.com)
-> 
-> Malahal Naineni [malahal@us.ibm.com] wrote:
-> > diff -r 8305d08f6ecf -r 5e7598cf7714 drivers/scsi/scsi_lib.c
-> > --- a/drivers/scsi/scsi_lib.c	Wed Aug 25 13:44:33 2010 -0700
-> > +++ b/drivers/scsi/scsi_lib.c	Wed Aug 25 13:44:33 2010 -0700
-> > @@ -1633,8 +1633,10 @@ struct request_queue *__scsi_alloc_queue
-> >  	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
-> > 
-> >  	/* New queue, no concurrency on queue_flags */
-> > -	if (!shost->use_clustering)
-> > +	if (!shost->use_clustering) {
-> >  		queue_flag_clear_unlocked(QUEUE_FLAG_CLUSTER, q);
-> > +		q->limits.no_cluster = 1;
-> > +	}
-> > 
-> >  	/*
-> >  	 * set a reasonable default alignment on word boundaries: the
-> > 
-> > --
-> > dm-devel mailing list
-> > dm-devel@redhat.com
-> > https://www.redhat.com/mailman/listinfo/dm-devel
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
+This entry is being used for tracking a regression from 2.6.36. Please don't
+close it until the problem is fixed in the mainline.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
