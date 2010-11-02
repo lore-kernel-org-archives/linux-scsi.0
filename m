@@ -1,66 +1,52 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: tcm IBMVSCSIS driver
-Date: Mon, 01 Nov 2010 15:37:57 -0700
-Message-ID: <1288651077.7708.89.camel@haakon2.linux-iscsi.org>
-References: <1288479943.21870.55.camel@haakon2.linux-iscsi.org>
-	 <20101101215109E.fujita.tomonori@lab.ntt.co.jp>
-	 <1288648016.7708.42.camel@haakon2.linux-iscsi.org>
-	 <20101102071513A.fujita.tomonori@lab.ntt.co.jp>
+From: "MICROSOFT EMAIL PROMOTION" <information@microsoft.com>
+Subject: Congratulations - Promo Winner
+Date: Tue, 2 Nov 2010 04:38:28 -0200 (FNT)
+Message-ID: <57916.220.101.190.178.1288679908.squirrel__38503.2683298506$1288685232$gmane$org@220.101.190.178>
+Reply-To: mrglenn_bradley@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:40380 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755135Ab0KAWnD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2010 18:43:03 -0400
-In-Reply-To: <20101102071513A.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail.avellaneda-ba.gov.ar ([200.71.230.2]:39689 "EHLO
+	ns2.avellaneda-ba.gov.ar" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750715Ab0KBIGl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2010 04:06:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, lxie@us.ibm.com, rcjenn@us.ibm.com, michaelc@cs.wisc.edu, James.Bottomley@HansenPartnership.com, joel.becker@oracle.com
 
-On Tue, 2010-11-02 at 07:20 +0900, FUJITA Tomonori wrote:
-> On Mon, 01 Nov 2010 14:46:56 -0700
-> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> 
-> > On Mon, 2010-11-01 at 21:56 +0900, FUJITA Tomonori wrote:
-> > > On Sat, 30 Oct 2010 16:05:43 -0700
-> > > "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
-> > > 
-> > > > One final question in that regard is in your ibmvscsis_queuecommand()
-> > > > code, only INQUIRY, REPORT_LUNS, and MODE_SENSE need to be handled
-> > > > specially for other non Linux VIO SRP Initiator guests on the other
-> > > > end..
-> > > 
-> > > INQUIRY and REPORT_LUNS need the special responses. Otherwise the
-> > > initiators can't see the logical units.
-> > > 
-> > 
-> > There also appears to be a bunch of magic bits set for MODE_SENSE as
-> > well and seems to indicate a hard requirement for legacy non linux
-> > guests, yes..?
-> 
-> No, see ibmvio.c in tgt's user space code.
-> 
+Congratulations - Promo Winner
 
-<nod>
+The MICROSOFT EMAIL PROMO TEAM is glad to announce that
+after a successful completion of the PROMO DRAWS held on the
+1st November 2010, your e-mail address,attached to winning
+numbers:(11) (80) (12)(96) (09) (43) won in the Tenth
+lottery category.
 
-> 
-> > Also wrt to the internal REPORT_LUNs emuation, is it just the LUN
-> > encoding that is specific to ibmvscsis..?  I am wondering if can just
-> > add a operation TCM fabric module TFO op for individual struct
-> > se_lun->unmapped_lun -> REPORT_LUN payload encode, and drop this
-> > internal emulation code.
-> 
-> Yeah.
+You have therefore been approved to claim a total sum of
+=A3450,000,00 Pounds Sterling in cash credited to REF NO:MICRO-L/2009-E=
+ND10.
 
-Thanks for the clarification here..  I will look at getting this coded
-up for TCM core + existing fabric module code and added as a special
-case for TCM/ibmvscsis.
+All participants were selected through our Microsoft computer
+ballot system drawn from 167,000 Names,as part of our
+International  "E-MAIL" Promotion Program for our prominent
+MS-WORD users all over the world and for the continuous use
+of the internet. You are advised to contact the claims
+processor with the details below via his e-mail address :
 
-Thanks Tomo-san!
+NAME:  Glenn Bradley
+EMAIL: mrglenn_bradley01@yahoo.com.hk
 
---nab
+PLEASE NOTE YOU ARE TO SEND THE FOLLOWING INFORMATION TO CLAIM YOUR PRI=
+ZE:
+1.Full Name:... 2.Address:... 3.Phone:... 4.Country:... 5.Sex/Gender:..=
+=2E
 
 
+YOURS SINCERELY,
+RACHEL STEWART.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
