@@ -1,36 +1,69 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 21852] BUG: unable to handle kernel NULL pointer dereference at
- 0000000c (elv_quiesce_start)
-Date: Wed, 3 Nov 2010 09:16:43 GMT
-Message-ID: <201011030916.oA39Gh3U012635@demeter2.kernel.org>
-References: <bug-21852-11613@https.bugzilla.kernel.org/>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: [PATCH] fix allocating target in scsi scan
+Date: Wed, 3 Nov 2010 22:38:53 +0800
+Message-ID: <AANLkTi=VdM5xzxcfQ+w1j8R3=3s4r-riKytzGKRznLOd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [140.211.167.42] ([140.211.167.42]:47762 "EHLO
-	demeter2.kernel.org" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1753617Ab0KCJQo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2010 05:16:44 -0400
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oA39GhB8012636
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 3 Nov 2010 09:16:43 GMT
-In-Reply-To: <bug-21852-11613@https.bugzilla.kernel.org/>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:64646 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753280Ab0KCOiz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2010 10:38:55 -0400
+Received: by wwe15 with SMTP id 15so753341wwe.1
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Nov 2010 07:38:54 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=21852
+When allocating target fails NUL is directly returned without making
+certain that it already exists.
 
+The uncertainty is fixed by checking already created targets, then
+returns the correct.
 
+Signed-off-by: Hillf Danton <dhillf@gmail.com>
+---
 
+--- a/drivers/scsi/scsi_scan.c	2010-09-13 07:07:38.000000000 +0800
++++ b/drivers/scsi/scsi_scan.c	2010-11-03 22:29:34.000000000 +0800
+@@ -410,7 +410,7 @@ static struct scsi_target *scsi_alloc_ta
+ 	starget = kzalloc(size, GFP_KERNEL);
+ 	if (!starget) {
+ 		printk(KERN_ERR "%s: allocation failure\n", __func__);
+-		return NULL;
++		goto retry;
+ 	}
+ 	dev = &starget->dev;
+ 	device_initialize(dev);
+@@ -435,7 +435,10 @@ static struct scsi_target *scsi_alloc_ta
+ 	found_target = __scsi_find_target(parent, channel, id);
+ 	if (found_target)
+ 		goto found;
+-
++	if (! dev) {
++		spin_unlock_irqrestore(shost->host_lock, flags);
++		return NULL;
++	}
+ 	list_add_tail(&starget->siblings, &shost->__targets);
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	/* allocate and add */
+@@ -459,14 +462,17 @@ static struct scsi_target *scsi_alloc_ta
+ 	found_target->reap_ref++;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	if (found_target->state != STARGET_DEL) {
+-		put_device(dev);
++		if (dev)
++			put_device(dev);
+ 		return found_target;
+ 	}
+ 	/* Unfortunately, we found a dying target; need to
+ 	 * wait until it's dead before we can get a new one */
+ 	put_device(&found_target->dev);
+ 	flush_scheduled_work();
+-	goto retry;
++	if (dev)
++		goto retry;
++	return NULL;
+ }
 
-
---- Comment #1 from Fabio Comolli <fabio.comolli@gmail.com>  2010-11-03 09:16:39 ---
-This bug is fixed. Please see this thread: http://lkml.org/lkml/2010/10/24/118
-I suppose Linus actually reverted the offending commits but I'm not sure.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+ static void scsi_target_reap_usercontext(struct work_struct *work)
