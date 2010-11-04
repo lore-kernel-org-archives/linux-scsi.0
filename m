@@ -1,103 +1,44 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: Re: scsi_dh_rdac: Changing the memory allocation flag
- from GFP_KERNEL to GFP_NOIO
-Date: Thu, 4 Nov 2010 09:20:57 -0600
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4F4F3014C@cosmail01.lsi.com>
-References: <E463DF2B2E584B4A82673F53D62C2EF4877BC7E8@cosmail01.lsi.com>
-	<20101104151436.GA1026@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: Linux 2.6.37-rc1 (scsi_debug: list corruption)
+Date: Thu, 04 Nov 2010 09:12:21 -0700
+Message-ID: <4CD2DB65.5060400@oracle.com>
+References: <AANLkTimr3rW67HxgOUyReEW8dmmSsd4b7-Ns57mXzS1w@mail.gmail.com>	<20101103162015.99475a0b.randy.dunlap@oracle.com> <AANLkTin5PphTtZaesEU3U0PA8NJv=Jmis8yQF6b=KbeG@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20101104151436.GA1026@redhat.com>
-Content-Language: en-US
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>, device-mapper development <dm-devel@redhat.com>
-Cc: Seetharaman <chandra.seetharaman@us.ibm.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>, Rob Evers <revers@redhat.com>, Chandra@redhat.com, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:27285 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750759Ab0KDQMm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2010 12:12:42 -0400
+In-Reply-To: <AANLkTin5PphTtZaesEU3U0PA8NJv=Jmis8yQF6b=KbeG@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Xiaotian Feng <xtfeng@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-> -----Original Message-----
-> From: Mike Snitzer [mailto:snitzer@redhat.com]
-> Sent: Thursday, November 04, 2010 10:15 AM
-> To: device-mapper development
-> Cc: linux-scsi@vger.kernel.org; Chandra Seetharaman;
-> michaelc@cs.wisc.edu; Rob Evers; Moger, Babu
-> Subject: Re: scsi_dh_rdac: Changing the memory allocation flag from
-> GFP_KERNEL to GFP_NOIO
+On 11/03/10 19:25, Xiaotian Feng wrote:
+> On Thu, Nov 4, 2010 at 7:20 AM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
+>>
+>>
+>> [  102.555847] calling  scsi_debug_init+0x0/0x704 [scsi_debug] @ 3337
+>> Nov  3 16:06:12 control kernel: [  102.555847] calling  scsi_deb[  102.622974] scsi_debug: host protection
+>> [  102.627513] scsi4 : scsi_debug, version 1.82 [20100324], dev_size_mb=8, opts=0x0
+>> Nov  3 16:06:13 control kernel: [  102.639095] initcall scsi_debug_init+0x0/0x704 [scsi_debug] returned 0 after 75039 usecs
+>> Nov  3 16:06:13 [  102.651072] ------------[ cut here ]------------
+>> [  102.657373] WARNING: at /local/linsrc/lnx-2637-rc1/lib/list_debug.c:26 __list_add+0x4d/0xa5()
+>> [  102.666012] Hardware name: OptiPlex GX620
+>> [  102.671396] list_add corruption. next->prev should be prev (ffffffff81ae5e50), but was 6b6b6b6b6b6b6b6b. (next=ffff88006c880590).
 > 
-> This patch appears to have gotten lost in the shuffle but still seems
-> relevant.  I found it while auditing dm-devel's patchwork, patch is
-> here: https://patchwork.kernel.org/patch/71073/
+> This might be related with net rds percpu_counter corruption. Does
+> following patch fix your issue?
+> http://patchwork.ozlabs.org/patch/69939/
 
-  Yes, Please.. We need this patch.. 
-> 
-> On Tue, Jan 05 2010 at 12:20pm -0500,
-> Moger, Babu <Babu.Moger@lsi.com> wrote:
-> 
-> > This patch changes the memory allocation flag from GFP_KERNEL to
-> GFP_NOIO which is more appropriate.
-> >
-> > This was noticed by Mike Christie and Rob Evers..
-> > Mike Christie wrote:
-> > > Rob Evers wrote:
-> > >> +
-> > >> +static int queue_mode_select(struct scsi_device *sdev,
-> > >> +                activate_complete fn, void *data)
-> > >> +{
-> > >> +    struct rdac_queue_data *qdata;
-> > >> +    struct rdac_controller *ctlr;
-> > >> +
-> > >> +    qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
-> > >> +    if (!qdata)
-> > >> +        return SCSI_DH_RETRY;
-> > >> +
-> > >
-> > > It looks like this is called in the main IO path. A failed IO could
-> cause, the path to go down,
-> > > then we would call this to active a new path. If the system needed
-> to write out pages to the same
-> > > disk that just had the failed path so it can allocate memory then
-> GFP_KERNEL would be bad to use here.
-> > > You would use a mempool and still use something like GFP_NOIO. If a
-> mempool is not possible for some
-> > > reason, then you would want to still use GFP_NOIO.
-> >
-> > Using mempool would become bit more complex here because I cannot
-> assume about the number of elements
-> > during the allocation. I would use GFP_NOIO.
-> >
-> > CC: Mike Christie <michaelc@cs.wisc.edu>
-> > CC: Rob Evers <revers@redhat.com>
-> > CC: Chandra Seetharaman <chandra.seetharaman@us.ibm.com>
-> > Signed-off-by: Babu Moger <babu.moger@lsi.com>
-> >
-> > ---
-> > --- linux-2.6.33-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c.orig
-> 	2010-01-05 11:49:22.000000000 -0400
-> > +++ linux-2.6.33-rc2/drivers/scsi/device_handler/scsi_dh_rdac.c	2010-
-> 01-05 11:53:13.000000000 -0400
-> > @@ -624,7 +624,7 @@ static int queue_mode_select(struct scsi
-> >  	struct rdac_queue_data *qdata;
-> >  	struct rdac_controller *ctlr;
-> >
-> > -	qdata = kzalloc(sizeof(*qdata), GFP_KERNEL);
-> > +	qdata = kzalloc(sizeof(*qdata), GFP_NOIO);
-> >  	if (!qdata)
-> >  		return SCSI_DH_RETRY;
-> >
-> >
-> >
-> >
-> > --
-> > dm-devel mailing list
-> > dm-devel@redhat.com
-> > https://www.redhat.com/mailman/listinfo/dm-devel
+Yes, somehow that patch fixes it.
+
+What good eyes you have.
+
+thanks,
+-- 
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
