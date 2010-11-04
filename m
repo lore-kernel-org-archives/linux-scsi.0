@@ -1,44 +1,75 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: Linux 2.6.37-rc1 (scsi_debug: list corruption)
-Date: Thu, 04 Nov 2010 09:12:21 -0700
-Message-ID: <4CD2DB65.5060400@oracle.com>
-References: <AANLkTimr3rW67HxgOUyReEW8dmmSsd4b7-Ns57mXzS1w@mail.gmail.com>	<20101103162015.99475a0b.randy.dunlap@oracle.com> <AANLkTin5PphTtZaesEU3U0PA8NJv=Jmis8yQF6b=KbeG@mail.gmail.com>
+From: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Subject: [PATCH 1/2] ipr: fix lun assignment and comparison
+Date: Thu, 04 Nov 2010 09:35:58 -0700
+Message-ID: <4CD2E0EE.5020802@linux.vnet.ibm.com>
+References: <20101104162643.264567565@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:27285 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759Ab0KDQMm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2010 12:12:42 -0400
-In-Reply-To: <AANLkTin5PphTtZaesEU3U0PA8NJv=Jmis8yQF6b=KbeG@mail.gmail.com>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:40906 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031Ab0KDQgA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2010 12:36:00 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id oA4GQ3UM001599
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Nov 2010 10:26:03 -0600
+Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v9.1) with ESMTP id oA4GZxiI216728
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Nov 2010 10:35:59 -0600
+Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id oA4Gdwse020218
+	for <linux-scsi@vger.kernel.org>; Thu, 4 Nov 2010 10:39:59 -0600
+In-Reply-To: <20101104162643.264567565@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xiaotian Feng <xtfeng@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
 
-On 11/03/10 19:25, Xiaotian Feng wrote:
-> On Thu, Nov 4, 2010 at 7:20 AM, Randy Dunlap <randy.dunlap@oracle.com> wrote:
->>
->>
->> [  102.555847] calling  scsi_debug_init+0x0/0x704 [scsi_debug] @ 3337
->> Nov  3 16:06:12 control kernel: [  102.555847] calling  scsi_deb[  102.622974] scsi_debug: host protection
->> [  102.627513] scsi4 : scsi_debug, version 1.82 [20100324], dev_size_mb=8, opts=0x0
->> Nov  3 16:06:13 control kernel: [  102.639095] initcall scsi_debug_init+0x0/0x704 [scsi_debug] returned 0 after 75039 usecs
->> Nov  3 16:06:13 [  102.651072] ------------[ cut here ]------------
->> [  102.657373] WARNING: at /local/linsrc/lnx-2637-rc1/lib/list_debug.c:26 __list_add+0x4d/0xa5()
->> [  102.666012] Hardware name: OptiPlex GX620
->> [  102.671396] list_add corruption. next->prev should be prev (ffffffff81ae5e50), but was 6b6b6b6b6b6b6b6b. (next=ffff88006c880590).
-> 
-> This might be related with net rds percpu_counter corruption. Does
-> following patch fix your issue?
-> http://patchwork.ozlabs.org/patch/69939/
+The lun value was not getting set up correctly for all devices attached to the
+new 64 bit adapters.  The fix is to move the logic to earlier in the
+ipr_init_res_entry routine such that the value does get set correctly for all
+devices.
 
-Yes, somehow that patch fixes it.
+Then the ipr_is_same_device comparison function was using the wrong lun value
+in the logic for the new adapters.  Change this to use the correct lun value.
 
-What good eyes you have.
+Signed-off-by: Wayne Boyer <wayneb@linux.vnet.ibm.com>
+---
 
-thanks,
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+ drivers/scsi/ipr.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+Index: b/drivers/scsi/ipr.c
+===================================================================
+--- a/drivers/scsi/ipr.c	2010-11-02 21:23:46.000000000 -0700
++++ b/drivers/scsi/ipr.c	2010-11-04 08:54:52.000000000 -0700
+@@ -1048,6 +1048,8 @@ static void ipr_init_res_entry(struct ip
+ 			sizeof(res->res_path));
+
+ 		res->bus = 0;
++		memcpy(&res->dev_lun.scsi_lun, &cfgtew->u.cfgte64->lun,
++			sizeof(res->dev_lun.scsi_lun));
+ 		res->lun = scsilun_to_int(&res->dev_lun);
+
+ 		if (res->type == IPR_RES_TYPE_GENERIC_SCSI) {
+@@ -1063,9 +1065,6 @@ static void ipr_init_res_entry(struct ip
+ 								  ioa_cfg->max_devs_supported);
+ 				set_bit(res->target, ioa_cfg->target_ids);
+ 			}
+-
+-			memcpy(&res->dev_lun.scsi_lun, &cfgtew->u.cfgte64->lun,
+-				sizeof(res->dev_lun.scsi_lun));
+ 		} else if (res->type == IPR_RES_TYPE_IOAFP) {
+ 			res->bus = IPR_IOAFP_VIRTUAL_BUS;
+ 			res->target = 0;
+@@ -1116,7 +1115,7 @@ static int ipr_is_same_device(struct ipr
+ 	if (res->ioa_cfg->sis64) {
+ 		if (!memcmp(&res->dev_id, &cfgtew->u.cfgte64->dev_id,
+ 					sizeof(cfgtew->u.cfgte64->dev_id)) &&
+-			!memcmp(&res->lun, &cfgtew->u.cfgte64->lun,
++			!memcmp(&res->dev_lun.scsi_lun, &cfgtew->u.cfgte64->lun,
+ 					sizeof(cfgtew->u.cfgte64->lun))) {
+ 			return 1;
+ 		}
+
