@@ -1,39 +1,63 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 18652] mptscsih: ioc0: attempting task abort when heavy disk
- operations on MPT SAS
-Date: Thu, 4 Nov 2010 09:59:48 GMT
-Message-ID: <201011040959.oA49xm6t017320@demeter1.kernel.org>
-References: <bug-18652-11613@https.bugzilla.kernel.org/>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [RFC v2 16/21] tcm: Add PSCSI subsystem plugin
+Date: Thu, 04 Nov 2010 16:14:51 +0300
+Message-ID: <4CD2B1CB.6070004@vlnb.net>
+References: <1285195867-11728-1-git-send-email-nab@linux-iscsi.org> <4CD01EE2.20705@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter.kernel.org ([140.211.167.39]:49017 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753368Ab0KDJ7s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2010 05:59:48 -0400
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id oA49xmsu017321
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 4 Nov 2010 09:59:48 GMT
-In-Reply-To: <bug-18652-11613@https.bugzilla.kernel.org/>
+Received: from moutng.kundenserver.de ([212.227.17.8]:56223 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751400Ab0KDNPE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2010 09:15:04 -0400
+In-Reply-To: <4CD01EE2.20705@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@suse.de>, Jens Axboe <axboe@kernel.dk>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=18652
+Boaz Harrosh, on 11/02/2010 05:23 PM wrote:
 
+[...]
 
+>> +	 * Some pseudo SCSI HBAs do not fill in sector_size
+>> +	 * correctly. (See ide-scsi.c)  So go ahead and setup sane
+>> +	 * values.
+>> +	 */
+>> +	if (!sd->sector_size) {
+>> +		switch (sd->type) {
+>> +		case TYPE_DISK:
+>> +			sd->sector_size = 512;
+>> +			break;
+>> +		case TYPE_ROM:
+>> +			sd->sector_size = 2048;
+>> +			break;
+>> +		case TYPE_TAPE: /* The Tape may not be in the drive */
+>> +			break;
+>> +		case TYPE_MEDIUM_CHANGER: /* Control CDBs only */
+>> +			break;
+>> +		default:
+>> +			printk(KERN_ERR "Unable to set sector_size for %d\n",
+>> +					sd->type);
+>> +			return NULL;
+> 
+> What about sector-less devices? OSD, Scanners, printers ...
 
+[...]
 
+>> +	/*
+>> +	 * For TYPE_TAPE, attempt to determine blocksize with MODE_SENSE.
+>> +	 */
+>> +	if (sd->type == TYPE_TAPE) {
+> 
+> Just as a future note:
+> One of the things I'm missing from LIO is the notion of SCSI_TYPE or SCSI
+> class. So things like this can be done in a plugin manner as per TYPE
+> Like in the Kernel we have the ULDs for that.
 
---- Comment #5 from ksb@inbox.lv  2010-11-04 09:59:46 ---
-As I said before - happens only on WD'c, exactly WD2500AAKS. It don't happen on
-other older hdd's, i.e. WDC WD2500KS.
-HDD's are connected to 6-Drive Hot-Swap Expander Board AXX6DRV3GEXP, but when I
-attach SATA hdd's directly to mainboard - everything works ok, without any
-errors.
+This is exactly how it is done in SCST.
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Also SCST well handles sector-less devices.
+
+Vlad
