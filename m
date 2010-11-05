@@ -1,174 +1,208 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH 00/49] Use vzalloc not vmalloc/kmemset
-Date: Thu,  4 Nov 2010 20:07:24 -0700
-Message-ID: <cover.1288925424.git.joe@perches.com>
+Subject: [PATCH 34/49] drivers/scsi: Use vzalloc
+Date: Thu,  4 Nov 2010 20:07:58 -0700
+Message-ID: <a5b5595719fe07b0d6b1c0bced4c70179c5b30df.1288925425.git.joe@perches.com>
 References: <alpine.DEB.2.00.1011031108260.11625@router.home>
-Return-path: <owner-linux-mm@kvack.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.perches.com ([173.55.12.10]:4152 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753850Ab0KEDJB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Nov 2010 23:09:01 -0400
 In-Reply-To: <alpine.DEB.2.00.1011031108260.11625@router.home>
-Sender: owner-linux-mm@kvack.org
-To: Jiri Kosina <trivial@kernel.org>
-Cc: linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mips@linux-mips.org, kvm@vger.kernel.org, kvm-ppc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, cbe-oss-dev@lists.ozlabs.org, linux-s390@vger.kernel.org, amd64-microcode@amd64.org, linux-crypto@vger.kernel.org, linux-atm-general@lists.sourceforge.net, netdev@vger.kernel.org, drbd-user@lists.linbit.com, dri-devel@lists.freedesktop.org, linux-input@vger.kernel.org, linux-rdma@vger.kernel.org, dm-devel@redhat.com, linux-raid@vger.kernel.org, linux-media@vger.kernel.org, linux-mtd@lists.infradead.org, e1000-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, osst-users@lists.sourceforge.net, devel@driverdev.osuosl.org, xen-devel@lists.xen.org, virtualization@lists.osdl.org, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, codalist@coda.cs.cmu.edu, linux-mm@kvac
+In-Reply-To: <cover.1288925424.git.joe@perches.com>
+References: <cover.1288925424.git.joe@perches.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+Cc: Jing Huang <huangj@brocade.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Willem Riede <osst@riede.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, osst-users@lists.sourceforge.net
 
-Converted vmalloc/memset and vmalloc_node/memset to
-vzalloc or vzalloc_node using a cocci script and some editing
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/bfa/bfad.c         |    3 +--
+ drivers/scsi/bfa/bfad_debugfs.c |    8 ++------
+ drivers/scsi/cxgbi/libcxgbi.h   |    9 +++------
+ drivers/scsi/osst.c             |    3 +--
+ drivers/scsi/qla2xxx/qla_attr.c |    3 +--
+ drivers/scsi/qla2xxx/qla_bsg.c  |    3 +--
+ drivers/scsi/scsi_debug.c       |    7 ++-----
+ 7 files changed, 11 insertions(+), 25 deletions(-)
 
-Reduces text a little bit.
-
-Compiled x86 only.
-
-There are still vmalloc_32 with memset calls still around.
-
-Broken out to multiple patches to cc appropriate maintainers.
-
-Joe Perches (49):
-  arch/ia64: Use vzalloc
-  arch/mips: Use vzalloc
-  arch/powerpc: Use vzalloc
-  arch/s390: Use vzalloc
-  arch/x86: Use vzalloc
-  crypto: Use vzalloc
-  drivers/atm: Use vzalloc
-  drivers/block: Use vzalloc
-  drivers/char: Use vzalloc
-  drivers/gpu: Use vzalloc
-  drivers/hid: Use vzalloc
-  drivers/infiniband: Use vzalloc
-  drivers/isdn: Use vzalloc
-  drivers/md: Use vzalloc
-  drivers/media: Use vzalloc
-  drivers/mtd: Use vzalloc
-  drivers/net/cxgb3: Use vzalloc
-  drivers/net/cxgb4: Use vzalloc
-  drivers/net/e1000: Use vzalloc
-  drivers/net/e1000e: Use vzalloc
-  drivers/net/ehea: Use vzalloc
-  drivers/net/igb: Use vzalloc
-  drivers/net/igbvf: Use vzalloc
-  drivers/net/ixgb: Use vzalloc
-  drivers/net/ixgbe: Use vzalloc
-  drivers/net/ixgbevf: Use vzalloc
-  drivers/net/netxen: Use vzalloc
-  drivers/net/pch_gbe: Use vzalloc
-  drivers/net/qlcnic: Use vzalloc
-  drivers/net/sfc: Use vzalloc
-  drivers/net/vxge: Use vzalloc
-  drivers/net/bnx2.c: Use vzalloc
-  drivers/s390: Use vzalloc
-  drivers/scsi: Use vzalloc
-  drivers/staging: Use vzalloc
-  drivers/video: Use vzalloc
-  fs/ext4: Use vzalloc
-  fs/jffs2: Use vzalloc
-  fs/reiserfs: Use vzalloc
-  fs/udf: Use vzalloc
-  fs/xfs: Use vzalloc
-  include/linux/coda_linux.h: Use vzalloc
-  kernel: Use vzalloc
-  mm: Use vzalloc
-  net/core/pktgen.c: Use vzalloc
-  net/netfilter: Use vzalloc
-  net/rds: Use vzalloc
-  sound/oss/dev_table.c: Use vzalloc
-  virt/kvm/kvm_main.c: Use vzalloc
-
- arch/ia64/kernel/perfmon.c                      |    3 +-
- arch/mips/sibyte/common/sb_tbprof.c             |    3 +-
- arch/powerpc/kvm/book3s.c                       |    6 +--
- arch/powerpc/platforms/cell/spufs/lscsa_alloc.c |    3 +-
- arch/s390/hypfs/hypfs_diag.c                    |    3 +-
- arch/x86/kernel/microcode_amd.c                 |    3 +-
- arch/x86/kvm/x86.c                              |    3 +-
- arch/x86/mm/pageattr-test.c                     |    3 +-
- crypto/deflate.c                                |    3 +-
- crypto/zlib.c                                   |    3 +-
- drivers/atm/idt77252.c                          |   11 ++++---
- drivers/atm/lanai.c                             |    3 +-
- drivers/block/drbd/drbd_bitmap.c                |    5 +--
- drivers/char/agp/backend.c                      |    3 +-
- drivers/char/mspec.c                            |    5 +--
- drivers/gpu/drm/via/via_dmablit.c               |    4 +-
- drivers/hid/hid-core.c                          |    3 +-
- drivers/infiniband/hw/amso1100/c2_rnic.c        |    5 +--
- drivers/infiniband/hw/ehca/ipz_pt_fn.c          |    5 +--
- drivers/infiniband/hw/ipath/ipath_driver.c      |    3 +-
- drivers/infiniband/hw/ipath/ipath_file_ops.c    |   11 ++-----
- drivers/infiniband/hw/ipath/ipath_init_chip.c   |    5 +--
- drivers/infiniband/hw/qib/qib_init.c            |    7 +---
- drivers/infiniband/ulp/ipoib/ipoib_cm.c         |   10 ++----
- drivers/infiniband/ulp/ipoib/ipoib_main.c       |    3 +-
- drivers/isdn/i4l/isdn_common.c                  |    4 +-
- drivers/isdn/mISDN/dsp_core.c                   |    3 +-
- drivers/isdn/mISDN/l1oip_codec.c                |    6 +--
- drivers/md/dm-log.c                             |    3 +-
- drivers/md/dm-snap-persistent.c                 |    3 +-
- drivers/md/dm-table.c                           |    4 +--
- drivers/media/dvb/ngene/ngene-core.c            |    3 +-
- drivers/media/video/mx3_camera.c                |    3 +-
- drivers/media/video/pwc/pwc-if.c                |    3 +-
- drivers/media/video/videobuf-dma-sg.c           |    3 +-
- drivers/mtd/nand/nandsim.c                      |    3 +-
- drivers/mtd/ubi/vtbl.c                          |    6 +--
- drivers/net/bnx2.c                              |   10 +-----
- drivers/net/cxgb3/cxgb3_offload.c               |    7 ++--
- drivers/net/cxgb4/cxgb4_main.c                  |    7 ++--
- drivers/net/e1000/e1000_main.c                  |    6 +--
- drivers/net/e1000e/netdev.c                     |    6 +--
- drivers/net/ehea/ehea_main.c                    |    4 +--
- drivers/net/igb/igb_main.c                      |    6 +--
- drivers/net/igbvf/netdev.c                      |    6 +--
- drivers/net/ixgb/ixgb_main.c                    |    6 +--
- drivers/net/ixgbe/ixgbe_main.c                  |   10 ++----
- drivers/net/ixgbevf/ixgbevf_main.c              |    6 +--
- drivers/net/netxen/netxen_nic_init.c            |    7 +---
- drivers/net/pch_gbe/pch_gbe_main.c              |    6 +--
- drivers/net/qlcnic/qlcnic_init.c                |    7 +---
- drivers/net/sfc/filter.c                        |    3 +-
- drivers/net/vxge/vxge-config.c                  |   37 +++++-----------------
- drivers/s390/cio/blacklist.c                    |    3 +-
- drivers/scsi/bfa/bfad.c                         |    3 +-
- drivers/scsi/bfa/bfad_debugfs.c                 |    8 +----
- drivers/scsi/cxgbi/libcxgbi.h                   |    9 ++----
- drivers/scsi/osst.c                             |    3 +-
- drivers/scsi/qla2xxx/qla_attr.c                 |    3 +-
- drivers/scsi/qla2xxx/qla_bsg.c                  |    3 +-
- drivers/scsi/scsi_debug.c                       |    7 +---
- drivers/staging/comedi/drivers.c                |    4 +--
- drivers/staging/rtl8192e/r8192E_core.c          |    4 +--
- drivers/staging/udlfb/udlfb.c                   |    5 +--
- drivers/staging/xgifb/XGI_main_26.c             |    3 +-
- drivers/staging/zram/zram_drv.c                 |    3 +-
- drivers/video/arcfb.c                           |    5 +--
- drivers/video/broadsheetfb.c                    |    4 +--
- drivers/video/hecubafb.c                        |    5 +--
- drivers/video/metronomefb.c                     |    4 +--
- drivers/video/xen-fbfront.c                     |    3 +-
- fs/ext4/super.c                                 |    4 +--
- fs/jffs2/build.c                                |    5 +--
- fs/reiserfs/journal.c                           |    9 ++----
- fs/reiserfs/resize.c                            |    4 +--
- fs/udf/super.c                                  |    5 +--
- fs/xfs/linux-2.6/kmem.h                         |    7 +----
- include/linux/coda_linux.h                      |   26 ++++++++++------
- kernel/profile.c                                |    6 +--
- kernel/relay.c                                  |    4 +--
- mm/memcontrol.c                                 |    5 +--
- mm/page_cgroup.c                                |    3 +-
- mm/percpu.c                                     |    8 +----
- mm/swapfile.c                                   |    3 +-
- net/core/pktgen.c                               |    3 +-
- net/netfilter/x_tables.c                        |    5 +--
- net/rds/ib_cm.c                                 |    6 +--
- sound/oss/dev_table.c                           |    6 +--
- virt/kvm/kvm_main.c                             |   13 ++------
- 89 files changed, 167 insertions(+), 328 deletions(-)
-
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index 1f93897..10dc5d2 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -600,13 +600,12 @@ retry:
+ 		meminfo_elem = &hal_meminfo->meminfo[i];
+ 		switch (meminfo_elem->mem_type) {
+ 		case BFA_MEM_TYPE_KVA:
+-			kva = vmalloc(meminfo_elem->mem_len);
++			kva = vzalloc(meminfo_elem->mem_len);
+ 			if (kva == NULL) {
+ 				bfad_hal_mem_release(bfad);
+ 				rc = BFA_STATUS_ENOMEM;
+ 				goto ext;
+ 			}
+-			memset(kva, 0, meminfo_elem->mem_len);
+ 			meminfo_elem->kva = kva;
+ 			break;
+ 		case BFA_MEM_TYPE_DMA:
+diff --git a/drivers/scsi/bfa/bfad_debugfs.c b/drivers/scsi/bfa/bfad_debugfs.c
+index 1fedeeb..0f7af51 100644
+--- a/drivers/scsi/bfa/bfad_debugfs.c
++++ b/drivers/scsi/bfa/bfad_debugfs.c
+@@ -79,7 +79,7 @@ bfad_debugfs_open_fwtrc(struct inode *inode, struct file *file)
+ 
+ 	fw_debug->buffer_len = sizeof(struct bfa_trc_mod_s);
+ 
+-	fw_debug->debug_buffer = vmalloc(fw_debug->buffer_len);
++	fw_debug->debug_buffer = vzalloc(fw_debug->buffer_len);
+ 	if (!fw_debug->debug_buffer) {
+ 		kfree(fw_debug);
+ 		printk(KERN_INFO "bfad[%d]: Failed to allocate fwtrc buffer\n",
+@@ -87,8 +87,6 @@ bfad_debugfs_open_fwtrc(struct inode *inode, struct file *file)
+ 		return -ENOMEM;
+ 	}
+ 
+-	memset(fw_debug->debug_buffer, 0, fw_debug->buffer_len);
+-
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	rc = bfa_debug_fwtrc(&bfad->bfa,
+ 			fw_debug->debug_buffer,
+@@ -123,7 +121,7 @@ bfad_debugfs_open_fwsave(struct inode *inode, struct file *file)
+ 
+ 	fw_debug->buffer_len = sizeof(struct bfa_trc_mod_s);
+ 
+-	fw_debug->debug_buffer = vmalloc(fw_debug->buffer_len);
++	fw_debug->debug_buffer = vzalloc(fw_debug->buffer_len);
+ 	if (!fw_debug->debug_buffer) {
+ 		kfree(fw_debug);
+ 		printk(KERN_INFO "bfad[%d]: Failed to allocate fwsave buffer\n",
+@@ -131,8 +129,6 @@ bfad_debugfs_open_fwsave(struct inode *inode, struct file *file)
+ 		return -ENOMEM;
+ 	}
+ 
+-	memset(fw_debug->debug_buffer, 0, fw_debug->buffer_len);
+-
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	rc = bfa_debug_fwsave(&bfad->bfa,
+ 			fw_debug->debug_buffer,
+diff --git a/drivers/scsi/cxgbi/libcxgbi.h b/drivers/scsi/cxgbi/libcxgbi.h
+index c57d59d..7627e37 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.h
++++ b/drivers/scsi/cxgbi/libcxgbi.h
+@@ -658,14 +658,11 @@ static inline u32 cxgbi_tag_nonrsvd_bits(struct cxgbi_tag_format *tformat,
+ 	return v1 | v2;
+ }
+ 
+-static inline void *cxgbi_alloc_big_mem(unsigned int size,
+-					gfp_t gfp)
++static inline void *cxgbi_alloc_big_mem(unsigned int size, gfp_t gfp)
+ {
+-	void *p = kmalloc(size, gfp);
++	void *p = kzalloc(size, gfp);
+ 	if (!p)
+-		p = vmalloc(size);
+-	if (p)
+-		memset(p, 0, size);
++		p = vzalloc(size);
+ 	return p;
+ }
+ 
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 54de1d1..02bc1cc 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -2296,11 +2296,10 @@ static int osst_write_header(struct osst_tape * STp, struct osst_request ** aSRp
+ 	if (STp->raw) return 0;
+ 
+ 	if (STp->header_cache == NULL) {
+-		if ((STp->header_cache = (os_header_t *)vmalloc(sizeof(os_header_t))) == NULL) {
++		if ((STp->header_cache = vzalloc(sizeof(os_header_t))) == NULL) {
+ 			printk(KERN_ERR "%s:E: Failed to allocate header cache\n", name);
+ 			return (-ENOMEM);
+ 		}
+-		memset(STp->header_cache, 0, sizeof(os_header_t));
+ #if DEBUG
+ 		printk(OSST_DEB_MSG "%s:D: Allocated and cleared memory for header cache\n", name);
+ #endif
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index bc8194f..7151b04 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -271,7 +271,7 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
+ 		    ha->optrom_size - start : size;
+ 
+ 		ha->optrom_state = QLA_SREADING;
+-		ha->optrom_buffer = vmalloc(ha->optrom_region_size);
++		ha->optrom_buffer = vzalloc(ha->optrom_region_size);
+ 		if (ha->optrom_buffer == NULL) {
+ 			qla_printk(KERN_WARNING, ha,
+ 			    "Unable to allocate memory for optrom retrieval "
+@@ -291,7 +291,6 @@ qla2x00_sysfs_write_optrom_ctl(struct file *filp, struct kobject *kobj,
+ 		    "Reading flash region -- 0x%x/0x%x.\n",
+ 		    ha->optrom_region_start, ha->optrom_region_size));
+ 
+-		memset(ha->optrom_buffer, 0, ha->optrom_region_size);
+ 		ha->isp_ops->read_optrom(vha, ha->optrom_buffer,
+ 		    ha->optrom_region_start, ha->optrom_region_size);
+ 		break;
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 31a4121..27f7f79 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1356,7 +1356,7 @@ qla2x00_optrom_setup(struct fc_bsg_job *bsg_job, struct qla_hw_data *ha,
+ 		ha->optrom_state = QLA_SREADING;
+ 	}
+ 
+-	ha->optrom_buffer = vmalloc(ha->optrom_region_size);
++	ha->optrom_buffer = vzalloc(ha->optrom_region_size);
+ 	if (!ha->optrom_buffer) {
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "Read: Unable to allocate memory for optrom retrieval "
+@@ -1366,7 +1366,6 @@ qla2x00_optrom_setup(struct fc_bsg_job *bsg_job, struct qla_hw_data *ha,
+ 		return -ENOMEM;
+ 	}
+ 
+-	memset(ha->optrom_buffer, 0, ha->optrom_region_size);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 2c36bae..e6aaad4 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -3305,12 +3305,11 @@ static int __init scsi_debug_init(void)
+ 			       (sdebug_sectors_per * sdebug_heads);
+ 	}
+ 
+-	fake_storep = vmalloc(sz);
++	fake_storep = vzalloc(sz);
+ 	if (NULL == fake_storep) {
+ 		printk(KERN_ERR "scsi_debug_init: out of memory, 1\n");
+ 		return -ENOMEM;
+ 	}
+-	memset(fake_storep, 0, sz);
+ 	if (scsi_debug_num_parts > 0)
+ 		sdebug_build_parts(fake_storep, sz);
+ 
+@@ -3355,7 +3354,7 @@ static int __init scsi_debug_init(void)
+ 
+ 		map_size = (sdebug_store_sectors / scsi_debug_unmap_granularity);
+ 		map_bytes = map_size >> 3;
+-		map_storep = vmalloc(map_bytes);
++		map_storep = vzalloc(map_bytes);
+ 
+ 		printk(KERN_INFO "scsi_debug_init: %lu provisioning blocks\n",
+ 		       map_size);
+@@ -3366,8 +3365,6 @@ static int __init scsi_debug_init(void)
+ 			goto free_vm;
+ 		}
+ 
+-		memset(map_storep, 0x0, map_bytes);
+-
+ 		/* Map first 1KB for partition table */
+ 		if (scsi_debug_num_parts)
+ 			map_region(0, 2);
 -- 
 1.7.3.1.g432b3.dirty
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Fight unfair telecom policy in Canada: sign http://dissolvethecrtc.ca/
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
