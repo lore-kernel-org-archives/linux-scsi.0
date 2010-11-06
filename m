@@ -1,62 +1,71 @@
-From: Oliver Neukum <oneukum@suse.de>
-Subject: [PATCH 3/3] SCSI:sd: sd_start_stop_device() error handling
-Date: Fri, 5 Nov 2010 11:09:22 +0100
-Message-ID: <201011051109.22392.oneukum@suse.de>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: SCSI TMF processing; tag allocation
+Date: Fri, 5 Nov 2010 23:02:43 -0700 (PDT)
+Message-ID: <380694.87733.qm@web31812.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40506 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752815Ab0KEKJC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2010 06:09:02 -0400
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	by mx2.suse.de (Postfix) with ESMTP id B2DEB8655F
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Nov 2010 11:09:00 +0100 (CET)
+Received: from web31812.mail.mud.yahoo.com ([68.142.207.75]:44493 "HELO
+	web31812.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751695Ab0KFGCp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Nov 2010 02:02:45 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>, hare@suse.de, linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, jens.axboe@oracle.com, James.Bottomley@suse.de
 
->From 63cd566f7e63bc1592e2652b95b53cf7aaa7dcb3 Mon Sep 17 00:00:00 2001
-From: Oliver Neukum <oliver@neukum.org>
-Date: Mon, 25 Oct 2010 15:36:27 +0200
-Subject: [PATCH 3/3] SCSI:sd: sd_start_stop_device() error handling
+Here is the following scenario:
 
-- ignore failure of sd_start_stop_device() due to medium removal
-- do not abort a system suspension due to a failure in sd_start_stop_device()
+Tags 2, 3, ..., X are pending in the device, NOT necessarily submitted in that order (this is the "task set").
 
-Signed-off-by: Oliver Neukum <oneukum@suse.de>
----
- drivers/scsi/sd.c |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+Tag 8 times out and is aborted via TMF ABORT TASK. Immediately the device returns okay and the driver says to SCSI core that all is well.
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5ed75bf..9559fc4 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2569,6 +2569,10 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
- 		sd_print_result(sdkp, res);
- 		if (driver_byte(res) & DRIVER_SENSE)
- 			sd_print_sense_hdr(sdkp, &sshdr);
-+		if ((scsi_sense_valid(&sshdr) &&
-+			/* 0x3a is medium not present */
-+			sshdr.asc == 0x3a))
-+			res = 0;
- 	}
- 
- 	/* SCSI error codes must not go to the generic layer */
-@@ -2621,6 +2625,10 @@ static int sd_suspend(struct device *dev, pm_message_t mesg)
- 	if ((mesg.event & PM_EVENT_SLEEP) && sdkp->device->manage_start_stop) {
- 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
- 		ret = sd_start_stop_device(sdkp, 0);
-+
-+		/* an error is not worth aborting a system sleep */
-+		if (!(mesg.event & PM_EVENT_AUTO))
-+			ret = 0;
- 	}
- 
- done:
--- 
-1.7.1
+SCSI Core sends TUR immediately, reusing the tag, tag 8.
+
+Then the rest of the commands that were pending in the task set complete with success (2, 3, ..., X, and 8), in the order they were submitted, since tasks 2 to X are I/O commands and 8 being TUR has no implicit HEAD OF QUEUE it completes last with success. Now the device task set is empty. Those commands are completed okay with the Linux device driver with SCSI Core (meaning done() were called, result is 0).
+
+SCSI Core though, continues to abort the rest of the task set, tags 2, ..., X. The device says okay, since they are not in its task set. So SCSI Core's error "handling" routine, sends ABORT TASK for TAG 3. *BUT* since tag 3 is free, immediately after the TMF, we see TUR with, guess what, tag 3, since as far as SCSI/Block layer are concerned, tag 3 is free
+(bitmap in the block layer).
+
+Sure enough, the device receives both, back to back: first the ABORT TASK
+TMF with tag of task to be managed (TTBM) of 3, and then it receives TUR
+with tag of 3. Sure enough the device aborts the TUR.
+
+TUR times out with SCSI Core/block layer and we see SCSI Core tries to
+abort it again, by sending another ABORT TASK TMF with TTBM of 3, that of
+the TUR.
+
+At the same time error handling goes on and sends ABORT TASK TMF for the rest of the commands in the task set and at the end sends LU RESET and I_T Nexus reset (well, the driver that is, but nevertheless).
+
+There are several issues here involving people at various layers (not in any/priority order):
+
+First, SCSI Core should probably send ABORT TASK SET. Sending ABORT TASK for each task at the device is also okay, but adds transport overhead.
+
+Second, SCSI Core should not send ABORT TASK for a completed task. Sure, the device will reply with FUNCTION COMPLETE either way, but in the
+aforementioned case the task server aborts a command which wasn't
+intended to be aborted (and since the tag was reused--see below). That is,
+if the command is in the "eh" queue, and is completed, don't send ABORT
+TASK for it.
+
+Third, and most importantly, tags should form an increasing sequence and should not be reused until all other tags after it and before it have been reused. This for example can be accomplished if one were to use
+find_next_zero_bit() with non-zero "offset", it being the last allocated
+tag in a modulo the number of tags manner. That is, find_next_zero_bit()
+could wrap as well as starting from an offset or the caller could implement
+that via two calls to this function, in blk_queue_start_tag().
+
+Forth, transport protocols need tags for other purposes than just sending
+I/O commands, for example sending task management functions. LLDDs should
+be given callbacks to allocate a free tag, only if #3 above is implemented.
+
+Fifth, all commands that enter queuecommand() should be tagged, regardless
+of whether the device supports tags and how many. At the moment, this
+isn't so, and transports are forced to reserve the first tag the
+transport supports for non-tagged commands and the rest for tagged
+commands. For example INQUIRY coming untagged (tag 0), and then
+READ coming with tag 0 (tagged). This adds additional work for LLDDs to
+check whether the "request" is tagged or not and assign it a tag if
+it is not, or offset the tag if it is tagged with the offset reserved
+for untagged tasks (normally just one).
+
+    Luben
 
