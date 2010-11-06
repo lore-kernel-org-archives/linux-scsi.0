@@ -1,39 +1,34 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [RFC PATCH] SCSI host lock push-down
-Date: Sat, 06 Nov 2010 10:31:05 +0100
-Message-ID: <4CD52059.7010503@s5r6.in-berlin.de>
-References: <20101105002409.GA21714@havoc.gtf.org>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: [PATCH] fix retries of scsi device in scsi library
+Date: Sat, 6 Nov 2010 19:36:53 +0800
+Message-ID: <AANLkTink9T7-b7V_9EAToPrGSWAmK9s+G7d5Ybxc+srr@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20101105002409.GA21714@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:44463 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752640Ab0KFLgz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Nov 2010 07:36:55 -0400
+Received: by wwb39 with SMTP id 39so2287905wwb.1
+        for <linux-scsi@vger.kernel.org>; Sat, 06 Nov 2010 04:36:54 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> An alternate arrangement, not presented by this patch, might
-> be preferred:  in order to make it clear that queuecommand
-> locking has changed, one could s/queuecommand/queuecommand_nl/ in
-> Scsi_Host_Template, in order to guarantee that drivers are either
-> (a) upgraded or (b) broken at compile time.  Compile-time detection of
-> new locking may be desirable, and I'll volunteer to change my patch to
-> do that, if community members prefer that route instead of below.
+The computation of retries for sdev is not correct since it is less
+than what the caller asks.
 
-I followed only a fraction of the related discussion.  Thus I wonder why a
-renaming of scsi_host_template.queuecommand was not part of these attempts
-from the very outset.
+Signed-off-by: Hillf Danton <dhillf@gmail.com>
+---
 
-Given the choice between compile-time breakage of unconverted drivers and
-silent invalidation of potential locking assumptions at runtime, the
-preferable way forward is quite clear IMO.
+--- a/drivers/scsi/scsi_lib.c	2010-09-13 07:07:38.000000000 +0800
++++ b/drivers/scsi/scsi_lib.c	2010-11-06 19:34:18.000000000 +0800
+@@ -2000,7 +2000,7 @@ scsi_test_unit_ready(struct scsi_device
+ 		    sshdr->sense_key == UNIT_ATTENTION)
+ 			sdev->changed = 1;
+ 	} while (scsi_sense_valid(sshdr) &&
+-		 sshdr->sense_key == UNIT_ATTENTION && --retries);
++		 sshdr->sense_key == UNIT_ATTENTION && retries--);
 
-(Since no coexistence period of .queuecommand and .queuecommand_nl or
-.unlocked_queuecommand is planned, how about you rename it to .queue_command?
-Follows Linux naming conventions more closely.)
--- 
-Stefan Richter
--=====-==-=- =-== --==-
-http://arcgraph.de/sr/
+ 	if (!sshdr)
+ 		/* could not allocate sense buffer, so can't process it */
