@@ -1,47 +1,42 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [RFC PATCH] SCSI host lock push-down
-Date: Sun, 07 Nov 2010 11:54:22 -0500
-Message-ID: <4CD6D9BE.3030206@garzik.org>
-References: <20101105002409.GA21714@havoc.gtf.org> <4CD52059.7010503@s5r6.in-berlin.de>
+Date: Sun, 07 Nov 2010 11:57:03 -0500
+Message-ID: <4CD6DA5F.3050905@garzik.org>
+References: <20101105002409.GA21714@havoc.gtf.org> <4CD66222.5040808@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4CD52059.7010503@s5r6.in-berlin.de>
+In-Reply-To: <4CD66222.5040808@panasas.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Boaz Harrosh <bharrosh@panasas.com>
 Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/06/2010 05:31 AM, Stefan Richter wrote:
-> Jeff Garzik wrote:
->> An alternate arrangement, not presented by this patch, might
->> be preferred:  in order to make it clear that queuecommand
->> locking has changed, one could s/queuecommand/queuecommand_nl/ in
->> Scsi_Host_Template, in order to guarantee that drivers are either
->> (a) upgraded or (b) broken at compile time.  Compile-time detection of
->> new locking may be desirable, and I'll volunteer to change my patch to
->> do that, if community members prefer that route instead of below.
+On 11/07/2010 03:24 AM, Boaz Harrosh wrote:
+> Well now isn't that simple? One nit for me though.
+> I would like to see a more scary name for above something like:
+> DEF_SCSI_QCMD_WITH_LOCKING or
+> DEF_SCSI_QCMD_OLD_WAY
+
+I don't have a real preference; whatever the community prefers.  Maybe I 
+would suggest DEF_SCSI_QCMD_LOCKER.
+
+
+> Something that calls for a cleanup and removal the first time
+> the driver is touched.
 >
-> I followed only a fraction of the related discussion.  Thus I wonder why a
-> renaming of scsi_host_template.queuecommand was not part of these attempts
-> from the very outset.
+> Otherwise I think this is the only form that should make it safe
+> for this Kernel.
 >
-> Given the choice between compile-time breakage of unconverted drivers and
-> silent invalidation of potential locking assumptions at runtime, the
-> preferable way forward is quite clear IMO.
+> (The rename could be nice also though it is one additional hunk in
+>   each driver. Did you use a script to produce this?)
 
-I am leaning towards a rename, but wanted to see what others thought.
-
-
-> (Since no coexistence period of .queuecommand and .queuecommand_nl or
-> .unlocked_queuecommand is planned, how about you rename it to .queue_command?
-> Follows Linux naming conventions more closely.)
-
-To me, that name lacks a clear "locking changed" signal, for a random 
-engineer who simply stumbles upon the queuecommand -> queue_command 
-rename change one day.
+No script; a few vim macros helped a bit.  I wanted to actually examine 
+each callsite, to get a feel of the locking scheme, and make sure my 
+change was truly an equivalent-transformation.
 
 	Jeff
+
 
 
