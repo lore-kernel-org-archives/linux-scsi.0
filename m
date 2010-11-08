@@ -1,105 +1,172 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Mon, 08 Nov 2010 22:58:37 +0300
-Message-ID: <4CD8566D.1020202@vlnb.net>
-References: <20101009212047.GB27180@kroah.com> <4CB36592.6060909@vlnb.net> <20101011213235.GA11489@kroah.com> <4CB4AEB9.30501@vlnb.net> <20101012190345.GA25737@kroah.com> <4CB75E81.7000208@vlnb.net> <20101014200413.GA30831@kroah.com> <4CC1CA4D.1090609@vlnb.net> <20101022175624.GA13640@kroah.com> <4CC1DAA2.7030602@vlnb.net> <20101022185437.GA9103@kroah.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: [PATCH repost] [SCSI] Retrieve the Caching mode page
+Date: Mon, 8 Nov 2010 13:03:45 -0800 (PST)
+Message-ID: <803953.39974.qm@web31806.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.8]:56061 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753834Ab0KHT7Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 14:59:25 -0500
-In-Reply-To: <20101022185437.GA9103@kroah.com>
+Received: from web31806.mail.mud.yahoo.com ([68.142.207.69]:27734 "HELO
+	web31806.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754730Ab0KHVDq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 16:03:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-Greg KH, on 10/22/2010 10:54 PM wrote:
-> On Fri, Oct 22, 2010 at 10:40:34PM +0400, Vladislav Bolkhovitin wrote:
->>>> +	unsigned int tgt_kobj_initialized:1;
->>>
->>> It's the middle of the merge window, and I'm about to go on vacation, so
->>> I didn't read this patch after this line.
->>>
->>> It's obvious that this patch is wrong, you shouldn't need to worry about
->>> this.  And even if you did, you don't need this flag.
->>>
->>> Why are you trying to do something that no one else needs?  Why make
->>> things harder than they have to be.
->>
->> I tried to explain that to you in http://lkml.org/lkml/2010/10/14/291
->> and mentioned there the need to create this flag to track
->> half-initialized kobjects. You agreed
->> (http://lkml.org/lkml/2010/10/14/299) that don't return half-initialized
->> objects is a regular kernel practice, but then requested to strictly
->> bound the larger object freeing to its kobject release(), which means
->> that all SYSFS creating functions now have to return half-initialized
->> SYSFS hierarchy in case of any error. Hence the flag to track it.
-> 
-> I agreed that you needed to do something about it, not that this is the
-> correct way to do it.
-> 
-> Think for a second as to why your code path looks different from EVERY
-> other kobject user in the kernel.  Perhaps it is incorrect?  You don't
-> need all this completion mess, in fact, it's wrong.
-> 
-> Just do what everyone else does please, as that is the simpler, and
-> correct, way to do it.
+Some kernel transport drivers unconditionally disable
+retrieval of the Caching mode page. One such for example is
+the BBB/CBI transport over USB.  Such a restraint is too
+harsh as some devices do support the Caching mode
+page. Unconditionally enabling the retrieval of this mode
+page over those transports at their transport code level may
+result in some devices failing and becoming unusable.
 
-Hello Greg,
+This patch implements a method of retrieving the Caching
+mode page without unconditionally enabling it in the
+transports which unconditionally disable it. The idea is to
+ask for all supported pages, page code 0x3F, and then search
+for the Caching mode page in the mode parameter data
+returned. The sd driver already asks for all the mode pages
+supported by the attached device by setting the page code to
+0x3F in order to find out if the media is write protected by
+reading the WP bit in the Device Specific Parameter
+field. It then attempts to retrieve only the Caching mode
+page by setting the page code to 8 and actually attempting
+to retrieve it if and only if the transport allows it.
 
-Why SCST objects are different from most other kernel objects and why
-they can't be implemented the same way as them is exactly what I'm
-trying to explain you. Let me try again from a bit different angle.
+The method implemented here is that if the transport doesn't
+allow retrieval of the Caching mode page and the device is
+not RBC, then we ask for all pages supported by setting the
+page code to 0x3F (similarly to how the WP bit is retrieved
+above), and then we search for the Caching mode page in the
+mode parameter data returned.
 
-SCST objects are different from the most other kernel objects, because
-they are very complex, hence complex to initialize and delete with
-dependencies in order how initialization and delete actions should be
-performed. Particularly, SCST objects have a lot of attributes and
-sub-objects, so their kobjects can't be inited and exposed to SYSFS or
-removed from it until they reach some point during initialization or
-delete correspondingly, otherwise their attributes' reads and writes can
-crash.
+With this patch, devices over SATA, report this (no change):
 
-I can elaborate all those on examples, if you request.
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] 976773168 512-byte logical blocks: (500 GB/465 GiB)
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: Attached scsi generic sg0 type 0
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
 
-I understand you are very busy and appreciate very much your review and
-comments, so be glad to implement what you are requesting. But I don't
-see how to implement that in an acceptable manner with neither the
-completion-based delete as now, nor with x_initialized flag as in the
-previous patch.
+Smart devices report their Caching mode page. This is a
+change where we'd previously see the kernel making
+assumption about the device's cache being write-through:
 
-Note, SCST's kobjects are not the only kobjects in the kernel using the
-completion based delete. See, for instance, ktype_cpufreq, ktype_cpuidle
-or ext4_ktype.
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: Attached scsi generic sg2 type 0
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] 610472646 4096-byte logical blocks: (2.50 TB/2.27 TiB)
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] Write Protect is off
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] Mode Sense: 47 00 10 08
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
 
-Also, elevator (struct elevator_queue) uses "registered" flag to see if
-it was added to the SYSFS.
+And "dumb" devices over BBB, are correctly shown not to
+support reporting the Caching mode page:
 
-Thus, you can see, both the completion and the flag approaches already
-used in the kernel. Hence, I believe, the way how SCST is doing it
-should also be acceptable.
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] 15663104 512-byte logical blocks: (8.01 GB/7.46 GiB)
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] Write Protect is off
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] Mode Sense: 23 00 00 00
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] No Caching mode page present
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] Assuming drive cache: write through
 
-I'm not a person who, as you, probably, guessed, at first doing, only
-then thinking and reading docs. I before writing a code line at first
-read all the available docs and carefully consider possible
-alternatives, so there isn't a well thought bit in SCST.
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+---
+ drivers/scsi/sd.c |   63 +++++++++++++++++++++++++++++++++++++++-------------
+ 1 files changed, 47 insertions(+), 16 deletions(-)
 
-I believe, the completions aren't mess, they are refinement.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ffa0689..81e83d7 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1867,10 +1867,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	int old_rcd = sdkp->RCD;
+ 	int old_dpofua = sdkp->DPOFUA;
+ 
+-	if (sdp->skip_ms_page_8)
+-		goto defaults;
+-
+-	if (sdp->type == TYPE_RBC) {
++	if (sdp->skip_ms_page_8) {
++		if (sdp->type == TYPE_RBC)
++			goto defaults;
++		else {
++			modepage = 0x3F;
++			dbd = 0;
++		}
++	} else if (sdp->type == TYPE_RBC) {
+ 		modepage = 6;
+ 		dbd = 8;
+ 	} else {
+@@ -1898,13 +1902,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	 */
+ 	if (len < 3)
+ 		goto bad_sense;
+-	if (len > 20)
+-		len = 20;
+-
+-	/* Take headers and block descriptors into account */
+-	len += data.header_length + data.block_descriptor_length;
+-	if (len > SD_BUF_SIZE)
+-		goto bad_sense;
++	else if (len > SD_BUF_SIZE) {
++		sd_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
++			  "data from %d to %d bytes\n", len, SD_BUF_SIZE);
++		len = SD_BUF_SIZE;
++	}
+ 
+ 	/* Get the data */
+ 	res = sd_do_mode_sense(sdp, dbd, modepage, buffer, len, &data, &sshdr);
+@@ -1912,16 +1914,45 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	if (scsi_status_is_good(res)) {
+ 		int offset = data.header_length + data.block_descriptor_length;
+ 
+-		if (offset >= SD_BUF_SIZE - 2) {
+-			sd_printk(KERN_ERR, sdkp, "Malformed MODE SENSE response\n");
+-			goto defaults;
++		while (offset < len) {
++			u8 page_code = buffer[offset] & 0x3F;
++			u8 spf       = buffer[offset] & 0x40;
++
++			if (page_code == 8 || page_code == 6) {
++				/* We're interested only in the first 3 bytes.
++				 */
++				if (len - offset <= 2) {
++					sd_printk(KERN_ERR, sdkp, "Incomplete "
++						  "mode parameter data\n");
++					goto defaults;
++				} else {
++					modepage = page_code;
++					goto Page_found;
++				}
++			} else {
++				/* Go to the next page */
++				if (spf && len - offset > 3)
++					offset += 4 + (buffer[offset+2] << 8) +
++						buffer[offset+3];
++				else if (!spf && len - offset > 1)
++					offset += 2 + buffer[offset+1];
++				else {
++					sd_printk(KERN_ERR, sdkp, "Incomplete "
++						  "mode parameter data\n");
++					goto defaults;
++				}
++			}
+ 		}
+ 
+-		if ((buffer[offset] & 0x3f) != modepage) {
++		if (modepage == 0x3F) {
++			sd_printk(KERN_ERR, sdkp, "No Caching mode page "
++				  "present\n");
++			goto defaults;
++		} else if ((buffer[offset] & 0x3f) != modepage) {
+ 			sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
+ 			goto defaults;
+ 		}
+-
++	Page_found:
+ 		if (modepage == 8) {
+ 			sdkp->WCE = ((buffer[offset + 2] & 0x04) != 0);
+ 			sdkp->RCD = ((buffer[offset + 2] & 0x01) != 0);
+-- 
+1.7.0.1
 
-> Oh, and why are you using a kobject at all anyway?  Shouldn't you be
-> using a 'struct device'?
-
-We need only to represent our internal SCST objects on the SYSFS. The
-objects are not devices, but special entities for special purposes. For
-instance, struct scst_session is a representation of SCSI I_T nexuses.
-Struct scst_tgt_dev - I_T_L nexuses. Another example is struct scst_acg,
-which is a representation of per initiator access control groups to
-determine which initiators can see which LUNs. Hence, for such purpose
-kobjects are fully sufficient.
-
-Thanks,
-Vlad
