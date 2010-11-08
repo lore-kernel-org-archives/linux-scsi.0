@@ -1,279 +1,370 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 6/9] target: remove dead blockdevice claim/release code
-Date: Mon, 08 Nov 2010 10:56:07 -0500
-Message-ID: <20101108155648.286575749@canuck.infradead.org>
+Subject: [PATCH 5/9] target: clean up transport_subsystem_register
+Date: Mon, 08 Nov 2010 10:56:06 -0500
+Message-ID: <20101108155647.982654567@canuck.infradead.org>
 References: <20101108155601.872926000@canuck.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canuck.infradead.org ([134.117.69.58]:44173 "EHLO
+Received: from canuck.infradead.org ([134.117.69.58]:44172 "EHLO
 	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060Ab0KHP4t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 10:56:49 -0500
-Content-Disposition: inline; filename=lio-cleanup-claim
+	with ESMTP id S1753048Ab0KHP4s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 10:56:48 -0500
+Content-Disposition: inline; filename=lio-simplify-transport_subsystem_register
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: nab@linux-iscsi.org
 Cc: linux-scsi@vger.kernel.org
 
-This code is entirely unused - even the last reference to
-linux_blockdevice_release was unreachable at this point.
+Move initialization of the list into transport_subsystem_register, set the
+owner field in the operations vector like for most others, remove the
+external_submod field and replace it by not having an owner pointer.
+Remove unessecary initializations to zero for se_subsystem_api fields.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: lio-core-2.6/drivers/target/target_core_device.c
-===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_device.c	2010-11-08 15:52:26.154863014 +0100
-+++ lio-core-2.6/drivers/target/target_core_device.c	2010-11-08 15:57:14.058196347 +0100
-@@ -50,111 +50,6 @@
- #include "target_core_pr.h"
- #include "target_core_ua.h"
- 
--struct block_device *__linux_blockdevice_claim(
--	int major,
--	int minor,
--	void *claim_ptr,
--	int *ret)
--{
--	dev_t dev;
--	struct block_device *bd;
--
--	dev = MKDEV(major, minor);
--
--	bd = bdget(dev);
--	if (!(bd)) {
--		*ret = -1;
--		return NULL;
--	}
--
--	if (blkdev_get(bd, FMODE_WRITE|FMODE_READ) < 0) {
--		*ret = -1;
--		return NULL;
--	}
--	/*
--	 * If no claim pointer was passed from claimee, use struct block_device.
--	 */
--	if (!claim_ptr)
--		claim_ptr = (void *)bd;
--
--	if (bd_claim(bd, claim_ptr) < 0) {
--		blkdev_put(bd, FMODE_WRITE|FMODE_READ);
--		*ret = 0;
--		return bd;
--	}
--
--	*ret = 1;
--	return bd;
--}
--
--struct block_device *linux_blockdevice_claim(
--	int major,
--	int minor,
--	void *claim_ptr)
--{
--	dev_t dev;
--	struct block_device *bd;
--
--	dev = MKDEV(major, minor);
--
--	bd = bdget(dev);
--	if (!(bd))
--		return NULL;
--
--	if (blkdev_get(bd, FMODE_WRITE|FMODE_READ) < 0)
--		return NULL;
--	/*
--	 * If no claim pointer was passed from claimee, use struct block_device.
--	 */
--	if (!claim_ptr)
--		claim_ptr = (void *)bd;
--
--	if (bd_claim(bd, claim_ptr) < 0) {
--		blkdev_put(bd, FMODE_WRITE|FMODE_READ);
--		return NULL;
--	}
--
--	return bd;
--}
--EXPORT_SYMBOL(linux_blockdevice_claim);
--
--int linux_blockdevice_release(int major, int minor, struct block_device *bd_p)
--{
--	dev_t dev;
--	struct block_device *bd;
--
--	if (!bd_p) {
--		dev = MKDEV(major, minor);
--
--		bd = bdget(dev);
--		if (!(bd))
--			return -1;
--	} else
--		bd = bd_p;
--
--	bd_release(bd);
--	blkdev_put(bd, FMODE_WRITE|FMODE_READ);
--
--	return 0;
--}
--EXPORT_SYMBOL(linux_blockdevice_release);
--
--int linux_blockdevice_check(int major, int minor)
--{
--	struct block_device *bd;
--
--	bd = linux_blockdevice_claim(major, minor, NULL);
--	if (!(bd))
--		return -1;
--	/*
--	 * Blockdevice was able to be claimed, now unclaim it and return success
--	 */
--	linux_blockdevice_release(major, minor, NULL);
--
--	return 0;
--}
--EXPORT_SYMBOL(linux_blockdevice_check);
--
- extern int __transport_get_lun_for_cmd(
- 	struct se_cmd *se_cmd,
- 	u32 unpacked_lun)
 Index: lio-core-2.6/drivers/target/target_core_file.c
 ===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_file.c	2010-11-08 15:54:21.721529679 +0100
-+++ lio-core-2.6/drivers/target/target_core_file.c	2010-11-08 15:55:27.531529681 +0100
-@@ -234,14 +234,7 @@ static struct se_device *fd_create_virtd
- 	dev_limits.max_cdb_len = TCM_MAX_COMMAND_SIZE;
- 	dev_limits.hw_queue_depth = FD_MAX_DEVICE_QUEUE_DEPTH;
- 	dev_limits.queue_depth = FD_DEVICE_QUEUE_DEPTH;
--	/*
--	 * Pass dev_flags for linux_blockdevice_claim_bd or
--	 * linux_blockdevice_claim() from the usage above.
--	 *
--	 * Note that transport_add_device_to_core_hba() will call
--	 * linux_blockdevice_release() internally on failure to
--	 * call bd_release() on the referenced struct block_device.
--	 */
-+
- 	dev = transport_add_device_to_core_hba(hba, &fileio_template,
- 				se_dev, dev_flags, (void *)fd_dev,
- 				&dev_limits, "FILEIO", FD_VERSION);
-Index: lio-core-2.6/drivers/target/target_core_file.h
-===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_file.h	2010-11-08 15:52:03.078196347 +0100
-+++ lio-core-2.6/drivers/target/target_core_file.h	2010-11-08 15:56:30.278196346 +0100
-@@ -16,10 +16,6 @@
- #define FD_DATA_NONE		3
+--- lio-core-2.6.orig/drivers/target/target_core_file.c	2010-11-08 15:37:15.944863013 +0100
++++ lio-core-2.6/drivers/target/target_core_file.c	2010-11-08 15:49:05.428196347 +0100
+@@ -953,9 +953,9 @@ static sector_t fd_get_blocks(struct se_
  
- extern struct se_global *se_global;
--extern struct block_device *__linux_blockdevice_claim(int, int, void *, int *);
--extern struct block_device *linux_blockdevice_claim(int, int, void *);
--extern int linux_blockdevice_release(int, int, struct block_device *);
--extern int linux_blockdevice_check(int, int);
+ static struct se_subsystem_api fileio_template = {
+ 	.name			= "fileio",
++	.owner			= THIS_MODULE,
+ 	.type			= FILEIO,
+ 	.transport_type		= TRANSPORT_PLUGIN_VHBA_PDEV,
+-	.external_submod	= 1,
+ 	.attach_hba		= fd_attach_hba,
+ 	.detach_hba		= fd_detach_hba,
+ 	.cdb_none		= fd_CDB_none,
+@@ -973,7 +973,6 @@ static struct se_subsystem_api fileio_te
+ 	.transport_complete	= fd_transport_complete,
+ 	.allocate_request	= fd_allocate_request,
+ 	.do_task		= fd_do_task,
+-	.do_discard		= NULL,
+ 	.do_sync_cache		= fd_emulate_sync_cache,
+ 	.free_task		= fd_free_task,
+ 	.check_configfs_dev_params = fd_check_configfs_dev_params,
+@@ -989,23 +988,14 @@ static struct se_subsystem_api fileio_te
+ 	.get_device_type	= fd_get_device_type,
+ 	.get_dma_length		= fd_get_dma_length,
+ 	.get_blocks		= fd_get_blocks,
+-	.write_pending		= NULL,
+ };
  
- #define RRF_EMULATE_CDB		0x01
- #define RRF_GOT_LBA		0x02
-Index: lio-core-2.6/drivers/target/target_core_iblock.c
-===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_iblock.c	2010-11-08 15:54:21.734863014 +0100
-+++ lio-core-2.6/drivers/target/target_core_iblock.c	2010-11-08 16:03:22.868196349 +0100
-@@ -187,15 +187,7 @@ static struct se_device *iblock_create_v
- 	ib_dev->ibd_major = MAJOR(bd->bd_dev);
- 	ib_dev->ibd_minor = MINOR(bd->bd_dev);
- 	ib_dev->ibd_bd = bd;
--	ib_dev->ibd_flags |= IBDF_BDEV_EXCLUSIVE;
--	/*
--	 * Pass dev_flags for linux_blockdevice_claim() or
--	 * linux_blockdevice_claim() from the usage above.
--	 *
--	 * Note that transport_add_device_to_core_hba() will call
--	 * linux_blockdevice_release() internally on failure to
--	 * call bd_release() on the referenced struct block_device.
--	 */
-+
- 	dev = transport_add_device_to_core_hba(hba,
- 			&iblock_template, se_dev, dev_flags, (void *)ib_dev,
- 			&dev_limits, "IBLOCK", IBLOCK_VERSION);
-@@ -251,25 +243,8 @@ static void iblock_free_device(void *p)
+-int __init fileio_module_init(void)
++static int __init fileio_module_init(void)
  {
- 	struct iblock_dev *ib_dev = p;
- 
--	if (ib_dev->ibd_bd) {
--		printk(KERN_INFO "IBLOCK: Releasing Major:Minor - %d:%d\n",
--			ib_dev->ibd_major, ib_dev->ibd_minor);
+-	int ret;
 -
--		if (ib_dev->ibd_flags & IBDF_BDEV_EXCLUSIVE)
--			close_bdev_exclusive(ib_dev->ibd_bd,
--				FMODE_WRITE|FMODE_READ);
--		else
--			linux_blockdevice_release(ib_dev->ibd_major,
--					ib_dev->ibd_minor, ib_dev->ibd_bd);
--		ib_dev->ibd_bd = NULL;
--	}
+-	INIT_LIST_HEAD(&fileio_template.sub_api_list);
 -
--	if (ib_dev->ibd_bio_set) {
--		DEBUG_IBLOCK("Calling bioset_free ib_dev->ibd_bio_set: %p\n",
--				ib_dev->ibd_bio_set);
--		bioset_free(ib_dev->ibd_bio_set);
--	}
+-	ret = transport_subsystem_register(&fileio_template, THIS_MODULE);
+-	if (ret < 0)
+-		return ret;
 -
-+	close_bdev_exclusive(ib_dev->ibd_bd, FMODE_WRITE|FMODE_READ);
-+	bioset_free(ib_dev->ibd_bio_set);
- 	kfree(ib_dev);
+-	return 0;
++	return transport_subsystem_register(&fileio_template);
  }
  
-Index: lio-core-2.6/drivers/target/target_core_iblock.h
+-void fileio_module_exit(void)
++static void fileio_module_exit(void)
+ {
+ 	transport_subsystem_release(&fileio_template);
+ }
+Index: lio-core-2.6/drivers/target/target_core_hba.c
 ===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_iblock.h	2010-11-08 15:59:59.918196346 +0100
-+++ lio-core-2.6/drivers/target/target_core_iblock.h	2010-11-08 16:00:08.661529684 +0100
-@@ -23,8 +23,7 @@ struct iblock_req {
+--- lio-core-2.6.orig/drivers/target/target_core_hba.c	2010-11-08 15:41:43.444863012 +0100
++++ lio-core-2.6/drivers/target/target_core_hba.c	2010-11-08 15:48:43.508196346 +0100
+@@ -100,23 +100,17 @@ int se_core_add_hba(
+ 		return -EINVAL;
  
- #define IBDF_HAS_UDEV_PATH		0x01
- #define IBDF_HAS_FORCE			0x02
--#define IBDF_BDEV_EXCLUSIVE		0x04
--#define IBDF_BDEV_ISSUE_FLUSH		0x08
-+#define IBDF_BDEV_ISSUE_FLUSH		0x04
+ 	hba->transport = t;
++
+ 	/*
+ 	 * Get TCM subsystem api struct module reference to struct se_hba
+ 	 */
+-	if (t->external_submod) {
+-		if (!(t->sub_owner)) {
+-			printk(KERN_ERR "Pointer to struct module does not"
+-				" exist for %s\n", t->name);
+-			hba->transport = NULL;
+-			transport_core_put_sub(t);
+-			return -EINVAL;
+-		}
++	if (t->owner) {
+ 		/*
+ 		 * Grab a struct module reference count for subsystem plugin
+ 		 */
+-		if (!(try_module_get(t->sub_owner))) {
+-			printk(KERN_ERR "try_module_get() failed for"
+-				" t->sub_owner\n");
++		if (!try_module_get(t->owner)) {
++			printk(KERN_ERR "try_module_get() failed for %s\n",
++				t->owner->name);
+ 			hba->transport = NULL;
+ 			transport_core_put_sub(t);
+ 			return -EINVAL;
+@@ -126,8 +120,8 @@ int se_core_add_hba(
+ 	ret = t->attach_hba(hba, plugin_dep_id);
+ 	if (ret < 0) {
+ 		hba->transport = NULL;
+-		if (t->external_submod)
+-			module_put(t->sub_owner);
++		if (t->owner)
++			module_put(t->owner);
+ 		transport_core_put_sub(t);
+ 		return ret;
+ 	}
+@@ -157,8 +151,8 @@ static int se_core_shutdown_hba(
+ 	/*
+ 	 * Release TCM subsystem api struct module reference from struct se_hba
+ 	 */
+-	if (t->external_submod)
+-		module_put(t->sub_owner);
++	if (t->owner)
++		module_put(t->owner);
  
- struct iblock_dev {
- 	unsigned char ibd_udev_path[SE_UDEV_PATH_LEN];
-Index: lio-core-2.6/drivers/target/target_core_pscsi.h
+ 	return 0;
+ }
+Index: lio-core-2.6/drivers/target/target_core_iblock.c
 ===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_pscsi.h	2010-11-08 15:53:09.088196347 +0100
-+++ lio-core-2.6/drivers/target/target_core_pscsi.h	2010-11-08 15:56:11.404863014 +0100
-@@ -20,9 +20,6 @@
- #define PS_TIMEOUT_OTHER	(500*HZ)
+--- lio-core-2.6.orig/drivers/target/target_core_iblock.c	2010-11-08 15:38:27.891529681 +0100
++++ lio-core-2.6/drivers/target/target_core_iblock.c	2010-11-08 15:48:47.868196356 +0100
+@@ -921,9 +921,9 @@ static void iblock_bio_done(struct bio *
  
- extern struct se_global *se_global;
--extern struct block_device *linux_blockdevice_claim(int, int, void *);
--extern int linux_blockdevice_release(int, int, struct block_device *);
--extern int linux_blockdevice_check(int, int);
+ static struct se_subsystem_api iblock_template = {
+ 	.name			= "iblock",
++	.owner			= THIS_MODULE,
+ 	.type			= IBLOCK,
+ 	.transport_type		= TRANSPORT_PLUGIN_VHBA_PDEV,
+-	.external_submod	= 1,
+ 	.cdb_none		= iblock_CDB_none,
+ 	.cdb_read_non_SG	= iblock_CDB_read_non_SG,
+ 	.cdb_read_SG		= iblock_CDB_read_SG,
+@@ -957,23 +957,14 @@ static struct se_subsystem_api iblock_te
+ 	.get_device_type	= iblock_get_device_type,
+ 	.get_dma_length		= iblock_get_dma_length,
+ 	.get_blocks		= iblock_get_blocks,
+-	.write_pending		= NULL,
+ };
  
- #include <linux/device.h>
- #include <scsi/scsi_driver.h>
-Index: lio-core-2.6/drivers/target/target_core_stgt.h
+-int __init iblock_module_init(void)
++static int __init iblock_module_init(void)
+ {
+-	int ret;
+-
+-	INIT_LIST_HEAD(&iblock_template.sub_api_list);
+-
+-	ret = transport_subsystem_register(&iblock_template, THIS_MODULE);
+-	if (ret < 0)
+-		return ret;
+-
+-	return 0;
++	return transport_subsystem_register(&iblock_template);
+ }
+ 
+-void iblock_module_exit(void)
++static void iblock_module_exit(void)
+ {
+ 	transport_subsystem_release(&iblock_template);
+ }
+Index: lio-core-2.6/drivers/target/target_core_pscsi.c
 ===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_stgt.h	2010-11-08 15:53:17.704863012 +0100
-+++ lio-core-2.6/drivers/target/target_core_stgt.h	2010-11-08 15:56:13.564863014 +0100
-@@ -12,9 +12,6 @@
- #define PS_TIMEOUT_OTHER	(500*HZ)
+--- lio-core-2.6.orig/drivers/target/target_core_pscsi.c	2010-11-08 15:38:27.901529680 +0100
++++ lio-core-2.6/drivers/target/target_core_pscsi.c	2010-11-08 15:48:49.844863013 +0100
+@@ -1485,9 +1485,9 @@ static void pscsi_req_done(struct reques
  
- extern struct se_global *se_global;
--extern struct block_device *linux_blockdevice_claim(int, int, void *);
--extern int linux_blockdevice_release(int, int, struct block_device *);
--extern int linux_blockdevice_check(int, int);
+ static struct se_subsystem_api pscsi_template = {
+ 	.name			= "pscsi",
++	.owner			= THIS_MODULE,
+ 	.type			= PSCSI,
+ 	.transport_type		= TRANSPORT_PLUGIN_PHBA_PDEV,
+-	.external_submod	= 1,
+ 	.cdb_none		= pscsi_CDB_none,
+ 	.cdb_read_non_SG	= pscsi_CDB_read_non_SG,
+ 	.cdb_read_SG		= pscsi_CDB_read_SG,
+@@ -1516,23 +1516,14 @@ static struct se_subsystem_api pscsi_tem
+ 	.get_device_rev		= pscsi_get_device_rev,
+ 	.get_device_type	= pscsi_get_device_type,
+ 	.get_dma_length		= pscsi_get_dma_length,
+-	.write_pending		= NULL,
+ };
  
- #include <linux/device.h>
- #include <scsi/scsi_driver.h>
-Index: lio-core-2.6/include/target/target_core_device.h
+-int __init pscsi_module_init(void)
++static int __init pscsi_module_init(void)
+ {
+-	int ret;
+-
+-	INIT_LIST_HEAD(&pscsi_template.sub_api_list);
+-
+-	ret = transport_subsystem_register(&pscsi_template, THIS_MODULE);
+-	if (ret < 0)
+-		return ret;
+-
+-	return 0;
++	return transport_subsystem_register(&pscsi_template);
+ }
+ 
+-void pscsi_module_exit(void)
++static void pscsi_module_exit(void)
+ {
+ 	transport_subsystem_release(&pscsi_template);
+ }
+Index: lio-core-2.6/drivers/target/target_core_rd.c
 ===================================================================
---- lio-core-2.6.orig/include/target/target_core_device.h	2010-11-08 15:52:18.101529681 +0100
-+++ lio-core-2.6/include/target/target_core_device.h	2010-11-08 15:56:17.911529680 +0100
-@@ -3,10 +3,6 @@
+--- lio-core-2.6.orig/drivers/target/target_core_rd.c	2010-11-08 15:38:27.911529679 +0100
++++ lio-core-2.6/drivers/target/target_core_rd.c	2010-11-08 15:49:00.321529680 +0100
+@@ -1283,7 +1283,6 @@ static struct se_subsystem_api rd_dr_tem
+ 	.name			= "rd_dr",
+ 	.type			= RAMDISK_DR,
+ 	.transport_type		= TRANSPORT_PLUGIN_VHBA_VDEV,
+-	.external_submod	= 0,
+ 	.cdb_none		= rd_CDB_none,
+ 	.cdb_read_non_SG	= rd_CDB_read_non_SG,
+ 	.cdb_read_SG		= rd_CDB_read_SG,
+@@ -1314,14 +1313,12 @@ static struct se_subsystem_api rd_dr_tem
+ 	.get_dma_length		= rd_get_dma_length,
+ 	.get_blocks		= rd_get_blocks,
+ 	.do_se_mem_map		= rd_DIRECT_do_se_mem_map,
+-	.write_pending		= NULL,
+ };
  
- extern struct se_global *se_global;
+ static struct se_subsystem_api rd_mcp_template = {
+ 	.name			= "rd_mcp",
+ 	.type			= RAMDISK_MCP,
+ 	.transport_type		= TRANSPORT_PLUGIN_VHBA_VDEV,
+-	.external_submod	= 0,
+ 	.cdb_none		= rd_CDB_none,
+ 	.cdb_read_non_SG	= rd_CDB_read_non_SG,
+ 	.cdb_read_SG		= rd_CDB_read_SG,
+@@ -1348,21 +1345,17 @@ static struct se_subsystem_api rd_mcp_te
+ 	.get_device_rev		= rd_get_device_rev,
+ 	.get_device_type	= rd_get_device_type,
+ 	.get_dma_length		= rd_get_dma_length,
+-	.write_pending		= NULL,
+ };
  
--extern struct block_device *__linux_blockdevice_claim(int, int, void *, int *);
--extern struct block_device *linux_blockdevice_claim(int, int, void *);
--extern int linux_blockdevice_release(int, int, struct block_device *);
--extern int linux_blockdevice_check(int, int);
- extern int transport_get_lun_for_cmd(struct se_cmd *, unsigned char *, u32);
- extern int transport_get_lun_for_tmr(struct se_cmd *, u32);
- extern struct se_dev_entry *core_get_se_deve_from_rtpi(
+ int __init rd_module_init(void)
+ {
+ 	int ret;
+ 
+-	INIT_LIST_HEAD(&rd_dr_template.sub_api_list);
+-	INIT_LIST_HEAD(&rd_mcp_template.sub_api_list);
+-
+-	ret = transport_subsystem_register(&rd_dr_template, NULL);
++	ret = transport_subsystem_register(&rd_dr_template);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = transport_subsystem_register(&rd_mcp_template, NULL);
++	ret = transport_subsystem_register(&rd_mcp_template);
+ 	if (ret < 0) {
+ 		transport_subsystem_release(&rd_dr_template);
+ 		return ret;
+Index: lio-core-2.6/drivers/target/target_core_stgt.c
+===================================================================
+--- lio-core-2.6.orig/drivers/target/target_core_stgt.c	2010-11-08 15:38:27.924863014 +0100
++++ lio-core-2.6/drivers/target/target_core_stgt.c	2010-11-08 15:49:02.761529680 +0100
+@@ -833,9 +833,9 @@ static int stgt_transfer_response(struct
+ 
+ static struct se_subsystem_api stgt_template = {
+ 	.name			= "stgt",
++	.owner			= THIS_MODULE,
+ 	.type			= STGT,
+ 	.transport_type		= TRANSPORT_PLUGIN_VHBA_PDEV,
+-	.external_submod	= 1,
+ 	.cdb_none		= stgt_CDB_none,
+ 	.cdb_read_non_SG	= stgt_CDB_read_non_SG,
+ 	.cdb_read_SG		= stgt_CDB_read_SG,
+@@ -865,23 +865,14 @@ static struct se_subsystem_api stgt_temp
+ 	.get_device_rev		= stgt_get_device_rev,
+ 	.get_device_type	= stgt_get_device_type,
+ 	.get_dma_length		= stgt_get_dma_length,
+-	.write_pending		= NULL,
+ };
+ 
+-int __init stgt_module_init(void)
++static int __init stgt_module_init(void)
+ {
+-	int ret;
+-
+-	INIT_LIST_HEAD(&stgt_template.sub_api_list);
+-
+-	ret = transport_subsystem_register(&stgt_template, THIS_MODULE);
+-	if (ret < 0)
+-		return ret;
+-
+-	return 0;
++	return transport_subsystem_register(&stgt_template);
+ }
+ 
+-void stgt_module_exit(void)
++static void stgt_module_exit(void)
+ {
+ 	transport_subsystem_release(&stgt_template);
+ }
+Index: lio-core-2.6/drivers/target/target_core_transport.c
+===================================================================
+--- lio-core-2.6.orig/drivers/target/target_core_transport.c	2010-11-08 15:37:15.928196347 +0100
++++ lio-core-2.6/drivers/target/target_core_transport.c	2010-11-08 15:44:43.708196346 +0100
+@@ -545,18 +545,11 @@ int transport_subsystem_check_init(void)
+ }
+ 
+ int transport_subsystem_register(
+-	struct se_subsystem_api *sub_api,
+-	struct module *sub_owner)
++	struct se_subsystem_api *sub_api)
+ {
+ 	struct se_subsystem_api *s;
+-	/*
+-	 * Save struct module * for TFO [attach,detach]_hba() reference
+-	 * in se_core_add_hba()
+-	 */
+-	if (sub_api->external_submod && (sub_owner != NULL))
+-		sub_api->sub_owner = sub_owner;
+-	else
+-		sub_api->sub_owner = NULL;
++
++	INIT_LIST_HEAD(&sub_api->sub_api_list);
+ 
+ 	mutex_lock(&se_global->g_sub_api_mutex);
+ 	list_for_each_entry(s, &se_global->g_sub_api_list, sub_api_list) {
+@@ -572,7 +565,7 @@ int transport_subsystem_register(
+ 	mutex_unlock(&se_global->g_sub_api_mutex);
+ 
+ 	printk(KERN_INFO "TCM: Registered subsystem plugin: %s struct module:"
+-			" %p\n", sub_api->name, sub_api->sub_owner);
++			" %p\n", sub_api->name, sub_api->owner);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(transport_subsystem_register);
+Index: lio-core-2.6/include/target/target_core_transport.h
+===================================================================
+--- lio-core-2.6.orig/include/target/target_core_transport.h	2010-11-08 15:42:48.694863012 +0100
++++ lio-core-2.6/include/target/target_core_transport.h	2010-11-08 15:49:30.924863014 +0100
+@@ -138,8 +138,7 @@ extern int __iscsi_debug_dev(struct se_d
+ extern unsigned char *transport_get_iqn_sn(void);
+ extern void transport_init_queue_obj(struct se_queue_obj *);
+ extern int transport_subsystem_check_init(void);
+-extern int transport_subsystem_register(struct se_subsystem_api *,
+-				struct module *);
++extern int transport_subsystem_register(struct se_subsystem_api *);
+ extern void transport_subsystem_release(struct se_subsystem_api *);
+ extern void transport_load_plugins(void);
+ extern struct se_subsystem_api *transport_core_get_sub_by_name(const char *);
+@@ -323,13 +322,9 @@ struct se_subsystem_api {
+ 	 */
+ 	u8 transport_type;
+ 	/*
+-	 * For target_core_rd.c internal usage
+-	 */
+-	int external_submod;
+-	/*
+ 	 * struct module for struct se_hba references
+ 	 */
+-	struct module *sub_owner;
++	struct module *owner;
+ 	/*
+ 	 * Counter for struct se_hba reference
+ 	 */
 
