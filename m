@@ -1,43 +1,52 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [RFCv3 00/21] TCM Core and TCM_Loop patches for v2.6.37
-Date: Mon, 8 Nov 2010 23:50:47 +0900
-Message-ID: <20101108234328C.fujita.tomonori@lab.ntt.co.jp>
-References: <1287441313-19703-1-git-send-email-nab@linux-iscsi.org>
-	<20101108143307.GA22121@infradead.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 0/3] scsi_lib: Some love to scsi_lib
+Date: Mon, 08 Nov 2010 17:02:18 +0200
+Message-ID: <4CD810FA.902@panasas.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:42443 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752627Ab0KHOvr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Nov 2010 09:51:47 -0500
-In-Reply-To: <20101108143307.GA22121@infradead.org>
+Received: from exprod5og111.obsmtp.com ([64.18.0.22]:37575 "HELO
+	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754799Ab0KHPCZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 10:02:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, michaelc@cs.wisc.edu, hch@lst.de, hare@suse.de, James.Bottomley@suse.de, axboe@kernel.dk, bharrosh@panasas.com
+To: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jeff@garzik.org>
+Cc: Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Mon, 8 Nov 2010 09:33:07 -0500
-Christoph Hellwig <hch@infradead.org> wrote:
+Submitted a much needed cleanup to scsi_lib's command completion
+path. The code after these patches should theoretically be
+behaviour equivalent to current code. Only cleaner smaller, and
+easier to understand. The motivation was to make things clearer
+to understand. It was all inspired by Alan Stern and more things
+added to that.
 
-> I promised you and James to get back to a throughout review for more
-> than just the backends.  It's still in progress, but here is what I
-> think is most important:
+Theoretically, since I have only tested with the usual tests I have.
+Boot an x86_64 machine, git clone, make, xfstests ...
+I did not run any Error injection tests with scsi_debug, since I don't
+have any set up. Though one should because the error handling might
+have changed accidentally, though not intended.
 
-Agreed about all the comments. I complained about similar issues
-publicly and privately.
+Please someone, Alan Jeff ... I have tried to go through every possible
+code path and prove that we do exactly as before. But I might have missed
+something. Please check my Math.
 
-btw, when I'm back to Japan, I resume to work on the ibmvscsis driver.
+I'm sitting on these patches since 2.6.34-rc4, but never followed
+them through, and tested them. Sorry. They patched without any issues
+on top of current scsi-misc meaning nothing changed in this area since a
+long time.
 
+The patches are:
+[PATCH 1/3] scsi_lib: request_queue is only needed inside scsi_requeue_command
+[PATCH 2/3] scsi_lib: Remove that __scsi_release_buffers contraption
 
->  - Sort of the the namepspace for both the file names and function
->    names.  I think you reluctantly agreed to do that a while ago anyway,
->    but I think it's time to bite the bullet now.  Please agree on a
->    common prefix for both function names and modules.  I think the
->    target name in the directory structure is the best one, but I really
->    don't care too much.  The transport_ prefix used in some code is
->    really misleading, and the se_ in other isn't too helpful either.
+	These two are pure and trivial
 
-Agreed. And as I said, we definitely need to fix the module names
-before the mainline inclusion.
+[PATCH 3/3] scsi_lib: Collapse scsi_end_request into only user
+
+	This one should be reviewed, but should not change any
+	behaviour.
+
+Thanks
+Boaz
