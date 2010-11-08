@@ -1,73 +1,158 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] scsi_lib: BUG: Can't RETRY scsi_cmnd if some bytes were completed
-Date: Mon, 08 Nov 2010 18:18:58 +0200
-Message-ID: <4CD822F2.6060101@panasas.com>
-References: <4CD810FA.902@panasas.com>
+Subject: [PATCH 1/2] scsi.h: Make exported header exportable
+Date: Mon, 08 Nov 2010 18:31:29 +0200
+Message-ID: <4CD825E1.2040105@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og104.obsmtp.com ([64.18.0.178]:59868 "HELO
-	exprod5og104.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753771Ab0KHQTZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 11:19:25 -0500
-In-Reply-To: <4CD810FA.902@panasas.com>
+Received: from exprod5og108.obsmtp.com ([64.18.0.186]:54814 "HELO
+	exprod5og108.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754081Ab0KHQbd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 11:31:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Jeff Garzik <jeff@garzik.org>
-Cc: Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Peter Korsgaard <jacmet@sunsite.dk>
 
-Re-inspecting the code after the last cleanup actually exposed
-a BAD bug for me. See below. James this is based on the last
-patchset I sent.
 
-Boaz
----
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] scsi_lib: BUG: Can't RETRY scsi_cmnd if some bytes were completed
+* Move kernel specific things to end of file inside
+  an #ifdef __KERNEL__ clause
+* Convert some u8 to __u8
 
-In scsi_io_completion() there are many cases where action is
-set to ACTION_RETRY or ACTION_DELAYED_RETRY. But we are not
-allowed to just RETRY a command if some bytes where already
-completed by blk_end_request(). This is a bad memory overrun
-of DMA writing/reading random memory. We must re-prepare the
-command in this case.
-
-It is possible that all the cases that set ACTION_RETRY* have
-actually come with good_bytes=0 (.i.e resid = everything) But
-both the error and resid value come from LLDs and/or targets
-and should not be trusted with such a BAD crash. Better safe
-than sorry.
-
-It is possible that this fix is actually not good enough and
-in the case of some of these RETRYs we need to not call
-blk_end_request() in the first place. But this calls for
-a structural reorganisation of scsi_io_completion(). James
-this is your turf please have a look.
-
+CC: Peter Korsgaard <jacmet@sunsite.dk>
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/scsi_lib.c |    6 ++++++
- 1 files changed, 6 insertions(+), 0 deletions(-)
+ include/scsi/scsi.h |   97 +++++++++++++++++++++++++++------------------------
+ 1 files changed, 51 insertions(+), 46 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d76a69b..b78b34e 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -827,6 +827,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 		action = ACTION_FAIL;
- 	}
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 216af85..b217c7c 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -10,39 +10,6 @@
  
-+	if (action >= ACTION_RETRY && good_bytes)
-+		/* We cannot just retry if above blk_end_request advanced on
-+		 * some good_bytes, so ACTION_REPREP
-+		 */
-+		action = ACTION_REPREP;
+ #include <linux/types.h>
+ 
+-struct scsi_cmnd;
+-
+-/*
+- * The maximum number of SG segments that we will put inside a
+- * scatterlist (unless chaining is used). Should ideally fit inside a
+- * single page, to avoid a higher order allocation.  We could define this
+- * to SG_MAX_SINGLE_ALLOC to pack correctly at the highest order.  The
+- * minimum value is 32
+- */
+-#define SCSI_MAX_SG_SEGMENTS	128
+-
+-/*
+- * Like SCSI_MAX_SG_SEGMENTS, but for archs that have sg chaining. This limit
+- * is totally arbitrary, a setting of 2048 will get you at least 8mb ios.
+- */
+-#ifdef ARCH_HAS_SG_CHAIN
+-#define SCSI_MAX_SG_CHAIN_SEGMENTS	2048
+-#else
+-#define SCSI_MAX_SG_CHAIN_SEGMENTS	SCSI_MAX_SG_SEGMENTS
+-#endif
+-
+-/*
+- * DIX-capable adapters effectively support infinite chaining for the
+- * protection information scatterlist
+- */
+-#define SCSI_MAX_PROT_SG_SEGMENTS	0xFFFF
+-
+-/*
+- * Special value for scanning to specify scanning or rescanning of all
+- * possible channels, (target) ids, or luns on a given shost.
+- */
+-#define SCAN_WILD_CARD	~0
+-
+ /*
+  *      SCSI opcodes
+  */
+@@ -173,16 +140,6 @@ scsi_varlen_cdb_length(const void *hdr)
+ 	return ((struct scsi_varlen_cdb_hdr *)hdr)->additional_cdb_length + 8;
+ }
+ 
+-extern const unsigned char scsi_command_size_tbl[8];
+-#define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
+-
+-static inline unsigned
+-scsi_command_size(const unsigned char *cmnd)
+-{
+-	return (cmnd[0] == VARIABLE_LENGTH_CMD) ?
+-		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
+-}
+-
+ /*
+  *  SCSI Architecture Model (SAM) Status codes. Taken from SAM-3 draft
+  *  T10/1561-D Revision 4 Draft dated 7th November 2002.
+@@ -298,9 +255,6 @@ enum scsi_protocol {
+ 	SCSI_PROTOCOL_UNSPEC = 0xf, /* No specific protocol */
+ };
+ 
+-/* Returns a human-readable name for the device */
+-extern const char * scsi_device_type(unsigned type);
+-
+ /*
+  * standard mode-select header prepended to all mode-select commands
+  */
+@@ -526,4 +480,55 @@ static inline __u32 scsi_to_u32(__u8 *ptr)
+ 	return (ptr[0]<<24) + (ptr[1]<<16) + (ptr[2]<<8) + ptr[3];
+ }
+ 
 +
- 	switch (action) {
- 	case ACTION_NEXT_CMND:
- 		scsi_release_buffers(cmd);
++#ifdef __KERNEL__
++
++struct scsi_cmnd;
++
++/*
++ * The maximum number of SG segments that we will put inside a
++ * scatterlist (unless chaining is used). Should ideally fit inside a
++ * single page, to avoid a higher order allocation.  We could define this
++ * to SG_MAX_SINGLE_ALLOC to pack correctly at the highest order.  The
++ * minimum value is 32
++ */
++#define SCSI_MAX_SG_SEGMENTS	128
++
++/*
++ * Like SCSI_MAX_SG_SEGMENTS, but for archs that have sg chaining. This limit
++ * is totally arbitrary, a setting of 2048 will get you at least 8mb ios.
++ */
++#ifdef ARCH_HAS_SG_CHAIN
++#define SCSI_MAX_SG_CHAIN_SEGMENTS	2048
++#else
++#define SCSI_MAX_SG_CHAIN_SEGMENTS	SCSI_MAX_SG_SEGMENTS
++#endif
++
++/*
++ * DIX-capable adapters effectively support infinite chaining for the
++ * protection information scatterlist
++ */
++#define SCSI_MAX_PROT_SG_SEGMENTS	0xFFFF
++
++/*
++ * Special value for scanning to specify scanning or rescanning of all
++ * possible channels, (target) ids, or luns on a given shost.
++ */
++#define SCAN_WILD_CARD	~0
++
++extern const unsigned char scsi_command_size_tbl[8];
++#define COMMAND_SIZE(opcode) scsi_command_size_tbl[((opcode) >> 5) & 7]
++
++static inline unsigned
++scsi_command_size(const unsigned char *cmnd)
++{
++	return (cmnd[0] == VARIABLE_LENGTH_CMD) ?
++		scsi_varlen_cdb_length(cmnd) : COMMAND_SIZE(cmnd[0]);
++}
++
++/* Returns a human-readable name for the device */
++extern const char *scsi_device_type(unsigned type);
++
++#endif /* __KERNEL__ */
++
+ #endif /* _SCSI_SCSI_H */
 -- 
 1.7.2.3
-
 
