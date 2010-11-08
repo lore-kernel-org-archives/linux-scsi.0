@@ -1,57 +1,53 @@
-From: =?utf-8?B?TWljaGHFgiBOYXphcmV3aWN6?= <m.nazarewicz@samsung.com>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
 Subject: Re: [PATCH] [USB] UAS: eliminate infinite loop; add debug print
-Date: Mon, 08 Nov 2010 18:40:47 +0100
-Message-ID: <op.vlu4p9uc7p4s8u@pikus>
-References: <272723.33242.qm@web31808.mail.mud.yahoo.com>
+Date: Mon, 8 Nov 2010 09:38:08 -0800
+Message-ID: <20101108173808.GA13326@kroah.com>
+References: <20101108112456.GI4173@linux.intel.com>
+ <272723.33242.qm@web31808.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8;
-	format=flowed	delsp=yes
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.w1.samsung.com ([210.118.77.13]:52501 "EHLO
-	mailout3.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755087Ab0KHRkt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 12:40:49 -0500
-In-reply-to: <272723.33242.qm@web31808.mail.mud.yahoo.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <272723.33242.qm-5Es2LHxk9sSvuULXzWHTWIglqE1Y4D90QQ4Iyu8u01E@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Cc: Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>, Luben Tuikov <ltuikov@yahoo.com>
-Cc: Greg KH <greg@kroah.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
->> -0700, Luben Tuikov wrote:
->> > Also add a debug option and a few debug prints.
+On Mon, Nov 08, 2010 at 09:27:22AM -0800, Luben Tuikov wrote:
+> --- On Mon, 11/8/10, Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org> wrote:
+> > -0700, Luben Tuikov wrote:
+> > > Eliminate an infinite loop whereby the SCSI layer
+> > > would reissue a command (which would be failed by
+> > > the driver) ad infinitum. (Invariably due to the
+> > > driver's profuse use of the
+> > > SCSI_MLQUEUE_DEVICE_BUSY returned result in its
+> > > queuecommand() method.)
+> > > 
+> > > Also add a debug option and a few debug prints.
+> > 
+> > Why have you added your own debug scheme instead of using
+> > dev_dbg?
+> 
+> Because, this debug "scheme" produces copious and otherwise
+> unnecessary volume of debug information in a working driver. And
+> because you can turn it on/off just for this driver. It is intended to
+> be used only for debugging this driver and the UAS device(s) to which
+> the driver communicates. 99.9% of the time, this setting will be a 'N'
+> out there.  And this is what the Kconfig help entry says: "If unsure,
+> say 'N'."
 
-> --- On Mon, 11/8/10, Matthew Wilcox <willy@linux.intel.com> wrote:
->> Why have you added your own debug scheme instead of using
->> dev_dbg?
+dev_dbg() is able to be turned on and off dynamically when the kernel is
+running without rebuilding anything, which is what you really want to
+have happen for a driver being used by normal users.
 
-On Mon, 08 Nov 2010 18:27:22 +0100, Luben Tuikov <ltuikov@yahoo.com> wr=
-ote:
-> Because, this debug "scheme" produces copious and otherwise unnecessa=
-ry
-> volume of debug information in a working driver. And because you can =
-turn
-> it on/off just for this driver. It is intended to be used only for
-> debugging this driver and the UAS device(s) to which the driver
-> communicates. 99.9% of the time, this setting will be a 'N' out there=
-=2E
-> And this is what the Kconfig help entry says: "If unsure, say 'N'."
+It also produces the output in a standard manner that we have all agreed
+to follow.
 
-dev_dbg() and pr_debug() are no-ops when DEBUG is not defined, so
-proper way to do things is to use dev_dbg() and put the following
-before any #includes:
+thanks,
 
-#ifdef CONFIG_USB_UAS_DEBUG
-#  define DEBUG 1
-#endif
-
---=20
-Best regards,                                        _     _
-| Humble Liege of Serenely Enlightened Majesty of  o' \,=3D./ `o
-| Computer Science,  Micha=C5=82 "mina86" Nazarewicz       (o o)
-+----[mina86*mina86.com]---[mina86*jabber.org]----ooO--(_)--Ooo--
+greg k-h
 --
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 More majordomo info at  http://vger.kernel.org/majordomo-info.html
