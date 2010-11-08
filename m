@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 1/3] scsi_lib: request_queue is only needed inside scsi_requeue_command
-Date: Mon, 08 Nov 2010 17:10:11 +0200
-Message-ID: <4CD812D3.7090906@panasas.com>
+Subject: [PATCH 2/3] scsi_lib: Remove that __scsi_release_buffers contraption
+Date: Mon, 08 Nov 2010 17:11:49 +0200
+Message-ID: <4CD81335.8020201@panasas.com>
 References: <4CD810FA.902@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exprod5og111.obsmtp.com ([64.18.0.22]:48529 "HELO
-	exprod5og111.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754837Ab0KHPKO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 10:10:14 -0500
+Received: from exprod5og105.obsmtp.com ([64.18.0.180]:58288 "HELO
+	exprod5og105.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754837Ab0KHPLx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2010 10:11:53 -0500
 In-Reply-To: <4CD810FA.902@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,73 +18,91 @@ To: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kerne
 Cc: Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
 
-This is a pure cleanup. Just starting the engines for things
-to come.
+Remove "do_bidi_check" by checking and nullifying cmd->request
+when blk_end_* indicates the request is no longer valid.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/scsi_lib.c |   11 +++++------
- 1 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_lib.c |   41 +++++++++++++++++------------------------
+ 1 files changed, 17 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index eafeeda..c886754 100644
+index c886754..db3bb7f 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -475,9 +475,10 @@ static void scsi_run_queue(struct request_queue *q)
-  *		sector.
-  * Notes:	Upon return, cmd is a stale pointer.
-  */
--static void scsi_requeue_command(struct request_queue *q, struct scsi_cmnd *cmd)
-+static void scsi_requeue_command(struct scsi_cmnd *cmd)
- {
- 	struct request *req = cmd->request;
-+	struct request_queue *q = req->q;
- 	unsigned long flags;
+@@ -512,8 +512,6 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
+ 		scsi_run_queue(sdev->request_queue);
+ }
  
- 	spin_lock_irqsave(q->queue_lock, flags);
-@@ -538,7 +539,6 @@ static void __scsi_release_buffers(struct scsi_cmnd *, int);
- static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
- 					  int bytes, int requeue)
- {
--	struct request_queue *q = cmd->device->request_queue;
- 	struct request *req = cmd->request;
- 
- 	/*
-@@ -557,7 +557,7 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
- 				 * queue, and goose the queue again.
- 				 */
- 				scsi_release_buffers(cmd);
--				scsi_requeue_command(q, cmd);
-+				scsi_requeue_command(cmd);
- 				cmd = NULL;
- 			}
- 			return cmd;
-@@ -706,7 +706,6 @@ EXPORT_SYMBOL(scsi_release_buffers);
- void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- {
- 	int result = cmd->result;
--	struct request_queue *q = cmd->device->request_queue;
- 	struct request *req = cmd->request;
- 	int error = 0;
- 	struct scsi_sense_hdr sshdr;
-@@ -907,7 +906,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 			scsi_print_command(cmd);
+-static void __scsi_release_buffers(struct scsi_cmnd *, int);
+-
+ /*
+  * Function:    scsi_end_request()
+  *
+@@ -564,11 +562,12 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
  		}
- 		if (blk_end_request_err(req, error))
--			scsi_requeue_command(q, cmd);
-+			scsi_requeue_command(cmd);
- 		else
- 			scsi_next_command(cmd);
- 		break;
-@@ -916,7 +915,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 		 * A new command will be prepared and issued.
- 		 */
- 		scsi_release_buffers(cmd);
--		scsi_requeue_command(q, cmd);
-+		scsi_requeue_command(cmd);
- 		break;
- 	case ACTION_RETRY:
- 		/* Retry the same command immediately */
+ 	}
+ 
++	cmd->request = NULL;
+ 	/*
+ 	 * This will goose the queue request function at the end, so we don't
+ 	 * need to worry about launching another command.
+ 	 */
+-	__scsi_release_buffers(cmd, 0);
++	scsi_release_buffers(cmd);
+ 	scsi_next_command(cmd);
+ 	return NULL;
+ }
+@@ -624,26 +623,6 @@ static void scsi_free_sgtable(struct scsi_data_buffer *sdb)
+ 	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, scsi_sg_free);
+ }
+ 
+-static void __scsi_release_buffers(struct scsi_cmnd *cmd, int do_bidi_check)
+-{
+-
+-	if (cmd->sdb.table.nents)
+-		scsi_free_sgtable(&cmd->sdb);
+-
+-	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
+-
+-	if (do_bidi_check && scsi_bidi_cmnd(cmd)) {
+-		struct scsi_data_buffer *bidi_sdb =
+-			cmd->request->next_rq->special;
+-		scsi_free_sgtable(bidi_sdb);
+-		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
+-		cmd->request->next_rq->special = NULL;
+-	}
+-
+-	if (scsi_prot_sg_count(cmd))
+-		scsi_free_sgtable(cmd->prot_sdb);
+-}
+-
+ /*
+  * Function:    scsi_release_buffers()
+  *
+@@ -663,7 +642,21 @@ static void __scsi_release_buffers(struct scsi_cmnd *cmd, int do_bidi_check)
+  */
+ void scsi_release_buffers(struct scsi_cmnd *cmd)
+ {
+-	__scsi_release_buffers(cmd, 1);
++	if (cmd->sdb.table.nents)
++		scsi_free_sgtable(&cmd->sdb);
++
++	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
++
++	if (cmd->request && scsi_bidi_cmnd(cmd)) {
++		struct scsi_data_buffer *bidi_sdb =
++			cmd->request->next_rq->special;
++		scsi_free_sgtable(bidi_sdb);
++		kmem_cache_free(scsi_sdb_cache, bidi_sdb);
++		cmd->request->next_rq->special = NULL;
++	}
++
++	if (scsi_prot_sg_count(cmd))
++		scsi_free_sgtable(cmd->prot_sdb);
+ }
+ EXPORT_SYMBOL(scsi_release_buffers);
+ 
 -- 
 1.7.2.3
 
