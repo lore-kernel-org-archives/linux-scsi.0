@@ -1,53 +1,39 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: [PATCH] fix mem leak in scsi target interface
-Date: Tue, 9 Nov 2010 22:08:32 +0800
-Message-ID: <AANLkTikwExfibO+7=21NruN-Pd6e=-XN_vc6iq4KRbG7@mail.gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] tcm: Convert backstore ->set_configfs_dev_params() to
+ use parser.h
+Date: Tue, 09 Nov 2010 19:58:01 +0200
+Message-ID: <4CD98BA9.7010102@panasas.com>
+References: <1289296122-13152-1-git-send-email-nab@linux-iscsi.org> <20101109100359.GA26324@infradead.org> <1289297001.19946.92.camel@haakon2.linux-iscsi.org> <20101109134522.GA4548@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:32901 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221Ab0KIOIf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2010 09:08:35 -0500
-Received: by wyb36 with SMTP id 36so4847173wyb.19
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Nov 2010 06:08:34 -0800 (PST)
+Received: from exprod5og102.obsmtp.com ([64.18.0.143]:46964 "HELO
+	exprod5og102.obsmtp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754123Ab0KIR6E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2010 12:58:04 -0500
+In-Reply-To: <20101109134522.GA4548@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-When error encountered, the allocated page/s could be returned back to
-the mm system of linus, which triggers mem leak.
+On 11/09/2010 03:45 PM, Christoph Hellwig wrote:
+> On Tue, Nov 09, 2010 at 02:03:21AM -0800, Nicholas A. Bellinger wrote:
+>> <nod> thanks for the pointer here..
+>>
+>> Btw, the kstrdup() is required because the configfs attribute store
+>> function will be passing a 'const char *page' that is propigated from
+>> target_core_configfs.c: target_core_store_dev_control() out to
+>> ->set_configfs_dev_params() backend code.
+> 
+> strsep doesn't modify the data it points to, just the pointer itself.
+> We could get around this by casting the pointer, which at least avoids
+> the memory allocation.  But it's probably not worth bothering.
+> 
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
----
+If it is so, then the proper fix is to "const" the parameter to strsep()
+most certainly don't hide a const_cast like that. This is a landmine
+waiting to explode.
 
---- a/drivers/scsi/scsi_tgt_if.c	2010-09-13 07:07:38.000000000 +0800
-+++ b/drivers/scsi/scsi_tgt_if.c	2010-11-09 21:35:10.000000000 +0800
-@@ -18,6 +18,10 @@
-  * along with this program; if not, write to the Free Software
-  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
-  * 02110-1301 USA
-+ *
-+ * Nov 9, 2010	Hillf Danton <dhillf@gmail.com>
-+ *		minor fix of memory leakage
-+ *
-  */
- #include <linux/miscdevice.h>
- #include <linux/gfp.h>
-@@ -359,11 +363,15 @@ static int tgt_ring_init(struct tgt_ring
- 		ring->tr_pages[i] = get_zeroed_page(GFP_KERNEL);
- 		if (!ring->tr_pages[i]) {
- 			eprintk("out of memory\n");
--			return -ENOMEM;
-+			goto err;
- 		}
- 	}
-
- 	return 0;
-+ err:
-+ 	for (; --i >= 0;)
-+		free_page(ring->tr_pages[i]);
-+	return -ENOMEM;
- }
-
- void scsi_tgt_if_exit(void)
+Boaz
