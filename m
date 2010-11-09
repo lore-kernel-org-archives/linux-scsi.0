@@ -1,87 +1,73 @@
-From: Joe Eykholt <jeykholt@cisco.com>
-Subject: Re: [PATCH] fix vulnerability in file operations of scsi target interface
-Date: Tue, 09 Nov 2010 10:15:34 -0800
-Message-ID: <4CD98FC6.9000108@cisco.com>
-References: <AANLkTin+Epf5WuD9sV=kNNgVXo5No4euF=6VoSOkFK12@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 22512] New: no disks are found at driver start after upgrate
+ from 2.6.35.8 to 2.6.36
+Date: Tue, 9 Nov 2010 19:53:21 GMT
+Message-ID: <bug-22512-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-4.cisco.com ([171.68.10.86]:47527 "EHLO
-	sj-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754198Ab0KISPf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2010 13:15:35 -0500
-In-Reply-To: <AANLkTin+Epf5WuD9sV=kNNgVXo5No4euF=6VoSOkFK12@mail.gmail.com>
+Received: from demeter.kernel.org ([140.211.167.39]:50825 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753325Ab0KITxX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2010 14:53:23 -0500
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id oA9JrMEI014424
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 9 Nov 2010 19:53:22 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 11/9/10 6:01 AM, Hillf Danton wrote:
-> Ring buffers are setup for exchanging data between K and U spaces, but
-> they could not survive multiple open operations.
-> 
-> The registered misc interface is monitored and prevented from multiple
-> opens for fixing the vulnerability.
-> 
-> A typo, -BUSY, is also cleaned up.
-> 
-> btw, the ring buffers could be setup in a per file manner?
-> 
-> Signed-off-by: Hillf Danton <dhillf@gmail.com>
-> ---
-> 
-> --- a/drivers/scsi/scsi_tgt_if.c	2010-09-13 07:07:38.000000000 +0800
-> +++ b/drivers/scsi/scsi_tgt_if.c	2010-11-09 21:42:48.000000000 +0800
-> @@ -85,7 +85,7 @@ static int tgt_uspace_send_event(u32 typ
->  	if (!ev->hdr.status)
->  		tgt_ring_idx_inc(ring);
->  	else
-> -		err = -BUSY;
-> +		err = -EBUSY;
-> 
->  	spin_unlock_irqrestore(&ring->tr_lock, flags);
-> 
-> @@ -319,20 +319,33 @@ static int tgt_mmap(struct file *filp, s
->  	return err;
->  }
-> 
-> +static unsigned long tgt_open_cnt = 0;
-> +
->  static int tgt_open(struct inode *inode, struct file *file)
->  {
-> +	if (tgt_open_cnt)
-> +		return -EBUSY;
-> +	tgt_open_cnt++;
+https://bugzilla.kernel.org/show_bug.cgi?id=22512
 
-Since there's no locking, there's still a tiny hole where
-simultaneous opens could succeed.  Consider using an atomic.
-Good find and good fix otherwise.
+           Summary: no disks are found at driver start after upgrate from
+                    2.6.35.8 to 2.6.36
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.36
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: blocking
+          Priority: P1
+         Component: QLOGIC QLA2XXX
+        AssignedTo: scsi_drivers-qla2xxx@kernel-bugs.osdl.org
+        ReportedBy: cunio@agora.pl
+        Regression: Yes
 
-> +
->  	tx_ring.tr_idx = rx_ring.tr_idx = 0;
-> 
->  	cycle_kernel_lock();
->  	return 0;
->  }
-> 
-> +static int tgt_release(struct inode *inode, struct file *file)
-> +{
-> +	tgt_open_cnt--;
-> +	return 0;
-> +}
-> +
->  static const struct file_operations tgt_fops = {
->  	.owner		= THIS_MODULE,
->  	.open		= tgt_open,
->  	.poll		= tgt_poll,
->  	.write		= tgt_write,
->  	.mmap		= tgt_mmap,
-> +	.release	= tgt_release,
->  };
-> 
->  static struct miscdevice tgt_miscdev = {
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Driver loads without errors but after messages:
+[  993.976622] qla2xxx 0000:0c:00.0: LIP reset occurred (f700).
+[  993.996537] qla2xxx 0000:0c:00.0: LIP occurred (f700).
+[  993.996690] qla2xxx 0000:0c:00.0: LIP reset occurred (f7f7).
+[  995.027739] qla2xxx 0000:0c:00.0: LOOP UP detected (4 Gbps).
+[  995.620024] qla2xxx 0000:0c:00.0:
+[  995.620026]  QLogic Fibre Channel HBA Driver: 8.03.04-k0
+[  995.620027]   QLogic QLE2460 - PCI-Express Single Channel 4Gb Fibre Channel
+HBA
+[  995.620028]   ISP2432: PCIe (2.5GT/s x4) @ 0000:0c:00.0 hdma+, host#=14,
+fw=5.03.07 (496)
+
+No disks are detected
+
+Previous kernel detects:
+[    4.017172] scsi 1:0:0:0: Direct-Access     IBM      1814      FAStT  0916
+PQ: 0 ANSI: 5
+[    4.017576] sd 1:0:0:0: Attached scsi generic sg3 type 0
+[    4.017702] sd 1:0:0:0: Embedded Enclosure Device
+[    4.018413] sd 1:0:0:0: [sdb] 838860800 512-byte logical blocks: (429 GB/400
+GiB)
+[    4.019311] sd 1:0:0:0: [sdb] Write Protect is off
+[    4.019444] sd 1:0:0:0: [sdb] Mode Sense: 77 00 10 08
+[    4.019842] sd 1:0:0:0: [sdb] Write cache: enabled, read cache: enabled,
+supports DPO and FUA
+
+and many others
+
+driver is compiled as module
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
