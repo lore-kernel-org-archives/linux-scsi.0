@@ -1,12 +1,12 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/3] tcm/pscsi: Fix incorrect usage of head_of_queue with blk_execute_rq_nowait()
-Date: Mon,  8 Nov 2010 21:41:18 -0800
-Message-ID: <1289281278-20454-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 3/3] tcm/pscsi: Remove legacy struct scsi_device->sector_size workaround for TYPE_DISK
+Date: Mon,  8 Nov 2010 21:41:34 -0800
+Message-ID: <1289281294-20500-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp110.sbc.mail.gq1.yahoo.com ([67.195.14.95]:31567 "HELO
-	smtp110.sbc.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751448Ab0KIFlV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2010 00:41:21 -0500
+Received: from smtp104.sbc.mail.mud.yahoo.com ([68.142.198.203]:39188 "HELO
+	smtp104.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751448Ab0KIFlh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2010 00:41:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
@@ -14,46 +14,56 @@ Cc: Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds a conditional check based on the received struct se_task->task_se_cmd->sam_task_attr
-to determine if the HEAD_OF_QUEUE flag should be set when calling blk_execute_rq_nowait().
-This fixes a bug where all struct request for TCM/pSCSI where being set with the HEAD_OF_QUEUE
-tag.
-
-Many thanks to Boaz Harrosh for catching this one!
+At this point in late 2010 w/ v2.6.37-rc1, it has beem many years since
+a broken ML / LLD was *not* properly setting struct scsi_device->sector_size for
+TYPE_DISK.
 
 Reported-by: Boaz Harrosh <bharrosh@panasas.com>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_pscsi.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/target/target_core_pscsi.c |   29 -----------------------------
+ 1 files changed, 0 insertions(+), 29 deletions(-)
 
 diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 6296a0f..a1b9bf6 100644
+index fa2c975..6a31bed 100644
 --- a/drivers/target/target_core_pscsi.c
 +++ b/drivers/target/target_core_pscsi.c
-@@ -41,6 +41,7 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-+#include <scsi/libsas.h> /* For TASK_ATTR_* */
+@@ -204,35 +204,6 @@ static struct se_device *pscsi_add_device_to_list(
+ 	struct queue_limits *limits;
  
- #include <target/target_core_base.h>
- #include <target/target_core_device.h>
-@@ -802,9 +803,12 @@ static int pscsi_do_task(struct se_task *task)
- 	pt->pscsi_req->retries = PS_RETRY;
- 	/*
- 	 * Queue the struct request into the struct scsi_device->request_queue.
-+	 * Also check for HEAD_OF_QUEUE SAM TASK attr from received se_cmd
-+	 * descriptor
- 	 */
--	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, NULL,
--			      pt->pscsi_req, 1, pscsi_req_done);
-+	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, NULL, pt->pscsi_req,
-+			(task->task_se_cmd->sam_task_attr == TASK_ATTR_HOQ),
-+			pscsi_req_done);
+ 	memset(&dev_limits, 0, sizeof(struct se_dev_limits));
+-	/*
+-	 * Some pseudo SCSI HBAs do not fill in sector_size
+-	 * correctly. (See ide-scsi.c)  So go ahead and setup sane
+-	 * values.
+-	 */
+-	if (!sd->sector_size) {
+-		switch (sd->type) {
+-		case TYPE_DISK:
+-			sd->sector_size = 512;
+-			break;
+-		case TYPE_ROM:
+-			sd->sector_size = 2048;
+-			break;
+-		case TYPE_TAPE: /* The Tape may not be in the drive */
+-			break;
+-		case TYPE_MEDIUM_CHANGER: /* Control CDBs only */
+-			break;
+-		default:
+-			printk(KERN_ERR "Unable to set sector_size for %d\n",
+-					sd->type);
+-			return NULL;
+-		}
+-
+-		if (sd->sector_size) {
+-			printk(KERN_ERR "Set broken SCSI Device"
+-				" %d:%d:%d sector_size to %d\n", sd->channel,
+-				sd->id, sd->lun, sd->sector_size);
+-		}
+-	}
  
- 	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
- }
+ 	if (!sd->queue_depth) {
+ 		sd->queue_depth = PSCSI_DEFAULT_QUEUEDEPTH;
 -- 
 1.5.6.5
 
