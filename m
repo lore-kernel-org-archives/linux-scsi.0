@@ -1,55 +1,34 @@
-From: Davidlohr Bueso <dave@gnu.org>
-Subject: [PATCH] aic7xxx: Add a better library-dependency description when
- libdb is needed
-Date: Tue, 09 Nov 2010 09:06:55 -0300
-Message-ID: <1289304415.2260.4.camel@cowboy>
-Reply-To: dave@gnu.org
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] tcm: Convert backstore ->set_configfs_dev_params() to
+ use parser.h
+Date: Tue, 9 Nov 2010 08:45:22 -0500
+Message-ID: <20101109134522.GA4548@infradead.org>
+References: <1289296122-13152-1-git-send-email-nab@linux-iscsi.org>
+ <20101109100359.GA26324@infradead.org>
+ <1289297001.19946.92.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:38058 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751954Ab0KINpX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2010 08:45:23 -0500
+Content-Disposition: inline
+In-Reply-To: <1289297001.19946.92.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 
-From: Davidlohr Bueso <dave@gnu.org>
+On Tue, Nov 09, 2010 at 02:03:21AM -0800, Nicholas A. Bellinger wrote:
+> <nod> thanks for the pointer here..
+> 
+> Btw, the kstrdup() is required because the configfs attribute store
+> function will be passing a 'const char *page' that is propigated from
+> target_core_configfs.c: target_core_store_dev_control() out to
+> ->set_configfs_dev_params() backend code.
 
-While recently building aicasm_symbol.c it failed because I didn't have the berkeley libdb, so no aicdb.h file was created. With this patch I wouldn't have had to gone to google to see what "development library" it was referring to.
-make -C drivers/scsi/aic7xxx/aicasm
-*** Install db development libraries
-bison -d -b aicasm_gram aicasm_gram.y
-mv aicasm_gram.tab.c aicasm_gram.c
-mv aicasm_gram.tab.h aicasm_gram.h
-bison -d -b aicasm_macro_gram -p mm aicasm_macro_gram.y
-mv aicasm_macro_gram.tab.c aicasm_macro_gram.c
-mv aicasm_macro_gram.tab.h aicasm_macro_gram.h
-flex  -oaicasm_scan.c aicasm_scan.l
-flex  -Pmm -oaicasm_macro_scan.c aicasm_macro_scan.l
-gcc -I/usr/include -I. aicasm.c aicasm_symbol.c aicasm_gram.c aicasm_macro_gram.c aicasm_scan.c aicasm_macro_scan.c -o aicasm -ldb
-aicasm_symbol.c:48: fatal error: aicdb.h: No such file or directory
-compilation terminated.
-make[4]: *** [aicasm] Error 1
-make[3]: *** [drivers/scsi/aic7xxx/aicasm/aicasm] Error 2
-make[2]: *** [drivers/scsi/aic7xxx] Error 2
+strsep doesn't modify the data it points to, just the pointer itself.
+We could get around this by casting the pointer, which at least avoids
+the memory allocation.  But it's probably not worth bothering.
 
-Signed-off-by: Davidlohr Bueso <dave@gnu.org>
----
- drivers/scsi/aic7xxx/aicasm/Makefile |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/aic7xxx/aicasm/Makefile b/drivers/scsi/aic7xxx/aicasm/Makefile
-index b98c5c1..b399d46 100644
---- a/drivers/scsi/aic7xxx/aicasm/Makefile
-+++ b/drivers/scsi/aic7xxx/aicasm/Makefile
-@@ -49,7 +49,7 @@ aicdb.h:
- 	 elif [ -e "/usr/include/db_185.h" ]; then		\
- 		echo "#include <db_185.h>" > aicdb.h;		\
- 	 else							\
--		echo "*** Install db development libraries";	\
-+		echo "*** Install Berkeley DB (libdb) development libraries";	\
- 	 fi
- 
- clean:
--- 
-1.7.1
