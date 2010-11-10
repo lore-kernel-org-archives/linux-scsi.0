@@ -1,20 +1,20 @@
 From: bugzilla-daemon@bugzilla.kernel.org
 Subject: [Bug 22512] no disks are found at driver start after upgrate from
  2.6.35.8 to 2.6.36
-Date: Wed, 10 Nov 2010 18:07:43 GMT
-Message-ID: <201011101807.oAAI7hV1005786@demeter2.kernel.org>
+Date: Wed, 10 Nov 2010 18:18:12 GMT
+Message-ID: <201011101818.oAAIIC1U023186@demeter2.kernel.org>
 References: <bug-22512-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:57070 "EHLO
+Received: from demeter2.kernel.org ([140.211.167.42]:46817 "EHLO
 	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754345Ab0KJSHo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2010 13:07:44 -0500
+	with ESMTP id S1752129Ab0KJSSN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2010 13:18:13 -0500
 Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oAAI7hXx005787
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oAAIICnX023187
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2010 18:07:43 GMT
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2010 18:18:12 GMT
 In-Reply-To: <bug-22512-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -26,18 +26,19 @@ https://bugzilla.kernel.org/show_bug.cgi?id=22512
 
 
 
---- Comment #2 from cunio@agora.pl  2010-11-10 18:07:42 ---
-This patch seems to be already applied to 2.6.36.
-Here you are part of qla24xx_logio_entry
+--- Comment #3 from Andrew Vasquez <andrew.vasquez@qlogic.com>  2010-11-10 18:18:09 ---
+Apologize, that was the wrong link.  Try this one:
 
-                if (iop[0] & BIT_4) {
-                        fcport->port_type = FCT_TARGET;
-                        if (iop[0] & BIT_8)
-                                fcport->flags |= FCF_FCP2_DEVICE;
-                } else if (iop[0] & BIT_5)
-                        fcport->port_type = FCT_INITIATOR;
+    [SCSI] qla2xxx: Add module parameter to enable/disable GFF_ID device type
+check.                                            
 
-                if (logio->io_parameter[7] || logio->io_parameter[8])
+    Add the module parameter ql2xgffidenable to disable/enable the use of the   
+    GFF_ID name server command to prevent non FCP SCSI devices from being added
+to                                              
+    the driver's internal fc_port database.
+
+   
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4da26e162b69d89c3186a35a052c05e61a555637
 
 -- 
 Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
