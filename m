@@ -1,118 +1,80 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 05/16] BNX2I: Modified the bnx2i stop path to compensate
- for in progress ops
-Date: Wed, 10 Nov 2010 15:04:46 -0800
-Message-ID: <1289430297-30221-6-git-send-email-eddie.wai@broadcom.com>
+From: "Eddie Wai" <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH 08/16] BNX2I: Added mutex lock protection to
+ conn_get_param
+Date: Wed, 10 Nov 2010 15:04:49 -0800
+Message-ID: <1289430297-30221-9-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2863 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757418Ab0KJXDK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Nov 2010 18:03:10 -0500
-In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncCKiEw6yjEhCtyezmBBoE6Qaq7Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: James Bottomley <JBottomley-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org>
+Cc: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Ben Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@novell.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-The stop path has been augmented to wait a max of 10s for all in
-progress offload and destroy activities to complete before proceeding
-to terminate all active connections (via iscsid or forcefully).
+Added net_dev mutex lock protection before accessing the csk
+parameters.
 
-Note that any new offload and destroy requests are now blocked and
-return to the caller immediately.
-
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-Acked-by: Anil Veerabhadrappa <anilgv@broadcom.com>
-Reviewed-by: Benjamin Li <benli@broadcom.com>
-Reviewed-by: Michael Chan <mchan@broadcom.com>
+Signed-off-by: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Reviewed-by: Benjamin Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
 ---
- drivers/scsi/bnx2i/bnx2i_init.c  |   21 +++++++++++++++++----
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    7 ++++++-
- 2 files changed, 23 insertions(+), 5 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   17 +++++++++++++----
+ 1 files changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index 50c2aa3..c8e929d 100644
---- a/drivers/scsi/bnx2i/bnx2i_init.c
-+++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -211,13 +211,24 @@ void bnx2i_stop(void *handle)
- {
- 	struct bnx2i_hba *hba = handle;
- 	int conns_active;
-+	int wait_delay = 1 * HZ;
- 
- 	/* check if cleanup happened in GOING_DOWN context */
--	if (!test_and_clear_bit(ADAPTER_STATE_GOING_DOWN,
--				&hba->adapter_state))
-+	if (!test_and_set_bit(ADAPTER_STATE_GOING_DOWN,
-+			      &hba->adapter_state)) {
- 		iscsi_host_for_each_session(hba->shost,
- 					    bnx2i_drop_session);
--
-+		wait_delay = hba->hba_shutdown_tmo;
-+	}
-+	/* Wait for inflight offload connection tasks to complete before
-+	 * proceeding. Forcefully terminate all connection recovery in
-+	 * progress at the earliest, either in bind(), send_pdu(LOGIN),
-+	 * or conn_start()
-+	 */
-+	wait_event_interruptible_timeout(hba->eh_wait,
-+					 (list_empty(&hba->ep_ofld_list) &&
-+					 list_empty(&hba->ep_destroy_list)),
-+					 10 * HZ);
- 	/* Wait for all endpoints to be torn down, Chip will be reset once
- 	 *  control returns to network driver. So it is required to cleanup and
- 	 * release all connection resources before returning from this routine.
-@@ -226,7 +237,7 @@ void bnx2i_stop(void *handle)
- 		conns_active = hba->ofld_conns_active;
- 		wait_event_interruptible_timeout(hba->eh_wait,
- 				(hba->ofld_conns_active != conns_active),
--				hba->hba_shutdown_tmo);
-+				wait_delay);
- 		if (hba->ofld_conns_active == conns_active)
- 			break;
- 	}
-@@ -235,9 +246,11 @@ void bnx2i_stop(void *handle)
- 	/* This flag should be cleared last so that ep_disconnect() gracefully
- 	 * cleans up connection context
- 	 */
-+	clear_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state);
- 	clear_bit(ADAPTER_STATE_UP, &hba->adapter_state);
- }
- 
-+
- /**
-  * bnx2i_register_device - register bnx2i adapter instance with the cnic driver
-  * @hba:	Adapter instance to register
 diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index fb50efb..823e4fa 100644
+index 6a87a83..6951969 100644
 --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1383,6 +1383,12 @@ static int bnx2i_conn_bind(struct iscsi_cls_session *cls_session,
- 	ep = iscsi_lookup_endpoint(transport_fd);
- 	if (!ep)
- 		return -EINVAL;
-+	/*
-+	 * Forcefully terminate all in progress connection recovery at the
-+	 * earliest, either in bind(), send_pdu(LOGIN), or conn_start()
-+	 */
-+	if (bnx2i_adapter_ready(hba))
-+		return -EIO;
+@@ -1473,21 +1473,30 @@ static int bnx2i_conn_get_param(struct iscsi_cls_conn *cls_conn,
+ 	struct bnx2i_conn *bnx2i_conn = conn->dd_data;
+ 	int len = 0;
  
- 	bnx2i_ep = ep->dd_data;
- 	if ((bnx2i_ep->state == EP_STATE_TCP_FIN_RCVD) ||
-@@ -1404,7 +1410,6 @@ static int bnx2i_conn_bind(struct iscsi_cls_session *cls_session,
- 				  hba->netdev->name);
- 		return -EEXIST;
++	if (!(bnx2i_conn && bnx2i_conn->ep && bnx2i_conn->ep->hba))
++		goto out;
++
+ 	switch (param) {
+ 	case ISCSI_PARAM_CONN_PORT:
+-		if (bnx2i_conn->ep)
++		mutex_lock(&bnx2i_conn->ep->hba->net_dev_lock);
++		if (bnx2i_conn->ep->cm_sk)
+ 			len = sprintf(buf, "%hu\n",
+ 				      bnx2i_conn->ep->cm_sk->dst_port);
++		mutex_unlock(&bnx2i_conn->ep->hba->net_dev_lock);
+ 		break;
+ 	case ISCSI_PARAM_CONN_ADDRESS:
+-		if (bnx2i_conn->ep)
++		mutex_lock(&bnx2i_conn->ep->hba->net_dev_lock);
++		if (bnx2i_conn->ep->cm_sk)
+ 			len = sprintf(buf, "%pI4\n",
+ 				      &bnx2i_conn->ep->cm_sk->dst_ip);
++		mutex_unlock(&bnx2i_conn->ep->hba->net_dev_lock);
+ 		break;
+ 	default:
+-		return iscsi_conn_get_param(cls_conn, param, buf);
++		len = iscsi_conn_get_param(cls_conn, param, buf);
++		if (len == -ENOSYS)
++			len = 0;
  	}
 -
- 	bnx2i_ep->conn = bnx2i_conn;
- 	bnx2i_conn->ep = bnx2i_ep;
- 	bnx2i_conn->iscsi_conn_cid = bnx2i_ep->ep_iscsi_cid;
++out:
+ 	return len;
+ }
+ 
 -- 
 1.7.0.5
 
 
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
