@@ -1,51 +1,111 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 22512] no disks are found at driver start after upgrate from
- 2.6.35.8 to 2.6.36
-Date: Wed, 10 Nov 2010 19:56:50 GMT
-Message-ID: <201011101956.oAAJuoP2032249@demeter1.kernel.org>
-References: <bug-22512-11613@https.bugzilla.kernel.org/>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Wed, 10 Nov 2010 23:19:58 +0300
+Message-ID: <4CDAFE6E.7050200@vlnb.net>
+References: <20101011213235.GA11489@kroah.com> <4CB4AEB9.30501@vlnb.net> <20101012190345.GA25737@kroah.com> <4CB75E81.7000208@vlnb.net> <20101014200413.GA30831@kroah.com> <4CC1CA4D.1090609@vlnb.net> <20101022175624.GA13640@kroah.com> <4CC1DAA2.7030602@vlnb.net> <20101022185437.GA9103@kroah.com> <4CD8566D.1020202@vlnb.net> <20101109002829.GA22633@kroah.com> <4CD9A9B8.70708@vlnb.net> <4CDA6CD4.3010308@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:41263 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755393Ab0KJT4w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2010 14:56:52 -0500
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id oAAJuou0032250
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2010 19:56:50 GMT
-In-Reply-To: <bug-22512-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CDA6CD4.3010308@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=22512
-
-
-
-
-
---- Comment #4 from cunio@agora.pl  2010-11-10 19:56:47 ---
-(In reply to comment #3)
-> Apologize, that was the wrong link.  Try this one:
+Boaz Harrosh, on 11/10/2010 12:58 PM wrote:
+> On 11/09/2010 10:06 PM, Vladislav Bolkhovitin wrote:
+>>
+>> Sorry, but what is incorrect in the working implementation without any
+>> bugs doing its job in the simplest, smallest and clearest way?
+>>
+>> If those objects remade to free themselves in the kobjects release(),
+>> what value would it add to them? Would the implementation be simpler,
+>> smaller or clearer? Not, I believe, new implementation would be only
+>> bigger and less clear. So, what's the point to do it to make the code worse?
+>>
 > 
->     [SCSI] qla2xxx: Add module parameter to enable/disable GFF_ID device type
-> check.                                            
+> Totally theoretically speaking, since I have not inspected the code.
 > 
->     Add the module parameter ql2xgffidenable to disable/enable the use of the   
->     GFF_ID name server command to prevent non FCP SCSI devices from being added
-> to                                              
->     the driver's internal fc_port database.
+> If today you wait for the count to reach zero, then unregister
+> and send an event to some other subsystem to free the object.
 > 
->    
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4da26e162b69d89c3186a35a052c05e61a555637
+> Is it not the same as if you take an extra refcount, unregister and
+> send the event at count=1. Then at that other place decrement the last
+> count to cause the object to be freed.
+> 
+> I agree that it is hard to do lockless. what some places do is have
+> an extra kref. The kobj has a single ref on it. everything takes the
+> other kref. when that reaches zero the unregister and event fires
+> and at free you decrement the only kobj ref to deallocate. This is one
+> way. In some situations you can manage with a single counter it all
+> depends.
 
-This is it.
+Thanks for sharing your thoughts with us. But the question isn't about
+if it's possible to implement what we need locklessly. The question is
+in two approaches how to synchronously delete objects with entries on SYSFS:
 
-May be somebody should build 2.6.36.1
+1. struct object_x {
+	...
+	struct kobject kobj;
+	struct completion *release_completion;
+};
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+static void x_release(struct kobject *kobj)
+{
+	struct object_x *x;
+	struct completion *c;
+
+	x = container_of(kobj, struct object_x, kobj);
+	c = x->release_completion;
+	kfree(x);
+	complete_all(c);
+}
+
+void del_object(struct object_x *x)
+{
+	DECLARE_COMPLETION_ONSTACK(completion);
+
+	...
+	x->release_completion = &completion;
+	kobject_put(&x->kobj);
+	wait_for_completion(&completion);
+}
+
+and
+
+2. struct object_x {
+	...
+	struct kobject kobj;
+	struct completion release_completion;
+};
+
+static void x_release(struct kobject *kobj)
+{
+	struct object_x *x;
+
+	x = container_of(kobj, struct object_x, kobj);
+	complete_all(&x->release_completion);
+}
+
+void del_object(struct object_x *x)
+{
+	...
+	kobject_put(&x->kobj);
+	wait_for_completion(&completion);
+	...
+	kfree(x);
+}
+
+Greg asserts that (1) is the only correct approach while (2) is
+incorrect, and I'm trying to justify that (2) is correct too and
+sometimes could be better, i.e. simpler and clearer, because it
+decouples object_x from SYSFS and its kobj. Then kobj becomes an
+ordinary member of struct object_x without any special treatment and
+with the same lifetime rules as other members of struct object_x. While
+in (1) all lifetime of struct object_x is strictly attached to kobj, so
+it needs be specially handled with additional code for that if struct
+object_x has many other members which needed to be initialized/deleted
+_before and after_ kobj as we have in SCST.
+
+Vlad
