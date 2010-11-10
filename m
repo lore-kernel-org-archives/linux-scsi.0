@@ -1,25 +1,28 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] block: remove REQ_HARDBARRIER
-Date: Wed, 10 Nov 2010 14:42:28 +0100
-Message-ID: <20101110134227.GA4963@lst.de>
-References: <1281977523-19335-1-git-send-email-tj@kernel.org> <201008241745.35242.philipp.reisner@linbit.com> <20101022083511.GA7853@lst.de> <201010231318.33517.philipp.reisner@linbit.com> <4CC311D5.9040904@fusionio.com> <20101023165924.GA1395@lst.de> <4CC3326E.5020009@fusionio.com>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: [PATCH] fix the poll method of bsg file operations in Block layer
+ SCSI generic driver
+Date: Wed, 10 Nov 2010 21:58:52 +0800
+Message-ID: <AANLkTi=butKgG8VktAu0V12aBKTetOJwiGkcTLG_RZWB@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:47569 "EHLO verein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751072Ab0KJNmc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Nov 2010 08:42:32 -0500
-Content-Disposition: inline
-In-Reply-To: <4CC3326E.5020009@fusionio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, "Zou, Yi" <yi.zou@intel.com>, Joe Eykholt <jeykholt@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jaxboe@fusionio.com>
-Cc: Christoph Hellwig <hch@lst.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sat, Oct 23, 2010 at 09:07:26PM +0200, Jens Axboe wrote:
-> Thanks Christoph, applied for 2.6.37 (but with a few days of brewing).
+Though it looks like a typo, the check for POLLOUT is computed incorrectly.
 
-So, what's the plan?  I'd really hate to see 2.6.37 getting released
-with those stale barrier bits left in.
+Signed-off-by: Hillf Danton <dhillf@gmail.com>
+---
 
+--- a/block/bsg.c	2010-09-13 07:07:38.000000000 +0800
++++ b/block/bsg.c	2010-11-10 21:40:30.000000000 +0800
+@@ -874,6 +874,8 @@ static unsigned int bsg_poll(struct file
+ 	if (!list_empty(&bd->done_list))
+ 		mask |= POLLIN | POLLRDNORM;
+ 	if (bd->queued_cmds >= bd->max_queue)
++		;
++	else
+ 		mask |= POLLOUT;
+ 	spin_unlock_irq(&bd->lock);
