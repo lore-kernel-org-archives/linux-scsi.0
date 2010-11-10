@@ -1,55 +1,57 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 03/16] BNX2I: Fixed the endian bug in the TMF LUN cmd
- send
-Date: Wed, 10 Nov 2010 15:04:44 -0800
-Message-ID: <1289430297-30221-4-git-send-email-eddie.wai@broadcom.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: Patch added to scsi-rc-fixes-2.6:  [SCSI] host lock push-down
+Date: Wed, 10 Nov 2010 18:28:01 -0500
+Message-ID: <4CDB2A81.5030100@garzik.org>
+References: <201011102240.oAAMe86a001486@hera.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1963 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757399Ab0KJXDI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Nov 2010 18:03:08 -0500
-In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:45492 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757010Ab0KJX2L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2010 18:28:11 -0500
+In-Reply-To: <201011102240.oAAMe86a001486@hera.kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@novell.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
+To: James Bottomley <jejb@kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, LKML <linux-kernel@vger.kernel.org>
 
-Added a be32_to_cpu call for the TMF LUN wqe.
+On 11/10/2010 05:40 PM, James Bottomley wrote:
+> Your commit:
+>
+>      [SCSI] host lock push-down
+>
+>      Move the mid-layer's ->queuecommand() invocation from being locked
+>      with the host lock to being unlocked to facilitate speeding up the
+>      critical path for drivers who don't need this lock taken anyway.
+>
+>      The patch below presents a simple SCSI host lock push-down as an
+>      equivalent transformation.  No locking or other behavior should change
+>      with this patch.  All existing bugs and locking orders are preserved.
+>
+>      Minimal code disturbance was attempted with this change.  Most drivers
+>      needed only two one-line modifications for their host lock push-down.
+>
+>      Signed-off-by: Jeff Garzik<jgarzik@redhat.com>
+>      Signed-off-by: James Bottomley<James.Bottomley@suse.de>
+>
+> has been added to the upstream SCSI tree
+> You can find it here:
 
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
----
- drivers/scsi/bnx2i/bnx2i_hwi.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+No comments on renaming ->queuecommand to something else?
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 32cf930..c9a3c0f 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -385,6 +385,7 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
- 	struct bnx2i_cmd *bnx2i_cmd;
- 	struct bnx2i_tmf_request *tmfabort_wqe;
- 	u32 dword;
-+	__be32 scsi_lun[2];
- 
- 	bnx2i_cmd = (struct bnx2i_cmd *)mtask->dd_data;
- 	tmfabort_hdr = (struct iscsi_tm *)mtask->hdr;
-@@ -426,7 +427,10 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
- 	default:
- 		tmfabort_wqe->ref_itt = RESERVED_ITT;
- 	}
--	memcpy(tmfabort_wqe->lun, tmfabort_hdr->lun, sizeof(struct scsi_lun));
-+	memcpy(scsi_lun, tmfabort_hdr->lun, sizeof(struct scsi_lun));
-+	tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
-+	tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);
-+
- 	tmfabort_wqe->ref_cmd_sn = be32_to_cpu(tmfabort_hdr->refcmdsn);
- 
- 	tmfabort_wqe->bd_list_addr_lo = (u32) bnx2i_conn->hba->mp_bd_dma;
--- 
-1.7.0.5
+The consequences are rather dire if this goes unnoticed, yes?
 
+	Jeff
+
+
+In http://marc.info/?l=linux-ide&m=128891665713984&w=2 I wrote:
+> An alternate arrangement, not presented by this patch, might
+> be preferred:  in order to make it clear that queuecommand
+> locking has changed, one could s/queuecommand/queuecommand_nl/ in
+> Scsi_Host_Template, in order to guarantee that drivers are either
+> (a) upgraded or (b) broken at compile time.  Compile-time detection of
+> new locking may be desirable, and I'll volunteer to change my patch to
+> do that, if community members prefer that route instead of below.
 
