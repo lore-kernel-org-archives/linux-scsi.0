@@ -1,80 +1,133 @@
-From: "Eddie Wai" <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 08/16] BNX2I: Added mutex lock protection to
- conn_get_param
-Date: Wed, 10 Nov 2010 15:04:49 -0800
-Message-ID: <1289430297-30221-9-git-send-email-eddie.wai@broadcom.com>
+From: "Eddie Wai" <eddie.wai@broadcom.com>
+Subject: [PATCH 04/16] BNX2I: Updated the handling of NETEVENTs to
+ alleviate recovery
+Date: Wed, 10 Nov 2010 15:04:45 -0800
+Message-ID: <1289430297-30221-5-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncCKiEw6yjEhCtyezmBBoE6Qaq7Q-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: James Bottomley <JBottomley-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org>
-Cc: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Ben Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:1904 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757396Ab0KJXDI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Nov 2010 18:03:08 -0500
+In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@novell.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-Added net_dev mutex lock protection before accessing the csk
-parameters.
+The NETDEV_GOING_DOWN handling will no longer request to put all
+active sessions into recovery mode until the NETDEV_DOWN event.
+This will eliminate the unnecessary recovery request to iscsid in the
+NETDEV_GOING_DOWN->NETDEV_UNREGISTER path which will remove the host
+anyway.
 
-Signed-off-by: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Benjamin Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+Reviewed-by: Michael Chan <mchan@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i_iscsi.c |   17 +++++++++++++----
- 1 files changed, 13 insertions(+), 4 deletions(-)
+ drivers/scsi/bnx2i/bnx2i.h     |    3 ++
+ drivers/scsi/bnx2i/bnx2i_hwi.c |   53 +++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 53 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 6a87a83..6951969 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1473,21 +1473,30 @@ static int bnx2i_conn_get_param(struct iscsi_cls_conn *cls_conn,
- 	struct bnx2i_conn *bnx2i_conn = conn->dd_data;
- 	int len = 0;
- 
-+	if (!(bnx2i_conn && bnx2i_conn->ep && bnx2i_conn->ep->hba))
-+		goto out;
+diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
+index a44b1b3..1aeb9f0 100644
+--- a/drivers/scsi/bnx2i/bnx2i.h
++++ b/drivers/scsi/bnx2i/bnx2i.h
+@@ -227,6 +227,7 @@ struct bnx2i_cmd {
+  * @gen_pdu:               login/nopout/logout pdu resources
+  * @violation_notified:    bit mask used to track iscsi error/warning messages
+  *                         already printed out
++ * @prev_sess_state:       tracks the previous connection state
+  *
+  * iSCSI connection structure
+  */
+@@ -250,6 +251,8 @@ struct bnx2i_conn {
+ 	 */
+ 	struct generic_pdu_resc gen_pdu;
+ 	u64 violation_notified;
 +
- 	switch (param) {
- 	case ISCSI_PARAM_CONN_PORT:
--		if (bnx2i_conn->ep)
-+		mutex_lock(&bnx2i_conn->ep->hba->net_dev_lock);
-+		if (bnx2i_conn->ep->cm_sk)
- 			len = sprintf(buf, "%hu\n",
- 				      bnx2i_conn->ep->cm_sk->dst_port);
-+		mutex_unlock(&bnx2i_conn->ep->hba->net_dev_lock);
- 		break;
- 	case ISCSI_PARAM_CONN_ADDRESS:
--		if (bnx2i_conn->ep)
-+		mutex_lock(&bnx2i_conn->ep->hba->net_dev_lock);
-+		if (bnx2i_conn->ep->cm_sk)
- 			len = sprintf(buf, "%pI4\n",
- 				      &bnx2i_conn->ep->cm_sk->dst_ip);
-+		mutex_unlock(&bnx2i_conn->ep->hba->net_dev_lock);
- 		break;
- 	default:
--		return iscsi_conn_get_param(cls_conn, param, buf);
-+		len = iscsi_conn_get_param(cls_conn, param, buf);
-+		if (len == -ENOSYS)
-+			len = 0;
- 	}
--
-+out:
- 	return len;
- }
++	int prev_sess_state;
+ };
  
+ 
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index c9a3c0f..7eeb673 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -2244,6 +2244,11 @@ static void bnx2i_indicate_kcqe(void *context, struct kcqe *kcqe[],
+ static void bnx2i_indicate_netevent(void *context, unsigned long event)
+ {
+ 	struct bnx2i_hba *hba = context;
++	struct bnx2i_conn *bnx2i_conn;
++	struct iscsi_conn *conn;
++	struct iscsi_session *session;
++	int conns_active, i;
++	unsigned long flags;
+ 
+ 	switch (event) {
+ 	case NETDEV_UP:
+@@ -2251,13 +2256,55 @@ static void bnx2i_indicate_netevent(void *context, unsigned long event)
+ 			bnx2i_send_fw_iscsi_init_msg(hba);
+ 		break;
+ 	case NETDEV_DOWN:
++		for (i = 0; i < hba->max_active_conns; i++) {
++			bnx2i_conn = bnx2i_get_conn_from_id(hba, i);
++			if (bnx2i_conn) {
++				conn = bnx2i_conn->cls_conn->dd_data;
++				session = conn->session;
++				spin_lock_irqsave(&session->lock, flags);
++				if (session->state == ISCSI_STATE_FAILED)
++					session->state =
++						bnx2i_conn->prev_sess_state;
++				spin_unlock_irqrestore(&session->lock, flags);
++			}
++		}
++		iscsi_host_for_each_session(hba->shost,
++					    bnx2i_drop_session);
++		while (hba->ofld_conns_active) {
++			conns_active = hba->ofld_conns_active;
++
++			wait_event_interruptible_timeout(hba->eh_wait,
++				(hba->ofld_conns_active != conns_active),
++				hba->hba_shutdown_tmo);
++			if (hba->ofld_conns_active == conns_active)
++				break;
++		}
++		/* This flag should be cleared last so that ep_disconnect()
++		 * gracefully cleans up connection context
++		 */
+ 		clear_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state);
+ 		clear_bit(ADAPTER_STATE_UP, &hba->adapter_state);
++		if (hba->ofld_conns_active)
++			printk(KERN_ERR "bnx2i (%s): NETDEV_DOWN with %d "
++				"active conns\n", hba->netdev->name,
++				hba->ofld_conns_active);
+ 		break;
+ 	case NETDEV_GOING_DOWN:
+-		set_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state);
+-		iscsi_host_for_each_session(hba->shost,
+-					    bnx2i_drop_session);
++		/* Suspend all data transmissions */
++		for (i = 0; i < hba->max_active_conns; i++) {
++			bnx2i_conn = bnx2i_get_conn_from_id(hba, i);
++			if (bnx2i_conn) {
++				conn = bnx2i_conn->cls_conn->dd_data;
++				session = conn->session;
++				spin_lock_irqsave(&session->lock, flags);
++				bnx2i_conn->prev_sess_state = session->state;
++				if (conn->stop_stage == 0)
++					session->state = ISCSI_STATE_FAILED;
++				spin_unlock_irqrestore(&session->lock, flags);
++				iscsi_suspend_queue(conn);
++				set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
++			}
++		}
+ 		break;
+ 	case NETDEV_CHANGE:
+ 		bnx2i_get_link_state(hba);
 -- 
 1.7.0.5
 
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
