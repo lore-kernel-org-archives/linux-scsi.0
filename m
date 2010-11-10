@@ -1,16 +1,16 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 13/16] BNX2I: Cleaned up various error conditions in
- ep_connect/disconnect
-Date: Wed, 10 Nov 2010 15:04:54 -0800
-Message-ID: <1289430297-30221-14-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH 11/16] BNX2I: Added return code check for chip kwqe
+ submission request
+Date: Wed, 10 Nov 2010 15:04:52 -0800
+Message-ID: <1289430297-30221-12-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2035 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:2032 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757411Ab0KJXDI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1757409Ab0KJXDI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 10 Nov 2010 18:03:08 -0500
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,194 +18,218 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-Various error conditions inside ep_connect and ep_disconnect were
-either not being handled or not being handled correctly.  This patch
-fixes all those issues.
+Added the handling for cases when a chip request is made to the
+CNIC module but the hardware is not ready to accept.  This would
+lead to many unnecessary wait timeouts.
+This code adds check in the connect establishment and destruction
+path.
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-Acked-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i_iscsi.c |   67 ++++++++++++++++++++++---------------
- 1 files changed, 40 insertions(+), 27 deletions(-)
+ drivers/scsi/bnx2i/bnx2i.h       |    9 +++---
+ drivers/scsi/bnx2i/bnx2i_hwi.c   |   54 ++++++++++++++++++++++++++++----------
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   17 ++++++++++-
+ 3 files changed, 60 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
+index d153607..72feb6c 100644
+--- a/drivers/scsi/bnx2i/bnx2i.h
++++ b/drivers/scsi/bnx2i/bnx2i.h
+@@ -652,6 +652,7 @@ enum {
+ 	EP_STATE_OFLD_FAILED            = 0x8000000,
+ 	EP_STATE_CONNECT_FAILED         = 0x10000000,
+ 	EP_STATE_DISCONN_TIMEDOUT       = 0x20000000,
++	EP_STATE_OFLD_FAILED_CID_BUSY   = 0x80000000,
+ };
+ 
+ /**
+@@ -761,11 +762,11 @@ extern int bnx2i_send_iscsi_logout(struct bnx2i_conn *conn,
+ 				   struct iscsi_task *mtask);
+ extern void bnx2i_send_cmd_cleanup_req(struct bnx2i_hba *hba,
+ 				       struct bnx2i_cmd *cmd);
+-extern void bnx2i_send_conn_ofld_req(struct bnx2i_hba *hba,
+-				     struct bnx2i_endpoint *ep);
+-extern void bnx2i_update_iscsi_conn(struct iscsi_conn *conn);
+-extern void bnx2i_send_conn_destroy(struct bnx2i_hba *hba,
++extern int bnx2i_send_conn_ofld_req(struct bnx2i_hba *hba,
+ 				    struct bnx2i_endpoint *ep);
++extern void bnx2i_update_iscsi_conn(struct iscsi_conn *conn);
++extern int bnx2i_send_conn_destroy(struct bnx2i_hba *hba,
++				   struct bnx2i_endpoint *ep);
+ 
+ extern int bnx2i_alloc_qp_resc(struct bnx2i_hba *hba,
+ 			       struct bnx2i_endpoint *ep);
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 4609ef5..c577da6 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -701,10 +701,11 @@ void bnx2i_send_cmd_cleanup_req(struct bnx2i_hba *hba, struct bnx2i_cmd *cmd)
+  * this routine prepares and posts CONN_OFLD_REQ1/2 KWQE to initiate
+  * 	iscsi connection context clean-up process
+  */
+-void bnx2i_send_conn_destroy(struct bnx2i_hba *hba, struct bnx2i_endpoint *ep)
++int bnx2i_send_conn_destroy(struct bnx2i_hba *hba, struct bnx2i_endpoint *ep)
+ {
+ 	struct kwqe *kwqe_arr[2];
+ 	struct iscsi_kwqe_conn_destroy conn_cleanup;
++	int rc = -EINVAL;
+ 
+ 	memset(&conn_cleanup, 0x00, sizeof(struct iscsi_kwqe_conn_destroy));
+ 
+@@ -721,7 +722,9 @@ void bnx2i_send_conn_destroy(struct bnx2i_hba *hba, struct bnx2i_endpoint *ep)
+ 
+ 	kwqe_arr[0] = (struct kwqe *) &conn_cleanup;
+ 	if (hba->cnic && hba->cnic->submit_kwqes)
+-		hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, 1);
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, 1);
++
++	return rc;
+ }
+ 
+ 
+@@ -732,8 +735,8 @@ void bnx2i_send_conn_destroy(struct bnx2i_hba *hba, struct bnx2i_endpoint *ep)
+  *
+  * 5706/5708/5709 specific - prepares and posts CONN_OFLD_REQ1/2 KWQE
+  */
+-static void bnx2i_570x_send_conn_ofld_req(struct bnx2i_hba *hba,
+-					  struct bnx2i_endpoint *ep)
++static int bnx2i_570x_send_conn_ofld_req(struct bnx2i_hba *hba,
++					 struct bnx2i_endpoint *ep)
+ {
+ 	struct kwqe *kwqe_arr[2];
+ 	struct iscsi_kwqe_conn_offload1 ofld_req1;
+@@ -741,6 +744,7 @@ static void bnx2i_570x_send_conn_ofld_req(struct bnx2i_hba *hba,
+ 	dma_addr_t dma_addr;
+ 	int num_kwqes = 2;
+ 	u32 *ptbl;
++	int rc = -EINVAL;
+ 
+ 	ofld_req1.hdr.op_code = ISCSI_KWQE_OPCODE_OFFLOAD_CONN1;
+ 	ofld_req1.hdr.flags =
+@@ -778,7 +782,9 @@ static void bnx2i_570x_send_conn_ofld_req(struct bnx2i_hba *hba,
+ 	ofld_req2.num_additional_wqes = 0;
+ 
+ 	if (hba->cnic && hba->cnic->submit_kwqes)
+-		hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++
++	return rc;
+ }
+ 
+ 
+@@ -789,8 +795,8 @@ static void bnx2i_570x_send_conn_ofld_req(struct bnx2i_hba *hba,
+  *
+  * 57710 specific - prepares and posts CONN_OFLD_REQ1/2 KWQE
+  */
+-static void bnx2i_5771x_send_conn_ofld_req(struct bnx2i_hba *hba,
+-					   struct bnx2i_endpoint *ep)
++static int bnx2i_5771x_send_conn_ofld_req(struct bnx2i_hba *hba,
++					  struct bnx2i_endpoint *ep)
+ {
+ 	struct kwqe *kwqe_arr[5];
+ 	struct iscsi_kwqe_conn_offload1 ofld_req1;
+@@ -799,6 +805,7 @@ static void bnx2i_5771x_send_conn_ofld_req(struct bnx2i_hba *hba,
+ 	dma_addr_t dma_addr;
+ 	int num_kwqes = 2;
+ 	u32 *ptbl;
++	int rc = -EINVAL;
+ 
+ 	ofld_req1.hdr.op_code = ISCSI_KWQE_OPCODE_OFFLOAD_CONN1;
+ 	ofld_req1.hdr.flags =
+@@ -844,7 +851,9 @@ static void bnx2i_5771x_send_conn_ofld_req(struct bnx2i_hba *hba,
+ 	num_kwqes += 1;
+ 
+ 	if (hba->cnic && hba->cnic->submit_kwqes)
+-		hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++
++	return rc;
+ }
+ 
+ /**
+@@ -855,12 +864,16 @@ static void bnx2i_5771x_send_conn_ofld_req(struct bnx2i_hba *hba,
+  *
+  * this routine prepares and posts CONN_OFLD_REQ1/2 KWQE
+  */
+-void bnx2i_send_conn_ofld_req(struct bnx2i_hba *hba, struct bnx2i_endpoint *ep)
++int bnx2i_send_conn_ofld_req(struct bnx2i_hba *hba, struct bnx2i_endpoint *ep)
+ {
++	int rc;
++
+ 	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type))
+-		bnx2i_5771x_send_conn_ofld_req(hba, ep);
++		rc = bnx2i_5771x_send_conn_ofld_req(hba, ep);
+ 	else
+-		bnx2i_570x_send_conn_ofld_req(hba, ep);
++		rc = bnx2i_570x_send_conn_ofld_req(hba, ep);
++
++	return rc;
+ }
+ 
+ 
+@@ -2165,11 +2178,24 @@ static void bnx2i_process_ofld_cmpl(struct bnx2i_hba *hba,
+ 	}
+ 
+ 	if (ofld_kcqe->completion_status) {
++		ep->state = EP_STATE_OFLD_FAILED;
+ 		if (ofld_kcqe->completion_status ==
+ 		    ISCSI_KCQE_COMPLETION_STATUS_CTX_ALLOC_FAILURE)
+-			printk(KERN_ALERT "bnx2i: unable to allocate"
+-					  " iSCSI context resources\n");
+-		ep->state = EP_STATE_OFLD_FAILED;
++			printk(KERN_ALERT "bnx2i (%s): ofld1 cmpl - unable "
++				"to allocate iSCSI context resources\n",
++				hba->netdev->name);
++		else if (ofld_kcqe->completion_status ==
++			 ISCSI_KCQE_COMPLETION_STATUS_INVALID_OPCODE)
++			printk(KERN_ALERT "bnx2i (%s): ofld1 cmpl - invalid "
++				"opcode\n", hba->netdev->name);
++		else if (ofld_kcqe->completion_status ==
++			ISCSI_KCQE_COMPLETION_STATUS_CID_BUSY)
++			/* error status code valid only for 5771x chipset */
++			ep->state = EP_STATE_OFLD_FAILED_CID_BUSY;
++		else
++			printk(KERN_ALERT "bnx2i (%s): ofld1 cmpl - invalid "
++				"error code %d\n", hba->netdev->name,
++				ofld_kcqe->completion_status);
+ 	} else {
+ 		ep->state = EP_STATE_OFLD_COMPL;
+ 		cid_addr = ofld_kcqe->iscsi_conn_context_id;
 diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 507cd25..b3925c7 100644
+index dd18717..b32baf8 100644
 --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -411,7 +411,9 @@ static void bnx2i_free_ep(struct iscsi_endpoint *ep)
- 	bnx2i_ep->state = EP_STATE_IDLE;
- 	bnx2i_ep->hba->ofld_conns_active--;
+@@ -1691,7 +1691,9 @@ static int bnx2i_tear_down_conn(struct bnx2i_hba *hba,
+ 	bnx2i_ep_destroy_list_add(hba, ep);
  
--	bnx2i_free_iscsi_cid(bnx2i_ep->hba, bnx2i_ep->ep_iscsi_cid);
-+	if (bnx2i_ep->ep_iscsi_cid != (u16) -1)
-+		bnx2i_free_iscsi_cid(bnx2i_ep->hba, bnx2i_ep->ep_iscsi_cid);
+ 	/* destroy iSCSI context, wait for it to complete */
+-	bnx2i_send_conn_destroy(hba, ep);
++	if (bnx2i_send_conn_destroy(hba, ep))
++		ep->state = EP_STATE_CLEANUP_CMPL;
 +
- 	if (bnx2i_ep->conn) {
- 		bnx2i_ep->conn->ep = NULL;
- 		bnx2i_ep->conn = NULL;
-@@ -1763,13 +1765,17 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 		 */
- 		hba = bnx2i_check_route(dst_addr);
+ 	wait_event_interruptible(ep->ofld_wait,
+ 				 (ep->state != EP_STATE_CLEANUP_START));
  
--	if (!hba || test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state)) {
-+	if (!hba) {
- 		rc = -EINVAL;
- 		goto nohba;
- 	}
-+	mutex_lock(&hba->net_dev_lock);
+@@ -1790,7 +1792,18 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 	bnx2i_ep->ofld_timer.data = (unsigned long) bnx2i_ep;
+ 	add_timer(&bnx2i_ep->ofld_timer);
  
-+	if (bnx2i_adapter_ready(hba) || !hba->cid_que.cid_free_cnt) {
-+		rc = -EPERM;
-+		goto check_busy;
-+	}
- 	cnic = hba->cnic;
--	mutex_lock(&hba->net_dev_lock);
- 	ep = bnx2i_alloc_ep(hba);
- 	if (!ep) {
- 		rc = -ENOMEM;
-@@ -1777,23 +1783,21 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 	}
- 	bnx2i_ep = ep->dd_data;
- 
--	if (bnx2i_adapter_ready(hba)) {
--		rc = -EPERM;
--		goto net_if_down;
--	}
--
- 	bnx2i_ep->num_active_cmds = 0;
- 	iscsi_cid = bnx2i_alloc_iscsi_cid(hba);
- 	if (iscsi_cid == -1) {
--		printk(KERN_ALERT "alloc_ep: unable to allocate iscsi cid\n");
-+		printk(KERN_ALERT "bnx2i (%s): alloc_ep - unable to allocate "
-+			"iscsi cid\n", hba->netdev->name);
- 		rc = -ENOMEM;
--		goto iscsi_cid_err;
-+		bnx2i_free_ep(ep);
-+		goto check_busy;
- 	}
- 	bnx2i_ep->hba_age = hba->age;
- 
- 	rc = bnx2i_alloc_qp_resc(hba, bnx2i_ep);
- 	if (rc != 0) {
--		printk(KERN_ALERT "bnx2i: ep_conn, alloc QP resc error\n");
-+		printk(KERN_ALERT "bnx2i (%s): ep_conn - alloc QP resc error"
-+			"\n", hba->netdev->name);
- 		rc = -ENOMEM;
- 		goto qp_resc_err;
- 	}
-@@ -1832,7 +1836,12 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 	bnx2i_ep_ofld_list_del(hba, bnx2i_ep);
- 
- 	if (bnx2i_ep->state != EP_STATE_OFLD_COMPL) {
--		rc = -ENOSPC;
+-	bnx2i_send_conn_ofld_req(hba, bnx2i_ep);
++	if (bnx2i_send_conn_ofld_req(hba, bnx2i_ep)) {
 +		if (bnx2i_ep->state == EP_STATE_OFLD_FAILED_CID_BUSY) {
 +			printk(KERN_ALERT "bnx2i (%s): iscsi cid %d is busy\n",
 +				hba->netdev->name, bnx2i_ep->ep_iscsi_cid);
 +			rc = -EBUSY;
 +		} else
 +			rc = -ENOSPC;
- 		goto conn_failed;
- 	}
- 
-@@ -1840,7 +1849,8 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 			     iscsi_cid, &bnx2i_ep->cm_sk, bnx2i_ep);
- 	if (rc) {
- 		rc = -EINVAL;
--		goto conn_failed;
-+		/* Need to terminate and cleanup the connection */
-+		goto release_ep;
- 	}
- 
- 	bnx2i_ep->cm_sk->rcv_buf = 256 * 1024;
-@@ -1884,8 +1894,6 @@ release_ep:
- 		return ERR_PTR(rc);
- 	}
- conn_failed:
--net_if_down:
--iscsi_cid_err:
- 	bnx2i_free_qp_resc(hba, bnx2i_ep);
- qp_resc_err:
- 	bnx2i_free_ep(ep);
-@@ -2004,7 +2012,8 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
- 	if (!cnic)
- 		return 0;
- 
--	if (bnx2i_ep->state == EP_STATE_IDLE)
-+	if (bnx2i_ep->state == EP_STATE_IDLE ||
-+	    bnx2i_ep->state == EP_STATE_DISCONN_TIMEDOUT)
- 		return 0;
- 
- 	if (!bnx2i_ep_tcp_conn_active(bnx2i_ep))
-@@ -2030,9 +2039,10 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
- 			if (session->state == ISCSI_STATE_LOGGING_OUT) {
- 				if (bnx2i_ep->state == EP_STATE_LOGOUT_SENT) {
- 					/* Logout sent, but no resp */
--					printk(KERN_ALERT "bnx2i - WARNING "
--						"logout response was not "
--						"received!\n");
-+					printk(KERN_ALERT "bnx2i (%s): WARNING"
-+						" logout response was not "
-+						"received!\n",
-+						bnx2i_ep->hba->netdev->name);
- 				} else if (bnx2i_ep->state ==
- 					   EP_STATE_LOGOUT_RESP_RCVD)
- 					close = 1;
-@@ -2050,9 +2060,8 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
- 	else
- 		close_ret = cnic->cm_abort(bnx2i_ep->cm_sk);
- 
--	/* No longer allow CFC delete if cm_close/abort fails the request */
- 	if (close_ret)
--		printk(KERN_ALERT "bnx2i: %s close/abort(%d) returned %d\n",
-+		printk(KERN_ALERT "bnx2i (%s): close/abort(%d) returned %d\n",
- 			bnx2i_ep->hba->netdev->name, close, close_ret);
- 	else
- 		/* wait for option-2 conn teardown */
-@@ -2066,7 +2075,7 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
- destroy_conn:
- 	bnx2i_ep_active_list_del(hba, bnx2i_ep);
- 	if (bnx2i_tear_down_conn(hba, bnx2i_ep))
--		ret = -EINVAL;
-+		return -EINVAL;
- out:
- 	bnx2i_ep->state = EP_STATE_IDLE;
- 	return ret;
-@@ -2105,14 +2114,17 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
- 
- 	mutex_lock(&hba->net_dev_lock);
- 
--	if (bnx2i_ep->state == EP_STATE_IDLE)
--		goto return_bnx2i_ep;
-+	if (bnx2i_ep->state == EP_STATE_DISCONN_TIMEDOUT)
-+		goto out;
- 
--	if (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state))
-+	if (bnx2i_ep->state == EP_STATE_IDLE)
- 		goto free_resc;
- 
--	if (bnx2i_ep->hba_age != hba->age)
-+	if (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state) ||
-+	    (bnx2i_ep->hba_age != hba->age)) {
-+		bnx2i_ep_active_list_del(hba, bnx2i_ep);
- 		goto free_resc;
++		printk(KERN_ALERT "bnx2i (%s): unable to send conn offld kwqe"
++			"\n", hba->netdev->name);
++		bnx2i_ep_ofld_list_del(hba, bnx2i_ep);
++		goto conn_failed;
 +	}
  
- 	/* Do all chip cleanup here */
- 	if (bnx2i_hw_ep_disconnect(bnx2i_ep)) {
-@@ -2121,11 +2133,12 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
- 	}
- free_resc:
- 	bnx2i_free_qp_resc(hba, bnx2i_ep);
--return_bnx2i_ep:
-+
- 	if (bnx2i_conn)
- 		bnx2i_conn->ep = NULL;
- 
- 	bnx2i_free_ep(ep);
-+out:
- 	mutex_unlock(&hba->net_dev_lock);
- 	
- 	wake_up_interruptible(&hba->eh_wait);
+ 	/* Wait for CNIC hardware to setup conn context and return 'cid' */
+ 	wait_event_interruptible(bnx2i_ep->ofld_wait,
 -- 
 1.7.0.5
 
