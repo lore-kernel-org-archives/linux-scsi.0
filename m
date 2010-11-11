@@ -1,89 +1,111 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/2] target: remove dead DF_* flags
-Date: Thu, 11 Nov 2010 05:40:57 -0500
-Message-ID: <20101111104056.GB21472@infradead.org>
-References: <20101111104040.GA21472@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:34423 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358Ab0KKKk5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2010 05:40:57 -0500
-Content-Disposition: inline
-In-Reply-To: <20101111104040.GA21472@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] scsi: Convert scsi_host->cmd_serial_number to odd numbered atomic_t counter
+Date: Thu, 11 Nov 2010 02:46:45 -0800
+Message-ID: <1289472405-31003-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Index: lio-core-2.6/drivers/target/target_core_iblock.c
-===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_iblock.c	2010-11-11 11:32:33.198165135 +0100
-+++ lio-core-2.6/drivers/target/target_core_iblock.c	2010-11-11 11:33:55.878165135 +0100
-@@ -180,7 +180,6 @@ static struct se_device *iblock_create_v
- 	dev_limits.hw_queue_depth = IBLOCK_MAX_DEVICE_QUEUE_DEPTH;
- 	dev_limits.queue_depth = IBLOCK_DEVICE_QUEUE_DEPTH;
+This patch converts struct scsi_host->cmd_serial_number to a 'odd incremented by 2'
+atomic_t counter in scsi_cmd_get_serial(), and moves the host_lock held call in
+jgarzik's DEF_SCSI_QCMD() wrapper back into it's original location in scsi_dispatch_cmd().
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/hosts.c     |    1 +
+ drivers/scsi/scsi.c      |   20 ++++++++++++++------
+ include/scsi/scsi_host.h |    7 ++-----
+ 3 files changed, 17 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 4f7a582..317af8e 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -381,6 +381,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
++	atomic_set(&shost->cmd_serial_number, 1);
  
--	dev_flags = DF_CLAIMED_BLOCKDEV;
- 	ib_dev->ibd_major = MAJOR(bd->bd_dev);
- 	ib_dev->ibd_minor = MINOR(bd->bd_dev);
- 	ib_dev->ibd_bd = bd;
-Index: lio-core-2.6/drivers/target/target_core_rd.c
-===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_rd.c	2010-11-11 11:32:33.214831800 +0100
-+++ lio-core-2.6/drivers/target/target_core_rd.c	2010-11-11 11:33:55.878165135 +0100
-@@ -272,9 +272,6 @@ static struct se_device *rd_create_virtd
- 
- 	memset(&dev_limits, 0, sizeof(struct se_dev_limits));
- 
--	if (rd_dev->rd_direct)
--		dev_flags |= DF_TRANSPORT_DMA_ALLOC;
--
- 	if (rd_build_device_space(rd_dev) < 0)
- 		goto fail;
- 
-Index: lio-core-2.6/drivers/target/target_core_transport.c
-===================================================================
---- lio-core-2.6.orig/drivers/target/target_core_transport.c	2010-11-11 11:32:57.781498467 +0100
-+++ lio-core-2.6/drivers/target/target_core_transport.c	2010-11-11 11:33:55.881498468 +0100
-@@ -1983,13 +1983,6 @@ static void core_setup_task_attr_emulati
- 		TRANSPORT(dev)->get_device_rev(dev));
- }
- 
--/*	transport_add_device_to_core_hba():
-- *
-- *	Note that some plugins (IBLOCK) will pass device_flags ==
-- *	DF_CLAIMED_BLOCKDEV signifying OS that a dependent block_device
-- *	has been claimed.  In exception cases we will release said
-- *	block_device ourselves.
-- */
- struct se_device *transport_add_device_to_core_hba(
- 	struct se_hba *hba,
- 	struct se_subsystem_api *transport,
-Index: lio-core-2.6/include/target/target_core_transport.h
-===================================================================
---- lio-core-2.6.orig/include/target/target_core_transport.h	2010-11-11 11:32:57.788165135 +0100
-+++ lio-core-2.6/include/target/target_core_transport.h	2010-11-11 11:34:28.824831800 +0100
-@@ -59,16 +59,9 @@
- /*
-  * struct se_device->dev_flags
+ 	if (sht->supported_mode == MODE_UNKNOWN)
+ 		/* means we didn't set it ... default to INITIATOR */
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index e3d0629..bdc0837 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -632,15 +632,17 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
+  * @cmd: command to assign serial number to
+  *
+  * Description: a serial number identifies a request for error recovery
+- * and debugging purposes.  Protected by the Host_Lock of host.
++ * and debugging purposes.  Called directly by scsi_dispatch_cmd() for all LLDs
++ * after the great host_lock pushdown. 
   */
--#define DF_READAHEAD_ACTIVE                     0x00000001
--#define DF_TRANSPORT_DMA_ALLOC			0x00000002
--#define DF_TRANSPORT_BUF_ALLOC			0x00000004
--#define DF_DEV_DEBUG				0x00000008
--#define DF_CLAIMED_BLOCKDEV			0x00000010
--#define DF_PERSISTENT_CLAIMED_BLOCKDEV		0x00000020
--#define DF_READ_ONLY				0x00000040
--#define DF_SPC3_PERSISTENT_RESERVE		0x00000080
--#define DF_SPC2_RESERVATIONS			0x00000100
--#define DF_SPC2_RESERVATIONS_WITH_ISID		0x00000200
-+#define DF_READ_ONLY				0x00000001
-+#define DF_SPC2_RESERVATIONS			0x00000002
-+#define DF_SPC2_RESERVATIONS_WITH_ISID		0x00000004
+-void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
++static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ {
+-	cmd->serial_number = host->cmd_serial_number++;
+-	if (cmd->serial_number == 0) 
+-		cmd->serial_number = host->cmd_serial_number++;
++	/*
++	 * Increment the host->cmd_serial_number by 2 so cmd->serial_number
++	 * is always odd and wraps to 1 instead of 0.
++	 */
++	cmd->serial_number = atomic_add_return(2, &host->cmd_serial_number);
+ }
+-EXPORT_SYMBOL(scsi_cmd_get_serial);
  
- /*
-  * Used as return values from transport_generic_cmd_sequencer()
+ /**
+  * scsi_dispatch_command - Dispatch a command to the low-level driver.
+@@ -736,6 +738,12 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 		scsi_done(cmd);
+ 		goto out;
+ 	}
++	/*
++	 * Assign a cmd->serial_number from host->cmd_serial_number that
++	 * is used by scsi_softirq_done() to signal scsi_try_to_abort_cmd()
++	 * that a outstanding cmd has been completed.
++	 */
++	scsi_cmd_get_serial(host, cmd);
+ 
+ 	if (unlikely(host->shost_state == SHOST_DEL)) {
+ 		cmd->result = (DID_NO_CONNECT << 16);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index cea74ba..6909038 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -518,7 +518,6 @@ struct scsi_host_template {
+ 		int rc;							\
+ 		struct Scsi_Host *shost = cmd->device->host;		\
+ 		spin_lock_irqsave(shost->host_lock, irq_flags);		\
+-		scsi_cmd_get_serial(shost, cmd);			\
+ 		rc = func_name##_lck (cmd, done);			\
+ 		spin_unlock_irqrestore(shost->host_lock, irq_flags);	\
+ 		return rc;						\
+@@ -625,10 +624,9 @@ struct Scsi_Host {
+ 	short unsigned int max_sectors;
+ 	unsigned long dma_boundary;
+ 	/* 
+-	 * Used to assign serial numbers to the cmds.
+-	 * Protected by the host lock.
++	 * Used to assign serial numbers to the cmds in scsi_cmd_get_serial()
+ 	 */
+-	unsigned long cmd_serial_number;
++	atomic_t cmd_serial_number;
+ 	
+ 	unsigned active_mode:2;
+ 	unsigned unchecked_isa_dma:1;
+@@ -773,7 +771,6 @@ extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
+ extern void scsi_host_put(struct Scsi_Host *t);
+ extern struct Scsi_Host *scsi_host_lookup(unsigned short);
+ extern const char *scsi_host_state_name(enum scsi_host_state);
+-extern void scsi_cmd_get_serial(struct Scsi_Host *, struct scsi_cmnd *);
+ 
+ extern u64 scsi_calculate_bounce_limit(struct Scsi_Host *);
+ 
+-- 
+1.5.6.5
