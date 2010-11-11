@@ -1,111 +1,201 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] scsi: Convert scsi_host->cmd_serial_number to odd numbered atomic_t counter
-Date: Thu, 11 Nov 2010 02:46:45 -0800
-Message-ID: <1289472405-31003-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/2] target: kill CONFIG_TCM_DEBUG_DEV
+Date: Thu, 11 Nov 2010 02:46:16 -0800
+Message-ID: <1289472376.2867.90.camel@haakon2.linux-iscsi.org>
+References: <20101111104040.GA21472@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:36689 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752753Ab0KKKv2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2010 05:51:28 -0500
+In-Reply-To: <20101111104040.GA21472@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Thu, 2010-11-11 at 05:40 -0500, Christoph Hellwig wrote:
+> __iscsi_debug_dev doesn't compile and isn't actually used anywhere.  Remove
+> it and the surrounding infrastructure.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
 
-This patch converts struct scsi_host->cmd_serial_number to a 'odd incremented by 2'
-atomic_t counter in scsi_cmd_get_serial(), and moves the host_lock held call in
-jgarzik's DEF_SCSI_QCMD() wrapper back into it's original location in scsi_dispatch_cmd().
+Commited as 67e05b3fde.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/hosts.c     |    1 +
- drivers/scsi/scsi.c      |   20 ++++++++++++++------
- include/scsi/scsi_host.h |    7 ++-----
- 3 files changed, 17 insertions(+), 11 deletions(-)
+Thanks!
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 4f7a582..317af8e 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -381,6 +381,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
- 	shost->use_clustering = sht->use_clustering;
- 	shost->ordered_tag = sht->ordered_tag;
-+	atomic_set(&shost->cmd_serial_number, 1);
- 
- 	if (sht->supported_mode == MODE_UNKNOWN)
- 		/* means we didn't set it ... default to INITIATOR */
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index e3d0629..bdc0837 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -632,15 +632,17 @@ void scsi_log_completion(struct scsi_cmnd *cmd, int disposition)
-  * @cmd: command to assign serial number to
-  *
-  * Description: a serial number identifies a request for error recovery
-- * and debugging purposes.  Protected by the Host_Lock of host.
-+ * and debugging purposes.  Called directly by scsi_dispatch_cmd() for all LLDs
-+ * after the great host_lock pushdown. 
-  */
--void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
-+static inline void scsi_cmd_get_serial(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- {
--	cmd->serial_number = host->cmd_serial_number++;
--	if (cmd->serial_number == 0) 
--		cmd->serial_number = host->cmd_serial_number++;
-+	/*
-+	 * Increment the host->cmd_serial_number by 2 so cmd->serial_number
-+	 * is always odd and wraps to 1 instead of 0.
-+	 */
-+	cmd->serial_number = atomic_add_return(2, &host->cmd_serial_number);
- }
--EXPORT_SYMBOL(scsi_cmd_get_serial);
- 
- /**
-  * scsi_dispatch_command - Dispatch a command to the low-level driver.
-@@ -736,6 +738,12 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 		scsi_done(cmd);
- 		goto out;
- 	}
-+	/*
-+	 * Assign a cmd->serial_number from host->cmd_serial_number that
-+	 * is used by scsi_softirq_done() to signal scsi_try_to_abort_cmd()
-+	 * that a outstanding cmd has been completed.
-+	 */
-+	scsi_cmd_get_serial(host, cmd);
- 
- 	if (unlikely(host->shost_state == SHOST_DEL)) {
- 		cmd->result = (DID_NO_CONNECT << 16);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index cea74ba..6909038 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -518,7 +518,6 @@ struct scsi_host_template {
- 		int rc;							\
- 		struct Scsi_Host *shost = cmd->device->host;		\
- 		spin_lock_irqsave(shost->host_lock, irq_flags);		\
--		scsi_cmd_get_serial(shost, cmd);			\
- 		rc = func_name##_lck (cmd, done);			\
- 		spin_unlock_irqrestore(shost->host_lock, irq_flags);	\
- 		return rc;						\
-@@ -625,10 +624,9 @@ struct Scsi_Host {
- 	short unsigned int max_sectors;
- 	unsigned long dma_boundary;
- 	/* 
--	 * Used to assign serial numbers to the cmds.
--	 * Protected by the host lock.
-+	 * Used to assign serial numbers to the cmds in scsi_cmd_get_serial()
- 	 */
--	unsigned long cmd_serial_number;
-+	atomic_t cmd_serial_number;
- 	
- 	unsigned active_mode:2;
- 	unsigned unchecked_isa_dma:1;
-@@ -773,7 +771,6 @@ extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
- extern void scsi_host_put(struct Scsi_Host *t);
- extern struct Scsi_Host *scsi_host_lookup(unsigned short);
- extern const char *scsi_host_state_name(enum scsi_host_state);
--extern void scsi_cmd_get_serial(struct Scsi_Host *, struct scsi_cmnd *);
- 
- extern u64 scsi_calculate_bounce_limit(struct Scsi_Host *);
- 
--- 
-1.5.6.5
+> Index: lio-core-2.6/drivers/target/lio-target/iscsi_target.c
+> ===================================================================
+> --- lio-core-2.6.orig/drivers/target/lio-target/iscsi_target.c	2010-11-11 11:32:02.234831800 +0100
+> +++ lio-core-2.6/drivers/target/lio-target/iscsi_target.c	2010-11-11 11:32:57.778165134 +0100
+> @@ -939,10 +939,6 @@ static int iscsi_target_detect(void)
+>  	spin_lock_init(&iscsi_global->debug_erl_lock);
+>  #endif /* DEBUG_ERL */
+>  
+> -#ifdef DEBUG_DEV
+> -	spin_lock_init(&iscsi_global->debug_dev_lock);
+> -#endif
+> -
+>  	dir_entry = proc_mkdir("iscsi_target", 0);
+>  	if (!(dir_entry)) {
+>  		printk(KERN_ERR "proc_mkdir() failed.\n");
+> Index: lio-core-2.6/drivers/target/target_core_transport.c
+> ===================================================================
+> --- lio-core-2.6.orig/drivers/target/target_core_transport.c	2010-11-11 11:32:33.221498468 +0100
+> +++ lio-core-2.6/drivers/target/target_core_transport.c	2010-11-11 11:32:57.781498467 +0100
+> @@ -413,71 +413,6 @@ void release_se_global(void)
+>  	se_global = NULL;
+>  }
+>  
+> -#ifdef DEBUG_DEV
+> -
+> -/* warning FIXME: PLUGIN API TODO */
+> -int __iscsi_debug_dev(struct se_device *dev)
+> -{
+> -	int fail_task = 0;
+> -	fd_dev_t *fd_dev;
+> -	iblock_dev_t *ib_dev;
+> -	rd_dev_t *rd_dev;
+> -	struct scsi_device *sd;
+> -
+> -	spin_lock(&se_global->debug_dev_lock);
+> -	switch (dev->se_hba->type) {
+> -	case PSCSI:
+> -		sd = (struct scsi_device *) dev->dev_ptr;
+> -		if (dev->dev_flags & DF_DEV_DEBUG) {
+> -			printk(KERN_INFO "HBA[%u] - Failing PSCSI Task for"
+> -				" %d/%d/%d\n", dev->se_hba->hba_id,
+> -				sd->channel, sd->id, sd->lun);
+> -			fail_task = 1;
+> -		}
+> -		break;
+> -	case IBLOCK:
+> -		ib_dev = (iblock_dev_t *) dev->dev_ptr;
+> -		if (dev->dev_flags & DF_DEV_DEBUG) {
+> -			printk(KERN_INFO "HBA[%u] - Failing IBLOCK Task for"
+> -				" %u/%u\n", dev->se_hba->hba_id,
+> -				ib_dev->ibd_major, ib_dev->ibd_minor);
+> -			fail_task = 1;
+> -		}
+> -		break;
+> -	case FILEIO:
+> -		fd_dev = (fd_dev_t *) dev->dev_ptr;
+> -		if (dev->dev_flags & DF_DEV_DEBUG) {
+> -			printk(KERN_INFO "HBA[%u] - Failing FILEIO Task for"
+> -				" %u\n", dev->se_hba->hba_id,
+> -				fd_dev->fd_dev_id);
+> -			fail_task = 1;
+> -		}
+> -		break;
+> -	case RAMDISK_DR:
+> -	case RAMDISK_MCP:
+> -		rd_dev = (rd_dev_t *) dev->dev_ptr;
+> -		if (dev->dev_flags & DF_DEV_DEBUG) {
+> -			printk(KERN_INFO "HBA[%u] - Failing RAMDISK Task for"
+> -				" %u\n", dev->se_hba->hba_id,
+> -				rd_dev->rd_dev_id);
+> -			fail_task = 1;
+> -		}
+> -		break;
+> -	default:
+> -		if (dev->dev_flags & DF_DEV_DEBUG) {
+> -			printk(KERN_INFO "HBA[%u] - Failing unknown Task\n",
+> -				dev->se_hba->hba_id);
+> -			fail_task = 1;
+> -		}
+> -		break;
+> -	}
+> -	spin_unlock(&se_global->debug_dev_lock);
+> -
+> -	return fail_task;
+> -}
+> -
+> -#endif /* DEBUG_DEV */
+> -
+>  void transport_init_queue_obj(struct se_queue_obj *qobj)
+>  {
+>  	atomic_set(&qobj->queue_cnt, 0);
+> @@ -1229,17 +1164,6 @@ check_task_stop:
+>  	}
+>  	atomic_dec(&T_TASK(cmd)->t_task_cdbs_timeout_left);
+>  
+> -#ifdef DEBUG_DEV
+> -	if (dev) {
+> -		if (__iscsi_debug_dev(dev) != 0) {
+> -			success = 0;
+> -			task->task_scsi_status = 1;
+> -			cmd->transport_error_status =
+> -				PYX_TRANSPORT_LU_COMM_FAILURE;
+> -		}
+> -	}
+> -#endif /* DEBUG_DEV */
+> -
+>  	/*
+>  	 * Decrement the outstanding t_task_cdbs_left count.  The last
+>  	 * struct se_task from struct se_cmd will complete itself into the
+> Index: lio-core-2.6/include/target/target_core_base.h
+> ===================================================================
+> --- lio-core-2.6.orig/include/target/target_core_base.h	2010-11-11 11:32:02.000000000 +0100
+> +++ lio-core-2.6/include/target/target_core_base.h	2010-11-11 11:32:57.784831801 +0100
+> @@ -1057,9 +1057,6 @@ struct se_global {
+>  	spinlock_t		se_tpg_lock;
+>  	spinlock_t		lu_gps_lock;
+>  	spinlock_t		plugin_class_lock;
+> -#ifdef DEBUG_DEV
+> -	spinlock_t		debug_dev_lock;
+> -#endif
+>  } ____cacheline_aligned;
+>  
+>  #endif /* TARGET_CORE_BASE_H */
+> Index: lio-core-2.6/include/target/target_core_transport.h
+> ===================================================================
+> --- lio-core-2.6.orig/include/target/target_core_transport.h	2010-11-11 11:32:33.000000000 +0100
+> +++ lio-core-2.6/include/target/target_core_transport.h	2010-11-11 11:32:57.788165135 +0100
+> @@ -132,9 +132,6 @@ struct se_subsystem_api;
+>  
+>  extern int init_se_global(void);
+>  extern void release_se_global(void);
+> -#ifdef DEBUG_DEV
+> -extern int __iscsi_debug_dev(struct se_device *);
+> -#endif
+>  extern void transport_init_queue_obj(struct se_queue_obj *);
+>  extern int transport_subsystem_check_init(void);
+>  extern int transport_subsystem_register(struct se_subsystem_api *);
+> Index: lio-core-2.6/drivers/target/Kbuild
+> ===================================================================
+> --- lio-core-2.6.orig/drivers/target/Kbuild	2010-11-11 11:32:02.251498468 +0100
+> +++ lio-core-2.6/drivers/target/Kbuild	2010-11-11 11:32:57.798165135 +0100
+> @@ -16,10 +16,6 @@ target_core_mod-y		:= target_core_config
+>  				   target_core_rd.o \
+>  				   target_core_mib.o
+>  
+> -ifdef CONFIG_TCM_DEBUG_DEV
+> -EXTRA_CFLAGS			+= -DDEBUG_DEV
+> -endif
+> -
+>  obj-$(CONFIG_TARGET_CORE)	+= target_core_mod.o
+>  
+>  # Subsystem modules
+> Index: lio-core-2.6/drivers/target/Kconfig
+> ===================================================================
+> --- lio-core-2.6.orig/drivers/target/Kconfig	2010-11-11 11:32:02.261498467 +0100
+> +++ lio-core-2.6/drivers/target/Kconfig	2010-11-11 11:32:57.801498468 +0100
+> @@ -5,13 +5,6 @@ config TARGET_CORE
+>      ---help---
+>      Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled control path for target_core_mod.  This includes built-in TCM RAMDISK subsystem logic for virtual LUN 0 access
+>  
+> -config TCM_DEBUG_DEV
+> -	tristate "TCM Debug device code"
+> -	depends on TARGET_CORE
+> -	default n
+> -	---help---
+> -	Say Y here to enable the TCM Debug device code
+> -
+>  config TCM_IBLOCK
+>  	tristate "TCM/IBLOCK Subsystem Plugin for Linux/BLOCK"
+>  	depends on TARGET_CORE
+
