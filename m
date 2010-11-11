@@ -1,76 +1,60 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH take 2] [USB] Use normalized sense when emulating autosense
-Date: Thu, 11 Nov 2010 10:27:11 -0800 (PST)
-Message-ID: <673670.8195.qm@web31801.mail.mud.yahoo.com>
-References: <20101111174322.GB20296@one-eyed-alien.net>
-Reply-To: ltuikov@yahoo.com
+From: "Mr. Beuker Hendrik" <lejven@tkk.fi>
+Subject: Work with me
+Date: Thu, 11 Nov 2010 19:55:36 +0200
+Message-ID: <20101111195536.2z7hngny84o0scw4__48489.3943802037$1289500706$gmane$org@webmail1.tkk.fi>
+Reply-To: bhendrik1@mspil.edu.cn
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31801.mail.mud.yahoo.com ([68.142.207.64]:47953 "HELO
-	web31801.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754876Ab0KKS1N convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Nov 2010 13:27:13 -0500
-In-Reply-To: <20101111174322.GB20296@one-eyed-alien.net>
+Received: from mx01.hut.fi ([130.233.228.108]:46370 "EHLO mx01.hut.fi"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753658Ab0KKSiT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2010 13:38:19 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Cc: Greg KH <greg@kroah.com>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
---- On Thu, 11/11/10, Matthew Dharm <mdharm-kernel@one-eyed-alien.net> =
-wrote:
-> On Thu, Nov 11, 2010 at 09:07:53AM -0800, Luben Tuikov wrote:
-> >=20
-> > Oh, I see. I'll re-post the patch then to Matthew and
-> the people and lists you listed above.
->=20
-> Now that I'm on the CC, I see this.
->=20
-> What's the 10k-foot level summary here?
 
-I'm not sure either. It's apparently the procedure of getting a patch i=
-nto the linux kernel nowadays. Last time I did this was 5 years ago and=
- in linux-scsi--I remember it being easier, again that was 5 years ago.
+UBS International Holdings BV
+Herengracht 600
+NL-1017 CJ Amsterdam, Netherlands.
+www.ubs.com/investmentbank
 
-> Is there an alternate sense-data format that uses some sort of "descr=
-iptor" structure?
+Greetings,
 
-Yes. Some devices return this format of sense data for some commands.
+I am an investment consultant working with UBS International Holdings BV
+in the Netherlands. I will be happy to work this transaction out with you
+if you have a corporate or personal Bank Account and if you are reliable
+and honest. I need strong Assurance that you will never let me down, as I
+can arrange and provide you details/documentatal proof so that
+funds($8.5 million) will be transferred into your account as the next of
+kin to the late depositor(Abbas Farhan al-Jabouri, who was an Election
+candidate and also a business man). Abbas Farhan al-Jabouri and his two
+relatives were executed in Mohammed al Malih, near Mandali onthe 29th of
+January 2009.  During one of our periodic auditing I discovered a dormant
+accounts with the said balance (Eight million, five Hundred thousand
+Dollars only), this account have not been operated for some years now.
 
-> I'm assuming this is
-> a new SCSI-III thing, or did I just miss it in SCSI-II?
-> This *looks* like you're using functions provided by the
-> SCSI core to
-> access and modify the sense data... so I'm assuming that's
-> because there
-> are alternate formats...
+At this moment I will not be able to issue more details about this
+business, until your response is received.
 
-The patch doesn't add code that modifies the sense data. That modificat=
-ion code is already there, the patch fixes the modification which assum=
-ed only one type of format of sense data.
+If you are not familiar with my Bank profile, please take a moment of your
+very busy schedules to read about my Bank
+website(www.ubs.com/investment bank). I look forward to hearing from you as
+soon as possible via my private email; bhendrik1@mspil.edu.cn
 
-The patch uses SCSI functions to abstract the sense information irrespe=
-ctive of the type of format of sense data.
+Thank you for your time and attention.
 
->=20
-> Matt
->=20
-> --=20
-> Matthew Dharm=A0 =A0 =A0 =A0 =A0 =A0
-> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0
-> =A0 Home: mdharm-usb@one-eyed-alien.net
->=20
-> Maintainer, Linux USB Mass Storage Driver
->=20
-> It was a new hope.
-> =A0=A0=A0 =A0=A0=A0 =A0=A0=A0
-> =A0=A0=A0 =A0=A0=A0 -- Dust Puppy
-> User Friendly, 12/25/1998
->=20
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Warmest Regards,
+Mr. Beuker Hendrik
+Investment Consultant.
+UBS.
+
+
+
+
+
+
+
