@@ -1,64 +1,47 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Patch added to scsi-rc-fixes-2.6:  [SCSI] host lock push-down
-Date: Wed, 10 Nov 2010 18:52:08 -0500
-Message-ID: <4CDB3028.6080605@garzik.org>
-References: <201011102240.oAAMe86a001486@hera.kernel.org> <4CDB2A81.5030100@garzik.org> <1289432759.3016.63.camel@mulgrave.site>
+From: "jack_wang" <jack_wang@usish.com>
+Subject: Re: Re: sd: Why we need to call sd_revalidate_disk twice in sd_probe_async
+Date: Thu, 11 Nov 2010 08:31:55 +0800
+Message-ID: <201011110831550629239@usish.com>
+References: <014D70148ADE4E969B698514F7F6913E@usish.com.cn>,
+ <yq1eiatzdw6.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain;
+	charset="gb2312"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vw0-f46.google.com ([209.85.212.46]:59311 "EHLO
-	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757322Ab0KJXwM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2010 18:52:12 -0500
-In-Reply-To: <1289432759.3016.63.camel@mulgrave.site>
+Received: from sr-smtp.usish.com ([210.5.144.203]:37428 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753586Ab0KKAbz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2010 19:31:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-
-On 11/10/2010 06:45 PM, James Bottomley wrote:
-> On Wed, 2010-11-10 at 18:28 -0500, Jeff Garzik wrote:
->> On 11/10/2010 05:40 PM, James Bottomley wrote:
->>> Your commit:
->>>
->>>       [SCSI] host lock push-down
->>>
->>>       Move the mid-layer's ->queuecommand() invocation from being locked
->>>       with the host lock to being unlocked to facilitate speeding up the
->>>       critical path for drivers who don't need this lock taken anyway.
->>>
->>>       The patch below presents a simple SCSI host lock push-down as an
->>>       equivalent transformation.  No locking or other behavior should change
->>>       with this patch.  All existing bugs and locking orders are preserved.
->>>
->>>       Minimal code disturbance was attempted with this change.  Most drivers
->>>       needed only two one-line modifications for their host lock push-down.
->>>
->>>       Signed-off-by: Jeff Garzik<jgarzik@redhat.com>
->>>       Signed-off-by: James Bottomley<James.Bottomley@suse.de>
->>>
->>> has been added to the upstream SCSI tree
->>> You can find it here:
->>
->> No comments on renaming ->queuecommand to something else?
->
-> What we wondered about doing differently isn't really relevant for a
-> change log ... that should just really be about what was done (to avoid
-> confusion).
-
-Wasn't referring to the changelog (perhaps shouldn't have quoted that); 
-just asking the question generally.
+Cc: "James.Bottomley@suse.de" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
 
 
->> The consequences are rather dire if this goes unnoticed, yes?
->
-> You mean if there's a missed in-tree driver?  Yes, but I took care to
-> make sure all SCSI drivers were accounted for.  For out of tree drivers,
-> as with the eh lock push down, it's caveat emptor.
+ 
+>>>>> "Jack" == Jack Wang <jack_wang@usish.com> writes:
+Jack> I notice in sd.c, we call sd_revalidate_disk twice in function
+Jack> sd_probe_async?  Are there some special reasons?
+I'm traveling right now and don't have my scribbles. But my recollection
+is that it's due to a quirk in the way things are registered with the
+block layer. Some limits are hanging off of the request queue and some
+off of struct gendisk.
+For stacking purposes we need to set some queue defaults before we
+register the gendisk. And then we do a second revalidate pass to get
+everything in place after the gendisk has been set up. Alignment
+offsets, for instance, need to be updated after the partition table has
+been read.
+So, yes. It is intentional that revalidate is called both before and
+after add_disk().
+If this causing you problems? And if so, why?
 
-Thinking about out-of-tree drivers, yes.
 
-	Jeff
+Hi, Martin
+
+Thanks for explaination, I just curious about the duplicated call, No problems found.
+
+Jack
+-- 
+Martin K. Petersen Oracle Linux Engineering
 
 
