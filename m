@@ -1,32 +1,32 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] target: remove dead DF_* flags
-Date: Thu, 11 Nov 2010 07:21:59 -0500
-Message-ID: <20101111122159.GA22413@infradead.org>
-References: <20101111104040.GA21472@infradead.org>
- <20101111104056.GB21472@infradead.org>
- <1289473630.2867.110.camel@haakon2.linux-iscsi.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Thu, 11 Nov 2010 04:04:53 -0800
+Message-ID: <20101111120453.GA672@kroah.com>
+References: <4CC1CA4D.1090609@vlnb.net> <20101022175624.GA13640@kroah.com> <4CC1DAA2.7030602@vlnb.net> <20101022185437.GA9103@kroah.com> <4CD8566D.1020202@vlnb.net> <20101109002829.GA22633@kroah.com> <4CD9A9B8.70708@vlnb.net> <4CDA6CD4.3010308@panasas.com> <4CDAFE6E.7050200@vlnb.net> <4CDBBE80.40908@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:38986 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756354Ab0KKMWA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2010 07:22:00 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1289473630.2867.110.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <4CDBBE80.40908@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Thu, Nov 11, 2010 at 03:07:10AM -0800, Nicholas A. Bellinger wrote:
-> This is still required by RAMDISK_DR to allow the backend to perform the
-> se_task->task_sg[] mapping from the ramdisk provided struct scatterlists
-> using se_subsystem_api->allocate_dma()
+On Thu, Nov 11, 2010 at 11:59:28AM +0200, Boaz Harrosh wrote:
+> 4. Exactly Like 3 but without the extra kref member
+>    Only x_put() changes and x_kref_release() now receives
+>    an x_object
+> 
+> int x_put(struct object_x *x)
+> {
+> 	if (kobject_put(&x->kobj) == 1)
+> 		// Like above [3] x_kref_release()
+> 		x_kref_release(x);
+> }
 
-It's not actually used anywhere at all.  And if you mean fronted instead
-of backend above and imply not yet merged - I don't think adding special
-cases for the ramdisk driver into frontends is a good idea, as it's not
-really a case worth optimizing for.  And even then it's entirely dead
-and untested code for now.
+This is racy, please never do this.
 
+thanks,
+
+greg k-h
