@@ -1,131 +1,62 @@
-From: Joe Eykholt <jeykholt@cisco.com>
-Subject: Re: [PATCH] fix vulnerability in file operations of scsi target interface
-Date: Thu, 11 Nov 2010 10:47:21 -0800
-Message-ID: <4CDC3A39.6020801@cisco.com>
-References: <AANLkTin+Epf5WuD9sV=kNNgVXo5No4euF=6VoSOkFK12@mail.gmail.com>	<4CD98FC6.9000108@cisco.com> <AANLkTimN+nhY+SDApbcpJ41z9jPTu6jj0RmYjNYNyo5+@mail.gmail.com>
+From: Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
+Subject: Re: [PATCH take 2] [USB] Use normalized sense when emulating autosense
+Date: Thu, 11 Nov 2010 10:49:46 -0800
+Message-ID: <20101111184946.GC20296@one-eyed-alien.net>
+References: <20101111174322.GB20296@one-eyed-alien.net> <673670.8195.qm@web31801.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-4.cisco.com ([171.68.10.86]:47331 "EHLO
-	sj-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754942Ab0KKSrW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2010 13:47:22 -0500
-In-Reply-To: <AANLkTimN+nhY+SDApbcpJ41z9jPTu6jj0RmYjNYNyo5+@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="VywGB/WGlW4DM4P8"
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <673670.8195.qm-n6NU40r8ZaqvuULXzWHTWIglqE1Y4D90QQ4Iyu8u01E@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
 
+--VywGB/WGlW4DM4P8
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 11/11/10 5:45 AM, Hillf Danton wrote:
-> On Wed, Nov 10, 2010 at 2:15 AM, Joe Eykholt <jeykholt@cisco.com> wrote:
->> On 11/9/10 6:01 AM, Hillf Danton wrote:
->>> Ring buffers are setup for exchanging data between K and U spaces, but
->>> they could not survive multiple open operations.
->>>
->>> The registered misc interface is monitored and prevented from multiple
->>> opens for fixing the vulnerability.
->>>
->>> A typo, -BUSY, is also cleaned up.
->>>
->>> btw, the ring buffers could be setup in a per file manner?
->>>
->>> Signed-off-by: Hillf Danton <dhillf@gmail.com>
->>> ---
->>>
->>> --- a/drivers/scsi/scsi_tgt_if.c      2010-09-13 07:07:38.000000000 +0800
->>> +++ b/drivers/scsi/scsi_tgt_if.c      2010-11-09 21:42:48.000000000 +0800
->>> @@ -85,7 +85,7 @@ static int tgt_uspace_send_event(u32 typ
->>>       if (!ev->hdr.status)
->>>               tgt_ring_idx_inc(ring);
->>>       else
->>> -             err = -BUSY;
->>> +             err = -EBUSY;
->>>
->>>       spin_unlock_irqrestore(&ring->tr_lock, flags);
->>>
->>> @@ -319,20 +319,33 @@ static int tgt_mmap(struct file *filp, s
->>>       return err;
->>>  }
->>>
->>> +static unsigned long tgt_open_cnt = 0;
->>> +
->>>  static int tgt_open(struct inode *inode, struct file *file)
->>>  {
->>> +     if (tgt_open_cnt)
->>> +             return -EBUSY;
->>> +     tgt_open_cnt++;
->>
->> Since there's no locking, there's still a tiny hole where
->> simultaneous opens could succeed.  Consider using an atomic.
->> Good find and good fix otherwise.
->>
-> Would you please, Joe, show the atomic version?
-> thanks//Hillf
+On Thu, Nov 11, 2010 at 10:27:11AM -0800, Luben Tuikov wrote:
+> The patch uses SCSI functions to abstract the sense information irrespect=
+ive of the type of format of sense data.
 
-I take it back.  There's no good atomic version.
-The best I came up with was:
-In open:
-	if (atomic_inc_return(&tgt_open_cnt) != 1)
-		return -EBUSY;
+Looks reasonable.  The underlying SCSI functions seem to all have the tests
+to distinguish between sense format types.  Let's just hope there are no
+devices out there which can confuse those tests, or we'll be buried in
+regressions.
 
-Then in release (since its the last close):
-	atomic_set(&tgt_open_cnt, 0);
+ACKed-by: Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
 
-There's still a hole that this might overflow, and I don't see
-the best way to fix that without test-and-set or compare-and-swap.
-We can't just decrement it since the last close will clear it.
+Matt
 
-So the best thing would be to use your
-version but protect it with the tx_ring.tr_lock.
-I would rename tgt_open_cnt to just tgt_busy,
-and make it a u8 since it will be 1 or 0.
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-	int error = 0;
-	
-	spin_lock_irq(&tx_ring.tr_lock);
-	if (tgt_busy)
-		error = -EBUSY;
-	else {
-		tgt_busy = 1;
-		tx_ring.tr_idx = 0;
-		rx_ring.tr_idx = 0;
-	}
-	spin_unlock_irq(&tx_ring.tr_lock);
-	return error;
+My mother not mind to die for stoppink Windows NT!  She is rememberink=20
+Stalin!
+					-- Pitr
+User Friendly, 9/6/1998
 
-Then in release:
-	spin_lock_irq(&tx_ring.tr_lock);
-	tgt_busy = 0;
-	spin_unlock_irq(&tx_ring.tr_lock);
+--VywGB/WGlW4DM4P8
+Content-Type: application/pgp-signature
+Content-Disposition: inline
 
->>> +
->>>       tx_ring.tr_idx = rx_ring.tr_idx = 0;
->>>
->>>       cycle_kernel_lock();
->>>       return 0;
->>>  }
->>>
->>> +static int tgt_release(struct inode *inode, struct file *file)
->>> +{
->>> +     tgt_open_cnt--;
->>> +     return 0;
->>> +}
->>> +
->>>  static const struct file_operations tgt_fops = {
->>>       .owner          = THIS_MODULE,
->>>       .open           = tgt_open,
->>>       .poll           = tgt_poll,
->>>       .write          = tgt_write,
->>>       .mmap           = tgt_mmap,
->>> +     .release        = tgt_release,
->>>  };
->>>
->>>  static struct miscdevice tgt_miscdev = {
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFM3DrK3gL8qCooyc4RAky0AJ9lH9VGKO2/jkDqQKrcloV5a4TJWgCeILba
+VjOrIrVK99RYWvEj1e5qzhY=
+=PSWE
+-----END PGP SIGNATURE-----
+
+--VywGB/WGlW4DM4P8--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
