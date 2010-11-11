@@ -1,83 +1,80 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH,RFC] target: fix block limits VPD emulation
-Date: Wed, 10 Nov 2010 23:52:27 -0800
-Message-ID: <1289461947.2867.18.camel@haakon2.linux-iscsi.org>
-References: <20101110210432.GC24988@infradead.org>
+Subject: Re: Patch added to scsi-rc-fixes-2.6:  [SCSI] host lock push-down
+Date: Thu, 11 Nov 2010 00:58:35 -0800
+Message-ID: <1289465915.2867.68.camel@haakon2.linux-iscsi.org>
+References: <201011102240.oAAMe86a001486@hera.kernel.org>
+	 <4CDB2A81.5030100@garzik.org> <1289432759.3016.63.camel@mulgrave.site>
+	 <4CDB3028.6080605@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:42703 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757821Ab0KKH5j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2010 02:57:39 -0500
-In-Reply-To: <20101110210432.GC24988@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CDB3028.6080605@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Wed, 2010-11-10 at 16:04 -0500, Christoph Hellwig wrote:
-> Just because our target supports TP the initiator doesn't have.
-> Handle short block limit VPD requests even if TP is supported.
+On Wed, 2010-11-10 at 18:52 -0500, Jeff Garzik wrote:
+> On 11/10/2010 06:45 PM, James Bottomley wrote:
+> > On Wed, 2010-11-10 at 18:28 -0500, Jeff Garzik wrote:
+> >> On 11/10/2010 05:40 PM, James Bottomley wrote:
+> >>> Your commit:
+> >>>
+> >>>       [SCSI] host lock push-down
+> >>>
+> >>>       Move the mid-layer's ->queuecommand() invocation from being locked
+> >>>       with the host lock to being unlocked to facilitate speeding up the
+> >>>       critical path for drivers who don't need this lock taken anyway.
+> >>>
+> >>>       The patch below presents a simple SCSI host lock push-down as an
+> >>>       equivalent transformation.  No locking or other behavior should change
+> >>>       with this patch.  All existing bugs and locking orders are preserved.
+> >>>
+> >>>       Minimal code disturbance was attempted with this change.  Most drivers
+> >>>       needed only two one-line modifications for their host lock push-down.
+> >>>
+> >>>       Signed-off-by: Jeff Garzik<jgarzik@redhat.com>
+> >>>       Signed-off-by: James Bottomley<James.Bottomley@suse.de>
+> >>>
+> >>> has been added to the upstream SCSI tree
+> >>> You can find it here:
+> >>
+> >> No comments on renaming ->queuecommand to something else?
+> >
+> > What we wondered about doing differently isn't really relevant for a
+> > change log ... that should just really be about what was done (to avoid
+> > confusion).
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Wasn't referring to the changelog (perhaps shouldn't have quoted that); 
+> just asking the question generally.
+> 
+> 
+> >> The consequences are rather dire if this goes unnoticed, yes?
+> >
+> > You mean if there's a missed in-tree driver?  Yes, but I took care to
+> > make sure all SCSI drivers were accounted for.  For out of tree drivers,
+> > as with the eh lock push down, it's caveat emptor.
+> 
+> Thinking about out-of-tree drivers, yes.
+> 
 
-Postel's law +1 for hch.  Commited as 462bc6c.
+Hi Jeff and James,
 
-Thanks!
+Thank you for getting this initial patch merged.  I really think this
+was and is the best choice moving forward.   Also, a seriously big thank
+you to all of the other folks who have helped identify LLDs issues for
+host_lock less mode for drivers!!
+
+In the next days I will get a atomic_t scsi_host->cmd_serial_number
+patch rebased (which is really very minor at this point w/o the
+scsi_error.c changes), and merge the current host_lock-less 'scoreboard'
+on top of jgarzik's code and tag for .38.   So, please let me know if
+you would to include minor the atomic_t scsi_host->cmd_serial_number
+patch for .37 or if you would rather have this immediately preceed the
+first series of "enable host-lock_less for LLD vendor superturbo hba"
+for the .38 round.
+
+Best,
 
 --nab
-
-> 
-> Index: lio-core-2.6/drivers/target/target_core_cdb.c
-> ===================================================================
-> --- lio-core-2.6.orig/drivers/target/target_core_cdb.c	2010-11-09 12:12:21.908196346 +0100
-> +++ lio-core-2.6/drivers/target/target_core_cdb.c	2010-11-09 12:15:14.691529680 +0100
-> @@ -497,20 +497,18 @@ target_emulate_evpd_b0(struct se_cmd *cm
->  	if (DEV_ATTRIB(dev)->emulate_tpu || DEV_ATTRIB(dev)->emulate_tpws)
->  		have_tp = 1;
->  
-> -	if (have_tp) {
-> -		if (cmd->data_length < (0x3c + 4)) {
-> -			printk(KERN_INFO "Received data_length: %u"
-> -				" too small for TPE=1 EVPD 0xb0\n",
-> -				cmd->data_length);
-> -			return -1;
-> -		}
-> -	} else {
-> -		if (cmd->data_length < (0x10 + 4)) {
-> -			printk(KERN_INFO "Received data_length: %u"
-> -				" too small for TPE=1 EVPD 0xb0\n",
-> -				cmd->data_length);
-> -			return -1;
-> -		}
-> +	if (cmd->data_length < (0x10 + 4)) {
-> +		printk(KERN_INFO "Received data_length: %u"
-> +			" too small for EVPD 0xb0\n",
-> +			cmd->data_length);
-> +		return -1;
-> +	}
-> +
-> +	if (have_tp && cmd->data_length < (0x3c + 4)) {
-> +		printk(KERN_INFO "Received data_length: %u"
-> +			" too small for TPE=1 EVPD 0xb0\n",
-> +			cmd->data_length);
-> +		have_tp = 0;
->  	}
->  
->  	buf[0] = dev->transport->get_device_type(dev);
-> @@ -532,7 +530,11 @@ target_emulate_evpd_b0(struct se_cmd *cm
->  	 */
->  	put_unaligned_be32(DEV_ATTRIB(dev)->optimal_sectors, &buf[12]);
->  
-> -	if (!have_tp)
-> +	/*
-> +	 * Exit now if we don't support TP or the initiator sent a too
-> +	 * short buffer.
-> +	 */
-> +	if (!have_tp || cmd->data_length < (0x3c + 4))
->  		return 0;
->  
->  	/*
-
