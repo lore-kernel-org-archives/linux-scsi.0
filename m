@@ -1,42 +1,71 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] scsi: Convert scsi_host->cmd_serial_number to odd
- numbered atomic_t counter
-Date: Thu, 11 Nov 2010 09:53:03 -0600
-Message-ID: <1289490783.2982.33.camel@mulgrave.site>
-References: <1289472405-31003-1-git-send-email-nab@linux-iscsi.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH take 2] [USB] Use normalized sense when emulating autosense
+Date: Thu, 11 Nov 2010 08:49:51 -0800 (PST)
+Message-ID: <892012.17950.qm@web31804.mail.mud.yahoo.com>
+References: <20101111134450.GB12291@kroah.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1289472405-31003-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web31804.mail.mud.yahoo.com ([68.142.207.67]:47778 "HELO
+	web31804.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754510Ab0KKQtx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Nov 2010 11:49:53 -0500
+In-Reply-To: <20101111134450.GB12291@kroah.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 2010-11-11 at 02:46 -0800, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> This patch converts struct scsi_host->cmd_serial_number to a 'odd incremented by 2'
-> atomic_t counter in scsi_cmd_get_serial(), and moves the host_lock held call in
-> jgarzik's DEF_SCSI_QCMD() wrapper back into it's original location in scsi_dispatch_cmd().
+--- On Thu, 11/11/10, Greg KH <greg@kroah.com> wrote:
+> On Fri, Oct 22, 2010 at 02:12:51PM
+> -0700, Luben Tuikov wrote:
+> > This patch solves two things:
+> > 1) Enables autosense emulation code to correctly
+> > interpret descriptor format sense data, and
+> > 2) Fixes a bug whereby the autosense emulation
+> > code would overwrite descriptor format sense data
+> > with SENSE KEY HARDWARE ERROR in fixed format, to
+> > incorrectly look like this:
+> >=20
+> > Oct 21 14:11:07 localhost kernel: sd 7:0:0:0:
+> [sdc]=A0 Sense Key : Recovered Error [current]
+> [descriptor]
+> > Oct 21 14:11:07 localhost kernel: Descriptor sense
+> data with sense descriptors (in hex):
+> > Oct 21 14:11:07 localhost kernel:=A0 =A0 =A0
+> =A0 72 01 04 1d 00 00 00 0e 09 0c 00 00 00 00 00 00
+> > Oct 21 14:11:07 localhost kernel:=A0 =A0 =A0
+> =A0 00 4f 00 c2 00 50
+> > Oct 21 14:11:07 localhost kernel: sd 7:0:0:0:
+> [sdc]=A0 ASC=3D0x4 ASCQ=3D0x1d
+> >=20
+> > Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+>=20
+> I need to get the ack from the usb-storage
+> maintainer.=A0 Can you get that
+> so that I can apply this?
 
-Actually, no ... this isn't really a good idea; you're lengthening our
-critical path here (an atomic costs a lot more than a simple add under
-spinlock).
+Hi Greg,
 
-There are only a few drivers left that actually make use of a serial
-number.  Of those, the only modern ones are qla4, lpfc, mpt2sas and
-megaraid.
+I don't know who the usb-storage maintainer is, as I've mostly contribu=
+ted to linux-scsi. Do you? I know Alan acked this patch. Is it him? Any=
+ reason you didn't CC the usb-storage maintainer in this email?  Can yo=
+u reply back to this thread CC-ing him? The only email I have in my add=
+ress book is yours.
 
-So the next logical step seems to be eliminate the overloading of the
-serial number zero value, which removes the last mid-layer use (dpt_i2o
-seems to abuse this unnecessarily as well), then the serial number code
-can be pushed down into the queuecommand routines of only those drivers
-that actually use it.  None of the modern ones seems to have a
-legitimate use, so I think their uses can mostly be eliminated.  Thus,
-we might be able to get away with a simple queuecommand push down and
-never bother with atomics for this (since it's unlikely the legacy users
-would convert away from a lock wrapping their queuecommand routines).
+Thank you for being so nice and patient in this long, difficult, arduou=
+s and intimidating[1] process.
 
-James
+   Luben
+[1]linux-2.6/Documentation/development-process/6.Followthrough:22:
+"Working with reviewers can be, for many developers, the most intimidat=
+ing part of the kernel development process."
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
