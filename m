@@ -1,59 +1,78 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 02/11] libata: Convert to host_lock less w/ interrupts
-	disabled internally
-Date: Thu, 11 Nov 2010 20:54:32 -0800
-Message-ID: <1289537672.2867.203.camel@haakon2.linux-iscsi.org>
-References: <1289520817-16458-1-git-send-email-nab@linux-iscsi.org>
-	 <4CDCB8C1.6000303@garzik.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Fri, 12 Nov 2010 13:09:48 +0100
+Message-ID: <AANLkTikA7GRDR2Y3nUfQYxLHCWVLfzVPJmZED_whuCWD@mail.gmail.com>
+References: <20101022175624.GA13640@kroah.com> <4CC1DAA2.7030602@vlnb.net>
+ <20101022185437.GA9103@kroah.com> <4CD8566D.1020202@vlnb.net>
+ <20101109002829.GA22633@kroah.com> <4CD9A9B8.70708@vlnb.net>
+ <4CDA6CD4.3010308@panasas.com> <4CDAFE6E.7050200@vlnb.net>
+ <4CDBBE80.40908@panasas.com> <4CDC56F9.9040601@vlnb.net> <20101112012315.GE17097@core.coreip.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:59141 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753702Ab0KLE7q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2010 23:59:46 -0500
-In-Reply-To: <4CDCB8C1.6000303@garzik.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:43166 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752042Ab0KLMKJ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2010 07:10:09 -0500
+In-Reply-To: <20101112012315.GE17097@core.coreip.homeip.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>, Greg KH <greg@kroah.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
 
-On Thu, 2010-11-11 at 22:47 -0500, Jeff Garzik wrote:
-> On 11/11/2010 07:13 PM, Nicholas A. Bellinger wrote:
-> > From: Nicholas Bellinger<nab@linux-iscsi.org>
+On Fri, Nov 12, 2010 at 2:23 AM, Dmitry Torokhov
+<dmitry.torokhov@gmail.com> wrote:
+> On Thu, Nov 11, 2010 at 11:50:01PM +0300, Vladislav Bolkhovitin wrote=
+:
+> > [ ... ]
 > >
-> > This patch changes ata_scsi_queuecmd_lck() to a host lock less
-> > ata_scsi_queuecmd() that will disable interrupts internally using
-> > ap->lock and drops the now legacy host_lock unlock.
-> >
-> > Signed-off-by: Nicholas A. Bellinger<nab@linux-iscsi.org>
-> > ---
-> >   drivers/ata/libata-scsi.c |   14 ++++----------
-> >   1 files changed, 4 insertions(+), 10 deletions(-)
-> >
-> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-> > index a007c36..9614758 100644
-> > --- a/drivers/ata/libata-scsi.c
-> > +++ b/drivers/ata/libata-scsi.c
-> > @@ -3173,25 +3173,22 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
-> >    *	SCSI commands.  This creates the overall effect of
-> >    *	ATA and ATAPI devices appearing as SCSI devices.
-> >    *
-> > - *	LOCKING:
-> > - *	Releases scsi-layer-held lock, and obtains host lock.
-> > - *
-> 
-> The code appears correct but the comment removal is not.
-> 
-> Locking has not disappeared, and the ATA host lock continues to be obtained.
-> 
-> 
+> > This is the last internal put. All other references are from outsid=
+ers.
+> > So, we are waiting for all them to put before we go on.
+>
+> The question is why do you need to wait here? I presume it is module
+> unloading path, but then it is quite bad - you can easily wedge your
+> subsystem if you make something to take a reference to your kobject
+> while module is trying to be unloaded. Back when sysfs attributes tie=
+d
+> kobjects the easiest thing was to do:
+>
+> =A0 =A0 =A0 =A0rmmod <module> < / sys/devices/..../attribute
+>
+> If you are done with the kobject - just proceed with what you were do=
+ing
+> and let it die its own peaceful death some time later. You just need =
+to
+> make sure release code sticks around to free it and your subsystem co=
+re
+> can be tasked with this. Use module counter to prevent unloading of t=
+he
+> subsystem core until all kobjects belonging to the subsystem are
+> destroyed.
 
-My apologies for not reading this comment throughly..  Reinstating in
-lio-core-2.6.git/lock_less-LLDs-for-38
+Do you mean keeping a kref object in the kernel module, invoking
+kref_get() every time a kobject has been created and invoking
+kref_put() from the kobject/ktype release method ? That would help to
+reduce the race window but would not eliminate all races: as soon as
+the last kref_put() has been invoked from the release method, the
+module can get unloaded. And module unloading involves freeing all
+module code sections, including the section that contains the
+implementation of the release method. Which is a race condition.
 
-Thank you!
+I'm not sure that it is even possible with the current kobject
+implementation to solve this race. I haven't found any information
+about this race in Documentation/kobject.txt. And it seems to me that
+the code in samples/kobject/kobject-example.c is vulnerable to this
+race: methods like foo_show() and foo_store() can access statically
+allocated memory ("static int foo") after the module has been
+unloaded. Although the race window is small, this makes me wonder
+whether module unloading been overlooked at the time the kobject
+subsystem has been designed and implemented ?
 
---nab
-
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
