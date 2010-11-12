@@ -1,76 +1,171 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Fri, 12 Nov 2010 13:09:48 +0100
-Message-ID: <AANLkTikA7GRDR2Y3nUfQYxLHCWVLfzVPJmZED_whuCWD@mail.gmail.com>
-References: <20101022175624.GA13640@kroah.com> <4CC1DAA2.7030602@vlnb.net>
- <20101022185437.GA9103@kroah.com> <4CD8566D.1020202@vlnb.net>
- <20101109002829.GA22633@kroah.com> <4CD9A9B8.70708@vlnb.net>
- <4CDA6CD4.3010308@panasas.com> <4CDAFE6E.7050200@vlnb.net>
- <4CDBBE80.40908@panasas.com> <4CDC56F9.9040601@vlnb.net> <20101112012315.GE17097@core.coreip.homeip.net>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: Re: [PATCH] fix vulnerability in file operations of scsi target interface
+Date: Fri, 12 Nov 2010 21:42:27 +0800
+Message-ID: <AANLkTim5wr_ZdV0=XR=1a=P7t=ErE=S8nxi4CSc8r53V@mail.gmail.com>
+References: <AANLkTin+Epf5WuD9sV=kNNgVXo5No4euF=6VoSOkFK12@mail.gmail.com>
+	<4CD98FC6.9000108@cisco.com>
+	<AANLkTimN+nhY+SDApbcpJ41z9jPTu6jj0RmYjNYNyo5+@mail.gmail.com>
+	<4CDC3A39.6020801@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:43166 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752042Ab0KLMKJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2010 07:10:09 -0500
-In-Reply-To: <20101112012315.GE17097@core.coreip.homeip.net>
+Received: from mail-ey0-f174.google.com ([209.85.215.174]:38572 "EHLO
+	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751730Ab0KLNm3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2010 08:42:29 -0500
+Received: by eye27 with SMTP id 27so1811456eye.19
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Nov 2010 05:42:28 -0800 (PST)
+In-Reply-To: <4CDC3A39.6020801@cisco.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>, Greg KH <greg@kroah.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>
+To: Joe Eykholt <jeykholt@cisco.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Nov 12, 2010 at 2:23 AM, Dmitry Torokhov
-<dmitry.torokhov@gmail.com> wrote:
-> On Thu, Nov 11, 2010 at 11:50:01PM +0300, Vladislav Bolkhovitin wrote=
+On Fri, Nov 12, 2010 at 2:47 AM, Joe Eykholt <jeykholt@cisco.com> wrote=
 :
-> > [ ... ]
-> >
-> > This is the last internal put. All other references are from outsid=
-ers.
-> > So, we are waiting for all them to put before we go on.
 >
-> The question is why do you need to wait here? I presume it is module
-> unloading path, but then it is quite bad - you can easily wedge your
-> subsystem if you make something to take a reference to your kobject
-> while module is trying to be unloaded. Back when sysfs attributes tie=
-d
-> kobjects the easiest thing was to do:
 >
-> =A0 =A0 =A0 =A0rmmod <module> < / sys/devices/..../attribute
+> On 11/11/10 5:45 AM, Hillf Danton wrote:
+>> On Wed, Nov 10, 2010 at 2:15 AM, Joe Eykholt <jeykholt@cisco.com> wr=
+ote:
+>>> On 11/9/10 6:01 AM, Hillf Danton wrote:
+>>>> Ring buffers are setup for exchanging data between K and U spaces,=
+ but
+>>>> they could not survive multiple open operations.
+>>>>
+>>>> The registered misc interface is monitored and prevented from mult=
+iple
+>>>> opens for fixing the vulnerability.
+>>>>
+>>>> A typo, -BUSY, is also cleaned up.
+>>>>
+>>>> btw, the ring buffers could be setup in a per file manner?
+>>>>
+>>>> Signed-off-by: Hillf Danton <dhillf@gmail.com>
+>>>> ---
+>>>>
+>>>> --- a/drivers/scsi/scsi_tgt_if.c =C2=A0 =C2=A0 =C2=A02010-09-13 07=
+:07:38.000000000 +0800
+>>>> +++ b/drivers/scsi/scsi_tgt_if.c =C2=A0 =C2=A0 =C2=A02010-11-09 21=
+:42:48.000000000 +0800
+>>>> @@ -85,7 +85,7 @@ static int tgt_uspace_send_event(u32 typ
+>>>> =C2=A0 =C2=A0 =C2=A0 if (!ev->hdr.status)
+>>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 tgt_ring_idx_inc(=
+ring);
+>>>> =C2=A0 =C2=A0 =C2=A0 else
+>>>> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 err =3D -BUSY;
+>>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 err =3D -EBUSY;
+>>>>
+>>>> =C2=A0 =C2=A0 =C2=A0 spin_unlock_irqrestore(&ring->tr_lock, flags)=
+;
+>>>>
+>>>> @@ -319,20 +319,33 @@ static int tgt_mmap(struct file *filp, s
+>>>> =C2=A0 =C2=A0 =C2=A0 return err;
+>>>> =C2=A0}
+>>>>
+>>>> +static unsigned long tgt_open_cnt =3D 0;
+>>>> +
+>>>> =C2=A0static int tgt_open(struct inode *inode, struct file *file)
+>>>> =C2=A0{
+>>>> + =C2=A0 =C2=A0 if (tgt_open_cnt)
+>>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return -EBUSY;
+>>>> + =C2=A0 =C2=A0 tgt_open_cnt++;
+>>>
+>>> Since there's no locking, there's still a tiny hole where
+>>> simultaneous opens could succeed. =C2=A0Consider using an atomic.
+>>> Good find and good fix otherwise.
+>>>
+>> Would you please, Joe, show the atomic version?
+>> thanks//Hillf
 >
-> If you are done with the kobject - just proceed with what you were do=
-ing
-> and let it die its own peaceful death some time later. You just need =
-to
-> make sure release code sticks around to free it and your subsystem co=
-re
-> can be tasked with this. Use module counter to prevent unloading of t=
-he
-> subsystem core until all kobjects belonging to the subsystem are
-> destroyed.
+> I take it back. =C2=A0There's no good atomic version.
+> The best I came up with was:
+> In open:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (atomic_inc_return(&tgt_open_cnt) !=3D =
+1)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return -EBUSY;
+>
+> Then in release (since its the last close):
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0atomic_set(&tgt_open_cnt, 0);
+>
+> There's still a hole that this might overflow, and I don't see
+> the best way to fix that without test-and-set or compare-and-swap.
+> We can't just decrement it since the last close will clear it.
 
-Do you mean keeping a kref object in the kernel module, invoking
-kref_get() every time a kobject has been created and invoking
-kref_put() from the kobject/ktype release method ? That would help to
-reduce the race window but would not eliminate all races: as soon as
-the last kref_put() has been invoked from the release method, the
-module can get unloaded. And module unloading involves freeing all
-module code sections, including the section that contains the
-implementation of the release method. Which is a race condition.
+Great operation, thanks.
+A good lesson already offered by Wilcox, you see Joe, clearing only
+necessary when the final closing.
 
-I'm not sure that it is even possible with the current kobject
-implementation to solve this race. I haven't found any information
-about this race in Documentation/kobject.txt. And it seems to me that
-the code in samples/kobject/kobject-example.c is vulnerable to this
-race: methods like foo_show() and foo_store() can access statically
-allocated memory ("static int foo") after the module has been
-unloaded. Although the race window is small, this makes me wonder
-whether module unloading been overlooked at the time the kobject
-subsystem has been designed and implemented ?
+>
+> So the best thing would be to use your
+> version but protect it with the tx_ring.tr_lock.
+> I would rename tgt_open_cnt to just tgt_busy,
+> and make it a u8 since it will be 1 or 0.
 
-Bart.
+But u8 is not native word, and the spin_lock_irq is enough, I think. //=
+Hillf
+
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0int error =3D 0;
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_irq(&tx_ring.tr_lock);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (tgt_busy)
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0error =3D -EBU=
+SY;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0else {
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0tgt_busy =3D 1=
+;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0tx_ring.tr_idx=
+ =3D 0;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0rx_ring.tr_idx=
+ =3D 0;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_irq(&tx_ring.tr_lock);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0return error;
+>
+> Then in release:
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_irq(&tx_ring.tr_lock);
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0tgt_busy =3D 0;
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_irq(&tx_ring.tr_lock);
+>
+>>>> +
+>>>> =C2=A0 =C2=A0 =C2=A0 tx_ring.tr_idx =3D rx_ring.tr_idx =3D 0;
+>>>>
+>>>> =C2=A0 =C2=A0 =C2=A0 cycle_kernel_lock();
+>>>> =C2=A0 =C2=A0 =C2=A0 return 0;
+>>>> =C2=A0}
+>>>>
+>>>> +static int tgt_release(struct inode *inode, struct file *file)
+>>>> +{
+>>>> + =C2=A0 =C2=A0 tgt_open_cnt--;
+>>>> + =C2=A0 =C2=A0 return 0;
+>>>> +}
+>>>> +
+>>>> =C2=A0static const struct file_operations tgt_fops =3D {
+>>>> =C2=A0 =C2=A0 =C2=A0 .owner =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =
+THIS_MODULE,
+>>>> =C2=A0 =C2=A0 =C2=A0 .open =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =3D =
+tgt_open,
+>>>> =C2=A0 =C2=A0 =C2=A0 .poll =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =3D =
+tgt_poll,
+>>>> =C2=A0 =C2=A0 =C2=A0 .write =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =
+tgt_write,
+>>>> =C2=A0 =C2=A0 =C2=A0 .mmap =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =3D =
+tgt_mmap,
+>>>> + =C2=A0 =C2=A0 .release =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D tgt_releas=
+e,
+>>>> =C2=A0};
+>>>>
+>>>> =C2=A0static struct miscdevice tgt_miscdev =3D {
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-sc=
+si" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info=
+=2Ehtml
+>>>
+>
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
