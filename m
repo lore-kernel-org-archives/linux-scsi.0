@@ -1,41 +1,61 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 00/11] mpt2sas : Description patch
-Date: Sat, 13 Nov 2010 04:28:24 +0530
-Message-ID: <20101112225724.GB853@lsi.com>
+Subject: [PATCH 01/11] mpt2sas: Removed compiler warnnings when logging is disabled
+Date: Sat, 13 Nov 2010 04:29:20 +0530
+Message-ID: <20101112225912.GC853@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog108.obsmtp.com ([74.125.149.199]:40570 "EHLO
-	na3sys009aog108.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751313Ab0KLXlH (ORCPT
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:59927 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757582Ab0KLXln (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Nov 2010 18:41:07 -0500
+	Fri, 12 Nov 2010 18:41:43 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-
-MPT2SAS driver changes.
-These patches are taken from 2.6.36-rc.
-Please consider this patch set for next kernel release.
-
-[PATCH 01/11] mpt2sas: Removed compiler warnnings when logging is disabled
-[PATCH 02/11] mpt2sas: Added sanity check for cb_idx and smid access.
-[PATCH 03/11] mpt2sas: Added loadtime parameters for IOMissingDelay and
-Device missing delay parameters.
-[PATCH 04/11] mpt2sas: Create a pool of chain buffer instead of dedicated
-per IOs.
-[PATCH 05/11] mpt2sas: Modify code to support Expander switch.
-[PATCH 06/11] mpt2sas: MPI 2.0 Header updated.
-[PATCH 07/11] mpt2sas: Remove code for TASK_SET_FULL from driver.
-[PATCH 08/11] mpt2sas: change queue depth with reason argument more
-appropriately.
-[PATCH 09/11] mpt2sas: Sanity check for phy count is added using max phy
-count.
-[PATCH 10/11] mpt2sas: Debug string changes from target to device.
-[PATCH 11/11] mpt2sas: Bump version 07.100.00.00
+The compiler throws warning messages while compiling without
+CONFIG_SCSI_MPT2SAS_LOGGING.
+Set proper ifdef for CONFIG_SCSI_MPT2SAS_LOGGING to avoid warnnings.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
+
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_ctl.c b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+index b774973..6f7e9b2 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_ctl.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_ctl.c
+@@ -80,6 +80,7 @@ enum block_state {
+ 	BLOCKING,
+ };
+ 
++#ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ /**
+  * _ctl_sas_device_find_by_handle - sas device search
+  * @ioc: per adapter object
+@@ -106,7 +107,6 @@ _ctl_sas_device_find_by_handle(struct MPT2SAS_ADAPTER *ioc, u16 handle)
+ 	return r;
+ }
+ 
+-#ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ /**
+  * _ctl_display_some_debug - debug routine
+  * @ioc: per adapter object
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index 16e99b6..9bf5c16 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -2715,9 +2715,10 @@ static u8
+ _scsih_sas_control_complete(struct MPT2SAS_ADAPTER *ioc, u16 smid,
+     u8 msix_index, u32 reply)
+ {
++#ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	Mpi2SasIoUnitControlReply_t *mpi_reply =
+ 	    mpt2sas_base_get_reply_virt_addr(ioc, reply);
+-
++#endif
+ 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT
+ 	    "sc_complete:handle(0x%04x), (open) "
+ 	    "smid(%d), ioc_status(0x%04x), loginfo(0x%08x)\n",
