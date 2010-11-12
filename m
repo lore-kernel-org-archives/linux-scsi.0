@@ -1,173 +1,68 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [PATCH] fix vulnerability in file operations of scsi target interface
-Date: Fri, 12 Nov 2010 21:42:27 +0800
-Message-ID: <AANLkTim5wr_ZdV0=XR=1a=P7t=ErE=S8nxi4CSc8r53V@mail.gmail.com>
-References: <AANLkTin+Epf5WuD9sV=kNNgVXo5No4euF=6VoSOkFK12@mail.gmail.com>
-	<4CD98FC6.9000108@cisco.com>
-	<AANLkTimN+nhY+SDApbcpJ41z9jPTu6jj0RmYjNYNyo5+@mail.gmail.com>
-	<4CDC3A39.6020801@cisco.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.30 available
+Date: Fri, 12 Nov 2010 09:01:07 -0500
+Message-ID: <4CDD48A3.7030506@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ey0-f174.google.com ([209.85.215.174]:38572 "EHLO
-	mail-ey0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751730Ab0KLNm3 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2010 08:42:29 -0500
-Received: by eye27 with SMTP id 27so1811456eye.19
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Nov 2010 05:42:28 -0800 (PST)
-In-Reply-To: <4CDC3A39.6020801@cisco.com>
+Received: from smtp.infotech.no ([82.134.31.41]:56545 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932094Ab0KLOBV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Nov 2010 09:01:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Eykholt <jeykholt@cisco.com>
-Cc: linux-scsi@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Fri, Nov 12, 2010 at 2:47 AM, Joe Eykholt <jeykholt@cisco.com> wrote=
-:
->
->
-> On 11/11/10 5:45 AM, Hillf Danton wrote:
->> On Wed, Nov 10, 2010 at 2:15 AM, Joe Eykholt <jeykholt@cisco.com> wr=
-ote:
->>> On 11/9/10 6:01 AM, Hillf Danton wrote:
->>>> Ring buffers are setup for exchanging data between K and U spaces,=
- but
->>>> they could not survive multiple open operations.
->>>>
->>>> The registered misc interface is monitored and prevented from mult=
-iple
->>>> opens for fixing the vulnerability.
->>>>
->>>> A typo, -BUSY, is also cleaned up.
->>>>
->>>> btw, the ring buffers could be setup in a per file manner?
->>>>
->>>> Signed-off-by: Hillf Danton <dhillf@gmail.com>
->>>> ---
->>>>
->>>> --- a/drivers/scsi/scsi_tgt_if.c =C2=A0 =C2=A0 =C2=A02010-09-13 07=
-:07:38.000000000 +0800
->>>> +++ b/drivers/scsi/scsi_tgt_if.c =C2=A0 =C2=A0 =C2=A02010-11-09 21=
-:42:48.000000000 +0800
->>>> @@ -85,7 +85,7 @@ static int tgt_uspace_send_event(u32 typ
->>>> =C2=A0 =C2=A0 =C2=A0 if (!ev->hdr.status)
->>>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 tgt_ring_idx_inc(=
-ring);
->>>> =C2=A0 =C2=A0 =C2=A0 else
->>>> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 err =3D -BUSY;
->>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 err =3D -EBUSY;
->>>>
->>>> =C2=A0 =C2=A0 =C2=A0 spin_unlock_irqrestore(&ring->tr_lock, flags)=
-;
->>>>
->>>> @@ -319,20 +319,33 @@ static int tgt_mmap(struct file *filp, s
->>>> =C2=A0 =C2=A0 =C2=A0 return err;
->>>> =C2=A0}
->>>>
->>>> +static unsigned long tgt_open_cnt =3D 0;
->>>> +
->>>> =C2=A0static int tgt_open(struct inode *inode, struct file *file)
->>>> =C2=A0{
->>>> + =C2=A0 =C2=A0 if (tgt_open_cnt)
->>>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return -EBUSY;
->>>> + =C2=A0 =C2=A0 tgt_open_cnt++;
->>>
->>> Since there's no locking, there's still a tiny hole where
->>> simultaneous opens could succeed. =C2=A0Consider using an atomic.
->>> Good find and good fix otherwise.
->>>
->> Would you please, Joe, show the atomic version?
->> thanks//Hillf
->
-> I take it back. =C2=A0There's no good atomic version.
-> The best I came up with was:
-> In open:
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (atomic_inc_return(&tgt_open_cnt) !=3D =
-1)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0return -EBUSY;
->
-> Then in release (since its the last close):
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0atomic_set(&tgt_open_cnt, 0);
->
-> There's still a hole that this might overflow, and I don't see
-> the best way to fix that without test-and-set or compare-and-swap.
-> We can't just decrement it since the last close will clear it.
+sg3_utils is a package of command line utilities for sending
+SCSI and some ATA commands to devices. This package targets
+the linux kernel (lk) 2.6 and lk 2.4 series. It also has
+ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
 
-Great operation, thanks.
-A good lesson already offered by Wilcox, you see Joe, clearing only
-necessary when the final closing.
+This version tracks various changes made by www.t10.org
+since April 2010. Note that "thin provisioning" has been
+renamed to "logical block provisioning". There is a copy of
+ChangeLog below.
 
->
-> So the best thing would be to use your
-> version but protect it with the tx_ring.tr_lock.
-> I would rename tgt_open_cnt to just tgt_busy,
-> and make it a u8 since it will be 1 or 0.
+For an overview of sg3_utils and downloads see this page:
+     http://sg.danny.cz/sg/sg3_utils.html
+The sg_dd utility has its own page at:
+     http://sg.danny.cz/sg/sg_dd.html
+The SG_IO ioctl is discussed at:
+     http://sg.danny.cz/sg/sg_io.html
+A full changelog can be found at:
+     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
 
-But u8 is not native word, and the spin_lock_irq is enough, I think. //=
-Hillf
+A release announcement will be sent to freshmeat.net .
 
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0int error =3D 0;
->
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_irq(&tx_ring.tr_lock);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0if (tgt_busy)
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0error =3D -EBU=
-SY;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0else {
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0tgt_busy =3D 1=
-;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0tx_ring.tr_idx=
- =3D 0;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0rx_ring.tr_idx=
- =3D 0;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0}
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_irq(&tx_ring.tr_lock);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0return error;
->
-> Then in release:
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_lock_irq(&tx_ring.tr_lock);
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0tgt_busy =3D 0;
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0spin_unlock_irq(&tx_ring.tr_lock);
->
->>>> +
->>>> =C2=A0 =C2=A0 =C2=A0 tx_ring.tr_idx =3D rx_ring.tr_idx =3D 0;
->>>>
->>>> =C2=A0 =C2=A0 =C2=A0 cycle_kernel_lock();
->>>> =C2=A0 =C2=A0 =C2=A0 return 0;
->>>> =C2=A0}
->>>>
->>>> +static int tgt_release(struct inode *inode, struct file *file)
->>>> +{
->>>> + =C2=A0 =C2=A0 tgt_open_cnt--;
->>>> + =C2=A0 =C2=A0 return 0;
->>>> +}
->>>> +
->>>> =C2=A0static const struct file_operations tgt_fops =3D {
->>>> =C2=A0 =C2=A0 =C2=A0 .owner =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =
-THIS_MODULE,
->>>> =C2=A0 =C2=A0 =C2=A0 .open =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =3D =
-tgt_open,
->>>> =C2=A0 =C2=A0 =C2=A0 .poll =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =3D =
-tgt_poll,
->>>> =C2=A0 =C2=A0 =C2=A0 .write =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D =
-tgt_write,
->>>> =C2=A0 =C2=A0 =C2=A0 .mmap =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =3D =
-tgt_mmap,
->>>> + =C2=A0 =C2=A0 .release =C2=A0 =C2=A0 =C2=A0 =C2=A0=3D tgt_releas=
-e,
->>>> =C2=A0};
->>>>
->>>> =C2=A0static struct miscdevice tgt_miscdev =3D {
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe linux-sc=
-si" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info=
-=2Ehtml
->>>
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Changelog for sg3_utils-1.30 [20101111] [svn: r363]
+   - sg_referrals: new utility for REPORT REFERRALS
+   - sbc3r25 renames 'thin' provisioning' to 'logical block
+     provisioning': changes in sg_format, sg_inq, sg_logs,
+     sg_modes, sg_readcap, sg_vpd
+   - sg_inq: update version descriptor list to spc4r27
+     - extended inquiry vpd page add extended self test
+       completion minutes field
+   - sg_lib: sync asc/ascq list to spc4r27
+     - dStrHex(): trim excess trailing spaces
+   - sg_read_long: add --readonly option (open() is rw)
+   - sg_raw: add --readonly option (open() is rw)
+     - allow bidirectional commands
+   - sg_vpd: rdac vendor page [0xc8] parse corrections
+     - extended inquiry vpd page add extended self test
+       completion minutes field
+   - sg_ses: expand --date (in) buffer to 2048 bytes
+   - sg_opcodes: add extended parameter data for TMFs (spc4r26)
+   - sg_dd: clean count calculation, document nocache flag
+     - treat bsg devices as implicit sg_io
+   - sg_write_same: if READ CAPACITY(16) fails try 10 byte variant
+     - anticipate approval of proposal to allow UNMAP and ANCHOR
+       bits to be set on WRITE SAME(10) with '--10' option
+   - sg3_utils man page: sections added for OS device names
+
+Changelog for sg3_utils-1.29 [20100406] [svn: r334]
+...
+
+Doug Gilbert
