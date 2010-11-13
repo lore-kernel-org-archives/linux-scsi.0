@@ -1,89 +1,119 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: SCSI TMF processing; tag allocation
-Date: Sat, 13 Nov 2010 05:37:50 -0700
-Message-ID: <20101113123750.GF18258@parisc-linux.org>
-References: <380694.87733.qm@web31812.mail.mud.yahoo.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Sat, 13 Nov 2010 20:20:18 +0300
+Message-ID: <4CDEC8D2.8080101@vlnb.net>
+References: <20101022175624.GA13640@kroah.com> <4CC1DAA2.7030602@vlnb.net> <20101022185437.GA9103@kroah.com> <4CD8566D.1020202@vlnb.net> <20101109002829.GA22633@kroah.com> <4CD9A9B8.70708@vlnb.net> <4CDA6CD4.3010308@panasas.com> <4CDAFE6E.7050200@vlnb.net> <4CDBBE80.40908@panasas.com> <4CDC56F9.9040601@vlnb.net> <20101112012315.GE17097@core.coreip.homeip.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:54827 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752259Ab0KMMhw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Nov 2010 07:37:52 -0500
-Content-Disposition: inline
-In-Reply-To: <380694.87733.qm@web31812.mail.mud.yahoo.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101112012315.GE17097@core.coreip.homeip.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>
-Cc: Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jaxboe@fusionio.com>
 
-On Fri, Nov 05, 2010 at 11:02:43PM -0700, Luben Tuikov wrote:
-> Sure enough, the device receives both, back to back: first the ABORT TASK
-> TMF with tag of task to be managed (TTBM) of 3, and then it receives TUR
-> with tag of 3. Sure enough the device aborts the TUR.
+Dmitry Torokhov, on 11/12/2010 04:23 AM wrote:
+>>> This put might not be the last put on the object, IOs in flight
+>>> and/or open files might have extra reference on the object.
+>>> We release our initial ref, and below wait for all operations
+>>> to complete. (Is there a matter of timeout like files not closing?)
+>>
+>> This is the last internal put. All other references are from outsiders.
+>> So, we are waiting for all them to put before we go on.
+>>
+> 
+> The question is why do you need to wait here? I presume it is module
+> unloading path, but then it is quite bad - you can easily wedge your
+> subsystem if you make something to take a reference to your kobject
+> while module is ytying to be unloaded. Back when sysfs attributes tied
+> kobjects the easiest thing was to do:
+> 
+> 	rmmod <module> < / sys/devices/..../attribute
+> 
+> If you are done with the kobject - just proceed with what you were doing
+> and let it die its own peaceful death some time later. You just need to
+> make sure release code sticks around to free it and your subsystem core
+> can be tasked with this. Use module counter to prevent unloading of the
+> subsystem core until all kobjects belonging to the subsystem are
+> destroyed.
 
-I think that's acceptable device behaviour, but it's not guaranteed
-device behaviour, as far as I can tell.  Receiving the abort and then
-the task isn't guaranteed to abort the task.
+This is a very good question. During implementation I spent a lot of
+time working on it.
 
-> First, SCSI Core should probably send ABORT TASK SET. Sending ABORT TASK for each task at the device is also okay, but adds transport overhead.
+In fact, the first implementation was asynchronous similarly as you
+proposing, i.e. it just proceed with what you were doing and let it die
+its own peaceful death some time later. But soon the implementation was
+becoming so complicated, so it started getting out of control. For
+instance, some of the tasks to solve with this approach were:
 
-Agreed.
+1. What to do if another SCST object is being created with the same name
+as supposed to be deleted, but not completely dead yet?
 
-> Second, SCSI Core should not send ABORT TASK for a completed task. Sure, the device will reply with FUNCTION COMPLETE either way, but in the
-> aforementioned case the task server aborts a command which wasn't
-> intended to be aborted (and since the tag was reused--see below). That is,
-> if the command is in the "eh" queue, and is completed, don't send ABORT
-> TASK for it.
+2. What to do if a dieing object is found on some list and reference for
+is supposed to be taken? If the object deleted from the list before it
+marked dieing, i.e. the latest internal put() done, it made additional
+problems during deleting it after the latest external put done.
 
-Agreed.
+...
 
-> Third, and most importantly, tags should form an increasing sequence and should not be reused until all other tags after it and before it have been reused. This for example can be accomplished if one were to use
-> find_next_zero_bit() with non-zero "offset", it being the last allocated
-> tag in a modulo the number of tags manner. That is, find_next_zero_bit()
-> could wrap as well as starting from an offset or the caller could implement
-> that via two calls to this function, in blk_queue_start_tag().
+So, I decided to reimplement it to be completely synchronous. SYSFS
+authors did really great job and thanks to the excellent internal SYSFS
+design and implementation it is absolutely safe. See:
 
-It might be more efficient too.  If we cycle through, we can start by
-just trying to assign the next tag; it will likely succeed.  If it's
-already assigned, then we can search.
+[root@tgt ~]# modprobe scst
+[root@tgt ~]# cd /sys/kernel/scst_tgt/
+[root@tgt scst_tgt]# ls -l
+total 0
+drwxr-xr-x 4 root root    0 Nov 13 21:31 devices
+drwxr-xr-x 2 root root    0 Nov 13 21:31 handlers
+-r--r--r-- 1 root root 4096 Nov 13 21:30 last_sysfs_mgmt_res
+-rw-r--r-- 1 root root 4096 Nov 13 21:30 setup_id
+drwxr-xr-x 5 root root    0 Nov 13 21:31 sgv
+drwxr-xr-x 2 root root    0 Nov 13 21:31 targets
+-rw-r--r-- 1 root root 4096 Nov 13 21:30 threads
+-rw-r--r-- 1 root root 4096 Nov 13 21:30 trace_level
+-r--r--r-- 1 root root 4096 Nov 13 21:30 version
+[root@tgt scst_tgt]# cat version
+2.1.0-pre1
+EXTRACHECKS
+DEBUG
+[root@tgt scst_tgt]# rmmod scst </sys/kernel/scst_tgt/version
+[root@tgt scst_tgt]# ls -l
+total 0
+[root@tgt scst_tgt]# pwd
+/sys/kernel/scst_tgt
+[root@tgt scst_tgt]# lsmod
+Module                  Size  Used by
+scsi_debug             65188  0
+w83627hf               22424  0
+hwmon_vid               2207  1 w83627hf
+adm1021                 6189  0
+binfmt_misc             6229  1
+xfs                   673142  1
+exportfs                3143  1 xfs
+dm_mirror              12069  0
+dm_region_hash          8703  1 dm_mirror
+dm_log                  8345  2 dm_mirror,dm_region_hash
+dm_mod                 63511  2 dm_mirror,dm_log
+pci_slot                3378  0
+hed                     1758  0
+floppy                 52718  0
+uhci_hcd               21459  0
+sg                     25181  0
+e1000                 128475  0
+i2c_i801                8756  0
+pcspkr                  1442  0
+i2c_core               22319  2 adm1021,i2c_i801
+e7xxx_edac              3463  0
+parport_pc             25439  0
+parport                29682  1 parport_pc
 
-> Forth, transport protocols need tags for other purposes than just sending
-> I/O commands, for example sending task management functions. LLDDs should
-> be given callbacks to allocate a free tag, only if #3 above is implemented.
+Everything works fine.
 
-Definitely!
+This is because SYSFS doesn't hold references for the corresponding
+kobjects for every open file handle. It holds references only when
+show() and store() functions called. So, everything is under control and
+a malicious user can do nothing to hold a reference forever.
 
-> Fifth, all commands that enter queuecommand() should be tagged, regardless
-> of whether the device supports tags and how many. At the moment, this
-> isn't so, and transports are forced to reserve the first tag the
-> transport supports for non-tagged commands and the rest for tagged
-> commands. For example INQUIRY coming untagged (tag 0), and then
-> READ coming with tag 0 (tagged). This adds additional work for LLDDs to
-> check whether the "request" is tagged or not and assign it a tag if
-> it is not, or offset the tag if it is tagged with the offset reserved
-> for untagged tasks (normally just one).
-
-This one confuses me, though.  I've not seen it happen.  As far as I can
-tell, the SCSI layer will either send a single untagged command, or it
-will send one-or-more tagged commands.  I haven't been able to provoke it
-into sending an untagged command _and_ a tagged command at the same time.
-
-For UAS, I didn't reserve a tag; I just use tag 0 for untagged
-commands, and refuse to send a tagged command if there's an untagged
-command outstanding.  I could put a printk in to see if that logic
-ever triggers...
-
-SPC-4 seems to indicate (in the INQUIRY command, 6.4.2) that support
-for queueing is now non-optional, and even support for basic queueing
-has been removed, replaced only with the 'command management model'.
-I must confess to being somewhat confused by the difference between the
-'basic queue' model and 'command management' model, but ideally as a
-driver writer, I shouldn't have to understand it (because it would be
-handled for me by the SCSI core).
-
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Vlad
