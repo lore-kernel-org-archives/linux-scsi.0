@@ -1,50 +1,62 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patch] scsi/osd: checking NULL instead of ERR_PTR()
-Date: Sun, 14 Nov 2010 15:39:53 +0200
-Message-ID: <4CDFE6A9.10704@panasas.com>
-References: <20101112043146.GC3533@bicker>
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH] bsg: correct fault if queue object removed while dev_t open
+Date: Sun, 14 Nov 2010 11:12:04 -0500
+Message-ID: <29a2a8aa-1e3b-463b-ad7d-3e214f0f6105@exht1.ad.emulex.com>
+Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:32178 "EHLO
-	daytona.int.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755532Ab0KNNzL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Nov 2010 08:55:11 -0500
-In-Reply-To: <20101112043146.GC3533@bicker>
+Received: from exht1.emulex.com ([138.239.113.183]:9568 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756142Ab0KNQMp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Nov 2010 11:12:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <error27@gmail.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: Benny Halevy <bhalevy@panasas.com>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: carl.lajeunesse@emulex.com
 
-On 11/12/2010 06:31 AM, Dan Carpenter wrote:
-> bio_map_kern() returns ERR_PTRs on failure and never returns NULL.
-> 
-> Signed-off-by: Dan Carpenter <error27@gmail.com>
-> 
+This patch corrects an issue in bsg that results in a general protection
+fault if an LLD is removed while an application is using an open file
+handle to a bsg device, and the application issues an ioctl. The fault
+occurs because the class_dev is NULL, having been cleared in
+bsg_unregister_queue() when the driver was removed.  With this
+patch, a check is made for the class_dev, and the application
+will receive ENXIO if the related object is gone.
 
-Acked-by: Boaz Harrosh <bharrosh@panasas.com>
+Note: this patch is related to the prior scsi_transport_fc patch which
+correct a bsg infinited queued request issue:
+http://marc.info/?l=linux-scsi&m=128330809428540&w=2
 
-> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-> index 0433ea6..b798919 100644
-> --- a/drivers/scsi/osd/osd_initiator.c
-> +++ b/drivers/scsi/osd/osd_initiator.c
-> @@ -951,8 +951,8 @@ static int _osd_req_finalize_cdb_cont(struct osd_request *or, const u8 *cap_key)
->  	/* create a bio for continuation segment */
->  	bio = bio_map_kern(req_q, or->cdb_cont.buff, or->cdb_cont.total_bytes,
->  			   GFP_KERNEL);
-> -	if (unlikely(!bio))
-> -		return -ENOMEM;
-> +	if (unlikely(IS_ERR(bio)))
-> +		return PTR_ERR(bio);
->  
->  	bio->bi_rw |= REQ_WRITE;
->  
+-- james s
 
-Wahoo, good catch, thanks! This is new code in 2.6.37-rc1. It should be pushed
-for current Kernel.
 
-James: please apply to scsi-rc-fixes for the next round of fixes?
+ Signed-off-by: Carl Lajeunesse <carl.lajeunesse@emulex.com>
+ Signed-off-by: James Smart <james.smart@emulex.com>
 
-Thanks
-Boaz
+ ---
+
+ bsg.c |    8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+
+diff -upNr a/block/bsg.c b/block/bsg.c
+--- a/block/bsg.c	2010-11-14 10:31:52.000000000 -0500
++++ b/block/bsg.c	2010-11-14 10:32:12.000000000 -0500
+@@ -250,6 +250,14 @@ bsg_map_hdr(struct bsg_device *bd, struc
+ 	int ret, rw;
+ 	unsigned int dxfer_len;
+ 	void *dxferp = NULL;
++	struct bsg_class_device *bcd = &q->bsg_dev;
++
++	/* if the LLD has been removed then the bsg_unregister_queue will
++	 * eventually be called and the class_dev was freed, so we can no
++	 * longer use this request_queue. Return no such address.
++	 */
++	if (!bcd->class_dev)
++		return ERR_PTR(-ENXIO);
+ 
+ 	dprintk("map hdr %llx/%u %llx/%u\n", (unsigned long long) hdr->dout_xferp,
+ 		hdr->dout_xfer_len, (unsigned long long) hdr->din_xferp,
+
+
