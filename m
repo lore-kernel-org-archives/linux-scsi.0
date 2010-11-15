@@ -1,60 +1,49 @@
 From: Vladislav Bolkhovitin <vst@vlnb.net>
 Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Mon, 15 Nov 2010 23:37:28 +0300
-Message-ID: <4CE19A08.8050606@vlnb.net>
-References: <20101022185437.GA9103@kroah.com> <4CD8566D.1020202@vlnb.net> <20101109002829.GA22633@kroah.com> <4CD9A9B8.70708@vlnb.net> <4CDA6CD4.3010308@panasas.com> <4CDAFE6E.7050200@vlnb.net> <4CDBBE80.40908@panasas.com> <4CDC56F9.9040601@vlnb.net> <20101112012315.GE17097@core.coreip.homeip.net> <4CDEC8D2.8080101@vlnb.net> <20101115070436.GC14442@core.coreip.homeip.net>
+Date: Mon, 15 Nov 2010 23:36:50 +0300
+Message-ID: <4CE199E2.5030106@vlnb.net>
+References: <4CD8566D.1020202@vlnb.net> <20101109002829.GA22633@kroah.com> <4CD9A9B8.70708@vlnb.net> <4CDA6CD4.3010308@panasas.com> <4CDAFE6E.7050200@vlnb.net> <4CDBBE80.40908@panasas.com> <4CDC56F9.9040601@vlnb.net> <20101112012315.GE17097@core.coreip.homeip.net> <4CDEC8D2.8080101@vlnb.net> <20101113235938.GA1827@kroah.com> <20101115065919.GB14442@core.coreip.homeip.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:60396 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751556Ab0KOUhT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2010 15:37:19 -0500
-In-Reply-To: <20101115070436.GC14442@core.coreip.homeip.net>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101115065919.GB14442@core.coreip.homeip.net>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
+Cc: Greg KH <greg@kroah.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Dmitry Torokhov, on 11/15/2010 10:04 AM wrote:
->> 1. What to do if another SCST object is being created with the same name
->> as supposed to be deleted, but not completely dead yet?
-> 
-> The same rules as with files - the object disappears from the
-> "directories" so no new users can get it but is not destroyed till last
-> reference is gone.
-> 
+Dmitry Torokhov, on 11/15/2010 09:59 AM wrote:
+> On Sat, Nov 13, 2010 at 03:59:38PM -0800, Greg KH wrote:
+>> On Sat, Nov 13, 2010 at 08:20:18PM +0300, Vladislav Bolkhovitin wrote:
+>>> So, I decided to reimplement it to be completely synchronous. SYSFS
+>>> authors did really great job and thanks to the excellent internal SYSFS
+>>> design and implementation it is absolutely safe. See:
+>>>
+>>> [root@tgt ~]# modprobe scst
+>>> [root@tgt ~]# cd /sys/kernel/scst_tgt/
 >>
->> 2. What to do if a dieing object is found on some list and reference for
->> is supposed to be taken? If the object deleted from the list before it
->> marked dieing, i.e. the latest internal put() done, it made additional
->> problems during deleting it after the latest external put done.
+>> Sorry, but no, you can't put this in /sys/kernel/ without getting the
+>> approval of the sysfs maintainer.
+>>
+>> I really don't understand why you are using kobjects in the first place,
+>> why isn't this in the main device tree in the kernel, using 'struct
+>> device'?
 > 
-> You delete the object from the list, then mark it as dead, notify users,
-> drop refcount. No new users will get it (as it is not on the list
-> anymore) and existing ones should notice that it is dead and stop using
-> it.
+> It is my understanding that Vlad is able to reflect the topology by
+> manipulating sysfs objects there.
 
-Those are good in theory, but on practice, you know, devil is in the
-details..
+Correct. As I wrote in the previous e-mail, SCST doesn't deal with
+devices, so doesn't have a need to use struct device.
 
->> This is because SYSFS doesn't hold references for the corresponding
->> kobjects for every open file handle. It holds references only when
->> show() and store() functions called. So, everything is under control and
->> a malicious user can do nothing to hold a reference forever.
+>> In the end, I guess it really doesn't matter as this code isn't getting
+>> merged so I shouldn't worry about it, right?
+>>
 > 
-> Right, Tejun plugged this particular (and very annoying) attributes
-> behavior
+> This is quite unfortunate as I still have not seen the public comparison
+> of the 2 implementations and the lists of benefits and shortfalls for
+> both of them.
 
-This behavior isn't annoying, it's GREAT, because it allows to use SYSFS
-simply and reliably.
+Indeed, it is unfortunate :(. Undercover political games continue...
 
->, but that does not mean that this is the only way kobject's
-> reference might be pinned.
-
-Could you be more specific and point out on exact ways for that? From my
-quite deep SYSFS source code study I see such cases should not exist.
-
-Thanks,
 Vlad
