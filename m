@@ -1,51 +1,58 @@
-From: "Jack Wang" <jack_wang@usish.com>
-Subject: RE: [PATCH 25/44] drivers/scsi/pm8001: Remove unnecessary semicolons
-Date: Mon, 15 Nov 2010 11:27:32 +0800
-Message-ID: <1671200DA80140558ED0D17FB55585AD@usish.com.cn>
-References: <cover.1289789604.git.joe@perches.com> <20b352f91642ca45ad730d8eeec0bbd323d26626.1289789605.git.joe@perches.com>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Sun, 14 Nov 2010 22:59:20 -0800
+Message-ID: <20101115065919.GB14442@core.coreip.homeip.net>
+References: <4CD8566D.1020202@vlnb.net>
+ <20101109002829.GA22633@kroah.com>
+ <4CD9A9B8.70708@vlnb.net>
+ <4CDA6CD4.3010308@panasas.com>
+ <4CDAFE6E.7050200@vlnb.net>
+ <4CDBBE80.40908@panasas.com>
+ <4CDC56F9.9040601@vlnb.net>
+ <20101112012315.GE17097@core.coreip.homeip.net>
+ <4CDEC8D2.8080101@vlnb.net>
+ <20101113235938.GA1827@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=gb2312
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sr-smtp.usish.com ([210.5.144.203]:58240 "EHLO
-	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932514Ab0KOD14 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Nov 2010 22:27:56 -0500
-In-Reply-To: <20b352f91642ca45ad730d8eeec0bbd323d26626.1289789605.git.joe@perches.com>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:57421 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757203Ab0KOG7a (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2010 01:59:30 -0500
+Content-Disposition: inline
+In-Reply-To: <20101113235938.GA1827@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Joe Perches' <joe@perches.com>, 'Jiri Kosina' <trivial@kernel.org>
-Cc: lindar_liu@usish.com, "'James E.J. Bottomley'" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Vu Pham <vuhuong@mellanox.com>, Bart Van Assche <bart.vanassche@gmail.com>, James Smart <James.Smart@Emulex.Com>, Joe Eykholt <jeykholt@cisco.com>, Andy Yan <ayan@marvell.com>, Chetan Loke <generationgnu@yahoo.com>, Hannes Reinecke <hare@suse.de>, Richard Sharpe <realrichardsharpe@gmail.com>, Daniel Henrique Debonzi <debonzi@linux.vnet.ibm.com>
 
->=20
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/scsi/pm8001/pm8001_init.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c
-> b/drivers/scsi/pm8001/pm8001_init.c
-> index f8c86b2..be210dd 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -160,7 +160,7 @@ static void pm8001_free(struct pm8001_hba_info
-*pm8001_ha)
->  static void pm8001_tasklet(unsigned long opaque)
->  {
->  	struct pm8001_hba_info *pm8001_ha;
-> -	pm8001_ha =3D (struct pm8001_hba_info *)opaque;;
-> +	pm8001_ha =3D (struct pm8001_hba_info *)opaque;
->  	if (unlikely(!pm8001_ha))
->  		BUG_ON(1);
->  	PM8001_CHIP_DISP->isr(pm8001_ha);
-> --
-> 1.7.3.1.g432b3.dirty
-[Jack Wang] Acked-by: Jack Wang <jack_wang@usish.com>
-Thanks=A3=A1
+On Sat, Nov 13, 2010 at 03:59:38PM -0800, Greg KH wrote:
+> On Sat, Nov 13, 2010 at 08:20:18PM +0300, Vladislav Bolkhovitin wrote:
+> > So, I decided to reimplement it to be completely synchronous. SYSFS
+> > authors did really great job and thanks to the excellent internal SYSFS
+> > design and implementation it is absolutely safe. See:
+> > 
+> > [root@tgt ~]# modprobe scst
+> > [root@tgt ~]# cd /sys/kernel/scst_tgt/
+> 
+> Sorry, but no, you can't put this in /sys/kernel/ without getting the
+> approval of the sysfs maintainer.
+> 
+> I really don't understand why you are using kobjects in the first place,
+> why isn't this in the main device tree in the kernel, using 'struct
+> device'?
+> 
 
+It is my understanding that Vlad is able to reflect the topology by
+manipulating sysfs objects there.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> In the end, I guess it really doesn't matter as this code isn't getting
+> merged so I shouldn't worry about it, right?
+> 
+
+This is quite unfortunate as I still have not seen the public comparison
+of the 2 implementations and the lists of benefits and shortfalls for
+both of them.
+
+-- 
+Dmitry
