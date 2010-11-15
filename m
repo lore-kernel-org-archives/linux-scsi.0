@@ -1,200 +1,163 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: [PATCH][resend][SCSI] Reduce sequential pointer derefs in scsi_error.c
- and reduce size as well
-Date: Sun, 14 Nov 2010 23:41:10 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1011142323230.1253@swampdragon.chaosbits.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:27491 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932312Ab0KNWxW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Nov 2010 17:53:22 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 00/44] remove unnecessary semicolons
+Date: Sun, 14 Nov 2010 19:04:19 -0800
+Message-ID: <cover.1289789604.git.joe@perches.com>
+Return-path: <cpufreq-owner@vger.kernel.org>
+Sender: cpufreq-owner@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org, microblaze-uclinux@itee.uq.edu.au, user-mode-linux-devel@lists.sourceforge.net, user-mode-linux-user@lists.sourceforge.net, cpufreq@vger.kernel.org, linux-i2c@vger.kernel.org, netdev@vger.kernel.org, linux-media@vger.kernel.org, linux-mmc@vger.kernel.org, e1000-devel@lists.sourceforge.net, linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org, platform-driver-x86@vger.kernel.org, ibm-acpi-devel@lists.sourceforge.net, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org, xen-devel@lists.xensource.com, virtualization@lists.osdl.org, v9fs-developer@lists.sourceforge.net, ceph-devel@vger.kernel.org, logfs@logfs.org, linux-nfs@vger.kernel.org, ocfs2-devel@oss.oracle.comlinu
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org
 
-This is a resend of a (slightly updated) patch that was originally 
-submitted on
-  24 April 2008
-  27 April 2008
+ya trivial series...
 
+Joe Perches (44):
+  arch/arm: Remove unnecessary semicolons
+  arch/microblaze: Remove unnecessary semicolons
+  arch/um: Remove unnecessary semicolons
+  drivers/cpufreq: Remove unnecessary semicolons
+  drivers/gpio: Remove unnecessary semicolons
+  drivers/i2c: Remove unnecessary semicolons
+  drivers/isdn: Remove unnecessary semicolons
+  drivers/leds: Remove unnecessary semicolons
+  drivers/media/video: Remove unnecessary semicolons
+  drivers/misc: Remove unnecessary semicolons
+  drivers/mmc: Remove unnecessary semicolons
+  drivers/net/bnx2x: Remove unnecessary semicolons
+  drivers/net/e1000e: Remove unnecessary semicolons
+  drivers/net/ixgbe: Remove unnecessary semicolons
+  drivers/net/vxge: Remove unnecessary semicolons
+  drivers/net/wireless/ath: Remove unnecessary semicolons
+  drivers/net/wireless/iwlwifi: Remove unnecessary semicolons
+  drivers/net/cnic.c: Remove unnecessary semicolons
+  drivers/platform/x86: Remove unnecessary semicolons
+  drivers/power: Remove unnecessary semicolons
+  drivers/s390/net: Remove unnecessary semicolons
+  drivers/scsi/be2iscsi: Remove unnecessary semicolons
+  drivers/scsi/bfa: Remove unnecessary semicolons
+  drivers/scsi/lpfc: Remove unnecessary semicolons
+  drivers/scsi/pm8001: Remove unnecessary semicolons
+  drivers/scsi/qla2xxx: Remove unnecessary semicolons
+  drivers/serial: Remove unnecessary semicolons
+  drivers/spi: Remove unnecessary semicolons
+  drivers/staging: Remove unnecessary semicolons
+  drivers/usb/gadget: Remove unnecessary semicolons
+  drivers/xen: Remove unnecessary semicolons
+  fs/9p: Remove unnecessary semicolons
+  fs/ceph: Remove unnecessary semicolons
+  fs/logfs: Remove unnecessary semicolons
+  fs/nfs: Remove unnecessary semicolons
+  fs/ocfs2: Remove unnecessary semicolons
+  fs/ubifs: Remove unnecessary semicolons
+  include/linux/if_macvlan.h: Remove unnecessary semicolons
+  include/net/caif/cfctrl.h: Remove unnecessary semicolons
+  mm/hugetlb.c: Remove unnecessary semicolons
+  net/ipv6/mcast.c: Remove unnecessary semicolons
+  net/sunrpc/addr.c: Remove unnecessary semicolons
+  sound/core/pcm_lib.c: Remove unnecessary semicolons
+  sound/soc/codecs: Remove unnecessary semicolons
 
-This patch reduces the number of sequential pointer derefs in drivers/scsi/scsi_error.c
-
-The bennefits are:
-
- - makes the code easier to read. Lots of sequential derefs of the same 
-   pointers is not easy on the eye.
-
- - theoretically at least, just dereferencing the pointers once can allow 
-   the compiler to generally slightly faster code, so in theory this could 
-   also be a micro speed optimization.
-
- - reduces size
-
-   before:
-      text    data     bss     dec     hex filename
-     18829     128    4728   23685    5c85 drivers/scsi/scsi_error.o
- 
-   after:
-      text    data     bss     dec     hex filename
-     18775     128    4728   23631    5c4f drivers/scsi/scsi_error.o
-
-Please consider applying.
-
-
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
- scsi_error.c |   61 +++++++++++++++++++++++++++++++++--------------------------
- 1 file changed, 35 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index f3cf924..75a68a0 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -129,14 +129,15 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- {
- 	struct scsi_cmnd *scmd = req->special;
- 	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
-+	struct Scsi_Host *host = scmd->device->host;
- 
- 	trace_scsi_dispatch_cmd_timeout(scmd);
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 
--	if (scmd->device->host->transportt->eh_timed_out)
--		rtn = scmd->device->host->transportt->eh_timed_out(scmd);
--	else if (scmd->device->host->hostt->eh_timed_out)
--		rtn = scmd->device->host->hostt->eh_timed_out(scmd);
-+	if (host->transportt->eh_timed_out)
-+		rtn = host->transportt->eh_timed_out(scmd);
-+	else if (host->hostt->eh_timed_out)
-+		rtn = host->hostt->eh_timed_out(scmd);
- 
- 	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
- 		     !scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
-@@ -507,22 +508,23 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	int rtn;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
- 					  __func__));
- 
--	if (!scmd->device->host->hostt->eh_host_reset_handler)
-+	if (!hostt->eh_host_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_host_reset_handler(scmd);
-+	rtn = hostt->eh_host_reset_handler(scmd);
- 
- 	if (rtn == SUCCESS) {
--		if (!scmd->device->host->hostt->skip_settle_delay)
-+		if (!hostt->skip_settle_delay)
- 			ssleep(HOST_RESET_SETTLE_TIME);
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		scsi_report_bus_reset(scmd->device->host,
--				      scmd_channel(scmd));
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(host->host_lock, flags);
-+		scsi_report_bus_reset(host, scmd_channel(scmd));
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -536,22 +538,23 @@ static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	int rtn;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
- 					  __func__));
- 
--	if (!scmd->device->host->hostt->eh_bus_reset_handler)
-+	if (!hostt->eh_bus_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_bus_reset_handler(scmd);
-+	rtn = hostt->eh_bus_reset_handler(scmd);
- 
- 	if (rtn == SUCCESS) {
--		if (!scmd->device->host->hostt->skip_settle_delay)
-+		if (!hostt->skip_settle_delay)
- 			ssleep(BUS_RESET_SETTLE_TIME);
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		scsi_report_bus_reset(scmd->device->host,
--				      scmd_channel(scmd));
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(host->host_lock, flags);
-+		scsi_report_bus_reset(host, scmd_channel(scmd));
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -577,16 +580,18 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	int rtn;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
--	if (!scmd->device->host->hostt->eh_target_reset_handler)
-+	if (!hostt->eh_target_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_target_reset_handler(scmd);
-+	rtn = hostt->eh_target_reset_handler(scmd);
- 	if (rtn == SUCCESS) {
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(host->host_lock, flags);
- 		__starget_for_each_device(scsi_target(scmd->device), NULL,
- 					  __scsi_report_device_reset);
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -605,11 +610,12 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- {
- 	int rtn;
-+	struct scsi_host_template *hostt = scmd->device->host->hostt;
- 
--	if (!scmd->device->host->hostt->eh_device_reset_handler)
-+	if (!hostt->eh_device_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_device_reset_handler(scmd);
-+	rtn = hostt->eh_device_reset_handler(scmd);
- 	if (rtn == SUCCESS)
- 		__scsi_report_device_reset(scmd->device, NULL);
- 	return rtn;
-@@ -617,10 +623,13 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- 
- static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
- {
--	if (!scmd->device->host->hostt->eh_abort_handler)
-+	int (*eh_abort_handler)(struct scsi_cmnd *) =
-+		scmd->device->host->hostt->eh_abort_handler;
-+
-+	if (!eh_abort_handler)
- 		return FAILED;
- 
--	return scmd->device->host->hostt->eh_abort_handler(scmd);
-+	return eh_abort_handler(scmd);
- }
- 
- /**
-
-
+ arch/arm/mach-at91/at91cap9_devices.c              |    2 +-
+ arch/arm/mach-at91/at91sam9g45_devices.c           |    2 +-
+ arch/arm/mach-at91/at91sam9rl_devices.c            |    2 +-
+ arch/arm/mach-nuc93x/time.c                        |    2 +-
+ arch/arm/mach-tegra/tegra2_clocks.c                |    2 +-
+ arch/arm/mach-w90x900/cpu.c                        |    2 +-
+ arch/arm/plat-mxc/irq.c                            |    2 +-
+ arch/microblaze/lib/memmove.c                      |    2 +-
+ arch/um/drivers/mmapper_kern.c                     |    2 +-
+ drivers/cpufreq/cpufreq_conservative.c             |    2 +-
+ drivers/gpio/langwell_gpio.c                       |    2 +-
+ drivers/i2c/busses/i2c-designware.c                |    2 +-
+ drivers/isdn/hardware/mISDN/mISDNinfineon.c        |    4 ++--
+ drivers/isdn/hardware/mISDN/mISDNisar.c            |    2 +-
+ drivers/leds/leds-mc13783.c                        |    2 +-
+ drivers/media/video/cx88/cx88-blackbird.c          |    2 +-
+ drivers/media/video/davinci/vpfe_capture.c         |    2 +-
+ drivers/media/video/em28xx/em28xx-cards.c          |    2 +-
+ drivers/misc/bmp085.c                              |    2 +-
+ drivers/misc/isl29020.c                            |    2 +-
+ drivers/mmc/host/davinci_mmc.c                     |    2 +-
+ drivers/net/bnx2x/bnx2x_link.c                     |    4 ++--
+ drivers/net/bnx2x/bnx2x_main.c                     |    2 +-
+ drivers/net/cnic.c                                 |    2 +-
+ drivers/net/e1000e/netdev.c                        |    2 +-
+ drivers/net/ixgbe/ixgbe_sriov.c                    |    2 +-
+ drivers/net/vxge/vxge-main.c                       |    2 +-
+ drivers/net/wireless/ath/ath9k/htc.h               |    2 +-
+ drivers/net/wireless/iwlwifi/iwl-agn.c             |    2 +-
+ drivers/platform/x86/classmate-laptop.c            |    2 +-
+ drivers/platform/x86/thinkpad_acpi.c               |    2 +-
+ drivers/power/intel_mid_battery.c                  |    2 +-
+ drivers/s390/net/qeth_core_sys.c                   |    2 +-
+ drivers/scsi/be2iscsi/be_main.c                    |    4 ++--
+ drivers/scsi/bfa/bfa_fcs_lport.c                   |    2 +-
+ drivers/scsi/lpfc/lpfc_bsg.c                       |    2 +-
+ drivers/scsi/pm8001/pm8001_init.c                  |    2 +-
+ drivers/scsi/qla2xxx/qla_isr.c                     |    4 ++--
+ drivers/scsi/qla2xxx/qla_nx.c                      |    2 +-
+ drivers/serial/mrst_max3110.c                      |    2 +-
+ drivers/spi/amba-pl022.c                           |    2 +-
+ drivers/spi/spi_nuc900.c                           |    2 +-
+ .../staging/ath6kl/hif/sdio/linux_sdio/src/hif.c   |    2 +-
+ drivers/staging/ath6kl/os/linux/ar6000_drv.c       |    2 +-
+ drivers/staging/bcm/InterfaceInit.c                |    2 +-
+ drivers/staging/bcm/InterfaceIsr.c                 |    2 +-
+ drivers/staging/bcm/Misc.c                         |    4 ++--
+ .../comedi/drivers/addi-data/APCI1710_Tor.c        |    2 +-
+ .../comedi/drivers/addi-data/hwdrv_apci1500.c      |    2 +-
+ .../comedi/drivers/addi-data/hwdrv_apci1516.c      |    2 +-
+ .../comedi/drivers/addi-data/hwdrv_apci3501.c      |    2 +-
+ drivers/staging/comedi/drivers/amplc_pci230.c      |    2 +-
+ drivers/staging/comedi/drivers/cb_das16_cs.c       |    2 +-
+ drivers/staging/comedi/drivers/comedi_bond.c       |    2 +-
+ drivers/staging/crystalhd/crystalhd_hw.c           |    2 +-
+ drivers/staging/go7007/go7007-driver.c             |    2 +-
+ drivers/staging/iio/accel/lis3l02dq_ring.c         |    2 +-
+ .../staging/intel_sst/intel_sst_drv_interface.c    |    4 ++--
+ drivers/staging/keucr/smilmain.c                   |    4 ++--
+ drivers/staging/keucr/smilsub.c                    |    4 ++--
+ drivers/staging/msm/lcdc_toshiba_wvga_pt.c         |    2 +-
+ drivers/staging/rt2860/common/cmm_data_pci.c       |    4 ++--
+ drivers/staging/rt2860/rt_linux.c                  |    2 +-
+ drivers/staging/rt2860/rtmp.h                      |    2 +-
+ drivers/staging/rtl8192e/ieee80211/ieee80211_tx.c  |    2 +-
+ drivers/staging/rtl8192e/r819xE_phy.c              |    2 +-
+ drivers/staging/rtl8192u/ieee80211/ieee80211_tx.c  |    2 +-
+ drivers/staging/rtl8192u/r8192U_core.c             |    2 +-
+ drivers/staging/rtl8192u/r819xU_phy.c              |    2 +-
+ drivers/staging/rtl8712/rtl8712_efuse.c            |    2 +-
+ drivers/staging/rtl8712/rtl8712_xmit.c             |    2 +-
+ drivers/staging/rtl8712/rtl871x_xmit.c             |    2 +-
+ drivers/staging/tidspbridge/core/tiomap3430.c      |    4 ++--
+ drivers/staging/tidspbridge/rmgr/nldr.c            |    2 +-
+ drivers/staging/vt6655/card.c                      |    2 +-
+ drivers/staging/vt6655/iwctl.c                     |    2 +-
+ drivers/staging/vt6655/wpa2.c                      |    4 ++--
+ drivers/staging/vt6656/baseband.c                  |    2 +-
+ drivers/staging/vt6656/iwctl.c                     |    2 +-
+ drivers/staging/vt6656/power.c                     |    2 +-
+ drivers/staging/vt6656/wpa2.c                      |    4 ++--
+ drivers/usb/gadget/f_fs.c                          |    2 +-
+ drivers/xen/swiotlb-xen.c                          |    2 +-
+ fs/9p/acl.c                                        |    2 +-
+ fs/9p/xattr.c                                      |    2 +-
+ fs/ceph/mds_client.c                               |    2 +-
+ fs/logfs/readwrite.c                               |    2 +-
+ fs/nfs/getroot.c                                   |    2 +-
+ fs/ocfs2/refcounttree.c                            |    2 +-
+ fs/ubifs/scan.c                                    |    2 +-
+ include/linux/if_macvlan.h                         |    2 +-
+ include/net/caif/cfctrl.h                          |    2 +-
+ mm/hugetlb.c                                       |    2 +-
+ net/ipv6/mcast.c                                   |    2 +-
+ net/sunrpc/addr.c                                  |    2 +-
+ sound/core/pcm_lib.c                               |    2 +-
+ sound/soc/codecs/wm8904.c                          |    2 +-
+ sound/soc/codecs/wm8940.c                          |    1 -
+ sound/soc/codecs/wm8993.c                          |    2 +-
+ sound/soc/codecs/wm_hubs.c                         |    2 +-
+ 100 files changed, 111 insertions(+), 112 deletions(-)
 
 -- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please.
+1.7.3.1.g432b3.dirty
 
