@@ -1,171 +1,247 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/2] target: Kconfig fixes
-Date: Mon, 15 Nov 2010 14:43:15 -0500
-Message-ID: <20101115194315.GA23989@infradead.org>
+Subject: [PATCH 2/2] target: rename Kbuild files to Makefile
+Date: Mon, 15 Nov 2010 14:43:25 -0500
+Message-ID: <20101115194325.GB23989@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:59944 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:59947 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758012Ab0KOTnQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2010 14:43:16 -0500
+	with ESMTP id S1758012Ab0KOTn0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2010 14:43:26 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: nab@linux-iscsi.org
 Cc: linux-scsi@vger.kernel.org
 
-Use the menuconfig verb for the main TARGET_CORE option to make it look
-better in menuconfig, use a big if TARGET_CORE to get rid of a lot of
-depends, use help instead of ---help---, shorten lines to be under 80
-chars where applicable, convert options to bool instead of tristate
-where they should be, and remove the discuraged default values for
-all the options.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: lio-core/drivers/target/Kconfig
+Index: lio-core/drivers/target/Kbuild
 ===================================================================
---- lio-core.orig/drivers/target/Kconfig	2010-11-15 20:28:39.010253809 +0100
-+++ lio-core/drivers/target/Kconfig	2010-11-15 20:28:56.459254088 +0100
-@@ -1,39 +1,41 @@
--config TARGET_CORE
-+
-+menuconfig TARGET_CORE
-     tristate "Generic Target Core Mod (TCM) and ConfigFS Infrastructure"
-     select CONFIGFS_FS
--    default m
--    ---help---
--    Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled control path for target_core_mod.  This includes built-in TCM RAMDISK subsystem logic for virtual LUN 0 access
-+    help
-+      Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled
-+      control path for target_core_mod.  This includes built-in TCM RAMDISK
-+      subsystem logic for virtual LUN 0 access
-+
-+if TARGET_CORE
- 
- config TCM_IBLOCK
- 	tristate "TCM/IBLOCK Subsystem Plugin for Linux/BLOCK"
--	depends on TARGET_CORE
--	default y
--	---help---
--	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered access to Linux/Block devices using BIO
-+	help
-+	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered
-+	access to Linux/Block devices using BIO
- 
- config TCM_FILEIO
- 	tristate "TCM/FILEIO Subsystem Plugin for Linux/VFS"
--	depends on TARGET_CORE
--	default y
--	---help---
--	Say Y here to enable the TCM/FILEIO subsystem plugin for buffered access to Linux/VFS struct file or struct block_device
-+	help
-+	Say Y here to enable the TCM/FILEIO subsystem plugin for buffered
-+	access to Linux/VFS struct file or struct block_device
- 
- config TCM_PSCSI
- 	tristate "TCM/pSCSI Subsystem Plugin for Linux/SCSI"
--	depends on TARGET_CORE
--	default y
--	---help---
--	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered passthrough access to Linux/SCSI device
-+	help
-+	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered
-+	passthrough access to Linux/SCSI device
- 
- config TCM_STGT
- 	tristate "TCM/STGT Subsystem Plugin"
--	depends on TARGET_CORE && EXPERIMENTAL
-+	depends on EXPERIMENTAL
- 	select SCSI_TGT
--	default n
--	---help---
-+	help
- 	Say Y here to enable the WIP TCM/STGT subsystem plugin for accessing STGT device
- 
- source "drivers/target/tcm_loop/Kconfig"
- source "drivers/target/lio-target/Kconfig"
- source "drivers/target/tcm_fc/Kconfig"
-+
-+endif
-Index: lio-core/drivers/target/tcm_fc/Kconfig
-===================================================================
---- lio-core.orig/drivers/target/tcm_fc/Kconfig	2010-11-15 20:28:39.023013342 +0100
-+++ lio-core/drivers/target/tcm_fc/Kconfig	2010-11-15 20:28:56.459254088 +0100
-@@ -1,6 +1,5 @@
- config TCM_FC
- 	tristate "TCM_FC fabric Plugin"
--	depends on TARGET_CORE && LIBFC
--	default n
--	---help---
-+	depends on LIBFC
-+	help
- 	Say Y here to enable the TCM FC plugin for accessing FC fabrics in TCM
-Index: lio-core/drivers/target/tcm_loop/Kconfig
-===================================================================
---- lio-core.orig/drivers/target/tcm_loop/Kconfig	2010-11-15 20:28:39.043254088 +0100
-+++ lio-core/drivers/target/tcm_loop/Kconfig	2010-11-15 20:29:46.093032970 +0100
-@@ -1,13 +1,11 @@
- config TCM_LOOP_FABRIC
--        tristate "TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module "
--        depends on TARGET_CORE && CONFIGFS_FS
--        default n
--        ---help---
--        Say Y here to enable the TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module
-+        tristate "TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module"
-+        help
-+        Say Y here to enable the TCM Virtual SAS target and Linux/SCSI LDD
-+	fabric loopback module.
- 
- config TCM_LOOP_CDB_DEBUG
--	tristate "TCM loopback fabric module CDB debug code"
--	depends on TARGET_CORE && CONFIGFS_FS && TCM_LOOP_FABRIC
--	default n
--	---help---
-+	bool "TCM loopback fabric module CDB debug code"
-+	depends on TCM_LOOP_FABRIC
-+	help
- 	Say Y here to enable the TCM loopback fabric module CDB debug code
-Index: lio-core/drivers/target/lio-target/Kconfig
-===================================================================
---- lio-core.orig/drivers/target/lio-target/Kconfig	2010-11-15 20:29:50.375009781 +0100
-+++ lio-core/drivers/target/lio-target/Kconfig	2010-11-15 20:32:04.538290269 +0100
-@@ -1,29 +1,16 @@
- config LIO_TARGET
-         tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
--        default m
--        depends on TARGET_CORE
--	select CONFIGFS_FS
--        ---help---
--        Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI Target Mode Stack
+--- lio-core.orig/drivers/target/Kbuild	2010-11-15 20:28:49.340253390 +0100
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,31 +0,0 @@
+-EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/
 -
--config LIO_TARGET_SNMP
--	tristate "LIO-Target iSCSI MIBs"
--	default y
--	depends on LIO_TARGET && PROC_FS
--	---help---
--	Say Y here to enable the iSCSI MIBs via procfs for LIO-Target.
-+        help
-+        Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
-+	Target Mode Stack.
- 
- config LIO_TARGET_DEBUG
--	tristate "LIO-Target iscsi_debug.h ring buffer messages" 
--	default n
--	depends on LIO_TARGET
--	---help---
-+	bool "LIO-Target iscsi_debug.h ring buffer messages"
-+	help
- 	Say Y here to enable the legacy DEBUG_ISCSI macros in iscsi_debug.h
- 
- config LIO_TARGET_DEBUG_ERL
--	tristate "LIO-Target ErrorRecoveryLevel debug code"
--	default n
--	depends on LIO_TARGET
--	---help---
--	Say Y here to enable the iSCSI ErrorRecoveryLevel debugging code
-+	bool "LIO-Target ErrorRecoveryLevel debug code"
-+	help
-+	Say Y here to enable the iSCSI ErrorRecoveryLevel debugging code.
- 	
+-target_core_mod-y		:= target_core_configfs.o \
+-				   target_core_device.o \
+-				   target_core_fabric_configfs.o \
+-				   target_core_fabric_lib.o \
+-				   target_core_hba.o \
+-				   target_core_pr.o \
+-				   target_core_alua.o \
+-				   target_core_scdb.o \
+-				   target_core_tmr.o \
+-				   target_core_tpg.o \
+-				   target_core_transport.o \
+-				   target_core_cdb.o \
+-				   target_core_ua.o \
+-				   target_core_rd.o \
+-				   target_core_mib.o
+-
+-obj-$(CONFIG_TARGET_CORE)	+= target_core_mod.o
+-
+-# Subsystem modules
+-obj-$(CONFIG_TCM_IBLOCK)	+= target_core_iblock.o
+-obj-$(CONFIG_TCM_FILEIO)	+= target_core_file.o
+-obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
+-obj-$(CONFIG_TCM_STGT)		+= target_core_stgt.o
+-
+-# Fabric modules
+-obj-$(CONFIG_LIO_TARGET)	+= lio-target/
+-obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop/
+-
+-obj-$(CONFIG_TCM_FC)		+= tcm_fc/
+Index: lio-core/drivers/target/Makefile
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ lio-core/drivers/target/Makefile	2010-11-15 20:32:13.206003355 +0100
+@@ -0,0 +1,31 @@
++EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/
++
++target_core_mod-y		:= target_core_configfs.o \
++				   target_core_device.o \
++				   target_core_fabric_configfs.o \
++				   target_core_fabric_lib.o \
++				   target_core_hba.o \
++				   target_core_pr.o \
++				   target_core_alua.o \
++				   target_core_scdb.o \
++				   target_core_tmr.o \
++				   target_core_tpg.o \
++				   target_core_transport.o \
++				   target_core_cdb.o \
++				   target_core_ua.o \
++				   target_core_rd.o \
++				   target_core_mib.o
++
++obj-$(CONFIG_TARGET_CORE)	+= target_core_mod.o
++
++# Subsystem modules
++obj-$(CONFIG_TCM_IBLOCK)	+= target_core_iblock.o
++obj-$(CONFIG_TCM_FILEIO)	+= target_core_file.o
++obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
++obj-$(CONFIG_TCM_STGT)		+= target_core_stgt.o
++
++# Fabric modules
++obj-$(CONFIG_LIO_TARGET)	+= lio-target/
++obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop/
++
++obj-$(CONFIG_TCM_FC)		+= tcm_fc/
+Index: lio-core/drivers/target/tcm_fc/Kbuild
+===================================================================
+--- lio-core.orig/drivers/target/tcm_fc/Kbuild	2010-11-15 20:32:27.637004333 +0100
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,16 +0,0 @@
+-EXTRA_CFLAGS += -I$(srctree)/drivers/target/ \
+-		-I$(srctree)/drivers/scsi/ \
+-		-I$(srctree)/include/scsi/ \
+-		-I$(srctree)/drivers/target/tcm_fc/
+-
+-tcm_fc-objs := \
+-		tfc_cmd.o \
+-		tfc_conf.o \
+-		tfc_io.o \
+-		tfc_sess.o
+-
+-obj-$(CONFIG_TCM_FC)	+= tcm_fc.o
+-
+-ifdef CONFIGFS_TCM_FC_DEBUG
+-EXTRA_CFLAGS	+= -DTCM_FC_DEBUG
+-endif
+Index: lio-core/drivers/target/tcm_fc/Makefile
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ lio-core/drivers/target/tcm_fc/Makefile	2010-11-15 20:32:55.127016720 +0100
+@@ -0,0 +1,15 @@
++EXTRA_CFLAGS += -I$(srctree)/drivers/target/ \
++		-I$(srctree)/drivers/scsi/ \
++		-I$(srctree)/include/scsi/ \
++		-I$(srctree)/drivers/target/tcm_fc/
++
++tcm_fc-y +=	tfc_cmd.o \
++		tfc_conf.o \
++		tfc_io.o \
++		tfc_sess.o
++
++obj-$(CONFIG_TCM_FC)	+= tcm_fc.o
++
++ifdef CONFIGFS_TCM_FC_DEBUG
++EXTRA_CFLAGS	+= -DTCM_FC_DEBUG
++endif
+Index: lio-core/drivers/target/tcm_loop/Kbuild
+===================================================================
+--- lio-core.orig/drivers/target/tcm_loop/Kbuild	2010-11-15 20:33:03.138261841 +0100
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,11 +0,0 @@
+-EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/tcm_loop/
+-
+-tcm_loop-objs			:= tcm_loop_fabric.o \
+-				   tcm_loop_fabric_scsi.o \
+-				   tcm_loop_configfs.o \
+-
+-obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop.o
+-
+-ifdef CONFIG_TCM_LOOP_CDB_DEBUG
+-EXTRA_CFLAGS			+= -DTCM_LOOP_CDB_DEBUG
+-endif
+Index: lio-core/drivers/target/tcm_loop/Makefile
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ lio-core/drivers/target/tcm_loop/Makefile	2010-11-15 20:33:14.072290333 +0100
+@@ -0,0 +1,11 @@
++EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/tcm_loop/
++
++tcm_loop-y			:= tcm_loop_fabric.o \
++				   tcm_loop_fabric_scsi.o \
++				   tcm_loop_configfs.o \
++
++obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop.o
++
++ifdef CONFIG_TCM_LOOP_CDB_DEBUG
++EXTRA_CFLAGS			+= -DTCM_LOOP_CDB_DEBUG
++endif
+Index: lio-core/drivers/target/lio-target/Kbuild
+===================================================================
+--- lio-core.orig/drivers/target/lio-target/Kbuild	2010-11-15 20:33:29.942254717 +0100
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,37 +0,0 @@
+-EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/lio-target
+-
+-EXTRA_CFLAGS+=-D_TARGET -DPYX_ISCSI_VENDOR='"Linux-iSCSI.org"'
+-
+-iscsi_target_mod-objs		:=	iscsi_auth_chap.o \
+-					iscsi_debug_opcodes.o \
+-					iscsi_parameters.o \
+-					iscsi_seq_and_pdu_list.o \
+-					iscsi_serial.o \
+-					iscsi_thread_queue.o \
+-					iscsi_target_datain_values.o \
+-					iscsi_target_device.o \
+-					iscsi_target_discovery.o \
+-					iscsi_target_erl0.o \
+-					iscsi_target_erl1.o \
+-					iscsi_target_erl2.o \
+-					iscsi_target_login.o \
+-					iscsi_target_nego.o \
+-					iscsi_target_nodeattrib.o \
+-					iscsi_target_tmr.o \
+-					iscsi_target_tpg.o \
+-					iscsi_target_util.o \
+-					iscsi_target.o \
+-					iscsi_target_configfs.o \
+-					iscsi_target_mib.o
+-
+-ifdef CONFIG_LIO_TARGET_DEBUG_ERL
+-iscsi_target_mod-objs		+= iscsi_target_debugerl.o
+-EXTRA_CFLAGS			+= -DDEBUG_ERL
+-endif
+-
+-ifdef CONFIG_LIO_TARGET_DEBUG
+-EXTRA_CFLAGS			+= -DCONFIG_ISCSI_DEBUG=1
+-endif
+-
+-
+-obj-$(CONFIG_LIO_TARGET)	+= iscsi_target_mod.o
+Index: lio-core/drivers/target/lio-target/Makefile
+===================================================================
+--- /dev/null	1970-01-01 00:00:00.000000000 +0000
++++ lio-core/drivers/target/lio-target/Makefile	2010-11-15 20:34:18.928004914 +0100
+@@ -0,0 +1,36 @@
++EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/lio-target
++
++EXTRA_CFLAGS+=-D_TARGET -DPYX_ISCSI_VENDOR='"Linux-iSCSI.org"'
++
++iscsi_target_mod-y +=		iscsi_auth_chap.o \
++				iscsi_debug_opcodes.o \
++				iscsi_parameters.o \
++				iscsi_seq_and_pdu_list.o \
++				iscsi_serial.o \
++				iscsi_thread_queue.o \
++				iscsi_target_datain_values.o \
++				iscsi_target_device.o \
++				iscsi_target_discovery.o \
++				iscsi_target_erl0.o \
++				iscsi_target_erl1.o \
++				iscsi_target_erl2.o \
++				iscsi_target_login.o \
++				iscsi_target_nego.o \
++				iscsi_target_nodeattrib.o \
++				iscsi_target_tmr.o \
++				iscsi_target_tpg.o \
++				iscsi_target_util.o \
++				iscsi_target.o \
++				iscsi_target_configfs.o \
++				iscsi_target_mib.o
++
++ifdef CONFIG_LIO_TARGET_DEBUG_ERL
++iscsi_target_mod-y		+= iscsi_target_debugerl.o
++EXTRA_CFLAGS			+= -DDEBUG_ERL
++endif
++
++ifdef CONFIG_LIO_TARGET_DEBUG
++EXTRA_CFLAGS			+= -DCONFIG_ISCSI_DEBUG=1
++endif
++
++obj-$(CONFIG_LIO_TARGET)	+= iscsi_target_mod.o
