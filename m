@@ -1,30 +1,171 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: SCSI TMF processing; tag allocation
-Date: Mon, 15 Nov 2010 12:09:02 -0700
-Message-ID: <20101115190901.GB6178@parisc-linux.org>
-References: <380694.87733.qm@web31812.mail.mud.yahoo.com> <4CE181A8.8050102@interlog.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 1/2] target: Kconfig fixes
+Date: Mon, 15 Nov 2010 14:43:15 -0500
+Message-ID: <20101115194315.GA23989@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:59944 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758012Ab0KOTnQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2010 14:43:16 -0500
 Content-Disposition: inline
-In-Reply-To: <4CE181A8.8050102@interlog.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dgilbert@interlog.com>
-Cc: ltuikov@yahoo.com, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, jens.axboe@oracle.com, James.Bottomley@suse.de
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: nab@linux-iscsi.org
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Nov 15, 2010 at 01:53:28PM -0500, Douglas Gilbert wrote:
-> On the subject of UAS, due to some USB-3 streaming protocol
-> requirements, three tag values cannot be used by SCSI. They
-> are 0h, FFFEh and FFFFh. So those available for SCSI tag
-> use are 1h to FFFDh inclusive.
+Use the menuconfig verb for the main TARGET_CORE option to make it look
+better in menuconfig, use a big if TARGET_CORE to get rid of a lot of
+depends, use help instead of ---help---, shorten lines to be under 80
+chars where applicable, convert options to bool instead of tristate
+where they should be, and remove the discuraged default values for
+all the options.
 
-I add 1 to the tag value handed to me by the block layer, and use that
-as the tag value that I tell the UAS device this command has.  So if I
-ask for 256 tags, I'll hand values 1-257 to the device.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Index: lio-core/drivers/target/Kconfig
+===================================================================
+--- lio-core.orig/drivers/target/Kconfig	2010-11-15 20:28:39.010253809 +0100
++++ lio-core/drivers/target/Kconfig	2010-11-15 20:28:56.459254088 +0100
+@@ -1,39 +1,41 @@
+-config TARGET_CORE
++
++menuconfig TARGET_CORE
+     tristate "Generic Target Core Mod (TCM) and ConfigFS Infrastructure"
+     select CONFIGFS_FS
+-    default m
+-    ---help---
+-    Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled control path for target_core_mod.  This includes built-in TCM RAMDISK subsystem logic for virtual LUN 0 access
++    help
++      Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled
++      control path for target_core_mod.  This includes built-in TCM RAMDISK
++      subsystem logic for virtual LUN 0 access
++
++if TARGET_CORE
+ 
+ config TCM_IBLOCK
+ 	tristate "TCM/IBLOCK Subsystem Plugin for Linux/BLOCK"
+-	depends on TARGET_CORE
+-	default y
+-	---help---
+-	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered access to Linux/Block devices using BIO
++	help
++	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered
++	access to Linux/Block devices using BIO
+ 
+ config TCM_FILEIO
+ 	tristate "TCM/FILEIO Subsystem Plugin for Linux/VFS"
+-	depends on TARGET_CORE
+-	default y
+-	---help---
+-	Say Y here to enable the TCM/FILEIO subsystem plugin for buffered access to Linux/VFS struct file or struct block_device
++	help
++	Say Y here to enable the TCM/FILEIO subsystem plugin for buffered
++	access to Linux/VFS struct file or struct block_device
+ 
+ config TCM_PSCSI
+ 	tristate "TCM/pSCSI Subsystem Plugin for Linux/SCSI"
+-	depends on TARGET_CORE
+-	default y
+-	---help---
+-	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered passthrough access to Linux/SCSI device
++	help
++	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered
++	passthrough access to Linux/SCSI device
+ 
+ config TCM_STGT
+ 	tristate "TCM/STGT Subsystem Plugin"
+-	depends on TARGET_CORE && EXPERIMENTAL
++	depends on EXPERIMENTAL
+ 	select SCSI_TGT
+-	default n
+-	---help---
++	help
+ 	Say Y here to enable the WIP TCM/STGT subsystem plugin for accessing STGT device
+ 
+ source "drivers/target/tcm_loop/Kconfig"
+ source "drivers/target/lio-target/Kconfig"
+ source "drivers/target/tcm_fc/Kconfig"
++
++endif
+Index: lio-core/drivers/target/tcm_fc/Kconfig
+===================================================================
+--- lio-core.orig/drivers/target/tcm_fc/Kconfig	2010-11-15 20:28:39.023013342 +0100
++++ lio-core/drivers/target/tcm_fc/Kconfig	2010-11-15 20:28:56.459254088 +0100
+@@ -1,6 +1,5 @@
+ config TCM_FC
+ 	tristate "TCM_FC fabric Plugin"
+-	depends on TARGET_CORE && LIBFC
+-	default n
+-	---help---
++	depends on LIBFC
++	help
+ 	Say Y here to enable the TCM FC plugin for accessing FC fabrics in TCM
+Index: lio-core/drivers/target/tcm_loop/Kconfig
+===================================================================
+--- lio-core.orig/drivers/target/tcm_loop/Kconfig	2010-11-15 20:28:39.043254088 +0100
++++ lio-core/drivers/target/tcm_loop/Kconfig	2010-11-15 20:29:46.093032970 +0100
+@@ -1,13 +1,11 @@
+ config TCM_LOOP_FABRIC
+-        tristate "TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module "
+-        depends on TARGET_CORE && CONFIGFS_FS
+-        default n
+-        ---help---
+-        Say Y here to enable the TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module
++        tristate "TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module"
++        help
++        Say Y here to enable the TCM Virtual SAS target and Linux/SCSI LDD
++	fabric loopback module.
+ 
+ config TCM_LOOP_CDB_DEBUG
+-	tristate "TCM loopback fabric module CDB debug code"
+-	depends on TARGET_CORE && CONFIGFS_FS && TCM_LOOP_FABRIC
+-	default n
+-	---help---
++	bool "TCM loopback fabric module CDB debug code"
++	depends on TCM_LOOP_FABRIC
++	help
+ 	Say Y here to enable the TCM loopback fabric module CDB debug code
+Index: lio-core/drivers/target/lio-target/Kconfig
+===================================================================
+--- lio-core.orig/drivers/target/lio-target/Kconfig	2010-11-15 20:29:50.375009781 +0100
++++ lio-core/drivers/target/lio-target/Kconfig	2010-11-15 20:32:04.538290269 +0100
+@@ -1,29 +1,16 @@
+ config LIO_TARGET
+         tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
+-        default m
+-        depends on TARGET_CORE
+-	select CONFIGFS_FS
+-        ---help---
+-        Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI Target Mode Stack
+-
+-config LIO_TARGET_SNMP
+-	tristate "LIO-Target iSCSI MIBs"
+-	default y
+-	depends on LIO_TARGET && PROC_FS
+-	---help---
+-	Say Y here to enable the iSCSI MIBs via procfs for LIO-Target.
++        help
++        Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
++	Target Mode Stack.
+ 
+ config LIO_TARGET_DEBUG
+-	tristate "LIO-Target iscsi_debug.h ring buffer messages" 
+-	default n
+-	depends on LIO_TARGET
+-	---help---
++	bool "LIO-Target iscsi_debug.h ring buffer messages"
++	help
+ 	Say Y here to enable the legacy DEBUG_ISCSI macros in iscsi_debug.h
+ 
+ config LIO_TARGET_DEBUG_ERL
+-	tristate "LIO-Target ErrorRecoveryLevel debug code"
+-	default n
+-	depends on LIO_TARGET
+-	---help---
+-	Say Y here to enable the iSCSI ErrorRecoveryLevel debugging code
++	bool "LIO-Target ErrorRecoveryLevel debug code"
++	help
++	Say Y here to enable the iSCSI ErrorRecoveryLevel debugging code.
+ 	
