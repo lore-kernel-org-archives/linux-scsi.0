@@ -1,109 +1,197 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Mon, 15 Nov 2010 12:19:30 -0800
-Message-ID: <1289852370.22107.104.camel@haakon2.linux-iscsi.org>
-References: <20101109002829.GA22633@kroah.com> <4CD9A9B8.70708@vlnb.net>
-	 <4CDA6CD4.3010308@panasas.com> <4CDAFE6E.7050200@vlnb.net>
-	 <4CDBBE80.40908@panasas.com> <4CDC56F9.9040601@vlnb.net>
-	 <20101112012315.GE17097@core.coreip.homeip.net> <4CDEC8D2.8080101@vlnb.net>
-	 <20101113235938.GA1827@kroah.com> <4CE1017E.4090409@panasas.com>
-	 <20101115161620.GB5981@kroah.com> <4CE16B8E.1000300@panasas.com>
-	 <AANLkTikPVXGJ5-5YDk1uqfqrqxGLpSiSdaX3h7qxo-ie@mail.gmail.com>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 1/2] target: Kconfig fixes
+Date: Mon, 15 Nov 2010 12:26:21 -0800
+Message-ID: <20101115122621.ea812a6c.randy.dunlap@oracle.com>
+References: <20101115194315.GA23989@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:42743 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932737Ab0KOUYn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2010 15:24:43 -0500
-In-Reply-To: <AANLkTikPVXGJ5-5YDk1uqfqrqxGLpSiSdaX3h7qxo-ie@mail.gmail.com>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:64414 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756504Ab0KOU0q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2010 15:26:46 -0500
+In-Reply-To: <20101115194315.GA23989@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Greg KH <greg@kroah.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, scst-devel <scst-devel@lists.sourceforge.net>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-<Trimming CC list>
+On Mon, 15 Nov 2010 14:43:15 -0500 Christoph Hellwig wrote:
 
-On Mon, 2010-11-15 at 18:49 +0100, Bart Van Assche wrote:
-> On Mon, Nov 15, 2010 at 6:19 PM, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > [ ... ]
-> > Perhaps consider a new alternative like the device tree as Greg suggested
-> > or maybe finally accept the harsh realities of ConfigFS.
+> Use the menuconfig verb for the main TARGET_CORE option to make it look
+> better in menuconfig, use a big if TARGET_CORE to get rid of a lot of
+> depends, use help instead of ---help---, shorten lines to be under 80
+> chars where applicable, convert options to bool instead of tristate
+> where they should be, and remove the discuraged default values for
+> all the options.
 > 
-> I think that Vlad has already explained several times why ConfigFS is
-> not suited for the needs of a storage target: a storage target must
-> not only be able to accept configuration information from userspace
-> but must also be able to create new directories and file nodes itself.
-> See e.g. this message from October 6:
-> http://kerneltrap.org/mailarchive/linux-kernel/2010/10/6/4628664.
-> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Sorry, but this post explains nothing but a single misguided and
-uninformed opinion, with no hard facts on the actual usage of a native
-configfs control plane within target mode infrastructure.  
+Yes, mostly looks good, with the small exception of a few spaces-for-indents
+that should be tabs.  (identified below)
 
-The hard facts are:
+Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
 
-Using configfs works to drive the generation/release, real time
-configuration, dependancy relationships because:
+Thanks.
 
-*) configfs represents the individual target data structures who's
-creation/deletion are driven from enterily userspace.
 
-*) The parent/child relationships of dependant data structures is
-handled transparently to the configfs consumer (eg: no hard requirement
-internal reference counting)
+> Index: lio-core/drivers/target/Kconfig
+> ===================================================================
+> --- lio-core.orig/drivers/target/Kconfig	2010-11-15 20:28:39.010253809 +0100
+> +++ lio-core/drivers/target/Kconfig	2010-11-15 20:28:56.459254088 +0100
+> @@ -1,39 +1,41 @@
+> -config TARGET_CORE
+> +
+> +menuconfig TARGET_CORE
+>      tristate "Generic Target Core Mod (TCM) and ConfigFS Infrastructure"
 
-*) The module reference counting of target core -> fabric module is
-handled transparently to configfs consumers *and* TCM fabric modules
+Unchanged line above uses spaces instead of tab for indent.
 
-*) The current implementation of TCM/ConfigFS contains no global locks.
-Each /sys/kernel/config/target/$FABRIC_1 operates independently of
-/sys/kernel/config/target/$FABRIC_2
+>      select CONFIGFS_FS
+> -    default m
+> -    ---help---
+> -    Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled control path for target_core_mod.  This includes built-in TCM RAMDISK subsystem logic for virtual LUN 0 access
+> +    help
+> +      Say Y or M here to enable the TCM Storage Engine and ConfigFS enabled
+> +      control path for target_core_mod.  This includes built-in TCM RAMDISK
+> +      subsystem logic for virtual LUN 0 access
+> +
+> +if TARGET_CORE
+>  
+>  config TCM_IBLOCK
+>  	tristate "TCM/IBLOCK Subsystem Plugin for Linux/BLOCK"
+> -	depends on TARGET_CORE
+> -	default y
+> -	---help---
+> -	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered access to Linux/Block devices using BIO
+> +	help
+> +	Say Y here to enable the TCM/IBLOCK subsystem plugin for non-buffered
+> +	access to Linux/Block devices using BIO
+>  
+>  config TCM_FILEIO
+>  	tristate "TCM/FILEIO Subsystem Plugin for Linux/VFS"
+> -	depends on TARGET_CORE
+> -	default y
+> -	---help---
+> -	Say Y here to enable the TCM/FILEIO subsystem plugin for buffered access to Linux/VFS struct file or struct block_device
+> +	help
+> +	Say Y here to enable the TCM/FILEIO subsystem plugin for buffered
+> +	access to Linux/VFS struct file or struct block_device
+>  
+>  config TCM_PSCSI
+>  	tristate "TCM/pSCSI Subsystem Plugin for Linux/SCSI"
+> -	depends on TARGET_CORE
+> -	default y
+> -	---help---
+> -	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered passthrough access to Linux/SCSI device
+> +	help
+> +	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered
+> +	passthrough access to Linux/SCSI device
+>  
+>  config TCM_STGT
+>  	tristate "TCM/STGT Subsystem Plugin"
+> -	depends on TARGET_CORE && EXPERIMENTAL
+> +	depends on EXPERIMENTAL
+>  	select SCSI_TGT
+> -	default n
+> -	---help---
+> +	help
+>  	Say Y here to enable the WIP TCM/STGT subsystem plugin for accessing STGT device
+>  
+>  source "drivers/target/tcm_loop/Kconfig"
+>  source "drivers/target/lio-target/Kconfig"
+>  source "drivers/target/tcm_fc/Kconfig"
+> +
+> +endif
+> Index: lio-core/drivers/target/tcm_fc/Kconfig
+> ===================================================================
+> --- lio-core.orig/drivers/target/tcm_fc/Kconfig	2010-11-15 20:28:39.023013342 +0100
+> +++ lio-core/drivers/target/tcm_fc/Kconfig	2010-11-15 20:28:56.459254088 +0100
+> @@ -1,6 +1,5 @@
+>  config TCM_FC
+>  	tristate "TCM_FC fabric Plugin"
+> -	depends on TARGET_CORE && LIBFC
+> -	default n
+> -	---help---
+> +	depends on LIBFC
+> +	help
+>  	Say Y here to enable the TCM FC plugin for accessing FC fabrics in TCM
+> Index: lio-core/drivers/target/tcm_loop/Kconfig
+> ===================================================================
+> --- lio-core.orig/drivers/target/tcm_loop/Kconfig	2010-11-15 20:28:39.043254088 +0100
+> +++ lio-core/drivers/target/tcm_loop/Kconfig	2010-11-15 20:29:46.093032970 +0100
+> @@ -1,13 +1,11 @@
+>  config TCM_LOOP_FABRIC
+> -        tristate "TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module "
+> -        depends on TARGET_CORE && CONFIGFS_FS
+> -        default n
+> -        ---help---
+> -        Say Y here to enable the TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module
+> +        tristate "TCM Virtual SAS target and Linux/SCSI LDD fabric loopback module"
+> +        help
+> +        Say Y here to enable the TCM Virtual SAS target and Linux/SCSI LDD
 
-*) Expecting target fabric module developers to (by-hand) add struct
-config_groups, struct kobjects or anything else directly to their fabric
-module code is really clumsy and stupid.  This problem was solved
-earlier this year in TCM v4.0 with the advent of:
+The 3 lines above use spaces for indents instead of tabs.
 
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/target/target_core_fabric_configfs.c;hb=refs/heads/lio-4.0
+> +	fabric loopback module.
+>  
+>  config TCM_LOOP_CDB_DEBUG
+> -	tristate "TCM loopback fabric module CDB debug code"
+> -	depends on TARGET_CORE && CONFIGFS_FS && TCM_LOOP_FABRIC
+> -	default n
+> -	---help---
+> +	bool "TCM loopback fabric module CDB debug code"
+> +	depends on TCM_LOOP_FABRIC
+> +	help
+>  	Say Y here to enable the TCM loopback fabric module CDB debug code
+> Index: lio-core/drivers/target/lio-target/Kconfig
+> ===================================================================
+> --- lio-core.orig/drivers/target/lio-target/Kconfig	2010-11-15 20:29:50.375009781 +0100
+> +++ lio-core/drivers/target/lio-target/Kconfig	2010-11-15 20:32:04.538290269 +0100
+> @@ -1,29 +1,16 @@
+>  config LIO_TARGET
+>          tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
+> -        default m
+> -        depends on TARGET_CORE
+> -	select CONFIGFS_FS
+> -        ---help---
+> -        Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI Target Mode Stack
+> -
+> -config LIO_TARGET_SNMP
+> -	tristate "LIO-Target iSCSI MIBs"
+> -	default y
+> -	depends on LIO_TARGET && PROC_FS
+> -	---help---
+> -	Say Y here to enable the iSCSI MIBs via procfs for LIO-Target.
+> +        help
+> +        Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
 
-What this code means is that target fabric module developers no longer
-has to duplicate complex control path code, and all of the interesting
-port attributes (like ALUA secondary access state for example) are
-transparent to new fabric modules, and 'just work'.  We can even
-generate *functional* configfs skeletons for new fabric modules using
-tcm_mod_builder.py discussed here:
+2 lines above use spaces instead of tabs for indent.
 
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=Documentation/target/tcm_mod_builder.txt;hb=refs/heads/lio-4.0
+> +	Target Mode Stack.
+>  
+>  config LIO_TARGET_DEBUG
+> -	tristate "LIO-Target iscsi_debug.h ring buffer messages" 
+> -	default n
+> -	depends on LIO_TARGET
+> -	---help---
+> +	bool "LIO-Target iscsi_debug.h ring buffer messages"
+> +	help
+>  	Say Y here to enable the legacy DEBUG_ISCSI macros in iscsi_debug.h
+>  
+>  config LIO_TARGET_DEBUG_ERL
+> -	tristate "LIO-Target ErrorRecoveryLevel debug code"
+> -	default n
+> -	depends on LIO_TARGET
+> -	---help---
+> -	Say Y here to enable the iSCSI ErrorRecoveryLevel debugging code
+> +	bool "LIO-Target ErrorRecoveryLevel debug code"
+> +	help
+> +	Say Y here to enable the iSCSI ErrorRecoveryLevel debugging code.
+>  	
+> --
 
-For the specific case of the target control path, until someone from
-SCST can present some hard facts *and* running code about the target
-mode configfs vs. sysfs debate, the discussion is like comparing oil and
-water. 
-
-Again, please do not take this as the LIO maintainer saying 'you should
-stop working on SCST code XYZ', because that is *not* what I am saying.
-We are simply stating that we already have a fully functional configfs
-backend and generic target fabric independent infrastrucutre that has
-not only been reviewed no less than five times this year on
-linux-scsi/LKML, it has actually been developed *on* linux-scsi, patch
-by patch in full view of the configfs maintainer and other interested
-parties.
-
-This is the reason why the v4.0 code has progressed as fast as it has; a
-constant feedback loop from upstream developers who have been involved
-since the start of the development process.  By virtue of this fact, we
-where able to make some early design decisions based on feedback from
-the community from the original proposed design and running prototype
-code.
-
-So, while I can very much apperciate Boaz's desire to attempt to
-reconcile the relationship between myself + other TCM/LIO developers
-with the SCST development community, but I don't think this will happen
-without a definate change to the SCST development workflow and
-interaction with 'outside of project' developers.
-
---nab
-
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
