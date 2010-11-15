@@ -1,41 +1,37 @@
-From: Joe Perches <joe-6d6DIl74uiNBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH 00/11] Remove unnecessary casts of pci_get_drvdata
-Date: Mon, 15 Nov 2010 12:13:51 -0800
-Message-ID: <cover.1289851770.git.joe@perches.com>
-Return-path: <linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-i2c-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jiri Kosina <trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: linux-i2c-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, alsa-devel-K7yf7f+aM1XWsZ/bQMPhNw@public.gmane.org
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 08/11] drivers/scsi/be2iscsi/be_main.c: Remove unnecessary casts of pci_get_drvdata
+Date: Mon, 15 Nov 2010 12:13:59 -0800
+Message-ID: <ae40e74f63fb73423dd731aecbe476a08acdb275.1289851770.git.joe@perches.com>
+References: <cover.1289851770.git.joe@perches.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.perches.com ([173.55.12.10]:1337 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933683Ab0KOUOL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Nov 2010 15:14:11 -0500
+In-Reply-To: <cover.1289851770.git.joe@perches.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jiri Kosina <trivial@kernel.org>
+Cc: Jayamohan Kallickal <jayamohank@serverengines.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Joe Perches (11):
-  drivers/i2c/busses/i2c-nforce2.c: Remove unnecessary casts of pci_get_drvdata
-  drivers/ide/pmac.c: Remove unnecessary casts of pci_get_drvdata
-  drivers/media/dvb/ngene/ngene-core.c: Remove unnecessary casts of pci_get_drvdata
-  drivers/misc/ibmasm/module.c: Remove unnecessary casts of pci_get_drvdata
-  drivers/net/irda: Remove unnecessary casts of pci_get_drvdata
-  drivers/net/s2io.c: Remove unnecessary casts of pci_get_drvdata
-  drivers/net/vxge/vxge-main.c: Remove unnecessary casts of pci_get_drvdata
-  drivers/scsi/be2iscsi/be_main.c: Remove unnecessary casts of pci_get_drvdata
-  drivers/staging: Remove unnecessary casts of pci_get_drvdata
-  drivers/usb/host/uhci-hcd.c: Remove unnecessary casts of pci_get_drvdata
-  sound/pci/asihpi/hpioctl.c: Remove unnecessary casts of pci_get_drvdata
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/be2iscsi/be_main.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
- drivers/i2c/busses/i2c-nforce2.c          |    2 +-
- drivers/ide/pmac.c                        |    4 ++--
- drivers/media/dvb/ngene/ngene-core.c      |    2 +-
- drivers/misc/ibmasm/module.c              |    2 +-
- drivers/net/irda/donauboe.c               |    6 +++---
- drivers/net/irda/vlsi_ir.c                |    2 +-
- drivers/net/s2io.c                        |    3 +--
- drivers/net/vxge/vxge-main.c              |   28 ++++++++++++----------------
- drivers/scsi/be2iscsi/be_main.c           |    2 +-
- drivers/staging/crystalhd/crystalhd_lnx.c |    6 +++---
- drivers/staging/et131x/et131x_initpci.c   |    2 +-
- drivers/staging/wlags49_h2/wl_pci.c       |    2 +-
- drivers/usb/host/uhci-hcd.c               |    2 +-
- sound/pci/asihpi/hpioctl.c                |    2 +-
- 14 files changed, 30 insertions(+), 35 deletions(-)
-
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 75a85aa..b00b904 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -4103,7 +4103,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+ 	u8 *real_offset = 0;
+ 	u32 value = 0;
+ 
+-	phba = (struct beiscsi_hba *)pci_get_drvdata(pcidev);
++	phba = pci_get_drvdata(pcidev);
+ 	if (!phba) {
+ 		dev_err(&pcidev->dev, "beiscsi_remove called with no phba\n");
+ 		return;
 -- 
 1.7.3.1.g432b3.dirty
+
