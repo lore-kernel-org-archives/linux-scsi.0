@@ -1,77 +1,30 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: [PATCH] SCSI: fix minor bug in scsi_error_handler
-Date: Tue, 16 Nov 2010 11:26:38 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1011161125020.1597-100000@iolanthe.rowland.org>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH v5] SCSI host lock push-down
+Date: Tue, 16 Nov 2010 09:25:21 -0800
+Message-ID: <AANLkTi=GGq0tMAWtwa-yQBpmpA8JCSWu1XK1rQ2j_Cmo@mail.gmail.com>
+References: <1289606118.3015.539.camel@mulgrave.site> <AANLkTinj2BM2eGo2yyfzs=t+nu79WLW_bGYota9sDZwH@mail.gmail.com>
+ <20101113051635.GA11613@havoc.gtf.org> <20101116071029.GA13540@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56312 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754408Ab0KPQ0j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Nov 2010 11:26:39 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:53536 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754148Ab0KPRZp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Nov 2010 12:25:45 -0500
+In-Reply-To: <20101116071029.GA13540@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-This patch (as1360b) fixes a small bug in scsi_error_handler(): If for
-any reason the scsi_autopm_get_host() call should fail, the thread's
-state doesn't get set back to TASK_INTERRUPTIBLE.  The routine will
-run through its main loop an extra time instead of going straight to
-sleep.
+On Mon, Nov 15, 2010 at 11:10 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>
+> Move the mid-layer's ->queuecommand() invocation from being locked
+> with the host lock to being unlocked to facilitate speeding up the
+> critical path for drivers who don't need this lock taken anyway.
 
-Rather than adding yet another set_current_state() call, the patch
-shrinks the scsi_error_handler() routine by moving an existing
-set_current_state() call inside the loop where it really ought to be,
-removing two other calls in the process.
+Looks ok to me. How should I take this? Just as a patch? Or should it
+go through the scsi tree?
 
-Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-CC: stable@kernel.org
-
----
-
-Index: usb-2.6/drivers/scsi/scsi_error.c
-===================================================================
---- usb-2.6.orig/drivers/scsi/scsi_error.c
-+++ usb-2.6/drivers/scsi/scsi_error.c
-@@ -1744,21 +1744,22 @@ int scsi_error_handler(void *data)
- {
- 	struct Scsi_Host *shost = data;
- 
--	/*
--	 * We use TASK_INTERRUPTIBLE so that the thread is not
--	 * counted against the load average as a running process.
--	 * We never actually get interrupted because kthread_run
--	 * disables signal delivery for the created thread.
--	 */
--	set_current_state(TASK_INTERRUPTIBLE);
--	while (!kthread_should_stop()) {
-+	for (;;) {
-+		/*
-+		 * We use TASK_INTERRUPTIBLE so that the thread is not
-+		 * counted against the load average as a running process.
-+		 * We never actually get interrupted because kthread_run
-+		 * disables signal delivery for the created thread.
-+		 */
-+		set_current_state(TASK_INTERRUPTIBLE);
-+		if (kthread_should_stop())
-+			break;
- 		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
- 		    shost->host_failed != shost->host_busy) {
- 			SCSI_LOG_ERROR_RECOVERY(1,
- 				printk("Error handler scsi_eh_%d sleeping\n",
- 					shost->host_no));
- 			schedule();
--			set_current_state(TASK_INTERRUPTIBLE);
- 			continue;
- 		}
- 
-@@ -1794,7 +1795,6 @@ int scsi_error_handler(void *data)
- 		 */
- 		scsi_restart_operations(shost);
- 		scsi_autopm_put_host(shost);
--		set_current_state(TASK_INTERRUPTIBLE);
- 	}
- 	__set_current_state(TASK_RUNNING);
- 
-
+                   Linus
