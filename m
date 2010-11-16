@@ -1,35 +1,81 @@
-From: "Jozef Ruud Roosevelt" <"jozef@"@admin.in.th>
-Subject: Re: Attention Please.
-Date: Tue, 16 Nov 2010 13:03:09 -0300 (BRT)
-Message-ID: <0b7b6dc6ba61551189893a42e928890f.squirrel__46611.160101793$1289923780$gmane$org@webmail.dfte.ufrn.br>
-Reply-To: jozef_rosevelt@admin.in.th
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [PATCH] fix kzalloc in scsi device handler
+Date: Tue, 16 Nov 2010 09:15:12 -0700
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4F51A7EDA@cosmail01.lsi.com>
+References: <AANLkTimsOGcybKBvJCjbtUaUpg5asYMDSky2QhovjcG+@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fisica.dfte.ufrn.br ([200.19.173.16]:35869 "EHLO
-	fisica.dfte.ufrn.br" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753892Ab0KPQJa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Nov 2010 11:09:30 -0500
+Received: from na3sys009aog110.obsmtp.com ([74.125.149.203]:57363 "EHLO
+	na3sys009aog110.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754441Ab0KPQUw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Nov 2010 11:20:52 -0500
+In-Reply-To: <AANLkTimsOGcybKBvJCjbtUaUpg5asYMDSky2QhovjcG+@mail.gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hillf Danton <dhillf@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Chandra Seetharaman <chandra.seetharaman@us.ibm.com>
 
-
-
-
-Attention Please,
-
-I am Jozef Ruud Roosevelt, a Dutch National presently residing in
-Newcastle United Kingdom, I have a proposition Involving an investment
-initiative in your country economy  to discuss with you, It will be of
-mutual benefit to both of us, and I believe we can handle it together,
-once we have a common understanding and mutual cooperation in the
-execution of the modalities. I work with Abn Amro Bank as an auditor.
-
-Should you be interested, please e-mail back to me through this email
-address: (jozef.rosevelt@yahoo.co.uk).
-I await your earliest response.
-
-Yours Sincerely,
-Jozef Ruud Roosevel.
-
+DQpBZ3JlZS4uIEJ1dCB0aGlzIG1heSBub3QgZml4IHRoZSBwcm9ibGVtIGNvbXBsZXRlbHkuLiBQ
+bGVhc2Ugc2VlIG15IGNvbW1lbnRzIGJlbG93Li4gDQpBbHNvIGNvcGllZCBDaGFuZHJhIGlmIGhl
+IGhhcyBhbnkgY29tbWVudHMuLiANCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBG
+cm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2kt
+DQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVoYWxmIE9mIEhpbGxmIERhbnRvbg0KPiBT
+ZW50OiBUdWVzZGF5LCBOb3ZlbWJlciAxNiwgMjAxMCA3OjM0IEFNDQo+IFRvOiBsaW51eC1zY3Np
+QHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIGZpeCBremFsbG9jIGluIHNjc2kg
+ZGV2aWNlIGhhbmRsZXINCj4gDQo+IFRoZXkgbG9vayBsaWtlIHR5cG8sIHNpbmNlIHRoZXJlIGFy
+ZSBmb3VyIGluc3RhbmNlcyBvZiBremFsbG9jIGFsbW9zdA0KPiB0eXBlZCBieSB0aGUgc2FtZSBm
+aW5nZXIuDQo+IA0KPiBUaGUgcG9pbnRlciBpcyByZXBsYWNlZCB3aXRoIGEgc3RydWN0LCB3aGlj
+aCBoZWxwcyBremFsbG9jIHJldHVybg0KPiBjb3JyZWN0IHJlc3VsdC4NCj4gDQo+IHRoYW5rcyBm
+b3IgYW55IGNvbW1lbnQgb24gdGhlIHBvc3NpYmlsaXR5IHRoYXQgbWVtIG92ZXJmbG93IGNvdWxk
+DQo+IGhhcHBlbi4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IEhpbGxmIERhbnRvbiA8ZGhpbGxmQGdt
+YWlsLmNvbT4NCj4gLS0tDQo+IA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvZGV2aWNlX2hhbmRsZXIv
+c2NzaV9kaF9hbHVhLmMJMjAxMC0xMS0wMQ0KPiAxOTo1NDoxMi4wMDAwMDAwMDAgKzA4MDANCj4g
+KysrIGIvZHJpdmVycy9zY3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhfYWx1YS5jCTIwMTAtMTEt
+MTYNCj4gMjA6NDA6MzYuMDAwMDAwMDAwICswODAwDQo+IEBAIC03NTksNyArNzU5LDcgQEAgc3Rh
+dGljIGludCBhbHVhX2J1c19hdHRhY2goc3RydWN0IHNjc2lfZA0KPiAgCXVuc2lnbmVkIGxvbmcg
+ZmxhZ3M7DQo+ICAJaW50IGVyciA9IFNDU0lfREhfT0s7DQo+IA0KPiAtCXNjc2lfZGhfZGF0YSA9
+IGt6YWxsb2Moc2l6ZW9mKHN0cnVjdCBzY3NpX2RldmljZV9oYW5kbGVyICopDQo+ICsJc2NzaV9k
+aF9kYXRhID0ga3phbGxvYyhzaXplb2Yoc3RydWN0IHNjc2lfZGhfZGF0YSkNCj4gIAkJCSAgICAg
+ICArIHNpemVvZigqaCkgLCBHRlBfS0VSTkVMKTsNCg0KSSB0aGluayB0aGlzIHNob3VsZCBiZSBs
+aWtlIHRoaXMgYmVsb3cuIA0KDQogICAgICBzY3NpX2RoX2RhdGEgPSBremFsbG9jKHNpemVvZihz
+dHJ1Y3Qgc2NzaV9kaF9kYXRhKQ0KICAJCQkgICAgICAgKyBzaXplb2Yoc3RydWN0IGFsdWFfZGhf
+ZGF0YSkgLCBHRlBfS0VSTkVMKTsNCg0KU2FtZSB0aGluZyBzaG91bGQgYXBwbHkgZm9yIGFsbCB0
+aGUgYmVsb3cgc2VnbWVudHMuLg0KDQo+ICAJaWYgKCFzY3NpX2RoX2RhdGEpIHsNCj4gIAkJc2Rl
+dl9wcmludGsoS0VSTl9FUlIsIHNkZXYsICIlczogQXR0YWNoIGZhaWxlZFxuIiwNCj4gLS0tIGEv
+ZHJpdmVycy9zY3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhfZW1jLmMJMjAxMC0xMS0wMQ0KPiAx
+OTo1NDoxMi4wMDAwMDAwMDAgKzA4MDANCj4gKysrIGIvZHJpdmVycy9zY3NpL2RldmljZV9oYW5k
+bGVyL3Njc2lfZGhfZW1jLmMJMjAxMC0xMS0xNg0KPiAyMDo0MDozOC4wMDAwMDAwMDAgKzA4MDAN
+Cj4gQEAgLTY1MCw3ICs2NTAsNyBAQCBzdGF0aWMgaW50IGNsYXJpaW9uX2J1c19hdHRhY2goc3Ry
+dWN0IHNjDQo+ICAJdW5zaWduZWQgbG9uZyBmbGFnczsNCj4gIAlpbnQgZXJyOw0KPiANCj4gLQlz
+Y3NpX2RoX2RhdGEgPSBremFsbG9jKHNpemVvZihzdHJ1Y3Qgc2NzaV9kZXZpY2VfaGFuZGxlciAq
+KQ0KPiArCXNjc2lfZGhfZGF0YSA9IGt6YWxsb2Moc2l6ZW9mKHN0cnVjdCBzY3NpX2RoX2RhdGEp
+DQo+ICAJCQkgICAgICAgKyBzaXplb2YoKmgpICwgR0ZQX0tFUk5FTCk7DQo+ICAJaWYgKCFzY3Np
+X2RoX2RhdGEpIHsNCj4gIAkJc2Rldl9wcmludGsoS0VSTl9FUlIsIHNkZXYsICIlczogQXR0YWNo
+IGZhaWxlZFxuIiwNCj4gLS0tIGEvZHJpdmVycy9zY3NpL2RldmljZV9oYW5kbGVyL3Njc2lfZGhf
+aHBfc3cuYwkyMDEwLTExLTAxDQo+IDE5OjU0OjEyLjAwMDAwMDAwMCArMDgwMA0KPiArKysgYi9k
+cml2ZXJzL3Njc2kvZGV2aWNlX2hhbmRsZXIvc2NzaV9kaF9ocF9zdy5jCTIwMTAtMTEtMTYNCj4g
+MjA6NDA6MzYuMDAwMDAwMDAwICswODAwDQo+IEBAIC0zMzgsNyArMzM4LDcgQEAgc3RhdGljIGlu
+dCBocF9zd19idXNfYXR0YWNoKHN0cnVjdCBzY3NpXw0KPiAgCXVuc2lnbmVkIGxvbmcgZmxhZ3M7
+DQo+ICAJaW50IHJldDsNCj4gDQo+IC0Jc2NzaV9kaF9kYXRhID0ga3phbGxvYyhzaXplb2Yoc3Ry
+dWN0IHNjc2lfZGV2aWNlX2hhbmRsZXIgKikNCj4gKwlzY3NpX2RoX2RhdGEgPSBremFsbG9jKHNp
+emVvZihzdHJ1Y3Qgc2NzaV9kaF9kYXRhKQ0KPiAgCQkJICAgICAgICsgc2l6ZW9mKHN0cnVjdCBo
+cF9zd19kaF9kYXRhKSAsIEdGUF9LRVJORUwpOw0KPiAgCWlmICghc2NzaV9kaF9kYXRhKSB7DQo+
+ICAJCXNkZXZfcHJpbnRrKEtFUk5fRVJSLCBzZGV2LCAiJXM6IEF0dGFjaCBGYWlsZWRcbiIsDQo+
+IC0tLSBhL2RyaXZlcnMvc2NzaS9kZXZpY2VfaGFuZGxlci9zY3NpX2RoX3JkYWMuYwkyMDEwLTEx
+LTAxDQo+IDE5OjU0OjEyLjAwMDAwMDAwMCArMDgwMA0KPiArKysgYi9kcml2ZXJzL3Njc2kvZGV2
+aWNlX2hhbmRsZXIvc2NzaV9kaF9yZGFjLmMJMjAxMC0xMS0xNg0KPiAyMDo0MDozMi4wMDAwMDAw
+MDAgKzA4MDANCj4gQEAgLTgwMCw3ICs4MDAsNyBAQCBzdGF0aWMgaW50IHJkYWNfYnVzX2F0dGFj
+aChzdHJ1Y3Qgc2NzaV9kDQo+ICAJaW50IGVycjsNCj4gIAljaGFyIGFycmF5X25hbWVbQVJSQVlf
+TEFCRUxfTEVOXTsNCj4gDQo+IC0Jc2NzaV9kaF9kYXRhID0ga3phbGxvYyhzaXplb2Yoc3RydWN0
+IHNjc2lfZGV2aWNlX2hhbmRsZXIgKikNCj4gKwlzY3NpX2RoX2RhdGEgPSBremFsbG9jKHNpemVv
+ZihzdHJ1Y3Qgc2NzaV9kaF9kYXRhKQ0KPiAgCQkJICAgICAgICsgc2l6ZW9mKCpoKSAsIEdGUF9L
+RVJORUwpOw0KPiAgCWlmICghc2NzaV9kaF9kYXRhKSB7DQo+ICAJCXNkZXZfcHJpbnRrKEtFUk5f
+RVJSLCBzZGV2LCAiJXM6IEF0dGFjaCBmYWlsZWRcbiIsDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJl
+IGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIg0K
+PiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9y
+Zw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21ham9y
+ZG9tby1pbmZvLmh0bWwNCg==
