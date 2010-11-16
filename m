@@ -1,34 +1,37 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: SCSI TMF processing; tag allocation
-Date: Tue, 16 Nov 2010 23:28:53 +0300
-Message-ID: <4CE2E985.4050102@vlnb.net>
-References: <380694.87733.qm@web31812.mail.mud.yahoo.com> <20101113123750.GF18258@parisc-linux.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v5] SCSI host lock push-down
+Date: Tue, 16 Nov 2010 16:26:03 -0500
+Message-ID: <AANLkTikYdrNSn7of7fcwgXwQqDaHTD3Vcuh1=MAKP_dB@mail.gmail.com>
+References: <1289606118.3015.539.camel@mulgrave.site>
+	<AANLkTinj2BM2eGo2yyfzs=t+nu79WLW_bGYota9sDZwH@mail.gmail.com>
+	<20101113051635.GA11613@havoc.gtf.org>
+	<20101116071029.GA13540@havoc.gtf.org>
+	<AANLkTi=GGq0tMAWtwa-yQBpmpA8JCSWu1XK1rQ2j_Cmo@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101113123750.GF18258@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, Greg KH <greg@kroah.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jaxboe@fusionio.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:58093 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757580Ab0KPV0F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Nov 2010 16:26:05 -0500
+In-Reply-To: <AANLkTi=GGq0tMAWtwa-yQBpmpA8JCSWu1XK1rQ2j_Cmo@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-Matthew Wilcox, on 11/13/2010 03:37 PM wrote:
-> SPC-4 seems to indicate (in the INQUIRY command, 6.4.2) that support
-> for queueing is now non-optional, and even support for basic queueing
-> has been removed, replaced only with the 'command management model'.
-> I must confess to being somewhat confused by the difference between the
-> 'basic queue' model and 'command management' model
+On Tue, Nov 16, 2010 at 12:25 PM, Linus Torvalds
+<torvalds@linux-foundation.org> wrote:
+> On Mon, Nov 15, 2010 at 11:10 PM, Jeff Garzik <jeff@garzik.org> wrote:
+>>
+>> Move the mid-layer's ->queuecommand() invocation from being locked
+>> with the host lock to being unlocked to facilitate speeding up the
+>> critical path for drivers who don't need this lock taken anyway.
+>
+> Looks ok to me. How should I take this? Just as a patch? Or should it
+> go through the scsi tree?
 
-The 'command management model' is what was called 'full task management
-model' in SAM-3. The difference of it with 'basic task management model'
-in SAM-3 is that (basically) in the latter:
+Directly as a single patch (v5), if James acks; otherwise through
+jejb/scsi-rc-fixes.git I would presume.
 
- - Support only for SIMPLE or ORDERED commands (not both)
-
- - For SIMPLE commands their reorder can't be controlled
-
- - On any error all queued commands must be aborted and this behavior
-can't be controlled.
-
-Vlad
+     Jeff
