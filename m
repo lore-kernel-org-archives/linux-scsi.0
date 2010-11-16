@@ -1,106 +1,40 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: [PATCH] fix kzalloc in scsi device handler
-Date: Tue, 16 Nov 2010 12:23:35 -0700
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4F51A8010@cosmail01.lsi.com>
-References: <AANLkTimsOGcybKBvJCjbtUaUpg5asYMDSky2QhovjcG+@mail.gmail.com>
- <201011161835.49079.eike-kernel@sf-tec.de>
- <E463DF2B2E584B4A82673F53D62C2EF4F51A7FEA@cosmail01.lsi.com>
- <201011162017.44328.eike-kernel@sf-tec.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Unloading sym53c8xx driver causes ___free_dma_mem_cluster
+	warnings
+Date: Tue, 16 Nov 2010 12:27:19 -0700
+Message-ID: <20101116192718.GC6178@parisc-linux.org>
+References: <20101116191309.DD04C14E644@gemini.denx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:49762 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757393Ab0KPTXh convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Nov 2010 14:23:37 -0500
-In-Reply-To: <201011162017.44328.eike-kernel@sf-tec.de>
-Content-Language: en-US
+Received: from palinux.external.hp.com ([192.25.206.14]:48490 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753528Ab0KPT1U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Nov 2010 14:27:20 -0500
+Content-Disposition: inline
+In-Reply-To: <20101116191309.DD04C14E644@gemini.denx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: Hillf Danton <dhillf@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chandra Seetharaman <chandra.seetharaman@us.ibm.com>
+To: Wolfgang Denk <wd@denx.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> -----Original Message-----
-> From: Rolf Eike Beer [mailto:eike-kernel@sf-tec.de]
-> Sent: Tuesday, November 16, 2010 1:18 PM
-> To: Moger, Babu
-> Cc: Hillf Danton; linux-scsi@vger.kernel.org; Chandra Seetharaman
-> Subject: Re: [PATCH] fix kzalloc in scsi device handler
+On Tue, Nov 16, 2010 at 08:13:09PM +0100, Wolfgang Denk wrote:
+> Hi,
 > 
-> Moger, Babu wrote:
-> > > -----Original Message-----
-> > > From: Rolf Eike Beer [mailto:eike-kernel@sf-tec.de]
-> > > Sent: Tuesday, November 16, 2010 11:36 AM
-> > > To: Moger, Babu
-> > > Cc: Hillf Danton; linux-scsi@vger.kernel.org; Chandra Seetharaman
-> > > Subject: Re: [PATCH] fix kzalloc in scsi device handler
-> > >
-> > > Moger, Babu wrote:
-> > > > Agree.. But this may not fix the problem completely.. Please see
-> my
-> > > > comments below.. Also copied Chandra if he has any comments..
-> > > >
-> > > > > -----Original Message-----
-> > > > > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> > > > > owner@vger.kernel.org] On Behalf Of Hillf Danton
-> > > > > Sent: Tuesday, November 16, 2010 7:34 AM
-> > > > > To: linux-scsi@vger.kernel.org
-> > > > > Subject: [PATCH] fix kzalloc in scsi device handler
-> > > > >
-> > > > > They look like typo, since there are four instances of kzalloc
-> > >
-> > > almost
-> > >
-> > > > > typed by the same finger.
-> > > > >
-> > > > > The pointer is replaced with a struct, which helps kzalloc
-> return
-> > > > > correct result.
-> > > > >
-> > > > > thanks for any comment on the possibility that mem overflow
-> could
-> > > > > happen.
-> > > > >
-> > > > > Signed-off-by: Hillf Danton <dhillf@gmail.com>
-> > > > > ---
-> > > > >
-> > > > > --- a/drivers/scsi/device_handler/scsi_dh_alua.c	2010-11-01
-> > > > > 19:54:12.000000000 +0800
-> > > > > +++ b/drivers/scsi/device_handler/scsi_dh_alua.c	2010-11-16
-> > > > > 20:40:36.000000000 +0800
-> > > > > @@ -759,7 +759,7 @@ static int alua_bus_attach(struct scsi_d
-> > > > >
-> > > > >  	unsigned long flags;
-> > > > >  	int err = SCSI_DH_OK;
-> > > > >
-> > > > > -	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
-> > > > > +	scsi_dh_data = kzalloc(sizeof(struct scsi_dh_data)
-> > > > >
-> > > > >  			       + sizeof(*h) , GFP_KERNEL);
-> > > >
-> > > > I think this should be like this below.
-> > > >
-> > > >       scsi_dh_data = kzalloc(sizeof(struct scsi_dh_data)
-> > > >
-> > > >   			       + sizeof(struct alua_dh_data) ,
-> GFP_KERNEL);
-> > >
-> > > How about kzalloc(sizeof(*scsi_dh_data) + sizeof(*h), GFP_KERNEL)?
-> >
-> > No.. This would only allocate couple of pointers..  The below should
-> be
-> > good enough..
-> 
-> No, it would not.
-> 
-> >      scsi_dh_data = kzalloc(sizeof(struct scsi_dh_data)
-> >    			       + sizeof(struct alua_dh_data) , GFP_KERNEL);
-> 
-> And that is exactly what I tried to avoid. Look at the * before the
-> variable
-> name. That would allocate the space for what that pointer is pointing
-> to.
+> when unloading the sym53c8xx driver a number of kernel warning
+> messages are printed:
 
-Ok.. got it.. Then, Your suggestion should work fine.. Thanks. 
+Yes, this is well known (if you search the scsi archives, you'll find
+several previous reports).  It's harmless -- the only place it could hurt
+is on ARM, and I've never heard of anyone plugging a sym2 card into an
+ARM machine.
+
+The fix would be quite involved, and the driver really isn't worth fixing
+-- the hardware tops out at 160 MB/s which is an order of magnitude
+lower performance than the hardware I'm currently working on.
+
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
