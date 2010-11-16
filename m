@@ -1,105 +1,64 @@
-From: Florian Mickler <florian@mickler.org>
-Subject: Re: [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Tue, 16 Nov 2010 09:49:38 +0100
-Message-ID: <20101116094938.5d55f4bf@schatten.dmk.lab>
-References: <4CDA6CD4.3010308@panasas.com>
-	<4CDAFE6E.7050200@vlnb.net>
-	<4CDBBE80.40908@panasas.com>
-	<4CDC56F9.9040601@vlnb.net>
-	<20101112012315.GE17097@core.coreip.homeip.net>
-	<4CDEC8D2.8080101@vlnb.net>
-	<20101113235938.GA1827@kroah.com>
-	<AANLkTi=PxYi8kCsAxbopUHBC+=2QPuoEcojdqugS88sH@mail.gmail.com>
-	<20101115184422.GA9566@kroah.com>
-	<4CE19A94.8080504@vlnb.net>
-	<20101115221359.GA9530@kroah.com>
-	<4CE210D3.5060703@cisco.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 2/2] target: rename Kbuild files to Makefile
+Date: Tue, 16 Nov 2010 12:32:47 +0200
+Message-ID: <4CE25DCF.30408@panasas.com>
+References: <20101115194325.GB23989@infradead.org>	 <1289853179.22107.114.camel@haakon2.linux-iscsi.org> <1289854531.22107.117.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4CE210D3.5060703@cisco.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from daytona.panasas.com ([67.152.220.89]:26983 "EHLO
+	daytona.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932793Ab0KPKcv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Nov 2010 05:32:51 -0500
+In-Reply-To: <1289854531.22107.117.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Mon, 15 Nov 2010 21:04:19 -0800
-Joe Eykholt <jeykholt@cisco.com> wrote:
-
+On 11/15/2010 10:55 PM, Nicholas A. Bellinger wrote:
+> On Mon, 2010-11-15 at 12:32 -0800, Nicholas A. Bellinger wrote:
+>> On Mon, 2010-11-15 at 14:43 -0500, Christoph Hellwig wrote:
+>>> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>>>
+>>
+>> I was under the impression that $(srcdir)/Kbuild was the preferred
+>> modern name..?
+>>
 > 
+> This is in fact mainline convention, commited as 9093542.
 > 
-> On 11/15/10 2:13 PM, Greg KH wrote:
-> > On Mon, Nov 15, 2010 at 11:39:48PM +0300, Vladislav Bolkhovitin wrote:
-> >> Greg KH, on 11/15/2010 09:44 PM wrote:
-> >> > On Mon, Nov 15, 2010 at 06:45:24PM +0100, Bart Van Assche wrote:
-> >> >> On Sun, Nov 14, 2010 at 12:59 AM, Greg KH <greg@kroah.com> wrote:
-> >> >>>
-> >> >>> On Sat, Nov 13, 2010 at 08:20:18PM +0300, Vladislav Bolkhovitin wrote:
-> >> >>>> So, I decided to reimplement it to be completely synchronous. SYSFS
-> >> >>>> authors did really great job and thanks to the excellent internal SYSFS
-> >> >>>> design and implementation it is absolutely safe. See:
-> >> >>>>
-> >> >>>> [root@tgt ~]# modprobe scst
-> >> >>>> [root@tgt ~]# cd /sys/kernel/scst_tgt/
-> >> >>>
-> >> >>> Sorry, but no, you can't put this in /sys/kernel/ without getting the
-> >> >>> approval of the sysfs maintainer.
-> >> >>>
-> >> >>> I really don't understand why you are using kobjects in the first place,
-> >> >>> why isn't this in the main device tree in the kernel, using 'struct
-> >> >>> device'?
-> >> >>
-> >> >> We might have missed something, but as far as we know it has not yet
-> >> >> been explained in this thread why using 'struct device' would be an
-> >> >> advantage over using 'struct kobject'.
-> >> >
-> >> > It's very simple.
-> >> >
-> >> > You want your device to show up in the global device tree in the kernel,
-> >> > not off to one side, unconnected to anything else.
-> >> >
-> >> > Please use 'struct device', it is what you want to do here.
-> >>
-> >> But we don't have any device to show up in the global device tree!
-> > 
-> > Not true at all.
-> > 
-> >> We don't have any devices in the struct device's understanding at all!
-> > 
-> > Then create them just like you are doing so for your kobject use.
-> > 
-> > The first device would be the root one, and then everything trickles
-> > down from there.
-> > 
-> > And use configfs for your configuration stuff, that's what it is there
-> > for, and if it doesn't somehow work properly for you, please work with
-> > the configfs developers to fix that up.
-> > 
-> > thanks,
-> > 
-> > greg k-h
+> Thanks!
 > 
-> I don't have any opinion on the above, but I don't see why sysfs can't be
-> used for configuration as well as its other roles. It seems to me wasteful
-> to require configfs to be used in order to change configuration when
-> sysfs works fine for this.
+> --nab
 
-Well, I'm not involved here.. but to me it makes sense. It's just a
-useful principle in software design. You don't take something that is
-designed for one purpose and mis-use it. It will grow warts and
-mutate, stealing flexibility. 
+[Rant below please ignore]
 
-it's one of the reasons many software projects become
-unmaintainable... nobody can change anything anymore because the
-once simple design has proliferated into a nine headed monster...
+>From Documentation/kbuild/makefiles.txt
 
+  === 3 The kbuild files
 
-> Just my two cents.
+  Most Makefiles within the kernel are kbuild Makefiles that use the
+  kbuild infrastructure. This chapter introduces the syntax used in the
+  kbuild makefiles.
+  The preferred name for the kbuild files are 'Makefile' but 'Kbuild' can
+  be used and if both a 'Makefile' and a 'Kbuild' file exists, then the 'Kbuild'
+  file will be used.
 
-My two cents too.
+This has changed since the time I started. Back then that text was:
+  The preferred name for the kbuild files are Kbuild
 
-> 
-> 	Joe
+If I go to a random subdirectory in the Kernel and do:
+[drivers/foo]$ make
+With a Kbuild file it outputs:
+make: *** No targets specified and no makefile found.  Stop.
 
-Flo
+With a Makefile it outputs:
+make: *** No targets.  Stop.
+
+Sigh! For me a "Makefile" is a make's makefile. Kbuild files are
+not makefiles and should not be named as one.
+
+But that's a lost cause
+Boaz
