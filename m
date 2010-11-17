@@ -1,87 +1,96 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 11/11] scsi_debug: Convert to host_lock less
-Date: Wed, 17 Nov 2010 14:19:55 -0800
-Message-ID: <1290032395-5062-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 02/11] libata: remove SCSI host lock and serial number usage from ata_scsi_queuecmd
+Date: Wed, 17 Nov 2010 14:18:33 -0800
+Message-ID: <1290032313-4879-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm29-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.248]:26338 "HELO
-	nm29-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933707Ab0KQWUA (ORCPT
+Received: from nm18.bullet.mail.ac4.yahoo.com ([98.139.52.215]:38519 "HELO
+	nm18.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758610Ab0KQWZS (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2010 17:20:00 -0500
+	Wed, 17 Nov 2010 17:25:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, Jeff Garzik <jeff@garzik.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Jeff Garzik <jeff@garzik.org>
 
-This patch converts scsi_debug to run in host_lock less mode with interrupts
-enabled, as we don't have a underly HW reason to use IRQ_DISABLE_SCSI_QCMD().
+cmd->serial_number is never tested in any path we reach; therefore we may
+remove the call to scsi_cmd_get_serial() inside DEF_SCSI_QCMD, the SCSI
+host_lock acquisition surrounding it, and our own SCSI host_lock
+unlock+relock cycle.
 
+Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/scsi_debug.c |   16 +++++++---------
- 1 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/ata/libata-scsi.c |   21 +++++++++------------
+ 1 files changed, 9 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index c499eb3..71cd1fa 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3538,7 +3538,7 @@ static void sdebug_remove_adapter(void)
- }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 19835d3..66aa4be 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3166,8 +3166,8 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
  
- static
--int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
-+int scsi_debug_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *SCpnt)
+ /**
+  *	ata_scsi_queuecmd - Issue SCSI cdb to libata-managed device
++ *	@shost: SCSI host of command to be sent
+  *	@cmd: SCSI command to be sent
+- *	@done: Completion function, called when command is complete
+  *
+  *	In some cases, this function translates SCSI commands into
+  *	ATA taskfiles, and queues the taskfiles to be sent to
+@@ -3177,42 +3177,39 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
+  *	ATA and ATAPI devices appearing as SCSI devices.
+  *
+  *	LOCKING:
+- *	Releases scsi-layer-held lock, and obtains host lock.
++ *	ATA host lock
+  *
+  *	RETURNS:
+  *	Return value from __ata_scsi_queuecmd() if @cmd can be queued,
+  *	0 otherwise.
+  */
+-static int ata_scsi_queuecmd_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
++int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
  {
- 	unsigned char *cmd = (unsigned char *) SCpnt->cmnd;
- 	int len, k;
-@@ -3566,17 +3566,17 @@ int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
- 	if (target == SCpnt->device->host->hostt->this_id) {
- 		printk(KERN_INFO "scsi_debug: initiator's id used as "
- 		       "target!\n");
--		return schedule_resp(SCpnt, NULL, done,
-+		return schedule_resp(SCpnt, NULL, SCpnt->scsi_done,
- 				     DID_NO_CONNECT << 16, 0);
+ 	struct ata_port *ap;
+ 	struct ata_device *dev;
+ 	struct scsi_device *scsidev = cmd->device;
+-	struct Scsi_Host *shost = scsidev->host;
+ 	int rc = 0;
++	unsigned long irq_flags;
+ 
+ 	ap = ata_shost_to_port(shost);
+ 
+-	spin_unlock(shost->host_lock);
+-	spin_lock(ap->lock);
++	spin_lock_irqsave(ap->lock, irq_flags);
+ 
+ 	ata_scsi_dump_cdb(ap, cmd);
+ 
+ 	dev = ata_scsi_find_dev(ap, scsidev);
+ 	if (likely(dev))
+-		rc = __ata_scsi_queuecmd(cmd, done, dev);
++		rc = __ata_scsi_queuecmd(cmd, cmd->scsi_done, dev);
+ 	else {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+-		done(cmd);
++		cmd->scsi_done(cmd);
  	}
  
- 	if ((SCpnt->device->lun >= scsi_debug_max_luns) &&
- 	    (SCpnt->device->lun != SAM2_WLUN_REPORT_LUNS))
--		return schedule_resp(SCpnt, NULL, done,
-+		return schedule_resp(SCpnt, NULL, SCpnt->scsi_done,
- 				     DID_NO_CONNECT << 16, 0);
- 	devip = devInfoReg(SCpnt->device);
- 	if (NULL == devip)
--		return schedule_resp(SCpnt, NULL, done,
-+		return schedule_resp(SCpnt, NULL, SCpnt->scsi_done,
- 				     DID_NO_CONNECT << 16, 0);
- 
- 	if ((scsi_debug_every_nth != 0) &&
-@@ -3610,8 +3610,8 @@ int scsi_debug_queuecommand_lck(struct scsi_cmnd *SCpnt, done_funct_t done)
- 			mk_sense_buffer(devip, ILLEGAL_REQUEST,
- 					INVALID_OPCODE, 0);
- 			errsts = check_condition_result;
--			return schedule_resp(SCpnt, devip, done, errsts,
--					     0);
-+			return schedule_resp(SCpnt, devip, SCpnt->scsi_done,
-+						errsts, 0);
- 		}
- 	}
- 
-@@ -3885,12 +3885,10 @@ xdwrite_read:
- 		errsts = check_condition_result;
- 		break;
- 	}
--	return schedule_resp(SCpnt, devip, done, errsts,
-+	return schedule_resp(SCpnt, devip, SCpnt->scsi_done, errsts,
- 			     (delay_override ? 0 : scsi_debug_delay));
+-	spin_unlock(ap->lock);
+-	spin_lock(shost->host_lock);
++	spin_unlock_irqrestore(ap->lock, irq_flags);
++
+ 	return rc;
  }
  
--static DEF_SCSI_QCMD(scsi_debug_queuecommand)
+-DEF_SCSI_QCMD(ata_scsi_queuecmd)
 -
- static struct scsi_host_template sdebug_driver_template = {
- 	.proc_info =		scsi_debug_proc_info,
- 	.proc_name =		sdebug_proc_name,
+ /**
+  *	ata_scsi_simulate - simulate SCSI command on ATA device
+  *	@dev: the target device
 -- 
 1.7.2.3
 
