@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 06/11] mpt2sas: Convert to host_lock less w/ interrupts disabled externally
-Date: Wed, 17 Nov 2010 14:19:09 -0800
-Message-ID: <1290032349-4959-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 07/11] fnic: Convert to host_lock less w/ interrupts disabled externally
+Date: Wed, 17 Nov 2010 14:19:18 -0800
+Message-ID: <1290032358-4979-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm5-vm0.bullet.mail.ne1.yahoo.com ([98.138.90.251]:33066 "HELO
-	nm5-vm0.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S935518Ab0KQWTO (ORCPT
+Received: from nm8-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.230]:21752 "HELO
+	nm8-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933707Ab0KQWTZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2010 17:19:14 -0500
+	Wed, 17 Nov 2010 17:19:25 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
@@ -15,46 +15,57 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, An
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts the mpt2sas driver to run in host_lock less mode
-with the new IRQ_DISABLE_SCSI_QCMD() that disables interrupts while
-calling ->queuecommand() dispatch
+This patch converts fnic to run in host_lock less mode with the new
+IRQ_DISABLE_SCSI_QCMD() that disables interrupts while calling ->queuecommand()
+dispatch.  It also drops the legacy host_lock unlock optimization.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c |   14 +++-----------
+ 1 files changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index 1a96a00..e564fe7 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -3304,7 +3304,7 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
- }
- 
- /**
-- * _scsih_qcmd - main scsi request entry point
-+ * _scsih_qcmd_irq_disable - main scsi request entry point
-  * @scmd: pointer to scsi command object
-  * @done: function pointer to be invoked on completion
-  *
-@@ -3315,7 +3315,7 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
-  * SCSI_MLQUEUE_HOST_BUSY if the entire host queue is full
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 22d0240..9f51beb 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -349,7 +349,8 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
+  * Routine to send a scsi cdb
+  * Called with host_lock held and interrupts disabled.
   */
- static int
--_scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
-+_scsih_qcmd_irq_disable(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
+-static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
++static int fnic_queuecommand_irq_disable(struct scsi_cmnd *sc,
++					void (*done)(struct scsi_cmnd *))
  {
- 	struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
- 	struct MPT2SAS_DEVICE *sas_device_priv_data;
-@@ -3441,7 +3441,7 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 	return SCSI_MLQUEUE_HOST_BUSY;
+ 	struct fc_lport *lp;
+ 	struct fc_rport *rport;
+@@ -373,13 +374,6 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 
+-	/*
+-	 * Release host lock, use driver resource specific locks from here.
+-	 * Don't re-enable interrupts in case they were disabled prior to the
+-	 * caller disabling them.
+-	 */
+-	spin_unlock(lp->host->host_lock);
+-
+ 	/* Get a new io_req for this SCSI IO */
+ 	fnic = lport_priv(lp);
+ 
+@@ -452,12 +446,10 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 		}
+ 	}
+ out:
+-	/* acquire host lock before returning to SCSI */
+-	spin_lock(lp->host->host_lock);
+ 	return ret;
  }
  
--static DEF_SCSI_QCMD(_scsih_qcmd)
-+static IRQ_DISABLE_SCSI_QCMD(_scsih_qcmd)
+-DEF_SCSI_QCMD(fnic_queuecommand)
++IRQ_DISABLE_SCSI_QCMD(fnic_queuecommand)
  
- /**
-  * _scsih_normalize_sense - normalize descriptor and fixed format sense data
+ /*
+  * fnic_fcpio_fw_reset_cmpl_handler
 -- 
 1.7.2.3
 
