@@ -1,96 +1,83 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 02/11] libata: remove SCSI host lock and serial number usage from ata_scsi_queuecmd
-Date: Wed, 17 Nov 2010 14:18:33 -0800
-Message-ID: <1290032313-4879-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 09/11] qla2xxx: Convert to host_lock less w/ interrupts disabled externally
+Date: Wed, 17 Nov 2010 14:19:38 -0800
+Message-ID: <1290032378-5020-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm18.bullet.mail.ac4.yahoo.com ([98.139.52.215]:38519 "HELO
-	nm18.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1758610Ab0KQWZS (ORCPT
+Received: from nm4-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.190]:34806 "HELO
+	nm4-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1758749Ab0KQW0W (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2010 17:25:18 -0500
+	Wed, 17 Nov 2010 17:26:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, Jeff Garzik <jeff@garzik.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Jeff Garzik <jeff@garzik.org>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-cmd->serial_number is never tested in any path we reach; therefore we may
-remove the call to scsi_cmd_get_serial() inside DEF_SCSI_QCMD, the SCSI
-host_lock acquisition surrounding it, and our own SCSI host_lock
-unlock+relock cycle.
+This patch converts qla2xxx to run in host_lock less mode with the new
+IRQ_DISABLE_SCSI_QCMD() that disables interrupts while calling ->queuecommand()
+dispatch.  It also drops the legacy host_lock unlock optimization.
 
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/ata/libata-scsi.c |   21 +++++++++------------
- 1 files changed, 9 insertions(+), 12 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c |   11 +++--------
+ 1 files changed, 3 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 19835d3..66aa4be 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3166,8 +3166,8 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
- 
- /**
-  *	ata_scsi_queuecmd - Issue SCSI cdb to libata-managed device
-+ *	@shost: SCSI host of command to be sent
-  *	@cmd: SCSI command to be sent
-- *	@done: Completion function, called when command is complete
-  *
-  *	In some cases, this function translates SCSI commands into
-  *	ATA taskfiles, and queues the taskfiles to be sent to
-@@ -3177,42 +3177,39 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
-  *	ATA and ATAPI devices appearing as SCSI devices.
-  *
-  *	LOCKING:
-- *	Releases scsi-layer-held lock, and obtains host lock.
-+ *	ATA host lock
-  *
-  *	RETURNS:
-  *	Return value from __ata_scsi_queuecmd() if @cmd can be queued,
-  *	0 otherwise.
-  */
--static int ata_scsi_queuecmd_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
-+int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
- {
- 	struct ata_port *ap;
- 	struct ata_device *dev;
- 	struct scsi_device *scsidev = cmd->device;
--	struct Scsi_Host *shost = scsidev->host;
- 	int rc = 0;
-+	unsigned long irq_flags;
- 
- 	ap = ata_shost_to_port(shost);
- 
--	spin_unlock(shost->host_lock);
--	spin_lock(ap->lock);
-+	spin_lock_irqsave(ap->lock, irq_flags);
- 
- 	ata_scsi_dump_cdb(ap, cmd);
- 
- 	dev = ata_scsi_find_dev(ap, scsidev);
- 	if (likely(dev))
--		rc = __ata_scsi_queuecmd(cmd, done, dev);
-+		rc = __ata_scsi_queuecmd(cmd, cmd->scsi_done, dev);
- 	else {
- 		cmd->result = (DID_BAD_TARGET << 16);
--		done(cmd);
-+		cmd->scsi_done(cmd);
- 	}
- 
--	spin_unlock(ap->lock);
--	spin_lock(shost->host_lock);
-+	spin_unlock_irqrestore(ap->lock, irq_flags);
-+
- 	return rc;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 1644eab..15db72b 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -534,7 +534,8 @@ qla2x00_get_new_sp(scsi_qla_host_t *vha, fc_port_t *fcport,
  }
  
--DEF_SCSI_QCMD(ata_scsi_queuecmd)
+ static int
+-qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
++qla2xxx_queuecommand_irq_disable(struct scsi_cmnd *cmd,
++				void (*done)(struct scsi_cmnd *))
+ {
+ 	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+@@ -544,7 +545,6 @@ qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *)
+ 	srb_t *sp;
+ 	int rval;
+ 
+-	spin_unlock_irq(vha->host->host_lock);
+ 	if (ha->flags.eeh_busy) {
+ 		if (ha->flags.pci_channel_io_perm_failure)
+ 			cmd->result = DID_NO_CONNECT << 16;
+@@ -585,8 +585,6 @@ qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *)
+ 	if (rval != QLA_SUCCESS)
+ 		goto qc24_host_busy_free_sp;
+ 
+-	spin_lock_irq(vha->host->host_lock);
 -
- /**
-  *	ata_scsi_simulate - simulate SCSI command on ATA device
-  *	@dev: the target device
+ 	return 0;
+ 
+ qc24_host_busy_free_sp:
+@@ -594,21 +592,18 @@ qc24_host_busy_free_sp:
+ 	mempool_free(sp, ha->srb_mempool);
+ 
+ qc24_host_busy_lock:
+-	spin_lock_irq(vha->host->host_lock);
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ 
+ qc24_target_busy:
+-	spin_lock_irq(vha->host->host_lock);
+ 	return SCSI_MLQUEUE_TARGET_BUSY;
+ 
+ qc24_fail_command:
+-	spin_lock_irq(vha->host->host_lock);
+ 	done(cmd);
+ 
+ 	return 0;
+ }
+ 
+-static DEF_SCSI_QCMD(qla2xxx_queuecommand)
++static IRQ_DISABLE_SCSI_QCMD(qla2xxx_queuecommand)
+ 
+ 
+ /*
 -- 
 1.7.2.3
 
