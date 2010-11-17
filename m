@@ -1,113 +1,83 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH v2] libata: remove scsi host lock and serial number usage
-Date: Wed, 17 Nov 2010 12:21:11 -0500
-Message-ID: <20101117172111.GA26812@havoc.gtf.org>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: [dm-devel] block_abort_queue (blk_abort_request) racing with
+ scsi_request_fn
+Date: Wed, 17 Nov 2010 09:49:25 -0800
+Message-ID: <20101117174925.GA2176@linux.vnet.ibm.com>
+References: <20100512052336.GB15240@linux.vnet.ibm.com>
+ <4CDA4524.4010204@cs.wisc.edu>
+ <4CDA49F8.9050406@cs.wisc.edu>
+ <20101110163047.GA26201@linux.vnet.ibm.com>
+ <4CDB0BAA.8060801@cs.wisc.edu>
+ <20101112175440.GA3978@linux.vnet.ibm.com>
+ <20101116213904.GA470@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:33046 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934939Ab0KQRVT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2010 12:21:19 -0500
+Received: from e31.co.us.ibm.com ([32.97.110.149]:38631 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754518Ab0KQRtd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2010 12:49:33 -0500
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com [9.17.195.107])
+	by e31.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id oAHHaHbC006366
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2010 10:36:17 -0700
+Received: from d03av06.boulder.ibm.com (d03av06.boulder.ibm.com [9.17.195.245])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id oAHHnToN159184
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2010 10:49:29 -0700
+Received: from d03av06.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av06.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id oAHHrXI7002671
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2010 10:53:34 -0700
 Content-Disposition: inline
+In-Reply-To: <20101116213904.GA470@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ide@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, James.Bottomley@suse.de
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
+Mike Snitzer <snitzer@redhat.com> wrote:
+> Hi Mike,
+> 
+> On Fri, Nov 12 2010 at 12:54pm -0500,
+> Mike Anderson <andmike@linux.vnet.ibm.com> wrote:
+> 
+> > By not directly timing out the I/O but accelerating the timeout by a
+> > factor. The value could be calculated as a percentage of the queue timeout
+> > value for a default with the option of exposing a sysfs attribute
+> > similar to fast_io_fail_tmo. The attribute could also provide a off
+> > method which we do not have today and is my bad that we do not have one
+> > (I posted the features patch to multipath but did not followup which
+> > would have provided a off).
+> 
+> You're referring to these patches:
+> https://patchwork.kernel.org/patch/96674/
+> https://patchwork.kernel.org/patch/96673/
+> 
 
-Much better...  Just updated #upstream-fixes with the below patch.
+Yes these are the patches that I was referring to.
 
-James just posted to linux-scsi
-	[PATCH] Eliminate error handler overload of the SCSI serial number
-but as Tejun pointed out, we _completely and entirely_ replace the SCSI
-error handler apparatus with our own, thereby eliminating any
-possibility that we would ever read or use cmd->serial_number.
+> Do you have an interest in pursuing these further? 
 
-Our lock profile is quite a bit improved.
+Yes.
 
-Further simplifications and cleanups related to 'done' are possible,
-but those are kept separate from the change below.
+> In the near-term
+> should we default to off (so introduce MP_FEATURE_ABORT_Q) -- given the
+> current race which exposes corruption?
+> 
 
+Given the current race exposure default to off might be the best choice.
 
-commit 23e701e6208191ad103517ae7a700f2dc59ab2ec
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Wed Nov 17 12:03:58 2010 -0500
+> Or are you now interested in accelerating the timeout?  I'd need to
+> review this thread in more detail to give you an opinion.  But I do know
+> that simply disabling dm-mpath's call to blk_abort_queue() enables some
+> extensive path failure load testing to _not_ cause the list corruption
+> that leads to a crash.
 
-    [libata] remove SCSI host lock and serial number usage from ata_scsi_queuecmd
-    
-    cmd->serial_number is never tested in any path we reach; therefore we may
-    remove the call to scsi_cmd_get_serial() inside DEF_SCSI_QCMD, the SCSI
-    host_lock acquisition surrounding it, and our own SCSI host_lock
-    unlock+relock cycle.
-    
-    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+I think the on/off control plus a fix to address the issue when it is on
+would be good. Since I do not believe we want the impact the normal IO
+path by more lock bouncing adding modification of the blk_abort_queue
+function appeared like one of the least distributive options. There might
+be others.
 
- drivers/ata/libata-scsi.c |   21 +++++++++------------
- 1 file changed, 9 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 19835d3..66aa4be 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3166,8 +3166,8 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
- 
- /**
-  *	ata_scsi_queuecmd - Issue SCSI cdb to libata-managed device
-+ *	@shost: SCSI host of command to be sent
-  *	@cmd: SCSI command to be sent
-- *	@done: Completion function, called when command is complete
-  *
-  *	In some cases, this function translates SCSI commands into
-  *	ATA taskfiles, and queues the taskfiles to be sent to
-@@ -3177,42 +3177,39 @@ static inline int __ata_scsi_queuecmd(struct scsi_cmnd *scmd,
-  *	ATA and ATAPI devices appearing as SCSI devices.
-  *
-  *	LOCKING:
-- *	Releases scsi-layer-held lock, and obtains host lock.
-+ *	ATA host lock
-  *
-  *	RETURNS:
-  *	Return value from __ata_scsi_queuecmd() if @cmd can be queued,
-  *	0 otherwise.
-  */
--static int ata_scsi_queuecmd_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
-+int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
- {
- 	struct ata_port *ap;
- 	struct ata_device *dev;
- 	struct scsi_device *scsidev = cmd->device;
--	struct Scsi_Host *shost = scsidev->host;
- 	int rc = 0;
-+	unsigned long irq_flags;
- 
- 	ap = ata_shost_to_port(shost);
- 
--	spin_unlock(shost->host_lock);
--	spin_lock(ap->lock);
-+	spin_lock_irqsave(ap->lock, irq_flags);
- 
- 	ata_scsi_dump_cdb(ap, cmd);
- 
- 	dev = ata_scsi_find_dev(ap, scsidev);
- 	if (likely(dev))
--		rc = __ata_scsi_queuecmd(cmd, done, dev);
-+		rc = __ata_scsi_queuecmd(cmd, cmd->scsi_done, dev);
- 	else {
- 		cmd->result = (DID_BAD_TARGET << 16);
--		done(cmd);
-+		cmd->scsi_done(cmd);
- 	}
- 
--	spin_unlock(ap->lock);
--	spin_lock(shost->host_lock);
-+	spin_unlock_irqrestore(ap->lock, irq_flags);
-+
- 	return rc;
- }
- 
--DEF_SCSI_QCMD(ata_scsi_queuecmd)
--
- /**
-  *	ata_scsi_simulate - simulate SCSI command on ATA device
-  *	@dev: the target device
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
