@@ -1,36 +1,70 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] fix kzalloc in scsi device handler
-Date: Wed, 17 Nov 2010 12:04:04 +0200
-Message-ID: <4CE3A894.5050303@panasas.com>
-References: <AANLkTimsOGcybKBvJCjbtUaUpg5asYMDSky2QhovjcG+@mail.gmail.com> <E463DF2B2E584B4A82673F53D62C2EF4F51A7EDA@cosmail01.lsi.com> <201011161835.49079.eike-kernel@sf-tec.de>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: [patch] fix TUR method in HP/COMPAQ MSA Device Handler
+Date: Wed, 17 Nov 2010 20:47:29 +0800
+Message-ID: <AANLkTikG+kH5RJj3TH0kiRde+kgvEz-Qwhd4TF3sE4Wo@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:59726 "EHLO
-	daytona.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932500Ab0KQKEH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2010 05:04:07 -0500
-In-Reply-To: <201011161835.49079.eike-kernel@sf-tec.de>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:49563 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024Ab0KQMra (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2010 07:47:30 -0500
+Received: by wwa36 with SMTP id 36so1977296wwa.1
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2010 04:47:29 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: "Moger, Babu" <Babu.Moger@lsi.com>, Hillf Danton <dhillf@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Chandra Seetharaman <chandra.seetharaman@us.ibm.com>
+To: linux-scsi@vger.kernel.org
 
-On 11/16/2010 07:35 PM, Rolf Eike Beer wrote:
-> 
-> How about:
-> 	scsi_dh_data = kzalloc(sizeof(*scsi_dh_data) + sizeof(*h), GFP_KERNEL)?
-> 
-> Eike
+[1] In case of tur_done(), though the result of scsi_normalize_sense()
+could be reused, the default ret is fixed to be SCSI_DH_IO, since
+tomato is not potato.
 
-I always prefer this form because this way I have all the information in
-that single statement. I'm allocating space for scsi_dh_data for what ever
-that would be. The other form I have to go looking up to see what is
-scsi_dh_data's type and there is place for error.
+[2] in case of hp_sw_tur(), retry is fixed according to HP_SW_RETRIES,
+though the sdev asks to try again.
 
-Naturally for above it would follow:
-	h = typeof(h)(scsi_dh_data + 1);
+Signed-off-by: Hillf Danton <dhillf@gmail.com>
+---
 
-My $0.017
-Boaz
+--- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2010-11-01
+19:54:12.000000000 +0800
++++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2010-11-17
+20:30:34.000000000 +0800
+@@ -95,6 +95,8 @@ static int tur_done(struct scsi_device *
+ 			   "%s: sending tur failed, sense %x/%x/%x\n",
+ 			   HP_SW_NAME, sshdr.sense_key, sshdr.asc,
+ 			   sshdr.ascq);
++
++		ret = SCSI_DH_IO;
+ 		break;
+ 	}
+
+@@ -113,6 +115,7 @@ static int hp_sw_tur(struct scsi_device
+ {
+ 	struct request *req;
+ 	int ret;
++	int retry_cnt = 0;
+
+ retry:
+ 	req = blk_get_request(sdev->request_queue, WRITE, GFP_NOIO);
+@@ -145,7 +148,12 @@ retry:
+ 	}
+ 	if (ret == SCSI_DH_IMM_RETRY) {
+ 		blk_put_request(req);
+-		goto retry;
++		if (retry_cnt++ < HP_SW_RETRIES)
++			goto retry;
++		else {
++			ret = SCSI_DH_IO;
++			goto out;
++		}
+ 	}
+ 	if (ret == SCSI_DH_DEV_OFFLINED) {
+ 		h->path_state = HP_SW_PATH_PASSIVE;
+@@ -153,7 +161,7 @@ retry:
+ 	}
+
+ 	blk_put_request(req);
+-
++ out:
+ 	return ret;
+ }
