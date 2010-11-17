@@ -1,30 +1,47 @@
-From: Andre Tomt <andre@tomt.net>
-Subject: Re: mvsas errors in 2.6.36
-Date: Wed, 17 Nov 2010 09:24:14 +0100
-Message-ID: <4CE3912E.6060904@tomt.net>
-References: <201010290650.32892.thomas@fjellstrom.ca> <201010310911.45738.thomas@fjellstrom.ca> <201011170053.31174.thomas@fjellstrom.ca>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: remove unlock+relock cycle in ata_scsi_queuecmd
+Date: Wed, 17 Nov 2010 11:01:13 +0100
+Message-ID: <4CE3A7E9.3010009@kernel.org>
+References: <20101117062958.GA2894@havoc.gtf.org> <AANLkTikQysiwSV_m38vKaEuPQ=NH10o2s69d=aNGOhLr@mail.gmail.com> <4CE38D70.4010507@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201011170053.31174.thomas@fjellstrom.ca>
+In-Reply-To: <4CE38D70.4010507@garzik.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: thomas@fjellstrom.ca
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/17/2010 08:53 AM, Thomas Fjellstrom wrote:
-[snip]
-> Still no fatal errors, but the problem is still happening regularly. It causes
-> a pause in disk io of a couple seconds at least. Really quite annoying.
-[snip]
+Hello, Jeff, Linus.
 
-After the mvsas update in 2.6.35 this started happening to me as well; 
-at least its better than the previous state - not working.. ;-) However, 
-after rolling a new 2.6.35 with the following fix that is queued up for 
-the upcoming 2.6.35 and 2.6.36 stable releases, they seem to have 
-dissapeared - 3 days and counting.
+On 11/17/2010 09:08 AM, Jeff Garzik wrote:
+> Looking solely at the SCSI code (ie. ignoring LLD code), it seems
+> like the magic number zero for serial_number is signaling a boolean
+> condition "are we an EH command?"
+> 
+> EH tests this at the very beginning of the abort/reset/explode error
+> handling sequence, presumably to avoid recursive EH invocations
+> (scsi_try_to_abort_cmd).
+>
+> So maybe an EH expert (Tejun?) can correct me here, but I think we
+> may be able to completely the lock/get-serial/unlock sequence from
+> libata, as long as scsi_init_cmd_errh() reliably sets an "I am an EH
+> command" flag.
+> 
+> Would be nice if true...
 
-http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob_plain;f=queue-2.6.33/libsas-fix-ncq-mixing-with-non-ncq.patch;h=b6d7c92094d95ad67a3b23c2e09c25d4fbd0f46b;hb=HEAD
+Yeah, it's actually nice (for once).  libata doesn't use or care about
+scmd->serial_number at all.  The SCSI EH path you mentioned above is
+not applicable as libata implements its eh_strategy_handler and SCSI
+only calls scsi_try_to_abort_cmd() for the default EH handler,
+scsi_unjam_host().
 
-The fix is queued up for the next 2.6.36 and 2.6.35 stable point-releases.
+We'll need to test a bit to make sure everything is okay but I'm
+fairly certain removing it won't break anything fundamental.  If
+something breaks at all, it would be some silly easy-to-fix thing.
+
+Thanks.
+
+-- 
+tejun
