@@ -1,104 +1,41 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: [PATCH] Eliminate error handler overload of the SCSI serial number
-Date: Wed, 17 Nov 2010 10:10:57 -0600
-Message-ID: <1290010257.4736.50.camel@mulgrave.site>
+Subject: Re: [PATCH] libata: remove unlock+relock cycle in ata_scsi_queuecmd
+Date: Wed, 17 Nov 2010 10:11:16 -0600
+Message-ID: <1290010276.4736.51.camel@mulgrave.site>
+References: <20101117062958.GA2894@havoc.gtf.org>
+	 <AANLkTikQysiwSV_m38vKaEuPQ=NH10o2s69d=aNGOhLr@mail.gmail.com>
+	 <4CE38D70.4010507@garzik.org> <1290007719.4736.9.camel@mulgrave.site>
+	 <20101117154741.GA16768@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:43133 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934741Ab0KQQLB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2010 11:11:01 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101117154741.GA16768@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Mike Anderson <andmike@linux.vnet.ibm.com>
 
-The error handler is using the test cmd->serial_number == 0 in the
-abort routines to signal that the command to be aborted has already
-completed normally.  This design was to close a race window in the
-original error handler where a command could go through the normal
-completion routines after it timed out but before error handling was
-started.
+On Wed, 2010-11-17 at 10:47 -0500, Christoph Hellwig wrote:
+> > Right ... I couldn't persuade anyone else to do it, so I'll probably end
+> > up coding it.  It looks like the serial number zero check might be
+> > bogus.  If so I'll remove it, then push the serial number acquisition
+> > down only into the locked queuecommand of only those drivers that
+> > actually use it (which were listed in the quoted email, and which might
+> > have a big impetus to remove it if the use is trivial).  Then we can
+> > begin unwinding the locking.
+> 
+> In dc395x, eata_pio, in2000, lpfc, megaraid_legacy, megaraid_mbox,
+> megaraid_sas, mesh, ncr53c8xx, qla1280, qla4xxx, wd33c93 and i2o_scsi
+> use it in printks only, and all this can be safely removed.
+> 
+> Except for EH that only leaves dpt_i2o, eata, mpt2sas, u14-34f, mptscsi
+> as non-trivial users.  If you sort out the EH side I'll volunteer to
+> kill the printks and add private serial numbers to the five drivers
+> mentioned above.
 
-Mike Anderson pointed out that when we converted our timeout and
-softirq completions, we picked up atomicity here because the block
-layer now mediates this with the REQ_ATOM_COMPLETE flag and guarantees
-that *either* the command times out or our done routine is called, but
-ensures we can't get both occurring.  That makes the serial number
-zero check redundant and it can be removed.
+You're on (you were cc'd on the patch) ... I was planning just to move
+the scsi_cmnd_get_serial() call into the locked queuecommand routine,
+but a more permanent solution might be better.
 
-Signed-off-by: James Bottomley <James.Bottomley@suse.de>
----
- drivers/scsi/scsi_error.c |   26 ++------------------------
- drivers/scsi/scsi_lib.c   |    5 -----
- 2 files changed, 2 insertions(+), 29 deletions(-)
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 824b8fc..30ac116 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -615,7 +615,7 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- 	return rtn;
- }
- 
--static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
-+static int scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
- {
- 	if (!scmd->device->host->hostt->eh_abort_handler)
- 		return FAILED;
-@@ -623,31 +623,9 @@ static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
- 	return scmd->device->host->hostt->eh_abort_handler(scmd);
- }
- 
--/**
-- * scsi_try_to_abort_cmd - Ask host to abort a running command.
-- * @scmd:	SCSI cmd to abort from Lower Level.
-- *
-- * Notes:
-- *    This function will not return until the user's completion function
-- *    has been called.  there is no timeout on this operation.  if the
-- *    author of the low-level driver wishes this operation to be timed,
-- *    they can provide this facility themselves.  helper functions in
-- *    scsi_error.c can be supplied to make this easier to do.
-- */
--static int scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
--{
--	/*
--	 * scsi_done was called just after the command timed out and before
--	 * we had a chance to process it. (db)
--	 */
--	if (scmd->serial_number == 0)
--		return SUCCESS;
--	return __scsi_try_to_abort_cmd(scmd);
--}
--
- static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
- {
--	if (__scsi_try_to_abort_cmd(scmd) != SUCCESS)
-+	if (scsi_try_to_abort_cmd(scmd) != SUCCESS)
- 		if (scsi_try_bus_device_reset(scmd) != SUCCESS)
- 			if (scsi_try_target_reset(scmd) != SUCCESS)
- 				if (scsi_try_bus_reset(scmd) != SUCCESS)
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index eafeeda..5b6bbae 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1403,11 +1403,6 @@ static void scsi_softirq_done(struct request *rq)
- 
- 	INIT_LIST_HEAD(&cmd->eh_entry);
- 
--	/*
--	 * Set the serial numbers back to zero
--	 */
--	cmd->serial_number = 0;
--
- 	atomic_inc(&cmd->device->iodone_cnt);
- 	if (cmd->result)
- 		atomic_inc(&cmd->device->ioerr_cnt);
--- 
-1.7.2.3
-
-
-
+James
