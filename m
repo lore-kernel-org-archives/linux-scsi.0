@@ -1,124 +1,34 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/3] target: simplify cmd transformation
-Date: Wed, 17 Nov 2010 14:21:59 -0800
-Message-ID: <1290032519.31890.56.camel@haakon2.linux-iscsi.org>
-References: <20101117213847.GA26557@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 03/11] scsi: Add IRQ_DISABLE_SCSI_QCMD wrapper
+Date: Wed, 17 Nov 2010 17:27:52 -0500
+Message-ID: <20101117222752.GA26760@infradead.org>
+References: <1290032322-4899-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:39729 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935070Ab0KQW1W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2010 17:27:22 -0500
-In-Reply-To: <20101117213847.GA26557@infradead.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:45901 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758610Ab0KQW2E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2010 17:28:04 -0500
+Content-Disposition: inline
+In-Reply-To: <1290032322-4899-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>
 
-On Wed, 2010-11-17 at 16:38 -0500, Christoph Hellwig wrote:
-> There is no need for the transport_cdb_transform function pointer,
-> we can simply call the right code based on the cmd flags.
+On Wed, Nov 17, 2010 at 02:18:42PM -0800, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> This patch adds a IRQ_DISABLE_SCSI_QCMD() wrapper macro used by LLDs
+> that can now run in host_lock less mode, but still need interrupts disabled
+> using local_irq_save() before calling their lld_queuecommand() dispatcher.
 > 
+> jgarzik says this method is in fact slower than doing a spin_lock_irqsave() on
+> internal lib_lld_queuecommand() callers (as is done in libiscsi and libata)
+> but is still needed by the majority of lock_less LLDs.
 
-Hmmm, it is really less expensive to drop cmd->transport_cdb_transport()
-and change transport_generic_new_cmd() to require 4 bitwise AND instructions
-for each bulk SCF_SCSI_DATA_SG_IO_CDB cmd..?
-
-> Index: lio-core/drivers/target/target_core_transport.c
-> ===================================================================
-> --- lio-core.orig/drivers/target/target_core_transport.c	2010-11-16 18:52:11.887253809 +0100
-> +++ lio-core/drivers/target/target_core_transport.c	2010-11-16 18:55:26.414004751 +0100
-> @@ -2258,16 +2258,6 @@ static struct se_task *transport_generic
->  	return task;
->  }
->  
-> -static int transport_process_data_sg_transform(
-> -	struct se_cmd *cmd,
-> -	struct se_transform_info *ti)
-> -{
-> -	/*
-> -	 * Already handled in transport_generic_get_cdb_count()
-> -	 */
-> -	return 0;
-> -}
-> -
->  static int transport_do_se_mem_map(struct se_device *, struct se_task *,
->  	struct list_head *, void *, struct se_mem *, struct se_mem **,
->  	u32 *, u32 *);
-> @@ -2635,22 +2625,16 @@ int transport_generic_allocate_tasks(
->  		DEBUG_CDB_H("Set cdb[0]: 0x%02x to"
->  				" SCF_SCSI_CONTROL_SG_IO_CDB\n", cdb[0]);
->  		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_SG_IO_CDB;
-> -		cmd->transport_cdb_transform =
-> -				&transport_process_control_sg_transform;
->  		break;
->  	case TGCS_CONTROL_NONSG_IO_CDB:
->  		DEBUG_CDB_H("Set cdb[0]: 0x%02x to "
->  				"SCF_SCSI_CONTROL_NONSG_IO_CDB\n", cdb[0]);
->  		cmd->se_cmd_flags |= SCF_SCSI_CONTROL_NONSG_IO_CDB;
-> -		cmd->transport_cdb_transform =
-> -				&transport_process_control_nonsg_transform;
->  		break;
->  	case TGCS_NON_DATA_CDB:
->  		DEBUG_CDB_H("Set cdb[0]: 0x%02x to "
->  				"SCF_SCSI_NON_DATA_CDB\n", cdb[0]);
->  		cmd->se_cmd_flags |= SCF_SCSI_NON_DATA_CDB;
-> -		cmd->transport_cdb_transform =
-> -				&transport_process_non_data_transform;
->  		break;
->  	case TGCS_UNSUPPORTED_CDB:
->  		DEBUG_CDB_H("Set cdb[0]: 0x%02x to"
-> @@ -5280,8 +5264,6 @@ static int transport_new_cmd_obj(
->  		}
->  		T_TASK(cmd)->t_task_cdbs += task_cdbs;
->  
-> -		cmd->transport_cdb_transform =
-> -				&transport_process_data_sg_transform;
->  #if 0
->  		printk(KERN_INFO "data_length: %u, LBA: %llu t_tasks_sectors:"
->  			" %u, t_task_cdbs: %u\n", obj_ptr, cmd->data_length,
-> @@ -6084,13 +6066,16 @@ int transport_generic_new_cmd(struct se_
->  		}
->  	}
->  
-> -	if (!(cmd->transport_cdb_transform)) {
-> -		dump_stack();
-> -		ret = PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
-> -		goto failure;
-> -	}
-> +	if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB)
-> +		ret = transport_process_control_sg_transform(cmd, &ti);
-> +	else if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB)
-> +		ret = transport_process_control_nonsg_transform(cmd, &ti);
-> +	else if (cmd->se_cmd_flags & SCF_SCSI_NON_DATA_CDB)
-> +		ret = transport_process_non_data_transform(cmd, &ti);
-> +	else
-> +		BUG_ON(!(cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB));
->  
-> -	if (cmd->transport_cdb_transform(cmd, &ti) < 0) {
-> +	if (ret < 0) {
->  		ret = PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
->  		goto failure;
->  	}
-> Index: lio-core/include/target/target_core_base.h
-> ===================================================================
-> --- lio-core.orig/include/target/target_core_base.h	2010-11-16 18:52:11.891253040 +0100
-> +++ lio-core/include/target/target_core_base.h	2010-11-16 18:55:26.415004611 +0100
-> @@ -574,8 +574,6 @@ struct se_cmd {
->  	struct se_transport_task *t_task;
->  	struct se_transport_task t_task_backstore;
->  	struct target_core_fabric_ops *se_tfo;
-> -	int (*transport_cdb_transform)(struct se_cmd *,
-> -					struct se_transform_info *);
->  	int (*transport_emulate_cdb)(struct se_cmd *);
->  	u32 (*transport_get_lba)(unsigned char *);
->  	unsigned long long (*transport_get_long_lba)(unsigned char *);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It's not an overly helpful macro.  There's no reason a driver should
+ever disable irqs on it's own without actually taking a lock.  Please
+invest the additional couple of minutes and do a proper conversion.
 
