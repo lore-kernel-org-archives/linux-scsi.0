@@ -1,20 +1,30 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: remove unlock+relock cycle in ata_scsi_queuecmd
-Date: Wed, 17 Nov 2010 03:13:49 -0500
-Message-ID: <4CE38EBD.2040606@garzik.org>
-References: <20101117062958.GA2894@havoc.gtf.org> <AANLkTikQysiwSV_m38vKaEuPQ=NH10o2s69d=aNGOhLr@mail.gmail.com> <4CE38D70.4010507@garzik.org>
+From: Andre Tomt <andre@tomt.net>
+Subject: Re: mvsas errors in 2.6.36
+Date: Wed, 17 Nov 2010 09:24:14 +0100
+Message-ID: <4CE3912E.6060904@tomt.net>
+References: <201010290650.32892.thomas@fjellstrom.ca> <201010310911.45738.thomas@fjellstrom.ca> <201011170053.31174.thomas@fjellstrom.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4CE38D70.4010507@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201011170053.31174.thomas@fjellstrom.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: thomas@fjellstrom.ca
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/17/2010 03:08 AM, Jeff Garzik wrote:
-> So maybe an EH expert (Tejun?) can correct me here, but I think we may
-> be able to completely the lock/get-serial/unlock sequence from libata,
-		^^^ er, completely remove
+On 11/17/2010 08:53 AM, Thomas Fjellstrom wrote:
+[snip]
+> Still no fatal errors, but the problem is still happening regularly. It causes
+> a pause in disk io of a couple seconds at least. Really quite annoying.
+[snip]
 
+After the mvsas update in 2.6.35 this started happening to me as well; 
+at least its better than the previous state - not working.. ;-) However, 
+after rolling a new 2.6.35 with the following fix that is queued up for 
+the upcoming 2.6.35 and 2.6.36 stable releases, they seem to have 
+dissapeared - 3 days and counting.
+
+http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob_plain;f=queue-2.6.33/libsas-fix-ncq-mixing-with-non-ncq.patch;h=b6d7c92094d95ad67a3b23c2e09c25d4fbd0f46b;hb=HEAD
+
+The fix is queued up for the next 2.6.36 and 2.6.35 stable point-releases.
