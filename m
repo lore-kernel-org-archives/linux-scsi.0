@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 08/11] lpfc: Convert to host_lock less w/ interrupts disabled externally
-Date: Wed, 17 Nov 2010 14:19:28 -0800
-Message-ID: <1290032368-4999-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 10/11] qla4xxx: Convert to host_lock less w/ interrupts disabled externally
+Date: Wed, 17 Nov 2010 14:19:46 -0800
+Message-ID: <1290032386-5042-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm16-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.238]:41366 "HELO
-	nm16-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933707Ab0KQWTf (ORCPT
+Received: from nm13-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.244]:39207 "HELO
+	nm13-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S933707Ab0KQWTv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2010 17:19:35 -0500
+	Wed, 17 Nov 2010 17:19:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
@@ -15,60 +15,71 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, An
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts lpfc to run in host_lock less mode with the new
+This patch converts qla4xxx to run in host_lock less mode with the new
 IRQ_DISABLE_SCSI_QCMD() that disables interrupts while calling ->queuecommand()
-dispatch.  It also drops the legacy host_lock unlock optimization around
-lpfc_sli_handle_fast_ring_event().
+dispatch.  It also drops the legacy host_lock unlock optimization.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c |    9 ++++-----
- 1 files changed, 4 insertions(+), 5 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c |   10 +++-------
+ 1 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 581837b..62a62e9 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -2886,7 +2886,7 @@ void lpfc_poll_timeout(unsigned long ptr)
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 0d48fb4..d21eba7 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -450,7 +450,7 @@ void qla4xxx_srb_compl(struct kref *ref)
  }
  
  /**
-- * lpfc_queuecommand - scsi_host_template queuecommand entry point
-+ * lpfc_queuecommand_irq_disable - scsi_host_template queuecommand entry point
-  * @cmnd: Pointer to scsi_cmnd data structure.
-  * @done: Pointer to done routine.
-  *
-@@ -2899,7 +2899,8 @@ void lpfc_poll_timeout(unsigned long ptr)
-  *   SCSI_MLQUEUE_HOST_BUSY - Block all devices served by this host temporarily.
+- * qla4xxx_queuecommand - scsi layer issues scsi command to driver.
++ * qla4xxx_queuecommand_irq_disable - scsi layer issues scsi command to driver.
+  * @cmd: Pointer to Linux's SCSI command structure
+  * @done_fn: Function that the driver calls to notify the SCSI mid-layer
+  *	that the command has been processed.
+@@ -463,7 +463,7 @@ void qla4xxx_srb_compl(struct kref *ref)
+  * completion handling).   Unfortunely, it sometimes calls the scheduler
+  * in interrupt context which is a big NO! NO!.
   **/
- static int
--lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
-+lpfc_queuecommand_irq_disable(struct scsi_cmnd *cmnd,
-+			void (*done) (struct scsi_cmnd *))
+-static int qla4xxx_queuecommand_lck(struct scsi_cmnd *cmd,
++static int qla4xxx_queuecommand_irq_disable(struct scsi_cmnd *cmd,
+ 				void (*done)(struct scsi_cmnd *))
  {
- 	struct Scsi_Host  *shost = cmnd->device->host;
- 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
-@@ -3038,11 +3039,9 @@ lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
- 		goto out_host_busy_free_buf;
- 	}
- 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
--		spin_unlock(shost->host_lock);
- 		lpfc_sli_handle_fast_ring_event(phba,
- 			&phba->sli.ring[LPFC_FCP_RING], HA_R0RE_REQ);
+ 	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
+@@ -508,8 +508,6 @@ static int qla4xxx_queuecommand_lck(struct scsi_cmnd *cmd,
+ 	    test_bit(DPC_RESET_HA_FW_CONTEXT, &ha->dpc_flags))
+ 		goto qc_host_busy;
  
--		spin_lock(shost->host_lock);
- 		if (phba->cfg_poll & DISABLE_FCP_RING_INT)
- 			lpfc_poll_rearm_timer(phba);
- 	}
-@@ -3060,7 +3059,7 @@ lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+-	spin_unlock_irq(ha->host->host_lock);
+-
+ 	srb = qla4xxx_get_new_srb(ha, ddb_entry, cmd, done);
+ 	if (!srb)
+ 		goto qc_host_busy_lock;
+@@ -518,7 +516,6 @@ static int qla4xxx_queuecommand_lck(struct scsi_cmnd *cmd,
+ 	if (rval != QLA_SUCCESS)
+ 		goto qc_host_busy_free_sp;
+ 
+-	spin_lock_irq(ha->host->host_lock);
+ 	return 0;
+ 
+ qc_host_busy_free_sp:
+@@ -526,7 +523,6 @@ qc_host_busy_free_sp:
+ 	mempool_free(srb, ha->srb_mempool);
+ 
+ qc_host_busy_lock:
+-	spin_lock_irq(ha->host->host_lock);
+ 
+ qc_host_busy:
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+@@ -537,7 +533,7 @@ qc_fail_command:
  	return 0;
  }
  
--static DEF_SCSI_QCMD(lpfc_queuecommand)
-+static IRQ_DISABLE_SCSI_QCMD(lpfc_queuecommand)
+-static DEF_SCSI_QCMD(qla4xxx_queuecommand)
++static IRQ_DISABLE_SCSI_QCMD(qla4xxx_queuecommand)
  
  /**
-  * lpfc_abort_handler - scsi_host_template eh_abort_handler entry point
+  * qla4xxx_mem_free - frees memory allocated to adapter
 -- 
 1.7.2.3
 
