@@ -1,89 +1,87 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: block_abort_queue (blk_abort_request) racing with scsi_request_fn
-Date: Wed, 17 Nov 2010 16:55:41 -0500
-Message-ID: <20101117215541.GA7785@redhat.com>
-References: <20100512052336.GB15240@linux.vnet.ibm.com>
- <4CDA4524.4010204@cs.wisc.edu>
- <4CDA49F8.9050406@cs.wisc.edu>
- <20101110163047.GA26201@linux.vnet.ibm.com>
- <4CDB0BAA.8060801@cs.wisc.edu>
- <20101112175440.GA3978@linux.vnet.ibm.com>
- <20101116213904.GA470@redhat.com>
- <20101117174925.GA2176@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH/RFCv2 00/11] First wave of LLD host_lock less conversion
+Date: Wed, 17 Nov 2010 14:18:15 -0800
+Message-ID: <1290032295-4838-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56497 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759107Ab0KQVzw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2010 16:55:52 -0500
-Content-Disposition: inline
-In-Reply-To: <20101117174925.GA2176@linux.vnet.ibm.com>
+Received: from nm23.bullet.mail.sp2.yahoo.com ([98.139.91.93]:35008 "HELO
+	nm23.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S934523Ab0KQWSU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Nov 2010 17:18:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, "dm-devel@redhat.com James Bottomley" <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Wed, Nov 17 2010 at 12:49pm -0500,
-Mike Anderson <andmike@linux.vnet.ibm.com> wrote:
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-> Mike Snitzer <snitzer@redhat.com> wrote:
-> > Hi Mike,
-> > 
-> > On Fri, Nov 12 2010 at 12:54pm -0500,
-> > Mike Anderson <andmike@linux.vnet.ibm.com> wrote:
-> > 
-> > > By not directly timing out the I/O but accelerating the timeout by a
-> > > factor. The value could be calculated as a percentage of the queue timeout
-> > > value for a default with the option of exposing a sysfs attribute
-> > > similar to fast_io_fail_tmo. The attribute could also provide a off
-> > > method which we do not have today and is my bad that we do not have one
-> > > (I posted the features patch to multipath but did not followup which
-> > > would have provided a off).
-> > 
-> > You're referring to these patches:
-> > https://patchwork.kernel.org/patch/96674/
-> > https://patchwork.kernel.org/patch/96673/
-> > 
-> 
-> Yes these are the patches that I was referring to.
-> 
-> > Do you have an interest in pursuing these further? 
-> 
-> Yes.
-> 
-> > In the near-term
-> > should we default to off (so introduce MP_FEATURE_ABORT_Q) -- given the
-> > current race which exposes corruption?
-> > 
-> 
-> Given the current race exposure default to off might be the best choice.
+Greetings all,
 
-OK, I can work to refresh these patches, invert the logic to default to
-off, and repost.  But in addition I'll post a 3rd patch that disallows
-anything but off.
+This series contains the v2 respin for the first series of lock_less LLD
+conversion patches now available from lio-core-2.6.git/lock_less-LLDs-for-38-v2
+This series is built on top of the recently committed to mainline full host_lock
+push down patch by jgarzik @ commit f281233d3, and the recent:
 
-> > Or are you now interested in accelerating the timeout?  I'd need to
-> > review this thread in more detail to give you an opinion.  But I do know
-> > that simply disabling dm-mpath's call to blk_abort_queue() enables some
-> > extensive path failure load testing to _not_ cause the list corruption
-> > that leads to a crash.
-> 
-> I think the on/off control plus a fix to address the issue when it is on
-> would be good. Since I do not believe we want the impact the normal IO
-> path by more lock bouncing adding modification of the blk_abort_queue
-> function appeared like one of the least distributive options. There might
-> be others.
+[PATCH] Eliminate error handler overload of the SCSI serial number
 
-OK, I'll defer to you (and/or Mike C) to propose that additional fix
-to allow us to safely enable the feature.  As part of that patch you'd
-revert the small change from my 3rd patch that disallows anything but
-off?
+The first patch to libiscsi does a conversion to host_lock less whilst using existing
+internal spin_lock_irqsave(); do_lld_work(); spin_unlock_irqrestore() LLD locks.
+The second patch from jgarzik included in the series does an simlar -> improved
+host_lock less conversion w/ interrupts disabled internally from the libata I/O
+queuecommand dispatcher.
 
-Could be that we won't need my 3rd patch -- if your additional fix for
-the race can be developed and tested quickly.  But "quickly" is all
-relative, the comprehensive load testing I've done is successful if it
-lasts ~50 hours without crashing.
+The third patch adds a IRQ_DISABLE_SCSI_QCMD wrapper similar to DEF_SCSI_QCMD()
+that will disable interrupts using local_irq_save() before calling
+lld_queuecommand_irq_disable().
 
-Thanks,
-Mike
+The forth -> eleventh patches convert libsas, message/fusion, mpt2sas, fnic, lpfc,
+qla2xxx and qla4xxx to run in host_lock less w/ IRQ_DISABLE_SCSI_QCMD().  The final
+patch drops the usage of DEF_SCSI_QCMD() around scsi_debug, which is fully capable
+of processing I/O w/o hard interrupts disabled.
+
+This code has been generated against this afternoon's .37-rc2, and compile tested only.
+
+To the CC'ed LLD maintainers, please have a look and add your comments / feedback
+as necessary.
+
+Thanks!
+
+--nab
+
+
+Jeff Garzik (1):
+  libata: remove SCSI host lock and serial number usage from
+    ata_scsi_queuecmd
+
+Nicholas Bellinger (10):
+  libiscsi: Convert to host_lock less w/ interrupts disabled internally
+  scsi: Add IRQ_DISABLE_SCSI_QCMD wrapper
+  libsas: Convert to host_lock less w/ interrupts disabled externally
+  message: Convert to host_lock less w/ interrupts disabled externally
+  mpt2sas: Convert to host_lock less w/ interrupts disabled externally
+  fnic: Convert to host_lock less w/ interrupts disabled externally
+  lpfc: Convert to host_lock less w/ interrupts disabled externally
+  qla2xxx: Convert to host_lock less w/ interrupts disabled externally
+  qla4xxx: Convert to host_lock less w/ interrupts disabled externally
+  scsi_debug: Convert to host_lock less
+
+ drivers/ata/libata-scsi.c            |   21 +++++++++------------
+ drivers/message/fusion/mptfc.c       |    2 +-
+ drivers/message/fusion/mptsas.c      |    6 +++---
+ drivers/message/fusion/mptscsih.c    |    8 +++++---
+ drivers/message/fusion/mptscsih.h    |    2 +-
+ drivers/message/fusion/mptspi.c      |    6 +++---
+ drivers/scsi/fnic/fnic_scsi.c        |   14 +++-----------
+ drivers/scsi/libiscsi.c              |   19 +++++++------------
+ drivers/scsi/libsas/sas_scsi_host.c  |    4 ++--
+ drivers/scsi/lpfc/lpfc_scsi.c        |    9 ++++-----
+ drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 +++---
+ drivers/scsi/qla2xxx/qla_os.c        |   11 +++--------
+ drivers/scsi/qla4xxx/ql4_os.c        |   10 +++-------
+ drivers/scsi/scsi_debug.c            |   16 +++++++---------
+ include/scsi/scsi_host.h             |   14 ++++++++++++++
+ 15 files changed, 68 insertions(+), 80 deletions(-)
+
+-- 
+1.7.2.3
+
