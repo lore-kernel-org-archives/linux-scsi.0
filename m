@@ -1,57 +1,58 @@
-From: =?UTF-8?B?546L56We?= <oujin.rera@gmail.com>
-Subject: Re: dma_mask on scsi_calculate_bounce_limit
-Date: Fri, 19 Nov 2010 01:54:24 +0800
-Message-ID: <AANLkTinHZC9iFjG1wyJTrRN_aMRkaGUgH=n2CF0wUG8f@mail.gmail.com>
-References: <AANLkTin4V6ZZ5T5x+had0+4hL3JzGyR3sa68qaJeZBYv@mail.gmail.com>
-	<1290093715.3041.13.camel@mulgrave.site>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 01/11] libiscsi: Convert to host_lock less w/ interrupts
+ disabled internally
+Date: Thu, 18 Nov 2010 12:26:59 -0600
+Message-ID: <4CE56FF3.300@cs.wisc.edu>
+References: <1290032304-4859-1-git-send-email-nab@linux-iscsi.org> <4CE47C12.80804@cs.wisc.edu> <4CE4F906.3080506@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gy0-f174.google.com ([209.85.160.174]:39003 "EHLO
-	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755203Ab0KRRyZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Nov 2010 12:54:25 -0500
-Received: by gyh4 with SMTP id 4so2022829gyh.19
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Nov 2010 09:54:25 -0800 (PST)
-In-Reply-To: <1290093715.3041.13.camel@mulgrave.site>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:53110 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760060Ab0KRSTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Nov 2010 13:19:50 -0500
+In-Reply-To: <4CE4F906.3080506@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>
 
-On Thu, Nov 18, 2010 at 11:21 PM, James Bottomley
-<James.Bottomley@suse.de> wrote:
-> On Thu, 2010-11-18 at 14:20 +0530, =E7=8E=8B=E7=A5=9E wrote:
->> Hi
+On 11/18/2010 03:59 AM, Boaz Harrosh wrote:
+> On 11/18/2010 03:06 AM, Mike Christie wrote:
+>> On 11/17/2010 04:18 PM, Nicholas A. Bellinger wrote:
+>>>    prepd_fault:
+>>>    	sc->scsi_done = NULL;
 >>
->> I have enabled DMA for my host device and when i connect a scsi devi=
-ce
->> to the host, it crashes in the following code..
+>>> -	done(sc);
+>>> -	spin_lock(host->host_lock);
+>>> +	sc->scsi_done(sc);
+>>>    	return 0;
 >>
->> Function: scsi_calculate_bounce_limit
+>> This will NULL pointer. See a couple lines above where we NULL it.
+>> iscsi_free_task checks if the scsi_done pointer is set and if it is it
+>> will call scsi_done.
 >>
->> =C2=A0if (host_dev && host_dev->dma_mask)
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 bounce_limit=
- =3D *host_dev->dma_mask;
+>> It is a hack to prevent the normal completion path from calling
+>> scsi_done. For the case where we return SCSI_MLQUEUE_TARGET_BUSY (the
+>> prepd_reject case) we need something to prevent scsi_done from getting
+>> called.
 >>
->> "*dma_mask" is illegal pointer operation. I would like to understand
->> is this known and is there reason behind such a code ?
+>> For the return 0/prepd_fault case we can just call sc->scsi_done, but we
+>> have to move some code around.
+>>
+>> I do not like how the code does the NULLing and testing. Let me work on
+>> this and send a tested patch.
 >
-> It likely means you're operating on a new architecture and its generi=
-c
-> devices haven't been set up correctly.
+> Mike if you are on this. Do you think we need the _irqsave locking.
+> I always thought that the network receive is not on the HW interrupt
+> but on a completion thread. Could you verify?
+>
 
-Could you please more specific on what is generic devices haven't been
-setup properly...
+Yeah, we do not need the irqsave locking, because for software iscsi the 
+session lock is just locked in softirqs/timers and the iscsi xmit 
+thread. For offload and iser (be2iscsi, bnx2i, iser and cxgb*) we have 
+similar combinations (some drivers have a tasklet thrown in there too) 
+and no real interrupts.
 
->
-> James
->
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+qla4xxx does not use the iscsi_queuecommand function.
