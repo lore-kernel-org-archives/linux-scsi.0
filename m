@@ -1,40 +1,95 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 03/11] scsi: Add IRQ_DISABLE_SCSI_QCMD wrapper
-Date: Thu, 18 Nov 2010 12:25:50 +0200
-Message-ID: <4CE4FF2E.1010303@panasas.com>
-References: <1290032322-4899-1-git-send-email-nab@linux-iscsi.org> <20101117222752.GA26760@infradead.org> <1290032970.31890.61.camel@haakon2.linux-iscsi.org> <20101117223735.GA514@infradead.org>
+Subject: Re: [PATCH 2/3] target: simplify cmd to task mapping
+Date: Thu, 18 Nov 2010 14:07:17 +0200
+Message-ID: <4CE516F5.10400@panasas.com>
+References: <20101117213857.GB26557@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:38877 "EHLO
+Received: from daytona.panasas.com ([67.152.220.89]:39845 "EHLO
 	daytona.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753790Ab0KRKZy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Nov 2010 05:25:54 -0500
-In-Reply-To: <20101117223735.GA514@infradead.org>
+	with ESMTP id S1750917Ab0KRMHT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Nov 2010 07:07:19 -0500
+In-Reply-To: <20101117213857.GB26557@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>
+Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-On 11/18/2010 12:37 AM, Christoph Hellwig wrote:
-> On Wed, Nov 17, 2010 at 02:29:30PM -0800, Nicholas A. Bellinger wrote:
->> Hmmm, this is following jgarzik's recommendation for LLDs that we could
->> not immediately identify a internal spin_lock to disable interrupts
->> upon.  (eg: not libiscsi and libata).
+On 11/17/2010 11:38 PM, Christoph Hellwig wrote:
+> The cmd to task mapping is almost the same for all control CDBs,
+> except for calling different backend methods to do the backed-specific
+> mapping.  Merge the code performing the mapping into a single
+> new transport_map_control_cmd_to_task helper, and kill the
+> transport_map_task callback by simplify calling the backend methods
+> directly for the single task for a control CDB, and hardcoding
+> ->map_task_SG for data CDBs.
 > 
-> In that case wait for the driver author to identify it.  If there's
-> no maintainer in reach chance is the driver doesn't care about the push
-> down.  No need to rush any of this, do it one driver at a time and get
-> it right.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
 
-I totally agree with Christoph. Patches 5, 6, 8, 11 all change behaviour
+<>
 
-I would like to see an "I audit the driver and ..." Please see my comment
-to [patch 6]
+> +static int
+> +transport_map_control_cmd_to_task(struct se_cmd *cmd,
+> +		struct se_transform_info *ti)
+> +{
+> +	struct se_device *dev = SE_DEV(cmd);
+> +	unsigned char *cdb;
+> +	struct se_task *task;
+> +	int ret;
+> +
+> +	task = transport_generic_get_task(ti, cmd, ti->se_obj_ptr,
+> +				  cmd->data_direction);
+> +	if (!task)
+> +		return PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
+> +
+> +	cdb = TRANSPORT(dev)->get_cdb(task);
+> +	if (cdb)
+> +		memcpy(cdb, cmd->t_task->t_task_cdb,
+> +			scsi_command_size(cmd->t_task->t_task_cdb));
+> +
+> +	task->task_size = cmd->data_length;
+> +	task->task_sg_num =
+> +		(cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB) ? 1 : 0;
+> +
+> +	atomic_inc(&cmd->t_task->t_fe_count);
+> +	atomic_inc(&cmd->t_task->t_se_count);
+> +
+> +	if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB) {
+> +		struct se_mem *se_mem, *se_mem_lout = NULL;
+> +		u32 se_mem_cnt = 0, task_offset = 0;
+> +
+> +		BUG_ON(list_empty(cmd->t_task->t_mem_list));
+> +
+> +		ret = transport_do_se_mem_map(dev, task,
+> +				cmd->t_task->t_mem_list, NULL, se_mem,
+> +				&se_mem_lout, &se_mem_cnt, &task_offset);
+> +		if (ret < 0)
+> +			return PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
+> +
+> +		if (dev->transport->map_task_SG)
+> +			return dev->transport->map_task_SG(task);
+> +		return 0;
+> +	} else if (cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
+> +		if (dev->transport->map_task_non_SG(task))
+> +			return dev->transport->map_task_non_SG(task);
+> +		return 0;
+> +	} else if (cmd->se_cmd_flags & SCF_SCSI_NON_DATA_CDB) {
+> +		if (dev->transport->cdb_none(task))
+> +			return dev->transport->cdb_none(task);
+> +		return 0;
 
-Do it one by one and open-code the local_irq_save/restore inside the
-main function. It's not like you can get away from a total audit and
-testing.
+If all these are mutual exclusive (if..elseif..else) can we not make
+them an enum and switch() for costless-ness and clarity?
 
 Boaz
+> +	} else {
+> +		BUG();
+> +		return PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
+> +	}
+> +}
+> +
+
+<>
