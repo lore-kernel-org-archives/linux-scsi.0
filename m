@@ -1,338 +1,359 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: Re: [PATCH][resend][SCSI] Reduce number of sequential pointer derefs
- in scsi_error.c and reduce size as well
-Date: Thu, 18 Nov 2010 21:49:29 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1011182140510.8526@swampdragon.chaosbits.net>
-References: <alpine.LNX.2.00.1011181957500.3651@swampdragon.chaosbits.net> <AANLkTi=McRJSHp8==o+=coK0_pK5s9dwUgLmrkohSmTX@mail.gmail.com>
+From: Vladislav Bolkhovitin <vvvvvst@gmail.com>
+Subject: Re: [Scst-devel] [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Fri, 19 Nov 2010 00:02:58 +0300
+Message-ID: <4CE59482.3050002@gmail.com>
+References: <20101109002829.GA22633@kroah.com> <4CD9A9B8.70708@vlnb.net> <4CDA6CD4.3010308@panasas.com> <4CDAFE6E.7050200@vlnb.net> <4CDBBE80.40908@panasas.com> <4CDC56F9.9040601@vlnb.net> <20101112012315.GE17097@core.coreip.homeip.net> <4CDEC8D2.8080101@vlnb.net> <20101113235938.GA1827@kroah.com> <4CE1017E.4090409@panasas.com> <20101115161620.GB5981@kroah.com> <4CE16B8E.1000300@panasas.com> <AANLkTikPVXGJ5-5YDk1uqfqrqxGLpSiSdaX3h7qxo-ie@mail.gmail.com> <8985DEAF-4227-4629-B90A-938D2BA3534E@etechsoft.com> <4CE2846C.6070501@vlnb.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:11850 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760449Ab0KRVCM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Nov 2010 16:02:12 -0500
-In-Reply-To: <AANLkTi=McRJSHp8==o+=coK0_pK5s9dwUgLmrkohSmTX@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CE2846C.6070501@vlnb.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Richard Williams <richard@etechsoft.com>, Bart Van Assche <bvanassche@acm.org>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>, Hannes Reinecke <hare@suse.de>, Andy Yan <ayan@marvell.com>, Andrew Morton <akpm@linux-foundation.org>, Vu Pham <vuhuong@mellanox.com>, Linus Torvalds <torvalds@linux-foundation.org>, Joel Becker <joel.becker@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, Eric Youngdale <eric@andante.org>, "David S. Miller" <davem@davemloft.net>, Mike Anderson <andmike@us.ibm.com>, Russell King <rmk@arm.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, 18 Nov 2010, Linus Torvalds wrote:
-
-> On Thu, Nov 18, 2010 at 11:30 AM, Jesper Juhl <jj@chaosbits.net> wrote:
-> >
-> > This is the fourth time I send this patch. For some reason it seems unable
-> > to get any feedback at all. I'd really appreciate a clear ACK or NACK on
-> > it and I'll keep resending it until it's either merged or I get a NACK
-> > with a reason.
+Vladislav Bolkhovitin, on 11/16/2010 04:17 PM wrote:
+> Your questions are very good, so let's summarize what we need to serve
+> the needs of a SCSI target subsystem (not necessary SCST) and see what
+> can fit them.
 > 
-> The patch looks ok to me, but you've basically selected the least
-> interesting file possible. No wonder people can't seem to care.
+> So, the needs:
 > 
-
-Thank you very much for reviewing the patch and replying with your 
-feedback!
-
-I agree that this is not the most sexy file in the tree to be modifying, 
-but I'm not seeking fame and fortune by doing this, just trying to 
-optimize the few corners I find - every little bit helps; right?
-
-
-> Also, this is just ugly as hell, and doesn't help anything:
+> 1. Be capable to represent to user space internal configuration to let
+> user space be able to see and analyze it, including various statistics.
 > 
-> +       int (*eh_abort_handler)(struct scsi_cmnd *) =
-> +               scmd->device->host->hostt->eh_abort_handler;
+> 2. Let user space manage the internal configuration.
 > 
-> since the compiler will have optimized that double access away anyway
-> (no writes in between). So you could have made it about a thousand
-> times more readable with no downside by doing
+> 3. Desired: possibility to send to user space events about important
+> internal actions, like I/O failures, which may need user space
+> intervention to recover, like switching from active to passive role in a
+> cluster.
 > 
->     struct scsi_host_template *hostt = scmd->device->host->hostt;
+> So, what can we do with ConfigFS:
 > 
->     if (!hostt->eh_abort_handler)
->         return FAILED;
->     return hostt->eh_abort_handler(scmd);
+> (1): Only partially, because by design ConfigFS isn't supposed to
+> represent internal configuration, it can only manage it. Extending
+> ConfigFS to be capable to do that would be, in my understanding, a
+> strong violation of its purpose and, hence, design and if went this way
+> eventually ConfigFS would become just a duplication of the SYSFS
+> functionality.
 > 
-> instead. Look ma, no long lines.
+> (2): ConfigFS can do that. This is exactly for what it was designed and
+> implemented. But in this particular application it would have some
+> limitations derived from (1): to manage harware-related entries a user
+> should magically know from somewhen names of those entries to create
+> them by "mkdir" command.
 > 
-> Rule of thumb: if you need more than one line for an expression or
-> variable definition, you're doing something wrong.
+> For instance, consider a user has a Fibre Channel HBA and want to use it
+> in the target mode. Before he can configure it, he should somehow know
+> its ports names and for each of them run:
 > 
+> # mkdir /sys/kernel/config/.../50:50:00:00:00:00:00:11
+> # mkdir /sys/kernel/config/.../50:50:00:00:00:00:00:12
+> ...
+> 
+> where 50:50:00:00:00:00:00:1x are the ports' names. Only after that
+> those ports appear on the ConfigFS and can be managed.
+> 
+> (3): No events at all.
+> 
+> Now consider SYSFS:
+> 
+> (1): Easily. This is exactly for what it was designed and implemented.
+> 
+> (2): Possible without any limitations and side effects.
+> 
+> (3): Also possible.
+> 
+> So, why not use SYSFS if it suits all the needs _without_ any additional
+> effort and patches?
+> 
+> Other alternatives? A set of custom IOCTLs? One more configuration FS? I
+> believe, those would be quite disgusting for all.
+> 
+>> Maybe I misunderstand - But if both sides have merit then wouldn't a
+>> compromise be appropriate?
+>>
+>> Maybe the sensical compromise is to use sysfs code to create a new
+>> namespace that would fit this purpose?  It seems that I am also
+>> hearing that the alternatives to sysfs aren't always adequate - so
+>> why not use sysfs, but have a place where it's appropriate to use it?
+> 
+> This is exactly what we are proposing: to use SYSFS in additional
+> namespace /sys/kernel/scst_tgt.
+> 
+> As far as I can see, only Greg is against it. Greg keeps his reasons
+> private, so I can only guess that Greg is against extending usage of
+> SYSFS (note, _usage_, not implementation! Everything needed long ago
+> implemented.) beyond the scope it was originally designed around 10
+> years ago. But SYSFS is already widely used this way in the kernel, as
+> Joe illustrated, hence there is demand for it. People need it. So, why
+> not to just acknowledge this fact and go ahead the simplest and most
+> useful for both users and developers way?
 
-Fair enough. Seeing your version of this and looking a second time at mine 
-I have to agree completely.
-You are absolutely right in stating that the compiler will handle this 
-just fine, so it's only a readabillity issue and your version is a *lot* 
-more readable than what I came up with.
+Since nobody objected, Greg, could you consider to ACK SCST SYSFS
+management interface in /sys/kernel/scst_tgt/, please? Please find the
+SCST SYSFS ABI documentation file you requested below.
 
-I've updated the patch below - the original changelog bit still applies, 
-only change is what you pointed out above.
+We are also preparing a new patch to free our objects in kobjects.release()
+without explicit x_initialized flags as you requested.
 
+Thank you for your effort,
+Vlad
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
- scsi_error.c |   87 +++++++++++++++++++++++++++++++----------------------------
- 1 file changed, 46 insertions(+), 41 deletions(-)
+Documentation/ABI/testing/sysfs-scst:
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 824b8fc..8dc02c6 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -3,14 +3,14 @@
-  *
-  *  SCSI error/timeout handling
-  *      Initial versions: Eric Youngdale.  Based upon conversations with
-- *                        Leonard Zubkoff and David Miller at Linux Expo, 
-+ *                        Leonard Zubkoff and David Miller at Linux Expo,
-  *                        ideas originating from all over the place.
-  *
-  *	Restructured scsi_unjam_host and associated functions.
-  *	September 04, 2002 Mike Anderson (andmike@us.ibm.com)
-  *
-  *	Forward port of Russell King's (rmk@arm.linux.org.uk) changes and
-- *	minor  cleanups.
-+ *	minor cleanups.
-  *	September 30, 2002 Mike Anderson (andmike@us.ibm.com)
-  */
- 
-@@ -129,14 +129,15 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- {
- 	struct scsi_cmnd *scmd = req->special;
- 	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
-+	struct Scsi_Host *host = scmd->device->host;
- 
- 	trace_scsi_dispatch_cmd_timeout(scmd);
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 
--	if (scmd->device->host->transportt->eh_timed_out)
--		rtn = scmd->device->host->transportt->eh_timed_out(scmd);
--	else if (scmd->device->host->hostt->eh_timed_out)
--		rtn = scmd->device->host->hostt->eh_timed_out(scmd);
-+	if (host->transportt->eh_timed_out)
-+		rtn = host->transportt->eh_timed_out(scmd);
-+	else if (host->hostt->eh_timed_out)
-+		rtn = host->hostt->eh_timed_out(scmd);
- 
- 	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
- 		     !scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
-@@ -195,7 +196,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
- 				++total_failures;
- 				if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD)
- 					++cmd_cancel;
--				else 
-+				else
- 					++cmd_failed;
- 			}
- 		}
-@@ -294,7 +295,7 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 			return NEEDS_RETRY;
- 		}
- 		/*
--		 * if the device is in the process of becoming ready, we 
-+		 * if the device is in the process of becoming ready, we
- 		 * should retry.
- 		 */
- 		if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
-@@ -507,22 +508,23 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	int rtn;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
- 					  __func__));
- 
--	if (!scmd->device->host->hostt->eh_host_reset_handler)
-+	if (!hostt->eh_host_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_host_reset_handler(scmd);
-+	rtn = hostt->eh_host_reset_handler(scmd);
- 
- 	if (rtn == SUCCESS) {
--		if (!scmd->device->host->hostt->skip_settle_delay)
-+		if (!hostt->skip_settle_delay)
- 			ssleep(HOST_RESET_SETTLE_TIME);
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		scsi_report_bus_reset(scmd->device->host,
--				      scmd_channel(scmd));
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(host->host_lock, flags);
-+		scsi_report_bus_reset(host, scmd_channel(scmd));
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -536,22 +538,23 @@ static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	int rtn;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
- 					  __func__));
- 
--	if (!scmd->device->host->hostt->eh_bus_reset_handler)
-+	if (!hostt->eh_bus_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_bus_reset_handler(scmd);
-+	rtn = hostt->eh_bus_reset_handler(scmd);
- 
- 	if (rtn == SUCCESS) {
--		if (!scmd->device->host->hostt->skip_settle_delay)
-+		if (!hostt->skip_settle_delay)
- 			ssleep(BUS_RESET_SETTLE_TIME);
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		scsi_report_bus_reset(scmd->device->host,
--				      scmd_channel(scmd));
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(host->host_lock, flags);
-+		scsi_report_bus_reset(host, scmd_channel(scmd));
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -577,16 +580,18 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	int rtn;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
--	if (!scmd->device->host->hostt->eh_target_reset_handler)
-+	if (!hostt->eh_target_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_target_reset_handler(scmd);
-+	rtn = hostt->eh_target_reset_handler(scmd);
- 	if (rtn == SUCCESS) {
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(host->host_lock, flags);
- 		__starget_for_each_device(scsi_target(scmd->device), NULL,
- 					  __scsi_report_device_reset);
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -605,11 +610,12 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- {
- 	int rtn;
-+	struct scsi_host_template *hostt = scmd->device->host->hostt;
- 
--	if (!scmd->device->host->hostt->eh_device_reset_handler)
-+	if (!hostt->eh_device_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_device_reset_handler(scmd);
-+	rtn = hostt->eh_device_reset_handler(scmd);
- 	if (rtn == SUCCESS)
- 		__scsi_report_device_reset(scmd->device, NULL);
- 	return rtn;
-@@ -617,10 +623,10 @@ static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- 
- static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
- {
--	if (!scmd->device->host->hostt->eh_abort_handler)
--		return FAILED;
--
--	return scmd->device->host->hostt->eh_abort_handler(scmd);
-+    struct scsi_host_template *hostt = scmd->device->host->hostt;
-+    if (!hostt->eh_abort_handler)
-+        return FAILED;
-+    return hostt->eh_abort_handler(scmd);
- }
- 
- /**
-@@ -867,7 +873,7 @@ EXPORT_SYMBOL(scsi_eh_finish_cmd);
-  *
-  * Description:
-  *    See if we need to request sense information.  if so, then get it
-- *    now, so we have a better idea of what to do.  
-+ *    now, so we have a better idea of what to do.
-  *
-  * Notes:
-  *    This has the unfortunate side effect that if a shost adapter does
-@@ -987,7 +993,6 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
- 			    !scsi_eh_tur(scmd)) {
- 				scsi_eh_finish_cmd(scmd, done_q);
- 			}
--				
- 		} else
- 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: aborting"
- 							  " cmd failed:"
-@@ -1031,7 +1036,7 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
-  *
-  * Notes:
-  *    If commands are failing due to not ready, initializing command required,
-- *	try revalidating the device, which will end up sending a start unit. 
-+ *	try revalidating the device, which will end up sending a start unit.
-  */
- static int scsi_eh_stu(struct Scsi_Host *shost,
- 			      struct list_head *work_q,
-@@ -1085,7 +1090,7 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
-  *    Try a bus device reset.  Still, look to see whether we have multiple
-  *    devices that are jammed or not - if we have multiple devices, it
-  *    makes no sense to try bus_device_reset - we really would need to try
-- *    a bus_reset instead. 
-+ *    a bus_reset instead.
-  */
- static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 				    struct list_head *work_q,
-@@ -1196,7 +1201,7 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- }
- 
- /**
-- * scsi_eh_bus_reset - send a bus reset 
-+ * scsi_eh_bus_reset - send a bus reset
-  * @shost:	&scsi host being recovered.
-  * @work_q:     &list_head for pending commands.
-  * @done_q:	&list_head for processed commands.
-@@ -1213,7 +1218,7 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 	 * we really want to loop over the various channels, and do this on
- 	 * a channel by channel basis.  we should also check to see if any
- 	 * of the failed commands are on soft_reset devices, and if so, skip
--	 * the reset.  
-+	 * the reset.
- 	 */
- 
- 	for (channel = 0; channel <= shost->max_channel; channel++) {
-@@ -1255,7 +1260,7 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- }
- 
- /**
-- * scsi_eh_host_reset - send a host reset 
-+ * scsi_eh_host_reset - send a host reset
-  * @work_q:	list_head for processed commands.
-  * @done_q:	list_head for processed commands.
-  */
-@@ -1408,7 +1413,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		return SUCCESS;
- 		/*
- 		 * when the low level driver returns did_soft_error,
--		 * it is responsible for keeping an internal retry counter 
-+		 * it is responsible for keeping an internal retry counter
- 		 * in order to avoid endless loops (db)
- 		 *
- 		 * actually this is a bug in this function here.  we should
-@@ -2005,7 +2010,7 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 		if (sb_len > 7)
- 			sshdr->additional_length = sense_buffer[7];
- 	} else {
--		/* 
-+		/*
- 		 * fixed format
- 		 */
- 		if (sb_len > 2)
+What:		/sys/kernel/scst_tgt/
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Contains SCST management interface entries.
 
+What:		/sys/kernel/scst_tgt/devices/
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Contains subdirectories for all SCST devices
 
+What:		/sys/kernel/scst_tgt/devices/<device>/exported/exportX
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Links to LUNs in the LUNs group where <device> exported, e.g. to
+		/sys/kernel/scst_tgt/targets/iscsi/iqn.2006-10.net.vlnb:tgt/luns/11
 
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please.
+What:		/sys/kernel/scst_tgt/devices/<device>/handler
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Link to dev handler of this device, if assigned, e.g. to
+		/sys/kernel/scst_tgt/handlers/dev_disk
 
+What:		/sys/kernel/scst_tgt/devices/<device>/type
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		SCSI type of this device as define by SAM.
+
+What:		/sys/kernel/scst_tgt/handlers/
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Contains all SCST dev handlers.
+
+What:		/sys/kernel/scst_tgt/handlers/<handler>/<device>
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Links to <device> managed by this dev handler, e.g.
+		ext3_disk1_4K -> /sys/kernel/scst_tgt/devices/ext3_disk1_4K
+
+What:		/sys/kernel/scst_tgt/handlers/<handler>/mgmt
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Management entry, which allows to create and delete
+		devices for this dev handler. See SysfsRules file for more
+		info.
+
+What:		/sys/kernel/scst_tgt/handlers/<handler>/type
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		SCSI type of this dev handler as define by SAM.
+
+What:		/sys/kernel/scst_tgt/sgv/
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Contains SCST SGV caches statistics.
+
+What:		/sys/kernel/scst_tgt/sgv/global_stats
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Contains global SGV cache statistics.
+
+What:		/sys/kernel/scst_tgt/sgv/<cache>/stats
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Contains statistics for SGV cache <cache>
+
+What:		/sys/kernel/scst_tgt/targets/
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Contains all SCST target drivers
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Contains all targets for <target_driver>
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/mgmt
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Optional management entry, which allows to create and
+		delete targets for this target driver. See SysfsRules
+		file for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/enable
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Optional attribute to enable <target_driver> and make it serve
+		incoming connections from initiators. Possible values:
+		1 - enable
+		0 - disable
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Contains security groups for <target>
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/mgmt
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Allows to create and delete security groups for <target>.
+		See README.scst for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/initiators/mgmt
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Allows to add and delete initiators to/from <group>.
+		See README.scst for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/initiators/<initiator_name>
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		One or more initiators in <group>. Contains initiator's name.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/luns/mgmt
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Allows to add and delete LUNs to/from <group>. See README.scst
+		for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/luns/<lun>/device
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Link to device for <lun>, e.g. to /sys/kernel/scst_tgt/devices/ext3_disk1_4K
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/luns/<lun>/read_only
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Sets if this LUN should be read only
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/addr_method
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Sets SCSI addressing method for <group>. See README.scst
+		for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/cpu_mask
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Sets CPU mask for threads serving initiators in <group>.
+		See README.scst for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/io_grouping_type
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Sets IO grouping types for threads serving initiators
+		in <group>. See README.scst for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/luns/mgmt
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Allows to add and delete LUNs to/from the <target>'s default
+		set of LUNs. See README.scst for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/luns/<lun>/device
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Link to device for <lun>, e.g. to /sys/kernel/scst_tgt/devices/ext3_disk1_4K
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/luns/<lun>/read_only
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Sets if this LUN should be read only
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/addr_method
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Sets SCSI addressing method for the <target>'s default
+		set of LUNs. See README.scst for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/cpu_mask
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Sets CPU mask for threads serving initiators in the
+		<target>'s default set of LUNs. See README.scst for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/io_grouping_type
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Sets IO grouping types for threads serving initiators
+		in the <target>'s default set of LUNs. See README.scst
+		for more info.
+
+What:		/sys/kernel/scst_tgt/targets/<target_driver>/<target>/enable
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Optional attribute to enable <target> and make it serve
+		incoming connections from initiators. Possible values:
+		1 - enable
+		0 - disable
+
+What:		/sys/kernel/scst_tgt/last_sysfs_mgmt_res
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Returning completion status of the last management
+		command. See README.scst for more info.
+
+What:		/sys/kernel/scst_tgt/setup_id
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Allows to read and write SCST setup ID. This ID can be
+		used in cases, when the same SCST configuration should
+		be installed on several targets, but exported from those
+		targets devices should have different IDs and SNs. For
+		instance, VDISK dev handler uses this ID to generate T10
+		vendor specific identifier and SN of the devices.
+
+What:		/sys/kernel/scst_tgt/threads
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Allows to read and set number of global SCST I/O
+		threads. Those threads used with async. dev handlers,
+		for instance, vdisk BLOCKIO or NULLIO
+
+What:		/sys/kernel/scst_tgt/version
+Date:		November 2010
+Contact:	Vladislav Bolkhovitin <vst@vlnb.net>
+Description:
+		Allows to see version of SCST and enabled optional features.
