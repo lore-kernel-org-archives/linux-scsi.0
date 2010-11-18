@@ -1,31 +1,49 @@
-From: <akande11@cox.net>
-Subject: XMAS BONANZA
-Date: Thu, 18 Nov 2010 12:42:14 -0800
-Message-ID: <20101118154216.LVPZ8.137379.imail@fed1rmwml46>
-Reply-To: ericdonald200@aol.com
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH][resend][SCSI] Reduce number of sequential pointer derefs
+ in scsi_error.c and reduce size as well
+Date: Thu, 18 Nov 2010 13:18:58 -0800
+Message-ID: <AANLkTim1MChiEa9rBL0ZfSCak6G2x4ivK47Svd6swEBS@mail.gmail.com>
+References: <alpine.LNX.2.00.1011181957500.3651@swampdragon.chaosbits.net>
+ <AANLkTi=McRJSHp8==o+=coK0_pK5s9dwUgLmrkohSmTX@mail.gmail.com> <alpine.LNX.2.00.1011182140510.8526@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fed1rmpop108.cox.net ([68.230.241.12]:32828 "EHLO
-	fed1rmpop108.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752910Ab0KRVT0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Nov 2010 16:19:26 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1011182140510.8526@swampdragon.chaosbits.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, Eric Youngdale <eric@andante.org>, "David S. Miller" <davem@davemloft.net>, Mike Anderson <andmike@us.ibm.com>, Russell King <rmk@arm.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-You were selected in the British award  that  took place
-November 5th, and you are to claim  the amount
-of one million Pounds which means you are one of our  lucky
-recipents, Your  number is: (CT-222-6747,FGN/P-900-56).
+On Thu, Nov 18, 2010 at 12:49 PM, Jesper Juhl <jj@chaosbits.net> wrote:
+>
+> Fair enough. Seeing your version of this and looking a second time at mine
+> I have to agree completely.
+> You are absolutely right in stating that the compiler will handle this
+> just fine, so it's only a readabillity issue and your version is a *lot*
+> more readable than what I came up with.
 
+Btw, one thing to look out for is all those function calls: it really
+looks like many of them would be better off not having to dereference
+the thing inside each helper function, but just have it dereferenced
+in the caller.
 
-You are to send us this info
+You might trying passing in "struct Scsi_Host *host" to a lot of those
+helper functions in addition to the 'scmd' part. There's a lot of
+"scmd->device->host" going on, and even if you remove some of them
+_within_ a function, if you really want to get rid of them you should
+probably do one of them in the caller.
 
-NAME IN FULL: 
-DELIVERY ADDRESS: 
-AGE: 
-NATIONALITY: 
-OCCUPATION: 
-PHONE: 
-SEX:
+That's why the queuecommand() function was changed to take
+
+    struct Scsi_Host *h, struct scsi_cmnd *
+
+as its arguments, because that host is used so commonly. And passing
+two arguments is usually free (ie almost all architectures pass it in
+registers), and that host variable almost always already exists in the
+caller because the caller already needed it.
+
+So if you changed the functions that only take "scsi_cmnd *" as an
+argument to match the new queuecommand() interface, I bet you'd get
+more cleanups. And the interfaces would match.
+
+              Linus
