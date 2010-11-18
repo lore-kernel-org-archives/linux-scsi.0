@@ -1,37 +1,53 @@
-From: =?UTF-8?B?546L56We?= <oujin.rera@gmail.com>
-Subject: dma_mask on scsi_calculate_bounce_limit
-Date: Thu, 18 Nov 2010 14:20:43 +0530
-Message-ID: <AANLkTin4V6ZZ5T5x+had0+4hL3JzGyR3sa68qaJeZBYv@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] libata: 'done' related SCSI cleanups
+Date: Thu, 18 Nov 2010 10:27:20 +0100
+Message-ID: <4CE4F178.8030807@kernel.org>
+References: <20101118040412.GA20168@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:35407 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755848Ab0KRIuo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Nov 2010 03:50:44 -0500
-Received: by yxf34 with SMTP id 34so1686653yxf.19
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Nov 2010 00:50:44 -0800 (PST)
+Received: from hera.kernel.org ([140.211.167.34]:40325 "EHLO hera.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755561Ab0KRJ1c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Nov 2010 04:27:32 -0500
+In-Reply-To: <20101118040412.GA20168@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Hi
+Hello, Jeff.
 
-I have enabled DMA for my host device and when i connect a scsi device
-to the host, it crashes in the following code..
+On 11/18/2010 05:04 AM, Jeff Garzik wrote:
+> 
+> Checked this into #upstream...
+> 
+> We cannot easily remove 'scsidone' pointer from struct ata_queued_cmd,
+> because of the following code in __ata_eh_qc_complete():
+> 
+> 	static void ata_eh_scsidone(struct scsi_cmnd *scmd)
+> 	{
+> 	        /* nada */
+> 	}
+> 
+> 	...
+> 
+> 	spin_lock_irqsave(ap->lock, flags);
+>         qc->scsidone = ata_eh_scsidone;
+> 	__ata_qc_complete(qc);
+> 	spin_unlock_irqrestore(ap->lock, flags);
+> 
+> 	scsi_eh_finish_cmd(scmd, &ap->eh_done_q);
+> 
+> I guess we're avoiding scsi_eh_done() here, Tejun?
 
-=46unction: scsi_calculate_bounce_limit
+No, we're avoiding the usual scsi_done() as after EH they're done by
+scsi_eh_flush_done_q().  We can factor out ata_scsi_qc_complete() and
+atapi_qc_complete() and create EH variants which don't call ->scsidone
+but I'm not sure that would worth the hassle.
 
-=A0if (host_dev && host_dev->dma_mask)
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bounce_limit =3D *host_dev->dma_mask;
+Thank you.
 
-"*dma_mask" is illegal pointer operation. I would like to understand
-is this known and is there reason behind such a code ?
-
-TIA
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
