@@ -1,58 +1,65 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 01/11] libiscsi: Convert to host_lock less w/ interrupts
- disabled internally
-Date: Thu, 18 Nov 2010 12:26:59 -0600
-Message-ID: <4CE56FF3.300@cs.wisc.edu>
-References: <1290032304-4859-1-git-send-email-nab@linux-iscsi.org> <4CE47C12.80804@cs.wisc.edu> <4CE4F906.3080506@panasas.com>
+From: "Eddie Wai" <eddie.wai@broadcom.com>
+Subject: Re: [PATCH 04/16] BNX2I: Updated the handling of NETEVENTs to
+ alleviate recovery
+Date: Thu, 18 Nov 2010 10:25:34 -0800
+Message-ID: <1290104736.6191.95.camel@ltirv-waie-lx1>
+References: <Eddie Wai <eddie.wai@broadcom.com>
+ <1289430297-30221-5-git-send-email-eddie.wai@broadcom.com>
+ <4CE49A06.10903@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:53110 "EHLO sabe.cs.wisc.edu"
+Received: from mms1.broadcom.com ([216.31.210.17]:2688 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760060Ab0KRSTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Nov 2010 13:19:50 -0500
-In-Reply-To: <4CE4F906.3080506@panasas.com>
+	id S1755600Ab0KRSXi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Nov 2010 13:23:38 -0500
+In-Reply-To: <4CE49A06.10903@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Tejun Heo <tj@kernel.org>, Mike Anderson <andmike@linux.vnet.ibm.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Eddie Wai <waie@broadcom.com>, James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
 
-On 11/18/2010 03:59 AM, Boaz Harrosh wrote:
-> On 11/18/2010 03:06 AM, Mike Christie wrote:
->> On 11/17/2010 04:18 PM, Nicholas A. Bellinger wrote:
->>>    prepd_fault:
->>>    	sc->scsi_done = NULL;
->>
->>> -	done(sc);
->>> -	spin_lock(host->host_lock);
->>> +	sc->scsi_done(sc);
->>>    	return 0;
->>
->> This will NULL pointer. See a couple lines above where we NULL it.
->> iscsi_free_task checks if the scsi_done pointer is set and if it is it
->> will call scsi_done.
->>
->> It is a hack to prevent the normal completion path from calling
->> scsi_done. For the case where we return SCSI_MLQUEUE_TARGET_BUSY (the
->> prepd_reject case) we need something to prevent scsi_done from getting
->> called.
->>
->> For the return 0/prepd_fault case we can just call sc->scsi_done, but we
->> have to move some code around.
->>
->> I do not like how the code does the NULLing and testing. Let me work on
->> this and send a tested patch.
->
-> Mike if you are on this. Do you think we need the _irqsave locking.
-> I always thought that the network receive is not on the HW interrupt
-> but on a completion thread. Could you verify?
->
+On Wed, 2010-11-17 at 19:14 -0800, Mike Christie wrote:
+> On 11/10/2010 05:04 PM, Eddie Wai wrote:
+> >   	case NETDEV_GOING_DOWN:
+> > -		set_bit(ADAPTER_STATE_GOING_DOWN,&hba->adapter_state);
+> > -		iscsi_host_for_each_session(hba->shost,
+> > -					    bnx2i_drop_session);
+> > +		/* Suspend all data transmissions */
+> > +		for (i = 0; i<  hba->max_active_conns; i++) {
+> > +			bnx2i_conn = bnx2i_get_conn_from_id(hba, i);
+> > +			if (bnx2i_conn) {
+> > +				conn = bnx2i_conn->cls_conn->dd_data;
+> > +				session = conn->session;
+> > +				spin_lock_irqsave(&session->lock, flags);
+> > +				bnx2i_conn->prev_sess_state = session->state;
+> > +				if (conn->stop_stage == 0)
+> > +					session->state = ISCSI_STATE_FAILED;
+> > +				spin_unlock_irqrestore(&session->lock, flags);
+> > +				iscsi_suspend_queue(conn);
+> > +				set_bit(ISCSI_SUSPEND_BIT,&conn->suspend_rx);
+> 
+> 
+> How do you go from going down to down? What happens (does net layer 
+> shutdown connections running and have the net driver clean something 
+> up)? How long does it take?
+All upper layer clean up will be conducted in another code path from the net layer via cnic.
+This will do the actual iSCSI connection cleanup.
+> You should not be digging into the session state and conn stop_stage and 
+> probably the suspend_rx bit.
+> 
+> Add some libiscsi function that just calls something like 
+> iscsi_conn_failure that does not initiate recovery. So basically just mv 
+> everything but the iscsi_conn_error_event call in iscsi_conn_failure to 
+> some new function iscsi_conn_suspend. Have iscsi_conn_failure call 
+> iscsi_conn_suspend and iscsi_conn_error_event, and then have your driver 
+> call iscsi_conn_suspend.
+> 
+Agreed.  Modifying the iscsi_conn_failure is a better solution.  We'll
+defer this change for now.
 
-Yeah, we do not need the irqsave locking, because for software iscsi the 
-session lock is just locked in softirqs/timers and the iscsi xmit 
-thread. For offload and iser (be2iscsi, bnx2i, iser and cxgb*) we have 
-similar combinations (some drivers have a tasklet thrown in there too) 
-and no real interrupts.
+Thanks,
+Eddie
 
-qla4xxx does not use the iscsi_queuecommand function.
+
