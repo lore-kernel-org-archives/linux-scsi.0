@@ -1,8 +1,8 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
+From: "Michael Chan" <mchan@broadcom.com>
 Subject: Re: [PATCH 04/16] BNX2I: Updated the handling of NETEVENTs to
  alleviate recovery
-Date: Thu, 18 Nov 2010 10:25:34 -0800
-Message-ID: <1290104736.6191.95.camel@ltirv-waie-lx1>
+Date: Thu, 18 Nov 2010 10:28:28 -0800
+Message-ID: <1290104908.7547.18.camel@HP1>
 References: <Eddie Wai <eddie.wai@broadcom.com>
  <1289430297-30221-5-git-send-email-eddie.wai@broadcom.com>
  <4CE49A06.10903@cs.wisc.edu>
@@ -10,15 +10,16 @@ Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2688 "EHLO mms1.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1324 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755600Ab0KRSXi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Nov 2010 13:23:38 -0500
+	id S1758760Ab0KRSbe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Nov 2010 13:31:34 -0500
 In-Reply-To: <4CE49A06.10903@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Eddie Wai <waie@broadcom.com>, James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
+Cc: Eddie Wai <waie@broadcom.com>, James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
+
 
 On Wed, 2010-11-17 at 19:14 -0800, Mike Christie wrote:
 > On 11/10/2010 05:04 PM, Eddie Wai wrote:
@@ -44,8 +45,13 @@ On Wed, 2010-11-17 at 19:14 -0800, Mike Christie wrote:
 > How do you go from going down to down? What happens (does net layer 
 > shutdown connections running and have the net driver clean something 
 > up)? How long does it take?
-All upper layer clean up will be conducted in another code path from the net layer via cnic.
-This will do the actual iSCSI connection cleanup.
+
+net layer will just stop transmitting on devices that are down.  But
+with iSCSI connections offloaded to our chips, these connections must be
+terminated and deleted before the net driver resets the chip.
+Otherwise, the chip won't come up correctly after reset.
+
+> 
 > You should not be digging into the session state and conn stop_stage and 
 > probably the suspend_rx bit.
 > 
@@ -56,10 +62,5 @@ This will do the actual iSCSI connection cleanup.
 > iscsi_conn_suspend and iscsi_conn_error_event, and then have your driver 
 > call iscsi_conn_suspend.
 > 
-Agreed.  Modifying the iscsi_conn_failure is a better solution.  We'll
-defer this change for now.
-
-Thanks,
-Eddie
 
 
