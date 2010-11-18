@@ -1,94 +1,59 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH v2] dm mpath: add feature flag to control call to blk_abort_queue
-Date: Wed, 17 Nov 2010 23:40:22 -0500
-Message-ID: <1290055222-12320-1-git-send-email-snitzer@redhat.com>
+From: Mike Anderson <andmike@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2] dm mpath: add feature flag to control call to
+ blk_abort_queue
+Date: Wed, 17 Nov 2010 23:20:32 -0800
+Message-ID: <20101118072032.GA13390@linux.vnet.ibm.com>
 References: <20101117215541.GA7785@redhat.com>
+ <1290055222-12320-1-git-send-email-snitzer@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47129 "EHLO mx1.redhat.com"
+Received: from e7.ny.us.ibm.com ([32.97.182.137]:54142 "EHLO e7.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752713Ab0KREkk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Nov 2010 23:40:40 -0500
-In-Reply-To: <20101117215541.GA7785@redhat.com>
+	id S1754890Ab0KRHUi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Nov 2010 02:20:38 -0500
+Received: from d01relay06.pok.ibm.com (d01relay06.pok.ibm.com [9.56.227.116])
+	by e7.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id oAI73jYE023404
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Nov 2010 02:03:45 -0500
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay06.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id oAI7Kbfs2273312
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Nov 2010 02:20:37 -0500
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id oAI7KalE027457
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Nov 2010 02:20:36 -0500
+Content-Disposition: inline
+In-Reply-To: <1290055222-12320-1-git-send-email-snitzer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com
-Cc: linux-scsi@vger.kernel.org, Mike Anderson <andmike@linux.vnet.ibm.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-Add 'features' member to 'struct multipath' and introduce
-MPF_ABORT_QUEUE as the first feature flag.  If "abort_queue_on_failure"
-is provided during mpath device configuration the MPF_ABORT_QUEUE
-feature flag will be set and blk_abort_queue() will be called during
-path failure to allow for lower latency path failures.
+Mike S,
 
-But this feature has been disabled by default due to a race (between
-blk_abort_queue and scsi_request_fn) that can lead to list corruption,
-from: https://www.redhat.com/archives/dm-devel/2010-November/msg00085.html
+Thanks for doing the refresh / update of the patch.
+I just did a quick test and did not see any issues but did have a couple
+of questions.
 
-"the cmd gets blk_abort_queued/timedout run on it and the scsi eh
-somehow is able to complete and run scsi_queue_insert while
-scsi_request_fn is still trying to process the request."
+Two questions:
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-Cc: Mike Anderson <andmike@linux.vnet.ibm.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/md/dm-mpath.c |   19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+1.) Should we bump the multipath targets version for this change?
 
-Index: linux-2.6/drivers/md/dm-mpath.c
-===================================================================
---- linux-2.6.orig/drivers/md/dm-mpath.c
-+++ linux-2.6/drivers/md/dm-mpath.c
-@@ -56,8 +56,14 @@ struct priority_group {
- 	struct list_head pgpaths;
- };
- 
-+/*
-+ * Bits for the m->features
-+ */
-+#define MPF_ABORT_QUEUE 0
-+
- /* Multipath context */
- struct multipath {
-+	unsigned long features;
- 	struct list_head list;
- 	struct dm_target *ti;
- 
-@@ -146,7 +152,8 @@ static void deactivate_path(struct work_
- 	struct pgpath *pgpath =
- 		container_of(work, struct pgpath, deactivate_path);
- 
--	blk_abort_queue(pgpath->path.dev->bdev->bd_disk->queue);
-+	if (test_bit(MPF_ABORT_QUEUE, &pgpath->pg->m->features))
-+		blk_abort_queue(pgpath->path.dev->bdev->bd_disk->queue);
- }
- 
- static struct priority_group *alloc_priority_group(void)
-@@ -813,6 +820,11 @@ static int parse_features(struct arg_set
- 			continue;
- 		}
- 
-+		if (!strnicmp(param_name, MESG_STR("abort_queue_on_failure"))) {
-+			set_bit(MPF_ABORT_QUEUE, &m->features);
-+			continue;
-+		}
-+
- 		if (!strnicmp(param_name, MESG_STR("pg_init_retries")) &&
- 		    (argc >= 1)) {
- 			r = read_param(_params + 1, shift(as),
-@@ -1382,11 +1394,14 @@ static int multipath_status(struct dm_ta
- 		DMEMIT("2 %u %u ", m->queue_size, m->pg_init_count);
- 	else {
- 		DMEMIT("%u ", m->queue_if_no_path +
--			      (m->pg_init_retries > 0) * 2);
-+			      (m->pg_init_retries > 0) * 2 +
-+			      test_bit(MPF_ABORT_QUEUE, &m->features));
- 		if (m->queue_if_no_path)
- 			DMEMIT("queue_if_no_path ");
- 		if (m->pg_init_retries)
- 			DMEMIT("pg_init_retries %u ", m->pg_init_retries);
-+		if (test_bit(MPF_ABORT_QUEUE, &m->features))
-+			DMEMIT("abort_queue_on_failure ");
- 	}
- 
- 	if (!m->hw_handler_name || type == STATUSTYPE_INFO)
+2.) A general question on the length of the feature name
+"abort_queue_on_failure" while the descriptive name is nice I noticed if
+I have two features that the multipath output line starts wrapping. I
+guess we could make the feature name shorter, but eventually if we added
+more features the line would eventually wrap so a shorted name will just
+stop wrapping now.
+
+(I had a old experimental patch where I was trying to use the feature
+flags to control the selection of fast fail flags to use and if full
+recovery was done on the IO. The output was kinda messy, but that is to
+be expected with this type of text interface vs a attribute based
+alternative.)
+
+Thanks,
+
+-andmike
+--
+Michael Anderson
+andmike@linux.vnet.ibm.com
