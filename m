@@ -1,43 +1,55 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH v2 14/14] BNX2I: Updated version to 2.6.2.1
-Date: Thu, 18 Nov 2010 17:30:09 -0800
-Message-ID: <1290130209-32133-15-git-send-email-eddie.wai@broadcom.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
+From: Malahal Naineni <malahal@us.ibm.com>
+Subject: Re: [dm-devel] [RFC] training mpath to discern between SCSI errors
+Date: Thu, 18 Nov 2010 19:11:49 -0800
+Message-ID: <20101119031149.GA28455@us.ibm.com>
+References: <20100825155918.GB8509@redhat.com>
+ <4C7B984E.4070802@suse.de>
+ <4C7B9F14.9080900@mvista.com>
+ <4C7BA670.2060303@suse.de>
+ <4C7BC5B4.3010707@suse.de>
+ <4CBC00B3.7090603@ce.jp.nec.com>
+ <4CBC35AE.9050002@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3429 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750920Ab0KSCNL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Nov 2010 21:13:11 -0500
-In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4CBC35AE.9050002@suse.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@novell.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
----
- drivers/scsi/bnx2i/bnx2i_init.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Hannes Reinecke [hare@suse.de] wrote:
+> > Also (although this might be a bit off topic from your patch),
+> > can we expand such a distinction to what should be logged?
+> > Currently, it's difficult to distinguish important SCSI/block errors
+> > and less important ones in kernel log.
+> > For example, when I get a link failure on sda, kernel prints something
+> > like below, regardless of whether the I/O is recovered by multipathing or not:
+> >   end_request: I/O error, dev sda, sector XXXXX
+> > 
+> Indeed, when using the above we could be modifying the above
+> message, eg by
+> 
+> end_request: transport error, dev sda, sector XXXXX
+> 
+> or
+> 
+> end_request: target error, dev sda, sector XXXXX
+> 
+> which would improve the output noticeable.
+> 
+> > Setting REQ_QUIET in dm-multipath could mask the message
+> > but also other important ones in SCSI.
+> > 
+> Hmm. Not sure about that, but I think the above modifications will
+> be useful already.
+> 
+> I'll be sending an updated patch.
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index 131ef80..58ad4d7 100644
---- a/drivers/scsi/bnx2i/bnx2i_init.c
-+++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -18,8 +18,8 @@ static struct list_head adapter_list = LIST_HEAD_INIT(adapter_list);
- static u32 adapter_count;
- 
- #define DRV_MODULE_NAME		"bnx2i"
--#define DRV_MODULE_VERSION	"2.1.3"
--#define DRV_MODULE_RELDATE	"Aug 10, 2010"
-+#define DRV_MODULE_VERSION	"2.6.2.1"
-+#define DRV_MODULE_RELDATE	"Nov 18, 2010"
- 
- static char version[] __devinitdata =
- 		"Broadcom NetXtreme II iSCSI Driver " DRV_MODULE_NAME \
--- 
-1.7.0.5
+Hannes, is there an updated version of this patch? It applied fine with
+Linus git tree with a minor reject! I would like to test an updated
+version if you have one (the update seems to refer to better logging
+only, right?).
 
-
+Thanks, Malahal.
