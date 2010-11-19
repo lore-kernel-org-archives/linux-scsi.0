@@ -1,81 +1,92 @@
-From: "Unrein, Jason" <Jason.Unrein@lsi.com>
-Subject: RE: missing mptsas support for  LSI Logic / Symbios Logic SAS1068
- PCI-X Fusion-MPT SAS [1000:0055] (rev 02)
-Date: Fri, 19 Nov 2010 13:15:47 -0700
-Message-ID: <D41A5B864986B546A595D85C4701A9C00102055408@cosmail03.lsi.com>
-References: <201011191842.25939.a.miskiewicz@gmail.com>
- <201011191939.07573.a.miskiewicz@gmail.com>
+From: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Subject: Re: [Scst-devel] [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Fri, 19 Nov 2010 12:22:02 -0800
+Message-ID: <20101119202202.GB6323@core.coreip.homeip.net>
+References: <20101113235938.GA1827@kroah.com>
+ <4CE1017E.4090409@panasas.com>
+ <20101115161620.GB5981@kroah.com>
+ <4CE16B8E.1000300@panasas.com>
+ <AANLkTikPVXGJ5-5YDk1uqfqrqxGLpSiSdaX3h7qxo-ie@mail.gmail.com>
+ <8985DEAF-4227-4629-B90A-938D2BA3534E@etechsoft.com>
+ <4CE2846C.6070501@vlnb.net>
+ <4CE59482.3050002@gmail.com>
+ <20101118214619.GA29097@kroah.com>
+ <4CE6BB4A.5060606@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:57857 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932120Ab0KSUUT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2010 15:20:19 -0500
-In-Reply-To: <201011191939.07573.a.miskiewicz@gmail.com>
-Content-Language: en-US
+Received: from mail-gy0-f174.google.com ([209.85.160.174]:47796 "EHLO
+	mail-gy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754718Ab0KSUWO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2010 15:22:14 -0500
+Content-Disposition: inline
+In-Reply-To: <4CE6BB4A.5060606@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>, "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Vladislav Bolkhovitin <vvvvvst@gmail.com>
+Cc: Greg KH <greg@kroah.com>, Richard Williams <richard@etechsoft.com>, Bart Van Assche <bvanassche@acm.org>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>, Hannes Reinecke <hare@suse.de>, Andy Yan <ayan@marvell.com>, Andrew Morton <akpm@linux-foundation.org>, Vu Pham <vuhuong@mellanox.com>, Linus Torvalds <torvalds@linux-foundation.org>, Joel Becker <joel.becker@oracle.com>
 
-SXMgdGhpcyBhbiBvbiBib2FyZCBNUFQgY2hpcCBvciBpcyBpdCBhbiBhZGQtaW4gSEJBPyAgSSdt
-IG5vdCBhd2FyZSBvZiBhIERJRCBvZiAweDU1LiAgTW9yZSB0aGFuIGxpa2VseSBpdOKAmXMgZWl0
-aGVyIGEgbWVnYXJhaWQgYm9hcmQgb3IgYSBjdXN0b21lciB0d2Vha2VkIHNvbWV0aGluZyBvZiBv
-dXJzLiBBIHBob3RvIG9mIGl0IGlmIGl0J3MgYW4gYWRkLWluIG9yIGEgbGluayB0byB0aGUgcHJv
-ZHVjdCBpdCdzIGluIHdvdWxkIGhlbHAgbmFycm93IGl0IGRvd24uICBBbHNvLCBpZiBpdCdzIGFu
-IG1wdGxpbnV4IGNhcmQsIHRoZXJlIHNob3VsZCBiZSB0d28gaWRlbnRpZmljYXRpb25zIG9uIGl0
-LiAgQm90aCBzaG91bGQgYmUgb24gYSB3aGl0ZSBsYWJlbCB3aXRoIGEgYmFyY29kZS4gIE9uZSB3
-aWxsIGJlIFNBUzMjIyMjWC4uLiBUaGUgb3RoZXIgd2lsbCBiZSBMIy0jIyMjLSMjIy4NCg0KDQot
-LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogQXJrYWRpdXN6IE1pc2tpZXdpY3ogW21h
-aWx0bzphLm1pc2tpZXdpY3pAZ21haWwuY29tXSANClNlbnQ6IEZyaWRheSwgTm92ZW1iZXIgMTks
-IDIwMTAgMTI6MzkgUE0NClRvOiBNb29yZSwgRXJpYw0KQ2M6IERMLU1QVCBGdXNpb24gTGludXg7
-IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogbWlzc2luZyBtcHRzYXMg
-c3VwcG9ydCBmb3IgTFNJIExvZ2ljIC8gU3ltYmlvcyBMb2dpYyBTQVMxMDY4IFBDSS1YIEZ1c2lv
-bi1NUFQgU0FTIFsxMDAwOjAwNTVdIChyZXYgMDIpDQoNCk9uIEZyaWRheSAxOSBvZiBOb3ZlbWJl
-ciAyMDEwLCBBcmthZGl1c3ogTWlza2lld2ljeiB3cm90ZToNCj4gSGksDQo+IA0KPiBJIHdvbmRl
-ciBpZiBtcHRzYXMgZHJpdmVyIGlzIGFibGUgdG8gc3VwcG9ydCB0aGlzIGhhcmR3YXJlPw0KPiAN
-Cj4gMDQ6MDguMCBTQ1NJIHN0b3JhZ2UgY29udHJvbGxlciBbMDEwMF06IExTSSBMb2dpYyAvIFN5
-bWJpb3MgTG9naWMgU0FTMTA2OA0KPiBQQ0ktIFggRnVzaW9uLU1QVCBTQVMgWzEwMDA6MDA1NV0g
-KHJldiAwMikNCj4gICAgICAgICBTdWJzeXN0ZW06IEludGVsIENvcnBvcmF0aW9uIERldmljZSBb
-ODA4NjozNTA0XQ0KPiANCj4gQ3VycmVudGx5IGRyaXZlciBkb2Vzbid0IGhhbmRsZSAxMDAwOjAw
-NTUgcGNpaWQuIFRoZSBwcm9ibGVtIHNlZW1zIHF1aXRlDQo+IG9sZCBzaW5jZSBJIGZvdW5kIHNv
-bWVvbmUgYXNraW5nIGZvciBpdCBsb25nIHRpbWUgYWdvDQo+IGh0dHA6Ly9sa21sLm9yZy9sa21s
-LzIwMDcvMS8yMy84Nw0KDQpbcm9vdEByZXNjdWUgbXB0c2FzXSMgZWNobyAxMDAwIDAwNTUgPiBu
-ZXdfaWQNCltyb290QHJlc2N1ZSBtcHRzYXNdIw0KDQpkcml2ZXMgd2VyZSBkZXRlY3RlZCwgSSB3
-YXMgYWJsZSB0byBjcmVhdGUgZmlsZXN5c3RlbSwgd3JpdGUsIHJlYWQgZmV3IGZpbGVzDQphbmQg
-dGhlc2Ugc2hvcnQgdGVzdHMgd29ya2VkIHdlbGwuIA0KDQpTbyBJIHdvbmRlciB3aGF0J3MgdGhl
-IGNhc2Ugd2l0aCBpdCBub3QgYmVpbmcgYWRkZWQgdG8gbXB0c2FzIGRyaXZlcj8gVGhhbmtzLg0K
-DQpbIDU2ODkuNDM2NTUxXSBtcHRzYXMgMDAwMDowNDowOC4wOiBQQ0kgSU5UIEEgLT4gR1NJIDE2
-IChsZXZlbCwgbG93KSAtPiBJUlEgMTYNClsgNTY4OS40MzY4ODZdIG1wdGJhc2U6IGlvYzA6IElu
-aXRpYXRpbmcgYnJpbmd1cA0KWyA1NjkwLjA0Mjc3MF0gaW9jMDogOiBDYXBhYmlsaXRpZXM9e0lu
-aXRpYXRvcn0NClsgNTY5OS40MjEwNjZdIHNjc2k4IDogaW9jMDogLCBGd1Jldj0wMTEyMDAwMGgs
-IFBvcnRzPTEsIE1heFE9NTExLCBJUlE9MTYNClsgNTY5OS40NTg3MDRdIG1wdHNhczogaW9jMDog
-YXR0YWNoaW5nIHNhdGEgZGV2aWNlOiBmd19jaGFubmVsIDAsIGZ3X2lkIDAsIHBoeSAwLCBzYXNf
-YWRkciAweDEyMjEwMDAwMDAwMDAwMDANClsgNTY5OS40NjE0OTVdIHNjc2kgODowOjA6MDogRGly
-ZWN0LUFjY2VzcyAgICAgQVRBICAgICAgU1Q5NTAwNDIwQVMgICAgICBTRE0xIFBROiAwIEFOU0k6
-IDUNClsgNTY5OS40NjUxODJdIHNkIDg6MDowOjA6IFtzZGFdIDk3Njc3MzE2OCA1MTItYnl0ZSBs
-b2dpY2FsIGJsb2NrczogKDUwMCBHQi80NjUgR2lCKQ0KWyA1Njk5LjQ2NTgyMl0gbXB0c2FzOiBp
-b2MwOiBhdHRhY2hpbmcgc2F0YSBkZXZpY2U6IGZ3X2NoYW5uZWwgMCwgZndfaWQgMSwgcGh5IDEs
-IHNhc19hZGRyIDB4MTIyMTAwMDAwMTAwMDAwMA0KWyA1Njk5LjQ2NjU5OV0gc2QgODowOjA6MDog
-QXR0YWNoZWQgc2NzaSBnZW5lcmljIHNnMCB0eXBlIDANClsgNTY5OS40NjkyMzJdIHNjc2kgODow
-OjE6MDogRGlyZWN0LUFjY2VzcyAgICAgQVRBICAgICAgU1Q5NTAwNDIwQVMgICAgICBTRE0xIFBR
-OiAwIEFOU0k6IDUNClsgNTY5OS40NzExNDBdIHNkIDg6MDoxOjA6IEF0dGFjaGVkIHNjc2kgZ2Vu
-ZXJpYyBzZzEgdHlwZSAwDQpbIDU2OTkuNDcyODQyXSBzZCA4OjA6MTowOiBbc2RiXSA5NzY3NzMx
-NjggNTEyLWJ5dGUgbG9naWNhbCBibG9ja3M6ICg1MDAgR0IvNDY1IEdpQikNClsgNTY5OS44MDE0
-MjJdIHNkIDg6MDowOjA6IFtzZGFdIFdyaXRlIFByb3RlY3QgaXMgb2ZmDQpbIDU2OTkuODAxNDI1
-XSBzZCA4OjA6MDowOiBbc2RhXSBNb2RlIFNlbnNlOiA3MyAwMCAwMCAwOA0KWyA1Njk5LjgwNjQy
-N10gc2QgODowOjE6MDogW3NkYl0gV3JpdGUgUHJvdGVjdCBpcyBvZmYNClsgNTY5OS44MDY0MzFd
-IHNkIDg6MDoxOjA6IFtzZGJdIE1vZGUgU2Vuc2U6IDczIDAwIDAwIDA4DQpbIDU2OTkuODIyMDI0
-XSBzZCA4OjA6MDowOiBbc2RhXSBXcml0ZSBjYWNoZTogZW5hYmxlZCwgcmVhZCBjYWNoZTogZW5h
-YmxlZCwgZG9lc24ndCBzdXBwb3J0IERQTyBvciBGVUENClsgNTY5OS44MjcxMzVdIHNkIDg6MDox
-OjA6IFtzZGJdIFdyaXRlIGNhY2hlOiBlbmFibGVkLCByZWFkIGNhY2hlOiBlbmFibGVkLCBkb2Vz
-bid0IHN1cHBvcnQgRFBPIG9yIEZVQQ0KWyA1Njk5LjkyODEwOF0gIHNkYToNClsgNTY5OS45MzMx
-NjNdICBzZGI6IHVua25vd24gcGFydGl0aW9uIHRhYmxlDQpbIDU2OTkuOTYyNDQwXSAgdW5rbm93
-biBwYXJ0aXRpb24gdGFibGUNClsgNTcwMC4wNjgzNjldIHNkIDg6MDowOjA6IFtzZGFdIEF0dGFj
-aGVkIFNDU0kgZGlzaw0KWyA1NzAwLjA3Mzc1OV0gc2QgODowOjE6MDogW3NkYl0gQXR0YWNoZWQg
-U0NTSSBkaXNrDQoNCg0KLS0gDQpBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51
-eCBUZWFtDQphcmVrbSAvIG1hdmVuLnBsICAgICAgICAgICAgaHR0cDovL2Z0cC5wbGQtbGludXgu
-b3JnLw0K
+On Fri, Nov 19, 2010 at 09:00:42PM +0300, Vladislav Bolkhovitin wrote:
+> Greg KH, on 11/19/2010 12:46 AM wrote:
+> > On Fri, Nov 19, 2010 at 12:02:58AM +0300, Vladislav Bolkhovitin wrote:
+> >> Since nobody objected, Greg, could you consider to ACK SCST SYSFS
+> >> management interface in /sys/kernel/scst_tgt/, please? Please find the
+> >> SCST SYSFS ABI documentation file you requested below.
+> > 
+> > No, sorry, again, you should not be using kobjects, and do not polute
+> > the main /sys/kernel/ namespace with this.
+> 
+> Which other namespace should we "polute" then?
+> 
+> > Use 'struct device' please, that is what it is there for, and is what
+> > the rest of the kernel is using. And use the rest of the
+> > driver/bus/device infrastructure as your model will work with it just
+> > fine.
+> 
+> Greg, sorry, I don't understand your requirements and, because of this,
+> we can't go ahead implementing them. Could you explain your position,
+> please?
+> 
+> None of the SCST objects are Linux devices. None of them has entries in
+> /dev, none of them needs to send any events to udev and none of them
+> sends or receives data from DMA, hence has any DMA parameters or
+> restrictions. So, how can them fit into the driver/bus/device model you
+> are enforcing?
+> 
+
+Note that the entities in /sys/devices/... tree and not necessarily
+physical devices bit rather interface abstractionss. Consider, for
+example, /sys/class/input/*. None of the "devices" there talk directly
+to hardware, do DMA or other things. Some of them don't even talk to
+usrespace directly but rather through additional interfaces (evdev.
+mousedev, ect). Still they are represented there and even have suspend
+and resume methods (because even for logical devices it makes sense to
+save and restore some state).
+
+> For instance:
+> 
+>  - struct sgv_pool (/sys/kernel/scst_tgt/sgv/<cache>) is an SG vectors
+> cache. Isn't it a nonsense to make it device?
+> 
+>  - struct scst_acg
+> (/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/)
+> is an access control group to define which initiators see which LUNs
+> from target <target>. Same, isn't it a nonsense to make it device?
+> 
+>  - struct scst_acn
+> (/sys/kernel/scst_tgt/targets/<target_driver>/<target>/ini_groups/<group>/initiators/<initiator_name>)
+> is an entry in the access control group <group> to define which
+> initiators should use group <group>. Again, isn't it a nonsense to make
+> it device?
+> 
+> Etc.
+> 
+> How could they fit in the driver/bus/device model?
+
+Maybe not all of them are. Some of them could probably be represented by
+attributes of other devices. And some of them are, fitting into the
+overall /sys/devices hierarchy and describing physical and logical
+relations between them.
+
+-- 
+Dmitry
