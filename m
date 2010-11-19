@@ -1,44 +1,81 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16971] qla4xxx compile failure on 32-bit PowerPC: missing readq
- and writeq
-Date: Fri, 19 Nov 2010 20:06:53 GMT
-Message-ID: <201011192006.oAJK6rVJ002268@demeter1.kernel.org>
-References: <bug-16971-11613@https.bugzilla.kernel.org/>
+From: "Unrein, Jason" <Jason.Unrein@lsi.com>
+Subject: RE: missing mptsas support for  LSI Logic / Symbios Logic SAS1068
+ PCI-X Fusion-MPT SAS [1000:0055] (rev 02)
+Date: Fri, 19 Nov 2010 13:15:47 -0700
+Message-ID: <D41A5B864986B546A595D85C4701A9C00102055408@cosmail03.lsi.com>
+References: <201011191842.25939.a.miskiewicz@gmail.com>
+ <201011191939.07573.a.miskiewicz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:48300 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932142Ab0KSUGy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2010 15:06:54 -0500
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id oAJK6r2J002269
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2010 20:06:53 GMT
-In-Reply-To: <bug-16971-11613@https.bugzilla.kernel.org/>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:57857 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932120Ab0KSUUT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Nov 2010 15:20:19 -0500
+In-Reply-To: <201011191939.07573.a.miskiewicz@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>, "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=16971
-
-
-
-
-
---- Comment #5 from Rafael J. Wysocki <rjw@sisk.pl>  2010-11-19 20:06:51 ---
-On Friday, November 19, 2010, Meelis Roos wrote:
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=16971
-> > Subject		: qla4xxx compile failure on 32-bit PowerPC: missing readq and writeq
-> > Submitter	: Meelis Roos <mroos@linux.ee>
-> > Date		: 2010-08-19 21:03 (92 days old)
-> > Message-ID	: <<alpine.SOC.1.00.1008192359310.19654@math.ut.ee>>
-> > References	: http://marc.info/?l=linux-kernel&m=128225184900892&w=2
-> 
-> Still unfixed in mainline.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+SXMgdGhpcyBhbiBvbiBib2FyZCBNUFQgY2hpcCBvciBpcyBpdCBhbiBhZGQtaW4gSEJBPyAgSSdt
+IG5vdCBhd2FyZSBvZiBhIERJRCBvZiAweDU1LiAgTW9yZSB0aGFuIGxpa2VseSBpdOKAmXMgZWl0
+aGVyIGEgbWVnYXJhaWQgYm9hcmQgb3IgYSBjdXN0b21lciB0d2Vha2VkIHNvbWV0aGluZyBvZiBv
+dXJzLiBBIHBob3RvIG9mIGl0IGlmIGl0J3MgYW4gYWRkLWluIG9yIGEgbGluayB0byB0aGUgcHJv
+ZHVjdCBpdCdzIGluIHdvdWxkIGhlbHAgbmFycm93IGl0IGRvd24uICBBbHNvLCBpZiBpdCdzIGFu
+IG1wdGxpbnV4IGNhcmQsIHRoZXJlIHNob3VsZCBiZSB0d28gaWRlbnRpZmljYXRpb25zIG9uIGl0
+LiAgQm90aCBzaG91bGQgYmUgb24gYSB3aGl0ZSBsYWJlbCB3aXRoIGEgYmFyY29kZS4gIE9uZSB3
+aWxsIGJlIFNBUzMjIyMjWC4uLiBUaGUgb3RoZXIgd2lsbCBiZSBMIy0jIyMjLSMjIy4NCg0KDQot
+LS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogQXJrYWRpdXN6IE1pc2tpZXdpY3ogW21h
+aWx0bzphLm1pc2tpZXdpY3pAZ21haWwuY29tXSANClNlbnQ6IEZyaWRheSwgTm92ZW1iZXIgMTks
+IDIwMTAgMTI6MzkgUE0NClRvOiBNb29yZSwgRXJpYw0KQ2M6IERMLU1QVCBGdXNpb24gTGludXg7
+IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogbWlzc2luZyBtcHRzYXMg
+c3VwcG9ydCBmb3IgTFNJIExvZ2ljIC8gU3ltYmlvcyBMb2dpYyBTQVMxMDY4IFBDSS1YIEZ1c2lv
+bi1NUFQgU0FTIFsxMDAwOjAwNTVdIChyZXYgMDIpDQoNCk9uIEZyaWRheSAxOSBvZiBOb3ZlbWJl
+ciAyMDEwLCBBcmthZGl1c3ogTWlza2lld2ljeiB3cm90ZToNCj4gSGksDQo+IA0KPiBJIHdvbmRl
+ciBpZiBtcHRzYXMgZHJpdmVyIGlzIGFibGUgdG8gc3VwcG9ydCB0aGlzIGhhcmR3YXJlPw0KPiAN
+Cj4gMDQ6MDguMCBTQ1NJIHN0b3JhZ2UgY29udHJvbGxlciBbMDEwMF06IExTSSBMb2dpYyAvIFN5
+bWJpb3MgTG9naWMgU0FTMTA2OA0KPiBQQ0ktIFggRnVzaW9uLU1QVCBTQVMgWzEwMDA6MDA1NV0g
+KHJldiAwMikNCj4gICAgICAgICBTdWJzeXN0ZW06IEludGVsIENvcnBvcmF0aW9uIERldmljZSBb
+ODA4NjozNTA0XQ0KPiANCj4gQ3VycmVudGx5IGRyaXZlciBkb2Vzbid0IGhhbmRsZSAxMDAwOjAw
+NTUgcGNpaWQuIFRoZSBwcm9ibGVtIHNlZW1zIHF1aXRlDQo+IG9sZCBzaW5jZSBJIGZvdW5kIHNv
+bWVvbmUgYXNraW5nIGZvciBpdCBsb25nIHRpbWUgYWdvDQo+IGh0dHA6Ly9sa21sLm9yZy9sa21s
+LzIwMDcvMS8yMy84Nw0KDQpbcm9vdEByZXNjdWUgbXB0c2FzXSMgZWNobyAxMDAwIDAwNTUgPiBu
+ZXdfaWQNCltyb290QHJlc2N1ZSBtcHRzYXNdIw0KDQpkcml2ZXMgd2VyZSBkZXRlY3RlZCwgSSB3
+YXMgYWJsZSB0byBjcmVhdGUgZmlsZXN5c3RlbSwgd3JpdGUsIHJlYWQgZmV3IGZpbGVzDQphbmQg
+dGhlc2Ugc2hvcnQgdGVzdHMgd29ya2VkIHdlbGwuIA0KDQpTbyBJIHdvbmRlciB3aGF0J3MgdGhl
+IGNhc2Ugd2l0aCBpdCBub3QgYmVpbmcgYWRkZWQgdG8gbXB0c2FzIGRyaXZlcj8gVGhhbmtzLg0K
+DQpbIDU2ODkuNDM2NTUxXSBtcHRzYXMgMDAwMDowNDowOC4wOiBQQ0kgSU5UIEEgLT4gR1NJIDE2
+IChsZXZlbCwgbG93KSAtPiBJUlEgMTYNClsgNTY4OS40MzY4ODZdIG1wdGJhc2U6IGlvYzA6IElu
+aXRpYXRpbmcgYnJpbmd1cA0KWyA1NjkwLjA0Mjc3MF0gaW9jMDogOiBDYXBhYmlsaXRpZXM9e0lu
+aXRpYXRvcn0NClsgNTY5OS40MjEwNjZdIHNjc2k4IDogaW9jMDogLCBGd1Jldj0wMTEyMDAwMGgs
+IFBvcnRzPTEsIE1heFE9NTExLCBJUlE9MTYNClsgNTY5OS40NTg3MDRdIG1wdHNhczogaW9jMDog
+YXR0YWNoaW5nIHNhdGEgZGV2aWNlOiBmd19jaGFubmVsIDAsIGZ3X2lkIDAsIHBoeSAwLCBzYXNf
+YWRkciAweDEyMjEwMDAwMDAwMDAwMDANClsgNTY5OS40NjE0OTVdIHNjc2kgODowOjA6MDogRGly
+ZWN0LUFjY2VzcyAgICAgQVRBICAgICAgU1Q5NTAwNDIwQVMgICAgICBTRE0xIFBROiAwIEFOU0k6
+IDUNClsgNTY5OS40NjUxODJdIHNkIDg6MDowOjA6IFtzZGFdIDk3Njc3MzE2OCA1MTItYnl0ZSBs
+b2dpY2FsIGJsb2NrczogKDUwMCBHQi80NjUgR2lCKQ0KWyA1Njk5LjQ2NTgyMl0gbXB0c2FzOiBp
+b2MwOiBhdHRhY2hpbmcgc2F0YSBkZXZpY2U6IGZ3X2NoYW5uZWwgMCwgZndfaWQgMSwgcGh5IDEs
+IHNhc19hZGRyIDB4MTIyMTAwMDAwMTAwMDAwMA0KWyA1Njk5LjQ2NjU5OV0gc2QgODowOjA6MDog
+QXR0YWNoZWQgc2NzaSBnZW5lcmljIHNnMCB0eXBlIDANClsgNTY5OS40NjkyMzJdIHNjc2kgODow
+OjE6MDogRGlyZWN0LUFjY2VzcyAgICAgQVRBICAgICAgU1Q5NTAwNDIwQVMgICAgICBTRE0xIFBR
+OiAwIEFOU0k6IDUNClsgNTY5OS40NzExNDBdIHNkIDg6MDoxOjA6IEF0dGFjaGVkIHNjc2kgZ2Vu
+ZXJpYyBzZzEgdHlwZSAwDQpbIDU2OTkuNDcyODQyXSBzZCA4OjA6MTowOiBbc2RiXSA5NzY3NzMx
+NjggNTEyLWJ5dGUgbG9naWNhbCBibG9ja3M6ICg1MDAgR0IvNDY1IEdpQikNClsgNTY5OS44MDE0
+MjJdIHNkIDg6MDowOjA6IFtzZGFdIFdyaXRlIFByb3RlY3QgaXMgb2ZmDQpbIDU2OTkuODAxNDI1
+XSBzZCA4OjA6MDowOiBbc2RhXSBNb2RlIFNlbnNlOiA3MyAwMCAwMCAwOA0KWyA1Njk5LjgwNjQy
+N10gc2QgODowOjE6MDogW3NkYl0gV3JpdGUgUHJvdGVjdCBpcyBvZmYNClsgNTY5OS44MDY0MzFd
+IHNkIDg6MDoxOjA6IFtzZGJdIE1vZGUgU2Vuc2U6IDczIDAwIDAwIDA4DQpbIDU2OTkuODIyMDI0
+XSBzZCA4OjA6MDowOiBbc2RhXSBXcml0ZSBjYWNoZTogZW5hYmxlZCwgcmVhZCBjYWNoZTogZW5h
+YmxlZCwgZG9lc24ndCBzdXBwb3J0IERQTyBvciBGVUENClsgNTY5OS44MjcxMzVdIHNkIDg6MDox
+OjA6IFtzZGJdIFdyaXRlIGNhY2hlOiBlbmFibGVkLCByZWFkIGNhY2hlOiBlbmFibGVkLCBkb2Vz
+bid0IHN1cHBvcnQgRFBPIG9yIEZVQQ0KWyA1Njk5LjkyODEwOF0gIHNkYToNClsgNTY5OS45MzMx
+NjNdICBzZGI6IHVua25vd24gcGFydGl0aW9uIHRhYmxlDQpbIDU2OTkuOTYyNDQwXSAgdW5rbm93
+biBwYXJ0aXRpb24gdGFibGUNClsgNTcwMC4wNjgzNjldIHNkIDg6MDowOjA6IFtzZGFdIEF0dGFj
+aGVkIFNDU0kgZGlzaw0KWyA1NzAwLjA3Mzc1OV0gc2QgODowOjE6MDogW3NkYl0gQXR0YWNoZWQg
+U0NTSSBkaXNrDQoNCg0KLS0gDQpBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51
+eCBUZWFtDQphcmVrbSAvIG1hdmVuLnBsICAgICAgICAgICAgaHR0cDovL2Z0cC5wbGQtbGludXgu
+b3JnLw0K
