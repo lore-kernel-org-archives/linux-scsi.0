@@ -1,55 +1,102 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] smp_utils-0.95 available
-Date: Fri, 19 Nov 2010 15:31:47 -0500
-Message-ID: <4CE6DEB3.80506@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: "Unrein, Jason" <Jason.Unrein@lsi.com>
+Subject: RE: missing mptsas support for  LSI Logic / Symbios Logic SAS1068
+ PCI-X Fusion-MPT SAS [1000:0055] (rev 02)
+Date: Fri, 19 Nov 2010 13:37:13 -0700
+Message-ID: <D41A5B864986B546A595D85C4701A9C00102055414@cosmail03.lsi.com>
+References: <201011191842.25939.a.miskiewicz@gmail.com>
+ <201011191939.07573.a.miskiewicz@gmail.com>
+ <D41A5B864986B546A595D85C4701A9C00102055408@cosmail03.lsi.com>
+ <201011192130.33459.a.miskiewicz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:46079 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752953Ab0KSUbw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2010 15:31:52 -0500
-Received: from localhost (localhost [127.0.0.1])
-	by smtp.infotech.no (Postfix) with ESMTP id 34DC7316E9
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2010 21:31:51 +0100 (CET)
-Received: from smtp.infotech.no ([127.0.0.1])
-	by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id ml9LmC4k1cX0 for <linux-scsi@vger.kernel.org>;
-	Fri, 19 Nov 2010 21:31:49 +0100 (CET)
-Received: from [192.168.48.95] (ip-70.51.99.216.dsl-cust.ca.inter.net [216.99.51.70])
-	by smtp.infotech.no (Postfix) with ESMTPA id 14002316E8
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2010 21:31:48 +0100 (CET)
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:46084 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755892Ab0KSUhD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Nov 2010 15:37:03 -0500
+In-Reply-To: <201011192130.33459.a.miskiewicz@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
+To: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-smp_utils is a package of command line utilities for invoking
-SMP functions to monitor and manage SAS expanders. SMP is the
-Serial Attached SCSI (SAS) Management Protocol. A SAS Host
-Bus Adapter (HBA) includes a SMP initiator (along with SSP and
-STP initiators). A SAS expander contains a SMP target. Many
-SAS HBAs have a SMP pass through interface that can be used to
-send SMP requests and receive the responses. This package
-should work with the linux kernel (lk) 2.6 series, the lk 2.4
-series, and builds on FreeBSD.
-
-Three interfaces are available: "sgv4", "mptctl" and "smp_portal".
-The "sgv4" interface uses the bsg driver.
-
-This version fixes a problem accessing mpt2sas HBAs
-when used with the mptctl interface.
-
-For an overview and examples of smp_utils see:
-http://sg.danny.cz/sg/smp_utils.html
-A tarball, rpm and deb can be found in table 2.
-
-Changelog for smp_utils-0.95 [20101116] [svn:r47]
-   - place link to smp_utils.html examples in man pages
-   - alter Makefile for non-root users
-   - add spl-r04 discover changes (spl is upper layers of sas-2.1)
-   - mpt: cope with mpt2 ioctl that uses a different magic number
-
-
-Doug Gilbert
+U28gaXQgc291bmRzIGxpa2UgdGhleSdyZSBqdXN0IHR3ZWFraW5nIHRoZSBJRCBzbyBpdCB3aWxs
+IGJlIGlkZW50aWZpZWQgYnkgdGhlaXIgZHJpdmVyIG9yIG1lZ2FyYWlkIGRyaXZlciBpbnN0ZWFk
+IG9mIG91cnMuICBJJ20gYXNzdW1pbmcgdGhlIG5ldyBkZXZpY2UgSUQgaXMgMHg1NCBpbnN0ZWFk
+IHdoaWNoIHNob3VsZCBiZSByZWNvZ25pemVkIGFuZCB3b3JrIGZpbmUgbGlrZSB5b3UgbWVudGlv
+bmVkLg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogQXJrYWRpdXN6IE1pc2tp
+ZXdpY3ogW21haWx0bzphLm1pc2tpZXdpY3pAZ21haWwuY29tXSANClNlbnQ6IEZyaWRheSwgTm92
+ZW1iZXIgMTksIDIwMTAgMjozMSBQTQ0KVG86IFVucmVpbiwgSmFzb24NCkNjOiBNb29yZSwgRXJp
+YzsgREwtTVBUIEZ1c2lvbiBMaW51eDsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNClN1Ympl
+Y3Q6IFJlOiBtaXNzaW5nIG1wdHNhcyBzdXBwb3J0IGZvciBMU0kgTG9naWMgLyBTeW1iaW9zIExv
+Z2ljIFNBUzEwNjggUENJLVggRnVzaW9uLU1QVCBTQVMgWzEwMDA6MDA1NV0gKHJldiAwMikNCg0K
+T24gRnJpZGF5IDE5IG9mIE5vdmVtYmVyIDIwMTAsIFVucmVpbiwgSmFzb24gd3JvdGU6DQo+IElz
+IHRoaXMgYW4gb24gYm9hcmQgTVBUIGNoaXAgb3IgaXMgaXQgYW4gYWRkLWluIEhCQT8gIEknbSBu
+b3QgYXdhcmUgb2YgYQ0KPiBESUQgb2YgMHg1NS4gIE1vcmUgdGhhbiBsaWtlbHkgaXTigJlzIGVp
+dGhlciBhIG1lZ2FyYWlkIGJvYXJkIG9yIGEgY3VzdG9tZXINCj4gdHdlYWtlZCBzb21ldGhpbmcg
+b2Ygb3Vycy4gQSBwaG90byBvZiBpdCBpZiBpdCdzIGFuIGFkZC1pbiBvciBhIGxpbmsgdG8NCj4g
+dGhlIHByb2R1Y3QgaXQncyBpbiB3b3VsZCBoZWxwIG5hcnJvdyBpdCBkb3duLiAgQWxzbywgaWYg
+aXQncyBhbiBtcHRsaW51eA0KPiBjYXJkLCB0aGVyZSBzaG91bGQgYmUgdHdvIGlkZW50aWZpY2F0
+aW9ucyBvbiBpdC4gIEJvdGggc2hvdWxkIGJlIG9uIGENCj4gd2hpdGUgbGFiZWwgd2l0aCBhIGJh
+cmNvZGUuICBPbmUgd2lsbCBiZSBTQVMzIyMjI1guLi4gVGhlIG90aGVyIHdpbGwgYmUNCj4gTCMt
+IyMjIy0jIyMuDQoNCkknbSBhbG1vc3Qgc3VyZSBpdCdzIG9uYm9hcmQgY29udHJvbGxlciAoY2Fu
+bm90IGNoZWNrLCBtYWNoaW5lIGlzIGF2YWlsYWJsZSANCnJlbW90ZWx5IG9ubHkpLiAgSXQncyBJ
+bnRlbCBTUjE1NTAgc2VydmVyLg0KDQpBbnl3YXkgSSBmb3VuZCBhIG9wdGlvbiBpbiBub3JtYWwg
+QklPUyB0byBkaXNhYmxlICJpbnRlbCBzd3JhaWQiIGFuZCBub3cgaXQgaXMgDQpkZXRlY3RlZCBu
+aWNlbHkgYnkgbXB0c2FzIHdpdGhvdXQgYW55IG5ld19pZCB0d2Vha3MgKGJlY29tZXMgdmlzaWJs
+ZSB1bmRlciANCnBjaWlkIGFscmVhZHkga25vd24gdG8gbXB0c2FzKS4NCg0KVGhhbmtzIQ0KDQo+
+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEFya2FkaXVzeiBNaXNraWV3aWN6
+IFttYWlsdG86YS5taXNraWV3aWN6QGdtYWlsLmNvbV0NCj4gU2VudDogRnJpZGF5LCBOb3ZlbWJl
+ciAxOSwgMjAxMCAxMjozOSBQTQ0KPiBUbzogTW9vcmUsIEVyaWMNCj4gQ2M6IERMLU1QVCBGdXNp
+b24gTGludXg7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBtaXNz
+aW5nIG1wdHNhcyBzdXBwb3J0IGZvciBMU0kgTG9naWMgLyBTeW1iaW9zIExvZ2ljIFNBUzEwNjgN
+Cj4gUENJLVggRnVzaW9uLU1QVCBTQVMgWzEwMDA6MDA1NV0gKHJldiAwMikNCj4gDQo+IE9uIEZy
+aWRheSAxOSBvZiBOb3ZlbWJlciAyMDEwLCBBcmthZGl1c3ogTWlza2lld2ljeiB3cm90ZToNCj4g
+PiBIaSwNCj4gPiANCj4gPiBJIHdvbmRlciBpZiBtcHRzYXMgZHJpdmVyIGlzIGFibGUgdG8gc3Vw
+cG9ydCB0aGlzIGhhcmR3YXJlPw0KPiA+IA0KPiA+IDA0OjA4LjAgU0NTSSBzdG9yYWdlIGNvbnRy
+b2xsZXIgWzAxMDBdOiBMU0kgTG9naWMgLyBTeW1iaW9zIExvZ2ljIFNBUzEwNjgNCj4gPiBQQ0kt
+IFggRnVzaW9uLU1QVCBTQVMgWzEwMDA6MDA1NV0gKHJldiAwMikNCj4gPiANCj4gPiAgICAgICAg
+IFN1YnN5c3RlbTogSW50ZWwgQ29ycG9yYXRpb24gRGV2aWNlIFs4MDg2OjM1MDRdDQo+ID4gDQo+
+ID4gQ3VycmVudGx5IGRyaXZlciBkb2Vzbid0IGhhbmRsZSAxMDAwOjAwNTUgcGNpaWQuIFRoZSBw
+cm9ibGVtIHNlZW1zIHF1aXRlDQo+ID4gb2xkIHNpbmNlIEkgZm91bmQgc29tZW9uZSBhc2tpbmcg
+Zm9yIGl0IGxvbmcgdGltZSBhZ28NCj4gPiBodHRwOi8vbGttbC5vcmcvbGttbC8yMDA3LzEvMjMv
+ODcNCj4gDQo+IFtyb290QHJlc2N1ZSBtcHRzYXNdIyBlY2hvIDEwMDAgMDA1NSA+IG5ld19pZA0K
+PiBbcm9vdEByZXNjdWUgbXB0c2FzXSMNCj4gDQo+IGRyaXZlcyB3ZXJlIGRldGVjdGVkLCBJIHdh
+cyBhYmxlIHRvIGNyZWF0ZSBmaWxlc3lzdGVtLCB3cml0ZSwgcmVhZCBmZXcNCj4gZmlsZXMgYW5k
+IHRoZXNlIHNob3J0IHRlc3RzIHdvcmtlZCB3ZWxsLg0KPiANCj4gU28gSSB3b25kZXIgd2hhdCdz
+IHRoZSBjYXNlIHdpdGggaXQgbm90IGJlaW5nIGFkZGVkIHRvIG1wdHNhcyBkcml2ZXI/DQo+IFRo
+YW5rcy4NCj4gDQo+IFsgNTY4OS40MzY1NTFdIG1wdHNhcyAwMDAwOjA0OjA4LjA6IFBDSSBJTlQg
+QSAtPiBHU0kgMTYgKGxldmVsLCBsb3cpIC0+IElSUQ0KPiAxNiBbIDU2ODkuNDM2ODg2XSBtcHRi
+YXNlOiBpb2MwOiBJbml0aWF0aW5nIGJyaW5ndXANCj4gWyA1NjkwLjA0Mjc3MF0gaW9jMDogOiBD
+YXBhYmlsaXRpZXM9e0luaXRpYXRvcn0NCj4gWyA1Njk5LjQyMTA2Nl0gc2NzaTggOiBpb2MwOiAs
+IEZ3UmV2PTAxMTIwMDAwaCwgUG9ydHM9MSwgTWF4UT01MTEsIElSUT0xNg0KPiBbIDU2OTkuNDU4
+NzA0XSBtcHRzYXM6IGlvYzA6IGF0dGFjaGluZyBzYXRhIGRldmljZTogZndfY2hhbm5lbCAwLCBm
+d19pZCAwLA0KPiBwaHkgMCwgc2FzX2FkZHIgMHgxMjIxMDAwMDAwMDAwMDAwIFsgNTY5OS40NjE0
+OTVdIHNjc2kgODowOjA6MDoNCj4gRGlyZWN0LUFjY2VzcyAgICAgQVRBICAgICAgU1Q5NTAwNDIw
+QVMgICAgICBTRE0xIFBROiAwIEFOU0k6IDUgWw0KPiA1Njk5LjQ2NTE4Ml0gc2QgODowOjA6MDog
+W3NkYV0gOTc2NzczMTY4IDUxMi1ieXRlIGxvZ2ljYWwgYmxvY2tzOiAoNTAwDQo+IEdCLzQ2NSBH
+aUIpIFsgNTY5OS40NjU4MjJdIG1wdHNhczogaW9jMDogYXR0YWNoaW5nIHNhdGEgZGV2aWNlOiBm
+d19jaGFubmVsDQo+IDAsIGZ3X2lkIDEsIHBoeSAxLCBzYXNfYWRkciAweDEyMjEwMDAwMDEwMDAw
+MDAgWyA1Njk5LjQ2NjU5OV0gc2QgODowOjA6MDoNCj4gQXR0YWNoZWQgc2NzaSBnZW5lcmljIHNn
+MCB0eXBlIDANCj4gWyA1Njk5LjQ2OTIzMl0gc2NzaSA4OjA6MTowOiBEaXJlY3QtQWNjZXNzICAg
+ICBBVEEgICAgICBTVDk1MDA0MjBBUyAgICAgDQo+IFNETTEgUFE6IDAgQU5TSTogNSBbIDU2OTku
+NDcxMTQwXSBzZCA4OjA6MTowOiBBdHRhY2hlZCBzY3NpIGdlbmVyaWMgc2cxDQo+IHR5cGUgMA0K
+PiBbIDU2OTkuNDcyODQyXSBzZCA4OjA6MTowOiBbc2RiXSA5NzY3NzMxNjggNTEyLWJ5dGUgbG9n
+aWNhbCBibG9ja3M6ICg1MDANCj4gR0IvNDY1IEdpQikgWyA1Njk5LjgwMTQyMl0gc2QgODowOjA6
+MDogW3NkYV0gV3JpdGUgUHJvdGVjdCBpcyBvZmYNCj4gWyA1Njk5LjgwMTQyNV0gc2QgODowOjA6
+MDogW3NkYV0gTW9kZSBTZW5zZTogNzMgMDAgMDAgMDgNCj4gWyA1Njk5LjgwNjQyN10gc2QgODow
+OjE6MDogW3NkYl0gV3JpdGUgUHJvdGVjdCBpcyBvZmYNCj4gWyA1Njk5LjgwNjQzMV0gc2QgODow
+OjE6MDogW3NkYl0gTW9kZSBTZW5zZTogNzMgMDAgMDAgMDgNCj4gWyA1Njk5LjgyMjAyNF0gc2Qg
+ODowOjA6MDogW3NkYV0gV3JpdGUgY2FjaGU6IGVuYWJsZWQsIHJlYWQgY2FjaGU6IGVuYWJsZWQs
+DQo+IGRvZXNuJ3Qgc3VwcG9ydCBEUE8gb3IgRlVBIFsgNTY5OS44MjcxMzVdIHNkIDg6MDoxOjA6
+IFtzZGJdIFdyaXRlIGNhY2hlOg0KPiBlbmFibGVkLCByZWFkIGNhY2hlOiBlbmFibGVkLCBkb2Vz
+bid0IHN1cHBvcnQgRFBPIG9yIEZVQSBbIDU2OTkuOTI4MTA4XSANCj4gc2RhOg0KPiBbIDU2OTku
+OTMzMTYzXSAgc2RiOiB1bmtub3duIHBhcnRpdGlvbiB0YWJsZQ0KPiBbIDU2OTkuOTYyNDQwXSAg
+dW5rbm93biBwYXJ0aXRpb24gdGFibGUNCj4gWyA1NzAwLjA2ODM2OV0gc2QgODowOjA6MDogW3Nk
+YV0gQXR0YWNoZWQgU0NTSSBkaXNrDQo+IFsgNTcwMC4wNzM3NTldIHNkIDg6MDoxOjA6IFtzZGJd
+IEF0dGFjaGVkIFNDU0kgZGlzaw0KDQoNCi0tIA0KQXJrYWRpdXN6IE1pxZtraWV3aWN6ICAgICAg
+ICBQTEQvTGludXggVGVhbQ0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6Ly9mdHAu
+cGxkLWxpbnV4Lm9yZy8NCg==
