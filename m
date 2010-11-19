@@ -1,55 +1,79 @@
-From: Malahal Naineni <malahal@us.ibm.com>
-Subject: Re: [dm-devel] [RFC] training mpath to discern between SCSI errors
-Date: Thu, 18 Nov 2010 19:11:49 -0800
-Message-ID: <20101119031149.GA28455@us.ibm.com>
-References: <20100825155918.GB8509@redhat.com>
- <4C7B984E.4070802@suse.de>
- <4C7B9F14.9080900@mvista.com>
- <4C7BA670.2060303@suse.de>
- <4C7BC5B4.3010707@suse.de>
- <4CBC00B3.7090603@ce.jp.nec.com>
- <4CBC35AE.9050002@suse.de>
+From: =?UTF-8?B?546L56We?= <oujin.rera@gmail.com>
+Subject: Re: dma_mask on scsi_calculate_bounce_limit
+Date: Fri, 19 Nov 2010 12:11:34 +0530
+Message-ID: <AANLkTimb6iHPTUCco+stpPCGZJUGC3ePBTik6=GOaa6H@mail.gmail.com>
+References: <AANLkTin4V6ZZ5T5x+had0+4hL3JzGyR3sa68qaJeZBYv@mail.gmail.com>
+	<1290093715.3041.13.camel@mulgrave.site>
+	<AANLkTinHZC9iFjG1wyJTrRN_aMRkaGUgH=n2CF0wUG8f@mail.gmail.com>
+	<1290127944.11007.46.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4CBC35AE.9050002@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset=Big5
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yx0-f174.google.com ([209.85.213.174]:48876 "EHLO
+	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750766Ab0KSGlf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2010 01:41:35 -0500
+Received: by yxf34 with SMTP id 34so2466969yxf.19
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Nov 2010 22:41:34 -0800 (PST)
+In-Reply-To: <1290127944.11007.46.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hannes Reinecke [hare@suse.de] wrote:
-> > Also (although this might be a bit off topic from your patch),
-> > can we expand such a distinction to what should be logged?
-> > Currently, it's difficult to distinguish important SCSI/block errors
-> > and less important ones in kernel log.
-> > For example, when I get a link failure on sda, kernel prints something
-> > like below, regardless of whether the I/O is recovered by multipathing or not:
-> >   end_request: I/O error, dev sda, sector XXXXX
-> > 
-> Indeed, when using the above we could be modifying the above
-> message, eg by
-> 
-> end_request: transport error, dev sda, sector XXXXX
-> 
-> or
-> 
-> end_request: target error, dev sda, sector XXXXX
-> 
-> which would improve the output noticeable.
-> 
-> > Setting REQ_QUIET in dm-multipath could mask the message
-> > but also other important ones in SCSI.
-> > 
-> Hmm. Not sure about that, but I think the above modifications will
-> be useful already.
-> 
-> I'll be sending an updated patch.
+On Fri, Nov 19, 2010 at 6:22 AM, James Bottomley
+<James.Bottomley@suse.de> wrote:
+> On Fri, 2010-11-19 at 01:54 +0800, =A4=FD=AF=AB wrote:
+>> On Thu, Nov 18, 2010 at 11:21 PM, James Bottomley
+>> <James.Bottomley@suse.de> wrote:
+>> > On Thu, 2010-11-18 at 14:20 +0530, =A4=FD=AF=AB wrote:
+>> >> Hi
+>> >>
+>> >> I have enabled DMA for my host device and when i connect a scsi d=
+evice
+>> >> to the host, it crashes in the following code..
+>> >>
+>> >> Function: scsi_calculate_bounce_limit
+>> >>
+>> >>  if (host_dev && host_dev->dma_mask)
+>> >>                 bounce_limit =3D *host_dev->dma_mask;
+>> >>
+>> >> "*dma_mask" is illegal pointer operation. I would like to underst=
+and
+>> >> is this known and is there reason behind such a code ?
+>> >
+>> > It likely means you're operating on a new architecture and its gen=
+eric
+>> > devices haven't been set up correctly.
+>>
+>> Could you please more specific on what is generic devices haven't be=
+en
+>> setup properly...
+>
+> It means the architecture setup code left a NULL pointer in the gener=
+ic
+> device which shouldn't be there ... without knowing which architectur=
+e
+> and seeing the code, it's pretty impossible to be more specific.
 
-Hannes, is there an updated version of this patch? It applied fine with
-Linus git tree with a minor reject! I would like to test an updated
-version if you have one (the update seems to refer to better logging
-only, right?).
+It is for ARM and the error is not due to NULL pointer. The code just
+checks if it is host mode + dma enabled and it access a normal
+interger variable with indirection causing the crash;
 
-Thanks, Malahal.
+int dma_mask;
+
+and accessing dma_mask as "*dma_mask" ??
+
+Anything I am missing :O
+
+>
+> James
+>
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
