@@ -1,16 +1,16 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH v2 13/14] BNX2I: Updated copyright and maintainer info
-Date: Thu, 18 Nov 2010 17:30:08 -0800
-Message-ID: <1290130209-32133-14-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH v2 14/14] BNX2I: Updated version to 2.6.2.1
+Date: Thu, 18 Nov 2010 17:30:09 -0800
+Message-ID: <1290130209-32133-15-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3006 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3429 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750819Ab0KSCNK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Nov 2010 21:13:10 -0500
+	id S1750920Ab0KSCNL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Nov 2010 21:13:11 -0500
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,153 +19,24 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.co
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
 ---
- drivers/scsi/bnx2i/57xx_iscsi_constants.h |    3 ++-
- drivers/scsi/bnx2i/57xx_iscsi_hsi.h       |    3 ++-
- drivers/scsi/bnx2i/bnx2i.h                |    3 ++-
- drivers/scsi/bnx2i/bnx2i_hwi.c            |    3 ++-
- drivers/scsi/bnx2i/bnx2i_init.c           |    3 ++-
- drivers/scsi/bnx2i/bnx2i_iscsi.c          |    3 ++-
- drivers/scsi/bnx2i/bnx2i_sysfs.c          |    3 ++-
- 7 files changed, 14 insertions(+), 7 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_init.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/57xx_iscsi_constants.h b/drivers/scsi/bnx2i/57xx_iscsi_constants.h
-index 1b6f86b..30e6bdb 100644
---- a/drivers/scsi/bnx2i/57xx_iscsi_constants.h
-+++ b/drivers/scsi/bnx2i/57xx_iscsi_constants.h
-@@ -1,12 +1,13 @@
- /* 57xx_iscsi_constants.h: Broadcom NetXtreme II iSCSI HSI
-  *
-- * Copyright (c) 2006 - 2009 Broadcom Corporation
-+ * Copyright (c) 2006 - 2010 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-  * the Free Software Foundation.
-  *
-  * Written by: Anil Veerabhadrappa (anilgv@broadcom.com)
-+ * Maintained by: Eddie Wai (eddie.wai@broadcom.com)
-  */
- #ifndef __57XX_ISCSI_CONSTANTS_H_
- #define __57XX_ISCSI_CONSTANTS_H_
-diff --git a/drivers/scsi/bnx2i/57xx_iscsi_hsi.h b/drivers/scsi/bnx2i/57xx_iscsi_hsi.h
-index 36af1af..dad6c8a 100644
---- a/drivers/scsi/bnx2i/57xx_iscsi_hsi.h
-+++ b/drivers/scsi/bnx2i/57xx_iscsi_hsi.h
-@@ -1,12 +1,13 @@
- /* 57xx_iscsi_hsi.h: Broadcom NetXtreme II iSCSI HSI.
-  *
-- * Copyright (c) 2006 - 2009 Broadcom Corporation
-+ * Copyright (c) 2006 - 2010 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-  * the Free Software Foundation.
-  *
-  * Written by: Anil Veerabhadrappa (anilgv@broadcom.com)
-+ * Maintained by: Eddie Wai (eddie.wai@broadcom.com)
-  */
- #ifndef __57XX_ISCSI_HSI_LINUX_LE__
- #define __57XX_ISCSI_HSI_LINUX_LE__
-diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
-index 866a22c..e1ca5fe 100644
---- a/drivers/scsi/bnx2i/bnx2i.h
-+++ b/drivers/scsi/bnx2i/bnx2i.h
-@@ -1,6 +1,6 @@
- /* bnx2i.h: Broadcom NetXtreme II iSCSI driver.
-  *
-- * Copyright (c) 2006 - 2009 Broadcom Corporation
-+ * Copyright (c) 2006 - 2010 Broadcom Corporation
-  * Copyright (c) 2007, 2008 Red Hat, Inc.  All rights reserved.
-  * Copyright (c) 2007, 2008 Mike Christie
-  *
-@@ -9,6 +9,7 @@
-  * the Free Software Foundation.
-  *
-  * Written by: Anil Veerabhadrappa (anilgv@broadcom.com)
-+ * Maintained by: Eddie Wai (eddie.wai@broadcom.com)
-  */
- 
- #ifndef _BNX2I_H_
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index b3c264d..48463df 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1,6 +1,6 @@
- /* bnx2i_hwi.c: Broadcom NetXtreme II iSCSI driver.
-  *
-- * Copyright (c) 2006 - 2009 Broadcom Corporation
-+ * Copyright (c) 2006 - 2010 Broadcom Corporation
-  * Copyright (c) 2007, 2008 Red Hat, Inc.  All rights reserved.
-  * Copyright (c) 2007, 2008 Mike Christie
-  *
-@@ -9,6 +9,7 @@
-  * the Free Software Foundation.
-  *
-  * Written by: Anil Veerabhadrappa (anilgv@broadcom.com)
-+ * Maintained by: Eddie Wai (eddie.wai@broadcom.com)
-  */
- 
- #include <linux/gfp.h>
 diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index 338caac..131ef80 100644
+index 131ef80..58ad4d7 100644
 --- a/drivers/scsi/bnx2i/bnx2i_init.c
 +++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -1,6 +1,6 @@
- /* bnx2i.c: Broadcom NetXtreme II iSCSI driver.
-  *
-- * Copyright (c) 2006 - 2009 Broadcom Corporation
-+ * Copyright (c) 2006 - 2010 Broadcom Corporation
-  * Copyright (c) 2007, 2008 Red Hat, Inc.  All rights reserved.
-  * Copyright (c) 2007, 2008 Mike Christie
-  *
-@@ -9,6 +9,7 @@
-  * the Free Software Foundation.
-  *
-  * Written by: Anil Veerabhadrappa (anilgv@broadcom.com)
-+ * Maintained by: Eddie Wai (eddie.wai@broadcom.com)
-  */
+@@ -18,8 +18,8 @@ static struct list_head adapter_list = LIST_HEAD_INIT(adapter_list);
+ static u32 adapter_count;
  
- #include "bnx2i.h"
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index f60a525..fc18ee2 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1,7 +1,7 @@
- /*
-  * bnx2i_iscsi.c: Broadcom NetXtreme II iSCSI driver.
-  *
-- * Copyright (c) 2006 - 2009 Broadcom Corporation
-+ * Copyright (c) 2006 - 2010 Broadcom Corporation
-  * Copyright (c) 2007, 2008 Red Hat, Inc.  All rights reserved.
-  * Copyright (c) 2007, 2008 Mike Christie
-  *
-@@ -10,6 +10,7 @@
-  * the Free Software Foundation.
-  *
-  * Written by: Anil Veerabhadrappa (anilgv@broadcom.com)
-+ * Maintained by: Eddie Wai (eddie.wai@broadcom.com)
-  */
+ #define DRV_MODULE_NAME		"bnx2i"
+-#define DRV_MODULE_VERSION	"2.1.3"
+-#define DRV_MODULE_RELDATE	"Aug 10, 2010"
++#define DRV_MODULE_VERSION	"2.6.2.1"
++#define DRV_MODULE_RELDATE	"Nov 18, 2010"
  
- #include <linux/slab.h>
-diff --git a/drivers/scsi/bnx2i/bnx2i_sysfs.c b/drivers/scsi/bnx2i/bnx2i_sysfs.c
-index 96426b7..9174196 100644
---- a/drivers/scsi/bnx2i/bnx2i_sysfs.c
-+++ b/drivers/scsi/bnx2i/bnx2i_sysfs.c
-@@ -1,12 +1,13 @@
- /* bnx2i_sysfs.c: Broadcom NetXtreme II iSCSI driver.
-  *
-- * Copyright (c) 2004 - 2009 Broadcom Corporation
-+ * Copyright (c) 2004 - 2010 Broadcom Corporation
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-  * the Free Software Foundation.
-  *
-  * Written by: Anil Veerabhadrappa (anilgv@broadcom.com)
-+ * Maintained by: Eddie Wai (eddie.wai@broadcom.com)
-  */
- 
- #include "bnx2i.h"
+ static char version[] __devinitdata =
+ 		"Broadcom NetXtreme II iSCSI Driver " DRV_MODULE_NAME \
 -- 
 1.7.0.5
 
