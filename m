@@ -1,75 +1,69 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [Scst-devel] [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Fri, 19 Nov 2010 13:19:04 -0800
-Message-ID: <20101119211904.GB28606@kroah.com>
-References: <20101113235938.GA1827@kroah.com>
- <4CE1017E.4090409@panasas.com>
- <20101115161620.GB5981@kroah.com>
- <4CE16B8E.1000300@panasas.com>
- <AANLkTikPVXGJ5-5YDk1uqfqrqxGLpSiSdaX3h7qxo-ie@mail.gmail.com>
- <8985DEAF-4227-4629-B90A-938D2BA3534E@etechsoft.com>
- <4CE2846C.6070501@vlnb.net>
- <4CE59482.3050002@gmail.com>
- <20101118214619.GA29097@kroah.com>
- <4CE6BB4A.5060606@gmail.com>
+From: Mark Lord <kernel-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org>
+Subject: Re: 2.6.37-rc2-git4: Reported regressions 2.6.35 -> 2.6.36
+Date: Fri, 19 Nov 2010 17:55:42 -0500
+Message-ID: <4CE7006E.4040102@teksavvy.com>
+References: <tTUH_XeInOH.A.dMF.c3b5MB@chimera>	<4CE5C919.7090504@teksavvy.com> <AANLkTi=8G7pNA7QTxaXDWKrWrCERPfmKU+nLJWCA=JUH@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:57741 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755686Ab0KSVTL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2010 16:19:11 -0500
-Content-Disposition: inline
-In-Reply-To: <4CE6BB4A.5060606@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <AANLkTi=8G7pNA7QTxaXDWKrWrCERPfmKU+nLJWCA=JUH-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alex Deucher <alexdeucher-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vvvvvst@gmail.com>
-Cc: Richard Williams <richard@etechsoft.com>, Bart Van Assche <bvanassche@acm.org>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, scst-devel <scst-devel@lists.sourceforge.net>, Hannes Reinecke <hare@suse.de>, Andy Yan <ayan@marvell.com>, Andrew Morton <akpm@linux-foundation.org>, Vu Pham <vuhuong@mellanox.com>, Linus Torvalds <torvalds@linux-foundation.org>, Joel Becker <joel.becker@oracle.com>
 
-On Fri, Nov 19, 2010 at 09:00:42PM +0300, Vladislav Bolkhovitin wrote:
-> Greg KH, on 11/19/2010 12:46 AM wrote:
-> > On Fri, Nov 19, 2010 at 12:02:58AM +0300, Vladislav Bolkhovitin wrote:
-> >> Since nobody objected, Greg, could you consider to ACK SCST SYSFS
-> >> management interface in /sys/kernel/scst_tgt/, please? Please find the
-> >> SCST SYSFS ABI documentation file you requested below.
-> > 
-> > No, sorry, again, you should not be using kobjects, and do not polute
-> > the main /sys/kernel/ namespace with this.
-> 
-> Which other namespace should we "polute" then?
+On 10-11-19 11:39 AM, Alex Deucher wrote:
+> On Thu, Nov 18, 2010 at 7:47 PM, Mark Lord<kernel-R6A+fiHC8nRWk0Htik3J/w@public.gmane.org>  wrote:
+>
+>> My non-Intel graphics notebook (has ATI X1400 graphics) also has a resume
+>> regression with 2.6.36.  But it does work fine with 2.6.35 (and earlier,
+>> back many years).  As a result, I'm stuck with 2.6.35 for the time being,
+>> and lack the time for a concerted debug effort on 2.6.36+ right now.
+>>
+>
+> Can you bisect?  Does this patch help?
+>
+> diff --git a/drivers/gpu/drm/radeon/atom.c b/drivers/gpu/drm/radeon/atom.c
+> index 8e421f6..05efb5b 100644
+> --- a/drivers/gpu/drm/radeon/atom.c
+> +++ b/drivers/gpu/drm/radeon/atom.c
+> @@ -112,6 +112,7 @@ static uint32_t atom_iio_execute(struct
+> atom_context *ctx, int base,
+>                          base += 3;
+>                          break;
+>                  case ATOM_IIO_WRITE:
+> +                       (void)ctx->card->ioreg_read(ctx->card, CU16(base + 1));
+>                          ctx->card->ioreg_write(ctx->card, CU16(base + 1), temp);
+>                          base += 3;
+>                          break;
 
-None.  Use 'struct device'
+It now comes back at resume time.
 
-> > Use 'struct device' please, that is what it is there for, and is what
-> > the rest of the kernel is using. And use the rest of the
-> > driver/bus/device infrastructure as your model will work with it just
-> > fine.
-> 
-> Greg, sorry, I don't understand your requirements and, because of this,
-> we can't go ahead implementing them. Could you explain your position,
-> please?
+But suffers long delays (also sometimes with 2.6.35) doing this:
 
-I have multiple times.
+[drm:atom_op_jump] *ERROR* atombios stuck in loop for more than 5secs aborting
+[drm:atom_execute_table_locked] *ERROR* atombios stuck executing E576 (len 105, 
+WS 12, PS 8) @ 0xE5C4
+[drm:atom_op_jump] *ERROR* atombios stuck in loop for more than 5secs aborting
+[drm:atom_execute_table_locked] *ERROR* atombios stuck executing ECD2 (len 86, 
+WS 4, PS 0) @ 0xED05
+[drm:atom_op_jump] *ERROR* atombios stuck in loop for more than 5secs aborting
+[drm:atom_execute_table_locked] *ERROR* atombios stuck executing E576 (len 105, 
+WS 12, PS 8) @ 0xE5C4
+PM: resume of devices complete after 15718.253 msecs
 
-> None of the SCST objects are Linux devices. None of them has entries in
-> /dev, none of them needs to send any events to udev and none of them
-> sends or receives data from DMA, hence has any DMA parameters or
-> restrictions. So, how can them fit into the driver/bus/device model you
-> are enforcing?
+So I did this (local hack only, obviously NOT for mainline) to work around that 
+issue:
 
-That doesn't matter.  They are still "devices" that the kernel knows
-about and as such, fit into the device tree of everything in the kernel.
+--- linux-2.6.36/drivers/gpu/drm/radeon/atom.c  2010-10-20 16:30:22.000000000 -0400
++++ linux/drivers/gpu/drm/radeon/atom.c 2010-11-19 17:14:21.141807003 -0500
+@@ -1150,6 +1151,7 @@
 
-> Sorry, but we have an impression that you are judging without seeing the
-> full picture. Isn't it a duty of a subsystem's maintainer to see full
-> picture before deciding if it's good or bad?
+         if (!base)
+                 return -EINVAL;
++       if (base == 0xe576 || base == 0xecd2) return 0;  /* prevent freezes on 
+Dell i9400 w/X1400 */
 
-It's the duty of a subsystem's maintainer to enforce the correct model
-of the kernel, and that is what I am doing.
-
-Again, this is the last email I'm writing on this topic, as none of the
-previous ones seem to be sinking in.
-
-good luck,
-
-greg k-h
+         len = CU16(base + ATOM_CT_SIZE_PTR);
+         ws = CU8(base + ATOM_CT_WS_PTR);
