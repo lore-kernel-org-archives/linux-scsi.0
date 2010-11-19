@@ -1,89 +1,42 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: [PATCH 9/9] scsi: megaraid_sas - Documentation and driver version
- update
-Date: Fri, 19 Nov 2010 10:50:32 -0700
-Message-ID: <4B6A08C587958942AA3002690DD4F8C30106A96232@cosmail02.lsi.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 8/9] scsi: megaraid_sas - Driver take some workloads
+ from FW
+Date: Fri, 19 Nov 2010 11:53:01 -0600
+Message-ID: <1290189181.23556.77.camel@mulgrave.site>
 References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C30106A961D6@cosmail02.lsi.com>
- <4B6A08C587958942AA3002690DD4F8C30106A961E4@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A961D6@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A961E4@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A961F2@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A96213@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A96218@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A9621E@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A96223@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_4B6A08C587958942AA3002690DD4F8C30106A96232cosmail02lsic_"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30106A961E4@cosmail02.lsi.com>
-Content-Language: en-US
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30106A96223@cosmail02.lsi.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, Tomas Henzl <thenzl@redhat.com>, "Karlikova, Lenka" <Lenka.Karlikova@lsi.com>, "Nielson, Mike" <Mike.Nielson@lsi.com>, "Jablonski, Charles" <Charles.Jablonski@lsi.com>
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
---_002_4B6A08C587958942AA3002690DD4F8C30106A96232cosmail02lsic_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Fri, 2010-11-19 at 10:43 -0700, Yang, Bo wrote:
+> Driver added the new feature to take some of the workloads from FW to increase
+> performance of the iMR controller.  FW assigns the read cmds back to driver
+> which will increase the performance for megaraid sas iMR controller.
 
-Documentation and driver version update
+Just on a process note: you don't have to cc me at every known
+address ... I do read linux-scsi ...
 
-Signed-off-by Bo Yang<bo.yang@lsi.com>
+My first take on this patch is that you're basically passing data back
+to the kernel for RAID-N parity calculations.  This effectively makes
+your RAID one of those pseudo HW ones.  In which case, why not simply
+abandon the HW raid piece and have it all done by DM/MD, which are well
+optimised for all types of RAID?  The reason for asking is that we're
+trying to reduce the number of in-kernel raid implementations and this
+is going in the wrong direction.
 
----
-Documentation/scsi/ChangeLog.megaraid_sas |   30 ++++++++++++++++++++++++++=
-++++
-drivers/scsi/megaraid/megaraid_sas.c      |    2 +-
-drivers/scsi/megaraid/megaraid_sas.h      |    6 +++---
- 3 files changed, 34 insertions(+), 4 deletions(-)
-
---_002_4B6A08C587958942AA3002690DD4F8C30106A96232cosmail02lsic_
-Content-Type: application/octet-stream; name="megasas-p9-version.patch"
-Content-Description: megasas-p9-version.patch
-Content-Disposition: attachment; filename="megasas-p9-version.patch";
-	size=2405; creation-date="Fri, 19 Nov 2010 10:47:32 GMT";
-	modification-date="Thu, 18 Nov 2010 03:01:28 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtcnVwTiBvbGQvRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMg
-bmV3L0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzCi0tLSBvbGQvRG9j
-dW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5tZWdhcmFpZF9zYXMJMjAxMC0xMS0xNyAxNTowOTox
-Mi4wMDAwMDAwMDAgLTA1MDAKKysrIG5ldy9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLm1l
-Z2FyYWlkX3NhcwkyMDEwLTExLTE3IDE1OjA5OjEyLjAwMDAwMDAwMCAtMDUwMApAQCAtMSwzICsx
-LDMzIEBACisxIFJlbGVhc2UgRGF0ZSAgICA6IFRodXIuICBOb3YuMTgsIDIwMTAgMDk6MTI6NDUg
-UFNUIDIwMTAgLQorCQkJKGVtYWlsZC1pZDptZWdhcmFpZGxpbnV4QGxzaS5jb20pCisJCQlCbyBZ
-YW5nCisKKzIgQ3VycmVudCBWZXJzaW9uIDogMDAuMDAuMDQuMzgtcmMxCiszIE9sZGVyIFZlcnNp
-b24gICA6IDAwLjAwLjA0LjMxLXJjMQorCisxLglDaGFuZ2VkIHRoZSBzbGVlcCB0byBzc2xlZXAg
-d2hlbiBkcml2ZXIgd2FpdGluZyBmb3IKKwlGVyBjaGFuZ2UgdGhlIHN0YXRlIGZyb20gZmFpbCB0
-byByZWFkeS4gIEFsc28gaW5jcmVhc2UKKwl0aGUgd2FpdCB0aW1lIGlmIGZ3IGluZmFpbGVkIHN0
-YXRlLgorCisyLglEcml2ZXIgbWFkZSB0aGUgY2hhbmdlcyB0byBvbmx5IHN1cHBvcnQgSkJPRCwg
-VFlQRSBkZXZpY2UKKwlhbmQgVkRzLgorCiszLglEcml2ZXIgd2lsbCBzY2FuIHRoZSBkZXZpY2Ug
-YWZ0ZXIgcmVjZWl2ZSB0aGUgZXZlbnQgY29kZToKKwlNUl9FVlRfTERfU1RBVEVfQ0hBTkdFIGZy
-b20gRlcuCisKKzQuCURyaXZlciBhZGRlZCB0aGUgY2hhbmdlcyB0byBwcm92aWRlIHRoZSB2ZXJz
-aW9uIHRvIEZXLgorCis1LglJZiBkcml2ZXIgc3VwcG9ydCBpZWVlIHNnZSwgZHJpdmVyIHdpbGwg
-cmVwb3J0IHRoZSAyNTYgSworCW1heF9zZWN0b3JzIHRvIE9TCisKKzYuCUFkZCB0aGUgb25saW5l
-IHN1cHBvcnQgZm9yIG91ciBpTVIgY29udHJvbGxlci4KKworNy4JQ3JlYXRlIG1lZ2FzYXMgd29y
-a19xdWV1ZSB0byBoYW5kbGUgdGhlIG9ubGluZSBjb250cm9sbGVyCisJcmVzZXQgdGhyZWFkLgor
-Cis4LglUbyBpbmNyZWFzZSBwZXJmb3JtYW5jZSwgaU1SIGZ3IHdpbGwgYXNzaWduIHNvbWUgcmVh
-ZCBjbWRzIHRvIGRyaXZlci4KKworCiAxIFJlbGVhc2UgRGF0ZSAgICA6IFRodXIuICBNYXkgMDMs
-IDIwMTAgMDk6MTI6NDUgUFNUIDIwMDkgLQogCQkJKGVtYWlsZC1pZDptZWdhcmFpZGxpbnV4QGxz
-aS5jb20pCiAJCQlCbyBZYW5nCmRpZmYgLXJ1cE4gb2xkL2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9t
-ZWdhcmFpZF9zYXMuYyBuZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jCi0t
-LSBvbGQvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jCTIwMTAtMTEtMTcgMTU6
-MDk6MTIuMDAwMDAwMDAwIC0wNTAwCisrKyBuZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2Fy
-YWlkX3Nhcy5jCTIwMTAtMTEtMTcgMTU6MDk6MTIuMDAwMDAwMDAwIC0wNTAwCkBAIC0xMCw3ICsx
-MCw3IEBACiAgKgkgICAyIG9mIHRoZSBMaWNlbnNlLCBvciAoYXQgeW91ciBvcHRpb24pIGFueSBs
-YXRlciB2ZXJzaW9uLgogICoKICAqIEZJTEUJCTogbWVnYXJhaWRfc2FzLmMKLSAqIFZlcnNpb24g
-ICAgIDogdjAwLjAwLjA0LjMxLXJjMQorICogVmVyc2lvbiAgICAgOiB2MDAuMDAuMDQuMzctcmMx
-CiAgKgogICogQXV0aG9yczoKICAqCShlbWFpbC1pZCA6IG1lZ2FyYWlkbGludXhAbHNpLmNvbSkK
-ZGlmZiAtcnVwTiBvbGQvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oIG5ldy9k
-cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmgKLS0tIG9sZC9kcml2ZXJzL3Njc2kv
-bWVnYXJhaWQvbWVnYXJhaWRfc2FzLmgJMjAxMC0xMS0xNyAxNTowOToxMi4wMDAwMDAwMDAgLTA1
-MDAKKysrIG5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmgJMjAxMC0xMS0x
-OCAwNTowMDo0MS4wMDAwMDAwMDAgLTA1MDAKQEAgLTE4LDkgKzE4LDkgQEAKIC8qCiAgKiBNZWdh
-UkFJRCBTQVMgRHJpdmVyIG1ldGEgZGF0YQogICovCi0jZGVmaW5lIE1FR0FTQVNfVkVSU0lPTgkJ
-CSIwMC4wMC4wNC4zMS1yYzEiCi0jZGVmaW5lIE1FR0FTQVNfUkVMREFURQkJCSJNYXkgMywgMjAx
-MCIKLSNkZWZpbmUgTUVHQVNBU19FWFRfVkVSU0lPTgkJIk1vbi4gTWF5IDMsIDExOjQxOjUxIFBT
-VCAyMDEwIgorI2RlZmluZSBNRUdBU0FTX1ZFUlNJT04JCQkiMDAuMDAuMDQuMzgtcmMxIgorI2Rl
-ZmluZSBNRUdBU0FTX1JFTERBVEUJCQkiTm92LiAxOCwgMjAxMCIKKyNkZWZpbmUgTUVHQVNBU19F
-WFRfVkVSU0lPTgkJIlRodXIuIE5vdi4gMTgsIDExOjQxOjUxIFBTVCAyMDEwIgogCiAvKgogICog
-RGV2aWNlIElEcwo=
-
---_002_4B6A08C587958942AA3002690DD4F8C30106A96232cosmail02lsic_--
+James
