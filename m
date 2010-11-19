@@ -1,8 +1,7 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH v2 03/14] BNX2I: Fixed the endian bug in the TMF LUN cmd
- send
-Date: Thu, 18 Nov 2010 17:29:58 -0800
-Message-ID: <1290130209-32133-4-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH v2 04/14] BNX2I: Fixed a cid leak issue for 5771X (10g)
+Date: Thu, 18 Nov 2010 17:29:59 -0800
+Message-ID: <1290130209-32133-5-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -10,45 +9,65 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mms1.broadcom.com ([216.31.210.17]:2853 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754143Ab0KSB6Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Nov 2010 20:58:24 -0500
+	id S1755003Ab0KSB63 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Nov 2010 20:58:29 -0500
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-Added a be32_to_cpu call for the TMF LUN wqe.
+A cid leak issue was found when the connect destroy request exceeded
+the driver's disconnection timeout.  This will lead to a cid resource
+leak issue.
+The fix is to allow the cid cleanup even when this happens.
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
+Acked-by: Anil Veerabhadrappa <anilgv@broadcom.com>
+Reviewed-by: Michael Chan <mchan@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i_hwi.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   24 ++++++++++++++++--------
+ 1 files changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 32cf930..c9a3c0f 100644
---- a/drivers/scsi/bnx2i/bnx2i_hwi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -385,6 +385,7 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
- 	struct bnx2i_cmd *bnx2i_cmd;
- 	struct bnx2i_tmf_request *tmfabort_wqe;
- 	u32 dword;
-+	u32 scsi_lun[2];
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index fb50efb..b766812 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1640,18 +1640,26 @@ no_nx2_route:
+ static int bnx2i_tear_down_conn(struct bnx2i_hba *hba,
+ 				 struct bnx2i_endpoint *ep)
+ {
+-	if (test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic))
++	if (test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic) && ep->cm_sk)
+ 		hba->cnic->cm_destroy(ep->cm_sk);
  
- 	bnx2i_cmd = (struct bnx2i_cmd *)mtask->dd_data;
- 	tmfabort_hdr = (struct iscsi_tm *)mtask->hdr;
-@@ -426,7 +427,10 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
- 	default:
- 		tmfabort_wqe->ref_itt = RESERVED_ITT;
- 	}
--	memcpy(tmfabort_wqe->lun, tmfabort_hdr->lun, sizeof(struct scsi_lun));
-+	memcpy(scsi_lun, tmfabort_hdr->lun, sizeof(struct scsi_lun));
-+	tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
-+	tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);
+-	if (test_bit(ADAPTER_STATE_GOING_DOWN, &ep->hba->adapter_state))
+-		ep->state = EP_STATE_DISCONN_COMPL;
+-
+ 	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type) &&
+ 	    ep->state == EP_STATE_DISCONN_TIMEDOUT) {
+-		printk(KERN_ALERT "bnx2i - ERROR - please submit GRC Dump,"
+-				  " NW/PCIe trace, driver msgs to developers"
+-				  " for analysis\n");
+-		return 1;
++		if (ep->conn && ep->conn->cls_conn &&
++		    ep->conn->cls_conn->dd_data) {
++			struct iscsi_conn *conn = ep->conn->cls_conn->dd_data;
 +
- 	tmfabort_wqe->ref_cmd_sn = be32_to_cpu(tmfabort_hdr->refcmdsn);
++			/* Must suspend all rx queue activity for this ep */
++			set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
++		}
++		/* CONN_DISCONNECT timeout may or may not be an issue depending
++		 * on what transcribed in TCP layer, different targets behave
++		 * differently
++		 */
++		printk(KERN_ALERT "bnx2i (%s): - WARN - CONN_DISCON timed out, "
++				  "please submit GRC Dump, NW/PCIe trace, "
++				  "driver msgs to developers for analysis\n",
++				  hba->netdev->name);
+ 	}
  
- 	tmfabort_wqe->bd_list_addr_lo = (u32) bnx2i_conn->hba->mp_bd_dma;
+ 	ep->state = EP_STATE_CLEANUP_START;
 -- 
 1.7.0.5
 
