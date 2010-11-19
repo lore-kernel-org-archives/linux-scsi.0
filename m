@@ -1,73 +1,105 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH v2 04/14] BNX2I: Fixed a cid leak issue for 5771X (10g)
-Date: Thu, 18 Nov 2010 17:29:59 -0800
-Message-ID: <1290130209-32133-5-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH v2 01/14] BNX2I: Fixed bugs in the handling of
+ unsolicited NOP-Ins
+Date: Thu, 18 Nov 2010 17:29:56 -0800
+Message-ID: <1290130209-32133-2-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2853 "EHLO mms1.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:3045 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755003Ab0KSB63 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Nov 2010 20:58:29 -0500
+	id S1751042Ab0KSCFy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Nov 2010 21:05:54 -0500
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-A cid leak issue was found when the connect destroy request exceeded
-the driver's disconnection timeout.  This will lead to a cid resource
-leak issue.
-The fix is to allow the cid cleanup even when this happens.
+Unsolicited NOP-Ins are placed in the receive queue of the hardware
+which requires to be read out regardless if the receive pipe is suspended
+or not.  This patch adds the disposal of this RQ element under this
+condition.
+Also fixed the bug in the unsolicited NOP-In handling routine which
+checks for the RESERVED_ITT.
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-Acked-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 Reviewed-by: Michael Chan <mchan@broadcom.com>
+Reviewed-by: Benjamin Li <benli@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i_iscsi.c |   24 ++++++++++++++++--------
- 1 files changed, 16 insertions(+), 8 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_hwi.c |   23 +++++++++++++++--------
+ 1 files changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index fb50efb..b766812 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1640,18 +1640,26 @@ no_nx2_route:
- static int bnx2i_tear_down_conn(struct bnx2i_hba *hba,
- 				 struct bnx2i_endpoint *ep)
- {
--	if (test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic))
-+	if (test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic) && ep->cm_sk)
- 		hba->cnic->cm_destroy(ep->cm_sk);
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 8d9dbb3..16c76e0 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -1549,11 +1549,9 @@ static int bnx2i_process_nopin_mesg(struct iscsi_session *session,
+ 	struct iscsi_task *task;
+ 	struct bnx2i_nop_in_msg *nop_in;
+ 	struct iscsi_nopin *hdr;
+-	u32 itt;
+ 	int tgt_async_nop = 0;
  
--	if (test_bit(ADAPTER_STATE_GOING_DOWN, &ep->hba->adapter_state))
--		ep->state = EP_STATE_DISCONN_COMPL;
--
- 	if (test_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type) &&
- 	    ep->state == EP_STATE_DISCONN_TIMEDOUT) {
--		printk(KERN_ALERT "bnx2i - ERROR - please submit GRC Dump,"
--				  " NW/PCIe trace, driver msgs to developers"
--				  " for analysis\n");
--		return 1;
-+		if (ep->conn && ep->conn->cls_conn &&
-+		    ep->conn->cls_conn->dd_data) {
-+			struct iscsi_conn *conn = ep->conn->cls_conn->dd_data;
-+
-+			/* Must suspend all rx queue activity for this ep */
-+			set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
-+		}
-+		/* CONN_DISCONNECT timeout may or may not be an issue depending
-+		 * on what transcribed in TCP layer, different targets behave
-+		 * differently
-+		 */
-+		printk(KERN_ALERT "bnx2i (%s): - WARN - CONN_DISCON timed out, "
-+				  "please submit GRC Dump, NW/PCIe trace, "
-+				  "driver msgs to developers for analysis\n",
-+				  hba->netdev->name);
+ 	nop_in = (struct bnx2i_nop_in_msg *)cqe;
+-	itt = nop_in->itt & ISCSI_NOP_IN_MSG_INDEX;
+ 
+ 	spin_lock(&session->lock);
+ 	hdr = (struct iscsi_nopin *)&bnx2i_conn->gen_pdu.resp_hdr;
+@@ -1563,7 +1561,7 @@ static int bnx2i_process_nopin_mesg(struct iscsi_session *session,
+ 	hdr->exp_cmdsn = cpu_to_be32(nop_in->exp_cmd_sn);
+ 	hdr->ttt = cpu_to_be32(nop_in->ttt);
+ 
+-	if (itt == (u16) RESERVED_ITT) {
++	if (nop_in->itt == (u16) RESERVED_ITT) {
+ 		bnx2i_unsol_pdu_adjust_rq(bnx2i_conn);
+ 		hdr->itt = RESERVED_ITT;
+ 		tgt_async_nop = 1;
+@@ -1571,7 +1569,8 @@ static int bnx2i_process_nopin_mesg(struct iscsi_session *session,
  	}
  
- 	ep->state = EP_STATE_CLEANUP_START;
+ 	/* this is a response to one of our nop-outs */
+-	task = iscsi_itt_to_task(conn, itt);
++	task = iscsi_itt_to_task(conn,
++			 (itt_t) (nop_in->itt & ISCSI_NOP_IN_MSG_INDEX));
+ 	if (task) {
+ 		hdr->flags = ISCSI_FLAG_CMD_FINAL;
+ 		hdr->itt = task->hdr->itt;
+@@ -1721,9 +1720,18 @@ static void bnx2i_process_new_cqes(struct bnx2i_conn *bnx2i_conn)
+ 		if (nopin->cq_req_sn != qp->cqe_exp_seq_sn)
+ 			break;
+ 
+-		if (unlikely(test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx)))
++		if (unlikely(test_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx))) {
++			if (nopin->op_code == ISCSI_OP_NOOP_IN &&
++			    nopin->itt == (u16) RESERVED_ITT) {
++				printk(KERN_ALERT "bnx2i: Unsolicited "
++					"NOP-In detected for suspended "
++					"connection dev=%s!\n",
++					bnx2i_conn->hba->netdev->name);
++				bnx2i_unsol_pdu_adjust_rq(bnx2i_conn);
++				goto cqe_out;
++			}
+ 			break;
+-
++		}
+ 		tgt_async_msg = 0;
+ 
+ 		switch (nopin->op_code) {
+@@ -1770,10 +1778,9 @@ static void bnx2i_process_new_cqes(struct bnx2i_conn *bnx2i_conn)
+ 			printk(KERN_ALERT "bnx2i: unknown opcode 0x%x\n",
+ 					  nopin->op_code);
+ 		}
+-
+ 		if (!tgt_async_msg)
+ 			bnx2i_conn->ep->num_active_cmds--;
+-
++cqe_out:
+ 		/* clear out in production version only, till beta keep opcode
+ 		 * field intact, will be helpful in debugging (context dump)
+ 		 * nopin->op_code = 0;
 -- 
 1.7.0.5
 
