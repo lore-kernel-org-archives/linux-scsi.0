@@ -1,93 +1,65 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: dma_mask on scsi_calculate_bounce_limit
-Date: Fri, 19 Nov 2010 09:15:40 -0600
-Message-ID: <1290179740.23556.13.camel@mulgrave.site>
-References: <AANLkTin4V6ZZ5T5x+had0+4hL3JzGyR3sa68qaJeZBYv@mail.gmail.com>
-	 <1290093715.3041.13.camel@mulgrave.site>
-	 <AANLkTinHZC9iFjG1wyJTrRN_aMRkaGUgH=n2CF0wUG8f@mail.gmail.com>
-	 <1290127944.11007.46.camel@mulgrave.site>
-	 <AANLkTimb6iHPTUCco+stpPCGZJUGC3ePBTik6=GOaa6H@mail.gmail.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: [PATCH 1/9] scsi: megaraid_sas - Change the time format during the
+ driver online controller reset
+Date: Fri, 19 Nov 2010 09:33:47 -0700
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57128 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754766Ab0KSPPq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2010 10:15:46 -0500
-In-Reply-To: <AANLkTimb6iHPTUCco+stpPCGZJUGC3ePBTik6=GOaa6H@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+	boundary="_002_4B6A08C587958942AA3002690DD4F8C30106A961BDcosmail02lsic_"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?Q?=E7=8E=8B=E7=A5=9E?= <oujin.rera@gmail.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2010-11-19 at 12:11 +0530, =E7=8E=8B=E7=A5=9E wrote:
-> On Fri, Nov 19, 2010 at 6:22 AM, James Bottomley
-> <James.Bottomley@suse.de> wrote:
-> > On Fri, 2010-11-19 at 01:54 +0800, =E7=8E=8B=E7=A5=9E wrote:
-> >> On Thu, Nov 18, 2010 at 11:21 PM, James Bottomley
-> >> <James.Bottomley@suse.de> wrote:
-> >> > On Thu, 2010-11-18 at 14:20 +0530, =E7=8E=8B=E7=A5=9E wrote:
-> >> >> Hi
-> >> >>
-> >> >> I have enabled DMA for my host device and when i connect a scsi=
- device
-> >> >> to the host, it crashes in the following code..
-> >> >>
-> >> >> Function: scsi_calculate_bounce_limit
-> >> >>
-> >> >>  if (host_dev && host_dev->dma_mask)
-> >> >>                 bounce_limit =3D *host_dev->dma_mask;
-> >> >>
-> >> >> "*dma_mask" is illegal pointer operation. I would like to under=
-stand
-> >> >> is this known and is there reason behind such a code ?
-> >> >
-> >> > It likely means you're operating on a new architecture and its g=
-eneric
-> >> > devices haven't been set up correctly.
-> >>
-> >> Could you please more specific on what is generic devices haven't =
-been
-> >> setup properly...
-> >
-> > It means the architecture setup code left a NULL pointer in the gen=
-eric
-> > device which shouldn't be there ... without knowing which architect=
-ure
-> > and seeing the code, it's pretty impossible to be more specific.
->=20
-> It is for ARM and the error is not due to NULL pointer. The code just
-> checks if it is host mode + dma enabled and it access a normal
-> interger variable with indirection causing the crash;
+--_002_4B6A08C587958942AA3002690DD4F8C30106A961BDcosmail02lsic_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-OK, it's crashing because the pointer isn't set up correctly ... is tha=
-t
-more semantically accurate?
+Change the 30 seconds wait in OCR routine to ssleep and give more time to F=
+W come out from failed status
 
-The pointer setup is done in the arch code, so that's where the problem
-is.
+Signed-off-by Bo Yang<bo.yang@lsi.com>
 
-> int dma_mask;
+---
+drivers/scsi/megaraid/megaraid_sas.c |   11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+=20
 
-That's not the definition in struct device; this is:
+--_002_4B6A08C587958942AA3002690DD4F8C30106A961BDcosmail02lsic_
+Content-Type: application/octet-stream; name="megasas-p1-timechange.patch"
+Content-Description: megasas-p1-timechange.patch
+Content-Disposition: attachment; filename="megasas-p1-timechange.patch";
+	size=1292; creation-date="Thu, 18 Nov 2010 20:37:02 GMT";
+	modification-date="Wed, 17 Nov 2010 13:09:11 GMT"
+Content-Transfer-Encoding: base64
 
-        u64             *dma_mask;      /* dma mask (if dma'able device=
-) */
+ZGlmZiAtcnVwTiBvbGQvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jIG5ldy9k
+cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMKLS0tIG9sZC9kcml2ZXJzL3Njc2kv
+bWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMJMjAxMC0xMS0xMCAwNDozOTo0OC4wMDAwMDAwMDAgLTA1
+MDAKKysrIG5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMJMjAxMC0xMS0x
+NCAxNTozMjozMS4wMDAwMDAwMDAgLTA1MDAKQEAgLTIyOTQsNyArMjI5NCw2IEBAIHByb2Nlc3Nf
+Zndfc3RhdGVfY2hhbmdlX3dxKHN0cnVjdCB3b3JrX3MKIHsKIAlzdHJ1Y3QgbWVnYXNhc19pbnN0
+YW5jZSAqaW5zdGFuY2UgPQogCQljb250YWluZXJfb2Yod29yaywgc3RydWN0IG1lZ2FzYXNfaW5z
+dGFuY2UsIHdvcmtfaW5pdCk7Ci0JdTMyIHdhaXQ7CiAJdW5zaWduZWQgbG9uZyBmbGFnczsKIAog
+CWlmIChpbnN0YW5jZS0+YWRwcmVjb3ZlcnkgIT0gTUVHQVNBU19BRFBSRVNFVF9TTV9JTkZBVUxU
+KSB7CkBAIC0yMzIwLDEwICsyMzE5LDggQEAgcHJvY2Vzc19md19zdGF0ZV9jaGFuZ2Vfd3Eoc3Ry
+dWN0IHdvcmtfcwogCQlwcmludGsoS0VSTl9OT1RJQ0UgIm1lZ2FyYWlkX3NhczogSEJBIHJlY292
+ZXJ5IHN0YXRlIG1hY2hpbmUsIgogCQkJCQkic3RhdGUgMiBzdGFydGluZy4uLlxuIik7CiAKLQkJ
+Lyp3YWl0dGluZyBmb3IgYWJvdXQgMjAgc2Vjb25kIGJlZm9yZSBzdGFydCB0aGUgc2Vjb25kIGlu
+aXQqLwotCQlmb3IgKHdhaXQgPSAwOyB3YWl0IDwgMzA7IHdhaXQrKykgewotCQkJbXNsZWVwKDEw
+MDApOwotCQl9CisJCS8qd2FpdHRpbmcgZm9yIGFib3V0IDMwIHNlY29uZCBiZWZvcmUgc3RhcnQg
+dGhlIHNlY29uZCBpbml0Ki8KKwkJc3NsZWVwKDMwKTsKIAogCQlpZiAobWVnYXNhc190cmFuc2l0
+aW9uX3RvX3JlYWR5KGluc3RhbmNlKSkgewogCQkJcHJpbnRrKEtFUk5fTk9USUNFICJtZWdhcmFp
+ZF9zYXM6YWRhcHRlciBub3QgcmVhZHlcbiIpOwpAQCAtMjQ4Nyw3ICsyNDg0LDkgQEAgbWVnYXNh
+c190cmFuc2l0aW9uX3RvX3JlYWR5KHN0cnVjdCBtZWdhcwogCQljYXNlIE1GSV9TVEFURV9GQVVM
+VDoKIAogCQkJcHJpbnRrKEtFUk5fREVCVUcgIm1lZ2FzYXM6IEZXIGluIEZBVUxUIHN0YXRlISFc
+biIpOwotCQkJcmV0dXJuIC1FTk9ERVY7CisJCQltYXhfd2FpdCA9IE1FR0FTQVNfUkVTRVRfV0FJ
+VF9USU1FOworCQkJY3VyX3N0YXRlID0gTUZJX1NUQVRFX0ZBVUxUOworCQkJYnJlYWs7CiAKIAkJ
+Y2FzZSBNRklfU1RBVEVfV0FJVF9IQU5EU0hBS0U6CiAJCQkvKgo=
 
-
-> and accessing dma_mask as "*dma_mask" ??
->=20
-> Anything I am missing :O
-
-Yes, but you supply too little information to know what.  It's
-definitely a problem somewhere in the arch setup code.
-
-James
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--_002_4B6A08C587958942AA3002690DD4F8C30106A961BDcosmail02lsic_--
