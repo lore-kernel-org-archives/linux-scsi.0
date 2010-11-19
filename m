@@ -1,95 +1,64 @@
-From: Alex Deucher <alexdeucher@gmail.com>
-Subject: Re: 2.6.37-rc2-git4: Reported regressions 2.6.35 -> 2.6.36
-Date: Fri, 19 Nov 2010 11:39:26 -0500
-Message-ID: <AANLkTi=8G7pNA7QTxaXDWKrWrCERPfmKU+nLJWCA=JUH@mail.gmail.com>
-References: <tTUH_XeInOH.A.dMF.c3b5MB@chimera>
-	<4CE5C919.7090504@teksavvy.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: [PATCH 2/9] scsi: megaraid_sas - Driver only report tape drive,
+ JBOD and logic drives
+Date: Fri, 19 Nov 2010 09:53:28 -0700
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30106A961D6@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="_002_4B6A08C587958942AA3002690DD4F8C30106A961D6cosmail02lsic_"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4CE5C919.7090504@teksavvy.com>
+In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
+To: "Yang, Bo" <Bo.Yang@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'James.Bottomley@suse.de'" <James.Bottomley@suse.de>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, Tomas Henzl <thenzl@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Nov 18, 2010 at 7:47 PM, Mark Lord <kernel@teksavvy.com> wrote:
-> On 10-11-18 06:50 PM, Rafael J. Wysocki wrote:
->>
->> This message contains a list of some post-2.6.35 regressions introdu=
-ced
->> before
->> 2.6.36, for which there are no fixes in the mainline known to the tr=
-acking
->> team.
->> If any of them have been fixed already, please let us know.
->>
->> If you know of any other unresolved post-2.6.35 regressions, please =
-let us
->> know
->> either and we'll add them to the list. =A0Also, please let us know i=
-f any
->> of the entries below are invalid.
->
->> Bug-Entry =A0 =A0 =A0 : http://bugzilla.kernel.org/show_bug.cgi?id=3D=
-21652
->> Subject =A0 =A0 =A0 =A0 : several problems with intel graphics since=
- 2.6.36
->> Submitter =A0 =A0 =A0 : Norbert Preining<preining@logic.at>
->> Date =A0 =A0 =A0 =A0 =A0 =A0: 2010-10-27 14:32 (23 days old)
->> Message-ID =A0 =A0 =A0:<20101027143252.GA8676@gamma.logic.tuwien.ac.=
-at>
->> References =A0 =A0 =A0: http://marc.info/?l=3Dlinux-kernel&m=3D12881=
-8998630241&w=3D2
->
-> That one is interesting to me.. I suspect it may be the same cause
-> as for https://bugzilla.kernel.org/show_bug.cgi?id=3D21952
->
-> I have one of those Samsung (N210) Netbooks here: works fine with 2.6=
-=2E34 and
-> earlier,
-> but fails to come out of suspend on 2.6.35/2.6.36 (haven't tried 2.6.=
-37).
->
-> So perhaps add 21952 to the list, or link it to the 21652
-> (kind of amusing how similar the bug numbers are..).
->
->
-> My non-Intel graphics notebook (has ATI X1400 graphics) also has a re=
-sume
-> regression with 2.6.36. =A0But it does work fine with 2.6.35 (and ear=
-lier,
-> back many years). =A0As a result, I'm stuck with 2.6.35 for the time =
-being,
-> and lack the time for a concerted debug effort on 2.6.36+ right now.
->
+--_002_4B6A08C587958942AA3002690DD4F8C30106A961D6cosmail02lsic_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Can you bisect?  Does this patch help?
+Driver only report tape drive, JBOD and logic drives to OS
 
-diff --git a/drivers/gpu/drm/radeon/atom.c b/drivers/gpu/drm/radeon/ato=
-m.c
-index 8e421f6..05efb5b 100644
---- a/drivers/gpu/drm/radeon/atom.c
-+++ b/drivers/gpu/drm/radeon/atom.c
-@@ -112,6 +112,7 @@ static uint32_t atom_iio_execute(struct
-atom_context *ctx, int base,
-                        base +=3D 3;
-                        break;
-                case ATOM_IIO_WRITE:
-+                       (void)ctx->card->ioreg_read(ctx->card, CU16(bas=
-e + 1));
-                        ctx->card->ioreg_write(ctx->card, CU16(base + 1=
-), temp);
-                        base +=3D 3;
-                        break;
+Signed-off-by Bo Yang<bo.yang@lsi.com>
 
+---
+drivers/scsi/megaraid/megaraid_sas.c |   19 +++++++++++++------
+ 1 file changed, 13 insertions(+), 6 deletions(-)
 
-Alex
+--_002_4B6A08C587958942AA3002690DD4F8C30106A961D6cosmail02lsic_
+Content-Type: application/octet-stream; name="megasas-p2-enclusure.patch"
+Content-Description: megasas-p2-enclusure.patch
+Content-Disposition: attachment; filename="megasas-p2-enclusure.patch";
+	size=1255; creation-date="Thu, 18 Nov 2010 20:37:02 GMT";
+	modification-date="Wed, 17 Nov 2010 13:09:11 GMT"
+Content-Transfer-Encoding: base64
 
-> Cheers
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> http://lists.freedesktop.org/mailman/listinfo/dri-devel
->
+ZGlmZiAtcnVwTiBvbGQvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jIG5ldy9k
+cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMKLS0tIG9sZC9kcml2ZXJzL3Njc2kv
+bWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMJMjAxMC0xMS0xNCAxNTozMzoyNS4wMDAwMDAwMDAgLTA1
+MDAKKysrIG5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMJMjAxMC0xMS0x
+NCAxNTozNDowMC4wMDAwMDAwMDAgLTA1MDAKQEAgLTE0NDUsMTUgKzE0NDUsMjIgQEAgc3RhdGlj
+IGludCBtZWdhc2FzX3NsYXZlX2NvbmZpZ3VyZShzdHJ1YwogCSogICAgICAgIFRoYXQgd2lsbCBi
+ZSBmaXhlZCBvbmNlIExTSSBlbmdpbmVlcnMgaGF2ZSBhdWRpdGVkIHRoZQogCSogICAgICAgIGZp
+cm13YXJlIGZvciBwb3NzaWJsZSBpc3N1ZXMuCiAJKi8KLQlpZiAoc2Rldi0+Y2hhbm5lbCA8IE1F
+R0FTQVNfTUFYX1BEX0NIQU5ORUxTICYmCi0JCQkJc2Rldi0+dHlwZSA9PSBUWVBFX0RJU0spIHsK
+LQkJcGRfaW5kZXggPSAoc2Rldi0+Y2hhbm5lbCAqIE1FR0FTQVNfTUFYX0RFVl9QRVJfQ0hBTk5F
+TCkgKwotCQkJCQkJCQlzZGV2LT5pZDsKLQkJaWYgKGluc3RhbmNlLT5wZF9saXN0W3BkX2luZGV4
+XS5kcml2ZVN0YXRlID09Ci0JCQkJCQlNUl9QRF9TVEFURV9TWVNURU0pIHsKKwlpZiAoc2Rldi0+
+Y2hhbm5lbCA8IE1FR0FTQVNfTUFYX1BEX0NIQU5ORUxTKSB7CisJCWlmIChzZGV2LT50eXBlID09
+IFRZUEVfVEFQRSkgewogCQkJYmxrX3F1ZXVlX3JxX3RpbWVvdXQoc2Rldi0+cmVxdWVzdF9xdWV1
+ZSwKIAkJCQlNRUdBU0FTX0RFRkFVTFRfQ01EX1RJTUVPVVQgKiBIWik7CiAJCQlyZXR1cm4gMDsK
+KwkJfSBlbHNlIGlmIChzZGV2LT50eXBlID09IFRZUEVfRElTSykgeworCQlwZF9pbmRleCA9CisJ
+CShzZGV2LT5jaGFubmVsICogTUVHQVNBU19NQVhfREVWX1BFUl9DSEFOTkVMKSArIHNkZXYtPmlk
+OworCQkJaWYgKChpbnN0YW5jZS0+cGRfbGlzdFtwZF9pbmRleF0uZHJpdmVTdGF0ZSA9PQorCQkJ
+CQlNUl9QRF9TVEFURV9TWVNURU0pICYmCisJCQkJKGluc3RhbmNlLT5wZF9saXN0W3BkX2luZGV4
+XS5kcml2ZVR5cGUgPT0KKwkJCQkJCVRZUEVfRElTSykpIHsKKwkJCQlibGtfcXVldWVfcnFfdGlt
+ZW91dChzZGV2LT5yZXF1ZXN0X3F1ZXVlLAorCQkJCQlNRUdBU0FTX0RFRkFVTFRfQ01EX1RJTUVP
+VVQgKiBIWik7CisJCQkJcmV0dXJuIDA7CisJCQl9CiAJCX0KIAkJcmV0dXJuIC1FTlhJTzsKIAl9
+Cg==
+
+--_002_4B6A08C587958942AA3002690DD4F8C30106A961D6cosmail02lsic_--
