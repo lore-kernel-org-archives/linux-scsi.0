@@ -1,129 +1,87 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 06/11] mpt2sas: Convert to host_lock less w/ interrupts
-	disabled externally
-Date: Fri, 19 Nov 2010 16:32:58 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED709047ABA@inbmail01.lsi.com>
-References: <1290032349-4959-1-git-send-email-nab@linux-iscsi.org>
-	 <4CE4FCB8.20608@panasas.com>
- <1290121071.31890.135.camel@haakon2.linux-iscsi.org>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: dma_mask on scsi_calculate_bounce_limit
+Date: Fri, 19 Nov 2010 10:13:29 -0500
+Message-ID: <4CE69419.2020201@interlog.com>
+References: <AANLkTin4V6ZZ5T5x+had0+4hL3JzGyR3sa68qaJeZBYv@mail.gmail.com>	<1290093715.3041.13.camel@mulgrave.site>	<AANLkTinHZC9iFjG1wyJTrRN_aMRkaGUgH=n2CF0wUG8f@mail.gmail.com>	<1290127944.11007.46.camel@mulgrave.site> <AANLkTimb6iHPTUCco+stpPCGZJUGC3ePBTik6=GOaa6H@mail.gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=Big5
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:40450 "EHLO
-	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752832Ab0KSLDK convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Nov 2010 06:03:10 -0500
-In-Reply-To: <1290121071.31890.135.camel@haakon2.linux-iscsi.org>
-Content-Language: en-US
+Received: from smtp.infotech.no ([82.134.31.41]:39495 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754676Ab0KSPNg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Nov 2010 10:13:36 -0500
+In-Reply-To: <AANLkTimb6iHPTUCco+stpPCGZJUGC3ePBTik6=GOaa6H@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Vasu Dev <vasu.dev@linux.intel.com>, Tejun Heo <tj@kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
+To: =?Big5?B?pP2vqw==?= <oujin.rera@gmail.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
+On 10-11-19 01:41 AM, =A4=FD=AF=AB wrote:
+> On Fri, Nov 19, 2010 at 6:22 AM, James Bottomley
+> <James.Bottomley@suse.de>  wrote:
+>> On Fri, 2010-11-19 at 01:54 +0800, =A4=FD=AF=AB wrote:
+>>> On Thu, Nov 18, 2010 at 11:21 PM, James Bottomley
+>>> <James.Bottomley@suse.de>  wrote:
+>>>> On Thu, 2010-11-18 at 14:20 +0530, =A4=FD=AF=AB wrote:
+>>>>> Hi
+>>>>>
+>>>>> I have enabled DMA for my host device and when i connect a scsi d=
+evice
+>>>>> to the host, it crashes in the following code..
+>>>>>
+>>>>> Function: scsi_calculate_bounce_limit
+>>>>>
+>>>>>   if (host_dev&&  host_dev->dma_mask)
+>>>>>                  bounce_limit =3D *host_dev->dma_mask;
+>>>>>
+>>>>> "*dma_mask" is illegal pointer operation. I would like to underst=
+and
+>>>>> is this known and is there reason behind such a code ?
+>>>>
+>>>> It likely means you're operating on a new architecture and its gen=
+eric
+>>>> devices haven't been set up correctly.
+>>>
+>>> Could you please more specific on what is generic devices haven't b=
+een
+>>> setup properly...
+>>
+>> It means the architecture setup code left a NULL pointer in the gene=
+ric
+>> device which shouldn't be there ... without knowing which architectu=
+re
+>> and seeing the code, it's pretty impossible to be more specific.
+>=20
+> It is for ARM and the error is not due to NULL pointer. The code just
+> checks if it is host mode + dma enabled and it access a normal
+> interger variable with indirection causing the crash;
+>=20
+> int dma_mask;
+>=20
+> and accessing dma_mask as "*dma_mask" ??
+>=20
+> Anything I am missing :O
 
+Yes, supplying more information.
 
-> -----Original Message-----
-> From: Nicholas A. Bellinger [mailto:nab@linux-iscsi.org]
-> Sent: Friday, November 19, 2010 4:28 AM
-> To: Boaz Harrosh
-> Cc: linux-scsi; Jeff Garzik; James Bottomley; Christoph Hellwig; Mike
-> Christie; Vasu Dev; Tejun Heo; DL-MPT Fusion Linux; Desai, Kashyap
-> Subject: Re: [PATCH 06/11] mpt2sas: Convert to host_lock less w/
-> interrupts disabled externally
-> 
-> <Trimming CC list>
-> 
-> On Thu, 2010-11-18 at 12:15 +0200, Boaz Harrosh wrote:
-> > On 11/18/2010 12:19 AM, Nicholas A. Bellinger wrote:
-> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > >
-> > > This patch converts the mpt2sas driver to run in host_lock less
-> mode
-> > > with the new IRQ_DISABLE_SCSI_QCMD() that disables interrupts while
-> > > calling ->queuecommand() dispatch
-> > >
-> > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > > ---
-> > >  drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 +++---
-> > >  1 files changed, 3 insertions(+), 3 deletions(-)
-> > >
-> > > diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > > index 1a96a00..e564fe7 100644
-> > > --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > > +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > > @@ -3304,7 +3304,7 @@ _scsih_eedp_error_handling(struct scsi_cmnd
-> *scmd, u16 ioc_status)
-> > >  }
-> > >
-> > >  /**
-> > > - * _scsih_qcmd - main scsi request entry point
-> > > + * _scsih_qcmd_irq_disable - main scsi request entry point
-> > >   * @scmd: pointer to scsi command object
-> > >   * @done: function pointer to be invoked on completion
-> > >   *
-> > > @@ -3315,7 +3315,7 @@ _scsih_eedp_error_handling(struct scsi_cmnd
-> *scmd, u16 ioc_status)
-> > >   * SCSI_MLQUEUE_HOST_BUSY if the entire host queue is full
-> > >   */
-> > >  static int
-> > > -_scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct
-> scsi_cmnd *))
-> > > +_scsih_qcmd_irq_disable(struct scsi_cmnd *scmd, void
-> (*done)(struct scsi_cmnd *))
-> > >  {
-> > >  	struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
-> > >  	struct MPT2SAS_DEVICE *sas_device_priv_data;
-> > > @@ -3441,7 +3441,7 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void
-> (*done)(struct scsi_cmnd *))
-> > >  	return SCSI_MLQUEUE_HOST_BUSY;
-> > >  }
-> > >
-> > > -static DEF_SCSI_QCMD(_scsih_qcmd)
-> > > +static IRQ_DISABLE_SCSI_QCMD(_scsih_qcmd)
-> > >
-> >
-> > How can this (and other in the patchset) can be correct? I mean I
-> expect
-> > that if you remove the lock,xx_qcmd_lck,unlock then inside the
-> xx_qcmd_lck
-> > there was an unlock,do123,lock and that driver was effectively
-> running lockless
-> > before. (like in iscsi). But here this is new behaviour. If it is
-> correct
-> > I would like to see a statement from you that:
-> > 	"I have audited this driver, and all shared resources are
-> protected by
-> >          XYZ so ..."
-> >
-> > Otherwise how can I know this is correct? I have never audited this
-> driver myself
-> >
-> 
-> So for this specific mpt2sas case, Vasu Dev had been testing the
-> lock_less case w/o disabling interrupts for his original
-> SHT->unlocked_qcmd=1 patch, and from his comments this mode was stable
-> during his JBOD lock_less small block IOP performance test.
-> 
-Nicholas, mpt2sas driver is safe even if in lock less condition.
-I have tested mpt2sas driver available in 2.6.37-rc2 where I have seen host lock push down code is available for mpt2sas driver 
-I have seen static DEF_SCSI_QCMD(_scsih_qcmd) is available for mpt2sas driver. I also did testing removing that particular macro and making 
-Mpt2sas driver in actual host lock less mode. Below observation is after removing static DEF_SCSI_QCMD(_scsih_qcmd) from mpt2sas (that is what I refer as actual host lock less mode)
+I'm familiar with AT91SAM9G20 which is an ARM based
+microcontroller. The directory of interest in the kernel
+source is arch/arm/mach-at91 and for the G20 the
+at91sam9260_devices.c file defines its DMA masks for
+its devices. In all cases that I can see the dma_mask is
+the address of a u64 holding DMA_BIT_MASK(32) .
 
-I have tested stability of the driver and I/O integrity. Things were fine. I am not seeing any need for even going for IRQ_DISABLE_SCSI_QCMD() patch too.
-Mpt2sas driver is able to handle host lock less mode seamlessly, since we have all required (racy) places under spinlocks.
+There are no real SCSI devices on the G20 but USB
+might be regarded as SCSI "once removed". And the
+USB devices on the G20 have dma_mask values as
+described above.
 
-I do not see any solid need for this patch. Please correct me if I am missing anything here.
+Doug Gilbert
 
-~ Kashyap
-
-> This patch currently includes IRQ_DISABLE_SCSI_QCMD() usage which I am
-> not even sure is needed (according to Vasu's original findings), but I
-> decided to err on the conservative side until we can get some feedback
-> from the the mpt2sas maintainer (Kashyap @ LSI CC'ed).
-> 
-> --nab
-> 
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
