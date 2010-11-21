@@ -1,7 +1,8 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/6] lpfc 8.3.19: Fix critical errors and crashes
-Date: Sat, 20 Nov 2010 23:11:30 -0500
-Message-ID: <1290312690.32645.10.camel@wookie>
+Subject: [PATCH 2/6] lpfc 8.3.19: Add latest SLI4 Hardware initialization
+ support
+Date: Sat, 20 Nov 2010 23:11:37 -0500
+Message-ID: <1290312697.32645.11.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,266 +10,350 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from exht1.emulex.com ([138.239.113.183]:23292 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751082Ab0KUEOh (ORCPT
+	with ESMTP id S1752227Ab0KUEOh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Sat, 20 Nov 2010 23:14:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Fix critical errors and crashes
 
-- Replace LOF_SECURITY with LOG_SECURITY
-- When calculating diag test memory size, use full size with header.
-- Return LS_RJT with status=UNSUPPORTED on unrecognized ELS's
-- Correct NULL pointer dereference when lpfc_create_vport_work_array()
-  returns NULL.
-- Added code to handle CVL when port is in LPFC_VPORT_FAILED state.
-- In lpfc_do_scr_ns_plogi, check the nodelist for FDMI_DID and reuse
-  the resource.
-- Check for generic request 64 and calculate the sgl offset for the request
-  and reply sgls, also calculate the xmit length using only the request bde.
+- Add the Lancer FC and FCoE PCI IDs
+- Add new SLI4 INTF register definitions
+- Implement new SLI4 doorbell register
+
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc_bsg.c     |    4 +--
- lpfc_els.c     |   31 ++++++++++++++++++++--------
- lpfc_hbadisc.c |    9 ++++++++
- lpfc_init.c    |    6 +++--
- lpfc_logmsg.h  |    2 -
- lpfc_sli.c     |   61 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 6 files changed, 99 insertions(+), 14 deletions(-)
+ lpfc_hw.h   |    6 +-
+ lpfc_hw4.h  |  128 ++++++++++++++++++++++++++++++++++++++++++++++++++----------
+ lpfc_init.c |   48 +++++++++++++++++-----
+ 3 files changed, 149 insertions(+), 33 deletions(-)
 
 
-diff -upNr a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
---- a/drivers/scsi/lpfc/lpfc_bsg.c	2010-11-12 12:14:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c	2010-11-19 16:08:26.000000000 -0500
-@@ -2162,7 +2162,7 @@ lpfc_bsg_diag_test(struct fc_bsg_job *jo
- 		goto loopback_test_exit;
- 	}
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+--- a/drivers/scsi/lpfc/lpfc_hw4.h	2010-11-12 12:14:48.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw4.h	2010-11-19 16:10:18.000000000 -0500
+@@ -64,29 +64,39 @@ struct lpfc_sli_intf {
+ #define lpfc_sli_intf_valid_MASK		0x00000007
+ #define lpfc_sli_intf_valid_WORD		word0
+ #define LPFC_SLI_INTF_VALID		6
+-#define lpfc_sli_intf_featurelevel2_SHIFT	24
+-#define lpfc_sli_intf_featurelevel2_MASK	0x0000001F
+-#define lpfc_sli_intf_featurelevel2_WORD	word0
+-#define lpfc_sli_intf_featurelevel1_SHIFT	16
+-#define lpfc_sli_intf_featurelevel1_MASK	0x000000FF
+-#define lpfc_sli_intf_featurelevel1_WORD	word0
+-#define LPFC_SLI_INTF_FEATURELEVEL1_1	1
+-#define LPFC_SLI_INTF_FEATURELEVEL1_2	2
++#define lpfc_sli_intf_sli_hint2_SHIFT		24
++#define lpfc_sli_intf_sli_hint2_MASK		0x0000001F
++#define lpfc_sli_intf_sli_hint2_WORD		word0
++#define LPFC_SLI_INTF_SLI_HINT2_NONE	0
++#define lpfc_sli_intf_sli_hint1_SHIFT		16
++#define lpfc_sli_intf_sli_hint1_MASK		0x000000FF
++#define lpfc_sli_intf_sli_hint1_WORD		word0
++#define LPFC_SLI_INTF_SLI_HINT1_NONE	0
++#define LPFC_SLI_INTF_SLI_HINT1_1	1
++#define LPFC_SLI_INTF_SLI_HINT1_2	2
++#define lpfc_sli_intf_if_type_SHIFT		12
++#define lpfc_sli_intf_if_type_MASK		0x0000000F
++#define lpfc_sli_intf_if_type_WORD		word0
++#define LPFC_SLI_INTF_IF_TYPE_0		0
++#define LPFC_SLI_INTF_IF_TYPE_1		1
++#define LPFC_SLI_INTF_IF_TYPE_2		2
+ #define lpfc_sli_intf_sli_family_SHIFT		8
+-#define lpfc_sli_intf_sli_family_MASK		0x000000FF
++#define lpfc_sli_intf_sli_family_MASK		0x0000000F
+ #define lpfc_sli_intf_sli_family_WORD		word0
+-#define LPFC_SLI_INTF_FAMILY_BE2	0
+-#define LPFC_SLI_INTF_FAMILY_BE3	1
++#define LPFC_SLI_INTF_FAMILY_BE2	0x0
++#define LPFC_SLI_INTF_FAMILY_BE3	0x1
++#define LPFC_SLI_INTF_FAMILY_LNCR_A0	0xa
++#define LPFC_SLI_INTF_FAMILY_LNCR_B0	0xb
+ #define lpfc_sli_intf_slirev_SHIFT		4
+ #define lpfc_sli_intf_slirev_MASK		0x0000000F
+ #define lpfc_sli_intf_slirev_WORD		word0
+ #define LPFC_SLI_INTF_REV_SLI3		3
+ #define LPFC_SLI_INTF_REV_SLI4		4
+-#define lpfc_sli_intf_if_type_SHIFT		0
+-#define lpfc_sli_intf_if_type_MASK		0x00000007
+-#define lpfc_sli_intf_if_type_WORD		word0
+-#define LPFC_SLI_INTF_IF_TYPE_0		0
+-#define LPFC_SLI_INTF_IF_TYPE_1		1
++#define lpfc_sli_intf_func_type_SHIFT		0
++#define lpfc_sli_intf_func_type_MASK		0x00000001
++#define lpfc_sli_intf_func_type_WORD		word0
++#define LPFC_SLI_INTF_IF_TYPE_PHYS	0
++#define LPFC_SLI_INTF_IF_TYPE_VIRT	1
+ };
  
--	if (size >= BUF_SZ_4K) {
-+	if (full_size >= BUF_SZ_4K) {
- 		/*
- 		 * Allocate memory for ioctl data. If buffer is bigger than 64k,
- 		 * then we allocate 64k and re-use that buffer over and over to
-@@ -2171,7 +2171,7 @@ lpfc_bsg_diag_test(struct fc_bsg_job *jo
- 		 * problem with GET_FCPTARGETMAPPING...
- 		 */
- 		if (size <= (64 * 1024))
--			total_mem = size;
-+			total_mem = full_size;
- 		else
- 			total_mem = 64 * 1024;
- 	} else
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2010-11-12 12:14:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2010-11-19 16:08:26.000000000 -0500
-@@ -6201,7 +6201,7 @@ lpfc_els_unsol_buffer(struct lpfc_hba *p
- 			cmd, did, vport->port_state);
+ #define LPFC_SLI4_MBX_EMBED	true
+@@ -450,13 +460,15 @@ struct lpfc_register {
+ 	uint32_t word0;
+ };
  
- 		/* Unsupported ELS command, reject */
--		rjt_err = LSRJT_INVALID_CMD;
-+		rjt_err = LSRJT_CMD_UNSUPPORTED;
- 
- 		/* Unknown ELS command <elsCmd> received from NPORT <did> */
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
-@@ -6408,18 +6408,31 @@ lpfc_do_scr_ns_plogi(struct lpfc_hba *ph
- 	}
- 
- 	if (vport->cfg_fdmi_on) {
--		ndlp_fdmi = mempool_alloc(phba->nlp_mem_pool,
--					  GFP_KERNEL);
-+		/* If this is the first time, allocate an ndlp and initialize
-+		 * it. Otherwise, make sure the node is enabled and then do the
-+		 * login.
-+		 */
-+		ndlp_fdmi = lpfc_findnode_did(vport, FDMI_DID);
-+		if (!ndlp_fdmi) {
-+			ndlp_fdmi = mempool_alloc(phba->nlp_mem_pool,
-+						  GFP_KERNEL);
-+			if (ndlp_fdmi) {
-+				lpfc_nlp_init(vport, ndlp_fdmi, FDMI_DID);
-+				ndlp_fdmi->nlp_type |= NLP_FABRIC;
-+			} else
-+				return;
-+		}
-+		if (!NLP_CHK_NODE_ACT(ndlp_fdmi))
-+			ndlp_fdmi = lpfc_enable_node(vport,
-+						     ndlp_fdmi,
-+						     NLP_STE_NPR_NODE);
++/* The SLI4 INTF register offset is common to all if_type values. */
++#define LPFC_SLI_INTF			0x0058
 +
- 		if (ndlp_fdmi) {
--			lpfc_nlp_init(vport, ndlp_fdmi, FDMI_DID);
--			ndlp_fdmi->nlp_type |= NLP_FABRIC;
- 			lpfc_nlp_set_state(vport, ndlp_fdmi,
--				NLP_STE_PLOGI_ISSUE);
--			lpfc_issue_els_plogi(vport, ndlp_fdmi->nlp_DID,
--					     0);
-+					   NLP_STE_PLOGI_ISSUE);
-+			lpfc_issue_els_plogi(vport, ndlp_fdmi->nlp_DID, 0);
- 		}
- 	}
--	return;
- }
++/* The following BAR0 Registers apply to SLI4 if_type 0 UCNAs. */
+ #define LPFC_UERR_STATUS_HI		0x00A4
+ #define LPFC_UERR_STATUS_LO		0x00A0
+ #define LPFC_UE_MASK_HI			0x00AC
+ #define LPFC_UE_MASK_LO			0x00A8
+-#define LPFC_SLI_INTF			0x0058
  
- /**
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-11-12 12:14:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2010-11-19 16:08:26.000000000 -0500
-@@ -4059,6 +4059,11 @@ lpfc_unreg_hba_rpis(struct lpfc_hba *phb
- 	int i;
+-/* BAR0 Registers */
+ #define LPFC_HST_STATE			0x00AC
+ #define lpfc_hst_state_perr_SHIFT	31
+ #define lpfc_hst_state_perr_MASK	0x1
+@@ -480,6 +492,10 @@ struct lpfc_register {
+ #define lpfc_hst_state_port_status_MASK		0xFFFF
+ #define lpfc_hst_state_port_status_WORD		word0
  
- 	vports = lpfc_create_vport_work_array(phba);
-+	if (!vports) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_DISCOVERY,
-+			"2884 Vport array allocation failed \n");
-+		return;
-+	}
- 	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
- 		shost = lpfc_shost_from_vport(vports[i]);
- 		spin_lock_irq(shost->host_lock);
-@@ -5254,6 +5259,10 @@ lpfc_fcf_inuse(struct lpfc_hba *phba)
++/*
++ * The following Port Status Values apply to SLI4, if_type 0 and 2
++ * UCNAs.
++ */
+ #define LPFC_POST_STAGE_POWER_ON_RESET			0x0000
+ #define LPFC_POST_STAGE_AWAITING_HOST_RDY		0x0001
+ #define LPFC_POST_STAGE_HOST_RDY			0x0002
+@@ -514,6 +530,64 @@ struct lpfc_register {
+ #define LPFC_POST_STAGE_ARMFW_READY			0xC000
+ #define LPFC_POST_STAGE_ARMFW_UE 			0xF000
  
- 	vports = lpfc_create_vport_work_array(phba);
- 
-+	/* If driver cannot allocate memory, indicate fcf is in use */
-+	if (!vports)
-+		return 1;
 +
- 	for (i = 0; i <= phba->max_vports && vports[i] != NULL; i++) {
- 		shost = lpfc_shost_from_vport(vports[i]);
- 		spin_lock_irq(shost->host_lock);
++/* The following BAR0 register sets are defined for if_type 2 UCNAs. */
++#define LPFC_SLIPORT_SEMAPHORE		0x0400
++#define lpfc_sliport_smphr_perr_SHIFT	31
++#define lpfc_sliport_smphr_perr_MASK	0x1
++#define lpfc_sliport_smphr_perr_WORD	word0
++#define lpfc_sliport_smphr_sfi_SHIFT	30
++#define lpfc_sliport_smphr_sfi_MASK	0x1
++#define lpfc_sliport_smphr_sfi_WORD	word0
++#define lpfc_sliport_smphr_nip_SHIFT	29
++#define lpfc_sliport_smphr_nip_MASK	0x1
++#define lpfc_sliport_smphr_nip_WORD	word0
++#define lpfc_sliport_smphr_ipc_SHIFT	28
++#define lpfc_sliport_smphr_ipc_MASK	0x1
++#define lpfc_sliport_smphr_ipc_WORD	word0
++#define lpfc_sliport_smphr_scr1_SHIFT	27
++#define lpfc_sliport_smphr_scr1_MASK	0x1
++#define lpfc_sliport_smphr_scr1_WORD	word0
++#define lpfc_sliport_smphr_scr2_SHIFT	26
++#define lpfc_sliport_smphr_scr2_MASK	0x1
++#define lpfc_sliport_smphr_scr2_WORD	word0
++#define lpfc_sliport_smphr_host_scratch_SHIFT	16
++#define lpfc_sliport_smphr_host_scratch_MASK	0xFF
++#define lpfc_sliport_smphr_host_scratch_WORD	word0
++#define lpfc_sliport_smphr_port_status_SHIFT	0
++#define lpfc_sliport_smphr_port_status_MASK	0xFFFF
++#define lpfc_sliport_smphr_port_status_WORD	word0
++
++#define LPFC_SLIPORT_STATUS		0x0404
++#define lpfc_sliport_status_err_SHIFT	31
++#define lpfc_sliport_status_err_MASK	0x1
++#define lpfc_sliport_status_err_WORD	word0
++#define lpfc_sliport_status_end_SHIFT	30
++#define lpfc_sliport_status_end_MASK	0x1
++#define lpfc_sliport_status_end_WORD	word0
++#define lpfc_sliport_status_oti_SHIFT	29
++#define lpfc_sliport_status_oti_MASK	0x1
++#define lpfc_sliport_status_oti_WORD	word0
++#define lpfc_sliport_status_rn_SHIFT	24
++#define lpfc_sliport_status_rn_MASK	0x1
++#define lpfc_sliport_status_rn_WORD	word0
++#define lpfc_sliport_status_rdy_SHIFT	23
++#define lpfc_sliport_status_rdy_MASK	0x1
++#define lpfc_sliport_status_rdy_WORD	word0
++
++#define LPFC_SLIPORT_CONTROL		0x0408
++#define lpfc_sliport_ctrl_end_SHIFT	30
++#define lpfc_sliport_ctrl_end_MASK	0x1
++#define lpfc_sliport_ctrl_end_WORD	word0
++#define LPFC_SLIPORT_LITTLE_ENDIAN 0
++#define LPFC_SLIPORT_BIG_ENDIAN	   1
++#define lpfc_sliport_ctrl_ip_SHIFT	27
++#define lpfc_sliport_ctrl_ip_MASK	0x1
++#define lpfc_sliport_ctrl_ip_WORD	word0
++
++#define LPFC_SLIPORT_ERROR_1		0x040C
++#define LPFC_SLIPORT_ERROR_2		0x0410
++
+ /* BAR1 Registers */
+ #define LPFC_IMR_MASK_ALL	0xFFFFFFFF
+ #define LPFC_ISCR_CLEAR_ALL	0xFFFFFFFF
+@@ -569,14 +643,21 @@ struct lpfc_register {
+ #define LPFC_SLI4_INTR30		BIT30
+ #define LPFC_SLI4_INTR31		BIT31
+ 
+-/* BAR2 Registers */
++/*
++ * The Doorbell registers defined here exist in different BAR
++ * register sets depending on the UCNA Port's reported if_type
++ * value.  For UCNA ports running SLI4 and if_type 0, they reside in
++ * BAR2.  For UCNA ports running SLI4 and if_type 2, they reside in
++ * BAR0.  The offsets are the same so the driver must account for
++ * any base address difference.
++ */
+ #define LPFC_RQ_DOORBELL		0x00A0
+ #define lpfc_rq_doorbell_num_posted_SHIFT	16
+ #define lpfc_rq_doorbell_num_posted_MASK	0x3FFF
+ #define lpfc_rq_doorbell_num_posted_WORD	word0
+ #define LPFC_RQ_POST_BATCH		8	/* RQEs to post at one time */
+ #define lpfc_rq_doorbell_id_SHIFT		0
+-#define lpfc_rq_doorbell_id_MASK		0x03FF
++#define lpfc_rq_doorbell_id_MASK		0xFFFF
+ #define lpfc_rq_doorbell_id_WORD		word0
+ 
+ #define LPFC_WQ_DOORBELL		0x0040
+@@ -591,6 +672,11 @@ struct lpfc_register {
+ #define lpfc_wq_doorbell_id_WORD		word0
+ 
+ #define LPFC_EQCQ_DOORBELL		0x0120
++#define lpfc_eqcq_doorbell_se_SHIFT		31
++#define lpfc_eqcq_doorbell_se_MASK		0x0001
++#define lpfc_eqcq_doorbell_se_WORD		word0
++#define LPFC_EQCQ_SOLICIT_ENABLE_OFF	0
++#define LPFC_EQCQ_SOLICIT_ENABLE_ON	1
+ #define lpfc_eqcq_doorbell_arm_SHIFT		29
+ #define lpfc_eqcq_doorbell_arm_MASK		0x0001
+ #define lpfc_eqcq_doorbell_arm_WORD		word0
+@@ -628,7 +714,7 @@ struct lpfc_register {
+ #define lpfc_mq_doorbell_num_posted_MASK	0x3FFF
+ #define lpfc_mq_doorbell_num_posted_WORD	word0
+ #define lpfc_mq_doorbell_id_SHIFT		0
+-#define lpfc_mq_doorbell_id_MASK		0x03FF
++#define lpfc_mq_doorbell_id_MASK		0xFFFF
+ #define lpfc_mq_doorbell_id_WORD		word0
+ 
+ struct lpfc_sli4_cfg_mhdr {
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2010-11-12 12:14:48.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2010-11-19 16:10:17.000000000 -0500
+@@ -1172,7 +1172,10 @@ typedef struct {
+ #define PCI_VENDOR_ID_EMULEX        0x10df
+ #define PCI_DEVICE_ID_FIREFLY       0x1ae5
+ #define PCI_DEVICE_ID_PROTEUS_VF    0xe100
++#define PCI_DEVICE_ID_BALIUS        0xe131
+ #define PCI_DEVICE_ID_PROTEUS_PF    0xe180
++#define PCI_DEVICE_ID_LANCER_FC     0xe200
++#define PCI_DEVICE_ID_LANCER_FCOE   0xe260
+ #define PCI_DEVICE_ID_SAT_SMB       0xf011
+ #define PCI_DEVICE_ID_SAT_MID       0xf015
+ #define PCI_DEVICE_ID_RFLY          0xf095
+@@ -1189,6 +1192,7 @@ typedef struct {
+ #define PCI_DEVICE_ID_SAT           0xf100
+ #define PCI_DEVICE_ID_SAT_SCSP      0xf111
+ #define PCI_DEVICE_ID_SAT_DCSP      0xf112
++#define PCI_DEVICE_ID_FALCON        0xf180
+ #define PCI_DEVICE_ID_SUPERFLY      0xf700
+ #define PCI_DEVICE_ID_DRAGONFLY     0xf800
+ #define PCI_DEVICE_ID_CENTAUR       0xf900
+@@ -1210,8 +1214,6 @@ typedef struct {
+ #define PCI_VENDOR_ID_SERVERENGINE  0x19a2
+ #define PCI_DEVICE_ID_TIGERSHARK    0x0704
+ #define PCI_DEVICE_ID_TOMCAT        0x0714
+-#define PCI_DEVICE_ID_FALCON        0xf180
+-#define PCI_DEVICE_ID_BALIUS        0xe131
+ 
+ #define JEDEC_ID_ADDRESS            0x0080001c
+ #define FIREFLY_JEDEC_ID            0x1ACC
 diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2010-11-12 12:14:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2010-11-19 16:08:26.000000000 -0500
-@@ -3247,10 +3247,12 @@ lpfc_sli4_perform_vport_cvl(struct lpfc_
- 		if (!ndlp)
- 			return 0;
+--- a/drivers/scsi/lpfc/lpfc_init.c	2010-11-19 16:08:26.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2010-11-19 16:10:18.000000000 -0500
+@@ -1853,6 +1853,14 @@ lpfc_get_hba_model_desc(struct lpfc_hba 
+ 		m = (typeof(m)){"LPVe12002", "PCIe Shared I/O",
+ 				"Fibre Channel Adapter"};
+ 		break;
++	case PCI_DEVICE_ID_LANCER_FC:
++		oneConnect = 1;
++		m = (typeof(m)){"Undefined", "PCIe", "Fibre Channel Adapter"};
++		break;
++	case PCI_DEVICE_ID_LANCER_FCOE:
++		oneConnect = 1;
++		m = (typeof(m)){"Undefined", "PCIe", "FCoE"};
++		break;
+ 	default:
+ 		m = (typeof(m)){"Unknown", "", ""};
+ 		break;
+@@ -3950,7 +3958,7 @@ lpfc_sli4_driver_resource_setup(struct l
+ 	int rc, i, hbq_count, buf_size, dma_buf_size, max_buf_size;
+ 	uint8_t pn_page[LPFC_MAX_SUPPORTED_PAGES] = {0};
+ 	struct lpfc_mqe *mqe;
+-	int longs;
++	int longs, sli_family;
+ 
+ 	/* Before proceed, wait for POST done and device ready */
+ 	rc = lpfc_sli4_post_status_check(phba);
+@@ -4012,12 +4020,22 @@ lpfc_sli4_driver_resource_setup(struct l
+ 	 */
+ 	buf_size = (sizeof(struct fcp_cmnd) + sizeof(struct fcp_rsp) +
+ 		    ((phba->cfg_sg_seg_cnt + 2) * sizeof(struct sli4_sge)));
+-	/* Feature Level 1 hardware is limited to 2 pages */
+-	if ((bf_get(lpfc_sli_intf_featurelevel1, &phba->sli4_hba.sli_intf) ==
+-	     LPFC_SLI_INTF_FEATURELEVEL1_1))
+-		max_buf_size = LPFC_SLI4_FL1_MAX_BUF_SIZE;
+-	else
+-		max_buf_size = LPFC_SLI4_MAX_BUF_SIZE;
++
++	sli_family = bf_get(lpfc_sli_intf_sli_family, &phba->sli4_hba.sli_intf);
++	max_buf_size = LPFC_SLI4_MAX_BUF_SIZE;
++	switch (sli_family) {
++	case LPFC_SLI_INTF_FAMILY_BE2:
++	case LPFC_SLI_INTF_FAMILY_BE3:
++		/* There is a single hint for BE - 2 pages per BPL. */
++		if (bf_get(lpfc_sli_intf_sli_hint1, &phba->sli4_hba.sli_intf) ==
++		    LPFC_SLI_INTF_SLI_HINT1_1)
++			max_buf_size = LPFC_SLI4_FL1_MAX_BUF_SIZE;
++		break;
++	case LPFC_SLI_INTF_FAMILY_LNCR_A0:
++	case LPFC_SLI_INTF_FAMILY_LNCR_B0:
++	default:
++		break;
++	}
+ 	for (dma_buf_size = LPFC_SLI4_MIN_BUF_SIZE;
+ 	     dma_buf_size < max_buf_size && buf_size > dma_buf_size;
+ 	     dma_buf_size = dma_buf_size << 1)
+@@ -5233,16 +5251,22 @@ lpfc_sli4_post_status_check(struct lpfc_
+ 		   &phba->sli4_hba.sli_intf) == LPFC_SLI_INTF_VALID) {
+ 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+ 				"2534 Device Info: ChipType=0x%x, SliRev=0x%x, "
+-				"FeatureL1=0x%x, FeatureL2=0x%x\n",
++				"IFType=0x%x, SLIHint_1=0x%x, SLIHint_2=0x%x, "
++				"FT=0x%x\n",
+ 				bf_get(lpfc_sli_intf_sli_family,
+ 				       &phba->sli4_hba.sli_intf),
+ 				bf_get(lpfc_sli_intf_slirev,
+ 				       &phba->sli4_hba.sli_intf),
+-				bf_get(lpfc_sli_intf_featurelevel1,
++				bf_get(lpfc_sli_intf_if_type,
++				       &phba->sli4_hba.sli_intf),
++				bf_get(lpfc_sli_intf_sli_hint1,
++				       &phba->sli4_hba.sli_intf),
++				bf_get(lpfc_sli_intf_sli_hint2,
+ 				       &phba->sli4_hba.sli_intf),
+-				bf_get(lpfc_sli_intf_featurelevel2,
++				bf_get(lpfc_sli_intf_func_type,
+ 				       &phba->sli4_hba.sli_intf));
  	}
--	if (phba->pport->port_state < LPFC_FLOGI)
-+	if ((phba->pport->port_state < LPFC_FLOGI) &&
-+		(phba->pport->port_state != LPFC_VPORT_FAILED))
- 		return NULL;
- 	/* If virtual link is not yet instantiated ignore CVL */
--	if ((vport != phba->pport) && (vport->port_state < LPFC_FDISC))
-+	if ((vport != phba->pport) && (vport->port_state < LPFC_FDISC)
-+		&& (vport->port_state != LPFC_VPORT_FAILED))
- 		return NULL;
- 	shost = lpfc_shost_from_vport(vport);
- 	if (!shost)
-diff -upNr a/drivers/scsi/lpfc/lpfc_logmsg.h b/drivers/scsi/lpfc/lpfc_logmsg.h
---- a/drivers/scsi/lpfc/lpfc_logmsg.h	2010-08-04 10:31:45.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_logmsg.h	2010-11-19 16:08:26.000000000 -0500
-@@ -33,7 +33,7 @@
- #define LOG_FCP_ERROR	0x00001000	/* log errors, not underruns */
- #define LOG_LIBDFC	0x00002000	/* Libdfc events */
- #define LOG_VPORT	0x00004000	/* NPIV events */
--#define LOF_SECURITY	0x00008000	/* Security events */
-+#define LOG_SECURITY	0x00008000	/* Security events */
- #define LOG_EVENT	0x00010000	/* CT,TEMP,DUMP, logging */
- #define LOG_FIP		0x00020000	/* FIP events */
- #define LOG_ALL_MSG	0xffffffff	/* LOG all messages */
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2010-11-12 12:14:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2010-11-19 16:08:26.000000000 -0500
-@@ -5863,6 +5863,8 @@ lpfc_sli4_bpl2sgl(struct lpfc_hba *phba,
- 	IOCB_t *icmd;
- 	int numBdes = 0;
- 	int i = 0;
-+	uint32_t offset = 0; /* accumulated offset in the sg request list */
-+	int inbound = 0; /* number of sg reply entries inbound from firmware */
- 
- 	if (!piocbq || !sglq)
- 		return xritag;
-@@ -5897,6 +5899,20 @@ lpfc_sli4_bpl2sgl(struct lpfc_hba *phba,
- 			 */
- 			bde.tus.w = le32_to_cpu(bpl->tus.w);
- 			sgl->sge_len = cpu_to_le32(bde.tus.f.bdeSize);
-+			/* The offsets in the sgl need to be accumulated
-+			 * separately for the request and reply lists.
-+			 * The request is always first, the reply follows.
-+			 */
-+			if (piocbq->iocb.ulpCommand == CMD_GEN_REQUEST64_CR) {
-+				/* add up the reply sg entries */
-+				if (bpl->tus.f.bdeFlags == BUFF_TYPE_BDE_64I)
-+					inbound++;
-+				/* first inbound? reset the offset */
-+				if (inbound == 1)
-+					offset = 0;
-+				bf_set(lpfc_sli4_sge_offset, sgl, offset);
-+				offset += bde.tus.f.bdeSize;
-+			}
- 			bpl++;
- 			sgl++;
- 		}
-@@ -6140,6 +6156,18 @@ lpfc_sli4_iocb2wqe(struct lpfc_hba *phba
- 		bf_set(wqe_ebde_cnt, &wqe->fcp_icmd.wqe_com, 0);
- 	break;
- 	case CMD_GEN_REQUEST64_CR:
-+		/* For this command calculate the xmit length of the
-+		 * request bde.
-+		 */
-+		xmit_len = 0;
-+		numBdes = iocbq->iocb.un.genreq64.bdl.bdeSize /
-+			sizeof(struct ulp_bde64);
-+		for (i = 0; i < numBdes; i++) {
-+			if (bpl[i].tus.f.bdeFlags != BUFF_TYPE_BDE_64)
-+				break;
-+			bde.tus.w = le32_to_cpu(bpl[i].tus.w);
-+			xmit_len += bde.tus.f.bdeSize;
-+		}
- 		/* word3 iocb=IO_TAG wqe=request_payload_len */
- 		wqe->gen_req.request_payload_len = xmit_len;
- 		/* word4 iocb=parameter wqe=relative_offset memcpy */
-@@ -12854,6 +12882,7 @@ lpfc_cleanup_pending_mbox(struct lpfc_vp
- 	struct lpfc_nodelist *act_mbx_ndlp = NULL;
- 	struct Scsi_Host  *shost = lpfc_shost_from_vport(vport);
- 	LIST_HEAD(mbox_cmd_list);
-+	uint8_t restart_loop;
- 
- 	/* Clean up internally queued mailbox commands with the vport */
- 	spin_lock_irq(&phba->hbalock);
-@@ -12882,6 +12911,38 @@ lpfc_cleanup_pending_mbox(struct lpfc_vp
- 			mb->mbox_flag |= LPFC_MBX_IMED_UNREG;
- 		}
- 	}
-+	/* Cleanup any mailbox completions which are not yet processed */
-+	do {
-+		restart_loop = 0;
-+		list_for_each_entry(mb, &phba->sli.mboxq_cmpl, list) {
-+			/*
-+			 * If this mailox is already processed or it is
-+			 * for another vport ignore it.
-+			 */
-+			if ((mb->vport != vport) ||
-+				(mb->mbox_flag & LPFC_MBX_IMED_UNREG))
-+				continue;
 +
-+			if ((mb->u.mb.mbxCommand != MBX_REG_LOGIN64) &&
-+				(mb->u.mb.mbxCommand != MBX_REG_VPI))
-+				continue;
-+
-+			mb->mbox_cmpl = lpfc_sli_def_mbox_cmpl;
-+			if (mb->u.mb.mbxCommand == MBX_REG_LOGIN64) {
-+				ndlp = (struct lpfc_nodelist *)mb->context2;
-+				/* Unregister the RPI when mailbox complete */
-+				mb->mbox_flag |= LPFC_MBX_IMED_UNREG;
-+				restart_loop = 1;
-+				spin_unlock_irq(&phba->hbalock);
-+				spin_lock(shost->host_lock);
-+				ndlp->nlp_flag &= ~NLP_IGNR_REG_CMPL;
-+				spin_unlock(shost->host_lock);
-+				spin_lock_irq(&phba->hbalock);
-+				break;
-+			}
-+		}
-+	} while (restart_loop);
-+
- 	spin_unlock_irq(&phba->hbalock);
+ 	phba->sli4_hba.ue_mask_lo = readl(phba->sli4_hba.UEMASKLOregaddr);
+ 	phba->sli4_hba.ue_mask_hi = readl(phba->sli4_hba.UEMASKHIregaddr);
+ 	/* With uncoverable error, log the error message and return error */
+@@ -8992,6 +9016,10 @@ static struct pci_device_id lpfc_id_tabl
+ 		PCI_ANY_ID, PCI_ANY_ID, },
+ 	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_BALIUS,
+ 		PCI_ANY_ID, PCI_ANY_ID, },
++	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_LANCER_FC,
++		PCI_ANY_ID, PCI_ANY_ID, },
++	{PCI_VENDOR_ID_EMULEX, PCI_DEVICE_ID_LANCER_FCOE,
++		PCI_ANY_ID, PCI_ANY_ID, },
+ 	{ 0 }
+ };
  
- 	/* Release the cleaned-up mailbox commands */
 
 
