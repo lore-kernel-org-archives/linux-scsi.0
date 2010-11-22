@@ -1,29 +1,38 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] target: simplify cmd to task mapping
-Date: Mon, 22 Nov 2010 16:07:07 -0500
-Message-ID: <20101122210707.GA25898@infradead.org>
-References: <20101117213857.GB26557@infradead.org>
- <4CE516F5.10400@panasas.com>
+From: Kamala Narasimhan <kamala.narasimhan@gmail.com>
+Subject: AHCI related question
+Date: Mon, 22 Nov 2010 16:43:17 -0500
+Message-ID: <AANLkTi=++zEOaXoJ31m-ausDAf_HGGrz4p8i1qCw4em4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:37743 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756254Ab0KVVHL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Nov 2010 16:07:11 -0500
-Content-Disposition: inline
-In-Reply-To: <4CE516F5.10400@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org, jgarzik@pobox.com
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@infradead.org>, nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
-On Thu, Nov 18, 2010 at 02:07:17PM +0200, Boaz Harrosh wrote:
-> If all these are mutual exclusive (if..elseif..else) can we not make
-> them an enum and switch() for costless-ness and clarity?
+Thought I would request help from AHCI experts to solve an issue I
+encounter.  Apologies in advance if this is not the right forum for
+requesting such help.
 
-We could.  But IMHO we should simply get rid of all the special cases
-instead.  First remove the non-SG case, then fold the zero transfer
-length one in as a special zero-length SG and then check how many
-differences we have left between the data and control plane.
+Background - I am writing a minimal AHCI driver that would be invoked
+within Xen environment upon a system crash.  It is minimal in the
+sense it doesn't do much in the way of initializing the device,
+setting up interrupts etc. as dom0 would take care of initialization
+and we will be using it in polled mode with no interrupts, so no need
+to setup interrupts.  Upon a system crash, I am able to get to abar
+and HBA registers etc.  I am also able to map the relevant memory
+regions appropriately within Xen and access it.  But, when I issue a
+command by setting the relevant free slot specific bit in the port
+command issue register (pxci), the bit I set for the slot in pxci is
+not getting reset as it should upon successful execution of the
+command.
 
+As an experiment, I simply tried to stop/start the HBA engine by
+setting the ST bit in the command register (PxCMD) to 0 but the CR, FR
+bits etc. in PxCMD is not getting reset by the HBA upon ST reset as
+expected.  It appears the HBA engine is not responding as it should.
+If you can share any thought as to why the HBA is not responding
+though the PCI space, abar, port registers etc. looks fine that would
+be much appreciated.  Thanks!
+
+Kamala
