@@ -1,99 +1,160 @@
-From: Nikanth Karthikesan <knikanth@suse.de>
-Subject: Re: [PATCH 1/1] pmcraid driver disable msix and other changes
-Date: Mon, 22 Nov 2010 15:28:52 +0530
-Message-ID: <201011221528.52597.knikanth@suse.de>
-References: <alpine.LNX.1.10.1011161334560.1759@rslab235.pmc-sierra.bc.ca>
+From: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Subject: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
+Date: Mon, 22 Nov 2010 08:56:35 -0800 (PST)
+Message-ID: <949636.86471.qm@web31809.mail.mud.yahoo.com>
+Reply-To: ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57122 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752750Ab0KVJzZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Nov 2010 04:55:25 -0500
-In-Reply-To: <alpine.LNX.1.10.1011161334560.1759@rslab235.pmc-sierra.bc.ca>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, Linus Torvalds <torvalds@linu>
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com
 
-On Wednesday 17 November 2010 03:13:41 Anil Ravindranath wrote:
-> The following are the fixes in this patch:
+Some kernel transport drivers unconditionally disable
+retrieval of the Caching mode page. One such for example is
+the BBB/CBI transport over USB.  Such a restraint is too
+harsh as some devices do support the Caching mode
+page. Unconditionally enabling the retrieval of this mode
+page over those transports at their transport code level may
+result in some devices failing and becoming unusable.
 
-Fixes for what? Can you include the bugs caused by enabling msi-x inthe 
-changelog.
+This patch implements a method of retrieving the Caching
+mode page without unconditionally enabling it in the
+transports which unconditionally disable it. The idea is to
+ask for all supported pages, page code 0x3F, and then search
+for the Caching mode page in the mode parameter data
+returned. The sd driver already asks for all the mode pages
+supported by the attached device by setting the page code to
+0x3F in order to find out if the media is write protected by
+reading the WP bit in the Device Specific Parameter
+field. It then attempts to retrieve only the Caching mode
+page by setting the page code to 8 and actually attempting
+to retrieve it if and only if the transport allows it.
 
-> 1. Disable msi-x for now
-> 2. Change device configuration entry size
-> 
+The method implemented here is that if the transport doesn't
+allow retrieval of the Caching mode page and the device is
+not RBC, then we ask for all pages supported by setting the
+page code to 0x3F (similarly to how the WP bit is retrieved
+above), and then we search for the Caching mode page in the
+mode parameter data returned.
 
-Why?
+With this patch, devices over SATA, report this (no change):
 
-So this patch kind of disables c20c426732a5a5d21e99b36286f79c2024115341?
-Would it be better to revert it?
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] 976773168 512-byte logical blocks: (500 GB/465 GiB)
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: Attached scsi generic sg0 type 0
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] Write Protect is off
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
+Oct 22 18:45:58 localhost kernel: sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
 
-> Signed-off-by: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
-> 
->  pmcraid.c |    4 +++-
->  pmcraid.h |    6 ++----
->  2 files changed, 5 insertions(+), 5 deletions(-)
-> 
-> --- scsi-misc-2.6.orig/drivers/scsi/pmcraid.h	2010-11-04 12:03:46.000000000
->  -0700 +++ scsi-misc-2.6/drivers/scsi/pmcraid.h	2010-11-04
->  11:15:06.000000000 -0700 @@ -42,7 +42,7 @@
->   */
->  #define PMCRAID_DRIVER_NAME		"PMC MaxRAID"
->  #define PMCRAID_DEVFILE			"pmcsas"
-> -#define PMCRAID_DRIVER_VERSION		"2.0.3"
-> +#define PMCRAID_DRIVER_VERSION		"1.0.3"
+Smart devices report their Caching mode page. This is a
+change where we'd previously see the kernel making
+assumption about the device's cache being write-through:
 
-hm.. version jump back!
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: Attached scsi generic sg2 type 0
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] 610472646 4096-byte logical blocks: (2.50 TB/2.27 TiB)
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] Write Protect is off
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] Mode Sense: 47 00 10 08
+Oct 22 18:45:58 localhost kernel: sd 6:0:0:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
 
->  #define PMCRAID_DRIVER_DATE		__DATE__
-> 
->  #define PMCRAID_FW_VERSION_1		0x002
-> @@ -333,11 +333,9 @@
->  	__u8  lun[PMCRAID_LUN_LEN];
->  } __attribute__((packed, aligned(4)));
-> 
-> -/* extended configuration table sizes are of 64 bytes in size */
-> -#define PMCRAID_CFGTE_EXT_SIZE	32
-> +/* extended configuration table sizes are also of 32 bytes in size */
->  struct pmcraid_config_table_entry_ext {
->  	struct pmcraid_config_table_entry cfgte;
-> -	__u8  cfgte_ext[PMCRAID_CFGTE_EXT_SIZE];
->  };
-> 
->  /* resource types (config_table_entry.resource_type values) */
-> --- scsi-misc-2.6.orig/drivers/scsi/pmcraid.c	2010-11-04 12:03:38.000000000
->  -0700 +++ scsi-misc-2.6/drivers/scsi/pmcraid.c	2010-11-04
->  12:11:21.000000000 -0700 @@ -62,6 +62,7 @@
->  static unsigned int pmcraid_debug_log;
->  static unsigned int pmcraid_disable_aen;
->  static unsigned int pmcraid_log_level = IOASC_LOG_LEVEL_MUST;
-> +static unsigned int pmcraid_enable_msix;
-> 
->  /*
->   * Data structures to support multiple adapters by the LLD.
-> @@ -4689,7 +4690,8 @@
->  	int rc;
->  	struct pci_dev *pdev = pinstance->pdev;
-> 
-> -	if (pci_find_capability(pdev, PCI_CAP_ID_MSIX)) {
-> +	if ((pmcraid_enable_msix) &&
-> +		(pci_find_capability(pdev, PCI_CAP_ID_MSIX))) {
+And "dumb" devices over BBB, are correctly shown not to
+support reporting the Caching mode page:
 
-coding style nitpick: Unnecessary parenthesis.
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] 15663104 512-byte logical blocks: (8.01 GB/7.46 GiB)
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] Write Protect is off
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] Mode Sense: 23 00 00 00
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] No Caching mode page present
+Oct 22 18:49:06 localhost kernel: sd 7:0:0:0: [sdc] Assuming drive cache: write through
 
-Thanks
-Nikanth
+Signed-off-by: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+---
+ drivers/scsi/sd.c |   63 +++++++++++++++++++++++++++++++++++++++-------------
+ 1 files changed, 47 insertions(+), 16 deletions(-)
 
->  		int num_hrrq = PMCRAID_NUM_MSIX_VECTORS;
->  		struct msix_entry entries[PMCRAID_NUM_MSIX_VECTORS];
->  		int i;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index ffa0689..81e83d7 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1867,10 +1867,14 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+        int old_rcd = sdkp->RCD;
+        int old_dpofua = sdkp->DPOFUA;
+ 
+-       if (sdp->skip_ms_page_8)
+-               goto defaults;
+-
+-       if (sdp->type == TYPE_RBC) {
++       if (sdp->skip_ms_page_8) {
++               if (sdp->type == TYPE_RBC)
++                       goto defaults;
++               else {
++                       modepage = 0x3F;
++                       dbd = 0;
++               }
++       } else if (sdp->type == TYPE_RBC) {
+                modepage = 6;
+                dbd = 8;
+        } else {
+@@ -1898,13 +1902,11 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+         */
+        if (len < 3)
+                goto bad_sense;
+-       if (len > 20)
+-               len = 20;
+-
+-       /* Take headers and block descriptors into account */
+-       len += data.header_length + data.block_descriptor_length;
+-       if (len > SD_BUF_SIZE)
+-               goto bad_sense;
++       else if (len > SD_BUF_SIZE) {
++               sd_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
++                         "data from %d to %d bytes\n", len, SD_BUF_SIZE);
++               len = SD_BUF_SIZE;
++       }
+ 
+        /* Get the data */
+        res = sd_do_mode_sense(sdp, dbd, modepage, buffer, len, &data, &sshdr);
+@@ -1912,16 +1914,45 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+        if (scsi_status_is_good(res)) {
+                int offset = data.header_length + data.block_descriptor_length;
+ 
+-               if (offset >= SD_BUF_SIZE - 2) {
+-                       sd_printk(KERN_ERR, sdkp, "Malformed MODE SENSE response\n");
+-                       goto defaults;
++               while (offset < len) {
++                       u8 page_code = buffer[offset] & 0x3F;
++                       u8 spf       = buffer[offset] & 0x40;
++
++                       if (page_code == 8 || page_code == 6) {
++                               /* We're interested only in the first 3 bytes.
++                                */
++                               if (len - offset <= 2) {
++                                       sd_printk(KERN_ERR, sdkp, "Incomplete "
++                                                 "mode parameter data\n");
++                                       goto defaults;
++                               } else {
++                                       modepage = page_code;
++                                       goto Page_found;
++                               }
++                       } else {
++                               /* Go to the next page */
++                               if (spf && len - offset > 3)
++                                       offset += 4 + (buffer[offset+2] << 8) +
++                                               buffer[offset+3];
++                               else if (!spf && len - offset > 1)
++                                       offset += 2 + buffer[offset+1];
++                               else {
++                                       sd_printk(KERN_ERR, sdkp, "Incomplete "
++                                                 "mode parameter data\n");
++                                       goto defaults;
++                               }
++                       }
+                }
+ 
+-               if ((buffer[offset] & 0x3f) != modepage) {
++               if (modepage == 0x3F) {
++                       sd_printk(KERN_ERR, sdkp, "No Caching mode page "
++                                 "present\n");
++                       goto defaults;
++               } else if ((buffer[offset] & 0x3f) != modepage) {
+                        sd_printk(KERN_ERR, sdkp, "Got wrong page\n");
+                        goto defaults;
+                }
