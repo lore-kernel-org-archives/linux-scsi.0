@@ -1,119 +1,56 @@
-From: Anil Ravindranath <anil_ravindranath@pmc-sierra.com>
-Subject: Re: [PATCH 1/1] pmcraid driver disable msix and other changes
-Date: Mon, 22 Nov 2010 09:25:31 -0800 (PST)
-Message-ID: <alpine.LNX.1.10.1011220852170.4089@rslab235.pmc-sierra.bc.ca>
-References: <alpine.LNX.1.10.1011161334560.1759@rslab235.pmc-sierra.bc.ca> <201011221528.52597.knikanth@suse.de>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
+Date: Mon, 22 Nov 2010 12:02:26 -0800 (PST)
+Message-ID: <538170.68988.qm@web31803.mail.mud.yahoo.com>
+References: <AANLkTi=7tW6wqrk8ZkFuTYwmS-wZ4nQ+jkxk8U95H42F@mail.gmail.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:59792 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751300Ab0KVTY5 (ORCPT
+Received: from web31803.mail.mud.yahoo.com ([68.142.207.66]:43712 "HELO
+	web31803.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1757448Ab0KVUC1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Nov 2010 14:24:57 -0500
-In-Reply-To: <201011221528.52597.knikanth@suse.de>
+	Mon, 22 Nov 2010 15:02:27 -0500
+In-Reply-To: <AANLkTi=7tW6wqrk8ZkFuTYwmS-wZ4nQ+jkxk8U95H42F@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nikanth Karthikesan <knikanth@suse.de>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@hansenpartnership.com, anil_ravindranath@pmc-sierra.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@suse.de>
 
+--- On Mon, 11/22/10, Linus Torvalds <torvalds@linux-foundation.org> wrote:
+> > Some kernel transport drivers unconditionally disable
+> > retrieval of the Caching mode page. One such for
+> example is
+> > the BBB/CBI transport over USB.
+> 
+> One reason for that is that historically we've seen devices
+> that
+> simply go crazy - to the point of simply stopping to
+> respond to
+> anything - when you ask for pages that Windows doesn't ask
+> for.
+> 
+> It's especially common on USB storage, but it happens
+> elsewhere too.
+> The device firmware simply hasn't ever been tested in that
+> situation,
+> and it's buggy.
+> 
+> So I don't mind the patch per se, but I think it's
+> potentially way
+> more dangerous than it looks.
 
+This patch does not ask for pages that Windows doesn't ask for. The sd driver already asks for all pages (page code 0x3F) and then checks if the device is write protected. Here is the present code:
 
-On Mon, 22 Nov 2010, Nikanth Karthikesan wrote:
+  2217                  sd_read_write_protect_flag(sdkp, buffer);
+  2218                  sd_read_cache_type(sdkp, buffer);
+  2219                  sd_read_app_tag_own(sdkp, buffer);
 
-> On Wednesday 17 November 2010 03:13:41 Anil Ravindranath wrote:
-> > The following are the fixes in this patch:
-> 
-> Fixes for what? Can you include the bugs caused by enabling msi-x inthe 
-> changelog.
-> 
-> > 1. Disable msi-x for now
-> > 2. Change device configuration entry size
-> > 
-> 
-> Why?
-> 
-The reasons are very much controller and FW specific and not driver bugs. 
-The product does not want to have MSI-X support for now. Maybe in future it will enabled.
-Regarding device configuration entry size change again its FW 
-requirement.
+Line 2217 asks for page code 0x3F, meaning all mode pages.
+Line 2218 asks for the Caching mode page or not at all if the device flags forbid it (all USB storage devices in the Linux kernel).
 
+This patch adds processing of the data returned when all mode pages are asked for (0x3F) in the function on line 2218. It then parses the data to find out if the Caching mode page is present.
 
-> So this patch kind of disables c20c426732a5a5d21e99b36286f79c2024115341?
-> Would it be better to revert it?
-> 
+   Luben
 
-The commit you are referring is quite old and there are lot other changes 
-after that. This patch just disables MSI-X.
-
-> > Signed-off-by: Anil Ravindranath<anil_ravindranath@pmc-sierra.com>
-> > 
-> >  pmcraid.c |    4 +++-
-> >  pmcraid.h |    6 ++----
-> >  2 files changed, 5 insertions(+), 5 deletions(-)
-> > 
-> > --- scsi-misc-2.6.orig/drivers/scsi/pmcraid.h	2010-11-04 12:03:46.000000000
-> >  -0700 +++ scsi-misc-2.6/drivers/scsi/pmcraid.h	2010-11-04
-> >  11:15:06.000000000 -0700 @@ -42,7 +42,7 @@
-> >   */
-> >  #define PMCRAID_DRIVER_NAME		"PMC MaxRAID"
-> >  #define PMCRAID_DEVFILE			"pmcsas"
-> > -#define PMCRAID_DRIVER_VERSION		"2.0.3"
-> > +#define PMCRAID_DRIVER_VERSION		"1.0.3"
-> 
-> hm.. version jump back!
-> 
-One of main reasons we bumped from 1.0. to 2.0 was support for MSI-X and 
-since we have disabled for now, the version is back to 1.0.3.
-
-> >  #define PMCRAID_DRIVER_DATE		__DATE__
-> > 
-> >  #define PMCRAID_FW_VERSION_1		0x002
-> > @@ -333,11 +333,9 @@
-> >  	__u8  lun[PMCRAID_LUN_LEN];
-> >  } __attribute__((packed, aligned(4)));
-> > 
-> > -/* extended configuration table sizes are of 64 bytes in size */
-> > -#define PMCRAID_CFGTE_EXT_SIZE	32
-> > +/* extended configuration table sizes are also of 32 bytes in size */
-> >  struct pmcraid_config_table_entry_ext {
-> >  	struct pmcraid_config_table_entry cfgte;
-> > -	__u8  cfgte_ext[PMCRAID_CFGTE_EXT_SIZE];
-> >  };
-> > 
-> >  /* resource types (config_table_entry.resource_type values) */
-> > --- scsi-misc-2.6.orig/drivers/scsi/pmcraid.c	2010-11-04 12:03:38.000000000
-> >  -0700 +++ scsi-misc-2.6/drivers/scsi/pmcraid.c	2010-11-04
-> >  12:11:21.000000000 -0700 @@ -62,6 +62,7 @@
-> >  static unsigned int pmcraid_debug_log;
-> >  static unsigned int pmcraid_disable_aen;
-> >  static unsigned int pmcraid_log_level = IOASC_LOG_LEVEL_MUST;
-> > +static unsigned int pmcraid_enable_msix;
-> > 
-> >  /*
-> >   * Data structures to support multiple adapters by the LLD.
-> > @@ -4689,7 +4690,8 @@
-> >  	int rc;
-> >  	struct pci_dev *pdev = pinstance->pdev;
-> > 
-> > -	if (pci_find_capability(pdev, PCI_CAP_ID_MSIX)) {
-> > +	if ((pmcraid_enable_msix) &&
-> > +		(pci_find_capability(pdev, PCI_CAP_ID_MSIX))) {
-> 
-> coding style nitpick: Unnecessary parenthesis.
-> 
-For readiblity sake the paranthesis are kept. If it was an coding 
-style issue checkpatch would have picked, I guess, correct?.
-
-> Thanks
-> Nikanth
-> 
-> >  		int num_hrrq = PMCRAID_NUM_MSIX_VECTORS;
-> >  		struct msix_entry entries[PMCRAID_NUM_MSIX_VECTORS];
-> >  		int i;
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
