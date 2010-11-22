@@ -1,76 +1,56 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH v2 11/14] BNX2I: Added feature to silently drop NOPOUT
- request
-Date: Mon, 22 Nov 2010 11:42:43 -0600
-Message-ID: <4CEAAB93.7040103@cs.wisc.edu>
-References: <Eddie Wai <eddie.wai@broadcom.com> <1290130209-32133-12-git-send-email-eddie.wai@broadcom.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
+Date: Mon, 22 Nov 2010 14:02:06 -0500
+Message-ID: <4CEABE2E.4010609@interlog.com>
+References: <949636.86471.qm@web31809.mail.mud.yahoo.com> <AANLkTi=7tW6wqrk8ZkFuTYwmS-wZ4nQ+jkxk8U95H42F@mail.gmail.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <open-iscsi+bncCLPJla3WGRC006rnBBoEqqqYxA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1290130209-32133-12-git-send-email-eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Cc: James Bottomley <JBottomley-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Ben Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AANLkTi=7tW6wqrk8ZkFuTYwmS-wZ4nQ+jkxk8U95H42F@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: ltuikov@yahoo.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/18/2010 07:30 PM, Eddie Wai wrote:
-> In the case the chip is undergoing different invasive operation
-> which requires a chip reset, all NOPOUT request during this period
-> must be silently dropped from queuing to the hardware.  This patch
-> will respond to libiscsi immediately with sent success.  Since the
-> request was not actually sent, the NOPIN wait timeout will get
-> triggered and another NOPOUT request will commence through the
-> proper channel.
+On 10-11-22 12:07 PM, Linus Torvalds wrote:
+> On Mon, Nov 22, 2010 at 8:56 AM, Luben Tuikov<ltuikov@yahoo.com>  wrote:
+>>
+>> Some kernel transport drivers unconditionally disable
+>> retrieval of the Caching mode page. One such for example is
+>> the BBB/CBI transport over USB.
 >
-> Signed-off-by: Eddie Wai<eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-> Acked-by: Anil Veerabhadrappa<anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-> ---
->   drivers/scsi/bnx2i/bnx2i_iscsi.c |   16 ++++++++++++++++
->   1 files changed, 16 insertions(+), 0 deletions(-)
+> One reason for that is that historically we've seen devices that
+> simply go crazy - to the point of simply stopping to respond to
+> anything - when you ask for pages that Windows doesn't ask for.
 >
-> diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> index f622e89..5e8dff9 100644
-> --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-> @@ -1068,6 +1068,22 @@ static int bnx2i_iscsi_send_generic_request(struct iscsi_task *task)
->   	char *buf;
->   	int data_len;
+> It's especially common on USB storage, but it happens elsewhere too.
+> The device firmware simply hasn't ever been tested in that situation,
+> and it's buggy.
 >
-> +	/*
-> +	 * Forcefully terminate all in progress connection recovery at the
-> +	 * earliest, either in bind(), send_pdu(LOGIN), or conn_start()
-> +	 */
-> +	if (bnx2i_adapter_ready(bnx2i_conn->ep->hba)) {
-> +		if ((task->hdr->opcode&  ISCSI_OPCODE_MASK) ==
-> +		    ISCSI_OP_NOOP_OUT)
-> +			/* This is a WA to indicate to libiscsi that the nopout
-> +			 * request was sent successfully without actually
-> +			 * submitting to the hardware.
-> +			 * Just silently drop the nopout request
-> +			 */
-> +			return 0;
+> So I don't mind the patch per se, but I think it's potentially way
+> more dangerous than it looks.
 
-I'd like to just have libiscsi handle a error code here instead of 
-hacking around its lack of eh handling.
+The vast majority of USB mass storage devices are based
+on SCSI-2 (1994) or a particularly nasty standard
+called RBC (Reduced Block Commands, 1999) which is a
+partial subset of the block commands (i.e. disk related).
+We are all aware of the quality of most of the device
+end implementations out in the wild.
 
+I believe what Luben is working with is a new standard
+called UAS (soon to be ratified) which is based on
+www.t10.org work in the last few years. It seems to be
+an attempt to throw out the older USB mass storage
+transport and do it again, properly.
 
-> +		else
-> +			return -EIO;
-> +	}
->   	bnx2i_iscsi_prep_generic_pdu_bd(bnx2i_conn);
->   	switch (task->hdr->opcode&  ISCSI_OPCODE_MASK) {
->   	case ISCSI_OP_LOGIN:
+In the USB domain the UAS transport is identified in
+an interface as mass storage class (8), SCSI transparent
+command set subclass (6) and protocol 0x62. I would
+think that the USB and SCSI layers could be modified to
+remove some or all of its mass storage hacks (e.g. disabling
+retrieval of the Caching mode page) when the transport
+is UAS.
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+Doug Gilbert
