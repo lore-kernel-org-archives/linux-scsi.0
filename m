@@ -1,16 +1,16 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH v3 02/13] BNX2I: Added fix for NOP-Out response panic
- from unsolicited NOP-In
-Date: Tue, 23 Nov 2010 15:29:21 -0800
-Message-ID: <1290554972-16928-3-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH v3 03/13] BNX2I: Fixed the endian bug in the TMF LUN cmd
+ send
+Date: Tue, 23 Nov 2010 15:29:22 -0800
+Message-ID: <1290554972-16928-4-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1112 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1094 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754077Ab0KWX1g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754067Ab0KWX1g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 23 Nov 2010 18:27:36 -0500
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,71 +18,37 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-The patch fixes the following situations where NOP-Out pkt is called for:
-- local unsolicited NOP-Out requests (requesting no NOP-In response)
-- local NOP-Out responses to unsolicited NOP-In requests
-
-kernel panic is observed due to double session spin_lock requests; one in the
-bnx2i_process_nopin_local_cmpl routine in bnx2i_hwi.c and the other in the
-iscsi_put_task routine in libiscsi.c
-
-The proposed fix is to export the currently static __iscsi_put_task() routine
-and have bnx2i call it directly instead of the iscsi_put_task() routine which
-holds the session spin lock.
+Added a be32_to_cpu call for the TMF LUN wqe.
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-Reviewed-by: Michael Chan <mchan@broadcom.com>
-Reviewed-by: Anil Veerabhadrappa <anilgv@broadcom.com>
-Acked-by: Benjamin Li <benli@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i_hwi.c |    2 +-
- drivers/scsi/libiscsi.c        |    3 ++-
- include/scsi/libiscsi.h        |    1 +
- 3 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_hwi.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
-index 16c76e0..32cf930 100644
+index 32cf930..c9a3c0f 100644
 --- a/drivers/scsi/bnx2i/bnx2i_hwi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
-@@ -1513,7 +1513,7 @@ static void bnx2i_process_nopin_local_cmpl(struct iscsi_session *session,
- 	task = iscsi_itt_to_task(conn,
- 				 nop_in->itt & ISCSI_NOP_IN_MSG_INDEX);
- 	if (task)
--		iscsi_put_task(task);
-+		__iscsi_put_task(task);
- 	spin_unlock(&session->lock);
- }
+@@ -385,6 +385,7 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
+ 	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct bnx2i_tmf_request *tmfabort_wqe;
+ 	u32 dword;
++	u32 scsi_lun[2];
  
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 633e090..b63e2a4 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -539,11 +539,12 @@ void __iscsi_get_task(struct iscsi_task *task)
- }
- EXPORT_SYMBOL_GPL(__iscsi_get_task);
+ 	bnx2i_cmd = (struct bnx2i_cmd *)mtask->dd_data;
+ 	tmfabort_hdr = (struct iscsi_tm *)mtask->hdr;
+@@ -426,7 +427,10 @@ int bnx2i_send_iscsi_tmf(struct bnx2i_conn *bnx2i_conn,
+ 	default:
+ 		tmfabort_wqe->ref_itt = RESERVED_ITT;
+ 	}
+-	memcpy(tmfabort_wqe->lun, tmfabort_hdr->lun, sizeof(struct scsi_lun));
++	memcpy(scsi_lun, tmfabort_hdr->lun, sizeof(struct scsi_lun));
++	tmfabort_wqe->lun[0] = be32_to_cpu(scsi_lun[0]);
++	tmfabort_wqe->lun[1] = be32_to_cpu(scsi_lun[1]);
++
+ 	tmfabort_wqe->ref_cmd_sn = be32_to_cpu(tmfabort_hdr->refcmdsn);
  
--static void __iscsi_put_task(struct iscsi_task *task)
-+void __iscsi_put_task(struct iscsi_task *task)
- {
- 	if (atomic_dec_and_test(&task->refcount))
- 		iscsi_free_task(task);
- }
-+EXPORT_SYMBOL_GPL(__iscsi_put_task);
- 
- void iscsi_put_task(struct iscsi_task *task)
- {
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index ae5196a..2ea9aec 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -420,6 +420,7 @@ extern struct iscsi_task *iscsi_itt_to_ctask(struct iscsi_conn *, itt_t);
- extern struct iscsi_task *iscsi_itt_to_task(struct iscsi_conn *, itt_t);
- extern void iscsi_requeue_task(struct iscsi_task *task);
- extern void iscsi_put_task(struct iscsi_task *task);
-+extern void __iscsi_put_task(struct iscsi_task *task);
- extern void __iscsi_get_task(struct iscsi_task *task);
- extern void iscsi_complete_scsi_task(struct iscsi_task *task,
- 				     uint32_t exp_cmdsn, uint32_t max_cmdsn);
+ 	tmfabort_wqe->bd_list_addr_lo = (u32) bnx2i_conn->hba->mp_bd_dma;
 -- 
 1.7.0.5
 
