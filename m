@@ -1,89 +1,57 @@
-From: Don Zickus <dzickus@redhat.com>
-Subject: Re: xhci: suspend/resume issues
-Date: Tue, 23 Nov 2010 14:09:13 -0500
-Message-ID: <20101123190913.GG18100@redhat.com>
-References: <2DEEA3AB13739D45A22ADDB5086AEA0B914AD4@sshaexmb1.amd.com>
- <20101111191904.GK4823@redhat.com>
- <20101111210420.GA9020@xanatos>
- <20101116154756.GZ4823@redhat.com>
- <2DEEA3AB13739D45A22ADDB5086AEA0B9A6287@sshaexmb1.amd.com>
- <20101119185907.GA30923@xanatos>
- <20101119225602.GP18100@redhat.com>
- <20101119233046.GA13059@xanatos>
- <20101122224947.GD18100@redhat.com>
- <20101122231524.GA26888@xanatos>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [PATCH] scsi: Set queue limits no_cluster for stacked devices
+Date: Tue, 23 Nov 2010 13:56:50 -0800
+Message-ID: <201011231356497405397@promise.com>
+Reply-To: ed.lin@promise.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="gb2312"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:11964 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754572Ab0KWTJS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Nov 2010 14:09:18 -0500
-Content-Disposition: inline
-In-Reply-To: <20101122231524.GA26888@xanatos>
+Received: from gateway.promise.com ([67.111.72.2]:23738 "EHLO
+	nonamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750943Ab0KWV5O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2010 16:57:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: "Xu, Andiry" <Andiry.Xu@amd.com>, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: promise_linux <promise_linux@promise.com>, dm-devel <dm-devel@redhat.com>
 
-On Mon, Nov 22, 2010 at 03:15:24PM -0800, Sarah Sharp wrote:
-> Ccing the scsi and USB mass storage devices lists on this issue.
-> Background: a USB 3.0 mass storage device shows up as a USB 2.0 device
-> after resume, and then migrates back to USB 3.0 speeds after a reset.
-> 
-> On Mon, Nov 22, 2010 at 05:49:47PM -0500, Don Zickus wrote:
-> > On Fri, Nov 19, 2010 at 03:30:46PM -0800, Sarah Sharp wrote:
-> > > The fifth patch had no effect on whether the device showed up as
-> > > SuperSpeed after a system resume, so I don't think it's needed.  Even
-> > > after the four I sent yesterday, the device still shows up as high speed
-> > > at first, which means USB persist won't work for it.  I'm going to look
-> > > into Alan Stern's suggestion to reorder the HS ports to be before the SS
-> > > ports.  I will probably need you to test again.
-> > > 
-> > > Thanks for working with me on this.
-> > 
-> > Thanks Sarah for you help.
-> > 
-> > Another issue popped up for me.  I noticed when I suspend having a usb3
-> > filesystem mounted (ie mount /dev/sdb2 /mnt), when the system comes back
-> > up, the filesystem is remounted onto /media (probably a distro thing) but
-> > more importantly it comes back as /dev/sdbc (note the 'c' and not 'b').
-> 
-> That's normal, as the USB core thinks the device disconnected, and a new
-> device was placed on that same port.  The USB core has to assume it was
-> a new device, so the block layer will create a new filesystem (sdc) for
-> it.  That's just a by-product of the broken device connecting as high
-> speed and then re-connecting as SuperSpeed once it's reset.
-> 
-> I was going to create a patch to reorder the ports, but Greg KH declined
-> to take the 2 patches that you've successfully tested for 2.6.37, as
-> they're too large.  Since I can't fix your broken device in 2.6.37, I'll
-> skip the workarounds I sent you and just send the split roothub patches
-> for 2.6.38.  Those should fix your issues, since they do an equivalent
-> thing to the disable ports patches I sent.  I'll have to send those
-> patches to test once they're finished.
+When a dm is created, it will adjust queue limits from underlying
+devices. If the no_cluster member is not set, QUEUE_FLAG_CLUSTER
+will be set. When a bio is constructed, QUEUE_FLAG_CLUSTER enables
+segment merge, and neighboring mergeable segments are counted as
+only one segment. Later, however, when the request is mapped to
+scatterlist, if the underlying (scsi) device does not enable
+clustering, the mergeable segments will be separated, and unexpected
+sg count surge follows. If the original segment count is around the
+max_hw_segments (sg_tablesize) limit, the final sg count could break
+the limit due to the extra addition. This is caused by mismatch of
+cluster settings between dm and underlying device.
 
-Yes please do.
+The dm layer already has function to adjust limits based on underlying
+device limits. So, it is necessary to set queue limits no_cluster at
+scsi side, to eliminate the discrepancy.
 
-> 
-> > Looking into my previously mounted /mnt directory yields an i/o error
-> > (probably because it is now under /dev/sdc).
-> 
-> As long as it doesn't produce any kernel oops, that's normal.  The
-> kernel has noticed the device went away, but userspace hasn't.  At
-> least, that's my general impression.  You'll have to ask the USB mass
-> storage guys, or the SCSI folks for the details on how that's supposed
-> to work.
-> 
-> > Unmounting everything and remounting 'mount /dev/sdc2 /mnt' (using the new
-> > letter 'c' instead of 'b') works fine and no data loss seems to occur.
-> > 
-> > Just thought it might be annoying and was wondering if you had any ideas
-> > on that?
-> 
-> There's no way to work around it if the device disconnects, AFAIK.
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
+ drivers/scsi/scsi_lib.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Alright, thanks for the info.
+diff -purN a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c	2010-11-23 11:46:04.000000000 -0800
++++ b/drivers/scsi/scsi_lib.c	2010-11-23 11:49:22.000000000 -0800
+@@ -1643,8 +1643,10 @@ struct request_queue *__scsi_alloc_queue
+ 	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
+ 
+ 	/* New queue, no concurrency on queue_flags */
+-	if (!shost->use_clustering)
++	if (!shost->use_clustering) {
+ 		queue_flag_clear_unlocked(QUEUE_FLAG_CLUSTER, q);
++		q->limits.no_cluster = 1;
++	}
+ 
+ 	/*
+ 	 * set a reasonable default alignment on word boundaries: the
 
-Cheers,
-Don
+
