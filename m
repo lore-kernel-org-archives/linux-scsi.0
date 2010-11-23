@@ -1,84 +1,53 @@
-From: Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
+From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
 Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
-Date: Mon, 22 Nov 2010 20:59:00 -0800
-Message-ID: <20101123045900.GK20296@one-eyed-alien.net>
-References: <949636.86471.qm@web31809.mail.mud.yahoo.com> <AANLkTi=7tW6wqrk8ZkFuTYwmS-wZ4nQ+jkxk8U95H42F@mail.gmail.com> <4CEABE2E.4010609@interlog.com>
+Date: Mon, 22 Nov 2010 21:00:48 -0800
+Message-ID: <20101123050048.GL20296@one-eyed-alien.net>
+References: <AANLkTi=7tW6wqrk8ZkFuTYwmS-wZ4nQ+jkxk8U95H42F@mail.gmail.com> <538170.68988.qm@web31803.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="enGqbSaueFq5omEL"
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+	protocol="application/pgp-signature"; boundary="qo7zVO9a9OQ5oQtr"
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4CEABE2E.4010609-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
+In-Reply-To: <538170.68988.qm@web31803.mail.mud.yahoo.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
 
---enGqbSaueFq5omEL
+--qo7zVO9a9OQ5oQtr
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Nov 22, 2010 at 02:02:06PM -0500, Douglas Gilbert wrote:
-> On 10-11-22 12:07 PM, Linus Torvalds wrote:
-> >On Mon, Nov 22, 2010 at 8:56 AM, Luben Tuikov<ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>  wrote:
-> >>
-> >>Some kernel transport drivers unconditionally disable
-> >>retrieval of the Caching mode page. One such for example is
-> >>the BBB/CBI transport over USB.
-> >
-> >One reason for that is that historically we've seen devices that
-> >simply go crazy - to the point of simply stopping to respond to
-> >anything - when you ask for pages that Windows doesn't ask for.
-> >
-> >It's especially common on USB storage, but it happens elsewhere too.
-> >The device firmware simply hasn't ever been tested in that situation,
-> >and it's buggy.
-> >
-> >So I don't mind the patch per se, but I think it's potentially way
-> >more dangerous than it looks.
+On Mon, Nov 22, 2010 at 12:02:26PM -0800, Luben Tuikov wrote:
+> --- On Mon, 11/22/10, Linus Torvalds <torvalds@linux-foundation.org>
+> wrote:
+> > So I don't mind the patch per se, but I think it's potentially way more
+> > dangerous than it looks.
 >=20
-> The vast majority of USB mass storage devices are based
-> on SCSI-2 (1994) or a particularly nasty standard
-> called RBC (Reduced Block Commands, 1999) which is a
-> partial subset of the block commands (i.e. disk related).
-> We are all aware of the quality of most of the device
-> end implementations out in the wild.
+> This patch does not ask for pages that Windows doesn't ask for. The sd
+> driver already asks for all pages (page code 0x3F) and then checks if the
+> device is write protected. Here is the present code:
+>=20
+>   2217                  sd_read_write_protect_flag(sdkp, buffer); 2218
+>   sd_read_cache_type(sdkp, buffer); 2219
+>   sd_read_app_tag_own(sdkp, buffer);
+>=20
+> Line 2217 asks for page code 0x3F, meaning all mode pages.  Line 2218
+> asks for the Caching mode page or not at all if the device flags forbid
+> it (all USB storage devices in the Linux kernel).
+>=20
+> This patch adds processing of the data returned when all mode pages are
+> asked for (0x3F) in the function on line 2218. It then parses the data to
+> find out if the Caching mode page is present.
 
-Not true.  The vast majority of USB mass storage devices adhere to no SCSI
-or T10 specification at all.  The official definition of the "Transparent
-SCSI" operating mode of the USB Mass Storage Class is "that which
-microsoft/sun/other major vendors use".  Of course, that's not written down
-anywhere, but it was the intent of the committee and that is the reason why
-the committee rejected all attempts by people like me to implement a
-command-based compliance test.
+As long as you are not changing the command stream that the devices see, I
+think this is a reasonable risk to take.
 
-> I believe what Luben is working with is a new standard
-> called UAS (soon to be ratified) which is based on
-> www.t10.org work in the last few years. It seems to be
-> an attempt to throw out the older USB mass storage
-> transport and do it again, properly.
-
-Luben's patch changes the behavior of sd-mod, which would affect both
-usb-storage and UAS.
-
-The primary thing that UAS adds is support for USB 3.0 streams and TCQ,
-which are both designed to improve performance.  I consider it likely that
-the quality of device firmware will be equally poor as older devices.
-
-That said, Luben's patch is kinda slick.  sd-mod already asks for a lot of
-mode page data; it does this so that it's request matches the observed
-behavior of a "popular" Redmond, WA-based OS.  Luben's patch just searches
-through that data to see if it can find what it is looking for, rather than
-rqeuesting a specific mode page later (which may not be supported).
-
-That said, I still consider this somewhat risky.  We've seen devices with
-grossly inaccurate data before.
-
-But, to my thinking, as long as the devices don't see any change in the
-command stream, then I think the risk has been properly mitigated.  To my
-understanding, this is the case.
+What are the consequences if the device returns what appear to be a Caching
+Mode Page, but it is actually filled with garbage or otherwise inaccurate
+data?
 
 Matt
 
@@ -87,25 +56,20 @@ Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
 net=20
 Maintainer, Linux USB Mass Storage Driver
 
-Sir, for the hundreth time, we do NOT carry 600-round boxes of belt-fed=20
-suction darts!
-					-- Salesperson to Greg
-User Friendly, 12/30/1997
+You suck Stef.
+					-- Greg=20
+User Friendly, 11/29/97
 
---enGqbSaueFq5omEL
+--qo7zVO9a9OQ5oQtr
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQFM60oU3gL8qCooyc4RAirnAJ9EiydgakBEm8qiem9ngfrC2COMHwCeNZ0B
-tSbKvpLGzZ6w4HUFyO+4ksI=
-=esEZ
+iD8DBQFM60qA3gL8qCooyc4RAvjXAJ0Q/1XXXgQnEKftIH230FA1kAcHEQCeNMHx
+LGoOvKb0liPwoEBJPy+zoYE=
+=E1Yj
 -----END PGP SIGNATURE-----
 
---enGqbSaueFq5omEL--
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--qo7zVO9a9OQ5oQtr--
