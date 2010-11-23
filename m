@@ -1,63 +1,84 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [usb-storage] xhci: suspend/resume issues
-Date: Mon, 22 Nov 2010 20:51:13 -0800
-Message-ID: <20101123045113.GJ20296@one-eyed-alien.net>
-References: <2DEEA3AB13739D45A22ADDB5086AEA0B914AD4@sshaexmb1.amd.com> <20101111191904.GK4823@redhat.com> <20101111210420.GA9020@xanatos> <20101116154756.GZ4823@redhat.com> <2DEEA3AB13739D45A22ADDB5086AEA0B9A6287@sshaexmb1.amd.com> <20101119185907.GA30923@xanatos> <20101119225602.GP18100@redhat.com> <20101119233046.GA13059@xanatos> <20101122224947.GD18100@redhat.com> <20101122231524.GA26888@xanatos>
+From: Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
+Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
+Date: Mon, 22 Nov 2010 20:59:00 -0800
+Message-ID: <20101123045900.GK20296@one-eyed-alien.net>
+References: <949636.86471.qm@web31809.mail.mud.yahoo.com> <AANLkTi=7tW6wqrk8ZkFuTYwmS-wZ4nQ+jkxk8U95H42F@mail.gmail.com> <4CEABE2E.4010609@interlog.com>
 Mime-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="utPK4TBebyzZxMrE"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:40197
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751017Ab0KWEvc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Nov 2010 23:51:32 -0500
+	protocol="application/pgp-signature"; boundary="enGqbSaueFq5omEL"
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20101122231524.GA26888@xanatos>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <4CEABE2E.4010609-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sarah Sharp <sarah.a.sharp@linux.intel.com>
-Cc: Don Zickus <dzickus@redhat.com>, usb-storage@lists.one-eyed-alien.net, linux-usb@vger.kernel.org, "Xu, Andiry" <Andiry.Xu@amd.com>, linux-scsi@vger.kernel.org
 
 
---utPK4TBebyzZxMrE
+--enGqbSaueFq5omEL
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Nov 22, 2010 at 03:15:24PM -0800, Sarah Sharp wrote:
-> Ccing the scsi and USB mass storage devices lists on this issue.
-> Background: a USB 3.0 mass storage device shows up as a USB 2.0 device
-> after resume, and then migrates back to USB 3.0 speeds after a reset.
+On Mon, Nov 22, 2010 at 02:02:06PM -0500, Douglas Gilbert wrote:
+> On 10-11-22 12:07 PM, Linus Torvalds wrote:
+> >On Mon, Nov 22, 2010 at 8:56 AM, Luben Tuikov<ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>  wrote:
+> >>
+> >>Some kernel transport drivers unconditionally disable
+> >>retrieval of the Caching mode page. One such for example is
+> >>the BBB/CBI transport over USB.
+> >
+> >One reason for that is that historically we've seen devices that
+> >simply go crazy - to the point of simply stopping to respond to
+> >anything - when you ask for pages that Windows doesn't ask for.
+> >
+> >It's especially common on USB storage, but it happens elsewhere too.
+> >The device firmware simply hasn't ever been tested in that situation,
+> >and it's buggy.
+> >
+> >So I don't mind the patch per se, but I think it's potentially way
+> >more dangerous than it looks.
 >=20
-> On Mon, Nov 22, 2010 at 05:49:47PM -0500, Don Zickus wrote:
-> > Looking into my previously mounted /mnt directory yields an i/o error
-> > (probably because it is now under /dev/sdc).
->=20
-> As long as it doesn't produce any kernel oops, that's normal.  The
-> kernel has noticed the device went away, but userspace hasn't.  At
-> least, that's my general impression.  You'll have to ask the USB mass
-> storage guys, or the SCSI folks for the details on how that's supposed
-> to work.
+> The vast majority of USB mass storage devices are based
+> on SCSI-2 (1994) or a particularly nasty standard
+> called RBC (Reduced Block Commands, 1999) which is a
+> partial subset of the block commands (i.e. disk related).
+> We are all aware of the quality of most of the device
+> end implementations out in the wild.
 
-That's mostly right.  The USB and SCSI layers know the device has gone
-away, but there is no way to signal to the filesystem layers that the
-underlying device is gone.  So, all the I/O requests are simply 'failed'
-until the device is unmounted, at which point the refcount drops to zero
-and the structures are actually deleted.
+Not true.  The vast majority of USB mass storage devices adhere to no SCSI
+or T10 specification at all.  The official definition of the "Transparent
+SCSI" operating mode of the USB Mass Storage Class is "that which
+microsoft/sun/other major vendors use".  Of course, that's not written down
+anywhere, but it was the intent of the committee and that is the reason why
+the committee rejected all attempts by people like me to implement a
+command-based compliance test.
 
-> > Unmounting everything and remounting 'mount /dev/sdc2 /mnt' (using the =
-new
-> > letter 'c' instead of 'b') works fine and no data loss seems to occur.
-> >=20
-> > Just thought it might be annoying and was wondering if you had any ideas
-> > on that?
->=20
-> There's no way to work around it if the device disconnects, AFAIK.
+> I believe what Luben is working with is a new standard
+> called UAS (soon to be ratified) which is based on
+> www.t10.org work in the last few years. It seems to be
+> an attempt to throw out the older USB mass storage
+> transport and do it again, properly.
 
-I'm coming late to the discussion, but Sara is right.  If the device
-disconnects, there is no way to know that it is the same device when it
-reconnects.
+Luben's patch changes the behavior of sd-mod, which would affect both
+usb-storage and UAS.
+
+The primary thing that UAS adds is support for USB 3.0 streams and TCQ,
+which are both designed to improve performance.  I consider it likely that
+the quality of device firmware will be equally poor as older devices.
+
+That said, Luben's patch is kinda slick.  sd-mod already asks for a lot of
+mode page data; it does this so that it's request matches the observed
+behavior of a "popular" Redmond, WA-based OS.  Luben's patch just searches
+through that data to see if it can find what it is looking for, rather than
+rqeuesting a specific mode page later (which may not be supported).
+
+That said, I still consider this somewhat risky.  We've seen devices with
+grossly inaccurate data before.
+
+But, to my thinking, as long as the devices don't see any change in the
+command stream, then I think the risk has been properly mitigated.  To my
+understanding, this is the case.
 
 Matt
 
@@ -66,20 +87,25 @@ Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
 net=20
 Maintainer, Linux USB Mass Storage Driver
 
-I could always suspend a few hundred accounts and watch what happens.
-					-- Tanya
-User Friendly, 7/31/1998
+Sir, for the hundreth time, we do NOT carry 600-round boxes of belt-fed=20
+suction darts!
+					-- Salesperson to Greg
+User Friendly, 12/30/1997
 
---utPK4TBebyzZxMrE
+--enGqbSaueFq5omEL
 Content-Type: application/pgp-signature
 Content-Disposition: inline
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v1.4.7 (GNU/Linux)
 
-iD8DBQFM60hB3gL8qCooyc4RAsPaAKCJsFOKHrHofntV7Jh6mhnzM1zL4ACfXcKM
-qSbV4jzTR1+aB0BO8+3H1dQ=
-=OzEf
+iD8DBQFM60oU3gL8qCooyc4RAirnAJ9EiydgakBEm8qiem9ngfrC2COMHwCeNZ0B
+tSbKvpLGzZ6w4HUFyO+4ksI=
+=esEZ
 -----END PGP SIGNATURE-----
 
---utPK4TBebyzZxMrE--
+--enGqbSaueFq5omEL--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
