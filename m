@@ -1,92 +1,180 @@
-From: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
-Date: Tue, 23 Nov 2010 13:40:21 -0500
-Message-ID: <4CEC0A95.5020201@interlog.com>
-References: <949636.86471.qm@web31809.mail.mud.yahoo.com> <AANLkTi=7tW6wqrk8ZkFuTYwmS-wZ4nQ+jkxk8U95H42F@mail.gmail.com> <4CEABE2E.4010609@interlog.com> <20101123045900.GK20296@one-eyed-alien.net>
-Reply-To: dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org
+From: Zimny Lech <napohybelskurwysynom2010@gmail.com>
+Subject: Re: linux-next: Tree for November 23
+Date: Tue, 23 Nov 2010 20:03:52 +0100
+Message-ID: <AANLkTikON67=AG3SuE=BkE8ZCuBLvJbR4v4_mR+jZudj@mail.gmail.com>
+References: <20101123140609.2b6503ff.sfr@canb.auug.org.au>
+	<AANLkTi===xonvuovLS5Ch=coMDjzLQ4XSsPRDowDJ4L2@mail.gmail.com>
+	<20101123091551.f3ed937f.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20101123045900.GK20296-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20101123091551.f3ed937f.randy.dunlap@oracle.com>
+Sender: linux-next-owner@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10-11-22 11:59 PM, Matthew Dharm wrote:
-> On Mon, Nov 22, 2010 at 02:02:06PM -0500, Douglas Gilbert wrote:
->> On 10-11-22 12:07 PM, Linus Torvalds wrote:
->>> On Mon, Nov 22, 2010 at 8:56 AM, Luben Tuikov<ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>   wrote:
->>>>
->>>> Some kernel transport drivers unconditionally disable
->>>> retrieval of the Caching mode page. One such for example is
->>>> the BBB/CBI transport over USB.
->>>
->>> One reason for that is that historically we've seen devices that
->>> simply go crazy - to the point of simply stopping to respond to
->>> anything - when you ask for pages that Windows doesn't ask for.
->>>
->>> It's especially common on USB storage, but it happens elsewhere too.
->>> The device firmware simply hasn't ever been tested in that situation,
->>> and it's buggy.
->>>
->>> So I don't mind the patch per se, but I think it's potentially way
->>> more dangerous than it looks.
+2010/11/23 Randy Dunlap <randy.dunlap@oracle.com>:
+> On Tue, 23 Nov 2010 16:43:22 +0100 Zimny Lech wrote:
+>
+>> Ave
 >>
->> The vast majority of USB mass storage devices are based
->> on SCSI-2 (1994) or a particularly nasty standard
->> called RBC (Reduced Block Commands, 1999) which is a
->> partial subset of the block commands (i.e. disk related).
->> We are all aware of the quality of most of the device
->> end implementations out in the wild.
+>> 2010/11/23 Stephen Rothwell <sfr@canb.auug.org.au>:
+>> > Hi all,
+>> >
+>> > Changes since 20101122:
+>> >
+>>
+>>
+>> Random config generator has failed :)
 >
-> Not true.  The vast majority of USB mass storage devices adhere to no SCSI
-> or T10 specification at all.  The official definition of the "Transparent
-> SCSI" operating mode of the USB Mass Storage Class is "that which
-> microsoft/sun/other major vendors use".  Of course, that's not written down
-> anywhere, but it was the intent of the committee and that is the reason why
-> the committee rejected all attempts by people like me to implement a
-> command-based compliance test.
+> Hi,
+> What do you mean by this?
 
-Okay.
+This is what I get from "make" after "make randconfig".
 
->> I believe what Luben is working with is a new standard
->> called UAS (soon to be ratified) which is based on
->> www.t10.org work in the last few years. It seems to be
->> an attempt to throw out the older USB mass storage
->> transport and do it again, properly.
->
-> Luben's patch changes the behavior of sd-mod, which would affect both
-> usb-storage and UAS.
->
-> The primary thing that UAS adds is support for USB 3.0 streams and TCQ,
-> which are both designed to improve performance.  I consider it likely that
-> the quality of device firmware will be equally poor as older devices.
+> =A0I'm not seeing any randconfig generator problems.
+> Are you using any options or inputs to kconfig?
 
-That depends on how low we, and particularly W7, set
-the bar. And W7 has a similar set of problems to
-us. For example, how to detect an SSD supporting
-trim behind a USB transport.
+No.
 
-Doug Gilbert
+I'm using script below to build kernel - nothing really unusual. Log
+and config for this failed build are attached to previous email
 
-> That said, Luben's patch is kinda slick.  sd-mod already asks for a lot of
-> mode page data; it does this so that it's request matches the observed
-> behavior of a "popular" Redmond, WA-based OS.  Luben's patch just searches
-> through that data to see if it can find what it is looking for, rather than
-> rqeuesting a specific mode page later (which may not be supported).
+import os, sys, time
+from hexer_io import *
+
+class BuildKernel:
+        def __init__(self, options, config):
+                self.options =3D options
+                self.config =3D config
+                self.timestamp =3D ""
+
+        def generate_timestamp(self):
+                self.timestamp =3D time.strftime("%y-%m-%d-%H-%M-%S",
+time.gmtime())
+                print("timestamp =3D " + self.timestamp)
+
+        def check_dirs(self):
+                if not os.path.isdir(self.config["KERNEL_DIR"]):
+                        print("KERNEL_DIR=3D" +
+self.config["KERNEL_DIR"] + " doesn't exist")
+                        sys.exit(1)
+                if not os.path.isdir(self.config["KERNEL_OBJ_DIR"]):
+                        print("KERNEL_OBJ_DIR=3D" +
+self.config["KERNEL_OBJ_DIR"] + " doesn't exist")
+                        sys.exit(1)
+                if not os.path.isdir(self.config["HEXER_DIR"] + "/build=
+s/"):
+                        os.system("mkdir " + self.config["HEXER_DIR"]
++ "/builds/")
+
+        def kernel_make_mrproper(self):
+                print("make mrproper")
+                os.system("cd " + self.config["KERNEL_DIR"] + " &&
+LANG=3D\"C\" make mrproper &> /dev/null")
+                os.system("cd " + self.config["KERNEL_DIR"] + " &&
+LANG=3D\"C\" make O=3D" + self.config["KERNEL_OBJ_DIR"] + " mrproper &>
+/dev/null")
+
+        def kernel_make_clean(self):
+                print("make clean")
+                os.system("cd " + self.config["KERNEL_DIR"] + " &&
+LANG=3D\"C\" make O=3D" + self.config["KERNEL_OBJ_DIR"] + " clean &>
+/dev/null")
+
+        def kernel_make_randconfig(self):
+                print("make randconfig")
+                os.system("cd " + self.config["KERNEL_DIR"] + " &&
+LANG=3D\"C\" make O=3D" + self.config["KERNEL_OBJ_DIR"] + " randconfig =
+&>
+/dev/null")
+                os.system("cp " + self.config["KERNEL_OBJ_DIR"] +
+"/.config " + self.config["HEXER_DIR"] + "/builds/" + self.timestamp +
+"-config")
+
+        def kernel_make(self):
+                print("make")
+                os.system("cd " + self.config["KERNEL_DIR"] + " &&
+LANG=3D\"C\" make O=3D" + self.config["KERNEL_OBJ_DIR"] + " &> " +
+self.config["HEXER_DIR"] + "/builds/" + self.timestamp + "-buildlog")
+
+        def build_random_kernel(self, loop):
+                while True:
+                        IOStopFile.get_stop_file(self.config)
+                        self.generate_timestamp()
+                        #self.kernel_make_clean()
+                        self.kernel_make_randconfig()
+                        self.kernel_make()
+                        if not loop:
+                                break
+
+        def build(self):
+                self.kernel_make_mrproper()
+                if self.options.mode =3D=3D "brk":
+                        self.build_random_kernel(self.options.loop)
+
+        def run(self):
+                self.check_dirs()
+                self.build()
+
+
 >
-> That said, I still consider this somewhat risky.  We've seen devices with
-> grossly inaccurate data before.
 >
-> But, to my thinking, as long as the devices don't see any change in the
-> command stream, then I think the risk has been properly mitigated.  To my
-> understanding, this is the case.
+>> USB Gadget Support (USB_GADGET) [Y/n/?] y
+>> =A0 Debugging messages (DEVELOPMENT) (USB_GADGET_DEBUG) [Y/n/?] y
+>> =A0 Debugging information files (DEVELOPMENT) (USB_GADGET_DEBUG_FILE=
+S) [N/y/?] n
+>> =A0 Debugging information files in debugfs (DEVELOPMENT)
+>> (USB_GADGET_DEBUG_FS) [Y/n/?] y
+>> =A0 Maximum VBUS Power usage (2-500 mA) (USB_GADGET_VBUS_DRAW) [2] 2
+>> =A0 USB Peripheral Controller
+>> =A0 > 1. Renesas R8A66597 USB Peripheral Controller (USB_GADGET_R8A6=
+6597)
+>> =A0 =A0 2. Renesas M66592 USB Peripheral Controller (USB_GADGET_M665=
+92)
+>> =A0 choice[1-2?]: 1
+>> =A0 USB Gadget Drivers
+>> =A0 =A0 1. Gadget Zero (DEVELOPMENT) (USB_ZERO)
+>> =A0 =A0 2. Audio Gadget (EXPERIMENTAL) (USB_AUDIO)
+>> =A0 > 3. Ethernet Gadget (with CDC Ethernet support) (USB_ETH)
+>> =A0 =A0 4. Serial Gadget (with CDC ACM and CDC OBEX support) (USB_G_=
+SERIAL)
+>> =A0 =A0 5. Printer Gadget (USB_G_PRINTER)
+>> =A0 =A0 6. CDC Composite Device (Ethernet and ACM) (USB_CDC_COMPOSIT=
+E)
+>> =A0 =A0 7. HID Gadget (USB_G_HID)
+>> =A0 =A0 8. EHCI Debug Device Gadget (USB_G_DBGP)
+>> =A0 choice[1-8?]: 3
+>> =A0 =A0 RNDIS support (USB_ETH_RNDIS) [Y/n/?] (NEW) aborted!
+>>
+>> Console input/output is redirected. Run 'make oldconfig' to update
+>> configuration.
+>>
+>> make[3]: *** [silentoldconfig] Error 1
+>> make[2]: *** [silentoldconfig] Error 2
+>> make[1]: *** No rule to make target `include/config/auto.conf', need=
+ed
+>> by `include/config/kernel.release'. =A0Stop.
+>> make: *** [sub-make] Error 2
 >
-> Matt
+>
+> ---
+> ~Randy
+> *** Remember to use Documentation/SubmitChecklist when testing your c=
+ode ***
 >
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+--=20
+Slawa!
+N.P.S.
+
+Chwa=B3a tobie, Szatanie, cze=B6=E6 na wysoko=B6ciach
+Nieba, gdzie kr=F3lowa=B3e=B6, chwa=B3a w g=B3=EAboko=B6ciach
+Piek=B3a, gdzie zwyci=EA=BFony, trwasz w dumnym milczeniu!
+Uczy=F1, niechaj ma dusza spocznie z Tob=B1 w cieniu
+Drzewa Wiedzy, gdy swoje konary rozwinie,
+Jak sklepienie ko=B6cio=B3a, kt=F3ry nie przeminie!
