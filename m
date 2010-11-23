@@ -1,16 +1,16 @@
 From: Zimny Lech <napohybelskurwysynom2010@gmail.com>
 Subject: Re: linux-next: Tree for November 23
-Date: Tue, 23 Nov 2010 20:03:52 +0100
-Message-ID: <AANLkTikON67=AG3SuE=BkE8ZCuBLvJbR4v4_mR+jZudj@mail.gmail.com>
+Date: Tue, 23 Nov 2010 20:04:12 +0100
+Message-ID: <AANLkTikLJW0be+kVgEnAZDbiDMVbYOrA7f5VYs+KHSe_@mail.gmail.com>
 References: <20101123140609.2b6503ff.sfr@canb.auug.org.au>
 	<AANLkTi===xonvuovLS5Ch=coMDjzLQ4XSsPRDowDJ4L2@mail.gmail.com>
 	<20101123091551.f3ed937f.randy.dunlap@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-next-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20101123091551.f3ed937f.randy.dunlap@oracle.com>
-Sender: linux-next-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Randy Dunlap <randy.dunlap@oracle.com>
 Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
