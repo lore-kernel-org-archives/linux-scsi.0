@@ -1,32 +1,33 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
-Date: Tue, 23 Nov 2010 01:25:23 -0800 (PST)
-Message-ID: <589506.10541.qm@web31809.mail.mud.yahoo.com>
-References: <20101123050048.GL20296@one-eyed-alien.net>
-Reply-To: ltuikov@yahoo.com
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 2/3] target: simplify cmd to task mapping
+Date: Tue, 23 Nov 2010 11:52:39 +0200
+Message-ID: <4CEB8EE7.80106@panasas.com>
+References: <20101117213857.GB26557@infradead.org> <4CE516F5.10400@panasas.com> <20101122210707.GA25898@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101123050048.GL20296@one-eyed-alien.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from daytona.panasas.com ([67.152.220.89]:52581 "EHLO
+	daytona.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982Ab0KWJwm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2010 04:52:42 -0500
+In-Reply-To: <20101122210707.GA25898@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: nab@linux-iscsi.org, linux-scsi@vger.kernel.org
 
---- On Mon, 11/22/10, Matthew Dharm <mdharm-kernel@one-eyed-alien.net> wrote:
+On 11/22/2010 11:07 PM, Christoph Hellwig wrote:
+> On Thu, Nov 18, 2010 at 02:07:17PM +0200, Boaz Harrosh wrote:
+>> If all these are mutual exclusive (if..elseif..else) can we not make
+>> them an enum and switch() for costless-ness and clarity?
+> 
+> We could.  But IMHO we should simply get rid of all the special cases
+> instead.  First remove the non-SG case, then fold the zero transfer
+> length one in as a special zero-length SG and then check how many
+> differences we have left between the data and control plane.
+> 
 
-> As long as you are not changing the command stream that the
-> devices see, I
-> think this is a reasonable risk to take.
+ACK ^3
 
-No, not at all.
-
-> What are the consequences if the device returns what appear
-> to be a Caching
-> Mode Page, but it is actually filled with garbage or
-> otherwise inaccurate
-> data?
-
-Data corruption would be no different than when determining whether the media is write protected or determining other parameters. A similar question would be "What would the consequences be if the device misreported the media write-protect bit?" I suppose such a device would be quite broken and inoperative.
-
-   Luben
+Boaz
