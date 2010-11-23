@@ -1,193 +1,211 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH v3 08/13] BNX2I: Removed the dynamic registration of
- CNIC
-Date: Tue, 23 Nov 2010 15:29:27 -0800
-Message-ID: <1290554972-16928-9-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH v3 11/13] BNX2I: Cleaned up various error conditions in
+ ep_connect/disconnect
+Date: Tue, 23 Nov 2010 15:29:30 -0800
+Message-ID: <1290554972-16928-12-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1055 "EHLO mms2.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:2501 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754061Ab0KWX1g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Nov 2010 18:27:36 -0500
+	id S1753777Ab0KWX1f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Nov 2010 18:27:35 -0500
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-The code no longer needs to dynamically register and unregister
-the CNIC device.  The CNIC device will be kept registered until
-module unload.
+Various error conditions inside ep_connect and ep_disconnect were
+either not being handled or not being handled correctly.  This patch
+fixes all those issues.
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-Reviewed-by: Michael Chan <mchan@broadcom.com>
+Acked-by: Anil Veerabhadrappa <anilgv@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i.h       |    3 -
- drivers/scsi/bnx2i/bnx2i_init.c  |   82 --------------------------------------
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    7 ---
- 3 files changed, 0 insertions(+), 92 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |   67 ++++++++++++++++++++++---------------
+ 1 files changed, 40 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
-index a44b1b3..2c34e22 100644
---- a/drivers/scsi/bnx2i/bnx2i.h
-+++ b/drivers/scsi/bnx2i/bnx2i.h
-@@ -717,14 +717,11 @@ extern struct device_attribute *bnx2i_dev_attributes[];
-  * Function Prototypes
-  */
- extern void bnx2i_identify_device(struct bnx2i_hba *hba);
--extern void bnx2i_register_device(struct bnx2i_hba *hba);
- 
- extern void bnx2i_ulp_init(struct cnic_dev *dev);
- extern void bnx2i_ulp_exit(struct cnic_dev *dev);
- extern void bnx2i_start(void *handle);
- extern void bnx2i_stop(void *handle);
--extern void bnx2i_reg_dev_all(void);
--extern void bnx2i_unreg_dev_all(void);
- extern struct bnx2i_hba *get_adapter_list_head(void);
- 
- struct bnx2i_conn *bnx2i_get_conn_from_id(struct bnx2i_hba *hba,
-diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index 50c2aa3..769311f 100644
---- a/drivers/scsi/bnx2i/bnx2i_init.c
-+++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -65,8 +65,6 @@ MODULE_PARM_DESC(rq_size, "Configure RQ size");
- 
- u64 iscsi_error_mask = 0x00;
- 
--static void bnx2i_unreg_one_device(struct bnx2i_hba *hba) ;
--
- 
- /**
-  * bnx2i_identify_device - identifies NetXtreme II device type
-@@ -239,86 +237,6 @@ void bnx2i_stop(void *handle)
- }
- 
- /**
-- * bnx2i_register_device - register bnx2i adapter instance with the cnic driver
-- * @hba:	Adapter instance to register
-- *
-- * registers bnx2i adapter instance with the cnic driver while holding the
-- *	adapter structure lock
-- */
--void bnx2i_register_device(struct bnx2i_hba *hba)
--{
--	int rc;
--
--	if (test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state) ||
--	    test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic)) {
--		return;
--	}
--
--	rc = hba->cnic->register_device(hba->cnic, CNIC_ULP_ISCSI, hba);
--
--	if (!rc)
--		set_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic);
--}
--
--
--/**
-- * bnx2i_reg_dev_all - registers all adapter instances with the cnic driver
-- *
-- * registers all bnx2i adapter instances with the cnic driver while holding
-- *	the global resource lock
-- */
--void bnx2i_reg_dev_all(void)
--{
--	struct bnx2i_hba *hba, *temp;
--
--	mutex_lock(&bnx2i_dev_lock);
--	list_for_each_entry_safe(hba, temp, &adapter_list, link)
--		bnx2i_register_device(hba);
--	mutex_unlock(&bnx2i_dev_lock);
--}
--
--
--/**
-- * bnx2i_unreg_one_device - unregister adapter instance with the cnic driver
-- * @hba:	Adapter instance to unregister
-- *
-- * registers bnx2i adapter instance with the cnic driver while holding
-- *	the adapter structure lock
-- */
--static void bnx2i_unreg_one_device(struct bnx2i_hba *hba)
--{
--	if (hba->ofld_conns_active ||
--	    !test_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic) ||
--	    test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state))
--		return;
--
--	hba->cnic->unregister_device(hba->cnic, CNIC_ULP_ISCSI);
--
--	/* ep_disconnect could come before NETDEV_DOWN, driver won't
--	 * see NETDEV_DOWN as it already unregistered itself.
--	 */
--	hba->adapter_state = 0;
--	clear_bit(BNX2I_CNIC_REGISTERED, &hba->reg_with_cnic);
--}
--
--/**
-- * bnx2i_unreg_dev_all - unregisters all bnx2i instances with the cnic driver
-- *
-- * unregisters all bnx2i adapter instances with the cnic driver while holding
-- *	the global resource lock
-- */
--void bnx2i_unreg_dev_all(void)
--{
--	struct bnx2i_hba *hba, *temp;
--
--	mutex_lock(&bnx2i_dev_lock);
--	list_for_each_entry_safe(hba, temp, &adapter_list, link)
--		bnx2i_unreg_one_device(hba);
--	mutex_unlock(&bnx2i_dev_lock);
--}
--
--
--/**
-  * bnx2i_init_one - initialize an adapter instance and allocate memory resources
-  * @hba:	bnx2i adapter instance
-  * @cnic:	cnic device handle
 diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 07dd4f9..43b7dad 100644
+index f622e89..24997c6 100644
 --- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
 +++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1606,8 +1606,6 @@ static struct bnx2i_hba *bnx2i_check_route(struct sockaddr *dst_addr)
- 	struct bnx2i_hba *hba;
- 	struct cnic_dev *cnic = NULL;
+@@ -411,7 +411,9 @@ static void bnx2i_free_ep(struct iscsi_endpoint *ep)
+ 	bnx2i_ep->state = EP_STATE_IDLE;
+ 	bnx2i_ep->hba->ofld_conns_active--;
  
--	bnx2i_reg_dev_all();
+-	bnx2i_free_iscsi_cid(bnx2i_ep->hba, bnx2i_ep->ep_iscsi_cid);
++	if (bnx2i_ep->ep_iscsi_cid != (u16) -1)
++		bnx2i_free_iscsi_cid(bnx2i_ep->hba, bnx2i_ep->ep_iscsi_cid);
++
+ 	if (bnx2i_ep->conn) {
+ 		bnx2i_ep->conn->ep = NULL;
+ 		bnx2i_ep->conn = NULL;
+@@ -1738,13 +1740,17 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 		 */
+ 		hba = bnx2i_check_route(dst_addr);
+ 
+-	if (!hba || test_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state)) {
++	if (!hba) {
+ 		rc = -EINVAL;
+ 		goto nohba;
+ 	}
++	mutex_lock(&hba->net_dev_lock);
+ 
++	if (bnx2i_adapter_ready(hba) || !hba->cid_que.cid_free_cnt) {
++		rc = -EPERM;
++		goto check_busy;
++	}
+ 	cnic = hba->cnic;
+-	mutex_lock(&hba->net_dev_lock);
+ 	ep = bnx2i_alloc_ep(hba);
+ 	if (!ep) {
+ 		rc = -ENOMEM;
+@@ -1752,23 +1758,21 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 	}
+ 	bnx2i_ep = ep->dd_data;
+ 
+-	if (bnx2i_adapter_ready(hba)) {
+-		rc = -EPERM;
+-		goto net_if_down;
+-	}
 -
- 	hba = get_adapter_list_head();
- 	if (hba && hba->cnic)
- 		cnic = hba->cnic->cm_select_dev(desti, CNIC_ULP_ISCSI);
-@@ -1726,8 +1724,6 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 	if (shost) {
- 		/* driver is given scsi host to work with */
- 		hba = iscsi_host_priv(shost);
--		/* Register the device with cnic if not already done so */
--		bnx2i_register_device(hba);
- 	} else
- 		/*
- 		 * check if the given destination can be reached through
-@@ -1853,7 +1849,6 @@ qp_resc_err:
- check_busy:
- 	mutex_unlock(&hba->net_dev_lock);
- nohba:
--	bnx2i_unreg_dev_all();
- 	return ERR_PTR(rc);
- }
+ 	bnx2i_ep->num_active_cmds = 0;
+ 	iscsi_cid = bnx2i_alloc_iscsi_cid(hba);
+ 	if (iscsi_cid == -1) {
+-		printk(KERN_ALERT "alloc_ep: unable to allocate iscsi cid\n");
++		printk(KERN_ALERT "bnx2i (%s): alloc_ep - unable to allocate "
++			"iscsi cid\n", hba->netdev->name);
+ 		rc = -ENOMEM;
+-		goto iscsi_cid_err;
++		bnx2i_free_ep(ep);
++		goto check_busy;
+ 	}
+ 	bnx2i_ep->hba_age = hba->age;
  
-@@ -2089,8 +2084,6 @@ return_bnx2i_ep:
+ 	rc = bnx2i_alloc_qp_resc(hba, bnx2i_ep);
+ 	if (rc != 0) {
+-		printk(KERN_ALERT "bnx2i: ep_conn, alloc QP resc error\n");
++		printk(KERN_ALERT "bnx2i (%s): ep_conn - alloc QP resc error"
++			"\n", hba->netdev->name);
+ 		rc = -ENOMEM;
+ 		goto qp_resc_err;
+ 	}
+@@ -1807,7 +1811,12 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 	bnx2i_ep_ofld_list_del(hba, bnx2i_ep);
+ 
+ 	if (bnx2i_ep->state != EP_STATE_OFLD_COMPL) {
+-		rc = -ENOSPC;
++		if (bnx2i_ep->state == EP_STATE_OFLD_FAILED_CID_BUSY) {
++			printk(KERN_ALERT "bnx2i (%s): iscsi cid %d is busy\n",
++				hba->netdev->name, bnx2i_ep->ep_iscsi_cid);
++			rc = -EBUSY;
++		} else
++			rc = -ENOSPC;
+ 		goto conn_failed;
+ 	}
+ 
+@@ -1815,7 +1824,8 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
+ 			     iscsi_cid, &bnx2i_ep->cm_sk, bnx2i_ep);
+ 	if (rc) {
+ 		rc = -EINVAL;
+-		goto conn_failed;
++		/* Need to terminate and cleanup the connection */
++		goto release_ep;
+ 	}
+ 
+ 	bnx2i_ep->cm_sk->rcv_buf = 256 * 1024;
+@@ -1859,8 +1869,6 @@ release_ep:
+ 		return ERR_PTR(rc);
+ 	}
+ conn_failed:
+-net_if_down:
+-iscsi_cid_err:
+ 	bnx2i_free_qp_resc(hba, bnx2i_ep);
+ qp_resc_err:
+ 	bnx2i_free_ep(ep);
+@@ -1979,7 +1987,8 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
+ 	if (!cnic)
+ 		return 0;
+ 
+-	if (bnx2i_ep->state == EP_STATE_IDLE)
++	if (bnx2i_ep->state == EP_STATE_IDLE ||
++	    bnx2i_ep->state == EP_STATE_DISCONN_TIMEDOUT)
+ 		return 0;
+ 
+ 	if (!bnx2i_ep_tcp_conn_active(bnx2i_ep))
+@@ -2005,9 +2014,10 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
+ 			if (session->state == ISCSI_STATE_LOGGING_OUT) {
+ 				if (bnx2i_ep->state == EP_STATE_LOGOUT_SENT) {
+ 					/* Logout sent, but no resp */
+-					printk(KERN_ALERT "bnx2i - WARNING "
+-						"logout response was not "
+-						"received!\n");
++					printk(KERN_ALERT "bnx2i (%s): WARNING"
++						" logout response was not "
++						"received!\n",
++						bnx2i_ep->hba->netdev->name);
+ 				} else if (bnx2i_ep->state ==
+ 					   EP_STATE_LOGOUT_RESP_RCVD)
+ 					close = 1;
+@@ -2025,9 +2035,8 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
+ 	else
+ 		close_ret = cnic->cm_abort(bnx2i_ep->cm_sk);
+ 
+-	/* No longer allow CFC delete if cm_close/abort fails the request */
+ 	if (close_ret)
+-		printk(KERN_ALERT "bnx2i: %s close/abort(%d) returned %d\n",
++		printk(KERN_ALERT "bnx2i (%s): close/abort(%d) returned %d\n",
+ 			bnx2i_ep->hba->netdev->name, close, close_ret);
+ 	else
+ 		/* wait for option-2 conn teardown */
+@@ -2041,7 +2050,7 @@ int bnx2i_hw_ep_disconnect(struct bnx2i_endpoint *bnx2i_ep)
+ destroy_conn:
+ 	bnx2i_ep_active_list_del(hba, bnx2i_ep);
+ 	if (bnx2i_tear_down_conn(hba, bnx2i_ep))
+-		ret = -EINVAL;
++		return -EINVAL;
+ out:
+ 	bnx2i_ep->state = EP_STATE_IDLE;
+ 	return ret;
+@@ -2080,14 +2089,17 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
+ 
+ 	mutex_lock(&hba->net_dev_lock);
+ 
+-	if (bnx2i_ep->state == EP_STATE_IDLE)
+-		goto return_bnx2i_ep;
++	if (bnx2i_ep->state == EP_STATE_DISCONN_TIMEDOUT)
++		goto out;
+ 
+-	if (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state))
++	if (bnx2i_ep->state == EP_STATE_IDLE)
+ 		goto free_resc;
+ 
+-	if (bnx2i_ep->hba_age != hba->age)
++	if (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state) ||
++	    (bnx2i_ep->hba_age != hba->age)) {
++		bnx2i_ep_active_list_del(hba, bnx2i_ep);
+ 		goto free_resc;
++	}
+ 
+ 	/* Do all chip cleanup here */
+ 	if (bnx2i_hw_ep_disconnect(bnx2i_ep)) {
+@@ -2096,11 +2108,12 @@ static void bnx2i_ep_disconnect(struct iscsi_endpoint *ep)
+ 	}
+ free_resc:
+ 	bnx2i_free_qp_resc(hba, bnx2i_ep);
+-return_bnx2i_ep:
++
+ 	if (bnx2i_conn)
+ 		bnx2i_conn->ep = NULL;
  
  	bnx2i_free_ep(ep);
++out:
  	mutex_unlock(&hba->net_dev_lock);
--	if (!hba->ofld_conns_active)
--		bnx2i_unreg_dev_all();
  
  	wake_up_interruptible(&hba->eh_wait);
- }
 -- 
 1.7.0.5
 
