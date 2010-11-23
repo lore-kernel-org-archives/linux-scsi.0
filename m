@@ -1,32 +1,97 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 22512] New: no disks are found at driver start
- after upgrate from 2.6.35.8 to 2.6.36
-Date: Mon, 22 Nov 2010 16:26:27 -0800
-Message-ID: <20101122162627.35f899de.akpm@linux-foundation.org>
-References: <bug-22512-10286@https.bugzilla.kernel.org/>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] scsi: Use vsprint extension %pV, save ~16KB
+Date: Mon, 22 Nov 2010 19:40:09 -0800
+Message-ID: <1290483609.27683.68.camel@Joe-Laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:59415 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932065Ab0KWA1A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 22 Nov 2010 19:27:00 -0500
-In-Reply-To: <bug-22512-10286@https.bugzilla.kernel.org/>
+Received: from mail.perches.com ([173.55.12.10]:1799 "EHLO mail.perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750923Ab0KWDkL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Nov 2010 22:40:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stable@kernel.org
-Cc: linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 9 Nov 2010 19:53:21 GMT
-bugzilla-daemon@bugzilla.kernel.org wrote:
+Make a function out of the scmd_printk macro.
+Use %pV in the scmd_printk function to reduce string duplication.
+Move the function prototype to include/scsi/scsi_cmnd.h
 
-> https://bugzilla.kernel.org/show_bug.cgi?id=22512
+allyesconfig x86 size
+   text	   data	    bss	    dec	    hex	filename
+5329860	 125779	1279944	6735583	 66c6df	drivers/scsi/built-in.o.new
+5345681	 125779	1281912	6753372	 670c5c	drivers/scsi/built-in.o.old
 
->From this bug report it appears that
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4da26e162b69d89c3186a35a052c05e61a555637
-is needed in 2.6.36.x to fix a 2.6.35->2.6.36 regression.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/scsi/sd.c          |   24 ++++++++++++++++++++++++
+ include/scsi/scsi_cmnd.h   |    4 ++++
+ include/scsi/scsi_device.h |    6 ------
+ 3 files changed, 28 insertions(+), 6 deletions(-)
 
-But nobody remembered to add cc:<stable@kernel.org> to the changelog,
-so it got lost.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9564961..5a15e1b 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2711,3 +2711,27 @@ static void sd_print_result(struct scsi_disk *sdkp, int result)
+ 	scsi_show_result(result);
+ }
+ 
++/* scmd_printk utility routine */
++
++int scmd_printk(const char *prefix, const struct scsi_cmnd *scmd,
++		const char *fmt, ...)
++{
++	int rtn;
++	struct va_format vaf;
++	va_list args;
++	
++	va_start(args, fmt);
++
++	vaf.fmt = fmt;
++	vaf.va = &args;
++
++	if (scmd->request->rq_disk)
++		rtn = sdev_printk(prefix, scmd->device, "[%s] %pV",
++				  scmd->request->rq_disk->disk_name, &vaf);
++	else
++		rtn = sdev_printk(prefix, scmd->device, "%pV", &vaf);
++
++	va_end(args);
++
++	return rtn;
++}
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index a5e885a..e055815 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -302,4 +302,8 @@ static inline void set_driver_byte(struct scsi_cmnd *cmd, char status)
+ 	cmd->result |= status << 24;
+ }
+ 
++__attribute__((format (printf, 3, 4)))
++int scmd_printk(const char *prefix, const struct scsi_cmnd *scmd,
++		const char *fmt, ...);
++
+ #endif /* _SCSI_SCSI_CMND_H */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 85867dc..6f6fb36 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -214,12 +214,6 @@ struct scsi_dh_data {
+ #define sdev_printk(prefix, sdev, fmt, a...)	\
+ 	dev_printk(prefix, &(sdev)->sdev_gendev, fmt, ##a)
+ 
+-#define scmd_printk(prefix, scmd, fmt, a...)				\
+-        (scmd)->request->rq_disk ?					\
+-	sdev_printk(prefix, (scmd)->device, "[%s] " fmt,		\
+-		    (scmd)->request->rq_disk->disk_name, ##a) :		\
+-	sdev_printk(prefix, (scmd)->device, fmt, ##a)
+-
+ enum scsi_target_state {
+ 	STARGET_CREATED = 1,
+ 	STARGET_RUNNING,
+
+
