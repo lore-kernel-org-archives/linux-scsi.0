@@ -1,182 +1,198 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/8] target: remove core_get_hba/core_put_hba
-Date: Tue, 23 Nov 2010 17:30:55 -0500
-Message-ID: <20101123223109.640724989@bombadil.infradead.org>
+Subject: [PATCH 1/8] target: consolidate se_global externs
+Date: Tue, 23 Nov 2010 17:30:54 -0500
+Message-ID: <20101123223109.322454076@bombadil.infradead.org>
 References: <20101123223053.574330460@bombadil.infradead.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:50171 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:50168 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752975Ab0KWWbK (ORCPT
+	with ESMTP id S1752575Ab0KWWbK (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2010 17:31:10 -0500
-Content-Disposition: inline; filename=lio-kill-get-put_hba
+Content-Disposition: inline; filename=lio-kill-se_global-externs
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: nab@linux-iscsi.org
 Cc: linux-scsi@vger.kernel.org
 
-No need for trivial wrappers around the mutex API.  Also replace
-target_core_get_hba_from_item with a item_to_hba that just wraps the
-container_of instead of including the locking.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: lio-core/drivers/target/target_core_configfs.c
+Index: lio-core/drivers/target/lio-target/iscsi_target_mib.h
 ===================================================================
---- lio-core.orig/drivers/target/target_core_configfs.c	2010-11-23 22:11:59.116252830 +0100
-+++ lio-core/drivers/target/target_core_configfs.c	2010-11-23 22:12:05.405254018 +0100
-@@ -61,18 +61,10 @@ struct target_core_configfs_attribute {
- 	ssize_t (*store)(void *, const char *, size_t);
- };
+--- lio-core.orig/drivers/target/lio-target/iscsi_target_mib.h	2010-11-22 22:58:54.556005310 +0100
++++ lio-core/drivers/target/lio-target/iscsi_target_mib.h	2010-11-22 22:58:58.684264410 +0100
+@@ -76,7 +76,6 @@ extern void remove_iscsi_target_mib(void
+ extern void init_iscsi_index_table(void);
+ extern u32 iscsi_get_new_index(iscsi_index_t);
  
--static struct se_hba *target_core_get_hba_from_item(
--	struct config_item *item)
-+static inline struct se_hba *
-+item_to_hba(struct config_item *item)
- {
--	struct se_hba *hba = container_of(to_config_group(item),
--				struct se_hba, hba_group);
--	if (!(hba))
--		return NULL;
--
--	if (core_get_hba(hba) < 0)
--		return NULL;
--
--	return hba;
-+	return container_of(to_config_group(item), struct se_hba, hba_group);
- }
+-extern struct se_global *se_global;
+ extern struct iscsi_global *iscsi_global;
  
- /*
-@@ -2815,33 +2807,24 @@ static struct config_group *target_core_
- {
- 	struct t10_alua_tg_pt_gp *tg_pt_gp;
- 	struct se_subsystem_dev *se_dev;
--	struct se_hba *hba;
- 	struct se_subsystem_api *t;
--	struct config_item *hba_ci;
-+	struct config_item *hba_ci = &group->cg_item;
-+	struct se_hba *hba = item_to_hba(hba_ci);
- 	struct config_group *dev_cg = NULL, *tg_pt_gp_cg = NULL;
- 
--	hba_ci = &group->cg_item;
--	if (!(hba_ci)) {
--		printk(KERN_ERR "Unable to locate config_item hba_ci\n");
-+	if (mutex_lock_interruptible(&hba->hba_access_mutex))
- 		return NULL;
--	}
- 
--	hba = target_core_get_hba_from_item(hba_ci);
--	if (!(hba)) {
--		printk(KERN_ERR "Unable to locate struct se_hba from struct config_item\n");
--		return NULL;
--	}
- 	/*
- 	 * Locate the struct se_subsystem_api from parent's struct se_hba.
- 	 */
- 	t = hba->transport;
- 
- 	se_dev = kzalloc(sizeof(struct se_subsystem_dev), GFP_KERNEL);
--	if (!(se_dev)) {
-+	if (!se_dev) {
- 		printk(KERN_ERR "Unable to allocate memory for"
- 				" struct se_subsystem_dev\n");
--		core_put_hba(hba);
--		return NULL;
-+		goto unlock;
- 	}
- 	INIT_LIST_HEAD(&se_dev->g_se_dev_list);
- 	INIT_LIST_HEAD(&se_dev->t10_wwn.t10_vpd_list);
-@@ -2926,7 +2909,7 @@ static struct config_group *target_core_
- 	printk(KERN_INFO "Target_Core_ConfigFS: Allocated struct se_subsystem_dev:"
- 		" %p se_dev_su_ptr: %p\n", se_dev, se_dev->se_dev_su_ptr);
- 
--	core_put_hba(hba);
-+	mutex_unlock(&hba->hba_access_mutex);
- 	return &se_dev->se_dev_group;
- out:
- 	if (T10_ALUA(se_dev)->default_tg_pt_gp) {
-@@ -2940,7 +2923,8 @@ out:
- 	if (se_dev->se_dev_su_ptr)
- 		t->free_device(se_dev->se_dev_su_ptr);
- 	kfree(se_dev);
--	core_put_hba(hba);
-+unlock:
-+	mutex_unlock(&hba->hba_access_mutex);
- 	return NULL;
- }
- 
-@@ -2956,9 +2940,9 @@ static void target_core_drop_subdev(
- 	struct config_group *dev_cg, *tg_pt_gp_cg;
- 	int i, ret;
- 
--	hba = target_core_get_hba_from_item(
--			&se_dev->se_dev_hba->hba_group.cg_item);
--	if (!(hba))
-+	hba = item_to_hba(&se_dev->se_dev_hba->hba_group.cg_item);
-+
-+	if (mutex_lock_interruptible(&hba->hba_access_mutex))
- 		goto out;
- 
- 	t = hba->transport;
-@@ -3012,7 +2996,7 @@ static void target_core_drop_subdev(
- 		"_dev_t: %p\n", se_dev);
- 
- hba_out:
--	core_put_hba(hba);
-+	mutex_unlock(&hba->hba_access_mutex);
- out:
- 	kfree(se_dev);
- }
-@@ -3188,8 +3172,7 @@ static void target_core_call_delhbafromt
- 	struct config_group *group,
- 	struct config_item *item)
- {
--	struct se_hba *hba = container_of(to_config_group(item), struct se_hba,
--				hba_group);
-+	struct se_hba *hba = item_to_hba(item);
- 
- 	config_item_put(item);
- 	se_core_del_hba(hba);
-Index: lio-core/drivers/target/target_core_hba.c
+ #endif   /*** ISCSI_TARGET_MIB_H ***/
+Index: lio-core/drivers/target/target_core_alua.h
 ===================================================================
---- lio-core.orig/drivers/target/target_core_hba.c	2010-11-23 22:11:59.110252691 +0100
-+++ lio-core/drivers/target/target_core_hba.c	2010-11-23 22:12:05.407253459 +0100
-@@ -44,12 +44,6 @@
+--- lio-core.orig/drivers/target/target_core_alua.h	2010-11-22 23:00:47.665254437 +0100
++++ lio-core/drivers/target/target_core_alua.h	2010-11-22 23:00:49.664255060 +0100
+@@ -61,8 +61,6 @@
+  */
+ #define ALUA_SECONDARY_METADATA_WWN_LEN			256
  
- #include "target_core_hba.h"
- 
--int core_get_hba(struct se_hba *hba)
--{
--	return ((mutex_lock_interruptible(&hba->hba_access_mutex) != 0) ?
--		-1 : 0);
--}
+-extern struct se_global *se_global;
 -
- struct se_hba *core_alloc_hba(void)
- {
- 	struct se_hba *hba;
-@@ -70,11 +64,6 @@ struct se_hba *core_alloc_hba(void)
- 	return hba;
- }
+ extern struct kmem_cache *t10_alua_lu_gp_cache;
+ extern struct kmem_cache *t10_alua_lu_gp_mem_cache;
+ extern struct kmem_cache *t10_alua_tg_pt_gp_cache;
+Index: lio-core/drivers/target/target_core_file.h
+===================================================================
+--- lio-core.orig/drivers/target/target_core_file.h	2010-11-22 22:59:15.077260722 +0100
++++ lio-core/drivers/target/target_core_file.h	2010-11-22 22:59:17.612255907 +0100
+@@ -11,8 +11,6 @@
+ #define FD_BLOCKSIZE		512
+ #define FD_MAX_SECTORS		1024
  
--void core_put_hba(struct se_hba *hba)
--{
--	mutex_unlock(&hba->hba_access_mutex);
--}
+-extern struct se_global *se_global;
 -
- /*	se_core_add_hba():
-  *
-  *
+ #define RRF_EMULATE_CDB		0x01
+ #define RRF_GOT_LBA		0x02
+ 
 Index: lio-core/drivers/target/target_core_hba.h
 ===================================================================
---- lio-core.orig/drivers/target/target_core_hba.h	2010-11-23 22:12:04.751252552 +0100
-+++ lio-core/drivers/target/target_core_hba.h	2010-11-23 22:12:05.414253529 +0100
-@@ -3,9 +3,7 @@
+--- lio-core.orig/drivers/target/target_core_hba.h	2010-11-22 23:01:00.589012434 +0100
++++ lio-core/drivers/target/target_core_hba.h	2010-11-22 23:01:02.425281117 +0100
+@@ -1,8 +1,6 @@
+ #ifndef TARGET_CORE_HBA_H
+ #define TARGET_CORE_HBA_H
  
+-extern struct se_global *se_global;
+-
  extern struct kmem_cache *se_hba_cache;
  
--extern int core_get_hba(struct se_hba *);
- extern struct se_hba *core_alloc_hba(void);
--extern void core_put_hba(struct se_hba *);
- extern int se_core_add_hba(struct se_hba *, const char *, u32);
- extern int se_core_del_hba(struct se_hba *);
+ extern int core_get_hba(struct se_hba *);
+Index: lio-core/drivers/target/target_core_iblock.h
+===================================================================
+--- lio-core.orig/drivers/target/target_core_iblock.h	2010-11-22 23:01:05.726255904 +0100
++++ lio-core/drivers/target/target_core_iblock.h	2010-11-22 23:01:07.752284613 +0100
+@@ -9,8 +9,6 @@
+ #define IBLOCK_MAX_CDBS		16
+ #define IBLOCK_LBA_SHIFT	9
  
+-extern struct se_global *se_global;
+-
+ struct iblock_req {
+ 	struct se_task ib_task;
+ 	unsigned char ib_scsi_cdb[TCM_MAX_COMMAND_SIZE];
+Index: lio-core/drivers/target/target_core_mib.h
+===================================================================
+--- lio-core.orig/drivers/target/target_core_mib.h	2010-11-22 23:01:20.790010409 +0100
++++ lio-core/drivers/target/target_core_mib.h	2010-11-22 23:01:22.762065871 +0100
+@@ -1,8 +1,6 @@
+ #ifndef TARGET_CORE_MIB_H
+ #define TARGET_CORE_MIB_H
+ 
+-extern struct se_global *se_global;
+-
+ typedef enum {
+ 	SCSI_INST_INDEX,
+ 	SCSI_DEVICE_INDEX,
+Index: lio-core/drivers/target/target_core_pscsi.h
+===================================================================
+--- lio-core.orig/drivers/target/target_core_pscsi.h	2010-11-22 23:01:26.717260165 +0100
++++ lio-core/drivers/target/target_core_pscsi.h	2010-11-22 23:01:31.137267076 +0100
+@@ -16,8 +16,6 @@
+ #define PS_TIMEOUT_DISK		(15*HZ)
+ #define PS_TIMEOUT_OTHER	(500*HZ)
+ 
+-extern struct se_global *se_global;
+-
+ #include <linux/device.h>
+ #include <scsi/scsi_driver.h>
+ #include <scsi/scsi_device.h>
+Index: lio-core/drivers/target/target_core_rd.h
+===================================================================
+--- lio-core.orig/drivers/target/target_core_rd.h	2010-11-22 23:01:35.306022911 +0100
++++ lio-core/drivers/target/target_core_rd.h	2010-11-22 23:01:37.089005878 +0100
+@@ -14,8 +14,6 @@
+ #define RD_BLOCKSIZE		512
+ #define RD_MAX_SECTORS		1024
+ 
+-extern struct se_global *se_global;
+-
+ extern struct kmem_cache *se_mem_cache;
+ 
+ /* Used in target_core_init_configfs() for virtual LUN 0 access */
+Index: lio-core/drivers/target/target_core_stgt.h
+===================================================================
+--- lio-core.orig/drivers/target/target_core_stgt.h	2010-11-22 23:01:42.267003356 +0100
++++ lio-core/drivers/target/target_core_stgt.h	2010-11-22 23:01:44.354026748 +0100
+@@ -11,8 +11,6 @@
+ #define PS_TIMEOUT_DISK		(15*HZ)
+ #define PS_TIMEOUT_OTHER	(500*HZ)
+ 
+-extern struct se_global *se_global;
+-
+ #include <linux/device.h>
+ #include <scsi/scsi_driver.h>
+ #include <scsi/scsi_device.h>
+Index: lio-core/drivers/target/target_core_transport.c
+===================================================================
+--- lio-core.orig/drivers/target/target_core_transport.c	2010-11-22 23:02:15.221260794 +0100
++++ lio-core/drivers/target/target_core_transport.c	2010-11-22 23:02:18.795255486 +0100
+@@ -186,7 +186,6 @@
+ #endif
+ 
+ struct se_global *se_global;
+-EXPORT_SYMBOL(se_global);
+ 
+ static struct kmem_cache *se_cmd_cache;
+ static struct kmem_cache *se_sess_cache;
+Index: lio-core/include/target/target_core_configfs.h
+===================================================================
+--- lio-core.orig/include/target/target_core_configfs.h	2010-11-22 22:59:34.818253040 +0100
++++ lio-core/include/target/target_core_configfs.h	2010-11-22 22:59:37.451028987 +0100
+@@ -5,8 +5,6 @@
+ #define TARGET_CORE_NAME_MAX_LEN	64
+ #define TARGET_FABRIC_NAME_SIZE		32
+ 
+-extern struct se_global *se_global;
+-
+ extern struct target_fabric_configfs *target_fabric_configfs_init(
+ 				struct module *, const char *);
+ extern void target_fabric_configfs_free(struct target_fabric_configfs *);
+Index: lio-core/include/target/target_core_device.h
+===================================================================
+--- lio-core.orig/include/target/target_core_device.h	2010-11-22 23:00:14.935004123 +0100
++++ lio-core/include/target/target_core_device.h	2010-11-22 23:00:19.264030183 +0100
+@@ -1,8 +1,6 @@
+ #ifndef TARGET_CORE_DEVICE_H
+ #define TARGET_CORE_DEVICE_H
+ 
+-extern struct se_global *se_global;
+-
+ extern int transport_get_lun_for_cmd(struct se_cmd *, unsigned char *, u32);
+ extern int transport_get_lun_for_tmr(struct se_cmd *, u32);
+ extern struct se_dev_entry *core_get_se_deve_from_rtpi(
+Index: lio-core/include/target/target_core_tpg.h
+===================================================================
+--- lio-core.orig/include/target/target_core_tpg.h	2010-11-22 23:00:29.978003774 +0100
++++ lio-core/include/target/target_core_tpg.h	2010-11-22 23:00:32.143068375 +0100
+@@ -1,8 +1,6 @@
+ #ifndef TARGET_CORE_TPG_H
+ #define TARGET_CORE_TPG_H
+ 
+-extern struct se_global *se_global;
+- 
+ extern struct se_node_acl *__core_tpg_get_initiator_node_acl(struct se_portal_group *tpg,
+ 						const char *);
+ extern struct se_node_acl *core_tpg_get_initiator_node_acl(struct se_portal_group *tpg,
+Index: lio-core/include/target/target_core_transport.h
+===================================================================
+--- lio-core.orig/include/target/target_core_transport.h	2010-11-22 23:00:14.947004472 +0100
++++ lio-core/include/target/target_core_transport.h	2010-11-22 23:00:25.745263933 +0100
+@@ -374,5 +374,6 @@ struct se_subsystem_api {
+ #define TRANSPORT(dev)		((dev)->transport)
+ #define HBA_TRANSPORT(hba)	((hba)->transport)
+ 
+-#endif /* TARGET_CORE_TRANSPORT_H */
++extern struct se_global *se_global;
+ 
++#endif /* TARGET_CORE_TRANSPORT_H */
 
