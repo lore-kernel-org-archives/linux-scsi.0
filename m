@@ -1,40 +1,32 @@
-From: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
 Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
-Date: Tue, 23 Nov 2010 00:43:09 -0800 (PST)
-Message-ID: <987735.18126.qm@web31812.mail.mud.yahoo.com>
-Reply-To: ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org
+Date: Tue, 23 Nov 2010 01:25:23 -0800 (PST)
+Message-ID: <589506.10541.qm@web31809.mail.mud.yahoo.com>
+References: <20101123050048.GL20296@one-eyed-alien.net>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Douglas Gilbert <dgilbert-qazKcTl6WRFWk0Htik3J/w@public.gmane.org>, Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
-Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101123050048.GL20296@one-eyed-alien.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
---- On Mon, 11/22/10, Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org> =
-wrote:
+--- On Mon, 11/22/10, Matthew Dharm <mdharm-kernel@one-eyed-alien.net> wrote:
 
-> That said, Luben's patch is kinda slick.
+> As long as you are not changing the command stream that the
+> devices see, I
+> think this is a reasonable risk to take.
 
-Thank you.
+No, not at all.
 
-> sd-modalready asks for a lot of
-> mode page data; it does this so that it's request matches
-> the observed
-> behavior of a "popular" Redmond, WA-based OS.=A0 Luben's
-> patch just searches
-> through that data to see if it can find what it is looking
-> for, rather than
-> rqeuesting a specific mode page later (which may not be
-> supported).
+> What are the consequences if the device returns what appear
+> to be a Caching
+> Mode Page, but it is actually filled with garbage or
+> otherwise inaccurate
+> data?
 
-Yes, devices wouldn't sense a change in requests. The patch preserves t=
-his quality of device discovery.
+Data corruption would be no different than when determining whether the media is write protected or determining other parameters. A similar question would be "What would the consequences be if the device misreported the media write-protect bit?" I suppose such a device would be quite broken and inoperative.
 
    Luben
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
