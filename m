@@ -1,42 +1,31 @@
-From: madhu.iyengar@qlogic.com
-Subject: [PATCH 3/5] qla2xxx: Correct issue where NPIV-config data was not being allocated for 82xx parts.
-Date: Tue, 23 Nov 2010 16:52:48 -0800
-Message-ID: <1290559970-12123-4-git-send-email-madhu.iyengar@qlogic.com>
-References: <1290559970-12123-1-git-send-email-madhu.iyengar@qlogic.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/8] target: consolidate se_global externs
+Date: Tue, 23 Nov 2010 17:50:04 -0800
+Message-ID: <1290563404.30138.143.camel@haakon2.linux-iscsi.org>
+References: <20101123223053.574330460@bombadil.infradead.org>
+	 <20101123223109.322454076@bombadil.infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:59507 "HELO mx.mv.qlogic.com"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755024Ab0KXBFs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Nov 2010 20:05:48 -0500
-In-Reply-To: <1290559970-12123-1-git-send-email-madhu.iyengar@qlogic.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:48166 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576Ab0KXBzc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2010 20:55:32 -0500
+In-Reply-To: <20101123223109.322454076@bombadil.infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+On Tue, 2010-11-23 at 17:30 -0500, Christoph Hellwig wrote:
+> plain text document attachment (lio-kill-se_global-externs)
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
 
-This would cause a panic while reading the NPIV-config data.
+Looks good, committed as df8906630.
 
-Cc: stable@kernel.org
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_os.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Thanks!
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 1644eab..b873156 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -2064,6 +2064,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->init_cb_size = sizeof(struct mid_init_cb_81xx);
- 		ha->gid_list_info_size = 8;
- 		ha->optrom_size = OPTROM_SIZE_82XX;
-+		ha->nvram_npiv_size = QLA_MAX_VPORTS_QLA25XX;
- 		ha->isp_ops = &qla82xx_isp_ops;
- 		ha->flash_conf_off = FARX_ACCESS_FLASH_CONF;
- 		ha->flash_data_off = FARX_ACCESS_FLASH_DATA;
--- 
-1.6.0.2
+--nab
 
