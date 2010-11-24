@@ -1,72 +1,90 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 8/8] target: remove struct se_transform_info
-Date: Tue, 23 Nov 2010 19:11:40 -0800
-Message-ID: <1290568300.30138.187.camel@haakon2.linux-iscsi.org>
-References: <20101123223053.574330460@bombadil.infradead.org>
-	 <20101123223111.263485253@bombadil.infradead.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
+Date: Wed, 24 Nov 2010 01:02:28 -0800 (PST)
+Message-ID: <549123.75632.qm@web31809.mail.mud.yahoo.com>
+References: <20101123143026.GM20296@one-eyed-alien.net>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:41853 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751001Ab0KXDRI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2010 22:17:08 -0500
-In-Reply-To: <20101123223111.263485253@bombadil.infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101123143026.GM20296@one-eyed-alien.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2010-11-23 at 17:31 -0500, Christoph Hellwig wrote:
-> plain text document attachment (kill-se_transform_info)
-> No quite sure what the original use was, but these days it's almost
-> completely superflous.  Besides the two different ways to pass the
-> se_device that can also be retreived from the se_cmd it only contained
-> a set_counts flag for transport_generic_get_cdb_count, which can more
-> easily be passed directly.
-> 
+--- On Tue, 11/23/10, Matthew Dharm <mdharm-kernel@one-eyed-alien.net> =
+wrote:
 
-This is a long overdue cleanup committed as 2e7d255302, great stuff.  ;)
+> Not really.=A0 In your example case of the write-protect
+> bit, either the
+> device would be improperly marked as write-protected when
+> it is not, or we
+> would improperly send write commands to a protected
+> device.=A0 Neither is a
+> great tradgedy; commands will fail, errors will be
+> generated, and life will
+> go on.
 
-Also just to clarify, the se_transform_info was a historical reminent
-used by SCF_SCSI_DATA_SG_IO_CDB cmds in order to support the v2.x legacy
-iSCSI RAID1 w/ so that individual se_tasks could be directed to
-different se_devices from a single received se_lun -> se_cmd.
+Yes, indeed.
 
-Which brings the total for the series tested this evening against
-TCM_loop and LIO-Target ports on .37-rc2 x86 KVM with IBLOCK, PSCSI,
-FILEIO and IBLOCK backends.  Pushing into lio-core-2.6.git now..
+> However, I don't know what is in the Caching Mode
+> Page.
 
- drivers/target/lio-target/iscsi_target_core.h |    1 -
- drivers/target/lio-target/iscsi_target_mib.h  |    1 -
- drivers/target/target_core_alua.h             |    2 -
- drivers/target/target_core_configfs.c         |   65 +++------
- drivers/target/target_core_device.c           |   18 +--
- drivers/target/target_core_file.c             |   27 +---
- drivers/target/target_core_file.h             |    2 -
- drivers/target/target_core_hba.c              |  180 ++++++++++------------
- drivers/target/target_core_hba.h              |   11 +-
- drivers/target/target_core_iblock.c           |   23 +---
- drivers/target/target_core_iblock.h           |    2 -
- drivers/target/target_core_mib.c              |    3 -
- drivers/target/target_core_mib.h              |    2 -
- drivers/target/target_core_pscsi.c            |   11 +-
- drivers/target/target_core_pscsi.h            |    2 -
- drivers/target/target_core_rd.c               |   30 +----
- drivers/target/target_core_rd.h               |    2 -
- drivers/target/target_core_stgt.c             |    9 +-
- drivers/target/target_core_stgt.h             |    2 -
- drivers/target/target_core_transport.c        |  207 +++++--------------------
- include/target/target_core_base.h             |   38 -----
- include/target/target_core_configfs.h         |    2 -
- include/target/target_core_device.h           |    2 -
- include/target/target_core_tpg.h              |    2 -
- include/target/target_core_transport.h        |   15 +--
- 25 files changed, 163 insertions(+), 496 deletions(-)
+It's described in SBC-3.
 
-Thanks Christoph!
+> I don't know how
+> those bits are used to determine the behavior of the rest
+> of the kernel.
 
---nab
+I see.
 
+> Maybe one of those bits means "only store data in Japanese"
+> or something
+> equally disturbing.
 
+I doubt it. (And I don't find that disturbing.)
+
+> The old code used to make a "safe" default choice if the
+> caching mode page
+> was not available (for whatever
+> reason).=A0=A0=A0What are the implications of not
+> making the "safe" choice improperly (due to mode page
+> corruption)?
+
+Let's see... the old code made the ``"safe" default choice'' of believi=
+ng that the write cache is disabled and will thus never synchronize the=
+ cache, i.e. send SYNCHRONIZE CACHE command, reading drivers/scsi/sd.c.=
+ It also believes that the read cache is enabled, harmless as it is not=
+ used by the kernel. It also assumes that DPOFUA is not supported and w=
+ill thus never set FUA in the CDB, in sd_revalidate_disk() (blk dev ops=
+).
+
+Quoting you, s/write commands/cdbs with FUA set or SYNCHRONIZE CACHE co=
+mmand/g:
+
+> we
+> would improperly send write commands to a protected
+> device.  Neither is a
+> great tradgedy; commands will fail, errors will be
+> generated, and life will
+> go on.
+
+But I believe the discussion has gone astray. Bringing it back to the o=
+riginal topic:
+
+I doubt this as very unlikely. Has anyone actually seen a device that s=
+ends mode parameter data with faux Caching mode page or corrupted data =
+that is in fact interpreted as a Caching mode page? Is such a device fu=
+lly operational sans the faux Caching mode page, or does it just not wo=
+rk? Is it common to have devices having a faux Caching mode page or cor=
+rupted mode parameter data resulting in a Caching mode page with random=
+ data?
+
+Undoubtedly, as the usb-storage maintainer, you must have variety of de=
+vices, some broken some not. Could you apply this patch to your tree an=
+d test some of the devices you have? My tests indicate a stable behavio=
+r.
+
+    Luben
