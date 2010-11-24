@@ -1,75 +1,57 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
-Date: Wed, 24 Nov 2010 14:58:51 +0000
-Message-ID: <1290610731.7617.32.camel@mulgrave.site>
-References: <Pine.LNX.4.44L0.1011240945260.1513-100000@iolanthe.rowland.org>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 8/9] scsi: megaraid_sas - Driver take some workloads
+ from FW
+Date: Wed, 24 Nov 2010 08:22:21 -0700
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30106B1DEB9@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A961D6@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A961E4@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A961F2@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A96213@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A96218@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A9621E@cosmail02.lsi.com>
+	 <4B6A08C587958942AA3002690DD4F8C30106A96223@cosmail02.lsi.com>
+ <1290189181.23556.77.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.1011240945260.1513-100000@iolanthe.rowland.org>
+In-Reply-To: <1290189181.23556.77.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: ltuikov@yahoo.com, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, Tomas Henzl <thenzl@redhat.com>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, "Prabhakaran, Rajesh" <Rajesh.Prabhakaran@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2010-11-24 at 09:49 -0500, Alan Stern wrote:
-> On Wed, 24 Nov 2010, James Bottomley wrote:
-> 
-> > On Wed, 2010-11-24 at 01:02 -0800, Luben Tuikov wrote:
-> > > I doubt this as very unlikely. Has anyone actually seen a device that
-> > > sends mode parameter data with faux Caching mode page or corrupted
-> > > data that is in fact interpreted as a Caching mode page? Is such a
-> > > device fully operational sans the faux Caching mode page, or does it
-> > > just not work? Is it common to have devices having a faux Caching mode
-> > > page or corrupted mode parameter data resulting in a Caching mode page
-> > > with random data?
-> > > 
-> > > Undoubtedly, as the usb-storage maintainer, you must have variety of
-> > > devices, some broken some not. Could you apply this patch to your tree
-> > > and test some of the devices you have? My tests indicate a stable
-> > > behavior.
-> > 
-> > The basic problem isn't devices lying ... the worst we'll do is current
-> > behaviour (not SYNC when we should).  The problem is devices that get
-> > confused (or worse simply crash the firmware).  The best way to avoid
-> > the crashing firmware problem ... if we can assume that modern USB
-> > devices are better is to key off the SCSI version.  Unfortunately, in
-> > spite of several attempts, we've never managed to stop usbstorage lying
-> > about this:
-> > 
-> > 		/* Some devices report a SCSI revision level above 2 but are
-> > 		 * unable to handle the REPORT LUNS command (for which
-> > 		 * support is mandatory at level 3).  Since we already have
-> > 		 * a Get-Max-LUN request, we won't lose much by setting the
-> > 		 * revision level down to 2.  The only devices that would be
-> > 		 * affected are those with sparse LUNs. */
-> > 		if (sdev->scsi_level > SCSI_2)
-> > 			sdev->sdev_target->scsi_level =
-> > 					sdev->scsi_level = SCSI_2;
-> > 
-> > Untangling all of this would be rather complex, I fear.
-> 
-> Quite likely.
-> 
-> > The final question is is it worth it?  Since USB devices are supposed to
-> > be hot unpluggable, surely a USB device with a write back cache would be
-> > a disaster: no-one will SYNC the cache on a surprise unplug anyway ...
-> > therefore there shouldn't really be any of them surviving in the wild
-> > (famous last words, I suppose).
-> 
-> Well, hot unpluggable doesn't mean it's okay to unplug the device at 
-> any time.  For example, under Windows you're not supposed to unplug a 
-> USB drive without first going through the "Safely remove hardware" 
-> applet.  And of course, you can easily guess what command that applet 
-> sends to the device...
-> 
-> On the whole, I'm with Luben on this.  The likelihood of introducing
-> bad behavior because of devices sending incorrect cache-page
-> information seems very small.
-
-Yes, just assure me that sending the mode page request won't kill
-anything and I'm fine with applying it.  As I said, as long as we get a
-reply, whatever it is it can't make use behave any worse than we do now.
-
-James
+SmFtZXMsDQoNCk91ciBtZWdhcmFpZCBzYXMgZHJpdmVyIG9ubHkgaW1wbGVtZW50ZWQgdGhlIHBh
+cnQgb2YgdGhlIFhPUiBjYWxjdWxhdGlvbiBhbmQgY29weSBjYXBhYmlsaXR5KG1vdmluZyBkYXRh
+IGJldHdlZW4gMiBidWZmZXJzKSBmb3IgdGhlIFJBSUQ1IGNtZHMgd2hpY2ggRlcgYXNrcyBkcml2
+ZXIgdG8gZG8uICBXaGVuIGZ3IHJlY2VpdmVkIHZlcnkgaGVhdnkgSS9PcyBhbmQgdGhlcmUgYXJl
+IGhpZ2ggcGVuZGluZyBjbWRzIGluIEZXLCBmdyB3aWxsIGFzayB0aGUgaGVscCBmcm9tIGRyaXZl
+ciB0byBmaW5pc2ggc29tZSBjbWRzIGFuZCByZWR1Y2UgdGhlIGZ3IGhlYXZ5IGxvYWQuICBEcml2
+ZXIgd2lsbCBvbmx5IGRvIHBhcnQgb2YgdGhlIFJBSUQ1IChub3QgdGFrZSB0aGUgam9icykgZnJv
+bSBGVy4gIERyaXZlciBpcyBub3QgZHVwbGljYXRpbmcgUGFyaXR5IGNhbGN1bGF0aW9uIGRvbmUg
+b24gZG0vbWQuDQoNClRoYW5rcywNCg0KQm8gWWFuZyAgDQoNCg0KDQotLS0tLU9yaWdpbmFsIE1l
+c3NhZ2UtLS0tLQ0KRnJvbTogSmFtZXMgQm90dG9tbGV5IFttYWlsdG86SmFtZXMuQm90dG9tbGV5
+QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0gDQpTZW50OiBGcmlkYXksIE5vdmVtYmVyIDE5LCAyMDEw
+IDEyOjUzIFBNDQpUbzogWWFuZywgQm8NCkNjOiAnbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcn
+OyAnYWtwbUBvc2RsLm9yZyc7ICdsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnJzsgVG9tYXMg
+SGVuemwNClN1YmplY3Q6IFJlOiBbUEFUQ0ggOC85XSBzY3NpOiBtZWdhcmFpZF9zYXMgLSBEcml2
+ZXIgdGFrZSBzb21lIHdvcmtsb2FkcyBmcm9tIEZXDQoNCk9uIEZyaSwgMjAxMC0xMS0xOSBhdCAx
+MDo0MyAtMDcwMCwgWWFuZywgQm8gd3JvdGU6DQo+IERyaXZlciBhZGRlZCB0aGUgbmV3IGZlYXR1
+cmUgdG8gdGFrZSBzb21lIG9mIHRoZSB3b3JrbG9hZHMgZnJvbSBGVyB0byBpbmNyZWFzZQ0KPiBw
+ZXJmb3JtYW5jZSBvZiB0aGUgaU1SIGNvbnRyb2xsZXIuICBGVyBhc3NpZ25zIHRoZSByZWFkIGNt
+ZHMgYmFjayB0byBkcml2ZXINCj4gd2hpY2ggd2lsbCBpbmNyZWFzZSB0aGUgcGVyZm9ybWFuY2Ug
+Zm9yIG1lZ2FyYWlkIHNhcyBpTVIgY29udHJvbGxlci4NCg0KSnVzdCBvbiBhIHByb2Nlc3Mgbm90
+ZTogeW91IGRvbid0IGhhdmUgdG8gY2MgbWUgYXQgZXZlcnkga25vd24NCmFkZHJlc3MgLi4uIEkg
+ZG8gcmVhZCBsaW51eC1zY3NpIC4uLg0KDQpNeSBmaXJzdCB0YWtlIG9uIHRoaXMgcGF0Y2ggaXMg
+dGhhdCB5b3UncmUgYmFzaWNhbGx5IHBhc3NpbmcgZGF0YSBiYWNrDQp0byB0aGUga2VybmVsIGZv
+ciBSQUlELU4gcGFyaXR5IGNhbGN1bGF0aW9ucy4gIFRoaXMgZWZmZWN0aXZlbHkgbWFrZXMNCnlv
+dXIgUkFJRCBvbmUgb2YgdGhvc2UgcHNldWRvIEhXIG9uZXMuICBJbiB3aGljaCBjYXNlLCB3aHkg
+bm90IHNpbXBseQ0KYWJhbmRvbiB0aGUgSFcgcmFpZCBwaWVjZSBhbmQgaGF2ZSBpdCBhbGwgZG9u
+ZSBieSBETS9NRCwgd2hpY2ggYXJlIHdlbGwNCm9wdGltaXNlZCBmb3IgYWxsIHR5cGVzIG9mIFJB
+SUQ/ICBUaGUgcmVhc29uIGZvciBhc2tpbmcgaXMgdGhhdCB3ZSdyZQ0KdHJ5aW5nIHRvIHJlZHVj
+ZSB0aGUgbnVtYmVyIG9mIGluLWtlcm5lbCByYWlkIGltcGxlbWVudGF0aW9ucyBhbmQgdGhpcw0K
+aXMgZ29pbmcgaW4gdGhlIHdyb25nIGRpcmVjdGlvbi4NCg0KSmFtZXMNCg0KDQo=
