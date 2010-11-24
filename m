@@ -1,120 +1,203 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 3/8] target: remove se_hba_cache
-Date: Tue, 23 Nov 2010 18:13:58 -0800
-Message-ID: <1290564838.30138.161.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 5/8] target: simplify subsystem registration and lookup
+Date: Tue, 23 Nov 2010 18:33:25 -0800
+Message-ID: <1290566005.30138.171.camel@haakon2.linux-iscsi.org>
 References: <20101123223053.574330460@bombadil.infradead.org>
-	 <20101123223109.874349746@bombadil.infradead.org>
+	 <20101123223110.413122129@bombadil.infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:37591 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:53392 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750797Ab0KXCT0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2010 21:19:26 -0500
-In-Reply-To: <20101123223109.874349746@bombadil.infradead.org>
+	with ESMTP id S1751109Ab0KXCix (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Nov 2010 21:38:53 -0500
+In-Reply-To: <20101123223110.413122129@bombadil.infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-scsi@vger.kernel.org
 
 On Tue, 2010-11-23 at 17:30 -0500, Christoph Hellwig wrote:
-> plain text document attachment (lio-kill-se_hba_cache)
-> There is no need of a slab cache for the hba structures.  There's very few of
-> them and their allocation it in a slow path.
+> plain text document attachment (lio-move-subsystem-registration)
+> Move the subsystem registration and lookup into target_core_hba.c, and
+> make the list of subsystems local to the file.  Get rid of the sub_api_hba_cnt
+> field and instead to proper reference counting of the module inside the
+> subsystem_mutex to make it non-racy vs module removal.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+I think this looks good with a small NULL pointer deference fix
+mentioned below..
+
 > 
-> Index: lio-core/drivers/target/target_core_configfs.c
-> ===================================================================
-> --- lio-core.orig/drivers/target/target_core_configfs.c	2010-11-23 22:12:05.405254018 +0100
-> +++ lio-core/drivers/target/target_core_configfs.c	2010-11-23 22:33:25.000253320 +0100
-> @@ -3163,7 +3163,7 @@ static struct config_group *target_core_
->  
->  	return &hba->hba_group;
->  out:
-> -	kmem_cache_free(se_hba_cache, hba);
-> +	kfree(hba);
->  	return ERR_PTR(ret);
->  }
->  
-> Index: lio-core/drivers/target/target_core_device.c
-> ===================================================================
-> --- lio-core.orig/drivers/target/target_core_device.c	2010-11-23 22:11:59.006253249 +0100
-> +++ lio-core/drivers/target/target_core_device.c	2010-11-23 22:33:25.014252691 +0100
-> @@ -1619,7 +1619,7 @@ int core_dev_setup_virtual_lun0(void)
->  	ret = se_core_add_hba(hba, "rd_dr", 0);
->  	if (ret < 0) {
->  		printk("se_core_add_hba() with %d\n", ret);
-> -		kmem_cache_free(se_hba_cache, hba);
-> +		kfree(hba);
->  		return ret;
->  	}
->  
 > Index: lio-core/drivers/target/target_core_hba.c
 > ===================================================================
-> --- lio-core.orig/drivers/target/target_core_hba.c	2010-11-23 22:12:05.407253459 +0100
-> +++ lio-core/drivers/target/target_core_hba.c	2010-11-23 22:33:25.026253459 +0100
-> @@ -48,8 +48,8 @@ struct se_hba *core_alloc_hba(void)
->  {
->  	struct se_hba *hba;
+> --- lio-core.orig/drivers/target/target_core_hba.c	2010-11-23 22:36:42.000000000 +0100
+> +++ lio-core/drivers/target/target_core_hba.c	2010-11-23 22:43:18.977254087 +0100
+> @@ -44,10 +43,63 @@
 >  
-> -	hba = kmem_cache_zalloc(se_hba_cache, GFP_KERNEL);
-> -	if (!(hba)) {
-> +	hba = kmalloc(sizeof(*hba), GFP_KERNEL);
-> +	if (!hba) {
->  		printk(KERN_ERR "Unable to allocate struct se_hba\n");
->  		return NULL;
+>  #include "target_core_hba.h"
+>  
+> +static LIST_HEAD(subsystem_list);
+> +static DEFINE_MUTEX(subsystem_mutex);
+> +
+> +int transport_subsystem_register(struct se_subsystem_api *sub_api)
+> +{
+> +	struct se_subsystem_api *s;
+> +
+> +	INIT_LIST_HEAD(&sub_api->sub_api_list);
+> +
+> +	mutex_lock(&subsystem_mutex);
+> +	list_for_each_entry(s, &subsystem_list, sub_api_list) {
+> +		if (!(strcmp(s->name, sub_api->name))) {
+> +			printk(KERN_ERR "%p is already registered with"
+> +				" duplicate name %s, unable to process"
+> +				" request\n", s, s->name);
+> +			mutex_unlock(&subsystem_mutex);
+> +			return -EEXIST;
+> +		}
+> +	}
+> +	list_add_tail(&sub_api->sub_api_list, &subsystem_list);
+> +	mutex_unlock(&subsystem_mutex);
+> +
+> +	printk(KERN_INFO "TCM: Registered subsystem plugin: %s struct module:"
+> +			" %p\n", sub_api->name, sub_api->owner);
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL(transport_subsystem_register);
+> +
+> +void transport_subsystem_release(struct se_subsystem_api *sub_api)
+> +{
+> +	mutex_lock(&subsystem_mutex);
+> +	list_del(&sub_api->sub_api_list);
+> +	mutex_unlock(&subsystem_mutex);
+> +}
+> +EXPORT_SYMBOL(transport_subsystem_release);
+> +
+> +static struct se_subsystem_api *core_get_backend(const char *sub_name)
+> +{
+> +	struct se_subsystem_api *s;
+> +
+> +	mutex_lock(&subsystem_mutex);
+> +	list_for_each_entry(s, &subsystem_list, sub_api_list) {
+> +		if (!strcmp(s->name, sub_name))
+> +			goto found;
+> +	}
+> +	mutex_unlock(&subsystem_mutex);
+> +	return NULL;
+> +found:
+> +	if (s->owner && !try_module_get(s->owner))
+> +		s = NULL;
+> +	mutex_unlock(&subsystem_mutex);
+> +	return s;
+> +}
+> +
+>  struct se_hba *
+>  core_alloc_hba(const char *plugin_name, u32 plugin_dep_id, u32 hba_flags)
+>  {
+> -	struct se_subsystem_api *t;
+>  	struct se_hba *hba;
+>  	int ret = 0;
+>  
+> @@ -68,30 +120,13 @@ core_alloc_hba(const char *plugin_name,
+>  	atomic_set(&hba->max_queue_depth, 0);
+>  	atomic_set(&hba->left_queue_depth, 0);
+>  
+> -	t = transport_core_get_sub_by_name(plugin_name);
+> -	if (!t) {
+> +	hba->transport = core_get_backend(plugin_name);
+> +	if (!hba->transport) {
+>  		ret = -EINVAL;
+>  		goto out_free_hba;
 >  	}
+>  
+> -	hba->transport = t;
+> -
+> -	/*
+> -	 * Get TCM subsystem api struct module reference to struct se_hba
+> -	 */
+> -	if (t->owner) {
+> -		/*
+> -		 * Grab a struct module reference count for subsystem plugin
+> -		 */
+> -		if (!try_module_get(t->owner)) {
+> -			printk(KERN_ERR "try_module_get() failed for %s\n",
+> -				t->owner->name);
+> -			ret = -EINVAL;
+> -			goto out_put_subsystem;
+> -		}
+> -	}
+> -
+> -	ret = t->attach_hba(hba, plugin_dep_id);
+> +	ret = hba->transport->attach_hba(hba, plugin_dep_id);
+>  	if (ret < 0)
+>  		goto out_module_put;
+>  
+> @@ -106,11 +141,9 @@ core_alloc_hba(const char *plugin_name,
+>  	return hba;
+>  
+>  out_module_put:
+> -	if (t->owner)
+> -		module_put(t->owner);
+> -out_put_subsystem:
+> +	if (hba->transport->owner)
+> +		module_put(hba->transport->owner);
+>  	hba->transport = NULL;
+> -	transport_core_put_sub(t);
+>  out_free_hba:
+>  	kfree(hba);
+>  	return ERR_PTR(ret);
+> @@ -134,11 +167,6 @@ core_delete_hba(struct se_hba *hba)
+>  	spin_unlock(&hba->device_lock);
+>  
+>  	hba->transport->detach_hba(hba);
+> -	if (hba->transport->owner)
+> -		module_put(hba->transport->owner);
+> -
+> -	if (!(hba->hba_flags & HBA_FLAGS_INTERNAL_USE))
+> -		transport_core_put_sub(hba->transport);
+>  
+>  	spin_lock(&se_global->hba_lock);
+>  	list_del(&hba->hba_list);
+> @@ -149,6 +177,8 @@ core_delete_hba(struct se_hba *hba)
+>  	printk(KERN_INFO "CORE_HBA[%d] - Detached HBA from Generic Target"
+>  			" Core\n", hba->hba_id);
+>  
+> +	if (hba->transport->owner)
+> +		module_put(hba->transport->owner);
+>  	kfree(hba);
+>  	return 0;
+>  }
 
-Hmmm, actually I assumed you where using kzalloc() here but unfortuately
-that is not the case.   kmalloc() w/o a trailing memset here creates the
-following OOPs in configfs code for the non zero'ed hba->hba_group..
+Fixing a NULL pointer deference here because of the:
 
-TCM: Registered subsystem plugin: iblock struct module: f09c0118
-TCM: Registered subsystem plugin: fileio struct module: f09c71a0
-TCM: Registered subsystem plugin: pscsi struct module: f09ced68
-TCM: Registered subsystem plugin: stgt struct module: f0a8af40
-CORE_HBA[840988271] - TCM FILEIO HBA Driver 4.0 on Generic Target Core Stack v4.0.0-rc5
-CORE_HBA[840988271] - Attached FILEIO HBA: 0 to Generic Target Core with TCQ Depth: 256 MaxSectors: 1024
-CORE_HBA[1] - Attached HBA to Generic Target Core
-BUG: unable to handle kernel paging request at f0041c80
-IP: [<c1092f95>] kfree+0x29/0xc3
-*pde = 00000000 
-Oops: 0000 [#1] SMP 
-last sysfs file: /sys/devices/tcm_loop_0/tcm_loop_adapter_0/host7/target7:0:1/7:0:1:0/type
-Modules linked in: target_core_stgt target_core_pscsi target_core_file target_core_iblock target_core_mod iscsi_initiator_mod cryptomgr aead crc32c crypto_hash crypto_algapi scsi_tgt configfs dm_mirror dm_region_hash dm_log dm_snapshot sg pcnet32 mii [last unloaded: target_core_mod]
+	 hba->transport = NULL;
 
-Pid: 15935, comm: tcm_node Not tainted 2.6.37-rc2+ #52 440BX Desktop Reference Platform/VMware Virtual Platform
-EIP: 0060:[<c1092f95>] EFLAGS: 00210282 CPU: 0
-EIP is at kfree+0x29/0xc3
-EAX: 4556455f EBX: f0041c80 ECX: ee477e70 EDX: cbe92690
-ESI: f0cdfc4c EDI: cbe92694 EBP: ee477e48 ESP: ee477e30
- DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
-Process tcm_node (pid: 15935, ti=ee476000 task=e1c5b480 task.ti=ee476000)
-Stack:
- 00000000 4556455f cbe92690 cbe92690 f0cdfc4c cbe92694 ee477e60 f0dc59fb
- cbe92694 cbe92690 f0cdfc4c ee477ec8 ee477e78 f0dc5a4e cbe92690 ec8b73c0
- cbe92690 ee477e8f ee477ed8 f0cbb818 ee477e90 ec8b73c0 656c6966 30006f69
-Call Trace:
- [<f0dc59fb>] ? config_item_set_name+0x7d/0x8f [configfs]
- [<f0dc5a4e>] ? config_group_init_type_name+0x10/0x23 [configfs]
- [<f0cbb818>] ? target_core_call_addhbatotarget+0xfe/0x108 [target_core_mod]
- [<f0dc4bf9>] ? configfs_mkdir+0x138/0x2d1 [configfs]
- [<c109d68a>] ? vfs_mkdir+0x5c/0x88
- [<f0dc4ac1>] ? configfs_mkdir+0x0/0x2d1 [configfs]
- [<c109f402>] ? sys_mkdirat+0x7a/0xba
- [<c1098de9>] ? sys_stat64+0x14/0x28
- [<c10888ce>] ? do_mmap_pgoff+0x22f/0x27f
- [<c1002903>] ? sysenter_exit+0xf/0x18
- [<c109f452>] ? sys_mkdir+0x10/0x12
- [<c10028d0>] ? sysenter_do_call+0x12/0x36
-Code: 5d c3 55 89 e5 57 56 53 83 ec 0c 83 f8 10 89 45 ec 0f 86 a6 00 00 00 89 c3 81 c3 00 00 00 40 c1 eb 0c c1 e3 05 03 1d 80 44 af c1 <8b> 03 66 85 c0 79 03 8b 5b 0c 8b 03 84 c0 78 14 66 f7 03 00 c0 
-EIP: [<c1092f95>] kfree+0x29/0xc3 SS:ESP 0068:ee477e30
-CR2: 00000000f0041c80
----[ end trace 9a735723aa0c3f01 ]---
+assignment above printk() in the section above (and out of view for the
+patch) in core_delete_hba()
 
-Converted to a kzalloc() and rebased into new commit 4a17dbe7bcc.
+Committed as 276bb848bf with the following incremental fix:
 
---nab
+diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+index f600f87..4bbe820 100644
+--- a/drivers/target/target_core_hba.c
++++ b/drivers/target/target_core_hba.c
+@@ -173,13 +173,13 @@ core_delete_hba(struct se_hba *hba)
+        list_del(&hba->hba_list);
+        spin_unlock(&se_global->hba_lock);
+ 
+-       hba->transport = NULL;
+-
+        printk(KERN_INFO "CORE_HBA[%d] - Detached HBA from Generic Target"
+                        " Core\n", hba->hba_id);
+ 
+        if (hba->transport->owner)
+                module_put(hba->transport->owner);
++
++       hba->transport = NULL;
+        kfree(hba);
+        return 0;
+ }
+
 
