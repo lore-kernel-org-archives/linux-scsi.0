@@ -1,77 +1,44 @@
-From: "Eddie Wai" <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH v3 07/13] BNX2I: Added mutex lock protection to
- conn_get_param
-Date: Tue, 23 Nov 2010 15:29:26 -0800
-Message-ID: <1290554972-16928-8-git-send-email-eddie.wai@broadcom.com>
-References: <Eddie Wai <eddie.wai@broadcom.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: PATCH 00/13] BNX2I: Patch set to fix various bug fixes
+Date: Tue, 23 Nov 2010 18:16:29 -0600
+Message-ID: <4CEC595D.8070602@cs.wisc.edu>
+References: <Eddie Wai <eddie.wai@broadcom.com> <1290554972-16928-1-git-send-email-eddie.wai@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncCKiEw6yjEhDpm7HnBBoE0ekwug-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: James Bottomley <JBottomley-Et1tbQHTxzrQT0dZR+AlfA@public.gmane.org>
-Cc: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Ben Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:58392 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754312Ab0KXAI0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Nov 2010 19:08:26 -0500
+In-Reply-To: <1290554972-16928-1-git-send-email-eddie.wai@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eddie Wai <eddie.wai@broadcom.com>
+Cc: James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
 
-Added net_dev mutex lock protection before accessing the csk
-parameters.
+On 11/23/2010 05:29 PM, Eddie Wai wrote:
+> Hello,
+>
+> This patch set contains various bug fixes as categorized in the following:
+> - scsi command handling (nop-ins, tmfs)
+> - various connection clean up bug fixes
+> In v3, the following patches are updated:
+>    BNX2I: Fixed the remote TCP RST handling for the 570X (1g)
+>
+>> In v2, the following patches are modified based on Mike Christie's comments:
+>>   BNX2I: Added mutex lock protection to conn_get_param (rm ret 0)
+>>   BNX2I: Removed the dynamic registration of CNIC (trailing space)
+>>
+>
+> In v3, these patches were removed pending better resolution:
+>    BNX2I: Added feature to silently drop NOPOUT request
+>>   BNX2I: Updated the handling of NETEVENTs to alleviate recovery
+>>   BNX2I: Added code to handle the binding of an existing connection
+>
+> Your comments are grealy appreciated.  Please review, thanks.
+>
 
-Signed-off-by: Eddie Wai <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Reviewed-by: Benjamin Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
----
- drivers/scsi/bnx2i/bnx2i_iscsi.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+Looks ok. Thanks
 
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index a2c9b1f..07dd4f9 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1461,21 +1461,28 @@ static int bnx2i_conn_get_param(struct iscsi_cls_conn *cls_conn,
- 	struct bnx2i_conn *bnx2i_conn = conn->dd_data;
- 	int len = 0;
- 
-+	if (!(bnx2i_conn && bnx2i_conn->ep && bnx2i_conn->ep->hba))
-+		goto out;
-+
- 	switch (param) {
- 	case ISCSI_PARAM_CONN_PORT:
--		if (bnx2i_conn->ep)
-+		mutex_lock(&bnx2i_conn->ep->hba->net_dev_lock);
-+		if (bnx2i_conn->ep->cm_sk)
- 			len = sprintf(buf, "%hu\n",
- 				      bnx2i_conn->ep->cm_sk->dst_port);
-+		mutex_unlock(&bnx2i_conn->ep->hba->net_dev_lock);
- 		break;
- 	case ISCSI_PARAM_CONN_ADDRESS:
--		if (bnx2i_conn->ep)
-+		mutex_lock(&bnx2i_conn->ep->hba->net_dev_lock);
-+		if (bnx2i_conn->ep->cm_sk)
- 			len = sprintf(buf, "%pI4\n",
- 				      &bnx2i_conn->ep->cm_sk->dst_ip);
-+		mutex_unlock(&bnx2i_conn->ep->hba->net_dev_lock);
- 		break;
- 	default:
- 		return iscsi_conn_get_param(cls_conn, param, buf);
- 	}
--
-+out:
- 	return len;
- }
- 
--- 
-1.7.0.5
-
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
