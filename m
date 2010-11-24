@@ -1,90 +1,62 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
-Date: Wed, 24 Nov 2010 01:02:28 -0800 (PST)
-Message-ID: <549123.75632.qm@web31809.mail.mud.yahoo.com>
-References: <20101123143026.GM20296@one-eyed-alien.net>
-Reply-To: ltuikov@yahoo.com
+Date: Wed, 24 Nov 2010 10:10:29 +0000
+Message-ID: <1290593429.14652.33.camel@mulgrave.site>
+References: <549123.75632.qm@web31809.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20101123143026.GM20296@one-eyed-alien.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:51308 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752656Ab0KXKKg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Nov 2010 05:10:36 -0500
+In-Reply-To: <549123.75632.qm@web31809.mail.mud.yahoo.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>
 
---- On Tue, 11/23/10, Matthew Dharm <mdharm-kernel@one-eyed-alien.net> =
-wrote:
+On Wed, 2010-11-24 at 01:02 -0800, Luben Tuikov wrote:
+> I doubt this as very unlikely. Has anyone actually seen a device that
+> sends mode parameter data with faux Caching mode page or corrupted
+> data that is in fact interpreted as a Caching mode page? Is such a
+> device fully operational sans the faux Caching mode page, or does it
+> just not work? Is it common to have devices having a faux Caching mode
+> page or corrupted mode parameter data resulting in a Caching mode page
+> with random data?
+> 
+> Undoubtedly, as the usb-storage maintainer, you must have variety of
+> devices, some broken some not. Could you apply this patch to your tree
+> and test some of the devices you have? My tests indicate a stable
+> behavior.
 
-> Not really.=A0 In your example case of the write-protect
-> bit, either the
-> device would be improperly marked as write-protected when
-> it is not, or we
-> would improperly send write commands to a protected
-> device.=A0 Neither is a
-> great tradgedy; commands will fail, errors will be
-> generated, and life will
-> go on.
+The basic problem isn't devices lying ... the worst we'll do is current
+behaviour (not SYNC when we should).  The problem is devices that get
+confused (or worse simply crash the firmware).  The best way to avoid
+the crashing firmware problem ... if we can assume that modern USB
+devices are better is to key off the SCSI version.  Unfortunately, in
+spite of several attempts, we've never managed to stop usbstorage lying
+about this:
 
-Yes, indeed.
+		/* Some devices report a SCSI revision level above 2 but are
+		 * unable to handle the REPORT LUNS command (for which
+		 * support is mandatory at level 3).  Since we already have
+		 * a Get-Max-LUN request, we won't lose much by setting the
+		 * revision level down to 2.  The only devices that would be
+		 * affected are those with sparse LUNs. */
+		if (sdev->scsi_level > SCSI_2)
+			sdev->sdev_target->scsi_level =
+					sdev->scsi_level = SCSI_2;
 
-> However, I don't know what is in the Caching Mode
-> Page.
+Untangling all of this would be rather complex, I fear.
 
-It's described in SBC-3.
+The final question is is it worth it?  Since USB devices are supposed to
+be hot unpluggable, surely a USB device with a write back cache would be
+a disaster: no-one will SYNC the cache on a surprise unplug anyway ...
+therefore there shouldn't really be any of them surviving in the wild
+(famous last words, I suppose).
 
-> I don't know how
-> those bits are used to determine the behavior of the rest
-> of the kernel.
+James
 
-I see.
 
-> Maybe one of those bits means "only store data in Japanese"
-> or something
-> equally disturbing.
-
-I doubt it. (And I don't find that disturbing.)
-
-> The old code used to make a "safe" default choice if the
-> caching mode page
-> was not available (for whatever
-> reason).=A0=A0=A0What are the implications of not
-> making the "safe" choice improperly (due to mode page
-> corruption)?
-
-Let's see... the old code made the ``"safe" default choice'' of believi=
-ng that the write cache is disabled and will thus never synchronize the=
- cache, i.e. send SYNCHRONIZE CACHE command, reading drivers/scsi/sd.c.=
- It also believes that the read cache is enabled, harmless as it is not=
- used by the kernel. It also assumes that DPOFUA is not supported and w=
-ill thus never set FUA in the CDB, in sd_revalidate_disk() (blk dev ops=
-).
-
-Quoting you, s/write commands/cdbs with FUA set or SYNCHRONIZE CACHE co=
-mmand/g:
-
-> we
-> would improperly send write commands to a protected
-> device.  Neither is a
-> great tradgedy; commands will fail, errors will be
-> generated, and life will
-> go on.
-
-But I believe the discussion has gone astray. Bringing it back to the o=
-riginal topic:
-
-I doubt this as very unlikely. Has anyone actually seen a device that s=
-ends mode parameter data with faux Caching mode page or corrupted data =
-that is in fact interpreted as a Caching mode page? Is such a device fu=
-lly operational sans the faux Caching mode page, or does it just not wo=
-rk? Is it common to have devices having a faux Caching mode page or cor=
-rupted mode parameter data resulting in a Caching mode page with random=
- data?
-
-Undoubtedly, as the usb-storage maintainer, you must have variety of de=
-vices, some broken some not. Could you apply this patch to your tree an=
-d test some of the devices you have? My tests indicate a stable behavio=
-r.
-
-    Luben
