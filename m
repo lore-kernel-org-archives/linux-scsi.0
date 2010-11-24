@@ -1,44 +1,65 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: PATCH 00/13] BNX2I: Patch set to fix various bug fixes
-Date: Tue, 23 Nov 2010 18:16:29 -0600
-Message-ID: <4CEC595D.8070602@cs.wisc.edu>
-References: <Eddie Wai <eddie.wai@broadcom.com> <1290554972-16928-1-git-send-email-eddie.wai@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: madhu.iyengar@qlogic.com
+Subject: [PATCH 2/5] qla2xxx: Change MSI initialization from using incorrect request_irq parameter.
+Date: Tue, 23 Nov 2010 16:52:47 -0800
+Message-ID: <1290559970-12123-3-git-send-email-madhu.iyengar@qlogic.com>
+References: <1290559970-12123-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:58392 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754312Ab0KXAI0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Nov 2010 19:08:26 -0500
-In-Reply-To: <1290554972-16928-1-git-send-email-eddie.wai@broadcom.com>
+Received: from vpn.pathscale.com ([198.186.3.75]:59500 "HELO mx.mv.qlogic.com"
+	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1754410Ab0KXBCi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Nov 2010 20:02:38 -0500
+In-Reply-To: <1290559970-12123-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
+To: James.Bottomley@suse.de
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Mike Hernandez <michael.hernandez@qlogic.com>
 
-On 11/23/2010 05:29 PM, Eddie Wai wrote:
-> Hello,
->
-> This patch set contains various bug fixes as categorized in the following:
-> - scsi command handling (nop-ins, tmfs)
-> - various connection clean up bug fixes
-> In v3, the following patches are updated:
->    BNX2I: Fixed the remote TCP RST handling for the 570X (1g)
->
->> In v2, the following patches are modified based on Mike Christie's comments:
->>   BNX2I: Added mutex lock protection to conn_get_param (rm ret 0)
->>   BNX2I: Removed the dynamic registration of CNIC (trailing space)
->>
->
-> In v3, these patches were removed pending better resolution:
->    BNX2I: Added feature to silently drop NOPOUT request
->>   BNX2I: Updated the handling of NETEVENTs to alleviate recovery
->>   BNX2I: Added code to handle the binding of an existing connection
->
-> Your comments are grealy appreciated.  Please review, thanks.
->
+From: Mike Hernandez <michael.hernandez@qlogic.com>
 
-Looks ok. Thanks
+IRQF_SHARED flag should not be set when calling request_irq for MSI
+since this interrupt mechanism cannot be shared like standard INTx.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Signed-off-by: Mike Hernandez <michael.hernandez@qlogic.com>
+Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_def.h |    1 -
+ drivers/scsi/qla2xxx/qla_isr.c |    5 +++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 3a22eff..9ce539d 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2409,7 +2409,6 @@ struct qla_hw_data {
+ 		uint32_t	enable_target_reset	:1;
+ 		uint32_t	enable_lip_full_login	:1;
+ 		uint32_t	enable_led_scheme	:1;
+-		uint32_t	inta_enabled		:1;
+ 		uint32_t	msi_enabled		:1;
+ 		uint32_t	msix_enabled		:1;
+ 		uint32_t	disable_serdes		:1;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 1f06ddd..7f77898 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2491,14 +2491,15 @@ skip_msix:
+ skip_msi:
+ 
+ 	ret = request_irq(ha->pdev->irq, ha->isp_ops->intr_handler,
+-	    IRQF_SHARED, QLA2XXX_DRIVER_NAME, rsp);
++	    ha->flags.msi_enabled ? 0 : IRQF_SHARED,
++	    QLA2XXX_DRIVER_NAME, rsp);
+ 	if (ret) {
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "Failed to reserve interrupt %d already in use.\n",
+ 		    ha->pdev->irq);
+ 		goto fail;
+ 	}
+-	ha->flags.inta_enabled = 1;
++
+ clear_risc_ints:
+ 
+ 	/*
+-- 
+1.6.0.2
+
