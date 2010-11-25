@@ -1,258 +1,147 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] target: remove unused snapshot attributes
-Date: Thu, 25 Nov 2010 03:01:16 -0500
-Message-ID: <20101125080116.GB6469@infradead.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 21172] OOPS in disk_replace_part_tbl.
+Date: Thu, 25 Nov 2010 10:16:20 GMT
+Message-ID: <201011251016.oAPAGKj9026679@demeter2.kernel.org>
+References: <bug-21172-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:42572 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750981Ab0KYIBQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Nov 2010 03:01:16 -0500
-Content-Disposition: inline
+Received: from demeter2.kernel.org ([140.211.167.42]:41482 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751726Ab0KYKQV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Nov 2010 05:16:21 -0500
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oAPAGKbH026680
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Nov 2010 10:16:21 GMT
+In-Reply-To: <bug-21172-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+https://bugzilla.kernel.org/show_bug.cgi?id=21172
 
-Index: lio-core/drivers/target/target_core_configfs.c
-===================================================================
---- lio-core.orig/drivers/target/target_core_configfs.c	2010-11-25 08:52:56.000000000 +0100
-+++ lio-core/drivers/target/target_core_configfs.c	2010-11-25 08:53:47.000000000 +0100
-@@ -1635,162 +1635,6 @@ static struct config_item_type target_co
- 
- /*  End functions for struct config_item_type target_core_dev_pr_cit */
- 
--/* Start functions for struct config_item type target_core_dev_snap_cit */
--
--CONFIGFS_EATTR_STRUCT(target_core_dev_snap, se_subsystem_dev);
--#define SE_DEV_SNAP_ATTR(_name, _mode)					\
--static struct target_core_dev_snap_attribute				\
--			target_core_dev_snap_attr_##_name =		\
--	__CONFIGFS_EATTR(_name, _mode,					\
--	target_core_dev_snap_show_attr_##_name,				\
--	target_core_dev_snap_store_attr_##_name);
--
--#define DEF_SNAP_ATTRIB_STR_SHOW(_name)					\
--static ssize_t target_core_dev_snap_show_attr_##_name(			\
--	struct se_subsystem_dev *se_dev,				\
--	char *page)							\
--{									\
--	return snprintf(page, PAGE_SIZE, "%s\n", SE_DEV_SNAP(se_dev)->_name); \
--}
--
--#define DEF_SNAP_ATTRIB_STR_STORE(_name, _max)				\
--static ssize_t target_core_dev_snap_store_attr_##_name(			\
--	struct se_subsystem_dev *se_dev,				\
--	const char *page,						\
--	size_t count)							\
--{									\
--	if (strlen(page) > _max) {					\
--		printk(KERN_ERR "String length for attrib: %s exceeds max:" \
--			" %d\n", __stringify(_name), _max);		\
--		return -EINVAL;						\
--	}								\
--	snprintf(SE_DEV_SNAP(se_dev)->_name, PAGE_SIZE, "%s", page);	\
--	return count;							\
--}
--
--#define DEF_SNAP_ATTRIB_STR(_name, _max)				\
--DEF_SNAP_ATTRIB_STR_SHOW(_name)						\
--DEF_SNAP_ATTRIB_STR_STORE(_name, _max)
--
--#define DEF_SNAP_ATTRIB_INT_SHOW(_name)					\
--static ssize_t target_core_dev_snap_show_attr_##_name(			\
--	struct se_subsystem_dev *se_dev,				\
--	char *page)							\
--{									\
--	return snprintf(page, PAGE_SIZE, "%d\n", SE_DEV_SNAP(se_dev)->_name); \
--}
--
--#define DEF_SNAP_ATTRIB_INT_STORE(_name, _max, _min)			\
--static ssize_t target_core_dev_snap_store_attr_##_name(			\
--	struct se_subsystem_dev *se_dev,				\
--	const char *page,						\
--	size_t count)							\
--{									\
--	int ret;							\
--	unsigned long val;						\
--									\
--	ret = strict_strtoul(page, 0, &val);				\
--	if (ret < 0) {							\
--		printk(KERN_ERR "strict_strtoul() failed for %s with"	\
--			" ret: %d\n", __stringify(_name), ret);		\
--		return -EINVAL;						\
--	}								\
--	if ((_max != 0) && (val > _max)) {				\
--		printk(KERN_ERR "snap attribute: %s exceeds max: %d\n",	\
--				__stringify(_name), _max);		\
--		return -EINVAL;						\
--	}								\
--	if (val < _min) {						\
--		printk(KERN_ERR "snap attribute: %s less than min: %d\n", \
--				__stringify(_name), _min);		\
--		return -EINVAL;						\
--	}								\
--	SE_DEV_SNAP(se_dev)->_name = (int)val;				\
--	return count;							\
--}
--
--#define DEF_SNAP_ATTRIB_INT(_name, _max, _min)				\
--DEF_SNAP_ATTRIB_INT_SHOW(_name)						\
--DEF_SNAP_ATTRIB_INT_STORE(_name, _max, _min)
--
--DEF_SNAP_ATTRIB_STR(contact, SNAP_CONTACT_LEN);
--SE_DEV_SNAP_ATTR(contact, S_IRUGO | S_IWUSR);
--
--DEF_SNAP_ATTRIB_STR(lv_group, SNAP_GROUP_LEN);
--SE_DEV_SNAP_ATTR(lv_group, S_IRUGO | S_IWUSR);
--
--DEF_SNAP_ATTRIB_STR(lvc_size, SNAP_LVC_LEN);
--SE_DEV_SNAP_ATTR(lvc_size, S_IRUGO | S_IWUSR);
--
--DEF_SNAP_ATTRIB_INT(pid, 0, 0);
--SE_DEV_SNAP_ATTR(pid, S_IRUGO | S_IWUSR);
--
--DEF_SNAP_ATTRIB_INT(enabled, 1, 0);
--SE_DEV_SNAP_ATTR(enabled, S_IRUGO | S_IWUSR);
--
--DEF_SNAP_ATTRIB_INT(permissions, 1, 0);
--SE_DEV_SNAP_ATTR(permissions, S_IRUGO | S_IWUSR);
--
--/* Max number of snapshots to rotate */
--DEF_SNAP_ATTRIB_INT(max_snapshots, 256, 1);
--SE_DEV_SNAP_ATTR(max_snapshots, S_IRUGO | S_IWUSR);
--
--/* Max minutes for warning emails about usage */
--DEF_SNAP_ATTRIB_INT(max_warn, 60, 0);
--SE_DEV_SNAP_ATTR(max_warn, S_IRUGO | S_IWUSR);
--
--/* 15 Minute max, 5 second min */
--DEF_SNAP_ATTRIB_INT(check_interval, 900, 5);
--SE_DEV_SNAP_ATTR(check_interval, S_IRUGO | S_IWUSR);
--
--/* One 7-day week max, 1 minute min */
--DEF_SNAP_ATTRIB_INT(create_interval, 604800, 60);
--SE_DEV_SNAP_ATTR(create_interval, S_IRUGO | S_IWUSR);
--
--/* Snapshot usage */
--DEF_SNAP_ATTRIB_INT(usage, 100, 0);
--SE_DEV_SNAP_ATTR(usage, S_IRUGO | S_IWUSR);
--
--/* Snapshot usage before sending warning */
--DEF_SNAP_ATTRIB_INT(usage_warn, 100, 0);
--SE_DEV_SNAP_ATTR(usage_warn, S_IRUGO | S_IWUSR);
--
--/* Volume group usage before sending warning */
--DEF_SNAP_ATTRIB_INT(vgs_usage_warn, 100, 0);
--SE_DEV_SNAP_ATTR(vgs_usage_warn, S_IRUGO | S_IWUSR);
--
--CONFIGFS_EATTR_OPS(target_core_dev_snap, se_subsystem_dev, se_dev_snap_group);
--
--static struct configfs_attribute *target_core_dev_snap_attrs[] = {
--	&target_core_dev_snap_attr_contact.attr,
--	&target_core_dev_snap_attr_lv_group.attr,
--	&target_core_dev_snap_attr_lvc_size.attr,
--	&target_core_dev_snap_attr_pid.attr,
--	&target_core_dev_snap_attr_enabled.attr,
--	&target_core_dev_snap_attr_permissions.attr,
--	&target_core_dev_snap_attr_max_snapshots.attr,
--	&target_core_dev_snap_attr_max_warn.attr,
--	&target_core_dev_snap_attr_check_interval.attr,
--	&target_core_dev_snap_attr_create_interval.attr,
--	&target_core_dev_snap_attr_usage.attr,
--	&target_core_dev_snap_attr_usage_warn.attr,
--	&target_core_dev_snap_attr_vgs_usage_warn.attr,
--	NULL,
--};
--
--static struct configfs_item_operations target_core_dev_snap_ops = {
--	.show_attribute		= target_core_dev_snap_attr_show,
--	.store_attribute	= target_core_dev_snap_attr_store,
--};
--
--static struct config_item_type target_core_dev_snap_cit = {
--	.ct_item_ops		= &target_core_dev_snap_ops,
--	.ct_attrs		= target_core_dev_snap_attrs,
--	.ct_owner		= THIS_MODULE,
--};
--
--/* End functions for struct config_item type target_core_dev_snap_cit */
--
- /*  Start functions for struct config_item_type target_core_dev_cit */
- 
- static ssize_t target_core_show_dev_info(void *p, char *page)
-@@ -2872,18 +2716,15 @@ static struct config_group *target_core_
- 			&target_core_dev_attrib_cit);
- 	config_group_init_type_name(&se_dev->se_dev_pr_group, "pr",
- 			&target_core_dev_pr_cit);
--	config_group_init_type_name(&se_dev->se_dev_snap_group, "snap",
--			&target_core_dev_snap_cit);
- 	config_group_init_type_name(&se_dev->t10_wwn.t10_wwn_group, "wwn",
- 			&target_core_dev_wwn_cit);
- 	config_group_init_type_name(&se_dev->t10_alua.alua_tg_pt_gps_group,
- 			"alua", &target_core_alua_tg_pt_gps_cit);
- 	dev_cg->default_groups[0] = &se_dev->se_dev_attrib.da_group;
- 	dev_cg->default_groups[1] = &se_dev->se_dev_pr_group;
--	dev_cg->default_groups[2] = &se_dev->se_dev_snap_group;
--	dev_cg->default_groups[3] = &se_dev->t10_wwn.t10_wwn_group;
--	dev_cg->default_groups[4] = &se_dev->t10_alua.alua_tg_pt_gps_group;
--	dev_cg->default_groups[5] = NULL;
-+	dev_cg->default_groups[2] = &se_dev->t10_wwn.t10_wwn_group;
-+	dev_cg->default_groups[3] = &se_dev->t10_alua.alua_tg_pt_gps_group;
-+	dev_cg->default_groups[4] = NULL;
- 	/*
- 	 * Add core/$HBA/$DEV/alua/tg_pt_gps/default_tg_pt_gp
- 	 */
-Index: lio-core/include/target/target_core_base.h
-===================================================================
---- lio-core.orig/include/target/target_core_base.h	2010-11-25 08:53:17.774272876 +0100
-+++ lio-core/include/target/target_core_base.h	2010-11-25 08:53:47.000000000 +0100
-@@ -688,25 +688,6 @@ struct se_dev_attrib {
- 	struct config_group da_group;
- } ____cacheline_aligned;
- 
--struct se_dev_snap_attrib {
--#define SNAP_CONTACT_LEN		128
--	unsigned char	contact[SNAP_CONTACT_LEN];
--#define SNAP_GROUP_LEN			128
--	unsigned char	lv_group[SNAP_GROUP_LEN];
--#define SNAP_LVC_LEN			32
--	unsigned char	lvc_size[SNAP_LVC_LEN];
--	pid_t		pid;
--	int		enabled;
--	int		permissions;
--	int		max_snapshots;
--	int		max_warn;
--	int		check_interval;
--	int		create_interval;
--	int		usage;
--	int		usage_warn;
--	int		vgs_usage_warn;
--} ____cacheline_aligned;
--
- struct se_subsystem_dev {
- /* Used for struct se_subsystem_dev-->se_dev_alias, must be less than PAGE_SIZE */
- #define SE_DEV_ALIAS_LEN		512
-@@ -718,7 +699,6 @@ struct se_subsystem_dev {
- 	struct se_hba *se_dev_hba;
- 	struct se_device *se_dev_ptr;
- 	struct se_dev_attrib se_dev_attrib;
--	struct se_dev_snap_attrib se_snap_attrib;
- 	/* T10 Asymmetric Logical Unit Assignment for Target Ports */
- 	struct t10_alua	t10_alua;
- 	/* T10 Inquiry and VPD WWN Information */
-@@ -731,11 +711,8 @@ struct se_subsystem_dev {
- 	struct config_group se_dev_group;
- 	/* For T10 Reservations */
- 	struct config_group se_dev_pr_group;
--	/* For userspace lvm utils */
--	struct config_group se_dev_snap_group;
- } ____cacheline_aligned;
- 
--#define SE_DEV_SNAP(su_dev)	(&(su_dev)->se_snap_attrib)
- #define T10_ALUA(su_dev)	(&(su_dev)->t10_alua)
- #define T10_RES(su_dev)		(&(su_dev)->t10_reservation)
- #define T10_PR_OPS(su_dev)	(&(su_dev)->t10_reservation.pr_ops)
+
+kakaouete <kaouete@crazydwarves.org> changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |kaouete@crazydwarves.org
+
+
+
+
+--- Comment #2 from kakaouete <kaouete@crazydwarves.org>  2010-11-25 10:16:15 ---
+Hi, I noticed the same problem, it appeared between 2.6.36 and 2.6.36.1.
+
+Every time I unplug a usb device storage (my phone as well my usb key), I get
+the oops:
+
+usb 8-5: new high speed USB device using ehci_hcd and address 2
+Initializing USB Mass Storage driver...
+scsi6 : usb-storage 8-5:1.0
+usbcore: registered new interface driver usb-storage
+USB Mass Storage support registered.
+scsi 6:0:0:0: Direct-Access     Lexar    JD Secure II +   1100 PQ: 0 ANSI: 0
+CCS
+sd 6:0:0:0: Attached scsi generic sg2 type 0
+sd 6:0:0:0: [sdb] 15663104 512-byte logical blocks: (8.01 GB/7.46 GiB)
+sd 6:0:0:0: [sdb] Write Protect is off
+sd 6:0:0:0: [sdb] Mode Sense: 43 00 00 00
+sd 6:0:0:0: [sdb] Assuming drive cache: write through
+sd 6:0:0:0: [sdb] Assuming drive cache: write through
+ sdb: sdb1
+sd 6:0:0:0: [sdb] Assuming drive cache: write through
+sd 6:0:0:0: [sdb] Attached SCSI removable disk
+usb 8-5: USB disconnect, address 2
+BUG: unable to handle kernel NULL pointer dereference at 00000000000003a0
+IP: [<ffffffff811dca07>] disk_replace_part_tbl.clone.15+0x27/0x70
+PGD 13ac78067 PUD 13937e067 PMD 0 
+Oops: 0000 [#1] PREEMPT SMP 
+last sysfs file: /sys/devices/pci0000:00/0000:00:1d.7/usb8/8-5/speed
+CPU 0 
+Modules linked in: nls_cp437 vfat fat usb_storage fuse ipv6 rfcomm sco bnep
+coretemp l2cap crc16 ext2 loop pata_pcmcia usbhid hid usblp tpm_infineon
+snd_hda_codec_analog ide_cs ide_core btusb bluetooth uvcvideo videodev
+v4l1_compat v4l2_compat_ioctl32 snd_seq_dummy snd_seq_oss snd_seq_midi_event
+snd_seq snd_seq_device snd_hda_intel fan parport_pc uinput arc4 snd_hda_codec
+snd_hwdep ecb snd_pcm sdhci_pci sdhci snd_timer joydev hp_wmi tpm_tis snd
+mmc_core soundcore snd_page_alloc tpm tpm_bios video firewire_ohci hp_accel
+cpufreq_powersave output container lis3lv02d input_polldev led_class
+firewire_core crc_itu_t cpufreq_ondemand wmi pcmcia acpi_cpufreq thermal ac
+battery button yenta_socket pcmcia_rsrc freq_table pcmcia_core iwlagn iwlcore
+mac80211 cfg80211 rfkill uhci_hcd ppdev ehci_hcd iTCO_wdt iTCO_vendor_support
+usbcore pcspkr psmouse intel_agp processor e1000e sg lp parport evdev serio_raw
+mperf ext3 jbd mbcache sr_mod cdrom sd_mod ahci libahci libata scsi_mod radeon
+ttm drm_kms_helper drm i2c_algo_bit i2c_core
+
+Pid: 1713, comm: khubd Not tainted 2.6.36-ARCH #1 30DC/HP EliteBook 6930p
+RIP: 0010:[<ffffffff811dca07>]  [<ffffffff811dca07>]
+disk_replace_part_tbl.clone.15+0x27/0x70
+RSP: 0018:ffff8801381559a0  EFLAGS: 00010282
+RAX: 0000000000000000 RBX: ffff88005a24dd40 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff88013b74ec38
+RBP: ffff8801381559b0 R08: ffff88013fc380a8 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000000 R12: 0000000000000000
+R13: 0000000000000000 R14: ffff8800ad56ab68 R15: 0000000000000246
+FS:  0000000000000000(0000) GS:ffff880001a00000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+CR2: 00000000000003a0 CR3: 000000013afdf000 CR4: 00000000000406f0
+DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+Process khubd (pid: 1713, threadinfo ffff880138154000, task ffff8801383f6120)
+Stack:
+ ffff88013b74ec00 ffffffff81585160 ffff8801381559d0 ffffffff811dca7b
+<0> ffff8800ad56ab68 0000000000000000 ffff8801381559f0 ffffffff812a0df2
+<0> ffff8800ad56ab68 ffff88013b74ec70 ffff880138155a20 ffffffff811eaf15
+Call Trace:
+ [<ffffffff811dca7b>] disk_release+0x2b/0x50
+ [<ffffffff812a0df2>] device_release+0x22/0x90
+ [<ffffffff811eaf15>] kobject_release+0x45/0x90
+ [<ffffffff811eaed0>] ? kobject_release+0x0/0x90
+ [<ffffffff811ec737>] kref_put+0x37/0x70
+ [<ffffffff811eadf7>] kobject_put+0x27/0x60
+ [<ffffffff811db9b2>] put_disk+0x12/0x20
+ [<ffffffffa022a3d1>] sg_device_destroy+0x51/0x70 [sg]
+ [<ffffffffa022a380>] ? sg_device_destroy+0x0/0x70 [sg]
+ [<ffffffff811ec737>] kref_put+0x37/0x70
+ [<ffffffffa022a274>] sg_put_dev+0x14/0x20 [sg]
+ [<ffffffffa022a376>] sg_remove+0xf6/0x100 [sg]
+ [<ffffffff812a1ad1>] device_del+0xc1/0x1b0
+ [<ffffffff812a1bd1>] device_unregister+0x11/0x20
+ [<ffffffffa017adb5>] __scsi_remove_device+0xa5/0xc0 [scsi_mod]
+ [<ffffffffa01798bc>] scsi_forget_host+0x5c/0x80 [scsi_mod]
+ [<ffffffffa017047a>] scsi_remove_host+0x6a/0x120 [scsi_mod]
+ [<ffffffffa04de332>] quiesce_and_remove_host+0x62/0xb0 [usb_storage]
+ [<ffffffffa04de43d>] usb_stor_disconnect+0x1d/0x30 [usb_storage]
+ [<ffffffffa0306bb5>] usb_unbind_interface+0x55/0x1a0 [usbcore]
+ [<ffffffff812a4a60>] __device_release_driver+0x70/0xe0
+ [<ffffffff812a4af8>] device_release_driver+0x28/0x40
+ [<ffffffff812a4556>] bus_remove_device+0x76/0xa0
+ [<ffffffff812a1b37>] device_del+0x127/0x1b0
+ [<ffffffffa030474c>] usb_disable_device+0x6c/0x130 [usbcore]
+ [<ffffffffa02fd0f5>] usb_disconnect+0x95/0x120 [usbcore]
+ [<ffffffffa02fef5d>] hub_thread+0xaad/0x1200 [usbcore]
+ [<ffffffff813931ed>] ? schedule+0x87d/0x9c0
+ [<ffffffff81075af0>] ? autoremove_wake_function+0x0/0x40
+ [<ffffffffa02fe4b0>] ? hub_thread+0x0/0x1200 [usbcore]
+ [<ffffffff81075546>] kthread+0x96/0xa0
+ [<ffffffff8100bd64>] kernel_thread_helper+0x4/0x10
+ [<ffffffff810754b0>] ? kthread+0x0/0xa0
+ [<ffffffff8100bd60>] ? kernel_thread_helper+0x0/0x10
+Code: 1f 44 00 00 55 48 89 e5 48 83 ec 10 4c 89 64 24 08 48 89 1c 24 49 89 f4
+48 8b 1f 48 85 db 48 89 17 74 38 48 c7 43 18 00 00 00 00 <48> 8b be a0 03 00 00
+e8 8d 8e 1b 00 4c 89 e7 e8 b5 18 ff ff 49 
+RIP  [<ffffffff811dca07>] disk_replace_part_tbl.clone.15+0x27/0x70
+ RSP <ffff8801381559a0>
+CR2: 00000000000003a0
+---[ end trace 308505f4649cb883 ]---
+ata1.00: configured for UDMA/100
+ata1: EH complete
+ata1.00: configured for UDMA/100
+ata1: EH complete
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
