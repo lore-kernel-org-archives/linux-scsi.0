@@ -1,48 +1,42 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: [PATCH] fix mm leakage of block request in SCSI FiberChannel transport
-Date: Thu, 25 Nov 2010 21:53:05 +0800
-Message-ID: <AANLkTi=08YvR9O7c7+asB3d-PkguutKepFZfUbCXmYZR@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [dm-devel] QUEUE_FLAG_CLUSTER?
+Date: Thu, 25 Nov 2010 10:21:43 -0500
+Message-ID: <yq14ob5o2d4.fsf@sermon.lab.mkp.net>
+References: <85ABFDC4641C4847BA6088F2982EFD8F049D4EB8@nonamew.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:37777 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752219Ab0KYNxI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Nov 2010 08:53:08 -0500
+Received: from rcsinet10.oracle.com ([148.87.113.121]:51327 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752937Ab0KYPXX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Nov 2010 10:23:23 -0500
+In-Reply-To: <85ABFDC4641C4847BA6088F2982EFD8F049D4EB8@nonamew.ptu.promise.com> (Ed
+	Lin's message of "Fri, 19 Nov 2010 17:24:14 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, Robert Love <robert.w.love@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, "James E.J. Bottomley" <James.Bottomley@suse.de>, devel@open-fcoe.org, linux-kernel@vger.kernel.org
+To: device-mapper development <dm-devel@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Promise_Linux <Promise_Linux@promise.com>
 
-When blk_rq_timed_out_timer run, only requests that are not completed
-are selected for processing with LLD callback function.
+>>>>> "Ed" == "Ed Lin <- PTU" <ed.lin@promise.com>> writes:
 
-In the case of fc_bsg_job_timeout, if BLK_EH_NOT_HANDLED returned, the
-block layer will be signaled to do nothing for the request, but the
-request still remains uncompleted since it is already marked with
-REQ_ATOM_COMPLETE by the timer function and blk_complete_request()
-will check it. Thus mm leakage is triggered.
+Ed,
 
-It is fixed by returning BLK_EH_HANDLED, instead of
-BLK_EH_NOT_HANDLED, with warning also recorded.
+Ed> The dm already has function to adjust limits based on underlying
+Ed> device limits. So, is it good to add the no_cluster setting to the
+Ed> queue limits at the scsi side? For example, some code change like
+Ed> the following?
 
-Thanks all for comments when preparing this work.
+We should never issue a command that does not adhere to the limits set
+by the device driver. Upon inspection I agree this is busted and it's my
+fault.
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
----
+DM does not have a request_queue when stacking and as a result we ended
+up with two entities tracking whether a device supports clustering or
+not. And as it turns out the queue flag and the queue limits are not
+always in agreement.
 
---- a/drivers/scsi/scsi_transport_fc.c	2010-11-01 19:54:12.000000000 +0800
-+++ b/drivers/scsi/scsi_transport_fc.c	2010-11-24 20:55:12.000000000 +0800
-@@ -3626,9 +3626,9 @@ fc_bsg_job_timeout(struct request *req)
+I've coded up a proper fix for this and will post a patch shortly. I'm
+just running a bunch of tests to ensure we do the right thing...
 
- 	/* the blk_end_sync_io() doesn't check the error */
- 	if (done)
--		return BLK_EH_NOT_HANDLED;
--	else
--		return BLK_EH_HANDLED;
-+		printk(KERN_WARNING "%s: fixing mm leak...done\n", __func__);
-+
-+	return BLK_EH_HANDLED;
- }
-
- static int
+-- 
+Martin K. Petersen	Oracle Linux Engineering
