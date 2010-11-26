@@ -1,92 +1,71 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 1/4] target-pscsi: query tape blocksize using
-	scsi_execute_req
-Date: Thu, 25 Nov 2010 23:22:21 -0800
-Message-ID: <1290756141.16160.66.camel@haakon2.linux-iscsi.org>
-References: <1290755672-19819-1-git-send-email-nab@linux-iscsi.org>
-	 <1290755672-19819-2-git-send-email-nab@linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] target: Convert transport_dev_end_lba() to ->get_blocks()
+Date: Thu, 25 Nov 2010 23:52:40 -0800
+Message-ID: <1290757960-22505-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:40952 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752752Ab0KZH1x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Nov 2010 02:27:53 -0500
-In-Reply-To: <1290755672-19819-2-git-send-email-nab@linux-iscsi.org>
+Received: from nm20.bullet.mail.sp2.yahoo.com ([98.139.91.90]:23066 "HELO
+	nm20.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753645Ab0KZHwr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Nov 2010 02:52:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
+To: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Thu, 2010-11-25 at 23:14 -0800, Nicholas A. Bellinger wrote:
-> From: Christoph Hellwig <hch@lst.de>
-> 
-> Use the native Linux scsi execution support instead of the target passthrough
-> support to get the tape blocksize
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> ---
->  drivers/target/target_core_pscsi.c |   66 ++++++++++++++++--------------------
->  1 files changed, 29 insertions(+), 37 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-> index b14fe35..773ff83 100644
-> --- a/drivers/target/target_core_pscsi.c
-> +++ b/drivers/target/target_core_pscsi.c
-> @@ -181,6 +181,33 @@ static int pscsi_pmode_enable_hba(struct se_hba *hba, unsigned long mode_flag)
->  	return 1;
->  }
->  
-> +static void pscsi_tape_read_blocksize(struct se_device *dev,
-> +		struct scsi_device *sdev)
-> +{
-> +	unsigned char cdb[MAX_COMMAND_SIZE], *buf;
-> +
-> +	buf = kzalloc(12, GFP_KERNEL);
-> +	if (!buf)
-> +		return;
-> +
-> +	memset(cdb, 0, MAX_COMMAND_SIZE);
-> +	cdb[0] = MODE_SENSE;
-> +	cdb[4] = 0x0c; /* 12 bytes */
-> +
-> +	if (!scsi_execute_req(sdev, cdb, DMA_FROM_DEVICE, buf, 12, NULL,
-> +			HZ, 1, NULL))
-> +		goto out_free;
-> +
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hrrrmmm, missed the bugfix for the proper return value of
-scsi_execute_req() here.
+This patch converts transport_get_sectors() -> transport_dev_end_lba() to use
+dev->transport->get_blocks(dev) directly instead of the dev->dev_sectors_total
+assignment in transport_add_device_to_core_hba().
 
-Committed the following incremental patch as 4793c9f04ba.
+This fixes a bug where backend struct block_devices like (Linux/LVM w/ IBLOCK)
+could change their effective size reported by ->get_blocks(), but the original
+dev->dev_sectors_total was still be enforced by transport_dev_end_lba().
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 9cc6bc4..defde22 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -185,6 +185,7 @@ static void pscsi_tape_read_blocksize(struct se_device *dev,
-                struct scsi_device *sdev)
+Tested with IBLOCK, FILEIO, RAMDISK_DR and pSCSI LUNs of TYPE_DISK.
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_transport.c |    5 +----
+ include/target/target_core_base.h      |    1 -
+ 2 files changed, 1 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index dbe5dbf..665eaac 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1715,9 +1715,6 @@ struct se_device *transport_add_device_to_core_hba(
+ 	}
+ 	scsi_dump_inquiry(dev);
+ 
+-	if (TRANSPORT(dev)->get_device_type(dev) == TYPE_DISK)
+-		dev->dev_sectors_total = dev->transport->get_blocks(dev);
+-
+ out:
+ 	if (!ret)
+ 		return dev;
+@@ -4248,7 +4245,7 @@ EXPORT_SYMBOL(transport_generic_map_mem_to_cmd);
+ 
+ static inline long long transport_dev_end_lba(struct se_device *dev)
  {
-        unsigned char cdb[MAX_COMMAND_SIZE], *buf;
-+       int ret;
-
-        buf = kzalloc(12, GFP_KERNEL);
-        if (!buf)
-@@ -194,8 +195,9 @@ static void pscsi_tape_read_blocksize(struct se_device *dev,
-        cdb[0] = MODE_SENSE;
-        cdb[4] = 0x0c; /* 12 bytes */
-
--       if (!scsi_execute_req(sdev, cdb, DMA_FROM_DEVICE, buf, 12, NULL,
--                       HZ, 1, NULL))
-+       ret = scsi_execute_req(sdev, cdb, DMA_FROM_DEVICE, buf, 12, NULL,
-+                       HZ, 1, NULL);
-+       if (ret)
-                goto out_free;
-
-        /*
+-	return dev->dev_sectors_total + 1;
++	return dev->transport->get_blocks(dev) + 1;
+ }
+ 
+ static int transport_get_sectors(struct se_cmd *cmd)
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 7ccde37..ba15644 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -731,7 +731,6 @@ struct se_device {
+ 	/* Used for SPC-2 reservations enforce of ISIDs */
+ 	u64			dev_res_bin_isid;
+ 	t10_task_attr_index_t	dev_task_attr_type;
+-	unsigned long long	dev_sectors_total;
+ 	/* Pointer to transport specific device structure */
+ 	void 			*dev_ptr;
+ 	u32			dev_index;
 -- 
 1.5.6.5
-
 
