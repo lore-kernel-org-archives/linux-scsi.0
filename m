@@ -1,63 +1,62 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/3] megaraid_sas: Convert to host_lock less w/
-	interrupts disabled internally
-Date: Sat, 27 Nov 2010 23:28:59 -0800
-Message-ID: <1290929339.6216.188.camel@haakon2.linux-iscsi.org>
-References: <1290928656-31116-1-git-send-email-nab@linux-iscsi.org>
+From: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
+Subject: After memory pressure: can't read from tape anymore
+Date: Sun, 28 Nov 2010 20:15:29 +0100
+Message-ID: <1290971729.2814.13.camel@larosa>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:40213 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751128Ab0K1Hec (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Nov 2010 02:34:32 -0500
-In-Reply-To: <1290928656-31116-1-git-send-email-nab@linux-iscsi.org>
+Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:42552 "EHLO
+	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750791Ab0K1TWG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 28 Nov 2010 14:22:06 -0500
+Received: from [10.0.42.6] (port-92-201-136-71.dynamic.qsc.de [92.201.136.71])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smarthost.TechFak.Uni-Bielefeld.DE (Postfix) with ESMTPSA id 6023AB2
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Nov 2010 20:15:30 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, Bo Yang <Bo.Yang@lsi.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@suse.de>
+To: linux-scsi@vger.kernel.org
 
-On Sat, 2010-11-27 at 23:17 -0800, Nicholas A. Bellinger wrote:
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
-> 
-> Greetings Hannes, Bo and Co,
-> 
-> This series converts megaraid_sas to run in modern host_lock-less mode
-> for >= .37-rc3+ with interrupts disabled internally around megasas_instance->hba_lock.
-> This series is currently living in lio-core-2.6.git/lock_less-LLDs-for-38-v2,
-> and is intended for .38 mainline code.
-> 
-> The first patch adds a handful of missing barriers around instance->fw_outstanding
-> usage w/ atomic_add() and atomic_dec().
-> 
-> The second converts instance->issuepend_done to an atomic_t, along with
-> the necessary assignments in order to run w/ Scsi_Host->host_lock, and
-> without instance->hba_lock.
-> 
-> The third patch does the actual conversion, and adds a __megasas_get_cmd()
-> usased by megasas_queue_command() w/ instance->hba_lock, along with
-> being held for megasas_build_ldio() and megasas_build_dcdb() in order
-> to locate the proper frame for struct megasas_cmd.  This is really the
-> one major change in order to get host_lock-less to function with interrupts
-> disabled around hba_lock.
-> 
-> So far this has been tested with Hannes's QEMU 8708EM2 HBA emulation with
-> TCM_Loop backends using SG_IO from KVM host in a paired Host/Guest .37-rc3
-> environment.  This has not been tested on real silicon yet, but I believe
-> this series should be working there as well.
-> 
+Hi, 
 
-And quick screenshot running in KVM Host TCM_Loop host_lock-less mode
-into KVM Guest megaraid_sas host_lock-less mode w/ small block LTP
-disktest.
+On our backup system (2 LTO4 drives/Tandberg library via LSISAS1068E,
+Kernel 2.6.36 with the stock Fusion MPT SAS Host driver 3.04.17 on
+debian/squeeze), we see reproducible tape read and write failures after
+the system was under memory pressure:
 
-http://www.linux-iscsi.org/index.php/File:TCM_loop-megasas-37-rc3.png
+[342567.297152] st0: Can't allocate 2097152 byte tape buffer.
+[342569.316099] st0: Can't allocate 2097152 byte tape buffer.
+[342570.805164] st0: Can't allocate 2097152 byte tape buffer.
+[342571.958331] st0: Can't allocate 2097152 byte tape buffer.
+[342572.704264] st0: Can't allocate 2097152 byte tape buffer.
+[342873.737130] st: from_buffer offset overflow.
 
-Just a FYI, with scsi-generic <-> TCM_Loop everything appears to be
-stable for both small and large block size tests.
+Bacula is spewing this message every time it tries to access the tape
+drive:
+28-Nov 19:58 sd1.techfak JobId 2857: Error: block.c:1002 Read error on fd=10 at file:blk 0:0 on device "drv2" (/dev/nst0). ERR=Input/output error
 
---nab
+By memory pressure, I mean that the KVM processes containing the
+postgres-db (~20million files) and the bacula director have used all
+available RAM, one of them used ~4GiB of its 12GiB swap for an hour or
+so (by selecting a full restore, it seems that the whole directory tree
+of the 15mio files backup gets read into memory). After this, I wasn't
+able to read from the second tape drive anymore (/dev/st0); whereas the
+first tape drive was restoring the data happily (it is currently about
+halfway through a 3TiB restore from 5 tapes).
 
+This same behaviour appears when we're doing a few incremental backups;
+after a while, it just isn't possible to use the tape drives anymore -
+every I/O operation gives an I/O Error, even a simple dd bs=64k
+count=10. After a restart, the system behaves correctly until
+-seemingly- another memory pressure situation occured.
+
+I'd be delighted if somebody can help me debug this; my systemtap skills
+are non-existent unfortunatly.
+
+kind regads,
+Lukas Kolbe
 
 
