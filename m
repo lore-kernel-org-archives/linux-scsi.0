@@ -1,352 +1,172 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: [PATCH][SCSI][Resend]: Reduce sequential pointer derefs, reduce
- size, clean up whitespace in scsi_error.c
-Date: Sun, 28 Nov 2010 23:09:41 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1011282256250.29621@swampdragon.chaosbits.net>
+From: Mikko Korkalo <mikko@korkalo.fi>
+Subject: Re: 2.6.36: Dropped interrupts in ata_piix
+Date: Mon, 29 Nov 2010 13:41:29 +0200
+Message-ID: <4CF39169.6010601@korkalo.fi>
+Reply-To: 4CC78F95.4050107@google.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:27499 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751266Ab0K1WRG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Nov 2010 17:17:06 -0500
+Received: from mail.f-solutions.fi ([80.75.108.135]:58868 "EHLO
+	mail.f-solutions.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752840Ab0K2LtB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2010 06:49:01 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: mikew@google.com
 
 Hi,
 
-This is a resend of a (slightly updated) patch that was originally 
-submitted on
-  24 April 2008
-  27 April 2008
-  14 November 2010
+I am replying to the message here:
+http://www.spinics.net/lists/linux-scsi/msg47723.html
+(I just registered to the mailing list, so I manually added the Reply-To
+header, hopefully it's correct)
 
-I'm getting tired of carrying this patch. I'd like an ACK or NACK (or 
-preferably just a merge) of this patch. I've submitted it several times 
-without a single comment. Except from Linus, who (according to my personal 
-analytical skills) seems to like it but had some improvement suggestions 
-(included in this version).
+It seems I have very similar symptoms with 2.6.36, I can reproduce them
+easily in a live system, I could even grant shell access if necessary.
+It didn't happen at all with stock ubuntu 8.04 LTS kernel
+(2.6.32-25-generic-pae).
 
-This patch does the following to scsi_error.c:
+Currently, 1 out of 3 SATA hard drives are suffering from this.
+I left a dd command overnight to read the drive contents to /dev/null.
+One drive didn't finish while all the other drives finished with normal
+speeds.
+I have attached dmesg and smartctl messages.
 
- - Cleans up trailing whitespace.
- - Reduces the size of scsi_error.o.
- - Reduces the number of pointer dereferences quite a bit.
+Should I try and revert the mentioned patches, or something else?
+Anyone able to provide direct links to these patches, I don't normally
+involve in kernel development so I'm kind of new to this.
 
-Could we please just merge this and move on? Or if that's not possible 
-for some reason, then throw it out and tell me the reason...
+Here are my logs. SMART doesn't report any errors, but I see a lot of
+errors in dmesg.
 
+$ sudo smartctl -a /dev/sdc
+smartctl version 5.38 [i686-pc-linux-gnu] Copyright (C) 2002-8 Bruce Allen
+Home page is http://smartmontools.sourceforge.net/
 
-(Please CC me on replies)
+=== START OF INFORMATION SECTION ===
+Device Model:     WDC WD20EADS-00S2B0
+Serial Number:    WD-WCAVY0359972
+Firmware Version: 04.05G04
+User Capacity:    2,000,398,934,016 bytes
+Device is:        Not in smartctl database [for details use: -P showall]
+ATA Version is:   8
+ATA Standard is:  Exact ATA specification draft version not indicated
+Local Time is:    Mon Nov 29 12:18:20 2010 EET
+SMART support is: Available - device has SMART capability.
+SMART support is: Enabled
 
+=== START OF READ SMART DATA SECTION ===
+SMART overall-health self-assessment test result: PASSED
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
----
- scsi_error.c |   96 ++++++++++++++++++++++++++++++-----------------------------
- 1 file changed, 50 insertions(+), 46 deletions(-)
+General SMART Values:
+Offline data collection status:  (0x84) Offline data collection activity
+                                        was suspended by an interrupting command from host.
+                                        Auto Offline Data Collection: Enabled.
+Self-test execution status:      (   0) The previous self-test routine completed
+                                        without error or no self-test has ever
+                                        been run.
+Total time to complete Offline
+data collection:                 (43200) seconds.
+Offline data collection
+capabilities:                    (0x7b) SMART execute Offline immediate.
+                                        Auto Offline data collection on/off support.
+                                        Suspend Offline collection upon new
+                                        command.
+                                        Offline surface scan supported.
+                                        Self-test supported.
+                                        Conveyance Self-test supported.
+                                        Selective Self-test supported.
+SMART capabilities:            (0x0003) Saves SMART data before entering
+                                        power-saving mode.
+                                        Supports SMART auto save timer.
+Error logging capability:        (0x01) Error logging supported.
+                                        General Purpose Logging supported.
+Short self-test routine
+recommended polling time:        (   2) minutes.
+Extended self-test routine
+recommended polling time:        ( 255) minutes.
+Conveyance self-test routine
+recommended polling time:        (   5) minutes.
+SCT capabilities:              (0x303f) SCT Status supported.
+                                        SCT Feature Control supported.
+                                        SCT Data Table supported.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 824b8fc..a53864e 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -3,14 +3,14 @@
-  *
-  *  SCSI error/timeout handling
-  *      Initial versions: Eric Youngdale.  Based upon conversations with
-- *                        Leonard Zubkoff and David Miller at Linux Expo, 
-+ *                        Leonard Zubkoff and David Miller at Linux Expo,
-  *                        ideas originating from all over the place.
-  *
-  *	Restructured scsi_unjam_host and associated functions.
-  *	September 04, 2002 Mike Anderson (andmike@us.ibm.com)
-  *
-  *	Forward port of Russell King's (rmk@arm.linux.org.uk) changes and
-- *	minor  cleanups.
-+ *	minor cleanups.
-  *	September 30, 2002 Mike Anderson (andmike@us.ibm.com)
-  */
- 
-@@ -129,14 +129,15 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
- {
- 	struct scsi_cmnd *scmd = req->special;
- 	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
-+	struct Scsi_Host *host = scmd->device->host;
- 
- 	trace_scsi_dispatch_cmd_timeout(scmd);
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 
--	if (scmd->device->host->transportt->eh_timed_out)
--		rtn = scmd->device->host->transportt->eh_timed_out(scmd);
--	else if (scmd->device->host->hostt->eh_timed_out)
--		rtn = scmd->device->host->hostt->eh_timed_out(scmd);
-+	if (host->transportt->eh_timed_out)
-+		rtn = host->transportt->eh_timed_out(scmd);
-+	else if (host->hostt->eh_timed_out)
-+		rtn = host->hostt->eh_timed_out(scmd);
- 
- 	if (unlikely(rtn == BLK_EH_NOT_HANDLED &&
- 		     !scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
-@@ -195,7 +196,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
- 				++total_failures;
- 				if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD)
- 					++cmd_cancel;
--				else 
-+				else
- 					++cmd_failed;
- 			}
- 		}
-@@ -214,7 +215,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
- 
- 	SCSI_LOG_ERROR_RECOVERY(2, printk("Total of %d commands on %d"
- 					  " devices require eh work\n",
--				  total_failures, devices_failed));
-+				   total_failures, devices_failed));
- }
- #endif
- 
-@@ -294,7 +295,7 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 			return NEEDS_RETRY;
- 		}
- 		/*
--		 * if the device is in the process of becoming ready, we 
-+		 * if the device is in the process of becoming ready, we
- 		 * should retry.
- 		 */
- 		if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
-@@ -488,7 +489,7 @@ static int scsi_eh_completed_normally(struct scsi_cmnd *scmd)
-  */
- static void scsi_eh_done(struct scsi_cmnd *scmd)
- {
--	struct completion     *eh_action;
-+	struct completion *eh_action;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3,
- 		printk("%s scmd: %p result: %x\n",
-@@ -507,22 +508,23 @@ static int scsi_try_host_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	int rtn;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Host RST\n",
- 					  __func__));
- 
--	if (!scmd->device->host->hostt->eh_host_reset_handler)
-+	if (!hostt->eh_host_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_host_reset_handler(scmd);
-+	rtn = hostt->eh_host_reset_handler(scmd);
- 
- 	if (rtn == SUCCESS) {
--		if (!scmd->device->host->hostt->skip_settle_delay)
-+		if (!hostt->skip_settle_delay)
- 			ssleep(HOST_RESET_SETTLE_TIME);
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		scsi_report_bus_reset(scmd->device->host,
--				      scmd_channel(scmd));
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(host->host_lock, flags);
-+		scsi_report_bus_reset(host, scmd_channel(scmd));
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -536,22 +538,23 @@ static int scsi_try_bus_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	int rtn;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
- 	SCSI_LOG_ERROR_RECOVERY(3, printk("%s: Snd Bus RST\n",
- 					  __func__));
- 
--	if (!scmd->device->host->hostt->eh_bus_reset_handler)
-+	if (!hostt->eh_bus_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_bus_reset_handler(scmd);
-+	rtn = hostt->eh_bus_reset_handler(scmd);
- 
- 	if (rtn == SUCCESS) {
--		if (!scmd->device->host->hostt->skip_settle_delay)
-+		if (!hostt->skip_settle_delay)
- 			ssleep(BUS_RESET_SETTLE_TIME);
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
--		scsi_report_bus_reset(scmd->device->host,
--				      scmd_channel(scmd));
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(host->host_lock, flags);
-+		scsi_report_bus_reset(host, scmd_channel(scmd));
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -577,16 +580,18 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	int rtn;
-+	struct Scsi_Host *host = scmd->device->host;
-+	struct scsi_host_template *hostt = host->hostt;
- 
--	if (!scmd->device->host->hostt->eh_target_reset_handler)
-+	if (!hostt->eh_target_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_target_reset_handler(scmd);
-+	rtn = hostt->eh_target_reset_handler(scmd);
- 	if (rtn == SUCCESS) {
--		spin_lock_irqsave(scmd->device->host->host_lock, flags);
-+		spin_lock_irqsave(host->host_lock, flags);
- 		__starget_for_each_device(scsi_target(scmd->device), NULL,
- 					  __scsi_report_device_reset);
--		spin_unlock_irqrestore(scmd->device->host->host_lock, flags);
-+		spin_unlock_irqrestore(host->host_lock, flags);
- 	}
- 
- 	return rtn;
-@@ -605,22 +610,23 @@ static int scsi_try_target_reset(struct scsi_cmnd *scmd)
- static int scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
- {
- 	int rtn;
-+	struct scsi_host_template *hostt = scmd->device->host->hostt;
- 
--	if (!scmd->device->host->hostt->eh_device_reset_handler)
-+	if (!hostt->eh_device_reset_handler)
- 		return FAILED;
- 
--	rtn = scmd->device->host->hostt->eh_device_reset_handler(scmd);
-+	rtn = hostt->eh_device_reset_handler(scmd);
- 	if (rtn == SUCCESS)
- 		__scsi_report_device_reset(scmd->device, NULL);
- 	return rtn;
- }
- 
--static int __scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
-+static int __scsi_try_to_abort_cmd(struct scsi_host_template *hostt,
-+				   struct scsi_cmnd *scmd)
- {
--	if (!scmd->device->host->hostt->eh_abort_handler)
-+	if (!hostt->eh_abort_handler)
- 		return FAILED;
--
--	return scmd->device->host->hostt->eh_abort_handler(scmd);
-+	return hostt->eh_abort_handler(scmd);
- }
- 
- /**
-@@ -642,12 +648,12 @@ static int scsi_try_to_abort_cmd(struct scsi_cmnd *scmd)
- 	 */
- 	if (scmd->serial_number == 0)
- 		return SUCCESS;
--	return __scsi_try_to_abort_cmd(scmd);
-+	return __scsi_try_to_abort_cmd(scmd->device->host->hostt, scmd);
- }
- 
- static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
- {
--	if (__scsi_try_to_abort_cmd(scmd) != SUCCESS)
-+	if (__scsi_try_to_abort_cmd(scmd->device->host->hostt, scmd) != SUCCESS)
- 		if (scsi_try_bus_device_reset(scmd) != SUCCESS)
- 			if (scsi_try_target_reset(scmd) != SUCCESS)
- 				if (scsi_try_bus_reset(scmd) != SUCCESS)
-@@ -867,7 +873,7 @@ EXPORT_SYMBOL(scsi_eh_finish_cmd);
-  *
-  * Description:
-  *    See if we need to request sense information.  if so, then get it
-- *    now, so we have a better idea of what to do.  
-+ *    now, so we have a better idea of what to do.
-  *
-  * Notes:
-  *    This has the unfortunate side effect that if a shost adapter does
-@@ -987,7 +993,6 @@ static int scsi_eh_abort_cmds(struct list_head *work_q,
- 			    !scsi_eh_tur(scmd)) {
- 				scsi_eh_finish_cmd(scmd, done_q);
- 			}
--				
- 		} else
- 			SCSI_LOG_ERROR_RECOVERY(3, printk("%s: aborting"
- 							  " cmd failed:"
-@@ -1031,7 +1036,7 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
-  *
-  * Notes:
-  *    If commands are failing due to not ready, initializing command required,
-- *	try revalidating the device, which will end up sending a start unit. 
-+ *	try revalidating the device, which will end up sending a start unit.
-  */
- static int scsi_eh_stu(struct Scsi_Host *shost,
- 			      struct list_head *work_q,
-@@ -1085,7 +1090,7 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
-  *    Try a bus device reset.  Still, look to see whether we have multiple
-  *    devices that are jammed or not - if we have multiple devices, it
-  *    makes no sense to try bus_device_reset - we really would need to try
-- *    a bus_reset instead. 
-+ *    a bus_reset instead.
-  */
- static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
- 				    struct list_head *work_q,
-@@ -1196,7 +1201,7 @@ static int scsi_eh_target_reset(struct Scsi_Host *shost,
- }
- 
- /**
-- * scsi_eh_bus_reset - send a bus reset 
-+ * scsi_eh_bus_reset - send a bus reset
-  * @shost:	&scsi host being recovered.
-  * @work_q:     &list_head for pending commands.
-  * @done_q:	&list_head for processed commands.
-@@ -1213,7 +1218,7 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- 	 * we really want to loop over the various channels, and do this on
- 	 * a channel by channel basis.  we should also check to see if any
- 	 * of the failed commands are on soft_reset devices, and if so, skip
--	 * the reset.  
-+	 * the reset.
- 	 */
- 
- 	for (channel = 0; channel <= shost->max_channel; channel++) {
-@@ -1255,7 +1260,7 @@ static int scsi_eh_bus_reset(struct Scsi_Host *shost,
- }
- 
- /**
-- * scsi_eh_host_reset - send a host reset 
-+ * scsi_eh_host_reset - send a host reset
-  * @work_q:	list_head for processed commands.
-  * @done_q:	list_head for processed commands.
-  */
-@@ -1408,7 +1413,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		return SUCCESS;
- 		/*
- 		 * when the low level driver returns did_soft_error,
--		 * it is responsible for keeping an internal retry counter 
-+		 * it is responsible for keeping an internal retry counter
- 		 * in order to avoid endless loops (db)
- 		 *
- 		 * actually this is a bug in this function here.  we should
-@@ -1446,7 +1451,6 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 			 */
- 			break;
- 		/* fallthrough */
--
- 	case DID_BUS_BUSY:
- 	case DID_PARITY:
- 		goto maybe_retry;
-@@ -2005,7 +2009,7 @@ int scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
- 		if (sb_len > 7)
- 			sshdr->additional_length = sense_buffer[7];
- 	} else {
--		/* 
-+		/*
- 		 * fixed format
- 		 */
- 		if (sb_len > 2)
+SMART Attributes Data Structure revision number: 16
+Vendor Specific SMART Attributes with Thresholds:
+ID# ATTRIBUTE_NAME          FLAG     VALUE WORST THRESH TYPE      UPDATED  WHEN_FAILED RAW_VALUE
+  1 Raw_Read_Error_Rate     0x002f   200   200   051    Pre-fail  Always       -       0
+  3 Spin_Up_Time            0x0027   157   133   021    Pre-fail  Always       -       9108
+  4 Start_Stop_Count        0x0032   099   099   000    Old_age   Always       -       1198
+  5 Reallocated_Sector_Ct   0x0033   200   200   140    Pre-fail  Always       -       0
+  7 Seek_Error_Rate         0x002e   100   253   000    Old_age   Always       -       0
+  9 Power_On_Hours          0x0032   085   085   000    Old_age   Always       -       11337
+ 10 Spin_Retry_Count        0x0032   100   100   000    Old_age   Always       -       0
+ 11 Calibration_Retry_Count 0x0032   100   253   000    Old_age   Always       -       0
+ 12 Power_Cycle_Count       0x0032   100   100   000    Old_age   Always       -       58
+192 Power-Off_Retract_Count 0x0032   200   200   000    Old_age   Always       -       22
+193 Load_Cycle_Count        0x0032   172   172   000    Old_age   Always       -       86640
+194 Temperature_Celsius     0x0022   109   095   000    Old_age   Always       -       43
+196 Reallocated_Event_Count 0x0032   200   200   000    Old_age   Always       -       0
+197 Current_Pending_Sector  0x0032   200   200   000    Old_age   Always       -       0
+198 Offline_Uncorrectable   0x0030   200   200   000    Old_age   Offline      -       0
+199 UDMA_CRC_Error_Count    0x0032   200   200   000    Old_age   Always       -       1279
+200 Multi_Zone_Error_Rate   0x0008   200   200   000    Old_age   Offline      -       0
 
+SMART Error Log Version: 1
+No Errors Logged
 
+SMART Self-test log structure revision number 1
+Num  Test_Description    Status                  Remaining  LifeTime(hours)  LBA_of_first_error
+# 1  Short offline       Completed without error       00%      5200         -
 
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please.
+SMART Selective self-test log data structure revision number 1
+ SPAN  MIN_LBA  MAX_LBA  CURRENT_TEST_STATUS
+    1        0        0  Not_testing
+    2        0        0  Not_testing
+    3        0        0  Not_testing
+    4        0        0  Not_testing
+    5        0        0  Not_testing
+Selective self-test flags (0x0):
+  After scanning selected spans, do NOT read-scan remainder of disk.
+If Selective self-test is pending on power-up, resume after 0 minute delay.
+
+$ dmesg|tail -30
+[51214.053097] ata4.00: failed command: READ DMA EXT
+[51214.055504] ata4.00: cmd 25/00:00:bf:0d:38/00:02:94:00:00/e0 tag 0 dma 262144 in
+[51214.055507]          res 40/00:00:00:00:00/84:01:09:00:00/00 Emask 0x24 (host bus error)
+[51214.060435] ata4.00: status: { DRDY }
+[51214.062824] ata4: soft resetting link
+[51214.339049] ata4.00: configured for UDMA/33
+[51214.339059] ata4.00: device reported invalid CHS sector 0
+[51214.339117] ata4: EH complete
+[51253.024028] ata4: lost interrupt (Status 0x51)
+[51253.024050] ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[51253.026504] ata4.00: BMDMA stat 0x26, BMDMA stat 0x0, BMDMA stat 0x0, BMDMA stat 0x0, BMDMA stat 0x0
+[51253.029131] ata4.00: failed command: READ DMA EXT
+[51253.031523] ata4.00: cmd 25/00:00:bf:49:38/00:01:94:00:00/e0 tag 0 dma 131072 in
+[51253.031526]          res 40/00:00:00:00:00/84:01:09:00:00/00 Emask 0x24 (host bus error)
+[51253.036463] ata4.00: status: { DRDY }
+[51253.038863] ata4: soft resetting link
+[51253.339048] ata4.00: configured for UDMA/33
+[51253.339055] ata4.00: device reported invalid CHS sector 0
+[51253.339066] ata4: EH complete
+[51288.008028] ata4: lost interrupt (Status 0x51)
+[51288.008050] ata4.00: exception Emask 0x0 SAct 0x0 SErr 0x0 action 0x6 frozen
+[51288.010468] ata4.00: BMDMA stat 0x26, BMDMA stat 0x0, BMDMA stat 0x0, BMDMA stat 0x0, BMDMA stat 0x0
+[51288.013096] ata4.00: failed command: READ DMA EXT
+[51288.015506] ata4.00: cmd 25/00:00:bf:5f:38/00:01:94:00:00/e0 tag 0 dma 131072 in
+[51288.015509]          res 40/00:00:00:00:00/84:01:09:00:00/00 Emask 0x24 (host bus error)
+[51288.020517] ata4.00: status: { DRDY }
+[51288.022906] ata4: soft resetting link
+[51288.339041] ata4.00: configured for UDMA/33
+[51288.339049] ata4.00: device reported invalid CHS sector 0
+[51288.339059] ata4: EH complete
+
+My kernel is stock except for BFS scheduler patches. I don't see how that could cause this.
+
+Best Regards
+Mikko Korkalo
+
 
