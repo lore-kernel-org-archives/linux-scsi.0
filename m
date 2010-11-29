@@ -1,178 +1,150 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/3] target: remove unused get_dma_length subsystem method
-Date: Mon, 29 Nov 2010 16:57:34 -0500
-Message-ID: <20101129215734.GA19703@infradead.org>
+Subject: [PATCH 2/3] target: always assign t_task_lba in
+ transport_generic_cmd_sequencer
+Date: Mon, 29 Nov 2010 16:58:04 -0500
+Message-ID: <20101129215804.GA19726@infradead.org>
+References: <20101129215734.GA19703@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:33565 "EHLO
+Received: from bombadil.infradead.org ([18.85.46.34]:33568 "EHLO
 	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752388Ab0K2V5f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2010 16:57:35 -0500
+	with ESMTP id S1752166Ab0K2V6F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Nov 2010 16:58:05 -0500
 Content-Disposition: inline
+In-Reply-To: <20101129215734.GA19703@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: nab@linux-iscsi.org
 Cc: linux-scsi@vger.kernel.org
 
+We already sometimes directly calculate the lba in
+transport_generic_cmd_sequencer, but sometimes use the transport_get_long_lba /
+transport_get_lba callback in the se_cmd.  Unify the code to always assign
+it directly and remove the callbacks.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: lio-core/drivers/target/target_core_file.c
+Index: lio-core/drivers/target/target_core_transport.c
 ===================================================================
---- lio-core.orig/drivers/target/target_core_file.c	2010-11-29 19:33:01.688023888 +0100
-+++ lio-core/drivers/target/target_core_file.c	2010-11-29 19:33:14.165258208 +0100
-@@ -635,15 +635,6 @@ static u32 fd_get_device_type(struct se_
- 	return TYPE_DISK;
- }
- 
--/*	fd_get_dma_length(): (Part of se_subsystem_api_t template)
-- *
-- *
-- */
--static u32 fd_get_dma_length(u32 task_size, struct se_device *dev)
--{
--	return PAGE_SIZE;
--}
+--- lio-core.orig/drivers/target/target_core_transport.c	2010-11-29 19:42:05.046003633 +0100
++++ lio-core/drivers/target/target_core_transport.c	2010-11-29 19:47:31.670254576 +0100
+@@ -1952,15 +1952,6 @@ int transport_generic_allocate_tasks(
+ 		DEBUG_CDB_H("Set cdb[0]: 0x%02x to "
+ 				"SCF_SCSI_DATA_SG_IO_CDB\n", cdb[0]);
+ 		cmd->se_cmd_flags |= SCF_SCSI_DATA_SG_IO_CDB;
 -
- static sector_t fd_get_blocks(struct se_device *dev)
- {
- 	struct fd_dev *fd_dev = dev->dev_ptr;
-@@ -676,7 +667,6 @@ static struct se_subsystem_api fileio_te
- 	.get_cdb		= fd_get_cdb,
- 	.get_device_rev		= fd_get_device_rev,
- 	.get_device_type	= fd_get_device_type,
--	.get_dma_length		= fd_get_dma_length,
- 	.get_blocks		= fd_get_blocks,
- };
- 
-Index: lio-core/drivers/target/target_core_iblock.c
-===================================================================
---- lio-core.orig/drivers/target/target_core_iblock.c	2010-11-29 19:33:01.695009151 +0100
-+++ lio-core/drivers/target/target_core_iblock.c	2010-11-29 19:33:14.165258208 +0100
-@@ -705,11 +705,6 @@ static u32 iblock_get_device_type(struct
- 	return TYPE_DISK;
- }
- 
--static u32 iblock_get_dma_length(u32 task_size, struct se_device *dev)
--{
--	return PAGE_SIZE;
--}
+-		/*
+-		 * Get the initial Logical Block Address from the Original
+-		 * Command Descriptor Block that arrived on the iSCSI wire.
+-		 */
+-		T_TASK(cmd)->t_task_lba = (cmd->transport_get_long_lba) ?
+-			cmd->transport_get_long_lba(cdb) :
+-			cmd->transport_get_lba(cdb);
 -
- static sector_t iblock_get_blocks(struct se_device *dev)
- {
- 	struct iblock_dev *ibd = dev->dev_ptr;
-@@ -792,7 +787,6 @@ static struct se_subsystem_api iblock_te
- 	.get_cdb		= iblock_get_cdb,
- 	.get_device_rev		= iblock_get_device_rev,
- 	.get_device_type	= iblock_get_device_type,
--	.get_dma_length		= iblock_get_dma_length,
- 	.get_blocks		= iblock_get_blocks,
- };
- 
-Index: lio-core/drivers/target/target_core_rd.c
+ 		break;
+ 	case TGCS_CONTROL_SG_IO_CDB:
+ 		DEBUG_CDB_H("Set cdb[0]: 0x%02x to"
+@@ -3184,7 +3175,7 @@ static int transport_generic_cmd_sequenc
+ 			return TGCS_UNSUPPORTED_CDB;
+ 		size = transport_get_size(sectors, cdb, cmd);
+ 		cmd->transport_split_cdb = &split_cdb_XX_6;
+-		cmd->transport_get_lba = &transport_lba_21;
++		T_TASK(cmd)->t_task_lba = transport_lba_21(cdb);
+ 		ret = TGCS_DATA_SG_IO_CDB;
+ 		break;
+ 	case READ_10:
+@@ -3193,7 +3184,7 @@ static int transport_generic_cmd_sequenc
+ 			return TGCS_UNSUPPORTED_CDB;
+ 		size = transport_get_size(sectors, cdb, cmd);
+ 		cmd->transport_split_cdb = &split_cdb_XX_10;
+-		cmd->transport_get_lba = &transport_lba_32;
++		T_TASK(cmd)->t_task_lba = transport_lba_32(cdb);
+ 		ret = TGCS_DATA_SG_IO_CDB;
+ 		break;
+ 	case READ_12:
+@@ -3202,7 +3193,7 @@ static int transport_generic_cmd_sequenc
+ 			return TGCS_UNSUPPORTED_CDB;
+ 		size = transport_get_size(sectors, cdb, cmd);
+ 		cmd->transport_split_cdb = &split_cdb_XX_12;
+-		cmd->transport_get_lba = &transport_lba_32;
++		T_TASK(cmd)->t_task_lba = transport_lba_32(cdb);
+ 		ret = TGCS_DATA_SG_IO_CDB;
+ 		break;
+ 	case READ_16:
+@@ -3211,7 +3202,7 @@ static int transport_generic_cmd_sequenc
+ 			return TGCS_UNSUPPORTED_CDB;
+ 		size = transport_get_size(sectors, cdb, cmd);
+ 		cmd->transport_split_cdb = &split_cdb_XX_16;
+-		cmd->transport_get_long_lba = &transport_lba_64;
++		T_TASK(cmd)->t_task_lba = transport_lba_64(cdb);
+ 		ret = TGCS_DATA_SG_IO_CDB;
+ 		break;
+ 	case WRITE_6:
+@@ -3220,7 +3211,7 @@ static int transport_generic_cmd_sequenc
+ 			return TGCS_UNSUPPORTED_CDB;
+ 		size = transport_get_size(sectors, cdb, cmd);
+ 		cmd->transport_split_cdb = &split_cdb_XX_6;
+-		cmd->transport_get_lba = &transport_lba_21;
++		T_TASK(cmd)->t_task_lba = transport_lba_21(cdb);
+ 		ret = TGCS_DATA_SG_IO_CDB;
+ 		break;
+ 	case WRITE_10:
+@@ -3229,7 +3220,7 @@ static int transport_generic_cmd_sequenc
+ 			return TGCS_UNSUPPORTED_CDB;
+ 		size = transport_get_size(sectors, cdb, cmd);
+ 		cmd->transport_split_cdb = &split_cdb_XX_10;
+-		cmd->transport_get_lba = &transport_lba_32;
++		T_TASK(cmd)->t_task_lba = transport_lba_32(cdb);
+ 		T_TASK(cmd)->t_tasks_fua = (cdb[1] & 0x8);
+ 		ret = TGCS_DATA_SG_IO_CDB;
+ 		break;
+@@ -3239,7 +3230,7 @@ static int transport_generic_cmd_sequenc
+ 			return TGCS_UNSUPPORTED_CDB;
+ 		size = transport_get_size(sectors, cdb, cmd);
+ 		cmd->transport_split_cdb = &split_cdb_XX_12;
+-		cmd->transport_get_lba = &transport_lba_32;
++		T_TASK(cmd)->t_task_lba = transport_lba_32(cdb);
+ 		T_TASK(cmd)->t_tasks_fua = (cdb[1] & 0x8);
+ 		ret = TGCS_DATA_SG_IO_CDB;
+ 		break;
+@@ -3249,7 +3240,7 @@ static int transport_generic_cmd_sequenc
+ 			return TGCS_UNSUPPORTED_CDB;
+ 		size = transport_get_size(sectors, cdb, cmd);
+ 		cmd->transport_split_cdb = &split_cdb_XX_16;
+-		cmd->transport_get_long_lba = &transport_lba_64;
++		T_TASK(cmd)->t_task_lba = transport_lba_64(cdb);
+ 		T_TASK(cmd)->t_tasks_fua = (cdb[1] & 0x8);
+ 		ret = TGCS_DATA_SG_IO_CDB;
+ 		break;
+@@ -3262,7 +3253,7 @@ static int transport_generic_cmd_sequenc
+ 			return TGCS_UNSUPPORTED_CDB;
+ 		size = transport_get_size(sectors, cdb, cmd);
+ 		cmd->transport_split_cdb = &split_cdb_XX_10;
+-		cmd->transport_get_lba = &transport_lba_32;
++		T_TASK(cmd)->t_task_lba = transport_lba_32(cdb);
+ 		passthrough = (TRANSPORT(dev)->transport_type ==
+ 				TRANSPORT_PLUGIN_PHBA_PDEV);
+ 		/*
+@@ -3297,7 +3288,7 @@ static int transport_generic_cmd_sequenc
+ 			 * XDWRITE_READ_32 logic.
+ 			 */
+ 			cmd->transport_split_cdb = &split_cdb_XX_32;
+-			cmd->transport_get_long_lba = &transport_lba_64_ext;
++			T_TASK(cmd)->t_task_lba = transport_lba_64_ext(cdb);
+ 			/*
+ 			 * Skip the remaining assignments for TCM/PSCSI passthrough
+ 			 */
+Index: lio-core/include/target/target_core_base.h
 ===================================================================
---- lio-core.orig/drivers/target/target_core_rd.c	2010-11-29 19:33:01.715003703 +0100
-+++ lio-core/drivers/target/target_core_rd.c	2010-11-29 19:33:14.173020046 +0100
-@@ -1017,15 +1017,6 @@ static u32 rd_get_device_type(struct se_
- 	return TYPE_DISK;
- }
- 
--/*	rd_get_dma_length(): (Part of se_subsystem_api_t template)
-- *
-- *
-- */
--static u32 rd_get_dma_length(u32 task_size, struct se_device *dev)
--{
--	return PAGE_SIZE;
--}
--
- static sector_t rd_get_blocks(struct se_device *dev)
- {
- 	struct rd_dev *rd_dev = dev->dev_ptr;
-@@ -1052,7 +1043,6 @@ static struct se_subsystem_api rd_dr_tem
- 	.get_cdb		= rd_get_cdb,
- 	.get_device_rev		= rd_get_device_rev,
- 	.get_device_type	= rd_get_device_type,
--	.get_dma_length		= rd_get_dma_length,
- 	.get_blocks		= rd_get_blocks,
- 	.do_se_mem_map		= rd_DIRECT_do_se_mem_map,
- };
-@@ -1074,7 +1064,6 @@ static struct se_subsystem_api rd_mcp_te
- 	.get_cdb		= rd_get_cdb,
- 	.get_device_rev		= rd_get_device_rev,
- 	.get_device_type	= rd_get_device_type,
--	.get_dma_length		= rd_get_dma_length,
- 	.get_blocks		= rd_get_blocks,
- };
- 
-Index: lio-core/drivers/target/target_core_stgt.c
-===================================================================
---- lio-core.orig/drivers/target/target_core_stgt.c	2010-11-29 19:33:01.724003145 +0100
-+++ lio-core/drivers/target/target_core_stgt.c	2010-11-29 19:33:14.177031221 +0100
-@@ -514,15 +514,6 @@ static u32 stgt_get_device_type(struct s
- 	return sd->type;
- }
- 
--/*	stgt_get_dma_length():
-- *
-- *
-- */
--static u32 stgt_get_dma_length(u32 task_size, struct se_device *dev)
--{
--	return PAGE_SIZE;
--}
--
- /*	stgt_handle_SAM_STATUS_failures():
-  *
-  *
-@@ -609,7 +600,6 @@ static struct se_subsystem_api stgt_temp
- 	.get_sense_buffer	= stgt_get_sense_buffer,
- 	.get_device_rev		= stgt_get_device_rev,
- 	.get_device_type	= stgt_get_device_type,
--	.get_dma_length		= stgt_get_dma_length,
- };
- 
- static int __init stgt_module_init(void)
-Index: lio-core/include/target/target_core_transport.h
-===================================================================
---- lio-core.orig/include/target/target_core_transport.h	2010-11-29 19:33:01.676004681 +0100
-+++ lio-core/include/target/target_core_transport.h	2010-11-29 19:33:14.182005379 +0100
-@@ -342,10 +342,6 @@ struct se_subsystem_api {
- 	 */
- 	u32 (*get_device_type)(struct se_device *);
- 	/*
--	 * get_dma_length():
--	 */
--	u32 (*get_dma_length)(u32, struct se_device *);
--	/*
- 	 * Get the sector_t from a subsystem backstore..
- 	 */
- 	sector_t (*get_blocks)(struct se_device *);
-Index: lio-core/drivers/target/target_core_pscsi.c
-===================================================================
---- lio-core.orig/drivers/target/target_core_pscsi.c	2010-11-29 19:33:15.180003285 +0100
-+++ lio-core/drivers/target/target_core_pscsi.c	2010-11-29 19:33:36.257004472 +0100
-@@ -1361,15 +1361,6 @@ static u32 pscsi_get_device_type(struct
- 	return sd->type;
- }
- 
--/*	pscsi_get_dma_length():
-- *
-- *
-- */
--static u32 pscsi_get_dma_length(u32 task_size, struct se_device *dev)
--{
--	return PAGE_SIZE;
--}
--
- static sector_t pscsi_get_blocks(struct se_device *dev)
- {
- 	struct pscsi_dev_virt *pdv = dev->dev_ptr;
-@@ -1459,7 +1450,6 @@ static struct se_subsystem_api pscsi_tem
- 	.get_sense_buffer	= pscsi_get_sense_buffer,
- 	.get_device_rev		= pscsi_get_device_rev,
- 	.get_device_type	= pscsi_get_device_type,
--	.get_dma_length		= pscsi_get_dma_length,
- 	.get_blocks		= pscsi_get_blocks,
- };
- 
+--- lio-core.orig/include/target/target_core_base.h	2010-11-29 19:45:26.207004193 +0100
++++ lio-core/include/target/target_core_base.h	2010-11-29 19:45:30.786254087 +0100
+@@ -531,8 +531,6 @@ struct se_cmd {
+ 	struct se_transport_task t_task_backstore;
+ 	struct target_core_fabric_ops *se_tfo;
+ 	int (*transport_emulate_cdb)(struct se_cmd *);
+-	u32 (*transport_get_lba)(unsigned char *);
+-	unsigned long long (*transport_get_long_lba)(unsigned char *);
+ 	void (*transport_split_cdb)(unsigned long long, u32 *, unsigned char *);
+ 	void (*transport_wait_for_tasks)(struct se_cmd *, int, int);
+ 	void (*transport_complete_callback)(struct se_cmd *);
