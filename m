@@ -1,24 +1,45 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
 Subject: RE: [PATCH 0/3] megaraid_sas: Convert to host_lock less w/
 	interrupts disabled internally
-Date: Tue, 30 Nov 2010 14:05:59 -0800
-Message-ID: <1291154759.17194.133.camel@haakon2.linux-iscsi.org>
+Date: Tue, 30 Nov 2010 15:30:05 -0700
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30106BC00B8@cosmail02.lsi.com>
 References: <1290928656-31116-1-git-send-email-nab@linux-iscsi.org>
 	 <4B6A08C587958942AA3002690DD4F8C30106B1E5D6@cosmail02.lsi.com>
 	 <1291152112.17194.121.camel@haakon2.linux-iscsi.org>
+ <1291154759.17194.133.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:32921 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752400Ab0K3WLe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2010 17:11:34 -0500
-In-Reply-To: <1291152112.17194.121.camel@haakon2.linux-iscsi.org>
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:53602 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755109Ab0K3W3u convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2010 17:29:50 -0500
+In-Reply-To: <1291154759.17194.133.camel@haakon2.linux-iscsi.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@suse.de>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
+
+Nicholas,
+
+Thanks for put it back.  This set (to NULL) is in original megasas_get_cmd  src.  
+
+Can you share your testing with us (how much test you did in lock_less kernel)?  We don't do any test with this kernel..
+
+Thanks,
+
+Bo Yang
+
+
+-----Original Message-----
+From: Nicholas A. Bellinger [mailto:nab@linux-iscsi.org] 
+Sent: Tuesday, November 30, 2010 5:06 PM
+To: Yang, Bo
+Cc: linux-scsi; Hannes Reinecke; Christoph Hellwig; James Bottomley; Daftardar, Jayant
+Subject: RE: [PATCH 0/3] megaraid_sas: Convert to host_lock less w/ interrupts disabled internally
 
 On Tue, 2010-11-30 at 13:21 -0800, Nicholas A. Bellinger wrote:
 > On Mon, 2010-11-29 at 23:26 -0700, Yang, Bo wrote:
