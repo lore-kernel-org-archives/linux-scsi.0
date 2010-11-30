@@ -1,183 +1,68 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 0/3] megaraid_sas: Convert to host_lock less w/
-	interrupts disabled internally
-Date: Tue, 30 Nov 2010 15:30:05 -0700
-Message-ID: <4B6A08C587958942AA3002690DD4F8C30106BC00B8@cosmail02.lsi.com>
-References: <1290928656-31116-1-git-send-email-nab@linux-iscsi.org>
-	 <4B6A08C587958942AA3002690DD4F8C30106B1E5D6@cosmail02.lsi.com>
-	 <1291152112.17194.121.camel@haakon2.linux-iscsi.org>
- <1291154759.17194.133.camel@haakon2.linux-iscsi.org>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: training mpath to discern between SCSI errors
+Date: Tue, 30 Nov 2010 17:59:56 -0500
+Message-ID: <20101130225956.GA8882@redhat.com>
+References: <20100825155918.GB8509@redhat.com>
+ <4C7B984E.4070802@suse.de>
+ <4C7B9F14.9080900@mvista.com>
+ <4C7BA670.2060303@suse.de>
+ <4C7BC5B4.3010707@suse.de>
+ <4CBC00B3.7090603@ce.jp.nec.com>
+ <4CBC35AE.9050002@suse.de>
+ <20101119031149.GA28455@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:53602 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755109Ab0K3W3u convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2010 17:29:50 -0500
-In-Reply-To: <1291154759.17194.133.camel@haakon2.linux-iscsi.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20101119031149.GA28455@us.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@suse.de>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-Nicholas,
+On Thu, Nov 18 2010 at 10:11pm -0500,
+Malahal Naineni <malahal@us.ibm.com> wrote:
 
-Thanks for put it back.  This set (to NULL) is in original megasas_get_cmd  src.  
-
-Can you share your testing with us (how much test you did in lock_less kernel)?  We don't do any test with this kernel..
-
-Thanks,
-
-Bo Yang
-
-
------Original Message-----
-From: Nicholas A. Bellinger [mailto:nab@linux-iscsi.org] 
-Sent: Tuesday, November 30, 2010 5:06 PM
-To: Yang, Bo
-Cc: linux-scsi; Hannes Reinecke; Christoph Hellwig; James Bottomley; Daftardar, Jayant
-Subject: RE: [PATCH 0/3] megaraid_sas: Convert to host_lock less w/ interrupts disabled internally
-
-On Tue, 2010-11-30 at 13:21 -0800, Nicholas A. Bellinger wrote:
-> On Mon, 2010-11-29 at 23:26 -0700, Yang, Bo wrote:
-> > Nicholas,
-> >
-> > Thanks for your patches (patches 1 -3).  We need to build the driver and provide it to our testing team to do
-> > the full verification on lock_less kernel.
+> Hannes Reinecke [hare@suse.de] wrote:
+> > > Also (although this might be a bit off topic from your patch),
+> > > can we expand such a distinction to what should be logged?
+> > > Currently, it's difficult to distinguish important SCSI/block errors
+> > > and less important ones in kernel log.
+> > > For example, when I get a link failure on sda, kernel prints something
+> > > like below, regardless of whether the I/O is recovered by multipathing or not:
+> > >   end_request: I/O error, dev sda, sector XXXXX
+> > > 
+> > Indeed, when using the above we could be modifying the above
+> > message, eg by
+> > 
+> > end_request: transport error, dev sda, sector XXXXX
+> > 
+> > or
+> > 
+> > end_request: target error, dev sda, sector XXXXX
+> > 
+> > which would improve the output noticeable.
+> > 
+> > > Setting REQ_QUIET in dm-multipath could mask the message
+> > > but also other important ones in SCSI.
+> > > 
+> > Hmm. Not sure about that, but I think the above modifications will
+> > be useful already.
+> > 
+> > I'll be sending an updated patch.
 > 
-> > The patch 2 and patch 3 changed the driver's major routines (I/O, get/return cmds routines and OCR routine).
-> > I will keep update after we did the internal patch re-view for those changes as well as the testing team
-> > give us the report.
-> > 
-> 
-> Great, thanks for moving forward on the lock_less conversion..  Please
-> let me know if you have any other questions.
-> 
-> > By the way, can you send me the full link of: lio-core-2.6.git/lock_less-LLDs-for-38-v2?  I am try to understand the changes for patch 3
-> 
-> 
-> The patch #3 in full context is available here:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=blob;f=drivers/scsi/megaraid/megaraid_sas.c;h=c42e1e4ef8c9923d9a930fa631f8d65455afadd6;hb=lock_less-LLDs-for-38-v2
-> 
-> Thanks!
-> 
-> --nab
-> 
-> 
+> Hannes, is there an updated version of this patch? It applied fine with
+> Linus git tree with a minor reject! I would like to test an updated
+> version if you have one (the update seems to refer to better logging
+> only, right?).
 
-Hi Bo,
+Hannes,
 
-I also noticed that __megasas_get_cmd() still needs the initial *cmd =
-NULL assignment.  Pushing the following into lock_less-LLDs-for-38-v2
-now:
+Any chance you've had time to fold your proposed logging changes in and
+rebase this patch?  Could you post that updated patch?
 
-Subject: [PATCH] megaraid_sas: Add NULL assignment in __megasas_get_cmd()
+I'd like to help see this patch through to inclussion when 2.6.38 merge
+window opens.  I can help with further review, testing and development.
 
-This patch changes the initial struct megasas_cmd *cmd to NULL,
-which follows the pre lock_less conversion code.
-
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/megaraid/megaraid_sas.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
-index c42e1e4..be956a5 100644
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -131,7 +131,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- static struct megasas_cmd *
- __megasas_get_cmd(struct megasas_instance *instance)
- {
--       struct megasas_cmd *cmd;
-+       struct megasas_cmd *cmd = NULL;
-
-        if (!list_empty(&instance->cmd_pool)) {
-                cmd = list_entry((&instance->cmd_pool)->next,
--- 
-1.7.2.3
-
-Thanks!
-
---nab
-
-> > +	struct megasas_cmd *cmd;
-> >  	unsigned long flags;
-> > -	struct megasas_cmd *cmd = NULL;
-> > 
-> > And 
-> > 
-> > +megasas_get_cmd(struct megasas_instance *instance) {
-> > +	struct megasas_cmd *cmd;
-> > +	unsigned long flags;
-> > +
-> > +	spin_lock_irqsave(&instance->cmd_pool_lock, flags);
-> > +	cmd = __megasas_get_cmd(instance);
-> >  	spin_unlock_irqrestore(&instance->cmd_pool_lock, flags);
-> > +
-> >  	return cmd;
-> >  }     
-> > 
-> > Regards,
-> > 
-> > Bo Yang  
-> > 
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Nicholas A. Bellinger
-> > Sent: Sunday, November 28, 2010 2:18 AM
-> > To: linux-scsi; Hannes Reinecke; Yang, Bo
-> > Cc: Christoph Hellwig; James Bottomley; Nicholas Bellinger
-> > Subject: [PATCH 0/3] megaraid_sas: Convert to host_lock less w/ interrupts disabled internally
-> > 
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> > Greetings Hannes, Bo and Co,
-> > 
-> > This series converts megaraid_sas to run in modern host_lock-less mode
-> > for >= .37-rc3+ with interrupts disabled internally around megasas_instance->hba_lock.
-> > This series is currently living in lio-core-2.6.git/lock_less-LLDs-for-38-v2,
-> > and is intended for .38 mainline code.
-> > 
-> > The first patch adds a handful of missing barriers around instance->fw_outstanding
-> > usage w/ atomic_add() and atomic_dec().
-> > 
-> > The second converts instance->issuepend_done to an atomic_t, along with
-> > the necessary assignments in order to run w/ Scsi_Host->host_lock, and
-> > without instance->hba_lock.
-> > 
-> > The third patch does the actual conversion, and adds a __megasas_get_cmd()
-> > usased by megasas_queue_command() w/ instance->hba_lock, along with
-> > being held for megasas_build_ldio() and megasas_build_dcdb() in order
-> > to locate the proper frame for struct megasas_cmd.  This is really the
-> > one major change in order to get host_lock-less to function with interrupts
-> > disabled around hba_lock.
-> > 
-> > So far this has been tested with Hannes's QEMU 8708EM2 HBA emulation with
-> > TCM_Loop backends using SG_IO from KVM host in a paired Host/Guest .37-rc3
-> > environment.  This has not been tested on real silicon yet, but I believe
-> > this series should be working there as well.
-> > 
-> > Comments are welcome, thanks!
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > 
-> > Nicholas Bellinger (3):
-> >   megaraid_sas: Add smp_mb__after_atomic_*() for
-> >     instance->fw_outstanding
-> >   megaraid_sas: Convert instance->issuepend_done to atomic_t
-> >   megaraid_sas: Convert SHT->queuecommand() to run host_lock-less
-> > 
-> >  drivers/scsi/megaraid/megaraid_sas.c |   84 ++++++++++++++++++++++-----------
-> >  drivers/scsi/megaraid/megaraid_sas.h |    2 +-
-> >  2 files changed, 57 insertions(+), 29 deletions(-)
-> > 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Please advise, thanks.
+Mike
