@@ -1,42 +1,38 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH] [SCSI] megaraid_sas: Declare poll_aen_lock as static
-Date: Tue, 30 Nov 2010 00:06:28 -0700
-Message-ID: <4B6A08C587958942AA3002690DD4F8C30106B1E5D8@cosmail02.lsi.com>
-References: <1290893835.3292.44.camel@localhost>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 18652] mptscsih: ioc0: attempting task abort when heavy disk
+ operations on MPT SAS
+Date: Tue, 30 Nov 2010 09:55:24 GMT
+Message-ID: <201011300955.oAU9tOjX026524@demeter1.kernel.org>
+References: <bug-18652-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:45463 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753456Ab0K3HGN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2010 02:06:13 -0500
-In-Reply-To: <1290893835.3292.44.camel@localhost>
-Content-Language: en-US
+Received: from demeter1.kernel.org ([140.211.167.39]:42671 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754943Ab0K3JzZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2010 04:55:25 -0500
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id oAU9tO6G026525
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Nov 2010 09:55:24 GMT
+In-Reply-To: <bug-18652-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ben Hutchings <ben@decadent.org.uk>, "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: DL-MegaRAID Linux <megaraidlinux@lsi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-QmVuLA0KDQpJIGFsc28gZG9uJ3QgZmluZCBvdXQgdGhlIG5lZ2F0aXZlIGZvciB0aGUgb3JpZ2lu
-YWwgZGVmaW5lLg0KDQpUaGFua3MsDQoNCkJvIFlhbmcNCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdl
-LS0tLS0NCkZyb206IEJlbiBIdXRjaGluZ3MgW21haWx0bzpiZW5AZGVjYWRlbnQub3JnLnVrXSAN
-ClNlbnQ6IFNhdHVyZGF5LCBOb3ZlbWJlciAyNywgMjAxMCA0OjM3IFBNDQpUbzogSmFtZXMgRS5K
-LiBCb3R0b21sZXkNCkNjOiBETC1NZWdhUkFJRCBMaW51eDsgbGludXgtc2NzaUB2Z2VyLmtlcm5l
-bC5vcmcNClN1YmplY3Q6IFtQQVRDSF0gW1NDU0ldIG1lZ2FyYWlkX3NhczogRGVjbGFyZSBwb2xs
-X2Flbl9sb2NrIGFzIHN0YXRpYw0KDQpUaGVyZSBpcyBubyByZWFzb24gZm9yIHRoaXMgdG8gYmUg
-ZXh0ZXJuLg0KDQpTaWduZWQtb2ZmLWJ5OiBCZW4gSHV0Y2hpbmdzIDxiZW5AZGVjYWRlbnQub3Jn
-LnVrPg0KLS0tDQogZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jIHwgICAgMiAr
-LQ0KIDEgZmlsZXMgY2hhbmdlZCwgMSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9ucygtKQ0KDQpk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jIGIvZHJpdmVy
-cy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jDQppbmRleCA3NDUxYmMwLi43MDUwYTg4IDEw
-MDY0NA0KLS0tIGEvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5jDQorKysgYi9k
-cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmMNCkBAIC0xMTUsNyArMTE1LDcgQEAg
-c3RhdGljIHUzMiBtZWdhc2FzX2RiZ19sdmw7DQogc3RhdGljIHUzMiBzdXBwb3J0X2RldmljZV9j
-aGFuZ2U7DQogDQogLyogZGVmaW5lIGxvY2sgZm9yIGFlbiBwb2xsICovDQotc3BpbmxvY2tfdCBw
-b2xsX2Flbl9sb2NrOw0KK3N0YXRpYyBzcGlubG9ja190IHBvbGxfYWVuX2xvY2s7DQogDQogc3Rh
-dGljIHZvaWQNCiBtZWdhc2FzX2NvbXBsZXRlX2NtZChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAq
-aW5zdGFuY2UsIHN0cnVjdCBtZWdhc2FzX2NtZCAqY21kLA0KLS0gDQoxLjcuMi4zDQoNCg0KLS0g
-DQpCZW4gSHV0Y2hpbmdzDQpPbmNlIGEgam9iIGlzIGZvdWxlZCB1cCwgYW55dGhpbmcgZG9uZSB0
-byBpbXByb3ZlIGl0IG1ha2VzIGl0IHdvcnNlLg0K
+https://bugzilla.kernel.org/show_bug.cgi?id=18652
+
+
+ksb@inbox.lv changed:
+
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+     Kernel Version|2.6.35.4 - 2.6.36           |2.6.35.4 - 2.6.36.1
+
+
+
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
