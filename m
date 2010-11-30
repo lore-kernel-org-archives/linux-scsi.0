@@ -1,89 +1,94 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 8/9] scsi: megaraid_sas - Driver take some workloads from
- FW
-Date: Tue, 30 Nov 2010 16:57:38 +0100
-Message-ID: <4CF51EF2.1010606@redhat.com>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C30106A961D6@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C30106A961E4@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C30106A961F2@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C30106A96213@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C30106A96218@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C30106A9621E@cosmail02.lsi.com>	 <4B6A08C587958942AA3002690DD4F8C30106A96223@cosmail02.lsi.com> <1290189181.23556.77.camel@mulgrave.site> <4B6A08C587958942AA3002690DD4F8C30106B1DEB9@cosmail02.lsi.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: After memory pressure: can't read from tape anymore
+Date: Tue, 30 Nov 2010 18:10:06 +0200
+Message-ID: <4CF521DE.7020800@panasas.com>
+References: <1290971729.2814.13.camel@larosa>	 <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local> <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30106B1DEB9@cosmail02.lsi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, "Prabhakaran, Rajesh" <Rajesh.Prabhakaran@lsi.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from daytona.panasas.com ([67.152.220.89]:16770 "EHLO
+	daytona.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751168Ab0K3QKK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2010 11:10:10 -0500
+In-Reply-To: <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
+Cc: Kai Makisara <Kai.Makisara@kolumbus.fi>, linux-scsi@vger.kernel.org
 
-On 11/24/2010 04:22 PM, Yang, Bo wrote:
-> James,
->
-> Our megaraid sas driver only implemented the part of the XOR calculat=
-ion and copy capability(moving data between 2 buffers) for the RAID5 cm=
-ds which FW asks driver to do.  When fw received very heavy I/Os and th=
-ere are high pending cmds in FW, fw will ask the help from driver to fi=
-nish some cmds and reduce the fw heavy load.  Driver will only do part =
-of the RAID5 (not take the jobs) from FW.  Driver is not duplicating Pa=
-rity calculation done on dm/md.
->  =20
-Do I understand it right - it means that the computation is done someti=
-mes in the firmware and
-sometimes in the driver depending on the load? I think it is not good h=
-aving two complicated
-computations on two different places. Wouldn't it better to compute it =
-always in the driver?
-Could we get a module option for choosing this computation - a)automati=
-c, b)only in fw
-c)only in driver?
+On 11/30/2010 03:31 PM, Lukas Kolbe wrote:
+> On Mon, 2010-11-29 at 19:09 +0200, Kai Makisara wrote:
+> 
+> Hi,
+> 
+>>> On our backup system (2 LTO4 drives/Tandberg library via LSISAS1068E,
+>>> Kernel 2.6.36 with the stock Fusion MPT SAS Host driver 3.04.17 on
+>>> debian/squeeze), we see reproducible tape read and write failures after
+>>> the system was under memory pressure:
+>>>
+>>> [342567.297152] st0: Can't allocate 2097152 byte tape buffer.
+>>> [342569.316099] st0: Can't allocate 2097152 byte tape buffer.
+>>> [342570.805164] st0: Can't allocate 2097152 byte tape buffer.
+>>> [342571.958331] st0: Can't allocate 2097152 byte tape buffer.
+>>> [342572.704264] st0: Can't allocate 2097152 byte tape buffer.
+>>> [342873.737130] st: from_buffer offset overflow.
+>>>
+>>> Bacula is spewing this message every time it tries to access the tape
+>>> drive:
+>>> 28-Nov 19:58 sd1.techfak JobId 2857: Error: block.c:1002 Read error on fd=10 at file:blk 0:0 on device "drv2" (/dev/nst0). ERR=Input/output error
+>>>
+>>> By memory pressure, I mean that the KVM processes containing the
+>>> postgres-db (~20million files) and the bacula director have used all
+>>> available RAM, one of them used ~4GiB of its 12GiB swap for an hour or
+>>> so (by selecting a full restore, it seems that the whole directory tree
+>>> of the 15mio files backup gets read into memory). After this, I wasn't
+>>> able to read from the second tape drive anymore (/dev/st0); whereas the
+>>> first tape drive was restoring the data happily (it is currently about
+>>> halfway through a 3TiB restore from 5 tapes).
+>>>
+>>> This same behaviour appears when we're doing a few incremental backups;
+>>> after a while, it just isn't possible to use the tape drives anymore -
+>>> every I/O operation gives an I/O Error, even a simple dd bs=64k
+>>> count=10. After a restart, the system behaves correctly until
+>>> -seemingly- another memory pressure situation occured.
+>>>
+>> This is predictable. The maximum number of scatter/gather segments seems 
+>> to be 128. The st driver first tries to set up transfer directly from the 
+>> user buffer to the HBA. The user buffer is usually fragmented so that one 
+>> scatter/gather segment is used for each page. Assuming 4 kB page size, the 
+>> maximu size of the direct transfer is 128 x 4 = 512 kB.
+>>
+>> When this fails, the driver tries to allocate a kernel buffer so that 
+>> there larger than 4 kB physically contiguous segments. Let's assume that 
+>> it can find 128 16 kB segments. In this case the maximum block size is 
+>> 2048 kB. Memory pressure results in memory fragmentation and the driver 
+>> can't find large enough segments and allocation fails. This is what you 
+>> are seeing.
+> 
+> Reasonable explanation, thanks. What makes me wonder is why it still
+> fails *after* memory pressure was gone - ie free shows more than 4GiB of
+> free memory. I had the output of /proc/meminfo at that time but can't
+> find it anymore :/
+> 
+>> So, one solution is to use 512 kB block size. Another one is to try to 
+>> find out if the 128 segment limit is a physical limitation or just a 
+>> choice. In the latter case the mptsas driver could be modified to support 
+>> larger block size even after memory fragmentation.
+> 
+> Even with 64kb blocksize (dd bs=64k), I was getting I/O errors trying to
+> access the tape drive. I am now trying to upper the max_sg_segs
+> parameter to the st module (modinfo says 256 is the default; I'm trying
+> 1024 now) and see how well this works under memory pressure.
+> 
 
-Tomas
+It looks like something is broken/old-code in sr. Most important LLDs
+and block-layer scsi-ml fully support sg-chaining that effectively are
+able to deliver limitless (Only limited by HW) sg sizes. It looks like
+sr has some code that tries to allocate contiguous buffers larger than
+PAGE_SIZE. Why does it do that? It should not be necessary any more.
 
+>> Kai
+> 
 
-> Thanks,
->
-> Bo Yang =20
->
->
->
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@HansenPartnership.com]=20
-> Sent: Friday, November 19, 2010 12:53 PM
-> To: Yang, Bo
-> Cc: 'linux-scsi@vger.kernel.org'; 'akpm@osdl.org'; 'linux-kernel@vger=
-=2Ekernel.org'; Tomas Henzl
-> Subject: Re: [PATCH 8/9] scsi: megaraid_sas - Driver take some worklo=
-ads from FW
->
-> On Fri, 2010-11-19 at 10:43 -0700, Yang, Bo wrote:
->  =20
->> Driver added the new feature to take some of the workloads from FW t=
-o increase
->> performance of the iMR controller.  FW assigns the read cmds back to=
- driver
->> which will increase the performance for megaraid sas iMR controller.
->>    =20
-> Just on a process note: you don't have to cc me at every known
-> address ... I do read linux-scsi ...
->
-> My first take on this patch is that you're basically passing data bac=
-k
-> to the kernel for RAID-N parity calculations.  This effectively makes
-> your RAID one of those pseudo HW ones.  In which case, why not simply
-> abandon the HW raid piece and have it all done by DM/MD, which are we=
-ll
-> optimised for all types of RAID?  The reason for asking is that we're
-> trying to reduce the number of in-kernel raid implementations and thi=
-s
-> is going in the wrong direction.
->
-> James
->
->
-> N=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDr=EF=BF=BD=EF=BF=BDy=EF=
-=BF=BD=EF=BF=BD=EF=BF=BDb=EF=BF=BDX=EF=BF=BD=EF=BF=BD=C7=A7v=EF=BF=BD^=EF=
-=BF=BD)=DE=BA{.n=EF=BF=BD+=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BD{=EF=BF=BD=
-=EF=BF=BD=EF=BF=BD"=EF=BF=BD{ay=EF=BF=BD=1D=CA=87=DA=99=EF=BF=BD,j=07=EF=
-=BF=BD=EF=BF=BDf=EF=BF=BD=EF=BF=BD=EF=BF=BDh=EF=BF=BD=EF=BF=BD=EF=BF=BD=
-z=EF=BF=BD=1E=EF=BF=BDw=EF=BF=BD=EF=BF=BD=EF=BF=BD=0C=EF=BF=BD=EF=BF=BD=
-=EF=BF=BDj:+v=EF=BF=BD=EF=BF=BD=EF=BF=BDw=EF=BF=BDj=EF=BF=BDm=EF=BF=BD=EF=
-=BF=BD=EF=BF=BD=EF=BF=BD=07=EF=BF=BD=EF=BF=BD=EF=BF=BD=EF=BF=BDzZ+=EF=BF=
-=BD=EF=BF=BD=DD=A2j"=EF=BF=BD=EF=BF=BD!tml=3D
+Boaz
