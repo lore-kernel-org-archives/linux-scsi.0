@@ -1,50 +1,106 @@
-From: Maggie <xmzhang@brocade.com>
-Subject: [PATCH 0/2] bfa fix sparse check warnings
-Date: Mon, 29 Nov 2010 18:17:36 -0800
-Message-ID: <1291083456-10796-1-git-send-email-xmzhang@brocade.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 0/3] megaraid_sas: Convert to host_lock less w/
+ interrupts disabled internally
+Date: Mon, 29 Nov 2010 23:26:51 -0700
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30106B1E5D6@cosmail02.lsi.com>
+References: <1290928656-31116-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:44336 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751764Ab0K3Cka (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Nov 2010 21:40:30 -0500
+Received: from na3sys009aog102.obsmtp.com ([74.125.149.69]:41667 "EHLO
+	na3sys009aog102.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752595Ab0K3G0g convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2010 01:26:36 -0500
+In-Reply-To: <1290928656-31116-1-git-send-email-nab@linux-iscsi.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: adapter_linux_open_src_team@blc-10-10.brocade.com, Maggie <xmzhang@brocade.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@suse.de>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>
 
-This patch set fixes sparse check warnings. The first patch fixes all regular
-sparse check warning, and the second patch is the first round of fix for the 
-endianess check warnings from make C=2 CF="-D__CHECK_ENDIAN__".
+Nicholas,
 
-Maggie (2):
-  bfa: fix regular sparse check warnings.
-  bfa: fix endianess sparse check warnings
+Thanks for your patches (patches 1 -3).  We need to build the driver and provide it to our testing team to do the full verification on lock_less kernel.  The patch 2 and patch 3 changed the driver's major routines (I/O, get/return cmds routines and OCR routine).  I will keep update after we did the internal patch re-view for those changes as well as the testing team give us the report.
 
- drivers/scsi/bfa/bfa_cb_ioim.h   |    2 +-
- drivers/scsi/bfa/bfa_defs_svc.h  |    8 +-
- drivers/scsi/bfa/bfa_fc.h        |   50 ++++----
- drivers/scsi/bfa/bfa_fcbuild.c   |   44 ++++----
- drivers/scsi/bfa/bfa_fcbuild.h   |   28 +++---
- drivers/scsi/bfa/bfa_fcs.h       |   14 +-
- drivers/scsi/bfa/bfa_fcs_lport.c |  232 +++++++++++++++++++-------------------
- drivers/scsi/bfa/bfa_fcs_rport.c |   10 +--
- drivers/scsi/bfa/bfa_ioc.c       |    5 +-
- drivers/scsi/bfa/bfa_ioc.h       |   10 +-
- drivers/scsi/bfa/bfa_ioc_cb.c    |    2 +-
- drivers/scsi/bfa/bfa_ioc_ct.c    |    2 +-
- drivers/scsi/bfa/bfa_port.c      |    2 +-
- drivers/scsi/bfa/bfa_svc.c       |    4 +-
- drivers/scsi/bfa/bfad.c          |    4 +-
- drivers/scsi/bfa/bfad_attr.c     |    8 +-
- drivers/scsi/bfa/bfad_debugfs.c  |   42 ++++++-
- drivers/scsi/bfa/bfad_drv.h      |    6 +-
- drivers/scsi/bfa/bfi.h           |    4 +-
- drivers/scsi/bfa/bfi_ms.h        |   50 ++++----
- 20 files changed, 277 insertions(+), 250 deletions(-)
+By the way, can you send me the full link of: lio-core-2.6.git/lock_less-LLDs-for-38-v2?  I am try to understand the changes for patch 3
+
+
++	struct megasas_cmd *cmd;
+ 	unsigned long flags;
+-	struct megasas_cmd *cmd = NULL;
+
+And 
+
++megasas_get_cmd(struct megasas_instance *instance) {
++	struct megasas_cmd *cmd;
++	unsigned long flags;
++
++	spin_lock_irqsave(&instance->cmd_pool_lock, flags);
++	cmd = __megasas_get_cmd(instance);
+ 	spin_unlock_irqrestore(&instance->cmd_pool_lock, flags);
++
+ 	return cmd;
+ }     
+
+Regards,
+
+Bo Yang  
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Nicholas A. Bellinger
+Sent: Sunday, November 28, 2010 2:18 AM
+To: linux-scsi; Hannes Reinecke; Yang, Bo
+Cc: Christoph Hellwig; James Bottomley; Nicholas Bellinger
+Subject: [PATCH 0/3] megaraid_sas: Convert to host_lock less w/ interrupts disabled internally
+
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+
+Greetings Hannes, Bo and Co,
+
+This series converts megaraid_sas to run in modern host_lock-less mode
+for >= .37-rc3+ with interrupts disabled internally around megasas_instance->hba_lock.
+This series is currently living in lio-core-2.6.git/lock_less-LLDs-for-38-v2,
+and is intended for .38 mainline code.
+
+The first patch adds a handful of missing barriers around instance->fw_outstanding
+usage w/ atomic_add() and atomic_dec().
+
+The second converts instance->issuepend_done to an atomic_t, along with
+the necessary assignments in order to run w/ Scsi_Host->host_lock, and
+without instance->hba_lock.
+
+The third patch does the actual conversion, and adds a __megasas_get_cmd()
+usased by megasas_queue_command() w/ instance->hba_lock, along with
+being held for megasas_build_ldio() and megasas_build_dcdb() in order
+to locate the proper frame for struct megasas_cmd.  This is really the
+one major change in order to get host_lock-less to function with interrupts
+disabled around hba_lock.
+
+So far this has been tested with Hannes's QEMU 8708EM2 HBA emulation with
+TCM_Loop backends using SG_IO from KVM host in a paired Host/Guest .37-rc3
+environment.  This has not been tested on real silicon yet, but I believe
+this series should be working there as well.
+
+Comments are welcome, thanks!
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Nicholas Bellinger (3):
+  megaraid_sas: Add smp_mb__after_atomic_*() for
+    instance->fw_outstanding
+  megaraid_sas: Convert instance->issuepend_done to atomic_t
+  megaraid_sas: Convert SHT->queuecommand() to run host_lock-less
+
+ drivers/scsi/megaraid/megaraid_sas.c |   84 ++++++++++++++++++++++-----------
+ drivers/scsi/megaraid/megaraid_sas.h |    2 +-
+ 2 files changed, 57 insertions(+), 29 deletions(-)
 
 -- 
-1.7.2.1
+1.7.2.3
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
