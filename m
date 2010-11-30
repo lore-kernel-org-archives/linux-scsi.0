@@ -1,69 +1,80 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: After memory pressure: can't read from tape anymore
-Date: Tue, 30 Nov 2010 19:24:25 +0200
-Message-ID: <4CF53349.10509@panasas.com>
-References: <1290971729.2814.13.camel@larosa>  <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local> <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de> <4CF521DE.7020800@panasas.com> <alpine.LNX.2.00.1011301821210.9731@kai.makisara.local> <4CF52A03.2000704@panasas.com> <alpine.LNX.2.00.1011301853300.9731@kai.makisara.local>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 7/9] scsi: megaraid_sas - Driver created the self work
+ queue for OCR
+Date: Tue, 30 Nov 2010 11:05:35 -0700
+Message-ID: <4B6A08C587958942AA3002690DD4F8C30106BBFEB5@cosmail02.lsi.com>
+References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C30106A961D6@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C30106A961E4@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C30106A961F2@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C30106A96213@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C30106A96218@cosmail02.lsi.com>
+ <4B6A08C587958942AA3002690DD4F8C30106A9621E@cosmail02.lsi.com>
+ <4CF5221E.8080603@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:20334 "EHLO
-	daytona.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754732Ab0K3RY2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Nov 2010 12:24:28 -0500
-In-Reply-To: <alpine.LNX.2.00.1011301853300.9731@kai.makisara.local>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CF5221E.8080603@redhat.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>, linux-scsi@vger.kernel.org
 
-On 11/30/2010 07:04 PM, Kai Makisara wrote:
-> On Tue, 30 Nov 2010, Boaz Harrosh wrote:
-> 
->> On 11/30/2010 06:23 PM, Kai Makisara wrote:
->>> On Tue, 30 Nov 2010, Boaz Harrosh wrote:
->>>
->>>> On 11/30/2010 03:31 PM, Lukas Kolbe wrote:
->>>>> On Mon, 2010-11-29 at 19:09 +0200, Kai Makisara wrote:
->>>>>
->>> ....
->>>> It looks like something is broken/old-code in sr. Most important LLDs
->>>> and block-layer scsi-ml fully support sg-chaining that effectively are
->>>> able to deliver limitless (Only limited by HW) sg sizes. It looks like
->>>> sr has some code that tries to allocate contiguous buffers larger than
->>>> PAGE_SIZE. Why does it do that? It should not be necessary any more.
->>>>
->>> The relevant driver is st 
->>
->> Sorry I meant st, yes.
->>
->>> and it use sg chaining when necessary. I tried 
->>> to explain that the effective limit in this case comes from mptsas. I 
->>> don't know if it is HW limit or driver limit.
->>>
->>
->> Than I don't understand where is the failing allocation. Where in the
->> code path anyone is trying to allocate something bigger then a page?
->> Please explain?
->>
-> The function enlarge_buffer() in st.c tries to allocate a driver buffer 
-> that is large enough for one block so that the number of contiguous memory 
-> blocks does not exceed the allowed maximum. Allocation is done using 
-> alloc_pages() (at line 3744 in st.c in 2.6.36), usually with order > 0.
-> 
+Tomas,
 
-I looked at enlarge_buffer() and it looks fragile and broken. If you really
-need a pointer eg:
-	STbuffer->b_data = page_address(STbuffer->reserved_pages[0]);
+In which case megasas_ocr_wq will hit NULL if create_workqueue create work queue success? If create_workqueue failed, OCR may have the problem.  But do you know if create_workqueue has the number limitation for creating work queues (how many work queue can it created? 10 or 20)?
 
-Than way not use vmalloc() for buffers larger then PAGE_SIZE? But better yet
-avoid it by keeping a pages_array or sg-list and operate on an aio type
-operations.
+Thanks,
 
-> Kai
+Bo Yang
 
-But I understand this is a lot of work on an old driver. Perhaps pre-allocate
-something big at startup. specified by user?
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com]
+Sent: Tuesday, November 30, 2010 11:11 AM 
+To: Yang, Bo
+Cc: 'James.Bottomley@HansenPartnership.com'; 'linux-scsi@vger.kernel.org'; 'akpm@osdl.org'; 'linux-kernel@vger.kernel.org'
+Subject: Re: [PATCH 7/9] scsi: megaraid_sas - Driver created the self work queue for OCR
 
-Thanks
-Boaz
+On 11/19/2010 06:37 PM, Yang, Bo wrote:
+> Driver created the owner work queue (don't use global work queue). This queue will be used for online controller reset routine.
+>
+> Signed-off-by Bo Yang<bo.yang@lsi.com>
+>
+> ---
+> drivers/scsi/megaraid/megaraid_sas.c |   13 ++++++++++++-
+>  1 file changed, 12 insertions(+), 1 deletion(-)
+>   
+> diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c
+> new/drivers/scsi/megaraid/megaraid_sas.c ---
+> old/drivers/scsi/megaraid/megaraid_sas.c 2010-11-17 13:46:11.000000000
+> -0500 +++ new/drivers/scsi/megaraid/megaraid_sas.c 2010-11-17
+> 13:47:46.000000000 -0500 @@ -108,6 +108,7 @@ static struct
+> megasas_mgmt_info megasas_ static struct fasync_struct
+> *megasas_async_queue; static DEFINE_MUTEX(megasas_async_queue_mutex);
+> +static struct workqueue_struct *megasas_ocr_wq; static int
+> megasas_poll_wait_aen; static
+> DECLARE_WAIT_QUEUE_HEAD(megasas_poll_wait); static u32
+> support_poll_for_event; @@ -2435,7 +2436,7 @@
+> megasas_deplete_reply_queue(struct megas printk(KERN_NOTICE "megasas:
+> fwState=%x, stage:%d\n", fw_state, instance->adprecovery); -
+> schedule_work(&instance->work_init); + queue_work(megasas_ocr_wq,
+> &instance->work_init); return IRQ_HANDLED; } else { @@ -5157,6
+> +5158,11 @@ static int __init megasas_init(void) goto err_pcidrv; } +
+> megasas_ocr_wq = create_workqueue("megasas_ocr"); + + if (
+> !megasas_ocr_wq ) + printk(KERN_DEBUG "megasas: Failed to create
+> workqueue.\n"); + 
+What happens later, when you pass the null pointer to the queue_work ?
+I'm not sure this will work.
+
+> rval = driver_create_file(&megasas_pci_driver.driver,
+> &driver_attr_version); if (rval) @@ -5228,6 +5234,11 @@ static void
+> __exit megasas_exit(void) &driver_attr_release_date);
+> driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
+> + if (megasas_ocr_wq) { + destroy_workqueue(megasas_ocr_wq); +
+> megasas_ocr_wq = NULL; + } +
+> pci_unregister_driver(&megasas_pci_driver);
+> unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl"); } 
