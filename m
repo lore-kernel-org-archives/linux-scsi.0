@@ -1,71 +1,74 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 19/27] libfc: fix fc_tm_done not freeing the allocated fsp pkt
-Date: Tue, 30 Nov 2010 16:19:35 -0800
-Message-ID: <20101201001935.18369.44484.stgit@localhost.localdomain>
+Subject: [PATCH 22/27] libfcoe: fix checking of conflicting fabrics in
+	fcoe_ctlr_select()
+Date: Tue, 30 Nov 2010 16:19:51 -0800
+Message-ID: <20101201001951.18369.1120.stgit@localhost.localdomain>
 References: <20101201001756.18369.7107.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:48861 "EHLO mga02.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:26147 "EHLO mga11.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753067Ab0LAATg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2010 19:19:36 -0500
+	id S1752798Ab0LAATw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2010 19:19:52 -0500
 In-Reply-To: <20101201001756.18369.7107.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Hillf Danton <dhillf@gmail.com>, Yi Zou <yi.zou@intel.com>
+Cc: Joe Eykholt <jeykholt@cisco.com>
 
-From: Yi Zou <yi.zou@intel.com>
+From: Joe Eykholt <jeykholt@cisco.com>
 
-Frame should be freed in fc_tm_done, this is an updated patch on the one
-initially submitted by Hillf Danton.
+The check for conflicting fabrics in fcoe_ctlr_select()
+ignores any FCFs that aren't usable.  This is a minor
+problem now but becomes more pronounced after later patches.
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
-Signed-off-by: Yi Zou <yi.zou@intel.com>
+Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_fcp.c |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |   17 ++++++++++-------
+ 1 files changed, 10 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index a25057d..12b639d 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1321,27 +1321,27 @@ static void fc_tm_done(struct fc_seq *seq, struct fc_frame *fp, void *arg)
- 		 *
- 		 * scsi-eh will escalate for when either happens.
- 		 */
--		return;
-+		goto out;
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index 4d0be20..826c260 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -1361,12 +1361,22 @@ static void fcoe_ctlr_select(struct fcoe_ctlr *fip)
+ {
+ 	struct fcoe_fcf *fcf;
+ 	struct fcoe_fcf *best = NULL;
++	struct fcoe_fcf *first;
++
++	first = list_first_entry(&fip->fcfs, struct fcoe_fcf, list);
+ 
+ 	list_for_each_entry(fcf, &fip->fcfs, list) {
+ 		LIBFCOE_FIP_DBG(fip, "consider FCF for fab %16.16llx "
+ 				"VFID %d map %x val %d\n",
+ 				fcf->fabric_name, fcf->vfid,
+ 				fcf->fc_map, fcoe_ctlr_mtu_valid(fcf));
++		if (fcf->fabric_name != first->fabric_name ||
++		    fcf->vfid != first->vfid ||
++		    fcf->fc_map != first->fc_map) {
++			LIBFCOE_FIP_DBG(fip, "Conflicting fabric, VFID, "
++					"or FC-MAP\n");
++			return NULL;
++		}
+ 		if (!fcoe_ctlr_fcf_usable(fcf)) {
+ 			LIBFCOE_FIP_DBG(fip, "FCF for fab %16.16llx "
+ 					"map %x %svalid %savailable\n",
+@@ -1380,13 +1390,6 @@ static void fcoe_ctlr_select(struct fcoe_ctlr *fip)
+ 			best = fcf;
+ 			continue;
+ 		}
+-		if (fcf->fabric_name != best->fabric_name ||
+-		    fcf->vfid != best->vfid ||
+-		    fcf->fc_map != best->fc_map) {
+-			LIBFCOE_FIP_DBG(fip, "Conflicting fabric, VFID, "
+-					"or FC-MAP\n");
+-			return;
+-		}
+ 		if (fcf->pri < best->pri)
+ 			best = fcf;
  	}
- 
- 	if (fc_fcp_lock_pkt(fsp))
--		return;
-+		goto out;
- 
- 	/*
- 	 * raced with eh timeout handler.
- 	 */
--	if (!fsp->seq_ptr || !fsp->wait_for_comp) {
--		spin_unlock_bh(&fsp->scsi_pkt_lock);
--		return;
--	}
-+	if (!fsp->seq_ptr || !fsp->wait_for_comp)
-+		goto out_unlock;
- 
- 	fh = fc_frame_header_get(fp);
- 	if (fh->fh_type != FC_TYPE_BLS)
- 		fc_fcp_resp(fsp, fp);
- 	fsp->seq_ptr = NULL;
- 	fsp->lp->tt.exch_done(seq);
--	fc_frame_free(fp);
-+out_unlock:
- 	fc_fcp_unlock_pkt(fsp);
-+out:
-+	fc_frame_free(fp);
- }
- 
- /**
 
