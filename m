@@ -1,122 +1,126 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] scsi: fix libfc sparse warnings
-Date: Wed, 1 Dec 2010 11:04:05 -0800
-Message-ID: <20101201110405.1cc8f6c6.randy.dunlap@oracle.com>
-References: <20101201001756.18369.7107.stgit@localhost.localdomain>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 1/1] hpsa: fix redefinition of PCI_DEVICE_ID_CISSF
+Date: Wed, 1 Dec 2010 22:50:43 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A77887D105549FE@GVW0547EXC.americas.hpqcorp.net>
+References: <20101201171607.GA17943@beardog.cce.hp.com>
+ <20101201144748.cd01d4d1.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:52218 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755908Ab0LATEa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2010 14:04:30 -0500
-In-Reply-To: <20101201001756.18369.7107.stgit@localhost.localdomain>
+Received: from g1t0026.austin.hp.com ([15.216.28.33]:18444 "EHLO
+	g1t0026.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756244Ab0LAWvT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2010 17:51:19 -0500
+In-Reply-To: <20101201144748.cd01d4d1.akpm@linux-foundation.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, hplk <hplk@lists.hp.com>
 
 
-If not already included elsewhere, this could be added.
 
----
-From: Randy Dunlap <randy.dunlap@oracle.com>
+> -----Original Message-----
+> From: Andrew Morton [mailto:akpm@linux-foundation.org]
+> Sent: Wednesday, December 01, 2010 4:48 PM
+> To: Miller, Mike (OS Dev)
+> Cc: James E. J. Bottomley; LKML; LKML-scsi; hplk
+> Subject: Re: [PATCH 1/1] hpsa: fix redefinition of PCI_DEVICE_ID_CISSF
+> 
+> On Wed, 1 Dec 2010 11:16:07 -0600
+> Mike Miller <mike.miller@hp.com> wrote:
+> 
+> > hpsa: a pci device ID is defined twice
+> >
+> > From: Mike Miller <mike.miller@hp.com>
+> >
+> > PCI_DEVICE_ID_CISSF is defined as 323b in pci_ids.h but redefined as
+> 3fff in
+> > hpsa.c. The ID of 3fff will _never_ ship as a standalone controller.
+> It is
+> > intended only as part a complete storage solution. As such, this
+> patch
+> > removes the redefinition and the StorageWorks P1210m from the product
+> table.
+> >
+> > It also removes a duplicate line for the "unknown" controller
+> support.
+> 
+> It is missing a signed-off-by:, and please quote the warning message
+> when fixing warnings.
 
-Fix sparse warning for non-ANSI function declaration.
-Declare workqueue structs as static.
+Sorry about that. I guess I expected stg to do that.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/scsi/libfc/fc_exch.c  |    6 +++---
- drivers/scsi/libfc/fc_fcp.c   |    6 +++---
- drivers/scsi/libfc/fc_rport.c |    6 +++---
- 3 files changed, 9 insertions(+), 9 deletions(-)
+> 
+> Also, this patch fixes a bug, doesn't it?  323b controllers simply
+> won't work?
 
---- lnx-2637-rc4.orig/drivers/scsi/libfc/fc_exch.c
-+++ lnx-2637-rc4/drivers/scsi/libfc/fc_exch.c
-@@ -38,7 +38,7 @@ u16	fc_cpu_mask;		/* cpu mask for possib
- EXPORT_SYMBOL(fc_cpu_mask);
- static u16	fc_cpu_order;	/* 2's power to represent total possible cpus */
- static struct kmem_cache *fc_em_cachep;	       /* cache for exchanges */
--struct workqueue_struct *fc_exch_workqueue;
-+static struct workqueue_struct *fc_exch_workqueue;
- 
- /*
-  * Structure and function definitions for managing Fibre Channel Exchanges
-@@ -2325,7 +2325,7 @@ EXPORT_SYMBOL(fc_exch_init);
- /**
-  * fc_setup_exch_mgr() - Setup an exchange manager
-  */
--int fc_setup_exch_mgr()
-+int fc_setup_exch_mgr(void)
- {
- 	fc_em_cachep = kmem_cache_create("libfc_em", sizeof(struct fc_exch),
- 					 0, SLAB_HWCACHE_ALIGN, NULL);
-@@ -2363,7 +2363,7 @@ int fc_setup_exch_mgr()
- /**
-  * fc_destroy_exch_mgr() - Destroy an exchange manager
-  */
--void fc_destroy_exch_mgr()
-+void fc_destroy_exch_mgr(void)
- {
- 	destroy_workqueue(fc_exch_workqueue);
- 	kmem_cache_destroy(fc_em_cachep);
---- lnx-2637-rc4.orig/drivers/scsi/libfc/fc_fcp.c
-+++ lnx-2637-rc4/drivers/scsi/libfc/fc_fcp.c
-@@ -42,7 +42,7 @@
- 
- #include "fc_libfc.h"
- 
--struct kmem_cache *scsi_pkt_cachep;
-+static struct kmem_cache *scsi_pkt_cachep;
- 
- /* SRB state definitions */
- #define FC_SRB_FREE		0		/* cmd is free */
-@@ -2196,7 +2196,7 @@ void fc_fcp_destroy(struct fc_lport *lpo
- }
- EXPORT_SYMBOL(fc_fcp_destroy);
- 
--int fc_setup_fcp()
-+int fc_setup_fcp(void)
- {
- 	int rc = 0;
- 
-@@ -2212,7 +2212,7 @@ int fc_setup_fcp()
- 	return rc;
- }
- 
--void fc_destroy_fcp()
-+void fc_destroy_fcp(void)
- {
- 	if (scsi_pkt_cachep)
- 		kmem_cache_destroy(scsi_pkt_cachep);
---- lnx-2637-rc4.orig/drivers/scsi/libfc/fc_rport.c
-+++ lnx-2637-rc4/drivers/scsi/libfc/fc_rport.c
-@@ -58,7 +58,7 @@
- 
- #include "fc_libfc.h"
- 
--struct workqueue_struct *rport_event_queue;
-+static struct workqueue_struct *rport_event_queue;
- 
- static void fc_rport_enter_flogi(struct fc_rport_priv *);
- static void fc_rport_enter_plogi(struct fc_rport_priv *);
-@@ -1888,7 +1888,7 @@ EXPORT_SYMBOL(fc_rport_init);
- /**
-  * fc_setup_rport() - Initialize the rport_event_queue
-  */
--int fc_setup_rport()
-+int fc_setup_rport(void)
- {
- 	rport_event_queue = create_singlethread_workqueue("fc_rport_eq");
- 	if (!rport_event_queue)
-@@ -1899,7 +1899,7 @@ int fc_setup_rport()
- /**
-  * fc_destroy_rport() - Destroy the rport_event_queue
-  */
--void fc_destroy_rport()
-+void fc_destroy_rport(void)
- {
- 	destroy_workqueue(rport_event_queue);
- }
+That's correct.
+
+-- mikem
+
+> 
+> James, it's needed in .37 please.
+> 
+> 
+> From: Mike Miller <mike.miller@hp.com>
+> 
+> drivers/scsi/hpsa.c:93:1: warning: "PCI_DEVICE_ID_HP_CISSF" redefined
+> In file included from include/linux/pci.h:58,
+>                  from drivers/scsi/hpsa.c:25:
+> include/linux/pci_ids.h:746:1: warning: this is the location of the
+> previous definition
+> 
+> PCI_DEVICE_ID_CISSF is defined as 323b in pci_ids.h but redefined as
+> 3fff in
+> hpsa.c. The ID of 3fff will _never_ ship as a standalone controller. It
+> is
+> intended only as part a complete storage solution. As such, this patch
+> removes the redefinition and the StorageWorks P1210m from the product
+> table.
+> 
+> It also removes a duplicate line for the "unknown" controller support.
+> 
+> Signed-off-by: Mike Miller <mike.miller@hp.com>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/scsi/hpsa.c |    8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
+> 
+> diff -puN drivers/scsi/hpsa.c~hpsa-fix-redefinition-of-
+> pci_device_id_cissf drivers/scsi/hpsa.c
+> --- a/drivers/scsi/hpsa.c~hpsa-fix-redefinition-of-pci_device_id_cissf
+> +++ a/drivers/scsi/hpsa.c
+> @@ -90,11 +90,7 @@ static const struct pci_device_id hpsa_p
+>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> 0x3252},
+>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> 0x3253},
+>  	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C,
+> 0x3254},
+> -#define PCI_DEVICE_ID_HP_CISSF 0x333f
+> -	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C,
+> 0x333F},
+> -	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,             PCI_ANY_ID,
+> PCI_ANY_ID,
+> -		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
+> -	{PCI_VENDOR_ID_COMPAQ,     PCI_ANY_ID,             PCI_ANY_ID,
+> PCI_ANY_ID,
+> +	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
+>  		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
+>  	{0,}
+>  };
+> @@ -113,8 +109,6 @@ static struct board_type products[] = {
+>  	{0x3249103C, "Smart Array P812", &SA5_access},
+>  	{0x324a103C, "Smart Array P712m", &SA5_access},
+>  	{0x324b103C, "Smart Array P711m", &SA5_access},
+> -	{0x3233103C, "StorageWorks P1210m", &SA5_access},
+> -	{0x333F103C, "StorageWorks P1210m", &SA5_access},
+>  	{0x3250103C, "Smart Array", &SA5_access},
+>  	{0x3250113C, "Smart Array", &SA5_access},
+>  	{0x3250123C, "Smart Array", &SA5_access},
+> _
+
