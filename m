@@ -1,16 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 07/27] libfc: fix stats computation in fc_queuecommand()
-Date: Tue, 30 Nov 2010 16:18:33 -0800
-Message-ID: <20101201001833.18369.25364.stgit@localhost.localdomain>
+Subject: [PATCH 06/27] libfc: fix mem leak in fc_seq_assign()
+Date: Tue, 30 Nov 2010 16:18:28 -0800
+Message-ID: <20101201001828.18369.80904.stgit@localhost.localdomain>
 References: <20101201001756.18369.7107.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:5175 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:61256 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752489Ab0LAASe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2010 19:18:34 -0500
+	id S1752489Ab0LAASn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2010 19:18:43 -0500
 In-Reply-To: <20101201001756.18369.7107.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,30 +19,25 @@ Cc: Hillf Danton <dhillf@gmail.com>
 
 From: Hillf Danton <dhillf@gmail.com>
 
-There seems accumulation needed.
+There is a typo cleaned, which triggers memory leakage.
 
 Signed-off-by: Hillf Danton <dhillf@gmail.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_fcp.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index e82ff6e..eb3fe37 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1820,11 +1820,11 @@ int fc_queuecommand(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
- 	if (sc_cmd->sc_data_direction == DMA_FROM_DEVICE) {
- 		fsp->req_flags = FC_SRB_READ;
- 		stats->InputRequests++;
--		stats->InputMegabytes = fsp->data_len;
-+		stats->InputMegabytes += fsp->data_len;
- 	} else if (sc_cmd->sc_data_direction == DMA_TO_DEVICE) {
- 		fsp->req_flags = FC_SRB_WRITE;
- 		stats->OutputRequests++;
--		stats->OutputMegabytes = fsp->data_len;
-+		stats->OutputMegabytes += fsp->data_len;
- 	} else {
- 		fsp->req_flags = 0;
- 		stats->ControlRequests++;
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 46973d6..8bfb421 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -1274,7 +1274,7 @@ static struct fc_seq *fc_seq_assign(struct fc_lport *lport, struct fc_frame *fp)
+ 
+ 	list_for_each_entry(ema, &lport->ema_list, ema_list)
+ 		if ((!ema->match || ema->match(fp)) &&
+-		    fc_seq_lookup_recip(lport, ema->mp, fp) != FC_RJT_NONE)
++		    fc_seq_lookup_recip(lport, ema->mp, fp) == FC_RJT_NONE)
+ 			break;
+ 	return fr_seq(fp);
+ }
 
