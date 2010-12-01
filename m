@@ -1,95 +1,121 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 7/9] scsi: megaraid_sas - Driver created the self work
- queue for OCR
-Date: Wed, 01 Dec 2010 13:19:17 +0100
-Message-ID: <4CF63D45.8020608@redhat.com>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C30106A961D6@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C30106A961E4@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C30106A961F2@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C30106A96213@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C30106A96218@cosmail02.lsi.com> <4B6A08C587958942AA3002690DD4F8C30106A9621E@cosmail02.lsi.com> <4CF5221E.8080603@redhat.com> <4B6A08C587958942AA3002690DD4F8C30106BBFEB5@cosmail02.lsi.com>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: Re: [PATCH] fix scsi cmnd retries in error handling
+Date: Wed, 1 Dec 2010 22:09:58 +0800
+Message-ID: <AANLkTi=HWJXQpQPPtFwPvaZsKyqvbA1hW5J3sWod+qcV@mail.gmail.com>
+References: <AANLkTikYv-4STgVob=7j70Mo2fuLOR=zc3=WTD7x3Kig@mail.gmail.com>
+	<1288618715.3056.21.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30106BBFEB5@cosmail02.lsi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:58377 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754940Ab0LAOKB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2010 09:10:01 -0500
+Received: by wwa36 with SMTP id 36so7429894wwa.1
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Dec 2010 06:10:00 -0800 (PST)
+In-Reply-To: <1288618715.3056.21.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-On 11/30/2010 07:05 PM, Yang, Bo wrote:
-> Tomas,
+On Mon, Nov 1, 2010 at 9:38 PM, James Bottomley <James.Bottomley@suse.d=
+e> wrote:
+> On Mon, 2010-11-01 at 21:02 +0800, Hillf Danton wrote:
+>> There are two instances of increment and test of retries of scsi cmn=
+d
+>> in functions scsi_decide_disposition() and scsi_eh_flush_done_q()
+>> respectively.
 >
-> In which case megasas_ocr_wq will hit NULL if create_workqueue create work queue success? If create_workqueue failed, OCR may have the problem.  But do you know if create_workqueue has the number limitation for creating work queues (how many work queue can it created? 10 or 20)?
->   
-+	megasas_ocr_wq = create_workqueue("megasas_ocr");
+> This analysis is incomplete. =C2=A0Those two functions are called in
+> completely separate paths, so you can't remove the increment from one
+> and expect the other to compensate.
+>
+
+The delivered is not correct, and it could get fixed.
+
+
+--- a/drivers/scsi/scsi_error.c	2010-11-01 19:54:12.000000000 +0800
++++ b/drivers/scsi/scsi_error.c	2010-12-01 21:55:52.000000000 +0800
+@@ -927,6 +927,13 @@ int scsi_eh_get_sense(struct list_head *
+ 			scmd->retries =3D scmd->allowed;
+ 		else if (rtn !=3D NEEDS_RETRY)
+ 			continue;
++		else if (host_byte(scmd->result) !=3D DID_IMM_RETRY)
++			/*
++			 * in case of NEEDS_RETRY, undo the increment of
++			 * retries in scsi_decide_disposition() since it
++			 * is also checked when flushing done_q.
++			 */
++			scmd->retries--;
+
+ 		scsi_eh_finish_cmd(scmd, done_q);
+ 	}
+
+
+
+But there is still room for simplification,
+
+--- a/drivers/scsi/scsi_error.c	2010-11-01 19:54:12.000000000 +0800
++++ b/drivers/scsi/scsi_error.c	2010-12-01 22:08:34.000000000 +0800
+@@ -896,6 +896,8 @@ int scsi_eh_get_sense(struct list_head *
+ 	struct scsi_cmnd *scmd, *next;
+ 	int rtn;
+
++	return list_empty(work_q);
 +
-+	if ( !megasas_ocr_wq )
-+		printk(KERN_DEBUG "megasas: Failed to create workqueue.\n");
+ 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+ 		if ((scmd->eh_eflags & SCSI_EH_CANCEL_CMD) ||
+ 		    SCSI_SENSE_VALID(scmd))
 
-Then why do you check the return value if it can not fail?
 
-You are allocating a lot of resources in the init function and when some of them is not 
-available (which is unlikely) you return with an error value. Why don't you want that for 
-create_workqueue too?
+since SCSI_EH_CANCEL_CMD is concerned not only by scsi_eh_scmd_add() bu=
+t by
+scsi_eh_get_sense() also, which looks a reasonable explanation to what
+they are called in
+completely separate paths.
 
-Is it safe enter the suspend mode with the workqueue still doing some job?
-Shouldn't be the workqueue flushed in the suspend function?
- 
+Thanks
+Hillf
 
-> Thanks,
+
+> James
 >
-> Bo Yang
->
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Tuesday, November 30, 2010 11:11 AM 
-> To: Yang, Bo
-> Cc: 'James.Bottomley@HansenPartnership.com'; 'linux-scsi@vger.kernel.org'; 'akpm@osdl.org'; 'linux-kernel@vger.kernel.org'
-> Subject: Re: [PATCH 7/9] scsi: megaraid_sas - Driver created the self work queue for OCR
->
-> On 11/19/2010 06:37 PM, Yang, Bo wrote:
->   
->> Driver created the owner work queue (don't use global work queue). This queue will be used for online controller reset routine.
+>> One of the increments is overwork when the corresponding cmnds are s=
+ame.
+>> The overwork is fixed in scsi_decide_disposition().
 >>
->> Signed-off-by Bo Yang<bo.yang@lsi.com>
->>
+>> Signed-off-by: Hillf Danton <dhillf@gmail.com>
 >> ---
->> drivers/scsi/megaraid/megaraid_sas.c |   13 ++++++++++++-
->>  1 file changed, 12 insertions(+), 1 deletion(-)
->>   
->> diff -rupN old/drivers/scsi/megaraid/megaraid_sas.c
->> new/drivers/scsi/megaraid/megaraid_sas.c ---
->> old/drivers/scsi/megaraid/megaraid_sas.c 2010-11-17 13:46:11.000000000
->> -0500 +++ new/drivers/scsi/megaraid/megaraid_sas.c 2010-11-17
->> 13:47:46.000000000 -0500 @@ -108,6 +108,7 @@ static struct
->> megasas_mgmt_info megasas_ static struct fasync_struct
->> *megasas_async_queue; static DEFINE_MUTEX(megasas_async_queue_mutex);
->> +static struct workqueue_struct *megasas_ocr_wq; static int
->> megasas_poll_wait_aen; static
->> DECLARE_WAIT_QUEUE_HEAD(megasas_poll_wait); static u32
->> support_poll_for_event; @@ -2435,7 +2436,7 @@
->> megasas_deplete_reply_queue(struct megas printk(KERN_NOTICE "megasas:
->> fwState=%x, stage:%d\n", fw_state, instance->adprecovery); -
->> schedule_work(&instance->work_init); + queue_work(megasas_ocr_wq,
->> &instance->work_init); return IRQ_HANDLED; } else { @@ -5157,6
->> +5158,11 @@ static int __init megasas_init(void) goto err_pcidrv; } +
->> megasas_ocr_wq = create_workqueue("megasas_ocr"); + + if (
->> !megasas_ocr_wq ) + printk(KERN_DEBUG "megasas: Failed to create
->> workqueue.\n"); + 
->>     
-> What happens later, when you pass the null pointer to the queue_work ?
-> I'm not sure this will work.
+>>
+>> --- a/drivers/scsi/scsi_error.c =C2=A0 =C2=A0 =C2=A0 2010-09-13 07:0=
+7:38.000000000 +0800
+>> +++ b/drivers/scsi/scsi_error.c =C2=A0 =C2=A0 =C2=A0 2010-11-01 20:3=
+9:38.000000000 +0800
+>> @@ -1541,7 +1541,7 @@ int scsi_decide_disposition(struct scsi_
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0* the request was not marked fast fail. =C2=
+=A0Note that above,
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0* even if the request is marked fast fail=
+, we still requeue
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0* for queue congestion conditions (QUEUE_=
+=46ULL or BUSY) */
+>> - =C2=A0 =C2=A0 if ((++scmd->retries) <=3D scmd->allowed
+>> + =C2=A0 =C2=A0 if (scmd->retries < scmd->allowed
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 && !scsi_noretry_cmd(scmd)) {
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return NEEDS_RETRY;
+>> =C2=A0 =C2=A0 =C2=A0 } else {
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi=
+" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =C2=A0http://vger.kernel.org/majordomo-info.h=
+tml
 >
->   
->> rval = driver_create_file(&megasas_pci_driver.driver,
->> &driver_attr_version); if (rval) @@ -5228,6 +5234,11 @@ static void
->> __exit megasas_exit(void) &driver_attr_release_date);
->> driver_remove_file(&megasas_pci_driver.driver, &driver_attr_version);
->> + if (megasas_ocr_wq) { + destroy_workqueue(megasas_ocr_wq); +
->> megasas_ocr_wq = NULL; + } +
->> pci_unregister_driver(&megasas_pci_driver);
->> unregister_chrdev(megasas_mgmt_majorno, "megaraid_sas_ioctl"); } 
->>     
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
