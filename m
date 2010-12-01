@@ -1,7 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 13/27] libfc: fix memory leakage in remote port
-Date: Tue, 30 Nov 2010 16:19:04 -0800
-Message-ID: <20101201001904.18369.57123.stgit@localhost.localdomain>
+Subject: [PATCH 14/27] drivers/scsi/fcoe: Update WARN uses
+Date: Tue, 30 Nov 2010 16:19:09 -0800
+Message-ID: <20101201001909.18369.17318.stgit@localhost.localdomain>
 References: <20101201001756.18369.7107.stgit@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,43 +9,35 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga01.intel.com ([192.55.52.88]:5041 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752634Ab0LAATF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Nov 2010 19:19:05 -0500
+	id S1752781Ab0LAATK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Nov 2010 19:19:10 -0500
 In-Reply-To: <20101201001756.18369.7107.stgit@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Hillf Danton <dhillf@gmail.com>
+Cc: Joe Perches <joe@perches.com>
 
-From: Hillf Danton <dhillf@gmail.com>
+From: Joe Perches <joe@perches.com>
 
-There seems rdata should get put before return.
+Add missing newlines.
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
+Signed-off-by: Joe Perches <joe@perches.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_rport.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/libfcoe.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index a84ef13..a7175ad 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -652,7 +652,7 @@ void fc_rport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	FC_RPORT_DBG(rdata, "Received a FLOGI %s\n", fc_els_resp_type(fp));
- 
- 	if (fp == ERR_PTR(-FC_EX_CLOSED))
--		return;
-+		goto put;
- 
- 	mutex_lock(&rdata->rp_mutex);
- 
-@@ -689,6 +689,7 @@ out:
- 	fc_frame_free(fp);
- err:
- 	mutex_unlock(&rdata->rp_mutex);
-+put:
- 	kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
- 	return;
- bad:
+diff --git a/drivers/scsi/fcoe/libfcoe.c b/drivers/scsi/fcoe/libfcoe.c
+index bc17c71..58ad3c7 100644
+--- a/drivers/scsi/fcoe/libfcoe.c
++++ b/drivers/scsi/fcoe/libfcoe.c
+@@ -2475,7 +2475,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 	case FIP_ST_LINK_WAIT:
+ 		goto unlock;
+ 	default:
+-		WARN(1, "unexpected state %d", fip->state);
++		WARN(1, "unexpected state %d\n", fip->state);
+ 		goto unlock;
+ 	}
+ 	mod_timer(&fip->timer, next_time);
 
