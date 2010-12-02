@@ -1,90 +1,73 @@
-From: Thomas Fjellstrom <thomas@fjellstrom.ca>
-Subject: Re: mvsas errors in 2.6.36
-Date: Thu, 2 Dec 2010 02:48:59 -0700
-Message-ID: <201012020249.00367.thomas@fjellstrom.ca>
-References: <201010290650.32892.thomas@fjellstrom.ca> <4CE3912E.6060904@tomt.net> <201012012329.54944.thomas@fjellstrom.ca>
-Reply-To: thomas@fjellstrom.ca
+From: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
+Subject: Re: After memory pressure: can't read from tape anymore
+Date: Thu, 02 Dec 2010 11:01:37 +0100
+Message-ID: <1291284097.2814.78.camel@larosa>
+References: <1290971729.2814.13.camel@larosa>
+	 <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>
+	 <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>
+	 <4CF521DE.7020800@panasas.com>
+	 <alpine.LNX.2.00.1011301821210.9731@kai.makisara.local>
+	 <4CF52A03.2000704@panasas.com>
+	 <alpine.LNX.2.00.1011301853300.9731@kai.makisara.local>
+	 <4CF53349.10509@panasas.com>
+	 <alpine.LNX.2.00.1011302139460.9731@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tomasu.net ([64.85.170.234]:42146 "EHLO mail.tomasu.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751053Ab0LBJtK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Dec 2010 04:49:10 -0500
-In-Reply-To: <201012012329.54944.thomas@fjellstrom.ca>
+Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:45502 "EHLO
+	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751492Ab0LBKBk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Dec 2010 05:01:40 -0500
+In-Reply-To: <alpine.LNX.2.00.1011302139460.9731@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andre Tomt <andre@tomt.net>
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@lsi.com>
 
-On December 1, 2010, Thomas Fjellstrom wrote:
-> On November 17, 2010, you wrote:
-> > On 11/17/2010 08:53 AM, Thomas Fjellstrom wrote:
-> > [snip]
-> > 
-> > > Still no fatal errors, but the problem is still happening regularly. It
-> > > causes a pause in disk io of a couple seconds at least. Really quite
-> > > annoying.
-> > > 
-> > > One thing thats got me wondering, is could this be a power issue?
-> > > It almost seems like (from the messages) that a single drive (any
-> > > drive) is freaking out, and returning an error that probably shouldn't
-> > > happen (no CHS 0?), which could mean the drive is underpowered and the
-> > > firmware is flipping out. I'm not entirely sure. The system has a 750w
-> > > decent quality Antec power supply. The total power use of the system
-> > > shouldn't come over half that (phenom II x4 810 cpu, gigabyte
-> > > ma790fxtud5p mb, low profile nvidia 9400GS gpu, 8 sata hdds, 3 fans,
-> > > etc). I'm mostly sure the 12v rails are spread out evenly, but I have
-> > > yet to make absolutely sure.
+Am Dienstag, den 30.11.2010, 21:53 +0200 schrieb Kai Makisara:
+> On Tue, 30 Nov 2010, Boaz Harrosh wrote:
 > 
-> Made absolute sure. I had been worrying that I was overloading one of the
-> rails on the PSU, but it turns out that it isn't a multi 12v rail PSU after
-> all. The box and advertising says it is, but the electronics inside all say
-> its a single 12v rail device.
+> ...
+> > I looked at enlarge_buffer() and it looks fragile and broken. If you really
+> > need a pointer eg:
+> > 	STbuffer->b_data = page_address(STbuffer->reserved_pages[0]);
+> > 
+> If you think it is broken, please fix it.
 > 
-> > [snip]
+> > Than way not use vmalloc() for buffers larger then PAGE_SIZE? But better yet
+> > avoid it by keeping a pages_array or sg-list and operate on an aio type
+> > operations.
 > > 
-> > After the mvsas update in 2.6.35 this started happening to me as well;
-> > at least its better than the previous state - not working.. ;-) However,
-> > after rolling a new 2.6.35 with the following fix that is queued up for
-> > the upcoming 2.6.35 and 2.6.36 stable releases, they seem to have
-> > dissapeared - 3 days and counting.
-> > 
-> > http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob_
-> > pl
-> > ain;f=queue-2.6.33/libsas-fix-ncq-mixing-with-non-ncq.patch;h=b6d7c92094
-> > d95 ad67a3b23c2e09c25d4fbd0f46b;hb=HEAD
-> > 
-> > The fix is queued up for the next 2.6.36 and 2.6.35 stable
-> > point-releases.
+> vmalloc() is not a solution here. Think about this from the HBA side. Each 
+> s/g segment must be contiguous in the address space the HBA uses. In many 
+> cases this is the physical memory address space. Any solution must make 
+> sure that the HBA can perform the requested data transfer.
 > 
-> Ahah. I wonder how I missed that when I first read it. I'll have to give
-> the stable .36 kernel a try. Thanks!
+> > > Kai
+> > 
+> > But I understand this is a lot of work on an old driver. Perhaps pre-allocate
+> > something big at startup. specified by user?
+> > 
+> This used to be possible at some time and it could be made possible again. 
+> But I don't like this option because it means that the users must 
+> explicitly set the boot parameters.
+> 
+> And it is difficult for me to believe the modern SAS HBAs only support 128 
+> s/g segments.
 
-No fix so far:
+I'll go ahead and file a bug about this. Maybe this gets it more
+attention? At the moment, linux 2.6.32-36 is pretty much useless for
+tape-based backups for us.
 
-[ 2539.040104] drivers/scsi/mvsas/mv_sas.c 1703:<7>mv_abort_task() mvi=ffff880222f00000 task=ffff88018b3e2980 slot=ffff880222f265d0 slot_idx=x2
-[ 2539.040118] drivers/scsi/mvsas/mv_sas.c 1632:mvs_query_task:rc= 5
-[ 2539.040154] drivers/scsi/mvsas/mv_sas.c 2083:port 7 ctrl sts=0x89800.
-[ 2539.040163] drivers/scsi/mvsas/mv_sas.c 2085:Port 7 irq sts = 0x1001001
-[ 2539.040176] drivers/scsi/mvsas/mv_sas.c 2111:phy7 Unplug Notice
-[ 2539.050220] drivers/scsi/mvsas/mv_sas.c 2083:port 7 ctrl sts=0x199800.
-[ 2539.050229] drivers/scsi/mvsas/mv_sas.c 2085:Port 7 irq sts = 0x1001081
-[ 2539.071157] drivers/scsi/mvsas/mv_sas.c 2083:port 7 ctrl sts=0x199800.
-[ 2539.071165] drivers/scsi/mvsas/mv_sas.c 2085:Port 7 irq sts = 0x10000
-[ 2539.071173] drivers/scsi/mvsas/mv_sas.c 2138:notify plug in on phy[7]
-[ 2539.081142] drivers/scsi/mvsas/mv_sas.c 1224:port 7 attach dev info is 5000002
-[ 2539.081142] drivers/scsi/mvsas/mv_sas.c 1226:port 7 attach sas addr is 7
-[ 2539.081142] drivers/scsi/mvsas/mv_sas.c 378:phy 7 byte dmaded.
-[ 2541.270047] drivers/scsi/mvsas/mv_sas.c 1586:mvs_I_T_nexus_reset for device[5]:rc= 0
-[ 2541.270066] ata14: translated ATA stat/err 0x01/04 to SCSI SK/ASC/ASCQ 0xb/00/00
-[ 2541.270926] ata14: status=0x01 { Error }
-[ 2541.271747] ata14: error=0x04 { DriveStatusError }
+What's interesting is that when this happens, one of the two tape drives
+seems to work, where for the second one the system can't allocate large
+enough buffers. 
 
-That appeared after about 42 minutes of uptime.
+> Kai
 
 -- 
-Thomas Fjellstrom
-thomas@fjellstrom.ca
+Lukas
+
+
+
