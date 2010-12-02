@@ -1,91 +1,61 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 1/1] hpsa: fix redefinition of PCI_DEVICE_ID_CISSF
-Date: Wed, 1 Dec 2010 14:47:48 -0800
-Message-ID: <20101201144748.cd01d4d1.akpm@linux-foundation.org>
-References: <20101201171607.GA17943@beardog.cce.hp.com>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: mvsas errors in 2.6.36
+Date: Wed, 1 Dec 2010 23:29:54 -0700
+Message-ID: <201012012329.54944.thomas@fjellstrom.ca>
+References: <201010290650.32892.thomas@fjellstrom.ca> <201011170053.31174.thomas@fjellstrom.ca> <4CE3912E.6060904@tomt.net>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([140.211.169.13]:44389 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755240Ab0LAWx1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Dec 2010 17:53:27 -0500
-In-Reply-To: <20101201171607.GA17943@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CE3912E.6060904@tomt.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andre Tomt <andre@tomt.net>
+Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>
-Cc: "James E. J. Bottomley" <James.Bottomley@HansenPartnership.com>, LKML <linux-kernel@vger.kernel.org>, LKML-scsi <linux-scsi@vger.kernel.org>, hplk@lists.hp.com
 
-On Wed, 1 Dec 2010 11:16:07 -0600
-Mike Miller <mike.miller@hp.com> wrote:
-
-> hpsa: a pci device ID is defined twice
+On November 17, 2010, you wrote:
+> On 11/17/2010 08:53 AM, Thomas Fjellstrom wrote:
+> [snip]
 > 
-> From: Mike Miller <mike.miller@hp.com>
+> > Still no fatal errors, but the problem is still happening regularly. It
+> > causes a pause in disk io of a couple seconds at least. Really quite
+> > annoying.
+> >
+> > One thing thats got me wondering, is could this be a power issue?
+> > It almost seems like (from the messages) that a single drive (any drive)
+> > is freaking out, and returning an error that probably shouldn't happen (no 
+> > CHS 0?), which could mean the drive is underpowered and the firmware is 
+> > flipping out. I'm not entirely sure. The system has a 750w decent quality
+> > Antec power supply. The total power use of the system shouldn't come over 
+> > half that (phenom II x4 810 cpu, gigabyte ma790fxtud5p mb, low profile 
+> > nvidia 9400GS gpu, 8 sata hdds, 3 fans, etc). I'm mostly sure the 12v 
+> > rails are spread out evenly, but I have yet to make absolutely sure.
+
+Made absolute sure. I had been worrying that I was overloading one of the 
+rails on the PSU, but it turns out that it isn't a multi 12v rail PSU after 
+all. The box and advertising says it is, but the electronics inside all say 
+its a single 12v rail device.
+
+> [snip]
 > 
-> PCI_DEVICE_ID_CISSF is defined as 323b in pci_ids.h but redefined as 3fff in
-> hpsa.c. The ID of 3fff will _never_ ship as a standalone controller. It is
-> intended only as part a complete storage solution. As such, this patch
-> removes the redefinition and the StorageWorks P1210m from the product table.
+> After the mvsas update in 2.6.35 this started happening to me as well;
+> at least its better than the previous state - not working.. ;-) However,
+> after rolling a new 2.6.35 with the following fix that is queued up for
+> the upcoming 2.6.35 and 2.6.36 stable releases, they seem to have
+> dissapeared - 3 days and counting.
 > 
-> It also removes a duplicate line for the "unknown" controller support.
+> http://git.kernel.org/?p=linux/kernel/git/stable/stable-queue.git;a=blob_pl
+> ain;f=queue-2.6.33/libsas-fix-ncq-mixing-with-non-ncq.patch;h=b6d7c92094d95
+> ad67a3b23c2e09c25d4fbd0f46b;hb=HEAD
+> 
+> The fix is queued up for the next 2.6.36 and 2.6.35 stable point-releases.
 
-It is missing a signed-off-by:, and please quote the warning message
-when fixing warnings.
-
-Also, this patch fixes a bug, doesn't it?  323b controllers simply
-won't work?
-
-James, it's needed in .37 please.
+Ahah. I wonder how I missed that when I first read it. I'll have to give the 
+stable .36 kernel a try. Thanks!
 
 
-From: Mike Miller <mike.miller@hp.com>
-
-drivers/scsi/hpsa.c:93:1: warning: "PCI_DEVICE_ID_HP_CISSF" redefined
-In file included from include/linux/pci.h:58,
-                 from drivers/scsi/hpsa.c:25:
-include/linux/pci_ids.h:746:1: warning: this is the location of the previous definition
-
-PCI_DEVICE_ID_CISSF is defined as 323b in pci_ids.h but redefined as 3fff in
-hpsa.c. The ID of 3fff will _never_ ship as a standalone controller. It is
-intended only as part a complete storage solution. As such, this patch
-removes the redefinition and the StorageWorks P1210m from the product table.
-
-It also removes a duplicate line for the "unknown" controller support.
-
-Signed-off-by: Mike Miller <mike.miller@hp.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/hpsa.c |    8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
-
-diff -puN drivers/scsi/hpsa.c~hpsa-fix-redefinition-of-pci_device_id_cissf drivers/scsi/hpsa.c
---- a/drivers/scsi/hpsa.c~hpsa-fix-redefinition-of-pci_device_id_cissf
-+++ a/drivers/scsi/hpsa.c
-@@ -90,11 +90,7 @@ static const struct pci_device_id hpsa_p
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3252},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3253},
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3254},
--#define PCI_DEVICE_ID_HP_CISSF 0x333f
--	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSF,     0x103C, 0x333F},
--	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,             PCI_ANY_ID, PCI_ANY_ID,
--		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
--	{PCI_VENDOR_ID_COMPAQ,     PCI_ANY_ID,             PCI_ANY_ID, PCI_ANY_ID,
-+	{PCI_VENDOR_ID_HP,     PCI_ANY_ID,	PCI_ANY_ID, PCI_ANY_ID,
- 		PCI_CLASS_STORAGE_RAID << 8, 0xffff << 8, 0},
- 	{0,}
- };
-@@ -113,8 +109,6 @@ static struct board_type products[] = {
- 	{0x3249103C, "Smart Array P812", &SA5_access},
- 	{0x324a103C, "Smart Array P712m", &SA5_access},
- 	{0x324b103C, "Smart Array P711m", &SA5_access},
--	{0x3233103C, "StorageWorks P1210m", &SA5_access},
--	{0x333F103C, "StorageWorks P1210m", &SA5_access},
- 	{0x3250103C, "Smart Array", &SA5_access},
- 	{0x3250113C, "Smart Array", &SA5_access},
- 	{0x3250123C, "Smart Array", &SA5_access},
-_
-
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
