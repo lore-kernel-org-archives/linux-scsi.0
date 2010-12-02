@@ -1,85 +1,118 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: After memory pressure: can't read from tape anymore
-Date: Thu, 2 Dec 2010 18:41:17 +0200 (EET)
-Message-ID: <alpine.LNX.2.00.1012021823420.9213@kai.makisara.local>
-References: <1290971729.2814.13.camel@larosa>  <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>  <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>  <alpine.LNX.2.00.1011301813460.9731@kai.makisara.local> <1291223211.2814.72.camel@larosa>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: After memory pressure: can't read from tape anymore
+Date: Thu, 2 Dec 2010 23:44:03 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED709113B13@inbmail01.lsi.com>
+References: <1290971729.2814.13.camel@larosa>
+  <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>
+  <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>
+  <4CF521DE.7020800@panasas.com>
+  <alpine.LNX.2.00.1011301821210.9731@kai.makisara.local>
+  <4CF52A03.2000704@panasas.com>
+  <alpine.LNX.2.00.1011301853300.9731@kai.makisara.local>
+  <4CF53349.10509@panasas.com>
+  <alpine.LNX.2.00.1011302139460.9731@kai.makisara.local>
+ <1291196400.2814.34.camel@larosa>
+ <B2FD678A64EAAD45B089B123FDFC3ED709113ABB@inbmail01.lsi.com>
+ <alpine.LNX.2.00.1012021807060.9213@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vs12.mail.saunalahti.fi ([195.197.172.107]:58797 "EHLO
-	vs12.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752744Ab0LBQlW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Dec 2010 11:41:22 -0500
-In-Reply-To: <1291223211.2814.72.camel@larosa>
+Received: from na3sys009aog113.obsmtp.com ([74.125.149.209]:39101 "EHLO
+	na3sys009aog113.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752672Ab0LBSNx convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Dec 2010 13:13:53 -0500
+In-Reply-To: <alpine.LNX.2.00.1012021807060.9213@kai.makisara.local>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
-Cc: linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@lsi.com>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>, Boaz Harrosh <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 1 Dec 2010, Lukas Kolbe wrote:
 
-> Am Dienstag, den 30.11.2010, 18:20 +0200 schrieb Kai Makisara:
-> 
-...
-> > If you see error with 64 kB block size, I would like to see any messages 
-> > associated with these errors.
-> 
-> I have now hit this bug again. Trying to read and write a label from the
-> tape drive in question results in this (via bacula's btape command):
-> 
-> *readlabel
-> 01-Dec 17:47 btape JobId 0: Error: block.c:1002 Read error on fd=3 at
-> file:blk 0:0 on device "drv1" (/dev/nst1). ERR=Value too large for
-> defined data type.
-> btape: btape.c:525 Volume has no label.
-> 
-> Volume Label:
-> Id                : **error**VerNo             : 0
-> VolName           :
-> PrevVolName       :
-> VolFile           : 0
-> LabelType         : Unknown 0
-> LabelSize         : 0
-> PoolName          :
-> MediaType         :
-> PoolType          :
-> HostName          :
-> Date label written: -4712-01-01 at 00:00
-> *label
-> Enter Volume Name: AAA543
-> 01-Dec 17:47 btape JobId 0: Error: block.c:577 Write error at 0:0 on
-> device "drv1" (/dev/nst1). ERR=Input/output error.
-> 01-Dec 17:48 btape JobId 0: Error: Backspace record at EOT failed.
-> ERR=Input/output error
-> Wrote Volume label for volume "AAA543".
-> 
-> dmesg says (as expected): 
-> 
-> [158529.011206] st1: Can't allocate 2097152 byte tape buffer.
-> [158544.348411] st: append_to_buffer offset overflow.
-> [158544.348416] st: append_to_buffer offset overflow.
-> [158544.348418] st: append_to_buffer offset overflow.
-> [158544.348419] st: append_to_buffer offset overflow.
-> 
-The messages except the first one are something that should never happen. 
-I think that there is something wrong with returning from enlarge_buffer() 
-when it fails. I will look at this when I have time.
 
-...
-> Trying to write to the tape looks like below, which seems to match your
-> earlier description; ie 64/65k works, 128k blocksize works, 256k
-> blocksize and above don't work anymore. I wasn't able to reproduce not
-> being able to write with a 64k blocksize at the moment.
+> -----Original Message-----
+> From: Kai Makisara [mailto:Kai.Makisara@kolumbus.fi]
+> Sent: Thursday, December 02, 2010 9:53 PM
+> To: Desai, Kashyap
+> Cc: Lukas Kolbe; Boaz Harrosh; linux-scsi@vger.kernel.org
+> Subject: RE: After memory pressure: can't read from tape anymore
 > 
-Assuming that the MPT driver is configured for 128 segments, you should 
-always be able to read and write 512 kB blocks.
-
-...
-> I hope this somehow helps,
-> Lukas
+> On Thu, 2 Dec 2010, Desai, Kashyap wrote:
 > 
-These messages are helpful.
+> >
+> >
+> > > -----Original Message-----
+> > > From: Lukas Kolbe [mailto:lkolbe@techfak.uni-bielefeld.de]
+> > > Sent: Wednesday, December 01, 2010 3:10 PM
+> > > To: Kai Makisara
+> > > Cc: Boaz Harrosh; linux-scsi@vger.kernel.org; Desai, Kashyap
+> > > Subject: Re: After memory pressure: can't read from tape anymore
+> > >
+> > > Am Dienstag, den 30.11.2010, 21:53 +0200 schrieb Kai Makisara:
+> > > > On Tue, 30 Nov 2010, Boaz Harrosh wrote:
+> > >
+> > > I'm Cc'ing Desay Kashyap from LSI, maybe he can comment on the
+> hardware
+> > > limitations of the SAS1068E?
+> > Lukas,
+> >
+> > No. it is not limitation from h/w that " CONFIG_FUSION_MAX_SGE" needs
+> to be 128.
+> > But our code is written such a way that even if you change it more
+> than 128, it will fall down to 128 again.
+> >
+> > To change this value you need to do below changes in mptbase.h
+> >
+> > --
+> > -#define MPT_SCSI_SG_DEPTH     CONFIG_FUSION_MAX_SGE
+> > +#define MPT_SCSI_SG_DEPTH       256
+> > --
+> >
+> > 128 is good amount for Scatter gather element. This value is standard
+> value for MPT FUSIION, since long.
+> >
+> > This value will be reflect to sg_tablesize and linux scatter-gather
+> module will use this value for creating sg_table for HBA.
+> > See: " cat /sys/class/scsi_host/host<x>/sg_tablesize"
+> >
+> > If single IO is not able to fit into sg_tablesize, then it will be
+> converted into multiple IOs for Low Layer Drivers(By "scatter-gather"
+> module of linux).
+> > So I do not see any problem with
+> > CONFIG_FUSION_MAX_SGE value.  Our driver internally convert sglist
+> into SGE which understood by LSI H/W.
+> >
+> You can't convert write of one block into multiple IOs. If someone
+> wants
+> to write 2 MB blocks, the system must transfer 2 MB in one IO. The
+> choices
+> are:
 
-Thanks,
-Kai
+I am not sure why single IO cannot be converted into multiple "IO" request.
+If you run below commands
+" sg_dd if=/dev/zero of=/dev/sdb bs=4800000 count=1"
 
+You will see multiple IOs(requests) are coming to low layer driver. 
+
+> 
+> 1. Direct I/O from user space. With 4 kB page size, this means that 513
+> s/g segments (512 if the user buffer page is aligned) must be used.
+> (Unless there is an IOMMU and an API for an ULD to use it.)
+> 
+> 2. Use a bounce buffer. Dynamic allocation of the bounce buffer with a
+> small number of segments is problematic when the system has been
+> running
+> for a long time but the buffer can be allocated when the device is
+> detected. (This is problematic if the device is detected at run-time.)
+> 
+> I don't know which alternative is more efficient from the HW point of
+> view
+> if both are possible. Do you (or someone else) have any opinion on
+> this?
+
+Regarding above things, I am not sure too, why this has to be part of Low level driver?
+It has to be done my block layer.... 
+> 
+> Kai
