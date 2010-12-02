@@ -1,442 +1,320 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 2/7] zfcp: Redesign of the debug tracing for SAN records.
-Date: Thu, 02 Dec 2010 15:16:13 +0100
-Message-ID: <20101202141918.947611880@de.ibm.com>
-References: <20101202141611.976946976@de.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.uk.ibm.com ([194.196.100.161]:50421 "EHLO
-	mtagate1.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757802Ab0LBOTY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Dec 2010 09:19:24 -0500
-Content-Disposition: inline; filename=702-zfcp-debug-tracing-san.diff
-Sender: linux-scsi-owner@vger.kernel.org
+From: Bjorn Helgaas <bjorn.helgaas@hp.com>
+Subject: Re: PCI: make pci_restore_state return void
+Date: Thu, 2 Dec 2010 09:15:46 -0700
+Message-ID: <201012020915.50049.bjorn.helgaas@hp.com>
+References: <1291160606-31494-1-git-send-email-jon.mason@exar.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1291160606-31494-1-git-send-email-jon.mason@exar.com>
+Sender: netdev-owner@vger.kernel.org
+To: Jon Mason <jon.mason@exar.com>
+Cc: Jesse Barnes <jbarnes@virtuousgeek.org>, linux-pci@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, linux-media@vger.kernel.org, Andrew Gallatin <gallatin@myri.com>, Brice Goglin <brice@myri.com>, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, Steve Hodgson <shodgson@solarflare.com>, Ben Hutchings <bhutchings@solarflare.com>, Stephen Hemminger <shemminger@linux-foundation.org>, Ivo van Doorn <IvDoorn@gmail.com>, Gertjan van Wingerde <gwingerde@gmail.com>, linux-wireless@vger.kernel.org, Brian King <brking@us.ibm.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, linux-scsi@vger.kernel.org, Jaya Kumar <jayakumar.alsa@gmail.com>, boyod.yang@siliconmotion.com.cn
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.com, heiko.carstens@de.ibm.com, maier@linux.vnet.ibm.com, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-From: Swen Schillig <swen@vnet.ibm.com>
+On Tuesday, November 30, 2010 04:43:26 pm Jon Mason wrote:
+> pci_restore_state only ever returns 0, thus there is no benefit in
+> having it return any value.  Also, a large majority of the callers do
+> not check the return code of pci_restore_state.  Make the
+> pci_restore_state a void return and avoid the overhead.
+> 
+> Signed-off-by: Jon Mason <jon.mason@exar.com>
 
-This patch is the continuation to redesign the zfcp tracing to a more
-straight-forward and easy to extend scheme.
+Looks reasonable to me, but doesn't appear to be a regression fix or
+anything urgent that needs to be in .37, so I'll wait and let Jesse
+handle this when he returns from vacation.  OK?
 
-This patch deals with all trace records of the zfcp SAN area.
+Bjorn
 
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
----
-
- drivers/s390/scsi/zfcp_dbf.c |  205 ++++++++++---------------------------------
- drivers/s390/scsi/zfcp_dbf.h |   68 ++++++--------
- drivers/s390/scsi/zfcp_ext.h |    8 -
- drivers/s390/scsi/zfcp_fc.c  |    2 
- drivers/s390/scsi/zfcp_fsf.c |    8 -
- 5 files changed, 87 insertions(+), 204 deletions(-)
-
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_dbf.c linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c
---- linux-2.6/drivers/s390/scsi/zfcp_dbf.c	2010-12-02 11:14:00.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.c	2010-12-02 11:14:00.000000000 +0100
-@@ -527,183 +527,79 @@ void zfcp_dbf_rec_run(char *tag, struct
- 	spin_unlock_irqrestore(&dbf->rec_lock, flags);
- }
- 
--/**
-- * zfcp_dbf_san_ct_request - trace event for issued CT request
-- * @fsf_req: request containing issued CT data
-- * @d_id: destination id where ct request is sent to
-- */
--void zfcp_dbf_san_ct_request(struct zfcp_fsf_req *fsf_req, u32 d_id)
--{
--	struct zfcp_fsf_ct_els *ct = (struct zfcp_fsf_ct_els *)fsf_req->data;
--	struct zfcp_adapter *adapter = fsf_req->adapter;
--	struct zfcp_dbf *dbf = adapter->dbf;
--	struct fc_ct_hdr *hdr = sg_virt(ct->req);
--	struct zfcp_dbf_san_record *r = &dbf->san_buf;
--	struct zfcp_dbf_san_record_ct_request *oct = &r->u.ct_req;
--	int level = 3;
--	unsigned long flags;
--
--	spin_lock_irqsave(&dbf->san_lock, flags);
--	memset(r, 0, sizeof(*r));
--	strncpy(r->tag, "octc", ZFCP_DBF_TAG_SIZE);
--	r->fsf_reqid = fsf_req->req_id;
--	r->fsf_seqno = fsf_req->seq_no;
--	oct->d_id = d_id;
--	oct->cmd_req_code = hdr->ct_cmd;
--	oct->revision = hdr->ct_rev;
--	oct->gs_type = hdr->ct_fs_type;
--	oct->gs_subtype = hdr->ct_fs_subtype;
--	oct->options = hdr->ct_options;
--	oct->max_res_size = hdr->ct_mr_size;
--	oct->len = min((int)ct->req->length - (int)sizeof(struct fc_ct_hdr),
--		       ZFCP_DBF_SAN_MAX_PAYLOAD);
--	debug_event(dbf->san, level, r, sizeof(*r));
--	zfcp_dbf_hexdump(dbf->san, r, sizeof(*r), level,
--			 (void *)hdr + sizeof(struct fc_ct_hdr), oct->len);
--	spin_unlock_irqrestore(&dbf->san_lock, flags);
--}
--
--/**
-- * zfcp_dbf_san_ct_response - trace event for completion of CT request
-- * @fsf_req: request containing CT response
-- */
--void zfcp_dbf_san_ct_response(struct zfcp_fsf_req *fsf_req)
-+static inline
-+void zfcp_dbf_san(char *tag, struct zfcp_dbf *dbf, void *data, u8 id, u16 len,
-+		  u64 req_id, u32 d_id)
- {
--	struct zfcp_fsf_ct_els *ct = (struct zfcp_fsf_ct_els *)fsf_req->data;
--	struct zfcp_adapter *adapter = fsf_req->adapter;
--	struct fc_ct_hdr *hdr = sg_virt(ct->resp);
--	struct zfcp_dbf *dbf = adapter->dbf;
--	struct zfcp_dbf_san_record *r = &dbf->san_buf;
--	struct zfcp_dbf_san_record_ct_response *rct = &r->u.ct_resp;
--	int level = 3;
-+	struct zfcp_dbf_san *rec = &dbf->san_buf;
-+	u16 rec_len;
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(&dbf->san_lock, flags);
--	memset(r, 0, sizeof(*r));
--	strncpy(r->tag, "rctc", ZFCP_DBF_TAG_SIZE);
--	r->fsf_reqid = fsf_req->req_id;
--	r->fsf_seqno = fsf_req->seq_no;
--	rct->cmd_rsp_code = hdr->ct_cmd;
--	rct->revision = hdr->ct_rev;
--	rct->reason_code = hdr->ct_reason;
--	rct->expl = hdr->ct_explan;
--	rct->vendor_unique = hdr->ct_vendor;
--	rct->max_res_size = hdr->ct_mr_size;
--	rct->len = min((int)ct->resp->length - (int)sizeof(struct fc_ct_hdr),
--		       ZFCP_DBF_SAN_MAX_PAYLOAD);
--	debug_event(dbf->san, level, r, sizeof(*r));
--	zfcp_dbf_hexdump(dbf->san, r, sizeof(*r), level,
--			 (void *)hdr + sizeof(struct fc_ct_hdr), rct->len);
--	spin_unlock_irqrestore(&dbf->san_lock, flags);
--}
-+	memset(rec, 0, sizeof(*rec));
- 
--static void zfcp_dbf_san_els(const char *tag, int level,
--			     struct zfcp_fsf_req *fsf_req, u32 d_id,
--			     void *buffer, int buflen)
--{
--	struct zfcp_adapter *adapter = fsf_req->adapter;
--	struct zfcp_dbf *dbf = adapter->dbf;
--	struct zfcp_dbf_san_record *rec = &dbf->san_buf;
--	unsigned long flags;
-+	rec->id = id;
-+	rec->fsf_req_id = req_id;
-+	rec->d_id = d_id;
-+	rec_len = min(len, (u16)ZFCP_DBF_SAN_MAX_PAYLOAD);
-+	memcpy(rec->payload, data, rec_len);
-+	memcpy(rec->tag, tag, ZFCP_DBF_TAG_LEN);
- 
--	spin_lock_irqsave(&dbf->san_lock, flags);
--	memset(rec, 0, sizeof(*rec));
--	strncpy(rec->tag, tag, ZFCP_DBF_TAG_SIZE);
--	rec->fsf_reqid = fsf_req->req_id;
--	rec->fsf_seqno = fsf_req->seq_no;
--	rec->u.els.d_id = d_id;
--	debug_event(dbf->san, level, rec, sizeof(*rec));
--	zfcp_dbf_hexdump(dbf->san, rec, sizeof(*rec), level,
--			 buffer, min(buflen, ZFCP_DBF_SAN_MAX_PAYLOAD));
-+	debug_event(dbf->san, 1, rec, sizeof(*rec));
- 	spin_unlock_irqrestore(&dbf->san_lock, flags);
- }
- 
- /**
-- * zfcp_dbf_san_els_request - trace event for issued ELS
-- * @fsf_req: request containing issued ELS
-+ * zfcp_dbf_san_req - trace event for issued SAN request
-+ * @tag: indentifier for event
-+ * @fsf_req: request containing issued CT data
-+ * d_id: destination ID
-  */
--void zfcp_dbf_san_els_request(struct zfcp_fsf_req *fsf_req)
-+void zfcp_dbf_san_req(char *tag, struct zfcp_fsf_req *fsf, u32 d_id)
- {
--	struct zfcp_fsf_ct_els *els = (struct zfcp_fsf_ct_els *)fsf_req->data;
--	u32 d_id = ntoh24(fsf_req->qtcb->bottom.support.d_id);
--
--	zfcp_dbf_san_els("oels", 2, fsf_req, d_id,
--			 sg_virt(els->req), els->req->length);
-+	struct zfcp_dbf *dbf = fsf->adapter->dbf;
-+	struct zfcp_fsf_ct_els *ct_els = fsf->data;
-+	u16 length;
-+
-+	length = (u16)(ct_els->req->length + FC_CT_HDR_LEN);
-+	zfcp_dbf_san(tag, dbf, sg_virt(ct_els->req), ZFCP_DBF_SAN_REQ, length,
-+		     fsf->req_id, d_id);
- }
- 
- /**
-- * zfcp_dbf_san_els_response - trace event for completed ELS
-- * @fsf_req: request containing ELS response
-+ * zfcp_dbf_san_res - trace event for received SAN request
-+ * @tag: indentifier for event
-+ * @fsf_req: request containing issued CT data
-  */
--void zfcp_dbf_san_els_response(struct zfcp_fsf_req *fsf_req)
-+void zfcp_dbf_san_res(char *tag, struct zfcp_fsf_req *fsf)
- {
--	struct zfcp_fsf_ct_els *els = (struct zfcp_fsf_ct_els *)fsf_req->data;
--	u32 d_id = ntoh24(fsf_req->qtcb->bottom.support.d_id);
--
--	zfcp_dbf_san_els("rels", 2, fsf_req, d_id,
--			       sg_virt(els->resp), els->resp->length);
-+	struct zfcp_dbf *dbf = fsf->adapter->dbf;
-+	struct zfcp_fsf_ct_els *ct_els = fsf->data;
-+	u16 length;
-+
-+	length = (u16)(ct_els->resp->length + FC_CT_HDR_LEN);
-+	zfcp_dbf_san(tag, dbf, sg_virt(ct_els->resp), ZFCP_DBF_SAN_RES, length,
-+		     fsf->req_id, 0);
- }
- 
- /**
-- * zfcp_dbf_san_incoming_els - trace event for incomig ELS
-- * @fsf_req: request containing unsolicited status buffer with incoming ELS
-+ * zfcp_dbf_san_in_els - trace event for incoming ELS
-+ * @tag: indentifier for event
-+ * @fsf_req: request containing issued CT data
-  */
--void zfcp_dbf_san_incoming_els(struct zfcp_fsf_req *fsf_req)
-+void zfcp_dbf_san_in_els(char *tag, struct zfcp_fsf_req *fsf)
- {
--	struct fsf_status_read_buffer *buf =
--			(struct fsf_status_read_buffer *)fsf_req->data;
--	int length = (int)buf->length -
--		     (int)((void *)&buf->payload - (void *)buf);
--
--	zfcp_dbf_san_els("iels", 1, fsf_req, ntoh24(buf->d_id),
--			       (void *)buf->payload.data, length);
-+	struct zfcp_dbf *dbf = fsf->adapter->dbf;
-+	struct fsf_status_read_buffer *srb =
-+		(struct fsf_status_read_buffer *) fsf->data;
-+	u16 length;
-+
-+	length = (u16)(srb->length -
-+			offsetof(struct fsf_status_read_buffer, payload));
-+	zfcp_dbf_san(tag, dbf, srb->payload.data, ZFCP_DBF_SAN_ELS, length,
-+		     fsf->req_id, ntoh24(srb->d_id));
- }
- 
--static int zfcp_dbf_san_view_format(debug_info_t *id, struct debug_view *view,
--				    char *out_buf, const char *in_buf)
--{
--	struct zfcp_dbf_san_record *r = (struct zfcp_dbf_san_record *)in_buf;
--	char *p = out_buf;
--
--	if (strncmp(r->tag, "dump", ZFCP_DBF_TAG_SIZE) == 0)
--		return 0;
--
--	zfcp_dbf_tag(&p, "tag", r->tag);
--	zfcp_dbf_out(&p, "fsf_reqid", "0x%0Lx", r->fsf_reqid);
--	zfcp_dbf_out(&p, "fsf_seqno", "0x%08x", r->fsf_seqno);
--
--	if (strncmp(r->tag, "octc", ZFCP_DBF_TAG_SIZE) == 0) {
--		struct zfcp_dbf_san_record_ct_request *ct = &r->u.ct_req;
--		zfcp_dbf_out(&p, "d_id", "0x%06x", ct->d_id);
--		zfcp_dbf_out(&p, "cmd_req_code", "0x%04x", ct->cmd_req_code);
--		zfcp_dbf_out(&p, "revision", "0x%02x", ct->revision);
--		zfcp_dbf_out(&p, "gs_type", "0x%02x", ct->gs_type);
--		zfcp_dbf_out(&p, "gs_subtype", "0x%02x", ct->gs_subtype);
--		zfcp_dbf_out(&p, "options", "0x%02x", ct->options);
--		zfcp_dbf_out(&p, "max_res_size", "0x%04x", ct->max_res_size);
--	} else if (strncmp(r->tag, "rctc", ZFCP_DBF_TAG_SIZE) == 0) {
--		struct zfcp_dbf_san_record_ct_response *ct = &r->u.ct_resp;
--		zfcp_dbf_out(&p, "cmd_rsp_code", "0x%04x", ct->cmd_rsp_code);
--		zfcp_dbf_out(&p, "revision", "0x%02x", ct->revision);
--		zfcp_dbf_out(&p, "reason_code", "0x%02x", ct->reason_code);
--		zfcp_dbf_out(&p, "reason_code_expl", "0x%02x", ct->expl);
--		zfcp_dbf_out(&p, "vendor_unique", "0x%02x", ct->vendor_unique);
--		zfcp_dbf_out(&p, "max_res_size", "0x%04x", ct->max_res_size);
--	} else if (strncmp(r->tag, "oels", ZFCP_DBF_TAG_SIZE) == 0 ||
--		   strncmp(r->tag, "rels", ZFCP_DBF_TAG_SIZE) == 0 ||
--		   strncmp(r->tag, "iels", ZFCP_DBF_TAG_SIZE) == 0) {
--		struct zfcp_dbf_san_record_els *els = &r->u.els;
--		zfcp_dbf_out(&p, "d_id", "0x%06x", els->d_id);
--	}
--	return p - out_buf;
--}
--
--static struct debug_view zfcp_dbf_san_view = {
--	.name = "structured",
--	.header_proc = zfcp_dbf_view_header,
--	.format_proc = zfcp_dbf_san_view_format,
--};
--
- void _zfcp_dbf_scsi(const char *tag, const char *tag2, int level,
- 		    struct zfcp_dbf *dbf, struct scsi_cmnd *scsi_cmnd,
- 		    struct zfcp_fsf_req *fsf_req, unsigned long old_req_id)
-@@ -882,8 +778,7 @@ int zfcp_dbf_adapter_register(struct zfc
- 
- 	/* debug feature area which records SAN command failures and recovery */
- 	sprintf(dbf_name, "zfcp_%s_san", dev_name(&adapter->ccw_device->dev));
--	dbf->san = zfcp_dbf_reg(dbf_name, 6, &zfcp_dbf_san_view,
--				sizeof(struct zfcp_dbf_san_record));
-+	dbf->san = zfcp_dbf_reg(dbf_name, 3, NULL, sizeof(struct zfcp_dbf_san));
- 	if (!dbf->san)
- 		goto err_out;
- 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_dbf.h linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.h
---- linux-2.6/drivers/s390/scsi/zfcp_dbf.h	2010-12-02 11:14:00.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_dbf.h	2010-12-02 11:14:00.000000000 +0100
-@@ -108,6 +108,34 @@ struct zfcp_dbf_rec {
- 	} u;
- } __packed;
- 
-+/**
-+ * enum zfcp_dbf_san_id - SAN trace record identifier
-+ * @ZFCP_DBF_SAN_REQ: request trace record id
-+ * @ZFCP_DBF_SAN_RES: response trace record id
-+ * @ZFCP_DBF_SAN_ELS: extended link service record id
-+ */
-+enum zfcp_dbf_san_id {
-+	ZFCP_DBF_SAN_REQ	= 1,
-+	ZFCP_DBF_SAN_RES	= 2,
-+	ZFCP_DBF_SAN_ELS	= 3,
-+};
-+
-+/** struct zfcp_dbf_san - trace record for SAN requests and responses
-+ * @id: unique number of recovery record type
-+ * @tag: identifier string specifying the location of initiation
-+ * @fsf_req_id: request id for fsf requests
-+ * @payload: unformatted information related to request/response
-+ * @d_id: destination id
-+ */
-+struct zfcp_dbf_san {
-+	u8 id;
-+	char tag[ZFCP_DBF_TAG_LEN];
-+	u64 fsf_req_id;
-+	u32 d_id;
-+#define ZFCP_DBF_SAN_MAX_PAYLOAD (FC_CT_HDR_LEN + 32)
-+	char payload[ZFCP_DBF_SAN_MAX_PAYLOAD];
-+} __packed;
-+
- struct zfcp_dbf_hba_record_response {
- 	u32 fsf_command;
- 	u64 fsf_reqid;
-@@ -176,44 +204,6 @@ struct zfcp_dbf_hba_record {
- 	} u;
- } __attribute__ ((packed));
- 
--struct zfcp_dbf_san_record_ct_request {
--	u16 cmd_req_code;
--	u8 revision;
--	u8 gs_type;
--	u8 gs_subtype;
--	u8 options;
--	u16 max_res_size;
--	u32 len;
--	u32 d_id;
--} __attribute__ ((packed));
--
--struct zfcp_dbf_san_record_ct_response {
--	u16 cmd_rsp_code;
--	u8 revision;
--	u8 reason_code;
--	u8 expl;
--	u8 vendor_unique;
--	u16 max_res_size;
--	u32 len;
--} __attribute__ ((packed));
--
--struct zfcp_dbf_san_record_els {
--	u32 d_id;
--} __attribute__ ((packed));
--
--struct zfcp_dbf_san_record {
--	u8 tag[ZFCP_DBF_TAG_SIZE];
--	u64 fsf_reqid;
--	u32 fsf_seqno;
--	union {
--		struct zfcp_dbf_san_record_ct_request ct_req;
--		struct zfcp_dbf_san_record_ct_response ct_resp;
--		struct zfcp_dbf_san_record_els els;
--	} u;
--} __attribute__ ((packed));
--
--#define ZFCP_DBF_SAN_MAX_PAYLOAD 1024
--
- struct zfcp_dbf_scsi_record {
- 	u8 tag[ZFCP_DBF_TAG_SIZE];
- 	u8 tag2[ZFCP_DBF_TAG_SIZE];
-@@ -250,7 +240,7 @@ struct zfcp_dbf {
- 	spinlock_t			scsi_lock;
- 	struct zfcp_dbf_rec		rec_buf;
- 	struct zfcp_dbf_hba_record	hba_buf;
--	struct zfcp_dbf_san_record	san_buf;
-+	struct zfcp_dbf_san		san_buf;
- 	struct zfcp_dbf_scsi_record	scsi_buf;
- 	struct zfcp_adapter		*adapter;
- };
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_ext.h linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h
---- linux-2.6/drivers/s390/scsi/zfcp_ext.h	2010-12-02 11:14:00.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_ext.h	2010-12-02 11:14:00.000000000 +0100
-@@ -55,11 +55,9 @@ extern void _zfcp_dbf_hba_fsf_unsol(cons
- 					  struct fsf_status_read_buffer *);
- extern void zfcp_dbf_hba_qdio(struct zfcp_dbf *, unsigned int, int, int);
- extern void zfcp_dbf_hba_berr(struct zfcp_dbf *, struct zfcp_fsf_req *);
--extern void zfcp_dbf_san_ct_request(struct zfcp_fsf_req *, u32);
--extern void zfcp_dbf_san_ct_response(struct zfcp_fsf_req *);
--extern void zfcp_dbf_san_els_request(struct zfcp_fsf_req *);
--extern void zfcp_dbf_san_els_response(struct zfcp_fsf_req *);
--extern void zfcp_dbf_san_incoming_els(struct zfcp_fsf_req *);
-+extern void zfcp_dbf_san_req(char *, struct zfcp_fsf_req *, u32);
-+extern void zfcp_dbf_san_res(char *, struct zfcp_fsf_req *);
-+extern void zfcp_dbf_san_in_els(char *, struct zfcp_fsf_req *);
- extern void _zfcp_dbf_scsi(const char *, const char *, int, struct zfcp_dbf *,
- 			   struct scsi_cmnd *, struct zfcp_fsf_req *,
- 			   unsigned long);
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fc.c linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c
---- linux-2.6/drivers/s390/scsi/zfcp_fc.c	2010-12-02 11:13:24.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fc.c	2010-12-02 11:14:00.000000000 +0100
-@@ -251,7 +251,7 @@ void zfcp_fc_incoming_els(struct zfcp_fs
- 		(struct fsf_status_read_buffer *) fsf_req->data;
- 	unsigned int els_type = status_buffer->payload.data[0];
- 
--	zfcp_dbf_san_incoming_els(fsf_req);
-+	zfcp_dbf_san_in_els("fciels1", fsf_req);
- 	if (els_type == ELS_PLOGI)
- 		zfcp_fc_incoming_plogi(fsf_req);
- 	else if (els_type == ELS_LOGO)
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2010-12-02 11:14:00.000000000 +0100
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2010-12-02 11:14:00.000000000 +0100
-@@ -882,7 +882,7 @@ static void zfcp_fsf_send_ct_handler(str
- 
- 	switch (header->fsf_status) {
-         case FSF_GOOD:
--		zfcp_dbf_san_ct_response(req);
-+		zfcp_dbf_san_res("fsscth1", req);
- 		ct->status = 0;
- 		break;
-         case FSF_SERVICE_CLASS_NOT_SUPPORTED:
-@@ -1025,7 +1025,7 @@ int zfcp_fsf_send_ct(struct zfcp_fc_wka_
- 	req->qtcb->header.port_handle = wka_port->handle;
- 	req->data = ct;
- 
--	zfcp_dbf_san_ct_request(req, wka_port->d_id);
-+	zfcp_dbf_san_req("fssct_1", req, wka_port->d_id);
- 
- 	ret = zfcp_fsf_req_send(req);
- 	if (ret)
-@@ -1053,7 +1053,7 @@ static void zfcp_fsf_send_els_handler(st
- 
- 	switch (header->fsf_status) {
- 	case FSF_GOOD:
--		zfcp_dbf_san_els_response(req);
-+		zfcp_dbf_san_res("fsselh1", req);
- 		send_els->status = 0;
- 		break;
- 	case FSF_SERVICE_CLASS_NOT_SUPPORTED:
-@@ -1127,7 +1127,7 @@ int zfcp_fsf_send_els(struct zfcp_adapte
- 	req->handler = zfcp_fsf_send_els_handler;
- 	req->data = els;
- 
--	zfcp_dbf_san_els_request(req);
-+	zfcp_dbf_san_req("fssels1", req, d_id);
- 
- 	ret = zfcp_fsf_req_send(req);
- 	if (ret)
-
+> ---
+>  drivers/media/video/cafe_ccic.c         |    4 +---
+>  drivers/net/myri10ge/myri10ge.c         |    4 +---
+>  drivers/net/sfc/falcon.c                |   25 +++++--------------------
+>  drivers/net/skge.c                      |    4 +---
+>  drivers/net/sky2.c                      |    5 +----
+>  drivers/net/wireless/rt2x00/rt2x00pci.c |    4 ++--
+>  drivers/pci/pci-driver.c                |    3 ++-
+>  drivers/pci/pci.c                       |    7 ++-----
+>  drivers/scsi/ipr.c                      |    8 +-------
+>  drivers/scsi/pmcraid.c                  |    7 +------
+>  drivers/staging/sm7xx/smtcfb.c          |    2 +-
+>  include/linux/pci.h                     |    8 +++-----
+>  sound/pci/cs5535audio/cs5535audio_pm.c  |    7 +------
+>  13 files changed, 22 insertions(+), 66 deletions(-)
+> 
+> diff --git a/drivers/media/video/cafe_ccic.c b/drivers/media/video/cafe_ccic.c
+> index 2934770..3e653f3 100644
+> --- a/drivers/media/video/cafe_ccic.c
+> +++ b/drivers/media/video/cafe_ccic.c
+> @@ -2186,9 +2186,7 @@ static int cafe_pci_resume(struct pci_dev *pdev)
+>  	struct cafe_camera *cam = to_cam(v4l2_dev);
+>  	int ret = 0;
+>  
+> -	ret = pci_restore_state(pdev);
+> -	if (ret)
+> -		return ret;
+> +	pci_restore_state(pdev);
+>  	ret = pci_enable_device(pdev);
+>  
+>  	if (ret) {
+> diff --git a/drivers/net/myri10ge/myri10ge.c b/drivers/net/myri10ge/myri10ge.c
+> index 8524cc4..d3c4a37 100644
+> --- a/drivers/net/myri10ge/myri10ge.c
+> +++ b/drivers/net/myri10ge/myri10ge.c
+> @@ -3403,9 +3403,7 @@ static int myri10ge_resume(struct pci_dev *pdev)
+>  		return -EIO;
+>  	}
+>  
+> -	status = pci_restore_state(pdev);
+> -	if (status)
+> -		return status;
+> +	pci_restore_state(pdev);
+>  
+>  	status = pci_enable_device(pdev);
+>  	if (status) {
+> diff --git a/drivers/net/sfc/falcon.c b/drivers/net/sfc/falcon.c
+> index 267019b..1763b9a 100644
+> --- a/drivers/net/sfc/falcon.c
+> +++ b/drivers/net/sfc/falcon.c
+> @@ -1066,22 +1066,9 @@ static int falcon_reset_hw(struct efx_nic *efx, enum reset_type method)
+>  
+>  	/* Restore PCI configuration if needed */
+>  	if (method == RESET_TYPE_WORLD) {
+> -		if (efx_nic_is_dual_func(efx)) {
+> -			rc = pci_restore_state(nic_data->pci_dev2);
+> -			if (rc) {
+> -				netif_err(efx, drv, efx->net_dev,
+> -					  "failed to restore PCI config for "
+> -					  "the secondary function\n");
+> -				goto fail3;
+> -			}
+> -		}
+> -		rc = pci_restore_state(efx->pci_dev);
+> -		if (rc) {
+> -			netif_err(efx, drv, efx->net_dev,
+> -				  "failed to restore PCI config for the "
+> -				  "primary function\n");
+> -			goto fail4;
+> -		}
+> +		if (efx_nic_is_dual_func(efx))
+> +			pci_restore_state(nic_data->pci_dev2);
+> +		pci_restore_state(efx->pci_dev);
+>  		netif_dbg(efx, drv, efx->net_dev,
+>  			  "successfully restored PCI config\n");
+>  	}
+> @@ -1092,7 +1079,7 @@ static int falcon_reset_hw(struct efx_nic *efx, enum reset_type method)
+>  		rc = -ETIMEDOUT;
+>  		netif_err(efx, hw, efx->net_dev,
+>  			  "timed out waiting for hardware reset\n");
+> -		goto fail5;
+> +		goto fail3;
+>  	}
+>  	netif_dbg(efx, hw, efx->net_dev, "hardware reset complete\n");
+>  
+> @@ -1100,11 +1087,9 @@ static int falcon_reset_hw(struct efx_nic *efx, enum reset_type method)
+>  
+>  	/* pci_save_state() and pci_restore_state() MUST be called in pairs */
+>  fail2:
+> -fail3:
+>  	pci_restore_state(efx->pci_dev);
+>  fail1:
+> -fail4:
+> -fail5:
+> +fail3:
+>  	return rc;
+>  }
+>  
+> diff --git a/drivers/net/skge.c b/drivers/net/skge.c
+> index 220e039..61553af 100644
+> --- a/drivers/net/skge.c
+> +++ b/drivers/net/skge.c
+> @@ -4087,9 +4087,7 @@ static int skge_resume(struct pci_dev *pdev)
+>  	if (err)
+>  		goto out;
+>  
+> -	err = pci_restore_state(pdev);
+> -	if (err)
+> -		goto out;
+> +	pci_restore_state(pdev);
+>  
+>  	err = skge_reset(hw);
+>  	if (err)
+> diff --git a/drivers/net/sky2.c b/drivers/net/sky2.c
+> index d657708..be3aee7 100644
+> --- a/drivers/net/sky2.c
+> +++ b/drivers/net/sky2.c
+> @@ -4969,10 +4969,7 @@ static int sky2_resume(struct pci_dev *pdev)
+>  	if (err)
+>  		goto out;
+>  
+> -	err = pci_restore_state(pdev);
+> -	if (err)
+> -		goto out;
+> -
+> +	pci_restore_state(pdev);
+>  	pci_enable_wake(pdev, PCI_D0, 0);
+>  
+>  	/* Re-enable all clocks */
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+> index 868ca19..5e3c46f 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00pci.c
+> +++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+> @@ -356,12 +356,12 @@ int rt2x00pci_resume(struct pci_dev *pci_dev)
+>  	struct rt2x00_dev *rt2x00dev = hw->priv;
+>  
+>  	if (pci_set_power_state(pci_dev, PCI_D0) ||
+> -	    pci_enable_device(pci_dev) ||
+> -	    pci_restore_state(pci_dev)) {
+> +	    pci_enable_device(pci_dev)) {
+>  		ERROR(rt2x00dev, "Failed to resume device.\n");
+>  		return -EIO;
+>  	}
+>  
+> +	pci_restore_state(pci_dev);
+>  	return rt2x00lib_resume(rt2x00dev);
+>  }
+>  EXPORT_SYMBOL_GPL(rt2x00pci_resume);
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index 8a6f797..80e551e 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -449,7 +449,8 @@ static int pci_restore_standard_config(struct pci_dev *pci_dev)
+>  			return error;
+>  	}
+>  
+> -	return pci_restore_state(pci_dev);
+> +	pci_restore_state(pci_dev);
+> +	return 0;
+>  }
+>  
+>  static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e98c810..c711d1b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -937,14 +937,13 @@ pci_save_state(struct pci_dev *dev)
+>   * pci_restore_state - Restore the saved state of a PCI device
+>   * @dev: - PCI device that we're dealing with
+>   */
+> -int 
+> -pci_restore_state(struct pci_dev *dev)
+> +void pci_restore_state(struct pci_dev *dev)
+>  {
+>  	int i;
+>  	u32 val;
+>  
+>  	if (!dev->state_saved)
+> -		return 0;
+> +		return;
+>  
+>  	/* PCI Express register must be restored first */
+>  	pci_restore_pcie_state(dev);
+> @@ -968,8 +967,6 @@ pci_restore_state(struct pci_dev *dev)
+>  	pci_restore_iov_state(dev);
+>  
+>  	dev->state_saved = false;
+> -
+> -	return 0;
+>  }
+>  
+>  static int do_pci_enable_device(struct pci_dev *dev, int bars)
+> diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+> index fa60d7d..1d7dbe6 100644
+> --- a/drivers/scsi/ipr.c
+> +++ b/drivers/scsi/ipr.c
+> @@ -7485,16 +7485,10 @@ static int ipr_reset_restore_cfg_space(struct ipr_cmnd *ipr_cmd)
+>  {
+>  	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
+>  	volatile u32 int_reg;
+> -	int rc;
+>  
+>  	ENTER;
+>  	ioa_cfg->pdev->state_saved = true;
+> -	rc = pci_restore_state(ioa_cfg->pdev);
+> -
+> -	if (rc != PCIBIOS_SUCCESSFUL) {
+> -		ipr_cmd->s.ioasa.hdr.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
+> -		return IPR_RC_JOB_CONTINUE;
+> -	}
+> +	pci_restore_state(ioa_cfg->pdev);
+>  
+>  	if (ipr_set_pcix_cmd_reg(ioa_cfg)) {
+>  		ipr_cmd->s.ioasa.hdr.ioasc = cpu_to_be32(IPR_IOASC_PCI_ACCESS_ERROR);
+> diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+> index cf89091..091baf2 100644
+> --- a/drivers/scsi/pmcraid.c
+> +++ b/drivers/scsi/pmcraid.c
+> @@ -2227,12 +2227,7 @@ static void pmcraid_ioa_reset(struct pmcraid_cmd *cmd)
+>  		/* Once either bist or pci reset is done, restore PCI config
+>  		 * space. If this fails, proceed with hard reset again
+>  		 */
+> -		if (pci_restore_state(pinstance->pdev)) {
+> -			pmcraid_info("config-space error resetting again\n");
+> -			pinstance->ioa_state = IOA_STATE_IN_RESET_ALERT;
+> -			pmcraid_reset_alert(cmd);
+> -			break;
+> -		}
+> +		pci_restore_state(pinstance->pdev);
+>  
+>  		/* fail all pending commands */
+>  		pmcraid_fail_outstanding_cmds(pinstance);
+> diff --git a/drivers/staging/sm7xx/smtcfb.c b/drivers/staging/sm7xx/smtcfb.c
+> index 24f47d6..7162dee 100644
+> --- a/drivers/staging/sm7xx/smtcfb.c
+> +++ b/drivers/staging/sm7xx/smtcfb.c
+> @@ -1071,7 +1071,7 @@ static int __maybe_unused smtcfb_resume(struct pci_dev *pdev)
+>  	/* when resuming, restore pci data and fb cursor */
+>  	if (pdev->dev.power.power_state.event != PM_EVENT_FREEZE) {
+>  		retv = pci_set_power_state(pdev, PCI_D0);
+> -		retv = pci_restore_state(pdev);
+> +		pci_restore_state(pdev);
+>  		if (pci_enable_device(pdev))
+>  			return -1;
+>  		pci_set_master(pdev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index 7454408..63cbadc 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -806,7 +806,7 @@ size_t pci_get_rom_size(struct pci_dev *pdev, void __iomem *rom, size_t size);
+>  
+>  /* Power management related routines */
+>  int pci_save_state(struct pci_dev *dev);
+> -int pci_restore_state(struct pci_dev *dev);
+> +void pci_restore_state(struct pci_dev *dev);
+>  int __pci_complete_power_transition(struct pci_dev *dev, pci_power_t state);
+>  int pci_set_power_state(struct pci_dev *dev, pci_power_t state);
+>  pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state);
+> @@ -1168,10 +1168,8 @@ static inline int pci_save_state(struct pci_dev *dev)
+>  	return 0;
+>  }
+>  
+> -static inline int pci_restore_state(struct pci_dev *dev)
+> -{
+> -	return 0;
+> -}
+> +static inline void pci_restore_state(struct pci_dev *dev)
+> +{ }
+>  
+>  static inline int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
+>  {
+> diff --git a/sound/pci/cs5535audio/cs5535audio_pm.c b/sound/pci/cs5535audio/cs5535audio_pm.c
+> index a3301cc..185b000 100644
+> --- a/sound/pci/cs5535audio/cs5535audio_pm.c
+> +++ b/sound/pci/cs5535audio/cs5535audio_pm.c
+> @@ -90,12 +90,7 @@ int snd_cs5535audio_resume(struct pci_dev *pci)
+>  	int i;
+>  
+>  	pci_set_power_state(pci, PCI_D0);
+> -	if (pci_restore_state(pci) < 0) {
+> -		printk(KERN_ERR "cs5535audio: pci_restore_state failed, "
+> -		       "disabling device\n");
+> -		snd_card_disconnect(card);
+> -		return -EIO;
+> -	}
+> +	pci_restore_state(pci);
+>  	if (pci_enable_device(pci) < 0) {
+>  		printk(KERN_ERR "cs5535audio: pci_enable_device failed, "
+>  		       "disabling device\n");
+> 
