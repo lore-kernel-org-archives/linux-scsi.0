@@ -1,131 +1,60 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: After memory pressure: can't read from tape anymore
-Date: Thu, 2 Dec 2010 16:47:19 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED709113ABB@inbmail01.lsi.com>
-References: <1290971729.2814.13.camel@larosa>
-	 <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>
-	 <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>
-	 <4CF521DE.7020800@panasas.com>
-	 <alpine.LNX.2.00.1011301821210.9731@kai.makisara.local>
-	 <4CF52A03.2000704@panasas.com>
-	 <alpine.LNX.2.00.1011301853300.9731@kai.makisara.local>
-	 <4CF53349.10509@panasas.com>
-	 <alpine.LNX.2.00.1011302139460.9731@kai.makisara.local>
- <1291196400.2814.34.camel@larosa>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: mvsas errors in 2.6.36
+Date: Thu, 2 Dec 2010 06:37:31 -0700
+Message-ID: <201012020637.31852.thomas@fjellstrom.ca>
+References: <201010290650.32892.thomas@fjellstrom.ca> <201012020249.00367.thomas@fjellstrom.ca> <4CF79C60.9030107@shiftmail.org>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:38291 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757358Ab0LBLRU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Dec 2010 06:17:20 -0500
-In-Reply-To: <1291196400.2814.34.camel@larosa>
-Content-Language: en-US
+Received: from tomasu.net ([64.85.170.234]:42392 "EHLO mail.tomasu.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757358Ab0LBNhl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 2 Dec 2010 08:37:41 -0500
+In-Reply-To: <4CF79C60.9030107@shiftmail.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>, Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Spelic <spelic@shiftmail.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogTHVrYXMgS29sYmUgW21h
-aWx0bzpsa29sYmVAdGVjaGZhay51bmktYmllbGVmZWxkLmRlXQ0KPiBTZW50OiBXZWRuZXNkYXks
-IERlY2VtYmVyIDAxLCAyMDEwIDM6MTAgUE0NCj4gVG86IEthaSBNYWtpc2FyYQ0KPiBDYzogQm9h
-eiBIYXJyb3NoOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgRGVzYWksIEthc2h5YXANCj4g
-U3ViamVjdDogUmU6IEFmdGVyIG1lbW9yeSBwcmVzc3VyZTogY2FuJ3QgcmVhZCBmcm9tIHRhcGUg
-YW55bW9yZQ0KPiANCj4gQW0gRGllbnN0YWcsIGRlbiAzMC4xMS4yMDEwLCAyMTo1MyArMDIwMCBz
-Y2hyaWViIEthaSBNYWtpc2FyYToNCj4gPiBPbiBUdWUsIDMwIE5vdiAyMDEwLCBCb2F6IEhhcnJv
-c2ggd3JvdGU6DQo+IA0KPiBJJ20gQ2MnaW5nIERlc2F5IEthc2h5YXAgZnJvbSBMU0ksIG1heWJl
-IGhlIGNhbiBjb21tZW50IG9uIHRoZSBoYXJkd2FyZQ0KPiBsaW1pdGF0aW9ucyBvZiB0aGUgU0FT
-MTA2OEU/DQpMdWthcywNCg0KTm8uIGl0IGlzIG5vdCBsaW1pdGF0aW9uIGZyb20gaC93IHRoYXQg
-IiBDT05GSUdfRlVTSU9OX01BWF9TR0UiIG5lZWRzIHRvIGJlIDEyOC4NCkJ1dCBvdXIgY29kZSBp
-cyB3cml0dGVuIHN1Y2ggYSB3YXkgdGhhdCBldmVuIGlmIHlvdSBjaGFuZ2UgaXQgbW9yZSB0aGFu
-IDEyOCwgaXQgd2lsbCBmYWxsIGRvd24gdG8gMTI4IGFnYWluLg0KDQpUbyBjaGFuZ2UgdGhpcyB2
-YWx1ZSB5b3UgbmVlZCB0byBkbyBiZWxvdyBjaGFuZ2VzIGluIG1wdGJhc2UuaA0KDQotLQ0KLSNk
-ZWZpbmUgTVBUX1NDU0lfU0dfREVQVEggICAgIENPTkZJR19GVVNJT05fTUFYX1NHRQ0KKyNkZWZp
-bmUgTVBUX1NDU0lfU0dfREVQVEggICAgICAgMjU2DQotLQ0KDQoxMjggaXMgZ29vZCBhbW91bnQg
-Zm9yIFNjYXR0ZXIgZ2F0aGVyIGVsZW1lbnQuIFRoaXMgdmFsdWUgaXMgc3RhbmRhcmQgdmFsdWUg
-Zm9yIE1QVCBGVVNJSU9OLCBzaW5jZSBsb25nLg0KDQpUaGlzIHZhbHVlIHdpbGwgYmUgcmVmbGVj
-dCB0byBzZ190YWJsZXNpemUgYW5kIGxpbnV4IHNjYXR0ZXItZ2F0aGVyIG1vZHVsZSB3aWxsIHVz
-ZSB0aGlzIHZhbHVlIGZvciBjcmVhdGluZyBzZ190YWJsZSBmb3IgSEJBLg0KU2VlOiAiIGNhdCAv
-c3lzL2NsYXNzL3Njc2lfaG9zdC9ob3N0PHg+L3NnX3RhYmxlc2l6ZSINCg0KSWYgc2luZ2xlIElP
-IGlzIG5vdCBhYmxlIHRvIGZpdCBpbnRvIHNnX3RhYmxlc2l6ZSwgdGhlbiBpdCB3aWxsIGJlIGNv
-bnZlcnRlZCBpbnRvIG11bHRpcGxlIElPcyBmb3IgTG93IExheWVyIERyaXZlcnMoQnkgInNjYXR0
-ZXItZ2F0aGVyIiBtb2R1bGUgb2YgbGludXgpLg0KU28gSSBkbyBub3Qgc2VlIGFueSBwcm9ibGVt
-IHdpdGggDQpDT05GSUdfRlVTSU9OX01BWF9TR0UgdmFsdWUuICBPdXIgZHJpdmVyIGludGVybmFs
-bHkgY29udmVydCBzZ2xpc3QgaW50byBTR0Ugd2hpY2ggdW5kZXJzdG9vZCBieSBMU0kgSC9XLg0K
-DQpUaGFua3MsIEthc2h5YXANCg0KDQo+IA0KPiA+IC4uLg0KPiA+ID4gSSBsb29rZWQgYXQgZW5s
-YXJnZV9idWZmZXIoKSBhbmQgaXQgbG9va3MgZnJhZ2lsZSBhbmQgYnJva2VuLiBJZg0KPiB5b3Ug
-cmVhbGx5DQo+ID4gPiBuZWVkIGEgcG9pbnRlciBlZzoNCj4gPiA+IAlTVGJ1ZmZlci0+Yl9kYXRh
-ID0gcGFnZV9hZGRyZXNzKFNUYnVmZmVyLT5yZXNlcnZlZF9wYWdlc1swXSk7DQo+ID4gPg0KPiA+
-IElmIHlvdSB0aGluayBpdCBpcyBicm9rZW4sIHBsZWFzZSBmaXggaXQuDQo+ID4NCj4gPiA+IFRo
-YW4gd2F5IG5vdCB1c2Ugdm1hbGxvYygpIGZvciBidWZmZXJzIGxhcmdlciB0aGVuIFBBR0VfU0la
-RT8gQnV0DQo+IGJldHRlciB5ZXQNCj4gPiA+IGF2b2lkIGl0IGJ5IGtlZXBpbmcgYSBwYWdlc19h
-cnJheSBvciBzZy1saXN0IGFuZCBvcGVyYXRlIG9uIGFuIGFpbw0KPiB0eXBlDQo+ID4gPiBvcGVy
-YXRpb25zLg0KPiA+ID4NCj4gPiB2bWFsbG9jKCkgaXMgbm90IGEgc29sdXRpb24gaGVyZS4gVGhp
-bmsgYWJvdXQgdGhpcyBmcm9tIHRoZSBIQkEgc2lkZS4NCj4gRWFjaA0KPiA+IHMvZyBzZWdtZW50
-IG11c3QgYmUgY29udGlndW91cyBpbiB0aGUgYWRkcmVzcyBzcGFjZSB0aGUgSEJBIHVzZXMuIElu
-DQo+IG1hbnkNCj4gPiBjYXNlcyB0aGlzIGlzIHRoZSBwaHlzaWNhbCBtZW1vcnkgYWRkcmVzcyBz
-cGFjZS4gQW55IHNvbHV0aW9uIG11c3QNCj4gbWFrZQ0KPiA+IHN1cmUgdGhhdCB0aGUgSEJBIGNh
-biBwZXJmb3JtIHRoZSByZXF1ZXN0ZWQgZGF0YSB0cmFuc2Zlci4NCj4gPg0KPiA+ID4gPiBLYWkN
-Cj4gPiA+DQo+ID4gPiBCdXQgSSB1bmRlcnN0YW5kIHRoaXMgaXMgYSBsb3Qgb2Ygd29yayBvbiBh
-biBvbGQgZHJpdmVyLiBQZXJoYXBzDQo+IHByZS1hbGxvY2F0ZQ0KPiA+ID4gc29tZXRoaW5nIGJp
-ZyBhdCBzdGFydHVwLiBzcGVjaWZpZWQgYnkgdXNlcj8NCj4gPiA+DQo+ID4gVGhpcyB1c2VkIHRv
-IGJlIHBvc3NpYmxlIGF0IHNvbWUgdGltZSBhbmQgaXQgY291bGQgYmUgbWFkZSBwb3NzaWJsZQ0K
-PiBhZ2Fpbi4NCj4gPiBCdXQgSSBkb24ndCBsaWtlIHRoaXMgb3B0aW9uIGJlY2F1c2UgaXQgbWVh
-bnMgdGhhdCB0aGUgdXNlcnMgbXVzdA0KPiA+IGV4cGxpY2l0bHkgc2V0IHRoZSBib290IHBhcmFt
-ZXRlcnMuDQo+ID4NCj4gPiBBbmQgaXQgaXMgZGlmZmljdWx0IGZvciBtZSB0byBiZWxpZXZlIHRo
-ZSBtb2Rlcm4gU0FTIEhCQXMgb25seQ0KPiBzdXBwb3J0IDEyOA0KPiA+IHMvZyBzZWdtZW50cy4N
-Cj4gPg0KPiA+IEthaQ0KPiANCj4gDQo+IEZvciByZWZlcmVuY2UsIGhlcmUncyBteSBvcmlnaW5h
-bCBtZXNzYWdlIHdpdGggS2FpcyByZXBseToNCj4gDQo+ID4gSGksDQo+ID4NCj4gPiBPbiBvdXIg
-YmFja3VwIHN5c3RlbSAoMiBMVE80IGRyaXZlcy9UYW5kYmVyZyBsaWJyYXJ5IHZpYSBMU0lTQVMx
-MDY4RSwNCj4gPiBLZXJuZWwgMi42LjM2IHdpdGggdGhlIHN0b2NrIEZ1c2lvbiBNUFQgU0FTIEhv
-c3QgZHJpdmVyIDMuMDQuMTcgb24NCj4gPiBkZWJpYW4vc3F1ZWV6ZSksIHdlIHNlZSByZXByb2R1
-Y2libGUgdGFwZSByZWFkIGFuZCB3cml0ZSBmYWlsdXJlcw0KPiBhZnRlcg0KPiA+IHRoZSBzeXN0
-ZW0gd2FzIHVuZGVyIG1lbW9yeSBwcmVzc3VyZToNCj4gPg0KPiA+IFszNDI1NjcuMjk3MTUyXSBz
-dDA6IENhbid0IGFsbG9jYXRlIDIwOTcxNTIgYnl0ZSB0YXBlIGJ1ZmZlci4NCj4gPiBbMzQyNTY5
-LjMxNjA5OV0gc3QwOiBDYW4ndCBhbGxvY2F0ZSAyMDk3MTUyIGJ5dGUgdGFwZSBidWZmZXIuDQo+
-ID4gWzM0MjU3MC44MDUxNjRdIHN0MDogQ2FuJ3QgYWxsb2NhdGUgMjA5NzE1MiBieXRlIHRhcGUg
-YnVmZmVyLg0KPiA+IFszNDI1NzEuOTU4MzMxXSBzdDA6IENhbid0IGFsbG9jYXRlIDIwOTcxNTIg
-Ynl0ZSB0YXBlIGJ1ZmZlci4NCj4gPiBbMzQyNTcyLjcwNDI2NF0gc3QwOiBDYW4ndCBhbGxvY2F0
-ZSAyMDk3MTUyIGJ5dGUgdGFwZSBidWZmZXIuDQo+ID4gWzM0Mjg3My43MzcxMzBdIHN0OiBmcm9t
-X2J1ZmZlciBvZmZzZXQgb3ZlcmZsb3cuDQo+ID4NCj4gPiBCYWN1bGEgaXMgc3Bld2luZyB0aGlz
-IG1lc3NhZ2UgZXZlcnkgdGltZSBpdCB0cmllcyB0byBhY2Nlc3MgdGhlIHRhcGUNCj4gPiBkcml2
-ZToNCj4gPiAyOC1Ob3YgMTk6NTggc2QxLnRlY2hmYWsgSm9iSWQgMjg1NzogRXJyb3I6IGJsb2Nr
-LmM6MTAwMiBSZWFkIGVycm9yDQo+IG9uIGZkPTEwIGF0IGZpbGU6YmxrIDA6MCBvbiBkZXZpY2Ug
-ImRydjIiICgvZGV2L25zdDApLiBFUlI9SW5wdXQvb3V0cHV0DQo+IGVycm9yDQo+ID4NCj4gPiBC
-eSBtZW1vcnkgcHJlc3N1cmUsIEkgbWVhbiB0aGF0IHRoZSBLVk0gcHJvY2Vzc2VzIGNvbnRhaW5p
-bmcgdGhlDQo+ID4gcG9zdGdyZXMtZGIgKH4yMG1pbGxpb24gZmlsZXMpIGFuZCB0aGUgYmFjdWxh
-IGRpcmVjdG9yIGhhdmUgdXNlZCBhbGwNCj4gPiBhdmFpbGFibGUgUkFNLCBvbmUgb2YgdGhlbSB1
-c2VkIH40R2lCIG9mIGl0cyAxMkdpQiBzd2FwIGZvciBhbiBob3VyDQo+IG9yDQo+ID4gc28gKGJ5
-IHNlbGVjdGluZyBhIGZ1bGwgcmVzdG9yZSwgaXQgc2VlbXMgdGhhdCB0aGUgd2hvbGUgZGlyZWN0
-b3J5DQo+IHRyZWUNCj4gPiBvZiB0aGUgMTVtaW8gZmlsZXMgYmFja3VwIGdldHMgcmVhZCBpbnRv
-IG1lbW9yeSkuIEFmdGVyIHRoaXMsIEkNCj4gd2Fzbid0DQo+ID4gYWJsZSB0byByZWFkIGZyb20g
-dGhlIHNlY29uZCB0YXBlIGRyaXZlIGFueW1vcmUgKC9kZXYvc3QwKTsgd2hlcmVhcw0KPiB0aGUN
-Cj4gPiBmaXJzdCB0YXBlIGRyaXZlIHdhcyByZXN0b3JpbmcgdGhlIGRhdGEgaGFwcGlseSAoaXQg
-aXMgY3VycmVudGx5DQo+IGFib3V0DQo+ID4gaGFsZndheSB0aHJvdWdoIGEgM1RpQiByZXN0b3Jl
-IGZyb20gNSB0YXBlcykuDQo+ID4NCj4gPiBUaGlzIHNhbWUgYmVoYXZpb3VyIGFwcGVhcnMgd2hl
-biB3ZSdyZSBkb2luZyBhIGZldyBpbmNyZW1lbnRhbA0KPiBiYWNrdXBzOw0KPiA+IGFmdGVyIGEg
-d2hpbGUsIGl0IGp1c3QgaXNuJ3QgcG9zc2libGUgdG8gdXNlIHRoZSB0YXBlIGRyaXZlcyBhbnlt
-b3JlDQo+IC0NCj4gPiBldmVyeSBJL08gb3BlcmF0aW9uIGdpdmVzIGFuIEkvTyBFcnJvciwgZXZl
-biBhIHNpbXBsZSBkZCBicz02NGsNCj4gPiBjb3VudD0xMC4gQWZ0ZXIgYSByZXN0YXJ0LCB0aGUg
-c3lzdGVtIGJlaGF2ZXMgY29ycmVjdGx5IHVudGlsDQo+ID4gLXNlZW1pbmdseS0gYW5vdGhlciBt
-ZW1vcnkgcHJlc3N1cmUgc2l0dWF0aW9uIG9jY3VyZWQuDQo+ID4NCj4gVGhpcyBpcyBwcmVkaWN0
-YWJsZS4gVGhlIG1heGltdW0gbnVtYmVyIG9mIHNjYXR0ZXIvZ2F0aGVyIHNlZ21lbnRzDQo+IHNl
-ZW1zDQo+IHRvIGJlIDEyOC4gVGhlIHN0IGRyaXZlciBmaXJzdCB0cmllcyB0byBzZXQgdXAgdHJh
-bnNmZXIgZGlyZWN0bHkgZnJvbQ0KPiB0aGUNCj4gdXNlciBidWZmZXIgdG8gdGhlIEhCQS4gVGhl
-IHVzZXIgYnVmZmVyIGlzIHVzdWFsbHkgZnJhZ21lbnRlZCBzbyB0aGF0DQo+IG9uZQ0KPiBzY2F0
-dGVyL2dhdGhlciBzZWdtZW50IGlzIHVzZWQgZm9yIGVhY2ggcGFnZS4gQXNzdW1pbmcgNCBrQiBw
-YWdlIHNpemUsDQo+IHRoZQ0KPiBtYXhpbXUgc2l6ZSBvZiB0aGUgZGlyZWN0IHRyYW5zZmVyIGlz
-IDEyOCB4IDQgPSA1MTIga0IuDQo+IA0KPiBXaGVuIHRoaXMgZmFpbHMsIHRoZSBkcml2ZXIgdHJp
-ZXMgdG8gYWxsb2NhdGUgYSBrZXJuZWwgYnVmZmVyIHNvIHRoYXQNCj4gdGhlcmUgbGFyZ2VyIHRo
-YW4gNCBrQiBwaHlzaWNhbGx5IGNvbnRpZ3VvdXMgc2VnbWVudHMuIExldCdzIGFzc3VtZQ0KPiB0
-aGF0DQo+IGl0IGNhbiBmaW5kIDEyOCAxNiBrQiBzZWdtZW50cy4gSW4gdGhpcyBjYXNlIHRoZSBt
-YXhpbXVtIGJsb2NrIHNpemUgaXMNCj4gMjA0OCBrQi4gTWVtb3J5IHByZXNzdXJlIHJlc3VsdHMg
-aW4gbWVtb3J5IGZyYWdtZW50YXRpb24gYW5kIHRoZSBkcml2ZXINCj4gY2FuJ3QgZmluZCBsYXJn
-ZSBlbm91Z2ggc2VnbWVudHMgYW5kIGFsbG9jYXRpb24gZmFpbHMuIFRoaXMgaXMgd2hhdCB5b3UN
-Cj4gYXJlIHNlZWluZy4NCj4gDQo+IFNvLCBvbmUgc29sdXRpb24gaXMgdG8gdXNlIDUxMiBrQiBi
-bG9jayBzaXplLiBBbm90aGVyIG9uZSBpcyB0byB0cnkgdG8NCj4gZmluZCBvdXQgaWYgdGhlIDEy
-OCBzZWdtZW50IGxpbWl0IGlzIGEgcGh5c2ljYWwgbGltaXRhdGlvbiBvciBqdXN0IGENCj4gY2hv
-aWNlLiBJbiB0aGUgbGF0dGVyIGNhc2UgdGhlIG1wdHNhcyBkcml2ZXIgY291bGQgYmUgbW9kaWZp
-ZWQgdG8NCj4gc3VwcG9ydA0KPiBsYXJnZXIgYmxvY2sgc2l6ZSBldmVuIGFmdGVyIG1lbW9yeSBm
-cmFnbWVudGF0aW9uLg0KPiANCj4gS2FpDQo+IA0KPiANCj4gDQo+IA0KDQo=
+On December 2, 2010, you wrote:
+> On 12/02/2010 10:48 AM, Thomas Fjellstrom wrote:
+> >
+> >>> http://git.kernel.org/?p=linux/kernel/git/stable/stable-
+queue.git;a=blob_
+> >>> pl
+> >>> ain;f=queue-2.6.33/libsas-fix-ncq-mixing-with-non-ncq.patch;h=b6d7c92094
+> >>> d95 ad67a3b23c2e09c25d4fbd0f46b;hb=HEAD
+> >>>
+> >>> The fix is queued up for the next 2.6.36 and 2.6.35 stable
+> >>> point-releases.
+> >>>        
+> >> Ahah. I wonder how I missed that when I first read it. I'll have to give
+> >> the stable .36 kernel a try. Thanks!
+> >>      
+> > No fix so far:
+> >    
+> 
+> If you tried v2.6.36 or v2.6.36.1 like you said you are not getting the 
+> above mentioned commit.
+> It's already applied only in 2.6.37-rc1..rc4
+> What version have you tried exactly?
+> 
+
+2.6.36, and from the machine itself:
+
+root@boris:~# uname -a
+Linux boris 2.6.36.1+ #2 SMP Thu Dec 2 00:37:57 MST 2010 x86_64 GNU/Linux
+
+There are fewer errors it seems though. Its been a few hours and theres only 
+one set, rather than one every 30-60 minutes or so.
+
+I pulled 2.6.36.1 directly from the kernel.org 2.6.36.y git repo, and in case 
+you're wondering, the extra patches giving it the + is the group scheduling 
+patch. Otherwise its a vanila 2.6.36.1.
+
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
