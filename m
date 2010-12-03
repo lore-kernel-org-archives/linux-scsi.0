@@ -1,37 +1,40 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 12/12] qla4xxx: Update driver version to 5.02.00-k5
-Date: Thu, 2 Dec 2010 22:13:00 -0800
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA872243F4123@AVEXMB1.qlogic.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: After memory pressure: can't read from tape anymore
+Date: Fri, 3 Dec 2010 18:44:48 +0900
+Message-ID: <20101203183122F.fujita.tomonori@lab.ntt.co.jp>
+References: <4CF52A03.2000704@panasas.com>
+	<alpine.LNX.2.00.1011301853300.9731@kai.makisara.local>
+	<4CF53349.10509@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:3278 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932126Ab0LCGND convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Dec 2010 01:13:03 -0500
-Content-Language: en-US
+Received: from sh.osrg.net ([192.16.179.4]:60214 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932292Ab0LCJpN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Dec 2010 04:45:13 -0500
+In-Reply-To: <4CF53349.10509@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: bharrosh@panasas.com
+Cc: Kai.Makisara@kolumbus.fi, lkolbe@techfak.uni-bielefeld.de, linux-scsi@vger.kernel.org
 
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Signed-off-by: Ravi Anand <ravi.anand@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_version.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+On Tue, 30 Nov 2010 19:24:25 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index 454d3f5..8475b30 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,4 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
- 
--#define QLA4XXX_DRIVER_VERSION	"5.02.00-k4"
-+#define QLA4XXX_DRIVER_VERSION	"5.02.00-k5"
--- 
-1.7.3.2
+> I looked at enlarge_buffer() and it looks fragile and broken. If you really
+> need a pointer eg:
+> 	STbuffer->b_data = page_address(STbuffer->reserved_pages[0]);
+> 
+> Than way not use vmalloc() for buffers larger then PAGE_SIZE? But better yet
 
+As Kai said, this buffer is used for dma so you can't use vmalloc.
+
+sg drivers keeps an array for pages. b_data is used for some commands
+that do small data transfer (< PAGE_SIZE). So the driver exploits the
+first page for it.
+
+> avoid it by keeping a pages_array or sg-list and operate on an aio type
+> operations.
+
+As explained, the driver keeps a pages_array.
