@@ -1,54 +1,60 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: RE: After memory pressure: can't read from tape anymore
-Date: Fri, 3 Dec 2010 20:11:08 +0900
-Message-ID: <20101203200758P.fujita.tomonori@lab.ntt.co.jp>
-References: <alpine.LNX.2.00.1012021807060.9213@kai.makisara.local>
-	<20101203191014K.fujita.tomonori@lab.ntt.co.jp>
-	<B2FD678A64EAAD45B089B123FDFC3ED709113BDA@inbmail01.lsi.com>
+Subject: Re: After memory pressure: can't read from tape anymore
+Date: Fri, 3 Dec 2010 21:27:57 +0900
+Message-ID: <20101203212453W.fujita.tomonori@lab.ntt.co.jp>
+References: <1290971729.2814.13.camel@larosa>
+	<alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:39839 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:55337 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757747Ab0LCLL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 3 Dec 2010 06:11:28 -0500
-In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED709113BDA@inbmail01.lsi.com>
+	id S932292Ab0LCM2M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 3 Dec 2010 07:28:12 -0500
+In-Reply-To: <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap.Desai@lsi.com
-Cc: fujita.tomonori@lab.ntt.co.jp, Kai.Makisara@kolumbus.fi, lkolbe@techfak.uni-bielefeld.de, bharrosh@panasas.com, linux-scsi@vger.kernel.org
+To: Kai.Makisara@kolumbus.fi
+Cc: lkolbe@techfak.uni-bielefeld.de, linux-scsi@vger.kernel.org
 
-On Fri, 3 Dec 2010 16:15:34 +0530
-"Desai, Kashyap" <Kashyap.Desai@lsi.com> wrote:
+On Mon, 29 Nov 2010 19:09:46 +0200 (EET)
+Kai Makisara <Kai.Makisara@kolumbus.fi> wrote:
 
-> But I see maximum value for " CONFIG_FUSION_MAX_SGE" is 128 only and we can not go beyond this.
-> I see scsi_alloc_queue below lines 
-> 
->       blk_queue_max_hw_segments(q, shost->sg_tablesize);
->         blk_queue_max_phys_segments(q, SCSI_MAX_SG_CHAIN_SEGMENTS);
-> 
-> both the values play role while selecting max scatter gather elements.. 
-> Where max_hw_segements are equal to value of " CONFIG_FUSION_MAX_SGE", but max_phys_segements are limited to  below value
-> #define SCSI_MAX_SG_SEGMENTS    128 (defined in scsi.h)
+> > This same behaviour appears when we're doing a few incremental backups;
+> > after a while, it just isn't possible to use the tape drives anymore -
+> > every I/O operation gives an I/O Error, even a simple dd bs=64k
+> > count=10. After a restart, the system behaves correctly until
+> > -seemingly- another memory pressure situation occured.
+> > 
+> This is predictable. The maximum number of scatter/gather segments seems 
+> to be 128. The st driver first tries to set up transfer directly from the 
+> user buffer to the HBA. The user buffer is usually fragmented so that one 
+> scatter/gather segment is used for each page. Assuming 4 kB page size, the 
+> maximu size of the direct transfer is 128 x 4 = 512 kB.
 
-Hmm, max_phys_segements is set to SCSI_MAX_SG_CHAIN_SEGMENTS (not
-SCSI_MAX_SG_SEGMENTS).
+Can we make enlarge_buffer friendly to the memory alloctor a bit?
 
-SCSI_MAX_SG_CHAIN_SEGMENTS can be larger:
+His problem is that the driver can't allocate 2 mB with the hardware
+limit 128 segments.
 
-#ifdef ARCH_HAS_SG_CHAIN
-#define SCSI_MAX_SG_CHAIN_SEGMENTS	2048
-#else
-#define SCSI_MAX_SG_CHAIN_SEGMENTS	SCSI_MAX_SG_SEGMENTS
-#endif
+enlarge_buffer tries to use ST_MAX_ORDER and if the allocation (256 kB
+page) fails, enlarge_buffer fails. It could try smaller order instead?
 
-So shost->sg_tablesize (SCSI_MPT2SAS_MAX_SGE) sets the limit here.
+Not tested at all.
 
-btw, max_hw_segments and max_phys_segments were consolidated.
 
-With newer kernels, you can find the following in
-__scsi_alloc_queue():
-
-blk_queue_max_segments(q, min_t(unsigned short, shost->sg_tablesize,
-			SCSI_MAX_SG_CHAIN_SEGMENTS));
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 5b7388f..119544b 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -3729,7 +3729,8 @@ static int enlarge_buffer(struct st_buffer * STbuffer, int new_size, int need_dm
+ 		b_size = PAGE_SIZE << order;
+ 	} else {
+ 		for (b_size = PAGE_SIZE, order = 0;
+-		     order < ST_MAX_ORDER && b_size < new_size;
++		     order < ST_MAX_ORDER &&
++			     max_segs * (PAGE_SIZE << order) < new_size;
+ 		     order++, b_size *= 2)
+ 			;  /* empty */
+ 	}
