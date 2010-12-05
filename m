@@ -1,61 +1,40 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
-Date: Sun, 5 Dec 2010 12:53:50 -0800 (PST)
-Message-ID: <874800.41815.qm@web31807.mail.mud.yahoo.com>
-Reply-To: ltuikov@yahoo.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16971] qla4xxx compile failure on 32-bit PowerPC: missing readq
+ and writeq
+Date: Sun, 5 Dec 2010 21:52:22 GMT
+Message-ID: <201012052152.oB5LqMmA011154@demeter2.kernel.org>
+References: <bug-16971-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31807.mail.mud.yahoo.com ([68.142.207.70]:37807 "HELO
-	web31807.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753987Ab0LEUxw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Dec 2010 15:53:52 -0500
+Received: from demeter2.kernel.org ([140.211.167.42]:48021 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755757Ab0LEVwX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Dec 2010 16:52:23 -0500
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oB5LqMT4011155
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sun, 5 Dec 2010 21:52:22 GMT
+In-Reply-To: <bug-16971-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>
+To: linux-scsi@vger.kernel.org
 
---- On Wed, 11/24/10, Luben Tuikov <ltuikov@yahoo.com> wrote:
-> 
-> CBI/BBB isn't supposed to be, nor is designed to support
-> SAM-modern devices. So while REQUEST LUN /may/ work on some
-> devices which implement it in their firmware, it is NOT a
-> requirement for those devices as they are not required to
-> adhere to any SAM version. Those transport protocols define
-> a class-specific request to get the maximum LUN, and another
-> to reset the target port (instead of I_T Reset or LU Reset).
-> They also do not support SCSI Status completion of the
-> command, nor Autosense. They also do not provide TMFs. They
-> provide none of the SCSI transport protocol services in
-> support of the Execute Command procedure call. The SCSI
-> layer shouldn't be trying to guess their "SCSI version", and
-> or treat them as real SCSI devices sending REPORT LUNs, etc.
-> commands.
-> 
-> Newer, modern transport protocols over USB, are part of
-> SAM, and it is devices who connect via those protocols that
-> are being disadvantaged, due to the adoption (assumption) of
-> CBI/BBB well into the SCSI layer.
-> 
-> To this effect, the transport protocol can tell upper
-> layers if the device is true SCSI (new usb transports or
-> other) or hybrid (usb-storage). In the former case, the
-> device is a SCSI device, in the latter, only basic commands
-> should be attempted.
-> 
-> This isn't to say that firmware for those devices wouldn't
-> be buggy. Of course it will, and most will probably port
-> their legacy FW over to the new SPTL, but the protocol
-> requirements are there by design (i.e. there is no longer
-> Get Max Lun class-specific request, the application client
-> has to send REPORT LUNS, and FW has to answer it) and we
-> have to accommodate that.
-> 
-> It is in this spirit that this patch doesn't change wire
-> behavior, but simply parses data returned by a command
-> already supported by older protocols.
+https://bugzilla.kernel.org/show_bug.cgi?id=16971
 
-Did anyone pick up this patch?
 
-    Luben
 
+
+
+--- Comment #6 from Rafael J. Wysocki <rjw@sisk.pl>  2010-12-05 21:52:20 ---
+On Sunday, December 05, 2010, Meelis Roos wrote:
+> > The following bug entry is on the current list of known regressions
+> > introduced between 2.6.35 and 2.6.36.  Please verify if it still should
+> > be listed and let the tracking team know (either way).
+> 
+> Yes, still present in yesterdays git.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
