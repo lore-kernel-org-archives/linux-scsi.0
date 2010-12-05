@@ -1,40 +1,53 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 16971] qla4xxx compile failure on 32-bit PowerPC: missing readq
- and writeq
-Date: Sun, 5 Dec 2010 21:52:22 GMT
-Message-ID: <201012052152.oB5LqMmA011154@demeter2.kernel.org>
-References: <bug-16971-11613@https.bugzilla.kernel.org/>
+From: Michael Ellerman <michael-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>
+Subject: Re: PCI: make pci_restore_state return void
+Date: Mon, 06 Dec 2010 09:46:50 +1100
+Message-ID: <1291589210.8514.17.camel@concordia>
+References: <1291160606-31494-1-git-send-email-jon.mason@exar.com>
+Reply-To: michael-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:48021 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755757Ab0LEVwX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Dec 2010 16:52:23 -0500
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oB5LqMT4011155
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sun, 5 Dec 2010 21:52:22 GMT
-In-Reply-To: <bug-16971-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hIo3ss+mqY7LCWIJJSeq"
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1291160606-31494-1-git-send-email-jon.mason-0FX2CSrisTk@public.gmane.org>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jon Mason <jon.mason-0FX2CSrisTk@public.gmane.org>
+Cc: Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Gallatin <gallatin-vV262kQ/Wyo@public.gmane.org>, Brice Goglin <brice-vV262kQ/Wyo@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Solarflare linux maintainers <linux-net-drivers-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, Steve Hodgson <shodgson-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, Ben Hutchings <bhutchings-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, Stephen Hemminger <shemminger-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Ivo van Doorn <IvDoorn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Gertjan van Wingerde <gwingerde-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Brian King <brking-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Anil Ravindranath <anil_ravindranath-4W7cOCfLBmzY0TyS/+Ba5Q@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jaya Kumar <jayakumar.alsa-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, boyod.yang-S9cbI//bT0v8C245oKUbwW/U75nxZMCp@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-https://bugzilla.kernel.org/show_bug.cgi?id=16971
 
 
+--=-hIo3ss+mqY7LCWIJJSeq
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Tue, 2010-11-30 at 17:43 -0600, Jon Mason wrote:
+> pci_restore_state only ever returns 0, thus there is no benefit in
+> having it return any value.  Also, a large majority of the callers do
+> not check the return code of pci_restore_state.  Make the
+> pci_restore_state a void return and avoid the overhead.
+
+It does kind of make me nervous that (basically) no one ever checks the
+return code from the PCI config space accessors, even though in theory
+they can fail. This code being but one example.
+
+/end random comment :)
+
+cheers
 
 
+--=-hIo3ss+mqY7LCWIJJSeq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
 
---- Comment #6 from Rafael J. Wysocki <rjw@sisk.pl>  2010-12-05 21:52:20 ---
-On Sunday, December 05, 2010, Meelis Roos wrote:
-> > The following bug entry is on the current list of known regressions
-> > introduced between 2.6.35 and 2.6.36.  Please verify if it still should
-> > be listed and let the tracking team know (either way).
-> 
-> Yes, still present in yesterdays git.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+iEYEABECAAYFAkz8FloACgkQdSjSd0sB4dIPhwCeNnj0SmUov+MFuxEIOmKoioHa
+Tl4An1+jVELgYgfllAqQnNuGjRly4Xgt
+=nazf
+-----END PGP SIGNATURE-----
+
+--=-hIo3ss+mqY7LCWIJJSeq--
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
