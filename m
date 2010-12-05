@@ -1,49 +1,58 @@
-From: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
-Subject: RE: After memory pressure: can't read from tape anymore
-Date: Sun, 05 Dec 2010 11:44:49 +0100
-Message-ID: <1291545889.2814.2882.camel@larosa>
-References: <1290971729.2814.13.camel@larosa>
-	 <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>
-	 <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>
-	 <4CF521DE.7020800@panasas.com>
-	 <alpine.LNX.2.00.1011301821210.9731@kai.makisara.local>
-	 <4CF52A03.2000704@panasas.com>
-	 <alpine.LNX.2.00.1011301853300.9731@kai.makisara.local>
-	 <4CF53349.10509@panasas.com>
-	 <alpine.LNX.2.00.1011302139460.9731@kai.makisara.local>
-	 <1291196400.2814.34.camel@larosa>
-	 <B2FD678A64EAAD45B089B123FDFC3ED709113ABB@inbmail01.lsi.com>
-	 <alpine.LNX.2.00.1012021807060.9213@kai.makisara.local>
-	 <B2FD678A64EAAD45B089B123FDFC3ED709113B13@inbmail01.lsi.com>
-	 <alpine.LNX.2.00.1012022215060.9213@kai.makisara.local>
+From: Audio Haven <audiohaven@gmail.com>
+Subject: Re: mvsas errors in 2.6.36
+Date: Sun, 5 Dec 2010 11:45:01 +0100
+Message-ID: <AANLkTinVK8FAApP2zP8gqmPhgPo4ZeUMRRJ4cD+O1iza@mail.gmail.com>
+References: <201010290650.32892.thomas@fjellstrom.ca>
+	<4CE3912E.6060904@tomt.net>
+	<201012012329.54944.thomas@fjellstrom.ca>
+	<201012020249.00367.thomas@fjellstrom.ca>
+	<4CF79C60.9030107@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:50547 "EHLO
-	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754601Ab0LEKox (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Dec 2010 05:44:53 -0500
-In-Reply-To: <alpine.LNX.2.00.1012022215060.9213@kai.makisara.local>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:35985 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754601Ab0LEKpD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Dec 2010 05:45:03 -0500
+Received: by wyb28 with SMTP id 28so11033576wyb.19
+        for <linux-scsi@vger.kernel.org>; Sun, 05 Dec 2010 02:45:02 -0800 (PST)
+In-Reply-To: <4CF79C60.9030107@shiftmail.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Spelic <spelic@shiftmail.org>
+Cc: thomas@fjellstrom.ca, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Am Donnerstag, den 02.12.2010, 22:25 +0200 schrieb Kai Makisara:
+On Thu, Dec 2, 2010 at 2:17 PM, Spelic <spelic@shiftmail.org> wrote:
+> It's already applied only in 2.6.37-rc1..rc4
 
-> P.S. Why is it necessary to use 2 MB blocks? Some people say that it is 
-> the optimal block size for some current tape drives.
+After one year of mvsas troubles, I can finally say that 2.6.37-rc4
+fixed all of my mvsas issues. I have been stress testing 2 machines
+for days and can't trigger the usual mvsas issues (nexus errors and
+unplug notices) anymore.
 
-I really couldn't care less about blocksizes, but it seems to be that
-it's impossible to reach high LTO4 write-speeds with lower blocksizes;
-tests show that >100MiB/s are not possible with blocksizes around 64KB
-to 512KB (from memory), so: the bigger the blocksize, the higher the
-writing speed.
+In the past, on one system all 8 1TB drives of 2 different brands
+(Hitachi & Samsung) on a Supermicro AOC-SASLP-MV8 gave me random
+errors, such as unplug notices. Large file copies over samba stalled
+or were aborted. This could easily be triggered by doing 1 hour of
+large IO.
 
-I suppose this gets even more critical with LTO5 drives.
+On a second system, newer 1.5 TB drives gave me almost no issues. I
+had to stress much longer before something appeared in the log. Both
+machines have identical motherboards and same kernel versions. So my
+suspicion some of the older 1 TB drives were bad is now confirmed.
 
--- 
-Lukas
+With 2.6.37-rc4, only the real faulty drives are now reported in dmesg
+instead of ALL drives after waiting long enough. I found one drive had
+12 uncorrectable sectors according to smart, while another drive
+always reported DriveStatusError under heavy load. These two drives
+were always slowing down the array. After removong them from the RAID6
+software raid, speed is now stable.
 
+On the second system with all good drives, the nexus errors and unplug
+notices are completely gone.
 
+Thanks to everyone who helped making mvsas stable as it finally works!
+
+Best regards,
+
+Audio Haven (Frederic Vanden Poel)
