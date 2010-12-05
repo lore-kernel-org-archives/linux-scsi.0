@@ -1,91 +1,57 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: After memory pressure: can't read from tape anymore
-Date: Sun, 5 Dec 2010 21:16:01 +0900
-Message-ID: <20101205211537C.fujita.tomonori@lab.ntt.co.jp>
-References: <1291395815.2814.376.camel@larosa>
-	<1291399814.2881.66.camel@mulgrave.site>
-	<1291546383.2814.2890.camel@larosa>
+From: Thomas Fjellstrom <thomas@fjellstrom.ca>
+Subject: Re: mvsas errors in 2.6.36
+Date: Sun, 5 Dec 2010 13:01:59 -0700
+Message-ID: <201012051301.59223.thomas@fjellstrom.ca>
+References: <201010290650.32892.thomas@fjellstrom.ca> <201012040844.47337.thomas@fjellstrom.ca> <201012051008390934167@usish.com>
+Reply-To: thomas@fjellstrom.ca
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="gb2312"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:54343 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754462Ab0LEMQg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Dec 2010 07:16:36 -0500
-In-Reply-To: <1291546383.2814.2890.camel@larosa>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201012051008390934167@usish.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jack_wang <jack_wang@usish.com>
+Cc: David Milburn <dmilburn@redhat.com>, Andre Tomt <andre@tomt.net>, Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: lkolbe@techfak.uni-bielefeld.de
-Cc: James.Bottomley@suse.de, kai.makisara@kolumbus.fi, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, Kashyap.Desai@lsi.com
 
-On Sun, 05 Dec 2010 11:53:03 +0100
-Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de> wrote:
-
-> Well, 2MB blocksizes actually do work - bacula is reporting a blocksize
-> of ~2MB for each drive while writing to it - only after there was memory
-> pressure and a new tape got inserted, it is *not* possible anymore to
-> write to the tape with these blocksizes, and dmesg tells me one of these
-> every time bacula tries to read from or write to a tape:
-
-I don't know how bacula works but I guess that it closes and reopen a
-st device when you insert a new tape. The driver frees the memory when
-it closes the device.
-
-
-> [101883.958351] st0: Can't allocate 2097152 byte tape buffer.
-> [103901.666608] st0: Can't allocate 10249541 byte tape buffer.
-> 
-> No idea why it's trying 10MB, though.
-> 
-> I tested with the patch from Fujita, and this messages from before
-> applying the patch: 
-> 
-> [158544.348411] st: append_to_buffer offset overflow.
-> 
-> do not appear anymore.
-> It didn't help on the not-being-able-to-write-after-memory-pressure
-> matter, though.
-
-There is no way to guarantee that we can allocate physically continuous
-large memory.
-
-
-> >  This isn't something we can work around
-> > in the driver because the transaction can't be split ... it has to go
-> > down as a single WRITE command with a single output data buffer.
+On December 4, 2010, jack_wang wrote:
+> On December 4, 2010, Thomas Fjellstrom wrote:
+> > On December 4, 2010, Thomas Fjellstrom wrote:
+> > > On December 4, 2010, jack_wang wrote:
+> > > > 
+> [snip]
 > > 
-> > The LSI 1068 is an upgradeable firmware system, so it's always possible
-> > LSI can come up with a firmware update that increases the size (this
-> > would also require a corresponding driver change), but it doesn't sound
-> > to be something that can be done in the driver alone.
+> > Even after the reboot it still happens, though with that change, it 
+/seems/
+> > as if the pause is gone, but I can't be sure yet.
+> > 
+> Nope, pauses are still here, but they are shorter.
 > 
-> If only LSI's website were a little more clear on where to find updated
-> firmware and what was the latest version :/.
-n
+> [Jack] Yes , once the host enter error handle , the scsi core will hold on 
+the host(not sen IOs to the host as you see pause utill 
+>  the error are corrected). The main reason of the host go into error host is 
+there are commands have no response utill the command
+> timer timeout, this maybe the disks need more time or the host lost interupt 
+or some other reason.  You may need to change disks
+> and host part by part to see what cause the command timeout.
+> 
 
-I think that Desai said that your hardware can handle more sg
-entries. You have a better chance to live with memory pressure. Try
-the following patch with my patch. You need to set FUSION_MAX_SGE to
-256 with kernel meunconfig (or whatever you like) and rebuild your
-kernel. Make sure that the driver supports 256 entries like this:
+Well so far I see errors from 4 of my 6 disks since I rebooted 30 hours ago. 
+And in the past I've seen these errors come from all disks. I'm more inclined 
+to believe its some kind of handling issue than that all of those drives are 
+in some way bad. Especially since that older driver I got from Andy Yan did 
+not suffer from any of these issues. Of course it had other problems, like 
+hotswap oopsing the kernel, but I almost never use hotswap, so it was never an 
+issue for me.
 
-fujita@calla:~$ cat /sys/class/scsi_host/host4/sg_tablesize
-256
+Now I'm not sure its related, but I do see this:
+[  342.353646] hrtimer: interrupt took 61135 ns
+in my dmesg. But that really isn't that long of a pause least not by human 
+standards. And theres only the one. It happens once just after boot up, and 
+then never again (I assume because at bootup the machine is starting up 4 kvm 
+VMs /at the same time/).
 
-diff --git a/drivers/message/fusion/Kconfig b/drivers/message/fusion/Kconfig
-index a34a11d..e70d65e 100644
---- a/drivers/message/fusion/Kconfig
-+++ b/drivers/message/fusion/Kconfig
-@@ -61,9 +61,9 @@ config FUSION_SAS
- 	  LSISAS1078
- 
- config FUSION_MAX_SGE
--	int "Maximum number of scatter gather entries (16 - 128)"
-+	int "Maximum number of scatter gather entries (16 - 256)"
- 	default "128"
--	range 16 128
-+	range 16 256
- 	help
- 	  This option allows you to specify the maximum number of scatter-
- 	  gather entries per I/O. The driver default is 128, which matches
+-- 
+Thomas Fjellstrom
+thomas@fjellstrom.ca
