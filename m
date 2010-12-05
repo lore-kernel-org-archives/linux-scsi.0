@@ -1,90 +1,49 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: [PATCH] fix race in FCP layer
-Date: Sun, 5 Dec 2010 12:50:09 +0800
-Message-ID: <AANLkTi=aqDZyDF4z7AUt6uYOsAcgx=hHsjk68+n+pEUY@mail.gmail.com>
+From: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
+Subject: RE: After memory pressure: can't read from tape anymore
+Date: Sun, 05 Dec 2010 11:44:49 +0100
+Message-ID: <1291545889.2814.2882.camel@larosa>
+References: <1290971729.2814.13.camel@larosa>
+	 <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>
+	 <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>
+	 <4CF521DE.7020800@panasas.com>
+	 <alpine.LNX.2.00.1011301821210.9731@kai.makisara.local>
+	 <4CF52A03.2000704@panasas.com>
+	 <alpine.LNX.2.00.1011301853300.9731@kai.makisara.local>
+	 <4CF53349.10509@panasas.com>
+	 <alpine.LNX.2.00.1011302139460.9731@kai.makisara.local>
+	 <1291196400.2814.34.camel@larosa>
+	 <B2FD678A64EAAD45B089B123FDFC3ED709113ABB@inbmail01.lsi.com>
+	 <alpine.LNX.2.00.1012021807060.9213@kai.makisara.local>
+	 <B2FD678A64EAAD45B089B123FDFC3ED709113B13@inbmail01.lsi.com>
+	 <alpine.LNX.2.00.1012022215060.9213@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:65148 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753386Ab0LEEuL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Dec 2010 23:50:11 -0500
-Received: by wyb28 with SMTP id 28so10902361wyb.19
-        for <linux-scsi@vger.kernel.org>; Sat, 04 Dec 2010 20:50:10 -0800 (PST)
+Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:50547 "EHLO
+	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754601Ab0LEKox (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Dec 2010 05:44:53 -0500
+In-Reply-To: <alpine.LNX.2.00.1012022215060.9213@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: devel@open-fcoe.org
-Cc: linux-scsi@vger.kernel.org
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, Boaz Harrosh <bharrosh@panasas.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-There in fc_tm_done() race is detected incorrectly, since there is no
-race if fcp pkt could still get locked.
+Am Donnerstag, den 02.12.2010, 22:25 +0200 schrieb Kai Makisara:
 
-The race is removed by extra holding fcp pkt before waiting for
-completion, then it is safer to operate on fcp pkt both in tm
-responser and after waiting for completion.
+> P.S. Why is it necessary to use 2 MB blocks? Some people say that it is 
+> the optimal block size for some current tape drives.
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
----
+I really couldn't care less about blocksizes, but it seems to be that
+it's impossible to reach high LTO4 write-speeds with lower blocksizes;
+tests show that >100MiB/s are not possible with blocksizes around 64KB
+to 512KB (from memory), so: the bigger the blocksize, the higher the
+writing speed.
 
---- a/drivers/scsi/libfc/fc_fcp.c	2010-11-01 19:54:12.000000000 +0800
-+++ b/drivers/scsi/libfc/fc_fcp.c	2010-12-05 12:39:14.000000000 +0800
-@@ -1206,6 +1206,9 @@ static void fc_lun_reset_send(unsigned l
- 		fc_fcp_timer_set(fsp, FC_SCSI_REC_TOV);
- 		fc_fcp_unlock_pkt(fsp);
- 	}
-+	else
-+		/* hold pkt for safe operations in tm responser */
-+		fc_fcp_pkt_hold(fsp);
- }
+I suppose this gets even more critical with LTO5 drives.
 
- /**
-@@ -1246,6 +1249,8 @@ static int fc_lun_reset(struct fc_lport
- 	if (fsp->seq_ptr) {
- 		lport->tt.exch_done(fsp->seq_ptr);
- 		fsp->seq_ptr = NULL;
-+		/* release hold for tm responser */
-+		fc_fcp_pkt_release(fsp);
- 	}
- 	fsp->wait_for_comp = 0;
- 	spin_unlock_bh(&fsp->scsi_pkt_lock);
-@@ -1276,6 +1281,7 @@ static void fc_tm_done(struct fc_seq *se
- 	struct fc_frame_header *fh;
+-- 
+Lukas
 
- 	if (IS_ERR(fp)) {
-+		fc_fcp_pkt_release(fsp);
- 		/*
- 		 * If there is an error just let it timeout or wait
- 		 * for TMF to be aborted if it timedout.
-@@ -1285,14 +1291,12 @@ static void fc_tm_done(struct fc_seq *se
- 		return;
- 	}
 
--	if (fc_fcp_lock_pkt(fsp))
--		return;
--
--	/*
--	 * raced with eh timeout handler.
--	 */
--	if (!fsp->seq_ptr || !fsp->wait_for_comp) {
--		spin_unlock_bh(&fsp->scsi_pkt_lock);
-+	if (fc_fcp_lock_pkt(fsp)) {
-+		/*
-+		 * race with fc_lun_reset(),
-+		 * pkt has to be cleaned up there.
-+		 */
-+		fc_fcp_pkt_release(fsp);
- 		return;
- 	}
-
-@@ -1301,8 +1305,10 @@ static void fc_tm_done(struct fc_seq *se
- 		fc_fcp_resp(fsp, fp);
- 	fsp->seq_ptr = NULL;
- 	fsp->lp->tt.exch_done(seq);
--	fc_frame_free(fp);
- 	fc_fcp_unlock_pkt(fsp);
-+	/* release hold for tm responser */
-+	fc_fcp_pkt_release(fsp);
-+	fc_frame_free(fp);
- }
-
- /**
