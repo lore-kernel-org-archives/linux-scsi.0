@@ -1,71 +1,67 @@
-From: Joe Jin <joe.jin@oracle.com>
-Subject: [PATCH 1/1] SCSI: fix scsi disk hotpulg/hotunplug race
-Date: Mon, 6 Dec 2010 21:30:28 +0800
-Message-ID: <20101206133028.GB19448@joejin-pc.cn.oracle.com>
+From: Ralf Gerbig <rge@quengel.org>
+Subject: Re: 2.6.36 Crash/Panik in scsi_eh
+Date: Mon, 06 Dec 2010 18:28:37 +0100
+Message-ID: <87d3pe6cai.fsf@gerlin1.hsp-law.de>
+References: <87fwvkm215.fsf@gerlin1.hsp-law.de>
+	<1288710413.3056.256.camel@mulgrave.site>
+	<87pqunwszm.fsf@gerlin1.hsp-law.de>
+	<1288723004.3056.473.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rcsinet10.oracle.com ([148.87.113.121]:40320 "EHLO
-	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752578Ab0LFNbV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2010 08:31:21 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1288723004.3056.473.camel@mulgrave.site> (James Bottomley's
+	message of "Tue, 02 Nov 2010 14:36:44 -0400")
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, greg.marsden@oracle.com, guru.anbalagane@oracle.com, joe.jin@oracle.com
 
-Hi,
+Hi Everyone,
 
-Trigger scsi scan when plug new disk, device also support disk
-hotplug and auto scan disk, it may allocate scsi_target for same
-target more then one by call scsi_alloc_target(),  this caused by
-the race of __scsi_add_device() and scsi_scan_host_selected().
+* James Bottomley writes:
 
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Signed-off-by: Joe Jin <joe.jin@oracle.com>
+> On Tue, 2010-11-02 at 18:11 +0100, Ralf Gerbig wrote:
+>> >> Nov  2 10:40:57 gerlin1 kernel: [45977.560407] RIP: 0010:[<ffffffff811d2290>]  [<ffffffff811d2290>] scsi_dispatch_cmd+0x92/0x22e
+>> 
+>> > This is the faulting location ... could you run addr2line on this
+>> > address to map it to a line of source code?
+>> 
+>> addr2line id only say ??:0
+>> 
+>> I recompiled vmlinux with debugging symbols, and gdb says:
+>> 
+>> Reading symbols from /usr/src/linux-git/linux-2.6/vmlinux...done.
+>> (gdb) l *(scsi_dispatch_cmd + 0x92)
+>> 0xffffffff811d2290 is in scsi_dispatch_cmd (drivers/scsi/scsi.c:707).
+>> 702              * We will wait MIN_RESET_DELAY clock ticks after the
+>> last reset so
+>> 703              * we can avoid the drive not being ready.
+>> 704              */
+>> 705             timeout = host->last_reset + MIN_RESET_DELAY;
+>> 706
+>> 707             if (host->resetting && time_before(jiffies, timeout)) {
+>> 708                     int ticks_remaining = timeout - jiffies;
+>> 709                     /*
+>> 710                      * NOTE: This may be executed from within an interrupt
+>> 711                      * handler!  This is bad, but for now, it'll do. The irq
 
----
- scsi_scan.c |    8 +++++---
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 087821f..2429771 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1508,12 +1508,14 @@ struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
- 	if (strncmp(scsi_scan_type, "none", 4) == 0)
- 		return ERR_PTR(-ENODEV);
- 
-+	mutex_lock(&shost->scan_mutex);
- 	starget = scsi_alloc_target(parent, channel, id);
--	if (!starget)
-+	if (!starget) {
-+		mutex_unlock(&shost->scan_mutex);
- 		return ERR_PTR(-ENOMEM);
-+	}
- 	scsi_autopm_get_target(starget);
- 
--	mutex_lock(&shost->scan_mutex);
- 	if (!shost->async_scan)
- 		scsi_complete_async_scans();
- 
-@@ -1521,10 +1523,10 @@ struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
- 		scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
- 		scsi_autopm_put_host(shost);
- 	}
--	mutex_unlock(&shost->scan_mutex);
- 	scsi_autopm_put_target(starget);
- 	scsi_target_reap(starget);
- 	put_device(&starget->dev);
-+	mutex_unlock(&shost->scan_mutex);
- 
- 	return sdev;
- }
-
--- 
-Oracle <http://www.oracle.com>
-Joe Jin | Team Leader, Software Development | +8610.8278.6295
-ORACLE | Linux and Virtualization
-Incubator Building 2-A ZPark | Beijing China, 100094
+> Um, that's bad.  It's saying the junk pointer is host on line 707 but
+> when it was dereferenced on line 705 it was fine.  This is most likely
+> to indicate either memory corruption (another thread overwrote the host
+> location or even a hardware fault).
 
 
+just to wrap this up: you where right, the commits between
+2.6.36-rc8-00045-g51ea8a8 and 2.6.36 where not at fault, as
+the former also crashed after 11 days.
+
+Without any bright, or even dim, ideas I changed -Os to -O2
+
+ -CONFIG_CC_OPTIMIZE_FOR_SIZE=y
++# CONFIG_CC_OPTIMIZE_FOR_SIZE is not set
+
+and 2.6.36 runs without problems since Nov. 14th.
+
+Thanks for caring,
+
+Ralf
