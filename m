@@ -1,58 +1,71 @@
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Subject: Re: After memory pressure: can't read from tape anymore
-Date: Mon, 06 Dec 2010 12:34:15 +0100
-Message-ID: <87wrnnw2x4.fsf@nemi.mork.no>
-References: <1290971729.2814.13.camel@larosa>
-	<alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>
-	<1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>
-	<alpine.LNX.2.00.1011301813460.9731@kai.makisara.local>
-	<1291223211.2814.72.camel@larosa>
-	<alpine.LNX.2.00.1012021823420.9213@kai.makisara.local>
-	<alpine.LNX.2.00.1012060952570.7928@kai.makisara.local>
-	<1291628171.2181.1366.camel@quux.techfak.uni-bielefeld.de>
+From: Joe Jin <joe.jin@oracle.com>
+Subject: [PATCH 1/1] SCSI: fix scsi disk hotpulg/hotunplug race
+Date: Mon, 6 Dec 2010 21:30:28 +0800
+Message-ID: <20101206133028.GB19448@joejin-pc.cn.oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:50912 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752001Ab0LFLuH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Dec 2010 06:50:07 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1PPZa0-0004XC-6O
-	for linux-scsi@vger.kernel.org; Mon, 06 Dec 2010 12:50:04 +0100
-Received: from 193.160.199.2 ([193.160.199.2])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Dec 2010 12:50:04 +0100
-Received: from bjorn by 193.160.199.2 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Dec 2010 12:50:04 +0100
+Received: from rcsinet10.oracle.com ([148.87.113.121]:40320 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752578Ab0LFNbV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2010 08:31:21 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, greg.marsden@oracle.com, guru.anbalagane@oracle.com, joe.jin@oracle.com
 
-Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de> writes:
+Hi,
 
-> I just tonight discovered that Debian's .config has
-> CONFIG_FUSION_MAX_SGE=3D40. Right now I'm testing with the mptsas' dr=
-ivers
-> maximum of 128 and see if I can reproduce the failure under memory
-> pressure again. Sorry for not catching this one earlier! After readin=
-g
-> the source, I had the assumption that it already was 128 ...
+Trigger scsi scan when plug new disk, device also support disk
+hotplug and auto scan disk, it may allocate scsi_target for same
+target more then one by call scsi_alloc_target(),  this caused by
+the race of __scsi_add_device() and scsi_scan_host_selected().
 
-So did I... =20
+Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Signed-off-by: Joe Jin <joe.jin@oracle.com>
 
-I assume the difference is unintentional so I opened a Debian bug:
-http://bugs.debian.org/606096
+---
+ scsi_scan.c |    8 +++++---
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 087821f..2429771 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1508,12 +1508,14 @@ struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
+ 	if (strncmp(scsi_scan_type, "none", 4) == 0)
+ 		return ERR_PTR(-ENODEV);
+ 
++	mutex_lock(&shost->scan_mutex);
+ 	starget = scsi_alloc_target(parent, channel, id);
+-	if (!starget)
++	if (!starget) {
++		mutex_unlock(&shost->scan_mutex);
+ 		return ERR_PTR(-ENOMEM);
++	}
+ 	scsi_autopm_get_target(starget);
+ 
+-	mutex_lock(&shost->scan_mutex);
+ 	if (!shost->async_scan)
+ 		scsi_complete_async_scans();
+ 
+@@ -1521,10 +1523,10 @@ struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
+ 		scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
+ 		scsi_autopm_put_host(shost);
+ 	}
+-	mutex_unlock(&shost->scan_mutex);
+ 	scsi_autopm_put_target(starget);
+ 	scsi_target_reap(starget);
+ 	put_device(&starget->dev);
++	mutex_unlock(&shost->scan_mutex);
+ 
+ 	return sdev;
+ }
+
+-- 
+Oracle <http://www.oracle.com>
+Joe Jin | Team Leader, Software Development | +8610.8278.6295
+ORACLE | Linux and Virtualization
+Incubator Building 2-A ZPark | Beijing China, 100094
 
 
-Bj=C3=B8rn
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
