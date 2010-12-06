@@ -1,53 +1,72 @@
-From: Michael Ellerman <michael-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>
-Subject: Re: PCI: make pci_restore_state return void
-Date: Mon, 06 Dec 2010 09:46:50 +1100
-Message-ID: <1291589210.8514.17.camel@concordia>
-References: <1291160606-31494-1-git-send-email-jon.mason@exar.com>
-Reply-To: michael-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: After memory pressure: can't read from tape anymore
+Date: Mon, 6 Dec 2010 09:59:11 +0200 (EET)
+Message-ID: <alpine.LNX.2.00.1012060952570.7928@kai.makisara.local>
+References: <1290971729.2814.13.camel@larosa>  <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>  <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>  <alpine.LNX.2.00.1011301813460.9731@kai.makisara.local> <1291223211.2814.72.camel@larosa>
+ <alpine.LNX.2.00.1012021823420.9213@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature"; boundary="=-hIo3ss+mqY7LCWIJJSeq"
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1291160606-31494-1-git-send-email-jon.mason-0FX2CSrisTk@public.gmane.org>
-Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jon Mason <jon.mason-0FX2CSrisTk@public.gmane.org>
-Cc: Jesse Barnes <jbarnes-Y1mF5jBUw70BENJcbMCuUQ@public.gmane.org>, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jonathan Corbet <corbet-T1hC0tSOHrs@public.gmane.org>, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Andrew Gallatin <gallatin-vV262kQ/Wyo@public.gmane.org>, Brice Goglin <brice-vV262kQ/Wyo@public.gmane.org>, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Solarflare linux maintainers <linux-net-drivers-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, Steve Hodgson <shodgson-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, Ben Hutchings <bhutchings-s/n/eUQHGBpZroRs9YW3xA@public.gmane.org>, Stephen Hemminger <shemminger-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Ivo van Doorn <IvDoorn-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Gertjan van Wingerde <gwingerde-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Brian King <brking-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Anil Ravindranath <anil_ravindranath-4W7cOCfLBmzY0TyS/+Ba5Q@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Jaya Kumar <jayakumar.alsa-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, boyod.yang-S9cbI//bT0v8C245oKUbwW/U75nxZMCp@public.gmane.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vs15.mail.saunalahti.fi ([195.197.172.101]:34984 "EHLO
+	vs15.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751262Ab0LFH7V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Dec 2010 02:59:21 -0500
+In-Reply-To: <alpine.LNX.2.00.1012021823420.9213@kai.makisara.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
+Cc: linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
+On Thu, 2 Dec 2010, Kai Makisara wrote:
 
---=-hIo3ss+mqY7LCWIJJSeq
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> On Wed, 1 Dec 2010, Lukas Kolbe wrote:
+> 
+> > Am Dienstag, den 30.11.2010, 18:20 +0200 schrieb Kai Makisara:
+> > 
+> ...
+> > > If you see error with 64 kB block size, I would like to see any messages 
+> > > associated with these errors.
+> > 
+> > I have now hit this bug again. Trying to read and write a label from the
+> > tape drive in question results in this (via bacula's btape command):
+> > 
+...
+> > [158529.011206] st1: Can't allocate 2097152 byte tape buffer.
+> > [158544.348411] st: append_to_buffer offset overflow.
+> > [158544.348416] st: append_to_buffer offset overflow.
+> > [158544.348418] st: append_to_buffer offset overflow.
+> > [158544.348419] st: append_to_buffer offset overflow.
+> > 
+> The messages except the first one are something that should never happen. 
+> I think that there is something wrong with returning from enlarge_buffer() 
+> when it fails. I will look at this when I have time.
+> 
+OK, today I have had some time (national holiday). I think I have tracked 
+down this problem. The patch at the end should fix it. Basically, 
+normalize_buffer() needs to know the order of the pages in order to 
+properly free the pages and update the buffer size. When allocation 
+failed, the order was not yet stored into the tape buffer definition. This 
+does explain the problem after allocation failed. Why allocation failed is 
+another problem which has been discussed elsewhere.
 
-On Tue, 2010-11-30 at 17:43 -0600, Jon Mason wrote:
-> pci_restore_state only ever returns 0, thus there is no benefit in
-> having it return any value.  Also, a large majority of the callers do
-> not check the return code of pci_restore_state.  Make the
-> pci_restore_state a void return and avoid the overhead.
+Kai
 
-It does kind of make me nervous that (basically) no one ever checks the
-return code from the PCI config space accessors, even though in theory
-they can fail. This code being but one example.
-
-/end random comment :)
-
-cheers
-
-
---=-hIo3ss+mqY7LCWIJJSeq
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEABECAAYFAkz8FloACgkQdSjSd0sB4dIPhwCeNnj0SmUov+MFuxEIOmKoioHa
-Tl4An1+jVELgYgfllAqQnNuGjRly4Xgt
-=nazf
------END PGP SIGNATURE-----
-
---=-hIo3ss+mqY7LCWIJJSeq--
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-----------------------------------8<------------------------------------
+--- linux-2.6.36.1/drivers/scsi/st.c.org	2010-12-05 17:07:04.285226110 +0200
++++ linux-2.6.36.1/drivers/scsi/st.c	2010-12-06 09:46:34.756000154 +0200
+@@ -3729,6 +3729,7 @@ static int enlarge_buffer(struct st_buff
+ 		     order < ST_MAX_ORDER && b_size < new_size;
+ 		     order++, b_size *= 2)
+ 			;  /* empty */
++		STbuffer->reserved_page_order = order;
+ 	}
+ 	if (max_segs * (PAGE_SIZE << order) < new_size) {
+ 		if (order == ST_MAX_ORDER)
+@@ -3755,7 +3756,6 @@ static int enlarge_buffer(struct st_buff
+ 		segs++;
+ 	}
+ 	STbuffer->b_data = page_address(STbuffer->reserved_pages[0]);
+-	STbuffer->reserved_page_order = order;
+ 
+ 	return 1;
+ }
