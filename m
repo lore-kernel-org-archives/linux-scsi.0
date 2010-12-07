@@ -1,44 +1,47 @@
-From: tomm <tommlkml@gmail.com>
-Subject: Re: mvsas errors in 2.6.36
-Date: Tue, 7 Dec 2010 19:45:26 +0000 (UTC)
-Message-ID: <loom.20101207T203638-996@post.gmane.org>
-References: <201010290650.32892.thomas@fjellstrom.ca> <201010310911.45738.thomas@fjellstrom.ca>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [Bugme-new] [Bug 22512] New: no disks are found at
+ driver start after upgrate from 2.6.35.8 to 2.6.36
+Date: Tue, 7 Dec 2010 13:23:32 -0800
+Message-ID: <20101207212332.GF14849@kroah.com>
+References: <bug-22512-10286@https.bugzilla.kernel.org/>
+	<20101122162627.35f899de.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lo.gmane.org ([80.91.229.12]:43087 "EHLO lo.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753190Ab0LGTuH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Dec 2010 14:50:07 -0500
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <lnx-linux-scsi@m.gmane.org>)
-	id 1PQ3Y5-0000sc-CC
-	for linux-scsi@vger.kernel.org; Tue, 07 Dec 2010 20:50:05 +0100
-Received: from c-24-8-176-90.hsd1.co.comcast.net ([24.8.176.90])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Dec 2010 20:50:05 +0100
-Received: from tommlkml by c-24-8-176-90.hsd1.co.comcast.net with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Dec 2010 20:50:05 +0100
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-bounces@linux.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20101122162627.35f899de.akpm@linux-foundation.org>
+List-Unsubscribe: <http://linux.kernel.org/mailman/options/stable>,
+	<mailto:stable-request@linux.kernel.org?subject=unsubscribe>
+List-Archive: <http://linux.kernel.org/mailman/private/stable/>
+List-Post: <mailto:stable@linux.kernel.org>
+List-Help: <mailto:stable-request@linux.kernel.org?subject=help>
+List-Subscribe: <http://linux.kernel.org/mailman/listinfo/stable>,
+	<mailto:stable-request@linux.kernel.org?subject=subscribe>
+Sender: stable-bounces@linux.kernel.org
+Errors-To: stable-bounces@linux.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Chad Dupuis <chad.dupuis@qlogic.com>, stable@kernel.org, Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Thomas Fjellstrom <thomas <at> fjellstrom.ca> writes:
+On Mon, Nov 22, 2010 at 04:26:27PM -0800, Andrew Morton wrote:
+> On Tue, 9 Nov 2010 19:53:21 GMT
+> bugzilla-daemon@bugzilla.kernel.org wrote:
+> 
+> > https://bugzilla.kernel.org/show_bug.cgi?id=22512
+> 
+> >From this bug report it appears that
+> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=4da26e162b69d89c3186a35a052c05e61a555637
+> is needed in 2.6.36.x to fix a 2.6.35->2.6.36 regression.
+> 
+> But nobody remembered to add cc:<stable@kernel.org> to the changelog,
+> so it got lost.
 
-[snip]
-> > The card is a AOC-SASLP-MV8
+Thanks, I've queued it up for the next .36 kernel release.
 
-Been following this discussion and wondering if you have
-finally found a solution to this problem?
+If only the SCSI maintainer would tag patches for the stable trees,
+things would be so much easier...
 
-Also, have you considered this might be a heat problem with
-the card?  That particular Supermicro card as a large heat
-sink on the Marvell chip and during operation I've noticed
-it gets quite hot.  Perhaps you can try running a fan over
-the card and re-running your tests to rule this out.
+thanks,
 
--tom
-
+greg k-h
