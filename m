@@ -1,49 +1,60 @@
 From: Mike Snitzer <snitzer@redhat.com>
-Subject: [RFC PATCH 0/3] differentiate between I/O errors
-Date: Tue,  7 Dec 2010 18:16:39 -0500
-Message-ID: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
-References: <20101130225956.GA8882@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:19677 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753493Ab0LGXRc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Dec 2010 18:17:32 -0500
-In-Reply-To: <20101130225956.GA8882@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [RFC PATCH v2 2/3] dm mpath: propagate target errors
+	immediately
+Date: Tue,  7 Dec 2010 18:16:41 -0500
+Message-ID: <1291763802-8251-3-git-send-email-snitzer@redhat.com>
+References: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
 To: Hannes Reinecke <hare@suse.de>
-Cc: k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, j-nomura@ce.jp.nec.com, vst@vlnb.net, rwheeler@redhat.com, hch@lst.de, chris.mason@oracle.com, tj@kernel.org
+Cc: k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, hch@lst.de, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, j-nomura@ce.jp.nec.com, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, tj@kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Refreshed Hannes' initial "scsi: Detailed I/O errors" patch against
-v2.6.37-rc5.  v2 introduces __scsi_error_from_host_byte to avoid
-the duplicate switch statement.  Also a few whitespace and comment
-changes.
+DM now has more information about the nature of the underlying storage
+failure.  Path failure is avoided if a request failed due to a target
+error.  Instead the target error is immediately passed up the stack.
 
-Split DM mpath change out to separate v2 patch; failed discard is now
-retryable in the face of a non-target IO error.
+Discard requests that fail due to non-target errors may now be retried.
 
-Added improved block layer's I/O error message (based on the finer
-grained I/O error returns afforded by SCSI).
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+---
+ drivers/md/dm-mpath.c |   11 +----------
+ 1 files changed, 1 insertions(+), 10 deletions(-)
 
-Comments/suggestions are welcome.
-
-Thanks,
-Mike
-
-Hannes Reinecke (1):
-  scsi: Detailed I/O errors
-
-Mike Snitzer (2):
-  dm mpath: propagate target I/O errors immediately
-  block: improve detail in I/O error messages
-
- block/blk-core.c          |   12 +++++++++---
- drivers/md/dm-mpath.c     |   11 +----------
- drivers/scsi/scsi_error.c |   24 +++++++++++++++++-------
- drivers/scsi/scsi_lib.c   |   24 ++++++++++++++++++++++--
- include/scsi/scsi.h       |    3 +++
- 5 files changed, 52 insertions(+), 22 deletions(-)
-
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 487ecda..071529a 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -1270,16 +1270,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
+ 	if (!error && !clone->errors)
+ 		return 0;	/* I/O complete */
+ 
+-	if (error == -EOPNOTSUPP)
+-		return error;
+-
+-	if (clone->cmd_flags & REQ_DISCARD)
+-		/*
+-		 * Pass all discard request failures up.
+-		 * FIXME: only fail_path if the discard failed due to a
+-		 * transport problem.  This requires precise understanding
+-		 * of the underlying failure (e.g. the SCSI sense).
+-		 */
++	if (error == -EOPNOTSUPP || error == -EREMOTEIO)
+ 		return error;
+ 
+ 	if (mpio->pgpath)
 -- 
 1.7.2.3
-
