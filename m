@@ -1,50 +1,44 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: [PATCH] remove return in remote port
-Date: Tue, 7 Dec 2010 21:46:47 +0800
-Message-ID: <AANLkTimmHCdAW9aEDLcWvMGsst-Rt=0rSVfpReNPn+_Q@mail.gmail.com>
+From: Namhyung Kim <namhyung@gmail.com>
+Subject: [PATCH 2/3] [SCSI] fdomain: fix compiler warning on fdomain_pci_tbl
+Date: Wed,  8 Dec 2010 00:31:35 +0900
+Message-ID: <1291735896-14541-2-git-send-email-namhyung@gmail.com>
+References: <1291735896-14541-1-git-send-email-namhyung@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:63306 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752967Ab0LGNqt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Dec 2010 08:46:49 -0500
-Received: by wwa36 with SMTP id 36so14160456wwa.1
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Dec 2010 05:46:47 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1291735896-14541-1-git-send-email-namhyung@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Rik Faith <faith@cs.unc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: devel@open-fcoe.org
-Cc: linux-scsi@vger.kernel.org
 
-Though hard to read, the removed looks unnecessary.
+Annotate fdomain_pci_tbl as '__used' to fix following warning:
 
-Then it is clear.
+  CC      drivers/scsi/fdomain.o
+drivers/scsi/fdomain.c:1775: warning: =E2=80=98fdomain_pci_tbl=E2=80=99=
+ defined but not used
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
+Signed-off-by: Namhyung Kim <namhyung@gmail.com>
+Cc: Rik Faith <faith@cs.unc.edu>
 ---
+ drivers/scsi/fdomain.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
---- a/drivers/scsi/libfc/fc_rport.c	2010-11-01 19:54:12.000000000 +0800
-+++ b/drivers/scsi/libfc/fc_rport.c	2010-12-07 20:47:40.000000000 +0800
-@@ -575,7 +575,7 @@ static void fc_rport_error_retry(struct
-
- 	/* make sure this isn't an FC_EX_CLOSED error, never retry those */
- 	if (PTR_ERR(fp) == -FC_EX_CLOSED)
--		return fc_rport_error(rdata, fp);
-+		goto out;
-
- 	if (rdata->retries < rdata->local_port->max_rport_retry_count) {
- 		FC_RPORT_DBG(rdata, "Error %ld in state %s, retrying\n",
-@@ -585,10 +585,10 @@ static void fc_rport_error_retry(struct
- 		if (PTR_ERR(fp) == -FC_EX_TIMEOUT)
- 			delay = 0;
- 		schedule_delayed_work(&rdata->retry_work, delay);
--		return;
- 	}
--
--	return fc_rport_error(rdata, fp);
-+	else
-+ out:
-+		fc_rport_error(rdata, fp);
- }
-
- /**
+diff --git a/drivers/scsi/fdomain.c b/drivers/scsi/fdomain.c
+index 69b7aa5..974c0d9 100644
+--- a/drivers/scsi/fdomain.c
++++ b/drivers/scsi/fdomain.c
+@@ -1772,7 +1772,7 @@ struct scsi_host_template fdomain_driver_template=
+ =3D {
+ #ifndef PCMCIA
+ #ifdef CONFIG_PCI
+=20
+-static struct pci_device_id fdomain_pci_tbl[] __devinitdata =3D {
++static struct pci_device_id fdomain_pci_tbl[] __devinitdata __used =3D=
+ {
+ 	{ PCI_VENDOR_ID_FD, PCI_DEVICE_ID_FD_36C70,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
+ 	{ }
+--=20
+1.7.0.4
