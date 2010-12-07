@@ -1,73 +1,50 @@
-From: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: [PATCH] add stats info for FCP packets
-Date: Tue, 7 Dec 2010 21:41:03 +0800
-Message-ID: <AANLkTinjzErP33bWtmkTJh9BftJJtjjNiH4f2sHV-6j_@mail.gmail.com>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: [PATCH] remove return in remote port
+Date: Tue, 7 Dec 2010 21:46:47 +0800
+Message-ID: <AANLkTimmHCdAW9aEDLcWvMGsst-Rt=0rSVfpReNPn+_Q@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Unsubscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://www.open-fcoe.org/pipermail/devel>
-List-Post: <mailto:devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://www.open-fcoe.org/mailman/listinfo/devel>,
-	<mailto:devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Sender: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Errors-To: devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-To: devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:63306 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752967Ab0LGNqt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Dec 2010 08:46:49 -0500
+Received: by wwa36 with SMTP id 36so14160456wwa.1
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Dec 2010 05:46:47 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: devel@open-fcoe.org
+Cc: linux-scsi@vger.kernel.org
 
-Stats info is added, in the define of fcp internal, to monitor the
-usage of fcp pkts.
+Though hard to read, the removed looks unnecessary.
 
-Then it is simple to answer not only whether but also how many pkts
-leaked in the life cycle of fc local port.
+Then it is clear.
 
-This work is motivated to capture mm leak of fcp pkts with outstanding
-REC, and thanks for dropping a reply to this message if captured.
-
-Signed-off-by: Hillf Danton <dhillf-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Hillf Danton <dhillf@gmail.com>
 ---
 
---- a/drivers/scsi/libfc/fc_fcp.c	2010-11-01 19:54:12.000000000 +0800
-+++ b/drivers/scsi/libfc/fc_fcp.c	2010-12-07 20:44:36.000000000 +0800
-@@ -82,6 +82,8 @@ struct fc_fcp_internal {
- 	unsigned long		last_can_queue_ramp_down_time;
- 	unsigned long		last_can_queue_ramp_up_time;
- 	int			max_can_queue;
-+	/* stats info of the usage of fcp pkts */
-+	unsigned long		pkts;
- };
+--- a/drivers/scsi/libfc/fc_rport.c	2010-11-01 19:54:12.000000000 +0800
++++ b/drivers/scsi/libfc/fc_rport.c	2010-12-07 20:47:40.000000000 +0800
+@@ -575,7 +575,7 @@ static void fc_rport_error_retry(struct
 
- #define fc_get_scsi_internal(x)	((struct fc_fcp_internal *)(x)->scsi_priv)
-@@ -151,6 +153,7 @@ static struct fc_fcp_pkt *fc_fcp_pkt_all
+ 	/* make sure this isn't an FC_EX_CLOSED error, never retry those */
+ 	if (PTR_ERR(fp) == -FC_EX_CLOSED)
+-		return fc_rport_error(rdata, fp);
++		goto out;
 
- 	fsp = mempool_alloc(si->scsi_pkt_pool, gfp);
- 	if (fsp) {
-+		si->pkts++;
- 		memset(fsp, 0, sizeof(*fsp));
- 		fsp->lp = lport;
- 		atomic_set(&fsp->ref_cnt, 1);
-@@ -172,7 +175,7 @@ static void fc_fcp_pkt_release(struct fc
- {
- 	if (atomic_dec_and_test(&fsp->ref_cnt)) {
- 		struct fc_fcp_internal *si = fc_get_scsi_internal(fsp->lp);
--
-+		si->pkts--;
- 		mempool_free(fsp, si->scsi_pkt_pool);
+ 	if (rdata->retries < rdata->local_port->max_rport_retry_count) {
+ 		FC_RPORT_DBG(rdata, "Error %ld in state %s, retrying\n",
+@@ -585,10 +585,10 @@ static void fc_rport_error_retry(struct
+ 		if (PTR_ERR(fp) == -FC_EX_TIMEOUT)
+ 			delay = 0;
+ 		schedule_delayed_work(&rdata->retry_work, delay);
+-		return;
  	}
- }
-@@ -2187,7 +2190,10 @@ void fc_fcp_destroy(struct fc_lport *lpo
- 	if (!list_empty(&si->scsi_pkt_queue))
- 		printk(KERN_ERR "libfc: Leaked SCSI packets when destroying "
- 		       "port (%6.6x)\n", lport->port_id);
 -
-+	if (si->pkts != 0)
-+		printk(KERN_WARNING "libfc: %lu leaked SCSI packets when "
-+			"destroying local port (%6.6x)\n",
-+			si->pkts, lport->port_id);
- 	mempool_destroy(si->scsi_pkt_pool);
- 	kfree(si);
- 	lport->scsi_priv = NULL;
+-	return fc_rport_error(rdata, fp);
++	else
++ out:
++		fc_rport_error(rdata, fp);
+ }
+
+ /**
