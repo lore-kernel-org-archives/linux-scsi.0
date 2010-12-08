@@ -1,60 +1,95 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [RFC PATCH v2 2/3] dm mpath: propagate target errors
-	immediately
-Date: Tue,  7 Dec 2010 18:16:41 -0500
-Message-ID: <1291763802-8251-3-git-send-email-snitzer@redhat.com>
-References: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH repost 3] [SCSI] Retrieve the Caching mode page
+Date: Tue, 7 Dec 2010 16:02:26 -0800 (PST)
+Message-ID: <732182.60247.qm@web31816.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Hannes Reinecke <hare@suse.de>
-Cc: k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, hch@lst.de, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, j-nomura@ce.jp.nec.com, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, tj@kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web31816.mail.mud.yahoo.com ([68.142.206.169]:22222 "HELO
+	web31816.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752264Ab0LHAJI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Dec 2010 19:09:08 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>
 
-DM now has more information about the nature of the underlying storage
-failure.  Path failure is avoided if a request failed due to a target
-error.  Instead the target error is immediately passed up the stack.
+--- On Sun, 12/5/10, Luben Tuikov <ltuikov@yahoo.com> wrote:
+> --- On Wed, 11/24/10, Luben Tuikov
+> <ltuikov@yahoo.com>
+> wrote:
+> > 
+> > CBI/BBB isn't supposed to be, nor is designed to
+> support
+> > SAM-modern devices. So while REQUEST LUN /may/ work on
+> some
+> > devices which implement it in their firmware, it is
+> NOT a
+> > requirement for those devices as they are not required
+> to
+> > adhere to any SAM version. Those transport protocols
+> define
+> > a class-specific request to get the maximum LUN, and
+> another
+> > to reset the target port (instead of I_T Reset or LU
+> Reset).
+> > They also do not support SCSI Status completion of
+> the
+> > command, nor Autosense. They also do not provide TMFs.
+> They
+> > provide none of the SCSI transport protocol services
+> in
+> > support of the Execute Command procedure call. The
+> SCSI
+> > layer shouldn't be trying to guess their "SCSI
+> version", and
+> > or treat them as real SCSI devices sending REPORT
+> LUNs, etc.
+> > commands.
+> > 
+> > Newer, modern transport protocols over USB, are part
+> of
+> > SAM, and it is devices who connect via those protocols
+> that
+> > are being disadvantaged, due to the adoption
+> (assumption) of
+> > CBI/BBB well into the SCSI layer.
+> > 
+> > To this effect, the transport protocol can tell upper
+> > layers if the device is true SCSI (new usb transports
+> or
+> > other) or hybrid (usb-storage). In the former case,
+> the
+> > device is a SCSI device, in the latter, only basic
+> commands
+> > should be attempted.
+> > 
+> > This isn't to say that firmware for those devices
+> wouldn't
+> > be buggy. Of course it will, and most will probably
+> port
+> > their legacy FW over to the new SPTL, but the
+> protocol
+> > requirements are there by design (i.e. there is no
+> longer
+> > Get Max Lun class-specific request, the application
+> client
+> > has to send REPORT LUNS, and FW has to answer it) and
+> we
+> > have to accommodate that.
+> > 
+> > It is in this spirit that this patch doesn't change
+> wire
+> > behavior, but simply parses data returned by a
+> command
+> > already supported by older protocols.
+> 
+> Did anyone pick up this patch?
 
-Discard requests that fail due to non-target errors may now be retried.
+It's been over 6 weeks now that this patch's been in these mailing lists.
+Will anyone pick up this patch, or should I stop posting it every week? Please let me know--it's been posted here 6 times in the last 6 weeks.
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- drivers/md/dm-mpath.c |   11 +----------
- 1 files changed, 1 insertions(+), 10 deletions(-)
+Thanks,
+   Luben
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index 487ecda..071529a 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -1270,16 +1270,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
- 	if (!error && !clone->errors)
- 		return 0;	/* I/O complete */
- 
--	if (error == -EOPNOTSUPP)
--		return error;
--
--	if (clone->cmd_flags & REQ_DISCARD)
--		/*
--		 * Pass all discard request failures up.
--		 * FIXME: only fail_path if the discard failed due to a
--		 * transport problem.  This requires precise understanding
--		 * of the underlying failure (e.g. the SCSI sense).
--		 */
-+	if (error == -EOPNOTSUPP || error == -EREMOTEIO)
- 		return error;
- 
- 	if (mpio->pgpath)
--- 
-1.7.2.3
