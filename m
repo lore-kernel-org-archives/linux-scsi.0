@@ -1,45 +1,40 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [RFC PATCH 3/3] block: improve detail in I/O error messages
-Date: Wed, 08 Dec 2010 14:28:32 +0300
-Message-ID: <4CFF6BE0.4090109@ru.mvista.com>
-References: <1291763802-8251-1-git-send-email-snitzer@redhat.com> <1291763802-8251-4-git-send-email-snitzer@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 16971] qla4xxx compile failure on 32-bit PowerPC: missing readq
+ and writeq
+Date: Wed, 8 Dec 2010 12:08:17 GMT
+Message-ID: <201012081208.oB8C8HkA003975@demeter2.kernel.org>
+References: <bug-16971-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1291763802-8251-4-git-send-email-snitzer@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, j-nomura@ce.jp.nec.com, vst@vlnb.net, rwheeler@redhat.com, hch@lst.de, chris.mason@oracle.com, tj@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:45975 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754786Ab0LHMIS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2010 07:08:18 -0500
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oB8C8H4Z003976
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 8 Dec 2010 12:08:17 GMT
+In-Reply-To: <bug-16971-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello.
+https://bugzilla.kernel.org/show_bug.cgi?id=16971
 
-On 08-12-2010 2:16, Mike Snitzer wrote:
 
-> Classify severity of I/O errors for target and transport errors.
 
-> Signed-off-by: Mike Snitzer<snitzer@redhat.com>
-[...]
 
-> diff --git a/block/blk-core.c b/block/blk-core.c
-> index 4ce953f..ab8c776 100644
-> --- a/block/blk-core.c
-> +++ b/block/blk-core.c
-> @@ -2028,9 +2028,15 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
->
->   	if (error&&  req->cmd_type == REQ_TYPE_FS&&
->   	!(req->cmd_flags&  REQ_QUIET)) {
-> -		printk(KERN_ERR "end_request: I/O error, dev %s, sector %llu\n",
-> -				req->rq_disk ? req->rq_disk->disk_name : "?",
-> -				(unsigned long long)blk_rq_pos(req));
-> +		char *error_type = "I/O";
-> +
-> +		if (error == -ENOLINK)
-> +			error_type = "recoverable transport";
-> +		else if (error == -EREMOTEIO)
-> +			error_type = "critical target";
 
-    *switch* would be more natural here.
+--- Comment #7 from Vikas <vikas.chaudhary@qlogic.com>  2010-12-08 12:08:15 ---
+Please apply following patch from Ben Hutchings to fix this issue.
 
-WBR, Sergei
+http://marc.info/?l=linux-scsi&m=128593600201958&w=2
+
+Thanks,
+Vikas.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
