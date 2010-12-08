@@ -1,55 +1,55 @@
-From: Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>
-Subject: Re: After memory pressure: can't read from tape anymore
-Date: Wed, 08 Dec 2010 15:19:42 +0100
-Message-ID: <1291817982.2181.1380.camel@quux.techfak.uni-bielefeld.de>
-References: <1290971729.2814.13.camel@larosa>
-	 <alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>
-	 <1291123886.2181.1347.camel@quux.techfak.uni-bielefeld.de>
-	 <alpine.LNX.2.00.1011301813460.9731@kai.makisara.local>
-	 <1291223211.2814.72.camel@larosa>
-	 <alpine.LNX.2.00.1012021823420.9213@kai.makisara.local>
-	 <alpine.LNX.2.00.1012060952570.7928@kai.makisara.local>
-	 <1291628171.2181.1366.camel@quux.techfak.uni-bielefeld.de>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH v2 3/3] block: improve detail in I/O error messages
+Date: Wed, 8 Dec 2010 10:05:09 -0500
+Message-ID: <20101208150509.GB14056@redhat.com>
+References: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
+ <1291763802-8251-4-git-send-email-snitzer@redhat.com>
+ <4CFF6BE0.4090109@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smarthost.TechFak.Uni-Bielefeld.DE ([129.70.137.17]:54955 "EHLO
-	smarthost.TechFak.Uni-Bielefeld.DE" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755194Ab0LHOTn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2010 09:19:43 -0500
-In-Reply-To: <1291628171.2181.1366.camel@quux.techfak.uni-bielefeld.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4CFF6BE0.4090109@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: Hannes Reinecke <hare@suse.de>, k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, j-nomura@ce.jp.nec.com, vst@vlnb.net, rwheeler@redhat.com, hch@lst.de, chris.mason@oracle.com, tj@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: linux-scsi@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Mon, 2010-12-06 at 10:36 +0100, Lukas Kolbe wrote:
-> On Mon, 2010-12-06 at 09:59 +0200, Kai Makisara wrote:
-> > On Thu, 2 Dec 2010, Kai Makisara wrote:
-> 
-> > OK, today I have had some time (national holiday). I think I have tracked 
-> > down this problem. The patch at the end should fix it. Basically, 
-> > normalize_buffer() needs to know the order of the pages in order to 
-> > properly free the pages and update the buffer size. When allocation 
-> > failed, the order was not yet stored into the tape buffer definition. This 
-> > does explain the problem after allocation failed.
-> 
-> Thank you, this does indeed look nasty (like a not easily catched bug).
-> 
-> > Why allocation failed is another problem which has been discussed elsewhere.
-> 
-> I just tonight discovered that Debian's .config has
-> CONFIG_FUSION_MAX_SGE=40. Right now I'm testing with the mptsas' drivers
-> maximum of 128 and see if I can reproduce the failure under memory
-> pressure again. Sorry for not catching this one earlier! After reading
-> the source, I had the assumption that it already was 128 ...
+Classify severity of I/O errors for target and transport errors.
 
-Debian has since fixed to the new default value here, and after a few
-days of testing with CONFIG_FUSION_MAX_SGE=128 and your patch I wasn't
-able to reproduce the failure anymore!
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+---
+ block/blk-core.c |   20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-Kind regards,
-Lukas
-
-
+Index: linux-2.6/block/blk-core.c
+===================================================================
+--- linux-2.6.orig/block/blk-core.c
++++ linux-2.6/block/blk-core.c
+@@ -2028,9 +2028,23 @@ bool blk_update_request(struct request *
+ 
+ 	if (error && req->cmd_type == REQ_TYPE_FS &&
+ 	    !(req->cmd_flags & REQ_QUIET)) {
+-		printk(KERN_ERR "end_request: I/O error, dev %s, sector %llu\n",
+-				req->rq_disk ? req->rq_disk->disk_name : "?",
+-				(unsigned long long)blk_rq_pos(req));
++		char *error_type;
++
++		switch (error) {
++		case -ENOLINK:
++			error_type = "recoverable transport";
++			break;
++		case -EREMOTEIO:
++			error_type = "critical target";
++			break;
++		case -EIO:
++		default:
++			error_type = "I/O";
++			break;
++		}
++		printk(KERN_ERR "end_request: %s error, dev %s, sector %llu\n",
++		       error_type, req->rq_disk ? req->rq_disk->disk_name : "?",
++		       (unsigned long long)blk_rq_pos(req));
+ 	}
+ 
+ 	blk_account_io_completion(req, nr_bytes);
