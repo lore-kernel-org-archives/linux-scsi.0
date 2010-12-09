@@ -1,108 +1,52 @@
-From: Joe Eykholt <jeykholt@cisco.com>
-Subject: Re: [Open-FCoE] [PATCH] add stats info for FC rports
-Date: Wed, 08 Dec 2010 14:06:59 -0800
-Message-ID: <4D000183.9050804@cisco.com>
-References: <AANLkTi=mwHmJwNwCqJXxGXsfyULpnTX0t7rOq3eV9YOF@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 00/12] qla4xxx: Updates for scsi-misc-2.6
+Date: Wed, 08 Dec 2010 20:56:17 -0600
+Message-ID: <4D004551.7060709@cs.wisc.edu>
+References: <5E4F49720D0BAD499EE1F01232234BA872243F4116@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-3.cisco.com ([171.71.176.72]:38840 "EHLO
-	sj-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676Ab0LHWG6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Dec 2010 17:06:58 -0500
-In-Reply-To: <AANLkTi=mwHmJwNwCqJXxGXsfyULpnTX0t7rOq3eV9YOF@mail.gmail.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:35133 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754689Ab0LICrs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Dec 2010 21:47:48 -0500
+In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA872243F4116@AVEXMB1.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hillf Danton <dhillf@gmail.com>
-Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Prasanna Mumbai <prasanna.mumbai@qlogic.com>, Shyam Sundar <shyam.sundar@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
 
+On 12/03/2010 12:11 AM, Vikas Chaudhary wrote:
+> James,
+>
+> Please apply these patches on scsi-misc-2.6 tree.
+>
+> Karen Higgins (1):
+> 	qla4xxx: use correct fw_ddb_index in abort task
+>
+> Lalit Chandivade (4):
+> 	qla4xxx: do not process interrupt unconditionally
+> 	qla4xxx: put device in FAILED state for 82XX initialization failure
+> 	qla4xxx: Fail initialization if qla4_8xxx_pci_mem_write_2M fails
+> 	qla4xxx: do not check for fw hung if reset retry is in progress
+>
+> Prasanna Mumbai (1):
+> 	qla4xxx: cache new IP address acquired via DHCP
+>
+> Shyam Sundar (1):
+> 	qla4xxx: initialize MSI in correct way
+>
+> Swapnil Nagle (1):
+> 	qla4xxx: memory wedge with peg_halt test in loop
+>
+> Vikas Chaudhary (3):
+> 	qla4xxx: Drop use of IRQF_DISABLE
+> 	qla4xxx: do not reset hba if ql4xdontresethba is set
+> 	qla4xxx: Updated the Copyright header
+> 	qla4xxx: Update driver version to 5.02.00-k5
+>
 
+Looks ok.
 
-On 12/8/10 5:27 AM, Hillf Danton wrote:
-> Stats info is added, in the define of local port, to monitor the usage
-> of remote ports.
-> 
-> Then it is simple to answer how many rport data leaked in the life
-> cycle of lport.
-> 
-> This work is motivated to capture mm leak of rports of
-> FC_FID_DIR_SERV, and thanks for dropping a reply to this message if
-> captured.
-
-This sounds like code that could be done locally and then
-tossed out once the leak is found.  Also, there is already a list
-of remote ports, I think, so the count is redundant info.
-
-> Signed-off-by: Hillf Danton <dhillf@gmail.com>
-> ---
-> 
-> --- a/include/scsi/libfc.h	2010-11-01 19:54:12.000000000 +0800
-> +++ b/include/scsi/libfc.h	2010-12-08 21:05:46.000000000 +0800
-> @@ -803,6 +803,9 @@ struct fc_lport {
->  	void			       *scsi_priv;
->  	struct fc_disc                 disc;
-> 
-> +	/* stats info of the usage of rports */
-> +	unsigned long			nr_rdata;
-> +
->  	/* Virtual port information */
->  	struct list_head	       vports;
->  	struct fc_vport		       *vport;
-> --- a/drivers/scsi/libfc/fc_rport.c	2010-11-01 19:54:12.000000000 +0800
-> +++ b/drivers/scsi/libfc/fc_rport.c	2010-12-08 21:16:40.000000000 +0800
-> @@ -128,7 +128,7 @@ static struct fc_rport_priv *fc_rport_cr
->  	rdata = kzalloc(sizeof(*rdata) + lport->rport_priv_size, GFP_KERNEL);
->  	if (!rdata)
->  		return NULL;
-> -
-> +	lport->nr_rdata++;
->  	rdata->ids.node_name = -1;
->  	rdata->ids.port_name = -1;
->  	rdata->ids.port_id = port_id;
-> @@ -159,6 +159,7 @@ static void fc_rport_free_rcu(struct rcu
->  	struct fc_rport_priv *rdata;
-> 
->  	rdata = container_of(rcu, struct fc_rport_priv, rcu);
-> +	rdata->local_port->nr_rdata--;
-
-What about locking?  I don't think you should do this in the rcu
-callback because the local port may no longer exist. Instead, I
-would do it in fc_rport_destroy.
-
->  	kfree(rdata);
->  }
-> 
-> @@ -1880,7 +1881,7 @@ int fc_rport_init(struct fc_lport *lport
-> 
->  	if (!lport->tt.rport_destroy)
->  		lport->tt.rport_destroy = fc_rport_destroy;
-> -
-> +	lport->nr_rdata = 0;
-
-Everything in the lport starts as zero, so no need to insert this explicitly.
-
->  	return 0;
->  }
->  EXPORT_SYMBOL(fc_rport_init);
-> --- a/drivers/scsi/libfc/fc_fcp.c	2010-11-01 19:54:12.000000000 +0800
-> +++ b/drivers/scsi/libfc/fc_fcp.c	2010-12-08 21:19:20.000000000 +0800
-> @@ -2184,6 +2184,11 @@ void fc_fcp_destroy(struct fc_lport *lpo
->  {
->  	struct fc_fcp_internal *si = fc_get_scsi_internal(lport);
-> 
-> +	if (lport->nr_rdata != 0)
-> +		printk(KERN_WARNING "libfc: %lu Leaked rports when "
-> +			"destroying local port (%6.6x)\n",
-> +			lport->nr_rdata, lport->port_id);
-> +
-
-The equivalent of this check should go into fc_rport.c, not here.
-
->  	if (!list_empty(&si->scsi_pkt_queue))
->  		printk(KERN_ERR "libfc: Leaked SCSI packets when destroying "
->  		       "port (%6.6x)\n", lport->port_id);
-> _______________________________________________
-> devel mailing list
-> devel@open-fcoe.org
-> http://www.open-fcoe.org/mailman/listinfo/devel
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
