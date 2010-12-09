@@ -1,52 +1,63 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 00/12] qla4xxx: Updates for scsi-misc-2.6
-Date: Wed, 08 Dec 2010 20:56:17 -0600
-Message-ID: <4D004551.7060709@cs.wisc.edu>
-References: <5E4F49720D0BAD499EE1F01232234BA872243F4116@AVEXMB1.qlogic.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH UPDATED 5/8] scsi: fix TUR error handling in sr_media_change()
+Date: Thu, 09 Dec 2010 11:18:42 +0100
+Message-ID: <4D00AD02.8080504@kernel.org>
+References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-6-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:35133 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754689Ab0LICrs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Dec 2010 21:47:48 -0500
-In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA872243F4116@AVEXMB1.qlogic.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1291838262-21274-6-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com, Rolf Eike Beer <eike-kernel@sf-tec.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Karen Higgins <karen.higgins@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Prasanna Mumbai <prasanna.mumbai@qlogic.com>, Shyam Sundar <shyam.sundar@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
 
-On 12/03/2010 12:11 AM, Vikas Chaudhary wrote:
-> James,
->
-> Please apply these patches on scsi-misc-2.6 tree.
->
-> Karen Higgins (1):
-> 	qla4xxx: use correct fw_ddb_index in abort task
->
-> Lalit Chandivade (4):
-> 	qla4xxx: do not process interrupt unconditionally
-> 	qla4xxx: put device in FAILED state for 82XX initialization failure
-> 	qla4xxx: Fail initialization if qla4_8xxx_pci_mem_write_2M fails
-> 	qla4xxx: do not check for fw hung if reset retry is in progress
->
-> Prasanna Mumbai (1):
-> 	qla4xxx: cache new IP address acquired via DHCP
->
-> Shyam Sundar (1):
-> 	qla4xxx: initialize MSI in correct way
->
-> Swapnil Nagle (1):
-> 	qla4xxx: memory wedge with peg_halt test in loop
->
-> Vikas Chaudhary (3):
-> 	qla4xxx: Drop use of IRQF_DISABLE
-> 	qla4xxx: do not reset hba if ql4xdontresethba is set
-> 	qla4xxx: Updated the Copyright header
-> 	qla4xxx: Update driver version to 5.02.00-k5
->
+sr_test_unit_ready() returns 0 iff TUR succeeded - IOW, when media is
+present and the device is actually ready, so the return value wouldn't
+be zero when TUR ends with sense data. sr_media_change() incorrectly
+tests (retval || (scsi_sense_valid(sshdr)...)) when it tries to test
+whether TUR failed without sense data or with sense data indicating
+media-not-present.
 
-Looks ok.
+Fix the test using scsi_status_is_good() and update comments.
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+- Fixed a comment typo spotted by Eike.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Rolf Eike Beer <eike-kernel@sf-tec.de>
+---
+Typo fixed.  git tree updated accordingly.  Thanks.
+
+ drivers/scsi/sr.c |   18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+Index: work/drivers/scsi/sr.c
+===================================================================
+--- work.orig/drivers/scsi/sr.c
++++ work/drivers/scsi/sr.c
+@@ -214,13 +214,17 @@ static int sr_media_change(struct cdrom_
+
+ 	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
+ 	retval = sr_test_unit_ready(cd->device, sshdr);
+-	if (retval || (scsi_sense_valid(sshdr) &&
+-		       /* 0x3a is medium not present */
+-		       sshdr->asc == 0x3a)) {
+-		/* Media not present or unable to test, unit probably not
+-		 * ready. This usually means there is no disc in the drive.
+-		 * Mark as changed, and we will figure it out later once
+-		 * the drive is available again.
++	/*
++	 * Media is considered to be present if TUR succeeds or fails with
++	 * sense data indicating something other than media-not-present
++	 * (ASC 0x3a).
++	 */
++	if (!scsi_status_is_good(retval) &&
++	    (!scsi_sense_valid(sshdr) || sshdr->asc == 0x3a)) {
++		/*
++		 * Probably no media in the device.  Mark as changed, and
++		 * we will figure it out later once the drive is available
++		 * again.
+ 		 */
+ 		cd->device->changed = 1;
+ 		/* This will force a flush, if called from check_disk_change */
