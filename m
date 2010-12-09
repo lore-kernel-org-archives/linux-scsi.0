@@ -1,50 +1,35 @@
-From: Jing Huang <huangj@Brocade.COM>
-Subject: RE: linux-next: Tree for December 9
-Date: Thu, 9 Dec 2010 11:35:42 -0800
-Message-ID: <E5313AF6F2BFD14293E5FD0F94750F86A5CFCB9049@HQ1-EXCH01.corp.brocade.com>
-References: <20101209154148.ca4ba4e0.sfr@canb.auug.org.au>
-	<AANLkTikjGhkYoR_o3uq-sUEY1daXSRWQgRmMBoVJ-n1=@mail.gmail.com>
-	<20101209154900.GA20190@suse.de>
- <AANLkTimh-E2By3YdeapZ-HP-H8+Y+PWkt762zjH0sOEG@mail.gmail.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [trivial PATCH 00/15] remove duplicate unlikely from IS_ERR
+Date: Thu, 09 Dec 2010 12:32:53 -0800
+Message-ID: <1291926773.20677.26.camel@Joe-Laptop>
+References: <1291906801-1389-2-git-send-email-tklauser@distanz.ch>
+	 <cover.1291923888.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <AANLkTimh-E2By3YdeapZ-HP-H8+Y+PWkt762zjH0sOEG@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-next-owner@vger.kernel.org
-To: Zimny Lech <napohybelskurwysynom2010@gmail.com>, Greg KH <gregkh@suse.de>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <cover.1291923888.git.joe@perches.com>
+Sender: owner-linux-mm@kvack.org
+To: netdev@vger.kernel.org, Tobias Klauser <tklauser@distanz.ch>
+Cc: uclinux-dist-devel@blackfin.uclinux.org, rtc-linux@googlegroups.com, linux-s390@vger.kernel.org, osd-dev@open-osd.org, linux-arm-msm@vger.kernel.org, linux-usb@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-mm@kvack.org, Jiri Kosina <trivial@kernel.org>, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
 List-Id: linux-scsi@vger.kernel.org
 
->2010/12/9 Greg KH <gregkh@suse.de>:
->> On Thu, Dec 09, 2010 at 12:46:19PM +0100, Zimny Lech wrote:
->>> Ave
->>>
->>> 2010/12/9 Stephen Rothwell <sfr@canb.auug.org.au>:
->>> > Hi all,
->>> >
->>> > Changes since 20101208:
->>> >
->>>
->>> =A0 LD =A0 =A0 =A0drivers/built-in.o
->>> drivers/staging/built-in.o:(.data+0xec80): multiple definition of `=
-log_level'
->>
->> That's coming from the cxt1e1 driver, I'll fix that up to be a "sane=
-"
->> global name.
->>
->>> drivers/scsi/built-in.o:(.data+0xa71c): first defined here
->>
->> That's coming from the drivers/scsi/bfa/ driver, and it too should b=
-e
->> fixed as it shouldn't have a global variable with this name in it.
->> Care to let the maintainer of that driver know about this as well?
->
+On Thu, 2010-12-09 at 12:03 -0800, Joe Perches wrote:
+> Tobias Klauser <tklauser@distanz.ch> sent a patch to remove
+> an unnecessary unlikely from drivers/misc/c2port/core.c,
+> https://lkml.org/lkml/2010/12/9/199
 
-Hi Zimny,=20
+It seems that Tobias did send all the appropriate patches,
+not as a series, but as individual patches to kernel-janitor.
 
-I will provide a fix for linux-next soon.
-Thanks
-Jing
+c2port was the only one that went to lkml.
+
+Please ignore this series and apply Tobias' patches.
+
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom policy in Canada: sign http://dissolvethecrtc.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
