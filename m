@@ -1,60 +1,41 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH 5/8] scsi: fix TUR error handling in sr_media_change()
-Date: Thu, 09 Dec 2010 21:20:53 +0300
-Message-ID: <4D011E05.5030205@ru.mvista.com>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-6-git-send-email-tj@kernel.org>
+From: Jeff Johnson <jeff.johnson@aeoncomputing.com>
+Subject: Is it possible to issue device reset to PMC PM8388 expander using
+ sg3_utils or smp_utils?
+Date: Thu, 09 Dec 2010 10:41:00 -0800
+Message-ID: <4D0122BC.8060501@aeoncomputing.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1291838262-21274-6-git-send-email-tj@kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-fx0-f43.google.com ([209.85.161.43]:61992 "EHLO
+	mail-fx0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751622Ab0LISlQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2010 13:41:16 -0500
+Received: by fxm18 with SMTP id 18so2747795fxm.2
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Dec 2010 10:41:15 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello.
+Greetings,
 
-Tejun Heo wrote:
+Is it possible to issue a low level device reset to a PMC-Sierra PM8388 
+24x3G SAS expander using either sg3_utils or smp_utils?
 
-> sr_test_unit_ready() returns 0 iff TUR succeeded - IOW, when media is
-> present and the device is actually ready, so the return value wouldn't
-> be zero when TUR ends with sense data. sr_media_change() incorrectly
-> tests (retval || (scsi_sense_valid(sshdr)...)) when it tries to test
-> whether TUR failed without sense data or with sense data indicating
-> media-not-present.
+I am able to enumerate and read the status of the phys on the PM8388, 
+read end device information, etc. I tried sg_reset and it does a bus 
+reset but not an expander reset.
 
-> Fix the test using scsi_status_is_good() and update comments.
+Technical documentation on the PM8388 is not readily available so I do 
+not know if it has a mode select bit or other special method to get the 
+expander to reset itself.
 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-[...]
+I am looking for an inband method to reset the expander to clear a 
+condition where some phys in a wide connection fail to link. A power 
+cycle clears the condition and I am looking to mimic a power cycle by 
+bouncing the expander at the lowest level possible via the SAS host 
+connection.
 
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index d7b383c..deb24f0 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -214,13 +214,17 @@ static int sr_media_change(struct cdrom_device_info *cdi, int slot)
->  
->  	sshdr =  kzalloc(sizeof(*sshdr), GFP_KERNEL);
->  	retval = sr_test_unit_ready(cd->device, sshdr);
-> -	if (retval || (scsi_sense_valid(sshdr) &&
-> -		       /* 0x3a is medium not present */
-> -		       sshdr->asc == 0x3a)) {
-> -		/* Media not present or unable to test, unit probably not
-> -		 * ready. This usually means there is no disc in the drive.
-> -		 * Mark as changed, and we will figure it out later once
-> -		 * the drive is available again.
-> +	/*
-> +	 * Media is considered to be present if TUR succeeds or fails with
-> +	 * sense data indicating something other than media-not-present
-> +	 * (ASC 0x3a).
-> +	 */
-> +	if (!scsi_status_is_good(retval) &&
-> +	    (!scsi_sense_valid(sshdr) || sshdr->asc == 0x3a)) {
-> +		/*
-> +		 * Probably not media in the device.  Mark as changed, and
+Thank you.
 
-    s/not/no/
-
-WBR, Sergei
-
+--Jeff
