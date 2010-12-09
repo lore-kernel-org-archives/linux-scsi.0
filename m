@@ -1,94 +1,78 @@
-From: Robert Jennings <rcj@linux.vnet.ibm.com>
-Subject: [PATCH] ibmvfc: Improve ibmvfc_async_desc memory layout
-Date: Thu, 9 Dec 2010 14:03:59 -0600
-Message-ID: <20101209200359.GA7677@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e38.co.us.ibm.com ([32.97.110.159]:56437 "EHLO
-	e38.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814Ab0LIUEG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2010 15:04:06 -0500
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
-	by e38.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id oB9KtZOi005766
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Dec 2010 13:55:35 -0700
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id oB9K41OT132638
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Dec 2010 13:04:02 -0700
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id oB9K3x8x006860
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Dec 2010 13:04:01 -0700
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [trivial PATCH 00/15] remove duplicate unlikely from IS_ERR
+Date: Thu,  9 Dec 2010 12:03:53 -0800
+Message-ID: <cover.1291923888.git.joe@perches.com>
+References: <1291906801-1389-2-git-send-email-tklauser@distanz.ch>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1291906801-1389-2-git-send-email-tklauser@distanz.ch>
+Sender: owner-linux-mm@kvack.org
+To: netdev@vger.kernel.org, uclinux-dist-devel@blackfin.uclinux.org, rtc-linux@googlegroups.com, linux-s390@vger.kernel.org, osd-dev@open-osd.org, linux-arm-msm@vger.kernel.org
+Cc: Jiri Kosina <trivial@kernel.org>, dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
 
-By changing field ordering we can avoid a couple of memory holes in
-the tables that use the ibmvfc_async_desc structure.
+Tobias Klauser <tklauser@distanz.ch> sent a patch to remove
+an unnecessary unlikely from drivers/misc/c2port/core.c,
+https://lkml.org/lkml/2010/12/9/199
 
-Signed-off-by: Robert Jennings <rcj@linux.vnet.ibm.com>
----
- drivers/scsi/ibmvscsi/ibmvfc.c |   28 ++++++++++++++--------------
- drivers/scsi/ibmvscsi/ibmvfc.h |    2 +-
- 2 files changed, 15 insertions(+), 15 deletions(-)
+Here are the other instances treewide.
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index df5ed28..1d19ba5 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -2496,23 +2496,23 @@ static void ibmvfc_terminate_rport_io(struct fc_rport *rport)
- }
+I think it'd be good if people would, when noticing defects in a
+specific subsystem, look for and correct the same defect treewide.
+
+IS_ERR already has an unlikely test so remove unnecessary
+unlikelys from the call sites.
+
+from: include/linux/err.h
+#define IS_ERR_VALUE(x) unlikely((x) >= (unsigned long)-MAX_ERRNO)
+[...]
+static inline long __must_check IS_ERR(const void *ptr)
+{
+	return IS_ERR_VALUE((unsigned long)ptr);
+}
+
+Sending directly to maintainers for now, will resend in a month
+or so only to trivial if not picked up.
  
- static const struct ibmvfc_async_desc ae_desc [] = {
--	{ IBMVFC_AE_ELS_PLOGI,		"PLOGI",		IBMVFC_DEFAULT_LOG_LEVEL + 1 },
--	{ IBMVFC_AE_ELS_LOGO,		"LOGO",		IBMVFC_DEFAULT_LOG_LEVEL + 1 },
--	{ IBMVFC_AE_ELS_PRLO,		"PRLO",		IBMVFC_DEFAULT_LOG_LEVEL + 1 },
--	{ IBMVFC_AE_SCN_NPORT,		"N-Port SCN",	IBMVFC_DEFAULT_LOG_LEVEL + 1 },
--	{ IBMVFC_AE_SCN_GROUP,		"Group SCN",	IBMVFC_DEFAULT_LOG_LEVEL + 1 },
--	{ IBMVFC_AE_SCN_DOMAIN,		"Domain SCN",	IBMVFC_DEFAULT_LOG_LEVEL },
--	{ IBMVFC_AE_SCN_FABRIC,		"Fabric SCN",	IBMVFC_DEFAULT_LOG_LEVEL },
--	{ IBMVFC_AE_LINK_UP,		"Link Up",		IBMVFC_DEFAULT_LOG_LEVEL },
--	{ IBMVFC_AE_LINK_DOWN,		"Link Down",	IBMVFC_DEFAULT_LOG_LEVEL },
--	{ IBMVFC_AE_LINK_DEAD,		"Link Dead",	IBMVFC_DEFAULT_LOG_LEVEL },
--	{ IBMVFC_AE_HALT,			"Halt",		IBMVFC_DEFAULT_LOG_LEVEL },
--	{ IBMVFC_AE_RESUME,		"Resume",		IBMVFC_DEFAULT_LOG_LEVEL },
--	{ IBMVFC_AE_ADAPTER_FAILED,	"Adapter Failed",	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ "PLOGI",	IBMVFC_AE_ELS_PLOGI,	IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ "LOGO",	IBMVFC_AE_ELS_LOGO,	IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ "PRLO",	IBMVFC_AE_ELS_PRLO,	IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ "N-Port SCN",	IBMVFC_AE_SCN_NPORT,	IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ "Group SCN",	IBMVFC_AE_SCN_GROUP,	IBMVFC_DEFAULT_LOG_LEVEL + 1 },
-+	{ "Domain SCN",	IBMVFC_AE_SCN_DOMAIN,	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ "Fabric SCN",	IBMVFC_AE_SCN_FABRIC,	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ "Link Up",	IBMVFC_AE_LINK_UP,	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ "Link Down",	IBMVFC_AE_LINK_DOWN,	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ "Link Dead",	IBMVFC_AE_LINK_DEAD,	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ "Halt",	IBMVFC_AE_HALT,		IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ "Resume",	IBMVFC_AE_RESUME,	IBMVFC_DEFAULT_LOG_LEVEL },
-+	{ "Adapter Failed", IBMVFC_AE_ADAPTER_FAILED, IBMVFC_DEFAULT_LOG_LEVEL },
- };
- 
- static const struct ibmvfc_async_desc unknown_ae = {
--	0, "Unknown async", IBMVFC_DEFAULT_LOG_LEVEL
-+	"Unknown async", 0, IBMVFC_DEFAULT_LOG_LEVEL
- };
- 
- /**
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
-index ef663e7..834c37f 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.h
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.h
-@@ -542,8 +542,8 @@ enum ibmvfc_async_event {
- };
- 
- struct ibmvfc_async_desc {
--	enum ibmvfc_async_event ae;
- 	const char *desc;
-+	enum ibmvfc_async_event ae;
- 	int log_level;
- };
- 
+Joe Perches (15):
+  drm: Remove duplicate unlikely from IS_ERR
+  stmmac: Remove duplicate unlikely from IS_ERR
+  rtc: Remove duplicate unlikely from IS_ERR
+  s390: Remove duplicate unlikely from IS_ERR
+  osd: Remove duplicate unlikely from IS_ERR
+  serial: Remove duplicate unlikely from IS_ERR
+  brcm80211: Remove duplicate unlikely from IS_ERR
+  gadget: Remove duplicate unlikely from IS_ERR
+  exofs: Remove duplicate unlikely from IS_ERR
+  ext2: Remove duplicate unlikely from IS_ERR
+  ext3: Remove duplicate unlikely from IS_ERR
+  ext4: Remove duplicate unlikely from IS_ERR
+  nfs: Remove duplicate unlikely from IS_ERR
+  mm: Remove duplicate unlikely from IS_ERR
+  ipv6: Remove duplicate unlikely from IS_ERR
+
+ drivers/gpu/drm/ttm/ttm_tt.c                     |    4 ++--
+ drivers/net/stmmac/stmmac_main.c                 |    2 +-
+ drivers/rtc/rtc-bfin.c                           |    2 +-
+ drivers/s390/scsi/zfcp_fsf.c                     |    4 ++--
+ drivers/scsi/osd/osd_initiator.c                 |    2 +-
+ drivers/serial/msm_serial.c                      |    2 +-
+ drivers/staging/brcm80211/brcmfmac/wl_cfg80211.c |    2 +-
+ drivers/usb/gadget/f_fs.c                        |    4 ++--
+ fs/exofs/super.c                                 |    2 +-
+ fs/ext2/namei.c                                  |    2 +-
+ fs/ext3/namei.c                                  |    2 +-
+ fs/ext4/namei.c                                  |    2 +-
+ fs/nfs/mount_clnt.c                              |    2 +-
+ mm/vmalloc.c                                     |    2 +-
+ net/ipv6/af_inet6.c                              |    2 +-
+ 15 files changed, 18 insertions(+), 18 deletions(-)
+
 -- 
-1.7.0.4
+1.7.3.3.464.gf80b6
 
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Fight unfair telecom policy in Canada: sign http://dissolvethecrtc.ca/
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
