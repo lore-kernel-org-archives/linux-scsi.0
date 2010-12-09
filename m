@@ -1,40 +1,95 @@
 From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [RFC] [PATCH 3/5] bnx2fc: Broadcom FCoE offload driver
- submission - part 1
-Date: Thu, 9 Dec 2010 10:53:52 -0800
-Message-ID: <1291920832.5480.159.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+Subject: [RFC] [PATCH 5/5] bnx2fc: Broadcom FCoE offload driver
+ submission - part 3
+Date: Thu, 9 Dec 2010 10:53:54 -0800
+Message-ID: <1291920835.5480.161.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
  charset=cp1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2369 "EHLO mms2.broadcom.com"
+Received: from mms1.broadcom.com ([216.31.210.17]:4308 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756759Ab0LISyh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Dec 2010 13:54:37 -0500
+	id S1756725Ab0LISyl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Dec 2010 13:54:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Michael Chan <mchan@broadcom.com>
 
-This patch contains code that interfaces with 57712 firmware
-and ELS handling.
+This patch contains code that interfaces with libfc, libfcoe
+and cnic modules to create FCoE instances, send/receive
+non-offload FIP/FCoE packets, listen to link events, etc.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_els.c |  500 ++++++++++
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 1939 ++++++++++++++++++++++++++++++++++++++
- 2 files changed, 2439 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_els.c
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_hwi.c
+ drivers/scsi/Kconfig              |    1 +
+ drivers/scsi/Makefile             |    1 +
+ drivers/scsi/bnx2fc/Kconfig       |   11 +
+ drivers/scsi/bnx2fc/Makefile      |    3 +
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2320 +++++++++++++++++++++++++++++++++++++
+ 5 files changed, 2336 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/bnx2fc/Kconfig
+ create mode 100644 drivers/scsi/bnx2fc/Makefile
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_fcoe.c
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 8616496..4a1f029 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -381,6 +381,7 @@ config ISCSI_BOOT_SYSFS
+ 
+ source "drivers/scsi/cxgbi/Kconfig"
+ source "drivers/scsi/bnx2i/Kconfig"
++source "drivers/scsi/bnx2fc/Kconfig"
+ source "drivers/scsi/be2iscsi/Kconfig"
+ 
+ config SGIWD93_SCSI
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 2e9a87e..b57c532 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -40,6 +40,7 @@ obj-$(CONFIG_LIBFC)		+= libfc/
+ obj-$(CONFIG_LIBFCOE)		+= fcoe/
+ obj-$(CONFIG_FCOE)		+= fcoe/
+ obj-$(CONFIG_FCOE_FNIC)		+= fnic/
++obj-$(CONFIG_SCSI_BNX2X_FCOE)	+= libfc/ fcoe/ bnx2fc/
+ obj-$(CONFIG_ISCSI_TCP) 	+= libiscsi.o	libiscsi_tcp.o iscsi_tcp.o
+ obj-$(CONFIG_INFINIBAND_ISER) 	+= libiscsi.o
+ obj-$(CONFIG_ISCSI_BOOT_SYSFS)	+= iscsi_boot_sysfs.o
+diff --git a/drivers/scsi/bnx2fc/Kconfig b/drivers/scsi/bnx2fc/Kconfig
 new file mode 100644
-index 0000000..af5a4f4
+index 0000000..6a38080
 --- /dev/null
-+++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
-@@ -0,0 +1,500 @@
-+/* bnx2fc_els.c: Broadcom NetXtreme II Linux FCoE offload driver.
++++ b/drivers/scsi/bnx2fc/Kconfig
+@@ -0,0 +1,11 @@
++config SCSI_BNX2X_FCOE
++	tristate "Broadcom NetXtreme II FCoE support"
++	depends on PCI
++	select NETDEVICES
++	select NETDEV_1000
++	select LIBFC
++	select LIBFCOE
++	select CNIC
++	---help---
++	This driver supports FCoE offload for the Broadcom NetXtreme II
++	devices.
+diff --git a/drivers/scsi/bnx2fc/Makefile b/drivers/scsi/bnx2fc/Makefile
+new file mode 100644
+index 0000000..a92695a
+--- /dev/null
++++ b/drivers/scsi/bnx2fc/Makefile
+@@ -0,0 +1,3 @@
++obj-$(CONFIG_SCSI_BNX2X_FCOE) += bnx2fc.o
++
++bnx2fc-y := bnx2fc_els.o bnx2fc_fcoe.o bnx2fc_hwi.o bnx2fc_io.o bnx2fc_tgt.o
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+new file mode 100644
+index 0000000..f2abc3a
+--- /dev/null
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -0,0 +1,2320 @@
++/* bnx2fc_fcoe.c: Broadcom NetXtreme II Linux FCoE offload driver.
 + *
 + * Copyright (c) 2008 - 2010 Broadcom Corporation
 + *
@@ -47,2438 +102,2313 @@ index 0000000..af5a4f4
 +
 +#include "bnx2fc.h"
 +
-+static void bnx2fc_logo_resp(struct fc_seq *seq, struct fc_frame *fp,
-+			     void *arg);
-+static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
-+			      void *arg);
-+static int bnx2fc_initiate_els(struct bnx2fc_rport *tgt, unsigned int op,
-+			void *data, u32 data_len,
-+			void (*cb_func)(struct bnx2fc_els_cb_arg *cb_arg),
-+			struct bnx2fc_els_cb_arg *cb_arg, u32 timer_msec);
++static struct list_head adapter_list;
++static u32 adapter_count;
++static DEFINE_MUTEX(bnx2fc_dev_lock);
 +
-+void bnx2fc_fill_fc_hdr(struct fc_frame_header *fc_hdr, enum fc_rctl r_ctl,
-+			u32 sid, u32 did, enum fc_fh_type fh_type,
-+			u32 f_ctl, u32 parm_offset)
++#define DRV_MODULE_NAME		"bnx2fc"
++#define DRV_MODULE_VERSION	BNX2FC_VERSION
++#define DRV_MODULE_RELDATE	"09/08/10"
++
++
++static char version[] __devinitdata =
++		"Broadcom NetXtreme II FCoE Driver " DRV_MODULE_NAME \
++		" v" DRV_MODULE_VERSION " (" DRV_MODULE_RELDATE ")\n";
++
++
++MODULE_AUTHOR("Bhanu Prakash Gollapudi <bprakash@broadcom.com>");
++MODULE_DESCRIPTION("Broadcom NetXtreme II BCM57710 FCoE Driver");
++MODULE_LICENSE("GPL");
++MODULE_VERSION(DRV_MODULE_VERSION);
++
++#define FCOE_LOW_QUEUE_DEPTH	32
++#define FCOE_GW_ADDR_MODE           0x00
++#define FCOE_FCOUI_ADDR_MODE        0x01
++
++#define FCOE_WORD_TO_BYTE  4
++
++static struct scsi_transport_template	*bnx2fc_transport_template;
++static struct scsi_transport_template	*bnx2fc_vport_xport_template;
++
++struct bnx2fc_global_s bnx2fc_global;
++
++static struct cnic_ulp_ops bnx2fc_cnic_cb;
++static struct libfc_function_template bnx2fc_libfc_fcn_templ;
++static struct scsi_host_template bnx2fc_shost_template;
++static struct fc_function_template bnx2fc_transport_function;
++static struct fc_function_template bnx2fc_vport_xport_function;
++static int bnx2fc_create(const char *, struct kernel_param *);
++static int bnx2fc_destroy(const char *, struct kernel_param *);
++
++static void bnx2fc_recv_frame(struct sk_buff *skb);
++
++static u64 bnx2fc_wwn_from_mac(unsigned char mac[MAX_ADDR_LEN],
++		      unsigned int scheme, unsigned int port);
++static inline int bnx2fc_start_io(struct sk_buff *skb);
++static void bnx2fc_start_disc(struct bnx2fc_hba *hba);
++static void bnx2fc_check_wait_queue(struct fc_lport *lp, struct sk_buff *skb);
++static int bnx2fc_shost_config(struct fc_lport *lp);
++static int bnx2fc_net_config(struct fc_lport *lp);
++static int bnx2fc_lport_config(struct fc_lport *lport,
++			       struct Scsi_Host *shost);
++static int bnx2fc_em_config(struct fc_lport *lport);
++static int bnx2fc_bind_adapter_devices(struct bnx2fc_hba *hba);
++static void bnx2fc_unbind_adapter_devices(struct bnx2fc_hba *hba);
++static int bnx2fc_bind_pcidev(struct bnx2fc_hba *hba);
++static void bnx2fc_unbind_pcidev(struct bnx2fc_hba *hba);
++static struct fc_lport *bnx2fc_if_create(struct bnx2fc_hba *hba,
++				  struct device *parent, int npiv);
++static void bnx2fc_destroy_work(struct work_struct *work);
++
++static struct net_device *bnx2fc_if_to_netdev(const char *buffer);
++static struct bnx2fc_hba *bnx2fc_hba_lookup(struct net_device *phys_dev);
++static struct bnx2fc_hba *bnx2fc_find_hba_for_cnic(struct cnic_dev *cnic);
++
++static void bnx2fc_port_shutdown(struct fc_lport *lport);
++static void bnx2fc_stop(struct bnx2fc_hba *hba);
++static int __init bnx2fc_mod_init(void);
++static void __exit bnx2fc_mod_exit(void);
++
++unsigned long bnx2fc_debug_level;
++module_param(bnx2fc_debug_level, long, 0644);
++module_param_call(create, bnx2fc_create, NULL, (void *)FIP_MODE_FABRIC,
++		  S_IWUSR);
++__MODULE_PARM_TYPE(create, "string");
++MODULE_PARM_DESC(create, " Creates fcoe instance on a ethernet interface");
++module_param_call(destroy, bnx2fc_destroy, NULL, NULL, S_IWUSR);
++__MODULE_PARM_TYPE(destroy, "string");
++MODULE_PARM_DESC(destroy, " Destroys fcoe instance on a ethernet interface");
++
++/*
++MODULE_PARM_DESC(bnx2fc_debug_level, "Bit mask to enable debug logging,\n\t\t"
++		"LOG_IOERR	0x00000001\n\t\t"
++		"LOG_SESS	0x00000002\n\t\t"
++		"LOG_DEV_EVT	0x00000004\n\t\t"
++		"LOG_ELS	0x00000008\n\t\t"
++		"LOG_FRAME	0x00000010\n\t\t"
++		"LOG_INIT	0x00000020\n\t\t"
++		"LOG_ALL	0xffffffff\n"
++		);
++*/
++
++#define FCOE_MAX_QUEUE_DEPTH 256
++
++static u64 bnx2fc_wwn_from_mac(unsigned char mac[MAX_ADDR_LEN],
++		      unsigned int scheme, unsigned int port)
 +{
-+	hton24(fc_hdr->fh_s_id, sid);
-+	hton24(fc_hdr->fh_d_id, did);
-+	fc_hdr->fh_r_ctl = r_ctl;
-+	fc_hdr->fh_type = fh_type;
-+	hton24(fc_hdr->fh_f_ctl, f_ctl);
-+	fc_hdr->fh_cs_ctl = 0;
-+	fc_hdr->fh_df_ctl = 0;
-+	fc_hdr->fh_parm_offset = htonl(parm_offset);
-+}
++	u64 wwn;
++	u64 host_mac;
 +
-+static void bnx2fc_rrq_compl(struct bnx2fc_els_cb_arg *cb_arg)
-+{
-+	struct bnx2fc_cmd *orig_io_req;
-+	struct bnx2fc_cmd *rrq_req;
-+	int rc = 0;
++	/* The MAC is in NO, so flip only the low 48 bits */
++	host_mac = ((u64) mac[0] << 40) |
++		((u64) mac[1] << 32) |
++		((u64) mac[2] << 24) |
++		((u64) mac[3] << 16) |
++		((u64) mac[4] << 8) |
++		(u64) mac[5];
 +
-+	BUG_ON(!cb_arg);
-+	rrq_req = cb_arg->io_req;
-+	bnx2fc_dbg(LOG_ELS, "Entered rrq_compl callback\n");
-+	orig_io_req = cb_arg->aborted_io_req;
-+	BUG_ON(!orig_io_req);
-+	bnx2fc_dbg(LOG_ELS, "rrq_compl: orig xid = 0x%x, rrq_xid = 0x%x "
-+			    "ref_cnt(o) = %d, ref_cnt = %d\n",
-+		orig_io_req->xid, rrq_req->xid, orig_io_req->cmd_refcnt.counter,
-+		rrq_req->cmd_refcnt.counter);
-+
-+	bnx2fc_cmd_release(orig_io_req);
-+
-+	if (test_and_clear_bit(BNX2FC_FLAG_ELS_TIMEOUT, &rrq_req->req_flags)) {
-+		/*
-+		 * els req is timed out. cleanup the IO with FW and
-+		 * drop the completion. Remove from active_cmd_queue.
-+		 */
-+		bnx2fc_dbg(LOG_ELS, "rrq xid - 0x%x timed out, clean it up\n",
-+			   rrq_req->xid);
-+
-+		if (rrq_req->on_active_queue) {
-+			list_del_init(&rrq_req->link);
-+			rrq_req->on_active_queue = 0;
-+			rc = bnx2fc_initiate_cleanup(rrq_req);
-+			BUG_ON(rc);
-+		}
++	WARN_ON(host_mac >= (1ULL << 48));
++	wwn = host_mac | ((u64) scheme << 60);
++	switch (scheme) {
++	case 1:
++		WARN_ON(port != 0);
++		break;
++	case 2:
++		WARN_ON(port >= 0xfff);
++		wwn |= (u64) port << 48;
++		break;
++	default:
++		WARN_ON(1);
++		break;
 +	}
-+	kfree(cb_arg);
-+}
-+int bnx2fc_send_rrq(struct bnx2fc_cmd *aborted_io_req)
-+{
 +
-+	struct fc_els_rrq rrq;
-+	struct bnx2fc_rport *tgt = aborted_io_req->tgt;
-+	struct fc_lport *lport = tgt->rdata->local_port;
-+	struct bnx2fc_els_cb_arg *cb_arg = NULL;
-+	u32 sid = tgt->sid;
-+	u32 r_a_tov = lport->r_a_tov;
++	return wwn;
++}
++static inline int bnx2fc_start_io(struct sk_buff *skb)
++{
++	struct sk_buff *nskb;
 +	int rc;
 +
-+	bnx2fc_dbg(LOG_ELS, "Sending RRQ orig_xid = 0x%x\n",
-+		   aborted_io_req->xid);
-+	memset(&rrq, 0, sizeof(rrq));
-+
-+	cb_arg = kzalloc(sizeof(struct bnx2fc_els_cb_arg), GFP_ATOMIC);
-+	if (!cb_arg) {
-+		printk(KERN_ERR PFX "Unable to allocate cb_arg for RRQ\n");
-+		rc = -ENOMEM;
-+		goto rrq_err;
-+	}
-+
-+	cb_arg->aborted_io_req = aborted_io_req;
-+
-+	rrq.rrq_cmd = ELS_RRQ;
-+	hton24(rrq.rrq_s_id, sid);
-+	rrq.rrq_ox_id = htons(aborted_io_req->xid);
-+	rrq.rrq_rx_id = htons(aborted_io_req->task->rx_wr_tx_rd.rx_id);
-+
-+	rc = bnx2fc_initiate_els(tgt, ELS_RRQ, &rrq, sizeof(rrq),
-+				 bnx2fc_rrq_compl, cb_arg,
-+				 r_a_tov);
-+rrq_err:
-+	if (rc) {
-+		bnx2fc_dbg(LOG_ELS, "RRQ failed - release orig io req 0x%x\n",
-+			aborted_io_req->xid);
-+		kfree(cb_arg);
-+		spin_lock_bh(&tgt->tgt_lock);
-+		bnx2fc_cmd_release(aborted_io_req);
-+		spin_unlock_bh(&tgt->tgt_lock);
-+	}
-+	return rc;
++	nskb = skb_clone(skb, GFP_ATOMIC);
++	rc = dev_queue_xmit(nskb);
++	if (rc != 0)
++		return rc;
++	kfree_skb(skb);
++	return 0;
 +}
 +
-+static void bnx2fc_l2_els_compl(struct bnx2fc_els_cb_arg *cb_arg)
++static void bnx2fc_clean_rx_queue(struct fc_lport *lp)
 +{
-+	struct bnx2fc_cmd *els_req;
-+	struct bnx2fc_rport *tgt;
-+	struct bnx2fc_mp_req *mp_req;
-+	struct fc_frame_header *fc_hdr;
-+	unsigned char *buf;
-+	void *resp_buf;
-+	u32 resp_len, hdr_len;
-+	u16 l2_oxid;
-+	int frame_len;
++	struct bnx2fc_global_s *bg;
++	struct fcoe_rcv_info *fr;
++	struct sk_buff_head *list;
++	struct sk_buff *skb, *next;
++	struct sk_buff *head;
++
++	bg = &bnx2fc_global;
++	spin_lock_bh(&bg->fcoe_rx_list.lock);
++	list = &bg->fcoe_rx_list;
++	head = list->next;
++	for (skb = head; skb != (struct sk_buff *)list;
++	     skb = next) {
++		next = skb->next;
++		fr = fcoe_dev_from_skb(skb);
++		if (fr->fr_dev == lp) {
++			__skb_unlink(skb, list);
++			kfree_skb(skb);
++		}
++	}
++	spin_unlock_bh(&bg->fcoe_rx_list.lock);
++}
++
++static void bnx2fc_queue_timer(ulong lport)
++{
++	bnx2fc_check_wait_queue((struct fc_lport *) lport, NULL);
++}
++
++static void bnx2fc_clean_pending_queue(struct fc_lport *lp)
++{
++	struct bnx2fc_port *port;
++	struct sk_buff *skb;
++	port = lport_priv(lp);
++
++	spin_lock_bh(&port->fcoe_pending_queue.lock);
++	while ((skb = __skb_dequeue(&port->fcoe_pending_queue)) != NULL) {
++		spin_unlock_bh(&port->fcoe_pending_queue.lock);
++		kfree_skb(skb);
++		spin_lock_bh(&port->fcoe_pending_queue.lock);
++	}
++	spin_unlock_bh(&port->fcoe_pending_queue.lock);
++}
++
++static void bnx2fc_check_wait_queue(struct fc_lport *lp, struct sk_buff *skb)
++{
++	struct bnx2fc_port *port = lport_priv(lp);
 +	int rc = 0;
 +
-+	l2_oxid = cb_arg->l2_oxid;
-+	bnx2fc_dbg(LOG_ELS, "ELS COMPL - l2_oxid = 0x%x\n", l2_oxid);
++	spin_lock_bh(&port->fcoe_pending_queue.lock);
 +
-+	els_req = cb_arg->io_req;
-+	if (test_and_clear_bit(BNX2FC_FLAG_ELS_TIMEOUT, &els_req->req_flags)) {
-+		/*
-+		 * els req is timed out. cleanup the IO with FW and
-+		 * drop the completion. libfc will handle the els timeout
-+		 */
-+		if (els_req->on_active_queue) {
-+			list_del_init(&els_req->link);
-+			els_req->on_active_queue = 0;
-+			rc = bnx2fc_initiate_cleanup(els_req);
-+			BUG_ON(rc);
++	if (skb)
++		__skb_queue_tail(&port->fcoe_pending_queue, skb);
++
++	if (port->fcoe_pending_queue_active)
++		goto out;
++	port->fcoe_pending_queue_active = 1;
++
++	while (port->fcoe_pending_queue.qlen) {
++		/* keep qlen > 0 until bnx2fc_start_io succeeds */
++		port->fcoe_pending_queue.qlen++;
++		skb = __skb_dequeue(&port->fcoe_pending_queue);
++
++		spin_unlock_bh(&port->fcoe_pending_queue.lock);
++		rc = bnx2fc_start_io(skb);
++		spin_lock_bh(&port->fcoe_pending_queue.lock);
++
++		if (rc) {
++			__skb_queue_head(&port->fcoe_pending_queue, skb);
++			/* undo temporary increment above */
++			port->fcoe_pending_queue.qlen--;
++			break;
 +		}
-+		goto free_arg;
++		/* undo temporary increment above */
++		port->fcoe_pending_queue.qlen--;
 +	}
 +
-+	tgt = els_req->tgt;
-+	mp_req = &(els_req->mp_req);
-+	fc_hdr = &(mp_req->resp_fc_hdr);
-+	resp_len = mp_req->resp_len;
-+	resp_buf = mp_req->resp_buf;
-+
-+	buf = kzalloc(0x1000, GFP_ATOMIC);
-+	if (!buf) {
-+		printk(KERN_ERR PFX "Unable to alloc mp buf\n");
-+		return;
-+	}
-+	hdr_len = sizeof(*fc_hdr);
-+	memcpy(buf, fc_hdr, hdr_len);
-+	memcpy(buf + hdr_len, resp_buf, resp_len);
-+	frame_len = hdr_len + resp_len;
-+
-+	bnx2fc_process_l2_frame_compl(tgt, buf, frame_len, l2_oxid);
-+	kfree(buf);
-+free_arg:
-+	kfree(cb_arg);
++	if (port->fcoe_pending_queue.qlen < FCOE_LOW_QUEUE_DEPTH)
++		lp->qfull = 0;
++	if (port->fcoe_pending_queue.qlen && !timer_pending(&port->timer))
++		mod_timer(&port->timer, jiffies + 2);
++	port->fcoe_pending_queue_active = 0;
++out:
++	if (port->fcoe_pending_queue.qlen > FCOE_MAX_QUEUE_DEPTH)
++		lp->qfull = 1;
++	spin_unlock_bh(&port->fcoe_pending_queue.lock);
++	return;
 +}
 +
-+int bnx2fc_send_adisc(struct bnx2fc_rport *tgt, struct fc_frame *fp)
++u32 bnx2fc_crc(struct fc_frame *fp)
 +{
-+	struct fc_els_adisc *adisc;
-+	struct fc_frame_header *fh;
-+	struct bnx2fc_els_cb_arg *cb_arg;
-+	struct fc_lport *lport = tgt->rdata->local_port;
-+	u32 r_a_tov = lport->r_a_tov;
-+	int rc;
++	struct sk_buff *skb = fp_skb(fp);
++	struct skb_frag_struct *frag;
++	unsigned char *data;
++	unsigned long off, len, clen;
++	u32 crc;
++	unsigned i;
 +
-+	bnx2fc_dbg(LOG_ELS, "Sending ADISC\n");
-+	fh = fc_frame_header_get(fp);
-+	cb_arg = kzalloc(sizeof(struct bnx2fc_els_cb_arg), GFP_ATOMIC);
-+	if (!cb_arg) {
-+		printk(KERN_ERR PFX "Unable to allocate cb_arg for ADISC\n");
-+		return -ENOMEM;
-+	}
++	crc = crc32(~0, skb->data, skb_headlen(skb));
 +
-+	cb_arg->l2_oxid = ntohs(fh->fh_ox_id);
-+
-+	bnx2fc_dbg(LOG_ELS, "send ADISC: l2_oxid = 0x%x\n", cb_arg->l2_oxid);
-+	adisc = fc_frame_payload_get(fp, sizeof(*adisc));
-+	/* adisc is initialized by libfc */
-+	rc = bnx2fc_initiate_els(tgt, ELS_ADISC, adisc, sizeof(*adisc),
-+				 bnx2fc_l2_els_compl, cb_arg, 2 * r_a_tov);
-+	if (rc)
-+		kfree(cb_arg);
-+	return rc;
-+}
-+
-+int bnx2fc_send_logo(struct bnx2fc_rport *tgt, struct fc_frame *fp)
-+{
-+	struct fc_els_logo *logo;
-+	struct fc_frame_header *fh;
-+	struct bnx2fc_els_cb_arg *cb_arg;
-+	struct fc_lport *lport = tgt->rdata->local_port;
-+	u32 r_a_tov = lport->r_a_tov;
-+	int rc;
-+
-+	bnx2fc_dbg(LOG_ELS, "Sending LOGO\n");
-+	fh = fc_frame_header_get(fp);
-+	cb_arg = kzalloc(sizeof(struct bnx2fc_els_cb_arg), GFP_ATOMIC);
-+	if (!cb_arg) {
-+		printk(KERN_ERR PFX "Unable to allocate cb_arg for LOGO\n");
-+		return -ENOMEM;
-+	}
-+
-+	cb_arg->l2_oxid = ntohs(fh->fh_ox_id);
-+
-+	logo = fc_frame_payload_get(fp, sizeof(*logo));
-+	/* logo is initialized by libfc */
-+	rc = bnx2fc_initiate_els(tgt, ELS_LOGO, logo, sizeof(*logo),
-+				 bnx2fc_l2_els_compl, cb_arg, 2 * r_a_tov);
-+	if (rc)
-+		kfree(cb_arg);
-+	return rc;
-+}
-+
-+static int bnx2fc_initiate_els(struct bnx2fc_rport *tgt, unsigned int op,
-+			void *data, u32 data_len,
-+			void (*cb_func)(struct bnx2fc_els_cb_arg *cb_arg),
-+			struct bnx2fc_els_cb_arg *cb_arg, u32 timer_msec)
-+{
-+	struct bnx2fc_port *port = tgt->port;
-+	struct bnx2fc_hba *hba = port->hba;
-+	struct fc_rport *rport = tgt->rport;
-+	struct fc_lport *lport = port->lport;
-+	struct bnx2fc_cmd *els_req;
-+	struct bnx2fc_mp_req *mp_req;
-+	struct fc_frame_header *fc_hdr;
-+	struct fcoe_task_ctx_entry *task;
-+	struct fcoe_task_ctx_entry *task_page;
-+	int rc = 0;
-+	int task_idx, index;
-+	u32 did, sid;
-+	u16 xid;
-+	unsigned long start = jiffies;
-+
-+	bnx2fc_dbg(LOG_ELS, "Sending ELS\n");
-+
-+	rc = fc_remote_port_chkready(rport);
-+	if (rc) {
-+		printk(KERN_ALERT PFX "els 0x%x: rport not ready\n", op);
-+		rc = -EINVAL;
-+		goto els_err;
-+	}
-+	if (lport->state != LPORT_ST_READY || !(lport->link_up)) {
-+		printk(KERN_ALERT PFX "els 0x%x: link is not ready\n", op);
-+		rc = -EINVAL;
-+		goto els_err;
-+	}
-+	if (!(test_bit(BNX2FC_FLAG_SESSION_READY, &tgt->flags)) ||
-+	     (test_bit(BNX2FC_FLAG_EXPL_LOGO, &tgt->flags))) {
-+		printk(KERN_ERR PFX "els 0x%x: tgt not ready\n", op);
-+		rc = -EINVAL;
-+		goto els_err;
-+	}
-+retry_els:
-+	els_req = bnx2fc_elstm_alloc(tgt, BNX2FC_ELS);
-+	if (!els_req) {
-+		if (time_after(jiffies, start + (10 * HZ))) {
-+			bnx2fc_dbg(LOG_ELS, "els: Failed els 0x%x", op);
-+			rc = FAILED;
-+			goto els_err;
-+		}
-+		msleep(20);
-+		goto retry_els;
-+	}
-+
-+	bnx2fc_dbg(LOG_ELS, "initiate_els els_req = 0x%p cb_arg = %p\n",
-+		els_req, cb_arg);
-+	els_req->sc_cmd = NULL;
-+	els_req->port = port;
-+	els_req->tgt = tgt;
-+	els_req->cb_func = cb_func;
-+	cb_arg->io_req = els_req;
-+	els_req->cb_arg = cb_arg;
-+
-+	mp_req = (struct bnx2fc_mp_req *)&(els_req->mp_req);
-+	rc = bnx2fc_init_mp_req(els_req);
-+	if (rc == FAILED) {
-+		printk(KERN_ALERT PFX "ELS MP request init failed\n");
-+		spin_lock_bh(&tgt->tgt_lock);
-+		bnx2fc_cmd_release(els_req);
-+		spin_unlock_bh(&tgt->tgt_lock);
-+		goto els_err;
-+	} else {
-+		/* rc SUCCESS */
-+		rc = 0;
-+	}
-+
-+	/* Fill ELS Payload */
-+	if ((op >= ELS_LS_RJT) && (op <= ELS_AUTH_ELS)) {
-+		memcpy(mp_req->req_buf, data, data_len);
-+	} else {
-+		printk(KERN_ALERT PFX "Invalid ELS op 0x%x\n", op);
-+		els_req->cb_func = NULL;
-+		els_req->cb_arg = NULL;
-+		spin_lock_bh(&tgt->tgt_lock);
-+		bnx2fc_cmd_release(els_req);
-+		spin_unlock_bh(&tgt->tgt_lock);
-+		rc = -EINVAL;
-+	}
-+
-+	if (rc)
-+		goto els_err;
-+
-+	/* Fill FC header */
-+	fc_hdr = &(mp_req->req_fc_hdr);
-+
-+	did = tgt->rport->port_id;
-+	sid = tgt->sid;
-+
-+	bnx2fc_fill_fc_hdr(fc_hdr, FC_RCTL_ELS_REQ, sid, did,
-+			   FC_TYPE_ELS, FC_FC_FIRST_SEQ | FC_FC_END_SEQ |
-+			   FC_FC_SEQ_INIT, 0);
-+
-+	/* Obtain exchange id */
-+	xid = bnx2fc_get_xid(els_req, hba);
-+	task_idx = xid/BNX2FC_TASKS_PER_PAGE;
-+	index = xid % BNX2FC_TASKS_PER_PAGE;
-+
-+	/* Initialize task context for this IO request */
-+	task_page = (struct fcoe_task_ctx_entry *) hba->task_ctx[task_idx];
-+	task = &(task_page[index]);
-+	bnx2fc_init_mp_task(els_req, task);
-+
-+	spin_lock_bh(&tgt->tgt_lock);
-+
-+	if (!test_bit(BNX2FC_FLAG_SESSION_READY, &tgt->flags)) {
-+		printk(KERN_ERR PFX "initiate_els.. session not ready\n");
-+		els_req->cb_func = NULL;
-+		els_req->cb_arg = NULL;
-+		bnx2fc_cmd_release(els_req);
-+		spin_unlock_bh(&tgt->tgt_lock);
-+		return -EINVAL;
-+	}
-+
-+	if (timer_msec)
-+		bnx2fc_cmd_timer_set(els_req, timer_msec);
-+	bnx2fc_add_2_sq(tgt, xid);
-+
-+	els_req->on_active_queue = 1;
-+	list_add_tail(&els_req->link, &tgt->els_queue);
-+
-+	/* Ring doorbell */
-+	bnx2fc_dbg(LOG_ELS, "Ringing doorbell for ELS req\n");
-+	bnx2fc_ring_doorbell(tgt);
-+	spin_unlock_bh(&tgt->tgt_lock);
-+
-+els_err:
-+	return rc;
-+}
-+
-+void bnx2fc_process_els_compl(struct bnx2fc_cmd *els_req,
-+			      struct fcoe_task_ctx_entry *task, u8 num_rq)
-+{
-+	struct bnx2fc_mp_req *mp_req;
-+	struct fc_frame_header *fc_hdr;
-+	u64 *hdr;
-+	u64 *temp_hdr;
-+
-+	bnx2fc_dbg(LOG_ELS, "Entered process_els_compl xid = 0x%x\n"
-+				"refcnt = %d, cmd_type = %d\n",
-+			els_req->xid, els_req->cmd_refcnt.counter,
-+			els_req->cmd_type);
-+
-+	if (test_and_set_bit(BNX2FC_FLAG_ELS_DONE,
-+			     &els_req->req_flags)) {
-+		bnx2fc_dbg(LOG_ELS, "Timer context finished processing this "
-+			   "els - 0x%x\n", els_req->xid);
-+		/* This IO doesnt receive cleanup completion */
-+		bnx2fc_cmd_release(els_req);
-+		return;
-+	}
-+
-+	/* Cancel the timeout_work, as we received the response */
-+	if (cancel_delayed_work(&els_req->timeout_work))
-+		bnx2fc_cmd_release(els_req); /* drop timer hold */
-+
-+	if (els_req->on_active_queue) {
-+		list_del_init(&els_req->link);
-+		els_req->on_active_queue = 0;
-+	}
-+
-+	mp_req = &(els_req->mp_req);
-+	fc_hdr = &(mp_req->resp_fc_hdr);
-+
-+	hdr = (u64 *)fc_hdr;
-+	temp_hdr = (u64 *)
-+		&task->cmn.general.cmd_info.mp_fc_frame.fc_hdr;
-+	hdr[0] = cpu_to_be64(temp_hdr[0]);
-+	hdr[1] = cpu_to_be64(temp_hdr[1]);
-+	hdr[2] = cpu_to_be64(temp_hdr[2]);
-+
-+	mp_req->resp_len = task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_off;
-+	bnx2fc_dbg(LOG_ELS, "els_compl: resp_len = %d\n", mp_req->resp_len);
-+
-+	/* Parse ELS response */
-+	if ((els_req->cb_func) && (els_req->cb_arg)) {
-+		els_req->cb_func(els_req->cb_arg);
-+		els_req->cb_arg = NULL;
-+	}
-+
-+	bnx2fc_cmd_release(els_req);
-+}
-+
-+static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
-+			      void *arg)
-+{
-+	struct fcoe_ctlr *fip = arg;
-+	struct fc_exch *exch = fc_seq_exch(seq);
-+	struct fc_lport *lport = exch->lp;
-+	u8 *mac;
-+	int i;
-+	struct fc_frame_header *fh;
-+	u8 op;
-+
-+	if (IS_ERR(fp))
-+		goto done;
-+
-+	mac = fr_cb(fp)->granted_mac;
-+	if (is_zero_ether_addr(mac)) {
-+		fh = fc_frame_header_get(fp);
-+		if (fh->fh_type != FC_TYPE_ELS) {
-+			printk(KERN_ERR PFX "bnx2fc_flogi_resp:"
-+				"fh_type != FC_TYPE_ELS\n");
-+			fc_frame_free(fp);
-+			return;
-+		}
-+		op = fc_frame_payload_op(fp);
-+		if (lport->vport) {
-+			if (op == ELS_LS_RJT) {
-+				printk(KERN_ERR PFX "bnx2fc_flogi_resp is LS_RJT\n");
-+				fc_vport_terminate(lport->vport);
-+				fc_frame_free(fp);
-+				return;
-+			}
-+		}
-+		if (fcoe_ctlr_recv_flogi(fip, lport, fp)) {
-+			fc_frame_free(fp);
-+			return;
++	for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
++		frag = &skb_shinfo(skb)->frags[i];
++		off = frag->page_offset;
++		len = frag->size;
++		while (len > 0) {
++			clen = min(len, PAGE_SIZE - (off & ~PAGE_MASK));
++			data = kmap_atomic(frag->page + (off >> PAGE_SHIFT),
++					   KM_SKB_DATA_SOFTIRQ);
++			crc = crc32(crc, data + (off & ~PAGE_MASK), clen);
++			kunmap_atomic(data, KM_SKB_DATA_SOFTIRQ);
++			off += clen;
++			len -= clen;
 +		}
 +	}
-+	fip->update_mac(lport, mac);
-+	bnx2fc_dbg(LOG_ELS, "flogi_resp - updated_mac = ");
-+	for (i = 0; i < 6; i++)
-+		bnx2fc_dbg(LOG_ELS, "%02x:", mac[i]);
-+	bnx2fc_dbg(LOG_ELS, "\n");
-+
-+done:
-+	fc_lport_flogi_resp(seq, fp, lport);
++	return crc;
 +}
-+
-+static void bnx2fc_logo_resp(struct fc_seq *seq, struct fc_frame *fp,
-+			     void *arg)
++int bnx2fc_get_paged_crc_eof(struct sk_buff *skb, int tlen)
 +{
-+	struct fcoe_ctlr *fip = arg;
-+	struct fc_exch *exch = fc_seq_exch(seq);
-+	struct fc_lport *lport = exch->lp;
-+	static u8 zero_mac[ETH_ALEN] = { 0 };
++	struct bnx2fc_global_s *bg;
++	struct page *page;
 +
-+	if (!IS_ERR(fp))
-+		fip->update_mac(lport, zero_mac);
-+	fc_lport_logo_resp(seq, fp, lport);
++	bg = &bnx2fc_global;
++	page = bg->crc_eof_page;
++	if (!page) {
++		page = alloc_page(GFP_ATOMIC);
++		if (!page)
++			return -ENOMEM;
++		bg->crc_eof_page = page;
++		bg->crc_eof_offset = 0;
++	}
++
++	get_page(page);
++	skb_fill_page_desc(skb, skb_shinfo(skb)->nr_frags, page,
++			   bg->crc_eof_offset, tlen);
++	skb->len += tlen;
++	skb->data_len += tlen;
++	skb->truesize += tlen;
++	bg->crc_eof_offset += sizeof(struct fcoe_crc_eof);
++
++	if (bg->crc_eof_offset >= PAGE_SIZE) {
++		bg->crc_eof_page = NULL;
++		bg->crc_eof_offset = 0;
++		put_page(page);
++	}
++	return 0;
 +}
 +
-+struct fc_seq *bnx2fc_elsct_send(struct fc_lport *lport, u32 did,
-+				      struct fc_frame *fp, unsigned int op,
-+				      void (*resp)(struct fc_seq *,
-+						   struct fc_frame *,
-+						   void *),
-+				      void *arg, u32 timeout)
++static void bnx2fc_abort_io(struct fc_lport *lport)
++{
++	bnx2fc_dbg(LOG_IOERR, "Entered bnx2fc_abort_io\n");
++
++}
++
++static void bnx2fc_cleanup(struct fc_lport *lport)
 +{
 +	struct bnx2fc_port *port = lport_priv(lport);
 +	struct bnx2fc_hba *hba = port->hba;
-+	struct fcoe_ctlr *fip = &hba->ctlr;
-+	struct fc_frame_header *fh = fc_frame_header_get(fp);
++	struct bnx2fc_rport *tgt;
++	int i;
 +
-+	switch (op) {
-+	case ELS_FLOGI:
-+	case ELS_FDISC:
-+		return fc_elsct_send(lport, did, fp, op, bnx2fc_flogi_resp,
-+				     fip, timeout);
-+	case ELS_LOGO:
-+		/* only hook onto fabric logouts, not port logouts */
-+		if (ntoh24(fh->fh_d_id) != FC_FID_FLOGI)
-+			break;
-+		return fc_elsct_send(lport, did, fp, op, bnx2fc_logo_resp,
-+				     fip, timeout);
++	bnx2fc_dbg(LOG_IOERR, "Entered bnx2fc_cleanup\n");
++	mutex_lock(&hba->hba_mutex);
++	spin_lock_bh(&hba->hba_lock);
++	for (i = 0; i < BNX2FC_NUM_MAX_SESS; i++) {
++		tgt = hba->tgt_ofld_list[i];
++		if (tgt) {
++			/* Cleanup IOs belonging to requested vport */
++			if (tgt->port == port) {
++				spin_unlock_bh(&hba->hba_lock);
++				bnx2fc_dbg(LOG_IOERR, "flush/cleanup\n");
++				bnx2fc_flush_active_ios(tgt);
++				spin_lock_bh(&hba->hba_lock);
++			}
++		}
 +	}
-+	return fc_elsct_send(lport, did, fp, op, resp, arg, timeout);
-+}
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-new file mode 100644
-index 0000000..6452b0f
---- /dev/null
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -0,0 +1,1939 @@
-+/* bnx2fc_hwi.c: Broadcom NetXtreme II Linux FCoE offload driver.
-+ *
-+ * Copyright (c) 2008 - 2010 Broadcom Corporation
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation.
-+ *
-+ * Written by: Bhanu Prakash Gollapudi (bprakash@broadcom.com)
-+ */
-+
-+#include "bnx2fc.h"
-+
-+static void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt, u16 wqe);
-+static void bnx2fc_fastpath_notification(struct bnx2fc_hba *hba,
-+					struct fcoe_kcqe *new_cqe_kcqe);
-+static void bnx2fc_process_ofld_cmpl(struct bnx2fc_hba *hba,
-+					struct fcoe_kcqe *ofld_kcqe);
-+static void bnx2fc_process_enable_conn_cmpl(struct bnx2fc_hba *hba,
-+						struct fcoe_kcqe *ofld_kcqe);
-+static void bnx2fc_init_failure(struct bnx2fc_hba *hba, u32 err_code);
-+static void bnx2fc_process_fcoe_error(struct bnx2fc_hba *hba,
-+					struct fcoe_kcqe *fcoe_err);
-+static void bnx2fc_process_conn_destroy_cmpl(struct bnx2fc_hba *hba,
-+					struct fcoe_kcqe *conn_destroy);
-+
-+int bnx2fc_send_stat_req(struct bnx2fc_hba *hba)
-+{
-+	struct fcoe_kwqe_stat stat_req;
-+	struct kwqe *kwqe_arr[2];
-+	int num_kwqes = 1;
-+	int rc = 0;
-+
-+	bnx2fc_dbg(LOG_INIT, "Entered bnx2fc_send_stat_req\n");
-+
-+	memset(&stat_req, 0x00, sizeof(struct fcoe_kwqe_stat));
-+	stat_req.hdr.op_code = FCOE_KWQE_OPCODE_STAT;
-+	stat_req.hdr.flags =
-+		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+	stat_req.stat_params_addr_lo = (u32) hba->stats_buf_dma;
-+	stat_req.stat_params_addr_hi = (u32) ((u64)hba->stats_buf_dma >> 32);
-+
-+	kwqe_arr[0] = (struct kwqe *) &stat_req;
-+
-+	if (hba->cnic && hba->cnic->submit_kwqes)
-+		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
-+
-+	return rc;
++	spin_unlock_bh(&hba->hba_lock);
++	mutex_unlock(&hba->hba_mutex);
 +}
 +
-+/**
-+ * bnx2fc_send_fw_fcoe_init_msg - initiates initial handshake with FCoE f/w
-+ *
-+ * @hba:	adapter structure pointer
-+ *
-+ * Send down FCoE firmware init KWQEs which initiates the initial handshake
-+ *	with the f/w.
-+ *
-+ */
-+int bnx2fc_send_fw_fcoe_init_msg(struct bnx2fc_hba *hba)
++static int bnx2fc_xmit_l2_frame(struct bnx2fc_rport *tgt,
++			     struct fc_frame *fp)
 +{
-+	struct fcoe_kwqe_init1 fcoe_init1;
-+	struct fcoe_kwqe_init2 fcoe_init2;
-+	struct fcoe_kwqe_init3 fcoe_init3;
-+	struct kwqe *kwqe_arr[3];
-+	int num_kwqes = 3;
++	struct fc_rport_priv *rdata = tgt->rdata;
++	struct fc_frame_header *fh;
 +	int rc = 0;
 +
-+	if (!hba->cnic) {
-+		printk(KERN_ALERT PFX "hba->cnic NULL during fcoe fw init\n");
++	fh = fc_frame_header_get(fp);
++	bnx2fc_dbg(LOG_FRAME, "Xmit L2 frame rport = 0x%x, oxid = 0x%x, "
++			"r_ctl = 0x%x\n", rdata->ids.port_id,
++			ntohs(fh->fh_ox_id), fh->fh_r_ctl);
++	if ((fh->fh_type == FC_TYPE_ELS) &&
++	    (fh->fh_r_ctl == FC_RCTL_ELS_REQ)) {
++
++		switch (fc_frame_payload_op(fp)) {
++		case ELS_ADISC:
++			rc = bnx2fc_send_adisc(tgt, fp);
++			break;
++		case ELS_LOGO:
++			rc = bnx2fc_send_logo(tgt, fp);
++			break;
++		default:
++			break;
++		}
++	} else if ((fh->fh_type ==  FC_TYPE_BLS) &&
++	    (fh->fh_r_ctl == FC_RCTL_BA_ABTS))
++		bnx2fc_dbg(LOG_FRAME, "ABTS frame\n");
++	else {
++		bnx2fc_dbg(LOG_FRAME, "Send L2 frame type 0x%x "
++				"rctl 0x%x thru non-offload path\n",
++				fh->fh_type, fh->fh_r_ctl);
 +		return -ENODEV;
 +	}
-+
-+	/* fill init1 KWQE */
-+	memset(&fcoe_init1, 0x00, sizeof(struct fcoe_kwqe_init1));
-+	fcoe_init1.hdr.op_code = FCOE_KWQE_OPCODE_INIT1;
-+	fcoe_init1.hdr.flags = (FCOE_KWQE_LAYER_CODE <<
-+					FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+	fcoe_init1.num_tasks = BNX2FC_MAX_TASKS;
-+	fcoe_init1.sq_num_wqes = BNX2FC_SQ_WQES_MAX;
-+	fcoe_init1.rq_num_wqes = BNX2FC_RQ_WQES_MAX;
-+	fcoe_init1.rq_buffer_log_size = BNX2FC_RQ_BUF_LOG_SZ;
-+	fcoe_init1.cq_num_wqes = BNX2FC_CQ_WQES_MAX;
-+	fcoe_init1.dummy_buffer_addr_lo = (u32) hba->dummy_buf_dma;
-+	fcoe_init1.dummy_buffer_addr_hi = (u32) ((u64)hba->dummy_buf_dma >> 32);
-+	fcoe_init1.task_list_pbl_addr_lo = (u32) hba->task_ctx_bd_dma;
-+	fcoe_init1.task_list_pbl_addr_hi =
-+				(u32) ((u64) hba->task_ctx_bd_dma >> 32);
-+	fcoe_init1.mtu = hba->netdev->mtu;
-+
-+	fcoe_init1.flags = (PAGE_SHIFT <<
-+				FCOE_KWQE_INIT1_LOG_PAGE_SIZE_SHIFT);
-+	fcoe_init1.flags |= (0 <<
-+				FCOE_KWQE_INIT1_LOG_CACHED_PBES_PER_FUNC_SHIFT);
-+
-+	fcoe_init1.num_sessions_log = BNX2FC_NUM_MAX_SESS_LOG;
-+
-+	/* fill init2 KWQE */
-+	memset(&fcoe_init2, 0x00, sizeof(struct fcoe_kwqe_init2));
-+	fcoe_init2.hdr.op_code = FCOE_KWQE_OPCODE_INIT2;
-+	fcoe_init2.hdr.flags = (FCOE_KWQE_LAYER_CODE <<
-+					FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+	fcoe_init2.hash_tbl_pbl_addr_lo = (u32) hba->hash_tbl_pbl_dma;
-+	fcoe_init2.hash_tbl_pbl_addr_hi = (u32)
-+					   ((u64) hba->hash_tbl_pbl_dma >> 32);
-+
-+	fcoe_init2.t2_hash_tbl_addr_lo = (u32) hba->t2_hash_tbl_dma;
-+	fcoe_init2.t2_hash_tbl_addr_hi = (u32)
-+					  ((u64) hba->t2_hash_tbl_dma >> 32);
-+
-+	fcoe_init2.t2_ptr_hash_tbl_addr_lo = (u32) hba->t2_hash_tbl_ptr_dma;
-+	fcoe_init2.t2_ptr_hash_tbl_addr_hi = (u32)
-+					((u64) hba->t2_hash_tbl_ptr_dma >> 32);
-+
-+	fcoe_init2.free_list_count = BNX2FC_NUM_MAX_SESS;
-+
-+	/* fill init3 KWQE */
-+	memset(&fcoe_init3, 0x00, sizeof(struct fcoe_kwqe_init3));
-+	fcoe_init3.hdr.op_code = FCOE_KWQE_OPCODE_INIT3;
-+	fcoe_init3.hdr.flags = (FCOE_KWQE_LAYER_CODE <<
-+					FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+	fcoe_init3.error_bit_map_lo = 0xffffffff;
-+	fcoe_init3.error_bit_map_hi = 0xffffffff;
-+
-+
-+	kwqe_arr[0] = (struct kwqe *) &fcoe_init1;
-+	kwqe_arr[1] = (struct kwqe *) &fcoe_init2;
-+	kwqe_arr[2] = (struct kwqe *) &fcoe_init3;
-+
-+	if (hba->cnic && hba->cnic->submit_kwqes)
-+		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
-+
-+	return rc;
-+}
-+int bnx2fc_send_fw_fcoe_destroy_msg(struct bnx2fc_hba *hba)
-+{
-+	struct fcoe_kwqe_destroy fcoe_destroy;
-+	struct kwqe *kwqe_arr[2];
-+	int num_kwqes = 1;
-+	int rc = -1;
-+
-+	/* fill destroy KWQE */
-+	memset(&fcoe_destroy, 0x00, sizeof(struct fcoe_kwqe_destroy));
-+	fcoe_destroy.hdr.op_code = FCOE_KWQE_OPCODE_DESTROY;
-+	fcoe_destroy.hdr.flags = (FCOE_KWQE_LAYER_CODE <<
-+					FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+	kwqe_arr[0] = (struct kwqe *) &fcoe_destroy;
-+
-+	bnx2fc_dbg(LOG_INIT, "Submitting destroy KWQE\n");
-+	if (hba->cnic && hba->cnic->submit_kwqes)
-+		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
-+	bnx2fc_dbg(LOG_INIT, "destroy rc = %d\n", rc);
-+
-+	return rc;
++	if (rc)
++		return -ENOMEM;
++	else
++		return 0;
 +}
 +
 +/**
-+ * bnx2fc_send_session_ofld_req - initiates FCoE Session offload process
-+ *
-+ * @port:		port structure pointer
-+ * @tgt:		bnx2fc_rport structure pointer
++ * bnx2fc_xmit - bnx2fc's FCoE frame transmit function
++ * @lport:	the associated local port
++ * @fp:	the fc_frame to be transmitted
 + */
-+int bnx2fc_send_session_ofld_req(struct bnx2fc_port *port,
-+					struct bnx2fc_rport *tgt)
++static int bnx2fc_xmit(struct fc_lport *lport, struct fc_frame *fp)
 +{
-+	struct fc_lport *lport = port->lport;
-+	struct bnx2fc_hba *hba = port->hba;
-+	struct kwqe *kwqe_arr[4];
-+	struct fcoe_kwqe_conn_offload1 ofld_req1;
-+	struct fcoe_kwqe_conn_offload2 ofld_req2;
-+	struct fcoe_kwqe_conn_offload3 ofld_req3;
-+	struct fcoe_kwqe_conn_offload4 ofld_req4;
-+	struct fc_rport_priv *rdata = tgt->rdata;
-+	struct fc_rport *rport = tgt->rport;
-+	int num_kwqes = 4;
-+	u32 port_id;
-+	int rc = 0;
-+	u16 conn_id;
-+
-+	/* Initialize offload request 1 structure */
-+	memset(&ofld_req1, 0x00, sizeof(struct fcoe_kwqe_conn_offload1));
-+
-+	ofld_req1.hdr.op_code = FCOE_KWQE_OPCODE_OFFLOAD_CONN1;
-+	ofld_req1.hdr.flags =
-+		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+
-+	conn_id = (u16)tgt->fcoe_conn_id;
-+	ofld_req1.fcoe_conn_id = conn_id;
-+
-+
-+	ofld_req1.sq_addr_lo = (u32) tgt->sq_dma;
-+	ofld_req1.sq_addr_hi = (u32)((u64) tgt->sq_dma >> 32);
-+
-+	ofld_req1.rq_pbl_addr_lo = (u32) tgt->rq_pbl_dma;
-+	ofld_req1.rq_pbl_addr_hi = (u32)((u64) tgt->rq_pbl_dma >> 32);
-+
-+	ofld_req1.rq_first_pbe_addr_lo = (u32) tgt->rq_dma;
-+	ofld_req1.rq_first_pbe_addr_hi =
-+				(u32)((u64) tgt->rq_dma >> 32);
-+
-+	ofld_req1.rq_prod = 0x8000;
-+
-+	/* Initialize offload request 2 structure */
-+	memset(&ofld_req2, 0x00, sizeof(struct fcoe_kwqe_conn_offload2));
-+
-+	ofld_req2.hdr.op_code = FCOE_KWQE_OPCODE_OFFLOAD_CONN2;
-+	ofld_req2.hdr.flags =
-+		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+	ofld_req2.tx_max_fc_pay_len = rdata->maxframe_size;
-+
-+	ofld_req2.cq_addr_lo = (u32) tgt->cq_dma;
-+	ofld_req2.cq_addr_hi = (u32)((u64)tgt->cq_dma >> 32);
-+
-+	ofld_req2.xferq_addr_lo = (u32) tgt->xferq_dma;
-+	ofld_req2.xferq_addr_hi = (u32)((u64)tgt->xferq_dma >> 32);
-+
-+	ofld_req2.conn_db_addr_lo = (u32)tgt->conn_db_dma;
-+	ofld_req2.conn_db_addr_hi = (u32)((u64)tgt->conn_db_dma >> 32);
-+
-+	/* Initialize offload request 3 structure */
-+	memset(&ofld_req3, 0x00, sizeof(struct fcoe_kwqe_conn_offload3));
-+
-+	ofld_req3.hdr.op_code = FCOE_KWQE_OPCODE_OFFLOAD_CONN3;
-+	ofld_req3.hdr.flags =
-+		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+	ofld_req3.vlan_tag = hba->vlan_id <<
-+				FCOE_KWQE_CONN_OFFLOAD3_VLAN_ID_SHIFT;
-+	ofld_req3.vlan_tag |= 0 << FCOE_KWQE_CONN_OFFLOAD3_CFI_SHIFT;
-+	ofld_req3.vlan_tag |= 3 << FCOE_KWQE_CONN_OFFLOAD3_PRIORITY_SHIFT;
-+
-+	port_id = fc_host_port_id(lport->host);
-+	if (port_id == 0) {
-+		bnx2fc_dbg(LOG_SESS, "ofld_req: port_id = 0, link down?\n");
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * Store s_id of the initiator for further reference. This will
-+	 * be used during disable/destroy during linkdown processing as
-+	 * when the lport is reset, the port_id also is reset to 0
-+	 */
-+	tgt->sid = port_id;
-+	ofld_req3.s_id[0] = (port_id & 0x000000FF);
-+	ofld_req3.s_id[1] = (port_id & 0x0000FF00) >> 8;
-+	ofld_req3.s_id[2] = (port_id & 0x00FF0000) >> 16;
-+
-+	port_id = rport->port_id;
-+	ofld_req3.d_id[0] = (port_id & 0x000000FF);
-+	ofld_req3.d_id[1] = (port_id & 0x0000FF00) >> 8;
-+	ofld_req3.d_id[2] = (port_id & 0x00FF0000) >> 16;
-+
-+	ofld_req3.tx_total_conc_seqs = rdata->max_seq;
-+
-+	ofld_req3.tx_max_conc_seqs_c3 = rdata->max_seq;
-+	ofld_req3.rx_max_fc_pay_len  = lport->mfs;
-+
-+	ofld_req3.rx_total_conc_seqs = BNX2FC_MAX_SEQS;
-+	ofld_req3.rx_max_conc_seqs_c3 = BNX2FC_MAX_SEQS;
-+	ofld_req3.rx_open_seqs_exch_c3 = 1;
-+
-+	ofld_req3.confq_first_pbe_addr_lo = tgt->confq_dma;
-+	ofld_req3.confq_first_pbe_addr_hi = (u32)((u64) tgt->confq_dma >> 32);
-+
-+	/* set mul_n_port_ids supported flag to 0, until it is supported */
-+	ofld_req3.flags = 0;
-+	/*
-+	ofld_req3.flags |= (((lport->send_sp_features & FC_SP_FT_MNA) ? 1:0) <<
-+			    FCOE_KWQE_CONN_OFFLOAD3_B_MUL_N_PORT_IDS_SHIFT);
-+	*/
-+	/* Info from PLOGI response */
-+	ofld_req3.flags |= (((rdata->sp_features & FC_SP_FT_EDTR) ? 1 : 0) <<
-+			     FCOE_KWQE_CONN_OFFLOAD3_B_E_D_TOV_RES_SHIFT);
-+
-+	ofld_req3.flags |= (((rdata->sp_features & FC_SP_FT_SEQC) ? 1 : 0) <<
-+			     FCOE_KWQE_CONN_OFFLOAD3_B_CONT_INCR_SEQ_CNT_SHIFT);
-+
-+	/* Info from PRLI response */
-+	/* Enable these when Seq Level Error Recovery is supported */
-+	/*
-+	ofld_req3.flags |= (((rdata->flags & FC_RP_FLAGS_CONF_REQ)
-+			    ? 1 : 0) <<
-+			    FCOE_KWQE_CONN_OFFLOAD3_B_CONF_REQ_SHIFT);
-+
-+	ofld_req3.flags |= (((rdata->flags & FC_RP_FLAGS_REC_SUPPORTED)
-+			    ? 1 : 0) <<
-+			    FCOE_KWQE_CONN_OFFLOAD3_B_REC_VALID_SHIFT);
-+	*/
-+	ofld_req3.flags |= 0 << FCOE_KWQE_CONN_OFFLOAD3_B_CONF_REQ_SHIFT;
-+	ofld_req3.flags |= 0 << FCOE_KWQE_CONN_OFFLOAD3_B_REC_VALID_SHIFT;
-+
-+	/* vlan flag */
-+	ofld_req3.flags |= (hba->vlan_enabled <<
-+			    FCOE_KWQE_CONN_OFFLOAD3_B_VLAN_FLAG_SHIFT);
-+
-+	/* C2_VALID and ACK flags are not set as they are not suppported */
-+
-+
-+	/* Initialize offload request 4 structure */
-+	memset(&ofld_req4, 0x00, sizeof(struct fcoe_kwqe_conn_offload4));
-+	ofld_req4.hdr.op_code = FCOE_KWQE_OPCODE_OFFLOAD_CONN4;
-+	ofld_req4.hdr.flags =
-+		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+	ofld_req4.e_d_tov_timer_val = lport->e_d_tov / 20;
-+
-+
-+	ofld_req4.src_mac_addr_lo32[0] =  port->data_src_addr[5];
-+							/* local mac */
-+	ofld_req4.src_mac_addr_lo32[1] =  port->data_src_addr[4];
-+	ofld_req4.src_mac_addr_lo32[2] =  port->data_src_addr[3];
-+	ofld_req4.src_mac_addr_lo32[3] =  port->data_src_addr[2];
-+	ofld_req4.src_mac_addr_hi16[0] =  port->data_src_addr[1];
-+	ofld_req4.src_mac_addr_hi16[1] =  port->data_src_addr[0];
-+	ofld_req4.dst_mac_addr_lo32[0] =  hba->ctlr.dest_addr[5];/* fcf mac */
-+	ofld_req4.dst_mac_addr_lo32[1] =  hba->ctlr.dest_addr[4];
-+	ofld_req4.dst_mac_addr_lo32[2] =  hba->ctlr.dest_addr[3];
-+	ofld_req4.dst_mac_addr_lo32[3] =  hba->ctlr.dest_addr[2];
-+	ofld_req4.dst_mac_addr_hi16[0] =  hba->ctlr.dest_addr[1];
-+	ofld_req4.dst_mac_addr_hi16[1] =  hba->ctlr.dest_addr[0];
-+
-+	ofld_req4.lcq_addr_lo = (u32) tgt->lcq_dma;
-+	ofld_req4.lcq_addr_hi = (u32)((u64) tgt->lcq_dma >> 32);
-+
-+	ofld_req4.confq_pbl_base_addr_lo = (u32) tgt->confq_pbl_dma;
-+	ofld_req4.confq_pbl_base_addr_hi =
-+					(u32)((u64) tgt->confq_pbl_dma >> 32);
-+
-+	kwqe_arr[0] = (struct kwqe *) &ofld_req1;
-+	kwqe_arr[1] = (struct kwqe *) &ofld_req2;
-+	kwqe_arr[2] = (struct kwqe *) &ofld_req3;
-+	kwqe_arr[3] = (struct kwqe *) &ofld_req4;
-+
-+	if (hba->cnic && hba->cnic->submit_kwqes)
-+		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
-+
-+	return rc;
-+}
-+
-+/**
-+ * bnx2fc_send_session_enable_req - initiates FCoE Session enablement
-+ *
-+ * @port:		port structure pointer
-+ * @tgt:		bnx2fc_rport structure pointer
-+ */
-+static int bnx2fc_send_session_enable_req(struct bnx2fc_port *port,
-+					struct bnx2fc_rport *tgt)
-+{
-+	struct kwqe *kwqe_arr[2];
-+	struct bnx2fc_hba *hba = port->hba;
-+	struct fcoe_kwqe_conn_enable_disable enbl_req;
-+	struct fc_lport *lport = port->lport;
-+	struct fc_rport *rport = tgt->rport;
-+	int num_kwqes = 1;
-+	int rc = 0;
-+	u32 port_id;
-+
-+	memset(&enbl_req, 0x00,
-+	       sizeof(struct fcoe_kwqe_conn_enable_disable));
-+	enbl_req.hdr.op_code = FCOE_KWQE_OPCODE_ENABLE_CONN;
-+	enbl_req.hdr.flags =
-+		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+	enbl_req.src_mac_addr_lo32[0] =  port->data_src_addr[5];
-+							/* local mac */
-+	enbl_req.src_mac_addr_lo32[1] =  port->data_src_addr[4];
-+	enbl_req.src_mac_addr_lo32[2] =  port->data_src_addr[3];
-+	enbl_req.src_mac_addr_lo32[3] =  port->data_src_addr[2];
-+	enbl_req.src_mac_addr_hi16[0] =  port->data_src_addr[1];
-+	enbl_req.src_mac_addr_hi16[1] =  port->data_src_addr[0];
-+
-+	enbl_req.dst_mac_addr_lo32[0] =  hba->ctlr.dest_addr[5];/* fcf mac */
-+	enbl_req.dst_mac_addr_lo32[1] =  hba->ctlr.dest_addr[4];
-+	enbl_req.dst_mac_addr_lo32[2] =  hba->ctlr.dest_addr[3];
-+	enbl_req.dst_mac_addr_lo32[3] =  hba->ctlr.dest_addr[2];
-+	enbl_req.dst_mac_addr_hi16[0] =  hba->ctlr.dest_addr[1];
-+	enbl_req.dst_mac_addr_hi16[1] =  hba->ctlr.dest_addr[0];
-+
-+	port_id = fc_host_port_id(lport->host);
-+	if (port_id != tgt->sid) {
-+		printk(KERN_ERR PFX "WARN: enable_req port_id = 0x%x,"
-+				"sid = 0x%x\n", port_id, tgt->sid);
-+		port_id = tgt->sid;
-+	}
-+	enbl_req.s_id[0] = (port_id & 0x000000FF);
-+	enbl_req.s_id[1] = (port_id & 0x0000FF00) >> 8;
-+	enbl_req.s_id[2] = (port_id & 0x00FF0000) >> 16;
-+
-+	port_id = rport->port_id;
-+	enbl_req.d_id[0] = (port_id & 0x000000FF);
-+	enbl_req.d_id[1] = (port_id & 0x0000FF00) >> 8;
-+	enbl_req.d_id[2] = (port_id & 0x00FF0000) >> 16;
-+	enbl_req.vlan_tag = hba->vlan_id <<
-+				FCOE_KWQE_CONN_ENABLE_DISABLE_VLAN_ID_SHIFT;
-+	enbl_req.vlan_tag |= 0 << FCOE_KWQE_CONN_ENABLE_DISABLE_CFI_SHIFT;
-+	enbl_req.vlan_tag |= 3 << FCOE_KWQE_CONN_ENABLE_DISABLE_PRIORITY_SHIFT;
-+	enbl_req.vlan_flag = hba->vlan_enabled;
-+	enbl_req.context_id = tgt->context_id;
-+	enbl_req.conn_id = tgt->fcoe_conn_id;
-+
-+	kwqe_arr[0] = (struct kwqe *) &enbl_req;
-+
-+	if (hba->cnic && hba->cnic->submit_kwqes)
-+		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
-+	return rc;
-+}
-+
-+/**
-+ * bnx2fc_send_session_disable_req - initiates FCoE Session disable
-+ *
-+ * @port:		port structure pointer
-+ * @tgt:		bnx2fc_rport structure pointer
-+ */
-+int bnx2fc_send_session_disable_req(struct bnx2fc_port *port,
-+				    struct bnx2fc_rport *tgt)
-+{
-+	struct bnx2fc_hba *hba = port->hba;
-+	struct fcoe_kwqe_conn_enable_disable disable_req;
-+	struct kwqe *kwqe_arr[2];
-+	struct fc_rport *rport = tgt->rport;
-+	int num_kwqes = 1;
-+	int rc = 0;
-+	u32 port_id;
-+
-+	memset(&disable_req, 0x00,
-+	       sizeof(struct fcoe_kwqe_conn_enable_disable));
-+	disable_req.hdr.op_code = FCOE_KWQE_OPCODE_DISABLE_CONN;
-+	disable_req.hdr.flags =
-+		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+	disable_req.src_mac_addr_lo32[0] =  port->data_src_addr[5];
-+	disable_req.src_mac_addr_lo32[2] =  port->data_src_addr[3];
-+	disable_req.src_mac_addr_lo32[3] =  port->data_src_addr[2];
-+	disable_req.src_mac_addr_hi16[0] =  port->data_src_addr[1];
-+	disable_req.src_mac_addr_hi16[1] =  port->data_src_addr[0];
-+
-+	disable_req.dst_mac_addr_lo32[0] =  hba->ctlr.dest_addr[5];/* fcf mac */
-+	disable_req.dst_mac_addr_lo32[1] =  hba->ctlr.dest_addr[4];
-+	disable_req.dst_mac_addr_lo32[2] =  hba->ctlr.dest_addr[3];
-+	disable_req.dst_mac_addr_lo32[3] =  hba->ctlr.dest_addr[2];
-+	disable_req.dst_mac_addr_hi16[0] =  hba->ctlr.dest_addr[1];
-+	disable_req.dst_mac_addr_hi16[1] =  hba->ctlr.dest_addr[0];
-+
-+	port_id = tgt->sid;
-+	bnx2fc_dbg(LOG_SESS, "Host Port id = 0x%x\n", port_id);
-+	disable_req.s_id[0] = (port_id & 0x000000FF);
-+	disable_req.s_id[1] = (port_id & 0x0000FF00) >> 8;
-+	disable_req.s_id[2] = (port_id & 0x00FF0000) >> 16;
-+
-+
-+	port_id = rport->port_id;
-+	disable_req.d_id[0] = (port_id & 0x000000FF);
-+	disable_req.d_id[1] = (port_id & 0x0000FF00) >> 8;
-+	disable_req.d_id[2] = (port_id & 0x00FF0000) >> 16;
-+	disable_req.context_id = tgt->context_id;
-+	disable_req.conn_id = tgt->fcoe_conn_id;
-+	disable_req.vlan_tag = hba->vlan_id <<
-+				FCOE_KWQE_CONN_ENABLE_DISABLE_VLAN_ID_SHIFT;
-+	disable_req.vlan_tag |= 0 << FCOE_KWQE_CONN_ENABLE_DISABLE_CFI_SHIFT;
-+	disable_req.vlan_tag |=
-+			3 << FCOE_KWQE_CONN_ENABLE_DISABLE_PRIORITY_SHIFT;
-+	disable_req.vlan_flag = hba->vlan_enabled;
-+
-+	kwqe_arr[0] = (struct kwqe *) &disable_req;
-+
-+	if (hba->cnic && hba->cnic->submit_kwqes)
-+		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
-+
-+	return rc;
-+}
-+
-+/**
-+ * bnx2fc_send_session_destroy_req - initiates FCoE Session destroy
-+ *
-+ * @port:		port structure pointer
-+ * @tgt:		bnx2fc_rport structure pointer
-+ */
-+int bnx2fc_send_session_destroy_req(struct bnx2fc_hba *hba,
-+					struct bnx2fc_rport *tgt)
-+{
-+	struct fcoe_kwqe_conn_destroy destroy_req;
-+	struct kwqe *kwqe_arr[2];
-+	int num_kwqes = 1;
-+	int rc = 0;
-+
-+	memset(&destroy_req, 0x00, sizeof(struct fcoe_kwqe_conn_destroy));
-+	destroy_req.hdr.op_code = FCOE_KWQE_OPCODE_DESTROY_CONN;
-+	destroy_req.hdr.flags =
-+		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
-+
-+	destroy_req.context_id = tgt->context_id;
-+	destroy_req.conn_id = tgt->fcoe_conn_id;
-+
-+	kwqe_arr[0] = (struct kwqe *) &destroy_req;
-+
-+	if (hba->cnic && hba->cnic->submit_kwqes)
-+		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
-+
-+	return rc;
-+}
-+
-+void bnx2fc_process_l2_frame_compl(struct bnx2fc_rport *tgt,
-+				   unsigned char *buf,
-+				   u32 frame_len, u16 l2_oxid)
-+{
-+	struct bnx2fc_port *port = tgt->port;
-+	struct bnx2fc_hba *hba = port->hba;
-+	struct fc_lport *lp = port->lport;
-+	struct fc_frame *fp;
-+	struct fc_frame_header *fh;
-+	struct fcoe_hdr *hp;
-+	struct fcoe_crc_eof *cp;
-+	struct fcoe_rcv_info *fr;
-+	struct bnx2fc_global_s *bg;
-+
-+	struct sk_buff *skb;
-+	unsigned int hlen;	/* header length implies the version */
-+	unsigned int tlen;	/* trailer length */
-+	unsigned int elen;	/* eth header, may include vlan */
-+	u32 crc;
-+	struct ethhdr *eh;
-+
-+	u32 payload_len;
-+	u16 oxid;
-+	int idx;
-+	u8 op;
-+
-+	bnx2fc_dbg(LOG_FRAME, "l2_frame_compl l2_oxid = 0x%x, frame_len = %d\n",
-+		l2_oxid, frame_len);
-+	payload_len = frame_len - sizeof(struct fc_frame_header);
-+
-+	fp = fc_frame_alloc(lp, payload_len);
-+	if (!fp) {
-+		printk(KERN_ERR PFX "fc_frame_alloc failure\n");
-+		return;
-+	}
-+
-+	fh = (struct fc_frame_header *) fc_frame_header_get(fp);
-+	/* Copy FC Frame header and payload into the frame */
-+	memcpy(fh, buf, frame_len);
-+
-+	if (l2_oxid != FC_XID_UNKNOWN)
-+		fh->fh_ox_id = htons(l2_oxid);
++	struct ethhdr		*eh;
++	struct fcoe_crc_eof	*cp;
++	struct sk_buff		*skb;
++	struct fc_frame_header	*fh;
++	struct bnx2fc_hba	*hba;
++	struct bnx2fc_port	*port;
++	struct fcoe_hdr		*hp;
++	struct bnx2fc_rport	*tgt;
++	struct fcoe_dev_stats	*stats;
++	u8			sof, eof;
++	u32			crc;
++	unsigned int		hlen, tlen, elen;
++	int			wlen, rc = 0;
++
++	port = (struct bnx2fc_port *)lport_priv(lport);
++	hba = port->hba;
++
++	fh = fc_frame_header_get(fp);
 +
 +	skb = fp_skb(fp);
++	if (!lport->link_up) {
++		bnx2fc_dbg(LOG_FRAME, "bnx2fc_xmit link down\n");
++		kfree_skb(skb);
++		return 0;
++	}
 +
-+	if ((fh->fh_r_ctl == FC_RCTL_ELS_REQ) ||
-+	    (fh->fh_r_ctl == FC_RCTL_ELS_REP)) {
-+
-+		if (fh->fh_type == FC_TYPE_ELS) {
-+			op = fc_frame_payload_op(fp);
-+			if ((op == ELS_TEST) ||	(op == ELS_ESTC) ||
-+			    (op == ELS_FAN) || (op == ELS_CSU)) {
-+				/*
-+				 * No need to reply for these
-+				 * ELS requests
-+				 */
-+				printk(KERN_ERR PFX "dropping ELS 0x%x\n", op);
-+				kfree_skb(skb);
-+				return;
-+			}
-+		}
-+		/* Pass it on to libfc for further processing */
-+		elen = (hba->netdev->priv_flags & IFF_802_1Q_VLAN) ?
-+			sizeof(struct vlan_ethhdr) :
-+			sizeof(struct ethhdr);
-+		hlen = sizeof(struct fcoe_hdr);
-+		tlen = sizeof(struct fcoe_crc_eof);
-+		skb->ip_summed = CHECKSUM_NONE;
-+		crc = bnx2fc_crc(fp);
-+
-+		if (skb_is_nonlinear(skb)) {
-+			skb_frag_t *frag;
-+			if (bnx2fc_get_paged_crc_eof(skb, tlen)) {
-+				printk(KERN_ERR PFX "Frame crc error\n");
-+				kfree_skb(skb);
-+				return;
-+			}
-+			idx = skb_shinfo(skb)->nr_frags - 1;
-+			frag = &skb_shinfo(skb)->frags[idx];
-+			cp = kmap_atomic(frag->page,
-+					 KM_SKB_DATA_SOFTIRQ) +
-+					 frag->page_offset;
-+		} else {
-+			cp = (struct fcoe_crc_eof *)skb_put(skb, tlen);
-+		}
-+		memset(cp, 0, sizeof(*cp));
-+		/*
-+		 * We are supposed to receive single frame
-+		 * sequences from the firmware
-+		 */
-+		cp->fcoe_eof = FC_EOF_T;
-+		cp->fcoe_crc32 = cpu_to_le32(~crc);
-+
-+		if (skb_is_nonlinear(skb)) {
-+			kunmap_atomic(cp, KM_SKB_DATA_SOFTIRQ);
-+			cp = NULL;
-+		}
-+
-+		skb_push(skb, hlen + elen);
-+		skb_reset_mac_header(skb);
-+		skb_set_network_header(skb, elen);
-+		skb_set_transport_header(skb, elen+hlen);
-+		skb->mac_len = elen;
-+		skb->protocol = htons(ETH_P_FCOE);
-+		skb->dev = hba->netdev;
-+
-+		/* adjust skb->data to point to fcoe_hdr */
-+		skb_pull(skb, elen);
-+
-+		eh = eth_hdr(skb);
-+		eh->h_proto = htons(ETH_P_FCOE);
-+
-+		/* Should we be setting eh->h_dest and h_source? */
-+		memcpy(eh->h_dest, port->data_src_addr, ETH_ALEN);
-+
-+		hp = (struct fcoe_hdr *)skb_network_header(skb);
-+		memset(hp, 0, sizeof(*hp));
-+		if (FC_FCOE_VER)
-+			FC_FCOE_ENCAPS_VER(hp, FC_FCOE_VER);
-+
-+		/* needs to be less than 0x30 - FC_SOF_N3 */
-+		hp->fcoe_sof = FC_SOF_I3;
-+
-+		fr = fcoe_dev_from_skb(skb);
-+		fr->fr_dev = lp;
-+		oxid =  ntohs(fh->fh_ox_id);
-+
-+		bg = &bnx2fc_global;
-+		spin_lock_bh(&bg->fcoe_rx_list.lock);
-+
-+		if (unlikely(!bg->l2_thread)) {
-+			spin_unlock_bh(&bg->fcoe_rx_list.lock);
-+			printk(KERN_ERR PFX "ERROR-thread is NULL\n");
++	if (unlikely(fh->fh_r_ctl == FC_RCTL_ELS_REQ)) {
++		if (!hba->ctlr.sel_fcf) {
++			bnx2fc_dbg(LOG_FRAME, "FCF not selected yet!\n");
 +			kfree_skb(skb);
-+			return;
++			return -EINVAL;
 +		}
-+		bnx2fc_dbg(LOG_FRAME, "l2 frame queued\n");
-+		__skb_queue_tail(&bg->fcoe_rx_list, skb);
-+		if (bg->fcoe_rx_list.qlen == 1)
-+			wake_up_process(bg->l2_thread);
-+		spin_unlock_bh(&bg->fcoe_rx_list.lock);
++		if (fcoe_ctlr_els_send(&hba->ctlr, lport, skb))
++			return 0;
++	}
++
++	sof = fr_sof(fp);
++	eof = fr_eof(fp);
++
++	/*
++	 * Snoop the frame header to check if the frame is for
++	 * an offloaded session
++	 */
++	/*
++	 * tgt_ofld_list access is synchronized using
++	 * both hba mutex and hba lock. Atleast hba mutex or
++	 * hba lock needs to be held for read access.
++	 */
++
++	spin_lock_bh(&hba->hba_lock);
++	tgt = bnx2fc_tgt_lookup(port, ntoh24(fh->fh_d_id));
++	if (tgt && (test_bit(BNX2FC_FLAG_SESSION_READY, &tgt->flags))) {
++		/* This frame is for offloaded session */
++		bnx2fc_dbg(LOG_SESS, "xmit: Frame is for offloaded session "
++				"port_id = 0x%x\n", ntoh24(fh->fh_d_id));
++		spin_unlock_bh(&hba->hba_lock);
++		rc = bnx2fc_xmit_l2_frame(tgt, fp);
++		if (rc != -ENODEV) {
++			kfree_skb(skb);
++			return rc;
++		}
 +	} else {
-+		bnx2fc_dbg(LOG_FRAME, "fh_r_ctl = 0x%x\n", fh->fh_r_ctl);
++		spin_unlock_bh(&hba->hba_lock);
++	}
++
++	elen = sizeof(struct ethhdr);
++	hlen = sizeof(struct fcoe_hdr);
++	tlen = sizeof(struct fcoe_crc_eof);
++	wlen = (skb->len - tlen + sizeof(crc)) / FCOE_WORD_TO_BYTE;
++
++	skb->ip_summed = CHECKSUM_NONE;
++	crc = bnx2fc_crc(fp);
++
++	/* copy port crc and eof to the skb buff */
++	if (skb_is_nonlinear(skb)) {
++		skb_frag_t *frag;
++		if (bnx2fc_get_paged_crc_eof(skb, tlen)) {
++			kfree_skb(skb);
++			return -ENOMEM;
++		}
++		frag = &skb_shinfo(skb)->frags[skb_shinfo(skb)->nr_frags - 1];
++		cp = kmap_atomic(frag->page, KM_SKB_DATA_SOFTIRQ)
++				+ frag->page_offset;
++	} else {
++		cp = (struct fcoe_crc_eof *)skb_put(skb, tlen);
++	}
++
++	memset(cp, 0, sizeof(*cp));
++	cp->fcoe_eof = eof;
++	cp->fcoe_crc32 = cpu_to_le32(~crc);
++	if (skb_is_nonlinear(skb)) {
++		kunmap_atomic(cp, KM_SKB_DATA_SOFTIRQ);
++		cp = NULL;
++	}
++
++	/* adjust skb network/transport offsets to match mac/fcoe/port */
++	skb_push(skb, elen + hlen);
++	skb_reset_mac_header(skb);
++	skb_reset_network_header(skb);
++	skb->mac_len = elen;
++	skb->protocol = htons(ETH_P_FCOE);
++	skb->dev = hba->netdev;
++
++	/* fill up mac and fcoe headers */
++	eh = eth_hdr(skb);
++	eh->h_proto = htons(ETH_P_FCOE);
++	if (hba->ctlr.map_dest)
++		fc_fcoe_set_mac(eh->h_dest, fh->fh_d_id);
++	else
++		/* insert GW address */
++		memcpy(eh->h_dest, hba->ctlr.dest_addr, ETH_ALEN);
++
++	if (unlikely(hba->ctlr.flogi_oxid != FC_XID_UNKNOWN))
++		memcpy(eh->h_source, hba->ctlr.ctl_src_addr, ETH_ALEN);
++	else
++		memcpy(eh->h_source, port->data_src_addr, ETH_ALEN);
++
++	hp = (struct fcoe_hdr *)(eh + 1);
++	memset(hp, 0, sizeof(*hp));
++	if (FC_FCOE_VER)
++		FC_FCOE_ENCAPS_VER(hp, FC_FCOE_VER);
++	hp->fcoe_sof = sof;
++
++	/* fcoe lso, mss is in max_payload which is non-zero for FCP data */
++	if (lport->seq_offload && fr_max_payload(fp)) {
++		skb_shinfo(skb)->gso_type = SKB_GSO_FCOE;
++		skb_shinfo(skb)->gso_size = fr_max_payload(fp);
++	} else {
++		skb_shinfo(skb)->gso_type = 0;
++		skb_shinfo(skb)->gso_size = 0;
++	}
++
++	/*update tx stats */
++	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats->TxFrames++;
++	stats->TxWords += wlen;
++	put_cpu();
++
++	/* send down to lld */
++	fr_dev(fp) = lport;
++	if (port->fcoe_pending_queue.qlen)
++		bnx2fc_check_wait_queue(lport, skb);
++	else if (bnx2fc_start_io(skb))
++		bnx2fc_check_wait_queue(lport, skb);
++
++	return 0;
++}
++
++/**
++ * bnx2fc_rcv - This is bnx2fc's receive function called by NET_RX_SOFTIRQ
++ * @skb:	the receive socket buffer
++ * @dev:	associated net device
++ * @ptype:	context
++ * @olddev:	last device
++ *
++ * This function receives the packet and builds FC frame and passes it up
++ */
++static int bnx2fc_rcv(struct sk_buff *skb, struct net_device *dev,
++		struct packet_type *ptype, struct net_device *olddev)
++{
++	struct fc_lport *lport;
++	struct bnx2fc_hba *hba;
++	struct fc_frame_header *fh;
++	struct fcoe_rcv_info *fr;
++	struct bnx2fc_global_s *bg;
++	unsigned short oxid;
++
++	hba = container_of(ptype, struct bnx2fc_hba, fcoe_packet_type);
++	lport = hba->ctlr.lp;
++
++	if (unlikely(lport == NULL)) {
++		printk(KERN_ALERT PFX "bnx2fc_rcv: lport is NULL\n");
++		goto err;
++	}
++
++	if (unlikely(eth_hdr(skb)->h_proto != htons(ETH_P_FCOE))) {
++		printk(KERN_ALERT PFX "bnx2fc_rcv: Wrong FC type frame\n");
++		goto err;
++	}
++
++	/*
++	 * Check for minimum frame length, and make sure required FCoE
++	 * and FC headers are pulled into the linear data area.
++	 */
++	if (unlikely((skb->len < FCOE_MIN_FRAME) ||
++	    !pskb_may_pull(skb, FCOE_HEADER_LEN)))
++		goto err;
++
++	skb_set_transport_header(skb, sizeof(struct fcoe_hdr));
++	fh = (struct fc_frame_header *) skb_transport_header(skb);
++
++	oxid = ntohs(fh->fh_ox_id);
++
++	fr = fcoe_dev_from_skb(skb);
++	fr->fr_dev = lport;
++	fr->ptype = ptype;
++
++	bg = &bnx2fc_global;
++	spin_lock_bh(&bg->fcoe_rx_list.lock);
++
++	__skb_queue_tail(&bg->fcoe_rx_list, skb);
++	if (bg->fcoe_rx_list.qlen == 1)
++		wake_up_process(bg->l2_thread);
++
++	spin_unlock_bh(&bg->fcoe_rx_list.lock);
++
++	return 0;
++err:
++	kfree_skb(skb);
++	return -1;
++}
++
++static int bnx2fc_l2_rcv_thread(void *arg)
++{
++	struct bnx2fc_global_s *bg = arg;
++	struct sk_buff *skb;
++
++	while (!kthread_should_stop()) {
++		spin_lock_bh(&bg->fcoe_rx_list.lock);
++		while ((skb = __skb_dequeue(&bg->fcoe_rx_list)) == NULL) {
++			set_current_state(TASK_INTERRUPTIBLE);
++			spin_unlock_bh(&bg->fcoe_rx_list.lock);
++			schedule();
++			set_current_state(TASK_RUNNING);
++			if (kthread_should_stop())
++				return 0;
++			spin_lock_bh(&bg->fcoe_rx_list.lock);
++		}
++		spin_unlock_bh(&bg->fcoe_rx_list.lock);
++		bnx2fc_recv_frame(skb);
++	}
++	return 0;
++}
++
++
++static void bnx2fc_recv_frame(struct sk_buff *skb)
++{
++	u32 fr_len;
++	struct fc_lport *lport;
++	struct fcoe_rcv_info *fr;
++	struct fcoe_dev_stats *stats;
++	struct fc_frame_header *fh;
++	struct fcoe_crc_eof crc_eof;
++	struct fc_frame *fp;
++	struct fc_lport *vn_port;
++	struct bnx2fc_port *port;
++	u8 *mac = NULL;
++	u8 *dest_mac = NULL;
++	struct fcoe_hdr *hp;
++
++	fr = fcoe_dev_from_skb(skb);
++	lport = fr->fr_dev;
++	if (unlikely(lport == NULL)) {
++		printk(KERN_ALERT PFX "Invalid lport struct\n");
 +		kfree_skb(skb);
 +		return;
 +	}
-+}
 +
-+static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
-+{
-+	u8 num_rq;
-+	struct fcoe_err_report_entry *err_entry;
-+	unsigned char *rq_data;
-+	unsigned char *buf = NULL, *buf1;
-+	int i;
-+	u16 xid;
-+	u32 frame_len, len;
-+	struct bnx2fc_cmd *io_req = NULL;
-+	struct fcoe_task_ctx_entry *task, *task_page;
-+	struct bnx2fc_hba *hba = tgt->port->hba;
-+	int task_idx, index;
-+	int rc = 0;
++	if (skb_is_nonlinear(skb))
++		skb_linearize(skb);
++	mac = eth_hdr(skb)->h_source;
++	dest_mac = eth_hdr(skb)->h_dest;
 +
++	/* Pull the header */
++	hp = (struct fcoe_hdr *) skb_network_header(skb);
++	fh = (struct fc_frame_header *) skb_transport_header(skb);
++	skb_pull(skb, sizeof(struct fcoe_hdr));
++	fr_len = skb->len - sizeof(struct fcoe_crc_eof);
 +
-+	bnx2fc_dbg(LOG_IOERR, "Entered UNSOL COMPLETION wqe = 0x%x\n", wqe);
-+	switch (wqe & FCOE_UNSOLICITED_CQE_SUBTYPE) {
-+	case FCOE_UNSOLICITED_FRAME_CQE_TYPE:
-+		frame_len = (wqe & FCOE_UNSOLICITED_CQE_PKT_LEN) >>
-+			     FCOE_UNSOLICITED_CQE_PKT_LEN_SHIFT;
++	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats->RxFrames++;
++	stats->RxWords += fr_len / FCOE_WORD_TO_BYTE;
 +
-+		num_rq = (frame_len + BNX2FC_RQ_BUF_SZ - 1) / BNX2FC_RQ_BUF_SZ;
-+
-+		rq_data = (unsigned char *)bnx2fc_get_next_rqe(tgt, num_rq);
-+		if (rq_data) {
-+			buf = rq_data;
-+		} else {
-+			buf1 = buf = kmalloc((num_rq * BNX2FC_RQ_BUF_SZ),
-+					      GFP_ATOMIC);
-+			for (i = 0; i < num_rq; i++) {
-+				rq_data = (unsigned char *)
-+					   bnx2fc_get_next_rqe(tgt, 1);
-+				len = BNX2FC_RQ_BUF_SZ;
-+				memcpy(buf1, rq_data, len);
-+				buf1 += len;
-+			}
-+		}
-+		bnx2fc_process_l2_frame_compl(tgt, buf, frame_len,
-+					      FC_XID_UNKNOWN);
-+
-+		if (buf != rq_data)
-+			kfree(buf);
-+		bnx2fc_return_rqe(tgt, num_rq);
-+		break;
-+
-+	case FCOE_ERROR_DETECTION_CQE_TYPE:
-+		/*
-+		 *In case of error reporting CQE a single RQ entry
-+		 * is consumes.
-+		 */
-+		spin_lock_bh(&tgt->tgt_lock);
-+		num_rq = 1;
-+		err_entry = (struct fcoe_err_report_entry *)
-+			     bnx2fc_get_next_rqe(tgt, 1);
-+		xid = err_entry->fc_hdr.ox_id;
-+		bnx2fc_dbg(LOG_IOERR, "Unsol Error Frame OX_ID = 0x%x\n", xid);
-+		bnx2fc_dbg(LOG_IOERR, "err_warn_bitmap = %08x:%08x\n",
-+			err_entry->err_warn_bitmap_hi,
-+			err_entry->err_warn_bitmap_lo);
-+		bnx2fc_dbg(LOG_IOERR, "buf_offsets - tx = 0x%x, rx = 0x%x\n",
-+			err_entry->tx_buf_off, err_entry->rx_buf_off);
-+
-+		task_idx = xid / BNX2FC_TASKS_PER_PAGE;
-+		index = xid % BNX2FC_TASKS_PER_PAGE;
-+		task_page = (struct fcoe_task_ctx_entry *)
-+						hba->task_ctx[task_idx];
-+		task = &(task_page[index]);
-+
-+		io_req = (struct bnx2fc_cmd *)hba->cmd_mgr->cmds[xid];
-+		if (!io_req) {
-+			spin_unlock_bh(&tgt->tgt_lock);
-+			break;
-+		}
-+
-+		if (io_req->cmd_type != BNX2FC_SCSI_CMD) {
-+			printk(KERN_ERR PFX "err_warn: Not a SCSI cmd\n");
-+			spin_unlock_bh(&tgt->tgt_lock);
-+			break;
-+		}
-+
-+		if (test_and_clear_bit(BNX2FC_FLAG_IO_CLEANUP,
-+				       &io_req->req_flags)) {
-+			bnx2fc_dbg(LOG_IOERR, "unsol_err: cleanup in "
-+					    "progress.. ignore unsol err\n");
-+			spin_unlock_bh(&tgt->tgt_lock);
-+			break;
-+		}
-+
-+		/*
-+		 * If ABTS is already in progress, and FW error is
-+		 * received after that, do not cancel the timeout_work
-+		 * and let the error recovery continue by explicitly
-+		 * logging out the target, when the ABTS eventually
-+		 * times out.
-+		 */
-+		if (!test_and_set_bit(BNX2FC_FLAG_ISSUE_ABTS,
-+				      &io_req->req_flags)) {
-+			/*
-+			 * Cancel the timeout_work, as we received IO
-+			 * completion with FW error.
-+			 */
-+			if (cancel_delayed_work(&io_req->timeout_work))
-+				bnx2fc_cmd_release(io_req); /* timer hold */
-+
-+			rc = bnx2fc_initiate_abts(io_req);
-+			if (rc != SUCCESS) {
-+				bnx2fc_dbg(LOG_IOERR, "err_warn: initiate_abts "
-+					"failed xid = 0x%x. issue cleanup\n",
-+					io_req->xid);
-+				rc = bnx2fc_initiate_cleanup(io_req);
-+				BUG_ON(rc);
-+			}
-+		} else
-+			printk(KERN_ERR PFX "err_warn: io_req (0x%x) already "
-+					    "in ABTS processing\n", xid);
-+		spin_unlock_bh(&tgt->tgt_lock);
-+		break;
-+
-+	case FCOE_WARNING_DETECTION_CQE_TYPE:
-+		/*
-+		 *In case of warning reporting CQE a single RQ entry
-+		 * is consumes.
-+		 */
-+		num_rq = 1;
-+		err_entry = (struct fcoe_err_report_entry *)
-+			     bnx2fc_get_next_rqe(tgt, 1);
-+		xid = cpu_to_be16(err_entry->fc_hdr.ox_id);
-+		bnx2fc_dbg(LOG_IOERR, "Unsol Warning Frame OX_ID = 0x%x\n",
-+			xid);
-+		bnx2fc_dbg(LOG_IOERR, "err_warn_bitmap = %08x:%08x",
-+			err_entry->err_warn_bitmap_hi,
-+			err_entry->err_warn_bitmap_lo);
-+		bnx2fc_dbg(LOG_IOERR, "buf_offsets - tx = 0x%x, rx = 0x%x",
-+			err_entry->tx_buf_off, err_entry->rx_buf_off);
-+
-+		break;
-+
-+	default:
-+		printk(KERN_ERR PFX "Unsol Compl: Invalid CQE Subtype\n");
-+		break;
-+	}
-+}
-+
-+static void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt, u16 wqe)
-+{
-+	struct fcoe_task_ctx_entry *task;
-+	struct fcoe_task_ctx_entry *task_page;
-+	struct bnx2fc_port *port = tgt->port;
-+	struct bnx2fc_hba *hba = port->hba;
-+	struct bnx2fc_cmd *io_req;
-+	int task_idx, index;
-+	u16 xid;
-+	u8  cmd_type;
-+	u8 rx_state = 0;
-+	u8 num_rq;
-+
-+	spin_lock_bh(&tgt->tgt_lock);
-+	xid = wqe & FCOE_PEND_WQ_CQE_TASK_ID;
-+	if (xid >= BNX2FC_MAX_TASKS) {
-+		printk(KERN_ALERT PFX "ERROR:xid out of range\n");
-+		spin_unlock_bh(&tgt->tgt_lock);
++	fp = (struct fc_frame *)skb;
++	fc_frame_init(fp);
++	fr_dev(fp) = lport;
++	fr_sof(fp) = hp->fcoe_sof;
++	if (skb_copy_bits(skb, fr_len, &crc_eof, sizeof(crc_eof))) {
++		put_cpu();
++		kfree_skb(skb);
 +		return;
 +	}
-+	task_idx = xid / BNX2FC_TASKS_PER_PAGE;
-+	index = xid % BNX2FC_TASKS_PER_PAGE;
-+	task_page = (struct fcoe_task_ctx_entry *)hba->task_ctx[task_idx];
-+	task = &(task_page[index]);
-+
-+	num_rq = ((task->rx_wr_tx_rd.rx_flags &
-+		   FCOE_TASK_CTX_ENTRY_RXWR_TXRD_NUM_RQ_WQE) >>
-+		   FCOE_TASK_CTX_ENTRY_RXWR_TXRD_NUM_RQ_WQE_SHIFT);
-+
-+	io_req = (struct bnx2fc_cmd *)hba->cmd_mgr->cmds[xid];
-+
-+	if (io_req == NULL) {
-+		printk(KERN_ERR PFX "ERROR? cq_compl - io_req is NULL\n");
-+		spin_unlock_bh(&tgt->tgt_lock);
++	fr_eof(fp) = crc_eof.fcoe_eof;
++	fr_crc(fp) = crc_eof.fcoe_crc32;
++	if (pskb_trim(skb, fr_len)) {
++		put_cpu();
++		kfree_skb(skb);
 +		return;
 +	}
 +
-+	/* Timestamp IO completion time */
-+	cmd_type = io_req->cmd_type;
++	fh = fc_frame_header_get(fp);
 +
-+	/* optimized completion path */
-+	if (cmd_type == BNX2FC_SCSI_CMD) {
-+		rx_state = ((task->rx_wr_tx_rd.rx_flags &
-+			    FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RX_STATE) >>
-+			    FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RX_STATE_SHIFT);
-+
-+		if (rx_state == FCOE_TASK_RX_STATE_COMPLETED) {
-+			bnx2fc_process_scsi_cmd_compl(io_req, task, num_rq);
-+			spin_unlock_bh(&tgt->tgt_lock);
++	vn_port = fc_vport_id_lookup(lport, ntoh24(fh->fh_d_id));
++	if (vn_port) {
++		port = lport_priv(vn_port);
++		if (compare_ether_addr(port->data_src_addr, dest_mac)
++		    != 0) {
++			bnx2fc_dbg(LOG_FRAME, "fpma mismatch\n");
++			put_cpu();
++			kfree_skb(skb);
 +			return;
 +		}
 +	}
-+
-+	/* Process other IO completion types */
-+	switch (cmd_type) {
-+	case BNX2FC_SCSI_CMD:
-+		bnx2fc_dbg(LOG_IOERR, "SCSI_CMD(0x%x) "\
-+			"complete - rx_state = %d\n", io_req->xid, rx_state);
-+
-+		if (rx_state == FCOE_TASK_RX_STATE_ABTS_COMPLETED)
-+			bnx2fc_process_abts_compl(io_req, task, num_rq);
-+		else if (rx_state ==
-+			 FCOE_TASK_RX_STATE_EXCHANGE_CLEANUP_COMPLETED)
-+			bnx2fc_process_cleanup_compl(io_req, task, num_rq);
-+		else
-+			printk(KERN_ERR PFX "Invalid rx state - %d\n",
-+				rx_state);
-+		break;
-+
-+	case BNX2FC_TASK_MGMT_CMD:
-+		bnx2fc_dbg(LOG_IOERR, "Processing TM complete (0x%x)\n",
-+			   io_req->xid);
-+		bnx2fc_process_tm_compl(io_req, task, num_rq);
-+		break;
-+
-+	case BNX2FC_ABTS:
-+		/*
-+		 * ABTS request received by firmware. ABTS response
-+		 * will be delivered to the task belonging to the IO
-+		 * that was aborted
-+		 */
-+		bnx2fc_dbg(LOG_IOERR, "cq_compl(0x%x) - ABTS sent out "
-+			   "by fw\n", io_req->xid);
-+		bnx2fc_cmd_release(io_req);
-+		break;
-+
-+	case BNX2FC_ELS:
-+		bnx2fc_dbg(LOG_ELS, "cq_compl(0x%x) - call"
-+			   " process_els_compl\n", io_req->xid);
-+		bnx2fc_process_els_compl(io_req, task, num_rq);
-+		break;
-+
-+	case BNX2FC_CLEANUP:
-+		bnx2fc_dbg(LOG_IOERR, "cq_compl(0x%x) - cleanup resp rcvd\n",
-+			   io_req->xid);
-+
-+		bnx2fc_cmd_release(io_req);
-+		break;
-+
-+	default:
-+		printk(KERN_ERR PFX "Invalid cmd_type %d\n", cmd_type);
-+		break;
-+	}
-+	spin_unlock_bh(&tgt->tgt_lock);
-+	return;
-+}
-+
-+int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt)
-+{
-+	struct fcoe_cqe *cq;
-+	u32 cq_cons;
-+	struct fcoe_cqe *cqe;
-+	u16 wqe;
-+	bool more_cqes_found = false;
-+
-+	/*
-+	 * cq_lock is a low contention lock used to protect
-+	 * the CQ data structure from being freed up during
-+	 * the upload operation
-+	 */
-+	spin_lock_bh(&tgt->cq_lock);
-+
-+	if (!tgt->cq) {
-+		printk(KERN_ERR PFX "process_new_cqes: cq is NULL\n");
-+		spin_unlock_bh(&tgt->cq_lock);
-+		return 0;
-+	}
-+	cq = tgt->cq;
-+	cq_cons = tgt->cq_cons_idx;
-+	cqe = &cq[cq_cons];
-+
-+	do {
-+		more_cqes_found ^= true;
-+
-+		while (((wqe = cqe->wqe) & FCOE_CQE_TOGGLE_BIT) ==
-+		       (tgt->cq_curr_toggle_bit <<
-+		       FCOE_CQE_TOGGLE_BIT_SHIFT)) {
-+
-+			/* new entry on the cq */
-+			if (wqe & FCOE_CQE_CQE_TYPE) {
-+				/* Unsolicited event notification */
-+				bnx2fc_process_unsol_compl(tgt, wqe);
-+			} else {
-+				/* Pending work request completion */
-+				bnx2fc_process_cq_compl(tgt, wqe);
-+			}
-+			cqe++;
-+			tgt->cq_cons_idx++;
-+
-+			if (tgt->cq_cons_idx == BNX2FC_CQ_WQES_MAX) {
-+				tgt->cq_cons_idx = 0;
-+				cqe = cq;
-+				tgt->cq_curr_toggle_bit =
-+					1 - tgt->cq_curr_toggle_bit;
-+			}
-+		}
-+		/* Re-arm CQ */
-+		if (more_cqes_found) {
-+			tgt->conn_db->cq_arm.lo = -1;
-+			wmb();
-+		}
-+	} while (more_cqes_found);
-+
-+	/*
-+	 * Commit tgt->cq_cons_idx change to the memory
-+	 * spin_lock implies full memory barrier, no need to smp_wmb
-+	 */
-+
-+	spin_unlock_bh(&tgt->cq_lock);
-+	return 0;
-+}
-+
-+/**
-+ * bnx2fc_fastpath_notification - process global event queue (KCQ)
-+ *
-+ * @hba:		adapter structure pointer
-+ * @new_cqe_kcqe:	pointer to newly DMA'd KCQ entry
-+ *
-+ * Fast path event notification handler
-+ */
-+static void bnx2fc_fastpath_notification(struct bnx2fc_hba *hba,
-+					struct fcoe_kcqe *new_cqe_kcqe)
-+{
-+	u32 conn_id = new_cqe_kcqe->fcoe_conn_id;
-+	struct bnx2fc_rport *tgt =
-+			(struct bnx2fc_rport *)hba->tgt_ofld_list[conn_id];
-+
-+	if (!tgt) {
-+		printk(KERN_ALERT PFX "conn_id 0x%x not valid\n", conn_id);
++	if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
++	    fh->fh_type == FC_TYPE_FCP) {
++		bnx2fc_dbg(LOG_INIT, "DD_SOL_DATA\n");
++		/* Drop FCP data. We dont this in L2 path */
++		put_cpu();
++		kfree_skb(skb);
 +		return;
 +	}
-+	bnx2fc_process_new_cqes(tgt);
-+}
-+
-+/**
-+ * bnx2fc_process_ofld_cmpl - process FCoE session offload completion
-+ *
-+ * @hba:	adapter structure pointer
-+ * @ofld_kcqe:	connection offload kcqe pointer
-+ *
-+ * handle session offload completion, enable the session if offload is
-+ * successful.
-+ */
-+static void bnx2fc_process_ofld_cmpl(struct bnx2fc_hba *hba,
-+					struct fcoe_kcqe *ofld_kcqe)
-+{
-+	struct bnx2fc_rport		*tgt;
-+	struct bnx2fc_port		*port;
-+	u32				conn_id;
-+	u32				context_id;
-+	int				rc;
-+
-+	conn_id = ofld_kcqe->fcoe_conn_id;
-+	context_id = ofld_kcqe->fcoe_conn_context_id;
-+	bnx2fc_dbg(LOG_SESS, "Entered ofld compl - context_id = 0x%x\n",
-+		ofld_kcqe->fcoe_conn_context_id);
-+	tgt = (struct bnx2fc_rport *)hba->tgt_ofld_list[conn_id];
-+	if (!tgt) {
-+		printk(KERN_ALERT PFX "ERROR:ofld_cmpl: No pending ofld req\n");
++	if (le32_to_cpu(fr_crc(fp)) !=
++			~crc32(~0, skb->data, fr_len)) {
++		if (stats->InvalidCRCCount < 5)
++			printk(KERN_WARNING PFX "dropping frame with "
++			       "CRC error\n");
++		stats->InvalidCRCCount++;
++		put_cpu();
++		kfree_skb(skb);
 +		return;
 +	}
-+	port = tgt->port;
-+	if (hba != tgt->port->hba) {
-+		printk(KERN_ALERT PFX "ERROR:ofld_cmpl: HBA mis-match\n");
-+		goto ofld_cmpl_err;
-+	}
-+	/*
-+	 * cnic has allocated a context_id for this session; use this
-+	 * while enabling the session.
-+	 */
-+	tgt->context_id = context_id;
-+	if (ofld_kcqe->completion_status) {
-+		if (ofld_kcqe->completion_status ==
-+				FCOE_KCQE_COMPLETION_STATUS_CTX_ALLOC_FAILURE) {
-+			printk(KERN_ERR PFX "unable to allocate FCoE context "
-+				"resources\n");
-+			set_bit(BNX2FC_FLAG_CTX_ALLOC_FAILURE, &tgt->flags);
-+		}
-+		goto ofld_cmpl_err;
-+	} else {
-+
-+		/* now enable the session */
-+		rc = bnx2fc_send_session_enable_req(port, tgt);
-+		if (rc) {
-+			printk(KERN_ALERT PFX "enable session failed\n");
-+			goto ofld_cmpl_err;
-+		}
-+	}
-+	return;
-+ofld_cmpl_err:
-+	set_bit(BNX2FC_FLAG_OFLD_REQ_CMPL, &tgt->flags);
-+	wake_up_interruptible(&tgt->ofld_wait);
-+	return;
++	put_cpu();
++	fc_exch_recv(lport, fp);
 +}
 +
-+/**
-+ * bnx2fc_process_enable_conn_cmpl - process FCoE session enable completion
-+ *
-+ * @hba:	adapter structure pointer
-+ * @ofld_kcqe:	connection offload kcqe pointer
-+ *
-+ * handle session enable completion, mark the rport as ready
-+ */
-+
-+static void bnx2fc_process_enable_conn_cmpl(struct bnx2fc_hba *hba,
-+						struct fcoe_kcqe *ofld_kcqe)
++static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *shost)
 +{
-+	struct bnx2fc_rport		*tgt;
-+	u32				conn_id;
-+	u32				context_id;
-+
-+	context_id = ofld_kcqe->fcoe_conn_context_id;
-+	conn_id = ofld_kcqe->fcoe_conn_id;
-+	tgt = (struct bnx2fc_rport *)hba->tgt_ofld_list[conn_id];
-+
-+	bnx2fc_dbg(LOG_SESS, "Enable compl - context_id = 0x%x\n",
-+		ofld_kcqe->fcoe_conn_context_id);
-+	if (!tgt) {
-+		printk(KERN_ALERT PFX "ERROR:enbl_cmpl: No pending ofld req\n");
-+		return;
-+	}
-+	/*
-+	 * context_id should be the same for this target during offload
-+	 * and enable
-+	 */
-+	if (tgt->context_id != context_id) {
-+		printk(KERN_ALERT PFX "context id mis-match\n");
-+		return;
-+	}
-+	if (hba != tgt->port->hba) {
-+		printk(KERN_ALERT PFX "bnx2fc-enbl_cmpl: HBA mis-match\n");
-+		goto enbl_cmpl_err;
-+	}
-+	if (ofld_kcqe->completion_status) {
-+		goto enbl_cmpl_err;
-+	} else {
-+		/* enable successful - rport ready for issuing IOs */
-+		set_bit(BNX2FC_FLAG_OFFLOADED, &tgt->flags);
-+		set_bit(BNX2FC_FLAG_OFLD_REQ_CMPL, &tgt->flags);
-+		wake_up_interruptible(&tgt->ofld_wait);
-+	}
-+	return;
-+
-+enbl_cmpl_err:
-+	set_bit(BNX2FC_FLAG_OFLD_REQ_CMPL, &tgt->flags);
-+	wake_up_interruptible(&tgt->ofld_wait);
-+	return;
-+}
-+
-+static void bnx2fc_process_conn_disable_cmpl(struct bnx2fc_hba *hba,
-+					struct fcoe_kcqe *disable_kcqe)
-+{
-+
-+	struct bnx2fc_rport		*tgt;
-+	u32				conn_id;
-+
-+	conn_id = disable_kcqe->fcoe_conn_id;
-+	tgt = (struct bnx2fc_rport *)hba->tgt_ofld_list[conn_id];
-+	bnx2fc_dbg(LOG_SESS, PFX "disable_cmpl: conn_id %d tgt 0x%p\n",
-+		conn_id, tgt);
-+	if (!tgt) {
-+		printk(KERN_ALERT PFX "ERROR: disable_cmpl: No disable req\n");
-+		return;
-+	}
-+
-+	if (disable_kcqe->completion_status) {
-+		printk(KERN_ALERT PFX "ERROR: Disable failed with cmpl status %d\n",
-+			disable_kcqe->completion_status);
-+		return;
-+	} else {
-+		/* disable successful */
-+		bnx2fc_dbg(LOG_SESS, "disable successful\n");
-+		clear_bit(BNX2FC_FLAG_OFFLOADED, &tgt->flags);
-+		set_bit(BNX2FC_FLAG_DISABLED, &tgt->flags);
-+		set_bit(BNX2FC_FLAG_UPLD_REQ_COMPL, &tgt->flags);
-+		wake_up_interruptible(&tgt->upld_wait);
-+	}
-+	return;
-+}
-+
-+static void bnx2fc_process_conn_destroy_cmpl(struct bnx2fc_hba *hba,
-+					struct fcoe_kcqe *destroy_kcqe)
-+{
-+	struct bnx2fc_rport		*tgt;
-+	u32				conn_id;
-+
-+	conn_id = destroy_kcqe->fcoe_conn_id;
-+	tgt = (struct bnx2fc_rport *)hba->tgt_ofld_list[conn_id];
-+	bnx2fc_dbg(LOG_SESS, "destroy_cmpl: conn_id %d tgt 0x%p\n",
-+		conn_id, tgt);
-+	if (!tgt) {
-+		printk(KERN_ALERT PFX "destroy_cmpl: No destroy req\n");
-+		return;
-+	}
-+
-+	if (destroy_kcqe->completion_status) {
-+		printk(KERN_ALERT PFX "Destroy conn failed, cmpl status %d\n",
-+			destroy_kcqe->completion_status);
-+		return;
-+	} else {
-+		/* destroy successful */
-+		bnx2fc_dbg(LOG_SESS, "upload successful\n");
-+		clear_bit(BNX2FC_FLAG_DISABLED, &tgt->flags);
-+		set_bit(BNX2FC_FLAG_DESTROYED, &tgt->flags);
-+		set_bit(BNX2FC_FLAG_UPLD_REQ_COMPL, &tgt->flags);
-+		wake_up_interruptible(&tgt->upld_wait);
-+	}
-+	return;
-+}
-+
-+static void bnx2fc_init_failure(struct bnx2fc_hba *hba, u32 err_code)
-+{
-+	switch (err_code) {
-+	case FCOE_KCQE_COMPLETION_STATUS_INVALID_OPCODE:
-+		printk(KERN_ERR PFX "init_failure due to invalid opcode\n");
-+		break;
-+
-+	case FCOE_KCQE_COMPLETION_STATUS_CTX_ALLOC_FAILURE:
-+		printk(KERN_ERR PFX "init failed due to ctx alloc failure\n");
-+		break;
-+
-+	case FCOE_KCQE_COMPLETION_STATUS_NIC_ERROR:
-+		printk(KERN_ERR PFX "init_failure due to NIC error\n");
-+		break;
-+
-+	default:
-+		printk(KERN_ERR PFX "Unknown Error code %d\n", err_code);
-+	}
-+}
-+
-+/**
-+ * bnx2fc_indicae_kcqe - process KCQE
-+ *
-+ * @hba:	adapter structure pointer
-+ * @kcqe:	kcqe pointer
-+ * @num_cqe:	Number of completion queue elements
-+ *
-+ * Generic KCQ event handler
-+ */
-+void bnx2fc_indicate_kcqe(void *context, struct kcqe *kcq[],
-+					u32 num_cqe)
-+{
-+	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)context;
-+	int i = 0;
-+	struct fcoe_kcqe *kcqe = NULL;
-+
-+	while (i < num_cqe) {
-+		kcqe = (struct fcoe_kcqe *) kcq[i++];
-+
-+		switch (kcqe->op_code) {
-+		case FCOE_KCQE_OPCODE_CQ_EVENT_NOTIFICATION:
-+			bnx2fc_fastpath_notification(hba, kcqe);
-+			break;
-+
-+		case FCOE_KCQE_OPCODE_OFFLOAD_CONN:
-+			bnx2fc_process_ofld_cmpl(hba, kcqe);
-+			break;
-+
-+		case FCOE_KCQE_OPCODE_ENABLE_CONN:
-+			bnx2fc_process_enable_conn_cmpl(hba, kcqe);
-+			break;
-+
-+		case FCOE_KCQE_OPCODE_INIT_FUNC:
-+			if (kcqe->completion_status !=
-+					FCOE_KCQE_COMPLETION_STATUS_SUCCESS) {
-+				bnx2fc_init_failure(hba,
-+						kcqe->completion_status);
-+			} else {
-+				set_bit(ADAPTER_STATE_UP, &hba->adapter_state);
-+				bnx2fc_get_link_state(hba);
-+				printk(KERN_INFO PFX "[%.2x]: FCOE_INIT passed\n",
-+					(u8)hba->pcidev->bus->number);
-+			}
-+			break;
-+
-+		case FCOE_KCQE_OPCODE_DESTROY_FUNC:
-+			if (kcqe->completion_status !=
-+					FCOE_KCQE_COMPLETION_STATUS_SUCCESS) {
-+
-+				printk(KERN_ERR PFX "DESTROY failed\n");
-+			} else {
-+				printk(KERN_ERR PFX "DESTROY success\n");
-+			}
-+			hba->flags |= BNX2FC_FLAG_DESTROY_CMPL;
-+			wake_up_interruptible(&hba->destroy_wait);
-+			break;
-+
-+		case FCOE_KCQE_OPCODE_DISABLE_CONN:
-+			bnx2fc_process_conn_disable_cmpl(hba, kcqe);
-+			break;
-+
-+		case FCOE_KCQE_OPCODE_DESTROY_CONN:
-+			bnx2fc_process_conn_destroy_cmpl(hba, kcqe);
-+			break;
-+
-+		case FCOE_KCQE_OPCODE_STAT_FUNC:
-+			if (kcqe->completion_status !=
-+			    FCOE_KCQE_COMPLETION_STATUS_SUCCESS)
-+				printk(KERN_ERR PFX "STAT failed\n");
-+			else
-+				bnx2fc_dbg(LOG_INIT, "STAT Success\n");
-+
-+			complete(&hba->stat_req_done);
-+			break;
-+
-+		case FCOE_KCQE_OPCODE_FCOE_ERROR:
-+			bnx2fc_process_fcoe_error(hba, kcqe);
-+			break;
-+
-+		default:
-+			printk(KERN_ALERT PFX "unknown opcode 0x%x\n",
-+								kcqe->op_code);
-+		}
-+	}
-+}
-+
-+static void bnx2fc_process_fcoe_error(struct bnx2fc_hba *hba,
-+					struct fcoe_kcqe *fcoe_err)
-+{
-+
-+
-+}
-+
-+void bnx2fc_add_2_sq(struct bnx2fc_rport *tgt, u16 xid)
-+{
-+	struct fcoe_sqe *sqe;
-+
-+	sqe = (struct fcoe_sqe *) &tgt->sq[tgt->sq_prod_idx];
-+
-+	/* Fill SQ WQE */
-+	sqe->wqe = xid << FCOE_SQE_TASK_ID_SHIFT;
-+	sqe->wqe |= tgt->sq_curr_toggle_bit << FCOE_SQE_TOGGLE_BIT_SHIFT;
-+
-+	/* Advance SQ Prod Idx */
-+	if (++tgt->sq_prod_idx == BNX2FC_SQ_WQES_MAX) {
-+		tgt->sq_prod_idx = 0;
-+		tgt->sq_curr_toggle_bit = 1 - tgt->sq_curr_toggle_bit;
-+	}
-+}
-+
-+void bnx2fc_ring_doorbell(struct bnx2fc_rport *tgt)
-+{
-+	struct b577xx_doorbell_set_prod ev_doorbell;
-+	u32 msg;
-+
-+	wmb();
-+
-+	memset(&ev_doorbell, 0, sizeof(struct b577xx_doorbell_set_prod));
-+	ev_doorbell.header.header = B577XX_DOORBELL_HDR_DB_TYPE;
-+
-+	ev_doorbell.prod = tgt->sq_prod_idx |
-+				(tgt->sq_curr_toggle_bit << 15);
-+	ev_doorbell.header.header |= B577XX_FCOE_CONNECTION_TYPE <<
-+					B577XX_DOORBELL_HDR_CONN_TYPE_SHIFT;
-+	msg = *((u32 *)&ev_doorbell);
-+	writel(cpu_to_le32(msg), tgt->ctx_base);
-+
-+	mmiowb();
-+
-+}
-+
-+void bnx2fc_map_doorbell(struct bnx2fc_rport *tgt)
-+{
-+	u32 context_id = tgt->context_id;
-+	struct bnx2fc_port *port = tgt->port;
-+	u32 reg_off;
-+	resource_size_t reg_base;
-+
-+	reg_base = pci_resource_start(port->hba->pcidev,
-+					BNX2X_DOORBELL_PCI_BAR);
-+	reg_off = BNX2FC_5771X_DB_PAGE_SIZE *
-+			(context_id & 0x1FFFF) + DPM_TRIGER_TYPE;
-+	tgt->ctx_base = ioremap_nocache(reg_base + reg_off, 4);
-+}
-+
-+char *bnx2fc_get_next_rqe(struct bnx2fc_rport *tgt, u8 num_items)
-+{
-+	char *buf = (char *)tgt->rq + (tgt->rq_cons_idx * BNX2FC_RQ_BUF_SZ);
-+
-+	if (tgt->rq_cons_idx + num_items > BNX2FC_RQ_WQES_MAX)
-+		return NULL;
-+
-+	tgt->rq_cons_idx += num_items;
-+
-+	if (tgt->rq_cons_idx >= BNX2FC_RQ_WQES_MAX)
-+		tgt->rq_cons_idx -= BNX2FC_RQ_WQES_MAX;
-+
-+	return buf;
-+}
-+
-+void bnx2fc_return_rqe(struct bnx2fc_rport *tgt, u8 num_items)
-+{
-+	/* return the rq buffer */
-+	u32 next_prod_idx = tgt->rq_prod_idx + num_items;
-+	if ((next_prod_idx & 0x7fff) == BNX2FC_RQ_WQES_MAX) {
-+		/* Wrap around RQ */
-+		next_prod_idx += 0x8000 - BNX2FC_RQ_WQES_MAX;
-+	}
-+	tgt->rq_prod_idx = next_prod_idx;
-+	tgt->conn_db->rq_prod = tgt->rq_prod_idx;
-+}
-+
-+void bnx2fc_init_cleanup_task(struct bnx2fc_cmd *io_req,
-+			      struct fcoe_task_ctx_entry *task,
-+			      u16 orig_xid)
-+{
-+	u8 task_type = FCOE_TASK_TYPE_EXCHANGE_CLEANUP;
-+	struct bnx2fc_rport *tgt = io_req->tgt;
-+	u32 context_id = tgt->context_id;
-+
-+	memset(task, 0, sizeof(struct fcoe_task_ctx_entry));
-+
-+	/* Tx Write Rx Read */
-+	task->tx_wr_rx_rd.tx_flags = FCOE_TASK_TX_STATE_EXCHANGE_CLEANUP <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE_SHIFT;
-+	task->tx_wr_rx_rd.init_flags = task_type <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE_SHIFT;
-+	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE_SHIFT;
-+	/* Common */
-+	task->cmn.common_flags = context_id <<
-+				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_CID_SHIFT;
-+	task->cmn.general.cleanup_info.task_id = orig_xid;
-+
-+
-+}
-+
-+void bnx2fc_init_mp_task(struct bnx2fc_cmd *io_req,
-+				struct fcoe_task_ctx_entry *task)
-+{
-+	struct bnx2fc_mp_req *mp_req = &(io_req->mp_req);
-+	struct bnx2fc_rport *tgt = io_req->tgt;
-+	struct fc_frame_header *fc_hdr;
-+	u8 task_type = 0;
-+	u64 *hdr;
-+	u64 temp_hdr[3];
-+	u32 context_id;
-+
-+	bnx2fc_dbg(LOG_IOERR, "Initializing MP task for cmd_type = %d\n",
-+		io_req->cmd_type);
-+
-+	/* Obtain task_type */
-+	if ((io_req->cmd_type == BNX2FC_TASK_MGMT_CMD) ||
-+	    (io_req->cmd_type == BNX2FC_ELS)) {
-+		task_type = FCOE_TASK_TYPE_MIDPATH;
-+	} else if (io_req->cmd_type == BNX2FC_ABTS) {
-+		task_type = FCOE_TASK_TYPE_ABTS;
-+	}
-+
-+	memset(task, 0, sizeof(struct fcoe_task_ctx_entry));
-+
-+	/* Setup the task from io_req for easy reference */
-+	io_req->task = task;
-+
-+	bnx2fc_dbg(LOG_IOERR, "task type = %d\n", task_type);
-+
-+	/* Tx only */
-+	if ((task_type == FCOE_TASK_TYPE_MIDPATH) ||
-+	    (task_type == FCOE_TASK_TYPE_UNSOLICITED)) {
-+		task->tx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.lo =
-+				(u32)mp_req->mp_req_bd_dma;
-+		task->tx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.hi =
-+				(u32)((u64)mp_req->mp_req_bd_dma >> 32);
-+		task->tx_wr_only.sgl_ctx.mul_sges.sgl_size = 1;
-+		bnx2fc_dbg(LOG_IOERR, "init_mp_task - bd_dma = 0x%llx\n",
-+			mp_req->mp_req_bd_dma);
-+	}
-+
-+	/* Tx Write Rx Read */
-+	task->tx_wr_rx_rd.tx_flags = FCOE_TASK_TX_STATE_INIT <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE_SHIFT;
-+	task->tx_wr_rx_rd.init_flags = task_type <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE_SHIFT;
-+	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_DEV_TYPE_DISK <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_DEV_TYPE_SHIFT;
-+	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE_SHIFT;
-+
-+	/* Common */
-+	task->cmn.data_2_trns = io_req->data_xfer_len;
-+	context_id = tgt->context_id;
-+	task->cmn.common_flags = context_id <<
-+				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_CID_SHIFT;
-+	task->cmn.common_flags |= 1 <<
-+				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_VALID_SHIFT;
-+	task->cmn.common_flags |= 1 <<
-+			FCOE_TASK_CTX_ENTRY_TX_RX_CMN_EXP_FIRST_FRAME_SHIFT;
-+
-+	/* Rx Write Tx Read */
-+	fc_hdr = &(mp_req->req_fc_hdr);
-+	if (task_type == FCOE_TASK_TYPE_MIDPATH) {
-+		fc_hdr->fh_ox_id = cpu_to_be16(io_req->xid);
-+		fc_hdr->fh_rx_id = htons(0xffff);
-+		task->rx_wr_tx_rd.rx_id = 0xffff;
-+	} else if (task_type == FCOE_TASK_TYPE_UNSOLICITED) {
-+		fc_hdr->fh_rx_id = cpu_to_be16(io_req->xid);
-+	}
-+
-+	/* Fill FC Header into middle path buffer */
-+	hdr = (u64 *) &task->cmn.general.cmd_info.mp_fc_frame.fc_hdr;
-+	memcpy(temp_hdr, fc_hdr, sizeof(temp_hdr));
-+	hdr[0] = cpu_to_be64(temp_hdr[0]);
-+	hdr[1] = cpu_to_be64(temp_hdr[1]);
-+	hdr[2] = cpu_to_be64(temp_hdr[2]);
-+
-+	/* Rx Only */
-+	if (task_type == FCOE_TASK_TYPE_MIDPATH) {
-+
-+		task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.lo =
-+				(u32)mp_req->mp_resp_bd_dma;
-+		task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.hi =
-+				(u32)((u64)mp_req->mp_resp_bd_dma >> 32);
-+		task->rx_wr_only.sgl_ctx.mul_sges.sgl_size = 1;
-+	}
-+}
-+
-+void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
-+			     struct fcoe_task_ctx_entry *task)
-+{
-+	u8 task_type;
-+	struct scsi_cmnd *sc_cmd = io_req->sc_cmd;
-+	struct io_bdt *bd_tbl = io_req->bd_tbl;
-+	struct bnx2fc_rport *tgt = io_req->tgt;
-+	u64 *fcp_cmnd;
-+	u64 tmp_fcp_cmnd[4];
-+	u32 context_id;
-+	int cnt, i;
-+	int bd_count;
-+
-+	memset(task, 0, sizeof(struct fcoe_task_ctx_entry));
-+
-+	/* Setup the task from io_req for easy reference */
-+	io_req->task = task;
-+
-+	if (sc_cmd->sc_data_direction == DMA_TO_DEVICE)
-+		task_type = FCOE_TASK_TYPE_WRITE;
-+	else
-+		task_type = FCOE_TASK_TYPE_READ;
-+
-+	/* Tx only */
-+	if (task_type == FCOE_TASK_TYPE_WRITE) {
-+		task->tx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.lo =
-+				(u32)bd_tbl->bd_tbl_dma;
-+		task->tx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.hi =
-+				(u32)((u64)bd_tbl->bd_tbl_dma >> 32);
-+		task->tx_wr_only.sgl_ctx.mul_sges.sgl_size =
-+				bd_tbl->bd_valid;
-+	}
-+
-+	/*Tx Write Rx Read */
-+	/* Init state to NORMAL */
-+	task->tx_wr_rx_rd.tx_flags = FCOE_TASK_TX_STATE_NORMAL <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE_SHIFT;
-+	task->tx_wr_rx_rd.init_flags = task_type <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE_SHIFT;
-+	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_DEV_TYPE_DISK <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_DEV_TYPE_SHIFT;
-+	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE_SHIFT;
-+
-+	/* Common */
-+	task->cmn.data_2_trns = io_req->data_xfer_len;
-+	context_id = tgt->context_id;
-+	task->cmn.common_flags = context_id <<
-+				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_CID_SHIFT;
-+	task->cmn.common_flags |= 1 <<
-+				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_VALID_SHIFT;
-+	task->cmn.common_flags |= 1 <<
-+			FCOE_TASK_CTX_ENTRY_TX_RX_CMN_EXP_FIRST_FRAME_SHIFT;
-+
-+	/* Set initiative ownership */
-+	task->cmn.common_flags |= FCOE_TASK_CTX_ENTRY_TX_RX_CMN_SEQ_INIT;
-+
-+	/* Set initial seq counter */
-+	task->cmn.tx_low_seq_cnt = 1;
-+
-+	/* Set state to "waiting for the first packet" */
-+	task->cmn.common_flags |= FCOE_TASK_CTX_ENTRY_TX_RX_CMN_EXP_FIRST_FRAME;
-+
-+	/* Fill FCP_CMND IU */
-+	fcp_cmnd = (u64 *)
-+		    task->cmn.general.cmd_info.fcp_cmd_payload.opaque;
-+	bnx2fc_build_fcp_cmnd(io_req, (struct fcp_cmnd *)&tmp_fcp_cmnd);
-+
-+	/* swap fcp_cmnd */
-+	cnt = sizeof(struct fcp_cmnd) / sizeof(u64);
-+
-+	for (i = 0; i < cnt; i++) {
-+		*fcp_cmnd = cpu_to_be64(tmp_fcp_cmnd[i]);
-+		fcp_cmnd++;
-+	}
-+
-+	/* Rx Write Tx Read */
-+	task->rx_wr_tx_rd.rx_id = 0xffff;
-+
-+	/* Rx Only */
-+	if (task_type == FCOE_TASK_TYPE_READ) {
-+
-+		bd_count = bd_tbl->bd_valid;
-+		if (bd_count == 1) {
-+
-+			struct fcoe_bd_ctx *fcoe_bd_tbl = bd_tbl->bd_tbl;
-+
-+			task->rx_wr_only.sgl_ctx.single_sge.cur_buf_addr.lo =
-+					fcoe_bd_tbl->buf_addr_lo;
-+			task->rx_wr_only.sgl_ctx.single_sge.cur_buf_addr.hi =
-+					fcoe_bd_tbl->buf_addr_hi;
-+			task->rx_wr_only.sgl_ctx.single_sge.cur_buf_rem =
-+					fcoe_bd_tbl->buf_len;
-+			task->tx_wr_rx_rd.init_flags |= 1 <<
-+				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_SINGLE_SGE_SHIFT;
-+		} else {
-+
-+			task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.lo =
-+					(u32)bd_tbl->bd_tbl_dma;
-+			task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.hi =
-+					(u32)((u64)bd_tbl->bd_tbl_dma >> 32);
-+			task->rx_wr_only.sgl_ctx.mul_sges.sgl_size =
-+					bd_tbl->bd_valid;
-+		}
-+	}
-+}
-+
-+/**
-+ * bnx2fc_setup_task_ctx - allocate and map task context
-+ *
-+ * @hba:	pointer to adapter structure
-+ *
-+ * allocate memory for task context, and associated BD table to be used
-+ * by firmware
-+ *
-+ */
-+int bnx2fc_setup_task_ctx(struct bnx2fc_hba *hba)
-+{
++	struct fc_host_statistics *bnx2fc_stats;
++	struct fc_lport *lport = shost_priv(shost);
++	struct bnx2fc_port *port = lport_priv(lport);
++	struct bnx2fc_hba *hba = port->hba;
++	struct fcoe_statistics_params *fw_stats;
 +	int rc = 0;
-+	struct regpair *task_ctx_bdt;
-+	dma_addr_t addr;
-+	int i;
 +
-+	/*
-+	 * Allocate task context bd table. A page size of bd table
-+	 * can map 256 buffers. Each buffer contains 32 task context
-+	 * entries. Hence the limit with one page is 8192 task context
-+	 * entries.
-+	 */
-+	hba->task_ctx_bd_tbl = dma_alloc_coherent(&hba->pcidev->dev,
-+						  PAGE_SIZE,
-+						  &hba->task_ctx_bd_dma,
-+						  GFP_KERNEL);
-+	if (!hba->task_ctx_bd_tbl) {
-+		printk(KERN_ERR PFX "unable to allocate task context BDT\n");
-+		rc = -1;
-+		goto out;
++	fw_stats = (struct fcoe_statistics_params *)hba->stats_buffer;
++	bnx2fc_stats = fc_get_host_stats(shost);
++
++	init_completion(&hba->stat_req_done);
++	if (bnx2fc_send_stat_req(hba))
++		return bnx2fc_stats;
++	rc = wait_for_completion_timeout(&hba->stat_req_done, (2 * HZ));
++	if (!rc) {
++		bnx2fc_dbg(LOG_INIT, "FW stat req timed out\n");
++		return bnx2fc_stats;
 +	}
-+	memset(hba->task_ctx_bd_tbl, 0, PAGE_SIZE);
++	bnx2fc_stats->invalid_crc_count += fw_stats->rx_stat1.fc_crc_cnt;
++	bnx2fc_stats->tx_frames += fw_stats->tx_stat.fcoe_tx_pkt_cnt;
++	bnx2fc_stats->tx_words += (fw_stats->tx_stat.fcoe_tx_byte_cnt) / 4;
++	bnx2fc_stats->rx_frames += fw_stats->rx_stat0.fcoe_rx_pkt_cnt;
++	bnx2fc_stats->rx_words += (fw_stats->rx_stat0.fcoe_rx_byte_cnt) / 4;
++	bnx2fc_stats->dumped_frames = 0;
++	bnx2fc_stats->lip_count = 0;
++	bnx2fc_stats->nos_count = 0;
++	bnx2fc_stats->loss_of_sync_count = 0;
++	bnx2fc_stats->loss_of_signal_count = 0;
++	bnx2fc_stats->prim_seq_protocol_err_count = 0;
 +
-+	/*
-+	 * Allocate task_ctx which is an array of pointers pointing to
-+	 * a page containing 32 task contexts
-+	 */
-+	hba->task_ctx = kmalloc((BNX2FC_TASK_CTX_ARR_SZ * sizeof(void *)),
-+				 GFP_KERNEL);
-+	if (!hba->task_ctx) {
-+		printk(KERN_ERR PFX "unable to allocate task context array\n");
-+		rc = -1;
-+		goto out1;
++	return bnx2fc_stats;
++}
++
++static int bnx2fc_shost_config(struct fc_lport *lport)
++{
++	struct bnx2fc_port *port = lport_priv(lport);
++	struct bnx2fc_hba *hba = port->hba;
++	struct Scsi_Host *shost = lport->host;
++	int rc = 0;
++
++	shost->max_cmd_len = BNX2FC_MAX_CMD_LEN;
++	shost->max_lun = BNX2FC_MAX_LUN;
++	shost->max_id = BNX2FC_MAX_FCP_TGT;
++	shost->max_channel = 0;
++	if (lport->vport)
++		shost->transportt = bnx2fc_vport_xport_template;
++	else
++		shost->transportt = bnx2fc_transport_template;
++
++	/* Add the new host to SCSI-ml */
++	rc = scsi_add_host(lport->host, NULL);
++	if (rc) {
++		printk(KERN_ERR PFX "Error on scsi_add_host\n");
++		return rc;
 +	}
-+	memset(hba->task_ctx, 0, BNX2FC_TASK_CTX_ARR_SZ * sizeof(void *));
++	if (!lport->vport)
++		fc_host_max_npiv_vports(lport->host) = USHRT_MAX;
++	sprintf(fc_host_symbolic_name(lport->host), "%s v%s over %s",
++		BNX2FC_NAME, BNX2FC_VERSION,
++		hba->netdev->name);
 +
-+	/*
-+	 * Allocate task_ctx_dma which is an array of dma addresses
-+	 */
-+	hba->task_ctx_dma = kmalloc((BNX2FC_TASK_CTX_ARR_SZ *
-+					sizeof(dma_addr_t)), GFP_KERNEL);
-+	if (!hba->task_ctx_dma) {
-+		printk(KERN_ERR PFX "unable to alloc context mapping array\n");
-+		rc = -1;
-+		goto out2;
-+	}
-+
-+	task_ctx_bdt = (struct regpair *)hba->task_ctx_bd_tbl;
-+	for (i = 0; i < BNX2FC_TASK_CTX_ARR_SZ; i++) {
-+
-+		hba->task_ctx[i] = dma_alloc_coherent(&hba->pcidev->dev,
-+						      PAGE_SIZE,
-+						      &hba->task_ctx_dma[i],
-+						      GFP_KERNEL);
-+		if (!hba->task_ctx[i]) {
-+			printk(KERN_ERR PFX "unable to alloc task context\n");
-+			rc = -1;
-+			goto out3;
-+		}
-+		memset(hba->task_ctx[i], 0, PAGE_SIZE);
-+		addr = (u64)hba->task_ctx_dma[i];
-+		task_ctx_bdt->hi = (u64) addr >> 32;
-+		task_ctx_bdt->lo = (u32) addr;
-+		task_ctx_bdt++;
-+	}
 +	return 0;
++}
 +
-+out3:
-+	for (i = 0; i < BNX2FC_TASK_CTX_ARR_SZ; i++) {
-+		if (hba->task_ctx[i]) {
++static int bnx2fc_link_ok(struct fc_lport *lport)
++{
++	struct bnx2fc_port *port = lport_priv(lport);
++	struct bnx2fc_hba *hba = port->hba;
++	struct net_device *dev = hba->phys_dev;
++	struct ethtool_cmd ecmd = { ETHTOOL_GSET };
++	int rc = 0;
 +
-+			dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
-+				hba->task_ctx[i], hba->task_ctx_dma[i]);
-+			hba->task_ctx[i] = NULL;
++	if ((dev->flags & IFF_UP) && netif_carrier_ok(dev)) {
++		dev = hba->netdev;
++		if (dev->ethtool_ops->get_settings) {
++			dev->ethtool_ops->get_settings(dev, &ecmd);
++			lport->link_supported_speeds &=
++				~(FC_PORTSPEED_1GBIT | FC_PORTSPEED_10GBIT);
++			if (ecmd.supported & (SUPPORTED_1000baseT_Half |
++					      SUPPORTED_1000baseT_Full))
++				lport->link_supported_speeds |=
++							FC_PORTSPEED_1GBIT;
++			if (ecmd.supported & SUPPORTED_10000baseT_Full)
++				lport->link_supported_speeds |=
++					FC_PORTSPEED_10GBIT;
++			if (ecmd.speed == SPEED_1000)
++				lport->link_speed = FC_PORTSPEED_1GBIT;
++			if (ecmd.speed == SPEED_10000)
++				lport->link_speed = FC_PORTSPEED_10GBIT;
 +		}
++		clear_bit(ADAPTER_STATE_LINK_DOWN, &hba->adapter_state);
++	} else {
++		set_bit(ADAPTER_STATE_LINK_DOWN, &hba->adapter_state);
++		rc = -1;
 +	}
-+
-+	kfree(hba->task_ctx_dma);
-+	hba->task_ctx_dma = NULL;
-+out2:
-+	kfree(hba->task_ctx);
-+	hba->task_ctx = NULL;
-+out1:
-+	dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
-+			hba->task_ctx_bd_tbl, hba->task_ctx_bd_dma);
-+	hba->task_ctx_bd_tbl = NULL;
-+out:
 +	return rc;
 +}
 +
-+void bnx2fc_free_task_ctx(struct bnx2fc_hba *hba)
++/**
++ * bnx2fc_get_link_state - get network link state
++ * @hba:	adapter instance pointer
++ *
++ * updates adapter structure flag based on netdev state
++ */
++void bnx2fc_get_link_state(struct bnx2fc_hba *hba)
 +{
-+	int i;
-+
-+	if (hba->task_ctx_bd_tbl) {
-+		dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
-+				    hba->task_ctx_bd_tbl,
-+				    hba->task_ctx_bd_dma);
-+		hba->task_ctx_bd_tbl = NULL;
-+	}
-+
-+	if (hba->task_ctx) {
-+		for (i = 0; i < BNX2FC_TASK_CTX_ARR_SZ; i++) {
-+			if (hba->task_ctx[i]) {
-+				dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
-+						    hba->task_ctx[i],
-+						    hba->task_ctx_dma[i]);
-+				hba->task_ctx[i] = NULL;
-+			}
-+		}
-+		kfree(hba->task_ctx);
-+		hba->task_ctx = NULL;
-+	}
-+
-+	kfree(hba->task_ctx_dma);
-+	hba->task_ctx_dma = NULL;
++	if (test_bit(__LINK_STATE_NOCARRIER, &hba->netdev->state))
++		set_bit(ADAPTER_STATE_LINK_DOWN, &hba->adapter_state);
++	else
++		clear_bit(ADAPTER_STATE_LINK_DOWN, &hba->adapter_state);
 +}
 +
-+static void bnx2fc_free_hash_table(struct bnx2fc_hba *hba)
++static int bnx2fc_net_config(struct fc_lport *lport)
 +{
-+	int i;
-+	int segment_count;
-+	int hash_table_size;
-+	u32 *pbl;
++	struct bnx2fc_hba *hba;
++	struct net_device *netdev;
++	struct bnx2fc_port *port;
++	u32 mfs;
++	u32 max_mfs;
++	u64 wwnn, wwpn;
 +
-+	segment_count = hba->hash_tbl_segment_count;
-+	hash_table_size = BNX2FC_NUM_MAX_SESS * BNX2FC_MAX_ROWS_IN_HASH_TBL *
-+		sizeof(struct fcoe_hash_table_entry);
++	port = lport_priv(lport);
++	hba = port->hba;
++	netdev = hba->netdev;
 +
-+	pbl = hba->hash_tbl_pbl;
-+	for (i = 0; i < segment_count; ++i) {
-+		dma_addr_t dma_address;
++	/* require support for get_pauseparam ethtool op. */
++	if (!hba->phys_dev->ethtool_ops ||
++	    !hba->phys_dev->ethtool_ops->get_pauseparam)
++		return -EOPNOTSUPP;
 +
-+		dma_address = *pbl;
-+		++pbl;
-+		dma_address += (u64) *pbl << 32;
-+		++pbl;
-+		dma_free_coherent(&hba->pcidev->dev,
-+				  BNX2FC_HASH_TBL_CHUNK_SIZE,
-+				  hba->hash_tbl_segments[i],
-+				  dma_address);
++	mfs = netdev->mtu - (sizeof(struct fcoe_hdr) +
++				sizeof(struct fcoe_crc_eof));
++	max_mfs = BNX2FC_MAX_PAYLOAD + sizeof(struct fc_frame_header);
++	bnx2fc_dbg(LOG_INIT, "mfs = %d, max_mfs = %d\n", mfs, max_mfs);
++	if (mfs > max_mfs)
++		mfs = max_mfs;
 +
++	/* Adjust mfs to be a multiple of 256 bytes */
++	mfs = (((mfs - sizeof(struct fc_frame_header)) / BNX2FC_MIN_PAYLOAD) *
++			BNX2FC_MIN_PAYLOAD);
++	mfs = mfs + sizeof(struct fc_frame_header);
++
++	bnx2fc_dbg(LOG_INIT, "Set MFS = %d\n", mfs);
++	if (fc_set_mfs(lport, mfs))
++		return -EINVAL;
++
++	skb_queue_head_init(&port->fcoe_pending_queue);
++	port->fcoe_pending_queue_active = 0;
++	setup_timer(&port->timer, bnx2fc_queue_timer, (unsigned long) lport);
++
++	if (!lport->vport) {
++		wwnn = bnx2fc_wwn_from_mac(hba->ctlr.ctl_src_addr, 1, 0);
++		bnx2fc_dbg(LOG_INIT, "WWNN = 0x%llx\n", wwnn);
++		fc_set_wwnn(lport, wwnn);
++
++		wwpn = bnx2fc_wwn_from_mac(hba->ctlr.ctl_src_addr, 2, 0);
++		bnx2fc_dbg(LOG_INIT, "WWPN = 0x%llx\n", wwpn);
++		fc_set_wwpn(lport, wwpn);
 +	}
 +
-+	if (hba->hash_tbl_pbl) {
-+		dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
-+				    hba->hash_tbl_pbl,
-+				    hba->hash_tbl_pbl_dma);
-+		hba->hash_tbl_pbl = NULL;
++	return 0;
++}
++
++static void bnx2fc_destroy_timer(unsigned long data)
++{
++	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)data;
++
++	bnx2fc_dbg(LOG_IOERR, "ERROR:bnx2fc_destroy_timer - "
++		   "Destroy compl not received!!\n");
++	hba->flags |= BNX2FC_FLAG_DESTROY_CMPL;
++	wake_up_interruptible(&hba->destroy_wait);
++}
++
++/**
++ * bnx2fc_indicate_netevent - Generic netdev event handler
++ *
++ * @context:	adapter structure pointer
++ * @event:	event type
++ *
++ * Handles NETDEV_UP, NETDEV_DOWN, NETDEV_GOING_DOWN,NETDEV_CHANGE and
++ * NETDEV_CHANGE_MTU events
++ */
++static void bnx2fc_indicate_netevent(void *context, unsigned long event)
++{
++	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)context;
++	struct fc_lport *lport = hba->ctlr.lp;
++	struct net_device *netdev;
++	u32 link_possible = 1;
++	u32 mfs;
++	u32 max_mfs;
++
++	if (!test_bit(BNX2FC_CREATE_DONE, &hba->init_done)) {
++		bnx2fc_dbg(LOG_DEV_EVT, "driver not ready. event=%s %ld\n",
++			   hba->netdev->name, event);
++		return;
++	}
++
++	/*
++	 * ASSUMPTION:
++	 * indicate_netevent cannot be called from cnic unless bnx2fc
++	 * does register_device
++	 */
++	BUG_ON(!lport);
++
++	bnx2fc_dbg(LOG_DEV_EVT, "enter netevent handler - event=%s %ld\n",
++				hba->netdev->name, event);
++
++	switch (event) {
++	case NETDEV_UP:
++		bnx2fc_dbg(LOG_DEV_EVT, "Port up, adapter_state = %ld\n",
++			hba->adapter_state);
++		if (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state))
++			printk(KERN_ERR "indicate_netevent: "\
++					"adapter is not UP!!\n");
++		break;
++	case NETDEV_DOWN:
++		bnx2fc_dbg(LOG_DEV_EVT, "Port down\n");
++		clear_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state);
++		clear_bit(ADAPTER_STATE_UP, &hba->adapter_state);
++		link_possible = 0;
++		break;
++	case NETDEV_GOING_DOWN:
++		bnx2fc_dbg(LOG_DEV_EVT, "Port going down\n");
++		set_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state);
++		link_possible = 0;
++		break;
++	case NETDEV_CHANGEMTU:
++		bnx2fc_dbg(LOG_DEV_EVT, "NETDEV_CHANGEMTU event\n");
++		netdev = hba->netdev;
++		mfs = netdev->mtu - (sizeof(struct fcoe_hdr) +
++				     sizeof(struct fcoe_crc_eof));
++		max_mfs = BNX2FC_MAX_PAYLOAD + sizeof(struct fc_frame_header);
++		bnx2fc_dbg(LOG_DEV_EVT, "change_mtu mfs = %d, max_mfs = %d\n",
++			mfs, max_mfs);
++		if (mfs > max_mfs)
++			mfs = max_mfs;
++		/* Adjust mfs to be a multiple of 256 bytes */
++		mfs = (((mfs - sizeof(struct fc_frame_header)) /
++		       BNX2FC_MIN_PAYLOAD) * BNX2FC_MIN_PAYLOAD);
++		mfs = mfs + sizeof(struct fc_frame_header);
++
++		bnx2fc_dbg(LOG_DEV_EVT, "set new MFS = %d\n", mfs);
++		fc_set_mfs(lport, mfs);
++		break;
++
++	case NETDEV_CHANGE:
++		bnx2fc_dbg(LOG_DEV_EVT, "NETDEV_CHANGE\n");
++		break;
++
++	default:
++		printk(KERN_ERR PFX "Unkonwn netevent %ld", event);
++		return;
++	}
++
++	if (link_possible && !bnx2fc_link_ok(lport)) {
++		printk(KERN_ERR "indicate_netevent: call ctlr_link_up\n");
++		fcoe_ctlr_link_up(&hba->ctlr);
++	} else {
++		printk(KERN_ERR "indicate_netevent: call ctlr_link_down\n");
++		if (fcoe_ctlr_link_down(&hba->ctlr)) {
++			clear_bit(ADAPTER_STATE_READY, &hba->adapter_state);
++			fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
++			per_cpu_ptr(lport->dev_stats,
++				    get_cpu())->LinkFailureCount++;
++			put_cpu();
++			bnx2fc_clean_pending_queue(lport);
++
++			init_waitqueue_head(&hba->shutdown_wait);
++			bnx2fc_dbg(LOG_INIT, "indicate_netevent "
++					     "num_ofld_sess = %d\n",
++				   hba->num_ofld_sess);
++			hba->wait_for_link_down = 1;
++			bnx2fc_dbg(LOG_INIT, "waiting for uploads to "
++					     "compl proc = %s\n",
++				   current->comm);
++			wait_event_interruptible(hba->shutdown_wait,
++						 (hba->num_ofld_sess == 0));
++			bnx2fc_dbg(LOG_INIT, "wakeup - num_ofld_sess = %d\n",
++				hba->num_ofld_sess);
++			hba->wait_for_link_down = 0;
++
++			if (signal_pending(current))
++				flush_signals(current);
++		}
 +	}
 +}
 +
-+static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
++static int bnx2fc_em_config(struct fc_lport *lport)
 +{
-+	int i;
-+	int hash_table_size;
-+	int segment_count;
-+	int segment_array_size;
-+	int dma_segment_array_size;
-+	dma_addr_t *dma_segment_array;
-+	u32 *pbl;
++	struct bnx2fc_port *port = lport_priv(lport);
++	struct bnx2fc_hba *hba = port->hba;
 +
-+	hash_table_size = BNX2FC_NUM_MAX_SESS * BNX2FC_MAX_ROWS_IN_HASH_TBL *
-+		sizeof(struct fcoe_hash_table_entry);
-+
-+	segment_count = hash_table_size + BNX2FC_HASH_TBL_CHUNK_SIZE - 1;
-+	segment_count /= BNX2FC_HASH_TBL_CHUNK_SIZE;
-+	hba->hash_tbl_segment_count = segment_count;
-+
-+	segment_array_size = segment_count * sizeof(*hba->hash_tbl_segments);
-+	hba->hash_tbl_segments = kzalloc(segment_array_size, GFP_KERNEL);
-+	if (!hba->hash_tbl_segments) {
-+		printk(KERN_ERR PFX "hash table pointers alloc failed\n");
-+		return -ENOMEM;
-+	}
-+	dma_segment_array_size = segment_count * sizeof(*dma_segment_array);
-+	dma_segment_array = kzalloc(dma_segment_array_size, GFP_KERNEL);
-+	if (!dma_segment_array) {
-+		printk(KERN_ERR PFX "hash table pointers (dma) alloc failed\n");
++	if (!fc_exch_mgr_alloc(lport, FC_CLASS_3, FCOE_MIN_XID,
++				FCOE_MAX_XID, NULL)) {
++		printk(KERN_ERR PFX "em_config:fc_exch_mgr_alloc failed\n");
 +		return -ENOMEM;
 +	}
 +
-+	for (i = 0; i < segment_count; ++i) {
-+		hba->hash_tbl_segments[i] =
-+			dma_alloc_coherent(&hba->pcidev->dev,
-+					   BNX2FC_HASH_TBL_CHUNK_SIZE,
-+					   &dma_segment_array[i],
-+					   GFP_KERNEL);
-+		bnx2fc_dbg(LOG_INIT, "hash table segment[%i]: %p: %llx\n",
-+		       i, hba->hash_tbl_segments[i],
-+		       dma_segment_array[i]);
-+		if (!hba->hash_tbl_segments[i]) {
-+			printk(KERN_ERR PFX "hash segment alloc failed\n");
-+			while (--i >= 0) {
-+				dma_free_coherent(&hba->pcidev->dev,
-+						    BNX2FC_HASH_TBL_CHUNK_SIZE,
-+						    hba->hash_tbl_segments[i],
-+						    dma_segment_array[i]);
-+				hba->hash_tbl_segments[i] = NULL;
-+			}
-+			kfree(dma_segment_array);
-+			return -ENOMEM;
-+		}
-+		memset(hba->hash_tbl_segments[i], 0,
-+		       BNX2FC_HASH_TBL_CHUNK_SIZE);
-+	}
++	hba->cmd_mgr = bnx2fc_cmd_mgr_alloc(hba, BNX2FC_MIN_XID,
++					    BNX2FC_MAX_XID);
 +
-+	hba->hash_tbl_pbl = dma_alloc_coherent(&hba->pcidev->dev,
-+					       PAGE_SIZE,
-+					       &hba->hash_tbl_pbl_dma,
-+					       GFP_KERNEL);
-+	bnx2fc_dbg(LOG_INIT, "hash table pbl: %p: %llx\n",
-+		       hba->hash_tbl_pbl, hba->hash_tbl_pbl_dma);
-+	if (!hba->hash_tbl_pbl) {
-+		printk(KERN_ERR PFX "hash table pbl alloc failed\n");
-+		kfree(dma_segment_array);
++	if (!hba->cmd_mgr) {
++		printk(KERN_ERR PFX "em_config:bnx2fc_cmd_mgr_alloc failed\n");
++		fc_exch_mgr_free(lport);
 +		return -ENOMEM;
 +	}
-+	memset(hba->hash_tbl_pbl, 0, PAGE_SIZE);
++	return 0;
++}
 +
-+	pbl = hba->hash_tbl_pbl;
-+	for (i = 0; i < segment_count; ++i) {
-+		u64 paddr = dma_segment_array[i];
-+		*pbl = (u32) paddr;
-+		++pbl;
-+		*pbl = (u32) (paddr >> 32);
-+		++pbl;
-+	}
-+	pbl = hba->hash_tbl_pbl;
-+	i = 0;
-+	while (*pbl && *(pbl + 1)) {
-+		u32 lo;
-+		u32 hi;
-+		lo = *pbl;
-+		++pbl;
-+		hi = *pbl;
-+		++pbl;
-+		bnx2fc_dbg(LOG_INIT, "hash table[%d]: 0x%08x%08x\n", i, hi, lo);
-+		++i;
-+	}
-+	kfree(dma_segment_array);
++static int bnx2fc_lport_config(struct fc_lport *lport, struct Scsi_Host *shost)
++{
++	lport->host = shost;
++	lport->link_up = 0;
++	lport->qfull = 0;
++	lport->max_retry_count = 3;
++	lport->max_rport_retry_count = 3;
++	lport->e_d_tov = 2 * 1000;
++	lport->r_a_tov = 10 * 1000;
++
++	/* REVISIT: enable when supporting tape devices
++	lport->service_params = (FCP_SPPF_INIT_FCN | FCP_SPPF_RD_XRDY_DIS |
++				FCP_SPPF_RETRY | FCP_SPPF_CONF_COMPL);
++	*/
++	lport->service_params = (FCP_SPPF_INIT_FCN | FCP_SPPF_RD_XRDY_DIS);
++	lport->does_npiv = 1;
++
++	memset(&lport->rnid_gen, 0, sizeof(struct fc_els_rnid_gen));
++	lport->rnid_gen.rnid_atype = BNX2FC_RNID_HBA;
++
++	/* alloc stats structure */
++	if (fc_lport_init_stats(lport))
++		return -ENOMEM;
++
++	/* Finish fc_lport configuration */
++	fc_lport_config(lport);
++
 +	return 0;
 +}
 +
 +/**
-+ * bnx2fc_setup_fw_resc - Allocate and map hash table and dummy buffer
++ * bnx2fc_fip_recv - handle a received FIP frame.
++ * @skb: the received skb
++ * @dev: associated &net_device
++ * @ptype: the &packet_type structure which was used to register this handler.
++ * @orig_dev: original receive &net_device, in case @ dev is a bond.
 + *
-+ * @hba:	Pointer to adapter structure
-+ *
++ * Returns: 0 for success
 + */
-+int bnx2fc_setup_fw_resc(struct bnx2fc_hba *hba)
++static int bnx2fc_fip_recv(struct sk_buff *skb, struct net_device *dev,
++			   struct packet_type *ptype,
++			   struct net_device *orig_dev)
 +{
-+	u64 addr;
-+	u32 mem_size;
-+	int i;
++	struct bnx2fc_hba *hba;
++	hba = container_of(ptype, struct bnx2fc_hba, fip_packet_type);
++	fcoe_ctlr_recv(&hba->ctlr, skb);
++	return 0;
++}
 +
-+	if (bnx2fc_allocate_hash_table(hba))
-+		return -ENOMEM;
++/**
++ * bnx2fc_update_src_mac() - Update Ethernet MAC filters.
++ * @fip: FCoE controller.
++ * @old: Unicast MAC address to delete if the MAC is non-zero.
++ * @new: Unicast MAC address to add.
++ *
++ * Remove any previously-set unicast MAC filter.
++ * Add secondary FCoE MAC address filter for our OUI.
++ */
++static void bnx2fc_update_src_mac(struct fc_lport *lport, u8 *addr)
++{
++	struct bnx2fc_port *port = lport_priv(lport);
 +
-+	mem_size = BNX2FC_NUM_MAX_SESS * sizeof(struct regpair);
-+	hba->t2_hash_tbl_ptr = dma_alloc_coherent(&hba->pcidev->dev, mem_size,
-+						  &hba->t2_hash_tbl_ptr_dma,
-+						  GFP_KERNEL);
-+	if (!hba->t2_hash_tbl_ptr) {
-+		printk(KERN_ERR PFX "unable to allocate t2 hash table ptr\n");
-+		bnx2fc_free_fw_resc(hba);
-+		return -ENOMEM;
-+	}
-+	memset(hba->t2_hash_tbl_ptr, 0x00, mem_size);
-+	bnx2fc_dbg(LOG_INIT, "t2_hash_tbl_ptr = 0x%p, DMA = 0x%llx\n",
-+		hba->t2_hash_tbl_ptr, hba->t2_hash_tbl_ptr_dma);
++	memcpy(port->data_src_addr, addr, ETH_ALEN);
++}
 +
-+	mem_size = BNX2FC_NUM_MAX_SESS *
-+				sizeof(struct fcoe_t2_hash_table_entry);
-+	hba->t2_hash_tbl = dma_alloc_coherent(&hba->pcidev->dev, mem_size,
-+					      &hba->t2_hash_tbl_dma,
-+					      GFP_KERNEL);
-+	if (!hba->t2_hash_tbl) {
-+		printk(KERN_ERR PFX "unable to allocate t2 hash table\n");
-+		bnx2fc_free_fw_resc(hba);
-+		return -ENOMEM;
-+	}
-+	memset(hba->t2_hash_tbl, 0x00, mem_size);
-+	for (i = 0; i < BNX2FC_NUM_MAX_SESS; i++) {
-+		addr = (unsigned long) hba->t2_hash_tbl_dma +
-+			 ((i+1) * sizeof(struct fcoe_t2_hash_table_entry));
-+		hba->t2_hash_tbl[i].next.lo = addr & 0xffffffff;
-+		hba->t2_hash_tbl[i].next.hi = addr >> 32;
-+	}
-+	bnx2fc_dbg(LOG_INIT, "t2_hash_tbl = 0x%p, DMA = 0x%llx\n",
-+		hba->t2_hash_tbl, hba->t2_hash_tbl_dma);
++/**
++ * bnx2fc_get_src_mac() - return the ethernet source address for an lport
++ * @lport: libfc port
++ */
++static u8 *bnx2fc_get_src_mac(struct fc_lport *lport)
++{
++	struct bnx2fc_port *port;
 +
-+	hba->dummy_buffer = dma_alloc_coherent(&hba->pcidev->dev,
-+					       PAGE_SIZE, &hba->dummy_buf_dma,
-+					       GFP_KERNEL);
-+	if (!hba->dummy_buffer) {
-+		printk(KERN_ERR PFX "unable to alloc MP Dummy Buffer\n");
-+		bnx2fc_free_fw_resc(hba);
-+		return -ENOMEM;
++	port = (struct bnx2fc_port *)lport_priv(lport);
++	return port->data_src_addr;
++}
++/**
++ * bnx2fc_fip_send() - send an Ethernet-encapsulated FIP frame.
++ * @fip: FCoE controller.
++ * @skb: FIP Packet.
++ */
++static void bnx2fc_fip_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
++{
++	skb->dev = bnx2fc_from_ctlr(fip)->netdev;
++	dev_queue_xmit(skb);
++}
++
++static int bnx2fc_vport_create(struct fc_vport *vport, bool disabled)
++{
++	struct Scsi_Host *shost = vport_to_shost(vport);
++	struct fc_lport *n_port = shost_priv(shost);
++	struct bnx2fc_port *port = lport_priv(n_port);
++	struct bnx2fc_hba *hba = port->hba;
++	struct net_device *netdev = hba->netdev;
++	struct fc_lport *vn_port;
++
++	if (!test_bit(BNX2FC_FW_INIT_DONE, &hba->init_done)) {
++		printk(KERN_ERR PFX "vn ports cannot be created on"
++			"this hba\n");
++		return -EIO;
++	}
++	mutex_lock(&bnx2fc_dev_lock);
++	vn_port = bnx2fc_if_create(hba, &vport->dev, 1);
++	mutex_unlock(&bnx2fc_dev_lock);
++
++	if (IS_ERR(vn_port)) {
++		printk(KERN_ERR PFX "bnx2fc_vport_create (%s) failed\n",
++			netdev->name);
++		return -EIO;
 +	}
 +
-+	hba->stats_buffer = dma_alloc_coherent(&hba->pcidev->dev,
-+					       PAGE_SIZE,
-+					       &hba->stats_buf_dma,
-+					       GFP_KERNEL);
-+	if (!hba->stats_buffer) {
-+		printk(KERN_ERR PFX "unable to alloc Stats Buffer\n");
-+		bnx2fc_free_fw_resc(hba);
-+		return -ENOMEM;
++	if (disabled) {
++		fc_vport_set_state(vport, FC_VPORT_DISABLED);
++	} else {
++		vn_port->boot_time = jiffies;
++		fc_fabric_login(vn_port);
++		fc_vport_setlink(vn_port);
 +	}
-+	memset(hba->stats_buffer, 0x00, PAGE_SIZE);
++	return 0;
++}
++
++static int bnx2fc_vport_destroy(struct fc_vport *vport)
++{
++	struct Scsi_Host *shost = vport_to_shost(vport);
++	struct fc_lport *n_port = shost_priv(shost);
++	struct fc_lport *vn_port = vport->dd_data;
++	struct bnx2fc_port *port = lport_priv(vn_port);
++
++	mutex_lock(&n_port->lp_mutex);
++	list_del(&vn_port->list);
++	mutex_unlock(&n_port->lp_mutex);
++	schedule_work(&port->destroy_work);
++	return 0;
++}
++
++static int bnx2fc_vport_disable(struct fc_vport *vport, bool disable)
++{
++	struct fc_lport *lport = vport->dd_data;
++
++	if (disable) {
++		fc_vport_set_state(vport, FC_VPORT_DISABLED);
++		fc_fabric_logoff(lport);
++	} else {
++		lport->boot_time = jiffies;
++		fc_fabric_login(lport);
++		fc_vport_setlink(lport);
++	}
++	return 0;
++}
++
++
++static int bnx2fc_netdev_setup(struct bnx2fc_hba *hba)
++{
++	struct net_device *netdev = hba->netdev;
++	struct net_device *physdev = hba->phys_dev;
++	struct netdev_hw_addr *ha;
++	int sel_san_mac = 0;
++
++	/* Do not support for bonding device */
++	if ((netdev->priv_flags & IFF_MASTER_ALB) ||
++			(netdev->priv_flags & IFF_SLAVE_INACTIVE) ||
++			(netdev->priv_flags & IFF_MASTER_8023AD)) {
++		return -EOPNOTSUPP;
++	}
++
++	/* setup Source MAC Address */
++	rcu_read_lock();
++	for_each_dev_addr(physdev, ha) {
++		bnx2fc_dbg(LOG_INIT, "net_config: ha->type = %d, fip_mac = ",
++			ha->type);
++		printk(KERN_INFO "%2x:%2x:%2x:%2x:%2x:%2x\n", ha->addr[0],
++				ha->addr[1], ha->addr[2], ha->addr[3],
++				ha->addr[4], ha->addr[5]);
++
++		if ((ha->type == NETDEV_HW_ADDR_T_SAN) &&
++		    (is_valid_ether_addr(ha->addr))) {
++			memcpy(hba->ctlr.ctl_src_addr, ha->addr, ETH_ALEN);
++			sel_san_mac = 1;
++			bnx2fc_dbg(LOG_INIT, "Found SAN MAC\n");
++		}
++	}
++	rcu_read_unlock();
++
++	if (!sel_san_mac)
++		return -ENODEV;
++
++	hba->fip_packet_type.func = bnx2fc_fip_recv;
++	hba->fip_packet_type.type = htons(ETH_P_FIP);
++	hba->fip_packet_type.dev = netdev;
++	dev_add_pack(&hba->fip_packet_type);
++
++	hba->fcoe_packet_type.func = bnx2fc_rcv;
++	hba->fcoe_packet_type.type = __constant_htons(ETH_P_FCOE);
++	hba->fcoe_packet_type.dev = netdev;
++	dev_add_pack(&hba->fcoe_packet_type);
 +
 +	return 0;
 +}
 +
-+void bnx2fc_free_fw_resc(struct bnx2fc_hba *hba)
++static int bnx2fc_attach_transport(void)
 +{
-+	u32 mem_size;
++	bnx2fc_transport_template =
++		fc_attach_transport(&bnx2fc_transport_function);
 +
-+	if (hba->stats_buffer) {
-+		dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
-+				  hba->stats_buffer, hba->stats_buf_dma);
-+		hba->stats_buffer = NULL;
++	if (bnx2fc_transport_template == NULL) {
++		printk(KERN_ERR PFX "Failed to attach FC transport\n");
++		return -ENODEV;
 +	}
 +
-+	if (hba->dummy_buffer) {
-+		dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
-+				  hba->dummy_buffer, hba->dummy_buf_dma);
-+		hba->dummy_buffer = NULL;
++	bnx2fc_vport_xport_template =
++		fc_attach_transport(&bnx2fc_vport_xport_function);
++	if (bnx2fc_vport_xport_template == NULL) {
++		printk(KERN_ERR PFX
++		       "Failed to attach FC transport for vport\n");
++		fc_release_transport(bnx2fc_transport_template);
++		bnx2fc_transport_template = NULL;
++		return -ENODEV;
 +	}
-+
-+	if (hba->t2_hash_tbl_ptr) {
-+		mem_size = BNX2FC_NUM_MAX_SESS * sizeof(struct regpair);
-+		dma_free_coherent(&hba->pcidev->dev, mem_size,
-+				    hba->t2_hash_tbl_ptr,
-+				    hba->t2_hash_tbl_ptr_dma);
-+		hba->t2_hash_tbl_ptr = NULL;
-+	}
-+
-+	if (hba->t2_hash_tbl) {
-+		mem_size = BNX2FC_NUM_MAX_SESS *
-+			    sizeof(struct fcoe_t2_hash_table_entry);
-+		dma_free_coherent(&hba->pcidev->dev, mem_size,
-+				    hba->t2_hash_tbl, hba->t2_hash_tbl_dma);
-+		hba->t2_hash_tbl = NULL;
-+	}
-+	bnx2fc_free_hash_table(hba);
++	return 0;
 +}
++static void bnx2fc_release_transport(void)
++{
++	fc_release_transport(bnx2fc_transport_template);
++	fc_release_transport(bnx2fc_vport_xport_template);
++	bnx2fc_transport_template = NULL;
++	bnx2fc_vport_xport_template = NULL;
++}
++
++static void bnx2fc_interface_release(struct kref *kref)
++{
++	struct bnx2fc_hba *hba;
++	struct net_device *netdev;
++	struct net_device *phys_dev;
++
++	hba = container_of(kref, struct bnx2fc_hba, kref);
++	bnx2fc_dbg(LOG_INIT, "Interface is being released hba = 0x%p\n", hba);
++
++	netdev = hba->netdev;
++	phys_dev = hba->phys_dev;
++
++	/* tear-down FIP controller */
++	if (test_and_clear_bit(BNX2FC_CTLR_INIT_DONE, &hba->init_done))
++		fcoe_ctlr_destroy(&hba->ctlr);
++
++	/* Free the command manager */
++	if (hba->cmd_mgr) {
++		bnx2fc_cmd_mgr_free(hba->cmd_mgr);
++		hba->cmd_mgr = NULL;
++	}
++	dev_put(netdev);
++	module_put(THIS_MODULE);
++}
++
++static inline void bnx2fc_interface_get(struct bnx2fc_hba *hba)
++{
++	kref_get(&hba->kref);
++}
++
++static inline void bnx2fc_interface_put(struct bnx2fc_hba *hba)
++{
++	kref_put(&hba->kref, bnx2fc_interface_release);
++}
++static void bnx2fc_interface_destroy(struct bnx2fc_hba *hba)
++{
++	bnx2fc_unbind_pcidev(hba);
++	kfree(hba);
++}
++
++/**
++ * bnx2fc_interface_create - create a new fcoe instance
++ *
++ * @cnic:	pointer to cnic device
++ *
++ * Creates a new FCoE instance on the given device which include allocating
++ *	hba structure, scsi_host and lport structures.
++ */
++static struct bnx2fc_hba *bnx2fc_interface_create(struct cnic_dev *cnic)
++{
++	struct bnx2fc_hba *hba;
++	int rc;
++
++	hba = kzalloc(sizeof(*hba), GFP_KERNEL);
++	if (!hba) {
++		printk(KERN_ERR PFX "Unable to allocate hba structure\n");
++		return NULL;
++	}
++	spin_lock_init(&hba->hba_lock);
++	mutex_init(&hba->hba_mutex);
++
++	hba->cnic = cnic;
++	rc = bnx2fc_bind_pcidev(hba);
++	if (rc)
++		goto bind_err;
++	hba->phys_dev = cnic->netdev;
++	/* will get overwritten after we do vlan discovery */
++	hba->netdev = hba->phys_dev;
++
++	init_waitqueue_head(&hba->shutdown_wait);
++	hba->num_ofld_sess = 0;
++
++	init_waitqueue_head(&hba->destroy_wait);
++	return hba;
++bind_err:
++	printk(KERN_ERR PFX "create_interface: bind error\n");
++	kfree(hba);
++	return NULL;
++}
++
++static int bnx2fc_interface_setup(struct bnx2fc_hba *hba,
++				  enum fip_state fip_mode)
++{
++	int rc = 0;
++	struct net_device *netdev = hba->netdev;
++
++	dev_hold(netdev);
++	kref_init(&hba->kref);
++
++	/* Initialize FIP */
++	fcoe_ctlr_init(&hba->ctlr, fip_mode);
++
++	hba->ctlr.send = bnx2fc_fip_send;
++	hba->ctlr.update_mac = bnx2fc_update_src_mac;
++	hba->ctlr.get_src_addr = bnx2fc_get_src_mac;
++	set_bit(BNX2FC_CTLR_INIT_DONE, &hba->init_done);
++
++	rc = bnx2fc_netdev_setup(hba);
++	if (rc)
++		goto setup_err;
++
++	return 0;
++
++setup_err:
++	fcoe_ctlr_destroy(&hba->ctlr);
++	dev_put(netdev);
++	bnx2fc_interface_put(hba);
++	return rc;
++}
++
++/**
++ * bnx2fc_if_create() - Create FCoE instance on a given interface
++ *
++ * @hba:	FCoE interface to create a local port on
++ * @parent:	Device pointer to be the parent in sysfs for the SCSI host
++ * @npiv:	Indicates if the port is vport or not
++ *
++ * Creates a fc_lport instance and a Scsi_Host instance and configure them.
++ *
++ * Returns:	Allocated fc_lport or an error pointer
++ */
++static struct fc_lport *bnx2fc_if_create(struct bnx2fc_hba *hba,
++				  struct device *parent, int npiv)
++{
++	struct fc_lport		*lport = NULL;
++	struct bnx2fc_port	*port;
++	struct Scsi_Host	*shost;
++	struct fc_vport		*vport = dev_to_vport(parent);
++	int			rc = 0;
++
++	/* Allocate Scsi_Host structure */
++	if (!npiv) {
++		lport = libfc_host_alloc(&bnx2fc_shost_template,
++					  sizeof(struct bnx2fc_port));
++	} else {
++		lport = libfc_vport_create(vport,
++					   sizeof(struct bnx2fc_port));
++	}
++
++	if (!lport) {
++		printk(KERN_ERR PFX "could not allocate scsi host structure\n");
++		return NULL;
++	}
++	shost = lport->host;
++	port = lport_priv(lport);
++	port->lport = lport;
++	port->hba = hba;
++	INIT_WORK(&port->destroy_work, bnx2fc_destroy_work);
++
++	/* Configure bnx2fc_port */
++	rc = bnx2fc_lport_config(lport, shost);
++	if (rc)
++		goto lp_config_err;
++
++	if (npiv) {
++		vport = dev_to_vport(parent);
++		printk(KERN_ERR PFX "Setting vport names, 0x%llX 0x%llX\n",
++			vport->node_name, vport->port_name);
++		fc_set_wwnn(lport, vport->node_name);
++		fc_set_wwpn(lport, vport->port_name);
++	}
++	/* Configure netdev and networking properties of the lport */
++	rc = bnx2fc_net_config(lport);
++	if (rc) {
++		printk(KERN_ERR PFX "Error on bnx2fc_net_config\n");
++		goto lp_config_err;
++	}
++
++	rc = bnx2fc_shost_config(lport);
++	if (rc) {
++		printk(KERN_ERR PFX "Couldnt configure shost for %s\n",
++			hba->netdev->name);
++		goto lp_config_err;
++	}
++
++	/* Initialize the libfc library */
++	rc = fcoe_libfc_config(lport, &hba->ctlr, &bnx2fc_libfc_fcn_templ, 1);
++	if (rc) {
++		printk(KERN_ERR PFX "Couldnt configure libfc\n");
++		goto shost_err;
++	}
++	fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
++
++	/* Allocate exchange manager */
++	if (!npiv) {
++		rc = bnx2fc_em_config(lport);
++		if (rc) {
++			printk(KERN_ERR PFX "Error on bnx2fc_em_config\n");
++			goto shost_err;
++		}
++	}
++
++	bnx2fc_interface_get(hba);
++	return lport;
++
++shost_err:
++	scsi_remove_host(shost);
++lp_config_err:
++	scsi_host_put(lport->host);
++	return NULL;
++}
++
++static void bnx2fc_netdev_cleanup(struct bnx2fc_hba *hba)
++{
++	/* Dont listen for Ethernet packets anymore */
++	__dev_remove_pack(&hba->fcoe_packet_type);
++	__dev_remove_pack(&hba->fip_packet_type);
++	synchronize_net();
++}
++
++static void bnx2fc_if_destroy(struct fc_lport *lport)
++{
++	struct bnx2fc_port *port = lport_priv(lport);
++	struct bnx2fc_hba *hba = port->hba;
++
++	bnx2fc_dbg(LOG_INIT, "ENTERED bnx2fc_if_destroy\n");
++	/* Stop the transmit retry timer */
++	del_timer_sync(&port->timer);
++
++	/* Free existing transmit skbs */
++	bnx2fc_clean_pending_queue(lport);
++
++	bnx2fc_interface_put(hba);
++
++	/* Free queued packets for the receive thread */
++	bnx2fc_clean_rx_queue(lport);
++
++	/* Detach from scsi-ml */
++	fc_remove_host(lport->host);
++	scsi_remove_host(lport->host);
++
++	/*
++	 * Note that only the physical lport will have the exchange manager.
++	 * for vports, this function is NOP
++	 */
++	fc_exch_mgr_free(lport);
++
++	/* Free memory used by statistical counters */
++	fc_lport_free_stats(lport);
++
++	/* Release Scsi_Host */
++	scsi_host_put(lport->host);
++}
++
++/**
++ * bnx2fc_destroy() - Destroy a bnx2fc FCoE interface
++ * @buffer: The name of the Ethernet interface to be destroyed
++ * @kp:     The associated kernel parameter
++ *
++ * Called from sysfs.
++ *
++ * Returns: 0 for success
++ */
++static int bnx2fc_destroy(const char *buffer, struct kernel_param *kp)
++{
++	struct bnx2fc_hba *hba = NULL;
++	struct net_device *netdev;
++	struct net_device *phys_dev;
++	int rc = 0;
++
++	if (!rtnl_trylock())
++		return restart_syscall();
++
++	mutex_lock(&bnx2fc_dev_lock);
++#ifdef CONFIG_SCSI_BNX2X_FCOE_MODULE
++	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
++		rc = -ENODEV;
++		goto netdev_err;
++	}
++#endif
++	netdev = bnx2fc_if_to_netdev(buffer);
++	if (!netdev) {
++		rc = -ENODEV;
++		goto netdev_err;
++	}
++
++	/* obtain physical netdev */
++	if (netdev->priv_flags & IFF_802_1Q_VLAN)
++		phys_dev = vlan_dev_real_dev(netdev);
++	else {
++		printk(KERN_ERR PFX "Not a vlan device\n");
++		rc = -ENODEV;
++		goto put_err;
++	}
++
++	hba = bnx2fc_hba_lookup(phys_dev);
++	if (!hba) {
++		rc = -ENODEV;
++		printk(KERN_ERR PFX "bnx2fc_destroy: hba not found\n");
++		goto hba_err;
++	}
++
++	if (!test_bit(BNX2FC_CREATE_DONE, &hba->init_done)) {
++		printk(KERN_ERR PFX "bnx2fc_destroy: Create not called\n");
++		goto put_err;
++	}
++
++	bnx2fc_netdev_cleanup(hba);
++
++	bnx2fc_stop(hba);
++
++	bnx2fc_if_destroy(hba->ctlr.lp);
++
++	destroy_workqueue(hba->timer_work_queue);
++
++hba_err:
++	clear_bit(BNX2FC_CREATE_DONE, &hba->init_done);
++put_err:
++	dev_put(netdev);
++netdev_err:
++	mutex_unlock(&bnx2fc_dev_lock);
++	rtnl_unlock();
++	return rc;
++}
++
++static void bnx2fc_destroy_work(struct work_struct *work)
++{
++	struct bnx2fc_port *port;
++	struct fc_lport *lport;
++
++	bnx2fc_dbg(LOG_INIT, "Entered bnx2fc_destroy_work\n");
++	port = container_of(work, struct bnx2fc_port, destroy_work);
++	lport = port->lport;
++
++	bnx2fc_port_shutdown(lport);
++	rtnl_lock();
++	mutex_lock(&bnx2fc_dev_lock);
++	bnx2fc_if_destroy(lport);
++	mutex_unlock(&bnx2fc_dev_lock);
++	rtnl_unlock();
++}
++
++static void bnx2fc_unbind_adapter_devices(struct bnx2fc_hba *hba)
++{
++	bnx2fc_dbg(LOG_INIT, "ENTERED unbind_adapter\n");
++	bnx2fc_free_fw_resc(hba);
++	bnx2fc_free_task_ctx(hba);
++}
++
++/**
++ * bnx2fc_bind_adapter_devices - binds bnx2fc adapter with the associated
++ *			pci structure
++ * @hba:		Adapter instance
++ */
++static int bnx2fc_bind_adapter_devices(struct bnx2fc_hba *hba)
++{
++	if (bnx2fc_setup_task_ctx(hba))
++		goto mem_err;
++
++	if (bnx2fc_setup_fw_resc(hba))
++		goto mem_err;
++
++	return 0;
++mem_err:
++	bnx2fc_unbind_adapter_devices(hba);
++	return -ENOMEM;
++}
++
++static int bnx2fc_bind_pcidev(struct bnx2fc_hba *hba)
++{
++	struct cnic_dev *cnic;
++
++	if (!hba->cnic) {
++		printk(KERN_ERR PFX "cnic is NULL\n");
++		return -ENODEV;
++	}
++	cnic = hba->cnic;
++	hba->pcidev = cnic->pcidev;
++	if (hba->pcidev)
++		pci_dev_get(hba->pcidev);
++
++	return 0;
++}
++
++static void bnx2fc_unbind_pcidev(struct bnx2fc_hba *hba)
++{
++	if (hba->pcidev)
++		pci_dev_put(hba->pcidev);
++	hba->pcidev = NULL;
++}
++
++/**
++ * bnx2fc_ulp_start - cnic callback to initialize & start adapter instance
++ *
++ * @handle:	transport handle pointing to adapter struture
++ *
++ * This function maps adapter structure to pcidev structure and initiates
++ *	firmware handshake to enable/initialize on-chip FCoE components.
++ *	This bnx2fc - cnic interface api callback is used after following
++ *	conditions are met -
++ *	a) underlying network interface is up (marked by event NETDEV_UP
++ *		from netdev
++ *	b) bnx2fc adatper structure is registered.
++ */
++static void bnx2fc_ulp_start(void *handle)
++{
++#define BNX2FC_INIT_POLL_TIME		(1000 / HZ)
++	struct bnx2fc_hba *hba = handle;
++	struct fc_lport *lport = hba->ctlr.lp;
++	int rc = 0;
++	int i = HZ;
++
++	bnx2fc_dbg(LOG_INIT, "Entered bnx2fc_ulp_start hba = %p\n", hba);
++	mutex_lock(&bnx2fc_dev_lock);
++
++	if (test_bit(BNX2FC_FW_INIT_DONE, &hba->init_done))
++		goto start_disc;
++
++	rc = bnx2fc_bind_adapter_devices(hba);
++	if (rc) {
++		printk(KERN_ALERT PFX
++			"bnx2fc_bind_adapter_devices failed - rc = %d\n", rc);
++		mutex_unlock(&bnx2fc_dev_lock);
++		return;
++	}
++	rc = bnx2fc_send_fw_fcoe_init_msg(hba);
++	if (rc) {
++		printk(KERN_ALERT PFX
++			"bnx2fc_send_fw_fcoe_init_msg failed - rc = %d\n", rc);
++		bnx2fc_unbind_adapter_devices(hba);
++		mutex_unlock(&bnx2fc_dev_lock);
++		return;
++	}
++	/*
++	 * Wait until the adapter init message is complete, and adapter
++	 * state is UP.
++	 */
++	while (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state) && i--)
++		msleep(BNX2FC_INIT_POLL_TIME);
++
++	if (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state)) {
++		printk(KERN_ERR PFX "bnx2fc_start: %s failed to initialize.  "
++			"Ignoring...\n",
++			hba->cnic->netdev->name);
++		bnx2fc_unbind_adapter_devices(hba);
++		mutex_unlock(&bnx2fc_dev_lock);
++		return;
++	}
++	/* Mark HBA to indicate that the FW INIT is done */
++	set_bit(BNX2FC_FW_INIT_DONE, &hba->init_done);
++start_disc:
++	mutex_unlock(&bnx2fc_dev_lock);
++
++	bnx2fc_dbg(LOG_INIT, "bnx2fc started.\n");
++
++	/* Kick off Fabric discovery*/
++	if (test_bit(BNX2FC_CREATE_DONE, &hba->init_done)) {
++		printk(KERN_ERR PFX "ulp_init: start discovery\n");
++		lport->tt.frame_send = bnx2fc_xmit;
++		bnx2fc_start_disc(hba);
++	}
++	return;
++}
++
++static void bnx2fc_port_shutdown(struct fc_lport *lport)
++{
++
++	bnx2fc_dbg(LOG_INIT, "ENTERED bnx2fc_port_shutdown\n");
++	fc_fabric_logoff(lport);
++	fc_lport_destroy(lport);
++}
++
++static void bnx2fc_stop(struct bnx2fc_hba *hba)
++{
++	struct fc_lport *lport;
++
++	bnx2fc_dbg(LOG_INIT, "ENTERED bnx2fc_stop - init_done = %ld\n",
++		   hba->init_done);
++	if (test_bit(BNX2FC_FW_INIT_DONE, &hba->init_done) &&
++	    test_bit(BNX2FC_CREATE_DONE, &hba->init_done)) {
++		lport = hba->ctlr.lp;
++		bnx2fc_port_shutdown(lport);
++		bnx2fc_dbg(LOG_INIT, "bnx2fc_stop: waiting for %d "
++				"offloaded sessions\n",
++				hba->num_ofld_sess);
++		wait_event_interruptible(hba->shutdown_wait,
++					 (hba->num_ofld_sess == 0));
++		mutex_lock(&hba->hba_mutex);
++		clear_bit(ADAPTER_STATE_UP, &hba->adapter_state);
++		clear_bit(ADAPTER_STATE_GOING_DOWN, &hba->adapter_state);
++		fc_host_port_type(lport->host) = FC_PORTTYPE_UNKNOWN;
++
++		clear_bit(ADAPTER_STATE_READY, &hba->adapter_state);
++		mutex_unlock(&hba->hba_mutex);
++	}
++}
++
++static void bnx2fc_fw_destroy(struct bnx2fc_hba *hba)
++{
++	if (test_and_clear_bit(BNX2FC_FW_INIT_DONE, &hba->init_done)) {
++		if (bnx2fc_send_fw_fcoe_destroy_msg(hba) == 0) {
++			init_timer(&hba->destroy_timer);
++			hba->destroy_timer.expires = (20 * HZ) + jiffies;
++			hba->destroy_timer.function = bnx2fc_destroy_timer;
++			hba->destroy_timer.data = (unsigned long)hba;
++			add_timer(&hba->destroy_timer);
++			wait_event_interruptible(hba->destroy_wait,
++						 (hba->flags &
++						  BNX2FC_FLAG_DESTROY_CMPL));
++			/* This should never happen */
++			bnx2fc_dbg(LOG_INIT, "hba->flags = 0x%x\n", hba->flags);
++			if (signal_pending(current))
++				flush_signals(current);
++
++			del_timer_sync(&hba->destroy_timer);
++		}
++		bnx2fc_unbind_adapter_devices(hba);
++	}
++}
++
++/**
++ * bnx2fc_ulp_stop - cnic callback to shutdown adapter instance
++ * @handle:	transport handle pointing to adapter structure
++ *
++ * Driver checks if adapter is already in shutdown mode, if not start
++ *	the shutdown process.
++ */
++static void bnx2fc_ulp_stop(void *handle)
++{
++	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)handle;
++
++	printk(KERN_ERR "ULP_STOP\n");
++
++	mutex_lock(&bnx2fc_dev_lock);
++	bnx2fc_stop(hba);
++	bnx2fc_fw_destroy(hba);
++	mutex_unlock(&bnx2fc_dev_lock);
++}
++
++static void bnx2fc_start_disc(struct bnx2fc_hba *hba)
++{
++	struct fc_lport *lport;
++	int wait_cnt = 0;
++
++	printk(KERN_ERR PFX "Entered bnx2fc_start_disc\n");
++	/* Kick off FIP/FLOGI */
++	if (!test_bit(BNX2FC_FW_INIT_DONE, &hba->init_done)) {
++		printk(KERN_ERR PFX "Init not done yet\n");
++		return;
++	}
++
++	lport = hba->ctlr.lp;
++	bnx2fc_dbg(LOG_INIT, "calling fc_fabric_login\n");
++
++	if (!bnx2fc_link_ok(lport)) {
++		bnx2fc_dbg(LOG_INIT, "init_one - ctlr_link_up\n");
++		fcoe_ctlr_link_up(&hba->ctlr);
++		fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
++		set_bit(ADAPTER_STATE_READY, &hba->adapter_state);
++	}
++
++	/* wait for the FCF to be selected before issuing FLOGI */
++	while (!hba->ctlr.sel_fcf) {
++		msleep(250);
++		/* give up after 3 secs */
++		if (++wait_cnt > 12)
++			break;
++	}
++	fc_lport_init(lport);
++	fc_fabric_login(lport);
++	return;
++}
++
++
++static struct net_device *bnx2fc_if_to_netdev(const char *buffer)
++{
++	char *cp;
++	char ifname[IFNAMSIZ + 2];
++
++	if (buffer) {
++		strlcpy(ifname, buffer, IFNAMSIZ);
++		cp = ifname + strlen(ifname);
++		while (--cp >= ifname && *cp == '\n')
++			*cp = '\0';
++		return dev_get_by_name(&init_net, ifname);
++	}
++	return NULL;
++}
++
++/**
++ * bnx2fc_ulp_init - Initialize an adapter instance
++ *
++ * @dev :	cnic device handle
++ * Called from cnic_register_driver() context to initialize all
++ *	enumerated cnic devices. This routine allocates adapter structure
++ *	and other device specific resources.
++ */
++static void bnx2fc_ulp_init(struct cnic_dev *dev)
++{
++	struct bnx2fc_hba *hba;
++	int rc = 0;
++
++	bnx2fc_dbg(LOG_INIT, "bnx2fc_ulp_init\n");
++	/* bnx2fc works only when bnx2x is loaded */
++	if (!test_bit(CNIC_F_BNX2X_CLASS, &dev->flags)) {
++		printk(KERN_ERR PFX "bnx2fc FCoE not supported on %s,"
++				    " flags: %lx\n",
++			dev->netdev->name, dev->flags);
++		return;
++	}
++
++	/* Configure FCoE interface */
++	hba = bnx2fc_interface_create(dev);
++	if (!hba) {
++		printk(KERN_ERR PFX "hba initialization failed\n");
++		return;
++	}
++
++	/* Add HBA to the adapter list */
++	mutex_lock(&bnx2fc_dev_lock);
++	list_add_tail(&hba->link, &adapter_list);
++	adapter_count++;
++	mutex_unlock(&bnx2fc_dev_lock);
++
++	clear_bit(BNX2FC_CNIC_REGISTERED, &hba->reg_with_cnic);
++	rc = dev->register_device(dev, CNIC_ULP_FCOE,
++						(void *) hba);
++	if (rc) {
++		printk(KERN_ALERT PFX "register_device failed, rc = %d\n", rc);
++		return;
++	} else {
++		set_bit(BNX2FC_CNIC_REGISTERED, &hba->reg_with_cnic);
++	}
++	return;
++}
++
++/**
++ * bnx2fc_create() - Create bnx2fc FCoE interface
++ * @buffer: The name of Ethernet interface to create on
++ * @kp:     The associated kernel param
++ *
++ * Called from sysfs.
++ *
++ * Returns: 0 for success
++ */
++static int bnx2fc_create(const char *buffer, struct kernel_param *kp)
++{
++	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
++	struct bnx2fc_hba *hba;
++	struct cnic_dev *dev;
++	struct net_device *netdev;
++	struct net_device *phys_dev;
++	struct fc_lport *lport;
++	struct ethtool_drvinfo drvinfo;
++	int rc = 0;
++	int vlan_id;
++
++	bnx2fc_dbg(LOG_INIT, "Entered bnx2fc_create\n");
++	if (!rtnl_trylock()) {
++		printk(KERN_ERR "trying for rtnl_lock\n");
++		return restart_syscall();
++	}
++	mutex_lock(&bnx2fc_dev_lock);
++
++#ifdef CONFIG_SCSI_BNX2X_FCOE_MODULE
++	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
++		rc = -ENODEV;
++		goto mod_err;
++	}
++#endif
++
++	if (!try_module_get(THIS_MODULE)) {
++		rc = -EINVAL;
++		goto mod_err;
++	}
++
++	netdev = bnx2fc_if_to_netdev(buffer);
++	if (!netdev) {
++		rc = -EINVAL;
++		goto netdev_err;
++	}
++
++	/* obtain physical netdev */
++	if (netdev->priv_flags & IFF_802_1Q_VLAN) {
++		phys_dev = vlan_dev_real_dev(netdev);
++		vlan_id = vlan_dev_vlan_id(netdev);
++	} else {
++		printk(KERN_ERR PFX "Not a vlan device\n");
++		rc = -EINVAL;
++		goto putdev_err;
++	}
++	/* verify if the physical device is a netxtreme2 device */
++	if (phys_dev->ethtool_ops && phys_dev->ethtool_ops->get_drvinfo) {
++		memset(&drvinfo, 0, sizeof(drvinfo));
++		phys_dev->ethtool_ops->get_drvinfo(phys_dev, &drvinfo);
++		if (strcmp(drvinfo.driver, "bnx2x")) {
++			printk(KERN_ERR PFX "Not a netxtreme2 device\n");
++			rc = -EINVAL;
++			goto putdev_err;
++		}
++	} else {
++		printk(KERN_ERR PFX "unable to obtain drv_info\n");
++		rc = -EINVAL;
++		goto putdev_err;
++	}
++
++	printk(KERN_ERR PFX "phys_dev is netxtreme2 device\n");
++
++	/* obtain hba and initialize rest of the structure */
++	hba = bnx2fc_hba_lookup(phys_dev);
++	if (!hba) {
++		rc = -ENODEV;
++		printk(KERN_ERR PFX "bnx2fc_create: hba not found\n");
++		goto putdev_err;
++	}
++
++	if (test_bit(BNX2FC_CREATE_DONE, &hba->init_done)) {
++		rc = -EEXIST;
++		goto putdev_err;
++	}
++
++	/* update netdev with vlan netdev */
++	hba->netdev = netdev;
++	dev = hba->cnic;
++	hba->vlan_id = vlan_id;
++	hba->vlan_enabled = 1;
++
++	rc = bnx2fc_interface_setup(hba, fip_mode);
++	if (rc) {
++		printk(KERN_ERR PFX "bnx2fc_interface_setup failed\n");
++		goto ifput_err;
++	}
++
++	hba->jiffies_at_init = jiffies;
++
++	hba->timer_work_queue =
++			create_singlethread_workqueue("bnx2fc_timer_wq");
++	if (!hba->timer_work_queue) {
++		printk(KERN_ERR PFX "ulp_init could not create timer_wq\n");
++		rc = -EINVAL;
++		goto ifput_err;
++	}
++
++	lport = bnx2fc_if_create(hba, &netdev->dev, 0);
++	if (!lport) {
++		printk(KERN_ERR PFX "Failed to create interface (%s)\n",
++			netdev->name);
++		bnx2fc_netdev_cleanup(hba);
++		rc = -EINVAL;
++		goto if_create_err;
++	}
++
++	lport->boot_time = jiffies;
++
++	/* Make this master N_port */
++	hba->ctlr.lp = lport;
++
++	set_bit(BNX2FC_CREATE_DONE, &hba->init_done);
++	printk(KERN_ERR PFX "create: START DISC\n");
++	bnx2fc_start_disc(hba);
++	/*
++	 * Release from kref_init in bnx2fc_interface_setup, on success
++	 * lport should be holding a reference taken in bnx2fc_if_create
++	 */
++	bnx2fc_interface_put(hba);
++	/* put netdev that was held while calling dev_get_by_name */
++	dev_put(netdev);
++	mutex_unlock(&bnx2fc_dev_lock);
++	rtnl_unlock();
++	return 0;
++
++if_create_err:
++	destroy_workqueue(hba->timer_work_queue);
++ifput_err:
++	bnx2fc_interface_put(hba);
++putdev_err:
++	dev_put(netdev);
++netdev_err:
++	module_put(THIS_MODULE);
++mod_err:
++	mutex_unlock(&bnx2fc_dev_lock);
++	rtnl_unlock();
++	return rc;
++}
++
++/**
++ * bnx2fc_find_hba_for_cnic - maps cnic instance to bnx2fc adapter instance
++ *
++ * @cnic:	Pointer to cnic device instance
++ *
++ **/
++static struct bnx2fc_hba *bnx2fc_find_hba_for_cnic(struct cnic_dev *cnic)
++{
++	struct list_head *list;
++	struct list_head *temp;
++	struct bnx2fc_hba *hba;
++
++	/* Called with bnx2fc_dev_lock held */
++	list_for_each_safe(list, temp, &adapter_list) {
++		hba = (struct bnx2fc_hba *)list;
++		if (hba->cnic == cnic)
++			return hba;
++	}
++	return NULL;
++}
++
++static struct bnx2fc_hba *bnx2fc_hba_lookup(struct net_device *phys_dev)
++{
++	struct list_head *list;
++	struct list_head *temp;
++	struct bnx2fc_hba *hba;
++
++	/* Called with bnx2fc_dev_lock held */
++	list_for_each_safe(list, temp, &adapter_list) {
++		hba = (struct bnx2fc_hba *)list;
++		if (hba->phys_dev == phys_dev)
++			return hba;
++	}
++	printk(KERN_ERR PFX "hba_lookup: hba NULL\n");
++	return NULL;
++}
++
++/**
++ * bnx2fc_ulp_exit - shuts down adapter instance and frees all resources
++ *
++ * @dev		cnic device handle
++ */
++static void bnx2fc_ulp_exit(struct cnic_dev *dev)
++{
++	struct bnx2fc_hba *hba;
++
++	bnx2fc_dbg(LOG_INIT, "Entered bnx2fc_ulp_exit\n");
++
++	if (!test_bit(CNIC_F_BNX2X_CLASS, &dev->flags)) {
++		printk(KERN_ERR PFX "bnx2fc port check: %s, flags: %lx\n",
++			dev->netdev->name, dev->flags);
++		return;
++	}
++
++	mutex_lock(&bnx2fc_dev_lock);
++	hba = bnx2fc_find_hba_for_cnic(dev);
++	if (!hba) {
++		printk(KERN_ERR PFX "bnx2fc_ulp_exit: hba not found, dev 0%p\n",
++		       dev);
++		mutex_unlock(&bnx2fc_dev_lock);
++		return;
++	}
++
++	bnx2fc_dbg(LOG_INIT, "removed hba 0x%p from adapter list\n", hba);
++	list_del_init(&hba->link);
++	adapter_count--;
++
++	if (test_bit(BNX2FC_CREATE_DONE, &hba->init_done)) {
++		/* destroy not called yet, move to quiesced list */
++		bnx2fc_netdev_cleanup(hba);
++		bnx2fc_if_destroy(hba->ctlr.lp);
++	}
++	mutex_unlock(&bnx2fc_dev_lock);
++
++	bnx2fc_ulp_stop(hba);
++	/* unregister cnic device */
++	if (test_and_clear_bit(BNX2FC_CNIC_REGISTERED, &hba->reg_with_cnic))
++		hba->cnic->unregister_device(hba->cnic, CNIC_ULP_FCOE);
++	bnx2fc_interface_destroy(hba);
++}
++
++/**
++ * bnx2fc_fcoe_reset() - Resets the fcoe
++ * @shost: shost the reset is from
++ *
++ * Returns: always 0
++ */
++static int bnx2fc_fcoe_reset(struct Scsi_Host *shost)
++{
++	struct fc_lport *lport = shost_priv(shost);
++	fc_lport_reset(lport);
++	return 0;
++}
++
++/**
++ * bnx2fc_mod_init - module init entry point
++ *
++ * Initialize driver wide global data structures, and register
++ * with cnic module
++ **/
++static int __init bnx2fc_mod_init(void)
++{
++	struct bnx2fc_global_s *bg;
++	struct task_struct *l2_thread;
++	int rc = 0;
++
++	printk(KERN_INFO PFX "%s", version);
++	INIT_LIST_HEAD(&adapter_list);
++	mutex_init(&bnx2fc_dev_lock);
++
++	adapter_count = 0;
++
++	/* Attach FC transport template */
++	rc = bnx2fc_attach_transport();
++	if (rc)
++		return rc;
++
++	bg = &bnx2fc_global;
++	skb_queue_head_init(&bg->fcoe_rx_list);
++	l2_thread = kthread_create(bnx2fc_l2_rcv_thread,
++				   (void *)bg,
++				   "bnx2fc_l2_thread");
++	if (IS_ERR(bg->l2_thread)) {
++		rc = PTR_ERR(l2_thread);
++		return rc;
++	}
++	wake_up_process(l2_thread);
++	spin_lock_bh(&bg->fcoe_rx_list.lock);
++	bg->l2_thread = l2_thread;
++	spin_unlock_bh(&bg->fcoe_rx_list.lock);
++
++	cnic_register_driver(CNIC_ULP_FCOE, &bnx2fc_cnic_cb);
++	return 0;
++}
++
++static void __exit bnx2fc_mod_exit(void)
++{
++	LIST_HEAD(to_be_deleted);
++	struct bnx2fc_hba *hba, *next;
++	struct bnx2fc_global_s *bg;
++	struct task_struct *l2_thread;
++	struct sk_buff *skb;
++
++	/*
++	 * NOTE: Since cnic calls register_driver routine rtnl_lock,
++	 * it will have higher precedence than bnx2fc_dev_lock.
++	 * unregister_device() cannot be called with bnx2fc_dev_lock
++	 * held.
++	 */
++	mutex_lock(&bnx2fc_dev_lock);
++	list_splice(&adapter_list, &to_be_deleted);
++	INIT_LIST_HEAD(&adapter_list);
++	adapter_count = 0;
++	mutex_unlock(&bnx2fc_dev_lock);
++
++	/* Unregister with cnic */
++	list_for_each_entry_safe(hba, next, &to_be_deleted, link) {
++		list_del_init(&hba->link);
++		printk(KERN_ERR PFX "MOD_EXIT:destroy hba = 0x%p, kref = %d\n",
++			hba, atomic_read(&hba->kref.refcount));
++		bnx2fc_ulp_stop(hba);
++		/* unregister cnic device */
++		if (test_and_clear_bit(BNX2FC_CNIC_REGISTERED,
++				       &hba->reg_with_cnic))
++			hba->cnic->unregister_device(hba->cnic, CNIC_ULP_FCOE);
++		bnx2fc_interface_destroy(hba);
++	}
++	cnic_unregister_driver(CNIC_ULP_FCOE);
++
++	/* Destroy global thread */
++	bg = &bnx2fc_global;
++	spin_lock_bh(&bg->fcoe_rx_list.lock);
++	l2_thread = bg->l2_thread;
++	bg->l2_thread = NULL;
++	while ((skb = __skb_dequeue(&bg->fcoe_rx_list)) != NULL)
++		kfree_skb(skb);
++
++	spin_unlock_bh(&bg->fcoe_rx_list.lock);
++
++	if (l2_thread)
++		kthread_stop(l2_thread);
++
++	/* flush any async interface destroy */
++	flush_scheduled_work();
++	/* flush out VN_Ports scheduled for destruction */
++	flush_scheduled_work();
++	/*
++	 * detach from scsi transport
++	 * must happen after all destroys are done
++	 */
++	bnx2fc_release_transport();
++}
++
++module_init(bnx2fc_mod_init);
++module_exit(bnx2fc_mod_exit);
++
++static struct fc_function_template bnx2fc_transport_function = {
++	.show_host_node_name = 1,
++	.show_host_port_name = 1,
++	.show_host_supported_classes = 1,
++	.show_host_supported_fc4s = 1,
++	.show_host_active_fc4s = 1,
++	.show_host_maxframe_size = 1,
++
++	.show_host_port_id = 1,
++	.show_host_supported_speeds = 1,
++	.get_host_speed = fc_get_host_speed,
++	.show_host_speed = 1,
++	.show_host_port_type = 1,
++	.get_host_port_state = fc_get_host_port_state,
++	.show_host_port_state = 1,
++	.show_host_symbolic_name = 1,
++
++	.dd_fcrport_size = (sizeof(struct fc_rport_libfc_priv) +
++				sizeof(struct bnx2fc_rport)),
++	.show_rport_maxframe_size = 1,
++	.show_rport_supported_classes = 1,
++
++	.show_host_fabric_name = 1,
++	.show_starget_node_name = 1,
++	.show_starget_port_name = 1,
++	.show_starget_port_id = 1,
++	.set_rport_dev_loss_tmo = fc_set_rport_loss_tmo,
++	.show_rport_dev_loss_tmo = 1,
++	.get_fc_host_stats = bnx2fc_get_host_stats,
++
++	.issue_fc_host_lip = bnx2fc_fcoe_reset,
++
++	.vport_create = bnx2fc_vport_create,
++	.vport_delete = bnx2fc_vport_destroy,
++	.vport_disable = bnx2fc_vport_disable,
++};
++
++static struct fc_function_template bnx2fc_vport_xport_function = {
++	.show_host_node_name = 1,
++	.show_host_port_name = 1,
++	.show_host_supported_classes = 1,
++	.show_host_supported_fc4s = 1,
++	.show_host_active_fc4s = 1,
++	.show_host_maxframe_size = 1,
++
++	.show_host_port_id = 1,
++	.show_host_supported_speeds = 1,
++	.get_host_speed = fc_get_host_speed,
++	.show_host_speed = 1,
++	.show_host_port_type = 1,
++	.get_host_port_state = fc_get_host_port_state,
++	.show_host_port_state = 1,
++	.show_host_symbolic_name = 1,
++
++	.dd_fcrport_size = (sizeof(struct fc_rport_libfc_priv) +
++				sizeof(struct bnx2fc_rport)),
++	.show_rport_maxframe_size = 1,
++	.show_rport_supported_classes = 1,
++
++	.show_host_fabric_name = 1,
++	.show_starget_node_name = 1,
++	.show_starget_port_name = 1,
++	.show_starget_port_id = 1,
++	.set_rport_dev_loss_tmo = fc_set_rport_loss_tmo,
++	.show_rport_dev_loss_tmo = 1,
++	.get_fc_host_stats = fc_get_host_stats,
++	.issue_fc_host_lip = bnx2fc_fcoe_reset,
++};
++
++/**
++ * scsi_host_template structure used while registering with SCSI-ml
++ */
++static struct scsi_host_template bnx2fc_shost_template = {
++	.module			= THIS_MODULE,
++	.name			= "Broadcom Offload FCoE Initiator",
++	.queuecommand		= bnx2fc_queuecommand,
++	.eh_abort_handler	= bnx2fc_eh_abort,	  /* abts */
++	.eh_device_reset_handler = bnx2fc_eh_device_reset, /* lun reset */
++	.eh_target_reset_handler = bnx2fc_eh_target_reset, /* tgt reset */
++	.eh_host_reset_handler	= fc_eh_host_reset,
++	.slave_alloc		= fc_slave_alloc,
++	.change_queue_depth	= fc_change_queue_depth,
++	.change_queue_type	= fc_change_queue_type,
++	.this_id		= -1,
++	.cmd_per_lun		= 3,
++	.can_queue		= (BNX2FC_MAX_OUTSTANDING_CMNDS/2),
++	.use_clustering		= ENABLE_CLUSTERING,
++	.sg_tablesize		= BNX2FC_MAX_BDS_PER_CMD,
++	.max_sectors		= 512,
++};
++
++static struct libfc_function_template bnx2fc_libfc_fcn_templ = {
++	.frame_send		= bnx2fc_xmit,
++	.elsct_send		= bnx2fc_elsct_send,
++	.fcp_abort_io		= bnx2fc_abort_io,
++	.fcp_cleanup		= bnx2fc_cleanup,
++	.rport_event_callback	= bnx2fc_rport_event_handler,
++};
++
++/**
++ * bnx2fc_cnic_cb - global template of bnx2fc - cnic driver interface
++ *			structure carrying callback function pointers
++ */
++static struct cnic_ulp_ops bnx2fc_cnic_cb = {
++	.owner			= THIS_MODULE,
++	.cnic_init		= bnx2fc_ulp_init,
++	.cnic_exit		= bnx2fc_ulp_exit,
++	.cnic_start		= bnx2fc_ulp_start,
++	.cnic_stop		= bnx2fc_ulp_stop,
++	.indicate_kcqes		= bnx2fc_indicate_kcqe,
++	.indicate_netevent	= bnx2fc_indicate_netevent,
++};
 -- 
 1.7.0.6
 
