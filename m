@@ -1,36 +1,50 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 05/15] osd: Remove duplicate unlikely from IS_ERR
-Date: Thu,  9 Dec 2010 12:03:58 -0800
-Message-ID: <786f4b066afe0eb7303f991f936b2643bcfc2d86.1291923889.git.joe@perches.com>
-References: <1291906801-1389-2-git-send-email-tklauser@distanz.ch>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1291906801-1389-2-git-send-email-tklauser@distanz.ch>
-In-Reply-To: <cover.1291923888.git.joe@perches.com>
-References: <cover.1291923888.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>, Benny Halevy <bhalevy@panasas.com>
-Cc: Jiri Kosina <trivial@kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, osd-dev@open-osd.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Jing Huang <huangj@Brocade.COM>
+Subject: RE: linux-next: Tree for December 9
+Date: Thu, 9 Dec 2010 11:35:42 -0800
+Message-ID: <E5313AF6F2BFD14293E5FD0F94750F86A5CFCB9049@HQ1-EXCH01.corp.brocade.com>
+References: <20101209154148.ca4ba4e0.sfr@canb.auug.org.au>
+	<AANLkTikjGhkYoR_o3uq-sUEY1daXSRWQgRmMBoVJ-n1=@mail.gmail.com>
+	<20101209154900.GA20190@suse.de>
+ <AANLkTimh-E2By3YdeapZ-HP-H8+Y+PWkt762zjH0sOEG@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <AANLkTimh-E2By3YdeapZ-HP-H8+Y+PWkt762zjH0sOEG@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-next-owner@vger.kernel.org
+To: Zimny Lech <napohybelskurwysynom2010@gmail.com>, Greg KH <gregkh@suse.de>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Adapter Linux Open SRC Team <adapter_linux_open_src_team@Brocade.COM>
 List-Id: linux-scsi@vger.kernel.org
 
-IS_ERR already uses unlikely, remove unlikely from the call sites.
+>2010/12/9 Greg KH <gregkh@suse.de>:
+>> On Thu, Dec 09, 2010 at 12:46:19PM +0100, Zimny Lech wrote:
+>>> Ave
+>>>
+>>> 2010/12/9 Stephen Rothwell <sfr@canb.auug.org.au>:
+>>> > Hi all,
+>>> >
+>>> > Changes since 20101208:
+>>> >
+>>>
+>>> =A0 LD =A0 =A0 =A0drivers/built-in.o
+>>> drivers/staging/built-in.o:(.data+0xec80): multiple definition of `=
+log_level'
+>>
+>> That's coming from the cxt1e1 driver, I'll fix that up to be a "sane=
+"
+>> global name.
+>>
+>>> drivers/scsi/built-in.o:(.data+0xa71c): first defined here
+>>
+>> That's coming from the drivers/scsi/bfa/ driver, and it too should b=
+e
+>> fixed as it shouldn't have a global variable with this name in it.
+>> Care to let the maintainer of that driver know about this as well?
+>
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/osd/osd_initiator.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Hi Zimny,=20
 
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index b798919..b37c8a3 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -951,7 +951,7 @@ static int _osd_req_finalize_cdb_cont(struct osd_request *or, const u8 *cap_key)
- 	/* create a bio for continuation segment */
- 	bio = bio_map_kern(req_q, or->cdb_cont.buff, or->cdb_cont.total_bytes,
- 			   GFP_KERNEL);
--	if (unlikely(IS_ERR(bio)))
-+	if (IS_ERR(bio))
- 		return PTR_ERR(bio);
- 
- 	bio->bi_rw |= REQ_WRITE;
--- 
-1.7.3.3.464.gf80b6
+I will provide a fix for linux-next soon.
+Thanks
+Jing
