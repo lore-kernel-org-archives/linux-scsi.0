@@ -1,27 +1,31 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 2/9] scsi: megaraid_sas - Driver only report tape
- drive, JBOD and logic drives
-Date: Thu, 09 Dec 2010 11:07:21 -0600
-Message-ID: <1291914441.3002.209.camel@mulgrave.site>
-References: <4B6A08C587958942AA3002690DD4F8C3D0804533@cosmail02.lsi.com>
-	 <4B6A08C587958942AA3002690DD4F8C3DBD67F68@cosmail02.lsi.com>
-	 <4B6A08C587958942AA3002690DD4F8C30106A961BD@cosmail02.lsi.com>
-	 <4B6A08C587958942AA3002690DD4F8C30106A961D6@cosmail02.lsi.com>
+From: Stephen Hemminger <shemminger@vyatta.com>
+Subject: [PATCH] iscsi: add module alias
+Date: Thu, 9 Dec 2010 09:37:56 -0800
+Message-ID: <20101209093756.06210c6a@nehalam>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4B6A08C587958942AA3002690DD4F8C30106A961D6@cosmail02.lsi.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'akpm@osdl.org'" <akpm@osdl.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>, "Daftardar, Jayant" <Jayant.Daftardar@lsi.com>, Tomas Henzl <thenzl@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.vyatta.com ([76.74.103.46]:46909 "EHLO mail.vyatta.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754147Ab0LIRh6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 9 Dec 2010 12:37:58 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 
-On Fri, 2010-11-19 at 09:53 -0700, Yang, Bo wrote:
-> Driver only report tape drive, JBOD and logic drives to OS
+Since iscsi transport can be built as a module and uses netlink socket
+to communicate. The module should have an alias to autoload when socket
+of NETLINK_ISCSI type is requested.
 
-Could you explain the point of this further?  As far as I can see, it
-would prevent the driver from reporting enclosures, which it is
-currently doing.
+Signed-off-by: Stephen Hemminger <shemminger@vyatta.com>
 
-James
+--- a/drivers/scsi/scsi_transport_iscsi.c	2010-12-09 09:21:42.784962783 -0800
++++ b/drivers/scsi/scsi_transport_iscsi.c	2010-12-09 09:22:40.812352712 -0800
+@@ -2200,3 +2200,4 @@ MODULE_AUTHOR("Mike Christie <michaelc@c
+ MODULE_DESCRIPTION("iSCSI Transport Interface");
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(ISCSI_TRANSPORT_VERSION);
++MODULE_ALIAS_NET_PF_PROTO(PF_NETLINK, NETLINK_ISCSI);
+
