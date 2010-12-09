@@ -1,78 +1,34 @@
-From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [RFC] [PATCH 0/5] bnx2fc: Broadcom FCoE offload driver
- submission
-Date: Thu, 9 Dec 2010 10:53:49 -0800
-Message-ID: <1291920829.5480.156.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 5/8] scsi: fix TUR error handling in sr_media_change()
+Date: Thu, 09 Dec 2010 19:53:17 +0100
+Message-ID: <4D01259D.2010409@kernel.org>
+References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-6-git-send-email-tj@kernel.org> <4D011E05.5030205@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:4308 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751872Ab0LISyB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 9 Dec 2010 13:54:01 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4D011E05.5030205@ru.mvista.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Sergei Shtylyov <sshtylyov@mvista.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Michael Chan <mchan@broadcom.com>
 
-This is the initial submission of Broadcom FCoE offload driver(bnx2fc)
-to the upstream kernel. This driver is for Broadcom Netxtreme II 57712
-chip. The following patches contain the driver sources for bnx2fc driver,
-and the libfc change to enable bnx2fc. bnx2fc is a SCSI low level driver
-that interfaces with SCSI midlayer, libfc, libfcoe, cnic modules. bnx2fc
-driver uses services of libfc for slow path operations such as FIP and
-fabric discovery. The fast path IO perations are performed after offloading
-the session information to the underlying FCoE firmware.
+Hello, Sergei.
 
-Here is the brief description of patches:
-[PATCH 1/5]: Introduces event callback for low level driver.
-[PATCH 2/5]: header files used by bnx2fc driver
-[PATCH 3/5]: firmware interface and ELS handling
-[PATCH 4/5]: IO and session handling
-[PATCH 5/5]: libfc/libfcoe interface, and makefile/kconfig files
+On 12/09/2010 07:20 PM, Sergei Shtylyov wrote:
+>> +    /*
+>> +     * Media is considered to be present if TUR succeeds or fails with
+>> +     * sense data indicating something other than media-not-present
+>> +     * (ASC 0x3a).
+>> +     */
+>> +    if (!scsi_status_is_good(retval) &&
+>> +        (!scsi_sense_valid(sshdr) || sshdr->asc == 0x3a)) {
+>> +        /*
+>> +         * Probably not media in the device.  Mark as changed, and
+> 
+>    s/not/no/
 
-Bhanu Prakash Gollapudi (5):
-  libfc: introduce LLD event callback
-  bnx2fc: Broadcom FCoE offload driver submission (header files)
-  bnx2fc: Broadcom FCoE Offload driver submission - part 1
-  bnx2fc: Broadcom FCoE Offload driver submission - part 2
-  bnx2fc: Broadcom FCoE Offload driver submission - part 3
+Updated patch already posted.  Thanks.
 
- drivers/scsi/Kconfig                      |    1 +
- drivers/scsi/Makefile                     |    1 +
- drivers/scsi/bnx2fc/57xx_fcoe_constants.h |  261 ++++
- drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h     | 1163 +++++++++++++++
- drivers/scsi/bnx2fc/Kconfig               |   11 +
- drivers/scsi/bnx2fc/Makefile              |    3 +
- drivers/scsi/bnx2fc/bnx2fc.h              |  545 +++++++
- drivers/scsi/bnx2fc/bnx2fc_debug.h        |   23 +
- drivers/scsi/bnx2fc/bnx2fc_els.c          |  500 +++++++
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c         | 2320 +++++++++++++++++++++++++++++
- drivers/scsi/bnx2fc/bnx2fc_hwi.c          | 1939 ++++++++++++++++++++++++
- drivers/scsi/bnx2fc/bnx2fc_io.c           | 1894 +++++++++++++++++++++++
- drivers/scsi/bnx2fc/bnx2fc_tgt.c          |  875 +++++++++++
- drivers/scsi/bnx2fc/fcoe_constants.h      |   29 +
- drivers/scsi/bnx2fc/microcode_constants.h |  179 +++
- drivers/scsi/libfc/fc_npiv.c              |    1 +
- drivers/scsi/libfc/fc_rport.c             |   19 +-
- include/scsi/libfc.h                      |   15 +
- 18 files changed, 9778 insertions(+), 1 deletions(-)
- create mode 100644 drivers/scsi/bnx2fc/57xx_fcoe_constants.h
- create mode 100644 drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h
- create mode 100644 drivers/scsi/bnx2fc/Kconfig
- create mode 100644 drivers/scsi/bnx2fc/Makefile
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc.h
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_debug.h
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_els.c
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_fcoe.c
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_hwi.c
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_io.c
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_tgt.c
- create mode 100644 drivers/scsi/bnx2fc/fcoe_constants.h
- create mode 100644 drivers/scsi/bnx2fc/microcode_constants.h
-
-
-
-
+-- 
+tejun
