@@ -1,41 +1,51 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 21372] NULL pointer deference at disk_replace_part_tbl+0x32
-Date: Thu, 9 Dec 2010 10:52:14 GMT
-Message-ID: <201012091052.oB9AqE4Y008298@demeter2.kernel.org>
-References: <bug-21372-11613@https.bugzilla.kernel.org/>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: Re: [PATCH] fix vulnerability of the release method of file
+ operations in Block layer SCSI generic driver
+Date: Thu, 9 Dec 2010 21:49:00 +0800
+Message-ID: <AANLkTikT3NUv5gqr2f9UXORPVbUaHCYbL5ejFCSBiz8X@mail.gmail.com>
+References: <AANLkTikbkhHmsVAdGrY0OTnH=gUZW5igjsWSF9y=Ub1u@mail.gmail.com>
+	<20101110151823.GC18258@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:36939 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756650Ab0LIKwP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2010 05:52:15 -0500
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oB9AqEgl008299
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 9 Dec 2010 10:52:15 GMT
-In-Reply-To: <bug-21372-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101110151823.GC18258@parisc-linux.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Zou, Yi" <yi.zou@intel.com>, Joe Eykholt <jeykholt@cisco.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=21372
+On Wed, Nov 10, 2010 at 11:18 PM, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Wed, Nov 10, 2010 at 10:08:37PM +0800, Hillf Danton wrote:
+>> The computation context setup by previous opening the bsg file could
+>> not survive following open/release operations upon the same file
+>> object.
+>
+> Umm .. release is called on final close of a file, not on every close
+> of a file.
 
+Thanks for sharing the knowledge about the release callback.
 
-Florian Mickler <florian@mickler.org> changed:
+But I am still wondering, if the operations in the release is safe, how the
+increments, pumped up by open operations on cmdline, of the ref_count
+of bsg device then get decreased, which could trigger mm leakage.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|RESOLVED                    |CLOSED
+And both vulnerability and leakage, if possible, could be fixed by replacing
+the only line we concerned with printk, see below please.
 
+Cheers
+Hillf
+---
 
+--- a/block/bsg.c	2010-11-01 19:54:12.000000000 +0800
++++ b/block/bsg.c	2010-12-09 21:38:32.000000000 +0800
+@@ -855,7 +855,10 @@ static int bsg_release(struct inode *ino
+ {
+ 	struct bsg_device *bd = file->private_data;
 
-
---- Comment #4 from Florian Mickler <florian@mickler.org>  2010-12-09 10:52:13 ---
-(this was the only commit I could find that somehow had something to do with
-reverting, io and stat(s)...)
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+-	file->private_data = NULL;
++	if (atomic_read(&bd->ref_count) != 1)
++		printk(KERN_WARNING "bsg: ref count of %s is %d\n",
++			bd->name, atomic_read(&bd->ref_count));
++
+ 	return bsg_put_device(bd);
+ }
