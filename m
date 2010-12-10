@@ -1,34 +1,112 @@
-From: Jesse Barnes <jbarnes@virtuousgeek.org>
-Subject: Re: PCI: make pci_restore_state return void
-Date: Fri, 10 Dec 2010 13:07:30 -0800
-Message-ID: <20101210130730.29d07c2d@jbarnes-desktop>
-References: <1291160606-31494-1-git-send-email-jon.mason@exar.com>
+From: "Bhanu Gollapudi" <bprakash@broadcom.com>
+Subject: RE: [RFC] [PATCH 5/5] bnx2fc: Broadcom FCoE offload driver
+ submission - part 3
+Date: Fri, 10 Dec 2010 15:28:04 -0800
+Message-ID: <1292023684.5480.198.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+References: <1291920835.5480.161.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+ <7C88852EF6F99F4EB538472FCFEBE22201499C3157@orsmsx509.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+ charset=cp1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from oproxy1-pub.bluehost.com ([66.147.249.253]:59488 "HELO
-	oproxy1-pub.bluehost.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754720Ab0LJVHe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2010 16:07:34 -0500
-In-Reply-To: <1291160606-31494-1-git-send-email-jon.mason@exar.com>
+Received: from mms3.broadcom.com ([216.31.210.19]:2143 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751169Ab0LJX2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 10 Dec 2010 18:28:18 -0500
+In-Reply-To: <7C88852EF6F99F4EB538472FCFEBE22201499C3157@orsmsx509.amr.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jon Mason <jon.mason@exar.com>
-Cc: linux-pci@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, linux-media@vger.kernel.org, Andrew Gallatin <gallatin@myri.com>, Brice Goglin <brice@myri.com>, netdev@vger.kernel.org, Solarflare linux maintainers <linux-net-drivers@solarflare.com>, Steve Hodgson <shodgson@solarflare.com>, Ben Hutchings <bhutchings@solarflare.com>, Stephen Hemminger <shemminger@linux-foundation.org>, Ivo van Doorn <IvDoorn@gmail.com>, Gertjan van Wingerde <gwingerde@gmail.com>, linux-wireless@vger.kernel.org, Brian King <brking@us.ibm.com>, Anil Ravindranath <anil_ravindranath@pmc-sierra.com>, linux-scsi@vger.kernel.org, Jaya Kumar <jayakumar.alsa@gmail.com>, boyod.yang@siliconmotion.com.cn
+To: "Zou, Yi" <yi.zou@intel.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, devel@open-fcoe.org
 
-On Tue, 30 Nov 2010 17:43:26 -0600
-Jon Mason <jon.mason@exar.com> wrote:
-
-> pci_restore_state only ever returns 0, thus there is no benefit in
-> having it return any value.  Also, a large majority of the callers do
-> not check the return code of pci_restore_state.  Make the
-> pci_restore_state a void return and avoid the overhead.
+On Fri, 2010-12-10 at 11:52 -0800, Zou, Yi wrote:
+> > This patch contains code that interfaces with libfc, libfcoe
+> > and cnic modules to create FCoE instances, send/receive
+> > non-offload FIP/FCoE packets, listen to link events, etc.
+> > 
+> > Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+> > ---
+> >  drivers/scsi/Kconfig              |    1 +
+> >  drivers/scsi/Makefile             |    1 +
+> >  drivers/scsi/bnx2fc/Kconfig       |   11 +
+> >  drivers/scsi/bnx2fc/Makefile      |    3 +
+> >  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2320
+> > +++++++++++++++++++++++++++++++++++++
+> >  5 files changed, 2336 insertions(+), 0 deletions(-)
+> >  create mode 100644 drivers/scsi/bnx2fc/Kconfig
+> >  create mode 100644 drivers/scsi/bnx2fc/Makefile
+> >  create mode 100644 drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> > 
+> > <-- snip -->
+> >
+> > +
+> > +unsigned long bnx2fc_debug_level;
+> > +module_param(bnx2fc_debug_level, long, 0644);
+> > +module_param_call(create, bnx2fc_create, NULL, (void *)FIP_MODE_FABRIC,
+> > +		  S_IWUSR);
+> > +__MODULE_PARM_TYPE(create, "string");
+> > +MODULE_PARM_DESC(create, " Creates fcoe instance on a ethernet
+> > interface");
+> > +module_param_call(destroy, bnx2fc_destroy, NULL, NULL, S_IWUSR);
+> > +__MODULE_PARM_TYPE(destroy, "string");
+> > +MODULE_PARM_DESC(destroy, " Destroys fcoe instance on a ethernet
+> > interface");
+> > +
 > 
-> Signed-off-by: Jon Mason <jon.mason@exar.com>
-> ---
+> //I sent this earlier to open-fcoe.org mailing list and realized it was
+> temporarily down, so resend this here, apologize if you get it multiple
+> times.
+> 
+> I understand that fcoe.ko is not needed here, but the above also indicates
+> that the create/destroy will not be going through the existing fcoe-utils
+> which uses sysfs entries of the fcoe module. I think it will be nice for
+> everyone to use fcoe-utils as the open-fcoe user space tool.
 
-Applied to linux-next, thanks.
+Thanks for the comments, Yi.
 
--- 
-Jesse Barnes, Intel Open Source Technology Center
+You're right. fcoe.ko is not needed. However, we definitely want to
+integrate this driver with open-fcoe's fcoe-utils.
+
+> 
+> However, the existing fcoe.c does not offer that flexibility, where I think
+> we have to separate the fcoe.c to provide a fcoe transport layer so vendor
+> fcoe hba can plug in, where the existing fcoe.c is the sw fcoe transport and 
+> plugged in by default. All fcoe transports are registered when they are loaded,
+> when fcoe_create() gets called from sysfs, it passes to the fcoe transport to 
+> look up from the registered transports, whoever thinks the netdev is associated 
+> with its hw will take over from there, fcoe_destroy() is similar. The default
+> transport is the sw fcoe hba in current fcoe.c will be called upon if no
+> registered fcoe transport can provide offload there.
+> 
+> As the mod params are in fcoe.c, I think we can move create/destroy to libfcoe,
+> and, yeah, that does require change in fcoe-utils as well, but that would allow
+> fcoe.c be the pure sw fcoe transport. There will be functions in current fcoe.c
+> that can be exported so both sw or hw fcoe transport can use, reducing the code
+> size. The sw fcoe transport can plug in as vendor's transport in the same way
+> through fcoe transport registration, so fcoe.ko will not be required for any
+> vendors who has their fcoe transport implementation, e.g., bnx2fc_fcoe.
+> 
+> I hope this makes sense, I do think this logic would work nicely for any
+> fcoe hba to provide the same user interface on top of given network interface
+> name via fcoe-util, which is already pretty well maintained and tested, with
+> full DCB support as well. I am hoping we can move towards this direction, if not
+> now. 
+
+This definitely is one approach that we can follow. 
+
+Approach we are following today is to modify /etc/fcoe/cfg-eth* to
+include "DRIVER_NAME", which fcoemon can use to identify the sysfs path
+to make appropriate calls to create/destroy.
+
+Either way, changes in fcoe-utils are required.
+
+Thanks,
+Bhanu
+> 
+> Thanks,
+> yi
+> 
+
+
+
