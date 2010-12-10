@@ -1,39 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 24512] Burning CD-R fails and burning CD-RW succeeds on 2.6.32.
- Both work on 2.6.26
-Date: Fri, 10 Dec 2010 15:38:22 GMT
-Message-ID: <201012101538.oBAFcM5u013608@demeter1.kernel.org>
-References: <bug-24512-11613@https.bugzilla.kernel.org/>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [Scst-devel] [PATCH 8/19]: SCST SYSFS interface implementation
+Date: Fri, 10 Dec 2010 11:36:37 -0800
+Message-ID: <20101210193637.GA23113@kroah.com>
+References: <20101115161620.GB5981@kroah.com>
+ <4CE16B8E.1000300@panasas.com>
+ <AANLkTikPVXGJ5-5YDk1uqfqrqxGLpSiSdaX3h7qxo-ie@mail.gmail.com>
+ <8985DEAF-4227-4629-B90A-938D2BA3534E@etechsoft.com>
+ <4CE2846C.6070501@vlnb.net>
+ <4CE59482.3050002@gmail.com>
+ <20101118214619.GA29097@kroah.com>
+ <4CE6BB4A.5060606@gmail.com>
+ <20101119211904.GB28606@kroah.com>
+ <AANLkTimJo_ZtQ3uVEBv864pP9f9AZR3D_o0R7T-B3fWL@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:49267 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753615Ab0LJPiX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2010 10:38:23 -0500
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id oBAFcMxc013609
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2010 15:38:22 GMT
-In-Reply-To: <bug-24512-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTimJo_ZtQ3uVEBv864pP9f9AZR3D_o0R7T-B3fWL@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Vladislav Bolkhovitin <vvvvvst@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, scst-devel <scst-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=24512
+On Fri, Dec 10, 2010 at 01:06:06PM +0100, Bart Van Assche wrote:
+> On Fri, Nov 19, 2010 at 10:19 PM, Greg KH <greg@kroah.com> wrote:
+> > [ ... ]
+> >
+> > None. =A0Use 'struct device'
+>=20
+> How about using 'struct device' as follows ?
+> * Move /sys/kernel/scst_tgt/targets to /sys/class/target_driver.
 
+Please never create a new class, use 'struct bus_type' instead and
+create a bus and have drivers and devices on it.
 
-Tejun Heo <tj@kernel.org> changed:
+thanks,
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-          Component|Serial ATA                  |SCSI
-         AssignedTo|tj@kernel.org               |linux-scsi@vger.kernel.org
-
-
-
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+greg k-h
