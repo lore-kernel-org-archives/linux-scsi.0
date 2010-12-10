@@ -1,160 +1,41 @@
 From: Maggie Zhang <xmzhang@brocade.com>
-Subject: [PATCH 3/7] bfa: remove a file with small size
-Date: Thu, 9 Dec 2010 19:09:26 -0800
-Message-ID: <1291950566-12813-1-git-send-email-xmzhang@brocade.com>
+Subject: [PATCH 5/7] bfa: remove all SCSI IO callbacks
+Date: Thu, 9 Dec 2010 19:11:39 -0800
+Message-ID: <1291950699-15250-1-git-send-email-xmzhang@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:44624 "EHLO
-	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752193Ab0LJDJb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2010 22:09:31 -0500
+Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:55112 "EHLO
+	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753198Ab0LJDLp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Dec 2010 22:11:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 Cc: adapter_linux_open_src_team@blc-10-10.brocade.com, Maggie Zhang <xmzhang@brocade.com>, Jing Huang <huangj@brocade.com>
 
-Removed bfa_drv.c, merged it to bfa_core.c and modified Makefile.
+Remove SCSI IO callbacks, and as a result remove bfa_cb_ioim.h.
 
 Signed-off-by: Maggie Zhang <xmzhang@brocade.com>
 Signed-off-by: Jing Huang <huangj@brocade.com>
 ---
- drivers/scsi/bfa/Makefile      |    2 +-
- drivers/scsi/bfa/bfa.h         |    1 -
- drivers/scsi/bfa/bfa_core.c    |   87 ++++++++++++++++++++++++++++++++
- drivers/scsi/bfa/bfa_drv.c     |  107 ----------------------------------------
- drivers/scsi/bfa/bfa_modules.h |    3 -
- 5 files changed, 88 insertions(+), 112 deletions(-)
- delete mode 100644 drivers/scsi/bfa/bfa_drv.c
+ drivers/scsi/bfa/bfa_cb_ioim.h |  169 ----------------------------------------
+ drivers/scsi/bfa/bfa_defs.h    |    4 +-
+ drivers/scsi/bfa/bfa_fc.h      |    5 +-
+ drivers/scsi/bfa/bfa_fcpim.c   |   53 ++++++++-----
+ drivers/scsi/bfa/bfa_fcpim.h   |    8 +-
+ drivers/scsi/bfa/bfad_im.c     |   10 ++-
+ drivers/scsi/bfa/bfi.h         |    2 +-
+ drivers/scsi/bfa/bfi_ms.h      |    2 +-
+ 8 files changed, 49 insertions(+), 204 deletions(-)
+ delete mode 100644 drivers/scsi/bfa/bfa_cb_ioim.h
 
-diff --git a/drivers/scsi/bfa/Makefile b/drivers/scsi/bfa/Makefile
-index d2eefd3..ed26a6a 100644
---- a/drivers/scsi/bfa/Makefile
-+++ b/drivers/scsi/bfa/Makefile
-@@ -3,6 +3,6 @@ obj-$(CONFIG_SCSI_BFA_FC) := bfa.o
- bfa-y := bfad.o bfad_im.o bfad_attr.o bfad_debugfs.o
- bfa-y += bfa_ioc.o bfa_ioc_cb.o bfa_ioc_ct.o bfa_hw_cb.o bfa_hw_ct.o
- bfa-y += bfa_fcs.o bfa_fcs_lport.o bfa_fcs_rport.o bfa_fcs_fcpim.o bfa_fcbuild.o
--bfa-y += bfa_port.o bfa_fcpim.o bfa_core.o bfa_drv.o bfa_svc.o
-+bfa-y += bfa_port.o bfa_fcpim.o bfa_core.o bfa_svc.o
- 
- ccflags-y := -DBFA_PERF_BUILD
-diff --git a/drivers/scsi/bfa/bfa.h b/drivers/scsi/bfa/bfa.h
-index 6231e5a..8f17186 100644
---- a/drivers/scsi/bfa/bfa.h
-+++ b/drivers/scsi/bfa/bfa.h
-@@ -331,7 +331,6 @@ void bfa_hwct_msix_getvecs(struct bfa_s *bfa, u32 *vecmap, u32 *nvecs,
- 			   u32 *maxvec);
- void bfa_hwct_msix_get_rme_range(struct bfa_s *bfa, u32 *start,
- 				 u32 *end);
--void bfa_com_port_attach(struct bfa_s *bfa, struct bfa_meminfo_s *mi);
- void bfa_iocfc_get_bootwwns(struct bfa_s *bfa, u8 *nwwns, wwn_t *wwns);
- wwn_t bfa_iocfc_get_pwwn(struct bfa_s *bfa);
- wwn_t bfa_iocfc_get_nwwn(struct bfa_s *bfa);
-diff --git a/drivers/scsi/bfa/bfa_core.c b/drivers/scsi/bfa/bfa_core.c
-index 002907c..d417864 100644
---- a/drivers/scsi/bfa/bfa_core.c
-+++ b/drivers/scsi/bfa/bfa_core.c
-@@ -22,6 +22,93 @@
- BFA_TRC_FILE(HAL, CORE);
- 
- /*
-+ * BFA module list terminated by NULL
-+ */
-+static struct bfa_module_s *hal_mods[] = {
-+	&hal_mod_sgpg,
-+	&hal_mod_fcport,
-+	&hal_mod_fcxp,
-+	&hal_mod_lps,
-+	&hal_mod_uf,
-+	&hal_mod_rport,
-+	&hal_mod_fcpim,
-+	NULL
-+};
-+
-+/*
-+ * Message handlers for various modules.
-+ */
-+static bfa_isr_func_t  bfa_isrs[BFI_MC_MAX] = {
-+	bfa_isr_unhandled,	/* NONE */
-+	bfa_isr_unhandled,	/* BFI_MC_IOC */
-+	bfa_isr_unhandled,	/* BFI_MC_DIAG */
-+	bfa_isr_unhandled,	/* BFI_MC_FLASH */
-+	bfa_isr_unhandled,	/* BFI_MC_CEE */
-+	bfa_fcport_isr,		/* BFI_MC_FCPORT */
-+	bfa_isr_unhandled,	/* BFI_MC_IOCFC */
-+	bfa_isr_unhandled,	/* BFI_MC_LL */
-+	bfa_uf_isr,		/* BFI_MC_UF */
-+	bfa_fcxp_isr,		/* BFI_MC_FCXP */
-+	bfa_lps_isr,		/* BFI_MC_LPS */
-+	bfa_rport_isr,		/* BFI_MC_RPORT */
-+	bfa_itnim_isr,		/* BFI_MC_ITNIM */
-+	bfa_isr_unhandled,	/* BFI_MC_IOIM_READ */
-+	bfa_isr_unhandled,	/* BFI_MC_IOIM_WRITE */
-+	bfa_isr_unhandled,	/* BFI_MC_IOIM_IO */
-+	bfa_ioim_isr,		/* BFI_MC_IOIM */
-+	bfa_ioim_good_comp_isr,	/* BFI_MC_IOIM_IOCOM */
-+	bfa_tskim_isr,		/* BFI_MC_TSKIM */
-+	bfa_isr_unhandled,	/* BFI_MC_SBOOT */
-+	bfa_isr_unhandled,	/* BFI_MC_IPFC */
-+	bfa_isr_unhandled,	/* BFI_MC_PORT */
-+	bfa_isr_unhandled,	/* --------- */
-+	bfa_isr_unhandled,	/* --------- */
-+	bfa_isr_unhandled,	/* --------- */
-+	bfa_isr_unhandled,	/* --------- */
-+	bfa_isr_unhandled,	/* --------- */
-+	bfa_isr_unhandled,	/* --------- */
-+	bfa_isr_unhandled,	/* --------- */
-+	bfa_isr_unhandled,	/* --------- */
-+	bfa_isr_unhandled,	/* --------- */
-+	bfa_isr_unhandled,	/* --------- */
-+};
-+/*
-+ * Message handlers for mailbox command classes
-+ */
-+static bfa_ioc_mbox_mcfunc_t  bfa_mbox_isrs[BFI_MC_MAX] = {
-+	NULL,
-+	NULL,		/* BFI_MC_IOC   */
-+	NULL,		/* BFI_MC_DIAG  */
-+	NULL,		/* BFI_MC_FLASH */
-+	NULL,		/* BFI_MC_CEE   */
-+	NULL,		/* BFI_MC_PORT  */
-+	bfa_iocfc_isr,	/* BFI_MC_IOCFC */
-+	NULL,
-+};
-+
-+
-+
-+static void
-+bfa_com_port_attach(struct bfa_s *bfa, struct bfa_meminfo_s *mi)
-+{
-+	struct bfa_port_s	*port = &bfa->modules.port;
-+	u32			dm_len;
-+	u8			*dm_kva;
-+	u64			dm_pa;
-+
-+	dm_len = bfa_port_meminfo();
-+	dm_kva = bfa_meminfo_dma_virt(mi);
-+	dm_pa  = bfa_meminfo_dma_phys(mi);
-+
-+	memset(port, 0, sizeof(struct bfa_port_s));
-+	bfa_port_attach(port, &bfa->ioc, bfa, bfa->trcmod);
-+	bfa_port_mem_claim(port, dm_kva, dm_pa);
-+
-+	bfa_meminfo_dma_virt(mi) = dm_kva + dm_len;
-+	bfa_meminfo_dma_phys(mi) = dm_pa + dm_len;
-+}
-+
-+/*
-  * BFA IOC FC related definitions
-  */
- 
-diff --git a/drivers/scsi/bfa/bfa_drv.c b/drivers/scsi/bfa/bfa_drv.c
+diff --git a/drivers/scsi/bfa/bfa_cb_ioim.h b/drivers/scsi/bfa/bfa_cb_ioim.h
 deleted file mode 100644
-index 0222d7c..0000000
---- a/drivers/scsi/bfa/bfa_drv.c
+index afb5738..0000000
+--- a/drivers/scsi/bfa/bfa_cb_ioim.h
 +++ /dev/null
-@@ -1,107 +0,0 @@
+@@ -1,169 +0,0 @@
 -/*
 - * Copyright (c) 2005-2010 Brocade Communications Systems, Inc.
 - * All rights reserved
@@ -172,117 +53,459 @@ index 0222d7c..0000000
 - * General Public License for more details.
 - */
 -
--#include "bfa_modules.h"
+-#ifndef __BFA_HCB_IOIM_H__
+-#define __BFA_HCB_IOIM_H__
 -
+-#include "bfa_os_inc.h"
 -/*
-- * BFA module list terminated by NULL
+- * task attribute values in FCP-2 FCP_CMND IU
 - */
--struct bfa_module_s *hal_mods[] = {
--	&hal_mod_sgpg,
--	&hal_mod_fcport,
--	&hal_mod_fcxp,
--	&hal_mod_lps,
--	&hal_mod_uf,
--	&hal_mod_rport,
--	&hal_mod_fcpim,
--	NULL
--};
+-#define SIMPLE_Q    0
+-#define HEAD_OF_Q   1
+-#define ORDERED_Q   2
+-#define ACA_Q	    4
+-#define UNTAGGED    5
 -
--/*
-- * Message handlers for various modules.
-- */
--bfa_isr_func_t  bfa_isrs[BFI_MC_MAX] = {
--	bfa_isr_unhandled,	/* NONE */
--	bfa_isr_unhandled,	/* BFI_MC_IOC */
--	bfa_isr_unhandled,	/* BFI_MC_DIAG */
--	bfa_isr_unhandled,	/* BFI_MC_FLASH */
--	bfa_isr_unhandled,	/* BFI_MC_CEE */
--	bfa_fcport_isr,		/* BFI_MC_FCPORT */
--	bfa_isr_unhandled,	/* BFI_MC_IOCFC */
--	bfa_isr_unhandled,	/* BFI_MC_LL */
--	bfa_uf_isr,		/* BFI_MC_UF */
--	bfa_fcxp_isr,		/* BFI_MC_FCXP */
--	bfa_lps_isr,		/* BFI_MC_LPS */
--	bfa_rport_isr,		/* BFI_MC_RPORT */
--	bfa_itnim_isr,		/* BFI_MC_ITNIM */
--	bfa_isr_unhandled,	/* BFI_MC_IOIM_READ */
--	bfa_isr_unhandled,	/* BFI_MC_IOIM_WRITE */
--	bfa_isr_unhandled,	/* BFI_MC_IOIM_IO */
--	bfa_ioim_isr,		/* BFI_MC_IOIM */
--	bfa_ioim_good_comp_isr,	/* BFI_MC_IOIM_IOCOM */
--	bfa_tskim_isr,		/* BFI_MC_TSKIM */
--	bfa_isr_unhandled,	/* BFI_MC_SBOOT */
--	bfa_isr_unhandled,	/* BFI_MC_IPFC */
--	bfa_isr_unhandled,	/* BFI_MC_PORT */
--	bfa_isr_unhandled,	/* --------- */
--	bfa_isr_unhandled,	/* --------- */
--	bfa_isr_unhandled,	/* --------- */
--	bfa_isr_unhandled,	/* --------- */
--	bfa_isr_unhandled,	/* --------- */
--	bfa_isr_unhandled,	/* --------- */
--	bfa_isr_unhandled,	/* --------- */
--	bfa_isr_unhandled,	/* --------- */
--	bfa_isr_unhandled,	/* --------- */
--	bfa_isr_unhandled,	/* --------- */
--};
--
--
--/*
-- * Message handlers for mailbox command classes
-- */
--bfa_ioc_mbox_mcfunc_t  bfa_mbox_isrs[BFI_MC_MAX] = {
--	NULL,
--	NULL,			/* BFI_MC_IOC   */
--	NULL,			/* BFI_MC_DIAG  */
--	NULL,		/* BFI_MC_FLASH */
--	NULL,			/* BFI_MC_CEE   */
--	NULL,			/* BFI_MC_PORT  */
--	bfa_iocfc_isr,		/* BFI_MC_IOCFC */
--	NULL,
--};
--
--
--
--void
--bfa_com_port_attach(struct bfa_s *bfa, struct bfa_meminfo_s *mi)
+-static inline lun_t
+-bfad_int_to_lun(u32 luno)
 -{
--	struct bfa_port_s	*port = &bfa->modules.port;
--	u32		dm_len;
--	u8			*dm_kva;
--	u64		dm_pa;
+-	union {
+-		__be16	scsi_lun[4];
+-		lun_t		bfa_lun;
+-	} lun;
 -
--	dm_len = bfa_port_meminfo();
--	dm_kva = bfa_meminfo_dma_virt(mi);
--	dm_pa  = bfa_meminfo_dma_phys(mi);
+-	lun.bfa_lun     = 0;
+-	lun.scsi_lun[0] = cpu_to_be16(luno);
 -
--	memset(port, 0, sizeof(struct bfa_port_s));
--	bfa_port_attach(port, &bfa->ioc, bfa, bfa->trcmod);
--	bfa_port_mem_claim(port, dm_kva, dm_pa);
--
--	bfa_meminfo_dma_virt(mi) = dm_kva + dm_len;
--	bfa_meminfo_dma_phys(mi) = dm_pa + dm_len;
+-	return lun.bfa_lun;
 -}
-diff --git a/drivers/scsi/bfa/bfa_modules.h b/drivers/scsi/bfa/bfa_modules.h
-index 15407ab..ab79ff6 100644
---- a/drivers/scsi/bfa/bfa_modules.h
-+++ b/drivers/scsi/bfa/bfa_modules.h
-@@ -99,7 +99,6 @@ struct bfa_module_s {
- 	void (*iocdisable) (struct bfa_s *bfa);
+-
+-/*
+- * Get LUN for the I/O request
+- */
+-#define bfa_cb_ioim_get_lun(__dio)	\
+-	bfad_int_to_lun(((struct scsi_cmnd *)__dio)->device->lun)
+-
+-/*
+- * Get CDB for the I/O request
+- */
+-static inline u8 *
+-bfa_cb_ioim_get_cdb(struct bfad_ioim_s *dio)
+-{
+-	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+-
+-	return (u8 *) cmnd->cmnd;
+-}
+-
+-/*
+- * Get I/O direction (read/write) for the I/O request
+- */
+-static inline enum fcp_iodir
+-bfa_cb_ioim_get_iodir(struct bfad_ioim_s *dio)
+-{
+-	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+-	enum dma_data_direction dmadir;
+-
+-	dmadir = cmnd->sc_data_direction;
+-	if (dmadir == DMA_TO_DEVICE)
+-		return FCP_IODIR_WRITE;
+-	else if (dmadir == DMA_FROM_DEVICE)
+-		return FCP_IODIR_READ;
+-	else
+-		return FCP_IODIR_NONE;
+-}
+-
+-/*
+- * Get IO size in bytes for the I/O request
+- */
+-static inline u32
+-bfa_cb_ioim_get_size(struct bfad_ioim_s *dio)
+-{
+-	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+-
+-	return scsi_bufflen(cmnd);
+-}
+-
+-/*
+- * Get timeout for the I/O request
+- */
+-static inline u8
+-bfa_cb_ioim_get_timeout(struct bfad_ioim_s *dio)
+-{
+-	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+-	/*
+-	 * TBD: need a timeout for scsi passthru
+-	 */
+-	if (cmnd->device->host == NULL)
+-		return 4;
+-
+-	return 0;
+-}
+-
+-/*
+- * Get Command Reference Number for the I/O request. 0 if none.
+- */
+-static inline u8
+-bfa_cb_ioim_get_crn(struct bfad_ioim_s *dio)
+-{
+-	return 0;
+-}
+-
+-/*
+- * Get SAM-3 priority for the I/O request. 0 is default.
+- */
+-static inline u8
+-bfa_cb_ioim_get_priority(struct bfad_ioim_s *dio)
+-{
+-	return 0;
+-}
+-
+-/*
+- * Get task attributes for the I/O request. Default is FCP_TASK_ATTR_SIMPLE(0).
+- */
+-static inline u8
+-bfa_cb_ioim_get_taskattr(struct bfad_ioim_s *dio)
+-{
+-	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+-	u8	task_attr = UNTAGGED;
+-
+-	if (cmnd->device->tagged_supported) {
+-		switch (cmnd->tag) {
+-		case HEAD_OF_QUEUE_TAG:
+-			task_attr = HEAD_OF_Q;
+-			break;
+-		case ORDERED_QUEUE_TAG:
+-			task_attr = ORDERED_Q;
+-			break;
+-		default:
+-			task_attr = SIMPLE_Q;
+-			break;
+-		}
+-	}
+-
+-	return task_attr;
+-}
+-
+-/*
+- * Get CDB length in bytes for the I/O request. Default is FCP_CMND_CDB_LEN(16).
+- */
+-static inline u8
+-bfa_cb_ioim_get_cdblen(struct bfad_ioim_s *dio)
+-{
+-	struct scsi_cmnd *cmnd = (struct scsi_cmnd *)dio;
+-
+-	return cmnd->cmd_len;
+-}
+-
+-/*
+- * Assign queue to be used for the I/O request. This value depends on whether
+- * the driver wants to use the queues via any specific algorithm. Currently,
+- * this is not supported.
+- */
+-#define bfa_cb_ioim_get_reqq(__dio) BFA_FALSE
+-
+-#endif /* __BFA_HCB_IOIM_H__ */
+diff --git a/drivers/scsi/bfa/bfa_defs.h b/drivers/scsi/bfa/bfa_defs.h
+index 4b5b9e3..07b57c4 100644
+--- a/drivers/scsi/bfa/bfa_defs.h
++++ b/drivers/scsi/bfa/bfa_defs.h
+@@ -446,8 +446,8 @@ enum bfa_boot_bootopt {
+  * Boot lun information.
+  */
+ struct bfa_boot_bootlun_s {
+-	wwn_t   pwwn;   /*  port wwn of target */
+-	lun_t   lun;    /*  64-bit lun */
++	wwn_t   pwwn;		/*  port wwn of target */
++	struct scsi_lun   lun;  /*  64-bit lun */
+ };
+ #pragma pack()
+ 
+diff --git a/drivers/scsi/bfa/bfa_fc.h b/drivers/scsi/bfa/bfa_fc.h
+index 7dd0caf..a478311 100644
+--- a/drivers/scsi/bfa/bfa_fc.h
++++ b/drivers/scsi/bfa/bfa_fc.h
+@@ -21,7 +21,6 @@
+ #include "bfa_os_inc.h"
+ 
+ typedef u64 wwn_t;
+-typedef u64 lun_t;
+ 
+ #define WWN_NULL	(0)
+ #define FC_SYMNAME_MAX	256	/*  max name server symbolic name size */
+@@ -1176,8 +1175,8 @@ struct fc_srr_s {
+ #define FCP_CMND_LUN_LEN    8
+ 
+ struct fcp_cmnd_s {
+-	lun_t           lun;		/* 64-bit LU number */
+-	u8         crn;		/* command reference number */
++	struct scsi_lun		lun;	/* 64-bit LU number */
++	u8			crn;	/* command reference number */
+ #ifdef __BIGENDIAN
+ 	u8         resvd:1,
+ 			priority:4,	/* FCP-3: SAM-3 priority */
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 898864a..01d86ef 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -16,7 +16,7 @@
+  */
+ 
+ #include "bfa_modules.h"
+-#include "bfa_cb_ioim.h"
++#include "bfa_os_inc.h"
+ 
+ BFA_TRC_FILE(HAL, FCPIM);
+ BFA_MODULE(fcpim);
+@@ -263,7 +263,7 @@ static void	bfa_ioim_sm_cmnd_retry(struct bfa_ioim_s *ioim,
+ static void     __bfa_cb_tskim_done(void *cbarg, bfa_boolean_t complete);
+ static void     __bfa_cb_tskim_failed(void *cbarg, bfa_boolean_t complete);
+ static bfa_boolean_t bfa_tskim_match_scope(struct bfa_tskim_s *tskim,
+-					lun_t lun);
++					struct scsi_lun lun);
+ static void     bfa_tskim_gather_ios(struct bfa_tskim_s *tskim);
+ static void     bfa_tskim_cleanp_comp(void *tskim_cbarg);
+ static void     bfa_tskim_cleanup_ios(struct bfa_tskim_s *tskim);
+@@ -2315,7 +2315,7 @@ bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
+ {
+ 	struct bfa_itnim_s *itnim = ioim->itnim;
+ 	struct bfi_ioim_req_s *m;
+-	static struct fcp_cmnd_s cmnd_z0 = { 0 };
++	static struct fcp_cmnd_s cmnd_z0 = {{{0}}};
+ 	struct bfi_sge_s *sge, *sgpge;
+ 	u32	pgdlen = 0;
+ 	u32	fcp_dl;
+@@ -2324,6 +2324,7 @@ bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
+ 	struct bfa_sgpg_s *sgpg;
+ 	struct scsi_cmnd *cmnd = (struct scsi_cmnd *) ioim->dio;
+ 	u32 i, sge_id, pgcumsz;
++	enum dma_data_direction dmadir;
+ 
+ 	/*
+ 	 * check for room in queue to send request now
+@@ -2341,7 +2342,7 @@ bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
+ 	 */
+ 	m->io_tag = cpu_to_be16(ioim->iotag);
+ 	m->rport_hdl = ioim->itnim->rport->fw_handle;
+-	m->io_timeout = bfa_cb_ioim_get_timeout(ioim->dio);
++	m->io_timeout = 0;
+ 
+ 	sge = &m->sges[0];
+ 	sgpg = ioim->sgpg;
+@@ -2412,10 +2413,17 @@ bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
+ 	 * set up I/O command parameters
+ 	 */
+ 	m->cmnd = cmnd_z0;
+-	m->cmnd.lun = bfa_cb_ioim_get_lun(ioim->dio);
+-	m->cmnd.iodir = bfa_cb_ioim_get_iodir(ioim->dio);
+-	m->cmnd.cdb = *(scsi_cdb_t *)bfa_cb_ioim_get_cdb(ioim->dio);
+-	fcp_dl = bfa_cb_ioim_get_size(ioim->dio);
++	int_to_scsilun(cmnd->device->lun, &m->cmnd.lun);
++	dmadir = cmnd->sc_data_direction;
++	if (dmadir == DMA_TO_DEVICE)
++		m->cmnd.iodir = FCP_IODIR_WRITE;
++	else if (dmadir == DMA_FROM_DEVICE)
++		m->cmnd.iodir = FCP_IODIR_READ;
++	else
++		m->cmnd.iodir = FCP_IODIR_NONE;
++
++	m->cmnd.cdb = *(scsi_cdb_t *) cmnd->cmnd;
++	fcp_dl = scsi_bufflen(cmnd);
+ 	m->cmnd.fcp_dl = cpu_to_be32(fcp_dl);
+ 
+ 	/*
+@@ -2439,7 +2447,7 @@ bfa_ioim_send_ioreq(struct bfa_ioim_s *ioim)
+ 		bfi_h2i_set(m->mh, BFI_MC_IOIM_IO, 0, bfa_lpuid(ioim->bfa));
+ 	}
+ 	if (itnim->seq_rec ||
+-	    (bfa_cb_ioim_get_size(ioim->dio) & (sizeof(u32) - 1)))
++	    (scsi_bufflen(cmnd) & (sizeof(u32) - 1)))
+ 		bfi_h2i_set(m->mh, BFI_MC_IOIM_IO, 0, bfa_lpuid(ioim->bfa));
+ 
+ 	/*
+@@ -2769,7 +2777,8 @@ bfa_ioim_profile_start(struct bfa_ioim_s *ioim)
+ void
+ bfa_ioim_profile_comp(struct bfa_ioim_s *ioim)
+ {
+-	u32 fcp_dl = bfa_cb_ioim_get_size(ioim->dio);
++	struct scsi_cmnd *cmnd = (struct scsi_cmnd *) ioim->dio;
++	u32 fcp_dl = scsi_bufflen(cmnd);
+ 	u32 index = bfa_ioim_get_index(fcp_dl);
+ 	u64 end_time = jiffies;
+ 	struct bfa_itnim_latency_s *io_lat =
+@@ -2895,8 +2904,7 @@ bfa_ioim_start(struct bfa_ioim_s *ioim)
+ 	 * Obtain the queue over which this request has to be issued
+ 	 */
+ 	ioim->reqq = bfa_fcpim_ioredirect_enabled(ioim->bfa) ?
+-			bfa_cb_ioim_get_reqq(ioim->dio) :
+-			bfa_itnim_get_reqq(ioim);
++			BFA_FALSE : bfa_itnim_get_reqq(ioim);
+ 
+ 	bfa_sm_send_event(ioim, BFA_IOIM_SM_START);
+ }
+@@ -3186,7 +3194,7 @@ __bfa_cb_tskim_failed(void *cbarg, bfa_boolean_t complete)
+ }
+ 
+ static	bfa_boolean_t
+-bfa_tskim_match_scope(struct bfa_tskim_s *tskim, lun_t lun)
++bfa_tskim_match_scope(struct bfa_tskim_s *tskim, struct scsi_lun lun)
+ {
+ 	switch (tskim->tm_cmnd) {
+ 	case FCP_TM_TARGET_RESET:
+@@ -3196,7 +3204,7 @@ bfa_tskim_match_scope(struct bfa_tskim_s *tskim, lun_t lun)
+ 	case FCP_TM_CLEAR_TASK_SET:
+ 	case FCP_TM_LUN_RESET:
+ 	case FCP_TM_CLEAR_ACA:
+-		return (tskim->lun == lun);
++		return (!memcmp(&tskim->lun, &lun, sizeof(lun)));
+ 
+ 	default:
+ 		bfa_assert(0);
+@@ -3213,7 +3221,9 @@ bfa_tskim_gather_ios(struct bfa_tskim_s *tskim)
+ {
+ 	struct bfa_itnim_s *itnim = tskim->itnim;
+ 	struct bfa_ioim_s *ioim;
+-	struct list_head	*qe, *qen;
++	struct list_head *qe, *qen;
++	struct scsi_cmnd *cmnd;
++	struct scsi_lun scsilun;
+ 
+ 	INIT_LIST_HEAD(&tskim->io_q);
+ 
+@@ -3222,8 +3232,9 @@ bfa_tskim_gather_ios(struct bfa_tskim_s *tskim)
+ 	 */
+ 	list_for_each_safe(qe, qen, &itnim->io_q) {
+ 		ioim = (struct bfa_ioim_s *) qe;
+-		if (bfa_tskim_match_scope
+-			(tskim, bfa_cb_ioim_get_lun(ioim->dio))) {
++		cmnd = (struct scsi_cmnd *) ioim->dio;
++		int_to_scsilun(cmnd->device->lun, &scsilun);
++		if (bfa_tskim_match_scope(tskim, scsilun)) {
+ 			list_del(&ioim->qe);
+ 			list_add_tail(&ioim->qe, &tskim->io_q);
+ 		}
+@@ -3234,8 +3245,9 @@ bfa_tskim_gather_ios(struct bfa_tskim_s *tskim)
+ 	 */
+ 	list_for_each_safe(qe, qen, &itnim->pending_q) {
+ 		ioim = (struct bfa_ioim_s *) qe;
+-		if (bfa_tskim_match_scope
+-			(tskim, bfa_cb_ioim_get_lun(ioim->dio))) {
++		cmnd = (struct scsi_cmnd *) ioim->dio;
++		int_to_scsilun(cmnd->device->lun, &scsilun);
++		if (bfa_tskim_match_scope(tskim, scsilun)) {
+ 			list_del(&ioim->qe);
+ 			list_add_tail(&ioim->qe, &ioim->fcpim->ioim_comp_q);
+ 			bfa_ioim_tov(ioim);
+@@ -3494,7 +3506,8 @@ bfa_tskim_free(struct bfa_tskim_s *tskim)
+  * @return None.
+  */
+ void
+-bfa_tskim_start(struct bfa_tskim_s *tskim, struct bfa_itnim_s *itnim, lun_t lun,
++bfa_tskim_start(struct bfa_tskim_s *tskim, struct bfa_itnim_s *itnim,
++			struct scsi_lun lun,
+ 			enum fcp_tm_cmnd tm_cmnd, u8 tsecs)
+ {
+ 	tskim->itnim	= itnim;
+diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
+index 18bdc44..7d0eaba 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.h
++++ b/drivers/scsi/bfa/bfa_fcpim.h
+@@ -146,9 +146,9 @@ struct bfa_tskim_s {
+ 	struct bfa_s	*bfa;	/*  BFA module  */
+ 	struct bfa_fcpim_mod_s  *fcpim;	/*  parent fcpim module	*/
+ 	struct bfa_itnim_s	*itnim;	/*  i-t-n nexus for this IO  */
+-	struct bfad_tskim_s	*dtsk;   /*  driver task mgmt cmnd	*/
+-	bfa_boolean_t	notify;	/*  notify itnim on TM comp  */
+-	lun_t	lun;	/*  lun if applicable	*/
++	struct bfad_tskim_s	*dtsk;  /*  driver task mgmt cmnd	*/
++	bfa_boolean_t	notify;		/*  notify itnim on TM comp  */
++	struct scsi_lun		lun;	/*  lun if applicable	*/
+ 	enum fcp_tm_cmnd	tm_cmnd;	/*  task management command  */
+ 	u16	tsk_tag;	/*  FWI IO tag	*/
+ 	u8	tsecs;	/*  timeout in seconds	*/
+@@ -389,7 +389,7 @@ struct bfa_tskim_s	*bfa_tskim_alloc(struct bfa_s *bfa,
+ 					struct bfad_tskim_s *dtsk);
+ void		bfa_tskim_free(struct bfa_tskim_s *tskim);
+ void		bfa_tskim_start(struct bfa_tskim_s *tskim,
+-				struct bfa_itnim_s *itnim, lun_t lun,
++				struct bfa_itnim_s *itnim, struct scsi_lun lun,
+ 				enum fcp_tm_cmnd tm, u8 t_secs);
+ void		bfa_cb_tskim_done(void *bfad, struct bfad_tskim_s *dtsk,
+ 				  enum bfi_tskim_status tsk_status);
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index d24b7e4..8cc4451 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -21,7 +21,6 @@
+ 
+ #include "bfad_drv.h"
+ #include "bfad_im.h"
+-#include "bfa_cb_ioim.h"
+ #include "bfa_fcs.h"
+ 
+ BFA_TRC_FILE(LDRV, IM);
+@@ -257,6 +256,7 @@ bfad_im_target_reset_send(struct bfad_s *bfad, struct scsi_cmnd *cmnd,
+ 	struct bfa_tskim_s *tskim;
+ 	struct bfa_itnim_s *bfa_itnim;
+ 	bfa_status_t    rc = BFA_STATUS_OK;
++	struct scsi_lun scsilun;
+ 
+ 	tskim = bfa_tskim_alloc(&bfad->bfa, (struct bfad_tskim_s *) cmnd);
+ 	if (!tskim) {
+@@ -273,7 +273,8 @@ bfad_im_target_reset_send(struct bfad_s *bfad, struct scsi_cmnd *cmnd,
+ 	cmnd->host_scribble = NULL;
+ 	cmnd->SCp.Status = 0;
+ 	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
+-	bfa_tskim_start(tskim, bfa_itnim, (lun_t)0,
++	memset(&scsilun, 0, sizeof(scsilun));
++	bfa_tskim_start(tskim, bfa_itnim, scsilun,
+ 			    FCP_TM_TARGET_RESET, BFAD_TARGET_RESET_TMO);
+ out:
+ 	return rc;
+@@ -300,6 +301,7 @@ bfad_im_reset_lun_handler(struct scsi_cmnd *cmnd)
+ 	int             rc = SUCCESS;
+ 	unsigned long   flags;
+ 	enum bfi_tskim_status task_status;
++	struct scsi_lun scsilun;
+ 
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	itnim = itnim_data->itnim;
+@@ -326,8 +328,8 @@ bfad_im_reset_lun_handler(struct scsi_cmnd *cmnd)
+ 	cmnd->SCp.ptr = (char *)&wq;
+ 	cmnd->SCp.Status = 0;
+ 	bfa_itnim = bfa_fcs_itnim_get_halitn(&itnim->fcs_itnim);
+-	bfa_tskim_start(tskim, bfa_itnim,
+-			    bfad_int_to_lun(cmnd->device->lun),
++	int_to_scsilun(cmnd->device->lun, &scsilun);
++	bfa_tskim_start(tskim, bfa_itnim, scsilun,
+ 			    FCP_TM_LUN_RESET, BFAD_LUN_RESET_TMO);
+ 	spin_unlock_irqrestore(&bfad->bfad_lock, flags);
+ 
+diff --git a/drivers/scsi/bfa/bfi.h b/drivers/scsi/bfa/bfi.h
+index 27b33c7..e194484 100644
+--- a/drivers/scsi/bfa/bfi.h
++++ b/drivers/scsi/bfa/bfi.h
+@@ -399,7 +399,7 @@ union bfi_ioc_i2h_msg_u {
+  */
+ struct bfi_pbc_blun_s {
+ 	wwn_t		tgt_pwwn;
+-	lun_t		tgt_lun;
++	struct scsi_lun	tgt_lun;
  };
  
--extern struct bfa_module_s *hal_mods[];
- 
- struct bfa_s {
- 	void			*bfad;		/*  BFA driver instance    */
-@@ -116,8 +115,6 @@ struct bfa_s {
- 	struct bfa_msix_s	msix;
- };
- 
--extern bfa_isr_func_t bfa_isrs[BFI_MC_MAX];
--extern bfa_ioc_mbox_mcfunc_t  bfa_mbox_isrs[];
- extern bfa_boolean_t bfa_auto_recover;
- extern struct bfa_module_s hal_mod_sgpg;
- extern struct bfa_module_s hal_mod_fcport;
+ /*
+diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
+index 1028876..e0e5318 100644
+--- a/drivers/scsi/bfa/bfi_ms.h
++++ b/drivers/scsi/bfa/bfi_ms.h
+@@ -725,7 +725,7 @@ struct bfi_tskim_req_s {
+ 	struct bfi_mhdr_s  mh;	/*  Common msg header	*/
+ 	__be16	tsk_tag;	/*  task management tag	*/
+ 	u16	itn_fhdl;	/*  itn firmware handle	*/
+-	lun_t	lun;	/*  LU number	*/
++	struct 	scsi_lun lun;	/*  LU number	*/
+ 	u8	tm_flags;	/*  see enum fcp_tm_cmnd	*/
+ 	u8	t_secs;	/*  Timeout value in seconds	*/
+ 	u8	rsvd[2];
 -- 
 1.7.2.1
 
