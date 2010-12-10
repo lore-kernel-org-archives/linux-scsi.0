@@ -1,112 +1,35 @@
-From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: RE: [RFC] [PATCH 5/5] bnx2fc: Broadcom FCoE offload driver
- submission - part 3
-Date: Fri, 10 Dec 2010 15:28:04 -0800
-Message-ID: <1292023684.5480.198.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
-References: <1291920835.5480.161.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
- <7C88852EF6F99F4EB538472FCFEBE22201499C3157@orsmsx509.amr.corp.intel.com>
+From: Malahal Naineni <malahal@us.ibm.com>
+Subject: Re: [RFC PATCH 0/3] differentiate between I/O errors
+Date: Fri, 10 Dec 2010 15:40:36 -0800
+Message-ID: <20101210234036.GA4841@us.ibm.com>
+References: <20101130225956.GA8882@redhat.com>
+ <1291763802-8251-1-git-send-email-snitzer@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:2143 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751169Ab0LJX2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Dec 2010 18:28:18 -0500
-In-Reply-To: <7C88852EF6F99F4EB538472FCFEBE22201499C3157@orsmsx509.amr.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, j-nomura@ce.jp.nec.com, vst@vlnb.net, rwheeler@redhat.com, hch@lst.de, chris.mason@oracle.com, tj@kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Zou, Yi" <yi.zou@intel.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, devel@open-fcoe.org
 
-On Fri, 2010-12-10 at 11:52 -0800, Zou, Yi wrote:
-> > This patch contains code that interfaces with libfc, libfcoe
-> > and cnic modules to create FCoE instances, send/receive
-> > non-offload FIP/FCoE packets, listen to link events, etc.
-> > 
-> > Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-> > ---
-> >  drivers/scsi/Kconfig              |    1 +
-> >  drivers/scsi/Makefile             |    1 +
-> >  drivers/scsi/bnx2fc/Kconfig       |   11 +
-> >  drivers/scsi/bnx2fc/Makefile      |    3 +
-> >  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2320
-> > +++++++++++++++++++++++++++++++++++++
-> >  5 files changed, 2336 insertions(+), 0 deletions(-)
-> >  create mode 100644 drivers/scsi/bnx2fc/Kconfig
-> >  create mode 100644 drivers/scsi/bnx2fc/Makefile
-> >  create mode 100644 drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> > 
-> > <-- snip -->
-> >
-> > +
-> > +unsigned long bnx2fc_debug_level;
-> > +module_param(bnx2fc_debug_level, long, 0644);
-> > +module_param_call(create, bnx2fc_create, NULL, (void *)FIP_MODE_FABRIC,
-> > +		  S_IWUSR);
-> > +__MODULE_PARM_TYPE(create, "string");
-> > +MODULE_PARM_DESC(create, " Creates fcoe instance on a ethernet
-> > interface");
-> > +module_param_call(destroy, bnx2fc_destroy, NULL, NULL, S_IWUSR);
-> > +__MODULE_PARM_TYPE(destroy, "string");
-> > +MODULE_PARM_DESC(destroy, " Destroys fcoe instance on a ethernet
-> > interface");
-> > +
+Mike Snitzer [snitzer@redhat.com] wrote:
+> Refreshed Hannes' initial "scsi: Detailed I/O errors" patch against
+> v2.6.37-rc5.  v2 introduces __scsi_error_from_host_byte to avoid
+> the duplicate switch statement.  Also a few whitespace and comment
+> changes.
 > 
-> //I sent this earlier to open-fcoe.org mailing list and realized it was
-> temporarily down, so resend this here, apologize if you get it multiple
-> times.
+> Split DM mpath change out to separate v2 patch; failed discard is now
+> retryable in the face of a non-target IO error.
 > 
-> I understand that fcoe.ko is not needed here, but the above also indicates
-> that the create/destroy will not be going through the existing fcoe-utils
-> which uses sysfs entries of the fcoe module. I think it will be nice for
-> everyone to use fcoe-utils as the open-fcoe user space tool.
-
-Thanks for the comments, Yi.
-
-You're right. fcoe.ko is not needed. However, we definitely want to
-integrate this driver with open-fcoe's fcoe-utils.
-
+> Added improved block layer's I/O error message (based on the finer
+> grained I/O error returns afforded by SCSI).
 > 
-> However, the existing fcoe.c does not offer that flexibility, where I think
-> we have to separate the fcoe.c to provide a fcoe transport layer so vendor
-> fcoe hba can plug in, where the existing fcoe.c is the sw fcoe transport and 
-> plugged in by default. All fcoe transports are registered when they are loaded,
-> when fcoe_create() gets called from sysfs, it passes to the fcoe transport to 
-> look up from the registered transports, whoever thinks the netdev is associated 
-> with its hw will take over from there, fcoe_destroy() is similar. The default
-> transport is the sw fcoe hba in current fcoe.c will be called upon if no
-> registered fcoe transport can provide offload there.
-> 
-> As the mod params are in fcoe.c, I think we can move create/destroy to libfcoe,
-> and, yeah, that does require change in fcoe-utils as well, but that would allow
-> fcoe.c be the pure sw fcoe transport. There will be functions in current fcoe.c
-> that can be exported so both sw or hw fcoe transport can use, reducing the code
-> size. The sw fcoe transport can plug in as vendor's transport in the same way
-> through fcoe transport registration, so fcoe.ko will not be required for any
-> vendors who has their fcoe transport implementation, e.g., bnx2fc_fcoe.
-> 
-> I hope this makes sense, I do think this logic would work nicely for any
-> fcoe hba to provide the same user interface on top of given network interface
-> name via fcoe-util, which is already pretty well maintained and tested, with
-> full DCB support as well. I am hoping we can move towards this direction, if not
-> now. 
+> Comments/suggestions are welcome.
 
-This definitely is one approach that we can follow. 
+I did test the Hannes original patch with the latest Linus' git tree! I
+used scsi_debug to simulate path failures as well as 'Media' failures
+and it did work as expected. I will test your patches soon.
 
-Approach we are following today is to modify /etc/fcoe/cfg-eth* to
-include "DRIVER_NAME", which fcoemon can use to identify the sysfs path
-to make appropriate calls to create/destroy.
-
-Either way, changes in fcoe-utils are required.
-
-Thanks,
-Bhanu
-> 
-> Thanks,
-> yi
-> 
-
-
-
+Thanks, Malahal.
