@@ -1,70 +1,76 @@
 From: Hillf Danton <dhillf@gmail.com>
 Subject: Re: [Open-FCoE] [PATCH] add stats info for FC rports
-Date: Fri, 10 Dec 2010 21:35:22 +0800
-Message-ID: <AANLkTimyuEPVz6hdWk93sjY_me-+RRKLCPBc5M-1tmrJ@mail.gmail.com>
+Date: Fri, 10 Dec 2010 23:13:32 +0800
+Message-ID: <AANLkTimj8Ez=cUPocr8eONJUuZR87wczoV6Pe1BewOHo@mail.gmail.com>
 References: <AANLkTi=mwHmJwNwCqJXxGXsfyULpnTX0t7rOq3eV9YOF@mail.gmail.com>
 	<4D000183.9050804@cisco.com>
 	<AANLkTikWJ-M53Qvd+bM9_xZ11it=gz3p5qVQN037fGT_@mail.gmail.com>
 	<4D012B58.3030804@cisco.com>
+	<AANLkTimyuEPVz6hdWk93sjY_me-+RRKLCPBc5M-1tmrJ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:60486 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753153Ab0LJNfY convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2010 08:35:24 -0500
-Received: by wyb28 with SMTP id 28so3450888wyb.19
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2010 05:35:23 -0800 (PST)
-In-Reply-To: <4D012B58.3030804@cisco.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:50402 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755443Ab0LJPNe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2010 10:13:34 -0500
+Received: by wwa36 with SMTP id 36so3815617wwa.1
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Dec 2010 07:13:32 -0800 (PST)
+In-Reply-To: <AANLkTimyuEPVz6hdWk93sjY_me-+RRKLCPBc5M-1tmrJ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Joe Eykholt <jeykholt@cisco.com>
 Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-On Fri, Dec 10, 2010 at 3:17 AM, Joe Eykholt <jeykholt@cisco.com> wrote=
-:
->
->
-> On 12/9/10 6:18 AM, Hillf Danton wrote:
->> On Thu, Dec 9, 2010 at 6:06 AM, Joe Eykholt <jeykholt@cisco.com> wro=
-te:
->>
->> Locking here looks unnecessary, since lport could not goto Mars.
->> If could, lot of orphans have to stay on Earth with no more care.
->
-> The lport could go away before the rport is freed by rcu.
+It is the second version with two changes.
 
-Yes, rcu was neglected by my fault.
+This version could not be completed without help from Joe,
+specially on rcu and tearing lport down.
 
-> Also, two rports could be freed in rcu callbacks at the same time,
-> so two decrements of nr_rdata could be concurrent and you would
-> get nondeterministic results since the decrement isn't atomic.
->
->
->>
->> When initing lport, clarity could be redundant.
->
-> So, you agree or not?
-
-Agree with no doubt.
-
->
->> When destroying lport, it is the right place to report leakage.
->
-> Yes, but there's a call from lport destroy into rport, and that's the
-> place to report rport leakage, not in the FCP module. =C2=A0For one t=
-hing,
-> not all LLDs use that fcp module.
-
-Great point.
-
-Redelivery soon out.
-
-good weekend
+Thank you, Joe.
 Hillf
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+
+--- a/include/scsi/libfc.h	2010-11-01 19:54:12.000000000 +0800
++++ b/include/scsi/libfc.h	2010-12-08 21:05:46.000000000 +0800
+@@ -803,6 +803,9 @@ struct fc_lport {
+ 	void			       *scsi_priv;
+ 	struct fc_disc                 disc;
+
++	/* stats info of the usage of rports */
++	unsigned long			nr_rdata;
++
+ 	/* Virtual port information */
+ 	struct list_head	       vports;
+ 	struct fc_vport		       *vport;
+--- a/drivers/scsi/libfc/fc_rport.c	2010-11-01 19:54:12.000000000 +0800
++++ b/drivers/scsi/libfc/fc_rport.c	2010-12-10 23:10:54.000000000 +0800
+@@ -129,6 +129,7 @@ static struct fc_rport_priv *fc_rport_cr
+ 	if (!rdata)
+ 		return NULL;
+
++	lport->nr_rdata++;
+ 	rdata->ids.node_name = -1;
+ 	rdata->ids.port_name = -1;
+ 	rdata->ids.port_id = port_id;
+@@ -171,6 +172,7 @@ static void fc_rport_destroy(struct kref
+ 	struct fc_rport_priv *rdata;
+
+ 	rdata = container_of(kref, struct fc_rport_priv, kref);
++	rdata->local_port->nr_rdata--;
+ 	call_rcu(&rdata->rcu, fc_rport_free_rcu);
+ }
+
+--- a/drivers/scsi/libfc/fc_lport.c	2010-11-01 19:54:12.000000000 +0800
++++ b/drivers/scsi/libfc/fc_lport.c	2010-12-10 23:06:00.000000000 +0800
+@@ -629,6 +629,10 @@ int fc_lport_destroy(struct fc_lport *lp
+ 	lport->tt.fcp_abort_io(lport);
+ 	lport->tt.disc_stop_final(lport);
+ 	lport->tt.exch_mgr_reset(lport, 0, 0);
++	if (lport->nr_rdata != 0)
++		printk(KERN_WARNING "libfc: %lu Leaked rports when "
++			"destroying local port (%6.6x)\n",
++			lport->nr_rdata, lport->port_id);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(fc_lport_destroy);
