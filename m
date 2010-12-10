@@ -1,40 +1,89 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [Scst-devel] [PATCH 8/19]: SCST SYSFS interface implementation
-Date: Fri, 10 Dec 2010 11:36:37 -0800
-Message-ID: <20101210193637.GA23113@kroah.com>
-References: <20101115161620.GB5981@kroah.com>
- <4CE16B8E.1000300@panasas.com>
- <AANLkTikPVXGJ5-5YDk1uqfqrqxGLpSiSdaX3h7qxo-ie@mail.gmail.com>
- <8985DEAF-4227-4629-B90A-938D2BA3534E@etechsoft.com>
- <4CE2846C.6070501@vlnb.net>
- <4CE59482.3050002@gmail.com>
- <20101118214619.GA29097@kroah.com>
- <4CE6BB4A.5060606@gmail.com>
- <20101119211904.GB28606@kroah.com>
- <AANLkTimJo_ZtQ3uVEBv864pP9f9AZR3D_o0R7T-B3fWL@mail.gmail.com>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: RE: [RFC] [PATCH 5/5] bnx2fc: Broadcom FCoE offload driver
+ submission - part 3
+Date: Fri, 10 Dec 2010 11:52:14 -0800
+Message-ID: <7C88852EF6F99F4EB538472FCFEBE22201499C3157@orsmsx509.amr.corp.intel.com>
+References: <1291920835.5480.161.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTimJo_ZtQ3uVEBv864pP9f9AZR3D_o0R7T-B3fWL@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Vladislav Bolkhovitin <vvvvvst@gmail.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, scst-devel <scst-devel@lists.sourceforge.net>
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:46176 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756066Ab0LJTwt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Dec 2010 14:52:49 -0500
+In-Reply-To: <1291920835.5480.161.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bhanu Gollapudi <bprakash@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Michael Chan <mchan@broadcom.com>
 
-On Fri, Dec 10, 2010 at 01:06:06PM +0100, Bart Van Assche wrote:
-> On Fri, Nov 19, 2010 at 10:19 PM, Greg KH <greg@kroah.com> wrote:
-> > [ ... ]
-> >
-> > None. =A0Use 'struct device'
->=20
-> How about using 'struct device' as follows ?
-> * Move /sys/kernel/scst_tgt/targets to /sys/class/target_driver.
+> This patch contains code that interfaces with libfc, libfcoe
+> and cnic modules to create FCoE instances, send/receive
+> non-offload FIP/FCoE packets, listen to link events, etc.
+> 
+> Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+> ---
+>  drivers/scsi/Kconfig              |    1 +
+>  drivers/scsi/Makefile             |    1 +
+>  drivers/scsi/bnx2fc/Kconfig       |   11 +
+>  drivers/scsi/bnx2fc/Makefile      |    3 +
+>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2320
+> +++++++++++++++++++++++++++++++++++++
+>  5 files changed, 2336 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/scsi/bnx2fc/Kconfig
+>  create mode 100644 drivers/scsi/bnx2fc/Makefile
+>  create mode 100644 drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> 
+> <-- snip -->
+>
+> +
+> +unsigned long bnx2fc_debug_level;
+> +module_param(bnx2fc_debug_level, long, 0644);
+> +module_param_call(create, bnx2fc_create, NULL, (void *)FIP_MODE_FABRIC,
+> +		  S_IWUSR);
+> +__MODULE_PARM_TYPE(create, "string");
+> +MODULE_PARM_DESC(create, " Creates fcoe instance on a ethernet
+> interface");
+> +module_param_call(destroy, bnx2fc_destroy, NULL, NULL, S_IWUSR);
+> +__MODULE_PARM_TYPE(destroy, "string");
+> +MODULE_PARM_DESC(destroy, " Destroys fcoe instance on a ethernet
+> interface");
+> +
 
-Please never create a new class, use 'struct bus_type' instead and
-create a bus and have drivers and devices on it.
+//I sent this earlier to open-fcoe.org mailing list and realized it was
+temporarily down, so resend this here, apologize if you get it multiple
+times.
 
-thanks,
+I understand that fcoe.ko is not needed here, but the above also indicates
+that the create/destroy will not be going through the existing fcoe-utils
+which uses sysfs entries of the fcoe module. I think it will be nice for
+everyone to use fcoe-utils as the open-fcoe user space tool.
 
-greg k-h
+However, the existing fcoe.c does not offer that flexibility, where I think
+we have to separate the fcoe.c to provide a fcoe transport layer so vendor
+fcoe hba can plug in, where the existing fcoe.c is the sw fcoe transport and 
+plugged in by default. All fcoe transports are registered when they are loaded,
+when fcoe_create() gets called from sysfs, it passes to the fcoe transport to 
+look up from the registered transports, whoever thinks the netdev is associated 
+with its hw will take over from there, fcoe_destroy() is similar. The default
+transport is the sw fcoe hba in current fcoe.c will be called upon if no
+registered fcoe transport can provide offload there.
+
+As the mod params are in fcoe.c, I think we can move create/destroy to libfcoe,
+and, yeah, that does require change in fcoe-utils as well, but that would allow
+fcoe.c be the pure sw fcoe transport. There will be functions in current fcoe.c
+that can be exported so both sw or hw fcoe transport can use, reducing the code
+size. The sw fcoe transport can plug in as vendor's transport in the same way
+through fcoe transport registration, so fcoe.ko will not be required for any
+vendors who has their fcoe transport implementation, e.g., bnx2fc_fcoe.
+
+I hope this makes sense, I do think this logic would work nicely for any
+fcoe hba to provide the same user interface on top of given network interface
+name via fcoe-util, which is already pretty well maintained and tested, with
+full DCB support as well. I am hoping we can move towards this direction, if not
+now. 
+
+Thanks,
+yi
