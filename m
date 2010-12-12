@@ -1,35 +1,41 @@
-From: Malahal Naineni <malahal@us.ibm.com>
-Subject: Re: [RFC PATCH 0/3] differentiate between I/O errors
-Date: Fri, 10 Dec 2010 15:40:36 -0800
-Message-ID: <20101210234036.GA4841@us.ibm.com>
-References: <20101130225956.GA8882@redhat.com>
- <1291763802-8251-1-git-send-email-snitzer@redhat.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 2/2] scsi: don't use execute_in_process_context()
+Date: Sun, 12 Dec 2010 16:48:33 -0600
+Message-ID: <1292194113.2989.9.camel@mulgrave.site>
+References: <4CBD95C0.6060302@kernel.org>  <4CBD95DC.8000001@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1291763802-8251-1-git-send-email-snitzer@redhat.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, k-ueda@ct.jp.nec.com, michaelc@cs.wisc.edu, tytso@mit.edu, sshtylyov@mvista.com, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, j-nomura@ce.jp.nec.com, vst@vlnb.net, rwheeler@redhat.com, hch@lst.de, chris.mason@oracle.com, tj@kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4CBD95DC.8000001@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, lkml <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Mike Snitzer [snitzer@redhat.com] wrote:
-> Refreshed Hannes' initial "scsi: Detailed I/O errors" patch against
-> v2.6.37-rc5.  v2 introduces __scsi_error_from_host_byte to avoid
-> the duplicate switch statement.  Also a few whitespace and comment
-> changes.
-> 
-> Split DM mpath change out to separate v2 patch; failed discard is now
-> retryable in the face of a non-target IO error.
-> 
-> Added improved block layer's I/O error message (based on the finer
-> grained I/O error returns afforded by SCSI).
-> 
-> Comments/suggestions are welcome.
+On Tue, 2010-10-19 at 14:58 +0200, Tejun Heo wrote:
+> SCSI is the only subsystem which uses execute_in_process_context().
+> With the recent workqueue updates, unconditionally using work wouldn't
+> cause deadlocks around execution resources and the two places where
+> SCSI uses them are cold paths where using work unconditionally
+> wouldn't make any difference.  Drop execute_in_process_context() and
+> use work directly.
 
-I did test the Hannes original patch with the latest Linus' git tree! I
-used scsi_debug to simulate path failures as well as 'Media' failures
-and it did work as expected. I will test your patches soon.
+Sorry, managed to lose this until the ping.
 
-Thanks, Malahal.
+The analysis above isn't quite correct, I'm afraid.  We use the
+execute_in_process_context() not to avoid deadlocks, but to acquire
+process context if we don't have it because the API allows calling from
+sites at interrupt context.  The point of using
+execute_in_process_context() is that we actually want to make use of the
+user context if we have one ... there's no point using a workqueue in
+that case, because there's nothing to be gained (except to slow
+everything down).  We have no ordering constraints (the traditional
+reason for using workqueues) so this is purely about context.
+
+Alan stern recently did an analysis (at least for the target reap) that
+says we actually have no interrupt context call sites, so abandoning the
+execute_in_process_context() for a direct call in that case might make
+sense.
+
+James
