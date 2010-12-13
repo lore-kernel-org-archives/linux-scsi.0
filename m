@@ -1,14 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/2] target: Fix tfo->write_pending() fabric callback ordering
-Date: Mon, 13 Dec 2010 15:58:42 -0800
-Message-ID: <1292284723-6806-2-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 2/2] target: Convert se_nacl->nacl_sess_lock to use spin_lock_irq()
+Date: Mon, 13 Dec 2010 15:58:43 -0800
+Message-ID: <1292284723-6806-3-git-send-email-nab@linux-iscsi.org>
 References: <1292284723-6806-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm23.bullet.mail.sp2.yahoo.com ([98.139.91.93]:38855 "HELO
-	nm23.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757027Ab0LMX6y (ORCPT
+Received: from nm28-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.234]:25371 "HELO
+	nm28-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756864Ab0LMX64 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Dec 2010 18:58:54 -0500
+	Mon, 13 Dec 2010 18:58:56 -0500
 In-Reply-To: <1292284723-6806-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,84 +17,143 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch moves the call to transport_cmd_check_stop() to
-clear the T_TASK(cmd)->t_transport_active=0 bit before calling
-back into fabric module code via CMD_TFO(cmd)->write_pending()
-in order to signal that WRITE data is ready to be transfered.
+This patch converts the usage of se_nacl->nacl_sess_lock to use
+spin_[un]lock_irq in __transport_register_session() and
+transport_deregister_session_configfs(), along with the iSCSI specific
+fabric_lib TransportID handlers in target_core_fabric_lib.c
 
-This fixes the case where transport_generic_handle_data() would have
-to wait until T_TASK(cmd)->t_transport_active==0 before being able
-to call transport_add_cmd_to_queue(cmd, TRANSPORT_PROCESS_WRITE)
-to queue the completed WRITE paylods into TCM.  This allows
-transport_generic_handle_data() to be called directly from interrupt
-context code for HW target mode.
+This patch also changes PRI logic in core_scsi3_pri_read_full_status() to
+increment pr_reg->pr_res_holders and drop pr_tmpl->registration_lock while
+calling TPG_TFO(se_tpg)->tpg_get_pr_transport_id*() for the iSCSI TransportID
+case that needs to obtain se_nacl->nacl_sess_lock.
 
-Note that the call to transport_cmd_check_stop() is safe with transport_off=1
-preceeding CMD_TFO(cmd)->write_pending() because the se_cmd->se_lun pointer
-is *not* being cleared for the write_pending case.
+This has been done to allow transport_deregister_session_configfs() to be called
+from interrupt context for HW target mode.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-(cherry picked from commit 658efaabe00f86427761a0c79c38d757bb0e94fe)
+(cherry picked from commit cc8a8c3cb55293822871ce40c2cec73163206203)
 ---
- drivers/target/target_core_transport.c |   31 ++++++++++++++++---------------
- 1 files changed, 16 insertions(+), 15 deletions(-)
+ drivers/target/target_core_fabric_lib.c |    8 ++++----
+ drivers/target/target_core_pr.c         |   11 +++++++++++
+ drivers/target/target_core_transport.c  |    8 ++++----
+ 3 files changed, 19 insertions(+), 8 deletions(-)
 
+diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+index f4b34d3..3e6986d 100644
+--- a/drivers/target/target_core_fabric_lib.c
++++ b/drivers/target/target_core_fabric_lib.c
+@@ -229,7 +229,7 @@ u32 iscsi_get_pr_transport_id(
+ 	u32 off = 4, padding = 0;
+ 	u16 len = 0;
+ 
+-	spin_lock(&se_nacl->nacl_sess_lock);
++	spin_lock_irq(&se_nacl->nacl_sess_lock);
+ 	/*
+ 	 * Set PROTOCOL IDENTIFIER to 5h for iSCSI
+ 	*/
+@@ -293,7 +293,7 @@ u32 iscsi_get_pr_transport_id(
+ 		buf[off+len] = '\0'; off++;
+ 		len += 7;
+ 	}
+-	spin_unlock(&se_nacl->nacl_sess_lock);
++	spin_unlock_irq(&se_nacl->nacl_sess_lock);
+ 	/*
+ 	 * The ADDITIONAL LENGTH field specifies the number of bytes that follow
+ 	 * in the TransportID. The additional length shall be at least 20 and
+@@ -323,7 +323,7 @@ u32 iscsi_get_pr_transport_id_len(
+ {
+ 	u32 len = 0, padding = 0;
+ 
+-	spin_lock(&se_nacl->nacl_sess_lock);
++	spin_lock_irq(&se_nacl->nacl_sess_lock);
+ 	len = strlen(se_nacl->initiatorname);
+ 	/*
+ 	 * Add extra byte for NULL terminator
+@@ -342,7 +342,7 @@ u32 iscsi_get_pr_transport_id_len(
+ 		*format_code = 1;
+ 	} else
+ 		*format_code = 0;
+-	spin_unlock(&se_nacl->nacl_sess_lock);
++	spin_unlock_irq(&se_nacl->nacl_sess_lock);
+ 	/*
+ 	 * The ADDITIONAL LENGTH field specifies the number of bytes that follow
+ 	 * in the TransportID. The additional length shall be at least 20 and
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 5d6c545..6b275bb 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -4042,6 +4042,10 @@ static int core_scsi3_pri_read_full_status(struct se_cmd *cmd)
+ 		se_nacl = pr_reg->pr_reg_nacl;
+ 		se_tpg = pr_reg->pr_reg_nacl->se_tpg;
+ 		add_desc_len = 0;
++
++		atomic_inc(&pr_reg->pr_res_holders);
++		smp_mb__after_atomic_inc();
++		spin_unlock(&pr_tmpl->registration_lock);
+ 		/*
+ 		 * Determine expected length of $FABRIC_MOD specific
+ 		 * TransportID full status descriptor..
+@@ -4052,6 +4056,9 @@ static int core_scsi3_pri_read_full_status(struct se_cmd *cmd)
+ 		if ((exp_desc_len + add_len) > cmd->data_length) {
+ 			printk(KERN_WARNING "SPC-3 PRIN READ_FULL_STATUS ran"
+ 				" out of buffer: %d\n", cmd->data_length);
++			spin_lock(&pr_tmpl->registration_lock);
++			atomic_dec(&pr_reg->pr_res_holders);
++			smp_mb__after_atomic_dec();
+ 			break;
+ 		}
+ 		/*
+@@ -4110,6 +4117,10 @@ static int core_scsi3_pri_read_full_status(struct se_cmd *cmd)
+ 		 */
+ 		desc_len = TPG_TFO(se_tpg)->tpg_get_pr_transport_id(se_tpg,
+ 				se_nacl, pr_reg, &format_code, &buf[off+4]);
++
++		spin_lock(&pr_tmpl->registration_lock);
++		atomic_dec(&pr_reg->pr_res_holders);
++		smp_mb__after_atomic_dec();
+ 		/*
+ 		 * Set the ADDITIONAL DESCRIPTOR LENGTH
+ 		 */
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 63fb5ca..019ccbc 100644
+index 019ccbc..dbc2800 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -1995,18 +1995,13 @@ int transport_generic_handle_data(
- 	struct se_cmd *cmd)
- {
- 	/*
--	 * Make sure that the transport has been disabled by
--	 * transport_write_pending() before readding this struct se_cmd to the
--	 * processing queue.  If it has not yet been reset to zero by the
--	 * processing thread in transport_add_cmd_to_queue(), let other
--	 * processes run.  If a signal was received, then we assume the
--	 * connection is being failed/shutdown, so we return a failure.
-+	 * For the software fabric case, then we assume the nexus is being
-+	 * failed/shutdown when signals are pending from the kthread context
-+	 * caller, so we return a failure.  For the HW target mode case running
-+	 * in interrupt code, the signal_pending() check is skipped.
- 	 */
--	while (atomic_read(&T_TASK(cmd)->t_transport_active)) {
--		msleep_interruptible(10);
--		if (signal_pending(current))
--			return -1;
--	}
-+	if (!in_interrupt() && signal_pending(current))
-+		return -1;
- 	/*
- 	 * If the received CDB has aleady been ABORTED by the generic
- 	 * target engine, we now call transport_check_aborted_status()
-@@ -5212,16 +5207,22 @@ static int transport_generic_write_pending(struct se_cmd *cmd)
- 				T_TASK(cmd)->t_task_buf,
- 				T_TASK(cmd)->t_task_pt_sgl);
- 	/*
-+	 * Clear the se_cmd for WRITE_PENDING status in order to set
-+	 * T_TASK(cmd)->t_transport_active=0 so that transport_generic_handle_data
-+	 * can be called from HW target mode interrupt code.  This is safe
-+	 * to be called with transport_off=1 before the CMD_TFO(cmd)->write_pending
-+	 * because the se_cmd->se_lun pointer is not being cleared.
-+	 */
-+	transport_cmd_check_stop(cmd, 1, 0);
-+
-+	/*
- 	 * Call the fabric write_pending function here to let the
- 	 * frontend know that WRITE buffers are ready.
- 	 */
- 	ret = CMD_TFO(cmd)->write_pending(cmd);
--	if (ret < 0) {
--		transport_cmd_check_stop(cmd, 1, 0);
-+	if (ret < 0)
- 		return ret;
--	}
+@@ -474,7 +474,7 @@ void __transport_register_session(
+ 					&buf[0], PR_REG_ISID_LEN);
+ 			se_sess->sess_bin_isid = get_unaligned_be64(&buf[0]);
+ 		}
+-		spin_lock_bh(&se_nacl->nacl_sess_lock);
++		spin_lock_irq(&se_nacl->nacl_sess_lock);
+ 		/*
+ 		 * The se_nacl->nacl_sess pointer will be set to the
+ 		 * last active I_T Nexus for each struct se_node_acl.
+@@ -483,7 +483,7 @@ void __transport_register_session(
  
--	transport_cmd_check_stop(cmd, 1, 0);
- 	return PYX_TRANSPORT_WRITE_PENDING;
+ 		list_add_tail(&se_sess->sess_acl_list,
+ 			      &se_nacl->acl_sess_list);
+-		spin_unlock_bh(&se_nacl->nacl_sess_lock);
++		spin_unlock_irq(&se_nacl->nacl_sess_lock);
+ 	}
+ 	list_add_tail(&se_sess->sess_list, &se_tpg->tpg_sess_list);
+ 
+@@ -513,7 +513,7 @@ void transport_deregister_session_configfs(struct se_session *se_sess)
+ 	 */
+ 	se_nacl = se_sess->se_node_acl;
+ 	if ((se_nacl)) {
+-		spin_lock_bh(&se_nacl->nacl_sess_lock);
++		spin_lock_irq(&se_nacl->nacl_sess_lock);
+ 		list_del(&se_sess->sess_acl_list);
+ 		/*
+ 		 * If the session list is empty, then clear the pointer.
+@@ -527,7 +527,7 @@ void transport_deregister_session_configfs(struct se_session *se_sess)
+ 					se_nacl->acl_sess_list.prev,
+ 					struct se_session, sess_acl_list);	
+ 		}
+-		spin_unlock_bh(&se_nacl->nacl_sess_lock);
++		spin_unlock_irq(&se_nacl->nacl_sess_lock);
+ 	}
  }
- 
+ EXPORT_SYMBOL(transport_deregister_session_configfs);
 -- 
 1.5.6.5
 
