@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 2/6] bfa: Store port configuration in flash for persistency.
-Date: Mon, 13 Dec 2010 16:16:50 -0800
-Message-ID: <1292285810-7327-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 4/6] bfa: direct attach mode fix.
+Date: Mon, 13 Dec 2010 16:17:42 -0800
+Message-ID: <1292285862-8468-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:35632 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758057Ab0LNARO (ORCPT
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59132 "EHLO
+	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758013Ab0LNAXe (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Dec 2010 19:17:14 -0500
+	Mon, 13 Dec 2010 19:23:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -18,107 +18,263 @@ Cc: huangj@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@broc
 From: Krishna Gudipati <kgudipat@brocade.com>
 
 Change details:
-	- When the bfa driver is loaded a flogi is sent without the knowledge
-	  of trunking configuration. This normal flogi causes the switch ports
-	  which had trunking enabled to go to persistent offline.
-	  Solution is to store the port configuration (which has trunking info) in
-	  the flash for persistency. The firmware will read this configuration when
-	  the very first fcport enable is received.
+	- Direct attach is not working due to the check of PID in fcxp_send request.
+	- Added logic to set the lps->lp_pid with the PID assigned for n2n mode.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_svc.c |   25 ++++++++++++++++++++++++-
- drivers/scsi/bfa/bfa_svc.h |    1 +
- drivers/scsi/bfa/bfi_ms.h  |    6 ++++--
- 3 files changed, 29 insertions(+), 3 deletions(-)
+ drivers/scsi/bfa/bfa_fcs.h       |    1 +
+ drivers/scsi/bfa/bfa_fcs_lport.c |    3 +
+ drivers/scsi/bfa/bfa_svc.c       |   99 +++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/bfa/bfa_svc.h       |    1 +
+ drivers/scsi/bfa/bfi_ms.h        |    8 +++
+ 5 files changed, 111 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
+index f0e652b..0fd6316 100644
+--- a/drivers/scsi/bfa/bfa_fcs.h
++++ b/drivers/scsi/bfa/bfa_fcs.h
+@@ -38,6 +38,7 @@ enum bfa_lps_event {
+ 	BFA_LPS_SM_DELETE	= 5,	/* lps delete from user         */
+ 	BFA_LPS_SM_OFFLINE	= 6,	/* Link is offline              */
+ 	BFA_LPS_SM_RX_CVL	= 7,	/* Rx clear virtual link        */
++	BFA_LPS_SM_SET_N2N_PID  = 8,	/* Set assigned PID for n2n */
+ };
+ 
+ 
+diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
+index bf96626..a153646 100644
+--- a/drivers/scsi/bfa/bfa_fcs_lport.c
++++ b/drivers/scsi/bfa/bfa_fcs_lport.c
+@@ -309,6 +309,7 @@ bfa_fcs_lport_plogi(struct bfa_fcs_lport_s *port,
+ 			return;
+ 		}
+ 		port->pid  = rx_fchs->d_id;
++		bfa_lps_set_n2n_pid(port->fabric->lps, rx_fchs->d_id);
+ 	}
+ 
+ 	/*
+@@ -323,6 +324,7 @@ bfa_fcs_lport_plogi(struct bfa_fcs_lport_s *port,
+ 			(memcmp((void *)&bfa_fcs_lport_get_pwwn(port),
+ 			(void *)&plogi->port_name, sizeof(wwn_t)) < 0)) {
+ 			port->pid  = rx_fchs->d_id;
++			bfa_lps_set_n2n_pid(port->fabric->lps, rx_fchs->d_id);
+ 			rport->pid = rx_fchs->s_id;
+ 		}
+ 		bfa_fcs_rport_plogi(rport, rx_fchs, plogi);
+@@ -979,6 +981,7 @@ bfa_fcs_lport_n2n_online(struct bfa_fcs_lport_s *port)
+ 	    ((void *)&pcfg->pwwn, (void *)&n2n_port->rem_port_wwn,
+ 	     sizeof(wwn_t)) > 0) {
+ 		port->pid = N2N_LOCAL_PID;
++		bfa_lps_set_n2n_pid(port->fabric->lps, N2N_LOCAL_PID);
+ 		/*
+ 		 * First, check if we know the device by pwwn.
+ 		 */
 diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index d5e5bfd..bbd8fbb 100644
+index bbd8fbb..698a2d6 100644
 --- a/drivers/scsi/bfa/bfa_svc.c
 +++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -1890,6 +1890,8 @@ bfa_fcport_sm_uninit(struct bfa_fcport_s *fcport,
- 		/*
- 		 * Start event after IOC is configured and BFA is started.
- 		 */
-+		fcport->use_flash_cfg = BFA_TRUE;
+@@ -131,6 +131,7 @@ static void bfa_lps_reqq_resume(void *lps_arg);
+ static void bfa_lps_free(struct bfa_lps_s *lps);
+ static void bfa_lps_send_login(struct bfa_lps_s *lps);
+ static void bfa_lps_send_logout(struct bfa_lps_s *lps);
++static void bfa_lps_send_set_n2n_pid(struct bfa_lps_s *lps);
+ static void bfa_lps_login_comp(struct bfa_lps_s *lps);
+ static void bfa_lps_logout_comp(struct bfa_lps_s *lps);
+ static void bfa_lps_cvl_event(struct bfa_lps_s *lps);
+@@ -143,6 +144,8 @@ static void bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event);
+ static void bfa_lps_sm_loginwait(struct bfa_lps_s *lps, enum bfa_lps_event
+ 					event);
+ static void bfa_lps_sm_online(struct bfa_lps_s *lps, enum bfa_lps_event event);
++static void bfa_lps_sm_online_n2n_pid_wait(struct bfa_lps_s *lps,
++					enum bfa_lps_event event);
+ static void bfa_lps_sm_logout(struct bfa_lps_s *lps, enum bfa_lps_event event);
+ static void bfa_lps_sm_logowait(struct bfa_lps_s *lps, enum bfa_lps_event
+ 					event);
+@@ -1254,6 +1257,12 @@ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ 			else
+ 				bfa_plog_str(lps->bfa->plog, BFA_PL_MID_LPS,
+ 					BFA_PL_EID_LOGIN, 0, "FLOGI Accept");
++			/* If N2N, send the assigned PID to FW */
++			bfa_trc(lps->bfa, lps->fport);
++			bfa_trc(lps->bfa, lps->lp_pid);
 +
- 		if (bfa_fcport_send_enable(fcport)) {
- 			bfa_trc(fcport->bfa, BFA_TRUE);
- 			bfa_sm_set_state(fcport, bfa_fcport_sm_enabling);
-@@ -2855,6 +2857,7 @@ bfa_fcport_send_enable(struct bfa_fcport_s *fcport)
- 	m->port_cfg = fcport->cfg;
- 	m->msgtag = fcport->msgtag;
- 	m->port_cfg.maxfrsize = cpu_to_be16(fcport->cfg.maxfrsize);
-+	 m->use_flash_cfg = fcport->use_flash_cfg;
- 	bfa_dma_be_addr_set(m->stats_dma_addr, fcport->stats_pa);
- 	bfa_trc(fcport->bfa, m->stats_dma_addr.a32.addr_lo);
- 	bfa_trc(fcport->bfa, m->stats_dma_addr.a32.addr_hi);
-@@ -3251,8 +3254,28 @@ bfa_fcport_isr(struct bfa_s *bfa, struct bfi_msg_s *msg)
- 
- 	switch (msg->mhdr.msg_id) {
- 	case BFI_FCPORT_I2H_ENABLE_RSP:
--		if (fcport->msgtag == i2hmsg.penable_rsp->msgtag)
-+		if (fcport->msgtag == i2hmsg.penable_rsp->msgtag) {
-+
-+			if (fcport->use_flash_cfg) {
-+				fcport->cfg = i2hmsg.penable_rsp->port_cfg;
-+				fcport->cfg.maxfrsize =
-+					cpu_to_be16(fcport->cfg.maxfrsize);
-+				fcport->cfg.path_tov =
-+					cpu_to_be16(fcport->cfg.path_tov);
-+				fcport->cfg.q_depth =
-+					cpu_to_be16(fcport->cfg.q_depth);
-+
-+				if (fcport->cfg.trunked)
-+					fcport->trunk.attr.state =
-+						BFA_TRUNK_OFFLINE;
-+				else
-+					fcport->trunk.attr.state =
-+						BFA_TRUNK_DISABLED;
-+				fcport->use_flash_cfg = BFA_FALSE;
-+			}
-+
- 			bfa_sm_send_event(fcport, BFA_FCPORT_SM_FWRSP);
-+		}
++			if (!lps->fport && lps->lp_pid)
++				bfa_sm_send_event(lps, BFA_LPS_SM_SET_N2N_PID);
+ 		} else {
+ 			bfa_sm_set_state(lps, bfa_lps_sm_init);
+ 			if (lps->fdisc)
+@@ -1272,6 +1281,11 @@ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ 		bfa_sm_set_state(lps, bfa_lps_sm_init);
  		break;
  
- 	case BFI_FCPORT_I2H_DISABLE_RSP:
++	case BFA_LPS_SM_SET_N2N_PID:
++		bfa_trc(lps->bfa, lps->fport);
++		bfa_trc(lps->bfa, lps->lp_pid);
++		break;
++
+ 	default:
+ 		bfa_sm_fault(lps->bfa, event);
+ 	}
+@@ -1340,9 +1354,59 @@ bfa_lps_sm_online(struct bfa_lps_s *lps, enum bfa_lps_event event)
+ 			BFA_PL_EID_FIP_FCF_CVL, 0, "FCF Clear Virt. Link Rx");
+ 		break;
+ 
++	case BFA_LPS_SM_SET_N2N_PID:
++		if (bfa_reqq_full(lps->bfa, lps->reqq)) {
++			bfa_sm_set_state(lps, bfa_lps_sm_online_n2n_pid_wait);
++			bfa_reqq_wait(lps->bfa, lps->reqq, &lps->wqe);
++		} else
++			bfa_lps_send_set_n2n_pid(lps);
++                break;
++
++	case BFA_LPS_SM_OFFLINE:
++	case BFA_LPS_SM_DELETE:
++		bfa_sm_set_state(lps, bfa_lps_sm_init);
++		break;
++
++	default:
++		bfa_sm_fault(lps->bfa, event);
++	}
++}
++
++/**
++ * login complete
++ */
++static void
++bfa_lps_sm_online_n2n_pid_wait(struct bfa_lps_s *lps, enum bfa_lps_event event)
++{
++	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, event);
++
++	switch (event) {
++	case BFA_LPS_SM_RESUME:
++		bfa_sm_set_state(lps, bfa_lps_sm_online);
++		bfa_lps_send_set_n2n_pid(lps);
++		break;
++
++	case BFA_LPS_SM_LOGOUT:
++		bfa_sm_set_state(lps, bfa_lps_sm_logowait);
++		bfa_plog_str(lps->bfa->plog, BFA_PL_MID_LPS,
++			BFA_PL_EID_LOGO, 0, "Logout");
++		break;
++
++	case BFA_LPS_SM_RX_CVL:
++		bfa_sm_set_state(lps, bfa_lps_sm_init);
++		bfa_reqq_wcancel(&lps->wqe);
++
++		/* Let the vport module know about this event */
++		bfa_lps_cvl_event(lps);
++		bfa_plog_str(lps->bfa->plog, BFA_PL_MID_LPS,
++			BFA_PL_EID_FIP_FCF_CVL, 0, "FCF Clear Virt. Link Rx");
++		break;
++
+ 	case BFA_LPS_SM_OFFLINE:
+ 	case BFA_LPS_SM_DELETE:
+ 		bfa_sm_set_state(lps, bfa_lps_sm_init);
++		bfa_reqq_wcancel(&lps->wqe);
+ 		break;
+ 
+ 	default:
+@@ -1498,8 +1562,9 @@ bfa_lps_login_rsp(struct bfa_s *bfa, struct bfi_lps_login_rsp_s *rsp)
+ 	switch (rsp->status) {
+ 	case BFA_STATUS_OK:
+ 		lps->fport	= rsp->f_port;
++		if (lps->fport)
++			lps->lp_pid = rsp->lp_pid;
+ 		lps->npiv_en	= rsp->npiv_en;
+-		lps->lp_pid	= rsp->lp_pid;
+ 		lps->pr_bbcred	= be16_to_cpu(rsp->bb_credit);
+ 		lps->pr_pwwn	= rsp->port_name;
+ 		lps->pr_nwwn	= rsp->node_name;
+@@ -1626,6 +1691,25 @@ bfa_lps_send_logout(struct bfa_lps_s *lps)
+ 	bfa_reqq_produce(lps->bfa, lps->reqq);
+ }
+ 
++/**
++ * send n2n pid set request to firmware
++ */
++static void
++bfa_lps_send_set_n2n_pid(struct bfa_lps_s *lps)
++{
++	struct bfi_lps_n2n_pid_req_s *m;
++
++	m = bfa_reqq_next(lps->bfa, lps->reqq);
++	bfa_assert(m);
++
++	bfi_h2i_set(m->mh, BFI_MC_LPS, BFI_LPS_H2I_N2N_PID_REQ,
++		bfa_lpuid(lps->bfa));
++
++	m->lp_tag = lps->lp_tag;
++	m->lp_pid = lps->lp_pid;
++	bfa_reqq_produce(lps->bfa, lps->reqq);
++}
++
+ /*
+  * Indirect login completion handler for non-fcs
+  */
+@@ -1846,6 +1930,19 @@ bfa_lps_get_base_pid(struct bfa_s *bfa)
+ 	return BFA_LPS_FROM_TAG(mod, 0)->lp_pid;
+ }
+ 
++/**
++ * Set PID in case of n2n (which is assigned during PLOGI)
++ */
++void
++bfa_lps_set_n2n_pid(struct bfa_lps_s *lps, uint32_t n2n_pid)
++{
++	bfa_trc(lps->bfa, lps->lp_tag);
++	bfa_trc(lps->bfa, n2n_pid);
++
++	lps->lp_pid = n2n_pid;
++	bfa_sm_send_event(lps, BFA_LPS_SM_SET_N2N_PID);
++}
++
+ /*
+  * LPS firmware message class handler.
+  */
 diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
-index 29b0918..36c81c7 100644
+index 36c81c7..331ad99 100644
 --- a/drivers/scsi/bfa/bfa_svc.h
 +++ b/drivers/scsi/bfa/bfa_svc.h
-@@ -444,6 +444,7 @@ struct bfa_fcport_s {
- 	u8			myalpa;	/*  my ALPA in LOOP topology */
- 	u8			rsvd[3];
- 	struct bfa_port_cfg_s	cfg;	/*  current port configuration */
-+	bfa_boolean_t		use_flash_cfg; /* get port cfg from flash */
- 	struct bfa_qos_attr_s  qos_attr;   /* QoS Attributes */
- 	struct bfa_qos_vc_attr_s qos_vc_attr;  /*  VC info from ELP */
- 	struct bfa_reqq_wait_s	reqq_wait;
+@@ -610,6 +610,7 @@ void bfa_lps_flogi(struct bfa_lps_s *lps, void *uarg, u8 alpa,
+ void bfa_lps_fdisc(struct bfa_lps_s *lps, void *uarg, u16 pdusz,
+ 		   wwn_t pwwn, wwn_t nwwn);
+ void bfa_lps_fdisclogo(struct bfa_lps_s *lps);
++void bfa_lps_set_n2n_pid(struct bfa_lps_s *lps, u32 n2n_pid);
+ u32 bfa_lps_get_base_pid(struct bfa_s *bfa);
+ u8 bfa_lps_get_tag_from_pid(struct bfa_s *bfa, u32 pid);
+ void bfa_cb_lps_flogi_comp(void *bfad, void *uarg, bfa_status_t status);
 diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
-index e0e5318..8f22ef1 100644
+index 8f22ef1..8d1ded3 100644
 --- a/drivers/scsi/bfa/bfi_ms.h
 +++ b/drivers/scsi/bfa/bfi_ms.h
-@@ -188,7 +188,8 @@ struct bfi_fcport_rsp_s {
- 	struct bfi_mhdr_s  mh;		/*  common msg header		    */
- 	u8		   status;	/*  port enable status		    */
- 	u8		   rsvd[3];
--	u32	   msgtag;	/*  msgtag for reply		    */
-+	struct	bfa_port_cfg_s port_cfg;/* port configuration	*/
-+	u32	msgtag;			/* msgtag for reply	*/
+@@ -342,6 +342,7 @@ struct bfi_uf_frm_rcvd_s {
+ enum bfi_lps_h2i_msgs {
+ 	BFI_LPS_H2I_LOGIN_REQ	= 1,
+ 	BFI_LPS_H2I_LOGOUT_REQ	= 2,
++	BFI_LPS_H2I_N2N_PID_REQ = 3,
  };
  
- /*
-@@ -202,7 +203,8 @@ struct bfi_fcport_enable_req_s {
- 	struct bfa_port_cfg_s port_cfg; /*  port configuration	    */
- 	union bfi_addr_u   stats_dma_addr; /*  DMA address for stats	    */
- 	u32	   msgtag;	/*  msgtag for reply		    */
--	u32	   rsvd2;
-+	u8	use_flash_cfg;	/* get prot cfg from flash */
-+	u8	rsvd2[3];
+ enum bfi_lps_i2h_msgs {
+@@ -401,10 +402,17 @@ struct bfi_lps_cvl_event_s {
+ 	u8		rsvd[3];
  };
  
- /*
++struct bfi_lps_n2n_pid_req_s {
++	struct bfi_mhdr_s	mh;	/*  common msg header		*/
++	u8	lp_tag;
++	u32	lp_pid : 24;
++};
++
+ union bfi_lps_h2i_msg_u {
+ 	struct bfi_mhdr_s		*msg;
+ 	struct bfi_lps_login_req_s	*login_req;
+ 	struct bfi_lps_logout_req_s	*logout_req;
++	struct bfi_lps_n2n_pid_req_s	*n2n_pid_req;
+ };
+ 
+ union bfi_lps_i2h_msg_u {
 -- 
 1.7.3.rc1
 
