@@ -1,15 +1,15 @@
 From: <kgudipat@brocade.com>
-Subject: [PATCH 4/6] bfa: direct attach mode fix.
-Date: Mon, 13 Dec 2010 16:17:42 -0800
-Message-ID: <1292285862-8468-1-git-send-email-kgudipat@brocade.com>
+Subject: [PATCH 5/6] bfa: io tag handling and minor bug fix.
+Date: Mon, 13 Dec 2010 16:23:27 -0800
+Message-ID: <1292286207-15427-1-git-send-email-kgudipat@brocade.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59132 "EHLO
+Received: from mx0a-000f0801.pphosted.com ([67.231.144.122]:59140 "EHLO
 	mx0a-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758013Ab0LNAXe (ORCPT
+	by vger.kernel.org with ESMTP id S1750848Ab0LNAXx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Dec 2010 19:23:34 -0500
+	Mon, 13 Dec 2010 19:23:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
@@ -17,264 +17,161 @@ Cc: huangj@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@broc
 
 From: Krishna Gudipati <kgudipat@brocade.com>
 
-Change details:
-	- Direct attach is not working due to the check of PID in fcxp_send request.
-	- Added logic to set the lps->lp_pid with the PID assigned for n2n mode.
+Fix iotag handling:
+	1) Update and check io tag for retry case.
+	2) Clearing upper 3 bits in io tag when an IO completes.
+	   The 3 upper bits in io tags are used for counting FCP exchange retry.
+	   Un-cleared bits will cause firmware to access invalid memory when the
+	   same io tag is used for an IO to a target that doesn't support FCP
+	   exchange retry.
+	3) Only check the effective bits when validating an iotag.
+
+Other minor fixes:
+	1) Added trace to get FC header type with assert of unhandled packet received.
+	   Ignore the type FC_TYPE_FC_FSS (FC_XS).
+	2) Fixed the adapter info display check - to check for fcmode flag even.
 
 Signed-off-by: Krishna Gudipati <kgudipat@brocade.com>
 ---
- drivers/scsi/bfa/bfa_fcs.h       |    1 +
- drivers/scsi/bfa/bfa_fcs_lport.c |    3 +
- drivers/scsi/bfa/bfa_svc.c       |   99 +++++++++++++++++++++++++++++++++++++-
- drivers/scsi/bfa/bfa_svc.h       |    1 +
- drivers/scsi/bfa/bfi_ms.h        |    8 +++
- 5 files changed, 111 insertions(+), 1 deletions(-)
+ drivers/scsi/bfa/bfa_fcpim.c     |    8 +++++---
+ drivers/scsi/bfa/bfa_fcpim.h     |   22 ++++++++++++----------
+ drivers/scsi/bfa/bfa_fcs_lport.c |    8 ++++++--
+ drivers/scsi/bfa/bfad_im.c       |    2 +-
+ 4 files changed, 24 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/bfa/bfa_fcs.h b/drivers/scsi/bfa/bfa_fcs.h
-index f0e652b..0fd6316 100644
---- a/drivers/scsi/bfa/bfa_fcs.h
-+++ b/drivers/scsi/bfa/bfa_fcs.h
-@@ -38,6 +38,7 @@ enum bfa_lps_event {
- 	BFA_LPS_SM_DELETE	= 5,	/* lps delete from user         */
- 	BFA_LPS_SM_OFFLINE	= 6,	/* Link is offline              */
- 	BFA_LPS_SM_RX_CVL	= 7,	/* Rx clear virtual link        */
-+	BFA_LPS_SM_SET_N2N_PID  = 8,	/* Set assigned PID for n2n */
- };
+diff --git a/drivers/scsi/bfa/bfa_fcpim.c b/drivers/scsi/bfa/bfa_fcpim.c
+index 314c931..5e697f2 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.c
++++ b/drivers/scsi/bfa/bfa_fcpim.c
+@@ -1540,8 +1540,8 @@ bfa_ioim_sm_active(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
+ 		break;
  
+ 	case BFA_IOIM_SM_SQRETRY:
+-		if (bfa_ioim_get_iotag(ioim) != BFA_TRUE) {
+-			/* max retry completed free IO */
++		if (bfa_ioim_maxretry_reached(ioim)) {
++			/* max retry reached, free IO */
+ 			bfa_sm_set_state(ioim, bfa_ioim_sm_hcb_free);
+ 			bfa_ioim_move_to_comp_q(ioim);
+ 			bfa_cb_queue(ioim->bfa, &ioim->hcb_qe,
+@@ -1569,6 +1569,7 @@ bfa_ioim_sm_cmnd_retry(struct bfa_ioim_s *ioim, enum bfa_ioim_event event)
+ 	switch (event) {
+ 	case BFA_IOIM_SM_FREE:
+ 		/* abts and rrq done. Now retry the IO with new tag */
++		bfa_ioim_update_iotag(ioim);
+ 		if (!bfa_ioim_send_ioreq(ioim)) {
+ 			bfa_sm_set_state(ioim, bfa_ioim_sm_qfull);
+ 			break;
+@@ -2526,7 +2527,7 @@ bfa_ioim_good_comp_isr(struct bfa_s *bfa, struct bfi_msg_s *m)
+ 	iotag = be16_to_cpu(rsp->io_tag);
  
+ 	ioim = BFA_IOIM_FROM_TAG(fcpim, iotag);
+-	bfa_assert(ioim->iotag == iotag);
++	bfa_assert(BFA_IOIM_TAG_2_ID(ioim->iotag) == iotag);
+ 
+ 	bfa_trc_fp(ioim->bfa, ioim->iotag);
+ 	bfa_ioim_cb_profile_comp(fcpim, ioim);
+@@ -2629,6 +2630,7 @@ bfa_ioim_free(struct bfa_ioim_s *ioim)
+ 	bfa_stats(ioim->itnim, io_comps);
+ 	fcpim->ios_active--;
+ 
++	ioim->iotag &= BFA_IOIM_IOTAG_MASK;
+ 	list_del(&ioim->qe);
+ 	list_add_tail(&ioim->qe, &fcpim->ioim_free_q);
+ }
+diff --git a/drivers/scsi/bfa/bfa_fcpim.h b/drivers/scsi/bfa/bfa_fcpim.h
+index f933458..1e38dad 100644
+--- a/drivers/scsi/bfa/bfa_fcpim.h
++++ b/drivers/scsi/bfa/bfa_fcpim.h
+@@ -41,7 +41,7 @@
+ 	(__itnim->ioprofile.iocomps[__index]++)
+ 
+ #define BFA_IOIM_RETRY_TAG_OFFSET 11
+-#define BFA_IOIM_RETRY_TAG_MASK 0x07ff /* 2K IOs */
++#define BFA_IOIM_IOTAG_MASK 0x07ff /* 2K IOs */
+ #define BFA_IOIM_RETRY_MAX 7
+ 
+ /* Buckets are are 512 bytes to 2MB */
+@@ -189,8 +189,9 @@ struct bfa_itnim_s {
+ 
+ #define bfa_itnim_is_online(_itnim) ((_itnim)->is_online)
+ #define BFA_FCPIM_MOD(_hal) (&(_hal)->modules.fcpim_mod)
++#define BFA_IOIM_TAG_2_ID(_iotag)	((_iotag) & BFA_IOIM_IOTAG_MASK)
+ #define BFA_IOIM_FROM_TAG(_fcpim, _iotag)	\
+-	(&fcpim->ioim_arr[(_iotag & BFA_IOIM_RETRY_TAG_MASK)])
++	(&fcpim->ioim_arr[(_iotag & BFA_IOIM_IOTAG_MASK)])
+ #define BFA_TSKIM_FROM_TAG(_fcpim, _tmtag)	\
+ 	(&fcpim->tskim_arr[_tmtag & (fcpim->num_tskim_reqs - 1)])
+ 
+@@ -198,20 +199,21 @@ struct bfa_itnim_s {
+ 	(_bfa->modules.fcpim_mod.io_profile_start_time)
+ #define bfa_fcpim_get_io_profile(_bfa)	\
+ 	(_bfa->modules.fcpim_mod.io_profile)
++#define bfa_ioim_update_iotag(__ioim) do {				\
++	uint16_t k = (__ioim)->iotag >> BFA_IOIM_RETRY_TAG_OFFSET;	\
++	k++; (__ioim)->iotag &= BFA_IOIM_IOTAG_MASK;			\
++	(__ioim)->iotag |= k << BFA_IOIM_RETRY_TAG_OFFSET;		\
++} while (0)
+ 
+ static inline bfa_boolean_t
+-bfa_ioim_get_iotag(struct bfa_ioim_s *ioim)
++bfa_ioim_maxretry_reached(struct bfa_ioim_s *ioim)
+ {
+-	u16 k = ioim->iotag;
+-
+-	k >>= BFA_IOIM_RETRY_TAG_OFFSET; k++;
+-
+-	if (k > BFA_IOIM_RETRY_MAX)
++	uint16_t k = ioim->iotag >> BFA_IOIM_RETRY_TAG_OFFSET;
++	if (k < BFA_IOIM_RETRY_MAX)
+ 		return BFA_FALSE;
+-	ioim->iotag &= BFA_IOIM_RETRY_TAG_MASK;
+-	ioim->iotag |= k<<BFA_IOIM_RETRY_TAG_OFFSET;
+ 	return BFA_TRUE;
+ }
++
+ /*
+  * function prototypes
+  */
 diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index bf96626..a153646 100644
+index a153646..74d7be9 100644
 --- a/drivers/scsi/bfa/bfa_fcs_lport.c
 +++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -309,6 +309,7 @@ bfa_fcs_lport_plogi(struct bfa_fcs_lport_s *port,
- 			return;
- 		}
- 		port->pid  = rx_fchs->d_id;
-+		bfa_lps_set_n2n_pid(port->fabric->lps, rx_fchs->d_id);
+@@ -604,6 +604,7 @@ bfa_fcs_lport_uf_recv(struct bfa_fcs_lport_s *lport,
+ 	struct fc_els_cmd_s *els_cmd = (struct fc_els_cmd_s *) (fchs + 1);
+ 
+ 	bfa_stats(lport, uf_recvs);
++	bfa_trc(lport->fcs, fchs->type);
+ 
+ 	if (!bfa_fcs_lport_is_online(lport)) {
+ 		bfa_stats(lport, uf_recv_drops);
+@@ -663,8 +664,11 @@ bfa_fcs_lport_uf_recv(struct bfa_fcs_lport_s *lport,
+ 	 * Only handles ELS frames for now.
+ 	 */
+ 	if (fchs->type != FC_TYPE_ELS) {
+-		bfa_trc(lport->fcs, fchs->type);
+-		bfa_assert(0);
++		bfa_trc(lport->fcs, fchs->s_id);
++		bfa_trc(lport->fcs, fchs->d_id);
++		/* ignore type FC_TYPE_FC_FSS */
++		if(fchs->type != FC_TYPE_FC_FSS)
++			bfa_sm_fault(lport->fcs, fchs->type);
+ 		return;
  	}
  
- 	/*
-@@ -323,6 +324,7 @@ bfa_fcs_lport_plogi(struct bfa_fcs_lport_s *port,
- 			(memcmp((void *)&bfa_fcs_lport_get_pwwn(port),
- 			(void *)&plogi->port_name, sizeof(wwn_t)) < 0)) {
- 			port->pid  = rx_fchs->d_id;
-+			bfa_lps_set_n2n_pid(port->fabric->lps, rx_fchs->d_id);
- 			rport->pid = rx_fchs->s_id;
- 		}
- 		bfa_fcs_rport_plogi(rport, rx_fchs, plogi);
-@@ -979,6 +981,7 @@ bfa_fcs_lport_n2n_online(struct bfa_fcs_lport_s *port)
- 	    ((void *)&pcfg->pwwn, (void *)&n2n_port->rem_port_wwn,
- 	     sizeof(wwn_t)) > 0) {
- 		port->pid = N2N_LOCAL_PID;
-+		bfa_lps_set_n2n_pid(port->fabric->lps, N2N_LOCAL_PID);
- 		/*
- 		 * First, check if we know the device by pwwn.
- 		 */
-diff --git a/drivers/scsi/bfa/bfa_svc.c b/drivers/scsi/bfa/bfa_svc.c
-index bbd8fbb..698a2d6 100644
---- a/drivers/scsi/bfa/bfa_svc.c
-+++ b/drivers/scsi/bfa/bfa_svc.c
-@@ -131,6 +131,7 @@ static void bfa_lps_reqq_resume(void *lps_arg);
- static void bfa_lps_free(struct bfa_lps_s *lps);
- static void bfa_lps_send_login(struct bfa_lps_s *lps);
- static void bfa_lps_send_logout(struct bfa_lps_s *lps);
-+static void bfa_lps_send_set_n2n_pid(struct bfa_lps_s *lps);
- static void bfa_lps_login_comp(struct bfa_lps_s *lps);
- static void bfa_lps_logout_comp(struct bfa_lps_s *lps);
- static void bfa_lps_cvl_event(struct bfa_lps_s *lps);
-@@ -143,6 +144,8 @@ static void bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event);
- static void bfa_lps_sm_loginwait(struct bfa_lps_s *lps, enum bfa_lps_event
- 					event);
- static void bfa_lps_sm_online(struct bfa_lps_s *lps, enum bfa_lps_event event);
-+static void bfa_lps_sm_online_n2n_pid_wait(struct bfa_lps_s *lps,
-+					enum bfa_lps_event event);
- static void bfa_lps_sm_logout(struct bfa_lps_s *lps, enum bfa_lps_event event);
- static void bfa_lps_sm_logowait(struct bfa_lps_s *lps, enum bfa_lps_event
- 					event);
-@@ -1254,6 +1257,12 @@ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 			else
- 				bfa_plog_str(lps->bfa->plog, BFA_PL_MID_LPS,
- 					BFA_PL_EID_LOGIN, 0, "FLOGI Accept");
-+			/* If N2N, send the assigned PID to FW */
-+			bfa_trc(lps->bfa, lps->fport);
-+			bfa_trc(lps->bfa, lps->lp_pid);
-+
-+			if (!lps->fport && lps->lp_pid)
-+				bfa_sm_send_event(lps, BFA_LPS_SM_SET_N2N_PID);
- 		} else {
- 			bfa_sm_set_state(lps, bfa_lps_sm_init);
- 			if (lps->fdisc)
-@@ -1272,6 +1281,11 @@ bfa_lps_sm_login(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 		bfa_sm_set_state(lps, bfa_lps_sm_init);
- 		break;
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 95761ca..e15b6b6 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -182,7 +182,7 @@ bfad_im_info(struct Scsi_Host *shost)
+ 	bfa_get_adapter_model(bfa, model);
  
-+	case BFA_LPS_SM_SET_N2N_PID:
-+		bfa_trc(lps->bfa, lps->fport);
-+		bfa_trc(lps->bfa, lps->lp_pid);
-+		break;
-+
- 	default:
- 		bfa_sm_fault(lps->bfa, event);
- 	}
-@@ -1340,9 +1354,59 @@ bfa_lps_sm_online(struct bfa_lps_s *lps, enum bfa_lps_event event)
- 			BFA_PL_EID_FIP_FCF_CVL, 0, "FCF Clear Virt. Link Rx");
- 		break;
- 
-+	case BFA_LPS_SM_SET_N2N_PID:
-+		if (bfa_reqq_full(lps->bfa, lps->reqq)) {
-+			bfa_sm_set_state(lps, bfa_lps_sm_online_n2n_pid_wait);
-+			bfa_reqq_wait(lps->bfa, lps->reqq, &lps->wqe);
-+		} else
-+			bfa_lps_send_set_n2n_pid(lps);
-+                break;
-+
-+	case BFA_LPS_SM_OFFLINE:
-+	case BFA_LPS_SM_DELETE:
-+		bfa_sm_set_state(lps, bfa_lps_sm_init);
-+		break;
-+
-+	default:
-+		bfa_sm_fault(lps->bfa, event);
-+	}
-+}
-+
-+/**
-+ * login complete
-+ */
-+static void
-+bfa_lps_sm_online_n2n_pid_wait(struct bfa_lps_s *lps, enum bfa_lps_event event)
-+{
-+	bfa_trc(lps->bfa, lps->lp_tag);
-+	bfa_trc(lps->bfa, event);
-+
-+	switch (event) {
-+	case BFA_LPS_SM_RESUME:
-+		bfa_sm_set_state(lps, bfa_lps_sm_online);
-+		bfa_lps_send_set_n2n_pid(lps);
-+		break;
-+
-+	case BFA_LPS_SM_LOGOUT:
-+		bfa_sm_set_state(lps, bfa_lps_sm_logowait);
-+		bfa_plog_str(lps->bfa->plog, BFA_PL_MID_LPS,
-+			BFA_PL_EID_LOGO, 0, "Logout");
-+		break;
-+
-+	case BFA_LPS_SM_RX_CVL:
-+		bfa_sm_set_state(lps, bfa_lps_sm_init);
-+		bfa_reqq_wcancel(&lps->wqe);
-+
-+		/* Let the vport module know about this event */
-+		bfa_lps_cvl_event(lps);
-+		bfa_plog_str(lps->bfa->plog, BFA_PL_MID_LPS,
-+			BFA_PL_EID_FIP_FCF_CVL, 0, "FCF Clear Virt. Link Rx");
-+		break;
-+
- 	case BFA_LPS_SM_OFFLINE:
- 	case BFA_LPS_SM_DELETE:
- 		bfa_sm_set_state(lps, bfa_lps_sm_init);
-+		bfa_reqq_wcancel(&lps->wqe);
- 		break;
- 
- 	default:
-@@ -1498,8 +1562,9 @@ bfa_lps_login_rsp(struct bfa_s *bfa, struct bfi_lps_login_rsp_s *rsp)
- 	switch (rsp->status) {
- 	case BFA_STATUS_OK:
- 		lps->fport	= rsp->f_port;
-+		if (lps->fport)
-+			lps->lp_pid = rsp->lp_pid;
- 		lps->npiv_en	= rsp->npiv_en;
--		lps->lp_pid	= rsp->lp_pid;
- 		lps->pr_bbcred	= be16_to_cpu(rsp->bb_credit);
- 		lps->pr_pwwn	= rsp->port_name;
- 		lps->pr_nwwn	= rsp->node_name;
-@@ -1626,6 +1691,25 @@ bfa_lps_send_logout(struct bfa_lps_s *lps)
- 	bfa_reqq_produce(lps->bfa, lps->reqq);
- }
- 
-+/**
-+ * send n2n pid set request to firmware
-+ */
-+static void
-+bfa_lps_send_set_n2n_pid(struct bfa_lps_s *lps)
-+{
-+	struct bfi_lps_n2n_pid_req_s *m;
-+
-+	m = bfa_reqq_next(lps->bfa, lps->reqq);
-+	bfa_assert(m);
-+
-+	bfi_h2i_set(m->mh, BFI_MC_LPS, BFI_LPS_H2I_N2N_PID_REQ,
-+		bfa_lpuid(lps->bfa));
-+
-+	m->lp_tag = lps->lp_tag;
-+	m->lp_pid = lps->lp_pid;
-+	bfa_reqq_produce(lps->bfa, lps->reqq);
-+}
-+
- /*
-  * Indirect login completion handler for non-fcs
-  */
-@@ -1846,6 +1930,19 @@ bfa_lps_get_base_pid(struct bfa_s *bfa)
- 	return BFA_LPS_FROM_TAG(mod, 0)->lp_pid;
- }
- 
-+/**
-+ * Set PID in case of n2n (which is assigned during PLOGI)
-+ */
-+void
-+bfa_lps_set_n2n_pid(struct bfa_lps_s *lps, uint32_t n2n_pid)
-+{
-+	bfa_trc(lps->bfa, lps->lp_tag);
-+	bfa_trc(lps->bfa, n2n_pid);
-+
-+	lps->lp_pid = n2n_pid;
-+	bfa_sm_send_event(lps, BFA_LPS_SM_SET_N2N_PID);
-+}
-+
- /*
-  * LPS firmware message class handler.
-  */
-diff --git a/drivers/scsi/bfa/bfa_svc.h b/drivers/scsi/bfa/bfa_svc.h
-index 36c81c7..331ad99 100644
---- a/drivers/scsi/bfa/bfa_svc.h
-+++ b/drivers/scsi/bfa/bfa_svc.h
-@@ -610,6 +610,7 @@ void bfa_lps_flogi(struct bfa_lps_s *lps, void *uarg, u8 alpa,
- void bfa_lps_fdisc(struct bfa_lps_s *lps, void *uarg, u16 pdusz,
- 		   wwn_t pwwn, wwn_t nwwn);
- void bfa_lps_fdisclogo(struct bfa_lps_s *lps);
-+void bfa_lps_set_n2n_pid(struct bfa_lps_s *lps, u32 n2n_pid);
- u32 bfa_lps_get_base_pid(struct bfa_s *bfa);
- u8 bfa_lps_get_tag_from_pid(struct bfa_s *bfa, u32 pid);
- void bfa_cb_lps_flogi_comp(void *bfad, void *uarg, bfa_status_t status);
-diff --git a/drivers/scsi/bfa/bfi_ms.h b/drivers/scsi/bfa/bfi_ms.h
-index 8f22ef1..8d1ded3 100644
---- a/drivers/scsi/bfa/bfi_ms.h
-+++ b/drivers/scsi/bfa/bfi_ms.h
-@@ -342,6 +342,7 @@ struct bfi_uf_frm_rcvd_s {
- enum bfi_lps_h2i_msgs {
- 	BFI_LPS_H2I_LOGIN_REQ	= 1,
- 	BFI_LPS_H2I_LOGOUT_REQ	= 2,
-+	BFI_LPS_H2I_N2N_PID_REQ = 3,
- };
- 
- enum bfi_lps_i2h_msgs {
-@@ -401,10 +402,17 @@ struct bfi_lps_cvl_event_s {
- 	u8		rsvd[3];
- };
- 
-+struct bfi_lps_n2n_pid_req_s {
-+	struct bfi_mhdr_s	mh;	/*  common msg header		*/
-+	u8	lp_tag;
-+	u32	lp_pid : 24;
-+};
-+
- union bfi_lps_h2i_msg_u {
- 	struct bfi_mhdr_s		*msg;
- 	struct bfi_lps_login_req_s	*login_req;
- 	struct bfi_lps_logout_req_s	*logout_req;
-+	struct bfi_lps_n2n_pid_req_s	*n2n_pid_req;
- };
- 
- union bfi_lps_i2h_msg_u {
+ 	memset(bfa_buf, 0, sizeof(bfa_buf));
+-	if (ioc->ctdev)
++	if (ioc->ctdev && !ioc->fcmode)
+ 		snprintf(bfa_buf, sizeof(bfa_buf),
+ 		"Brocade FCOE Adapter, " "model: %s hwpath: %s driver: %s",
+ 		 model, bfad->pci_name, BFAD_DRIVER_VERSION);
 -- 
 1.7.3.rc1
 
