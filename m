@@ -1,62 +1,35 @@
-From: <kgudipat@brocade.com>
-Subject: [PATCH 0/6] bfa: Update bfa driver to version 2.3.2.3
-Date: Mon, 13 Dec 2010 16:04:21 -0800
-Message-ID: <1292285061-10080-1-git-send-email-kgudipat@brocade.com>
+From: "PRIVATE HOME LENDER INC" <derr@yahoo.com>
+Subject: SEASONAL FINANCIAL LENDER
+Date: Tue, 14 Dec 2010 09:46:03 +0800
+Message-ID: <20101214014541.9D1627000087@msfrf2116.sfr.fr>
+Reply-To: <phlmikejackson@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="_iso-2022-jp$ESC"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-000f0801.pphosted.com ([67.231.152.113]:36505 "EHLO
-	mx0b-000f0801.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758382Ab0LNAqY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Dec 2010 19:46:24 -0500
+Received: from smtp21.services.sfr.fr ([93.17.128.4]:50094 "EHLO
+	smtp21.services.sfr.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758790Ab0LNBp7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Dec 2010 20:45:59 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, huangj@brocade.com, vravindr@brocade.com, rvadivel@brocade.com, amathur@brocade.com
-Cc: adapter_linux_open_src_team@brocade.com, kgudipat@brocade.com
+To: der@yahoo.com
 
-From: Krishna Gudipati <kgudipat@brocade.com>
+apply for a loan to establish your business.
+our interest is very affordable and our loan process is very fast as well as
+percentage rate of 2.5% yearly from $5 000.00 min To $100 000 000.00 max
+get back to us on this information below
 
-Hi James,
 
-	The following patch set updates the Brocade BFA driver to v2.3.2.3.
+name
+phone
+duration
+address
+amount
 
-	I have compiled & tested the code against your scsi-misc (2.6.37-rc5-0.7-default).
-
-	Please note that these patches need to be applied after the patch-set submitted
-	
-	by Maggie Zhang.
-
-	http://marc.info/?l=linux-scsi&m=129195103301803&w=2
-
-Thanks,
-Krishna C Gudipati.
-
-Krishna Gudipati (6):
-  bfa: IOC fwtrace save logic & state machine fixes.
-  bfa: Store port configuration in flash for persistency.
-  bfa: IOC auto recovery fix.
-  bfa: direct attach mode fix.
-  bfa: io tag handling and minor bug fix.
-  bfa: Update the driver version to 2.3.2.3
-
- drivers/scsi/bfa/bfa_fcpim.c     |    8 +-
- drivers/scsi/bfa/bfa_fcpim.h     |   22 +-
- drivers/scsi/bfa/bfa_fcs.h       |    1 +
- drivers/scsi/bfa/bfa_fcs_lport.c |   11 +-
- drivers/scsi/bfa/bfa_ioc.c       |  427 +++++++++++++++++++++++++-------------
- drivers/scsi/bfa/bfa_ioc.h       |   19 ++-
- drivers/scsi/bfa/bfa_ioc_cb.c    |   95 ++++++++-
- drivers/scsi/bfa/bfa_ioc_ct.c    |  101 +++++++++-
- drivers/scsi/bfa/bfa_svc.c       |  124 +++++++++++-
- drivers/scsi/bfa/bfa_svc.h       |    2 +
- drivers/scsi/bfa/bfad_drv.h      |    2 +-
- drivers/scsi/bfa/bfad_im.c       |    2 +-
- drivers/scsi/bfa/bfi_cbreg.h     |    1 +
- drivers/scsi/bfa/bfi_ctreg.h     |   41 +++--
- drivers/scsi/bfa/bfi_ms.h        |   14 +-
- 15 files changed, 683 insertions(+), 187 deletions(-)
-
--- 
-1.7.3.rc1
+regards
+private home lender inc
+phlmikejackson@gmail.com
+mr mike jackson
 
