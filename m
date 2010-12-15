@@ -1,27 +1,29 @@
 From: adam radford <aradford@gmail.com>
-Subject: [PATCH 3/11]: megaraid_sas: Add MSI-X support and msix_disable module parameter
-Date: Tue, 14 Dec 2010 18:53:41 -0800
-Message-ID: <AANLkTi=KXg1a3ft-t3wDuxD80JcFkSWE=b8BfWVUjzqY@mail.gmail.com>
+Subject: [PATCH 4/11]: megaraid_sas: Use lowest memory bar for SR-IOV VF support
+Date: Tue, 14 Dec 2010 18:56:07 -0800
+Message-ID: <AANLkTikh6QctVEJGqWGmCY1Cda-je0YWTGaf4oXrzkFP@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=00163630ffe37ef8f604976a0bc3
+Content-Type: multipart/mixed; boundary=001636831cda29532804976a14a4
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:40584 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757669Ab0LOCxm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2010 21:53:42 -0500
-Received: by qyj19 with SMTP id 19so5572073qyj.19
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2010 18:53:42 -0800 (PST)
+Received: from mail-qw0-f46.google.com ([209.85.216.46]:64298 "EHLO
+	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754608Ab0LOC4I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2010 21:56:08 -0500
+Received: by qwa26 with SMTP id 26so1484617qwa.19
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2010 18:56:07 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
---00163630ffe37ef8f604976a0bc3
+--001636831cda29532804976a14a4
 Content-Type: text/plain; charset=ISO-8859-1
 
-James/linux-scsi,
+James/Linux-scsi,
 
-This patch adds MSI-X support and 'msix_disable' module parameter to
-the megaraid_sas driver.
+The following patch modifies the megaraid_sas driver to select the
+lowest memory bar available so
+the driver will work in SR-IOV VF environments where the memory bar
+mapping changes.
 
 Signed-off-by: Adam Radford <aradford@gmail.com>
 
@@ -31,183 +33,120 @@ attachment in case Gmail hoses the patch.
 diff -Naur linux-2.6.37-rc5.old/drivers/scsi/megaraid/megaraid_sas_base.c
 linux-2.6.37-rc5.new/drivers/scsi/megaraid/megaraid_sas_base.c
 --- linux-2.6.37-rc5.old/drivers/scsi/megaraid/megaraid_sas_base.c	2010-12-14
-16:03:02.000000000 -0800
+16:15:22.000000000 -0800
 +++ linux-2.6.37-rc5.new/drivers/scsi/megaraid/megaraid_sas_base.c	2010-12-14
-16:12:59.000000000 -0800
-@@ -72,6 +72,10 @@
- MODULE_PARM_DESC(max_sectors,
- 	"Maximum number of sectors per IO command");
+16:18:40.000000000 -0800
+@@ -3236,21 +3236,14 @@
+ 	u32 tmp_sectors;
+ 	struct megasas_register_set __iomem *reg_set;
+ 	struct megasas_ctrl_info *ctrl_info;
+-	/*
+-	 * Map the message registers
+-	 */
+-	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1078GEN2) ||
+-		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0071SKINNY) ||
+-		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0073SKINNY) ||
+-		(instance->pdev->device == PCI_DEVICE_ID_LSI_SAS0079GEN2)) {
+-		instance->base_addr = pci_resource_start(instance->pdev, 1);
+-	} else {
+-		instance->base_addr = pci_resource_start(instance->pdev, 0);
+-	}
++	unsigned long bar_list;
 
-+static int msix_disable;
-+module_param(msix_disable, int, S_IRUGO);
-+MODULE_PARM_DESC(msix_disable, "Disable MSI-X interrupt handling. Default: 0");
-+
- MODULE_LICENSE("GPL");
- MODULE_VERSION(MEGASAS_VERSION);
- MODULE_AUTHOR("megaraidlinux@lsi.com");
-@@ -3863,10 +3867,20 @@
- 	if (megasas_init_mfi(instance))
- 		goto fail_init_mfi;
-
-+	/* Try to enable MSI-X */
-+	if ((instance->pdev->device != PCI_DEVICE_ID_LSI_SAS1078R) &&
-+	    (instance->pdev->device != PCI_DEVICE_ID_LSI_SAS1078DE) &&
-+	    (instance->pdev->device != PCI_DEVICE_ID_LSI_VERDE_ZCR) &&
-+	    !msix_disable && !pci_enable_msix(instance->pdev,
-+					      &instance->msixentry, 1))
-+		instance->msi_flag = 1;
-+
- 	/*
- 	 * Register IRQ
- 	 */
--	if (request_irq(pdev->irq, megasas_isr, IRQF_SHARED, "megasas", instance)) {
-+	if (request_irq(instance->msi_flag ? instance->msixentry.vector :
-+			pdev->irq, instance->instancet->service_isr,
-+			IRQF_SHARED, "megasas", instance)) {
- 		printk(KERN_DEBUG "megasas: Failed to register IRQ\n");
- 		goto fail_irq;
+-	if (pci_request_selected_regions(instance->pdev,
+-		pci_select_bars(instance->pdev, IORESOURCE_MEM),
+-		"megasas: LSI")) {
++	/* Find first memory bar */
++	bar_list = pci_select_bars(instance->pdev, IORESOURCE_MEM);
++	instance->bar = find_first_bit(&bar_list, sizeof(unsigned long));
++	instance->base_addr = pci_resource_start(instance->pdev, instance->bar);
++	if (pci_request_selected_regions(instance->pdev, instance->bar,
++					 "megasas: LSI")) {
+ 		printk(KERN_DEBUG "megasas: IO memory region busy!\n");
+ 		return -EBUSY;
  	}
-@@ -3911,8 +3925,10 @@
+@@ -3411,8 +3404,7 @@
+ 	iounmap(instance->reg_set);
 
- 	pci_set_drvdata(pdev, NULL);
- 	instance->instancet->disable_intr(instance->reg_set);
--	free_irq(instance->pdev->irq, instance);
--
-+	free_irq(instance->msi_flag ? instance->msixentry.vector :
-+		 instance->pdev->irq, instance);
-+	if (instance->msi_flag)
-+		pci_disable_msix(instance->pdev);
- 	megasas_release_mfi(instance);
+       fail_ioremap:
+-	pci_release_selected_regions(instance->pdev,
+-		pci_select_bars(instance->pdev, IORESOURCE_MEM));
++	pci_release_selected_regions(instance->pdev, instance->bar);
 
-       fail_irq:
-@@ -4053,7 +4069,10 @@
+ 	return -EINVAL;
+ }
+@@ -3432,8 +3424,7 @@
 
- 	pci_set_drvdata(instance->pdev, instance);
- 	instance->instancet->disable_intr(instance->reg_set);
--	free_irq(instance->pdev->irq, instance);
-+	free_irq(instance->msi_flag ? instance->msixentry.vector :
-+		 instance->pdev->irq, instance);
-+	if (instance->msi_flag)
-+		pci_disable_msix(instance->pdev);
+ 	iounmap(instance->reg_set);
 
- 	pci_save_state(pdev);
- 	pci_disable_device(pdev);
-@@ -4116,11 +4135,16 @@
- 	tasklet_init(&instance->isr_tasklet, megasas_complete_cmd_dpc,
- 			(unsigned long)instance);
+-	pci_release_selected_regions(instance->pdev,
+-		pci_select_bars(instance->pdev, IORESOURCE_MEM));
++	pci_release_selected_regions(instance->pdev, instance->bar);
+ }
 
-+	/* Now re-enable MSI-X */
-+	if (instance->msi_flag)
-+		pci_enable_msix(instance->pdev, &instance->msixentry, 1);
-+
- 	/*
- 	 * Register IRQ
- 	 */
--	if (request_irq(pdev->irq, megasas_isr, IRQF_SHARED,
--		"megasas", instance)) {
-+	if (request_irq(instance->msi_flag ? instance->msixentry.vector :
-+			pdev->irq, instance->instancet->service_isr,
-+			IRQF_SHARED, "megasas", instance)) {
- 		printk(KERN_ERR "megasas: Failed to register IRQ\n");
- 		goto fail_irq;
- 	}
-@@ -4218,7 +4242,10 @@
-
- 	instance->instancet->disable_intr(instance->reg_set);
-
--	free_irq(instance->pdev->irq, instance);
-+	free_irq(instance->msi_flag ? instance->msixentry.vector :
-+		 instance->pdev->irq, instance);
-+	if (instance->msi_flag)
-+		pci_disable_msix(instance->pdev);
-
- 	megasas_release_mfi(instance);
-
+ /**
 diff -Naur linux-2.6.37-rc5.old/drivers/scsi/megaraid/megaraid_sas.h
 linux-2.6.37-rc5.new/drivers/scsi/megaraid/megaraid_sas.h
 --- linux-2.6.37-rc5.old/drivers/scsi/megaraid/megaraid_sas.h	2010-12-14
-16:03:02.000000000 -0800
+16:15:22.000000000 -0800
 +++ linux-2.6.37-rc5.new/drivers/scsi/megaraid/megaraid_sas.h	2010-12-14
-16:10:16.000000000 -0800
-@@ -1335,6 +1335,9 @@
+16:19:23.000000000 -0800
+@@ -1338,6 +1338,7 @@
 
- 	struct timer_list io_completion_timer;
- 	struct list_head internal_reset_pending_q;
-+
-+	u8	msi_flag;
-+	struct msix_entry msixentry;
+ 	u8	msi_flag;
+ 	struct msix_entry msixentry;
++	unsigned long bar;
  };
 
  enum {
 
---00163630ffe37ef8f604976a0bc3
-Content-Type: application/octet-stream; name="megaraid_sas.patch3"
-Content-Disposition: attachment; filename="megaraid_sas.patch3"
+--001636831cda29532804976a14a4
+Content-Type: application/octet-stream; name="megaraid_sas.patch4"
+Content-Disposition: attachment; filename="megaraid_sas.patch4"
 Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ghpmi14u0
+X-Attachment-Id: f_ghpml6sx0
 
 ZGlmZiAtTmF1ciBsaW51eC0yLjYuMzctcmM1Lm9sZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
 YXJhaWRfc2FzX2Jhc2UuYyBsaW51eC0yLjYuMzctcmM1Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJh
 aWQvbWVnYXJhaWRfc2FzX2Jhc2UuYwotLS0gbGludXgtMi42LjM3LXJjNS5vbGQvZHJpdmVycy9z
-Y3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19iYXNlLmMJMjAxMC0xMi0xNCAxNjowMzowMi4wMDAw
+Y3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19iYXNlLmMJMjAxMC0xMi0xNCAxNjoxNToyMi4wMDAw
 MDAwMDAgLTA4MDAKKysrIGxpbnV4LTIuNi4zNy1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFp
-ZC9tZWdhcmFpZF9zYXNfYmFzZS5jCTIwMTAtMTItMTQgMTY6MTI6NTkuMDAwMDAwMDAwIC0wODAw
-CkBAIC03Miw2ICs3MiwxMCBAQAogTU9EVUxFX1BBUk1fREVTQyhtYXhfc2VjdG9ycywKIAkiTWF4
-aW11bSBudW1iZXIgb2Ygc2VjdG9ycyBwZXIgSU8gY29tbWFuZCIpOwogCitzdGF0aWMgaW50IG1z
-aXhfZGlzYWJsZTsKK21vZHVsZV9wYXJhbShtc2l4X2Rpc2FibGUsIGludCwgU19JUlVHTyk7CitN
-T0RVTEVfUEFSTV9ERVNDKG1zaXhfZGlzYWJsZSwgIkRpc2FibGUgTVNJLVggaW50ZXJydXB0IGhh
-bmRsaW5nLiBEZWZhdWx0OiAwIik7CisKIE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsKIE1PRFVMRV9W
-RVJTSU9OKE1FR0FTQVNfVkVSU0lPTik7CiBNT0RVTEVfQVVUSE9SKCJtZWdhcmFpZGxpbnV4QGxz
-aS5jb20iKTsKQEAgLTM4NjMsMTAgKzM4NjcsMjAgQEAKIAlpZiAobWVnYXNhc19pbml0X21maShp
-bnN0YW5jZSkpCiAJCWdvdG8gZmFpbF9pbml0X21maTsKIAorCS8qIFRyeSB0byBlbmFibGUgTVNJ
-LVggKi8KKwlpZiAoKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgIT0gUENJX0RFVklDRV9JRF9MU0lf
-U0FTMTA3OFIpICYmCisJICAgIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlICE9IFBDSV9ERVZJQ0Vf
-SURfTFNJX1NBUzEwNzhERSkgJiYKKwkgICAgKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgIT0gUENJ
-X0RFVklDRV9JRF9MU0lfVkVSREVfWkNSKSAmJgorCSAgICAhbXNpeF9kaXNhYmxlICYmICFwY2lf
-ZW5hYmxlX21zaXgoaW5zdGFuY2UtPnBkZXYsCisJCQkJCSAgICAgICZpbnN0YW5jZS0+bXNpeGVu
-dHJ5LCAxKSkKKwkJaW5zdGFuY2UtPm1zaV9mbGFnID0gMTsKKwogCS8qCiAJICogUmVnaXN0ZXIg
-SVJRCiAJICovCi0JaWYgKHJlcXVlc3RfaXJxKHBkZXYtPmlycSwgbWVnYXNhc19pc3IsIElSUUZf
-U0hBUkVELCAibWVnYXNhcyIsIGluc3RhbmNlKSkgeworCWlmIChyZXF1ZXN0X2lycShpbnN0YW5j
-ZS0+bXNpX2ZsYWcgPyBpbnN0YW5jZS0+bXNpeGVudHJ5LnZlY3RvciA6CisJCQlwZGV2LT5pcnEs
-IGluc3RhbmNlLT5pbnN0YW5jZXQtPnNlcnZpY2VfaXNyLAorCQkJSVJRRl9TSEFSRUQsICJtZWdh
-c2FzIiwgaW5zdGFuY2UpKSB7CiAJCXByaW50ayhLRVJOX0RFQlVHICJtZWdhc2FzOiBGYWlsZWQg
-dG8gcmVnaXN0ZXIgSVJRXG4iKTsKIAkJZ290byBmYWlsX2lycTsKIAl9CkBAIC0zOTExLDggKzM5
-MjUsMTAgQEAKIAogCXBjaV9zZXRfZHJ2ZGF0YShwZGV2LCBOVUxMKTsKIAlpbnN0YW5jZS0+aW5z
-dGFuY2V0LT5kaXNhYmxlX2ludHIoaW5zdGFuY2UtPnJlZ19zZXQpOwotCWZyZWVfaXJxKGluc3Rh
-bmNlLT5wZGV2LT5pcnEsIGluc3RhbmNlKTsKLQorCWZyZWVfaXJxKGluc3RhbmNlLT5tc2lfZmxh
-ZyA/IGluc3RhbmNlLT5tc2l4ZW50cnkudmVjdG9yIDoKKwkJIGluc3RhbmNlLT5wZGV2LT5pcnEs
-IGluc3RhbmNlKTsKKwlpZiAoaW5zdGFuY2UtPm1zaV9mbGFnKQorCQlwY2lfZGlzYWJsZV9tc2l4
-KGluc3RhbmNlLT5wZGV2KTsKIAltZWdhc2FzX3JlbGVhc2VfbWZpKGluc3RhbmNlKTsKIAogICAg
-ICAgZmFpbF9pcnE6CkBAIC00MDUzLDcgKzQwNjksMTAgQEAKIAogCXBjaV9zZXRfZHJ2ZGF0YShp
-bnN0YW5jZS0+cGRldiwgaW5zdGFuY2UpOwogCWluc3RhbmNlLT5pbnN0YW5jZXQtPmRpc2FibGVf
-aW50cihpbnN0YW5jZS0+cmVnX3NldCk7Ci0JZnJlZV9pcnEoaW5zdGFuY2UtPnBkZXYtPmlycSwg
-aW5zdGFuY2UpOworCWZyZWVfaXJxKGluc3RhbmNlLT5tc2lfZmxhZyA/IGluc3RhbmNlLT5tc2l4
-ZW50cnkudmVjdG9yIDoKKwkJIGluc3RhbmNlLT5wZGV2LT5pcnEsIGluc3RhbmNlKTsKKwlpZiAo
-aW5zdGFuY2UtPm1zaV9mbGFnKQorCQlwY2lfZGlzYWJsZV9tc2l4KGluc3RhbmNlLT5wZGV2KTsK
-IAogCXBjaV9zYXZlX3N0YXRlKHBkZXYpOwogCXBjaV9kaXNhYmxlX2RldmljZShwZGV2KTsKQEAg
-LTQxMTYsMTEgKzQxMzUsMTYgQEAKIAl0YXNrbGV0X2luaXQoJmluc3RhbmNlLT5pc3JfdGFza2xl
-dCwgbWVnYXNhc19jb21wbGV0ZV9jbWRfZHBjLAogCQkJKHVuc2lnbmVkIGxvbmcpaW5zdGFuY2Up
-OwogCisJLyogTm93IHJlLWVuYWJsZSBNU0ktWCAqLworCWlmIChpbnN0YW5jZS0+bXNpX2ZsYWcp
-CisJCXBjaV9lbmFibGVfbXNpeChpbnN0YW5jZS0+cGRldiwgJmluc3RhbmNlLT5tc2l4ZW50cnks
-IDEpOworCiAJLyoKIAkgKiBSZWdpc3RlciBJUlEKIAkgKi8KLQlpZiAocmVxdWVzdF9pcnEocGRl
-di0+aXJxLCBtZWdhc2FzX2lzciwgSVJRRl9TSEFSRUQsCi0JCSJtZWdhc2FzIiwgaW5zdGFuY2Up
-KSB7CisJaWYgKHJlcXVlc3RfaXJxKGluc3RhbmNlLT5tc2lfZmxhZyA/IGluc3RhbmNlLT5tc2l4
-ZW50cnkudmVjdG9yIDoKKwkJCXBkZXYtPmlycSwgaW5zdGFuY2UtPmluc3RhbmNldC0+c2Vydmlj
-ZV9pc3IsCisJCQlJUlFGX1NIQVJFRCwgIm1lZ2FzYXMiLCBpbnN0YW5jZSkpIHsKIAkJcHJpbnRr
-KEtFUk5fRVJSICJtZWdhc2FzOiBGYWlsZWQgdG8gcmVnaXN0ZXIgSVJRXG4iKTsKIAkJZ290byBm
-YWlsX2lycTsKIAl9CkBAIC00MjE4LDcgKzQyNDIsMTAgQEAKIAogCWluc3RhbmNlLT5pbnN0YW5j
-ZXQtPmRpc2FibGVfaW50cihpbnN0YW5jZS0+cmVnX3NldCk7CiAKLQlmcmVlX2lycShpbnN0YW5j
-ZS0+cGRldi0+aXJxLCBpbnN0YW5jZSk7CisJZnJlZV9pcnEoaW5zdGFuY2UtPm1zaV9mbGFnID8g
-aW5zdGFuY2UtPm1zaXhlbnRyeS52ZWN0b3IgOgorCQkgaW5zdGFuY2UtPnBkZXYtPmlycSwgaW5z
-dGFuY2UpOworCWlmIChpbnN0YW5jZS0+bXNpX2ZsYWcpCisJCXBjaV9kaXNhYmxlX21zaXgoaW5z
-dGFuY2UtPnBkZXYpOwogCiAJbWVnYXNhc19yZWxlYXNlX21maShpbnN0YW5jZSk7CiAKZGlmZiAt
-TmF1ciBsaW51eC0yLjYuMzctcmM1Lm9sZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRf
-c2FzLmggbGludXgtMi42LjM3LXJjNS5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlk
-X3Nhcy5oCi0tLSBsaW51eC0yLjYuMzctcmM1Lm9sZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
-YXJhaWRfc2FzLmgJMjAxMC0xMi0xNCAxNjowMzowMi4wMDAwMDAwMDAgLTA4MDAKKysrIGxpbnV4
-LTIuNi4zNy1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAkyMDEw
-LTEyLTE0IDE2OjEwOjE2LjAwMDAwMDAwMCAtMDgwMApAQCAtMTMzNSw2ICsxMzM1LDkgQEAKIAog
-CXN0cnVjdCB0aW1lcl9saXN0IGlvX2NvbXBsZXRpb25fdGltZXI7CiAJc3RydWN0IGxpc3RfaGVh
-ZCBpbnRlcm5hbF9yZXNldF9wZW5kaW5nX3E7CisKKwl1OAltc2lfZmxhZzsKKwlzdHJ1Y3QgbXNp
-eF9lbnRyeSBtc2l4ZW50cnk7CiB9OwogCiBlbnVtIHsK
---00163630ffe37ef8f604976a0bc3--
+ZC9tZWdhcmFpZF9zYXNfYmFzZS5jCTIwMTAtMTItMTQgMTY6MTg6NDAuMDAwMDAwMDAwIC0wODAw
+CkBAIC0zMjM2LDIxICszMjM2LDE0IEBACiAJdTMyIHRtcF9zZWN0b3JzOwogCXN0cnVjdCBtZWdh
+c2FzX3JlZ2lzdGVyX3NldCBfX2lvbWVtICpyZWdfc2V0OwogCXN0cnVjdCBtZWdhc2FzX2N0cmxf
+aW5mbyAqY3RybF9pbmZvOwotCS8qCi0JICogTWFwIHRoZSBtZXNzYWdlIHJlZ2lzdGVycwotCSAq
+LwotCWlmICgoaW5zdGFuY2UtPnBkZXYtPmRldmljZSA9PSBQQ0lfREVWSUNFX0lEX0xTSV9TQVMx
+MDc4R0VOMikgfHwKLQkJKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RFVklDRV9JRF9M
+U0lfU0FTMDA3MVNLSU5OWSkgfHwKLQkJKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgPT0gUENJX0RF
+VklDRV9JRF9MU0lfU0FTMDA3M1NLSU5OWSkgfHwKLQkJKGluc3RhbmNlLT5wZGV2LT5kZXZpY2Ug
+PT0gUENJX0RFVklDRV9JRF9MU0lfU0FTMDA3OUdFTjIpKSB7Ci0JCWluc3RhbmNlLT5iYXNlX2Fk
+ZHIgPSBwY2lfcmVzb3VyY2Vfc3RhcnQoaW5zdGFuY2UtPnBkZXYsIDEpOwotCX0gZWxzZSB7Ci0J
+CWluc3RhbmNlLT5iYXNlX2FkZHIgPSBwY2lfcmVzb3VyY2Vfc3RhcnQoaW5zdGFuY2UtPnBkZXYs
+IDApOwotCX0KKwl1bnNpZ25lZCBsb25nIGJhcl9saXN0OwogCi0JaWYgKHBjaV9yZXF1ZXN0X3Nl
+bGVjdGVkX3JlZ2lvbnMoaW5zdGFuY2UtPnBkZXYsCi0JCXBjaV9zZWxlY3RfYmFycyhpbnN0YW5j
+ZS0+cGRldiwgSU9SRVNPVVJDRV9NRU0pLAotCQkibWVnYXNhczogTFNJIikpIHsKKwkvKiBGaW5k
+IGZpcnN0IG1lbW9yeSBiYXIgKi8KKwliYXJfbGlzdCA9IHBjaV9zZWxlY3RfYmFycyhpbnN0YW5j
+ZS0+cGRldiwgSU9SRVNPVVJDRV9NRU0pOworCWluc3RhbmNlLT5iYXIgPSBmaW5kX2ZpcnN0X2Jp
+dCgmYmFyX2xpc3QsIHNpemVvZih1bnNpZ25lZCBsb25nKSk7CisJaW5zdGFuY2UtPmJhc2VfYWRk
+ciA9IHBjaV9yZXNvdXJjZV9zdGFydChpbnN0YW5jZS0+cGRldiwgaW5zdGFuY2UtPmJhcik7CisJ
+aWYgKHBjaV9yZXF1ZXN0X3NlbGVjdGVkX3JlZ2lvbnMoaW5zdGFuY2UtPnBkZXYsIGluc3RhbmNl
+LT5iYXIsCisJCQkJCSAibWVnYXNhczogTFNJIikpIHsKIAkJcHJpbnRrKEtFUk5fREVCVUcgIm1l
+Z2FzYXM6IElPIG1lbW9yeSByZWdpb24gYnVzeSFcbiIpOwogCQlyZXR1cm4gLUVCVVNZOwogCX0K
+QEAgLTM0MTEsOCArMzQwNCw3IEBACiAJaW91bm1hcChpbnN0YW5jZS0+cmVnX3NldCk7CiAKICAg
+ICAgIGZhaWxfaW9yZW1hcDoKLQlwY2lfcmVsZWFzZV9zZWxlY3RlZF9yZWdpb25zKGluc3RhbmNl
+LT5wZGV2LAotCQlwY2lfc2VsZWN0X2JhcnMoaW5zdGFuY2UtPnBkZXYsIElPUkVTT1VSQ0VfTUVN
+KSk7CisJcGNpX3JlbGVhc2Vfc2VsZWN0ZWRfcmVnaW9ucyhpbnN0YW5jZS0+cGRldiwgaW5zdGFu
+Y2UtPmJhcik7CiAKIAlyZXR1cm4gLUVJTlZBTDsKIH0KQEAgLTM0MzIsOCArMzQyNCw3IEBACiAK
+IAlpb3VubWFwKGluc3RhbmNlLT5yZWdfc2V0KTsKIAotCXBjaV9yZWxlYXNlX3NlbGVjdGVkX3Jl
+Z2lvbnMoaW5zdGFuY2UtPnBkZXYsCi0JCXBjaV9zZWxlY3RfYmFycyhpbnN0YW5jZS0+cGRldiwg
+SU9SRVNPVVJDRV9NRU0pKTsKKwlwY2lfcmVsZWFzZV9zZWxlY3RlZF9yZWdpb25zKGluc3RhbmNl
+LT5wZGV2LCBpbnN0YW5jZS0+YmFyKTsKIH0KIAogLyoqCmRpZmYgLU5hdXIgbGludXgtMi42LjM3
+LXJjNS5vbGQvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oIGxpbnV4LTIuNi4z
+Ny1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAotLS0gbGludXgt
+Mi42LjM3LXJjNS5vbGQvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oCTIwMTAt
+MTItMTQgMTY6MTU6MjIuMDAwMDAwMDAwIC0wODAwCisrKyBsaW51eC0yLjYuMzctcmM1Lm5ldy9k
+cml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzLmgJMjAxMC0xMi0xNCAxNjoxOToyMy4w
+MDAwMDAwMDAgLTA4MDAKQEAgLTEzMzgsNiArMTMzOCw3IEBACiAKIAl1OAltc2lfZmxhZzsKIAlz
+dHJ1Y3QgbXNpeF9lbnRyeSBtc2l4ZW50cnk7CisJdW5zaWduZWQgbG9uZyBiYXI7CiB9OwogCiBl
+bnVtIHsK
+--001636831cda29532804976a14a4--
