@@ -1,50 +1,46 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] scsi: don't use execute_in_process_context()
-Date: Wed, 15 Dec 2010 17:00:36 +0100
-Message-ID: <4D08E624.3020808@kernel.org>
-References: <4CBD95C0.6060302@kernel.org>  <4CBD95DC.8000001@kernel.org>	 <1292194113.2989.9.camel@mulgrave.site>  <4D073E9A.3000608@kernel.org>	 <1292335754.3058.2.camel@mulgrave.site>  <4D077CD9.6050907@kernel.org>	 <1292336798.3058.5.camel@mulgrave.site>  <4D078052.3040800@kernel.org>	 <1292382245.19511.56.camel@mulgrave.site>  <4D08E2FF.5090605@kernel.org> <1292428486.4688.180.camel@mulgrave.site>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: After memory pressure: can't read from tape anymore
+Date: Wed, 15 Dec 2010 19:27:42 +0300
+Message-ID: <4D08EC7E.5080201@vlnb.net>
+References: <1290971729.2814.13.camel@larosa>	<alpine.LNX.2.00.1011291857420.7923@kai.makisara.local>	<20101203212453W.fujita.tomonori@lab.ntt.co.jp>	<4CF905D1.6050903@kolumbus.fi>	<1291388776.2881.4.camel@mulgrave.site>	<1291395815.2814.376.camel@larosa>	<1291399814.2881.66.camel@mulgrave.site>	<4D07D519.70800@vlnb.net> <20101214142320.27d911d5@nehalam>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1292428486.4688.180.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, lkml <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from moutng.kundenserver.de ([212.227.17.9]:57421 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751861Ab0LOQ1n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Dec 2010 11:27:43 -0500
+In-Reply-To: <20101214142320.27d911d5@nehalam>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stephen Hemminger <shemminger@vyatta.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, Lukas Kolbe <lkolbe@techfak.uni-bielefeld.de>, =?ISO-8859-1?Q?Kai_M=E4kisara?= <kai.makisara@kolumbus.fi>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, Kashyap Desai <Kashyap.Desai@lsi.com>, netdev@vger.kernel.org
 
-Hello,
-
-On 12/15/2010 04:54 PM, James Bottomley wrote:
-> On Wed, 2010-12-15 at 16:47 +0100, Tejun Heo wrote:
->> One way or the other, the current code is racy.  The module can go
->> away while the work is still running.  We'll have to add sync
->> interface for ew's, which conceptually is fine but is unnecessary with
->> the current code base.  Let's do it when it actually is necessary.
+Stephen Hemminger, on 12/15/2010 01:23 AM wrote:
+> On Tue, 14 Dec 2010 23:35:37 +0300
+> Vladislav Bolkhovitin <vst@vlnb.net> wrote:
 > 
-> OK, ignoring the bickering over API, this is what I don't get.
+>> What is interesting to me in this regard is how networking with 9K jumbo
+>> frames manages to work acceptably reliable? Jumbo frames used
+>> sufficiently often, including under high memory pressure.
+>>
+>> I'm not a deep networking guru, but network drivers need to allocate
+>> physically continual memory for skbs, which means 16K per 9K packet,
+>> which means order 2 allocations per skb.
 > 
-> The executed function releases the parent reference as its last call.
-> That will cause the freeing of the embedded work item and a cascade
-> release of all the parents.  If there's no more references, that will
-> result in a final put of the module semaphore and rmmod will then
-> proceed.  What is racy about that?  All the work structures and
-> references have been freed before the module gets removed.  Nothing
-> blocks the execution thread in the function, so it exits long before the
-> code path gets zeroed.
+> Good network drivers support fragmentation and allocate a small portion
+> for the header and allocate pages for the rest. This requires no higher
+> order allocation. The networking stack takes fragmented data coming
+> in and does the necessary copy/merging to access contiguous headers.
+> 
+> There are still some crap network drivers that require large contiguous
+> allocation. These should not be used with jumbo frames in real
+> environments.
 
-Because the final put and return aren't atomic against module
-unloading.  The worker can get preempted inbetween and the module can
-be unloaded beneath it.  When the worker is scheduled back, its text,
-which was inside the module, is gone.
+I see. Thanks for clarifying it.
 
-To make that working, it either has to do the final put from the code
-outside of the module (in another module or built-in) or the module
-unloading should guarantee that the work item has finished executing
-before proceeding with unload, which can only be done by flushing it
-from outside the work itself.
+Vlad
 
-Thanks.
 
--- 
-tejun
+
