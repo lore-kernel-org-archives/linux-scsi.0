@@ -1,210 +1,213 @@
 From: adam radford <aradford@gmail.com>
-Subject: [PATCH 2/11]: megaraid_sas: Update GPL headers.
-Date: Tue, 14 Dec 2010 18:51:48 -0800
-Message-ID: <AANLkTi=Rx1dK07nisQACkf-ECyS_umUCpB=zDaArmAc7@mail.gmail.com>
+Subject: [PATCH 3/11]: megaraid_sas: Add MSI-X support and msix_disable module parameter
+Date: Tue, 14 Dec 2010 18:53:41 -0800
+Message-ID: <AANLkTi=KXg1a3ft-t3wDuxD80JcFkSWE=b8BfWVUjzqY@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001636831cdac0047504976a04d7
+Content-Type: multipart/mixed; boundary=00163630ffe37ef8f604976a0bc3
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:34585 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758698Ab0LOCvt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2010 21:51:49 -0500
-Received: by qwa26 with SMTP id 26so1481525qwa.19
-        for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2010 18:51:48 -0800 (PST)
+Received: from mail-qy0-f174.google.com ([209.85.216.174]:40584 "EHLO
+	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757669Ab0LOCxm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Dec 2010 21:53:42 -0500
+Received: by qyj19 with SMTP id 19so5572073qyj.19
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Dec 2010 18:53:42 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
---001636831cdac0047504976a04d7
+--00163630ffe37ef8f604976a0bc3
 Content-Type: text/plain; charset=ISO-8859-1
 
 James/linux-scsi,
 
-This patch updates the GPL headers in megaraid_sas_base.c and megaraid_sas.h.
+This patch adds MSI-X support and 'msix_disable' module parameter to
+the megaraid_sas driver.
 
 Signed-off-by: Adam Radford <aradford@gmail.com>
 
-Note: This patch has been included in-line below, and also as an
+Note: The patch has been included in-line below, and also as an
 attachment in case Gmail hoses the patch.
 
 diff -Naur linux-2.6.37-rc5.old/drivers/scsi/megaraid/megaraid_sas_base.c
 linux-2.6.37-rc5.new/drivers/scsi/megaraid/megaraid_sas_base.c
 --- linux-2.6.37-rc5.old/drivers/scsi/megaraid/megaraid_sas_base.c	2010-12-14
-15:53:14.000000000 -0800
+16:03:02.000000000 -0800
 +++ linux-2.6.37-rc5.new/drivers/scsi/megaraid/megaraid_sas_base.c	2010-12-14
-16:01:00.000000000 -0800
-@@ -1,27 +1,34 @@
- /*
-+ *  Linux MegaRAID driver for SAS based RAID controllers
-  *
-- *		Linux MegaRAID driver for SAS based RAID controllers
-+ *  Copyright (c) 2009-2011  LSI Corporation.
-  *
-- * Copyright (c) 2003-2005  LSI Corporation.
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation; either version 2
-+ *  of the License, or (at your option) any later version.
-  *
-- *	   This program is free software; you can redistribute it and/or
-- *	   modify it under the terms of the GNU General Public License
-- *	   as published by the Free Software Foundation; either version
-- *	   2 of the License, or (at your option) any later version.
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-  *
-- * FILE		: megaraid_sas.c
-- * Version     : v00.00.04.31-rc1
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-  *
-- * Authors:
-- *	(email-id : megaraidlinux@lsi.com)
-- * 	Sreenivas Bagalkote
-- * 	Sumant Patro
-- *	Bo Yang
-+ *  FILE: megaraid_sas_base.c
-+ *  Version : v00.00.05.29-rc1
-  *
-- * List of supported controllers
-+ *  Authors: LSI Corporation
-+ *           Sreenivas Bagalkote
-+ *           Sumant Patro
-+ *           Bo Yang
-  *
-- * OEM	Product Name			VID	DID	SSVID	SSID
-- * ---	------------			---	---	----	----
-+ *  Send feedback to: <megaraidlinux@lsi.com>
-+ *
-+ *  Mail to: LSI Corporation, 1621 Barber Lane, Milpitas, CA 95035
-+ *     ATTN: Linuxraid
-  */
+16:12:59.000000000 -0800
+@@ -72,6 +72,10 @@
+ MODULE_PARM_DESC(max_sectors,
+ 	"Maximum number of sectors per IO command");
 
- #include <linux/kernel.h>
++static int msix_disable;
++module_param(msix_disable, int, S_IRUGO);
++MODULE_PARM_DESC(msix_disable, "Disable MSI-X interrupt handling. Default: 0");
++
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(MEGASAS_VERSION);
+ MODULE_AUTHOR("megaraidlinux@lsi.com");
+@@ -3863,10 +3867,20 @@
+ 	if (megasas_init_mfi(instance))
+ 		goto fail_init_mfi;
+
++	/* Try to enable MSI-X */
++	if ((instance->pdev->device != PCI_DEVICE_ID_LSI_SAS1078R) &&
++	    (instance->pdev->device != PCI_DEVICE_ID_LSI_SAS1078DE) &&
++	    (instance->pdev->device != PCI_DEVICE_ID_LSI_VERDE_ZCR) &&
++	    !msix_disable && !pci_enable_msix(instance->pdev,
++					      &instance->msixentry, 1))
++		instance->msi_flag = 1;
++
+ 	/*
+ 	 * Register IRQ
+ 	 */
+-	if (request_irq(pdev->irq, megasas_isr, IRQF_SHARED, "megasas", instance)) {
++	if (request_irq(instance->msi_flag ? instance->msixentry.vector :
++			pdev->irq, instance->instancet->service_isr,
++			IRQF_SHARED, "megasas", instance)) {
+ 		printk(KERN_DEBUG "megasas: Failed to register IRQ\n");
+ 		goto fail_irq;
+ 	}
+@@ -3911,8 +3925,10 @@
+
+ 	pci_set_drvdata(pdev, NULL);
+ 	instance->instancet->disable_intr(instance->reg_set);
+-	free_irq(instance->pdev->irq, instance);
+-
++	free_irq(instance->msi_flag ? instance->msixentry.vector :
++		 instance->pdev->irq, instance);
++	if (instance->msi_flag)
++		pci_disable_msix(instance->pdev);
+ 	megasas_release_mfi(instance);
+
+       fail_irq:
+@@ -4053,7 +4069,10 @@
+
+ 	pci_set_drvdata(instance->pdev, instance);
+ 	instance->instancet->disable_intr(instance->reg_set);
+-	free_irq(instance->pdev->irq, instance);
++	free_irq(instance->msi_flag ? instance->msixentry.vector :
++		 instance->pdev->irq, instance);
++	if (instance->msi_flag)
++		pci_disable_msix(instance->pdev);
+
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+@@ -4116,11 +4135,16 @@
+ 	tasklet_init(&instance->isr_tasklet, megasas_complete_cmd_dpc,
+ 			(unsigned long)instance);
+
++	/* Now re-enable MSI-X */
++	if (instance->msi_flag)
++		pci_enable_msix(instance->pdev, &instance->msixentry, 1);
++
+ 	/*
+ 	 * Register IRQ
+ 	 */
+-	if (request_irq(pdev->irq, megasas_isr, IRQF_SHARED,
+-		"megasas", instance)) {
++	if (request_irq(instance->msi_flag ? instance->msixentry.vector :
++			pdev->irq, instance->instancet->service_isr,
++			IRQF_SHARED, "megasas", instance)) {
+ 		printk(KERN_ERR "megasas: Failed to register IRQ\n");
+ 		goto fail_irq;
+ 	}
+@@ -4218,7 +4242,10 @@
+
+ 	instance->instancet->disable_intr(instance->reg_set);
+
+-	free_irq(instance->pdev->irq, instance);
++	free_irq(instance->msi_flag ? instance->msixentry.vector :
++		 instance->pdev->irq, instance);
++	if (instance->msi_flag)
++		pci_disable_msix(instance->pdev);
+
+ 	megasas_release_mfi(instance);
+
 diff -Naur linux-2.6.37-rc5.old/drivers/scsi/megaraid/megaraid_sas.h
 linux-2.6.37-rc5.new/drivers/scsi/megaraid/megaraid_sas.h
---- linux-2.6.37-rc5.old/drivers/scsi/megaraid/megaraid_sas.h	2010-12-06
-20:09:04.000000000 -0800
+--- linux-2.6.37-rc5.old/drivers/scsi/megaraid/megaraid_sas.h	2010-12-14
+16:03:02.000000000 -0800
 +++ linux-2.6.37-rc5.new/drivers/scsi/megaraid/megaraid_sas.h	2010-12-14
-15:55:13.000000000 -0800
-@@ -1,15 +1,30 @@
- /*
-+ *  Linux MegaRAID driver for SAS based RAID controllers
-  *
-- *		Linux MegaRAID driver for SAS based RAID controllers
-+ *  Copyright (c) 2009-2011  LSI Corporation.
-  *
-- * Copyright (c) 2003-2005  LSI Corporation.
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation; either version 2
-+ *  of the License, or (at your option) any later version.
-  *
-- *		This program is free software; you can redistribute it and/or
-- *		modify it under the terms of the GNU General Public License
-- *		as published by the Free Software Foundation; either version
-- *		2 of the License, or (at your option) any later version.
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-  *
-- * FILE		: megaraid_sas.h
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-+ *
-+ *  FILE: megaraid_sas.h
-+ *
-+ *  Authors: LSI Corporation
-+ *
-+ *  Send feedback to: <megaraidlinux@lsi.com>
-+ *
-+ *  Mail to: LSI Corporation, 1621 Barber Lane, Milpitas, CA 95035
-+ *     ATTN: Linuxraid
-  */
+16:10:16.000000000 -0800
+@@ -1335,6 +1335,9 @@
 
- #ifndef LSI_MEGARAID_SAS_H
+ 	struct timer_list io_completion_timer;
+ 	struct list_head internal_reset_pending_q;
++
++	u8	msi_flag;
++	struct msix_entry msixentry;
+ };
 
---001636831cdac0047504976a04d7
-Content-Type: application/octet-stream; name="megaraid_sas.patch2"
-Content-Disposition: attachment; filename="megaraid_sas.patch2"
+ enum {
+
+--00163630ffe37ef8f604976a0bc3
+Content-Type: application/octet-stream; name="megaraid_sas.patch3"
+Content-Disposition: attachment; filename="megaraid_sas.patch3"
 Content-Transfer-Encoding: base64
-X-Attachment-Id: f_ghpmfnr20
+X-Attachment-Id: f_ghpmi14u0
 
 ZGlmZiAtTmF1ciBsaW51eC0yLjYuMzctcmM1Lm9sZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
 YXJhaWRfc2FzX2Jhc2UuYyBsaW51eC0yLjYuMzctcmM1Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJh
 aWQvbWVnYXJhaWRfc2FzX2Jhc2UuYwotLS0gbGludXgtMi42LjM3LXJjNS5vbGQvZHJpdmVycy9z
-Y3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19iYXNlLmMJMjAxMC0xMi0xNCAxNTo1MzoxNC4wMDAw
+Y3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19iYXNlLmMJMjAxMC0xMi0xNCAxNjowMzowMi4wMDAw
 MDAwMDAgLTA4MDAKKysrIGxpbnV4LTIuNi4zNy1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFp
-ZC9tZWdhcmFpZF9zYXNfYmFzZS5jCTIwMTAtMTItMTQgMTY6MDE6MDAuMDAwMDAwMDAwIC0wODAw
-CkBAIC0xLDI3ICsxLDM0IEBACiAvKgorICogIExpbnV4IE1lZ2FSQUlEIGRyaXZlciBmb3IgU0FT
-IGJhc2VkIFJBSUQgY29udHJvbGxlcnMKICAqCi0gKgkJTGludXggTWVnYVJBSUQgZHJpdmVyIGZv
-ciBTQVMgYmFzZWQgUkFJRCBjb250cm9sbGVycworICogIENvcHlyaWdodCAoYykgMjAwOS0yMDEx
-ICBMU0kgQ29ycG9yYXRpb24uCiAgKgotICogQ29weXJpZ2h0IChjKSAyMDAzLTIwMDUgIExTSSBD
-b3Jwb3JhdGlvbi4KKyAqICBUaGlzIHByb2dyYW0gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiBy
-ZWRpc3RyaWJ1dGUgaXQgYW5kL29yCisgKiAgbW9kaWZ5IGl0IHVuZGVyIHRoZSB0ZXJtcyBvZiB0
-aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UKKyAqICBhcyBwdWJsaXNoZWQgYnkgdGhlIEZy
-ZWUgU29mdHdhcmUgRm91bmRhdGlvbjsgZWl0aGVyIHZlcnNpb24gMgorICogIG9mIHRoZSBMaWNl
-bnNlLCBvciAoYXQgeW91ciBvcHRpb24pIGFueSBsYXRlciB2ZXJzaW9uLgogICoKLSAqCSAgIFRo
-aXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJpYnV0ZSBpdCBhbmQv
-b3IKLSAqCSAgIG1vZGlmeSBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhlIEdOVSBHZW5lcmFsIFB1
-YmxpYyBMaWNlbnNlCi0gKgkgICBhcyBwdWJsaXNoZWQgYnkgdGhlIEZyZWUgU29mdHdhcmUgRm91
-bmRhdGlvbjsgZWl0aGVyIHZlcnNpb24KLSAqCSAgIDIgb2YgdGhlIExpY2Vuc2UsIG9yIChhdCB5
-b3VyIG9wdGlvbikgYW55IGxhdGVyIHZlcnNpb24uCisgKiAgVGhpcyBwcm9ncmFtIGlzIGRpc3Ry
-aWJ1dGVkIGluIHRoZSBob3BlIHRoYXQgaXQgd2lsbCBiZSB1c2VmdWwsCisgKiAgYnV0IFdJVEhP
-VVQgQU5ZIFdBUlJBTlRZOyB3aXRob3V0IGV2ZW4gdGhlIGltcGxpZWQgd2FycmFudHkgb2YKKyAq
-ICBNRVJDSEFOVEFCSUxJVFkgb3IgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UuICBT
-ZWUgdGhlCisgKiAgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UgZm9yIG1vcmUgZGV0YWlscy4K
-ICAqCi0gKiBGSUxFCQk6IG1lZ2FyYWlkX3Nhcy5jCi0gKiBWZXJzaW9uICAgICA6IHYwMC4wMC4w
-NC4zMS1yYzEKKyAqICBZb3Ugc2hvdWxkIGhhdmUgcmVjZWl2ZWQgYSBjb3B5IG9mIHRoZSBHTlUg
-R2VuZXJhbCBQdWJsaWMgTGljZW5zZQorICogIGFsb25nIHdpdGggdGhpcyBwcm9ncmFtOyBpZiBu
-b3QsIHdyaXRlIHRvIHRoZSBGcmVlIFNvZnR3YXJlCisgKiAgRm91bmRhdGlvbiwgSW5jLiwgNTkg
-VGVtcGxlIFBsYWNlLCBTdWl0ZSAzMzAsIEJvc3RvbiwgTUEgMDIxMTEtMTMwNyBVU0EKICAqCi0g
-KiBBdXRob3JzOgotICoJKGVtYWlsLWlkIDogbWVnYXJhaWRsaW51eEBsc2kuY29tKQotICogCVNy
-ZWVuaXZhcyBCYWdhbGtvdGUKLSAqIAlTdW1hbnQgUGF0cm8KLSAqCUJvIFlhbmcKKyAqICBGSUxF
-OiBtZWdhcmFpZF9zYXNfYmFzZS5jCisgKiAgVmVyc2lvbiA6IHYwMC4wMC4wNS4yOS1yYzEKICAq
-Ci0gKiBMaXN0IG9mIHN1cHBvcnRlZCBjb250cm9sbGVycworICogIEF1dGhvcnM6IExTSSBDb3Jw
-b3JhdGlvbgorICogICAgICAgICAgIFNyZWVuaXZhcyBCYWdhbGtvdGUKKyAqICAgICAgICAgICBT
-dW1hbnQgUGF0cm8KKyAqICAgICAgICAgICBCbyBZYW5nCiAgKgotICogT0VNCVByb2R1Y3QgTmFt
-ZQkJCVZJRAlESUQJU1NWSUQJU1NJRAotICogLS0tCS0tLS0tLS0tLS0tLQkJCS0tLQktLS0JLS0t
-LQktLS0tCisgKiAgU2VuZCBmZWVkYmFjayB0bzogPG1lZ2FyYWlkbGludXhAbHNpLmNvbT4KKyAq
-CisgKiAgTWFpbCB0bzogTFNJIENvcnBvcmF0aW9uLCAxNjIxIEJhcmJlciBMYW5lLCBNaWxwaXRh
-cywgQ0EgOTUwMzUKKyAqICAgICBBVFROOiBMaW51eHJhaWQKICAqLwogCiAjaW5jbHVkZSA8bGlu
-dXgva2VybmVsLmg+CmRpZmYgLU5hdXIgbGludXgtMi42LjM3LXJjNS5vbGQvZHJpdmVycy9zY3Np
-L21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oIGxpbnV4LTIuNi4zNy1yYzUubmV3L2RyaXZlcnMvc2Nz
-aS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAotLS0gbGludXgtMi42LjM3LXJjNS5vbGQvZHJpdmVy
-cy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhcy5oCTIwMTAtMTItMDYgMjA6MDk6MDQuMDAwMDAw
-MDAwIC0wODAwCisrKyBsaW51eC0yLjYuMzctcmM1Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQv
-bWVnYXJhaWRfc2FzLmgJMjAxMC0xMi0xNCAxNTo1NToxMy4wMDAwMDAwMDAgLTA4MDAKQEAgLTEs
-MTUgKzEsMzAgQEAKIC8qCisgKiAgTGludXggTWVnYVJBSUQgZHJpdmVyIGZvciBTQVMgYmFzZWQg
-UkFJRCBjb250cm9sbGVycwogICoKLSAqCQlMaW51eCBNZWdhUkFJRCBkcml2ZXIgZm9yIFNBUyBi
-YXNlZCBSQUlEIGNvbnRyb2xsZXJzCisgKiAgQ29weXJpZ2h0IChjKSAyMDA5LTIwMTEgIExTSSBD
-b3Jwb3JhdGlvbi4KICAqCi0gKiBDb3B5cmlnaHQgKGMpIDIwMDMtMjAwNSAgTFNJIENvcnBvcmF0
-aW9uLgorICogIFRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJp
-YnV0ZSBpdCBhbmQvb3IKKyAqICBtb2RpZnkgaXQgdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUg
-R2VuZXJhbCBQdWJsaWMgTGljZW5zZQorICogIGFzIHB1Ymxpc2hlZCBieSB0aGUgRnJlZSBTb2Z0
-d2FyZSBGb3VuZGF0aW9uOyBlaXRoZXIgdmVyc2lvbiAyCisgKiAgb2YgdGhlIExpY2Vuc2UsIG9y
-IChhdCB5b3VyIG9wdGlvbikgYW55IGxhdGVyIHZlcnNpb24uCiAgKgotICoJCVRoaXMgcHJvZ3Jh
-bSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJlZGlzdHJpYnV0ZSBpdCBhbmQvb3IKLSAqCQlt
-b2RpZnkgaXQgdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5z
-ZQotICoJCWFzIHB1Ymxpc2hlZCBieSB0aGUgRnJlZSBTb2Z0d2FyZSBGb3VuZGF0aW9uOyBlaXRo
-ZXIgdmVyc2lvbgotICoJCTIgb2YgdGhlIExpY2Vuc2UsIG9yIChhdCB5b3VyIG9wdGlvbikgYW55
-IGxhdGVyIHZlcnNpb24uCisgKiAgVGhpcyBwcm9ncmFtIGlzIGRpc3RyaWJ1dGVkIGluIHRoZSBo
-b3BlIHRoYXQgaXQgd2lsbCBiZSB1c2VmdWwsCisgKiAgYnV0IFdJVEhPVVQgQU5ZIFdBUlJBTlRZ
-OyB3aXRob3V0IGV2ZW4gdGhlIGltcGxpZWQgd2FycmFudHkgb2YKKyAqICBNRVJDSEFOVEFCSUxJ
-VFkgb3IgRklUTkVTUyBGT1IgQSBQQVJUSUNVTEFSIFBVUlBPU0UuICBTZWUgdGhlCisgKiAgR05V
-IEdlbmVyYWwgUHVibGljIExpY2Vuc2UgZm9yIG1vcmUgZGV0YWlscy4KICAqCi0gKiBGSUxFCQk6
-IG1lZ2FyYWlkX3Nhcy5oCisgKiAgWW91IHNob3VsZCBoYXZlIHJlY2VpdmVkIGEgY29weSBvZiB0
-aGUgR05VIEdlbmVyYWwgUHVibGljIExpY2Vuc2UKKyAqICBhbG9uZyB3aXRoIHRoaXMgcHJvZ3Jh
-bTsgaWYgbm90LCB3cml0ZSB0byB0aGUgRnJlZSBTb2Z0d2FyZQorICogIEZvdW5kYXRpb24sIElu
-Yy4sIDU5IFRlbXBsZSBQbGFjZSwgU3VpdGUgMzMwLCBCb3N0b24sIE1BIDAyMTExLTEzMDcgVVNB
-CisgKgorICogIEZJTEU6IG1lZ2FyYWlkX3Nhcy5oCisgKgorICogIEF1dGhvcnM6IExTSSBDb3Jw
-b3JhdGlvbgorICoKKyAqICBTZW5kIGZlZWRiYWNrIHRvOiA8bWVnYXJhaWRsaW51eEBsc2kuY29t
-PgorICoKKyAqICBNYWlsIHRvOiBMU0kgQ29ycG9yYXRpb24sIDE2MjEgQmFyYmVyIExhbmUsIE1p
-bHBpdGFzLCBDQSA5NTAzNQorICogICAgIEFUVE46IExpbnV4cmFpZAogICovCiAKICNpZm5kZWYg
-TFNJX01FR0FSQUlEX1NBU19ICg==
---001636831cdac0047504976a04d7--
+ZC9tZWdhcmFpZF9zYXNfYmFzZS5jCTIwMTAtMTItMTQgMTY6MTI6NTkuMDAwMDAwMDAwIC0wODAw
+CkBAIC03Miw2ICs3MiwxMCBAQAogTU9EVUxFX1BBUk1fREVTQyhtYXhfc2VjdG9ycywKIAkiTWF4
+aW11bSBudW1iZXIgb2Ygc2VjdG9ycyBwZXIgSU8gY29tbWFuZCIpOwogCitzdGF0aWMgaW50IG1z
+aXhfZGlzYWJsZTsKK21vZHVsZV9wYXJhbShtc2l4X2Rpc2FibGUsIGludCwgU19JUlVHTyk7CitN
+T0RVTEVfUEFSTV9ERVNDKG1zaXhfZGlzYWJsZSwgIkRpc2FibGUgTVNJLVggaW50ZXJydXB0IGhh
+bmRsaW5nLiBEZWZhdWx0OiAwIik7CisKIE1PRFVMRV9MSUNFTlNFKCJHUEwiKTsKIE1PRFVMRV9W
+RVJTSU9OKE1FR0FTQVNfVkVSU0lPTik7CiBNT0RVTEVfQVVUSE9SKCJtZWdhcmFpZGxpbnV4QGxz
+aS5jb20iKTsKQEAgLTM4NjMsMTAgKzM4NjcsMjAgQEAKIAlpZiAobWVnYXNhc19pbml0X21maShp
+bnN0YW5jZSkpCiAJCWdvdG8gZmFpbF9pbml0X21maTsKIAorCS8qIFRyeSB0byBlbmFibGUgTVNJ
+LVggKi8KKwlpZiAoKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgIT0gUENJX0RFVklDRV9JRF9MU0lf
+U0FTMTA3OFIpICYmCisJICAgIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlICE9IFBDSV9ERVZJQ0Vf
+SURfTFNJX1NBUzEwNzhERSkgJiYKKwkgICAgKGluc3RhbmNlLT5wZGV2LT5kZXZpY2UgIT0gUENJ
+X0RFVklDRV9JRF9MU0lfVkVSREVfWkNSKSAmJgorCSAgICAhbXNpeF9kaXNhYmxlICYmICFwY2lf
+ZW5hYmxlX21zaXgoaW5zdGFuY2UtPnBkZXYsCisJCQkJCSAgICAgICZpbnN0YW5jZS0+bXNpeGVu
+dHJ5LCAxKSkKKwkJaW5zdGFuY2UtPm1zaV9mbGFnID0gMTsKKwogCS8qCiAJICogUmVnaXN0ZXIg
+SVJRCiAJICovCi0JaWYgKHJlcXVlc3RfaXJxKHBkZXYtPmlycSwgbWVnYXNhc19pc3IsIElSUUZf
+U0hBUkVELCAibWVnYXNhcyIsIGluc3RhbmNlKSkgeworCWlmIChyZXF1ZXN0X2lycShpbnN0YW5j
+ZS0+bXNpX2ZsYWcgPyBpbnN0YW5jZS0+bXNpeGVudHJ5LnZlY3RvciA6CisJCQlwZGV2LT5pcnEs
+IGluc3RhbmNlLT5pbnN0YW5jZXQtPnNlcnZpY2VfaXNyLAorCQkJSVJRRl9TSEFSRUQsICJtZWdh
+c2FzIiwgaW5zdGFuY2UpKSB7CiAJCXByaW50ayhLRVJOX0RFQlVHICJtZWdhc2FzOiBGYWlsZWQg
+dG8gcmVnaXN0ZXIgSVJRXG4iKTsKIAkJZ290byBmYWlsX2lycTsKIAl9CkBAIC0zOTExLDggKzM5
+MjUsMTAgQEAKIAogCXBjaV9zZXRfZHJ2ZGF0YShwZGV2LCBOVUxMKTsKIAlpbnN0YW5jZS0+aW5z
+dGFuY2V0LT5kaXNhYmxlX2ludHIoaW5zdGFuY2UtPnJlZ19zZXQpOwotCWZyZWVfaXJxKGluc3Rh
+bmNlLT5wZGV2LT5pcnEsIGluc3RhbmNlKTsKLQorCWZyZWVfaXJxKGluc3RhbmNlLT5tc2lfZmxh
+ZyA/IGluc3RhbmNlLT5tc2l4ZW50cnkudmVjdG9yIDoKKwkJIGluc3RhbmNlLT5wZGV2LT5pcnEs
+IGluc3RhbmNlKTsKKwlpZiAoaW5zdGFuY2UtPm1zaV9mbGFnKQorCQlwY2lfZGlzYWJsZV9tc2l4
+KGluc3RhbmNlLT5wZGV2KTsKIAltZWdhc2FzX3JlbGVhc2VfbWZpKGluc3RhbmNlKTsKIAogICAg
+ICAgZmFpbF9pcnE6CkBAIC00MDUzLDcgKzQwNjksMTAgQEAKIAogCXBjaV9zZXRfZHJ2ZGF0YShp
+bnN0YW5jZS0+cGRldiwgaW5zdGFuY2UpOwogCWluc3RhbmNlLT5pbnN0YW5jZXQtPmRpc2FibGVf
+aW50cihpbnN0YW5jZS0+cmVnX3NldCk7Ci0JZnJlZV9pcnEoaW5zdGFuY2UtPnBkZXYtPmlycSwg
+aW5zdGFuY2UpOworCWZyZWVfaXJxKGluc3RhbmNlLT5tc2lfZmxhZyA/IGluc3RhbmNlLT5tc2l4
+ZW50cnkudmVjdG9yIDoKKwkJIGluc3RhbmNlLT5wZGV2LT5pcnEsIGluc3RhbmNlKTsKKwlpZiAo
+aW5zdGFuY2UtPm1zaV9mbGFnKQorCQlwY2lfZGlzYWJsZV9tc2l4KGluc3RhbmNlLT5wZGV2KTsK
+IAogCXBjaV9zYXZlX3N0YXRlKHBkZXYpOwogCXBjaV9kaXNhYmxlX2RldmljZShwZGV2KTsKQEAg
+LTQxMTYsMTEgKzQxMzUsMTYgQEAKIAl0YXNrbGV0X2luaXQoJmluc3RhbmNlLT5pc3JfdGFza2xl
+dCwgbWVnYXNhc19jb21wbGV0ZV9jbWRfZHBjLAogCQkJKHVuc2lnbmVkIGxvbmcpaW5zdGFuY2Up
+OwogCisJLyogTm93IHJlLWVuYWJsZSBNU0ktWCAqLworCWlmIChpbnN0YW5jZS0+bXNpX2ZsYWcp
+CisJCXBjaV9lbmFibGVfbXNpeChpbnN0YW5jZS0+cGRldiwgJmluc3RhbmNlLT5tc2l4ZW50cnks
+IDEpOworCiAJLyoKIAkgKiBSZWdpc3RlciBJUlEKIAkgKi8KLQlpZiAocmVxdWVzdF9pcnEocGRl
+di0+aXJxLCBtZWdhc2FzX2lzciwgSVJRRl9TSEFSRUQsCi0JCSJtZWdhc2FzIiwgaW5zdGFuY2Up
+KSB7CisJaWYgKHJlcXVlc3RfaXJxKGluc3RhbmNlLT5tc2lfZmxhZyA/IGluc3RhbmNlLT5tc2l4
+ZW50cnkudmVjdG9yIDoKKwkJCXBkZXYtPmlycSwgaW5zdGFuY2UtPmluc3RhbmNldC0+c2Vydmlj
+ZV9pc3IsCisJCQlJUlFGX1NIQVJFRCwgIm1lZ2FzYXMiLCBpbnN0YW5jZSkpIHsKIAkJcHJpbnRr
+KEtFUk5fRVJSICJtZWdhc2FzOiBGYWlsZWQgdG8gcmVnaXN0ZXIgSVJRXG4iKTsKIAkJZ290byBm
+YWlsX2lycTsKIAl9CkBAIC00MjE4LDcgKzQyNDIsMTAgQEAKIAogCWluc3RhbmNlLT5pbnN0YW5j
+ZXQtPmRpc2FibGVfaW50cihpbnN0YW5jZS0+cmVnX3NldCk7CiAKLQlmcmVlX2lycShpbnN0YW5j
+ZS0+cGRldi0+aXJxLCBpbnN0YW5jZSk7CisJZnJlZV9pcnEoaW5zdGFuY2UtPm1zaV9mbGFnID8g
+aW5zdGFuY2UtPm1zaXhlbnRyeS52ZWN0b3IgOgorCQkgaW5zdGFuY2UtPnBkZXYtPmlycSwgaW5z
+dGFuY2UpOworCWlmIChpbnN0YW5jZS0+bXNpX2ZsYWcpCisJCXBjaV9kaXNhYmxlX21zaXgoaW5z
+dGFuY2UtPnBkZXYpOwogCiAJbWVnYXNhc19yZWxlYXNlX21maShpbnN0YW5jZSk7CiAKZGlmZiAt
+TmF1ciBsaW51eC0yLjYuMzctcmM1Lm9sZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRf
+c2FzLmggbGludXgtMi42LjM3LXJjNS5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlk
+X3Nhcy5oCi0tLSBsaW51eC0yLjYuMzctcmM1Lm9sZC9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVn
+YXJhaWRfc2FzLmgJMjAxMC0xMi0xNCAxNjowMzowMi4wMDAwMDAwMDAgLTA4MDAKKysrIGxpbnV4
+LTIuNi4zNy1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAkyMDEw
+LTEyLTE0IDE2OjEwOjE2LjAwMDAwMDAwMCAtMDgwMApAQCAtMTMzNSw2ICsxMzM1LDkgQEAKIAog
+CXN0cnVjdCB0aW1lcl9saXN0IGlvX2NvbXBsZXRpb25fdGltZXI7CiAJc3RydWN0IGxpc3RfaGVh
+ZCBpbnRlcm5hbF9yZXNldF9wZW5kaW5nX3E7CisKKwl1OAltc2lfZmxhZzsKKwlzdHJ1Y3QgbXNp
+eF9lbnRyeSBtc2l4ZW50cnk7CiB9OwogCiBlbnVtIHsK
+--00163630ffe37ef8f604976a0bc3--
