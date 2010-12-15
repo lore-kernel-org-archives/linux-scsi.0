@@ -1,117 +1,53 @@
 From: matthew@wil.cx
-Subject: [PATCH 3/5] uas: Rename sense pipe and sense urb to status pipe and status urb
-Date: Wed, 15 Dec 2010 15:44:04 -0500
-Message-ID: <1292445846-12101-3-git-send-email-matthew@wil.cx>
+Subject: [PATCH 2/5] uas: Use kzalloc instead of kmalloc
+Date: Wed, 15 Dec 2010 15:44:03 -0500
+Message-ID: <1292445846-12101-2-git-send-email-matthew@wil.cx>
 References: <20101215204147.GA1263@parisc-linux.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ironport2-out.teksavvy.com ([206.248.154.183]:33935 "EHLO
+	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752158Ab0LOUyL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Dec 2010 15:54:11 -0500
 In-Reply-To: <20101215204147.GA1263@parisc-linux.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Greg KH <greg@kroah.com>
 Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Matthew Wilcox <matthew@wil.cx>
 
-The spec calls this the status pipe.  While it is used to receive sense IUs,
-it is also used to receive other IUs, so this can be confusing.
+The IUs are not being fully initialised by the driver (due to the reserved
+space).  Since we should be zeroing reserved fields, use kzalloc to do
+it for us.
 
 Reported-by: Luben Tuikov <ltuikov@yahoo.com>
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/usb/storage/uas.c |   32 ++++++++++++++++----------------
- 1 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/usb/storage/uas.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 981fdef..f82787f 100644
+index ca277c2..981fdef 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -100,8 +100,8 @@ struct uas_dev_info {
- };
+@@ -297,7 +297,7 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 	if (!urb)
+ 		goto out;
  
- enum {
--	ALLOC_SENSE_URB		= (1 << 0),
--	SUBMIT_SENSE_URB	= (1 << 1),
-+	ALLOC_STATUS_URB	= (1 << 0),
-+	SUBMIT_STATUS_URB	= (1 << 1),
- 	ALLOC_DATA_IN_URB	= (1 << 2),
- 	SUBMIT_DATA_IN_URB	= (1 << 3),
- 	ALLOC_DATA_OUT_URB	= (1 << 4),
-@@ -115,7 +115,7 @@ struct uas_cmd_info {
- 	unsigned int state;
- 	unsigned int stream;
- 	struct urb *cmd_urb;
--	struct urb *sense_urb;
-+	struct urb *status_urb;
- 	struct urb *data_in_urb;
- 	struct urb *data_out_urb;
- 	struct list_head list;
-@@ -207,7 +207,7 @@ static void uas_xfer_data(struct urb *urb, struct scsi_cmnd *cmnd,
- 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
- 	int err;
+-	iu = kmalloc(sizeof(*iu), gfp);
++	iu = kzalloc(sizeof(*iu), gfp);
+ 	if (!iu)
+ 		goto free;
  
--	cmdinfo->state = direction | SUBMIT_SENSE_URB;
-+	cmdinfo->state = direction | SUBMIT_STATUS_URB;
- 	err = uas_submit_urbs(cmnd, cmnd->device->hostdata, GFP_ATOMIC);
- 	if (err) {
- 		spin_lock(&uas_work_lock);
-@@ -360,21 +360,21 @@ static int uas_submit_urbs(struct scsi_cmnd *cmnd,
- {
- 	struct uas_cmd_info *cmdinfo = (void *)&cmnd->SCp;
+@@ -328,7 +328,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
+ 	if (len < 0)
+ 		len = 0;
+ 	len = ALIGN(len, 4);
+-	iu = kmalloc(sizeof(*iu) + len, gfp);
++	iu = kzalloc(sizeof(*iu) + len, gfp);
+ 	if (!iu)
+ 		goto free;
  
--	if (cmdinfo->state & ALLOC_SENSE_URB) {
--		cmdinfo->sense_urb = uas_alloc_sense_urb(devinfo, gfp, cmnd,
--							cmdinfo->stream);
--		if (!cmdinfo->sense_urb)
-+	if (cmdinfo->state & ALLOC_STATUS_URB) {
-+		cmdinfo->status_urb = uas_alloc_sense_urb(devinfo, gfp, cmnd,
-+							  cmdinfo->stream);
-+		if (!cmdinfo->status_urb)
- 			return SCSI_MLQUEUE_DEVICE_BUSY;
--		cmdinfo->state &= ~ALLOC_SENSE_URB;
-+		cmdinfo->state &= ~ALLOC_STATUS_URB;
- 	}
- 
--	if (cmdinfo->state & SUBMIT_SENSE_URB) {
--		if (usb_submit_urb(cmdinfo->sense_urb, gfp)) {
-+	if (cmdinfo->state & SUBMIT_STATUS_URB) {
-+		if (usb_submit_urb(cmdinfo->status_urb, gfp)) {
- 			scmd_printk(KERN_INFO, cmnd,
- 					"sense urb submission failure\n");
- 			return SCSI_MLQUEUE_DEVICE_BUSY;
- 		}
--		cmdinfo->state &= ~SUBMIT_SENSE_URB;
-+		cmdinfo->state &= ~SUBMIT_STATUS_URB;
- 	}
- 
- 	if (cmdinfo->state & ALLOC_DATA_IN_URB) {
-@@ -443,7 +443,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 
- 	BUILD_BUG_ON(sizeof(struct uas_cmd_info) > sizeof(struct scsi_pointer));
- 
--	if (!cmdinfo->sense_urb && sdev->current_cmnd)
-+	if (!cmdinfo->status_urb && sdev->current_cmnd)
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 
- 	if (blk_rq_tagged(cmnd->request)) {
-@@ -455,7 +455,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 
- 	cmnd->scsi_done = done;
- 
--	cmdinfo->state = ALLOC_SENSE_URB | SUBMIT_SENSE_URB |
-+	cmdinfo->state = ALLOC_STATUS_URB | SUBMIT_STATUS_URB |
- 			ALLOC_CMD_URB | SUBMIT_CMD_URB;
- 
- 	switch (cmnd->sc_data_direction) {
-@@ -478,8 +478,8 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd,
- 	err = uas_submit_urbs(cmnd, devinfo, GFP_ATOMIC);
- 	if (err) {
- 		/* If we did nothing, give up now */
--		if (cmdinfo->state & SUBMIT_SENSE_URB) {
--			usb_free_urb(cmdinfo->sense_urb);
-+		if (cmdinfo->state & SUBMIT_STATUS_URB) {
-+			usb_free_urb(cmdinfo->status_urb);
- 			return SCSI_MLQUEUE_DEVICE_BUSY;
- 		}
- 		spin_lock(&uas_work_lock);
 -- 
 1.7.2.3
+
