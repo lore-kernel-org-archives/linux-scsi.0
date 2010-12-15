@@ -1,6295 +1,2330 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC 1/3] qla2xxx: Add target mode support into 2xxx series LLD code
-Date: Wed, 15 Dec 2010 12:33:36 -0800
-Message-ID: <1292445218-15005-2-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC 3/3] tcm_qla2xxx: Add HW target mode I/O, control and TMR path code
+Date: Wed, 15 Dec 2010 12:33:38 -0800
+Message-ID: <1292445218-15005-4-git-send-email-nab@linux-iscsi.org>
 References: <1292445218-15005-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm16.bullet.mail.sp2.yahoo.com ([98.139.91.86]:40336 "HELO
-	nm16.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752641Ab0LOUd6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Dec 2010 15:33:58 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1292445218-15005-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Ra
 Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for qla2xxx series target mode using a new
-target fabric module API based on SCST qla2x00t LLD code using a
-8.02.01-k4 version, and refactors 80% of the qla2x00t module code into qla2xxx
-LLD code at qla2x_target.c using modern 8.03.04-k0 and v4.0 target/configfs
-infrastructure presented as a seperate patch to tcm_qla2xxx.ko   This patch
-introduces a new target fabric module API in qla2x_tgt_def.h here:
+This patch adds initial support for functioning READ and WRITE I/O into
+tcm_qla2xxx fabric module code and TCM backends using new qla2x_target.c
+LLD logic introduced into commit 3d21d3e3a9e2.  This includes support for
+demo-mode TPG access and explict NodeACLs via configfs using
+tcm_qla2xxx_setup_nacl_from_rport() from libfc struct fc_host->rports.
 
-struct qla_target_template {
+This patch also adds support for using tcm_qla2xxx_lport->lport_fcport_map
+and ->lport_loopid_map to track struct se_node_acl pointers for individual
+24-bit Port ID and 16-bit Loop ID values for qla_target_template
+->find_sess_by_s_id() and ->find_sess_by_loop_id() used in a number of
+locations into the primary I/O dispatch logic in qla2x_target.c LLD code.
 
-       int (*handle_cmd)(scsi_qla_host_t *, struct q2t_cmd *, uint32_t, uint32_t, int, int, int);
-       int (*handle_data)(struct q2t_cmd *);
-       int (*handle_tmr)(struct q2t_mgmt_cmd *, uint32_t, uint8_t);
-       void (*free_cmd)(struct q2t_cmd *);
-       void (*free_session)(struct q2t_sess *);
+The main piece to setup a FC Nexus is done in tcm_qla2xxx_check_initiator_node_acl(),
+which calls tcm_qla2xxx_set_sess_by_[s_id,loop_id]() to setup our
+lport->lport_fcport_map and lport_loopid_map pointers respectively, and register
+the new nexus with TCM via __transport_register_session().  The FC nexus release and
+reset path is done via a qla2x_target.c LLD callback to tcm_qla2xxx_free_session()
+which calls transport_deregister_session_configfs(), then to clear the
+tcm_qla2xxx_set_sess_by_[s_id,loop_id]() struct se_nacl pointer, and finally
+transport_deregister_session() to release our struct se_session.
 
-       int (*check_initiator_node_acl)(scsi_qla_host_t *, void *, uint8_t *, uint16_t);
-       struct q2t_sess *(*find_sess_by_loop_id)(scsi_qla_host_t *, const uint16_t);
-       struct q2t_sess *(*find_sess_by_s_id)(scsi_qla_host_t *, const uint8_t *);
-};
-
-This is called via scsi_qla_host_t->hw->qla2x_tmpl within both existing
-qla2xxx LLD and new qla2x_target.c code to process LLD internal target
-mode operations and tcm_qla2xxx fabric module specific operations for
-callers within qla2x_target.c.
-
-There are still a handful of TODO items including proper FC SRR support
-(service retransmission request) and TMRs currently using hardcoded LUN=0,
-but the main pieces are up and running, and properly handling nexus reset
-and tcm_qla2xxx module shutdown+restart w/o having to reload qla2xxx.ko
+For the functioning non NPIV case in tcm_qla2xxx_configfs.c:tcm_qla2xxx_make_tpg()
+we use a single lport->tpg_1 pointer, and only allow a single scsi_qla_host_t *
+per struct tcm_qla2xxx_lport.  The NPIV configfs code is still a WIP and is using
+NOPs for in tcm_qla2xxx_configfs.c at this point.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/qla2xxx/qla2x_target.c  | 5060 ++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla2x_target.h  |  290 ++
- drivers/scsi/qla2xxx/qla2x_tgt.h     |  140 +
- drivers/scsi/qla2xxx/qla2x_tgt_def.h |  717 +++++
- 4 files changed, 6207 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/qla2xxx/qla2x_target.c
- create mode 100644 drivers/scsi/qla2xxx/qla2x_target.h
- create mode 100644 drivers/scsi/qla2xxx/qla2x_tgt.h
- create mode 100644 drivers/scsi/qla2xxx/qla2x_tgt_def.h
+ drivers/target/tcm_qla2xxx/Kbuild                 |    6 +
+ drivers/target/tcm_qla2xxx/Kconfig                |    6 +
+ drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h     |   91 ++
+ drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c | 1319 +++++++++++++++++++++
+ drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c   |  766 ++++++++++++
+ drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.h   |   48 +
+ 6 files changed, 2236 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/tcm_qla2xxx/Kbuild
+ create mode 100644 drivers/target/tcm_qla2xxx/Kconfig
+ create mode 100644 drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h
+ create mode 100644 drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c
+ create mode 100644 drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c
+ create mode 100644 drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.h
 
-diff --git a/drivers/scsi/qla2xxx/qla2x_target.c b/drivers/scsi/qla2xxx/qla2x_target.c
+diff --git a/drivers/target/tcm_qla2xxx/Kbuild b/drivers/target/tcm_qla2xxx/Kbuild
 new file mode 100644
-index 0000000..59a8885
+index 0000000..067cca1
 --- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla2x_target.c
-@@ -0,0 +1,5060 @@
++++ b/drivers/target/tcm_qla2xxx/Kbuild
+@@ -0,0 +1,6 @@
++EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/ -I$(srctree)/drivers/scsi/qla2xxx/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/tcm_qla2xxx/
++
++tcm_qla2xxx-objs		:= tcm_qla2xxx_fabric.o \
++				   tcm_qla2xxx_configfs.o \
++
++obj-$(CONFIG_TCM_QLA2XXX)	+= tcm_qla2xxx.o
+diff --git a/drivers/target/tcm_qla2xxx/Kconfig b/drivers/target/tcm_qla2xxx/Kconfig
+new file mode 100644
+index 0000000..b9002fc
+--- /dev/null
++++ b/drivers/target/tcm_qla2xxx/Kconfig
+@@ -0,0 +1,6 @@
++config TCM_QLA2XXX
++	tristate "TCM_QLA2XXX fabric module for Qlogic 2xxx series target mode HBAs"
++	depends on TARGET_CORE && CONFIGFS_FS
++	default n
++	---help---
++	Say Y here to enable the TCM_QLA2XXX fabric module for Qlogic 2xxx series target mode HBAs
+diff --git a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h
+new file mode 100644
+index 0000000..fbe6628
+--- /dev/null
++++ b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_base.h
+@@ -0,0 +1,91 @@
++#include <target/target_core_base.h>
++
++#define TCM_QLA2XXX_VERSION	"v0.1"
++/* length of ASCII WWPNs including pad */
++#define TCM_QLA2XXX_NAMELEN	32
++/* lenth of ASCII NPIV 'WWPN+WWNN' including pad */
++#define TCM_QLA2XXX_NPIV_NAMELEN 66
++
++#include "qla2x_target.h"
++
++#if 0
++#define DEBUG_Q2T_SESS_MAP(x...)	printk(KERN_INFO x)
++#else
++#define DEBUG_Q2T_SESS_MAP(x...)
++#endif
++
++struct tcm_qla2xxx_nacl {
++	/* From libfc struct fc_rport->port_id */
++	u16 nport_id;
++	/* Binary World Wide unique Node Name for remote FC Initiator Nport */
++	u64 nport_wwnn;
++	/* ASCII formatted WWPN for FC Initiator Nport */
++	char nport_name[TCM_QLA2XXX_NAMELEN];
++	/* Pointer to q2t_sess */
++	struct q2t_sess *q2t_sess;
++	/* Pointer to TCM FC nexus */
++	struct se_session *nport_nexus;
++	/* Returned by tcm_qla2xxx_make_nodeacl() */
++	struct se_node_acl se_node_acl;
++};
++
++struct tcm_qla2xxx_tpg {
++	/* FC lport target portal group tag for TCM */
++	u16 lport_tpgt;
++	/* Atomic bit to determine TPG active status */
++	atomic_t lport_tpg_enabled;
++	/* Pointer back to tcm_qla2xxx_lport */
++	struct tcm_qla2xxx_lport *lport;
++	/* Returned by tcm_qla2xxx_make_tpg() */
++	struct se_portal_group se_tpg;
++};
++
 +/*
-+ *  qla2x_target.c SCSI LLD infrastructure for QLogic 22xx/23xx/24xx/25xx
-+ *
-+ *  based on qla2x00t.c code:
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2006 Nathaniel Clark <nate@misrule.us>
-+ *  Copyright (C) 2006 - 2010 ID7 Ltd.
-+ *
-+ *  Forward port and refactoring to modern qla2xxx and target/configfs
-+ *
-+ *  Copyright (C) 2010 Nicholas A. Bellinger <nab@kernel.org>
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation, version 2
-+ *  of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
++ * Used for the 24-bit lport->lport_fcport_map;
 + */
++struct tcm_qla2xxx_fc_al_pa {
++	struct se_node_acl *se_nacl;
++};
++
++struct tcm_qla2xxx_fc_area {
++        struct tcm_qla2xxx_fc_al_pa al_pas[256];
++};
++
++struct tcm_qla2xxx_fc_domain {
++        struct tcm_qla2xxx_fc_area areas[256];
++};
++
++struct tcm_qla2xxx_fc_loopid {
++	struct se_node_acl *se_nacl;
++};
++
++struct tcm_qla2xxx_lport {
++	/* SCSI protocol the lport is providing */
++	u8 lport_proto_id;
++	/* Binary World Wide unique Port Name for FC Target Lport */
++	u64 lport_wwpn;
++	/* Binary World Wide unique Port Name for FC NPIV Target Lport */
++	u64 lport_npiv_wwpn;
++	/* Binary World Wide unique Node Name for FC NPIV Target Lport */
++	u64 lport_npiv_wwnn;
++	/* ASCII formatted WWPN for FC Target Lport */
++	char lport_name[TCM_QLA2XXX_NAMELEN];
++	/* ASCII formatted WWPN+WWNN for NPIV FC Target Lport */
++	char lport_npiv_name[TCM_QLA2XXX_NPIV_NAMELEN];
++	/* vmalloc'ed memory for fc_port pointers in 24-bit FC Port ID space */
++	char *lport_fcport_map;
++	/* vmalloc-ed memory for fc_port pointers for 16-bit FC loop ID */
++	char *lport_loopid_map;
++	/* Pointer to struct scsi_qla_host from qla2xxx LLD */
++	struct scsi_qla_host *qla_vha;
++	/* Pointer to struct scsi_qla_host for NPIV VP from qla2xxx LLD */
++	struct scsi_qla_host *qla_npiv_vp;
++	/* Pointer to struct q2t_tgt pointer */
++	struct q2t_tgt lport_q2t_tgt;
++	/* Pointer to struct fc_vport for NPIV vport from libfc */
++	struct fc_vport *npiv_vport;
++	/* Pointer to TPG=1 for non NPIV mode */
++	struct tcm_qla2xxx_tpg *tpg_1;
++	/* Returned by tcm_qla2xxx_make_lport() */
++	struct se_wwn lport_wwn;
++};
+diff --git a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c
+new file mode 100644
+index 0000000..9cf9018
+--- /dev/null
++++ b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_configfs.c
+@@ -0,0 +1,1319 @@
++/*******************************************************************************
++ * Filename:  tcm_qla2xxx_configfs.c
++ *
++ * This file contains TCM QLA2XXX fabric module implementation using
++ * v4 configfs fabric infrastructure for QLogic target mode HBAs
++ *
++ * Copyright (c) 2010 Rising Tide, Inc.
++ * Copyright (c) 2010 Linux-iSCSI.org
++ *
++ * Copyright (c) 2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ ****************************************************************************/
++
++#define TCM_QLA2XXX_CONFIGFS_C
 +
 +#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/types.h>
++#include <linux/moduleparam.h>
 +#include <linux/version.h>
-+#include <linux/blkdev.h>
-+#include <linux/interrupt.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_host.h>
-+#include <linux/pci.h>
-+#include <linux/delay.h>
-+#include <linux/list.h>
++#include <generated/utsrelease.h>
++#include <linux/utsname.h>
++#include <linux/init.h>
++#include <linux/slab.h>
++#include <linux/kthread.h>
++#include <linux/types.h>
++#include <linux/string.h>
++#include <linux/configfs.h>
++#include <linux/ctype.h>
 +#include <asm/unaligned.h>
++
 +#include <target/target_core_base.h>
 +#include <target/target_core_transport.h>
 +#include <target/target_core_fabric_ops.h>
-+#include <target/target_core_tmr.h>
++#include <target/target_core_fabric_configfs.h>
++#include <target/target_core_fabric_lib.h>
++#include <target/target_core_device.h>
++#include <target/target_core_tpg.h>
++#include <target/target_core_configfs.h>
++#include <target/target_core_base.h>
++#include <target/configfs_macros.h>
 +
-+#include "qla_def.h"
-+#include "qla2x_tgt.h"
-+#include "qla2x_target.h"
++#include <tcm_qla2xxx_base.h>
++#include <tcm_qla2xxx_fabric.h>
 +
-+/*
-+ * From scsi/fc/fc_fcp.h
-+ */
-+enum fcp_resp_rsp_codes {
-+	FCP_TMF_CMPL = 0,
-+	FCP_DATA_LEN_INVALID = 1,
-+	FCP_CMND_FIELDS_INVALID = 2,
-+	FCP_DATA_PARAM_MISMATCH = 3,
-+	FCP_TMF_REJECTED = 4,
-+	FCP_TMF_FAILED = 5,
-+	FCP_TMF_INVALID_LUN = 9,
-+};
++#include <qla_def.h>
 +
-+/*
-+ * fc_pri_ta from scsi/fc/fc_fcp.h
-+ */
-+#define FCP_PTA_SIMPLE      0   /* simple task attribute */
-+#define FCP_PTA_HEADQ       1   /* head of queue task attribute */
-+#define FCP_PTA_ORDERED     2   /* ordered task attribute */
-+#define FCP_PTA_ACA         4   /* auto. contigent allegiance */
-+#define FCP_PTA_MASK        7   /* mask for task attribute field */
-+#define FCP_PRI_SHIFT       3   /* priority field starts in bit 3 */
-+#define FCP_PRI_RESVD_MASK  0x80        /* reserved bits in priority field */
++#undef TCM_QLA2XXX_CONFIGFS_C
 +
-+/*
-+ * This driver calls qla2x00_req_pkt() and qla2x00_issue_marker(), which
-+ * must be called under HW lock and could unlock/lock it inside.
-+ * It isn't an issue, since in the current implementation on the time when
-+ * those functions are called:
-+ *
-+ *   - Either context is IRQ and only IRQ handler can modify HW data,
-+ *     including rings related fields,
-+ *
-+ *   - Or access to target mode variables from struct q2t_tgt doesn't
-+ *     cross those functions boundaries, except tgt_stop, which
-+ *     additionally protected by irq_cmd_count.
-+ */
++/* Local pointer to allocated TCM configfs fabric module */
++struct target_fabric_configfs *tcm_qla2xxx_fabric_configfs;
++struct target_fabric_configfs *tcm_qla2xxx_npiv_fabric_configfs;
 +
-+#if 0
-+#define TRACE_DBG(x...) printk(KERN_INFO x)
-+#else
-+#define TRACE_DBG(x...)
-+#endif
-+
-+#if 0
-+#define TRACE_MGMT_DBG(x...) printk(KERN_INFO x)
-+#else
-+#define TRACE_MGMT_DBG(x...)
-+#endif
-+
-+#if 0
-+#define TRACE_SCSI(x...) printk(KERN_INFO x)
-+#else
-+#define TRACE_SCSI(x...)
-+#endif
-+
-+#if 0
-+#define TRACE_SG(x...) printk(KERN_INFO x)
-+#else
-+#define TRACE_SG(x...)
-+#endif
-+
-+#if 0
-+#define TRACE_MGMT(x...) printk(KERN_INFO x)
-+#else
-+#define TRACE_MGMT(x...)
-+#endif
-+
-+#define TRACE_BUFFER(x, buff, len)
-+
-+static int __q24_xmit_response(struct q2t_cmd *, int, uint8_t);
-+
-+/* Predefs for callbacks handed to qla2xxx(target) */
-+static void q24_atio_pkt(scsi_qla_host_t *ha, atio7_entry_t *pkt);
-+static void q2t_response_pkt(scsi_qla_host_t *ha, response_t *pkt);
-+static int q2t_issue_task_mgmt(struct q2t_sess *sess, uint32_t lun,
-+	int lun_size, int fn, void *iocb, int flags);
-+static void q2x_send_term_exchange(scsi_qla_host_t *ha, struct q2t_cmd *cmd,
-+	atio_entry_t *atio, int ha_locked);
-+static void q24_send_term_exchange(scsi_qla_host_t *ha, struct q2t_cmd *cmd,
-+	atio7_entry_t *atio, int ha_locked);
-+static void q2t_reject_free_srr_imm(scsi_qla_host_t *ha, struct srr_imm *imm,
-+	int ha_lock);
-+static int q2t_cut_cmd_data_head(struct q2t_cmd *cmd, unsigned int offset);
-+static void q2t_clear_tgt_db(struct q2t_tgt *tgt, bool local_only);
-+static int q2t_unreg_sess(struct q2t_sess *sess);
-+
-+
-+/*
-+ * Global Variables
-+ */
-+
-+static struct kmem_cache *q2t_cmd_cachep;
-+static struct kmem_cache *q2t_mgmt_cmd_cachep;
-+static mempool_t *q2t_mgmt_cmd_mempool;
-+
-+static DECLARE_RWSEM(q2t_unreg_rwsem);
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static inline void q2t_sess_get(struct q2t_sess *sess)
++static int tcm_qla2xxx_setup_nacl_from_rport(
++	struct se_portal_group *se_tpg,
++	struct se_node_acl *se_nacl,
++	struct tcm_qla2xxx_lport *lport,
++	struct tcm_qla2xxx_nacl *nacl,
++	u64 rport_wwnn)
 +{
-+	sess->sess_ref++;
-+	TRACE_DBG("sess %p, new sess_ref %d\n", sess, sess->sess_ref);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static inline void q2t_sess_put(struct q2t_sess *sess)
-+{
-+	TRACE_DBG("sess %p, new sess_ref %d\n", sess, sess->sess_ref-1);
-+	BUG_ON(sess->sess_ref == 0);
-+
-+	sess->sess_ref--;
-+	if (sess->sess_ref == 0)
-+		q2t_unreg_sess(sess);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry (to protect tgt->sess_list) */
-+static struct q2t_sess *q2t_find_sess_by_port_name(
-+	struct q2t_tgt *tgt,
-+	const uint8_t *port_name)
-+{
-+	struct q2t_sess *sess;
-+
-+	list_for_each_entry(sess, &tgt->sess_list, sess_list_entry) {
-+		if ((sess->port_name[0] == port_name[0]) &&
-+		    (sess->port_name[1] == port_name[1]) &&
-+		    (sess->port_name[2] == port_name[2]) &&
-+		    (sess->port_name[3] == port_name[3]) &&
-+		    (sess->port_name[4] == port_name[4]) &&
-+		    (sess->port_name[5] == port_name[5]) &&
-+		    (sess->port_name[6] == port_name[6]) &&
-+		    (sess->port_name[7] == port_name[7]))
-+			return sess;
-+	}
-+
-+	return NULL;
-+}
-+
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static inline request_t *q2t_req_pkt(scsi_qla_host_t *vha)
-+{
-+	return qla2x00_req_pkt(vha);
-+}
-+
-+/* Might release hw lock, then reaquire!! */
-+static inline int q2t_issue_marker(scsi_qla_host_t *vha, int vha_locked)
-+{
-+	/* Send marker if required */
-+	if (unlikely(vha->marker_needed != 0)) {
-+		int rc = qla2x00_issue_marker(vha, vha_locked);
-+		if (rc != QLA_SUCCESS) {
-+			printk(KERN_ERR "qla2x00t(%d): issue_marker() "
-+				"failed\n", vha->vp_idx);
-+		}
-+		return rc;
-+	}
-+	return QLA_SUCCESS;
-+}
-+
-+static inline
-+scsi_qla_host_t *q2t_find_host_by_d_id(scsi_qla_host_t *vha, uint8_t *d_id)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if ((vha->d_id.b.area != d_id[1]) || (vha->d_id.b.domain != d_id[0]))
-+		return NULL;
-+
-+	if (vha->d_id.b.al_pa == d_id[2])
-+		return vha;
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		uint8_t vp_idx;
-+		BUG_ON(ha->tgt_vp_map == NULL);
-+		vp_idx = ha->tgt_vp_map[d_id[2]].idx;
-+		if (likely(test_bit(vp_idx, ha->vp_idx_map)))
-+			return ha->tgt_vp_map[vp_idx].vha;
-+	}
-+
-+	return NULL;
-+}
-+
-+static inline
-+scsi_qla_host_t *q2t_find_host_by_vp_idx(scsi_qla_host_t *vha, uint16_t vp_idx)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if (vha->vp_idx == vp_idx)
-+		return vha;
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		BUG_ON(ha->tgt_vp_map == NULL);
-+		if (likely(test_bit(vp_idx, ha->vp_idx_map)))
-+			return ha->tgt_vp_map[vp_idx].vha;
-+	}
-+
-+	return NULL;
-+}
-+
-+void q24_atio_pkt_all_vps(scsi_qla_host_t *vha, atio7_entry_t *atio)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	switch (atio->entry_type) {
-+	case ATIO_TYPE7:
-+	{
-+		scsi_qla_host_t *host = q2t_find_host_by_d_id(vha, atio->fcp_hdr.d_id);
-+		if (unlikely(NULL == host)) {
-+			printk(KERN_ERR "qla2x00t(%d): Received ATIO_TYPE7 "
-+				"with unknown d_id %x:%x:%x\n", vha->vp_idx,
-+				atio->fcp_hdr.d_id[0], atio->fcp_hdr.d_id[1],
-+				atio->fcp_hdr.d_id[2]);
-+			break;
-+		}
-+		q24_atio_pkt(host, atio);
-+		break;
-+	}
-+
-+	case IMMED_NOTIFY_TYPE:
-+	{
-+		scsi_qla_host_t *host = vha;
-+
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			notify24xx_entry_t *entry = (notify24xx_entry_t *)atio;
-+			if ((entry->vp_index != 0xFF) &&
-+			    (entry->nport_handle != 0xFFFF)) {
-+				host = q2t_find_host_by_vp_idx(vha,
-+							entry->vp_index);
-+				if (unlikely(!host)) {
-+					printk(KERN_ERR "qla2x00t(%d): Received "
-+						"ATIO (IMMED_NOTIFY_TYPE) "
-+						"with unknown vp_index %d\n",
-+						vha->vp_idx, entry->vp_index);
-+					break;
-+				}
-+			}
-+		}
-+		q24_atio_pkt(host, atio);
-+		break;
-+	}
-+
-+	default:
-+		printk(KERN_ERR "qla2x00t(%d): Received unknown ATIO atio "
-+		     "type %x\n", vha->vp_idx, atio->entry_type);
-+		break;
-+	}
-+
-+	return;
-+}
-+
-+void q2t_response_pkt_all_vps(scsi_qla_host_t *vha, response_t *pkt)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	switch (pkt->entry_type) {
-+	case CTIO_TYPE7:
-+	{
-+		ctio7_fw_entry_t *entry = (ctio7_fw_entry_t *)pkt;
-+		scsi_qla_host_t *host = q2t_find_host_by_vp_idx(vha,
-+						entry->vp_index);
-+		if (unlikely(!host)) {
-+			printk(KERN_ERR "qla2x00t(%d): Response pkt (CTIO_TYPE7) "
-+				"received, with unknown vp_index %d\n",
-+				vha->vp_idx, entry->vp_index);
-+			break;
-+		}
-+		q2t_response_pkt(host, pkt);
-+		break;
-+	}
-+
-+	case IMMED_NOTIFY_TYPE:
-+	{
-+		scsi_qla_host_t *host = vha;
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			notify24xx_entry_t *entry = (notify24xx_entry_t *)pkt;
-+			host = q2t_find_host_by_vp_idx(vha, entry->vp_index);
-+			if (unlikely(!host)) {
-+				printk(KERN_ERR "qla2x00t(%d): Response pkt "
-+					"(IMMED_NOTIFY_TYPE) received, "
-+					"with unknown vp_index %d\n",
-+					vha->vp_idx, entry->vp_index);
-+				break;
-+			}
-+		}
-+		q2t_response_pkt(host, pkt);
-+		break;
-+	}
-+
-+	case NOTIFY_ACK_TYPE:
-+	{
-+		scsi_qla_host_t *host = vha;
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			nack24xx_entry_t *entry = (nack24xx_entry_t *)pkt;
-+			if (0xFF != entry->vp_index) {
-+				host = q2t_find_host_by_vp_idx(vha,
-+						entry->vp_index);
-+				if (unlikely(!host)) {
-+					printk(KERN_ERR "qla2x00t(%d): Response "
-+						"pkt (NOTIFY_ACK_TYPE) "
-+						"received, with unknown "
-+						"vp_index %d\n", vha->vp_idx,
-+						entry->vp_index);
-+					break;
-+				}
-+			}
-+		}
-+		q2t_response_pkt(host, pkt);
-+		break;
-+	}
-+
-+	case ABTS_RECV_24XX:
-+	{
-+		abts24_recv_entry_t *entry = (abts24_recv_entry_t *)pkt;
-+		scsi_qla_host_t *host = q2t_find_host_by_vp_idx(vha,
-+						entry->vp_index);
-+		if (unlikely(!host)) {
-+			printk(KERN_ERR "qla2x00t(%d): Response pkt "
-+				"(ABTS_RECV_24XX) received, with unknown "
-+				"vp_index %d\n", vha->vp_idx, entry->vp_index);
-+			break;
-+		}
-+		q2t_response_pkt(host, pkt);
-+		break;
-+	}
-+
-+	case ABTS_RESP_24XX:
-+	{
-+		abts24_resp_entry_t *entry = (abts24_resp_entry_t *)pkt;
-+		scsi_qla_host_t *host = q2t_find_host_by_vp_idx(vha,
-+						entry->vp_index);
-+		if (unlikely(!host)) {
-+			printk(KERN_ERR "qla2x00t(%d): Response pkt "
-+				"(ABTS_RECV_24XX) received, with unknown "
-+				"vp_index %d\n", vha->vp_idx, entry->vp_index);
-+			break;
-+		}
-+		q2t_response_pkt(host, pkt);
-+		break;
-+	}
-+
-+	default:
-+		q2t_response_pkt(vha, pkt);
-+		break;
-+	}
-+
-+}
-+
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static void q2t_free_session_done(struct q2t_sess *sess)
-+{
-+	struct q2t_tgt *tgt;
-+	scsi_qla_host_t *vha = sess->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	tgt = sess->tgt;
-+	/*
-+	 * Release the target session for FC Nexus from fabric module code.
-+	 */
-+	if (sess->se_sess != NULL)
-+		ha->qla2x_tmpl->free_session(sess);
-+
-+	TRACE_MGMT_DBG("Unregistration of sess %p finished\n", sess);
-+
-+	kfree(sess);
-+
-+	if (!tgt)
-+		return;
-+
-+	TRACE_DBG("empty(sess_list) %d sess_count %d\n",
-+	      list_empty(&tgt->sess_list), tgt->sess_count);
-+
-+	ha = tgt->ha;
-+	/*
-+	 * We need to protect against race, when tgt is freed before or
-+	 * inside wake_up()
-+	 */
-+	tgt->sess_count--;
-+	if (tgt->sess_count == 0)
-+		wake_up_all(&tgt->waitQ);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2t_unreg_sess(struct q2t_sess *sess)
-+{
-+	int res = 1;
-+
-+	BUG_ON(sess == NULL);
-+	BUG_ON(sess->sess_ref != 0);
-+
-+	list_del(&sess->sess_list_entry);
-+
-+	if (sess->deleted)
-+		list_del(&sess->del_list_entry);
-+
-+	printk(KERN_INFO "qla2x00t(%d): %ssession for loop_id %d deleted\n",
-+		sess->vha->vp_idx, sess->local ? "local " : "",
-+		sess->loop_id);
-+
-+	q2t_free_session_done(sess);
-+
-+	return res;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2t_reset(scsi_qla_host_t *vha, void *iocb, int mcmd)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_sess *sess = NULL;
-+	uint16_t lun = 0, loop_id;
-+	int res = 0;
-+	uint8_t s_id[3];
-+
-+	memset(&s_id, 0, 3);
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		notify24xx_entry_t *n = (notify24xx_entry_t *)iocb;
-+		loop_id = le16_to_cpu(n->nport_handle);
-+		s_id[0] = n->port_id[0];
-+		s_id[1] = n->port_id[1];
-+		s_id[2] = n->port_id[2];
-+	} else
-+		loop_id = GET_TARGET_ID(ha, (notify_entry_t *)iocb);
-+
-+	if (loop_id == 0xFFFF) {
-+#warning FIXME: Re-enable Global event handling..
-+#if 0
-+		/* Global event */
-+		printk("Processing q2t_reset with loop_id=0xffff global event............\n");
-+		atomic_inc(&ha->q2t_tgt->tgt_global_resets_count);
-+		q2t_clear_tgt_db(ha->q2t_tgt, 1);
-+		if (!list_empty(&ha->q2t_tgt->sess_list)) {
-+			sess = list_entry(ha->q2t_tgt->sess_list.next,
-+				typeof(*sess), sess_list_entry);
-+			switch (mcmd) {
-+			case Q2T_NEXUS_LOSS_SESS:
-+				mcmd = Q2T_NEXUS_LOSS;
-+				break;
-+			case Q2T_ABORT_ALL_SESS:
-+				mcmd = Q2T_ABORT_ALL;
-+				break;
-+			case Q2T_NEXUS_LOSS:
-+			case Q2T_ABORT_ALL:
-+				break;
-+			default:
-+				printk(KERN_ERR "qla2x00t(%d): Not allowed "
-+					"command %x in %s", vha->vp_idx,
-+					mcmd, __func__);
-+				sess = NULL;
-+				break;
-+			}
-+		} else
-+			sess = NULL;
-+#endif
-+	} else {
-+		sess = ha->qla2x_tmpl->find_sess_by_loop_id(vha, loop_id);
-+	}
-+
-+	TRACE_DBG("Using sess for q2t_reset: %p\n", sess);
-+	if (!sess) {
-+		res = -ESRCH;
-+		ha->q2t_tgt->tm_to_unknown = 1;
-+		return res;
-+	}
-+
-+	printk(KERN_INFO "scsi(%ld): resetting (session %p from port "
-+		"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x, "
-+		"mcmd %x, loop_id %d)\n", vha->host_no, sess,
-+		sess->port_name[0], sess->port_name[1],
-+		sess->port_name[2], sess->port_name[3],
-+		sess->port_name[4], sess->port_name[5],
-+		sess->port_name[6], sess->port_name[7],
-+		mcmd, loop_id);
-+
-+	return q2t_issue_task_mgmt(sess, lun, sizeof(lun), mcmd,
-+				iocb, Q24_MGMT_SEND_NACK);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static void q2t_schedule_sess_for_deletion(struct q2t_sess *sess)
-+{
-+	struct q2t_tgt *tgt = sess->tgt;
-+	uint32_t dev_loss_tmo = tgt->ha->port_down_retry_count + 5;
-+	bool schedule;
-+
-+	if (sess->deleted)
-+		return;
-+	/*
-+	 * If the list is empty, then, most likely, the work isn't
-+	 * scheduled.
-+	 */
-+	schedule = list_empty(&tgt->del_sess_list);
-+
-+	TRACE_DBG("Scheduling sess %p for deletion (schedule %d)", sess,
-+		schedule);
-+	list_add_tail(&sess->del_list_entry, &tgt->del_sess_list);
-+	sess->deleted = 1;
-+	sess->expires = jiffies + dev_loss_tmo * HZ;
-+
-+	printk(KERN_INFO "qla2x00t(%d): session for port %02x:%02x:%02x:"
-+		"%02x:%02x:%02x:%02x:%02x (loop ID %d) scheduled for "
-+		"deletion in %d secs\n", sess->vha->vp_idx,
-+		sess->port_name[0], sess->port_name[1],
-+		sess->port_name[2], sess->port_name[3],
-+		sess->port_name[4], sess->port_name[5],
-+		sess->port_name[6], sess->port_name[7],
-+		sess->loop_id, dev_loss_tmo);
-+
-+	if (schedule)
-+		schedule_delayed_work(&tgt->sess_del_work,
-+				jiffies - sess->expires);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static void q2t_clear_tgt_db(struct q2t_tgt *tgt, bool local_only)
-+{
-+	struct q2t_sess *sess, *sess_tmp;
-+
-+	list_for_each_entry_safe(sess, sess_tmp, &tgt->sess_list,
-+					sess_list_entry) {
-+		if (local_only) {
-+			if (!sess->local)
-+				continue;
-+			q2t_schedule_sess_for_deletion(sess);
-+		} else
-+			q2t_sess_put(sess);
-+	}
-+
-+	/* At this point tgt could be already dead */
-+}
-+
-+static int q24_get_loop_id(scsi_qla_host_t *vha, const uint8_t *s_id,
-+	uint16_t *loop_id)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	dma_addr_t gid_list_dma;
-+	struct gid_list_info *gid_list;
-+	char *id_iter;
-+	int res, rc, i;
-+	uint16_t entries;
-+
-+	gid_list = dma_alloc_coherent(&ha->pdev->dev, GID_LIST_SIZE,
-+			&gid_list_dma, GFP_KERNEL);
-+	if (!gid_list) {
-+		printk(KERN_ERR "qla2x00t(%d): DMA Alloc failed of %zd\n",
-+			vha->vp_idx, GID_LIST_SIZE);
-+		return -ENOMEM;
-+	}
-+
-+	/* Get list of logged in devices */
-+	rc = qla2x00_get_id_list(vha, gid_list, gid_list_dma, &entries);
-+	if (rc != QLA_SUCCESS) {
-+		printk(KERN_ERR "qla2x00t(%d): get_id_list() failed: %x\n",
-+			vha->vp_idx, rc);
-+		res = -1;
-+		goto out_free_id_list;
-+	}
-+
-+	id_iter = (char *)gid_list;
-+	res = -1;
-+	for (i = 0; i < entries; i++) {
-+		struct gid_list_info *gid = (struct gid_list_info *)id_iter;
-+		if ((gid->al_pa == s_id[2]) &&
-+		    (gid->area == s_id[1]) &&
-+		    (gid->domain == s_id[0])) {
-+			*loop_id = le16_to_cpu(gid->loop_id);
-+			res = 0;
-+			break;
-+		}
-+		id_iter += ha->gid_list_info_size;
-+	}
-+
-+out_free_id_list:
-+	dma_free_coherent(&ha->pdev->dev, GID_LIST_SIZE, gid_list, gid_list_dma);
-+
-+	return res;
-+}
-+
-+static bool q2t_check_fcport_exist(scsi_qla_host_t *vha, struct q2t_sess *sess)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	bool res, found = false;
-+	int rc, i;
-+	uint16_t loop_id = 0xFFFF; /* to eliminate compiler's warning */
-+	uint16_t entries;
-+	void *pmap;
-+	int pmap_len;
-+	fc_port_t *fcport;
-+	int global_resets;
-+
-+retry:
-+	global_resets = atomic_read(&ha->q2t_tgt->tgt_global_resets_count);
-+
-+	rc = qla2x00_get_node_name_list(vha, &pmap, &pmap_len);
-+	if (rc != QLA_SUCCESS) {
-+		res = false;
-+		goto out;
-+	}
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		struct qla_port24_data *pmap24 = pmap;
-+
-+		entries = pmap_len/sizeof(*pmap24);
-+
-+		for (i = 0; i < entries; ++i) {
-+			if ((sess->port_name[0] == pmap24[i].port_name[0]) &&
-+			    (sess->port_name[1] == pmap24[i].port_name[1]) &&
-+			    (sess->port_name[2] == pmap24[i].port_name[2]) &&
-+			    (sess->port_name[3] == pmap24[i].port_name[3]) &&
-+			    (sess->port_name[4] == pmap24[i].port_name[4]) &&
-+			    (sess->port_name[5] == pmap24[i].port_name[5]) &&
-+			    (sess->port_name[6] == pmap24[i].port_name[6]) &&
-+			    (sess->port_name[7] == pmap24[i].port_name[7])) {
-+				loop_id = le16_to_cpu(pmap24[i].loop_id);
-+				found = true;
-+				break;
-+			}
-+		}
-+	} else {
-+		struct qla_port23_data *pmap2x = pmap;
-+
-+		entries = pmap_len/sizeof(*pmap2x);
-+
-+		for (i = 0; i < entries; ++i) {
-+			if ((sess->port_name[0] == pmap2x[i].port_name[0]) &&
-+			    (sess->port_name[1] == pmap2x[i].port_name[1]) &&
-+			    (sess->port_name[2] == pmap2x[i].port_name[2]) &&
-+			    (sess->port_name[3] == pmap2x[i].port_name[3]) &&
-+			    (sess->port_name[4] == pmap2x[i].port_name[4]) &&
-+			    (sess->port_name[5] == pmap2x[i].port_name[5]) &&
-+			    (sess->port_name[6] == pmap2x[i].port_name[6]) &&
-+			    (sess->port_name[7] == pmap2x[i].port_name[7])) {
-+				loop_id = le16_to_cpu(pmap2x[i].loop_id);
-+				found = true;
-+				break;
-+			}
-+		}
-+	}
-+
-+	kfree(pmap);
-+
-+	if (!found) {
-+		res = false;
-+		goto out;
-+	}
-+
-+	printk(KERN_INFO "q2t_check_fcport_exist(): loop_id %d", loop_id);
-+
-+	fcport = kzalloc(sizeof(*fcport), GFP_KERNEL);
-+	if (fcport == NULL) {
-+		printk(KERN_ERR "qla2x00t(%d): Allocation of tmp FC port failed",
-+			vha->vp_idx);
-+		res = false;
-+		goto out;
-+	}
-+
-+	fcport->loop_id = loop_id;
-+
-+	rc = qla2x00_get_port_database(vha, fcport, 0);
-+	if (rc != QLA_SUCCESS) {
-+		printk(KERN_ERR "qla2x00t(%d): Failed to retrieve fcport "
-+			"information -- get_port_database() returned %x "
-+			"(loop_id=0x%04x)", vha->vp_idx, rc, loop_id);
-+		res = false;
-+		goto out_free_fcport;
-+	}
-+
-+	if (global_resets != atomic_read(&ha->q2t_tgt->tgt_global_resets_count)) {
-+		TRACE_MGMT_DBG("qla2x00t(%d): global reset during session "
-+			"discovery (counter was %d, new %d), retrying",
-+			vha->vp_idx, global_resets,
-+			atomic_read(&ha->q2t_tgt->tgt_global_resets_count));
-+		goto retry;
-+	}
-+
-+	TRACE_MGMT_DBG("Updating sess %p s_id %x:%x:%x, "
-+		"loop_id %d) to d_id %x:%x:%x, loop_id %d", sess,
-+		sess->s_id.b.domain, sess->s_id.b.al_pa,
-+		sess->s_id.b.area, sess->loop_id, fcport->d_id.b.domain,
-+		fcport->d_id.b.al_pa, fcport->d_id.b.area, fcport->loop_id);
-+
-+	sess->s_id = fcport->d_id;
-+	sess->loop_id = fcport->loop_id;
-+	sess->conf_compl_supported = fcport->conf_compl_supported;
-+
-+	res = true;
-+
-+out_free_fcport:
-+	kfree(fcport);
-+
-+out:
-+	return res;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static void q2t_undelete_sess(struct q2t_sess *sess)
-+{
-+	BUG_ON(!sess->deleted);
-+
-+	list_del(&sess->del_list_entry);
-+	sess->deleted = 0;
-+}
-+
-+static void q2t_del_sess_work_fn(struct delayed_work *work)
-+{
-+	struct q2t_tgt *tgt = container_of(work, struct q2t_tgt,
-+					sess_del_work);
-+	scsi_qla_host_t *vha = tgt->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_sess *sess;
++	struct scsi_qla_host *vha = lport->qla_vha;
++	struct Scsi_Host *sh = vha->host;
++	struct fc_host_attrs *fc_host = shost_to_fc_host(sh);
++	struct fc_rport *rport;
++	struct tcm_qla2xxx_fc_domain *d;
++	struct tcm_qla2xxx_fc_area *a;
++	struct tcm_qla2xxx_fc_al_pa *p;
 +	unsigned long flags;
-+
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	while (!list_empty(&tgt->del_sess_list)) {
-+		sess = list_entry(tgt->del_sess_list.next, typeof(*sess),
-+				del_list_entry);
-+		if (time_after_eq(jiffies, sess->expires)) {
-+			bool cancel;
-+
-+			q2t_undelete_sess(sess);
-+
-+			spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+			cancel = q2t_check_fcport_exist(vha, sess);
-+			spin_lock_irqsave(&ha->hardware_lock, flags);
-+
-+			if (cancel) {
-+				if (sess->deleted) {
-+					/*
-+					 * sess was again deleted while we were
-+					 * discovering it
-+					 */
-+					continue;
-+				}
-+
-+				printk(KERN_INFO "qla2x00t(%d): cancel deletion of "
-+					"session for port %02x:%02x:%02x:%02x:%02x:"
-+					"%02x:%02x:%02x (loop ID %d), because it isn't"
-+					" deleted by firmware", vha->vp_idx,
-+					sess->port_name[0], sess->port_name[1],
-+					sess->port_name[2], sess->port_name[3],
-+					sess->port_name[4], sess->port_name[5],
-+					sess->port_name[6], sess->port_name[7],
-+					sess->loop_id);
-+			} else {
-+				TRACE_MGMT_DBG("Timeout: sess %p about to be "
-+					"deleted\n", sess);
-+				q2t_sess_put(sess);
-+			}
-+		} else {
-+			schedule_delayed_work(&tgt->sess_del_work,
-+				jiffies - sess->expires);
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+}
-+
-+/*
-+ * Adds an extra ref to allow to drop hw lock after adding sess to the list.
-+ * Caller must put it.
-+ */
-+static struct q2t_sess *q2t_create_sess(
-+	scsi_qla_host_t *vha,
-+	fc_port_t *fcport,
-+	bool local)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_sess *sess;
-+	unsigned char be_sid[3];
-+
-+	/* Check to avoid double sessions */
-+#if 0
-+	spin_lock_irq(&ha->hardware_lock);
-+	list_for_each_entry(sess, &tgt->sess_list, sess_list_entry) {
-+		if ((sess->port_name[0] == fcport->port_name[0]) &&
-+		    (sess->port_name[1] == fcport->port_name[1]) &&
-+		    (sess->port_name[2] == fcport->port_name[2]) &&
-+		    (sess->port_name[3] == fcport->port_name[3]) &&
-+		    (sess->port_name[4] == fcport->port_name[4]) &&
-+		    (sess->port_name[5] == fcport->port_name[5]) &&
-+		    (sess->port_name[6] == fcport->port_name[6]) &&
-+		    (sess->port_name[7] == fcport->port_name[7])) {
-+			TRACE_MGMT_DBG("Double sess %p found (s_id %x:%x:%x, "
-+				"loop_id %d), updating to d_id %x:%x:%x, "
-+				"loop_id %d", sess, sess->s_id.b.domain,
-+				sess->s_id.b.al_pa, sess->s_id.b.area,
-+				sess->loop_id, fcport->d_id.b.domain,
-+				fcport->d_id.b.al_pa, fcport->d_id.b.area,
-+				fcport->loop_id);
-+
-+			if (sess->deleted)
-+				q2t_undelete_sess(sess);
-+
-+			q2t_sess_get(sess);
-+			sess->s_id = fcport->d_id;
-+			sess->loop_id = fcport->loop_id;
-+			sess->conf_compl_supported = fcport->conf_compl_supported;
-+			if (sess->local && !local)
-+				sess->local = 0;
-+			spin_unlock_irq(&ha->hardware_lock);
-+			goto out;
-+		}
-+	}
-+	spin_unlock_irq(&ha->hardware_lock);
-+#endif
-+	/* We are under tgt_mutex, so a new sess can't be added behind us */
-+
-+	sess = kzalloc(sizeof(*sess), GFP_KERNEL);
-+	if (!sess) {
-+		printk(KERN_ERR "qla2x00t(%u): session allocation failed, "
-+			"all commands from port %02x:%02x:%02x:%02x:"
-+			"%02x:%02x:%02x:%02x will be refused", vha->vp_idx,
-+			fcport->port_name[0], fcport->port_name[1],
-+			fcport->port_name[2], fcport->port_name[3],
-+			fcport->port_name[4], fcport->port_name[5],
-+			fcport->port_name[6], fcport->port_name[7]);
-+
-+		return NULL;
-+	}
-+
-+	sess->sess_ref = 2; /* plus 1 extra ref, see above */
-+	sess->tgt = ha->q2t_tgt;
-+	sess->vha = vha;
-+
-+	sess->s_id = fcport->d_id;
-+	sess->loop_id = fcport->loop_id;
-+	sess->local = local;
-+
-+	TRACE_MGMT_DBG("Adding sess %p to tgt %p via ->set_sess_by_s_id()\n",
-+			sess, ha->q2t_tgt);
-+
-+	be_sid[0] = sess->s_id.b.domain;
-+	be_sid[1] = sess->s_id.b.area;
-+	be_sid[2] = sess->s_id.b.al_pa;
++	unsigned char domain, area, al_pa;
 +	/*
-+	 * Determine if this fc_port->port_name is allowed to access
-+	 * target mode using explict NodeACLs+MappedLUNs, or using
-+	 * TPG demo mode.  If this is successful a target mode FC nexus
-+	 * is created.
++	 * Scan the existing rports, and create a session for the
++	 * explict NodeACL is an matching rport->node_name already
++	 * exists.
 +	 */
-+	if (ha->qla2x_tmpl->check_initiator_node_acl(vha, sess, &be_sid[0],
-+				fcport->loop_id) < 0) {
-+		kfree(sess);
-+		return NULL;
++	spin_lock_irqsave(sh->host_lock, flags);
++	list_for_each_entry(rport, &fc_host->rports, peers) {
++		if (rport_wwnn != rport->node_name)
++			continue;
++
++		DEBUG_Q2T_SESS_MAP("Located existing rport_wwpn and rport->node_name:"
++			" 0x%016LX, port_id: 0x%04x\n", rport->node_name,
++			rport->port_id);
++		domain = (rport->port_id >> 16) & 0xff;
++		area = (rport->port_id >> 8) & 0xff;
++		al_pa = rport->port_id & 0xff;
++		nacl->nport_id = rport->port_id;
++
++		DEBUG_Q2T_SESS_MAP("fc_rport domain: 0x%02x area: 0x%02x al_pa: %02x\n",
++				domain, area, al_pa);
++		spin_unlock_irqrestore(sh->host_lock, flags);
++
++		d = (struct tcm_qla2xxx_fc_domain *)&lport->lport_fcport_map[domain];
++		DEBUG_Q2T_SESS_MAP("Using d: %p for domain: 0x%02x\n", d, domain);
++		a = &d->areas[area];
++		DEBUG_Q2T_SESS_MAP("Using a: %p for area: 0x%02x\n", a, area);
++		p = &a->al_pas[al_pa];
++		DEBUG_Q2T_SESS_MAP("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
++
++		p->se_nacl = se_nacl;
++		DEBUG_Q2T_SESS_MAP("Setting p->se_nacl to se_nacl: %p for WWNN: 0x%016LX,"
++			" port_id: 0x%04x\n", se_nacl, rport_wwnn,
++			nacl->nport_id);
++
++		return 1;
 +	}
-+
-+	sess->conf_compl_supported = fcport->conf_compl_supported;
-+	BUILD_BUG_ON(sizeof(sess->port_name) != sizeof(fcport->port_name));
-+	memcpy(sess->port_name, fcport->port_name, sizeof(sess->port_name));
-+
-+	spin_lock_irq(&ha->hardware_lock);
-+	list_add_tail(&sess->sess_list_entry, &ha->q2t_tgt->sess_list);
-+	ha->q2t_tgt->sess_count++;
-+	spin_unlock_irq(&ha->hardware_lock);
-+
-+	printk(KERN_INFO "qla2x00t(%d): %ssession for wwn %02x:%02x:%02x:%02x:"
-+		"%02x:%02x:%02x:%02x (loop_id %d, s_id %x:%x:%x, confirmed"
-+		" completion %ssupported) added\n", vha->vp_idx, local ?
-+		"local " : "", fcport->port_name[0], fcport->port_name[1],
-+		fcport->port_name[2], fcport->port_name[3], fcport->port_name[4],
-+		fcport->port_name[5], fcport->port_name[6], fcport->port_name[7],
-+		fcport->loop_id, sess->s_id.b.domain, sess->s_id.b.area,
-+		sess->s_id.b.al_pa, sess->conf_compl_supported ? "" : "not ");
-+
-+	return sess;
-+}
-+
-+/*
-+ * Called from drivers/scsi/qla2xxx/qla_init.c:qla2x00_reg_remote_port()
-+ */
-+void q2t_fc_port_added(scsi_qla_host_t *vha, fc_port_t *fcport)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = ha->q2t_tgt;
-+	struct q2t_sess *sess;
-+	unsigned char s_id[3];
-+
-+	if (!tgt || (fcport->port_type != FCT_INITIATOR))
-+		return;
-+#warning FIXME: Convert to atomic_t
-+	if (tgt->tgt_stop)
-+		return;
-+
-+	spin_lock_irq(&ha->hardware_lock);
-+	sess = q2t_find_sess_by_port_name(tgt, fcport->port_name);
-+	if (!sess) {
-+		spin_unlock_irq(&ha->hardware_lock);
-+
-+		memset(&s_id, 0, 3);
-+		s_id[0] = fcport->d_id.b.domain;
-+		s_id[1] = fcport->d_id.b.area;
-+		s_id[2] = fcport->d_id.b.al_pa;
-+
-+		mutex_lock(&ha->tgt_mutex);
-+		sess = q2t_create_sess(vha, fcport, false);
-+		mutex_unlock(&ha->tgt_mutex);
-+
-+		spin_lock_irq(&ha->hardware_lock);
-+		if (sess != NULL)
-+			q2t_sess_put(sess); /* put the extra creation ref */
-+	} else {
-+		if (sess->deleted) {
-+			q2t_undelete_sess(sess);
-+
-+			printk(KERN_INFO "qla2x00t(%u): %ssession for port %02x:"
-+				"%02x:%02x:%02x:%02x:%02x:%02x:%02x (loop ID %d) "
-+				"reappeared\n", vha->vp_idx,
-+				sess->local ? "local " : "", sess->port_name[0],
-+				sess->port_name[1], sess->port_name[2],
-+				sess->port_name[3], sess->port_name[4],
-+				sess->port_name[5], sess->port_name[6],
-+				sess->port_name[7], sess->loop_id);
-+
-+			TRACE_MGMT_DBG("Reappeared sess %p\n", sess);
-+		}
-+		sess->s_id = fcport->d_id;
-+		sess->loop_id = fcport->loop_id;
-+		sess->conf_compl_supported = fcport->conf_compl_supported;
-+	}
-+
-+	if (sess->local) {
-+		printk(KERN_INFO "qla2x00t(%u): local session for "
-+			"port %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x "
-+			"(loop ID %d) became global\n", vha->vp_idx,
-+			fcport->port_name[0], fcport->port_name[1],
-+			fcport->port_name[2], fcport->port_name[3],
-+			fcport->port_name[4], fcport->port_name[5],
-+			fcport->port_name[6], fcport->port_name[7],
-+			sess->loop_id);
-+		sess->local = 0;
-+	}
-+	spin_unlock_irq(&ha->hardware_lock);
-+}
-+
-+void q2t_fc_port_deleted(scsi_qla_host_t *vha, fc_port_t *fcport)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = ha->q2t_tgt;
-+	struct q2t_sess *sess;
-+
-+	if (!tgt || (fcport->port_type != FCT_INITIATOR))
-+		return;
-+#warning FIXME: Convert to atomic_t
-+	if (tgt->tgt_stop)
-+		return;
-+
-+	spin_lock_irq(&ha->hardware_lock);
-+	sess = q2t_find_sess_by_port_name(tgt, fcport->port_name);
-+	if (!sess) {
-+		spin_unlock_irq(&ha->hardware_lock);
-+		return;
-+	}
-+
-+	TRACE_MGMT_DBG("q2t_fc_port_deleted %p", sess);
-+
-+	sess->local = 1;
-+	q2t_schedule_sess_for_deletion(sess);
-+	spin_unlock_irq(&ha->hardware_lock);
-+}
-+
-+static inline int test_tgt_sess_count(struct q2t_tgt *tgt)
-+{
-+	struct qla_hw_data *ha = tgt->ha;
-+	unsigned long flags;
-+	int res;
-+	/*
-+	 * We need to protect against race, when tgt is freed before or
-+	 * inside wake_up()
-+	 */
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	TRACE_DBG("tgt %p, empty(sess_list)=%d sess_count=%d\n",
-+	      tgt, list_empty(&tgt->sess_list), tgt->sess_count);
-+	res = (tgt->sess_count == 0);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return res;
-+}
-+
-+/* Called by tcm_qla2xxx configfs code */
-+void q2t_target_stop(struct q2t_tgt *tgt)
-+{
-+	scsi_qla_host_t *vha = tgt->vha;
-+	struct qla_hw_data *ha = tgt->ha;
-+
-+	if (tgt->tgt_stop || tgt->tgt_stopped) {
-+		printk(KERN_ERR "Already in tgt->tgt_stop or tgt_stopped state\n");
-+		dump_stack();
-+		return;
-+	}
-+
-+	TRACE_DBG("Stopping target for host %ld(%p)\n", vha->host_no, vha);
-+
-+	/*
-+	 * Mutex needed to sync with q2t_fc_port_[added,deleted].
-+	 * Lock is needed, because we still can get an incoming packet.
-+	 */
-+
-+	mutex_lock(&ha->tgt_mutex);
-+	spin_lock_irq(&ha->hardware_lock);
-+	tgt->tgt_stop = 1;
-+	q2t_clear_tgt_db(tgt, false);
-+	spin_unlock_irq(&ha->hardware_lock);
-+	mutex_unlock(&ha->tgt_mutex);
-+
-+	cancel_delayed_work_sync(&tgt->sess_del_work);
-+
-+	TRACE_MGMT_DBG("Waiting for sess works (tgt %p)", tgt);
-+	spin_lock_irq(&tgt->sess_work_lock);
-+	while (!list_empty(&tgt->sess_works_list)) {
-+		spin_unlock_irq(&tgt->sess_work_lock);
-+		flush_scheduled_work();
-+		spin_lock_irq(&tgt->sess_work_lock);
-+	}
-+	spin_unlock_irq(&tgt->sess_work_lock);
-+
-+	TRACE_MGMT_DBG("Waiting for tgt %p: list_empty(sess_list)=%d "
-+		"sess_count=%d\n", tgt, list_empty(&tgt->sess_list),
-+		tgt->sess_count);
-+
-+	wait_event(tgt->waitQ, test_tgt_sess_count(tgt));
-+
-+	/* Big hammer */
-+	if (!ha->host_shutting_down && qla_tgt_mode_enabled(vha))
-+		qla2x00_disable_tgt_mode(vha);
-+
-+	/* Wait for sessions to clear out (just in case) */
-+	wait_event(tgt->waitQ, test_tgt_sess_count(tgt));
-+
-+	TRACE_MGMT_DBG("Waiting for %d IRQ commands to complete (tgt %p)",
-+		tgt->irq_cmd_count, tgt);
-+
-+	mutex_lock(&ha->tgt_mutex);
-+	spin_lock_irq(&ha->hardware_lock);
-+	while (tgt->irq_cmd_count != 0) {
-+		spin_unlock_irq(&ha->hardware_lock);
-+		udelay(2);
-+		spin_lock_irq(&ha->hardware_lock);
-+	}
-+	tgt->tgt_stop = 0;
-+	tgt->tgt_stopped = 1;
-+	spin_unlock_irq(&ha->hardware_lock);
-+	mutex_unlock(&ha->tgt_mutex);
-+
-+	TRACE_MGMT_DBG("Stop of tgt %p finished", tgt);
-+}
-+EXPORT_SYMBOL(q2t_target_stop);
-+
-+int q2t_target_release(struct q2t_tgt *tgt)
-+{
-+	struct qla_hw_data *ha = tgt->ha;
-+
-+	if ((ha->q2t_tgt != NULL) && !tgt->tgt_stopped)
-+		q2t_target_stop(tgt);
-+
-+	ha->q2t_tgt = NULL;
-+
-+	TRACE_MGMT_DBG("Release of tgt %p finished\n", tgt);
-+
-+	kfree(tgt);
-+	return 0;
-+}
-+EXPORT_SYMBOL(q2t_target_release);
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2t_sched_sess_work(struct q2t_tgt *tgt, int type,
-+	const void *param, unsigned int param_size)
-+{
-+	struct q2t_sess_work_param *prm;
-+	unsigned long flags;
-+
-+	prm = kzalloc(sizeof(*prm), GFP_ATOMIC);
-+	if (!prm ) {
-+		printk(KERN_ERR "qla2x00t(%d): Unable to create session "
-+			"work, command will be refused", 0);
-+		return -ENOMEM;
-+	}
-+
-+	TRACE_MGMT_DBG("Scheduling work (type %d, prm %p) to find session for "
-+		"param %p (size %d, tgt %p)\n", type, prm, param, param_size, tgt);
-+
-+	BUG_ON(param_size > (sizeof(*prm) -
-+		offsetof(struct q2t_sess_work_param, cmd)));
-+
-+	prm->type = type;
-+	memcpy(&prm->cmd, param, param_size);
-+
-+	spin_lock_irqsave(&tgt->sess_work_lock, flags);
-+	if (!tgt->sess_works_pending)
-+		tgt->tm_to_unknown = 0;
-+	list_add_tail(&prm->sess_works_list_entry, &tgt->sess_works_list);
-+	tgt->sess_works_pending = 1;
-+	spin_unlock_irqrestore(&tgt->sess_work_lock, flags);
-+
-+	schedule_work(&tgt->sess_work);
++	spin_unlock_irqrestore(sh->host_lock, flags);
 +
 +	return 0;
 +}
 +
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q2x_modify_command_count(scsi_qla_host_t *vha, int cmd_count,
-+	int imm_count)
++int tcm_qla2xxx_clear_nacl_from_fcport_map(
++	struct se_node_acl *se_nacl)
 +{
-+	struct qla_hw_data *ha = vha->hw;
-+	modify_lun_entry_t *pkt;
++	struct se_portal_group *se_tpg = se_nacl->se_tpg;
++	struct se_wwn *se_wwn = se_tpg->se_tpg_wwn;
++	struct tcm_qla2xxx_lport *lport = container_of(se_wwn,
++				struct tcm_qla2xxx_lport, lport_wwn);
++	struct tcm_qla2xxx_nacl *nacl = container_of(se_nacl,
++				struct tcm_qla2xxx_nacl, se_node_acl);
++	struct tcm_qla2xxx_fc_domain *d;
++	struct tcm_qla2xxx_fc_area *a;
++	struct tcm_qla2xxx_fc_al_pa *p;
++	unsigned char domain, area, al_pa;
 +
-+	printk(KERN_INFO "Sending MODIFY_LUN (ha=%p, cmd=%d, imm=%d)\n",
-+		  ha, cmd_count, imm_count);
++	domain = (nacl->nport_id >> 16) & 0xff;
++	area = (nacl->nport_id >> 8) & 0xff;
++	al_pa = nacl->nport_id & 0xff;
 +
-+	/* Sending marker isn't necessary, since we called from ISR */
++	DEBUG_Q2T_SESS_MAP("fc_rport domain: 0x%02x area: 0x%02x al_pa: %02x\n",
++			domain, area, al_pa);
 +
-+	pkt = (modify_lun_entry_t *)q2t_req_pkt(vha);
-+	if (!pkt) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet\n", vha->vp_idx, __func__);
-+		return;
-+	}
++	d = (struct tcm_qla2xxx_fc_domain *)&lport->lport_fcport_map[domain];
++	DEBUG_Q2T_SESS_MAP("Using d: %p for domain: 0x%02x\n", d, domain);
++	a = &d->areas[area];
++	DEBUG_Q2T_SESS_MAP("Using a: %p for area: 0x%02x\n", a, area);
++	p = &a->al_pas[al_pa];
++	DEBUG_Q2T_SESS_MAP("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
 +
-+	ha->q2t_tgt->modify_lun_expected++;
++	p->se_nacl = NULL;
++	DEBUG_Q2T_SESS_MAP("Clearing p->se_nacl to se_nacl: %p for WWNN: 0x%016LX,"
++		" port_id: 0x%04x\n", se_nacl, nacl->nport_wwnn,
++		nacl->nport_id);
 +
-+	pkt->entry_type = MODIFY_LUN_TYPE;
-+	pkt->entry_count = 1;
-+	if (cmd_count < 0) {
-+		pkt->operators = MODIFY_LUN_CMD_SUB;	/* Subtract from command count */
-+		pkt->command_count = -cmd_count;
-+	} else if (cmd_count > 0) {
-+		pkt->operators = MODIFY_LUN_CMD_ADD;	/* Add to command count */
-+		pkt->command_count = cmd_count;
-+	}
-+
-+	if (imm_count < 0) {
-+		pkt->operators |= MODIFY_LUN_IMM_SUB;
-+		pkt->immed_notify_count = -imm_count;
-+	} else if (imm_count > 0) {
-+		pkt->operators |= MODIFY_LUN_IMM_ADD;
-+		pkt->immed_notify_count = imm_count;
-+	}
-+
-+	pkt->timeout = 0;	/* Use default */
-+
-+	TRACE_BUFFER("MODIFY LUN packet data", pkt, REQUEST_ENTRY_SIZE);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
++	return 0;
 +}
 +
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q2x_send_notify_ack(scsi_qla_host_t *vha, notify_entry_t *iocb,
-+	uint32_t add_flags, uint16_t resp_code, int resp_code_valid,
-+	uint16_t srr_flags, uint16_t srr_reject_code, uint8_t srr_explan)
++static struct se_node_acl *tcm_qla2xxx_make_nodeacl(
++	struct se_portal_group *se_tpg,
++	struct config_group *group,
++	const char *name)
 +{
-+	struct qla_hw_data *ha = vha->hw;
-+	nack_entry_t *ntfy;
-+
-+	TRACE_DBG("Sending NOTIFY_ACK (ha=%p)\n", ha);
-+
-+	/* Send marker if required */
-+	if (q2t_issue_marker(vha, 1) != QLA_SUCCESS)
-+		return;
-+
-+	ntfy = (nack_entry_t *)q2t_req_pkt(vha);
-+	if (!ntfy) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet\n", vha->vp_idx, __func__);
-+		return;
-+	}
-+
-+	if (ha->q2t_tgt != NULL)
-+		ha->q2t_tgt->notify_ack_expected++;
-+
-+	ntfy->entry_type = NOTIFY_ACK_TYPE;
-+	ntfy->entry_count = 1;
-+	SET_TARGET_ID(ha, ntfy->target, GET_TARGET_ID(ha, iocb));
-+	ntfy->status = iocb->status;
-+	ntfy->task_flags = iocb->task_flags;
-+	ntfy->seq_id = iocb->seq_id;
-+	/* Do not increment here, the chip isn't decrementing */
-+	/* ntfy->flags = __constant_cpu_to_le16(NOTIFY_ACK_RES_COUNT); */
-+	ntfy->flags |= cpu_to_le16(add_flags);
-+	ntfy->srr_rx_id = iocb->srr_rx_id;
-+	ntfy->srr_rel_offs = iocb->srr_rel_offs;
-+	ntfy->srr_ui = iocb->srr_ui;
-+	ntfy->srr_flags = cpu_to_le16(srr_flags);
-+	ntfy->srr_reject_code = cpu_to_le16(srr_reject_code);
-+	ntfy->srr_reject_code_expl = srr_explan;
-+	ntfy->ox_id = iocb->ox_id;
-+
-+	if (resp_code_valid) {
-+		ntfy->resp_code = cpu_to_le16(resp_code);
-+		ntfy->flags |= __constant_cpu_to_le16(
-+			NOTIFY_ACK_TM_RESP_CODE_VALID);
-+	}
-+
-+	TRACE_SCSI("qla2x00t(%d): Sending Notify Ack Seq %#x -> I %#x "
-+		"St %#x RC %#x\n", vha->vp_idx,
-+		le16_to_cpu(iocb->seq_id), GET_TARGET_ID(ha, iocb),
-+		le16_to_cpu(iocb->status), le16_to_cpu(ntfy->resp_code));
-+	TRACE_BUFFER("Notify Ack packet data", ntfy, REQUEST_ENTRY_SIZE);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q24_send_abts_resp(scsi_qla_host_t *vha,
-+	const abts24_recv_entry_t *abts, uint32_t status, bool ids_reversed)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	abts24_resp_entry_t *resp;
-+	uint32_t f_ctl;
-+	uint8_t *p;
-+
-+	TRACE_DBG("Sending task mgmt ABTS response (ha=%p, atio=%p, "
-+		"status=%x\n", ha, abts, status);
-+
-+	/* Send marker if required */
-+	if (q2t_issue_marker(vha, 1) != QLA_SUCCESS)
-+		return;
-+
-+	resp = (abts24_resp_entry_t *)q2t_req_pkt(vha);
-+	if (!resp) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet", vha->vp_idx, __func__);
-+		return;
-+	}
-+
-+	resp->entry_type = ABTS_RESP_24XX;
-+	resp->entry_count = 1;
-+	resp->nport_handle = abts->nport_handle;
-+	resp->vp_index = vha->vp_idx;
-+	resp->sof_type = abts->sof_type;
-+	resp->exchange_address = abts->exchange_address;
-+	resp->fcp_hdr_le = abts->fcp_hdr_le;
-+	f_ctl = __constant_cpu_to_le32(F_CTL_EXCH_CONTEXT_RESP |
-+			F_CTL_LAST_SEQ | F_CTL_END_SEQ |
-+			F_CTL_SEQ_INITIATIVE);
-+	p = (uint8_t *)&f_ctl;
-+	resp->fcp_hdr_le.f_ctl[0] = *p++;
-+	resp->fcp_hdr_le.f_ctl[1] = *p++;
-+	resp->fcp_hdr_le.f_ctl[2] = *p;
-+	if (ids_reversed) {
-+		resp->fcp_hdr_le.d_id[0] = abts->fcp_hdr_le.d_id[0];
-+		resp->fcp_hdr_le.d_id[1] = abts->fcp_hdr_le.d_id[1];
-+		resp->fcp_hdr_le.d_id[2] = abts->fcp_hdr_le.d_id[2];
-+		resp->fcp_hdr_le.s_id[0] = abts->fcp_hdr_le.s_id[0];
-+		resp->fcp_hdr_le.s_id[1] = abts->fcp_hdr_le.s_id[1];
-+		resp->fcp_hdr_le.s_id[2] = abts->fcp_hdr_le.s_id[2];
-+	} else {
-+		resp->fcp_hdr_le.d_id[0] = abts->fcp_hdr_le.s_id[0];
-+		resp->fcp_hdr_le.d_id[1] = abts->fcp_hdr_le.s_id[1];
-+		resp->fcp_hdr_le.d_id[2] = abts->fcp_hdr_le.s_id[2];
-+		resp->fcp_hdr_le.s_id[0] = abts->fcp_hdr_le.d_id[0];
-+		resp->fcp_hdr_le.s_id[1] = abts->fcp_hdr_le.d_id[1];
-+		resp->fcp_hdr_le.s_id[2] = abts->fcp_hdr_le.d_id[2];
-+	}
-+	resp->exchange_addr_to_abort = abts->exchange_addr_to_abort;
-+	if (status == FCP_TMF_CMPL) {
-+		resp->fcp_hdr_le.r_ctl = R_CTL_BASIC_LINK_SERV | R_CTL_B_ACC;
-+		resp->payload.ba_acct.seq_id_valid = SEQ_ID_INVALID;
-+		resp->payload.ba_acct.low_seq_cnt = 0x0000;
-+		resp->payload.ba_acct.high_seq_cnt = 0xFFFF;
-+		resp->payload.ba_acct.ox_id = abts->fcp_hdr_le.ox_id;
-+		resp->payload.ba_acct.rx_id = abts->fcp_hdr_le.rx_id;
-+	} else {
-+		resp->fcp_hdr_le.r_ctl = R_CTL_BASIC_LINK_SERV | R_CTL_B_RJT;
-+		resp->payload.ba_rjt.reason_code =
-+			BA_RJT_REASON_CODE_UNABLE_TO_PERFORM;
-+		/* Other bytes are zero */
-+	}
-+
-+	TRACE_BUFFER("ABTS RESP packet data", resp, REQUEST_ENTRY_SIZE);
-+
-+	ha->q2t_tgt->abts_resp_expected++;
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q24_retry_term_exchange(scsi_qla_host_t *vha,
-+	abts24_resp_fw_entry_t *entry)
-+{
-+	ctio7_status1_entry_t *ctio;
-+
-+	TRACE_DBG("Sending retry TERM EXCH CTIO7 (ha=%p)\n", vha->hw);
-+
-+	/* Send marker if required */
-+	if (q2t_issue_marker(vha, 1) != QLA_SUCCESS)
-+		return;
-+
-+	ctio = (ctio7_status1_entry_t *)q2t_req_pkt(vha);
-+	if (ctio == NULL) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet\n", vha->vp_idx, __func__);
-+		return;
-+	}
-+
-+	/*
-+	 * We've got on entrance firmware's response on by us generated
-+	 * ABTS response. So, in it ID fields are reversed.
-+	 */
-+
-+	ctio->common.entry_type = CTIO_TYPE7;
-+	ctio->common.entry_count = 1;
-+	ctio->common.nport_handle = entry->nport_handle;
-+	ctio->common.handle = Q2T_SKIP_HANDLE |	CTIO_COMPLETION_HANDLE_MARK;
-+	ctio->common.timeout = __constant_cpu_to_le16(Q2T_TIMEOUT);
-+	ctio->common.vp_index = vha->vp_idx;
-+	ctio->common.initiator_id[0] = entry->fcp_hdr_le.d_id[0];
-+	ctio->common.initiator_id[1] = entry->fcp_hdr_le.d_id[1];
-+	ctio->common.initiator_id[2] = entry->fcp_hdr_le.d_id[2];
-+	ctio->common.exchange_addr = entry->exchange_addr_to_abort;
-+	ctio->flags = __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_TERMINATE);
-+	ctio->ox_id = entry->fcp_hdr_le.ox_id;
-+
-+	TRACE_BUFFER("CTIO7 retry TERM EXCH packet data", ctio, REQUEST_ENTRY_SIZE);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+
-+	q24_send_abts_resp(vha, (abts24_recv_entry_t *)entry,
-+		FCP_TMF_CMPL, true);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int __q24_handle_abts(scsi_qla_host_t *vha, abts24_recv_entry_t *abts,
-+	struct q2t_sess *sess)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_mgmt_cmd *mcmd;
-+	uint32_t lun;
++	struct se_wwn *se_wwn = se_tpg->se_tpg_wwn;
++	struct tcm_qla2xxx_lport *lport = container_of(se_wwn,
++				struct tcm_qla2xxx_lport, lport_wwn);
++	struct se_node_acl *se_nacl, *se_nacl_new;
++	struct tcm_qla2xxx_nacl *nacl;
++	u64 wwnn;
++	u32 qla2xxx_nexus_depth;
 +	int rc;
 +
-+	TRACE_MGMT_DBG("qla2x00t(%d): task abort (tag=%d)\n", vha->vp_idx,
-+		abts->exchange_addr_to_abort);
++	if (tcm_qla2xxx_parse_wwn(name, &wwnn, 1) < 0)
++		return ERR_PTR(-EINVAL);
 +
-+	mcmd = mempool_alloc(q2t_mgmt_cmd_mempool, GFP_ATOMIC);
-+	if (mcmd == NULL) {
-+		printk(KERN_ERR "qla2x00t(%d): %s: Allocation of ABORT cmd failed",
-+			vha->vp_idx, __func__);
-+		return -ENOMEM;
-+	}
-+	memset(mcmd, 0, sizeof(*mcmd));
-+
-+	mcmd->sess = sess;
-+	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
-+
-+#warning FIXME: Hardcoded LUN for __q24_handle_abts()
-+	lun = 0;
-+
-+	rc = ha->qla2x_tmpl->handle_tmr(mcmd, lun, ABORT_TASK);
-+	if (rc != 0) {
-+		printk(KERN_ERR "qla2x00t(%d):  qla2x_tmpl->handle_tmr()"
-+				" failed: %d", vha->vp_idx, rc);
-+		mempool_free(mcmd, q2t_mgmt_cmd_mempool);
-+		return -EFAULT;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q24_handle_abts(scsi_qla_host_t *vha, abts24_recv_entry_t *abts)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_sess *sess;
-+	uint32_t tag = abts->exchange_addr_to_abort, s_id;
-+	int rc;
-+
-+	if (le32_to_cpu(abts->fcp_hdr_le.parameter) & ABTS_PARAM_ABORT_SEQ) {
-+		printk(KERN_ERR "qla2x00t(%d): ABTS: Abort Sequence not "
-+			"supported\n", vha->vp_idx);
-+		q24_send_abts_resp(vha, abts, FCP_TMF_REJECTED, false);
-+		return;
-+	}
-+
-+	if (tag == ATIO_EXCHANGE_ADDRESS_UNKNOWN) {
-+		TRACE_MGMT_DBG("qla2x00t(%d): ABTS: Unknown Exchange "
-+			"Address received\n", vha->vp_idx);
-+		q24_send_abts_resp(vha, abts, FCP_TMF_REJECTED, false);
-+		return;
-+	}
-+
-+	TRACE_MGMT_DBG("qla2x00t(%d): task abort (s_id=%x:%x:%x, "
-+		"tag=%d, param=%x)\n", vha->vp_idx, abts->fcp_hdr_le.s_id[2],
-+		abts->fcp_hdr_le.s_id[1], abts->fcp_hdr_le.s_id[0], tag,
-+		le32_to_cpu(abts->fcp_hdr_le.parameter));
-+
-+	memset(&s_id, 0, 3);
-+	s_id = (abts->fcp_hdr_le.s_id[0] << 16) | (abts->fcp_hdr_le.s_id[1] << 8) |
-+		abts->fcp_hdr_le.s_id[2];
-+
-+	sess = ha->qla2x_tmpl->find_sess_by_s_id(vha, (unsigned char *)&s_id);
-+	if (!sess) {
-+		TRACE_MGMT_DBG("qla2x00t(%d): task abort for unexisting "
-+			"session\n", vha->vp_idx);
-+		rc = q2t_sched_sess_work(ha->q2t_tgt, Q2T_SESS_WORK_ABORT,
-+					abts, sizeof(*abts));
-+		if (rc != 0) {
-+			ha->q2t_tgt->tm_to_unknown = 1;
-+			q24_send_abts_resp(vha, abts, FCP_TMF_REJECTED, false);
-+		}
-+		return;
-+	}
-+
-+	rc = __q24_handle_abts(vha, abts, sess);
-+	if (rc != 0) {
-+		printk(KERN_ERR "qla2x00t(%d): __q24_handle_abts() failed: %d\n",
-+			    vha->vp_idx, rc);
-+		q24_send_abts_resp(vha, abts, FCP_TMF_REJECTED, false);
-+		return;
-+	}
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q24_send_task_mgmt_ctio(scsi_qla_host_t *ha,
-+	struct q2t_mgmt_cmd *mcmd, uint32_t resp_code)
-+{
-+	const atio7_entry_t *atio = &mcmd->orig_iocb.atio7;
-+	ctio7_status1_entry_t *ctio;
-+
-+	TRACE_DBG("Sending task mgmt CTIO7 (ha=%p, atio=%p, resp_code=%x\n",
-+		  ha, atio, resp_code);
-+
-+	/* Send marker if required */
-+	if (q2t_issue_marker(ha, 1) != QLA_SUCCESS)
-+		return;
-+
-+	ctio = (ctio7_status1_entry_t *)q2t_req_pkt(ha);
-+	if (ctio == NULL) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet\n", ha->vp_idx, __func__);
-+		return;
-+	}
-+
-+	ctio->common.entry_type = CTIO_TYPE7;
-+	ctio->common.entry_count = 1;
-+	ctio->common.handle = Q2T_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
-+	ctio->common.nport_handle = mcmd->sess->loop_id;
-+	ctio->common.timeout = __constant_cpu_to_le16(Q2T_TIMEOUT);
-+	ctio->common.vp_index = ha->vp_idx;
-+	ctio->common.initiator_id[0] = atio->fcp_hdr.s_id[2];
-+	ctio->common.initiator_id[1] = atio->fcp_hdr.s_id[1];
-+	ctio->common.initiator_id[2] = atio->fcp_hdr.s_id[0];
-+	ctio->common.exchange_addr = atio->exchange_addr;
-+	ctio->flags = (atio->attr << 9) | __constant_cpu_to_le16(
-+		CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS);
-+	ctio->ox_id = swab16(atio->fcp_hdr.ox_id);
-+	ctio->scsi_status = __constant_cpu_to_le16(SS_RESPONSE_INFO_LEN_VALID);
-+	ctio->response_len = __constant_cpu_to_le16(8);
-+	((uint32_t *)ctio->sense_data)[0] = cpu_to_be32(resp_code);
-+
-+	TRACE_BUFFER("CTIO7 TASK MGMT packet data", ctio, REQUEST_ENTRY_SIZE);
-+
-+	qla2x00_isp_cmd(ha, ha->req);
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q24_send_notify_ack(scsi_qla_host_t *vha,
-+	notify24xx_entry_t *iocb, uint16_t srr_flags,
-+	uint8_t srr_reject_code, uint8_t srr_explan)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	nack24xx_entry_t *nack;
-+
-+	TRACE_DBG("Sending NOTIFY_ACK24 (ha=%p)\n", ha);
-+
-+	/* Send marker if required */
-+	if (q2t_issue_marker(vha, 1) != QLA_SUCCESS)
-+		return;
-+
-+	if (ha->q2t_tgt != NULL)
-+		ha->q2t_tgt->notify_ack_expected++;
-+
-+	nack = (nack24xx_entry_t *)q2t_req_pkt(vha);
-+	if (!nack) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet\n", vha->vp_idx, __func__);
-+		return;
-+	}
-+
-+	nack->entry_type = NOTIFY_ACK_TYPE;
-+	nack->entry_count = 1;
-+	nack->nport_handle = iocb->nport_handle;
-+	if (le16_to_cpu(iocb->status) == IMM_NTFY_ELS) {
-+		nack->flags = iocb->flags &
-+			__constant_cpu_to_le32(NOTIFY24XX_FLAGS_PUREX_IOCB);
-+	}
-+	nack->srr_rx_id = iocb->srr_rx_id;
-+	nack->status = iocb->status;
-+	nack->status_subcode = iocb->status_subcode;
-+	nack->exchange_address = iocb->exchange_address;
-+	nack->srr_rel_offs = iocb->srr_rel_offs;
-+	nack->srr_ui = iocb->srr_ui;
-+	nack->srr_flags = cpu_to_le16(srr_flags);
-+	nack->srr_reject_code = srr_reject_code;
-+	nack->srr_reject_code_expl = srr_explan;
-+	nack->ox_id = iocb->ox_id;
-+	nack->vp_index = iocb->vp_index;
-+
-+	TRACE_SCSI("qla2x00t(%d): Sending 24xx Notify Ack %d\n",
-+		vha->vp_idx, nack->status);
-+	TRACE_BUFFER("24xx Notify Ack packet data", nack, sizeof(*nack));
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+}
-+
-+/* callback from target fabric module code */
-+void q2t_xmit_tm_rsp(struct q2t_mgmt_cmd *mcmd)
-+{
-+	scsi_qla_host_t *vha;
-+	struct qla_hw_data *ha;
-+	unsigned long flags;
-+
-+	TRACE_MGMT_DBG("TM response mcmd (%p) status %#x state %#x", mcmd,
-+		mcmd->se_tmr_req->response, mcmd->flags);
-+
-+	vha = mcmd->sess->vha;
-+	ha = vha->hw;
-+
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		if (mcmd->flags == Q24_MGMT_SEND_NACK) {
-+			q24_send_notify_ack(vha,
-+				&mcmd->orig_iocb.notify_entry24, 0, 0, 0);
-+		} else {
-+			if (mcmd->se_tmr_req->function == ABORT_TASK)
-+				q24_send_abts_resp(vha, &mcmd->orig_iocb.abts,
-+					mcmd->fc_tm_rsp, false);
-+			else
-+				q24_send_task_mgmt_ctio(vha, mcmd, mcmd->fc_tm_rsp);
-+		}
-+	} else {
-+		q2x_send_notify_ack(vha, &mcmd->orig_iocb.notify_entry, 0,
-+			mcmd->fc_tm_rsp, 1, 0, 0, 0);
-+	}
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	mempool_free(mcmd, q2t_mgmt_cmd_mempool);
-+}
-+EXPORT_SYMBOL(q2t_xmit_tm_rsp);
-+
-+/* No locks */
-+static int q2t_pci_map_calc_cnt(struct q2t_prm *prm)
-+{
-+	BUG_ON(prm->cmd->sg_cnt == 0);
-+
-+	prm->sg = (struct scatterlist *)prm->cmd->sg;
-+	prm->seg_cnt = pci_map_sg(prm->tgt->ha->pdev, prm->cmd->sg,
-+		prm->cmd->sg_cnt, prm->cmd->dma_data_direction);
-+	if (unlikely(prm->seg_cnt == 0))
-+		goto out_err;
-+
-+	prm->cmd->sg_mapped = 1;
++	se_nacl_new = tcm_qla2xxx_alloc_fabric_acl(se_tpg);
++	if (!(se_nacl_new))
++		return ERR_PTR(-ENOMEM);
++//#warning FIXME: Hardcoded qla2xxx_nexus depth in tcm_qla2xxx_make_nodeacl()
++	qla2xxx_nexus_depth = 1;
 +
 +	/*
-+	 * If greater than four sg entries then we need to allocate
-+	 * the continuation entries
++	 * se_nacl_new may be released by core_tpg_add_initiator_node_acl()
++	 * when converting a NodeACL from demo mode -> explict
 +	 */
-+	if (prm->seg_cnt > prm->tgt->datasegs_per_cmd) {
-+		prm->req_cnt += (uint16_t)(prm->seg_cnt -
-+				prm->tgt->datasegs_per_cmd) /
-+				prm->tgt->datasegs_per_cont;
-+		if (((uint16_t)(prm->seg_cnt - prm->tgt->datasegs_per_cmd)) %
-+		    prm->tgt->datasegs_per_cont)
-+			prm->req_cnt++;
++	se_nacl = core_tpg_add_initiator_node_acl(se_tpg, se_nacl_new,
++				name, qla2xxx_nexus_depth);
++	if (IS_ERR(se_nacl)) {
++		tcm_qla2xxx_release_fabric_acl(se_tpg, se_nacl_new);
++		return se_nacl;
 +	}
-+
-+	TRACE_DBG("seg_cnt=%d, req_cnt=%d\n", prm->seg_cnt, prm->req_cnt);
-+	return 0;
-+
-+out_err:
-+	printk(KERN_ERR "qla2x00t(%d): PCI mapping failed: sg_cnt=%d",
-+		0, prm->cmd->sg_cnt);
-+	return -1;
-+}
-+
-+static inline void q2t_unmap_sg(scsi_qla_host_t *vha, struct q2t_cmd *cmd)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	BUG_ON(!cmd->sg_mapped);
-+	pci_unmap_sg(ha->pdev, cmd->sg, cmd->sg_cnt, cmd->dma_data_direction);
-+	cmd->sg_mapped = 0;
-+}
-+
-+static int q2t_check_reserve_free_req(scsi_qla_host_t *vha, uint32_t req_cnt)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	device_reg_t __iomem *reg = ha->iobase;
-+	uint32_t cnt;
-+
-+	if (vha->req->cnt < (req_cnt + 2)) {
-+		if (IS_FWI2_CAPABLE(ha))
-+			cnt = (uint16_t)RD_REG_DWORD(
-+				    &reg->isp24.req_q_out);
-+		else
-+			cnt = qla2x00_debounce_register(
-+				    ISP_REQ_Q_OUT(ha, &reg->isp));
-+		TRACE_DBG("Request ring circled: cnt=%d, "
-+			"vha->->ring_index=%d, vha->req->cnt=%d, req_cnt=%d\n",
-+			cnt, vha->req->ring_index, vha->req->cnt, req_cnt);
-+		if  (vha->req->ring_index < cnt)
-+			vha->req->cnt = cnt - vha->req->ring_index;
-+		else
-+			vha->req->cnt = vha->req->length -
-+			    (vha->req->ring_index - cnt);
-+	}
-+
-+	if (unlikely(vha->req->cnt < (req_cnt + 2))) {
-+		printk(KERN_INFO "qla2x00t(%d): There is no room in the "
-+			"request ring: vha->req->ring_index=%d, vha->req->cnt=%d, "
-+			"req_cnt=%d\n", vha->vp_idx, vha->req->ring_index,
-+			vha->req->cnt, req_cnt);
-+		return -ENOMEM;
-+	}
-+	vha->req->cnt -= req_cnt;
-+
-+	return 0;
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static inline void *q2t_get_req_pkt(scsi_qla_host_t *vha)
-+{
-+	/* Adjust ring index. */
-+	vha->req->ring_index++;
-+	if (vha->req->ring_index == vha->req->length) {
-+		vha->req->ring_index = 0;
-+		vha->req->ring_ptr = vha->req->ring;
-+	} else {
-+		vha->req->ring_ptr++;
-+	}
-+	return (cont_entry_t *)vha->req->ring_ptr;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static inline uint32_t q2t_make_handle(scsi_qla_host_t *vha)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	uint32_t h;
-+
-+	h = ha->current_handle;
-+	/* always increment cmd handle */
-+	do {
-+		++h;
-+		if (h > MAX_OUTSTANDING_COMMANDS)
-+			h = 1; /* 0 is Q2T_NULL_HANDLE */
-+		if (h == ha->current_handle) {
-+			printk(KERN_INFO "qla2x00t(%d): Ran out of "
-+				"empty cmd slots in ha %p\n", vha->vp_idx, ha);
-+			h = Q2T_NULL_HANDLE;
-+			break;
-+		}
-+	} while ((h == Q2T_NULL_HANDLE) ||
-+		 (h == Q2T_SKIP_HANDLE) ||
-+		 (ha->cmds[h-1] != NULL));
-+
-+	if (h != Q2T_NULL_HANDLE)
-+		ha->current_handle = h;
-+
-+	return h;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static void q2x_build_ctio_pkt(struct q2t_prm *prm, scsi_qla_host_t *vha)
-+{
-+	uint32_t h;
-+	ctio_entry_t *pkt;
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	pkt = (ctio_entry_t *)vha->req->ring_ptr;
-+	prm->pkt = pkt;
-+	memset(pkt, 0, sizeof(*pkt));
-+
-+	if (prm->tgt->tgt_enable_64bit_addr)
-+		pkt->common.entry_type = CTIO_A64_TYPE;
-+	else
-+		pkt->common.entry_type = CONTINUE_TGT_IO_TYPE;
-+
-+	pkt->common.entry_count = (uint8_t)prm->req_cnt;
-+
-+	h = q2t_make_handle(vha);
-+	if (h != Q2T_NULL_HANDLE)
-+		ha->cmds[h-1] = prm->cmd;
-+
-+	pkt->common.handle = h | CTIO_COMPLETION_HANDLE_MARK;
-+	pkt->common.timeout = __constant_cpu_to_le16(Q2T_TIMEOUT);
-+
-+	/* Set initiator ID */
-+	h = GET_TARGET_ID(ha, &prm->cmd->atio.atio2x);
-+	SET_TARGET_ID(ha, pkt->common.target, h);
-+
-+	pkt->common.rx_id = prm->cmd->atio.atio2x.rx_id;
-+	pkt->common.relative_offset = cpu_to_le32(prm->cmd->offset);
-+
-+	TRACE_SCSI("qla2x00t(%d): handle(se_cmd) -> %08x, "
-+		"timeout %d L %#x -> I %#x E %#x\n", vha->vp_idx,
-+		pkt->common.handle, Q2T_TIMEOUT,
-+		le16_to_cpu(prm->cmd->atio.atio2x.lun),
-+		GET_TARGET_ID(ha, &pkt->common), pkt->common.rx_id);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q24_build_ctio_pkt(struct q2t_prm *prm, scsi_qla_host_t *vha)
-+{
-+	uint32_t h;
-+	ctio7_status0_entry_t *pkt;
-+	struct qla_hw_data *ha = vha->hw;
-+	atio7_entry_t *atio = &prm->cmd->atio.atio7;
-+
-+	pkt = (ctio7_status0_entry_t *)vha->req->ring_ptr;
-+	prm->pkt = pkt;
-+	memset(pkt, 0, sizeof(*pkt));
-+
-+	pkt->common.entry_type = CTIO_TYPE7;
-+	pkt->common.entry_count = (uint8_t)prm->req_cnt;
-+	pkt->common.vp_index = vha->vp_idx;
-+
-+	h = q2t_make_handle(vha);
-+	if (unlikely(h == Q2T_NULL_HANDLE)) {
-+		/*
-+		 * CTIO type 7 from the firmware doesn't provide a way to
-+		 * know the initiator's LOOP ID, hence we can't find
-+		 * the session and, so, the command.
-+		 */
-+		dump_stack();
-+		return -ENOMEM;
-+	} else
-+		ha->cmds[h-1] = prm->cmd;
-+
-+	pkt->common.handle = h | CTIO_COMPLETION_HANDLE_MARK;
-+	pkt->common.nport_handle = prm->cmd->loop_id;
-+	pkt->common.timeout = __constant_cpu_to_le16(Q2T_TIMEOUT);
-+	pkt->common.initiator_id[0] = atio->fcp_hdr.s_id[2];
-+	pkt->common.initiator_id[1] = atio->fcp_hdr.s_id[1];
-+	pkt->common.initiator_id[2] = atio->fcp_hdr.s_id[0];
-+	pkt->common.exchange_addr = atio->exchange_addr;
-+	pkt->flags |= (atio->attr << 9);
-+	pkt->ox_id = swab16(atio->fcp_hdr.ox_id);
-+	pkt->relative_offset = cpu_to_le32(prm->cmd->offset);
-+
-+	TRACE_SCSI("qla2x00t(%d): handle(cmd) -> %08x, "
-+		"timeout %d, ox_id %#x\n", vha->vp_idx, pkt->common.handle,
-+		Q2T_TIMEOUT, le16_to_cpu(pkt->ox_id));
-+	return 0;
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. We have already made sure
-+ * that there is sufficient amount of request entries to not drop it.
-+ */
-+static void q2t_load_cont_data_segments(struct q2t_prm *prm, scsi_qla_host_t *vha)
-+{
-+	int cnt;
-+	uint32_t *dword_ptr;
-+	int enable_64bit_addressing = prm->tgt->tgt_enable_64bit_addr;
-+
-+	/* Build continuation packets */
-+	while (prm->seg_cnt > 0) {
-+		cont_a64_entry_t *cont_pkt64 =
-+			(cont_a64_entry_t *)q2t_get_req_pkt(vha);
-+
-+		/*
-+		 * Make sure that from cont_pkt64 none of
-+		 * 64-bit specific fields used for 32-bit
-+		 * addressing. Cast to (cont_entry_t *) for
-+		 * that.
-+		 */
-+
-+		memset(cont_pkt64, 0, sizeof(*cont_pkt64));
-+
-+		cont_pkt64->entry_count = 1;
-+		cont_pkt64->sys_define = 0;
-+
-+		if (enable_64bit_addressing) {
-+			cont_pkt64->entry_type = CONTINUE_A64_TYPE;
-+			dword_ptr =
-+			    (uint32_t *)&cont_pkt64->dseg_0_address;
-+		} else {
-+			cont_pkt64->entry_type = CONTINUE_TYPE;
-+			dword_ptr =
-+			    (uint32_t *)&((cont_entry_t *)
-+					    cont_pkt64)->dseg_0_address;
-+		}
-+
-+		/* Load continuation entry data segments */
-+		for (cnt = 0;
-+		     cnt < prm->tgt->datasegs_per_cont && prm->seg_cnt;
-+		     cnt++, prm->seg_cnt--) {
-+			*dword_ptr++ =
-+			    cpu_to_le32(pci_dma_lo32
-+					(sg_dma_address(prm->sg)));
-+			if (enable_64bit_addressing) {
-+				*dword_ptr++ =
-+				    cpu_to_le32(pci_dma_hi32
-+						(sg_dma_address
-+						 (prm->sg)));
-+			}
-+			*dword_ptr++ = cpu_to_le32(sg_dma_len(prm->sg));
-+
-+			TRACE_SG("S/G Segment Cont. phys_addr=%llx:%llx, len=%d",
-+			      (long long unsigned int)pci_dma_hi32(sg_dma_address(prm->sg)),
-+			      (long long unsigned int)pci_dma_lo32(sg_dma_address(prm->sg)),
-+			      (int)sg_dma_len(prm->sg));
-+
-+			prm->sg++;
-+		}
-+
-+		TRACE_BUFFER("Continuation packet data",
-+			     cont_pkt64, REQUEST_ENTRY_SIZE);
-+	}
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. We have already made sure
-+ * that there is sufficient amount of request entries to not drop it.
-+ */
-+static void q2x_load_data_segments(struct q2t_prm *prm, scsi_qla_host_t *vha)
-+{
-+	int cnt;
-+	uint32_t *dword_ptr;
-+	int enable_64bit_addressing = prm->tgt->tgt_enable_64bit_addr;
-+	ctio_common_entry_t *pkt = (ctio_common_entry_t *)prm->pkt;
-+
-+	TRACE_SCSI("iocb->scsi_status=%x, iocb->flags=%x\n",
-+	      le16_to_cpu(pkt->scsi_status), le16_to_cpu(pkt->flags));
-+
-+	pkt->transfer_length = cpu_to_le32(prm->cmd->bufflen);
-+
-+	/* Setup packet address segment pointer */
-+	dword_ptr = pkt->dseg_0_address;
-+
-+	if (prm->seg_cnt == 0) {
-+		/* No data transfer */
-+		*dword_ptr++ = 0;
-+		*dword_ptr = 0;
-+
-+		TRACE_BUFFER("No data, CTIO packet data", pkt,
-+			REQUEST_ENTRY_SIZE);
-+		return;
-+	}
-+
-+	/* Set total data segment count */
-+	pkt->dseg_count = cpu_to_le16(prm->seg_cnt);
-+
-+	/* If scatter gather */
-+	TRACE_SG("%s", "Building S/G data segments...");
-+	/* Load command entry data segments */
-+	for (cnt = 0;
-+	     (cnt < prm->tgt->datasegs_per_cmd) && prm->seg_cnt;
-+	     cnt++, prm->seg_cnt--) {
-+		*dword_ptr++ =
-+		    cpu_to_le32(pci_dma_lo32(sg_dma_address(prm->sg)));
-+		if (enable_64bit_addressing) {
-+			*dword_ptr++ =
-+			    cpu_to_le32(pci_dma_hi32
-+					(sg_dma_address(prm->sg)));
-+		}
-+		*dword_ptr++ = cpu_to_le32(sg_dma_len(prm->sg));
-+
-+		TRACE_SG("S/G Segment phys_addr=%llx:%llx, len=%d\n",
-+		      (long long unsigned int)pci_dma_hi32(sg_dma_address(prm->sg)),
-+		      (long long unsigned int)pci_dma_lo32(sg_dma_address(prm->sg)),
-+		      (int)sg_dma_len(prm->sg));
-+
-+		prm->sg++;
-+	}
-+
-+	TRACE_BUFFER("Scatter/gather, CTIO packet data", pkt,
-+		REQUEST_ENTRY_SIZE);
-+
-+	q2t_load_cont_data_segments(prm, vha);
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. We have already made sure
-+ * that there is sufficient amount of request entries to not drop it.
-+ */
-+static void q24_load_data_segments(struct q2t_prm *prm, scsi_qla_host_t *vha)
-+{
-+	int cnt;
-+	uint32_t *dword_ptr;
-+	int enable_64bit_addressing = prm->tgt->tgt_enable_64bit_addr;
-+	ctio7_status0_entry_t *pkt = (ctio7_status0_entry_t *)prm->pkt;
-+
-+	TRACE_DBG("iocb->scsi_status=%x, iocb->flags=%x\n",
-+	      le16_to_cpu(pkt->scsi_status), le16_to_cpu(pkt->flags));
-+
-+	pkt->transfer_length = cpu_to_le32(prm->cmd->bufflen);
-+
-+	/* Setup packet address segment pointer */
-+	dword_ptr = pkt->dseg_0_address;
-+
-+	if (prm->seg_cnt == 0) {
-+		/* No data transfer */
-+		*dword_ptr++ = 0;
-+		*dword_ptr = 0;
-+
-+		TRACE_BUFFER("No data, CTIO7 packet data", pkt,
-+			REQUEST_ENTRY_SIZE);
-+		return;
-+	}
-+
-+	/* Set total data segment count */
-+	pkt->common.dseg_count = cpu_to_le16(prm->seg_cnt);
-+
-+	/* If scatter gather */
-+	TRACE_SG("%s", "Building S/G data segments...");
-+	/* Load command entry data segments */
-+	for (cnt = 0;
-+	     (cnt < prm->tgt->datasegs_per_cmd) && prm->seg_cnt;
-+	     cnt++, prm->seg_cnt--) {
-+		*dword_ptr++ =
-+		    cpu_to_le32(pci_dma_lo32(sg_dma_address(prm->sg)));
-+		if (enable_64bit_addressing) {
-+			*dword_ptr++ =
-+			    cpu_to_le32(pci_dma_hi32(
-+					sg_dma_address(prm->sg)));
-+		}
-+		*dword_ptr++ = cpu_to_le32(sg_dma_len(prm->sg));
-+
-+		TRACE_SG("S/G Segment phys_addr=%llx:%llx, len=%d\n",
-+		      (long long unsigned int)pci_dma_hi32(sg_dma_address(
-+								prm->sg)),
-+		      (long long unsigned int)pci_dma_lo32(sg_dma_address(
-+								prm->sg)),
-+		      (int)sg_dma_len(prm->sg));
-+
-+		prm->sg++;
-+	}
-+
-+	q2t_load_cont_data_segments(prm, vha);
-+}
-+
-+static inline int q2t_has_data(struct q2t_cmd *cmd)
-+{
-+	return cmd->bufflen > 0;
-+}
-+
-+/*
-+ * Called without ha->hardware_lock held
-+ */
-+static int q2t_pre_xmit_response(struct q2t_cmd *cmd, struct q2t_prm *prm,
-+			int xmit_type, uint8_t scsi_status, uint32_t *full_req_cnt)
-+{
-+	struct q2t_tgt *tgt = cmd->tgt;
-+	scsi_qla_host_t *vha = tgt->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct se_cmd *se_cmd = &cmd->se_cmd;
-+
-+	if (unlikely(cmd->aborted)) {
-+		TRACE_MGMT_DBG("qla2x00t(%d): terminating exchange "
-+			"for aborted cmd=%p (se_cmd=%p, tag=%d)",
-+			vha->vp_idx, cmd, se_cmd, cmd->tag);
-+
-+		cmd->state = Q2T_STATE_ABORTED;
-+
-+		if (IS_FWI2_CAPABLE(ha))
-+			q24_send_term_exchange(vha, cmd, &cmd->atio.atio7, 0);
-+		else
-+			q2x_send_term_exchange(vha, cmd, &cmd->atio.atio2x, 0);
-+		/* !! At this point cmd could be already freed !! */
-+		return Q2T_PRE_XMIT_RESP_CMD_ABORTED;
-+	}
-+
-+	TRACE_SCSI("qla2x00t(%d): tag=%u\n", vha->vp_idx, cmd->tag);
-+
-+	prm->cmd = cmd;
-+	prm->tgt = tgt;
-+	prm->rq_result = scsi_status;
-+	prm->sense_buffer = &cmd->sense_buffer[0];
-+	prm->sense_buffer_len = TRANSPORT_SENSE_BUFFER;
-+	prm->sg = NULL;
-+	prm->seg_cnt = -1;
-+	prm->req_cnt = 1;
-+	prm->add_status_pkt = 0;
-+
-+	TRACE_DBG("rq_result=%x, xmit_type=%x\n", prm->rq_result, xmit_type);
-+	if (prm->rq_result != 0)
-+		TRACE_BUFFER("Sense", prm->sense_buffer, prm->sense_buffer_len);
-+
-+	/* Send marker if required */
-+	if (q2t_issue_marker(vha, 0) != QLA_SUCCESS)
-+		return -EFAULT;
-+
-+	TRACE_DBG("CTIO start: vha(%d)\n", vha->vp_idx);
-+
-+	if ((xmit_type & Q2T_XMIT_DATA) && q2t_has_data(cmd)) {
-+		if  (q2t_pci_map_calc_cnt(prm) != 0)
-+			return -EAGAIN;
-+	}
-+
-+	*full_req_cnt = prm->req_cnt;
-+
-+	if (se_cmd->se_cmd_flags & SCF_UNDERFLOW_BIT) {
-+		prm->residual = se_cmd->residual_count;
-+		TRACE_DBG("Residual underflow: %d (tag %d, "
-+			"op %x, bufflen %d, rq_result %x)\n",
-+			prm->residual, cmd->tag,
-+			T_TASK(se_cmd)->t_task_cdb[0], cmd->bufflen,
-+			prm->rq_result);
-+		prm->rq_result |= SS_RESIDUAL_UNDER;
-+	} else if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) {
-+		prm->residual = se_cmd->residual_count;
-+		TRACE_DBG("Residual overflow: %d (tag %d, "
-+			"op %x, bufflen %d, rq_result %x)\n",
-+			prm->residual, cmd->tag,
-+			T_TASK(se_cmd)->t_task_cdb[0], cmd->bufflen,
-+			prm->rq_result);
-+		prm->rq_result |= SS_RESIDUAL_OVER;
-+		prm->residual = -prm->residual;
-+	}
-+
-+	if (xmit_type & Q2T_XMIT_STATUS) {
-+		/*
-+		 * If Q2T_XMIT_DATA is not set, add_status_pkt will be ignored
-+		 * in *xmit_response() below
-+		 */
-+		if (q2t_has_data(cmd)) {
-+			if (Q2T_SENSE_VALID(prm->sense_buffer) ||
-+			    (IS_FWI2_CAPABLE(ha) &&
-+			     (prm->rq_result != 0))) {
-+				prm->add_status_pkt = 1;
-+				(*full_req_cnt)++;
-+			}
-+		}
-+	}
-+
-+	TRACE_DBG("req_cnt=%d, full_req_cnt=%d, add_status_pkt=%d\n",
-+		prm->req_cnt, *full_req_cnt, prm->add_status_pkt);
-+
-+	return 0;
-+}
-+
-+static inline int q2t_need_explicit_conf(struct qla_hw_data *ha,
-+	struct q2t_cmd *cmd, int sending_sense)
-+{
-+	if (ha->enable_class_2)
-+		return 0;
-+
-+	if (sending_sense)
-+		return cmd->conf_compl_supported;
-+	else
-+		return ha->enable_explicit_conf && cmd->conf_compl_supported;
-+}
-+
-+static void q2x_init_ctio_ret_entry(ctio_ret_entry_t *ctio_m1,
-+	struct q2t_prm *prm, scsi_qla_host_t *vha)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	prm->sense_buffer_len = min((uint32_t)prm->sense_buffer_len,
-+				    (uint32_t)sizeof(ctio_m1->sense_data));
-+
-+	ctio_m1->flags = __constant_cpu_to_le16(OF_SSTS | OF_FAST_POST |
-+				     OF_NO_DATA | OF_SS_MODE_1);
-+	ctio_m1->flags |= __constant_cpu_to_le16(OF_INC_RC);
-+	if (q2t_need_explicit_conf(ha, prm->cmd, 0)) {
-+		ctio_m1->flags |= __constant_cpu_to_le16(OF_EXPL_CONF |
-+					OF_CONF_REQ);
-+	}
-+	ctio_m1->scsi_status = cpu_to_le16(prm->rq_result);
-+	ctio_m1->residual = cpu_to_le32(prm->residual);
-+	if (Q2T_SENSE_VALID(prm->sense_buffer)) {
-+		if (q2t_need_explicit_conf(ha, prm->cmd, 1)) {
-+			ctio_m1->flags |= __constant_cpu_to_le16(OF_EXPL_CONF |
-+						OF_CONF_REQ);
-+		}
-+		ctio_m1->scsi_status |= __constant_cpu_to_le16(
-+						SS_SENSE_LEN_VALID);
-+		ctio_m1->sense_length = cpu_to_le16(prm->sense_buffer_len);
-+		memcpy(ctio_m1->sense_data, prm->sense_buffer,
-+		       prm->sense_buffer_len);
-+	} else {
-+		memset(ctio_m1->sense_data, 0, sizeof(ctio_m1->sense_data));
-+		ctio_m1->sense_length = 0;
-+	}
-+
-+	/* Sense with len > 26, is it possible ??? */
-+
-+	return;
-+}
-+
-+static int __q2x_xmit_response(struct q2t_cmd *cmd, int xmit_type, uint8_t scsi_status)
-+{
-+	scsi_qla_host_t *vha = cmd->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_prm prm;
-+	ctio_common_entry_t *pkt;
-+	unsigned long flags;
-+	uint32_t full_req_cnt = 0;
-+	int res;
-+
-+	memset(&prm, 0, sizeof(prm));
-+
-+	res = q2t_pre_xmit_response(cmd, &prm, xmit_type, scsi_status, &full_req_cnt);
-+	if (unlikely(res != 0)) {
-+		if (res == Q2T_PRE_XMIT_RESP_CMD_ABORTED)
-+			return 0;
-+
-+		return res;
-+	}
-+
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+
-+	/* Does F/W have an IOCBs for this request */
-+	res = q2t_check_reserve_free_req(vha, full_req_cnt);
-+	if (unlikely(res != 0) && (xmit_type & Q2T_XMIT_DATA))
-+		goto out_unmap_unlock;
-+
-+	q2x_build_ctio_pkt(&prm, cmd->vha);
-+	pkt = (ctio_common_entry_t *)prm.pkt;
-+
-+	if (q2t_has_data(cmd) && (xmit_type & Q2T_XMIT_DATA)) {
-+		pkt->flags |= __constant_cpu_to_le16(OF_FAST_POST | OF_DATA_IN);
-+		pkt->flags |= __constant_cpu_to_le16(OF_INC_RC);
-+
-+		q2x_load_data_segments(&prm, vha);
-+
-+		if (prm.add_status_pkt == 0) {
-+			if (xmit_type & Q2T_XMIT_STATUS) {
-+				pkt->scsi_status = cpu_to_le16(prm.rq_result);
-+				pkt->residual = cpu_to_le32(prm.residual);
-+				pkt->flags |= __constant_cpu_to_le16(OF_SSTS);
-+				if (q2t_need_explicit_conf(ha, cmd, 0)) {
-+					pkt->flags |= __constant_cpu_to_le16(
-+							OF_EXPL_CONF |
-+							OF_CONF_REQ);
-+				}
-+			}
-+		} else {
-+			/*
-+			 * We have already made sure that there is sufficient
-+			 * amount of request entries to not drop HW lock in
-+			 * req_pkt().
-+			 */
-+			ctio_ret_entry_t *ctio_m1 =
-+				(ctio_ret_entry_t *)q2t_get_req_pkt(vha);
-+
-+			TRACE_DBG("%s", "Building additional status packet");
-+
-+			memcpy(ctio_m1, pkt, sizeof(*ctio_m1));
-+			ctio_m1->entry_count = 1;
-+			ctio_m1->dseg_count = 0;
-+
-+			/* Real finish is ctio_m1's finish */
-+			pkt->handle |= CTIO_INTERMEDIATE_HANDLE_MARK;
-+			pkt->flags &= ~__constant_cpu_to_le16(OF_INC_RC);
-+
-+			q2x_init_ctio_ret_entry(ctio_m1, &prm, cmd->vha);
-+			TRACE_BUFFER("Status CTIO packet data", ctio_m1,
-+				REQUEST_ENTRY_SIZE);
-+		}
-+	} else
-+		q2x_init_ctio_ret_entry((ctio_ret_entry_t *)pkt, &prm, cmd->vha);
-+
-+	cmd->state = Q2T_STATE_PROCESSED; /* Mid-level is done processing */
-+
-+	TRACE_DBG("Xmitting CTIO7 response pkt for 2xxx: %p scsi_status:"
-+			" 0x%02x\n", pkt, scsi_status);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return 0;
-+
-+out_unmap_unlock:
-+	if (cmd->sg_mapped)
-+		q2t_unmap_sg(vha, cmd);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return res;
-+}
-+
-+#ifdef CONFIG_QLA_TGT_DEBUG_SRR
-+/*
-+ *  Original taken from the XFS code
-+ */
-+static unsigned long q2t_srr_random(void)
-+{
-+	static int Inited;
-+	static unsigned long RandomValue;
-+	static DEFINE_SPINLOCK(lock);
-+	/* cycles pseudo-randomly through all values between 1 and 2^31 - 2 */
-+	register long rv;
-+	register long lo;
-+	register long hi;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&lock, flags);
-+	if (!Inited) {
-+		RandomValue = jiffies;
-+		Inited = 1;
-+	}
-+	rv = RandomValue;
-+	hi = rv / 127773;
-+	lo = rv % 127773;
-+	rv = 16807 * lo - 2836 * hi;
-+	if (rv <= 0)
-+		rv += 2147483647;
-+	RandomValue = rv;
-+	spin_unlock_irqrestore(&lock, flags);
-+	return rv;
-+}
-+
-+static void q2t_check_srr_debug(struct q2t_cmd *cmd, int *xmit_type)
-+{
-+#if 0 /* This is not a real status packets lost, so it won't lead to SRR */
-+	if ((*xmit_type & Q2T_XMIT_STATUS) && (q2t_srr_random() % 200) == 50) {
-+		*xmit_type &= ~Q2T_XMIT_STATUS;
-+		TRACE_MGMT_DBG("Dropping cmd %p (tag %d) status", cmd,
-+			cmd->tag);
-+	}
-+#endif
-+
-+	if (q2t_has_data(cmd) && (cmd->sg_cnt > 1) &&
-+	    ((q2t_srr_random() % 100) == 20)) {
-+		int i, leave = 0;
-+		unsigned int tot_len = 0;
-+
-+		while (leave == 0)
-+			leave = q2t_srr_random() % cmd->sg_cnt;
-+
-+		for (i = 0; i < leave; i++)
-+			tot_len += cmd->sg[i].length;
-+
-+		TRACE_MGMT_DBG("Cutting cmd %p (tag %d) buffer tail to len %d, "
-+			"sg_cnt %d (cmd->bufflen %d, cmd->sg_cnt %d)", cmd,
-+			cmd->tag, tot_len, leave, cmd->bufflen, cmd->sg_cnt);
-+
-+		cmd->bufflen = tot_len;
-+		cmd->sg_cnt = leave;
-+	}
-+
-+	if (q2t_has_data(cmd) && ((q2t_srr_random() % 100) == 70)) {
-+		unsigned int offset = q2t_srr_random() % cmd->bufflen;
-+
-+		TRACE_MGMT_DBG("Cutting cmd %p (tag %d) buffer head "
-+			"to offset %d (cmd->bufflen %d)", cmd, cmd->tag,
-+			offset, cmd->bufflen);
-+		if (offset == 0)
-+			*xmit_type &= ~Q2T_XMIT_DATA;
-+		else if (q2t_cut_cmd_data_head(cmd, offset)) {
-+			TRACE_MGMT_DBG("q2t_cut_cmd_data_head() failed (tag %d)",
-+				cmd->tag);
-+		}
-+	}
-+}
-+#else
-+static inline void q2t_check_srr_debug(struct q2t_cmd *cmd, int *xmit_type) {}
-+#endif
-+
-+int q2x_xmit_response(struct q2t_cmd *cmd, int xmit_type, uint8_t scsi_status)
-+{
-+#if 0
-+	q2t_check_srr_debug(cmd, &xmit_type);
-+#endif
-+
-+	TRACE_DBG("is_send_status=%d, cmd->bufflen=%d, cmd->sg_cnt=%d, "
-+		"cmd->dma_data_direction=%d", (xmit_type & Q2T_XMIT_STATUS) ?
-+		1 : 0, cmd->bufflen, cmd->sg_cnt, cmd->dma_data_direction);
-+
-+	return (IS_FWI2_CAPABLE(cmd->tgt->ha)) ?
-+		__q24_xmit_response(cmd, xmit_type, scsi_status) :
-+		__q2x_xmit_response(cmd, xmit_type, scsi_status);
-+}
-+EXPORT_SYMBOL(q2x_xmit_response);
-+
-+static void q24_init_ctio_ret_entry(ctio7_status0_entry_t *ctio,
-+	struct q2t_prm *prm)
-+{
-+	ctio7_status1_entry_t *ctio1;
-+
-+	prm->sense_buffer_len = min((uint32_t)prm->sense_buffer_len,
-+				    (uint32_t)sizeof(ctio1->sense_data));
-+	ctio->flags |= __constant_cpu_to_le16(CTIO7_FLAGS_SEND_STATUS);
-+	if (q2t_need_explicit_conf(prm->tgt->ha, prm->cmd, 0)) {
-+		ctio->flags |= __constant_cpu_to_le16(
-+				CTIO7_FLAGS_EXPLICIT_CONFORM |
-+				CTIO7_FLAGS_CONFORM_REQ);
-+	}
-+	ctio->residual = cpu_to_le32(prm->residual);
-+	ctio->scsi_status = cpu_to_le16(prm->rq_result);
-+	if (Q2T_SENSE_VALID(prm->sense_buffer)) {
-+		int i;
-+
-+		ctio1 = (ctio7_status1_entry_t *)ctio;
-+		if (q2t_need_explicit_conf(prm->tgt->ha, prm->cmd, 1)) {
-+			ctio1->flags |= __constant_cpu_to_le16(
-+				CTIO7_FLAGS_EXPLICIT_CONFORM |
-+				CTIO7_FLAGS_CONFORM_REQ);
-+		}
-+		ctio1->flags &= ~__constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_0);
-+		ctio1->flags |= __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1);
-+		ctio1->scsi_status |= __constant_cpu_to_le16(SS_SENSE_LEN_VALID);
-+		ctio1->sense_length = cpu_to_le16(prm->sense_buffer_len);
-+		for (i = 0; i < prm->sense_buffer_len/4; i++)
-+			((uint32_t *)ctio1->sense_data)[i] =
-+				cpu_to_be32(((uint32_t *)prm->sense_buffer)[i]);
-+#if 0
-+		if (unlikely((prm->sense_buffer_len % 4) != 0)) {
-+			static int q;
-+			if (q < 10) {
-+				printk(KERN_INFO "qla2x00t(%d): %d bytes of sense "
-+					"lost", prm->tgt->ha->vp_idx,
-+					prm->sense_buffer_len % 4);
-+				q++;
-+			}
-+		}
-+#endif
-+	} else {
-+		ctio1 = (ctio7_status1_entry_t *)ctio;
-+		ctio1->flags &= ~__constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_0);
-+		ctio1->flags |= __constant_cpu_to_le16(CTIO7_FLAGS_STATUS_MODE_1);
-+		ctio1->sense_length = 0;
-+		memset(ctio1->sense_data, 0, sizeof(ctio1->sense_data));
-+	}
-+
-+	/* Sense with len > 24, is it possible ??? */
-+}
-+
-+/*
-+ * Callback to setup response of xmit_type of Q2T_XMIT_DATA and * Q2T_XMIT_STATUS
-+ * for >= 24xx silicon
-+ */
-+static int __q24_xmit_response(struct q2t_cmd *cmd, int xmit_type, uint8_t scsi_status)
-+{
-+	scsi_qla_host_t *vha = cmd->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	ctio7_status0_entry_t *pkt;
-+	struct q2t_prm prm;
-+	uint32_t full_req_cnt = 0;
-+	unsigned long flags;
-+	int res;
-+
-+	memset(&prm, 0, sizeof(prm));
-+
-+	res = q2t_pre_xmit_response(cmd, &prm, xmit_type, scsi_status, &full_req_cnt);
-+	if (unlikely(res != 0)) {
-+		if (res == Q2T_PRE_XMIT_RESP_CMD_ABORTED)
-+			return 0;
-+
-+		return res;
-+	}
-+
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+
-+        /* Does F/W have an IOCBs for this request */
-+	res = q2t_check_reserve_free_req(vha, full_req_cnt);
-+	if (unlikely(res != 0) && (xmit_type & Q2T_XMIT_DATA))
-+		goto out_unmap_unlock;
-+
-+	res = q24_build_ctio_pkt(&prm, vha);
-+	if (unlikely(res != 0))
-+		goto out_unmap_unlock;
-+
-+
-+	pkt = (ctio7_status0_entry_t *)prm.pkt;
-+
-+	if (q2t_has_data(cmd) && (xmit_type & Q2T_XMIT_DATA)) {
-+		pkt->flags |= __constant_cpu_to_le16(CTIO7_FLAGS_DATA_IN |
-+				CTIO7_FLAGS_STATUS_MODE_0);
-+
-+		q24_load_data_segments(&prm, vha);
-+
-+		if (prm.add_status_pkt == 0) {
-+			if (xmit_type & Q2T_XMIT_STATUS) {
-+				pkt->scsi_status = cpu_to_le16(prm.rq_result);
-+				pkt->residual = cpu_to_le32(prm.residual);
-+				pkt->flags |= __constant_cpu_to_le16(
-+						CTIO7_FLAGS_SEND_STATUS);
-+				if (q2t_need_explicit_conf(ha, cmd, 0)) {
-+					pkt->flags |= __constant_cpu_to_le16(
-+						CTIO7_FLAGS_EXPLICIT_CONFORM |
-+						CTIO7_FLAGS_CONFORM_REQ);
-+				}
-+			}
-+
-+		} else {
-+			/*
-+			 * We have already made sure that there is sufficient
-+			 * amount of request entries to not drop HW lock in
-+			 * req_pkt().
-+			 */
-+			ctio7_status1_entry_t *ctio =
-+				(ctio7_status1_entry_t *)q2t_get_req_pkt(vha);
-+
-+			TRACE_DBG("Building additional status packet\n");
-+
-+			memcpy(ctio, pkt, sizeof(*ctio));
-+			ctio->common.entry_count = 1;
-+			ctio->common.dseg_count = 0;
-+			ctio->flags &= ~__constant_cpu_to_le16(
-+						CTIO7_FLAGS_DATA_IN);
-+
-+			/* Real finish is ctio_m1's finish */
-+			pkt->common.handle |= CTIO_INTERMEDIATE_HANDLE_MARK;
-+			pkt->flags |= __constant_cpu_to_le16(
-+					CTIO7_FLAGS_DONT_RET_CTIO);
-+			q24_init_ctio_ret_entry((ctio7_status0_entry_t *)ctio,
-+							&prm);
-+			printk("Status CTIO7: %p\n", ctio);
-+		}
-+	} else
-+		q24_init_ctio_ret_entry(pkt, &prm);
-+
-+
-+	cmd->state = Q2T_STATE_PROCESSED; /* Mid-level is done processing */
-+
-+	TRACE_DBG("Xmitting CTIO7 response pkt for 24xx: %p scsi_status:"
-+			" 0x%02x\n", pkt, scsi_status);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return 0;
-+
-+out_unmap_unlock:
-+	if (cmd->sg_mapped)
-+		q2t_unmap_sg(vha, cmd);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return res;
-+}
-+
-+int q2t_rdy_to_xfer(struct q2t_cmd *cmd)
-+{
-+	scsi_qla_host_t *vha = cmd->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = cmd->tgt;
-+	struct q2t_prm prm;
-+	void *p;
-+	unsigned long flags;
-+	int res = 0;
-+
-+	memset(&prm, 0, sizeof(prm));
-+	prm.cmd = cmd;
-+	prm.tgt = tgt;
-+	prm.sg = NULL;
-+	prm.req_cnt = 1;
-+
-+	/* Send marker if required */
-+	if (q2t_issue_marker(vha, 0) != QLA_SUCCESS)
-+		return -EIO;
-+
-+	TRACE_DBG("CTIO_start: vha(%d)", (int)vha->vp_idx);
-+
-+	/* Calculate number of entries and segments required */
-+	if (q2t_pci_map_calc_cnt(&prm) != 0)
-+		return -ENOMEM;
-+
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
-+
-+	/* Does F/W have an IOCBs for this request */
-+	res = q2t_check_reserve_free_req(vha, prm.req_cnt);
-+	if (res != 0)
-+		goto out_unlock_free_unmap;
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		ctio7_status0_entry_t *pkt;
-+		res = q24_build_ctio_pkt(&prm, vha);
-+		if (unlikely(res != 0))
-+			goto out_unlock_free_unmap;
-+		pkt = (ctio7_status0_entry_t *)prm.pkt;
-+		pkt->flags |= __constant_cpu_to_le16(CTIO7_FLAGS_DATA_OUT |
-+				CTIO7_FLAGS_STATUS_MODE_0);
-+		q24_load_data_segments(&prm, vha);
-+		p = pkt;
-+	} else {
-+		ctio_common_entry_t *pkt;
-+		q2x_build_ctio_pkt(&prm, vha);
-+		pkt = (ctio_common_entry_t *)prm.pkt;
-+		pkt->flags = __constant_cpu_to_le16(OF_FAST_POST | OF_DATA_OUT);
-+		q2x_load_data_segments(&prm, vha);
-+		p = pkt;
-+	}
-+
-+	cmd->state = Q2T_STATE_NEED_DATA;
-+
-+	TRACE_BUFFER("Xfering", p, REQUEST_ENTRY_SIZE);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return res;
-+
-+out_unlock_free_unmap:
-+	if (cmd->sg_mapped)
-+		q2t_unmap_sg(vha, cmd);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	return res;
-+}
-+EXPORT_SYMBOL(q2t_rdy_to_xfer);
-+
-+/* If hardware_lock held on entry, might drop it, then reaquire */
-+static void q2x_send_term_exchange(scsi_qla_host_t *vha, struct q2t_cmd *cmd,
-+	atio_entry_t *atio, int ha_locked)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	ctio_ret_entry_t *ctio;
-+	unsigned long flags = 0; /* to stop compiler's warning */
-+	int do_tgt_cmd_done = 0;
-+
-+	TRACE_DBG("Sending TERM EXCH CTIO (ha=%p)\n", ha);
-+
-+	/* Send marker if required */
-+	if (q2t_issue_marker(vha, ha_locked) != QLA_SUCCESS)
-+		return;
-+
-+	if (!ha_locked)
-+		spin_lock_irqsave(&ha->hardware_lock, flags);
-+
-+	ctio = (ctio_ret_entry_t *)q2t_req_pkt(vha);
-+	if (ctio == NULL) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet\n", vha->vp_idx, __func__);
-+		goto out_unlock;
-+	}
-+
-+	ctio->entry_type = CTIO_RET_TYPE;
-+	ctio->entry_count = 1;
-+	if (cmd != NULL) {
-+		if (cmd->state < Q2T_STATE_PROCESSED) {
-+			printk(KERN_ERR "qla2x00t(%d): Terminating cmd %p with "
-+				"incorrect state %d\n", vha->vp_idx, cmd,
-+				cmd->state);
-+		} else
-+			do_tgt_cmd_done = 1;
-+	}
-+	ctio->handle = Q2T_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
-+
-+	/* Set IDs */
-+	SET_TARGET_ID(ha, ctio->target, GET_TARGET_ID(ha, atio));
-+	ctio->rx_id = atio->rx_id;
-+
-+	/* Most likely, it isn't needed */
-+	ctio->residual = atio->data_length;
-+	if (ctio->residual != 0)
-+		ctio->scsi_status |= SS_RESIDUAL_UNDER;
-+
-+	ctio->flags = __constant_cpu_to_le16(OF_FAST_POST | OF_TERM_EXCH |
-+			OF_NO_DATA | OF_SS_MODE_1);
-+	ctio->flags |= __constant_cpu_to_le16(OF_INC_RC);
-+
-+	TRACE_BUFFER("CTIO TERM EXCH packet data", ctio, REQUEST_ENTRY_SIZE);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+
-+out_unlock:
-+	if (!ha_locked)
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	if (do_tgt_cmd_done) {
-+		if (!ha_locked && !in_interrupt())
-+			msleep(250); /* just in case */
-+
-+		ha->qla2x_tmpl->free_cmd(cmd);
-+	}
-+}
-+
-+/* If hardware_lock held on entry, might drop it, then reaquire */
-+static void q24_send_term_exchange(scsi_qla_host_t *vha, struct q2t_cmd *cmd,
-+	atio7_entry_t *atio, int ha_locked)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	ctio7_status1_entry_t *ctio;
-+	unsigned long flags = 0; /* to stop compiler's warning */
-+	int do_tgt_cmd_done = 0;
-+
-+	TRACE_DBG("Sending TERM EXCH CTIO7 (ha=%p)\n", ha);
-+
-+	/* Send marker if required */
-+	if (q2t_issue_marker(vha, ha_locked) != QLA_SUCCESS)
-+		return;
-+
-+	if (!ha_locked)
-+		spin_lock_irqsave(&ha->hardware_lock, flags);
-+
-+	ctio = (ctio7_status1_entry_t *)q2t_req_pkt(vha);
-+	if (ctio == NULL) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet\n", vha->vp_idx, __func__);
-+		goto out_unlock;
-+	}
-+
-+	ctio->common.entry_type = CTIO_TYPE7;
-+	ctio->common.entry_count = 1;
-+	if (cmd != NULL) {
-+		ctio->common.nport_handle = cmd->loop_id;
-+		if (cmd->state < Q2T_STATE_PROCESSED) {
-+			printk(KERN_ERR "qla2x00t(%d): Terminating cmd %p with "
-+				"incorrect state %d\n", vha->vp_idx, cmd,
-+				 cmd->state);
-+		} else
-+			do_tgt_cmd_done = 1;
-+	} else
-+		ctio->common.nport_handle = CTIO7_NHANDLE_UNRECOGNIZED;
-+	ctio->common.handle = Q2T_SKIP_HANDLE |	CTIO_COMPLETION_HANDLE_MARK;
-+	ctio->common.timeout = __constant_cpu_to_le16(Q2T_TIMEOUT);
-+	ctio->common.vp_index = vha->vp_idx;
-+	ctio->common.initiator_id[0] = atio->fcp_hdr.s_id[2];
-+	ctio->common.initiator_id[1] = atio->fcp_hdr.s_id[1];
-+	ctio->common.initiator_id[2] = atio->fcp_hdr.s_id[0];
-+	ctio->common.exchange_addr = atio->exchange_addr;
-+	ctio->flags = (atio->attr << 9) | __constant_cpu_to_le16(
-+		CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_TERMINATE);
-+	ctio->ox_id = swab16(atio->fcp_hdr.ox_id);
-+
-+	/* Most likely, it isn't needed */
-+	ctio->residual = get_unaligned((uint32_t *)
-+			&atio->fcp_cmnd.add_cdb[atio->fcp_cmnd.add_cdb_len]);
-+	if (ctio->residual != 0)
-+		ctio->scsi_status |= SS_RESIDUAL_UNDER;
-+
-+	TRACE_BUFFER("CTIO7 TERM EXCH packet data", ctio, REQUEST_ENTRY_SIZE);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+
-+out_unlock:
-+	if (!ha_locked)
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
-+	if (do_tgt_cmd_done) {
-+		if (!ha_locked && !in_interrupt())
-+			msleep(250); /* just in case */
-+
-+		ha->qla2x_tmpl->free_cmd(cmd);
-+	}
-+}
-+
-+void q2t_free_cmd(struct q2t_cmd *cmd)
-+{
-+	BUG_ON(cmd->sg_mapped);
-+
-+	if (unlikely(cmd->free_sg))
-+		kfree(cmd->sg);
-+	kmem_cache_free(q2t_cmd_cachep, cmd);
-+}
-+EXPORT_SYMBOL(q2t_free_cmd);
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2t_prepare_srr_ctio(scsi_qla_host_t *vha, struct q2t_cmd *cmd,
-+	void *ctio)
-+{
-+	struct srr_ctio *sc;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = ha->q2t_tgt;
-+	struct srr_imm *imm;
-+
-+	tgt->ctio_srr_id++;
-+
-+	TRACE_MGMT_DBG("qla2x00t(%d): CTIO with SRR "
-+		"status received\n", vha->vp_idx);
-+
-+	if (!ctio) {
-+		printk(KERN_ERR "qla2x00t(%d): SRR CTIO, "
-+			"but ctio is NULL\n", vha->vp_idx);
-+		return EINVAL;
-+	}
-+
-+	dump_stack();
-+
-+	sc = kzalloc(sizeof(*sc), GFP_ATOMIC);
-+	if (sc != NULL) {
-+		sc->cmd = cmd;
-+		/* IRQ is already OFF */
-+		spin_lock(&tgt->srr_lock);
-+		sc->srr_id = tgt->ctio_srr_id;
-+		list_add_tail(&sc->srr_list_entry,
-+			&tgt->srr_ctio_list);
-+		TRACE_MGMT_DBG("CTIO SRR %p added (id %d)\n",
-+			sc, sc->srr_id);
-+		if (tgt->imm_srr_id == tgt->ctio_srr_id) {
-+			int found = 0;
-+			list_for_each_entry(imm, &tgt->srr_imm_list,
-+					srr_list_entry) {
-+				if (imm->srr_id == sc->srr_id) {
-+					found = 1;
-+					break;
-+				}
-+			}
-+			if (found) {
-+				TRACE_MGMT_DBG("%s", "Scheduling srr work\n");
-+				schedule_work(&tgt->srr_work);
-+			} else {
-+				printk(KERN_ERR "qla2x00t(%d): imm_srr_id "
-+					"== ctio_srr_id (%d), but there is no "
-+					"corresponding SRR IMM, deleting CTIO "
-+					"SRR %p\n", vha->vp_idx, tgt->ctio_srr_id,
-+					sc);
-+				list_del(&sc->srr_list_entry);
-+				spin_unlock(&tgt->srr_lock);
-+
-+				kfree(sc);
-+				return -EINVAL;
-+			}
-+		}
-+		spin_unlock(&tgt->srr_lock);
-+	} else {
-+		struct srr_imm *ti;
-+
-+		printk(KERN_ERR "qla2x00t(%d): Unable to allocate SRR CTIO entry\n",
-+			vha->vp_idx);
-+		spin_lock(&tgt->srr_lock);
-+		list_for_each_entry_safe(imm, ti, &tgt->srr_imm_list,
-+					srr_list_entry) {
-+			if (imm->srr_id == tgt->ctio_srr_id) {
-+				TRACE_MGMT_DBG("IMM SRR %p deleted "
-+					"(id %d)\n", imm, imm->srr_id);
-+				list_del(&imm->srr_list_entry);
-+				q2t_reject_free_srr_imm(vha, imm, 1);
-+			}
-+		}
-+		spin_unlock(&tgt->srr_lock);
-+
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static int q2t_term_ctio_exchange(scsi_qla_host_t *vha, void *ctio,
-+	struct q2t_cmd *cmd, uint32_t status)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	int term = 0;
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		if (ctio != NULL) {
-+			ctio7_fw_entry_t *c = (ctio7_fw_entry_t *)ctio;
-+			term = !(c->flags &
-+				__constant_cpu_to_le16(OF_TERM_EXCH));
-+		} else
-+			term = 1;
-+		if (term) {
-+			q24_send_term_exchange(vha, cmd,
-+				&cmd->atio.atio7, 1);
-+		}
-+	} else {
-+		if (status != CTIO_SUCCESS)
-+			q2x_modify_command_count(vha, 1, 0);
-+#if 0 /* seems, it isn't needed */
-+		if (ctio != NULL) {
-+			ctio_common_entry_t *c = (ctio_common_entry_t *)ctio;
-+			term = !(c->flags &
-+				__constant_cpu_to_le16(
-+					CTIO7_FLAGS_TERMINATE));
-+		} else
-+			term = 1;
-+		if (term) {
-+			q2x_send_term_exchange(vha, cmd,
-+				&cmd->atio.atio2x, 1);
-+		}
-+#endif
-+	}
-+	return term;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static inline struct q2t_cmd *q2t_get_cmd(scsi_qla_host_t *vha, uint32_t handle)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	handle--;
-+	if (ha->cmds[handle] != NULL) {
-+		struct q2t_cmd *cmd = ha->cmds[handle];
-+		ha->cmds[handle] = NULL;
-+		return cmd;
-+	} else
-+		return NULL;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static struct q2t_cmd *q2t_ctio_to_cmd(scsi_qla_host_t *vha, uint32_t handle,
-+	void *ctio)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_cmd *cmd = NULL;
-+
-+	/* Clear out internal marks */
-+	handle &= ~(CTIO_COMPLETION_HANDLE_MARK | CTIO_INTERMEDIATE_HANDLE_MARK);
-+
-+	if (handle != Q2T_NULL_HANDLE) {
-+		if (unlikely(handle == Q2T_SKIP_HANDLE)) {
-+			TRACE_DBG("%s", "SKIP_HANDLE CTIO\n");
-+			return NULL;
-+		}
-+		/* handle-1 is actually used */
-+		if (unlikely(handle > MAX_OUTSTANDING_COMMANDS)) {
-+			printk(KERN_ERR "qla2x00t(%d): Wrong handle %x "
-+				"received\n", vha->vp_idx, handle);
-+			return NULL;
-+		}
-+		cmd = q2t_get_cmd(vha, handle);
-+		if (unlikely(cmd == NULL)) {
-+			printk(KERN_WARNING "qla2x00t(%d): Suspicious: unable to "
-+				   "find the command with handle %x\n",
-+				   vha->vp_idx, handle);
-+			return NULL;
-+		}
-+	} else if (ctio != NULL) {
-+		struct q2t_sess *sess;
-+		int tag;
-+		uint16_t loop_id;
-+
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			/* We can't get loop ID from CTIO7 */
-+			printk(KERN_ERR "qla2x00t(%d): Wrong CTIO received: "
-+				"QLA24xx doesn't support NULL handles\n",
-+				vha->vp_idx);
-+			return NULL;
-+		} else {
-+			ctio_common_entry_t *c = (ctio_common_entry_t *)ctio;
-+			loop_id = GET_TARGET_ID(ha, c);
-+			tag = c->rx_id;
-+		}
-+
-+		sess = ha->qla2x_tmpl->find_sess_by_loop_id(vha, loop_id);
-+		if (!sess) {
-+			printk(KERN_WARNING "qla2x00t(%d): Suspicious: "
-+				   "ctio_completion for non-existing session "
-+				   "(loop_id %d, tag %d)\n",
-+				   vha->vp_idx, loop_id, tag);
-+			return NULL;
-+		}
-+	}
-+
-+	return cmd;
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q2t_do_ctio_completion(scsi_qla_host_t *vha, uint32_t handle,
-+	uint32_t status, void *ctio)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct se_cmd *se_cmd;
-+	struct target_core_fabric_ops *tfo;
-+	struct q2t_cmd *cmd;
-+
-+	TRACE_SCSI("qla2x00t(%d): handle(ctio %p status %#x) <- %08x\n",
-+			vha->vp_idx, ctio, status, handle);
-+
-+	if (handle & CTIO_INTERMEDIATE_HANDLE_MARK) {
-+		/* That could happen only in case of an error/reset/abort */
-+		if (status != CTIO_SUCCESS) {
-+			TRACE_MGMT_DBG("Intermediate CTIO received (status %x)\n",
-+				status);
-+		}
-+		return;
-+	}
-+
-+	cmd = q2t_ctio_to_cmd(vha, handle, ctio);
-+	if (cmd == NULL) {
-+		if (status != CTIO_SUCCESS)
-+			q2t_term_ctio_exchange(vha, ctio, NULL, status);
-+		return;
-+	}
-+	se_cmd = &cmd->se_cmd;
-+	tfo = se_cmd->se_tfo;
-+
-+	if (cmd->sg_mapped)
-+		q2t_unmap_sg(vha, cmd);
-+
-+	if (unlikely(status != CTIO_SUCCESS)) {
-+		switch (status & 0xFFFF) {
-+		case CTIO_LIP_RESET:
-+		case CTIO_TARGET_RESET:
-+		case CTIO_ABORTED:
-+		case CTIO_TIMEOUT:
-+		case CTIO_INVALID_RX_ID:
-+			/* They are OK */
-+			printk(KERN_INFO "qla2x00t(%d): CTIO with "
-+				"status %#x received, state %x, se_cmd %p, "
-+				"(LIP_RESET=e, ABORTED=2, TARGET_RESET=17, "
-+				"TIMEOUT=b, INVALID_RX_ID=8)\n", vha->vp_idx,
-+				status, cmd->state, se_cmd);
-+			break;
-+
-+		case CTIO_PORT_LOGGED_OUT:
-+		case CTIO_PORT_UNAVAILABLE:
-+			printk(KERN_INFO "qla2x00t(%d): CTIO with PORT LOGGED "
-+				"OUT (29) or PORT UNAVAILABLE (28) status %x "
-+				"received (state %x, se_cmd %p)\n",
-+				vha->vp_idx, status, cmd->state, se_cmd);
-+			break;
-+
-+		case CTIO_SRR_RECEIVED:
-+			printk(KERN_INFO "qla2x00t(%d): CTIO with SRR_RECEIVED"
-+				" status %x received (state %x, se_cmd %p)\n",
-+				vha->vp_idx, status, cmd->state, se_cmd);
-+			if (q2t_prepare_srr_ctio(vha, cmd, ctio) != 0)
-+				break;
-+			else
-+				return;
-+
-+		default:
-+			printk(KERN_ERR "qla2x00t(%d): CTIO with error status "
-+				"0x%x received (state %x, se_cmd %p\n",
-+				vha->vp_idx, status, cmd->state, se_cmd);
-+			break;
-+		}
-+
-+		if (cmd->state != Q2T_STATE_NEED_DATA)
-+			if (q2t_term_ctio_exchange(vha, ctio, cmd, status))
-+				return;
-+	}
-+
-+	if (cmd->state == Q2T_STATE_PROCESSED) {
-+		TRACE_DBG("Command %p finished\n", cmd);
-+	} else if (cmd->state == Q2T_STATE_NEED_DATA) {
-+		int rx_status = 0;
-+
-+		cmd->state = Q2T_STATE_DATA_IN;
-+
-+		if (unlikely(status != CTIO_SUCCESS))
-+			rx_status = -EIO;
-+		else
-+			cmd->write_data_transferred = 1;
-+
-+		TRACE_DBG("Data received, context %x, rx_status %d\n",
-+		      0x0, rx_status);
-+
-+		ha->qla2x_tmpl->handle_data(cmd);
-+		return;
-+	} else if (cmd->state == Q2T_STATE_ABORTED) {
-+		TRACE_MGMT_DBG("Aborted command %p (tag %d) finished\n", cmd,
-+			cmd->tag);
-+	} else {
-+		printk(KERN_ERR "qla2x00t(%d): A command in state (%d) should "
-+			"not return a CTIO complete\n", vha->vp_idx, cmd->state);
-+	}
-+
-+	if (unlikely(status != CTIO_SUCCESS)) {
-+		TRACE_MGMT_DBG("%s", "Finishing failed CTIO\n");
-+		dump_stack();
-+	}
-+
-+	ha->qla2x_tmpl->free_cmd(cmd);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+/* called via callback from qla2xxx */
-+void q2x_ctio_completion(scsi_qla_host_t *vha, uint32_t handle)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = ha->q2t_tgt;
-+
-+	if (likely(tgt == NULL)) {
-+		TRACE_DBG("CTIO, but target mode not enabled (ha %d %p handle "
-+			"%#x)", vha->vp_idx, ha, handle);
-+		return;
-+	}
-+
-+	tgt->irq_cmd_count++;
-+	q2t_do_ctio_completion(vha, handle, CTIO_SUCCESS, NULL);
-+	tgt->irq_cmd_count--;
-+}
-+
-+static inline int q2t_get_fcp_task_attr(uint8_t task_codes)
-+{
-+	int fcp_task_attr;
-+
-+	switch (task_codes) {
-+        case ATIO_SIMPLE_QUEUE:
-+                fcp_task_attr = FCP_PTA_SIMPLE;
-+                break;
-+        case ATIO_HEAD_OF_QUEUE:
-+                fcp_task_attr = FCP_PTA_HEADQ;
-+                break;
-+        case ATIO_ORDERED_QUEUE:
-+                fcp_task_attr = FCP_PTA_ORDERED;
-+                break;
-+        case ATIO_ACA_QUEUE:
-+		fcp_task_attr = FCP_PTA_ACA;
-+		break;
-+        case ATIO_UNTAGGED:
-+                fcp_task_attr = FCP_PTA_SIMPLE;
-+                break;
-+        default:
-+                printk(KERN_WARNING "qla2x00t: unknown task code %x, use "
-+                        "ORDERED instead\n", task_codes);
-+                fcp_task_attr = FCP_PTA_ORDERED;
-+                break;
-+        }
-+
-+	return fcp_task_attr;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2x_send_cmd_to_target(scsi_qla_host_t *vha, struct q2t_cmd *cmd)
-+{
-+	atio_entry_t *atio = &cmd->atio.atio2x;
-+	uint32_t data_length;
-+	int fcp_task_attr, data_dir, bidi = 0, ret;
-+	uint16_t lun;
-+
-+	/* make it be in network byte order */
-+	lun = swab16(le16_to_cpu(atio->lun));
-+	cmd->tag = atio->rx_id;
-+
-+	if ((atio->execution_codes & (ATIO_EXEC_READ | ATIO_EXEC_WRITE)) ==
-+				(ATIO_EXEC_READ | ATIO_EXEC_WRITE)) {
-+		bidi = 1;
-+		data_dir = DMA_TO_DEVICE;
-+	} else if (atio->execution_codes & ATIO_EXEC_READ)
-+		data_dir = DMA_FROM_DEVICE;
-+	else if (atio->execution_codes & ATIO_EXEC_WRITE)
-+		data_dir = DMA_TO_DEVICE;
-+	else
-+		data_dir = DMA_NONE;
-+
-+	fcp_task_attr = q2t_get_fcp_task_attr(atio->task_codes);
-+	data_length = le32_to_cpu(atio->data_length);
-+
-+	TRACE_SCSI("qla2x00t: START q2x command: %p lun: 0x%04x"
-+		" (tag %d)\n", cmd, lun, cmd->tag);
 +	/*
-+	 * Dispatch command to tcm_qla2xxx fabric module code
++	 * Locate our struct tcm_qla2xxx_nacl and set the FC Nport WWPN
 +	 */
-+	ret = vha->hw->qla2x_tmpl->handle_cmd(vha, cmd, lun, data_length,
-+				fcp_task_attr, data_dir, bidi);
-+	return ret;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q24_send_cmd_to_target(scsi_qla_host_t *vha, struct q2t_cmd *cmd)
-+{
-+	atio7_entry_t *atio = &cmd->atio.atio7;
-+	uint32_t lun, data_length;
-+	int fcp_task_attr, data_dir, bidi = 0, ret;
-+
-+	cmd->tag = atio->exchange_addr;
-+	lun = atio->fcp_cmnd.lun;
-+
-+	if (atio->fcp_cmnd.rddata && atio->fcp_cmnd.wrdata) {
-+		bidi = 1;
-+		data_dir = DMA_TO_DEVICE;
-+	} else if (atio->fcp_cmnd.rddata)
-+		data_dir = DMA_FROM_DEVICE;
-+	else if (atio->fcp_cmnd.wrdata)
-+		data_dir = DMA_TO_DEVICE;
-+	else
-+		data_dir = DMA_NONE;
-+
-+	fcp_task_attr = q2t_get_fcp_task_attr(atio->fcp_cmnd.task_attr);
-+	data_length = be32_to_cpu(get_unaligned((uint32_t *)
-+			&atio->fcp_cmnd.add_cdb[atio->fcp_cmnd.add_cdb_len]));
-+
-+	TRACE_SCSI("qla2x00t: START q24 Command %p lun: 0x%08x"
-+		" (tag %d)\n", cmd, lun, cmd->tag);
++	nacl = container_of(se_nacl, struct tcm_qla2xxx_nacl, se_node_acl);
++	nacl->nport_wwnn = wwnn;
++	tcm_qla2xxx_format_wwn(&nacl->nport_name[0], TCM_QLA2XXX_NAMELEN, wwnn);
 +	/*
-+	 * Dispatch command to tcm_qla2xxx fabric module code
++	 * Setup a se_nacl handle based on an a matching struct fc_rport setup
++	 * via drivers/scsi/qla2xxx/qla_init.c:qla2x00_reg_remote_port()
 +	 */
-+	ret = vha->hw->qla2x_tmpl->handle_cmd(vha, cmd, lun, data_length,
-+				fcp_task_attr, data_dir, bidi);
-+	return ret;
++	rc = tcm_qla2xxx_setup_nacl_from_rport(se_tpg, se_nacl, lport,
++					nacl, wwnn);
++	if (rc < 0) {
++		tcm_qla2xxx_release_fabric_acl(se_tpg, se_nacl_new);
++		return ERR_PTR(rc);
++	}
++
++	return se_nacl;;
 +}
 +
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2t_send_cmd_to_target(scsi_qla_host_t *vha,
-+	struct q2t_cmd *cmd, struct q2t_sess *sess)
++static void tcm_qla2xxx_drop_nodeacl(struct se_node_acl *se_acl)
 +{
++	struct se_portal_group *se_tpg = se_acl->se_tpg;
++	struct tcm_qla2xxx_nacl *nacl = container_of(se_acl,
++				struct tcm_qla2xxx_nacl, se_node_acl);
++
++	core_tpg_del_initiator_node_acl(se_tpg, se_acl, 1);
++	kfree(nacl);
++}
++
++static ssize_t tcm_qla2xxx_tpg_show_enable(
++	struct se_portal_group *se_tpg,
++	char *page)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++			struct tcm_qla2xxx_tpg, se_tpg);
++
++	return snprintf(page, PAGE_SIZE, "%d\n",
++			atomic_read(&tpg->lport_tpg_enabled));
++}
++
++extern void q2t_target_stop(struct q2t_tgt *);
++
++static ssize_t tcm_qla2xxx_tpg_store_enable(
++	struct se_portal_group *se_tpg,
++	const char *page,
++	size_t count)
++{
++	struct se_wwn *se_wwn = se_tpg->se_tpg_wwn;
++	struct tcm_qla2xxx_lport *lport = container_of(se_wwn,
++			struct tcm_qla2xxx_lport, lport_wwn);
++	struct scsi_qla_host *vha = lport->qla_vha;
 +	struct qla_hw_data *ha = vha->hw;
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++			struct tcm_qla2xxx_tpg, se_tpg);
++	char *endptr;
++	u32 op;
 +
-+	cmd->sess = sess;
-+	cmd->loop_id = sess->loop_id;
-+	cmd->conf_compl_supported = sess->conf_compl_supported;
-+
-+	return (IS_FWI2_CAPABLE(ha)) ? q24_send_cmd_to_target(vha, cmd) :
-+			q2x_send_cmd_to_target(vha, cmd);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2t_handle_cmd_for_atio(scsi_qla_host_t *vha, atio_t *atio)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = ha->q2t_tgt;
-+	struct q2t_sess *sess;
-+	struct q2t_cmd *cmd;
-+	int res = 0;
-+
-+	if (unlikely(tgt->tgt_stop)) {
-+		TRACE_MGMT_DBG("New command while device %p is shutting "
-+			"down\n", tgt);
-+		return -EFAULT;
-+	}
-+
-+	cmd = kmem_cache_zalloc(q2t_cmd_cachep, GFP_ATOMIC);
-+	if (!cmd) {
-+		printk(KERN_INFO "qla2x00t(%d): Allocation of cmd "
-+			"failed\n", vha->vp_idx);
-+		return -ENOMEM;
-+	}
-+
-+	memcpy(&cmd->atio.atio2x, atio, sizeof(*atio));
-+	cmd->state = Q2T_STATE_NEW;
-+	cmd->tgt = ha->q2t_tgt;
-+	cmd->vha = vha;
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		atio7_entry_t *a = (atio7_entry_t *)atio;
-+		sess = ha->qla2x_tmpl->find_sess_by_s_id(vha, a->fcp_hdr.s_id);
-+		if (unlikely(!sess)) {
-+			TRACE_MGMT_DBG("qla2x00t(%d): Unable to find "
-+				"wwn login (s_id %x:%x:%x), trying to create "
-+				"it manually\n", vha->vp_idx,
-+				a->fcp_hdr.s_id[0], a->fcp_hdr.s_id[1],
-+				a->fcp_hdr.s_id[2]);
-+			goto out_sched;
-+		}
-+	} else {
-+		sess = ha->qla2x_tmpl->find_sess_by_loop_id(vha,
-+			GET_TARGET_ID(ha, (atio_entry_t *)atio));
-+		if (unlikely(!sess)) {
-+			TRACE_MGMT_DBG("qla2x00t(%d): Unable to find "
-+				"wwn login (loop_id=%d), trying to create it "
-+				"manually\n", vha->vp_idx,
-+				GET_TARGET_ID(ha, (atio_entry_t *)atio));
-+			goto out_sched;
-+		}
-+	}
-+
-+	res = q2t_send_cmd_to_target(vha, cmd, sess);
-+	if (unlikely(res != 0))
-+		goto out_free_cmd;
-+
-+	return res;
-+
-+out_free_cmd:
-+	q2t_free_cmd(cmd);
-+	return res;
-+
-+out_sched:
-+	if (atio->entry_count > 1) {
-+		TRACE_MGMT_DBG("Dropping multy entry cmd %p\n", cmd);
-+		res = -EBUSY;
-+		goto out_free_cmd;
-+	}
-+	res = q2t_sched_sess_work(tgt, Q2T_SESS_WORK_CMD, &cmd, sizeof(cmd));
-+	if (res != 0)
-+		q2t_free_cmd(cmd);
-+
-+	return res;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2t_issue_task_mgmt(struct q2t_sess *sess, uint32_t lun,
-+	int lun_size, int fn, void *iocb, int flags)
-+{
-+	scsi_qla_host_t *vha = sess->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_mgmt_cmd *mcmd;
-+	int res;
-+	uint8_t tmr_func;
-+
-+	mcmd = mempool_alloc(q2t_mgmt_cmd_mempool, GFP_ATOMIC);
-+	if (!mcmd) {
-+		printk(KERN_ERR "qla2x00t(%d): Allocation of management "
-+			"command failed, some commands and their data could "
-+			"leak\n", vha->vp_idx);
-+		return -ENOMEM;
-+	}
-+	memset(mcmd, 0, sizeof(*mcmd));
-+	mcmd->sess = sess;
-+
-+	if (iocb) {
-+		memcpy(&mcmd->orig_iocb.notify_entry, iocb,
-+			sizeof(mcmd->orig_iocb.notify_entry));
-+	}
-+	mcmd->tmr_func = fn;
-+	mcmd->flags = flags;
-+
-+	switch (fn) {
-+	case Q2T_CLEAR_ACA:
-+		TRACE_MGMT("qla2x00t(%d): CLEAR_ACA received\n",
-+			sess->vha->vp_idx);
-+		tmr_func = CLEAR_ACA;
-+		break;
-+
-+	case Q2T_TARGET_RESET:
-+		TRACE_MGMT("qla2x00t(%d): TARGET_RESET received\n",
-+			sess->vha->vp_idx);
-+		tmr_func = TARGET_WARM_RESET;
-+		break;
-+
-+	case Q2T_LUN_RESET:
-+		TRACE_MGMT("qla2x00t(%d): LUN_RESET received\n",
-+			sess->vha->vp_idx);
-+		tmr_func = LUN_RESET;
-+		break;
-+
-+	case Q2T_CLEAR_TS:
-+		TRACE_MGMT("qla2x00t(%d): CLEAR_TS received\n",
-+			sess->vha->vp_idx);
-+		tmr_func = CLEAR_TASK_SET;
-+		break;
-+
-+	case Q2T_ABORT_TS:
-+		TRACE_MGMT("qla2x00t(%d): ABORT_TS received\n",
-+			sess->vha->vp_idx);
-+		tmr_func = ABORT_TASK_SET;
-+		break;
-+#if 0
-+	case Q2T_ABORT_ALL:
-+		TRACE_MGMT("qla2x00t(%d): Doing ABORT_ALL_TASKS\n",
-+			sess->vha->vp_idx);
-+		tmr_func = 0;
-+		break;
-+
-+	case Q2T_ABORT_ALL_SESS:
-+		TRACE_MGMT("qla2x00t(%d): Doing ABORT_ALL_TASKS_SESS\n",
-+			sess->vha->vp_idx);
-+		tmr_func = 0;
-+		break;
-+
-+	case Q2T_NEXUS_LOSS_SESS:
-+		TRACE_MGMT("qla2x00t(%d): Doing NEXUS_LOSS_SESS\n",
-+			sess->vha->vp_idx);
-+		tmr_func = 0;
-+		break;
-+
-+	case Q2T_NEXUS_LOSS:
-+		TRACE_MGMT("qla2x00t(%d): Doing NEXUS_LOSS\n",
-+			sess->vha->vp_idx);
-+		tmr_func = 0;
-+		break;
-+#endif
-+	default:
-+		printk(KERN_ERR "qla2x00t(%d): Unknown task mgmt fn 0x%x\n",
-+			    sess->vha->vp_idx, fn);
-+		mempool_free(mcmd, q2t_mgmt_cmd_mempool);
-+		return -ENOSYS;
-+	}
-+
-+	res = ha->qla2x_tmpl->handle_tmr(mcmd, lun, tmr_func);
-+	if (res != 0) {
-+		printk(KERN_ERR "qla2x00t(%d): qla2x_tmpl->handle_tmr() failed: %d\n",
-+			    sess->vha->vp_idx, res);
-+		mempool_free(mcmd, q2t_mgmt_cmd_mempool);
-+		return -EFAULT;
-+	}
-+
-+	return 0;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2t_handle_task_mgmt(scsi_qla_host_t *vha, void *iocb)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt;
-+	struct q2t_sess *sess;
-+	uint32_t lun;
-+	int lun_size, fn, res = 0;
-+
-+	tgt = ha->q2t_tgt;
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		atio7_entry_t *a = (atio7_entry_t *)iocb;
-+
-+		lun = a->fcp_cmnd.lun;
-+		lun_size = sizeof(a->fcp_cmnd.lun);
-+		fn = a->fcp_cmnd.task_mgmt_flags;
-+		sess = ha->qla2x_tmpl->find_sess_by_s_id(vha,
-+					a->fcp_hdr.s_id);
-+	} else {
-+		notify_entry_t *n = (notify_entry_t *)iocb;
-+		/* make it be in network byte order */
-+		lun = swab16(le16_to_cpu(n->lun));
-+		lun_size = sizeof(lun);
-+		fn = n->task_flags >> IMM_NTFY_TASK_MGMT_SHIFT;
-+		sess = ha->qla2x_tmpl->find_sess_by_loop_id(vha,
-+					GET_TARGET_ID(ha, n));
-+	}
-+
-+	if (!sess) {
-+		TRACE_MGMT_DBG("qla2x00t(%d): task mgmt fn 0x%x for "
-+			"non-existant session\n", vha->vp_idx, fn);
-+		res = q2t_sched_sess_work(tgt, Q2T_SESS_WORK_TM, iocb,
-+			IS_FWI2_CAPABLE(ha) ? sizeof(atio7_entry_t) :
-+					      sizeof(notify_entry_t));
-+		if (res != 0)
-+			tgt->tm_to_unknown = 1;
-+
-+		return res;
-+	}
-+
-+	return q2t_issue_task_mgmt(sess, lun, lun_size, fn, iocb, 0);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int __q2t_abort_task(scsi_qla_host_t *vha, notify_entry_t *iocb,
-+	struct q2t_sess *sess)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_mgmt_cmd *mcmd;
-+	uint32_t lun;
-+	int rc;
-+	uint16_t tag;
-+
-+	mcmd = mempool_alloc(q2t_mgmt_cmd_mempool, GFP_ATOMIC);
-+	if (mcmd == NULL) {
-+		printk(KERN_ERR "qla2x00t(%d): %s: Allocation of ABORT"
-+			" cmd failed\n", vha->vp_idx, __func__);
-+		return -ENOMEM;
-+	}
-+	memset(mcmd, 0, sizeof(*mcmd));
-+
-+	mcmd->sess = sess;
-+	memcpy(&mcmd->orig_iocb.notify_entry, iocb,
-+		sizeof(mcmd->orig_iocb.notify_entry));
-+
-+	tag = le16_to_cpu(iocb->seq_id);
-+#warning FIXME: Hardcoded LUN for __q2t_abort_task
-+	lun = 0;
-+	rc = ha->qla2x_tmpl->handle_tmr(mcmd, lun, ABORT_TASK);
-+	if (rc != 0) {
-+		printk(KERN_ERR "qla2x00t(%d): qla2x_tmpl->handle_tmr()"
-+			" failed: %d\n", vha->vp_idx, rc);
-+		mempool_free(mcmd, q2t_mgmt_cmd_mempool);
-+		return -EFAULT;
-+	}
-+
-+	return 0;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+static int q2t_abort_task(scsi_qla_host_t *vha, notify_entry_t *iocb)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_sess *sess;
-+	int loop_id, res;
-+
-+	loop_id = GET_TARGET_ID(ha, iocb);
-+
-+	sess = ha->qla2x_tmpl->find_sess_by_loop_id(vha, loop_id);
-+	if (sess == NULL) {
-+		TRACE_MGMT_DBG("qla2x00t(%d): task abort for unexisting "
-+			"session\n", vha->vp_idx);
-+		res = q2t_sched_sess_work(sess->tgt, Q2T_SESS_WORK_ABORT,
-+					iocb, sizeof(*iocb));
-+		if (res != 0)
-+			sess->tgt->tm_to_unknown = 1;
-+
-+		return res;
-+	}
-+
-+	return __q2t_abort_task(vha, iocb, sess);
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static int q24_handle_els(scsi_qla_host_t *vha, notify24xx_entry_t *iocb)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	int res = 0;
-+
-+	TRACE_MGMT_DBG("qla2x00t(%d): Port ID: 0x%02x:%02x:%02x ELS opcode:"
-+			" 0x%02x\n", vha->vp_idx, iocb->port_id[0],
-+		iocb->port_id[1], iocb->port_id[2], iocb->status_subcode);
-+
-+	switch (iocb->status_subcode) {
-+	case ELS_PLOGI:
-+	case ELS_FLOGI:
-+	case ELS_PRLI:
-+	case ELS_LOGO:
-+	case ELS_PRLO:
-+		res = q2t_reset(vha, iocb, Q2T_NEXUS_LOSS_SESS);
-+		break;
-+	case ELS_PDISC:
-+	case ELS_ADISC:
-+	{
-+		struct q2t_tgt *tgt = ha->q2t_tgt;
-+		if (tgt->link_reinit_iocb_pending) {
-+			q24_send_notify_ack(vha, &tgt->link_reinit_iocb, 0, 0, 0);
-+			tgt->link_reinit_iocb_pending = 0;
-+		}
-+		res = 1; /* send notify ack */
-+		break;
-+	}
-+
-+	default:
-+		printk(KERN_ERR "qla2x00t(%d): Unsupported ELS command %x "
-+			"received\n", vha->vp_idx, iocb->status_subcode);
-+		res = q2t_reset(vha, iocb, Q2T_NEXUS_LOSS_SESS);
-+		break;
-+	}
-+
-+	return res;
-+}
-+
-+static int q2t_cut_cmd_data_head(struct q2t_cmd *cmd, unsigned int offset)
-+{
-+	int res = 0;
-+	int cnt, first_sg, first_page = 0, first_page_offs = 0, i;
-+	unsigned int l;
-+	int cur_dst, cur_src;
-+	struct scatterlist *sg;
-+	size_t bufflen = 0;
-+
-+	first_sg = -1;
-+	cnt = 0;
-+	l = 0;
-+	for (i = 0; i < cmd->sg_cnt; i++) {
-+		l += cmd->sg[i].length;
-+		if (l > offset) {
-+			int sg_offs = l - cmd->sg[i].length;
-+			first_sg = i;
-+			if (cmd->sg[i].offset == 0) {
-+				first_page_offs = offset % PAGE_SIZE;
-+				first_page = (offset - sg_offs) >> PAGE_SHIFT;
-+			} else {
-+				TRACE_SG("i=%d, sg[i].offset=%d, "
-+					"sg_offs=%d", i, cmd->sg[i].offset, sg_offs);
-+				if ((cmd->sg[i].offset + sg_offs) > offset) {
-+					first_page_offs = offset - sg_offs;
-+					first_page = 0;
-+				} else {
-+					int sec_page_offs = sg_offs +
-+						(PAGE_SIZE - cmd->sg[i].offset);
-+					first_page_offs = sec_page_offs % PAGE_SIZE;
-+					first_page = 1 +
-+						((offset - sec_page_offs) >>
-+							PAGE_SHIFT);
-+				}
-+			}
-+			cnt = cmd->sg_cnt - i + (first_page_offs != 0);
-+			break;
-+		}
-+	}
-+	if (first_sg == -1) {
-+		printk(KERN_ERR "qla2x00t(%d): Wrong offset %d, buf length %d",
-+			cmd->vha->vp_idx, offset, cmd->bufflen);
++	op = simple_strtoul(page, &endptr, 0);
++	if ((op != 1) && (op != 0)) {
++		printk(KERN_ERR "Illegal value for tpg_enable: %u\n", op);
 +		return -EINVAL;
 +	}
 +
-+	TRACE_SG("offset=%d, first_sg=%d, first_page=%d, "
-+		"first_page_offs=%d, cmd->bufflen=%d, cmd->sg_cnt=%d", offset,
-+		first_sg, first_page, first_page_offs, cmd->bufflen,
-+		cmd->sg_cnt);
-+
-+	sg = kzalloc(cnt * sizeof(sg[0]), GFP_KERNEL);
-+	if (sg == NULL) {
-+		printk(KERN_ERR "qla2x00t(%d): Unable to allocate cut "
-+			"SG (len %zd)", cmd->vha->vp_idx,
-+			cnt * sizeof(sg[0]));
-+		return -ENOMEM;
-+	}
-+	sg_init_table(sg, cnt);
-+
-+	cur_dst = 0;
-+	cur_src = first_sg;
-+	if (first_page_offs != 0) {
-+		int fpgs;
-+		sg_set_page(&sg[cur_dst], &sg_page(&cmd->sg[cur_src])[first_page],
-+			PAGE_SIZE - first_page_offs, first_page_offs);
-+		bufflen += sg[cur_dst].length;
-+		TRACE_SG("cur_dst=%d, cur_src=%d, sg[].page=%p, "
-+			"sg[].offset=%d, sg[].length=%d, bufflen=%zu",
-+			cur_dst, cur_src, sg_page(&sg[cur_dst]), sg[cur_dst].offset,
-+			sg[cur_dst].length, bufflen);
-+		cur_dst++;
-+
-+		fpgs = (cmd->sg[cur_src].length >> PAGE_SHIFT) +
-+			((cmd->sg[cur_src].length & ~PAGE_MASK) != 0);
-+		first_page++;
-+		if (fpgs > first_page) {
-+			sg_set_page(&sg[cur_dst],
-+				&sg_page(&cmd->sg[cur_src])[first_page],
-+				cmd->sg[cur_src].length - PAGE_SIZE*first_page,
-+				0);
-+			TRACE_SG("fpgs=%d, cur_dst=%d, cur_src=%d, "
-+				"sg[].page=%p, sg[].length=%d, bufflen=%zu",
-+				fpgs, cur_dst, cur_src, sg_page(&sg[cur_dst]),
-+				sg[cur_dst].length, bufflen);
-+			bufflen += sg[cur_dst].length;
-+			cur_dst++;
-+		}
-+		cur_src++;
-+	}
-+
-+	while (cur_src < cmd->sg_cnt) {
-+		sg_set_page(&sg[cur_dst], sg_page(&cmd->sg[cur_src]),
-+			cmd->sg[cur_src].length, cmd->sg[cur_src].offset);
-+		TRACE_SG("cur_dst=%d, cur_src=%d, "
-+			"sg[].page=%p, sg[].length=%d, sg[].offset=%d, "
-+			"bufflen=%zu", cur_dst, cur_src, sg_page(&sg[cur_dst]),
-+			sg[cur_dst].length, sg[cur_dst].offset, bufflen);
-+		bufflen += sg[cur_dst].length;
-+		cur_dst++;
-+		cur_src++;
-+	}
-+
-+	if (cmd->free_sg)
-+		kfree(cmd->sg);
-+
-+	cmd->sg = sg;
-+	cmd->free_sg = 1;
-+	cmd->sg_cnt = cur_dst;
-+	cmd->bufflen = bufflen;
-+	cmd->offset += offset;
-+
-+	return res;
-+}
-+
-+static inline int q2t_srr_adjust_data(struct q2t_cmd *cmd,
-+	uint32_t srr_rel_offs, int *xmit_type)
-+{
-+	int res = 0;
-+	int rel_offs;
-+
-+	rel_offs = srr_rel_offs - cmd->offset;
-+	TRACE_MGMT_DBG("srr_rel_offs=%d, rel_offs=%d", srr_rel_offs, rel_offs);
-+
-+	*xmit_type = Q2T_XMIT_ALL;
-+
-+	if (rel_offs < 0) {
-+		printk(KERN_ERR "qla2x00t(%d): SRR rel_offs (%d) "
-+			"< 0", cmd->vha->vp_idx, rel_offs);
-+		res = -1;
-+	} else if (rel_offs == cmd->bufflen)
-+		*xmit_type = Q2T_XMIT_STATUS;
-+	else if (rel_offs > 0)
-+		res = q2t_cut_cmd_data_head(cmd, rel_offs);
-+
-+	return res;
-+}
-+
-+/* No locks, thread context */
-+#warning FIXME: q24_handle_srr
-+static void q24_handle_srr(scsi_qla_host_t *vha, struct srr_ctio *sctio,
-+	struct srr_imm *imm)
-+{
-+	notify24xx_entry_t *ntfy = &imm->imm.notify_entry24;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_cmd *cmd = sctio->cmd;
-+	struct se_cmd *se_cmd = &cmd->se_cmd;
-+
-+	TRACE_MGMT_DBG("SRR cmd %p, srr_ui %x\n", cmd, ntfy->srr_ui);
-+
-+	switch (ntfy->srr_ui) {
-+	case SRR_IU_STATUS:
-+		spin_lock_irq(&ha->hardware_lock);
-+		q24_send_notify_ack(vha, ntfy,
-+			NOTIFY_ACK_SRR_FLAGS_ACCEPT, 0, 0);
-+		spin_unlock_irq(&ha->hardware_lock);
-+		__q24_xmit_response(cmd, Q2T_XMIT_STATUS, se_cmd->scsi_status);
-+		break;
-+	case SRR_IU_DATA_IN:
-+#if 0
-+		cmd->bufflen = 0;
-+		if (q2t_has_data(cmd)) {
-+			uint32_t offset;
-+			int xmit_type;
-+			offset = le32_to_cpu(imm->imm.notify_entry24.srr_rel_offs);
-+			if (q2t_srr_adjust_data(cmd, offset, &xmit_type) != 0)
-+				goto out_reject;
-+			spin_lock_irq(&ha->hardware_lock);
-+			q24_send_notify_ack(vha, ntfy,
-+				NOTIFY_ACK_SRR_FLAGS_ACCEPT, 0, 0);
-+			spin_unlock_irq(&ha->hardware_lock);
-+			__q24_xmit_response(cmd, xmit_type, se_cmd->scsi_status);
-+		} else {
-+			printk(KERN_ERR "qla2x00t(%d): SRR for in data for cmd "
-+				"without them (tag %d, SCSI status %d), "
-+				"reject", vha->vp_idx, cmd->tag,
-+				cmd->se_cmd.scsi_status);
-+			goto out_reject;
-+		}
-+#else
-+		printk("q24 SRR_IU_DATA_IN, rejecting\n");
-+		dump_stack();
-+		goto out_reject;
-+#endif
-+		break;
-+	case SRR_IU_DATA_OUT:
-+#if 0
-+		cmd->bufflen = 0;
-+		cmd->sg = NULL;
-+		cmd->sg_cnt = 0;
-+		if (q2t_has_data(cmd)) {
-+			uint32_t offset;
-+			int xmit_type;
-+			offset = le32_to_cpu(imm->imm.notify_entry24.srr_rel_offs);
-+			if (q2t_srr_adjust_data(cmd, offset, &xmit_type) != 0)
-+				goto out_reject;
-+			spin_lock_irq(&ha->hardware_lock);
-+			q24_send_notify_ack(vha, ntfy,
-+				NOTIFY_ACK_SRR_FLAGS_ACCEPT, 0, 0);
-+			spin_unlock_irq(&ha->hardware_lock);
-+			if (xmit_type & Q2T_XMIT_DATA)
-+				__q2t_rdy_to_xfer(cmd);
-+		} else {
-+			printk(KERN_ERR "qla2x00t(%d): SRR for out data for cmd "
-+				"without them (tag %d, SCSI status %d), "
-+				"reject", vha->vp_idx, cmd->tag,
-+				cmd->se_cmd.scsi_status);
-+			goto out_reject;
-+		}
-+#else
-+		printk("q24 SRR_IU_DATA_OUT, rejecting\n");
-+		dump_stack();
-+		goto out_reject;
-+#endif
-+		break;
-+	default:
-+		printk(KERN_ERR "qla2x00t(%d): Unknown srr_ui value %x",
-+			vha->vp_idx, ntfy->srr_ui);
-+		goto out_reject;
-+	}
-+
-+	return;
-+
-+out_reject:
-+	spin_lock_irq(&ha->hardware_lock);
-+	q24_send_notify_ack(vha, ntfy, NOTIFY_ACK_SRR_FLAGS_REJECT,
-+		NOTIFY_ACK_SRR_REJECT_REASON_UNABLE_TO_PERFORM,
-+		NOTIFY_ACK_SRR_FLAGS_REJECT_EXPL_NO_EXPL);
-+	if (cmd->state == Q2T_STATE_NEED_DATA) {
-+		cmd->state = Q2T_STATE_DATA_IN;
-+		dump_stack();
-+	} else
-+		q24_send_term_exchange(vha, cmd, &cmd->atio.atio7, 1);
-+	spin_unlock_irq(&ha->hardware_lock);
-+}
-+
-+/* No locks, thread context */
-+static void q2x_handle_srr(scsi_qla_host_t *vha, struct srr_ctio *sctio,
-+	struct srr_imm *imm)
-+{
-+	notify_entry_t *ntfy = &imm->imm.notify_entry;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_cmd *cmd = sctio->cmd;
-+	struct se_cmd *se_cmd = &cmd->se_cmd;
-+
-+	TRACE_MGMT_DBG("SRR cmd %p, srr_ui %x\n", cmd, ntfy->srr_ui);
-+
-+	switch (ntfy->srr_ui) {
-+	case SRR_IU_STATUS:
-+		spin_lock_irq(&ha->hardware_lock);
-+		q2x_send_notify_ack(vha, ntfy, 0, 0, 0,
-+			NOTIFY_ACK_SRR_FLAGS_ACCEPT, 0, 0);
-+		spin_unlock_irq(&ha->hardware_lock);
-+		__q2x_xmit_response(cmd, Q2T_XMIT_STATUS, se_cmd->scsi_status);
-+		break;
-+	case SRR_IU_DATA_IN:
-+#if 0
-+		cmd->bufflen = 0;
-+		if (q2t_has_data(cmd)) {
-+			uint32_t offset;
-+			int xmit_type;
-+			offset = le32_to_cpu(imm->imm.notify_entry.srr_rel_offs);
-+			if (q2t_srr_adjust_data(cmd, offset, &xmit_type) != 0)
-+				goto out_reject;
-+			spin_lock_irq(&ha->hardware_lock);
-+			q2x_send_notify_ack(vha, ntfy, 0, 0, 0,
-+				NOTIFY_ACK_SRR_FLAGS_ACCEPT, 0, 0);
-+			spin_unlock_irq(&ha->hardware_lock);
-+			__q2x_xmit_response(cmd, xmit_type);
-+		} else {
-+			printk(KERN_ERR "qla2x00t(%d): SRR for in data for cmd "
-+				"without them (tag %d, SCSI status %d), "
-+				"reject", vha->vp_idx, cmd->tag,
-+				cmd->se_cmd.scsi_status);
-+			goto out_reject;
-+		}
-+#else
-+		printk("q2x SRR_IU_DATA_IN:\n");
-+		dump_stack();
-+#endif
-+		break;
-+	case SRR_IU_DATA_OUT:
-+#if 0
-+		cmd->bufflen = 0;
-+		cmd->sg = NULL;
-+		cmd->sg_cnt = 0;
-+		if (q2t_has_data(cmd)) {
-+			uint32_t offset;
-+			int xmit_type;
-+			offset = le32_to_cpu(imm->imm.notify_entry.srr_rel_offs);
-+			if (q2t_srr_adjust_data(cmd, offset, &xmit_type) != 0)
-+				goto out_reject;
-+			spin_lock_irq(&ha->hardware_lock);
-+			q2x_send_notify_ack(vha, ntfy, 0, 0, 0,
-+				NOTIFY_ACK_SRR_FLAGS_ACCEPT, 0, 0);
-+			spin_unlock_irq(&ha->hardware_lock);
-+			if (xmit_type & Q2T_XMIT_DATA)
-+				__q2t_rdy_to_xfer(cmd);
-+		} else {
-+			printk(KERN_ERR "qla2x00t(%d): SRR for out data for cmd "
-+				"without them (tag %d, SCSI status %d), "
-+				"reject", vha->vp_idx, cmd->tag,
-+				cmd->se_cmd.scsi_status);
-+			goto out_reject;
-+		}
-+#else
-+		printk("q2x SRR_IU_DATA_OUT:\n");
-+		dump_stack();
-+#endif
-+		break;
-+	default:
-+		printk(KERN_ERR "qla2x00t(%d): Unknown srr_ui value %x",
-+			vha->vp_idx, ntfy->srr_ui);
-+		goto out_reject;
-+	}
-+
-+	return;
-+
-+out_reject:
-+	spin_lock_irq(&ha->hardware_lock);
-+	q2x_send_notify_ack(vha, ntfy, 0, 0, 0, NOTIFY_ACK_SRR_FLAGS_REJECT,
-+		NOTIFY_ACK_SRR_REJECT_REASON_UNABLE_TO_PERFORM,
-+		NOTIFY_ACK_SRR_FLAGS_REJECT_EXPL_NO_EXPL);
-+	if (cmd->state == Q2T_STATE_NEED_DATA) {
-+		cmd->state = Q2T_STATE_DATA_IN;
-+		dump_stack();
-+	} else
-+		q2x_send_term_exchange(vha, cmd, &cmd->atio.atio2x, 1);
-+	spin_unlock_irq(&ha->hardware_lock);
-+}
-+
-+static void q2t_reject_free_srr_imm(scsi_qla_host_t *vha, struct srr_imm *imm,
-+	int ha_locked)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	if (!ha_locked)
-+		spin_lock_irq(&ha->hardware_lock);
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		q24_send_notify_ack(vha, &imm->imm.notify_entry24,
-+			NOTIFY_ACK_SRR_FLAGS_REJECT,
-+			NOTIFY_ACK_SRR_REJECT_REASON_UNABLE_TO_PERFORM,
-+			NOTIFY_ACK_SRR_FLAGS_REJECT_EXPL_NO_EXPL);
++	if (op) {
++		atomic_set(&tpg->lport_tpg_enabled, 1);
++		qla2x00_enable_tgt_mode(vha);
 +	} else {
-+		q2x_send_notify_ack(vha, &imm->imm.notify_entry,
-+			0, 0, 0, NOTIFY_ACK_SRR_FLAGS_REJECT,
-+			NOTIFY_ACK_SRR_REJECT_REASON_UNABLE_TO_PERFORM,
-+			NOTIFY_ACK_SRR_FLAGS_REJECT_EXPL_NO_EXPL);
++		if (!ha->q2t_tgt) {
++			printk(KERN_ERR "truct qla_hw_data *ha->q2t_tgt is NULL\n");
++			return -ENODEV;
++		}
++		atomic_set(&tpg->lport_tpg_enabled, 0);
++		q2t_target_stop(ha->q2t_tgt);
 +	}
 +
-+	if (!ha_locked)
-+		spin_unlock_irq(&ha->hardware_lock);
-+
-+	kfree(imm);
++	return count;
 +}
 +
-+#warning FIXME: q2t_handle_srr_work()
-+static void q2t_handle_srr_work(struct work_struct *work)
++TF_TPG_BASE_ATTR(tcm_qla2xxx, enable, S_IRUGO | S_IWUSR);
++
++static struct configfs_attribute *tcm_qla2xxx_tpg_attrs[] = {
++	&tcm_qla2xxx_tpg_enable.attr,
++	NULL,
++};
++
++static struct se_portal_group *tcm_qla2xxx_make_tpg(
++	struct se_wwn *wwn,
++	struct config_group *group,
++	const char *name)
 +{
-+	struct q2t_tgt *tgt = container_of(work, struct q2t_tgt, srr_work);
-+	scsi_qla_host_t *vha = NULL;
-+	struct qla_hw_data *ha = tgt->ha;
-+	struct srr_ctio *sctio;
++	struct tcm_qla2xxx_lport *lport = container_of(wwn,
++			struct tcm_qla2xxx_lport, lport_wwn);
++	struct tcm_qla2xxx_tpg *tpg;
++	unsigned long tpgt;
++	int ret;
 +
-+	TRACE_MGMT_DBG("Entering SRR work (tgt %p)\n", tgt);
++	if (strstr(name, "tpgt_") != name)
++		return ERR_PTR(-EINVAL);
++	if (strict_strtoul(name + 5, 10, &tpgt) || tpgt > USHRT_MAX)
++		return ERR_PTR(-EINVAL);
 +
-+restart:
-+	spin_lock_irq(&tgt->srr_lock);
-+	list_for_each_entry(sctio, &tgt->srr_ctio_list, srr_list_entry) {
-+		struct srr_imm *imm, *i, *ti;
-+		struct q2t_cmd *cmd;
-+		struct se_cmd *se_cmd;
++	if ((lport->qla_npiv_vp == NULL) && (tpgt != 1)) {
++		printk(KERN_ERR "In non NPIV mode, a single TPG=1 is used for"
++			" HW port mappings\n");
++		return ERR_PTR(-ENOSYS);
++	}
 +
-+		imm = NULL;
-+		list_for_each_entry_safe(i, ti, &tgt->srr_imm_list,
-+						srr_list_entry) {
-+			if (i->srr_id == sctio->srr_id) {
-+				list_del(&i->srr_list_entry);
-+				if (imm) {
-+					printk(KERN_ERR "qla2x00t(%d): There must "
-+					  "be only one IMM SRR per CTIO SRR "
-+					  "(IMM SRR %p, id %d, CTIO %p\n",
-+					  vha->vp_idx, i, i->srr_id, sctio);
-+					q2t_reject_free_srr_imm(vha, i, 0);
-+				} else
-+					imm = i;
-+			}
-+		}
++	tpg = kzalloc(sizeof(struct tcm_qla2xxx_tpg), GFP_KERNEL);
++	if (!(tpg)) {
++		printk(KERN_ERR "Unable to allocate struct tcm_qla2xxx_tpg\n");
++		return ERR_PTR(-ENOMEM);
++	}
++	tpg->lport = lport;
++	tpg->lport_tpgt = tpgt;
 +
-+		TRACE_MGMT_DBG("IMM SRR %p, CTIO SRR %p (id %d)\n", imm, sctio,
-+			sctio->srr_id);
++	ret = core_tpg_register(&tcm_qla2xxx_fabric_configfs->tf_ops, wwn,
++				&tpg->se_tpg, (void *)tpg,
++				TRANSPORT_TPG_TYPE_NORMAL);
++	if (ret < 0) {
++		kfree(tpg);
++		return NULL;
++	}
++	/*
++	 * Setup local TPG=1 pointer for non NPIV mode.
++	 */
++	if (lport->qla_npiv_vp == NULL)
++		lport->tpg_1 = tpg;
 +
-+		if (imm == NULL) {
-+			TRACE_MGMT_DBG("Not found matching IMM for SRR CTIO "
-+				"(id %d)\n", sctio->srr_id);
-+			continue;
-+		} else
-+			list_del(&sctio->srr_list_entry);
++	return &tpg->se_tpg;
++}
 +
-+		spin_unlock_irq(&tgt->srr_lock);
++static void tcm_qla2xxx_drop_tpg(struct se_portal_group *se_tpg)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++			struct tcm_qla2xxx_tpg, se_tpg);
++	struct tcm_qla2xxx_lport *lport = tpg->lport;
 +
-+		cmd = sctio->cmd;
-+		vha = cmd->vha;
-+#if 0
-+		/* Restore the originals, except bufflen */
-+		cmd->offset = 0;
-+		if (cmd->free_sg) {
-+			kfree(cmd->sg);
-+			cmd->free_sg = 0;
-+		}
-+		cmd->sg = NULL;
-+		cmd->sg_cnt = 0;
++	core_tpg_deregister(se_tpg);
++	/*
++	 * Clear local TPG=1 pointer for non NPIV mode.
++	 */
++	if (lport->qla_npiv_vp == NULL)
++		lport->tpg_1 = NULL;
 +
-+		se_cmd = &cmd->se_cmd;
++	kfree(tpg);
++}
 +
-+		TRACE_MGMT_DBG("SRR cmd %p (se_cmd %p, tag %d, op %x), "
-+			"sg_cnt=%d, offset=%d", cmd, &cmd->se_cmd,
-+			cmd->tag, T_TASK(se_cmd)->t_task_cdb[0], cmd->sg_cnt,
-+			cmd->offset);
-+#else
++static struct se_portal_group *tcm_qla2xxx_npiv_make_tpg(
++	struct se_wwn *wwn,
++	struct config_group *group,
++	const char *name)
++{
++	struct tcm_qla2xxx_lport *lport = container_of(wwn,
++			struct tcm_qla2xxx_lport, lport_wwn);
++	struct tcm_qla2xxx_tpg *tpg;
++	unsigned long tpgt;
++	int ret;
++
++	if (strstr(name, "tpgt_") != name)
++		return ERR_PTR(-EINVAL);
++	if (strict_strtoul(name + 5, 10, &tpgt) || tpgt > USHRT_MAX)
++		return ERR_PTR(-EINVAL);
++
++	tpg = kzalloc(sizeof(struct tcm_qla2xxx_tpg), GFP_KERNEL);
++	if (!(tpg)) {
++		printk(KERN_ERR "Unable to allocate struct tcm_qla2xxx_tpg\n");
++		return ERR_PTR(-ENOMEM);
++	}
++	tpg->lport = lport;
++	tpg->lport_tpgt = tpgt;
++
++	ret = core_tpg_register(&tcm_qla2xxx_npiv_fabric_configfs->tf_ops, wwn,
++				&tpg->se_tpg, (void *)tpg,
++				TRANSPORT_TPG_TYPE_NORMAL);
++	if (ret < 0) {
++		kfree(tpg);
++		return NULL;
++	}
++	return &tpg->se_tpg;
++}
++
++static struct q2t_sess *tcm_qla2xxx_find_sess_by_s_id(
++	scsi_qla_host_t *vha,
++	const uint8_t *s_id)
++{
++	struct qla_hw_data *ha = vha->hw;
++	struct tcm_qla2xxx_lport *lport;
++	struct se_node_acl *se_nacl;
++	struct tcm_qla2xxx_nacl *nacl;
++	struct tcm_qla2xxx_fc_domain *d;
++	struct tcm_qla2xxx_fc_area *a;
++	struct tcm_qla2xxx_fc_al_pa *p;
++	unsigned char domain, area, al_pa;
++
++	lport = (struct tcm_qla2xxx_lport *)ha->target_lport_ptr;
++	if (!lport) {
++		printk(KERN_ERR "Unable to locate struct tcm_qla2xxx_lport\n");
 +		dump_stack();
-+#endif
-+		if (IS_FWI2_CAPABLE(ha))
-+			q24_handle_srr(vha, sctio, imm);
-+		else
-+			q2x_handle_srr(vha, sctio, imm);
-+
-+		kfree(imm);
-+		kfree(sctio);
-+		goto restart;
++		return NULL;
 +	}
-+	spin_unlock_irq(&tgt->srr_lock);
++
++	domain = s_id[0];
++	area = s_id[1];
++	al_pa = s_id[2];
++
++	DEBUG_Q2T_SESS_MAP("find_sess_by_s_id: 0x%02x area: 0x%02x al_pa: %02x\n",
++			domain, area, al_pa);
++
++	d = (struct tcm_qla2xxx_fc_domain *)&lport->lport_fcport_map[domain];
++	DEBUG_Q2T_SESS_MAP("Using d: %p for domain: 0x%02x\n", d, domain);
++	a = &d->areas[area];
++	DEBUG_Q2T_SESS_MAP("Using a: %p for area: 0x%02x\n", a, area);
++	p = &a->al_pas[al_pa];
++	DEBUG_Q2T_SESS_MAP("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
++
++	se_nacl = p->se_nacl;
++	if (!se_nacl) {
++		printk(KERN_ERR "Unable to locate s_id: 0x%02x area: 0x%02x"
++			" al_pa: %02x\n", domain, area, al_pa);
++		return NULL;
++	}
++	DEBUG_Q2T_SESS_MAP("find_sess_by_s_id: located se_nacl: %p,"
++		" initiatorname: %s\n", se_nacl, se_nacl->initiatorname);
++
++	nacl = container_of(se_nacl, struct tcm_qla2xxx_nacl, se_node_acl);
++	if (!nacl->q2t_sess) {
++		printk(KERN_ERR "Unable to locate struct q2t_sess\n");
++		return NULL;
++	}
++
++	return nacl->q2t_sess;
 +}
 +
-+/* ha->hardware_lock supposed to be held on entry */
-+static void q2t_prepare_srr_imm(scsi_qla_host_t *vha, void *iocb)
++static void tcm_qla2xxx_set_sess_by_s_id(
++	struct tcm_qla2xxx_lport *lport,
++	struct se_node_acl *new_se_nacl,
++	struct tcm_qla2xxx_nacl *nacl,
++	struct se_session *se_sess,
++	struct q2t_sess *q2t_sess,
++	uint8_t *s_id)
 +{
-+	struct srr_imm *imm;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = ha->q2t_tgt;
-+	notify_entry_t *iocb2x = (notify_entry_t *)iocb;
-+	notify24xx_entry_t *iocb24 = (notify24xx_entry_t *)iocb;
-+	struct srr_ctio *sctio;
++	struct se_node_acl *saved_nacl;
++	struct tcm_qla2xxx_fc_domain *d;
++	struct tcm_qla2xxx_fc_area *a;
++	struct tcm_qla2xxx_fc_al_pa *p;
++	unsigned char domain, area, al_pa;
 +
-+	tgt->imm_srr_id++;
++	domain = s_id[0];
++	area = s_id[1];
++	al_pa = s_id[2];
++	DEBUG_Q2T_SESS_MAP("set_sess_by_s_id: domain 0x%02x area: 0x%02x al_pa: %02x\n",
++			domain, area, al_pa);
 +
-+	TRACE_MGMT_DBG("qla2x00t(%d): SRR received\n", vha->vp_idx);
++	d = (struct tcm_qla2xxx_fc_domain *)&lport->lport_fcport_map[domain];
++	DEBUG_Q2T_SESS_MAP("Using d: %p for domain: 0x%02x\n", d, domain);
++	a = &d->areas[area];
++	DEBUG_Q2T_SESS_MAP("Using a: %p for area: 0x%02x\n", a, area);
++	p = &a->al_pas[al_pa];
++	DEBUG_Q2T_SESS_MAP("Using p: %p for al_pa: 0x%02x\n", p, al_pa);
 +
-+	imm = kzalloc(sizeof(*imm), GFP_ATOMIC);
-+	if (imm != NULL) {
-+		memcpy(&imm->imm.notify_entry, iocb,
-+			sizeof(imm->imm.notify_entry));
-+
-+		/* IRQ is already OFF */
-+		spin_lock(&tgt->srr_lock);
-+		imm->srr_id = tgt->imm_srr_id;
-+		list_add_tail(&imm->srr_list_entry,
-+			&tgt->srr_imm_list);
-+		TRACE_MGMT_DBG("IMM NTFY SRR %p added (id %d, ui %x)\n", imm,
-+			imm->srr_id, iocb24->srr_ui);
-+		if (tgt->imm_srr_id == tgt->ctio_srr_id) {
-+			int found = 0;
-+			list_for_each_entry(sctio, &tgt->srr_ctio_list,
-+					srr_list_entry) {
-+				if (sctio->srr_id == imm->srr_id) {
-+					found = 1;
-+					break;
-+				}
-+			}
-+			if (found) {
-+				TRACE_MGMT_DBG("%s", "Scheduling srr work\n");
-+				schedule_work(&tgt->srr_work);
-+			} else {
-+				TRACE_MGMT_DBG("qla2x00t(%d): imm_srr_id "
-+					"== ctio_srr_id (%d), but there is no "
-+					"corresponding SRR CTIO, deleting IMM "
-+					"SRR %p\n", vha->vp_idx, tgt->ctio_srr_id,
-+					imm);
-+				list_del(&imm->srr_list_entry);
-+
-+				kfree(imm);
-+
-+				spin_unlock(&tgt->srr_lock);
-+				goto out_reject;
-+			}
-+		}
-+		spin_unlock(&tgt->srr_lock);
-+	} else {
-+		struct srr_ctio *ts;
-+
-+		printk(KERN_ERR "qla2x00t(%d): Unable to allocate SRR IMM "
-+			"entry, SRR request will be rejected\n", vha->vp_idx);
-+
-+		/* IRQ is already OFF */
-+		spin_lock(&tgt->srr_lock);
-+		list_for_each_entry_safe(sctio, ts, &tgt->srr_ctio_list,
-+					srr_list_entry) {
-+			if (sctio->srr_id == tgt->imm_srr_id) {
-+				TRACE_MGMT_DBG("CTIO SRR %p deleted "
-+					"(id %d)\n", sctio, sctio->srr_id);
-+				list_del(&sctio->srr_list_entry);
-+				if (IS_FWI2_CAPABLE(ha)) {
-+					q24_send_term_exchange(vha, sctio->cmd,
-+						&sctio->cmd->atio.atio7, 1);
-+				} else {
-+					q2x_send_term_exchange(vha, sctio->cmd,
-+						&sctio->cmd->atio.atio2x, 1);
-+				}
-+				kfree(sctio);
-+			}
-+		}
-+		spin_unlock(&tgt->srr_lock);
-+		goto out_reject;
-+	}
-+
-+	return;
-+
-+out_reject:
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		q24_send_notify_ack(vha, iocb24,
-+			NOTIFY_ACK_SRR_FLAGS_REJECT,
-+			NOTIFY_ACK_SRR_REJECT_REASON_UNABLE_TO_PERFORM,
-+			NOTIFY_ACK_SRR_FLAGS_REJECT_EXPL_NO_EXPL);
-+	} else {
-+		q2x_send_notify_ack(vha, iocb2x,
-+			0, 0, 0, NOTIFY_ACK_SRR_FLAGS_REJECT,
-+			NOTIFY_ACK_SRR_REJECT_REASON_UNABLE_TO_PERFORM,
-+			NOTIFY_ACK_SRR_FLAGS_REJECT_EXPL_NO_EXPL);
-+	}
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q2t_handle_imm_notify(scsi_qla_host_t *vha, void *iocb)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	notify_entry_t *iocb2x = (notify_entry_t *)iocb;
-+	notify24xx_entry_t *iocb24 = (notify24xx_entry_t *)iocb;
-+	uint32_t add_flags = 0;
-+	int send_notify_ack = 1;
-+	uint16_t status;
-+
-+	status = le16_to_cpu(iocb2x->status);
-+	TRACE_BUFFER("IMMED Notify Coming Up",
-+		iocb, sizeof(*iocb2x));
-+
-+	switch (status) {
-+	case IMM_NTFY_LIP_RESET:
-+	{
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			TRACE_MGMT_DBG("qla2x00t(%d): LIP reset (loop %#x), "
-+				"subcode %x\n", vha->vp_idx,
-+				le16_to_cpu(iocb24->nport_handle),
-+				iocb24->status_subcode);
-+		} else {
-+			TRACE_MGMT_DBG("qla2x00t(%d): LIP reset (I %#x)\n",
-+				vha->vp_idx, GET_TARGET_ID(ha, iocb2x));
-+			/* set the Clear LIP reset event flag */
-+			add_flags |= NOTIFY_ACK_CLEAR_LIP_RESET;
-+		}
-+		if (q2t_reset(vha, iocb, Q2T_ABORT_ALL) == 0)
-+			send_notify_ack = 0;
-+		break;
-+	}
-+
-+	case IMM_NTFY_LIP_LINK_REINIT:
-+	{
-+		struct q2t_tgt *tgt = ha->q2t_tgt;
-+		TRACE_MGMT_DBG("qla2x00t(%d): LINK REINIT (loop %#x, "
-+			"subcode %x)\n", vha->vp_idx,
-+			le16_to_cpu(iocb24->nport_handle),
-+			iocb24->status_subcode);
-+		if (tgt->link_reinit_iocb_pending)
-+			q24_send_notify_ack(vha, &tgt->link_reinit_iocb, 0, 0, 0);
-+		memcpy(&tgt->link_reinit_iocb, iocb24, sizeof(*iocb24));
-+		tgt->link_reinit_iocb_pending = 1;
-+		/*
-+		 * QLogic requires to wait after LINK REINIT for possible
-+		 * PDISC or ADISC ELS commands
-+		 */
-+		send_notify_ack = 0;
-+		break;
-+	}
-+
-+	case IMM_NTFY_PORT_LOGOUT:
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			TRACE_MGMT_DBG("qla2x00t(%d): Port logout (loop "
-+				"%#x, subcode %x)\n", vha->vp_idx,
-+				le16_to_cpu(iocb24->nport_handle),
-+				iocb24->status_subcode);
-+		} else {
-+			TRACE_MGMT_DBG("qla2x00t(%d): Port logout (S "
-+				"%08x -> L %#x)\n", vha->vp_idx,
-+				le16_to_cpu(iocb2x->seq_id),
-+				le16_to_cpu(iocb2x->lun));
-+		}
-+		if (q2t_reset(vha, iocb, Q2T_NEXUS_LOSS_SESS) == 0)
-+			send_notify_ack = 0;
-+		/* The sessions will be cleared in the callback, if needed */
-+		break;
-+
-+	case IMM_NTFY_GLBL_TPRLO:
-+		TRACE_MGMT_DBG("qla2x00t(%d): Global TPRLO (%x)\n",
-+			vha->vp_idx, status);
-+		if (q2t_reset(vha, iocb, Q2T_NEXUS_LOSS) == 0)
-+			send_notify_ack = 0;
-+		/* The sessions will be cleared in the callback, if needed */
-+		break;
-+
-+	case IMM_NTFY_PORT_CONFIG:
-+		TRACE_MGMT_DBG("qla2x00t(%d): Port config changed (%x)\n",
-+			vha->vp_idx, status);
-+		if (q2t_reset(vha, iocb, Q2T_ABORT_ALL) == 0)
-+			send_notify_ack = 0;
-+		/* The sessions will be cleared in the callback, if needed */
-+		break;
-+
-+	case IMM_NTFY_GLBL_LOGO:
-+		printk(KERN_WARNING "qla2x00t(%d): Link failure detected\n",
-+			vha->vp_idx);
-+		/* I_T nexus loss */
-+		if (q2t_reset(vha, iocb, Q2T_NEXUS_LOSS) == 0)
-+			send_notify_ack = 0;
-+		break;
-+
-+	case IMM_NTFY_IOCB_OVERFLOW:
-+		printk(KERN_ERR "qla2x00t(%d): Cannot provide requested "
-+			"capability (IOCB overflowed the immediate notify "
-+			"resource count)\n", vha->vp_idx);
-+		break;
-+
-+	case IMM_NTFY_ABORT_TASK:
-+		TRACE_MGMT_DBG("qla2x00t(%d): Abort Task (S %08x I %#x -> "
-+			"L %#x)\n", vha->vp_idx, le16_to_cpu(iocb2x->seq_id),
-+			GET_TARGET_ID(ha, iocb2x), le16_to_cpu(iocb2x->lun));
-+		if (q2t_abort_task(vha, iocb2x) == 0)
-+			send_notify_ack = 0;
-+		break;
-+
-+	case IMM_NTFY_RESOURCE:
-+		printk(KERN_ERR "qla2x00t(%d): Out of resources, host %ld\n",
-+			    vha->vp_idx, vha->host_no);
-+		break;
-+
-+	case IMM_NTFY_MSG_RX:
-+		TRACE_MGMT_DBG("qla2x00t(%d): Immediate notify task %x\n",
-+			vha->vp_idx, iocb2x->task_flags);
-+		if (q2t_handle_task_mgmt(vha, iocb2x) == 0)
-+			send_notify_ack = 0;
-+		break;
-+
-+	case IMM_NTFY_ELS:
-+		if (q24_handle_els(vha, iocb24) == 0)
-+			send_notify_ack = 0;
-+		break;
-+
-+	case IMM_NTFY_SRR:
-+		q2t_prepare_srr_imm(vha, iocb);
-+		send_notify_ack = 0;
-+		break;
-+
-+	default:
-+		printk(KERN_ERR "qla2x00t(%d): Received unknown immediate "
-+			"notify status %x\n", vha->vp_idx, status);
-+		break;
-+	}
-+
-+	if (send_notify_ack) {
-+		if (IS_FWI2_CAPABLE(ha))
-+			q24_send_notify_ack(vha, iocb24, 0, 0, 0);
-+		else
-+			q2x_send_notify_ack(vha, iocb2x, add_flags, 0, 0, 0,
-+				0, 0);
-+	}
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q2x_send_busy(scsi_qla_host_t *vha, atio_entry_t *atio)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	ctio_ret_entry_t *ctio;
-+
-+	/* Sending marker isn't necessary, since we called from ISR */
-+
-+	ctio = (ctio_ret_entry_t *)q2t_req_pkt(vha);
-+	if (!ctio) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet", vha->vp_idx, __func__);
++	saved_nacl = p->se_nacl;
++	if (!saved_nacl) {
++		DEBUG_Q2T_SESS_MAP("Setting up new p->se_nacl to new_se_nacl\n");
++		p->se_nacl = new_se_nacl;
++		q2t_sess->se_sess = se_sess;
++		nacl->q2t_sess = q2t_sess;
 +		return;
 +	}
 +
-+	ctio->entry_type = CTIO_RET_TYPE;
-+	ctio->entry_count = 1;
-+	ctio->handle = Q2T_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
-+	ctio->scsi_status = __constant_cpu_to_le16(SAM_STAT_BUSY);
-+	ctio->residual = atio->data_length;
-+	if (ctio->residual != 0)
-+		ctio->scsi_status |= SS_RESIDUAL_UNDER;
-+
-+	/* Set IDs */
-+	SET_TARGET_ID(ha, ctio->target, GET_TARGET_ID(ha, atio));
-+	ctio->rx_id = atio->rx_id;
-+
-+	ctio->flags = __constant_cpu_to_le16(OF_SSTS | OF_FAST_POST |
-+				  OF_NO_DATA | OF_SS_MODE_1);
-+	ctio->flags |= __constant_cpu_to_le16(OF_INC_RC);
-+	/*
-+	 * CTIO from fw w/o se_cmd doesn't provide enough info to retry it,
-+	 * if the explicit conformation is used.
-+	 */
-+
-+	TRACE_BUFFER("CTIO BUSY packet data", ctio, REQUEST_ENTRY_SIZE);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+static void q24_send_busy(scsi_qla_host_t *vha, atio7_entry_t *atio,
-+	uint16_t status)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	ctio7_status1_entry_t *ctio;
-+	struct q2t_sess *sess;
-+
-+	sess = ha->qla2x_tmpl->find_sess_by_s_id(vha, atio->fcp_hdr.s_id);
-+	if (!sess) {
-+		q24_send_term_exchange(vha, NULL, atio, 1);
-+		return;
-+	}
-+
-+	/* Sending marker isn't necessary, since we called from ISR */
-+
-+	ctio = (ctio7_status1_entry_t *)q2t_req_pkt(vha);
-+	if (!ctio) {
-+		printk(KERN_ERR "qla2x00t(%d): %s failed: unable to allocate "
-+			"request packet", vha->vp_idx, __func__);
-+		return;
-+	}
-+
-+	ctio->common.entry_type = CTIO_TYPE7;
-+	ctio->common.entry_count = 1;
-+	ctio->common.handle = Q2T_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
-+	ctio->common.nport_handle = sess->loop_id;
-+	ctio->common.timeout = __constant_cpu_to_le16(Q2T_TIMEOUT);
-+	ctio->common.vp_index = vha->vp_idx;
-+	ctio->common.initiator_id[0] = atio->fcp_hdr.s_id[2];
-+	ctio->common.initiator_id[1] = atio->fcp_hdr.s_id[1];
-+	ctio->common.initiator_id[2] = atio->fcp_hdr.s_id[0];
-+	ctio->common.exchange_addr = atio->exchange_addr;
-+	ctio->flags = (atio->attr << 9) | __constant_cpu_to_le16(
-+		CTIO7_FLAGS_STATUS_MODE_1 | CTIO7_FLAGS_SEND_STATUS |
-+		CTIO7_FLAGS_DONT_RET_CTIO);
-+	/*
-+	 * CTIO from fw w/o se_cmd doesn't provide enough info to retry it,
-+	 * if the explicit conformation is used.
-+	 */
-+	ctio->ox_id = swab16(atio->fcp_hdr.ox_id);
-+	ctio->scsi_status = cpu_to_le16(status);
-+	ctio->residual = get_unaligned((uint32_t *)
-+			&atio->fcp_cmnd.add_cdb[atio->fcp_cmnd.add_cdb_len]);
-+	if (ctio->residual != 0)
-+		ctio->scsi_status |= SS_RESIDUAL_UNDER;
-+
-+	TRACE_BUFFER("CTIO7 BUSY packet data", ctio, REQUEST_ENTRY_SIZE);
-+
-+	qla2x00_isp_cmd(vha, vha->req);
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+/* called via callback from qla2xxx */
-+static void q24_atio_pkt(scsi_qla_host_t *vha, atio7_entry_t *atio)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = ha->q2t_tgt;
-+	int rc;
-+
-+	if (unlikely(tgt == NULL)) {
-+		TRACE_MGMT_DBG("ATIO pkt, but no tgt (ha %p)", ha);
-+		return;
-+	}
-+
-+	TRACE_SCSI("qla2x00t(%d): ATIO pkt %p: type %02x count %02x",
-+	      vha->vp_idx, atio, atio->entry_type, atio->entry_count);
-+
-+	/*
-+	 * In tgt_stop mode we also should allow all requests to pass.
-+	 * Otherwise, some commands can stuck.
-+	 */
-+
-+	tgt->irq_cmd_count++;
-+
-+	switch (atio->entry_type) {
-+	case ATIO_TYPE7:
-+		TRACE_DBG("ATIO_TYPE7 instance %d, lun %Lx, read/write %d/%d, "
-+			"add_cdb_len %d, data_length %04x, s_id %x:%x:%x\n",
-+			vha->vp_idx, atio->fcp_cmnd.lun, atio->fcp_cmnd.rddata,
-+			atio->fcp_cmnd.wrdata, atio->fcp_cmnd.add_cdb_len,
-+			be32_to_cpu(get_unaligned((uint32_t *)
-+				&atio->fcp_cmnd.add_cdb[atio->fcp_cmnd.add_cdb_len])),
-+			atio->fcp_hdr.s_id[0], atio->fcp_hdr.s_id[1],
-+			atio->fcp_hdr.s_id[2]);
-+		TRACE_BUFFER("Incoming ATIO7 packet data", atio,
-+			REQUEST_ENTRY_SIZE);
-+#if 0
-+		TRACE_SCSI("FCP CDB", atio->fcp_cmnd.cdb,
-+				sizeof(atio->fcp_cmnd.cdb));
-+#endif
-+		if (unlikely(atio->exchange_addr ==
-+				ATIO_EXCHANGE_ADDRESS_UNKNOWN)) {
-+			printk(KERN_INFO "qla2x00t(%d): ATIO_TYPE7 "
-+				"received with UNKNOWN exchange address, "
-+				"sending QUEUE_FULL\n", vha->vp_idx);
-+			q24_send_busy(vha, atio, SAM_STAT_TASK_SET_FULL);
-+			break;
-+		}
-+		if (likely(atio->fcp_cmnd.task_mgmt_flags == 0))
-+			rc = q2t_handle_cmd_for_atio(vha, (atio_t *)atio);
-+		else
-+			rc = q2t_handle_task_mgmt(vha, atio);
-+		if (unlikely(rc != 0)) {
-+			if (rc == -ESRCH) {
-+#if 1 /* With TERM EXCHANGE some FC cards refuse to boot */
-+				q24_send_busy(vha, atio, SAM_STAT_BUSY);
-+#else
-+				q24_send_term_exchange(vha, NULL, atio, 1);
-+#endif
-+			} else {
-+				printk(KERN_INFO "qla2x00t(%d): Unable to send "
-+				   "command to target, sending BUSY status\n",
-+				   vha->vp_idx);
-+				q24_send_busy(vha, atio, SAM_STAT_BUSY);
-+			}
-+		}
-+		break;
-+
-+	case IMMED_NOTIFY_TYPE:
-+	{
-+		notify_entry_t *pkt = (notify_entry_t *)atio;
-+		if (unlikely(pkt->entry_status != 0)) {
-+			printk(KERN_ERR "qla2x00t(%d): Received ATIO packet %x "
-+				"with error status %x\n", vha->vp_idx,
-+				pkt->entry_type, pkt->entry_status);
-+			break;
-+		}
-+		TRACE_DBG("%s", "IMMED_NOTIFY ATIO");
-+		q2t_handle_imm_notify(vha, pkt);
-+		break;
-+	}
-+
-+	default:
-+		printk(KERN_ERR "qla2x00t(%d): Received unknown ATIO atio "
-+		     "type %x\n", vha->vp_idx, atio->entry_type);
-+		break;
-+	}
-+
-+	tgt->irq_cmd_count--;
-+}
-+
-+/* ha->hardware_lock supposed to be held on entry */
-+/* called via callback from qla2xxx */
-+static void q2t_response_pkt(scsi_qla_host_t *vha, response_t *pkt)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = ha->q2t_tgt;
-+
-+	if (unlikely(tgt == NULL)) {
-+		printk(KERN_ERR "qla2x00t(%d): Response pkt %x received, but no "
-+			"tgt (ha %p)\n", vha->vp_idx, pkt->entry_type, ha);
-+		return;
-+	}
-+
-+	TRACE_SCSI("qla2x00t(%d): response pkt %p: T %02x C %02x S %02x "
-+		"handle %#x\n", vha->vp_idx, pkt, pkt->entry_type,
-+		pkt->entry_count, pkt->entry_status, pkt->handle);
-+
-+	/*
-+	 * In tgt_stop mode we also should allow all requests to pass.
-+	 * Otherwise, some commands can stuck.
-+	 */
-+
-+	if (unlikely(pkt->entry_status != 0)) {
-+		printk(KERN_ERR "qla2x00t(%d): Received response packet %x "
-+		     "with error status %x\n", vha->vp_idx, pkt->entry_type,
-+		     pkt->entry_status);
-+		switch (pkt->entry_type) {
-+		case ACCEPT_TGT_IO_TYPE:
-+		case IMMED_NOTIFY_TYPE:
-+		case ABTS_RECV_24XX:
++	if (nacl->q2t_sess) {
++		if (new_se_nacl == NULL) {
++			DEBUG_Q2T_SESS_MAP("Clearing existing nacl->q2t_sess"
++					" and p->se_nacl\n");
++			p->se_nacl = NULL;
++			nacl->q2t_sess = NULL;
 +			return;
-+		default:
-+			break;
 +		}
-+	}
-+
-+	tgt->irq_cmd_count++;
-+
-+	switch (pkt->entry_type) {
-+	case CTIO_TYPE7:
-+	{
-+		ctio7_fw_entry_t *entry = (ctio7_fw_entry_t *)pkt;
-+		TRACE_DBG("CTIO_TYPE7: instance %d\n", vha->vp_idx);
-+		TRACE_BUFFER("Incoming CTIO7 packet data", entry,
-+			REQUEST_ENTRY_SIZE);
-+		q2t_do_ctio_completion(vha, entry->handle,
-+			le16_to_cpu(entry->status)|(pkt->entry_status << 16),
-+			entry);
-+		break;
-+	}
-+
-+	case ACCEPT_TGT_IO_TYPE:
-+	{
-+		atio_entry_t *atio;
-+		int rc;
-+		atio = (atio_entry_t *)pkt;
-+		TRACE_DBG("ACCEPT_TGT_IO instance %d status %04x "
-+			  "lun %04x read/write %d data_length %04x "
-+			  "target_id %02x rx_id %04x\n ",
-+			  vha->vp_idx, le16_to_cpu(atio->status),
-+			  le16_to_cpu(atio->lun),
-+			  atio->execution_codes,
-+			  le32_to_cpu(atio->data_length),
-+			  GET_TARGET_ID(ha, atio), atio->rx_id);
-+		TRACE_BUFFER("Incoming ATIO packet data", atio,
-+			REQUEST_ENTRY_SIZE);
-+		if (atio->status != __constant_cpu_to_le16(ATIO_CDB_VALID)) {
-+			printk(KERN_ERR "qla2x00t(%d): ATIO with error "
-+				    "status %x received\n", vha->vp_idx,
-+				    le16_to_cpu(atio->status));
-+			break;
-+		}
-+		TRACE_BUFFER("Incoming ATIO packet data", atio, REQUEST_ENTRY_SIZE);
-+		TRACE_SCSI("FCP CDB: 0x%02x, sizeof(cdb): %lu", atio->cdb[0],
-+				(unsigned long int)sizeof(atio->cdb));
-+
-+		rc = q2t_handle_cmd_for_atio(vha, (atio_t *)atio);
-+		if (unlikely(rc != 0)) {
-+			if (rc == -ESRCH) {
-+#if 1 /* With TERM EXCHANGE some FC cards refuse to boot */
-+				q2x_send_busy(vha, atio);
-+#else
-+				q2x_send_term_exchange(vha, NULL, atio, 1);
-+#endif
-+			} else {
-+				printk(KERN_INFO "qla2x00t(%d): Unable to send "
-+					"command to target, sending BUSY status\n",
-+					vha->vp_idx);
-+				q2x_send_busy(vha, atio);
-+			}
-+		}
-+	}
-+	break;
-+
-+	case CONTINUE_TGT_IO_TYPE:
-+	{
-+		ctio_common_entry_t *entry = (ctio_common_entry_t *)pkt;
-+		TRACE_DBG("CONTINUE_TGT_IO: instance %d\n", vha->vp_idx);
-+		TRACE_BUFFER("Incoming CTIO packet data", entry,
-+			REQUEST_ENTRY_SIZE);
-+		q2t_do_ctio_completion(vha, entry->handle,
-+			le16_to_cpu(entry->status)|(pkt->entry_status << 16),
-+			entry);
-+		break;
-+	}
-+
-+	case CTIO_A64_TYPE:
-+	{
-+		ctio_common_entry_t *entry = (ctio_common_entry_t *)pkt;
-+		TRACE_DBG("CTIO_A64: instance %d\n", vha->vp_idx);
-+		TRACE_BUFFER("Incoming CTIO_A64 packet data", entry,
-+			REQUEST_ENTRY_SIZE);
-+		q2t_do_ctio_completion(vha, entry->handle,
-+			le16_to_cpu(entry->status)|(pkt->entry_status << 16),
-+			entry);
-+		break;
-+	}
-+
-+	case IMMED_NOTIFY_TYPE:
-+		TRACE_DBG("%s", "IMMED_NOTIFY\n");
-+		q2t_handle_imm_notify(vha, (notify_entry_t *)pkt);
-+		break;
-+
-+	case NOTIFY_ACK_TYPE:
-+		if (tgt->notify_ack_expected > 0) {
-+			nack_entry_t *entry = (nack_entry_t *)pkt;
-+			TRACE_DBG("NOTIFY_ACK seq %08x status %x\n",
-+				  le16_to_cpu(entry->seq_id),
-+				  le16_to_cpu(entry->status));
-+			TRACE_BUFFER("Incoming NOTIFY_ACK packet data", pkt,
-+				RESPONSE_ENTRY_SIZE);
-+			tgt->notify_ack_expected--;
-+			if (entry->status != __constant_cpu_to_le16(NOTIFY_ACK_SUCCESS)) {
-+				printk(KERN_ERR "qla2x00t(%d): NOTIFY_ACK "
-+					    "failed %x\n", vha->vp_idx,
-+					    le16_to_cpu(entry->status));
-+			}
-+		} else {
-+			printk(KERN_ERR "qla2x00t(%d): Unexpected NOTIFY_ACK "
-+				    "received\n", vha->vp_idx);
-+		}
-+		break;
-+
-+	case ABTS_RECV_24XX:
-+		TRACE_DBG("ABTS_RECV_24XX: instance %d\n", vha->vp_idx);
-+		TRACE_BUFFER("Incoming ABTS_RECV "
-+			"packet data", pkt, REQUEST_ENTRY_SIZE);
-+		q24_handle_abts(vha, (abts24_recv_entry_t *)pkt);
-+		break;
-+
-+	case ABTS_RESP_24XX:
-+		if (tgt->abts_resp_expected > 0) {
-+			abts24_resp_fw_entry_t *entry =
-+				(abts24_resp_fw_entry_t *)pkt;
-+			TRACE_DBG("ABTS_RESP_24XX: compl_status %x\n",
-+				entry->compl_status);
-+			TRACE_BUFFER("Incoming ABTS_RESP "
-+				"packet data", pkt, REQUEST_ENTRY_SIZE);
-+			tgt->abts_resp_expected--;
-+			if (le16_to_cpu(entry->compl_status) != ABTS_RESP_COMPL_SUCCESS) {
-+				if ((entry->error_subcode1 == 0x1E) &&
-+				    (entry->error_subcode2 == 0)) {
-+					/*
-+					 * We've got a race here: aborted exchange not
-+					 * terminated, i.e. response for the aborted
-+					 * command was sent between the abort request
-+					 * was received and processed. Unfortunately,
-+					 * the firmware has a silly requirement that
-+					 * all aborted exchanges must be explicitely
-+					 * terminated, otherwise it refuses to send
-+					 * responses for the abort requests. So, we
-+					 * have to (re)terminate the exchange and
-+					 * retry the abort response.
-+					 */
-+					q24_retry_term_exchange(vha, entry);
-+				} else
-+					printk(KERN_ERR "qla2x00t(%d): ABTS_RESP_24XX "
-+					    "failed %x (subcode %x:%x)", vha->vp_idx,
-+					    entry->compl_status, entry->error_subcode1,
-+					    entry->error_subcode2);
-+			}
-+		} else {
-+			printk(KERN_ERR "qla2x00t(%d): Unexpected ABTS_RESP_24XX "
-+				    "received\n", vha->vp_idx);
-+		}
-+		break;
-+
-+	case MODIFY_LUN_TYPE:
-+		if (tgt->modify_lun_expected > 0) {
-+			modify_lun_entry_t *entry = (modify_lun_entry_t *)pkt;
-+			TRACE_DBG("MODIFY_LUN %x, imm %c%d, cmd %c%d",
-+				  entry->status,
-+				  (entry->operators & MODIFY_LUN_IMM_ADD) ? '+'
-+				  : (entry->operators & MODIFY_LUN_IMM_SUB) ? '-'
-+				  : ' ',
-+				  entry->immed_notify_count,
-+				  (entry->operators & MODIFY_LUN_CMD_ADD) ? '+'
-+				  : (entry->operators & MODIFY_LUN_CMD_SUB) ? '-'
-+				  : ' ',
-+				  entry->command_count);
-+			tgt->modify_lun_expected--;
-+			if (entry->status != MODIFY_LUN_SUCCESS) {
-+				printk(KERN_ERR "qla2x00t(%d): MODIFY_LUN "
-+					    "failed %x\n", vha->vp_idx,
-+					    entry->status);
-+			}
-+		} else {
-+			printk(KERN_ERR "qla2x00t(%d): Unexpected MODIFY_LUN "
-+			    "received\n", (ha != NULL) ? vha->vp_idx : -1);
-+		}
-+		break;
-+
-+	case ENABLE_LUN_TYPE:
-+	{
-+		elun_entry_t *entry = (elun_entry_t *)pkt;
-+		TRACE_DBG("ENABLE_LUN %x imm %u cmd %u \n",
-+			  entry->status, entry->immed_notify_count,
-+			  entry->command_count);
-+		if (entry->status == ENABLE_LUN_ALREADY_ENABLED) {
-+			TRACE_DBG("LUN is already enabled: %#x\n",
-+				  entry->status);
-+			entry->status = ENABLE_LUN_SUCCESS;
-+		} else if (entry->status == ENABLE_LUN_RC_NONZERO) {
-+			TRACE_DBG("ENABLE_LUN succeeded, but with "
-+				"error: %#x\n", entry->status);
-+			entry->status = ENABLE_LUN_SUCCESS;
-+		} else if (entry->status != ENABLE_LUN_SUCCESS) {
-+			printk(KERN_ERR "qla2x00t(%d): ENABLE_LUN "
-+				"failed %x\n", vha->vp_idx, entry->status);
-+			qla_clear_tgt_mode(vha);
-+		} /* else success */
-+		break;
-+	}
-+
-+	default:
-+		printk(KERN_ERR "qla2x00t(%d): Received unknown response pkt "
-+		     "type %x\n", vha->vp_idx, pkt->entry_type);
-+		break;
-+	}
-+
-+	tgt->irq_cmd_count--;
-+}
-+
-+/*
-+ * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
-+ */
-+void q2t_async_event(uint16_t code, scsi_qla_host_t *vha, uint16_t *mailbox)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_tgt *tgt = ha->q2t_tgt;
-+	int reason_code;
-+
-+	if (unlikely(tgt == NULL)) {
-+		TRACE_DBG("ASYNC EVENT %#x, but no tgt (ha %p)", code, ha);
++		DEBUG_Q2T_SESS_MAP("Replacing existing nacl->q2t_sess and"
++				" p->se_nacl\n");
++		p->se_nacl = new_se_nacl;
++		q2t_sess->se_sess = se_sess;
++		nacl->q2t_sess = q2t_sess;
 +		return;
 +	}
 +
++	if (new_se_nacl == NULL) {
++		DEBUG_Q2T_SESS_MAP("Clearing existing p->se_nacl\n");
++		p->se_nacl = NULL;
++		return;
++	}
++
++	DEBUG_Q2T_SESS_MAP("Replacing existing p->se_nacl w/o active"
++				" nacl->q2t_sess\n");
++	p->se_nacl = new_se_nacl;
++	q2t_sess->se_sess = se_sess;
++	nacl->q2t_sess = q2t_sess;
++
++	DEBUG_Q2T_SESS_MAP("Setup nacl->q2t_sess %p by s_id for se_nacl: %p,"
++		" initiatorname: %s\n", nacl->q2t_sess, new_se_nacl,
++		new_se_nacl->initiatorname);
++}
++
++static struct q2t_sess *tcm_qla2xxx_find_sess_by_loop_id(
++	scsi_qla_host_t *vha,
++	const uint16_t loop_id)
++{
++	struct qla_hw_data *ha = vha->hw;
++	struct tcm_qla2xxx_lport *lport;
++	struct se_node_acl *se_nacl;
++	struct tcm_qla2xxx_nacl *nacl;
++	struct tcm_qla2xxx_fc_loopid *fc_loopid;
++
++	lport = (struct tcm_qla2xxx_lport *)ha->target_lport_ptr;
++	if (!lport) {
++		printk(KERN_ERR "Unable to locate struct tcm_qla2xxx_lport\n");
++		dump_stack();
++		return NULL;
++	}
++
++	DEBUG_Q2T_SESS_MAP("find_sess_by_loop_id: Using loop_id: 0x%04x\n", loop_id);
++
++	fc_loopid = (struct tcm_qla2xxx_fc_loopid *)&lport->lport_loopid_map[loop_id];
++
++	se_nacl = fc_loopid->se_nacl;
++	if (!se_nacl) {
++		printk(KERN_ERR "Unable to locate se_nacl by loop_id:"
++				" 0x%04x\n", loop_id);
++		return NULL;
++	}
++
++	nacl = container_of(se_nacl, struct tcm_qla2xxx_nacl, se_node_acl);
++
++	if (!nacl->q2t_sess) {
++		printk(KERN_ERR "Unable to locate struct q2t_sess\n");
++		return NULL;
++	}
++
++	return nacl->q2t_sess;
++}
++
++static void tcm_qla2xxx_set_sess_by_loop_id(
++	struct tcm_qla2xxx_lport *lport,
++	struct se_node_acl *new_se_nacl,
++	struct tcm_qla2xxx_nacl *nacl,
++	struct se_session *se_sess,
++	struct q2t_sess *q2t_sess,
++	uint16_t loop_id)
++{
++	struct se_node_acl *saved_nacl;
++	struct tcm_qla2xxx_fc_loopid *fc_loopid;
++
++	DEBUG_Q2T_SESS_MAP("set_sess_by_loop_id: Using loop_id: 0x%04x\n", loop_id);
++
++	fc_loopid = (struct tcm_qla2xxx_fc_loopid *)&lport->lport_loopid_map[loop_id];
++
++	saved_nacl = fc_loopid->se_nacl;
++	if (!saved_nacl) {
++		DEBUG_Q2T_SESS_MAP("Setting up new fc_loopid->se_nacl"
++				" to new_se_nacl\n");
++		fc_loopid->se_nacl = new_se_nacl;
++		if (q2t_sess->se_sess != se_sess)
++			q2t_sess->se_sess = se_sess;
++		if (nacl->q2t_sess != q2t_sess)
++			nacl->q2t_sess = q2t_sess;
++		return;
++	}
++
++	if (nacl->q2t_sess) {
++		if (new_se_nacl == NULL) {
++			DEBUG_Q2T_SESS_MAP("Clearing nacl->q2t_sess and"
++					" fc_loopid->se_nacl\n");
++			fc_loopid->se_nacl = NULL;
++			nacl->q2t_sess = NULL;
++			return;
++		}
++
++		DEBUG_Q2T_SESS_MAP("Replacing existing nacl->q2t_sess and"
++				" fc_loopid->se_nacl\n");
++		fc_loopid->se_nacl = new_se_nacl;
++		if (q2t_sess->se_sess != se_sess)
++			q2t_sess->se_sess = se_sess;
++		if (nacl->q2t_sess != q2t_sess)
++			nacl->q2t_sess = q2t_sess;
++		return;
++	}
++
++	if (new_se_nacl == NULL) {
++		DEBUG_Q2T_SESS_MAP("Clearing fc_loopid->se_nacl\n");
++		fc_loopid->se_nacl = NULL;
++		return;
++	}
++
++	DEBUG_Q2T_SESS_MAP("Replacing existing fc_loopid->se_nacl w/o"
++			" active nacl->q2t_sess\n");
++	fc_loopid->se_nacl = new_se_nacl;
++	if (q2t_sess->se_sess != se_sess)
++		q2t_sess->se_sess = se_sess;
++	if (nacl->q2t_sess != q2t_sess)
++		nacl->q2t_sess = q2t_sess;
++
++	DEBUG_Q2T_SESS_MAP("Setup nacl->q2t_sess %p by loop_id for se_nacl: %p,"
++		" initiatorname: %s\n", nacl->q2t_sess, new_se_nacl,
++		new_se_nacl->initiatorname);
++}
++
++static void tcm_qla2xxx_free_session(struct q2t_sess *sess)
++{
++	struct q2t_tgt *tgt = sess->tgt;
++	struct qla_hw_data *ha = tgt->ha;
++	struct se_session *se_sess;
++	struct se_node_acl *se_nacl;
++	struct tcm_qla2xxx_lport *lport;
++	struct tcm_qla2xxx_nacl *nacl;
++	unsigned char be_sid[3];
++
++	se_sess = sess->se_sess;
++	if (!se_sess) {
++		printk(KERN_ERR "struct q2t_sess->se_sess is NULL\n");
++		dump_stack();
++		return;
++	}
++	se_nacl = se_sess->se_node_acl;
++        nacl = container_of(se_nacl, struct tcm_qla2xxx_nacl, se_node_acl);
++
++	lport = (struct tcm_qla2xxx_lport *)ha->target_lport_ptr;
++	if (!lport) {
++		printk(KERN_ERR "Unable to locate struct tcm_qla2xxx_lport\n");
++		dump_stack();
++		return;
++	}
 +	/*
-+	 * In tgt_stop mode we also should allow all requests to pass.
-+	 * Otherwise, some commands can stuck.
++	 * Now clear the struct se_node_acl->nacl_sess pointer
 +	 */
++	transport_deregister_session_configfs(sess->se_sess);
 +
-+	tgt->irq_cmd_count++;
++        /*
++         * And now clear the se_nacl and session pointers from our HW lport
++         * mappings for fabric S_ID and LOOP_ID.
++         */
++	memset(&be_sid, 0, 3);
++	be_sid[0] = sess->s_id.b.domain;
++	be_sid[1] = sess->s_id.b.area;
++	be_sid[2] = sess->s_id.b.al_pa;
 +
-+	switch (code) {
-+	case MBA_RESET:			/* Reset */
-+	case MBA_SYSTEM_ERR:		/* System Error */
-+	case MBA_REQ_TRANSFER_ERR:	/* Request Transfer Error */
-+	case MBA_RSP_TRANSFER_ERR:	/* Response Transfer Error */
-+	case MBA_ATIO_TRANSFER_ERR:	/* ATIO Queue Transfer Error */
-+		TRACE_MGMT_DBG("qla2x00t(%d): System error async event %#x "
-+			"occured", vha->vp_idx, code);
-+		break;
-+
-+	case MBA_LOOP_UP:
-+	{
-+		TRACE_MGMT_DBG("qla2x00t(%d): Async LOOP_UP occured "
-+			"(m[1]=%x, m[2]=%x, m[3]=%x, m[4]=%x)", vha->vp_idx,
-+			le16_to_cpu(mailbox[1]), le16_to_cpu(mailbox[2]),
-+			le16_to_cpu(mailbox[3]), le16_to_cpu(mailbox[4]));
-+		if (tgt->link_reinit_iocb_pending) {
-+			q24_send_notify_ack(vha, &tgt->link_reinit_iocb, 0, 0, 0);
-+			tgt->link_reinit_iocb_pending = 0;
-+		}
-+		break;
-+	}
-+
-+	case MBA_LIP_OCCURRED:
-+	case MBA_LOOP_DOWN:
-+	case MBA_LIP_RESET:
-+	case MBA_RSCN_UPDATE:
-+		TRACE_MGMT_DBG("qla2x00t(%d): Async event %#x occured "
-+			"(m[1]=%x, m[2]=%x, m[3]=%x, m[4]=%x)", vha->vp_idx,
-+			code, le16_to_cpu(mailbox[1]), le16_to_cpu(mailbox[2]),
-+			le16_to_cpu(mailbox[3]), le16_to_cpu(mailbox[4]));
-+		break;
-+
-+	case MBA_PORT_UPDATE:
-+		TRACE_MGMT_DBG("qla2x00t(%d): Port update async event %#x "
-+			"occured: updating the ports database (m[1]=%x, m[2]=%x, "
-+			"m[3]=%x, m[4]=%x)", vha->vp_idx, code,
-+			le16_to_cpu(mailbox[1]), le16_to_cpu(mailbox[2]),
-+			le16_to_cpu(mailbox[3]), le16_to_cpu(mailbox[4]));
-+		reason_code = le16_to_cpu(mailbox[2]);
-+		if (reason_code == 0x4)
-+			TRACE_MGMT_DBG("Async MB 2: Got PLOGI Complete\n");
-+		else if (reason_code == 0x7)
-+			TRACE_MGMT_DBG("Async MB 2: Port Logged Out\n");
-+		break;
-+
-+	default:
-+		TRACE_MGMT_DBG("qla2x00t(%d): Async event %#x occured: "
-+			"ignore (m[1]=%x, m[2]=%x, m[3]=%x, m[4]=%x)",
-+			vha->vp_idx, code,
-+			le16_to_cpu(mailbox[1]), le16_to_cpu(mailbox[2]),
-+			le16_to_cpu(mailbox[3]), le16_to_cpu(mailbox[4]));
-+		break;
-+	}
-+
-+	tgt->irq_cmd_count--;
++        tcm_qla2xxx_set_sess_by_s_id(lport, NULL, nacl, se_sess,
++                        sess, be_sid);
++        tcm_qla2xxx_set_sess_by_loop_id(lport, NULL, nacl, se_sess,
++                        sess, sess->loop_id);
++	/*
++	 * Release the FC nexus -> target se_session link now.
++	 */
++	transport_deregister_session(sess->se_sess);
 +}
-+
-+static fc_port_t *q2t_get_port_database(scsi_qla_host_t *vha,
-+	const uint8_t *s_id, uint16_t loop_id)
-+{
-+	fc_port_t *fcport;
-+	int rc;
-+
-+	fcport = kzalloc(sizeof(*fcport), GFP_KERNEL);
-+	if (!fcport) {
-+		printk(KERN_ERR "qla2x00t(%d): Allocation of tmp FC port failed",
-+				vha->vp_idx);
-+		return NULL;
-+	}
-+
-+	TRACE_MGMT_DBG("loop_id %d", loop_id);
-+
-+	fcport->loop_id = loop_id;
-+
-+	rc = qla2x00_get_port_database(vha, fcport, 0);
-+	if (rc != QLA_SUCCESS) {
-+		printk(KERN_ERR "qla2x00t(%d): Failed to retrieve fcport "
-+			"information -- get_port_database() returned %x "
-+			"(loop_id=0x%04x)", vha->vp_idx, rc, loop_id);
-+		kfree(fcport);
-+		return NULL;
-+        }
-+
-+	return fcport;
-+}
-+
-+/* Must be called under tgt_mutex */
-+static struct q2t_sess *q2t_make_local_sess(scsi_qla_host_t *vha,
-+	uint8_t *s_id, uint16_t loop_id)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_sess *sess = NULL;
-+	fc_port_t *fcport = NULL;
-+	int rc, global_resets;
-+
-+retry:
-+	global_resets = atomic_read(&ha->q2t_tgt->tgt_global_resets_count);
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		rc = q24_get_loop_id(vha, s_id, &loop_id);
-+		if (rc != 0) {
-+			if ((s_id[0] == 0xFF) &&
-+			    (s_id[1] == 0xFC)) {
-+				/*
-+				 * This is Domain Controller, so it should be
-+				 * OK to drop SCSI commands from it.
-+				 */
-+				TRACE_MGMT_DBG("Unable to find initiator with "
-+					"S_ID %x:%x:%x", s_id[0], s_id[1],
-+					s_id[2]);
-+			} else
-+				printk(KERN_ERR "qla2x00t(%d): Unable to find "
-+					"initiator with S_ID %x:%x:%x",
-+					vha->vp_idx, s_id[0], s_id[1],
-+					s_id[2]);
-+			return NULL;
-+		}
-+	}
-+
-+	fcport = q2t_get_port_database(vha, s_id, loop_id);
-+	if (!fcport)
-+		return NULL;
-+
-+	if (global_resets != atomic_read(&ha->q2t_tgt->tgt_global_resets_count)) {
-+		TRACE_MGMT_DBG("qla2x00t(%d): global reset during session "
-+			"discovery (counter was %d, new %d), retrying",
-+			vha->vp_idx, global_resets,
-+			atomic_read(&ha->q2t_tgt->tgt_global_resets_count));
-+		goto retry;
-+	}
-+
-+	sess = q2t_create_sess(vha, fcport, true);
-+
-+	kfree(fcport);
-+	return sess;
-+}
-+
-+static void q2t_exec_sess_work(struct q2t_tgt *tgt,
-+	struct q2t_sess_work_param *prm)
-+{
-+	scsi_qla_host_t *vha = tgt->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+	struct q2t_sess *sess = NULL;
-+	uint32_t be_s_id;
-+	uint8_t *s_id = NULL; /* to hide compiler warnings */
-+	int rc, loop_id = -1; /* to hide compiler warnings */
-+
-+	TRACE_MGMT_DBG("q2t_exec_sess_work() processing -> prm %p\n", prm);
-+
-+	spin_lock_irq(&ha->hardware_lock);
-+
-+	if (tgt->tgt_stop)
-+		goto send;
-+
-+	switch (prm->type) {
-+	case Q2T_SESS_WORK_CMD:
-+	{
-+		struct q2t_cmd *cmd = prm->cmd;
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			atio7_entry_t *a = (atio7_entry_t *)&cmd->atio;
-+			s_id = a->fcp_hdr.s_id;
-+		} else
-+			loop_id = GET_TARGET_ID(ha, (atio_entry_t *)&cmd->atio);
-+		break;
-+	}
-+	case Q2T_SESS_WORK_ABORT:
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			be_s_id = (prm->abts.fcp_hdr_le.s_id[0] << 16) |
-+				(prm->abts.fcp_hdr_le.s_id[1] << 8) |
-+				prm->abts.fcp_hdr_le.s_id[2];
-+
-+			sess = ha->qla2x_tmpl->find_sess_by_s_id(vha,
-+					(unsigned char *)&be_s_id);
-+			goto after_find;
-+		} else
-+			loop_id = GET_TARGET_ID(ha, &prm->tm_iocb);
-+		break;
-+	case Q2T_SESS_WORK_TM:
-+		if (IS_FWI2_CAPABLE(ha))
-+			s_id = prm->tm_iocb2.fcp_hdr.s_id;
-+		else
-+			loop_id = GET_TARGET_ID(ha, &prm->tm_iocb);
-+		break;
-+	default:
-+		BUG_ON(1);
-+		break;
-+	}
-+
-+	if (IS_FWI2_CAPABLE(ha))
-+		sess = ha->qla2x_tmpl->find_sess_by_s_id(vha, s_id);
-+	else
-+		sess = ha->qla2x_tmpl->find_sess_by_loop_id(vha, loop_id);
-+
-+after_find:
-+	if (sess != NULL) {
-+		TRACE_MGMT_DBG("sess %p found\n", sess);
-+		q2t_sess_get(sess);
-+	} else {
-+		spin_unlock_irq(&ha->hardware_lock);
-+
-+		mutex_lock(&ha->tgt_mutex);
-+		sess = q2t_make_local_sess(vha, s_id, loop_id);
-+		mutex_unlock(&ha->tgt_mutex);
-+
-+		spin_lock_irq(&ha->hardware_lock);
-+		/* sess has got an extra creation ref */
-+	}
-+
-+send:
-+	if ((sess == NULL) || tgt->tgt_stop)
-+		goto out_term;
-+
-+	switch (prm->type) {
-+	case Q2T_SESS_WORK_CMD:
-+	{
-+		struct q2t_cmd *cmd = prm->cmd;
-+		if (tgt->tm_to_unknown) {
-+			/*
-+			 * Cmd might be already aborted behind us, so be safe
-+			 * and abort it. It should be OK, initiator will retry
-+			 * it.
-+			 */
-+			goto out_term;
-+		}
-+		rc = q2t_send_cmd_to_target(vha, cmd, sess);
-+		break;
-+	}
-+	case Q2T_SESS_WORK_ABORT:
-+		if (IS_FWI2_CAPABLE(ha))
-+			rc = __q24_handle_abts(vha, &prm->abts, sess);
-+		else
-+			rc = __q2t_abort_task(vha, &prm->tm_iocb, sess);
-+		break;
-+	case Q2T_SESS_WORK_TM:
-+	{
-+		uint32_t lun;
-+		int lun_size, fn;
-+		void *iocb;
-+
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			atio7_entry_t *a = &prm->tm_iocb2;
-+			iocb = a;
-+			lun = a->fcp_cmnd.lun;
-+			lun_size = sizeof(a->fcp_cmnd.lun);
-+			fn = a->fcp_cmnd.task_mgmt_flags;
-+		} else {
-+			notify_entry_t *n = &prm->tm_iocb;
-+			iocb = n;
-+			/* make it be in network byte order */
-+			lun = swab16(le16_to_cpu(n->lun));
-+			lun_size = sizeof(lun);
-+			fn = n->task_flags >> IMM_NTFY_TASK_MGMT_SHIFT;
-+		}
-+		rc = q2t_issue_task_mgmt(sess, lun, lun_size, fn, iocb, 0);
-+		break;
-+	}
-+	default:
-+		BUG_ON(1);
-+		break;
-+	}
-+
-+	if (rc != 0)
-+		goto out_term;
-+
-+	if (sess != NULL)
-+		q2t_sess_put(sess);
-+
-+	spin_unlock_irq(&ha->hardware_lock);
-+	return;
-+
-+out_term:
-+	switch (prm->type) {
-+	case Q2T_SESS_WORK_CMD:
-+	{
-+		struct q2t_cmd *cmd = prm->cmd;
-+		TRACE_MGMT_DBG("Terminating work cmd %p", cmd);
-+		/*
-+		 * cmd has not sent to target yet, so pass NULL as the second
-+		 * argument
-+		 */
-+		if (IS_FWI2_CAPABLE(ha))
-+			q24_send_term_exchange(vha, NULL, &cmd->atio.atio7, 1);
-+		else
-+			q2x_send_term_exchange(vha, NULL, &cmd->atio.atio2x, 1);
-+		q2t_free_cmd(cmd);
-+		break;
-+	}
-+	case Q2T_SESS_WORK_ABORT:
-+		if (IS_FWI2_CAPABLE(ha))
-+			q24_send_abts_resp(vha, &prm->abts,
-+				FCP_TMF_REJECTED, false);
-+		else
-+			q2x_send_notify_ack(vha, &prm->tm_iocb, 0,
-+				0, 0, 0, 0, 0);
-+		break;
-+	case Q2T_SESS_WORK_TM:
-+		if (IS_FWI2_CAPABLE(ha))
-+			q24_send_term_exchange(vha, NULL, &prm->tm_iocb2, 1);
-+		else
-+			q2x_send_notify_ack(vha, &prm->tm_iocb, 0,
-+				0, 0, 0, 0, 0);
-+		break;
-+	default:
-+		BUG_ON(1);
-+		break;
-+	}
-+	if (sess != NULL)
-+		q2t_sess_put(sess);
-+
-+	spin_unlock_irq(&ha->hardware_lock);
-+}
-+
-+static void q2t_sess_work_fn(struct work_struct *work)
-+{
-+	struct q2t_tgt *tgt = container_of(work, struct q2t_tgt, sess_work);
-+	scsi_qla_host_t *vha = tgt->vha;
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	TRACE_MGMT_DBG("Sess work (tgt %p)", tgt);
-+
-+	spin_lock_irq(&tgt->sess_work_lock);
-+	while (!list_empty(&tgt->sess_works_list)) {
-+		struct q2t_sess_work_param *prm = list_entry(
-+			tgt->sess_works_list.next, typeof(*prm),
-+			sess_works_list_entry);
-+
-+		/*
-+		 * This work can be scheduled on several CPUs at time, so we
-+		 * must delete the entry to eliminate double processing
-+		 */
-+		list_del(&prm->sess_works_list_entry);
-+
-+		spin_unlock_irq(&tgt->sess_work_lock);
-+
-+		q2t_exec_sess_work(tgt, prm);
-+
-+		spin_lock_irq(&tgt->sess_work_lock);
-+
-+		kfree(prm);
-+	}
-+	spin_unlock_irq(&tgt->sess_work_lock);
-+
-+	spin_lock_irq(&ha->hardware_lock);
-+	spin_lock(&tgt->sess_work_lock);
-+	if (list_empty(&tgt->sess_works_list)) {
-+		tgt->sess_works_pending = 0;
-+		tgt->tm_to_unknown = 0;
-+	}
-+	spin_unlock(&tgt->sess_work_lock);
-+	spin_unlock_irq(&ha->hardware_lock);
-+}
-+
-+/* Must be called under tgt_host_action_mutex */
-+int q2t_add_target(struct qla_hw_data *ha, scsi_qla_host_t *base_vha)
-+{
-+	struct q2t_tgt *tgt;
-+	int sg_tablesize;
-+
-+	TRACE_DBG("Registering target for host %ld(%p)", base_vha->host_no, ha);
-+
-+	BUG_ON((ha->q2t_tgt != NULL) || (ha->qla2x_tmpl != NULL));
-+
-+	tgt = kzalloc(sizeof(struct q2t_tgt), GFP_KERNEL);
-+	if (!tgt) {
-+		printk(KERN_ERR "Unable to allocate struct q2t_tgt\n");
-+		return -ENOMEM;
-+	}
-+
-+	tgt->ha = ha;
-+	tgt->vha = base_vha;
-+	init_waitqueue_head(&tgt->waitQ);
-+	INIT_LIST_HEAD(&tgt->sess_list);
-+	INIT_LIST_HEAD(&tgt->del_sess_list);
-+	INIT_DELAYED_WORK(&tgt->sess_del_work,
-+		(void (*)(struct work_struct *))q2t_del_sess_work_fn);
-+	spin_lock_init(&tgt->sess_work_lock);
-+	INIT_WORK(&tgt->sess_work, q2t_sess_work_fn);
-+	INIT_LIST_HEAD(&tgt->sess_works_list);
-+	spin_lock_init(&tgt->srr_lock);
-+	INIT_LIST_HEAD(&tgt->srr_ctio_list);
-+	INIT_LIST_HEAD(&tgt->srr_imm_list);
-+	INIT_WORK(&tgt->srr_work, q2t_handle_srr_work);
-+	atomic_set(&tgt->tgt_global_resets_count, 0);
-+
-+	ha->q2t_tgt = tgt;
-+
-+	if (IS_FWI2_CAPABLE(ha)) {
-+		printk(KERN_INFO "qla2x00t(%d): using 64 Bit PCI "
-+			   "addressing", base_vha->vp_idx);
-+			tgt->tgt_enable_64bit_addr = 1;
-+			/* 3 is reserved */
-+			sg_tablesize =
-+			    QLA_MAX_SG_24XX(base_vha->req->length - 3);
-+			tgt->datasegs_per_cmd = DATASEGS_PER_COMMAND_24XX;
-+			tgt->datasegs_per_cont = DATASEGS_PER_CONT_24XX;
-+	} else {
-+		if (ha->flags.enable_64bit_addressing) {
-+			printk(KERN_INFO "qla2x00t(%d): 64 Bit PCI "
-+				   "addressing enabled", base_vha->vp_idx);
-+			tgt->tgt_enable_64bit_addr = 1;
-+			/* 3 is reserved */
-+			sg_tablesize =
-+				QLA_MAX_SG64(base_vha->req->length - 3);
-+			tgt->datasegs_per_cmd = DATASEGS_PER_COMMAND64;
-+			tgt->datasegs_per_cont = DATASEGS_PER_CONT64;
-+		} else {
-+			printk(KERN_INFO "qla2x00t(%d): Using 32 Bit "
-+				   "PCI addressing", base_vha->vp_idx);
-+			sg_tablesize =
-+				QLA_MAX_SG32(base_vha->req->length - 3);
-+			tgt->datasegs_per_cmd = DATASEGS_PER_COMMAND32;
-+			tgt->datasegs_per_cont = DATASEGS_PER_CONT32;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+/* Must be called under tgt_host_action_mutex */
-+int q2t_remove_target(struct qla_hw_data *ha, scsi_qla_host_t *vha)
-+{
-+	if (!ha->q2t_tgt) {
-+		printk(KERN_ERR "qla2x00t(%d): Can't remove "
-+			"existing target", vha->vp_idx);
-+		return 0;
-+	}
-+
-+	TRACE_DBG("Unregistering target for host %ld(%p)", vha->host_no, ha);
-+	q2t_target_release(ha->q2t_tgt);
-+
-+	return 0;
-+}
-+
-+int q2t_init(void)
-+{
-+	BUILD_BUG_ON(sizeof(atio7_entry_t) != sizeof(atio_entry_t));
-+
-+	q2t_cmd_cachep = NULL;
-+	q2t_mgmt_cmd_cachep = NULL;
-+	q2t_mgmt_cmd_mempool = NULL;
-+
-+	q2t_cmd_cachep = kmem_cache_create("q2t_cmd_cachep",
-+			sizeof(struct q2t_cmd), __alignof__(struct q2t_cmd),
-+			0, NULL);
-+	if (!q2t_cmd_cachep) {
-+		printk(KERN_ERR "kmem_cache_create for q2t_cmd_cachep failed\n");
-+		return -ENOMEM;
-+	}
-+
-+	q2t_mgmt_cmd_cachep = kmem_cache_create("q2t_mgmt_cmd_cachep",
-+		sizeof(struct q2t_mgmt_cmd), __alignof__(struct q2t_mgmt_cmd),
-+			0, NULL);
-+	if (!q2t_mgmt_cmd_cachep) {
-+		printk(KERN_ERR "kmem_cache_create for q2t_mgmt_cmd_cachep failed\n");
-+		kmem_cache_destroy(q2t_cmd_cachep);
-+		return -ENOMEM;
-+	}
-+
-+	q2t_mgmt_cmd_mempool = mempool_create(25, mempool_alloc_slab,
-+				mempool_free_slab, q2t_mgmt_cmd_cachep);
-+	if (!q2t_mgmt_cmd_mempool) {
-+		printk(KERN_ERR "mempool_create for q2t_mgmt_cmd_mempool failed\n");
-+		kmem_cache_destroy(q2t_mgmt_cmd_cachep);
-+		kmem_cache_destroy(q2t_cmd_cachep);
-+		return -ENOMEM;
-+	}
-+
-+	return 0;
-+}
-+
-+void q2t_exit(void)
-+{
-+	if (q2t_mgmt_cmd_mempool != NULL)
-+		mempool_destroy(q2t_mgmt_cmd_mempool);
-+	if (q2t_mgmt_cmd_cachep != NULL)
-+		kmem_cache_destroy(q2t_mgmt_cmd_cachep);
-+	if (q2t_cmd_cachep != NULL)
-+		kmem_cache_destroy(q2t_cmd_cachep);
-+}
-diff --git a/drivers/scsi/qla2xxx/qla2x_target.h b/drivers/scsi/qla2xxx/qla2x_target.h
-new file mode 100644
-index 0000000..4d38f05
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla2x_target.h
-@@ -0,0 +1,290 @@
-+/*
-+ *  qla2x_target.h SCSI LLD infrastructure for QLogic 22xx/23xx/24xx/25xx
-+ *
-+ *  based on qla2x00t.h code:
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2006 Nathaniel Clark <nate@misrule.us>
-+ *  Copyright (C) 2006 - 2010 ID7 Ltd.
-+ *
-+ *  Forward port and refactoring to modern qla2xxx and target/configfs
-+ *
-+ *  Copyright (C) 2010 Nicholas A. Bellinger <nab@kernel.org>
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation, version 2
-+ *  of the License.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+
-+#ifndef __QLA2X00T_H
-+#define __QLA2X00T_H
-+
-+#include "qla2x_tgt_def.h"
-+
-+#define Q2T_TIMEOUT                 10	/* in seconds */
-+
-+#define Q2T_MAX_HW_PENDING_TIME	    60 /* in seconds */
-+
-+/* Immediate notify status constants */
-+#define IMM_NTFY_LIP_RESET          0x000E
-+#define IMM_NTFY_LIP_LINK_REINIT    0x000F
-+#define IMM_NTFY_IOCB_OVERFLOW      0x0016
-+#define IMM_NTFY_ABORT_TASK         0x0020
-+#define IMM_NTFY_PORT_LOGOUT        0x0029
-+#define IMM_NTFY_PORT_CONFIG        0x002A
-+#define IMM_NTFY_GLBL_TPRLO         0x002D
-+#define IMM_NTFY_GLBL_LOGO          0x002E
-+#define IMM_NTFY_RESOURCE           0x0034
-+#define IMM_NTFY_MSG_RX             0x0036
-+#define IMM_NTFY_SRR                0x0045
-+#define IMM_NTFY_ELS                0x0046
-+
-+/* Immediate notify task flags */
-+#define IMM_NTFY_TASK_MGMT_SHIFT    8
-+
-+#define Q2T_CLEAR_ACA               0x40
-+#define Q2T_TARGET_RESET            0x20
-+#define Q2T_LUN_RESET               0x10
-+#define Q2T_CLEAR_TS                0x04
-+#define Q2T_ABORT_TS                0x02
-+#define Q2T_ABORT_ALL_SESS          0xFFFF
-+#define Q2T_ABORT_ALL               0xFFFE
-+#define Q2T_NEXUS_LOSS_SESS         0xFFFD
-+#define Q2T_NEXUS_LOSS              0xFFFC
-+
-+/* Notify Acknowledge flags */
-+#define NOTIFY_ACK_RES_COUNT        BIT_8
-+#define NOTIFY_ACK_CLEAR_LIP_RESET  BIT_5
-+#define NOTIFY_ACK_TM_RESP_CODE_VALID BIT_4
-+
-+/* Command's states */
-+#define Q2T_STATE_NEW               0	/* New command and target processing it */
-+#define Q2T_STATE_NEED_DATA         1	/* target needs data to continue */
-+#define Q2T_STATE_DATA_IN           2	/* Data arrived and target is processing */
-+#define Q2T_STATE_PROCESSED         3	/* target done processing */
-+#define Q2T_STATE_ABORTED           4	/* Command aborted */
-+
-+/* Special handles */
-+#define Q2T_NULL_HANDLE             0
-+#define Q2T_SKIP_HANDLE             (0xFFFFFFFF & ~CTIO_COMPLETION_HANDLE_MARK)
-+
-+/* ATIO task_codes field */
-+#define ATIO_SIMPLE_QUEUE           0
-+#define ATIO_HEAD_OF_QUEUE          1
-+#define ATIO_ORDERED_QUEUE          2
-+#define ATIO_ACA_QUEUE              4
-+#define ATIO_UNTAGGED               5
-+
-+/* TM failed response codes, see FCP (9.4.11 FCP_RSP_INFO) */
-+#define	FC_TM_SUCCESS               0
-+#define	FC_TM_BAD_FCP_DATA          1
-+#define	FC_TM_BAD_CMD               2
-+#define	FC_TM_FCP_DATA_MISMATCH     3
-+#define	FC_TM_REJECT                4
-+#define FC_TM_FAILED                5
 +
 +/*
-+ * Error code of q2t_pre_xmit_response() meaning that cmd's exchange was
-+ * terminated, so no more actions is needed and success should be returned
-+ * to target.
++ * Called via q2t_create_sess():ha->qla2x_tmpl->check_initiator_node_acl()
++ * to locate struct se_node_acl
 + */
-+#define Q2T_PRE_XMIT_RESP_CMD_ABORTED	0x1717
++static int tcm_qla2xxx_check_initiator_node_acl(
++	scsi_qla_host_t *vha,
++	void *q2t_sess,
++	uint8_t *s_id,
++	uint16_t loop_id)
++{
++	struct qla_hw_data *ha = vha->hw;
++	struct tcm_qla2xxx_lport *lport;
++	struct tcm_qla2xxx_tpg *tpg;
++	struct tcm_qla2xxx_nacl *nacl;
++	struct se_portal_group *se_tpg;
++	struct se_node_acl *se_nacl;
++	struct se_session *se_sess;
++	struct q2t_sess *sess = q2t_sess;
++	unsigned char port_name[36];
 +
-+#if (BITS_PER_LONG > 32) || defined(CONFIG_HIGHMEM64G)
-+#define pci_dma_lo32(a) (a & 0xffffffff)
-+#define pci_dma_hi32(a) ((((a) >> 16)>>16) & 0xffffffff)
-+#else
-+#define pci_dma_lo32(a) (a & 0xffffffff)
-+#define pci_dma_hi32(a) 0
-+#endif
++	lport = (struct tcm_qla2xxx_lport *)ha->target_lport_ptr;
++	if (!lport) {
++		printk(KERN_ERR "Unable to locate struct tcm_qla2xxx_lport\n");
++		dump_stack();
++		return -EINVAL;
++	}
++	/*
++	 * Locate the TPG=1 reference..
++	 */
++	tpg = lport->tpg_1;
++	if (!tpg) {
++		printk(KERN_ERR "Unable to lcoate struct tcm_qla2xxx_lport->tpg_1\n");
++		return -EINVAL;
++	}
++	se_tpg = &tpg->se_tpg;
 +
-+#define Q2T_SENSE_VALID(sense)  ((sense != NULL) && \
-+				(((const uint8_t *)(sense))[0] & 0x70) == 0x70)
++	se_sess = transport_init_session();
++	if (!se_sess) {
++		printk(KERN_ERR "Unable to initialize struct se_session\n");
++		return -ENOMEM;
++	}
++	/*
++	 * Format the FCP Initiator port_name into colon seperated values to match
++	 * the format by tcm_qla2xxx explict ConfigFS NodeACLs.
++	 */
++	memset(&port_name, 0, 36);
++	snprintf(port_name, 36, "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x",
++		sess->port_name[0], sess->port_name[1], sess->port_name[2],
++		sess->port_name[3], sess->port_name[4], sess->port_name[5],
++		sess->port_name[6], sess->port_name[7]);
++	/*
++	 * Locate our struct se_node_acl either from an explict NodeACL created
++	 * via ConfigFS, or via running in TPG demo mode.
++	 */
++	se_sess->se_node_acl = core_tpg_check_initiator_node_acl(se_tpg, port_name);
++	if (!se_sess->se_node_acl) {
++		transport_free_session(se_sess);
++		return -EINVAL;
++	}
++	se_nacl = se_sess->se_node_acl;
++	nacl = container_of(se_nacl, struct tcm_qla2xxx_nacl, se_node_acl);
++	/*
++	 * And now setup the new se_nacl and session pointers into our HW lport
++	 * mappings for fabric S_ID and LOOP_ID.
++	 */
++	tcm_qla2xxx_set_sess_by_s_id(lport, se_nacl, nacl, se_sess,
++			q2t_sess, s_id);
++	tcm_qla2xxx_set_sess_by_loop_id(lport, se_nacl, nacl, se_sess,
++			q2t_sess, loop_id);
++	/*
++	 * Finally register the new FC Nexus with TCM
++	 */
++	__transport_register_session(se_nacl->se_tpg, se_nacl, se_sess, nacl);
 +
-+struct q2t_tgt {
++	return 0;
++}
++
++/*
++ * Calls into tcm_qla2xxx used by qla2xxx LLD I/O path.
++ */
++static struct qla_target_template tcm_qla2xxx_template = {
++	.handle_cmd		= tcm_qla2xxx_handle_cmd,
++	.handle_data		= tcm_qla2xxx_handle_data,
++	.handle_tmr		= tcm_qla2xxx_handle_tmr,
++	.free_cmd		= tcm_qla2xxx_free_cmd,
++	.free_session		= tcm_qla2xxx_free_session,
++	.check_initiator_node_acl = tcm_qla2xxx_check_initiator_node_acl,
++	.find_sess_by_s_id	= tcm_qla2xxx_find_sess_by_s_id,
++	.find_sess_by_loop_id	= tcm_qla2xxx_find_sess_by_loop_id,
++};
++
++static int tcm_qla2xxx_init_lport(
++	struct tcm_qla2xxx_lport *lport,
++	struct scsi_qla_host *vha,
++	struct scsi_qla_host *npiv_vp)
++{
++	struct qla_hw_data *ha = vha->hw;
++
++	lport->lport_fcport_map = vmalloc(
++			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
++	if (!(lport->lport_fcport_map)) {
++		printk(KERN_ERR "Unable to allocate lport_fcport_map of %lu"
++			" bytes\n", sizeof(struct tcm_qla2xxx_fc_domain) * 256);
++		return -ENOMEM;
++	}
++	memset(lport->lport_fcport_map, 0,
++			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
++	printk(KERN_INFO "qla2xxx: Allocated lport_fcport_map of %lu bytes\n",
++			sizeof(struct tcm_qla2xxx_fc_domain) * 256);
++
++	lport->lport_loopid_map = vmalloc(sizeof(struct tcm_qla2xxx_fc_loopid) *
++				65536);
++	if (!(lport->lport_loopid_map)) {
++		printk(KERN_ERR "Unable to allocate lport->lport_loopid_map"
++			" of %lu bytes\n", sizeof(struct tcm_qla2xxx_fc_loopid)
++			* 65536);
++		vfree(lport->lport_fcport_map);
++		return -ENOMEM;
++	}
++	memset(lport->lport_loopid_map, 0, sizeof(struct tcm_qla2xxx_fc_loopid)
++			* 65536);
++	printk(KERN_INFO "qla2xxx: Allocated lport_loopid_map of %lu bytes\n",
++			sizeof(struct tcm_qla2xxx_fc_loopid) * 65536);
++	/*
++	 * Setup local pointer to vha, NPIV VP pointer (if present) and
++	 * vha->tcm_lport pointer
++	 */
++	lport->qla_vha = vha;
++	lport->qla_npiv_vp = npiv_vp;
++	/*
++	 * Setup the target_lport_ptr and qla2x_tmpl.
++	 */
++	ha->target_lport_ptr = lport;
++	ha->qla2x_tmpl = &tcm_qla2xxx_template;
++
++	return 0;
++}
++
++static struct se_wwn *tcm_qla2xxx_make_lport(
++	struct target_fabric_configfs *tf,
++	struct config_group *group,
++	const char *name)
++{
++	struct tcm_qla2xxx_lport *lport;
++	struct Scsi_Host *host = NULL;
++	struct pci_dev *dev = NULL;
 +	struct scsi_qla_host *vha;
 +	struct qla_hw_data *ha;
++	unsigned long flags;
++	u64 wwpn;
++	int i, ret = -ENODEV;
++	u8 b[8];
 +
-+	/*
-+	 * To sync between IRQ handlers and q2t_target_release(). Needed,
-+	 * because req_pkt() can drop/reaquire HW lock inside. Protected by
-+	 * HW lock.
-+	 */
-+	int irq_cmd_count;
++	if (tcm_qla2xxx_parse_wwn(name, &wwpn, 1) < 0)
++		return ERR_PTR(-EINVAL);
 +
-+	int datasegs_per_cmd, datasegs_per_cont;
++	lport = kzalloc(sizeof(struct tcm_qla2xxx_lport), GFP_KERNEL);
++	if (!(lport)) {
++		printk(KERN_ERR "Unable to allocate struct tcm_qla2xxx_lport\n");
++		return ERR_PTR(-ENOMEM);
++	}
++	lport->lport_wwpn = wwpn;
++	tcm_qla2xxx_format_wwn(&lport->lport_name[0], TCM_QLA2XXX_NAMELEN, wwpn);
 +
-+	/* Target's flags, serialized by pha->hardware_lock */
-+	unsigned int tgt_enable_64bit_addr:1;	/* 64-bits PCI addressing enabled */
-+	unsigned int link_reinit_iocb_pending:1;
-+	unsigned int tm_to_unknown:1; /* TM to unknown session was sent */
-+	unsigned int sess_works_pending:1; /* there are sess_work entries */
++	while ((dev = pci_get_device(PCI_VENDOR_ID_QLOGIC, PCI_ANY_ID,
++					dev)) != NULL) {
 +
-+	/*
-+	 * Protected by tgt_mutex AND hardware_lock for writing and tgt_mutex
-+	 * OR hardware_lock for reading.
-+	 */
-+	int tgt_stop; /* the target mode driver is being stopped */
-+	int tgt_stopped; /* the target mode driver has been stopped */
++		vha = pci_get_drvdata(dev);
++		if (!vha)
++			continue;
++		ha = vha->hw;
++		if (!ha)
++			continue;
++		host = vha->host;
++		if (!host)
++			continue;
 +
-+	/* Count of sessions refering q2t_tgt. Protected by hardware_lock. */
-+	int sess_count;
++		if (!(host->hostt->supported_mode & MODE_TARGET))
++			continue;
 +
-+	/* Protected by hardware_lock. Addition also protected by tgt_mutex. */
-+	struct list_head sess_list;
-+
-+	/* Protected by hardware_lock */
-+	struct list_head del_sess_list;
-+	struct delayed_work sess_del_work;
-+
-+	spinlock_t sess_work_lock;
-+	struct list_head sess_works_list;
-+	struct work_struct sess_work;
-+
-+	notify24xx_entry_t link_reinit_iocb;
-+	wait_queue_head_t waitQ;
-+	int notify_ack_expected;
-+	int abts_resp_expected;
-+	int modify_lun_expected;
-+
-+	int ctio_srr_id;
-+	int imm_srr_id;
-+	spinlock_t srr_lock;
-+	struct list_head srr_ctio_list;
-+	struct list_head srr_imm_list;
-+	struct work_struct srr_work;
-+
-+	atomic_t tgt_global_resets_count;
-+
-+	struct list_head tgt_list_entry;
-+};
-+
-+/*
-+ * Equivilant to IT Nexus (Initiator-Target)
-+ */
-+struct q2t_sess {
-+	uint16_t loop_id;
-+	port_id_t s_id;
-+
-+	unsigned int conf_compl_supported:1;
-+	unsigned int deleted:1;
-+	unsigned int local:1;
-+
-+	struct se_session *se_sess;
-+	scsi_qla_host_t *vha;
-+	struct q2t_tgt *tgt;
-+
-+	int sess_ref; /* protected by hardware_lock */
-+
-+	struct list_head sess_list_entry;
-+	unsigned long expires;
-+	struct list_head del_list_entry;
-+
-+	uint8_t port_name[WWN_SIZE];
-+};
-+
-+struct q2t_cmd {
-+	struct q2t_sess *sess;
-+	int state;
-+	struct se_cmd se_cmd;
-+	/* Sense buffer that will be mapped into outgoing status */
-+	unsigned char sense_buffer[TRANSPORT_SENSE_BUFFER];
-+
-+	unsigned int conf_compl_supported:1;/* to save extra sess dereferences */
-+	unsigned int sg_mapped:1;
-+	unsigned int free_sg:1;
-+	unsigned int aborted:1; /* Needed in case of SRR */
-+	unsigned int write_data_transferred:1;
-+
-+	struct scatterlist *sg;	/* cmd data buffer SG vector */
-+	int sg_cnt;		/* SG segments count */
-+	int bufflen;		/* cmd buffer length */
-+	int offset;
-+	uint32_t tag;
-+	dma_addr_t dma_handle;
-+	enum dma_data_direction dma_data_direction;
-+
-+	uint16_t loop_id;		    /* to save extra sess dereferences */
-+	struct q2t_tgt *tgt;		    /* to save extra sess dereferences */
-+	scsi_qla_host_t *vha;
-+
-+	union {
-+		atio7_entry_t atio7;
-+		atio_entry_t atio2x;
-+	} __attribute__((packed)) atio;
-+};
-+
-+struct q2t_sess_work_param {
-+	struct list_head sess_works_list_entry;
-+
-+#define Q2T_SESS_WORK_CMD	0
-+#define Q2T_SESS_WORK_ABORT	1
-+#define Q2T_SESS_WORK_TM	2
-+	int type;
-+
-+	union {
-+		struct q2t_cmd *cmd;
-+		abts24_recv_entry_t abts;
-+		notify_entry_t tm_iocb;
-+		atio7_entry_t tm_iocb2;
-+	};
-+};
-+
-+struct q2t_mgmt_cmd {
-+	uint8_t tmr_func;
-+	uint8_t fc_tm_rsp;
-+	struct q2t_sess *sess;
-+	struct se_cmd se_cmd;
-+	struct se_tmr_req *se_tmr_req;
-+	unsigned int flags;
-+#define Q24_MGMT_SEND_NACK	1
-+	union {
-+		atio7_entry_t atio7;
-+		notify_entry_t notify_entry;
-+		notify24xx_entry_t notify_entry24;
-+		abts24_recv_entry_t abts;
-+	} __attribute__((packed)) orig_iocb;
-+};
-+
-+struct q2t_prm {
-+	struct q2t_cmd *cmd;
-+	struct q2t_tgt *tgt;
-+	void *pkt;
-+	struct scatterlist *sg;	/* cmd data buffer SG vector */
-+	int seg_cnt;
-+	int req_cnt;
-+	uint16_t rq_result;
-+	uint16_t scsi_status;
-+	unsigned char *sense_buffer;
-+	int sense_buffer_len;
-+	int residual;
-+	int add_status_pkt;
-+};
-+
-+struct srr_imm {
-+	struct list_head srr_list_entry;
-+	int srr_id;
-+	union {
-+		notify_entry_t notify_entry;
-+		notify24xx_entry_t notify_entry24;
-+	} __attribute__((packed)) imm;
-+};
-+
-+struct srr_ctio {
-+	struct list_head srr_list_entry;
-+	int srr_id;
-+	struct q2t_cmd *cmd;
-+};
-+
-+#define Q2T_XMIT_DATA		1
-+#define Q2T_XMIT_STATUS		2
-+#define Q2T_XMIT_ALL		(Q2T_XMIT_STATUS|Q2T_XMIT_DATA)
-+
-+#endif /* __QLA2X00T_H */
-diff --git a/drivers/scsi/qla2xxx/qla2x_tgt.h b/drivers/scsi/qla2xxx/qla2x_tgt.h
-new file mode 100644
-index 0000000..16f524d
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla2x_tgt.h
-@@ -0,0 +1,140 @@
-+/*
-+ *  qla2x_tgt.h
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2006 Nathaniel Clark <nate@misrule.us>
-+ *  Copyright (C) 2007 - 2010 ID7 Ltd.
-+ *
-+ *  Forward port and refactoring to modern qla2xxx and target/configfs
-+ *
-+ *  Copyright (C) 2010 Nicholas A. Bellinger <nab@kernel.org>
-+ *
-+ *  Additional file for the target driver support.
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation; either version 2
-+ *  of the License, or (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+/*
-+ * This should be included only from within qla2xxx module.
-+ */
-+
-+
-+#ifndef __QLA2X_TGT_H
-+#define __QLA2X_TGT_H
-+
-+#include <linux/version.h>
-+
-+#include "qla2x_tgt_def.h"
-+
-+extern request_t *qla2x00_req_pkt(scsi_qla_host_t *ha);
-+
-+extern struct qla_tgt_data qla_target;
-+
-+void qla_set_tgt_mode(scsi_qla_host_t *ha);
-+void qla_clear_tgt_mode(scsi_qla_host_t *ha);
-+
-+static inline bool qla_tgt_mode_enabled(scsi_qla_host_t *ha)
-+{
-+	return ha->host->active_mode & MODE_TARGET;
-+}
-+
-+static inline bool qla_ini_mode_enabled(scsi_qla_host_t *ha)
-+{
-+	return ha->host->active_mode & MODE_INITIATOR;
-+}
-+
-+static inline void qla_reverse_ini_mode(scsi_qla_host_t *ha)
-+{
-+	if (ha->host->active_mode & MODE_INITIATOR)
-+		ha->host->active_mode &= ~MODE_INITIATOR;
-+	else
-+		ha->host->active_mode |= MODE_INITIATOR;
-+}
-+
-+/********************************************************************\
-+ * ISP Queue types left out of new QLogic driver (from old version)
-+\********************************************************************/
-+
-+/*
-+ * qla2x00_do_en_dis_lun
-+ *	Issue enable or disable LUN entry IOCB.
-+ *
-+ * Input:
-+ *	ha = adapter block pointer.
-+ *
-+ * Caller MUST have hardware lock held. This function might release it,
-+ * then reaquire.
-+ */
-+static inline void
-+__qla2x00_send_enable_lun(scsi_qla_host_t *vha, int enable)
-+{
-+	elun_entry_t *pkt;
-+	struct qla_hw_data *ha = vha->hw;
-+
-+	BUG_ON(IS_FWI2_CAPABLE(ha));
-+
-+	pkt = (elun_entry_t *)qla2x00_alloc_iocbs(vha, 0);
-+	if (pkt != NULL) {
-+		pkt->entry_type = ENABLE_LUN_TYPE;
-+		if (enable) {
-+			pkt->command_count = QLA2X00_COMMAND_COUNT_INIT;
-+			pkt->immed_notify_count = QLA2X00_IMMED_NOTIFY_COUNT_INIT;
-+			pkt->timeout = 0xffff;
-+		} else {
-+			pkt->command_count = 0;
-+			pkt->immed_notify_count = 0;
-+			pkt->timeout = 0;
++		spin_lock_irqsave(&ha->hardware_lock, flags);
++		if (host->active_mode & MODE_TARGET) {
++			printk(KERN_INFO "MODE_TARGET already active on qla2xxx"
++					"(%d)\n",  host->host_no);
++			spin_unlock_irqrestore(&ha->hardware_lock, flags);
++			continue;
 +		}
-+		DEBUG2(printk(KERN_DEBUG
-+			      "scsi%lu:ENABLE_LUN IOCB imm %u cmd %u timeout %u\n",
-+			      vha->host_no, pkt->immed_notify_count,
-+			      pkt->command_count, pkt->timeout));
++		spin_unlock_irqrestore(&ha->hardware_lock, flags);
 +
-+		/* Issue command to ISP */
-+		qla2x00_isp_cmd(vha, vha->req);
++		if (!scsi_host_get(host)) {
++			printk(KERN_ERR "Unable to scsi_host_get() for"
++				" qla2xxx scsi_host\n");
++			ret = -EINVAL;
++			goto out;
++		}
 +
-+	} else
-+		qla_clear_tgt_mode(vha);
-+#if defined(QL_DEBUG_LEVEL_2) || defined(QL_DEBUG_LEVEL_3)
-+	if (!pkt)
-+		printk(KERN_ERR "%s: **** FAILED ****\n", __func__);
++		printk("qla2xxx HW vha->node_name: ");
++		for (i = 0; i < 8; i++)
++			printk("%02x ", vha->node_name[i]);
++		printk("\n");
++
++		printk("qla2xxx HW vha->port_name: ");
++		for (i = 0; i < 8; i++)
++			printk("%02x ", vha->port_name[i]);
++		printk("\n");
++
++		printk("qla2xxx passed configfs WWPN: ");
++		put_unaligned_be64(wwpn, b);
++		for (i = 0; i < 8; i++)
++			printk("%02x ", b[i]);
++		printk("\n");
++
++		if (memcmp(vha->port_name, b, 8)) {
++			scsi_host_put(host);
++			continue;
++		}
++		printk("qla2xxx: Found matching HW WWPN: %s for lport\n", name);
++		ret = tcm_qla2xxx_init_lport(lport, vha, NULL);
++		break;
++	}
++
++	if (ret != 0)
++		goto out;
++
++	return &lport->lport_wwn;
++out:
++	kfree(lport);
++	return ERR_PTR(ret);
++}
++
++extern void q2t_target_stop(struct q2t_tgt *);
++
++static void tcm_qla2xxx_drop_lport(struct se_wwn *wwn)
++{
++	struct tcm_qla2xxx_lport *lport = container_of(wwn,
++			struct tcm_qla2xxx_lport, lport_wwn);
++	struct scsi_qla_host *vha = lport->qla_vha;
++	struct qla_hw_data *ha = vha->hw;
++	struct Scsi_Host *sh = vha->host;
++	/*
++	 * Call into qla2x_target.c LLD logic to shutdown the active
++	 * FC Nexuses and disable target mode operation for this qla_hw_data
++	 */
++	if ((ha->q2t_tgt != NULL) && !ha->q2t_tgt->tgt_stopped)
++		q2t_target_stop(ha->q2t_tgt);
++	/*
++	 * Clear the target_lport_ptr qla_target_template pointer in qla_hw_data
++	 */
++	ha->target_lport_ptr = NULL;
++	ha->qla2x_tmpl = NULL;
++	/*
++	 * Release the Scsi_Host reference for the underlying qla2xxx host
++	 */
++	scsi_host_put(sh);
++
++	vfree(lport->lport_loopid_map);
++	vfree(lport->lport_fcport_map);
++	kfree(lport);
++}
++
++static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
++	struct target_fabric_configfs *tf,
++	struct config_group *group,
++	const char *name)
++{
++	struct tcm_qla2xxx_lport *lport;
++	struct Scsi_Host *host = NULL;
++	struct pci_dev *dev = NULL;
++	struct scsi_qla_host *vha, *npiv_vp;
++	struct qla_hw_data *ha;
++	struct fc_vport_identifiers vid;
++	struct fc_vport *vport;
++	unsigned long flags;
++	u64 npiv_wwpn, npiv_wwnn;
++	int i, ret = -ENODEV;
++	u8 b[8], b2[8];
++
++	if (tcm_qla2xxx_npiv_parse_wwn(name, strlen(name)+1,
++				&npiv_wwpn, &npiv_wwnn) < 0)
++		return ERR_PTR(-EINVAL);
++
++	lport = kzalloc(sizeof(struct tcm_qla2xxx_lport), GFP_KERNEL);
++	if (!(lport)) {
++		printk(KERN_ERR "Unable to allocate struct tcm_qla2xxx_lport"
++				" for NPIV\n");
++		return ERR_PTR(-ENOMEM);
++	}
++	lport->lport_npiv_wwpn = npiv_wwpn;
++	lport->lport_npiv_wwnn = npiv_wwnn;
++	tcm_qla2xxx_npiv_format_wwn(&lport->lport_npiv_name[0],
++			TCM_QLA2XXX_NAMELEN, npiv_wwpn, npiv_wwnn);
++
++	while ((dev = pci_get_device(PCI_VENDOR_ID_QLOGIC, PCI_ANY_ID,
++					dev)) != NULL) {
++
++		vha = pci_get_drvdata(dev);
++		if (!vha)
++			continue;
++		ha = vha->hw;
++		if (!ha)
++			continue;
++		host = vha->host;
++		if (!host)
++			continue;
++
++		if (!(host->hostt->supported_mode & MODE_TARGET))
++			continue;
++
++		spin_lock_irqsave(&ha->hardware_lock, flags);
++		if (host->active_mode & MODE_TARGET) {
++			printk(KERN_INFO "MODE_TARGET already active on qla2xxx"
++					"(%d)\n",  host->host_no);
++			spin_unlock_irqrestore(&ha->hardware_lock, flags);
++			continue;
++		}
++		spin_unlock_irqrestore(&ha->hardware_lock, flags);
++
++		if (!scsi_host_get(host)) {
++			printk(KERN_ERR "Unable to scsi_host_get() for"
++				" qla2xxx scsi_host\n");
++			ret = -EINVAL;
++			goto out;
++		}
++
++		printk("qla2xxx HW vha->node_name: ");
++		for (i = 0; i < 8; i++)
++			printk("%02x ", vha->node_name[i]);
++		printk("\n");
++
++		printk("qla2xxx HW vha->port_name: ");
++		for (i = 0; i < 8; i++)
++			printk("%02x ", vha->port_name[i]);
++		printk("\n");
++
++		printk("qla2xxx passed configfs NPIV WWPN: ");
++		put_unaligned_be64(npiv_wwpn, b);
++		for (i = 0; i < 8; i++)
++			printk("%02x ", b[i]);
++		printk("\n");
++
++		printk("qla2xxx passed configfs NPIV WWNN: ");
++		put_unaligned_be64(npiv_wwnn, b2);
++		for (i = 0; i < 8; i++)
++			printk("%02x ", b2[i]);
++		printk("\n");
++
++		spin_lock_irqsave(&ha->vport_slock, flags);
++		list_for_each_entry(npiv_vp, &ha->vp_list, list) {
++			if (!npiv_vp->vp_idx)
++				continue;
++
++			if (memcmp(npiv_vp->port_name, b, 8) ||
++			    memcmp(npiv_vp->node_name, b2, 8))
++				continue;
++
++#warning FIXME: Need to add atomic_inc(&npiv_vp->vref_count) before dropping ha->vport_slock..?
++			spin_unlock_irqrestore(&ha->vport_slock, flags);
++
++			printk("qla2xxx_npiv: Found matching NPIV WWPN+WWNN: %s "
++					" for lport\n", name);
++			tcm_qla2xxx_init_lport(lport, vha, npiv_vp);
++			/*
++			 * Setup fc_vport_identifiers for NPIV containing
++			 * the passed WWPN and WWNN for the new libfc vport.
++			 */
++			memset(&vid, 0, sizeof(vid));
++			vid.roles = FC_PORT_ROLE_FCP_INITIATOR;
++			vid.vport_type = FC_PORTTYPE_NPIV;
++			vid.port_name = npiv_wwpn;
++			vid.node_name = npiv_wwnn;
++			/* vid.symbolic_name is already zero/NULL's */
++			vid.disable = false;	/* always enabled */
++
++			/* we only allow support on Channel 0 !!! */
++			vport = fc_vport_create(host, 0, &vid);
++			if (!vport) {
++				printk(KERN_ERR "fc_vport_create() failed for"
++						" NPIV tcm_qla2xxx\n");
++				scsi_host_put(host);
++				ret = -EINVAL;
++				goto out;
++			}
++			lport->npiv_vport = vport;
++			ret = 0;
++			spin_lock_irqsave(&ha->vport_slock, flags);
++			break;
++		}
++		spin_unlock_irqrestore(&ha->vport_slock, flags);
++
++		if (!ret)
++			break;
++
++		scsi_host_put(host);
++	}
++
++	if (ret != 0)
++		goto out;
++
++	return &lport->lport_wwn;
++out:
++	kfree(lport);
++	return ERR_PTR(ret);
++}
++
++static void tcm_qla2xxx_npiv_drop_lport(struct se_wwn *wwn)
++{
++	struct tcm_qla2xxx_lport *lport = container_of(wwn,
++			struct tcm_qla2xxx_lport, lport_wwn);
++	struct scsi_qla_host *vha = lport->qla_vha;
++	struct Scsi_Host *sh = vha->host;
++	/*
++	 * Notify libfc that we want to release the lport->npiv_vport
++	 */
++	fc_vport_terminate(lport->npiv_vport);
++
++	scsi_host_put(sh);
++	kfree(lport);
++}
++
++
++static ssize_t tcm_qla2xxx_wwn_show_attr_version(
++	struct target_fabric_configfs *tf,
++	char *page)
++{
++	return sprintf(page, "TCM QLOGIC QLA2XXX NPIV capable fabric module %s on %s/%s"
++		" on "UTS_RELEASE"\n", TCM_QLA2XXX_VERSION, utsname()->sysname,
++		utsname()->machine);
++}
++
++TF_WWN_ATTR_RO(tcm_qla2xxx, version);
++
++static struct configfs_attribute *tcm_qla2xxx_wwn_attrs[] = {
++	&tcm_qla2xxx_wwn_version.attr,
++	NULL,
++};
++
++static struct target_core_fabric_ops tcm_qla2xxx_ops = {
++	.get_fabric_name		= tcm_qla2xxx_get_fabric_name,
++	.get_fabric_proto_ident		= tcm_qla2xxx_get_fabric_proto_ident,
++	.tpg_get_wwn			= tcm_qla2xxx_get_fabric_wwn,
++	.tpg_get_tag			= tcm_qla2xxx_get_tag,
++	.tpg_get_default_depth		= tcm_qla2xxx_get_default_depth,
++	.tpg_get_pr_transport_id	= tcm_qla2xxx_get_pr_transport_id,
++	.tpg_get_pr_transport_id_len	= tcm_qla2xxx_get_pr_transport_id_len,
++	.tpg_parse_pr_out_transport_id	= tcm_qla2xxx_parse_pr_out_transport_id,
++	.tpg_check_demo_mode		= tcm_qla2xxx_check_true,
++	.tpg_check_demo_mode_cache	= tcm_qla2xxx_check_true,
++	.tpg_check_demo_mode_write_protect = tcm_qla2xxx_check_false,
++	.tpg_check_prod_mode_write_protect = tcm_qla2xxx_check_false,
++	.tpg_alloc_fabric_acl		= tcm_qla2xxx_alloc_fabric_acl,
++	.tpg_release_fabric_acl		= tcm_qla2xxx_release_fabric_acl,
++	.tpg_get_inst_index		= tcm_qla2xxx_tpg_get_inst_index,
++	.new_cmd_map			= tcm_qla2xxx_new_cmd_map,
++	.release_cmd_to_pool		= tcm_qla2xxx_release_cmd,
++	.release_cmd_direct		= tcm_qla2xxx_release_cmd,
++	.shutdown_session		= tcm_qla2xxx_shutdown_session,
++	.close_session			= tcm_qla2xxx_close_session,
++	.stop_session			= tcm_qla2xxx_stop_session,
++	.fall_back_to_erl0		= tcm_qla2xxx_reset_nexus,
++	.sess_logged_in			= tcm_qla2xxx_sess_logged_in,
++	.sess_get_index			= tcm_qla2xxx_sess_get_index,
++	.sess_get_initiator_sid		= NULL,
++	.write_pending			= tcm_qla2xxx_write_pending,
++	.write_pending_status		= tcm_qla2xxx_write_pending_status,
++	.set_default_node_attributes	= tcm_qla2xxx_set_default_node_attrs,
++	.get_task_tag			= tcm_qla2xxx_get_task_tag,
++	.get_cmd_state			= tcm_qla2xxx_get_cmd_state,
++	.new_cmd_failure		= tcm_qla2xxx_new_cmd_failure,
++	.queue_data_in			= tcm_qla2xxx_queue_data_in,
++	.queue_status			= tcm_qla2xxx_queue_status,
++	.queue_tm_rsp			= tcm_qla2xxx_queue_tm_rsp,
++	.get_fabric_sense_len		= tcm_qla2xxx_get_fabric_sense_len,
++	.set_fabric_sense_len		= tcm_qla2xxx_set_fabric_sense_len,
++	.is_state_remove		= tcm_qla2xxx_is_state_remove,
++	.pack_lun			= tcm_qla2xxx_pack_lun,
++	/*
++	 * Setup function pointers for generic logic in target_core_fabric_configfs.c
++	 */
++	.fabric_make_wwn		= tcm_qla2xxx_make_lport,
++	.fabric_drop_wwn		= tcm_qla2xxx_drop_lport,
++	.fabric_make_tpg		= tcm_qla2xxx_make_tpg,
++	.fabric_drop_tpg		= tcm_qla2xxx_drop_tpg,
++	.fabric_post_link		= NULL,
++	.fabric_pre_unlink		= NULL,
++	.fabric_make_np			= NULL,
++	.fabric_drop_np			= NULL,
++	.fabric_make_nodeacl		= tcm_qla2xxx_make_nodeacl,
++	.fabric_drop_nodeacl		= tcm_qla2xxx_drop_nodeacl,
++};
++
++static struct target_core_fabric_ops tcm_qla2xxx_npiv_ops = {
++	.get_fabric_name		= tcm_qla2xxx_npiv_get_fabric_name,
++	.get_fabric_proto_ident		= tcm_qla2xxx_get_fabric_proto_ident,
++	.tpg_get_wwn			= tcm_qla2xxx_npiv_get_fabric_wwn,
++	.tpg_get_tag			= tcm_qla2xxx_get_tag,
++	.tpg_get_default_depth		= tcm_qla2xxx_get_default_depth,
++	.tpg_get_pr_transport_id	= tcm_qla2xxx_get_pr_transport_id,
++	.tpg_get_pr_transport_id_len	= tcm_qla2xxx_get_pr_transport_id_len,
++	.tpg_parse_pr_out_transport_id	= tcm_qla2xxx_parse_pr_out_transport_id,
++	.tpg_check_demo_mode		= tcm_qla2xxx_check_false,
++	.tpg_check_demo_mode_cache	= tcm_qla2xxx_check_true,
++	.tpg_check_demo_mode_write_protect = tcm_qla2xxx_check_true,
++	.tpg_check_prod_mode_write_protect = tcm_qla2xxx_check_false,
++	.tpg_alloc_fabric_acl		= tcm_qla2xxx_alloc_fabric_acl,
++	.tpg_release_fabric_acl		= tcm_qla2xxx_release_fabric_acl,
++	.tpg_get_inst_index		= tcm_qla2xxx_tpg_get_inst_index,
++	.release_cmd_to_pool		= tcm_qla2xxx_release_cmd,
++	.release_cmd_direct		= tcm_qla2xxx_release_cmd,
++	.shutdown_session		= tcm_qla2xxx_shutdown_session,
++	.close_session			= tcm_qla2xxx_close_session,
++	.stop_session			= tcm_qla2xxx_stop_session,
++	.fall_back_to_erl0		= tcm_qla2xxx_reset_nexus,
++	.sess_logged_in			= tcm_qla2xxx_sess_logged_in,
++	.sess_get_index			= tcm_qla2xxx_sess_get_index,
++	.sess_get_initiator_sid		= NULL,
++	.write_pending			= tcm_qla2xxx_write_pending,
++	.write_pending_status		= tcm_qla2xxx_write_pending_status,
++	.set_default_node_attributes	= tcm_qla2xxx_set_default_node_attrs,
++	.get_task_tag			= tcm_qla2xxx_get_task_tag,
++	.get_cmd_state			= tcm_qla2xxx_get_cmd_state,
++	.new_cmd_failure		= tcm_qla2xxx_new_cmd_failure,
++	.queue_data_in			= tcm_qla2xxx_queue_data_in,
++	.queue_status			= tcm_qla2xxx_queue_status,
++	.queue_tm_rsp			= tcm_qla2xxx_queue_tm_rsp,
++	.get_fabric_sense_len		= tcm_qla2xxx_get_fabric_sense_len,
++	.set_fabric_sense_len		= tcm_qla2xxx_set_fabric_sense_len,
++	.is_state_remove		= tcm_qla2xxx_is_state_remove,
++	.pack_lun			= tcm_qla2xxx_pack_lun,
++	/*
++	 * Setup function pointers for generic logic in target_core_fabric_configfs.c
++	 */
++	.fabric_make_wwn		= tcm_qla2xxx_npiv_make_lport,
++	.fabric_drop_wwn		= tcm_qla2xxx_npiv_drop_lport,
++	.fabric_make_tpg		= tcm_qla2xxx_npiv_make_tpg,
++	.fabric_drop_tpg		= tcm_qla2xxx_drop_tpg,
++	.fabric_post_link		= NULL,
++	.fabric_pre_unlink		= NULL,
++	.fabric_make_np			= NULL,
++	.fabric_drop_np			= NULL,
++	.fabric_make_nodeacl		= tcm_qla2xxx_make_nodeacl,
++	.fabric_drop_nodeacl		= tcm_qla2xxx_drop_nodeacl,
++};
++
++static int tcm_qla2xxx_register_configfs(void)
++{
++	struct target_fabric_configfs *fabric, *npiv_fabric;
++	int ret;
++
++	printk(KERN_INFO "TCM QLOGIC QLA2XXX fabric module %s on %s/%s"
++		" on "UTS_RELEASE"\n", TCM_QLA2XXX_VERSION, utsname()->sysname,
++		utsname()->machine);
++	/*
++	 * Register the top level struct config_item_type with TCM core
++	 */
++	fabric = target_fabric_configfs_init(THIS_MODULE, "qla2xxx");
++	if (!(fabric)) {
++		printk(KERN_ERR "target_fabric_configfs_init() failed\n");
++		return -ENOMEM;
++	}
++	/*
++	 * Setup fabric->tf_ops from our local tcm_qla2xxx_ops
++	 */
++	fabric->tf_ops = tcm_qla2xxx_ops;
++	/*
++	 * Setup the struct se_task->task_sg[] chaining bit
++	 */
++	fabric->tf_ops.task_sg_chaining = 1;
++	/*
++	 * Setup default attribute lists for various fabric->tf_cit_tmpl
++	 */
++	TF_CIT_TMPL(fabric)->tfc_wwn_cit.ct_attrs = tcm_qla2xxx_wwn_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_base_cit.ct_attrs = tcm_qla2xxx_tpg_attrs;
++	TF_CIT_TMPL(fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;
++	/*
++	 * Register the fabric for use within TCM
++	 */
++	ret = target_fabric_configfs_register(fabric);
++	if (ret < 0) {
++		printk(KERN_ERR "target_fabric_configfs_register() failed"
++				" for TCM_QLA2XXX\n");
++		return ret;
++	}
++	/*
++	 * Setup our local pointer to *fabric
++	 */
++	tcm_qla2xxx_fabric_configfs = fabric;
++	printk(KERN_INFO "TCM_QLA2XXX[0] - Set fabric -> tcm_qla2xxx_fabric_configfs\n");
++
++	/*
++	 * Register the top level struct config_item_type for NPIV with TCM core
++	 */
++	npiv_fabric = target_fabric_configfs_init(THIS_MODULE, "qla2xxx_npiv");
++	if (!(npiv_fabric)) {
++		printk(KERN_ERR "target_fabric_configfs_init() failed\n");
++		ret = -ENOMEM;
++		goto out;
++	}
++	/*
++	 * Setup fabric->tf_ops from our local tcm_qla2xxx_npiv_ops
++	 */
++	npiv_fabric->tf_ops = tcm_qla2xxx_npiv_ops;
++	/*
++	 * Setup default attribute lists for various npiv_fabric->tf_cit_tmpl
++	 */
++	TF_CIT_TMPL(npiv_fabric)->tfc_wwn_cit.ct_attrs = tcm_qla2xxx_wwn_attrs;
++	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_base_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_attrib_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_param_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_np_base_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_nacl_base_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_nacl_attrib_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_nacl_auth_cit.ct_attrs = NULL;
++	TF_CIT_TMPL(npiv_fabric)->tfc_tpg_nacl_param_cit.ct_attrs = NULL;
++	/*
++	 * Register the npiv_fabric for use within TCM
++	 */
++	ret = target_fabric_configfs_register(npiv_fabric);
++	if (ret < 0) {
++		printk(KERN_ERR "target_fabric_configfs_register() failed"
++				" for TCM_QLA2XXX\n");
++		goto out;;
++	}
++	/*
++	 * Setup our local pointer to *npiv_fabric
++	 */
++	tcm_qla2xxx_npiv_fabric_configfs = npiv_fabric;
++	printk(KERN_INFO "TCM_QLA2XXX[0] - Set fabric -> tcm_qla2xxx_npiv_fabric_configfs\n");
++
++	return 0;
++out:
++	if (tcm_qla2xxx_fabric_configfs != NULL)
++		target_fabric_configfs_deregister(tcm_qla2xxx_fabric_configfs);
++
++	return ret;
++}
++
++static void tcm_qla2xxx_deregister_configfs(void)
++{
++	if (!(tcm_qla2xxx_fabric_configfs))
++		return;
++
++	target_fabric_configfs_deregister(tcm_qla2xxx_fabric_configfs);
++	tcm_qla2xxx_fabric_configfs = NULL;
++	printk(KERN_INFO "TCM_QLA2XXX[0] - Cleared tcm_qla2xxx_fabric_configfs\n");
++
++	target_fabric_configfs_deregister(tcm_qla2xxx_npiv_fabric_configfs);
++	tcm_qla2xxx_npiv_fabric_configfs = NULL;
++	printk(KERN_INFO "TCM_QLA2XXX[0] - Cleared tcm_qla2xxx_npiv_fabric_configfs\n");
++}
++
++static int __init tcm_qla2xxx_init(void)
++{
++	int ret;
++
++	ret = tcm_qla2xxx_register_configfs();
++	if (ret < 0)
++		return ret;
++
++	return 0;
++}
++
++static void __exit tcm_qla2xxx_exit(void)
++{
++	tcm_qla2xxx_deregister_configfs();
++}
++
++#ifdef MODULE
++MODULE_DESCRIPTION("TCM QLA2XXX series NPIV enabled fabric driver");
++MODULE_LICENSE("GPL");
++module_init(tcm_qla2xxx_init);
++module_exit(tcm_qla2xxx_exit);
 +#endif
+diff --git a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c
+new file mode 100644
+index 0000000..ed109de
+--- /dev/null
++++ b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.c
+@@ -0,0 +1,766 @@
++/*******************************************************************************
++ * Filename:  tcm_qla2xxx_fabric.c
++ *
++ * This file contains TCM_QLA2XXX functions for struct target_core_fabrib_ops
++ * for Qlogic 2xxx series target mode HBAs
++ *
++ * Copyright (c) 2010 Rising Tide Systems, Inc
++ * Copyright (c) 2010 Linux-iSCSI.org
++ *
++ * Copyright (c) 2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * tcm_qla2xxx_parse_wwn() and tcm_qla2xxx_format_wwn() contains code from
++ * the TCM_FC / Open-FCoE.org fabric module.
++ *
++ * Copyright (c) 2010 Cisco Systems, Inc
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ ****************************************************************************/
 +
++#define TCM_QLA2XXX_FABRIC_C
++
++#include <linux/slab.h>
++#include <linux/kthread.h>
++#include <linux/types.h>
++#include <linux/list.h>
++#include <linux/types.h>
++#include <linux/string.h>
++#include <linux/ctype.h>
++#include <asm/unaligned.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_cmnd.h>
++
++#include <target/target_core_base.h>
++#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_fabric_lib.h>
++#include <target/target_core_device.h>
++#include <target/target_core_tpg.h>
++#include <target/target_core_configfs.h>
++#include <target/target_core_tmr.h>
++
++#include <qla_def.h>
++#include <qla2x_tgt_def.h>
++
++//#include <scsi/libfc.h>
++//#include <scsi/scsi_transport_fc.h>
++
++#include <qla2x_target.h>
++
++#include <tcm_qla2xxx_base.h>
++#include <tcm_qla2xxx_fabric.h>
++
++#undef TCM_QLA2XXX_FABRIC_C
++
++int tcm_qla2xxx_check_true(struct se_portal_group *se_tpg)
++{
++	return 1;
++}
++
++int tcm_qla2xxx_check_false(struct se_portal_group *se_tpg)
++{
++	return 0;
++}
++
++/*
++ * Parse WWN.
++ * If strict, we require lower-case hex and colon separators to be sure
++ * the name is the same as what would be generated by ft_format_wwn()
++ * so the name and wwn are mapped one-to-one.
++ */
++ssize_t tcm_qla2xxx_parse_wwn(const char *name, u64 *wwn, int strict)
++{
++	const char *cp;
++	char c;
++	u32 nibble;
++	u32 byte = 0;
++	u32 pos = 0;
++	u32 err;
++
++	*wwn = 0;
++	for (cp = name; cp < &name[TCM_QLA2XXX_NAMELEN - 1]; cp++) {
++		c = *cp;
++		if (c == '\n' && cp[1] == '\0')
++			continue;
++		if (strict && pos++ == 2 && byte++ < 7) {
++			pos = 0;
++			if (c == ':')
++				continue;
++			err = 1;
++			goto fail;
++		}
++		if (c == '\0') {
++			err = 2;
++			if (strict && byte != 8)
++				goto fail;
++			return cp - name;
++		}
++		err = 3;
++		if (isdigit(c))
++			nibble = c - '0';
++		else if (isxdigit(c) && (islower(c) || !strict))
++			nibble = tolower(c) - 'a' + 10;
++		else
++			goto fail;
++		*wwn = (*wwn << 4) | nibble;
++	}
++	err = 4;
++fail:
++	printk(KERN_INFO "err %u len %zu pos %u byte %u\n",
++			err, cp - name, pos, byte);
++	return -1;
++}
++
++ssize_t tcm_qla2xxx_format_wwn(char *buf, size_t len, u64 wwn)
++{
++	u8 b[8];
++
++	put_unaligned_be64(wwn, b);
++	return snprintf(buf, len,
++		"%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x",
++		b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]);
++}
++
++char *tcm_qla2xxx_get_fabric_name(void)
++{
++	return "qla2xxx";
++}
++
++/*
++ * From drivers/scsi/scsi_transport_fc.c:fc_parse_wwn
++ */
++static int tcm_qla2xxx_npiv_extract_wwn(const char *ns, u64 *nm)
++{
++	unsigned int i, j, value;
++	u8 wwn[8];
++
++	memset(wwn, 0, sizeof(wwn));
++
++	/* Validate and store the new name */
++	for (i = 0, j = 0; i < 16; i++) {
++		value = hex_to_bin(*ns++);
++		if (value >= 0)
++			j = (j << 4) | value;
++		else
++			return -EINVAL;
++
++		if (i % 2) {
++			wwn[i/2] = j & 0xff;
++			j = 0;
++		}
++	}
++
++	*nm = wwn_to_u64(wwn);
++	return 0;
++}
++
++/*
++ * This parsing logic follows drivers/scsi/scsi_transport_fc.c:store_fc_host_vport_create()
++ */
++int tcm_qla2xxx_npiv_parse_wwn(
++	const char *name,
++	size_t count,
++	u64 *wwpn,
++	u64 *wwnn)
++{
++	unsigned int cnt = count;
++	int rc;
++
++	*wwpn = 0;
++	*wwnn = 0;
++
++	/* count may include a LF at end of string */
++	if (name[cnt-1] == '\n')
++		cnt--;
++
++	/* validate we have enough characters for WWPN */
++	if ((cnt != (16+1+16)) || (name[16] != ':'))
++		return -EINVAL;
++
++	rc = tcm_qla2xxx_npiv_extract_wwn(&name[0], wwpn);
++	if (rc != 0)
++		return rc;
++
++	rc = tcm_qla2xxx_npiv_extract_wwn(&name[17], wwnn);
++	if (rc != 0)
++		return rc;
++
++	return 0;
++}
++
++ssize_t tcm_qla2xxx_npiv_format_wwn(char *buf, size_t len, u64 wwpn, u64 wwnn)
++{
++	u8 b[8], b2[8];
++
++	put_unaligned_be64(wwpn, b);
++	put_unaligned_be64(wwnn, b2);
++        return snprintf(buf, len,
++                "%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x,"
++		"%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x:%2.2x",
++                b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7],
++		b2[0], b2[1], b2[2], b2[3], b2[4], b2[5], b2[6], b2[7]);
++}
++
++char *tcm_qla2xxx_npiv_get_fabric_name(void)
++{
++	return "qla2xxx_npiv";
++}
++
++u8 tcm_qla2xxx_get_fabric_proto_ident(struct se_portal_group *se_tpg)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++				struct tcm_qla2xxx_tpg, se_tpg);
++	struct tcm_qla2xxx_lport *lport = tpg->lport;
++	u8 proto_id;
++
++	switch (lport->lport_proto_id) {
++	case SCSI_PROTOCOL_FCP:
++	default:
++		proto_id = fc_get_fabric_proto_ident(se_tpg);
++		break;
++	}
++
++	return proto_id;
++}
++
++char *tcm_qla2xxx_get_fabric_wwn(struct se_portal_group *se_tpg)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++				struct tcm_qla2xxx_tpg, se_tpg);
++	struct tcm_qla2xxx_lport *lport = tpg->lport;
++
++	return &lport->lport_name[0];
++}
++
++char *tcm_qla2xxx_npiv_get_fabric_wwn(struct se_portal_group *se_tpg)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++				struct tcm_qla2xxx_tpg, se_tpg);
++	struct tcm_qla2xxx_lport *lport = tpg->lport;
++
++	return &lport->lport_npiv_name[0];
++}
++
++u16 tcm_qla2xxx_get_tag(struct se_portal_group *se_tpg)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++				struct tcm_qla2xxx_tpg, se_tpg);
++	return tpg->lport_tpgt;
++}
++
++u32 tcm_qla2xxx_get_default_depth(struct se_portal_group *se_tpg)
++{
++	return 1;
++}
++
++u32 tcm_qla2xxx_get_pr_transport_id(
++	struct se_portal_group *se_tpg,
++	struct se_node_acl *se_nacl,
++	struct t10_pr_registration *pr_reg,
++	int *format_code,
++	unsigned char *buf)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++				struct tcm_qla2xxx_tpg, se_tpg);
++	struct tcm_qla2xxx_lport *lport = tpg->lport;
++	int ret = 0;
++
++	switch (lport->lport_proto_id) {
++	case SCSI_PROTOCOL_FCP:
++	default:
++		ret = fc_get_pr_transport_id(se_tpg, se_nacl, pr_reg,
++					format_code, buf);
++		break;
++	}
++
++	return ret;
++}
++
++u32 tcm_qla2xxx_get_pr_transport_id_len(
++	struct se_portal_group *se_tpg,
++	struct se_node_acl *se_nacl,
++	struct t10_pr_registration *pr_reg,
++	int *format_code)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++				struct tcm_qla2xxx_tpg, se_tpg);
++	struct tcm_qla2xxx_lport *lport = tpg->lport;
++	int ret = 0;
++
++	switch (lport->lport_proto_id) {
++	case SCSI_PROTOCOL_FCP:
++	default:
++		ret = fc_get_pr_transport_id_len(se_tpg, se_nacl, pr_reg,
++					format_code);
++		break;
++	}
++
++	return ret;
++}
++
++char *tcm_qla2xxx_parse_pr_out_transport_id(
++	struct se_portal_group *se_tpg,
++	const char *buf,
++	u32 *out_tid_len,
++	char **port_nexus_ptr)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++				struct tcm_qla2xxx_tpg, se_tpg);
++	struct tcm_qla2xxx_lport *lport = tpg->lport;
++	char *tid = NULL;
++
++	switch (lport->lport_proto_id) {
++	case SCSI_PROTOCOL_FCP:
++	default:
++		tid = fc_parse_pr_out_transport_id(se_tpg, buf, out_tid_len,
++					port_nexus_ptr);
++		break;
++	}
++
++	return tid;
++}
++
++struct se_node_acl *tcm_qla2xxx_alloc_fabric_acl(struct se_portal_group *se_tpg)
++{
++	struct tcm_qla2xxx_nacl *nacl;
++
++	nacl = kzalloc(sizeof(struct tcm_qla2xxx_nacl), GFP_KERNEL);
++	if (!(nacl)) {
++		printk(KERN_ERR "Unable to alocate struct tcm_qla2xxx_nacl\n");
++		return NULL;
++	}
++
++	return &nacl->se_node_acl;
++}
++
++void tcm_qla2xxx_release_fabric_acl(
++	struct se_portal_group *se_tpg,
++	struct se_node_acl *se_nacl)
++{
++	struct tcm_qla2xxx_nacl *nacl = container_of(se_nacl,
++			struct tcm_qla2xxx_nacl, se_node_acl);
++	kfree(nacl);
++}
++
++u32 tcm_qla2xxx_tpg_get_inst_index(struct se_portal_group *se_tpg)
++{
++	struct tcm_qla2xxx_tpg *tpg = container_of(se_tpg,
++				struct tcm_qla2xxx_tpg, se_tpg);
++
++	return tpg->lport_tpgt;
++}
++
++/*
++ * Called from qla_target_template->free_cmd(), and will call
++ * tcm_qla2xxx_release_cmd via normal struct target_core_fabric_ops
++ * release callback.
++ */
++void tcm_qla2xxx_free_cmd(struct q2t_cmd *cmd)
++{
++	transport_generic_free_cmd(&cmd->se_cmd, 0, 1, 0);
++}
++
++extern void q2t_free_cmd(struct q2t_cmd *cmd);
++/*
++ * Callback from TCM Core to release underlying fabric descriptor
++ */
++void tcm_qla2xxx_release_cmd(struct se_cmd *se_cmd)
++{
++	struct q2t_cmd *cmd = container_of(se_cmd, struct q2t_cmd, se_cmd);
++
++	if (se_cmd->se_tmr_req != NULL)
++		return;
++
++	q2t_free_cmd(cmd);
++}
++
++#warning FIXME: tcm_qla2xxx_shutdown_session
++int tcm_qla2xxx_shutdown_session(struct se_session *se_sess)
++{
++	printk("tcm_qla2xxx_shutdown_session returning TRUE\n");
++	return 1;
++}
++
++extern int tcm_qla2xxx_clear_nacl_from_fcport_map(struct se_node_acl *);
++
++void tcm_qla2xxx_close_session(struct se_session *se_sess)
++{
++	tcm_qla2xxx_clear_nacl_from_fcport_map(se_sess->se_node_acl);
++}
++
++void tcm_qla2xxx_stop_session(struct se_session *se_sess, int sess_sleep , int conn_sleep)
++{
++	tcm_qla2xxx_clear_nacl_from_fcport_map(se_sess->se_node_acl);
++}
++
++void tcm_qla2xxx_reset_nexus(struct se_session *se_sess)
++{
++	return;
++}
++
++int tcm_qla2xxx_sess_logged_in(struct se_session *se_sess)
++{
++	return 0;
++}
++
++u32 tcm_qla2xxx_sess_get_index(struct se_session *se_sess)
++{
++	return 0;
++}
++
++extern int q2t_rdy_to_xfer(struct q2t_cmd *);
++
++int tcm_qla2xxx_write_pending(struct se_cmd *se_cmd)
++{
++	struct q2t_cmd *cmd = container_of(se_cmd, struct q2t_cmd, se_cmd);
++
++	cmd->bufflen = se_cmd->data_length;
++	cmd->dma_data_direction = se_cmd->data_direction;
++	/*
++	 * Setup the struct se_task->task_sg[] chained SG list
++	 */
++	if ((se_cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) ||
++	    (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB)) {
++		transport_do_task_sg_chain(se_cmd);
++
++		cmd->sg_cnt = T_TASK(se_cmd)->t_tasks_sg_chained_no;
++		cmd->sg = T_TASK(se_cmd)->t_tasks_sg_chained;
++	} else if (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
++		/*
++		 * Use T_TASK(se_cmd)->t_tasks_sg_bounce for control CDBs
++		 * using a contigious buffer
++		 */
++		sg_init_table(&T_TASK(se_cmd)->t_tasks_sg_bounce, 1);
++		sg_set_buf(&T_TASK(se_cmd)->t_tasks_sg_bounce,
++			T_TASK(se_cmd)->t_task_buf, se_cmd->data_length);
++		cmd->sg_cnt = 1;
++		cmd->sg = &T_TASK(se_cmd)->t_tasks_sg_bounce;
++	} else {
++		printk(KERN_ERR "Unknown se_cmd_flags: 0x%08x in"
++			" tcm_qla2xxx_write_pending()\n", se_cmd->se_cmd_flags);
++		BUG();
++	}
++	/*
++	 * qla2x_target.c:q2t_rdy_to_xfer() will call pci_map_sg() to setup
++	 * the SGL mappings into PCIe memory for incoming FCP WRITE data.
++	 */
++	return q2t_rdy_to_xfer(cmd);
++}
++
++int tcm_qla2xxx_write_pending_status(struct se_cmd *se_cmd)
++{
++	return 0;
++}
++
++void tcm_qla2xxx_set_default_node_attrs(struct se_node_acl *nacl)
++{
++	return;
++}
++
++u32 tcm_qla2xxx_get_task_tag(struct se_cmd *se_cmd)
++{
++	struct q2t_cmd *cmd = container_of(se_cmd, struct q2t_cmd, se_cmd);
++
++	return cmd->tag;
++}
++
++int tcm_qla2xxx_get_cmd_state(struct se_cmd *se_cmd)
++{
++	return 0;
++}
++
++void tcm_qla2xxx_new_cmd_failure(struct se_cmd *se_cmd)
++{
 +	return;
 +}
 +
 +/*
-+ * qla2x00_send_enable_lun
-+ *      Issue enable LUN entry IOCB.
-+ *
-+ * Input:
-+ *      ha = adapter block pointer.
-+ *	enable = enable/disable flag.
++ * Main entry point for incoming ATIO packets from qla2x_target.c
++ * and qla2xxx LLD code.
 + */
-+static inline void
-+qla2x00_send_enable_lun(scsi_qla_host_t *vha, bool enable)
++int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct q2t_cmd *cmd,
++			uint32_t lun, uint32_t data_length,
++			int fcp_task_attr, int data_dir, int bidi)
 +{
-+	struct qla_hw_data *ha = vha->hw;
++	struct se_cmd *se_cmd = &cmd->se_cmd;
++	struct se_session *se_sess;
++	struct se_portal_group *se_tpg;
++	struct q2t_sess *sess;
 +
-+	if (!IS_FWI2_CAPABLE(ha)) {
-+		unsigned long flags;
-+		spin_lock_irqsave(&ha->hardware_lock, flags);
-+		__qla2x00_send_enable_lun(vha, enable);
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	sess = cmd->sess;
++	if (!sess) {
++		printk(KERN_ERR "Unable to locate struct q2t_sess from q2t_cmd\n");
++		return -EINVAL;
 +	}
++
++	se_sess = sess->se_sess;
++	if (!se_sess) {
++		printk(KERN_ERR "Unable to locate active struct se_session\n");
++		return -EINVAL;
++	}
++	se_tpg = se_sess->se_tpg;
++
++	/*
++	 * Initialize struct se_cmd descriptor from target_core_mod infrastructure
++	 */
++	transport_init_se_cmd(se_cmd, se_tpg->se_tpg_tfo, se_sess,
++			data_length, data_dir,
++			fcp_task_attr, &cmd->sense_buffer[0]);
++	/*
++	 * Signal BIDI usage with T_TASK(cmd)->t_tasks_bidi
++	 */
++	if (bidi)
++		T_TASK(se_cmd)->t_tasks_bidi = 1;
++	/*
++	 * Locate the struct se_lun pointer and attach it to struct se_cmd
++	 */
++	if (transport_get_lun_for_cmd(se_cmd, NULL, lun) < 0) {
++		/* NON_EXISTENT_LUN */
++		transport_send_check_condition_and_sense(se_cmd,
++				se_cmd->scsi_sense_reason, 0);
++		return 0;
++	}
++	/*
++	 * Queue up the newly allocated to be processed in TCM thread context.
++	 */
++	transport_device_setup_cmd(se_cmd);
++	/*
++	 * Queue up the newly allocated to be processed in TCM thread context.
++	 */
++	transport_generic_handle_cdb_map(se_cmd);
++	return 0;
 +}
 +
-+extern int q2t_add_target(struct qla_hw_data *, scsi_qla_host_t *);
++int tcm_qla2xxx_new_cmd_map(struct se_cmd *se_cmd)
++{
++	struct q2t_cmd *cmd = container_of(se_cmd, struct q2t_cmd, se_cmd);
++	scsi_qla_host_t *vha = cmd->vha;
++	struct qla_hw_data *ha = vha->hw;
++	unsigned char *cdb;
++	int ret;
 +
-+extern void q2t_fc_port_added(scsi_qla_host_t *, fc_port_t *);
-+extern void q2t_fc_port_deleted(scsi_qla_host_t *, fc_port_t *);
++	if (IS_FWI2_CAPABLE(ha)) {
++		atio7_entry_t *atio = &cmd->atio.atio7;
++		cdb = &atio->fcp_cmnd.cdb[0];
++	} else {
++		atio_entry_t *atio = &cmd->atio.atio2x;
++		cdb = &atio->cdb[0];
++	}
 +
-+#endif /* __QLA2X_TGT_H */
-diff --git a/drivers/scsi/qla2xxx/qla2x_tgt_def.h b/drivers/scsi/qla2xxx/qla2x_tgt_def.h
-new file mode 100644
-index 0000000..cadb444
---- /dev/null
-+++ b/drivers/scsi/qla2xxx/qla2x_tgt_def.h
-@@ -0,0 +1,717 @@
-+/*
-+ *  qla2x_tgt_def.h
-+ *
-+ *  Copyright (C) 2004 - 2010 Vladislav Bolkhovitin <vst@vlnb.net>
-+ *  Copyright (C) 2004 - 2005 Leonid Stoljar
-+ *  Copyright (C) 2006 Nathaniel Clark <nate@misrule.us>
-+ *  Copyright (C) 2007 - 2010 ID7 Ltd.
-+ *
-+ *  Forward port and refactoring to modern qla2xxx and target/configfs
-+ *
-+ *  Copyright (C) 2010 Nicholas A. Bellinger <nab@kernel.org>
-+ *
-+ *  Additional file for the target driver support.
-+ *
-+ *  This program is free software; you can redistribute it and/or
-+ *  modify it under the terms of the GNU General Public License
-+ *  as published by the Free Software Foundation; either version 2
-+ *  of the License, or (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-+ *  GNU General Public License for more details.
-+ */
-+/*
-+ * This is the global def file that is useful for including from the
-+ * target portion.
-+ */
-+
-+#ifndef __QLA2X_TGT_DEF_H
-+#define __QLA2X_TGT_DEF_H
-+
-+#include "qla_def.h"
-+
-+/*
-+ * Must be changed on any change in any initiator visible interfaces or
-+ * data in the target add-on
-+ */
-+#define QLA2X_TARGET_MAGIC	269
-+
-+/*
-+ * Must be changed on any change in any target visible interfaces or
-+ * data in the initiator
-+ */
-+#define QLA2X_INITIATOR_MAGIC   57222
-+
-+#define QLA2X_INI_MODE_STR_EXCLUSIVE	"exclusive"
-+#define QLA2X_INI_MODE_STR_DISABLED	"disabled"
-+#define QLA2X_INI_MODE_STR_ENABLED	"enabled"
-+
-+#define QLA2X_INI_MODE_EXCLUSIVE	0
-+#define QLA2X_INI_MODE_DISABLED		1
-+#define QLA2X_INI_MODE_ENABLED		2
-+
-+#define QLA2X00_COMMAND_COUNT_INIT	250
-+#define QLA2X00_IMMED_NOTIFY_COUNT_INIT 250
-+
-+/*
-+ * Used to mark which completion handles (for RIO Status's) are for CTIO's
-+ * vs. regular (non-target) info. This is checked for in
-+ * qla2x00_process_response_queue() to see if a handle coming back in a
-+ * multi-complete should come to the tgt driver or be handled there by qla2xxx
-+ */
-+#define CTIO_COMPLETION_HANDLE_MARK	BIT_29
-+#if (CTIO_COMPLETION_HANDLE_MARK <= MAX_OUTSTANDING_COMMANDS)
-+#error "Hackish CTIO_COMPLETION_HANDLE_MARK no longer larger than MAX_OUTSTANDING_COMMANDS"
-+#endif
-+#define HANDLE_IS_CTIO_COMP(h) (h & CTIO_COMPLETION_HANDLE_MARK)
-+
-+/* Used to mark CTIO as intermediate */
-+#define CTIO_INTERMEDIATE_HANDLE_MARK	BIT_30
-+
-+#ifndef OF_SS_MODE_0
-+/*
-+ * ISP target entries - Flags bit definitions.
-+ */
-+#define OF_SS_MODE_0        0
-+#define OF_SS_MODE_1        1
-+#define OF_SS_MODE_2        2
-+#define OF_SS_MODE_3        3
-+
-+#define OF_EXPL_CONF        BIT_5       /* Explicit Confirmation Requested */
-+#define OF_DATA_IN          BIT_6       /* Data in to initiator */
-+					/*  (data from target to initiator) */
-+#define OF_DATA_OUT         BIT_7       /* Data out from initiator */
-+					/*  (data from initiator to target) */
-+#define OF_NO_DATA          (BIT_7 | BIT_6)
-+#define OF_INC_RC           BIT_8       /* Increment command resource count */
-+#define OF_FAST_POST        BIT_9       /* Enable mailbox fast posting. */
-+#define OF_CONF_REQ         BIT_13      /* Confirmation Requested */
-+#define OF_TERM_EXCH        BIT_14      /* Terminate exchange */
-+#define OF_SSTS             BIT_15      /* Send SCSI status */
-+#endif
-+
-+#ifndef DATASEGS_PER_COMMAND32
-+#define DATASEGS_PER_COMMAND32    3
-+#define DATASEGS_PER_CONT32       7
-+#define QLA_MAX_SG32(ql) \
-+   (((ql) > 0) ? (DATASEGS_PER_COMMAND32 + DATASEGS_PER_CONT32*((ql) - 1)) : 0)
-+
-+#define DATASEGS_PER_COMMAND64    2
-+#define DATASEGS_PER_CONT64       5
-+#define QLA_MAX_SG64(ql) \
-+   (((ql) > 0) ? (DATASEGS_PER_COMMAND64 + DATASEGS_PER_CONT64*((ql) - 1)) : 0)
-+#endif
-+
-+#ifndef DATASEGS_PER_COMMAND_24XX
-+#define DATASEGS_PER_COMMAND_24XX 1
-+#define DATASEGS_PER_CONT_24XX    5
-+#define QLA_MAX_SG_24XX(ql) \
-+   (min(1270, ((ql) > 0) ? (DATASEGS_PER_COMMAND_24XX + DATASEGS_PER_CONT_24XX*((ql) - 1)) : 0))
-+#endif
-+
-+/********************************************************************\
-+ * ISP Queue types left out of new QLogic driver (from old version)
-+\********************************************************************/
-+
-+#ifndef ENABLE_LUN_TYPE
-+#define ENABLE_LUN_TYPE 0x0B		/* Enable LUN entry. */
-+/*
-+ * ISP queue - enable LUN entry structure definition.
-+ */
-+typedef struct {
-+	uint8_t	 entry_type;		/* Entry type. */
-+	uint8_t	 entry_count;		/* Entry count. */
-+	uint8_t	 sys_define;		/* System defined. */
-+	uint8_t	 entry_status;		/* Entry Status. */
-+	uint32_t sys_define_2;		/* System defined. */
-+	uint8_t	 reserved_8;
-+	uint8_t	 reserved_1;
-+	uint16_t reserved_2;
-+	uint32_t reserved_3;
-+	uint8_t	 status;
-+	uint8_t	 reserved_4;
-+	uint8_t	 command_count;		/* Number of ATIOs allocated. */
-+	uint8_t	 immed_notify_count;	/* Number of Immediate Notify entries allocated. */
-+	uint16_t reserved_5;
-+	uint16_t timeout;		/* 0 = 30 seconds, 0xFFFF = disable */
-+	uint16_t reserved_6[20];
-+} __attribute__((packed)) elun_entry_t;
-+#define ENABLE_LUN_SUCCESS          0x01
-+#define ENABLE_LUN_RC_NONZERO       0x04
-+#define ENABLE_LUN_INVALID_REQUEST  0x06
-+#define ENABLE_LUN_ALREADY_ENABLED  0x3E
-+#endif
-+
-+#ifndef MODIFY_LUN_TYPE
-+#define MODIFY_LUN_TYPE 0x0C	  /* Modify LUN entry. */
-+/*
-+ * ISP queue - modify LUN entry structure definition.
-+ */
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t sys_define_2;		    /* System defined. */
-+	uint8_t	 reserved_8;
-+	uint8_t	 reserved_1;
-+	uint8_t	 operators;
-+	uint8_t	 reserved_2;
-+	uint32_t reserved_3;
-+	uint8_t	 status;
-+	uint8_t	 reserved_4;
-+	uint8_t	 command_count;		    /* Number of ATIOs allocated. */
-+	uint8_t	 immed_notify_count;	    /* Number of Immediate Notify */
-+	/* entries allocated. */
-+	uint16_t reserved_5;
-+	uint16_t timeout;		    /* 0 = 30 seconds, 0xFFFF = disable */
-+	uint16_t reserved_7[20];
-+} __attribute__((packed)) modify_lun_entry_t;
-+#define MODIFY_LUN_SUCCESS	0x01
-+#define MODIFY_LUN_CMD_ADD BIT_0
-+#define MODIFY_LUN_CMD_SUB BIT_1
-+#define MODIFY_LUN_IMM_ADD BIT_2
-+#define MODIFY_LUN_IMM_SUB BIT_3
-+#endif
-+
-+#define GET_TARGET_ID(ha, iocb) ((HAS_EXTENDED_IDS(ha))			\
-+				 ? le16_to_cpu((iocb)->target.extended)	\
-+				 : (uint16_t)(iocb)->target.id.standard)
-+
-+#ifndef IMMED_NOTIFY_TYPE
-+#define IMMED_NOTIFY_TYPE 0x0D		/* Immediate notify entry. */
-+/*
-+ * ISP queue - immediate notify entry structure definition.
-+ */
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t sys_define_2;		    /* System defined. */
-+	target_id_t target;
-+	uint16_t lun;
-+	uint8_t  target_id;
-+	uint8_t  reserved_1;
-+	uint16_t status_modifier;
-+	uint16_t status;
-+	uint16_t task_flags;
-+	uint16_t seq_id;
-+	uint16_t srr_rx_id;
-+	uint32_t srr_rel_offs;
-+	uint16_t srr_ui;
-+#define SRR_IU_DATA_IN		0x1
-+#define SRR_IU_DATA_OUT		0x5
-+#define SRR_IU_STATUS		0x7
-+	uint16_t srr_ox_id;
-+	uint8_t reserved_2[30];
-+	uint16_t ox_id;
-+} __attribute__((packed)) notify_entry_t;
-+#endif
-+
-+#ifndef NOTIFY_ACK_TYPE
-+#define NOTIFY_ACK_TYPE 0x0E	  /* Notify acknowledge entry. */
-+/*
-+ * ISP queue - notify acknowledge entry structure definition.
-+ */
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t sys_define_2;		    /* System defined. */
-+	target_id_t target;
-+	uint8_t	 target_id;
-+	uint8_t	 reserved_1;
-+	uint16_t flags;
-+	uint16_t resp_code;
-+	uint16_t status;
-+	uint16_t task_flags;
-+	uint16_t seq_id;
-+	uint16_t srr_rx_id;
-+	uint32_t srr_rel_offs;
-+	uint16_t srr_ui;
-+	uint16_t srr_flags;
-+	uint16_t srr_reject_code;
-+	uint8_t  srr_reject_vendor_uniq;
-+	uint8_t  srr_reject_code_expl;
-+	uint8_t  reserved_2[26];
-+	uint16_t ox_id;
-+} __attribute__((packed)) nack_entry_t;
-+#define NOTIFY_ACK_SRR_FLAGS_ACCEPT	0
-+#define NOTIFY_ACK_SRR_FLAGS_REJECT	1
-+
-+#define NOTIFY_ACK_SRR_REJECT_REASON_UNABLE_TO_PERFORM	0x9
-+
-+#define NOTIFY_ACK_SRR_FLAGS_REJECT_EXPL_NO_EXPL		0
-+#define NOTIFY_ACK_SRR_FLAGS_REJECT_EXPL_UNABLE_TO_SUPPLY_DATA	0x2a
-+
-+#define NOTIFY_ACK_SUCCESS      0x01
-+#endif
-+
-+#ifndef ACCEPT_TGT_IO_TYPE
-+#define ACCEPT_TGT_IO_TYPE 0x16 /* Accept target I/O entry. */
-+/*
-+ * ISP queue - Accept Target I/O (ATIO) entry structure definition.
-+ */
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t sys_define_2;		    /* System defined. */
-+	target_id_t target;
-+	uint16_t rx_id;
-+	uint16_t flags;
-+	uint16_t status;
-+	uint8_t	 command_ref;
-+	uint8_t	 task_codes;
-+	uint8_t	 task_flags;
-+	uint8_t	 execution_codes;
-+	uint8_t	 cdb[MAX_CMDSZ];
-+	uint32_t data_length;
-+	uint16_t lun;
-+	uint8_t  initiator_port_name[WWN_SIZE]; /* on qla23xx */
-+	uint16_t reserved_32[6];
-+	uint16_t ox_id;
-+} __attribute__((packed)) atio_entry_t;
-+#endif
-+
-+#ifndef CONTINUE_TGT_IO_TYPE
-+#define CONTINUE_TGT_IO_TYPE 0x17
-+/*
-+ * ISP queue - Continue Target I/O (CTIO) entry for status mode 0
-+ *	       structure definition.
-+ */
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t handle;		    /* System defined handle */
-+	target_id_t target;
-+	uint16_t rx_id;
-+	uint16_t flags;
-+	uint16_t status;
-+	uint16_t timeout;		    /* 0 = 30 seconds, 0xFFFF = disable */
-+	uint16_t dseg_count;		    /* Data segment count. */
-+	uint32_t relative_offset;
-+	uint32_t residual;
-+	uint16_t reserved_1[3];
-+	uint16_t scsi_status;
-+	uint32_t transfer_length;
-+	uint32_t dseg_0_address[0];
-+} __attribute__((packed)) ctio_common_entry_t;
-+#define ATIO_PATH_INVALID       0x07
-+#define ATIO_CANT_PROV_CAP      0x16
-+#define ATIO_CDB_VALID          0x3D
-+
-+#define ATIO_EXEC_READ          BIT_1
-+#define ATIO_EXEC_WRITE         BIT_0
-+#endif
-+
-+#ifndef CTIO_A64_TYPE
-+#define CTIO_A64_TYPE 0x1F
-+typedef struct {
-+	ctio_common_entry_t common;
-+	uint32_t dseg_0_address;	    /* Data segment 0 address. */
-+	uint32_t dseg_0_length;		    /* Data segment 0 length. */
-+	uint32_t dseg_1_address;	    /* Data segment 1 address. */
-+	uint32_t dseg_1_length;		    /* Data segment 1 length. */
-+	uint32_t dseg_2_address;	    /* Data segment 2 address. */
-+	uint32_t dseg_2_length;		    /* Data segment 2 length. */
-+} __attribute__((packed)) ctio_entry_t;
-+#define CTIO_SUCCESS			0x01
-+#define CTIO_ABORTED			0x02
-+#define CTIO_INVALID_RX_ID		0x08
-+#define CTIO_TIMEOUT			0x0B
-+#define CTIO_LIP_RESET			0x0E
-+#define CTIO_TARGET_RESET		0x17
-+#define CTIO_PORT_UNAVAILABLE		0x28
-+#define CTIO_PORT_LOGGED_OUT		0x29
-+#define CTIO_PORT_CONF_CHANGED		0x2A
-+#define CTIO_SRR_RECEIVED		0x45
-+
-+#endif
-+
-+#ifndef CTIO_RET_TYPE
-+#define CTIO_RET_TYPE	0x17		/* CTIO return entry */
-+/*
-+ * ISP queue - CTIO returned entry structure definition.
-+ */
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t handle;		    /* System defined handle. */
-+	target_id_t target;
-+	uint16_t rx_id;
-+	uint16_t flags;
-+	uint16_t status;
-+	uint16_t timeout;	    /* 0 = 30 seconds, 0xFFFF = disable */
-+	uint16_t dseg_count;	    /* Data segment count. */
-+	uint32_t relative_offset;
-+	uint32_t residual;
-+	uint16_t reserved_1[2];
-+	uint16_t sense_length;
-+	uint16_t scsi_status;
-+	uint16_t response_length;
-+	uint8_t	 sense_data[26];
-+} __attribute__((packed)) ctio_ret_entry_t;
-+#endif
-+
-+#define ATIO_TYPE7 0x06 /* Accept target I/O entry for 24xx */
-+
-+typedef struct {
-+	uint8_t  r_ctl;
-+	uint8_t  d_id[3];
-+	uint8_t  cs_ctl;
-+	uint8_t  s_id[3];
-+	uint8_t  type;
-+	uint8_t  f_ctl[3];
-+	uint8_t  seq_id;
-+	uint8_t  df_ctl;
-+	uint16_t seq_cnt;
-+	uint16_t ox_id;
-+	uint16_t rx_id;
-+	uint32_t parameter;
-+} __attribute__((packed)) fcp_hdr_t;
-+
-+typedef struct {
-+	uint8_t  d_id[3];
-+	uint8_t  r_ctl;
-+	uint8_t  s_id[3];
-+	uint8_t  cs_ctl;
-+	uint8_t  f_ctl[3];
-+	uint8_t  type;
-+	uint16_t seq_cnt;
-+	uint8_t  df_ctl;
-+	uint8_t  seq_id;
-+	uint16_t rx_id;
-+	uint16_t ox_id;
-+	uint32_t parameter;
-+} __attribute__((packed)) fcp_hdr_le_t;
-+
-+#define F_CTL_EXCH_CONTEXT_RESP	BIT_23
-+#define F_CTL_SEQ_CONTEXT_RESIP	BIT_22
-+#define F_CTL_LAST_SEQ		BIT_20
-+#define F_CTL_END_SEQ		BIT_19
-+#define F_CTL_SEQ_INITIATIVE	BIT_16
-+
-+#define R_CTL_BASIC_LINK_SERV	0x80
-+#define R_CTL_B_ACC		0x4
-+#define R_CTL_B_RJT		0x5
-+
-+typedef struct {
-+	uint64_t lun;
-+	uint8_t  cmnd_ref;
-+	uint8_t  task_attr:3;
-+	uint8_t  reserved:5;
-+	uint8_t  task_mgmt_flags;
-+#define FCP_CMND_TASK_MGMT_CLEAR_ACA		6
-+#define FCP_CMND_TASK_MGMT_TARGET_RESET		5
-+#define FCP_CMND_TASK_MGMT_LU_RESET		4
-+#define FCP_CMND_TASK_MGMT_CLEAR_TASK_SET	2
-+#define FCP_CMND_TASK_MGMT_ABORT_TASK_SET	1
-+	uint8_t  wrdata:1;
-+	uint8_t  rddata:1;
-+	uint8_t  add_cdb_len:6;
-+	uint8_t  cdb[16];
 +	/*
-+	 * add_cdb is optional and can absent from atio7_fcp_cmnd_t. Size 4 only to
-+	 * make sizeof(atio7_fcp_cmnd_t) be as expected by BUILD_BUG_ON() in
-+	 * q2t_init().
++	 * Allocate the necessary tasks to complete the received CDB+data
 +	 */
-+	uint8_t  add_cdb[4];
-+	/* uint32_t data_length; */
-+} __attribute__((packed)) atio7_fcp_cmnd_t;
++	ret = transport_generic_allocate_tasks(se_cmd, cdb);
++	if (ret == -1) {
++		/* Out of Resources */
++		transport_send_check_condition_and_sense(se_cmd,
++				TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE, 0);
++		return 0;
++	} else if (ret == -2) {
++		/*
++		 * Handle case for SAM_STAT_RESERVATION_CONFLICT
++		 */
++		if (se_cmd->se_cmd_flags & SCF_SCSI_RESERVATION_CONFLICT) {
++			tcm_qla2xxx_queue_status(se_cmd);
++			return 0;
++		}
++		/*
++		 * Otherwise, return SAM_STAT_CHECK_CONDITION and return
++		 * sense data.
++		 */
++		transport_send_check_condition_and_sense(se_cmd,
++				se_cmd->scsi_sense_reason, 0);
++		return 0;
++	}
++	/*
++	 * drivers/target/target_core_transport.c:transport_processing_thread()
++	 * falls through to TRANSPORT_NEW_CMD.
++	 */
++	return 0;
++}
 +
 +/*
-+ * ISP queue - Accept Target I/O (ATIO) type 7 entry for 24xx structure
-+ * definition.
++ * Called from qla2x_target.c:q2t_do_ctio_completion()
 + */
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t  fcp_cmnd_len_low;
-+	uint8_t  fcp_cmnd_len_high:4;
-+	uint8_t  attr:4;
-+	uint32_t exchange_addr;
-+#define ATIO_EXCHANGE_ADDRESS_UNKNOWN		0xFFFFFFFF
-+	fcp_hdr_t fcp_hdr;
-+	atio7_fcp_cmnd_t fcp_cmnd;
-+} __attribute__((packed)) atio7_entry_t;
-+
-+#define CTIO_TYPE7 0x12 /* Continue target I/O entry (for 24xx) */
++int tcm_qla2xxx_handle_data(struct q2t_cmd *cmd)
++{
++	/*
++	 * We now tell TCM to queue this WRITE CDB with TRANSPORT_PROCESS_WRITE
++	 * status to the backstore processing thread.
++	 */
++	return transport_generic_handle_data(&cmd->se_cmd);
++}
 +
 +/*
-+ * ISP queue - Continue Target I/O (ATIO) type 7 entry (for 24xx) structure
-+ * definition.
++ * Called from qla2x_target.c:q2t_issue_task_mgmt()
 + */
-+
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t handle;		    /* System defined handle */
-+	uint16_t nport_handle;
-+#define CTIO7_NHANDLE_UNRECOGNIZED	0xFFFF
-+	uint16_t timeout;
-+	uint16_t dseg_count;		    /* Data segment count. */
-+	uint8_t  vp_index;
-+	uint8_t  add_flags;
-+	uint8_t  initiator_id[3];
-+	uint8_t  reserved;
-+	uint32_t exchange_addr;
-+} __attribute__((packed)) ctio7_common_entry_t;
-+
-+typedef struct {
-+	ctio7_common_entry_t common;
-+	uint16_t reserved1;
-+	uint16_t flags;
-+	uint32_t residual;
-+	uint16_t ox_id;
-+	uint16_t scsi_status;
-+	uint32_t relative_offset;
-+	uint32_t reserved2;
-+	uint32_t transfer_length;
-+	uint32_t reserved3;
-+	uint32_t dseg_0_address[2];	    /* Data segment 0 address. */
-+	uint32_t dseg_0_length;		    /* Data segment 0 length. */
-+} __attribute__((packed)) ctio7_status0_entry_t;
-+
-+typedef struct {
-+	ctio7_common_entry_t common;
-+	uint16_t sense_length;
-+	uint16_t flags;
-+	uint32_t residual;
-+	uint16_t ox_id;
-+	uint16_t scsi_status;
-+	uint16_t response_len;
-+	uint16_t reserved;
-+	uint8_t sense_data[24];
-+} __attribute__((packed)) ctio7_status1_entry_t;
-+
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t handle;		    /* System defined handle */
-+	uint16_t status;
-+	uint16_t timeout;
-+	uint16_t dseg_count;		    /* Data segment count. */
-+	uint8_t  vp_index;
-+	uint8_t  reserved1[5];
-+	uint32_t exchange_address;
-+	uint16_t reserved2;
-+	uint16_t flags;
-+	uint32_t residual;
-+	uint16_t ox_id;
-+	uint16_t reserved3;
-+	uint32_t relative_offset;
-+	uint8_t  reserved4[24];
-+} __attribute__((packed)) ctio7_fw_entry_t;
-+
-+/* CTIO7 flags values */
-+#define CTIO7_FLAGS_SEND_STATUS		BIT_15
-+#define CTIO7_FLAGS_TERMINATE		BIT_14
-+#define CTIO7_FLAGS_CONFORM_REQ		BIT_13
-+#define CTIO7_FLAGS_DONT_RET_CTIO	BIT_8
-+#define CTIO7_FLAGS_STATUS_MODE_0	0
-+#define CTIO7_FLAGS_STATUS_MODE_1	BIT_6
-+#define CTIO7_FLAGS_EXPLICIT_CONFORM	BIT_5
-+#define CTIO7_FLAGS_CONFIRM_SATISF	BIT_4
-+#define CTIO7_FLAGS_DSD_PTR		BIT_2
-+#define CTIO7_FLAGS_DATA_IN		BIT_1
-+#define CTIO7_FLAGS_DATA_OUT		BIT_0
++int tcm_qla2xxx_handle_tmr(struct q2t_mgmt_cmd *mcmd, uint32_t lun, uint8_t tmr_func)
++{
++	struct q2t_sess *sess = mcmd->sess;
++	struct se_session *se_sess = sess->se_sess;
++	struct se_portal_group *se_tpg = se_sess->se_tpg;
++	struct se_cmd *se_cmd = &mcmd->se_cmd;
++	/*
++	 * Initialize struct se_cmd descriptor from target_core_mod infrastructure
++	 */
++	transport_init_se_cmd(se_cmd, se_tpg->se_tpg_tfo, se_sess, 0,
++				DMA_NONE, 0, NULL);
++	/*
++	 * Allocate the TCM TMR
++	 */
++	se_cmd->se_tmr_req = core_tmr_alloc_req(se_cmd, (void *)mcmd, tmr_func);
++	if (!se_cmd->se_tmr_req)
++		return -ENOMEM;
++	/*
++	 * Save the se_tmr_req for q2t_xmit_tm_rsp() callback into LLD code
++	 */
++	mcmd->se_tmr_req = se_cmd->se_tmr_req;
++	/*
++	 * Locate the underlying TCM struct se_lun from sc->device->lun
++	 */
++	if (transport_get_lun_for_tmr(se_cmd, lun) < 0) {
++		transport_generic_free_cmd(se_cmd, 1, 1, 0);
++		return -EINVAL;
++	}
++	/*
++	 * Queue the TMR associated se_cmd into TCM Core for processing
++	 */
++	return transport_generic_handle_tmr(se_cmd);
++}
 +
 +/*
-+ * ISP queue - immediate notify entry structure definition for 24xx.
++ * From qla2x_target.c...
 + */
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t reserved;
-+	uint16_t nport_handle;
-+	uint16_t reserved_2;
-+	uint16_t flags;
-+#define NOTIFY24XX_FLAGS_GLOBAL_TPRLO	BIT_1
-+#define NOTIFY24XX_FLAGS_PUREX_IOCB	BIT_0
-+	uint16_t srr_rx_id;
-+	uint16_t status;
-+	uint8_t  status_subcode;
-+	uint8_t  reserved_3;
-+	uint32_t exchange_address;
-+	uint32_t srr_rel_offs;
-+	uint16_t srr_ui;
-+	uint16_t srr_ox_id;
-+	uint8_t  reserved_4[19];
-+	uint8_t  vp_index;
-+	uint32_t reserved_5;
-+	uint8_t  port_id[3];
-+	uint8_t  reserved_6;
-+	uint16_t reserved_7;
-+	uint16_t ox_id;
-+} __attribute__((packed)) notify24xx_entry_t;
++extern int q2x_xmit_response(struct q2t_cmd *, int, uint8_t);
 +
-+#define ELS_PLOGI			0x3
-+#define ELS_FLOGI			0x4
-+#define ELS_LOGO			0x5
-+#define ELS_PRLI			0x20
-+#define ELS_PRLO			0x21
-+#define ELS_TPRLO			0x24
-+#define ELS_PDISC			0x50
-+#define ELS_ADISC			0x52
++int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
++{
++	struct q2t_cmd *cmd = container_of(se_cmd, struct q2t_cmd, se_cmd);
 +
-+/*
-+ * ISP queue - notify acknowledge entry structure definition for 24xx.
-+ */
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t handle;
-+	uint16_t nport_handle;
-+	uint16_t reserved_1;
-+	uint16_t flags;
-+	uint16_t srr_rx_id;
-+	uint16_t status;
-+	uint8_t  status_subcode;
-+	uint8_t  reserved_3;
-+	uint32_t exchange_address;
-+	uint32_t srr_rel_offs;
-+	uint16_t srr_ui;
-+	uint16_t srr_flags;
-+	uint8_t  reserved_4[19];
-+	uint8_t  vp_index;
-+	uint8_t  srr_reject_vendor_uniq;
-+	uint8_t  srr_reject_code_expl;
-+	uint8_t  srr_reject_code;
-+	uint8_t  reserved_5[7];
-+	uint16_t ox_id;
-+} __attribute__((packed)) nack24xx_entry_t;
++	cmd->bufflen = se_cmd->data_length;
++	cmd->dma_data_direction = se_cmd->data_direction;
++	cmd->aborted = atomic_read(&T_TASK(se_cmd)->t_transport_aborted);
++	/*
++	 * Setup the struct se_task->task_sg[] chained SG list
++	 */
++	if ((se_cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) ||
++	    (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB)) {
++		transport_do_task_sg_chain(se_cmd);
 +
-+/*
-+ * ISP queue - ABTS received/response entries structure definition for 24xx.
-+ */
-+#define ABTS_RECV_24XX		0x54 /* ABTS received (for 24xx) */
-+#define ABTS_RESP_24XX		0x55 /* ABTS responce (for 24xx) */
++		cmd->sg_cnt = T_TASK(se_cmd)->t_tasks_sg_chained_no;
++		cmd->sg = T_TASK(se_cmd)->t_tasks_sg_chained;
++	} else if (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
++		/*
++		 * Use T_TASK(se_cmd)->t_tasks_sg_bounce for control CDBs
++		 * using a contigious buffer
++		 */
++		sg_init_table(&T_TASK(se_cmd)->t_tasks_sg_bounce, 1);
++		sg_set_buf(&T_TASK(se_cmd)->t_tasks_sg_bounce,
++			T_TASK(se_cmd)->t_task_buf, se_cmd->data_length);
 +
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint8_t  reserved_1[6];
-+	uint16_t nport_handle;
-+	uint8_t  reserved_2[2];
-+	uint8_t  vp_index;
-+	uint8_t  reserved_3:4;
-+	uint8_t  sof_type:4;
-+	uint32_t exchange_address;
-+	fcp_hdr_le_t fcp_hdr_le;
-+	uint8_t  reserved_4[16];
-+	uint32_t exchange_addr_to_abort;
-+} __attribute__((packed)) abts24_recv_entry_t;
++		cmd->sg_cnt = 1;
++		cmd->sg = &T_TASK(se_cmd)->t_tasks_sg_bounce;
++	} else {
++		cmd->sg_cnt = 0;
++		cmd->sg = NULL;
++	}
 +
-+#define ABTS_PARAM_ABORT_SEQ		BIT_0
++	cmd->offset = 0;
 +
-+typedef struct {
-+	uint16_t reserved;
-+	uint8_t  seq_id_last;
-+	uint8_t  seq_id_valid;
-+#define SEQ_ID_VALID	0x80
-+#define SEQ_ID_INVALID	0x00
-+	uint16_t rx_id;
-+	uint16_t ox_id;
-+	uint16_t high_seq_cnt;
-+	uint16_t low_seq_cnt;
-+} __attribute__((packed)) ba_acc_le_t;
++	/*
++	 * Now queue completed DATA_IN the qla2xxx LLD and response ring
++	 */
++	return q2x_xmit_response(cmd, Q2T_XMIT_DATA|Q2T_XMIT_STATUS,
++				se_cmd->scsi_status);
++}
 +
-+typedef struct {
-+	uint8_t vendor_uniq;
-+	uint8_t reason_expl;
-+	uint8_t reason_code;
-+#define BA_RJT_REASON_CODE_INVALID_COMMAND	0x1
-+#define BA_RJT_REASON_CODE_UNABLE_TO_PERFORM	0x9
-+	uint8_t reserved;
-+} __attribute__((packed)) ba_rjt_le_t;
++int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
++{
++	struct q2t_cmd *cmd = container_of(se_cmd, struct q2t_cmd, se_cmd);
 +
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t handle;
-+	uint16_t reserved_1;
-+	uint16_t nport_handle;
-+	uint16_t control_flags;
-+#define ABTS_CONTR_FLG_TERM_EXCHG	BIT_0
-+	uint8_t  vp_index;
-+	uint8_t  reserved_3:4;
-+	uint8_t  sof_type:4;
-+	uint32_t exchange_address;
-+	fcp_hdr_le_t fcp_hdr_le;
-+	union {
-+		ba_acc_le_t ba_acct;
-+		ba_rjt_le_t ba_rjt;
-+	} __attribute__((packed)) payload;
-+	uint32_t reserved_4;
-+	uint32_t exchange_addr_to_abort;
-+} __attribute__((packed)) abts24_resp_entry_t;
++	cmd->bufflen = se_cmd->data_length;
++	cmd->sg = NULL;
++	cmd->sg_cnt = 0;
++	cmd->offset = 0;
++	cmd->dma_data_direction = se_cmd->data_direction;
++	cmd->aborted = atomic_read(&T_TASK(se_cmd)->t_transport_aborted);
 +
-+typedef struct {
-+	uint8_t	 entry_type;		    /* Entry type. */
-+	uint8_t	 entry_count;		    /* Entry count. */
-+	uint8_t	 sys_define;		    /* System defined. */
-+	uint8_t	 entry_status;		    /* Entry Status. */
-+	uint32_t handle;
-+	uint16_t compl_status;
-+#define ABTS_RESP_COMPL_SUCCESS		0
-+#define ABTS_RESP_COMPL_SUBCODE_ERROR	0x31
-+	uint16_t nport_handle;
-+	uint16_t reserved_1;
-+	uint8_t  reserved_2;
-+	uint8_t  reserved_3:4;
-+	uint8_t  sof_type:4;
-+	uint32_t exchange_address;
-+	fcp_hdr_le_t fcp_hdr_le;
-+	uint8_t reserved_4[8];
-+	uint32_t error_subcode1;
-+#define ABTS_RESP_SUBCODE_ERR_ABORTED_EXCH_NOT_TERM	0x1E
-+	uint32_t error_subcode2;
-+	uint32_t exchange_addr_to_abort;
-+} __attribute__((packed)) abts24_resp_fw_entry_t;
++	/*
++	 * Now queue status response to qla2xxx LLD code and response ring
++	 */
++	return q2x_xmit_response(cmd, Q2T_XMIT_STATUS, se_cmd->scsi_status);
++}
 +
-+/********************************************************************\
-+ * Type Definitions used by initiator & target halves
-+\********************************************************************/
++extern void q2t_xmit_tm_rsp(struct q2t_mgmt_cmd *);
 +
-+struct q2t_mgmt_cmd;
-+struct q2t_sess;
++int tcm_qla2xxx_queue_tm_rsp(struct se_cmd *se_cmd)
++{
++	struct se_tmr_req *se_tmr = se_cmd->se_tmr_req;
++	struct q2t_mgmt_cmd *mcmd = container_of(se_cmd,
++				struct q2t_mgmt_cmd, se_cmd);
 +
-+struct qla_target_template {
++	printk("queue_tm_rsp: mcmd: %p func: 0x%02x response: 0x%02x\n",
++			mcmd, se_tmr->function, se_tmr->response);
++	/*
++	 * Do translation between TCM TM response codes and
++	 * QLA2xxx FC TM response codes.
++	 */
++	switch (se_tmr->response) {
++	case TMR_FUNCTION_COMPLETE:
++		mcmd->fc_tm_rsp = FC_TM_SUCCESS;
++		break;
++	case TMR_TASK_DOES_NOT_EXIST:
++		mcmd->fc_tm_rsp = FC_TM_BAD_CMD;
++		break;
++	case TMR_FUNCTION_REJECTED:
++		mcmd->fc_tm_rsp = FC_TM_REJECT;
++		break;
++	case TMR_LUN_DOES_NOT_EXIST:
++	default:
++		mcmd->fc_tm_rsp = FC_TM_FAILED;
++		break;
++	}
++	/*
++	 * Queue the TM response to QLA2xxx LLD to build a
++	 * CTIO response packet.
++	 */
++	q2t_xmit_tm_rsp(mcmd);
++	/*
++	 * Release the associated se_cmd->se_tmr_req and se_cmd
++	 * TMR related state now.
++	 */
++	transport_generic_free_cmd(se_cmd, 1, 1, 0);
++	return 0;
++}
 +
-+	int (*handle_cmd)(scsi_qla_host_t *, struct q2t_cmd *, uint32_t, uint32_t, int, int, int);
-+	int (*handle_data)(struct q2t_cmd *);
-+	int (*handle_tmr)(struct q2t_mgmt_cmd *, uint32_t, uint8_t);
-+	void (*free_cmd)(struct q2t_cmd *);
-+	void (*free_session)(struct q2t_sess *);
++u16 tcm_qla2xxx_get_fabric_sense_len(void)
++{
++	return 0;
++}
 +
-+	int (*check_initiator_node_acl)(scsi_qla_host_t *, void *, uint8_t *, uint16_t);
-+	struct q2t_sess *(*find_sess_by_loop_id)(scsi_qla_host_t *, const uint16_t);
-+	struct q2t_sess *(*find_sess_by_s_id)(scsi_qla_host_t *, const uint8_t *);
-+};
++u16 tcm_qla2xxx_set_fabric_sense_len(struct se_cmd *se_cmd, u32 sense_length)
++{
++	return 0;
++}
 +
-+int qla2x00_wait_for_loop_ready(scsi_qla_host_t *);
-+int qla2x00_wait_for_hba_online(scsi_qla_host_t *);
++int tcm_qla2xxx_is_state_remove(struct se_cmd *se_cmd)
++{
++	return 0;
++}
 +
-+#endif /* __QLA2X_TGT_DEF_H */
++u64 tcm_qla2xxx_pack_lun(unsigned int lun)
++{
++	WARN_ON(lun >= 256);
++	/* Caller wants this byte-swapped */
++	return cpu_to_le64((lun & 0xff) << 8);
++}
+diff --git a/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.h b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.h
+new file mode 100644
+index 0000000..dd65445
+--- /dev/null
++++ b/drivers/target/tcm_qla2xxx/tcm_qla2xxx_fabric.h
+@@ -0,0 +1,48 @@
++extern int tcm_qla2xxx_check_true(struct se_portal_group *);
++extern int tcm_qla2xxx_check_false(struct se_portal_group *);
++extern ssize_t tcm_qla2xxx_parse_wwn(const char *, u64 *, int);
++extern ssize_t tcm_qla2xxx_format_wwn(char *, size_t, u64);
++extern char *tcm_qla2xxx_get_fabric_name(void);
++extern int tcm_qla2xxx_npiv_parse_wwn(const char *name, size_t, u64 *, u64 *);
++extern ssize_t tcm_qla2xxx_npiv_format_wwn(char *, size_t, u64, u64);
++extern char *tcm_qla2xxx_npiv_get_fabric_name(void);
++extern u8 tcm_qla2xxx_get_fabric_proto_ident(struct se_portal_group *);
++extern char *tcm_qla2xxx_get_fabric_wwn(struct se_portal_group *);
++extern char *tcm_qla2xxx_npiv_get_fabric_wwn(struct se_portal_group *);
++extern u16 tcm_qla2xxx_get_tag(struct se_portal_group *);
++extern u32 tcm_qla2xxx_get_default_depth(struct se_portal_group *);
++extern u32 tcm_qla2xxx_get_pr_transport_id(struct se_portal_group *, struct se_node_acl *,
++			struct t10_pr_registration *, int *, unsigned char *);
++extern u32 tcm_qla2xxx_get_pr_transport_id_len(struct se_portal_group *, struct se_node_acl *,
++			struct t10_pr_registration *, int *);
++extern char *tcm_qla2xxx_parse_pr_out_transport_id(struct se_portal_group *, const char *,
++				u32 *, char **);
++extern struct se_node_acl *tcm_qla2xxx_alloc_fabric_acl(struct se_portal_group *);
++extern void tcm_qla2xxx_release_fabric_acl(struct se_portal_group *, struct se_node_acl *);
++extern u32 tcm_qla2xxx_tpg_get_inst_index(struct se_portal_group *);
++extern void tcm_qla2xxx_free_cmd(struct q2t_cmd *);
++extern void tcm_qla2xxx_release_cmd(struct se_cmd *);
++extern int tcm_qla2xxx_shutdown_session(struct se_session *);
++extern void tcm_qla2xxx_close_session(struct se_session *);
++extern void tcm_qla2xxx_stop_session(struct se_session *, int, int);
++extern void tcm_qla2xxx_reset_nexus(struct se_session *);
++extern int tcm_qla2xxx_sess_logged_in(struct se_session *);
++extern u32 tcm_qla2xxx_sess_get_index(struct se_session *);
++extern int tcm_qla2xxx_write_pending(struct se_cmd *);
++extern int tcm_qla2xxx_write_pending_status(struct se_cmd *);
++extern void tcm_qla2xxx_set_default_node_attrs(struct se_node_acl *);
++extern u32 tcm_qla2xxx_get_task_tag(struct se_cmd *);
++extern int tcm_qla2xxx_get_cmd_state(struct se_cmd *);
++extern void tcm_qla2xxx_new_cmd_failure(struct se_cmd *);
++extern int tcm_qla2xxx_handle_cmd(struct scsi_qla_host *, struct q2t_cmd *,
++                        uint32_t, uint32_t, int, int, int);
++extern int tcm_qla2xxx_new_cmd_map(struct se_cmd *);
++extern int tcm_qla2xxx_handle_data(struct q2t_cmd *);
++extern int tcm_qla2xxx_handle_tmr(struct q2t_mgmt_cmd *, uint32_t, uint8_t);
++extern int tcm_qla2xxx_queue_data_in(struct se_cmd *);
++extern int tcm_qla2xxx_queue_status(struct se_cmd *);
++extern int tcm_qla2xxx_queue_tm_rsp(struct se_cmd *);
++extern u16 tcm_qla2xxx_get_fabric_sense_len(void);
++extern u16 tcm_qla2xxx_set_fabric_sense_len(struct se_cmd *, u32);
++extern int tcm_qla2xxx_is_state_remove(struct se_cmd *);
++extern u64 tcm_qla2xxx_pack_lun(unsigned int);
 -- 
 1.7.3.3
-
