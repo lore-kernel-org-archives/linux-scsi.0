@@ -1,53 +1,43 @@
-From: matthew@wil.cx
-Subject: [PATCH 2/5] uas: Use kzalloc instead of kmalloc
-Date: Wed, 15 Dec 2010 15:44:03 -0500
-Message-ID: <1292445846-12101-2-git-send-email-matthew@wil.cx>
+From: matthew-Ztpu424NOJ8@public.gmane.org
+Subject: [PATCH 5/5] uas: Use GFP_NOIO instead of GFP_KERNEL in I/O submission path
+Date: Wed, 15 Dec 2010 15:44:06 -0500
+Message-ID: <1292445846-12101-5-git-send-email-matthew@wil.cx>
 References: <20101215204147.GA1263@parisc-linux.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ironport2-out.teksavvy.com ([206.248.154.183]:33935 "EHLO
-	ironport2-out.pppoe.ca" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752158Ab0LOUyL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Dec 2010 15:54:11 -0500
-In-Reply-To: <20101215204147.GA1263@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20101215204147.GA1263-6jwH94ZQLHl74goWV3ctuw@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>, Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
-From: Matthew Wilcox <matthew@wil.cx>
+From: Matthew Wilcox <matthew-Ztpu424NOJ8@public.gmane.org>
 
-The IUs are not being fully initialised by the driver (due to the reserved
-space).  Since we should be zeroing reserved fields, use kzalloc to do
-it for us.
+If swap is on a UAS device, we could recurse into the driver by using
+GFP_KERNEL.  Using GFP_NOIO ensures we won't.
 
-Reported-by: Luben Tuikov <ltuikov@yahoo.com>
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+Reported-by: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
+Signed-off-by: Matthew Wilcox <willy-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>
 ---
- drivers/usb/storage/uas.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/usb/storage/uas.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index ca277c2..981fdef 100644
+index 0ebe7f6..23f0dd9 100644
 --- a/drivers/usb/storage/uas.c
 +++ b/drivers/usb/storage/uas.c
-@@ -297,7 +297,7 @@ static struct urb *uas_alloc_sense_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 	if (!urb)
- 		goto out;
- 
--	iu = kmalloc(sizeof(*iu), gfp);
-+	iu = kzalloc(sizeof(*iu), gfp);
- 	if (!iu)
- 		goto free;
- 
-@@ -328,7 +328,7 @@ static struct urb *uas_alloc_cmd_urb(struct uas_dev_info *devinfo, gfp_t gfp,
- 	if (len < 0)
- 		len = 0;
- 	len = ALIGN(len, 4);
--	iu = kmalloc(sizeof(*iu) + len, gfp);
-+	iu = kzalloc(sizeof(*iu) + len, gfp);
- 	if (!iu)
- 		goto free;
+@@ -141,7 +141,7 @@ static void uas_do_work(struct work_struct *work)
+ 		struct scsi_pointer *scp = (void *)cmdinfo;
+ 		struct scsi_cmnd *cmnd = container_of(scp,
+ 							struct scsi_cmnd, SCp);
+-		uas_submit_urbs(cmnd, cmnd->device->hostdata, GFP_KERNEL);
++		uas_submit_urbs(cmnd, cmnd->device->hostdata, GFP_NOIO);
+ 	}
+ }
  
 -- 
 1.7.2.3
 
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
