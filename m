@@ -1,42 +1,28 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: [PATCH] thaw FC local port
-Date: Fri, 17 Dec 2010 00:07:37 +0800
-Message-ID: <AANLkTi=4waDVnmLg9VRvrwRej+TLe4KGsL58XdWdG091@mail.gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET] block/SCSI: implement in-kernel disk event handling,
+ take#2
+Date: Thu, 16 Dec 2010 17:31:29 +0100
+Message-ID: <4D0A3EE1.4050404@kernel.org>
+References: <1291838262-21274-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:54587 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756624Ab0LPQHi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Dec 2010 11:07:38 -0500
-Received: by wwa36 with SMTP id 36so2596429wwa.1
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2010 08:07:37 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1291838262-21274-1-git-send-email-tj@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
 List-Id: linux-scsi@vger.kernel.org
-To: devel@open-fcoe.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, linux-scsi@vger.kernel.org
 
-The state machine of local port is freezed if it could not get ready,
-so thawing is necessary.
+On 12/08/2010 08:57 PM, Tejun Heo wrote:
+> This is the second take of in-kernel-disk-event patchset which
+> implements in-kernel disk event handling framework and adds support
+> for it to sr and sd.  This is largely to move media presence polling
+> into kernel as userspace implementation turned out to be quite
+> problematic over the years.
 
-Signed-off-by: Hillf Danton <dhillf@gmail.com>
----
+Kay, Jens, James, how does this look to you guys?
 
---- a/drivers/scsi/libfc/fc_lport.c	2010-11-01 19:54:12.000000000 +0800
-+++ b/drivers/scsi/libfc/fc_lport.c	2010-12-17 00:08:06.000000000 +0800
-@@ -1514,11 +1514,11 @@ void fc_lport_enter_flogi(struct fc_lpor
+Thanks.
 
- 	fc_lport_state_enter(lport, LPORT_ST_FLOGI);
-
--	if (lport->point_to_multipoint) {
--		if (lport->port_id)
-+	if (lport->point_to_multipoint)
-+		if (lport->port_id) {
- 			fc_lport_enter_ready(lport);
--		return;
--	}
-+			return;
-+		}
-
- 	fp = fc_frame_alloc(lport, sizeof(struct fc_els_flogi));
- 	if (!fp)
+-- 
+tejun
