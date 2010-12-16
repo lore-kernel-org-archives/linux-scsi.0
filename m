@@ -1,74 +1,38 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 7/11]: megaraid_sas: Add MegaRAID 9265/9285 specific functions:
- megaraid_sas_fusion.c
-Date: Thu, 16 Dec 2010 14:57:36 +0100
-Message-ID: <4D0A1AD0.1040703@redhat.com>
-References: <AANLkTik1KwdG+73gWCqGj7sROdxWfBYfKqH4t=rcQkhi@mail.gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC] uas host lock removal conversion
+Date: Thu, 16 Dec 2010 07:00:36 -0700
+Message-ID: <20101216140035.GD1263@parisc-linux.org>
+References: <20101216050257.GC1263@parisc-linux.org> <20101216104458.GA5919@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34612 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755953Ab0LPN5o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Dec 2010 08:57:44 -0500
-In-Reply-To: <AANLkTik1KwdG+73gWCqGj7sROdxWfBYfKqH4t=rcQkhi@mail.gmail.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:55115 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756053Ab0LPOAh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Dec 2010 09:00:37 -0500
+Content-Disposition: inline
+In-Reply-To: <20101216104458.GA5919@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org
 
-On 12/15/2010 04:04 AM, adam radford wrote:
-> James/Linux-scsi,
->
-> This patch adds the MegaRAID 9265/9285 specific functions contained in
-> the file megaraid_sas_fusion.c.
->
-> Signed-off-by: Adam Radford <aradford@gmail.com>
->
-> Note: The patch has been included in-line below, and also as an
-> attachment in case Gmail hoses the patch.
->   
-> +/* Fusion OCR work queue */
-> +void megasas_fusion_ocr_wq(struct work_struct *work)
-> +{
-> +	struct megasas_instance *instance =
-> +		container_of(work, struct megasas_instance, work_init);
-> +	struct scsi_cmnd scmd;
-> +	struct scsi_device dev;
-> +
-> +	scmd.device = &dev;
-> +	dev.host = instance->host;
-> +	megasas_reset_fusion(&scmd);
-> +}
->   
-Hi Adam, Bo,
+On Thu, Dec 16, 2010 at 05:44:58AM -0500, Christoph Hellwig wrote:
+> On Wed, Dec 15, 2010 at 10:02:57PM -0700, Matthew Wilcox wrote:
+> > 
+> > I thought I'd take a crack at removing the host lock from uas.  I think
+> > I can now switch to using GFP_NOIO (since interrupts are enabled by
+> > scsi_request_fn()), and I have to use _irq spinlocks to protect the list
+> > that is modified from interrupt context (same reason :-).
+> 
+> ->qeuecommand can be called from software interrupt context, so you'll
+> need to stick to GFP_ATOMIC.
 
-The function megasas_fusion_ocr_wq seems to be used already in patch 6/11 
-and declared in 7/11 - this breaks bisectability.
+Ah, I couldn't find a path that did that.  Could you point it out to me?
+I'll send a patch to update that documentation.
 
-Further my compiler complains about a large frame size.
-Probably the 'struct scsi_device dev' is too large to be on stack.
-make checkstack
-...
-0x000090f4 megasas_fusion_ocr_wq [megaraid_sas]:	1696
-
-Tomas
-
-> +
-> +struct megasas_instance_template megasas_instance_template_fusion = {
-> +	.fire_cmd = megasas_fire_cmd_fusion,
-> +	.enable_intr = megasas_enable_intr_fusion,
-> +	.disable_intr = megasas_disable_intr_fusion,
-> +	.clear_intr = megasas_clear_intr_fusion,
-> +	.read_fw_status_reg = megasas_read_fw_status_reg_fusion,
-> +	.adp_reset = megasas_adp_reset_fusion,
-> +	.check_reset = megasas_check_reset_fusion,
-> +	.service_isr = megasas_isr_fusion,
-> +	.tasklet = megasas_complete_cmd_dpc_fusion,
-> +	.init_adapter = megasas_init_adapter_fusion,
-> +	.build_and_issue_cmd = megasas_build_and_issue_cmd_fusion,
-> +	.issue_dcmd = megasas_issue_dcmd_fusion,
-> +};
->   
-
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
