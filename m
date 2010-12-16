@@ -1,44 +1,51 @@
-From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 5/5] lpfc 8.3.20: Update lpfc driver version to 8.3.20
-Date: Wed, 15 Dec 2010 17:58:20 -0500
-Message-ID: <1292453918.32478.29.camel@wookie>
-Reply-To: james.smart@emulex.com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH] Fix a couple of comments in scsi_request_fn
+Date: Wed, 15 Dec 2010 21:49:31 -0700
+Message-ID: <20101216044931.GB1263@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:15493 "EHLO
-	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752891Ab0LOW7C (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Dec 2010 17:59:02 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:37251 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752183Ab0LPEtd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Dec 2010 23:49:33 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Update lpfc driver version to 8.3.20
+The IO request lock was killed in 2.5, and we don't take the shost lock
+in scsi_dispatch_cmd any more.
 
+Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 
- Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
- Signed-off-by: James Smart <james.smart@emulex.com>
-
- ---
-
- lpfc_version.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
---- a/drivers/scsi/lpfc/lpfc_version.h	2010-12-11 21:56:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_version.h	2010-12-15 13:05:07.000000000 -0500
-@@ -18,7 +18,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 5b6bbae..9e881cd 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1443,7 +1443,7 @@ static void scsi_softirq_done(struct request *rq)
+  *
+  * Returns:     Nothing
+  *
+- * Lock status: IO request lock assumed to be held when called.
++ * Lock status: request queue lock held, interrupts disabled
+  */
+ static void scsi_request_fn(struct request_queue *q)
+ {
+@@ -1530,10 +1530,6 @@ static void scsi_request_fn(struct request_queue *q)
+ 		scsi_target(sdev)->target_busy++;
+ 		shost->host_busy++;
  
--#define LPFC_DRIVER_VERSION "8.3.19"
-+#define LPFC_DRIVER_VERSION "8.3.20"
- #define LPFC_DRIVER_NAME		"lpfc"
- #define LPFC_SP_DRIVER_HANDLER_NAME	"lpfc:sp"
- #define LPFC_FP_DRIVER_HANDLER_NAME	"lpfc:fp"
-
-
+-		/*
+-		 * XXX(hch): This is rather suboptimal, scsi_dispatch_cmd will
+-		 *		take the lock again.
+-		 */
+ 		spin_unlock_irq(shost->host_lock);
+ 
+ 		/*
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
