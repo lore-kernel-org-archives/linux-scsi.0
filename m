@@ -1,47 +1,49 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH 7/11]: megaraid_sas: Add MegaRAID 9265/9285 specific
- functions: megaraid_sas_fusion.c
-Date: Thu, 16 Dec 2010 08:58:11 -0800
-Message-ID: <AANLkTikEB02WAiHTYe=FLm9EKhjTdaLLd97NQvWg2Y9t@mail.gmail.com>
-References: <AANLkTik1KwdG+73gWCqGj7sROdxWfBYfKqH4t=rcQkhi@mail.gmail.com>
-	<4D0A1AD0.1040703@redhat.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCHSET] block/SCSI: implement in-kernel disk event handling,
+  take#2
+Date: Thu, 16 Dec 2010 18:00:04 +0100
+Message-ID: <4D0A4594.6030704@kernel.dk>
+References: <1291838262-21274-1-git-send-email-tj@kernel.org> <4D0A3EE1.4050404@kernel.org> <4D0A400F.5090608@kernel.dk> <AANLkTi=d78R=1=7Ngm-CVLS9xTU-U0BojVi9fS5z5hr8@mail.gmail.com> <4D0A4196.8040209@kernel.dk> <4D0A4231.2070402@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:34682 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754773Ab0LPQ6M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Dec 2010 11:58:12 -0500
-Received: by qyj19 with SMTP id 19so553915qyj.19
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Dec 2010 08:58:12 -0800 (PST)
-In-Reply-To: <4D0A1AD0.1040703@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4D0A4231.2070402@kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jack@suse.cz, James.Bottomley@hansenpartnership.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-On Thu, Dec 16, 2010 at 5:57 AM, Tomas Henzl <thenzl@redhat.com> wrote:
-> Hi Adam, Bo,
->
-> The function megasas_fusion_ocr_wq seems to be used already in patch =
-6/11
-> and declared in 7/11 - this breaks bisectability.
->
-> Further my compiler complains about a large frame size.
-> Probably the 'struct scsi_device dev' is too large to be on stack.
-> make checkstack
-> ...
-> 0x000090f4 megasas_fusion_ocr_wq [megaraid_sas]: =A0 =A0 =A0 =A01696
->
+On 2010-12-16 17:45, Tejun Heo wrote:
+> Hello,
+> 
+> On 12/16/2010 05:43 PM, Jens Axboe wrote:
+>>>>> Kay, Jens, James, how does this look to you guys?
+>>>>
+>>>> I like the concept, this is probably what we should have done all along.
+>>>> The user space method has been tried and failed. So I was mostly laying
+>>>> it low waiting for feedback before integrating this.
+>>>
+>>> Yeah, it's nice stuff. Userspace works, but can not be made entirely
+>>> safe. We have (rare) bugs we just can not fix otherwise than disabling
+>>> polling.
+>>>
+>>>> Kay?
+>>>
+>>> I want it! :)
+>>>
+>>> If you merge it, let me know when you have a tree ready, so I can test
+>>> the most recent version again.
+>>
+>> OK good, looks like we all agree... I'll queue it up in for-2.6.38
+>> branch and update for-next to have all that stuff.
+> 
+> Heh, that was fast.  Anyways, James, it would be great if you can take
+> a look at the sr/sd changes.  I think they're correct but that's kinda
+> expected, so... :-)
 
-Tomas,
+One thing I noticed is that cdrom_check_events() needs an export.
 
-Thanks, we will fix this and repost patches 6 thru 10.
+-- 
+Jens Axboe
 
--Adam
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
