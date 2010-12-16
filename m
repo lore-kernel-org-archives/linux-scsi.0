@@ -1,74 +1,44 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 1/2] hpsa: do not consider firmware revision when looking for
-	device changes.
-Date: Thu, 16 Dec 2010 13:00:58 -0600
-Message-ID: <20101216190058.545.53652.stgit@beardog.cce.hp.com>
+Subject: [PATCH 2/2] hpsa: do not consider RAID level to be part of device
+	identity
+Date: Thu, 16 Dec 2010 13:01:03 -0600
+Message-ID: <20101216190103.545.97018.stgit@beardog.cce.hp.com>
 References: <20101216185823.545.99641.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:37206 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754873Ab0LPTBE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Dec 2010 14:01:04 -0500
 In-Reply-To: <20101216185823.545.99641.stgit@beardog.cce.hp.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, akpm@linux-foundation.org, smcameron@yahoo.com
-List-Id: linux-scsi@vger.kernel.org
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+From: Stephen M. Cameron <StephenM.Cameron>
 
-The firmware may have been updated, in which case, it's the same device,
-and in that case, we do not want to remove and add the device, we want to
-let it continue as is.
+Otherwise, after doing a RAID level migration, the disk will be
+disruptively removed and re-added as a different disk on rescan.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    9 ---------
- drivers/scsi/hpsa.h |    1 -
- 2 files changed, 0 insertions(+), 10 deletions(-)
+ drivers/scsi/hpsa.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a6dea08..a2408e5 100644
+index a2408e5..12deffc 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -641,11 +641,6 @@ static void fixup_botched_add(struct ctlr_info *h,
- static inline int device_is_the_same(struct hpsa_scsi_dev_t *dev1,
- 	struct hpsa_scsi_dev_t *dev2)
- {
--	if ((is_logical_dev_addr_mode(dev1->scsi3addr) ||
--		(dev1->lun != -1 && dev2->lun != -1)) &&
--		dev1->devtype != 0x0C)
--		return (memcmp(dev1, dev2, sizeof(*dev1)) == 0);
--
- 	/* we compare everything except lun and target as these
- 	 * are not yet assigned.  Compare parts likely
- 	 * to differ first
-@@ -660,8 +655,6 @@ static inline int device_is_the_same(struct hpsa_scsi_dev_t *dev1,
+@@ -657,8 +657,6 @@ static inline int device_is_the_same(struct hpsa_scsi_dev_t *dev1,
  		return 0;
- 	if (memcmp(dev1->vendor, dev2->vendor, sizeof(dev1->vendor)) != 0)
- 		return 0;
--	if (memcmp(dev1->revision, dev2->revision, sizeof(dev1->revision)) != 0)
--		return 0;
  	if (dev1->devtype != dev2->devtype)
  		return 0;
- 	if (dev1->raid_level != dev2->raid_level)
-@@ -1477,8 +1470,6 @@ static int hpsa_update_device_info(struct ctlr_info *h,
- 		sizeof(this_device->vendor));
- 	memcpy(this_device->model, &inq_buff[16],
- 		sizeof(this_device->model));
--	memcpy(this_device->revision, &inq_buff[32],
--		sizeof(this_device->revision));
- 	memset(this_device->device_id, 0,
- 		sizeof(this_device->device_id));
- 	hpsa_get_device_id(h, scsi3addr, this_device->device_id,
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index a203ef6..19586e1 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -45,7 +45,6 @@ struct hpsa_scsi_dev_t {
- 	unsigned char device_id[16];    /* from inquiry pg. 0x83 */
- 	unsigned char vendor[8];        /* bytes 8-15 of inquiry data */
- 	unsigned char model[16];        /* bytes 16-31 of inquiry data */
--	unsigned char revision[4];      /* bytes 32-35 of inquiry data */
- 	unsigned char raid_level;	/* from inquiry page 0xC1 */
- };
- 
+-	if (dev1->raid_level != dev2->raid_level)
+-		return 0;
+ 	if (dev1->bus != dev2->bus)
+ 		return 0;
+ 	return 1;
+
