@@ -1,44 +1,39 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 2/2] hpsa: do not consider RAID level to be part of device
-	identity
-Date: Thu, 16 Dec 2010 13:01:03 -0600
-Message-ID: <20101216190103.545.97018.stgit@beardog.cce.hp.com>
-References: <20101216185823.545.99641.stgit@beardog.cce.hp.com>
+Subject: [PATCH 0/2] Fix a couple hpsa bugs related to device discovery
+Date: Thu, 16 Dec 2010 13:00:51 -0600
+Message-ID: <20101216185823.545.99641.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:37206 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754873Ab0LPTBE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Dec 2010 14:01:04 -0500
-In-Reply-To: <20101216185823.545.99641.stgit@beardog.cce.hp.com>
+Received: from g1t0029.austin.hp.com ([15.216.28.36]:32357 "EHLO
+	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754873Ab0LPTCa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Dec 2010 14:02:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, akpm@linux-foundation.org, smcameron@yahoo.com
 
-From: Stephen M. Cameron <StephenM.Cameron>
+This series fixes a couple of bugs related to discovering changes to
+devices.  1) We should not consider a firmware change to mean the
+device identity has changed.  Just because a logical drive's firmware
+changes doesn't mean it's not the same drive with the same data, so
+it should not be removed and re-added to the scsi mid layer.
+2) Likewise if the RAID level is observed to change.  This can happen
+for instance by doing a RAID level migration from with the Array
+Configuration Utility. 
 
-Otherwise, after doing a RAID level migration, the disk will be
-disruptively removed and re-added as a different disk on rescan.
-
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a2408e5..12deffc 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -657,8 +657,6 @@ static inline int device_is_the_same(struct hpsa_scsi_dev_t *dev1,
- 		return 0;
- 	if (dev1->devtype != dev2->devtype)
- 		return 0;
--	if (dev1->raid_level != dev2->raid_level)
--		return 0;
- 	if (dev1->bus != dev2->bus)
- 		return 0;
- 	return 1;
+Stephen M. Cameron (2):
+      hpsa: do not consider firmware revision when looking for device changes.
+      hpsa: do not consider RAID level to be part of device identity
 
+
+ drivers/scsi/hpsa.c |   11 -----------
+ drivers/scsi/hpsa.h |    1 -
+ 2 files changed, 0 insertions(+), 12 deletions(-)
+
+-- 
+-- steve
