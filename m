@@ -1,108 +1,79 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH v3][SCSI] scsi_dh: propagate SCSI device deletion
-Date: Thu, 16 Dec 2010 14:57:07 -0500
-Message-ID: <20101216195707.GB25957@redhat.com>
-References: <D8C50530D6022F40A817A35C40CC06A7064AFC9450@DUBX7MCDUB01.EMEA.DELL.COM>
- <20101215160952.GA20869@redhat.com>
- <D8C50530D6022F40A817A35C40CC06A7064AFFCA3E@DUBX7MCDUB01.EMEA.DELL.COM>
- <20101216140209.GA23507@redhat.com>
- <D8C50530D6022F40A817A35C40CC06A7064AFFCF09@DUBX7MCDUB01.EMEA.DELL.COM>
- <20101216152930.GB23507@redhat.com>
- <D8C50530D6022F40A817A35C40CC06A7064AFFD030@DUBX7MCDUB01.EMEA.DELL.COM>
- <20101216162951.GE23507@redhat.com>
- <D8C50530D6022F40A817A35C40CC06A7064AFFD087@DUBX7MCDUB01.EMEA.DELL.COM>
+From: Vasu Dev <vasu.dev@linux.intel.com>
+Subject: Re: [Open-FCoE] [PATCH] fix computation related to FC_EX_CLOSED in
+ FC local port
+Date: Thu, 16 Dec 2010 12:05:42 -0800
+Message-ID: <1292529942.15910.17.camel@vi2.jf.intel.com>
+References: <AANLkTinZ04+m0-TOrv3vbLNH43b4VqKNJ9EyXdJYgj1A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:17806 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:20260 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751969Ab0LPT5P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Dec 2010 14:57:15 -0500
-Content-Disposition: inline
-In-Reply-To: <D8C50530D6022F40A817A35C40CC06A7064AFFD087@DUBX7MCDUB01.EMEA.DELL.COM>
+	id S1754551Ab0LPUFn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Dec 2010 15:05:43 -0500
+In-Reply-To: <AANLkTinZ04+m0-TOrv3vbLNH43b4VqKNJ9EyXdJYgj1A@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Menny_Hamburger@dell.com, Itay_Dar@dell.com, Rob_Thomas@dell.com, dm-devel@redhat.com
+To: Hillf Danton <dhillf@gmail.com>
+Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-From: Menny Hamburger <Menny_Hamburger@Dell.com>
+On Thu, 2010-12-16 at 23:54 +0800, Hillf Danton wrote:
+> In fc_lport_error(), FC_EX_CLOSED could be understood to be no more
+> rettries, so resetting local port is reasonable and necessary.
+> 
 
-Currently, when scsi_dh_activate() returns with an error
-(e.g. SCSI_DH_NOSYS) the activate_complete callback is not called and
-the error is not propagated to DM mpath.
+It is not reasonable/necessary in this case as FC_EX_CLOSED is issued on
+lport reset thru exch block reset called there, so doing lport reset
+again in same call flow is not needed unless I'm missing something to do
+reset again here. Are hitting any bug which got fixed by this patch ?
 
-When a SCSI device attached to a device handler is deleted, userland
-processes currently performing I/O on the device will have their I/O
-hang forever.  
+  
+> When processing response to flogi request, FC_EX_CLOSED should be
+> treated as other errors, since the state machine of local port could
+> reach reset.
+> 
+> Signed-off-by: Hillf Danton <dhillf@gmail.com>
+> ---
+> 
+> --- a/drivers/scsi/libfc/fc_lport.c	2010-11-01 19:54:12.000000000 +0800
+> +++ b/drivers/scsi/libfc/fc_lport.c	2010-12-16 23:46:06.000000000 +0800
+> @@ -1013,7 +1013,7 @@ static void fc_lport_error(struct fc_lpo
+>  		     lport->retry_count);
+> 
+>  	if (PTR_ERR(fp) == -FC_EX_CLOSED)
+> -		return;
+> +		goto reset;
+> 
+>  	/*
+>  	 * Memory allocation failure, or the exchange timed out
+> @@ -1029,6 +1029,7 @@ static void fc_lport_error(struct fc_lpo
+> 
+>  		schedule_delayed_work(&lport->retry_work, delay);
+>  	} else
+> + reset:
+>  		fc_lport_enter_reset(lport);
+>  }
+> 
+> @@ -1428,9 +1429,6 @@ void fc_lport_flogi_resp(struct fc_seq *
+> 
+>  	FC_LPORT_DBG(lport, "Received a FLOGI %s\n", fc_els_resp_type(fp));
+> 
+> -	if (fp == ERR_PTR(-FC_EX_CLOSED))
+> -		return;
+> -
 
-- Set SCSI_DH_NOSYS error when the handler is in the process of being
-  deleted (e.g. the SCSI device is in a SDEV_CANCEL or SDEV_DEL state).
+Like other resp handlers in lport.c, above code is required instead just
+removing for  fc_lport_flogi_resp, this is to allow exch clean up on
+exch block reset.
 
-- Set SCSI_DH_DEV_OFFLINED error when device is in SDEV_OFFLINE state.
+	Vasu
 
-- Call the activate_complete callback function directly from
-  scsi_dh_activate if an error has been set (when either the scsi_dh
-  internal data has already been deleted or is in the process of being
-  deleted).
+>  	mutex_lock(&lport->lp_mutex);
+> 
+>  	if (lport->state != LPORT_ST_FLOGI) {
+> _______________________________________________
+> devel mailing list
+> devel@lists.open-fcoe.org
+> https://lists.open-fcoe.org/mailman/listinfo/devel
 
-The patch was tested in an iSCSI environment, RDAC H/W handler and
-multipath.  In the following reproduction process, dd will I/O hang
-forever and the only way to release it will be to reboot the machine:
-1) Perform I/O on a multipath device:
-    dd if=/dev/dm-0 of=/dev/zero bs=8k count=1000000 &
-2) Delete all slave SCSI devices contained in the mpath device:
-   I)  In an iSCSI environment, the easiest way to do this is by
-   stopping iSCSI:
-       /etc/init.d/iscsi stop
-   II) Another way to delete the devices is by applying the following
-   bash scriptlet:
-       dm_devs=$(ls /sys/block/ | grep dm- | xargs)
-       for dm_dev in $dm_devs; do
-         devices=$(ls /sys/block/$dm_dev/slaves)
-         for device in $devices; do
-            echo 1 > /sys/block/$device/device/delete
-         done
-       done
-
-NOTE: when DM mpath's fail_path uses blk_abort_queue this scsi_dh change
-isn't strictly required.  However, DM mpath's call to blk_abort_queue
-will soon be reverted because it has proven to be unsafe due to a race
-(between blk_abort_queue and scsi_request_fn) that can lead to list
-corruption.  Therefore we cannot rely on blk_abort_queue via fail_path,
-but even if we could this scsi_dh change is still preferrable.
-
-Signed-off-by: Menny Hamburger <Menny_Hamburger@Dell.com>
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
----
- drivers/scsi/device_handler/scsi_dh.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
-
-v1 and v2 were posted/discussed on dm-devel
-v3: just tweaked the patch header a bit
-
-diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-index 6fae3d2..b0c56f6 100644
---- a/drivers/scsi/device_handler/scsi_dh.c
-+++ b/drivers/scsi/device_handler/scsi_dh.c
-@@ -442,12 +442,19 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
- 	sdev = q->queuedata;
- 	if (sdev && sdev->scsi_dh_data)
- 		scsi_dh = sdev->scsi_dh_data->scsi_dh;
--	if (!scsi_dh || !get_device(&sdev->sdev_gendev))
-+	if (!scsi_dh || !get_device(&sdev->sdev_gendev) ||
-+	    sdev->sdev_state == SDEV_CANCEL ||
-+	    sdev->sdev_state == SDEV_DEL)
- 		err = SCSI_DH_NOSYS;
-+	if (sdev->sdev_state == SDEV_OFFLINE)
-+		err = SCSI_DH_DEV_OFFLINED;
- 	spin_unlock_irqrestore(q->queue_lock, flags);
- 
--	if (err)
-+	if (err) {
-+		if (fn)
-+			fn(data, err);
- 		return err;
-+	}
- 
- 	if (scsi_dh->activate)
- 		err = scsi_dh->activate(sdev, fn, data);
