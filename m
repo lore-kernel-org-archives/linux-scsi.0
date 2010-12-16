@@ -1,27 +1,74 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET] block/SCSI: implement in-kernel disk event handling,
-  take#2
-Date: Thu, 16 Dec 2010 19:11:28 +0100
-Message-ID: <4D0A5650.2010004@kernel.org>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org> <4D0A3EE1.4050404@kernel.org> <4D0A400F.5090608@kernel.dk> <AANLkTi=d78R=1=7Ngm-CVLS9xTU-U0BojVi9fS5z5hr8@mail.gmail.com> <4D0A4196.8040209@kernel.dk> <4D0A4231.2070402@kernel.org> <4D0A4594.6030704@kernel.dk>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 1/2] hpsa: do not consider firmware revision when looking for
+	device changes.
+Date: Thu, 16 Dec 2010 13:00:58 -0600
+Message-ID: <20101216190058.545.53652.stgit@beardog.cce.hp.com>
+References: <20101216185823.545.99641.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D0A4594.6030704@kernel.dk>
+In-Reply-To: <20101216185823.545.99641.stgit@beardog.cce.hp.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jack@suse.cz, James.Bottomley@hansenpartnership.com
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, akpm@linux-foundation.org, smcameron@yahoo.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/16/2010 06:00 PM, Jens Axboe wrote:
->> Heh, that was fast.  Anyways, James, it would be great if you can take
->> a look at the sr/sd changes.  I think they're correct but that's kinda
->> expected, so... :-)
-> 
-> One thing I noticed is that cdrom_check_events() needs an export.
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Yeap, indeed.  Thanks for taking care of it.
+The firmware may have been updated, in which case, it's the same device,
+and in that case, we do not want to remove and add the device, we want to
+let it continue as is.
 
--- 
-tejun
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.c |    9 ---------
+ drivers/scsi/hpsa.h |    1 -
+ 2 files changed, 0 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index a6dea08..a2408e5 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -641,11 +641,6 @@ static void fixup_botched_add(struct ctlr_info *h,
+ static inline int device_is_the_same(struct hpsa_scsi_dev_t *dev1,
+ 	struct hpsa_scsi_dev_t *dev2)
+ {
+-	if ((is_logical_dev_addr_mode(dev1->scsi3addr) ||
+-		(dev1->lun != -1 && dev2->lun != -1)) &&
+-		dev1->devtype != 0x0C)
+-		return (memcmp(dev1, dev2, sizeof(*dev1)) == 0);
+-
+ 	/* we compare everything except lun and target as these
+ 	 * are not yet assigned.  Compare parts likely
+ 	 * to differ first
+@@ -660,8 +655,6 @@ static inline int device_is_the_same(struct hpsa_scsi_dev_t *dev1,
+ 		return 0;
+ 	if (memcmp(dev1->vendor, dev2->vendor, sizeof(dev1->vendor)) != 0)
+ 		return 0;
+-	if (memcmp(dev1->revision, dev2->revision, sizeof(dev1->revision)) != 0)
+-		return 0;
+ 	if (dev1->devtype != dev2->devtype)
+ 		return 0;
+ 	if (dev1->raid_level != dev2->raid_level)
+@@ -1477,8 +1470,6 @@ static int hpsa_update_device_info(struct ctlr_info *h,
+ 		sizeof(this_device->vendor));
+ 	memcpy(this_device->model, &inq_buff[16],
+ 		sizeof(this_device->model));
+-	memcpy(this_device->revision, &inq_buff[32],
+-		sizeof(this_device->revision));
+ 	memset(this_device->device_id, 0,
+ 		sizeof(this_device->device_id));
+ 	hpsa_get_device_id(h, scsi3addr, this_device->device_id,
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index a203ef6..19586e1 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -45,7 +45,6 @@ struct hpsa_scsi_dev_t {
+ 	unsigned char device_id[16];    /* from inquiry pg. 0x83 */
+ 	unsigned char vendor[8];        /* bytes 8-15 of inquiry data */
+ 	unsigned char model[16];        /* bytes 16-31 of inquiry data */
+-	unsigned char revision[4];      /* bytes 32-35 of inquiry data */
+ 	unsigned char raid_level;	/* from inquiry page 0xC1 */
+ };
+ 
