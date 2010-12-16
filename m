@@ -1,46 +1,29 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: [ANNOUNCE] UAS uasp.c driver available on github
-Date: Thu, 16 Dec 2010 01:40:07 -0800 (PST)
-Message-ID: <178171.36505.qm@web31804.mail.mud.yahoo.com>
-Reply-To: ltuikov@yahoo.com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] uas host lock removal conversion
+Date: Thu, 16 Dec 2010 05:44:58 -0500
+Message-ID: <20101216104458.GA5919@infradead.org>
+References: <20101216050257.GC1263@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31804.mail.mud.yahoo.com ([68.142.207.67]:30110 "HELO
-	web31804.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752341Ab0LPJkI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Dec 2010 04:40:08 -0500
+Received: from bombadil.infradead.org ([18.85.46.34]:33670 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753961Ab0LPKo7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Dec 2010 05:44:59 -0500
+Content-Disposition: inline
+In-Reply-To: <20101216050257.GC1263@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
---- On Mon, 12/13/10, Luben Tuikov <ltuikov@yahoo.com> wrote:
-> The uasp.c driver is available on
-> github at https://github.com/ltuikov/linux-2.6. The
-> free-linux branch is a branch off of the master branch. The
-> free-linux branch contains the following:
+On Wed, Dec 15, 2010 at 10:02:57PM -0700, Matthew Wilcox wrote:
 > 
->  * uasp.c driver which allows you to connect to USB
-> Attached SCSI (UAS) devices and use them as SCSI devices.
-> 
-> The free-linux branch also includes the following patches:
-> 
->  * 6e5eba [USB] Use normalized sense when emulating
-> autosense,
->  * 245423 [SCSI] Retrieve the Caching mode page, and
->  * 67869f [BLOCK] Preliminary increasing tag sequence
-> implementation.
-> 
-> The first two of those patches, 6e5eba and 245423, have
-> been accepted into topic branches and should be merged in
-> the next (or current) kernel release.
-> 
-> The 67869f patch is needed to eliminate TMF processing race
-> conditions in case of multiple application clients issuing
-> commands to the same I_T nexus as I described here: http://marc.info/?t=128902350400001&r=1&w=2.
+> I thought I'd take a crack at removing the host lock from uas.  I think
+> I can now switch to using GFP_NOIO (since interrupts are enabled by
+> scsi_request_fn()), and I have to use _irq spinlocks to protect the list
+> that is modified from interrupt context (same reason :-).
 
-A read-only git URL where you could pull from would be: git://github.com/ltuikov/linux-2.6.git
-
-   Luben
+->qeuecommand can be called from software interrupt context, so you'll
+need to stick to GFP_ATOMIC.
 
