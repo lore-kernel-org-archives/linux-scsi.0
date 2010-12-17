@@ -1,154 +1,126 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [ANNOUNCE] TCM/LIO v4.0.0-rc6 for 2.6.37-rc6
-Date: Fri, 17 Dec 2010 15:27:38 -0500
-Message-ID: <1292617658.2820.80.camel@mulgrave.site>
-References: <1292557664.31461.68.camel@haakon2.linux-iscsi.org>
-	 <1292599364.2820.21.camel@mulgrave.site>  <4D0B8975.1040206@vlnb.net>
-	 <1292602908.2820.41.camel@mulgrave.site>  <4D0BBE40.6030000@vlnb.net>
+Subject: Re: RFC: short reads on block devices
+Date: Fri, 17 Dec 2010 15:36:34 -0500
+Message-ID: <1292618194.2820.90.camel@mulgrave.site>
+References: <4D0B945C.2060309@interlog.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42141 "EHLO mx1.suse.de"
+Received: from cantor.suse.de ([195.135.220.2]:42309 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755218Ab0LQU2D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Dec 2010 15:28:03 -0500
-In-Reply-To: <4D0BBE40.6030000@vlnb.net>
+	id S1753982Ab0LQUhJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Dec 2010 15:37:09 -0500
+In-Reply-To: <4D0B945C.2060309@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Patil, Kiran" <kiran.patil@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Joe Eykholt <jeykholt@cisco.com>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Linus Torvalds <torvalds@linux-foundation.org>, Bart Van Assche <bart.vanassche@gmail.com>
+To: dgilbert@interlog.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Penokie, George" <George.Penokie@lsi.com>, mkp@mkp.net
 
-On Fri, 2010-12-17 at 22:47 +0300, Vladislav Bolkhovitin wrote:
-> James Bottomley, on 12/17/2010 07:21 PM wrote:
-> > On Fri, 2010-12-17 at 19:01 +0300, Vladislav Bolkhovitin wrote:
-> >> James Bottomley, on 12/17/2010 06:22 PM wrote:
-> >>> OK, I think this has reached the stage where it's been polished enough
-> >>> outside mainline to the point where we can complete any remaining todo
-> >>> items in-tree.
-> >>>
-> >>> So lets begin merging with the minimal target core and the TCM_Loop as
-> >>> two separate commits. I think the target core may just fit under the
-> >>> reflector mail length limits, but if not, you can send it as multiple
-> >>> patches and I'll recombine them.
-> >>
-> >> Well, could somebody eventually explain what are advantages of LIO over
-> >> SCST so you are choosing it?
-> >>
-> >> LIO is obviously worse all technically (see
-> >> http://scst.sourceforge.net/comparison.html) as well as in the number of
-> >> users and size of the community. Current in-rush attempts to make LIO
-> >> _look_ not worse than SCST changed nothing in this area.
-> > 
-> > To be honest, I don't really give a toss about niche feature
-> > comparisons: both products have niche features the other doesn't.  The
-> > basic requirements in both products are solid.
+On Fri, 2010-12-17 at 11:48 -0500, Douglas Gilbert wrote:
+> Recently while testing with the scsi_debug driver
+> I was able to trick the block layer into reading
+> random data which the block layer thought was
+> valid ***.
 > 
-> James, sorry, but your position is weak and absurd. In it maturity,
-> quality and features don't matter.
-
-I didn't say maturity and quality, I said niche features.  Apparently
-it's subjective, because both LIO and SCST think their own niche
-features are essential and the other's are irrelevant.
-
->  Following this logic Linux kernel and
-> a student's home brewed OS kernel for his PhD work are equal.
-
-So linux did begin as a student's home brewed OS kernel ...
-
->  Obviously,
-> this is wrong. No doubts, that all what Linux kernel can do with the
-> same quality as it does can be added to the student's kernel sooner or
-> later, ... but after several decades of hard work of thousands of people.
-
-Precisely.  Or said a different way: as long as you choose the most
-community oriented of competing offerings, the community will fill any
-perceived gaps.  Conversely, you can destroy a project simply by
-alienating the community.  That's why community is more important than
-feature set.
-
-> Moreover, isn't Linux kernel and you as a maintainer supposed to choose
-> what is ALREADY the best, not what is promising to become better
-> somewhen in the future? Or not become.
-
-No, see above.  Many technically very competent potential additions to
-linux have failed because of maintainer problems.
-
-> > If the niche feature has
-> > customer value, my estimation is that it can easily be added (to either
-> > product).
+> Best to start with an example, say LBA ** 4660 has
+> an unrecoverable error (aka medium error) and
+> the block layer fires off a SCSI READ for 8
+> blocks (512 byte variety) at LBA 4656. The response
+> will be a medium error with the sense buffer info
+> field indicating LBA 4660. Now are the 4 blocks
+> that precede it (i.e. LBA 4656 to 4659) possibly
+> sitting in the data-in buffer and valid??
 > 
-> If you eventually look on the technical comparison of SCST and LIO,
-> you'll see that SCST is far ahead in practically everywhere, in any
-> major area. Why not to compare yourself instead of blindly relying on
-> what NicholasB and his people are chea^H^H^H^Hsaying.
-> 
-> >> In the resent threads how many people voted for LIO? Nobody. How many
-> >> for SCST? Many. Moreover, has any real user of LIO participated in those
-> >> threads? None?
-> > 
-> > This isn't a democracy ... it's about choosing the most community
-> > oriented code base so that it's easily maintainable and easy to add
-> > feature requests and improvements as and when they come along.  In the
-> > past six months, LIO has made genuine efforts to clean up its act,
-> > streamline its code and support the other community projects that would
-> > need to go above and around it.
-> 
-> At first, can you recall any cases where community comments to SCST were
-> not addressed? All of them have been addressed and none ignored. NEVER.
-> 
-> Simply, LIO is very much premature code comparing to SCST. It is very
-> easy to find in it simple issues to comment, hence you see the big value
-> of comments.
+> The block layer thinks they are. This is what my
+> term "short read" in the title alludes to. So I put
+> this question to the T10 reflector:
+>     http://www.t10.org/t10r.htm
+> titled "sbc: reading blocks prior to a medium error".
+> And the answers were pretty clear. And the one from
+> George Penokie of LSI is interesting because Linux's
+> block layer assumption breaks some of LSI's equipment.
 
-Look, I'm not interested in the backstabbing.  *Both* projects have
-fairly large user bases and businesses with revenue models built around
-them, so I see that argument as a wash for both sides.
+Well, unsurprisingly, I was aware of the issue via Novell customer
+interactions.  Since you've outed LSI, we can discuss it openly.
 
-> In contrast, SCST has been maturing for many years (since 2004). It's
-> polished to high finish, so you can't so easily find out something to
-> improve in it. The feature requests and improvements in LIO you are
-> referring simply already in SCST.
-> 
-> Also, doesn't the size of the community reflects how community oriented
-> project is?
-> 
-> So far in the kernel community we see that, basically, the only person,
-> Christoph Hellwig, has taken responsibility to judge and he is pushing
-> LIO. Christoph is a very authoritative person, so many people are just
-> following his direction not dare to object. Nobody wants to go against
-> Christoph Hellwig. At max, people sending me private support e-mails
-> (thanks!) writing that SCST is great and obviously receives very unfair
-> treatment from the kernel maintainers.
-> 
-> But Christoph is a biased person. Several years ago he preferred
-> blessing STGT creation instead of already well existing at that moment
-> SCST. Now we know that was a wrong move and SCST was the right way to go.
-> 
-> Are we going to repeat that mistake again?
+The fact is that for medium errors, every other array returns valid data
+up to the erroring sector.
 
-I don't think it was a mistake. STGT gave us the userspace modifiability
-that neither LIO nor STGT offered at the time.
+> On the other hand, big array vendors and database vendors
+> want exactly what the block layer is doing at the moment.
+> So those guys don't want a change. [Please correct me
+> if that is too sweeping.] Also I'm informed some other
+> OSes do this as well.
+
+Plus all disk devices transfer up to the error sector.  Additionally,
+Martin Petersen uses the same code for DIF and he's secured external
+agreement from the DIF based arrays that nothwithstanding the ambiguity
+in the SCSI standards, all DIF arrays return valid data up to the sector
+with the DIF error.
+
+> I would like to propose a solution, at least in the SCSI
+> subsystem context. The 'resid' field was added 11 years
+> ago and is used by a HBA driver to indicate how many bytes
+> less than requested were placed in the scatter gather
+> list (i.e. the data-in buffer). It defaults to zero
+> (meaning all requested bytes have been read). Usually
+> for a medium error one would not bother setting resid
+> (so resid would remain 0). Somewhat surprisingly the
+> block layer has always ignored resid. I propose in the
+> case of a short read caused by a MEDIUM ERROR the block
+> layer checks resid. And if resid equals the requested
+> number of bytes then that means no data in the scatter
+> gather list is valid. So the block layer should act on
+> this information.
+> 
+> To this end I propose to change the scsi_debug driver
+> to set resid equal to bufflen when it simulates a
+> medium error.
+> 
+> Changes in the block layer and drivers from vendors who
+> want the strict "T10" handling of medium errors would
+> also be required. Maybe the USB mass storage (and UAS)
+> folks might also check if this impacts them.
+
+OK, so I checked, and I think all of the major in-use HBA drivers today
+do set the residue, so I'd be reasonably happy with a modification like
+the following.  It basically believes the lower of either the
+transferred data or the listed error (assuming the listed error is
+valid ... if it's invalid, we still assume we can't trust anything).
+This should mean that HBA drivers that set the residue work for all
+arrays and those that don't work as they do today.
 
 James
 
-> > You seem to have spent a lot of the
-> > intervening time arguing with the sysfs maintainer about why you're
-> > right and he's wrong.
-> 
-> Well, we are making the best designed and implemented code, right?
-> Aren't arguments part of this process?
-> 
-> Anyway, we almost finished a patch with new SCST sysfs interface, which
-> should satisfy Greg KH requirements. Bart several days ago sent proposed
-> new layout and Greg didn't object to it. We will send this patch in
-> several days.
-> 
-> Vlad
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9564961..d41eaa2 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1175,6 +1175,12 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+ 	u64 end_lba = blk_rq_pos(scmd->request) + (scsi_bufflen(scmd) / 512);
+ 	u64 bad_lba;
+ 	int info_valid;
++	/*
++	 * resid is optional but mosly filled in.  When it's unused,
++	 * its value is zero, so we assume the whole buffer transferred
++	 */
++	unsigned int transferred = scsi_bufflen(scmd) - scsi_get_resid(scmd);
++	unsigned int good_bytes; 
+ 
+ 	if (scmd->request->cmd_type != REQ_TYPE_FS)
+ 		return 0;
+@@ -1208,7 +1214,8 @@ static unsigned int sd_completed_bytes(struct scsi_cmnd *scmd)
+ 	/* This computation should always be done in terms of
+ 	 * the resolution of the device's medium.
+ 	 */
+-	return (bad_lba - start_lba) * scmd->device->sector_size;
++	good_bytes = (bad_lba - start_lba) * scmd->device->sector_size;
++	return min(good_bytes, transferred);
+ }
+ 
+ /**
 
 
