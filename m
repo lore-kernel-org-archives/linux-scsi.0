@@ -1,54 +1,63 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH 7/11]: megaraid_sas: Add MegaRAID 9265/9285 specific
- functions: megaraid_sas_fusion.c
-Date: Fri, 17 Dec 2010 09:46:16 -0800
-Message-ID: <AANLkTin6DGkRw+392=xoQbrD1c2S2DN9CG4DuaYwfqJ8@mail.gmail.com>
-References: <AANLkTik1KwdG+73gWCqGj7sROdxWfBYfKqH4t=rcQkhi@mail.gmail.com>
-	<4D0A1AD0.1040703@redhat.com>
-	<AANLkTikEB02WAiHTYe=FLm9EKhjTdaLLd97NQvWg2Y9t@mail.gmail.com>
-	<AANLkTin5=YL2mQxtGKQUTRCvnb2N29B32+J2ds8t-xPP@mail.gmail.com>
-	<4D0B3E9F.5000101@redhat.com>
-	<1292591611.2820.1.camel@mulgrave.site>
-	<AANLkTinHvfTvh6vJukMjc2nD=VWOedL1MhK9KW1z4qK_@mail.gmail.com>
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: [PATCH] thaw FC local port
+Date: Fri, 17 Dec 2010 11:04:00 -0800
+Message-ID: <1292612640.1346.1153.camel@fritz>
+References: <AANLkTi=4waDVnmLg9VRvrwRej+TLe4KGsL58XdWdG091@mail.gmail.com>
+	 <1292541521.1346.20.camel@fritz>
+	 <AANLkTi=m7gKFdYasPvq=2QYqC9A5BycqHYgQ7DZxWh4=@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qw0-f46.google.com ([209.85.216.46]:40498 "EHLO
-	mail-qw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754570Ab0LQRqS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Dec 2010 12:46:18 -0500
-Received: by qwa26 with SMTP id 26so937184qwa.19
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Dec 2010 09:46:17 -0800 (PST)
-In-Reply-To: <AANLkTinHvfTvh6vJukMjc2nD=VWOedL1MhK9KW1z4qK_@mail.gmail.com>
+Received: from mga03.intel.com ([143.182.124.21]:42594 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753568Ab0LQTEL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Dec 2010 14:04:11 -0500
+In-Reply-To: <AANLkTi=m7gKFdYasPvq=2QYqC9A5BycqHYgQ7DZxWh4=@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Tomas Henzl <thenzl@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
+To: Hillf Danton <dhillf@gmail.com>
+Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, Joe Eykholt <jeykholt@cisco.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Dec 17, 2010 at 9:30 AM, adam radford <aradford@gmail.com> wrote:
-> On Fri, Dec 17, 2010 at 5:13 AM, James Bottomley
-> <James.Bottomley@suse.de> wrote:
->>
->> What I do want for this is a rolled up change log for the entire commit,
->> please.
->>
->
-> James,
->
-> What exactly are you looking for here that I didn't provide in the
-> description summary in patch 0/11 ?
->
-> -Adam
->
+On Fri, 2010-12-17 at 05:46 -0800, Hillf Danton wrote:
+> On Fri, Dec 17, 2010 at 7:18 AM, Robert Love <robert.w.love@intel.com> wrote:
+> > On Thu, 2010-12-16 at 08:07 -0800, Hillf Danton wrote:
+> >> The state machine of local port is freezed if it could not get ready,
+> >> so thawing is necessary.
+> >>
+> > Please start putting a prefix "fcoe: ", "libfc: " or "libfcoe: " on your
+> > patch titles. Also, please provide more meaningful commit messages. I
+> > believe that I've pointed out these two issues with your patches before.
+> >
+> >> Signed-off-by: Hillf Danton <dhillf@gmail.com>
+> >> ---
+> >>
+> >> --- a/drivers/scsi/libfc/fc_lport.c   2010-11-01 19:54:12.000000000 +0800
+> >> +++ b/drivers/scsi/libfc/fc_lport.c   2010-12-17 00:08:06.000000000 +0800
+> >> @@ -1514,11 +1514,11 @@ void fc_lport_enter_flogi(struct fc_lpor
+> >>
+> >>       fc_lport_state_enter(lport, LPORT_ST_FLOGI);
+> >>
+> >> -     if (lport->point_to_multipoint) {
+> >> -             if (lport->port_id)
+> >> +     if (lport->point_to_multipoint)
+> >> +             if (lport->port_id) {
+> >>                       fc_lport_enter_ready(lport);
+> >> -             return;
+> >> -     }
+> >> +                     return;
+> >> +             }
+> >>
+> >>       fp = fc_frame_alloc(lport, sizeof(struct fc_els_flogi));
+> >>       if (!fp)
+> >
+> > We do not want to proceed with sending a FLOGI here when we're in
+> > point-to-multipoint (VN2VN) mode. VN2VN is a mode where there is no
+> > fabric and we FLOGI directly into the remote port. So for VN2VN the
+> > FLOGI happens in the rport layer.
+> 
+> How will lport get out of the LPORT_ST_FLOGI state then?
+> 
 
-James,
+fc_lport_set_local_id
 
-Here is a changelog for the commit of patches 6 thru 10:
-
-Add MegaRAID 9265/9285 specific code to megaraid_sas_base.c.
-Add MegaRAID 9265/9285 specific functions: megaraid_sas_fusion.c.
-Add MegaRAID 9265/9285 megaraid_sas_fusion.h header.
-Add MegaRAID 9265/9285 FastPath code.
-Add MegaRAID 9265/9285 specific code to megaraid_sas.h.
-
--Adam
