@@ -1,90 +1,116 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 7/11]: megaraid_sas: Add MegaRAID 9265/9285 specific
- functions: megaraid_sas_fusion.c
-Date: Fri, 17 Dec 2010 08:13:31 -0500
-Message-ID: <1292591611.2820.1.camel@mulgrave.site>
-References: <AANLkTik1KwdG+73gWCqGj7sROdxWfBYfKqH4t=rcQkhi@mail.gmail.com>
-	 <4D0A1AD0.1040703@redhat.com>
-	 <AANLkTikEB02WAiHTYe=FLm9EKhjTdaLLd97NQvWg2Y9t@mail.gmail.com>
-	 <AANLkTin5=YL2mQxtGKQUTRCvnb2N29B32+J2ds8t-xPP@mail.gmail.com>
-	 <4D0B3E9F.5000101@redhat.com>
+From: Hillf Danton <dhillf@gmail.com>
+Subject: Re: [Open-FCoE] [PATCH] fix computation related to FC_EX_CLOSED in FC
+ local port
+Date: Fri, 17 Dec 2010 21:17:32 +0800
+Message-ID: <AANLkTikEp2d8GZ_heoT148BUfO_5KS+hzi29n9gOX9sG@mail.gmail.com>
+References: <AANLkTinZ04+m0-TOrv3vbLNH43b4VqKNJ9EyXdJYgj1A@mail.gmail.com>
+	<1292529942.15910.17.camel@vi2.jf.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:57520 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754051Ab0LQNNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Dec 2010 08:13:37 -0500
-In-Reply-To: <4D0B3E9F.5000101@redhat.com>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:40123 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754763Ab0LQNRf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Dec 2010 08:17:35 -0500
+Received: by wyb28 with SMTP id 28so600859wyb.19
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Dec 2010 05:17:34 -0800 (PST)
+In-Reply-To: <1292529942.15910.17.camel@vi2.jf.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: adam radford <aradford@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
+To: Vasu Dev <vasu.dev@linux.intel.com>
+Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-On Fri, 2010-12-17 at 11:42 +0100, Tomas Henzl wrote:
-> On 12/16/2010 06:13 PM, adam radford wrote:
-> > On Thu, Dec 16, 2010 at 8:58 AM, adam radford <aradford@gmail.com> wrote:
-> >   
-> >> On Thu, Dec 16, 2010 at 5:57 AM, Tomas Henzl <thenzl@redhat.com> wrote:
-> >>     
-> >>> Hi Adam, Bo,
-> >>>
-> >>> The function megasas_fusion_ocr_wq seems to be used already in patch 6/11
-> >>> and declared in 7/11 - this breaks bisectability.
-> >>>
-> >>> Further my compiler complains about a large frame size.
-> >>> Probably the 'struct scsi_device dev' is too large to be on stack.
-> >>> make checkstack
-> >>> ...
-> >>> 0x000090f4 megasas_fusion_ocr_wq [megaraid_sas]:        1696
-> >>>
-> >>>       
-> >> Tomas,
-> >>
-> >> Thanks, we will fix this and repost patches 6 thru 10.
-> >>
-> >> -Adam
-> >>
-> >>     
-> > Tomas,
-> >
-> > Actually, if you look the patch 6, we put a note in there, that
-> > patches 6 thru 10 must be applied 'at once' for the build to work:
-> >
-> > "Note: Patches 6 thru 10 have to be applied at once in order to build."
-> >   
-> I'm not sure if git-bisect can understand this.
+On Fri, Dec 17, 2010 at 4:05 AM, Vasu Dev <vasu.dev@linux.intel.com> wr=
+ote:
+> On Thu, 2010-12-16 at 23:54 +0800, Hillf Danton wrote:
+>> In fc_lport_error(), FC_EX_CLOSED could be understood to be no more
+>> rettries, so resetting local port is reasonable and necessary.
+>>
+>
+> It is not reasonable/necessary in this case as FC_EX_CLOSED is issued=
+ on
+> lport reset thru exch block reset called there, so doing lport reset
+> again in same call flow is not needed unless I'm missing something to=
+ do
+> reset again here. Are hitting any bug which got fixed by this patch ?
+>
+Umm..why could lport reset then when no more retries, first?
+And how about the state machine of lport then if nothing done, second?
 
-He means I apply them all at once as a single commit.  We had to do this
-with the first five patches of Online Controller Reset which were
-likewise unbisectable.   It's a way of getting around the mailing list
-patch size limite (currently about $150k, I think) and making the
-patches more reviewable.
+It looks not buggy, I think.
+>
+>> When processing response to flogi request, FC_EX_CLOSED should be
+>> treated as other errors, since the state machine of local port could
+>> reach reset.
+>>
+>> Signed-off-by: Hillf Danton <dhillf@gmail.com>
+>> ---
+>>
+>> --- a/drivers/scsi/libfc/fc_lport.c =C2=A0 2010-11-01 19:54:12.00000=
+0000 +0800
+>> +++ b/drivers/scsi/libfc/fc_lport.c =C2=A0 2010-12-16 23:46:06.00000=
+0000 +0800
+>> @@ -1013,7 +1013,7 @@ static void fc_lport_error(struct fc_lpo
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
+lport->retry_count);
+>>
+>> =C2=A0 =C2=A0 =C2=A0 if (PTR_ERR(fp) =3D=3D -FC_EX_CLOSED)
+>> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return;
+>> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 goto reset;
+>>
+>> =C2=A0 =C2=A0 =C2=A0 /*
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0* Memory allocation failure, or the excha=
+nge timed out
+>> @@ -1029,6 +1029,7 @@ static void fc_lport_error(struct fc_lpo
+>>
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 schedule_delayed_wo=
+rk(&lport->retry_work, delay);
+>> =C2=A0 =C2=A0 =C2=A0 } else
+>> + reset:
+>> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 fc_lport_enter_rese=
+t(lport);
+>> =C2=A0}
+>>
+>> @@ -1428,9 +1429,6 @@ void fc_lport_flogi_resp(struct fc_seq *
+>>
+>> =C2=A0 =C2=A0 =C2=A0 FC_LPORT_DBG(lport, "Received a FLOGI %s\n", fc=
+_els_resp_type(fp));
+>>
+>> - =C2=A0 =C2=A0 if (fp =3D=3D ERR_PTR(-FC_EX_CLOSED))
+>> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return;
+>> -
+>
+> Like other resp handlers in lport.c, above code is required instead j=
+ust
+> removing for =C2=A0fc_lport_flogi_resp, this is to allow exch clean u=
+p on
+> exch block reset.
+=46irst, this error could be processed correctly after lock.
+And it could be also processed with more cares not only in the above
+error handler.
 
-What I do want for this is a rolled up change log for the entire commit,
-please.
+And the state machine of lport is the major concern of the patch,
+simply returning
+helps little.
 
-James
+Cheers
+Hillf
 
-> > This has been allowed on this list before.  Otherwise, we would have a
-> > very large patch while turning on the new support for this controller,
-> > making the patch less review-able by the community.
-> >   
-> If the maintainer accepts this, than I'm fine too. 
-> 
-> > I will look into and fix the large frame size compile issue you are
-> > seeing and re-post the appropriate patches.
-> >   
-> Thanks.
-> Tomas
-> 
-> > -Adam
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >   
-> 
-
-
+>
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0Vasu
+>
+>> =C2=A0 =C2=A0 =C2=A0 mutex_lock(&lport->lp_mutex);
+>>
+>> =C2=A0 =C2=A0 =C2=A0 if (lport->state !=3D LPORT_ST_FLOGI) {
+>> _______________________________________________
+>> devel mailing list
+>> devel@lists.open-fcoe.org
+>> https://lists.open-fcoe.org/mailman/listinfo/devel
+>
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
