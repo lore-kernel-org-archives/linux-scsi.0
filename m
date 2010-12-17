@@ -1,68 +1,83 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [ANNOUNCE] TCM/LIO v4.0.0-rc6 for 2.6.37-rc6
-Date: Fri, 17 Dec 2010 11:21:48 -0500
-Message-ID: <1292602908.2820.41.camel@mulgrave.site>
-References: <1292557664.31461.68.camel@haakon2.linux-iscsi.org>
-	 <1292599364.2820.21.camel@mulgrave.site>  <4D0B8975.1040206@vlnb.net>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: RFC: short reads on block devices
+Date: Fri, 17 Dec 2010 11:48:28 -0500
+Message-ID: <4D0B945C.2060309@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:54606 "EHLO mx2.suse.de"
+Received: from smtp.infotech.no ([82.134.31.41]:56769 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753504Ab0LQQVz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Dec 2010 11:21:55 -0500
-In-Reply-To: <4D0B8975.1040206@vlnb.net>
+	id S1752796Ab0LQQsf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Dec 2010 11:48:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Patil, Kiran" <kiran.patil@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Joe Eykholt <jeykholt@cisco.com>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Linus Torvalds <torvalds@linux-foundation.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, "Penokie, George" <George.Penokie@lsi.com>
 
-On Fri, 2010-12-17 at 19:01 +0300, Vladislav Bolkhovitin wrote:
-> James Bottomley, on 12/17/2010 06:22 PM wrote:
-> > OK, I think this has reached the stage where it's been polished enough
-> > outside mainline to the point where we can complete any remaining todo
-> > items in-tree.
-> > 
-> > So lets begin merging with the minimal target core and the TCM_Loop as
-> > two separate commits. I think the target core may just fit under the
-> > reflector mail length limits, but if not, you can send it as multiple
-> > patches and I'll recombine them.
-> 
-> Well, could somebody eventually explain what are advantages of LIO over
-> SCST so you are choosing it?
-> 
-> LIO is obviously worse all technically (see
-> http://scst.sourceforge.net/comparison.html) as well as in the number of
-> users and size of the community. Current in-rush attempts to make LIO
-> _look_ not worse than SCST changed nothing in this area.
+Recently while testing with the scsi_debug driver
+I was able to trick the block layer into reading
+random data which the block layer thought was
+valid ***.
 
-To be honest, I don't really give a toss about niche feature
-comparisons: both products have niche features the other doesn't.  The
-basic requirements in both products are solid.  If the niche feature has
-customer value, my estimation is that it can easily be added (to either
-product).
+Best to start with an example, say LBA ** 4660 has
+an unrecoverable error (aka medium error) and
+the block layer fires off a SCSI READ for 8
+blocks (512 byte variety) at LBA 4656. The response
+will be a medium error with the sense buffer info
+field indicating LBA 4660. Now are the 4 blocks
+that precede it (i.e. LBA 4656 to 4659) possibly
+sitting in the data-in buffer and valid??
 
-> In the resent threads how many people voted for LIO? Nobody. How many
-> for SCST? Many. Moreover, has any real user of LIO participated in those
-> threads? None?
+The block layer thinks they are. This is what my
+term "short read" in the title alludes to. So I put
+this question to the T10 reflector:
+    http://www.t10.org/t10r.htm
+titled "sbc: reading blocks prior to a medium error".
+And the answers were pretty clear. And the one from
+George Penokie of LSI is interesting because Linux's
+block layer assumption breaks some of LSI's equipment.
 
-This isn't a democracy ... it's about choosing the most community
-oriented code base so that it's easily maintainable and easy to add
-feature requests and improvements as and when they come along.  In the
-past six months, LIO has made genuine efforts to clean up its act,
-streamline its code and support the other community projects that would
-need to go above and around it.  You seem to have spent a lot of the
-intervening time arguing with the sysfs maintainer about why you're
-right and he's wrong.
+On the other hand, big array vendors and database vendors
+want exactly what the block layer is doing at the moment.
+So those guys don't want a change. [Please correct me
+if that is too sweeping.] Also I'm informed some other
+OSes do this as well.
 
-James
+I would like to propose a solution, at least in the SCSI
+subsystem context. The 'resid' field was added 11 years
+ago and is used by a HBA driver to indicate how many bytes
+less than requested were placed in the scatter gather
+list (i.e. the data-in buffer). It defaults to zero
+(meaning all requested bytes have been read). Usually
+for a medium error one would not bother setting resid
+(so resid would remain 0). Somewhat surprisingly the
+block layer has always ignored resid. I propose in the
+case of a short read caused by a MEDIUM ERROR the block
+layer checks resid. And if resid equals the requested
+number of bytes then that means no data in the scatter
+gather list is valid. So the block layer should act on
+this information.
 
-> Doesn't that matter for you? Which code is the best doesn't matter for
-> Linux anymore?
-> 
-> Undercover games are going on?
-> 
-> Vlad
+To this end I propose to change the scsi_debug driver
+to set resid equal to bufflen when it simulates a
+medium error.
 
+Changes in the block layer and drivers from vendors who
+want the strict "T10" handling of medium errors would
+also be required. Maybe the USB mass storage (and UAS)
+folks might also check if this impacts them.
 
+Doug Gilbert
+
+**  LBA is Logical Block Address (origin 0)
+
+*** Using 'modprobe scsi_debug opts=2' will set up a
+     pseudo device which the example in the second
+     paragraph is based on. Write a known pattern into the
+     pseudo device (only 8 MB long) and use dd to read
+     that device. Due to the 4 KB blocks used by the block
+     layer, the read ends at LBA 4655. In my tests LBAs
+     4576 through to 4655 are corrupted (i.e. not what is
+     actually on the pseudo device).
