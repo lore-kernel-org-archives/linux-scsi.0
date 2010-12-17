@@ -1,83 +1,120 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: RFC: short reads on block devices
-Date: Fri, 17 Dec 2010 11:48:28 -0500
-Message-ID: <4D0B945C.2060309@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 1/1] RFC: scsi/dm-mpath: return -EACCES on reservation
+ conflict
+Date: Fri, 17 Dec 2010 11:59:57 -0500
+Message-ID: <20101217165957.GB1934@redhat.com>
+References: <1255406553-7054-1-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:56769 "EHLO smtp.infotech.no"
+Received: from mx1.redhat.com ([209.132.183.28]:41872 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752796Ab0LQQsf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Dec 2010 11:48:35 -0500
+	id S1753683Ab0LQRAO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Dec 2010 12:00:14 -0500
+Content-Disposition: inline
+In-Reply-To: <1255406553-7054-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, "Penokie, George" <George.Penokie@lsi.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: linux-scsi@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Hannes Reinecke <hare@suse.de>
 
-Recently while testing with the scsi_debug driver
-I was able to trick the block layer into reading
-random data which the block layer thought was
-valid ***.
+On Tue, Oct 13 2009 at 12:02am -0400,
+michaelc@cs.wisc.edu <michaelc@cs.wisc.edu> wrote:
 
-Best to start with an example, say LBA ** 4660 has
-an unrecoverable error (aka medium error) and
-the block layer fires off a SCSI READ for 8
-blocks (512 byte variety) at LBA 4656. The response
-will be a medium error with the sense buffer info
-field indicating LBA 4660. Now are the 4 blocks
-that precede it (i.e. LBA 4656 to 4659) possibly
-sitting in the data-in buffer and valid??
+> From: Mike Christie <michaelc@cs.wisc.edu>
+> 
+> This patch was made over this patch
+> http://marc.info/?l=linux-scsi&m=125417106125449&w=2
+> 
+> The basic problem is that we do not want dm-multipath to retry
+> this error, but the scsi layer returns -EIO or -EILSEQ, so
+> dm-multipath cannot distinguish between a reservation conflict
+> and other errors.
+> 
+> This problem was originally discussed here
+> http://www.linux-archive.org/device-mapper-development/180290-dm-mpath-scsi-persistent-reservation.html
+> 
+> I have considered adding new blk error values (I have sent pactches
+> for this before and can send updated ones if we want to go this route),
+> and even just using more -EXYZ values for scsi errors, but in the end I am
+> just not sure it ended up being worth it, so this patch just
+> handles the one error.
+> 
+> The problem with adding new blk errors is that it seems only dm-multipath
+> knows what it wants (have not seen anything from the FS or RAID people),
+> and I also do not know what every device is sending so I cannot completely
+> clean up cases like where a device returns a error (check condition
+> and sense) indicating a controller port is temporarily unavialable.
+> For example, I do not know if I am getting a ILLEGAL request for some
+> non retryable device error vs the controller is getting its FW updated
+> (for a non retryable device error case we do not want to fail the path
+> and just want to fail the IO, but for FW update we just want to fail
+> the path), so I have to treat those device errors like a transport error
+> and just fail the path.
+> 
+> So, I did another take just using lots of different -EXYZ values. See
+> this patch
+> 
+> for an example. The problem is still that the transport error
+> and generic error cases are the same so all I bought was the handling
+> of the reservation conflict.
+> 
+> And, that is how I ended up here where I am only handling the one
+> error I know for sure will cause problems with the infrastructure we have.
+> I am  not in love with this patch, so please give me any other
+> suggestions.
+> 
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> ---
+>  drivers/md/dm-mpath.c   |    2 +-
+>  drivers/scsi/scsi_lib.c |    4 ++++
+>  2 files changed, 5 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> index 32d0b87..93e6ce5 100644
+> --- a/drivers/md/dm-mpath.c
+> +++ b/drivers/md/dm-mpath.c
+> @@ -1214,7 +1214,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
+>  	if (!error && !clone->errors)
+>  		return 0;	/* I/O complete */
+>  
+> -	if (error == -EOPNOTSUPP)
+> +	if (error == -EOPNOTSUPP || error == -EACCES)
+>  		return error;
+>  
+>  	if (mpio->pgpath)
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 1086552..5635035 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -797,6 +797,10 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  		 * happens.
+>  		 */
+>  		action = ACTION_RETRY;
+> +	else if (status_byte(cmd->result) == RESERVATION_CONFLICT) {
+> +		error = -EACCES;
+> +		description = "Could not access device";
+> +		action = ACTION_FAIL;
+>  	} else if (sense_valid && !sense_deferred) {
+>  		switch (sshdr.sense_key) {
+>  		case UNIT_ATTENTION:
+> -- 
+> 1.6.2.2
 
-The block layer thinks they are. This is what my
-term "short read" in the title alludes to. So I put
-this question to the T10 reflector:
-    http://www.t10.org/t10r.htm
-titled "sbc: reading blocks prior to a medium error".
-And the answers were pretty clear. And the one from
-George Penokie of LSI is interesting because Linux's
-block layer assumption breaks some of LSI's equipment.
+Hi Mike,
 
-On the other hand, big array vendors and database vendors
-want exactly what the block layer is doing at the moment.
-So those guys don't want a change. [Please correct me
-if that is too sweeping.] Also I'm informed some other
-OSes do this as well.
+Just a reminder that Hannes has proposed a slightly different approach
+(returning -EREMOTEIO instead of -EACCES).  Here is the version of
+Hannes' patch that I reviewed/rebased/tweaked last week:
+https://patchwork.kernel.org/patch/384612/
 
-I would like to propose a solution, at least in the SCSI
-subsystem context. The 'resid' field was added 11 years
-ago and is used by a HBA driver to indicate how many bytes
-less than requested were placed in the scatter gather
-list (i.e. the data-in buffer). It defaults to zero
-(meaning all requested bytes have been read). Usually
-for a medium error one would not bother setting resid
-(so resid would remain 0). Somewhat surprisingly the
-block layer has always ignored resid. I propose in the
-case of a short read caused by a MEDIUM ERROR the block
-layer checks resid. And if resid equals the requested
-number of bytes then that means no data in the scatter
-gather list is valid. So the block layer should act on
-this information.
+(NOTE: the scsi_decide_disposition() change relative to
+RESERVATION_CONFLICT).
 
-To this end I propose to change the scsi_debug driver
-to set resid equal to bufflen when it simulates a
-medium error.
+And here is the corresponding DM mpath change:
+https://patchwork.kernel.org/patch/384602/
 
-Changes in the block layer and drivers from vendors who
-want the strict "T10" handling of medium errors would
-also be required. Maybe the USB mass storage (and UAS)
-folks might also check if this impacts them.
+If you agree with this approach your ack would be appreciated.
 
-Doug Gilbert
-
-**  LBA is Logical Block Address (origin 0)
-
-*** Using 'modprobe scsi_debug opts=2' will set up a
-     pseudo device which the example in the second
-     paragraph is based on. Write a known pattern into the
-     pseudo device (only 8 MB long) and use dd to read
-     that device. Due to the 4 KB blocks used by the block
-     layer, the read ends at LBA 4655. In my tests LBAs
-     4576 through to 4655 are corrupted (i.e. not what is
-     actually on the pseudo device).
+Thanks,
+Mike
