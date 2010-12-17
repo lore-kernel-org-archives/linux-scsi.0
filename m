@@ -1,130 +1,113 @@
-From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: RE: [PATCH v3][SCSI] scsi_dh: propagate SCSI device deletion
-Date: Fri, 17 Dec 2010 08:46:58 -0700
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4F54410DB@cosmail01.lsi.com>
-References: <D8C50530D6022F40A817A35C40CC06A7064AFC9450@DUBX7MCDUB01.EMEA.DELL.COM>
- <20101215160952.GA20869@redhat.com>
- <D8C50530D6022F40A817A35C40CC06A7064AFFCA3E@DUBX7MCDUB01.EMEA.DELL.COM>
- <20101216140209.GA23507@redhat.com>
- <D8C50530D6022F40A817A35C40CC06A7064AFFCF09@DUBX7MCDUB01.EMEA.DELL.COM>
- <20101216152930.GB23507@redhat.com>
- <D8C50530D6022F40A817A35C40CC06A7064AFFD030@DUBX7MCDUB01.EMEA.DELL.COM>
- <20101216162951.GE23507@redhat.com>
- <D8C50530D6022F40A817A35C40CC06A7064AFFD087@DUBX7MCDUB01.EMEA.DELL.COM>
- <20101216195707.GB25957@redhat.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [ANNOUNCE] TCM/LIO v4.0.0-rc6 for 2.6.37-rc6
+Date: Fri, 17 Dec 2010 19:01:57 +0300
+Message-ID: <4D0B8975.1040206@vlnb.net>
+References: <1292557664.31461.68.camel@haakon2.linux-iscsi.org> <1292599364.2820.21.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:53073 "EHLO
-	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754345Ab0LQPqf convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Dec 2010 10:46:35 -0500
-In-Reply-To: <20101216195707.GB25957@redhat.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1292599364.2820.21.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Patil, Kiran" <kiran.patil@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Joe Eykholt <jeykholt@cisco.com>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "Menny_Hamburger@dell.com" <Menny_Hamburger@dell.com>, "Itay_Dar@dell.com" <Itay_Dar@dell.com>, "Rob_Thomas@dell.com" <Rob_Thomas@dell.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>
 
-Patches look good..
+James Bottomley, on 12/17/2010 06:22 PM wrote:
+> On Thu, 2010-12-16 at 19:47 -0800, Nicholas A. Bellinger wrote:
+>> Greetings all,
+>>
+>> It is my pleasure to announce TCM/LIO v4.0.0-rc6 for v2.6.37-rc6 has
+>> been tagged and pushed into lio-core-2.6.git/lio-4.0 and master
+>> branches.  It has been almost two months since the last -rc5 for .36-rc8
+>> was released, and since that time a number of refactoring and cleanup
+>> patch series from Christoph Hellwig have been merged to reduced the
+>> target core logic and backend drivers by nearly ~4200 LOC!
+>>
+>> A big thanks to Christoph for jumping on a number of areas that have
+>> needed attention in target_core_transport.c for some time, and for being
+>> the very first 'third party' kernel developer to pull ahead in the
+>> TCM/LIO patch ranking for a single TCM/LIO release.   It was a good
+>> race, and hch did very much earn his victory for this round (41 vs. 36)
+>> in the final rankings attached below.
+>>
+>> Also, I am proud to announce this is the first release of Target Core
+>> code running with a publically available HW target fabric module.  The
+>> tcm_qla2xxx and qla2xxx LLD code is now available from the
+>> lio-core-2.6.git/tcm_qla2xxx branch, and more information about the
+>> recent Alpha -> BETA release and the ongoing developers are available
+>> here:
+>>
+>> http://www.linux-iscsi.org/index.php/Qlogic
+>>
+>> And the initial RFC patches here:
+>>
+>> http://marc.info/?l=linux-scsi&m=129244523223528&w=2
+>>
+>> There have also been a number of important bugfixes that have gone into
+>> this release, so for folks running on earlier v4.0 code please consider
+>> upgrading now..  Here is a brief list of the critical fixes from below:
+>>
+>> *) tcm/iblock: Fix bio-set leak during bio exception handling (nab)
+>>
+>> *) tcm/pscsi: Fix incorrect usage of head_of_queue with
+>>     blk_execute_rq_nowait() (boaz)
+>>
+>> *) tcm/pscsi: Fix failure case for __pscsi_map_task_SG() (nab)
+>>
+>> *) tcm: Fix OOPs w/ task->task_sg_bidi[] for non BIDI operation (kiran)
+>>
+>> *) target: Fix tfo->write_pending() fabric callback ordering (nab,
+>> kiran, and others)
+>>
+>> There has also been work in a number of branches where work is ongoing,
+>> and not mentioned in the final stats below.  This includes Tomo-san's
+>> work with the ibmvscsis module for IBM POWER VSCSI in branch
+>> tcm_ibmvstgt, and Kiran Patil for his recent work in the
+>> tcm_fc_ddp_offload branch for adding offload support for 10 Gb/sec Intel
+>> NICs with TCM_FC/OpenFCOE target code that will be merged into TCM/LIO
+>> upstream in a future release.
+>>
+>> Kiran also found and fixed his first bug in upstream Target code, and
+>> helped squash another long standing (since v2.x day) issue wrt to
+>> interrupt context usage required for HW target mode within the
+>> transport_generic_write_pending() callback.  He will be continuing to
+>> test and improve the TCM_FC/OpenFCoE code on Intel 10 Gb/sec hardware,
+>> and maintaining the DDP offload pieces for FCoE within
+>> lio-core-2.6.git/tcm_fc_ddp_offload branch on kernel.org.  Thank you and
+>> great work Kiran!
+>>
+>> At this point v4.0 development will be slowing down, as I will only be
+>> accepting critical fixes at this point for v4.0.0-rc7 as we move into
+>> the testing and validation phase for .38 mainline code.  So please
+>> folks, if anyone has immediate issues for v4.0 that need to be
+>> considered, please make myself and other core target devels aware and we
+>> will do our best to get them addressed.
+> 
+> OK, I think this has reached the stage where it's been polished enough
+> outside mainline to the point where we can complete any remaining todo
+> items in-tree.
+> 
+> So lets begin merging with the minimal target core and the TCM_Loop as
+> two separate commits. I think the target core may just fit under the
+> reflector mail length limits, but if not, you can send it as multiple
+> patches and I'll recombine them.
 
-Reviewed-by: Babu Moger <babu.moger@lsi.com>
+Well, could somebody eventually explain what are advantages of LIO over
+SCST so you are choosing it?
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Mike Snitzer
-> Sent: Thursday, December 16, 2010 1:57 PM
-> To: linux-scsi@vger.kernel.org
-> Cc: Menny_Hamburger@dell.com; Itay_Dar@dell.com; Rob_Thomas@dell.com; dm-
-> devel@redhat.com
-> Subject: [PATCH v3][SCSI] scsi_dh: propagate SCSI device deletion
-> 
-> From: Menny Hamburger <Menny_Hamburger@Dell.com>
-> 
-> Currently, when scsi_dh_activate() returns with an error
-> (e.g. SCSI_DH_NOSYS) the activate_complete callback is not called and
-> the error is not propagated to DM mpath.
-> 
-> When a SCSI device attached to a device handler is deleted, userland
-> processes currently performing I/O on the device will have their I/O
-> hang forever.
-> 
-> - Set SCSI_DH_NOSYS error when the handler is in the process of being
->   deleted (e.g. the SCSI device is in a SDEV_CANCEL or SDEV_DEL state).
-> 
-> - Set SCSI_DH_DEV_OFFLINED error when device is in SDEV_OFFLINE state.
-> 
-> - Call the activate_complete callback function directly from
->   scsi_dh_activate if an error has been set (when either the scsi_dh
->   internal data has already been deleted or is in the process of being
->   deleted).
-> 
-> The patch was tested in an iSCSI environment, RDAC H/W handler and
-> multipath.  In the following reproduction process, dd will I/O hang
-> forever and the only way to release it will be to reboot the machine:
-> 1) Perform I/O on a multipath device:
->     dd if=/dev/dm-0 of=/dev/zero bs=8k count=1000000 &
-> 2) Delete all slave SCSI devices contained in the mpath device:
->    I)  In an iSCSI environment, the easiest way to do this is by
->    stopping iSCSI:
->        /etc/init.d/iscsi stop
->    II) Another way to delete the devices is by applying the following
->    bash scriptlet:
->        dm_devs=$(ls /sys/block/ | grep dm- | xargs)
->        for dm_dev in $dm_devs; do
->          devices=$(ls /sys/block/$dm_dev/slaves)
->          for device in $devices; do
->             echo 1 > /sys/block/$device/device/delete
->          done
->        done
-> 
-> NOTE: when DM mpath's fail_path uses blk_abort_queue this scsi_dh change
-> isn't strictly required.  However, DM mpath's call to blk_abort_queue
-> will soon be reverted because it has proven to be unsafe due to a race
-> (between blk_abort_queue and scsi_request_fn) that can lead to list
-> corruption.  Therefore we cannot rely on blk_abort_queue via fail_path,
-> but even if we could this scsi_dh change is still preferrable.
-> 
-> Signed-off-by: Menny Hamburger <Menny_Hamburger@Dell.com>
-> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-> ---
->  drivers/scsi/device_handler/scsi_dh.c |   11 +++++++++--
->  1 files changed, 9 insertions(+), 2 deletions(-)
-> 
-> v1 and v2 were posted/discussed on dm-devel
-> v3: just tweaked the patch header a bit
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh.c
-> b/drivers/scsi/device_handler/scsi_dh.c
-> index 6fae3d2..b0c56f6 100644
-> --- a/drivers/scsi/device_handler/scsi_dh.c
-> +++ b/drivers/scsi/device_handler/scsi_dh.c
-> @@ -442,12 +442,19 @@ int scsi_dh_activate(struct request_queue *q,
-> activate_complete fn, void *data)
->  	sdev = q->queuedata;
->  	if (sdev && sdev->scsi_dh_data)
->  		scsi_dh = sdev->scsi_dh_data->scsi_dh;
-> -	if (!scsi_dh || !get_device(&sdev->sdev_gendev))
-> +	if (!scsi_dh || !get_device(&sdev->sdev_gendev) ||
-> +	    sdev->sdev_state == SDEV_CANCEL ||
-> +	    sdev->sdev_state == SDEV_DEL)
->  		err = SCSI_DH_NOSYS;
-> +	if (sdev->sdev_state == SDEV_OFFLINE)
-> +		err = SCSI_DH_DEV_OFFLINED;
->  	spin_unlock_irqrestore(q->queue_lock, flags);
-> 
-> -	if (err)
-> +	if (err) {
-> +		if (fn)
-> +			fn(data, err);
->  		return err;
-> +	}
-> 
->  	if (scsi_dh->activate)
->  		err = scsi_dh->activate(sdev, fn, data);
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+LIO is obviously worse all technically (see
+http://scst.sourceforge.net/comparison.html) as well as in the number of
+users and size of the community. Current in-rush attempts to make LIO
+_look_ not worse than SCST changed nothing in this area.
+
+In the resent threads how many people voted for LIO? Nobody. How many
+for SCST? Many. Moreover, has any real user of LIO participated in those
+threads? None?
+
+Doesn't that matter for you? Which code is the best doesn't matter for
+Linux anymore?
+
+Undercover games are going on?
+
+Vlad
