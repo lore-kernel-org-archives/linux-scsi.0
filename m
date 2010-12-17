@@ -1,81 +1,59 @@
-From: Hillf Danton <dhillf@gmail.com>
-Subject: Re: [PATCH] thaw FC local port
-Date: Fri, 17 Dec 2010 21:46:27 +0800
-Message-ID: <AANLkTi=m7gKFdYasPvq=2QYqC9A5BycqHYgQ7DZxWh4=@mail.gmail.com>
-References: <AANLkTi=4waDVnmLg9VRvrwRej+TLe4KGsL58XdWdG091@mail.gmail.com>
-	<1292541521.1346.20.camel@fritz>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: training mpath to discern between SCSI errors
+Date: Fri, 17 Dec 2010 09:06:06 -0500
+Message-ID: <20101217140605.GA740@redhat.com>
+References: <20100825155918.GB8509@redhat.com> <4C7B984E.4070802@suse.de>
+	<4C7B9F14.9080900@mvista.com> <4C7BA670.2060303@suse.de>
+	<4C7BC5B4.3010707@suse.de> <4CBC00B3.7090603@ce.jp.nec.com>
+	<4CBC35AE.9050002@suse.de> <20101119031149.GA28455@us.ibm.com>
+	<20101130225956.GA8882@redhat.com> <4D0B31B5.101@suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:54258 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753937Ab0LQNq2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Dec 2010 08:46:28 -0500
-Received: by wyb28 with SMTP id 28so629667wyb.19
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Dec 2010 05:46:27 -0800 (PST)
-In-Reply-To: <1292541521.1346.20.camel@fritz>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <4D0B31B5.101@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, Sergei Shtylyov <sshtylyov@mvista.com>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, jack@suse.cz, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, swhiteho@redhat.com, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, konishi.ryusuke@lab.ntt.co.jp, Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, vst@vlnb.net, rwheeler@redhat.com, Christoph Hellwig <hch@lst.de>, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Love <robert.w.love@intel.com>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, Joe Eykholt <jeykholt@cisco.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Dec 17, 2010 at 7:18 AM, Robert Love <robert.w.love@intel.com> =
-wrote:
-> On Thu, 2010-12-16 at 08:07 -0800, Hillf Danton wrote:
->> The state machine of local port is freezed if it could not get ready=
-,
->> so thawing is necessary.
->>
-> Please start putting a prefix "fcoe: ", "libfc: " or "libfcoe: " on y=
-our
-> patch titles. Also, please provide more meaningful commit messages. I
-> believe that I've pointed out these two issues with your patches befo=
-re.
->
->> Signed-off-by: Hillf Danton <dhillf@gmail.com>
->> ---
->>
->> --- a/drivers/scsi/libfc/fc_lport.c =C2=A0 2010-11-01 19:54:12.00000=
-0000 +0800
->> +++ b/drivers/scsi/libfc/fc_lport.c =C2=A0 2010-12-17 00:08:06.00000=
-0000 +0800
->> @@ -1514,11 +1514,11 @@ void fc_lport_enter_flogi(struct fc_lpor
->>
->> =C2=A0 =C2=A0 =C2=A0 fc_lport_state_enter(lport, LPORT_ST_FLOGI);
->>
->> - =C2=A0 =C2=A0 if (lport->point_to_multipoint) {
->> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (lport->port_id)
->> + =C2=A0 =C2=A0 if (lport->point_to_multipoint)
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 if (lport->port_id) {
->> =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 fc_lport_enter_ready(lport);
->> - =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 return;
->> - =C2=A0 =C2=A0 }
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 return;
->> + =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 }
->>
->> =C2=A0 =C2=A0 =C2=A0 fp =3D fc_frame_alloc(lport, sizeof(struct fc_e=
-ls_flogi));
->> =C2=A0 =C2=A0 =C2=A0 if (!fp)
->
-> We do not want to proceed with sending a FLOGI here when we're in
-> point-to-multipoint (VN2VN) mode. VN2VN is a mode where there is no
-> fabric and we FLOGI directly into the remote port. So for VN2VN the
-> FLOGI happens in the rport layer.
+On Fri, Dec 17 2010 at  4:47am -0500,
+Hannes Reinecke <hare@suse.de> wrote:
 
-How will lport get out of the LPORT_ST_FLOGI state then?
+> On 11/30/2010 11:59 PM, Mike Snitzer wrote:
+> > Hannes,
+> > 
+> > Any chance you've had time to fold your proposed logging changes in and
+> > rebase this patch?  Could you post that updated patch?
+> > 
+> yes, will be following shortly.
+> 
+> > I'd like to help see this patch through to inclussion when 2.6.38 merge
+> > window opens.  I can help with further review, testing and development.
+> > 
+> Ok, thanks.
 
-Thanks
+I took some steps at furthering your work.  Here is the cover letter to
+the patches I resently sent to dm-devel:
+https://www.redhat.com/archives/dm-devel/2010-December/msg00090.html
 
-Hillf
->
-> //Rob
->
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+And here are the patches:
+https://patchwork.kernel.org/patch/384612/
+https://patchwork.kernel.org/patch/384602/
+https://patchwork.kernel.org/patch/390882/
+
+Please feel free to change these how ever you see fit but your feedback
+is really appreciated.
+
+Thanks,
+Mike
