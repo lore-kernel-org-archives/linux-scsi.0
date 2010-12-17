@@ -1,14 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH v2 02o/03] target: Add PSCSI subsystem plugin
-Date: Fri, 17 Dec 2010 13:11:31 -0800
-Message-ID: <1292620296-22822-17-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH v2 02q/03] target: Add generic fabric independent ConfigFS infrastructure
+Date: Fri, 17 Dec 2010 13:11:33 -0800
+Message-ID: <1292620296-22822-19-git-send-email-nab@linux-iscsi.org>
 References: <1292620296-22822-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm5-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.204]:23972 "HELO
-	nm5-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756506Ab0LQVMx (ORCPT
+Received: from nm4.bullet.mail.sp2.yahoo.com ([98.139.91.74]:23037 "HELO
+	nm4.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756506Ab0LQVM7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Dec 2010 16:12:53 -0500
+	Fri, 17 Dec 2010 16:12:59 -0500
 In-Reply-To: <1292620296-22822-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,38 +17,38 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds the PSCSI subsystem plugin for accessing struct scsi_device
-using struct request from upstream Linux/SCSI code.  This subsystem plugin
-follows a passthrough design, and does not provide and control CDB emulation
-for the registered struct scsi_device backstores.  This subsystem plugin also
-allows the export of both TYPE_DISk and non TYPE_DISK struct scsi_devices.
+This patch adds the v4 fabric independent configfs code that allows modules
+to use a generic set of struct config_item_types and struct config_groups hanging
+off fabric dependent structures, without having to explictly define a configfs layout
+of /sys/kernel/config/target/$FABRIC themselves.  This allows a generic layout to be
+used with fabric dependent attributes using struct config_item_type context specific
+macros in include/target/target_core_fabric_configfs.h.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_pscsi.c | 1471 ++++++++++++++++++++++++++++++++++++
- drivers/target/target_core_pscsi.h |   65 ++
- 2 files changed, 1536 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/target_core_pscsi.c
- create mode 100644 drivers/target/target_core_pscsi.h
+ drivers/target/target_core_fabric_configfs.c | 1001 ++++++++++++++++++++++++++
+ include/target/target_core_fabric_configfs.h |  106 +++
+ 2 files changed, 1107 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/target_core_fabric_configfs.c
+ create mode 100644 include/target/target_core_fabric_configfs.h
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
 new file mode 100644
-index 0000000..4761507
+index 0000000..5f0e497
 --- /dev/null
-+++ b/drivers/target/target_core_pscsi.c
-@@ -0,0 +1,1471 @@
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -0,0 +1,1001 @@
 +/*******************************************************************************
-+ * Filename:  target_core_pscsi.c
++* Filename: target_core_fabric_configfs.c
 + *
-+ * This file contains the generic target mode <-> Linux SCSI subsystem plugin.
++ * This file contains generic fabric module configfs infrastructure for
++ * TCM v4.x code
 + *
-+ * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
-+ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
-+ * Copyright (c) 2007-2010 Rising Tide Systems
-+ * Copyright (c) 2008-2010 Linux-iSCSI.org
++ * Copyright (c) 2010 Rising Tide Systems
++ * Copyright (c) 2010 Linux-iSCSI.org
 + *
-+ * Nicholas A. Bellinger <nab@kernel.org>
-+ *
++ * Copyright (c) 2010 Nicholas A. Bellinger <nab@linux-iscsi.org>
++*
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
 + * the Free Software Foundation; either version 2 of the License, or
@@ -58,1527 +58,1099 @@ index 0000000..4761507
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 + * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
-+ *
-+ ******************************************************************************/
++ ****************************************************************************/
 +
++#include <linux/module.h>
++#include <linux/moduleparam.h>
 +#include <linux/version.h>
-+#include <linux/string.h>
-+#include <linux/parser.h>
-+#include <linux/timer.h>
-+#include <linux/blkdev.h>
-+#include <linux/blk_types.h>
++#include <generated/utsrelease.h>
++#include <linux/utsname.h>
++#include <linux/init.h>
++#include <linux/fs.h>
++#include <linux/namei.h>
 +#include <linux/slab.h>
-+#include <linux/spinlock.h>
-+#include <linux/smp_lock.h>
-+#include <linux/genhd.h>
-+#include <linux/cdrom.h>
-+#include <linux/file.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/libsas.h> /* For TASK_ATTR_* */
++#include <linux/types.h>
++#include <linux/delay.h>
++#include <linux/unistd.h>
++#include <linux/string.h>
++#include <linux/syscalls.h>
++#include <linux/configfs.h>
 +
 +#include <target/target_core_base.h>
 +#include <target/target_core_device.h>
++#include <target/target_core_tpg.h>
 +#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_fabric_configfs.h>
++#include <target/target_core_configfs.h>
++#include <target/configfs_macros.h>
 +
-+#include "target_core_pscsi.h"
++#include "target_core_alua.h"
++#include "target_core_hba.h"
++#include "target_core_pr.h"
 +
-+#define ISPRINT(a)  ((a >= ' ') && (a <= '~'))
-+
-+static struct se_subsystem_api pscsi_template;
-+
-+static void pscsi_req_done(struct request *, int);
-+
-+/*	pscsi_get_sh():
-+ *
-+ *
-+ */
-+static struct Scsi_Host *pscsi_get_sh(u32 host_no)
-+{
-+	struct Scsi_Host *sh = NULL;
-+
-+	sh = scsi_host_lookup(host_no);
-+	if (IS_ERR(sh)) {
-+		printk(KERN_ERR "Unable to locate SCSI HBA with Host ID:"
-+				" %u\n", host_no);
-+		return NULL;
-+	}
-+
-+	return sh;
++#define TF_CIT_SETUP(_name, _item_ops, _group_ops, _attrs)		\
++static void target_fabric_setup_##_name##_cit(struct target_fabric_configfs *tf) \
++{									\
++	struct target_fabric_configfs_template *tfc = &tf->tf_cit_tmpl;	\
++	struct config_item_type *cit = &tfc->tfc_##_name##_cit;		\
++									\
++	cit->ct_item_ops = _item_ops;					\
++	cit->ct_group_ops = _group_ops;					\
++	cit->ct_attrs = _attrs;						\
++	cit->ct_owner = tf->tf_module;					\
++	printk("Setup generic %s\n", __stringify(_name));		\
 +}
 +
-+/*	pscsi_attach_hba():
-+ *
-+ * 	pscsi_get_sh() used scsi_host_lookup() to locate struct Scsi_Host.
-+ *	from the passed SCSI Host ID.
-+ */
-+static int pscsi_attach_hba(struct se_hba *hba, u32 host_id)
++/* Start of tfc_tpg_mappedlun_cit */
++
++static int target_fabric_mappedlun_link(
++	struct config_item *lun_acl_ci,
++	struct config_item *lun_ci)
 +{
-+	int hba_depth;
-+	struct pscsi_hba_virt *phv;
-+
-+	phv = kzalloc(sizeof(struct pscsi_hba_virt), GFP_KERNEL);
-+	if (!(phv)) {
-+		printk(KERN_ERR "Unable to allocate struct pscsi_hba_virt\n");
-+		return -1;
-+	}
-+	phv->phv_host_id = host_id;
-+	phv->phv_mode = PHV_VIRUTAL_HOST_ID;
-+	hba_depth = PSCSI_VIRTUAL_HBA_DEPTH;
-+	atomic_set(&hba->left_queue_depth, hba_depth);
-+	atomic_set(&hba->max_queue_depth, hba_depth);
-+
-+	hba->hba_ptr = (void *)phv;
-+
-+	printk(KERN_INFO "CORE_HBA[%d] - TCM SCSI HBA Driver %s on"
-+		" Generic Target Core Stack %s\n", hba->hba_id,
-+		PSCSI_VERSION, TARGET_CORE_MOD_VERSION);
-+	printk(KERN_INFO "CORE_HBA[%d] - Attached SCSI HBA to Generic"
-+		" Target Core with TCQ Depth: %d\n", hba->hba_id,
-+		atomic_read(&hba->max_queue_depth));
-+
-+	return 0;
-+}
-+
-+static void pscsi_detach_hba(struct se_hba *hba)
-+{
-+	struct pscsi_hba_virt *phv = hba->hba_ptr;
-+	struct Scsi_Host *scsi_host = phv->phv_lld_host;
-+
-+	if (scsi_host) {
-+		scsi_host_put(scsi_host);
-+
-+		printk(KERN_INFO "CORE_HBA[%d] - Detached SCSI HBA: %s from"
-+			" Generic Target Core\n", hba->hba_id,
-+			(scsi_host->hostt->name) ? (scsi_host->hostt->name) :
-+			"Unknown");
-+	} else
-+		printk(KERN_INFO "CORE_HBA[%d] - Detached Virtual SCSI HBA"
-+			" from Generic Target Core\n", hba->hba_id);
-+
-+	kfree(phv);
-+	hba->hba_ptr = NULL;
-+}
-+
-+static int pscsi_pmode_enable_hba(struct se_hba *hba, unsigned long mode_flag)
-+{
-+	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)hba->hba_ptr;
-+	struct Scsi_Host *sh = phv->phv_lld_host;
-+	int hba_depth = PSCSI_VIRTUAL_HBA_DEPTH;
++	struct se_dev_entry *deve;
++	struct se_lun *lun = container_of(to_config_group(lun_ci),
++			struct se_lun, lun_group);
++	struct se_lun_acl *lacl = container_of(to_config_group(lun_acl_ci),
++			struct se_lun_acl, se_lun_group);
++	struct se_portal_group *se_tpg;
++	struct config_item *nacl_ci, *tpg_ci, *tpg_ci_s, *wwn_ci, *wwn_ci_s;
++	int ret = 0, lun_access;
 +	/*
-+	 * Release the struct Scsi_Host
++	 * Ensure that the source port exists
 +	 */
-+	if (!(mode_flag)) {
-+		if (!(sh))
-+			return 0;
++	if (!(lun->lun_sep) || !(lun->lun_sep->sep_tpg)) {
++		printk(KERN_ERR "Source se_lun->lun_sep or lun->lun_sep->sep"
++				"_tpg does not exist\n");
++		return -EINVAL;
++	}
++	se_tpg = lun->lun_sep->sep_tpg;
 +
-+		phv->phv_lld_host = NULL;
-+		phv->phv_mode = PHV_VIRUTAL_HOST_ID;
-+		atomic_set(&hba->left_queue_depth, hba_depth);
-+		atomic_set(&hba->max_queue_depth, hba_depth);
-+
-+		printk(KERN_INFO "CORE_HBA[%d] - Disabled pSCSI HBA Passthrough"
-+			" %s\n", hba->hba_id, (sh->hostt->name) ?
-+			(sh->hostt->name) : "Unknown");
-+
-+		scsi_host_put(sh);
-+		return 0;
++	nacl_ci = &lun_acl_ci->ci_parent->ci_group->cg_item;
++	tpg_ci = &nacl_ci->ci_group->cg_item;
++	wwn_ci = &tpg_ci->ci_group->cg_item;
++	tpg_ci_s = &lun_ci->ci_parent->ci_group->cg_item;
++	wwn_ci_s = &tpg_ci_s->ci_group->cg_item;
++	/*
++	 * Make sure the SymLink is going to the same $FABRIC/$WWN/tpgt_$TPGT
++	 */
++	if (strcmp(config_item_name(wwn_ci), config_item_name(wwn_ci_s))) {
++		printk(KERN_ERR "Illegal Initiator ACL SymLink outside of %s\n",
++			config_item_name(wwn_ci));
++		return -EINVAL;
++	}
++	if (strcmp(config_item_name(tpg_ci), config_item_name(tpg_ci_s))) {
++		printk(KERN_ERR "Illegal Initiator ACL Symlink outside of %s"
++			" TPGT: %s\n", config_item_name(wwn_ci),
++			config_item_name(tpg_ci));
++		return -EINVAL;
 +	}
 +	/*
-+	 * Otherwise, locate struct Scsi_Host from the original passed
-+	 * pSCSI Host ID and enable for phba mode
++	 * If this struct se_node_acl was dynamically generated with
++	 * tpg_1/attrib/generate_node_acls=1, use the existing deve->lun_flags,
++	 * which be will write protected (READ-ONLY) when
++	 * tpg_1/attrib/demo_mode_write_protect=1
 +	 */
-+	sh = pscsi_get_sh(phv->phv_host_id);
-+	if (!(sh)) {
-+		printk(KERN_ERR "pSCSI: Unable to locate SCSI Host for"
-+			" phv_host_id: %d\n", phv->phv_host_id);
-+		return -1;
-+	}
-+	/*
-+	 * Usually the SCSI LLD will use the hostt->can_queue value to define
-+	 * its HBA TCQ depth.  Some other drivers (like 2.6 megaraid) don't set
-+	 * this at all and set sh->can_queue at runtime.
-+	 */
-+	hba_depth = (sh->hostt->can_queue > sh->can_queue) ?
-+		sh->hostt->can_queue : sh->can_queue;
-+
-+	atomic_set(&hba->left_queue_depth, hba_depth);
-+	atomic_set(&hba->max_queue_depth, hba_depth);
-+
-+	phv->phv_lld_host = sh;
-+	phv->phv_mode = PHV_LLD_SCSI_HOST_NO;
-+
-+	printk(KERN_INFO "CORE_HBA[%d] - Enabled pSCSI HBA Passthrough %s\n",
-+		hba->hba_id, (sh->hostt->name) ? (sh->hostt->name) : "Unknown");
-+
-+	return 1;
-+}
-+
-+static void pscsi_tape_read_blocksize(struct se_device *dev,
-+		struct scsi_device *sdev)
-+{
-+	unsigned char cdb[MAX_COMMAND_SIZE], *buf;
-+	int ret;
-+
-+	buf = kzalloc(12, GFP_KERNEL);
-+	if (!buf)
-+		return;
-+
-+	memset(cdb, 0, MAX_COMMAND_SIZE);
-+	cdb[0] = MODE_SENSE;
-+	cdb[4] = 0x0c; /* 12 bytes */
-+
-+	ret = scsi_execute_req(sdev, cdb, DMA_FROM_DEVICE, buf, 12, NULL,
-+			HZ, 1, NULL);
-+	if (ret)
-+		goto out_free;
-+
-+	/*
-+	 * If MODE_SENSE still returns zero, set the default value to 1024.
-+	 */
-+	sdev->sector_size = (buf[9] << 16) | (buf[10] << 8) | (buf[11]);
-+	if (!sdev->sector_size)
-+		sdev->sector_size = 1024;
-+out_free:
-+	kfree(buf);
-+}
-+
-+static void
-+pscsi_set_inquiry_info(struct scsi_device *sdev, struct t10_wwn *wwn)
-+{
-+	unsigned char *buf;
-+
-+	if (sdev->inquiry_len < INQUIRY_LEN)
-+		return;
-+
-+	buf = sdev->inquiry;
-+	if (!buf)
-+		return;
-+	/*
-+	 * Use sdev->inquiry from drivers/scsi/scsi_scan.c:scsi_alloc_sdev()
-+	 */
-+	memcpy(&wwn->vendor[0], &buf[8], sizeof(wwn->vendor));
-+	memcpy(&wwn->model[0], &buf[16], sizeof(wwn->model));
-+	memcpy(&wwn->revision[0], &buf[32], sizeof(wwn->revision));
-+}
-+
-+static int
-+pscsi_get_inquiry_vpd_serial(struct scsi_device *sdev, struct t10_wwn *wwn)
-+{
-+	unsigned char cdb[MAX_COMMAND_SIZE], *buf;
-+	int ret;
-+
-+	buf = kzalloc(INQUIRY_VPD_SERIAL_LEN, GFP_KERNEL);
-+	if (!buf)
-+		return -1;
-+
-+	memset(cdb, 0, MAX_COMMAND_SIZE);
-+	cdb[0] = INQUIRY;
-+	cdb[1] = 0x01; /* Query VPD */
-+	cdb[2] = 0x80; /* Unit Serial Number */
-+	cdb[3] = (INQUIRY_VPD_SERIAL_LEN >> 8) & 0xff;
-+	cdb[4] = (INQUIRY_VPD_SERIAL_LEN & 0xff);
-+
-+	ret = scsi_execute_req(sdev, cdb, DMA_FROM_DEVICE, buf,
-+			      INQUIRY_VPD_SERIAL_LEN, NULL, HZ, 1, NULL);
-+	if (ret)
-+		goto out_free;
-+
-+	snprintf(&wwn->unit_serial[0], INQUIRY_VPD_SERIAL_LEN, "%s", &buf[4]);
-+
-+	wwn->t10_sub_dev->su_dev_flags |= SDF_FIRMWARE_VPD_UNIT_SERIAL;
-+
-+	kfree(buf);
-+	return 0;
-+
-+out_free:
-+	kfree(buf);
-+	return -1;
-+}
-+
-+static void
-+pscsi_get_inquiry_vpd_device_ident(struct scsi_device *sdev,
-+		struct t10_wwn *wwn)
-+{
-+	unsigned char cdb[MAX_COMMAND_SIZE], *buf, *page_83;
-+	int ident_len, page_len, off = 4, ret;
-+	struct t10_vpd *vpd;
-+
-+	buf = kzalloc(INQUIRY_VPD_SERIAL_LEN, GFP_KERNEL);
-+	if (!buf)
-+		return;
-+
-+	memset(cdb, 0, MAX_COMMAND_SIZE);
-+	cdb[0] = INQUIRY;
-+	cdb[1] = 0x01; /* Query VPD */
-+	cdb[2] = 0x83; /* Device Identifier */
-+	cdb[3] = (INQUIRY_VPD_DEVICE_IDENTIFIER_LEN >> 8) & 0xff;
-+	cdb[4] = (INQUIRY_VPD_DEVICE_IDENTIFIER_LEN & 0xff);
-+
-+	ret = scsi_execute_req(sdev, cdb, DMA_FROM_DEVICE, buf,
-+			      INQUIRY_VPD_DEVICE_IDENTIFIER_LEN,
-+			      NULL, HZ, 1, NULL);
-+	if (ret)
-+		goto out;
-+
-+	page_len = (buf[2] << 8) | buf[3];
-+	while (page_len > 0) {
-+		/* Grab a pointer to the Identification descriptor */
-+		page_83 = &buf[off];
-+		ident_len = page_83[3];
-+		if (!ident_len) {
-+			printk(KERN_ERR "page_83[3]: identifier"
-+					" length zero!\n");
-+			break;
-+		}
-+		printk(KERN_INFO "T10 VPD Identifer Length: %d\n", ident_len);
-+
-+		vpd = kzalloc(sizeof(struct t10_vpd), GFP_KERNEL);
-+		if (!vpd) {
-+			printk(KERN_ERR "Unable to allocate memory for"
-+					" struct t10_vpd\n");
-+			goto out;
-+		}
-+		INIT_LIST_HEAD(&vpd->vpd_list);
-+
-+		transport_set_vpd_proto_id(vpd, page_83);
-+		transport_set_vpd_assoc(vpd, page_83);
-+
-+		if (transport_set_vpd_ident_type(vpd, page_83) < 0) {
-+			off += (ident_len + 4);
-+			page_len -= (ident_len + 4);
-+			kfree(vpd);
-+			continue;
-+		}
-+		if (transport_set_vpd_ident(vpd, page_83) < 0) {
-+			off += (ident_len + 4);
-+			page_len -= (ident_len + 4);
-+			kfree(vpd);
-+			continue;
-+		}
-+
-+		list_add_tail(&vpd->vpd_list, &wwn->t10_vpd_list);
-+		off += (ident_len + 4);
-+		page_len -= (ident_len + 4);
-+	}
-+
-+out:
-+	kfree(buf);
-+}
-+
-+/*	pscsi_add_device_to_list():
-+ *
-+ *
-+ */
-+static struct se_device *pscsi_add_device_to_list(
-+	struct se_hba *hba,
-+	struct se_subsystem_dev *se_dev,
-+	struct pscsi_dev_virt *pdv,
-+	struct scsi_device *sd,
-+	int dev_flags)
-+{
-+	struct se_device *dev;
-+	struct se_dev_limits dev_limits;
-+	struct request_queue *q;
-+	struct queue_limits *limits;
-+
-+	memset(&dev_limits, 0, sizeof(struct se_dev_limits));
-+
-+	if (!sd->queue_depth) {
-+		sd->queue_depth = PSCSI_DEFAULT_QUEUEDEPTH;
-+
-+		printk(KERN_ERR "Set broken SCSI Device %d:%d:%d"
-+			" queue_depth to %d\n", sd->channel, sd->id,
-+				sd->lun, sd->queue_depth);
-+	}
-+	/*
-+	 * Setup the local scope queue_limits from struct request_queue->limits
-+	 * to pass into transport_add_device_to_core_hba() as struct se_dev_limits.
-+	 */
-+	q = sd->request_queue;
-+	limits = &dev_limits.limits;
-+	limits->logical_block_size = sd->sector_size;
-+	limits->max_hw_sectors = (sd->host->max_sectors > queue_max_hw_sectors(q)) ?
-+				  queue_max_hw_sectors(q) : sd->host->max_sectors;
-+	limits->max_sectors = (sd->host->max_sectors > queue_max_sectors(q)) ?
-+				  queue_max_sectors(q) : sd->host->max_sectors;
-+	dev_limits.hw_queue_depth = sd->queue_depth;
-+	dev_limits.queue_depth = sd->queue_depth;
-+	/*
-+	 * Setup our standard INQUIRY info into se_dev->t10_wwn
-+	 */
-+	pscsi_set_inquiry_info(sd, &se_dev->t10_wwn);
-+
-+	/*
-+	 * Set the pointer pdv->pdv_sd to from passed struct scsi_device,
-+	 * which has already been referenced with Linux SCSI code with
-+	 * scsi_device_get() in this file's pscsi_create_virtdevice().
-+	 *
-+	 * The passthrough operations called by the transport_add_device_*
-+	 * function below will require this pointer to be set for passthroug
-+	 *  ops.
-+	 *
-+	 * For the shutdown case in pscsi_free_device(), this struct
-+	 * scsi_device  reference is released with Linux SCSI code
-+	 * scsi_device_put() and the pdv->pdv_sd cleared.
-+	 */
-+	pdv->pdv_sd = sd;
-+
-+	dev = transport_add_device_to_core_hba(hba, &pscsi_template,
-+				se_dev, dev_flags, (void *)pdv,
-+				&dev_limits, NULL, NULL);
-+	if (!(dev)) {
-+		pdv->pdv_sd = NULL;
-+		return NULL;
-+	}
-+
-+	/*
-+	 * Locate VPD WWN Information used for various purposes within
-+	 * the Storage Engine.
-+	 */
-+	if (!pscsi_get_inquiry_vpd_serial(sd, &se_dev->t10_wwn)) {
-+		/*
-+		 * If VPD Unit Serial returned GOOD status, try
-+		 * VPD Device Identification page (0x83).
-+		 */
-+		pscsi_get_inquiry_vpd_device_ident(sd, &se_dev->t10_wwn);
-+	}
-+
-+	/*
-+	 * For TYPE_TAPE, attempt to determine blocksize with MODE_SENSE.
-+	 */
-+	if (sd->type == TYPE_TAPE)
-+		pscsi_tape_read_blocksize(dev, sd);
-+	return dev;
-+}
-+
-+static void *pscsi_allocate_virtdevice(struct se_hba *hba, const char *name)
-+{
-+	struct pscsi_dev_virt *pdv;
-+
-+	pdv = kzalloc(sizeof(struct pscsi_dev_virt), GFP_KERNEL);
-+	if (!(pdv)) {
-+		printk(KERN_ERR "Unable to allocate memory for struct pscsi_dev_virt\n");
-+		return NULL;
-+	}
-+	pdv->pdv_se_hba = hba;
-+
-+	printk(KERN_INFO "PSCSI: Allocated pdv: %p for %s\n", pdv, name);
-+	return (void *)pdv;
-+}
-+
-+/*
-+ * Called with struct Scsi_Host->host_lock called.
-+ */
-+static struct se_device *pscsi_create_type_disk(
-+	struct scsi_device *sd,
-+	struct pscsi_dev_virt *pdv,
-+	struct se_subsystem_dev *se_dev,
-+	struct se_hba *hba)
-+{
-+	struct se_device *dev;
-+	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)pdv->pdv_se_hba->hba_ptr;
-+	struct Scsi_Host *sh = sd->host;
-+	struct block_device *bd;
-+	u32 dev_flags = 0;
-+
-+	if (scsi_device_get(sd)) {
-+		printk(KERN_ERR "scsi_device_get() failed for %d:%d:%d:%d\n",
-+			sh->host_no, sd->channel, sd->id, sd->lun);
-+		spin_unlock_irq(sh->host_lock);
-+		return NULL;
-+	}
-+	spin_unlock_irq(sh->host_lock);
-+	/*
-+	 * Claim exclusive struct block_device access to struct scsi_device
-+	 * for TYPE_DISK using supplied udev_path
-+	 */
-+	bd = open_bdev_exclusive(se_dev->se_dev_udev_path,
-+				FMODE_WRITE|FMODE_READ, pdv);
-+	if (!(bd)) {
-+		printk("pSCSI: open_bdev_exclusive() failed\n");
-+		scsi_device_put(sd);
-+		return NULL;
-+	}
-+	pdv->pdv_bd = bd;
-+
-+	dev = pscsi_add_device_to_list(hba, se_dev, pdv, sd, dev_flags);
-+	if (!(dev)) {
-+		close_bdev_exclusive(pdv->pdv_bd, FMODE_WRITE|FMODE_READ);
-+		scsi_device_put(sd);
-+		return NULL;
-+	}
-+	printk(KERN_INFO "CORE_PSCSI[%d] - Added TYPE_DISK for %d:%d:%d:%d\n",
-+		phv->phv_host_id, sh->host_no, sd->channel, sd->id, sd->lun);
-+
-+	return dev;
-+}
-+
-+/*
-+ * Called with struct Scsi_Host->host_lock called.
-+ */
-+static struct se_device *pscsi_create_type_rom(
-+	struct scsi_device *sd,
-+	struct pscsi_dev_virt *pdv,
-+	struct se_subsystem_dev *se_dev,
-+	struct se_hba *hba)
-+{
-+	struct se_device *dev;
-+	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)pdv->pdv_se_hba->hba_ptr;
-+	struct Scsi_Host *sh = sd->host;
-+	u32 dev_flags = 0;
-+
-+	if (scsi_device_get(sd)) {
-+		printk(KERN_ERR "scsi_device_get() failed for %d:%d:%d:%d\n",
-+			sh->host_no, sd->channel, sd->id, sd->lun);
-+		spin_unlock_irq(sh->host_lock);
-+		return NULL;
-+	}
-+	spin_unlock_irq(sh->host_lock);
-+
-+	dev = pscsi_add_device_to_list(hba, se_dev, pdv, sd, dev_flags);
-+	if (!(dev)) {
-+		scsi_device_put(sd);
-+		return NULL;
-+	}
-+	printk(KERN_INFO "CORE_PSCSI[%d] - Added Type: %s for %d:%d:%d:%d\n",
-+		phv->phv_host_id, scsi_device_type(sd->type), sh->host_no,
-+		sd->channel, sd->id, sd->lun);
-+
-+	return dev;
-+}
-+
-+/*
-+ *Called with struct Scsi_Host->host_lock called.
-+ */
-+static struct se_device *pscsi_create_type_other(
-+	struct scsi_device *sd,
-+	struct pscsi_dev_virt *pdv,
-+	struct se_subsystem_dev *se_dev,
-+	struct se_hba *hba)
-+{
-+	struct se_device *dev;
-+	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)pdv->pdv_se_hba->hba_ptr;
-+	struct Scsi_Host *sh = sd->host;
-+	u32 dev_flags = 0;
-+
-+	spin_unlock_irq(sh->host_lock);
-+	dev = pscsi_add_device_to_list(hba, se_dev, pdv, sd, dev_flags);
-+	if (!(dev))
-+		return NULL;
-+
-+	printk(KERN_INFO "CORE_PSCSI[%d] - Added Type: %s for %d:%d:%d:%d\n",
-+		phv->phv_host_id, scsi_device_type(sd->type), sh->host_no,
-+		sd->channel, sd->id, sd->lun);
-+
-+	return dev;
-+}
-+
-+static struct se_device *pscsi_create_virtdevice(
-+	struct se_hba *hba,
-+	struct se_subsystem_dev *se_dev,
-+	void *p)
-+{
-+	struct pscsi_dev_virt *pdv = (struct pscsi_dev_virt *)p;
-+	struct se_device *dev;
-+	struct scsi_device *sd;
-+	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt *)hba->hba_ptr;
-+	struct Scsi_Host *sh = phv->phv_lld_host;
-+	int legacy_mode_enable = 0;
-+
-+	if (!(pdv)) {
-+		printk(KERN_ERR "Unable to locate struct pscsi_dev_virt"
-+				" parameter\n");
-+		return NULL;
-+	}
-+	/*
-+	 * If not running in PHV_LLD_SCSI_HOST_NO mode, locate the
-+	 * struct Scsi_Host we will need to bring the TCM/pSCSI object online
-+	 */
-+	if (!(sh)) {
-+		if (phv->phv_mode == PHV_LLD_SCSI_HOST_NO) {
-+			printk(KERN_ERR "pSCSI: Unable to locate struct"
-+				" Scsi_Host for PHV_LLD_SCSI_HOST_NO\n");
-+			return NULL;
-+		}
-+		/*
-+		 * For the newer PHV_VIRUTAL_HOST_ID struct scsi_device
-+		 * reference, we enforce that udev_path has been set
-+		 */
-+		if (!(se_dev->su_dev_flags & SDF_USING_UDEV_PATH)) {
-+			printk(KERN_ERR "pSCSI: udev_path attribute has not"
-+				" been set before ENABLE=1\n");
-+			return NULL;
-+		}
-+		/*
-+		 * If no scsi_host_id= was passed for PHV_VIRUTAL_HOST_ID,
-+		 * use the original TCM hba ID to reference Linux/SCSI Host No
-+		 * and enable for PHV_LLD_SCSI_HOST_NO mode.
-+		 */
-+		if (!(pdv->pdv_flags & PDF_HAS_VIRT_HOST_ID)) {
-+			spin_lock(&hba->device_lock);
-+			if (!(list_empty(&hba->hba_dev_list))) {
-+				printk(KERN_ERR "pSCSI: Unable to set hba_mode"
-+					" with active devices\n");
-+				spin_unlock(&hba->device_lock);
-+				return NULL;
-+			}
-+			spin_unlock(&hba->device_lock);
-+
-+			if (pscsi_pmode_enable_hba(hba, 1) != 1)
-+				return NULL;
-+
-+			legacy_mode_enable = 1;
-+			hba->hba_flags |= HBA_FLAGS_PSCSI_MODE;
-+			sh = phv->phv_lld_host;
-+		} else {
-+			sh = pscsi_get_sh(pdv->pdv_host_id);
-+			if (!(sh)) {
-+				printk(KERN_ERR "pSCSI: Unable to locate"
-+					" pdv_host_id: %d\n", pdv->pdv_host_id);
-+				return NULL;
-+			}
-+		}
-+	} else {
-+		if (phv->phv_mode == PHV_VIRUTAL_HOST_ID) {
-+			printk(KERN_ERR "pSCSI: PHV_VIRUTAL_HOST_ID set while"
-+				" struct Scsi_Host exists\n");
-+			return NULL;
-+		}
-+	}
-+
-+	spin_lock_irq(sh->host_lock);
-+	list_for_each_entry(sd, &sh->__devices, siblings) {
-+		if ((pdv->pdv_channel_id != sd->channel) ||
-+		    (pdv->pdv_target_id != sd->id) ||
-+		    (pdv->pdv_lun_id != sd->lun))
-+			continue;
-+		/*
-+		 * Functions will release the held struct scsi_host->host_lock
-+		 * before calling calling pscsi_add_device_to_list() to register
-+		 * struct scsi_device with target_core_mod.
-+		 */
-+		switch (sd->type) {
-+		case TYPE_DISK:
-+			dev = pscsi_create_type_disk(sd, pdv, se_dev, hba);
-+			break;
-+		case TYPE_ROM:
-+			dev = pscsi_create_type_rom(sd, pdv, se_dev, hba);
-+			break;
-+		default:
-+			dev = pscsi_create_type_other(sd, pdv, se_dev, hba);
-+			break;
-+		}
-+
-+		if (!(dev)) {
-+			if (phv->phv_mode == PHV_VIRUTAL_HOST_ID)
-+				scsi_host_put(sh);
-+			else if (legacy_mode_enable) {
-+				pscsi_pmode_enable_hba(hba, 0);
-+				hba->hba_flags &= ~HBA_FLAGS_PSCSI_MODE;
-+			}
-+			pdv->pdv_sd = NULL;
-+			return NULL;
-+		}
-+		return dev;
-+	}
-+	spin_unlock_irq(sh->host_lock);
-+
-+	printk(KERN_ERR "pSCSI: Unable to locate %d:%d:%d:%d\n", sh->host_no,
-+		pdv->pdv_channel_id,  pdv->pdv_target_id, pdv->pdv_lun_id);
-+
-+	if (phv->phv_mode == PHV_VIRUTAL_HOST_ID)
-+		scsi_host_put(sh);
-+	else if (legacy_mode_enable) {
-+		pscsi_pmode_enable_hba(hba, 0);
-+		hba->hba_flags &= ~HBA_FLAGS_PSCSI_MODE;
-+	}
-+
-+	return NULL;
-+}
-+
-+/*	pscsi_free_device(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static void pscsi_free_device(void *p)
-+{
-+	struct pscsi_dev_virt *pdv = p;
-+	struct pscsi_hba_virt *phv = pdv->pdv_se_hba->hba_ptr;
-+	struct scsi_device *sd = pdv->pdv_sd;
-+
-+	if (sd) {
-+		/*
-+		 * Release exclusive pSCSI internal struct block_device claim for
-+		 * struct scsi_device with TYPE_DISK from pscsi_create_type_disk()
-+		 */
-+		if ((sd->type == TYPE_DISK) && pdv->pdv_bd) {
-+			close_bdev_exclusive(pdv->pdv_bd,
-+					FMODE_WRITE|FMODE_READ);
-+			pdv->pdv_bd = NULL;
-+		}
-+		/*
-+		 * For HBA mode PHV_LLD_SCSI_HOST_NO, release the reference
-+		 * to struct Scsi_Host now.
-+		 */
-+		if ((phv->phv_mode == PHV_LLD_SCSI_HOST_NO) &&
-+		    (phv->phv_lld_host != NULL))
-+			scsi_host_put(phv->phv_lld_host);
-+
-+		if ((sd->type == TYPE_DISK) || (sd->type == TYPE_ROM))
-+			scsi_device_put(sd);
-+
-+		pdv->pdv_sd = NULL;
-+	}
-+
-+	kfree(pdv);
-+}
-+
-+static inline struct pscsi_plugin_task *PSCSI_TASK(struct se_task *task)
-+{
-+	return container_of(task, struct pscsi_plugin_task, pscsi_task);
-+}
-+
-+
-+/*	pscsi_transport_complete():
-+ *
-+ *
-+ */
-+static int pscsi_transport_complete(struct se_task *task)
-+{
-+	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
-+	struct scsi_device *sd = pdv->pdv_sd;
-+	int result;
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+	unsigned char *cdb = &pt->pscsi_cdb[0];
-+
-+	result = pt->pscsi_result;
-+	/*
-+	 * Hack to make sure that Write-Protect modepage is set if R/O mode is
-+	 * forced.
-+	 */
-+	if (((cdb[0] == MODE_SENSE) || (cdb[0] == MODE_SENSE_10)) &&
-+	     (status_byte(result) << 1) == SAM_STAT_GOOD) {
-+		if (!TASK_CMD(task)->se_deve)
-+			goto after_mode_sense;
-+
-+		if (TASK_CMD(task)->se_deve->lun_flags &
-+				TRANSPORT_LUNFLAGS_READ_ONLY) {
-+			unsigned char *buf = (unsigned char *)
-+				T_TASK(task->task_se_cmd)->t_task_buf;
-+
-+			if (cdb[0] == MODE_SENSE_10) {
-+				if (!(buf[3] & 0x80))
-+					buf[3] |= 0x80;
-+			} else {
-+				if (!(buf[2] & 0x80))
-+					buf[2] |= 0x80;
-+			}
-+		}
-+	}
-+after_mode_sense:
-+
-+	if (sd->type != TYPE_TAPE)
-+		goto after_mode_select;
-+
-+	/*
-+	 * Hack to correctly obtain the initiator requested blocksize for
-+	 * TYPE_TAPE.  Since this value is dependent upon each tape media,
-+	 * struct scsi_device->sector_size will not contain the correct value
-+	 * by default, so we go ahead and set it so
-+	 * TRANSPORT(dev)->get_blockdev() returns the correct value to the
-+	 * storage engine.
-+	 */
-+	if (((cdb[0] == MODE_SELECT) || (cdb[0] == MODE_SELECT_10)) &&
-+	      (status_byte(result) << 1) == SAM_STAT_GOOD) {
-+		unsigned char *buf;
-+		struct scatterlist *sg = task->task_sg;
-+		u16 bdl;
-+		u32 blocksize;
-+
-+		buf = sg_virt(&sg[0]);
-+		if (!(buf)) {
-+			printk(KERN_ERR "Unable to get buf for scatterlist\n");
-+			goto after_mode_select;
-+		}
-+
-+		if (cdb[0] == MODE_SELECT)
-+			bdl = (buf[3]);
-+		else
-+			bdl = (buf[6] << 8) | (buf[7]);
-+
-+		if (!bdl)
-+			goto after_mode_select;
-+
-+		if (cdb[0] == MODE_SELECT)
-+			blocksize = (buf[9] << 16) | (buf[10] << 8) |
-+					(buf[11]);
-+		else
-+			blocksize = (buf[13] << 16) | (buf[14] << 8) |
-+					(buf[15]);
-+
-+		sd->sector_size = blocksize;
-+	}
-+after_mode_select:
-+
-+	if (status_byte(result) & CHECK_CONDITION)
-+		return 1;
-+
-+	return 0;
-+}
-+
-+static struct se_task *
-+pscsi_alloc_task(struct se_cmd *cmd)
-+{
-+	struct pscsi_plugin_task *pt;
-+	unsigned char *cdb = T_TASK(cmd)->t_task_cdb;
-+
-+	pt = kzalloc(sizeof(struct pscsi_plugin_task), GFP_KERNEL);
-+	if (!pt) {
-+		printk(KERN_ERR "Unable to allocate struct pscsi_plugin_task\n");
-+		return NULL;
-+	}
-+
-+	/*
-+	 * If TCM Core is signaling a > TCM_MAX_COMMAND_SIZE allocation,
-+	 * allocate the extended CDB buffer for per struct se_task context
-+	 * pt->pscsi_cdb now.
-+	 */
-+	if (T_TASK(cmd)->t_task_cdb != T_TASK(cmd)->__t_task_cdb) {
-+
-+		pt->pscsi_cdb = kzalloc(scsi_command_size(cdb), GFP_KERNEL);
-+		if (!(pt->pscsi_cdb)) {
-+			printk(KERN_ERR "pSCSI: Unable to allocate extended"
-+					" pt->pscsi_cdb\n");
-+			return NULL;
-+		}
-+	} else
-+		pt->pscsi_cdb = &pt->__pscsi_cdb[0];
-+
-+	return &pt->pscsi_task;
-+}
-+
-+static inline void pscsi_blk_init_request(
-+	struct se_task *task,
-+	struct pscsi_plugin_task *pt,
-+	struct request *req,
-+	int bidi_read)
-+{
-+	/*
-+	 * Defined as "scsi command" in include/linux/blkdev.h.
-+	 */
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	/*
-+	 * For the extra BIDI-COMMAND READ struct request we do not
-+	 * need to setup the remaining structure members
-+	 */
-+	if (bidi_read)
-+		return;
-+	/*
-+	 * Setup the done function pointer for struct request,
-+	 * also set the end_io_data pointer.to struct se_task.
-+	 */
-+	req->end_io = pscsi_req_done;
-+	req->end_io_data = (void *)task;
-+	/*
-+	 * Load the referenced struct se_task's SCSI CDB into
-+	 * include/linux/blkdev.h:struct request->cmd
-+	 */
-+	req->cmd_len = scsi_command_size(pt->pscsi_cdb);
-+	req->cmd = &pt->pscsi_cdb[0];
-+	/*
-+	 * Setup pointer for outgoing sense data.
-+	 */
-+	req->sense = (void *)&pt->pscsi_sense[0];
-+	req->sense_len = 0;
-+}
-+
-+/*
-+ * Used for pSCSI data payloads for all *NON* SCF_SCSI_DATA_SG_IO_CDB
-+*/
-+static int pscsi_blk_get_request(struct se_task *task)
-+{
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
-+
-+	pt->pscsi_req = blk_get_request(pdv->pdv_sd->request_queue,
-+			(task->task_data_direction == DMA_TO_DEVICE),
-+			GFP_KERNEL);
-+	if (!(pt->pscsi_req) || IS_ERR(pt->pscsi_req)) {
-+		printk(KERN_ERR "PSCSI: blk_get_request() failed: %ld\n",
-+				IS_ERR(pt->pscsi_req));
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
-+	}
-+	/*
-+	 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
-+	 * and setup rq callback, CDB and sense.
-+	 */
-+	pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
-+	return 0;
-+}
-+
-+/*      pscsi_do_task(): (Part of se_subsystem_api_t template)
-+ *
-+ *
-+ */
-+static int pscsi_do_task(struct se_task *task)
-+{
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
-+	/*
-+	 * Set the struct request->timeout value based on peripheral
-+	 * device type from SCSI.
-+	 */
-+	if (pdv->pdv_sd->type == TYPE_DISK)
-+		pt->pscsi_req->timeout = PS_TIMEOUT_DISK;
++	spin_lock_irq(&lacl->se_lun_nacl->device_list_lock);
++	deve = &lacl->se_lun_nacl->device_list[lacl->mapped_lun];
++	if (deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS)
++		lun_access = deve->lun_flags;
 +	else
-+		pt->pscsi_req->timeout = PS_TIMEOUT_OTHER;
-+
-+	pt->pscsi_req->retries = PS_RETRY;
++		lun_access =
++			(TPG_TFO(se_tpg)->tpg_check_prod_mode_write_protect(
++				se_tpg)) ? TRANSPORT_LUNFLAGS_READ_ONLY :
++					   TRANSPORT_LUNFLAGS_READ_WRITE;
++	spin_unlock_irq(&lacl->se_lun_nacl->device_list_lock);
 +	/*
-+	 * Queue the struct request into the struct scsi_device->request_queue.
-+	 * Also check for HEAD_OF_QUEUE SAM TASK attr from received se_cmd
-+	 * descriptor
++	 * Determine the actual mapped LUN value user wants..
++	 *
++	 * This value is what the SCSI Initiator actually sees the
++	 * iscsi/$IQN/$TPGT/lun/lun_* as on their SCSI Initiator Ports.
 +	 */
-+	blk_execute_rq_nowait(pdv->pdv_sd->request_queue, NULL, pt->pscsi_req,
-+			(task->task_se_cmd->sam_task_attr == TASK_ATTR_HOQ),
-+			pscsi_req_done);
++	ret = core_dev_add_initiator_node_lun_acl(se_tpg, lacl,
++			lun->unpacked_lun, lun_access);
 +
-+	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
++	return (ret < 0) ? -EINVAL : 0;
 +}
 +
-+static void pscsi_free_task(struct se_task *task)
++static int target_fabric_mappedlun_unlink(
++	struct config_item *lun_acl_ci,
++	struct config_item *lun_ci)
 +{
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+	struct se_cmd *cmd = task->task_se_cmd;
-+
++	struct se_lun *lun;
++	struct se_lun_acl *lacl = container_of(to_config_group(lun_acl_ci),
++			struct se_lun_acl, se_lun_group);
++	struct se_node_acl *nacl = lacl->se_lun_nacl;
++	struct se_dev_entry *deve = &nacl->device_list[lacl->mapped_lun];
++	struct se_portal_group *se_tpg;
 +	/*
-+	 * Release the extended CDB allocation from pscsi_alloc_task()
-+	 * if one exists.
++	 * Determine if the underlying MappedLUN has already been released..
 +	 */
-+	if (T_TASK(cmd)->t_task_cdb != T_TASK(cmd)->__t_task_cdb)
-+		kfree(pt->pscsi_cdb);
-+	/*
-+	 * We do not release the bio(s) here associated with this task, as
-+	 * this is handled by bio_put() and pscsi_bi_endio().
-+	 */
-+	kfree(pt);
-+}
++	if (!(deve->se_lun))
++		return 0;
 +
-+enum {
-+	Opt_scsi_host_id, Opt_scsi_channel_id, Opt_scsi_target_id,
-+	Opt_scsi_lun_id, Opt_err
-+};
++	lun = container_of(to_config_group(lun_ci), struct se_lun, lun_group);
++	se_tpg = lun->lun_sep->sep_tpg;
 +
-+static match_table_t tokens = {
-+	{Opt_scsi_host_id, "scsi_host_id=%d"},
-+	{Opt_scsi_channel_id, "scsi_channel_id=%d"},
-+	{Opt_scsi_target_id, "scsi_target_id=%d"},
-+	{Opt_scsi_lun_id, "scsi_lun_id=%d"},
-+	{Opt_err, NULL}
-+};
-+
-+static ssize_t pscsi_set_configfs_dev_params(struct se_hba *hba,
-+	struct se_subsystem_dev *se_dev,
-+	const char *page,
-+	ssize_t count)
-+{
-+	struct pscsi_dev_virt *pdv = se_dev->se_dev_su_ptr;
-+	struct pscsi_hba_virt *phv = hba->hba_ptr;
-+	char *orig, *ptr, *opts;
-+	substring_t args[MAX_OPT_ARGS];
-+	int ret = 0, arg, token;
-+
-+	opts = kstrdup(page, GFP_KERNEL);
-+	if (!opts)
-+		return -ENOMEM;
-+
-+	orig = opts;
-+
-+	while ((ptr = strsep(&opts, ",")) != NULL) {
-+		if (!*ptr)
-+			continue;
-+
-+		token = match_token(ptr, tokens, args);
-+		switch (token) {
-+		case Opt_scsi_host_id:
-+			if (phv->phv_mode == PHV_LLD_SCSI_HOST_NO) {
-+				printk(KERN_ERR "PSCSI[%d]: Unable to accept"
-+					" scsi_host_id while phv_mode =="
-+					" PHV_LLD_SCSI_HOST_NO\n",
-+					phv->phv_host_id);
-+				ret = -EINVAL;
-+				goto out;
-+			}
-+			match_int(args, &arg);
-+			pdv->pdv_host_id = arg;
-+			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI Host ID:"
-+				" %d\n", phv->phv_host_id, pdv->pdv_host_id);
-+			pdv->pdv_flags |= PDF_HAS_VIRT_HOST_ID;
-+			break;
-+		case Opt_scsi_channel_id:
-+			match_int(args, &arg);
-+			pdv->pdv_channel_id = arg;
-+			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI Channel"
-+				" ID: %d\n",  phv->phv_host_id,
-+				pdv->pdv_channel_id);
-+			pdv->pdv_flags |= PDF_HAS_CHANNEL_ID;
-+			break;
-+		case Opt_scsi_target_id:
-+			match_int(args, &arg);
-+			pdv->pdv_target_id = arg;
-+			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI Target"
-+				" ID: %d\n", phv->phv_host_id,
-+				pdv->pdv_target_id);
-+			pdv->pdv_flags |= PDF_HAS_TARGET_ID;
-+			break;
-+		case Opt_scsi_lun_id:
-+			match_int(args, &arg);
-+			pdv->pdv_lun_id = arg;
-+			printk(KERN_INFO "PSCSI[%d]: Referencing SCSI LUN ID:"
-+				" %d\n", phv->phv_host_id, pdv->pdv_lun_id);
-+			pdv->pdv_flags |= PDF_HAS_LUN_ID;
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
-+out:
-+	kfree(orig);
-+	return (!ret) ? count : ret;
-+}
-+
-+static ssize_t pscsi_check_configfs_dev_params(
-+	struct se_hba *hba,
-+	struct se_subsystem_dev *se_dev)
-+{
-+	struct pscsi_dev_virt *pdv = se_dev->se_dev_su_ptr;
-+
-+	if (!(pdv->pdv_flags & PDF_HAS_CHANNEL_ID) ||
-+	    !(pdv->pdv_flags & PDF_HAS_TARGET_ID) ||
-+	    !(pdv->pdv_flags & PDF_HAS_LUN_ID)) {
-+		printk(KERN_ERR "Missing scsi_channel_id=, scsi_target_id= and"
-+			" scsi_lun_id= parameters\n");
-+		return -1;
-+	}
-+
++	core_dev_del_initiator_node_lun_acl(se_tpg, lun, lacl);
 +	return 0;
 +}
 +
-+static ssize_t pscsi_show_configfs_dev_params(
-+        struct se_hba *hba,
-+        struct se_subsystem_dev *se_dev,
-+        char *b)
++CONFIGFS_EATTR_STRUCT(target_fabric_mappedlun, se_lun_acl);
++#define TCM_MAPPEDLUN_ATTR(_name, _mode)				\
++static struct target_fabric_mappedlun_attribute target_fabric_mappedlun_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_fabric_mappedlun_show_##_name,				\
++	target_fabric_mappedlun_store_##_name);
++
++static ssize_t target_fabric_mappedlun_show_write_protect(
++	struct se_lun_acl *lacl,
++	char *page)
 +{
-+	struct pscsi_hba_virt *phv = hba->hba_ptr;
-+        struct pscsi_dev_virt *pdv = se_dev->se_dev_su_ptr;
-+	struct scsi_device *sd = pdv->pdv_sd;
-+	unsigned char host_id[16];
-+	ssize_t bl;
++	struct se_node_acl *se_nacl = lacl->se_lun_nacl;
++	struct se_dev_entry *deve;
++	ssize_t len;
++
++	spin_lock_irq(&se_nacl->device_list_lock);
++	deve = &se_nacl->device_list[lacl->mapped_lun];
++	len = sprintf(page, "%d\n",
++			(deve->lun_flags & TRANSPORT_LUNFLAGS_READ_ONLY) ?
++			1 : 0);
++	spin_unlock_irq(&se_nacl->device_list_lock);
++
++	return len;
++}
++
++static ssize_t target_fabric_mappedlun_store_write_protect(
++	struct se_lun_acl *lacl,
++	const char *page,
++	size_t count)
++{
++	struct se_node_acl *se_nacl = lacl->se_lun_nacl;
++	struct se_portal_group *se_tpg = se_nacl->se_tpg;
++	char *endptr;
++	u32 op;
++
++	op = simple_strtoul(page, &endptr, 0);
++	if ((op != 1) && (op != 0)) {
++		printk(KERN_ERR "Illegal value for access: %u\n", op);
++		return -EINVAL;
++	}
++	core_update_device_list_access(lacl->mapped_lun, (op) ?
++			TRANSPORT_LUNFLAGS_READ_ONLY :
++			TRANSPORT_LUNFLAGS_READ_WRITE,
++			lacl->se_lun_nacl);
++
++	printk(KERN_INFO "%s_ConfigFS: Changed Initiator ACL: %s"
++		" Mapped LUN: %u Write Protect bit to %s\n",
++		TPG_TFO(se_tpg)->get_fabric_name(),
++		lacl->initiatorname, lacl->mapped_lun, (op) ? "ON" : "OFF");
++
++        return count;
++
++}
++
++TCM_MAPPEDLUN_ATTR(write_protect, S_IRUGO | S_IWUSR);
++
++CONFIGFS_EATTR_OPS(target_fabric_mappedlun, se_lun_acl, se_lun_group);
++
++static struct configfs_attribute *target_fabric_mappedlun_attrs[] = {
++	&target_fabric_mappedlun_write_protect.attr,
++	NULL,
++};
++
++static struct configfs_item_operations target_fabric_mappedlun_item_ops = {
++	.show_attribute		= target_fabric_mappedlun_attr_show,
++	.store_attribute	= target_fabric_mappedlun_attr_store,
++	.allow_link		= target_fabric_mappedlun_link,
++	.drop_link		= target_fabric_mappedlun_unlink,
++};
++
++TF_CIT_SETUP(tpg_mappedlun, &target_fabric_mappedlun_item_ops, NULL,
++		target_fabric_mappedlun_attrs);
++
++/* End of tfc_tpg_mappedlun_cit */
++
++/* Start of tfc_tpg_nacl_attrib_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_attrib, se_node_acl, acl_attrib_group);
++
++static struct configfs_item_operations target_fabric_nacl_attrib_item_ops = {
++	.show_attribute		= target_fabric_nacl_attrib_attr_show,
++	.store_attribute	= target_fabric_nacl_attrib_attr_store,
++};
++
++TF_CIT_SETUP(tpg_nacl_attrib, &target_fabric_nacl_attrib_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_nacl_attrib_cit */
++
++/* Start of tfc_tpg_nacl_auth_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_auth, se_node_acl, acl_auth_group);
++
++static struct configfs_item_operations target_fabric_nacl_auth_item_ops = {
++	.show_attribute		= target_fabric_nacl_auth_attr_show,
++	.store_attribute	= target_fabric_nacl_auth_attr_store,
++};
++
++TF_CIT_SETUP(tpg_nacl_auth, &target_fabric_nacl_auth_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_nacl_auth_cit */
++
++/* Start of tfc_tpg_nacl_param_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_param, se_node_acl, acl_param_group);
++
++static struct configfs_item_operations target_fabric_nacl_param_item_ops = {
++	.show_attribute		= target_fabric_nacl_param_attr_show,
++	.store_attribute	= target_fabric_nacl_param_attr_store,
++};
++
++TF_CIT_SETUP(tpg_nacl_param, &target_fabric_nacl_param_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_nacl_param_cit */
++
++/* Start of tfc_tpg_nacl_base_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_nacl_base, se_node_acl, acl_group);
++
++static struct config_group *target_fabric_make_mappedlun(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_node_acl *se_nacl = container_of(group,
++			struct se_node_acl, acl_group);
++	struct se_portal_group *se_tpg = se_nacl->se_tpg;
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_lun_acl *lacl;
++	struct config_item *acl_ci;
++	char *buf, *endptr, *ptr;
++	u32 mapped_lun;
++	int ret = 0;
++
++	acl_ci = &group->cg_item;
++	if (!(acl_ci)) {
++		printk(KERN_ERR "Unable to locatel acl_ci\n");
++		return NULL;
++	}
++
++	buf = kzalloc(strlen(name) + 1, GFP_KERNEL);
++	if (!(buf)) {
++		printk(KERN_ERR "Unable to allocate memory for name buf\n");
++		return ERR_PTR(-ENOMEM);
++	}
++	snprintf(buf, strlen(name) + 1, "%s", name);
++	/*
++	 * Make sure user is creating iscsi/$IQN/$TPGT/acls/$INITIATOR/lun_$ID.
++	 */
++	ptr = strstr(buf, "lun_");
++	if (!(ptr)) {
++		printk(KERN_ERR "Unable to locate \"lun_\" from buf: %s"
++			" name: %s\n", buf, name);
++		ret = -EINVAL;
++		goto out;
++	}
++	ptr += 3; /* Skip to "_" */
++	*ptr = '\0'; /* Terminate the string */
++	ptr++; /* Advance pointer to next characater */
++
++	/*
++	 * Determine the Mapped LUN value.  This is what the SCSI Initiator
++	 * Port will actually see.
++	 */
++	mapped_lun = simple_strtoul(ptr, &endptr, 0);
++
++	lacl = core_dev_init_initiator_node_lun_acl(se_tpg, mapped_lun,
++			config_item_name(acl_ci), &ret);
++        if (!(lacl))
++                goto out;
++
++	config_group_init_type_name(&lacl->se_lun_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_mappedlun_cit);
++
++	kfree(buf);
++	return &lacl->se_lun_group;
++out:
++	kfree(buf);
++	return ERR_PTR(ret);
++}
++
++static void target_fabric_drop_mappedlun(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_lun_acl *lacl = container_of(to_config_group(item),
++			struct se_lun_acl, se_lun_group);
++	struct se_portal_group *se_tpg = lacl->se_lun_nacl->se_tpg;
++
++	config_item_put(item);
++	core_dev_free_initiator_node_lun_acl(se_tpg, lacl);
++}
++
++static struct configfs_item_operations target_fabric_nacl_base_item_ops = {
++	.show_attribute		= target_fabric_nacl_base_attr_show,
++	.store_attribute	= target_fabric_nacl_base_attr_store,
++};
++
++static struct configfs_group_operations target_fabric_nacl_base_group_ops = {
++	.make_group		= target_fabric_make_mappedlun,
++	.drop_item		= target_fabric_drop_mappedlun,
++};
++
++TF_CIT_SETUP(tpg_nacl_base, &target_fabric_nacl_base_item_ops,
++		&target_fabric_nacl_base_group_ops, NULL);
++
++/* End of tfc_tpg_nacl_base_cit */
++
++/* Start of tfc_tpg_nacl_cit */
++
++static struct config_group *target_fabric_make_nodeacl(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++			struct se_portal_group, tpg_acl_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_node_acl *se_nacl;
++	struct config_group *nacl_cg;
++
++	if (!(tf->tf_ops.fabric_make_nodeacl)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_nodeacl is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	se_nacl = tf->tf_ops.fabric_make_nodeacl(se_tpg, group, name);
++	if (IS_ERR(se_nacl))
++		return ERR_PTR(PTR_ERR(se_nacl));
++
++	nacl_cg = &se_nacl->acl_group;
++	nacl_cg->default_groups = se_nacl->acl_default_groups;
++	nacl_cg->default_groups[0] = &se_nacl->acl_attrib_group;
++	nacl_cg->default_groups[1] = &se_nacl->acl_auth_group;
++	nacl_cg->default_groups[2] = &se_nacl->acl_param_group;
++	nacl_cg->default_groups[3] = NULL;
++
++	config_group_init_type_name(&se_nacl->acl_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_base_cit);
++	config_group_init_type_name(&se_nacl->acl_attrib_group, "attrib",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_attrib_cit);
++	config_group_init_type_name(&se_nacl->acl_auth_group, "auth",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_auth_cit);
++	config_group_init_type_name(&se_nacl->acl_param_group, "param",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_param_cit);
++
++	return &se_nacl->acl_group;
++}
++
++static void target_fabric_drop_nodeacl(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_portal_group *se_tpg = container_of(group,
++			struct se_portal_group, tpg_acl_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_node_acl *se_nacl = container_of(to_config_group(item),
++			struct se_node_acl, acl_group);
++	struct config_item *df_item;
++	struct config_group *nacl_cg;
 +	int i;
 +
-+	if (phv->phv_mode == PHV_VIRUTAL_HOST_ID)
-+		snprintf(host_id, 16, "%d", pdv->pdv_host_id);
-+	else
-+		snprintf(host_id, 16, "PHBA Mode");
-+
-+	bl = sprintf(b, "SCSI Device Bus Location:"
-+		" Channel ID: %d Target ID: %d LUN: %d Host ID: %s\n",
-+		pdv->pdv_channel_id, pdv->pdv_target_id, pdv->pdv_lun_id,
-+		host_id);
-+
-+	if (sd) {
-+		bl += sprintf(b + bl, "        ");
-+		bl += sprintf(b + bl, "Vendor: ");
-+		for (i = 0; i < 8; i++) {
-+			if (ISPRINT(sd->vendor[i]))   /* printable character? */
-+				bl += sprintf(b + bl, "%c", sd->vendor[i]);
-+			else
-+				bl += sprintf(b + bl, " ");
-+		}
-+		bl += sprintf(b + bl, " Model: ");
-+		for (i = 0; i < 16; i++) {
-+			if (ISPRINT(sd->model[i]))   /* printable character ? */
-+				bl += sprintf(b + bl, "%c", sd->model[i]);
-+			else
-+				bl += sprintf(b + bl, " ");
-+		}
-+		bl += sprintf(b + bl, " Rev: ");
-+		for (i = 0; i < 4; i++) {
-+			if (ISPRINT(sd->rev[i]))   /* printable character ? */
-+				bl += sprintf(b + bl, "%c", sd->rev[i]);
-+			else
-+				bl += sprintf(b + bl, " ");
-+		}
-+		bl += sprintf(b + bl, "\n");
++	nacl_cg = &se_nacl->acl_group;
++	for (i = 0; nacl_cg->default_groups[i]; i++) {
++		df_item = &nacl_cg->default_groups[i]->cg_item;
++		nacl_cg->default_groups[i] = NULL;
++		config_item_put(df_item);
 +	}
-+	return bl;
++
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_nodeacl(se_nacl);
 +}
 +
-+static void pscsi_bi_endio(struct bio *bio, int error)
++static struct configfs_group_operations target_fabric_nacl_group_ops = {
++	.make_group	= target_fabric_make_nodeacl,
++	.drop_item	= target_fabric_drop_nodeacl,
++};
++
++TF_CIT_SETUP(tpg_nacl, NULL, &target_fabric_nacl_group_ops, NULL);
++
++/* End of tfc_tpg_nacl_cit */
++
++/* Start of tfc_tpg_np_base_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_np_base, se_tpg_np, tpg_np_group);
++
++static struct configfs_item_operations target_fabric_np_base_item_ops = {
++	.show_attribute		= target_fabric_np_base_attr_show,
++	.store_attribute	= target_fabric_np_base_attr_store,
++};
++
++TF_CIT_SETUP(tpg_np_base, &target_fabric_np_base_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_np_base_cit */
++
++/* Start of tfc_tpg_np_cit */
++
++static struct config_group *target_fabric_make_np(
++	struct config_group *group,
++	const char *name)
 +{
-+	bio_put(bio);
++	struct se_portal_group *se_tpg = container_of(group,
++				struct se_portal_group, tpg_np_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_tpg_np *se_tpg_np;
++
++	if (!(tf->tf_ops.fabric_make_np)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_np is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	se_tpg_np = tf->tf_ops.fabric_make_np(se_tpg, group, name);
++	if (!(se_tpg_np) || IS_ERR(se_tpg_np))
++		return ERR_PTR(-EINVAL);
++
++	config_group_init_type_name(&se_tpg_np->tpg_np_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_np_base_cit);
++
++	return &se_tpg_np->tpg_np_group;
 +}
 +
-+static inline struct bio *pscsi_get_bio(struct pscsi_dev_virt *pdv, int sg_num)
++static void target_fabric_drop_np(
++	struct config_group *group,
++	struct config_item *item)
 +{
-+	struct bio *bio;
-+	/*
-+	 * Use bio_malloc() following the comment in for bio -> struct request
-+	 * in block/blk-core.c:blk_make_request()
-+	 */
-+	bio = bio_kmalloc(GFP_KERNEL, sg_num);
-+	if (!(bio)) {
-+		printk(KERN_ERR "PSCSI: bio_kmalloc() failed\n");
-+		return NULL;
-+	}
-+	bio->bi_end_io = pscsi_bi_endio;
++	struct se_portal_group *se_tpg = container_of(group,
++				struct se_portal_group, tpg_np_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++	struct se_tpg_np *se_tpg_np = container_of(to_config_group(item),
++				struct se_tpg_np, tpg_np_group);
 +
-+	return bio;
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_np(se_tpg_np);
 +}
 +
-+#if 0
-+#define DEBUG_PSCSI(x...) printk(x)
-+#else
-+#define DEBUG_PSCSI(x...)
-+#endif
++static struct configfs_group_operations target_fabric_np_group_ops = {
++	.make_group	= &target_fabric_make_np,
++	.drop_item	= &target_fabric_drop_np,
++};
 +
-+static int __pscsi_map_task_SG(
-+	struct se_task *task,
-+	struct scatterlist *task_sg,
-+	u32 task_sg_num,
-+	int bidi_read)
++TF_CIT_SETUP(tpg_np, NULL, &target_fabric_np_group_ops, NULL);
++
++/* End of tfc_tpg_np_cit */
++
++/* Start of tfc_tpg_port_cit */
++
++CONFIGFS_EATTR_STRUCT(target_fabric_port, se_lun);
++#define TCM_PORT_ATTR(_name, _mode)					\
++static struct target_fabric_port_attribute target_fabric_port_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_fabric_port_show_attr_##_name,				\
++	target_fabric_port_store_attr_##_name);
++
++#define TCM_PORT_ATTOR_RO(_name)					\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_fabric_port_show_attr_##_name);
++
++/*
++ * alua_tg_pt_gp
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_gp(
++	struct se_lun *lun,
++	char *page)
 +{
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
-+	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
-+	struct page *page;
-+	struct scatterlist *sg;
-+	u32 data_len = task->task_size, i, len, bytes, off;
-+	int nr_pages = (task->task_size + task_sg[0].offset +
-+			PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	int nr_vecs = 0, rc, ret = PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
-+	int rw = (task->task_data_direction == DMA_TO_DEVICE);
++	if (!(lun))
++		return -ENODEV;
 +
-+	if (!task->task_size)
-+		return 0;
-+	/*
-+	 * For SCF_SCSI_DATA_SG_IO_CDB, Use fs/bio.c:bio_add_page() to setup
-+	 * the bio_vec maplist from TC< struct se_mem -> task->task_sg ->
-+	 * struct scatterlist memory.  The struct se_task->task_sg[] currently needs
-+	 * to be attached to struct bios for submission to Linux/SCSI using
-+	 * struct request to struct scsi_device->request_queue.
-+	 *
-+	 * Note that this will be changing post v2.6.28 as Target_Core_Mod/pSCSI
-+	 * is ported to upstream SCSI passthrough functionality that accepts
-+	 * struct scatterlist->page_link or struct page as a paraemeter.
-+	 */
-+	DEBUG_PSCSI("PSCSI: nr_pages: %d\n", nr_pages);
++	if (!(lun->lun_sep))
++		return -ENODEV;
 +
-+	for_each_sg(task_sg, sg, task_sg_num, i) {
-+		page = sg_page(sg);
-+		off = sg->offset;
-+		len = sg->length;
++	return core_alua_show_tg_pt_gp_info(lun->lun_sep, page);
++}
 +
-+		DEBUG_PSCSI("PSCSI: i: %d page: %p len: %d off: %d\n", i,
-+			page, len, off);
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_gp(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
 +
-+		while (len > 0 && data_len > 0) {
-+			bytes = min_t(unsigned int, len, PAGE_SIZE - off);
-+			bytes = min(bytes, data_len);
++	if (!(lun->lun_sep))
++		return -ENODEV;
 +
-+			if (!(bio)) {
-+				nr_vecs = min_t(int, BIO_MAX_PAGES, nr_pages);
-+				nr_pages -= nr_vecs;
-+				/*
-+				 * Calls bio_kmalloc() and sets bio->bi_end_io()
-+				 */
-+				bio = pscsi_get_bio(pdv, nr_vecs);
-+				if (!(bio))
-+					goto fail;
++	return core_alua_store_tg_pt_gp_info(lun->lun_sep, page, count);
++}
 +
-+				if (rw)
-+					bio->bi_rw |= REQ_WRITE;
++TCM_PORT_ATTR(alua_tg_pt_gp, S_IRUGO | S_IWUSR);
 +
-+				DEBUG_PSCSI("PSCSI: Allocated bio: %p,"
-+					" dir: %s nr_vecs: %d\n", bio,
-+					(rw) ? "rw" : "r", nr_vecs);
-+				/*
-+				 * Set *hbio pointer to handle the case:
-+				 * nr_pages > BIO_MAX_PAGES, where additional
-+				 * bios need to be added to complete a given
-+				 * struct se_task
-+				 */
-+				if (!hbio)
-+					hbio = tbio = bio;
-+				else
-+					tbio = tbio->bi_next = bio;
-+			}
++/*
++ * alua_tg_pt_offline
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_offline(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
 +
-+			DEBUG_PSCSI("PSCSI: Calling bio_add_pc_page() i: %d"
-+				" bio: %p page: %p len: %d off: %d\n", i, bio,
-+				page, len, off);
++	if (!(lun->lun_sep))
++		return -ENODEV;
 +
-+			rc = bio_add_pc_page(pdv->pdv_sd->request_queue,
-+					bio, page, bytes, off);
-+			if (rc != bytes)
-+				goto fail;
++	return core_alua_show_offline_bit(lun, page);
++}
 +
-+			DEBUG_PSCSI("PSCSI: bio->bi_vcnt: %d nr_vecs: %d\n",
-+				bio->bi_vcnt, nr_vecs);
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_offline(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
 +
-+			if (bio->bi_vcnt > nr_vecs) {
-+				DEBUG_PSCSI("PSCSI: Reached bio->bi_vcnt max:"
-+					" %d i: %d bio: %p, allocating another"
-+					" bio\n", bio->bi_vcnt, i, bio);
-+				/*
-+				 * Clear the pointer so that another bio will
-+				 * be allocated with pscsi_get_bio() above, the
-+				 * current bio has already been set *tbio and
-+				 * bio->bi_next.
-+				 */
-+				bio = NULL;
-+			}
++	if (!(lun->lun_sep))
++		return -ENODEV;
 +
-+			page++;
-+			len -= bytes;
-+			data_len -= bytes;
-+			off = 0;
-+		}
++	return core_alua_store_offline_bit(lun, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_offline, S_IRUGO | S_IWUSR);
++
++/*
++ * alua_tg_pt_status
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_status(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_secondary_status(lun, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_status(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_secondary_status(lun, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_status, S_IRUGO | S_IWUSR);
++
++/*
++ * alua_tg_pt_write_md
++ */
++static ssize_t target_fabric_port_show_attr_alua_tg_pt_write_md(
++	struct se_lun *lun,
++	char *page)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_show_secondary_write_metadata(lun, page);
++}
++
++static ssize_t target_fabric_port_store_attr_alua_tg_pt_write_md(
++	struct se_lun *lun,
++	const char *page,
++	size_t count)
++{
++	if (!(lun))
++		return -ENODEV;
++
++	if (!(lun->lun_sep))
++		return -ENODEV;
++
++	return core_alua_store_secondary_write_metadata(lun, page, count);
++}
++
++TCM_PORT_ATTR(alua_tg_pt_write_md, S_IRUGO | S_IWUSR);
++
++
++static struct configfs_attribute *target_fabric_port_attrs[] = {
++	&target_fabric_port_alua_tg_pt_gp.attr,
++	&target_fabric_port_alua_tg_pt_offline.attr,
++	&target_fabric_port_alua_tg_pt_status.attr,
++	&target_fabric_port_alua_tg_pt_write_md.attr,
++	NULL,
++};
++
++CONFIGFS_EATTR_OPS(target_fabric_port, se_lun, lun_group);
++
++static int target_fabric_port_link(
++	struct config_item *lun_ci,
++	struct config_item *se_dev_ci)
++{
++	struct config_item *tpg_ci;
++	struct se_device *dev;
++	struct se_lun *lun = container_of(to_config_group(lun_ci),
++				struct se_lun, lun_group);
++	struct se_lun *lun_p;
++	struct se_portal_group *se_tpg;
++	struct se_subsystem_dev *se_dev = container_of(
++				to_config_group(se_dev_ci), struct se_subsystem_dev,
++				se_dev_group);
++	struct target_fabric_configfs *tf;
++	int ret;
++
++	tpg_ci = &lun_ci->ci_parent->ci_group->cg_item;
++	se_tpg = container_of(to_config_group(tpg_ci),
++				struct se_portal_group, tpg_group);
++	tf = se_tpg->se_tpg_wwn->wwn_tf;
++
++	if (lun->lun_se_dev!= NULL) {
++		printk(KERN_ERR "Port Symlink already exists\n");
++		return -EEXIST;
 +	}
-+	/*
-+	 * Setup the primary pt->pscsi_req used for non BIDI and BIDI-COMMAND
-+	 * primary SCSI WRITE poayload mapped for struct se_task->task_sg[]
-+	 */
-+	if (!(bidi_read)) {
++
++	dev = se_dev->se_dev_ptr;
++	if (!(dev)) {
++		printk(KERN_ERR "Unable to locate struct se_device pointer from"
++			" %s\n", config_item_name(se_dev_ci));
++		ret = -ENODEV;
++		goto out;
++	}
++
++	lun_p = core_dev_add_lun(se_tpg, dev->se_hba, dev,
++				lun->unpacked_lun);
++	if ((IS_ERR(lun_p)) || !(lun_p)) {
++		printk(KERN_ERR "core_dev_add_lun() failed\n");
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if (tf->tf_ops.fabric_post_link) {
 +		/*
-+		 * Starting with v2.6.31, call blk_make_request() passing in *hbio to
-+		 * allocate the pSCSI task a struct request.
++		 * Call the optional fabric_post_link() to allow a
++		 * fabric module to setup any additional state once
++		 * core_dev_add_lun() has been called..
 +		 */
-+		pt->pscsi_req = blk_make_request(pdv->pdv_sd->request_queue,
-+					hbio, GFP_KERNEL);
-+		if (!(pt->pscsi_req)) {
-+			printk(KERN_ERR "pSCSI: blk_make_request() failed\n");
-+			goto fail;
-+		}
-+		/*
-+		 * Setup the newly allocated struct request for REQ_TYPE_BLOCK_PC,
-+		 * and setup rq callback, CDB and sense.
-+		 */
-+		pscsi_blk_init_request(task, pt, pt->pscsi_req, 0);
++		tf->tf_ops.fabric_post_link(se_tpg, lun);
++	}
 +
-+		return task->task_sg_num;
-+	}
-+	/*
-+	 * Setup the secondary pt->pscsi_req->next_rq used for the extra BIDI-COMMAND
-+	 * SCSI READ paylaod mapped for struct se_task->task_sg_bidi[]
-+	 */
-+	pt->pscsi_req->next_rq = blk_make_request(pdv->pdv_sd->request_queue,
-+					hbio, GFP_KERNEL);
-+	if (!(pt->pscsi_req->next_rq)) {
-+		printk(KERN_ERR "pSCSI: blk_make_request() failed for BIDI\n");
-+		goto fail;
-+	}
-+	pscsi_blk_init_request(task, pt, pt->pscsi_req->next_rq, 1);
-+
-+	return task->task_sg_num;
-+fail:
-+	while (hbio) {
-+		bio = hbio;
-+		hbio = hbio->bi_next;
-+		bio->bi_next = NULL;
-+		bio_endio(bio, 0);
-+	}
++	return 0;
++out:
 +	return ret;
 +}
 +
-+static int pscsi_map_task_SG(struct se_task *task)
++static int target_fabric_port_unlink(
++	struct config_item *lun_ci,
++	struct config_item *se_dev_ci)
 +{
-+	int ret;
++	struct se_lun *lun = container_of(to_config_group(lun_ci),
++				struct se_lun, lun_group);
++	struct se_portal_group *se_tpg = lun->lun_sep->sep_tpg;
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
 +
-+	/*
-+	 * Setup the main struct request for the task->task_sg[] payload
-+	 */
-+
-+	ret = __pscsi_map_task_SG(task, task->task_sg, task->task_sg_num, 0);
-+	if (ret >= 0 && task->task_sg_bidi) {
++	if (tf->tf_ops.fabric_pre_unlink) {
 +		/*
-+		 * If present, set up the extra BIDI-COMMAND SCSI READ
-+		 * struct request and payload.
-+		 */
-+		ret = __pscsi_map_task_SG(task, task->task_sg_bidi,
-+					task->task_sg_num, 1);
++		 * Call the optional fabric_pre_unlink() to allow a
++		 * fabric module to release any additional stat before
++		 * core_dev_del_lun() is called.
++		*/
++		tf->tf_ops.fabric_pre_unlink(se_tpg, lun);
 +	}
 +
-+	if (ret < 0)
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
++	core_dev_del_lun(se_tpg, lun->unpacked_lun);
 +	return 0;
 +}
 +
-+/*	pscsi_map_task_non_SG():
-+ *
-+ *
-+ */
-+static int pscsi_map_task_non_SG(struct se_task *task)
-+{
-+	struct se_cmd *cmd = TASK_CMD(task);
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+	struct pscsi_dev_virt *pdv = task->se_dev->dev_ptr;
-+	int ret = 0;
-+
-+	if (pscsi_blk_get_request(task) < 0)
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
-+
-+	if (!task->task_size)
-+		return 0;
-+
-+	ret = blk_rq_map_kern(pdv->pdv_sd->request_queue,
-+			pt->pscsi_req, T_TASK(cmd)->t_task_buf,
-+			task->task_size, GFP_KERNEL);
-+	if (ret < 0) {
-+		printk(KERN_ERR "PSCSI: blk_rq_map_kern() failed: %d\n", ret);
-+		return PYX_TRANSPORT_LU_COMM_FAILURE;
-+	}
-+	return 0;
-+}
-+
-+static int pscsi_CDB_none(struct se_task *task)
-+{
-+	return pscsi_blk_get_request(task);
-+}
-+
-+/*	pscsi_get_cdb():
-+ *
-+ *
-+ */
-+static unsigned char *pscsi_get_cdb(struct se_task *task)
-+{
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+
-+	return pt->pscsi_cdb;
-+}
-+
-+/*	pscsi_get_sense_buffer():
-+ *
-+ *
-+ */
-+static unsigned char *pscsi_get_sense_buffer(struct se_task *task)
-+{
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+
-+	return (unsigned char *)&pt->pscsi_sense[0];
-+}
-+
-+/*	pscsi_get_device_rev():
-+ *
-+ *
-+ */
-+static u32 pscsi_get_device_rev(struct se_device *dev)
-+{
-+	struct pscsi_dev_virt *pdv = dev->dev_ptr;
-+	struct scsi_device *sd = pdv->pdv_sd;
-+
-+	return (sd->scsi_level - 1) ? sd->scsi_level - 1 : 1;
-+}
-+
-+/*	pscsi_get_device_type():
-+ *
-+ *
-+ */
-+static u32 pscsi_get_device_type(struct se_device *dev)
-+{
-+	struct pscsi_dev_virt *pdv = dev->dev_ptr;
-+	struct scsi_device *sd = pdv->pdv_sd;
-+
-+	return sd->type;
-+}
-+
-+static sector_t pscsi_get_blocks(struct se_device *dev)
-+{
-+	struct pscsi_dev_virt *pdv = dev->dev_ptr;
-+
-+	if (pdv->pdv_bd && pdv->pdv_bd->bd_part)
-+		return pdv->pdv_bd->bd_part->nr_sects;
-+
-+	dump_stack();
-+	return 0;
-+}
-+
-+/*	pscsi_handle_SAM_STATUS_failures():
-+ *
-+ *
-+ */
-+static inline void pscsi_process_SAM_status(
-+	struct se_task *task,
-+	struct pscsi_plugin_task *pt)
-+{
-+	task->task_scsi_status = status_byte(pt->pscsi_result);
-+	if ((task->task_scsi_status)) {
-+		task->task_scsi_status <<= 1;
-+		printk(KERN_INFO "PSCSI Status Byte exception at task: %p CDB:"
-+			" 0x%02x Result: 0x%08x\n", task, pt->pscsi_cdb[0],
-+			pt->pscsi_result);
-+	}
-+
-+	switch (host_byte(pt->pscsi_result)) {
-+	case DID_OK:
-+		transport_complete_task(task, (!task->task_scsi_status));
-+		break;
-+	default:
-+		printk(KERN_INFO "PSCSI Host Byte exception at task: %p CDB:"
-+			" 0x%02x Result: 0x%08x\n", task, pt->pscsi_cdb[0],
-+			pt->pscsi_result);
-+		task->task_scsi_status = SAM_STAT_CHECK_CONDITION;
-+		task->task_error_status = PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
-+		TASK_CMD(task)->transport_error_status =
-+					PYX_TRANSPORT_UNKNOWN_SAM_OPCODE;
-+		transport_complete_task(task, 0);
-+		break;
-+	}
-+
-+	return;
-+}
-+
-+static void pscsi_req_done(struct request *req, int uptodate)
-+{
-+	struct se_task *task = req->end_io_data;
-+	struct pscsi_plugin_task *pt = PSCSI_TASK(task);
-+
-+	pt->pscsi_result = req->errors;
-+	pt->pscsi_resid = req->resid_len;
-+
-+	pscsi_process_SAM_status(task, pt);
-+	/*
-+	 * Release BIDI-READ if present
-+	 */
-+	if (req->next_rq != NULL)
-+		__blk_put_request(req->q, req->next_rq);
-+
-+	__blk_put_request(req->q, req);
-+	pt->pscsi_req = NULL;
-+}
-+
-+static struct se_subsystem_api pscsi_template = {
-+	.name			= "pscsi",
-+	.owner			= THIS_MODULE,
-+	.transport_type		= TRANSPORT_PLUGIN_PHBA_PDEV,
-+	.cdb_none		= pscsi_CDB_none,
-+	.map_task_non_SG	= pscsi_map_task_non_SG,
-+	.map_task_SG		= pscsi_map_task_SG,
-+	.attach_hba		= pscsi_attach_hba,
-+	.detach_hba		= pscsi_detach_hba,
-+	.pmode_enable_hba	= pscsi_pmode_enable_hba,
-+	.allocate_virtdevice	= pscsi_allocate_virtdevice,
-+	.create_virtdevice	= pscsi_create_virtdevice,
-+	.free_device		= pscsi_free_device,
-+	.transport_complete	= pscsi_transport_complete,
-+	.alloc_task		= pscsi_alloc_task,
-+	.do_task		= pscsi_do_task,
-+	.free_task		= pscsi_free_task,
-+	.check_configfs_dev_params = pscsi_check_configfs_dev_params,
-+	.set_configfs_dev_params = pscsi_set_configfs_dev_params,
-+	.show_configfs_dev_params = pscsi_show_configfs_dev_params,
-+	.get_cdb		= pscsi_get_cdb,
-+	.get_sense_buffer	= pscsi_get_sense_buffer,
-+	.get_device_rev		= pscsi_get_device_rev,
-+	.get_device_type	= pscsi_get_device_type,
-+	.get_blocks		= pscsi_get_blocks,
++static struct configfs_item_operations target_fabric_port_item_ops = {
++	.show_attribute		= target_fabric_port_attr_show,
++	.store_attribute	= target_fabric_port_attr_store,
++	.allow_link		= target_fabric_port_link,
++	.drop_link		= target_fabric_port_unlink,
 +};
 +
-+static int __init pscsi_module_init(void)
++TF_CIT_SETUP(tpg_port, &target_fabric_port_item_ops, NULL, target_fabric_port_attrs);
++
++/* End of tfc_tpg_port_cit */
++
++/* Start of tfc_tpg_lun_cit */
++
++static struct config_group *target_fabric_make_lun(
++	struct config_group *group,
++	const char *name)
 +{
-+	return transport_subsystem_register(&pscsi_template);
++	struct se_lun *lun;
++	struct se_portal_group *se_tpg = container_of(group,
++			struct se_portal_group, tpg_lun_group);
++	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
++
++	char *str, *endptr;
++	u32 unpacked_lun;
++
++	str = strstr(name, "_");
++	if (!(str)) {
++		printk(KERN_ERR "Unable to locate \'_\" in"
++				" \"lun_$LUN_NUMBER\"\n");
++		return NULL;
++	}
++	str++; /* Advance over _ delim.. */
++	unpacked_lun = simple_strtoul(str, &endptr, 0);
++
++	lun = core_get_lun_from_tpg(se_tpg, unpacked_lun);
++	if (!(lun))
++		return ERR_PTR(-EINVAL);
++
++	config_group_init_type_name(&lun->lun_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_port_cit);
++
++	return &lun->lun_group;
 +}
 +
-+static void pscsi_module_exit(void)
++static void target_fabric_drop_lun(
++	struct config_group *group,
++	struct config_item *item)
 +{
-+	transport_subsystem_release(&pscsi_template);
++	config_item_put(item);
 +}
 +
-+MODULE_DESCRIPTION("TCM PSCSI subsystem plugin");
-+MODULE_AUTHOR("nab@Linux-iSCSI.org");
-+MODULE_LICENSE("GPL");
++static struct configfs_group_operations target_fabric_lun_group_ops = {
++	.make_group	= &target_fabric_make_lun,
++	.drop_item	= &target_fabric_drop_lun,
++};
 +
-+module_init(pscsi_module_init);
-+module_exit(pscsi_module_exit);
-diff --git a/drivers/target/target_core_pscsi.h b/drivers/target/target_core_pscsi.h
++TF_CIT_SETUP(tpg_lun, NULL, &target_fabric_lun_group_ops, NULL);
++
++/* End of tfc_tpg_lun_cit */
++
++/* Start of tfc_tpg_attrib_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_tpg_attrib, se_portal_group, tpg_attrib_group);
++
++static struct configfs_item_operations target_fabric_tpg_attrib_item_ops = {
++	.show_attribute		= target_fabric_tpg_attrib_attr_show,
++	.store_attribute	= target_fabric_tpg_attrib_attr_store,
++};
++
++TF_CIT_SETUP(tpg_attrib, &target_fabric_tpg_attrib_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_attrib_cit */
++
++/* Start of tfc_tpg_param_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_tpg_param, se_portal_group, tpg_param_group);
++
++static struct configfs_item_operations target_fabric_tpg_param_item_ops = {
++	.show_attribute		= target_fabric_tpg_param_attr_show,
++	.store_attribute	= target_fabric_tpg_param_attr_store,
++};
++
++TF_CIT_SETUP(tpg_param, &target_fabric_tpg_param_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_param_cit */
++
++/* Start of tfc_tpg_base_cit */
++/*
++ * For use with TF_TPG_ATTR() and TF_TPG_ATTR_RO()
++ */
++CONFIGFS_EATTR_OPS(target_fabric_tpg, se_portal_group, tpg_group);
++
++static struct configfs_item_operations target_fabric_tpg_base_item_ops = {
++	.show_attribute		= target_fabric_tpg_attr_show,
++	.store_attribute	= target_fabric_tpg_attr_store,
++};
++
++TF_CIT_SETUP(tpg_base, &target_fabric_tpg_base_item_ops, NULL, NULL);
++
++/* End of tfc_tpg_base_cit */
++
++/* Start of tfc_tpg_cit */
++
++static struct config_group *target_fabric_make_tpg(
++	struct config_group *group,
++	const char *name)
++{
++	struct se_wwn *wwn = container_of(group, struct se_wwn, wwn_group);
++	struct target_fabric_configfs *tf = wwn->wwn_tf;
++	struct se_portal_group *se_tpg;
++
++	if (!(tf->tf_ops.fabric_make_tpg)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_tpg is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	se_tpg = tf->tf_ops.fabric_make_tpg(wwn, group, name);
++	if (!(se_tpg) || IS_ERR(se_tpg))
++		return ERR_PTR(-EINVAL);
++	/*
++	 * Setup default groups from pre-allocated se_tpg->tpg_default_groups
++	 */
++	se_tpg->tpg_group.default_groups = se_tpg->tpg_default_groups;
++	se_tpg->tpg_group.default_groups[0] = &se_tpg->tpg_lun_group;
++	se_tpg->tpg_group.default_groups[1] = &se_tpg->tpg_np_group;
++	se_tpg->tpg_group.default_groups[2] = &se_tpg->tpg_acl_group;
++	se_tpg->tpg_group.default_groups[3] = &se_tpg->tpg_attrib_group;
++	se_tpg->tpg_group.default_groups[4] = &se_tpg->tpg_param_group;
++	se_tpg->tpg_group.default_groups[5] = NULL;
++
++	config_group_init_type_name(&se_tpg->tpg_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_base_cit);
++	config_group_init_type_name(&se_tpg->tpg_lun_group, "lun",
++			&TF_CIT_TMPL(tf)->tfc_tpg_lun_cit);
++	config_group_init_type_name(&se_tpg->tpg_np_group, "np",
++			&TF_CIT_TMPL(tf)->tfc_tpg_np_cit);
++	config_group_init_type_name(&se_tpg->tpg_acl_group, "acls",
++			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_cit);
++	config_group_init_type_name(&se_tpg->tpg_attrib_group, "attrib",
++			&TF_CIT_TMPL(tf)->tfc_tpg_attrib_cit);
++	config_group_init_type_name(&se_tpg->tpg_param_group, "param",
++			&TF_CIT_TMPL(tf)->tfc_tpg_param_cit);
++
++	return &se_tpg->tpg_group;
++}
++
++static void target_fabric_drop_tpg(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct se_wwn *wwn = container_of(group, struct se_wwn, wwn_group);
++	struct target_fabric_configfs *tf = wwn->wwn_tf;
++	struct se_portal_group *se_tpg = container_of(to_config_group(item),
++				struct se_portal_group, tpg_group);
++	struct config_group *tpg_cg = &se_tpg->tpg_group;
++	struct config_item *df_item;
++	int i;
++	/*
++	 * Release default groups, but do not release tpg_cg->default_groups
++	 * memory as it is statically allocated at se_tpg->tpg_default_groups.
++	 */
++	for (i = 0; tpg_cg->default_groups[i]; i++) {
++		df_item = &tpg_cg->default_groups[i]->cg_item;
++		tpg_cg->default_groups[i] = NULL;
++		config_item_put(df_item);
++	}
++
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_tpg(se_tpg);
++}
++
++static struct configfs_group_operations target_fabric_tpg_group_ops = {
++	.make_group	= target_fabric_make_tpg,
++	.drop_item	= target_fabric_drop_tpg,
++};
++
++TF_CIT_SETUP(tpg, NULL, &target_fabric_tpg_group_ops, NULL);
++
++/* End of tfc_tpg_cit */
++
++/* Start of tfc_wwn_cit */
++
++static struct config_group *target_fabric_make_wwn(
++	struct config_group *group,
++	const char *name)
++{
++	struct target_fabric_configfs *tf = container_of(group,
++				struct target_fabric_configfs, tf_group);
++	struct se_wwn *wwn;
++
++	if (!(tf->tf_ops.fabric_make_wwn)) {
++		printk(KERN_ERR "tf->tf_ops.fabric_make_wwn is NULL\n");
++		return ERR_PTR(-ENOSYS);
++	}
++
++	wwn = tf->tf_ops.fabric_make_wwn(tf, group, name);
++	if (!(wwn) || IS_ERR(wwn))
++		return ERR_PTR(-EINVAL);
++
++	wwn->wwn_tf = tf;
++	config_group_init_type_name(&wwn->wwn_group, name,
++			&TF_CIT_TMPL(tf)->tfc_tpg_cit);
++
++	return &wwn->wwn_group;
++}
++
++static void target_fabric_drop_wwn(
++	struct config_group *group,
++	struct config_item *item)
++{
++	struct target_fabric_configfs *tf = container_of(group,
++				struct target_fabric_configfs, tf_group);
++	struct se_wwn *wwn = container_of(to_config_group(item),
++				struct se_wwn, wwn_group);
++
++	config_item_put(item);
++	tf->tf_ops.fabric_drop_wwn(wwn);
++}
++
++static struct configfs_group_operations target_fabric_wwn_group_ops = {
++	.make_group	= target_fabric_make_wwn,
++	.drop_item	= target_fabric_drop_wwn,
++};
++/*
++ * For use with TF_WWN_ATTR() and TF_WWN_ATTR_RO()
++ */
++CONFIGFS_EATTR_OPS(target_fabric_wwn, target_fabric_configfs, tf_group);
++
++static struct configfs_item_operations target_fabric_wwn_item_ops = {
++	.show_attribute		= target_fabric_wwn_attr_show,
++	.store_attribute	= target_fabric_wwn_attr_store,
++};
++
++TF_CIT_SETUP(wwn, &target_fabric_wwn_item_ops, &target_fabric_wwn_group_ops, NULL);
++
++/* End of tfc_wwn_cit */
++
++/* Start of tfc_discovery_cit */
++
++CONFIGFS_EATTR_OPS(target_fabric_discovery, target_fabric_configfs,
++		tf_disc_group);
++
++static struct configfs_item_operations target_fabric_discovery_item_ops = {
++	.show_attribute		= target_fabric_discovery_attr_show,
++	.store_attribute	= target_fabric_discovery_attr_store,
++};
++
++TF_CIT_SETUP(discovery, &target_fabric_discovery_item_ops, NULL, NULL);
++
++/* End of tfc_discovery_cit */
++
++int target_fabric_setup_cits(struct target_fabric_configfs *tf)
++{
++	target_fabric_setup_discovery_cit(tf);
++	target_fabric_setup_wwn_cit(tf);
++	target_fabric_setup_tpg_cit(tf);
++	target_fabric_setup_tpg_base_cit(tf);
++	target_fabric_setup_tpg_port_cit(tf);
++	target_fabric_setup_tpg_lun_cit(tf);
++	target_fabric_setup_tpg_np_cit(tf);
++	target_fabric_setup_tpg_np_base_cit(tf);
++	target_fabric_setup_tpg_attrib_cit(tf);
++	target_fabric_setup_tpg_param_cit(tf);
++	target_fabric_setup_tpg_nacl_cit(tf);
++	target_fabric_setup_tpg_nacl_base_cit(tf);
++	target_fabric_setup_tpg_nacl_attrib_cit(tf);
++	target_fabric_setup_tpg_nacl_auth_cit(tf);
++	target_fabric_setup_tpg_nacl_param_cit(tf);
++	target_fabric_setup_tpg_mappedlun_cit(tf);
++
++	return 0;
++}
+diff --git a/include/target/target_core_fabric_configfs.h b/include/target/target_core_fabric_configfs.h
 new file mode 100644
-index 0000000..a4cd5d3
+index 0000000..a26fb75
 --- /dev/null
-+++ b/drivers/target/target_core_pscsi.h
-@@ -0,0 +1,65 @@
-+#ifndef TARGET_CORE_PSCSI_H
-+#define TARGET_CORE_PSCSI_H
++++ b/include/target/target_core_fabric_configfs.h
+@@ -0,0 +1,106 @@
++/*
++ * Used for tfc_wwn_cit attributes
++ */
 +
-+#define PSCSI_VERSION		"v4.0"
-+#define PSCSI_VIRTUAL_HBA_DEPTH	2048
++#include <target/configfs_macros.h>
 +
-+/* used in pscsi_find_alloc_len() */
-+#ifndef INQUIRY_DATA_SIZE
-+#define INQUIRY_DATA_SIZE	0x24
-+#endif
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_attrib, se_node_acl);
++#define TF_NACL_ATTRIB_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_attrib_attribute _fabric##_nacl_attrib_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_attrib_show_##_name,				\
++	_fabric##_nacl_attrib_store_##_name);
 +
-+/* used in pscsi_add_device_to_list() */
-+#define PSCSI_DEFAULT_QUEUEDEPTH	1
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_auth, se_node_acl);
++#define TF_NACL_AUTH_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_auth_attribute _fabric##_nacl_auth_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_auth_show_##_name,				\
++	_fabric##_nacl_auth_store_##_name);
 +
-+#define PS_RETRY		5
-+#define PS_TIMEOUT_DISK		(15*HZ)
-+#define PS_TIMEOUT_OTHER	(500*HZ)
++#define TF_NACL_AUTH_ATTR_RO(_fabric, _name)				\
++static struct target_fabric_nacl_auth_attribute _fabric##_nacl_auth_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_nacl_auth_show_##_name);
 +
-+#include <linux/device.h>
-+#include <scsi/scsi_driver.h>
-+#include <scsi/scsi_device.h>
-+#include <linux/kref.h>
-+#include <linux/kobject.h>
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_param, se_node_acl);
++#define TF_NACL_PARAM_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_param_attribute _fabric##_nacl_param_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_param_show_##_name,				\
++	_fabric##_nacl_param_store_##_name);
 +
-+struct pscsi_plugin_task {
-+	struct se_task pscsi_task;
-+	unsigned char *pscsi_cdb;
-+	unsigned char __pscsi_cdb[TCM_MAX_COMMAND_SIZE];
-+	unsigned char pscsi_sense[SCSI_SENSE_BUFFERSIZE];
-+	int	pscsi_direction;
-+	int	pscsi_result;
-+	u32	pscsi_resid;
-+	struct request *pscsi_req;
-+} ____cacheline_aligned;
++#define TF_NACL_PARAM_ATTR_RO(_fabric, _name)				\
++static struct target_fabric_nacl_param_attribute _fabric##_nacl_param_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_nacl_param_show_##_name);
 +
-+#define PDF_HAS_CHANNEL_ID	0x01
-+#define PDF_HAS_TARGET_ID	0x02
-+#define PDF_HAS_LUN_ID		0x04
-+#define PDF_HAS_VPD_UNIT_SERIAL 0x08
-+#define PDF_HAS_VPD_DEV_IDENT	0x10
-+#define PDF_HAS_VIRT_HOST_ID	0x20
 +
-+struct pscsi_dev_virt {
-+	int	pdv_flags;
-+	int	pdv_host_id;
-+	int	pdv_channel_id;
-+	int	pdv_target_id;
-+	int	pdv_lun_id;
-+	struct block_device *pdv_bd;
-+	struct scsi_device *pdv_sd;
-+	struct se_hba *pdv_se_hba;
-+} ____cacheline_aligned;
++CONFIGFS_EATTR_STRUCT(target_fabric_nacl_base, se_node_acl);
++#define TF_NACL_BASE_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_nacl_base_attribute _fabric##_nacl_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_nacl_show_##_name,					\
++	_fabric##_nacl_store_##_name);
 +
-+typedef enum phv_modes {
-+	PHV_VIRUTAL_HOST_ID,
-+	PHV_LLD_SCSI_HOST_NO
-+} phv_modes_t;
++#define TF_NACL_BASE_ATTR_RO(_fabric, _name)				\
++static struct target_fabric_nacl_base_attribute _fabric##_nacl_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_nacl_show_##_name);
 +
-+struct pscsi_hba_virt {
-+	int			phv_host_id;
-+	phv_modes_t		phv_mode;
-+	struct Scsi_Host	*phv_lld_host;
-+} ____cacheline_aligned;
++CONFIGFS_EATTR_STRUCT(target_fabric_np_base, se_tpg_np);
++#define TF_NP_BASE_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_np_base_attribute _fabric##_np_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_np_show_##_name,					\
++	_fabric##_np_store_##_name);
 +
-+#endif   /*** TARGET_CORE_PSCSI_H ***/
++CONFIGFS_EATTR_STRUCT(target_fabric_tpg_attrib, se_portal_group);
++#define TF_TPG_ATTRIB_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_tpg_attrib_attribute _fabric##_tpg_attrib_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_tpg_attrib_show_##_name,				\
++	_fabric##_tpg_attrib_store_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_tpg_param, se_portal_group);
++#define TF_TPG_PARAM_ATTR(_fabric, _name, _mode)			\
++static struct target_fabric_tpg_param_attribute _fabric##_tpg_param_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_tpg_param_show_##_name,				\
++	_fabric##_tpg_param_store_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_tpg, se_portal_group);
++#define TF_TPG_BASE_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_tpg_attribute _fabric##_tpg_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_tpg_show_##_name,					\
++	_fabric##_tpg_store_##_name);
++
++
++CONFIGFS_EATTR_STRUCT(target_fabric_wwn, target_fabric_configfs);
++#define TF_WWN_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_wwn_attribute _fabric##_wwn_##_name =	\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_wwn_show_attr_##_name,				\
++	_fabric##_wwn_store_attr_##_name);
++
++#define TF_WWN_ATTR_RO(_fabric, _name)					\
++static struct target_fabric_wwn_attribute _fabric##_wwn_##_name =	\
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_wwn_show_attr_##_name);
++
++CONFIGFS_EATTR_STRUCT(target_fabric_discovery, target_fabric_configfs);
++#define TF_DISC_ATTR(_fabric, _name, _mode)				\
++static struct target_fabric_discovery_attribute _fabric##_disc_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	_fabric##_disc_show_##_name,					\
++	_fabric##_disc_store_##_name);
++
++#define TF_DISC_ATTR_RO(_fabric, _name)					\
++static struct target_fabric_discovery_attribute _fabric##_disc_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	_fabric##_disc_show_##_name);
++
++extern int target_fabric_setup_cits(struct target_fabric_configfs *);
 -- 
 1.7.3.4
 
