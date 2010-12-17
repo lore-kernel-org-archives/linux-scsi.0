@@ -1,14 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH v2 02l/03] target: Add SCSI MIB statistics support
-Date: Fri, 17 Dec 2010 13:11:28 -0800
-Message-ID: <1292620296-22822-14-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH v2 02n/03] target: Add IBLOCK subsystem plugin
+Date: Fri, 17 Dec 2010 13:11:30 -0800
+Message-ID: <1292620296-22822-16-git-send-email-nab@linux-iscsi.org>
 References: <1292620296-22822-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm21.bullet.mail.sp2.yahoo.com ([98.139.91.91]:37945 "HELO
-	nm21.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756506Ab0LQVMh (ORCPT
+Received: from nm11.bullet.mail.sp2.yahoo.com ([98.139.91.81]:35011 "HELO
+	nm11.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756506Ab0LQVMn (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Dec 2010 16:12:37 -0500
+	Fri, 17 Dec 2010 16:12:43 -0500
 In-Reply-To: <1292620296-22822-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,31 +17,37 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for read-only SCSI MIBs through /proc/scsi_target/mib
-following RFC-4455.
+This patch adds the TCM/IBLOCK subsystem plugin for accessing struct block_device
+with an emulated SPC-3 control path from Linux/BLOCK code using struct bio.  The
+also includes WriteCache and FUA Write emulation to struct block_device using
+block/blk-barrier.c:blkdev_issue_flush()
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_mib.c | 1078 ++++++++++++++++++++++++++++++++++++++
- drivers/target/target_core_mib.h |   28 +
- 2 files changed, 1106 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/target_core_mib.c
- create mode 100644 drivers/target/target_core_mib.h
+ drivers/target/target_core_iblock.c |  808 +++++++++++++++++++++++++++++++++++
+ drivers/target/target_core_iblock.h |   40 ++
+ 2 files changed, 848 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/target_core_iblock.c
+ create mode 100644 drivers/target/target_core_iblock.h
 
-diff --git a/drivers/target/target_core_mib.c b/drivers/target/target_core_mib.c
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
 new file mode 100644
-index 0000000..d5a48aa
+index 0000000..e99bfc2
 --- /dev/null
-+++ b/drivers/target/target_core_mib.c
-@@ -0,0 +1,1078 @@
++++ b/drivers/target/target_core_iblock.c
+@@ -0,0 +1,808 @@
 +/*******************************************************************************
-+ * Filename:  target_core_mib.c
++ * Filename:  target_core_iblock.c
 + *
-+ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
++ * This file contains the Storage Engine  <-> Linux BlockIO transport
++ * specific functions.
++ *
++ * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
++ * Copyright (c) 2005, 2006, 2007 SBE, Inc.
 + * Copyright (c) 2007-2010 Rising Tide Systems
 + * Copyright (c) 2008-2010 Linux-iSCSI.org
 + *
-+ * Nicholas A. Bellinger <nab@linux-iscsi.org>
++ * Nicholas A. Bellinger <nab@kernel.org>
 + *
 + * This program is free software; you can redistribute it and/or modify
 + * it under the terms of the GNU General Public License as published by
@@ -59,1093 +65,831 @@ index 0000000..d5a48aa
 + *
 + ******************************************************************************/
 +
-+
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/delay.h>
-+#include <linux/timer.h>
-+#include <linux/string.h>
 +#include <linux/version.h>
-+#include <generated/utsrelease.h>
-+#include <linux/utsname.h>
-+#include <linux/proc_fs.h>
-+#include <linux/seq_file.h>
++#include <linux/string.h>
++#include <linux/parser.h>
++#include <linux/timer.h>
++#include <linux/fs.h>
 +#include <linux/blkdev.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++#include <linux/smp_lock.h>
++#include <linux/bio.h>
++#include <linux/genhd.h>
++#include <linux/file.h>
 +#include <scsi/scsi.h>
-+#include <scsi/scsi_device.h>
 +#include <scsi/scsi_host.h>
 +
 +#include <target/target_core_base.h>
++#include <target/target_core_device.h>
 +#include <target/target_core_transport.h>
-+#include <target/target_core_fabric_ops.h>
-+#include <target/target_core_configfs.h>
 +
-+#include "target_core_hba.h"
-+#include "target_core_mib.h"
++#include "target_core_iblock.h"
 +
-+/* SCSI mib table index */
-+static struct scsi_index_table scsi_index_table;
-+
-+#ifndef INITIAL_JIFFIES
-+#define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
++#if 0
++#define DEBUG_IBLOCK(x...) printk(x)
++#else
++#define DEBUG_IBLOCK(x...)
 +#endif
 +
-+/* SCSI Instance Table */
-+#define SCSI_INST_SW_INDEX		1
-+#define SCSI_TRANSPORT_INDEX		1
++static struct se_subsystem_api iblock_template;
 +
-+#define NONE		"None"
-+#define ISPRINT(a)   ((a >= ' ') && (a <= '~'))
++static void iblock_bio_done(struct bio *, int);
 +
-+static inline int list_is_first(const struct list_head *list,
-+				const struct list_head *head)
-+{
-+	return list->prev == head;
-+}
-+
-+static void *locate_hba_start(
-+	struct seq_file *seq,
-+	loff_t *pos)
-+{
-+	spin_lock(&se_global->g_device_lock);
-+	return seq_list_start(&se_global->g_se_dev_list, *pos);
-+}
-+
-+static void *locate_hba_next(
-+	struct seq_file *seq,
-+	void *v,
-+	loff_t *pos)
-+{
-+	return seq_list_next(v, &se_global->g_se_dev_list, pos);
-+}
-+
-+static void locate_hba_stop(struct seq_file *seq, void *v)
-+{
-+	spin_unlock(&se_global->g_device_lock);
-+}
-+
-+/****************************************************************************
-+ * SCSI MIB Tables
-+ ****************************************************************************/
-+
-+/*
-+ * SCSI Instance Table
++/*	iblock_attach_hba(): (Part of se_subsystem_api_t template)
++ *
++ *
 + */
-+static void *scsi_inst_seq_start(
-+	struct seq_file *seq,
-+	loff_t *pos)
++static int iblock_attach_hba(struct se_hba *hba, u32 host_id)
 +{
-+	spin_lock(&se_global->hba_lock);
-+	return seq_list_start(&se_global->g_hba_list, *pos);
-+}
++	struct iblock_hba *ib_host;
 +
-+static void *scsi_inst_seq_next(
-+	struct seq_file *seq,
-+	void *v,
-+	loff_t *pos)
-+{
-+	return seq_list_next(v, &se_global->g_hba_list, pos);
-+}
++	ib_host = kzalloc(sizeof(struct iblock_hba), GFP_KERNEL);
++	if (!(ib_host)) {
++		printk(KERN_ERR "Unable to allocate memory for"
++				" struct iblock_hba\n");
++		return -ENOMEM;
++	}
 +
-+static void scsi_inst_seq_stop(struct seq_file *seq, void *v)
-+{
-+	spin_unlock(&se_global->hba_lock);
-+}
++	ib_host->iblock_host_id = host_id;
 +
-+static int scsi_inst_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct se_hba *hba = list_entry(v, struct se_hba, hba_list);
++	atomic_set(&hba->left_queue_depth, IBLOCK_HBA_QUEUE_DEPTH);
++	atomic_set(&hba->max_queue_depth, IBLOCK_HBA_QUEUE_DEPTH);
++	hba->hba_ptr = (void *) ib_host;
 +
-+	if (list_is_first(&hba->hba_list, &se_global->g_hba_list))
-+		seq_puts(seq, "inst sw_indx\n");
++	printk(KERN_INFO "CORE_HBA[%d] - TCM iBlock HBA Driver %s on"
++		" Generic Target Core Stack %s\n", hba->hba_id,
++		IBLOCK_VERSION, TARGET_CORE_MOD_VERSION);
 +
-+	seq_printf(seq, "%u %u\n", hba->hba_index, SCSI_INST_SW_INDEX);
-+	seq_printf(seq, "plugin: %s version: %s\n",
-+			hba->transport->name, TARGET_CORE_VERSION);
++	printk(KERN_INFO "CORE_HBA[%d] - Attached iBlock HBA: %u to Generic"
++		" Target Core TCQ Depth: %d\n", hba->hba_id,
++		ib_host->iblock_host_id, atomic_read(&hba->max_queue_depth));
 +
 +	return 0;
 +}
 +
-+static const struct seq_operations scsi_inst_seq_ops = {
-+	.start	= scsi_inst_seq_start,
-+	.next	= scsi_inst_seq_next,
-+	.stop	= scsi_inst_seq_stop,
-+	.show	= scsi_inst_seq_show
-+};
-+
-+static int scsi_inst_seq_open(struct inode *inode, struct file *file)
++static void iblock_detach_hba(struct se_hba *hba)
 +{
-+	return seq_open(file, &scsi_inst_seq_ops);
++	struct iblock_hba *ib_host = hba->hba_ptr;
++
++	printk(KERN_INFO "CORE_HBA[%d] - Detached iBlock HBA: %u from Generic"
++		" Target Core\n", hba->hba_id, ib_host->iblock_host_id);
++
++	kfree(ib_host);
++	hba->hba_ptr = NULL;
 +}
 +
-+static const struct file_operations scsi_inst_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_inst_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Device Table
-+ */
-+static void *scsi_dev_seq_start(struct seq_file *seq, loff_t *pos)
++static void *iblock_allocate_virtdevice(struct se_hba *hba, const char *name)
 +{
-+	return locate_hba_start(seq, pos);
++	struct iblock_dev *ib_dev = NULL;
++	struct iblock_hba *ib_host = hba->hba_ptr;
++
++	ib_dev = kzalloc(sizeof(struct iblock_dev), GFP_KERNEL);
++	if (!(ib_dev)) {
++		printk(KERN_ERR "Unable to allocate struct iblock_dev\n");
++		return NULL;
++	}
++	ib_dev->ibd_host = ib_host;
++
++	printk(KERN_INFO  "IBLOCK: Allocated ib_dev for %s\n", name);
++
++	return ib_dev;
 +}
 +
-+static void *scsi_dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
++static struct se_device *iblock_create_virtdevice(
++	struct se_hba *hba,
++	struct se_subsystem_dev *se_dev,
++	void *p)
 +{
-+	return locate_hba_next(seq, v, pos);
-+}
++	struct iblock_dev *ib_dev = p;
++	struct se_device *dev;
++	struct se_dev_limits dev_limits;
++	struct block_device *bd = NULL;
++	struct request_queue *q;
++	struct queue_limits *limits;
++	u32 dev_flags = 0;
 +
-+static void scsi_dev_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
++	if (!(ib_dev)) {
++		printk(KERN_ERR "Unable to locate struct iblock_dev parameter\n");
++		return 0;
++	}
++	memset(&dev_limits, 0, sizeof(struct se_dev_limits));
++	/*
++	 * These settings need to be made tunable..
++	 */
++	ib_dev->ibd_bio_set = bioset_create(32, 64);
++	if (!(ib_dev->ibd_bio_set)) {
++		printk(KERN_ERR "IBLOCK: Unable to create bioset()\n");
++		return 0;
++	}
++	printk(KERN_INFO "IBLOCK: Created bio_set()\n");
++	/*
++	 * iblock_check_configfs_dev_params() ensures that ib_dev->ibd_udev_path
++	 * must already have been set in order for echo 1 > $HBA/$DEV/enable to run.
++	 */
++	printk(KERN_INFO  "IBLOCK: Claiming struct block_device: %s\n",
++			ib_dev->ibd_udev_path);
 +
-+static int scsi_dev_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct se_hba *hba;
-+	struct se_subsystem_dev *se_dev = list_entry(v, struct se_subsystem_dev,
-+						g_se_dev_list);
-+	struct se_device *dev = se_dev->se_dev_ptr;
-+	char str[28];
-+	int k;
++	bd = open_bdev_exclusive(ib_dev->ibd_udev_path,
++			FMODE_WRITE|FMODE_READ, ib_dev);
++	if (!(bd))
++		goto failed;
++	/*
++	 * Setup the local scope queue_limits from struct request_queue->limits
++	 * to pass into transport_add_device_to_core_hba() as struct se_dev_limits.
++	 */
++	q = bdev_get_queue(bd);
++	limits = &dev_limits.limits;
++	limits->logical_block_size = bdev_logical_block_size(bd);
++	limits->max_hw_sectors = queue_max_hw_sectors(q);
++	limits->max_sectors = queue_max_sectors(q);
++	dev_limits.hw_queue_depth = IBLOCK_MAX_DEVICE_QUEUE_DEPTH;
++	dev_limits.queue_depth = IBLOCK_DEVICE_QUEUE_DEPTH;
 +
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst indx role ports\n");
++	ib_dev->ibd_major = MAJOR(bd->bd_dev);
++	ib_dev->ibd_minor = MINOR(bd->bd_dev);
++	ib_dev->ibd_bd = bd;
 +
++	dev = transport_add_device_to_core_hba(hba,
++			&iblock_template, se_dev, dev_flags, (void *)ib_dev,
++			&dev_limits, "IBLOCK", IBLOCK_VERSION);
 +	if (!(dev))
-+		return 0;
++		goto failed;
 +
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
++	ib_dev->ibd_depth = dev->queue_depth;
++
++	/*
++	 * Check if the underlying struct block_device request_queue supports
++	 * the QUEUE_FLAG_DISCARD bit for UNMAP/WRITE_SAME in SCSI + TRIM
++	 * in ATA and we need to set TPE=1
++	 */
++	if (blk_queue_discard(bdev_get_queue(bd))) {
++		struct request_queue *q = bdev_get_queue(bd);
++
++		DEV_ATTRIB(dev)->max_unmap_lba_count =
++				q->limits.max_discard_sectors;
++		/*
++		 * Currently hardcoded to 1 in Linux/SCSI code..
++		 */
++		DEV_ATTRIB(dev)->max_unmap_block_desc_count = 1;
++		DEV_ATTRIB(dev)->unmap_granularity =
++				q->limits.discard_granularity;
++		DEV_ATTRIB(dev)->unmap_granularity_alignment =
++				q->limits.discard_alignment;
++
++		printk(KERN_INFO "IBLOCK: BLOCK Discard support available,"
++				" disabled by default\n");
 +	}
 +
-+	seq_printf(seq, "%u %u %s %u\n", hba->hba_index,
-+		   dev->dev_index, "Target", dev->dev_port_count);
++	return dev;
 +
-+	memcpy(&str[0], (void *)DEV_T10_WWN(dev), 28);
-+
-+	/* vendor */
-+	for (k = 0; k < 8; k++)
-+		str[k] = ISPRINT(DEV_T10_WWN(dev)->vendor[k]) ?
-+				DEV_T10_WWN(dev)->vendor[k] : 0x20;
-+	str[k] = 0x20;
-+
-+	/* model */
-+	for (k = 0; k < 16; k++)
-+		str[k+9] = ISPRINT(DEV_T10_WWN(dev)->model[k]) ?
-+				DEV_T10_WWN(dev)->model[k] : 0x20;
-+	str[k + 9] = 0;
-+
-+	seq_printf(seq, "dev_alias: %s\n", str);
-+
-+	return 0;
++failed:
++	if (ib_dev->ibd_bio_set) {
++		bioset_free(ib_dev->ibd_bio_set);
++		ib_dev->ibd_bio_set = NULL;
++	}
++	ib_dev->ibd_bd = NULL;
++	ib_dev->ibd_major = 0;
++	ib_dev->ibd_minor = 0;
++	return NULL;
 +}
 +
-+static const struct seq_operations scsi_dev_seq_ops = {
-+	.start  = scsi_dev_seq_start,
-+	.next   = scsi_dev_seq_next,
-+	.stop   = scsi_dev_seq_stop,
-+	.show   = scsi_dev_seq_show
-+};
-+
-+static int scsi_dev_seq_open(struct inode *inode, struct file *file)
++static void iblock_free_device(void *p)
 +{
-+	return seq_open(file, &scsi_dev_seq_ops);
++	struct iblock_dev *ib_dev = p;
++
++	close_bdev_exclusive(ib_dev->ibd_bd, FMODE_WRITE|FMODE_READ);
++	bioset_free(ib_dev->ibd_bio_set);
++	kfree(ib_dev);
 +}
 +
-+static const struct file_operations scsi_dev_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_dev_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Port Table
-+ */
-+static void *scsi_port_seq_start(struct seq_file *seq, loff_t *pos)
++static inline struct iblock_req *IBLOCK_REQ(struct se_task *task)
 +{
-+	return locate_hba_start(seq, pos);
++	return container_of(task, struct iblock_req, ib_task);
 +}
 +
-+static void *scsi_port_seq_next(struct seq_file *seq, void *v, loff_t *pos)
++static struct se_task *
++iblock_alloc_task(struct se_cmd *cmd)
 +{
-+	return locate_hba_next(seq, v, pos);
-+}
++	struct iblock_req *ib_req;
 +
-+static void scsi_port_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+static int scsi_port_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct se_hba *hba;
-+	struct se_subsystem_dev *se_dev = list_entry(v, struct se_subsystem_dev,
-+						g_se_dev_list);
-+	struct se_device *dev = se_dev->se_dev_ptr;
-+	struct se_port *sep, *sep_tmp;
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst device indx role busy_count\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
++	ib_req = kzalloc(sizeof(struct iblock_req), GFP_KERNEL);
++	if (!(ib_req)) {
++		printk(KERN_ERR "Unable to allocate memory for struct iblock_req\n");
++		return NULL;
 +	}
 +
-+	/* FIXME: scsiPortBusyStatuses count */
-+	spin_lock(&dev->se_port_lock);
-+	list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
-+		seq_printf(seq, "%u %u %u %s%u %u\n", hba->hba_index,
-+			dev->dev_index, sep->sep_index, "Device",
-+			dev->dev_index, 0);
-+	}
-+	spin_unlock(&dev->se_port_lock);
-+
-+	return 0;
++	ib_req->ib_dev = SE_DEV(cmd)->dev_ptr;
++	atomic_set(&ib_req->ib_bio_cnt, 0);
++	return &ib_req->ib_task;
 +}
 +
-+static const struct seq_operations scsi_port_seq_ops = {
-+	.start  = scsi_port_seq_start,
-+	.next   = scsi_port_seq_next,
-+	.stop   = scsi_port_seq_stop,
-+	.show   = scsi_port_seq_show
-+};
-+
-+static int scsi_port_seq_open(struct inode *inode, struct file *file)
++static unsigned long long iblock_emulate_read_cap_with_block_size(
++	struct se_device *dev,
++	struct block_device *bd,
++	struct request_queue *q)
 +{
-+	return seq_open(file, &scsi_port_seq_ops);
-+}
++	unsigned long long blocks_long = (div_u64(i_size_read(bd->bd_inode),
++					bdev_logical_block_size(bd)) - 1);
++	u32 block_size = bdev_logical_block_size(bd);
 +
-+static const struct file_operations scsi_port_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_port_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
++	if (block_size == DEV_ATTRIB(dev)->block_size)
++		return blocks_long;
 +
-+/*
-+ * SCSI Transport Table
-+ */
-+static void *scsi_transport_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return locate_hba_start(seq, pos);
-+}
-+
-+static void *scsi_transport_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_transport_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+static int scsi_transport_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct se_hba *hba;
-+	struct se_subsystem_dev *se_dev = list_entry(v, struct se_subsystem_dev,
-+						g_se_dev_list);
-+	struct se_device *dev = se_dev->se_dev_ptr;
-+	struct se_port *se, *se_tmp;
-+	struct se_portal_group *tpg;
-+	struct t10_wwn *wwn;
-+	char buf[64];
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst device indx dev_name\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
-+	}
-+
-+	wwn = DEV_T10_WWN(dev);
-+
-+	spin_lock(&dev->se_port_lock);
-+	list_for_each_entry_safe(se, se_tmp, &dev->dev_sep_list, sep_list) {
-+		tpg = se->sep_tpg;
-+		sprintf(buf, "scsiTransport%s",
-+				TPG_TFO(tpg)->get_fabric_name());
-+
-+		seq_printf(seq, "%u %s %u %s+%s\n",
-+			hba->hba_index, /* scsiTransportIndex */
-+			buf,  /* scsiTransportType */
-+			(TPG_TFO(tpg)->tpg_get_inst_index != NULL) ?
-+			TPG_TFO(tpg)->tpg_get_inst_index(tpg) :
-+			0,
-+			TPG_TFO(tpg)->tpg_get_wwn(tpg),
-+			(strlen(wwn->unit_serial)) ?
-+			/* scsiTransportDevName */
-+			wwn->unit_serial : wwn->vendor);
-+	}
-+	spin_unlock(&dev->se_port_lock);
-+
-+	return 0;
-+}
-+
-+static const struct seq_operations scsi_transport_seq_ops = {
-+	.start  = scsi_transport_seq_start,
-+	.next   = scsi_transport_seq_next,
-+	.stop   = scsi_transport_seq_stop,
-+	.show   = scsi_transport_seq_show
-+};
-+
-+static int scsi_transport_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_transport_seq_ops);
-+}
-+
-+static const struct file_operations scsi_transport_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_transport_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Target Device Table
-+ */
-+static void *scsi_tgt_dev_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return locate_hba_start(seq, pos);
-+}
-+
-+static void *scsi_tgt_dev_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_tgt_dev_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+
-+#define LU_COUNT	1  /* for now */
-+static int scsi_tgt_dev_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct se_hba *hba;
-+	struct se_subsystem_dev *se_dev = list_entry(v, struct se_subsystem_dev,
-+						g_se_dev_list);
-+	struct se_device *dev = se_dev->se_dev_ptr;
-+	int non_accessible_lus = 0;
-+	char status[16];
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst indx num_LUs status non_access_LUs"
-+			" resets\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
-+	}
-+
-+	switch (dev->dev_status) {
-+	case TRANSPORT_DEVICE_ACTIVATED:
-+		strcpy(status, "activated");
++	switch (block_size) {
++	case 4096:
++		switch (DEV_ATTRIB(dev)->block_size) {
++		case 2048:
++			blocks_long <<= 1;
++			break;
++		case 1024:
++			blocks_long <<= 2;
++			break;
++		case 512:
++			blocks_long <<= 3;
++		default:
++			break;
++		}
 +		break;
-+	case TRANSPORT_DEVICE_DEACTIVATED:
-+		strcpy(status, "deactivated");
-+		non_accessible_lus = 1;
++	case 2048:
++		switch (DEV_ATTRIB(dev)->block_size) {
++		case 4096:
++			blocks_long >>= 1;
++			break;
++		case 1024:
++			blocks_long <<= 1;
++			break;
++		case 512:
++			blocks_long <<= 2;
++			break;
++		default:
++			break;
++		}
 +		break;
-+	case TRANSPORT_DEVICE_SHUTDOWN:
-+		strcpy(status, "shutdown");
-+		non_accessible_lus = 1;
++	case 1024:
++		switch (DEV_ATTRIB(dev)->block_size) {
++		case 4096:
++			blocks_long >>= 2;
++			break;
++		case 2048:
++			blocks_long >>= 1;
++			break;
++		case 512:
++			blocks_long <<= 1;
++			break;
++		default:
++			break;
++		}
 +		break;
-+	case TRANSPORT_DEVICE_OFFLINE_ACTIVATED:
-+	case TRANSPORT_DEVICE_OFFLINE_DEACTIVATED:
-+		strcpy(status, "offline");
-+		non_accessible_lus = 1;
++	case 512:
++		switch (DEV_ATTRIB(dev)->block_size) {
++		case 4096:
++			blocks_long >>= 3;
++			break;
++		case 2048:
++			blocks_long >>= 2;
++			break;
++		case 1024:
++			blocks_long >>= 1;
++			break;
++		default:
++			break;
++		}
 +		break;
 +	default:
-+		sprintf(status, "unknown(%d)", dev->dev_status);
-+		non_accessible_lus = 1;
++		break;
 +	}
 +
-+	seq_printf(seq, "%u %u %u %s %u %u\n",
-+		   hba->hba_index, dev->dev_index, LU_COUNT,
-+		   status, non_accessible_lus, dev->num_resets);
++	return blocks_long;
++}
 +
++/*
++ * Emulate SYCHRONIZE_CACHE_*
++ */
++static void iblock_emulate_sync_cache(struct se_task *task)
++{
++	struct se_cmd *cmd = TASK_CMD(task);
++	struct iblock_dev *ib_dev = cmd->se_dev->dev_ptr;
++	int immed = (T_TASK(cmd)->t_task_cdb[1] & 0x2);
++	sector_t error_sector;
++	int ret;
++
++	/*
++	 * If the Immediate bit is set, queue up the GOOD response
++	 * for this SYNCHRONIZE_CACHE op
++	 */
++	if (immed)
++		transport_complete_sync_cache(cmd, 1);
++
++	/*
++	 * blkdev_issue_flush() does not support a specifying a range, so
++	 * we have to flush the entire cache.
++	 */
++	ret = blkdev_issue_flush(ib_dev->ibd_bd, GFP_KERNEL, &error_sector);
++	if (ret != 0) {
++		printk(KERN_ERR "IBLOCK: block_issue_flush() failed: %d "
++			" error_sector: %llu\n", ret,
++			(unsigned long long)error_sector);
++	}
++
++	if (!immed)
++		transport_complete_sync_cache(cmd, ret == 0);
++}
++
++/*
++ * Tell TCM Core that we are capable of WriteCache emulation for
++ * an underlying struct se_device.
++ */
++static int iblock_emulated_write_cache(struct se_device *dev)
++{
++	return 1;
++}
++
++static int iblock_emulated_dpo(struct se_device *dev)
++{
 +	return 0;
 +}
 +
-+static const struct seq_operations scsi_tgt_dev_seq_ops = {
-+	.start  = scsi_tgt_dev_seq_start,
-+	.next   = scsi_tgt_dev_seq_next,
-+	.stop   = scsi_tgt_dev_seq_stop,
-+	.show   = scsi_tgt_dev_seq_show
-+};
-+
-+static int scsi_tgt_dev_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_tgt_dev_seq_ops);
-+}
-+
-+static const struct file_operations scsi_tgt_dev_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_tgt_dev_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
 +/*
-+ * SCSI Target Port Table
++ * Tell TCM Core that we will be emulating Forced Unit Access (FUA) for WRITEs
++ * for TYPE_DISK.
 + */
-+static void *scsi_tgt_port_seq_start(struct seq_file *seq, loff_t *pos)
++static int iblock_emulated_fua_write(struct se_device *dev)
 +{
-+	return locate_hba_start(seq, pos);
++	return 1;
 +}
 +
-+static void *scsi_tgt_port_seq_next(struct seq_file *seq, void *v, loff_t *pos)
++static int iblock_emulated_fua_read(struct se_device *dev)
 +{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_tgt_port_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+static int scsi_tgt_port_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct se_hba *hba;
-+	struct se_subsystem_dev *se_dev = list_entry(v, struct se_subsystem_dev,
-+						g_se_dev_list);
-+	struct se_device *dev = se_dev->se_dev_ptr;
-+	struct se_port *sep, *sep_tmp;
-+	struct se_portal_group *tpg;
-+	u32 rx_mbytes, tx_mbytes;
-+	unsigned long long num_cmds;
-+	char buf[64];
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst device indx name port_index in_cmds"
-+			" write_mbytes read_mbytes hs_in_cmds\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
-+	}
-+
-+	spin_lock(&dev->se_port_lock);
-+	list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
-+		tpg = sep->sep_tpg;
-+		sprintf(buf, "%sPort#",
-+			TPG_TFO(tpg)->get_fabric_name());
-+
-+		seq_printf(seq, "%u %u %u %s%d %s%s%d ",
-+		     hba->hba_index,
-+		     dev->dev_index,
-+		     sep->sep_index,
-+		     buf, sep->sep_index,
-+		     TPG_TFO(tpg)->tpg_get_wwn(tpg), "+t+",
-+		     TPG_TFO(tpg)->tpg_get_tag(tpg));
-+
-+		spin_lock(&sep->sep_lun->lun_sep_lock);
-+		num_cmds = sep->sep_stats.cmd_pdus;
-+		rx_mbytes = (sep->sep_stats.rx_data_octets >> 20);
-+		tx_mbytes = (sep->sep_stats.tx_data_octets >> 20);
-+		spin_unlock(&sep->sep_lun->lun_sep_lock);
-+
-+		seq_printf(seq, "%llu %u %u %u\n", num_cmds,
-+			rx_mbytes, tx_mbytes, 0);
-+	}
-+	spin_unlock(&dev->se_port_lock);
-+
 +	return 0;
 +}
 +
-+static const struct seq_operations scsi_tgt_port_seq_ops = {
-+	.start  = scsi_tgt_port_seq_start,
-+	.next   = scsi_tgt_port_seq_next,
-+	.stop   = scsi_tgt_port_seq_stop,
-+	.show   = scsi_tgt_port_seq_show
-+};
-+
-+static int scsi_tgt_port_seq_open(struct inode *inode, struct file *file)
++static int iblock_do_task(struct se_task *task)
 +{
-+	return seq_open(file, &scsi_tgt_port_seq_ops);
-+}
++	struct se_device *dev = task->task_se_cmd->se_dev;
++	struct iblock_req *req = IBLOCK_REQ(task);
++	struct iblock_dev *ibd = (struct iblock_dev *)req->ib_dev;
++	struct request_queue *q = bdev_get_queue(ibd->ibd_bd);
++	struct bio *bio = req->ib_bio, *nbio = NULL;
++	int rw;
 +
-+static const struct file_operations scsi_tgt_port_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_tgt_port_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Authorized Initiator Table:
-+ * It contains the SCSI Initiators authorized to be attached to one of the
-+ * local Target ports.
-+ * Iterates through all active TPGs and extracts the info from the ACLs
-+ */
-+static void *scsi_auth_intr_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	spin_lock_bh(&se_global->se_tpg_lock);
-+	return seq_list_start(&se_global->g_se_tpg_list, *pos);
-+}
-+
-+static void *scsi_auth_intr_seq_next(struct seq_file *seq, void *v,
-+					 loff_t *pos)
-+{
-+	return seq_list_next(v, &se_global->g_se_tpg_list, pos);
-+}
-+
-+static void scsi_auth_intr_seq_stop(struct seq_file *seq, void *v)
-+{
-+	spin_unlock_bh(&se_global->se_tpg_lock);
-+}
-+
-+static int scsi_auth_intr_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct se_portal_group *se_tpg = list_entry(v, struct se_portal_group,
-+						se_tpg_list);
-+	struct se_dev_entry *deve;
-+	struct se_lun *lun;
-+	struct se_node_acl *se_nacl;
-+	int j;
-+
-+	if (list_is_first(&se_tpg->se_tpg_list,
-+			  &se_global->g_se_tpg_list))
-+		seq_puts(seq, "inst dev port indx dev_or_port intr_name "
-+			 "map_indx att_count num_cmds read_mbytes "
-+			 "write_mbytes hs_num_cmds creation_time row_status\n");
-+
-+	if (!(se_tpg))
-+		return 0;
-+
-+	spin_lock(&se_tpg->acl_node_lock);
-+	list_for_each_entry(se_nacl, &se_tpg->acl_node_list, acl_list) {
-+
-+		atomic_inc(&se_nacl->mib_ref_count);
-+		smp_mb__after_atomic_inc();
-+		spin_unlock(&se_tpg->acl_node_lock);
-+
-+		spin_lock_irq(&se_nacl->device_list_lock);
-+		for (j = 0; j < TRANSPORT_MAX_LUNS_PER_TPG; j++) {
-+			deve = &se_nacl->device_list[j];
-+			if (!(deve->lun_flags &
-+					TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) ||
-+			    (!deve->se_lun))
-+				continue;
-+			lun = deve->se_lun;
-+			if (!lun->lun_se_dev)
-+				continue;
-+
-+			seq_printf(seq, "%u %u %u %u %u %s %u %u %u %u %u %u"
-+					" %u %s\n",
-+				/* scsiInstIndex */
-+				(TPG_TFO(se_tpg)->tpg_get_inst_index != NULL) ?
-+				TPG_TFO(se_tpg)->tpg_get_inst_index(se_tpg) :
-+				0,
-+				/* scsiDeviceIndex */
-+				lun->lun_se_dev->dev_index,
-+				/* scsiAuthIntrTgtPortIndex */
-+				TPG_TFO(se_tpg)->tpg_get_tag(se_tpg),
-+				/* scsiAuthIntrIndex */
-+				se_nacl->acl_index,
-+				/* scsiAuthIntrDevOrPort */
-+				1,
-+				/* scsiAuthIntrName */
-+				se_nacl->initiatorname[0] ?
-+					se_nacl->initiatorname : NONE,
-+				/* FIXME: scsiAuthIntrLunMapIndex */
-+				0,
-+				/* scsiAuthIntrAttachedTimes */
-+				deve->attach_count,
-+				/* scsiAuthIntrOutCommands */
-+				deve->total_cmds,
-+				/* scsiAuthIntrReadMegaBytes */
-+				(u32)(deve->read_bytes >> 20),
-+				/* scsiAuthIntrWrittenMegaBytes */
-+				(u32)(deve->write_bytes >> 20),
-+				/* FIXME: scsiAuthIntrHSOutCommands */
-+				0,
-+				/* scsiAuthIntrLastCreation */
-+				(u32)(((u32)deve->creation_time -
-+					    INITIAL_JIFFIES) * 100 / HZ),
-+				/* FIXME: scsiAuthIntrRowStatus */
-+				"Ready");
-+		}
-+		spin_unlock_irq(&se_nacl->device_list_lock);
-+
-+		spin_lock(&se_tpg->acl_node_lock);
-+		atomic_dec(&se_nacl->mib_ref_count);
-+		smp_mb__after_atomic_dec();
++	if (task->task_data_direction == DMA_TO_DEVICE) {
++		/*
++		 * Force data to disk if we pretend to not have a volatile
++		 * write cache, or the initiator set the Force Unit Access bit.
++		 */
++		if (DEV_ATTRIB(dev)->emulate_write_cache == 0 ||
++		    (DEV_ATTRIB(dev)->emulate_fua_write > 0 &&
++		     T_TASK(task->task_se_cmd)->t_tasks_fua))
++			rw = WRITE_FUA;
++		else
++			rw = WRITE;
++	} else {
++		rw = READ;
 +	}
-+	spin_unlock(&se_tpg->acl_node_lock);
 +
-+	return 0;
++	while (bio) {
++		nbio = bio->bi_next;
++		bio->bi_next = NULL;
++		DEBUG_IBLOCK("Calling submit_bio() task: %p bio: %p"
++			" bio->bi_sector: %llu\n", task, bio, bio->bi_sector);
++
++		submit_bio(rw, bio);
++		bio = nbio;
++	}
++
++	if (q->unplug_fn)
++		q->unplug_fn(q);
++	return PYX_TRANSPORT_SENT_TO_TRANSPORT;
 +}
 +
-+static const struct seq_operations scsi_auth_intr_seq_ops = {
-+	.start	= scsi_auth_intr_seq_start,
-+	.next	= scsi_auth_intr_seq_next,
-+	.stop	= scsi_auth_intr_seq_stop,
-+	.show	= scsi_auth_intr_seq_show
++static int iblock_do_discard(struct se_device *dev, sector_t lba, u32 range)
++{
++	struct iblock_dev *ibd = dev->dev_ptr;
++	struct block_device *bd = ibd->ibd_bd;
++	int barrier = 0;
++
++	return blkdev_issue_discard(bd, lba, range, GFP_KERNEL, barrier);
++}
++
++static void iblock_free_task(struct se_task *task)
++{
++	struct iblock_req *req = IBLOCK_REQ(task);
++	struct bio *bio, *hbio = req->ib_bio;
++	/*
++	 * We only release the bio(s) here if iblock_bio_done() has not called
++	 * bio_put() -> iblock_bio_destructor().
++	 */
++	while (hbio != NULL) {
++		bio = hbio;
++		hbio = hbio->bi_next;
++		bio->bi_next = NULL;
++		bio_put(bio);
++	}
++
++	kfree(req);
++}
++
++enum {
++	Opt_udev_path, Opt_force, Opt_err
 +};
 +
-+static int scsi_auth_intr_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_auth_intr_seq_ops);
-+}
-+
-+static const struct file_operations scsi_auth_intr_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_auth_intr_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
++static match_table_t tokens = {
++	{Opt_udev_path, "udev_path=%s"},
++	{Opt_force, "force=%d"},
++	{Opt_err, NULL}
 +};
 +
-+/*
-+ * SCSI Attached Initiator Port Table:
-+ * It lists the SCSI Initiators attached to one of the local Target ports.
-+ * Iterates through all active TPGs and use active sessions from each TPG
-+ * to list the info fo this table.
-+ */
-+static void *scsi_att_intr_port_seq_start(struct seq_file *seq, loff_t *pos)
++static ssize_t iblock_set_configfs_dev_params(struct se_hba *hba,
++					       struct se_subsystem_dev *se_dev,
++					       const char *page, ssize_t count)
 +{
-+	spin_lock_bh(&se_global->se_tpg_lock);
-+	return seq_list_start(&se_global->g_se_tpg_list, *pos);
-+}
++	struct iblock_dev *ib_dev = se_dev->se_dev_su_ptr;
++	char *orig, *ptr, *opts;
++	substring_t args[MAX_OPT_ARGS];
++	int ret = 0, arg, token;
 +
-+static void *scsi_att_intr_port_seq_next(struct seq_file *seq, void *v,
-+					 loff_t *pos)
-+{
-+	return seq_list_next(v, &se_global->g_se_tpg_list, pos);
-+}
++	opts = kstrdup(page, GFP_KERNEL);
++	if (!opts)
++		return -ENOMEM;
 +
-+static void scsi_att_intr_port_seq_stop(struct seq_file *seq, void *v)
-+{
-+	spin_unlock_bh(&se_global->se_tpg_lock);
-+}
++	orig = opts;
 +
-+static int scsi_att_intr_port_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct se_portal_group *se_tpg = list_entry(v, struct se_portal_group,
-+						se_tpg_list);
-+	struct se_dev_entry *deve;
-+	struct se_lun *lun;
-+	struct se_node_acl *se_nacl;
-+	struct se_session *se_sess;
-+	unsigned char buf[64];
-+	int j;
-+
-+	if (list_is_first(&se_tpg->se_tpg_list,
-+			  &se_global->g_se_tpg_list))
-+		seq_puts(seq, "inst dev port indx port_auth_indx port_name"
-+			" port_ident\n");
-+
-+	if (!(se_tpg))
-+		return 0;
-+
-+	spin_lock(&se_tpg->session_lock);
-+	list_for_each_entry(se_sess, &se_tpg->tpg_sess_list, sess_list) {
-+		if ((TPG_TFO(se_tpg)->sess_logged_in(se_sess)) ||
-+		    (!se_sess->se_node_acl) ||
-+		    (!se_sess->se_node_acl->device_list))
++	while ((ptr = strsep(&opts, ",")) != NULL) {
++		if (!*ptr)
 +			continue;
 +
-+		atomic_inc(&se_sess->mib_ref_count);
-+		smp_mb__after_atomic_inc();
-+		se_nacl = se_sess->se_node_acl;
-+		atomic_inc(&se_nacl->mib_ref_count);
-+		smp_mb__after_atomic_inc();
-+		spin_unlock(&se_tpg->session_lock);
++		token = match_token(ptr, tokens, args);
++		switch (token) {
++		case Opt_udev_path:
++			if (ib_dev->ibd_bd) {
++				printk(KERN_ERR "Unable to set udev_path= while"
++					" ib_dev->ibd_bd exists\n");
++				ret = -EEXIST;
++				goto out;
++			}
 +
-+		spin_lock_irq(&se_nacl->device_list_lock);
-+		for (j = 0; j < TRANSPORT_MAX_LUNS_PER_TPG; j++) {
-+			deve = &se_nacl->device_list[j];
-+			if (!(deve->lun_flags &
-+					TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) ||
-+			   (!deve->se_lun))
-+				continue;
-+
-+			lun = deve->se_lun;
-+			if (!lun->lun_se_dev)
-+				continue;
-+
-+			memset(buf, 0, 64);
-+			if (TPG_TFO(se_tpg)->sess_get_initiator_sid != NULL)
-+				TPG_TFO(se_tpg)->sess_get_initiator_sid(
-+					se_sess, (unsigned char *)&buf[0], 64);
-+
-+			seq_printf(seq, "%u %u %u %u %u %s+i+%s\n",
-+				/* scsiInstIndex */
-+				(TPG_TFO(se_tpg)->tpg_get_inst_index != NULL) ?
-+				TPG_TFO(se_tpg)->tpg_get_inst_index(se_tpg) :
-+				0,
-+				/* scsiDeviceIndex */
-+				lun->lun_se_dev->dev_index,
-+				/* scsiPortIndex */
-+				TPG_TFO(se_tpg)->tpg_get_tag(se_tpg),
-+				/* scsiAttIntrPortIndex */
-+				(TPG_TFO(se_tpg)->sess_get_index != NULL) ?
-+				TPG_TFO(se_tpg)->sess_get_index(se_sess) :
-+				0,
-+				/* scsiAttIntrPortAuthIntrIdx */
-+				se_nacl->acl_index,
-+				/* scsiAttIntrPortName */
-+				se_nacl->initiatorname[0] ?
-+					se_nacl->initiatorname : NONE,
-+				/* scsiAttIntrPortIdentifier */
-+				buf);
++			ret = snprintf(ib_dev->ibd_udev_path, SE_UDEV_PATH_LEN,
++				"%s", match_strdup(&args[0]));
++			printk(KERN_INFO "IBLOCK: Referencing UDEV path: %s\n",
++					ib_dev->ibd_udev_path);
++			ib_dev->ibd_flags |= IBDF_HAS_UDEV_PATH;
++			break;
++		case Opt_force:
++			match_int(args, &arg);
++			ib_dev->ibd_force = arg;
++			printk(KERN_INFO "IBLOCK: Set force=%d\n",
++				ib_dev->ibd_force);
++			break;
++		default:
++			break;
 +		}
-+		spin_unlock_irq(&se_nacl->device_list_lock);
-+
-+		spin_lock(&se_tpg->session_lock);
-+		atomic_dec(&se_nacl->mib_ref_count);
-+		smp_mb__after_atomic_dec();
-+		atomic_dec(&se_sess->mib_ref_count);
-+		smp_mb__after_atomic_dec();
-+	}
-+	spin_unlock(&se_tpg->session_lock);
-+
-+	return 0;
-+}
-+
-+static const struct seq_operations scsi_att_intr_port_seq_ops = {
-+	.start	= scsi_att_intr_port_seq_start,
-+	.next	= scsi_att_intr_port_seq_next,
-+	.stop	= scsi_att_intr_port_seq_stop,
-+	.show	= scsi_att_intr_port_seq_show
-+};
-+
-+static int scsi_att_intr_port_seq_open(struct inode *inode, struct file *file)
-+{
-+	return seq_open(file, &scsi_att_intr_port_seq_ops);
-+}
-+
-+static const struct file_operations scsi_att_intr_port_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_att_intr_port_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/*
-+ * SCSI Logical Unit Table
-+ */
-+static void *scsi_lu_seq_start(struct seq_file *seq, loff_t *pos)
-+{
-+	return locate_hba_start(seq, pos);
-+}
-+
-+static void *scsi_lu_seq_next(struct seq_file *seq, void *v, loff_t *pos)
-+{
-+	return locate_hba_next(seq, v, pos);
-+}
-+
-+static void scsi_lu_seq_stop(struct seq_file *seq, void *v)
-+{
-+	locate_hba_stop(seq, v);
-+}
-+
-+#define SCSI_LU_INDEX		1
-+static int scsi_lu_seq_show(struct seq_file *seq, void *v)
-+{
-+	struct se_hba *hba;
-+	struct se_subsystem_dev *se_dev = list_entry(v, struct se_subsystem_dev,
-+						g_se_dev_list);
-+	struct se_device *dev = se_dev->se_dev_ptr;
-+	int j;
-+	char str[28];
-+
-+	if (list_is_first(&se_dev->g_se_dev_list, &se_global->g_se_dev_list))
-+		seq_puts(seq, "inst dev indx LUN lu_name vend prod rev"
-+		" dev_type status state-bit num_cmds read_mbytes"
-+		" write_mbytes resets full_stat hs_num_cmds creation_time\n");
-+
-+	if (!(dev))
-+		return 0;
-+
-+	hba = dev->se_hba;
-+	if (!(hba)) {
-+		/* Log error ? */
-+		return 0;
 +	}
 +
-+	/* Fix LU state, if we can read it from the device */
-+	seq_printf(seq, "%u %u %u %llu %s", hba->hba_index,
-+			dev->dev_index, SCSI_LU_INDEX,
-+			(unsigned long long)0, /* FIXME: scsiLuDefaultLun */
-+			(strlen(DEV_T10_WWN(dev)->unit_serial)) ?
-+			/* scsiLuWwnName */
-+			(char *)&DEV_T10_WWN(dev)->unit_serial[0] :
-+			"None");
-+
-+	memcpy(&str[0], (void *)DEV_T10_WWN(dev), 28);
-+	/* scsiLuVendorId */
-+	for (j = 0; j < 8; j++)
-+		str[j] = ISPRINT(DEV_T10_WWN(dev)->vendor[j]) ?
-+			DEV_T10_WWN(dev)->vendor[j] : 0x20;
-+	str[8] = 0;
-+	seq_printf(seq, " %s", str);
-+
-+	/* scsiLuProductId */
-+	for (j = 0; j < 16; j++)
-+		str[j] = ISPRINT(DEV_T10_WWN(dev)->model[j]) ?
-+			DEV_T10_WWN(dev)->model[j] : 0x20;
-+	str[16] = 0;
-+	seq_printf(seq, " %s", str);
-+
-+	/* scsiLuRevisionId */
-+	for (j = 0; j < 4; j++)
-+		str[j] = ISPRINT(DEV_T10_WWN(dev)->revision[j]) ?
-+			DEV_T10_WWN(dev)->revision[j] : 0x20;
-+	str[4] = 0;
-+	seq_printf(seq, " %s", str);
-+
-+	seq_printf(seq, " %u %s %s %llu %u %u %u %u %u %u\n",
-+		/* scsiLuPeripheralType */
-+		   TRANSPORT(dev)->get_device_type(dev),
-+		   (dev->dev_status == TRANSPORT_DEVICE_ACTIVATED) ?
-+		"available" : "notavailable", /* scsiLuStatus */
-+		"exposed", 	/* scsiLuState */
-+		(unsigned long long)dev->num_cmds,
-+		/* scsiLuReadMegaBytes */
-+		(u32)(dev->read_bytes >> 20),
-+		/* scsiLuWrittenMegaBytes */
-+		(u32)(dev->write_bytes >> 20),
-+		dev->num_resets, /* scsiLuInResets */
-+		0, /* scsiLuOutTaskSetFullStatus */
-+		0, /* scsiLuHSInCommands */
-+		(u32)(((u32)dev->creation_time - INITIAL_JIFFIES) *
-+							100 / HZ));
-+
-+	return 0;
++out:
++	kfree(orig);
++	return (!ret) ? count : ret;
 +}
 +
-+static const struct seq_operations scsi_lu_seq_ops = {
-+	.start  = scsi_lu_seq_start,
-+	.next   = scsi_lu_seq_next,
-+	.stop   = scsi_lu_seq_stop,
-+	.show   = scsi_lu_seq_show
-+};
-+
-+static int scsi_lu_seq_open(struct inode *inode, struct file *file)
++static ssize_t iblock_check_configfs_dev_params(
++	struct se_hba *hba,
++	struct se_subsystem_dev *se_dev)
 +{
-+	return seq_open(file, &scsi_lu_seq_ops);
-+}
++	struct iblock_dev *ibd = se_dev->se_dev_su_ptr;
 +
-+static const struct file_operations scsi_lu_seq_fops = {
-+	.owner	 = THIS_MODULE,
-+	.open	 = scsi_lu_seq_open,
-+	.read	 = seq_read,
-+	.llseek	 = seq_lseek,
-+	.release = seq_release,
-+};
-+
-+/****************************************************************************/
-+
-+/*
-+ * Remove proc fs entries
-+ */
-+void remove_scsi_target_mib(void)
-+{
-+	remove_proc_entry("scsi_target/mib/scsi_inst", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_dev", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_port", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_transport", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_tgt_dev", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_tgt_port", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_auth_intr", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_att_intr_port", NULL);
-+	remove_proc_entry("scsi_target/mib/scsi_lu", NULL);
-+	remove_proc_entry("scsi_target/mib", NULL);
-+}
-+
-+/*
-+ * Create proc fs entries for the mib tables
-+ */
-+int init_scsi_target_mib(void)
-+{
-+	struct proc_dir_entry *dir_entry;
-+	struct proc_dir_entry *scsi_inst_entry;
-+	struct proc_dir_entry *scsi_dev_entry;
-+	struct proc_dir_entry *scsi_port_entry;
-+	struct proc_dir_entry *scsi_transport_entry;
-+	struct proc_dir_entry *scsi_tgt_dev_entry;
-+	struct proc_dir_entry *scsi_tgt_port_entry;
-+	struct proc_dir_entry *scsi_auth_intr_entry;
-+	struct proc_dir_entry *scsi_att_intr_port_entry;
-+	struct proc_dir_entry *scsi_lu_entry;
-+
-+	dir_entry = proc_mkdir("scsi_target/mib", NULL);
-+	if (!(dir_entry)) {
-+		printk(KERN_ERR "proc_mkdir() failed.\n");
++	if (!(ibd->ibd_flags & IBDF_HAS_UDEV_PATH)) {
++		printk(KERN_ERR "Missing udev_path= parameters for IBLOCK\n");
 +		return -1;
 +	}
 +
-+	scsi_inst_entry =
-+		create_proc_entry("scsi_target/mib/scsi_inst", 0, NULL);
-+	if (scsi_inst_entry)
-+		scsi_inst_entry->proc_fops = &scsi_inst_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_dev_entry =
-+		create_proc_entry("scsi_target/mib/scsi_dev", 0, NULL);
-+	if (scsi_dev_entry)
-+		scsi_dev_entry->proc_fops = &scsi_dev_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_port_entry =
-+		create_proc_entry("scsi_target/mib/scsi_port", 0, NULL);
-+	if (scsi_port_entry)
-+		scsi_port_entry->proc_fops = &scsi_port_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_transport_entry =
-+		create_proc_entry("scsi_target/mib/scsi_transport", 0, NULL);
-+	if (scsi_transport_entry)
-+		scsi_transport_entry->proc_fops = &scsi_transport_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_tgt_dev_entry =
-+		create_proc_entry("scsi_target/mib/scsi_tgt_dev", 0, NULL);
-+	if (scsi_tgt_dev_entry)
-+		scsi_tgt_dev_entry->proc_fops = &scsi_tgt_dev_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_tgt_port_entry =
-+		create_proc_entry("scsi_target/mib/scsi_tgt_port", 0, NULL);
-+	if (scsi_tgt_port_entry)
-+		scsi_tgt_port_entry->proc_fops = &scsi_tgt_port_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_auth_intr_entry =
-+		create_proc_entry("scsi_target/mib/scsi_auth_intr", 0, NULL);
-+	if (scsi_auth_intr_entry)
-+		scsi_auth_intr_entry->proc_fops = &scsi_auth_intr_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_att_intr_port_entry =
-+	      create_proc_entry("scsi_target/mib/scsi_att_intr_port", 0, NULL);
-+	if (scsi_att_intr_port_entry)
-+		scsi_att_intr_port_entry->proc_fops =
-+				&scsi_att_intr_port_seq_fops;
-+	else
-+		goto error;
-+
-+	scsi_lu_entry = create_proc_entry("scsi_target/mib/scsi_lu", 0, NULL);
-+	if (scsi_lu_entry)
-+		scsi_lu_entry->proc_fops = &scsi_lu_seq_fops;
-+	else
-+		goto error;
-+
 +	return 0;
-+
-+error:
-+	printk(KERN_ERR "create_proc_entry() failed.\n");
-+	remove_scsi_target_mib();
-+	return -1;
 +}
 +
-+/*
-+ * Initialize the index table for allocating unique row indexes to various mib
-+ * tables
-+ */
-+void init_scsi_index_table(void)
++static ssize_t iblock_show_configfs_dev_params(
++	struct se_hba *hba,
++	struct se_subsystem_dev *se_dev,
++	char *b)
 +{
-+	memset(&scsi_index_table, 0, sizeof(struct scsi_index_table));
-+	spin_lock_init(&scsi_index_table.lock);
-+}
++	struct iblock_dev *ibd = se_dev->se_dev_su_ptr;
++	struct block_device *bd = ibd->ibd_bd;
++	char buf[BDEVNAME_SIZE];
++	ssize_t bl = 0;
 +
-+/*
-+ * Allocate a new row index for the entry type specified
-+ */
-+u32 scsi_get_new_index(scsi_index_t type)
-+{
-+	u32 new_index;
++	if (bd)
++		bl += sprintf(b + bl, "iBlock device: %s",
++				bdevname(bd, buf));
++	if (ibd->ibd_flags & IBDF_HAS_UDEV_PATH) {
++		bl += sprintf(b + bl, "  UDEV PATH: %s\n",
++				ibd->ibd_udev_path);
++	} else
++		bl += sprintf(b + bl, "\n");
 +
-+	if ((type < 0) || (type >= SCSI_INDEX_TYPE_MAX)) {
-+		printk(KERN_ERR "Invalid index type %d\n", type);
-+		return -1;
++	bl += sprintf(b + bl, "        ");
++	if (bd) {
++		bl += sprintf(b + bl, "Major: %d Minor: %d  %s\n",
++			ibd->ibd_major, ibd->ibd_minor, (!bd->bd_contains) ?
++			"" : (bd->bd_holder == (struct iblock_dev *)ibd) ?
++			"CLAIMED: IBLOCK" : "CLAIMED: OS");
++	} else {
++		bl += sprintf(b + bl, "Major: %d Minor: %d\n",
++			ibd->ibd_major, ibd->ibd_minor);
 +	}
 +
-+	spin_lock(&scsi_index_table.lock);
-+	new_index = ++scsi_index_table.scsi_mib_index[type];
-+	if (new_index == 0)
-+		new_index = ++scsi_index_table.scsi_mib_index[type];
-+	spin_unlock(&scsi_index_table.lock);
-+
-+	return new_index;
++	return bl;
 +}
-+EXPORT_SYMBOL(scsi_get_new_index);
-diff --git a/drivers/target/target_core_mib.h b/drivers/target/target_core_mib.h
++
++static void iblock_bio_destructor(struct bio *bio)
++{
++	struct se_task *task = bio->bi_private;
++	struct iblock_dev *ib_dev = task->se_dev->dev_ptr;
++
++	bio_free(bio, ib_dev->ibd_bio_set);
++}
++
++static struct bio *iblock_get_bio(
++	struct se_task *task,
++	struct iblock_req *ib_req,
++	struct iblock_dev *ib_dev,
++	int *ret,
++	sector_t lba,
++	u32 sg_num)
++{
++	struct bio *bio;
++
++	bio = bio_alloc_bioset(GFP_NOIO, sg_num, ib_dev->ibd_bio_set);
++	if (!(bio)) {
++		printk(KERN_ERR "Unable to allocate memory for bio\n");
++		*ret = PYX_TRANSPORT_OUT_OF_MEMORY_RESOURCES;
++		return NULL;
++	}
++
++	DEBUG_IBLOCK("Allocated bio: %p task_sg_num: %u using ibd_bio_set:"
++		" %p\n", bio, task->task_sg_num, ib_dev->ibd_bio_set);
++	DEBUG_IBLOCK("Allocated bio: %p task_size: %u\n", bio, task->task_size);
++
++	bio->bi_bdev = ib_dev->ibd_bd;
++	bio->bi_private = (void *) task;
++	bio->bi_destructor = iblock_bio_destructor;
++	bio->bi_end_io = &iblock_bio_done;
++	bio->bi_sector = lba;
++	atomic_inc(&ib_req->ib_bio_cnt);
++
++	DEBUG_IBLOCK("Set bio->bi_sector: %llu\n", bio->bi_sector);
++	DEBUG_IBLOCK("Set ib_req->ib_bio_cnt: %d\n",
++			atomic_read(&ib_req->ib_bio_cnt));
++	return bio;
++}
++
++static int iblock_map_task_SG(struct se_task *task)
++{
++	struct se_cmd *cmd = task->task_se_cmd;
++	struct se_device *dev = SE_DEV(cmd);
++	struct iblock_dev *ib_dev = task->se_dev->dev_ptr;
++	struct iblock_req *ib_req = IBLOCK_REQ(task);
++	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
++	struct scatterlist *sg;
++	int ret = 0;
++	u32 i, sg_num = task->task_sg_num;
++	sector_t block_lba;
++	/*
++	 * Do starting conversion up from non 512-byte blocksize with
++	 * struct se_task SCSI blocksize into Linux/Block 512 units for BIO.
++	 */
++	if (DEV_ATTRIB(dev)->block_size == 4096)
++		block_lba = (task->task_lba << 3);
++	else if (DEV_ATTRIB(dev)->block_size == 2048)
++		block_lba = (task->task_lba << 2);
++	else if (DEV_ATTRIB(dev)->block_size == 1024)
++		block_lba = (task->task_lba << 1);
++	else if (DEV_ATTRIB(dev)->block_size == 512)
++		block_lba = task->task_lba;
++	else {
++		printk(KERN_ERR "Unsupported SCSI -> BLOCK LBA conversion:"
++				" %u\n", DEV_ATTRIB(dev)->block_size);
++		return PYX_TRANSPORT_LU_COMM_FAILURE;
++	}
++
++	bio = iblock_get_bio(task, ib_req, ib_dev, &ret, block_lba, sg_num);
++	if (!(bio))
++		return ret;
++
++	ib_req->ib_bio = bio;
++	hbio = tbio = bio;
++	/*
++	 * Use fs/bio.c:bio_add_pages() to setup the bio_vec maplist
++	 * from TCM struct se_mem -> task->task_sg -> struct scatterlist memory.
++	 */
++	for_each_sg(task->task_sg, sg, task->task_sg_num, i) {
++		DEBUG_IBLOCK("task: %p bio: %p Calling bio_add_page(): page:"
++			" %p len: %u offset: %u\n", task, bio, sg_page(sg),
++				sg->length, sg->offset);
++again:
++		ret = bio_add_page(bio, sg_page(sg), sg->length, sg->offset);
++		if (ret != sg->length) {
++
++			DEBUG_IBLOCK("*** Set bio->bi_sector: %llu\n",
++					bio->bi_sector);
++			DEBUG_IBLOCK("** task->task_size: %u\n",
++					task->task_size);
++			DEBUG_IBLOCK("*** bio->bi_max_vecs: %u\n",
++					bio->bi_max_vecs);
++			DEBUG_IBLOCK("*** bio->bi_vcnt: %u\n",
++					bio->bi_vcnt);
++
++			bio = iblock_get_bio(task, ib_req, ib_dev, &ret,
++						block_lba, sg_num);
++			if (!(bio))
++				goto fail;
++
++			tbio = tbio->bi_next = bio;
++			DEBUG_IBLOCK("-----------------> Added +1 bio: %p to"
++				" list, Going to again\n", bio);
++			goto again;
++		}
++		/* Always in 512 byte units for Linux/Block */
++		block_lba += sg->length >> IBLOCK_LBA_SHIFT;
++		sg_num--;
++		DEBUG_IBLOCK("task: %p bio-add_page() passed!, decremented"
++			" sg_num to %u\n", task, sg_num);
++		DEBUG_IBLOCK("task: %p bio_add_page() passed!, increased lba"
++				" to %llu\n", task, block_lba);
++		DEBUG_IBLOCK("task: %p bio_add_page() passed!, bio->bi_vcnt:"
++				" %u\n", task, bio->bi_vcnt);
++	}
++
++	return 0;
++fail:
++	while (hbio) {
++		bio = hbio;
++		hbio = hbio->bi_next;
++		bio->bi_next = NULL;
++		bio_put(bio);
++	}
++	return ret;
++}
++
++static unsigned char *iblock_get_cdb(struct se_task *task)
++{
++	return IBLOCK_REQ(task)->ib_scsi_cdb;
++}
++
++static u32 iblock_get_device_rev(struct se_device *dev)
++{
++	return SCSI_SPC_2; /* Returns SPC-3 in Initiator Data */
++}
++
++static u32 iblock_get_device_type(struct se_device *dev)
++{
++	return TYPE_DISK;
++}
++
++static sector_t iblock_get_blocks(struct se_device *dev)
++{
++	struct iblock_dev *ibd = dev->dev_ptr;
++	struct block_device *bd = ibd->ibd_bd;
++	struct request_queue *q = bdev_get_queue(bd);
++
++	return iblock_emulate_read_cap_with_block_size(dev, bd, q);
++}
++
++static void iblock_bio_done(struct bio *bio, int err)
++{
++	struct se_task *task = bio->bi_private;
++	struct iblock_req *ibr = IBLOCK_REQ(task);
++	/*
++	 * Set -EIO if !BIO_UPTODATE and the passed is still err=0
++	 */
++	if (!(test_bit(BIO_UPTODATE, &bio->bi_flags)) && !(err))
++		err = -EIO;
++
++	if (err != 0) {
++		printk(KERN_ERR "test_bit(BIO_UPTODATE) failed for bio: %p,"
++			" err: %d\n", bio, err);
++		/*
++		 * Bump the ib_bio_err_cnt and release bio.
++		 */
++		atomic_inc(&ibr->ib_bio_err_cnt);
++		smp_mb__after_atomic_inc();
++		bio_put(bio);
++		/*
++		 * Wait to complete the task until the last bio as completed.
++		 */
++		if (!(atomic_dec_and_test(&ibr->ib_bio_cnt)))
++			return;
++
++		ibr->ib_bio = NULL;
++		transport_complete_task(task, 0);
++		return;
++	}
++	DEBUG_IBLOCK("done[%p] bio: %p task_lba: %llu bio_lba: %llu err=%d\n",
++		task, bio, task->task_lba, bio->bi_sector, err);
++	/*
++	 * bio_put() will call iblock_bio_destructor() to release the bio back
++	 * to ibr->ib_bio_set.
++	 */
++	bio_put(bio);
++	/*
++	 * Wait to complete the task until the last bio as completed.
++	 */
++	if (!(atomic_dec_and_test(&ibr->ib_bio_cnt)))
++		return;
++	/*
++	 * Return GOOD status for task if zero ib_bio_err_cnt exists.
++	 */
++	ibr->ib_bio = NULL;
++	transport_complete_task(task, (!atomic_read(&ibr->ib_bio_err_cnt)));
++}
++
++static struct se_subsystem_api iblock_template = {
++	.name			= "iblock",
++	.owner			= THIS_MODULE,
++	.transport_type		= TRANSPORT_PLUGIN_VHBA_PDEV,
++	.map_task_SG		= iblock_map_task_SG,
++	.attach_hba		= iblock_attach_hba,
++	.detach_hba		= iblock_detach_hba,
++	.allocate_virtdevice	= iblock_allocate_virtdevice,
++	.create_virtdevice	= iblock_create_virtdevice,
++	.free_device		= iblock_free_device,
++	.dpo_emulated		= iblock_emulated_dpo,
++	.fua_write_emulated	= iblock_emulated_fua_write,
++	.fua_read_emulated	= iblock_emulated_fua_read,
++	.write_cache_emulated	= iblock_emulated_write_cache,
++	.alloc_task		= iblock_alloc_task,
++	.do_task		= iblock_do_task,
++	.do_discard		= iblock_do_discard,
++	.do_sync_cache		= iblock_emulate_sync_cache,
++	.free_task		= iblock_free_task,
++	.check_configfs_dev_params = iblock_check_configfs_dev_params,
++	.set_configfs_dev_params = iblock_set_configfs_dev_params,
++	.show_configfs_dev_params = iblock_show_configfs_dev_params,
++	.get_cdb		= iblock_get_cdb,
++	.get_device_rev		= iblock_get_device_rev,
++	.get_device_type	= iblock_get_device_type,
++	.get_blocks		= iblock_get_blocks,
++};
++
++static int __init iblock_module_init(void)
++{
++	return transport_subsystem_register(&iblock_template);
++}
++
++static void iblock_module_exit(void)
++{
++	transport_subsystem_release(&iblock_template);
++}
++
++MODULE_DESCRIPTION("TCM IBLOCK subsystem plugin");
++MODULE_AUTHOR("nab@Linux-iSCSI.org");
++MODULE_LICENSE("GPL");
++
++module_init(iblock_module_init);
++module_exit(iblock_module_exit);
+diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
 new file mode 100644
-index 0000000..2772046
+index 0000000..64c1f4d
 --- /dev/null
-+++ b/drivers/target/target_core_mib.h
-@@ -0,0 +1,28 @@
-+#ifndef TARGET_CORE_MIB_H
-+#define TARGET_CORE_MIB_H
++++ b/drivers/target/target_core_iblock.h
+@@ -0,0 +1,40 @@
++#ifndef TARGET_CORE_IBLOCK_H
++#define TARGET_CORE_IBLOCK_H
 +
-+typedef enum {
-+	SCSI_INST_INDEX,
-+	SCSI_DEVICE_INDEX,
-+	SCSI_AUTH_INTR_INDEX,
-+	SCSI_INDEX_TYPE_MAX
-+} scsi_index_t;
++#define IBLOCK_VERSION		"4.0"
 +
-+struct scsi_index_table {
-+	spinlock_t	lock;
-+	u32 		scsi_mib_index[SCSI_INDEX_TYPE_MAX];
++#define IBLOCK_HBA_QUEUE_DEPTH	512
++#define IBLOCK_DEVICE_QUEUE_DEPTH	32
++#define IBLOCK_MAX_DEVICE_QUEUE_DEPTH	128
++#define IBLOCK_MAX_CDBS		16
++#define IBLOCK_LBA_SHIFT	9
++
++struct iblock_req {
++	struct se_task ib_task;
++	unsigned char ib_scsi_cdb[TCM_MAX_COMMAND_SIZE];
++	atomic_t ib_bio_cnt;
++	atomic_t ib_bio_err_cnt;
++	struct bio *ib_bio;
++	struct iblock_dev *ib_dev;
 +} ____cacheline_aligned;
 +
-+/* SCSI Port stats */
-+struct scsi_port_stats {
-+	u64	cmd_pdus;
-+	u64	tx_data_octets;
-+	u64	rx_data_octets;
++#define IBDF_HAS_UDEV_PATH		0x01
++#define IBDF_HAS_FORCE			0x02
++
++struct iblock_dev {
++	unsigned char ibd_udev_path[SE_UDEV_PATH_LEN];
++	int	ibd_force;
++	int	ibd_major;
++	int	ibd_minor;
++	u32	ibd_depth;
++	u32	ibd_flags;
++	struct bio_set	*ibd_bio_set;
++	struct block_device *ibd_bd;
++	struct iblock_hba *ibd_host;
 +} ____cacheline_aligned;
 +
-+extern int init_scsi_target_mib(void);
-+extern void remove_scsi_target_mib(void);
-+extern void init_scsi_index_table(void);
-+extern u32 scsi_get_new_index(scsi_index_t);
++struct iblock_hba {
++	int		iblock_host_id;
++} ____cacheline_aligned;
 +
-+#endif   /*** TARGET_CORE_MIB_H ***/
++#endif /* TARGET_CORE_IBLOCK_H */
 -- 
 1.7.3.4
 
