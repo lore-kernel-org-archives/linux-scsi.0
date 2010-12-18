@@ -1,48 +1,60 @@
-From: chetan loke <loke.chetan@gmail.com>
-Subject: Re: [ANNOUNCE] TCM/LIO v4.0.0-rc6 for 2.6.37-rc6
-Date: Sat, 18 Dec 2010 14:13:59 -0500
-Message-ID: <AANLkTimV-evsF4MFXs6JQ5H55AgtOpGrTuCdJBx9O_P=@mail.gmail.com>
-References: <1292557664.31461.68.camel@haakon2.linux-iscsi.org>
-	<1292599364.2820.21.camel@mulgrave.site>
-	<4D0B8975.1040206@vlnb.net>
-	<1292602908.2820.41.camel@mulgrave.site>
-	<4D0BBE40.6030000@vlnb.net>
-	<1292617658.2820.80.camel@mulgrave.site>
-	<4D0BD79B.2010600@vlnb.net>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 25192] New: 3w-{9,x}xxx don't work on big-endian MIPS
+Date: Sat, 18 Dec 2010 23:56:34 GMT
+Message-ID: <bug-25192-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D0BD79B.2010600@vlnb.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: James Bottomley <James.Bottomley@suse.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, "Patil, Kiran" <kiran.patil@intel.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Boaz Harrosh <bharrosh@panasas.com>, Joe Eykholt <jeykholt@cisco.com>, "J.H." <warthog9@kernel.org>, "H. Peter Anvin" <hpa@zytor.com>, Linus Torvalds <torvalds@linux-foundation.org>, Bart Van Assche <bart.vanassche@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:47806 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751927Ab0LRX4f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 18 Dec 2010 18:56:35 -0500
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oBINuY5e024551
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sat, 18 Dec 2010 23:56:34 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Dec 17, 2010 at 4:35 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
->
-> In this regard it looks to be a good idea to freeze accepting both LIO
-> and SCST until the end of the next year and then choose one with the
-> biggest activity in the related mailing lists, not counting me and
-> NicholasB.
->
+https://bugzilla.kernel.org/show_bug.cgi?id=25192
 
-Why wait till the end of the next year? What I proposed earlier was
-'to review at the architecture level'. If folks don't agree to it then
-this email drama will never
-stop. Once the review starts we can decide on a common baseline to
-benchmark both the stacks. I'm more than willing to test/benchmark
-ESX(front-end)/SCST/LIO(back-end) combo. I'm sure there will be others
-who would be willing to spend some of their time for this cause to
-validate claims made by both the communities. We can then publish all
-the results so that others can reproduce them.
+           Summary: 3w-{9,x}xxx don't work on big-endian MIPS
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.37
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: mattst88@gmail.com
+                CC: ralf@linux-mips.org
+        Regression: No
 
-> You want the best community, so let community choose!
->
 
-Sure, and then we will let community choose what's best for them. And
-if that means picking the best from both the worlds and coming up w/ a
-unified stack then that's great!
+Created an attachment (id=40762)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=40762)
+3ware-8006: lspci, dmesg, /proc/io{mem,ports}
 
-> Vlad
-> --
-Chetan
+Using the linux-mips tree,
+
+commit 1c334766ddc8ae7b12f3a12e0d06fe3895c5a5a7
+Author: Ralf Baechle <ralf@linux-mips.org>
+Date:   Wed Dec 1 17:33:17 2010 +0000
+
+I've been trying to use either a 3ware 8006 (3w-xxxx driver) or 3ware 9500s
+(3w-9xxx driver) in my Broadcom BCM91250a big-endian MIPS system.
+
+I see commits 75913d9bb8328c4eca54cad39a5fb665b48383eb which added big-endian
+support.
+
+Please tell me what I can do to help debug this.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
