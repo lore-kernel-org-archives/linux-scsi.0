@@ -1,87 +1,38 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 08/12] qla4xxx: Convert to host_lock less w/ interrupts disabled externally
-Date: Sun, 19 Dec 2010 13:22:03 -0800
-Message-ID: <1292793727-31957-9-git-send-email-nab@linux-iscsi.org>
-References: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 25192] 3w-{9,x}xxx don't work on big-endian MIPS
+Date: Sun, 19 Dec 2010 21:30:36 GMT
+Message-ID: <201012192130.oBJLUaP3011271@demeter2.kernel.org>
+References: <bug-25192-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm12.bullet.mail.ac4.yahoo.com ([98.139.52.209]:47459 "HELO
-	nm12.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757231Ab0LSVWx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Dec 2010 16:22:53 -0500
-In-Reply-To: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:53853 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932485Ab0LSVah (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Dec 2010 16:30:37 -0500
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oBJLUaki011272
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Sun, 19 Dec 2010 21:30:36 GMT
+In-Reply-To: <bug-25192-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@>
-Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Douglas Gilbert <dgilbert@interlog.com>, adam radford <aradford@gmail.com>, Kashyap Desai <Kashyap.Desai@lsi.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+https://bugzilla.kernel.org/show_bug.cgi?id=25192
 
-This patch converts qla4xxx to run in host_lock less mode with the new
-IRQ_DISABLE_SCSI_QCMD() that disables interrupts while calling ->queuecommand()
-dispatch.  It also drops the legacy host_lock unlock optimization.
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/qla4xxx/ql4_os.c |   10 +++-------
- 1 files changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 0d48fb4..d21eba7 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -450,7 +450,7 @@ void qla4xxx_srb_compl(struct kref *ref)
- }
- 
- /**
-- * qla4xxx_queuecommand - scsi layer issues scsi command to driver.
-+ * qla4xxx_queuecommand_irq_disable - scsi layer issues scsi command to driver.
-  * @cmd: Pointer to Linux's SCSI command structure
-  * @done_fn: Function that the driver calls to notify the SCSI mid-layer
-  *	that the command has been processed.
-@@ -463,7 +463,7 @@ void qla4xxx_srb_compl(struct kref *ref)
-  * completion handling).   Unfortunely, it sometimes calls the scheduler
-  * in interrupt context which is a big NO! NO!.
-  **/
--static int qla4xxx_queuecommand_lck(struct scsi_cmnd *cmd,
-+static int qla4xxx_queuecommand_irq_disable(struct scsi_cmnd *cmd,
- 				void (*done)(struct scsi_cmnd *))
- {
- 	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
-@@ -508,8 +508,6 @@ static int qla4xxx_queuecommand_lck(struct scsi_cmnd *cmd,
- 	    test_bit(DPC_RESET_HA_FW_CONTEXT, &ha->dpc_flags))
- 		goto qc_host_busy;
- 
--	spin_unlock_irq(ha->host->host_lock);
--
- 	srb = qla4xxx_get_new_srb(ha, ddb_entry, cmd, done);
- 	if (!srb)
- 		goto qc_host_busy_lock;
-@@ -518,7 +516,6 @@ static int qla4xxx_queuecommand_lck(struct scsi_cmnd *cmd,
- 	if (rval != QLA_SUCCESS)
- 		goto qc_host_busy_free_sp;
- 
--	spin_lock_irq(ha->host->host_lock);
- 	return 0;
- 
- qc_host_busy_free_sp:
-@@ -526,7 +523,6 @@ qc_host_busy_free_sp:
- 	mempool_free(srb, ha->srb_mempool);
- 
- qc_host_busy_lock:
--	spin_lock_irq(ha->host->host_lock);
- 
- qc_host_busy:
- 	return SCSI_MLQUEUE_HOST_BUSY;
-@@ -537,7 +533,7 @@ qc_fail_command:
- 	return 0;
- }
- 
--static DEF_SCSI_QCMD(qla4xxx_queuecommand)
-+static IRQ_DISABLE_SCSI_QCMD(qla4xxx_queuecommand)
- 
- /**
-  * qla4xxx_mem_free - frees memory allocated to adapter
+
+
+--- Comment #10 from Matt Turner <mattst88@gmail.com>  2010-12-19 21:30:30 ---
+Created an attachment (id=40932)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=40932)
+9500s debugging
+
+Doesn't look bizarre to me.
+
 -- 
-1.7.3.4
-
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
