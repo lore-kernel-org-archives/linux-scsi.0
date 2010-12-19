@@ -1,14 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 01/12] libiscsi: Convert to host_lock less w/ interrupts disabled internally
-Date: Sun, 19 Dec 2010 13:21:56 -0800
-Message-ID: <1292793727-31957-2-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 02/12] scsi: Add IRQ_DISABLE_SCSI_QCMD wrapper
+Date: Sun, 19 Dec 2010 13:21:57 -0800
+Message-ID: <1292793727-31957-3-git-send-email-nab@linux-iscsi.org>
 References: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm26-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.242]:42972 "HELO
+Received: from nm26-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.242]:43027 "HELO
 	nm26-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757194Ab0LSVWV (ORCPT
+	by vger.kernel.org with SMTP id S1757194Ab0LSVWZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 19 Dec 2010 16:22:21 -0500
+	Sun, 19 Dec 2010 16:22:25 -0500
 In-Reply-To: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,72 +17,44 @@ Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Vasu 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch changes iscsi_queuecommand_lck() to a host_lock less
-iscsi_queuecommand() that will internally disable interrupts using
-session->lock and drop the now legacy host_lock unlock.
+This patch adds a IRQ_DISABLE_SCSI_QCMD() wrapper macro used by LLDs
+that can now run in host_lock less mode, but still need interrupts disabled
+using local_irq_save() before calling their lld_queuecommand() dispatcher.
+
+jgarzik says this method is in fact slower than doing a spin_lock_irqsave() on
+internal lib_lld_queuecommand() callers (as is done in libiscsi and libata)
+but is still needed by the majority of lock_less LLDs.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/libiscsi.c |   10 ++--------
- 1 files changed, 2 insertions(+), 8 deletions(-)
+ include/scsi/scsi_host.h |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index c15fde8..5535782 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1599,7 +1599,7 @@ enum {
- 	FAILURE_SESSION_NOT_READY,
- };
- 
--static int iscsi_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
-+int iscsi_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
- {
- 	struct iscsi_cls_session *cls_session;
- 	struct Scsi_Host *host;
-@@ -1609,13 +1609,11 @@ static int iscsi_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi
- 	struct iscsi_conn *conn;
- 	struct iscsi_task *task = NULL;
- 
--	sc->scsi_done = done;
- 	sc->result = 0;
- 	sc->SCp.ptr = NULL;
- 
- 	host = sc->device->host;
- 	ihost = shost_priv(host);
--	spin_unlock(host->host_lock);
- 
- 	cls_session = starget_to_session(scsi_target(sc->device));
- 	session = cls_session->dd_data;
-@@ -1706,7 +1704,6 @@ static int iscsi_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi
- 
- 	session->queued_cmdsn++;
- 	spin_unlock(&session->lock);
--	spin_lock(host->host_lock);
- 	return 0;
- 
- prepd_reject:
-@@ -1716,7 +1713,6 @@ reject:
- 	spin_unlock(&session->lock);
- 	ISCSI_DBG_SESSION(session, "cmd 0x%x rejected (%d)\n",
- 			  sc->cmnd[0], reason);
--	spin_lock(host->host_lock);
- 	return SCSI_MLQUEUE_TARGET_BUSY;
- 
- prepd_fault:
-@@ -1732,12 +1728,10 @@ fault:
- 		scsi_out(sc)->resid = scsi_out(sc)->length;
- 		scsi_in(sc)->resid = scsi_in(sc)->length;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index e7e3858..321b114 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -521,6 +521,20 @@ struct scsi_host_template {
+ 		return rc;						\
  	}
--	done(sc);
--	spin_lock(host->host_lock);
-+	sc->scsi_done(sc);
- 	return 0;
- }
  
--DEF_SCSI_QCMD(iscsi_queuecommand)
- EXPORT_SYMBOL_GPL(iscsi_queuecommand);
++/*
++ * Used for LLDs running in lock-less mode, but that still require having
++ * interrupts disable during their lld_queuecommand() dispatch.
++ */
++#define IRQ_DISABLE_SCSI_QCMD(func_name)				\
++	int func_name(struct Scsi_Host *shost, struct scsi_cmnd *cmd)	\
++	{								\
++		unsigned long irq_flags;				\
++		int rc;							\
++		local_irq_save(irq_flags);				\
++		rc = func_name##_irq_disable(cmd, cmd->scsi_done);	\
++		local_irq_restore(irq_flags);				\
++		return rc;						\
++	}
  
- int iscsi_change_queue_depth(struct scsi_device *sdev, int depth, int reason)
+ /*
+  * shost state: If you alter this, you also need to alter scsi_sysfs.c
 -- 
 1.7.3.4
 
