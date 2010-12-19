@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 03/12] libsas: Convert to host_lock less w/ interrupts disabled externally
-Date: Sun, 19 Dec 2010 13:21:58 -0800
-Message-ID: <1292793727-31957-4-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 05/12] fnic: Convert to host_lock less w/ interrupts disabled externally
+Date: Sun, 19 Dec 2010 13:22:00 -0800
+Message-ID: <1292793727-31957-6-git-send-email-nab@linux-iscsi.org>
 References: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
@@ -12,57 +12,56 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch converts the libsas queuecommand to run in host_lock less mode
-w/ the new IRQ_DISABLE_SCSI_QCMD() that disables interrupts while calling
-->queuecommand() dispatch.
+This patch converts fnic to run in host_lock less mode with the new
+IRQ_DISABLE_SCSI_QCMD() that disables interrupts while calling ->queuecommand()
+dispatch.  It also drops the legacy host_lock unlock optimization.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/libsas/sas_scsi_host.c |   12 ++----------
- 1 files changed, 2 insertions(+), 10 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c |   14 +++-----------
+ 1 files changed, 3 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 29251fa..011580f 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -185,24 +185,17 @@ int sas_queue_up(struct sas_task *task)
- /**
-  * sas_queuecommand -- Enqueue a command for processing
-  * @parameters: See SCSI Core documentation
-- *
-- * Note: XXX: Remove the host unlock/lock pair when SCSI Core can
-- * call us without holding an IRQ spinlock...
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 22d0240..9f51beb 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -349,7 +349,8 @@ static inline int fnic_queue_wq_copy_desc(struct fnic *fnic,
+  * Routine to send a scsi cdb
+  * Called with host_lock held and interrupts disabled.
   */
--static int sas_queuecommand_lck(struct scsi_cmnd *cmd,
-+static int sas_queuecommand_irq_disable(struct scsi_cmnd *cmd,
- 		     void (*scsi_done)(struct scsi_cmnd *))
--	__releases(host->host_lock)
- 	__acquires(dev->sata_dev.ap->lock)
- 	__releases(dev->sata_dev.ap->lock)
--	__acquires(host->host_lock)
+-static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
++static int fnic_queuecommand_irq_disable(struct scsi_cmnd *sc,
++					void (*done)(struct scsi_cmnd *))
  {
- 	int res = 0;
- 	struct domain_device *dev = cmd_to_domain_dev(cmd);
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct sas_internal *i = to_sas_internal(host->transportt);
+ 	struct fc_lport *lp;
+ 	struct fc_rport *rport;
+@@ -373,13 +374,6 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
  
--	spin_unlock_irq(host->host_lock);
+-	/*
+-	 * Release host lock, use driver resource specific locks from here.
+-	 * Don't re-enable interrupts in case they were disabled prior to the
+-	 * caller disabling them.
+-	 */
+-	spin_unlock(lp->host->host_lock);
 -
- 	{
- 		struct sas_ha_struct *sas_ha = dev->port->ha;
- 		struct sas_task *task;
-@@ -250,11 +243,10 @@ static int sas_queuecommand_lck(struct scsi_cmnd *cmd,
+ 	/* Get a new io_req for this SCSI IO */
+ 	fnic = lport_priv(lp);
+ 
+@@ -452,12 +446,10 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
  		}
  	}
  out:
--	spin_lock_irq(host->host_lock);
- 	return res;
+-	/* acquire host lock before returning to SCSI */
+-	spin_lock(lp->host->host_lock);
+ 	return ret;
  }
  
--DEF_SCSI_QCMD(sas_queuecommand)
-+IRQ_DISABLE_SCSI_QCMD(sas_queuecommand)
+-DEF_SCSI_QCMD(fnic_queuecommand)
++IRQ_DISABLE_SCSI_QCMD(fnic_queuecommand)
  
- static void sas_eh_finish_cmd(struct scsi_cmnd *cmd)
- {
+ /*
+  * fnic_fcpio_fw_reset_cmpl_handler
 -- 
 1.7.3.4
