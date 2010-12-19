@@ -1,7 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 10/12] megaraid_sas: Add smp_mb__after_atomic_*() for instance->fw_outstanding
-Date: Sun, 19 Dec 2010 13:22:05 -0800
-Message-ID: <1292793727-31957-11-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 06/12] lpfc: Convert to host_lock less w/ interrupts disabled externally
+Date: Sun, 19 Dec 2010 13:22:01 -0800
+Message-ID: <1292793727-31957-7-git-send-email-nab@linux-iscsi.org>
 References: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
@@ -12,52 +12,59 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds four missing smp_mb__after_atomic_[inc,dec] barriers
-for atomic_inc() and atomic_dec() usage with instance->fw_outstanding
-within the main I/O dispatcher megasas_queue_command_lck(), completion
-callback megasas_complete_cmd() and struct megasas_instance HW reset
-queue drain in megasas_issue_pending_cmds_again().
+This patch converts lpfc to run in host_lock less mode with the new
+IRQ_DISABLE_SCSI_QCMD() that disables interrupts while calling ->queuecommand()
+dispatch.  It also drops the legacy host_lock unlock optimization around
+lpfc_sli_handle_fast_ring_event().
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/megaraid/megaraid_sas.c |    4 ++++
- 1 files changed, 4 insertions(+), 0 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c |    9 ++++-----
+ 1 files changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
-index 7451bc0..31c5419 100644
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -1398,6 +1398,7 @@ megasas_queue_command_lck(struct scsi_cmnd *scmd, void (*done) (struct scsi_cmnd
- 	 * Issue the command to the FW
- 	 */
- 	atomic_inc(&instance->fw_outstanding);
-+	smp_mb__after_atomic_inc();
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 581837b..62a62e9 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -2886,7 +2886,7 @@ void lpfc_poll_timeout(unsigned long ptr)
+ }
  
- 	instance->instancet->fire_cmd(instance, cmd->frame_phys_addr,
- 				cmd->frame_count-1, instance->reg_set);
-@@ -2068,6 +2069,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 		if (exception) {
+ /**
+- * lpfc_queuecommand - scsi_host_template queuecommand entry point
++ * lpfc_queuecommand_irq_disable - scsi_host_template queuecommand entry point
+  * @cmnd: Pointer to scsi_cmnd data structure.
+  * @done: Pointer to done routine.
+  *
+@@ -2899,7 +2899,8 @@ void lpfc_poll_timeout(unsigned long ptr)
+  *   SCSI_MLQUEUE_HOST_BUSY - Block all devices served by this host temporarily.
+  **/
+ static int
+-lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
++lpfc_queuecommand_irq_disable(struct scsi_cmnd *cmnd,
++			void (*done) (struct scsi_cmnd *))
+ {
+ 	struct Scsi_Host  *shost = cmnd->device->host;
+ 	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
+@@ -3038,11 +3039,9 @@ lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 		goto out_host_busy_free_buf;
+ 	}
+ 	if (phba->cfg_poll & ENABLE_FCP_RING_POLLING) {
+-		spin_unlock(shost->host_lock);
+ 		lpfc_sli_handle_fast_ring_event(phba,
+ 			&phba->sli.ring[LPFC_FCP_RING], HA_R0RE_REQ);
  
- 			atomic_dec(&instance->fw_outstanding);
-+			smp_mb__after_atomic_dec();
+-		spin_lock(shost->host_lock);
+ 		if (phba->cfg_poll & DISABLE_FCP_RING_INT)
+ 			lpfc_poll_rearm_timer(phba);
+ 	}
+@@ -3060,7 +3059,7 @@ lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+ 	return 0;
+ }
  
- 			scsi_dma_unmap(cmd->scmd);
- 			cmd->scmd->scsi_done(cmd->scmd);
-@@ -2116,6 +2118,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 		}
+-static DEF_SCSI_QCMD(lpfc_queuecommand)
++static IRQ_DISABLE_SCSI_QCMD(lpfc_queuecommand)
  
- 		atomic_dec(&instance->fw_outstanding);
-+		smp_mb__after_atomic_dec();
- 
- 		scsi_dma_unmap(cmd->scmd);
- 		cmd->scmd->scsi_done(cmd->scmd);
-@@ -2219,6 +2222,7 @@ megasas_issue_pending_cmds_again(struct megasas_instance *instance)
- 			cmd, cmd->scmd->cmnd[0], cmd->scmd->serial_number);
- 
- 			atomic_inc(&instance->fw_outstanding);
-+			smp_mb__after_atomic_inc();
- 			instance->instancet->fire_cmd(instance,
- 					cmd->frame_phys_addr,
- 					cmd->frame_count-1, instance->reg_set);
+ /**
+  * lpfc_abort_handler - scsi_host_template eh_abort_handler entry point
 -- 
 1.7.3.4
