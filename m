@@ -1,46 +1,84 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 22092] Kernel v2.6.36 trouble on USB disconnect
-Date: Mon, 20 Dec 2010 04:45:40 GMT
-Message-ID: <201012200445.oBK4jepQ009309@demeter1.kernel.org>
-References: <bug-22092-11613@https.bugzilla.kernel.org/>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 03/12] libsas: Convert to host_lock less w/ interrupts
+ disabled externally
+Date: Mon, 20 Dec 2010 10:58:01 +0200
+Message-ID: <4D0F1A99.8000703@panasas.com>
+References: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org> <1292793727-31957-4-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:34825 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752218Ab0LTEpl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Dec 2010 23:45:41 -0500
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id oBK4jfCb009310
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2010 04:45:41 GMT
-In-Reply-To: <bug-22092-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1292793727-31957-4-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-iscsi-target-dev@googlegroups.com
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Mike Christie <michaelc@cs.wisc.edu>, Mike Anderson <andmike@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Douglas Gilbert <dgilbert@interlog.com>, adam radford <aradford@gmail.com>, Kashyap Desai <Kashyap.Desai@lsi.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=22092
-
-
-
-
-
---- Comment #5 from Alan Stern <stern@rowland.harvard.edu>  2010-12-20 04:45:39 ---
-On Sun, 19 Dec 2010 bugzilla-daemon@bugzilla.kernel.org wrote:
-
-> --- Comment #4 from Rafael J. Wysocki <rjw@sisk.pl>  2010-12-19 14:48:12 ---
-> Closing as a duplicate.
+On 12/19/2010 11:21 PM, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> *** This bug has been marked as a duplicate of bug 24722 ***
+> This patch converts the libsas queuecommand to run in host_lock less mode
+> w/ the new IRQ_DISABLE_SCSI_QCMD() that disables interrupts while calling
+> ->queuecommand() dispatch.
+> 
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/scsi/libsas/sas_scsi_host.c |   12 ++----------
+>  1 files changed, 2 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+> index 29251fa..011580f 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -185,24 +185,17 @@ int sas_queue_up(struct sas_task *task)
+>  /**
+>   * sas_queuecommand -- Enqueue a command for processing
+>   * @parameters: See SCSI Core documentation
+> - *
+> - * Note: XXX: Remove the host unlock/lock pair when SCSI Core can
+> - * call us without holding an IRQ spinlock...
+>   */
+> -static int sas_queuecommand_lck(struct scsi_cmnd *cmd,
+> +static int sas_queuecommand_irq_disable(struct scsi_cmnd *cmd,
+>  		     void (*scsi_done)(struct scsi_cmnd *))
+> -	__releases(host->host_lock)
+>  	__acquires(dev->sata_dev.ap->lock)
+>  	__releases(dev->sata_dev.ap->lock)
+> -	__acquires(host->host_lock)
+>  {
+>  	int res = 0;
+>  	struct domain_device *dev = cmd_to_domain_dev(cmd);
+>  	struct Scsi_Host *host = cmd->device->host;
+>  	struct sas_internal *i = to_sas_internal(host->transportt);
+>  
+> -	spin_unlock_irq(host->host_lock);
+> -
+>  	{
+>  		struct sas_ha_struct *sas_ha = dev->port->ha;
+>  		struct sas_task *task;
+> @@ -250,11 +243,10 @@ static int sas_queuecommand_lck(struct scsi_cmnd *cmd,
+>  		}
+>  	}
+>  out:
+> -	spin_lock_irq(host->host_lock);
+>  	return res;
+>  }
+>  
+> -DEF_SCSI_QCMD(sas_queuecommand)
+> +IRQ_DISABLE_SCSI_QCMD(sas_queuecommand)
+>  
 
-Are you sure about this?  The error messages don't look at all similar.  
-The error for bug #24722 is a WARN_ONCE in ehci_endpoint_reset(),
-whereas the error in this bug report is some unspecified problem in
-disk_replace_part_tbl().
+I hate this new macro. It is so simple by now. And anyway you are
+doing them one by one and auditing the code. Please completely drop
+this macro and open code it. There is no "safety" argument to this
+ugliness, any more.
 
-Alan Stern
+(Completely drop the [PATCH 02/12] scsi: Add IRQ_DISABLE_SCSI_QCMD wrapper
+ patch and redo the users)
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Thanks
+Boaz
+
+
+>  static void sas_eh_finish_cmd(struct scsi_cmnd *cmd)
+>  {
