@@ -1,56 +1,66 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 25192] 3w-{9,x}xxx don't work on big-endian MIPS
-Date: Mon, 20 Dec 2010 17:05:57 GMT
-Message-ID: <201012201705.oBKH5vw2022071@demeter2.kernel.org>
-References: <bug-25192-11613@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [regression] 2.6.37-rc5: scsi_eh_11 CPU loop
+Date: Mon, 20 Dec 2010 18:12:56 +0100
+Message-ID: <4D0F8E98.9070500@kernel.org>
+References: <201012201105.08993.Martin@lichtvoll.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:52823 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932676Ab0LTRF6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2010 12:05:58 -0500
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oBKH5vvj022075
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Dec 2010 17:05:57 GMT
-In-Reply-To: <bug-25192-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <201012201105.08993.Martin@lichtvoll.de>
+Sender: linux-ide-owner@vger.kernel.org
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=25192
+Hello,
 
+On 12/20/2010 11:05 AM, Martin Steigerwald wrote:
+> Hi!
+> 
+> top - 10:49:07 up 3 days, 14:24,  8 users,  load average: 2.31, 2.62, 2.28
+> Tasks: 198 total,   2 running, 194 sleeping,   0 stopped,   2 zombie
+> Cpu(s):  6.8%us, 93.2%sy,  0.0%ni,  0.0%id,  0.0%wa,  0.0%hi,  0.0%si,  
+> 0.0%st
+> Mem:   2073660k total,  1941152k used,   132508k free,   153876k buffers
+> Swap:  4000180k total,   243452k used,  3756728k free,   676612k cached
+> 
+>   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                                               
+>   735 root      20   0     0    0    0 R 85.2  0.0 137:28.94 scsi_eh_11
+> 
+> I don't see anything in dmesg. Everything appears to work as normal, 
+> except for the slowness. Which got a bit better upon renicing scsi_eh_11 
+> to 19 (not knowing whether its really safe, but it works for now).
+> 
+> Interrupts appear to be within usual range as well:
 
+Can you please apply the following patch, trigger the problem and
+attach the kernel log?
 
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 5e59050..c748b5a 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -888,12 +888,19 @@ void ata_eh_fastdrain_timerfn(unsigned long arg)
+  */
+ static void ata_eh_set_pending(struct ata_port *ap, int fastdrain)
+ {
++	static int xxx;
+ 	int cnt;
 
+ 	/* already scheduled? */
+ 	if (ap->pflags & ATA_PFLAG_EH_PENDING)
+ 		return;
 
---- Comment #12 from Adam Radford <aradford@gmail.com>  2010-12-20 17:05:52 ---
-Matt,
++	if (!(ap->pflags & ATA_PFLAG_LOADING) && xxx < 16) {
++		ata_port_printk(ap, KERN_WARNING, "XXX ata_eh_set_pending()\n");
++		dump_stack();
++		xxx++;
++	}
++
+ 	ap->pflags |= ATA_PFLAG_EH_PENDING;
 
-You can prevent the crash from happening by commenting out or removing this
-line:
-
-printk(KERN_WARNING "3w-9xxx: scsi%d: Firmware %s, BIOS %s, Ports: %d.\n",
-        host->host_no,
-        (char *)twa_get_param(tw_dev, 0, TW_VERSION_TABLE,
-        TW_PARAM_FWVER, TW_PARAM_FWVER_LENGTH),
-        (char *)twa_get_param(tw_dev, 1, TW_VERSION_TABLE,
-        TW_PARAM_BIOSVER, TW_PARAM_BIOSVER_LENGTH),
-        le32_to_cpu(*(int *)twa_get_param(tw_dev, 2, TW_INFORMATION_TABLE,
-        TW_PARAM_PORTCOUNT, TW_PARAM_PORTCOUNT_LENGTH)));
-
-I was a little over-zealous in assuming the controller would be responding
-here, or you would have already hung the system in POST.
-
-At this point, since your card won't work in little-endian mode, I am guessing:
-
-1. Your card is bad, which you could test by trying another 9500-S card.
-2. The PCI slot you are trying is somehow incompatible with the 3ware hardware.
-
--Adam
+ 	if (!fastdrain)
 
 -- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+tejun
