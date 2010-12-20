@@ -1,178 +1,171 @@
 From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 06/11] mpt2sas: Convert to host_lock less w/ interrupts
-	disabled externally
-Date: Mon, 20 Dec 2010 20:34:40 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70916A016@inbmail01.lsi.com>
-References: <1290032349-4959-1-git-send-email-nab@linux-iscsi.org>
-	 <4CE4FCB8.20608@panasas.com>
- <1290121071.31890.135.camel@haakon2.linux-iscsi.org>
- <B2FD678A64EAAD45B089B123FDFC3ED709047ABA@inbmail01.lsi.com>
+Subject: RE: [PATCH 00/12] LLD host_lock-less conversion status for .38
+Date: Mon, 20 Dec 2010 20:38:34 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70916A017@inbmail01.lsi.com>
+References: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:55463 "EHLO
-	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757740Ab0LTPEr convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Dec 2010 10:04:47 -0500
-In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED709047ABA@inbmail01.lsi.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Jeff
+Cc: Mike Anderson <andmike@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Douglas Gilbert <dgilbert@interlog.com>, adam radford <aradford@gmail.com>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Vasu Dev <vasu.dev@linux.intel.com>, Tejun Heo <tj@kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
-
-Nicholas,
-
-I have gone through another round of code walkthrough (for mpt2sas and mptfusion) to find out dependency w.r.t new host lock less mode.
-In my opinion, w/ interrupts disable is a good ideal. (Earlier, I mentioned that mpt2sas is safe even if interrupts are enabled) 
-In real scenario, *preemption* disable is more IMP for mpt2sas/mptfusion driver than interrupts disable.
-
-e.a if scsih_qcmd_xxx has executed half of the code and (due to preemption is not disable for the same CPU), Scheduler can execute any other process on the SAME cpu (Though IRQ is disable). Consider Error handling is kicked off on the same CPU and as part of EH, it executed HBA reset.
-As part of HBA reset Driver has return back all pending Scsi command to mid-layer, and once control come back to original scsih_qcmd_xxx LLD drive will see bad results (Kernel crash/Data corruption/h/w hung or anything critical.....)
-
-
-So I would suggest to disable preemption also in your macro " IRQ_DISABLE_SCSI_QCMD " as below two level of prevention.
-        local_irq_save(flags);
-        preempt_disable();
-
-
-mpt2sas parameters checks like ioc_link_reset_in_process,
-tm_busy, scs_priv_target_data->deleted  are mainly to communicate device/IOC state of the firmware so there is no hard dependency w.r.t host_lock.
-
-
-Thanks, Kashyap
-
 
 
 
 > -----Original Message-----
-> From: Desai, Kashyap
-> Sent: Friday, November 19, 2010 4:33 PM
-> To: Nicholas A. Bellinger; Boaz Harrosh
-> Cc: linux-scsi; Jeff Garzik; James Bottomley; Christoph Hellwig; Mike
-> Christie; Vasu Dev; Tejun Heo; DL-MPT Fusion Linux
-> Subject: RE: [PATCH 06/11] mpt2sas: Convert to host_lock less w/
-> interrupts disabled externally
+> From: Nicholas A. Bellinger [mailto:nab@linux-iscsi.org]
+> Sent: Monday, December 20, 2010 2:52 AM
+> To: linux-scsi; linux-kernel; James Bottomley; Jeff Garzik; Christoph
+> Hellwig; FUJITA Tomonori; Hannes Reinecke; Mike Christie
+> Cc: Mike Anderson; Tejun Heo; Vasu Dev; Tim Chen; Andi Kleen; Ravi
+> Anand; Andrew Vasquez; Joe Eykholt; James Smart; Douglas Gilbert; adam
+> radford; Desai, Kashyap; DL-MPT Fusion Linux; Nicholas Bellinger
+> Subject: [PATCH 00/12] LLD host_lock-less conversion status for .38
 > 
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
+> Greetings James and Co,
 > 
-> > -----Original Message-----
-> > From: Nicholas A. Bellinger [mailto:nab@linux-iscsi.org]
-> > Sent: Friday, November 19, 2010 4:28 AM
-> > To: Boaz Harrosh
-> > Cc: linux-scsi; Jeff Garzik; James Bottomley; Christoph Hellwig; Mike
-> > Christie; Vasu Dev; Tejun Heo; DL-MPT Fusion Linux; Desai, Kashyap
-> > Subject: Re: [PATCH 06/11] mpt2sas: Convert to host_lock less w/
-> > interrupts disabled externally
-> >
-> > <Trimming CC list>
-> >
-> > On Thu, 2010-11-18 at 12:15 +0200, Boaz Harrosh wrote:
-> > > On 11/18/2010 12:19 AM, Nicholas A. Bellinger wrote:
-> > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > > >
-> > > > This patch converts the mpt2sas driver to run in host_lock less
-> > mode
-> > > > with the new IRQ_DISABLE_SCSI_QCMD() that disables interrupts
-> while
-> > > > calling ->queuecommand() dispatch
-> > > >
-> > > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > > > ---
-> > > >  drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 +++---
-> > > >  1 files changed, 3 insertions(+), 3 deletions(-)
-> > > >
-> > > > diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > > > index 1a96a00..e564fe7 100644
-> > > > --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > > > +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-> > > > @@ -3304,7 +3304,7 @@ _scsih_eedp_error_handling(struct scsi_cmnd
-> > *scmd, u16 ioc_status)
-> > > >  }
-> > > >
-> > > >  /**
-> > > > - * _scsih_qcmd - main scsi request entry point
-> > > > + * _scsih_qcmd_irq_disable - main scsi request entry point
-> > > >   * @scmd: pointer to scsi command object
-> > > >   * @done: function pointer to be invoked on completion
-> > > >   *
-> > > > @@ -3315,7 +3315,7 @@ _scsih_eedp_error_handling(struct scsi_cmnd
-> > *scmd, u16 ioc_status)
-> > > >   * SCSI_MLQUEUE_HOST_BUSY if the entire host queue is full
-> > > >   */
-> > > >  static int
-> > > > -_scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct
-> > scsi_cmnd *))
-> > > > +_scsih_qcmd_irq_disable(struct scsi_cmnd *scmd, void
-> > (*done)(struct scsi_cmnd *))
-> > > >  {
-> > > >  	struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device-
-> >host);
-> > > >  	struct MPT2SAS_DEVICE *sas_device_priv_data;
-> > > > @@ -3441,7 +3441,7 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd,
-> void
-> > (*done)(struct scsi_cmnd *))
-> > > >  	return SCSI_MLQUEUE_HOST_BUSY;
-> > > >  }
-> > > >
-> > > > -static DEF_SCSI_QCMD(_scsih_qcmd)
-> > > > +static IRQ_DISABLE_SCSI_QCMD(_scsih_qcmd)
-> > > >
-> > >
-> > > How can this (and other in the patchset) can be correct? I mean I
-> > expect
-> > > that if you remove the lock,xx_qcmd_lck,unlock then inside the
-> > xx_qcmd_lck
-> > > there was an unlock,do123,lock and that driver was effectively
-> > running lockless
-> > > before. (like in iscsi). But here this is new behaviour. If it is
-> > correct
-> > > I would like to see a statement from you that:
-> > > 	"I have audited this driver, and all shared resources are
-> > protected by
-> > >          XYZ so ..."
-> > >
-> > > Otherwise how can I know this is correct? I have never audited this
-> > driver myself
-> > >
-> >
-> > So for this specific mpt2sas case, Vasu Dev had been testing the
-> > lock_less case w/o disabling interrupts for his original
-> > SHT->unlocked_qcmd=1 patch, and from his comments this mode was
-> stable
-> > during his JBOD lock_less small block IOP performance test.
-> >
-> Nicholas, mpt2sas driver is safe even if in lock less condition.
-> I have tested mpt2sas driver available in 2.6.37-rc2 where I have seen
-> host lock push down code is available for mpt2sas driver
-> I have seen static DEF_SCSI_QCMD(_scsih_qcmd) is available for mpt2sas
-> driver. I also did testing removing that particular macro and making
-> Mpt2sas driver in actual host lock less mode. Below observation is
-> after removing static DEF_SCSI_QCMD(_scsih_qcmd) from mpt2sas (that is
-> what I refer as actual host lock less mode)
+> Attached are the current set of LLD host_lock-less conversions in the
+> queue
+> for .38, that have now been pushed into lio-core-2.6.git/lock_less-
+> LLDs-for-38-v3
 > 
-> I have tested stability of the driver and I/O integrity. Things were
-> fine. I am not seeing any need for even going for
-> IRQ_DISABLE_SCSI_QCMD() patch too.
-> Mpt2sas driver is able to handle host lock less mode seamlessly, since
-> we have all required (racy) places under spinlocks.
+> New in this v3 series are the megaraid_sas LLD changes necessary to run
+> in
+> host_lock-less mode, which have been tested thus far in legacy x86
+> interrupt
+> pin mode using 8708EM2 QEMU HBA emulation into KVM guest using TCM_Loop
+> virtual SCSI LUNs.
 > 
-> I do not see any solid need for this patch. Please correct me if I am
-> missing anything here.
+> This series also drops the drivers/scsi patches that have been resolved
+> with
+> the following (Thanks!)
 > 
-> ~ Kashyap
+> commit 459dbf72e4d2b4aa13620e6b70d54f098547bf13
+> Author: James Bottomley <James.Bottomley@suse.de>
+> Date:   Wed Nov 17 10:10:57 2010 -0600
 > 
-> > This patch currently includes IRQ_DISABLE_SCSI_QCMD() usage which I
-> am
-> > not even sure is needed (according to Vasu's original findings), but
-> I
-> > decided to err on the conservative side until we can get some
-> feedback
-> > from the the mpt2sas maintainer (Kashyap @ LSI CC'ed).
-> >
-> > --nab
-> >
+>     [SCSI] Eliminate error handler overload of the SCSI serial number
+> 
+> At this point the remaining code TODO items for the LLD conversion
+> patches
+> include
+> 
+> *) libiscsi: NULL sc->scsi_done() callback in exception path in
+> iscsi_queuecommand().
+> The last status on this from Mike Christie was:
+> 
+> "This will NULL pointer. See a couple lines above where we NULL it.
+> iscsi_free_task checks if the scsi_done pointer is set and if it is it
+> will call scsi_done.
+> 
+> It is a hack to prevent the normal completion path from calling
+> scsi_done. For the case where we return SCSI_MLQUEUE_TARGET_BUSY (the
+> prepd_reject case) we need something to prevent scsi_done from getting
+> called.
+> 
+> For the return 0/prepd_fault case we can just call sc->scsi_done, but
+> we
+> have to move some code around."
+> 
+> mnc, have you been able to take another look at this..?
+> 
+> *) mpt2sas: Locking considerations for firmware specific data
+> structures
+> 
+> A patch to mptsas was included originally to convert to host_lock less
+> w/ interrupts
+> disabled externally here:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-
+> 2.6.git;a=commitdiff;h=87ba9071b46f37f1adab1732d41b87bf195d191f
+> 
+> but due to concerns from jgarzik this had been dropped from the
+> lock_less-LLDs-for-38-v2
+> during the last round.  The feedback from Kashyap @ LSI is that mpt2sas
+> technically should be
+> able to run in host_lock-less, but there needs to be some explict
+> clarification in the code
+> for the conversion to happen.  More details are here:
+> 
+> http://marc.info/?l=linux-scsi&m=129022827729386&w=2
+> 
+> Kashyap, can you take another look at this and make sure this is
+> acceptable..?
 
+Nicholas, I have replied my input on the same thread. 
+
+> 
+> *) megaraid_sas: Running in host_lock-less mode with MSI-X interrupts
+> 
+> This has not been tested yet, but I would like to get some review from
+> the LSI
+> megaraid_sas folks now that their patches to enable MSI-X interrupts
+> has been sent
+> to linux-scsi.
+> 
+> AdamR, any thoughts or comments to add here..?
+> 
+> -----------------------------------------------------------------------
+> -----------
+> 
+> So at this point the next steps will be to shaking out breakage in
+> corner cases for
+> struct scsi_device hotplug removal, more testing+validation, and more
+> LLD code review.
+> 
+> For the CC'ed LLD maintainers, please have another look at the changes
+> to enable
+> host_lock-less operation within your code and send the necessary ACKs
+> to linux-scsi
+> at your earliest convience.  Many thanks to everyone who has
+> contributed!
+> 
+> If anyone has any other patches, comments or concerns please let me
+> know and they
+> will be queued up for the next v4 for-38 round.
+> 
+> Best Regards,
+> 
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> 
+> Nicholas Bellinger (12):
+>   libiscsi: Convert to host_lock less w/ interrupts disabled internally
+>   scsi: Add IRQ_DISABLE_SCSI_QCMD wrapper
+>   libsas: Convert to host_lock less w/ interrupts disabled externally
+>   message: Convert to host_lock less w/ interrupts disabled externally
+>   fnic: Convert to host_lock less w/ interrupts disabled externally
+>   lpfc: Convert to host_lock less w/ interrupts disabled externally
+>   qla2xxx: Convert to host_lock less w/ interrupts disabled externally
+>   qla4xxx: Convert to host_lock less w/ interrupts disabled externally
+>   scsi_debug: Convert to host_lock less
+>   megaraid_sas: Add smp_mb__after_atomic_*() for
+>     instance->fw_outstanding
+>   megaraid_sas: Convert instance->issuepend_done to atomic_t
+>   megaraid_sas: Convert SHT->queuecommand() to run host_lock-less
+> 
+>  drivers/message/fusion/mptfc.c       |    2 +-
+>  drivers/message/fusion/mptsas.c      |    6 +-
+>  drivers/message/fusion/mptscsih.c    |    8 ++-
+>  drivers/message/fusion/mptscsih.h    |    2 +-
+>  drivers/message/fusion/mptspi.c      |    6 +-
+>  drivers/scsi/fnic/fnic_scsi.c        |   14 +----
+>  drivers/scsi/libiscsi.c              |   10 +---
+>  drivers/scsi/libsas/sas_scsi_host.c  |   12 +----
+>  drivers/scsi/lpfc/lpfc_scsi.c        |    9 ++--
+>  drivers/scsi/megaraid/megaraid_sas.c |   85 ++++++++++++++++++++++----
+> --------
+>  drivers/scsi/megaraid/megaraid_sas.h |    2 +-
+>  drivers/scsi/qla2xxx/qla_os.c        |   11 +---
+>  drivers/scsi/qla4xxx/ql4_os.c        |   10 +---
+>  drivers/scsi/scsi_debug.c            |   16 +++----
+>  include/scsi/scsi_host.h             |   14 ++++++
+>  15 files changed, 107 insertions(+), 100 deletions(-)
+> 
+> --
+> 1.7.3.4
