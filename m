@@ -1,578 +1,1625 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 1/7] block: Add blk_rq_map_kern_sg()
-Date: Mon, 20 Dec 2010 18:48:13 +0100
-Message-ID: <201012201848.13924.bvanassche@acm.org>
+Subject: [PATCH 6/7] [SCSI] tgt: Removal
+Date: Mon, 20 Dec 2010 18:50:20 +0100
+Message-ID: <201012201850.20169.bvanassche@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jester.euphonynet.be ([212.87.96.13]:51086 "EHLO
+Received: from jester.euphonynet.be ([212.87.96.13]:51151 "EHLO
 	mailpush2.euphonynet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757391Ab0LTSUE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2010 13:20:04 -0500
+	with ESMTP id S1751012Ab0LTSUG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Dec 2010 13:20:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net
-Cc: James.Bottomley@suse.de, Jens Axboe <jaxboe@fusionio.com>
+To: linux-scsi@vger.kernel.org
+Cc: scst-devel@lists.sourceforge.net, James.Bottomley@suse.de, Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
 
-This patch implements function blk_rq_map_kern_sg(), which allows to
-map a kernel-originated SG vector to a block request. It is necessary
-to execute SCSI commands with from the kernel going SG buffer. SCST needs
-this functionality, because its target drivers, which are, basically,
-SCSI drivers, can deal only with SGs, not with BIOs.
+Because of the conversion of the ibmvstgt driver from tgt to SCST, and
+because the ibmvstgt driver was the only user of scsi_tgt, the scsi_tgt
+kernel module, the CONFIG_SCSI_TGT, CONFIG_SCSI_SRP_TGT_ATTRS and
+CONFIG_SCSI_FC_TGT_ATTRS kbuild variable, the scsi_host_template member
+variables transfer_response, supported_mode and active_mode and the
+constants MODE_UNKNOWN, MODE_INITIATOR and MODE_TARGET are no longer
+needed.
 
-Highlights of this implementations:
-
- - It uses BIOs chaining instead of kmalloc()'ing the whole bio.
-
- - It uses SGs chaining instead of kmalloc()'ing one big SG in case if
-direct mapping failed (e.g. because of DMA alignment or padding).
-
- - When needed, copy_page() is used instead of memcpy() to copy the
-whole pages faster.
-
-Also this patch adds and exports function sg_copy(), which copies
-one SG vector to another.
-
-This patch has already been reviewed in LKML/linux-scsi in
-http://lkml.org/lkml/2009/8/12/304. Since then it was only updated for
-2.6.37.
-
-Signed-off-by: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Jens Axboe <jaxboe@fusionio.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: Fujita Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Cc: Robert Jennings <rcj@linux.vnet.ibm.com>
 ---
- block/blk-map.c             |  333 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h      |    3 +
- include/linux/scatterlist.h |    5 +
- lib/scatterlist.c           |  129 +++++++++++++++++
- 4 files changed, 470 insertions(+), 0 deletions(-)
+ drivers/scsi/Makefile                      |    3 -
+ drivers/scsi/hosts.c                       |    6 -
+ drivers/scsi/scsi_sysfs.c                  |   32 +--
+ drivers/scsi/scsi_tgt_if.c                 |  398 -----------------
+ drivers/scsi/scsi_tgt_lib.c                |  662 ----------------------------
+ drivers/scsi/scsi_tgt_priv.h               |   32 --
+ drivers/scsi/scsi_transport_fc.c           |   12 -
+ drivers/scsi/scsi_transport_fc_internal.h  |   26 --
+ drivers/scsi/scsi_transport_srp.c          |   18 -
+ drivers/scsi/scsi_transport_srp_internal.h |   25 -
+ include/scsi/scsi_host.h                   |   33 --
+ include/scsi/scsi_tgt.h                    |   21 -
+ include/scsi/scsi_tgt_if.h                 |  108 -----
+ 13 files changed, 2 insertions(+), 1374 deletions(-)
+ delete mode 100644 drivers/scsi/scsi_tgt_if.c
+ delete mode 100644 drivers/scsi/scsi_tgt_lib.c
+ delete mode 100644 drivers/scsi/scsi_tgt_priv.h
+ delete mode 100644 drivers/scsi/scsi_transport_fc_internal.h
+ delete mode 100644 include/scsi/scsi_tgt.h
+ delete mode 100644 include/scsi/scsi_tgt_if.h
 
-diff --git a/block/blk-map.c b/block/blk-map.c
-index 5d5dbe4..bc036bc 100644
---- a/block/blk-map.c
-+++ b/block/blk-map.c
-@@ -5,6 +5,8 @@
- #include <linux/module.h>
- #include <linux/bio.h>
- #include <linux/blkdev.h>
-+#include <linux/scatterlist.h>
-+#include <linux/slab.h>
- #include <scsi/sg.h>		/* for struct sg_iovec */
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 2e9a87e..d8c109b 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -20,7 +20,6 @@ CFLAGS_gdth.o    = # -DDEBUG_GDTH=2 -D__SERIAL__ -D__COM2__ -DGDTH_STATISTICS
+ obj-$(CONFIG_PCMCIA)		+= pcmcia/
  
- #include "blk.h"
-@@ -273,6 +275,337 @@ int blk_rq_unmap_user(struct bio *bio)
+ obj-$(CONFIG_SCSI)		+= scsi_mod.o
+-obj-$(CONFIG_SCSI_TGT)		+= scsi_tgt.o
+ 
+ obj-$(CONFIG_RAID_ATTRS)	+= raid_class.o
+ 
+@@ -167,8 +166,6 @@ scsi_mod-$(CONFIG_SCSI_PROC_FS)	+= scsi_proc.o
+ scsi_mod-y			+= scsi_trace.o
+ scsi_mod-$(CONFIG_PM_OPS)	+= scsi_pm.o
+ 
+-scsi_tgt-y			+= scsi_tgt_lib.o scsi_tgt_if.o
+-
+ sd_mod-objs	:= sd.o
+ sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
+ 
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 4f7a582..826136d 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -382,12 +382,6 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
+ 
+-	if (sht->supported_mode == MODE_UNKNOWN)
+-		/* means we didn't set it ... default to INITIATOR */
+-		shost->active_mode = MODE_INITIATOR;
+-	else
+-		shost->active_mode = sht->supported_mode;
+-
+ 	if (sht->max_host_blocked)
+ 		shost->max_host_blocked = sht->max_host_blocked;
+ 	else
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 76ee2e7..3bd0e09 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -201,33 +201,10 @@ struct device_attribute dev_attr_hstate =
+ 	__ATTR(state, S_IRUGO | S_IWUSR, show_shost_state, store_shost_state);
+ 
+ static ssize_t
+-show_shost_mode(unsigned int mode, char *buf)
+-{
+-	ssize_t len = 0;
+-
+-	if (mode & MODE_INITIATOR)
+-		len = sprintf(buf, "%s", "Initiator");
+-
+-	if (mode & MODE_TARGET)
+-		len += sprintf(buf + len, "%s%s", len ? ", " : "", "Target");
+-
+-	len += sprintf(buf + len, "\n");
+-
+-	return len;
+-}
+-
+-static ssize_t
+ show_shost_supported_mode(struct device *dev, struct device_attribute *attr,
+ 			  char *buf)
+ {
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	unsigned int supported_mode = shost->hostt->supported_mode;
+-
+-	if (supported_mode == MODE_UNKNOWN)
+-		/* by default this should be initiator */
+-		supported_mode = MODE_INITIATOR;
+-
+-	return show_shost_mode(supported_mode, buf);
++	return sprintf(buf, "Initiator\n");
  }
- EXPORT_SYMBOL(blk_rq_unmap_user);
  
-+struct blk_kern_sg_work {
-+	atomic_t bios_inflight;
-+	struct sg_table sg_table;
-+	struct scatterlist *src_sgl;
-+};
-+
-+static void blk_free_kern_sg_work(struct blk_kern_sg_work *bw)
-+{
-+	sg_free_table(&bw->sg_table);
-+	kfree(bw);
-+	return;
-+}
-+
-+static void blk_bio_map_kern_endio(struct bio *bio, int err)
-+{
-+	struct blk_kern_sg_work *bw = bio->bi_private;
-+
-+	if (bw != NULL) {
-+		/* Decrement the bios in processing and, if zero, free */
-+		BUG_ON(atomic_read(&bw->bios_inflight) <= 0);
-+		if (atomic_dec_and_test(&bw->bios_inflight)) {
-+			if ((bio_data_dir(bio) == READ) && (err == 0)) {
-+				unsigned long flags;
-+
-+				local_irq_save(flags);	/* to protect KMs */
-+				sg_copy(bw->src_sgl, bw->sg_table.sgl, 0, 0,
-+					KM_BIO_DST_IRQ, KM_BIO_SRC_IRQ);
-+				local_irq_restore(flags);
-+			}
-+			blk_free_kern_sg_work(bw);
-+		}
-+	}
-+
-+	bio_put(bio);
-+	return;
-+}
-+
-+static int blk_rq_copy_kern_sg(struct request *rq, struct scatterlist *sgl,
-+			       int nents, struct blk_kern_sg_work **pbw,
-+			       gfp_t gfp, gfp_t page_gfp)
-+{
-+	int res = 0, i;
-+	struct scatterlist *sg;
-+	struct scatterlist *new_sgl;
-+	int new_sgl_nents;
-+	size_t len = 0, to_copy;
-+	struct blk_kern_sg_work *bw;
-+
-+	bw = kzalloc(sizeof(*bw), gfp);
-+	if (bw == NULL)
-+		goto out;
-+
-+	bw->src_sgl = sgl;
-+
-+	for_each_sg(sgl, sg, nents, i)
-+		len += sg->length;
-+	to_copy = len;
-+
-+	new_sgl_nents = PFN_UP(len);
-+
-+	res = sg_alloc_table(&bw->sg_table, new_sgl_nents, gfp);
-+	if (res != 0)
-+		goto out_free_bw;
-+
-+	new_sgl = bw->sg_table.sgl;
-+
-+	for_each_sg(new_sgl, sg, new_sgl_nents, i) {
-+		struct page *pg;
-+
-+		pg = alloc_page(page_gfp);
-+		if (pg == NULL)
-+			goto err_free_new_sgl;
-+
-+		sg_assign_page(sg, pg);
-+		sg->length = min_t(size_t, PAGE_SIZE, len);
-+
-+		len -= PAGE_SIZE;
-+	}
-+
-+	if (rq_data_dir(rq) == WRITE) {
-+		/*
-+		 * We need to limit amount of copied data to to_copy, because
-+		 * sgl might have the last element in sgl not marked as last in
-+		 * SG chaining.
-+		 */
-+		sg_copy(new_sgl, sgl, 0, to_copy,
-+			KM_USER0, KM_USER1);
-+	}
-+
-+	*pbw = bw;
-+	/*
-+	 * REQ_COPY_USER name is misleading. It should be something like
-+	 * REQ_HAS_TAIL_SPACE_FOR_PADDING.
-+	 */
-+	rq->cmd_flags |= REQ_COPY_USER;
-+
-+out:
-+	return res;
-+
-+err_free_new_sgl:
-+	for_each_sg(new_sgl, sg, new_sgl_nents, i) {
-+		struct page *pg = sg_page(sg);
-+		if (pg == NULL)
-+			break;
-+		__free_page(pg);
-+	}
-+	sg_free_table(&bw->sg_table);
-+
-+out_free_bw:
-+	kfree(bw);
-+	res = -ENOMEM;
-+	goto out;
-+}
-+
-+static int __blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
-+	int nents, struct blk_kern_sg_work *bw, gfp_t gfp)
-+{
-+	int res;
-+	struct request_queue *q = rq->q;
-+	int rw = rq_data_dir(rq);
-+	int max_nr_vecs, i;
-+	size_t tot_len;
-+	bool need_new_bio;
-+	struct scatterlist *sg, *prev_sg = NULL;
-+	struct bio *bio = NULL, *hbio = NULL, *tbio = NULL;
-+	int bios;
-+
-+	if (unlikely((sgl == NULL) || (sgl->length == 0) || (nents <= 0))) {
-+		WARN_ON(1);
-+		res = -EINVAL;
-+		goto out;
-+	}
-+
-+	/*
-+	 * Let's keep each bio allocation inside a single page to decrease
-+	 * probability of failure.
-+	 */
-+	max_nr_vecs =  min_t(size_t,
-+		((PAGE_SIZE - sizeof(struct bio)) / sizeof(struct bio_vec)),
-+		BIO_MAX_PAGES);
-+
-+	need_new_bio = true;
-+	tot_len = 0;
-+	bios = 0;
-+	for_each_sg(sgl, sg, nents, i) {
-+		struct page *page = sg_page(sg);
-+		void *page_addr = page_address(page);
-+		size_t len = sg->length, l;
-+		size_t offset = sg->offset;
-+
-+		tot_len += len;
-+		prev_sg = sg;
-+
-+		/*
-+		 * Each segment must be aligned on DMA boundary and
-+		 * not on stack. The last one may have unaligned
-+		 * length as long as the total length is aligned to
-+		 * DMA padding alignment.
-+		 */
-+		if (i == nents - 1)
-+			l = 0;
-+		else
-+			l = len;
-+		if (((sg->offset | l) & queue_dma_alignment(q)) ||
-+		    (page_addr && object_is_on_stack(page_addr + sg->offset))) {
-+			res = -EINVAL;
-+			goto out_free_bios;
-+		}
-+
-+		while (len > 0) {
-+			size_t bytes;
-+			int rc;
-+
-+			if (need_new_bio) {
-+				bio = bio_kmalloc(gfp, max_nr_vecs);
-+				if (bio == NULL) {
-+					res = -ENOMEM;
-+					goto out_free_bios;
-+				}
-+
-+				if (rw == WRITE)
-+					bio->bi_rw |= REQ_WRITE;
-+
-+				bios++;
-+				bio->bi_private = bw;
-+				bio->bi_end_io = blk_bio_map_kern_endio;
-+
-+				if (hbio == NULL)
-+					hbio = tbio = bio;
-+				else
-+					tbio = tbio->bi_next = bio;
-+			}
-+
-+			bytes = min_t(size_t, len, PAGE_SIZE - offset);
-+
-+			rc = bio_add_pc_page(q, bio, page, bytes, offset);
-+			if (rc < bytes) {
-+				if (unlikely(need_new_bio || (rc < 0))) {
-+					if (rc < 0)
-+						res = rc;
-+					else
-+						res = -EIO;
-+					goto out_free_bios;
-+				} else {
-+					need_new_bio = true;
-+					len -= rc;
-+					offset += rc;
-+					continue;
-+				}
-+			}
-+
-+			need_new_bio = false;
-+			offset = 0;
-+			len -= bytes;
-+			page = nth_page(page, 1);
-+		}
-+	}
-+
-+	if (hbio == NULL) {
-+		res = -EINVAL;
-+		goto out_free_bios;
-+	}
-+
-+	/* Total length must be aligned on DMA padding alignment */
-+	if ((tot_len & q->dma_pad_mask) &&
-+	    !(rq->cmd_flags & REQ_COPY_USER)) {
-+		res = -EINVAL;
-+		goto out_free_bios;
-+	}
-+
-+	if (bw != NULL)
-+		atomic_set(&bw->bios_inflight, bios);
-+
-+	while (hbio != NULL) {
-+		bio = hbio;
-+		hbio = hbio->bi_next;
-+		bio->bi_next = NULL;
-+
-+		blk_queue_bounce(q, &bio);
-+
-+		res = blk_rq_append_bio(q, rq, bio);
-+		if (unlikely(res != 0)) {
-+			bio->bi_next = hbio;
-+			hbio = bio;
-+			/* We can have one or more bios bounced */
-+			goto out_unmap_bios;
-+		}
-+	}
-+
-+	res = 0;
-+
-+	rq->buffer = NULL;
-+out:
-+	return res;
-+
-+out_unmap_bios:
-+	blk_rq_unmap_kern_sg(rq, res);
-+
-+out_free_bios:
-+	while (hbio != NULL) {
-+		bio = hbio;
-+		hbio = hbio->bi_next;
-+		bio_put(bio);
-+	}
-+	goto out;
-+}
-+
-+/**
-+ * blk_rq_map_kern_sg - map kernel data to a request, for REQ_TYPE_BLOCK_PC
-+ * @rq:		request to fill
-+ * @sgl:	area to map
-+ * @nents:	number of elements in @sgl
-+ * @gfp:	memory allocation flags
-+ *
-+ * Description:
-+ *    Data will be mapped directly if possible. Otherwise a bounce
-+ *    buffer will be used.
-+ */
-+int blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
-+		       int nents, gfp_t gfp)
-+{
-+	int res;
-+
-+	res = __blk_rq_map_kern_sg(rq, sgl, nents, NULL, gfp);
-+	if (unlikely(res != 0)) {
-+		struct blk_kern_sg_work *bw = NULL;
-+
-+		res = blk_rq_copy_kern_sg(rq, sgl, nents, &bw,
-+				gfp, rq->q->bounce_gfp | gfp);
-+		if (unlikely(res != 0))
-+			goto out;
-+
-+		res = __blk_rq_map_kern_sg(rq, bw->sg_table.sgl,
-+				bw->sg_table.nents, bw, gfp);
-+		if (res != 0) {
-+			blk_free_kern_sg_work(bw);
-+			goto out;
-+		}
-+	}
-+
-+	rq->buffer = NULL;
-+
-+out:
-+	return res;
-+}
-+EXPORT_SYMBOL(blk_rq_map_kern_sg);
-+
-+/**
-+ * blk_rq_unmap_kern_sg - unmap a request with kernel sg
-+ * @rq:		request to unmap
-+ * @err:	non-zero error code
-+ *
-+ * Description:
-+ *    Unmap a rq previously mapped by blk_rq_map_kern_sg(). Must be called
-+ *    only in case of an error!
-+ */
-+void blk_rq_unmap_kern_sg(struct request *rq, int err)
-+{
-+	struct bio *bio = rq->bio;
-+
-+	while (bio) {
-+		struct bio *b = bio;
-+		bio = bio->bi_next;
-+		b->bi_end_io(b, err);
-+	}
-+	rq->bio = NULL;
-+
-+	return;
-+}
-+EXPORT_SYMBOL(blk_rq_unmap_kern_sg);
-+
- /**
-  * blk_rq_map_kern - map kernel data to a request, for REQ_TYPE_BLOCK_PC usage
-  * @q:		request queue where request should be inserted
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index aae86fd..9965320 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -706,6 +706,9 @@ extern int blk_rq_map_kern(struct request_queue *, struct request *, void *, uns
- extern int blk_rq_map_user_iov(struct request_queue *, struct request *,
- 			       struct rq_map_data *, struct sg_iovec *, int,
- 			       unsigned int, gfp_t);
-+extern int blk_rq_map_kern_sg(struct request *rq, struct scatterlist *sgl,
-+			      int nents, gfp_t gfp);
-+extern void blk_rq_unmap_kern_sg(struct request *rq, int err);
- extern int blk_execute_rq(struct request_queue *, struct gendisk *,
- 			  struct request *, int);
- extern void blk_execute_rq_nowait(struct request_queue *, struct gendisk *,
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index 9aaf5bf..0177996 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -3,6 +3,7 @@
+ static DEVICE_ATTR(supported_mode, S_IRUGO | S_IWUSR, show_shost_supported_mode, NULL);
+@@ -236,12 +213,7 @@ static ssize_t
+ show_shost_active_mode(struct device *dev,
+ 		       struct device_attribute *attr, char *buf)
+ {
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-
+-	if (shost->active_mode == MODE_UNKNOWN)
+-		return snprintf(buf, 20, "unknown\n");
+-	else
+-		return show_shost_mode(shost->active_mode, buf);
++	return sprintf(buf, "Initiator\n");
+ }
  
- #include <asm/types.h>
- #include <asm/scatterlist.h>
-+#include <asm/kmap_types.h>
- #include <linux/mm.h>
- #include <linux/string.h>
- #include <asm/io.h>
-@@ -218,6 +219,10 @@ size_t sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
- size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
- 			 void *buf, size_t buflen);
+ static DEVICE_ATTR(active_mode, S_IRUGO | S_IWUSR, show_shost_active_mode, NULL);
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+deleted file mode 100644
+index 0172de1..0000000
+--- a/drivers/scsi/scsi_tgt_if.c
++++ /dev/null
+@@ -1,398 +0,0 @@
+-/*
+- * SCSI target kernel/user interface functions
+- *
+- * Copyright (C) 2005 FUJITA Tomonori <tomof@acm.org>
+- * Copyright (C) 2005 Mike Christie <michaelc@cs.wisc.edu>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation; either version 2 of the
+- * License, or (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+- * 02110-1301 USA
+- */
+-#include <linux/miscdevice.h>
+-#include <linux/gfp.h>
+-#include <linux/file.h>
+-#include <net/tcp.h>
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_device.h>
+-#include <scsi/scsi_host.h>
+-#include <scsi/scsi_tgt.h>
+-#include <scsi/scsi_tgt_if.h>
+-
+-#include <asm/cacheflush.h>
+-
+-#include "scsi_tgt_priv.h"
+-
+-#if TGT_RING_SIZE < PAGE_SIZE
+-#  define TGT_RING_SIZE PAGE_SIZE
+-#endif
+-
+-#define TGT_RING_PAGES (TGT_RING_SIZE >> PAGE_SHIFT)
+-#define TGT_EVENT_PER_PAGE (PAGE_SIZE / sizeof(struct tgt_event))
+-#define TGT_MAX_EVENTS (TGT_EVENT_PER_PAGE * TGT_RING_PAGES)
+-
+-struct tgt_ring {
+-	u32 tr_idx;
+-	unsigned long tr_pages[TGT_RING_PAGES];
+-	spinlock_t tr_lock;
+-};
+-
+-/* tx_ring : kernel->user, rx_ring : user->kernel */
+-static struct tgt_ring tx_ring, rx_ring;
+-static DECLARE_WAIT_QUEUE_HEAD(tgt_poll_wait);
+-
+-static inline void tgt_ring_idx_inc(struct tgt_ring *ring)
+-{
+-	if (ring->tr_idx == TGT_MAX_EVENTS - 1)
+-		ring->tr_idx = 0;
+-	else
+-		ring->tr_idx++;
+-}
+-
+-static struct tgt_event *tgt_head_event(struct tgt_ring *ring, u32 idx)
+-{
+-	u32 pidx, off;
+-
+-	pidx = idx / TGT_EVENT_PER_PAGE;
+-	off = idx % TGT_EVENT_PER_PAGE;
+-
+-	return (struct tgt_event *)
+-		(ring->tr_pages[pidx] + sizeof(struct tgt_event) * off);
+-}
+-
+-static int tgt_uspace_send_event(u32 type, struct tgt_event *p)
+-{
+-	struct tgt_event *ev;
+-	struct tgt_ring *ring = &tx_ring;
+-	unsigned long flags;
+-	int err = 0;
+-
+-	spin_lock_irqsave(&ring->tr_lock, flags);
+-
+-	ev = tgt_head_event(ring, ring->tr_idx);
+-	if (!ev->hdr.status)
+-		tgt_ring_idx_inc(ring);
+-	else
+-		err = -BUSY;
+-
+-	spin_unlock_irqrestore(&ring->tr_lock, flags);
+-
+-	if (err)
+-		return err;
+-
+-	memcpy(ev, p, sizeof(*ev));
+-	ev->hdr.type = type;
+-	mb();
+-	ev->hdr.status = 1;
+-
+-	flush_dcache_page(virt_to_page(ev));
+-
+-	wake_up_interruptible(&tgt_poll_wait);
+-
+-	return 0;
+-}
+-
+-int scsi_tgt_uspace_send_cmd(struct scsi_cmnd *cmd, u64 itn_id,
+-			     struct scsi_lun *lun, u64 tag)
+-{
+-	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
+-	struct tgt_event ev;
+-	int err;
+-
+-	memset(&ev, 0, sizeof(ev));
+-	ev.p.cmd_req.host_no = shost->host_no;
+-	ev.p.cmd_req.itn_id = itn_id;
+-	ev.p.cmd_req.data_len = scsi_bufflen(cmd);
+-	memcpy(ev.p.cmd_req.scb, cmd->cmnd, sizeof(ev.p.cmd_req.scb));
+-	memcpy(ev.p.cmd_req.lun, lun, sizeof(ev.p.cmd_req.lun));
+-	ev.p.cmd_req.attribute = cmd->tag;
+-	ev.p.cmd_req.tag = tag;
+-
+-	dprintk("%p %d %u %x %llx\n", cmd, shost->host_no,
+-		ev.p.cmd_req.data_len, cmd->tag,
+-		(unsigned long long) ev.p.cmd_req.tag);
+-
+-	err = tgt_uspace_send_event(TGT_KEVENT_CMD_REQ, &ev);
+-	if (err)
+-		eprintk("tx buf is full, could not send\n");
+-
+-	return err;
+-}
+-
+-int scsi_tgt_uspace_send_status(struct scsi_cmnd *cmd, u64 itn_id, u64 tag)
+-{
+-	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
+-	struct tgt_event ev;
+-	int err;
+-
+-	memset(&ev, 0, sizeof(ev));
+-	ev.p.cmd_done.host_no = shost->host_no;
+-	ev.p.cmd_done.itn_id = itn_id;
+-	ev.p.cmd_done.tag = tag;
+-	ev.p.cmd_done.result = cmd->result;
+-
+-	dprintk("%p %d %llu %u %x\n", cmd, shost->host_no,
+-		(unsigned long long) ev.p.cmd_req.tag,
+-		ev.p.cmd_req.data_len, cmd->tag);
+-
+-	err = tgt_uspace_send_event(TGT_KEVENT_CMD_DONE, &ev);
+-	if (err)
+-		eprintk("tx buf is full, could not send\n");
+-
+-	return err;
+-}
+-
+-int scsi_tgt_uspace_send_tsk_mgmt(int host_no, u64 itn_id, int function,
+-				  u64 tag, struct scsi_lun *scsilun, void *data)
+-{
+-	struct tgt_event ev;
+-	int err;
+-
+-	memset(&ev, 0, sizeof(ev));
+-	ev.p.tsk_mgmt_req.host_no = host_no;
+-	ev.p.tsk_mgmt_req.itn_id = itn_id;
+-	ev.p.tsk_mgmt_req.function = function;
+-	ev.p.tsk_mgmt_req.tag = tag;
+-	memcpy(ev.p.tsk_mgmt_req.lun, scsilun, sizeof(ev.p.tsk_mgmt_req.lun));
+-	ev.p.tsk_mgmt_req.mid = (u64) (unsigned long) data;
+-
+-	dprintk("%d %x %llx %llx\n", host_no, function, (unsigned long long) tag,
+-		(unsigned long long) ev.p.tsk_mgmt_req.mid);
+-
+-	err = tgt_uspace_send_event(TGT_KEVENT_TSK_MGMT_REQ, &ev);
+-	if (err)
+-		eprintk("tx buf is full, could not send\n");
+-
+-	return err;
+-}
+-
+-int scsi_tgt_uspace_send_it_nexus_request(int host_no, u64 itn_id,
+-					  int function, char *initiator_id)
+-{
+-	struct tgt_event ev;
+-	int err;
+-
+-	memset(&ev, 0, sizeof(ev));
+-	ev.p.it_nexus_req.host_no = host_no;
+-	ev.p.it_nexus_req.function = function;
+-	ev.p.it_nexus_req.itn_id = itn_id;
+-	if (initiator_id)
+-		strncpy(ev.p.it_nexus_req.initiator_id, initiator_id,
+-			sizeof(ev.p.it_nexus_req.initiator_id));
+-
+-	dprintk("%d %x %llx\n", host_no, function, (unsigned long long)itn_id);
+-
+-	err = tgt_uspace_send_event(TGT_KEVENT_IT_NEXUS_REQ, &ev);
+-	if (err)
+-		eprintk("tx buf is full, could not send\n");
+-
+-	return err;
+-}
+-
+-static int event_recv_msg(struct tgt_event *ev)
+-{
+-	int err = 0;
+-
+-	switch (ev->hdr.type) {
+-	case TGT_UEVENT_CMD_RSP:
+-		err = scsi_tgt_kspace_exec(ev->p.cmd_rsp.host_no,
+-					   ev->p.cmd_rsp.itn_id,
+-					   ev->p.cmd_rsp.result,
+-					   ev->p.cmd_rsp.tag,
+-					   ev->p.cmd_rsp.uaddr,
+-					   ev->p.cmd_rsp.len,
+-					   ev->p.cmd_rsp.sense_uaddr,
+-					   ev->p.cmd_rsp.sense_len,
+-					   ev->p.cmd_rsp.rw);
+-		break;
+-	case TGT_UEVENT_TSK_MGMT_RSP:
+-		err = scsi_tgt_kspace_tsk_mgmt(ev->p.tsk_mgmt_rsp.host_no,
+-					       ev->p.tsk_mgmt_rsp.itn_id,
+-					       ev->p.tsk_mgmt_rsp.mid,
+-					       ev->p.tsk_mgmt_rsp.result);
+-		break;
+-	case TGT_UEVENT_IT_NEXUS_RSP:
+-		err = scsi_tgt_kspace_it_nexus_rsp(ev->p.it_nexus_rsp.host_no,
+-						   ev->p.it_nexus_rsp.itn_id,
+-						   ev->p.it_nexus_rsp.result);
+-		break;
+-	default:
+-		eprintk("unknown type %d\n", ev->hdr.type);
+-		err = -EINVAL;
+-	}
+-
+-	return err;
+-}
+-
+-static ssize_t tgt_write(struct file *file, const char __user * buffer,
+-			 size_t count, loff_t * ppos)
+-{
+-	struct tgt_event *ev;
+-	struct tgt_ring *ring = &rx_ring;
+-
+-	while (1) {
+-		ev = tgt_head_event(ring, ring->tr_idx);
+-		/* do we need this? */
+-		flush_dcache_page(virt_to_page(ev));
+-
+-		if (!ev->hdr.status)
+-			break;
+-
+-		tgt_ring_idx_inc(ring);
+-		event_recv_msg(ev);
+-		ev->hdr.status = 0;
+-	};
+-
+-	return count;
+-}
+-
+-static unsigned int tgt_poll(struct file * file, struct poll_table_struct *wait)
+-{
+-	struct tgt_event *ev;
+-	struct tgt_ring *ring = &tx_ring;
+-	unsigned long flags;
+-	unsigned int mask = 0;
+-	u32 idx;
+-
+-	poll_wait(file, &tgt_poll_wait, wait);
+-
+-	spin_lock_irqsave(&ring->tr_lock, flags);
+-
+-	idx = ring->tr_idx ? ring->tr_idx - 1 : TGT_MAX_EVENTS - 1;
+-	ev = tgt_head_event(ring, idx);
+-	if (ev->hdr.status)
+-		mask |= POLLIN | POLLRDNORM;
+-
+-	spin_unlock_irqrestore(&ring->tr_lock, flags);
+-
+-	return mask;
+-}
+-
+-static int uspace_ring_map(struct vm_area_struct *vma, unsigned long addr,
+-			   struct tgt_ring *ring)
+-{
+-	int i, err;
+-
+-	for (i = 0; i < TGT_RING_PAGES; i++) {
+-		struct page *page = virt_to_page(ring->tr_pages[i]);
+-		err = vm_insert_page(vma, addr, page);
+-		if (err)
+-			return err;
+-		addr += PAGE_SIZE;
+-	}
+-
+-	return 0;
+-}
+-
+-static int tgt_mmap(struct file *filp, struct vm_area_struct *vma)
+-{
+-	unsigned long addr;
+-	int err;
+-
+-	if (vma->vm_pgoff)
+-		return -EINVAL;
+-
+-	if (vma->vm_end - vma->vm_start != TGT_RING_SIZE * 2) {
+-		eprintk("mmap size must be %lu, not %lu \n",
+-			TGT_RING_SIZE * 2, vma->vm_end - vma->vm_start);
+-		return -EINVAL;
+-	}
+-
+-	addr = vma->vm_start;
+-	err = uspace_ring_map(vma, addr, &tx_ring);
+-	if (err)
+-		return err;
+-	err = uspace_ring_map(vma, addr + TGT_RING_SIZE, &rx_ring);
+-
+-	return err;
+-}
+-
+-static int tgt_open(struct inode *inode, struct file *file)
+-{
+-	tx_ring.tr_idx = rx_ring.tr_idx = 0;
+-
+-	return 0;
+-}
+-
+-static const struct file_operations tgt_fops = {
+-	.owner		= THIS_MODULE,
+-	.open		= tgt_open,
+-	.poll		= tgt_poll,
+-	.write		= tgt_write,
+-	.mmap		= tgt_mmap,
+-	.llseek		= noop_llseek,
+-};
+-
+-static struct miscdevice tgt_miscdev = {
+-	.minor = MISC_DYNAMIC_MINOR,
+-	.name = "tgt",
+-	.fops = &tgt_fops,
+-};
+-
+-static void tgt_ring_exit(struct tgt_ring *ring)
+-{
+-	int i;
+-
+-	for (i = 0; i < TGT_RING_PAGES; i++)
+-		free_page(ring->tr_pages[i]);
+-}
+-
+-static int tgt_ring_init(struct tgt_ring *ring)
+-{
+-	int i;
+-
+-	spin_lock_init(&ring->tr_lock);
+-
+-	for (i = 0; i < TGT_RING_PAGES; i++) {
+-		ring->tr_pages[i] = get_zeroed_page(GFP_KERNEL);
+-		if (!ring->tr_pages[i]) {
+-			eprintk("out of memory\n");
+-			return -ENOMEM;
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+-void scsi_tgt_if_exit(void)
+-{
+-	tgt_ring_exit(&tx_ring);
+-	tgt_ring_exit(&rx_ring);
+-	misc_deregister(&tgt_miscdev);
+-}
+-
+-int scsi_tgt_if_init(void)
+-{
+-	int err;
+-
+-	err = tgt_ring_init(&tx_ring);
+-	if (err)
+-		return err;
+-
+-	err = tgt_ring_init(&rx_ring);
+-	if (err)
+-		goto free_tx_ring;
+-
+-	err = misc_register(&tgt_miscdev);
+-	if (err)
+-		goto free_rx_ring;
+-
+-	return 0;
+-free_rx_ring:
+-	tgt_ring_exit(&rx_ring);
+-free_tx_ring:
+-	tgt_ring_exit(&tx_ring);
+-
+-	return err;
+-}
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+deleted file mode 100644
+index c399be9..0000000
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ /dev/null
+@@ -1,662 +0,0 @@
+-/*
+- * SCSI target lib functions
+- *
+- * Copyright (C) 2005 Mike Christie <michaelc@cs.wisc.edu>
+- * Copyright (C) 2005 FUJITA Tomonori <tomof@acm.org>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation; either version 2 of the
+- * License, or (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+- * 02110-1301 USA
+- */
+-#include <linux/blkdev.h>
+-#include <linux/hash.h>
+-#include <linux/module.h>
+-#include <linux/pagemap.h>
+-#include <linux/slab.h>
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_device.h>
+-#include <scsi/scsi_host.h>
+-#include <scsi/scsi_transport.h>
+-#include <scsi/scsi_tgt.h>
+-
+-#include "scsi_tgt_priv.h"
+-
+-static struct workqueue_struct *scsi_tgtd;
+-static struct kmem_cache *scsi_tgt_cmd_cache;
+-
+-/*
+- * TODO: this struct will be killed when the block layer supports large bios
+- * and James's work struct code is in
+- */
+-struct scsi_tgt_cmd {
+-	/* TODO replace work with James b's code */
+-	struct work_struct work;
+-	/* TODO fix limits of some drivers */
+-	struct bio *bio;
+-
+-	struct list_head hash_list;
+-	struct request *rq;
+-	u64 itn_id;
+-	u64 tag;
+-};
+-
+-#define TGT_HASH_ORDER	4
+-#define cmd_hashfn(tag)	hash_long((unsigned long) (tag), TGT_HASH_ORDER)
+-
+-struct scsi_tgt_queuedata {
+-	struct Scsi_Host *shost;
+-	struct list_head cmd_hash[1 << TGT_HASH_ORDER];
+-	spinlock_t cmd_hash_lock;
+-};
+-
+-/*
+- * Function:	scsi_host_get_command()
+- *
+- * Purpose:	Allocate and setup a scsi command block and blk request
+- *
+- * Arguments:	shost	- scsi host
+- *		data_dir - dma data dir
+- *		gfp_mask- allocator flags
+- *
+- * Returns:	The allocated scsi command structure.
+- *
+- * This should be called by target LLDs to get a command.
+- */
+-struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *shost,
+-					enum dma_data_direction data_dir,
+-					gfp_t gfp_mask)
+-{
+-	int write = (data_dir == DMA_TO_DEVICE);
+-	struct request *rq;
+-	struct scsi_cmnd *cmd;
+-	struct scsi_tgt_cmd *tcmd;
+-
+-	/* Bail if we can't get a reference to the device */
+-	if (!get_device(&shost->shost_gendev))
+-		return NULL;
+-
+-	tcmd = kmem_cache_alloc(scsi_tgt_cmd_cache, GFP_ATOMIC);
+-	if (!tcmd)
+-		goto put_dev;
+-
+-	/*
+-	 * The blk helpers are used to the READ/WRITE requests
+-	 * transfering data from a initiator point of view. Since
+-	 * we are in target mode we want the opposite.
+-	 */
+-	rq = blk_get_request(shost->uspace_req_q, !write, gfp_mask);
+-	if (!rq)
+-		goto free_tcmd;
+-
+-	cmd = __scsi_get_command(shost, gfp_mask);
+-	if (!cmd)
+-		goto release_rq;
+-
+-	cmd->sc_data_direction = data_dir;
+-	cmd->jiffies_at_alloc = jiffies;
+-	cmd->request = rq;
+-
+-	cmd->cmnd = rq->cmd;
+-
+-	rq->special = cmd;
+-	rq->cmd_type = REQ_TYPE_SPECIAL;
+-	rq->cmd_flags |= REQ_TYPE_BLOCK_PC;
+-	rq->end_io_data = tcmd;
+-
+-	tcmd->rq = rq;
+-
+-	return cmd;
+-
+-release_rq:
+-	blk_put_request(rq);
+-free_tcmd:
+-	kmem_cache_free(scsi_tgt_cmd_cache, tcmd);
+-put_dev:
+-	put_device(&shost->shost_gendev);
+-	return NULL;
+-
+-}
+-EXPORT_SYMBOL_GPL(scsi_host_get_command);
+-
+-/*
+- * Function:	scsi_host_put_command()
+- *
+- * Purpose:	Free a scsi command block
+- *
+- * Arguments:	shost	- scsi host
+- * 		cmd	- command block to free
+- *
+- * Returns:	Nothing.
+- *
+- * Notes:	The command must not belong to any lists.
+- */
+-void scsi_host_put_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+-{
+-	struct request_queue *q = shost->uspace_req_q;
+-	struct request *rq = cmd->request;
+-	struct scsi_tgt_cmd *tcmd = rq->end_io_data;
+-	unsigned long flags;
+-
+-	kmem_cache_free(scsi_tgt_cmd_cache, tcmd);
+-
+-	spin_lock_irqsave(q->queue_lock, flags);
+-	__blk_put_request(q, rq);
+-	spin_unlock_irqrestore(q->queue_lock, flags);
+-
+-	__scsi_put_command(shost, cmd, &shost->shost_gendev);
+-}
+-EXPORT_SYMBOL_GPL(scsi_host_put_command);
+-
+-static void cmd_hashlist_del(struct scsi_cmnd *cmd)
+-{
+-	struct request_queue *q = cmd->request->q;
+-	struct scsi_tgt_queuedata *qdata = q->queuedata;
+-	unsigned long flags;
+-	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
+-
+-	spin_lock_irqsave(&qdata->cmd_hash_lock, flags);
+-	list_del(&tcmd->hash_list);
+-	spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
+-}
+-
+-static void scsi_unmap_user_pages(struct scsi_tgt_cmd *tcmd)
+-{
+-	blk_rq_unmap_user(tcmd->bio);
+-}
+-
+-static void scsi_tgt_cmd_destroy(struct work_struct *work)
+-{
+-	struct scsi_tgt_cmd *tcmd =
+-		container_of(work, struct scsi_tgt_cmd, work);
+-	struct scsi_cmnd *cmd = tcmd->rq->special;
+-
+-	dprintk("cmd %p %d %u\n", cmd, cmd->sc_data_direction,
+-		rq_data_dir(cmd->request));
+-	scsi_unmap_user_pages(tcmd);
+-	tcmd->rq->bio = NULL;
+-	scsi_host_put_command(scsi_tgt_cmd_to_host(cmd), cmd);
+-}
+-
+-static void init_scsi_tgt_cmd(struct request *rq, struct scsi_tgt_cmd *tcmd,
+-			      u64 itn_id, u64 tag)
+-{
+-	struct scsi_tgt_queuedata *qdata = rq->q->queuedata;
+-	unsigned long flags;
+-	struct list_head *head;
+-
+-	tcmd->itn_id = itn_id;
+-	tcmd->tag = tag;
+-	tcmd->bio = NULL;
+-	INIT_WORK(&tcmd->work, scsi_tgt_cmd_destroy);
+-	spin_lock_irqsave(&qdata->cmd_hash_lock, flags);
+-	head = &qdata->cmd_hash[cmd_hashfn(tag)];
+-	list_add(&tcmd->hash_list, head);
+-	spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
+-}
+-
+-/*
+- * scsi_tgt_alloc_queue - setup queue used for message passing
+- * shost: scsi host
+- *
+- * This should be called by the LLD after host allocation.
+- * And will be released when the host is released.
+- */
+-int scsi_tgt_alloc_queue(struct Scsi_Host *shost)
+-{
+-	struct scsi_tgt_queuedata *queuedata;
+-	struct request_queue *q;
+-	int err, i;
+-
+-	/*
+-	 * Do we need to send a netlink event or should uspace
+-	 * just respond to the hotplug event?
+-	 */
+-	q = __scsi_alloc_queue(shost, NULL);
+-	if (!q)
+-		return -ENOMEM;
+-
+-	queuedata = kzalloc(sizeof(*queuedata), GFP_KERNEL);
+-	if (!queuedata) {
+-		err = -ENOMEM;
+-		goto cleanup_queue;
+-	}
+-	queuedata->shost = shost;
+-	q->queuedata = queuedata;
+-
+-	/*
+-	 * this is a silly hack. We should probably just queue as many
+-	 * command as is recvd to userspace. uspace can then make
+-	 * sure we do not overload the HBA
+-	 */
+-	q->nr_requests = shost->can_queue;
+-	/*
+-	 * We currently only support software LLDs so this does
+-	 * not matter for now. Do we need this for the cards we support?
+-	 * If so we should make it a host template value.
+-	 */
+-	blk_queue_dma_alignment(q, 0);
+-	shost->uspace_req_q = q;
+-
+-	for (i = 0; i < ARRAY_SIZE(queuedata->cmd_hash); i++)
+-		INIT_LIST_HEAD(&queuedata->cmd_hash[i]);
+-	spin_lock_init(&queuedata->cmd_hash_lock);
+-
+-	return 0;
+-
+-cleanup_queue:
+-	blk_cleanup_queue(q);
+-	return err;
+-}
+-EXPORT_SYMBOL_GPL(scsi_tgt_alloc_queue);
+-
+-void scsi_tgt_free_queue(struct Scsi_Host *shost)
+-{
+-	int i;
+-	unsigned long flags;
+-	struct request_queue *q = shost->uspace_req_q;
+-	struct scsi_cmnd *cmd;
+-	struct scsi_tgt_queuedata *qdata = q->queuedata;
+-	struct scsi_tgt_cmd *tcmd, *n;
+-	LIST_HEAD(cmds);
+-
+-	spin_lock_irqsave(&qdata->cmd_hash_lock, flags);
+-
+-	for (i = 0; i < ARRAY_SIZE(qdata->cmd_hash); i++) {
+-		list_for_each_entry_safe(tcmd, n, &qdata->cmd_hash[i],
+-					 hash_list) {
+-			list_del(&tcmd->hash_list);
+-			list_add(&tcmd->hash_list, &cmds);
+-		}
+-	}
+-
+-	spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
+-
+-	while (!list_empty(&cmds)) {
+-		tcmd = list_entry(cmds.next, struct scsi_tgt_cmd, hash_list);
+-		list_del(&tcmd->hash_list);
+-		cmd = tcmd->rq->special;
+-
+-		shost->hostt->eh_abort_handler(cmd);
+-		scsi_tgt_cmd_destroy(&tcmd->work);
+-	}
+-}
+-EXPORT_SYMBOL_GPL(scsi_tgt_free_queue);
+-
+-struct Scsi_Host *scsi_tgt_cmd_to_host(struct scsi_cmnd *cmd)
+-{
+-	struct scsi_tgt_queuedata *queue = cmd->request->q->queuedata;
+-	return queue->shost;
+-}
+-EXPORT_SYMBOL_GPL(scsi_tgt_cmd_to_host);
+-
+-/*
+- * scsi_tgt_queue_command - queue command for userspace processing
+- * @cmd:	scsi command
+- * @scsilun:	scsi lun
+- * @tag:	unique value to identify this command for tmf
+- */
+-int scsi_tgt_queue_command(struct scsi_cmnd *cmd, u64 itn_id,
+-			   struct scsi_lun *scsilun, u64 tag)
+-{
+-	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
+-	int err;
+-
+-	init_scsi_tgt_cmd(cmd->request, tcmd, itn_id, tag);
+-	err = scsi_tgt_uspace_send_cmd(cmd, itn_id, scsilun, tag);
+-	if (err)
+-		cmd_hashlist_del(cmd);
+-
+-	return err;
+-}
+-EXPORT_SYMBOL_GPL(scsi_tgt_queue_command);
+-
+-/*
+- * This is run from a interrupt handler normally and the unmap
+- * needs process context so we must queue
+- */
+-static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
+-{
+-	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
+-
+-	dprintk("cmd %p %u\n", cmd, rq_data_dir(cmd->request));
+-
+-	scsi_tgt_uspace_send_status(cmd, tcmd->itn_id, tcmd->tag);
+-
+-	scsi_release_buffers(cmd);
+-
+-	queue_work(scsi_tgtd, &tcmd->work);
+-}
+-
+-static int scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
+-{
+-	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
+-	int err;
+-
+-	dprintk("cmd %p %u\n", cmd, rq_data_dir(cmd->request));
+-
+-	err = shost->hostt->transfer_response(cmd, scsi_tgt_cmd_done);
+-	switch (err) {
+-	case SCSI_MLQUEUE_HOST_BUSY:
+-	case SCSI_MLQUEUE_DEVICE_BUSY:
+-		return -EAGAIN;
+-	}
+-	return 0;
+-}
+-
+-/* TODO: test this crap and replace bio_map_user with new interface maybe */
+-static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
+-			       unsigned long uaddr, unsigned int len, int rw)
+-{
+-	struct request_queue *q = cmd->request->q;
+-	struct request *rq = cmd->request;
+-	int err;
+-
+-	dprintk("%lx %u\n", uaddr, len);
+-	err = blk_rq_map_user(q, rq, NULL, (void *)uaddr, len, GFP_KERNEL);
+-	if (err) {
+-		/*
+-		 * TODO: need to fixup sg_tablesize, max_segment_size,
+-		 * max_sectors, etc for modern HW and software drivers
+-		 * where this value is bogus.
+-		 *
+-		 * TODO2: we can alloc a reserve buffer of max size
+-		 * we can handle and do the slow copy path for really large
+-		 * IO.
+-		 */
+-		eprintk("Could not handle request of size %u.\n", len);
+-		return err;
+-	}
+-
+-	tcmd->bio = rq->bio;
+-	err = scsi_init_io(cmd, GFP_KERNEL);
+-	if (err) {
+-		scsi_release_buffers(cmd);
+-		goto unmap_rq;
+-	}
+-	/*
+-	 * we use REQ_TYPE_BLOCK_PC so scsi_init_io doesn't set the
+-	 * length for us.
+-	 */
+-	cmd->sdb.length = blk_rq_bytes(rq);
+-
+-	return 0;
+-
+-unmap_rq:
+-	scsi_unmap_user_pages(tcmd);
+-	return err;
+-}
+-
+-static int scsi_tgt_copy_sense(struct scsi_cmnd *cmd, unsigned long uaddr,
+-				unsigned len)
+-{
+-	char __user *p = (char __user *) uaddr;
+-
+-	if (copy_from_user(cmd->sense_buffer, p,
+-			   min_t(unsigned, SCSI_SENSE_BUFFERSIZE, len))) {
+-		printk(KERN_ERR "Could not copy the sense buffer\n");
+-		return -EIO;
+-	}
+-	return 0;
+-}
+-
+-static int scsi_tgt_abort_cmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+-{
+-	struct scsi_tgt_cmd *tcmd;
+-	int err;
+-
+-	err = shost->hostt->eh_abort_handler(cmd);
+-	if (err)
+-		eprintk("fail to abort %p\n", cmd);
+-
+-	tcmd = cmd->request->end_io_data;
+-	scsi_tgt_cmd_destroy(&tcmd->work);
+-	return err;
+-}
+-
+-static struct request *tgt_cmd_hash_lookup(struct request_queue *q, u64 tag)
+-{
+-	struct scsi_tgt_queuedata *qdata = q->queuedata;
+-	struct request *rq = NULL;
+-	struct list_head *head;
+-	struct scsi_tgt_cmd *tcmd;
+-	unsigned long flags;
+-
+-	head = &qdata->cmd_hash[cmd_hashfn(tag)];
+-	spin_lock_irqsave(&qdata->cmd_hash_lock, flags);
+-	list_for_each_entry(tcmd, head, hash_list) {
+-		if (tcmd->tag == tag) {
+-			rq = tcmd->rq;
+-			list_del(&tcmd->hash_list);
+-			break;
+-		}
+-	}
+-	spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
+-
+-	return rq;
+-}
+-
+-int scsi_tgt_kspace_exec(int host_no, u64 itn_id, int result, u64 tag,
+-			 unsigned long uaddr, u32 len, unsigned long sense_uaddr,
+-			 u32 sense_len, u8 rw)
+-{
+-	struct Scsi_Host *shost;
+-	struct scsi_cmnd *cmd;
+-	struct request *rq;
+-	struct scsi_tgt_cmd *tcmd;
+-	int err = 0;
+-
+-	dprintk("%d %llu %d %u %lx %u\n", host_no, (unsigned long long) tag,
+-		result, len, uaddr, rw);
+-
+-	/* TODO: replace with a O(1) alg */
+-	shost = scsi_host_lookup(host_no);
+-	if (!shost) {
+-		printk(KERN_ERR "Could not find host no %d\n", host_no);
+-		return -EINVAL;
+-	}
+-
+-	if (!shost->uspace_req_q) {
+-		printk(KERN_ERR "Not target scsi host %d\n", host_no);
+-		goto done;
+-	}
+-
+-	rq = tgt_cmd_hash_lookup(shost->uspace_req_q, tag);
+-	if (!rq) {
+-		printk(KERN_ERR "Could not find tag %llu\n",
+-		       (unsigned long long) tag);
+-		err = -EINVAL;
+-		goto done;
+-	}
+-	cmd = rq->special;
+-
+-	dprintk("cmd %p scb %x result %d len %d bufflen %u %u %x\n",
+-		cmd, cmd->cmnd[0], result, len, scsi_bufflen(cmd),
+-		rq_data_dir(rq), cmd->cmnd[0]);
+-
+-	if (result == TASK_ABORTED) {
+-		scsi_tgt_abort_cmd(shost, cmd);
+-		goto done;
+-	}
+-	/*
+-	 * store the userspace values here, the working values are
+-	 * in the request_* values
+-	 */
+-	tcmd = cmd->request->end_io_data;
+-	cmd->result = result;
+-
+-	if (cmd->result == SAM_STAT_CHECK_CONDITION)
+-		scsi_tgt_copy_sense(cmd, sense_uaddr, sense_len);
+-
+-	if (len) {
+-		err = scsi_map_user_pages(rq->end_io_data, cmd, uaddr, len, rw);
+-		if (err) {
+-			/*
+-			 * user-space daemon bugs or OOM
+-			 * TODO: we can do better for OOM.
+-			 */
+-			struct scsi_tgt_queuedata *qdata;
+-			struct list_head *head;
+-			unsigned long flags;
+-
+-			eprintk("cmd %p ret %d uaddr %lx len %d rw %d\n",
+-				cmd, err, uaddr, len, rw);
+-
+-			qdata = shost->uspace_req_q->queuedata;
+-			head = &qdata->cmd_hash[cmd_hashfn(tcmd->tag)];
+-
+-			spin_lock_irqsave(&qdata->cmd_hash_lock, flags);
+-			list_add(&tcmd->hash_list, head);
+-			spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
+-
+-			goto done;
+-		}
+-	}
+-	err = scsi_tgt_transfer_response(cmd);
+-done:
+-	scsi_host_put(shost);
+-	return err;
+-}
+-
+-int scsi_tgt_tsk_mgmt_request(struct Scsi_Host *shost, u64 itn_id,
+-			      int function, u64 tag, struct scsi_lun *scsilun,
+-			      void *data)
+-{
+-	int err;
+-
+-	/* TODO: need to retry if this fails. */
+-	err = scsi_tgt_uspace_send_tsk_mgmt(shost->host_no, itn_id,
+-					    function, tag, scsilun, data);
+-	if (err < 0)
+-		eprintk("The task management request lost!\n");
+-	return err;
+-}
+-EXPORT_SYMBOL_GPL(scsi_tgt_tsk_mgmt_request);
+-
+-int scsi_tgt_kspace_tsk_mgmt(int host_no, u64 itn_id, u64 mid, int result)
+-{
+-	struct Scsi_Host *shost;
+-	int err = -EINVAL;
+-
+-	dprintk("%d %d %llx\n", host_no, result, (unsigned long long) mid);
+-
+-	shost = scsi_host_lookup(host_no);
+-	if (!shost) {
+-		printk(KERN_ERR "Could not find host no %d\n", host_no);
+-		return err;
+-	}
+-
+-	if (!shost->uspace_req_q) {
+-		printk(KERN_ERR "Not target scsi host %d\n", host_no);
+-		goto done;
+-	}
+-
+-	err = shost->transportt->tsk_mgmt_response(shost, itn_id, mid, result);
+-done:
+-	scsi_host_put(shost);
+-	return err;
+-}
+-
+-int scsi_tgt_it_nexus_create(struct Scsi_Host *shost, u64 itn_id,
+-			     char *initiator)
+-{
+-	int err;
+-
+-	/* TODO: need to retry if this fails. */
+-	err = scsi_tgt_uspace_send_it_nexus_request(shost->host_no, itn_id, 0,
+-						    initiator);
+-	if (err < 0)
+-		eprintk("The i_t_neuxs request lost, %d %llx!\n",
+-			shost->host_no, (unsigned long long)itn_id);
+-	return err;
+-}
+-EXPORT_SYMBOL_GPL(scsi_tgt_it_nexus_create);
+-
+-int scsi_tgt_it_nexus_destroy(struct Scsi_Host *shost, u64 itn_id)
+-{
+-	int err;
+-
+-	/* TODO: need to retry if this fails. */
+-	err = scsi_tgt_uspace_send_it_nexus_request(shost->host_no,
+-						    itn_id, 1, NULL);
+-	if (err < 0)
+-		eprintk("The i_t_neuxs request lost, %d %llx!\n",
+-			shost->host_no, (unsigned long long)itn_id);
+-	return err;
+-}
+-EXPORT_SYMBOL_GPL(scsi_tgt_it_nexus_destroy);
+-
+-int scsi_tgt_kspace_it_nexus_rsp(int host_no, u64 itn_id, int result)
+-{
+-	struct Scsi_Host *shost;
+-	int err = -EINVAL;
+-
+-	dprintk("%d %d%llx\n", host_no, result, (unsigned long long)itn_id);
+-
+-	shost = scsi_host_lookup(host_no);
+-	if (!shost) {
+-		printk(KERN_ERR "Could not find host no %d\n", host_no);
+-		return err;
+-	}
+-
+-	if (!shost->uspace_req_q) {
+-		printk(KERN_ERR "Not target scsi host %d\n", host_no);
+-		goto done;
+-	}
+-
+-	err = shost->transportt->it_nexus_response(shost, itn_id, result);
+-done:
+-	scsi_host_put(shost);
+-	return err;
+-}
+-
+-static int __init scsi_tgt_init(void)
+-{
+-	int err;
+-
+-	scsi_tgt_cmd_cache =  KMEM_CACHE(scsi_tgt_cmd, 0);
+-	if (!scsi_tgt_cmd_cache)
+-		return -ENOMEM;
+-
+-	scsi_tgtd = create_workqueue("scsi_tgtd");
+-	if (!scsi_tgtd) {
+-		err = -ENOMEM;
+-		goto free_kmemcache;
+-	}
+-
+-	err = scsi_tgt_if_init();
+-	if (err)
+-		goto destroy_wq;
+-
+-	return 0;
+-
+-destroy_wq:
+-	destroy_workqueue(scsi_tgtd);
+-free_kmemcache:
+-	kmem_cache_destroy(scsi_tgt_cmd_cache);
+-	return err;
+-}
+-
+-static void __exit scsi_tgt_exit(void)
+-{
+-	destroy_workqueue(scsi_tgtd);
+-	scsi_tgt_if_exit();
+-	kmem_cache_destroy(scsi_tgt_cmd_cache);
+-}
+-
+-module_init(scsi_tgt_init);
+-module_exit(scsi_tgt_exit);
+-
+-MODULE_DESCRIPTION("SCSI target core");
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/scsi_tgt_priv.h b/drivers/scsi/scsi_tgt_priv.h
+deleted file mode 100644
+index fe4c621..0000000
+--- a/drivers/scsi/scsi_tgt_priv.h
++++ /dev/null
+@@ -1,32 +0,0 @@
+-struct scsi_cmnd;
+-struct scsi_lun;
+-struct Scsi_Host;
+-struct task_struct;
+-
+-/* tmp - will replace with SCSI logging stuff */
+-#define eprintk(fmt, args...)					\
+-do {								\
+-	printk("%s(%d) " fmt, __func__, __LINE__, ##args);	\
+-} while (0)
+-
+-#define dprintk(fmt, args...)
+-/* #define dprintk eprintk */
+-
+-extern void scsi_tgt_if_exit(void);
+-extern int scsi_tgt_if_init(void);
+-
+-extern int scsi_tgt_uspace_send_cmd(struct scsi_cmnd *cmd, u64 it_nexus_id,
+-				    struct scsi_lun *lun, u64 tag);
+-extern int scsi_tgt_uspace_send_status(struct scsi_cmnd *cmd, u64 it_nexus_id,
+-				       u64 tag);
+-extern int scsi_tgt_kspace_exec(int host_no, u64 it_nexus_id, int result, u64 tag,
+-				unsigned long uaddr, u32 len,
+-				unsigned long sense_uaddr, u32 sense_len, u8 rw);
+-extern int scsi_tgt_uspace_send_tsk_mgmt(int host_no, u64 it_nexus_id,
+-					 int function, u64 tag,
+-					 struct scsi_lun *scsilun, void *data);
+-extern int scsi_tgt_kspace_tsk_mgmt(int host_no, u64 it_nexus_id,
+-				    u64 mid, int result);
+-extern int scsi_tgt_uspace_send_it_nexus_request(int host_no, u64 it_nexus_id,
+-						 int function, char *initiator);
+-extern int scsi_tgt_kspace_it_nexus_rsp(int host_no, u64 it_nexus_id, int result);
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 998c01b..fed21fb 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -40,7 +40,6 @@
+ #include <scsi/scsi_netlink_fc.h>
+ #include <scsi/scsi_bsg_fc.h>
+ #include "scsi_priv.h"
+-#include "scsi_transport_fc_internal.h"
  
-+int sg_copy(struct scatterlist *dst_sg, struct scatterlist *src_sg,
-+	    int nents_to_copy, size_t copy_len,
-+	    enum km_type d_km_type, enum km_type s_km_type);
-+
+ static int fc_queue_work(struct Scsi_Host *, struct work_struct *);
+ static void fc_vport_sched_delete(struct work_struct *work);
+@@ -2964,10 +2963,6 @@ fc_remote_port_delete(struct fc_rport  *rport)
+ 
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+-	if (rport->roles & FC_PORT_ROLE_FCP_INITIATOR &&
+-	    shost->active_mode & MODE_TARGET)
+-		fc_tgt_it_nexus_destroy(shost, (unsigned long)rport);
+-
+ 	scsi_target_block(&rport->dev);
+ 
+ 	/* see if we need to kill io faster than waiting for device loss */
+@@ -3008,7 +3003,6 @@ fc_remote_port_rolechg(struct fc_rport  *rport, u32 roles)
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+ 	unsigned long flags;
+ 	int create = 0;
+-	int ret;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	if (roles & FC_PORT_ROLE_FCP_TARGET) {
+@@ -3017,12 +3011,6 @@ fc_remote_port_rolechg(struct fc_rport  *rport, u32 roles)
+ 			create = 1;
+ 		} else if (!(rport->roles & FC_PORT_ROLE_FCP_TARGET))
+ 			create = 1;
+-	} else if (shost->active_mode & MODE_TARGET) {
+-		ret = fc_tgt_it_nexus_create(shost, (unsigned long)rport,
+-					     (char *)&rport->node_name);
+-		if (ret)
+-			printk(KERN_ERR "FC Remore Port tgt nexus failed %d\n",
+-			       ret);
+ 	}
+ 
+ 	rport->roles = roles;
+diff --git a/drivers/scsi/scsi_transport_fc_internal.h b/drivers/scsi/scsi_transport_fc_internal.h
+deleted file mode 100644
+index e7bfbe7..0000000
+--- a/drivers/scsi/scsi_transport_fc_internal.h
++++ /dev/null
+@@ -1,26 +0,0 @@
+-#include <scsi/scsi_tgt.h>
+-
+-#ifdef CONFIG_SCSI_FC_TGT_ATTRS
+-static inline int fc_tgt_it_nexus_create(struct Scsi_Host *shost, u64 itn_id,
+-					 char *initiator)
+-{
+-	return scsi_tgt_it_nexus_create(shost, itn_id, initiator);
+-}
+-
+-static inline int fc_tgt_it_nexus_destroy(struct Scsi_Host *shost, u64 itn_id)
+-{
+-	return scsi_tgt_it_nexus_destroy(shost, itn_id);
+-}
+-#else
+-static inline int fc_tgt_it_nexus_create(struct Scsi_Host *shost, u64 itn_id,
+-					 char *initiator)
+-{
+-	return 0;
+-}
+-
+-static inline int fc_tgt_it_nexus_destroy(struct Scsi_Host *shost, u64 itn_id)
+-{
+-	return 0;
+-}
+-
+-#endif
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index 21a045e..76b6c5b 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -30,7 +30,6 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport.h>
+ #include <scsi/scsi_transport_srp.h>
+-#include "scsi_transport_srp_internal.h"
+ 
+ struct srp_host_attrs {
+ 	atomic_t next_port_id;
+@@ -223,18 +222,6 @@ struct srp_rport *srp_rport_add(struct Scsi_Host *shost,
+ 		return ERR_PTR(ret);
+ 	}
+ 
+-	if (shost->active_mode & MODE_TARGET &&
+-	    ids->roles == SRP_RPORT_ROLE_INITIATOR) {
+-		ret = srp_tgt_it_nexus_create(shost, (unsigned long)rport,
+-					      rport->port_id);
+-		if (ret) {
+-			device_del(&rport->dev);
+-			transport_destroy_device(&rport->dev);
+-			put_device(&rport->dev);
+-			return ERR_PTR(ret);
+-		}
+-	}
+-
+ 	transport_add_device(&rport->dev);
+ 	transport_configure_device(&rport->dev);
+ 
+@@ -251,11 +238,6 @@ EXPORT_SYMBOL_GPL(srp_rport_add);
+ void srp_rport_del(struct srp_rport *rport)
+ {
+ 	struct device *dev = &rport->dev;
+-	struct Scsi_Host *shost = dev_to_shost(dev->parent);
+-
+-	if (shost->active_mode & MODE_TARGET &&
+-	    rport->roles == SRP_RPORT_ROLE_INITIATOR)
+-		srp_tgt_it_nexus_destroy(shost, (unsigned long)rport);
+ 
+ 	transport_remove_device(dev);
+ 	device_del(dev);
+diff --git a/drivers/scsi/scsi_transport_srp_internal.h b/drivers/scsi/scsi_transport_srp_internal.h
+index 8a79747..e69de29 100644
+--- a/drivers/scsi/scsi_transport_srp_internal.h
++++ b/drivers/scsi/scsi_transport_srp_internal.h
+@@ -1,25 +0,0 @@
+-#include <scsi/scsi_tgt.h>
+-
+-#ifdef CONFIG_SCSI_SRP_TGT_ATTRS
+-static inline int srp_tgt_it_nexus_create(struct Scsi_Host *shost, u64 itn_id,
+-					  char *initiator)
+-{
+-	return scsi_tgt_it_nexus_create(shost, itn_id, initiator);
+-}
+-
+-static inline int srp_tgt_it_nexus_destroy(struct Scsi_Host *shost, u64 itn_id)
+-{
+-	return scsi_tgt_it_nexus_destroy(shost, itn_id);
+-}
+-
+-#else
+-static inline int srp_tgt_it_nexus_create(struct Scsi_Host *shost, u64 itn_id,
+-					  char *initiator)
+-{
+-	return 0;
+-}
+-static inline int srp_tgt_it_nexus_destroy(struct Scsi_Host *shost, u64 itn_id)
+-{
+-	return 0;
+-}
+-#endif
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index e7e3858..26c4066 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -20,7 +20,6 @@ struct scsi_host_cmd_pool;
+ struct scsi_transport_template;
+ struct blk_queue_tags;
+ 
+-
  /*
-  * Maximum number of entries that will be allocated in one piece, if
-  * a list larger than this is required then chaining will be utilized.
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index 4ceb05d..caf58c4 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -517,3 +517,132 @@ size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
- 	return sg_copy_buffer(sgl, nents, buf, buflen, 1);
- }
- EXPORT_SYMBOL(sg_copy_to_buffer);
-+
-+/*
-+ * Can switch to the next dst_sg element, so, to copy to strictly only
-+ * one dst_sg element, it must be either last in the chain, or
-+ * copy_len == dst_sg->length.
-+ */
-+static int sg_copy_elem(struct scatterlist **pdst_sg, size_t *pdst_len,
-+			size_t *pdst_offs, struct scatterlist *src_sg,
-+			size_t copy_len,
-+			enum km_type d_km_type, enum km_type s_km_type)
-+{
-+	int res = 0;
-+	struct scatterlist *dst_sg;
-+	size_t src_len, dst_len, src_offs, dst_offs;
-+	struct page *src_page, *dst_page;
-+
-+	dst_sg = *pdst_sg;
-+	dst_len = *pdst_len;
-+	dst_offs = *pdst_offs;
-+	dst_page = sg_page(dst_sg);
-+
-+	src_page = sg_page(src_sg);
-+	src_len = src_sg->length;
-+	src_offs = src_sg->offset;
-+
-+	do {
-+		void *saddr, *daddr;
-+		size_t n;
-+
-+		saddr = kmap_atomic(src_page +
-+					 (src_offs >> PAGE_SHIFT), s_km_type) +
-+				    (src_offs & ~PAGE_MASK);
-+		daddr = kmap_atomic(dst_page +
-+					(dst_offs >> PAGE_SHIFT), d_km_type) +
-+				    (dst_offs & ~PAGE_MASK);
-+
-+		if (((src_offs & ~PAGE_MASK) == 0) &&
-+		    ((dst_offs & ~PAGE_MASK) == 0) &&
-+		    (src_len >= PAGE_SIZE) && (dst_len >= PAGE_SIZE) &&
-+		    (copy_len >= PAGE_SIZE)) {
-+			copy_page(daddr, saddr);
-+			n = PAGE_SIZE;
-+		} else {
-+			n = min_t(size_t, PAGE_SIZE - (dst_offs & ~PAGE_MASK),
-+					  PAGE_SIZE - (src_offs & ~PAGE_MASK));
-+			n = min(n, src_len);
-+			n = min(n, dst_len);
-+			n = min_t(size_t, n, copy_len);
-+			memcpy(daddr, saddr, n);
-+		}
-+		dst_offs += n;
-+		src_offs += n;
-+
-+		kunmap_atomic(saddr, s_km_type);
-+		kunmap_atomic(daddr, d_km_type);
-+
-+		res += n;
-+		copy_len -= n;
-+		if (copy_len == 0)
-+			goto out;
-+
-+		src_len -= n;
-+		dst_len -= n;
-+		if (dst_len == 0) {
-+			dst_sg = sg_next(dst_sg);
-+			if (dst_sg == NULL)
-+				goto out;
-+			dst_page = sg_page(dst_sg);
-+			dst_len = dst_sg->length;
-+			dst_offs = dst_sg->offset;
-+		}
-+	} while (src_len > 0);
-+
-+out:
-+	*pdst_sg = dst_sg;
-+	*pdst_len = dst_len;
-+	*pdst_offs = dst_offs;
-+	return res;
-+}
-+
-+/**
-+ * sg_copy - copy one SG vector to another
-+ * @dst_sg:	destination SG
-+ * @src_sg:	source SG
-+ * @nents_to_copy: maximum number of entries to copy
-+ * @copy_len:	maximum amount of data to copy. If 0, then copy all.
-+ * @d_km_type:	kmap_atomic type for the destination SG
-+ * @s_km_type:	kmap_atomic type for the source SG
-+ *
-+ * Description:
-+ *    Data from the source SG vector will be copied to the destination SG
-+ *    vector. End of the vectors will be determined by sg_next() returning
-+ *    NULL. Returns number of bytes copied.
-+ */
-+int sg_copy(struct scatterlist *dst_sg, struct scatterlist *src_sg,
-+	    int nents_to_copy, size_t copy_len,
-+	    enum km_type d_km_type, enum km_type s_km_type)
-+{
-+	int res = 0;
-+	size_t dst_len, dst_offs;
-+
-+	if (copy_len == 0)
-+		copy_len = 0x7FFFFFFF; /* copy all */
-+
-+	if (nents_to_copy == 0)
-+		nents_to_copy = 0x7FFFFFFF; /* copy all */
-+
-+	dst_len = dst_sg->length;
-+	dst_offs = dst_sg->offset;
-+
-+	do {
-+		int copied = sg_copy_elem(&dst_sg, &dst_len, &dst_offs,
-+				src_sg, copy_len, d_km_type, s_km_type);
-+		copy_len -= copied;
-+		res += copied;
-+		if ((copy_len == 0) || (dst_sg == NULL))
-+			goto out;
-+
-+		nents_to_copy--;
-+		if (nents_to_copy == 0)
-+			goto out;
-+
-+		src_sg = sg_next(src_sg);
-+	} while (src_sg != NULL);
-+
-+out:
-+	return res;
-+}
-+EXPORT_SYMBOL(sg_copy);
+  * The various choices mean:
+  * NONE: Self evident.	Host adapter is not capable of scatter-gather.
+@@ -36,10 +35,6 @@ struct blk_queue_tags;
+ #define SG_NONE 0
+ #define SG_ALL	SCSI_MAX_SG_SEGMENTS
+ 
+-#define MODE_UNKNOWN 0x00
+-#define MODE_INITIATOR 0x01
+-#define MODE_TARGET 0x02
+-
+ #define DISABLE_CLUSTERING 0
+ #define ENABLE_CLUSTERING 1
+ 
+@@ -84,7 +79,6 @@ struct scsi_host_template {
+ 	 */
+ 	int (* ioctl)(struct scsi_device *dev, int cmd, void __user *arg);
+ 
+-
+ #ifdef CONFIG_COMPAT
+ 	/* 
+ 	 * Compat handler. Handle 32bit ABI.
+@@ -130,27 +124,6 @@ struct scsi_host_template {
+ 	int (* queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
+ 
+ 	/*
+-	 * The transfer functions are used to queue a scsi command to
+-	 * the LLD. When the driver is finished processing the command
+-	 * the done callback is invoked.
+-	 *
+-	 * This is called to inform the LLD to transfer
+-	 * scsi_bufflen(cmd) bytes. scsi_sg_count(cmd) speciefies the
+-	 * number of scatterlist entried in the command and
+-	 * scsi_sglist(cmd) returns the scatterlist.
+-	 *
+-	 * return values: see queuecommand
+-	 *
+-	 * If the LLD accepts the cmd, it should set the result to an
+-	 * appropriate value when completed before calling the done function.
+-	 *
+-	 * STATUS: REQUIRED FOR TARGET DRIVERS
+-	 */
+-	/* TODO: rename */
+-	int (* transfer_response)(struct scsi_cmnd *,
+-				  void (*done)(struct scsi_cmnd *));
+-
+-	/*
+ 	 * This is an error handling strategy routine.  You don't need to
+ 	 * define one of these if you don't want to - there is a default
+ 	 * routine that is present that should work in most cases.  For those
+@@ -426,11 +399,6 @@ struct scsi_host_template {
+ 	unsigned char present;
+ 
+ 	/*
+-	 * This specifies the mode that a LLD supports.
+-	 */
+-	unsigned supported_mode:2;
+-
+-	/*
+ 	 * True if this host adapter uses unchecked DMA onto an ISA bus.
+ 	 */
+ 	unsigned unchecked_isa_dma:1;
+@@ -627,7 +595,6 @@ struct Scsi_Host {
+ 	 */
+ 	unsigned long cmd_serial_number;
+ 	
+-	unsigned active_mode:2;
+ 	unsigned unchecked_isa_dma:1;
+ 	unsigned use_clustering:1;
+ 	unsigned use_blk_tcq:1;
+diff --git a/include/scsi/scsi_tgt.h b/include/scsi/scsi_tgt.h
+deleted file mode 100644
+index d0fefb9..0000000
+--- a/include/scsi/scsi_tgt.h
++++ /dev/null
+@@ -1,21 +0,0 @@
+-/*
+- * SCSI target definitions
+- */
+-
+-#include <linux/dma-mapping.h>
+-
+-struct Scsi_Host;
+-struct scsi_cmnd;
+-struct scsi_lun;
+-
+-extern struct Scsi_Host *scsi_tgt_cmd_to_host(struct scsi_cmnd *);
+-extern int scsi_tgt_alloc_queue(struct Scsi_Host *);
+-extern void scsi_tgt_free_queue(struct Scsi_Host *);
+-extern int scsi_tgt_queue_command(struct scsi_cmnd *, u64, struct scsi_lun *, u64);
+-extern int scsi_tgt_tsk_mgmt_request(struct Scsi_Host *, u64, int, u64,
+-				     struct scsi_lun *, void *);
+-extern struct scsi_cmnd *scsi_host_get_command(struct Scsi_Host *,
+-					       enum dma_data_direction,	gfp_t);
+-extern void scsi_host_put_command(struct Scsi_Host *, struct scsi_cmnd *);
+-extern int scsi_tgt_it_nexus_create(struct Scsi_Host *, u64, char *);
+-extern int scsi_tgt_it_nexus_destroy(struct Scsi_Host *, u64);
+diff --git a/include/scsi/scsi_tgt_if.h b/include/scsi/scsi_tgt_if.h
+deleted file mode 100644
+index f2ee7c2..0000000
+--- a/include/scsi/scsi_tgt_if.h
++++ /dev/null
+@@ -1,108 +0,0 @@
+-/*
+- * SCSI target kernel/user interface
+- *
+- * Copyright (C) 2005 FUJITA Tomonori <tomof@acm.org>
+- * Copyright (C) 2005 Mike Christie <michaelc@cs.wisc.edu>
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation; either version 2 of the
+- * License, or (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful, but
+- * WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+- * General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write to the Free Software
+- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+- * 02110-1301 USA
+- */
+-#ifndef __SCSI_TARGET_IF_H
+-#define __SCSI_TARGET_IF_H
+-
+-/* user -> kernel */
+-#define	TGT_UEVENT_CMD_RSP		0x0001
+-#define	TGT_UEVENT_IT_NEXUS_RSP		0x0002
+-#define	TGT_UEVENT_TSK_MGMT_RSP		0x0003
+-
+-/* kernel -> user */
+-#define	TGT_KEVENT_CMD_REQ		0x1001
+-#define	TGT_KEVENT_CMD_DONE		0x1002
+-#define	TGT_KEVENT_IT_NEXUS_REQ		0x1003
+-#define	TGT_KEVENT_TSK_MGMT_REQ		0x1004
+-
+-struct tgt_event_hdr {
+-	uint16_t version;
+-	uint16_t status;
+-	uint16_t type;
+-	uint16_t len;
+-} __attribute__ ((aligned (sizeof(uint64_t))));
+-
+-struct tgt_event {
+-	struct tgt_event_hdr hdr;
+-
+-	union {
+-		/* user-> kernel */
+-		struct {
+-			int host_no;
+-			int result;
+-			aligned_u64 itn_id;
+-			aligned_u64 tag;
+-			aligned_u64 uaddr;
+-			aligned_u64 sense_uaddr;
+-			uint32_t len;
+-			uint32_t sense_len;
+-			uint8_t rw;
+-		} cmd_rsp;
+-		struct {
+-			int host_no;
+-			int result;
+-			aligned_u64 itn_id;
+-			aligned_u64 mid;
+-		} tsk_mgmt_rsp;
+-		struct {
+-			__s32 host_no;
+-			__s32 result;
+-			aligned_u64 itn_id;
+-			__u32 function;
+-		} it_nexus_rsp;
+-
+-		/* kernel -> user */
+-		struct {
+-			int host_no;
+-			uint32_t data_len;
+-			aligned_u64 itn_id;
+-			uint8_t scb[16];
+-			uint8_t lun[8];
+-			int attribute;
+-			aligned_u64 tag;
+-		} cmd_req;
+-		struct {
+-			int host_no;
+-			int result;
+-			aligned_u64 itn_id;
+-			aligned_u64 tag;
+-		} cmd_done;
+-		struct {
+-			int host_no;
+-			int function;
+-			aligned_u64 itn_id;
+-			aligned_u64 tag;
+-			uint8_t lun[8];
+-			aligned_u64 mid;
+-		} tsk_mgmt_req;
+-		struct {
+-			__s32 host_no;
+-			__u32 function;
+-			aligned_u64 itn_id;
+-			__u32 max_cmds;
+-			__u8 initiator_id[16];
+-		} it_nexus_req;
+-	} p;
+-} __attribute__ ((aligned (sizeof(uint64_t))));
+-
+-#define TGT_RING_SIZE (1UL << 16)
+-
+-#endif
 -- 
 1.7.1
 
