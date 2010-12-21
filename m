@@ -1,72 +1,58 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: [ANNOUNCE]: Released version 2.0.0 of SCST core, target drivers iSCSI-SCST,
- qla2x00t (QLogic FC), ib_srpt (InfiniBand SRP) and scst_local as well as
- scstadmin utility and fileio_tgt user space backend handler
-Date: Tue, 21 Dec 2010 21:36:42 +0300
-Message-ID: <4D10F3BA.9040004@vlnb.net>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 11/11]: megaraid_sas:
+ Documentation/scsi/ChangeLog.megaraid_sas update
+Date: Tue, 21 Dec 2010 12:58:52 -0600
+Message-ID: <1292957932.3034.17.camel@mulgrave.site>
+References: <AANLkTikKhNaBpxLiwENzEL+LkFdG+bnbpxv41MhNixb-@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: linux-rdma@vger.kernel.org, Richard Sharpe <realrichardsharpe@gmail.com>, Bart Van Assche <bart.vanassche@gmail.com>, Mark Buechler <mark.buechler@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:55126 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751006Ab0LUS66 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Dec 2010 13:58:58 -0500
+In-Reply-To: <AANLkTikKhNaBpxLiwENzEL+LkFdG+bnbpxv41MhNixb-@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-I'm glad to announce stable release 2.0.0 of SCST core, target drivers
-for iSCSI (iSCSI-SCST), QLogic Fibre Channel 22xx/23xx/24xx/25xx
-(qla2x00t), InfiniBand SRP (ib_srpt), scst_local as well as scstadmin
-management utility and fileio_tgt user space backend handler.
+On Tue, 2010-12-14 at 19:11 -0800, adam radford wrote:
+> James/Linux-scsi,
+>=20
+> The following patch updates the Documentation/scsi/ChangeLog.megaraid=
+_sas file.
 
-SCST is an alternative implementation of SCSI target subsystem for
-Linux. It provides unified, consistent interface between SCSI target
-drivers and Linux kernel as well as between Linux kernel and storage
-backend handlers, connecting target drivers with real or emulated
-storage backend.
+now something in 6-11 doesn't work:
 
-SCST allows creation of sophisticated storage devices, which provide
-advanced functionality, like replication, thin provisioning,
-deduplication, high availability, automatic backup, etc. Another class
-of such devices are Virtual Tape Libraries (VTL) as well as other
-disk-based backup solutions. SCST created devices not limited by IP
-network interface only, but they can use any link supporting SCSI-style
-data exchange, including Fibre Channel, SAS and parallel SCSI. It might
-well be that your favorite storage appliance running SCST in the firmware.
+  CC [M]  drivers/scsi/megaraid/megaraid_sas_fusion.o
+drivers/scsi/megaraid/megaraid_sas_fusion.c: In function
+=E2=80=98megasas_fusion_ocr_wq=E2=80=99:
+drivers/scsi/megaraid/megaraid_sas_fusion.c:2232:10: error: =E2=80=98st=
+ruct
+megasas_instance=E2=80=99 has no member named =E2=80=98scmd=E2=80=99
+drivers/scsi/megaraid/megaraid_sas_fusion.c:2232:35: error: =E2=80=98st=
+ruct
+megasas_instance=E2=80=99 has no member named =E2=80=98dev=E2=80=99
+drivers/scsi/megaraid/megaraid_sas_fusion.c:2233:10: error: =E2=80=98st=
+ruct
+megasas_instance=E2=80=99 has no member named =E2=80=98dev=E2=80=99
+drivers/scsi/megaraid/megaraid_sas_fusion.c:2234:32: error: =E2=80=98st=
+ruct
+megasas_instance=E2=80=99 has no member named =E2=80=98scmd=E2=80=99
+make[1]: *** [drivers/scsi/megaraid/megaraid_sas_fusion.o] Error 1
 
-Target driver scst_local allows access to devices that are exported via
-SCST directly on the same Linux system that they are exported from. It
-makes no assumptions in the code about the device types on the target,
-so any device handlers that you load in SCST will be visible, including
-tapes and so forth. Additionally, it allows creation of fully functional
-target drivers in user space.
+Just send the redo as a single file ... it looks like the whole patch
+series is 125k; that should be just under the reflector limit.
 
-Scstadmin utility allows to configure SCST, including its target drivers
-and backend handlers, from config file, store live SCST configuration in
-config file as well as detect and apply changes in the config file on
-live SCST system.
+Thanks,
 
-More info about SCST core and modules you can find on:
+James
 
-   - SCST core: http://scst.sourceforge.net
 
-   - iSCSI target driver iSCSI-SCST:
-http://iscsi-scst.sourceforge.net/index.html
-
-   - QLogic 22xx/23xx/24xx/25xx Fibre Channel target driver:
-http://scst.sourceforge.net/target_qla2x00t.html
-
-   - InfiniBand SRP: http://scst.sourceforge.net/target_srp.html
-
-   - scst_local: http://scst.sourceforge.net/target_local.html
-
-   - fileio_tgt backend handler:
-http://scst.sourceforge.net/handler_fileio_tgt.html.
-
-You can download SCST core and modules from
-http://scst.sourceforge.net/downloads.html.
-
-Thanks to all who made it happen, especially to Bart Van Assche for
-ib_srpt development and a lot of other SCST activities, Mark Buechler
-for great scstadmin tool and Richard Sharpe for scst_local!
-
-Vlad
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
