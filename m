@@ -1,60 +1,38 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH scsi-misc-2.6] sd: implement sd_check_events()
-Date: Tue, 21 Dec 2010 14:24:57 -0600
-Message-ID: <1292963097.3034.21.camel@mulgrave.site>
-References: <20101217122831.39300d94.sfr@canb.auug.org.au>
-	 <1292597607.2820.17.camel@mulgrave.site>  <4D0CF27F.1080601@kernel.org>
-	 <1292862013.3034.7.camel@mulgrave.site>
-	 <1292954953.3034.15.camel@mulgrave.site>  <4D10FDAD.2060801@kernel.dk>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/11]: Update megaraid_sas driver explanation
+Date: Tue, 21 Dec 2010 15:26:20 -0500
+Message-ID: <20101221202620.GA15750@infradead.org>
+References: <AANLkTi=xOBgxZ8eJuYbKUAjHQ-uC1rr-qdU8UT-vMt9H@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <4D10FDAD.2060801@kernel.dk>
-Sender: linux-next-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <tj@kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([18.85.46.34]:52590 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045Ab0LUU0W (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Dec 2010 15:26:22 -0500
+Content-Disposition: inline
+In-Reply-To: <AANLkTi=xOBgxZ8eJuYbKUAjHQ-uC1rr-qdU8UT-vMt9H@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "bo.yang" <bo.yang@lsi.com>
 
-On Tue, 2010-12-21 at 20:19 +0100, Jens Axboe wrote:
-> On 2010-12-21 19:09, James Bottomley wrote:
-> > On Mon, 2010-12-20 at 10:20 -0600, James Bottomley wrote:
-> >> Added cc: linux-scsi
-> >>
-> >> On Sat, 2010-12-18 at 18:42 +0100, Tejun Heo wrote:
-> >>> Replace sd_media_change() with sd_check_events().
-> >>>
-> >>> * Move media removed logic into set_media_not_present() and
-> >>>   media_not_present() and set sdev->changed iff an existing media is
-> >>>   removed or the device indicates UNIT_ATTENTION.
-> >>>
-> >>> * Make sd_check_events() sets sdev->changed if previously missing
-> >>>   media becomes present.
-> >>>
-> >>> * Event is reported only if sdev->changed is set.
-> >>>
-> >>> This makes media presence event reported if scsi_disk->media_present
-> >>> actually changed or the device indicated UNIT_ATTENTION.  For backward
-> >>> compatibility, SDEV_EVT_MEDIA_CHANGE is generated each time
-> >>> sd_check_events() detects media change event.
-> >>>
-> >>> Signed-off-by: Tejun Heo <tj@kernel.org>
-> >>> Cc: Kay Sievers <kay.sievers@vrfy.org>
-> >>> ---
-> >>> Here it is.  The conflicts were due to Alan's recent patch, which was
-> >>> in the similar direction anyway.
-> >>
-> >> This looks fine to me.  Jens can you strip the SCSI patches out of your
-> >> tree and I'll run them through a postmerge tree to get the fix up?
-> > 
-> > Ping on this, please: I can't build a postmerge tree until block is
-> > sorted out.  I need these four removing:
+On Tue, Dec 14, 2010 at 06:40:18PM -0800, adam radford wrote:
+> James/linux-scsi,
 > 
-> I would need to revert those four then, I can't rebase any of those
-> branches.
+> Please ignore the previous megaraid_sas patches 1 thru 9 from Bo Yang.
+>  They will be re-submitted at a later time.
+> 
+> The following patches update the megaraid_sas driver as follows:
+> 
+> 1. Rename megaraid_sas.c to megaraid_sas_base.c
+> 2. Update GPL headers.
+> 3. Add MSI-X support and 'msix_disable' module parameter.
+> 4. Use lowest memory bar (for SR-IOV VF support).
+> 5. Add struct megasas_instance_template changes, and change all code to use new
+>    instance entries:
 
-That's a bit unfortunate.  OK, just revert the sd one then.  Hopefully
-we're close enough to the merge window that we won't pick up conflicts
-in the others.
+So what's the actual shared code with older megaraid_sas adapters after
+this?  It looks to me like you should simply add another driver for the
+new hardware.
 
-James
