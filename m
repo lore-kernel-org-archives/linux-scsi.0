@@ -1,60 +1,53 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 01/12] libiscsi: Convert to host_lock less w/ interrupts
- disabled internally
-Date: Tue, 21 Dec 2010 12:53:26 +0200
-Message-ID: <4D108726.2080003@panasas.com>
-References: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org> <1292793727-31957-2-git-send-email-nab@linux-iscsi.org> <4D0FF7E6.2060104@cs.wisc.edu>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [regression] 2.6.37-rc5: scsi_eh_11 CPU loop
+Date: Tue, 21 Dec 2010 12:03:56 +0100
+Message-ID: <20101221110355.GA981@htj.dyndns.org>
+References: <201012201105.08993.Martin@lichtvoll.de>
+ <4D0F8E98.9070500@kernel.org>
+ <201012211131.27698.Martin@lichtvoll.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D0FF7E6.2060104@cs.wisc.edu>
+Content-Disposition: inline
+In-Reply-To: <201012211131.27698.Martin@lichtvoll.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Jeff Garzik <jeff@garzik.org>, Christoph Hellwig <hch@lst.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Hannes Reinecke <hare@suse.de>, Mike Anderson <andmike@linux.vnet.ibm.com>, Tejun Heo <tj@kernel.org>, Vasu Dev <vasu.dev@linux.intel.com>, Tim Chen <tim.c.chen@linux.intel.com>, Andi Kleen <ak@linux.intel.com>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Joe Eykholt <jeykholt@cisco.com>, James Smart <james.smart@emulex.com>, Douglas Gilbert <dgilbert@interlog.com>, adam radford <aradford@gmail.com>, Kashyap Desai <Kashyap.Desai@lsi.com>, MPTFusionLinux <DL-MPTFusionLinux@lsi.com>
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/21/2010 02:42 AM, Mike Christie wrote:
-> On 12/19/2010 03:21 PM, Nicholas A. Bellinger wrote:
->>   prepd_fault:
->> @@ -1732,12 +1728,10 @@ fault:
->>   		scsi_out(sc)->resid = scsi_out(sc)->length;
->>   		scsi_in(sc)->resid = scsi_in(sc)->length;
->>   	}
->> -	done(sc);
->> -	spin_lock(host->host_lock);
->> +	sc->scsi_done(sc);
->>   	return 0;
-> 
-> 
-> Did you mean to send this patch or a different one? I think you sent a 
-> patch with this before and I said it was wrong. Did you disagree with 
-> that comment or did you change something else so it now works?
+Hello,
 
-Mike hi
+On Tue, Dec 21, 2010 at 11:31:15AM +0100, Martin Steigerwald wrote:
+> > diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> > index 5e59050..c748b5a 100644
+> [...]
+> > 
+> > +	if (!(ap->pflags & ATA_PFLAG_LOADING) && xxx < 16) {
+> > +		ata_port_printk(ap, KERN_WARNING, "XXX ata_eh_set_pending()\n");
+> > +		dump_stack();
+> > +		xxx++;
+> > +	}
+> > +
+> 
+> I will do so with my next kernel compile - likely rc7 if it comes out 
+> before Christmas.
+> 
+> As I do not know what exactly triggers it, it can take a while till I 
+> experience it again. I hope to be able to trigger it by inserting and 
+> removing the PCMCIA eSATA adapter lots of times. As the bug happened, I 
+> forgot to vgchange -an the LVM on the external drive. That might be or 
+> might not be related to triggering the issue. I will try this as well.
+> 
+> Reported-as: https://bugzilla.kernel.org/show_bug.cgi?id=25392
+> 
+> Might make sense to switch this bugzilla report to mail. Or use the 
+> bugzilla. Or just use the bugzilla for tracking and continue using mail. 
+> I'll do whatever suits you best (but prefer mail).
 
-I think Nick is gone for the holidays. What I understood is that he's
-waiting for you to fix it. Because he's not sure what the proper solution
-is. Do you have time to look into it? (It will take you much faster then me)
+I don't care either way.  Just ping me whenever you hit the problem
+again.
 
-On 12/19/2010 11:21 PM, Nicholas A. Bellinger wrote:
-> *) libiscsi: NULL sc->scsi_done() callback in exception path in iscsi_queuecommand().
-> The last status on this from Mike Christie was:
-> 
-> "This will NULL pointer. See a couple lines above where we NULL it. 
-> iscsi_free_task checks if the scsi_done pointer is set and if it is it 
-> will call scsi_done.
-> 
-> It is a hack to prevent the normal completion path from calling 
-> scsi_done. For the case where we return SCSI_MLQUEUE_TARGET_BUSY (the 
-> prepd_reject case) we need something to prevent scsi_done from getting 
-> called.
-> 
-> For the return 0/prepd_fault case we can just call sc->scsi_done, but we 
-> have to move some code around."
-> 
-> mnc, have you been able to take another look at this..?
-> 
+Thanks.
 
-Thanks
-Boaz
+-- 
+tejun
