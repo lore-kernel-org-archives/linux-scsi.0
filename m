@@ -1,17 +1,17 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 3/3] [SCSI] scst: Move SCST devices documentation to Documentation/ABI
-Date: Wed, 22 Dec 2010 21:47:00 +0100
-Message-ID: <201012222147.00547.bvanassche@acm.org>
+Subject: [PATCH 2/3] [SCSI] scst: Move SCST device documentation to Documentation/ABI
+Date: Wed, 22 Dec 2010 21:46:28 +0100
+Message-ID: <201012222146.28782.bvanassche@acm.org>
 References: <201012222144.47522.bvanassche@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jester.euphonynet.be ([212.87.96.13]:59388 "EHLO
+Received: from jester.euphonynet.be ([212.87.96.13]:59381 "EHLO
 	mailpush2.euphonynet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880Ab0LVUrQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Dec 2010 15:47:16 -0500
+	with ESMTP id S1751841Ab0LVUrP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Dec 2010 15:47:15 -0500
 In-Reply-To: <201012222144.47522.bvanassche@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,212 +19,262 @@ To: linux-scsi@vger.kernel.org
 Cc: vst@vlnb.net, realrichardsharpe@gmail.com, scst-devel@lists.sourceforge.net, Greg Kroah-Hartman <gregkh@suse.de>
 
 Move the documentation about the sysfs attributes of the SCST
-pass-through and virtual devices to Documentation/ABI/stable.
+virtual device to Documentation/ABI/stable.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Cc: Greg Kroah-Hartman <gregkh@suse.de>
 Cc: Vladislav Bolkhovitin <vst@vlnb.net>
 ---
- .../ABI/stable/sysfs-devices-scst_tgt_dev          |  153 ++++++++++++++++++++
- Documentation/ABI/stable/sysfs-driver-scst_tgt_dev |   29 ++++
- 2 files changed, 182 insertions(+), 0 deletions(-)
- create mode 100644 Documentation/ABI/stable/sysfs-devices-scst_tgt_dev
- create mode 100644 Documentation/ABI/stable/sysfs-driver-scst_tgt_dev
+ Documentation/ABI/stable/sysfs-devices-scst |  150 +++++++++++++++++++++++++++
+ Documentation/scst/README.scst              |   71 -------------
+ 2 files changed, 150 insertions(+), 71 deletions(-)
+ create mode 100644 Documentation/ABI/stable/sysfs-devices-scst
 
-diff --git a/Documentation/ABI/stable/sysfs-devices-scst_tgt_dev b/Documentation/ABI/stable/sysfs-devices-scst_tgt_dev
+diff --git a/Documentation/ABI/stable/sysfs-devices-scst b/Documentation/ABI/stable/sysfs-devices-scst
 new file mode 100644
-index 0000000..ab09c21
+index 0000000..80bc258
 --- /dev/null
-+++ b/Documentation/ABI/stable/sysfs-devices-scst_tgt_dev
-@@ -0,0 +1,153 @@
-+What:           /sys/bus/scst_tgt_dev/device/*/blocksize
++++ b/Documentation/ABI/stable/sysfs-devices-scst
+@@ -0,0 +1,150 @@
++What:           /sys/devices/scst/mgmt
 +Date:           December 2010
 +KernelVersion:  2.6.38
 +Contact:        linux-scsi@vger.kernel.org
 +Description:
-+		Block size used by the virtual device. Must be a power of two
-+		and equal to or above 512. Read-only.
++		Interface through which SCST management commands can be issued.
++		The documentation of the syntax of these commands can be
++		obtained by reading this file:
 +
-+What:           /sys/bus/scst_tgt_dev/device/*/exported/export<nr>
++		# cat mgmt
++		in device/<dev> <dev_cmd>
++		in device_driver/<devt> <devt_cmd>
++		in target_driver/<tgtt> <tgtt_cmd>
++		in target_driver/<tgtt>/<target>/luns <tgt_cmd>
++		in target_driver/<tgtt>/<target>/luns <luns_cmd>
++		in target_driver/<tgtt>/<target>/ini_groups <acg_mgmt_cmd>
++		in target_driver/<tgtt>/<target>/ini_groups/<acg> <acg_cmd>
++		in target_driver/<tgtt>/<target>/ini_groups/<acg>/luns <luns_cmd>
++		in target_driver/<tgtt>/<target>/ini_groups/<acg>/initiators <acg_ini_cmd>
++
++		dev_cmd syntax:
++
++		set_filename <filename>
++		set_threads_num <n>
++		set_thread_pool_type <thread_pool_type>
++
++		devt_cmd syntax:
++
++		add_device device_name [parameters]
++		del_device device_name
++		add_attribute <attribute> <value>
++		del_attribute <attribute> <value>
++		add_device_attribute device_name <attribute> <value>
++		del_device_attribute device_name <attribute> <value>
++
++		devt_cmd syntax for pass-through device types:
++
++		add_device H:C:I:L
++		del_device H:C:I:L
++
++		tgtt_cmd syntax:
++
++		add_target target_name [parameters]
++		del_target target_name
++		add_attribute <attribute> <value>
++		del_attribute <attribute> <value>
++		add_target_attribute target_name <attribute> <value>"
++		del_target_attribute target_name <attribute> <value>"
++
++		where parameters is one or more <name>=<value> pairs separated by ';'
++
++		tgt_cmd syntax:
++
++		enable
++		disable
++		set_cpu_mask <mask>
++
++		luns_cmd syntax:
++
++		add|del H:C:I:L lun [parameters]
++		add VNAME lun [parameters]
++		del lun
++		replace H:C:I:L lun [parameters]
++		replace VNAME lun [parameters]
++		clear
++
++		where parameters is either 'read_only' or empty.
++
++		acg_mgmt_cmd syntax:
++
++		create <group_name>
++		del <group_name>
++
++		acg_cmd syntax:
++		set_cpu_mask <mask>
++
++		acg_ini_cmd syntax:
++
++		add <initiator_name>
++		del <initiator_name>
++		move <initiator_name> <dest_group_name>
++		clear
++
++What:           /sys/devices/scst/setup_id
 +Date:           December 2010
 +KernelVersion:  2.6.38
 +Contact:        linux-scsi@vger.kernel.org
 +Description:
-+		Zero or more soft links to the LUNs through which this device
-+		has been exported. An example:
++		SCST setup ID. Allows to identify otherwise identical SCST
++		setups on different systems. Makes the IDs and SNs of
++		otherwise identical SCST devices unique. As an example,	the
++		vdisk device handler uses this to generate the T10 vendor
++		specific identifier and SN of vdisk devices. Read-write.
 +
-+		$ readlink /sys/bus/scst_tgt_dev/devices/disk01/exported/export0
-+		../../scst_local_tgt/luns/0
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/filename
++What:           /sys/devices/scst/sgv/global_stats
 +Date:           December 2010
 +KernelVersion:  2.6.38
 +Contact:        linux-scsi@vger.kernel.org
 +Description:
-+		For virtual devices, the absolute path of the associated file
-+		or device. Read-only. An example:
-+
-+		# cat /sys/devices/disk01/filename
-+		/dev/sdc
-+		[key]
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/nv_cache
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		Whether or not the device has a non-volatile cache. SCST uses
-+		this information to decide whether or not it is safe to
-+		acknowledge writes early to the initiator. Setting this
-+		attribute to 1 for a device that neither has a non-volatile
-+		cache nor an UPS will decrease I/O latency but may result in
-+		data loss in case of a power failure. Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/o_direct
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		The value 1 means that all caching has been disabled for
-+		a virtual device (direct I/O) and the value 0 means that caching
-+		is enabled. Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/read_only
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		For virtual devices, whether or not to deny write commands.
-+		Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/removable
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		For virtual devices, whether or not the underlying storage
-+		medium is removable. Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/resync_size
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		For virtual devices, writing to this attribute will update the
-+		internally cached device size. Write-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/scsi_device
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		For SCSI devices, the device identification. Read-only. An
-+		example:
-+
-+		$ cat /sys/bus/scst_tgt_dev/devices/1:0:0:0/scsi_device
-+		1:0:0:0
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/size_mb
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		For virtual devices, the internally cached size in MB of the
-+		underlying storage device. Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/t10_dev_id
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		SCSI device ID associated with the virtual device. This is the
-+		ID reported e.g. via the Device Identification page (0x83) of
-+		the INQUIRY command. Read-write.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/thin_provisioned
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		Whether or not the virtual device supports thin provisioning,
-+		or in other words, that remote initiators can mark storage as
-+		unallocated. Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/threads_num
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		Number of threads in the thread pool that is used for
-+		processing SCSI commands for this device. Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/threads_pool_type
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		Whether to use a distinct thread pool per initiator
-+		("per_initiator") or one thread pool for all initiators
-+		accessing this device ("shared"). Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/type
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		SCSI type of this device. Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/usn
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		Unique serial number as reported e.g. by the SCSI INQUIRY
-+		response. Read-only.
-+
-+What:           /sys/bus/scst_tgt_dev/device/*/write_through
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		Whether or not write-back caching has been disabled for a
-+		virtual device. The value 0 stands for write-back mode and the
-+		value 1 stands for write-through mode. Read-only.
-diff --git a/Documentation/ABI/stable/sysfs-driver-scst_tgt_dev b/Documentation/ABI/stable/sysfs-driver-scst_tgt_dev
-new file mode 100644
-index 0000000..33a9221
---- /dev/null
-+++ b/Documentation/ABI/stable/sysfs-driver-scst_tgt_dev
-@@ -0,0 +1,29 @@
-+What:           /sys/bus/scst_tgt_dev/drivers/*/add_device_parameters
-+Date:           December 2010
-+KernelVersion:  2.6.38
-+Contact:        linux-scsi@vger.kernel.org
-+Description:
-+		Names of the parameters supported when adding a device. Each
-+		parameter name appears on a separate line. Read-only.
++		Global SGV (scatter/gather vector) cache statistics. Read-only.
 +		An example:
 +
-+		$ cat /sys/bus/scst_tgt_dev/drivers/vdisk_fileio/add_device_parameters
-+		filename
-+		blocksize
-+		write_through
-+		nv_cache
-+		o_direct
-+		read_only
-+		removable
-+		thin_provisioned
++		$ cat sgv/global_stats
++		Inactive/active pages                      0/0
++		Hi/lo watermarks [pages]                   62208/0
++		Hi watermark releases/failures             0/0
++		Other allocs                               0
 +
-+What:           /sys/bus/scst_tgt_dev/drivers/*/type
++What:           /sys/devices/scst/sgv/sgv/stats
 +Date:           December 2010
 +KernelVersion:  2.6.38
 +Contact:        linux-scsi@vger.kernel.org
 +Description:
-+		SCSI type of the devices managed by this driver. Read-only.
-+		An example:
++		Statistics for the regular SGV cache. Read-only.
 +
-+		$ cat /sys/bus/scst_tgt_dev/drivers/vcdrom/type
-+		5 - CD-ROM device
++What:           /sys/devices/scst/sgv/sgv-clust/stats
++Date:           December 2010
++KernelVersion:  2.6.38
++Contact:        linux-scsi@vger.kernel.org
++Description:
++		Statistics for the clustering SGV cache. Read-only.
++
++What:           /sys/devices/scst/sgv/sgv-dma/stats
++Date:           December 2010
++KernelVersion:  2.6.38
++Contact:        linux-scsi@vger.kernel.org
++Description:
++		Statistics for the DMA SGV cache. Read-only.
++
++What:           /sys/devices/scst/threads
++Date:           December 2010
++KernelVersion:  2.6.38
++Contact:        linux-scsi@vger.kernel.org
++Description:
++		Number of global I/O threads. Global I/O threads are used by
++		asynchronous device handlers, e.g. the vdisk blockio handler.
++		Read-write.
++
++What:           /sys/devices/scst/version
++Date:           December 2010
++KernelVersion:  2.6.38
++Contact:        linux-scsi@vger.kernel.org
++Description:
++		SCST version (first line) and compile-time configuration
++		(subsequent lines). Read-only. An example:
++
++		$ cat /sys/devices/scst/version
++		2.0.0
++		TRACING
++		DEBUG
+diff --git a/Documentation/scst/README.scst b/Documentation/scst/README.scst
+index 7c16d5c..d098c3b 100644
+--- a/Documentation/scst/README.scst
++++ b/Documentation/scst/README.scst
+@@ -253,45 +253,6 @@ SCST sysfs interface
+ Root of SCST sysfs interface is /sys/kernel/scst_tgt. It has the
+ following entries:
+ 
+- - devices - this is a root subdirectory for all SCST devices
+-
+- - handlers - this is a root subdirectory for all SCST dev handlers
+-
+- - sgv - this is a root subdirectory for all SCST SGV caches
+-
+- - targets - this is a root subdirectory for all SCST targets
+-
+- - setup_id - allows to read and write SCST setup ID. This ID can be
+-   used in cases, when the same SCST configuration should be installed
+-   on several targets, but exported from those targets devices should
+-   have different IDs and SNs. For instance, VDISK dev handler uses this
+-   ID to generate T10 vendor specific identifier and SN of the devices.
+-
+- - threads - allows to read and set number of global SCST I/O threads.
+-   Those threads used with async. dev handlers, for instance, vdisk
+-   BLOCKIO or NULLIO.
+-
+- - trace_level - allows to enable and disable various tracing
+-   facilities. See content of this file for help how to use it.
+-
+- - version - read-only attribute, which allows to see version of
+-   SCST and enabled optional features.
+-
+- - last_sysfs_mgmt_res - read-only attribute returning completion status
+-   of the last management command. In the sysfs implementation there are
+-   some problems between internal sysfs and internal SCST locking. To
+-   avoid them in some cases sysfs calls can return error with errno
+-   EAGAIN. This doesn't mean the operation failed. It only means that
+-   the operation queued and not yet completed. To wait for it to
+-   complete, an management tool should poll this file. If the operation
+-   hasn't yet completed, it will also return EAGAIN. But after it's
+-   completed, it will return the result of this operation (0 for success
+-   or -errno for error).
+-
+-Each SCST sysfs file (attribute) can contain in the last line mark
+-"[key]". It is automatically added mark used to allow scstadmin to see
+-which attributes it should save in the config file. You can ignore it.
+-
+ "Devices" subdirectory contains subdirectories for each SCST devices.
+ 
+ Content of each device's subdirectory is dev handler specific. See
+@@ -325,38 +286,6 @@ SCST dev handlers can have the following common entries:
+ See below for more information about other entries of this subdirectory
+ of the standard SCST dev handlers.
+ 
+-"Handlers" subdirectory contains subdirectories for each SCST dev
+-handler.
+-
+-Content of each handler's subdirectory is dev handler specific. See
+-documentation for your dev handlers for more info about it as well as
+-SysfsRules file for more info about common to all dev handlers rules.
+-SCST dev handlers can have the following common entries:
+-
+- - mgmt - this entry allows to create virtual devices and their
+-   attributes (for virtual devices dev handlers) or assign/unassign real
+-   SCSI devices to/from this dev handler (for pass-through dev
+-   handlers).
+-
+- - trace_level - allows to enable and disable various tracing
+-   facilities. See content of this file for help how to use it.
+-
+- - type - SCSI type of devices served by this dev handler.
+-
+-See below for more information about other entries of this subdirectory
+-of the standard SCST dev handlers.
+-
+-"Sgv" subdirectory contains statistic information of SCST SGV caches. It
+-has the following entries:
+-
+- - None, one or more subdirectories for each existing SGV cache.
+-
+- - global_stats - file containing global SGV caches statistics.
+-
+-Each SGV cache's subdirectory has the following item:
+-
+- - stats - file containing statistics for this SGV caches.
+-
+ 
+ Access and devices visibility management (LUN masking)
+ ------------------------------------------------------
 -- 
 1.7.1
 
