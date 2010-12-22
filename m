@@ -1,37 +1,48 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 25192] 3w-{9,x}xxx don't work on big-endian MIPS
-Date: Wed, 22 Dec 2010 19:27:55 GMT
-Message-ID: <201012221927.oBMJRtxJ003724@demeter2.kernel.org>
-References: <bug-25192-11613@https.bugzilla.kernel.org/>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH 2a/7] SCST core / sysfs interface
+Date: Wed, 22 Dec 2010 11:32:30 -0800
+Message-ID: <20101222193230.GB29002@suse.de>
+References: <201012211105.49590.bvanassche@acm.org>
+ <20101221190313.GB10717@suse.de>
+ <AANLkTik-WY5+KsVU_Y2WDFeXNRzjXUPwmp66e5x1Bk7B@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:58681 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751076Ab0LVT14 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Dec 2010 14:27:56 -0500
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oBMJRtb5003725
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Dec 2010 19:27:55 GMT
-In-Reply-To: <bug-25192-11613@https.bugzilla.kernel.org/>
+Received: from cantor2.suse.de ([195.135.220.15]:52172 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751081Ab0LVTbs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 22 Dec 2010 14:31:48 -0500
+Content-Disposition: inline
+In-Reply-To: <AANLkTik-WY5+KsVU_Y2WDFeXNRzjXUPwmp66e5x1Bk7B@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, James.Bottomley@suse.de, Dmitry Torokhov <dmitry.torokhov@gmail.com>, Vladislav Bolkhovitin <vst@vlnb.net>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=25192
+On Wed, Dec 22, 2010 at 01:41:35PM +0100, Bart Van Assche wrote:
+> On Tue, Dec 21, 2010 at 8:03 PM, Greg KH <gregkh@suse.de> wrote:
+> >
+> > On Tue, Dec 21, 2010 at 11:05:49AM +0100, Bart Van Assche wrote:
+> > > +#if defined(CONFIG_SCST_DEBUG) || defined(CONFIG_SCST_TRACING)
+> > > +
+> > > +static ssize_t scst_tgtt_trace_level_show(struct device_driver *drv, char *buf)
+> >
+> > debug files belong in debugfs, not sysfs, please move them.
+> 
+> Hello Greg,
+> 
+> Thanks for the feedback about Documentation/ABI. I will move the SCST
+> sysfs documentation over there - in fact it's something I should
+> already have done since you had already mentioned it in a previous
+> e-mail.
+> 
+> Regarding the "trace_level" attributes in sysfs: are you aware that
+> these are not only useful for kernel developers to debug the storage
+> target code itself but also for storage target users who want to find
+> out what a SCSI initiator is doing ? The "scsi", "mgmt" and
+> "flow_control" trace levels are examples of this. Sometimes users (who
+> are not SCST developers) have to enable these in order to find out
+> what a SCSI initiator is doing. Are you sure you want these to be
+> moved to debugfs ?
 
-
-
-
-
---- Comment #13 from Matt Turner <mattst88@gmail.com>  2010-12-22 19:27:47 ---
-I've confirmed that the card works in an AMD64 system (with a few unknown
-opcode messages in dmesg, but I suppose that's nothing particularly strange).
-
-Ralf, do you have any ideas about why it wouldn't work with this board?
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are watching the assignee of the bug.
+Yes.
