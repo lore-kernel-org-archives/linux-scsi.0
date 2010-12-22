@@ -1,163 +1,200 @@
 From: madhu.iyengar@qlogic.com
-Subject: [PATCH 09/14] qla2xxx: Remove redundant module parameter permission bits
-Date: Tue, 21 Dec 2010 16:00:22 -0800
-Message-ID: <1292976027-12034-10-git-send-email-madhu.iyengar@qlogic.com>
+Subject: [PATCH 08/14] qla2xxx: Add sysfs node for displaying board temperature.
+Date: Tue, 21 Dec 2010 16:00:21 -0800
+Message-ID: <1292976027-12034-9-git-send-email-madhu.iyengar@qlogic.com>
 References: <1292976027-12034-1-git-send-email-madhu.iyengar@qlogic.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vpn.pathscale.com ([198.186.3.75]:36168 "HELO mx.mv.qlogic.com"
+Received: from vpn.pathscale.com ([198.186.3.75]:36166 "HELO mx.mv.qlogic.com"
 	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-	id S1753952Ab0LVADZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 21 Dec 2010 19:03:25 -0500
+	id S1753919Ab0LVADY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 21 Dec 2010 19:03:24 -0500
 In-Reply-To: <1292976027-12034-1-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de
-Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, Joe Carnuccio <joe.carnuccio@qlogic.com>
+Cc: giridhar.malavali@qlogic.com, madhu.iyengar@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@qlogic.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-For driver module parameters that have permission bits set to
-(S_IRUGO|S_IRUSR), remove the second term since it is already
-included in the first term.
+Add sysfs node for displaying board thermal/temperature.
 
-S_IRUGO comes defined as (S_IRUSR|S_IRGRP|S_IROTH).
-
-Signed-off-by: Joe Carnuccio <joe.carnuccio@qlogic.com>
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c |   32 ++++++++++++++++----------------
- 1 files changed, 16 insertions(+), 16 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   27 ++++++++++++++++
+ drivers/scsi/qla2xxx/qla_def.h  |    3 +-
+ drivers/scsi/qla2xxx/qla_gbl.h  |    2 +
+ drivers/scsi/qla2xxx/qla_init.c |    1 +
+ drivers/scsi/qla2xxx/qla_mbx.c  |   65 +++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 97 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 1814df8..51e944f 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -37,12 +37,12 @@ static struct kmem_cache *srb_cachep;
- static struct kmem_cache *ctx_cachep;
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index bc8194f..44578b5 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -1309,6 +1309,31 @@ qla2x00_fabric_param_show(struct device *dev, struct device_attribute *attr,
+ }
  
- int ql2xlogintimeout = 20;
--module_param(ql2xlogintimeout, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xlogintimeout, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xlogintimeout,
- 		"Login timeout value in seconds.");
+ static ssize_t
++qla2x00_thermal_temp_show(struct device *dev,
++	struct device_attribute *attr, char *buf)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
++	int rval = QLA_FUNCTION_FAILED;
++	uint16_t temp, frac;
++
++	if (!vha->hw->flags.thermal_supported)
++		return snprintf(buf, PAGE_SIZE, "\n");
++
++	temp = frac = 0;
++	if (test_bit(ABORT_ISP_ACTIVE, &vha->dpc_flags) ||
++	    test_bit(ISP_ABORT_NEEDED, &vha->dpc_flags))
++		DEBUG2_3_11(printk(KERN_WARNING
++		    "%s(%ld): isp reset in progress.\n",
++		    __func__, vha->host_no));
++	else if (!vha->hw->flags.eeh_busy)
++		rval = qla2x00_get_thermal_temp(vha, &temp, &frac);
++	if (rval != QLA_SUCCESS)
++		temp = frac = 0;
++
++	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", temp, frac);
++}
++
++static ssize_t
+ qla2x00_fw_state_show(struct device *dev, struct device_attribute *attr,
+     char *buf)
+ {
+@@ -1366,6 +1391,7 @@ static DEVICE_ATTR(vn_port_mac_address, S_IRUGO,
+ 		   qla2x00_vn_port_mac_address_show, NULL);
+ static DEVICE_ATTR(fabric_param, S_IRUGO, qla2x00_fabric_param_show, NULL);
+ static DEVICE_ATTR(fw_state, S_IRUGO, qla2x00_fw_state_show, NULL);
++static DEVICE_ATTR(thermal_temp, S_IRUGO, qla2x00_thermal_temp_show, NULL);
  
- int qlport_down_retry;
--module_param(qlport_down_retry, int, S_IRUGO|S_IRUSR);
-+module_param(qlport_down_retry, int, S_IRUGO);
- MODULE_PARM_DESC(qlport_down_retry,
- 		"Maximum number of command retries to a port that returns "
- 		"a PORT-DOWN status.");
-@@ -55,12 +55,12 @@ MODULE_PARM_DESC(ql2xplogiabsentdevice,
- 		"Default is 0 - no PLOGI. 1 - perfom PLOGI.");
+ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_driver_version,
+@@ -1394,6 +1420,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_fabric_param,
+ 	&dev_attr_fw_state,
+ 	&dev_attr_optrom_gold_fw_version,
++	&dev_attr_thermal_temp,
+ 	NULL,
+ };
  
- int ql2xloginretrycount = 0;
--module_param(ql2xloginretrycount, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xloginretrycount, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xloginretrycount,
- 		"Specify an alternate value for the NVRAM login retry count.");
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 6168628..ccfc8e7 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2426,7 +2426,8 @@ struct qla_hw_data {
+ 		uint32_t	fcp_prio_enabled	:1;
+ 		uint32_t	fw_hung	:1;
+ 		uint32_t        quiesce_owner:1;
+-		/* 29 bits */
++		uint32_t	thermal_supported:1;
++		/* 26 bits */
+ 	} flags;
  
- int ql2xallocfwdump = 1;
--module_param(ql2xallocfwdump, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xallocfwdump, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xallocfwdump,
- 		"Option to enable allocation of memory for a firmware dump "
- 		"during HBA initialization.  Memory allocation requirements "
-@@ -73,7 +73,7 @@ MODULE_PARM_DESC(ql2xextended_error_logging,
- 		"Default is 0 - no logging. 1 - log errors.");
+ 	/* This spinlock is used to protect "io transactions", you must
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index c228d24..39c4bdd 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -53,6 +53,8 @@ extern void qla2x00_update_fcport(scsi_qla_host_t *, fc_port_t *);
+ extern void qla2x00_alloc_fw_dump(scsi_qla_host_t *);
+ extern void qla2x00_try_to_stop_firmware(scsi_qla_host_t *);
  
- int ql2xshiftctondsd = 6;
--module_param(ql2xshiftctondsd, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xshiftctondsd, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xshiftctondsd,
- 		"Set to control shifting of command type processing "
- 		"based on total number of SG elements.");
-@@ -81,7 +81,7 @@ MODULE_PARM_DESC(ql2xshiftctondsd,
- static void qla2x00_free_device(scsi_qla_host_t *);
++extern int qla2x00_get_thermal_temp(scsi_qla_host_t *, uint16_t *, uint16_t *);
++
+ extern void qla84xx_put_chip(struct scsi_qla_host *);
  
- int ql2xfdmienable=1;
--module_param(ql2xfdmienable, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xfdmienable, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xfdmienable,
- 		"Enables FDMI registrations. "
- 		"0 - no FDMI. Default is 1 - perform FDMI.");
-@@ -106,27 +106,27 @@ MODULE_PARM_DESC(ql2xenablehba_err_chk,
- 		" Default is 0 - Error isolation disabled, 1 - Enable it");
+ extern int qla2x00_async_login(struct scsi_qla_host *, fc_port_t *,
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index c8ca25a..d0a0dc9 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -498,6 +498,7 @@ qla2x00_initialize_adapter(scsi_qla_host_t *vha)
+ 	vha->flags.reset_active = 0;
+ 	ha->flags.pci_channel_io_perm_failure = 0;
+ 	ha->flags.eeh_busy = 0;
++	ha->flags.thermal_supported = 1;
+ 	atomic_set(&vha->loop_down_timer, LOOP_DOWN_TIME);
+ 	atomic_set(&vha->loop_state, LOOP_DOWN);
+ 	vha->device_flags = DFLG_NO_CABLE;
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 04d6cfc..e473e9f 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -4160,6 +4160,71 @@ qla24xx_set_fcp_prio(scsi_qla_host_t *vha, uint16_t loop_id, uint16_t priority,
+ }
  
- int ql2xiidmaenable=1;
--module_param(ql2xiidmaenable, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xiidmaenable, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xiidmaenable,
- 		"Enables iIDMA settings "
- 		"Default is 1 - perform iIDMA. 0 - no iIDMA.");
- 
- int ql2xmaxqueues = 1;
--module_param(ql2xmaxqueues, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xmaxqueues, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xmaxqueues,
- 		"Enables MQ settings "
- 		"Default is 1 for single queue. Set it to number "
- 		"of queues in MQ mode.");
- 
- int ql2xmultique_tag;
--module_param(ql2xmultique_tag, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xmultique_tag, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xmultique_tag,
- 		"Enables CPU affinity settings for the driver "
- 		"Default is 0 for no affinity of request and response IO. "
- 		"Set it to 1 to turn on the cpu affinity.");
- 
- int ql2xfwloadbin;
--module_param(ql2xfwloadbin, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xfwloadbin, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xfwloadbin,
- 		"Option to specify location from which to load ISP firmware:\n"
- 		" 2 -- load firmware via the request_firmware() (hotplug)\n"
-@@ -135,39 +135,39 @@ MODULE_PARM_DESC(ql2xfwloadbin,
- 		" 0 -- use default semantics.\n");
- 
- int ql2xetsenable;
--module_param(ql2xetsenable, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xetsenable, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xetsenable,
- 		"Enables firmware ETS burst."
- 		"Default is 0 - skip ETS enablement.");
- 
- int ql2xdbwr = 1;
--module_param(ql2xdbwr, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xdbwr, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xdbwr,
- 	"Option to specify scheme for request queue posting\n"
- 	" 0 -- Regular doorbell.\n"
- 	" 1 -- CAMRAM doorbell (faster).\n");
- 
- int ql2xdontresethba;
--module_param(ql2xdontresethba, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xdontresethba, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xdontresethba,
- 	"Option to specify reset behaviour\n"
- 	" 0 (Default) -- Reset on failure.\n"
- 	" 1 -- Do not reset on failure.\n");
- 
- int ql2xtargetreset = 1;
--module_param(ql2xtargetreset, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xtargetreset, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xtargetreset,
- 		 "Enable target reset."
- 		 "Default is 1 - use hw defaults.");
- 
- int ql2xgffidenable;
--module_param(ql2xgffidenable, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xgffidenable, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xgffidenable,
- 		"Enables GFF_ID checks of port type. "
- 		"Default is 0 - Do not use GFF_ID information.");
- 
- int ql2xasynctmfenable;
--module_param(ql2xasynctmfenable, int, S_IRUGO|S_IRUSR);
-+module_param(ql2xasynctmfenable, int, S_IRUGO);
- MODULE_PARM_DESC(ql2xasynctmfenable,
- 		"Enables issue of TM IOCBs asynchronously via IOCB mechanism"
- 		"Default is 0 - Issue TM IOCBs via mailbox mechanism.");
+ int
++qla2x00_get_thermal_temp(scsi_qla_host_t *vha, uint16_t *temp, uint16_t *frac)
++{
++	int rval;
++	mbx_cmd_t mc;
++	mbx_cmd_t *mcp = &mc;
++	struct qla_hw_data *ha = vha->hw;
++
++	DEBUG11(printk(KERN_INFO "%s(%ld): entered.\n", __func__, ha->host_no));
++
++	/* High bits. */
++	mcp->mb[0] = MBC_READ_SFP;
++	mcp->mb[1] = 0x98;
++	mcp->mb[2] = 0;
++	mcp->mb[3] = 0;
++	mcp->mb[6] = 0;
++	mcp->mb[7] = 0;
++	mcp->mb[8] = 1;
++	mcp->mb[9] = 0x01;
++	mcp->mb[10] = BIT_13|BIT_0;
++	mcp->out_mb = MBX_10|MBX_9|MBX_8|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
++	mcp->in_mb = MBX_1|MBX_0;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->flags = 0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3_11(printk(KERN_WARNING
++		    "%s(%ld): failed=%x (%x).\n", __func__,
++		    vha->host_no, rval, mcp->mb[0]));
++		ha->flags.thermal_supported = 0;
++		goto fail;
++	}
++	*temp = mcp->mb[1] & 0xFF;
++
++	/* Low bits. */
++	mcp->mb[0] = MBC_READ_SFP;
++	mcp->mb[1] = 0x98;
++	mcp->mb[2] = 0;
++	mcp->mb[3] = 0;
++	mcp->mb[6] = 0;
++	mcp->mb[7] = 0;
++	mcp->mb[8] = 1;
++	mcp->mb[9] = 0x10;
++	mcp->mb[10] = BIT_13|BIT_0;
++	mcp->out_mb = MBX_10|MBX_9|MBX_8|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
++	mcp->in_mb = MBX_1|MBX_0;
++	mcp->tov = MBX_TOV_SECONDS;
++	mcp->flags = 0;
++	rval = qla2x00_mailbox_command(vha, mcp);
++	if (rval != QLA_SUCCESS) {
++		DEBUG2_3_11(printk(KERN_WARNING
++		    "%s(%ld): failed=%x (%x).\n", __func__,
++		    vha->host_no, rval, mcp->mb[0]));
++		ha->flags.thermal_supported = 0;
++		goto fail;
++	}
++	*frac = ((mcp->mb[1] & 0xFF) >> 6) * 25;
++
++	if (rval == QLA_SUCCESS)
++		DEBUG11(printk(KERN_INFO
++		    "%s(%ld): done.\n", __func__, ha->host_no));
++fail:
++	return rval;
++}
++
++int
+ qla82xx_mbx_intr_enable(scsi_qla_host_t *vha)
+ {
+ 	int rval;
 -- 
 1.6.0.2
 
