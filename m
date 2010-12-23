@@ -1,31 +1,210 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [RFC] lldd_I_T_nexus_reset use in sas_ata.c
-Date: Thu, 23 Dec 2010 15:05:06 -0600
-Message-ID: <1293138306.10141.14.camel@mulgrave.site>
-References: <AANLkTimTDLOv8A7Vq3y6-8L4VA8PpU135fSQZH8SgaKQ@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: RE: [PATCH 06/11] mpt2sas: Convert to host_lock less w/ interrupts
+	disabled externally
+Date: Thu, 23 Dec 2010 13:01:54 -0800
+Message-ID: <1293138114.4649.104.camel@haakon2.linux-iscsi.org>
+References: <1290032349-4959-1-git-send-email-nab@linux-iscsi.org>
+	 <4CE4FCB8.20608@panasas.com>
+	 <1290121071.31890.135.camel@haakon2.linux-iscsi.org>
+	 <B2FD678A64EAAD45B089B123FDFC3ED709047ABA@inbmail01.lsi.com>
+	 <B2FD678A64EAAD45B089B123FDFC3ED70916A016@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:41014 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751655Ab0LWVFN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Dec 2010 16:05:13 -0500
-In-Reply-To: <AANLkTimTDLOv8A7Vq3y6-8L4VA8PpU135fSQZH8SgaKQ@mail.gmail.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51720 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751655Ab0LWVHt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Dec 2010 16:07:49 -0500
+In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED70916A016@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chuck Tuffli <ctuffli@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-scsi <linux-scsi@vger.kernel.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Vasu Dev <vasu.dev@linux.intel.com>, Tejun Heo <tj@kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 
-On Thu, 2010-12-23 at 11:34 -0800, Chuck Tuffli wrote:
-> Can some shed light on why sas_ata_phy_reset() does an I_T nexus
-> reset? It seems like calling sas_phy_reset() might be more accurate in
-> this case. Thanks.
+On Mon, 2010-12-20 at 20:34 +0530, Desai, Kashyap wrote:
+> Nicholas,
+> 
 
-It needs an ATA reset that propagates.  ATA resets don't key off SAS phy
-resets, they have a separate reset sequence, which is triggered by the
-I_T nexus reset.
+Hi Kashyap,
 
-James
+My apologies for the delayed response, as I have been AFK for the past
+days..
 
+> I have gone through another round of code walkthrough (for mpt2sas and mptfusion) to find out dependency w.r.t new host lock less mode.
+> In my opinion, w/ interrupts disable is a good ideal. (Earlier, I mentioned that mpt2sas is safe even if interrupts are enabled) 
+> In real scenario, *preemption* disable is more IMP for mpt2sas/mptfusion driver than interrupts disable.
+> 
+
+Thank you for the clarification here.  
+
+> 
+> e.a if scsih_qcmd_xxx has executed half of the code and (due to preemption is not disable for the same CPU), Scheduler can execute
+> any other process on the SAME cpu (Though IRQ is disable). Consider Error handling is kicked off on the same CPU and as part of EH,
+> it executed HBA reset.
+> As part of HBA reset Driver has return back all pending Scsi command to mid-layer, and once control come back to original scsih_qcmd_xxx
+> LLD drive will see bad results (Kernel crash/Data corruption/h/w hung or anything critical.....)
+> 
+> 
+
+Hmmm, very good point.
+
+> So I would suggest to disable preemption also in your macro " IRQ_DISABLE_SCSI_QCMD " as below two level of prevention.
+>         local_irq_save(flags);
+>         preempt_disable();
+> 
+> 
+
+Ok, I have been asked to drop the IRQ_DISABLE_SCSI_QCMD() macro and open
+code this for the handful of LLDs in the host_lock-less series.  I will
+add the functional equivilent and disable preemption following your
+recommendation in mpt2sas/mptfusion (and the other drivers using
+IRQ_DISABLE_SCSI_QCMD) in the next round of lock_less-LLDs-for-38-v4.
+
+> mpt2sas parameters checks like ioc_link_reset_in_process,
+> tm_busy, scs_priv_target_data->deleted  are mainly to communicate device/IOC state of the firmware so there is no hard dependency w.r.t host_lock.
+> 
+
+Also understood.  Thanks for the feedback here and I will respin the
+mpt2sas/mptfusion for your review next week.
+
+Best Regards,
+
+--nab
+
+> 
+> Thanks, Kashyap
+> 
+> 
+> 
+> 
+> > -----Original Message-----
+> > From: Desai, Kashyap
+> > Sent: Friday, November 19, 2010 4:33 PM
+> > To: Nicholas A. Bellinger; Boaz Harrosh
+> > Cc: linux-scsi; Jeff Garzik; James Bottomley; Christoph Hellwig; Mike
+> > Christie; Vasu Dev; Tejun Heo; DL-MPT Fusion Linux
+> > Subject: RE: [PATCH 06/11] mpt2sas: Convert to host_lock less w/
+> > interrupts disabled externally
+> > 
+> > 
+> > 
+> > > -----Original Message-----
+> > > From: Nicholas A. Bellinger [mailto:nab@linux-iscsi.org]
+> > > Sent: Friday, November 19, 2010 4:28 AM
+> > > To: Boaz Harrosh
+> > > Cc: linux-scsi; Jeff Garzik; James Bottomley; Christoph Hellwig; Mike
+> > > Christie; Vasu Dev; Tejun Heo; DL-MPT Fusion Linux; Desai, Kashyap
+> > > Subject: Re: [PATCH 06/11] mpt2sas: Convert to host_lock less w/
+> > > interrupts disabled externally
+> > >
+> > > <Trimming CC list>
+> > >
+> > > On Thu, 2010-11-18 at 12:15 +0200, Boaz Harrosh wrote:
+> > > > On 11/18/2010 12:19 AM, Nicholas A. Bellinger wrote:
+> > > > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > > >
+> > > > > This patch converts the mpt2sas driver to run in host_lock less
+> > > mode
+> > > > > with the new IRQ_DISABLE_SCSI_QCMD() that disables interrupts
+> > while
+> > > > > calling ->queuecommand() dispatch
+> > > > >
+> > > > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> > > > > ---
+> > > > >  drivers/scsi/mpt2sas/mpt2sas_scsih.c |    6 +++---
+> > > > >  1 files changed, 3 insertions(+), 3 deletions(-)
+> > > > >
+> > > > > diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > > b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > > > > index 1a96a00..e564fe7 100644
+> > > > > --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > > > > +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> > > > > @@ -3304,7 +3304,7 @@ _scsih_eedp_error_handling(struct scsi_cmnd
+> > > *scmd, u16 ioc_status)
+> > > > >  }
+> > > > >
+> > > > >  /**
+> > > > > - * _scsih_qcmd - main scsi request entry point
+> > > > > + * _scsih_qcmd_irq_disable - main scsi request entry point
+> > > > >   * @scmd: pointer to scsi command object
+> > > > >   * @done: function pointer to be invoked on completion
+> > > > >   *
+> > > > > @@ -3315,7 +3315,7 @@ _scsih_eedp_error_handling(struct scsi_cmnd
+> > > *scmd, u16 ioc_status)
+> > > > >   * SCSI_MLQUEUE_HOST_BUSY if the entire host queue is full
+> > > > >   */
+> > > > >  static int
+> > > > > -_scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct
+> > > scsi_cmnd *))
+> > > > > +_scsih_qcmd_irq_disable(struct scsi_cmnd *scmd, void
+> > > (*done)(struct scsi_cmnd *))
+> > > > >  {
+> > > > >  	struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device-
+> > >host);
+> > > > >  	struct MPT2SAS_DEVICE *sas_device_priv_data;
+> > > > > @@ -3441,7 +3441,7 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd,
+> > void
+> > > (*done)(struct scsi_cmnd *))
+> > > > >  	return SCSI_MLQUEUE_HOST_BUSY;
+> > > > >  }
+> > > > >
+> > > > > -static DEF_SCSI_QCMD(_scsih_qcmd)
+> > > > > +static IRQ_DISABLE_SCSI_QCMD(_scsih_qcmd)
+> > > > >
+> > > >
+> > > > How can this (and other in the patchset) can be correct? I mean I
+> > > expect
+> > > > that if you remove the lock,xx_qcmd_lck,unlock then inside the
+> > > xx_qcmd_lck
+> > > > there was an unlock,do123,lock and that driver was effectively
+> > > running lockless
+> > > > before. (like in iscsi). But here this is new behaviour. If it is
+> > > correct
+> > > > I would like to see a statement from you that:
+> > > > 	"I have audited this driver, and all shared resources are
+> > > protected by
+> > > >          XYZ so ..."
+> > > >
+> > > > Otherwise how can I know this is correct? I have never audited this
+> > > driver myself
+> > > >
+> > >
+> > > So for this specific mpt2sas case, Vasu Dev had been testing the
+> > > lock_less case w/o disabling interrupts for his original
+> > > SHT->unlocked_qcmd=1 patch, and from his comments this mode was
+> > stable
+> > > during his JBOD lock_less small block IOP performance test.
+> > >
+> > Nicholas, mpt2sas driver is safe even if in lock less condition.
+> > I have tested mpt2sas driver available in 2.6.37-rc2 where I have seen
+> > host lock push down code is available for mpt2sas driver
+> > I have seen static DEF_SCSI_QCMD(_scsih_qcmd) is available for mpt2sas
+> > driver. I also did testing removing that particular macro and making
+> > Mpt2sas driver in actual host lock less mode. Below observation is
+> > after removing static DEF_SCSI_QCMD(_scsih_qcmd) from mpt2sas (that is
+> > what I refer as actual host lock less mode)
+> > 
+> > I have tested stability of the driver and I/O integrity. Things were
+> > fine. I am not seeing any need for even going for
+> > IRQ_DISABLE_SCSI_QCMD() patch too.
+> > Mpt2sas driver is able to handle host lock less mode seamlessly, since
+> > we have all required (racy) places under spinlocks.
+> > 
+> > I do not see any solid need for this patch. Please correct me if I am
+> > missing anything here.
+> > 
+> > ~ Kashyap
+> > 
+> > > This patch currently includes IRQ_DISABLE_SCSI_QCMD() usage which I
+> > am
+> > > not even sure is needed (according to Vasu's original findings), but
+> > I
+> > > decided to err on the conservative side until we can get some
+> > feedback
+> > > from the the mpt2sas maintainer (Kashyap @ LSI CC'ed).
+> > >
+> > > --nab
+> > >
+> 
 
