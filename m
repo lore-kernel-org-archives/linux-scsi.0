@@ -1,44 +1,64 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Tejun Heo <htejun@gmail.com>
 Subject: Re: Boot failure with block/for-next
-Date: Wed, 22 Dec 2010 22:31:13 -0600
-Message-ID: <1293078673.3019.765.camel@mulgrave.site>
+Date: Thu, 23 Dec 2010 11:09:56 +0100
+Message-ID: <20101223100956.GA15625@htj.dyndns.org>
 References: <1293038823.3019.89.camel@mulgrave.site>
+ <1293078673.3019.765.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:43795 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750764Ab0LWEbS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 22 Dec 2010 23:31:18 -0500
-In-Reply-To: <1293038823.3019.89.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1293078673.3019.765.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Tejun Heo <htejun@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Wed, 2010-12-22 at 11:27 -0600, James Bottomley wrote:
-> Trying to test out the SCSI post merge tree, I've found it won't boot on
-> my SCSI test system.  The reason is a failure to read the partition
-> table of the root disc.  It just gives
-> 
-> sda: unable to read partition table
-> 
-> The other four discs in the system seem to read their partition tables
-> OK.
-> 
-> The obvious candidate is the partition code rework in block/for-next.
-> Simply reverting 
+Hello, James.
 
-Actually, surprisingly, bisection confirms it's this patch:
+On Wed, Dec 22, 2010 at 10:31:13PM -0600, James Bottomley wrote:
+ > Actually, surprisingly, bisection confirms it's this patch:
+ > 
+ > Author: Tejun Heo <tj@kernel.org>
+ > Date:   Wed Dec 8 20:57:42 2010 +0100
+ > 
+ >     sd: implement sd_check_events()
+ > 
+ > I can't quite see how yet.
 
-Author: Tejun Heo <tj@kernel.org>
-Date:   Wed Dec 8 20:57:42 2010 +0100
+Does the following patch fix the problem?  Thanks.
 
-    sd: implement sd_check_events()
+Subject: sd: don't clear media presence unless it's removable
 
-I can't quite see how yet.
+set_media_not_present() can be called for a non-removable device if it
+raises UA for whatever reason; however, block layer calls into
+sd_check_events() only if the device is removable.  As the function is
+responsible for setting media presence, sd continues to think that
+media is missing on the non-removable device making it inaccessible.
 
-James
+This patch makes set_media_not_present() clear media presence iff the
+device is removable.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+---
+ drivers/scsi/sd.c |    7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
+Index: work/drivers/scsi/sd.c
+===================================================================
+--- work.orig/drivers/scsi/sd.c
++++ work/drivers/scsi/sd.c
+@@ -993,8 +993,11 @@ static void set_media_not_present(struct
+ {
+ 	if (sdkp->media_present)
+ 		sdkp->device->changed = 1;
+-	sdkp->media_present = 0;
+-	sdkp->capacity = 0;
++
++	if (sdkp->device->removable) {
++		sdkp->media_present = 0;
++		sdkp->capacity = 0;
++	}
+ }
+ 
+ static int media_not_present(struct scsi_disk *sdkp,
