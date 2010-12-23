@@ -1,7 +1,7 @@
 From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: [RFC 7/8] IB/srp: stop sharing the host lock with SCSI
-Date: Thu, 23 Dec 2010 16:31:32 -0500
-Message-ID: <1293139893-11678-8-git-send-email-dillowda@ornl.gov>
+Subject: [RFC 1/8] IB/srp: allow task management without a previous request
+Date: Thu, 23 Dec 2010 16:31:26 -0500
+Message-ID: <1293139893-11678-2-git-send-email-dillowda@ornl.gov>
 References: <1293139893-11678-1-git-send-email-dillowda@ornl.gov>
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1293139893-11678-1-git-send-email-dillowda-1Heg1YXhbW8@public.gmane.org>
@@ -10,174 +10,253 @@ To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-We don't need protection against the SCSI stack, so use our own lock to
-allow parallel progress on separate CPUs.
+We can only have one task management comment outstanding, so move the
+completion and status to the target port. This allows us to handle
+resets of a LUN without a corresponding request having been sent.
+Meanwhile, we don't need to play games with host_scribble, just use it
+as the pointer it is.
 
-This is a break-out of Bart Van Assche's work.
+This fixes a crash when we issue a bus reset using sg_reset.
+
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=13893
+Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |   42 +++++++++++++++++-----------------
- drivers/infiniband/ulp/srp/ib_srp.h |    2 +
- 2 files changed, 23 insertions(+), 21 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c |   90 ++++++++++++----------------------
+ drivers/infiniband/ulp/srp/ib_srp.h |   10 ++--
+ 2 files changed, 37 insertions(+), 63 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 4e8ae59..fff72c8 100644
+index 1e1e347..95fb9f0 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -447,12 +447,12 @@ static bool srp_change_state(struct srp_target_port *target,
+@@ -542,6 +542,7 @@ static void srp_unmap_data(struct scsi_cmnd *scmnd,
+ static void srp_remove_req(struct srp_target_port *target, struct srp_request *req)
  {
- 	int changed = false;
- 
--	spin_lock_irq(target->scsi_host->host_lock);
-+	spin_lock_irq(&target->lock);
- 	if (target->state == old) {
- 		target->state = new;
- 		changed = true;
- 	}
--	spin_unlock_irq(target->scsi_host->host_lock);
-+	spin_unlock_irq(&target->lock);
- 	return changed;
- }
- 
-@@ -555,11 +555,11 @@ static void srp_remove_req(struct srp_target_port *target,
- 	unsigned long flags;
- 
  	srp_unmap_data(req->scmnd, target, req);
--	spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	target->req_lim += req_lim_delta;
- 	req->scmnd = NULL;
++	req->scmnd = NULL;
  	list_move_tail(&req->list, &target->free_reqs);
--	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
  }
  
- static void srp_reset_req(struct srp_target_port *target, struct srp_request *req)
-@@ -634,13 +634,13 @@ err:
- 	 * Schedule our work inside the lock to avoid a race with
- 	 * the flush_scheduled_work() in srp_remove_one().
- 	 */
--	spin_lock_irq(target->scsi_host->host_lock);
-+	spin_lock_irq(&target->lock);
- 	if (target->state == SRP_TARGET_CONNECTING) {
- 		target->state = SRP_TARGET_DEAD;
- 		INIT_WORK(&target->work, srp_remove_work);
- 		schedule_work(&target->work);
+@@ -925,15 +926,13 @@ static void srp_process_rsp(struct srp_target_port *target, struct srp_rsp *rsp)
+ 
+ 	target->req_lim += delta;
+ 
+-	req = &target->req_ring[rsp->tag & ~SRP_TAG_TSK_MGMT];
+-
+ 	if (unlikely(rsp->tag & SRP_TAG_TSK_MGMT)) {
+-		if (be32_to_cpu(rsp->resp_data_len) < 4)
+-			req->tsk_status = -1;
+-		else
+-			req->tsk_status = rsp->data[3];
+-		complete(&req->done);
++		target->tsk_mgmt_status = -1;
++		if (be32_to_cpu(rsp->resp_data_len) >= 4)
++			target->tsk_mgmt_status = rsp->data[3];
++		complete(&target->tsk_mgmt_done);
+ 	} else {
++		req = &target->req_ring[rsp->tag];
+ 		scmnd = req->scmnd;
+ 		if (!scmnd)
+ 			shost_printk(KERN_ERR, target->scsi_host,
+@@ -953,13 +952,9 @@ static void srp_process_rsp(struct srp_target_port *target, struct srp_rsp *rsp)
+ 		else if (rsp->flags & (SRP_RSP_FLAG_DIOVER | SRP_RSP_FLAG_DIUNDER))
+ 			scsi_set_resid(scmnd, be32_to_cpu(rsp->data_in_res_cnt));
+ 
+-		if (!req->tsk_mgmt) {
+-			scmnd->host_scribble = (void *) -1L;
+-			scmnd->scsi_done(scmnd);
+-
+-			srp_remove_req(target, req);
+-		} else
+-			req->cmd_done = 1;
++		scmnd->host_scribble = NULL;
++		scmnd->scsi_done(scmnd);
++		srp_remove_req(target, req);
  	}
--	spin_unlock_irq(target->scsi_host->host_lock);
-+	spin_unlock_irq(&target->lock);
  
- 	return ret;
+ 	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
+@@ -1155,7 +1150,7 @@ static int srp_queuecommand_lck(struct scsi_cmnd *scmnd,
+ 
+ 	scmnd->scsi_done     = done;
+ 	scmnd->result        = 0;
+-	scmnd->host_scribble = (void *) (long) req->index;
++	scmnd->host_scribble = (void *) req;
+ 
+ 	cmd = iu->buf;
+ 	memset(cmd, 0, sizeof *cmd);
+@@ -1167,8 +1162,6 @@ static int srp_queuecommand_lck(struct scsi_cmnd *scmnd,
+ 
+ 	req->scmnd    = scmnd;
+ 	req->cmd      = iu;
+-	req->cmd_done = 0;
+-	req->tsk_mgmt = NULL;
+ 
+ 	len = srp_map_data(scmnd, target, req);
+ 	if (len < 0) {
+@@ -1442,7 +1435,7 @@ static int srp_cm_handler(struct ib_cm_id *cm_id, struct ib_cm_event *event)
  }
-@@ -829,17 +829,16 @@ static void srp_put_tx_iu(struct srp_target_port *target, struct srp_iu *iu,
+ 
+ static int srp_send_tsk_mgmt(struct srp_target_port *target,
+-			     struct srp_request *req, u8 func)
++			     u64 req_tag, unsigned int lun, u8 func)
  {
- 	unsigned long flags;
+ 	struct ib_device *dev = target->srp_host->srp_dev->dev;
+ 	struct srp_iu *iu;
+@@ -1451,12 +1444,10 @@ static int srp_send_tsk_mgmt(struct srp_target_port *target,
+ 	spin_lock_irq(target->scsi_host->host_lock);
  
--	spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	list_add(&iu->list, &target->free_tx);
- 	if (iu_type != SRP_IU_RSP)
- 		++target->req_lim;
--	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
+ 	if (target->state == SRP_TARGET_DEAD ||
+-	    target->state == SRP_TARGET_REMOVED) {
+-		req->scmnd->result = DID_BAD_TARGET << 16;
++	    target->state == SRP_TARGET_REMOVED)
+ 		goto out;
+-	}
+ 
+-	init_completion(&req->done);
++	init_completion(&target->tsk_mgmt_done);
+ 
+ 	iu = __srp_get_tx_iu(target, SRP_IU_TSK_MGMT);
+ 	if (!iu)
+@@ -1468,21 +1459,19 @@ static int srp_send_tsk_mgmt(struct srp_target_port *target,
+ 	memset(tsk_mgmt, 0, sizeof *tsk_mgmt);
+ 
+ 	tsk_mgmt->opcode 	= SRP_TSK_MGMT;
+-	tsk_mgmt->lun 		= cpu_to_be64((u64) req->scmnd->device->lun << 48);
+-	tsk_mgmt->tag 		= req->index | SRP_TAG_TSK_MGMT;
++	tsk_mgmt->lun 		= cpu_to_be64((u64) lun << 48);
++	tsk_mgmt->tag 		= req_tag | SRP_TAG_TSK_MGMT;
+ 	tsk_mgmt->tsk_mgmt_func = func;
+-	tsk_mgmt->task_tag 	= req->index;
++	tsk_mgmt->task_tag 	= req_tag;
+ 
+ 	ib_dma_sync_single_for_device(dev, iu->dma, sizeof *tsk_mgmt,
+ 				      DMA_TO_DEVICE);
+ 	if (__srp_post_send(target, iu, sizeof *tsk_mgmt))
+ 		goto out;
+ 
+-	req->tsk_mgmt = iu;
+-
+ 	spin_unlock_irq(target->scsi_host->host_lock);
+ 
+-	if (!wait_for_completion_timeout(&req->done,
++	if (!wait_for_completion_timeout(&target->tsk_mgmt_done,
+ 					 msecs_to_jiffies(SRP_ABORT_TIMEOUT_MS)))
+ 		return -1;
+ 
+@@ -1493,43 +1482,29 @@ out:
+ 	return -1;
  }
  
- /*
-- * Must be called with target->scsi_host->host_lock held to protect
-- * req_lim and free_tx.  If IU is not sent, it must be returned using
-- * srp_put_tx_iu().
-+ * Must be called with target->lock held to protect req_lim and free_tx.
-+ * If IU is not sent, it must be returned using srp_put_tx_iu().
-  *
-  * Note:
-  * An upper limit for the number of allocated information units for each
-@@ -958,10 +957,10 @@ static int srp_response_common(struct srp_target_port *target, s32 req_delta,
- 	struct srp_iu *iu;
- 	int err;
+-static int srp_find_req(struct srp_target_port *target,
+-			struct scsi_cmnd *scmnd,
+-			struct srp_request **req)
+-{
+-	if (scmnd->host_scribble == (void *) -1L)
+-		return -1;
+-
+-	*req = &target->req_ring[(long) scmnd->host_scribble];
+-
+-	return 0;
+-}
+-
+ static int srp_abort(struct scsi_cmnd *scmnd)
+ {
+ 	struct srp_target_port *target = host_to_target(scmnd->device->host);
+-	struct srp_request *req;
++	struct srp_request *req = (struct srp_request *) scmnd->host_scribble;
+ 	int ret = SUCCESS;
  
--	spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	target->req_lim += req_delta;
- 	iu = __srp_get_tx_iu(target, SRP_IU_RSP);
--	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
+ 	shost_printk(KERN_ERR, target->scsi_host, "SRP abort called\n");
  
- 	if (!iu) {
- 		shost_printk(KERN_ERR, target->scsi_host, PFX
-@@ -1126,7 +1125,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 		return 0;
- 	}
+-	if (target->qp_in_error)
+-		return FAILED;
+-	if (srp_find_req(target, scmnd, &req))
++	if (!req || target->qp_in_error)
+ 		return FAILED;
+-	if (srp_send_tsk_mgmt(target, req, SRP_TSK_ABORT_TASK))
++	if (srp_send_tsk_mgmt(target, req->index, scmnd->device->lun,
++			      SRP_TSK_ABORT_TASK))
+ 		return FAILED;
  
--	spin_lock_irqsave(shost->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	/* This goes away once the scsi_eh routines stop testing it. */
- 	scsi_cmd_get_serial(shost, scmnd);
- 	iu = __srp_get_tx_iu(target, SRP_IU_CMD);
-@@ -1135,7 +1134,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 				      list);
- 		list_del_init(&req->list);
- 	}
--	spin_unlock_irqrestore(shost->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
+ 	spin_lock_irq(target->scsi_host->host_lock);
  
- 	if (!iu)
- 		goto err;
-@@ -1181,9 +1180,9 @@ err_unmap:
- err_iu:
- 	srp_put_tx_iu(target, iu, SRP_IU_CMD);
+-	if (req->cmd_done) {
+-		srp_remove_req(target, req);
+-		scmnd->scsi_done(scmnd);
+-	} else if (!req->tsk_status) {
+-		srp_remove_req(target, req);
+-		scmnd->result = DID_ABORT << 16;
+-	} else
+-		ret = FAILED;
++	if (req->scmnd) {
++		if (!target->tsk_mgmt_status) {
++			srp_remove_req(target, req);
++			scmnd->result = DID_ABORT << 16;
++		} else
++			ret = FAILED;
++	}
  
--	spin_lock_irqsave(shost->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	list_add(&req->list, &target->free_reqs);
--	spin_unlock_irqrestore(shost->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
+ 	spin_unlock_irq(target->scsi_host->host_lock);
  
- err:
- 	return SCSI_MLQUEUE_HOST_BUSY;
-@@ -1449,9 +1448,9 @@ static int srp_send_tsk_mgmt(struct srp_target_port *target,
+@@ -1545,17 +1520,16 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
  
- 	init_completion(&target->tsk_mgmt_done);
+ 	if (target->qp_in_error)
+ 		return FAILED;
+-	if (srp_find_req(target, scmnd, &req))
+-		return FAILED;
+-	if (srp_send_tsk_mgmt(target, req, SRP_TSK_LUN_RESET))
++	if (srp_send_tsk_mgmt(target, SRP_TAG_NO_REQ, scmnd->device->lun,
++			      SRP_TSK_LUN_RESET))
+ 		return FAILED;
+-	if (req->tsk_status)
++	if (target->tsk_mgmt_status)
+ 		return FAILED;
  
--	spin_lock_irq(target->scsi_host->host_lock);
-+	spin_lock_irq(&target->lock);
- 	iu = __srp_get_tx_iu(target, SRP_IU_TSK_MGMT);
--	spin_unlock_irq(target->scsi_host->host_lock);
-+	spin_unlock_irq(&target->lock);
+ 	spin_lock_irq(target->scsi_host->host_lock);
  
- 	if (!iu)
- 		return -1;
-@@ -1955,6 +1954,7 @@ static ssize_t srp_create_target(struct device *dev,
- 	target->scsi_host  = target_host;
- 	target->srp_host   = host;
+ 	list_for_each_entry_safe(req, tmp, &target->req_queue, list)
+-		if (req->scmnd->device == scmnd->device)
++		if (req->scmnd && req->scmnd->device == scmnd->device)
+ 			srp_reset_req(target, req);
  
-+	spin_lock_init(&target->lock);
- 	INIT_LIST_HEAD(&target->free_tx);
- 	INIT_LIST_HEAD(&target->free_reqs);
- 	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
-@@ -2184,9 +2184,9 @@ static void srp_remove_one(struct ib_device *device)
- 		 */
- 		spin_lock(&host->target_lock);
- 		list_for_each_entry(target, &host->target_list, list) {
--			spin_lock_irq(target->scsi_host->host_lock);
-+			spin_lock_irq(&target->lock);
- 			target->state = SRP_TARGET_REMOVED;
--			spin_unlock_irq(target->scsi_host->host_lock);
-+			spin_unlock_irq(&target->lock);
- 		}
- 		spin_unlock(&host->target_lock);
- 
+ 	spin_unlock_irq(target->scsi_host->host_lock);
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
-index e2b1719..c4699ea 100644
+index ed0dce9..c923731 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.h
 +++ b/drivers/infiniband/ulp/srp/ib_srp.h
-@@ -144,6 +144,8 @@ struct srp_target_port {
+@@ -68,7 +68,8 @@ enum {
+ 	SRP_TSK_MGMT_SQ_SIZE	= 1,
+ 	SRP_CMD_SQ_SIZE		= SRP_REQ_SQ_SIZE - SRP_TSK_MGMT_SQ_SIZE,
  
- 	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
+-	SRP_TAG_TSK_MGMT	= 1 << (SRP_RQ_SHIFT + 1),
++	SRP_TAG_NO_REQ		= ~0UL,
++	SRP_TAG_TSK_MGMT	= 1UL << 31,
  
-+	spinlock_t		lock;
+ 	SRP_FMR_SIZE		= 256,
+ 	SRP_FMR_POOL_SIZE	= 1024,
+@@ -113,12 +114,8 @@ struct srp_request {
+ 	struct list_head	list;
+ 	struct scsi_cmnd       *scmnd;
+ 	struct srp_iu	       *cmd;
+-	struct srp_iu	       *tsk_mgmt;
+ 	struct ib_pool_fmr     *fmr;
+-	struct completion	done;
+ 	short			index;
+-	u8			cmd_done;
+-	u8			tsk_status;
+ };
+ 
+ struct srp_target_port {
+@@ -165,6 +162,9 @@ struct srp_target_port {
+ 	int			status;
+ 	enum srp_target_state	state;
+ 	int			qp_in_error;
 +
- 	struct list_head	free_tx;
- 	struct srp_iu	       *tx_ring[SRP_SQ_SIZE];
++	struct completion	tsk_mgmt_done;
++	u8			tsk_mgmt_status;
+ };
  
+ struct srp_iu {
 -- 
 1.7.2.3
 
