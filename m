@@ -1,7 +1,7 @@
 From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: [RFC 5/8] IB/srp: reduce local coverage for command submission and EH
-Date: Thu, 23 Dec 2010 16:31:30 -0500
-Message-ID: <1293139893-11678-6-git-send-email-dillowda@ornl.gov>
+Subject: [RFC 8/8] IB/srp: consolidate hot-path variables into cache lines
+Date: Thu, 23 Dec 2010 16:31:33 -0500
+Message-ID: <1293139893-11678-9-git-send-email-dillowda@ornl.gov>
 References: <1293139893-11678-1-git-send-email-dillowda@ornl.gov>
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <1293139893-11678-1-git-send-email-dillowda-1Heg1YXhbW8@public.gmane.org>
@@ -10,297 +10,135 @@ To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-We only need locks to protect our lists and number of credits available.
-By pre-consuming the credit for the request, we can reduce our lock
-coverage to just those areas. If we don't actually send the request,
-we'll need to put the credit back into the pool.
-
-This is a break-out and slight cleanup of Bart Van Assche's work.
+Put the variables accessed together in the hot-path into common
+cachelines, and separate them by RW vs RO to avoid false dirtying.
+We keep a local copy of the lkey and rkey in the target to avoid
+traversing pointers (and associated cache lines) to find them.
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |  126 +++++++++++++++++++----------------
- drivers/infiniband/ulp/srp/ib_srp.h |    1 -
- 2 files changed, 69 insertions(+), 58 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c |   12 +++++++-----
+ drivers/infiniband/ulp/srp/ib_srp.h |   31 +++++++++++++++++++------------
+ 2 files changed, 26 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index fcc8702..96d301e 100644
+index fff72c8..cef6191 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -818,9 +818,24 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
- }
+@@ -768,7 +768,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
+ 		struct srp_direct_buf *buf = (void *) cmd->add_data;
  
- /*
-+ * Return an IU and possible credit to the free pool
-+ */
-+static void srp_put_tx_iu(struct srp_target_port *target, struct srp_iu *iu,
-+			  enum srp_iu_type iu_type)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+	list_add(&iu->list, &target->free_tx);
-+	if (iu_type != SRP_IU_RSP)
-+		++target->req_lim;
-+	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+}
-+
-+/*
-  * Must be called with target->scsi_host->host_lock held to protect
-- * req_lim and free_tx.  Lock cannot be dropped between call here and
-- * call to __srp_post_send().
-+ * req_lim and free_tx.  If IU is not sent, it must be returned using
-+ * srp_put_tx_iu().
-  *
-  * Note:
-  * An upper limit for the number of allocated information units for each
-@@ -843,26 +858,25 @@ static struct srp_iu *__srp_get_tx_iu(struct srp_target_port *target,
- 		return NULL;
+ 		buf->va  = cpu_to_be64(ib_sg_dma_address(ibdev, scat));
+-		buf->key = cpu_to_be32(dev->mr->rkey);
++		buf->key = cpu_to_be32(target->rkey);
+ 		buf->len = cpu_to_be32(ib_sg_dma_len(ibdev, scat));
+ 	} else if (srp_map_fmr(target, scat, count, req,
+ 			       (void *) cmd->add_data)) {
+@@ -793,7 +793,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
+ 			buf->desc_list[i].va  =
+ 				cpu_to_be64(ib_sg_dma_address(ibdev, sg));
+ 			buf->desc_list[i].key =
+-				cpu_to_be32(dev->mr->rkey);
++				cpu_to_be32(target->rkey);
+ 			buf->desc_list[i].len = cpu_to_be32(dma_len);
+ 			datalen += dma_len;
+ 		}
+@@ -806,7 +806,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
+ 		buf->table_desc.va  =
+ 			cpu_to_be64(req->cmd->dma + sizeof *cmd + sizeof *buf);
+ 		buf->table_desc.key =
+-			cpu_to_be32(target->srp_host->srp_dev->mr->rkey);
++			cpu_to_be32(target->rkey);
+ 		buf->table_desc.len =
+ 			cpu_to_be32(count * sizeof (struct srp_direct_buf));
  
- 	/* Initiator responses to target requests do not consume credits */
--	if (target->req_lim <= rsv && iu_type != SRP_IU_RSP) {
--		++target->zero_req_lim;
--		return NULL;
-+	if (iu_type != SRP_IU_RSP) {
-+		if (target->req_lim <= rsv) {
-+			++target->zero_req_lim;
-+			return NULL;
-+		}
-+
-+		--target->req_lim;
- 	}
- 
- 	iu = list_first_entry(&target->free_tx, struct srp_iu, list);
--	iu->type = iu_type;
-+	list_del_init(&iu->list);
- 	return iu;
- }
- 
--/*
-- * Must be called with target->scsi_host->host_lock held to protect
-- * req_lim and free_tx.
-- */
--static int __srp_post_send(struct srp_target_port *target,
--			   struct srp_iu *iu, int len)
-+static int srp_post_send(struct srp_target_port *target,
-+			 struct srp_iu *iu, int len)
- {
- 	struct ib_sge list;
- 	struct ib_send_wr wr, *bad_wr;
--	int ret = 0;
+@@ -883,7 +883,7 @@ static int srp_post_send(struct srp_target_port *target,
  
  	list.addr   = iu->dma;
  	list.length = len;
-@@ -875,15 +889,7 @@ static int __srp_post_send(struct srp_target_port *target,
- 	wr.opcode     = IB_WR_SEND;
- 	wr.send_flags = IB_SEND_SIGNALED;
+-	list.lkey   = target->srp_host->srp_dev->mr->lkey;
++	list.lkey   = target->lkey;
  
--	ret = ib_post_send(target->qp, &wr, &bad_wr);
--
--	if (!ret) {
--		list_del_init(&iu->list);
--		if (iu->type != SRP_IU_RSP)
--			--target->req_lim;
--	}
--
--	return ret;
-+	return ib_post_send(target->qp, &wr, &bad_wr);
- }
+ 	wr.next       = NULL;
+ 	wr.wr_id      = (uintptr_t) iu;
+@@ -902,7 +902,7 @@ static int srp_post_recv(struct srp_target_port *target, struct srp_iu *iu)
  
- static int srp_post_recv(struct srp_target_port *target, struct srp_iu *iu)
-@@ -953,34 +959,33 @@ static void srp_process_rsp(struct srp_target_port *target, struct srp_rsp *rsp)
- static int srp_response_common(struct srp_target_port *target, s32 req_delta,
- 			       void *rsp, int len)
- {
--	struct ib_device *dev;
-+	struct ib_device *dev = target->srp_host->srp_dev->dev;
- 	unsigned long flags;
- 	struct srp_iu *iu;
--	int err = 1;
--
--	dev = target->srp_host->srp_dev->dev;
-+	int err;
+ 	list.addr   = iu->dma;
+ 	list.length = iu->size;
+-	list.lkey   = target->srp_host->srp_dev->mr->lkey;
++	list.lkey   = target->lkey;
  
- 	spin_lock_irqsave(target->scsi_host->host_lock, flags);
- 	target->req_lim += req_delta;
--
- 	iu = __srp_get_tx_iu(target, SRP_IU_RSP);
-+	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+
- 	if (!iu) {
- 		shost_printk(KERN_ERR, target->scsi_host, PFX
- 			     "no IU available to send response\n");
--		goto out;
-+		return 1;
- 	}
+ 	wr.next     = NULL;
+ 	wr.wr_id    = (uintptr_t) iu;
+@@ -1953,6 +1953,8 @@ static ssize_t srp_create_target(struct device *dev,
+ 	target->io_class   = SRP_REV16A_IB_IO_CLASS;
+ 	target->scsi_host  = target_host;
+ 	target->srp_host   = host;
++	target->lkey	   = host->srp_dev->mr->lkey;
++	target->rkey	   = host->srp_dev->mr->rkey;
  
- 	ib_dma_sync_single_for_cpu(dev, iu->dma, len, DMA_TO_DEVICE);
- 	memcpy(iu->buf, rsp, len);
- 	ib_dma_sync_single_for_device(dev, iu->dma, len, DMA_TO_DEVICE);
- 
--	err = __srp_post_send(target, iu, len);
--	if (err)
-+	err = srp_post_send(target, iu, len);
-+	if (err) {
- 		shost_printk(KERN_ERR, target->scsi_host, PFX
- 			     "unable to post response: %d\n", err);
-+		srp_put_tx_iu(target, iu, SRP_IU_RSP);
-+	}
- 
--out:
--	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
- 	return err;
- }
- 
-@@ -1107,14 +1112,14 @@ static void srp_send_completion(struct ib_cq *cq, void *target_ptr)
- 	}
- }
- 
--static int srp_queuecommand_lck(struct scsi_cmnd *scmnd,
--			    void (*done)(struct scsi_cmnd *))
-+static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- {
--	struct srp_target_port *target = host_to_target(scmnd->device->host);
-+	struct srp_target_port *target = host_to_target(shost);
- 	struct srp_request *req;
- 	struct srp_iu *iu;
- 	struct srp_cmd *cmd;
- 	struct ib_device *dev;
-+	unsigned long flags;
- 	int len;
- 
- 	if (target->state == SRP_TARGET_CONNECTING)
-@@ -1123,11 +1128,21 @@ static int srp_queuecommand_lck(struct scsi_cmnd *scmnd,
- 	if (target->state == SRP_TARGET_DEAD ||
- 	    target->state == SRP_TARGET_REMOVED) {
- 		scmnd->result = DID_BAD_TARGET << 16;
--		done(scmnd);
-+		scmnd->scsi_done(scmnd);
- 		return 0;
- 	}
- 
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	/* This goes away once the scsi_eh routines stop testing it. */
-+	scsi_cmd_get_serial(shost, scmnd);
- 	iu = __srp_get_tx_iu(target, SRP_IU_CMD);
-+	if (iu) {
-+		req = list_first_entry(&target->free_reqs, struct srp_request,
-+				      list);
-+		list_del_init(&req->list);
-+	}
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
- 	if (!iu)
- 		goto err;
- 
-@@ -1135,9 +1150,6 @@ static int srp_queuecommand_lck(struct scsi_cmnd *scmnd,
- 	ib_dma_sync_single_for_cpu(dev, iu->dma, srp_max_iu_len,
- 				   DMA_TO_DEVICE);
- 
--	req = list_first_entry(&target->free_reqs, struct srp_request, list);
--
--	scmnd->scsi_done     = done;
- 	scmnd->result        = 0;
- 	scmnd->host_scribble = (void *) req;
- 
-@@ -1156,30 +1168,33 @@ static int srp_queuecommand_lck(struct scsi_cmnd *scmnd,
- 	if (len < 0) {
- 		shost_printk(KERN_ERR, target->scsi_host,
- 			     PFX "Failed to map data\n");
--		goto err;
-+		goto err_iu;
- 	}
- 
- 	ib_dma_sync_single_for_device(dev, iu->dma, srp_max_iu_len,
- 				      DMA_TO_DEVICE);
- 
--	if (__srp_post_send(target, iu, len)) {
-+	if (srp_post_send(target, iu, len)) {
- 		shost_printk(KERN_ERR, target->scsi_host, PFX "Send failed\n");
- 		goto err_unmap;
- 	}
- 
--	list_del_init(&req->list);
--
- 	return 0;
- 
- err_unmap:
- 	srp_unmap_data(scmnd, target, req);
- 
-+err_iu:
-+	srp_put_tx_iu(target, iu, SRP_IU_CMD);
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_add(&req->list, &target->free_reqs);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+
- err:
- 	return SCSI_MLQUEUE_HOST_BUSY;
- }
- 
--static DEF_SCSI_QCMD(srp_queuecommand)
--
- static int srp_alloc_iu_bufs(struct srp_target_port *target)
- {
- 	int i;
-@@ -1434,17 +1449,18 @@ static int srp_send_tsk_mgmt(struct srp_target_port *target,
- 	struct srp_iu *iu;
- 	struct srp_tsk_mgmt *tsk_mgmt;
- 
--	spin_lock_irq(target->scsi_host->host_lock);
--
- 	if (target->state == SRP_TARGET_DEAD ||
- 	    target->state == SRP_TARGET_REMOVED)
--		goto out;
-+		return -1;
- 
- 	init_completion(&target->tsk_mgmt_done);
- 
-+	spin_lock_irq(target->scsi_host->host_lock);
- 	iu = __srp_get_tx_iu(target, SRP_IU_TSK_MGMT);
-+	spin_unlock_irq(target->scsi_host->host_lock);
-+
- 	if (!iu)
--		goto out;
-+		return -1;
- 
- 	ib_dma_sync_single_for_cpu(dev, iu->dma, sizeof *tsk_mgmt,
- 				   DMA_TO_DEVICE);
-@@ -1459,20 +1475,16 @@ static int srp_send_tsk_mgmt(struct srp_target_port *target,
- 
- 	ib_dma_sync_single_for_device(dev, iu->dma, sizeof *tsk_mgmt,
- 				      DMA_TO_DEVICE);
--	if (__srp_post_send(target, iu, sizeof *tsk_mgmt))
--		goto out;
--
--	spin_unlock_irq(target->scsi_host->host_lock);
-+	if (srp_post_send(target, iu, sizeof *tsk_mgmt)) {
-+		srp_put_tx_iu(target, iu, SRP_IU_TSK_MGMT);
-+		return -1;
-+	}
- 
- 	if (!wait_for_completion_timeout(&target->tsk_mgmt_done,
- 					 msecs_to_jiffies(SRP_ABORT_TIMEOUT_MS)))
- 		return -1;
- 
- 	return 0;
--
--out:
--	spin_unlock_irq(target->scsi_host->host_lock);
--	return -1;
- }
- 
- static int srp_abort(struct scsi_cmnd *scmnd)
+ 	spin_lock_init(&target->lock);
+ 	INIT_LIST_HEAD(&target->free_tx);
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
-index b3808dd..e2b1719 100644
+index c4699ea..43f9129 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.h
 +++ b/drivers/infiniband/ulp/srp/ib_srp.h
-@@ -168,7 +168,6 @@ struct srp_iu {
- 	void		       *buf;
- 	size_t			size;
- 	enum dma_data_direction	direction;
--	enum srp_iu_type	type;
+@@ -117,6 +117,24 @@ struct srp_request {
  };
  
- #endif /* IB_SRP_H */
+ struct srp_target_port {
++	/* These are RW in the hot path, and commonly used together */
++	struct list_head	free_tx;
++	struct list_head	free_reqs;
++	spinlock_t		lock;
++	s32			req_lim;
++
++	/* These are read-only in the hot path */
++	struct ib_cq	       *send_cq ____cacheline_aligned;
++	struct ib_cq	       *recv_cq;
++	struct ib_qp	       *qp;
++	u32			lkey;
++	u32			rkey;
++	enum srp_target_state	state;
++
++	/* Everything above this point is used in the hot path of
++	 * command processing. Try to keep them packed into cachelines.
++	 */
++
+ 	__be64			id_ext;
+ 	__be64			ioc_guid;
+ 	__be64			service_id;
+@@ -133,23 +151,13 @@ struct srp_target_port {
+ 	int			path_query_id;
+ 
+ 	struct ib_cm_id	       *cm_id;
+-	struct ib_cq	       *recv_cq;
+-	struct ib_cq	       *send_cq;
+-	struct ib_qp	       *qp;
+ 
+ 	int			max_ti_iu_len;
+-	s32			req_lim;
+ 
+ 	int			zero_req_lim;
+ 
+-	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
+-
+-	spinlock_t		lock;
+-
+-	struct list_head	free_tx;
+ 	struct srp_iu	       *tx_ring[SRP_SQ_SIZE];
+-
+-	struct list_head	free_reqs;
++	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
+ 	struct srp_request	req_ring[SRP_CMD_SQ_SIZE];
+ 
+ 	struct work_struct	work;
+@@ -157,7 +165,6 @@ struct srp_target_port {
+ 	struct list_head	list;
+ 	struct completion	done;
+ 	int			status;
+-	enum srp_target_state	state;
+ 	int			qp_in_error;
+ 
+ 	struct completion	tsk_mgmt_done;
 -- 
 1.7.2.3
 
