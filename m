@@ -1,65 +1,62 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH (trivial) 2/2] SCSI: simplify scsi_remove_target()
-Date: Thu, 23 Dec 2010 09:19:34 -0600
-Message-ID: <1293117574.3029.1.camel@mulgrave.site>
-References: <Pine.LNX.4.44L0.1011151603300.1370-100000@iolanthe.rowland.org>
-	 <alpine.LNX.2.00.1012221220560.16569@pobox.suse.cz>
+Subject: Re: Boot failure with block/for-next
+Date: Thu, 23 Dec 2010 09:27:21 -0600
+Message-ID: <1293118041.3029.3.camel@mulgrave.site>
+References: <1293038823.3019.89.camel@mulgrave.site>
+	 <1293078673.3019.765.camel@mulgrave.site>
+	 <20101223100956.GA15625@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49891 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753241Ab0LWPTj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Dec 2010 10:19:39 -0500
-In-Reply-To: <alpine.LNX.2.00.1012221220560.16569@pobox.suse.cz>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101223100956.GA15625@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Alan Stern <stern@rowland.harvard.edu>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, 2010-12-22 at 12:21 +0100, Jiri Kosina wrote:
-> On Mon, 15 Nov 2010, Alan Stern wrote:
+On Thu, 2010-12-23 at 11:09 +0100, Tejun Heo wrote:
+> Hello, James.
 > 
-> > This trivial patch (as1340) eliminates an unnecessary local variable
-> > from scsi_remove_target().
-> > 
-> > Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> > 
-> > ---
-> > 
-> > Index: usb-2.6/drivers/scsi/scsi_sysfs.c
-> > ===================================================================
-> > --- usb-2.6.orig/drivers/scsi/scsi_sysfs.c
-> > +++ usb-2.6/drivers/scsi/scsi_sysfs.c
-> > @@ -1020,16 +1020,14 @@ static int __remove_child (struct device
-> >   */
-> >  void scsi_remove_target(struct device *dev)
-> >  {
-> > -	struct device *rdev;
-> > -
-> >  	if (scsi_is_target_device(dev)) {
-> >  		__scsi_remove_target(to_scsi_target(dev));
-> >  		return;
-> >  	}
-> >  
-> > -	rdev = get_device(dev);
-> > +	get_device(dev);
-> >  	device_for_each_child(dev, NULL, __remove_child);
-> > -	put_device(rdev);
-> > +	put_device(dev);
-> >  }
-> >  EXPORT_SYMBOL(scsi_remove_target);
+> On Wed, Dec 22, 2010 at 10:31:13PM -0600, James Bottomley wrote:
+>  > Actually, surprisingly, bisection confirms it's this patch:
+>  > 
+>  > Author: Tejun Heo <tj@kernel.org>
+>  > Date:   Wed Dec 8 20:57:42 2010 +0100
+>  > 
+>  >     sd: implement sd_check_events()
+>  > 
+>  > I can't quite see how yet.
 > 
-> The code seems to be reshuffled a little bit in -next, so this'd better go 
-> through SCSI tree to avoid unnecessary conflicts between trees in next.
+> Does the following patch fix the problem?  Thanks.
 > 
-> James, are you going to pick it up?
+> Subject: sd: don't clear media presence unless it's removable
 
-I've got it in my queue ... it depends how much more trouble we get
-integrating driver patches (and the tightness of the merge window
-deadline, since some people suspect a christmas release).
+No, still the same failure.  Here's an excised log of an unsuccessful
+and successful disk probe:
+
+/bin/sh: can't access tty; job control turned off
+(initramfs) dmesg|grep sda
+sd 2:0:1:0: [sda] 71132960 512-byte logical blocks: (36.4 GB/33.9 GiB)
+sd 2:0:1:0: [sda] Write Protect is off
+sd 2:0:1:0: [sda] Mode Sense: d3 00 10 08
+sd 2:0:1:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
+device: 'sda': device_add
+PM: Adding info for No Bus:sda
+ sda: unable to read partition table
+sd 2:0:1:0: [sda] Attached SCSI disk
+(initramfs) dmesg|grep sdb
+sd 2:0:2:0: [sdb] 17942584 512-byte logical blocks: (9.18 GB/8.55 GiB)
+sd 2:0:2:0: [sdb] Write Protect is off
+sd 2:0:2:0: [sdb] Mode Sense: e3 00 10 08
+sd 2:0:2:0: [sdb] Write cache: disabled, read cache: enabled, supports DPO and FUA
+device: 'sdb': device_add
+PM: Adding info for No Bus:sdb
+ sdb: sdb1 sdb2
+device: 'sdb1': device_add
+PM: Adding info for No Bus:sdb1
+device: 'sdb2': device_add
+PM: Adding info for No Bus:sdb2
+sd 2:0:2:0: [sdb] Attached SCSI disk
 
 James
-
-
