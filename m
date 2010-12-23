@@ -1,52 +1,47 @@
-From: Chuck Tuffli <ctuffli@gmail.com>
-Subject: Re: [RFC] lldd_I_T_nexus_reset use in sas_ata.c
-Date: Thu, 23 Dec 2010 14:56:25 -0800
-Message-ID: <AANLkTim2dnMU5oH6vZdFL80U85KcTfTGikXwKDzFRuON@mail.gmail.com>
-References: <AANLkTimTDLOv8A7Vq3y6-8L4VA8PpU135fSQZH8SgaKQ@mail.gmail.com>
-	<1293138306.10141.14.camel@mulgrave.site>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: fix compile failure in linux-next
+Date: Thu, 23 Dec 2010 14:52:04 -0800
+Message-ID: <1293144724.4649.187.camel@haakon2.linux-iscsi.org>
+References: <1293036459.3019.46.camel@mulgrave.site>
+	 <1293144172.4649.177.camel@haakon2.linux-iscsi.org>
+	 <1293144604.10141.20.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:65357 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751608Ab0LWW40 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Dec 2010 17:56:26 -0500
-Received: by wyb28 with SMTP id 28so6529402wyb.19
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Dec 2010 14:56:25 -0800 (PST)
-In-Reply-To: <1293138306.10141.14.camel@mulgrave.site>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:50111 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752290Ab0LWW57 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Dec 2010 17:57:59 -0500
+In-Reply-To: <1293144604.10141.20.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi <linux-scsi@vger.kernel.org>, Stephen Rothwell <sfr@canb.auug.org.au>
 
-On Thu, Dec 23, 2010 at 1:05 PM, James Bottomley
-<James.Bottomley@suse.de> wrote:
-> On Thu, 2010-12-23 at 11:34 -0800, Chuck Tuffli wrote:
->> Can some shed light on why sas_ata_phy_reset() does an I_T nexus
->> reset? It seems like calling sas_phy_reset() might be more accurate =
-in
->> this case. Thanks.
->
-> It needs an ATA reset that propagates. =A0ATA resets don't key off SA=
-S phy
-> resets, they have a separate reset sequence, which is triggered by th=
-e
-> I_T nexus reset.
+On Thu, 2010-12-23 at 16:50 -0600, James Bottomley wrote:
+> On Thu, 2010-12-23 at 14:42 -0800, Nicholas A. Bellinger wrote:
+> > On Wed, 2010-12-22 at 10:47 -0600, James Bottomley wrote:
+> > > The interfaces open/close_bdev_exclusive are being eliminated in the
+> > > merge window.  Fix by using the replacements.
+> > > 
+> > > James
+> > > 
+> > 
+> > Hi James,
+> > 
+> > If you don't mind I am going to let srf carry this patch for now, and I
+> > will begin a 'for-linux-next' branch to prevent future breakage from
+> > drivers/target/.
+> 
+> It's already done.  The point about postmerge trees is to fix this type
+> of thing.
+> 
 
-Maybe this is a misunderstanding on my part, but I thought there were
-two ways to reset ATA devices connected to SAS/SMP:
-- SRST FIS or
-- issuing a link reset via LOCAL_PHY_CONTROL / SMP_PHY_CONTROL
+Ahhh, thanks for the clarification here.  I will try my best to prevent
+this type of conflict for linux-next in the future.
 
-Since sas_phy_reset() triggers the second case and three of the SAS
-drivers (aic94xx, mvsas, pm8001) all internally call sas_phy_reset()
-as a part of the I_T nexus reset, it seemed like this was a more
-direct and consistent approach.
+Best Regards,
 
----chuck
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--nab
+
