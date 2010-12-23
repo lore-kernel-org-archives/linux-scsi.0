@@ -1,84 +1,51 @@
 From: David Dillow <dillowda@ornl.gov>
-Subject: [RFC 0/8] IB/srp: scaling and bug fixes for 2.6.38
-Date: Thu, 23 Dec 2010 16:31:25 -0500
-Message-ID: <1293139893-11678-1-git-send-email-dillowda@ornl.gov>
+Subject: Re: [RFC 0/8] IB/srp: scaling and bug fixes for 2.6.38
+Date: Thu, 23 Dec 2010 17:08:18 -0500
+Message-ID: <1293142098.2896.15.camel@obelisk.thedillows.org>
+References: <1293141332-12318-1-git-send-email-dillowda@ornl.gov>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-WYfkAHzHUCyTxZ4h9uWe"
+Content-Type: multipart/mixed; boundary="=-Pc8PO6Z81bWkembmVNiE"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from amavis-outgoing1.knology.net ([24.214.64.230]:34164 "EHLO
+Received: from amavis-outgoing1.knology.net ([24.214.64.230]:37549 "EHLO
 	amavis-outgoing1.knology.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752116Ab0LWVzd (ORCPT
+	by vger.kernel.org with ESMTP id S1751468Ab0LWW2x (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 23 Dec 2010 16:55:33 -0500
+	Thu, 23 Dec 2010 17:28:53 -0500
+In-Reply-To: <1293141332-12318-1-git-send-email-dillowda@ornl.gov>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-rdma@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
 
 
---=-WYfkAHzHUCyTxZ4h9uWe
+--=-Pc8PO6Z81bWkembmVNiE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 
-The first patch in this series fixes a longstanding issue where we crash if we
-use sg_reset to perform a bus reset, but haven't sent enough commands to
-initialize all of our request structures. The remaining patches break up Bart
-Van Assche's lock scaling work, and add a few optimizations on top.
+On Thu, 2010-12-23 at 16:55 -0500, David Dillow wrote:
+> [ Sorry to break threading, I botched things when editing the cover
+> letter to add an attachment... ]
 
-The scaling work looks to have paid off pretty well. All tests were conducted
-over a QDR link between two Dell R410s with 2.6GHz Xeons. To push any possible
-bottlenecks to the initiator, the test target was stripped down to not transfer
-the requests data -- it simply response to the command as though it had.
+And here's the intended attachment for those interested in the test
+results.
 
-For fio driving one LUN using the SG engine, refactoring the locking using
-patches 2 through 6 give a 30% increase in command throughput from 16 to 64
-threads, while allowing similar (within the noise) or slight improvements for 1
-to 8 threads and 128 threads and above. Unsharing the lock (patch 7) with the
-SCSI mid-layer hurts a bit for the single thread case (~2%) but gives an
-additional 1 to 6% with more than one thread. Cache optimization (patch 8)
-returns the single thread case back to par, and gives a modest increase as
-threads increase.
+The configs:
+00-baseline is 698fd6a2c3ca05ec796072defb5c415289a86cdc in Linus's tree.
+01-shared-lock is with patches 1 through 6
+02-unshared-lock adds patch 7
+03-unshared-cache adds patch 8
 
-For fio driving mulitple LUNs using the AIO engine, patches 2 through 6 give
-slightly smaller increases at low thread counts with a single drive (20% over
-baseline), but the improvement increases as drives are added and/or iodepth
-increases, reaching 50% in many cases. The removing the shared lock typically
-brings 5-10% improvement over the lock reduction work, and optimizing the cache
-usage also gives a modest improvement, though more than in the SG case.
-
-There is more investigation to be done -- for example, AIO peaked at 296k IOPs
-from a single drive at an iodepth of 32 and a thread count of 32. SG peaked at
-183k IOPS at 64 threads (iodepth was 1, but I did not try a survey for this
-engine). I have some completion batching and blk-iopoll conversion patches as
-well, but they have some interesting performance anomolies at the moment that
-prevent them being a win.
-
-I'd appreciate people's review and comments, as while the patches have over 10
-billion commands on them from the performance testing and real hardware, they
-involve locking and race conditions, which have a habit of not showing up until
-the most inopportune time.
-
-Once 2.6.37 is out, I'll add sign offs and push these to my repo for 2.6.38.
-
-
-
-David Dillow (8):
-  IB/srp: allow task management without a previous request
-  IB/srp: consolidate state change code
-  IB/srp: allow lockless work posting
-  IB/srp: don't move active requests to their own list
-  IB/srp: reduce local coverage for command submission and EH
-  IB/srp: reduce lock coverage of command completion
-  IB/srp: stop sharing the host lock with SCSI
-  IB/srp: consolidate hot-path variables into cache lines
-
- drivers/infiniband/ulp/srp/ib_srp.c |  390 ++++++++++++++++-------------------
- drivers/infiniband/ulp/srp/ib_srp.h |   46 +++--
- 2 files changed, 204 insertions(+), 232 deletions(-)
+Each test was run for 10 seconds, and repeated 7 times. I initially ran
+for different runtimes to determine that there was little variability
+after a few seconds, and settled on 10 to move the tests along.
 
 -- 
-1.7.2.3
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
 
-
---=-WYfkAHzHUCyTxZ4h9uWe
+--=-Pc8PO6Z81bWkembmVNiE
 Content-Type: application/vnd.oasis.opendocument.spreadsheet; name="srp-scaling.ods"
 Content-Disposition: attachment; filename="srp-scaling.ods"
 Content-Transfer-Encoding: base64
@@ -2108,5 +2075,90 @@ AAAAAAAAAADPuAEAc2V0dGluZ3MueG1sUEsBAhQAFAAICAgAfaiXPUTVgP9KAQAAaAcAABUAAAAA
 AAAAAAAAAAAA3bwBAE1FVEEtSU5GL21hbmlmZXN0LnhtbFBLBQYAAAAADwAPAO4DAABqvgEAAAA=
 
 
---=-WYfkAHzHUCyTxZ4h9uWe--
+--=-Pc8PO6Z81bWkembmVNiE
+Content-Type: application/x-shellscript; name="run_tests.sh"
+Content-Disposition: attachment; filename="run_tests.sh"
+Content-Transfer-Encoding: 7bit
+
+#!/bin/bash
+
+for i in /sys/block/sd*/queue/scheduler; do echo noop > $i; done
+for i in /sys/block/sd*/queue/nr_requests; do echo 2048 > $i; done
+for i in /sys/block/sd*/queue/max_sectors_kb; do echo 4 > $i; done
+for i in /sys/block/sd*/queue/rotational; do echo 0 > $i; done
+for i in /sys/block/sd*/queue/add_random; do echo 0 > $i; done
+for i in /sys/block/sd*/queue/iostats; do echo 0 > $i; done
+for i in /sys/block/sd*/queue/nomerges; do echo 1 > $i; done
+
+
+FIO=/home/dad/benchmarks/fio.git/fio
+RUNTIME=10
+LOOPS=7
+
+die() {
+	echo "$@" 1>&2
+	exit 1
+}
+
+run_fio() {
+	# Caller provides ioengine, iodepth, numjobs, filenames
+	#
+	# --latency-log ?
+	# --output ?
+	# --group_reporting ?
+	#
+	local ret
+
+	set -x
+	$FIO --rw=randread --direct=1 --thread --gtod_reduce=1 \
+		--disable_bw_measurement=1 --exitall --bs=512 --readonly \
+		--eta=never --runtime=$RUNTIME --time_based \
+		--randrepeat=1 --norandommap "$@"
+	ret=$?
+	set +x
+	return $ret
+}
+
+
+# AIO tests
+run_aio_tests() {
+	# Caller provides filename option
+	#
+	local iodepth numjobs i
+
+	for iodepth in 1 2 4 8 16 32; do
+		for numjobs in 1 2 4 8 16 32; do
+			for (( i = 1 ; i <= LOOPS; i++)); do
+				run_fio --name="test AIO-i$iodepth-t$numjobs-d$numdisks-r$i" --ioengine=aio --iodepth=$iodepth \
+					--numjobs=$numjobs "$@" || return
+			done
+		done
+	done
+}
+
+# SG tests
+run_sg_tests() {
+	# Caller provides filename option
+	#
+	local numjobs i
+
+	for numjobs in 1 2 4 8 16 32 64 128 256; do
+		for (( i = 1 ; i <= LOOPS; i++)); do
+			run_fio --name="test SG-t$numjobs-d$numdisks-r$i" --ioengine=sg --numjobs=$numjobs "$@" || return
+		done
+	done
+}
+
+numdisks=0
+for dev in sd{a,b,c,d,e,f,g}; do
+	(( numdisks++ ))
+	disks="${disks+$disks:}/dev/$dev"
+	[[ $numdisks -eq 1 ]] && {
+		# XXX Not sure the SG tests make sense with > 1 disk
+		run_sg_tests --filename=$disks || die "error during sg tests"
+	}
+	run_aio_tests --filename=$disks || die "error during sg tests"
+done
+
+--=-Pc8PO6Z81bWkembmVNiE--
 
