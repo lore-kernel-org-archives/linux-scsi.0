@@ -1,27 +1,110 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: [PATCH] dma_declare_coherent_memory: push ioremap() up to caller
-Date: Fri, 24 Dec 2010 10:58:59 +0900
-Message-ID: <20101224015858.GG28151@linux-sh.org>
-References: <201012240020.37208.jkrzyszt@tis.icnet.pl>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] scsi_mid_low_api.txt recommend resid usage
+Date: Thu, 23 Dec 2010 21:40:37 -0500
+Message-ID: <4D140825.6000704@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-sh-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201012240020.37208.jkrzyszt@tis.icnet.pl>
-Sender: linux-sh-owner@vger.kernel.org
-To: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
-Cc: linux-arch@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Russell King - ARM Linux <linux@arm.linux.org.uk>, Arnd Bergmann <arnd@arndb.de>, Dan Williams <dan.j.williams@intel.com>, linux-sh@vger.kernel.org, Sascha Hauer <kernel@pengutronix.de>, linux-usb@vger.kernel.org, David Brownell <dbrownell@users.sourceforge.net>, linux-media@vger.kernel.org, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Catalin Marinas <catalin.marinas@arm.com>
+Content-Type: multipart/mixed;
+ boundary="------------050005000600020302050008"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.infotech.no ([82.134.31.41]:51484 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752601Ab0LXCkl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 23 Dec 2010 21:40:41 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Fri, Dec 24, 2010 at 12:20:32AM +0100, Janusz Krzysztofik wrote:
-> Tested on ARM OMAP1 based Amstrad Delta with a WIP OMAP1 camera patch, 
-> patterned upon two mach-mx3 machine types which already try to use the 
-> dma_declare_coherent_memory() method for reserving a region of system 
-> RAM preallocated with another dma_alloc_coherent(). Compile tested for 
-> all modified files except arch/sh/drivers/pci/fixups-dreamcast.c.
-> 
-> Signed-off-by: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
+This is a multi-part message in MIME format.
+--------------050005000600020302050008
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The arch/sh/drivers/pci/fixups-dreamcast.c build fine.
+As discussed in a thread on this list titled:
+    "RFC: short reads on block devices"
+this patch adds recommendations for LLDs to set resid
+when there might be uncertainty about how much data
+has been returned by a device.
 
-Acked-by: Paul Mundt <lethal@linux-sh.org>
+This patch inline and attached] is against scsi-misc-2.6.git
+
+
+Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
+
+
+diff --git a/Documentation/scsi/scsi_mid_low_api.txt 
+b/Documentation/scsi/scsi_mid_low_api.txt
+index df322c1..7bcdea7 100644
+--- a/Documentation/scsi/scsi_mid_low_api.txt
++++ b/Documentation/scsi/scsi_mid_low_api.txt
+@@ -1343,7 +1343,7 @@ Members of interest:
+                     underruns (overruns should be rare). If possible an LLD
+                     should set 'resid' prior to invoking 'done'. The most
+                     interesting case is data transfers from a SCSI target
+-                   device device (i.e. READs) that underrun.
++                   device (e.g. READs) that underrun.
+      underflow    - LLD should place (DID_ERROR << 16) in 'result' if
+                     actual number of bytes transferred is less than this
+                     figure. Not many LLDs implement this check and some that
+@@ -1351,6 +1351,18 @@ Members of interest:
+                     report a DID_ERROR. Better for an LLD to implement
+                     'resid'.
+
++It is recommended that a LLD set 'resid' on data transfers from a SCSI
++target device (e.g. READs). It is especially important that 'resid' is set
++when such data transfers have sense keys of MEDIUM ERROR and HARDWARE ERROR
++(and possibly RECOVERED ERROR). In these cases if a LLD is in doubt how much
++data has been received then the safest approach is to indicate no bytes have
++been received. For example: to indicate that no valid data has been received
++a LLD might use these helpers:
++    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
++where 'SCpnt' is a pointer to a scsi_cmnd object. To indicate only three 512
++bytes blocks has been received 'resid' could be set like this:
++    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt) - (3 * 512));
++
+  The scsi_cmnd structure is defined in include/scsi/scsi_cmnd.h
+
+
+
+--------------050005000600020302050008
+Content-Type: text/x-patch;
+ name="scsi_mid_low_api_resid.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="scsi_mid_low_api_resid.patch"
+
+diff --git a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
+index df322c1..7bcdea7 100644
+--- a/Documentation/scsi/scsi_mid_low_api.txt
++++ b/Documentation/scsi/scsi_mid_low_api.txt
+@@ -1343,7 +1343,7 @@ Members of interest:
+                    underruns (overruns should be rare). If possible an LLD
+                    should set 'resid' prior to invoking 'done'. The most
+                    interesting case is data transfers from a SCSI target
+-                   device device (i.e. READs) that underrun. 
++                   device (e.g. READs) that underrun. 
+     underflow    - LLD should place (DID_ERROR << 16) in 'result' if
+                    actual number of bytes transferred is less than this
+                    figure. Not many LLDs implement this check and some that
+@@ -1351,6 +1351,18 @@ Members of interest:
+                    report a DID_ERROR. Better for an LLD to implement
+                    'resid'.
+ 
++It is recommended that a LLD set 'resid' on data transfers from a SCSI
++target device (e.g. READs). It is especially important that 'resid' is set
++when such data transfers have sense keys of MEDIUM ERROR and HARDWARE ERROR
++(and possibly RECOVERED ERROR). In these cases if a LLD is in doubt how much
++data has been received then the safest approach is to indicate no bytes have
++been received. For example: to indicate that no valid data has been received
++a LLD might use these helpers:
++    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
++where 'SCpnt' is a pointer to a scsi_cmnd object. To indicate only three 512
++bytes blocks has been received 'resid' could be set like this:
++    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt) - (3 * 512));
++
+ The scsi_cmnd structure is defined in include/scsi/scsi_cmnd.h
+ 
+ 
+
+--------------050005000600020302050008--
