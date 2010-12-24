@@ -1,56 +1,75 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Boot failure with block/for-next
-Date: Fri, 24 Dec 2010 12:03:27 +0100
-Message-ID: <20101224110327.GB8781@htj.dyndns.org>
-References: <1293038823.3019.89.camel@mulgrave.site>
- <1293078673.3019.765.camel@mulgrave.site>
- <20101223100956.GA15625@htj.dyndns.org>
- <1293118041.3029.3.camel@mulgrave.site>
- <20101223155239.GB18482@htj.dyndns.org>
- <1293120614.7776.0.camel@mulgrave.site>
- <20101223161312.GC18482@htj.dyndns.org>
- <1293128717.7776.68.camel@mulgrave.site>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 3/3] [SCSI] scst: Move SCST devices documentation to Documentation/ABI
+Date: Fri, 24 Dec 2010 13:01:35 +0100
+Message-ID: <AANLkTi=TW6vGbTACZri9AERPCHpSxhGAzNC09Dp_5QNX@mail.gmail.com>
+References: <201012222144.47522.bvanassche@acm.org> <201012222147.00547.bvanassche@acm.org>
+ <201012231011.47995.konrad@darnok.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1293128717.7776.68.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:52689 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750836Ab0LXMB5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Dec 2010 07:01:57 -0500
+Received: by iyi12 with SMTP id 12so5768675iyi.19
+        for <linux-scsi@vger.kernel.org>; Fri, 24 Dec 2010 04:01:56 -0800 (PST)
+In-Reply-To: <201012231011.47995.konrad@darnok.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Konrad Rzeszutek Wilk <konrad@darnok.org>
+Cc: linux-scsi@vger.kernel.org, vst@vlnb.net, realrichardsharpe@gmail.com, scst-devel@lists.sourceforge.net, Greg Kroah-Hartman <gregkh@suse.de>
 
-Hello, James.
+On Thu, Dec 23, 2010 at 4:11 PM, Konrad Rzeszutek Wilk
+<konrad@darnok.org> wrote:
+>
+> > +
+> > +What: =A0 =A0 =A0 =A0 =A0 /sys/bus/scst_tgt_dev/device/*/exported/=
+export<nr>
+> > +Date: =A0 =A0 =A0 =A0 =A0 December 2010
+> > +KernelVersion: =A02.6.38
+> > +Contact: =A0 =A0 =A0 =A0linux-scsi@vger.kernel.org
+> > +Description:
+> > + =A0 =A0 =A0 =A0 =A0 =A0 Zero or more soft links to the LUNs throu=
+gh which this device
+> > + =A0 =A0 =A0 =A0 =A0 =A0 has been exported. An example:
+> > +
+> > + =A0 =A0 =A0 =A0 =A0 =A0 $ readlink /sys/bus/scst_tgt_dev/devices/=
+disk01/exported/export0
+> > + =A0 =A0 =A0 =A0 =A0 =A0 ../../scst_local_tgt/luns/0
+> > +
+> > +What: =A0 =A0 =A0 =A0 =A0 /sys/bus/scst_tgt_dev/device/*/filename
+> > +Date: =A0 =A0 =A0 =A0 =A0 December 2010
+> > +KernelVersion: =A02.6.38
+> > +Contact: =A0 =A0 =A0 =A0linux-scsi@vger.kernel.org
+> > +Description:
+> > + =A0 =A0 =A0 =A0 =A0 =A0 For virtual devices, the absolute path of=
+ the associated file
+> > + =A0 =A0 =A0 =A0 =A0 =A0 or device. Read-only. An example:
+> > +
+> > + =A0 =A0 =A0 =A0 =A0 =A0 # cat /sys/devices/disk01/filename
+> > + =A0 =A0 =A0 =A0 =A0 =A0 /dev/sdc
+> > + =A0 =A0 =A0 =A0 =A0 =A0 [key]
+>
+> Key?
+>
+> [ ... ]
 
-On Thu, Dec 23, 2010 at 12:25:17PM -0600, James Bottomley wrote:
-> On Thu, 2010-12-23 at 17:13 +0100, Tejun Heo wrote:
-> > On Thu, Dec 23, 2010 at 10:10:14AM -0600, James Bottomley wrote:
-> > > > Can you please apply the debug patch I posted in the other message and
-> > > > post the boot log?  Let's see how the partition read is failing.
-> > > 
-> > > That's actually a red herring ... the disk isn't spinning up, so the
-> > > partition read is getting a not ready.
-> > 
-> > Oh, yay, but at any rate I think the don't-clear-media-presence patch
-> > is probably a good idea just in case UA gets reported somehow.
-> 
-> Well, it wasn't this either.  It turns out that this disk alone reports
-> UNIT_ATTENTION RESET_OCCURRED on the first TEST UNIT READY of spin up.
-> Ordinarily this is harmless, but the new medium change code wrongly
-> interprets any UNIT_ATTENTION as medium changed (and then refuses to
-> talk to the disk).  This is actually a change from the previous code, so
-> the fix is to put it back the way it was.
+Hello Konrad,
 
-I see.  I wonder why the previous patch didn't work.  It should have
-had about the same effect.  I think the UA change went in there while
-trying to bring sr and sd behaviors closer to each other, but yes it
-seems the original code didn't have that.  That said, now there are
-paths where UA would be consumed without setting ->changed and thus sd
-may miss media change events.  This has been like this for quite some
-time and there aren't many removable sd devices these days, so maybe
-this doesn't matter too much.
+Thanks for the feedback. I'll do by best to clarify the documentation
+according to your remarks.
 
-Anyways, for now, the change looks good to me too.  Thanks.
+Regarding the "[key]" indicator on the second line: that is an
+indicator that is either present or absent. That indicator is only
+used by a user-space tool (scstadmin) to find out which sysfs
+attributes differ from their default value. That indicator makes it
+possible to minimize the amount of information to be saved when making
+the SCST state persistent.
 
--- 
-tejun
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
