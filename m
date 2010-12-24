@@ -1,39 +1,38 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH] scsi_mid_low_api.txt recommend resid usage
-Date: Fri, 24 Dec 2010 12:36:46 -0800
-Message-ID: <20101224123646.719a62c0.rdunlap@xenotime.net>
-References: <4D140825.6000704@interlog.com>
-	<20101224094612.8056bbcd.rdunlap@xenotime.net>
-	<4D14FFE4.9030204@interlog.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [ANNOUNCE] lsscsi-0.24 released
+Date: Fri, 24 Dec 2010 17:43:24 -0500
+Message-ID: <4D15220C.30705@interlog.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([72.52.115.56]:45982 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752293Ab0LXUgt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Dec 2010 15:36:49 -0500
-Received: from chimera.site ([173.50.240.230]) by xenotime.net for <linux-scsi@vger.kernel.org>; Fri, 24 Dec 2010 12:36:47 -0800
-In-Reply-To: <4D14FFE4.9030204@interlog.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Fri, 24 Dec 2010 15:17:40 -0500 Douglas Gilbert wrote:
+lsscsi is a utility that uses sysfs in linux 2.6 series kernels
+to list information about SCSI devices and SCSI hosts. Both a
+compact format which is one line per device and a "classic"
+format (like the output of 'cat /proc/scsi/scsi') are supported.
 
-> > Hi Doug,
-> >
-> > Using "an LLD" instead of "a LLD" would be more consistent with the rest
-> > of this txt file (and read better to me).
-> 
-> Randy,
-> There were other examples of "a LLD" which I
-> cleaned up as well.
+Version 0.24 is available at:
+     http://sg.danny.cz/scsi/lsscsi.html
+More information can be found on that page including examples
+and a Download section for tarballs, rpm and deb packages.
 
-Ack.  Thanks.
+There have only been superficial changes to the beta release
+of 0.24 made in June 2010.
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
-desserts:  http://www.xenotime.net/linux/recipes/
+ChangeLog:
+Version 0.24 2010/06/12 [svn: r83]
+   - FC transport syntax changes (colon to slash)
+   - add "(null)" to the currently accepted "<NULL>" as
+     the string representation of NULL
+   - add AM_MAINTAINER_MODE to configure.ac
+   - scandir() library function has changed its signature
+     in its 4th argument, use newer (non-void) variant
+Version 0.23 2009/12/01 [svn: r76]
+...
+
+Doug Gilbert
