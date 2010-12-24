@@ -1,94 +1,98 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [PATCH] dma_declare_coherent_memory: push ioremap() up to
-	caller
-Date: Fri, 24 Dec 2010 15:41:20 +0000
-Message-ID: <20101224154120.GH20587@n2100.arm.linux.org.uk>
-References: <201012240020.37208.jkrzyszt@tis.icnet.pl> <20101224130200.GG20587@n2100.arm.linux.org.uk> <201012241455.30430.jkrzyszt@tis.icnet.pl>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Boot failure with block/for-next
+Date: Fri, 24 Dec 2010 09:47:58 -0600
+Message-ID: <1293205678.2987.37.camel@mulgrave.site>
+References: <1293038823.3019.89.camel@mulgrave.site>
+	 <1293078673.3019.765.camel@mulgrave.site>
+	 <20101223100956.GA15625@htj.dyndns.org>
+	 <1293118041.3029.3.camel@mulgrave.site>
+	 <20101223155239.GB18482@htj.dyndns.org>
+	 <1293120614.7776.0.camel@mulgrave.site>
+	 <20101223161312.GC18482@htj.dyndns.org>
+	 <1293128717.7776.68.camel@mulgrave.site>
+	 <20101224110327.GB8781@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arch-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201012241455.30430.jkrzyszt@tis.icnet.pl>
-Sender: linux-arch-owner@vger.kernel.org
-To: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
-Cc: linux-arch@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, Dan Williams <dan.j.williams@intel.com>, linux-sh@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Sascha Hauer <kernel@pengutronix.de>, linux-usb@vger.kernel.org, David Brownell <dbrownell@users.sourceforge.net>, linux-media@vger.kernel.org, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Catalin Marinas <catalin.marinas@arm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20101224110327.GB8781@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Dec 24, 2010 at 02:55:25PM +0100, Janusz Krzysztofik wrote:
-> Friday 24 December 2010 14:02:00 Russell King - ARM Linux wrote:
-> > On Fri, Dec 24, 2010 at 12:20:32AM +0100, Janusz Krzysztofik wrote:
-> > > The patch tries to implement a solution suggested by Russell King,
-> > > http://lists.infradead.org/pipermail/linux-arm-kernel/2010-December
-> > >/035264.html. It is expected to solve video buffer allocation issues
-> > > for at least a few soc_camera I/O memory less host interface
-> > > drivers, designed around the videobuf_dma_contig layer, which
-> > > allocates video buffers using dma_alloc_coherent().
-> > >
-> > > Created against linux-2.6.37-rc5.
-> > >
-> > > Tested on ARM OMAP1 based Amstrad Delta with a WIP OMAP1 camera
-> > > patch, patterned upon two mach-mx3 machine types which already try
-> > > to use the dma_declare_coherent_memory() method for reserving a
-> > > region of system RAM preallocated with another
-> > > dma_alloc_coherent(). Compile tested for all modified files except
-> > > arch/sh/drivers/pci/fixups-dreamcast.c.
-> >
-> > Another note: with the pair of patches I've sent to the
-> > linux-arm-kernel list earlier today changing the DMA coherent
-> > allocator to steal memory from the system at boot.
-> >
-> > This means there's less need to pre-allocate DMA memory - if there's
-> > sufficient contiguous space in the DMA region to satisfy the
-> > allocation, then the allocation will succeed.  It's also independent
-> > of the maximum page size from the kernel's memory allocators too.
-> >
-> > So I suspect that mach-mx3 (and others) no longer need to do their
-> > own pre-allocation anymore if both of these patches go in.
+On Fri, 2010-12-24 at 12:03 +0100, Tejun Heo wrote:
+> Hello, James.
 > 
-> Then, my rationale will no longer be valid. So, either drop my patch if 
-> you think you have finally come out with a better solution which 
-> doesn't touch any system-wide API, or suggest a new justification for 
-> use in the commit log if you think still the patch solves something 
-> important.
+> On Thu, Dec 23, 2010 at 12:25:17PM -0600, James Bottomley wrote:
+> > On Thu, 2010-12-23 at 17:13 +0100, Tejun Heo wrote:
+> > > On Thu, Dec 23, 2010 at 10:10:14AM -0600, James Bottomley wrote:
+> > > > > Can you please apply the debug patch I posted in the other message and
+> > > > > post the boot log?  Let's see how the partition read is failing.
+> > > > 
+> > > > That's actually a red herring ... the disk isn't spinning up, so the
+> > > > partition read is getting a not ready.
+> > > 
+> > > Oh, yay, but at any rate I think the don't-clear-media-presence patch
+> > > is probably a good idea just in case UA gets reported somehow.
+> > 
+> > Well, it wasn't this either.  It turns out that this disk alone reports
+> > UNIT_ATTENTION RESET_OCCURRED on the first TEST UNIT READY of spin up.
+> > Ordinarily this is harmless, but the new medium change code wrongly
+> > interprets any UNIT_ATTENTION as medium changed (and then refuses to
+> > talk to the disk).  This is actually a change from the previous code, so
+> > the fix is to put it back the way it was.
+> 
+> I see.  I wonder why the previous patch didn't work.
 
-No.  It's not clear whether my pair of patches are both going to make it
-into the kernel, or even what timeframe they're going to make it in.
+Oh, you didn't put a ->removable check in enough paths.  The setting on
+UA was still unconditional, as was the check in sd_prep_fn().
 
-Irrespective of that, we do need a solution to this problem so that this
-stuff starts working again.
+>   It should have
+> had about the same effect.  I think the UA change went in there while
+> trying to bring sr and sd behaviors closer to each other, but yes it
+> seems the original code didn't have that.  That said, now there are
+> paths where UA would be consumed without setting ->changed and thus sd
+> may miss media change events.  This has been like this for quite some
+> time and there aren't many removable sd devices these days, so maybe
+> this doesn't matter too much.
 
-In any case, your patch makes complete sense through and through:
+The code can never really be merged.  for CD/DVD, UA pretty much does
+mean medium removal.  Discs and arrays emit a panoply of UA events (it's
+the SCSI asynchronous event mechanism) if you assume media change on all
+of them, there'll be terrible confusion.  We can narrow to 28/00 that
+means medium may have changed.  It could really do with checking by
+someone who has a removable disc device, though ... it looks like some
+of the 3B/xx might be applicable.
 
-1. if other architecture/machine wants to reserve a chunk of DMA-able
-   memory for a specific device (eg, because of a restriction on the
-   number of DMA address bits available) and it's completely DMA
-   coherent, it shouldn't have to go through the pains of having that
-   memory unconditionally ioremap'd.
+> Anyways, for now, the change looks good to me too.  Thanks.
 
-2. What if the memory being provided from some source where you already
-   have the mapping setup in a specific way for a reason?
+Thanks,
 
-For example, say I have an ARM design, and all peripherals are in a
-single 256MB memory region, which includes a chunk of SRAM set aside
-for DMA purposes.  Let's say I can map that really efficiently by a
-few page table entries, which means relatively little TLB usage for
-accessing this region.
+James
 
-With the current API, it becomes difficult to pass that mapping through
-the dma_declare_coherent_memory() because the physical address goes
-through ioremap(), which obfuscates what's going on.  However, if I
-could pass the bus and virtual address, then there's no ambiguity over
-what I want to do.
+---
 
-What if I want to declare memory to the DMA coherent allocator with
-attributes different from what ioremap() gives me, maybe with write
-combining properties (because it happens to be safe for the specific
-device) ?
-
-Passing the virtual address allows the API to become much more flexible.
-Not only that, it allows it to be used on ARM, rather than becoming (as
-it currently stands) prohibited on ARM.
-
-I believe that putting ioremap() inside this API was the wrong thing to
-do, and moving it outside makes the API much more flexible and usable.
-It's something I still fully support.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7d25746..1995533 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -578,7 +578,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 		goto out;
+ 	}
+ 
+-	if (sdp->changed) {
++	if (sdp->removable && sdp->changed) {
+ 		/*
+ 		 * quietly refuse to do anything to a changed disc until 
+ 		 * the changed bit has been reset
+@@ -1008,6 +1008,9 @@ static int media_not_present(struct scsi_disk *sdkp,
+ 	/* not invoked for commands that could return deferred errors */
+ 	switch (sshdr->sense_key) {
+ 	case UNIT_ATTENTION:
++		if (sdkp->device->removable && sshdr->asc == 0x28 &&
++		    sshdr->ascq == 0x00)
++			sdkp->device->changed = 1;
+ 	case NOT_READY:
+ 		/* medium not present */
+ 		if (sshdr->asc == 0x3A) {
