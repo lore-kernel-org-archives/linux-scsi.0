@@ -1,17 +1,16 @@
 From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 6/8] libfcoe: include libfcoe_transport.c into kernel
- libfcoe module
-Date: Thu, 23 Dec 2010 21:18:30 -0800
-Message-ID: <1293167910.4676.465.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+Subject: [PATCH 7/8] fcoe: prepare fcoe for using fcoe transport
+Date: Thu, 23 Dec 2010 21:18:32 -0800
+Message-ID: <1293167912.4676.466.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
  charset=cp1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4561 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3794 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750774Ab0LXFTU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Dec 2010 00:19:20 -0500
+	id S1750775Ab0LXFTV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Dec 2010 00:19:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: devel@open-fcoe.org, linux-scsi@vger.kernel.org
@@ -19,81 +18,94 @@ Cc: mchan@broadcom.com, yi.zou@intel.com, michaelc@cs.wisc.edu
 
 From: Yi Zou <yi.zou@intel.com>
 
-Now we can include the libfcoe_transport.c to the build of the kernel libfcoe
-module. Move the module information to libfcoe_transport, and it will have
-all the module parameters later for the create/destroy/enable/disable of an
-FCoE instance.
+Prepare the fcoe to convert it to use the newly added fcoe transport, making
+it as the default fcoe transport provider for libfcoe. This patch is to rename
+some of the variables to avoid any confusing names later as now there are
+several transports in the same file.
 
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/fcoe/Makefile            |    2 +-
- drivers/scsi/fcoe/libfcoe_fip.c       |    8 --------
- drivers/scsi/fcoe/libfcoe_transport.c |    8 ++++++++
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   29 +++++++++++++++--------------
+ 1 files changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/Makefile b/drivers/scsi/fcoe/Makefile
-index 8382aa2..87da252 100644
---- a/drivers/scsi/fcoe/Makefile
-+++ b/drivers/scsi/fcoe/Makefile
-@@ -1,4 +1,4 @@
- obj-$(CONFIG_FCOE) += fcoe.o
- obj-$(CONFIG_LIBFCOE) += libfcoe.o
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 9f9600b..6f953d5 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -145,8 +145,8 @@ static struct notifier_block fcoe_cpu_notifier = {
+ 	.notifier_call = fcoe_cpu_callback,
+ };
  
--libfcoe-objs := libfcoe_fip.o
-+libfcoe-objs := libfcoe_fip.o libfcoe_transport.o
-diff --git a/drivers/scsi/fcoe/libfcoe_fip.c b/drivers/scsi/fcoe/libfcoe_fip.c
-index 6457757..775625c 100644
---- a/drivers/scsi/fcoe/libfcoe_fip.c
-+++ b/drivers/scsi/fcoe/libfcoe_fip.c
-@@ -46,10 +46,6 @@
+-static struct scsi_transport_template *fcoe_transport_template;
+-static struct scsi_transport_template *fcoe_vport_transport_template;
++static struct scsi_transport_template *fcoe_nport_scsi_transport;
++static struct scsi_transport_template *fcoe_vport_scsi_transport;
  
- #include "libfcoe.h"
+ static int fcoe_vport_destroy(struct fc_vport *);
+ static int fcoe_vport_create(struct fc_vport *, bool disabled);
+@@ -163,7 +163,7 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
+ 	.lport_set_port_id = fcoe_set_port_id,
+ };
  
--MODULE_AUTHOR("Open-FCoE.org");
--MODULE_DESCRIPTION("FIP discovery protocol support for FCoE HBAs");
--MODULE_LICENSE("GPL v2");
--
- #define	FCOE_CTLR_MIN_FKA	500		/* min keep alive (mS) */
- #define	FCOE_CTLR_DEF_FKA	FIP_DEF_FKA	/* default keep alive (mS) */
+-struct fc_function_template fcoe_transport_function = {
++struct fc_function_template fcoe_nport_fc_functions = {
+ 	.show_host_node_name = 1,
+ 	.show_host_port_name = 1,
+ 	.show_host_supported_classes = 1,
+@@ -203,7 +203,7 @@ struct fc_function_template fcoe_transport_function = {
+ 	.bsg_request = fc_lport_bsg_request,
+ };
  
-@@ -68,10 +64,6 @@ static u8 fcoe_all_enode[ETH_ALEN] = FIP_ALL_ENODE_MACS;
- static u8 fcoe_all_vn2vn[ETH_ALEN] = FIP_ALL_VN2VN_MACS;
- static u8 fcoe_all_p2p[ETH_ALEN] = FIP_ALL_P2P_MACS;
+-struct fc_function_template fcoe_vport_transport_function = {
++struct fc_function_template fcoe_vport_fc_functions = {
+ 	.show_host_node_name = 1,
+ 	.show_host_port_name = 1,
+ 	.show_host_supported_classes = 1,
+@@ -708,9 +708,9 @@ static int fcoe_shost_config(struct fc_lport *lport, struct device *dev)
+ 	lport->host->max_cmd_len = FCOE_MAX_CMD_LEN;
  
--unsigned int libfcoe_debug_logging;
--module_param_named(debug_logging, libfcoe_debug_logging, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
--
- static const char * const fcoe_ctlr_states[] = {
- 	[FIP_ST_DISABLED] =     "DISABLED",
- 	[FIP_ST_LINK_WAIT] =    "LINK_WAIT",
-diff --git a/drivers/scsi/fcoe/libfcoe_transport.c b/drivers/scsi/fcoe/libfcoe_transport.c
-index b52d55a..fec0fb8 100644
---- a/drivers/scsi/fcoe/libfcoe_transport.c
-+++ b/drivers/scsi/fcoe/libfcoe_transport.c
-@@ -26,6 +26,10 @@
+ 	if (lport->vport)
+-		lport->host->transportt = fcoe_vport_transport_template;
++		lport->host->transportt = fcoe_vport_scsi_transport;
+ 	else
+-		lport->host->transportt = fcoe_transport_template;
++		lport->host->transportt = fcoe_nport_scsi_transport;
  
- #include "libfcoe.h"
+ 	/* add the new host to the SCSI-ml */
+ 	rc = scsi_add_host(lport->host, dev);
+@@ -1050,11 +1050,12 @@ out:
+ static int __init fcoe_if_init(void)
+ {
+ 	/* attach to scsi transport */
+-	fcoe_transport_template = fc_attach_transport(&fcoe_transport_function);
+-	fcoe_vport_transport_template =
+-		fc_attach_transport(&fcoe_vport_transport_function);
++	fcoe_nport_scsi_transport =
++		fc_attach_transport(&fcoe_nport_fc_functions);
++	fcoe_vport_scsi_transport =
++		fc_attach_transport(&fcoe_vport_fc_functions);
  
-+MODULE_AUTHOR("Open-FCoE.org");
-+MODULE_DESCRIPTION("FIP discovery protocol support for FCoE HBAs");
-+MODULE_LICENSE("GPL v2");
-+
- static int fcoe_transport_create(const char *, struct kernel_param *);
- static int fcoe_transport_destroy(const char *, struct kernel_param *);
- static int fcoe_transport_show(char *buffer, const struct kernel_param *kp);
-@@ -36,6 +40,10 @@ static int fcoe_transport_disable(const char *, struct kernel_param *);
- static LIST_HEAD(fcoe_transports);
- static DEFINE_MUTEX(ft_mutex);
+-	if (!fcoe_transport_template) {
++	if (!fcoe_nport_scsi_transport) {
+ 		printk(KERN_ERR "fcoe: Failed to attach to the FC transport\n");
+ 		return -ENODEV;
+ 	}
+@@ -1071,10 +1072,10 @@ static int __init fcoe_if_init(void)
+  */
+ int __exit fcoe_if_exit(void)
+ {
+-	fc_release_transport(fcoe_transport_template);
+-	fc_release_transport(fcoe_vport_transport_template);
+-	fcoe_transport_template = NULL;
+-	fcoe_vport_transport_template = NULL;
++	fc_release_transport(fcoe_nport_scsi_transport);
++	fc_release_transport(fcoe_vport_scsi_transport);
++	fcoe_nport_scsi_transport = NULL;
++	fcoe_vport_scsi_transport = NULL;
+ 	return 0;
+ }
  
-+unsigned int libfcoe_debug_logging;
-+module_param_named(debug_logging, libfcoe_debug_logging, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
-+
- module_param_call(show, NULL, fcoe_transport_show, NULL, S_IRUSR);
- __MODULE_PARM_TYPE(show, "string");
- MODULE_PARM_DESC(show, " Show registered FCoE transports");
 -- 
 1.7.0.6
 
