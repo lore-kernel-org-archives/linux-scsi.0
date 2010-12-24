@@ -1,17 +1,17 @@
 From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH 2/8] libfcoe: add fcoe_transport structure defines to
- include/scsi/libfcoe.h
-Date: Thu, 23 Dec 2010 21:18:23 -0800
-Message-ID: <1293167903.4676.461.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+Subject: [PATCH 3/8] libfcoe: add implementation to support fcoe
+ transport
+Date: Thu, 23 Dec 2010 21:18:25 -0800
+Message-ID: <1293167905.4676.462.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
  charset=cp1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4561 "EHLO MMS3.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:3794 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751272Ab0LXFSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 24 Dec 2010 00:18:50 -0500
+	id S1751272Ab0LXFS4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 24 Dec 2010 00:18:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: devel@open-fcoe.org, linux-scsi@vger.kernel.org
@@ -20,70 +20,49 @@ Cc: mchan@broadcom.com, yi.zou@intel.com, michaelc@cs.wisc.edu
 
 From: Yi Zou <yi.zou@intel.com>
 
-add the fcoe_transport struct to the common libfcoe.h header so all fcoe
-transport provides can use it to attach itself as an fcoe transport.
-This
-is the header part, and the next patch will be the transport code
-itself.
+Add the new libfcoe_transport.c file that implements basic fcoe transport
+interface. Eventually, the sysfs entries to create/destroy/enable/disable
+an FCoE instance will be coming to the fcoe transport layer, who does a
+look-up to find the corresponding transport provide and pass the corresponding
+action over to the identified provider.
+
+The fcoe.ko will become the default fcoe transport provider that can support
+FCoE on any given netdev interfaces, as the Open-FCoE.org's default software
+FCoE HBA solution. Any vendor specific FCoE HBA driver that is built on top
+of Open-FCoE's kernel stack of libfc & libfcoe as well as the user land tool
+of fcoe-utils can easily plug-in and start running FCoE on their network
+interfaces. The fcoe.ko will be converted to act as the default provider if
+no vendor specific transport provider is found, as it is always added to the
+very end of the list of attached transports.
 
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- include/scsi/libfcoe.h |   37 +++++++++++++++++++++++++++++++++++++
- 1 files changed, 37 insertions(+), 0 deletions(-)
+ drivers/scsi/fcoe/libfcoe.h |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index feb6a94..79a64ec 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -231,5 +231,42 @@ static inline bool is_fip_mode(struct fcoe_ctlr
-*fip)
- 	return fip->state == FIP_ST_ENABLED;
- }
+diff --git a/drivers/scsi/fcoe/libfcoe.h b/drivers/scsi/fcoe/libfcoe.h
+index c3fe316..21ff0bb 100644
+--- a/drivers/scsi/fcoe/libfcoe.h
++++ b/drivers/scsi/fcoe/libfcoe.h
+@@ -4,6 +4,7 @@
+ extern unsigned int libfcoe_debug_logging;
+ #define LIBFCOE_LOGGING	    0x01 /* General logging, not categorized */
+ #define LIBFCOE_FIP_LOGGING 0x02 /* FIP logging */
++#define LIBFCOE_TRANSPORT_LOGGING      0x04 /* FCoE transport logging */
  
-+/* helper for FCoE SW HBA drivers, can include subven and subdev if
-needed. The
-+ * modpost would use pci_device_id table to auto-generate formatted
-module alias
-+ * into the corresponding .mod.c file, but there may or may not be a
-pci device
-+ * id table for FCoE drivers so we use the following helper for build
-the fcoe
-+ * driver module alias.
-+ */
-+#define MODULE_ALIAS_FCOE_PCI(ven, dev) \
-+	MODULE_ALIAS("fcoe-pci:"	\
-+		"v" __stringify(ven)	\
-+		"d" __stringify(dev) "sv*sd*bc*sc*i*")
-+
-+/* struct fcoe_transport - The FCoE transport interface
-+ * @name:	a vendor specific name for their FCoE transport driver
-+ * @attached:	whether this transport is already attached
-+ * @is_vendor:	whether from vendor or the default Open-FCoE fcoe driver
-+ * @list:	list linkage to all attached transports
-+ * @match:	handler to allow the transport to match up a given netdev
-+ * @create:	handler to sysfs entry of create for FCoE instances
-+ * @destroy:	handler to sysfs entry of destory for FCoE instances
-+ * @enable:	handler to sysfs entry of enable for FCoE instances
-+ * @disable:	handler to sysfs entry of disable for FCoE instances
-+ */
-+struct fcoe_transport {
-+	char name[IFNAMSIZ];
-+	bool attached;
-+	bool is_vendor;
-+	struct list_head list;
-+	bool (*match) (struct net_device *device);
-+	int (*create) (struct net_device *device, enum fip_state fip_mode);
-+	int (*destroy) (struct net_device *device);
-+	int (*enable) (struct net_device *device);
-+	int (*disable) (struct net_device *device);
-+};
-+
-+/* fcoe transports registration and deregistration */
-+int fcoe_transport_attach(struct fcoe_transport *ft);
-+int fcoe_transport_detach(struct fcoe_transport *ft);
+ #define LIBFCOE_CHECK_LOGGING(LEVEL, CMD)		\
+ do {							\
+@@ -22,4 +23,9 @@ do {							\
+ 			      printk(KERN_INFO "host%d: fip: " fmt,	\
+ 				     (fip)->lp->host->host_no, ##args);)
  
- #endif /* _LIBFCOE_H */
++#define LIBFCOE_TRANSPORT_DBG(fmt, args...)				\
++	LIBFCOE_CHECK_LOGGING(LIBFCOE_TRANSPORT_LOGGING,		\
++			      printk(KERN_INFO "%s: " fmt,		\
++			      __func__, ##args);)
++
+ #endif /* _FCOE_LIBFCOE_H_ */
 -- 
 1.7.0.6
 
