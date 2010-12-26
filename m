@@ -1,53 +1,53 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] dma_declare_coherent_memory: push ioremap() up to caller
-Date: Sun, 26 Dec 2010 18:45:00 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.1012261837450.20458@axis700.grange>
-References: <201012240020.37208.jkrzyszt@tis.icnet.pl>
- <201012241455.30430.jkrzyszt@tis.icnet.pl> <20101224154120.GH20587@n2100.arm.linux.org.uk>
- <201012250024.38576.jkrzyszt@tis.icnet.pl>
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: [PATCH] SCSI, LSI Fusion MPT: Fix memory leak in
+ mptctl_getiocinfo()
+Date: Sun, 26 Dec 2010 22:14:01 +0100 (CET)
+Message-ID: <alpine.LNX.2.00.1012262207380.20797@swampdragon.chaosbits.net>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.17.10]:64125 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752304Ab0LZRpF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Dec 2010 12:45:05 -0500
-In-Reply-To: <201012250024.38576.jkrzyszt@tis.icnet.pl>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: DL-MPTFusionLinux@lsi.com
+Cc: Eric Moore <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, support@lsi.com
 List-Id: linux-scsi@vger.kernel.org
-To: Janusz Krzysztofik <jkrzyszt@tis.icnet.pl>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>, linux-arch@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Arnd Bergmann <arnd@arndb.de>, Dan Williams <dan.j.williams@intel.com>, linux-sh@vger.kernel.org, Paul Mundt <lethal@linux-sh.org>, Sascha Hauer <kernel@pengutronix.de>, linux-usb@vger.kernel.org, David Brownell <dbrownell@users.sourceforge.net>, linux-media@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@suse.de>, Catalin Marinas <catalin.marinas@arm.com>
 
-On Sat, 25 Dec 2010, Janusz Krzysztofik wrote:
+Hi,
 
-[snip]
+A 'kfree(karg)' is missing in a failure path in 
+drivers/message/fusion/mptctl.c::mptctl_getiocinfo() which can cause a 
+memory leak. This patch should take care of that.
 
-> > Passing the virtual address allows the API to become much more
-> > flexible. Not only that, it allows it to be used on ARM, rather than
-> > becoming (as it currently stands) prohibited on ARM.
-> >
-> > I believe that putting ioremap() inside this API was the wrong thing
-> > to do, and moving it outside makes the API much more flexible and
-> > usable. It's something I still fully support.
-> 
-> Thanks, this is what I was missing, having my point of view rather my 
-> machine centric, with not much wider experience. I'll quote your 
-> argumentation in next iteration of this patch if required.
+Hope I didn't miss something obvious, but to me it looks like adding this 
+kfree() is the right thing to do. If you disagree feel free to correct me 
+:-)
 
-AFAIU, this patch is similar to the previous two attempts:
 
-http://www.spinics.net/lists/linux-sh/msg05482.html
-and
-http://thread.gmane.org/gmane.linux.drivers.video-input-infrastructure/22271
-
-but is even more intrusive, because those two previous attempts added new 
-functions, whereas this one is modifying an existing one. Both those two 
-attempts have been NACKed by FUJITA Tomonori, btw, he is not on the 
-otherwise extensive CC list for this patch.
-
-Thanks
-Guennadi
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 ---
-Guennadi Liakhovetski, Ph.D.
-Freelance Open-Source Software Developer
-http://www.open-technology.de/
+ mptctl.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+  compile tested only since I don't have proper hardware to test for real.
+
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index a3856ed..1dcc13a 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -1307,8 +1307,10 @@ mptctl_getiocinfo (unsigned long arg, unsigned int data_size)
+ 	else
+ 		karg->adapterType = MPT_IOCTL_INTERFACE_SCSI;
+ 
+-	if (karg->hdr.port > 1)
++	if (karg->hdr.port > 1) {
++		kfree(karg);
+ 		return -EINVAL;
++	}
+ 	port = karg->hdr.port;
+ 
+ 	karg->port = port;
+
+
+-- 
+Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
+Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please.
