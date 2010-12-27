@@ -1,58 +1,45 @@
-From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [RFC 7/8] IB/srp: stop sharing the host lock with SCSI
-Date: Mon, 27 Dec 2010 20:47:41 +0200
-Message-ID: <4D18DF4D.6010607@panasas.com>
-References: <1293139893-11678-1-git-send-email-dillowda@ornl.gov>	 <1293139893-11678-8-git-send-email-dillowda@ornl.gov>	 <1293472165.2896.34.camel@obelisk.thedillows.org>	 <4D18D355.30308@panasas.com> <1293472913.2896.36.camel@obelisk.thedillows.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: linux-next: Tree for December 27 (drivers/target/)
+Date: Mon, 27 Dec 2010 11:21:14 -0800
+Message-ID: <20101227112114.634c6e60.randy.dunlap@oracle.com>
+References: <20101227170451.a9a9f873.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1293472913.2896.36.camel-1q1vX8mYZiGLUyTwlgNVppKKF0rrzTr+@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:46928 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753985Ab0L0TXt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Dec 2010 14:23:49 -0500
+In-Reply-To: <20101227170451.a9a9f873.sfr@canb.auug.org.au>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>
+Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, nab@kernel.org
 
-On 12/27/2010 08:01 PM, David Dillow wrote:
-> On Mon, 2010-12-27 at 19:56 +0200, Boaz Harrosh wrote:
->> On 12/27/2010 07:49 PM, David Dillow wrote:
->>> On Thu, 2010-12-23 at 16:31 -0500, David Dillow wrote:
->>>> We don't need protection against the SCSI stack, so use our own lock to
->>>> allow parallel progress on separate CPUs.
->>>
->>>> @@ -1126,7 +1125,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
->>>>  		return 0;
->>>>  	}
->>>>  
->>>> -	spin_lock_irqsave(shost->host_lock, flags);
->>>> +	spin_lock_irqsave(&target->lock, flags);
->>>>  	/* This goes away once the scsi_eh routines stop testing it. */
->>>>  	scsi_cmd_get_serial(shost, scmnd);
->>>>  	iu = __srp_get_tx_iu(target, SRP_IU_CMD);
->>>
->>> This one may be a bit problematic -- I need to look at the required
->>> locking to avoid a race with the serial number. Of course, there's an
->>> easy fix -- if this patch lands after the patches to remove the serial
->>> number check from the error handler, then there's no reason to get a
->>> serial number in the initiator.
->>>
->>
->> $ git log --oneline -1 linus/master -- drivers/scsi/scsi_error.c
->> 459dbf7 [SCSI] Eliminate error handler overload of the SCSI serial number
+On Mon, 27 Dec 2010 17:04:51 +1100 Stephen Rothwell wrote:
+
+> Hi all,
 > 
-> Oh goodie, I hadn't followed up to see if it was in one of James's later
-> pulls. Thanks for the heads up -- I'll dump scsi_cmd_get_serial() in
-> this patch then.
-> 
+> [The mirroring on kernel.org is running slowly]
 
-Are these base on James's trees? Or are you maintaining these scsi bits yourself?
+yep :(
 
-Also CC: Nicholas A. Bellinger just in case he has a matching patch in
-his luckless tree.
+> Changes since 20101221:
 
-Thanks
-Boaz
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+When CONFIG_SCSI is not enabled:
+
+ERROR: "scsi_device_type" [drivers/target/target_core_mod.ko] undefined!
+
+from target_core_transport.c::1586:
+
+	printk("  Type:   %s ", scsi_device_type(device_type));
+
+
+Also please update MAINTAINERS for drivers/target/.
+
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
+desserts:  http://www.xenotime.net/linux/recipes/
