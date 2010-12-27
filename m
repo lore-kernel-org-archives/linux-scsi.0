@@ -1,44 +1,58 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: linux-next: Tree for December 27 (drivers/target)
-Date: Mon, 27 Dec 2010 11:57:55 -0800
-Message-ID: <20101227115755.ffcdfc4f.randy.dunlap@oracle.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: linux-next: Tree for December 27 (drivers/target/)
+Date: Mon, 27 Dec 2010 14:47:41 -0800
+Message-ID: <1293490061.4649.205.camel@haakon2.linux-iscsi.org>
 References: <20101227170451.a9a9f873.sfr@canb.auug.org.au>
+	 <20101227112114.634c6e60.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20101227170451.a9a9f873.sfr@canb.auug.org.au>
+In-Reply-To: <20101227112114.634c6e60.randy.dunlap@oracle.com>
 Sender: linux-next-owner@vger.kernel.org
-To: Stephen Rothwell <sfr@canb.auug.org.au>, nab@kernel.org, scsi <linux-scsi@vger.kernel.org>
-Cc: linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 27 Dec 2010 17:04:51 +1100 Stephen Rothwell wrote:
-
-> Hi all,
+On Mon, 2010-12-27 at 11:21 -0800, Randy Dunlap wrote:
+> On Mon, 27 Dec 2010 17:04:51 +1100 Stephen Rothwell wrote:
 > 
-> [The mirroring on kernel.org is running slowly]
+> > Hi all,
+> > 
+> > [The mirroring on kernel.org is running slowly]
 > 
-> Changes since 20101221:
+> yep :(
 > 
-> Linus' tree lost its build failure.
+> > Changes since 20101221:
+> 
+> 
+> When CONFIG_SCSI is not enabled:
+> 
+> ERROR: "scsi_device_type" [drivers/target/target_core_mod.ko] undefined!
+> 
+> from target_core_transport.c::1586:
+> 
+> 	printk("  Type:   %s ", scsi_device_type(device_type));
+> 
 
+Hi Randy and Stephen,
 
-Hi Nick,
+As there is really no a reason for building CONFIG_TARGET_CORE w/o
+CONFIG_SCSI && CONFIG_BLOCK, the following patch has been added to the
+new linux-next target tree here:
 
-Please test building target code when CONFIG_BLOCK is not enabled.
+target: Add SCSI and BLOCK depends for TARGET_CORE
+http://git.kernel.org/?p=linux/kernel/git/nab/linux-next.git;a=commitdiff;h=15c8da9639029ac337dd2f0bb67010de62d4b724
 
-When CONFIG_BLOCK is not enabled, drivers/target/ gets a boat load of build errors.
+> 
+> Also please update MAINTAINERS for drivers/target/.
+> 
 
-Should TCM_IBLOCK depend on BLOCK?  That fixes lots of the build errors,
-but not all of them.
+Also added here, thanks for the reminder:
 
+target: Add drivers/target/ entry to MAINTAINERS
+http://git.kernel.org/?p=linux/kernel/git/nab/linux-next.git;a=commitdiff;h=85356c6c328b3c4add3d240e387087a76a469028
 
-The header file include/target/target_core_base.h uses struct queue_limits,
-so it should #include <linux/blkdev.h>.
+Best Regards,
 
-
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
-desserts:  http://www.xenotime.net/linux/recipes/
+--nab
