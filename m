@@ -1,39 +1,41 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: Re: [RFC 4/8] IB/srp: don't move active requests to their own list
-Date: Mon, 27 Dec 2010 12:46:23 -0500
-Message-ID: <1293471983.2896.31.camel@obelisk.thedillows.org>
+From: David Dillow <dave@thedillows.org>
+Subject: Re: [RFC 7/8] IB/srp: stop sharing the host lock with SCSI
+Date: Mon, 27 Dec 2010 12:49:25 -0500
+Message-ID: <1293472165.2896.34.camel@obelisk.thedillows.org>
 References: <1293139893-11678-1-git-send-email-dillowda@ornl.gov>
-	 <1293139893-11678-5-git-send-email-dillowda@ornl.gov>
-	 <AANLkTinuOD919iV+ixcWhZpSkJP1QP=+OyphzVSq4_aO@mail.gmail.com>
+	 <1293139893-11678-8-git-send-email-dillowda@ornl.gov>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <AANLkTinuOD919iV+ixcWhZpSkJP1QP=+OyphzVSq4_aO-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from amavis-outgoing2.knology.net ([24.214.64.231]:49754 "EHLO
+	amavis-outgoing2.knology.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751878Ab0L0Rt3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 27 Dec 2010 12:49:29 -0500
+In-Reply-To: <1293139893-11678-8-git-send-email-dillowda@ornl.gov>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-rdma@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
 
-On Mon, 2010-12-27 at 16:50 +0100, Bart Van Assche wrote:
-> On Thu, Dec 23, 2010 at 10:31 PM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
-> > We use req->scmnd != NULL to indicate an active request, so there's no
-> > need to keep a separate list for them. We can afford the array iteration
-> > during error handling, and dropping it gives us one less item that needs
-> > lock protection.
-> > [ ... ]
-> 
-> Before this patch a request was either on the free_reqs list or on the
-> req_queue list. After this patch has been applied a request is either
-> on the free_reqs list or not on any list. So it doesn't make sense
-> anymore to invoke list_move_tail() from srp_remove_req() - that
-> function should be modified such that it invokes list_add_tail(). And
-> once that is done the list_del_init() call added by this patch can be
-> replaced by a list_del() call.
+On Thu, 2010-12-23 at 16:31 -0500, David Dillow wrote:
+> We don't need protection against the SCSI stack, so use our own lock to
+> allow parallel progress on separate CPUs.
 
-Good suggestion.
+> @@ -1126,7 +1125,7 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
+>  		return 0;
+>  	}
+>  
+> -	spin_lock_irqsave(shost->host_lock, flags);
+> +	spin_lock_irqsave(&target->lock, flags);
+>  	/* This goes away once the scsi_eh routines stop testing it. */
+>  	scsi_cmd_get_serial(shost, scmnd);
+>  	iu = __srp_get_tx_iu(target, SRP_IU_CMD);
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This one may be a bit problematic -- I need to look at the required
+locking to avoid a race with the serial number. Of course, there's an
+easy fix -- if this patch lands after the patches to remove the serial
+number check from the error handler, then there's no reason to get a
+serial number in the initiator.
+
