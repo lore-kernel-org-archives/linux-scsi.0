@@ -1,254 +1,221 @@
 From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 4/8] [SCSI] scst: Substitute SCST_SYSFS_BLOCK_SIZE
-Date: Mon, 27 Dec 2010 14:39:06 +0100
-Message-ID: <201012271439.06828.bvanassche@acm.org>
+Subject: [PATCH 5/8] [SCSI] scst: Improve sysfs parsing robustness
+Date: Mon, 27 Dec 2010 14:39:40 +0100
+Message-ID: <201012271439.40202.bvanassche@acm.org>
 References: <201012271435.33778.bvanassche@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jester.euphonynet.be ([212.87.96.13]:52070 "EHLO
+Received: from jester.euphonynet.be ([212.87.96.13]:52121 "EHLO
 	mailpush2.euphonynet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753777Ab0L0NjO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Dec 2010 08:39:14 -0500
+	with ESMTP id S1753777Ab0L0Nju (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Dec 2010 08:39:50 -0500
 In-Reply-To: <201012271435.33778.bvanassche@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: scst-devel@lists.sourceforge.net, Greg Kroah-Hartman <gregkh@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Vladislav Bolkhovitin <vst@vlnb.net>, Richard Sharpe <realrichardsharpe@gmail.com>
 
-Replace all instances of SCST_SYSFS_BLOCK_SIZE by PAGE_SIZE and remove the
-symbolic constant SCST_SYSFS_BLOCK_SIZE.
+Improve the robustness of the code for parsing management commands
+received via the sysfs file /sys/devices/scst/mgmt. Allow several spaces
+between parameters where only a single space was allowed, and consistenly
+ignore trailing newlines.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>
 ---
- drivers/scst/scst_sysfs.c |   54 +++++++++++++++++++-------------------------
- include/scst/scst_const.h |    2 -
- 2 files changed, 23 insertions(+), 33 deletions(-)
+ drivers/scst/scst_sysfs.c |   85 ++++++++++++++++++++++++--------------------
+ 1 files changed, 46 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/scst/scst_sysfs.c b/drivers/scst/scst_sysfs.c
-index da325f5..ed10475 100644
+index ed10475..525f368 100644
 --- a/drivers/scst/scst_sysfs.c
 +++ b/drivers/scst/scst_sysfs.c
-@@ -1531,7 +1531,7 @@ static ssize_t scst_tgt_dev_latency_show(struct kobject *kobj,
- 		processed_cmds_wr = latency_stat->processed_cmds_wr;
- 		processed_cmds_rd = latency_stat->processed_cmds_rd;
+@@ -937,20 +937,24 @@ out_free:
  
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			 "%-5s %-9s %-15lu ", "Write", scst_io_size_names[i],
- 			(unsigned long)processed_cmds_wr);
- 		if (processed_cmds_wr == 0)
-@@ -1543,8 +1543,7 @@ static ssize_t scst_tgt_dev_latency_show(struct kobject *kobj,
- 			(unsigned long)scst_time_wr,
- 			(unsigned long)latency_stat->max_scst_time_wr,
- 			(unsigned long)latency_stat->scst_time_wr);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
--			"%-47s", buf);
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res, "%-47s", buf);
- 
- 		do_div(tgt_time_wr, processed_cmds_wr);
- 		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-@@ -1552,8 +1551,7 @@ static ssize_t scst_tgt_dev_latency_show(struct kobject *kobj,
- 			(unsigned long)tgt_time_wr,
- 			(unsigned long)latency_stat->max_tgt_time_wr,
- 			(unsigned long)latency_stat->tgt_time_wr);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
--			"%-47s", buf);
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res, "%-47s", buf);
- 
- 		do_div(dev_time_wr, processed_cmds_wr);
- 		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-@@ -1561,10 +1559,9 @@ static ssize_t scst_tgt_dev_latency_show(struct kobject *kobj,
- 			(unsigned long)dev_time_wr,
- 			(unsigned long)latency_stat->max_dev_time_wr,
- 			(unsigned long)latency_stat->dev_time_wr);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
--			"%-47s\n", buf);
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res, "%-47s\n", buf);
- 
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			"%-5s %-9s %-15lu ", "Read", scst_io_size_names[i],
- 			(unsigned long)processed_cmds_rd);
- 		if (processed_cmds_rd == 0)
-@@ -1576,8 +1573,7 @@ static ssize_t scst_tgt_dev_latency_show(struct kobject *kobj,
- 			(unsigned long)scst_time_rd,
- 			(unsigned long)latency_stat->max_scst_time_rd,
- 			(unsigned long)latency_stat->scst_time_rd);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
--			"%-47s", buf);
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res, "%-47s", buf);
- 
- 		do_div(tgt_time_rd, processed_cmds_rd);
- 		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-@@ -1585,8 +1581,7 @@ static ssize_t scst_tgt_dev_latency_show(struct kobject *kobj,
- 			(unsigned long)tgt_time_rd,
- 			(unsigned long)latency_stat->max_tgt_time_rd,
- 			(unsigned long)latency_stat->tgt_time_rd);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
--			"%-47s", buf);
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res, "%-47s", buf);
- 
- 		do_div(dev_time_rd, processed_cmds_rd);
- 		snprintf(buf, sizeof(buf), "%lu/%lu/%lu/%lu",
-@@ -1594,8 +1589,7 @@ static ssize_t scst_tgt_dev_latency_show(struct kobject *kobj,
- 			(unsigned long)dev_time_rd,
- 			(unsigned long)latency_stat->max_dev_time_rd,
- 			(unsigned long)latency_stat->dev_time_rd);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
--			"%-47s\n", buf);
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res, "%-47s\n", buf);
- 	}
- 	return res;
- }
-@@ -1671,7 +1665,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 	sess = scst_kobj_to_sess(kobj);
- 
- 	res = 0;
--	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+	res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 		"%-15s %-15s %-46s %-46s %-46s\n",
- 		"T-L names", "Total commands", "SCST latency",
- 		"Target latency", "Dev latency (min/avg/max/all ns)");
-@@ -1695,7 +1689,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 		processed_cmds_wr = latency_stat->processed_cmds_wr;
- 		processed_cmds_rd = latency_stat->processed_cmds_rd;
- 
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			"%-5s %-9s %-15lu ",
- 			"Write", scst_io_size_names[i],
- 			(unsigned long)processed_cmds_wr);
-@@ -1708,7 +1702,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 			(unsigned long)scst_time_wr,
- 			(unsigned long)latency_stat->max_scst_time_wr,
- 			(unsigned long)latency_stat->scst_time_wr);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			"%-47s", buf);
- 
- 		do_div(tgt_time_wr, processed_cmds_wr);
-@@ -1717,7 +1711,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 			(unsigned long)tgt_time_wr,
- 			(unsigned long)latency_stat->max_tgt_time_wr,
- 			(unsigned long)latency_stat->tgt_time_wr);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			"%-47s", buf);
- 
- 		do_div(dev_time_wr, processed_cmds_wr);
-@@ -1726,10 +1720,10 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 			(unsigned long)dev_time_wr,
- 			(unsigned long)latency_stat->max_dev_time_wr,
- 			(unsigned long)latency_stat->dev_time_wr);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			"%-47s\n", buf);
- 
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			"%-5s %-9s %-15lu ",
- 			"Read", scst_io_size_names[i],
- 			(unsigned long)processed_cmds_rd);
-@@ -1742,7 +1736,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 			(unsigned long)scst_time_rd,
- 			(unsigned long)latency_stat->max_scst_time_rd,
- 			(unsigned long)latency_stat->scst_time_rd);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			"%-47s", buf);
- 
- 		do_div(tgt_time_rd, processed_cmds_rd);
-@@ -1751,7 +1745,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 			(unsigned long)tgt_time_rd,
- 			(unsigned long)latency_stat->max_tgt_time_rd,
- 			(unsigned long)latency_stat->tgt_time_rd);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			"%-47s", buf);
- 
- 		do_div(dev_time_rd, processed_cmds_rd);
-@@ -1760,7 +1754,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 			(unsigned long)dev_time_rd,
- 			(unsigned long)latency_stat->max_dev_time_rd,
- 			(unsigned long)latency_stat->dev_time_rd);
--		res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+		res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 			"%-47s\n", buf);
- 	}
- 
-@@ -1769,7 +1763,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 	dev_time = sess->dev_time;
- 	processed_cmds = sess->processed_cmds;
- 
--	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+	res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 		"\n%-15s %-16d", "Overall ", processed_cmds);
- 
- 	if (processed_cmds == 0)
-@@ -1781,7 +1775,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 		(unsigned long)scst_time,
- 		(unsigned long)sess->max_scst_time,
- 		(unsigned long)sess->scst_time);
--	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+	res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 		"%-47s", buf);
- 
- 	do_div(tgt_time, processed_cmds);
-@@ -1790,7 +1784,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 		(unsigned long)tgt_time,
- 		(unsigned long)sess->max_tgt_time,
- 		(unsigned long)sess->tgt_time);
--	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+	res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 		"%-47s", buf);
- 
- 	do_div(dev_time, processed_cmds);
-@@ -1799,7 +1793,7 @@ static ssize_t scst_sess_latency_show(struct kobject *kobj,
- 		(unsigned long)dev_time,
- 		(unsigned long)sess->max_dev_time,
- 		(unsigned long)sess->dev_time);
--	res += scnprintf(&buffer[res], SCST_SYSFS_BLOCK_SIZE - res,
-+	res += scnprintf(&buffer[res], PAGE_SIZE - res,
- 		"%-47s\n\n", buf);
- 
- 	spin_unlock_bh(&sess->lat_lock);
-@@ -1937,8 +1931,7 @@ static ssize_t scst_sess_sysfs_initiator_name_show(struct kobject *kobj,
- 
- 	sess = scst_kobj_to_sess(kobj);
- 
--	return scnprintf(buf, SCST_SYSFS_BLOCK_SIZE, "%s\n",
--		sess->initiator_name);
-+	return scnprintf(buf, PAGE_SIZE, "%s\n", sess->initiator_name);
- }
- 
- static struct kobj_attribute session_initiator_name_attr =
-@@ -2588,8 +2581,7 @@ out:
- static ssize_t scst_acn_file_show(struct kobject *kobj,
- 	struct kobj_attribute *attr, char *buf)
+ static int scst_process_tgt_mgmt_store(char *cmd, struct scst_tgt *tgt)
  {
--	return scnprintf(buf, SCST_SYSFS_BLOCK_SIZE, "%s\n",
--		attr->attr.name);
-+	return scnprintf(buf, PAGE_SIZE, "%s\n", attr->attr.name);
- }
++	char *arg, *tail;
+ 	int res;
  
- int scst_acn_sysfs_create(struct scst_acn *acn)
-diff --git a/include/scst/scst_const.h b/include/scst/scst_const.h
-index d1dadfa..ac446fa 100644
---- a/include/scst/scst_const.h
-+++ b/include/scst/scst_const.h
-@@ -379,8 +379,6 @@ enum scst_cdb_flags {
- /*************************************************************
-  ** Misc constants
-  *************************************************************/
--#define SCST_SYSFS_BLOCK_SIZE			PAGE_SIZE
--
- #define SCST_PR_DIR				"/var/lib/scst/pr"
+ 	res = -EINVAL;
++	arg = cmd;
++	cmd = scst_get_next_lexem(&arg);
++	tail = arg;
++	scst_get_next_lexem(&tail);
+ 	if (strcmp(cmd, "enable") == 0)
+ 		res = scst_process_tgt_enable_store(tgt, true);
+ 	else if (strcmp(cmd, "disable") == 0)
+ 		res = scst_process_tgt_enable_store(tgt, false);
+-	else if (strncmp(cmd, "set_cpu_mask ", 13) == 0) {
++	else if (strcmp(cmd, "set_cpu_mask") == 0) {
+ 		cpumask_t *cpumask;
  
- #define TID_COMMON_SIZE				24
+ 		BUG_ON(!tgt->default_acg);
+ 
+-		res = scst_alloc_and_parse_cpumask(&cpumask, cmd + 13,
+-						   strlen(cmd + 13));
++		res = scst_alloc_and_parse_cpumask(&cpumask, arg, strlen(arg));
+ 		if (res)
+ 			goto out;
+ 		res = __scst_acg_process_cpu_mask_store(tgt, tgt->default_acg,
+@@ -1264,20 +1268,25 @@ static const struct device_attribute *scst_devt_dev_attrs[] = {
+ 
+ static int scst_process_dev_mgmt_store(char *cmd, struct scst_device *dev)
+ {
++	char *arg, *tail;
+ 	int res;
+ 
+ 	res = -EINVAL;
+-	if (strncmp(cmd, "set_filename ", 13) == 0) {
++	arg = cmd;
++	cmd = scst_get_next_lexem(&arg);
++	tail = arg;
++	scst_get_next_lexem(&tail);
++	if (strcmp(cmd, "set_filename") == 0) {
+ 		res = -EPERM;
+ 		if (!dev->handler->set_filename)
+ 			goto out;
+-		res = dev->handler->set_filename(dev, cmd + 13);
+-	} else if (strncmp(cmd, "set_threads_num ", 16) == 0) {
++		res = dev->handler->set_filename(dev, arg);
++	} else if (strcmp(cmd, "set_threads_num") == 0) {
+ 		long num_threads;
+ 
+-		res = strict_strtol(cmd + 16, 0, &num_threads);
++		res = strict_strtol(arg, 0, &num_threads);
+ 		if (res) {
+-			PRINT_ERROR("Bad thread count %s", cmd + 16);
++			PRINT_ERROR("Bad thread count %s", arg);
+ 			goto out;
+ 		}
+ 		if (num_threads < 0) {
+@@ -1285,13 +1294,12 @@ static int scst_process_dev_mgmt_store(char *cmd, struct scst_device *dev)
+ 			goto out;
+ 		}
+ 		res = scst_dev_set_threads_num(dev, num_threads);
+-	} else if (strncmp(cmd, "set_thread_pool_type ", 21) == 0) {
++	} else if (strcmp(cmd, "set_thread_pool_type") == 0) {
+ 		enum scst_dev_type_threads_pool_type newtpt;
+ 
+-		newtpt = scst_parse_threads_pool_type(cmd + 21,
+-						      strlen(cmd + 21));
++		newtpt = scst_parse_threads_pool_type(arg, strlen(arg));
+ 		if (newtpt == SCST_THREADS_POOL_TYPE_INVALID) {
+-			PRINT_ERROR("Invalid thread pool type %s", cmd + 21);
++			PRINT_ERROR("Invalid thread pool type %s", arg);
+ 			goto out;
+ 		}
+ 		res = scst_dev_set_thread_pool_type(dev, newtpt);
+@@ -2095,16 +2103,20 @@ out_del:
+  ** ini_groups directory implementation.
+  **/
+ 
+-static int scst_process_acg_mgmt_store(const char *cmd, struct scst_acg *acg)
++static int scst_process_acg_mgmt_store(char *cmd, struct scst_acg *acg)
+ {
++	char *arg, *tail;
+ 	int res;
+ 
+ 	res = -EINVAL;
+-	if (strncmp(cmd, "set_cpu_mask ", 13) == 0) {
++	arg = cmd;
++	cmd = scst_get_next_lexem(&arg);
++	tail = arg;
++	scst_get_next_lexem(&tail);
++	if (strcmp(cmd, "set_cpu_mask") == 0) {
+ 		cpumask_t *cpumask;
+ 
+-		res = scst_alloc_and_parse_cpumask(&cpumask, cmd + 13,
+-						   strlen(cmd + 13));
++		res = scst_alloc_and_parse_cpumask(&cpumask, arg, strlen(arg));
+ 		if (res)
+ 			goto out;
+ 		res = __scst_acg_process_cpu_mask_store(acg->tgt, acg, cpumask);
+@@ -3390,7 +3402,7 @@ static ssize_t scst_mgmt_store(struct device *device,
+ 	struct device_attribute *attr, const char *buf, size_t count)
+ {
+ 	ssize_t res;
+-	char *buffer, *path, *path_end, *cmd;
++	char *buffer, *path, *cmd, *tail;
+ 	enum mgmt_path_type mgmt_path_type;
+ 	struct scst_dev_type *devt;
+ 	struct scst_device *dev;
+@@ -3409,19 +3421,13 @@ static ssize_t scst_mgmt_store(struct device *device,
+ 		goto out;
+ 
+ 	res = -EINVAL;
+-	if (strncmp(buffer, "in ", 3) != 0)
++	path = buffer;
++	cmd = scst_get_next_lexem(&path);
++	if (strcmp(cmd, "in") != 0)
+ 		goto out;
+ 
+-	path = buffer + 3;
+-	while (*path && isspace((u8)*path))
+-		path++;
+-	path_end = path;
+-	while (*path_end && !isspace((u8)*path_end))
+-		path_end++;
+-	*path_end++ = '\0';
+-	cmd = path_end;
+-	while (*cmd && isspace((u8)*cmd))
+-		cmd++;
++	tail = path;
++	scst_get_next_lexem(&tail);
+ 
+ 	res = scst_suspend_activity(true);
+ 	if (res)
+@@ -3437,36 +3443,37 @@ static ssize_t scst_mgmt_store(struct device *device,
+ 	res = -EINVAL;
+ 	switch (mgmt_path_type) {
+ 	case DEVICE_PATH:
+-		res = scst_process_dev_mgmt_store(cmd, dev);
++		res = scst_process_dev_mgmt_store(tail, dev);
+ 		break;
+ 	case DEVICE_TYPE_PATH:
+ 		if (devt->add_device)
+-			res = scst_process_devt_mgmt_store(cmd, devt);
++			res = scst_process_devt_mgmt_store(tail, devt);
+ 		else
+-			res = scst_process_devt_pass_through_mgmt_store(cmd,
++			res = scst_process_devt_pass_through_mgmt_store(tail,
+ 									devt);
+ 		break;
+ 	case TARGET_TEMPLATE_PATH:
+-		res = scst_process_tgtt_mgmt_store(cmd, tgtt);
++		res = scst_process_tgtt_mgmt_store(tail, tgtt);
+ 		break;
+ 	case TARGET_PATH:
+-		res = scst_process_tgt_mgmt_store(cmd, tgt);
++		res = scst_process_tgt_mgmt_store(tail, tgt);
+ 		break;
+ 	case TARGET_LUNS_PATH:
+-		res = __scst_process_luns_mgmt_store(cmd, tgt, tgt->default_acg,
+-						     true);
++		res = __scst_process_luns_mgmt_store(tail, tgt,
++						     tgt->default_acg, true);
+ 		break;
+ 	case TARGET_INI_GROUPS_PATH:
+-		res = scst_process_ini_group_mgmt_store(cmd, tgt);
++		res = scst_process_ini_group_mgmt_store(tail, tgt);
+ 		break;
+ 	case ACG_PATH:
+-		res = scst_process_acg_mgmt_store(cmd, acg);
++		res = scst_process_acg_mgmt_store(tail, acg);
+ 		break;
+ 	case ACG_LUNS_PATH:
+-		res = __scst_process_luns_mgmt_store(cmd, acg->tgt, acg, false);
++		res = __scst_process_luns_mgmt_store(tail, acg->tgt, acg,
++						     false);
+ 		break;
+ 	case ACG_INITIATOR_GROUPS_PATH:
+-		res = scst_process_acg_ini_mgmt_store(cmd, acg->tgt, acg);
++		res = scst_process_acg_ini_mgmt_store(tail, acg->tgt, acg);
+ 		break;
+ 	case PATH_NOT_RECOGNIZED:
+ 		break;
 -- 
 1.7.1
 
