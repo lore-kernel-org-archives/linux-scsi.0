@@ -1,43 +1,34 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 7/8] [SCSI] scst: Correct SCST core version number
-Date: Mon, 27 Dec 2010 14:46:02 +0100
-Message-ID: <201012271446.02093.bvanassche@acm.org>
-References: <201012271435.33778.bvanassche@acm.org>
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Subject: Re: [RFC 4/8] IB/srp: don't move active requests to their own list
+Date: Mon, 27 Dec 2010 16:50:48 +0100
+Message-ID: <AANLkTinuOD919iV+ixcWhZpSkJP1QP=+OyphzVSq4_aO@mail.gmail.com>
+References: <1293139893-11678-1-git-send-email-dillowda@ornl.gov> <1293139893-11678-5-git-send-email-dillowda@ornl.gov>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jester.euphonynet.be ([212.87.96.13]:53006 "EHLO
-	mailpush2.euphonynet.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753725Ab0L0NqY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Dec 2010 08:46:24 -0500
-In-Reply-To: <201012271435.33778.bvanassche@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1293139893-11678-5-git-send-email-dillowda-1Heg1YXhbW8@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: scst-devel@lists.sourceforge.net, Greg Kroah-Hartman <gregkh@suse.de>, Konrad Rzeszutek Wilk <konrad@darnok.org>, Vladislav Bolkhovitin <vst@vlnb.net>, Richard Sharpe <realrichardsharpe@gmail.com>
 
-Change the version number of the SCST core from 2.1.0-pre1 into 2.0.0.
+On Thu, Dec 23, 2010 at 10:31 PM, David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org> wrote:
+> We use req->scmnd != NULL to indicate an active request, so there's no
+> need to keep a separate list for them. We can afford the array iteration
+> during error handling, and dropping it gives us one less item that needs
+> lock protection.
+> [ ... ]
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- include/scst/scst.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Before this patch a request was either on the free_reqs list or on the
+req_queue list. After this patch has been applied a request is either
+on the free_reqs list or not on any list. So it doesn't make sense
+anymore to invoke list_move_tail() from srp_remove_req() - that
+function should be modified such that it invokes list_add_tail(). And
+once that is done the list_del_init() call added by this patch can be
+replaced by a list_del() call.
 
-diff --git a/include/scst/scst.h b/include/scst/scst.h
-index e44547a..9034624 100644
---- a/include/scst/scst.h
-+++ b/include/scst/scst.h
-@@ -48,7 +48,7 @@
- #define SCST_VERSION(a, b, c, d)    (((a) << 24) + ((b) << 16) + ((c) << 8) + d)
- #define SCST_VERSION_CODE	    SCST_VERSION(2, 0, 0, 0)
- #define SCST_VERSION_STRING_SUFFIX
--#define SCST_VERSION_STRING	    "2.1.0-pre1" SCST_VERSION_STRING_SUFFIX
-+#define SCST_VERSION_STRING	    "2.0.0" SCST_VERSION_STRING_SUFFIX
- #define SCST_INTERFACE_VERSION	    \
- 		SCST_VERSION_STRING "$Revision: 3139 $" SCST_CONST_VERSION
- 
--- 
-1.7.1
-
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
