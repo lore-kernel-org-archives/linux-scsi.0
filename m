@@ -1,64 +1,83 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: linux-next: Tree for December 27 (drivers/target)
-Date: Tue, 28 Dec 2010 09:08:35 -0600
-Message-ID: <1293548915.2371.0.camel@fuzzy>
-References: <20101227170451.a9a9f873.sfr@canb.auug.org.au>
-	 <20101227115755.ffcdfc4f.randy.dunlap@oracle.com>
-	 <1293490179.4649.208.camel@haakon2.linux-iscsi.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: [PATCH] SCSI: kill compat SDEV_MEDIA_CHANGE event
+Date: Tue, 28 Dec 2010 16:20:47 +0100
+Message-ID: <20101228152047.GJ488@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:49668 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752771Ab0L1PKO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 28 Dec 2010 10:10:14 -0500
-In-Reply-To: <1293490179.4649.208.camel@haakon2.linux-iscsi.org>
+Received: from mail-bw0-f66.google.com ([209.85.214.66]:45813 "EHLO
+	mail-bw0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751604Ab0L1PUw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Dec 2010 10:20:52 -0500
+Received: by bwz7 with SMTP id 7so3810196bwz.1
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Dec 2010 07:20:50 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Kay Sievers <kay.sievers@vrfy.org>
 
-On Mon, 2010-12-27 at 14:49 -0800, Nicholas A. Bellinger wrote:
-> On Mon, 2010-12-27 at 11:57 -0800, Randy Dunlap wrote:
-> > On Mon, 27 Dec 2010 17:04:51 +1100 Stephen Rothwell wrote:
-> > 
-> > > Hi all,
-> > > 
-> > > [The mirroring on kernel.org is running slowly]
-> > > 
-> > > Changes since 20101221:
-> > > 
-> > > Linus' tree lost its build failure.
-> > 
-> > 
-> > Hi Nick,
-> > 
-> > Please test building target code when CONFIG_BLOCK is not enabled.
-> > 
-> > When CONFIG_BLOCK is not enabled, drivers/target/ gets a boat load of build errors.
-> > 
-> > Should TCM_IBLOCK depend on BLOCK?  That fixes lots of the build errors,
-> > but not all of them.
-> > 
-> > 
-> > The header file include/target/target_core_base.h uses struct queue_limits,
-> > so it should #include <linux/blkdev.h>.
-> > 
-> > 
-> 
-> Added the missing include here:
-> 
-> target: Add linux/blkdev.h include in target_core_base.h
-> http://git.kernel.org/?p=linux/kernel/git/nab/linux-next.git;a=commitdiff;h=e8bd07d3a525e71b424d308fc5084b89a6456bb2
-> 
-> Thanks Randy!
+SDEV_MEDIA_CHANGE event was first added by commit a341cd0f (SCSI: add
+asynchronous event notification API) for SATA AN support and then
+extended to cover generic media change events by commit 285e9670
+([SCSI] sr,sd: send media state change modification events).
 
-Could you just do mod patches inline to the list, please?  It's much
-less convenient trying to pull them out of a web page.
+This event was mapped to block device in userland with all properties
+stripped to simulate CHANGE event on the block device, which, in turn,
+was used to trigger further userspace action on media change.
 
-Thanks,
+The recent addition of disk event framework kept this event for
+backward compatibility but it turns out to be unnecessary and causes
+erratic and inefficient behavior.  The new disk event generates proper
+events on the block devices and the compat events are mapped to block
+device with all properties stripped, so the block device ends up
+generating multiple duplicate events for single actual event.
 
-James
+This patch removes the compat event generation from both sr and sd as
+suggested by Kay Sievers.  Both existing and newer versions of udev
+and the associated tools will behave better with the removal of these
+events as they from the beginning were expecting events on the block
+devices.
 
+Signed-off-by: Tejun Heo <tj@kernel.org>
+Cc: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Jeff Garzik <jgarzik@redhat.com>
+---
+ drivers/scsi/sd.c |    5 -----
+ drivers/scsi/sr.c |    4 ----
+ 2 files changed, 9 deletions(-)
 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7d25746..e567302 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1086,13 +1086,8 @@ out:
+ 	 *
+ 	 *	Medium present state has changed in either direction.
+ 	 *	Device has indicated UNIT_ATTENTION.
+-	 *
+-	 * Report SDEV_EVT_MEDIA_CHANGE too for backward compatibility.
+ 	 */
+-	if (sdp->changed)
+-		sdev_evt_send_simple(sdp, SDEV_EVT_MEDIA_CHANGE, GFP_KERNEL);
+ 	kfree(sshdr);
+-
+ 	retval = sdp->changed ? DISK_EVENT_MEDIA_CHANGE : 0;
+ 	sdp->changed = 0;
+ 	return retval;
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index be6baf8..aefadc6 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -249,10 +249,6 @@ skip_tur:
+ 		cd->device->changed = 0;
+ 	}
+ 
+-	/* for backward compatibility */
+-	if (events & DISK_EVENT_MEDIA_CHANGE)
+-		sdev_evt_send_simple(cd->device, SDEV_EVT_MEDIA_CHANGE,
+-				     GFP_KERNEL);
+ 	return events;
+ }
+ 
