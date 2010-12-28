@@ -1,39 +1,64 @@
-From: torn5 <torn5@shiftmail.org>
-Subject: Ext4 and scsi commands resubmission
-Date: Tue, 28 Dec 2010 11:41:58 +0100
-Message-ID: <4D19BEF6.5010007@shiftmail.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: linux-next: Tree for December 27 (drivers/target)
+Date: Tue, 28 Dec 2010 09:08:35 -0600
+Message-ID: <1293548915.2371.0.camel@fuzzy>
+References: <20101227170451.a9a9f873.sfr@canb.auug.org.au>
+	 <20101227115755.ffcdfc4f.randy.dunlap@oracle.com>
+	 <1293490179.4649.208.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; format=flowed; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from blade3.isti.cnr.it ([194.119.192.19]:52123 "EHLO
-	BLADE3.ISTI.CNR.IT" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753143Ab0L1Km3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Dec 2010 05:42:29 -0500
-Received: from SCRIPT-SPFWL-DAEMON.mx.isti.cnr.it by mx.isti.cnr.it
- (PMDF V6.5-x5 #31825) id <01NVYB5L5AZ4NG4OI5@mx.isti.cnr.it> for
- linux-scsi@vger.kernel.org; Tue, 28 Dec 2010 11:41:54 +0100 (MET)
-Received: from conversionlocal.isti.cnr.it by mx.isti.cnr.it
- (PMDF V6.5-x5 #31825) id <01NVYB5KS2GWNG4JSC@mx.isti.cnr.it> for
- linux-scsi@vger.kernel.org; Tue, 28 Dec 2010 11:41:51 +0100 (MET)
+Received: from cantor.suse.de ([195.135.220.2]:49668 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752771Ab0L1PKO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 28 Dec 2010 10:10:14 -0500
+In-Reply-To: <1293490179.4649.208.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-ext4@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, Stephen Rothwell <sfr@canb.auug.org.au>, scsi <linux-scsi@vger.kernel.org>, linux-next@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Hello all,
+On Mon, 2010-12-27 at 14:49 -0800, Nicholas A. Bellinger wrote:
+> On Mon, 2010-12-27 at 11:57 -0800, Randy Dunlap wrote:
+> > On Mon, 27 Dec 2010 17:04:51 +1100 Stephen Rothwell wrote:
+> > 
+> > > Hi all,
+> > > 
+> > > [The mirroring on kernel.org is running slowly]
+> > > 
+> > > Changes since 20101221:
+> > > 
+> > > Linus' tree lost its build failure.
+> > 
+> > 
+> > Hi Nick,
+> > 
+> > Please test building target code when CONFIG_BLOCK is not enabled.
+> > 
+> > When CONFIG_BLOCK is not enabled, drivers/target/ gets a boat load of build errors.
+> > 
+> > Should TCM_IBLOCK depend on BLOCK?  That fixes lots of the build errors,
+> > but not all of them.
+> > 
+> > 
+> > The header file include/target/target_core_base.h uses struct queue_limits,
+> > so it should #include <linux/blkdev.h>.
+> > 
+> > 
+> 
+> Added the missing include here:
+> 
+> target: Add linux/blkdev.h include in target_core_base.h
+> http://git.kernel.org/?p=linux/kernel/git/nab/linux-next.git;a=commitdiff;h=e8bd07d3a525e71b424d308fc5084b89a6456bb2
+> 
+> Thanks Randy!
 
-in open-iscsi, when network connectivity is lost, scsi commands that 
-were in-flight at the moment of disconnection are failed to the SCSI layer.
-These get resubmitted up to 5 times by the SCSI layer (or so is written 
-in the open-iscsi docs) and after that they are held in the queue 
-(device "blocked") until the network connection is restored.
+Could you just do mod patches inline to the list, please?  It's much
+less convenient trying to pull them out of a web page.
 
-Now the question is: when SCSI resubmits commands to a device, I suppose 
-they go to the end of the queue for the device, and not at the head like 
-they were. Am I right?
-How do filesystems, and in particular ext4, react to that?
-I suppose the ordering goes awry, barriers cannot succeed in this way, 
-especially if they were submitted as real SCSI barriers (i.e. without 
-using flush + command + flush workaround)
+Thanks,
 
-Thank you
+James
+
+
