@@ -1,41 +1,32 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 21172] OOPS in disk_replace_part_tbl.
-Date: Tue, 28 Dec 2010 22:09:30 GMT
-Message-ID: <201012282209.oBSM9UYu017926@demeter2.kernel.org>
-References: <bug-21172-11613@https.bugzilla.kernel.org/>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Ext4 and scsi commands resubmission
+Date: Tue, 28 Dec 2010 22:43:46 -0600
+Message-ID: <4D1ABC82.5050909@cs.wisc.edu>
+References: <4D19BEF6.5010007@shiftmail.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:47887 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751642Ab0L1WJb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Dec 2010 17:09:31 -0500
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oBSM9Uux017927
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Dec 2010 22:09:30 GMT
-In-Reply-To: <bug-21172-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ext4-owner@vger.kernel.org>
+In-Reply-To: <4D19BEF6.5010007@shiftmail.org>
+Sender: linux-ext4-owner@vger.kernel.org
+To: torn5 <torn5@shiftmail.org>
+Cc: linux-ext4@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=21172
+On 12/28/2010 04:41 AM, torn5 wrote:
+> Hello all,
+>
+> in open-iscsi, when network connectivity is lost, scsi commands that
+> were in-flight at the moment of disconnection are failed to the SCSI layer.
+> These get resubmitted up to 5 times by the SCSI layer (or so is written
+> in the open-iscsi docs) and after that they are held in the queue
+> (device "blocked") until the network connection is restored.
+>
+> Now the question is: when SCSI resubmits commands to a device, I suppose
+> they go to the end of the queue for the device, and not at the head like
+> they were. Am I right?
 
-
-Pawel Sikora <pluto@agmk.net> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |CODE_FIX
-
-
-
-
---- Comment #3 from Pawel Sikora <pluto@agmk.net>  2010-12-28 22:09:27 ---
-works fine on 2.6.36.2.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+The request goes to eh head. scsi layer calls 
+blk_requeue_request->elv_requeue_request-> 
+elv_insert(ELEVATOR_INSERT_REQUEUE) and ELEVATOR_INSERT_REQUEUE's case 
+falls through to the ELEVATOR_INSERT_FRONT case.
