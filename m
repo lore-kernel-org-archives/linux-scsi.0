@@ -1,45 +1,136 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 25602] [regression] 2.6.37-rc5: scsi_eh_11 CPU loop
-Date: Thu, 30 Dec 2010 10:43:49 GMT
-Message-ID: <201012301043.oBUAhnor012959@demeter2.kernel.org>
-References: <bug-25602-11613@https.bugzilla.kernel.org/>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi_mid_low_api.txt recommend resid usage
+Date: Thu, 30 Dec 2010 11:08:20 -0500
+Message-ID: <4D1CAE74.10005@interlog.com>
+References: <4D140825.6000704@interlog.com> <20101224094612.8056bbcd.rdunlap@xenotime.net>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter2.kernel.org ([140.211.167.42]:36544 "EHLO
-	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753215Ab0L3Knu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Dec 2010 05:43:50 -0500
-Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id oBUAhnF8012960
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Dec 2010 10:43:50 GMT
-In-Reply-To: <bug-25602-11613@https.bugzilla.kernel.org/>
+Received: from smtp.infotech.no ([82.134.31.41]:46494 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754515Ab0L3QI1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Dec 2010 11:08:27 -0500
+In-Reply-To: <20101224094612.8056bbcd.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=25602
+Randy,
+Add some extra words to define what is expected if
+a transport can do out-of-order data delivery
+(e.g. FCP_RESID, theoretically, is not precisely
+the resid we want).
+
+diff --git a/Documentation/scsi/scsi_mid_low_api.txt 
+b/Documentation/scsi/scsi_mid_low_api.txt
+index df322c1..d998af0 100644
+--- a/Documentation/scsi/scsi_mid_low_api.txt
++++ b/Documentation/scsi/scsi_mid_low_api.txt
+@@ -185,7 +185,7 @@ scsi_remove_host() ---------+
+  scsi_host_put()
+  ------------------------------------------------------------
+
+-It may be useful for a LLD to keep track of struct Scsi_Host instances
++It may be useful for an LLD to keep track of struct Scsi_Host instances
+  (a pointer is returned by scsi_host_alloc()). Such instances are "owned"
+  by the mid-level.  struct Scsi_Host instances are freed from
+  scsi_host_put() when the reference count hits zero.
+@@ -749,7 +749,7 @@ void scsi_unblock_requests(struct Scsi_Host * shost)
+   *
+   *      Notes: Should not be invoked if the "hotplug initialization
+   *      model" is being used. Called internally by exit_this_scsi_driver()
+- *      in the "passive initialization model". Hence a LLD has no need to
++ *      in the "passive initialization model". Hence an LLD has no need to
+   *      call this function directly.
+   *
+   *      Defined in: drivers/scsi/hosts.c .
+@@ -1343,7 +1343,7 @@ Members of interest:
+                     underruns (overruns should be rare). If possible an LLD
+                     should set 'resid' prior to invoking 'done'. The most
+                     interesting case is data transfers from a SCSI target
+-                   device device (i.e. READs) that underrun.
++                   device (e.g. READs) that underrun.
+      underflow    - LLD should place (DID_ERROR << 16) in 'result' if
+                     actual number of bytes transferred is less than this
+                     figure. Not many LLDs implement this check and some that
+@@ -1351,6 +1351,22 @@ Members of interest:
+                     report a DID_ERROR. Better for an LLD to implement
+                     'resid'.
+
++It is recommended that an LLD set 'resid' on data transfers from a SCSI
++target device (e.g. READs). It is especially important that 'resid' is set
++when such data transfers have sense keys of MEDIUM ERROR and HARDWARE ERROR
++(and possibly RECOVERED ERROR). In these cases if an LLD is in doubt how much
++data has been received then the safest approach is to indicate no bytes have
++been received. For example: to indicate that no valid data has been received
++an LLD might use these helpers:
++    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
++where 'SCpnt' is a pointer to a scsi_cmnd object. To indicate only three 512
++bytes blocks has been received 'resid' could be set like this:
++    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt) - (3 * 512));
++
++For transports that can do "out of order" delivery of data from a SCSI target
++device, the 'resid' should reflect the number of valid, consecutive bytes
++from the start of the buffer.
++
+  The scsi_cmnd structure is defined in include/scsi/scsi_cmnd.h
 
 
-Rafael J. Wysocki <rjw@sisk.pl> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|                            |DUPLICATE
+Doug Gilbert
 
 
+On 10-12-24 12:46 PM, Randy Dunlap wrote:
+> On Thu, 23 Dec 2010 21:40:37 -0500 Douglas Gilbert wrote:
+>
+>> As discussed in a thread on this list titled:
+>>      "RFC: short reads on block devices"
+>> this patch adds recommendations for LLDs to set resid
+>> when there might be uncertainty about how much data
+>> has been returned by a device.
+>>
+>> This patch inline and attached] is against scsi-misc-2.6.git
+>>
+>>
+>> Signed-off-by: Douglas Gilbert<dgilbert@interlog.com>
+>>
+>>
+>> diff --git a/Documentation/scsi/scsi_mid_low_api.txt
+>> b/Documentation/scsi/scsi_mid_low_api.txt
+>> index df322c1..7bcdea7 100644
+>> --- a/Documentation/scsi/scsi_mid_low_api.txt
+>> +++ b/Documentation/scsi/scsi_mid_low_api.txt
+>
+>> @@ -1351,6 +1351,18 @@ Members of interest:
+>>                       report a DID_ERROR. Better for an LLD to implement
+>>                       'resid'.
+>>
+>> +It is recommended that a LLD set 'resid' on data transfers from a SCSI
+>> +target device (e.g. READs). It is especially important that 'resid' is set
+>> +when such data transfers have sense keys of MEDIUM ERROR and HARDWARE ERROR
+>> +(and possibly RECOVERED ERROR). In these cases if a LLD is in doubt how much
+>> +data has been received then the safest approach is to indicate no bytes have
+>> +been received. For example: to indicate that no valid data has been received
+>> +a LLD might use these helpers:
+>> +    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
+>> +where 'SCpnt' is a pointer to a scsi_cmnd object. To indicate only three 512
+>> +bytes blocks has been received 'resid' could be set like this:
+>> +    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt) - (3 * 512));
+>> +
+>>    The scsi_cmnd structure is defined in include/scsi/scsi_cmnd.h
+>
+>
+> Hi Doug,
+>
+> Using "an LLD" instead of "a LLD" would be more consistent with the rest
+> of this txt file (and read better to me).
+>
+>
+> ---
+> ~Randy
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> desserts:  http://www.xenotime.net/linux/recipes/
+>
 
-
---- Comment #2 from Rafael J. Wysocki <rjw@sisk.pl>  2010-12-30 10:43:46 ---
-No, but it's better to create a bug entry first and put a link to it into
-your e-mail report.  Then, we'll likely notice that the bug entry already
-exists and we won't create another bug entry for it.
-
-*** This bug has been marked as a duplicate of bug 25392 ***
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
