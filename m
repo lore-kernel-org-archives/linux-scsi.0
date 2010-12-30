@@ -1,136 +1,48 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_mid_low_api.txt recommend resid usage
-Date: Thu, 30 Dec 2010 11:08:20 -0500
-Message-ID: <4D1CAE74.10005@interlog.com>
-References: <4D140825.6000704@interlog.com> <20101224094612.8056bbcd.rdunlap@xenotime.net>
-Reply-To: dgilbert@interlog.com
+From: Konrad Rzeszutek Wilk <konrad@darnok.org>
+Subject: Re: [PATCH 3/7] [SCSI] scst: Add scst_local driver.
+Date: Thu, 30 Dec 2010 11:10:11 -0500
+Message-ID: <201012301110.12253.konrad@darnok.org>
+References: <201012201849.03930.bvanassche@acm.org> <201012281351.20087.konrad@darnok.org> <AANLkTingSeNi2bTvtRGWh1o1Oe5HJBPyk93spAAsVX_T@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:46494 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754515Ab0L3QI1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 30 Dec 2010 11:08:27 -0500
-In-Reply-To: <20101224094612.8056bbcd.rdunlap@xenotime.net>
+Received: from andromeda.dapyr.net ([206.212.254.10]:60237 "EHLO
+	andromeda.dapyr.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754662Ab0L3QUP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Dec 2010 11:20:15 -0500
+In-Reply-To: <AANLkTingSeNi2bTvtRGWh1o1Oe5HJBPyk93spAAsVX_T@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, James.Bottomley@suse.de, realrichardsharpe@gmail.com
 
-Randy,
-Add some extra words to define what is expected if
-a transport can do out-of-order data delivery
-(e.g. FCP_RESID, theoretically, is not precisely
-the resid we want).
+> > pr_err? Or is this based on a module parameter?
+> 
+> The macro PRINT_ERROR() has been defined in the header file
+> include/scst/scst_debug.h. For this macro and also for related macros
+> (e.g. TRACE_DBG()) the user can configure via debugfs whether or not
+> PID, function name and/or line number should be included in the
+> generated messages.
 
-diff --git a/Documentation/scsi/scsi_mid_low_api.txt 
-b/Documentation/scsi/scsi_mid_low_api.txt
-index df322c1..d998af0 100644
---- a/Documentation/scsi/scsi_mid_low_api.txt
-+++ b/Documentation/scsi/scsi_mid_low_api.txt
-@@ -185,7 +185,7 @@ scsi_remove_host() ---------+
-  scsi_host_put()
-  ------------------------------------------------------------
+Hmm, at one hand that is neat, but at other I am wondering if it would be 
+better to use CONFIG_DYNAMIC_PRINTK functionality (which is what pr_debug 
+could be used for) - which is a more generic framework for this.
 
--It may be useful for a LLD to keep track of struct Scsi_Host instances
-+It may be useful for an LLD to keep track of struct Scsi_Host instances
-  (a pointer is returned by scsi_host_alloc()). Such instances are "owned"
-  by the mid-level.  struct Scsi_Host instances are freed from
-  scsi_host_put() when the reference count hits zero.
-@@ -749,7 +749,7 @@ void scsi_unblock_requests(struct Scsi_Host * shost)
-   *
-   *      Notes: Should not be invoked if the "hotplug initialization
-   *      model" is being used. Called internally by exit_this_scsi_driver()
-- *      in the "passive initialization model". Hence a LLD has no need to
-+ *      in the "passive initialization model". Hence an LLD has no need to
-   *      call this function directly.
-   *
-   *      Defined in: drivers/scsi/hosts.c .
-@@ -1343,7 +1343,7 @@ Members of interest:
-                     underruns (overruns should be rare). If possible an LLD
-                     should set 'resid' prior to invoking 'done'. The most
-                     interesting case is data transfers from a SCSI target
--                   device device (i.e. READs) that underrun.
-+                   device (e.g. READs) that underrun.
-      underflow    - LLD should place (DID_ERROR << 16) in 'result' if
-                     actual number of bytes transferred is less than this
-                     figure. Not many LLDs implement this check and some that
-@@ -1351,6 +1351,22 @@ Members of interest:
-                     report a DID_ERROR. Better for an LLD to implement
-                     'resid'.
+Some of these errors look relevant to the user so perhaps going through the 
+debugfs is not proper? Or is it that there are just soo many of them that it 
+is unclear whcih ones would be releveant?
 
-+It is recommended that an LLD set 'resid' on data transfers from a SCSI
-+target device (e.g. READs). It is especially important that 'resid' is set
-+when such data transfers have sense keys of MEDIUM ERROR and HARDWARE ERROR
-+(and possibly RECOVERED ERROR). In these cases if an LLD is in doubt how much
-+data has been received then the safest approach is to indicate no bytes have
-+been received. For example: to indicate that no valid data has been received
-+an LLD might use these helpers:
-+    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
-+where 'SCpnt' is a pointer to a scsi_cmnd object. To indicate only three 512
-+bytes blocks has been received 'resid' could be set like this:
-+    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt) - (3 * 512));
-+
-+For transports that can do "out of order" delivery of data from a SCSI target
-+device, the 'resid' should reflect the number of valid, consecutive bytes
-+from the start of the buffer.
-+
-  The scsi_cmnd structure is defined in include/scsi/scsi_cmnd.h
+> 
+> >> +             res = -ENOMEM;
+> >> +             goto out;
+> >> +     }
+> >> +
+> >> +     tr_id[0] = 0x00 | SCSI_TRANSPORTID_PROTOCOLID_SAS;
+> > 
+> > Hmm, why the 0x00? Can't you just do an assigment?
+> 
+> If I do not receive further feedback, I will queue the patch below:
 
-
-Doug Gilbert
-
-
-On 10-12-24 12:46 PM, Randy Dunlap wrote:
-> On Thu, 23 Dec 2010 21:40:37 -0500 Douglas Gilbert wrote:
->
->> As discussed in a thread on this list titled:
->>      "RFC: short reads on block devices"
->> this patch adds recommendations for LLDs to set resid
->> when there might be uncertainty about how much data
->> has been returned by a device.
->>
->> This patch inline and attached] is against scsi-misc-2.6.git
->>
->>
->> Signed-off-by: Douglas Gilbert<dgilbert@interlog.com>
->>
->>
->> diff --git a/Documentation/scsi/scsi_mid_low_api.txt
->> b/Documentation/scsi/scsi_mid_low_api.txt
->> index df322c1..7bcdea7 100644
->> --- a/Documentation/scsi/scsi_mid_low_api.txt
->> +++ b/Documentation/scsi/scsi_mid_low_api.txt
->
->> @@ -1351,6 +1351,18 @@ Members of interest:
->>                       report a DID_ERROR. Better for an LLD to implement
->>                       'resid'.
->>
->> +It is recommended that a LLD set 'resid' on data transfers from a SCSI
->> +target device (e.g. READs). It is especially important that 'resid' is set
->> +when such data transfers have sense keys of MEDIUM ERROR and HARDWARE ERROR
->> +(and possibly RECOVERED ERROR). In these cases if a LLD is in doubt how much
->> +data has been received then the safest approach is to indicate no bytes have
->> +been received. For example: to indicate that no valid data has been received
->> +a LLD might use these helpers:
->> +    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
->> +where 'SCpnt' is a pointer to a scsi_cmnd object. To indicate only three 512
->> +bytes blocks has been received 'resid' could be set like this:
->> +    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt) - (3 * 512));
->> +
->>    The scsi_cmnd structure is defined in include/scsi/scsi_cmnd.h
->
->
-> Hi Doug,
->
-> Using "an LLD" instead of "a LLD" would be more consistent with the rest
-> of this txt file (and read better to me).
->
->
-> ---
-> ~Randy
-> *** Remember to use Documentation/SubmitChecklist when testing your code ***
-> desserts:  http://www.xenotime.net/linux/recipes/
->
-
+ok.
