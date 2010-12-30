@@ -1,7 +1,7 @@
 From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 14/15]include:media:davinci:vpss.h Typo change diable to disable.
-Date: Thu, 30 Dec 2010 15:08:03 -0800
-Message-ID: <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
+Subject: [PATCH 15/15]drivers:spi:dw_spi.c Typo change diable to disable.
+Date: Thu, 30 Dec 2010 15:08:04 -0800
+Message-ID: <1293750484-1161-15-git-send-email-justinmattock@gmail.com>
 References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
  <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
  <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
@@ -15,34 +15,55 @@ References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
  <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
  <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
  <1293750484-1161-13-git-send-email-justinmattock@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1293750484-1161-13-git-send-email-justinmattock@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+ <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-gx0-f174.google.com ([209.85.161.174]:59254 "EHLO
+	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750967Ab0L3XI6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Dec 2010 18:08:58 -0500
+In-Reply-To: <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: trivial@kernel.org
 Cc: linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org, "Justin P. Mattock" <justinmattock@gmail.com>
-List-Id: linux-scsi@vger.kernel.org
 
-The below patch fixes a typo "diable" to "disable". Please let me know if this 
+The below patch fixes a typo "diable" to "disable". Please let me know if this
 is correct or not.
 
 Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
 
 ---
- include/media/davinci/vpss.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/spi/dw_spi.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/media/davinci/vpss.h b/include/media/davinci/vpss.h
-index c59cc02..b586495 100644
---- a/include/media/davinci/vpss.h
-+++ b/include/media/davinci/vpss.h
-@@ -44,7 +44,7 @@ struct vpss_pg_frame_size {
- 	short pplen;
- };
+diff --git a/drivers/spi/dw_spi.c b/drivers/spi/dw_spi.c
+index 7c3cf21..a3a065f 100644
+--- a/drivers/spi/dw_spi.c
++++ b/drivers/spi/dw_spi.c
+@@ -910,12 +910,12 @@ int __devinit dw_spi_add_host(struct dw_spi *dws)
+ 	ret = init_queue(dws);
+ 	if (ret) {
+ 		dev_err(&master->dev, "problem initializing queue\n");
+-		goto err_diable_hw;
++		goto err_disable_hw;
+ 	}
+ 	ret = start_queue(dws);
+ 	if (ret) {
+ 		dev_err(&master->dev, "problem starting queue\n");
+-		goto err_diable_hw;
++		goto err_disable_hw;
+ 	}
  
--/* Used for enable/diable VPSS Clock */
-+/* Used for enable/disable VPSS Clock */
- enum vpss_clock_sel {
- 	/* DM355/DM365 */
- 	VPSS_CCDC_CLOCK,
+ 	spi_master_set_devdata(master, dws);
+@@ -930,7 +930,7 @@ int __devinit dw_spi_add_host(struct dw_spi *dws)
+ 
+ err_queue_alloc:
+ 	destroy_queue(dws);
+-err_diable_hw:
++err_disable_hw:
+ 	spi_enable_chip(dws, 0);
+ 	free_irq(dws->irq, dws);
+ err_free_master:
 -- 
 1.6.5.2.180.gc5b3e
+
