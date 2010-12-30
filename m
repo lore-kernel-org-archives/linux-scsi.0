@@ -1,98 +1,148 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 3/7] [SCSI] scst: Add scst_local driver.
-Date: Thu, 30 Dec 2010 18:15:51 +0100
-Message-ID: <AANLkTinPvG22DhUXsyGG8UR1r0xdVM2gB6s=DZaufNDn@mail.gmail.com>
-References: <201012201849.03930.bvanassche@acm.org> <201012281351.20087.konrad@darnok.org>
- <AANLkTingSeNi2bTvtRGWh1o1Oe5HJBPyk93spAAsVX_T@mail.gmail.com> <201012301110.12253.konrad@darnok.org>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [PATCH] scsi_mid_low_api.txt recommend resid usage
+Date: Thu, 30 Dec 2010 09:50:30 -0800
+Message-ID: <20101230095030.a647466d.rdunlap@xenotime.net>
+References: <4D140825.6000704@interlog.com>
+	<20101224094612.8056bbcd.rdunlap@xenotime.net>
+	<4D1CAE74.10005@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:40454 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754897Ab0L3RQM convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Dec 2010 12:16:12 -0500
-Received: by iyi12 with SMTP id 12so9850225iyi.19
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Dec 2010 09:16:11 -0800 (PST)
-In-Reply-To: <201012301110.12253.konrad@darnok.org>
+Received: from xenotime.net ([72.52.115.56]:36215 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754912Ab0L3Rug (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Dec 2010 12:50:36 -0500
+Received: from chimera.site ([173.50.240.230]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 30 Dec 2010 09:50:31 -0800
+In-Reply-To: <4D1CAE74.10005@interlog.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Konrad Rzeszutek Wilk <konrad@darnok.org>
-Cc: linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, James.Bottomley@suse.de, realrichardsharpe@gmail.com
+To: dgilbert@interlog.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Thu, Dec 30, 2010 at 5:10 PM, Konrad Rzeszutek Wilk
-<konrad@darnok.org> wrote:
->> > pr_err? Or is this based on a module parameter?
->>
->> The macro PRINT_ERROR() has been defined in the header file
->> include/scst/scst_debug.h. For this macro and also for related macro=
-s
->> (e.g. TRACE_DBG()) the user can configure via debugfs whether or not
->> PID, function name and/or line number should be included in the
->> generated messages.
->
-> Hmm, at one hand that is neat, but at other I am wondering if it woul=
-d be
-> better to use CONFIG_DYNAMIC_PRINTK functionality (which is what pr_d=
-ebug
-> could be used for) - which is a more generic framework for this.
+On Thu, 30 Dec 2010 11:08:20 -0500 Douglas Gilbert wrote:
 
-(resending as plain text)
+> Randy,
+> Add some extra words to define what is expected if
+> a transport can do out-of-order data delivery
+> (e.g. FCP_RESID, theoretically, is not precisely
+> the resid we want).
 
-Hello Konrad,
+Can James use your previous:
+>> Signed-off-by: Douglas Gilbert<dgilbert@interlog.com>
 
-As far as I can see CONFIG_DYNAMIC_PRINTK was introduced in kernel
-2.6.28 but has been renamed to CONFIG_DYNAMIC_DEBUG in 2.6.30 ? The
-dynamic debug framework comes close but does not provide all the
-functionality we need. While the macros in <scst/scst_debug.h> assign
-a class to each generated line of debug output, the macros in
-<linux/dynamic_debug.h> treat all generated debug lines equal. Yet
-while debugging it is very convenient to be able to enable only one
-class of debug statements and let all others disabled. The SCST macros
-and debugfs files allow to enable only a specific class of debug
-statements. A quote from dynamic-debug-howto.txt:
+for this patch?
 
-<quote>
-Dynamic debug is designed to allow you to dynamically enable/disable ke=
-rnel
-code to obtain additional kernel information. Currently, if
-CONFIG_DYNAMIC_DEBUG is set, then all pr_debug()/dev_debug() calls can =
-be
-dynamically enabled per-callsite.
+Acked-by: Randy Dunlap <rdunlap@xenotime.net>
 
-Dynamic debug has even more useful features:
+Thanks.
 
-=A0* Simple query language allows turning on and off debugging statemen=
-ts by
-=A0=A0 matching any combination of:
 
-=A0=A0 - source filename
-=A0=A0 - function name
-=A0=A0 - line number (including ranges of line numbers)
-=A0=A0 - module name
-=A0=A0 - format string
+> diff --git a/Documentation/scsi/scsi_mid_low_api.txt 
+> b/Documentation/scsi/scsi_mid_low_api.txt
+> index df322c1..d998af0 100644
+> --- a/Documentation/scsi/scsi_mid_low_api.txt
+> +++ b/Documentation/scsi/scsi_mid_low_api.txt
+> @@ -185,7 +185,7 @@ scsi_remove_host() ---------+
+>   scsi_host_put()
+>   ------------------------------------------------------------
+> 
+> -It may be useful for a LLD to keep track of struct Scsi_Host instances
+> +It may be useful for an LLD to keep track of struct Scsi_Host instances
+>   (a pointer is returned by scsi_host_alloc()). Such instances are "owned"
+>   by the mid-level.  struct Scsi_Host instances are freed from
+>   scsi_host_put() when the reference count hits zero.
+> @@ -749,7 +749,7 @@ void scsi_unblock_requests(struct Scsi_Host * shost)
+>    *
+>    *      Notes: Should not be invoked if the "hotplug initialization
+>    *      model" is being used. Called internally by exit_this_scsi_driver()
+> - *      in the "passive initialization model". Hence a LLD has no need to
+> + *      in the "passive initialization model". Hence an LLD has no need to
+>    *      call this function directly.
+>    *
+>    *      Defined in: drivers/scsi/hosts.c .
+> @@ -1343,7 +1343,7 @@ Members of interest:
+>                      underruns (overruns should be rare). If possible an LLD
+>                      should set 'resid' prior to invoking 'done'. The most
+>                      interesting case is data transfers from a SCSI target
+> -                   device device (i.e. READs) that underrun.
+> +                   device (e.g. READs) that underrun.
+>       underflow    - LLD should place (DID_ERROR << 16) in 'result' if
+>                      actual number of bytes transferred is less than this
+>                      figure. Not many LLDs implement this check and some that
+> @@ -1351,6 +1351,22 @@ Members of interest:
+>                      report a DID_ERROR. Better for an LLD to implement
+>                      'resid'.
+> 
+> +It is recommended that an LLD set 'resid' on data transfers from a SCSI
+> +target device (e.g. READs). It is especially important that 'resid' is set
+> +when such data transfers have sense keys of MEDIUM ERROR and HARDWARE ERROR
+> +(and possibly RECOVERED ERROR). In these cases if an LLD is in doubt how much
+> +data has been received then the safest approach is to indicate no bytes have
+> +been received. For example: to indicate that no valid data has been received
+> +an LLD might use these helpers:
+> +    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
+> +where 'SCpnt' is a pointer to a scsi_cmnd object. To indicate only three 512
+> +bytes blocks has been received 'resid' could be set like this:
+> +    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt) - (3 * 512));
+> +
+> +For transports that can do "out of order" delivery of data from a SCSI target
+> +device, the 'resid' should reflect the number of valid, consecutive bytes
+> +from the start of the buffer.
+> +
+>   The scsi_cmnd structure is defined in include/scsi/scsi_cmnd.h
+> 
+> 
+> Doug Gilbert
+> 
+> 
+> On 10-12-24 12:46 PM, Randy Dunlap wrote:
+> > On Thu, 23 Dec 2010 21:40:37 -0500 Douglas Gilbert wrote:
+> >
+> >> As discussed in a thread on this list titled:
+> >>      "RFC: short reads on block devices"
+> >> this patch adds recommendations for LLDs to set resid
+> >> when there might be uncertainty about how much data
+> >> has been returned by a device.
+> >>
+> >> This patch inline and attached] is against scsi-misc-2.6.git
+> >>
+> >>
+> >> Signed-off-by: Douglas Gilbert<dgilbert@interlog.com>
+> >>
+> >>
+> >> diff --git a/Documentation/scsi/scsi_mid_low_api.txt
+> >> b/Documentation/scsi/scsi_mid_low_api.txt
+> >> index df322c1..7bcdea7 100644
+> >> --- a/Documentation/scsi/scsi_mid_low_api.txt
+> >> +++ b/Documentation/scsi/scsi_mid_low_api.txt
+> >
+> >> @@ -1351,6 +1351,18 @@ Members of interest:
+> >>                       report a DID_ERROR. Better for an LLD to implement
+> >>                       'resid'.
+> >>
+> >> +It is recommended that a LLD set 'resid' on data transfers from a SCSI
+> >> +target device (e.g. READs). It is especially important that 'resid' is set
+> >> +when such data transfers have sense keys of MEDIUM ERROR and HARDWARE ERROR
+> >> +(and possibly RECOVERED ERROR). In these cases if a LLD is in doubt how much
+> >> +data has been received then the safest approach is to indicate no bytes have
+> >> +been received. For example: to indicate that no valid data has been received
+> >> +a LLD might use these helpers:
+> >> +    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
+> >> +where 'SCpnt' is a pointer to a scsi_cmnd object. To indicate only three 512
+> >> +bytes blocks has been received 'resid' could be set like this:
+> >> +    scsi_set_resid(SCpnt, scsi_bufflen(SCpnt) - (3 * 512));
+> >> +
+> >>    The scsi_cmnd structure is defined in include/scsi/scsi_cmnd.h
+> >
+> >
+> > Hi Doug,
+> >
+> > Using "an LLD" instead of "a LLD" would be more consistent with the rest
+> > of this txt file (and read better to me).
 
-=A0* Provides a debugfs control file: <debugfs>/dynamic_debug/
-control which can be
-=A0=A0 read to display the complete list of known debug statements, to
-help guide you
-</quote>
 
-> Some of these errors look relevant to the user so perhaps going throu=
-gh the
-> debugfs is not proper? Or is it that there are just so many of them t=
-hat it
-> is unclear which ones would be relevant?
-
-Messages generated by one of the PRINT_*() macros also go to the
-kernel log when the kernel has been built with CONFIG_SCST_DEBUG=3Dn
-while messages generated via one of the TRACE_*() macros only go to
-the kernel log if the kernel has been built with CONFIG_SCST_DEBUG=3Dy
-and the corresponding class has been enabled via debugfs.
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
+desserts:  http://www.xenotime.net/linux/recipes/
