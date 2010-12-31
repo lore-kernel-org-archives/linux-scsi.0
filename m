@@ -1,73 +1,63 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 01/15]arch:m68k:ifpsp060:src:fpsp.S Typo change diable to disable.
-Date: Fri, 31 Dec 2010 11:33:49 +0100
-Message-ID: <AANLkTins7rj1o4rEcEFmVSA2=1yXZSfLdO000gqQP7cg@mail.gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [linux-pm] [RFC] Deferred disk spinup during system resume
+Date: Fri, 31 Dec 2010 12:27:32 +0100
+Message-ID: <20101231112732.GG18831@htj.dyndns.org>
+References: <AANLkTinOqLOJ7JCpHeQNYUEirqAvkSce+eFDCGkWn3jE@mail.gmail.com>
+ <201012302346.07275.rjw@sisk.pl>
+ <AANLkTikLn7VyB+TJMz=GGTHKSHg+9feQ9bje+KS3pD3k@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:40672 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751719Ab0LaKdw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Dec 2010 05:33:52 -0500
-In-Reply-To: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:37417 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752756Ab0LaL1h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Dec 2010 06:27:37 -0500
+Received: by bwz15 with SMTP id 15so12316366bwz.19
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Dec 2010 03:27:35 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <AANLkTikLn7VyB+TJMz=GGTHKSHg+9feQ9bje+KS3pD3k@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+To: Maksim Rayskiy <maksim.rayskiy@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org
 
-On Fri, Dec 31, 2010 at 00:07, Justin P. Mattock
-<justinmattock@gmail.com> wrote:
-> The below patch fixes a typo "diable" to "disable". Please let me kno=
-w if this
-> is correct or not.
->
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+On Thu, Dec 30, 2010 at 04:49:29PM -0800, Maksim Rayskiy wrote:
+> >> When resuming from system suspend, scsi disks are being spun up which
+> >> takes quite a lot of time (5+ seconds in my case). The spinup is done
+> >> synchronously, so this time adds up to overall system resume time.
+> >> Ours is an embedded platform and we are using flash-based rootfs, so
+> >> there is no immediate need in harddrive after resume. What is much
+> >> more important for us is to minimize time-to-full-power. To speed up
+> >> resume, we would like to have an option to defer the spinup or run it
+> >> in parallel with system resume. I could not find any existing
+> >> mechanism to do the trick, but I might have missed something.
+> >>
+> >> Can anybody comment on this?
+> >
+> > Do you use asynchronous suspend/resume?
+> >
+> 
+> Yes, asynchronous suspend/resume is enabled - it saves about 0.5
+> second in my case. But resume blocks anyway because disk driver is
+> waiting on sd_resume() to complete.
+> 
+> I am wondering if we could let the resume proceed while spinup is
+> going on, just mark the scsi device as quiescent to block any data
+> transfers.
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Yeah, it was asynchronous for a while when suspend/resume were
+implemented in libata proper.  It's a bit trickier to do that with sd
+doing the higher level part.  Hmmm... most SATA disks spin up
+automatically anyway so disabling START_STOP from sd should do the
+trick.  Does the following achieve async resume?
 
-> ---
-> =C2=A0arch/m68k/ifpsp060/src/fpsp.S | =C2=A0 =C2=A02 +-
-> =C2=A01 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/arch/m68k/ifpsp060/src/fpsp.S b/arch/m68k/ifpsp060/src/f=
-psp.S
-> index 73613b5..26e85e2 100644
-> --- a/arch/m68k/ifpsp060/src/fpsp.S
-> +++ b/arch/m68k/ifpsp060/src/fpsp.S
-> @@ -3881,7 +3881,7 @@ _fpsp_fline:
-> =C2=A0# FP Unimplemented Instruction stack frame and jump to that ent=
-ry
-> =C2=A0# point.
-> =C2=A0#
-> -# but, if the FPU is disabled, then we need to jump to the FPU diabl=
-ed
-> +# but, if the FPU is disabled, then we need to jump to the FPU disab=
-led
-> =C2=A0# entry point.
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0movc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0%pcr,%d0
-> =C2=A0 =C2=A0 =C2=A0 =C2=A0btst =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0&0x1,%d0
+ echo 0 > /sys/block/sdX/device/scsi_disk/h:c:i:l/manage_start_stop
 
-Gr{oetje,eeting}s,
+The problem is that the above would also prevent the kernel from
+issuing STANDBY_NOW on suspend or power down.  Maybe we should just
+make start_stop_xlat schedule async EH action instead.
 
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 Geert
+Thanks.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
-m68k.org
-
-In personal conversations with technical people, I call myself a hacker=
-=2E But
-when I'm talking to journalists I just say "programmer" or something li=
-ke that.
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
