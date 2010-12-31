@@ -1,13 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/5] libiscsi: add more informative failure message during iscsi scsi eh
-Date: Fri, 31 Dec 2010 02:22:18 -0600
-Message-ID: <1293783742-8238-2-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 5/5] libiscsi: use bh locking instead of irq with session lock
+Date: Fri, 31 Dec 2010 02:22:22 -0600
+Message-ID: <1293783742-8238-6-git-send-email-michaelc@cs.wisc.edu>
 References: <1293783742-8238-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:7709 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:40317 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752069Ab0LaIWa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Dec 2010 03:22:30 -0500
+	id S1751440Ab0LaIW2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Dec 2010 03:22:28 -0500
 In-Reply-To: <1293783742-8238-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,81 +16,65 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This adds a more informative error code and message
-for the iscsi scsi eh session drop paths. This allows
-you to distinguish if the session was dropped due to
-a connection failure vs the iscsi layer dropping
-the session due to scsi eh failure processing.
+The session lock is taken in threads, timers, and bottom halves
+like softirqs and tasklets. All the code but
+iscsi_conn/session_failure take the session lock with the spin_lock_bh
+call. This was done because I thought some offload drivers
+would be calling these functions from a irq. They never did,
+so this patch has iscsi_conn/session_failure use the bh
+locking.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libiscsi.c |   10 +++++-----
- include/scsi/iscsi_if.h |    1 +
- 2 files changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/libiscsi.c |   14 ++++++--------
+ 1 files changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index c15fde8..434d9ae 100644
+index f460637..b0481a8 100644
 --- a/drivers/scsi/libiscsi.c
 +++ b/drivers/scsi/libiscsi.c
-@@ -1795,9 +1795,9 @@ static int iscsi_exec_task_mgmt_fn(struct iscsi_conn *conn,
- 				      NULL, 0);
- 	if (!task) {
- 		spin_unlock_bh(&session->lock);
-+		iscsi_conn_printk(KERN_ERR, conn, "Could not send TMF.\n");
- 		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
- 		spin_lock_bh(&session->lock);
--		ISCSI_DBG_EH(session, "tmf exec failure\n");
- 		return -EPERM;
+@@ -1337,17 +1337,16 @@ void iscsi_session_failure(struct iscsi_session *session,
+ {
+ 	struct iscsi_conn *conn;
+ 	struct device *dev;
+-	unsigned long flags;
+ 
+-	spin_lock_irqsave(&session->lock, flags);
++	spin_lock_bh(&session->lock);
+ 	conn = session->leadconn;
+ 	if (session->state == ISCSI_STATE_TERMINATE || !conn) {
+-		spin_unlock_irqrestore(&session->lock, flags);
++		spin_unlock_bh(&session->lock);
+ 		return;
  	}
- 	conn->tmfcmd_pdus_cnt++;
-@@ -2202,7 +2202,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 		goto success_unlocked;
- 	case TMF_TIMEDOUT:
- 		spin_unlock_bh(&session->lock);
--		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
-+		iscsi_conn_failure(conn, ISCSI_ERR_SCSI_EH_SESSION_RST);
- 		goto failed_unlocked;
- 	case TMF_NOT_FOUND:
- 		if (!sc->SCp.ptr) {
-@@ -2289,7 +2289,7 @@ int iscsi_eh_device_reset(struct scsi_cmnd *sc)
- 		break;
- 	case TMF_TIMEDOUT:
- 		spin_unlock_bh(&session->lock);
--		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
-+		iscsi_conn_failure(conn, ISCSI_ERR_SCSI_EH_SESSION_RST);
- 		goto done;
- 	default:
- 		conn->tmf_state = TMF_INITIAL;
-@@ -2370,7 +2370,7 @@ failed:
- 	 * we drop the lock here but the leadconn cannot be destoyed while
- 	 * we are in the scsi eh
- 	 */
--	iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
-+	iscsi_conn_failure(conn, ISCSI_ERR_SCSI_EH_SESSION_RST);
  
- 	ISCSI_DBG_EH(session, "wait for relogin\n");
- 	wait_event_interruptible(conn->ehwait,
-@@ -2452,7 +2452,7 @@ int iscsi_eh_target_reset(struct scsi_cmnd *sc)
- 		break;
- 	case TMF_TIMEDOUT:
- 		spin_unlock_bh(&session->lock);
--		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
-+		iscsi_conn_failure(conn, ISCSI_ERR_SCSI_EH_SESSION_RST);
- 		goto done;
- 	default:
- 		conn->tmf_state = TMF_INITIAL;
-diff --git a/include/scsi/iscsi_if.h b/include/scsi/iscsi_if.h
-index a8631ac..c3e1cbc 100644
---- a/include/scsi/iscsi_if.h
-+++ b/include/scsi/iscsi_if.h
-@@ -263,6 +263,7 @@ enum iscsi_err {
- 	ISCSI_ERR_INVALID_HOST		= ISCSI_ERR_BASE + 18,
- 	ISCSI_ERR_XMIT_FAILED		= ISCSI_ERR_BASE + 19,
- 	ISCSI_ERR_TCP_CONN_CLOSE	= ISCSI_ERR_BASE + 20,
-+	ISCSI_ERR_SCSI_EH_SESSION_RST	= ISCSI_ERR_BASE + 21,
- };
+ 	dev = get_device(&conn->cls_conn->dev);
+-	spin_unlock_irqrestore(&session->lock, flags);
++	spin_unlock_bh(&session->lock);
+ 	if (!dev)
+ 	        return;
+ 	/*
+@@ -1366,17 +1365,16 @@ EXPORT_SYMBOL_GPL(iscsi_session_failure);
+ void iscsi_conn_failure(struct iscsi_conn *conn, enum iscsi_err err)
+ {
+ 	struct iscsi_session *session = conn->session;
+-	unsigned long flags;
  
- /*
+-	spin_lock_irqsave(&session->lock, flags);
++	spin_lock_bh(&session->lock);
+ 	if (session->state == ISCSI_STATE_FAILED) {
+-		spin_unlock_irqrestore(&session->lock, flags);
++		spin_unlock_bh(&session->lock);
+ 		return;
+ 	}
+ 
+ 	if (conn->stop_stage == 0)
+ 		session->state = ISCSI_STATE_FAILED;
+-	spin_unlock_irqrestore(&session->lock, flags);
++	spin_unlock_bh(&session->lock);
+ 
+ 	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
+ 	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
 -- 
 1.7.0.1
 
