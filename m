@@ -1,48 +1,41 @@
-From: Maksim Rayskiy <maksim.rayskiy@gmail.com>
-Subject: Re: [linux-pm] [RFC] Deferred disk spinup during system resume
-Date: Thu, 30 Dec 2010 16:49:29 -0800
-Message-ID: <AANLkTikLn7VyB+TJMz=GGTHKSHg+9feQ9bje+KS3pD3k@mail.gmail.com>
-References: <AANLkTinOqLOJ7JCpHeQNYUEirqAvkSce+eFDCGkWn3jE@mail.gmail.com>
-	<201012302346.07275.rjw@sisk.pl>
+From: Dan Carpenter <error27@gmail.com>
+Subject: Re: [PATCH 15/15]drivers:spi:dw_spi.c Typo change diable to
+ disable.
+Date: Fri, 31 Dec 2010 09:34:33 +0300
+Message-ID: <20101231063433.GB1886@bicker>
+References: <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-8-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-9-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-10-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-12-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-13-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-15-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:61915 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750875Ab0LaAta (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Dec 2010 19:49:30 -0500
-Received: by iyi12 with SMTP id 12so10100313iyi.19
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Dec 2010 16:49:29 -0800 (PST)
-In-Reply-To: <201012302346.07275.rjw@sisk.pl>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1293750484-1161-15-git-send-email-justinmattock@gmail.com>
+Sender: netdev-owner@vger.kernel.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: trivial@kernel.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org, spi-devel-general@lists.sourceforge.net, linux-media@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org, Tejun Heo <tj@kernel.org>
 
->> When resuming from system suspend, scsi disks are being spun up which
->> takes quite a lot of time (5+ seconds in my case). The spinup is done
->> synchronously, so this time adds up to overall system resume time.
->> Ours is an embedded platform and we are using flash-based rootfs, so
->> there is no immediate need in harddrive after resume. What is much
->> more important for us is to minimize time-to-full-power. To speed up
->> resume, we would like to have an option to defer the spinup or run it
->> in parallel with system resume. I could not find any existing
->> mechanism to do the trick, but I might have missed something.
->>
->> Can anybody comment on this?
->
-> Do you use asynchronous suspend/resume?
->
+On Thu, Dec 30, 2010 at 03:08:04PM -0800, Justin P. Mattock wrote:
+> The below patch fixes a typo "diable" to "disable". Please let me know if this
+> is correct or not.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
+> ---
+>  drivers/spi/dw_spi.c |    6 +++---
 
-Yes, asynchronous suspend/resume is enabled - it saves about 0.5
-second in my case. But resume blocks anyway because disk driver is
-waiting on sd_resume() to complete.
+You missed one from this file:
 
-I am wondering if we could let the resume proceed while spinup is
-going on, just mark the scsi device as quiescent to block any data
-transfers.
+/* Set the interrupt mask, for poll mode just diable all int */
+                                              ^^^^^^
+regards,
+dan carpenter
 
-Maksim.
-
-> Rafael
-> --
