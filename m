@@ -1,48 +1,33 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: Re: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to
- disable.
-Date: Fri, 31 Dec 2010 20:41:00 +0300
-Message-ID: <20101231174100.GF1886@bicker>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
- <20101231064515.GC3733@angua.secretlab.ca>
- <4D1D7DAE.7060504@gmail.com>
- <20101231091136.GC1886@bicker>
- <4D1DE616.7010105@gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Linux support for the LSI SAS8208ELP
+Date: Fri, 31 Dec 2010 10:52:00 -0700
+Message-ID: <20101231175200.GA32652@parisc-linux.org>
+References: <4D1E0831.8090602@digadd.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:42349 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753721Ab0LaRwD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Dec 2010 12:52:03 -0500
 Content-Disposition: inline
-In-Reply-To: <4D1DE616.7010105@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Grant Likely <grant.likely@secretlab.ca>, trivial@kernel.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org, spi-devel-general@lists.sourceforge.net, linux-media@vger.kernel.org
+In-Reply-To: <4D1E0831.8090602@digadd.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christian Schmidt <charlie@digadd.de>
+Cc: Eric Moore <Eric.Moore@lsi.com>, support@lsi.com, linux-scsi@vger.kernel.org
 
-On Fri, Dec 31, 2010 at 06:17:58AM -0800, Justin P. Mattock wrote:
-> >Wrong:  [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
-> >
-> >Right:  [PATCH 02/15] spi/dw_spi: Typo change diable to disable
-> >
-> >regards,
-> >dan carpenter
-> >
-> 
-> alright.. so having the backlash is alright for the subject
+On Fri, Dec 31, 2010 at 05:43:29PM +0100, Christian Schmidt wrote:
+> Since LSI seems to only provide closed source drivers for far obsolete
+> and limited "enterprise" distribution kernels I'd suggest the inclusion
+> of the PCI IDs into the kernel.
 
-Well really my point is not so much about backslashes vs colons, it's
-about getting the *one* correct prefix.  This stuff is probably
-scriptable most of the time, but you may still be required to think a
-little on the corner cases.
+http://marc.info/?l=linux-scsi&m=129019864003449&w=2
 
-Here is a script to get you started.
+(ok, 0x55 vs 0x59, but dollars-to-doughnuts it's the same 'problem')
 
-git log --format="%s" drivers/spi/dw_spi.c | \
-	head -n 20 |                         \
-	perl -ne 's/(.*):.*/$1/; print' |    \
-	sort | uniq -c | sort -rn |          \
-	perl -ne 's/^\W+\d+ //; print' |     \
-	head -n 1
-
-regards,
-dan carpenter
+-- 
+Matthew Wilcox				Intel Open Source Technology Centre
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
