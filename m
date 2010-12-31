@@ -1,45 +1,40 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: Re: [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to
- disable.
-Date: Fri, 31 Dec 2010 12:11:36 +0300
-Message-ID: <20101231091136.GC1886@bicker>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
- <20101231064515.GC3733@angua.secretlab.ca>
- <4D1D7DAE.7060504@gmail.com>
+From: Mauro Carvalho Chehab <maurochehab@gmail.com>
+Subject: Re: [PATCH 11/15]drivers:media:video:cx18:cx23418.h Typo change diable
+ to disable.
+Date: Fri, 31 Dec 2010 08:23:41 -0200
+Message-ID: <4D1DAF2D.5070604@gmail.com>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <1293750484-1161-4-git-send-email-justinmattock@gmail.com> <1293750484-1161-5-git-send-email-justinmattock@gmail.com> <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com> <1293750484-1161-9-git-send-email-justinmattock@gmail.com> <1293750484-1161-10-git-send-email-justinmattock@gmail.com> <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D1D7DAE.7060504@gmail.com>
-Sender: linux-m68k-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-media-owner@vger.kernel.org>
+In-Reply-To: <1293750484-1161-11-git-send-email-justinmattock@gmail.com>
+Sender: linux-media-owner@vger.kernel.org
 To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: Grant Likely <grant.likely@secretlab.ca>, trivial@kernel.org, devel@driverdev.osuosl.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org, spi-devel-general@lists.sourceforge.net, linux-media@vger.kernel.org
+Cc: trivial@kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Dec 30, 2010 at 10:52:30PM -0800, Justin P. Mattock wrote:
-> On 12/30/2010 10:45 PM, Grant Likely wrote:
-> >On Thu, Dec 30, 2010 at 03:07:51PM -0800, Justin P. Mattock wrote:
-> >>The below patch fixes a typo "diable" to "disable". Please let me know if this
-> >>is correct or not.
-> >>
-> >>Signed-off-by: Justin P. Mattock<justinmattock@gmail.com>
-> >
-> >applied, thanks.
-> >
-> >g.
+Em 30-12-2010 21:08, Justin P. Mattock escreveu:
+> The below patch fixes a typo "diable" to "disable". Please let me know if this 
+> is correct or not.
 > 
-> ahh.. thanks.. just cleared up the left out diabled that I had
-> thought I forgotten(ended up separating comments and code and
-> forgot)
-
-This is really just defensiveness and random grumbling and grumpiness on
-my part, but one reason I may have missed the first patch is because
-your subject lines are crap.
-
-Wrong:  [PATCH 02/15]drivers:spi:dw_spi.c Typo change diable to disable.
-
-Right:  [PATCH 02/15] spi/dw_spi: Typo change diable to disable
-
-regards,
-dan carpenter
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
+> 
+> ---
+>  drivers/media/video/cx18/cx23418.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/media/video/cx18/cx23418.h b/drivers/media/video/cx18/cx23418.h
+> index 2c00980..7e40035 100644
+> --- a/drivers/media/video/cx18/cx23418.h
+> +++ b/drivers/media/video/cx18/cx23418.h
+> @@ -177,7 +177,7 @@
+>     IN[0] - Task handle.
+>     IN[1] - luma type: 0 = disable, 1 = 1D horizontal only, 2 = 1D vertical only,
+>  		      3 = 2D H/V separable, 4 = 2D symmetric non-separable
+> -   IN[2] - chroma type: 0 - diable, 1 = 1D horizontal
+> +   IN[2] - chroma type: 0 - disable, 1 = 1D horizontal
+>     ReturnCode - One of the ERR_CAPTURE_... */
+>  #define CX18_CPU_SET_SPATIAL_FILTER_TYPE     	(CPU_CMD_MASK_CAPTURE | 0x000C)
+>  
