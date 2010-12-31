@@ -1,47 +1,73 @@
-From: Mauro Carvalho Chehab <maurochehab@gmail.com>
-Subject: Re: [PATCH 14/15]include:media:davinci:vpss.h Typo change diable
- to disable.
-Date: Fri, 31 Dec 2010 08:27:01 -0200
-Message-ID: <4D1DAFF5.3090108@gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <1293750484-1161-4-git-send-email-justinmattock@gmail.com> <1293750484-1161-5-git-send-email-justinmattock@gmail.com> <1293750484-1161-6-git-send-email-justinmattock@gmail.com> <1293750484-1161-7-git-send-email-justinmattock@gmail.com> <1293750484-1161-8-git-send-email-justinmattock@gmail.com> <1293750484-1161-9-git-send-email-justinmattock@gmail.com> <1293750484-1161-10-git-send-email-justinmattock@gmail.com> <1293750484-1161-11-git-send-email-justinmattock@gmail.com> <1293750484-1161-12-git-send-email-justinmattock@gmail.com> <1293750484-1161-13-git-send-email-justinmattock@gmail.com> <1293750484-1161-
- 14-git-send-email-justinmattock@gmail.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 01/15]arch:m68k:ifpsp060:src:fpsp.S Typo change diable to disable.
+Date: Fri, 31 Dec 2010 11:33:49 +0100
+Message-ID: <AANLkTins7rj1o4rEcEFmVSA2=1yXZSfLdO000gqQP7cg@mail.gmail.com>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1293750484-1161-14-git-send-email-justinmattock@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, linux-m68k@lists.linux-m68k.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-fx0-f46.google.com ([209.85.161.46]:40672 "EHLO
+	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751719Ab0LaKdw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Dec 2010 05:33:52 -0500
+In-Reply-To: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: trivial@kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
 
-Em 30-12-2010 21:08, Justin P. Mattock escreveu:
-> The below patch fixes a typo "diable" to "disable". Please let me know if this 
+On Fri, Dec 31, 2010 at 00:07, Justin P. Mattock
+<justinmattock@gmail.com> wrote:
+> The below patch fixes a typo "diable" to "disable". Please let me kno=
+w if this
 > is correct or not.
-> 
+>
 > Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-Acked-by: Mauro Carvalho Chehab <mchehab@redhat.com>
 
-PS.: Next time, please c/c linux-media ONLY on patches related to media
-drivers (/drivers/video and the corresponding include files). Having to
-dig into a series of 15 patches to just actually look on 3 patches 
-is not nice.
+Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-> 
 > ---
->  include/media/davinci/vpss.h |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/media/davinci/vpss.h b/include/media/davinci/vpss.h
-> index c59cc02..b586495 100644
-> --- a/include/media/davinci/vpss.h
-> +++ b/include/media/davinci/vpss.h
-> @@ -44,7 +44,7 @@ struct vpss_pg_frame_size {
->  	short pplen;
->  };
->  
-> -/* Used for enable/diable VPSS Clock */
-> +/* Used for enable/disable VPSS Clock */
->  enum vpss_clock_sel {
->  	/* DM355/DM365 */
->  	VPSS_CCDC_CLOCK,
+> =C2=A0arch/m68k/ifpsp060/src/fpsp.S | =C2=A0 =C2=A02 +-
+> =C2=A01 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/arch/m68k/ifpsp060/src/fpsp.S b/arch/m68k/ifpsp060/src/f=
+psp.S
+> index 73613b5..26e85e2 100644
+> --- a/arch/m68k/ifpsp060/src/fpsp.S
+> +++ b/arch/m68k/ifpsp060/src/fpsp.S
+> @@ -3881,7 +3881,7 @@ _fpsp_fline:
+> =C2=A0# FP Unimplemented Instruction stack frame and jump to that ent=
+ry
+> =C2=A0# point.
+> =C2=A0#
+> -# but, if the FPU is disabled, then we need to jump to the FPU diabl=
+ed
+> +# but, if the FPU is disabled, then we need to jump to the FPU disab=
+led
+> =C2=A0# entry point.
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0movc =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0%pcr,%d0
+> =C2=A0 =C2=A0 =C2=A0 =C2=A0btst =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0&0x1,%d0
+
+Gr{oetje,eeting}s,
+
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
+m68k.org
+
+In personal conversations with technical people, I call myself a hacker=
+=2E But
+when I'm talking to journalists I just say "programmer" or something li=
+ke that.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
