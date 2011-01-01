@@ -1,28 +1,57 @@
-From: David Blake <dblake2211@yahoo.com>
-Subject: Important mail from Mr David
-Date: Fri, 31 Dec 2010 23:22:09 -0500 (EST)
-Message-ID: <201101010422.p014M9uE025937@esteban.colo.ethernext.com>
-Reply-To: dblake2211@yahoo.com
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 03/15]drivers:staging:rtl8187se:r8180_hw.h Typo change
+	diable to disable.
+Date: Sat, 1 Jan 2011 17:48:32 +1100 (EST)
+Message-ID: <alpine.LNX.2.00.1012311722580.24460@nippy.intranet>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+	<1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+	<1293750484-1161-3-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [205.237.195.111] ([205.237.195.111]:2847 "EHLO
-	esteban.colo.ethernext.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751174Ab1AAE4P (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Dec 2010 23:56:15 -0500
-Received: from esteban.colo.ethernext.com (localhost [127.0.0.1])
-	by esteban.colo.ethernext.com (8.13.1/8.13.1) with ESMTP id p014MEUD025938
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Dec 2010 23:22:14 -0500 (EST)
-	(envelope-from httpd@esteban.colo.ethernext.com)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/devel>
+List-Post: <mailto:devel@linuxdriverproject.org>
+List-Help: <mailto:devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/devel>,
+	<mailto:devel-request@linuxdriverproject.org?subject=subscribe>
+Sender: devel-bounces@linuxdriverproject.org
+Errors-To: devel-bounces@linuxdriverproject.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: devel@driverdev.osuosl.org, trivial@kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-m68k@lists.linux-m68k.org, spi-devel-general@lists.sourceforge.net, linux-media@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-My name is David Blake From Scotland, I am at the hospital waiting to die. I have a  Charity project that i want you to do and it will benefit you and it is risk free and it is also Legal. Please get back to me so that i can give you more details.
- 
-David
 
 
+On Thu, 30 Dec 2010, Justin P. Mattock wrote:
 
+> The below patch fixes a typo "diable" to "disable". Please let me know if this 
+> is correct or not.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
+> ---
+>  drivers/staging/rtl8187se/r8180_hw.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/staging/rtl8187se/r8180_hw.h b/drivers/staging/rtl8187se/r8180_hw.h
+> index 3fca144..2911d40 100644
+> --- a/drivers/staging/rtl8187se/r8180_hw.h
+> +++ b/drivers/staging/rtl8187se/r8180_hw.h
+> @@ -554,7 +554,7 @@
+>  /* by amy for power save		*/
+>  /* by amy for antenna			*/
+>  #define EEPROM_SW_REVD_OFFSET 0x3f
+> -/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are diable.					*/
+> +/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are disabled.					*/
+
+I think, "other values disable" was what you meant?
+
+Finn
+
+>  #define EEPROM_SW_AD_MASK			0x0300
+>  #define EEPROM_SW_AD_ENABLE			0x0100
+>  
+> 
