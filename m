@@ -1,50 +1,38 @@
-From: "Justin P. Mattock" <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 03/15]drivers:staging:rtl8187se:r8180_hw.h Typo change
- diable to disable.
-Date: Sat, 01 Jan 2011 06:53:34 -0800
-Message-ID: <4D1F3FEE.7@gmail.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com> <1293750484-1161-2-git-send-email-justinmattock@gmail.com> <1293750484-1161-3-git-send-email-justinmattock@gmail.com> <alpine.LNX.2.00.1012311722580.24460@nippy.intranet> <4D1EDB22.2020308@gmail.com> <20110101090931.GH1886@bicker>
+From: roel kluin <roel.kluin@gmail.com>
+Subject: [PATCH] [SCSI] arcmsr: &/| confusion in arcmsr_build_ccb()
+Date: Sat, 01 Jan 2011 17:45:11 +0100
+Message-ID: <4D1F5A17.4010807@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20110101090931.GH1886@bicker>
-Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Dan Carpenter <error27-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Finn Thain <fthain-PnMVE5gNl/W9dxLkCovUHLpzq4S04n8Q@public.gmane.org>, devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, trivial-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.orglinux-
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: nick.cheng@areca.com.tw, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/01/2011 01:09 AM, Dan Carpenter wrote:
-> On Fri, Dec 31, 2010 at 11:43:30PM -0800, Justin P. Mattock wrote:
->> On 12/31/2010 10:48 PM, Finn Thain wrote:
->>>> -/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are diable.					*/
->>>> +/*  BIT[8-9] is for SW Antenna Diversity. Only the value EEPROM_SW_AD_ENABLE means enable, other values are disabled.					*/
->>>
->>> I think, "other values disable" was what you meant?
->>>
->>> Finn
->>>
->>>>   #define EEPROM_SW_AD_MASK			0x0300
->>>>   #define EEPROM_SW_AD_ENABLE			0x0100
->>>>
->>>>
->>>
->>
->> no! I changed it to disabled to make it proper..
->
-> Finn is obviously right, but maybe a compromise would be:
->
-> Only the value EEPROM_SW_AD_ENABLE means "enable", other values mean
-> "disable".
->
-> regards,
-> dan carpenter
->
+The WRITE_{6,10,12} are defined numbers, so the branch was always taken.
 
-ahh.. I see what you your saying now.. alright let me send this out that 
-way..
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+ drivers/scsi/arcmsr/arcmsr_hba.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Justin P. Mattock
---
-To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+See include/scsi/scsi.h:58-123 for
+#define WRITE_6               0x0a
+#define WRITE_10              0x2a
+#define WRITE_12              0xaa
+
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 17e3df4..a6e5222 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1171,7 +1171,8 @@ static int arcmsr_build_ccb(struct AdapterControlBlock *acb,
+ 	arcmsr_cdb->msgPages = arccdbsize/0x100 + (arccdbsize % 0x100 ? 1 : 0);
+ 	if ( arccdbsize > 256)
+ 		arcmsr_cdb->Flags |= ARCMSR_CDB_FLAG_SGL_BSIZE;
+-	if (pcmd->cmnd[0]|WRITE_6 || pcmd->cmnd[0]|WRITE_10 || pcmd->cmnd[0]|WRITE_12 ){
++	if (pcmd->cmnd[0] & WRITE_6 || pcmd->cmnd[0] & WRITE_10 ||
++			pcmd->cmnd[0] & WRITE_12 ){
+ 		arcmsr_cdb->Flags |= ARCMSR_CDB_FLAG_WRITE;
+ 	}
+ 	ccb->arc_cdb_size = arccdbsize;
