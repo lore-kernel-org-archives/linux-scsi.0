@@ -1,36 +1,37 @@
-From: Christian Schmidt <charlie@digadd.de>
-Subject: Re: Linux support for the LSI SAS8208ELP
-Date: Sat, 01 Jan 2011 18:32:18 +0100
-Message-ID: <4D1F6522.3050103@digadd.de>
-References: <4D1E0831.8090602@digadd.de> <20101231175200.GA32652@parisc-linux.org>
+From: roel kluin <roel.kluin@gmail.com>
+Subject: Re: [PATCH] [SCSI] arcmsr: &/| confusion in arcmsr_build_ccb()
+Date: Sat, 01 Jan 2011 19:40:23 +0100
+Message-ID: <4D1F7517.7080803@gmail.com>
+References: <4D1F5A17.4010807@gmail.com> <20110101170854.GB32652@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.digadd.de ([195.47.195.236]:58265 "EHLO mx1.digadd.de"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752923Ab1AARc1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Jan 2011 12:32:27 -0500
-In-Reply-To: <20101231175200.GA32652@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110101170854.GB32652@parisc-linux.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, just.for.lkml@googlemail.com
+Cc: nick.cheng@areca.com.tw, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Eric Moore <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org
 
-Hi Matthew,
+Make sure no other command which does a write, such as UNMAP and WRITE_32, is missed.
 
-On 12/31/2010 06:52 PM, Matthew Wilcox wrote:
-> On Fri, Dec 31, 2010 at 05:43:29PM +0100, Christian Schmidt wrote:
->> Since LSI seems to only provide closed source drivers for far obsolete
->> and limited "enterprise" distribution kernels I'd suggest the inclusion
->> of the PCI IDs into the kernel.
-> 
-> http://marc.info/?l=linux-scsi&m=129019864003449&w=2
-> 
-> (ok, 0x55 vs 0x59, but dollars-to-doughnuts it's the same 'problem')
+Signed-off-by: Roel Kluin <roel.kluin@gmail.com>
+---
+ drivers/scsi/arcmsr/arcmsr_hba.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Thanks for the link. On my mainboard it wasn't a BIOS setting but a
-jumper that changed the mode.
+If you agree this is the right fix, please ack.
 
-Regards,
-Christian
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 17e3df4..a5acedc 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1171,7 +1171,7 @@ static int arcmsr_build_ccb(struct AdapterControlBlock *acb,
+ 	arcmsr_cdb->msgPages = arccdbsize/0x100 + (arccdbsize % 0x100 ? 1 : 0);
+ 	if ( arccdbsize > 256)
+ 		arcmsr_cdb->Flags |= ARCMSR_CDB_FLAG_SGL_BSIZE;
+-	if (pcmd->cmnd[0]|WRITE_6 || pcmd->cmnd[0]|WRITE_10 || pcmd->cmnd[0]|WRITE_12 ){
++	if (pcmd->sc_data_direction == DMA_TO_DEVICE)
+ 		arcmsr_cdb->Flags |= ARCMSR_CDB_FLAG_WRITE;
+ 	}
+ 	ccb->arc_cdb_size = arccdbsize;
