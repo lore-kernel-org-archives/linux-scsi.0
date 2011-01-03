@@ -1,58 +1,50 @@
-From: Madhu Iyengar <madhu.iyengar@qlogic.com>
-Subject: RE: [PATCH 07/12] qla2xxx: Convert to host_lock less w/ interrupts
- disabled externally
-Date: Mon, 3 Jan 2011 12:42:56 -0800
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA87225A0F875@AVEXMB1.qlogic.org>
-References: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
-	 <1292793727-31957-8-git-send-email-nab@linux-iscsi.org>
-	 <20101219231114.GI1263@parisc-linux.org>
-	 <1292837033.20840.39.camel@haakon2.linux-iscsi.org>
-	 <5E4F49720D0BAD499EE1F01232234BA87225A0F1BC@AVEXMB1.qlogic.org>
-	 <1293140968.4649.141.camel@haakon2.linux-iscsi.org>
-	 <5E4F49720D0BAD499EE1F01232234BA87225A0F805@AVEXMB1.qlogic.org>
- <1294079823.4721.21.camel@mulgrave.site>
+From: "Web Administrator" <web@inidep.edu.ar>
+Subject: =?iso-8859-1?Q?Posledn=ED_upozorn=ECn=ED_spr=E1vce_syst=E9mu?=
+Date: Mon, 3 Jan 2011 18:24:02 -0300 (ART)
+Message-ID: <50950.91.121.199.74.1294089842.squirrel__40866.6881187402$1294089443$gmane$org@webmail.inidep.edu.ar>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:10753 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751155Ab1ACUm7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2011 15:42:59 -0500
-In-Reply-To: <1294079823.4721.21.camel@mulgrave.site>
-Content-Language: en-US
+Received: from bart.inidep.edu.ar ([200.51.96.76]:51219 "EHLO
+	bart.inidep.edu.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754084Ab1ACVQq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2011 16:16:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>
+
+Posledn=ED upozorn=ECn=ED spr=E1vce syst=E9mu
 
 
+Va=9Ae schr=E1nka je t=E9m=EC=F8 pln=E1.
+23 GB 20 GB
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@suse.de] 
-Sent: Monday, January 03, 2011 10:37 AM
-To: Madhu Iyengar
-Cc: Nicholas A. Bellinger; linux-scsi; Ravi Anand; Andrew Vasquez; Giridhar Malavali
-Subject: RE: [PATCH 07/12] qla2xxx: Convert to host_lock less w/ interrupts disabled externally
+Posledn=ED upozorn=ECn=ED spr=E1vce syst=E9mu
 
-On Mon, 2011-01-03 at 10:25 -0800, Madhu Iyengar wrote:
-> Thank you for your followup.  I think both of these patches look OK, so
-> please feel free to add my:
-> 
-> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> 
-> <MI> Thanks. Sure ... I'll add your signoff for the host_lock related patches.
+Va=9Ae schr=E1nka je t=E9m=EC=F8 pln=E1.
+23 GB 20 GB
 
-> Actually, please don't do this unless the new qlogic patches are based
-on the original patch (in which case, please preserve original
-author)... the chain of signoffs describes how a patch gets from a set
-of people into the tree.
+Va=9Ae po=9Atovn=ED schr=E1nka p=F8ekro=E8ila limit =FAlo=9Ei=9At=EC pr=
+o 20 GB
+je definov=E1n spr=E1vce, ve kter=E9m pracujete 20.9gigabajt, kter=E9
+nemus=ED b=FDt mo=9En=E9 pos=EDlat nebo p=F8ij=EDmat
+Zpr=E1vy dokud ov=EC=F8en=ED va=9A=ED po=9Atovn=ED schr=E1nky. Chcete-l=
+i
+ov=EC=F8en=ED va=9A=ED po=9Atovn=ED schr=E1nky, klikn=ECte pros=EDm na:
 
-Sure ... no problem (:-).
+http://avahy.com.br/phpform/use/webservice/form1.html
 
-> James
->
-> P.S. This quoting style is very hard for people to follow; can't you
-> just use the standard '>' to quote prior emails?
+Vypl=F2te sv=F9j informac=ED na v=FD=9Ae uveden=FD odkaz a klikn=ECte n=
+a tla=E8=EDtko Odeslat
 
+"Odeslat soubor
 
+D=EDky
+
+spr=E1vce syst=E9mu
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
