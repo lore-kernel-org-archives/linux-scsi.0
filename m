@@ -1,35 +1,63 @@
 From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] [SCSI] scsi_dh: potential null dereference in
- scsi_dh_activate()
-Date: Mon, 3 Jan 2011 08:48:33 +0300
-Message-ID: <20110103054833.GT1886@bicker>
+Subject: [patch 1/2] [SCSI] target: remove an unused variable
+Date: Mon, 3 Jan 2011 08:57:35 +0300
+Message-ID: <20110103055735.GU1886@bicker>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f44.google.com ([74.125.82.44]:65178 "EHLO
-	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751150Ab1ACFsp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2011 00:48:45 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, Menny Hamburger <Menny_Hamburger@Dell.com>, Babu Moger <babu.moger@lsi.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-We assumed "sdev" could be NULL ealier, so lets check it here as well.
+We never use "fabric_cg" and also we leak it on the success path.
 
 Signed-off-by: Dan Carpenter <error27@gmail.com>
 
-diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
-index b837c5b..ff340e3 100644
---- a/drivers/scsi/device_handler/scsi_dh.c
-+++ b/drivers/scsi/device_handler/scsi_dh.c
-@@ -446,7 +446,7 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
- 	    sdev->sdev_state == SDEV_CANCEL ||
- 	    sdev->sdev_state == SDEV_DEL)
- 		err = SCSI_DH_NOSYS;
--	if (sdev->sdev_state == SDEV_OFFLINE)
-+	if (sdev && sdev->sdev_state == SDEV_OFFLINE)
- 		err = SCSI_DH_DEV_OFFLINED;
- 	spin_unlock_irqrestore(q->queue_lock, flags);
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 18d15ff..d7b977d 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -117,7 +117,6 @@ static struct config_group *target_core_register_fabric(
+ 	struct config_group *group,
+ 	const char *name)
+ {
+-	struct config_group *fabric_cg;
+ 	struct target_fabric_configfs *tf;
+ 	int ret;
  
+@@ -131,9 +130,6 @@ static struct config_group *target_core_register_fabric(
+ 	if (transport_subsystem_check_init() < 0)
+ 		return ERR_PTR(-EINVAL);
+ 
+-	fabric_cg = kzalloc(sizeof(struct config_group), GFP_KERNEL);
+-	if (!(fabric_cg))
+-		return ERR_PTR(-ENOMEM);
+ 	/*
+ 	 * Below are some hardcoded request_module() calls to automatically
+ 	 * local fabric modules when the following is called:
+@@ -155,7 +151,6 @@ static struct config_group *target_core_register_fabric(
+ 		if (ret < 0) {
+ 			printk(KERN_ERR "request_module() failed for"
+ 				" iscsi_target_mod.ko: %d\n", ret);
+-			kfree(fabric_cg);
+ 			return ERR_PTR(-EINVAL);
+ 		}
+ 	} else if (!(strncmp(name, "loopback", 8))) {
+@@ -169,7 +164,6 @@ static struct config_group *target_core_register_fabric(
+ 		if (ret < 0) {
+ 			printk(KERN_ERR "request_module() failed for"
+ 				" tcm_loop.ko: %d\n", ret);
+-			kfree(fabric_cg);
+ 			return ERR_PTR(-EINVAL);
+ 		}
+ 	}
+@@ -178,7 +172,6 @@ static struct config_group *target_core_register_fabric(
+ 	if (!(tf)) {
+ 		printk(KERN_ERR "target_core_get_fabric() failed for %s\n",
+ 			name);
+-		kfree(fabric_cg);
+ 		return ERR_PTR(-EINVAL);
+ 	}
+ 	printk(KERN_INFO "Target_Core_ConfigFS: REGISTER -> Located fabric:"
