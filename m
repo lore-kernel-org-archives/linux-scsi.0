@@ -1,58 +1,62 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH 16/32] scsi/be2iscsi,qla2xxx: convert to alloc_workqueue()
-Date: Mon,  3 Jan 2011 14:49:39 +0100
-Message-ID: <1294062595-30097-17-git-send-email-tj@kernel.org>
-References: <1294062595-30097-1-git-send-email-tj@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1294062595-30097-1-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>, Jayamohan Kallickal <jayamohank@serverengines.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH] lpfc: lower stack use in lpfc_fc_frame_check
+Date: Mon, 3 Jan 2011 08:53:21 -0500
+Message-ID: <4D21D4D1.1010208@emulex.com>
+References: <4D121EC8.3090205@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exht1.emulex.com ([138.239.113.183]:38094 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S932129Ab1ACNxo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2011 08:53:44 -0500
+In-Reply-To: <4D121EC8.3090205@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-Switch to new workqueue interface alloc_workqueue().  These are
-identity conversions.
+Tomas,
 
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Cc: Jayamohan Kallickal <jayamohank@serverengines.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
----
-Please feel free to take it into the subsystem tree or simply ack -
-I'll route it through the wq tree.
+Thank you.
 
-Thanks.
+Acked-by: James Smart <james.smart@emulex.com>
 
- drivers/scsi/be2iscsi/be_main.c |    2 +-
- drivers/scsi/qla2xxx/qla_os.c   |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+-- james s
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 75a85aa..4339196 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4276,7 +4276,7 @@ static int __devinit beiscsi_dev_probe(struct pci_dev *pcidev,
- 
- 	snprintf(phba->wq_name, sizeof(phba->wq_name), "beiscsi_q_irq%u",
- 		 phba->shost->host_no);
--	phba->wq = create_workqueue(phba->wq_name);
-+	phba->wq = alloc_workqueue(phba->wq_name, WQ_MEM_RECLAIM, 1);
- 	if (!phba->wq) {
- 		shost_printk(KERN_ERR, phba->shost, "beiscsi_dev_probe-"
- 				"Failed to allocate work queue\n");
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 2c0876c..2cd0a77 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -356,7 +356,7 @@ static int qla25xx_setup_mode(struct scsi_qla_host *vha)
- 				"Can't create request queue\n");
- 			goto fail;
- 		}
--		ha->wq = create_workqueue("qla2xxx_wq");
-+		ha->wq = alloc_workqueue("qla2xxx_wq", WQ_MEM_RECLAIM, 1);
- 		vha->req = ha->req_q_map[req];
- 		options |= BIT_1;
- 		for (ques = 1; ques < ha->max_rsp_queues; ques++) {
--- 
-1.7.1
+
+On 12/22/2010 10:52 AM, Tomas Henzl wrote:
+> Hi,
+> according to checkstack the lpfc_fc_frame_check occupies the first place in stack usage:
+> make checkstack
+> objdump -d vmlinux $(find . -name '*.ko') | \
+> 	perl /root/rpmbuild/BUILD/kernel-2.6.32/linux-2.6.32.x86_64/scripts/checkstack.pl x86_64
+> 0x000013f4 lpfc_fc_frame_check [lpfc]:			1936
+> ...
+> This change makes the rctl_names static, thus not on stack.
+>
+> Tomas
+>
+> Signed-off-by: Tomas Henzl<thenzl@redhat.com>
+>
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index e98e792..634b2fe 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> @@ -11578,7 +11578,8 @@ lpfc_sli4_post_scsi_sgl_block(struct lpfc_hba *phba, struct list_head *sblist,
+>   static int
+>   lpfc_fc_frame_check(struct lpfc_hba *phba, struct fc_frame_header *fc_hdr)
+>   {
+> -	char *rctl_names[] = FC_RCTL_NAMES_INIT;
+> +	/*  make rctl_names static to save stack space */
+> +	static char *rctl_names[] = FC_RCTL_NAMES_INIT;
+>   	char *type_names[] = FC_TYPE_NAMES_INIT;
+>   	struct fc_vft_header *fc_vft_hdr;
+>
+>
+>
+>
+>
+>
