@@ -1,31 +1,218 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 17/32] scsi/ibmvstgt: use system_wq instead of vtgtd workqueue
-Date: Mon, 3 Jan 2011 18:45:33 +0100
-Message-ID: <AANLkTimSmStMdz8KTQB2k+p2kcVpm9KghZV1xDfuTOS4@mail.gmail.com>
-References: <1294062595-30097-1-git-send-email-tj@kernel.org> <1294062595-30097-18-git-send-email-tj@kernel.org>
+From: Madhu Iyengar <madhu.iyengar@qlogic.com>
+Subject: RE: [PATCH 07/12] qla2xxx: Convert to host_lock less w/ interrupts
+	disabled externally
+Date: Mon, 3 Jan 2011 10:25:32 -0800
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA87225A0F805@AVEXMB1.qlogic.org>
+References: <1292793727-31957-1-git-send-email-nab@linux-iscsi.org>
+	 <1292793727-31957-8-git-send-email-nab@linux-iscsi.org>
+	 <20101219231114.GI1263@parisc-linux.org>
+	 <1292837033.20840.39.camel@haakon2.linux-iscsi.org>
+	 <5E4F49720D0BAD499EE1F01232234BA87225A0F1BC@AVEXMB1.qlogic.org>
+ <1293140968.4649.141.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1294062595-30097-18-git-send-email-tj@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexcashub1.qlogic.com ([198.70.193.61]:13763 "EHLO
+	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750848Ab1ACSZg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2011 13:25:36 -0500
+In-Reply-To: <1293140968.4649.141.camel@haakon2.linux-iscsi.org>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Ravi Anand <ravi.anand@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, Madhu Iyengar <madhu.iyengar@qlogic.com>
 
-On Mon, Jan 3, 2011 at 2:49 PM, Tejun Heo <tj@kernel.org> wrote:
-> The target driver is not in the memory reclaim path and doesn't need =
-a
-> dedicated workqueue. =A0Drop vtgtd and use system_wq instead. =A0The =
-used
-> work item is sync flushed on removal.
 
-[ ... ]
 
-Hi Tejun,
+-----Original Message-----
+From: Nicholas A. Bellinger [mailto:nab@linux-iscsi.org] 
+Sent: Thursday, December 23, 2010 1:49 PM
+To: Madhu Iyengar
+Cc: Matthew Wilcox; linux-scsi; linux-kernel; James Bottomley; Jeff Garzik; Ravi Anand; Andrew Vasquez; Giridhar Malavali
+Subject: RE: [PATCH 07/12] qla2xxx: Convert to host_lock less w/ interrupts disabled externally
 
-No matter which storage target will go upstream, I'm afraid that this
-patch will conflict with it. See e.g.
-http://dchs.spinics.net/lists/linux-scsi/msg49105.html.
+On Mon, 2010-12-20 at 16:37 -0800, Madhu Iyengar wrote:
+> All,
+> 
+> We had (internally @ QLogic) come up with a couple of patches (attached).
+> 
+> Patch 1: Similar to the patch from NAB and from Mathew Wilcox
+> Patch 2: A bit more changes with the host_lost within the qla2xxx driver.
+> 
+> The above 2 patches have gone through some testing as well, so far so good. Please take a look and let us know.
+> 
 
-Bart.
+Hi Madhu,
+
+Thank you for your followup.  I think both of these patches look OK, so
+please feel free to add my:
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+<MI> Thanks. Sure ... I'll add your signoff for the host_lock related patches.
+
+Also let me know if you prefer these to be carried for the next series
+in lio-core-2.6.git/lock_less-LLDs-for-38-v4, or if you would rather
+these be picked up by James directly.
+
+<MI> We decided that we'll submit these host lock patches along with the next batch of qla2xxx patches, which James can pick up.
+
+Best Regards,
+
+--nab
+
+
+
+> Cheers,
+> Madhu
+> 
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Nicholas A. Bellinger
+> Sent: Monday, December 20, 2010 1:24 AM
+> To: Matthew Wilcox
+> Cc: linux-scsi; linux-kernel; James Bottomley; Jeff Garzik; Christoph Hellwig; FUJITA Tomonori; Hannes Reinecke; Mike Christie; Mike Anderson; Tejun Heo; Vasu Dev; Tim Chen; Andi Kleen; Ravi Anand; Andrew Vasquez; Joe Eykholt; James Smart; Douglas Gilbert; adam radford; Kashyap Desai; MPTFusionLinux
+> Subject: Re: [PATCH 07/12] qla2xxx: Convert to host_lock less w/ interrupts disabled externally
+> 
+> On Sun, 2010-12-19 at 16:11 -0700, Matthew Wilcox wrote:
+> > On Sun, Dec 19, 2010 at 01:22:02PM -0800, Nicholas A. Bellinger wrote:
+> > > This patch converts qla2xxx to run in host_lock less mode with the new
+> > > IRQ_DISABLE_SCSI_QCMD() that disables interrupts while calling ->queuecommand()
+> > > dispatch.  It also drops the legacy host_lock unlock optimization.
+> > 
+> > I'm not sure this is the right direction to go.  Now that Jeff's done
+> > the pushdown and put in the compatibility macros, I don't think it makes
+> > sense to do another partial transition on each driver.  Much better to
+> > take our time, analyse each driver thoroughly, and kill the DEF_SCSI_QCMD
+> > in each driver without introducing IRQ_DISABLE_SCSI_QCMD.
+> > 
+> > In particular for this driver, it explicitly re-enables interrupts,
+> > so it's pretty easy to do a full conversion.  Compile-tested only.
+> > 
+> > Convert qla2xxx driver to run without the shost lock
+> > 
+> > Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> 
+> Ok, this patch is functioning with LTP disktest I/O using .37-rc6
+> initiator side lock_less operation.
+> 
+> This has been added as an incremental patch for lock_less-LLDs-for-38-v3
+> here:
+> 
+> commit 355798dc3d97a0f07b14d1f3891ecca1802c9094
+> Author: Nicholas Bellinger <nab@linux-iscsi.org>
+> Date:   Mon Dec 20 01:24:12 2010 -0800
+> 
+>     qla2xxx: Convert qla2xxx driver to run without the shost lock
+>     
+>     This patch converts qla2xxx LLD code to run in fully lock-less mode
+>     and removes IRQ_DISABLE_SCSI_QCMD usage.  This also includes a handful
+>     of cleanups for cmd->scsi_done assignment removal from qla2x00_get_new_sp()
+>     and renames one goto of the exception patch with the '_lock' suffix in
+>     qla2xxx_queuecommand().
+>     
+>     So far this patch has been lightly tested with basic I/O functionality on
+>     bare-metal x86_64 .37-rc6 using ISP-2532 8 Gb/sec HW.
+>     
+>     Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+>     Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> 
+> Thanks!
+> 
+> --nab
+> 
+> > 
+> > diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> > index 2c0876c..b44d986 100644
+> > --- a/drivers/scsi/qla2xxx/qla_os.c
+> > +++ b/drivers/scsi/qla2xxx/qla_os.c
+> > @@ -513,7 +513,7 @@ qla24xx_fw_version_str(struct scsi_qla_host *vha, char *str)
+> >  
+> >  static inline srb_t *
+> >  qla2x00_get_new_sp(scsi_qla_host_t *vha, fc_port_t *fcport,
+> > -    struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+> > +    struct scsi_cmnd *cmd)
+> >  {
+> >  	srb_t *sp;
+> >  	struct qla_hw_data *ha = vha->hw;
+> > @@ -527,16 +527,15 @@ qla2x00_get_new_sp(scsi_qla_host_t *vha, fc_port_t *fcport,
+> >  	sp->cmd = cmd;
+> >  	sp->flags = 0;
+> >  	CMD_SP(cmd) = (void *)sp;
+> > -	cmd->scsi_done = done;
+> >  	sp->ctx = NULL;
+> >  
+> >  	return sp;
+> >  }
+> >  
+> >  static int
+> > -qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+> > +qla2xxx_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+> >  {
+> > -	scsi_qla_host_t *vha = shost_priv(cmd->device->host);
+> > +	scsi_qla_host_t *vha = shost_priv(shost);
+> >  	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+> >  	struct fc_rport *rport = starget_to_rport(scsi_target(cmd->device));
+> >  	struct qla_hw_data *ha = vha->hw;
+> > @@ -544,7 +543,6 @@ qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *)
+> >  	srb_t *sp;
+> >  	int rval;
+> >  
+> > -	spin_unlock_irq(vha->host->host_lock);
+> >  	if (ha->flags.eeh_busy) {
+> >  		if (ha->flags.pci_channel_io_perm_failure)
+> >  			cmd->result = DID_NO_CONNECT << 16;
+> > @@ -577,39 +575,32 @@ qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *)
+> >  		goto qc24_target_busy;
+> >  	}
+> >  
+> > -	sp = qla2x00_get_new_sp(base_vha, fcport, cmd, done);
+> > +	sp = qla2x00_get_new_sp(base_vha, fcport, cmd);
+> >  	if (!sp)
+> > -		goto qc24_host_busy_lock;
+> > +		goto qc24_host_busy;
+> >  
+> >  	rval = ha->isp_ops->start_scsi(sp);
+> >  	if (rval != QLA_SUCCESS)
+> >  		goto qc24_host_busy_free_sp;
+> >  
+> > -	spin_lock_irq(vha->host->host_lock);
+> > -
+> >  	return 0;
+> >  
+> >  qc24_host_busy_free_sp:
+> >  	qla2x00_sp_free_dma(sp);
+> >  	mempool_free(sp, ha->srb_mempool);
+> >  
+> > -qc24_host_busy_lock:
+> > -	spin_lock_irq(vha->host->host_lock);
+> > +qc24_host_busy:
+> >  	return SCSI_MLQUEUE_HOST_BUSY;
+> >  
+> >  qc24_target_busy:
+> > -	spin_lock_irq(vha->host->host_lock);
+> >  	return SCSI_MLQUEUE_TARGET_BUSY;
+> >  
+> >  qc24_fail_command:
+> > -	spin_lock_irq(vha->host->host_lock);
+> > -	done(cmd);
+> > +	cmd->scsi_done(cmd);
+> >  
+> >  	return 0;
+> >  }
+> >  
+> > -static DEF_SCSI_QCMD(qla2xxx_queuecommand)
+> > -
+> >  
+> >  /*
+> >   * qla2x00_eh_wait_on_command
+> > 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
+
