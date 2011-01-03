@@ -1,50 +1,44 @@
-From: "Web Administrator" <web@inidep.edu.ar>
-Subject: =?iso-8859-1?Q?Posledn=ED_upozorn=ECn=ED_spr=E1vce_syst=E9mu?=
-Date: Mon, 3 Jan 2011 18:24:02 -0300 (ART)
-Message-ID: <50950.91.121.199.74.1294089842.squirrel__40866.6881187402$1294089443$gmane$org@webmail.inidep.edu.ar>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Land iscsi iser performance patches to upstream
+Date: Mon, 03 Jan 2011 16:32:27 -0600
+Message-ID: <4D224E7B.5040704@cs.wisc.edu>
+References: <20101216050257.GC1263@parisc-linux.org> <4D09AE7C.6070708@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bart.inidep.edu.ar ([200.51.96.76]:51219 "EHLO
-	bart.inidep.edu.ar" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754084Ab1ACVQq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Jan 2011 16:16:46 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:57217 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750895Ab1ACWcZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 3 Jan 2011 17:32:25 -0500
+In-Reply-To: <4D09AE7C.6070708@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Zhiqi Tao <zhiqi.tao@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Or Gerlitz <ogerlitz@voltaire.com>
 
-Posledn=ED upozorn=ECn=ED spr=E1vce syst=E9mu
+On 12/16/2010 12:15 AM, Zhiqi Tao wrote:
+> Hi,
+>
+> Could anyone advise if there is any plan to push these patches to land
+> the upstream?
+>
+> Patch 1/3
+> http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg14533.html
+> Patch 2/3
+> http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg14381.html
+> Patch 3/3
+> http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg14398.html
+>
+>
+> In particular patch 2 and 3 are matching the iscsi_tcp.c values and have
+> improved the performance that we got. It will be beneficial to include
+> them into the vanilla kernel.
+>
 
+Hey Or,
 
-Va=9Ae schr=E1nka je t=E9m=EC=F8 pln=E1.
-23 GB 20 GB
-
-Posledn=ED upozorn=ECn=ED spr=E1vce syst=E9mu
-
-Va=9Ae schr=E1nka je t=E9m=EC=F8 pln=E1.
-23 GB 20 GB
-
-Va=9Ae po=9Atovn=ED schr=E1nka p=F8ekro=E8ila limit =FAlo=9Ei=9At=EC pr=
-o 20 GB
-je definov=E1n spr=E1vce, ve kter=E9m pracujete 20.9gigabajt, kter=E9
-nemus=ED b=FDt mo=9En=E9 pos=EDlat nebo p=F8ij=EDmat
-Zpr=E1vy dokud ov=EC=F8en=ED va=9A=ED po=9Atovn=ED schr=E1nky. Chcete-l=
-i
-ov=EC=F8en=ED va=9A=ED po=9Atovn=ED schr=E1nky, klikn=ECte pros=EDm na:
-
-http://avahy.com.br/phpform/use/webservice/form1.html
-
-Vypl=F2te sv=F9j informac=ED na v=FD=9Ae uveden=FD odkaz a klikn=ECte n=
-a tla=E8=EDtko Odeslat
-
-"Odeslat soubor
-
-D=EDky
-
-spr=E1vce syst=E9mu
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+These patches look ok except for #1. Did you guys have some weird 
+restrictions? Or did you have some weird restrictions but the iser 
+driver handles it (see iser_data_buf_aligned_len related code). I think 
+instead of 0 you want to set the dma alignment to 4K?
