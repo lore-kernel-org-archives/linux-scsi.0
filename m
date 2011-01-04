@@ -1,67 +1,52 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/10] mpt2sas: Description Patch
-Date: Tue, 04 Jan 2011 10:00:48 -0600
-Message-ID: <1294156848.4726.8.camel@mulgrave.site>
-References: <20110104060032.GA5751@lsi.com>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: RE: [patch] [SCSI] scsi_dh: potential null dereference in
+ scsi_dh_activate()
+Date: Tue, 4 Jan 2011 09:13:28 -0700
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4F5582F42@cosmail01.lsi.com>
+References: <20110103054833.GT1886@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:57597 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751449Ab1ADQAy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Jan 2011 11:00:54 -0500
-In-Reply-To: <20110104060032.GA5751@lsi.com>
+Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:40563 "EHLO
+	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750831Ab1ADQM4 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Jan 2011 11:12:56 -0500
+In-Reply-To: <20110103054833.GT1886@bicker>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+To: Dan Carpenter <error27@gmail.com>, "James E.J. Bottomley" <James.Bottomley@suse.de>
+Cc: Mike Snitzer <snitzer@redhat.com>, Menny Hamburger <Menny_Hamburger@Dell.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On Tue, 2011-01-04 at 11:30 +0530, Kashyap, Desai wrote:
-> MPT2SAS driver changes.
-> These patches are taken from 2.6.37-rc5.
-> Please consider this patch set for next kernel release.
+Looks good to me.
 
-That's a bit unlikely considering we're probably only a day or so away
-from a 2.6.37 kernel release.  It takes time to go through the
-linux-next and code inspection process.
-
-I can add them to scsi-misc with a cc stable (at least for the ones that
-are bug fixes):
-
-> [PATCH 01/10] mpt2sas: Device removal handshake even though the
-> PHYSTATUS_VACANT bit is set in the PhyStatus
-> [PATCH 02/10] mpt2sas: Internal device reset complete event is not
-> supported for older firmware prior to MPI Rev K
-> [PATCH 03/10] mpt2sas: Correct resizing calculation for max_queue_depth
-> [PATCH 04/10] mpt2sas: Revision P MPI Header Update
-
-This is an update not a bug fix
-
-> [PATCH 05/10] mpt2sas: Add support for Customer specific branding messages
-
-This is an update, not a bug fix
-
-> [PATCH 06/10] mpt2sas: Fix the race between broadcast asyn event and scsi
-> command completion.
-
-This patch seems to contain half the branding stuff from 5/10 ... please
-separate them
-
-> [PATCH 07/10] mpt2sas: Prevent access to freed memory from port enable process
-> [PATCH 08/10] mpt2sas: Basic Code Cleanup in mpt2sas_base
-
-A code cleanup is not a bug fix.
-
-> [PATCH 09/10] mpt2sas: Call the _scsih_ir_shutdown prior to reporting the
-> volumes missing from the OS
-> [PATCH 10/10] mpt2sas: Bump version 08.100.00.00
+> -----Original Message-----
+> From: Dan Carpenter [mailto:error27@gmail.com]
+> Sent: Sunday, January 02, 2011 11:49 PM
+> To: James E.J. Bottomley
+> Cc: Mike Snitzer; Menny Hamburger; Moger, Babu; linux-
+> scsi@vger.kernel.org; kernel-janitors@vger.kernel.org
+> Subject: [patch] [SCSI] scsi_dh: potential null dereference in
+> scsi_dh_activate()
 > 
-> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-
-So that's 1-3 bug fixes, rework 5,6 so it becomes a clean separation
-between enhancement and bug fix and 7,9 are bug fixes.
-
-James
-
-
+> We assumed "sdev" could be NULL ealier, so lets check it here as well.
+> 
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
+> 
+> diff --git a/drivers/scsi/device_handler/scsi_dh.c
+> b/drivers/scsi/device_handler/scsi_dh.c
+> index b837c5b..ff340e3 100644
+> --- a/drivers/scsi/device_handler/scsi_dh.c
+> +++ b/drivers/scsi/device_handler/scsi_dh.c
+> @@ -446,7 +446,7 @@ int scsi_dh_activate(struct request_queue *q,
+> activate_complete fn, void *data)
+>  	    sdev->sdev_state == SDEV_CANCEL ||
+>  	    sdev->sdev_state == SDEV_DEL)
+>  		err = SCSI_DH_NOSYS;
+> -	if (sdev->sdev_state == SDEV_OFFLINE)
+> +	if (sdev && sdev->sdev_state == SDEV_OFFLINE)
+>  		err = SCSI_DH_DEV_OFFLINED;
+>  	spin_unlock_irqrestore(q->queue_lock, flags);
+> 
