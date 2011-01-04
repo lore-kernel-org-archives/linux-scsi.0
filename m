@@ -1,34 +1,50 @@
-From: Or Gerlitz <ogerlitz@voltaire.com>
-Subject: Re: Land iscsi iser performance patches to upstream
-Date: Tue, 4 Jan 2011 09:22:09 +0200
-Message-ID: <4D22CAA1.5060600@voltaire.com>
-References: <20101216050257.GC1263@parisc-linux.org>	<4D09AE7C.6070708@oracle.com> <4D224E7B.5040704@cs.wisc.edu>
+From: DuanZhenzhong <zhenzhong.duan@oracle.com>
+Subject: declare MODULE_FIRMWARE in libsas
+Date: Tue, 04 Jan 2011 15:43:27 +0800
+Message-ID: <4D22CF9F.1070005@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060503040604030409070102"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fwil.voltaire.com ([193.47.165.2]:19321 "EHLO
-	Exil2010.voltaire.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750831Ab1ADHWK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2011 02:22:10 -0500
-In-Reply-To: <4D224E7B.5040704@cs.wisc.edu>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:53695 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897Ab1ADHoK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2011 02:44:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zhiqi Tao <zhiqi.tao@oracle.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On 12/16/2010 12:15 AM, Zhiqi Tao wrote:
->> In particular patch 2 and 3 are matching the iscsi_tcp.c values and 
->> have improved the performance that we got. It will be beneficial to 
->> include  them into the vanilla kernel.
-When saying "patch 2 and 3 have improved the performance that we got" - 
-did you mean the performance with iser or with iscsi-tcp? if with iser, 
-can you spare few words on the test and what was the performance 
-improvement?
+This is a multi-part message in MIME format.
+--------------060503040604030409070102
+Content-Type: text/plain; charset=GB2312
+Content-Transfer-Encoding: 7bit
 
-These patches allow to support e.g 1MB size commands, vs. the 512KB 
-limit of the upstream bits, however, we manage to see peak performance 
-with much IO sizes (e.g 128KB, 256KB), so I wasn't sure what these 
-patches could buy you performance wise.
+Signed-off-by: Zhenzhong Duan <zhenzhong.duan@oracle.com>
 
-Or.
+---
+ sas_scsi_host.c |    1 +
+ 1 file changed, 1 insertion(+)
+
+
+
+--------------060503040604030409070102
+Content-Type: text/x-patch;
+ name="declare-firmware-in-libsas.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="declare-firmware-in-libsas.patch"
+
+diff -up linux-2.6/drivers/scsi/libsas/sas_scsi_host.c.origfw linux-2.6/drivers/scsi/libsas/sas_scsi_host.c
+--- linux-2.6/drivers/scsi/libsas/sas_scsi_host.c.origfw	2011-01-04 14:11:18.000000000 +0800
++++ linux-2.6/drivers/scsi/libsas/sas_scsi_host.c	2011-01-04 14:11:35.000000000 +0800
+@@ -1110,6 +1110,7 @@ out:
+ 	release_firmware(fw);
+ 	return res;
+ }
++MODULE_FIRMWARE("sas_addr");
+ EXPORT_SYMBOL_GPL(sas_request_addr);
+ 
+ EXPORT_SYMBOL_GPL(sas_queuecommand);
+
+--------------060503040604030409070102--
