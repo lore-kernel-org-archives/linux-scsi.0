@@ -1,25 +1,36 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: declare MODULE_FIRMWARE in libsas
-Date: Tue, 04 Jan 2011 12:45:16 -0500
-Message-ID: <4D235CAC.5070309@garzik.org>
-References: <4D22CF9F.1070005@oracle.com> <1294150132.4726.0.camel@mulgrave.site>
+From: "John W. Linville" <linville@tuxdriver.com>
+Subject: Re: [PATCH 07/15]drivers:net:wireless:iwlwifi Typo change diable to
+ disable.
+Date: Tue, 4 Jan 2011 12:56:21 -0500
+Message-ID: <20110104175621.GB11333@tuxdriver.com>
+References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
+ <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1294150132.4726.0.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: DuanZhenzhong <zhenzhong.duan@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:47136 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750944Ab1ADSAI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2011 13:00:08 -0500
+Content-Disposition: inline
+In-Reply-To: <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: trivial@kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
 
-On 01/04/2011 09:08 AM, James Bottomley wrote:
-> On Tue, 2011-01-04 at 15:43 +0800, DuanZhenzhong wrote:
->> Signed-off-by: Zhenzhong Duan<zhenzhong.duan@oracle.com>
->>
->> ---
->
-> Description?  Since libsas has no firmware, surely some explanation is
-> required.
+On Thu, Dec 30, 2010 at 03:07:56PM -0800, Justin P. Mattock wrote:
+> The below patch fixes a typo "diable" to "disable". Please let me know if this 
+> is correct or not.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+Acked-by: John W. Linville <linville@tuxdriver.com>
 
-Indeed.  Looks bogus at first glance?
+-- 
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
