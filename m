@@ -1,32 +1,25 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: RE: [patch] [SCSI] scsi_dh: potential null dereference in
- scsi_dh_activate()
-Date: Tue, 04 Jan 2011 10:24:39 -0600
-Message-ID: <1294158279.4726.17.camel@mulgrave.site>
-References: <20110103054833.GT1886@bicker>
-	 <E463DF2B2E584B4A82673F53D62C2EF4F5582F42@cosmail01.lsi.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: declare MODULE_FIRMWARE in libsas
+Date: Tue, 04 Jan 2011 12:45:16 -0500
+Message-ID: <4D235CAC.5070309@garzik.org>
+References: <4D22CF9F.1070005@oracle.com> <1294150132.4726.0.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55467 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750947Ab1ADQYp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Jan 2011 11:24:45 -0500
-In-Reply-To: <E463DF2B2E584B4A82673F53D62C2EF4F5582F42@cosmail01.lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1294150132.4726.0.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: DuanZhenzhong <zhenzhong.duan@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moger, Babu" <Babu.Moger@lsi.com>
-Cc: Dan Carpenter <error27@gmail.com>, Mike Snitzer <snitzer@redhat.com>, Menny Hamburger <Menny_Hamburger@Dell.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
-On Tue, 2011-01-04 at 09:13 -0700, Moger, Babu wrote:
-> Looks good to me.
+On 01/04/2011 09:08 AM, James Bottomley wrote:
+> On Tue, 2011-01-04 at 15:43 +0800, DuanZhenzhong wrote:
+>> Signed-off-by: Zhenzhong Duan<zhenzhong.duan@oracle.com>
+>>
+>> ---
+>
+> Description?  Since libsas has no firmware, surely some explanation is
+> required.
 
-It does?  The first check is the bogus one, surely.  The queue is
-created and destroyed by scsi_alloc_sdev(), so queuedata can never be
-NULL for a SCSI queue.  There's no check anywhere in the rest of SCSI,
-so there shouldn't be one here, should there?
-
-James
-
-
+Indeed.  Looks bogus at first glance?
