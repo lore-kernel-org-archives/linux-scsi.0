@@ -1,49 +1,74 @@
-From: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-Subject: UASP updates (uasp.c)
-Date: Tue, 4 Jan 2011 10:15:53 -0800 (PST)
-Message-ID: <914550.72241.qm@web31813.mail.mud.yahoo.com>
-Reply-To: ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH 0/10] mpt2sas: Description Patch
+Date: Wed, 5 Jan 2011 01:03:27 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70916A7D6@inbmail01.lsi.com>
+References: <20110104060032.GA5751@lsi.com>
+ <1294156848.4726.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:47998 "EHLO
+	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751246Ab1ADTdT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2011 14:33:19 -0500
+In-Reply-To: <1294156848.4726.8.camel@mulgrave.site>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-Here are the updates you can find at https://github.com/ltuikov/linux-2.6:
-
-commit 7b725e4ffa88490cb2bb042a703644f75bcd52b9
-Author: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-Date:   Mon Jan 3 16:26:23 2011 -0800
-
-    [USB] UASP: Updates
-    
-    * Free the RESPONSE IU URB if unused, i.e. a
-      status urb was never used due to the failing
-      command.
-    * Make some debug messages clearer.
-    * REQ_HARDBARRIER no longer exists--update.
-    * scsi_host::queuecommand changed prototype--update.
-    
-    Signed-off-by: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-
-commit 58f76dfb08d155644ed639a319677c5dd9e11f16
-Author: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-Date:   Mon Jan 3 15:38:21 2011 -0800
-
-    [USB] UASP: Remove conflict markers in Makefile
-    
-    Signed-off-by: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-
-commit 1a15005eeb46c10067354b492ac73f09305c3e6b
-Author: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-Date:   Mon Jan 3 15:11:14 2011 -0800
-
-    [USB] UASP: Remove confict markers in Kconfig
-    
-    Signed-off-by: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QHN1c2UuZGVdDQo+IFNlbnQ6IFR1ZXNkYXksIEphbnVh
+cnkgMDQsIDIwMTEgOTozMSBQTQ0KPiBUbzogRGVzYWksIEthc2h5YXANCj4gQ2M6IGxpbnV4LXNj
+c2lAdmdlci5rZXJuZWwub3JnOyBNb29yZSwgRXJpYzsgUHJha2FzaCwgU2F0aHlhDQo+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggMC8xMF0gbXB0MnNhczogRGVzY3JpcHRpb24gUGF0Y2gNCj4gDQo+IE9u
+IFR1ZSwgMjAxMS0wMS0wNCBhdCAxMTozMCArMDUzMCwgS2FzaHlhcCwgRGVzYWkgd3JvdGU6DQo+
+ID4gTVBUMlNBUyBkcml2ZXIgY2hhbmdlcy4NCj4gPiBUaGVzZSBwYXRjaGVzIGFyZSB0YWtlbiBm
+cm9tIDIuNi4zNy1yYzUuDQo+ID4gUGxlYXNlIGNvbnNpZGVyIHRoaXMgcGF0Y2ggc2V0IGZvciBu
+ZXh0IGtlcm5lbCByZWxlYXNlLg0KPiANCj4gVGhhdCdzIGEgYml0IHVubGlrZWx5IGNvbnNpZGVy
+aW5nIHdlJ3JlIHByb2JhYmx5IG9ubHkgYSBkYXkgb3Igc28gYXdheQ0KPiBmcm9tIGEgMi42LjM3
+IGtlcm5lbCByZWxlYXNlLiAgSXQgdGFrZXMgdGltZSB0byBnbyB0aHJvdWdoIHRoZQ0KPiBsaW51
+eC1uZXh0IGFuZCBjb2RlIGluc3BlY3Rpb24gcHJvY2Vzcy4NCj4gDQo+IEkgY2FuIGFkZCB0aGVt
+IHRvIHNjc2ktbWlzYyB3aXRoIGEgY2Mgc3RhYmxlIChhdCBsZWFzdCBmb3IgdGhlIG9uZXMNCj4g
+dGhhdA0KPiBhcmUgYnVnIGZpeGVzKToNCj4gDQo+ID4gW1BBVENIIDAxLzEwXSBtcHQyc2FzOiBE
+ZXZpY2UgcmVtb3ZhbCBoYW5kc2hha2UgZXZlbiB0aG91Z2ggdGhlDQo+ID4gUEhZU1RBVFVTX1ZB
+Q0FOVCBiaXQgaXMgc2V0IGluIHRoZSBQaHlTdGF0dXMNCj4gPiBbUEFUQ0ggMDIvMTBdIG1wdDJz
+YXM6IEludGVybmFsIGRldmljZSByZXNldCBjb21wbGV0ZSBldmVudCBpcyBub3QNCj4gPiBzdXBw
+b3J0ZWQgZm9yIG9sZGVyIGZpcm13YXJlIHByaW9yIHRvIE1QSSBSZXYgSw0KPiA+IFtQQVRDSCAw
+My8xMF0gbXB0MnNhczogQ29ycmVjdCByZXNpemluZyBjYWxjdWxhdGlvbiBmb3INCj4gbWF4X3F1
+ZXVlX2RlcHRoDQo+ID4gW1BBVENIIDA0LzEwXSBtcHQyc2FzOiBSZXZpc2lvbiBQIE1QSSBIZWFk
+ZXIgVXBkYXRlDQo+IA0KPiBUaGlzIGlzIGFuIHVwZGF0ZSBub3QgYSBidWcgZml4DQo+IA0KPiA+
+IFtQQVRDSCAwNS8xMF0gbXB0MnNhczogQWRkIHN1cHBvcnQgZm9yIEN1c3RvbWVyIHNwZWNpZmlj
+IGJyYW5kaW5nDQo+IG1lc3NhZ2VzDQo+IA0KPiBUaGlzIGlzIGFuIHVwZGF0ZSwgbm90IGEgYnVn
+IGZpeA0KPiANCj4gPiBbUEFUQ0ggMDYvMTBdIG1wdDJzYXM6IEZpeCB0aGUgcmFjZSBiZXR3ZWVu
+IGJyb2FkY2FzdCBhc3luIGV2ZW50IGFuZA0KPiBzY3NpDQo+ID4gY29tbWFuZCBjb21wbGV0aW9u
+Lg0KPiANCj4gVGhpcyBwYXRjaCBzZWVtcyB0byBjb250YWluIGhhbGYgdGhlIGJyYW5kaW5nIHN0
+dWZmIGZyb20gNS8xMCAuLi4NCj4gcGxlYXNlDQo+IHNlcGFyYXRlIHRoZW0NCj4gDQo+ID4gW1BB
+VENIIDA3LzEwXSBtcHQyc2FzOiBQcmV2ZW50IGFjY2VzcyB0byBmcmVlZCBtZW1vcnkgZnJvbSBw
+b3J0DQo+IGVuYWJsZSBwcm9jZXNzDQo+ID4gW1BBVENIIDA4LzEwXSBtcHQyc2FzOiBCYXNpYyBD
+b2RlIENsZWFudXAgaW4gbXB0MnNhc19iYXNlDQo+IA0KPiBBIGNvZGUgY2xlYW51cCBpcyBub3Qg
+YSBidWcgZml4Lg0KPiANCj4gPiBbUEFUQ0ggMDkvMTBdIG1wdDJzYXM6IENhbGwgdGhlIF9zY3Np
+aF9pcl9zaHV0ZG93biBwcmlvciB0byByZXBvcnRpbmcNCj4gdGhlDQo+ID4gdm9sdW1lcyBtaXNz
+aW5nIGZyb20gdGhlIE9TDQo+ID4gW1BBVENIIDEwLzEwXSBtcHQyc2FzOiBCdW1wIHZlcnNpb24g
+MDguMTAwLjAwLjAwDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBLYXNoeWFwIERlc2FpIDxrYXNo
+eWFwLmRlc2FpQGxzaS5jb20+DQo+IA0KPiBTbyB0aGF0J3MgMS0zIGJ1ZyBmaXhlcywgcmV3b3Jr
+IDUsNiBzbyBpdCBiZWNvbWVzIGEgY2xlYW4gc2VwYXJhdGlvbg0KPiBiZXR3ZWVuIGVuaGFuY2Vt
+ZW50IGFuZCBidWcgZml4IGFuZCA3LDkgYXJlIGJ1ZyBmaXhlcy4NCg0KSmFtZXMgVGhhbmtzIGZv
+ciBxdWljayByZXZpZXcgYW5kIGdpdmluZyBtZSBzdWdnZXN0aW9uIGZvciBzZXBhcmF0aW9uIG9m
+IGZpeGVzIHZzIHVwZGF0ZXMuDQpUaGVyZSBhcmUgc29tZSB1bnVzdWFsIHRoaW5ncyBpbiBwYXRj
+aC02LiBJIHdpbGwgcmVzZW5kIHBhdGNoLTYuDQoNCkhlcmUsIEkgaGF2ZSByZS1saXN0ZWQgZml4
+ZXMuDQpbUEFUQ0ggMDEvMTBdIG1wdDJzYXM6IERldmljZSByZW1vdmFsIGhhbmRzaGFrZSBldmVu
+IHRob3VnaCB0aGUgLi4uDQpbUEFUQ0ggMDIvMTBdIG1wdDJzYXM6IEludGVybmFsIGRldmljZSBy
+ZXNldCBjb21wbGV0ZSBldmVudCBpcyBub3QgLi4uDQpbUEFUQ0ggMDMvMTBdIG1wdDJzYXM6IENv
+cnJlY3QgcmVzaXppbmcgY2FsY3VsYXRpb24gZm9yIG1heF9xdWV1ZV9kZXB0aA0KW1BBVENIIDA2
+LzEwXSBtcHQyc2FzOiBGaXggdGhlIHJhY2UgYmV0d2VlbiBicm9hZGNhc3QgYXN5biBldmVudCBh
+bmQgc2NzaSAuLg0KW1BBVENIIDA3LzEwXSBtcHQyc2FzOiBQcmV2ZW50IGFjY2VzcyB0byBmcmVl
+ZCBtZW1vcnkgZnJvbSBwb3J0IGVuYWJsZSBwcm9jZXNzIC4uDQpbUEFUQ0ggMDkvMTBdIG1wdDJz
+YXM6IENhbGwgdGhlIF9zY3NpaF9pcl9zaHV0ZG93biBwcmlvciB0byByZXBvcnRpbmcgdGhlIC4u
+Lg0KDQpUaGVzZSBhcmUgdXBkYXRlcy4NCltQQVRDSCAwNC8xMF0gbXB0MnNhczogUmV2aXNpb24g
+UCBNUEkgSGVhZGVyIFVwZGF0ZQ0KW1BBVENIIDA1LzEwXSBtcHQyc2FzOiBBZGQgc3VwcG9ydCBm
+b3IgQ3VzdG9tZXIgc3BlY2lmaWMgYnJhbmRpbmcgbWVzc2FnZXMNCltQQVRDSCAwOC8xMF0gbXB0
+MnNhczogQmFzaWMgQ29kZSBDbGVhbnVwIGluIG1wdDJzYXNfYmFzZQ0KDQoNClRoYW5rcywgS2Fz
+aHlhcA0KDQo+IA0KPiBKYW1lcw0KPiANCg0K
