@@ -1,74 +1,285 @@
 From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 0/10] mpt2sas: Description Patch
-Date: Wed, 5 Jan 2011 01:03:27 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70916A7D6@inbmail01.lsi.com>
-References: <20110104060032.GA5751@lsi.com>
- <1294156848.4726.8.camel@mulgrave.site>
+Subject: RE: [PATCH 06/10] mpt2sas: Fix the race between broadcast asyn
+ event and scsi
+Date: Wed, 5 Jan 2011 01:04:26 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED70916A7D7@inbmail01.lsi.com>
+References: <20110104060736.GG5751@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog103.obsmtp.com ([74.125.149.71]:47998 "EHLO
-	na3sys009aog103.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751246Ab1ADTdT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2011 14:33:19 -0500
-In-Reply-To: <1294156848.4726.8.camel@mulgrave.site>
+Received: from na3sys009aog106.obsmtp.com ([74.125.149.77]:55830 "EHLO
+	na3sys009aog106.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751246Ab1ADTd5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Jan 2011 14:33:57 -0500
+In-Reply-To: <20110104060736.GG5751@lsi.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QHN1c2UuZGVdDQo+IFNlbnQ6IFR1ZXNkYXksIEphbnVh
-cnkgMDQsIDIwMTEgOTozMSBQTQ0KPiBUbzogRGVzYWksIEthc2h5YXANCj4gQ2M6IGxpbnV4LXNj
-c2lAdmdlci5rZXJuZWwub3JnOyBNb29yZSwgRXJpYzsgUHJha2FzaCwgU2F0aHlhDQo+IFN1Ympl
-Y3Q6IFJlOiBbUEFUQ0ggMC8xMF0gbXB0MnNhczogRGVzY3JpcHRpb24gUGF0Y2gNCj4gDQo+IE9u
-IFR1ZSwgMjAxMS0wMS0wNCBhdCAxMTozMCArMDUzMCwgS2FzaHlhcCwgRGVzYWkgd3JvdGU6DQo+
-ID4gTVBUMlNBUyBkcml2ZXIgY2hhbmdlcy4NCj4gPiBUaGVzZSBwYXRjaGVzIGFyZSB0YWtlbiBm
-cm9tIDIuNi4zNy1yYzUuDQo+ID4gUGxlYXNlIGNvbnNpZGVyIHRoaXMgcGF0Y2ggc2V0IGZvciBu
-ZXh0IGtlcm5lbCByZWxlYXNlLg0KPiANCj4gVGhhdCdzIGEgYml0IHVubGlrZWx5IGNvbnNpZGVy
-aW5nIHdlJ3JlIHByb2JhYmx5IG9ubHkgYSBkYXkgb3Igc28gYXdheQ0KPiBmcm9tIGEgMi42LjM3
-IGtlcm5lbCByZWxlYXNlLiAgSXQgdGFrZXMgdGltZSB0byBnbyB0aHJvdWdoIHRoZQ0KPiBsaW51
-eC1uZXh0IGFuZCBjb2RlIGluc3BlY3Rpb24gcHJvY2Vzcy4NCj4gDQo+IEkgY2FuIGFkZCB0aGVt
-IHRvIHNjc2ktbWlzYyB3aXRoIGEgY2Mgc3RhYmxlIChhdCBsZWFzdCBmb3IgdGhlIG9uZXMNCj4g
-dGhhdA0KPiBhcmUgYnVnIGZpeGVzKToNCj4gDQo+ID4gW1BBVENIIDAxLzEwXSBtcHQyc2FzOiBE
-ZXZpY2UgcmVtb3ZhbCBoYW5kc2hha2UgZXZlbiB0aG91Z2ggdGhlDQo+ID4gUEhZU1RBVFVTX1ZB
-Q0FOVCBiaXQgaXMgc2V0IGluIHRoZSBQaHlTdGF0dXMNCj4gPiBbUEFUQ0ggMDIvMTBdIG1wdDJz
-YXM6IEludGVybmFsIGRldmljZSByZXNldCBjb21wbGV0ZSBldmVudCBpcyBub3QNCj4gPiBzdXBw
-b3J0ZWQgZm9yIG9sZGVyIGZpcm13YXJlIHByaW9yIHRvIE1QSSBSZXYgSw0KPiA+IFtQQVRDSCAw
-My8xMF0gbXB0MnNhczogQ29ycmVjdCByZXNpemluZyBjYWxjdWxhdGlvbiBmb3INCj4gbWF4X3F1
-ZXVlX2RlcHRoDQo+ID4gW1BBVENIIDA0LzEwXSBtcHQyc2FzOiBSZXZpc2lvbiBQIE1QSSBIZWFk
-ZXIgVXBkYXRlDQo+IA0KPiBUaGlzIGlzIGFuIHVwZGF0ZSBub3QgYSBidWcgZml4DQo+IA0KPiA+
-IFtQQVRDSCAwNS8xMF0gbXB0MnNhczogQWRkIHN1cHBvcnQgZm9yIEN1c3RvbWVyIHNwZWNpZmlj
-IGJyYW5kaW5nDQo+IG1lc3NhZ2VzDQo+IA0KPiBUaGlzIGlzIGFuIHVwZGF0ZSwgbm90IGEgYnVn
-IGZpeA0KPiANCj4gPiBbUEFUQ0ggMDYvMTBdIG1wdDJzYXM6IEZpeCB0aGUgcmFjZSBiZXR3ZWVu
-IGJyb2FkY2FzdCBhc3luIGV2ZW50IGFuZA0KPiBzY3NpDQo+ID4gY29tbWFuZCBjb21wbGV0aW9u
-Lg0KPiANCj4gVGhpcyBwYXRjaCBzZWVtcyB0byBjb250YWluIGhhbGYgdGhlIGJyYW5kaW5nIHN0
-dWZmIGZyb20gNS8xMCAuLi4NCj4gcGxlYXNlDQo+IHNlcGFyYXRlIHRoZW0NCj4gDQo+ID4gW1BB
-VENIIDA3LzEwXSBtcHQyc2FzOiBQcmV2ZW50IGFjY2VzcyB0byBmcmVlZCBtZW1vcnkgZnJvbSBw
-b3J0DQo+IGVuYWJsZSBwcm9jZXNzDQo+ID4gW1BBVENIIDA4LzEwXSBtcHQyc2FzOiBCYXNpYyBD
-b2RlIENsZWFudXAgaW4gbXB0MnNhc19iYXNlDQo+IA0KPiBBIGNvZGUgY2xlYW51cCBpcyBub3Qg
-YSBidWcgZml4Lg0KPiANCj4gPiBbUEFUQ0ggMDkvMTBdIG1wdDJzYXM6IENhbGwgdGhlIF9zY3Np
-aF9pcl9zaHV0ZG93biBwcmlvciB0byByZXBvcnRpbmcNCj4gdGhlDQo+ID4gdm9sdW1lcyBtaXNz
-aW5nIGZyb20gdGhlIE9TDQo+ID4gW1BBVENIIDEwLzEwXSBtcHQyc2FzOiBCdW1wIHZlcnNpb24g
-MDguMTAwLjAwLjAwDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBLYXNoeWFwIERlc2FpIDxrYXNo
-eWFwLmRlc2FpQGxzaS5jb20+DQo+IA0KPiBTbyB0aGF0J3MgMS0zIGJ1ZyBmaXhlcywgcmV3b3Jr
-IDUsNiBzbyBpdCBiZWNvbWVzIGEgY2xlYW4gc2VwYXJhdGlvbg0KPiBiZXR3ZWVuIGVuaGFuY2Vt
-ZW50IGFuZCBidWcgZml4IGFuZCA3LDkgYXJlIGJ1ZyBmaXhlcy4NCg0KSmFtZXMgVGhhbmtzIGZv
-ciBxdWljayByZXZpZXcgYW5kIGdpdmluZyBtZSBzdWdnZXN0aW9uIGZvciBzZXBhcmF0aW9uIG9m
-IGZpeGVzIHZzIHVwZGF0ZXMuDQpUaGVyZSBhcmUgc29tZSB1bnVzdWFsIHRoaW5ncyBpbiBwYXRj
-aC02LiBJIHdpbGwgcmVzZW5kIHBhdGNoLTYuDQoNCkhlcmUsIEkgaGF2ZSByZS1saXN0ZWQgZml4
-ZXMuDQpbUEFUQ0ggMDEvMTBdIG1wdDJzYXM6IERldmljZSByZW1vdmFsIGhhbmRzaGFrZSBldmVu
-IHRob3VnaCB0aGUgLi4uDQpbUEFUQ0ggMDIvMTBdIG1wdDJzYXM6IEludGVybmFsIGRldmljZSBy
-ZXNldCBjb21wbGV0ZSBldmVudCBpcyBub3QgLi4uDQpbUEFUQ0ggMDMvMTBdIG1wdDJzYXM6IENv
-cnJlY3QgcmVzaXppbmcgY2FsY3VsYXRpb24gZm9yIG1heF9xdWV1ZV9kZXB0aA0KW1BBVENIIDA2
-LzEwXSBtcHQyc2FzOiBGaXggdGhlIHJhY2UgYmV0d2VlbiBicm9hZGNhc3QgYXN5biBldmVudCBh
-bmQgc2NzaSAuLg0KW1BBVENIIDA3LzEwXSBtcHQyc2FzOiBQcmV2ZW50IGFjY2VzcyB0byBmcmVl
-ZCBtZW1vcnkgZnJvbSBwb3J0IGVuYWJsZSBwcm9jZXNzIC4uDQpbUEFUQ0ggMDkvMTBdIG1wdDJz
-YXM6IENhbGwgdGhlIF9zY3NpaF9pcl9zaHV0ZG93biBwcmlvciB0byByZXBvcnRpbmcgdGhlIC4u
-Lg0KDQpUaGVzZSBhcmUgdXBkYXRlcy4NCltQQVRDSCAwNC8xMF0gbXB0MnNhczogUmV2aXNpb24g
-UCBNUEkgSGVhZGVyIFVwZGF0ZQ0KW1BBVENIIDA1LzEwXSBtcHQyc2FzOiBBZGQgc3VwcG9ydCBm
-b3IgQ3VzdG9tZXIgc3BlY2lmaWMgYnJhbmRpbmcgbWVzc2FnZXMNCltQQVRDSCAwOC8xMF0gbXB0
-MnNhczogQmFzaWMgQ29kZSBDbGVhbnVwIGluIG1wdDJzYXNfYmFzZQ0KDQoNClRoYW5rcywgS2Fz
-aHlhcA0KDQo+IA0KPiBKYW1lcw0KPiANCg0K
+Please ignore this patch. I will re-send this patch.
+
+~ Kashyap
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Kashyap, Desai
+> Sent: Tuesday, January 04, 2011 11:38 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: James.Bottomley@HansenPartnership.com; Moore, Eric; Prakash, Sathya
+> Subject: [PATCH 06/10] mpt2sas: Fix the race between broadcast asyn
+> event and scsi
+> 
+> 
+> Add support for Customer specific branding messages when device driver
+> loads,
+> False timeout after hard resets, there were two issues which leads
+> to timeout.
+> (1) Panic because of invalid memory access in the broadcast asyn
+> event processing routine due to a race between accessing the scsi
+> command
+> pointer from broadcast asyn event processing thread and completing
+> the same scsi command from the interrupt context.
+> (2)  Broadcast asyn event notifcations are not handled due to events
+> ignored while the broadcast asyn event is activity being processed
+> from the event process kernel thread.
+> 
+> In addition, changed the ABRT_TASK_SET to ABORT_TASK in the
+> broadcast async event processing routine.   This is less disruptive to
+> other
+> request that generate Broadcast Asyn Primitives besides target
+> reset. e.g clear reservations, microcode download,and mode select.
+> 
+> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+> ---
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h
+> b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> index a16f2a0..db287d7 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+> @@ -819,7 +819,7 @@ _scsih_is_end_device(u32 device_info)
+>  }
+> 
+>  /**
+> - * mptscsih_get_scsi_lookup - returns scmd entry
+> + * _scsih_scsi_lookup_get - returns scmd entry
+>   * @ioc: per adapter object
+>   * @smid: system request message index
+>   *
+> @@ -832,6 +832,28 @@ _scsih_scsi_lookup_get(struct MPT2SAS_ADAPTER
+> *ioc, u16 smid)
+>  }
+> 
+>  /**
+> + * _scsih_scsi_lookup_get_clear - returns scmd entry
+> + * @ioc: per adapter object
+> + * @smid: system request message index
+> + *
+> + * Returns the smid stored scmd pointer.
+> + * Then will derefrence the stored scmd pointer.
+> + */
+> +static inline struct scsi_cmnd *
+> +_scsih_scsi_lookup_get_clear(struct MPT2SAS_ADAPTER *ioc, u16 smid)
+> +{
+> +	unsigned long flags;
+> +	struct scsi_cmnd *scmd;
+> +
+> +	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+> +	scmd = ioc->scsi_lookup[smid - 1].scmd;
+> +	ioc->scsi_lookup[smid - 1].scmd = NULL;
+> +	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+> +
+> +	return scmd;
+> +}
+> +
+> +/**
+>   * _scsih_scsi_lookup_find_by_scmd - scmd lookup
+>   * @ioc: per adapter object
+>   * @smid: system request message index
+> @@ -3207,7 +3229,7 @@ _scsih_flush_running_cmds(struct MPT2SAS_ADAPTER
+> *ioc)
+>  	u16 count = 0;
+> 
+>  	for (smid = 1; smid <= ioc->scsiio_depth; smid++) {
+> -		scmd = _scsih_scsi_lookup_get(ioc, smid);
+> +		scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+>  		if (!scmd)
+>  			continue;
+>  		count++;
+> @@ -3801,7 +3823,7 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *ioc, u16
+> smid, u8 msix_index, u32 reply)
+>  	u32 response_code = 0;
+> 
+>  	mpi_reply = mpt2sas_base_get_reply_virt_addr(ioc, reply);
+> -	scmd = _scsih_scsi_lookup_get(ioc, smid);
+> +	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+>  	if (scmd == NULL)
+>  		return 1;
+> 
+> @@ -5102,6 +5124,7 @@ _scsih_sas_broadcast_primative_event(struct
+> MPT2SAS_ADAPTER *ioc,
+>      struct fw_event_work *fw_event)
+>  {
+>  	struct scsi_cmnd *scmd;
+> +	struct scsi_device *sdev;
+>  	u16 smid, handle;
+>  	u32 lun;
+>  	struct MPT2SAS_DEVICE *sas_device_priv_data;
+> @@ -5112,12 +5135,17 @@ _scsih_sas_broadcast_primative_event(struct
+> MPT2SAS_ADAPTER *ioc,
+>  	Mpi2EventDataSasBroadcastPrimitive_t *event_data = fw_event-
+> >event_data;
+>  #endif
+>  	u16 ioc_status;
+> +	unsigned long flags;
+> +	int r;
+> +
+>  	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "broadcast primative: "
+>  	    "phy number(%d), width(%d)\n", ioc->name, event_data->PhyNum,
+>  	    event_data->PortWidth));
+>  	dtmprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: enter\n", ioc->name,
+>  	    __func__));
+> 
+> +	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+> +	ioc->broadcast_aen_busy = 0;
+>  	termination_count = 0;
+>  	query_count = 0;
+>  	mpi_reply = ioc->tm_cmds.reply;
+> @@ -5125,7 +5153,8 @@ _scsih_sas_broadcast_primative_event(struct
+> MPT2SAS_ADAPTER *ioc,
+>  		scmd = _scsih_scsi_lookup_get(ioc, smid);
+>  		if (!scmd)
+>  			continue;
+> -		sas_device_priv_data = scmd->device->hostdata;
+> +		sdev = scmd->device;
+> +		sas_device_priv_data = sdev->hostdata;
+>  		if (!sas_device_priv_data || !sas_device_priv_data-
+> >sas_target)
+>  			continue;
+>  		 /* skip hidden raid components */
+> @@ -5141,6 +5170,7 @@ _scsih_sas_broadcast_primative_event(struct
+> MPT2SAS_ADAPTER *ioc,
+>  		lun = sas_device_priv_data->lun;
+>  		query_count++;
+> 
+> +		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+>  		mpt2sas_scsih_issue_tm(ioc, handle, 0, 0, lun,
+>  		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK, smid, 30, NULL);
+>  		ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
+> @@ -5150,14 +5180,20 @@ _scsih_sas_broadcast_primative_event(struct
+> MPT2SAS_ADAPTER *ioc,
+>  		    (mpi_reply->ResponseCode ==
+>  		     MPI2_SCSITASKMGMT_RSP_TM_SUCCEEDED ||
+>  		     mpi_reply->ResponseCode ==
+> -		     MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC))
+> +		     MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC)) {
+> +			spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+>  			continue;
+> -
+> -		mpt2sas_scsih_issue_tm(ioc, handle, 0, 0, lun,
+> -		    MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET, 0, 30, NULL);
+> +		}
+> +		r = mpt2sas_scsih_issue_tm(ioc, handle, sdev->channel,
+> sdev->id,
+> +		    sdev->lun, MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK, smid,
+> 30,
+> +		    scmd);
+> +		if (r == FAILED)
+> +			sdev_printk(KERN_WARNING, sdev, "task abort: FAILED "
+> +			    "scmd(%p)\n", scmd);
+>  		termination_count += le32_to_cpu(mpi_reply-
+> >TerminationCount);
+> +		spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+>  	}
+> -	ioc->broadcast_aen_busy = 0;
+> +	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+> 
+>  	dtmprintk(ioc, printk(MPT2SAS_INFO_FMT
+>  	    "%s - exit, query_count = %d termination_count = %d\n",
+> based on specific customer subsystem vendor and device Ids
+> 
+> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+> ---
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> index a11ac67..4f1f3f2 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.c
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
+> @@ -1725,6 +1725,31 @@ _base_display_dell_branding(struct
+> MPT2SAS_ADAPTER *ioc)
+>  }
+> 
+>  /**
+> + * _base_display_intel_branding - Display branding string
+> + * @ioc: per adapter object
+> + *
+> + * Return nothing.
+> + */
+> +static void
+> +_base_display_intel_branding(struct MPT2SAS_ADAPTER *ioc)
+> +{
+> +	if (ioc->pdev->subsystem_vendor == PCI_VENDOR_ID_INTEL &&
+> +	    ioc->pdev->device == MPI2_MFGPAGE_DEVID_SAS2008) {
+> +
+> +		switch (ioc->pdev->subsystem_device) {
+> +		case MPT2SAS_INTEL_RMS2LL080_SSDID:
+> +			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+> +			    MPT2SAS_INTEL_RMS2LL080_BRANDING);
+> +			break;
+> +		case MPT2SAS_INTEL_RMS2LL040_SSDID:
+> +			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+> +			    MPT2SAS_INTEL_RMS2LL040_BRANDING);
+> +			break;
+> +		}
+> +	}
+> +}
+> +
+> +/**
+>   * _base_display_ioc_capabilities - Disply IOC's capabilities.
+>   * @ioc: per adapter object
+>   *
+> @@ -1754,6 +1779,7 @@ _base_display_ioc_capabilities(struct
+> MPT2SAS_ADAPTER *ioc)
+>  	    ioc->bios_pg3.BiosVersion & 0x000000FF);
+> 
+>  	_base_display_dell_branding(ioc);
+> +	_base_display_intel_branding(ioc);
+> 
+>  	printk(MPT2SAS_INFO_FMT "Protocol=(", ioc->name);
+> 
+> diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h
+> b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> index 283568c..82579fb 100644
+> --- a/drivers/scsi/mpt2sas/mpt2sas_base.h
+> +++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
+> @@ -154,6 +154,20 @@
+>  #define MPT2SAS_DELL_6GBPS_SAS_SSDID               0x1F22
+> 
+>  /*
+> + * Intel HBA branding
+> + */
+> +#define MPT2SAS_INTEL_RMS2LL080_BRANDING	\
+> +				"Intel Integrated RAID Module RMS2LL080"
+> +#define MPT2SAS_INTEL_RMS2LL040_BRANDING	\
+> +				"Intel Integrated RAID Module RMS2LL040"
+> +
+> +/*
+> + * Intel HBA SSDIDs
+> + */
+> +#define MPT2SAS_INTEL_RMS2LL080_SSDID          0x350E
+> +#define MPT2SAS_INTEL_RMS2LL040_SSDID          0x350F
+> +
+> +/*
+>   * per target private data
+>   */
+>  #define MPT_TARGET_FLAGS_RAID_COMPONENT	0x01
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
