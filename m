@@ -1,36 +1,49 @@
-From: "John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH 07/15]drivers:net:wireless:iwlwifi Typo change diable to
- disable.
-Date: Tue, 4 Jan 2011 12:56:21 -0500
-Message-ID: <20110104175621.GB11333@tuxdriver.com>
-References: <1293750484-1161-1-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-2-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-3-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-4-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-5-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-6-git-send-email-justinmattock@gmail.com>
- <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
+From: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Subject: UASP updates (uasp.c)
+Date: Tue, 4 Jan 2011 10:15:53 -0800 (PST)
+Message-ID: <914550.72241.qm@web31813.mail.mud.yahoo.com>
+Reply-To: ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:47136 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944Ab1ADSAI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Jan 2011 13:00:08 -0500
-Content-Disposition: inline
-In-Reply-To: <1293750484-1161-7-git-send-email-justinmattock@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Justin P. Mattock" <justinmattock@gmail.com>
-Cc: trivial@kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, ivtv-devel@ivtvdriver.org, linux-media@vger.kernel.org, linux-wireless@vger.kernel.org, linux-scsi@vger.kernel.org, spi-devel-general@lists.sourceforge.net, devel@driverdev.osuosl.org, linux-usb@vger.kernel.org
 
-On Thu, Dec 30, 2010 at 03:07:56PM -0800, Justin P. Mattock wrote:
-> The below patch fixes a typo "diable" to "disable". Please let me know if this 
-> is correct or not.
-> 
-> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
-Acked-by: John W. Linville <linville@tuxdriver.com>
+Here are the updates you can find at https://github.com/ltuikov/linux-2.6:
 
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+commit 7b725e4ffa88490cb2bb042a703644f75bcd52b9
+Author: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Date:   Mon Jan 3 16:26:23 2011 -0800
+
+    [USB] UASP: Updates
+    
+    * Free the RESPONSE IU URB if unused, i.e. a
+      status urb was never used due to the failing
+      command.
+    * Make some debug messages clearer.
+    * REQ_HARDBARRIER no longer exists--update.
+    * scsi_host::queuecommand changed prototype--update.
+    
+    Signed-off-by: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+
+commit 58f76dfb08d155644ed639a319677c5dd9e11f16
+Author: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Date:   Mon Jan 3 15:38:21 2011 -0800
+
+    [USB] UASP: Remove conflict markers in Makefile
+    
+    Signed-off-by: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+
+commit 1a15005eeb46c10067354b492ac73f09305c3e6b
+Author: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Date:   Mon Jan 3 15:11:14 2011 -0800
+
+    [USB] UASP: Remove confict markers in Kconfig
+    
+    Signed-off-by: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
