@@ -1,126 +1,151 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: [PATCH v2 4/8] IB/srp: don't move active requests to their own list
-Date: Wed,  5 Jan 2011 15:35:12 -0500
-Message-ID: <1294259716-30706-5-git-send-email-dillowda@ornl.gov>
+From: David Dillow <dillowda@ornl.gov>
+Subject: [PATCH v2 8/8] IB/srp: consolidate hot-path variables into cache lines
+Date: Wed,  5 Jan 2011 15:35:16 -0500
+Message-ID: <1294259716-30706-9-git-send-email-dillowda@ornl.gov>
 References: <1294259716-30706-1-git-send-email-dillowda@ornl.gov>
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1294259716-30706-1-git-send-email-dillowda-1Heg1YXhbW8@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from amavis-outgoing2.knology.net ([24.214.64.231]:50726 "EHLO
+	amavis-outgoing2.knology.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752802Ab1AEUfY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2011 15:35:24 -0500
+In-Reply-To: <1294259716-30706-1-git-send-email-dillowda@ornl.gov>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-rdma@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org
 
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Put the variables accessed together in the hot-path into common
+cachelines, and separate them by RW vs RO to avoid false dirtying.
+We keep a local copy of the lkey and rkey in the target to avoid
+traversing pointers (and associated cache lines) to find them.
 
-We use req->scmnd != NULL to indicate an active request, so there's no
-need to keep a separate list for them. We can afford the array iteration
-during error handling, and dropping it gives us one less item that needs
-lock protection.
-
-Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-[ broken out and small cleanups by David Dillow ]
-Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: David Dillow <dillowda@ornl.gov>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |   21 ++++++++++++---------
- drivers/infiniband/ulp/srp/ib_srp.h |    1 -
- 2 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c |   12 +++++++-----
+ drivers/infiniband/ulp/srp/ib_srp.h |   31 +++++++++++++++++++------------
+ 2 files changed, 26 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index aa78d26..6f36dbe 100644
+index 2f62367..7dcefe4 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -553,7 +553,7 @@ static void srp_remove_req(struct srp_target_port *target, struct srp_request *r
- {
- 	srp_unmap_data(req->scmnd, target, req);
- 	req->scmnd = NULL;
--	list_move_tail(&req->list, &target->free_reqs);
-+	list_add_tail(&req->list, &target->free_reqs);
- }
+@@ -768,7 +768,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
+ 		struct srp_direct_buf *buf = (void *) cmd->add_data;
  
- static void srp_reset_req(struct srp_target_port *target, struct srp_request *req)
-@@ -566,7 +566,6 @@ static void srp_reset_req(struct srp_target_port *target, struct srp_request *re
- static int srp_reconnect_target(struct srp_target_port *target)
- {
- 	struct ib_qp_attr qp_attr;
--	struct srp_request *req, *tmp;
- 	struct ib_wc wc;
- 	int i, ret;
+ 		buf->va  = cpu_to_be64(ib_sg_dma_address(ibdev, scat));
+-		buf->key = cpu_to_be32(dev->mr->rkey);
++		buf->key = cpu_to_be32(target->rkey);
+ 		buf->len = cpu_to_be32(ib_sg_dma_len(ibdev, scat));
+ 	} else if (srp_map_fmr(target, scat, count, req,
+ 			       (void *) cmd->add_data)) {
+@@ -793,7 +793,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
+ 			buf->desc_list[i].va  =
+ 				cpu_to_be64(ib_sg_dma_address(ibdev, sg));
+ 			buf->desc_list[i].key =
+-				cpu_to_be32(dev->mr->rkey);
++				cpu_to_be32(target->rkey);
+ 			buf->desc_list[i].len = cpu_to_be32(dma_len);
+ 			datalen += dma_len;
+ 		}
+@@ -806,7 +806,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
+ 		buf->table_desc.va  =
+ 			cpu_to_be64(req->cmd->dma + sizeof *cmd + sizeof *buf);
+ 		buf->table_desc.key =
+-			cpu_to_be32(target->srp_host->srp_dev->mr->rkey);
++			cpu_to_be32(target->rkey);
+ 		buf->table_desc.len =
+ 			cpu_to_be32(count * sizeof (struct srp_direct_buf));
  
-@@ -597,13 +596,16 @@ static int srp_reconnect_target(struct srp_target_port *target)
- 		; /* nothing */
+@@ -883,7 +883,7 @@ static int srp_post_send(struct srp_target_port *target,
  
- 	spin_lock_irq(target->scsi_host->host_lock);
--	list_for_each_entry_safe(req, tmp, &target->req_queue, list)
--		srp_reset_req(target, req);
-+	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
-+		struct srp_request *req = &target->req_ring[i];
-+		if (req->scmnd)
-+			srp_reset_req(target, req);
-+	}
- 	spin_unlock_irq(target->scsi_host->host_lock);
+ 	list.addr   = iu->dma;
+ 	list.length = len;
+-	list.lkey   = target->srp_host->srp_dev->mr->lkey;
++	list.lkey   = target->lkey;
  
- 	list_del_init(&target->free_tx);
- 	for (i = 0; i < SRP_SQ_SIZE; ++i)
--		list_move(&target->tx_ring[i]->list, &target->free_tx);
-+		list_add(&target->tx_ring[i]->list, &target->free_tx);
+ 	wr.next       = NULL;
+ 	wr.wr_id      = (uintptr_t) iu;
+@@ -902,7 +902,7 @@ static int srp_post_recv(struct srp_target_port *target, struct srp_iu *iu)
  
- 	target->qp_in_error = 0;
- 	ret = srp_connect_target(target);
-@@ -1165,7 +1167,7 @@ static int srp_queuecommand_lck(struct scsi_cmnd *scmnd,
- 		goto err_unmap;
- 	}
+ 	list.addr   = iu->dma;
+ 	list.length = iu->size;
+-	list.lkey   = target->srp_host->srp_dev->mr->lkey;
++	list.lkey   = target->lkey;
  
--	list_move_tail(&req->list, &target->req_queue);
-+	list_del(&req->list);
+ 	wr.next     = NULL;
+ 	wr.wr_id    = (uintptr_t) iu;
+@@ -1955,6 +1955,8 @@ static ssize_t srp_create_target(struct device *dev,
+ 	target->io_class   = SRP_REV16A_IB_IO_CLASS;
+ 	target->scsi_host  = target_host;
+ 	target->srp_host   = host;
++	target->lkey	   = host->srp_dev->mr->lkey;
++	target->rkey	   = host->srp_dev->mr->rkey;
  
- 	return 0;
- 
-@@ -1504,7 +1506,7 @@ static int srp_abort(struct scsi_cmnd *scmnd)
- static int srp_reset_device(struct scsi_cmnd *scmnd)
- {
- 	struct srp_target_port *target = host_to_target(scmnd->device->host);
--	struct srp_request *req, *tmp;
-+	int i;
- 
- 	shost_printk(KERN_ERR, target->scsi_host, "SRP reset_device called\n");
- 
-@@ -1518,9 +1520,11 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
- 
- 	spin_lock_irq(target->scsi_host->host_lock);
- 
--	list_for_each_entry_safe(req, tmp, &target->req_queue, list)
-+	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
-+		struct srp_request *req = &target->req_ring[i];
- 		if (req->scmnd && req->scmnd->device == scmnd->device)
- 			srp_reset_req(target, req);
-+	}
- 
- 	spin_unlock_irq(target->scsi_host->host_lock);
- 
-@@ -1954,7 +1958,6 @@ static ssize_t srp_create_target(struct device *dev,
- 
+ 	spin_lock_init(&target->lock);
  	INIT_LIST_HEAD(&target->free_tx);
- 	INIT_LIST_HEAD(&target->free_reqs);
--	INIT_LIST_HEAD(&target->req_queue);
- 	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
- 		target->req_ring[i].index = i;
- 		list_add_tail(&target->req_ring[i].list, &target->free_reqs);
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
-index 41ecb46..924d8e9 100644
+index acb435d..9dc6fc3 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.h
 +++ b/drivers/infiniband/ulp/srp/ib_srp.h
-@@ -148,7 +148,6 @@ struct srp_target_port {
- 	struct srp_iu	       *tx_ring[SRP_SQ_SIZE];
+@@ -117,6 +117,24 @@ struct srp_request {
+ };
  
- 	struct list_head	free_reqs;
--	struct list_head	req_queue;
+ struct srp_target_port {
++	/* These are RW in the hot path, and commonly used together */
++	struct list_head	free_tx;
++	struct list_head	free_reqs;
++	spinlock_t		lock;
++	s32			req_lim;
++
++	/* These are read-only in the hot path */
++	struct ib_cq	       *send_cq ____cacheline_aligned_in_smp;
++	struct ib_cq	       *recv_cq;
++	struct ib_qp	       *qp;
++	u32			lkey;
++	u32			rkey;
++	enum srp_target_state	state;
++
++	/* Everything above this point is used in the hot path of
++	 * command processing. Try to keep them packed into cachelines.
++	 */
++
+ 	__be64			id_ext;
+ 	__be64			ioc_guid;
+ 	__be64			service_id;
+@@ -133,23 +151,13 @@ struct srp_target_port {
+ 	int			path_query_id;
+ 
+ 	struct ib_cm_id	       *cm_id;
+-	struct ib_cq	       *recv_cq;
+-	struct ib_cq	       *send_cq;
+-	struct ib_qp	       *qp;
+ 
+ 	int			max_ti_iu_len;
+-	s32			req_lim;
+ 
+ 	int			zero_req_lim;
+ 
+-	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
+-
+-	spinlock_t		lock;
+-
+-	struct list_head	free_tx;
+ 	struct srp_iu	       *tx_ring[SRP_SQ_SIZE];
+-
+-	struct list_head	free_reqs;
++	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
  	struct srp_request	req_ring[SRP_CMD_SQ_SIZE];
  
  	struct work_struct	work;
+@@ -157,7 +165,6 @@ struct srp_target_port {
+ 	struct list_head	list;
+ 	struct completion	done;
+ 	int			status;
+-	enum srp_target_state	state;
+ 	int			qp_in_error;
+ 
+ 	struct completion	tsk_mgmt_done;
 -- 
 1.7.3.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
