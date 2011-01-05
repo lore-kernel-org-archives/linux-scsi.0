@@ -1,70 +1,151 @@
-From: Roland Dreier <rdreier-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 4/7] [SCSI] scst: Add SRP target driver
-Date: Wed, 05 Jan 2011 12:21:52 -0800
-Message-ID: <adaaajfdrtr.fsf@cisco.com>
-References: <201012201849.27639.bvanassche@acm.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Subject: [PATCH v2 6/8] IB/srp: reduce lock coverage of command completion
+Date: Wed,  5 Jan 2011 15:35:14 -0500
+Message-ID: <1294259716-30706-7-git-send-email-dillowda@ornl.gov>
+References: <1294259716-30706-1-git-send-email-dillowda@ornl.gov>
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <201012201849.27639.bvanassche-HInyCGIudOg@public.gmane.org> (Bart Van Assche's
-	message of "Mon, 20 Dec 2010 18:49:27 +0100")
+In-Reply-To: <1294259716-30706-1-git-send-email-dillowda-1Heg1YXhbW8@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, scst-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-l3A5Bk7waGM@public.gmane.org, Vu Pham <vu-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Roland Dreier <rolandd-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>, David Dillow <dave-i1Mk8JYDVaaSihdK6806/g@public.gmane.org>
+To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-So, just looking over some of the atomic_t usage here (which is usually
-one of the first places I review):
+From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 
- > +struct srpt_send_ioctx {
- > ...
- > +	atomic_t		state;
+We only need the lock to cover list and credit manipulations, so push
+those into srp_remove_req() and update the call chains.
 
-this seems to be accessed only with atomic_read(), atomic_set() and
-atomic_cmpxchg() (without any memory barriers).  It's rather hard to see
-that this is correct (and indeed without memory barriers I suspect it's
-not; also since atomic_read() does not protect the state from changing
-immediately afterwards there may be other races).
+We reorder the request removal and command completion in
+srp_process_rsp() to avoid the SCSI mid-layer sending another command
+before we've released our request and added any credits returned by the
+target. This prevents us from returning HOST_BUSY unneccesarily.
 
-I think it might be better to handle this in a simpler, more naive
-way -- just have a lock (probably an existing one) that protects the
-contents of state and not use cmpxchg().
+Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+[ broken out, small cleanups, and modified to avoid potential extraneous
+  HOST_BUSY returns by David Dillow ]
+Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+---
+ drivers/infiniband/ulp/srp/ib_srp.c |   37 +++++++++++++---------------------
+ 1 files changed, 14 insertions(+), 23 deletions(-)
 
-In any case since no "real" atomic operations are used, I suspect it
-would be better to just code this in terms of unsigned int and regular
-cmpxchg().
-
-Also, there is processing_compl:
-
- > +static void srpt_completion(struct ib_cq *cq, void *ctx)
- > +{
- > +	struct srpt_rdma_ch *ch = ctx;
- > +
- > +	BUG_ON(!ch);
- > +	atomic_inc(&ch->processing_compl);
-
-and
-
- > +static void srpt_unregister_channel(struct srpt_rdma_ch *ch)
- > ...
- > +	while (atomic_read(&ch->processing_compl))
- > +		;
-
-this seems racy to me -- I don't see any reason why we couldn't have:
-
-	srpt_completion()
-
-					srpt_unregister_channel()
-					  processing_compl == 0,
-					  continue
-
-	  atomic_inc(&ch->processing_compl);
-
-					  finish unregistering channel
-
-	  use unregistered channel
-
- - R.
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index d320dd4..15c3ae3 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -549,18 +549,24 @@ static void srp_unmap_data(struct scsi_cmnd *scmnd,
+ 			scsi_sg_count(scmnd), scmnd->sc_data_direction);
+ }
+ 
+-static void srp_remove_req(struct srp_target_port *target, struct srp_request *req)
++static void srp_remove_req(struct srp_target_port *target,
++			   struct srp_request *req, s32 req_lim_delta)
+ {
++	unsigned long flags;
++
+ 	srp_unmap_data(req->scmnd, target, req);
++	spin_lock_irqsave(target->scsi_host->host_lock, flags);
++	target->req_lim += req_lim_delta;
+ 	req->scmnd = NULL;
+ 	list_add_tail(&req->list, &target->free_reqs);
++	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
+ }
+ 
+ static void srp_reset_req(struct srp_target_port *target, struct srp_request *req)
+ {
+ 	req->scmnd->result = DID_RESET << 16;
+ 	req->scmnd->scsi_done(req->scmnd);
+-	srp_remove_req(target, req);
++	srp_remove_req(target, req, 0);
+ }
+ 
+ static int srp_reconnect_target(struct srp_target_port *target)
+@@ -595,13 +601,11 @@ static int srp_reconnect_target(struct srp_target_port *target)
+ 	while (ib_poll_cq(target->send_cq, 1, &wc) > 0)
+ 		; /* nothing */
+ 
+-	spin_lock_irq(target->scsi_host->host_lock);
+ 	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
+ 		struct srp_request *req = &target->req_ring[i];
+ 		if (req->scmnd)
+ 			srp_reset_req(target, req);
+ 	}
+-	spin_unlock_irq(target->scsi_host->host_lock);
+ 
+ 	list_del_init(&target->free_tx);
+ 	for (i = 0; i < SRP_SQ_SIZE; ++i)
+@@ -914,15 +918,12 @@ static void srp_process_rsp(struct srp_target_port *target, struct srp_rsp *rsp)
+ 	struct srp_request *req;
+ 	struct scsi_cmnd *scmnd;
+ 	unsigned long flags;
+-	s32 delta;
+-
+-	delta = (s32) be32_to_cpu(rsp->req_lim_delta);
+-
+-	spin_lock_irqsave(target->scsi_host->host_lock, flags);
+-
+-	target->req_lim += delta;
+ 
+ 	if (unlikely(rsp->tag & SRP_TAG_TSK_MGMT)) {
++		spin_lock_irqsave(target->scsi_host->host_lock, flags);
++		target->req_lim += be32_to_cpu(rsp->req_lim_delta);
++		spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
++
+ 		target->tsk_mgmt_status = -1;
+ 		if (be32_to_cpu(rsp->resp_data_len) >= 4)
+ 			target->tsk_mgmt_status = rsp->data[3];
+@@ -948,12 +949,10 @@ static void srp_process_rsp(struct srp_target_port *target, struct srp_rsp *rsp)
+ 		else if (rsp->flags & (SRP_RSP_FLAG_DIOVER | SRP_RSP_FLAG_DIUNDER))
+ 			scsi_set_resid(scmnd, be32_to_cpu(rsp->data_in_res_cnt));
+ 
++		srp_remove_req(target, req, be32_to_cpu(rsp->req_lim_delta));
+ 		scmnd->host_scribble = NULL;
+ 		scmnd->scsi_done(scmnd);
+-		srp_remove_req(target, req);
+ 	}
+-
+-	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
+ }
+ 
+ static int srp_response_common(struct srp_target_port *target, s32 req_delta,
+@@ -1498,18 +1497,14 @@ static int srp_abort(struct scsi_cmnd *scmnd)
+ 			      SRP_TSK_ABORT_TASK))
+ 		return FAILED;
+ 
+-	spin_lock_irq(target->scsi_host->host_lock);
+-
+ 	if (req->scmnd) {
+ 		if (!target->tsk_mgmt_status) {
+-			srp_remove_req(target, req);
++			srp_remove_req(target, req, 0);
+ 			scmnd->result = DID_ABORT << 16;
+ 		} else
+ 			ret = FAILED;
+ 	}
+ 
+-	spin_unlock_irq(target->scsi_host->host_lock);
+-
+ 	return ret;
+ }
+ 
+@@ -1528,16 +1523,12 @@ static int srp_reset_device(struct scsi_cmnd *scmnd)
+ 	if (target->tsk_mgmt_status)
+ 		return FAILED;
+ 
+-	spin_lock_irq(target->scsi_host->host_lock);
+-
+ 	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
+ 		struct srp_request *req = &target->req_ring[i];
+ 		if (req->scmnd && req->scmnd->device == scmnd->device)
+ 			srp_reset_req(target, req);
+ 	}
+ 
+-	spin_unlock_irq(target->scsi_host->host_lock);
+-
+ 	return SUCCESS;
+ }
+ 
+-- 
+1.7.3.4
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
