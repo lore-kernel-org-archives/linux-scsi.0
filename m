@@ -1,15 +1,15 @@
 From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: [PATCH 5/8] BNX2I: Added TCP timestamps option support
-Date: Wed, 5 Jan 2011 12:44:24 -0800
-Message-ID: <1294260267-17413-6-git-send-email-eddie.wai@broadcom.com>
+Subject: [PATCH 4/8] BNX2I: Added support for the 57712(E) devices
+Date: Wed, 5 Jan 2011 12:44:23 -0800
+Message-ID: <1294260267-17413-5-git-send-email-eddie.wai@broadcom.com>
 References: <Eddie Wai <eddie.wai@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:1851 "EHLO mms2.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1862 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752911Ab1AEUl6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752916Ab1AEUl6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 5 Jan 2011 15:41:58 -0500
 In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,58 +17,76 @@ List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <JBottomley@novell.com>
 Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-This TCP timestamps option is a module wise feature which can be
-enabled via the module param (time_stamps).  Once enabled, the TCP
-connection will advertise timestamps as an option to get negotiated.
+Moved all PCI_DEVICE_ID_NX2_57712(E) definitions to pci_ids.h
 
 Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
-Acked-by: Benjamin Li <benli@broadcom.com>
+Acked-by: Michael Chan <mchan@broadcom.com>
+Acked-by: Eilon Greenstein <eilong@broadcom.com>
 ---
- drivers/scsi/bnx2i/bnx2i.h       |    1 +
- drivers/scsi/bnx2i/bnx2i_init.c  |    4 ++++
- drivers/scsi/bnx2i/bnx2i_iscsi.c |    2 ++
- 3 files changed, 7 insertions(+), 0 deletions(-)
+ drivers/net/bnx2x/bnx2x_main.c  |    7 -------
+ drivers/scsi/bnx2i/bnx2i_init.c |   10 ++++++----
+ include/linux/pci_ids.h         |    2 ++
+ 3 files changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
-index e1ca5fe..cc7ebc1 100644
---- a/drivers/scsi/bnx2i/bnx2i.h
-+++ b/drivers/scsi/bnx2i/bnx2i.h
-@@ -701,6 +701,7 @@ struct bnx2i_endpoint {
- extern unsigned int error_mask1, error_mask2;
- extern u64 iscsi_error_mask;
- extern unsigned int en_tcp_dack;
-+extern unsigned int time_stamps;
- extern unsigned int event_coal_div;
- extern unsigned int event_coal_min;
+diff --git a/drivers/net/bnx2x/bnx2x_main.c b/drivers/net/bnx2x/bnx2x_main.c
+index ff99a2f..3efacfa 100644
+--- a/drivers/net/bnx2x/bnx2x_main.c
++++ b/drivers/net/bnx2x/bnx2x_main.c
+@@ -140,13 +140,6 @@ static struct {
+ 	{ "Broadcom NetXtreme II BCM57712E XGb" }
+ };
  
+-#ifndef PCI_DEVICE_ID_NX2_57712
+-#define PCI_DEVICE_ID_NX2_57712		0x1662
+-#endif
+-#ifndef PCI_DEVICE_ID_NX2_57712E
+-#define PCI_DEVICE_ID_NX2_57712E	0x1663
+-#endif
+-
+ static DEFINE_PCI_DEVICE_TABLE(bnx2x_pci_tbl) = {
+ 	{ PCI_VDEVICE(BROADCOM, PCI_DEVICE_ID_NX2_57710), BCM57710 },
+ 	{ PCI_VDEVICE(BROADCOM, PCI_DEVICE_ID_NX2_57711), BCM57711 },
 diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_init.c
-index 5ef01c9..c053764 100644
+index 6afaa34..5ef01c9 100644
 --- a/drivers/scsi/bnx2i/bnx2i_init.c
 +++ b/drivers/scsi/bnx2i/bnx2i_init.c
-@@ -48,6 +48,10 @@ unsigned int en_tcp_dack = 1;
- module_param(en_tcp_dack, int, 0664);
- MODULE_PARM_DESC(en_tcp_dack, "Enable TCP Delayed ACK");
+@@ -29,7 +29,7 @@ static char version[] __devinitdata =
+ MODULE_AUTHOR("Anil Veerabhadrappa <anilgv@broadcom.com> and "
+ 	      "Eddie Wai <eddie.wai@broadcom.com>");
  
-+unsigned int time_stamps = 0x00;
-+module_param(time_stamps, int, 0664);
-+MODULE_PARM_DESC(time_stamps, "Enable TCP TimeStamps [1 = Enable]");
-+
- unsigned int error_mask1 = 0x00;
- module_param(error_mask1, int, 0664);
- MODULE_PARM_DESC(error_mask1, "Config FW iSCSI Error Mask #1");
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index f9415aa..86ddc08 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -1832,6 +1832,8 @@ static struct iscsi_endpoint *bnx2i_ep_connect(struct Scsi_Host *shost,
- 	bnx2i_ep->cm_sk->rcv_buf = 256 * 1024;
- 	bnx2i_ep->cm_sk->snd_buf = 256 * 1024;
- 	clear_bit(SK_TCP_TIMESTAMP, &bnx2i_ep->cm_sk->tcp_flags);
-+	if (time_stamps)
-+		set_bit(SK_TCP_TIMESTAMP, &bnx2i_ep->cm_sk->tcp_flags);
- 
- 	memset(&saddr, 0, sizeof(saddr));
- 	if (dst_addr->sa_family == AF_INET) {
+-MODULE_DESCRIPTION("Broadcom NetXtreme II BCM5706/5708/5709/57710/57711"
++MODULE_DESCRIPTION("Broadcom NetXtreme II BCM5706/5708/5709/57710/57711/57712"
+ 		   " iSCSI Driver");
+ MODULE_LICENSE("GPL");
+ MODULE_VERSION(DRV_MODULE_VERSION);
+@@ -88,9 +88,11 @@ void bnx2i_identify_device(struct bnx2i_hba *hba)
+ 	    (hba->pci_did == PCI_DEVICE_ID_NX2_5709S)) {
+ 		set_bit(BNX2I_NX2_DEV_5709, &hba->cnic_dev_type);
+ 		hba->mail_queue_access = BNX2I_MQ_BIN_MODE;
+-	} else if (hba->pci_did == PCI_DEVICE_ID_NX2_57710 ||
+-		   hba->pci_did == PCI_DEVICE_ID_NX2_57711 ||
+-		   hba->pci_did == PCI_DEVICE_ID_NX2_57711E)
++	} else if (hba->pci_did == PCI_DEVICE_ID_NX2_57710  ||
++		   hba->pci_did == PCI_DEVICE_ID_NX2_57711  ||
++		   hba->pci_did == PCI_DEVICE_ID_NX2_57711E ||
++		   hba->pci_did == PCI_DEVICE_ID_NX2_57712  ||
++		   hba->pci_did == PCI_DEVICE_ID_NX2_57712E)
+ 		set_bit(BNX2I_NX2_DEV_57710, &hba->cnic_dev_type);
+ 	else
+ 		printk(KERN_ALERT "bnx2i: unknown device, 0x%x\n",
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d278dd9..6487382 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2067,6 +2067,8 @@
+ #define PCI_DEVICE_ID_TIGON3_5723	0x165b
+ #define PCI_DEVICE_ID_TIGON3_5705M	0x165d
+ #define PCI_DEVICE_ID_TIGON3_5705M_2	0x165e
++#define PCI_DEVICE_ID_NX2_57712		0x1662
++#define PCI_DEVICE_ID_NX2_57712E	0x1663
+ #define PCI_DEVICE_ID_TIGON3_5714	0x1668
+ #define PCI_DEVICE_ID_TIGON3_5714S	0x1669
+ #define PCI_DEVICE_ID_TIGON3_5780	0x166a
 -- 
 1.7.0.5
 
