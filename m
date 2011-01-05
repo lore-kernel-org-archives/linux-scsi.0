@@ -1,13 +1,13 @@
 From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH 1/5] [SCSI] scsi_dh_alua: fix submit_stpg return
-Date: Wed,  5 Jan 2011 16:00:20 -0500
-Message-ID: <1294261224-12599-2-git-send-email-snitzer@redhat.com>
+Subject: [PATCH 3/5] [SCSI] scsi_dh_alua: fix stpg_endio group state reporting
+Date: Wed,  5 Jan 2011 16:00:22 -0500
+Message-ID: <1294261224-12599-4-git-send-email-snitzer@redhat.com>
 References: <1294261224-12599-1-git-send-email-snitzer@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:16481 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:60167 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752815Ab1AEVBM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Jan 2011 16:01:12 -0500
+	id S1752924Ab1AEVBR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jan 2011 16:01:17 -0500
 In-Reply-To: <1294261224-12599-1-git-send-email-snitzer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,43 +16,40 @@ Cc: linux-scsi@vger.kernel.org, Joseph Gruher <joseph.r.gruher@intel.com>, Ilgu 
 
 From: Joseph Gruher <joseph.r.gruher@intel.com>
 
-submit_stpg() will always return failure so alua_activate() will report
-failure via dm-multipath callback function.  Even though the stpg fired
-successfuly dm-multipath does not know and always fails to change the
-valid path.
-
-By returning SCSI_DH_OK we're now skipping alua_activate()'s call to
-activate_complete 'fn'.  But this is fine because stpg_endio() will call
-it via h->callback_fn().
+Initialize stpg_endio() 'err' to SCSI_DH_OK and only change it to
+SCSI_DH_IO accordingly.  This allows the switching of target group state
+to be properly reported when no error has occurred.
 
 Signed-off-by: Joseph Gruher <joseph.r.gruher@intel.com>
 Signed-off-by: Ilgu Hong <ilgu.hong@promise.com>
 Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c |    3 +--
- 1 files changed, 1 insertions(+), 2 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c |    8 +++++---
+ 1 files changed, 5 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 6b72932..afb1d05 100644
+index ba3c649..9bd2c8a 100644
 --- a/drivers/scsi/device_handler/scsi_dh_alua.c
 +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -303,7 +303,6 @@ done:
- static unsigned submit_stpg(struct alua_dh_data *h)
+@@ -253,13 +253,15 @@ static void stpg_endio(struct request *req, int error)
  {
- 	struct request *rq;
--	int err = SCSI_DH_RES_TEMP_UNAVAIL;
- 	int stpg_len = 8;
- 	struct scsi_device *sdev = h->sdev;
+ 	struct alua_dh_data *h = req->end_io_data;
+ 	struct scsi_sense_hdr sense_hdr;
+-	unsigned err = SCSI_DH_IO;
++	unsigned err = SCSI_DH_OK;
  
-@@ -332,7 +331,7 @@ static unsigned submit_stpg(struct alua_dh_data *h)
- 	rq->end_io_data = h;
+ 	if (error || host_byte(req->errors) != DID_OK ||
+-			msg_byte(req->errors) != COMMAND_COMPLETE)
++			msg_byte(req->errors) != COMMAND_COMPLETE) {
++		err = SCSI_DH_IO;
+ 		goto done;
++	}
  
- 	blk_execute_rq_nowait(rq->q, NULL, rq, 1, stpg_endio);
--	return err;
-+	return SCSI_DH_OK;
- }
- 
- /*
+-	if (err == SCSI_DH_IO && h->senselen > 0) {
++	if (h->senselen > 0) {
+ 		err = scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
+ 					   &sense_hdr);
+ 		if (!err) {
 -- 
 1.7.3.4
 
