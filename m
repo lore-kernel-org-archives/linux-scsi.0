@@ -1,167 +1,70 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 06/10] mpt2sas:[Resend] Fix the race between broadcast asyn event and scsi command completion
-Date: Wed, 5 Jan 2011 17:54:32 +0530
-Message-ID: <20110105122432.GB1976@lsi.com>
+From: Josh Boyer <jwboyer@linux.vnet.ibm.com>
+Subject: [PATCH] Fix qla4xxx build on 32-bit platforms
+Date: Wed, 5 Jan 2011 09:14:05 -0500
+Message-ID: <20110105141404.GD2364@zod.rchland.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:55227 "EHLO
-	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752051Ab1AENJ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2011 08:09:29 -0500
+Received: from e32.co.us.ibm.com ([32.97.110.150]:39452 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751260Ab1AEOPS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2011 09:15:18 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p05E5O4k028185
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Jan 2011 07:05:24 -0700
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p05EFDMT047538
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Jan 2011 07:15:13 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p05EFCYv029532
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Jan 2011 07:15:13 -0700
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+To: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com
+Cc: Adrian Reber <adrian@lisas.de>, linux-scsi@vger.kernel.org
 
-Resend this patch as per Jame's comment.
+The qla4xxx driver uses readq/writeq unconditionally.  However, those
+functions are only defined in include/asm-generic/io.h when CONFIG_64BIT
+is set.  This leads to compile errors on 32-bit platforms such as ppc:
 
-False timeout after hard resets, there were two issues which leads
-to timeout.
-(1) Panic because of invalid memory access in the broadcast asyn
-event processing routine due to a race between accessing the scsi command
-pointer from broadcast asyn event processing thread and completing
-the same scsi command from the interrupt context.
-(2)  Broadcast asyn event notifcations are not handled due to events
-ignored while the broadcast asyn event is activity being processed
-from the event process kernel thread.
+drivers/scsi/qla4xxx/ql4_nx.c: In function 'qla4_8xxx_pci_mem_read_direct':
+drivers/scsi/qla4xxx/ql4_nx.c:717: error: implicit declaration of function 'readq'
+drivers/scsi/qla4xxx/ql4_nx.c: In function 'qla4_8xxx_pci_mem_write_direct':
+drivers/scsi/qla4xxx/ql4_nx.c:788: error: implicit declaration of function 'writeq'
 
-In addition, changed the ABRT_TASK_SET to ABORT_TASK in the
-broadcast async event processing routine.   This is less disruptive to other
-request that generate Broadcast Asyn Primitives besides target
-reset. e.g clear reservations, microcode download,and mode select.
+Guard their use in the driver with the same #ifdef.
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+Reported-by: Adrian Reber <adrian@lisas.de>
+Signed-off-by: Josh Boyer <jwboyer@linux.vnet.ibm.com>
+
 ---
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index a16f2a0..db287d7 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -819,7 +819,7 @@ _scsih_is_end_device(u32 device_info)
- }
- 
- /**
-- * mptscsih_get_scsi_lookup - returns scmd entry
-+ * _scsih_scsi_lookup_get - returns scmd entry
-  * @ioc: per adapter object
-  * @smid: system request message index
-  *
-@@ -832,6 +832,28 @@ _scsih_scsi_lookup_get(struct MPT2SAS_ADAPTER *ioc, u16 smid)
- }
- 
- /**
-+ * _scsih_scsi_lookup_get_clear - returns scmd entry
-+ * @ioc: per adapter object
-+ * @smid: system request message index
-+ *
-+ * Returns the smid stored scmd pointer.
-+ * Then will derefrence the stored scmd pointer.
-+ */
-+static inline struct scsi_cmnd *
-+_scsih_scsi_lookup_get_clear(struct MPT2SAS_ADAPTER *ioc, u16 smid)
-+{
-+	unsigned long flags;
-+	struct scsi_cmnd *scmd;
-+
-+	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
-+	scmd = ioc->scsi_lookup[smid - 1].scmd;
-+	ioc->scsi_lookup[smid - 1].scmd = NULL;
-+	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
-+
-+	return scmd;
-+}
-+
-+/**
-  * _scsih_scsi_lookup_find_by_scmd - scmd lookup
-  * @ioc: per adapter object
-  * @smid: system request message index
-@@ -3207,7 +3229,7 @@ _scsih_flush_running_cmds(struct MPT2SAS_ADAPTER *ioc)
- 	u16 count = 0;
- 
- 	for (smid = 1; smid <= ioc->scsiio_depth; smid++) {
--		scmd = _scsih_scsi_lookup_get(ioc, smid);
-+		scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
- 		if (!scmd)
- 			continue;
- 		count++;
-@@ -3801,7 +3823,7 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	u32 response_code = 0;
- 
- 	mpi_reply = mpt2sas_base_get_reply_virt_addr(ioc, reply);
--	scmd = _scsih_scsi_lookup_get(ioc, smid);
-+	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
- 	if (scmd == NULL)
- 		return 1;
- 
-@@ -5102,6 +5124,7 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
-     struct fw_event_work *fw_event)
- {
- 	struct scsi_cmnd *scmd;
-+	struct scsi_device *sdev;
- 	u16 smid, handle;
- 	u32 lun;
- 	struct MPT2SAS_DEVICE *sas_device_priv_data;
-@@ -5112,12 +5135,17 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
- 	Mpi2EventDataSasBroadcastPrimitive_t *event_data = fw_event->event_data;
- #endif
- 	u16 ioc_status;
-+	unsigned long flags;
-+	int r;
-+
- 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "broadcast primative: "
- 	    "phy number(%d), width(%d)\n", ioc->name, event_data->PhyNum,
- 	    event_data->PortWidth));
- 	dtmprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: enter\n", ioc->name,
- 	    __func__));
- 
-+	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
-+	ioc->broadcast_aen_busy = 0;
- 	termination_count = 0;
- 	query_count = 0;
- 	mpi_reply = ioc->tm_cmds.reply;
-@@ -5125,7 +5153,8 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
- 		scmd = _scsih_scsi_lookup_get(ioc, smid);
- 		if (!scmd)
- 			continue;
--		sas_device_priv_data = scmd->device->hostdata;
-+		sdev = scmd->device;
-+		sas_device_priv_data = sdev->hostdata;
- 		if (!sas_device_priv_data || !sas_device_priv_data->sas_target)
- 			continue;
- 		 /* skip hidden raid components */
-@@ -5141,6 +5170,7 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
- 		lun = sas_device_priv_data->lun;
- 		query_count++;
- 
-+		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
- 		mpt2sas_scsih_issue_tm(ioc, handle, 0, 0, lun,
- 		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK, smid, 30, NULL);
- 		ioc->tm_cmds.status = MPT2_CMD_NOT_USED;
-@@ -5150,14 +5180,20 @@ _scsih_sas_broadcast_primative_event(struct MPT2SAS_ADAPTER *ioc,
- 		    (mpi_reply->ResponseCode ==
- 		     MPI2_SCSITASKMGMT_RSP_TM_SUCCEEDED ||
- 		     mpi_reply->ResponseCode ==
--		     MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC))
-+		     MPI2_SCSITASKMGMT_RSP_IO_QUEUED_ON_IOC)) {
-+			spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
- 			continue;
--
--		mpt2sas_scsih_issue_tm(ioc, handle, 0, 0, lun,
--		    MPI2_SCSITASKMGMT_TASKTYPE_ABRT_TASK_SET, 0, 30, NULL);
-+		}
-+		r = mpt2sas_scsih_issue_tm(ioc, handle, sdev->channel, sdev->id,
-+		    sdev->lun, MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK, smid, 30,
-+		    scmd);
-+		if (r == FAILED)
-+			sdev_printk(KERN_WARNING, sdev, "task abort: FAILED "
-+			    "scmd(%p)\n", scmd);
- 		termination_count += le32_to_cpu(mpi_reply->TerminationCount);
-+		spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
- 	}
--	ioc->broadcast_aen_busy = 0;
-+	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
- 
- 	dtmprintk(ioc, printk(MPT2SAS_INFO_FMT
- 	    "%s - exit, query_count = %d termination_count = %d\n",
+
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 474b10d..792c3ae 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -713,9 +713,11 @@ static int qla4_8xxx_pci_mem_read_direct(struct scsi_qla_host *ha,
+ 	case 4:
+ 		*(u32 *)data = readl(addr);
+ 		break;
++#ifdef CONFIG_64BIT
+ 	case 8:
+ 		*(u64 *)data = readq(addr);
+ 		break;
++#endif
+ 	default:
+ 		ret = -1;
+ 		break;
+@@ -784,9 +786,11 @@ qla4_8xxx_pci_mem_write_direct(struct scsi_qla_host *ha, u64 off,
+ 	case 4:
+ 		writel(*(u32 *)data, addr);
+ 		break;
++#ifdef CONFIG_64BIT
+ 	case 8:
+ 		writeq(*(u64 *)data, addr);
+ 		break;
++#endif
+ 	default:
+ 		ret = -1;
+ 		break;
