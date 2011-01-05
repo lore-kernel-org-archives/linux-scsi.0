@@ -1,151 +1,273 @@
 From: David Dillow <dillowda@ornl.gov>
-Subject: [PATCH v2 8/8] IB/srp: consolidate hot-path variables into cache lines
-Date: Wed,  5 Jan 2011 15:35:16 -0500
-Message-ID: <1294259716-30706-9-git-send-email-dillowda@ornl.gov>
+Subject: [PATCH v2 3/8] IB/srp: allow lockless work posting
+Date: Wed,  5 Jan 2011 15:35:11 -0500
+Message-ID: <1294259716-30706-4-git-send-email-dillowda@ornl.gov>
 References: <1294259716-30706-1-git-send-email-dillowda@ornl.gov>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from amavis-outgoing2.knology.net ([24.214.64.231]:50726 "EHLO
-	amavis-outgoing2.knology.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752802Ab1AEUfY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2011 15:35:24 -0500
+Received: from amavis-outgoing1.knology.net ([24.214.64.230]:56939 "EHLO
+	amavis-outgoing1.knology.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752289Ab1AEUfU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2011 15:35:20 -0500
 In-Reply-To: <1294259716-30706-1-git-send-email-dillowda@ornl.gov>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-rdma@vger.kernel.org
 Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org
 
-Put the variables accessed together in the hot-path into common
-cachelines, and separate them by RW vs RO to avoid false dirtying.
-We keep a local copy of the lkey and rkey in the target to avoid
-traversing pointers (and associated cache lines) to find them.
+From: Bart Van Assche <bvanassche@acm.org>
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Only one CPU at a time will own an RX IU, so using the address of the IU
+as the work request cookie allows us to avoid taking a lock. We can
+similarly prepare the TX path for lockless posting by moving the free TX
+IUs to a list. This also removes the requirement that the queue sizes be
+a power of 2.
+
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+[ broken out, small cleanups, and modified to avoid needing an extra field
+  in the IU by David Dillow]
 Signed-off-by: David Dillow <dillowda@ornl.gov>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |   12 +++++++-----
- drivers/infiniband/ulp/srp/ib_srp.h |   31 +++++++++++++++++++------------
- 2 files changed, 26 insertions(+), 17 deletions(-)
+ drivers/infiniband/ulp/srp/ib_srp.c |   65 ++++++++++++++---------------------
+ drivers/infiniband/ulp/srp/ib_srp.h |    7 +---
+ 2 files changed, 28 insertions(+), 44 deletions(-)
 
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 2f62367..7dcefe4 100644
+index def9e6b..aa78d26 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.c
 +++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -768,7 +768,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
- 		struct srp_direct_buf *buf = (void *) cmd->add_data;
+@@ -568,7 +568,7 @@ static int srp_reconnect_target(struct srp_target_port *target)
+ 	struct ib_qp_attr qp_attr;
+ 	struct srp_request *req, *tmp;
+ 	struct ib_wc wc;
+-	int ret;
++	int i, ret;
  
- 		buf->va  = cpu_to_be64(ib_sg_dma_address(ibdev, scat));
--		buf->key = cpu_to_be32(dev->mr->rkey);
-+		buf->key = cpu_to_be32(target->rkey);
- 		buf->len = cpu_to_be32(ib_sg_dma_len(ibdev, scat));
- 	} else if (srp_map_fmr(target, scat, count, req,
- 			       (void *) cmd->add_data)) {
-@@ -793,7 +793,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
- 			buf->desc_list[i].va  =
- 				cpu_to_be64(ib_sg_dma_address(ibdev, sg));
- 			buf->desc_list[i].key =
--				cpu_to_be32(dev->mr->rkey);
-+				cpu_to_be32(target->rkey);
- 			buf->desc_list[i].len = cpu_to_be32(dma_len);
- 			datalen += dma_len;
- 		}
-@@ -806,7 +806,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
- 		buf->table_desc.va  =
- 			cpu_to_be64(req->cmd->dma + sizeof *cmd + sizeof *buf);
- 		buf->table_desc.key =
--			cpu_to_be32(target->srp_host->srp_dev->mr->rkey);
-+			cpu_to_be32(target->rkey);
- 		buf->table_desc.len =
- 			cpu_to_be32(count * sizeof (struct srp_direct_buf));
+ 	if (!srp_change_state(target, SRP_TARGET_LIVE, SRP_TARGET_CONNECTING))
+ 		return -EAGAIN;
+@@ -601,9 +601,9 @@ static int srp_reconnect_target(struct srp_target_port *target)
+ 		srp_reset_req(target, req);
+ 	spin_unlock_irq(target->scsi_host->host_lock);
  
-@@ -883,7 +883,7 @@ static int srp_post_send(struct srp_target_port *target,
+-	target->rx_head	 = 0;
+-	target->tx_head	 = 0;
+-	target->tx_tail  = 0;
++	list_del_init(&target->free_tx);
++	for (i = 0; i < SRP_SQ_SIZE; ++i)
++		list_move(&target->tx_ring[i]->list, &target->free_tx);
  
- 	list.addr   = iu->dma;
- 	list.length = len;
--	list.lkey   = target->srp_host->srp_dev->mr->lkey;
-+	list.lkey   = target->lkey;
+ 	target->qp_in_error = 0;
+ 	ret = srp_connect_target(target);
+@@ -817,7 +817,7 @@ static int srp_map_data(struct scsi_cmnd *scmnd, struct srp_target_port *target,
+ 
+ /*
+  * Must be called with target->scsi_host->host_lock held to protect
+- * req_lim and tx_head.  Lock cannot be dropped between call here and
++ * req_lim and free_tx.  Lock cannot be dropped between call here and
+  * call to __srp_post_send().
+  *
+  * Note:
+@@ -837,7 +837,7 @@ static struct srp_iu *__srp_get_tx_iu(struct srp_target_port *target,
+ 
+ 	srp_send_completion(target->send_cq, target);
+ 
+-	if (target->tx_head - target->tx_tail >= SRP_SQ_SIZE)
++	if (list_empty(&target->free_tx))
+ 		return NULL;
+ 
+ 	/* Initiator responses to target requests do not consume credits */
+@@ -846,14 +846,14 @@ static struct srp_iu *__srp_get_tx_iu(struct srp_target_port *target,
+ 		return NULL;
+ 	}
+ 
+-	iu = target->tx_ring[target->tx_head & SRP_SQ_MASK];
++	iu = list_first_entry(&target->free_tx, struct srp_iu, list);
+ 	iu->type = iu_type;
+ 	return iu;
+ }
+ 
+ /*
+  * Must be called with target->scsi_host->host_lock held to protect
+- * req_lim and tx_head.
++ * req_lim and free_tx.
+  */
+ static int __srp_post_send(struct srp_target_port *target,
+ 			   struct srp_iu *iu, int len)
+@@ -867,7 +867,7 @@ static int __srp_post_send(struct srp_target_port *target,
+ 	list.lkey   = target->srp_host->srp_dev->mr->lkey;
  
  	wr.next       = NULL;
- 	wr.wr_id      = (uintptr_t) iu;
-@@ -902,7 +902,7 @@ static int srp_post_recv(struct srp_target_port *target, struct srp_iu *iu)
+-	wr.wr_id      = target->tx_head & SRP_SQ_MASK;
++	wr.wr_id      = (uintptr_t) iu;
+ 	wr.sg_list    = &list;
+ 	wr.num_sge    = 1;
+ 	wr.opcode     = IB_WR_SEND;
+@@ -876,7 +876,7 @@ static int __srp_post_send(struct srp_target_port *target,
+ 	ret = ib_post_send(target->qp, &wr, &bad_wr);
+ 
+ 	if (!ret) {
+-		++target->tx_head;
++		list_del(&iu->list);
+ 		if (iu->type != SRP_IU_RSP)
+ 			--target->req_lim;
+ 	}
+@@ -884,36 +884,21 @@ static int __srp_post_send(struct srp_target_port *target,
+ 	return ret;
+ }
+ 
+-static int srp_post_recv(struct srp_target_port *target)
++static int srp_post_recv(struct srp_target_port *target, struct srp_iu *iu)
+ {
+-	unsigned long flags;
+-	struct srp_iu *iu;
+-	struct ib_sge list;
+ 	struct ib_recv_wr wr, *bad_wr;
+-	unsigned int next;
+-	int ret;
+-
+-	spin_lock_irqsave(target->scsi_host->host_lock, flags);
+-
+-	next	 = target->rx_head & SRP_RQ_MASK;
+-	wr.wr_id = next;
+-	iu	 = target->rx_ring[next];
++	struct ib_sge list;
  
  	list.addr   = iu->dma;
  	list.length = iu->size;
--	list.lkey   = target->srp_host->srp_dev->mr->lkey;
-+	list.lkey   = target->lkey;
+ 	list.lkey   = target->srp_host->srp_dev->mr->lkey;
  
  	wr.next     = NULL;
- 	wr.wr_id    = (uintptr_t) iu;
-@@ -1955,6 +1955,8 @@ static ssize_t srp_create_target(struct device *dev,
- 	target->io_class   = SRP_REV16A_IB_IO_CLASS;
++	wr.wr_id    = (uintptr_t) iu;
+ 	wr.sg_list  = &list;
+ 	wr.num_sge  = 1;
+ 
+-	ret = ib_post_recv(target->qp, &wr, &bad_wr);
+-	if (!ret)
+-		++target->rx_head;
+-
+-	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
+-
+-	return ret;
++	return ib_post_recv(target->qp, &wr, &bad_wr);
+ }
+ 
+ static void srp_process_rsp(struct srp_target_port *target, struct srp_rsp *rsp)
+@@ -1030,14 +1015,11 @@ static void srp_process_aer_req(struct srp_target_port *target,
+ 
+ static void srp_handle_recv(struct srp_target_port *target, struct ib_wc *wc)
+ {
+-	struct ib_device *dev;
+-	struct srp_iu *iu;
++	struct ib_device *dev = target->srp_host->srp_dev->dev;
++	struct srp_iu *iu = (struct srp_iu *) wc->wr_id;
+ 	int res;
+ 	u8 opcode;
+ 
+-	iu = target->rx_ring[wc->wr_id];
+-
+-	dev = target->srp_host->srp_dev->dev;
+ 	ib_dma_sync_single_for_cpu(dev, iu->dma, target->max_ti_iu_len,
+ 				   DMA_FROM_DEVICE);
+ 
+@@ -1078,7 +1060,7 @@ static void srp_handle_recv(struct srp_target_port *target, struct ib_wc *wc)
+ 	ib_dma_sync_single_for_device(dev, iu->dma, target->max_ti_iu_len,
+ 				      DMA_FROM_DEVICE);
+ 
+-	res = srp_post_recv(target);
++	res = srp_post_recv(target, iu);
+ 	if (res != 0)
+ 		shost_printk(KERN_ERR, target->scsi_host,
+ 			     PFX "Recv failed with error code %d\n", res);
+@@ -1107,6 +1089,7 @@ static void srp_send_completion(struct ib_cq *cq, void *target_ptr)
+ {
+ 	struct srp_target_port *target = target_ptr;
+ 	struct ib_wc wc;
++	struct srp_iu *iu;
+ 
+ 	while (ib_poll_cq(cq, 1, &wc) > 0) {
+ 		if (wc.status) {
+@@ -1117,7 +1100,8 @@ static void srp_send_completion(struct ib_cq *cq, void *target_ptr)
+ 			break;
+ 		}
+ 
+-		++target->tx_tail;
++		iu = (struct srp_iu *) wc.wr_id;
++		list_add(&iu->list, &target->free_tx);
+ 	}
+ }
+ 
+@@ -1212,6 +1196,8 @@ static int srp_alloc_iu_bufs(struct srp_target_port *target)
+ 						  GFP_KERNEL, DMA_TO_DEVICE);
+ 		if (!target->tx_ring[i])
+ 			goto err;
++
++		list_add(&target->tx_ring[i]->list, &target->free_tx);
+ 	}
+ 
+ 	return 0;
+@@ -1373,7 +1359,8 @@ static int srp_cm_handler(struct ib_cm_id *cm_id, struct ib_cm_event *event)
+ 			break;
+ 
+ 		for (i = 0; i < SRP_RQ_SIZE; i++) {
+-			target->status = srp_post_recv(target);
++			struct srp_iu *iu = target->rx_ring[i];
++			target->status = srp_post_recv(target, iu);
+ 			if (target->status)
+ 				break;
+ 		}
+@@ -1965,6 +1952,7 @@ static ssize_t srp_create_target(struct device *dev,
  	target->scsi_host  = target_host;
  	target->srp_host   = host;
-+	target->lkey	   = host->srp_dev->mr->lkey;
-+	target->rkey	   = host->srp_dev->mr->rkey;
  
- 	spin_lock_init(&target->lock);
- 	INIT_LIST_HEAD(&target->free_tx);
++	INIT_LIST_HEAD(&target->free_tx);
+ 	INIT_LIST_HEAD(&target->free_reqs);
+ 	INIT_LIST_HEAD(&target->req_queue);
+ 	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
+@@ -2235,8 +2223,7 @@ static int __init srp_init_module(void)
+ {
+ 	int ret;
+ 
+-	BUILD_BUG_ON_NOT_POWER_OF_2(SRP_SQ_SIZE);
+-	BUILD_BUG_ON_NOT_POWER_OF_2(SRP_RQ_SIZE);
++	BUILD_BUG_ON(FIELD_SIZEOF(struct ib_wc, wr_id) < sizeof(void *));
+ 
+ 	if (srp_sg_tablesize > 255) {
+ 		printk(KERN_WARNING PFX "Clamping srp_sg_tablesize to 255\n");
 diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
-index acb435d..9dc6fc3 100644
+index f8b689a..41ecb46 100644
 --- a/drivers/infiniband/ulp/srp/ib_srp.h
 +++ b/drivers/infiniband/ulp/srp/ib_srp.h
-@@ -117,6 +117,24 @@ struct srp_request {
- };
+@@ -59,10 +59,8 @@ enum {
  
- struct srp_target_port {
-+	/* These are RW in the hot path, and commonly used together */
-+	struct list_head	free_tx;
-+	struct list_head	free_reqs;
-+	spinlock_t		lock;
-+	s32			req_lim;
-+
-+	/* These are read-only in the hot path */
-+	struct ib_cq	       *send_cq ____cacheline_aligned_in_smp;
-+	struct ib_cq	       *recv_cq;
-+	struct ib_qp	       *qp;
-+	u32			lkey;
-+	u32			rkey;
-+	enum srp_target_state	state;
-+
-+	/* Everything above this point is used in the hot path of
-+	 * command processing. Try to keep them packed into cachelines.
-+	 */
-+
- 	__be64			id_ext;
- 	__be64			ioc_guid;
- 	__be64			service_id;
-@@ -133,23 +151,13 @@ struct srp_target_port {
- 	int			path_query_id;
+ 	SRP_RQ_SHIFT    	= 6,
+ 	SRP_RQ_SIZE		= 1 << SRP_RQ_SHIFT,
+-	SRP_RQ_MASK		= SRP_RQ_SIZE - 1,
  
- 	struct ib_cm_id	       *cm_id;
--	struct ib_cq	       *recv_cq;
--	struct ib_cq	       *send_cq;
--	struct ib_qp	       *qp;
- 
- 	int			max_ti_iu_len;
--	s32			req_lim;
+ 	SRP_SQ_SIZE		= SRP_RQ_SIZE,
+-	SRP_SQ_MASK		= SRP_SQ_SIZE - 1,
+ 	SRP_RSP_SQ_SIZE		= 1,
+ 	SRP_REQ_SQ_SIZE		= SRP_SQ_SIZE - SRP_RSP_SQ_SIZE,
+ 	SRP_TSK_MGMT_SQ_SIZE	= 1,
+@@ -144,11 +142,9 @@ struct srp_target_port {
  
  	int			zero_req_lim;
  
--	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
--
--	spinlock_t		lock;
--
--	struct list_head	free_tx;
+-	unsigned		rx_head;
+ 	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
+ 
+-	unsigned		tx_head;
+-	unsigned		tx_tail;
++	struct list_head	free_tx;
  	struct srp_iu	       *tx_ring[SRP_SQ_SIZE];
--
--	struct list_head	free_reqs;
-+	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
- 	struct srp_request	req_ring[SRP_CMD_SQ_SIZE];
  
- 	struct work_struct	work;
-@@ -157,7 +165,6 @@ struct srp_target_port {
- 	struct list_head	list;
- 	struct completion	done;
- 	int			status;
--	enum srp_target_state	state;
- 	int			qp_in_error;
+ 	struct list_head	free_reqs;
+@@ -168,6 +164,7 @@ struct srp_target_port {
+ };
  
- 	struct completion	tsk_mgmt_done;
+ struct srp_iu {
++	struct list_head	list;
+ 	u64			dma;
+ 	void		       *buf;
+ 	size_t			size;
 -- 
 1.7.3.4
 
