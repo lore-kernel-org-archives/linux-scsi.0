@@ -1,202 +1,52 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: [PATCH v2 7/8] IB/srp: stop sharing the host lock with SCSI
-Date: Wed,  5 Jan 2011 15:35:15 -0500
-Message-ID: <1294259716-30706-8-git-send-email-dillowda@ornl.gov>
-References: <1294259716-30706-1-git-send-email-dillowda@ornl.gov>
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1294259716-30706-1-git-send-email-dillowda-1Heg1YXhbW8@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org
+From: "Eddie Wai" <eddie.wai@broadcom.com>
+Subject: [PATCH 1/8] BNX2I: Allow ep CONNECT_FAILED condition to go
+ through proper cleanup
+Date: Wed, 5 Jan 2011 12:44:20 -0800
+Message-ID: <1294260267-17413-2-git-send-email-eddie.wai@broadcom.com>
+References: <Eddie Wai <eddie.wai@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:4816 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751683Ab1AEUlz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jan 2011 15:41:55 -0500
+In-Reply-To: <Eddie Wai <eddie.wai@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@novell.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>, Eddie Wai <eddie.wai@broadcom.com>
 
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Allow CNIC to go through the proper cleanup procedure for an endpoint
+which failed to connect.  Proper cleanup is necessary for the chip
+to reset back to the initial state for the offloaded endpoint.
 
-We don't need protection against the SCSI stack, so use our own lock to
-allow parallel progress on separate CPUs.
-
-Signed-off-by: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-[ broken out and small cleanups by David Dillow ]
-Signed-off-by: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Signed-off-by: Eddie Wai <eddie.wai@broadcom.com>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c |   46 +++++++++++++++++-----------------
- drivers/infiniband/ulp/srp/ib_srp.h |    2 +
- 2 files changed, 25 insertions(+), 23 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_iscsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 15c3ae3..2f62367 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -447,12 +447,12 @@ static bool srp_change_state(struct srp_target_port *target,
- {
- 	bool changed = false;
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index f0dce26..f9415aa 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1935,13 +1935,13 @@ static int bnx2i_ep_tcp_conn_active(struct bnx2i_endpoint *bnx2i_ep)
+ 		cnic_dev_10g = 1;
  
--	spin_lock_irq(target->scsi_host->host_lock);
-+	spin_lock_irq(&target->lock);
- 	if (target->state == old) {
- 		target->state = new;
- 		changed = true;
- 	}
--	spin_unlock_irq(target->scsi_host->host_lock);
-+	spin_unlock_irq(&target->lock);
- 	return changed;
- }
- 
-@@ -555,11 +555,11 @@ static void srp_remove_req(struct srp_target_port *target,
- 	unsigned long flags;
- 
- 	srp_unmap_data(req->scmnd, target, req);
--	spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	target->req_lim += req_lim_delta;
- 	req->scmnd = NULL;
- 	list_add_tail(&req->list, &target->free_reqs);
--	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
- }
- 
- static void srp_reset_req(struct srp_target_port *target, struct srp_request *req)
-@@ -634,13 +634,13 @@ err:
- 	 * Schedule our work inside the lock to avoid a race with
- 	 * the flush_scheduled_work() in srp_remove_one().
- 	 */
--	spin_lock_irq(target->scsi_host->host_lock);
-+	spin_lock_irq(&target->lock);
- 	if (target->state == SRP_TARGET_CONNECTING) {
- 		target->state = SRP_TARGET_DEAD;
- 		INIT_WORK(&target->work, srp_remove_work);
- 		schedule_work(&target->work);
- 	}
--	spin_unlock_irq(target->scsi_host->host_lock);
-+	spin_unlock_irq(&target->lock);
- 
- 	return ret;
- }
-@@ -829,17 +829,16 @@ static void srp_put_tx_iu(struct srp_target_port *target, struct srp_iu *iu,
- {
- 	unsigned long flags;
- 
--	spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	list_add(&iu->list, &target->free_tx);
- 	if (iu_type != SRP_IU_RSP)
- 		++target->req_lim;
--	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
- }
- 
- /*
-- * Must be called with target->scsi_host->host_lock held to protect
-- * req_lim and free_tx.  If IU is not sent, it must be returned using
-- * srp_put_tx_iu().
-+ * Must be called with target->lock held to protect req_lim and free_tx.
-+ * If IU is not sent, it must be returned using srp_put_tx_iu().
-  *
-  * Note:
-  * An upper limit for the number of allocated information units for each
-@@ -920,9 +919,9 @@ static void srp_process_rsp(struct srp_target_port *target, struct srp_rsp *rsp)
- 	unsigned long flags;
- 
- 	if (unlikely(rsp->tag & SRP_TAG_TSK_MGMT)) {
--		spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+		spin_lock_irqsave(&target->lock, flags);
- 		target->req_lim += be32_to_cpu(rsp->req_lim_delta);
--		spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+		spin_unlock_irqrestore(&target->lock, flags);
- 
- 		target->tsk_mgmt_status = -1;
- 		if (be32_to_cpu(rsp->resp_data_len) >= 4)
-@@ -963,10 +962,10 @@ static int srp_response_common(struct srp_target_port *target, s32 req_delta,
- 	struct srp_iu *iu;
- 	int err;
- 
--	spin_lock_irqsave(target->scsi_host->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	target->req_lim += req_delta;
- 	iu = __srp_get_tx_iu(target, SRP_IU_RSP);
--	spin_unlock_irqrestore(target->scsi_host->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
- 
- 	if (!iu) {
- 		shost_printk(KERN_ERR, target->scsi_host, PFX
-@@ -1131,14 +1130,14 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 		return 0;
- 	}
- 
--	spin_lock_irqsave(shost->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	iu = __srp_get_tx_iu(target, SRP_IU_CMD);
- 	if (iu) {
- 		req = list_first_entry(&target->free_reqs, struct srp_request,
- 				      list);
- 		list_del(&req->list);
- 	}
--	spin_unlock_irqrestore(shost->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
- 
- 	if (!iu)
- 		goto err;
-@@ -1184,9 +1183,9 @@ err_unmap:
- err_iu:
- 	srp_put_tx_iu(target, iu, SRP_IU_CMD);
- 
--	spin_lock_irqsave(shost->host_lock, flags);
-+	spin_lock_irqsave(&target->lock, flags);
- 	list_add(&req->list, &target->free_reqs);
--	spin_unlock_irqrestore(shost->host_lock, flags);
-+	spin_unlock_irqrestore(&target->lock, flags);
- 
- err:
- 	return SCSI_MLQUEUE_HOST_BUSY;
-@@ -1451,9 +1450,9 @@ static int srp_send_tsk_mgmt(struct srp_target_port *target,
- 
- 	init_completion(&target->tsk_mgmt_done);
- 
--	spin_lock_irq(target->scsi_host->host_lock);
-+	spin_lock_irq(&target->lock);
- 	iu = __srp_get_tx_iu(target, SRP_IU_TSK_MGMT);
--	spin_unlock_irq(target->scsi_host->host_lock);
-+	spin_unlock_irq(&target->lock);
- 
- 	if (!iu)
- 		return -1;
-@@ -1957,6 +1956,7 @@ static ssize_t srp_create_target(struct device *dev,
- 	target->scsi_host  = target_host;
- 	target->srp_host   = host;
- 
-+	spin_lock_init(&target->lock);
- 	INIT_LIST_HEAD(&target->free_tx);
- 	INIT_LIST_HEAD(&target->free_reqs);
- 	for (i = 0; i < SRP_CMD_SQ_SIZE; ++i) {
-@@ -2186,9 +2186,9 @@ static void srp_remove_one(struct ib_device *device)
- 		 */
- 		spin_lock(&host->target_lock);
- 		list_for_each_entry(target, &host->target_list, list) {
--			spin_lock_irq(target->scsi_host->host_lock);
-+			spin_lock_irq(&target->lock);
- 			target->state = SRP_TARGET_REMOVED;
--			spin_unlock_irq(target->scsi_host->host_lock);
-+			spin_unlock_irq(&target->lock);
- 		}
- 		spin_unlock(&host->target_lock);
- 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.h b/drivers/infiniband/ulp/srp/ib_srp.h
-index 81686ee..acb435d 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.h
-+++ b/drivers/infiniband/ulp/srp/ib_srp.h
-@@ -144,6 +144,8 @@ struct srp_target_port {
- 
- 	struct srp_iu	       *rx_ring[SRP_RQ_SIZE];
- 
-+	spinlock_t		lock;
-+
- 	struct list_head	free_tx;
- 	struct srp_iu	       *tx_ring[SRP_SQ_SIZE];
- 
+ 	switch (bnx2i_ep->state) {
+-	case EP_STATE_CONNECT_FAILED:
+ 	case EP_STATE_CLEANUP_FAILED:
+ 	case EP_STATE_OFLD_FAILED:
+ 	case EP_STATE_DISCONN_TIMEDOUT:
+ 		ret = 0;
+ 		break;
+ 	case EP_STATE_CONNECT_START:
++	case EP_STATE_CONNECT_FAILED:
+ 	case EP_STATE_CONNECT_COMPL:
+ 	case EP_STATE_ULP_UPDATE_START:
+ 	case EP_STATE_ULP_UPDATE_COMPL:
 -- 
-1.7.3.4
+1.7.0.5
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
