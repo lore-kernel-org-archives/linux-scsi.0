@@ -1,37 +1,26 @@
-From: Peter Jones <pjones@redhat.com>
-Subject: Re: [PATCH] Use a better comparitor for scsi vendor/model table matching.
-Date: Wed, 05 Jan 2011 11:50:09 -0500
-Message-ID: <4D24A141.70105@redhat.com>
-References: <1294241995-14270-1-git-send-email-pjones@redhat.com> <1294245387.15356.11.camel@mulgrave.site>
+From: Roland Dreier <rdreier-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [RFC 0/8] IB/srp: scaling and bug fixes for 2.6.38
+Date: Wed, 05 Jan 2011 10:09:46 -0800
+Message-ID: <adad3obfcid.fsf@cisco.com>
+References: <1293141332-12318-1-git-send-email-dillowda@ornl.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51695 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751983Ab1AEQuO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Jan 2011 11:50:14 -0500
-In-Reply-To: <1294245387.15356.11.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1293141332-12318-1-git-send-email-dillowda-1Heg1YXhbW8@public.gmane.org> (David
+	Dillow's message of "Thu, 23 Dec 2010 16:55:32 -0500")
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Tejun Heo <tj@kernel.org>, Linux SCSI <linux-scsi@vger.kernel.org>
 
-On 01/05/2011 11:36 AM, James Bottomley wrote:
-> On Wed, 2011-01-05 at 10:39 -0500, Peter Jones wrote:
->> Previously we were using strncmp in order to avoid having to include
->> whitespace in the devlist, but this means "HSV1000" matches a device
->> list entry that says "HSV100", which is wrong.  This patch adds
->> scsi_dh_strcmp(), which checks that any trailing characters in string 2
->> are the pad character 0x20.
-> 
-> Hmm, the cockup comes from dh rolling its own comparators.  Could you
-> just convert it to use the standard ones in scsi_devinfo.c?  There's an
-> example of how to do this in scsi_transport_spi.c
+I don't have anything to add beyond Bart's feedback -- this all appears
+quite well-tested and broken down into reasonable steps.  So I'd like to
+get your updated (and signed-off) patch queue for the 2.6.38 merge
+window if you get a chance.
 
-Oh, sure.  Thanks for the pointer.
-
--- 
-        Peter
-
-THE MAGIC WORDS ARE SQUEAMISH OSSIFRAGE
+Thanks,
+  Roland
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
