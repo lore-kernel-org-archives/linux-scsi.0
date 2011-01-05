@@ -1,26 +1,29 @@
-From: Roland Dreier <rdreier-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [RFC 0/8] IB/srp: scaling and bug fixes for 2.6.38
-Date: Wed, 05 Jan 2011 10:09:46 -0800
-Message-ID: <adad3obfcid.fsf@cisco.com>
-References: <1293141332-12318-1-git-send-email-dillowda@ornl.gov>
+From: Roland Dreier <rdreier@cisco.com>
+Subject: Re: [RFC 8/8] IB/srp: consolidate hot-path variables into cache lines
+Date: Wed, 05 Jan 2011 10:13:47 -0800
+Message-ID: <ada62u3fcbo.fsf@cisco.com>
+References: <1293139893-11678-1-git-send-email-dillowda@ornl.gov>
+	<1293139893-11678-9-git-send-email-dillowda@ornl.gov>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1293141332-12318-1-git-send-email-dillowda-1Heg1YXhbW8@public.gmane.org> (David
-	Dillow's message of "Thu, 23 Dec 2010 16:55:32 -0500")
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-3.cisco.com ([171.71.176.72]:17592 "EHLO
+	sj-iport-3.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751626Ab1AESNv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2011 13:13:51 -0500
+In-Reply-To: <1293139893-11678-9-git-send-email-dillowda@ornl.gov> (David
+	Dillow's message of "Thu, 23 Dec 2010 16:31:33 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Dillow <dillowda@ornl.gov>
+Cc: linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
 
-I don't have anything to add beyond Bart's feedback -- this all appears
-quite well-tested and broken down into reasonable steps.  So I'd like to
-get your updated (and signed-off) patch queue for the 2.6.38 merge
-window if you get a chance.
+Oh, I did have one minor comment I forgot about:
 
-Thanks,
-  Roland
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ > +	struct ib_cq	       *send_cq ____cacheline_aligned;
+
+This could actually be ____cacheline_aligned_in_smp I think, not that it
+matters at all in practice (although maybe someone will build a 1-core
+embedded initiator on a memory-constrained system someday??)
+
+ - R.
