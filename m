@@ -1,27 +1,40 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 5/8] BNX2I: Added TCP timestamps option support
-Date: Wed, 05 Jan 2011 14:52:17 -0600
-Message-ID: <4D24DA01.9060709@cs.wisc.edu>
-References: <Eddie Wai <eddie.wai@broadcom.com> <1294260267-17413-6-git-send-email-eddie.wai@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH 0/5] [SCSI] scsi_dh_alua: fixes and new dev support
+Date: Wed,  5 Jan 2011 16:00:19 -0500
+Message-ID: <1294261224-12599-1-git-send-email-snitzer@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:40914 "EHLO sabe.cs.wisc.edu"
+Received: from mx1.redhat.com ([209.132.183.28]:62982 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752053Ab1AEUzT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Jan 2011 15:55:19 -0500
-In-Reply-To: <1294260267-17413-6-git-send-email-eddie.wai@broadcom.com>
+	id S1752711Ab1AEVAe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jan 2011 16:00:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eddie Wai <eddie.wai@broadcom.com>
-Cc: James Bottomley <JBottomley@novell.com>, open-iscsi <open-iscsi@googlegroups.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Ben Li <benli@broadcom.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>
 
-On 01/05/2011 02:44 PM, Eddie Wai wrote:
-> This TCP timestamps option is a module wise feature which can be
-> enabled via the module param (time_stamps).  Once enabled, the TCP
-> connection will advertise timestamps as an option to get negotiated.
->
+James,
 
-Is there any reason this has to be module wide? Can the hw support 
-having it per connection?
+I'm sheparding these fixes and new dev support on behalf of Intel,
+Promise and NetApp.  Please review and queue for 2.6.39 if you're OK
+with the changes.
+
+Thanks,
+Mike
+
+Ilgu Hong (1):
+  scsi_dh_alua: Add Promise VTrak to dev list
+
+Joseph Gruher (3):
+  scsi_dh_alua: fix submit_stpg return
+  scsi_dh_alua: fix deadlock in stpg_endio
+  scsi_dh_alua: fix stpg_endio group state reporting
+
+Mike Snitzer (1):
+  scsi_dh_alua: add scalable ONTAP lun to dev list
+
+ drivers/scsi/device_handler/scsi_dh_alua.c |   16 ++++++++++------
+ 1 files changed, 10 insertions(+), 6 deletions(-)
+
+-- 
+1.7.3.4
+
