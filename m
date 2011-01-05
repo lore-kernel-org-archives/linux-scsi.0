@@ -1,70 +1,66 @@
-From: Josh Boyer <jwboyer@linux.vnet.ibm.com>
-Subject: [PATCH] Fix qla4xxx build on 32-bit platforms
-Date: Wed, 5 Jan 2011 09:14:05 -0500
-Message-ID: <20110105141404.GD2364@zod.rchland.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Peter Jones <pjones@redhat.com>
+Subject: [PATCH] Use a better comparitor for scsi vendor/model table matching.
+Date: Wed,  5 Jan 2011 10:39:55 -0500
+Message-ID: <1294241995-14270-1-git-send-email-pjones@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:39452 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260Ab1AEOPS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2011 09:15:18 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p05E5O4k028185
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Jan 2011 07:05:24 -0700
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p05EFDMT047538
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Jan 2011 07:15:13 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p05EFCYv029532
-	for <linux-scsi@vger.kernel.org>; Wed, 5 Jan 2011 07:15:13 -0700
-Content-Disposition: inline
+Received: from mx1.redhat.com ([209.132.183.28]:51906 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751097Ab1AEPka (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Jan 2011 10:40:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com
-Cc: Adrian Reber <adrian@lisas.de>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Tejun Heo <tj@kernel.org>, Linux SCSI <linux-scsi@vger.kernel.org>, Peter Jones <pjones@redhat.com>
 
-The qla4xxx driver uses readq/writeq unconditionally.  However, those
-functions are only defined in include/asm-generic/io.h when CONFIG_64BIT
-is set.  This leads to compile errors on 32-bit platforms such as ppc:
-
-drivers/scsi/qla4xxx/ql4_nx.c: In function 'qla4_8xxx_pci_mem_read_direct':
-drivers/scsi/qla4xxx/ql4_nx.c:717: error: implicit declaration of function 'readq'
-drivers/scsi/qla4xxx/ql4_nx.c: In function 'qla4_8xxx_pci_mem_write_direct':
-drivers/scsi/qla4xxx/ql4_nx.c:788: error: implicit declaration of function 'writeq'
-
-Guard their use in the driver with the same #ifdef.
-
-Reported-by: Adrian Reber <adrian@lisas.de>
-Signed-off-by: Josh Boyer <jwboyer@linux.vnet.ibm.com>
-
+Previously we were using strncmp in order to avoid having to include
+whitespace in the devlist, but this means "HSV1000" matches a device
+list entry that says "HSV100", which is wrong.  This patch adds
+scsi_dh_strcmp(), which checks that any trailing characters in string 2
+are the pad character 0x20.
 ---
+ drivers/scsi/device_handler/scsi_dh.c |   23 +++++++++++++++++++----
+ 1 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index 474b10d..792c3ae 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -713,9 +713,11 @@ static int qla4_8xxx_pci_mem_read_direct(struct scsi_qla_host *ha,
- 	case 4:
- 		*(u32 *)data = readl(addr);
- 		break;
-+#ifdef CONFIG_64BIT
- 	case 8:
- 		*(u64 *)data = readq(addr);
- 		break;
-+#endif
- 	default:
- 		ret = -1;
- 		break;
-@@ -784,9 +786,11 @@ qla4_8xxx_pci_mem_write_direct(struct scsi_qla_host *ha, u64 off,
- 	case 4:
- 		writel(*(u32 *)data, addr);
- 		break;
-+#ifdef CONFIG_64BIT
- 	case 8:
- 		writeq(*(u64 *)data, addr);
- 		break;
-+#endif
- 	default:
- 		ret = -1;
- 		break;
+diff --git a/drivers/scsi/device_handler/scsi_dh.c b/drivers/scsi/device_handler/scsi_dh.c
+index 6fae3d2..ec2eafb 100644
+--- a/drivers/scsi/device_handler/scsi_dh.c
++++ b/drivers/scsi/device_handler/scsi_dh.c
+@@ -71,16 +71,31 @@ scsi_dh_cache_lookup(struct scsi_device *sdev)
+ 	return found_dh;
+ }
+ 
++static int scsi_dh_strcmp(const char *a, const char *b)
++{
++	int blen = strlen(b);
++	int rc = strncmp(a, b, blen);
++	int i;
++
++	if (rc != 0)
++		return rc;
++
++	for (i = blen; a[i] != '\0'; i++) {
++		if (a[i] != ' ') {
++			return a[blen] < b[blen] ? -1 : 1;
++		}
++	}
++	return 0;
++}
++
+ static int scsi_dh_handler_lookup(struct scsi_device_handler *scsi_dh,
+ 				  struct scsi_device *sdev)
+ {
+ 	int i, found = 0;
+ 
+ 	for(i = 0; scsi_dh->devlist[i].vendor; i++) {
+-		if (!strncmp(sdev->vendor, scsi_dh->devlist[i].vendor,
+-			     strlen(scsi_dh->devlist[i].vendor)) &&
+-		    !strncmp(sdev->model, scsi_dh->devlist[i].model,
+-			     strlen(scsi_dh->devlist[i].model))) {
++		if (!scsi_dh_strcmp(sdev->vendor, scsi_dh->devlist[i].vendor) &&
++		    !scsi_dh_strcmp(sdev->model, scsi_dh->devlist[i].model)) {
+ 			found = 1;
+ 			break;
+ 		}
+-- 
+1.7.3.1
+
