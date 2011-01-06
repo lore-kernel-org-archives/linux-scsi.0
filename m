@@ -1,46 +1,99 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 00/11] hpsa: updates, January 2011
-Date: Thu, 06 Jan 2011 14:47:42 -0600
-Message-ID: <20110106204429.10753.92575.stgit@beardog.cce.hp.com>
+Subject: [PATCH 01/11] hpsa: defend against zero sized buffers in passthru
+	ioctls
+Date: Thu, 06 Jan 2011 14:47:48 -0600
+Message-ID: <20110106204747.10753.16087.stgit@beardog.cce.hp.com>
+References: <20110106204429.10753.92575.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0029.austin.hp.com ([15.216.28.36]:9161 "EHLO
-	g1t0029.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753050Ab1AFUrp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2011 15:47:45 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110106204429.10753.92575.stgit@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, akpm@linux-foundation.org, smcameron@yahoo.com
+List-Id: linux-scsi@vger.kernel.org
 
-The following series contains a few miscellaneous fixes for hpsa.
-The biggest change is to the reset_devices code to fix the
-saving/restoring of PCI registers so that the "doorbell"
-reset method now works on those controllers which support it.
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
+ drivers/scsi/hpsa.c |   36 ++++++++++++++++--------------------
+ 1 files changed, 16 insertions(+), 20 deletions(-)
 
-Stephen M. Cameron (11):
-      hpsa: defend against zero sized buffers in passthru ioctls
-      hpsa: fixup DMA address before freeing.
-      hpsa: Remove duplicate defines of DIRECT_LOOKUP_ constants
-      hpsa: fix board status waiting code
-      hpsa: Use kernel provided PCI state save and restore functions
-      hpsa: limit commands allocated on reset_devices
-      hpsa: do not reset unknown boards on reset_devices
-      hpsa: take the adapter lock in hpsa_wait_for_mode_change_ack
-      hpsa: allow driver to put controller in either simple or performant mode
-      hpsa: use usleep_range not msleep for small sleeps
-      hpsa: Add a per controller commands_outstanding entry in /sys
-
-
- Documentation/scsi/hpsa.txt |    6 +
- drivers/scsi/hpsa.c         |  210 ++++++++++++++++++++++---------------------
- drivers/scsi/hpsa.h         |    4 +
- drivers/scsi/hpsa_cmd.h     |    1 
- 4 files changed, 119 insertions(+), 102 deletions(-)
-
--- 
--- steve
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 12deffc..e4b5f3c 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2433,15 +2433,17 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		buff = kmalloc(iocommand.buf_size, GFP_KERNEL);
+ 		if (buff == NULL)
+ 			return -EFAULT;
+-	}
+-	if (iocommand.Request.Type.Direction == XFER_WRITE) {
+-		/* Copy the data into the buffer we created */
+-		if (copy_from_user(buff, iocommand.buf, iocommand.buf_size)) {
+-			kfree(buff);
+-			return -EFAULT;
++		if (iocommand.Request.Type.Direction == XFER_WRITE) {
++			/* Copy the data into the buffer we created */
++			if (copy_from_user(buff, iocommand.buf,
++				iocommand.buf_size)) {
++				kfree(buff);
++				return -EFAULT;
++			}
++		} else {
++			memset(buff, 0, iocommand.buf_size);
+ 		}
+-	} else
+-		memset(buff, 0, iocommand.buf_size);
++	}
+ 	c = cmd_special_alloc(h);
+ 	if (c == NULL) {
+ 		kfree(buff);
+@@ -2487,8 +2489,8 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		cmd_special_free(h, c);
+ 		return -EFAULT;
+ 	}
+-
+-	if (iocommand.Request.Type.Direction == XFER_READ) {
++	if (iocommand.Request.Type.Direction == XFER_READ &&
++		iocommand.buf_size > 0) {
+ 		/* Copy the data out of the buffer we created */
+ 		if (copy_to_user(iocommand.buf, buff, iocommand.buf_size)) {
+ 			kfree(buff);
+@@ -2581,14 +2583,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 	}
+ 	c->cmd_type = CMD_IOCTL_PEND;
+ 	c->Header.ReplyQueue = 0;
+-
+-	if (ioc->buf_size > 0) {
+-		c->Header.SGList = sg_used;
+-		c->Header.SGTotal = sg_used;
+-	} else {
+-		c->Header.SGList = 0;
+-		c->Header.SGTotal = 0;
+-	}
++	c->Header.SGList = c->Header.SGTotal = sg_used;
+ 	memcpy(&c->Header.LUN, &ioc->LUN_info, sizeof(c->Header.LUN));
+ 	c->Header.Tag.lower = c->busaddr;
+ 	memcpy(&c->Request, &ioc->Request, sizeof(c->Request));
+@@ -2605,7 +2600,8 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		}
+ 	}
+ 	hpsa_scsi_do_simple_cmd_core(h, c);
+-	hpsa_pci_unmap(h->pdev, c, sg_used, PCI_DMA_BIDIRECTIONAL);
++	if (sg_used)
++		hpsa_pci_unmap(h->pdev, c, sg_used, PCI_DMA_BIDIRECTIONAL);
+ 	check_ioctl_unit_attention(h, c);
+ 	/* Copy the error information out */
+ 	memcpy(&ioc->error_info, c->err_info, sizeof(ioc->error_info));
+@@ -2614,7 +2610,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		status = -EFAULT;
+ 		goto cleanup1;
+ 	}
+-	if (ioc->Request.Type.Direction == XFER_READ) {
++	if (ioc->Request.Type.Direction == XFER_READ && ioc->buf_size > 0) {
+ 		/* Copy the data out of the buffer we created */
+ 		BYTE __user *ptr = ioc->buf;
+ 		for (i = 0; i < sg_used; i++) {
