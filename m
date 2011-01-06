@@ -1,92 +1,71 @@
-From: "Eddie Wai" <eddie.wai-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH 0/8] Added bug fixes and several features for BNX2I
-Date: Wed, 5 Jan 2011 16:42:01 -0800
-Message-ID: <1294274522.1988.115.camel@ltirv-waie-lx1>
-References: <Eddie Wai <eddie.wai@broadcom.com>
- <1294260267-17413-1-git-send-email-eddie.wai@broadcom.com>
- <1294260724.16957.29.camel@mulgrave.site>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/5] [SCSI] scsi_dh_alua: fixes and new dev support
+Date: Wed, 05 Jan 2011 16:37:19 -0800
+Message-ID: <1294274239.14650.182.camel@haakon2.linux-iscsi.org>
+References: <1294261224-12599-1-git-send-email-snitzer@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncCKiEw6yjEhC7npTpBBoENKibZA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1294260724.16957.29.camel-0iu6Cu4xQGLYCGPCin2YbQ@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>
-Cc: Eddie Wai <waie-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Chan <mchan-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Anil Veerabhadrappa <anilgv-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>, Benjamin Li <benli-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:32777 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754464Ab1AFAnS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Jan 2011 19:43:18 -0500
+In-Reply-To: <1294261224-12599-1-git-send-email-snitzer@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-
-On Wed, 2011-01-05 at 12:52 -0800, James Bottomley wrote:
-> On Wed, 2011-01-05 at 12:44 -0800, Eddie Wai wrote:
-> > Hello,
-> >     
-> > This patch set contains two fixes and added various features as titled.
-> > The two fixes are:
-> > 1 - connection cleanup fix which fixes a chip panic issue
-> > 2 - nopout LUN field fix which fixes nopout timeouts
+On Wed, 2011-01-05 at 16:00 -0500, Mike Snitzer wrote:
+> James,
 > 
-> So the immediate question is do these need backporting to earlier
-> kernels via the stable tree (in which case a cc: stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org tag
-> would be needed)?
-Both bugs have been present in the code for quite a while.  I think its
-just recently that they got exposed.  The severity of the chip panic is
-higher as the chip will need to be reset to recover.  But it's not easy
-to trigger this and was found only by our PQA doing extraordinary tests.
-The nopout LUN bug is more common and will hamper I/O performance if the
-nopout LUN field is not 32-bit symmetric.  But the result is not
-catastrophic.
-
-I would recommend having these be backported to the stable tree if
-possible.  Let me know if you want to move forward with the stable tree
-patch.  Thanks.
+> I'm sheparding these fixes and new dev support on behalf of Intel,
+> Promise and NetApp.  Please review and queue for 2.6.39 if you're OK
+> with the changes.
 > 
-> James
+> Thanks,
+> Mike
 > 
+> Ilgu Hong (1):
+>   scsi_dh_alua: Add Promise VTrak to dev list
 > 
-> > The features added includes TCP timestamp, jumbo MTU, text pdu support
-> > for discovery offload, and 57712(E) support.
-> > 
-> > Please review.  Thanks.
-> > Eddie
-> > 
-> > Eddie Wai (8):
-> >   BNX2I: Allow ep CONNECT_FAILED condition to go through proper cleanup
-> >   BNX2I: Fixed the 32-bit swapping of the LUN field for nopouts for
-> >     5771X
-> >   BNX2I: Added handling for unsupported iSCSI offload hba
-> >   BNX2I: Added support for the 57712(E) devices
-> >   BNX2I: Added TCP timestamps option support
-> >   BNX2I: Added jumbo MTU support for the no shost case
-> >   BNX2I: Added iSCSI text pdu support for iSCSI offload
-> >   BNX2I: Updated to version 2.6.2.3
-> > 
-> >  drivers/net/bnx2x/bnx2x_main.c   |    7 --
-> >  drivers/scsi/bnx2i/bnx2i.h       |    5 +-
-> >  drivers/scsi/bnx2i/bnx2i_hwi.c   |  122 +++++++++++++++++++++++++++++++++++++-
-> >  drivers/scsi/bnx2i/bnx2i_init.c  |   33 ++++++++--
-> >  drivers/scsi/bnx2i/bnx2i_iscsi.c |   10 +++-
-> >  include/linux/pci_ids.h          |    2 +
-> >  6 files changed, 160 insertions(+), 19 deletions(-)
-> > 
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Joseph Gruher (3):
+>   scsi_dh_alua: fix submit_stpg return
+>   scsi_dh_alua: fix deadlock in stpg_endio
+>   scsi_dh_alua: fix stpg_endio group state reporting
 > 
+> Mike Snitzer (1):
+>   scsi_dh_alua: add scalable ONTAP lun to dev list
 > 
+>  drivers/scsi/device_handler/scsi_dh_alua.c |   16 ++++++++++------
+>  1 files changed, 10 insertions(+), 6 deletions(-)
 > 
 
+Hi Mike and James,
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+Would you mind including the following patch to add support for the
+target virtual backends drivers that natively support explict/implict
+ALUA to save the extra explict multipath configuration..?
+
+Thanks,
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 6b72932..dbf6c1a 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -731,6 +731,10 @@ static const struct scsi_dh_devlist alua_dev_list[] = {
+        {"Intel", "Multi-Flex"},
+        {"NETAPP", "LUN"},
+        {"AIX", "NVDISK"},
++       {"LIO-ORG", "IBLOCK"},
++       {"LIO-ORG", "FILEIO"},
++       {"LIO-ORG", "RAMDISK-MCP"},
++       {"LIO-ORG", "RAMDISK-DR"},
+        {NULL, NULL}
+ };
+ 
+
+
