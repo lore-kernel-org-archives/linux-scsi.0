@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 04/11] hpsa: fix board status waiting code
-Date: Thu, 06 Jan 2011 14:48:03 -0600
-Message-ID: <20110106204803.10753.99650.stgit@beardog.cce.hp.com>
+Subject: [PATCH 06/11] hpsa: limit commands allocated on reset_devices
+Date: Thu, 06 Jan 2011 14:48:13 -0600
+Message-ID: <20110106204813.10753.83892.stgit@beardog.cce.hp.com>
 References: <20110106204429.10753.92575.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,118 +15,26 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-After a reset, we should first wait for the board to become "not ready",
-and then wait for it to become "ready", instead of immediately
-waiting for it to become "ready", and do this waiting *after*
-restoring PCI config space registers.  Also, only wait 10 secs
-for board to become "not ready" after a reset (it should quickly
-become not ready.)
+This is to conserve memory in a memory-limited kdump scenario
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c |   44 ++++++++++++++++++++++++++++++++++++--------
- drivers/scsi/hpsa.h |    4 ++++
- 2 files changed, 40 insertions(+), 8 deletions(-)
+ drivers/scsi/hpsa.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index b345cc4..cfd30ad 100644
+index 82b94e2..688b243 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -173,6 +173,10 @@ static int __devinit hpsa_find_cfg_addrs(struct pci_dev *pdev,
- static int __devinit hpsa_pci_find_memory_BAR(struct pci_dev *pdev,
- 	unsigned long *memory_bar);
- static int __devinit hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id);
-+static int __devinit hpsa_wait_for_board_state(struct pci_dev *pdev,
-+	void __iomem *vaddr, int wait_for_ready);
-+#define BOARD_NOT_READY 0
-+#define BOARD_READY 1
- 
- static DEVICE_ATTR(raid_level, S_IRUGO, raid_level_show, NULL);
- static DEVICE_ATTR(lunid, S_IRUGO, lunid_show, NULL);
-@@ -3237,6 +3241,20 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	   need a little pause here */
- 	msleep(HPSA_POST_RESET_PAUSE_MSECS);
- 
-+	/* Wait for board to become not ready, then ready. */
-+	dev_info(&pdev->dev, "Waiting for board to become ready.\n");
-+	rc = hpsa_wait_for_board_state(pdev, vaddr, BOARD_NOT_READY);
-+	if (rc)
-+		dev_warn(&pdev->dev,
-+			"failed waiting for board to become not ready\n");
-+	rc = hpsa_wait_for_board_state(pdev, vaddr, BOARD_READY);
-+	if (rc) {
-+		dev_warn(&pdev->dev,
-+			"failed waiting for board to become ready\n");
-+		goto unmap_cfgtable;
-+	}
-+	dev_info(&pdev->dev, "board ready.\n");
-+
- 	/* Controller should be in simple mode at this point.  If it's not,
- 	 * It means we're on one of those controllers which doesn't support
- 	 * the doorbell reset method and on which the PCI power management reset
-@@ -3432,18 +3450,28 @@ static int __devinit hpsa_pci_find_memory_BAR(struct pci_dev *pdev,
- 	return -ENODEV;
- }
- 
--static int __devinit hpsa_wait_for_board_ready(struct ctlr_info *h)
-+static int __devinit hpsa_wait_for_board_state(struct pci_dev *pdev,
-+	void __iomem *vaddr, int wait_for_ready)
+@@ -3470,6 +3470,11 @@ static int __devinit hpsa_find_cfgtables(struct ctlr_info *h)
+ static void __devinit hpsa_get_max_perf_mode_cmds(struct ctlr_info *h)
  {
--	int i;
-+	int i, iterations;
- 	u32 scratchpad;
-+	if (wait_for_ready)
-+		iterations = HPSA_BOARD_READY_ITERATIONS;
-+	else
-+		iterations = HPSA_BOARD_NOT_READY_ITERATIONS;
- 
--	for (i = 0; i < HPSA_BOARD_READY_ITERATIONS; i++) {
--		scratchpad = readl(h->vaddr + SA5_SCRATCHPAD_OFFSET);
--		if (scratchpad == HPSA_FIRMWARE_READY)
--			return 0;
-+	for (i = 0; i < iterations; i++) {
-+		scratchpad = readl(vaddr + SA5_SCRATCHPAD_OFFSET);
-+		if (wait_for_ready) {
-+			if (scratchpad == HPSA_FIRMWARE_READY)
-+				return 0;
-+		} else {
-+			if (scratchpad != HPSA_FIRMWARE_READY)
-+				return 0;
-+		}
- 		msleep(HPSA_BOARD_READY_POLL_INTERVAL_MSECS);
- 	}
--	dev_warn(&h->pdev->dev, "board not ready, timed out.\n");
-+	dev_warn(&pdev->dev, "board not ready, timed out.\n");
- 	return -ENODEV;
- }
- 
-@@ -3635,7 +3663,7 @@ static int __devinit hpsa_pci_init(struct ctlr_info *h)
- 		err = -ENOMEM;
- 		goto err_out_free_res;
- 	}
--	err = hpsa_wait_for_board_ready(h);
-+	err = hpsa_wait_for_board_state(h->pdev, h->vaddr, BOARD_READY);
- 	if (err)
- 		goto err_out_free_res;
- 	err = hpsa_find_cfgtables(h);
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 19586e1..074d237 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -154,12 +154,16 @@ struct ctlr_info {
-  * HPSA_BOARD_READY_ITERATIONS are derived from those.
-  */
- #define HPSA_BOARD_READY_WAIT_SECS (120)
-+#define HPSA_BOARD_NOT_READY_WAIT_SECS (10)
- #define HPSA_BOARD_READY_POLL_INTERVAL_MSECS (100)
- #define HPSA_BOARD_READY_POLL_INTERVAL \
- 	((HPSA_BOARD_READY_POLL_INTERVAL_MSECS * HZ) / 1000)
- #define HPSA_BOARD_READY_ITERATIONS \
- 	((HPSA_BOARD_READY_WAIT_SECS * 1000) / \
- 		HPSA_BOARD_READY_POLL_INTERVAL_MSECS)
-+#define HPSA_BOARD_NOT_READY_ITERATIONS \
-+	((HPSA_BOARD_NOT_READY_WAIT_SECS * 1000) / \
-+		HPSA_BOARD_READY_POLL_INTERVAL_MSECS)
- #define HPSA_POST_RESET_PAUSE_MSECS (3000)
- #define HPSA_POST_RESET_NOOP_RETRIES (12)
- 
+ 	h->max_commands = readl(&(h->cfgtable->MaxPerformantModeCommands));
++
++	/* Limit commands in memory limited kdump scenario. */
++	if (reset_devices && h->max_commands > 32)
++		h->max_commands = 32;
++
+ 	if (h->max_commands < 16) {
+ 		dev_warn(&h->pdev->dev, "Controller reports "
+ 			"max supported commands of %d, an obvious lie. "
