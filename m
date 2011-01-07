@@ -1,46 +1,61 @@
-From: Maksim Rayskiy <maksim.rayskiy@gmail.com>
-Subject: Re: [linux-pm] [RFC] Deferred disk spinup during system resume
-Date: Thu, 6 Jan 2011 19:46:43 -0800
-Message-ID: <AANLkTimRvxEkU4Pfmp1V1od5drAfAby0j2wt_8iS2KzT@mail.gmail.com>
-References: <1294363046-28820-1-git-send-email-maksim.rayskiy@gmail.com>
-	<4D2685A1.6020708@pobox.com>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [-next] ERROR: "strchr" [drivers/target/target_core_mod.ko] undefined!
+Date: Fri, 7 Jan 2011 11:57:45 +0100
+Message-ID: <AANLkTinhrj38rbEt7ds971D9g-UF+xS0jmzO7X15ZaLn@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:52979 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751988Ab1AGDqo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2011 22:46:44 -0500
-Received: by iwn9 with SMTP id 9so16904268iwn.19
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Jan 2011 19:46:43 -0800 (PST)
-In-Reply-To: <4D2685A1.6020708@pobox.com>
+Received: from mail-fx0-f66.google.com ([209.85.161.66]:56424 "EHLO
+	mail-fx0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751683Ab1AGK5s convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jan 2011 05:57:48 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-scsi@vger.kernel.org, tj@kernel.org
+To: Nicholas Bellinger <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@suse.de>
+Cc: scsi <linux-scsi@vger.kernel.org>, Linux-Next <linux-next@vger.kernel.org>, linux-kernel@vger.kernel.org
 
->> Okay, I moved EH scheduling to ata_qc_issue(). But since now =A0STAR=
-T
->> taskfile is
->> created in ata_eh_maybe_verify() I do not see why the same code has =
-to
->> remain in ata_scsi_start_stop_xlat. Does it make sense?
->
-> The taskfile you are to pass to the hardware is created in
-> atapi_start_stop_xlat(), so you should not create a new taskfile in
-> ata_eh_maybe_verify()
->
+Since a few days, linux-next shows:
 
-I can only see that the taskfile is being created in
-ata_scsi_translate(). I want START request to return immediately, so I
-need to schedule a deferred execution.
-Do you suggest I create a new work_struct for this purpose (something
-like link->spinup_task)? If I do that, I do not need to use
-ata_port_schedule_eh() at all.
+| ERROR: "strchr" [drivers/target/target_core_mod.ko] undefined!
 
-Thanks,
-Maksim.
+in m68k allmodconfig builds
+(http://kisskb.ellerman.id.au/kisskb/buildresult/3754323/).
+
+I guess this is caused by the following 3 calls to strstr():
+
+drivers/target/target_core_configfs.c:
++       ptr =3D strstr(page, "1");
+
++       str =3D strstr(buf, "_");
+
++       str2 =3D strstr(str+1, "_");
+
+Some versions of gcc replace calls to strstr() with single-character
+"needle" string parameters by calls to strchr() behind our back.
+This causes linking errors if strchr() is defined as an inline function
+in <asm/string.h> (e.g. on m68k).
+
+You can prevent this by explicitly calling strchr() instead.
+
+Cfr. commit 59d309f9c8ef0bd01bf93cc0e758f1d810417bdb
+("kgdb: Replace strstr() by strchr() for single-character needles).
+
+Gr{oetje,eeting}s,
+
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-=
+m68k.org
+
+In personal conversations with technical people, I call myself a hacker=
+=2E But
+when I'm talking to journalists I just say "programmer" or something li=
+ke that.
+=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
+=A0 =C2=A0 =C2=A0 =C2=A0=C2=A0 =C2=A0=C2=A0 -- Linus Torvalds
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
