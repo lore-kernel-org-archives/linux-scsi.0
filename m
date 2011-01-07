@@ -1,53 +1,56 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [-next] ERROR: "strchr" [drivers/target/target_core_mod.ko]
- undefined!
-Date: Fri, 07 Jan 2011 09:44:04 -0600
-Message-ID: <1294415045.4895.16.camel@mulgrave.site>
-References: <AANLkTinhrj38rbEt7ds971D9g-UF+xS0jmzO7X15ZaLn@mail.gmail.com>
+From: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Subject: Re: target: Fix excessive stack usage
+Date: Fri, 7 Jan 2011 17:32:22 +0100
+Message-ID: <201101071732.27612.eike-kernel@sf-tec.de>
+References: <1294187361.7879.21.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed;
+  boundary="nextPart2407596.Z0znFfCdnp";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AANLkTinhrj38rbEt7ds971D9g-UF+xS0jmzO7X15ZaLn@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Nicholas Bellinger <nab@linux-iscsi.org>, scsi <linux-scsi@vger.kernel.org>, Linux-Next <linux-next@vger.kernel.org>, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.sf-mail.de ([62.27.20.61]:59854 "EHLO mail.sf-mail.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754394Ab1AGQef (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Jan 2011 11:34:35 -0500
+In-Reply-To: <1294187361.7879.21.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2011-01-07 at 11:57 +0100, Geert Uytterhoeven wrote:
-> Since a few days, linux-next shows:
-> 
-> | ERROR: "strchr" [drivers/target/target_core_mod.ko] undefined!
-> 
-> in m68k allmodconfig builds
-> (http://kisskb.ellerman.id.au/kisskb/buildresult/3754323/).
-> 
-> I guess this is caused by the following 3 calls to strstr():
-> 
-> drivers/target/target_core_configfs.c:
-> +       ptr = strstr(page, "1");
-> 
-> +       str = strstr(buf, "_");
-> 
-> +       str2 = strstr(str+1, "_");
-> 
-> Some versions of gcc replace calls to strstr() with single-character
-> "needle" string parameters by calls to strchr() behind our back.
-> This causes linking errors if strchr() is defined as an inline function
-> in <asm/string.h> (e.g. on m68k).
-> 
-> You can prevent this by explicitly calling strchr() instead.
-> 
-> Cfr. commit 59d309f9c8ef0bd01bf93cc0e758f1d810417bdb
-> ("kgdb: Replace strstr() by strchr() for single-character needles).
-> 
-> Gr{oetje,eeting}s,
+--nextPart2407596.Z0znFfCdnp
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-Surely the fix for this is not to inline it in m68k? If gcc is growing
-the capability to make these types of transformations, it's not going to
-stop at single entry string strstr().
+James Bottomley wrote:
 
-If you want to keep the fast inline, there is a way (which I forget) to
-drop an external reference as well, just in case.
+> @@ -1870,6 +1870,10 @@ static int __core_scsi3_update_aptpl_buf(
+>  				"No Registrations or Reservations\n");
+>  		return 0;
+>  	}
+> +	tmp =3D kmalloc(1024, GFP_KERNEL);
+> +	if (!tmp)
+> +		return -1;
 
-James
+Shouldn't this return useful errorcodes all over the place instead of just =
+=2D1?=20
+Like -ENOMEM?
+
+Eike
+
+--nextPart2407596.Z0znFfCdnp
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.15 (GNU/Linux)
+
+iEYEABECAAYFAk0nQBsACgkQXKSJPmm5/E6KPQCeJdvhdhyUvwLHD50DHjG6Pz3D
+rLQAnipfmENbmutmHTpnDB2cnbga1Ap3
+=w46Q
+-----END PGP SIGNATURE-----
+
+--nextPart2407596.Z0znFfCdnp--
