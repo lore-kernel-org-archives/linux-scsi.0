@@ -1,54 +1,64 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: target: Fix excessive stack usage
-Date: Fri, 07 Jan 2011 12:55:30 -0800
-Message-ID: <1294433730.2895.135.camel@haakon2.linux-iscsi.org>
-References: <1294187361.7879.21.camel@mulgrave.site>
-	 <201101071732.27612.eike-kernel@sf-tec.de>
+Subject: Re: [-next] ERROR: "strchr" [drivers/target/target_core_mod.ko]
+	undefined!
+Date: Fri, 07 Jan 2011 13:04:34 -0800
+Message-ID: <1294434274.2895.146.camel@haakon2.linux-iscsi.org>
+References: <AANLkTinhrj38rbEt7ds971D9g-UF+xS0jmzO7X15ZaLn@mail.gmail.com>
+	 <1294415045.4895.16.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:53442 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751760Ab1AGVB3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jan 2011 16:01:29 -0500
-In-Reply-To: <201101071732.27612.eike-kernel@sf-tec.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1294415045.4895.16.camel@mulgrave.site>
+Sender: linux-next-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, scsi <linux-scsi@vger.kernel.org>, Linux-Next <linux-next@vger.kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2011-01-07 at 17:32 +0100, Rolf Eike Beer wrote:
-> James Bottomley wrote:
+On Fri, 2011-01-07 at 09:44 -0600, James Bottomley wrote:
+> On Fri, 2011-01-07 at 11:57 +0100, Geert Uytterhoeven wrote:
+> > Since a few days, linux-next shows:
+> > 
+> > | ERROR: "strchr" [drivers/target/target_core_mod.ko] undefined!
+> > 
+> > in m68k allmodconfig builds
+> > (http://kisskb.ellerman.id.au/kisskb/buildresult/3754323/).
+> > 
+> > I guess this is caused by the following 3 calls to strstr():
+> > 
+> > drivers/target/target_core_configfs.c:
+> > +       ptr = strstr(page, "1");
+> > 
+> > +       str = strstr(buf, "_");
+> > 
+> > +       str2 = strstr(str+1, "_");
+> > 
+> > Some versions of gcc replace calls to strstr() with single-character
+> > "needle" string parameters by calls to strchr() behind our back.
+> > This causes linking errors if strchr() is defined as an inline function
+> > in <asm/string.h> (e.g. on m68k).
+> > 
+> > You can prevent this by explicitly calling strchr() instead.
+> > 
+> > Cfr. commit 59d309f9c8ef0bd01bf93cc0e758f1d810417bdb
+> > ("kgdb: Replace strstr() by strchr() for single-character needles).
+> > 
+> > Gr{oetje,eeting}s,
 > 
-> > @@ -1870,6 +1870,10 @@ static int __core_scsi3_update_aptpl_buf(
-> >  				"No Registrations or Reservations\n");
-> >  		return 0;
-> >  	}
-> > +	tmp = kmalloc(1024, GFP_KERNEL);
-> > +	if (!tmp)
-> > +		return -1;
+> Surely the fix for this is not to inline it in m68k? If gcc is growing
+> the capability to make these types of transformations, it's not going to
+> stop at single entry string strstr().
 > 
-> Shouldn't this return useful errorcodes all over the place instead of just -1? 
-> Like -ENOMEM?
+> If you want to keep the fast inline, there is a way (which I forget) to
+> drop an external reference as well, just in case.
 > 
 
-Hi Eike,
+Hi guys,
 
-So I ended up dropping this allocation from James' original patch in
-favour of shrinking the local stack usage for tmp from 1024 to 512 bytes
-in order to avoid the extra kmalloc() here..
+So I really don't have a strong perference here, but would tend to agree
+with James that this should probably be fixed in m68k..  If this is too
+much of an pain for you Geert I am happy to make this change.
 
-However there are still a number of cases in target_core_pr.c code where
-we 'return -1' to signal a failure.  This was originally because these
-failures never get propagated to any code that makes sense of errno, and
-all of the conditional checks are looking for a non zero return.
-
-So IMHO changing this does not provide much benefit, but I would still
-accept a patch if you are interested.  ;)
-
-Best,
+Thanks!
 
 --nab
-
-
