@@ -1,127 +1,448 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: target: problems with Persistent reservations, iscsi
-Date: Thu, 06 Jan 2011 14:51:53 -0800
-Message-ID: <1294354313.2895.93.camel@haakon2.linux-iscsi.org>
-References: <a17263ef-dd96-468e-ad85-0f987cdacb4f@j25g2000yqa.googlegroups.com>
-	 <1294184625.29002.29.camel@haakon2.linux-iscsi.org>
-	 <20110105162720.GA4494@omega17.zumbi.com.ar>
-	 <1294272793.14650.172.camel@haakon2.linux-iscsi.org>
-	 <AANLkTik-A3sGw6t8b8pj9Q0vMoycTTiZiine-DK=pahZ@mail.gmail.com>
-	 <1294351583.2895.87.camel@haakon2.linux-iscsi.org>
+From: maksim.rayskiy@gmail.com
+Subject: [linux-pm] [RFC] Deferred disk spinup during system resume
+Date: Thu, 6 Jan 2011 17:17:26 -0800
+Message-ID: <1294363046-28820-1-git-send-email-maksim.rayskiy@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:52128 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752484Ab1AFW5w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2011 17:57:52 -0500
-In-Reply-To: <1294351583.2895.87.camel@haakon2.linux-iscsi.org>
+Received: from mms2.broadcom.com ([216.31.210.18]:1447 "EHLO mms2.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755034Ab1AGBTT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Jan 2011 20:19:19 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gustavo Panizzo <gfaraway@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
+To: linux-scsi@vger.kernel.org, tj@kernel.org, jgarzik@pobox.com
+Cc: Maksim Rayskiy <maksim.rayskiy@gmail.com>
 
-On Thu, 2011-01-06 at 14:06 -0800, Nicholas A. Bellinger wrote:
-> On Thu, 2011-01-06 at 18:22 -0300, Gustavo Panizzo wrote:
-> > On Wed, Jan 5, 2011 at 9:13 PM, Nicholas A. Bellinger
-> > <nab@linux-iscsi.org> wrote:
+Jeff, 
 
-<SNIP>
+Okay, I moved EH scheduling to ata_qc_issue(). But since now  START taskfile is 
+created in ata_eh_maybe_verify() I do not see why the same code has to 
+remain in ata_scsi_start_stop_xlat. Does it make sense?
 
-> > >
-> > > So that said, there are two more tests I would like you to run to help isolate this particular
-> > > issue wrt to PR operation with demo mode (eg: generate_node_acls=1)
-> > >
-> > > *) Please go ahead and enable 'cache_dynamic_acls' for the TargetName+TargetPortalGroupTag endpoint
-> > > with the following and retest using the Vertias test suite.
-> > >
-> > > echo 1 > /sys/kernel/config/target/iscsi/iqn.2010.ar.com.zumbi:disk0/tpgt_1/attrib/cache_dynamic_acls
-> > it failed :(
-> > dmesg.test1 is the log file
-> > >
-> > > This will keep around the dynamically generated struct se_node_acls
-> > > which does have an effect on certain PR operations, but thus far you are
-> > > the first to the NULL pointer deference issue with demo mode PR
-> > > operation.
-> > >
-> > > *) From there, go ahead and disable demo mode all together for the TargetName+TargetPortalGroupTag
-> > > endpoint with:
-> > >
-> > > echo 0 > /sys/kernel/config/target/iscsi/iqn.2010.ar.com.zumbi:disk0/tpgt_1/attrib/generate_node_acls
-> > >
-> > > and fix the NodeACLs to match the actual initiator side IQNs and retest again.
-> > it failed too
-> > dmesg.test2 is the log file
-> > >
-> 
-> Ok, it appears that this OOPs is actually breakage for UNIT_ATTENTION
-> conditions from the addition of > 16 byte extended CDB support added
-> during the v4.0 development cycle last fall.  I am currently testing
-> with the patch below to ensure the T_TASK(cmd)->t_task_cdb pointer is
-> setup before the UA check in transport_generic_cmd_sequencer() can
-> return an exception, and will be verifying the fix shortly.
-> 
-> Please re-test your .37-rc7 setup with the following patch with explict
-> NodeACLs and/or TPG demo mode operation w/ cache_dynamic_acls=1 and let
-> us know your results.
-> 
-> Thanks!
-> 
+Maksim.
 
-Hi again Gustavo,
+Signed-off-by: Maksim Rayskiy <maksim.rayskiy@gmail.com>
+---
+ drivers/ata/libata-core.c |    8 ++
+ drivers/ata/libata-eh.c   |   45 ++++++++
+ drivers/ata/libata-scsi.c |   24 +----
+ drivers/char/defkeymap.c  |  262 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/libata.h    |    4 +-
+ 5 files changed, 323 insertions(+), 20 deletions(-)
+ create mode 100644 drivers/char/defkeymap.c
 
-I have been able to reproduce the issue and verify the bugfix with the
-patch below.  The following patch has now been pushed into lio-4.0 and
-master (upgraded recently to .37-FINAL) and sent out seperately to
-linux-scsi to be picked up for mainline.
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 7f77c67..0a9d400 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -4978,6 +4978,14 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
+ 	struct ata_link *link = qc->dev->link;
+ 	u8 prot = qc->tf.protocol;
+ 
++	if (unlikely(link->eh_info.dev_action[qc->dev->devno] &
++			ATA_EH_VERIFY)) {
++		ata_port_schedule_eh(ap);
++		qc->scsidone(qc->scsicmd);
++		ata_qc_free(qc);
++		return;
++	}
++
+ 	/* Make sure only one non-NCQ command is outstanding.  The
+ 	 * check is skipped for old EH because it reuses active qc to
+ 	 * request ATAPI sense.
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 5e59050..3823bc6 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -3252,6 +3252,48 @@ static int ata_eh_maybe_retry_flush(struct ata_device *dev)
+ 	return rc;
+ }
+ 
++static int ata_eh_maybe_verify(struct ata_device *dev)
++{
++	struct ata_link *link = dev->link;
++	struct ata_taskfile tf;
++	unsigned int err_mask;
++	int rc = 0;
++
++	ata_eh_about_to_do(link, dev, ATA_EH_VERIFY);
++
++	ata_tf_init(dev, &tf);
++
++	if (dev->flags & ATA_DFLAG_LBA) {
++		tf.flags |= ATA_TFLAG_LBA;
++
++		tf.lbah = 0x0;
++		tf.lbam = 0x0;
++		tf.lbal = 0x0;
++		tf.device |= ATA_LBA;
++	} else {
++		/* CHS */
++		tf.lbal = 0x1; /* sect */
++		tf.lbam = 0x0; /* cyl low */
++		tf.lbah = 0x0; /* cyl high */
++	}
++
++	tf.command = ATA_CMD_VERIFY;	/* READ VERIFY */
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_LBA48 | ATA_TFLAG_DEVICE;
++	tf.protocol = ATA_PROT_NODATA;
++
++	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
++	if (err_mask) {
++		ata_dev_printk(dev, KERN_WARNING,
++			       "READ_VERIFY failed Emask 0x%x\n", err_mask);
++		rc = -EIO;
++	}
++
++	/* don't retry VERIFY */
++	ata_eh_done(link, dev, ATA_EH_VERIFY);
++
++	return rc;
++}
++
+ /**
+  *	ata_eh_set_lpm - configure SATA interface power management
+  *	@link: link to configure power management
+@@ -3738,6 +3780,9 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+ 			rc = ata_eh_maybe_retry_flush(dev);
+ 			if (rc)
+ 				goto rest_fail;
++			rc = ata_eh_maybe_verify(dev);
++			if (rc)
++				goto rest_fail;
+ 		}
+ 
+ 	config_lpm:
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 66aa4be..aadcd0d 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1276,6 +1276,7 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth,
+  */
+ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ {
++	struct ata_device *dev = qc->dev;
+ 	struct scsi_cmnd *scmd = qc->scsicmd;
+ 	struct ata_taskfile *tf = &qc->tf;
+ 	const u8 *cdb = scmd->cmnd;
+@@ -1293,25 +1294,10 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
+ 	if (((cdb[4] >> 4) & 0xf) != 0)
+ 		goto invalid_fld;       /* power conditions not supported */
+ 
+-	if (cdb[4] & 0x1) {
+-		tf->nsect = 1;	/* 1 sector, lba=0 */
+-
+-		if (qc->dev->flags & ATA_DFLAG_LBA) {
+-			tf->flags |= ATA_TFLAG_LBA;
+-
+-			tf->lbah = 0x0;
+-			tf->lbam = 0x0;
+-			tf->lbal = 0x0;
+-			tf->device |= ATA_LBA;
+-		} else {
+-			/* CHS */
+-			tf->lbal = 0x1; /* sect */
+-			tf->lbam = 0x0; /* cyl low */
+-			tf->lbah = 0x0; /* cyl high */
+-		}
+-
+-		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
+-	} else {
++	if (cdb[4] & 0x1)
++		/* spinup is asynchronous */
++		dev->link->eh_info.dev_action[dev->devno] |= ATA_EH_VERIFY;
++	else {
+ 		/* Some odd clown BIOSen issue spindown on power off (ACPI S4
+ 		 * or S5) causing some drives to spin up and down again.
+ 		 */
+diff --git a/drivers/char/defkeymap.c b/drivers/char/defkeymap.c
+new file mode 100644
+index 0000000..d2208df
+--- /dev/null
++++ b/drivers/char/defkeymap.c
+@@ -0,0 +1,262 @@
++/* Do not edit this file! It was automatically generated by   */
++/*    loadkeys --mktable defkeymap.map > defkeymap.c          */
++
++#include <linux/types.h>
++#include <linux/keyboard.h>
++#include <linux/kd.h>
++
++u_short plain_map[NR_KEYS] = {
++	0xf200,	0xf01b,	0xf031,	0xf032,	0xf033,	0xf034,	0xf035,	0xf036,
++	0xf037,	0xf038,	0xf039,	0xf030,	0xf02d,	0xf03d,	0xf07f,	0xf009,
++	0xfb71,	0xfb77,	0xfb65,	0xfb72,	0xfb74,	0xfb79,	0xfb75,	0xfb69,
++	0xfb6f,	0xfb70,	0xf05b,	0xf05d,	0xf201,	0xf702,	0xfb61,	0xfb73,
++	0xfb64,	0xfb66,	0xfb67,	0xfb68,	0xfb6a,	0xfb6b,	0xfb6c,	0xf03b,
++	0xf027,	0xf060,	0xf700,	0xf05c,	0xfb7a,	0xfb78,	0xfb63,	0xfb76,
++	0xfb62,	0xfb6e,	0xfb6d,	0xf02c,	0xf02e,	0xf02f,	0xf700,	0xf30c,
++	0xf703,	0xf020,	0xf207,	0xf100,	0xf101,	0xf102,	0xf103,	0xf104,
++	0xf105,	0xf106,	0xf107,	0xf108,	0xf109,	0xf208,	0xf209,	0xf307,
++	0xf308,	0xf309,	0xf30b,	0xf304,	0xf305,	0xf306,	0xf30a,	0xf301,
++	0xf302,	0xf303,	0xf300,	0xf310,	0xf206,	0xf200,	0xf03c,	0xf10a,
++	0xf10b,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf30e,	0xf702,	0xf30d,	0xf01c,	0xf701,	0xf205,	0xf114,	0xf603,
++	0xf118,	0xf601,	0xf602,	0xf117,	0xf600,	0xf119,	0xf115,	0xf116,
++	0xf11a,	0xf10c,	0xf10d,	0xf11b,	0xf11c,	0xf110,	0xf311,	0xf11d,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++};
++
++u_short shift_map[NR_KEYS] = {
++	0xf200,	0xf01b,	0xf021,	0xf040,	0xf023,	0xf024,	0xf025,	0xf05e,
++	0xf026,	0xf02a,	0xf028,	0xf029,	0xf05f,	0xf02b,	0xf07f,	0xf009,
++	0xfb51,	0xfb57,	0xfb45,	0xfb52,	0xfb54,	0xfb59,	0xfb55,	0xfb49,
++	0xfb4f,	0xfb50,	0xf07b,	0xf07d,	0xf201,	0xf702,	0xfb41,	0xfb53,
++	0xfb44,	0xfb46,	0xfb47,	0xfb48,	0xfb4a,	0xfb4b,	0xfb4c,	0xf03a,
++	0xf022,	0xf07e,	0xf700,	0xf07c,	0xfb5a,	0xfb58,	0xfb43,	0xfb56,
++	0xfb42,	0xfb4e,	0xfb4d,	0xf03c,	0xf03e,	0xf03f,	0xf700,	0xf30c,
++	0xf703,	0xf020,	0xf207,	0xf10a,	0xf10b,	0xf10c,	0xf10d,	0xf10e,
++	0xf10f,	0xf110,	0xf111,	0xf112,	0xf113,	0xf213,	0xf203,	0xf307,
++	0xf308,	0xf309,	0xf30b,	0xf304,	0xf305,	0xf306,	0xf30a,	0xf301,
++	0xf302,	0xf303,	0xf300,	0xf310,	0xf206,	0xf200,	0xf03e,	0xf10a,
++	0xf10b,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf30e,	0xf702,	0xf30d,	0xf200,	0xf701,	0xf205,	0xf114,	0xf603,
++	0xf20b,	0xf601,	0xf602,	0xf117,	0xf600,	0xf20a,	0xf115,	0xf116,
++	0xf11a,	0xf10c,	0xf10d,	0xf11b,	0xf11c,	0xf110,	0xf311,	0xf11d,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++};
++
++u_short altgr_map[NR_KEYS] = {
++	0xf200,	0xf200,	0xf200,	0xf040,	0xf200,	0xf024,	0xf200,	0xf200,
++	0xf07b,	0xf05b,	0xf05d,	0xf07d,	0xf05c,	0xf200,	0xf200,	0xf200,
++	0xfb71,	0xfb77,	0xf918,	0xfb72,	0xfb74,	0xfb79,	0xfb75,	0xfb69,
++	0xfb6f,	0xfb70,	0xf200,	0xf07e,	0xf201,	0xf702,	0xf914,	0xfb73,
++	0xf917,	0xf919,	0xfb67,	0xfb68,	0xfb6a,	0xfb6b,	0xfb6c,	0xf200,
++	0xf200,	0xf200,	0xf700,	0xf200,	0xfb7a,	0xfb78,	0xf916,	0xfb76,
++	0xf915,	0xfb6e,	0xfb6d,	0xf200,	0xf200,	0xf200,	0xf700,	0xf30c,
++	0xf703,	0xf200,	0xf207,	0xf50c,	0xf50d,	0xf50e,	0xf50f,	0xf510,
++	0xf511,	0xf512,	0xf513,	0xf514,	0xf515,	0xf208,	0xf202,	0xf911,
++	0xf912,	0xf913,	0xf30b,	0xf90e,	0xf90f,	0xf910,	0xf30a,	0xf90b,
++	0xf90c,	0xf90d,	0xf90a,	0xf310,	0xf206,	0xf200,	0xf07c,	0xf516,
++	0xf517,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf30e,	0xf702,	0xf30d,	0xf200,	0xf701,	0xf205,	0xf114,	0xf603,
++	0xf118,	0xf601,	0xf602,	0xf117,	0xf600,	0xf119,	0xf115,	0xf116,
++	0xf11a,	0xf10c,	0xf10d,	0xf11b,	0xf11c,	0xf110,	0xf311,	0xf11d,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++};
++
++u_short ctrl_map[NR_KEYS] = {
++	0xf200,	0xf200,	0xf200,	0xf000,	0xf01b,	0xf01c,	0xf01d,	0xf01e,
++	0xf01f,	0xf07f,	0xf200,	0xf200,	0xf01f,	0xf200,	0xf008,	0xf200,
++	0xf011,	0xf017,	0xf005,	0xf012,	0xf014,	0xf019,	0xf015,	0xf009,
++	0xf00f,	0xf010,	0xf01b,	0xf01d,	0xf201,	0xf702,	0xf001,	0xf013,
++	0xf004,	0xf006,	0xf007,	0xf008,	0xf00a,	0xf00b,	0xf00c,	0xf200,
++	0xf007,	0xf000,	0xf700,	0xf01c,	0xf01a,	0xf018,	0xf003,	0xf016,
++	0xf002,	0xf00e,	0xf00d,	0xf200,	0xf20e,	0xf07f,	0xf700,	0xf30c,
++	0xf703,	0xf000,	0xf207,	0xf100,	0xf101,	0xf102,	0xf103,	0xf104,
++	0xf105,	0xf106,	0xf107,	0xf108,	0xf109,	0xf208,	0xf204,	0xf307,
++	0xf308,	0xf309,	0xf30b,	0xf304,	0xf305,	0xf306,	0xf30a,	0xf301,
++	0xf302,	0xf303,	0xf300,	0xf310,	0xf206,	0xf200,	0xf200,	0xf10a,
++	0xf10b,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf30e,	0xf702,	0xf30d,	0xf01c,	0xf701,	0xf205,	0xf114,	0xf603,
++	0xf118,	0xf601,	0xf602,	0xf117,	0xf600,	0xf119,	0xf115,	0xf116,
++	0xf11a,	0xf10c,	0xf10d,	0xf11b,	0xf11c,	0xf110,	0xf311,	0xf11d,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++};
++
++u_short shift_ctrl_map[NR_KEYS] = {
++	0xf200,	0xf200,	0xf200,	0xf000,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf01f,	0xf200,	0xf200,	0xf200,
++	0xf011,	0xf017,	0xf005,	0xf012,	0xf014,	0xf019,	0xf015,	0xf009,
++	0xf00f,	0xf010,	0xf200,	0xf200,	0xf201,	0xf702,	0xf001,	0xf013,
++	0xf004,	0xf006,	0xf007,	0xf008,	0xf00a,	0xf00b,	0xf00c,	0xf200,
++	0xf200,	0xf200,	0xf700,	0xf200,	0xf01a,	0xf018,	0xf003,	0xf016,
++	0xf002,	0xf00e,	0xf00d,	0xf200,	0xf200,	0xf200,	0xf700,	0xf30c,
++	0xf703,	0xf200,	0xf207,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf208,	0xf200,	0xf307,
++	0xf308,	0xf309,	0xf30b,	0xf304,	0xf305,	0xf306,	0xf30a,	0xf301,
++	0xf302,	0xf303,	0xf300,	0xf310,	0xf206,	0xf200,	0xf200,	0xf200,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf30e,	0xf702,	0xf30d,	0xf200,	0xf701,	0xf205,	0xf114,	0xf603,
++	0xf118,	0xf601,	0xf602,	0xf117,	0xf600,	0xf119,	0xf115,	0xf116,
++	0xf11a,	0xf10c,	0xf10d,	0xf11b,	0xf11c,	0xf110,	0xf311,	0xf11d,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++};
++
++u_short alt_map[NR_KEYS] = {
++	0xf200,	0xf81b,	0xf831,	0xf832,	0xf833,	0xf834,	0xf835,	0xf836,
++	0xf837,	0xf838,	0xf839,	0xf830,	0xf82d,	0xf83d,	0xf87f,	0xf809,
++	0xf871,	0xf877,	0xf865,	0xf872,	0xf874,	0xf879,	0xf875,	0xf869,
++	0xf86f,	0xf870,	0xf85b,	0xf85d,	0xf80d,	0xf702,	0xf861,	0xf873,
++	0xf864,	0xf866,	0xf867,	0xf868,	0xf86a,	0xf86b,	0xf86c,	0xf83b,
++	0xf827,	0xf860,	0xf700,	0xf85c,	0xf87a,	0xf878,	0xf863,	0xf876,
++	0xf862,	0xf86e,	0xf86d,	0xf82c,	0xf82e,	0xf82f,	0xf700,	0xf30c,
++	0xf703,	0xf820,	0xf207,	0xf500,	0xf501,	0xf502,	0xf503,	0xf504,
++	0xf505,	0xf506,	0xf507,	0xf508,	0xf509,	0xf208,	0xf209,	0xf907,
++	0xf908,	0xf909,	0xf30b,	0xf904,	0xf905,	0xf906,	0xf30a,	0xf901,
++	0xf902,	0xf903,	0xf900,	0xf310,	0xf206,	0xf200,	0xf83c,	0xf50a,
++	0xf50b,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf30e,	0xf702,	0xf30d,	0xf01c,	0xf701,	0xf205,	0xf114,	0xf603,
++	0xf118,	0xf210,	0xf211,	0xf117,	0xf600,	0xf119,	0xf115,	0xf116,
++	0xf11a,	0xf10c,	0xf10d,	0xf11b,	0xf11c,	0xf110,	0xf311,	0xf11d,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++};
++
++u_short ctrl_alt_map[NR_KEYS] = {
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf811,	0xf817,	0xf805,	0xf812,	0xf814,	0xf819,	0xf815,	0xf809,
++	0xf80f,	0xf810,	0xf200,	0xf200,	0xf201,	0xf702,	0xf801,	0xf813,
++	0xf804,	0xf806,	0xf807,	0xf808,	0xf80a,	0xf80b,	0xf80c,	0xf200,
++	0xf200,	0xf200,	0xf700,	0xf200,	0xf81a,	0xf818,	0xf803,	0xf816,
++	0xf802,	0xf80e,	0xf80d,	0xf200,	0xf200,	0xf200,	0xf700,	0xf30c,
++	0xf703,	0xf200,	0xf207,	0xf500,	0xf501,	0xf502,	0xf503,	0xf504,
++	0xf505,	0xf506,	0xf507,	0xf508,	0xf509,	0xf208,	0xf200,	0xf307,
++	0xf308,	0xf309,	0xf30b,	0xf304,	0xf305,	0xf306,	0xf30a,	0xf301,
++	0xf302,	0xf303,	0xf300,	0xf20c,	0xf206,	0xf200,	0xf200,	0xf50a,
++	0xf50b,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++	0xf30e,	0xf702,	0xf30d,	0xf200,	0xf701,	0xf205,	0xf114,	0xf603,
++	0xf118,	0xf601,	0xf602,	0xf117,	0xf600,	0xf119,	0xf115,	0xf20c,
++	0xf11a,	0xf10c,	0xf10d,	0xf11b,	0xf11c,	0xf110,	0xf311,	0xf11d,
++	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,	0xf200,
++};
++
++ushort *key_maps[MAX_NR_KEYMAPS] = {
++	plain_map, shift_map, altgr_map, NULL,
++	ctrl_map, shift_ctrl_map, NULL, NULL,
++	alt_map, NULL, NULL, NULL,
++	ctrl_alt_map, NULL
++};
++
++unsigned int keymap_count = 7;
++
++/*
++ * Philosophy: most people do not define more strings, but they who do
++ * often want quite a lot of string space. So, we statically allocate
++ * the default and allocate dynamically in chunks of 512 bytes.
++ */
++
++char func_buf[] = {
++	'\033', '[', '[', 'A', 0, 
++	'\033', '[', '[', 'B', 0, 
++	'\033', '[', '[', 'C', 0, 
++	'\033', '[', '[', 'D', 0, 
++	'\033', '[', '[', 'E', 0, 
++	'\033', '[', '1', '7', '~', 0, 
++	'\033', '[', '1', '8', '~', 0, 
++	'\033', '[', '1', '9', '~', 0, 
++	'\033', '[', '2', '0', '~', 0, 
++	'\033', '[', '2', '1', '~', 0, 
++	'\033', '[', '2', '3', '~', 0, 
++	'\033', '[', '2', '4', '~', 0, 
++	'\033', '[', '2', '5', '~', 0, 
++	'\033', '[', '2', '6', '~', 0, 
++	'\033', '[', '2', '8', '~', 0, 
++	'\033', '[', '2', '9', '~', 0, 
++	'\033', '[', '3', '1', '~', 0, 
++	'\033', '[', '3', '2', '~', 0, 
++	'\033', '[', '3', '3', '~', 0, 
++	'\033', '[', '3', '4', '~', 0, 
++	'\033', '[', '1', '~', 0, 
++	'\033', '[', '2', '~', 0, 
++	'\033', '[', '3', '~', 0, 
++	'\033', '[', '4', '~', 0, 
++	'\033', '[', '5', '~', 0, 
++	'\033', '[', '6', '~', 0, 
++	'\033', '[', 'M', 0, 
++	'\033', '[', 'P', 0, 
++};
++
++char *funcbufptr = func_buf;
++int funcbufsize = sizeof(func_buf);
++int funcbufleft = 0;          /* space left */
++
++char *func_table[MAX_NR_FUNC] = {
++	func_buf + 0,
++	func_buf + 5,
++	func_buf + 10,
++	func_buf + 15,
++	func_buf + 20,
++	func_buf + 25,
++	func_buf + 31,
++	func_buf + 37,
++	func_buf + 43,
++	func_buf + 49,
++	func_buf + 55,
++	func_buf + 61,
++	func_buf + 67,
++	func_buf + 73,
++	func_buf + 79,
++	func_buf + 85,
++	func_buf + 91,
++	func_buf + 97,
++	func_buf + 103,
++	func_buf + 109,
++	func_buf + 115,
++	func_buf + 120,
++	func_buf + 125,
++	func_buf + 130,
++	func_buf + 135,
++	func_buf + 140,
++	func_buf + 145,
++	NULL,
++	NULL,
++	func_buf + 149,
++	NULL,
++};
++
++struct kbdiacruc accent_table[MAX_DIACR] = {
++	{'`', 'A', 0300},	{'`', 'a', 0340},
++	{'\'', 'A', 0301},	{'\'', 'a', 0341},
++	{'^', 'A', 0302},	{'^', 'a', 0342},
++	{'~', 'A', 0303},	{'~', 'a', 0343},
++	{'"', 'A', 0304},	{'"', 'a', 0344},
++	{'O', 'A', 0305},	{'o', 'a', 0345},
++	{'0', 'A', 0305},	{'0', 'a', 0345},
++	{'A', 'A', 0305},	{'a', 'a', 0345},
++	{'A', 'E', 0306},	{'a', 'e', 0346},
++	{',', 'C', 0307},	{',', 'c', 0347},
++	{'`', 'E', 0310},	{'`', 'e', 0350},
++	{'\'', 'E', 0311},	{'\'', 'e', 0351},
++	{'^', 'E', 0312},	{'^', 'e', 0352},
++	{'"', 'E', 0313},	{'"', 'e', 0353},
++	{'`', 'I', 0314},	{'`', 'i', 0354},
++	{'\'', 'I', 0315},	{'\'', 'i', 0355},
++	{'^', 'I', 0316},	{'^', 'i', 0356},
++	{'"', 'I', 0317},	{'"', 'i', 0357},
++	{'-', 'D', 0320},	{'-', 'd', 0360},
++	{'~', 'N', 0321},	{'~', 'n', 0361},
++	{'`', 'O', 0322},	{'`', 'o', 0362},
++	{'\'', 'O', 0323},	{'\'', 'o', 0363},
++	{'^', 'O', 0324},	{'^', 'o', 0364},
++	{'~', 'O', 0325},	{'~', 'o', 0365},
++	{'"', 'O', 0326},	{'"', 'o', 0366},
++	{'/', 'O', 0330},	{'/', 'o', 0370},
++	{'`', 'U', 0331},	{'`', 'u', 0371},
++	{'\'', 'U', 0332},	{'\'', 'u', 0372},
++	{'^', 'U', 0333},	{'^', 'u', 0373},
++	{'"', 'U', 0334},	{'"', 'u', 0374},
++	{'\'', 'Y', 0335},	{'\'', 'y', 0375},
++	{'T', 'H', 0336},	{'t', 'h', 0376},
++	{'s', 's', 0337},	{'"', 'y', 0377},
++	{'s', 'z', 0337},	{'i', 'j', 0377},
++};
++
++unsigned int accent_table_size = 68;
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index d947b12..5d91fd0 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -326,9 +326,11 @@ enum {
+ 	ATA_EH_HARDRESET	= (1 << 2), /* meaningful only in ->prereset */
+ 	ATA_EH_RESET		= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
+ 	ATA_EH_ENABLE_LINK	= (1 << 3),
++	ATA_EH_VERIFY		= (1 << 4), /* used to force spin up */
+ 	ATA_EH_PARK		= (1 << 5), /* unload heads and stop I/O */
+ 
+-	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PARK,
++	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PARK |
++				  ATA_EH_VERIFY,
+ 	ATA_EH_ALL_ACTIONS	= ATA_EH_REVALIDATE | ATA_EH_RESET |
+ 				  ATA_EH_ENABLE_LINK,
+ 
+-- 
+1.7.0.4
 
-target: Fix T_TASK(cmd)->t_task_cdb assignement breakage
-http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=ff49f510a3a837ec6bd87eccac65bff31d5de561
-
-Thanks for your bug report!
-
---nab
-
-> --nab
-> 
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 2b59890..02e92a3 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -1897,13 +1897,6 @@ int transport_generic_allocate_tasks(
->  
->         transport_device_setup_cmd(cmd);
->         /*
-> -        * See if this is a CDB which follows SAM, also grab a function
-> -        * pointer to see if we need to do extra work.
-> -        */
-> -       ret = transport_generic_cmd_sequencer(cmd, cdb);
-> -       if (ret < 0)
-> -               return ret;
-> -       /*
->          * Ensure that the received CDB is less than the max (252 + 8) bytes
->          * for VARIABLE_LENGTH_CMD
->          */
-> @@ -1935,6 +1928,14 @@ int transport_generic_allocate_tasks(
->          */
->         memcpy(T_TASK(cmd)->t_task_cdb, cdb, scsi_command_size(cdb));
->         /*
-> +        * Setup the received CDB based on SCSI defined opcodes and
-> +        * perform unit attention, persistent reservations and ALUA
-> +        * checks for virtual device backends.
-> +        */
-> +       ret = transport_generic_cmd_sequencer(cmd, cdb);
-> +       if (ret < 0)
-> +               return ret;
-> +       /*
->          * Check for SAM Task Attribute Emulation
->          */
->         if (transport_check_alloc_task_attr(cmd) < 0) {
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
