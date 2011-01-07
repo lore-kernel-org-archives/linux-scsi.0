@@ -1,170 +1,53 @@
-From: maksim.rayskiy@gmail.com
-Subject: [RFC] Deferred disk spinup during system resume
-Date: Thu, 6 Jan 2011 17:27:06 -0800
-Message-ID: <1294363626-28901-1-git-send-email-maksim.rayskiy@gmail.com>
+From: DuanZhenzhong <zhenzhong.duan@oracle.com>
+Subject: Re: how do you try to get the firmware if not exist
+Date: Fri, 07 Jan 2011 10:00:30 +0800
+Message-ID: <4D2673BE.5080601@oracle.com>
+References: <4D2528E2.3090904@oracle.com> <20110106164345.GF27190@tux1.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1804 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755276Ab1AGB2Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Jan 2011 20:28:24 -0500
+Received: from rcsinet10.oracle.com ([148.87.113.121]:47585 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752672Ab1AGCAa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Jan 2011 21:00:30 -0500
+In-Reply-To: <20110106164345.GF27190@tux1.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, tj@kernel.org, jgarzik@pobox.com
+To: djwong@us.ibm.com
+Cc: James.Bottomley@HansenPartnership.com, Joe Jin <joe.jin@oracle.com>, Guru Anbalagane <Guru.Anbalagane@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Sorry, put some irrelevant stuff in the previous patch
+Sorry, just ignore this question, see joe's. thanks
 
----
- drivers/ata/libata-core.c |    8 ++++++++
- drivers/ata/libata-eh.c   |   45 +++++++++++++++++++++++++++++++++++++++++++++
- drivers/ata/libata-scsi.c |   24 +++++-------------------
- include/linux/libata.h    |    4 +++-
- 4 files changed, 61 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 7f77c67..0a9d400 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -4978,6 +4978,14 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
- 	struct ata_link *link = qc->dev->link;
- 	u8 prot = qc->tf.protocol;
- 
-+	if (unlikely(link->eh_info.dev_action[qc->dev->devno] &
-+			ATA_EH_VERIFY)) {
-+		ata_port_schedule_eh(ap);
-+		qc->scsidone(qc->scsicmd);
-+		ata_qc_free(qc);
-+		return;
-+	}
-+
- 	/* Make sure only one non-NCQ command is outstanding.  The
- 	 * check is skipped for old EH because it reuses active qc to
- 	 * request ATAPI sense.
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 5e59050..3823bc6 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -3252,6 +3252,48 @@ static int ata_eh_maybe_retry_flush(struct ata_device *dev)
- 	return rc;
- }
- 
-+static int ata_eh_maybe_verify(struct ata_device *dev)
-+{
-+	struct ata_link *link = dev->link;
-+	struct ata_taskfile tf;
-+	unsigned int err_mask;
-+	int rc = 0;
-+
-+	ata_eh_about_to_do(link, dev, ATA_EH_VERIFY);
-+
-+	ata_tf_init(dev, &tf);
-+
-+	if (dev->flags & ATA_DFLAG_LBA) {
-+		tf.flags |= ATA_TFLAG_LBA;
-+
-+		tf.lbah = 0x0;
-+		tf.lbam = 0x0;
-+		tf.lbal = 0x0;
-+		tf.device |= ATA_LBA;
-+	} else {
-+		/* CHS */
-+		tf.lbal = 0x1; /* sect */
-+		tf.lbam = 0x0; /* cyl low */
-+		tf.lbah = 0x0; /* cyl high */
-+	}
-+
-+	tf.command = ATA_CMD_VERIFY;	/* READ VERIFY */
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_LBA48 | ATA_TFLAG_DEVICE;
-+	tf.protocol = ATA_PROT_NODATA;
-+
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0, 0);
-+	if (err_mask) {
-+		ata_dev_printk(dev, KERN_WARNING,
-+			       "READ_VERIFY failed Emask 0x%x\n", err_mask);
-+		rc = -EIO;
-+	}
-+
-+	/* don't retry VERIFY */
-+	ata_eh_done(link, dev, ATA_EH_VERIFY);
-+
-+	return rc;
-+}
-+
- /**
-  *	ata_eh_set_lpm - configure SATA interface power management
-  *	@link: link to configure power management
-@@ -3738,6 +3780,9 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
- 			rc = ata_eh_maybe_retry_flush(dev);
- 			if (rc)
- 				goto rest_fail;
-+			rc = ata_eh_maybe_verify(dev);
-+			if (rc)
-+				goto rest_fail;
- 		}
- 
- 	config_lpm:
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 66aa4be..aadcd0d 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1276,6 +1276,7 @@ int ata_scsi_change_queue_depth(struct scsi_device *sdev, int queue_depth,
-  */
- static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
- {
-+	struct ata_device *dev = qc->dev;
- 	struct scsi_cmnd *scmd = qc->scsicmd;
- 	struct ata_taskfile *tf = &qc->tf;
- 	const u8 *cdb = scmd->cmnd;
-@@ -1293,25 +1294,10 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
- 	if (((cdb[4] >> 4) & 0xf) != 0)
- 		goto invalid_fld;       /* power conditions not supported */
- 
--	if (cdb[4] & 0x1) {
--		tf->nsect = 1;	/* 1 sector, lba=0 */
--
--		if (qc->dev->flags & ATA_DFLAG_LBA) {
--			tf->flags |= ATA_TFLAG_LBA;
--
--			tf->lbah = 0x0;
--			tf->lbam = 0x0;
--			tf->lbal = 0x0;
--			tf->device |= ATA_LBA;
--		} else {
--			/* CHS */
--			tf->lbal = 0x1; /* sect */
--			tf->lbam = 0x0; /* cyl low */
--			tf->lbah = 0x0; /* cyl high */
--		}
--
--		tf->command = ATA_CMD_VERIFY;	/* READ VERIFY */
--	} else {
-+	if (cdb[4] & 0x1)
-+		/* spinup is asynchronous */
-+		dev->link->eh_info.dev_action[dev->devno] |= ATA_EH_VERIFY;
-+	else {
- 		/* Some odd clown BIOSen issue spindown on power off (ACPI S4
- 		 * or S5) causing some drives to spin up and down again.
- 		 */
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index d947b12..5d91fd0 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -326,9 +326,11 @@ enum {
- 	ATA_EH_HARDRESET	= (1 << 2), /* meaningful only in ->prereset */
- 	ATA_EH_RESET		= ATA_EH_SOFTRESET | ATA_EH_HARDRESET,
- 	ATA_EH_ENABLE_LINK	= (1 << 3),
-+	ATA_EH_VERIFY		= (1 << 4), /* used to force spin up */
- 	ATA_EH_PARK		= (1 << 5), /* unload heads and stop I/O */
- 
--	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PARK,
-+	ATA_EH_PERDEV_MASK	= ATA_EH_REVALIDATE | ATA_EH_PARK |
-+				  ATA_EH_VERIFY,
- 	ATA_EH_ALL_ACTIONS	= ATA_EH_REVALIDATE | ATA_EH_RESET |
- 				  ATA_EH_ENABLE_LINK,
- 
--- 
-1.7.0.4
+--=20
+Regards
+zhenzhong
 
 
+Darrick J. Wong =E5=86=99=E9=81=93:
+> On Thu, Jan 06, 2011 at 10:28:50AM +0800, DuanZhenzhong wrote:
+>  =20
+>> Hi James and djwong,
+>>
+>> How to you try to get the firmware if not exist? thanks
+>>    =20
+>
+> Uh... are you asking how a driver responds when it asks for firmware =
+and
+> receives nothing in response?  Or are you asking how to find firmware=
+ for a
+> specific driver?
+>
+> [ccing linux-scsi given the references to aic94xx in the next message=
+=2E..]
+>
+> --D
+>  =20
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
