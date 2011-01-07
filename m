@@ -1,56 +1,49 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: target: Fix excessive stack usage
-Date: Fri, 7 Jan 2011 17:32:22 +0100
-Message-ID: <201101071732.27612.eike-kernel@sf-tec.de>
-References: <1294187361.7879.21.camel@mulgrave.site>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 1/3] hpsa: fix use of uninitialized variable in
+	hpsa_add_msa2xxx_enclosure_device()
+Date: Fri, 07 Jan 2011 10:55:43 -0600
+Message-ID: <20110107165543.14259.80663.stgit@beardog.cce.hp.com>
+References: <20110107165247.14259.45944.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2407596.Z0znFfCdnp";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:59854 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754394Ab1AGQef (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Jan 2011 11:34:35 -0500
-In-Reply-To: <1294187361.7879.21.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110107165247.14259.45944.stgit@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, akpm@linux-foundation.org, smcameron@yahoo.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
---nextPart2407596.Z0znFfCdnp
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-James Bottomley wrote:
+hpsa: fix use of uninitialized variable in hpsa_add_msa2xxx_enclosure_device()
 
-> @@ -1870,6 +1870,10 @@ static int __core_scsi3_update_aptpl_buf(
->  				"No Registrations or Reservations\n");
->  		return 0;
->  	}
-> +	tmp =3D kmalloc(1024, GFP_KERNEL);
-> +	if (!tmp)
-> +		return -1;
+Thanks to Scott Teel for noticing this.
 
-Shouldn't this return useful errorcodes all over the place instead of just =
-=2D1?=20
-Like -ENOMEM?
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ drivers/scsi/hpsa.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-Eike
-
---nextPart2407596.Z0znFfCdnp
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.15 (GNU/Linux)
-
-iEYEABECAAYFAk0nQBsACgkQXKSJPmm5/E6KPQCeJdvhdhyUvwLHD50DHjG6Pz3D
-rLQAnipfmENbmutmHTpnDB2cnbga1Ap3
-=w46Q
------END PGP SIGNATURE-----
-
---nextPart2407596.Z0znFfCdnp--
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index c255f46..c6c13b0 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -1617,6 +1617,8 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 	if (lun == 0) /* if lun is 0, then obviously we have a lun 0. */
+ 		return 0;
+ 
++	memset(scsi3addr, 0, 8);
++	scsi3addr[3] = target;
+ 	if (is_hba_lunid(scsi3addr))
+ 		return 0; /* Don't add the RAID controller here. */
+ 
+@@ -1631,8 +1633,6 @@ static int add_msa2xxx_enclosure_device(struct ctlr_info *h,
+ 		return 0;
+ 	}
+ 
+-	memset(scsi3addr, 0, 8);
+-	scsi3addr[3] = target;
+ 	if (hpsa_update_device_info(h, scsi3addr, this_device))
+ 		return 0;
+ 	(*nmsa2xxx_enclosures)++;
