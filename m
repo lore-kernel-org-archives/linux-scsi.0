@@ -1,83 +1,88 @@
-From: "Karen Xie" <kxie@chelsio.com>
-Subject: RE: [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info
-Date: Fri, 7 Jan 2011 16:09:03 -0800
-Message-ID: <8A71B368A89016469F72CD08050AD33408D571D6@maui.asicdesigners.com>
-References: <201101072245.p07MjdBm027576@localhost6.localdomain6> <4D27A500.2020009@cs.wisc.edu> <4D27A628.7040008@cs.wisc.edu>
+From: "Bhanu Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [RFC PATCH v2 0/8] adding support to FCoE transport
+Date: Sat, 8 Jan 2011 01:33:49 +0000
+Message-ID: <1294450430.4676.672.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+References: <20110107174027.14631.47077.stg.yi.zou@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+ charset=cp1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:8764 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752385Ab1AHAL1 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Jan 2011 19:11:27 -0500
-Content-class: urn:content-classes:message
+Received: from mms3.broadcom.com ([216.31.210.19]:1960 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752837Ab1AHBeE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Jan 2011 20:34:04 -0500
+In-Reply-To: <20110107174027.14631.47077.stg.yi.zou@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi@googlegroups.com
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: Yi Zou <yi.zou@intel.com>
+Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi, Mike,
+On Fri, 2011-01-07 at 09:42 -0800, Yi Zou wrote:
+> This is the RFC v2 of adding fcoe transport to support vendor specific FCoE
+> transport into the existing Open-FCoE framework.
+> 
+> v1:
+> Initial post for adding fcoe transport:
+> https://lists.open-fcoe.org/pipermail/devel/2010-December/010865.html
+> Follow-up comments & discussions:
+> https://lists.open-fcoe.org/pipermail/devel/2011-January/010890.html
+> 
+> v2:
+> 1. Per Joe's comment, renamed the libfcoe_fip.c to be fcoe_ctlr.c. I
+> also renamed the new ibfcoe_transport.c to be fcoe_transport.c.
+> 2. Per Bhanu's comment, I have merged the three follow-up patches
+> from Bhanu with the following changes in fcoe_parse_buffer():
+> a) Though not a problem of the existing fcoe-util since the sysfs
+> entry is changing to libfcoe anyway, I still want to fill the buffer
+> of drv_name with default "fcoe" so default behavior is still the same
+> w/o changing cfg-ethx.
+> b) Fixed the '\n' ending in the input buffer in fcoe_parse_buffer, we still
+> need that proper formatting logic from the original fcoe_if_to_netdev(),
+> otherwise the ifname and drv_name will be messed up, causing the lookup for
+> netdev and transport to fail.
+> 
+> Testing Notes:
+> Did the checkpatch and tested w/ overnight stress FCoE traffic on 2 LUNs using
+> fcoe.ko as the default fcoe transport, that seems to be working ok. However,
+> loop create/destroy testing is needed before this gets committed eventually.
 
-Yes, the message size is different between cxgb3i and cxgb4i. I am not
-using the pool mainly because this is on the tx side and tx skb
-recycling does not seem to be utilized much.
+Thanks Yi. bnx2fc patches got installed cleanly on top of your patches,
+and we were able run FCoE IO traffic, and will leave it running for the
+weekend.
 
-Karen
+Thanks,
+Bhanu
+> 
+> thanks,
+> yi
+> 
+> ---
+> 
+> Yi Zou (8):
+>       fcoe: convert fcoe.ko to become an fcoe transport provider driver
+>       fcoe: prepare fcoe for using fcoe transport
+>       libfcoe: include fcoe_transport.c into kernel libfcoe module
+>       libfcoe: remove libfcoe.c, use the same fcoe_ctlr.c instead
+>       libfcoe: rename libfcoe.c to fcoe_cltr.c for the coming fcoe_transport.c
+>       libfcoe: add implementation to support fcoe transport
+>       libfcoe: add fcoe_transport structure defines to include/scsi/libfcoe.h
+>       libfcoe: move logging macros into the local libfcoe.h header file
+> 
+> 
+>  drivers/scsi/fcoe/Makefile         |    2 
+>  drivers/scsi/fcoe/fcoe.c           |  183 +-
+>  drivers/scsi/fcoe/fcoe_ctlr.c      | 2682 ++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/fcoe/fcoe_transport.c |  548 +++++++
+>  drivers/scsi/fcoe/libfcoe.c        | 2708 ------------------------------------
+>  drivers/scsi/fcoe/libfcoe.h        |   31 
+>  include/scsi/libfcoe.h             |   43 +
+>  7 files changed, 3367 insertions(+), 2830 deletions(-)
+>  create mode 100644 drivers/scsi/fcoe/fcoe_ctlr.c
+>  create mode 100644 drivers/scsi/fcoe/fcoe_transport.c
+>  delete mode 100644 drivers/scsi/fcoe/libfcoe.c
+>  create mode 100644 drivers/scsi/fcoe/libfcoe.h
+> 
 
------Original Message-----
-From: Mike Christie [mailto:michaelc@cs.wisc.edu] 
-Sent: Friday, January 07, 2011 3:48 PM
-To: open-iscsi@googlegroups.com
-Cc: Karen Xie; linux-scsi@vger.kernel.org;
-James.Bottomley@HansenPartnership.com
-Subject: Re: [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info
 
-On 01/07/2011 05:42 PM, Mike Christie wrote:
-> On 01/07/2011 04:45 PM, kxie@chelsio.com wrote:
->> [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info.
->>
->> From: Karen Xie<kxie@chelsio.com>
->>
->> Remove gl_skb from cxgbi_ddp_info as it is only used by cxgb3i.
->>
->> Signed-off-by: Karen Xie<kxie@chelsio.com>
->> ---
->> drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 51
->> +++++-------------------------------
->> drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 2 -
->> drivers/scsi/cxgbi/libcxgbi.c | 15 +----------
->> drivers/scsi/cxgbi/libcxgbi.h | 3 --
->> 4 files changed, 8 insertions(+), 63 deletions(-)
->>
->> diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
->> b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
->> index a129a17..e2362b9 100644
->> --- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
->> +++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
->> @@ -1108,10 +1108,11 @@ static int ddp_set_map(struct cxgbi_sock
-*csk,
->> struct cxgbi_pagepod_hdr *hdr,
->> csk, idx, npods, gl);
->>
->> for (i = 0; i< npods; i++, idx++, pm_addr += PPOD_SIZE) {
->> - struct sk_buff *skb = ddp->gl_skb[idx];
->> + struct sk_buff *skb = alloc_wr(sizeof(struct ulp_mem_io) +
->> + PPOD_SIZE, 0, GFP_ATOMIC);
->
->
-> I think you want to try to avoid lots of little GFP_ATOMIC allocations
-> in the main IO path, because it probably is bad for performance and
-> because they can fail and you can be stuck with no mem but other
-> allocations needing to write data out.
->
-> Did you want to just make each driver allocate a pool/map, then
-allocate
-> from that pool/map in these places (cxgb4i does a similar skb
-allocation
-> at these points right?)?
->
 
-Oh yeah, is the complication that the cxgb3i driver uses 1 size for the 
-objects but cxgb4i is variable?
