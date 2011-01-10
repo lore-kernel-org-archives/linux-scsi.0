@@ -1,58 +1,58 @@
-From: "Karen Xie" <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-Subject: RE: [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info
-Date: Mon, 10 Jan 2011 14:57:16 -0800
-Message-ID: <8A71B368A89016469F72CD08050AD33408D574F5@maui.asicdesigners.com>
-References: <201101072245.p07MjdBm027576@localhost6.localdomain6> <4D27A500.2020009@cs.wisc.edu> <4D27A628.7040008@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D571D6@maui.asicdesigners.com> <4D27E6AA.5010304@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D5743D@maui.asicdesigners.com> <4D2B6494.8070406@cs.wisc.edu>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: kxie@chelsio.com
+Subject: [PATCH] cxgb3i: fixed connection problem with iscsi private ip
+Date: Mon, 10 Jan 2011 15:15:26 -0800
+Message-ID: <201101102315.p0ANFQ8u015283@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <open-iscsi+bncCNvLk8fsDxC_na7pBBoEtdOYiQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Content-class: urn:content-classes:message
-To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([67.207.112.58]:27086 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751292Ab1AJXPg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2011 18:15:36 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+Cc: kxie@chelsio.com, davem@davemloft.net, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-Yes, that's bug this patch is fixing too. The current implementation
-does not replenish the gl_skb after the initial allocation.
+[PATCH] cxgb3i: fixed connection problem with iscsi private ip
 
-I am working on an update which utilizing a pool of skbs, and those skbs
-would be used not only for the ddp setups (like the current gl_skb) but
-also for the connection management like the rx credit returns. So this
-skb pool will not reside in cxgbi_ddp_info, so still need to get rid of
-gl_skb. I guess this patch can be viewed as an interim fix.
+From: Karen Xie <kxie@chelsio.com>
 
------Original Message-----
-From: Mike Christie [mailto:michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org] 
-Sent: Monday, January 10, 2011 11:57 AM
-To: Karen Xie
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org; linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org;
-James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
-Subject: Re: [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info
+fixed the connection problem when the private iscsi ipv4 address is provisioned on the interface.
 
-On 01/10/2011 11:52 AM, Karen Xie wrote:
-> Hi, Mike,
->
-> What I mean is even if cxgb3i maintains a pool of skbs (equivalent of
-> gl_skbs). Once they are handed down to the network layer cxgb3 they
-will
-> still be freed by the network driver (on the tx path).
->
+Signed-off-by: Karen Xie <kxie@chelsio.com>
+---
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.h |   18 ++++++++++++++----
+ 1 files changed, 15 insertions(+), 4 deletions(-)
 
-So hows does it work now? It seems ddp_alloc_gl_skb is called at device 
-setup time, then when IO is queued/xmited we run ddp_set_map which 
-allocates from gl_skbs. If when you transmit the IO, the driver frees 
-the skb, how does gl_skb get replenished?
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
+index 5f5e339..bed14db 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
+@@ -24,10 +24,20 @@
+ 
+ extern cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS];
+ 
+-#define cxgb3i_get_private_ipv4addr(ndev) \
+-	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr)
+-#define cxgb3i_set_private_ipv4addr(ndev, addr) \
+-	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr) = addr
++static inline unsigned int cxgb3i_get_private_ipv4addr(struct net_device *ndev)
++{
++	return ((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr;
++}
++
++static inline void cxgb3i_set_private_ipv4addr(struct net_device *ndev,
++					unsigned int addr)
++{
++	struct port_info *pi =  (struct port_info *)netdev_priv(ndev);
++
++	pi->iscsic.flags = addr ? 1 : 0;
++	pi->iscsi_ipv4addr = addr;
++	if (addr)
++		memcpy(pi->iscsic.mac_addr, ndev->dev_addr, ETH_ALEN);
++}
+ 
+ struct cpl_iscsi_hdr_norss {
+ 	union opcode_tid ot;
