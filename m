@@ -1,51 +1,35 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: SCSI reusing tags during error recovery
-Date: Mon, 10 Jan 2011 10:21:16 -0800 (PST)
-Message-ID: <537305.92125.qm@web31812.mail.mud.yahoo.com>
-Reply-To: ltuikov@yahoo.com
+From: Jens Axboe <jaxboe@fusionio.com>
+Subject: Re: [PATCH] [BLOCK] Allow tag 0 to be generated
+Date: Mon, 10 Jan 2011 19:49:50 +0100
+Message-ID: <4D2B54CE.3080301@fusionio.com>
+References: <1266.36669.qm@web31807.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31812.mail.mud.yahoo.com ([68.142.207.75]:25797 "HELO
-	web31812.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753919Ab1AJSVS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2011 13:21:18 -0500
+Received: from mx2.fusionio.com ([64.244.102.31]:47424 "EHLO mx2.fusionio.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754008Ab1AJSt5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jan 2011 13:49:57 -0500
+In-Reply-To: <1266.36669.qm@web31807.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>
+To: "ltuikov@yahoo.com" <ltuikov@yahoo.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Observed is on the wire, the following scenario:
+On 2011-01-10 18:26, Luben Tuikov wrote:
+> Commit 67869fb9fdfa04503b250d59e086c15f1698aea0
 
-0: Tag A (READ) -->
-  (Times out)
-1: Tag X (TMF ABORT TASK, TTBM=A) -->
-2: Tag X (TMR FUNCTION COMPLETE) <--
-3: Tag A (TUR) -->
-4: Tag A (TUR status GOOD) <--
-5: Tag A+2 (some command) -->
-...
+That commit isn't a valid sha in my tree. What commit do you mean?
 
-Undoubtedly resulting from the SCSI layer reusing the request
-structure of the timed out Tag A to issue the Test Unit Ready
-command, sequence 3.
+> skipped tag 0 by virtue of setting last_tag to
+> 0. This commit sets it to -1, in order to start
+> and loop over from 0, thus generating tags
+> [0,max_tag-1], instead of [1,max_tag-1].
 
-However, if the task manager were unable to abort Tag A and
-returned a different task management result, then the TUR would
-complete with CHECK CONDITION (ABORTED COMMAND, OVERLAPPED
-COMMANDS ATTEMPTED). Not all transports require the task router
-to implement overlapped tag checking, and in most it is optional.
-The TUR should go out with Tag A+1.
+Irregardless, patch looks good. That's definitely a bug. Thanks!
 
-The SCSI layer should ideally, not perform error recovery ("error
-handling" to use Linux' own terminology) on behalf of a timed out
-request, but allow higher layers to issue TMF only based on a
-ITLQ (tag, a number) or ITL (LUN, a structure) or IT nexus
-(target port).
 
-A previous issue I raised, tag generation for tags of task
-management functions, can be found here:
-http://marc.info/?l=linux-scsi&m=128902337522890&w=2
-
-   Luben
+-- 
+Jens Axboe
 
