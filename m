@@ -1,65 +1,31 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] configfs: change depends -> select SYSFS
-Date: Mon, 10 Jan 2011 11:45:08 -0800
-Message-ID: <1294688708-24986-1-git-send-email-nab@linux-iscsi.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info
+Date: Mon, 10 Jan 2011 13:57:08 -0600
+Message-ID: <4D2B6494.8070406@cs.wisc.edu>
+References: <201101072245.p07MjdBm027576@localhost6.localdomain6> <4D27A500.2020009@cs.wisc.edu> <4D27A628.7040008@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D571D6@maui.asicdesigners.com> <4D27E6AA.5010304@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D5743D@maui.asicdesigners.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp102.sbc.mail.re3.yahoo.com ([66.196.96.85]:47298 "HELO
-	smtp102.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754431Ab1AJTwa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2011 14:52:30 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:34726 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751565Ab1AJUA0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jan 2011 15:00:26 -0500
+In-Reply-To: <8A71B368A89016469F72CD08050AD33408D5743D@maui.asicdesigners.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <joel.becker@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-next <linux-next@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Stephen Rothwell <sfr@canb.auug.org.au>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Karen Xie <kxie@chelsio.com>
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 01/10/2011 11:52 AM, Karen Xie wrote:
+> Hi, Mike,
+>
+> What I mean is even if cxgb3i maintains a pool of skbs (equivalent of
+> gl_skbs). Once they are handed down to the network layer cxgb3 they will
+> still be freed by the network driver (on the tx path).
+>
 
-Hi Joel,
-
-This is a fix for linux-next that Randy reported over the holidays but has not
-made it in just yet.   Please have a look and give your signoff at your earliest
-convience.
-
-Thanks!
-
-----------------------------------------------------------------------------------
-
-This patch changes configfs to select SYSFS to fix the following:
-
-warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
-
-This patch also fixes whitespace breakage in the 'help' section.
-
-Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- fs/configfs/Kconfig |   14 +++++++-------
- 1 files changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/fs/configfs/Kconfig b/fs/configfs/Kconfig
-index 13587cc..0e4bd23 100644
---- a/fs/configfs/Kconfig
-+++ b/fs/configfs/Kconfig
-@@ -1,11 +1,11 @@
- config CONFIGFS_FS
- 	tristate "Userspace-driven configuration filesystem"
--	depends on SYSFS
-+	select SYSFS
- 	help
--	  configfs is a ram-based filesystem that provides the converse
--	  of sysfs's functionality. Where sysfs is a filesystem-based
--	  view of kernel objects, configfs is a filesystem-based manager
--	  of kernel objects, or config_items.
-+	configfs is a RAM-based filesystem that provides the converse
-+	of sysfs's functionality. Where sysfs is a filesystem-based
-+	view of kernel objects, configfs is a filesystem-based manager
-+	of kernel objects, or config_items.
- 
--	  Both sysfs and configfs can and should exist together on the
--	  same system. One is not a replacement for the other.
-+	Both sysfs and configfs can and should exist together on the
-+	same system. One is not a replacement for the other.
--- 
-1.7.3.5
-
+So hows does it work now? It seems ddp_alloc_gl_skb is called at device 
+setup time, then when IO is queued/xmited we run ddp_set_map which 
+allocates from gl_skbs. If when you transmit the IO, the driver frees 
+the skb, how does gl_skb get replenished?
