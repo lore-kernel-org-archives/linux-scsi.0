@@ -1,52 +1,73 @@
-From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Subject: [GIT] lock scaling and bug fixes for 2.6.38
-Date: Mon, 10 Jan 2011 17:45:30 -0500
-Message-ID: <1294699530.3038.27.camel@obelisk.thedillows.org>
+From: Joel Becker <jlbec@evilplan.org>
+Subject: Re: [PATCH] configfs: change depends -> select SYSFS
+Date: Mon, 10 Jan 2011 15:46:41 -0800
+Message-ID: <20110110234640.GC4879@mail.oracle.com>
+References: <1294688708-24986-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: rdreier-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-next-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1294688708-24986-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-next-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Joel Becker <joel.becker@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-next <linux-next@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Randy Dunlap <randy.dunlap@oracle.com>, James Bottomley <James.Bottomley@suse.de>, Stephen Rothwell <sfr@canb.auug.org.au>
 List-Id: linux-scsi@vger.kernel.org
 
-Roland,
+On Mon, Jan 10, 2011 at 11:45:08AM -0800, Nicholas A. Bellinger wrote:
+> This patch changes configfs to select SYSFS to fix the following:
+> 
+> warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
 
-Please pull from
+	If others are selecting CONFIGFS_FS, I'm thinking that this must
+go in.  So
 
-    git://git.kernel.org/pub/scm/linux/kernel/git/dad/srp-initiator.git srp-lock-scaling
+Acked-by: Joel Becker <jlbec@evilplan.org>
 
-to get the following commits. This is the series posted and reviewed on
-the RDMA mailing list. I expect to have another pull request once you
-sort out how you want to handle work queues in the IB stack so that we
-can remove flush_scheduled_work() from the initiator.
-
-Thanks!
-
-Bart Van Assche (6):
-  IB/srp: consolidate state change code
-  IB/srp: allow lockless work posting
-  IB/srp: don't move active requests to their own list
-  IB/srp: reduce local coverage for command submission and EH
-  IB/srp: reduce lock coverage of command completion
-  IB/srp: stop sharing the host lock with SCSI
-
-David Dillow (8):
-  IB/srp: allow task management without a previous request
-  IB/srp: consolidate hot-path variables into cache lines
-
- drivers/infiniband/ulp/srp/ib_srp.c |  392 ++++++++++++++++-------------------
- drivers/infiniband/ulp/srp/ib_srp.h |   46 +++--
- 2 files changed, 206 insertions(+), 232 deletions(-)
+> 
+> This patch also fixes whitespace breakage in the 'help' section.
+> 
+> Reported-by: Randy Dunlap <randy.dunlap@oracle.com>
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> ---
+>  fs/configfs/Kconfig |   14 +++++++-------
+>  1 files changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/configfs/Kconfig b/fs/configfs/Kconfig
+> index 13587cc..0e4bd23 100644
+> --- a/fs/configfs/Kconfig
+> +++ b/fs/configfs/Kconfig
+> @@ -1,11 +1,11 @@
+>  config CONFIGFS_FS
+>  	tristate "Userspace-driven configuration filesystem"
+> -	depends on SYSFS
+> +	select SYSFS
+>  	help
+> -	  configfs is a ram-based filesystem that provides the converse
+> -	  of sysfs's functionality. Where sysfs is a filesystem-based
+> -	  view of kernel objects, configfs is a filesystem-based manager
+> -	  of kernel objects, or config_items.
+> +	configfs is a RAM-based filesystem that provides the converse
+> +	of sysfs's functionality. Where sysfs is a filesystem-based
+> +	view of kernel objects, configfs is a filesystem-based manager
+> +	of kernel objects, or config_items.
+>  
+> -	  Both sysfs and configfs can and should exist together on the
+> -	  same system. One is not a replacement for the other.
+> +	Both sysfs and configfs can and should exist together on the
+> +	same system. One is not a replacement for the other.
+> -- 
+> 1.7.3.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 -- 
-Dave Dillow
-National Center for Computational Science
-Oak Ridge National Laboratory
-(865) 241-6602 office
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Life's Little Instruction Book #451
+
+	"Don't be afraid to say, 'I'm sorry.'"
+
+			http://www.jlbec.org/
+			jlbec@evilplan.org
