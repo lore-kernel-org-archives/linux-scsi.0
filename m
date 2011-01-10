@@ -1,58 +1,52 @@
-From: kxie@chelsio.com
-Subject: [PATCH] cxgb3i: fixed connection problem with iscsi private ip
-Date: Mon, 10 Jan 2011 15:15:26 -0800
-Message-ID: <201101102315.p0ANFQ8u015283@localhost6.localdomain6>
+From: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
+Subject: [GIT] lock scaling and bug fixes for 2.6.38
+Date: Mon, 10 Jan 2011 17:45:30 -0500
+Message-ID: <1294699530.3038.27.camel@obelisk.thedillows.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([67.207.112.58]:27086 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751292Ab1AJXPg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2011 18:15:36 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: rdreier-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
-Cc: kxie@chelsio.com, davem@davemloft.net, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-[PATCH] cxgb3i: fixed connection problem with iscsi private ip
+Roland,
 
-From: Karen Xie <kxie@chelsio.com>
+Please pull from
 
-fixed the connection problem when the private iscsi ipv4 address is provisioned on the interface.
+    git://git.kernel.org/pub/scm/linux/kernel/git/dad/srp-initiator.git srp-lock-scaling
 
-Signed-off-by: Karen Xie <kxie@chelsio.com>
----
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.h |   18 ++++++++++++++----
- 1 files changed, 15 insertions(+), 4 deletions(-)
+to get the following commits. This is the series posted and reviewed on
+the RDMA mailing list. I expect to have another pull request once you
+sort out how you want to handle work queues in the IB stack so that we
+can remove flush_scheduled_work() from the initiator.
 
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
-index 5f5e339..bed14db 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
-@@ -24,10 +24,20 @@
- 
- extern cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS];
- 
--#define cxgb3i_get_private_ipv4addr(ndev) \
--	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr)
--#define cxgb3i_set_private_ipv4addr(ndev, addr) \
--	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr) = addr
-+static inline unsigned int cxgb3i_get_private_ipv4addr(struct net_device *ndev)
-+{
-+	return ((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr;
-+}
-+
-+static inline void cxgb3i_set_private_ipv4addr(struct net_device *ndev,
-+					unsigned int addr)
-+{
-+	struct port_info *pi =  (struct port_info *)netdev_priv(ndev);
-+
-+	pi->iscsic.flags = addr ? 1 : 0;
-+	pi->iscsi_ipv4addr = addr;
-+	if (addr)
-+		memcpy(pi->iscsic.mac_addr, ndev->dev_addr, ETH_ALEN);
-+}
- 
- struct cpl_iscsi_hdr_norss {
- 	union opcode_tid ot;
+Thanks!
+
+Bart Van Assche (6):
+  IB/srp: consolidate state change code
+  IB/srp: allow lockless work posting
+  IB/srp: don't move active requests to their own list
+  IB/srp: reduce local coverage for command submission and EH
+  IB/srp: reduce lock coverage of command completion
+  IB/srp: stop sharing the host lock with SCSI
+
+David Dillow (8):
+  IB/srp: allow task management without a previous request
+  IB/srp: consolidate hot-path variables into cache lines
+
+ drivers/infiniband/ulp/srp/ib_srp.c |  392 ++++++++++++++++-------------------
+ drivers/infiniband/ulp/srp/ib_srp.h |   46 +++--
+ 2 files changed, 206 insertions(+), 232 deletions(-)
+
+-- 
+Dave Dillow
+National Center for Computational Science
+Oak Ridge National Laboratory
+(865) 241-6602 office
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
