@@ -1,57 +1,58 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.37-rc8: Reported regressions from 2.6.36
-Date: Mon, 10 Jan 2011 21:11:06 +0100
-Message-ID: <201101102111.07266.rjw@sisk.pl>
-References: <96DQe4a_2tH.A.cFB.l27GNB@chimera> <20110110.000813.173856001.davem@davemloft.net>
+From: "Karen Xie" <kxie-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+Subject: RE: [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info
+Date: Mon, 10 Jan 2011 14:57:16 -0800
+Message-ID: <8A71B368A89016469F72CD08050AD33408D574F5@maui.asicdesigners.com>
+References: <201101072245.p07MjdBm027576@localhost6.localdomain6> <4D27A500.2020009@cs.wisc.edu> <4D27A628.7040008@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D571D6@maui.asicdesigners.com> <4D27E6AA.5010304@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D5743D@maui.asicdesigners.com> <4D2B6494.8070406@cs.wisc.edu>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:47850 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754418Ab1AJUL0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2011 15:11:26 -0500
-In-Reply-To: <20110110.000813.173856001.davem@davemloft.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <open-iscsi+bncCNvLk8fsDxC_na7pBBoEtdOYiQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Content-class: urn:content-classes:message
+To: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, maciej.rutecki@gmail.com, florian@mickler.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, kernel-testers@vger.kernel.org, netdev@vger.kernel.org, linux-acpi@vger.kernel.org, linux-pm@lists.linux-foundation.org, linux-scsi@vger.kernel.org, linux-wireless@vger.kernel.org, dri-devel@lists.freedesktop.org
 
-On Monday, January 10, 2011, David Miller wrote:
-> From: "Rafael J. Wysocki" <rjw@sisk.pl>
-> Date: Wed, 29 Dec 2010 23:59:38 +0100 (CET)
-> 
-> > Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24592
-> > Subject		: 2.6.37-rc5: NULL pointer oops in selinux_socket_unix_stream_connect
-> > Submitter	: Jeremy Fitzhardinge <jeremy@goop.org>
-> > Date		: 2010-12-08 21:09 (22 days old)
-> > Message-ID	: <4CFFF3F3.90100@goop.org>
-> > References	: http://marc.info/?l=linux-kernel&m=129184256629712&w=2
-> 
-> This bug is intended to be fixed by:
-> 
-> commit 3610cda53f247e176bcbb7a7cca64bc53b12acdb
-> Author: David S. Miller <davem@davemloft.net>
-> Date:   Wed Jan 5 15:38:53 2011 -0800
-> 
->     af_unix: Avoid socket->sk NULL OOPS in stream connect security hooks.
->     
->     unix_release() can asynchornously set socket->sk to NULL, and
->     it does so without holding the unix_state_lock() on "other"
->     during stream connects.
->     
->     However, the reverse mapping, sk->sk_socket, is only transitioned
->     to NULL under the unix_state_lock().
->     
->     Therefore make the security hooks follow the reverse mapping instead
->     of the forward mapping.
->     
->     Reported-by: Jeremy Fitzhardinge <jeremy@goop.org>
->     Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
->     Signed-off-by: David S. Miller <davem@davemloft.net>
-> 
+Yes, that's bug this patch is fixing too. The current implementation
+does not replenish the gl_skb after the initial allocation.
 
-OK, thanks for the info, closing.
+I am working on an update which utilizing a pool of skbs, and those skbs
+would be used not only for the ddp setups (like the current gl_skb) but
+also for the connection management like the rx credit returns. So this
+skb pool will not reside in cxgbi_ddp_info, so still need to get rid of
+gl_skb. I guess this patch can be viewed as an interim fix.
 
-Rafael
+-----Original Message-----
+From: Mike Christie [mailto:michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org] 
+Sent: Monday, January 10, 2011 11:57 AM
+To: Karen Xie
+Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org; linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org;
+James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org
+Subject: Re: [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info
+
+On 01/10/2011 11:52 AM, Karen Xie wrote:
+> Hi, Mike,
+>
+> What I mean is even if cxgb3i maintains a pool of skbs (equivalent of
+> gl_skbs). Once they are handed down to the network layer cxgb3 they
+will
+> still be freed by the network driver (on the tx path).
+>
+
+So hows does it work now? It seems ddp_alloc_gl_skb is called at device 
+setup time, then when IO is queued/xmited we run ddp_set_map which 
+allocates from gl_skbs. If when you transmit the IO, the driver frees 
+the skb, how does gl_skb get replenished?
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
