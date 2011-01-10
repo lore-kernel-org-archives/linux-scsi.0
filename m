@@ -1,60 +1,68 @@
-From: Caspar Smit <c.smit@truebit.nl>
-Subject: mptsas driver instability?
-Date: Mon, 10 Jan 2011 16:01:23 +0100
-Message-ID: <AANLkTiku4oOmAmkrzqouO2FkvMpLuQWTw7HpBqri8GpA@mail.gmail.com>
-References: <AANLkTinaAPKNb7Mw5=vxJ6aapY5G3Dk-R6Vr1rAx2G6d@mail.gmail.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: [PATCH] [BLOCK] Allow tag 0 to be generated
+Date: Mon, 10 Jan 2011 09:26:13 -0800 (PST)
+Message-ID: <1266.36669.qm@web31807.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qy0-f174.google.com ([209.85.216.174]:57138 "EHLO
-	mail-qy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754217Ab1AJPBZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2011 10:01:25 -0500
-Received: by qyj19 with SMTP id 19so1744164qyj.19
-        for <linux-scsi@vger.kernel.org>; Mon, 10 Jan 2011 07:01:24 -0800 (PST)
-In-Reply-To: <AANLkTinaAPKNb7Mw5=vxJ6aapY5G3Dk-R6Vr1rAx2G6d@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: jaxboe@fusionio.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi all,
+Commit 67869fb9fdfa04503b250d59e086c15f1698aea0
+skipped tag 0 by virtue of setting last_tag to
+0. This commit sets it to -1, in order to start
+and loop over from 0, thus generating tags
+[0,max_tag-1], instead of [1,max_tag-1].
 
-I recently switched the sas controller of one of my machines to a LSI
-SAS 3081E-R (LSI 1068E Chipset, mptsas driver)
+Signed-off-by: Luben Tuikov <ltuikov@yahoo.com>
+---
+ For a reference to the original patch see here:
+ git://github.com/ltuikov/linux-2.6.git
 
-I flashed the controller with the latest BIOS and firmware (IT)
-versions from the LSI website (BIOS 6.32.00.00, FW:1.31.00.00)
+ block/blk-tag.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-The machine is running Debian Linux Lenny 5.0 (latest 2.6.26-2-amd64 kernel)
-This kernel has the mptsas driver at version 3.04.06
-
-After a weekend of testruns (creating a raidset, filesystems tests and
-performance tests) there suddenly dropped a disk from one of the md's
-
-with the following error:
-
-[260824.590033] end_request: I/O error, dev sdv, sector 3907028992
-[260824.590111] md: super_written gets error=-5, uptodate=0
-[260824.590184] raid5: Disk failure on sdv, disabling device.
-[260824.590186] raid5: Operation continuing on 5 devices.
-
-After inspecting the disk on smart errors i couldn't find any errors.
-
-I had the same problem on another system running the lenny-backports
-kernel 2.6.32-bpo.5-amd64 (mptsas version 3.04.12) but since the disk
-there completely vanished from the kernel
-I don't know if this was really a disk problem or not.
-
-I read a thread to the mailinglist about this driver and there was
-stated that driver version 3.04.15 should be used.
-I saw that the latest version of the driver is 3.04.17 (in the 2.6.37 source)
-
-I'd like to avoid using a non-debian kernel so my question, is it
-possible to use the latest driver in the 2.6.26 and/or 2.6.32 debian
-kernel?
-
-If so, how would I compile this into the kernel?
-
-Kind regards,
-
-Caspar Smit
+diff --git a/block/blk-tag.c b/block/blk-tag.c
+index f792e98..744cea6 100644
+--- a/block/blk-tag.c
++++ b/block/blk-tag.c
+@@ -130,7 +130,7 @@ init_tag_map(struct request_queue *q, struct blk_queue_tag *tags, int depth)
+        tags->max_depth = depth;
+        tags->tag_index = tag_index;
+        tags->tag_map = tag_map;
+-       tags->last_tag = 0;
++       tags->last_tag = -1;
+ 
+        return 0;
+ fail:
+@@ -340,7 +340,7 @@ EXPORT_SYMBOL(blk_queue_end_tag);
+ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
+ {
+        struct blk_queue_tag *bqt = q->queue_tags;
+-       unsigned max_depth;
++       int max_depth;
+        int tag;
+ 
+        if (unlikely((rq->cmd_flags & REQ_QUEUED))) {
+@@ -361,14 +361,14 @@ int blk_queue_start_tag(struct request_queue *q, struct request *rq)
+        max_depth = bqt->max_depth;
+        if (!rq_is_sync(rq) && max_depth > 1) {
+                max_depth -= 2;
+-               if (!max_depth)
++               if (max_depth <= 0)
+                        max_depth = 1;
+                if (q->in_flight[BLK_RW_ASYNC] > max_depth)
+                        return 1;
+        }
+ 
+        if (bqt->last_tag == bqt->max_depth-1)
+-               bqt->last_tag = 0;
++               bqt->last_tag = -1;
+ 
+        do {
+                tag = find_next_zero_bit(bqt->tag_map,
+-- 
+1.7.2.2.165.gbc382
