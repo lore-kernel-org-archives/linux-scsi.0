@@ -1,69 +1,62 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH v2] cxgb3i: fixed connection problem with iscsi private
- ip
-Date: Mon, 10 Jan 2011 20:19:13 -0600
-Message-ID: <4D2BBE21.7010103@cs.wisc.edu>
-References: <201101110045.p0B0j7vv016416@localhost6.localdomain6>
+From: "Bhanu Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [RFC PATCH v2 0/8] adding support to FCoE transport
+Date: Mon, 10 Jan 2011 19:27:05 -0800
+Message-ID: <1294716425.820.19.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+References: <20110107174027.14631.47077.stg.yi.zou@intel.com>
+ <1294450430.4676.672.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+ charset=cp1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:51516 "EHLO sabe.cs.wisc.edu"
+Received: from mms1.broadcom.com ([216.31.210.17]:2636 "EHLO mms1.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754495Ab1AKCWf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2011 21:22:35 -0500
-In-Reply-To: <201101110045.p0B0j7vv016416@localhost6.localdomain6>
+	id S1754241Ab1AKD1P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jan 2011 22:27:15 -0500
+In-Reply-To: <1294450430.4676.672.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: kxie@chelsio.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, davem@davemloft.net, James.Bottomley@HansenPartnership.com
+To: Yi Zou <yi.zou@intel.com>
+Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 01/10/2011 06:45 PM, kxie@chelsio.com wrote:
-> [PATCH v2] cxgb3i: fixed connection problem with iscsi private ip
->
-> From: Karen Xie<kxie@chelsio.com>
->
-> The last one seems to have some formatting problem. Regenerated the patch.
->
-> fixed the connection problem when the private iscsi ipv4 address is provisioned on the interface.
->
-> Signed-off-by: Karen Xie<kxie@chelsio.com>
-> ---
->   drivers/scsi/cxgbi/cxgb3i/cxgb3i.h |   19 +++++++++++++++----
->   1 files changed, 15 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
-> index 5f5e339..20593fd 100644
-> --- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
-> +++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
-> @@ -24,10 +24,21 @@
->
->   extern cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS];
->
-> -#define cxgb3i_get_private_ipv4addr(ndev) \
-> -	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr)
-> -#define cxgb3i_set_private_ipv4addr(ndev, addr) \
-> -	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr) = addr
-> +static inline unsigned int cxgb3i_get_private_ipv4addr(struct net_device *ndev)
-> +{
-> +	return ((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr;
-> +}
-> +
-> +static inline void cxgb3i_set_private_ipv4addr(struct net_device *ndev,
-> +						unsigned int addr)
-> +{
-> +	struct port_info *pi =  (struct port_info *)netdev_priv(ndev);
-> +
-> +	pi->iscsic.flags = addr ? 1 : 0;
-> +	pi->iscsi_ipv4addr = addr;
-> +	if (addr)
-> +		memcpy(pi->iscsic.mac_addr, ndev->dev_addr, ETH_ALEN);
-> +}
->
->   struct cpl_iscsi_hdr_norss {
->   	union opcode_tid ot;
->
+On Fri, 2011-01-07 at 17:33 -0800, Bhanu Gollapudi wrote:
+> On Fri, 2011-01-07 at 09:42 -0800, Yi Zou wrote:
+> > This is the RFC v2 of adding fcoe transport to support vendor specific FCoE
+> > transport into the existing Open-FCoE framework.
+> > 
+> > v1:
+> > Initial post for adding fcoe transport:
+> > https://lists.open-fcoe.org/pipermail/devel/2010-December/010865.html
+> > Follow-up comments & discussions:
+> > https://lists.open-fcoe.org/pipermail/devel/2011-January/010890.html
+> > 
+> > v2:
+> > 1. Per Joe's comment, renamed the libfcoe_fip.c to be fcoe_ctlr.c. I
+> > also renamed the new ibfcoe_transport.c to be fcoe_transport.c.
+> > 2. Per Bhanu's comment, I have merged the three follow-up patches
+> > from Bhanu with the following changes in fcoe_parse_buffer():
+> > a) Though not a problem of the existing fcoe-util since the sysfs
+> > entry is changing to libfcoe anyway, I still want to fill the buffer
+> > of drv_name with default "fcoe" so default behavior is still the same
+> > w/o changing cfg-ethx.
+> > b) Fixed the '\n' ending in the input buffer in fcoe_parse_buffer, we still
+> > need that proper formatting logic from the original fcoe_if_to_netdev(),
+> > otherwise the ifname and drv_name will be messed up, causing the lookup for
+> > netdev and transport to fail.
+> > 
+> > Testing Notes:
+> > Did the checkpatch and tested w/ overnight stress FCoE traffic on 2 LUNs using
+> > fcoe.ko as the default fcoe transport, that seems to be working ok. However,
+> > loop create/destroy testing is needed before this gets committed eventually.
+> 
+> Thanks Yi. bnx2fc patches got installed cleanly on top of your patches,
+> and we were able run FCoE IO traffic, and will leave it running for the
+> weekend.
 
-Looks ok to me, and it fixes my setup here. Thanks.
+Just to confirm IO stress tests over the weekend were successful.  I
+submitted a couple of follow-up patches w.r.t ERESTARTSYS. 
 
-Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
+Thanks,
+Bhanu 
+
+
