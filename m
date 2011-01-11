@@ -1,92 +1,130 @@
-From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: RE: [RFC PATCH v2 0/8] adding support to FCoE transport
-Date: Tue, 11 Jan 2011 13:07:53 -0800
-Message-ID: <1294780073.820.20.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
-References: <20110107174027.14631.47077.stg.yi.zou@intel.com>
- <1294450430.4676.672.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
- <1294716425.820.19.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
- <7C88852EF6F99F4EB538472FCFEBE222014A631553@orsmsx509.amr.corp.intel.com>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH] hpsa: do not re-order commands in internal queues
+Date: Tue, 11 Jan 2011 16:46:58 -0600
+Message-ID: <20110111224658.24457.62925.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:3495 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755501Ab1AKVII (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jan 2011 16:08:08 -0500
-In-Reply-To: <7C88852EF6F99F4EB538472FCFEBE222014A631553@orsmsx509.amr.corp.intel.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, thenzl@redhat.com, akpm@linux-foundation.org, smcameron@yahoo.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Zou, Yi" <yi.zou@intel.com>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, 2011-01-11 at 11:55 -0800, Zou, Yi wrote:
-> > On Fri, 2011-01-07 at 17:33 -0800, Bhanu Gollapudi wrote:
-> > > On Fri, 2011-01-07 at 09:42 -0800, Yi Zou wrote:
-> > > > This is the RFC v2 of adding fcoe transport to support vendor
-> > specific FCoE
-> > > > transport into the existing Open-FCoE framework.
-> > > >
-> > > > v1:
-> > > > Initial post for adding fcoe transport:
-> > > > https://lists.open-fcoe.org/pipermail/devel/2010-December/010865.html
-> > > > Follow-up comments & discussions:
-> > > > https://lists.open-fcoe.org/pipermail/devel/2011-January/010890.html
-> > > >
-> > > > v2:
-> > > > 1. Per Joe's comment, renamed the libfcoe_fip.c to be fcoe_ctlr.c. I
-> > > > also renamed the new ibfcoe_transport.c to be fcoe_transport.c.
-> > > > 2. Per Bhanu's comment, I have merged the three follow-up patches
-> > > > from Bhanu with the following changes in fcoe_parse_buffer():
-> > > > a) Though not a problem of the existing fcoe-util since the sysfs
-> > > > entry is changing to libfcoe anyway, I still want to fill the buffer
-> > > > of drv_name with default "fcoe" so default behavior is still the same
-> > > > w/o changing cfg-ethx.
-> > > > b) Fixed the '\n' ending in the input buffer in fcoe_parse_buffer, we
-> > still
-> > > > need that proper formatting logic from the original
-> > fcoe_if_to_netdev(),
-> > > > otherwise the ifname and drv_name will be messed up, causing the
-> > lookup for
-> > > > netdev and transport to fail.
-> > > >
-> > > > Testing Notes:
-> > > > Did the checkpatch and tested w/ overnight stress FCoE traffic on 2
-> > LUNs using
-> > > > fcoe.ko as the default fcoe transport, that seems to be working ok.
-> > However,
-> > > > loop create/destroy testing is needed before this gets committed
-> > eventually.
-> > >
-> > > Thanks Yi. bnx2fc patches got installed cleanly on top of your patches,
-> > > and we were able run FCoE IO traffic, and will leave it running for the
-> > > weekend.
-> > 
-> > Just to confirm IO stress tests over the weekend were successful.  I
-> > submitted a couple of follow-up patches w.r.t ERESTARTSYS.
-> > 
-> > Thanks,
-> > Bhanu
-> > 
-> The follow-up patches look good to me, I'll pull your 1/3 and 2/3 in and
-> add them to the bottom of the original series, and do some more testing on
-> loop create/destroy, I only have fcoe as the default transport, it'll be
-> good if you can run the same test for both fcoe.ko as well as your bnx2fc
-> at the same time.
-> 
-> Thanks,
-> yi
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Sure. I'll report the test results tomorrow.
+Driver's internal queues should be FIFO, not LIFO.
+This is a port of an almost identical patch to cciss by Jens Axboe.
 
-Thanks,
-Bhanu
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+---
+ 0 files changed, 0 insertions(+), 0 deletions(-)
 
-> 
-> 
-> 
-> 
-
-
-
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 959eeb2..8404ed2 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -314,9 +314,9 @@ static ssize_t host_show_commands_outstanding(struct device *dev,
+ }
+ 
+ /* Enqueuing and dequeuing functions for cmdlists. */
+-static inline void addQ(struct hlist_head *list, struct CommandList *c)
++static inline void addQ(struct list_head *list, struct CommandList *c)
+ {
+-	hlist_add_head(&c->list, list);
++	list_add_tail(&c->list, list);
+ }
+ 
+ static inline u32 next_command(struct ctlr_info *h)
+@@ -366,9 +366,9 @@ static void enqueue_cmd_and_start_io(struct ctlr_info *h,
+ 
+ static inline void removeQ(struct CommandList *c)
+ {
+-	if (WARN_ON(hlist_unhashed(&c->list)))
++	if (WARN_ON(list_empty(&c->list)))
+ 		return;
+-	hlist_del_init(&c->list);
++	list_del_init(&c->list);
+ }
+ 
+ static inline int is_hba_lunid(unsigned char scsi3addr[])
+@@ -2228,7 +2228,7 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
+ 
+ 	c->cmdindex = i;
+ 
+-	INIT_HLIST_NODE(&c->list);
++	INIT_LIST_HEAD(&c->list);
+ 	c->busaddr = (u32) cmd_dma_handle;
+ 	temp64.val = (u64) err_dma_handle;
+ 	c->ErrDesc.Addr.lower = temp64.val32.lower;
+@@ -2266,7 +2266,7 @@ static struct CommandList *cmd_special_alloc(struct ctlr_info *h)
+ 	}
+ 	memset(c->err_info, 0, sizeof(*c->err_info));
+ 
+-	INIT_HLIST_NODE(&c->list);
++	INIT_LIST_HEAD(&c->list);
+ 	c->busaddr = (u32) cmd_dma_handle;
+ 	temp64.val = (u64) err_dma_handle;
+ 	c->ErrDesc.Addr.lower = temp64.val32.lower;
+@@ -2837,8 +2837,8 @@ static void start_io(struct ctlr_info *h)
+ {
+ 	struct CommandList *c;
+ 
+-	while (!hlist_empty(&h->reqQ)) {
+-		c = hlist_entry(h->reqQ.first, struct CommandList, list);
++	while (!list_empty(&h->reqQ)) {
++		c = list_entry(h->reqQ.first, struct CommandList, list);
+ 		/* can't do anything if fifo is full */
+ 		if ((h->access.fifo_full(h))) {
+ 			dev_warn(&h->pdev->dev, "fifo full\n");
+@@ -2929,10 +2929,9 @@ static inline u32 process_nonindexed_cmd(struct ctlr_info *h,
+ {
+ 	u32 tag;
+ 	struct CommandList *c = NULL;
+-	struct hlist_node *tmp;
+ 
+ 	tag = hpsa_tag_discard_error_bits(raw_tag);
+-	hlist_for_each_entry(c, tmp, &h->cmpQ, list) {
++	list_for_each_entry(c, &h->cmpQ, list) {
+ 		if ((c->busaddr & 0xFFFFFFE0) == (tag & 0xFFFFFFE0)) {
+ 			finish_cmd(c, raw_tag);
+ 			return next_command(h);
+@@ -3761,8 +3760,8 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+ 
+ 	h->pdev = pdev;
+ 	h->busy_initializing = 1;
+-	INIT_HLIST_HEAD(&h->cmpQ);
+-	INIT_HLIST_HEAD(&h->reqQ);
++	INIT_LIST_HEAD(&h->cmpQ);
++	INIT_LIST_HEAD(&h->reqQ);
+ 	spin_lock_init(&h->lock);
+ 	spin_lock_init(&h->scan_lock);
+ 	rc = hpsa_pci_init(h);
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 074d237..e898193 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -75,8 +75,8 @@ struct ctlr_info {
+ 	struct access_method access;
+ 
+ 	/* queue and queue Info */
+-	struct hlist_head reqQ;
+-	struct hlist_head cmpQ;
++	struct list_head reqQ;
++	struct list_head cmpQ;
+ 	unsigned int Qdepth;
+ 	unsigned int maxQsinceinit;
+ 	unsigned int maxSG;
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index 7910c14..785abdd 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -292,7 +292,7 @@ struct CommandList {
+ 	struct ctlr_info	   *h;
+ 	int			   cmd_type;
+ 	long			   cmdindex;
+-	struct hlist_node list;
++	struct list_head list;
+ 	struct request *rq;
+ 	struct completion *waiting;
+ 	void   *scsi_cmd;
