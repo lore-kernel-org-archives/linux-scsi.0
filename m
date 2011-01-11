@@ -1,26 +1,69 @@
-From: Roland Dreier <rdreier-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [GIT] lock scaling and bug fixes for 2.6.38
-Date: Mon, 10 Jan 2011 17:45:51 -0800
-Message-ID: <adak4ic6wmo.fsf@cisco.com>
-References: <1294699530.3038.27.camel@obelisk.thedillows.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH v2] cxgb3i: fixed connection problem with iscsi private
+ ip
+Date: Mon, 10 Jan 2011 20:19:13 -0600
+Message-ID: <4D2BBE21.7010103@cs.wisc.edu>
+References: <201101110045.p0B0j7vv016416@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1294699530.3038.27.camel-1q1vX8mYZiGLUyTwlgNVppKKF0rrzTr+@public.gmane.org> (David Dillow's
-	message of "Mon, 10 Jan 2011 17:45:30 -0500")
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: David Dillow <dillowda-1Heg1YXhbW8@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, bvanassche-HInyCGIudOg@public.gmane.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:51516 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754495Ab1AKCWf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Jan 2011 21:22:35 -0500
+In-Reply-To: <201101110045.p0B0j7vv016416@localhost6.localdomain6>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: open-iscsi@googlegroups.com
+Cc: kxie@chelsio.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, davem@davemloft.net, James.Bottomley@HansenPartnership.com
 
- >    git://git.kernel.org/pub/scm/linux/kernel/git/dad/srp-initiator.git srp-lock-scaling
+On 01/10/2011 06:45 PM, kxie@chelsio.com wrote:
+> [PATCH v2] cxgb3i: fixed connection problem with iscsi private ip
+>
+> From: Karen Xie<kxie@chelsio.com>
+>
+> The last one seems to have some formatting problem. Regenerated the patch.
+>
+> fixed the connection problem when the private iscsi ipv4 address is provisioned on the interface.
+>
+> Signed-off-by: Karen Xie<kxie@chelsio.com>
+> ---
+>   drivers/scsi/cxgbi/cxgb3i/cxgb3i.h |   19 +++++++++++++++----
+>   1 files changed, 15 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
+> index 5f5e339..20593fd 100644
+> --- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
+> +++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
+> @@ -24,10 +24,21 @@
+>
+>   extern cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS];
+>
+> -#define cxgb3i_get_private_ipv4addr(ndev) \
+> -	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr)
+> -#define cxgb3i_set_private_ipv4addr(ndev, addr) \
+> -	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr) = addr
+> +static inline unsigned int cxgb3i_get_private_ipv4addr(struct net_device *ndev)
+> +{
+> +	return ((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr;
+> +}
+> +
+> +static inline void cxgb3i_set_private_ipv4addr(struct net_device *ndev,
+> +						unsigned int addr)
+> +{
+> +	struct port_info *pi =  (struct port_info *)netdev_priv(ndev);
+> +
+> +	pi->iscsic.flags = addr ? 1 : 0;
+> +	pi->iscsi_ipv4addr = addr;
+> +	if (addr)
+> +		memcpy(pi->iscsic.mac_addr, ndev->dev_addr, ETH_ALEN);
+> +}
+>
+>   struct cpl_iscsi_hdr_norss {
+>   	union opcode_tid ot;
+>
 
-Thanks, pulled.
+Looks ok to me, and it fixes my setup here. Thanks.
 
-Will try to merge Tejun's work queue patch shortly.
-
- - R.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
