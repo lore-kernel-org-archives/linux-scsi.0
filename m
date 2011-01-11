@@ -1,53 +1,60 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL 0/4] target patches for scsi-post-merge .38
-Date: Mon, 10 Jan 2011 16:02:21 -0800
-Message-ID: <1294704141-26135-1-git-send-email-nab@linux-iscsi.org>
+From: kxie@chelsio.com
+Subject: [PATCH v2] cxgb3i: fixed connection problem with iscsi private ip
+Date: Mon, 10 Jan 2011 16:45:07 -0800
+Message-ID: <201101110045.p0B0j7vv016416@localhost6.localdomain6>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.re3.yahoo.com ([66.196.96.84]:25604 "HELO
-	smtp101.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752749Ab1AKACi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Jan 2011 19:02:38 -0500
+Received: from stargate.chelsio.com ([67.207.112.58]:17402 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751651Ab1AKApS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Jan 2011 19:45:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Gustavo Panizzo <gfaraway@gmail.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+Cc: kxie@chelsio.com, davem@davemloft.net, James.Bottomley@HansenPartnership.com, michaelc@cs.wisc.edu
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+[PATCH v2] cxgb3i: fixed connection problem with iscsi private ip
 
-Hi James,
+From: Karen Xie <kxie@chelsio.com>
 
-Please pull the following set of target patches rebased against scsi-post-merge
-for .38 here:
+The last one seems to have some formatting problem. Regenerated the patch.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git master
+fixed the connection problem when the private iscsi ipv4 address is provisioned on the interface.
 
-This includes an improved version of your patch to address the 1024+ byte stack
-usage warning and two other PR releated bug-fixes to address issues reported by
-Gusatvo Panizzo with Vertias Cluster on RHEL5 + Open-iSCSI clients in the last
-weeks.  These changes have been tested, verified externally, committed into
-upstream lio-core-2.6.git and posted to linux-scsi for review.  At this point
-with the addition of the MAINTAINERS entry, the core target pieces will be in
-sync with scsi-post-merge from upstream TCM code.
+Signed-off-by: Karen Xie <kxie@chelsio.com>
+---
+ drivers/scsi/cxgbi/cxgb3i/cxgb3i.h |   19 +++++++++++++++----
+ 1 files changed, 15 insertions(+), 4 deletions(-)
 
-Thanks again to Gustavo for his testing with lio-4.0 code over the holidays
-and all his help to get the Vertias Cluster working with a generic PR bugfix
-that applies to all SCSI target fabrics!
-
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-
-Nicholas Bellinger (4):
-  target: Fix excessive stack usage
-  target: Fix T_TASK(cmd)->t_task_cdb assignement breakage
-  target: Add missing core_scsi3_put_pr_reg() for explict REGISTER key
-    change
-  target: Add drivers/target/ entry to MAINTAINERS
-
- MAINTAINERS                            |   10 ++++++++++
- drivers/target/target_core_pr.c        |   15 ++++++++-------
- drivers/target/target_core_transport.c |   16 +++++++++-------
- 3 files changed, 27 insertions(+), 14 deletions(-)
-
--- 
-1.7.3.5
-
+diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
+index 5f5e339..20593fd 100644
+--- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
++++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.h
+@@ -24,10 +24,21 @@
+ 
+ extern cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS];
+ 
+-#define cxgb3i_get_private_ipv4addr(ndev) \
+-	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr)
+-#define cxgb3i_set_private_ipv4addr(ndev, addr) \
+-	(((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr) = addr
++static inline unsigned int cxgb3i_get_private_ipv4addr(struct net_device *ndev)
++{
++	return ((struct port_info *)(netdev_priv(ndev)))->iscsi_ipv4addr;
++}
++
++static inline void cxgb3i_set_private_ipv4addr(struct net_device *ndev,
++						unsigned int addr)
++{
++	struct port_info *pi =  (struct port_info *)netdev_priv(ndev);
++
++	pi->iscsic.flags = addr ? 1 : 0;
++	pi->iscsi_ipv4addr = addr;
++	if (addr)
++		memcpy(pi->iscsic.mac_addr, ndev->dev_addr, ETH_ALEN);
++}
+ 
+ struct cpl_iscsi_hdr_norss {
+ 	union opcode_tid ot;
