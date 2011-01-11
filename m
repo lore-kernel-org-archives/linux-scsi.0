@@ -1,31 +1,64 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info
-Date: Tue, 11 Jan 2011 14:23:31 -0600
-Message-ID: <4D2CBC43.8050808@cs.wisc.edu>
-References: <201101072245.p07MjdBm027576@localhost6.localdomain6> <4D27A500.2020009@cs.wisc.edu> <4D27A628.7040008@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D571D6@maui.asicdesigners.com> <4D27E6AA.5010304@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D5743D@maui.asicdesigners.com> <4D2B6494.8070406@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D574F5@maui.asicdesigners.com>
+Subject: Re: [PATCH 1/2] cxgbi: set ulpmode only if digest is on
+Date: Tue, 11 Jan 2011 14:24:59 -0600
+Message-ID: <4D2CBC9B.4000007@cs.wisc.edu>
+References: <201101072245.p07Mjdea027574@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:42929 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:47507 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753799Ab1AKU0u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Jan 2011 15:26:50 -0500
-In-Reply-To: <8A71B368A89016469F72CD08050AD33408D574F5@maui.asicdesigners.com>
+	id S1754009Ab1AKU2R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jan 2011 15:28:17 -0500
+In-Reply-To: <201101072245.p07Mjdea027574@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Xie <kxie@chelsio.com>
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
+To: open-iscsi@googlegroups.com
+Cc: kxie@chelsio.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On 01/10/2011 04:57 PM, Karen Xie wrote:
-> Yes, that's bug this patch is fixing too. The current implementation
-> does not replenish the gl_skb after the initial allocation.
+On 01/07/2011 04:45 PM, kxie@chelsio.com wrote:
+> [PATCH 1/2] cxgbi: set ulpmode only if digest is on
 >
-> I am working on an update which utilizing a pool of skbs, and those skbs
-> would be used not only for the ddp setups (like the current gl_skb) but
-> also for the connection management like the rx credit returns. So this
-> skb pool will not reside in cxgbi_ddp_info, so still need to get rid of
-> gl_skb. I guess this patch can be viewed as an interim fix.
+> From: Karen Xie<kxie@chelsio.com>
+>
+> There is need to set ulpmode on the tx skbs if no digest is enabled.
+>
+> Signed-off-by: Karen Xie<kxie@chelsio.com>
+> ---
+>   drivers/scsi/cxgbi/libcxgbi.c |   17 ++++++++++-------
+>   1 files changed, 10 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+> index be56617..17dcada 100644
+> --- a/drivers/scsi/cxgbi/libcxgbi.c
+> +++ b/drivers/scsi/cxgbi/libcxgbi.c
+> @@ -1908,13 +1908,16 @@ EXPORT_SYMBOL_GPL(cxgbi_conn_alloc_pdu);
+>
+>   static inline void tx_skb_setmode(struct sk_buff *skb, int hcrc, int dcrc)
+>   {
+> -	u8 submode = 0;
+> -
+> -	if (hcrc)
+> -		submode |= 1;
+> -	if (dcrc)
+> -		submode |= 2;
+> -	cxgbi_skcb_ulp_mode(skb) = (ULP2_MODE_ISCSI<<  4) | submode;
+> +	if (hcrc || dcrc) {
+> +		u8 submode = 0;
+> +
+> +		if (hcrc)
+> +			submode |= 1;
+> +		if (dcrc)
+> +			submode |= 2;
+> +		cxgbi_skcb_ulp_mode(skb) = (ULP2_MODE_ISCSI<<  4) | submode;
+> +	} else
+> +		cxgbi_skcb_ulp_mode(skb) = 0;
+>   }
+>
+>   int cxgbi_conn_init_pdu(struct iscsi_task *task, unsigned int offset,
 >
 
-Ok with me then.
+Ok.
+
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
