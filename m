@@ -1,80 +1,31 @@
-From: "Zou, Yi" <yi.zou@intel.com>
-Subject: RE: [RFC PATCH v2 0/8] adding support to FCoE transport
-Date: Tue, 11 Jan 2011 11:55:36 -0800
-Message-ID: <7C88852EF6F99F4EB538472FCFEBE222014A631553@orsmsx509.amr.corp.intel.com>
-References: <20110107174027.14631.47077.stg.yi.zou@intel.com>
- <1294450430.4676.672.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
- <1294716425.820.19.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2/2] cxgbi: get rid of gl_skb in cxgbi_ddp_info
+Date: Tue, 11 Jan 2011 14:23:31 -0600
+Message-ID: <4D2CBC43.8050808@cs.wisc.edu>
+References: <201101072245.p07MjdBm027576@localhost6.localdomain6> <4D27A500.2020009@cs.wisc.edu> <4D27A628.7040008@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D571D6@maui.asicdesigners.com> <4D27E6AA.5010304@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D5743D@maui.asicdesigners.com> <4D2B6494.8070406@cs.wisc.edu> <8A71B368A89016469F72CD08050AD33408D574F5@maui.asicdesigners.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:47174 "EHLO mga09.intel.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42929 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752398Ab1AKTzi convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Jan 2011 14:55:38 -0500
-In-Reply-To: <1294716425.820.19.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
-Content-Language: en-US
+	id S1753799Ab1AKU0u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Jan 2011 15:26:50 -0500
+In-Reply-To: <8A71B368A89016469F72CD08050AD33408D574F5@maui.asicdesigners.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Gollapudi <bprakash@broadcom.com>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Karen Xie <kxie@chelsio.com>
+Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-> On Fri, 2011-01-07 at 17:33 -0800, Bhanu Gollapudi wrote:
-> > On Fri, 2011-01-07 at 09:42 -0800, Yi Zou wrote:
-> > > This is the RFC v2 of adding fcoe transport to support vendor
-> specific FCoE
-> > > transport into the existing Open-FCoE framework.
-> > >
-> > > v1:
-> > > Initial post for adding fcoe transport:
-> > > https://lists.open-fcoe.org/pipermail/devel/2010-December/010865.html
-> > > Follow-up comments & discussions:
-> > > https://lists.open-fcoe.org/pipermail/devel/2011-January/010890.html
-> > >
-> > > v2:
-> > > 1. Per Joe's comment, renamed the libfcoe_fip.c to be fcoe_ctlr.c. I
-> > > also renamed the new ibfcoe_transport.c to be fcoe_transport.c.
-> > > 2. Per Bhanu's comment, I have merged the three follow-up patches
-> > > from Bhanu with the following changes in fcoe_parse_buffer():
-> > > a) Though not a problem of the existing fcoe-util since the sysfs
-> > > entry is changing to libfcoe anyway, I still want to fill the buffer
-> > > of drv_name with default "fcoe" so default behavior is still the same
-> > > w/o changing cfg-ethx.
-> > > b) Fixed the '\n' ending in the input buffer in fcoe_parse_buffer, we
-> still
-> > > need that proper formatting logic from the original
-> fcoe_if_to_netdev(),
-> > > otherwise the ifname and drv_name will be messed up, causing the
-> lookup for
-> > > netdev and transport to fail.
-> > >
-> > > Testing Notes:
-> > > Did the checkpatch and tested w/ overnight stress FCoE traffic on 2
-> LUNs using
-> > > fcoe.ko as the default fcoe transport, that seems to be working ok.
-> However,
-> > > loop create/destroy testing is needed before this gets committed
-> eventually.
-> >
-> > Thanks Yi. bnx2fc patches got installed cleanly on top of your patches,
-> > and we were able run FCoE IO traffic, and will leave it running for the
-> > weekend.
-> 
-> Just to confirm IO stress tests over the weekend were successful.  I
-> submitted a couple of follow-up patches w.r.t ERESTARTSYS.
-> 
-> Thanks,
-> Bhanu
-> 
-The follow-up patches look good to me, I'll pull your 1/3 and 2/3 in and
-add them to the bottom of the original series, and do some more testing on
-loop create/destroy, I only have fcoe as the default transport, it'll be
-good if you can run the same test for both fcoe.ko as well as your bnx2fc
-at the same time.
+On 01/10/2011 04:57 PM, Karen Xie wrote:
+> Yes, that's bug this patch is fixing too. The current implementation
+> does not replenish the gl_skb after the initial allocation.
+>
+> I am working on an update which utilizing a pool of skbs, and those skbs
+> would be used not only for the ddp setups (like the current gl_skb) but
+> also for the connection management like the rx credit returns. So this
+> skb pool will not reside in cxgbi_ddp_info, so still need to get rid of
+> gl_skb. I guess this patch can be viewed as an interim fix.
+>
 
-Thanks,
-yi
-
-
-
+Ok with me then.
