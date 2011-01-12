@@ -1,91 +1,92 @@
-From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: RE: [RFC PATCH v2 0/8] adding support to FCoE transport
-Date: Wed, 12 Jan 2011 14:36:48 -0800
-Message-ID: <1294871808.820.28.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
-References: <20110107174027.14631.47077.stg.yi.zou@intel.com>
- <1294450430.4676.672.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
- <1294716425.820.19.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
- <7C88852EF6F99F4EB538472FCFEBE222014A631553@orsmsx509.amr.corp.intel.com>
- <1294780073.820.20.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
-Content-Transfer-Encoding: 7bit
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] target: Call transport_new_cmd_failure() while draining qobj_list during LUN_RESET
+Date: Wed, 12 Jan 2011 15:41:58 -0800
+Message-ID: <1294875718-4555-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:2855 "EHLO mms2.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754731Ab1ALWhN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jan 2011 17:37:13 -0500
-In-Reply-To: <1294780073.820.20.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+Received: from nm24.bullet.mail.sp2.yahoo.com ([98.139.91.94]:46701 "HELO
+	nm24.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751845Ab1ALXmg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jan 2011 18:42:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Zou, Yi" <yi.zou@intel.com>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Tue, 2011-01-11 at 13:07 -0800, Bhanu Gollapudi wrote:
-> On Tue, 2011-01-11 at 11:55 -0800, Zou, Yi wrote:
-> > > On Fri, 2011-01-07 at 17:33 -0800, Bhanu Gollapudi wrote:
-> > > > On Fri, 2011-01-07 at 09:42 -0800, Yi Zou wrote:
-> > > > > This is the RFC v2 of adding fcoe transport to support vendor
-> > > specific FCoE
-> > > > > transport into the existing Open-FCoE framework.
-> > > > >
-> > > > > v1:
-> > > > > Initial post for adding fcoe transport:
-> > > > > https://lists.open-fcoe.org/pipermail/devel/2010-December/010865.html
-> > > > > Follow-up comments & discussions:
-> > > > > https://lists.open-fcoe.org/pipermail/devel/2011-January/010890.html
-> > > > >
-> > > > > v2:
-> > > > > 1. Per Joe's comment, renamed the libfcoe_fip.c to be fcoe_ctlr.c. I
-> > > > > also renamed the new ibfcoe_transport.c to be fcoe_transport.c.
-> > > > > 2. Per Bhanu's comment, I have merged the three follow-up patches
-> > > > > from Bhanu with the following changes in fcoe_parse_buffer():
-> > > > > a) Though not a problem of the existing fcoe-util since the sysfs
-> > > > > entry is changing to libfcoe anyway, I still want to fill the buffer
-> > > > > of drv_name with default "fcoe" so default behavior is still the same
-> > > > > w/o changing cfg-ethx.
-> > > > > b) Fixed the '\n' ending in the input buffer in fcoe_parse_buffer, we
-> > > still
-> > > > > need that proper formatting logic from the original
-> > > fcoe_if_to_netdev(),
-> > > > > otherwise the ifname and drv_name will be messed up, causing the
-> > > lookup for
-> > > > > netdev and transport to fail.
-> > > > >
-> > > > > Testing Notes:
-> > > > > Did the checkpatch and tested w/ overnight stress FCoE traffic on 2
-> > > LUNs using
-> > > > > fcoe.ko as the default fcoe transport, that seems to be working ok.
-> > > However,
-> > > > > loop create/destroy testing is needed before this gets committed
-> > > eventually.
-> > > >
-> > > > Thanks Yi. bnx2fc patches got installed cleanly on top of your patches,
-> > > > and we were able run FCoE IO traffic, and will leave it running for the
-> > > > weekend.
-> > > 
-> > > Just to confirm IO stress tests over the weekend were successful.  I
-> > > submitted a couple of follow-up patches w.r.t ERESTARTSYS.
-> > > 
-> > > Thanks,
-> > > Bhanu
-> > > 
-> > The follow-up patches look good to me, I'll pull your 1/3 and 2/3 in and
-> > add them to the bottom of the original series, and do some more testing on
-> > loop create/destroy, I only have fcoe as the default transport, it'll be
-> > good if you can run the same test for both fcoe.ko as well as your bnx2fc
-> > at the same time.
-> > 
-> > Thanks,
-> > yi
-> 
-> Sure. I'll report the test results tomorrow.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Yi, I was able to test both bnx2fc and fcoe on our adapter and tests ran
-fine overnight. I think these patches are good to go.
+This patch fixes a bug with TMR LUN_RESET operation for TCM fabric modules that
+go into an uninterruptible sleeping state waiting for an unsolicited SCSI WRITE
+buffer to become ready.  Currently fabric module code that have this requirement
+(SW iSCSI only) will end up sleeping forever if the command being aborted is
+from the pre-task execution qobj->qobj_list drain w/ TRANSPORT_NEW_CMD state
+at the bottom on core_tmr_lun_reset().
 
-Thanks,
-Bhanu
+The proper fix adds a call to transport_new_cmd_failure() and subsequent call to
+struct target_core_fabric_ops->new_cmd_failure() in order to signal to fabric module
+dependent code that the command containing unsolicited data out has been aborted,
+and the payload should be dropped.
 
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_tmr.c       |    9 +++++++++
+ drivers/target/target_core_transport.c |    3 +--
+ include/target/target_core_transport.h |    1 +
+ 3 files changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
+index 7a54af7..f0d85ad 100644
+--- a/drivers/target/target_core_tmr.c
++++ b/drivers/target/target_core_tmr.c
+@@ -365,6 +365,15 @@ int core_tmr_lun_reset(
+ 			" %d t_fe_count: %d\n", (preempt_and_abort_list) ?
+ 			"Preempt" : "", cmd, state,
+ 			atomic_read(&T_TASK(cmd)->t_fe_count));
++		/*
++		 * Signal that the command has failed via cmd->se_cmd_flags,
++		 * and call TFO->new_cmd_failure() to wakeup any fabric
++		 * dependent code used to wait for unsolicited data out
++		 * allocation to complete.  The fabric module is expected
++		 * to dump any remaining unsolicited data out for the aborted
++		 * command at this point.
++		 */
++		transport_new_cmd_failure(cmd);
+ 
+ 		core_tmr_handle_tas_abort(tmr_nacl, cmd, tas,
+ 				atomic_read(&T_TASK(cmd)->t_fe_count));
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index e5949a6..a9913f1 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -222,7 +222,6 @@ static int transport_map_sg_to_mem(struct se_cmd *cmd,
+ 		u32 *se_mem_cnt);
+ static void transport_memcpy_se_mem_read_contig(struct se_cmd *cmd,
+ 		unsigned char *dst, struct list_head *se_mem_list);
+-static void transport_new_cmd_failure(struct se_cmd *se_cmd);
+ static void transport_release_fe_cmd(struct se_cmd *cmd);
+ static void transport_remove_cmd_from_queue(struct se_cmd *cmd,
+ 		struct se_queue_obj *qobj);
+@@ -2704,7 +2703,7 @@ check_depth:
+ 	return 0;
+ }
+ 
+-static void transport_new_cmd_failure(struct se_cmd *se_cmd)
++void transport_new_cmd_failure(struct se_cmd *se_cmd)
+ {
+ 	unsigned long flags;
+ 	/*
+diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
+index 7f59308..66f44e5 100644
+--- a/include/target/target_core_transport.h
++++ b/include/target/target_core_transport.h
+@@ -164,6 +164,7 @@ extern int transport_generic_allocate_tasks(struct se_cmd *, unsigned char *);
+ extern int transport_generic_handle_cdb(struct se_cmd *);
+ extern int transport_generic_handle_cdb_map(struct se_cmd *);
+ extern int transport_generic_handle_data(struct se_cmd *);
++extern void transport_new_cmd_failure(struct se_cmd *);
+ extern int transport_generic_handle_tmr(struct se_cmd *);
+ extern void __transport_stop_task_timer(struct se_task *, unsigned long *);
+ extern unsigned char transport_asciihex_to_binaryhex(unsigned char val[2]);
+-- 
+1.7.3.5
 
