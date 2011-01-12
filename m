@@ -1,48 +1,50 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
-Date: Wed, 12 Jan 2011 12:21:42 +0100
-Message-ID: <20110112112142.GA9610@mtj.dyndns.org>
-References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: build failure of drivers/scsi/gdth.c
+Date: Wed, 12 Jan 2011 08:39:19 -0800
+Message-ID: <20110112083919.494a7404.rdunlap@xenotime.net>
+References: <Pine.LNX.4.64.1101121217090.6323@zuben.voltaire.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:47199 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753543Ab1ALLVq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Jan 2011 06:21:46 -0500
-Received: by fxm20 with SMTP id 20so421001fxm.19
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Jan 2011 03:21:45 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com>
+Received: from xenotime.net ([72.52.115.56]:51496 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1755196Ab1ALQjY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jan 2011 11:39:24 -0500
+Received: from chimera.site ([173.50.240.230]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 12 Jan 2011 08:39:19 -0800
+In-Reply-To: <Pine.LNX.4.64.1101121217090.6323@zuben.voltaire.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: maksim.rayskiy@gmail.com
-Cc: linux-scsi@vger.kernel.org, jgarzik@pobox.com
+To: Or Gerlitz <ogerlitz@voltaire.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hello, Maksim, Jeff.
+On Wed, 12 Jan 2011 12:29:19 +0200 Or Gerlitz wrote:
 
-On Tue, Jan 11, 2011 at 05:24:17PM -0800, maksim.rayskiy@gmail.com wrote:
-> @@ -4978,6 +4978,13 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
->  	struct ata_link *link = qc->dev->link;
->  	u8 prot = qc->tf.protocol;
->  
-> +	if (unlikely(qc->flags & ATA_QCFLAG_VERIFY)) {
-> +		ata_port_schedule_eh(ap);
-> +		qc->scsidone(qc->scsicmd);
-> +		ata_qc_free(qc);
-> +		return;
+> I got into that with 2.6.37 after adding some dynamic debug
+> configs (I can send the compressed .config if needed)
+> 
+> The same/similar problem happens also for the few more places
+> which use LINUX_VERSION_CODE
+> 
+>   CHK     include/linux/version.h
+>   CHK     include/generated/utsrelease.h
+>   CALL    scripts/checksyscalls.sh
+>   CHK     include/generated/compile.h
+>   CC [M]  drivers/scsi/gdth.o
+> drivers/scsi/gdth.c: In function gdth_ioctl:
+> drivers/scsi/gdth.c:4510: error: expected expression before >> token
+> drivers/scsi/gdth.c:4511: error: expected expression before >> token
+> drivers/scsi/gdth.c:4512: error: invalid lvalue in unary
+> make[2]: *** [drivers/scsi/gdth.o] Error 1
+> make[1]: *** [drivers/scsi] Error 2
+> make: *** [drivers] Error 2
+> --
 
-I still prefer the original patch where EH is scheduled from the
-translation layer.  This seems unnecessarily intrusive to me.  As I
-wrote before, it's not like we have a clean translation anyway and I
-think this better fits as impedance matching code in the translation
-layer anyway.  But, that said, this is a rather ugly piece of code
-which is necessary just to work around the fact that we live under
-scsi, so as long as it works, one way or the other probably doesn't
-matter all that much (the reason why I prefer the previous one, as it
-doens't try to be pretty and just gets it done), so it's Jeff's call.
+I've never seen this problem in 2.6.37 AFAIK and I have 2.6.37 gdth.o and gdth.ko
+built on my system now.
 
-Thanks.
+How can I reproduce this?
 
--- 
-tejun
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
