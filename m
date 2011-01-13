@@ -1,16 +1,16 @@
 From: Yi Zou <yi.zou@intel.com>
-Subject: [PATCH v3 09/10] libfcoe: Handle ERESTARTSYS for fcoe transport
-Date: Wed, 12 Jan 2011 18:20:36 -0800
-Message-ID: <20110113022035.12798.20350.stg.yi.zou@intel.com>
+Subject: [PATCH v3 10/10] fcoe: Return ERESTARTSYS on rtnl_trylock failure
+Date: Wed, 12 Jan 2011 18:20:42 -0800
+Message-ID: <20110113022041.12798.64499.stg.yi.zou@intel.com>
 References: <20110113021649.12798.71742.stg.yi.zou@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23367 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:37843 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932361Ab1AMCXa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jan 2011 21:23:30 -0500
+	id S932361Ab1AMCXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jan 2011 21:23:49 -0500
 In-Reply-To: <20110113021649.12798.71742.stg.yi.zou@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,68 +19,54 @@ Cc: bprakash@broadcom.com, linux-scsi@vger.kernel.org
 
 From: Bhanu Gollapudi <bprakash@broadcom.com>
 
-When the LLDDs return ERESTARTSYS as a result of not succeeding
-rtnl_trylock(), fcoe_transport_* functions should return
-restart_syscall().
+fcoe driver should return -ERESTARTSYS instead of -ENODEV so
+that rtnl lock will be retried.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 ---
 
- drivers/scsi/fcoe/fcoe_transport.c |   21 +++++++++++++++++----
- 1 files changed, 17 insertions(+), 4 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index 8a630aa..95fe16b 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -360,7 +360,10 @@ out_nodev:
- 		(rc) ? "failed" : "succeeded",
- 		(netdev) ? netdev->name : "n/a");
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index cd40fc8..eda70e5 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1948,7 +1948,7 @@ static int fcoe_disable(struct net_device *netdev)
  
--	return rc;
-+	if (rc == -ERESTARTSYS)
-+		return restart_syscall();
-+	else
-+		return rc;
- }
+ 	if (!rtnl_trylock()) {
+ 		mutex_unlock(&fcoe_config_mutex);
+-		return -ENODEV;
++		return -ERESTARTSYS;
+ 	}
  
- /**
-@@ -420,7 +423,10 @@ out_nodev:
- 		(rc) ? "failed" : "succeeded",
- 		(netdev) ? netdev->name : "n/a");
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+@@ -1992,7 +1992,7 @@ static int fcoe_enable(struct net_device *netdev)
+ #endif
+ 	if (!rtnl_trylock()) {
+ 		mutex_unlock(&fcoe_config_mutex);
+-		return -ENODEV;
++		return -ERESTARTSYS;
+ 	}
  
--	return rc;
-+	if (rc == -ERESTARTSYS)
-+		return restart_syscall();
-+	else
-+		return rc;
- }
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+@@ -2035,7 +2035,7 @@ static int fcoe_destroy(struct net_device *netdev)
+ #endif
+ 	if (!rtnl_trylock()) {
+ 		mutex_unlock(&fcoe_config_mutex);
+-		return -ENODEV;
++		return -ERESTARTSYS;
+ 	}
  
- /**
-@@ -472,7 +478,11 @@ out_putdev:
- 	dev_put(netdev);
- out_nodev:
- 	mutex_unlock(&ft_mutex);
--	return rc;
-+
-+	if (rc == -ERESTARTSYS)
-+		return restart_syscall();
-+	else
-+		return rc;
- }
+ 	fcoe = fcoe_hostlist_lookup_port(netdev);
+@@ -2088,7 +2088,7 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
  
- /**
-@@ -524,7 +534,10 @@ out_putdev:
- 	dev_put(netdev);
- out_nodev:
- 	mutex_unlock(&ft_mutex);
--	return rc;
-+	if (rc == -ERESTARTSYS)
-+		return restart_syscall();
-+	else
-+		return rc;
- }
+ 	if (!rtnl_trylock()) {
+ 		mutex_unlock(&fcoe_config_mutex);
+-		return -EIO;
++		return -ERESTARTSYS;
+ 	}
  
- /**
+ #ifdef CONFIG_FCOE_MODULE
 
