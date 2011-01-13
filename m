@@ -1,51 +1,72 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL 0/3] target patches for scsi-post-merge .38 (round 2)
-Date: Wed, 12 Jan 2011 17:03:14 -0800
-Message-ID: <1294880594-6976-1-git-send-email-nab@linux-iscsi.org>
+From: Yi Zou <yi.zou@intel.com>
+Subject: [PATCH v3 00/10] Adding support to fcoe transport
+Date: Wed, 12 Jan 2011 18:19:33 -0800
+Message-ID: <20110113021649.12798.71742.stg.yi.zou@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.re3.yahoo.com ([66.196.96.86]:47410 "HELO
-	smtp103.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756468Ab1AMBDQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jan 2011 20:03:16 -0500
+Received: from mga02.intel.com ([134.134.136.20]:46314 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932361Ab1AMCW2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Jan 2011 21:22:28 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>, Randy Dunlap <randy.dunlap@oracle.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: devel@open-fcoe.org
+Cc: bprakash@broadcom.com, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+This is v3 of the series to add fcoe transport as a thin layer to the
+existing Open-FCoE framework to allow third-party FCoE HBA drivers to
+plug in easily if the default SW HBA fcoe.ko driver is sufficient for
+the need. Related previous discussion are in the following threads:
+RFC v1:
+https://lists.open-fcoe.org/pipermail/devel/2010-December/010865.html
+https://lists.open-fcoe.org/pipermail/devel/2011-January/010890.html
 
-Hi James,
+RFC v2:
+https://lists.open-fcoe.org/pipermail/devel/2011-January/010900.html
 
-Please pull the followup set of target fixes rebased against scsi-post-merge
-for .38 here:
+Notes on v3:
+1. Included 2 of Bhanu's ERESTARTSYS patches as patch 9 and 10.
+2. Synced up w/ Open-FCoE's fcoe-next/master, so this series should apply
+and build cleanly.
+3. Did loop create-> i/o -> destroy test using default transport on
+fcoe.ko, with the help from Bhanu on testing this framework using his
+fcoe transport driver. 
+4. Corresponding changes on fcoe-utils are required to reflect the above
+changes, which I expect to follow soon.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git master
+thanks,
+yi
+---
 
-This includes an important bugfix for TMR LUN_RESET specific to fabric modules
-that go into uninterruptible sleep waiting for an unsolicited data out buffer to
-become ready (eg: SW iSCSI), a minor cleanup to convert the last simple_strtoul() ->
-strict_strtoul() in target_core_fabric_configfs.c, and configfs kbuild dependency
-change to include sysfs (by default) to fix a build warning reported by rdd and
-recently ACK'ed by jlbec.
+Bhanu Gollapudi (2):
+      fcoe: Return ERESTARTSYS on rtnl_trylock failure
+      libfcoe: Handle ERESTARTSYS for fcoe transport
 
-Thanks!
+Yi Zou (8):
+      fcoe: convert fcoe.ko to become an fcoe transport provider driver
+      fcoe: prepare fcoe for using fcoe transport
+      libfcoe: include fcoe_transport.c into kernel libfcoe module
+      libfcoe: remove libfcoe.c, use the same fcoe_ctlr.c instead
+      libfcoe: rename libfcoe.c to fcoe_cltr.c for the coming fcoe_transport.c
+      libfcoe: add implementation to support fcoe transport
+      libfcoe: add fcoe_transport structure defines to include/scsi/libfcoe.h
+      libfcoe: move logging macros into the local libfcoe.h header file
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-Nicholas Bellinger (3):
-  target: Call transport_new_cmd_failure() while draining qobj_list
-    during LUN_RESET
-  target: Convert remaining usage of simple_strtoul -> strict_strtoul
-  configfs: change depends -> select SYSFS
-
- drivers/target/target_core_fabric_configfs.c |   41 +++++++++++--------------
- drivers/target/target_core_tmr.c             |    9 ++++++
- drivers/target/target_core_transport.c       |    3 +-
- fs/configfs/Kconfig                          |   14 ++++----
- include/target/target_core_transport.h       |    1 +
- 5 files changed, 36 insertions(+), 32 deletions(-)
+ drivers/scsi/fcoe/Makefile         |    2 
+ drivers/scsi/fcoe/fcoe.c           |  183 +-
+ drivers/scsi/fcoe/fcoe_ctlr.c      | 2682 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/fcoe/fcoe_transport.c |  561 +++++++
+ drivers/scsi/fcoe/libfcoe.c        | 2708 ------------------------------------
+ drivers/scsi/fcoe/libfcoe.h        |   31 
+ include/scsi/libfcoe.h             |   43 +
+ 7 files changed, 3380 insertions(+), 2830 deletions(-)
+ create mode 100644 drivers/scsi/fcoe/fcoe_ctlr.c
+ create mode 100644 drivers/scsi/fcoe/fcoe_transport.c
+ delete mode 100644 drivers/scsi/fcoe/libfcoe.c
+ create mode 100644 drivers/scsi/fcoe/libfcoe.h
 
 -- 
-1.7.3.5
-
+Signature: Yi Zou <yi.zou@intel.com>
