@@ -1,72 +1,26 @@
-From: Yi Zou <yi.zou@intel.com>
-Subject: [PATCH v3 10/10] fcoe: Return ERESTARTSYS on rtnl_trylock failure
-Date: Wed, 12 Jan 2011 18:20:42 -0800
-Message-ID: <20110113022041.12798.64499.stg.yi.zou@intel.com>
-References: <20110113021649.12798.71742.stg.yi.zou@intel.com>
+From: Or Gerlitz <or.gerlitz@gmail.com>
+Subject: Re: build failure of drivers/scsi/gdth.c
+Date: Thu, 13 Jan 2011 11:20:20 +0200
+Message-ID: <AANLkTikmygrH_W=nTB2ERPjUETVNzW=8n7VL9Jf6DLu3@mail.gmail.com>
+References: <Pine.LNX.4.64.1101121217090.6323@zuben.voltaire.com>
+	<20110112083919.494a7404.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:37843 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932361Ab1AMCXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Jan 2011 21:23:49 -0500
-In-Reply-To: <20110113021649.12798.71742.stg.yi.zou@intel.com>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:59839 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932532Ab1AMJUV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jan 2011 04:20:21 -0500
+Received: by wwa36 with SMTP id 36so1582958wwa.1
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Jan 2011 01:20:20 -0800 (PST)
+In-Reply-To: <20110112083919.494a7404.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: devel@open-fcoe.org
-Cc: bprakash@broadcom.com, linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Or Gerlitz <ogerlitz@voltaire.com>, linux-scsi@vger.kernel.org
 
-From: Bhanu Gollapudi <bprakash@broadcom.com>
+Randy Dunlap <rdunlap@xenotime.net> wrote:
+> I've never seen this problem in 2.6.37 AFAIK and I have 2.6.37 gdth.o and gdth.ko
+> built on my system now. How can I reproduce this?
 
-fcoe driver should return -ERESTARTSYS instead of -ENODEV so
-that rtnl lock will be retried.
-
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-Signed-off-by: Yi Zou <yi.zou@intel.com>
----
-
- drivers/scsi/fcoe/fcoe.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index cd40fc8..eda70e5 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1948,7 +1948,7 @@ static int fcoe_disable(struct net_device *netdev)
- 
- 	if (!rtnl_trylock()) {
- 		mutex_unlock(&fcoe_config_mutex);
--		return -ENODEV;
-+		return -ERESTARTSYS;
- 	}
- 
- 	fcoe = fcoe_hostlist_lookup_port(netdev);
-@@ -1992,7 +1992,7 @@ static int fcoe_enable(struct net_device *netdev)
- #endif
- 	if (!rtnl_trylock()) {
- 		mutex_unlock(&fcoe_config_mutex);
--		return -ENODEV;
-+		return -ERESTARTSYS;
- 	}
- 
- 	fcoe = fcoe_hostlist_lookup_port(netdev);
-@@ -2035,7 +2035,7 @@ static int fcoe_destroy(struct net_device *netdev)
- #endif
- 	if (!rtnl_trylock()) {
- 		mutex_unlock(&fcoe_config_mutex);
--		return -ENODEV;
-+		return -ERESTARTSYS;
- 	}
- 
- 	fcoe = fcoe_hostlist_lookup_port(netdev);
-@@ -2088,7 +2088,7 @@ static int fcoe_create(struct net_device *netdev, enum fip_state fip_mode)
- 
- 	if (!rtnl_trylock()) {
- 		mutex_unlock(&fcoe_config_mutex);
--		return -EIO;
-+		return -ERESTARTSYS;
- 	}
- 
- #ifdef CONFIG_FCOE_MODULE
-
+I'll send you now my .config
