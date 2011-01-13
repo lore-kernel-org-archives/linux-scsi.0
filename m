@@ -1,42 +1,53 @@
-From: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
-Subject: UASP: updates and merges
-Date: Thu, 13 Jan 2011 02:45:24 -0800 (PST)
-Message-ID: <419275.23415.qm@web31813.mail.mud.yahoo.com>
-Reply-To: ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
+Date: Thu, 13 Jan 2011 16:37:07 +0100
+Message-ID: <20110113153707.GB12596@htj.dyndns.org>
+References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com>
+ <20110112112142.GA9610@mtj.dyndns.org>
+ <4D2DF45B.5010101@pobox.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:43409 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756825Ab1AMPhZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Jan 2011 10:37:25 -0500
+Received: by bwz15 with SMTP id 15so1632030bwz.19
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Jan 2011 07:37:16 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <4D2DF45B.5010101@pobox.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: maksim.rayskiy@gmail.com, linux-scsi@vger.kernel.org
 
-The UASP driver allows you to connect to UAS devices and use them
-as SCSI devices.
+Hey, Jeff.
 
-I've merged latest master (f87813) and resolved a conflict in drivers/scsi/sd.c by adding back the truncation of the mode sense data.
+On Wed, Jan 12, 2011 at 01:35:07PM -0500, Jeff Garzik wrote:
+> The previous patch breaks READ VERIFY translation for all cases
+> -except- this one.
 
-The UASP driver saw the following update:
+Ooh, right; then, can we just fix that?
 
-    [USB] UASP: factor out GFP flags and make them GFP_ATOMIC
-    
-    Factor out the GFP flags and make them atomic:
-    1) The SCSI subsystem uses GFP_ATOMIC, e.g. before
-    calling the host's slave_alloc callback (at the
-    time of this commit).
-    2) As we are a storage driver doing I/O, we should
-    use the lowest denominator (highest priority)
-    allocation, and of course we shouldn't sleep, thus
-    use GFP_ATOMIC.
+> The bottom line is that this patch simply wants to trigger an ATA
+> command, and return immediately, discarding the command results.
+> I'm not even sure a "run this command in background, and discard
+> results" facility requires the EH.
 
-The branch can be found here (off of master):
-https://github.com/ltuikov/linux-2.6
+It doens't necessarily require EH but the dependency is rather
+delicate because we still ride on SCSI EH.  For example, we don't have
+any provision for running qc's without the associated scmd.  If the
+command fails, libata EH rides on SCSI EH and the interaction relies
+on the association between qc's and scmd's.  We may be able to add
+privison for this case but we already have working mechanism in EH for
+internal commands so it's just easiser that way.
 
-Original posting of the UASP driver can be found here:
-http://marc.info/?l=linux-usb&m=129165511732388&w=2
+Well, actually, the _really_ right(eous) thing to do here would be
+just not doing it as it's an ugly hack no matter which way we spin it,
+but this has a quite significant impact on resume from STR latency
+so...
 
-   Luben
+Thanks.
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+tejun
