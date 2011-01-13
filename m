@@ -1,55 +1,253 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL 0/3] target: resync to latest scsi-post-merge .38
-Date: Thu, 13 Jan 2011 12:34:32 -0800
-Message-ID: <1294950872-12218-1-git-send-email-nab@linux-iscsi.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [v2 PATCH 2/5] bnx2fc: Broadcom FCoE offload driver submission
+ (header files)
+Date: Thu, 13 Jan 2011 16:53:57 -0600
+Message-ID: <4D2F8285.8040205@cs.wisc.edu>
+References: <1293170552.4676.572.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp125.sbc.mail.sp1.yahoo.com ([69.147.65.184]:32265 "HELO
-	smtp125.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S933611Ab1AMUeR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Jan 2011 15:34:17 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41004 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752227Ab1AMWyG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Jan 2011 17:54:06 -0500
+In-Reply-To: <1293170552.4676.572.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Bhanu Gollapudi <bprakash@broadcom.com>
+Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org, mchan@broadcom.com
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 12/24/2010 12:02 AM, Bhanu Gollapudi wrote:
+> diff --git a/drivers/scsi/bnx2fc/57xx_fcoe_constants.h b/drivers/scsi/bnx2fc/57xx_fcoe_constants.h
+> new file mode 100644
+> index 0000000..c1b4e77
+> --- /dev/null
+> +++ b/drivers/scsi/bnx2fc/57xx_fcoe_constants.h
+> @@ -0,0 +1,261 @@
+> +#ifndef __57XX_FCOE_CONSTANTS_H_
+> +#define __57XX_FCOE_CONSTANTS_H_
+> +
+> +/**
+> + * This file defines HSI constants for the FCoE flows
+> + */
+> +
 
-Hi James,
 
-This is a quick resync from my last two target 'GIT PULL' requests against
-the very latest LIO target code commit in scsi-post-merge-2.6.git:
+There is a bunch of old defines and maybe structs that are not used. 
+Remove them.
 
-   commit 7d2087a1820b104f3af526f1390f0fb673373e54
-   Author: Nicholas Bellinger <nab@linux-iscsi.org>
-   Date:   Fri Dec 17 11:11:26 2010 -0800
 
-       [SCSI] target: Add LIO target core v4.0.0-rc6
+> +#endif /* __57XX_FCOE_HSI_LINUX_LE__ */
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
+> new file mode 100644
+> index 0000000..0ba6d2e
+> --- /dev/null
+> +++ b/drivers/scsi/bnx2fc/bnx2fc.h
+> @@ -0,0 +1,545 @@
+> +#ifndef _BNX2FC_H_
+> +#define _BNX2FC_H_
+> +/* bnx2fc.h: Broadcom NetXtreme II Linux FCoE offload driver.
+> + *
+> + * Copyright (c) 2008 - 2010 Broadcom Corporation
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation.
+> + *
+> + * Written by: Bhanu Prakash Gollapudi (bprakash@broadcom.com)
+> + */
+> +
+> +#include<linux/version.h>
+> +#include<linux/module.h>
+> +#include<linux/moduleparam.h>
+> +
+> +#include<linux/kernel.h>
+> +#include<linux/skbuff.h>
+> +#include<linux/netdevice.h>
+> +#include<linux/etherdevice.h>
+> +#include<linux/ethtool.h>
+> +#include<linux/if_ether.h>
+> +#include<linux/if_vlan.h>
+> +#include<linux/kthread.h>
+> +#include<linux/crc32.h>
+> +#include<linux/cpu.h>
+> +
+> +#include<linux/types.h>
+> +#include<linux/list.h>
+> +#include<linux/delay.h>
+> +#include<asm/byteorder.h>
+> +#include<linux/timer.h>
+> +#include<linux/errno.h>
+> +#include<linux/pci.h>
+> +#include<linux/init.h>
+> +#include<linux/dma-mapping.h>
+> +#include<linux/workqueue.h>
+> +#include<linux/mutex.h>
+> +#include<linux/spinlock.h>
+> +#include<linux/bitops.h>
+> +#include<linux/log2.h>
+> +
+> +#include<net/tcp.h>
+> +
+> +#include<scsi/scsi.h>
+> +#include<scsi/scsi_host.h>
+> +#include<scsi/scsi_device.h>
+> +#include<scsi/scsi_cmnd.h>
+> +#include<scsi/scsi_eh.h>
+> +#include<scsi/scsi_tcq.h>
+> +#include<scsi/fc/fc_fip.h>
+> +#include<scsi/fc/fc_fc2.h>
+> +#include<scsi/libfc.h>
+> +#include<scsi/libfcoe.h>
+> +#include<scsi/fc_frame.h>
+> +
+> +#include<scsi/fc/fc_fcoe.h>
+> +
+> +#include<scsi/scsi_transport.h>
+> +#include<scsi/scsi_transport_fc.h>
+> +
+> +#include<linux/fs.h>
+> +#include<linux/mm.h>
+> +#include<linux/interrupt.h>
+> +#include<linux/sched.h>
+> +#include<linux/uaccess.h>
+> +#include<linux/io.h>
 
-Please pull from 'for-jejb' rebased against the above commmit here:
+These linux includes should be with the other ones.
 
-    git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-jejb
+> +
+> +#include "57xx_hsi_bnx2fc.h"
+> +
+> +#include "bnx2fc_debug.h"
+> +#include "../../net/cnic_if.h"
+> +
+> +#include "fcoe_constants.h"
+> +
+> +#define BNX2FC_NAME		"bnx2fc"
+> +#define BNX2FC_VERSION		"1.0.0"
+> +
+> +#define PFX			"bnx2fc: "
+> +
+> +#define BNX2FC_VLAN0FIX		1
 
-Note that for target_fabric_make_lun() strict_strtoul conversion (from
-PULL #2 yesterday) you will need to fix the obvious local scope variable
-definition newline conflict (a bug in git..?).  Also please make sure
-to carry the jlbec ACK'ed configfs kbuild change as well.
+Not used.
 
-Please let me know if you have any questions,
+> +
+> +#define BNX2X_DOORBELL_PCI_BAR                  2
+> +
+> +#define BNX2FC_MAX_BD_LEN		0xffff
+> +#define BNX2FC_BD_SPLIT_SZ		0x8000
+> +#define BNX2FC_MAX_BDS_PER_CMD		256
+> +#define MAX_PAGES_PER_EXCHG_CTX_POOL	1024
+> +
+> +#define BNX2FC_SQ_WQES_MAX	256
+> +
+> +#define BNX2FC_SCSI_MAX_SQES	((3 * BNX2FC_SQ_WQES_MAX) / 8)
+> +#define BNX2FC_TM_MAX_SQES	((BNX2FC_SQ_WQES_MAX) / 2)
+> +#define BNX2FC_ELS_MAX_SQES	(BNX2FC_TM_MAX_SQES - 1)
+> +
+> +#define BNX2FC_RQ_WQES_MAX	16
+> +#define BNX2FC_CQ_WQES_MAX	(BNX2FC_SQ_WQES_MAX + BNX2FC_RQ_WQES_MAX)
+> +
+> +#define BNX2FC_MAX_SESS		2048
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Not used.
 
-Nicholas Bellinger (3):
-  target: Add missing core_scsi3_put_pr_reg() for explict REGISTER key
-    change
-  target: Convert target_fabric_make_lun to strict_strtoul
-  configfs: change depends -> select SYSFS
+> +#define BNX2FC_NUM_MAX_SESS	128
 
- drivers/target/target_core_fabric_configfs.c |   13 +++++--------
- drivers/target/target_core_pr.c              |    1 +
- fs/configfs/Kconfig                          |   14 +++++++-------
- 3 files changed, 13 insertions(+), 15 deletions(-)
 
--- 
-1.7.3.5
+What is the difference between this and BNX2FC_MAX_FCP_TGT below? Should 
+they be the same? Seems low if you are using multipath too.
+
+
+
+> +#define BNX2FC_NUM_MAX_SESS_LOG	(ilog2(BNX2FC_NUM_MAX_SESS))
+> +
+> +#ifdef CONFIG_X86_64
+> +#define BNX2FC_MAX_OUTSTANDING_CMNDS	4096
+> +#else
+> +#define BNX2FC_MAX_OUTSTANDING_CMNDS	1024
+> +#endif
+
+Why is this different for other archs?
+
+
+> +#define BNX2FC_MIN_PAYLOAD		256
+> +#define BNX2FC_MAX_PAYLOAD		2048
+> +
+> +#define BNX2FC_RQ_BUF_SZ		256
+> +#define BNX2FC_RQ_BUF_LOG_SZ		(ilog2(BNX2FC_RQ_BUF_SZ))
+> +
+> +#define BNX2FC_SQ_WQE_SIZE		(sizeof(struct fcoe_sqe))
+> +#define BNX2FC_CQ_WQE_SIZE		(sizeof(struct fcoe_cqe))
+> +#define BNX2FC_RQ_WQE_SIZE		(BNX2FC_RQ_BUF_SZ)
+> +#define BNX2FC_XFERQ_WQE_SIZE		(sizeof(struct fcoe_xfrqe))
+> +#define BNX2FC_CONFQ_WQE_SIZE		(sizeof(struct fcoe_confqe))
+> +#define BNX2FC_5771X_DB_PAGE_SIZE	128
+> +
+> +#define BNX2FC_MAX_TASKS		BNX2FC_MAX_OUTSTANDING_CMNDS
+> +#define BNX2FC_TASK_SIZE		128
+> +/*#define BNX2FC_TASK_SIZE		(sizeof(struct fcoe_task_ctx_entry)) */
+> +#define	BNX2FC_TASKS_PER_PAGE		(PAGE_SIZE/BNX2FC_TASK_SIZE)
+> +#define BNX2FC_TASK_CTX_ARR_SZ		(BNX2FC_MAX_TASKS/BNX2FC_TASKS_PER_PAGE)
+> +
+> +#define BNX2FC_MAX_ROWS_IN_HASH_TBL	8
+> +#define BNX2FC_HASH_TBL_CHUNK_SIZE	(16 * 1024)
+> +
+> +#define BNX2FC_MAX_SEQS			255
+> +
+> +#define  SIMPLE_QUEUE			0x00
+> +#define  HEAD_OF_QUEUE			0x01
+> +#define  ORDERED_QUEUE			0x02
+> +#define  ACA_QUEUE			0x04
+
+
+these look like fc_fcp.h defs.
+
+> +#define  UNTAGGED			0x05
+> +
+> +#define FCP_TMF_TGT_RESET		0x20
+> +
+
+fc_fcp.h defs.
+
+
+> +#define FC_SRB_READ			(1<<  1)
+> +#define FC_SRB_WRITE			(1<<  0)
+> +
+> +#define BNX2FC_MIN_XID			0
+> +#define BNX2FC_MAX_XID			(BNX2FC_MAX_OUTSTANDING_CMNDS - 1)
+> +#define FCOE_MIN_XID			(BNX2FC_MAX_OUTSTANDING_CMNDS)
+> +#define FCOE_MAX_XID		\
+> +			(BNX2FC_MAX_OUTSTANDING_CMNDS + (nr_cpu_ids * 256))
+> +#define BNX2FC_MAX_LUN			0xFFFF
+
+
+Is this a hw limit?
+
+For bnx2i it is only 512. Should one be fixed or does the fcoe function 
+support a higher value?
+
+
+
+> +#define BNX2FC_MAX_FCP_TGT		256
+> +#define BNX2FC_MAX_CMD_LEN		16
+> +#define BNX2FC_IOS_PER_WORK		24
+
+
+Not used.
+
+
+
+> +#define IP_V4 0
+> +#define IP_V6 1
+
+What are these for?
+
+
+Could you go through the headers and removed unused stuff. I noted some 
+that had interesting names to me so I was looking at them, but there are 
+probably more.
+
 
