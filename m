@@ -1,47 +1,53 @@
 From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH v3 0/3] differentiate between I/O errors
-Date: Fri, 14 Jan 2011 10:58:53 -0500
-Message-ID: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
+Subject: [PATCH v3 2/3] dm mpath: propagate target errors immediately
+Date: Fri, 14 Jan 2011 10:58:55 -0500
+Message-ID: <1295020736-27699-3-git-send-email-snitzer@redhat.com>
+References: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43286 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:28782 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752032Ab1ANP7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1757656Ab1ANP7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 14 Jan 2011 10:59:16 -0500
+In-Reply-To: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-scsi@vger.kernel.org, agk@redhat.com, jaxboe@fusionio.com, Hannes Reinecke <hare@suse.de>, michaelc@cs.wisc.edu, Mike Snitzer <snitzer@redhat.com>
 
-Refreshed against 2.6.38 merge window commit (52cfd503ad717).
-Added Hannes' Acked-by to patch 2 and 3.  Removed RFC tag from all
-patches now that we have consensus.
+DM now has more information about the nature of the underlying storage
+failure.  Path failure is avoided if a request failed due to a target
+error.  Instead the target error is immediately passed up the stack.
 
-James, it would be outstanding if we could get this squeezed in to the
-2.6.38 merge.  But if not, at least getting it staged in your tree for
-2.6.39 merge would be great.
+Discard requests that fail due to non-target errors may now be retried.
 
-The non-scsi changes _could_ go through block and DM trees
-respectively but I figured it easiest to keep the patchset together in
-one tree (biggest change being SCSI it seemed to make sense to push
-the changes through your tree).
-sense).
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+Acked-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/md/dm-mpath.c |   11 +----------
+ 1 files changed, 1 insertions(+), 10 deletions(-)
 
-Please advise, thanks.
-Mike
-
-Hannes Reinecke (1):
-  scsi: Detailed I/O errors
-
-Mike Snitzer (2):
-  dm mpath: propagate target errors immediately
-  block: improve detail in I/O error messages
-
- block/blk-core.c          |   20 +++++++++++++++++---
- drivers/md/dm-mpath.c     |   11 +----------
- drivers/scsi/scsi_error.c |   24 +++++++++++++++++-------
- drivers/scsi/scsi_lib.c   |   24 ++++++++++++++++++++++--
- include/scsi/scsi.h       |    3 +++
- 5 files changed, 60 insertions(+), 22 deletions(-)
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index b82d288..532b845 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -1283,16 +1283,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
+ 	if (!error && !clone->errors)
+ 		return 0;	/* I/O complete */
+ 
+-	if (error == -EOPNOTSUPP)
+-		return error;
+-
+-	if (clone->cmd_flags & REQ_DISCARD)
+-		/*
+-		 * Pass all discard request failures up.
+-		 * FIXME: only fail_path if the discard failed due to a
+-		 * transport problem.  This requires precise understanding
+-		 * of the underlying failure (e.g. the SCSI sense).
+-		 */
++	if (error == -EOPNOTSUPP || error == -EREMOTEIO)
+ 		return error;
+ 
+ 	if (mpio->pgpath)
 -- 
 1.7.3.4
 
