@@ -1,82 +1,59 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: training mpath to discern between SCSI errors
-Date: Fri, 14 Jan 2011 08:59:17 -0500
-Message-ID: <20110114135917.GA25506@redhat.com>
-References: <4C7BA670.2060303@suse.de>
- <4C7BC5B4.3010707@suse.de>
- <4CBC00B3.7090603@ce.jp.nec.com>
- <4CBC35AE.9050002@suse.de>
- <20101119031149.GA28455@us.ibm.com>
- <20101130225956.GA8882@redhat.com>
- <4D0B31B5.101@suse.de>
- <20101217140605.GA740@redhat.com>
- <20110114010948.GA21818@redhat.com>
- <4D2FFF00.8020702@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 26692] New: Fusion MPT SPI bringup takes 80 seconds when the
+ kernel is quiet
+Date: Fri, 14 Jan 2011 15:40:24 GMT
+Message-ID: <bug-26692-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D2FFF00.8020702@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>, Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, michaelc@cs.wisc.edu, tytso@mit.edu, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, vst@vlnb.net, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-raid@vger.kernel.org, linux-ide@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, James.Bottomley@suse.de, Sergei Shtylyov <sshtylyov@mvista.com>, konishi.ryusuke@lab.ntt.co.jp, linux-fsdevel@vger.kernel.org, jack@suse.cz, rwheeler@redhat.com, swhiteho@redhat.com, chris.mason@oracle.com, Tejun Heo <tj@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter1.kernel.org ([140.211.167.39]:48035 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757486Ab1ANPkZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Jan 2011 10:40:25 -0500
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p0EFeObW018537
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Jan 2011 15:40:25 GMT
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jan 14 2011 at  2:45am -0500,
-Hannes Reinecke <hare@suse.de> wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=26692
 
-> On 01/14/2011 02:09 AM, Mike Snitzer wrote:
-> > On Fri, Dec 17 2010 at  9:06am -0500,
-> > Mike Snitzer <snitzer@redhat.com> wrote:
-> > 
-> >> On Fri, Dec 17 2010 at  4:47am -0500,
-> >> Hannes Reinecke <hare@suse.de> wrote:
-> >>
-> >>> On 11/30/2010 11:59 PM, Mike Snitzer wrote:
-> >>>> Hannes,
-> >>>>
-> >>>> Any chance you've had time to fold your proposed logging changes in and
-> >>>> rebase this patch?  Could you post that updated patch?
-> >>>>
-> >>> yes, will be following shortly.
-> >>>
-> >>>> I'd like to help see this patch through to inclussion when 2.6.38 merge
-> >>>> window opens.  I can help with further review, testing and development.
-> >>>>
-> >>> Ok, thanks.
-> >>
-> >> I took some steps at furthering your work.  Here is the cover letter to
-> >> the patches I resently sent to dm-devel:
-> >> https://www.redhat.com/archives/dm-devel/2010-December/msg00090.html
-> >>
-> >> And here are the patches:
-> >> https://patchwork.kernel.org/patch/384612/
-> >> https://patchwork.kernel.org/patch/384602/
-> >> https://patchwork.kernel.org/patch/390882/
-> >>
-> >> Please feel free to change these how ever you see fit but your feedback
-> >> is really appreciated.
-> > 
-> > Hannes,
-> > 
-> > Any update?  I'd really like to see this work get upstream ASAP.  I'm
-> > doubtful that is possible for 2.6.38 given the merge window is likely to
-> > close shortly.
-> > 
-> Sorry for the late answer; the above patches somehow got lost in my
-> various mail folders :-(
-> 
-> But yes, the patchset looks okay.
-> Feel free to add my Acked-by: to last two.
+           Summary: Fusion MPT SPI bringup takes 80 seconds when the
+                    kernel is quiet
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.37
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: wferi@niif.hu
+        Regression: No
 
-OK.
 
-> > Regardless, if we could get consensus on this work now and then stage it
-> > with James that would be great.
-> > 
-> Indeed. Will you resend it to linux-scsi or shall I do it?
+Created an attachment (id=43542)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=43542)
+dmesg after booting 2.6.37 quiet mtpbase.mpt_debug_level=0x8188
 
-I can resend, will do so shortly.
+This is the upstream followup for
+http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=607906, where you can find
+some basic kernel logs. Instead those I attach a log with
+mpt_debug_level=0x8188 (rather arbibtary value snatched from #11045, please ask
+for a better one).
 
-Thanks!
-Mike
+In short: on an IBM x345 loading the mptspi module under 2.6.32 oopses, unless
+the kernel is started with 'quiet', in which case it works all right. Under
+2.6.37 the module still works all right when the 'quiet' parameter is present,
+but introduces an 80-second boot delay without it (but at least manages to
+avoid the oops).
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
