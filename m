@@ -1,85 +1,33 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: [CFP] Linux Storage and Filesystems Workshop (April 4-5)
-Date: Fri, 14 Jan 2011 14:49:05 -0600
-Message-ID: <1295038146.18445.66.camel@mulgrave.site>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [ANNOUNCE]: SCST SCSI target mode subsystem 2.0.0.1 released
+Date: Sat, 15 Jan 2011 00:07:36 +0300
+Message-ID: <4D30BB18.6080804@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:42778 "EHLO mx2.suse.de"
+Received: from mail.dfsv43.com ([91.103.216.11]:36537 "EHLO mail.dfsv43.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752039Ab1ANUtL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Jan 2011 15:49:11 -0500
+	id S1752393Ab1ANVHP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jan 2011 16:07:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The annual Linux Storage, Filesystem and Memory Management Workshop for
-2011 will be held on the 2 days preceding the Linux Foundation
-Collaboration Summit at Hotel Kabuki in the Japantown area of San
-Francisco:
+SCST SCSI target mode subsystem 2.0.0.1 released and can be downloaded
+from the SCST download page http://scst.sourceforge.net/downloads.html.
 
-   http://events.linuxfoundation.org/events/collaboration-summit
+Everybody are strongly encouraged to upgrade.
 
-Given the success of last year's 3 track experiment, we are once again
-planning to hold some joint sessions and the rest split into separate
-Storage, Filesystem and Memory Management breakout sessions. We'd
-therefore like to issue a call for agenda proposals that are suitable
-for cross-track discussion as well as more technical subjects for
-discussion in the breakout sessions.
+Summary of changes between versions 2.0.0 and 2.0.0.1
+-----------------------------------------------------
 
-Suggestions for agenda topics should be sent before February 6th to
+ - Fixed critical issue with wrong INQUIRY page 0x80 (r3197)
 
-lsf-pc@lists.linuxfoundation.org
+ - Possible crashes due to incorrect execution context estimations fixed
 
-and optionally cc the Linux list which would be most interested in it:
+ - Responsiveness under heavy load improved
 
-SCSI: linux-scsi@vger.kernel.org
-FS: linux-fsdevel@vger.kernel.org
-MM: linux-mm@kvack.org
+Thanks to all participated!
 
-Please remember to tag your subject with [LSF/MM TOPIC] to make it
-easier to track. Agenda topics and attendees will be selected by the
-programme committee, but the final agenda will be by formed by consensus
-of the attendees on the day.
-
-We'll try to cap attendance at around 25-30 per track to facilitate
-discussions although the final numbers will depend on the room sizes at
-the venue.
-
-Requests to attend should be sent to:
-
-lsf-pc@lists.linuxfoundation.org
-
-please summarise what expertise you will bring to the meeting, and what
-you'd like to discuss.  please also tag your email with [ATTEND] so
-there's less chance of it getting lost in the large mail pile.
-
-Presentations are allowed to guide discussion, but are strongly
-discouraged.  There will be no recording or audio bridge, however
-written minutes will be published as in previous years:
-
-2010:
-http://lwn.net/Articles/399148/
-http://lwn.net/Articles/399313/
-http://lwn.net/Articles/400589/
-
-2009:
-http://lwn.net/Articles/327601/
-http://lwn.net/Articles/327740/
-http://lwn.net/Articles/328347/
-
-Prior years:
-http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
-http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
-
-If you have feedback on last year's meeting that we can use to improve
-this year's, please also send that to:
-
-lsf-pc@lists.linuxfoundation.org
-
-On behalf of the Program Committee, Thanks,
-
-James
-
-
+Vlad
