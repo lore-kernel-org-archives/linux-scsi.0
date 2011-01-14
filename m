@@ -1,87 +1,136 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v3 1/3] scsi: Detailed I/O errors
-Date: Fri, 14 Jan 2011 12:16:14 -0500
-Message-ID: <20110114171614.GA27852@redhat.com>
-References: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
- <1295020736-27699-2-git-send-email-snitzer@redhat.com>
- <20110114161048.GK5727@earth.li>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: [GIT PULL] SCSI postmerge patches for 2.6.38 merge window
+Date: Fri, 14 Jan 2011 12:40:53 -0600
+Message-ID: <1295030453.18445.63.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18538 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756926Ab1ANRQ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Jan 2011 12:16:28 -0500
-Content-Disposition: inline
-In-Reply-To: <20110114161048.GK5727@earth.li>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jonathan McDowell <noodles@earth.li>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, agk@redhat.com, jaxboe@fusionio.com, Hannes Reinecke <hare@suse.de>, michaelc@cs.wisc.edu
 
-On Fri, Jan 14 2011 at 11:10am -0500,
-Jonathan McDowell <noodles@earth.li> wrote:
+This is a set of three patches I've been carrying that had a
+dependencies on pieces of the block tree (which went in yesterday).
+It's been rebased to go cleanly on top of current git head (and elimnate
+some of the merge cruft of creating a postmerge tree).  All of the
+patches have been in Linux-next for several weeks.
 
-> On Fri, Jan 14, 2011 at 10:58:54AM -0500, Mike Snitzer wrote:
-> > From: Hannes Reinecke <hare@suse.de>
-> > 
-> > Instead of just passing 'EIO' for any I/O error we should be
-> > notifying the upper layers with more details about the cause
-> > of this error.
-> > 
-> > Update the possible I/O errors to:
-> > 
-> > - ENOLINK: Link failure between host and target
-> > - EIO: Retryable I/O error
-> > - EREMOTEIO: Non-retryable I/O error
-> > 
-> > 'Retryable' in this context means that an I/O error _might_ be
-> > restricted to the I_T_L nexus (vulgo: path), so retrying on another
-> > nexus / path might succeed.
-> ...
-> > @@ -1486,6 +1495,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
-> >  	case RESERVATION_CONFLICT:
-> >  		sdev_printk(KERN_INFO, scmd->device,
-> >  			    "reservation conflict\n");
-> > +		scmd->result |= (DID_TARGET_FAILURE << 16);
-> >  		return SUCCESS; /* causes immediate i/o error */
-> >  	default:
-> >  		return FAILED;
-> ...
-> > +#define DID_TARGET_FAILURE 0x10 /* Permanent target failure, do not retry on
-> > +				 * other paths */
-> 
-> I'd have viewed a reservation conflict as being tied to a particular
-> path, rather than the entire target. I've seen multipath setups where
-> there are reservation issues on some of the paths but others are fine
-> and this is expected (eg use of reservations to fence off particular
-> paths).
+The two sd/sr patches are just completion of the media events
+infrastructure which was in the block tree.  The main chunk is the
+addition of the LIO in-kernel target infrastructure which is one of the
+two competing target infrastructures which have been out of tree for
+several years now.  Thanks to quite a lot of effort (particularly from
+Christoph Hellwig) cleaning it up, I think it's ready for mainline
+inclusion.  This piece is just the target infrastructure; we'll begin
+adding the in-kernel drivers and the migration hooks for STGT (our
+original user land target driver) over the next merge window.
 
-Very good point (as I think you're correct).  Technically a reservation
-conflict is retryable across _different_ paths but (relative to the
-error path as it relates to multipath) it appears Hannes elected to go
-with the conservative approach of always failing the IO upward given the
-potential for data corruption when queue_if_no_path is used.
+The patch is available here:
 
-Hannes previously touched on this here:
-https://www.redhat.com/archives/dm-devel/2009-November/msg00190.html
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-post-merge-2.6.git
 
-"This also solves a potential data corruption with multipathing
-and persistent reservations. When queue_if_no_path is active
-multipath will queue any I/O failure (including those failed
-with RESERVATION CONFLICT) until the reservation status changes.
-But by then I/O might have been ongoing on the other paths,
-thus the delayed submission will severely corrupt your data."
+The short changelog is:
 
-Even in the context of that older SCSI sense-based mpath patchset a
-reservation conflict would always fail upward (regardless of path count
-and/or queue_if_no_path).
+Nicholas Bellinger (1):
+      target: Add LIO target core v4.0.0-rc6
 
-All said, the above doesn't excuse what seems to be a mis-categorization
-of reservation conflict as a pure non-retryable TARGET_FAILURE
-(EREMOTEIO).
+Tejun Heo (2):
+      sd,sr: kill compat SDEV_MEDIA_CHANGE event
+      sd: implement sd_check_events()
 
-But I'd like to defer to Hannes for the authorative answer ;)
+and the diffstat:
 
-Regards,
-Mike
+ Documentation/target/tcm_mod_builder.py      | 1094 +++++
+ Documentation/target/tcm_mod_builder.txt     |  145 +
+ drivers/Kconfig                              |    2 +
+ drivers/Makefile                             |    1 +
+ drivers/scsi/sd.c                            |  103 +-
+ drivers/scsi/sd.h                            |    1 -
+ drivers/scsi/sr.c                            |    4 -
+ drivers/target/Kconfig                       |   32 +
+ drivers/target/Makefile                      |   24 +
+ drivers/target/target_core_alua.c            | 1991 +++++++++
+ drivers/target/target_core_alua.h            |  126 +
+ drivers/target/target_core_cdb.c             | 1131 +++++
+ drivers/target/target_core_configfs.c        | 3225 ++++++++++++++
+ drivers/target/target_core_device.c          | 1694 +++++++
+ drivers/target/target_core_fabric_configfs.c |  996 +++++
+ drivers/target/target_core_fabric_lib.c      |  451 ++
+ drivers/target/target_core_file.c            |  688 +++
+ drivers/target/target_core_file.h            |   50 +
+ drivers/target/target_core_hba.c             |  185 +
+ drivers/target/target_core_hba.h             |    7 +
+ drivers/target/target_core_iblock.c          |  808 ++++
+ drivers/target/target_core_iblock.h          |   40 +
+ drivers/target/target_core_mib.c             | 1078 +++++
+ drivers/target/target_core_mib.h             |   28 +
+ drivers/target/target_core_pr.c              | 4252 ++++++++++++++++++
+ drivers/target/target_core_pr.h              |   67 +
+ drivers/target/target_core_pscsi.c           | 1470 ++++++
+ drivers/target/target_core_pscsi.h           |   65 +
+ drivers/target/target_core_rd.c              | 1091 +++++
+ drivers/target/target_core_rd.h              |   73 +
+ drivers/target/target_core_scdb.c            |  105 +
+ drivers/target/target_core_scdb.h            |   10 +
+ drivers/target/target_core_tmr.c             |  404 ++
+ drivers/target/target_core_tpg.c             |  826 ++++
+ drivers/target/target_core_transport.c       | 6134 ++++++++++++++++++++++++++
+ drivers/target/target_core_ua.c              |  332 ++
+ drivers/target/target_core_ua.h              |   36 +
+ include/target/configfs_macros.h             |  147 +
+ include/target/target_core_base.h            |  937 ++++
+ include/target/target_core_configfs.h        |   52 +
+ include/target/target_core_device.h          |   61 +
+ include/target/target_core_fabric_configfs.h |  106 +
+ include/target/target_core_fabric_lib.h      |   28 +
+ include/target/target_core_fabric_ops.h      |  100 +
+ include/target/target_core_tmr.h             |   43 +
+ include/target/target_core_tpg.h             |   35 +
+ include/target/target_core_transport.h       |  351 ++
+ 47 files changed, 30571 insertions(+), 58 deletions(-)
+ create mode 100755 Documentation/target/tcm_mod_builder.py
+ create mode 100644 Documentation/target/tcm_mod_builder.txt
+ create mode 100644 drivers/target/Kconfig
+ create mode 100644 drivers/target/Makefile
+ create mode 100644 drivers/target/target_core_alua.c
+ create mode 100644 drivers/target/target_core_alua.h
+ create mode 100644 drivers/target/target_core_cdb.c
+ create mode 100644 drivers/target/target_core_configfs.c
+ create mode 100644 drivers/target/target_core_device.c
+ create mode 100644 drivers/target/target_core_fabric_configfs.c
+ create mode 100644 drivers/target/target_core_fabric_lib.c
+ create mode 100644 drivers/target/target_core_file.c
+ create mode 100644 drivers/target/target_core_file.h
+ create mode 100644 drivers/target/target_core_hba.c
+ create mode 100644 drivers/target/target_core_hba.h
+ create mode 100644 drivers/target/target_core_iblock.c
+ create mode 100644 drivers/target/target_core_iblock.h
+ create mode 100644 drivers/target/target_core_mib.c
+ create mode 100644 drivers/target/target_core_mib.h
+ create mode 100644 drivers/target/target_core_pr.c
+ create mode 100644 drivers/target/target_core_pr.h
+ create mode 100644 drivers/target/target_core_pscsi.c
+ create mode 100644 drivers/target/target_core_pscsi.h
+ create mode 100644 drivers/target/target_core_rd.c
+ create mode 100644 drivers/target/target_core_rd.h
+ create mode 100644 drivers/target/target_core_scdb.c
+ create mode 100644 drivers/target/target_core_scdb.h
+ create mode 100644 drivers/target/target_core_tmr.c
+ create mode 100644 drivers/target/target_core_tpg.c
+ create mode 100644 drivers/target/target_core_transport.c
+ create mode 100644 drivers/target/target_core_ua.c
+ create mode 100644 drivers/target/target_core_ua.h
+ create mode 100644 include/target/configfs_macros.h
+ create mode 100644 include/target/target_core_base.h
+ create mode 100644 include/target/target_core_configfs.h
+ create mode 100644 include/target/target_core_device.h
+ create mode 100644 include/target/target_core_fabric_configfs.h
+ create mode 100644 include/target/target_core_fabric_lib.h
+ create mode 100644 include/target/target_core_fabric_ops.h
+ create mode 100644 include/target/target_core_tmr.h
+ create mode 100644 include/target/target_core_tpg.h
+ create mode 100644 include/target/target_core_transport.h
+
+James
