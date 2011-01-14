@@ -1,53 +1,55 @@
 From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH v3 2/3] dm mpath: propagate target errors immediately
-Date: Fri, 14 Jan 2011 10:58:55 -0500
-Message-ID: <1295020736-27699-3-git-send-email-snitzer@redhat.com>
+Subject: [PATCH v3 3/3] block: improve detail in I/O error messages
+Date: Fri, 14 Jan 2011 10:58:56 -0500
+Message-ID: <1295020736-27699-4-git-send-email-snitzer@redhat.com>
 References: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28782 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:62959 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757656Ab1ANP7Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Jan 2011 10:59:16 -0500
+	id S1752032Ab1ANP7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jan 2011 10:59:18 -0500
 In-Reply-To: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
 Cc: linux-scsi@vger.kernel.org, agk@redhat.com, jaxboe@fusionio.com, Hannes Reinecke <hare@suse.de>, michaelc@cs.wisc.edu, Mike Snitzer <snitzer@redhat.com>
 
-DM now has more information about the nature of the underlying storage
-failure.  Path failure is avoided if a request failed due to a target
-error.  Instead the target error is immediately passed up the stack.
-
-Discard requests that fail due to non-target errors may now be retried.
+Classify severity of I/O errors for target and transport errors.
 
 Signed-off-by: Mike Snitzer <snitzer@redhat.com>
 Acked-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/md/dm-mpath.c |   11 +----------
- 1 files changed, 1 insertions(+), 10 deletions(-)
+ block/blk-core.c |   20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index b82d288..532b845 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -1283,16 +1283,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
- 	if (!error && !clone->errors)
- 		return 0;	/* I/O complete */
+Index: linux-2.6/block/blk-core.c
+===================================================================
+--- linux-2.6.orig/block/blk-core.c
++++ linux-2.6/block/blk-core.c
+@@ -2044,9 +2044,23 @@ bool blk_update_request(struct request *
  
--	if (error == -EOPNOTSUPP)
--		return error;
--
--	if (clone->cmd_flags & REQ_DISCARD)
--		/*
--		 * Pass all discard request failures up.
--		 * FIXME: only fail_path if the discard failed due to a
--		 * transport problem.  This requires precise understanding
--		 * of the underlying failure (e.g. the SCSI sense).
--		 */
-+	if (error == -EOPNOTSUPP || error == -EREMOTEIO)
- 		return error;
+ 	if (error && req->cmd_type == REQ_TYPE_FS &&
+ 	    !(req->cmd_flags & REQ_QUIET)) {
+-		printk(KERN_ERR "end_request: I/O error, dev %s, sector %llu\n",
+-				req->rq_disk ? req->rq_disk->disk_name : "?",
+-				(unsigned long long)blk_rq_pos(req));
++		char *error_type;
++
++		switch (error) {
++		case -ENOLINK:
++			error_type = "recoverable transport";
++			break;
++		case -EREMOTEIO:
++			error_type = "critical target";
++			break;
++		case -EIO:
++		default:
++			error_type = "I/O";
++			break;
++		}
++		printk(KERN_ERR "end_request: %s error, dev %s, sector %llu\n",
++		       error_type, req->rq_disk ? req->rq_disk->disk_name : "?",
++		       (unsigned long long)blk_rq_pos(req));
+ 	}
  
- 	if (mpio->pgpath)
--- 
-1.7.3.4
-
+ 	blk_account_io_completion(req, nr_bytes);
