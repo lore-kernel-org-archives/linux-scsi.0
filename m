@@ -1,55 +1,60 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [PATCH v3 3/3] block: improve detail in I/O error messages
-Date: Fri, 14 Jan 2011 10:58:56 -0500
-Message-ID: <1295020736-27699-4-git-send-email-snitzer@redhat.com>
-References: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
+From: Jonathan McDowell <noodles@earth.li>
+Subject: Re: [PATCH v3 1/3] scsi: Detailed I/O errors
+Date: Fri, 14 Jan 2011 08:10:48 -0800
+Message-ID: <20110114161048.GK5727@earth.li>
+References: <1295020736-27699-1-git-send-email-snitzer@redhat.com> <1295020736-27699-2-git-send-email-snitzer@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:62959 "EHLO mx1.redhat.com"
+Received: from the.earth.li ([217.147.81.2]:45575 "EHLO the.earth.li"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752032Ab1ANP7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Jan 2011 10:59:18 -0500
-In-Reply-To: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
+	id S1751431Ab1ANQlw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jan 2011 11:41:52 -0500
+Content-Disposition: inline
+In-Reply-To: <1295020736-27699-2-git-send-email-snitzer@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, agk@redhat.com, jaxboe@fusionio.com, Hannes Reinecke <hare@suse.de>, michaelc@cs.wisc.edu, Mike Snitzer <snitzer@redhat.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, agk@redhat.com, jaxboe@fusionio.com, Hannes Reinecke <hare@suse.de>, michaelc@cs.wisc.edu
 
-Classify severity of I/O errors for target and transport errors.
+On Fri, Jan 14, 2011 at 10:58:54AM -0500, Mike Snitzer wrote:
+> From: Hannes Reinecke <hare@suse.de>
+> 
+> Instead of just passing 'EIO' for any I/O error we should be
+> notifying the upper layers with more details about the cause
+> of this error.
+> 
+> Update the possible I/O errors to:
+> 
+> - ENOLINK: Link failure between host and target
+> - EIO: Retryable I/O error
+> - EREMOTEIO: Non-retryable I/O error
+> 
+> 'Retryable' in this context means that an I/O error _might_ be
+> restricted to the I_T_L nexus (vulgo: path), so retrying on another
+> nexus / path might succeed.
+...
+> @@ -1486,6 +1495,7 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+>  	case RESERVATION_CONFLICT:
+>  		sdev_printk(KERN_INFO, scmd->device,
+>  			    "reservation conflict\n");
+> +		scmd->result |= (DID_TARGET_FAILURE << 16);
+>  		return SUCCESS; /* causes immediate i/o error */
+>  	default:
+>  		return FAILED;
+...
+> +#define DID_TARGET_FAILURE 0x10 /* Permanent target failure, do not retry on
+> +				 * other paths */
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-Acked-by: Hannes Reinecke <hare@suse.de>
----
- block/blk-core.c |   20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+I'd have viewed a reservation conflict as being tied to a particular
+path, rather than the entire target. I've seen multipath setups where
+there are reservation issues on some of the paths but others are fine
+and this is expected (eg use of reservations to fence off particular
+paths).
 
-Index: linux-2.6/block/blk-core.c
-===================================================================
---- linux-2.6.orig/block/blk-core.c
-+++ linux-2.6/block/blk-core.c
-@@ -2044,9 +2044,23 @@ bool blk_update_request(struct request *
- 
- 	if (error && req->cmd_type == REQ_TYPE_FS &&
- 	    !(req->cmd_flags & REQ_QUIET)) {
--		printk(KERN_ERR "end_request: I/O error, dev %s, sector %llu\n",
--				req->rq_disk ? req->rq_disk->disk_name : "?",
--				(unsigned long long)blk_rq_pos(req));
-+		char *error_type;
-+
-+		switch (error) {
-+		case -ENOLINK:
-+			error_type = "recoverable transport";
-+			break;
-+		case -EREMOTEIO:
-+			error_type = "critical target";
-+			break;
-+		case -EIO:
-+		default:
-+			error_type = "I/O";
-+			break;
-+		}
-+		printk(KERN_ERR "end_request: %s error, dev %s, sector %llu\n",
-+		       error_type, req->rq_disk ? req->rq_disk->disk_name : "?",
-+		       (unsigned long long)blk_rq_pos(req));
- 	}
- 
- 	blk_account_io_completion(req, nr_bytes);
+J.
+
+-- 
+/-\                             |   It's more than good enough so I
+|@/  Debian GNU/Linux Developer |           ain't switch'n.
+\-                              |
