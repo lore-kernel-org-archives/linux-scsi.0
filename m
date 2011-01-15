@@ -1,58 +1,48 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [GIT PULL] SCSI postmerge patches for 2.6.38 merge window
-Date: Sat, 15 Jan 2011 19:25:39 +0100
-Message-ID: <AANLkTimrsN_dg+0H27dov5ZfdQieTsBMPXQCawBkWZnN@mail.gmail.com>
-References: <1295030453.18445.63.camel@mulgrave.site>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [patch] [SCSI] target: checking for NULL instead of IS_ERR
+Date: Sat, 15 Jan 2011 12:52:24 -0800
+Message-ID: <1295124744.22813.8.camel@haakon2.linux-iscsi.org>
+References: <20110115140300.GC2721@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1295030453.18445.63.camel@mulgrave.site>
+In-Reply-To: <20110115140300.GC2721@bicker>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Dan Carpenter <error27@gmail.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jan 14, 2011 at 7:40 PM, James Bottomley
-<James.Bottomley@suse.de> wrote:
->
-> This is a set of three patches I've been carrying that had a
-> dependencies on pieces of the block tree (which went in yesterday).
-> It's been rebased to go cleanly on top of current git head (and elimn=
-ate
-> some of the merge cruft of creating a postmerge tree). =A0All of the
-> patches have been in Linux-next for several weeks.
->
-> The two sd/sr patches are just completion of the media events
-> infrastructure which was in the block tree. =A0The main chunk is the
-> addition of the LIO in-kernel target infrastructure which is one of t=
-he
-> two competing target infrastructures which have been out of tree for
-> several years now. =A0Thanks to quite a lot of effort (particularly f=
-rom
-> Christoph Hellwig) cleaning it up, I think it's ready for mainline
-> inclusion. =A0This piece is just the target infrastructure; we'll beg=
-in
-> adding the in-kernel drivers and the migration hooks for STGT (our
-> original user land target driver) over the next merge window.
->
-> The patch is available here:
->
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-post-merge-2.6.=
-git
->
-> The short changelog is:
->
-> Nicholas Bellinger (1):
-> =A0 =A0 =A0target: Add LIO target core v4.0.0-rc6
-> [ ... ]
+On Sat, 2011-01-15 at 17:03 +0300, Dan Carpenter wrote:
+> blkdev_get_by_path() returns an ERR_PTR() or error and it doesn't return
+> a NULL.  It looks like this bug would be easy to trigger by mistake.
+> 
+> Signed-off-by: Dan Carpenter <error27@gmail.com>
+> 
 
-As anyone can see in the source file drivers/target/target_core_mib.c
-this patch adds a significant number of new files to procfs. I thought
-that this was considered unacceptable since a long time ? Has anything
-changed ?
+Good catch here Dan..  This was added after a linux-next build failure
+over the holidays, but I completely missed the fact that it returns
+ERR_PTR..  Thanks for spotting this one!
 
-See also http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux-2.6=
-=2Egit;a=3Dblob;f=3Ddrivers/target/target_core_mib.c.
+The same problem exists in target_core_pscsi.c:pscsi_create_type_disk()
+as well..  Committed both fixes as 862ede4cbaf in
+lio-core-2.6.git/linus-38-rc1 against the .38 mainline target merge, and
+cherry picked into scsi-post-merge-2.6.git/for-jejb..
 
-Bart.
+James, please make sure this fix is included in your next pull to Linus.
+
+--nab
+
+> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+> index c6e0d75..3456135 100644
+> --- a/drivers/target/target_core_iblock.c
+> +++ b/drivers/target/target_core_iblock.c
+> @@ -154,7 +154,7 @@ static struct se_device *iblock_create_virtdevice(
+>  
+>  	bd = blkdev_get_by_path(ib_dev->ibd_udev_path,
+>  				FMODE_WRITE|FMODE_READ|FMODE_EXCL, ib_dev);
+> -	if (!(bd))
+> +	if (IS_ERR(bd))
+>  		goto failed;
+>  	/*
+>  	 * Setup the local scope queue_limits from struct request_queue->limits
