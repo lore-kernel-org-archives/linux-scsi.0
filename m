@@ -1,44 +1,89 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: Re: [Open-FCoE] [PATCH v3 04/10] libfcoe: rename libfcoe.c to
- fcoe_cltr.c for the	coming fcoe_transport.c
-Date: Fri, 14 Jan 2011 17:29:07 -0800
-Message-ID: <1295054947.1836.4.camel@fritz>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: RE: [Open-FCoE] [PATCH v3 03/10] libfcoe: add implementation to
+ support fcoe transport
+Date: Fri, 14 Jan 2011 17:37:41 -0800
+Message-ID: <7C88852EF6F99F4EB538472FCFEBE222014A75B00E@orsmsx509.amr.corp.intel.com>
 References: <20110113021649.12798.71742.stg.yi.zou@intel.com>
-	 <20110113022002.12798.45641.stg.yi.zou@intel.com>
-	 <1295054856.1836.3.camel@fritz>
+	 <20110113021955.12798.84485.stg.yi.zou@intel.com>
+ <1295054735.1836.1.camel@fritz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:27384 "EHLO mga01.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:64290 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751448Ab1AOB3I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Jan 2011 20:29:08 -0500
-In-Reply-To: <1295054856.1836.3.camel@fritz>
+	id S1751448Ab1AOBhw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Jan 2011 20:37:52 -0500
+In-Reply-To: <1295054735.1836.1.camel@fritz>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yi Zou <yi.zou@intel.com>
-Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org
+To: "Love, Robert W" <robert.w.love@intel.com>
+Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, 2011-01-14 at 17:27 -0800, Robert Love wrote:
-> On Wed, 2011-01-12 at 18:20 -0800, Yi Zou wrote:
-> > The existing libfcoe.c is mostly for FIP support, rename it to reflect that
-> > fact and so we can add fcoe_transport.c to the make file to include both
-> > into the libfcoe kernel module.
-> > 
-> > Signed-off-by: Yi Zou <yi.zou@intel.com>
-> > ---
-> > 
-> >  drivers/scsi/fcoe/fcoe_ctlr.c | 2690 +++++++++++++++++++++++++++++++++++++++++
-> >  1 files changed, 2690 insertions(+), 0 deletions(-)
-> >  create mode 100644 drivers/scsi/fcoe/fcoe_ctlr.c
-> 
-> This isn't renaming the file, it's copying it. Should this patch move
-> the file and then update Kconfig so that libfcoe builds?
-> 
-
-OK, just saw the next patch that completes the job. I think the two
-patches should be merged.
-
-//Rob
-
+PiANCj4gT24gV2VkLCAyMDExLTAxLTEyIGF0IDE4OjE5IC0wODAwLCBZaSBab3Ugd3JvdGU6DQo+
+ID4gQWRkIHRoZSBuZXcgZmNvZV90cmFuc3BvcnQuYyBmaWxlIHRoYXQgaW1wbGVtZW50cyBiYXNp
+YyBmY29lIHRyYW5zcG9ydA0KPiA+IGludGVyZmFjZS4gRXZlbnR1YWxseSwgdGhlIHN5c2ZzIGVu
+dHJpZXMgdG8NCj4gY3JlYXRlL2Rlc3Ryb3kvZW5hYmxlL2Rpc2FibGUNCj4gPiBhbiBGQ29FIGlu
+c3RhbmNlIHdpbGwgYmUgY29taW5nIHRvIHRoZSBmY29lIHRyYW5zcG9ydCBsYXllciwgd2hvIGRv
+ZXMgYQ0KPiA+IGxvb2stdXAgdG8gZmluZCB0aGUgY29ycmVzcG9uZGluZyB0cmFuc3BvcnQgcHJv
+dmlkZSBhbmQgcGFzcyB0aGUNCj4gY29ycmVzcG9uZGluZw0KPiA+IGFjdGlvbiBvdmVyIHRvIHRo
+ZSBpZGVudGlmaWVkIHByb3ZpZGVyLg0KPiA+DQo+ID4gVGhlIGZjb2Uua28gd2lsbCBiZWNvbWUg
+dGhlIGRlZmF1bHQgZmNvZSB0cmFuc3BvcnQgcHJvdmlkZXIgdGhhdCBjYW4NCj4gc3VwcG9ydA0K
+PiA+IEZDb0Ugb24gYW55IGdpdmVuIG5ldGRldiBpbnRlcmZhY2VzLCBhcyB0aGUgT3Blbi1GQ29F
+Lm9yZydzIGRlZmF1bHQNCj4gc29mdHdhcmUNCj4gPiBGQ29FIEhCQSBzb2x1dGlvbi4gQW55IHZl
+bmRvciBzcGVjaWZpYyBGQ29FIEhCQSBkcml2ZXIgdGhhdCBpcyBidWlsdCBvbg0KPiB0b3ANCj4g
+PiBvZiBPcGVuLUZDb0UncyBrZXJuZWwgc3RhY2sgb2YgbGliZmMgJiBsaWJmY29lIGFzIHdlbGwg
+YXMgdGhlIHVzZXIgbGFuZA0KPiB0b29sDQo+ID4gb2YgZmNvZS11dGlscyBjYW4gZWFzaWx5IHBs
+dWctaW4gYW5kIHN0YXJ0IHJ1bm5pbmcgRkNvRSBvbiB0aGVpcg0KPiBuZXR3b3JrDQo+ID4gaW50
+ZXJmYWNlcy4gVGhlIGZjb2Uua28gd2lsbCBiZSBjb252ZXJ0ZWQgdG8gYWN0IGFzIHRoZSBkZWZh
+dWx0DQo+IHByb3ZpZGVyIGlmDQo+ID4gbm8gdmVuZG9yIHNwZWNpZmljIHRyYW5zcG9ydCBwcm92
+aWRlciBpcyBmb3VuZCwgYXMgaXQgaXMgYWx3YXlzIGFkZGVkDQo+IHRvIHRoZQ0KPiA+IHZlcnkg
+ZW5kIG9mIHRoZSBsaXN0IG9mIGF0dGFjaGVkIHRyYW5zcG9ydHMuDQo+ID4NCj4gPiBUaGUgbG9v
+a3VwIGlzIGJhc2VkIG9uIHRoZSAiZHJ2X25hbWUiIHRvIGZldGNoIHRoZSBmY29lX3RyYW5zcG9y
+dA0KPiA+IHN0cnVjdHVyZS4gVGhlIHBvaW50ZXJzIHRvIG5ldGRldiBvYnRhaW5lZCBmcm9tICJp
+Zl9uYW1lIiBhbmQgdGhlDQo+ID4gZmNvZV90cmFuc3BvcnQgc3RydWN0dXJlIGFyZSBzYXZlZCBp
+biAnZmNvZV9uZXRkZXZfbWFwcGluZycgYW5kIGFkZGVkDQo+IHRvIHRoZQ0KPiA+ICdmY29lX25l
+dGRldicgbGlzdC4gIFN1YnNlcXVlbnQgZGVzdHJveS9kaXNhYmxlL2VuYWJsZSB3aWxsIGxvb2t1
+cA0KPiA+IGZjb2VfbmV0ZGV2X2xpc3QgdXNpbmcgbmV0ZGV2IGFzIHRoZSBrZXkgYW5kIG9idGFp
+biBmY29lX3RyYW5zcG9ydA0KPiBzdHJ1Y3R1cmUsDQo+ID4gYW5kIGNhbGwgZnQtPmRlc3Ryb3ks
+IGZ0LT5kaXNhYmxlIGFuZCBmdC0+ZW5hYmxlLg0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogWWkg
+Wm91IDx5aS56b3VAaW50ZWwuY29tPg0KPiA+IFNpZ25lZC1vZmYtYnk6IEJoYW51IFByYWthc2gg
+R29sbGFwdWRpIDxicHJha2FzaEBicm9hZGNvbS5jb20+DQo+ID4gLS0tDQo+ID4NCj4gPiAgZHJp
+dmVycy9zY3NpL2Zjb2UvZmNvZV90cmFuc3BvcnQuYyB8ICA1NDANCj4gKysrKysrKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrDQo+ID4gIGRyaXZlcnMvc2NzaS9mY29lL2xpYmZjb2UuaCAg
+ICAgICAgfCAgICA2DQo+ID4gIDIgZmlsZXMgY2hhbmdlZCwgNTQ2IGluc2VydGlvbnMoKyksIDAg
+ZGVsZXRpb25zKC0pDQo+ID4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3Njc2kvZmNvZS9m
+Y29lX3RyYW5zcG9ydC5jDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2Zjb2Uv
+ZmNvZV90cmFuc3BvcnQuYw0KPiBiL2RyaXZlcnMvc2NzaS9mY29lL2Zjb2VfdHJhbnNwb3J0LmMN
+Cj4gPiBuZXcgZmlsZSBtb2RlIDEwMDY0NA0KPiA+IGluZGV4IDAwMDAwMDAuLjUxN2MyOWINCj4g
+PiAtLS0gL2Rldi9udWxsDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL2Zjb2UvZmNvZV90cmFuc3Bv
+cnQuYw0KPiA+IEBAIC0wLDAgKzEsNTQwIEBADQo+ID4gKyNpbmNsdWRlIDxsaW51eC90eXBlcy5o
+Pg0KPiA+ICsjaW5jbHVkZSA8bGludXgvbW9kdWxlLmg+DQo+ID4gKyNpbmNsdWRlIDxsaW51eC9r
+ZXJuZWwuaD4NCj4gPiArI2luY2x1ZGUgPGxpbnV4L2xpc3QuaD4NCj4gPiArI2luY2x1ZGUgPGxp
+bnV4L3NwaW5sb2NrLmg+DQo+ID4gKyNpbmNsdWRlIDxsaW51eC90aW1lci5oPg0KPiA+ICsjaW5j
+bHVkZSA8bGludXgvbmV0ZGV2aWNlLmg+DQo+ID4gKyNpbmNsdWRlIDxsaW51eC9ldGhlcmRldmlj
+ZS5oPg0KPiA+ICsjaW5jbHVkZSA8bGludXgvZXRodG9vbC5oPg0KPiA+ICsjaW5jbHVkZSA8bGlu
+dXgvaWZfZXRoZXIuaD4NCj4gPiArI2luY2x1ZGUgPGxpbnV4L2lmX3ZsYW4uaD4NCj4gPiArI2lu
+Y2x1ZGUgPGxpbnV4L2Vycm5vLmg+DQo+ID4gKyNpbmNsdWRlIDxsaW51eC9iaXRvcHMuaD4NCj4g
+PiArI2luY2x1ZGUgPGxpbnV4L3NsYWIuaD4NCj4gPiArI2luY2x1ZGUgPG5ldC9ydG5ldGxpbmsu
+aD4NCj4gPiArDQo+ID4gKyNpbmNsdWRlIDxzY3NpL2ZjL2ZjX2Vscy5oPg0KPiA+ICsjaW5jbHVk
+ZSA8c2NzaS9mYy9mY19mcy5oPg0KPiA+ICsjaW5jbHVkZSA8c2NzaS9mYy9mY19maXAuaD4NCj4g
+PiArI2luY2x1ZGUgPHNjc2kvZmMvZmNfZW5jYXBzLmg+DQo+ID4gKyNpbmNsdWRlIDxzY3NpL2Zj
+L2ZjX2Zjb2UuaD4NCj4gPiArI2luY2x1ZGUgPHNjc2kvZmMvZmNfZmNwLmg+DQo+ID4gKw0KPiA+
+ICsjaW5jbHVkZSA8c2NzaS9saWJmYy5oPg0KPiA+ICsjaW5jbHVkZSA8c2NzaS9saWJmY29lLmg+
+DQo+ID4gKw0KPiA+ICsjaW5jbHVkZSAibGliZmNvZS5oIg0KPiA+ICsNCj4gDQo+IEknbSBnb2lu
+ZyB0byByZW1vdmUgdGhlIGZvbGxvd2luZyB1bm5lY2Vzc2FyeSBpbmNsdWRlcy4NCj4gDQo+ICAj
+aW5jbHVkZSA8bGludXgvbGlzdC5oPg0KPiAtI2luY2x1ZGUgPGxpbnV4L3NwaW5sb2NrLmg+DQo+
+IC0jaW5jbHVkZSA8bGludXgvdGltZXIuaD4NCj4gICNpbmNsdWRlIDxsaW51eC9uZXRkZXZpY2Uu
+aD4NCj4gLSNpbmNsdWRlIDxsaW51eC9ldGhlcmRldmljZS5oPg0KPiAtI2luY2x1ZGUgPGxpbnV4
+L2V0aHRvb2wuaD4NCj4gLSNpbmNsdWRlIDxsaW51eC9pZl9ldGhlci5oPg0KPiAtI2luY2x1ZGUg
+PGxpbnV4L2lmX3ZsYW4uaD4NCj4gICNpbmNsdWRlIDxsaW51eC9lcnJuby5oPg0KPiAtI2luY2x1
+ZGUgPGxpbnV4L2JpdG9wcy5oPg0KPiAgI2luY2x1ZGUgPGxpbnV4L3NsYWIuaD4NCj4gLSNpbmNs
+dWRlIDxuZXQvcnRuZXRsaW5rLmg+DQo+IA0KPiAtI2luY2x1ZGUgPHNjc2kvZmMvZmNfZWxzLmg+
+DQo+IC0jaW5jbHVkZSA8c2NzaS9mYy9mY19mcy5oPg0KPiAtI2luY2x1ZGUgPHNjc2kvZmMvZmNf
+ZmlwLmg+DQo+IC0jaW5jbHVkZSA8c2NzaS9mYy9mY19lbmNhcHMuaD4NCj4gLSNpbmNsdWRlIDxz
+Y3NpL2ZjL2ZjX2Zjb2UuaD4NCj4gLSNpbmNsdWRlIDxzY3NpL2ZjL2ZjX2ZjcC5oPg0KPiAtDQo+
+IC0jaW5jbHVkZSA8c2NzaS9saWJmYy5oPg0KPiAgI2luY2x1ZGUgPHNjc2kvbGliZmNvZS5oPg0K
+PiANCj4gLy9Sb2INCg0KWWVhaCwgdGhlc2UgbGVmdG92ZXJzIHNob3VsZCBiZSB0YWtlbiBvdXQs
+IHRoeC4NCg0KeWkNCg==
