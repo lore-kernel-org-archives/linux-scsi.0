@@ -1,35 +1,54 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] configfs: change depends -> select SYSFS
-Date: Sun, 16 Jan 2011 13:53:27 -0800
-Message-ID: <1295214807.22813.57.camel@haakon2.linux-iscsi.org>
-References: <1295125851-25279-1-git-send-email-nab@linux-iscsi.org>
-	 <20110116141105.59e5b3a2@stein>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] target/iblock: Fix memory leak in iblock_set_configfs_dev_params
+Date: Sun, 16 Jan 2011 15:04:30 -0800
+Message-ID: <1295219071-32722-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110116141105.59e5b3a2@stein>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>, Randy Dunlap <randy.dunlap@oracle.com>, James Bottomley <James.Bottomley@suse.de>
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Jesper Juhl <jj@chaosbits.net>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2011-01-16 at 14:11 +0100, Stefan Richter wrote:
-> On Jan 15 Nicholas A. Bellinger wrote:
-> > This patch changes configfs to select SYSFS to fix the following:
-> > 
-> > warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
-> 
-> Why don't you fix target-core's Kconfig instead?
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-The thought here was that since modern configfs is mounted
-at /sys/kernel/config/, selecting SYSFS by default when building
-CONFIGFS_FS made the most sense for existing configfs consumers.
+The match_strdup() allocation for Opt_udev_path needs to be released
+after usage.
 
-> > This patch also fixes whitespace breakage in the 'help' section.
-> 
-> There is no whitespace breakage in fs/configfs/Kconfig.
+Reported-off-by: Jesper Juhl <jj@chaosbits.net>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_iblock.c |   13 +++++++++----
+ 1 files changed, 9 insertions(+), 4 deletions(-)
 
-Fixed in scsi-post-merge-2.6.git/for-linus.  Thanks for your comments!
-
---nab
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index 67f0c09..422187b 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -469,7 +469,7 @@ static ssize_t iblock_set_configfs_dev_params(struct se_hba *hba,
+ 					       const char *page, ssize_t count)
+ {
+ 	struct iblock_dev *ib_dev = se_dev->se_dev_su_ptr;
+-	char *orig, *ptr, *opts;
++	char *orig, *ptr, *arg_p, *opts;
+ 	substring_t args[MAX_OPT_ARGS];
+ 	int ret = 0, arg, token;
+ 
+@@ -492,9 +492,14 @@ static ssize_t iblock_set_configfs_dev_params(struct se_hba *hba,
+ 				ret = -EEXIST;
+ 				goto out;
+ 			}
+-
+-			ret = snprintf(ib_dev->ibd_udev_path, SE_UDEV_PATH_LEN,
+-				"%s", match_strdup(&args[0]));
++			arg_p = match_strdup(&args[0]);
++			if (!arg_p) {
++				ret = -ENOMEM;
++				break;
++			}
++			snprintf(ib_dev->ibd_udev_path, SE_UDEV_PATH_LEN,
++					"%s", arg_p);
++			kfree(arg_p);
+ 			printk(KERN_INFO "IBLOCK: Referencing UDEV path: %s\n",
+ 					ib_dev->ibd_udev_path);
+ 			ib_dev->ibd_flags |= IBDF_HAS_UDEV_PATH;
+-- 
+1.5.6.5
