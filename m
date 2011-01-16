@@ -1,44 +1,29 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/2] iscsi: select CRYPTO and CRYPTO_CRC32C* by default
-Date: Sun, 16 Jan 2011 00:06:39 -0800
-Message-ID: <1295165199-28464-2-git-send-email-nab@linux-iscsi.org>
-References: <1295165199-28464-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm24.bullet.mail.ac4.yahoo.com ([98.139.52.221]:29840 "HELO
-	nm24.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751017Ab1APIHk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Jan 2011 03:07:40 -0500
-In-Reply-To: <1295165199-28464-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] configfs: change depends -> select SYSFS
+Date: Sun, 16 Jan 2011 14:11:05 +0100
+Message-ID: <20110116141105.59e5b3a2@stein>
+References: <1295125851-25279-1-git-send-email-nab@linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1295125851-25279-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>, Randy Dunlap <randy.dunlap@oracle.com>, James Bottomley <James.Bottomley@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Jan 15 Nicholas A. Bellinger wrote:
+> This patch changes configfs to select SYSFS to fix the following:
+> 
+> warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
 
-This patch changes LIO_TARGET to select CRYPTO, CRYPTO_CRC32C and
-CRYPTO_CRC32C_INTEL by default to ensure that the crypto_alloc_hash()
-calls in iscsi_login_setup_crypto() are able to function as expected.
+Why don't you fix target-core's Kconfig instead?
 
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/lio-target/Kconfig |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+> This patch also fixes whitespace breakage in the 'help' section.
 
-diff --git a/drivers/target/lio-target/Kconfig b/drivers/target/lio-target/Kconfig
-index 1998ba3..5cbd9e3 100644
---- a/drivers/target/lio-target/Kconfig
-+++ b/drivers/target/lio-target/Kconfig
-@@ -1,5 +1,8 @@
- config LIO_TARGET
- 	tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
-+	select CRYPTO
-+	select CRYPTO_CRC32C
-+	select CRYPTO_CRC32C_INTEL
- 	help
- 	Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
- 	Target Mode Stack.
+There is no whitespace breakage in fs/configfs/Kconfig.
 -- 
-1.5.6.5
-
+Stefan Richter
+-=====-==-== ---= =----
+http://arcgraph.de/sr/
