@@ -1,67 +1,43 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: Re: [PATCH] target: Fix memory leak in
- fd_set_configfs_dev_params().
-Date: Mon, 17 Jan 2011 19:29:56 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1101171929150.27021@swampdragon.chaosbits.net>
-References: <alpine.LNX.2.00.1101162006410.13377@swampdragon.chaosbits.net>  <1295218456.22813.61.camel@haakon2.linux-iscsi.org>  <alpine.LNX.2.00.1101162357250.13377@swampdragon.chaosbits.net> <1295219988.22813.72.camel@haakon2.linux-iscsi.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: PMP and SEMB messages to SEP
+Date: Mon, 17 Jan 2011 13:55:15 -0500
+Message-ID: <4D349093.6070902@garzik.org>
+References: <20110113192558.GE16039@MAIL.13thfloor.at> <20110114142018.GA978@htj.dyndns.org> <20110114165957.GH16039@MAIL.13thfloor.at> <20110114170407.GE978@htj.dyndns.org> <20110114173759.GI16039@MAIL.13thfloor.at> <20110117154042.GG27123@htj.dyndns.org> <1295281131.3015.44.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1295219988.22813.72.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1295281131.3015.44.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Tejun Heo <tj@kernel.org>, Herbert Poetzl <herbert@13thfloor.at>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 16 Jan 2011, Nicholas A. Bellinger wrote:
+On 01/17/2011 11:18 AM, James Bottomley wrote:
+> On Mon, 2011-01-17 at 16:40 +0100, Tejun Heo wrote:
+>>> - the SiI3726 supports GPIO pins, which can be reached via
+>>>    the General Status and Control Register [130] and accoring
+>>>    to the docu, the Read/Write Port Multiplier command can
+>>>    be used to read/write that register.
+>>>
+>>>    + how would I go about issuing such a command and where
+>>>      should it be done? i.e. what about interference with
+>>>      other commands? what about retrieving return values?
+>>
+>> The problem is that the PMP device itself is currently not allocated a
+>> userland visible device, so it doesn't have any /dev/* node.  Hmmm...
+>
+> So perhaps it should be.  If you look at the equivalent topology on SAS,
+> our expanders have a bsg device node precisely so that we can do this.
+>
+> That said, SAS expanders have a defined protocol (SAS Management
+> Protocol) to talk to the outside world, so they are real visible objects
+> always in our topology ... I'm not sure PMP has this ... it seems that
+> all PMP visibility is an extension to the standard?
 
-> On Sun, 2011-01-16 at 23:59 +0100, Jesper Juhl wrote:
-> > On Sun, 16 Jan 2011, Nicholas A. Bellinger wrote:
-> > 
-> > > On Sun, 2011-01-16 at 20:17 +0100, Jesper Juhl wrote:
-> > > > match_strdup() dynamically allocates memory and it is the responsabillity 
-> > > > of the caller to free that memory. In 
-> > > > drivers/target/target_core_file.c::fd_set_configfs_dev_params() two calls 
-> > > > are made to match_strdup() and in neither case is the allocated memory 
-> > > > freed, but instead it is leaked.
-> > > > 
-> > > > This patch should take care of the problem by kfree()'ing the allocated 
-> > > > memory once it is no longer needed. It also makes sure to return -ENOMEM 
-> > > > if the memory allocation in match_strdup() should fail.
-> > > > 
-> > > > Please review and consider for inclusion.
-> > > > 
-> > > > Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-> > > 
-> > > Ugh, this was my fault during the recent v4.0 configfs parameter
-> > > conversion.  Committed as 5c45b37 in lio-core-2.6.git/linus-38-rc1 and I
-> > > will fix up the other handful of match_strdup() breakage and carry into
-> > > scsi-post-merge-2.6.git/for-jejb shortly.
-> > > 
-> > > Thanks for catching this..
-> > > 
-> > 
-> > You're welcome.
-> > Yes, I did see a bunch of other match_strdup() related problems, but I 
-> > thought I'd just fix up one file initially to see the general reaction, 
-> > then do the rest later when this one had been merged. but if you want to 
-> > fix up the remainder, feel free.
-> > 
-> > I guess we can merge this patch as a starting point?
-> > 
-> 
-> Sure, the other two follow-up match_strdup() memory leak bugfix patches
-> for target/iblock and target_core_configfs.c APTPL metadata token
-> parsing have been included into the scsi-post-merge-2.6.git/for-jejb
-> queue.
-> 
-Ok, I assume you'll add my patch there as well?
+Yes, we do need a way to address these devices.
 
-> Thanks again!
-> 
-np
+	Jeff
 
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
-Plain text mails only, please.
+
+
