@@ -1,75 +1,50 @@
-From: James Bottomley <James.Bottomley@suse.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH] configfs: change depends -> select SYSFS
-Date: Sun, 16 Jan 2011 18:22:12 -0600
-Message-ID: <1295223733.2998.8.camel@mulgrave.site>
+Date: Mon, 17 Jan 2011 01:52:20 +0100
+Message-ID: <20110117015220.11b43ae7@stein>
 References: <1295125851-25279-1-git-send-email-nab@linux-iscsi.org>
-	 <20110116141105.59e5b3a2@stein>
-	 <1295214807.22813.57.camel@haakon2.linux-iscsi.org>
-	 <20110117000659.57352da7@stein>
+	<20110116141105.59e5b3a2@stein>
+	<1295214807.22813.57.camel@haakon2.linux-iscsi.org>
+	<20110117000659.57352da7@stein>
+	<AANLkTik=Pv1KdiBa3RbSoqmDC92F33jyFb0b-Ej_iGRN@mail.gmail.com>
+	<20110116231901.GF22723@ZenIV.linux.org.uk>
+	<AANLkTikWHkfb1-Yh_O=rYEqzgz48rwRggCp6uhr+E86J@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <20110117000659.57352da7@stein>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>, Randy Dunlap <randy.dunlap@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:38309 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751427Ab1AQAwk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Jan 2011 19:52:40 -0500
+In-Reply-To: <AANLkTikWHkfb1-Yh_O=rYEqzgz48rwRggCp6uhr+E86J@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>, Randy Dunlap <randy.dunlap@oracle.com>, James Bottomley <James.Bottomley@suse.de>
 
-On Mon, 2011-01-17 at 00:06 +0100, Stefan Richter wrote:
-> On Jan 16 Nicholas A. Bellinger wrote:
-> > On Sun, 2011-01-16 at 14:11 +0100, Stefan Richter wrote:
-> > > On Jan 15 Nicholas A. Bellinger wrote:
-> > > > This patch changes configfs to select SYSFS to fix the following:
-> > > > 
-> > > > warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
-> > > 
-> > > Why don't you fix target-core's Kconfig instead?
-> > 
-> > The thought here was that since modern configfs is mounted
-> > at /sys/kernel/config/, selecting SYSFS by default when building
-> > CONFIGFS_FS made the most sense for existing configfs consumers.
+On Jan 16 Linus Torvalds wrote:
+> Or do you expect a high-quality implementation of a configuration
+> script to allow the user to just say "I want ocfs2", and then figure
+> out the dependencies and solve them for you?
 > 
-> I for one think that layered "select" directives will open too many cans
-> of worms.
+> I'd say that the latter case is OBVIOUSLY the quality implementation,
+> while the former one is just stupid.
 
-select, since we have it, should be clean ... as in if you select
-something, you don't have to expose yourself to a huge pile of missing
-depends that only show up in obscure configurations.
+As Al noted, there also needs to be a convenient way to *disable* options.
 
+Hence, the Kconfig files should merely declare the dependencies.  Then,
+some user interfaces should deal with the this database of dependencies
+and let different people achieve different goals as easily as possible.
 
-> Best don't use select at all.
+We already have different UIs.  But perhaps we have too much UI down in
+the Kconfig files.  I.e., perhaps Kconfig shouldn't know the difference
+between depends-on and select.  Let the different UIs present the
+dependency graph to the operator in different ways, suitable to different
+tasks.
 
-The object of select is not to trip up the user.  If we used a purely
-depend based configuration, the user would have to know to select, say,
-the right SCSI transport classes before they get presented with drivers.
-It's completely correct, since transport classes are internal
-implementations, to have the user select drivers and Kconfig work out
-via the select directive what transport classes are needed.
-
-> If you use it, select only options that don't depend on anything else.
-> 
-> If you feel that people really want you to provide a select for them which
-> selects something that in turn depends on other things, then I suggest you
-> rather let your own option depend on these lower dependencies:
-> 
-> config HIGHLEVEL_FEATURE
-> 	tristate "some driver"
-> 	depends on SYSFS  # because CONFIGFS depends on it
-> 	select CONFIGFS
-
-This is what I don't understand.
-
-Actually I think the whole premise of the patch (to get back to the
-original topic) is wrong.
-
-TARGET_CORE depends on SCSI; SCSI has to have sysfs to survive ... we
-just don't work without it yet we neither select nor depend on it.
-SYSFS is only deselectable for embedded anyway, so I think the
-configuration which generated this whole argument was likely a bogus one
-and consequently, none of the patches are needed (or if they are,
-they're the tip of the iceberg).
-
-James
-
-
+/handwave off.
+-- 
+Stefan Richter
+-=====-==-== ---= =---=
+http://arcgraph.de/sr/
