@@ -1,83 +1,90 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] configfs: change depends -> select SYSFS
-Date: Mon, 17 Jan 2011 10:11:29 -0800
-Message-ID: <20110117101129.402fee67.randy.dunlap@oracle.com>
-References: <1295125851-25279-1-git-send-email-nab@linux-iscsi.org>
-	<20110116141105.59e5b3a2@stein>
-	<1295214807.22813.57.camel@haakon2.linux-iscsi.org>
-	<20110117000659.57352da7@stein>
-	<1295223733.2998.8.camel@mulgrave.site>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v3 1/3] scsi: Detailed I/O errors
+Date: Mon, 17 Jan 2011 13:20:59 -0500
+Message-ID: <20110117182059.GA6549@redhat.com>
+References: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
+ <1295020736-27699-2-git-send-email-snitzer@redhat.com>
+ <20110114161048.GK5727@earth.li>
+ <20110114171614.GA27852@redhat.com>
+ <4D3465B8.1040108@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1295223733.2998.8.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:5732 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752730Ab1AQSVT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Jan 2011 13:21:19 -0500
+Content-Disposition: inline
+In-Reply-To: <4D3465B8.1040108@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Jonathan McDowell <noodles@earth.li>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, agk@redhat.com, jaxboe@fusionio.com, michaelc@cs.wisc.edu
 
-On Sun, 16 Jan 2011 18:22:12 -0600 James Bottomley wrote:
+On Mon, Jan 17 2011 at 10:52am -0500,
+Hannes Reinecke <hare@suse.de> wrote:
 
-> On Mon, 2011-01-17 at 00:06 +0100, Stefan Richter wrote:
-> > On Jan 16 Nicholas A. Bellinger wrote:
-> > > On Sun, 2011-01-16 at 14:11 +0100, Stefan Richter wrote:
-> > > > On Jan 15 Nicholas A. Bellinger wrote:
-> > > > > This patch changes configfs to select SYSFS to fix the following:
-> > > > > 
-> > > > > warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
-> > > > 
-> > > > Why don't you fix target-core's Kconfig instead?
-> > > 
-> > > The thought here was that since modern configfs is mounted
-> > > at /sys/kernel/config/, selecting SYSFS by default when building
-> > > CONFIGFS_FS made the most sense for existing configfs consumers.
+> On 01/14/2011 06:16 PM, Mike Snitzer wrote:
+> > On Fri, Jan 14 2011 at 11:10am -0500,
+> > Jonathan McDowell <noodles@earth.li> wrote:
+> >>
+> >> I'd have viewed a reservation conflict as being tied to a particular
+> >> path, rather than the entire target. I've seen multipath setups where
+> >> there are reservation issues on some of the paths but others are fine
+> >> and this is expected (eg use of reservations to fence off particular
+> >> paths).
 > > 
-> > I for one think that layered "select" directives will open too many cans
-> > of worms.
-> 
-> select, since we have it, should be clean ... as in if you select
-> something, you don't have to expose yourself to a huge pile of missing
-> depends that only show up in obscure configurations.
-> 
-> 
-> > Best don't use select at all.
-> 
-> The object of select is not to trip up the user.  If we used a purely
-> depend based configuration, the user would have to know to select, say,
-> the right SCSI transport classes before they get presented with drivers.
-> It's completely correct, since transport classes are internal
-> implementations, to have the user select drivers and Kconfig work out
-> via the select directive what transport classes are needed.
-> 
-> > If you use it, select only options that don't depend on anything else.
+> > Very good point (as I think you're correct).  Technically a reservation
+> > conflict is retryable across _different_ paths but (relative to the
+> > error path as it relates to multipath) it appears Hannes elected to go
+> > with the conservative approach of always failing the IO upward given the
+> > potential for data corruption when queue_if_no_path is used.
 > > 
-> > If you feel that people really want you to provide a select for them which
-> > selects something that in turn depends on other things, then I suggest you
-> > rather let your own option depend on these lower dependencies:
+> > Hannes previously touched on this here:
+> > https://www.redhat.com/archives/dm-devel/2009-November/msg00190.html
 > > 
-> > config HIGHLEVEL_FEATURE
-> > 	tristate "some driver"
-> > 	depends on SYSFS  # because CONFIGFS depends on it
-> > 	select CONFIGFS
+> > "This also solves a potential data corruption with multipathing
+> > and persistent reservations. When queue_if_no_path is active
+> > multipath will queue any I/O failure (including those failed
+> > with RESERVATION CONFLICT) until the reservation status changes.
+> > But by then I/O might have been ongoing on the other paths,
+> > thus the delayed submission will severely corrupt your data."
+> > 
+> > Even in the context of that older SCSI sense-based mpath patchset a
+> > reservation conflict would always fail upward (regardless of path count
+> > and/or queue_if_no_path).
+> > 
+> > All said, the above doesn't excuse what seems to be a mis-categorization
+> > of reservation conflict as a pure non-retryable TARGET_FAILURE
+> > (EREMOTEIO).
+> > 
+> Ho-hum.
 > 
-> This is what I don't understand.
+> Yes, and no.
 > 
-> Actually I think the whole premise of the patch (to get back to the
-> original topic) is wrong.
+> Yes, it is correct that persistent reservations are in fact per
+> ITL nexus, and hence might yield different responses if retried on
+> another path.
 > 
-> TARGET_CORE depends on SCSI; SCSI has to have sysfs to survive ... we
-> just don't work without it yet we neither select nor depend on it.
-> SYSFS is only deselectable for embedded anyway, so I think the
-> configuration which generated this whole argument was likely a bogus one
-> and consequently, none of the patches are needed (or if they are,
-> they're the tip of the iceberg).
+> And no, it is not entirely correct to return the standard EIO error
+> here as then the no_path_retry mechanism might kick in and we're
+> back to square one.
+>
+> That said we probably need to invent another error code with
+> meaning 'Retry on other ITL nexus if present, but ignore no_path_retry'.
 
-This sounds like a problem.
-SCSI subsystem will certainly build without having SYSFS enabled, but I think
-that you are saying that it won't function without SYSFS.  Then it depends on
-SYSFS and should say so somewhere (IMO of course).
+That sounds right.  So something like the following?:
+- set ITL_NEXUS_ERROR/DID_ITL_NEXXUS_FAILURE in scsi (comparable to how
+  you did TARGET_ERROR/DID_TARGET_FAILURE) 
+- then return -EAGAIN from __scsi_error_from_host_byte() to signal to
+  upper layer(s) that a retry could be worthwhile -- driver specific
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+In mpath's case it can respond to -EAGAIN by conversatively retrying
+with the 'Retry on other ITL nexus if present, but ignore no_path_retry'
+semantic?
+
+(overloading -EAGAIN leaves something to be desired but I welcome other
+ideas).
+
+Thanks,
+Mike
