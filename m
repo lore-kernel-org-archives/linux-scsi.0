@@ -1,60 +1,75 @@
-From: Al Viro <viro@ZenIV.linux.org.uk>
+From: James Bottomley <James.Bottomley@suse.de>
 Subject: Re: [PATCH] configfs: change depends -> select SYSFS
-Date: Mon, 17 Jan 2011 00:05:58 +0000
-Message-ID: <20110117000558.GG22723@ZenIV.linux.org.uk>
+Date: Sun, 16 Jan 2011 18:22:12 -0600
+Message-ID: <1295223733.2998.8.camel@mulgrave.site>
 References: <1295125851-25279-1-git-send-email-nab@linux-iscsi.org>
- <20110116141105.59e5b3a2@stein>
- <1295214807.22813.57.camel@haakon2.linux-iscsi.org>
- <20110117000659.57352da7@stein>
- <AANLkTik=Pv1KdiBa3RbSoqmDC92F33jyFb0b-Ej_iGRN@mail.gmail.com>
- <20110116231901.GF22723@ZenIV.linux.org.uk>
- <AANLkTikWHkfb1-Yh_O=rYEqzgz48rwRggCp6uhr+E86J@mail.gmail.com>
+	 <20110116141105.59e5b3a2@stein>
+	 <1295214807.22813.57.camel@haakon2.linux-iscsi.org>
+	 <20110117000659.57352da7@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTikWHkfb1-Yh_O=rYEqzgz48rwRggCp6uhr+E86J@mail.gmail.com>
+In-Reply-To: <20110117000659.57352da7@stein>
 Sender: linux-fsdevel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>, Randy Dunlap <randy.dunlap@oracle.com>, James Bottomley <James.Bottomley@suse.de>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>, Randy Dunlap <randy.dunlap@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Jan 16, 2011 at 03:45:35PM -0800, Linus Torvalds wrote:
-
-> And now ask yourself, do you really expect some random user to say "I
-> want to enable SYSFS and CONFIGFS, because I am going to use ocfs2 on
-> my system"?
+On Mon, 2011-01-17 at 00:06 +0100, Stefan Richter wrote:
+> On Jan 16 Nicholas A. Bellinger wrote:
+> > On Sun, 2011-01-16 at 14:11 +0100, Stefan Richter wrote:
+> > > On Jan 15 Nicholas A. Bellinger wrote:
+> > > > This patch changes configfs to select SYSFS to fix the following:
+> > > > 
+> > > > warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
+> > > 
+> > > Why don't you fix target-core's Kconfig instead?
+> > 
+> > The thought here was that since modern configfs is mounted
+> > at /sys/kernel/config/, selecting SYSFS by default when building
+> > CONFIGFS_FS made the most sense for existing configfs consumers.
 > 
-> Really?
+> I for one think that layered "select" directives will open too many cans
+> of worms.
+
+select, since we have it, should be clean ... as in if you select
+something, you don't have to expose yourself to a huge pile of missing
+depends that only show up in obscure configurations.
+
+
+> Best don't use select at all.
+
+The object of select is not to trip up the user.  If we used a purely
+depend based configuration, the user would have to know to select, say,
+the right SCSI transport classes before they get presented with drivers.
+It's completely correct, since transport classes are internal
+implementations, to have the user select drivers and Kconfig work out
+via the select directive what transport classes are needed.
+
+> If you use it, select only options that don't depend on anything else.
 > 
-> Or do you expect a high-quality implementation of a configuration
-> script to allow the user to just say "I want ocfs2", and then figure
-> out the dependencies and solve them for you?
+> If you feel that people really want you to provide a select for them which
+> selects something that in turn depends on other things, then I suggest you
+> rather let your own option depend on these lower dependencies:
 > 
-> I'd say that the latter case is OBVIOUSLY the quality implementation,
-> while the former one is just stupid.
+> config HIGHLEVEL_FEATURE
+> 	tristate "some driver"
+> 	depends on SYSFS  # because CONFIGFS depends on it
+> 	select CONFIGFS
 
-It's a bit more complicated than that...
-	* nitpick: config option for a driver foo should be seen only after
-foo got enabled, so that's another case where we need depends on
-	* nitpick 2: some switchable things really shouldn't be selectable,
-or you'll get users wondering which of the drivers they'd enabled had
-lead to 32bit kernel on their amd64 boxen ;-)
-	* all nitpicks aside, there ought to be a way to say "no, I _REALLY_
-don't want that shit doing #define if(x) <horrible pile of crap> and if it
-means that I can't have oprofile, so be it".  Without chasing tons of select
-chains to see which FPOS do I need to disable to get rid of the damn thing.
-Right now the propagation of select chains makes it more and more unpleasant.
+This is what I don't understand.
 
-IOW, it would be very nice to be able to pin a select target down, turning
-selects leading to it into hard dependencies.
+Actually I think the whole premise of the patch (to get back to the
+original topic) is wrong.
 
-Another obviously missing thing is that dependencies should propagate back
-through select chains.  I.e. if A selects B, then hard dependencies of B
-should append to those of A.
+TARGET_CORE depends on SCSI; SCSI has to have sysfs to survive ... we
+just don't work without it yet we neither select nor depend on it.
+SYSFS is only deselectable for embedded anyway, so I think the
+configuration which generated this whole argument was likely a bogus one
+and consequently, none of the patches are needed (or if they are,
+they're the tip of the iceberg).
 
-It gets really lousy when you have shitloads of drivers spread over several
-Kconfig menus, all selecting an option that has a hard dependency.  As it
-is, if you want e.g. allmodconfig to produce something that builds you have
-to chase them all down and add dependencies to each of those drivers.  We
-have such piles in e.g. drivers/media.
+James
+
+
