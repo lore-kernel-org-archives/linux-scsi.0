@@ -1,29 +1,44 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] target_core_mib.h move
-Date: Mon, 17 Jan 2011 15:51:30 -0500
-Message-ID: <20110117205130.GA22532@infradead.org>
-References: <AANLkTim-KKyOt_U2cDvfW3cav9F29mSvzAcV9H2mJqbT@mail.gmail.com>
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: [PATCH] target: remove duplicate include of target/target_core_device.h
+ from drivers/target/target_core_hba.c
+Date: Mon, 17 Jan 2011 22:46:37 +0100 (CET)
+Message-ID: <alpine.LNX.2.00.1101172242510.27021@swampdragon.chaosbits.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:43302 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092Ab1AQUvb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2011 15:51:31 -0500
-Content-Disposition: inline
-In-Reply-To: <AANLkTim-KKyOt_U2cDvfW3cav9F29mSvzAcV9H2mJqbT@mail.gmail.com>
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:18816 "EHLO
+	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233Ab1AQVqg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2011 16:46:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fubo Chen <fubo.chen@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: linux-kernel@vger.kernel.org
+Cc: James Bottomley <James.Bottomley@suse.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "Nicholas A. Bellinger" <nab@kernel.org>, linux-scsi@vger.kernel.org
 
-On Mon, Jan 17, 2011 at 09:00:02PM +0100, Fubo Chen wrote:
-> target_core_mib.h move from drivers/target to include/target.
-> Otherwise my driver not build.
-> 
-> Signed-off-by: Fubo Chen <fubo.chen@gmail.com>
+drivers/target/target_core_hba.c includes target/target_core_device.h 
+twice - the two includes are even on two lines next to each other.
+This patch removes the duplicate include.
 
-Why does the driver need to poke into the target MIB code directly?
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ target_core_hba.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-Can you post the driver?
+diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+index 4bbe820..74d84f7 100644
+--- a/drivers/target/target_core_hba.c
++++ b/drivers/target/target_core_hba.c
+@@ -38,7 +38,6 @@
+ 
+ #include <target/target_core_base.h>
+ #include <target/target_core_device.h>
+-#include <target/target_core_device.h>
+ #include <target/target_core_tpg.h>
+ #include <target/target_core_transport.h>
+ 
+
+-- 
+Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
+Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please.
 
