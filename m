@@ -1,83 +1,80 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] configfs: change depends -> select SYSFS
-Date: Mon, 17 Jan 2011 14:10:16 -0800
-Message-ID: <1295302216.22813.212.camel@haakon2.linux-iscsi.org>
-References: <1295125851-25279-1-git-send-email-nab@linux-iscsi.org>
-	 <20110116141105.59e5b3a2@stein>
-	 <1295214807.22813.57.camel@haakon2.linux-iscsi.org>
-	 <20110117000659.57352da7@stein> <1295223733.2998.8.camel@mulgrave.site>
-	 <1295244354.22813.98.camel@haakon2.linux-iscsi.org>
-	 <20110117102420.5a1c1bf0.randy.dunlap@oracle.com>
+Subject: Re: [PATCH] target: Fix memory leak in
+	fd_set_configfs_dev_params().
+Date: Mon, 17 Jan 2011 14:16:37 -0800
+Message-ID: <1295302597.22813.222.camel@haakon2.linux-iscsi.org>
+References: <alpine.LNX.2.00.1101162006410.13377@swampdragon.chaosbits.net>
+	 <1295218456.22813.61.camel@haakon2.linux-iscsi.org>
+	 <alpine.LNX.2.00.1101162357250.13377@swampdragon.chaosbits.net>
+	 <1295219988.22813.72.camel@haakon2.linux-iscsi.org>
+	 <alpine.LNX.2.00.1101171929150.27021@swampdragon.chaosbits.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:51273 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:60415 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752466Ab1AQWKU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2011 17:10:20 -0500
-In-Reply-To: <20110117102420.5a1c1bf0.randy.dunlap@oracle.com>
+	with ESMTP id S1751878Ab1AQWQk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Jan 2011 17:16:40 -0500
+In-Reply-To: <alpine.LNX.2.00.1101171929150.27021@swampdragon.chaosbits.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2011-01-17 at 10:24 -0800, Randy Dunlap wrote:
-> On Sun, 16 Jan 2011 22:05:54 -0800 Nicholas A. Bellinger wrote:
+On Mon, 2011-01-17 at 19:29 +0100, Jesper Juhl wrote:
+> On Sun, 16 Jan 2011, Nicholas A. Bellinger wrote:
 > 
-> > On Sun, 2011-01-16 at 18:22 -0600, James Bottomley wrote:
-
-<SNIP>
-
-> > > This is what I don't understand.
+> > On Sun, 2011-01-16 at 23:59 +0100, Jesper Juhl wrote:
+> > > On Sun, 16 Jan 2011, Nicholas A. Bellinger wrote:
 > > > 
-> > > Actually I think the whole premise of the patch (to get back to the
-> > > original topic) is wrong.
+> > > > On Sun, 2011-01-16 at 20:17 +0100, Jesper Juhl wrote:
+> > > > > match_strdup() dynamically allocates memory and it is the responsabillity 
+> > > > > of the caller to free that memory. In 
+> > > > > drivers/target/target_core_file.c::fd_set_configfs_dev_params() two calls 
+> > > > > are made to match_strdup() and in neither case is the allocated memory 
+> > > > > freed, but instead it is leaked.
+> > > > > 
+> > > > > This patch should take care of the problem by kfree()'ing the allocated 
+> > > > > memory once it is no longer needed. It also makes sure to return -ENOMEM 
+> > > > > if the memory allocation in match_strdup() should fail.
+> > > > > 
+> > > > > Please review and consider for inclusion.
+> > > > > 
+> > > > > Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+> > > > 
+> > > > Ugh, this was my fault during the recent v4.0 configfs parameter
+> > > > conversion.  Committed as 5c45b37 in lio-core-2.6.git/linus-38-rc1 and I
+> > > > will fix up the other handful of match_strdup() breakage and carry into
+> > > > scsi-post-merge-2.6.git/for-jejb shortly.
+> > > > 
+> > > > Thanks for catching this..
+> > > > 
 > > > 
-> > > TARGET_CORE depends on SCSI; SCSI has to have sysfs to survive ... we
-> > > just don't work without it yet we neither select nor depend on it.
-> > > SYSFS is only deselectable for embedded anyway, so I think the
-> > > configuration which generated this whole argument was likely a bogus one
-> > > and consequently, none of the patches are needed (or if they are,
-> > > they're the tip of the iceberg).
+> > > You're welcome.
+> > > Yes, I did see a bunch of other match_strdup() related problems, but I 
+> > > thought I'd just fix up one file initially to see the general reaction, 
+> > > then do the rest later when this one had been merged. but if you want to 
+> > > fix up the remainder, feel free.
+> > > 
+> > > I guess we can merge this patch as a starting point?
 > > > 
 > > 
-> > This sounds fine for TARGET_CORE, but would still leave GFS2_FS with an
-> > unmet direct dependency according to the original warning above.
-> > Unfortuately I do not recall which exactly linux-next build
-> > configuration was causing this warning to occur from the original post:
+> > Sure, the other two follow-up match_strdup() memory leak bugfix patches
+> > for target/iblock and target_core_configfs.c APTPL metadata token
+> > parsing have been included into the scsi-post-merge-2.6.git/for-jejb
+> > queue.
 > > 
-> > http://marc.info/?l=linux-next&m=129355383112997&w=2
-> > 
-> > Any more thoughts here Randy..?
-> 
-> 
-> I've looked at GFS2 a bit now and I think that the warning is bogus:
-> 
-> kconfig complains with:
-> warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
-> 
-> but the "select" is conditional:
-> config GFS2_FS
-> 	tristate "GFS2 file system support"
-> 	depends on (64BIT || LBDAF)
-> 	select DLM if GFS2_FS_LOCKING_DLM
-> 	select CONFIGFS_FS if GFS2_FS_LOCKING_DLM
-> 	select SYSFS if GFS2_FS_LOCKING_DLM
-> 
-> and the same condition selects both SYSFS and CONFIGFS_FS.  Furthermore, the
-> conditional is not true, so neither of them is being selected/enabled.
-> Looks like a minor kconfig buglet to me.
+> Ok, I assume you'll add my patch there as well?
 > 
 
-Ok, so Linus has pulled the CONFIGFS_FS -> select SYSFS series and it
-looks like this 'select SYSFS ...' bit for GFS2_FS can safely be dropped
-now..
-
-Care to carry this one via your kbuild tree..?
-
-Thanks!
+Your patch along with the two followup match_strdup() fixes and your
+Reported-by' have been included in the LIO upstream tree (now merged
+with mainline tracking linus-38-rc1), and in the queue for
+scsi-post-merge-2.6.git/for-jejb branch for linux-scsi review ->
+mainline for-38.
 
 --nab
+
 
 
