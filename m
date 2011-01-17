@@ -1,85 +1,120 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: PMP and SEMB messages to SEP
-Date: Mon, 17 Jan 2011 16:40:42 +0100
-Message-ID: <20110117154042.GG27123@htj.dyndns.org>
-References: <20110113192558.GE16039@MAIL.13thfloor.at>
- <20110114142018.GA978@htj.dyndns.org>
- <20110114165957.GH16039@MAIL.13thfloor.at>
- <20110114170407.GE978@htj.dyndns.org>
- <20110114173759.GI16039@MAIL.13thfloor.at>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 1/3] scsi: Detailed I/O errors
+Date: Mon, 17 Jan 2011 16:52:24 +0100
+Message-ID: <4D3465B8.1040108@suse.de>
+References: <1295020736-27699-1-git-send-email-snitzer@redhat.com> <1295020736-27699-2-git-send-email-snitzer@redhat.com> <20110114161048.GK5727@earth.li> <20110114171614.GA27852@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110114173759.GI16039@MAIL.13thfloor.at>
-Sender: linux-ide-owner@vger.kernel.org
-To: Herbert Poetzl <herbert@13thfloor.at>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:48208 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752040Ab1AQPpp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Jan 2011 10:45:45 -0500
+In-Reply-To: <20110114171614.GA27852@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Jonathan McDowell <noodles@earth.li>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, agk@redhat.com, jaxboe@fusionio.com, michaelc@cs.wisc.edu
 
-(cc'ing linux-scsi)
-Hello,
+On 01/14/2011 06:16 PM, Mike Snitzer wrote:
+> On Fri, Jan 14 2011 at 11:10am -0500,
+> Jonathan McDowell <noodles@earth.li> wrote:
+>=20
+>> On Fri, Jan 14, 2011 at 10:58:54AM -0500, Mike Snitzer wrote:
+>>> From: Hannes Reinecke <hare@suse.de>
+>>>
+>>> Instead of just passing 'EIO' for any I/O error we should be
+>>> notifying the upper layers with more details about the cause
+>>> of this error.
+>>>
+>>> Update the possible I/O errors to:
+>>>
+>>> - ENOLINK: Link failure between host and target
+>>> - EIO: Retryable I/O error
+>>> - EREMOTEIO: Non-retryable I/O error
+>>>
+>>> 'Retryable' in this context means that an I/O error _might_ be
+>>> restricted to the I_T_L nexus (vulgo: path), so retrying on another
+>>> nexus / path might succeed.
+>> ...
+>>> @@ -1486,6 +1495,7 @@ int scsi_decide_disposition(struct scsi_cmnd =
+*scmd)
+>>>  	case RESERVATION_CONFLICT:
+>>>  		sdev_printk(KERN_INFO, scmd->device,
+>>>  			    "reservation conflict\n");
+>>> +		scmd->result |=3D (DID_TARGET_FAILURE << 16);
+>>>  		return SUCCESS; /* causes immediate i/o error */
+>>>  	default:
+>>>  		return FAILED;
+>> ...
+>>> +#define DID_TARGET_FAILURE 0x10 /* Permanent target failure, do no=
+t retry on
+>>> +				 * other paths */
+>>
+>> I'd have viewed a reservation conflict as being tied to a particular
+>> path, rather than the entire target. I've seen multipath setups wher=
+e
+>> there are reservation issues on some of the paths but others are fin=
+e
+>> and this is expected (eg use of reservations to fence off particular
+>> paths).
+>=20
+> Very good point (as I think you're correct).  Technically a reservati=
+on
+> conflict is retryable across _different_ paths but (relative to the
+> error path as it relates to multipath) it appears Hannes elected to g=
+o
+> with the conservative approach of always failing the IO upward given =
+the
+> potential for data corruption when queue_if_no_path is used.
+>=20
+> Hannes previously touched on this here:
+> https://www.redhat.com/archives/dm-devel/2009-November/msg00190.html
+>=20
+> "This also solves a potential data corruption with multipathing
+> and persistent reservations. When queue_if_no_path is active
+> multipath will queue any I/O failure (including those failed
+> with RESERVATION CONFLICT) until the reservation status changes.
+> But by then I/O might have been ongoing on the other paths,
+> thus the delayed submission will severely corrupt your data."
+>=20
+> Even in the context of that older SCSI sense-based mpath patchset a
+> reservation conflict would always fail upward (regardless of path cou=
+nt
+> and/or queue_if_no_path).
+>=20
+> All said, the above doesn't excuse what seems to be a mis-categorizat=
+ion
+> of reservation conflict as a pure non-retryable TARGET_FAILURE
+> (EREMOTEIO).
+>=20
+Ho-hum.
 
-On Fri, Jan 14, 2011 at 06:37:59PM +0100, Herbert Poetzl wrote:
-> Fair enough, let's start with a bunch of simple questions
-> I got from looking at the code (which I did just recently,
-> so don't expect deep understanding of the inner workings,
-> or even intelligent questions FWIW :)
-> 
-> - libata is used in the kernel for ata, sata and to some
->   extend for scsi (via (s)ata), as a helper library.
+Yes, and no.
 
-The (s) there is Serial not SCSI, but yes some SAS drivers use libata
-to drive SATA devices attached to SAS controllers.
+Yes, it is correct that persistent reservations are in fact per
+ITL nexus, and hence might yield different responses if retried on
+another path.
 
->   is there any counterpart in userspace to communicate
->   with (s)ata host/devices or how are the interfaces to
->   userspace designed to work?
+And no, it is not entirely correct to return the standard EIO error
+here as then the no_path_retry mechanism might kick in and we're
+back to square one.
 
-SG_IO is the standard way to issue custom commands.  You need to wrap
-ATA command inside a SCSI SCSI-ATA passthrough command.  Take a look
-at hdparm, smartctl or any other tool which issues direct commands.
+That said we probably need to invent another error code with
+meaning 'Retry on other ITL nexus if present, but ignore no_path_retry'=
+=2E
 
-> - the SiI3726 supports SAF-TE and SES protocols for the
->   SEMB/SEP and the EMCs are sent through the SATA interface
->   (according to the docu, SEP_ATTN in the command register
->   and SEP command code in the features register)
-> 
->   + how would I send such a command and retrieve the result
->     (if there is one) from within the kernel (maybe with
->     libata or from the ahci layer)?
+Cheers,
 
-If it's a proper command SAT passthrough via SG_IO should work but I'm
-not sure whether it is.  Is it?
-
-> - the SiI3726 supports GPIO pins, which can be reached via
->   the General Status and Control Register [130] and accoring
->   to the docu, the Read/Write Port Multiplier command can
->   be used to read/write that register.
->  
->   + how would I go about issuing such a command and where
->     should it be done? i.e. what about interference with
->     other commands? what about retrieving return values?
-
-The problem is that the PMP device itself is currently not allocated a
-userland visible device, so it doesn't have any /dev/* node.  Hmmm...
-
-> > There also was something added to ahci which is exported through
-> > sysfs.
-> 
-> I saw that the ahci driver uses *em_message* which I
-> think might be related to sending activity messages and
-> it also lists capabilities (which include 'ems') on
-> host adapters, but I'm not entirely sure this is SEMB
-> related (yet)
-
-The message sent there can be of any format and that's why it was
-added as a separate sysfs node.
-
-ISTR there's a SCSI enclosure management driver.  Maybe SCSI people
-have better clues about how enclosure management should be done?
-
-Thanks.
-
--- 
-tejun
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
