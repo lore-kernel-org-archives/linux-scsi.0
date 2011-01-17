@@ -1,90 +1,96 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v3 1/3] scsi: Detailed I/O errors
-Date: Mon, 17 Jan 2011 13:20:59 -0500
-Message-ID: <20110117182059.GA6549@redhat.com>
-References: <1295020736-27699-1-git-send-email-snitzer@redhat.com>
- <1295020736-27699-2-git-send-email-snitzer@redhat.com>
- <20110114161048.GK5727@earth.li>
- <20110114171614.GA27852@redhat.com>
- <4D3465B8.1040108@suse.de>
+From: Herbert Poetzl <herbert@13thfloor.at>
+Subject: Re: PMP and SEMB messages to SEP
+Date: Mon, 17 Jan 2011 19:21:40 +0100
+Message-ID: <20110117182140.GO16039@MAIL.13thfloor.at>
+References: <20110114170407.GE978@htj.dyndns.org> <20110114173759.GI16039@MAIL.13thfloor.at> <20110117154042.GG27123@htj.dyndns.org> <1295281131.3015.44.camel@mulgrave.site> <20110117171312.GL16039@MAIL.13thfloor.at> <20110117172054.GJ27123@htj.dyndns.org> <20110117173433.GM16039@MAIL.13thfloor.at> <20110117173946.GL27123@htj.dyndns.org> <20110117174806.GN16039@MAIL.13thfloor.at> <1295287504.3015.190.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:5732 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752730Ab1AQSVT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Jan 2011 13:21:19 -0500
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4D3465B8.1040108@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1295287504.3015.190.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Jonathan McDowell <noodles@earth.li>, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, agk@redhat.com, jaxboe@fusionio.com, michaelc@cs.wisc.edu
 
-On Mon, Jan 17 2011 at 10:52am -0500,
-Hannes Reinecke <hare@suse.de> wrote:
-
-> On 01/14/2011 06:16 PM, Mike Snitzer wrote:
-> > On Fri, Jan 14 2011 at 11:10am -0500,
-> > Jonathan McDowell <noodles@earth.li> wrote:
-> >>
-> >> I'd have viewed a reservation conflict as being tied to a particular
-> >> path, rather than the entire target. I've seen multipath setups where
-> >> there are reservation issues on some of the paths but others are fine
-> >> and this is expected (eg use of reservations to fence off particular
-> >> paths).
+On Mon, Jan 17, 2011 at 12:05:04PM -0600, James Bottomley wrote:
+> On Mon, 2011-01-17 at 18:48 +0100, Herbert Poetzl wrote:
+> > On Mon, Jan 17, 2011 at 06:39:46PM +0100, Tejun Heo wrote:
+> > > On Mon, Jan 17, 2011 at 06:34:33PM +0100, Herbert Poetzl wrote:
+> > > > hmm, haven't had the time to dig through the specs yet, but
+> > > > at least addonics seems to disagree here:
+> > > > 
+> > > > http://www.addonics.com/products/host_controller/tutorial_pm.asp
+> > > > 
+> > > > but maybe that's just a marketing page with no relation
+> > > > to reality ....
+> > > 
+> > > That's hardware RAID PMP.  It would just show up as a single drive to
+> > > the host.  They can do whatever they want to if they do that.
 > > 
-> > Very good point (as I think you're correct).  Technically a reservation
-> > conflict is retryable across _different_ paths but (relative to the
-> > error path as it relates to multipath) it appears Hannes elected to go
-> > with the conservative approach of always failing the IO upward given the
-> > potential for data corruption when queue_if_no_path is used.
+> > okay, understood.
 > > 
-> > Hannes previously touched on this here:
-> > https://www.redhat.com/archives/dm-devel/2009-November/msg00190.html
+> > > > > AFAIK, it just doesn't care.  It could be ses-2 or whatever else.  It
+> > > > > just transmits the binary blob it receives via sysfs and vice-versa.
+> > > > 
+> > > > the interesting part here is, that the AHCI host controller
+> > > > my PMP is connected to recognizes the PMP perfectly fine
+> > > > (i.e. more than one drive works just as expected), but doesn't
+> > > > seem to allow for the em_message part (despite the fact that
+> > > > the attached PMP seems to be SEMB/SEP capable) ...
+> > > > 
+> > > > maybe this is just a bug in the kernel code, maybe the AHCI
+> > > > implementation doesn't allow a PMP to receive enclosure
+> > > > management messages at all ...
+> > > 
+> > > AFAIK, the ahci em message thing is not via PMP. 
+> > > It's for cases where the ahci controller is directly connected 
+> > > to an enclosure. Well, that's my understanding anyway.
 > > 
-> > "This also solves a potential data corruption with multipathing
-> > and persistent reservations. When queue_if_no_path is active
-> > multipath will queue any I/O failure (including those failed
-> > with RESERVATION CONFLICT) until the reservation status changes.
-> > But by then I/O might have been ongoing on the other paths,
-> > thus the delayed submission will severely corrupt your data."
+> > okay, so something similar would be useful for controlling
+> > enclosures attached to PMPs then?
 > > 
-> > Even in the context of that older SCSI sense-based mpath patchset a
-> > reservation conflict would always fail upward (regardless of path count
-> > and/or queue_if_no_path).
+> > what would be the 'proper' place in the sysfs tree, espceically
+> > as the PMP doesn't show up there (yet)?
 > > 
-> > All said, the above doesn't excuse what seems to be a mis-categorization
-> > of reservation conflict as a pure non-retryable TARGET_FAILURE
-> > (EREMOTEIO).
-> > 
-> Ho-hum.
+> > how would I go about adding something like that to the kernel
+> > and where should it be placed (sysfs and code wise)?
 > 
-> Yes, and no.
+> OK, just so we're not at cross purposes:
 > 
-> Yes, it is correct that persistent reservations are in fact per
-> ITL nexus, and hence might yield different responses if retried on
-> another path.
+>      1. For an enclosure processor to show up and be attached to the
+>         enclosure driver, it has to present as a SCSI target. This
+>         often means handling nasty encapsulations somewhere (SES is
+>         most often used on non-standard busses like i2c or GPIO). If
+>         it's within a PMP and has a defined encapsulation which ATA
+>         recognises, it sounds like libata is the best place for this.
+
+it seems that the SATA specification, specifically the PMP
+part 'defines' something called SEMB (Smart Enclosure Management
+Bridge) which is controlled via specific SATA PMP commands to
+send 'messages' over (typically) I2C to an SEP (Smart Enclosure
+Processor) which can act upon them and even generate data/replies
+to retrieve information like the temperature, fan status, etc
+
+>      2. The above has nothing to do with whether the PMP device shows 
+>         up in sysfs or has a bsg command port. That's a completely
+>         separate discussion based on whether it makes sense (and
+>         whether we can cope with the topological complexity). Just by
+>         way of example, it's mostly not possible to use expanders with
+>         enclosure devices via our expander bsg device, because there's
+>         no SMP encapsulation of SES. What mostly happens is that the
+>         expander has two or more target ports, one of which is SMP
+>         and the other (completely separate one) is an addressable SES
+>         target.
+
+as far as I understood, the SEMB is a separate and well
+defined entity controllable via special PMP commands ...
+
+not every PMP has to have one, but if they do, it should
+conform to the specification, even on the I2C layer
+
+HTC,
+Herbert
+
+> James
 > 
-> And no, it is not entirely correct to return the standard EIO error
-> here as then the no_path_retry mechanism might kick in and we're
-> back to square one.
->
-> That said we probably need to invent another error code with
-> meaning 'Retry on other ITL nexus if present, but ignore no_path_retry'.
-
-That sounds right.  So something like the following?:
-- set ITL_NEXUS_ERROR/DID_ITL_NEXXUS_FAILURE in scsi (comparable to how
-  you did TARGET_ERROR/DID_TARGET_FAILURE) 
-- then return -EAGAIN from __scsi_error_from_host_byte() to signal to
-  upper layer(s) that a retry could be worthwhile -- driver specific
-
-In mpath's case it can respond to -EAGAIN by conversatively retrying
-with the 'Retry on other ITL nexus if present, but ignore no_path_retry'
-semantic?
-
-(overloading -EAGAIN leaves something to be desired but I welcome other
-ideas).
-
-Thanks,
-Mike
