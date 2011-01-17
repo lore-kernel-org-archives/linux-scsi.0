@@ -1,43 +1,49 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: remove duplicate include of
-	target/target_core_device.h from drivers/target/target_core_hba.c
-Date: Mon, 17 Jan 2011 14:43:05 -0800
-Message-ID: <1295304185.22813.247.camel@haakon2.linux-iscsi.org>
-References: <alpine.LNX.2.00.1101172242510.27021@swampdragon.chaosbits.net>
-	 <1295302951.22813.227.camel@haakon2.linux-iscsi.org>
-	 <alpine.LNX.2.00.1101172326060.27021@swampdragon.chaosbits.net>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [LSF/MM TOPIC] update on discard support & testing with vendors
+Date: Mon, 17 Jan 2011 18:18:30 -0500
+Message-ID: <AANLkTikihfUrLF3mMtMqYFsxqDgeQE=bv-=MN-ToY6R6@mail.gmail.com>
+References: <4D345637.6000207@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1101172326060.27021@swampdragon.chaosbits.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <4D345637.6000207@redhat.com>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: lsf-pc@lists.linuxfoundation.org, linux-fsdevel@vger.kernel.org, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2011-01-17 at 23:26 +0100, Jesper Juhl wrote:
-> On Mon, 17 Jan 2011, Nicholas A. Bellinger wrote:
-> 
-> > On Mon, 2011-01-17 at 22:46 +0100, Jesper Juhl wrote:
-> > > drivers/target/target_core_hba.c includes target/target_core_device.h 
-> > > twice - the two includes are even on two lines next to each other.
-> > > This patch removes the duplicate include.
-> > > 
-> > > Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-> > 
-> > Committed as:
-> > 
-> > [linus-38-rc1 95f39d1] target: remove duplicate include target_core_device.h
-> > 
-> > Please let me know if you have more include cleanups so they can be git
-> > squashed'  into a single commit for scsi-post-merge-2.6.git/for-jejb.
-> > 
-> I only found that one so far...
-> 
+On Mon, Jan 17, 2011 at 9:46 AM, Ric Wheeler <rwheeler@redhat.com> wrote:
+>
+> I would like to spend some time reviewing where we stand with the discard
+> support - specifically review where we do in the stack (creation time,
+> fine-grained during deletions, other bulk times), how the options perform
+> and any performance results we have with various classes of devices (SCSI
+> and SSD).
+>
+> Similar interest in how the topology/alignment support has worked out.
+>
+> Both topics took a lot of effort on our part and I expect that we are just
+> now going to be hitting the point where hardware vendors take us seriously
+> enough & are starting to test....
 
-<nod>  So for minor stuff like this (especially when the merge window is
-winding down) feel tree to send this to me directly and CC linux-scsi
-and I will make sure this gets in via scsi-post-merge-2.6.git/for-jejb.
++1
 
---nab
+Would be nice to hear from the stake holders at the various storage
+vendors (or users who have experience with said vendors'
+support/performance or lack thereof).
+
+At the last LSF, Martin and I spoke of the topology/alignment support
+that was added but it generated little discussion.  Could be such
+detail was too early, maybe this time around vendors will be more
+vocal.
+
+One nagging sticking point for some storage vendors is the Linux
+requirement that a LUN advertise itself as SPC-3 compliant (in order
+for Linux's SCSI layer to issue a READ CAPACITY 16, etc).
+
+Discard is more sexy so I'd expect a bit more discussion for that
+topic.  And again, BLOCK LIMITS VPD PAGE requirements have kept some
+vendors from implementing UNMAP support (sticking with WRITE SAME w/
+UNMAP bit set).
+
+Mike
