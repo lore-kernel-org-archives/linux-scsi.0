@@ -1,89 +1,83 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: PMP and SEMB messages to SEP
-Date: Mon, 17 Jan 2011 12:05:04 -0600
-Message-ID: <1295287504.3015.190.camel@mulgrave.site>
-References: <20110114142018.GA978@htj.dyndns.org>
-	 <20110114165957.GH16039@MAIL.13thfloor.at>
-	 <20110114170407.GE978@htj.dyndns.org>
-	 <20110114173759.GI16039@MAIL.13thfloor.at>
-	 <20110117154042.GG27123@htj.dyndns.org>
-	 <1295281131.3015.44.camel@mulgrave.site>
-	 <20110117171312.GL16039@MAIL.13thfloor.at>
-	 <20110117172054.GJ27123@htj.dyndns.org>
-	 <20110117173433.GM16039@MAIL.13thfloor.at>
-	 <20110117173946.GL27123@htj.dyndns.org>
-	 <20110117174806.GN16039@MAIL.13thfloor.at>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH] configfs: change depends -> select SYSFS
+Date: Mon, 17 Jan 2011 10:11:29 -0800
+Message-ID: <20110117101129.402fee67.randy.dunlap@oracle.com>
+References: <1295125851-25279-1-git-send-email-nab@linux-iscsi.org>
+	<20110116141105.59e5b3a2@stein>
+	<1295214807.22813.57.camel@haakon2.linux-iscsi.org>
+	<20110117000659.57352da7@stein>
+	<1295223733.2998.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20110117174806.GN16039@MAIL.13thfloor.at>
-Sender: linux-ide-owner@vger.kernel.org
-To: Herbert Poetzl <herbert@13thfloor.at>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1295223733.2998.8.camel@mulgrave.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2011-01-17 at 18:48 +0100, Herbert Poetzl wrote:
-> On Mon, Jan 17, 2011 at 06:39:46PM +0100, Tejun Heo wrote:
-> > On Mon, Jan 17, 2011 at 06:34:33PM +0100, Herbert Poetzl wrote:
-> > > hmm, haven't had the time to dig through the specs yet, but
-> > > at least addonics seems to disagree here:
+On Sun, 16 Jan 2011 18:22:12 -0600 James Bottomley wrote:
+
+> On Mon, 2011-01-17 at 00:06 +0100, Stefan Richter wrote:
+> > On Jan 16 Nicholas A. Bellinger wrote:
+> > > On Sun, 2011-01-16 at 14:11 +0100, Stefan Richter wrote:
+> > > > On Jan 15 Nicholas A. Bellinger wrote:
+> > > > > This patch changes configfs to select SYSFS to fix the following:
+> > > > > 
+> > > > > warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
+> > > > 
+> > > > Why don't you fix target-core's Kconfig instead?
 > > > 
-> > > http://www.addonics.com/products/host_controller/tutorial_pm.asp
-> > > 
-> > > but maybe that's just a marketing page with no relation
-> > > to reality ....
+> > > The thought here was that since modern configfs is mounted
+> > > at /sys/kernel/config/, selecting SYSFS by default when building
+> > > CONFIGFS_FS made the most sense for existing configfs consumers.
 > > 
-> > That's hardware RAID PMP.  It would just show up as a single drive to
-> > the host.  They can do whatever they want to if they do that.
+> > I for one think that layered "select" directives will open too many cans
+> > of worms.
 > 
-> okay, understood.
+> select, since we have it, should be clean ... as in if you select
+> something, you don't have to expose yourself to a huge pile of missing
+> depends that only show up in obscure configurations.
 > 
-> > > > AFAIK, it just doesn't care.  It could be ses-2 or whatever else.  It
-> > > > just transmits the binary blob it receives via sysfs and vice-versa.
-> > > 
-> > > the interesting part here is, that the AHCI host controller
-> > > my PMP is connected to recognizes the PMP perfectly fine
-> > > (i.e. more than one drive works just as expected), but doesn't
-> > > seem to allow for the em_message part (despite the fact that
-> > > the attached PMP seems to be SEMB/SEP capable) ...
-> > > 
-> > > maybe this is just a bug in the kernel code, maybe the AHCI
-> > > implementation doesn't allow a PMP to receive enclosure
-> > > management messages at all ...
+> 
+> > Best don't use select at all.
+> 
+> The object of select is not to trip up the user.  If we used a purely
+> depend based configuration, the user would have to know to select, say,
+> the right SCSI transport classes before they get presented with drivers.
+> It's completely correct, since transport classes are internal
+> implementations, to have the user select drivers and Kconfig work out
+> via the select directive what transport classes are needed.
+> 
+> > If you use it, select only options that don't depend on anything else.
 > > 
-> > AFAIK, the ahci em message thing is not via PMP. 
-> > It's for cases where the ahci controller is directly connected 
-> > to an enclosure. Well, that's my understanding anyway.
+> > If you feel that people really want you to provide a select for them which
+> > selects something that in turn depends on other things, then I suggest you
+> > rather let your own option depend on these lower dependencies:
+> > 
+> > config HIGHLEVEL_FEATURE
+> > 	tristate "some driver"
+> > 	depends on SYSFS  # because CONFIGFS depends on it
+> > 	select CONFIGFS
 > 
-> okay, so something similar would be useful for controlling
-> enclosures attached to PMPs then?
+> This is what I don't understand.
 > 
-> what would be the 'proper' place in the sysfs tree, espceically
-> as the PMP doesn't show up there (yet)?
+> Actually I think the whole premise of the patch (to get back to the
+> original topic) is wrong.
 > 
-> how would I go about adding something like that to the kernel
-> and where should it be placed (sysfs and code wise)?
+> TARGET_CORE depends on SCSI; SCSI has to have sysfs to survive ... we
+> just don't work without it yet we neither select nor depend on it.
+> SYSFS is only deselectable for embedded anyway, so I think the
+> configuration which generated this whole argument was likely a bogus one
+> and consequently, none of the patches are needed (or if they are,
+> they're the tip of the iceberg).
 
-OK, just so we're not at cross purposes:
+This sounds like a problem.
+SCSI subsystem will certainly build without having SYSFS enabled, but I think
+that you are saying that it won't function without SYSFS.  Then it depends on
+SYSFS and should say so somewhere (IMO of course).
 
-     1. For an enclosure processor to show up and be attached to the
-        enclosure driver, it has to present as a SCSI target.  This
-        often means handling nasty encapsulations somewhere (SES is most
-        often used on non-standard busses like i2c or GPIO).  If it's
-        within a PMP and has a defined encapsulation which ATA
-        recognises, it sounds like libata is the best place for this.
-     2. The above has nothing to do with whether the PMP device shows up
-        in sysfs or has a bsg command port.  That's a completely
-        separate discussion based on whether it makes sense (and whether
-        we can cope with the topological complexity).  Just by way of
-        example, it's mostly not possible to use expanders with
-        enclosure devices via our expander bsg device, because there's
-        no SMP encapsulation of SES.  What mostly happens is that the
-        expander has two or more target ports, one of which is SMP and
-        the other (completely separate one) is an addressable SES
-        target.
-
-James
-
-
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
