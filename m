@@ -1,66 +1,55 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v4 3/3] block: improve detail in I/O error messages
-Date: Tue, 18 Jan 2011 10:13:13 +0100
-Message-ID: <5acf8e401e40afb1bb7250bb37598c6e49dc830a.1295340405.git.hare@suse.de>
-References: <cover.1295340405.git.hare@suse.de>
- <b6ba7efc491aec18cd501f73e2e6bbebc2e0727a.1295340405.git.hare@suse.de>
- <fecf8512b216779a43fd02d739e85be4023c2328.1295340405.git.hare@suse.de>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH v4 1/3] scsi: Detailed I/O errors
+Date: Tue, 18 Jan 2011 12:33:55 +0100
+Message-ID: <4D357AA3.5070509@interlog.com>
+References: <cover.1295340405.git.hare@suse.de> <b6ba7efc491aec18cd501f73e2e6bbebc2e0727a.1295340405.git.hare@suse.de>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:46992 "EHLO mx2.suse.de"
+Received: from smtp.infotech.no ([82.134.31.41]:38689 "EHLO smtp.infotech.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753069Ab1ARJNO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Jan 2011 04:13:14 -0500
-In-Reply-To: <fecf8512b216779a43fd02d739e85be4023c2328.1295340405.git.hare@suse.de>
-In-Reply-To: <cover.1295340405.git.hare@suse.de>
-References: <cover.1295340405.git.hare@suse.de>
+	id S1751056Ab1ARLd6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jan 2011 06:33:58 -0500
+In-Reply-To: <b6ba7efc491aec18cd501f73e2e6bbebc2e0727a.1295340405.git.hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, jaxboe@fusionio.com, michaelc@cs.wisc.edu, agk@redhat.com, Hannes Reinecke <hare@suse.de>, Mike Snitzer <snitzer@redhat.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@suse.de>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, michaelc@cs.wisc.edu, agk@redhat.com, Mike Snitzer <snitzer@redhat.com>
 
-Classify severity of I/O errors for target, nexus, and
-transport errors.
+On 11-01-18 10:13 AM, Hannes Reinecke wrote:
+> Instead of just passing 'EIO' for any I/O error we should be
+> notifying the upper layers with more details about the cause
+> of this error.
+>
+> Update the possible I/O errors to:
+>
+> - ENOLINK: Link failure between host and target
+> - EIO: Retryable I/O error
+> - EREMOTEIO: Non-retryable I/O error
+> - EBADE: I/O error restricted to the I_T_L nexus
+>
+> 'Retryable' in this context means that an I/O error _might_ be
+> restricted to the I_T_L nexus (vulgo: path), so retrying on another
+> nexus / path might succeed.
+>
+> 'Non-retryable' in general refers to a target failure, so this
+> error will always be generated regardless of the I_T_L nexus
+> it was send on.
+>
+> I/O errors restricted to the I_T_L nexus might be retried
+> on another nexus / path, but they should _not_ be queued
+> if no paths are available.
 
-Signed-off-by: Mike Snitzer <snitzer@redhat.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- block/blk-core.c |   23 ++++++++++++++++++++---
- 1 files changed, 20 insertions(+), 3 deletions(-)
+Hannes,
+I don't know if it is applicable to this patch but with
+SAS when the uplink from an expander is being stressed
+(i.e. it temporarily doesn't have enough bandwidth) then
+a sense key of ABORTED COMMAND may be generated. In my
+experience retrying such a command succeeds.
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 4ce953f..3380a49 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -2028,9 +2028,26 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
- 
- 	if (error && req->cmd_type == REQ_TYPE_FS &&
- 	    !(req->cmd_flags & REQ_QUIET)) {
--		printk(KERN_ERR "end_request: I/O error, dev %s, sector %llu\n",
--				req->rq_disk ? req->rq_disk->disk_name : "?",
--				(unsigned long long)blk_rq_pos(req));
-+		char *error_type;
-+
-+		switch (error) {
-+		case -ENOLINK:
-+			error_type = "recoverable transport";
-+			break;
-+		case -EREMOTEIO:
-+			error_type = "critical target";
-+			break;
-+		case -EBADE:
-+			error_type = "critical nexus";
-+			break;
-+		case -EIO:
-+		default:
-+			error_type = "I/O";
-+			break;
-+		}
-+		printk(KERN_ERR "end_request: %s error, dev %s, sector %llu\n",
-+		       error_type, req->rq_disk ? req->rq_disk->disk_name : "?",
-+		       (unsigned long long)blk_rq_pos(req));
- 	}
- 
- 	blk_account_io_completion(req, nr_bytes);
--- 
-1.6.0.2
 
+BTW might "vulgo" be "ergo" [Latin: therefore]?
+
+Doug Gilbert
