@@ -1,127 +1,34 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH] target_core_mib.h move
-Date: Tue, 18 Jan 2011 12:12:43 -0800
-Message-ID: <1295381563.22813.429.camel@haakon2.linux-iscsi.org>
+Date: Tue, 18 Jan 2011 15:15:46 -0500
+Message-ID: <20110118201546.GA15970@infradead.org>
 References: <AANLkTim-KKyOt_U2cDvfW3cav9F29mSvzAcV9H2mJqbT@mail.gmail.com>
-	 <20110117205130.GA22532@infradead.org>
-	 <AANLkTinNiohS+9WDcCP4P=0beRRE53x4iFC9u7iXBOy2@mail.gmail.com>
+ <20110117205130.GA22532@infradead.org>
+ <AANLkTinNiohS+9WDcCP4P=0beRRE53x4iFC9u7iXBOy2@mail.gmail.com>
+ <1295381563.22813.429.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:45929 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753060Ab1ARUMr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2011 15:12:47 -0500
-In-Reply-To: <AANLkTinNiohS+9WDcCP4P=0beRRE53x4iFC9u7iXBOy2@mail.gmail.com>
+Received: from bombadil.infradead.org ([18.85.46.34]:35015 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752647Ab1ARUPr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2011 15:15:47 -0500
+Content-Disposition: inline
+In-Reply-To: <1295381563.22813.429.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fubo Chen <fubo.chen@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2011-01-18 at 17:58 +0100, Fubo Chen wrote:
-> On Mon, Jan 17, 2011 at 9:51 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Mon, Jan 17, 2011 at 09:00:02PM +0100, Fubo Chen wrote:
-> >> target_core_mib.h move from drivers/target to include/target.
-> >> Otherwise my driver not build.
-> >>
-> >> Signed-off-by: Fubo Chen <fubo.chen@gmail.com>
-> >
-> > Why does the driver need to poke into the target MIB code directly?
+On Tue, Jan 18, 2011 at 12:12:43PM -0800, Nicholas A. Bellinger wrote:
+> EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/include/ -I$(srctree)/drivers/scsi/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/tcm_mvsas_tgt
 > 
-> I should ask you why.
-> 
-> > Can you post the driver?
-> 
-> Compiler says:
-> 
-> $ make M=drivers/target modules
->   CC [M]  drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_fabric.o
-> In file included from drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_fabric.c:15:0:
-> include/target/target_core_base.h:11:29: fatal error:
-> target_core_mib.h: No such file or directory
-> compilation terminated.
-> make[2]: *** [drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_fabric.o] Error 1
-> make[1]: *** [drivers/target/tcm_mvsas_tgt] Error 2
-> make: *** [_module_drivers/target] Error 2
-> 
-> for this driver:
-> 
-> ---
->  drivers/target/Kbuild                              |    1 +
->  drivers/target/Kconfig                             |    2 +
->  drivers/target/tcm_mvsas_tgt/Kbuild                |    3 +
->  drivers/target/tcm_mvsas_tgt/Kconfig               |    6 +
->  drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_base.h  |   31 ++
->  .../target/tcm_mvsas_tgt/tcm_mvsas_tgt_configfs.c  |  298 ++++++++++++++++++++
->  .../target/tcm_mvsas_tgt/tcm_mvsas_tgt_fabric.c    |  272 ++++++++++++++++++
->  .../target/tcm_mvsas_tgt/tcm_mvsas_tgt_fabric.h    |   39 +++
->  8 files changed, 652 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/target/Kbuild
->  create mode 100644 drivers/target/tcm_mvsas_tgt/Kbuild
->  create mode 100644 drivers/target/tcm_mvsas_tgt/Kconfig
->  create mode 100644 drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_base.h
->  create mode 100644 drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_configfs.c
->  create mode 100644 drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_fabric.c
->  create mode 100644 drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_fabric.h
-> 
-> diff --git a/drivers/target/Kbuild b/drivers/target/Kbuild
-> new file mode 100644
-> index 0000000..a997c81
-> --- /dev/null
-> +++ b/drivers/target/Kbuild
-> @@ -0,0 +1 @@
-> +obj-$(CONFIG_TCM_MVSAS_TGT)	+= tcm_mvsas_tgt/
-> diff --git a/drivers/target/Kconfig b/drivers/target/Kconfig
-> index 2fac3be..85dcc60 100644
-> --- a/drivers/target/Kconfig
-> +++ b/drivers/target/Kconfig
-> @@ -29,4 +29,6 @@ config TCM_PSCSI
->  	Say Y here to enable the TCM/pSCSI subsystem plugin for non-buffered
->  	passthrough access to Linux/SCSI device
-> 
-> +source drivers/target/mvsas_tgt/Kconfig
-> +
->  endif
-> diff --git a/drivers/target/tcm_mvsas_tgt/Kbuild
-> b/drivers/target/tcm_mvsas_tgt/Kbuild
-> new file mode 100644
-> index 0000000..1c179d7
-> --- /dev/null
-> +++ b/drivers/target/tcm_mvsas_tgt/Kbuild
-> @@ -0,0 +1,3 @@
-> +tcm_mvsas_tgt-objs			:= tcm_mvsas_tgt_fabric.o \
-> +					   tcm_mvsas_tgt_configfs.o
-> +obj-$(CONFIG_TCM_MVSAS_TGT)		+= tcm_mvsas_tgt.o
+> FYI, depending upon the age of the tcm_mod_builder.py in question , you
+> may want to consider re-generating the fabric module skeleton with the
+> latest code.
 
-I think this fabric module was generated with an older version of
-Documentation/target/tcm_mod_builder.py, right..?
-
-After doing a quick 'tcm_mod_builder.py -m tcm_mvsas_tgt -p SAS' with
-mainline code, the newly generated tcm_mvsas_tgt.ko builds as expected..
-
-[nab@hera lio-core-2.6.git]$ make
-drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt.ko
-  CHK     include/linux/version.h
-  CHK     include/generated/utsrelease.h
-  CALL    scripts/checksyscalls.sh
-  CC [M]  drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_fabric.o
-  CC [M]  drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt_configfs.o
-  LD [M]  drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt.o
-  MODPOST 2 modules
-  CC      drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt.mod.o
-  LD [M]  drivers/target/tcm_mvsas_tgt/tcm_mvsas_tgt.ko
-
-The bit missing from the top of your Kbuild is:
-
-EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/include/ -I$(srctree)/drivers/scsi/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/tcm_mvsas_tgt
-
-FYI, depending upon the age of the tcm_mod_builder.py in question , you
-may want to consider re-generating the fabric module skeleton with the
-latest code.
-
-Thanks!
-
---nab
-
+This shouldn't be nessecary.  Except for special cases driver should
+never need special include paths.  I still don't see why the mib header
+should be needed by drivers, but if it is it needs to move under
+include/. 
 
