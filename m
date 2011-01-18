@@ -1,29 +1,38 @@
-From: Or Gerlitz <ogerlitz@voltaire.com>
-Subject: Re: build failure of drivers/scsi/gdth.c
-Date: Tue, 18 Jan 2011 09:39:18 +0200
-Message-ID: <4D3543A6.8040909@voltaire.com>
-References: <Pine.LNX.4.64.1101121217090.6323@zuben.voltaire.com>	<20110112083919.494a7404.rdunlap@xenotime.net>	<AANLkTikmygrH_W=nTB2ERPjUETVNzW=8n7VL9Jf6DLu3@mail.gmail.com> <20110113091127.dcdd3105.rdunlap@xenotime.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH v4 0/3] differentiate between I/O errors
+Date: Tue, 18 Jan 2011 10:13:10 +0100
+Message-ID: <cover.1295340405.git.hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fwil.voltaire.com ([193.47.165.2]:12096 "EHLO
-	Exil2010.voltaire.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751433Ab1ARHjV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2011 02:39:21 -0500
-In-Reply-To: <20110113091127.dcdd3105.rdunlap@xenotime.net>
+Received: from cantor.suse.de ([195.135.220.2]:59480 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752364Ab1ARJNO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jan 2011 04:13:14 -0500
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 8E8B79428F
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Jan 2011 10:13:13 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Or Gerlitz <or.gerlitz@gmail.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <jbottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, jaxboe@fusionio.com, michaelc@cs.wisc.edu, agk@redhat.com, Hannes Reinecke <hare@suse.de>
 
-Randy Dunlap wrote:
-> It builds OK for me.
+Changes in v4:
+Included new error -EBADE to signal nexus errors.
 
-okay, maybe something else is broken on my build environment, I'll send
-you off list the compressed verbose build log, the problem I'm not spotting
-is why LINUX_VERSION_CODE is defined to nothing in my env. I'm hitting this
-error on drivers/scsi/gdth.c and some other code that look on that constant,
-luckily there aren't many drivers doing that...
+The diffstat:
 
-Or.
+Hannes Reinecke (1):
+  scsi: Detailed I/O errors
+
+Mike Snitzer (2):
+  dm mpath: propagate target errors immediately
+  block: improve detail in I/O error messages
+
+ block/blk-core.c          |   23 ++++++++++++++++++++---
+ drivers/md/dm-mpath.c     |   22 ++++++++++------------
+ drivers/scsi/scsi_error.c |   24 +++++++++++++++++-------
+ drivers/scsi/scsi_lib.c   |   28 ++++++++++++++++++++++++++--
+ include/scsi/scsi.h       |    5 +++++
+ 5 files changed, 78 insertions(+), 24 deletions(-)
+
