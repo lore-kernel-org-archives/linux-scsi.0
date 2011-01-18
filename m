@@ -1,52 +1,85 @@
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [LSF/MM TOPIC][ATTEND] Discard support review/update and benchmark
- numbers
-Date: Tue, 18 Jan 2011 12:53:54 +0100 (CET)
-Message-ID: <alpine.LFD.2.00.1101181244570.2695@dhcp-lab-213.englab.brq.redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v4 1/3] scsi: Detailed I/O errors
+Date: Tue, 18 Jan 2011 13:01:52 +0100
+Message-ID: <4D358130.6040508@suse.de>
+References: <cover.1295340405.git.hare@suse.de> <b6ba7efc491aec18cd501f73e2e6bbebc2e0727a.1295340405.git.hare@suse.de> <4D357AA3.5070509@interlog.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-fsdevel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor2.suse.de ([195.135.220.15]:52009 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751056Ab1ARLzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jan 2011 06:55:09 -0500
+In-Reply-To: <4D357AA3.5070509@interlog.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com
+Cc: James Bottomley <jbottomley@suse.de>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, michaelc@cs.wisc.edu, agk@redhat.com, Mike Snitzer <snitzer@redhat.com>
 
-Agenda topic proposal:
-----------------------
+On 01/18/2011 12:33 PM, Douglas Gilbert wrote:
+> On 11-01-18 10:13 AM, Hannes Reinecke wrote:
+>> Instead of just passing 'EIO' for any I/O error we should be
+>> notifying the upper layers with more details about the cause
+>> of this error.
+>>
+>> Update the possible I/O errors to:
+>>
+>> - ENOLINK: Link failure between host and target
+>> - EIO: Retryable I/O error
+>> - EREMOTEIO: Non-retryable I/O error
+>> - EBADE: I/O error restricted to the I_T_L nexus
+>>
+>> 'Retryable' in this context means that an I/O error _might_ be
+>> restricted to the I_T_L nexus (vulgo: path), so retrying on another
+>> nexus / path might succeed.
+>>
+>> 'Non-retryable' in general refers to a target failure, so this
+>> error will always be generated regardless of the I_T_L nexus
+>> it was send on.
+>>
+>> I/O errors restricted to the I_T_L nexus might be retried
+>> on another nexus / path, but they should _not_ be queued
+>> if no paths are available.
+>=20
+> Hannes,
+> I don't know if it is applicable to this patch but with
+> SAS when the uplink from an expander is being stressed
+> (i.e. it temporarily doesn't have enough bandwidth) then
+> a sense key of ABORTED COMMAND may be generated. In my
+> experience retrying such a command succeeds.
+>=20
+I guess this should be handled by scsi EH, as there
+should be some sensible ASC/ASCQ values to go with
+it.
 
-In the past year a lot of work has been done towards more efficient
-Linux discard support. We would like to review all the efforts in
-this area and summarize where we stand now and what can be done in
-the near future. Show the options we have and how they perform with
-various classes of devices in different benchmarks and present some
-numbers. Last, but not least we think that we are at the point where
-hardware vendors should join in the discussion. At this matter we
-would like to outline the options they have to test the Linux discard
-stack with their hardware and make it all cooperate easily.
+This patchset is primarily for fixing up multipathing,
+which has the habit of retrying failed I/Os on the
+next path. For some errors this is just pointless
+(eg MEDIUM ERROR), for some errors this is the desired
+behaviour (namely transport errors), and for others
+this is positively damaging (persistent reservation
+failures).
+Just plain EIO simply don't cover the whole range :-)
 
-Authors:
---------
+>=20
+> BTW might "vulgo" be "ergo" [Latin: therefore]?
+>=20
+Nope. Correct etymology is from 'sermo vulgaris',
+ie the language of the common people.
+But maybe I should remove it for the next
+round to avoid confusion.
 
-Christoph Hellwig <hch@infradead.org>
+Cheers,
 
-Christoph Hellwig has been working with Linux for more than 10 years,
-soon focussing on kernel-related issues. He has also been involved in
-various other Free Software projects. After a number of smaller network
-administration and programming contracts he worked for Caldera's German
-development subsidiary on various kernel and userlevel aspects of the
-OpenLinux distribution and later joined the filesystem and storage group
-at SGI, focussing on XFS for Linux. Since 2004 he has been self-employed
-doing contracting, consulting and training in the Linux Kernel and Storage
-world.
-
-Lukas Czerner <lczerner@redhat.com>
-
-Lukas is a software engineer with Red Hat, Inc, where he works mainly on
-Ext4 filesystem. He has been involved in performance evaluation of Linux
-discard support and was examining of alternative approaches which led to
-establishing the interface for filesystem batched discard support aka
-FITRIM as well as implementation for Ext4/3 filesystems.
-
-
-Thanks!
--Lukas
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
