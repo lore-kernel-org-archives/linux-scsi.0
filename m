@@ -1,605 +1,498 @@
-From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [v2 PATCH 4/5] bnx2fc: Broadcom FCoE Offload driver
- submission - part 2
-Date: Mon, 17 Jan 2011 19:29:20 -0800
-Message-ID: <1295321360.3536.158.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
-References: <1293170555.4676.574.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
- <4D34FE9A.2030002@cs.wisc.edu>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [v2 PATCH 5/5] bnx2fc: Broadcom FCoE Offload driver submission
+ - part 3
+Date: Mon, 17 Jan 2011 21:41:36 -0600
+Message-ID: <4D350BF0.7040301@cs.wisc.edu>
+References: <1293170556.4676.575.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=cp1252
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms2.broadcom.com ([216.31.210.18]:3820 "EHLO mms2.broadcom.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:39586 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752641Ab1ARD3n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Jan 2011 22:29:43 -0500
-In-Reply-To: <4D34FE9A.2030002@cs.wisc.edu>
+	id S1753444Ab1ARDlh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Jan 2011 22:41:37 -0500
+In-Reply-To: <1293170556.4676.575.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>
+To: Bhanu Gollapudi <bprakash@broadcom.com>
+Cc: devel@open-fcoe.org, linux-scsi@vger.kernel.org, mchan@broadcom.com
 
-On Mon, 2011-01-17 at 18:44 -0800, Mike Christie wrote:
-> On 12/24/2010 12:02 AM, Bhanu Gollapudi wrote:
-> > diff --git a/drivers/scsi/bnx2fc/bnx2fc_tgt.c b/drivers/scsi/bnx2fc/bnx2fc_tgt.c
-> 
-> > +
-> > +static void bnx2fc_offload_session(struct bnx2fc_port *port,
-> > +                                     struct bnx2fc_rport *tgt,
-> > +                                     struct fc_rport_priv *rdata)
-> > +{
-> > +     struct fc_lport *lport = rdata->local_port;
-> > +     struct fc_rport *rport = rdata->rport;
-> > +     struct bnx2fc_hba *hba = port->hba;
-> > +     int rval;
-> > +     int i = 0;
-> > +
-> > +     /* Initialize bnx2fc_rport */
-> > +     /* NOTE: tgt is already bzero'd */
-> > +     rval = bnx2fc_init_tgt(tgt, port, rdata);
-> > +     if (rval) {
-> > +             printk(KERN_ERR PFX "Failed to allocate conn id for "
-> > +                     "port_id (%6x)\n", rport->port_id);
-> > +             goto ofld_err;
-> > +     }
-> > +
-> > +     if (hba->num_ofld_sess>= BNX2FC_NUM_MAX_SESS) {
-> > +             printk(KERN_ERR PFX "exceeded max sessions port_id (%6x)\n",
-> > +                    rport->port_id);
-> > +             goto ofld_err;
-> > +     }
-> > +
-> > +     /* Allocate session resources */
-> > +     rval = bnx2fc_alloc_session_resc(hba, tgt);
-> > +     if (rval) {
-> > +             printk(KERN_ERR PFX "Failed to allocate resources\n");
-> > +             goto ofld_err;
-> > +     }
-> > +
-> > +     /*
-> > +      * Initialize FCoE session offload process.
-> > +      * Upon completion of offload process add
-> > +      * rport to list of rports
-> > +      */
-> > +retry_ofld:
-> > +     clear_bit(BNX2FC_FLAG_OFLD_REQ_CMPL,&tgt->flags);
-> > +     rval = bnx2fc_send_session_ofld_req(port, tgt);
-> > +     if (rval) {
-> > +             printk(KERN_ERR PFX "ofld_req failed\n");
-> > +             goto ofld_err;
-> > +     }
-> > +
-> > +     /*
-> > +      * wait for the session is offloaded and enabled. 20 Secs
-> > +      * should be ample time for this process to complete.
-> > +      */
-> > +     init_timer(&tgt->ofld_timer);
-> > +     tgt->ofld_timer.expires = (20 * HZ) + jiffies;
-> > +     tgt->ofld_timer.function = bnx2fc_ofld_timer;
-> > +     tgt->ofld_timer.data = (unsigned long)tgt;
-> 
-> 
-> setup_timer()
+On 12/24/2010 12:02 AM, Bhanu Gollapudi wrote:
+> +++ b/drivers/scsi/bnx2fc/Kconfig
+> @@ -0,0 +1,11 @@
+> +config SCSI_BNX2X_FCOE
+> +	tristate "Broadcom NetXtreme II FCoE support"
+> +	depends on PCI
+> +	select NETDEVICES
+> +	select NETDEV_1000
 
-OK. will use. Is there any advantage of using setup_timer()? This is not
-a perf path.
 
-> 
-> > +
-> > +     add_timer(&tgt->ofld_timer);
-> > +
-> > +     wait_event_interruptible(tgt->ofld_wait,
-> > +                              (test_bit(
-> > +                               BNX2FC_FLAG_OFLD_REQ_CMPL,
-> > +                             &tgt->flags)));
-> 
-> 
-> 
-> This gets run from libfc's work queue, right? It does not seem nice to
-> sleep here for so long and block other drivers.
+What is the NETDEV_1000 for?
 
-> For multipath setups having to wait this longs would be very bad.
 
-20 secs sounds long. But this is a local completion with the FW which
-hardly takes any time.
+> +	select LIBFC
+> +	select LIBFCOE
+> +	select CNIC
+> +	---help---
+> +	This driver supports FCoE offload for the Broadcom NetXtreme II
+> +	devices.
+> diff --git a/drivers/scsi/bnx2fc/Makefile b/drivers/scsi/bnx2fc/Makefile
+> new file mode 100644
+> index 0000000..a92695a
+> --- /dev/null
+> +++ b/drivers/scsi/bnx2fc/Makefile
+> @@ -0,0 +1,3 @@
+> +obj-$(CONFIG_SCSI_BNX2X_FCOE) += bnx2fc.o
+> +
+> +bnx2fc-y := bnx2fc_els.o bnx2fc_fcoe.o bnx2fc_hwi.o bnx2fc_io.o bnx2fc_tgt.o
+> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> new file mode 100644
+> index 0000000..ea846ee
+> --- /dev/null
+> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+> @@ -0,0 +1,2423 @@
+> +/* bnx2fc_fcoe.c: Broadcom NetXtreme II Linux FCoE offload driver.
+> + *
+> + * Copyright (c) 2008 - 2010 Broadcom Corporation
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation.
+> + *
+> + * Written by: Bhanu Prakash Gollapudi (bprakash@broadcom.com)
+> + */
+> +
+> +#include "bnx2fc.h"
+> +
+> +static struct list_head adapter_list;
+> +static u32 adapter_count;
+> +static DEFINE_MUTEX(bnx2fc_dev_lock);
+> +
+> +#define DRV_MODULE_NAME		"bnx2fc"
+> +#define DRV_MODULE_VERSION	BNX2FC_VERSION
+> +#define DRV_MODULE_RELDATE	"Dec, 23 2010"
+> +
+> +
+> +static char version[] __devinitdata =
+> +		"Broadcom NetXtreme II FCoE Driver " DRV_MODULE_NAME \
+> +		" v" DRV_MODULE_VERSION " (" DRV_MODULE_RELDATE ")\n";
+> +
+> +
+> +MODULE_AUTHOR("Bhanu Prakash Gollapudi<bprakash@broadcom.com>");
+> +MODULE_DESCRIPTION("Broadcom NetXtreme II BCM57710 FCoE Driver");
+> +MODULE_LICENSE("GPL");
+> +MODULE_VERSION(DRV_MODULE_VERSION);
+> +
+> +#define FCOE_LOW_QUEUE_DEPTH	32
+> +#define FCOE_GW_ADDR_MODE           0x00
+> +#define FCOE_FCOUI_ADDR_MODE        0x01
+> +
+> +#define FCOE_WORD_TO_BYTE  4
 
-> 
-> 
-> > +
-> > +void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt)
-> > +{
-> > +     struct bnx2fc_cmd *io_req;
-> > +     struct list_head *list;
-> > +     struct list_head *tmp;
-> > +     int rc;
-> > +     int i = 0;
-> > +     bnx2fc_dbg(LOG_IOERR, "Entered flush_active_ios - %d, port_id = 0x%x\n",
-> > +             tgt->num_active_ios, tgt->rdata->ids.port_id);
-> > +
-> > +     spin_lock_bh(&tgt->tgt_lock);
-> > +     tgt->flush_in_prog = 1;
-> > +
-> > +     list_for_each_safe(list, tmp,&tgt->active_cmd_queue) {
-> > +             i++;
-> > +             io_req = (struct bnx2fc_cmd *)list;
-> > +             list_del_init(&io_req->link);
-> > +             io_req->on_active_queue = 0;
-> > +             bnx2fc_dbg(LOG_IOERR, "cmd_queue cleanup - xid = 0x%x ref_cnt ="
-> > +                        " %d\n", io_req->xid, io_req->cmd_refcnt.counter);
-> > +
-> > +             if (cancel_delayed_work(&io_req->timeout_work)) {
-> > +                     if (test_and_clear_bit(BNX2FC_FLAG_EH_ABORT,
-> > +                                             &io_req->req_flags)) {
-> > +                             /* Handle eh_abort timeout */
-> > +                             bnx2fc_dbg(LOG_IOERR, "eh_abort for IO "
-> > +                                             "with oxid = 0x%x "
-> > +                                     "cleaned up\n", io_req->xid);
-> > +                             complete(&io_req->tm_done);
-> > +                     }
-> > +                     bnx2fc_cmd_release(io_req); /* drop timer hold */
-> > +             }
-> > +
-> > +             set_bit(BNX2FC_FLAG_IO_COMPL,&io_req->req_flags);
-> > +             set_bit(BNX2FC_FLAG_IO_CLEANUP,&io_req->req_flags);
-> > +             rc = bnx2fc_initiate_cleanup(io_req);
-> > +             BUG_ON(rc);
-> > +     }
-> > +
-> > +     list_for_each_safe(list, tmp,&tgt->els_queue) {
-> > +             i++;
-> > +             io_req = (struct bnx2fc_cmd *)list;
-> > +             list_del_init(&io_req->link);
-> > +             io_req->on_active_queue = 0;
-> > +
-> > +             bnx2fc_dbg(LOG_IOERR, "els_queue cleanup - xid = 0x%x"
-> > +                        " ref_cnt = %d\n", io_req->xid,
-> > +                        io_req->cmd_refcnt.counter);
-> > +
-> > +             if (cancel_delayed_work(&io_req->timeout_work))
-> > +                     bnx2fc_cmd_release(io_req); /* drop timer hold */
-> > +
-> > +             if ((io_req->cb_func)&&  (io_req->cb_arg)) {
-> > +                     io_req->cb_func(io_req->cb_arg);
-> > +                     io_req->cb_arg = NULL;
-> > +             }
-> > +
-> > +             rc = bnx2fc_initiate_cleanup(io_req);
-> > +             BUG_ON(rc);
-> > +     }
-> > +
-> > +     list_for_each_safe(list, tmp,&tgt->io_retire_queue) {
-> > +             i++;
-> > +             io_req = (struct bnx2fc_cmd *)list;
-> > +             list_del_init(&io_req->link);
-> > +
-> > +             bnx2fc_dbg(LOG_IOERR, "retire_queue flush - xid = 0x%x"
-> > +                     " ref_cnt = %d\n", io_req->xid,
-> > +                      io_req->cmd_refcnt.counter);
-> > +
-> > +             if (cancel_delayed_work(&io_req->timeout_work))
-> > +                     bnx2fc_cmd_release(io_req);
-> > +
-> > +             clear_bit(BNX2FC_FLAG_ISSUE_RRQ,&io_req->req_flags);
-> > +     }
-> > +
-> > +     bnx2fc_dbg(LOG_IOERR, "IOs flushed = %d\n", i);
-> > +     i = 0;
-> > +     spin_unlock_bh(&tgt->tgt_lock);
-> > +     /* wait for active_ios to go to 0 */
-> > +     while ((tgt->num_active_ios != 0)&&  (i++<  120))
-> > +             msleep(25);
-> 
-> 
-> Are you waiting for bnx2fc_cmd_timeout to stop running (for the case
-> where the cancel did not indicate it was pending) or to get a response
-> to when you did bnx2fc_initiate_cleanup?
 
-Waiting to get the response for bnx2fc_initiate_cleanup().
+rm unused defs and rm or rename defs in other files.
 
-> 
-> For bnx2fc_cmd_timeout you should just flush the workqueue_struct.
-> 
-> For bnx2fc_initiate_cleanup, where did the 120 * 25msecs limit come from?
 
-This is again a local completion from FW to get the cleanup completion
-for the outstanding IOs, and should not take longer. I'll probably use a
-symbol instead of hard coded 120.
+> +
+> +static struct scsi_transport_template	*bnx2fc_transport_template;
+> +static struct scsi_transport_template	*bnx2fc_vport_xport_template;
+> +
+> +struct bnx2fc_global_s bnx2fc_global;
+> +
+> +static struct cnic_ulp_ops bnx2fc_cnic_cb;
+> +static struct libfc_function_template bnx2fc_libfc_fcn_templ;
+> +static struct scsi_host_template bnx2fc_shost_template;
+> +static struct fc_function_template bnx2fc_transport_function;
+> +static struct fc_function_template bnx2fc_vport_xport_function;
+> +static int bnx2fc_create(struct net_device *netdev, enum fip_state fip_mode);
+> +static int bnx2fc_destroy(struct net_device *net_device);
+> +static int bnx2fc_enable(struct net_device *netdev);
+> +static int bnx2fc_disable(struct net_device *netdev);
+> +
+> +static void bnx2fc_recv_frame(struct sk_buff *skb);
+> +
+> +static u64 bnx2fc_wwn_from_mac(unsigned char mac[MAX_ADDR_LEN],
+> +		      unsigned int scheme, unsigned int port);
+> +static inline int bnx2fc_start_io(struct sk_buff *skb);
+> +static void bnx2fc_start_disc(struct bnx2fc_hba *hba);
+> +static void bnx2fc_check_wait_queue(struct fc_lport *lp, struct sk_buff *skb);
+> +static int bnx2fc_shost_config(struct fc_lport *lp);
+> +static int bnx2fc_net_config(struct fc_lport *lp);
+> +static int bnx2fc_lport_config(struct fc_lport *lport,
+> +			       struct Scsi_Host *shost);
+> +static int bnx2fc_em_config(struct fc_lport *lport);
+> +static int bnx2fc_bind_adapter_devices(struct bnx2fc_hba *hba);
+> +static void bnx2fc_unbind_adapter_devices(struct bnx2fc_hba *hba);
+> +static int bnx2fc_bind_pcidev(struct bnx2fc_hba *hba);
+> +static void bnx2fc_unbind_pcidev(struct bnx2fc_hba *hba);
+> +static struct fc_lport *bnx2fc_if_create(struct bnx2fc_hba *hba,
+> +				  struct device *parent, int npiv);
+> +static void bnx2fc_destroy_work(struct work_struct *work);
+> +
+> +static struct bnx2fc_hba *bnx2fc_hba_lookup(struct net_device *phys_dev);
+> +static struct bnx2fc_hba *bnx2fc_find_hba_for_cnic(struct cnic_dev *cnic);
+> +
+> +static void bnx2fc_port_shutdown(struct fc_lport *lport);
+> +static void bnx2fc_stop(struct bnx2fc_hba *hba);
+> +static int __init bnx2fc_mod_init(void);
+> +static void __exit bnx2fc_mod_exit(void);
+> +
+> +unsigned long bnx2fc_debug_level;
+> +module_param(bnx2fc_debug_level, long, 0644);
+> +
+> +/*
+> +MODULE_PARM_DESC(bnx2fc_debug_level, "Bit mask to enable debug logging,\n\t\t"
+> +		"LOG_IOERR	0x00000001\n\t\t"
+> +		"LOG_SESS	0x00000002\n\t\t"
+> +		"LOG_DEV_EVT	0x00000004\n\t\t"
+> +		"LOG_ELS	0x00000008\n\t\t"
+> +		"LOG_FRAME	0x00000010\n\t\t"
+> +		"LOG_INIT	0x00000020\n\t\t"
+> +		"LOG_ALL	0xffffffff\n"
+> +		);
+> +*/
+> +
 
-> 
-> 
-> 
-> > +     if (tgt->num_active_ios != 0)
-> > +             printk(KERN_ERR PFX "CLEANUP on port 0x%x:"
-> > +                                 " active_ios = %d\n",
-> > +                     tgt->rdata->ids.port_id, tgt->num_active_ios);
-> > +     spin_lock_bh(&tgt->tgt_lock);
-> > +     tgt->flush_in_prog = 0;
-> > +     spin_unlock_bh(&tgt->tgt_lock);
-> > +}
-> > +
-> > +static void bnx2fc_upload_session(struct bnx2fc_port *port,
-> > +                                     struct bnx2fc_rport *tgt)
-> > +{
-> > +     struct bnx2fc_hba *hba = port->hba;
-> > +
-> > +     bnx2fc_dbg(LOG_SESS, "upload_session: active_ios = %d\n",
-> > +             tgt->num_active_ios);
-> > +
-> > +     /*
-> > +      * Called with hba->hba_mutex held.
-> > +      * This is a blocking call
-> > +      */
-> > +     clear_bit(BNX2FC_FLAG_UPLD_REQ_COMPL,&tgt->flags);
-> > +     bnx2fc_send_session_disable_req(port, tgt);
-> > +
-> > +     /*
-> > +      * wait for upload to complete. 20 Secs
-> > +      * should be sufficient time for this process to complete.
-> > +      */
-> > +     init_timer(&tgt->upld_timer);
-> > +     tgt->upld_timer.expires = (20 * HZ) + jiffies;
-> > +     tgt->upld_timer.function = bnx2fc_upld_timer;
-> > +     tgt->upld_timer.data = (unsigned long)tgt;
-> > +
-> 
-> 
-> setup_timer() Check for other places in the code for this.
+rm if not used.
 
-Yes. will do.
+> +#define FCOE_MAX_QUEUE_DEPTH 256
+> +
+> +static u64 bnx2fc_wwn_from_mac(unsigned char mac[MAX_ADDR_LEN],
+> +		      unsigned int scheme, unsigned int port)
+> +{
+> +	u64 wwn;
+> +	u64 host_mac;
+> +
+> +	/* The MAC is in NO, so flip only the low 48 bits */
+> +	host_mac = ((u64) mac[0]<<  40) |
+> +		((u64) mac[1]<<  32) |
+> +		((u64) mac[2]<<  24) |
+> +		((u64) mac[3]<<  16) |
+> +		((u64) mac[4]<<  8) |
+> +		(u64) mac[5];
+> +
+> +	WARN_ON(host_mac>= (1ULL<<  48));
+> +	wwn = host_mac | ((u64) scheme<<  60);
+> +	switch (scheme) {
+> +	case 1:
+> +		WARN_ON(port != 0);
+> +		break;
+> +	case 2:
+> +		WARN_ON(port>= 0xfff);
+> +		wwn |= (u64) port<<  48;
+> +		break;
+> +	default:
+> +		WARN_ON(1);
+> +		break;
+> +	}
+> +
+> +	return wwn;
+> +}
 
-> 
-> 
-> > +     add_timer(&tgt->upld_timer);
-> > +
-> > +     bnx2fc_dbg(LOG_SESS, "waiting for disable compl\n");
-> > +     wait_event_interruptible(tgt->upld_wait,
-> > +                              (test_bit(
-> > +                               BNX2FC_FLAG_UPLD_REQ_COMPL,
-> > +                             &tgt->flags)));
-> > +
-> > +     if (signal_pending(current))
-> > +             flush_signals(current);
-> > +
-> > +     del_timer_sync(&tgt->upld_timer);
-> > +
-> > +     bnx2fc_dbg(LOG_SESS, "disable wait complete flags = 0x%lx\n",
-> > +             tgt->flags);
-> > +
-> > +     /*
-> > +      * traverse thru the active_q and tmf_q and cleanup
-> > +      * IOs in these lists
-> > +      */
-> > +     bnx2fc_dbg(LOG_SESS, "flush/upload\n");
-> > +     bnx2fc_flush_active_ios(tgt);
-> > +
-> > +     /* Issue destroy KWQE */
-> > +     if (test_bit(BNX2FC_FLAG_DISABLED,&tgt->flags)) {
-> > +             bnx2fc_dbg(LOG_SESS, "send destroy req\n");
-> > +             clear_bit(BNX2FC_FLAG_UPLD_REQ_COMPL,&tgt->flags);
-> > +             bnx2fc_send_session_destroy_req(hba, tgt);
-> > +
-> > +             /* wait for destroy to complete */
-> > +             init_timer(&tgt->upld_timer);
-> > +             tgt->upld_timer.expires = (20 * HZ) + jiffies;
-> > +             tgt->upld_timer.function = bnx2fc_upld_timer;
-> > +             tgt->upld_timer.data = (unsigned long)tgt;
-> > +
-> > +             add_timer(&tgt->upld_timer);
-> > +
-> > +             wait_event_interruptible(tgt->upld_wait,
-> > +                                      (test_bit(
-> > +                                       BNX2FC_FLAG_UPLD_REQ_COMPL,
-> > +                                     &tgt->flags)));
-> > +
-> > +             if (!(test_bit(BNX2FC_FLAG_DESTROYED,&tgt->flags)))
-> > +                     printk(KERN_ERR PFX "ERROR!! destroy timed out\n");
-> > +
-> > +             bnx2fc_dbg(LOG_SESS, "destroy wait complete flags = 0x%lx\n",
-> > +                     tgt->flags);
-> > +             if (signal_pending(current))
-> > +                     flush_signals(current);
-> > +
-> > +             del_timer_sync(&tgt->upld_timer);
-> > +
-> > +     } else {
-> > +             printk(KERN_ERR PFX "ERROR!! DISABLE req timed out, destroy"
-> > +                             " not sent to FW\n");
-> > +     }
-> 
-> 
-> No need for extra brackets.
 
-OK.
+libfcoe has this already.
 
-> 
-> > +
-> > +
-> > +     /* Free session resources */
-> > +     spin_lock_bh(&tgt->cq_lock);
-> > +     bnx2fc_free_session_resc(hba, tgt);
-> > +     bnx2fc_free_conn_id(hba, tgt->fcoe_conn_id);
-> > +     spin_unlock_bh(&tgt->cq_lock);
-> > +     return;
-> 
-> extra return
 
-OK.
+> +static inline int bnx2fc_start_io(struct sk_buff *skb)
+> +{
+> +	struct sk_buff *nskb;
+> +	int rc;
+> +
+> +	nskb = skb_clone(skb, GFP_ATOMIC);
+> +	rc = dev_queue_xmit(nskb);
+> +	if (rc != 0)
+> +		return rc;
+> +	kfree_skb(skb);
+> +	return 0;
+> +}
 
-> 
-> 
-> > +/**
-> > + * bnx2fc_tgt_lookup() - Lookup a bnx2fc_rport by port_id
-> > + * @port:  bnx2fc_port struct to lookup the target port on
-> > + * @port_id: The remote port ID to look up
-> > + */
-> > +struct bnx2fc_rport *bnx2fc_tgt_lookup(struct bnx2fc_port *port,
-> > +                                          u32 port_id)
-> > +{
-> > +     struct bnx2fc_hba *hba = port->hba;
-> > +     struct bnx2fc_rport *tgt;
-> > +     struct fc_rport_priv *rdata;
-> > +     int i;
-> > +
-> > +     for (i = 0; i<  BNX2FC_NUM_MAX_SESS; i++) {
-> > +             tgt = hba->tgt_ofld_list[i];
-> > +             if ((tgt)&&  (tgt->port == port)) {
-> > +                     rdata = tgt->rdata;
-> > +                     if (rdata->ids.port_id == port_id) {
-> > +                             if (rdata->rp_state != RPORT_ST_DELETE) {
-> > +                                     bnx2fc_dbg(LOG_IOERR, "rport 0x%x "
-> > +                                             "obtained\n",
-> > +                                             rdata->ids.port_id);
-> > +                                     return tgt;
-> > +                             } else {
-> > +                                     printk(KERN_ERR PFX "rport 0x%x "
-> > +                                             "is in DELETED state\n",
-> > +                                             rdata->ids.port_id);
-> > +                                     return NULL;
-> > +                             }
-> > +                     }
-> > +             }
-> > +     }
-> > +     return NULL;
-> > +}
-> 
-> 
-> It seems this should go in scsi_transport_fc. I thought there was a
-> similar lookup function in libfc too, and we were trying to move that to
-> the transport class.
 
-this is bnx2fc driver specific lookup, looking if the target is
-offloaded or not.
+fcoe.c has this.
 
-> 
-> 
-> 
-> 
-> > +
-> > +
-> > +/**
-> > + * bnx2fc_alloc_conn_id - allocates FCOE Connection id
-> > + *
-> > + * @hba:     pointer to adapter structure
-> > + * @tgt:     pointer to bnx2fc_rport structure
-> > + */
-> > +static u32 bnx2fc_alloc_conn_id(struct bnx2fc_hba *hba,
-> > +                             struct bnx2fc_rport *tgt)
-> > +{
-> > +     u32 conn_id, next;
-> > +
-> > +     /* called with hba mutex held */
-> > +
-> > +     /*
-> > +      * tgt_ofld_list access is synchronized using
-> > +      * both hba mutex and hba lock. Atleast hba mutex or
-> > +      * hba lock needs to be held for read access.
-> > +      */
-> > +
-> > +     spin_lock_bh(&hba->hba_lock);
-> > +     next = hba->next_conn_id;
-> > +     conn_id = hba->next_conn_id++;
-> > +     if (hba->next_conn_id == BNX2FC_NUM_MAX_SESS)
-> > +             hba->next_conn_id = 0;
-> > +
-> > +     while (hba->tgt_ofld_list[conn_id] != NULL) {
-> > +             conn_id++;
-> > +             if (conn_id == BNX2FC_NUM_MAX_SESS)
-> > +                     conn_id = 0;
-> > +
-> > +             if (conn_id == next) {
-> > +                     /* No free conn_ids are available */
-> > +                     conn_id = -1;
-> > +                     return conn_id;
-> 
-> Just do return -1;
 
-OK.
+> +
+> +static void bnx2fc_clean_rx_queue(struct fc_lport *lp)
+> +{
+> +	struct bnx2fc_global_s *bg;
+> +	struct fcoe_rcv_info *fr;
+> +	struct sk_buff_head *list;
+> +	struct sk_buff *skb, *next;
+> +	struct sk_buff *head;
+> +
+> +	bg =&bnx2fc_global;
+> +	spin_lock_bh(&bg->fcoe_rx_list.lock);
+> +	list =&bg->fcoe_rx_list;
+> +	head = list->next;
+> +	for (skb = head; skb != (struct sk_buff *)list;
+> +	     skb = next) {
+> +		next = skb->next;
+> +		fr = fcoe_dev_from_skb(skb);
+> +		if (fr->fr_dev == lp) {
+> +			__skb_unlink(skb, list);
+> +			kfree_skb(skb);
+> +		}
+> +	}
+> +	spin_unlock_bh(&bg->fcoe_rx_list.lock);
+> +}
 
-> 
-> 
-> 
-> 
-> > +static int bnx2fc_alloc_session_resc(struct bnx2fc_hba *hba,
-> > +                                     struct bnx2fc_rport *tgt)
-> > +{
-> > +     dma_addr_t page;
-> > +     int num_pages;
-> > +     u32 *pbl;
-> > +
-> > +     /* Allocate and map SQ */
-> > +     tgt->sq_mem_size = tgt->max_sqes * BNX2FC_SQ_WQE_SIZE;
-> > +     tgt->sq_mem_size = (tgt->sq_mem_size + (PAGE_SIZE - 1))&  PAGE_MASK;
-> > +
-> > +     tgt->sq = dma_alloc_coherent(&hba->pcidev->dev, tgt->sq_mem_size,
-> > +                             &tgt->sq_dma, GFP_KERNEL);
-> > +     if (!tgt->sq) {
-> > +             printk(KERN_ALERT PFX "unable to allocate SQ memory %d\n",
-> > +                     tgt->sq_mem_size);
-> > +             goto mem_alloc_failure;
-> > +     }
-> > +     memset(tgt->sq, 0, tgt->sq_mem_size);
-> > +
-> > +     /* Allocate and map CQ */
-> > +     tgt->cq_mem_size = tgt->max_cqes * BNX2FC_CQ_WQE_SIZE;
-> > +     tgt->cq_mem_size = (tgt->cq_mem_size + (PAGE_SIZE - 1))&  PAGE_MASK;
-> > +
-> > +     tgt->cq = dma_alloc_coherent(&hba->pcidev->dev, tgt->cq_mem_size,
-> > +                             &tgt->cq_dma, GFP_KERNEL);
-> > +     if (!tgt->cq) {
-> > +             printk(KERN_ALERT PFX "unable to allocate CQ memory %d\n",
-> > +                     tgt->cq_mem_size);
-> > +             goto mem_alloc_failure;
-> > +     }
-> > +     memset(tgt->cq, 0, tgt->cq_mem_size);
-> > +
-> > +     /* Allocate and map RQ and RQ PBL */
-> > +     tgt->rq_mem_size = tgt->max_rqes * BNX2FC_RQ_WQE_SIZE;
-> > +     tgt->rq_mem_size = (tgt->rq_mem_size + (PAGE_SIZE - 1))&  PAGE_MASK;
-> > +
-> > +     tgt->rq = dma_alloc_coherent(&hba->pcidev->dev, tgt->rq_mem_size,
-> > +                                     &tgt->rq_dma, GFP_KERNEL);
-> > +     if (!tgt->rq) {
-> > +             printk(KERN_ALERT PFX "unable to allocate RQ memory %d\n",
-> > +                     tgt->rq_mem_size);
-> > +             goto mem_alloc_failure;
-> > +     }
-> > +     memset(tgt->rq, 0, tgt->rq_mem_size);
-> > +
-> > +     tgt->rq_pbl_size = (tgt->rq_mem_size / PAGE_SIZE) * sizeof(void *);
-> > +     tgt->rq_pbl_size = (tgt->rq_pbl_size + (PAGE_SIZE - 1))&  PAGE_MASK;
-> > +
-> > +     tgt->rq_pbl = dma_alloc_coherent(&hba->pcidev->dev, tgt->rq_pbl_size,
-> > +                                     &tgt->rq_pbl_dma, GFP_KERNEL);
-> > +     if (!tgt->rq_pbl) {
-> > +             printk(KERN_ALERT PFX "unable to allocate RQ PBL %d\n",
-> > +                     tgt->rq_pbl_size);
-> > +             goto mem_alloc_failure;
-> > +     }
-> > +
-> > +     memset(tgt->rq_pbl, 0, tgt->rq_pbl_size);
-> > +     num_pages = tgt->rq_mem_size / PAGE_SIZE;
-> > +     page = tgt->rq_dma;
-> > +     pbl = (u32 *)tgt->rq_pbl;
-> > +
-> 
-> 
-> What is the code below supposed to be doing?
 
-It is just filling the PBL (aka, buffer descriptor list) for RQ.
-
-> 
-> 
-> > +     while (num_pages--) {
-> > +             *pbl = (u32)page;
-> > +             pbl++;
-> > +             *pbl = (u32)((u64)page>>  32);
-> > +             pbl++;
-> > +             page += PAGE_SIZE;
-> > +     }
-> > +
-> > +     /* Allocate and map XFERQ */
-> > +     tgt->xferq_mem_size = tgt->max_sqes * BNX2FC_XFERQ_WQE_SIZE;
-> > +     tgt->xferq_mem_size = (tgt->xferq_mem_size + (PAGE_SIZE - 1))&
-> > +                            PAGE_MASK;
-> > +
-> > +     tgt->xferq = dma_alloc_coherent(&hba->pcidev->dev, tgt->xferq_mem_size,
-> > +                                     &tgt->xferq_dma, GFP_KERNEL);
-> > +     if (!tgt->xferq) {
-> > +             printk(KERN_ALERT PFX "unable to allocate XFERQ %d\n",
-> > +                     tgt->xferq_mem_size);
-> > +             goto mem_alloc_failure;
-> > +     }
-> > +     memset(tgt->xferq, 0, tgt->xferq_mem_size);
-> > +
-> > +     /* Allocate and map CONFQ&  CONFQ PBL */
-> > +     tgt->confq_mem_size = tgt->max_sqes * BNX2FC_CONFQ_WQE_SIZE;
-> > +     tgt->confq_mem_size = (tgt->confq_mem_size + (PAGE_SIZE - 1))&
-> > +                            PAGE_MASK;
-> > +
-> > +     tgt->confq = dma_alloc_coherent(&hba->pcidev->dev, tgt->confq_mem_size,
-> > +                                     &tgt->confq_dma, GFP_KERNEL);
-> > +     if (!tgt->confq) {
-> > +             printk(KERN_ALERT PFX "unable to allocate CONFQ %d\n",
-> > +                     tgt->confq_mem_size);
-> > +             goto mem_alloc_failure;
-> > +     }
-> > +     memset(tgt->confq, 0, tgt->confq_mem_size);
-> > +
-> > +     tgt->confq_pbl_size =
-> > +             (tgt->confq_mem_size / PAGE_SIZE) * sizeof(void *);
-> > +     tgt->confq_pbl_size =
-> > +             (tgt->confq_pbl_size + (PAGE_SIZE - 1))&  PAGE_MASK;
-> > +
-> > +     tgt->confq_pbl = dma_alloc_coherent(&hba->pcidev->dev,
-> > +                                         tgt->confq_pbl_size,
-> > +                                     &tgt->confq_pbl_dma, GFP_KERNEL);
-> > +     if (!tgt->confq_pbl) {
-> > +             printk(KERN_ALERT PFX "unable to allocate CONFQ PBL %d\n",
-> > +                     tgt->confq_pbl_size);
-> > +             goto mem_alloc_failure;
-> > +     }
-> > +
-> > +     memset(tgt->confq_pbl, 0, tgt->confq_pbl_size);
-> > +     num_pages = tgt->confq_mem_size / PAGE_SIZE;
-> > +     page = tgt->confq_dma;
-> > +     pbl = (u32 *)tgt->confq_pbl;
-> > +
-> > +     while (num_pages--) {
-> > +             *pbl = (u32)page;
-> > +             pbl++;
-> > +             *pbl = (u32)((u64)page>>  32);
-> > +             pbl++;
-> > +             page += PAGE_SIZE;
-> > +     }
-> > +
-> > +     /* Allocate and map ConnDB */
-> > +     tgt->conn_db_mem_size = sizeof(struct fcoe_conn_db);
-> > +
-> > +     tgt->conn_db = dma_alloc_coherent(&hba->pcidev->dev,
-> > +                                       tgt->conn_db_mem_size,
-> > +                                     &tgt->conn_db_dma, GFP_KERNEL);
-> > +     if (!tgt->conn_db) {
-> > +             printk(KERN_ALERT PFX "unable to allocate conn_db %d\n",
-> > +                                             tgt->conn_db_mem_size);
-> > +             goto mem_alloc_failure;
-> > +     }
-> > +     memset(tgt->conn_db, 0, tgt->conn_db_mem_size);
-> > +
-> > +
-> > +     /* Allocate and map LCQ */
-> > +     tgt->lcq_mem_size = (tgt->max_sqes + 8) * BNX2FC_SQ_WQE_SIZE;
-> > +     tgt->lcq_mem_size = (tgt->lcq_mem_size + (PAGE_SIZE - 1))&
-> > +                          PAGE_MASK;
-> > +
-> > +     tgt->lcq = dma_alloc_coherent(&hba->pcidev->dev, tgt->lcq_mem_size,
-> > +                             &tgt->lcq_dma, GFP_KERNEL);
-> > +
-> > +     if (!tgt->lcq) {
-> > +             printk(KERN_ALERT PFX "unable to allocate lcq %d\n",
-> > +                    tgt->lcq_mem_size);
-> > +             goto mem_alloc_failure;
-> > +     }
-> > +     memset(tgt->lcq, 0, tgt->lcq_mem_size);
-> > +
-> > +     /* Arm CQ */
-> > +     tgt->conn_db->cq_arm.lo = -1;
-> > +     tgt->conn_db->rq_prod = 0x8000;
-> > +
-> > +     return 0;
-> > +
-> > +mem_alloc_failure:
-> > +     bnx2fc_free_session_resc(hba, tgt);
-> > +     bnx2fc_free_conn_id(hba, tgt->fcoe_conn_id);
-> > +     return -ENOMEM;
-> > +}
-> > +
-> 
-
-Thanks again for your valuable comments, Mike.
-
-Regards,
-Bhanu
+fcoe.c has something similar (per cpu one).
 
 
 
+> +
+> +static void bnx2fc_queue_timer(ulong lport)
+> +{
+> +	bnx2fc_check_wait_queue((struct fc_lport *) lport, NULL);
+> +}
+> +
+
+fcoe dup.
+
+> +static void bnx2fc_clean_pending_queue(struct fc_lport *lp)
+> +{
+> +	struct bnx2fc_port *port;
+> +	struct sk_buff *skb;
+> +	port = lport_priv(lp);
+> +
+> +	spin_lock_bh(&port->fcoe_pending_queue.lock);
+> +	while ((skb = __skb_dequeue(&port->fcoe_pending_queue)) != NULL) {
+> +		spin_unlock_bh(&port->fcoe_pending_queue.lock);
+> +		kfree_skb(skb);
+> +		spin_lock_bh(&port->fcoe_pending_queue.lock);
+> +	}
+> +	spin_unlock_bh(&port->fcoe_pending_queue.lock);
+> +}
+
+
+dup
+
+> +
+> +static void bnx2fc_check_wait_queue(struct fc_lport *lp, struct sk_buff *skb)
+> +{
+> +	struct bnx2fc_port *port = lport_priv(lp);
+> +	int rc = 0;
+> +
+> +	spin_lock_bh(&port->fcoe_pending_queue.lock);
+> +
+> +	if (skb)
+> +		__skb_queue_tail(&port->fcoe_pending_queue, skb);
+> +
+> +	if (port->fcoe_pending_queue_active)
+> +		goto out;
+> +	port->fcoe_pending_queue_active = 1;
+> +
+> +	while (port->fcoe_pending_queue.qlen) {
+> +		/* keep qlen>  0 until bnx2fc_start_io succeeds */
+> +		port->fcoe_pending_queue.qlen++;
+> +		skb = __skb_dequeue(&port->fcoe_pending_queue);
+> +
+> +		spin_unlock_bh(&port->fcoe_pending_queue.lock);
+> +		rc = bnx2fc_start_io(skb);
+> +		spin_lock_bh(&port->fcoe_pending_queue.lock);
+> +
+> +		if (rc) {
+> +			__skb_queue_head(&port->fcoe_pending_queue, skb);
+> +			/* undo temporary increment above */
+> +			port->fcoe_pending_queue.qlen--;
+> +			break;
+> +		}
+> +		/* undo temporary increment above */
+> +		port->fcoe_pending_queue.qlen--;
+> +	}
+> +
+> +	if (port->fcoe_pending_queue.qlen<  FCOE_LOW_QUEUE_DEPTH)
+> +		lp->qfull = 0;
+> +	if (port->fcoe_pending_queue.qlen&&  !timer_pending(&port->timer))
+> +		mod_timer(&port->timer, jiffies + 2);
+> +	port->fcoe_pending_queue_active = 0;
+> +out:
+> +	if (port->fcoe_pending_queue.qlen>  FCOE_MAX_QUEUE_DEPTH)
+> +		lp->qfull = 1;
+> +	spin_unlock_bh(&port->fcoe_pending_queue.lock);
+> +	return;
+> +}
+> +
+
+dup
+
+
+
+> +u32 bnx2fc_crc(struct fc_frame *fp)
+> +{
+> +	struct sk_buff *skb = fp_skb(fp);
+> +	struct skb_frag_struct *frag;
+> +	unsigned char *data;
+> +	unsigned long off, len, clen;
+> +	u32 crc;
+> +	unsigned i;
+> +
+> +	crc = crc32(~0, skb->data, skb_headlen(skb));
+> +
+> +	for (i = 0; i<  skb_shinfo(skb)->nr_frags; i++) {
+> +		frag =&skb_shinfo(skb)->frags[i];
+> +		off = frag->page_offset;
+> +		len = frag->size;
+> +		while (len>  0) {
+> +			clen = min(len, PAGE_SIZE - (off&  ~PAGE_MASK));
+> +			data = kmap_atomic(frag->page + (off>>  PAGE_SHIFT),
+> +					   KM_SKB_DATA_SOFTIRQ);
+> +			crc = crc32(crc, data + (off&  ~PAGE_MASK), clen);
+> +			kunmap_atomic(data, KM_SKB_DATA_SOFTIRQ);
+> +			off += clen;
+> +			len -= clen;
+> +		}
+> +	}
+> +	return crc;
+> +}
+
+
+dup.
+
+> +int bnx2fc_get_paged_crc_eof(struct sk_buff *skb, int tlen)
+> +{
+> +	struct bnx2fc_global_s *bg;
+> +	struct page *page;
+> +
+> +	bg =&bnx2fc_global;
+> +	page = bg->crc_eof_page;
+> +	if (!page) {
+> +		page = alloc_page(GFP_ATOMIC);
+> +		if (!page)
+> +			return -ENOMEM;
+> +		bg->crc_eof_page = page;
+> +		bg->crc_eof_offset = 0;
+> +	}
+> +
+> +	get_page(page);
+> +	skb_fill_page_desc(skb, skb_shinfo(skb)->nr_frags, page,
+> +			   bg->crc_eof_offset, tlen);
+> +	skb->len += tlen;
+> +	skb->data_len += tlen;
+> +	skb->truesize += tlen;
+> +	bg->crc_eof_offset += sizeof(struct fcoe_crc_eof);
+> +
+> +	if (bg->crc_eof_offset>= PAGE_SIZE) {
+> +		bg->crc_eof_page = NULL;
+> +		bg->crc_eof_offset = 0;
+> +		put_page(page);
+> +	}
+> +	return 0;
+> +}
+
+dup.
+
+I am going to stop. You know what is duplicated with fcoe/libfcoe. You 
+should export that code and use it instead of copying it. Change it if 
+you need to. Some things look like they need to be slightly changed. 
+Like the new callouts or a change to how they are called.
+
+
+
+> +
+> +static void bnx2fc_abort_io(struct fc_lport *lport)
+> +{
+> +	bnx2fc_dbg(LOG_IOERR, "Entered bnx2fc_abort_io\n");
+> +
+> +}
+
+delete.
+
+
+
+> +
+> +static int bnx2fc_shost_config(struct fc_lport *lport)
+> +{
+> +	struct bnx2fc_port *port = lport_priv(lport);
+> +	struct bnx2fc_hba *hba = port->hba;
+> +	struct Scsi_Host *shost = lport->host;
+> +	int rc = 0;
+> +
+> +	shost->max_cmd_len = BNX2FC_MAX_CMD_LEN;
+> +	shost->max_lun = BNX2FC_MAX_LUN;
+> +	shost->max_id = BNX2FC_MAX_FCP_TGT;
+> +	shost->max_channel = 0;
+> +	if (lport->vport)
+> +		shost->transportt = bnx2fc_vport_xport_template;
+> +	else
+> +		shost->transportt = bnx2fc_transport_template;
+> +
+> +	/* Add the new host to SCSI-ml */
+> +	rc = scsi_add_host(lport->host, NULL);
+
+
+For non vport calls the netdev's pdev should be passed here, so the 
+scsi/block layer gets the rights dma restrictions. For vport calls the 
+scsi host/vports's device should be passed.
+
+
+
+
+
+> +
+> +/**
+> + * bnx2fc_fip_recv - handle a received FIP frame.
+
+
+In some of your docbook comments you do
+
+functionname -
+/n
+and others you do
+functionname()
+no newline.
+
+You should stick to one style.
+
+> +
+> +/**
+> + * bnx2fc_mod_init - module init entry point
+> + *
+> + * Initialize driver wide global data structures, and register
+> + * with cnic module
+> + **/
+> +static int __init bnx2fc_mod_init(void)
+> +{
+> +	struct bnx2fc_global_s *bg;
+> +	struct task_struct *l2_thread;
+> +	int rc = 0;
+> +
+> +	printk(KERN_INFO PFX "%s", version);
+> +
+> +	/* register as a fcoe transport */
+> +	rc = fcoe_transport_attach(&bnx2fc_transport);
+> +	if (rc) {
+> +		printk(KERN_ERR "failed to register an fcoe transport, check "
+> +			"if libfcoe is loaded\n");
+> +		goto out;
+> +	}
+> +
+> +	INIT_LIST_HEAD(&adapter_list);
+> +	mutex_init(&bnx2fc_dev_lock);
+> +
+> +	adapter_count = 0;
+> +
+> +	/* Attach FC transport template */
+> +	rc = bnx2fc_attach_transport();
+> +	if (rc)
+> +		return rc;
+> +
+> +	bg =&bnx2fc_global;
+> +	skb_queue_head_init(&bg->fcoe_rx_list);
+> +	l2_thread = kthread_create(bnx2fc_l2_rcv_thread,
+> +				   (void *)bg,
+> +				   "bnx2fc_l2_thread");
+> +	if (IS_ERR(bg->l2_thread)) {
+> +		rc = PTR_ERR(l2_thread);
+> +		return rc;
+> +	}
+
+
+It seems you are leaking int he error paths.
+
+
+
+
+I did not review the host/netdev/cnic attachment/setup code, because I 
+was not sure how that has changed with Yi's patches.
