@@ -1,76 +1,64 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] configfs: change depends -> select SYSFS
-Date: Mon, 17 Jan 2011 16:13:24 -0800
-Message-ID: <4D34DB24.5040800@oracle.com>
-References: <1295125851-25279-1-git-send-email-nab@linux-iscsi.org>	 <20110116141105.59e5b3a2@stein>	 <1295214807.22813.57.camel@haakon2.linux-iscsi.org>	 <20110117000659.57352da7@stein> <1295223733.2998.8.camel@mulgrave.site>	 <1295244354.22813.98.camel@haakon2.linux-iscsi.org>	 <20110117102420.5a1c1bf0.randy.dunlap@oracle.com> <1295302216.22813.212.camel@haakon2.linux-iscsi.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [Bug 26992] New: iscsi session re-establishment by client does
+ not work (auth method rejected by target)
+Date: Mon, 17 Jan 2011 18:26:18 -0600
+Message-ID: <4D34DE2A.9090501@cs.wisc.edu>
+References: <bug-26992-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-In-Reply-To: <1295302216.22813.212.camel@haakon2.linux-iscsi.org>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Linus Torvalds <torvalds@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Joel Becker <jlbec@evilplan.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:37199 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752575Ab1ARA0m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Jan 2011 19:26:42 -0500
+In-Reply-To: <bug-26992-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On 01/17/11 14:10, Nicholas A. Bellinger wrote:
-> On Mon, 2011-01-17 at 10:24 -0800, Randy Dunlap wrote:
->> On Sun, 16 Jan 2011 22:05:54 -0800 Nicholas A. Bellinger wrote:
->>
->>> On Sun, 2011-01-16 at 18:22 -0600, James Bottomley wrote:
-> 
-> <SNIP>
-> 
->>>> This is what I don't understand.
->>>>
->>>> Actually I think the whole premise of the patch (to get back to the
->>>> original topic) is wrong.
->>>>
->>>> TARGET_CORE depends on SCSI; SCSI has to have sysfs to survive ... we
->>>> just don't work without it yet we neither select nor depend on it.
->>>> SYSFS is only deselectable for embedded anyway, so I think the
->>>> configuration which generated this whole argument was likely a bogus one
->>>> and consequently, none of the patches are needed (or if they are,
->>>> they're the tip of the iceberg).
->>>>
->>>
->>> This sounds fine for TARGET_CORE, but would still leave GFS2_FS with an
->>> unmet direct dependency according to the original warning above.
->>> Unfortuately I do not recall which exactly linux-next build
->>> configuration was causing this warning to occur from the original post:
->>>
->>> http://marc.info/?l=linux-next&m=129355383112997&w=2
->>>
->>> Any more thoughts here Randy..?
->>
->>
->> I've looked at GFS2 a bit now and I think that the warning is bogus:
->>
->> kconfig complains with:
->> warning: (TARGET_CORE && GFS2_FS) selects CONFIGFS_FS which has unmet direct dependencies (SYSFS)
->>
->> but the "select" is conditional:
->> config GFS2_FS
->> 	tristate "GFS2 file system support"
->> 	depends on (64BIT || LBDAF)
->> 	select DLM if GFS2_FS_LOCKING_DLM
->> 	select CONFIGFS_FS if GFS2_FS_LOCKING_DLM
->> 	select SYSFS if GFS2_FS_LOCKING_DLM
->>
->> and the same condition selects both SYSFS and CONFIGFS_FS.  Furthermore, the
->> conditional is not true, so neither of them is being selected/enabled.
->> Looks like a minor kconfig buglet to me.
->>
-> 
-> Ok, so Linus has pulled the CONFIGFS_FS -> select SYSFS series and it
-> looks like this 'select SYSFS ...' bit for GFS2_FS can safely be dropped
-> now..
-> 
-> Care to carry this one via your kbuild tree..?
+On 01/17/2011 06:12 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=26992
+>
+>             Summary: iscsi session re-establishment by client does not work
+>                      (auth method rejected by target)
+>             Product: IO/Storage
+>             Version: 2.5
+>      Kernel Version:>=2.6.33
+>            Platform: All
+>          OS/Version: Linux
+>                Tree: Mainline
+>              Status: NEW
+>            Severity: blocking
+>            Priority: P1
+>           Component: SCSI
+>          AssignedTo: linux-scsi@vger.kernel.org
+>          ReportedBy: bugzilla-kernel-org-sux2k0@mstier.de
+>                  CC: bugzilla-kernel-org-sux2k0@mstier.de
+>          Regression: No
+>
+>
+> Latest client kernel version known to work: 2.6.32.27 (vanilla)
+> First client kernel version known NOT to work: 2.6.33 (vanilla)
+>
+> I'm doing sanboot via iSCSI/TCP using gPXE 1.0.1 from etherboot.org. The gPXE
+> chain boot loader registers the iSCSI target lun as boot disk and when the
+> Ubuntu OS starts iscsid, session re-establishment fails when using kernel
+> 2.6.33 or higher on the client (session startup configured as manual). Works
+> perfectly with 2.6.32.27 on the client.
+>
 
+Are these kernel.org/open-iscsi.org open-iscsi tools ir distro build ones?
 
-Who are you asking?  (I don't have a kbuild tree.)
+I think this is due to a sysfs issue. If I am right it should be fixed 
+in 872 
+(http://kernel.org/pub/linux/kernel/people/mnc/open-iscsi/releases/open-iscsi-2.0-872.tar.gz) 
+or I think you can change the SYSFS DEPRECIATED and SYSFS V2 DEPRECIATED 
+settings. I cannot remember if you need to turn it on or off (I think 
+you need to turn it on with older tools). Send your .config.
 
--- 
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Also could you send the log messages for when it fails? And does normal 
+login work? If you just boot from a local drive and run iscsiadm to 
+login does it fail? What is the error message and what is the 
+/var/log/message output?
