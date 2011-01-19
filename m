@@ -1,157 +1,202 @@
 From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [v3 PATCH 1/6] libfc: introduce LLD event callback
-Date: Wed, 19 Jan 2011 14:06:47 -0800
-Message-ID: <1295474807.3536.405.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+Subject: [v3 PATCH 2/6] libfcoe: Move common code from fcoe.c to
+ libfcoe.c
+Date: Wed, 19 Jan 2011 14:06:48 -0800
+Message-ID: <1295474808.3536.406.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
  charset=cp1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1463 "EHLO MMS3.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1470 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753627Ab1ASWHQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1754163Ab1ASWHQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 19 Jan 2011 17:07:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: devel@open-fcoe.org, linux-scsi@vger.kernel.org
 Cc: mchan@broadcom.com, michaelc@cs.wisc.edu
 
-This patch enables LLD to listen to rport events and perform LLD
-specific operations based on the rport event. This patch also stores
-sp_features and spp_type in rdata for further reference by LLD.
+fcoe_start_io and fcoe_fc_crc are moved to libfcoe so that both
+fcoe and bnx2fc drivers can use these common functions.
+
+As part of this change, fixed fcoe_start_io to return ENOMEM if
+skb_clone fails.
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/libfc/fc_npiv.c  |    1 +
- drivers/scsi/libfc/fc_rport.c |   19 ++++++++++++++++++-
- include/scsi/libfc.h          |   15 +++++++++++++++
- 3 files changed, 34 insertions(+), 1 deletions(-)
+ drivers/scsi/fcoe/fcoe.c      |   58 -------------------------------------
+ drivers/scsi/fcoe/fcoe_ctlr.c |   63 +++++++++++++++++++++++++++++++++++++++++
+ include/scsi/libfcoe.h        |    2 +
+ 3 files changed, 65 insertions(+), 58 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_npiv.c b/drivers/scsi/libfc/fc_npiv.c
-index dd2b43b..076cd5f 100644
---- a/drivers/scsi/libfc/fc_npiv.c
-+++ b/drivers/scsi/libfc/fc_npiv.c
-@@ -86,6 +86,7 @@ struct fc_lport *fc_vport_id_lookup(struct fc_lport *n_port, u32 port_id)
- 
- 	return lport;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index eda70e5..e753027 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1358,28 +1358,6 @@ err2:
  }
-+EXPORT_SYMBOL(fc_vport_id_lookup);
- 
- /*
-  * When setting the link state of vports during an lport state change, it's
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 9ded612..59b16bb 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -145,8 +145,10 @@ static struct fc_rport_priv *fc_rport_create(struct fc_lport *lport,
- 	rdata->maxframe_size = FC_MIN_MAX_PAYLOAD;
- 	INIT_DELAYED_WORK(&rdata->retry_work, fc_rport_timeout);
- 	INIT_WORK(&rdata->event_work, fc_rport_work);
--	if (port_id != FC_FID_DIR_SERV)
-+	if (port_id != FC_FID_DIR_SERV) {
-+		rdata->lld_event_callback = lport->tt.rport_event_callback;
- 		list_add_rcu(&rdata->peers, &lport->disc.rports);
-+	}
- 	return rdata;
- }
- 
-@@ -302,6 +304,10 @@ static void fc_rport_work(struct work_struct *work)
- 			FC_RPORT_DBG(rdata, "callback ev %d\n", event);
- 			rport_ops->event_callback(lport, rdata, event);
- 		}
-+		if (rdata->lld_event_callback) {
-+			FC_RPORT_DBG(rdata, "lld callback ev %d\n", event);
-+			rdata->lld_event_callback(lport, rdata, event);
-+		}
- 		kref_put(&rdata->kref, lport->tt.rport_destroy);
- 		break;
- 
-@@ -324,6 +330,10 @@ static void fc_rport_work(struct work_struct *work)
- 			FC_RPORT_DBG(rdata, "callback ev %d\n", event);
- 			rport_ops->event_callback(lport, rdata, event);
- 		}
-+		if (rdata->lld_event_callback) {
-+			FC_RPORT_DBG(rdata, "lld callback ev %d\n", event);
-+			rdata->lld_event_callback(lport, rdata, event);
-+		}
- 		cancel_delayed_work_sync(&rdata->retry_work);
- 
- 		/*
-@@ -890,6 +900,9 @@ static void fc_rport_plogi_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		rdata->ids.port_name = get_unaligned_be64(&plp->fl_wwpn);
- 		rdata->ids.node_name = get_unaligned_be64(&plp->fl_wwnn);
- 
-+		/* save plogi response sp_features for further reference */
-+		rdata->sp_features = ntohs(plp->fl_csp.sp_features);
-+
- 		if (lport->point_to_multipoint)
- 			fc_rport_login_complete(rdata, fp);
- 		csp_seq = ntohs(plp->fl_csp.sp_tot_seq);
-@@ -997,6 +1010,7 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		resp_code = (pp->spp.spp_flags & FC_SPP_RESP_MASK);
- 		FC_RPORT_DBG(rdata, "PRLI spp_flags = 0x%x\n",
- 			     pp->spp.spp_flags);
-+		rdata->spp_type = pp->spp.spp_type;
- 		if (resp_code != FC_SPP_RESP_ACK) {
- 			if (resp_code == FC_SPP_RESP_CONF)
- 				fc_rport_error(rdata, fp);
-@@ -1010,6 +1024,8 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		fcp_parm = ntohl(pp->spp.spp_params);
- 		if (fcp_parm & FCP_SPPF_RETRY)
- 			rdata->flags |= FC_RP_FLAGS_RETRY;
-+		if (fcp_parm & FCP_SPPF_CONF_COMPL)
-+			rdata->flags |= FC_RP_FLAGS_CONF_REQ;
- 
- 		prov = fc_passive_prov[FC_TYPE_FCP];
- 		if (prov) {
-@@ -1719,6 +1735,7 @@ static void fc_rport_recv_prli_req(struct fc_rport_priv *rdata,
- 	spp = &pp->spp;
- 	mutex_lock(&fc_prov_mutex);
- 	while (len >= plen) {
-+		rdata->spp_type = rspp->spp_type;
- 		spp->spp_type = rspp->spp_type;
- 		spp->spp_type_ext = rspp->spp_type_ext;
- 		resp = 0;
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 79d1c76..85ecdaa 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -158,6 +158,7 @@ struct fc_rport_libfc_priv {
- 	#define FC_RP_FLAGS_REC_SUPPORTED	(1 << 0)
- 	#define FC_RP_FLAGS_RETRY		(1 << 1)
- 	#define FC_RP_STARTED			(1 << 2)
-+	#define FC_RP_FLAGS_CONF_REQ		(1 << 3)
- 	unsigned int	           e_d_tov;
- 	unsigned int	           r_a_tov;
- };
-@@ -207,6 +208,11 @@ struct fc_rport_priv {
- 	u32			    supported_classes;
- 	u16                         prli_count;
- 	struct rcu_head		    rcu;
-+	u16			    sp_features;
-+	u8			    spp_type;
-+	void			    (*lld_event_callback)(struct fc_lport *,
-+						      struct fc_rport_priv *,
-+						      enum fc_rport_event);
- };
  
  /**
-@@ -670,6 +676,15 @@ struct libfc_function_template {
- 	void (*rport_destroy)(struct kref *);
+- * fcoe_start_io() - Start FCoE I/O
+- * @skb: The packet to be transmitted
+- *
+- * This routine is called from the net device to start transmitting
+- * FCoE packets.
+- *
+- * Returns: 0 for success
+- */
+-static inline int fcoe_start_io(struct sk_buff *skb)
+-{
+-	struct sk_buff *nskb;
+-	int rc;
+-
+-	nskb = skb_clone(skb, GFP_ATOMIC);
+-	rc = dev_queue_xmit(nskb);
+-	if (rc != 0)
+-		return rc;
+-	kfree_skb(skb);
+-	return 0;
+-}
+-
+-/**
+  * fcoe_get_paged_crc_eof() - Allocate a page to be used for the trailer CRC
+  * @skb:  The packet to be transmitted
+  * @tlen: The total length of the trailer
+@@ -1427,42 +1405,6 @@ static int fcoe_get_paged_crc_eof(struct sk_buff *skb, int tlen)
+ }
  
- 	/*
-+	 * Callback routine after the remote port is logged in
-+	 *
-+	 * STATUS: OPTIONAL
-+	 */
-+	void (*rport_event_callback)(struct fc_lport *,
-+				     struct fc_rport_priv *,
-+				     enum fc_rport_event);
+ /**
+- * fcoe_fc_crc() - Calculates the CRC for a given frame
+- * @fp: The frame to be checksumed
+- *
+- * This uses crc32() routine to calculate the CRC for a frame
+- *
+- * Return: The 32 bit CRC value
+- */
+-u32 fcoe_fc_crc(struct fc_frame *fp)
+-{
+-	struct sk_buff *skb = fp_skb(fp);
+-	struct skb_frag_struct *frag;
+-	unsigned char *data;
+-	unsigned long off, len, clen;
+-	u32 crc;
+-	unsigned i;
+-
+-	crc = crc32(~0, skb->data, skb_headlen(skb));
+-
+-	for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
+-		frag = &skb_shinfo(skb)->frags[i];
+-		off = frag->page_offset;
+-		len = frag->size;
+-		while (len > 0) {
+-			clen = min(len, PAGE_SIZE - (off & ~PAGE_MASK));
+-			data = kmap_atomic(frag->page + (off >> PAGE_SHIFT),
+-					   KM_SKB_DATA_SOFTIRQ);
+-			crc = crc32(crc, data + (off & ~PAGE_MASK), clen);
+-			kunmap_atomic(data, KM_SKB_DATA_SOFTIRQ);
+-			off += clen;
+-			len -= clen;
+-		}
+-	}
+-	return crc;
+-}
+-
+-/**
+  * fcoe_xmit() - Transmit a FCoE frame
+  * @lport: The local port that the frame is to be transmitted for
+  * @fp:	   The frame to be transmitted
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 113357e..fd10037 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -32,6 +32,7 @@
+ #include <linux/errno.h>
+ #include <linux/bitops.h>
+ #include <linux/slab.h>
++#include <linux/crc32.h>
+ #include <net/rtnetlink.h>
+ 
+ #include <scsi/fc/fc_els.h>
+@@ -2680,3 +2681,65 @@ int fcoe_libfc_config(struct fc_lport *lport, struct fcoe_ctlr *fip,
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(fcoe_libfc_config);
 +
-+	/*
- 	 * Send a fcp cmd from fsp pkt.
- 	 * Called with the SCSI host lock unlocked and irqs disabled.
- 	 *
++/**
++ * fcoe_fc_crc() - Calculates the CRC for a given frame
++ * @fp: The frame to be checksumed
++ *
++ * This uses crc32() routine to calculate the CRC for a frame
++ *
++ * Return: The 32 bit CRC value
++ */
++u32 fcoe_fc_crc(struct fc_frame *fp)
++{
++	struct sk_buff *skb = fp_skb(fp);
++	struct skb_frag_struct *frag;
++	unsigned char *data;
++	unsigned long off, len, clen;
++	u32 crc;
++	unsigned i;
++
++	crc = crc32(~0, skb->data, skb_headlen(skb));
++
++	for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
++		frag = &skb_shinfo(skb)->frags[i];
++		off = frag->page_offset;
++		len = frag->size;
++		while (len > 0) {
++			clen = min(len, PAGE_SIZE - (off & ~PAGE_MASK));
++			data = kmap_atomic(frag->page + (off >> PAGE_SHIFT),
++					   KM_SKB_DATA_SOFTIRQ);
++			crc = crc32(crc, data + (off & ~PAGE_MASK), clen);
++			kunmap_atomic(data, KM_SKB_DATA_SOFTIRQ);
++			off += clen;
++			len -= clen;
++		}
++	}
++	return crc;
++}
++EXPORT_SYMBOL_GPL(fcoe_fc_crc);
++
++/**
++ * fcoe_start_io() - Start FCoE I/O
++ * @skb: The packet to be transmitted
++ *
++ * This routine is called from the net device to start transmitting
++ * FCoE packets.
++ *
++ * Returns: 0 for success
++ */
++int fcoe_start_io(struct sk_buff *skb)
++{
++	struct sk_buff *nskb;
++	int rc;
++
++	nskb = skb_clone(skb, GFP_ATOMIC);
++	if (!nskb)
++		return -ENOMEM;
++	rc = dev_queue_xmit(nskb);
++	if (rc != 0)
++		return rc;
++	kfree_skb(skb);
++	return 0;
++}
++EXPORT_SYMBOL_GPL(fcoe_start_io);
+diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
+index c0bf07c..da64ca6 100644
+--- a/include/scsi/libfcoe.h
++++ b/include/scsi/libfcoe.h
+@@ -221,6 +221,8 @@ int fcoe_ctlr_recv_flogi(struct fcoe_ctlr *, struct fc_lport *,
+ u64 fcoe_wwn_from_mac(unsigned char mac[], unsigned int, unsigned int);
+ int fcoe_libfc_config(struct fc_lport *, struct fcoe_ctlr *,
+ 		      const struct libfc_function_template *, int init_fcp);
++u32 fcoe_fc_crc(struct fc_frame *fp);
++int fcoe_start_io(struct sk_buff *skb);
+ 
+ /**
+  * is_fip_mode() - returns true if FIP mode selected.
 -- 
 1.7.0.6
 
