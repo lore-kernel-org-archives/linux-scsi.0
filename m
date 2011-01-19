@@ -1,132 +1,44 @@
-From: =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
-Subject: [PATCH v3] [SCSI] megaraid_sas: Sanity check user supplied length before passing it to dma_alloc_coherent()
-Date: Wed, 19 Jan 2011 10:01:14 +0100
-Message-ID: <1295427674-22582-1-git-send-email-bjorn@mork.no>
-References: <87lj2h2rwd.fsf@nemi.mork.no>
+From: "Michael Chan" <mchan@broadcom.com>
+Subject: Re: [v2 PATCH 5/5] bnx2fc: Broadcom FCoE Offload driver
+ submission - part 3
+Date: Wed, 19 Jan 2011 01:11:01 -0800
+Message-ID: <C27F8246C663564A84BB7AB34397724240CE6BCB2F@IRVEXCHCCR01.corp.ad.broadcom.com>
+References: <1293170556.4676.575.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+ <4D350BF0.7040301@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:37488 "EHLO canardo.mork.no"
+Received: from mms2.broadcom.com ([216.31.210.18]:4184 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753675Ab1ASJHU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jan 2011 04:07:20 -0500
-In-Reply-To: <87lj2h2rwd.fsf@nemi.mork.no>
+	id S1752651Ab1ASJLQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Jan 2011 04:11:16 -0500
+In-Reply-To: <4D350BF0.7040301@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com
-Cc: Bo.Yang@lsi.com, linux-scsi@vger.kernel.org, James.Bottomley@suse.de, =?UTF-8?q?Bj=C3=B8rn=20Mork?= <bjorn@mork.no>
+To: 'Mike Christie' <michaelc@cs.wisc.edu>, "Bhanu (Venkata Bhanu Prakash) Gollapudi" <bprakash@broadcom.com>
+Cc: "'devel@open-fcoe.org'" <devel@open-fcoe.org>, "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
-The ioc->sgl[i].iov_len value is supplied by the ioctl caller, and can =
-be
-zero in some cases.  Assume that's valid and continue without error.
+Mike Christie wrote:
 
-=46ixes (multiple individual reports of the same problem for quite a wh=
-ile):
+> 
+> On 12/24/2010 12:02 AM, Bhanu Gollapudi wrote:
+> > +++ b/drivers/scsi/bnx2fc/Kconfig
+> > @@ -0,0 +1,11 @@
+> > +config SCSI_BNX2X_FCOE
+> > +	tristate "Broadcom NetXtreme II FCoE support"
+> > +	depends on PCI
+> > +	select NETDEVICES
+> > +	select NETDEV_1000
+> 
+> 
+> What is the NETDEV_1000 for?
+> 
+> 
 
-http://marc.info/?l=3Dlinux-ide&m=3D128941801715301
-http://bugs.debian.org/604627
-http://www.mail-archive.com/linux-poweredge@dell.com/msg02575.html
+We need NETDEV_1000 because cnic is under NETDEV_1000.  Kconfig
+won't be able to check the dependencies correctly if we don't
+select NETDEV_1000.
 
-megasas: Failed to alloc kernel SGL buffer for IOCTL
-
-and
-
-[   69.162538] ------------[ cut here ]------------
-[   69.162806] kernel BUG at /build/buildd/linux-2.6.32/lib/swiotlb.c:3=
-68!
-[   69.163134] invalid opcode: 0000 [#1] SMP
-[   69.163570] last sysfs file: /sys/devices/system/cpu/cpu3/cache/inde=
-x2/shared_cpu_map
-[   69.163975] CPU 0
-[   69.164227] Modules linked in: fbcon tileblit font bitblit softcurso=
-r vga16fb vgastate ioatdma radeon ttm drm_kms_helper shpchp drm i2c_alg=
-o_bit lp parport floppy pata_jmicron megaraid_sas igb dca
-[   69.167419] Pid: 1206, comm: smartctl Tainted: G        W  2.6.32-25=
--server #45-Ubuntu X8DTN
-[   69.167843] RIP: 0010:[<ffffffff812c4dc5>]  [<ffffffff812c4dc5>] map=
-_single+0x255/0x260
-[   69.168370] RSP: 0018:ffff88081c0ebc58  EFLAGS: 00010246
-[   69.168655] RAX: 000000000003bffc RBX: 00000000ffffffff RCX: 0000000=
-000000002
-[   69.169000] RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff880=
-01dffe000
-[   69.169346] RBP: ffff88081c0ebcb8 R08: 0000000000000000 R09: ffff880=
-000030840
-[   69.169691] R10: 0000000000100000 R11: 0000000000000000 R12: 0000000=
-000000000
-[   69.170036] R13: 00000000ffffffff R14: 0000000000000001 R15: 0000000=
-000200000
-[   69.170382] FS:  00007fb8de189720(0000) GS:ffff88001de00000(0000) kn=
-lGS:0000000000000000
-[   69.170794] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   69.171094] CR2: 00007fb8dd59237c CR3: 000000081a790000 CR4: 0000000=
-0000006f0
-[   69.171439] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000=
-000000000
-[   69.171784] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000=
-000000400
-[   69.172130] Process smartctl (pid: 1206, threadinfo ffff88081c0ea000=
-, task ffff88081a760000)
-[   69.194513] Stack:
-[   69.205788]  0000000000000034 00000002817e3390 0000000000000000 ffff=
-88081c0ebe00
-[   69.217739] <0> 0000000000000000 000000000003bffc 0000000000000000 0=
-000000000000000
-[   69.241250] <0> 0000000000000000 00000000ffffffff ffff88081c5b4080 f=
-fff88081c0ebe00
-[   69.277310] Call Trace:
-[   69.289278]  [<ffffffff812c52ac>] swiotlb_alloc_coherent+0xec/0x130
-[   69.301118]  [<ffffffff81038b31>] x86_swiotlb_alloc_coherent+0x61/0x=
-70
-[   69.313045]  [<ffffffffa002d0ce>] megasas_mgmt_fw_ioctl+0x1ae/0x690 =
-[megaraid_sas]
-[   69.336399]  [<ffffffffa002d748>] megasas_mgmt_ioctl_fw+0x198/0x240 =
-[megaraid_sas]
-[   69.359346]  [<ffffffffa002f695>] megasas_mgmt_ioctl+0x35/0x50 [mega=
-raid_sas]
-[   69.370902]  [<ffffffff81153b12>] vfs_ioctl+0x22/0xa0
-[   69.382322]  [<ffffffff8115da2a>] ? alloc_fd+0x10a/0x150
-[   69.393622]  [<ffffffff81153cb1>] do_vfs_ioctl+0x81/0x410
-[   69.404696]  [<ffffffff8155cc13>] ? do_page_fault+0x153/0x3b0
-[   69.415761]  [<ffffffff811540c1>] sys_ioctl+0x81/0xa0
-[   69.426640]  [<ffffffff810121b2>] system_call_fastpath+0x16/0x1b
-[   69.437491] Code: fe ff ff 48 8b 3d 74 38 76 00 41 bf 00 00 20 00 e8=
- 51 f5 d7 ff 83 e0 ff 48 05 ff 07 00 00 48 c1 e8 0b 48 89 45 c8 e9 13 f=
-e ff ff <0f> 0b eb fe 0f 1f 80 00 00 00 00 55 48 89 e5 48 83 ec 20 4c 8=
-9
-[   69.478216] RIP  [<ffffffff812c4dc5>] map_single+0x255/0x260
-[   69.489668]  RSP <ffff88081c0ebc58>
-[   69.500975] ---[ end trace 6a2181b634e2abc7 ]---
-
-Reported-by: Bokhan Artem <aptem@ngs.ru>
-Reported by: Marc-Christian Petersen <m.c.p@gmx.de>
-Signed-off-by: Bj=C3=B8rn Mork <bjorn@mork.no>
----
- drivers/scsi/megaraid/megaraid_sas_base.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/m=
-egaraid/megaraid_sas_base.c
-index 5d6d07b..cee1d3b 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -4611,6 +4611,9 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *in=
-stance,
- 	 * For each user buffer, create a mirror buffer and copy in
- 	 */
- 	for (i =3D 0; i < ioc->sge_count; i++) {
-+		if (!ioc->sgl[i].iov_len)
-+			continue;
-+
- 		kbuff_arr[i] =3D dma_alloc_coherent(&instance->pdev->dev,
- 						    ioc->sgl[i].iov_len,
- 						    &buf_handle, GFP_KERNEL);
---=20
-1.7.2.3
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
