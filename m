@@ -1,1130 +1,42 @@
 From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [v3 PATCH 3/6] bnx2fc: Header files
-Date: Wed, 19 Jan 2011 14:06:50 -0800
-Message-ID: <1295474810.3536.407.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+Subject: [v3 PATCH 4/6] bnx2fc: Firmware interface and ELS handling
+Date: Wed, 19 Jan 2011 14:06:51 -0800
+Message-ID: <1295474811.3536.408.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
  charset=cp1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2415 "EHLO mms1.broadcom.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:1463 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753824Ab1ASWHW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 19 Jan 2011 17:07:22 -0500
+	id S1753812Ab1ASWHb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Jan 2011 17:07:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: devel@open-fcoe.org, linux-scsi@vger.kernel.org
 Cc: mchan@broadcom.com, michaelc@cs.wisc.edu
 
-This patch contains header files for bnx2fc driver.
+This patch contains code that interfaces with 57712 firmware
+and ELS handling .
 
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 ---
- drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h  | 1080 ++++++++++++++++++++++++++++++++
- drivers/scsi/bnx2fc/bnx2fc.h           |  520 +++++++++++++++
- drivers/scsi/bnx2fc/bnx2fc_constants.h |  206 ++++++
- drivers/scsi/bnx2fc/bnx2fc_debug.h     |   68 ++
- 4 files changed, 1874 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc.h
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_constants.h
- create mode 100644 drivers/scsi/bnx2fc/bnx2fc_debug.h
+ drivers/scsi/bnx2fc/bnx2fc_els.c |  497 ++++++++++
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c | 1909 ++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 2406 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_els.c
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_hwi.c
 
-diff --git a/drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h b/drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_els.c b/drivers/scsi/bnx2fc/bnx2fc_els.c
 new file mode 100644
-index 0000000..69d031d
+index 0000000..208f929
 --- /dev/null
-+++ b/drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h
-@@ -0,0 +1,1080 @@
-+#ifndef __57XX_FCOE_HSI_LINUX_LE__
-+#define __57XX_FCOE_HSI_LINUX_LE__
-+
++++ b/drivers/scsi/bnx2fc/bnx2fc_els.c
+@@ -0,0 +1,497 @@
 +/*
-+ * common data for all protocols
-+ */
-+struct b577xx_doorbell_hdr {
-+	u8 header;
-+#define B577XX_DOORBELL_HDR_RX (0x1<<0)
-+#define B577XX_DOORBELL_HDR_RX_SHIFT 0
-+#define B577XX_DOORBELL_HDR_DB_TYPE (0x1<<1)
-+#define B577XX_DOORBELL_HDR_DB_TYPE_SHIFT 1
-+#define B577XX_DOORBELL_HDR_DPM_SIZE (0x3<<2)
-+#define B577XX_DOORBELL_HDR_DPM_SIZE_SHIFT 2
-+#define B577XX_DOORBELL_HDR_CONN_TYPE (0xF<<4)
-+#define B577XX_DOORBELL_HDR_CONN_TYPE_SHIFT 4
-+};
-+
-+/*
-+ * doorbell message sent to the chip
-+ */
-+struct b577xx_doorbell_set_prod {
-+#if defined(__BIG_ENDIAN)
-+	u16 prod;
-+	u8 zero_fill1;
-+	struct b577xx_doorbell_hdr header;
-+#elif defined(__LITTLE_ENDIAN)
-+	struct b577xx_doorbell_hdr header;
-+	u8 zero_fill1;
-+	u16 prod;
-+#endif
-+};
-+
-+
-+struct regpair {
-+	__le32 lo;
-+	__le32 hi;
-+};
-+
-+
-+/*
-+ * Fixed size structure in order to plant it in Union structure
-+ */
-+struct fcoe_abts_rsp_union {
-+	u32 r_ctl;
-+	u32 abts_rsp_payload[7];
-+};
-+
-+
-+/*
-+ * 4 regs size
-+ */
-+struct fcoe_bd_ctx {
-+	u32 buf_addr_hi;
-+	u32 buf_addr_lo;
-+#if defined(__BIG_ENDIAN)
-+	u16 rsrv0;
-+	u16 buf_len;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 buf_len;
-+	u16 rsrv0;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u16 rsrv1;
-+	u16 flags;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 flags;
-+	u16 rsrv1;
-+#endif
-+};
-+
-+
-+struct fcoe_cleanup_flow_info {
-+#if defined(__BIG_ENDIAN)
-+	u16 reserved1;
-+	u16 task_id;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 task_id;
-+	u16 reserved1;
-+#endif
-+	u32 reserved2[7];
-+};
-+
-+
-+struct fcoe_fcp_cmd_payload {
-+	u32 opaque[8];
-+};
-+
-+struct fcoe_fc_hdr {
-+#if defined(__BIG_ENDIAN)
-+	u8 cs_ctl;
-+	u8 s_id[3];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 s_id[3];
-+	u8 cs_ctl;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u8 r_ctl;
-+	u8 d_id[3];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 d_id[3];
-+	u8 r_ctl;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u8 seq_id;
-+	u8 df_ctl;
-+	u16 seq_cnt;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 seq_cnt;
-+	u8 df_ctl;
-+	u8 seq_id;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u8 type;
-+	u8 f_ctl[3];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 f_ctl[3];
-+	u8 type;
-+#endif
-+	u32 parameters;
-+#if defined(__BIG_ENDIAN)
-+	u16 ox_id;
-+	u16 rx_id;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 rx_id;
-+	u16 ox_id;
-+#endif
-+};
-+
-+struct fcoe_fc_frame {
-+	struct fcoe_fc_hdr fc_hdr;
-+	u32 reserved0[2];
-+};
-+
-+union fcoe_cmd_flow_info {
-+	struct fcoe_fcp_cmd_payload fcp_cmd_payload;
-+	struct fcoe_fc_frame mp_fc_frame;
-+};
-+
-+
-+
-+struct fcoe_fcp_rsp_flags {
-+	u8 flags;
-+#define FCOE_FCP_RSP_FLAGS_FCP_RSP_LEN_VALID (0x1<<0)
-+#define FCOE_FCP_RSP_FLAGS_FCP_RSP_LEN_VALID_SHIFT 0
-+#define FCOE_FCP_RSP_FLAGS_FCP_SNS_LEN_VALID (0x1<<1)
-+#define FCOE_FCP_RSP_FLAGS_FCP_SNS_LEN_VALID_SHIFT 1
-+#define FCOE_FCP_RSP_FLAGS_FCP_RESID_OVER (0x1<<2)
-+#define FCOE_FCP_RSP_FLAGS_FCP_RESID_OVER_SHIFT 2
-+#define FCOE_FCP_RSP_FLAGS_FCP_RESID_UNDER (0x1<<3)
-+#define FCOE_FCP_RSP_FLAGS_FCP_RESID_UNDER_SHIFT 3
-+#define FCOE_FCP_RSP_FLAGS_FCP_CONF_REQ (0x1<<4)
-+#define FCOE_FCP_RSP_FLAGS_FCP_CONF_REQ_SHIFT 4
-+#define FCOE_FCP_RSP_FLAGS_FCP_BIDI_FLAGS (0x7<<5)
-+#define FCOE_FCP_RSP_FLAGS_FCP_BIDI_FLAGS_SHIFT 5
-+};
-+
-+
-+struct fcoe_fcp_rsp_payload {
-+	struct regpair reserved0;
-+	u32 fcp_resid;
-+#if defined(__BIG_ENDIAN)
-+	u16 retry_delay_timer;
-+	struct fcoe_fcp_rsp_flags fcp_flags;
-+	u8 scsi_status_code;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 scsi_status_code;
-+	struct fcoe_fcp_rsp_flags fcp_flags;
-+	u16 retry_delay_timer;
-+#endif
-+	u32 fcp_rsp_len;
-+	u32 fcp_sns_len;
-+};
-+
-+
-+/*
-+ * Fixed size structure in order to plant it in Union structure
-+ */
-+struct fcoe_fcp_rsp_union {
-+	struct fcoe_fcp_rsp_payload payload;
-+	struct regpair reserved0;
-+};
-+
-+
-+struct fcoe_fcp_xfr_rdy_payload {
-+	u32 burst_len;
-+	u32 data_ro;
-+};
-+
-+struct fcoe_read_flow_info {
-+	struct fcoe_fc_hdr fc_data_in_hdr;
-+	u32 reserved[2];
-+};
-+
-+struct fcoe_write_flow_info {
-+	struct fcoe_fc_hdr fc_data_out_hdr;
-+	struct fcoe_fcp_xfr_rdy_payload fcp_xfr_payload;
-+};
-+
-+union fcoe_rsp_flow_info {
-+	struct fcoe_fcp_rsp_union fcp_rsp;
-+	struct fcoe_abts_rsp_union abts_rsp;
-+};
-+
-+/*
-+ * 32 bytes used for general purposes
-+ */
-+union fcoe_general_task_ctx {
-+	union fcoe_cmd_flow_info cmd_info;
-+	struct fcoe_read_flow_info read_info;
-+	struct fcoe_write_flow_info write_info;
-+	union fcoe_rsp_flow_info rsp_info;
-+	struct fcoe_cleanup_flow_info cleanup_info;
-+	u32 comp_info[8];
-+};
-+
-+
-+/*
-+ * FCoE KCQ CQE parameters
-+ */
-+union fcoe_kcqe_params {
-+	u32 reserved0[4];
-+};
-+
-+/*
-+ * FCoE KCQ CQE
-+ */
-+struct fcoe_kcqe {
-+	u32 fcoe_conn_id;
-+	u32 completion_status;
-+	u32 fcoe_conn_context_id;
-+	union fcoe_kcqe_params params;
-+#if defined(__BIG_ENDIAN)
-+	u8 flags;
-+#define FCOE_KCQE_RESERVED0 (0x7<<0)
-+#define FCOE_KCQE_RESERVED0_SHIFT 0
-+#define FCOE_KCQE_RAMROD_COMPLETION (0x1<<3)
-+#define FCOE_KCQE_RAMROD_COMPLETION_SHIFT 3
-+#define FCOE_KCQE_LAYER_CODE (0x7<<4)
-+#define FCOE_KCQE_LAYER_CODE_SHIFT 4
-+#define FCOE_KCQE_LINKED_WITH_NEXT (0x1<<7)
-+#define FCOE_KCQE_LINKED_WITH_NEXT_SHIFT 7
-+	u8 op_code;
-+	u16 qe_self_seq;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 qe_self_seq;
-+	u8 op_code;
-+	u8 flags;
-+#define FCOE_KCQE_RESERVED0 (0x7<<0)
-+#define FCOE_KCQE_RESERVED0_SHIFT 0
-+#define FCOE_KCQE_RAMROD_COMPLETION (0x1<<3)
-+#define FCOE_KCQE_RAMROD_COMPLETION_SHIFT 3
-+#define FCOE_KCQE_LAYER_CODE (0x7<<4)
-+#define FCOE_KCQE_LAYER_CODE_SHIFT 4
-+#define FCOE_KCQE_LINKED_WITH_NEXT (0x1<<7)
-+#define FCOE_KCQE_LINKED_WITH_NEXT_SHIFT 7
-+#endif
-+};
-+
-+/*
-+ * FCoE KWQE header
-+ */
-+struct fcoe_kwqe_header {
-+#if defined(__BIG_ENDIAN)
-+	u8 flags;
-+#define FCOE_KWQE_HEADER_RESERVED0 (0xF<<0)
-+#define FCOE_KWQE_HEADER_RESERVED0_SHIFT 0
-+#define FCOE_KWQE_HEADER_LAYER_CODE (0x7<<4)
-+#define FCOE_KWQE_HEADER_LAYER_CODE_SHIFT 4
-+#define FCOE_KWQE_HEADER_RESERVED1 (0x1<<7)
-+#define FCOE_KWQE_HEADER_RESERVED1_SHIFT 7
-+	u8 op_code;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 op_code;
-+	u8 flags;
-+#define FCOE_KWQE_HEADER_RESERVED0 (0xF<<0)
-+#define FCOE_KWQE_HEADER_RESERVED0_SHIFT 0
-+#define FCOE_KWQE_HEADER_LAYER_CODE (0x7<<4)
-+#define FCOE_KWQE_HEADER_LAYER_CODE_SHIFT 4
-+#define FCOE_KWQE_HEADER_RESERVED1 (0x1<<7)
-+#define FCOE_KWQE_HEADER_RESERVED1_SHIFT 7
-+#endif
-+};
-+
-+/*
-+ * FCoE firmware init request 1
-+ */
-+struct fcoe_kwqe_init1 {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 num_tasks;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 num_tasks;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u32 task_list_pbl_addr_lo;
-+	u32 task_list_pbl_addr_hi;
-+	u32 dummy_buffer_addr_lo;
-+	u32 dummy_buffer_addr_hi;
-+#if defined(__BIG_ENDIAN)
-+	u16 rq_num_wqes;
-+	u16 sq_num_wqes;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 sq_num_wqes;
-+	u16 rq_num_wqes;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u16 cq_num_wqes;
-+	u16 rq_buffer_log_size;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 rq_buffer_log_size;
-+	u16 cq_num_wqes;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u8 flags;
-+#define FCOE_KWQE_INIT1_LOG_PAGE_SIZE (0xF<<0)
-+#define FCOE_KWQE_INIT1_LOG_PAGE_SIZE_SHIFT 0
-+#define FCOE_KWQE_INIT1_LOG_CACHED_PBES_PER_FUNC (0x7<<4)
-+#define FCOE_KWQE_INIT1_LOG_CACHED_PBES_PER_FUNC_SHIFT 4
-+#define FCOE_KWQE_INIT1_RESERVED1 (0x1<<7)
-+#define FCOE_KWQE_INIT1_RESERVED1_SHIFT 7
-+	u8 num_sessions_log;
-+	u16 mtu;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 mtu;
-+	u8 num_sessions_log;
-+	u8 flags;
-+#define FCOE_KWQE_INIT1_LOG_PAGE_SIZE (0xF<<0)
-+#define FCOE_KWQE_INIT1_LOG_PAGE_SIZE_SHIFT 0
-+#define FCOE_KWQE_INIT1_LOG_CACHED_PBES_PER_FUNC (0x7<<4)
-+#define FCOE_KWQE_INIT1_LOG_CACHED_PBES_PER_FUNC_SHIFT 4
-+#define FCOE_KWQE_INIT1_RESERVED1 (0x1<<7)
-+#define FCOE_KWQE_INIT1_RESERVED1_SHIFT 7
-+#endif
-+};
-+
-+/*
-+ * FCoE firmware init request 2
-+ */
-+struct fcoe_kwqe_init2 {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 reserved0;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 reserved0;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u32 hash_tbl_pbl_addr_lo;
-+	u32 hash_tbl_pbl_addr_hi;
-+	u32 t2_hash_tbl_addr_lo;
-+	u32 t2_hash_tbl_addr_hi;
-+	u32 t2_ptr_hash_tbl_addr_lo;
-+	u32 t2_ptr_hash_tbl_addr_hi;
-+	u32 free_list_count;
-+};
-+
-+/*
-+ * FCoE firmware init request 3
-+ */
-+struct fcoe_kwqe_init3 {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 reserved0;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 reserved0;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u32 error_bit_map_lo;
-+	u32 error_bit_map_hi;
-+#if defined(__BIG_ENDIAN)
-+	u8 reserved21[3];
-+	u8 cached_session_enable;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 cached_session_enable;
-+	u8 reserved21[3];
-+#endif
-+	u32 reserved2[4];
-+};
-+
-+/*
-+ * FCoE connection offload request 1
-+ */
-+struct fcoe_kwqe_conn_offload1 {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 fcoe_conn_id;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 fcoe_conn_id;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u32 sq_addr_lo;
-+	u32 sq_addr_hi;
-+	u32 rq_pbl_addr_lo;
-+	u32 rq_pbl_addr_hi;
-+	u32 rq_first_pbe_addr_lo;
-+	u32 rq_first_pbe_addr_hi;
-+#if defined(__BIG_ENDIAN)
-+	u16 reserved0;
-+	u16 rq_prod;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 rq_prod;
-+	u16 reserved0;
-+#endif
-+};
-+
-+/*
-+ * FCoE connection offload request 2
-+ */
-+struct fcoe_kwqe_conn_offload2 {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 tx_max_fc_pay_len;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 tx_max_fc_pay_len;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u32 cq_addr_lo;
-+	u32 cq_addr_hi;
-+	u32 xferq_addr_lo;
-+	u32 xferq_addr_hi;
-+	u32 conn_db_addr_lo;
-+	u32 conn_db_addr_hi;
-+	u32 reserved1;
-+};
-+
-+/*
-+ * FCoE connection offload request 3
-+ */
-+struct fcoe_kwqe_conn_offload3 {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 vlan_tag;
-+#define FCOE_KWQE_CONN_OFFLOAD3_VLAN_ID (0xFFF<<0)
-+#define FCOE_KWQE_CONN_OFFLOAD3_VLAN_ID_SHIFT 0
-+#define FCOE_KWQE_CONN_OFFLOAD3_CFI (0x1<<12)
-+#define FCOE_KWQE_CONN_OFFLOAD3_CFI_SHIFT 12
-+#define FCOE_KWQE_CONN_OFFLOAD3_PRIORITY (0x7<<13)
-+#define FCOE_KWQE_CONN_OFFLOAD3_PRIORITY_SHIFT 13
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 vlan_tag;
-+#define FCOE_KWQE_CONN_OFFLOAD3_VLAN_ID (0xFFF<<0)
-+#define FCOE_KWQE_CONN_OFFLOAD3_VLAN_ID_SHIFT 0
-+#define FCOE_KWQE_CONN_OFFLOAD3_CFI (0x1<<12)
-+#define FCOE_KWQE_CONN_OFFLOAD3_CFI_SHIFT 12
-+#define FCOE_KWQE_CONN_OFFLOAD3_PRIORITY (0x7<<13)
-+#define FCOE_KWQE_CONN_OFFLOAD3_PRIORITY_SHIFT 13
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u8 tx_max_conc_seqs_c3;
-+	u8 s_id[3];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 s_id[3];
-+	u8 tx_max_conc_seqs_c3;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u8 flags;
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_MUL_N_PORT_IDS (0x1<<0)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_MUL_N_PORT_IDS_SHIFT 0
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_E_D_TOV_RES (0x1<<1)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_E_D_TOV_RES_SHIFT 1
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_CONT_INCR_SEQ_CNT (0x1<<2)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_CONT_INCR_SEQ_CNT_SHIFT 2
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_CONF_REQ (0x1<<3)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_CONF_REQ_SHIFT 3
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_REC_VALID (0x1<<4)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_REC_VALID_SHIFT 4
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_C2_VALID (0x1<<5)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_C2_VALID_SHIFT 5
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_ACK_0 (0x1<<6)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_ACK_0_SHIFT 6
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_VLAN_FLAG (0x1<<7)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_VLAN_FLAG_SHIFT 7
-+	u8 d_id[3];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 d_id[3];
-+	u8 flags;
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_MUL_N_PORT_IDS (0x1<<0)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_MUL_N_PORT_IDS_SHIFT 0
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_E_D_TOV_RES (0x1<<1)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_E_D_TOV_RES_SHIFT 1
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_CONT_INCR_SEQ_CNT (0x1<<2)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_CONT_INCR_SEQ_CNT_SHIFT 2
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_CONF_REQ (0x1<<3)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_CONF_REQ_SHIFT 3
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_REC_VALID (0x1<<4)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_REC_VALID_SHIFT 4
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_C2_VALID (0x1<<5)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_C2_VALID_SHIFT 5
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_ACK_0 (0x1<<6)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_ACK_0_SHIFT 6
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_VLAN_FLAG (0x1<<7)
-+#define FCOE_KWQE_CONN_OFFLOAD3_B_VLAN_FLAG_SHIFT 7
-+#endif
-+	u32 reserved;
-+	u32 confq_first_pbe_addr_lo;
-+	u32 confq_first_pbe_addr_hi;
-+#if defined(__BIG_ENDIAN)
-+	u16 rx_max_fc_pay_len;
-+	u16 tx_total_conc_seqs;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 tx_total_conc_seqs;
-+	u16 rx_max_fc_pay_len;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u8 rx_open_seqs_exch_c3;
-+	u8 rx_max_conc_seqs_c3;
-+	u16 rx_total_conc_seqs;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 rx_total_conc_seqs;
-+	u8 rx_max_conc_seqs_c3;
-+	u8 rx_open_seqs_exch_c3;
-+#endif
-+};
-+
-+/*
-+ * FCoE connection offload request 4
-+ */
-+struct fcoe_kwqe_conn_offload4 {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u8 reserved2;
-+	u8 e_d_tov_timer_val;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 e_d_tov_timer_val;
-+	u8 reserved2;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u8 src_mac_addr_lo32[4];
-+#if defined(__BIG_ENDIAN)
-+	u8 dst_mac_addr_hi16[2];
-+	u8 src_mac_addr_hi16[2];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 src_mac_addr_hi16[2];
-+	u8 dst_mac_addr_hi16[2];
-+#endif
-+	u8 dst_mac_addr_lo32[4];
-+	u32 lcq_addr_lo;
-+	u32 lcq_addr_hi;
-+	u32 confq_pbl_base_addr_lo;
-+	u32 confq_pbl_base_addr_hi;
-+};
-+
-+/*
-+ * FCoE connection enable request
-+ */
-+struct fcoe_kwqe_conn_enable_disable {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 reserved0;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 reserved0;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u8 src_mac_addr_lo32[4];
-+#if defined(__BIG_ENDIAN)
-+	u16 vlan_tag;
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_VLAN_ID (0xFFF<<0)
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_VLAN_ID_SHIFT 0
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_CFI (0x1<<12)
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_CFI_SHIFT 12
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_PRIORITY (0x7<<13)
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_PRIORITY_SHIFT 13
-+	u8 src_mac_addr_hi16[2];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 src_mac_addr_hi16[2];
-+	u16 vlan_tag;
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_VLAN_ID (0xFFF<<0)
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_VLAN_ID_SHIFT 0
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_CFI (0x1<<12)
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_CFI_SHIFT 12
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_PRIORITY (0x7<<13)
-+#define FCOE_KWQE_CONN_ENABLE_DISABLE_PRIORITY_SHIFT 13
-+#endif
-+	u8 dst_mac_addr_lo32[4];
-+#if defined(__BIG_ENDIAN)
-+	u16 reserved1;
-+	u8 dst_mac_addr_hi16[2];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 dst_mac_addr_hi16[2];
-+	u16 reserved1;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u8 vlan_flag;
-+	u8 s_id[3];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 s_id[3];
-+	u8 vlan_flag;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u8 reserved3;
-+	u8 d_id[3];
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 d_id[3];
-+	u8 reserved3;
-+#endif
-+	u32 context_id;
-+	u32 conn_id;
-+	u32 reserved4;
-+};
-+
-+/*
-+ * FCoE connection destroy request
-+ */
-+struct fcoe_kwqe_conn_destroy {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 reserved0;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 reserved0;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u32 context_id;
-+	u32 conn_id;
-+	u32 reserved1[5];
-+};
-+
-+/*
-+ * FCoe destroy request
-+ */
-+struct fcoe_kwqe_destroy {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 reserved0;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 reserved0;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u32 reserved1[7];
-+};
-+
-+/*
-+ * FCoe statistics request
-+ */
-+struct fcoe_kwqe_stat {
-+#if defined(__BIG_ENDIAN)
-+	struct fcoe_kwqe_header hdr;
-+	u16 reserved0;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 reserved0;
-+	struct fcoe_kwqe_header hdr;
-+#endif
-+	u32 stat_params_addr_lo;
-+	u32 stat_params_addr_hi;
-+	u32 reserved1[5];
-+};
-+
-+/*
-+ * FCoE KWQ WQE
-+ */
-+union fcoe_kwqe {
-+	struct fcoe_kwqe_init1 init1;
-+	struct fcoe_kwqe_init2 init2;
-+	struct fcoe_kwqe_init3 init3;
-+	struct fcoe_kwqe_conn_offload1 conn_offload1;
-+	struct fcoe_kwqe_conn_offload2 conn_offload2;
-+	struct fcoe_kwqe_conn_offload3 conn_offload3;
-+	struct fcoe_kwqe_conn_offload4 conn_offload4;
-+	struct fcoe_kwqe_conn_enable_disable conn_enable_disable;
-+	struct fcoe_kwqe_conn_destroy conn_destroy;
-+	struct fcoe_kwqe_destroy destroy;
-+	struct fcoe_kwqe_stat statistics;
-+};
-+
-+struct fcoe_mul_sges_ctx {
-+	struct regpair cur_sge_addr;
-+#if defined(__BIG_ENDIAN)
-+	u8 sgl_size;
-+	u8 cur_sge_idx;
-+	u16 cur_sge_off;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 cur_sge_off;
-+	u8 cur_sge_idx;
-+	u8 sgl_size;
-+#endif
-+};
-+
-+struct fcoe_s_stat_ctx {
-+	u8 flags;
-+#define FCOE_S_STAT_CTX_ACTIVE (0x1<<0)
-+#define FCOE_S_STAT_CTX_ACTIVE_SHIFT 0
-+#define FCOE_S_STAT_CTX_ACK_ABORT_SEQ_COND (0x1<<1)
-+#define FCOE_S_STAT_CTX_ACK_ABORT_SEQ_COND_SHIFT 1
-+#define FCOE_S_STAT_CTX_ABTS_PERFORMED (0x1<<2)
-+#define FCOE_S_STAT_CTX_ABTS_PERFORMED_SHIFT 2
-+#define FCOE_S_STAT_CTX_SEQ_TIMEOUT (0x1<<3)
-+#define FCOE_S_STAT_CTX_SEQ_TIMEOUT_SHIFT 3
-+#define FCOE_S_STAT_CTX_P_RJT (0x1<<4)
-+#define FCOE_S_STAT_CTX_P_RJT_SHIFT 4
-+#define FCOE_S_STAT_CTX_ACK_EOFT (0x1<<5)
-+#define FCOE_S_STAT_CTX_ACK_EOFT_SHIFT 5
-+#define FCOE_S_STAT_CTX_RSRV1 (0x3<<6)
-+#define FCOE_S_STAT_CTX_RSRV1_SHIFT 6
-+};
-+
-+struct fcoe_seq_ctx {
-+#if defined(__BIG_ENDIAN)
-+	u16 low_seq_cnt;
-+	struct fcoe_s_stat_ctx s_stat;
-+	u8 seq_id;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 seq_id;
-+	struct fcoe_s_stat_ctx s_stat;
-+	u16 low_seq_cnt;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u16 err_seq_cnt;
-+	u16 high_seq_cnt;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 high_seq_cnt;
-+	u16 err_seq_cnt;
-+#endif
-+	u32 low_exp_ro;
-+	u32 high_exp_ro;
-+};
-+
-+
-+struct fcoe_single_sge_ctx {
-+	struct regpair cur_buf_addr;
-+#if defined(__BIG_ENDIAN)
-+	u16 reserved0;
-+	u16 cur_buf_rem;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 cur_buf_rem;
-+	u16 reserved0;
-+#endif
-+};
-+
-+union fcoe_sgl_ctx {
-+	struct fcoe_single_sge_ctx single_sge;
-+	struct fcoe_mul_sges_ctx mul_sges;
-+};
-+
-+
-+
-+/*
-+ * FCoE SQ element
-+ */
-+struct fcoe_sqe {
-+	u16 wqe;
-+#define FCOE_SQE_TASK_ID (0x7FFF<<0)
-+#define FCOE_SQE_TASK_ID_SHIFT 0
-+#define FCOE_SQE_TOGGLE_BIT (0x1<<15)
-+#define FCOE_SQE_TOGGLE_BIT_SHIFT 15
-+};
-+
-+
-+
-+struct fcoe_task_ctx_entry_tx_only {
-+	union fcoe_sgl_ctx sgl_ctx;
-+};
-+
-+struct fcoe_task_ctx_entry_txwr_rxrd {
-+#if defined(__BIG_ENDIAN)
-+	u16 verify_tx_seq;
-+	u8 init_flags;
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE (0x7<<0)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE_SHIFT 0
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_DEV_TYPE (0x1<<3)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_DEV_TYPE_SHIFT 3
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE (0x1<<4)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE_SHIFT 4
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_SINGLE_SGE (0x1<<5)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_SINGLE_SGE_SHIFT 5
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_RSRV5 (0x3<<6)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_RSRV5_SHIFT 6
-+	u8 tx_flags;
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE (0xF<<0)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE_SHIFT 0
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_RSRV4 (0xF<<4)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_RSRV4_SHIFT 4
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 tx_flags;
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE (0xF<<0)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE_SHIFT 0
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_RSRV4 (0xF<<4)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_RSRV4_SHIFT 4
-+	u8 init_flags;
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE (0x7<<0)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE_SHIFT 0
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_DEV_TYPE (0x1<<3)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_DEV_TYPE_SHIFT 3
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE (0x1<<4)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE_SHIFT 4
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_SINGLE_SGE (0x1<<5)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_SINGLE_SGE_SHIFT 5
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_RSRV5 (0x3<<6)
-+#define FCOE_TASK_CTX_ENTRY_TXWR_RXRD_RSRV5_SHIFT 6
-+	u16 verify_tx_seq;
-+#endif
-+};
-+
-+/*
-+ * Common section. Both TX and RX processing might write and read from it in
-+ * different flows
-+ */
-+struct fcoe_task_ctx_entry_tx_rx_cmn {
-+	u32 data_2_trns;
-+	union fcoe_general_task_ctx general;
-+#if defined(__BIG_ENDIAN)
-+	u16 tx_low_seq_cnt;
-+	struct fcoe_s_stat_ctx tx_s_stat;
-+	u8 tx_seq_id;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 tx_seq_id;
-+	struct fcoe_s_stat_ctx tx_s_stat;
-+	u16 tx_low_seq_cnt;
-+#endif
-+	u32 common_flags;
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_CID (0xFFFFFF<<0)
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_CID_SHIFT 0
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_VALID (0x1<<24)
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_VALID_SHIFT 24
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_SEQ_INIT (0x1<<25)
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_SEQ_INIT_SHIFT 25
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_PEND_XFER (0x1<<26)
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_PEND_XFER_SHIFT 26
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_PEND_CONF (0x1<<27)
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_PEND_CONF_SHIFT 27
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_EXP_FIRST_FRAME (0x1<<28)
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_EXP_FIRST_FRAME_SHIFT 28
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_RSRV (0x7<<29)
-+#define FCOE_TASK_CTX_ENTRY_TX_RX_CMN_RSRV_SHIFT 29
-+};
-+
-+struct fcoe_task_ctx_entry_rxwr_txrd {
-+#if defined(__BIG_ENDIAN)
-+	u16 rx_id;
-+	u16 rx_flags;
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RX_STATE (0xF<<0)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RX_STATE_SHIFT 0
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_NUM_RQ_WQE (0x7<<4)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_NUM_RQ_WQE_SHIFT 4
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_CONF_REQ (0x1<<7)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_CONF_REQ_SHIFT 7
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_MISS_FRAME (0x1<<8)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_MISS_FRAME_SHIFT 8
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RESERVED0 (0x7F<<9)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RESERVED0_SHIFT 9
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 rx_flags;
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RX_STATE (0xF<<0)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RX_STATE_SHIFT 0
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_NUM_RQ_WQE (0x7<<4)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_NUM_RQ_WQE_SHIFT 4
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_CONF_REQ (0x1<<7)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_CONF_REQ_SHIFT 7
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_MISS_FRAME (0x1<<8)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_MISS_FRAME_SHIFT 8
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RESERVED0 (0x7F<<9)
-+#define FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RESERVED0_SHIFT 9
-+	u16 rx_id;
-+#endif
-+};
-+
-+struct fcoe_task_ctx_entry_rx_only {
-+	struct fcoe_seq_ctx seq_ctx;
-+	struct fcoe_seq_ctx ooo_seq_ctx;
-+	u32 rsrv3;
-+	union fcoe_sgl_ctx sgl_ctx;
-+};
-+
-+struct fcoe_task_ctx_entry {
-+	struct fcoe_task_ctx_entry_tx_only tx_wr_only;
-+	struct fcoe_task_ctx_entry_txwr_rxrd tx_wr_rx_rd;
-+	struct fcoe_task_ctx_entry_tx_rx_cmn cmn;
-+	struct fcoe_task_ctx_entry_rxwr_txrd rx_wr_tx_rd;
-+	struct fcoe_task_ctx_entry_rx_only rx_wr_only;
-+	u32 reserved[4];
-+};
-+
-+
-+/*
-+ * FCoE XFRQ element
-+ */
-+struct fcoe_xfrqe {
-+	u16 wqe;
-+#define FCOE_XFRQE_TASK_ID (0x7FFF<<0)
-+#define FCOE_XFRQE_TASK_ID_SHIFT 0
-+#define FCOE_XFRQE_TOGGLE_BIT (0x1<<15)
-+#define FCOE_XFRQE_TOGGLE_BIT_SHIFT 15
-+};
-+
-+
-+/*
-+ * FCoE CONFQ element
-+ */
-+struct fcoe_confqe {
-+#if defined(__BIG_ENDIAN)
-+	u16 rx_id;
-+	u16 ox_id;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 ox_id;
-+	u16 rx_id;
-+#endif
-+	u32 param;
-+};
-+
-+
-+/*
-+ * FCoE conection data base
-+ */
-+struct fcoe_conn_db {
-+#if defined(__BIG_ENDIAN)
-+	u16 rsrv0;
-+	u16 rq_prod;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 rq_prod;
-+	u16 rsrv0;
-+#endif
-+	u32 rsrv1;
-+	struct regpair cq_arm;
-+};
-+
-+
-+/*
-+ * FCoE CQ element
-+ */
-+struct fcoe_cqe {
-+	u16 wqe;
-+#define FCOE_CQE_CQE_INFO (0x3FFF<<0)
-+#define FCOE_CQE_CQE_INFO_SHIFT 0
-+#define FCOE_CQE_CQE_TYPE (0x1<<14)
-+#define FCOE_CQE_CQE_TYPE_SHIFT 14
-+#define FCOE_CQE_TOGGLE_BIT (0x1<<15)
-+#define FCOE_CQE_TOGGLE_BIT_SHIFT 15
-+};
-+
-+
-+/*
-+ * FCoE error/warning resporting entry
-+ */
-+struct fcoe_err_report_entry {
-+	u32 err_warn_bitmap_lo;
-+	u32 err_warn_bitmap_hi;
-+	u32 tx_buf_off;
-+	u32 rx_buf_off;
-+	struct fcoe_fc_hdr fc_hdr;
-+};
-+
-+
-+/*
-+ * FCoE hash table entry (32 bytes)
-+ */
-+struct fcoe_hash_table_entry {
-+#if defined(__BIG_ENDIAN)
-+	u8 d_id_0;
-+	u8 s_id_2;
-+	u8 s_id_1;
-+	u8 s_id_0;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 s_id_0;
-+	u8 s_id_1;
-+	u8 s_id_2;
-+	u8 d_id_0;
-+#endif
-+#if defined(__BIG_ENDIAN)
-+	u16 dst_mac_addr_hi;
-+	u8 d_id_2;
-+	u8 d_id_1;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 d_id_1;
-+	u8 d_id_2;
-+	u16 dst_mac_addr_hi;
-+#endif
-+	u32 dst_mac_addr_lo;
-+#if defined(__BIG_ENDIAN)
-+	u16 vlan_id;
-+	u16 src_mac_addr_hi;
-+#elif defined(__LITTLE_ENDIAN)
-+	u16 src_mac_addr_hi;
-+	u16 vlan_id;
-+#endif
-+	u32 src_mac_addr_lo;
-+#if defined(__BIG_ENDIAN)
-+	u16 reserved1;
-+	u8 reserved0;
-+	u8 vlan_flag;
-+#elif defined(__LITTLE_ENDIAN)
-+	u8 vlan_flag;
-+	u8 reserved0;
-+	u16 reserved1;
-+#endif
-+	u32 reserved2;
-+	u32 field_id;
-+#define FCOE_HASH_TABLE_ENTRY_CID (0xFFFFFF<<0)
-+#define FCOE_HASH_TABLE_ENTRY_CID_SHIFT 0
-+#define FCOE_HASH_TABLE_ENTRY_RESERVED3 (0x7F<<24)
-+#define FCOE_HASH_TABLE_ENTRY_RESERVED3_SHIFT 24
-+#define FCOE_HASH_TABLE_ENTRY_VALID (0x1<<31)
-+#define FCOE_HASH_TABLE_ENTRY_VALID_SHIFT 31
-+};
-+
-+/*
-+ * FCoE pending work request CQE
-+ */
-+struct fcoe_pend_wq_cqe {
-+	u16 wqe;
-+#define FCOE_PEND_WQ_CQE_TASK_ID (0x3FFF<<0)
-+#define FCOE_PEND_WQ_CQE_TASK_ID_SHIFT 0
-+#define FCOE_PEND_WQ_CQE_CQE_TYPE (0x1<<14)
-+#define FCOE_PEND_WQ_CQE_CQE_TYPE_SHIFT 14
-+#define FCOE_PEND_WQ_CQE_TOGGLE_BIT (0x1<<15)
-+#define FCOE_PEND_WQ_CQE_TOGGLE_BIT_SHIFT 15
-+};
-+
-+
-+/*
-+ * FCoE RX statistics parameters section#0
-+ */
-+struct fcoe_rx_stat_params_section0 {
-+	u32 fcoe_ver_cnt;
-+	u32 fcoe_rx_pkt_cnt;
-+	u32 fcoe_rx_byte_cnt;
-+	u32 fcoe_rx_drop_pkt_cnt;
-+};
-+
-+
-+/*
-+ * FCoE RX statistics parameters section#1
-+ */
-+struct fcoe_rx_stat_params_section1 {
-+	u32 fc_crc_cnt;
-+	u32 eofa_del_cnt;
-+	u32 miss_frame_cnt;
-+	u32 seq_timeout_cnt;
-+	u32 drop_seq_cnt;
-+	u32 fcoe_rx_drop_pkt_cnt;
-+	u32 fcp_rx_pkt_cnt;
-+	u32 reserved0;
-+};
-+
-+
-+/*
-+ * FCoE TX statistics parameters
-+ */
-+struct fcoe_tx_stat_params {
-+	u32 fcoe_tx_pkt_cnt;
-+	u32 fcoe_tx_byte_cnt;
-+	u32 fcp_tx_pkt_cnt;
-+	u32 reserved0;
-+};
-+
-+/*
-+ * FCoE statistics parameters
-+ */
-+struct fcoe_statistics_params {
-+	struct fcoe_tx_stat_params tx_stat;
-+	struct fcoe_rx_stat_params_section0 rx_stat0;
-+	struct fcoe_rx_stat_params_section1 rx_stat1;
-+};
-+
-+
-+/*
-+ * FCoE t2 hash table entry (64 bytes)
-+ */
-+struct fcoe_t2_hash_table_entry {
-+	struct fcoe_hash_table_entry data;
-+	struct regpair next;
-+	struct regpair reserved0[3];
-+};
-+
-+/*
-+ * FCoE unsolicited CQE
-+ */
-+struct fcoe_unsolicited_cqe {
-+	u16 wqe;
-+#define FCOE_UNSOLICITED_CQE_SUBTYPE (0x3<<0)
-+#define FCOE_UNSOLICITED_CQE_SUBTYPE_SHIFT 0
-+#define FCOE_UNSOLICITED_CQE_PKT_LEN (0xFFF<<2)
-+#define FCOE_UNSOLICITED_CQE_PKT_LEN_SHIFT 2
-+#define FCOE_UNSOLICITED_CQE_CQE_TYPE (0x1<<14)
-+#define FCOE_UNSOLICITED_CQE_CQE_TYPE_SHIFT 14
-+#define FCOE_UNSOLICITED_CQE_TOGGLE_BIT (0x1<<15)
-+#define FCOE_UNSOLICITED_CQE_TOGGLE_BIT_SHIFT 15
-+};
-+
-+
-+
-+#endif /* __57XX_FCOE_HSI_LINUX_LE__ */
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-new file mode 100644
-index 0000000..df546e3
---- /dev/null
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -0,0 +1,520 @@
-+#ifndef _BNX2FC_H_
-+#define _BNX2FC_H_
-+/* bnx2fc.h: Broadcom NetXtreme II Linux FCoE offload driver.
++ * bnx2fc_els.c: Broadcom NetXtreme II Linux FCoE offload driver.
++ * This file contains helper routines that handle ELS requests
++ * and responses.
 + *
 + * Copyright (c) 2008 - 2010 Broadcom Corporation
 + *
@@ -1135,799 +47,2404 @@ index 0000000..df546e3
 + * Written by: Bhanu Prakash Gollapudi (bprakash@broadcom.com)
 + */
 +
-+#include <linux/module.h>
-+#include <linux/moduleparam.h>
-+#include <linux/kernel.h>
-+#include <linux/skbuff.h>
-+#include <linux/netdevice.h>
-+#include <linux/etherdevice.h>
-+#include <linux/if_ether.h>
-+#include <linux/if_vlan.h>
-+#include <linux/kthread.h>
-+#include <linux/crc32.h>
-+#include <linux/cpu.h>
-+#include <linux/types.h>
-+#include <linux/list.h>
-+#include <linux/delay.h>
-+#include <linux/timer.h>
-+#include <linux/errno.h>
-+#include <linux/pci.h>
-+#include <linux/init.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/workqueue.h>
-+#include <linux/mutex.h>
-+#include <linux/spinlock.h>
-+#include <linux/bitops.h>
-+#include <linux/log2.h>
-+#include <linux/interrupt.h>
-+#include <linux/sched.h>
-+#include <linux/io.h>
++#include "bnx2fc.h"
++
++static void bnx2fc_logo_resp(struct fc_seq *seq, struct fc_frame *fp,
++			     void *arg);
++static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
++			      void *arg);
++static int bnx2fc_initiate_els(struct bnx2fc_rport *tgt, unsigned int op,
++			void *data, u32 data_len,
++			void (*cb_func)(struct bnx2fc_els_cb_arg *cb_arg),
++			struct bnx2fc_els_cb_arg *cb_arg, u32 timer_msec);
 +
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_eh.h>
-+#include <scsi/scsi_tcq.h>
-+#include <scsi/libfc.h>
-+#include <scsi/libfcoe.h>
-+#include <scsi/scsi_transport.h>
-+#include <scsi/scsi_transport_fc.h>
-+#include <scsi/fc/fc_fip.h>
-+#include <scsi/fc/fc_fc2.h>
-+#include <scsi/fc_frame.h>
-+#include <scsi/fc/fc_fcoe.h>
-+#include <scsi/fc/fc_fcp.h>
-+
-+#include "57xx_hsi_bnx2fc.h"
-+#include "bnx2fc_debug.h"
-+#include "../../net/cnic_if.h"
-+#include "bnx2fc_constants.h"
-+
-+#define BNX2FC_NAME		"bnx2fc"
-+#define BNX2FC_VERSION		"1.0.0"
-+
-+#define PFX			"bnx2fc: "
-+
-+#define BNX2X_DOORBELL_PCI_BAR		2
-+
-+#define BNX2FC_MAX_BD_LEN		0xffff
-+#define BNX2FC_BD_SPLIT_SZ		0x8000
-+#define BNX2FC_MAX_BDS_PER_CMD		256
-+
-+#define BNX2FC_SQ_WQES_MAX	256
-+
-+#define BNX2FC_SCSI_MAX_SQES	((3 * BNX2FC_SQ_WQES_MAX) / 8)
-+#define BNX2FC_TM_MAX_SQES	((BNX2FC_SQ_WQES_MAX) / 2)
-+#define BNX2FC_ELS_MAX_SQES	(BNX2FC_TM_MAX_SQES - 1)
-+
-+#define BNX2FC_RQ_WQES_MAX	16
-+#define BNX2FC_CQ_WQES_MAX	(BNX2FC_SQ_WQES_MAX + BNX2FC_RQ_WQES_MAX)
-+
-+#define BNX2FC_NUM_MAX_SESS	128
-+#define BNX2FC_NUM_MAX_SESS_LOG	(ilog2(BNX2FC_NUM_MAX_SESS))
-+
-+#define BNX2FC_MAX_OUTSTANDING_CMNDS	4096
-+#define BNX2FC_MIN_PAYLOAD		256
-+#define BNX2FC_MAX_PAYLOAD		2048
-+
-+#define BNX2FC_RQ_BUF_SZ		256
-+#define BNX2FC_RQ_BUF_LOG_SZ		(ilog2(BNX2FC_RQ_BUF_SZ))
-+
-+#define BNX2FC_SQ_WQE_SIZE		(sizeof(struct fcoe_sqe))
-+#define BNX2FC_CQ_WQE_SIZE		(sizeof(struct fcoe_cqe))
-+#define BNX2FC_RQ_WQE_SIZE		(BNX2FC_RQ_BUF_SZ)
-+#define BNX2FC_XFERQ_WQE_SIZE		(sizeof(struct fcoe_xfrqe))
-+#define BNX2FC_CONFQ_WQE_SIZE		(sizeof(struct fcoe_confqe))
-+#define BNX2FC_5771X_DB_PAGE_SIZE	128
-+
-+#define BNX2FC_MAX_TASKS		BNX2FC_MAX_OUTSTANDING_CMNDS
-+#define BNX2FC_TASK_SIZE		128
-+#define	BNX2FC_TASKS_PER_PAGE		(PAGE_SIZE/BNX2FC_TASK_SIZE)
-+#define BNX2FC_TASK_CTX_ARR_SZ		(BNX2FC_MAX_TASKS/BNX2FC_TASKS_PER_PAGE)
-+
-+#define BNX2FC_MAX_ROWS_IN_HASH_TBL	8
-+#define BNX2FC_HASH_TBL_CHUNK_SIZE	(16 * 1024)
-+
-+#define BNX2FC_MAX_SEQS			255
-+
-+#define BNX2FC_READ			(1 << 1)
-+#define BNX2FC_WRITE			(1 << 0)
-+
-+#define BNX2FC_MIN_XID			0
-+#define BNX2FC_MAX_XID			(BNX2FC_MAX_OUTSTANDING_CMNDS - 1)
-+#define FCOE_MIN_XID			(BNX2FC_MAX_OUTSTANDING_CMNDS)
-+#define FCOE_MAX_XID		\
-+			(BNX2FC_MAX_OUTSTANDING_CMNDS + (nr_cpu_ids * 256))
-+#define BNX2FC_MAX_LUN			0xFFFF
-+#define BNX2FC_MAX_FCP_TGT		256
-+#define BNX2FC_MAX_CMD_LEN		16
-+
-+#define BNX2FC_TM_TIMEOUT		60	/* secs */
-+#define BNX2FC_IO_TIMEOUT		20000UL	/* msecs */
-+
-+#define BNX2FC_WAIT_CNT			120
-+#define BNX2FC_FW_TIMEOUT		(3 * HZ)
-+
-+#define PORT_MAX			2
-+
-+#define CMD_SCSI_STATUS(Cmnd)		((Cmnd)->SCp.Status)
-+
-+/* FC FCP Status */
-+#define	FC_GOOD				0
-+
-+#define BNX2FC_RNID_HBA			0x7
-+
-+struct bnx2fc_global_s {
-+	struct task_struct *l2_thread;
-+	struct sk_buff_head fcoe_rx_list;
-+	struct page *crc_eof_page;
-+	int crc_eof_offset;
-+};
-+extern struct bnx2fc_global_s bnx2fc_global;
-+
-+struct fcoe_percpu_s {
-+	struct task_struct *thread;
-+	struct list_head work_list;
-+	spinlock_t fp_work_lock;
-+};
-+
-+
-+struct bnx2fc_hba {
-+	struct list_head link;
-+	struct cnic_dev *cnic;
-+	struct pci_dev *pcidev;
-+	struct net_device *netdev;
-+	struct net_device *phys_dev;
-+	unsigned long reg_with_cnic;
-+		#define BNX2FC_CNIC_REGISTERED           1
-+	struct packet_type fcoe_packet_type;
-+	struct packet_type fip_packet_type;
-+	struct bnx2fc_cmd_mgr *cmd_mgr;
-+	struct workqueue_struct *timer_work_queue;
-+	struct kref kref;
-+	spinlock_t hba_lock;
-+	struct mutex hba_mutex;
-+	unsigned long adapter_state;
-+		#define ADAPTER_STATE_UP		0
-+		#define ADAPTER_STATE_GOING_DOWN	1
-+		#define ADAPTER_STATE_LINK_DOWN		2
-+		#define ADAPTER_STATE_READY		3
-+	u32 flags;
-+	unsigned long init_done;
-+		#define BNX2FC_FW_INIT_DONE		0
-+		#define BNX2FC_CTLR_INIT_DONE		1
-+		#define BNX2FC_CREATE_DONE		2
-+	struct fcoe_ctlr ctlr;
-+	u8 vlan_enabled;
-+	int vlan_id;
-+	u32 next_conn_id;
-+	struct fcoe_task_ctx_entry **task_ctx;
-+	dma_addr_t *task_ctx_dma;
-+	struct regpair *task_ctx_bd_tbl;
-+	dma_addr_t task_ctx_bd_dma;
-+
-+	int hash_tbl_segment_count;
-+	void **hash_tbl_segments;
-+	void *hash_tbl_pbl;
-+	dma_addr_t hash_tbl_pbl_dma;
-+	struct fcoe_t2_hash_table_entry *t2_hash_tbl;
-+	dma_addr_t t2_hash_tbl_dma;
-+	char *t2_hash_tbl_ptr;
-+	dma_addr_t t2_hash_tbl_ptr_dma;
-+
-+	char *dummy_buffer;
-+	dma_addr_t dummy_buf_dma;
-+
-+	struct fcoe_statistics_params *stats_buffer;
-+	dma_addr_t stats_buf_dma;
-+
-+	/*
-+	 * PCI related info.
-+	 */
-+	u16 pci_did;
-+	u16 pci_vid;
-+	u16 pci_sdid;
-+	u16 pci_svid;
-+	u16 pci_func;
-+	u16 pci_devno;
-+
-+	struct task_struct *l2_thread;
-+
-+	/* linkdown handling */
-+	wait_queue_head_t shutdown_wait;
-+	int wait_for_link_down;
-+
-+	/*destroy handling */
-+	struct timer_list destroy_timer;
-+	wait_queue_head_t destroy_wait;
-+
-+	/* Active list of offloaded sessions */
-+	struct bnx2fc_rport *tgt_ofld_list[BNX2FC_NUM_MAX_SESS];
-+	int num_ofld_sess;
-+
-+	/* statistics */
-+	struct completion stat_req_done;
-+};
-+
-+struct bnx2fc_port {
-+	struct bnx2fc_hba *hba;
-+	struct fc_lport *lport;
-+	struct timer_list timer;
-+	struct work_struct destroy_work;
-+	struct sk_buff_head fcoe_pending_queue;
-+	u8 fcoe_pending_queue_active;
-+	u8 data_src_addr[ETH_ALEN];
-+};
-+
-+#define bnx2fc_from_ctlr(fip) container_of(fip, struct bnx2fc_hba, ctlr)
-+
-+struct bnx2fc_cmd_mgr {
-+	struct bnx2fc_hba *hba;
-+	u16 next_idx;
-+	struct list_head *free_list;
-+	spinlock_t *free_list_lock;
-+	struct io_bdt **io_bdt_pool;
-+	struct bnx2fc_cmd **cmds;
-+};
-+
-+struct bnx2fc_rport {
-+	struct bnx2fc_port *port;
-+	struct fc_rport *rport;
-+	struct fc_rport_priv *rdata;
-+	void __iomem *ctx_base;
-+#define DPM_TRIGER_TYPE		0x40
-+	u32 fcoe_conn_id;
-+	u32 context_id;
-+	u32 sid;
-+
-+	unsigned long flags;
-+#define BNX2FC_FLAG_SESSION_READY	0x1
-+#define BNX2FC_FLAG_OFFLOADED		0x2
-+#define BNX2FC_FLAG_DISABLED		0x3
-+#define BNX2FC_FLAG_DESTROYED		0x4
-+#define BNX2FC_FLAG_OFLD_REQ_CMPL	0x5
-+#define BNX2FC_FLAG_DESTROY_CMPL	0x6
-+#define BNX2FC_FLAG_CTX_ALLOC_FAILURE	0x7
-+#define BNX2FC_FLAG_UPLD_REQ_COMPL	0x8
-+#define BNX2FC_FLAG_EXPL_LOGO		0x9
-+
-+	u32 max_sqes;
-+	u32 max_rqes;
-+	u32 max_cqes;
-+
-+	struct fcoe_sqe *sq;
-+	dma_addr_t sq_dma;
-+	u16 sq_prod_idx;
-+	u8 sq_curr_toggle_bit;
-+	u32 sq_mem_size;
-+
-+	struct fcoe_cqe *cq;
-+	dma_addr_t cq_dma;
-+	u32 cq_cons_idx;
-+	u8 cq_curr_toggle_bit;
-+	u32 cq_mem_size;
-+
-+	void *rq;
-+	dma_addr_t rq_dma;
-+	u32 rq_prod_idx;
-+	u32 rq_cons_idx;
-+	u32 rq_mem_size;
-+
-+	void *rq_pbl;
-+	dma_addr_t rq_pbl_dma;
-+	u32 rq_pbl_size;
-+
-+	struct fcoe_xfrqe *xferq;
-+	dma_addr_t xferq_dma;
-+	u32 xferq_mem_size;
-+
-+	struct fcoe_confqe *confq;
-+	dma_addr_t confq_dma;
-+	u32 confq_mem_size;
-+
-+	void *confq_pbl;
-+	dma_addr_t confq_pbl_dma;
-+	u32 confq_pbl_size;
-+
-+	struct fcoe_conn_db *conn_db;
-+	dma_addr_t conn_db_dma;
-+	u32 conn_db_mem_size;
-+
-+	struct fcoe_sqe *lcq;
-+	dma_addr_t lcq_dma;
-+	u32 lcq_mem_size;
-+
-+	void *ofld_req[4];
-+	dma_addr_t ofld_req_dma[4];
-+	void *enbl_req;
-+	dma_addr_t enbl_req_dma;
-+
-+	spinlock_t tgt_lock;
-+	spinlock_t cq_lock;
-+	atomic_t num_active_ios;
-+	u32 flush_in_prog;
-+	unsigned long work_time_slice;
-+	unsigned long timestamp;
-+	struct list_head free_task_list;
-+	struct bnx2fc_cmd *pending_queue[BNX2FC_SQ_WQES_MAX+1];
-+	atomic_t pi;
-+	atomic_t ci;
-+	struct list_head active_cmd_queue;
-+	struct list_head els_queue;
-+	struct list_head io_retire_queue;
-+	struct list_head active_tm_queue;
-+
-+	struct timer_list ofld_timer;
-+	wait_queue_head_t ofld_wait;
-+
-+	struct timer_list upld_timer;
-+	wait_queue_head_t upld_wait;
-+};
-+
-+struct bnx2fc_mp_req {
-+	u8 tm_flags;
-+
-+	u32 req_len;
-+	void *req_buf;
-+	dma_addr_t req_buf_dma;
-+	struct fcoe_bd_ctx *mp_req_bd;
-+	dma_addr_t mp_req_bd_dma;
-+	struct fc_frame_header req_fc_hdr;
-+
-+	u32 resp_len;
-+	void *resp_buf;
-+	dma_addr_t resp_buf_dma;
-+	struct fcoe_bd_ctx *mp_resp_bd;
-+	dma_addr_t mp_resp_bd_dma;
-+	struct fc_frame_header resp_fc_hdr;
-+};
-+
-+struct bnx2fc_els_cb_arg {
-+	struct bnx2fc_cmd *aborted_io_req;
-+	struct bnx2fc_cmd *io_req;
-+	u16 l2_oxid;
-+};
-+
-+/* bnx2fc command structure */
-+struct bnx2fc_cmd {
-+	struct list_head link;
-+	u8 on_active_queue;
-+	u8 on_tmf_queue;
-+	u8 cmd_type;
-+#define BNX2FC_SCSI_CMD		1
-+#define BNX2FC_TASK_MGMT_CMD		2
-+#define BNX2FC_ABTS			3
-+#define BNX2FC_ELS			4
-+#define BNX2FC_CLEANUP			5
-+	u8 io_req_flags;
-+	struct kref refcount;
-+	struct bnx2fc_port *port;
-+	struct bnx2fc_rport *tgt;
-+	struct scsi_cmnd *sc_cmd;
-+	struct bnx2fc_cmd_mgr *cmd_mgr;
-+	struct bnx2fc_mp_req mp_req;
-+	void (*cb_func)(struct bnx2fc_els_cb_arg *cb_arg);
-+	struct bnx2fc_els_cb_arg *cb_arg;
-+	struct delayed_work timeout_work; /* timer for ULP timeouts */
-+	struct completion tm_done;
-+	int wait_for_comp;
-+	u16 xid;
-+	struct fcoe_task_ctx_entry *task;
-+	struct io_bdt *bd_tbl;
-+	struct fcp_rsp *rsp;
-+	size_t data_xfer_len;
-+	unsigned long req_flags;
-+#define BNX2FC_FLAG_ISSUE_RRQ		0x1
-+#define BNX2FC_FLAG_ISSUE_ABTS		0x2
-+#define BNX2FC_FLAG_ABTS_DONE		0x3
-+#define BNX2FC_FLAG_TM_COMPL		0x4
-+#define BNX2FC_FLAG_TM_TIMEOUT		0x5
-+#define BNX2FC_FLAG_IO_CLEANUP		0x6
-+#define BNX2FC_FLAG_RETIRE_OXID		0x7
-+#define	BNX2FC_FLAG_EH_ABORT		0x8
-+#define BNX2FC_FLAG_IO_COMPL		0x9
-+#define BNX2FC_FLAG_ELS_DONE		0xa
-+#define BNX2FC_FLAG_ELS_TIMEOUT		0xb
-+	u32 fcp_resid;
-+	u32 fcp_rsp_len;
-+	u32 fcp_sns_len;
-+	u8 cdb_status; /* SCSI IO status */
-+	u8 fcp_status; /* FCP IO status */
-+	u8 fcp_rsp_code;
-+	u8 scsi_comp_flags;
-+};
-+
-+struct io_bdt {
-+	struct bnx2fc_cmd *io_req;
-+	struct fcoe_bd_ctx *bd_tbl;
-+	dma_addr_t bd_tbl_dma;
-+	u16 bd_valid;
-+};
-+
-+struct bnx2fc_work {
-+	struct list_head list;
-+	struct bnx2fc_rport *tgt;
-+	u16 wqe;
-+};
-+
-+
-+
-+struct bnx2fc_cmd *bnx2fc_elstm_alloc(struct bnx2fc_rport *tgt, int type);
-+void bnx2fc_cmd_release(struct kref *ref);
-+int bnx2fc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd);
-+int bnx2fc_send_fw_fcoe_init_msg(struct bnx2fc_hba *hba);
-+int bnx2fc_send_fw_fcoe_destroy_msg(struct bnx2fc_hba *hba);
-+int bnx2fc_send_session_ofld_req(struct bnx2fc_port *port,
-+					struct bnx2fc_rport *tgt);
-+int bnx2fc_send_session_disable_req(struct bnx2fc_port *port,
-+				    struct bnx2fc_rport *tgt);
-+int bnx2fc_send_session_destroy_req(struct bnx2fc_hba *hba,
-+					struct bnx2fc_rport *tgt);
-+void bnx2fc_map_doorbell(struct bnx2fc_rport *tgt);
-+void bnx2fc_indicate_kcqe(void *context, struct kcqe *kcq[],
-+					u32 num_cqe);
-+int bnx2fc_setup_task_ctx(struct bnx2fc_hba *hba);
-+void bnx2fc_free_task_ctx(struct bnx2fc_hba *hba);
-+int bnx2fc_setup_fw_resc(struct bnx2fc_hba *hba);
-+void bnx2fc_free_fw_resc(struct bnx2fc_hba *hba);
-+struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba,
-+						u16 min_xid, u16 max_xid);
-+void bnx2fc_cmd_mgr_free(struct bnx2fc_cmd_mgr *cmgr);
-+void bnx2fc_get_link_state(struct bnx2fc_hba *hba);
-+char *bnx2fc_get_next_rqe(struct bnx2fc_rport *tgt, u8 num_items);
-+void bnx2fc_return_rqe(struct bnx2fc_rport *tgt, u8 num_items);
-+int bnx2fc_get_paged_crc_eof(struct sk_buff *skb, int tlen);
 +void bnx2fc_fill_fc_hdr(struct fc_frame_header *fc_hdr, enum fc_rctl r_ctl,
 +			u32 sid, u32 did, enum fc_fh_type fh_type,
-+			u32 f_ctl, u32 param_offset);
-+int bnx2fc_send_rrq(struct bnx2fc_cmd *aborted_io_req);
-+int bnx2fc_send_adisc(struct bnx2fc_rport *tgt, struct fc_frame *fp);
-+int bnx2fc_send_logo(struct bnx2fc_rport *tgt, struct fc_frame *fp);
-+int bnx2fc_initiate_cleanup(struct bnx2fc_cmd *io_req);
-+int bnx2fc_initiate_abts(struct bnx2fc_cmd *io_req);
-+void bnx2fc_cmd_timer_set(struct bnx2fc_cmd *io_req,
-+			  unsigned int timer_msec);
-+int bnx2fc_init_mp_req(struct bnx2fc_cmd *io_req);
-+void bnx2fc_init_cleanup_task(struct bnx2fc_cmd *io_req,
-+			      struct fcoe_task_ctx_entry *task,
-+			      u16 orig_xid);
-+void bnx2fc_init_mp_task(struct bnx2fc_cmd *io_req,
-+			 struct fcoe_task_ctx_entry *task);
-+void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
-+			     struct fcoe_task_ctx_entry *task);
-+void bnx2fc_add_2_sq(struct bnx2fc_rport *tgt, u16 xid);
-+void bnx2fc_ring_doorbell(struct bnx2fc_rport *tgt);
-+int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd);
-+int bnx2fc_eh_host_reset(struct scsi_cmnd *sc_cmd);
-+int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd);
-+int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd);
-+void bnx2fc_rport_event_handler(struct fc_lport *lport,
-+				struct fc_rport_priv *rport,
-+				enum fc_rport_event event);
-+void bnx2fc_process_scsi_cmd_compl(struct bnx2fc_cmd *io_req,
-+				   struct fcoe_task_ctx_entry *task,
-+				   u8 num_rq);
-+void bnx2fc_process_cleanup_compl(struct bnx2fc_cmd *io_req,
-+			       struct fcoe_task_ctx_entry *task,
-+			       u8 num_rq);
-+void bnx2fc_process_abts_compl(struct bnx2fc_cmd *io_req,
-+			       struct fcoe_task_ctx_entry *task,
-+			       u8 num_rq);
-+void bnx2fc_process_tm_compl(struct bnx2fc_cmd *io_req,
-+			     struct fcoe_task_ctx_entry *task,
-+			     u8 num_rq);
++			u32 f_ctl, u32 parm_offset)
++{
++	hton24(fc_hdr->fh_s_id, sid);
++	hton24(fc_hdr->fh_d_id, did);
++	fc_hdr->fh_r_ctl = r_ctl;
++	fc_hdr->fh_type = fh_type;
++	hton24(fc_hdr->fh_f_ctl, f_ctl);
++	fc_hdr->fh_cs_ctl = 0;
++	fc_hdr->fh_df_ctl = 0;
++	fc_hdr->fh_parm_offset = htonl(parm_offset);
++}
++
++static void bnx2fc_rrq_compl(struct bnx2fc_els_cb_arg *cb_arg)
++{
++	struct bnx2fc_cmd *orig_io_req;
++	struct bnx2fc_cmd *rrq_req;
++	int rc = 0;
++
++	BUG_ON(!cb_arg);
++	rrq_req = cb_arg->io_req;
++	orig_io_req = cb_arg->aborted_io_req;
++	BUG_ON(!orig_io_req);
++	BNX2FC_ELS_DBG("rrq_compl: orig xid = 0x%x, rrq_xid = 0x%x\n",
++		   orig_io_req->xid, rrq_req->xid);
++
++	kref_put(&orig_io_req->refcount, bnx2fc_cmd_release);
++
++	if (test_and_clear_bit(BNX2FC_FLAG_ELS_TIMEOUT, &rrq_req->req_flags)) {
++		/*
++		 * els req is timed out. cleanup the IO with FW and
++		 * drop the completion. Remove from active_cmd_queue.
++		 */
++		BNX2FC_ELS_DBG("rrq xid - 0x%x timed out, clean it up\n",
++			   rrq_req->xid);
++
++		if (rrq_req->on_active_queue) {
++			list_del_init(&rrq_req->link);
++			rrq_req->on_active_queue = 0;
++			rc = bnx2fc_initiate_cleanup(rrq_req);
++			BUG_ON(rc);
++		}
++	}
++	kfree(cb_arg);
++}
++int bnx2fc_send_rrq(struct bnx2fc_cmd *aborted_io_req)
++{
++
++	struct fc_els_rrq rrq;
++	struct bnx2fc_rport *tgt = aborted_io_req->tgt;
++	struct fc_lport *lport = tgt->rdata->local_port;
++	struct bnx2fc_els_cb_arg *cb_arg = NULL;
++	u32 sid = tgt->sid;
++	u32 r_a_tov = lport->r_a_tov;
++	unsigned long start = jiffies;
++	int rc;
++
++	BNX2FC_ELS_DBG("Sending RRQ orig_xid = 0x%x\n",
++		   aborted_io_req->xid);
++	memset(&rrq, 0, sizeof(rrq));
++
++	cb_arg = kzalloc(sizeof(struct bnx2fc_els_cb_arg), GFP_NOIO);
++	if (!cb_arg) {
++		printk(KERN_ERR PFX "Unable to allocate cb_arg for RRQ\n");
++		rc = -ENOMEM;
++		goto rrq_err;
++	}
++
++	cb_arg->aborted_io_req = aborted_io_req;
++
++	rrq.rrq_cmd = ELS_RRQ;
++	hton24(rrq.rrq_s_id, sid);
++	rrq.rrq_ox_id = htons(aborted_io_req->xid);
++	rrq.rrq_rx_id = htons(aborted_io_req->task->rx_wr_tx_rd.rx_id);
++
++retry_rrq:
++	rc = bnx2fc_initiate_els(tgt, ELS_RRQ, &rrq, sizeof(rrq),
++				 bnx2fc_rrq_compl, cb_arg,
++				 r_a_tov);
++	if (rc == -ENOMEM) {
++		if (time_after(jiffies, start + (10 * HZ))) {
++			BNX2FC_ELS_DBG("rrq Failed\n");
++			rc = FAILED;
++			goto rrq_err;
++		}
++		msleep(20);
++		goto retry_rrq;
++	}
++rrq_err:
++	if (rc) {
++		BNX2FC_ELS_DBG("RRQ failed - release orig io req 0x%x\n",
++			aborted_io_req->xid);
++		kfree(cb_arg);
++		spin_lock_bh(&tgt->tgt_lock);
++		kref_put(&aborted_io_req->refcount, bnx2fc_cmd_release);
++		spin_unlock_bh(&tgt->tgt_lock);
++	}
++	return rc;
++}
++
++static void bnx2fc_l2_els_compl(struct bnx2fc_els_cb_arg *cb_arg)
++{
++	struct bnx2fc_cmd *els_req;
++	struct bnx2fc_rport *tgt;
++	struct bnx2fc_mp_req *mp_req;
++	struct fc_frame_header *fc_hdr;
++	unsigned char *buf;
++	void *resp_buf;
++	u32 resp_len, hdr_len;
++	u16 l2_oxid;
++	int frame_len;
++	int rc = 0;
++
++	l2_oxid = cb_arg->l2_oxid;
++	BNX2FC_ELS_DBG("ELS COMPL - l2_oxid = 0x%x\n", l2_oxid);
++
++	els_req = cb_arg->io_req;
++	if (test_and_clear_bit(BNX2FC_FLAG_ELS_TIMEOUT, &els_req->req_flags)) {
++		/*
++		 * els req is timed out. cleanup the IO with FW and
++		 * drop the completion. libfc will handle the els timeout
++		 */
++		if (els_req->on_active_queue) {
++			list_del_init(&els_req->link);
++			els_req->on_active_queue = 0;
++			rc = bnx2fc_initiate_cleanup(els_req);
++			BUG_ON(rc);
++		}
++		goto free_arg;
++	}
++
++	tgt = els_req->tgt;
++	mp_req = &(els_req->mp_req);
++	fc_hdr = &(mp_req->resp_fc_hdr);
++	resp_len = mp_req->resp_len;
++	resp_buf = mp_req->resp_buf;
++
++	buf = kzalloc(PAGE_SIZE, GFP_ATOMIC);
++	if (!buf) {
++		printk(KERN_ERR PFX "Unable to alloc mp buf\n");
++		goto free_arg;
++	}
++	hdr_len = sizeof(*fc_hdr);
++	if (hdr_len + resp_len > PAGE_SIZE) {
++		printk(KERN_ERR PFX "l2_els_compl: resp len is "
++				    "beyond page size\n");
++		goto free_buf;
++	}
++	memcpy(buf, fc_hdr, hdr_len);
++	memcpy(buf + hdr_len, resp_buf, resp_len);
++	frame_len = hdr_len + resp_len;
++
++	bnx2fc_process_l2_frame_compl(tgt, buf, frame_len, l2_oxid);
++
++free_buf:
++	kfree(buf);
++free_arg:
++	kfree(cb_arg);
++}
++
++int bnx2fc_send_adisc(struct bnx2fc_rport *tgt, struct fc_frame *fp)
++{
++	struct fc_els_adisc *adisc;
++	struct fc_frame_header *fh;
++	struct bnx2fc_els_cb_arg *cb_arg;
++	struct fc_lport *lport = tgt->rdata->local_port;
++	u32 r_a_tov = lport->r_a_tov;
++	int rc;
++
++	fh = fc_frame_header_get(fp);
++	cb_arg = kzalloc(sizeof(struct bnx2fc_els_cb_arg), GFP_ATOMIC);
++	if (!cb_arg) {
++		printk(KERN_ERR PFX "Unable to allocate cb_arg for ADISC\n");
++		return -ENOMEM;
++	}
++
++	cb_arg->l2_oxid = ntohs(fh->fh_ox_id);
++
++	BNX2FC_ELS_DBG("send ADISC: l2_oxid = 0x%x\n", cb_arg->l2_oxid);
++	adisc = fc_frame_payload_get(fp, sizeof(*adisc));
++	/* adisc is initialized by libfc */
++	rc = bnx2fc_initiate_els(tgt, ELS_ADISC, adisc, sizeof(*adisc),
++				 bnx2fc_l2_els_compl, cb_arg, 2 * r_a_tov);
++	if (rc)
++		kfree(cb_arg);
++	return rc;
++}
++
++int bnx2fc_send_logo(struct bnx2fc_rport *tgt, struct fc_frame *fp)
++{
++	struct fc_els_logo *logo;
++	struct fc_frame_header *fh;
++	struct bnx2fc_els_cb_arg *cb_arg;
++	struct fc_lport *lport = tgt->rdata->local_port;
++	u32 r_a_tov = lport->r_a_tov;
++	int rc;
++
++	fh = fc_frame_header_get(fp);
++	cb_arg = kzalloc(sizeof(struct bnx2fc_els_cb_arg), GFP_ATOMIC);
++	if (!cb_arg) {
++		printk(KERN_ERR PFX "Unable to allocate cb_arg for LOGO\n");
++		return -ENOMEM;
++	}
++
++	cb_arg->l2_oxid = ntohs(fh->fh_ox_id);
++
++	BNX2FC_ELS_DBG("Send LOGO: l2_oxid = 0x%x\n", cb_arg->l2_oxid);
++	logo = fc_frame_payload_get(fp, sizeof(*logo));
++	/* logo is initialized by libfc */
++	rc = bnx2fc_initiate_els(tgt, ELS_LOGO, logo, sizeof(*logo),
++				 bnx2fc_l2_els_compl, cb_arg, 2 * r_a_tov);
++	if (rc)
++		kfree(cb_arg);
++	return rc;
++}
++
++static int bnx2fc_initiate_els(struct bnx2fc_rport *tgt, unsigned int op,
++			void *data, u32 data_len,
++			void (*cb_func)(struct bnx2fc_els_cb_arg *cb_arg),
++			struct bnx2fc_els_cb_arg *cb_arg, u32 timer_msec)
++{
++	struct bnx2fc_port *port = tgt->port;
++	struct bnx2fc_hba *hba = port->hba;
++	struct fc_rport *rport = tgt->rport;
++	struct fc_lport *lport = port->lport;
++	struct bnx2fc_cmd *els_req;
++	struct bnx2fc_mp_req *mp_req;
++	struct fc_frame_header *fc_hdr;
++	struct fcoe_task_ctx_entry *task;
++	struct fcoe_task_ctx_entry *task_page;
++	int rc = 0;
++	int task_idx, index;
++	u32 did, sid;
++	u16 xid;
++
++	rc = fc_remote_port_chkready(rport);
++	if (rc) {
++		printk(KERN_ALERT PFX "els 0x%x: rport not ready\n", op);
++		rc = -EINVAL;
++		goto els_err;
++	}
++	if (lport->state != LPORT_ST_READY || !(lport->link_up)) {
++		printk(KERN_ALERT PFX "els 0x%x: link is not ready\n", op);
++		rc = -EINVAL;
++		goto els_err;
++	}
++	if (!(test_bit(BNX2FC_FLAG_SESSION_READY, &tgt->flags)) ||
++	     (test_bit(BNX2FC_FLAG_EXPL_LOGO, &tgt->flags))) {
++		printk(KERN_ERR PFX "els 0x%x: tgt not ready\n", op);
++		rc = -EINVAL;
++		goto els_err;
++	}
++	els_req = bnx2fc_elstm_alloc(tgt, BNX2FC_ELS);
++	if (!els_req) {
++		rc = -ENOMEM;
++		goto els_err;
++	}
++
++	els_req->sc_cmd = NULL;
++	els_req->port = port;
++	els_req->tgt = tgt;
++	els_req->cb_func = cb_func;
++	cb_arg->io_req = els_req;
++	els_req->cb_arg = cb_arg;
++
++	mp_req = (struct bnx2fc_mp_req *)&(els_req->mp_req);
++	rc = bnx2fc_init_mp_req(els_req);
++	if (rc == FAILED) {
++		printk(KERN_ALERT PFX "ELS MP request init failed\n");
++		spin_lock_bh(&tgt->tgt_lock);
++		kref_put(&els_req->refcount, bnx2fc_cmd_release);
++		spin_unlock_bh(&tgt->tgt_lock);
++		goto els_err;
++	} else {
++		/* rc SUCCESS */
++		rc = 0;
++	}
++
++	/* Fill ELS Payload */
++	if ((op >= ELS_LS_RJT) && (op <= ELS_AUTH_ELS)) {
++		memcpy(mp_req->req_buf, data, data_len);
++	} else {
++		printk(KERN_ALERT PFX "Invalid ELS op 0x%x\n", op);
++		els_req->cb_func = NULL;
++		els_req->cb_arg = NULL;
++		spin_lock_bh(&tgt->tgt_lock);
++		kref_put(&els_req->refcount, bnx2fc_cmd_release);
++		spin_unlock_bh(&tgt->tgt_lock);
++		rc = -EINVAL;
++	}
++
++	if (rc)
++		goto els_err;
++
++	/* Fill FC header */
++	fc_hdr = &(mp_req->req_fc_hdr);
++
++	did = tgt->rport->port_id;
++	sid = tgt->sid;
++
++	bnx2fc_fill_fc_hdr(fc_hdr, FC_RCTL_ELS_REQ, sid, did,
++			   FC_TYPE_ELS, FC_FC_FIRST_SEQ | FC_FC_END_SEQ |
++			   FC_FC_SEQ_INIT, 0);
++
++	/* Obtain exchange id */
++	xid = els_req->xid;
++	task_idx = xid/BNX2FC_TASKS_PER_PAGE;
++	index = xid % BNX2FC_TASKS_PER_PAGE;
++
++	/* Initialize task context for this IO request */
++	task_page = (struct fcoe_task_ctx_entry *) hba->task_ctx[task_idx];
++	task = &(task_page[index]);
++	bnx2fc_init_mp_task(els_req, task);
++
++	spin_lock_bh(&tgt->tgt_lock);
++
++	if (!test_bit(BNX2FC_FLAG_SESSION_READY, &tgt->flags)) {
++		printk(KERN_ERR PFX "initiate_els.. session not ready\n");
++		els_req->cb_func = NULL;
++		els_req->cb_arg = NULL;
++		kref_put(&els_req->refcount, bnx2fc_cmd_release);
++		spin_unlock_bh(&tgt->tgt_lock);
++		return -EINVAL;
++	}
++
++	if (timer_msec)
++		bnx2fc_cmd_timer_set(els_req, timer_msec);
++	bnx2fc_add_2_sq(tgt, xid);
++
++	els_req->on_active_queue = 1;
++	list_add_tail(&els_req->link, &tgt->els_queue);
++
++	/* Ring doorbell */
++	bnx2fc_ring_doorbell(tgt);
++	spin_unlock_bh(&tgt->tgt_lock);
++
++els_err:
++	return rc;
++}
++
 +void bnx2fc_process_els_compl(struct bnx2fc_cmd *els_req,
-+			      struct fcoe_task_ctx_entry *task,
-+			      u8 num_rq);
-+void bnx2fc_build_fcp_cmnd(struct bnx2fc_cmd *io_req,
-+			   struct fcp_cmnd *fcp_cmnd);
++			      struct fcoe_task_ctx_entry *task, u8 num_rq)
++{
++	struct bnx2fc_mp_req *mp_req;
++	struct fc_frame_header *fc_hdr;
++	u64 *hdr;
++	u64 *temp_hdr;
 +
++	BNX2FC_ELS_DBG("Entered process_els_compl xid = 0x%x"
++			"cmd_type = %d\n", els_req->xid, els_req->cmd_type);
 +
++	if (test_and_set_bit(BNX2FC_FLAG_ELS_DONE,
++			     &els_req->req_flags)) {
++		BNX2FC_ELS_DBG("Timer context finished processing this "
++			   "els - 0x%x\n", els_req->xid);
++		/* This IO doesnt receive cleanup completion */
++		kref_put(&els_req->refcount, bnx2fc_cmd_release);
++		return;
++	}
 +
-+void bnx2fc_flush_active_ios(struct bnx2fc_rport *tgt);
++	/* Cancel the timeout_work, as we received the response */
++	if (cancel_delayed_work(&els_req->timeout_work))
++		kref_put(&els_req->refcount,
++			 bnx2fc_cmd_release); /* drop timer hold */
++
++	if (els_req->on_active_queue) {
++		list_del_init(&els_req->link);
++		els_req->on_active_queue = 0;
++	}
++
++	mp_req = &(els_req->mp_req);
++	fc_hdr = &(mp_req->resp_fc_hdr);
++
++	hdr = (u64 *)fc_hdr;
++	temp_hdr = (u64 *)
++		&task->cmn.general.cmd_info.mp_fc_frame.fc_hdr;
++	hdr[0] = cpu_to_be64(temp_hdr[0]);
++	hdr[1] = cpu_to_be64(temp_hdr[1]);
++	hdr[2] = cpu_to_be64(temp_hdr[2]);
++
++	mp_req->resp_len = task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_off;
++
++	/* Parse ELS response */
++	if ((els_req->cb_func) && (els_req->cb_arg)) {
++		els_req->cb_func(els_req->cb_arg);
++		els_req->cb_arg = NULL;
++	}
++
++	kref_put(&els_req->refcount, bnx2fc_cmd_release);
++}
++
++static void bnx2fc_flogi_resp(struct fc_seq *seq, struct fc_frame *fp,
++			      void *arg)
++{
++	struct fcoe_ctlr *fip = arg;
++	struct fc_exch *exch = fc_seq_exch(seq);
++	struct fc_lport *lport = exch->lp;
++	u8 *mac;
++	struct fc_frame_header *fh;
++	u8 op;
++
++	if (IS_ERR(fp))
++		goto done;
++
++	mac = fr_cb(fp)->granted_mac;
++	if (is_zero_ether_addr(mac)) {
++		fh = fc_frame_header_get(fp);
++		if (fh->fh_type != FC_TYPE_ELS) {
++			printk(KERN_ERR PFX "bnx2fc_flogi_resp:"
++				"fh_type != FC_TYPE_ELS\n");
++			fc_frame_free(fp);
++			return;
++		}
++		op = fc_frame_payload_op(fp);
++		if (lport->vport) {
++			if (op == ELS_LS_RJT) {
++				printk(KERN_ERR PFX "bnx2fc_flogi_resp is LS_RJT\n");
++				fc_vport_terminate(lport->vport);
++				fc_frame_free(fp);
++				return;
++			}
++		}
++		if (fcoe_ctlr_recv_flogi(fip, lport, fp)) {
++			fc_frame_free(fp);
++			return;
++		}
++	}
++	fip->update_mac(lport, mac);
++done:
++	fc_lport_flogi_resp(seq, fp, lport);
++}
++
++static void bnx2fc_logo_resp(struct fc_seq *seq, struct fc_frame *fp,
++			     void *arg)
++{
++	struct fcoe_ctlr *fip = arg;
++	struct fc_exch *exch = fc_seq_exch(seq);
++	struct fc_lport *lport = exch->lp;
++	static u8 zero_mac[ETH_ALEN] = { 0 };
++
++	if (!IS_ERR(fp))
++		fip->update_mac(lport, zero_mac);
++	fc_lport_logo_resp(seq, fp, lport);
++}
++
 +struct fc_seq *bnx2fc_elsct_send(struct fc_lport *lport, u32 did,
 +				      struct fc_frame *fp, unsigned int op,
 +				      void (*resp)(struct fc_seq *,
 +						   struct fc_frame *,
 +						   void *),
-+				      void *arg, u32 timeout);
-+int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt);
-+void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt, u16 wqe);
-+struct bnx2fc_rport *bnx2fc_tgt_lookup(struct bnx2fc_port *port,
-+					     u32 port_id);
-+void bnx2fc_process_l2_frame_compl(struct bnx2fc_rport *tgt,
-+				   unsigned char *buf,
-+				   u32 frame_len, u16 l2_oxid);
-+int bnx2fc_send_stat_req(struct bnx2fc_hba *hba);
++				      void *arg, u32 timeout)
++{
++	struct bnx2fc_port *port = lport_priv(lport);
++	struct bnx2fc_hba *hba = port->hba;
++	struct fcoe_ctlr *fip = &hba->ctlr;
++	struct fc_frame_header *fh = fc_frame_header_get(fp);
 +
-+#endif
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_constants.h b/drivers/scsi/bnx2fc/bnx2fc_constants.h
++	switch (op) {
++	case ELS_FLOGI:
++	case ELS_FDISC:
++		return fc_elsct_send(lport, did, fp, op, bnx2fc_flogi_resp,
++				     fip, timeout);
++	case ELS_LOGO:
++		/* only hook onto fabric logouts, not port logouts */
++		if (ntoh24(fh->fh_d_id) != FC_FID_FLOGI)
++			break;
++		return fc_elsct_send(lport, did, fp, op, bnx2fc_logo_resp,
++				     fip, timeout);
++	}
++	return fc_elsct_send(lport, did, fp, op, resp, arg, timeout);
++}
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
 new file mode 100644
-index 0000000..fe77691
+index 0000000..4f56f9a
 --- /dev/null
-+++ b/drivers/scsi/bnx2fc/bnx2fc_constants.h
-@@ -0,0 +1,206 @@
-+#ifndef __BNX2FC_CONSTANTS_H_
-+#define __BNX2FC_CONSTANTS_H_
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -0,0 +1,1909 @@
++/* bnx2fc_hwi.c: Broadcom NetXtreme II Linux FCoE offload driver.
++ * This file contains the code that low level functions that interact
++ * with 57712 FCoE firmware.
++ *
++ * Copyright (c) 2008 - 2010 Broadcom Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation.
++ *
++ * Written by: Bhanu Prakash Gollapudi (bprakash@broadcom.com)
++ */
++
++#include "bnx2fc.h"
++
++DECLARE_PER_CPU(struct fcoe_percpu_s, bnx2fc_percpu);
++
++static void bnx2fc_fastpath_notification(struct bnx2fc_hba *hba,
++					struct fcoe_kcqe *new_cqe_kcqe);
++static void bnx2fc_process_ofld_cmpl(struct bnx2fc_hba *hba,
++					struct fcoe_kcqe *ofld_kcqe);
++static void bnx2fc_process_enable_conn_cmpl(struct bnx2fc_hba *hba,
++						struct fcoe_kcqe *ofld_kcqe);
++static void bnx2fc_init_failure(struct bnx2fc_hba *hba, u32 err_code);
++static void bnx2fc_process_conn_destroy_cmpl(struct bnx2fc_hba *hba,
++					struct fcoe_kcqe *conn_destroy);
++
++int bnx2fc_send_stat_req(struct bnx2fc_hba *hba)
++{
++	struct fcoe_kwqe_stat stat_req;
++	struct kwqe *kwqe_arr[2];
++	int num_kwqes = 1;
++	int rc = 0;
++
++	memset(&stat_req, 0x00, sizeof(struct fcoe_kwqe_stat));
++	stat_req.hdr.op_code = FCOE_KWQE_OPCODE_STAT;
++	stat_req.hdr.flags =
++		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++	stat_req.stat_params_addr_lo = (u32) hba->stats_buf_dma;
++	stat_req.stat_params_addr_hi = (u32) ((u64)hba->stats_buf_dma >> 32);
++
++	kwqe_arr[0] = (struct kwqe *) &stat_req;
++
++	if (hba->cnic && hba->cnic->submit_kwqes)
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++
++	return rc;
++}
 +
 +/**
-+ * This file defines HSI constants for the FCoE flows
++ * bnx2fc_send_fw_fcoe_init_msg - initiates initial handshake with FCoE f/w
++ *
++ * @hba:	adapter structure pointer
++ *
++ * Send down FCoE firmware init KWQEs which initiates the initial handshake
++ *	with the f/w.
++ *
++ */
++int bnx2fc_send_fw_fcoe_init_msg(struct bnx2fc_hba *hba)
++{
++	struct fcoe_kwqe_init1 fcoe_init1;
++	struct fcoe_kwqe_init2 fcoe_init2;
++	struct fcoe_kwqe_init3 fcoe_init3;
++	struct kwqe *kwqe_arr[3];
++	int num_kwqes = 3;
++	int rc = 0;
++
++	if (!hba->cnic) {
++		printk(KERN_ALERT PFX "hba->cnic NULL during fcoe fw init\n");
++		return -ENODEV;
++	}
++
++	/* fill init1 KWQE */
++	memset(&fcoe_init1, 0x00, sizeof(struct fcoe_kwqe_init1));
++	fcoe_init1.hdr.op_code = FCOE_KWQE_OPCODE_INIT1;
++	fcoe_init1.hdr.flags = (FCOE_KWQE_LAYER_CODE <<
++					FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++	fcoe_init1.num_tasks = BNX2FC_MAX_TASKS;
++	fcoe_init1.sq_num_wqes = BNX2FC_SQ_WQES_MAX;
++	fcoe_init1.rq_num_wqes = BNX2FC_RQ_WQES_MAX;
++	fcoe_init1.rq_buffer_log_size = BNX2FC_RQ_BUF_LOG_SZ;
++	fcoe_init1.cq_num_wqes = BNX2FC_CQ_WQES_MAX;
++	fcoe_init1.dummy_buffer_addr_lo = (u32) hba->dummy_buf_dma;
++	fcoe_init1.dummy_buffer_addr_hi = (u32) ((u64)hba->dummy_buf_dma >> 32);
++	fcoe_init1.task_list_pbl_addr_lo = (u32) hba->task_ctx_bd_dma;
++	fcoe_init1.task_list_pbl_addr_hi =
++				(u32) ((u64) hba->task_ctx_bd_dma >> 32);
++	fcoe_init1.mtu = hba->netdev->mtu;
++
++	fcoe_init1.flags = (PAGE_SHIFT <<
++				FCOE_KWQE_INIT1_LOG_PAGE_SIZE_SHIFT);
++
++	fcoe_init1.num_sessions_log = BNX2FC_NUM_MAX_SESS_LOG;
++
++	/* fill init2 KWQE */
++	memset(&fcoe_init2, 0x00, sizeof(struct fcoe_kwqe_init2));
++	fcoe_init2.hdr.op_code = FCOE_KWQE_OPCODE_INIT2;
++	fcoe_init2.hdr.flags = (FCOE_KWQE_LAYER_CODE <<
++					FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++	fcoe_init2.hash_tbl_pbl_addr_lo = (u32) hba->hash_tbl_pbl_dma;
++	fcoe_init2.hash_tbl_pbl_addr_hi = (u32)
++					   ((u64) hba->hash_tbl_pbl_dma >> 32);
++
++	fcoe_init2.t2_hash_tbl_addr_lo = (u32) hba->t2_hash_tbl_dma;
++	fcoe_init2.t2_hash_tbl_addr_hi = (u32)
++					  ((u64) hba->t2_hash_tbl_dma >> 32);
++
++	fcoe_init2.t2_ptr_hash_tbl_addr_lo = (u32) hba->t2_hash_tbl_ptr_dma;
++	fcoe_init2.t2_ptr_hash_tbl_addr_hi = (u32)
++					((u64) hba->t2_hash_tbl_ptr_dma >> 32);
++
++	fcoe_init2.free_list_count = BNX2FC_NUM_MAX_SESS;
++
++	/* fill init3 KWQE */
++	memset(&fcoe_init3, 0x00, sizeof(struct fcoe_kwqe_init3));
++	fcoe_init3.hdr.op_code = FCOE_KWQE_OPCODE_INIT3;
++	fcoe_init3.hdr.flags = (FCOE_KWQE_LAYER_CODE <<
++					FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++	fcoe_init3.error_bit_map_lo = 0xffffffff;
++	fcoe_init3.error_bit_map_hi = 0xffffffff;
++
++
++	kwqe_arr[0] = (struct kwqe *) &fcoe_init1;
++	kwqe_arr[1] = (struct kwqe *) &fcoe_init2;
++	kwqe_arr[2] = (struct kwqe *) &fcoe_init3;
++
++	if (hba->cnic && hba->cnic->submit_kwqes)
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++
++	return rc;
++}
++int bnx2fc_send_fw_fcoe_destroy_msg(struct bnx2fc_hba *hba)
++{
++	struct fcoe_kwqe_destroy fcoe_destroy;
++	struct kwqe *kwqe_arr[2];
++	int num_kwqes = 1;
++	int rc = -1;
++
++	/* fill destroy KWQE */
++	memset(&fcoe_destroy, 0x00, sizeof(struct fcoe_kwqe_destroy));
++	fcoe_destroy.hdr.op_code = FCOE_KWQE_OPCODE_DESTROY;
++	fcoe_destroy.hdr.flags = (FCOE_KWQE_LAYER_CODE <<
++					FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++	kwqe_arr[0] = (struct kwqe *) &fcoe_destroy;
++
++	if (hba->cnic && hba->cnic->submit_kwqes)
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++	return rc;
++}
++
++/**
++ * bnx2fc_send_session_ofld_req - initiates FCoE Session offload process
++ *
++ * @port:		port structure pointer
++ * @tgt:		bnx2fc_rport structure pointer
++ */
++int bnx2fc_send_session_ofld_req(struct bnx2fc_port *port,
++					struct bnx2fc_rport *tgt)
++{
++	struct fc_lport *lport = port->lport;
++	struct bnx2fc_hba *hba = port->hba;
++	struct kwqe *kwqe_arr[4];
++	struct fcoe_kwqe_conn_offload1 ofld_req1;
++	struct fcoe_kwqe_conn_offload2 ofld_req2;
++	struct fcoe_kwqe_conn_offload3 ofld_req3;
++	struct fcoe_kwqe_conn_offload4 ofld_req4;
++	struct fc_rport_priv *rdata = tgt->rdata;
++	struct fc_rport *rport = tgt->rport;
++	int num_kwqes = 4;
++	u32 port_id;
++	int rc = 0;
++	u16 conn_id;
++
++	/* Initialize offload request 1 structure */
++	memset(&ofld_req1, 0x00, sizeof(struct fcoe_kwqe_conn_offload1));
++
++	ofld_req1.hdr.op_code = FCOE_KWQE_OPCODE_OFFLOAD_CONN1;
++	ofld_req1.hdr.flags =
++		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++
++	conn_id = (u16)tgt->fcoe_conn_id;
++	ofld_req1.fcoe_conn_id = conn_id;
++
++
++	ofld_req1.sq_addr_lo = (u32) tgt->sq_dma;
++	ofld_req1.sq_addr_hi = (u32)((u64) tgt->sq_dma >> 32);
++
++	ofld_req1.rq_pbl_addr_lo = (u32) tgt->rq_pbl_dma;
++	ofld_req1.rq_pbl_addr_hi = (u32)((u64) tgt->rq_pbl_dma >> 32);
++
++	ofld_req1.rq_first_pbe_addr_lo = (u32) tgt->rq_dma;
++	ofld_req1.rq_first_pbe_addr_hi =
++				(u32)((u64) tgt->rq_dma >> 32);
++
++	ofld_req1.rq_prod = 0x8000;
++
++	/* Initialize offload request 2 structure */
++	memset(&ofld_req2, 0x00, sizeof(struct fcoe_kwqe_conn_offload2));
++
++	ofld_req2.hdr.op_code = FCOE_KWQE_OPCODE_OFFLOAD_CONN2;
++	ofld_req2.hdr.flags =
++		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++	ofld_req2.tx_max_fc_pay_len = rdata->maxframe_size;
++
++	ofld_req2.cq_addr_lo = (u32) tgt->cq_dma;
++	ofld_req2.cq_addr_hi = (u32)((u64)tgt->cq_dma >> 32);
++
++	ofld_req2.xferq_addr_lo = (u32) tgt->xferq_dma;
++	ofld_req2.xferq_addr_hi = (u32)((u64)tgt->xferq_dma >> 32);
++
++	ofld_req2.conn_db_addr_lo = (u32)tgt->conn_db_dma;
++	ofld_req2.conn_db_addr_hi = (u32)((u64)tgt->conn_db_dma >> 32);
++
++	/* Initialize offload request 3 structure */
++	memset(&ofld_req3, 0x00, sizeof(struct fcoe_kwqe_conn_offload3));
++
++	ofld_req3.hdr.op_code = FCOE_KWQE_OPCODE_OFFLOAD_CONN3;
++	ofld_req3.hdr.flags =
++		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++	ofld_req3.vlan_tag = hba->vlan_id <<
++				FCOE_KWQE_CONN_OFFLOAD3_VLAN_ID_SHIFT;
++	ofld_req3.vlan_tag |= 3 << FCOE_KWQE_CONN_OFFLOAD3_PRIORITY_SHIFT;
++
++	port_id = fc_host_port_id(lport->host);
++	if (port_id == 0) {
++		BNX2FC_HBA_DBG(lport, "ofld_req: port_id = 0, link down?\n");
++		return -EINVAL;
++	}
++
++	/*
++	 * Store s_id of the initiator for further reference. This will
++	 * be used during disable/destroy during linkdown processing as
++	 * when the lport is reset, the port_id also is reset to 0
++	 */
++	tgt->sid = port_id;
++	ofld_req3.s_id[0] = (port_id & 0x000000FF);
++	ofld_req3.s_id[1] = (port_id & 0x0000FF00) >> 8;
++	ofld_req3.s_id[2] = (port_id & 0x00FF0000) >> 16;
++
++	port_id = rport->port_id;
++	ofld_req3.d_id[0] = (port_id & 0x000000FF);
++	ofld_req3.d_id[1] = (port_id & 0x0000FF00) >> 8;
++	ofld_req3.d_id[2] = (port_id & 0x00FF0000) >> 16;
++
++	ofld_req3.tx_total_conc_seqs = rdata->max_seq;
++
++	ofld_req3.tx_max_conc_seqs_c3 = rdata->max_seq;
++	ofld_req3.rx_max_fc_pay_len  = lport->mfs;
++
++	ofld_req3.rx_total_conc_seqs = BNX2FC_MAX_SEQS;
++	ofld_req3.rx_max_conc_seqs_c3 = BNX2FC_MAX_SEQS;
++	ofld_req3.rx_open_seqs_exch_c3 = 1;
++
++	ofld_req3.confq_first_pbe_addr_lo = tgt->confq_dma;
++	ofld_req3.confq_first_pbe_addr_hi = (u32)((u64) tgt->confq_dma >> 32);
++
++	/* set mul_n_port_ids supported flag to 0, until it is supported */
++	ofld_req3.flags = 0;
++	/*
++	ofld_req3.flags |= (((lport->send_sp_features & FC_SP_FT_MNA) ? 1:0) <<
++			    FCOE_KWQE_CONN_OFFLOAD3_B_MUL_N_PORT_IDS_SHIFT);
++	*/
++	/* Info from PLOGI response */
++	ofld_req3.flags |= (((rdata->sp_features & FC_SP_FT_EDTR) ? 1 : 0) <<
++			     FCOE_KWQE_CONN_OFFLOAD3_B_E_D_TOV_RES_SHIFT);
++
++	ofld_req3.flags |= (((rdata->sp_features & FC_SP_FT_SEQC) ? 1 : 0) <<
++			     FCOE_KWQE_CONN_OFFLOAD3_B_CONT_INCR_SEQ_CNT_SHIFT);
++
++	/* vlan flag */
++	ofld_req3.flags |= (hba->vlan_enabled <<
++			    FCOE_KWQE_CONN_OFFLOAD3_B_VLAN_FLAG_SHIFT);
++
++	/* C2_VALID and ACK flags are not set as they are not suppported */
++
++
++	/* Initialize offload request 4 structure */
++	memset(&ofld_req4, 0x00, sizeof(struct fcoe_kwqe_conn_offload4));
++	ofld_req4.hdr.op_code = FCOE_KWQE_OPCODE_OFFLOAD_CONN4;
++	ofld_req4.hdr.flags =
++		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++	ofld_req4.e_d_tov_timer_val = lport->e_d_tov / 20;
++
++
++	ofld_req4.src_mac_addr_lo32[0] =  port->data_src_addr[5];
++							/* local mac */
++	ofld_req4.src_mac_addr_lo32[1] =  port->data_src_addr[4];
++	ofld_req4.src_mac_addr_lo32[2] =  port->data_src_addr[3];
++	ofld_req4.src_mac_addr_lo32[3] =  port->data_src_addr[2];
++	ofld_req4.src_mac_addr_hi16[0] =  port->data_src_addr[1];
++	ofld_req4.src_mac_addr_hi16[1] =  port->data_src_addr[0];
++	ofld_req4.dst_mac_addr_lo32[0] =  hba->ctlr.dest_addr[5];/* fcf mac */
++	ofld_req4.dst_mac_addr_lo32[1] =  hba->ctlr.dest_addr[4];
++	ofld_req4.dst_mac_addr_lo32[2] =  hba->ctlr.dest_addr[3];
++	ofld_req4.dst_mac_addr_lo32[3] =  hba->ctlr.dest_addr[2];
++	ofld_req4.dst_mac_addr_hi16[0] =  hba->ctlr.dest_addr[1];
++	ofld_req4.dst_mac_addr_hi16[1] =  hba->ctlr.dest_addr[0];
++
++	ofld_req4.lcq_addr_lo = (u32) tgt->lcq_dma;
++	ofld_req4.lcq_addr_hi = (u32)((u64) tgt->lcq_dma >> 32);
++
++	ofld_req4.confq_pbl_base_addr_lo = (u32) tgt->confq_pbl_dma;
++	ofld_req4.confq_pbl_base_addr_hi =
++					(u32)((u64) tgt->confq_pbl_dma >> 32);
++
++	kwqe_arr[0] = (struct kwqe *) &ofld_req1;
++	kwqe_arr[1] = (struct kwqe *) &ofld_req2;
++	kwqe_arr[2] = (struct kwqe *) &ofld_req3;
++	kwqe_arr[3] = (struct kwqe *) &ofld_req4;
++
++	if (hba->cnic && hba->cnic->submit_kwqes)
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++
++	return rc;
++}
++
++/**
++ * bnx2fc_send_session_enable_req - initiates FCoE Session enablement
++ *
++ * @port:		port structure pointer
++ * @tgt:		bnx2fc_rport structure pointer
++ */
++static int bnx2fc_send_session_enable_req(struct bnx2fc_port *port,
++					struct bnx2fc_rport *tgt)
++{
++	struct kwqe *kwqe_arr[2];
++	struct bnx2fc_hba *hba = port->hba;
++	struct fcoe_kwqe_conn_enable_disable enbl_req;
++	struct fc_lport *lport = port->lport;
++	struct fc_rport *rport = tgt->rport;
++	int num_kwqes = 1;
++	int rc = 0;
++	u32 port_id;
++
++	memset(&enbl_req, 0x00,
++	       sizeof(struct fcoe_kwqe_conn_enable_disable));
++	enbl_req.hdr.op_code = FCOE_KWQE_OPCODE_ENABLE_CONN;
++	enbl_req.hdr.flags =
++		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++	enbl_req.src_mac_addr_lo32[0] =  port->data_src_addr[5];
++							/* local mac */
++	enbl_req.src_mac_addr_lo32[1] =  port->data_src_addr[4];
++	enbl_req.src_mac_addr_lo32[2] =  port->data_src_addr[3];
++	enbl_req.src_mac_addr_lo32[3] =  port->data_src_addr[2];
++	enbl_req.src_mac_addr_hi16[0] =  port->data_src_addr[1];
++	enbl_req.src_mac_addr_hi16[1] =  port->data_src_addr[0];
++
++	enbl_req.dst_mac_addr_lo32[0] =  hba->ctlr.dest_addr[5];/* fcf mac */
++	enbl_req.dst_mac_addr_lo32[1] =  hba->ctlr.dest_addr[4];
++	enbl_req.dst_mac_addr_lo32[2] =  hba->ctlr.dest_addr[3];
++	enbl_req.dst_mac_addr_lo32[3] =  hba->ctlr.dest_addr[2];
++	enbl_req.dst_mac_addr_hi16[0] =  hba->ctlr.dest_addr[1];
++	enbl_req.dst_mac_addr_hi16[1] =  hba->ctlr.dest_addr[0];
++
++	port_id = fc_host_port_id(lport->host);
++	if (port_id != tgt->sid) {
++		printk(KERN_ERR PFX "WARN: enable_req port_id = 0x%x,"
++				"sid = 0x%x\n", port_id, tgt->sid);
++		port_id = tgt->sid;
++	}
++	enbl_req.s_id[0] = (port_id & 0x000000FF);
++	enbl_req.s_id[1] = (port_id & 0x0000FF00) >> 8;
++	enbl_req.s_id[2] = (port_id & 0x00FF0000) >> 16;
++
++	port_id = rport->port_id;
++	enbl_req.d_id[0] = (port_id & 0x000000FF);
++	enbl_req.d_id[1] = (port_id & 0x0000FF00) >> 8;
++	enbl_req.d_id[2] = (port_id & 0x00FF0000) >> 16;
++	enbl_req.vlan_tag = hba->vlan_id <<
++				FCOE_KWQE_CONN_ENABLE_DISABLE_VLAN_ID_SHIFT;
++	enbl_req.vlan_tag |= 3 << FCOE_KWQE_CONN_ENABLE_DISABLE_PRIORITY_SHIFT;
++	enbl_req.vlan_flag = hba->vlan_enabled;
++	enbl_req.context_id = tgt->context_id;
++	enbl_req.conn_id = tgt->fcoe_conn_id;
++
++	kwqe_arr[0] = (struct kwqe *) &enbl_req;
++
++	if (hba->cnic && hba->cnic->submit_kwqes)
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++	return rc;
++}
++
++/**
++ * bnx2fc_send_session_disable_req - initiates FCoE Session disable
++ *
++ * @port:		port structure pointer
++ * @tgt:		bnx2fc_rport structure pointer
++ */
++int bnx2fc_send_session_disable_req(struct bnx2fc_port *port,
++				    struct bnx2fc_rport *tgt)
++{
++	struct bnx2fc_hba *hba = port->hba;
++	struct fcoe_kwqe_conn_enable_disable disable_req;
++	struct kwqe *kwqe_arr[2];
++	struct fc_rport *rport = tgt->rport;
++	int num_kwqes = 1;
++	int rc = 0;
++	u32 port_id;
++
++	memset(&disable_req, 0x00,
++	       sizeof(struct fcoe_kwqe_conn_enable_disable));
++	disable_req.hdr.op_code = FCOE_KWQE_OPCODE_DISABLE_CONN;
++	disable_req.hdr.flags =
++		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++	disable_req.src_mac_addr_lo32[0] =  port->data_src_addr[5];
++	disable_req.src_mac_addr_lo32[2] =  port->data_src_addr[3];
++	disable_req.src_mac_addr_lo32[3] =  port->data_src_addr[2];
++	disable_req.src_mac_addr_hi16[0] =  port->data_src_addr[1];
++	disable_req.src_mac_addr_hi16[1] =  port->data_src_addr[0];
++
++	disable_req.dst_mac_addr_lo32[0] =  hba->ctlr.dest_addr[5];/* fcf mac */
++	disable_req.dst_mac_addr_lo32[1] =  hba->ctlr.dest_addr[4];
++	disable_req.dst_mac_addr_lo32[2] =  hba->ctlr.dest_addr[3];
++	disable_req.dst_mac_addr_lo32[3] =  hba->ctlr.dest_addr[2];
++	disable_req.dst_mac_addr_hi16[0] =  hba->ctlr.dest_addr[1];
++	disable_req.dst_mac_addr_hi16[1] =  hba->ctlr.dest_addr[0];
++
++	port_id = tgt->sid;
++	disable_req.s_id[0] = (port_id & 0x000000FF);
++	disable_req.s_id[1] = (port_id & 0x0000FF00) >> 8;
++	disable_req.s_id[2] = (port_id & 0x00FF0000) >> 16;
++
++
++	port_id = rport->port_id;
++	disable_req.d_id[0] = (port_id & 0x000000FF);
++	disable_req.d_id[1] = (port_id & 0x0000FF00) >> 8;
++	disable_req.d_id[2] = (port_id & 0x00FF0000) >> 16;
++	disable_req.context_id = tgt->context_id;
++	disable_req.conn_id = tgt->fcoe_conn_id;
++	disable_req.vlan_tag = hba->vlan_id <<
++				FCOE_KWQE_CONN_ENABLE_DISABLE_VLAN_ID_SHIFT;
++	disable_req.vlan_tag |=
++			3 << FCOE_KWQE_CONN_ENABLE_DISABLE_PRIORITY_SHIFT;
++	disable_req.vlan_flag = hba->vlan_enabled;
++
++	kwqe_arr[0] = (struct kwqe *) &disable_req;
++
++	if (hba->cnic && hba->cnic->submit_kwqes)
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++
++	return rc;
++}
++
++/**
++ * bnx2fc_send_session_destroy_req - initiates FCoE Session destroy
++ *
++ * @port:		port structure pointer
++ * @tgt:		bnx2fc_rport structure pointer
++ */
++int bnx2fc_send_session_destroy_req(struct bnx2fc_hba *hba,
++					struct bnx2fc_rport *tgt)
++{
++	struct fcoe_kwqe_conn_destroy destroy_req;
++	struct kwqe *kwqe_arr[2];
++	int num_kwqes = 1;
++	int rc = 0;
++
++	memset(&destroy_req, 0x00, sizeof(struct fcoe_kwqe_conn_destroy));
++	destroy_req.hdr.op_code = FCOE_KWQE_OPCODE_DESTROY_CONN;
++	destroy_req.hdr.flags =
++		(FCOE_KWQE_LAYER_CODE << FCOE_KWQE_HEADER_LAYER_CODE_SHIFT);
++
++	destroy_req.context_id = tgt->context_id;
++	destroy_req.conn_id = tgt->fcoe_conn_id;
++
++	kwqe_arr[0] = (struct kwqe *) &destroy_req;
++
++	if (hba->cnic && hba->cnic->submit_kwqes)
++		rc = hba->cnic->submit_kwqes(hba->cnic, kwqe_arr, num_kwqes);
++
++	return rc;
++}
++
++void bnx2fc_process_l2_frame_compl(struct bnx2fc_rport *tgt,
++				   unsigned char *buf,
++				   u32 frame_len, u16 l2_oxid)
++{
++	struct bnx2fc_port *port = tgt->port;
++	struct bnx2fc_hba *hba = port->hba;
++	struct fc_lport *lport = port->lport;
++	struct fc_frame *fp;
++	struct fc_frame_header *fh;
++	struct fcoe_hdr *hp;
++	struct fcoe_crc_eof *cp;
++	struct fcoe_rcv_info *fr;
++	struct bnx2fc_global_s *bg;
++
++	struct sk_buff *skb;
++	unsigned int hlen;	/* header length implies the version */
++	unsigned int tlen;	/* trailer length */
++	unsigned int elen;	/* eth header, may include vlan */
++	u32 crc;
++	struct ethhdr *eh;
++
++	u32 payload_len;
++	u16 oxid;
++	int idx;
++	u8 op;
++
++	BNX2FC_TGT_DBG(tgt, "l2_frame_compl l2_oxid = 0x%x, frame_len = %d\n",
++		l2_oxid, frame_len);
++	payload_len = frame_len - sizeof(struct fc_frame_header);
++
++	fp = fc_frame_alloc(lport, payload_len);
++	if (!fp) {
++		printk(KERN_ERR PFX "fc_frame_alloc failure\n");
++		return;
++	}
++
++	fh = (struct fc_frame_header *) fc_frame_header_get(fp);
++	/* Copy FC Frame header and payload into the frame */
++	memcpy(fh, buf, frame_len);
++
++	if (l2_oxid != FC_XID_UNKNOWN)
++		fh->fh_ox_id = htons(l2_oxid);
++
++	skb = fp_skb(fp);
++
++	if ((fh->fh_r_ctl == FC_RCTL_ELS_REQ) ||
++	    (fh->fh_r_ctl == FC_RCTL_ELS_REP)) {
++
++		if (fh->fh_type == FC_TYPE_ELS) {
++			op = fc_frame_payload_op(fp);
++			if ((op == ELS_TEST) ||	(op == ELS_ESTC) ||
++			    (op == ELS_FAN) || (op == ELS_CSU)) {
++				/*
++				 * No need to reply for these
++				 * ELS requests
++				 */
++				printk(KERN_ERR PFX "dropping ELS 0x%x\n", op);
++				kfree_skb(skb);
++				return;
++			}
++		}
++		/* Pass it on to libfc for further processing */
++		elen = (hba->netdev->priv_flags & IFF_802_1Q_VLAN) ?
++			sizeof(struct vlan_ethhdr) :
++			sizeof(struct ethhdr);
++		hlen = sizeof(struct fcoe_hdr);
++		tlen = sizeof(struct fcoe_crc_eof);
++		skb->ip_summed = CHECKSUM_NONE;
++		crc = fcoe_fc_crc(fp);
++
++		if (skb_is_nonlinear(skb)) {
++			skb_frag_t *frag;
++			if (bnx2fc_get_paged_crc_eof(skb, tlen)) {
++				printk(KERN_ERR PFX "Frame crc error\n");
++				kfree_skb(skb);
++				return;
++			}
++			idx = skb_shinfo(skb)->nr_frags - 1;
++			frag = &skb_shinfo(skb)->frags[idx];
++			cp = kmap_atomic(frag->page,
++					 KM_SKB_DATA_SOFTIRQ) +
++					 frag->page_offset;
++		} else {
++			cp = (struct fcoe_crc_eof *)skb_put(skb, tlen);
++		}
++		memset(cp, 0, sizeof(*cp));
++		/*
++		 * We are supposed to receive single frame
++		 * sequences from the firmware
++		 */
++		cp->fcoe_eof = FC_EOF_T;
++		cp->fcoe_crc32 = cpu_to_le32(~crc);
++
++		if (skb_is_nonlinear(skb)) {
++			kunmap_atomic(cp, KM_SKB_DATA_SOFTIRQ);
++			cp = NULL;
++		}
++
++		skb_push(skb, hlen + elen);
++		skb_reset_mac_header(skb);
++		skb_set_network_header(skb, elen);
++		skb_set_transport_header(skb, elen+hlen);
++		skb->mac_len = elen;
++		skb->protocol = htons(ETH_P_FCOE);
++		skb->dev = hba->netdev;
++
++		/* adjust skb->data to point to fcoe_hdr */
++		skb_pull(skb, elen);
++
++		eh = eth_hdr(skb);
++		eh->h_proto = htons(ETH_P_FCOE);
++
++		/* Should we be setting eh->h_dest and h_source? */
++		memcpy(eh->h_dest, port->data_src_addr, ETH_ALEN);
++
++		hp = (struct fcoe_hdr *)skb_network_header(skb);
++		memset(hp, 0, sizeof(*hp));
++		if (FC_FCOE_VER)
++			FC_FCOE_ENCAPS_VER(hp, FC_FCOE_VER);
++
++		/* needs to be less than 0x30 - FC_SOF_N3 */
++		hp->fcoe_sof = FC_SOF_I3;
++
++		fr = fcoe_dev_from_skb(skb);
++		fr->fr_dev = lport;
++		oxid =  ntohs(fh->fh_ox_id);
++
++		bg = &bnx2fc_global;
++		spin_lock_bh(&bg->fcoe_rx_list.lock);
++
++		if (unlikely(!bg->l2_thread)) {
++			spin_unlock_bh(&bg->fcoe_rx_list.lock);
++			printk(KERN_ERR PFX "ERROR-thread is NULL\n");
++			kfree_skb(skb);
++			return;
++		}
++		__skb_queue_tail(&bg->fcoe_rx_list, skb);
++		if (bg->fcoe_rx_list.qlen == 1)
++			wake_up_process(bg->l2_thread);
++		spin_unlock_bh(&bg->fcoe_rx_list.lock);
++	} else {
++		BNX2FC_HBA_DBG(lport, "fh_r_ctl = 0x%x\n", fh->fh_r_ctl);
++		kfree_skb(skb);
++	}
++}
++
++static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
++{
++	u8 num_rq;
++	struct fcoe_err_report_entry *err_entry;
++	unsigned char *rq_data;
++	unsigned char *buf = NULL, *buf1;
++	int i;
++	u16 xid;
++	u32 frame_len, len;
++	struct bnx2fc_cmd *io_req = NULL;
++	struct fcoe_task_ctx_entry *task, *task_page;
++	struct bnx2fc_hba *hba = tgt->port->hba;
++	int task_idx, index;
++	int rc = 0;
++
++
++	BNX2FC_TGT_DBG(tgt, "Entered UNSOL COMPLETION wqe = 0x%x\n", wqe);
++	switch (wqe & FCOE_UNSOLICITED_CQE_SUBTYPE) {
++	case FCOE_UNSOLICITED_FRAME_CQE_TYPE:
++		frame_len = (wqe & FCOE_UNSOLICITED_CQE_PKT_LEN) >>
++			     FCOE_UNSOLICITED_CQE_PKT_LEN_SHIFT;
++
++		num_rq = (frame_len + BNX2FC_RQ_BUF_SZ - 1) / BNX2FC_RQ_BUF_SZ;
++
++		rq_data = (unsigned char *)bnx2fc_get_next_rqe(tgt, num_rq);
++		if (rq_data) {
++			buf = rq_data;
++		} else {
++			buf1 = buf = kmalloc((num_rq * BNX2FC_RQ_BUF_SZ),
++					      GFP_ATOMIC);
++			for (i = 0; i < num_rq; i++) {
++				rq_data = (unsigned char *)
++					   bnx2fc_get_next_rqe(tgt, 1);
++				len = BNX2FC_RQ_BUF_SZ;
++				memcpy(buf1, rq_data, len);
++				buf1 += len;
++			}
++		}
++		bnx2fc_process_l2_frame_compl(tgt, buf, frame_len,
++					      FC_XID_UNKNOWN);
++
++		if (buf != rq_data)
++			kfree(buf);
++		bnx2fc_return_rqe(tgt, num_rq);
++		break;
++
++	case FCOE_ERROR_DETECTION_CQE_TYPE:
++		/*
++		 *In case of error reporting CQE a single RQ entry
++		 * is consumes.
++		 */
++		spin_lock_bh(&tgt->tgt_lock);
++		num_rq = 1;
++		err_entry = (struct fcoe_err_report_entry *)
++			     bnx2fc_get_next_rqe(tgt, 1);
++		xid = err_entry->fc_hdr.ox_id;
++		BNX2FC_TGT_DBG(tgt, "Unsol Error Frame OX_ID = 0x%x\n", xid);
++		BNX2FC_TGT_DBG(tgt, "err_warn_bitmap = %08x:%08x\n",
++			err_entry->err_warn_bitmap_hi,
++			err_entry->err_warn_bitmap_lo);
++		BNX2FC_TGT_DBG(tgt, "buf_offsets - tx = 0x%x, rx = 0x%x\n",
++			err_entry->tx_buf_off, err_entry->rx_buf_off);
++
++		task_idx = xid / BNX2FC_TASKS_PER_PAGE;
++		index = xid % BNX2FC_TASKS_PER_PAGE;
++		task_page = (struct fcoe_task_ctx_entry *)
++						hba->task_ctx[task_idx];
++		task = &(task_page[index]);
++
++		io_req = (struct bnx2fc_cmd *)hba->cmd_mgr->cmds[xid];
++		if (!io_req) {
++			spin_unlock_bh(&tgt->tgt_lock);
++			break;
++		}
++
++		if (io_req->cmd_type != BNX2FC_SCSI_CMD) {
++			printk(KERN_ERR PFX "err_warn: Not a SCSI cmd\n");
++			spin_unlock_bh(&tgt->tgt_lock);
++			break;
++		}
++
++		if (test_and_clear_bit(BNX2FC_FLAG_IO_CLEANUP,
++				       &io_req->req_flags)) {
++			BNX2FC_IO_DBG(io_req, "unsol_err: cleanup in "
++					    "progress.. ignore unsol err\n");
++			spin_unlock_bh(&tgt->tgt_lock);
++			break;
++		}
++
++		/*
++		 * If ABTS is already in progress, and FW error is
++		 * received after that, do not cancel the timeout_work
++		 * and let the error recovery continue by explicitly
++		 * logging out the target, when the ABTS eventually
++		 * times out.
++		 */
++		if (!test_and_set_bit(BNX2FC_FLAG_ISSUE_ABTS,
++				      &io_req->req_flags)) {
++			/*
++			 * Cancel the timeout_work, as we received IO
++			 * completion with FW error.
++			 */
++			if (cancel_delayed_work(&io_req->timeout_work))
++				kref_put(&io_req->refcount,
++					 bnx2fc_cmd_release); /* timer hold */
++
++			rc = bnx2fc_initiate_abts(io_req);
++			if (rc != SUCCESS) {
++				BNX2FC_IO_DBG(io_req, "err_warn: initiate_abts "
++					"failed. issue cleanup\n");
++				rc = bnx2fc_initiate_cleanup(io_req);
++				BUG_ON(rc);
++			}
++		} else
++			printk(KERN_ERR PFX "err_warn: io_req (0x%x) already "
++					    "in ABTS processing\n", xid);
++		spin_unlock_bh(&tgt->tgt_lock);
++		break;
++
++	case FCOE_WARNING_DETECTION_CQE_TYPE:
++		/*
++		 *In case of warning reporting CQE a single RQ entry
++		 * is consumes.
++		 */
++		num_rq = 1;
++		err_entry = (struct fcoe_err_report_entry *)
++			     bnx2fc_get_next_rqe(tgt, 1);
++		xid = cpu_to_be16(err_entry->fc_hdr.ox_id);
++		BNX2FC_TGT_DBG(tgt, "Unsol Warning Frame OX_ID = 0x%x\n", xid);
++		BNX2FC_TGT_DBG(tgt, "err_warn_bitmap = %08x:%08x",
++			err_entry->err_warn_bitmap_hi,
++			err_entry->err_warn_bitmap_lo);
++		BNX2FC_TGT_DBG(tgt, "buf_offsets - tx = 0x%x, rx = 0x%x",
++			err_entry->tx_buf_off, err_entry->rx_buf_off);
++
++		break;
++
++	default:
++		printk(KERN_ERR PFX "Unsol Compl: Invalid CQE Subtype\n");
++		break;
++	}
++}
++
++void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt, u16 wqe)
++{
++	struct fcoe_task_ctx_entry *task;
++	struct fcoe_task_ctx_entry *task_page;
++	struct bnx2fc_port *port = tgt->port;
++	struct bnx2fc_hba *hba = port->hba;
++	struct bnx2fc_cmd *io_req;
++	int task_idx, index;
++	u16 xid;
++	u8  cmd_type;
++	u8 rx_state = 0;
++	u8 num_rq;
++
++	spin_lock_bh(&tgt->tgt_lock);
++	xid = wqe & FCOE_PEND_WQ_CQE_TASK_ID;
++	if (xid >= BNX2FC_MAX_TASKS) {
++		printk(KERN_ALERT PFX "ERROR:xid out of range\n");
++		spin_unlock_bh(&tgt->tgt_lock);
++		return;
++	}
++	task_idx = xid / BNX2FC_TASKS_PER_PAGE;
++	index = xid % BNX2FC_TASKS_PER_PAGE;
++	task_page = (struct fcoe_task_ctx_entry *)hba->task_ctx[task_idx];
++	task = &(task_page[index]);
++
++	num_rq = ((task->rx_wr_tx_rd.rx_flags &
++		   FCOE_TASK_CTX_ENTRY_RXWR_TXRD_NUM_RQ_WQE) >>
++		   FCOE_TASK_CTX_ENTRY_RXWR_TXRD_NUM_RQ_WQE_SHIFT);
++
++	io_req = (struct bnx2fc_cmd *)hba->cmd_mgr->cmds[xid];
++
++	if (io_req == NULL) {
++		printk(KERN_ERR PFX "ERROR? cq_compl - io_req is NULL\n");
++		spin_unlock_bh(&tgt->tgt_lock);
++		return;
++	}
++
++	/* Timestamp IO completion time */
++	cmd_type = io_req->cmd_type;
++
++	/* optimized completion path */
++	if (cmd_type == BNX2FC_SCSI_CMD) {
++		rx_state = ((task->rx_wr_tx_rd.rx_flags &
++			    FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RX_STATE) >>
++			    FCOE_TASK_CTX_ENTRY_RXWR_TXRD_RX_STATE_SHIFT);
++
++		if (rx_state == FCOE_TASK_RX_STATE_COMPLETED) {
++			bnx2fc_process_scsi_cmd_compl(io_req, task, num_rq);
++			spin_unlock_bh(&tgt->tgt_lock);
++			return;
++		}
++	}
++
++	/* Process other IO completion types */
++	switch (cmd_type) {
++	case BNX2FC_SCSI_CMD:
++		if (rx_state == FCOE_TASK_RX_STATE_ABTS_COMPLETED)
++			bnx2fc_process_abts_compl(io_req, task, num_rq);
++		else if (rx_state ==
++			 FCOE_TASK_RX_STATE_EXCHANGE_CLEANUP_COMPLETED)
++			bnx2fc_process_cleanup_compl(io_req, task, num_rq);
++		else
++			printk(KERN_ERR PFX "Invalid rx state - %d\n",
++				rx_state);
++		break;
++
++	case BNX2FC_TASK_MGMT_CMD:
++		BNX2FC_IO_DBG(io_req, "Processing TM complete\n");
++		bnx2fc_process_tm_compl(io_req, task, num_rq);
++		break;
++
++	case BNX2FC_ABTS:
++		/*
++		 * ABTS request received by firmware. ABTS response
++		 * will be delivered to the task belonging to the IO
++		 * that was aborted
++		 */
++		BNX2FC_IO_DBG(io_req, "cq_compl- ABTS sent out by fw\n");
++		kref_put(&io_req->refcount, bnx2fc_cmd_release);
++		break;
++
++	case BNX2FC_ELS:
++		BNX2FC_IO_DBG(io_req, "cq_compl - call process_els_compl\n");
++		bnx2fc_process_els_compl(io_req, task, num_rq);
++		break;
++
++	case BNX2FC_CLEANUP:
++		BNX2FC_IO_DBG(io_req, "cq_compl- cleanup resp rcvd\n");
++		kref_put(&io_req->refcount, bnx2fc_cmd_release);
++		break;
++
++	default:
++		printk(KERN_ERR PFX "Invalid cmd_type %d\n", cmd_type);
++		break;
++	}
++	spin_unlock_bh(&tgt->tgt_lock);
++}
++
++struct bnx2fc_work *bnx2fc_alloc_work(struct bnx2fc_rport *tgt, u16 wqe)
++{
++	struct bnx2fc_work *work;
++	work = kzalloc(sizeof(struct bnx2fc_work), GFP_ATOMIC);
++	if (!work)
++		return NULL;
++
++	INIT_LIST_HEAD(&work->list);
++	work->tgt = tgt;
++	work->wqe = wqe;
++	return work;
++}
++
++int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt)
++{
++	struct fcoe_cqe *cq;
++	u32 cq_cons;
++	struct fcoe_cqe *cqe;
++	u16 wqe;
++	bool more_cqes_found = false;
++
++	/*
++	 * cq_lock is a low contention lock used to protect
++	 * the CQ data structure from being freed up during
++	 * the upload operation
++	 */
++	spin_lock_bh(&tgt->cq_lock);
++
++	if (!tgt->cq) {
++		printk(KERN_ERR PFX "process_new_cqes: cq is NULL\n");
++		spin_unlock_bh(&tgt->cq_lock);
++		return 0;
++	}
++	cq = tgt->cq;
++	cq_cons = tgt->cq_cons_idx;
++	cqe = &cq[cq_cons];
++
++	do {
++		more_cqes_found ^= true;
++
++		while (((wqe = cqe->wqe) & FCOE_CQE_TOGGLE_BIT) ==
++		       (tgt->cq_curr_toggle_bit <<
++		       FCOE_CQE_TOGGLE_BIT_SHIFT)) {
++
++			/* new entry on the cq */
++			if (wqe & FCOE_CQE_CQE_TYPE) {
++				/* Unsolicited event notification */
++				bnx2fc_process_unsol_compl(tgt, wqe);
++			} else {
++				struct bnx2fc_work *work = NULL;
++				struct fcoe_percpu_s *fps = NULL;
++				unsigned int cpu = wqe % num_possible_cpus();
++
++				fps = &per_cpu(bnx2fc_percpu, cpu);
++				spin_lock_bh(&fps->fp_work_lock);
++				if (unlikely(!fps->thread))
++					goto unlock;
++
++				work =  bnx2fc_alloc_work(tgt, wqe);
++				if (!work)
++					goto unlock;
++
++				list_add_tail(&work->list, &fps->work_list);
++unlock:
++				spin_unlock_bh(&fps->fp_work_lock);
++
++				/* Pending work request completion */
++				if (fps->thread && work)
++					wake_up_process(fps->thread);
++				else
++					bnx2fc_process_cq_compl(tgt, wqe);
++			}
++			cqe++;
++			tgt->cq_cons_idx++;
++
++			if (tgt->cq_cons_idx == BNX2FC_CQ_WQES_MAX) {
++				tgt->cq_cons_idx = 0;
++				cqe = cq;
++				tgt->cq_curr_toggle_bit =
++					1 - tgt->cq_curr_toggle_bit;
++			}
++		}
++		/* Re-arm CQ */
++		if (more_cqes_found) {
++			tgt->conn_db->cq_arm.lo = -1;
++			wmb();
++		}
++	} while (more_cqes_found);
++
++	/*
++	 * Commit tgt->cq_cons_idx change to the memory
++	 * spin_lock implies full memory barrier, no need to smp_wmb
++	 */
++
++	spin_unlock_bh(&tgt->cq_lock);
++	return 0;
++}
++
++/**
++ * bnx2fc_fastpath_notification - process global event queue (KCQ)
++ *
++ * @hba:		adapter structure pointer
++ * @new_cqe_kcqe:	pointer to newly DMA'd KCQ entry
++ *
++ * Fast path event notification handler
++ */
++static void bnx2fc_fastpath_notification(struct bnx2fc_hba *hba,
++					struct fcoe_kcqe *new_cqe_kcqe)
++{
++	u32 conn_id = new_cqe_kcqe->fcoe_conn_id;
++	struct bnx2fc_rport *tgt = hba->tgt_ofld_list[conn_id];
++
++	if (!tgt) {
++		printk(KERN_ALERT PFX "conn_id 0x%x not valid\n", conn_id);
++		return;
++	}
++
++	bnx2fc_process_new_cqes(tgt);
++}
++
++/**
++ * bnx2fc_process_ofld_cmpl - process FCoE session offload completion
++ *
++ * @hba:	adapter structure pointer
++ * @ofld_kcqe:	connection offload kcqe pointer
++ *
++ * handle session offload completion, enable the session if offload is
++ * successful.
++ */
++static void bnx2fc_process_ofld_cmpl(struct bnx2fc_hba *hba,
++					struct fcoe_kcqe *ofld_kcqe)
++{
++	struct bnx2fc_rport		*tgt;
++	struct bnx2fc_port		*port;
++	u32				conn_id;
++	u32				context_id;
++	int				rc;
++
++	conn_id = ofld_kcqe->fcoe_conn_id;
++	context_id = ofld_kcqe->fcoe_conn_context_id;
++	tgt = hba->tgt_ofld_list[conn_id];
++	if (!tgt) {
++		printk(KERN_ALERT PFX "ERROR:ofld_cmpl: No pending ofld req\n");
++		return;
++	}
++	BNX2FC_TGT_DBG(tgt, "Entered ofld compl - context_id = 0x%x\n",
++		ofld_kcqe->fcoe_conn_context_id);
++	port = tgt->port;
++	if (hba != tgt->port->hba) {
++		printk(KERN_ALERT PFX "ERROR:ofld_cmpl: HBA mis-match\n");
++		goto ofld_cmpl_err;
++	}
++	/*
++	 * cnic has allocated a context_id for this session; use this
++	 * while enabling the session.
++	 */
++	tgt->context_id = context_id;
++	if (ofld_kcqe->completion_status) {
++		if (ofld_kcqe->completion_status ==
++				FCOE_KCQE_COMPLETION_STATUS_CTX_ALLOC_FAILURE) {
++			printk(KERN_ERR PFX "unable to allocate FCoE context "
++				"resources\n");
++			set_bit(BNX2FC_FLAG_CTX_ALLOC_FAILURE, &tgt->flags);
++		}
++		goto ofld_cmpl_err;
++	} else {
++
++		/* now enable the session */
++		rc = bnx2fc_send_session_enable_req(port, tgt);
++		if (rc) {
++			printk(KERN_ALERT PFX "enable session failed\n");
++			goto ofld_cmpl_err;
++		}
++	}
++	return;
++ofld_cmpl_err:
++	set_bit(BNX2FC_FLAG_OFLD_REQ_CMPL, &tgt->flags);
++	wake_up_interruptible(&tgt->ofld_wait);
++}
++
++/**
++ * bnx2fc_process_enable_conn_cmpl - process FCoE session enable completion
++ *
++ * @hba:	adapter structure pointer
++ * @ofld_kcqe:	connection offload kcqe pointer
++ *
++ * handle session enable completion, mark the rport as ready
 + */
 +
-+/* KWQ/KCQ FCoE layer code */
-+#define FCOE_KWQE_LAYER_CODE   (7)
++static void bnx2fc_process_enable_conn_cmpl(struct bnx2fc_hba *hba,
++						struct fcoe_kcqe *ofld_kcqe)
++{
++	struct bnx2fc_rport		*tgt;
++	u32				conn_id;
++	u32				context_id;
 +
-+/* KWQ (kernel work queue) request op codes */
-+#define FCOE_KWQE_OPCODE_INIT1			(0)
-+#define FCOE_KWQE_OPCODE_INIT2			(1)
-+#define FCOE_KWQE_OPCODE_INIT3			(2)
-+#define FCOE_KWQE_OPCODE_OFFLOAD_CONN1	(3)
-+#define FCOE_KWQE_OPCODE_OFFLOAD_CONN2	(4)
-+#define FCOE_KWQE_OPCODE_OFFLOAD_CONN3	(5)
-+#define FCOE_KWQE_OPCODE_OFFLOAD_CONN4	(6)
-+#define FCOE_KWQE_OPCODE_ENABLE_CONN	(7)
-+#define FCOE_KWQE_OPCODE_DISABLE_CONN	(8)
-+#define FCOE_KWQE_OPCODE_DESTROY_CONN	(9)
-+#define FCOE_KWQE_OPCODE_DESTROY		(10)
-+#define FCOE_KWQE_OPCODE_STAT			(11)
++	context_id = ofld_kcqe->fcoe_conn_context_id;
++	conn_id = ofld_kcqe->fcoe_conn_id;
++	tgt = hba->tgt_ofld_list[conn_id];
++	if (!tgt) {
++		printk(KERN_ALERT PFX "ERROR:enbl_cmpl: No pending ofld req\n");
++		return;
++	}
 +
-+/* KCQ (kernel completion queue) response op codes */
-+#define FCOE_KCQE_OPCODE_INIT_FUNC				(0x10)
-+#define FCOE_KCQE_OPCODE_DESTROY_FUNC			(0x11)
-+#define FCOE_KCQE_OPCODE_STAT_FUNC				(0x12)
-+#define FCOE_KCQE_OPCODE_OFFLOAD_CONN			(0x15)
-+#define FCOE_KCQE_OPCODE_ENABLE_CONN			(0x16)
-+#define FCOE_KCQE_OPCODE_DISABLE_CONN			(0x17)
-+#define FCOE_KCQE_OPCODE_DESTROY_CONN			(0x18)
-+#define FCOE_KCQE_OPCODE_CQ_EVENT_NOTIFICATION  (0x20)
-+#define FCOE_KCQE_OPCODE_FCOE_ERROR				(0x21)
++	BNX2FC_TGT_DBG(tgt, "Enable compl - context_id = 0x%x\n",
++		ofld_kcqe->fcoe_conn_context_id);
 +
-+/* KCQ (kernel completion queue) completion status */
-+#define FCOE_KCQE_COMPLETION_STATUS_SUCCESS				(0x0)
-+#define FCOE_KCQE_COMPLETION_STATUS_ERROR				(0x1)
-+#define FCOE_KCQE_COMPLETION_STATUS_INVALID_OPCODE		(0x2)
-+#define FCOE_KCQE_COMPLETION_STATUS_CTX_ALLOC_FAILURE	(0x3)
-+#define FCOE_KCQE_COMPLETION_STATUS_CTX_FREE_FAILURE	(0x4)
-+#define FCOE_KCQE_COMPLETION_STATUS_NIC_ERROR			(0x5)
++	/*
++	 * context_id should be the same for this target during offload
++	 * and enable
++	 */
++	if (tgt->context_id != context_id) {
++		printk(KERN_ALERT PFX "context id mis-match\n");
++		return;
++	}
++	if (hba != tgt->port->hba) {
++		printk(KERN_ALERT PFX "bnx2fc-enbl_cmpl: HBA mis-match\n");
++		goto enbl_cmpl_err;
++	}
++	if (ofld_kcqe->completion_status) {
++		goto enbl_cmpl_err;
++	} else {
++		/* enable successful - rport ready for issuing IOs */
++		set_bit(BNX2FC_FLAG_OFFLOADED, &tgt->flags);
++		set_bit(BNX2FC_FLAG_OFLD_REQ_CMPL, &tgt->flags);
++		wake_up_interruptible(&tgt->ofld_wait);
++	}
++	return;
 +
-+/* Unsolicited CQE type */
-+#define FCOE_UNSOLICITED_FRAME_CQE_TYPE			0
-+#define FCOE_ERROR_DETECTION_CQE_TYPE			1
-+#define FCOE_WARNING_DETECTION_CQE_TYPE			2
++enbl_cmpl_err:
++	set_bit(BNX2FC_FLAG_OFLD_REQ_CMPL, &tgt->flags);
++	wake_up_interruptible(&tgt->ofld_wait);
++}
 +
-+/* Task context constants */
-+/* After driver has initialize the task in case timer services required */
-+#define	FCOE_TASK_TX_STATE_INIT					0
-+/* In case timer services are required then shall be updated by Xstorm after
-+ * start processing the task. In case no timer facilities are required then the
-+ * driver would initialize the state to this value */
-+#define	FCOE_TASK_TX_STATE_NORMAL				1
-+/* Task is under abort procedure. Updated in order to stop processing of
-+ * pending WQEs on this task */
-+#define	FCOE_TASK_TX_STATE_ABORT				2
-+/* For E_D_T_TOV timer expiration in Xstorm (Class 2 only) */
-+#define	FCOE_TASK_TX_STATE_ERROR				3
-+/* For REC_TOV timer expiration indication received from Xstorm */
-+#define	FCOE_TASK_TX_STATE_WARNING				4
-+/* For completed unsolicited task */
-+#define	FCOE_TASK_TX_STATE_UNSOLICITED_COMPLETED		5
-+/* For exchange cleanup request task */
-+#define	FCOE_TASK_TX_STATE_EXCHANGE_CLEANUP			6
-+/* For sequence cleanup request task */
-+#define	FCOE_TASK_TX_STATE_SEQUENCE_CLEANUP			7
-+/* Mark task as aborted and indicate that ABTS was not transmitted */
-+#define	FCOE_TASK_TX_STATE_BEFORE_ABTS_TX			8
-+/* Mark task as aborted and indicate that ABTS was transmitted */
-+#define	FCOE_TASK_TX_STATE_AFTER_ABTS_TX			9
-+/* For completion the ABTS task. */
-+#define	FCOE_TASK_TX_STATE_ABTS_TX_COMPLETED			10
-+/* Mark task as aborted and indicate that Exchange cleanup was not transmitted
++static void bnx2fc_process_conn_disable_cmpl(struct bnx2fc_hba *hba,
++					struct fcoe_kcqe *disable_kcqe)
++{
++
++	struct bnx2fc_rport		*tgt;
++	u32				conn_id;
++
++	conn_id = disable_kcqe->fcoe_conn_id;
++	tgt = hba->tgt_ofld_list[conn_id];
++	if (!tgt) {
++		printk(KERN_ALERT PFX "ERROR: disable_cmpl: No disable req\n");
++		return;
++	}
++
++	BNX2FC_TGT_DBG(tgt, PFX "disable_cmpl: conn_id %d\n", conn_id);
++
++	if (disable_kcqe->completion_status) {
++		printk(KERN_ALERT PFX "ERROR: Disable failed with cmpl status %d\n",
++			disable_kcqe->completion_status);
++		return;
++	} else {
++		/* disable successful */
++		BNX2FC_TGT_DBG(tgt, "disable successful\n");
++		clear_bit(BNX2FC_FLAG_OFFLOADED, &tgt->flags);
++		set_bit(BNX2FC_FLAG_DISABLED, &tgt->flags);
++		set_bit(BNX2FC_FLAG_UPLD_REQ_COMPL, &tgt->flags);
++		wake_up_interruptible(&tgt->upld_wait);
++	}
++}
++
++static void bnx2fc_process_conn_destroy_cmpl(struct bnx2fc_hba *hba,
++					struct fcoe_kcqe *destroy_kcqe)
++{
++	struct bnx2fc_rport		*tgt;
++	u32				conn_id;
++
++	conn_id = destroy_kcqe->fcoe_conn_id;
++	tgt = hba->tgt_ofld_list[conn_id];
++	if (!tgt) {
++		printk(KERN_ALERT PFX "destroy_cmpl: No destroy req\n");
++		return;
++	}
++
++	BNX2FC_TGT_DBG(tgt, "destroy_cmpl: conn_id %d\n", conn_id);
++
++	if (destroy_kcqe->completion_status) {
++		printk(KERN_ALERT PFX "Destroy conn failed, cmpl status %d\n",
++			destroy_kcqe->completion_status);
++		return;
++	} else {
++		/* destroy successful */
++		BNX2FC_TGT_DBG(tgt, "upload successful\n");
++		clear_bit(BNX2FC_FLAG_DISABLED, &tgt->flags);
++		set_bit(BNX2FC_FLAG_DESTROYED, &tgt->flags);
++		set_bit(BNX2FC_FLAG_UPLD_REQ_COMPL, &tgt->flags);
++		wake_up_interruptible(&tgt->upld_wait);
++	}
++}
++
++static void bnx2fc_init_failure(struct bnx2fc_hba *hba, u32 err_code)
++{
++	switch (err_code) {
++	case FCOE_KCQE_COMPLETION_STATUS_INVALID_OPCODE:
++		printk(KERN_ERR PFX "init_failure due to invalid opcode\n");
++		break;
++
++	case FCOE_KCQE_COMPLETION_STATUS_CTX_ALLOC_FAILURE:
++		printk(KERN_ERR PFX "init failed due to ctx alloc failure\n");
++		break;
++
++	case FCOE_KCQE_COMPLETION_STATUS_NIC_ERROR:
++		printk(KERN_ERR PFX "init_failure due to NIC error\n");
++		break;
++
++	default:
++		printk(KERN_ERR PFX "Unknown Error code %d\n", err_code);
++	}
++}
++
++/**
++ * bnx2fc_indicae_kcqe - process KCQE
++ *
++ * @hba:	adapter structure pointer
++ * @kcqe:	kcqe pointer
++ * @num_cqe:	Number of completion queue elements
++ *
++ * Generic KCQ event handler
 + */
-+#define	FCOE_TASK_TX_STATE_BEFORE_EXCHANGE_CLEANUP_TX		11
-+/* Mark task as aborted and indicate that Exchange cleanup was transmitted */
-+#define	FCOE_TASK_TX_STATE_AFTER_EXCHANGE_CLEANUP_TX		12
++void bnx2fc_indicate_kcqe(void *context, struct kcqe *kcq[],
++					u32 num_cqe)
++{
++	struct bnx2fc_hba *hba = (struct bnx2fc_hba *)context;
++	int i = 0;
++	struct fcoe_kcqe *kcqe = NULL;
 +
-+#define	FCOE_TASK_RX_STATE_NORMAL				0
-+#define	FCOE_TASK_RX_STATE_COMPLETED				1
-+/* Obsolete: Intermediate completion (middle path with local completion) */
-+#define	FCOE_TASK_RX_STATE_INTER_COMP				2
-+/* For REC_TOV timer expiration indication received from Xstorm */
-+#define	FCOE_TASK_RX_STATE_WARNING				3
-+/* For E_D_T_TOV timer expiration in Ustorm */
-+#define	FCOE_TASK_RX_STATE_ERROR				4
-+/* ABTS ACC arrived wait for local completion to finally complete the task. */
-+#define	FCOE_TASK_RX_STATE_ABTS_ACC_ARRIVED			5
-+/* local completion arrived wait for ABTS ACC to finally complete the task. */
-+#define	FCOE_TASK_RX_STATE_ABTS_LOCAL_COMP_ARRIVED		6
-+/* Special completion indication in case of task was aborted. */
-+#define FCOE_TASK_RX_STATE_ABTS_COMPLETED			7
-+/* Special completion indication in case of task was cleaned. */
-+#define FCOE_TASK_RX_STATE_EXCHANGE_CLEANUP_COMPLETED		8
-+/* Special completion indication (in task requested the exchange cleanup) in
-+ * case cleaned task is in non-valid. */
-+#define FCOE_TASK_RX_STATE_ABORT_CLEANUP_COMPLETED		9
-+/* Special completion indication (in task requested the sequence cleanup) in
-+ * case cleaned task was already returned to normal. */
-+#define FCOE_TASK_RX_STATE_IGNORED_SEQUENCE_CLEANUP		10
-+/* Exchange cleanup arrived wait until xfer will be handled to finally
-+ * complete the task. */
-+#define	FCOE_TASK_RX_STATE_EXCHANGE_CLEANUP_ARRIVED		11
-+/* Xfer handled, wait for exchange cleanup to finally complete the task. */
-+#define	FCOE_TASK_RX_STATE_EXCHANGE_CLEANUP_HANDLED_XFER	12
++	while (i < num_cqe) {
++		kcqe = (struct fcoe_kcqe *) kcq[i++];
 +
-+#define	FCOE_TASK_TYPE_WRITE			0
-+#define	FCOE_TASK_TYPE_READ				1
-+#define	FCOE_TASK_TYPE_MIDPATH			2
-+#define	FCOE_TASK_TYPE_UNSOLICITED		3
-+#define	FCOE_TASK_TYPE_ABTS				4
-+#define	FCOE_TASK_TYPE_EXCHANGE_CLEANUP	5
-+#define	FCOE_TASK_TYPE_SEQUENCE_CLEANUP	6
++		switch (kcqe->op_code) {
++		case FCOE_KCQE_OPCODE_CQ_EVENT_NOTIFICATION:
++			bnx2fc_fastpath_notification(hba, kcqe);
++			break;
 +
-+#define FCOE_TASK_DEV_TYPE_DISK			0
-+#define FCOE_TASK_DEV_TYPE_TAPE			1
++		case FCOE_KCQE_OPCODE_OFFLOAD_CONN:
++			bnx2fc_process_ofld_cmpl(hba, kcqe);
++			break;
 +
-+#define FCOE_TASK_CLASS_TYPE_3			0
-+#define FCOE_TASK_CLASS_TYPE_2			1
++		case FCOE_KCQE_OPCODE_ENABLE_CONN:
++			bnx2fc_process_enable_conn_cmpl(hba, kcqe);
++			break;
 +
-+/* Everest FCoE connection type */
-+#define B577XX_FCOE_CONNECTION_TYPE		4
++		case FCOE_KCQE_OPCODE_INIT_FUNC:
++			if (kcqe->completion_status !=
++					FCOE_KCQE_COMPLETION_STATUS_SUCCESS) {
++				bnx2fc_init_failure(hba,
++						kcqe->completion_status);
++			} else {
++				set_bit(ADAPTER_STATE_UP, &hba->adapter_state);
++				bnx2fc_get_link_state(hba);
++				printk(KERN_INFO PFX "[%.2x]: FCOE_INIT passed\n",
++					(u8)hba->pcidev->bus->number);
++			}
++			break;
 +
-+/* Error codes for Error Reporting in fast path flows */
-+/* XFER error codes */
-+#define FCOE_ERROR_CODE_XFER_OOO_RO					0
-+#define FCOE_ERROR_CODE_XFER_RO_NOT_ALIGNED				1
-+#define FCOE_ERROR_CODE_XFER_NULL_BURST_LEN				2
-+#define FCOE_ERROR_CODE_XFER_RO_GREATER_THAN_DATA2TRNS			3
-+#define FCOE_ERROR_CODE_XFER_INVALID_PAYLOAD_SIZE			4
-+#define FCOE_ERROR_CODE_XFER_TASK_TYPE_NOT_WRITE			5
-+#define FCOE_ERROR_CODE_XFER_PEND_XFER_SET				6
-+#define FCOE_ERROR_CODE_XFER_OPENED_SEQ					7
-+#define FCOE_ERROR_CODE_XFER_FCTL					8
++		case FCOE_KCQE_OPCODE_DESTROY_FUNC:
++			if (kcqe->completion_status !=
++					FCOE_KCQE_COMPLETION_STATUS_SUCCESS) {
 +
-+/* FCP RSP error codes */
-+#define FCOE_ERROR_CODE_FCP_RSP_BIDI_FLAGS_SET				9
-+#define FCOE_ERROR_CODE_FCP_RSP_UNDERFLOW				10
-+#define FCOE_ERROR_CODE_FCP_RSP_OVERFLOW				11
-+#define FCOE_ERROR_CODE_FCP_RSP_INVALID_LENGTH_FIELD			12
-+#define FCOE_ERROR_CODE_FCP_RSP_INVALID_SNS_FIELD			13
-+#define FCOE_ERROR_CODE_FCP_RSP_INVALID_PAYLOAD_SIZE			14
-+#define FCOE_ERROR_CODE_FCP_RSP_PEND_XFER_SET				15
-+#define FCOE_ERROR_CODE_FCP_RSP_OPENED_SEQ				16
-+#define FCOE_ERROR_CODE_FCP_RSP_FCTL					17
-+#define FCOE_ERROR_CODE_FCP_RSP_LAST_SEQ_RESET				18
-+#define FCOE_ERROR_CODE_FCP_RSP_CONF_REQ_NOT_SUPPORTED_YET		19
++				printk(KERN_ERR PFX "DESTROY failed\n");
++			} else {
++				printk(KERN_ERR PFX "DESTROY success\n");
++			}
++			hba->flags |= BNX2FC_FLAG_DESTROY_CMPL;
++			wake_up_interruptible(&hba->destroy_wait);
++			break;
 +
-+/* FCP DATA error codes */
-+#define FCOE_ERROR_CODE_DATA_OOO_RO					20
-+#define FCOE_ERROR_CODE_DATA_EXCEEDS_DEFINED_MAX_FRAME_SIZE		21
-+#define FCOE_ERROR_CODE_DATA_EXCEEDS_DATA2TRNS				22
-+#define FCOE_ERROR_CODE_DATA_SOFI3_SEQ_ACTIVE_SET			23
-+#define FCOE_ERROR_CODE_DATA_SOFN_SEQ_ACTIVE_RESET			24
-+#define FCOE_ERROR_CODE_DATA_EOFN_END_SEQ_SET				25
-+#define FCOE_ERROR_CODE_DATA_EOFT_END_SEQ_RESET			26
-+#define FCOE_ERROR_CODE_DATA_TASK_TYPE_NOT_READ			27
-+#define FCOE_ERROR_CODE_DATA_FCTL					28
++		case FCOE_KCQE_OPCODE_DISABLE_CONN:
++			bnx2fc_process_conn_disable_cmpl(hba, kcqe);
++			break;
 +
-+/* Middle path error codes */
-+#define FCOE_ERROR_CODE_MIDPATH_TYPE_NOT_ELS				29
-+#define FCOE_ERROR_CODE_MIDPATH_SOFI3_SEQ_ACTIVE_SET			30
-+#define FCOE_ERROR_CODE_MIDPATH_SOFN_SEQ_ACTIVE_RESET			31
-+#define FCOE_ERROR_CODE_MIDPATH_EOFN_END_SEQ_SET			32
-+#define FCOE_ERROR_CODE_MIDPATH_EOFT_END_SEQ_RESET			33
-+#define FCOE_ERROR_CODE_MIDPATH_ELS_REPLY_FCTL				34
-+#define FCOE_ERROR_CODE_MIDPATH_INVALID_REPLY				35
-+#define FCOE_ERROR_CODE_MIDPATH_ELS_REPLY_RCTL				36
++		case FCOE_KCQE_OPCODE_DESTROY_CONN:
++			bnx2fc_process_conn_destroy_cmpl(hba, kcqe);
++			break;
 +
-+/* ABTS error codes */
-+#define FCOE_ERROR_CODE_ABTS_REPLY_F_CTL				37
-+#define FCOE_ERROR_CODE_ABTS_REPLY_DDF_RCTL_FIELD			38
-+#define FCOE_ERROR_CODE_ABTS_REPLY_INVALID_BLS_RCTL			39
-+#define FCOE_ERROR_CODE_ABTS_REPLY_INVALID_RCTL			40
-+#define FCOE_ERROR_CODE_ABTS_REPLY_RCTL_GENERAL_MISMATCH		41
++		case FCOE_KCQE_OPCODE_STAT_FUNC:
++			if (kcqe->completion_status !=
++			    FCOE_KCQE_COMPLETION_STATUS_SUCCESS)
++				printk(KERN_ERR PFX "STAT failed\n");
++			complete(&hba->stat_req_done);
++			break;
 +
-+/* Common error codes */
-+#define FCOE_ERROR_CODE_COMMON_MIDDLE_FRAME_WITH_PAD			42
-+#define FCOE_ERROR_CODE_COMMON_SEQ_INIT_IN_TCE				43
-+#define FCOE_ERROR_CODE_COMMON_FC_HDR_RX_ID_MISMATCH			44
-+#define FCOE_ERROR_CODE_COMMON_INCORRECT_SEQ_CNT			45
-+#define FCOE_ERROR_CODE_COMMON_DATA_FC_HDR_FCP_TYPE_MISMATCH		46
-+#define FCOE_ERROR_CODE_COMMON_DATA_NO_MORE_SGES			47
-+#define FCOE_ERROR_CODE_COMMON_OPTIONAL_FC_HDR				48
-+#define FCOE_ERROR_CODE_COMMON_READ_TCE_OX_ID_TOO_BIG			49
-+#define FCOE_ERROR_CODE_COMMON_DATA_WAS_NOT_TRANSMITTED		50
++		case FCOE_KCQE_OPCODE_FCOE_ERROR:
++			/* fall thru */
++		default:
++			printk(KERN_ALERT PFX "unknown opcode 0x%x\n",
++								kcqe->op_code);
++		}
++	}
++}
 +
-+/* Unsolicited Rx error codes */
-+#define FCOE_ERROR_CODE_UNSOLICITED_TYPE_NOT_ELS			51
-+#define FCOE_ERROR_CODE_UNSOLICITED_TYPE_NOT_BLS			52
-+#define FCOE_ERROR_CODE_UNSOLICITED_FCTL_ELS				53
-+#define FCOE_ERROR_CODE_UNSOLICITED_FCTL_BLS				54
-+#define FCOE_ERROR_CODE_UNSOLICITED_R_CTL				55
++void bnx2fc_add_2_sq(struct bnx2fc_rport *tgt, u16 xid)
++{
++	struct fcoe_sqe *sqe;
 +
-+#define FCOE_ERROR_CODE_RW_TASK_DDF_RCTL_INFO_FIELD			56
-+#define FCOE_ERROR_CODE_RW_TASK_INVALID_RCTL				57
-+#define FCOE_ERROR_CODE_RW_TASK_RCTL_GENERAL_MISMATCH			58
++	sqe = &tgt->sq[tgt->sq_prod_idx];
 +
-+/* Timer error codes */
-+#define FCOE_ERROR_CODE_E_D_TOV_TIMER_EXPIRATION			60
-+#define FCOE_ERROR_CODE_REC_TOV_TIMER_EXPIRATION			61
++	/* Fill SQ WQE */
++	sqe->wqe = xid << FCOE_SQE_TASK_ID_SHIFT;
++	sqe->wqe |= tgt->sq_curr_toggle_bit << FCOE_SQE_TOGGLE_BIT_SHIFT;
 +
++	/* Advance SQ Prod Idx */
++	if (++tgt->sq_prod_idx == BNX2FC_SQ_WQES_MAX) {
++		tgt->sq_prod_idx = 0;
++		tgt->sq_curr_toggle_bit = 1 - tgt->sq_curr_toggle_bit;
++	}
++}
 +
-+#endif /* BNX2FC_CONSTANTS_H_ */
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_debug.h b/drivers/scsi/bnx2fc/bnx2fc_debug.h
-new file mode 100644
-index 0000000..9abbdd0
---- /dev/null
-+++ b/drivers/scsi/bnx2fc/bnx2fc_debug.h
-@@ -0,0 +1,68 @@
-+#ifndef __BNX2FC_DEBUG__
-+#define __BNX2FC_DEBUG__
++void bnx2fc_ring_doorbell(struct bnx2fc_rport *tgt)
++{
++	struct b577xx_doorbell_set_prod ev_doorbell;
++	u32 msg;
 +
-+/* Log level bit mask */
-+#define LOG_IO		0x01	/* scsi cmd error, cleanup */
-+#define LOG_TGT		0x02	/* Session setup, cleanup, etc' */
-+#define LOG_HBA		0x04	/* lport events, link, mtu, etc' */
-+#define LOG_ELS		0x08	/* ELS logs */
-+#define LOG_MISC	0x10	/* fcoe L2 frame related logs*/
-+#define LOG_ALL		0xff	/* LOG all messages */
++	wmb();
 +
-+extern unsigned int bnx2fc_debug_level;
++	memset(&ev_doorbell, 0, sizeof(struct b577xx_doorbell_set_prod));
++	ev_doorbell.header.header = B577XX_DOORBELL_HDR_DB_TYPE;
 +
-+#define BNX2FC_CHK_LOGGING(LEVEL, CMD)					\
-+	do {								\
-+		if (unlikely(bnx2fc_debug_level & LEVEL))		\
-+			do {						\
-+				CMD;					\
-+			} while (0);					\
-+	} while (0)
++	ev_doorbell.prod = tgt->sq_prod_idx |
++				(tgt->sq_curr_toggle_bit << 15);
++	ev_doorbell.header.header |= B577XX_FCOE_CONNECTION_TYPE <<
++					B577XX_DOORBELL_HDR_CONN_TYPE_SHIFT;
++	msg = *((u32 *)&ev_doorbell);
++	writel(cpu_to_le32(msg), tgt->ctx_base);
 +
-+#define BNX2FC_ELS_DBG(fmt, arg...)					\
-+	BNX2FC_CHK_LOGGING(LOG_ELS,					\
-+			   printk(KERN_ALERT PFX fmt, ##arg))
++	mmiowb();
 +
-+#define BNX2FC_MISC_DBG(fmt, arg...)					\
-+	BNX2FC_CHK_LOGGING(LOG_MISC,					\
-+			   printk(KERN_ALERT PFX fmt, ##arg))
++}
 +
-+#define BNX2FC_IO_DBG(io_req, fmt, arg...)				\
-+	do {								\
-+		if (!io_req || !io_req->port || !io_req->port->lport ||	\
-+		    !io_req->port->lport->host)				\
-+			BNX2FC_CHK_LOGGING(LOG_IO,			\
-+			   printk(KERN_ALERT PFX "NULL " fmt, ##arg));	\
-+		else							\
-+			BNX2FC_CHK_LOGGING(LOG_IO,			\
-+			   printk(KERN_ALERT PFX "host%u: xid:0x%x " fmt,\
-+				  (io_req)->port->lport->host->host_no,	\
-+				  (io_req)->xid, ##arg));		\
-+	} while (0)
++void bnx2fc_map_doorbell(struct bnx2fc_rport *tgt)
++{
++	u32 context_id = tgt->context_id;
++	struct bnx2fc_port *port = tgt->port;
++	u32 reg_off;
++	resource_size_t reg_base;
 +
-+#define BNX2FC_TGT_DBG(tgt, fmt, arg...)				\
-+	do {								\
-+		if (!tgt || !tgt->port || !tgt->port->lport ||		\
-+		    !tgt->port->lport->host || !tgt->rport)		\
-+			BNX2FC_CHK_LOGGING(LOG_TGT,			\
-+			   printk(KERN_ALERT PFX "NULL " fmt, ##arg));	\
-+		else							\
-+			BNX2FC_CHK_LOGGING(LOG_TGT,			\
-+			   printk(KERN_ALERT PFX "host%u: port:%x " fmt,\
-+				  (tgt)->port->lport->host->host_no,	\
-+				  (tgt)->rport->port_id, ##arg));	\
-+	} while (0)
++	reg_base = pci_resource_start(port->hba->pcidev,
++					BNX2X_DOORBELL_PCI_BAR);
++	reg_off = BNX2FC_5771X_DB_PAGE_SIZE *
++			(context_id & 0x1FFFF) + DPM_TRIGER_TYPE;
++	tgt->ctx_base = ioremap_nocache(reg_base + reg_off, 4);
++}
++
++char *bnx2fc_get_next_rqe(struct bnx2fc_rport *tgt, u8 num_items)
++{
++	char *buf = (char *)tgt->rq + (tgt->rq_cons_idx * BNX2FC_RQ_BUF_SZ);
++
++	if (tgt->rq_cons_idx + num_items > BNX2FC_RQ_WQES_MAX)
++		return NULL;
++
++	tgt->rq_cons_idx += num_items;
++
++	if (tgt->rq_cons_idx >= BNX2FC_RQ_WQES_MAX)
++		tgt->rq_cons_idx -= BNX2FC_RQ_WQES_MAX;
++
++	return buf;
++}
++
++void bnx2fc_return_rqe(struct bnx2fc_rport *tgt, u8 num_items)
++{
++	/* return the rq buffer */
++	u32 next_prod_idx = tgt->rq_prod_idx + num_items;
++	if ((next_prod_idx & 0x7fff) == BNX2FC_RQ_WQES_MAX) {
++		/* Wrap around RQ */
++		next_prod_idx += 0x8000 - BNX2FC_RQ_WQES_MAX;
++	}
++	tgt->rq_prod_idx = next_prod_idx;
++	tgt->conn_db->rq_prod = tgt->rq_prod_idx;
++}
++
++void bnx2fc_init_cleanup_task(struct bnx2fc_cmd *io_req,
++			      struct fcoe_task_ctx_entry *task,
++			      u16 orig_xid)
++{
++	u8 task_type = FCOE_TASK_TYPE_EXCHANGE_CLEANUP;
++	struct bnx2fc_rport *tgt = io_req->tgt;
++	u32 context_id = tgt->context_id;
++
++	memset(task, 0, sizeof(struct fcoe_task_ctx_entry));
++
++	/* Tx Write Rx Read */
++	task->tx_wr_rx_rd.tx_flags = FCOE_TASK_TX_STATE_EXCHANGE_CLEANUP <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE_SHIFT;
++	task->tx_wr_rx_rd.init_flags = task_type <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE_SHIFT;
++	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE_SHIFT;
++	/* Common */
++	task->cmn.common_flags = context_id <<
++				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_CID_SHIFT;
++	task->cmn.general.cleanup_info.task_id = orig_xid;
 +
 +
-+#define BNX2FC_HBA_DBG(lport, fmt, arg...)				\
-+	do {								\
-+		if (!lport || !lport->host)				\
-+			BNX2FC_CHK_LOGGING(LOG_HBA,			\
-+			   printk(KERN_ALERT PFX "NULL " fmt, ##arg));	\
-+		else							\
-+			BNX2FC_CHK_LOGGING(LOG_HBA,			\
-+			   printk(KERN_ALERT PFX "host%u: " fmt,	\
-+				  lport->host->host_no, ##arg));	\
-+	} while (0)
++}
 +
-+#endif
++void bnx2fc_init_mp_task(struct bnx2fc_cmd *io_req,
++				struct fcoe_task_ctx_entry *task)
++{
++	struct bnx2fc_mp_req *mp_req = &(io_req->mp_req);
++	struct bnx2fc_rport *tgt = io_req->tgt;
++	struct fc_frame_header *fc_hdr;
++	u8 task_type = 0;
++	u64 *hdr;
++	u64 temp_hdr[3];
++	u32 context_id;
++
++
++	/* Obtain task_type */
++	if ((io_req->cmd_type == BNX2FC_TASK_MGMT_CMD) ||
++	    (io_req->cmd_type == BNX2FC_ELS)) {
++		task_type = FCOE_TASK_TYPE_MIDPATH;
++	} else if (io_req->cmd_type == BNX2FC_ABTS) {
++		task_type = FCOE_TASK_TYPE_ABTS;
++	}
++
++	memset(task, 0, sizeof(struct fcoe_task_ctx_entry));
++
++	/* Setup the task from io_req for easy reference */
++	io_req->task = task;
++
++	BNX2FC_IO_DBG(io_req, "Init MP task for cmd_type = %d task_type = %d\n",
++		io_req->cmd_type, task_type);
++
++	/* Tx only */
++	if ((task_type == FCOE_TASK_TYPE_MIDPATH) ||
++	    (task_type == FCOE_TASK_TYPE_UNSOLICITED)) {
++		task->tx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.lo =
++				(u32)mp_req->mp_req_bd_dma;
++		task->tx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.hi =
++				(u32)((u64)mp_req->mp_req_bd_dma >> 32);
++		task->tx_wr_only.sgl_ctx.mul_sges.sgl_size = 1;
++		BNX2FC_IO_DBG(io_req, "init_mp_task - bd_dma = 0x%llx\n",
++			mp_req->mp_req_bd_dma);
++	}
++
++	/* Tx Write Rx Read */
++	task->tx_wr_rx_rd.tx_flags = FCOE_TASK_TX_STATE_INIT <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE_SHIFT;
++	task->tx_wr_rx_rd.init_flags = task_type <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE_SHIFT;
++	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_DEV_TYPE_DISK <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_DEV_TYPE_SHIFT;
++	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE_SHIFT;
++
++	/* Common */
++	task->cmn.data_2_trns = io_req->data_xfer_len;
++	context_id = tgt->context_id;
++	task->cmn.common_flags = context_id <<
++				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_CID_SHIFT;
++	task->cmn.common_flags |= 1 <<
++				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_VALID_SHIFT;
++	task->cmn.common_flags |= 1 <<
++			FCOE_TASK_CTX_ENTRY_TX_RX_CMN_EXP_FIRST_FRAME_SHIFT;
++
++	/* Rx Write Tx Read */
++	fc_hdr = &(mp_req->req_fc_hdr);
++	if (task_type == FCOE_TASK_TYPE_MIDPATH) {
++		fc_hdr->fh_ox_id = cpu_to_be16(io_req->xid);
++		fc_hdr->fh_rx_id = htons(0xffff);
++		task->rx_wr_tx_rd.rx_id = 0xffff;
++	} else if (task_type == FCOE_TASK_TYPE_UNSOLICITED) {
++		fc_hdr->fh_rx_id = cpu_to_be16(io_req->xid);
++	}
++
++	/* Fill FC Header into middle path buffer */
++	hdr = (u64 *) &task->cmn.general.cmd_info.mp_fc_frame.fc_hdr;
++	memcpy(temp_hdr, fc_hdr, sizeof(temp_hdr));
++	hdr[0] = cpu_to_be64(temp_hdr[0]);
++	hdr[1] = cpu_to_be64(temp_hdr[1]);
++	hdr[2] = cpu_to_be64(temp_hdr[2]);
++
++	/* Rx Only */
++	if (task_type == FCOE_TASK_TYPE_MIDPATH) {
++
++		task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.lo =
++				(u32)mp_req->mp_resp_bd_dma;
++		task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.hi =
++				(u32)((u64)mp_req->mp_resp_bd_dma >> 32);
++		task->rx_wr_only.sgl_ctx.mul_sges.sgl_size = 1;
++	}
++}
++
++void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
++			     struct fcoe_task_ctx_entry *task)
++{
++	u8 task_type;
++	struct scsi_cmnd *sc_cmd = io_req->sc_cmd;
++	struct io_bdt *bd_tbl = io_req->bd_tbl;
++	struct bnx2fc_rport *tgt = io_req->tgt;
++	u64 *fcp_cmnd;
++	u64 tmp_fcp_cmnd[4];
++	u32 context_id;
++	int cnt, i;
++	int bd_count;
++
++	memset(task, 0, sizeof(struct fcoe_task_ctx_entry));
++
++	/* Setup the task from io_req for easy reference */
++	io_req->task = task;
++
++	if (sc_cmd->sc_data_direction == DMA_TO_DEVICE)
++		task_type = FCOE_TASK_TYPE_WRITE;
++	else
++		task_type = FCOE_TASK_TYPE_READ;
++
++	/* Tx only */
++	if (task_type == FCOE_TASK_TYPE_WRITE) {
++		task->tx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.lo =
++				(u32)bd_tbl->bd_tbl_dma;
++		task->tx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.hi =
++				(u32)((u64)bd_tbl->bd_tbl_dma >> 32);
++		task->tx_wr_only.sgl_ctx.mul_sges.sgl_size =
++				bd_tbl->bd_valid;
++	}
++
++	/*Tx Write Rx Read */
++	/* Init state to NORMAL */
++	task->tx_wr_rx_rd.tx_flags = FCOE_TASK_TX_STATE_NORMAL <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TX_STATE_SHIFT;
++	task->tx_wr_rx_rd.init_flags = task_type <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_TASK_TYPE_SHIFT;
++	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_DEV_TYPE_DISK <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_DEV_TYPE_SHIFT;
++	task->tx_wr_rx_rd.init_flags |= FCOE_TASK_CLASS_TYPE_3 <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_CLASS_TYPE_SHIFT;
++
++	/* Common */
++	task->cmn.data_2_trns = io_req->data_xfer_len;
++	context_id = tgt->context_id;
++	task->cmn.common_flags = context_id <<
++				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_CID_SHIFT;
++	task->cmn.common_flags |= 1 <<
++				FCOE_TASK_CTX_ENTRY_TX_RX_CMN_VALID_SHIFT;
++	task->cmn.common_flags |= 1 <<
++			FCOE_TASK_CTX_ENTRY_TX_RX_CMN_EXP_FIRST_FRAME_SHIFT;
++
++	/* Set initiative ownership */
++	task->cmn.common_flags |= FCOE_TASK_CTX_ENTRY_TX_RX_CMN_SEQ_INIT;
++
++	/* Set initial seq counter */
++	task->cmn.tx_low_seq_cnt = 1;
++
++	/* Set state to "waiting for the first packet" */
++	task->cmn.common_flags |= FCOE_TASK_CTX_ENTRY_TX_RX_CMN_EXP_FIRST_FRAME;
++
++	/* Fill FCP_CMND IU */
++	fcp_cmnd = (u64 *)
++		    task->cmn.general.cmd_info.fcp_cmd_payload.opaque;
++	bnx2fc_build_fcp_cmnd(io_req, (struct fcp_cmnd *)&tmp_fcp_cmnd);
++
++	/* swap fcp_cmnd */
++	cnt = sizeof(struct fcp_cmnd) / sizeof(u64);
++
++	for (i = 0; i < cnt; i++) {
++		*fcp_cmnd = cpu_to_be64(tmp_fcp_cmnd[i]);
++		fcp_cmnd++;
++	}
++
++	/* Rx Write Tx Read */
++	task->rx_wr_tx_rd.rx_id = 0xffff;
++
++	/* Rx Only */
++	if (task_type == FCOE_TASK_TYPE_READ) {
++
++		bd_count = bd_tbl->bd_valid;
++		if (bd_count == 1) {
++
++			struct fcoe_bd_ctx *fcoe_bd_tbl = bd_tbl->bd_tbl;
++
++			task->rx_wr_only.sgl_ctx.single_sge.cur_buf_addr.lo =
++					fcoe_bd_tbl->buf_addr_lo;
++			task->rx_wr_only.sgl_ctx.single_sge.cur_buf_addr.hi =
++					fcoe_bd_tbl->buf_addr_hi;
++			task->rx_wr_only.sgl_ctx.single_sge.cur_buf_rem =
++					fcoe_bd_tbl->buf_len;
++			task->tx_wr_rx_rd.init_flags |= 1 <<
++				FCOE_TASK_CTX_ENTRY_TXWR_RXRD_SINGLE_SGE_SHIFT;
++		} else {
++
++			task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.lo =
++					(u32)bd_tbl->bd_tbl_dma;
++			task->rx_wr_only.sgl_ctx.mul_sges.cur_sge_addr.hi =
++					(u32)((u64)bd_tbl->bd_tbl_dma >> 32);
++			task->rx_wr_only.sgl_ctx.mul_sges.sgl_size =
++					bd_tbl->bd_valid;
++		}
++	}
++}
++
++/**
++ * bnx2fc_setup_task_ctx - allocate and map task context
++ *
++ * @hba:	pointer to adapter structure
++ *
++ * allocate memory for task context, and associated BD table to be used
++ * by firmware
++ *
++ */
++int bnx2fc_setup_task_ctx(struct bnx2fc_hba *hba)
++{
++	int rc = 0;
++	struct regpair *task_ctx_bdt;
++	dma_addr_t addr;
++	int i;
++
++	/*
++	 * Allocate task context bd table. A page size of bd table
++	 * can map 256 buffers. Each buffer contains 32 task context
++	 * entries. Hence the limit with one page is 8192 task context
++	 * entries.
++	 */
++	hba->task_ctx_bd_tbl = dma_alloc_coherent(&hba->pcidev->dev,
++						  PAGE_SIZE,
++						  &hba->task_ctx_bd_dma,
++						  GFP_KERNEL);
++	if (!hba->task_ctx_bd_tbl) {
++		printk(KERN_ERR PFX "unable to allocate task context BDT\n");
++		rc = -1;
++		goto out;
++	}
++	memset(hba->task_ctx_bd_tbl, 0, PAGE_SIZE);
++
++	/*
++	 * Allocate task_ctx which is an array of pointers pointing to
++	 * a page containing 32 task contexts
++	 */
++	hba->task_ctx = kzalloc((BNX2FC_TASK_CTX_ARR_SZ * sizeof(void *)),
++				 GFP_KERNEL);
++	if (!hba->task_ctx) {
++		printk(KERN_ERR PFX "unable to allocate task context array\n");
++		rc = -1;
++		goto out1;
++	}
++
++	/*
++	 * Allocate task_ctx_dma which is an array of dma addresses
++	 */
++	hba->task_ctx_dma = kmalloc((BNX2FC_TASK_CTX_ARR_SZ *
++					sizeof(dma_addr_t)), GFP_KERNEL);
++	if (!hba->task_ctx_dma) {
++		printk(KERN_ERR PFX "unable to alloc context mapping array\n");
++		rc = -1;
++		goto out2;
++	}
++
++	task_ctx_bdt = (struct regpair *)hba->task_ctx_bd_tbl;
++	for (i = 0; i < BNX2FC_TASK_CTX_ARR_SZ; i++) {
++
++		hba->task_ctx[i] = dma_alloc_coherent(&hba->pcidev->dev,
++						      PAGE_SIZE,
++						      &hba->task_ctx_dma[i],
++						      GFP_KERNEL);
++		if (!hba->task_ctx[i]) {
++			printk(KERN_ERR PFX "unable to alloc task context\n");
++			rc = -1;
++			goto out3;
++		}
++		memset(hba->task_ctx[i], 0, PAGE_SIZE);
++		addr = (u64)hba->task_ctx_dma[i];
++		task_ctx_bdt->hi = (u64) addr >> 32;
++		task_ctx_bdt->lo = (u32) addr;
++		task_ctx_bdt++;
++	}
++	return 0;
++
++out3:
++	for (i = 0; i < BNX2FC_TASK_CTX_ARR_SZ; i++) {
++		if (hba->task_ctx[i]) {
++
++			dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
++				hba->task_ctx[i], hba->task_ctx_dma[i]);
++			hba->task_ctx[i] = NULL;
++		}
++	}
++
++	kfree(hba->task_ctx_dma);
++	hba->task_ctx_dma = NULL;
++out2:
++	kfree(hba->task_ctx);
++	hba->task_ctx = NULL;
++out1:
++	dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
++			hba->task_ctx_bd_tbl, hba->task_ctx_bd_dma);
++	hba->task_ctx_bd_tbl = NULL;
++out:
++	return rc;
++}
++
++void bnx2fc_free_task_ctx(struct bnx2fc_hba *hba)
++{
++	int i;
++
++	if (hba->task_ctx_bd_tbl) {
++		dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
++				    hba->task_ctx_bd_tbl,
++				    hba->task_ctx_bd_dma);
++		hba->task_ctx_bd_tbl = NULL;
++	}
++
++	if (hba->task_ctx) {
++		for (i = 0; i < BNX2FC_TASK_CTX_ARR_SZ; i++) {
++			if (hba->task_ctx[i]) {
++				dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
++						    hba->task_ctx[i],
++						    hba->task_ctx_dma[i]);
++				hba->task_ctx[i] = NULL;
++			}
++		}
++		kfree(hba->task_ctx);
++		hba->task_ctx = NULL;
++	}
++
++	kfree(hba->task_ctx_dma);
++	hba->task_ctx_dma = NULL;
++}
++
++static void bnx2fc_free_hash_table(struct bnx2fc_hba *hba)
++{
++	int i;
++	int segment_count;
++	int hash_table_size;
++	u32 *pbl;
++
++	segment_count = hba->hash_tbl_segment_count;
++	hash_table_size = BNX2FC_NUM_MAX_SESS * BNX2FC_MAX_ROWS_IN_HASH_TBL *
++		sizeof(struct fcoe_hash_table_entry);
++
++	pbl = hba->hash_tbl_pbl;
++	for (i = 0; i < segment_count; ++i) {
++		dma_addr_t dma_address;
++
++		dma_address = *pbl;
++		++pbl;
++		dma_address += (u64) *pbl << 32;
++		++pbl;
++		dma_free_coherent(&hba->pcidev->dev,
++				  BNX2FC_HASH_TBL_CHUNK_SIZE,
++				  hba->hash_tbl_segments[i],
++				  dma_address);
++
++	}
++
++	if (hba->hash_tbl_pbl) {
++		dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
++				    hba->hash_tbl_pbl,
++				    hba->hash_tbl_pbl_dma);
++		hba->hash_tbl_pbl = NULL;
++	}
++}
++
++static int bnx2fc_allocate_hash_table(struct bnx2fc_hba *hba)
++{
++	int i;
++	int hash_table_size;
++	int segment_count;
++	int segment_array_size;
++	int dma_segment_array_size;
++	dma_addr_t *dma_segment_array;
++	u32 *pbl;
++
++	hash_table_size = BNX2FC_NUM_MAX_SESS * BNX2FC_MAX_ROWS_IN_HASH_TBL *
++		sizeof(struct fcoe_hash_table_entry);
++
++	segment_count = hash_table_size + BNX2FC_HASH_TBL_CHUNK_SIZE - 1;
++	segment_count /= BNX2FC_HASH_TBL_CHUNK_SIZE;
++	hba->hash_tbl_segment_count = segment_count;
++
++	segment_array_size = segment_count * sizeof(*hba->hash_tbl_segments);
++	hba->hash_tbl_segments = kzalloc(segment_array_size, GFP_KERNEL);
++	if (!hba->hash_tbl_segments) {
++		printk(KERN_ERR PFX "hash table pointers alloc failed\n");
++		return -ENOMEM;
++	}
++	dma_segment_array_size = segment_count * sizeof(*dma_segment_array);
++	dma_segment_array = kzalloc(dma_segment_array_size, GFP_KERNEL);
++	if (!dma_segment_array) {
++		printk(KERN_ERR PFX "hash table pointers (dma) alloc failed\n");
++		return -ENOMEM;
++	}
++
++	for (i = 0; i < segment_count; ++i) {
++		hba->hash_tbl_segments[i] =
++			dma_alloc_coherent(&hba->pcidev->dev,
++					   BNX2FC_HASH_TBL_CHUNK_SIZE,
++					   &dma_segment_array[i],
++					   GFP_KERNEL);
++		if (!hba->hash_tbl_segments[i]) {
++			printk(KERN_ERR PFX "hash segment alloc failed\n");
++			while (--i >= 0) {
++				dma_free_coherent(&hba->pcidev->dev,
++						    BNX2FC_HASH_TBL_CHUNK_SIZE,
++						    hba->hash_tbl_segments[i],
++						    dma_segment_array[i]);
++				hba->hash_tbl_segments[i] = NULL;
++			}
++			kfree(dma_segment_array);
++			return -ENOMEM;
++		}
++		memset(hba->hash_tbl_segments[i], 0,
++		       BNX2FC_HASH_TBL_CHUNK_SIZE);
++	}
++
++	hba->hash_tbl_pbl = dma_alloc_coherent(&hba->pcidev->dev,
++					       PAGE_SIZE,
++					       &hba->hash_tbl_pbl_dma,
++					       GFP_KERNEL);
++	if (!hba->hash_tbl_pbl) {
++		printk(KERN_ERR PFX "hash table pbl alloc failed\n");
++		kfree(dma_segment_array);
++		return -ENOMEM;
++	}
++	memset(hba->hash_tbl_pbl, 0, PAGE_SIZE);
++
++	pbl = hba->hash_tbl_pbl;
++	for (i = 0; i < segment_count; ++i) {
++		u64 paddr = dma_segment_array[i];
++		*pbl = (u32) paddr;
++		++pbl;
++		*pbl = (u32) (paddr >> 32);
++		++pbl;
++	}
++	pbl = hba->hash_tbl_pbl;
++	i = 0;
++	while (*pbl && *(pbl + 1)) {
++		u32 lo;
++		u32 hi;
++		lo = *pbl;
++		++pbl;
++		hi = *pbl;
++		++pbl;
++		++i;
++	}
++	kfree(dma_segment_array);
++	return 0;
++}
++
++/**
++ * bnx2fc_setup_fw_resc - Allocate and map hash table and dummy buffer
++ *
++ * @hba:	Pointer to adapter structure
++ *
++ */
++int bnx2fc_setup_fw_resc(struct bnx2fc_hba *hba)
++{
++	u64 addr;
++	u32 mem_size;
++	int i;
++
++	if (bnx2fc_allocate_hash_table(hba))
++		return -ENOMEM;
++
++	mem_size = BNX2FC_NUM_MAX_SESS * sizeof(struct regpair);
++	hba->t2_hash_tbl_ptr = dma_alloc_coherent(&hba->pcidev->dev, mem_size,
++						  &hba->t2_hash_tbl_ptr_dma,
++						  GFP_KERNEL);
++	if (!hba->t2_hash_tbl_ptr) {
++		printk(KERN_ERR PFX "unable to allocate t2 hash table ptr\n");
++		bnx2fc_free_fw_resc(hba);
++		return -ENOMEM;
++	}
++	memset(hba->t2_hash_tbl_ptr, 0x00, mem_size);
++
++	mem_size = BNX2FC_NUM_MAX_SESS *
++				sizeof(struct fcoe_t2_hash_table_entry);
++	hba->t2_hash_tbl = dma_alloc_coherent(&hba->pcidev->dev, mem_size,
++					      &hba->t2_hash_tbl_dma,
++					      GFP_KERNEL);
++	if (!hba->t2_hash_tbl) {
++		printk(KERN_ERR PFX "unable to allocate t2 hash table\n");
++		bnx2fc_free_fw_resc(hba);
++		return -ENOMEM;
++	}
++	memset(hba->t2_hash_tbl, 0x00, mem_size);
++	for (i = 0; i < BNX2FC_NUM_MAX_SESS; i++) {
++		addr = (unsigned long) hba->t2_hash_tbl_dma +
++			 ((i+1) * sizeof(struct fcoe_t2_hash_table_entry));
++		hba->t2_hash_tbl[i].next.lo = addr & 0xffffffff;
++		hba->t2_hash_tbl[i].next.hi = addr >> 32;
++	}
++
++	hba->dummy_buffer = dma_alloc_coherent(&hba->pcidev->dev,
++					       PAGE_SIZE, &hba->dummy_buf_dma,
++					       GFP_KERNEL);
++	if (!hba->dummy_buffer) {
++		printk(KERN_ERR PFX "unable to alloc MP Dummy Buffer\n");
++		bnx2fc_free_fw_resc(hba);
++		return -ENOMEM;
++	}
++
++	hba->stats_buffer = dma_alloc_coherent(&hba->pcidev->dev,
++					       PAGE_SIZE,
++					       &hba->stats_buf_dma,
++					       GFP_KERNEL);
++	if (!hba->stats_buffer) {
++		printk(KERN_ERR PFX "unable to alloc Stats Buffer\n");
++		bnx2fc_free_fw_resc(hba);
++		return -ENOMEM;
++	}
++	memset(hba->stats_buffer, 0x00, PAGE_SIZE);
++
++	return 0;
++}
++
++void bnx2fc_free_fw_resc(struct bnx2fc_hba *hba)
++{
++	u32 mem_size;
++
++	if (hba->stats_buffer) {
++		dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
++				  hba->stats_buffer, hba->stats_buf_dma);
++		hba->stats_buffer = NULL;
++	}
++
++	if (hba->dummy_buffer) {
++		dma_free_coherent(&hba->pcidev->dev, PAGE_SIZE,
++				  hba->dummy_buffer, hba->dummy_buf_dma);
++		hba->dummy_buffer = NULL;
++	}
++
++	if (hba->t2_hash_tbl_ptr) {
++		mem_size = BNX2FC_NUM_MAX_SESS * sizeof(struct regpair);
++		dma_free_coherent(&hba->pcidev->dev, mem_size,
++				    hba->t2_hash_tbl_ptr,
++				    hba->t2_hash_tbl_ptr_dma);
++		hba->t2_hash_tbl_ptr = NULL;
++	}
++
++	if (hba->t2_hash_tbl) {
++		mem_size = BNX2FC_NUM_MAX_SESS *
++			    sizeof(struct fcoe_t2_hash_table_entry);
++		dma_free_coherent(&hba->pcidev->dev, mem_size,
++				    hba->t2_hash_tbl, hba->t2_hash_tbl_dma);
++		hba->t2_hash_tbl = NULL;
++	}
++	bnx2fc_free_hash_table(hba);
++}
 -- 
 1.7.0.6
 
