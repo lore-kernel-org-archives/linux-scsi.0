@@ -1,62 +1,44 @@
-From: Justin Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH 1/7] dma/shdma.c Typo change desciptor to descriptor.
-Date: Wed, 19 Jan 2011 07:16:43 -0800
-Message-ID: <FD016761-9581-4730-BC79-CBEFEB9ED3EC@gmail.com>
-References: <1293817097-7945-1-git-send-email-justinmattock@gmail.com> <alpine.LNX.2.00.1101191537280.26685@pobox.suse.cz>
-Mime-Version: 1.0 (Apple Message framework v936)
-Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <alpine.LNX.2.00.1101191537280.26685-ztGlSCb7Y1iN3ZZ/Hiejyg@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jiri Kosina <jkosina-AlSwsSmVLrQ@public.gmane.org>
-Cc: dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Maksim Rayskiy <maksim.rayskiy@gmail.com>
+Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
+Date: Wed, 19 Jan 2011 12:29:59 -0800
+Message-ID: <AANLkTikcrznVeySm42NDYtWtKJBypSXCRv1QsOBug5zQ@mail.gmail.com>
+References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com>
+	<20110112112142.GA9610@mtj.dyndns.org>
+	<4D2DF45B.5010101@pobox.com>
+	<AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com>
+	<4D368D3B.7030701@pobox.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4D368D3B.7030701@pobox.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
 
-
-On Jan 19, 2011, at 6:38 AM, Jiri Kosina wrote:
-
-> On Fri, 31 Dec 2010, Justin P. Mattock wrote:
+> A kernel modification might not even be needed.
 >
->> Below is a patch, that changes a typo from "desciptor" to  
->> "descriptor".
->> Let me know if I missed anything.
->>
->> Signed-off-by: Justin P. Mattock <justinmattock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
->>
->> ---
->> drivers/dma/shdma.c |    2 +-
->> 1 files changed, 1 insertions(+), 1 deletions(-)
->>
->> diff --git a/drivers/dma/shdma.c b/drivers/dma/shdma.c
->> index 85ffd5e..72d25d9 100644
->> --- a/drivers/dma/shdma.c
->> +++ b/drivers/dma/shdma.c
->> @@ -740,7 +740,7 @@ static void sh_chan_xfer_ld_queue(struct  
->> sh_dmae_chan *sh_chan)
->> 		return;
->> 	}
->>
->> -	/* Find the first not transferred desciptor */
->> +	/* Find the first not transferred descriptor */
->> 	list_for_each_entry(desc, &sh_chan->ld_queue, node)
->> 		if (desc->mark == DESC_SUBMITTED) {
->> 			dev_dbg(sh_chan->dev, "Queue #%d to %d: %u@%x -> %x\n",
+> Have you tried simply issuing READ VERIFY via bsg, and not caring if =
+it
+> completes? =A0bsg should be able to handle an app submitting a comman=
+d, but
+> never checking the 'done' list, right? =A0A simple shell app could ex=
+ecute
 >
-> I have folded the whole series into one patch and applied, thanks.
+> =A0 =A0 =A0 =A0write(bsg_fd, ... SCSI READ VERIFY command ...)
+> =A0 =A0 =A0 =A0exit(0)
 >
-> -- 
-> Jiri Kosina
-> SUSE Labs, Novell Inc.
+> to avoid waiting for READ VERIFY command completion, I would hope.
+>
+> =A0 =A0 =A0 =A0Jeff
+>
 
+My question was how to speed up system resume when he the spinup
+request is coming from sd_resume(). For shell method to work I would
+have to ignore this request entirely and do READ VERIFY when system is
+fully restored.
+Can it be done without kernel modification? Tejun mentioned using
+manage_start_stop flag but had some reservations against it.
 
-
-alright... I think there was one that needed adjusting, but given the  
-situation Im in I wont be able to get to that
-until other things in my life get sorted out.. Thanks for taking these
-
-Justin P. Mattock
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Maksim.
