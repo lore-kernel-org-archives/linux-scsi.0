@@ -1,43 +1,44 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Fix tcm_mod_builder.py default EXTRA_CFLAGS
-Date: Tue, 18 Jan 2011 14:03:02 -0800
-Message-ID: <1295388182.22813.458.camel@haakon2.linux-iscsi.org>
-References: <1295386222-12869-1-git-send-email-nab@linux-iscsi.org>
-	 <20110118213604.GA13063@lst.de>
-	 <1295387162.22813.454.camel@haakon2.linux-iscsi.org>
-	 <20110118214726.GA13329@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: [PATCH] [SCSI] scsi_dh_alua: fix overflow in alua_rtpg port group id check
+Date: Tue, 18 Jan 2011 20:11:51 -0500
+Message-ID: <1295399511-10894-1-git-send-email-snitzer@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:37662 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751739Ab1ARWDF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Jan 2011 17:03:05 -0500
-In-Reply-To: <20110118214726.GA13329@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:50909 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752564Ab1ASBL4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Jan 2011 20:11:56 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org, Martin George <marting@netapp.com>, Hannes Reinecke <hare@suse.de>
 
-On Tue, 2011-01-18 at 22:47 +0100, Christoph Hellwig wrote:
-> On Tue, Jan 18, 2011 at 01:46:02PM -0800, Nicholas A. Bellinger wrote:
-> > This is correct on the -I$(srctree)/include/, and I will drop this as
-> > well..  However with the current fabric module include layout (all .h
-> > living in drivers/target/$FABRIC_MOD), the latter bit is still required
-> > AFAICS to build.
-> 
-> No, there's no need.  Just use ""-style includes and they'll always get
-> picked up in the local directory.
-> 
+For Target Portal Group IDs occupying the full 2 bytes in the RTPG
+response, the following group_id check in alua_rtpg() always fails
+because 'ucp' is only a signed char:
+   if (h->group_id == (ucp[2] << 8) + ucp[3]) {
 
-Whooops, fixed with ""-style includes in commit 7514aea.  Please let me
-know if you have any other thoughts wrt tcm_mod_builder.py and I will
-get these coded up..
+Fix this signed char overflow by changing 'ucp' to an unsigned char
+pointer (same type used for 'buff' member of alua_dh_data structure).
 
-Thanks again,  ;)
+Reported-by: Martin George <marting@netapp.com>
+Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
---nab
-
-
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 6b72932..536df91 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -545,7 +545,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_dh_data *h)
+ {
+ 	struct scsi_sense_hdr sense_hdr;
+ 	int len, k, off, valid_states = 0;
+-	char *ucp;
++	unsigned char *ucp;
+ 	unsigned err;
+ 	unsigned long expiry, interval = 10;
+ 
+-- 
+1.7.3.4
 
