@@ -1,42 +1,58 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
-Date: Wed, 19 Jan 2011 02:05:31 -0500
-Message-ID: <4D368D3B.7030701@pobox.com>
-References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com> <20110112112142.GA9610@mtj.dyndns.org> <4D2DF45B.5010101@pobox.com> <AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] [SCSI] megaraid_sas: Sanity check user supplied length
+ before passing it to dma_alloc_coherent()
+Date: Wed, 19 Jan 2011 17:12:00 +0900
+Message-ID: <20110119165809X.fujita.tomonori@lab.ntt.co.jp>
+References: <8739op51hr.fsf@nemi.mork.no>
+	<4B6A08C587958942AA3002690DD4F8C30106FA7846@cosmail02.lsi.com>
+	<87tyh52yi3.fsf@nemi.mork.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Maksim Rayskiy <maksim.rayskiy@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:41507 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753651Ab1ASIM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Jan 2011 03:12:26 -0500
+In-Reply-To: <87tyh52yi3.fsf@nemi.mork.no>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bjorn@mork.no
+Cc: Bo.Yang@lsi.com, linux-scsi@vger.kernel.org, megaraidlinux@lsi.com, James.Bottomley@suse.de
 
-On 01/12/2011 03:01 PM, Maksim Rayskiy wrote:
->>
->> The bottom line is that this patch simply wants to trigger an ATA command,
->> and return immediately, discarding the command results.  I'm not even sure a
->> "run this command in background, and discard results" facility requires the
->> EH.
->>
->
-> This is why I was asking if using a workqueue instead of EH might be a
-> better idea.
-> EH looks like an overkill here.
+On Wed, 19 Jan 2011 07:33:56 +0100
+**UNKNOWN CHARSET** <bjorn@mork.no> wrote:
 
-A kernel modification might not even be needed.
+> Both users have confirmed that the patch fixes their problem. One could
+> of course imagine a workaround in the smartctl application so that it
+> never sent requests with a zero iov_len, but I still believe that
+> actually fixing the driver to handle such requests is better.
 
-Have you tried simply issuing READ VERIFY via bsg, and not caring if it 
-completes?  bsg should be able to handle an app submitting a command, 
-but never checking the 'done' list, right?  A simple shell app could execute
+The patch looks fine to me. dma_alloc_coherent() doesn't take zero for
+the size argument (causes a kernel crash). The driver can't assume
+that an applications is sane so it needs to check the size that an
+application passed on.
 
-	write(bsg_fd, ... SCSI READ VERIFY command ...)
-	exit(0)
+Unfortunately, your patch can't be applied to the latest git. I think
+that you need to submit the updated patch first. After it's merged,
+you can send stable maintainers the modified patch that can be applied
+to stable kernels.
 
-to avoid waiting for READ VERIFY command completion, I would hope.
+Btw, about your patch, it's better to use "if (!hoge)" instead of "if
+(hoge == 0)" and kbuff_arr[] is initialized so seems that you don't
+need to reset it again. The updated patch would be something like:
 
-	Jeff
-
-
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 5d6d07b..cee1d3b 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4611,6 +4611,9 @@ megasas_mgmt_fw_ioctl(struct megasas_instance *instance,
+ 	 * For each user buffer, create a mirror buffer and copy in
+ 	 */
+ 	for (i = 0; i < ioc->sge_count; i++) {
++		if (!ioc->sgl[i].iov_len)
++			continue;
++
+ 		kbuff_arr[i] = dma_alloc_coherent(&instance->pdev->dev,
+ 						    ioc->sgl[i].iov_len,
+ 						    &buf_handle, GFP_KERNEL);
