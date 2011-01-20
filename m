@@ -1,41 +1,66 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/17][trivial] scsi: Remove unnecessary casts of void
- ptr returning alloc function return values
-Date: Thu, 20 Jan 2011 08:29:22 +0100
-Message-ID: <4D37E452.7030404@suse.de>
-References: <alpine.LNX.2.00.1011082334400.23697@swampdragon.chaosbits.net> <alpine.LNX.2.00.1101191526410.26685@pobox.suse.cz>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1101191526410.26685@pobox.suse.cz>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Jesper Juhl <jj@chaosbits.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, osst-users@lists.sourceforge.net, "James E.J. Bottomley" <James.Bottomley@suse.de>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] target: Call missing list_del() for demo-mode MappedLUN disable
+Date: Wed, 19 Jan 2011 23:26:02 -0800
+Message-ID: <1295508362-20011-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp106.sbc.mail.mud.yahoo.com ([68.142.198.104]:42560 "HELO
+	smtp106.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753305Ab1ATHZ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Jan 2011 02:25:58 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, John Hawley <warthog9@kernel.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On 01/19/2011 03:27 PM, Jiri Kosina wrote:
-> On Tue, 9 Nov 2010, Jesper Juhl wrote:
->=20
->> Hi,
->>
->> The [vk][cmz]alloc(_node) family of functions return void pointers w=
-hich
->> it's completely unnecessary/pointless to cast to other pointer types=
- since
->> that happens implicitly.
->>
->> This patch removes such casts from drivers/scsi/
->>
->>
->> Signed-off-by: Jesper Juhl <jj@chaosbits.net>\
-Acked-by: Hannes Reinecke <hare@suse.de>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Cheers,
+This patch fixes a v4.0 specific bug that was not properly addressed
+in commit 31dd8f6971ad:
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+commit 31dd8f6971ad62f4a849d98cafecf23675575e88
+Author: Nicholas Bellinger <nab@linux-iscsi.org>
+Date:   Sun Jan 16 20:50:54 2011 -0800
+
+    target: Fix demo-mode MappedLUN shutdown UA/PR breakage
+
+The main point is that list_del(&deve->alua_port_list); *must* be
+called via core_update_device_list_for_node() for each demo-mode
+struct se_node_acl specific MappedLUN that is being disabled when
+a dynamic struct se_node_acl->device_list[] is being released in
+core_free_device_list_for_node().
+
+Reported-by: John Hawley <warthog9@kernel.org>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_device.c |   11 +++++------
+ 1 files changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 89b3893..4c2bd9c 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -369,15 +369,14 @@ int core_update_device_list_for_node(
+ 		/*
+ 		 * deve->se_lun_acl will be NULL for demo-mode created LUNs
+ 		 * that have not been explictly concerted to MappedLUNs ->
+-		 * struct se_lun_acl.  This means that active UAs and
++		 * struct se_lun_acl, but we remove deve->alua_port_list from
++		 * port->sep_alua_list. This also means that active UAs and
+ 		 * NodeACL context specific PR metadata for demo-mode
+ 		 * MappedLUN *deve will be released below..
+ 		 */
+-		if (deve->se_lun_acl != NULL) {
+-			spin_lock_bh(&port->sep_alua_lock);
+-			list_del(&deve->alua_port_list);
+-			spin_unlock_bh(&port->sep_alua_lock);
+-		}
++		spin_lock_bh(&port->sep_alua_lock);
++		list_del(&deve->alua_port_list);
++		spin_unlock_bh(&port->sep_alua_lock);
+ 	}
+ 
+ 	spin_lock_irq(&nacl->device_list_lock);
+-- 
+1.5.6.5
+
