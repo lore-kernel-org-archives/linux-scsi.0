@@ -1,66 +1,57 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Call missing list_del() for demo-mode MappedLUN disable
-Date: Wed, 19 Jan 2011 23:26:02 -0800
-Message-ID: <1295508362-20011-1-git-send-email-nab@linux-iscsi.org>
+From: Or Gerlitz <ogerlitz@voltaire.com>
+Subject: Re: build failure of drivers/scsi/gdth.c
+Date: Thu, 20 Jan 2011 12:56:36 +0200
+Message-ID: <4D3814E4.3090703@voltaire.com>
+References: <Pine.LNX.4.64.1101121217090.6323@zuben.voltaire.com>	<20110112083919.494a7404.rdunlap@xenotime.net>	<AANLkTikmygrH_W=nTB2ERPjUETVNzW=8n7VL9Jf6DLu3@mail.gmail.com>	<20110113091127.dcdd3105.rdunlap@xenotime.net>	<4D3543A6.8040909@voltaire.com> <20110118084601.ad10d7ac.rdunlap@xenotime.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp106.sbc.mail.mud.yahoo.com ([68.142.198.104]:42560 "HELO
-	smtp106.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753305Ab1ATHZ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Jan 2011 02:25:58 -0500
+Received: from fwil.voltaire.com ([193.47.165.2]:29692 "EHLO
+	Exil2010.voltaire.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755210Ab1ATK4k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jan 2011 05:56:40 -0500
+In-Reply-To: <20110118084601.ad10d7ac.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, John Hawley <warthog9@kernel.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Randy Dunlap wrote:
+> What shell are you using?
+> Are you using any other build scripts that set an variable named VERSION ?
+> See https://bugzilla.kernel.org/show_bug.cgi?id=16510
 
-This patch fixes a v4.0 specific bug that was not properly addressed
-in commit 31dd8f6971ad:
+Thanks for the bz pointer, this happens as I wanted to change the kernel version
+and added something for sublevel instead for extraversion, I can build 
+drivers/scsi/gdth.c fine now, 
 
-commit 31dd8f6971ad62f4a849d98cafecf23675575e88
-Author: Nicholas Bellinger <nab@linux-iscsi.org>
-Date:   Sun Jan 16 20:50:54 2011 -0800
+so with 
 
-    target: Fix demo-mode MappedLUN shutdown UA/PR breakage
+> VERSION = 2
+> PATCHLEVEL = 6
+> SUBLEVEL = 37
+> EXTRAVERSION = -dd
+> NAME = Flesh-Eating Bats with Fangs
 
-The main point is that list_del(&deve->alua_port_list); *must* be
-called via core_update_device_list_for_node() for each demo-mode
-struct se_node_acl specific MappedLUN that is being disabled when
-a dynamic struct se_node_acl->device_list[] is being released in
-core_free_device_list_for_node().
+include/linux/version.h has
 
-Reported-by: John Hawley <warthog9@kernel.org>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_device.c |   11 +++++------
- 1 files changed, 5 insertions(+), 6 deletions(-)
+> #define LINUX_VERSION_CODE 132645
+> #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 89b3893..4c2bd9c 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -369,15 +369,14 @@ int core_update_device_list_for_node(
- 		/*
- 		 * deve->se_lun_acl will be NULL for demo-mode created LUNs
- 		 * that have not been explictly concerted to MappedLUNs ->
--		 * struct se_lun_acl.  This means that active UAs and
-+		 * struct se_lun_acl, but we remove deve->alua_port_list from
-+		 * port->sep_alua_list. This also means that active UAs and
- 		 * NodeACL context specific PR metadata for demo-mode
- 		 * MappedLUN *deve will be released below..
- 		 */
--		if (deve->se_lun_acl != NULL) {
--			spin_lock_bh(&port->sep_alua_lock);
--			list_del(&deve->alua_port_list);
--			spin_unlock_bh(&port->sep_alua_lock);
--		}
-+		spin_lock_bh(&port->sep_alua_lock);
-+		list_del(&deve->alua_port_list);
-+		spin_unlock_bh(&port->sep_alua_lock);
- 	}
- 
- 	spin_lock_irq(&nacl->device_list_lock);
--- 
-1.5.6.5
+and with 
+
+> VERSION = 2
+> PATCHLEVEL = 6
+> SUBLEVEL = 37-dd
+> EXTRAVERSION =
+> NAME = Flesh-Eating Bats with Fangs
+
+
+include/linux/version.h has
+
+> #define LINUX_VERSION_CODE
+> #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
+
+and whoever is addressing LINUX_VERSION_CODE fails to get built
 
