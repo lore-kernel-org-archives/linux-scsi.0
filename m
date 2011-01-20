@@ -1,44 +1,52 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: [PATCH] libsas: fix runaway error handler problem
-Date: Thu, 20 Jan 2011 17:26:44 -0600
-Message-ID: <1295566004.3014.48.camel@mulgrave.site>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: Status of the LSI 2108
+Date: Thu, 20 Jan 2011 15:34:19 -0800
+Message-ID: <20110120153419.806d38e1.rdunlap@xenotime.net>
+References: <1295411153.20086.81.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36351 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755926Ab1ATX0w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Jan 2011 18:26:52 -0500
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	by mx2.suse.de (Postfix) with ESMTP id 1DEEB867E2
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Jan 2011 00:26:51 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1295411153.20086.81.camel@localhost>
+Sender: linux-kernel-owner@vger.kernel.org
+To: purpleidea@gmail.com, scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-libsas makes use of scsi_schedule_eh() but forgets to clear the
-host_eh_scheduled flag in its error handling routine.  Because of this,
-the error handler thread never gets to sleep; it's constantly awake and
-trying to run the error routine leading to console spew and inability to
-run anything else (at least on a UP system).  The fix is to clear the
-flag as we splice the work queue.
+On Tue, 18 Jan 2011 23:25:53 -0500 James Shubin wrote:
 
-James
+> Hi,
+> 
+> I've been trying to find out if the LSI 2108 is fully supported in the
+> vanilla kernel, and any thoughts as to the quality/robustness.
+> 
+> This seems to be the correct source:
+> ftp://ftp.supermicro.nl/driver/SAS/LSI/2108/Driver/Linux/v04.31/
+> however I'm not sure at all if it's maintained, or what. I would
+> outright test this myself, however I haven't bought the servers yet
+> 
+> Thanks for your help,
+> Please cc-me on replies.
+
+Hi,
+
+Probably better to ask on the linux-scsi mailing list [added].
+Also added the lsi.com email address.
+
+
+drivers/scsi/mpt2sas/mpt2sas_scsih.c contains this:
+
+	/* Liberator ~ 2108 */
+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2108_1,
+		PCI_ANY_ID, PCI_ANY_ID },
+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2108_2,
+		PCI_ANY_ID, PCI_ANY_ID },
+	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2108_3,
+		PCI_ANY_ID, PCI_ANY_ID },
+
+so it looks like there is at least some basic support for the 2108.
+
 
 ---
-
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 5815cbe..9a7aaf5 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -646,6 +646,7 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_splice_init(&shost->eh_cmd_q, &eh_work_q);
-+	shost->host_eh_scheduled = 0;
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
- 	SAS_DPRINTK("Enter %s\n", __func__);
-
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
