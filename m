@@ -1,46 +1,46 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [RFC/PATCH] Deferred disk spinup during system resume
-Date: Thu, 20 Jan 2011 01:01:08 -0500
-Message-ID: <4D37CFA4.6030601@pobox.com>
-References: <1294795457-9006-1-git-send-email-maksim.rayskiy@gmail.com> <20110112112142.GA9610@mtj.dyndns.org> <4D2DF45B.5010101@pobox.com> <AANLkTikEusD_CvkOERsr_wr7T70g1kuU=JnBJm5ur5Wg@mail.gmail.com> <4D368D3B.7030701@pobox.com> <AANLkTikcrznVeySm42NDYtWtKJBypSXCRv1QsOBug5zQ@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] [SCSI] scsi_dh_alua: fix overflow in alua_rtpg port group
+ id check
+Date: Thu, 20 Jan 2011 08:24:45 +0100
+Message-ID: <4D37E33D.3090901@suse.de>
+References: <1295399511-10894-1-git-send-email-snitzer@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikcrznVeySm42NDYtWtKJBypSXCRv1QsOBug5zQ@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Maksim Rayskiy <maksim.rayskiy@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, linux-scsi@vger.kernel.org, Linux IDE mailing list <linux-ide@vger.kernel.org>, Jens Axboe <jens.axboe@oracle.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:50093 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752341Ab1ATHSA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Jan 2011 02:18:00 -0500
+In-Reply-To: <1295399511-10894-1-git-send-email-snitzer@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, Martin George <marting@netapp.com>
 
-On 01/19/2011 03:29 PM, Maksim Rayskiy wrote:
->> A kernel modification might not even be needed.
->>
->> Have you tried simply issuing READ VERIFY via bsg, and not caring if it
->> completes?  bsg should be able to handle an app submitting a command, but
->> never checking the 'done' list, right?  A simple shell app could execute
->>
->>         write(bsg_fd, ... SCSI READ VERIFY command ...)
->>         exit(0)
->>
->> to avoid waiting for READ VERIFY command completion, I would hope.
->>
->>         Jeff
->>
->
-> My question was how to speed up system resume when he the spinup
-> request is coming from sd_resume(). For shell method to work I would
-> have to ignore this request entirely and do READ VERIFY when system is
-> fully restored.
-> Can it be done without kernel modification? Tejun mentioned using
-> manage_start_stop flag but had some reservations against it.
+On 01/19/2011 02:11 AM, Mike Snitzer wrote:
+> For Target Portal Group IDs occupying the full 2 bytes in the RTPG
+> response, the following group_id check in alua_rtpg() always fails
+> because 'ucp' is only a signed char:
+>    if (h->group_id =3D=3D (ucp[2] << 8) + ucp[3]) {
+>=20
+> Fix this signed char overflow by changing 'ucp' to an unsigned char
+> pointer (same type used for 'buff' member of alua_dh_data structure).
+>=20
+> Reported-by: Martin George <marting@netapp.com>
+> Signed-off-by: Mike Snitzer <snitzer@redhat.com>
+Acked-by: Hannes Reinecke <hare@suse.de>
 
-Oh, if we're talking about sd_resume(), SCSI definitely has an internal 
-mechanism to fire off a request, without blocking and waiting for a 
-response.  It does sound like a kernel modification, but it should be 
-straightforward via existing APIs.
+Cheers,
 
-	Jeff
-
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
