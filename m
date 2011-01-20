@@ -1,57 +1,49 @@
-From: Or Gerlitz <ogerlitz@voltaire.com>
-Subject: Re: build failure of drivers/scsi/gdth.c
-Date: Thu, 20 Jan 2011 12:56:36 +0200
-Message-ID: <4D3814E4.3090703@voltaire.com>
-References: <Pine.LNX.4.64.1101121217090.6323@zuben.voltaire.com>	<20110112083919.494a7404.rdunlap@xenotime.net>	<AANLkTikmygrH_W=nTB2ERPjUETVNzW=8n7VL9Jf6DLu3@mail.gmail.com>	<20110113091127.dcdd3105.rdunlap@xenotime.net>	<4D3543A6.8040909@voltaire.com> <20110118084601.ad10d7ac.rdunlap@xenotime.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [LSF/MM TOPIC] SCSI referrals support
+Date: Thu, 20 Jan 2011 17:00:10 +0100
+Message-ID: <4D385C0A.3000901@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fwil.voltaire.com ([193.47.165.2]:29692 "EHLO
-	Exil2010.voltaire.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755210Ab1ATK4k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Jan 2011 05:56:40 -0500
-In-Reply-To: <20110118084601.ad10d7ac.rdunlap@xenotime.net>
+Received: from cantor2.suse.de ([195.135.220.15]:52140 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753058Ab1ATPxQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Jan 2011 10:53:16 -0500
+Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	by mx2.suse.de (Postfix) with ESMTP id 0EF3C890B6
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Jan 2011 16:53:16 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: linux-scsi@vger.kernel.org
+To: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Randy Dunlap wrote:
-> What shell are you using?
-> Are you using any other build scripts that set an variable named VERSION ?
-> See https://bugzilla.kernel.org/show_bug.cgi?id=16510
+Agenda topic proposal:
 
-Thanks for the bz pointer, this happens as I wanted to change the kernel version
-and added something for sublevel instead for extraversion, I can build 
-drivers/scsi/gdth.c fine now, 
+SCSI referrals support has already been discussed at last year's LSF
+conference. However, the solution proposed there would not support
+failover and would require quite a lot of changes to multipathing.
 
-so with 
+To enable failover it might be an idea to handle the LUN directly in
+multipathing. This would require eg:
+- request splitting
+- I/O alignment handling
+- SCSI unit attention handling
 
-> VERSION = 2
-> PATCHLEVEL = 6
-> SUBLEVEL = 37
-> EXTRAVERSION = -dd
-> NAME = Flesh-Eating Bats with Fangs
+I would be giving a short overview/presentation of the current
+state of the art, the shortcomings on the original proposal,
+and would like to invite a discussion on how to best support
+SCSI referrals.
 
-include/linux/version.h has
+Cheers,
 
-> #define LINUX_VERSION_CODE 132645
-> #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
-
-and with 
-
-> VERSION = 2
-> PATCHLEVEL = 6
-> SUBLEVEL = 37-dd
-> EXTRAVERSION =
-> NAME = Flesh-Eating Bats with Fangs
-
-
-include/linux/version.h has
-
-> #define LINUX_VERSION_CODE
-> #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
-
-and whoever is addressing LINUX_VERSION_CODE fails to get built
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
