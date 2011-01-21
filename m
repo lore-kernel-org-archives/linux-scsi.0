@@ -1,63 +1,99 @@
-From: "Unrein, Jason" <Jason.Unrein@lsi.com>
+From: James Shubin <purpleidea@gmail.com>
 Subject: RE: Status of the LSI 2108
-Date: Fri, 21 Jan 2011 08:47:23 -0700
-Message-ID: <D41A5B864986B546A595D85C4701A9C001023A5A4E@cosmail03.lsi.com>
+Date: Fri, 21 Jan 2011 11:20:35 -0500
+Message-ID: <1295626835.20086.131.camel@localhost>
 References: <1295411153.20086.81.camel@localhost>
 	 <20110120153419.806d38e1.rdunlap@xenotime.net>
- <1295567826.20086.89.camel@localhost>
+	 <1295567826.20086.89.camel@localhost>
+	 <D41A5B864986B546A595D85C4701A9C001023A5A4E@cosmail03.lsi.com>
+Reply-To: purpleidea@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1295567826.20086.89.camel@localhost>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "purpleidea@gmail.com" <purpleidea@gmail.com>, Randy Dunlap <rdunlap@xenotime.net>
-Cc: scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:58761 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750880Ab1AUQUY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Jan 2011 11:20:24 -0500
+In-Reply-To: <D41A5B864986B546A595D85C4701A9C001023A5A4E@cosmail03.lsi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: support@supermicro.com
 
-VGhlIGxhdGVzdCB2YW5pbGxhIGtlcm5lbCBzaG91bGQgaGF2ZSBzdXBwb3J0IGZvciBhbGwgb2Yg
-b3VyIHNlY29uZCBnZW5lcmF0aW9uIHNhcyBIQkFzICg2Z2IvcyBjYXBhYmxlKS4gIElmIHRoZXJl
-IGFyZSBhbnkgcHJvYmxlbXMgeW91IGNhbiBhbHdheXMgZG93bmxvYWQgYW4gdXBkYXRlZCBkcml2
-ZXIgZnJvbSB0aGUgd3d3LmxzaS5jb20gd2Vic2l0ZS4gIA0KDQpUaGUgU3VwZXJtaWNybyBmdHAg
-c2l0ZSB5b3Ugc2VudCBpcyBhY3R1YWxseSBmb3Igb3VyIGNvdW50ZXJwYXJ0IGluIExTSSwgTWVn
-YXJhaWQuICBTaW5jZSB0aGV5IHJ1biBhIGRpZmZlcmVudCBmaXJtd2FyZSwgdGhleSBoYXZlIGEg
-ZGlmZmVyZW50IGRyaXZlciBpbiB0aGUga2VybmVsIChtZWdhcmFpZF9zYXMpIHdoZXJlIGFzIG91
-cnMgYXJlIG1wdGxpbnV4IChHZW4xLCAzLjBnYi9zKSwgbXB0MnNhcyAoR2VuMiksIG1wdDJzYXNi
-dG0gKEdlbjIgYnV0IGZvciBvbGRlciAyLjYga2VybmVscykuICBXZSBib3RoIHVzZSB0aGUgc2Ft
-ZSBjaGlwIHNvIFN1cGVybWljcm8gbWlnaHQgYmUgbWFraW5nIGl0IGEgbGl0dGxlIGNvbmZ1c2lu
-Zy4gIFlvdSBtaWdodCBzZWUgaWYgdGhleSByZWZlcmVuY2UgdGhlIGNoaXAgYXMgYSBNZWdhcmFp
-ZCBjaGlwIGluIGFueSB3YXkgb3IgaWYgaXQgaXMgYWx3YXlzIGFuIExTSSBjaGlwLiBJdCBpcyBw
-b3NzaWJsZSB0byBydW4gaXQgaW4gYm90aCBtb2RlcyBpZiBhbGwgdGhlIGhhcmR3YXJlIGNvbXBv
-bmVudHMgYXJlIHRoZXJlLg0KDQpJdCB3b3VsZCBwcm9iYWJseSBiZSBiZXN0IHRvIGVtYWlsIFN1
-cGVybWljcm8gYW5kIGdldCB0aGUgZGV0YWlscyBmcm9tIHRoZW0gYWJvdXQgdGhlIGNoaXAgdG8g
-Y29uZmlybSB3aGF0IHlvdSBuZWVkLg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
-bTogSmFtZXMgU2h1YmluIFttYWlsdG86cHVycGxlaWRlYUBnbWFpbC5jb21dIA0KU2VudDogVGh1
-cnNkYXksIEphbnVhcnkgMjAsIDIwMTEgNTo1NyBQTQ0KVG86IFJhbmR5IER1bmxhcA0KQ2M6IHNj
-c2k7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IERMLU1QVCBGdXNpb24gTGludXgNClN1
-YmplY3Q6IFJlOiBTdGF0dXMgb2YgdGhlIExTSSAyMTA4DQoNClRoYW5rcyBSYW5keSBmb3Igc2Vu
-ZGluZyBtZSBpbiB0aGUgcmlnaHQgZGlyZWN0aW9uLg0KSGVsbG8gbGludXgtc2NzaSBhbmQgTFNJ
-LiBBbnkgdGhvdWdodHMgdG8gdGhlIGJlbG93IHF1ZXN0aW9uIHdvdWxkIGJlDQptdWNoIGFwcHJl
-Y2lhdGVkIQ0KDQpKYW1lcw0KDQoNCk9uIFRodSwgMjAxMS0wMS0yMCBhdCAxNTozNCAtMDgwMCwg
-UmFuZHkgRHVubGFwIHdyb3RlOg0KPiBPbiBUdWUsIDE4IEphbiAyMDExIDIzOjI1OjUzIC0wNTAw
-IEphbWVzIFNodWJpbiB3cm90ZToNCj4gDQo+ID4gSGksDQo+ID4gDQo+ID4gSSd2ZSBiZWVuIHRy
-eWluZyB0byBmaW5kIG91dCBpZiB0aGUgTFNJIDIxMDggaXMgZnVsbHkgc3VwcG9ydGVkIGluIHRo
-ZQ0KPiA+IHZhbmlsbGEga2VybmVsLCBhbmQgYW55IHRob3VnaHRzIGFzIHRvIHRoZSBxdWFsaXR5
-L3JvYnVzdG5lc3MuDQo+ID4gDQo+ID4gVGhpcyBzZWVtcyB0byBiZSB0aGUgY29ycmVjdCBzb3Vy
-Y2U6DQo+ID4gZnRwOi8vZnRwLnN1cGVybWljcm8ubmwvZHJpdmVyL1NBUy9MU0kvMjEwOC9Ecml2
-ZXIvTGludXgvdjA0LjMxLw0KPiA+IGhvd2V2ZXIgSSdtIG5vdCBzdXJlIGF0IGFsbCBpZiBpdCdz
-IG1haW50YWluZWQsIG9yIHdoYXQuIEkgd291bGQNCj4gPiBvdXRyaWdodCB0ZXN0IHRoaXMgbXlz
-ZWxmLCBob3dldmVyIEkgaGF2ZW4ndCBib3VnaHQgdGhlIHNlcnZlcnMgeWV0DQo+ID4gDQo+ID4g
-VGhhbmtzIGZvciB5b3VyIGhlbHAsDQo+ID4gUGxlYXNlIGNjLW1lIG9uIHJlcGxpZXMuDQo+IA0K
-PiBIaSwNCj4gDQo+IFByb2JhYmx5IGJldHRlciB0byBhc2sgb24gdGhlIGxpbnV4LXNjc2kgbWFp
-bGluZyBsaXN0IFthZGRlZF0uDQo+IEFsc28gYWRkZWQgdGhlIGxzaS5jb20gZW1haWwgYWRkcmVz
-cy4NCj4gDQo+IA0KPiBkcml2ZXJzL3Njc2kvbXB0MnNhcy9tcHQyc2FzX3Njc2loLmMgY29udGFp
-bnMgdGhpczoNCj4gDQo+IAkvKiBMaWJlcmF0b3IgfiAyMTA4ICovDQo+IAl7IE1QSTJfTUZHUEFH
-RV9WRU5ET1JJRF9MU0ksIE1QSTJfTUZHUEFHRV9ERVZJRF9TQVMyMTA4XzEsDQo+IAkJUENJX0FO
-WV9JRCwgUENJX0FOWV9JRCB9LA0KPiAJeyBNUEkyX01GR1BBR0VfVkVORE9SSURfTFNJLCBNUEky
-X01GR1BBR0VfREVWSURfU0FTMjEwOF8yLA0KPiAJCVBDSV9BTllfSUQsIFBDSV9BTllfSUQgfSwN
-Cj4gCXsgTVBJMl9NRkdQQUdFX1ZFTkRPUklEX0xTSSwgTVBJMl9NRkdQQUdFX0RFVklEX1NBUzIx
-MDhfMywNCj4gCQlQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lEIH0sDQo+IA0KPiBzbyBpdCBsb29rcyBs
-aWtlIHRoZXJlIGlzIGF0IGxlYXN0IHNvbWUgYmFzaWMgc3VwcG9ydCBmb3IgdGhlIDIxMDguDQo+
-IA0KPiANCj4gLS0tDQo+IH5SYW5keQ0KPiAqKiogUmVtZW1iZXIgdG8gdXNlIERvY3VtZW50YXRp
-b24vU3VibWl0Q2hlY2tsaXN0IHdoZW4gdGVzdGluZyB5b3VyIGNvZGUgKioqDQoNCg0K
+Hi Supermicro,
+
+I'm looking for information on whether the LSI 2108 is fully supported
+in the vanilla linux kernel, and any thoughts as to the quality/
+robustness of the driver. The servers in question that I'm interested in
+are the:
+http://www.supermicro.com/products/system/2U/8026/SYS-8026B-6R.cfm?SAS=Y
+
+Thank you for your time, feel free to see the below history for some
+background.
+
+James
+
+
+On Fri, 2011-01-21 at 08:47 -0700, Unrein, Jason wrote:
+> The latest vanilla kernel should have support for all of our second generation sas HBAs (6gb/s capable).  If there are any problems you can always download an updated driver from the www.lsi.com website.  
+> 
+> The Supermicro ftp site you sent is actually for our counterpart in LSI, Megaraid.  Since they run a different firmware, they have a different driver in the kernel (megaraid_sas) where as ours are mptlinux (Gen1, 3.0gb/s), mpt2sas (Gen2), mpt2sasbtm (Gen2 but for older 2.6 kernels).  We both use the same chip so Supermicro might be making it a little confusing.  You might see if they reference the chip as a Megaraid chip in any way or if it is always an LSI chip. It is possible to run it in both modes if all the hardware components are there.
+> 
+> It would probably be best to email Supermicro and get the details from them about the chip to confirm what you need.
+> 
+> -----Original Message-----
+> From: James Shubin [mailto:purpleidea@gmail.com] 
+> Sent: Thursday, January 20, 2011 5:57 PM
+> To: Randy Dunlap
+> Cc: scsi; linux-kernel@vger.kernel.org; DL-MPT Fusion Linux
+> Subject: Re: Status of the LSI 2108
+> 
+> Thanks Randy for sending me in the right direction.
+> Hello linux-scsi and LSI. Any thoughts to the below question would be
+> much appreciated!
+> 
+> James
+> 
+> 
+> On Thu, 2011-01-20 at 15:34 -0800, Randy Dunlap wrote:
+> > On Tue, 18 Jan 2011 23:25:53 -0500 James Shubin wrote:
+> > 
+> > > Hi,
+> > > 
+> > > I've been trying to find out if the LSI 2108 is fully supported in the
+> > > vanilla kernel, and any thoughts as to the quality/robustness.
+> > > 
+> > > This seems to be the correct source:
+> > > ftp://ftp.supermicro.nl/driver/SAS/LSI/2108/Driver/Linux/v04.31/
+> > > however I'm not sure at all if it's maintained, or what. I would
+> > > outright test this myself, however I haven't bought the servers yet
+> > > 
+> > > Thanks for your help,
+> > > Please cc-me on replies.
+> > 
+> > Hi,
+> > 
+> > Probably better to ask on the linux-scsi mailing list [added].
+> > Also added the lsi.com email address.
+> > 
+> > 
+> > drivers/scsi/mpt2sas/mpt2sas_scsih.c contains this:
+> > 
+> > 	/* Liberator ~ 2108 */
+> > 	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2108_1,
+> > 		PCI_ANY_ID, PCI_ANY_ID },
+> > 	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2108_2,
+> > 		PCI_ANY_ID, PCI_ANY_ID },
+> > 	{ MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2108_3,
+> > 		PCI_ANY_ID, PCI_ANY_ID },
+> > 
+> > so it looks like there is at least some basic support for the 2108.
+> > 
+> > 
+> > ---
+> > ~Randy
+> > *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> 
+> 
+
+
