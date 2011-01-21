@@ -1,116 +1,63 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scsi: Erroneous handling of sense status in SCSI EH commands
-Date: Fri, 21 Jan 2011 09:07:54 +0100
-Message-ID: <1295597274-5844-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:34527 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751067Ab1AUIH4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Jan 2011 03:07:56 -0500
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx1.suse.de (Postfix) with ESMTP id 08A5090847
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Jan 2011 09:07:55 +0100 (CET)
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Unrein, Jason" <Jason.Unrein@lsi.com>
+Subject: RE: Status of the LSI 2108
+Date: Fri, 21 Jan 2011 08:47:23 -0700
+Message-ID: <D41A5B864986B546A595D85C4701A9C001023A5A4E@cosmail03.lsi.com>
+References: <1295411153.20086.81.camel@localhost>
+	 <20110120153419.806d38e1.rdunlap@xenotime.net>
+ <1295567826.20086.89.camel@localhost>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1295567826.20086.89.camel@localhost>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "purpleidea@gmail.com" <purpleidea@gmail.com>, Randy Dunlap <rdunlap@xenotime.net>
+Cc: scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jbottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Consider a scenario where a SCSI EH command like TUR fails with a NOT READY
-status - MANUAL INTERVENTION REQUIRED (02/04/03). As evident in the ASC/ASCQ
-description, manual intervention is required in this case i.e. the target wants
-TUR to fail here so that the host administrator can take corrective action.
-
-But this particular ASC/ASCQ is not handled in the scsi_check_sense, which
-ultimately causes scsi_eh_tur to erroneously report a SUCCESS (device ready)
-instead of the actual FAILURE state (device not ready).
-
-This patch converts scsi_check_sense() to return SOFT_ERROR in
-cases where an error has been signalled via the sense code, but
-we should not wake the error handler. This error code will be
-reverted back to SUCCESS for normal command handling, but
-scsi_eh_completed_normally() will convert it to FAILED.
-
-Reported-by: Martin George <marting@netapp.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 45c7564..e86e62e 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -223,7 +223,7 @@ static inline void scsi_eh_prt_fail_stats(struct Scsi_Host *shost,
-  * @scmd:	Cmd to have sense checked.
-  *
-  * Return value:
-- * 	SUCCESS or FAILED or NEEDS_RETRY
-+ * 	SUCCESS or FAILED or NEEDS_RETRY or SOFT_ERROR
-  *
-  * Notes:
-  *	When a deferred error is detected the current command has
-@@ -278,7 +278,7 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 
- 	case ABORTED_COMMAND:
- 		if (sshdr.asc == 0x10) /* DIF */
--			return SUCCESS;
-+			return SOFT_ERROR;
- 
- 		return NEEDS_RETRY;
- 	case NOT_READY:
-@@ -324,19 +324,19 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 		 * Pass the UA upwards for a determination in the completion
- 		 * functions.
- 		 */
--		return SUCCESS;
-+		return SOFT_ERROR;
- 
- 		/* these three are not supported */
- 	case COPY_ABORTED:
- 	case VOLUME_OVERFLOW:
- 	case MISCOMPARE:
--		return SUCCESS;
-+		return SOFT_ERROR;
- 
- 	case MEDIUM_ERROR:
- 		if (sshdr.asc == 0x11 || /* UNRECOVERED READ ERR */
- 		    sshdr.asc == 0x13 || /* AMNF DATA FIELD */
- 		    sshdr.asc == 0x14) { /* RECORD NOT FOUND */
--			return SUCCESS;
-+			return SOFT_ERROR;
- 		}
- 		return NEEDS_RETRY;
- 
-@@ -344,13 +344,13 @@ static int scsi_check_sense(struct scsi_cmnd *scmd)
- 		if (scmd->device->retry_hwerror)
- 			return ADD_TO_MLQUEUE;
- 		else
--			return SUCCESS;
-+			return SOFT_ERROR;
- 
- 	case ILLEGAL_REQUEST:
- 	case BLANK_CHECK:
- 	case DATA_PROTECT:
- 	default:
--		return SUCCESS;
-+		return SOFT_ERROR;
- 	}
- }
- 
-@@ -1469,10 +1469,15 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
- 		rtn = scsi_check_sense(scmd);
- 		if (rtn == NEEDS_RETRY)
- 			goto maybe_retry;
--		/* if rtn == FAILED, we have no sense information;
-+		/* If rtn == FAILED, we have no sense information;
- 		 * returning FAILED will wake the error handler thread
- 		 * to collect the sense and redo the decide
--		 * disposition */
-+		 * disposition.
-+		 * If rtn == SOFT_ERROR an error has occurred, but
-+		 * we do _not_ need to wake the error handler.
-+		 * So return SUCCESS here. */
-+		if (rtn == SOFT_ERROR)
-+			rtn = SUCCESS;
- 		return rtn;
- 	case CONDITION_GOOD:
- 	case INTERMEDIATE_GOOD:
+VGhlIGxhdGVzdCB2YW5pbGxhIGtlcm5lbCBzaG91bGQgaGF2ZSBzdXBwb3J0IGZvciBhbGwgb2Yg
+b3VyIHNlY29uZCBnZW5lcmF0aW9uIHNhcyBIQkFzICg2Z2IvcyBjYXBhYmxlKS4gIElmIHRoZXJl
+IGFyZSBhbnkgcHJvYmxlbXMgeW91IGNhbiBhbHdheXMgZG93bmxvYWQgYW4gdXBkYXRlZCBkcml2
+ZXIgZnJvbSB0aGUgd3d3LmxzaS5jb20gd2Vic2l0ZS4gIA0KDQpUaGUgU3VwZXJtaWNybyBmdHAg
+c2l0ZSB5b3Ugc2VudCBpcyBhY3R1YWxseSBmb3Igb3VyIGNvdW50ZXJwYXJ0IGluIExTSSwgTWVn
+YXJhaWQuICBTaW5jZSB0aGV5IHJ1biBhIGRpZmZlcmVudCBmaXJtd2FyZSwgdGhleSBoYXZlIGEg
+ZGlmZmVyZW50IGRyaXZlciBpbiB0aGUga2VybmVsIChtZWdhcmFpZF9zYXMpIHdoZXJlIGFzIG91
+cnMgYXJlIG1wdGxpbnV4IChHZW4xLCAzLjBnYi9zKSwgbXB0MnNhcyAoR2VuMiksIG1wdDJzYXNi
+dG0gKEdlbjIgYnV0IGZvciBvbGRlciAyLjYga2VybmVscykuICBXZSBib3RoIHVzZSB0aGUgc2Ft
+ZSBjaGlwIHNvIFN1cGVybWljcm8gbWlnaHQgYmUgbWFraW5nIGl0IGEgbGl0dGxlIGNvbmZ1c2lu
+Zy4gIFlvdSBtaWdodCBzZWUgaWYgdGhleSByZWZlcmVuY2UgdGhlIGNoaXAgYXMgYSBNZWdhcmFp
+ZCBjaGlwIGluIGFueSB3YXkgb3IgaWYgaXQgaXMgYWx3YXlzIGFuIExTSSBjaGlwLiBJdCBpcyBw
+b3NzaWJsZSB0byBydW4gaXQgaW4gYm90aCBtb2RlcyBpZiBhbGwgdGhlIGhhcmR3YXJlIGNvbXBv
+bmVudHMgYXJlIHRoZXJlLg0KDQpJdCB3b3VsZCBwcm9iYWJseSBiZSBiZXN0IHRvIGVtYWlsIFN1
+cGVybWljcm8gYW5kIGdldCB0aGUgZGV0YWlscyBmcm9tIHRoZW0gYWJvdXQgdGhlIGNoaXAgdG8g
+Y29uZmlybSB3aGF0IHlvdSBuZWVkLg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJv
+bTogSmFtZXMgU2h1YmluIFttYWlsdG86cHVycGxlaWRlYUBnbWFpbC5jb21dIA0KU2VudDogVGh1
+cnNkYXksIEphbnVhcnkgMjAsIDIwMTEgNTo1NyBQTQ0KVG86IFJhbmR5IER1bmxhcA0KQ2M6IHNj
+c2k7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7IERMLU1QVCBGdXNpb24gTGludXgNClN1
+YmplY3Q6IFJlOiBTdGF0dXMgb2YgdGhlIExTSSAyMTA4DQoNClRoYW5rcyBSYW5keSBmb3Igc2Vu
+ZGluZyBtZSBpbiB0aGUgcmlnaHQgZGlyZWN0aW9uLg0KSGVsbG8gbGludXgtc2NzaSBhbmQgTFNJ
+LiBBbnkgdGhvdWdodHMgdG8gdGhlIGJlbG93IHF1ZXN0aW9uIHdvdWxkIGJlDQptdWNoIGFwcHJl
+Y2lhdGVkIQ0KDQpKYW1lcw0KDQoNCk9uIFRodSwgMjAxMS0wMS0yMCBhdCAxNTozNCAtMDgwMCwg
+UmFuZHkgRHVubGFwIHdyb3RlOg0KPiBPbiBUdWUsIDE4IEphbiAyMDExIDIzOjI1OjUzIC0wNTAw
+IEphbWVzIFNodWJpbiB3cm90ZToNCj4gDQo+ID4gSGksDQo+ID4gDQo+ID4gSSd2ZSBiZWVuIHRy
+eWluZyB0byBmaW5kIG91dCBpZiB0aGUgTFNJIDIxMDggaXMgZnVsbHkgc3VwcG9ydGVkIGluIHRo
+ZQ0KPiA+IHZhbmlsbGEga2VybmVsLCBhbmQgYW55IHRob3VnaHRzIGFzIHRvIHRoZSBxdWFsaXR5
+L3JvYnVzdG5lc3MuDQo+ID4gDQo+ID4gVGhpcyBzZWVtcyB0byBiZSB0aGUgY29ycmVjdCBzb3Vy
+Y2U6DQo+ID4gZnRwOi8vZnRwLnN1cGVybWljcm8ubmwvZHJpdmVyL1NBUy9MU0kvMjEwOC9Ecml2
+ZXIvTGludXgvdjA0LjMxLw0KPiA+IGhvd2V2ZXIgSSdtIG5vdCBzdXJlIGF0IGFsbCBpZiBpdCdz
+IG1haW50YWluZWQsIG9yIHdoYXQuIEkgd291bGQNCj4gPiBvdXRyaWdodCB0ZXN0IHRoaXMgbXlz
+ZWxmLCBob3dldmVyIEkgaGF2ZW4ndCBib3VnaHQgdGhlIHNlcnZlcnMgeWV0DQo+ID4gDQo+ID4g
+VGhhbmtzIGZvciB5b3VyIGhlbHAsDQo+ID4gUGxlYXNlIGNjLW1lIG9uIHJlcGxpZXMuDQo+IA0K
+PiBIaSwNCj4gDQo+IFByb2JhYmx5IGJldHRlciB0byBhc2sgb24gdGhlIGxpbnV4LXNjc2kgbWFp
+bGluZyBsaXN0IFthZGRlZF0uDQo+IEFsc28gYWRkZWQgdGhlIGxzaS5jb20gZW1haWwgYWRkcmVz
+cy4NCj4gDQo+IA0KPiBkcml2ZXJzL3Njc2kvbXB0MnNhcy9tcHQyc2FzX3Njc2loLmMgY29udGFp
+bnMgdGhpczoNCj4gDQo+IAkvKiBMaWJlcmF0b3IgfiAyMTA4ICovDQo+IAl7IE1QSTJfTUZHUEFH
+RV9WRU5ET1JJRF9MU0ksIE1QSTJfTUZHUEFHRV9ERVZJRF9TQVMyMTA4XzEsDQo+IAkJUENJX0FO
+WV9JRCwgUENJX0FOWV9JRCB9LA0KPiAJeyBNUEkyX01GR1BBR0VfVkVORE9SSURfTFNJLCBNUEky
+X01GR1BBR0VfREVWSURfU0FTMjEwOF8yLA0KPiAJCVBDSV9BTllfSUQsIFBDSV9BTllfSUQgfSwN
+Cj4gCXsgTVBJMl9NRkdQQUdFX1ZFTkRPUklEX0xTSSwgTVBJMl9NRkdQQUdFX0RFVklEX1NBUzIx
+MDhfMywNCj4gCQlQQ0lfQU5ZX0lELCBQQ0lfQU5ZX0lEIH0sDQo+IA0KPiBzbyBpdCBsb29rcyBs
+aWtlIHRoZXJlIGlzIGF0IGxlYXN0IHNvbWUgYmFzaWMgc3VwcG9ydCBmb3IgdGhlIDIxMDguDQo+
+IA0KPiANCj4gLS0tDQo+IH5SYW5keQ0KPiAqKiogUmVtZW1iZXIgdG8gdXNlIERvY3VtZW50YXRp
+b24vU3VibWl0Q2hlY2tsaXN0IHdoZW4gdGVzdGluZyB5b3VyIGNvZGUgKioqDQoNCg0K
