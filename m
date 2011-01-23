@@ -1,152 +1,108 @@
-From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
-Subject: Crash in 2.6.37
-Date: Sun, 23 Jan 2011 11:41:45 +0100
-Message-ID: <4D3C05E9.9030105@grumpydevil.homelinux.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [LSF/MM TOPIC] SCSI referrals support
+Date: Sun, 23 Jan 2011 13:25:00 +0200
+Message-ID: <4D3C100C.1010609@panasas.com>
+References: <4D385C0A.3000901@suse.de>  <4D385F69.5060209@interlog.com> <1295541361.3014.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tritonia.xxlwebhosting.nl ([81.4.88.63]:46700 "EHLO
-	tritonia.xxlwebhosting.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374Ab1AWKlu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2011 05:41:50 -0500
-Received: from 5ed67623.cm-7-7b.dynamic.ziggo.nl ([94.214.118.35] helo=hermes.office.romunt.nl)
-	by tritonia.xxlwebhosting.nl with esmtps (TLSv1:AES256-SHA:256)
-	(Exim 4.69)
-	(envelope-from <rudy@grumpydevil.homelinux.org>)
-	id 1PgxOF-0007Bq-QS
-	for linux-scsi@vger.kernel.org; Sun, 23 Jan 2011 11:41:47 +0100
-Received: from [192.168.1.15] (IDENT:506@cenedra.office.romunt.nl [192.168.1.15])
-	by hermes.office.romunt.nl (8.14.3/8.14.3) with ESMTP id p0NAfjwf022611
-	for <linux-scsi@vger.kernel.org>; Sun, 23 Jan 2011 11:41:45 +0100
+Received: from daytona.panasas.com ([67.152.220.89]:55987 "EHLO
+	daytona.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750897Ab1AWLZD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2011 06:25:03 -0500
+In-Reply-To: <1295541361.3014.8.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: dgilbert@interlog.com, Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Dears,
+On 01/20/2011 06:36 PM, James Bottomley wrote:
+> On Thu, 2011-01-20 at 17:14 +0100, Douglas Gilbert wrote:
+>> On 11-01-20 05:00 PM, Hannes Reinecke wrote:
+>>> Agenda topic proposal:
+>>>
+>>> SCSI referrals support has already been discussed at last year's LSF
+>>> conference. However, the solution proposed there would not support
+>>> failover and would require quite a lot of changes to multipathing.
+>>>
+>>> To enable failover it might be an idea to handle the LUN directly in
+>>> multipathing. This would require eg:
+>>> - request splitting
+>>> - I/O alignment handling
+>>> - SCSI unit attention handling
+>>>
+>>> I would be giving a short overview/presentation of the current
+>>> state of the art, the shortcomings on the original proposal,
+>>> and would like to invite a discussion on how to best support
+>>> SCSI referrals.
+>>
+>> IMO a worrying aspect of the changes associated with SCSI
+>> referrals is that sense data can now be returned with any
+>> SCSI status (i.e. not just CHECK CONDITION). How well would
+>> the SCSI subsystem cope with that? I know that the sg driver
+>> (and probably bsg) would need changes, as would my libsgutils
+>> library used by sg3_utils.
+> 
+> Well, not necessarily.  It scuppers plans to try to use the sense buffer
+> more efficiently, but right at the moment, we can receive sense for any
+> command.  We only actually look at it on a check condition return, but
+> that's easily updated.
+> 
+> As I read the standard, referrals sense data on successfully completed
+> commands is only really relevant to mp implementations, so it looks like
+> the mid-layer should ignore it anyway (as it would now) but provide a
+> hook for the device handlers to see it if they wanted.
+> 
+> James
+> 
+Something like:
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index eafeeda..454e562 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -722,20 +722,23 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			sense_deferred = scsi_sense_is_deferred(&sshdr);
+ 	}
+ 
++	if (req->sense) {
++		/*
++		 * SG_IO wants current and deferred errors
++		 */
++		int len = 8 + cmd->sense_buffer[7];
++
++		if (unlikely(len)) {
++			if (len > SCSI_SENSE_BUFFERSIZE)
++				len = SCSI_SENSE_BUFFERSIZE;
++			memcpy(req->sense, cmd->sense_buffer,  len);
++			req->sense_len = len;
++		}
++	}
++
+ 	if (req->cmd_type == REQ_TYPE_BLOCK_PC) { /* SG_IO ioctl from block level */
+ 		req->errors = result;
+ 		if (result) {
+-			if (sense_valid && req->sense) {
+-				/*
+-				 * SG_IO wants current and deferred errors
+-				 */
+-				int len = 8 + cmd->sense_buffer[7];
+-
+-				if (len > SCSI_SENSE_BUFFERSIZE)
+-					len = SCSI_SENSE_BUFFERSIZE;
+-				memcpy(req->sense, cmd->sense_buffer,  len);
+-				req->sense_len = len;
+-			}
+ 			if (!sense_deferred)
+ 				error = -EIO;
+ 		}
 
-I got the following crash by:
-- cp several G onto a raid 5 on a Marvell 88SE6480//// based controller 
-while also doing
-- cp * ../test/ on the same raid.
+Then an interested user can just look at req->sense_len. The reset of the stack will
+ignore all that because it looks for status/error-code.
 
-I strongly suspect mvsas to be the cause
+I was needing something like that as well but it's to do with advance
+storage maintenance, that's far down the road.
 
-Please keep me on cc, as i am not subscribed to linux-scsi
-
-Thanks,
-
-
-Rudy
-
-The crash:
-
-[ 2821.392849] BUG: unable to handle kernel paging request at 
-000000000000bbbb
-[ 2821.393697] IP: [<ffffffff815a1b5c>] cache_revisit_request+0xab/0x105
-[ 2821.393697] PGD 78e4d067 PUD 78c9a067 PMD 0
-[ 2821.393697] Oops: 0000 [#1] SMP
-[ 2821.393697] last sysfs file: 
-/sys/bus/pci/drivers/megaraid_sas/release_date
-[ 2821.393697] CPU 2
-[ 2821.393697] Modules linked in: parport_pc parport rc_tt_1500 
-ir_lirc_codec lirc_dev ir_sony_decoder ir_jvc_decoder ir_rc6_decoder 
-budget_ci lnbp21 budget_core saa7146 ir_rc5_decoder ir_nec_decoder 
-ttpci_eeprom tda1004x ir_core stb6100 tda10023 stv0297 stb0899 stv0299 
-dvb_core tda827x floppy
-[ 2821.393697]
-[ 2821.393697] Pid: 1105, comm: rpc.mountd Not tainted 2.6.37 #1 
-X7SB4/E/X7SB4/E
-[ 2821.393697] RIP: 0010:[<ffffffff815a1b5c>]  [<ffffffff815a1b5c>] 
-cache_revisit_request+0xab/0x105
-[ 2821.393697] RSP: 0018:ffff880069e45c18  EFLAGS: 00010206
-[ 2821.393697] RAX: 000000000000bbbb RBX: ffff880069e45c18 RCX: 
-000000000000bbbb
-[ 2821.393697] RDX: fffffffc4003d6e4 RSI: 0000000000000000 RDI: 
-ffffffff81c73774
-[ 2821.393697] RBP: ffff880069e45c38 R08: 00000000000000d0 R09: 
-0000000000000000
-[ 2821.393697] R10: 0000000000000000 R11: e000000000000000 R12: 
-ffff88007adc9f00
-[ 2821.393697] R13: ffff88007adc9f00 R14: ffff880069e7ee00 R15: 
-ffff88007adc9f20
-[ 2821.393697] FS:  00007f0247a2a740(0000) GS:ffff88007fd00000(0000) 
-knlGS:0000000000000000
-[ 2821.393697] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 2821.393697] CR2: 000000000000bbbb CR3: 000000007917a000 CR4: 
-00000000000406e0
-[ 2821.393697] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 
-0000000000000000
-[ 2821.393697] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 
-0000000000000400
-[ 2821.393697] Process rpc.mountd (pid: 1105, threadinfo 
-ffff880069e44000, task ffff880072408750)
-[ 2821.393697] Stack:
-[ 2821.393697]  ffff880069e45c18 ffff880069e45c18 ffff88007adc9f00 
-ffffffff81a39860
-[ 2821.393697] PGD 78e4d067 PUD 78c9a067 PMD 0
-[ 2821.393697] Oops: 0000 [#1] SMP
-[ 2821.393697] last sysfs file: 
-/sys/bus/pci/drivers/megaraid_sas/release_date
-[ 2821.393697] CPU 2
-[ 2821.393697] Modules linked in: parport_pc parport rc_tt_1500 
-ir_lirc_codec lirc_dev ir_sony_decoder ir_jvc_decoder ir_rc6_decoder 
-budget_ci lnbp21 budget_core saa7146 ir_rc5_decoder ir_nec_decoder 
-ttpci_eeprom tda1004x ir_core stb6100 tda10023 stv0297 stb0899 stv0299 
-dvb_core tda827x floppy
-[ 2821.393697]
-[ 2821.393697] Pid: 1105, comm: rpc.mountd Not tainted 2.6.37 #1 
-X7SB4/E/X7SB4/E
-[ 2821.393697] RIP: 0010:[<ffffffff815a1b5c>]  [<ffffffff815a1b5c>] 
-cache_revisit_request+0xab/0x105
-[ 2821.393697] RSP: 0018:ffff880069e45c18  EFLAGS: 00010206
-[ 2821.393697] RAX: 000000000000bbbb RBX: ffff880069e45c18 RCX: 
-000000000000bbbb
-[ 2821.393697] RDX: fffffffc4003d6e4 RSI: 0000000000000000 RDI: 
-ffffffff81c73774
-[ 2821.393697] RBP: ffff880069e45c38 R08: 00000000000000d0 R09: 
-0000000000000000
-[ 2821.393697] R10: 0000000000000000 R11: e000000000000000 R12: 
-ffff88007adc9f00
-[ 2821.393697] R13: ffff88007adc9f00 R14: ffff880069e7ee00 R15: 
-ffff88007adc9f20
-[ 2821.393697] FS:  00007f0247a2a740(0000) GS:ffff88007fd00000(0000) 
-knlGS:0000000000000000
-[ 2821.393697] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[ 2821.393697] CR2: 000000000000bbbb CR3: 000000007917a000 CR4: 
-00000000000406e0
-[ 2821.393697] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 
-0000000000000000
-[ 2821.393697] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 
-0000000000000400
-[ 2821.393697] Process rpc.mountd (pid: 1105, threadinfo 
-ffff880069e44000, task ffff880072408750)
-[ 2821.393697] Stack:
-[ 2821.393697]  ffff880069e45c18 ffff880069e45c18 ffff88007adc9f00 
-ffffffff81a39860
-[ 2821.393697]  ffff880069e45c58 ffffffff815a2698 ffffffff81a39860 
-ffff880069e45d08
-[ 2821.393697]  ffff880069e45ca8 ffffffff815a2f80 ffffffff81c43df8 
-0000006781c43df8
-[ 2821.393697] Call Trace:
-[ 2821.393697]  [<ffffffff815a2698>] cache_fresh_unlocked+0x1e/0x2e
-[ 2821.393697]  [<ffffffff815a2f80>] sunrpc_cache_update+0x15d/0x17d
-[ 2821.393697]  [<ffffffff811aadb8>] svc_export_update+0x29/0x2e
-[ 2821.393697]  [<ffffffff811ab2a4>] svc_export_parse+0x4e7/0x586
-[ 2821.393697]  [<ffffffff815a158d>] cache_do_downcall+0x3b/0x4c
-[ 2821.393697]  [<ffffffff815a1e1b>] cache_write+0xaf/0x129
-[ 2821.393697]  [<ffffffff815a1ec8>] cache_write_procfs+0x19/0x1b
-[ 2821.393697]  [<ffffffff81126ac0>] proc_reg_write+0x87/0xa6
-[ 2821.393697]  [<ffffffff8123df1d>] ? security_file_permission+0x29/0x2e
-[ 2821.393697]  [<ffffffff815a1eaf>] ? cache_write_procfs+0x0/0x1b
-[ 2821.393697]  [<ffffffff810de19f>] vfs_write+0xa9/0x105
-[ 2821.393697]  [<ffffffff810de2b1>] sys_write+0x45/0x69
-[ 2821.393697]  [<ffffffff81002a52>] system_call_fastpath+0x16/0x1b
-[ 2821.393697] Code: 4c 89 47 08 49 89 38 48 89 50 10 48 89 50 18 48 8b 
-7d e0 48 89 57 08 48 89 78 10 48 89 58 18 48 89 55 e0 48 89 c8 48 85 c0 
-74 0b <48> 8b 08 4c 39 60 20 75 ef eb 93 89 35 a3 24 6d 00 48 c7 c7 74
-[ 2821.393697] RIP  [<ffffffff815a1b5c>] cache_revisit_request+0xab/0x105
-[ 2821.393697]  RSP <ffff880069e45c18>
-[ 2821.393697] CR2: 000000000000bbbb
-[ 2821.716219] ---[ end trace a4730c6e3ffc5077 ]---
-
+Thanks
+Boaz
+ 
