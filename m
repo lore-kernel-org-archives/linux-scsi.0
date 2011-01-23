@@ -1,34 +1,37 @@
-From: Fubo Chen <fubo.chen@gmail.com>
-Subject: [PATCH] target: Simplify T_TASK() CMD_TFO()
-Date: Sun, 23 Jan 2011 15:06:41 +0100
-Message-ID: <AANLkTinoi-TVNjs+V5Rqw73U6FH1j-G1ptpoHnN6CJdq@mail.gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] target: Call proc_mkdir + remove_proc_entry with NULL
+ parameter
+Date: Sun, 23 Jan 2011 08:12:51 -0600
+Message-ID: <1295791971.3007.0.camel@mulgrave.site>
+References: <1295738425-4814-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:39456 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814Ab1AWOGm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2011 09:06:42 -0500
-Received: by iyj18 with SMTP id 18so3168118iyj.19
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Jan 2011 06:06:42 -0800 (PST)
+Received: from cantor.suse.de ([195.135.220.2]:56631 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750896Ab1AWOM5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Jan 2011 09:12:57 -0500
+In-Reply-To: <1295738425-4814-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@lst.de>
 
-diff --git a/include/target/target_core_base.h
-b/include/target/target_core_base.h
-index 4139bf0..193bdfd 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -537,8 +537,8 @@ struct se_cmd {
- 	void (*transport_complete_callback)(struct se_cmd *);
- } ____cacheline_aligned;
+On Sat, 2011-01-22 at 15:20 -0800, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch makes proc_mkdir() and remove_proc_entry() use a NULL
+> parameter to fix the following sparse warning:
+> 
+> CHECK   drivers/target/target_core_configfs.c
+> drivers/target/target_core_configfs.c:3131:54: warning: Using plain integer as NULL pointer
+> drivers/target/target_core_configfs.c:3145:50: warning: Using plain integer as NULL pointer
+> drivers/target/target_core_configfs.c:3212:42: warning: Using plain integer as NULL pointer
 
--#define T_TASK(cmd)     ((struct se_transport_task *)(cmd->t_task))
--#define CMD_TFO(cmd) ((struct target_core_fabric_ops *)cmd->se_tfo)
-+#define T_TASK(cmd)  ((cmd)->t_task)
-+#define CMD_TFO(cmd) ((cmd)->se_tfo)
+Um, so I thought this interface was being replaced ... there's not a lot
+of point in sparse fixing it.
 
- struct se_tmr_req {
- 	/* Task Management function to be preformed */
+James
+
+
