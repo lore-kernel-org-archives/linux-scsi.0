@@ -1,73 +1,97 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: [PATCH 3/3] libata: fix eh locking
-Date: Sun, 23 Jan 2011 08:31:14 -0600
-Message-ID: <1295793074.3007.18.camel@mulgrave.site>
-References: <1295792806.3007.12.camel@mulgrave.site>
+Subject: [PATCH] libsas: remove spurious sata control register read/write
+Date: Sun, 23 Jan 2011 08:34:25 -0600
+Message-ID: <1295793265.3007.19.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:56967 "EHLO mx1.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:39490 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750972Ab1AWObR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Jan 2011 09:31:17 -0500
-In-Reply-To: <1295792806.3007.12.camel@mulgrave.site>
+	id S1751008Ab1AWOe3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 23 Jan 2011 09:34:29 -0500
+Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.221.2])
+	by mx2.suse.de (Postfix) with ESMTP id 5BB6E86391
+	for <linux-scsi@vger.kernel.org>; Sun, 23 Jan 2011 15:34:28 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>
 
-The SCSI host eh_cmd_q should be protected by the host lock (not the
-port lock).  This probably doesn't matter that much at the moment,
-since we try to serialise the add and eh pieces, but it might matter
-in future for more convenient error handling.  Plus this switches
-libata to the standard eh pattern where you lock, remove from the cmd
-queue to a local list and unlock and then operate on the local list.
+Originally, libata required the illusion that it could access the sata
+control register.  Now, however, it can run perfectly well without
+them, so remove the dummy routines from libsas which tried to emulate
+them (but only ended up causing confusion).
 
 Signed-off-by: James Bottomley <James.Bottomley@suse.de>
----
- drivers/ata/libata-eh.c |    9 +++++++--
- 1 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index 17a6378..fc3f339 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -589,9 +589,14 @@ void ata_scsi_error(struct Scsi_Host *host)
- 	struct ata_port *ap = ata_shost_to_port(host);
- 	int i;
- 	unsigned long flags;
-+	LIST_HEAD(eh_work_q);
- 
- 	DPRINTK("ENTER\n");
- 
-+	spin_lock_irqsave(host->host_lock, flags);
-+	list_splice_init(&host->eh_cmd_q, &eh_work_q);
-+	spin_unlock_irqrestore(host->host_lock, flags);
-+
- 	/* make sure sff pio task is not running */
- 	ata_sff_flush_pio_task(ap);
- 
-@@ -627,7 +632,7 @@ void ata_scsi_error(struct Scsi_Host *host)
- 		if (ap->ops->lost_interrupt)
- 			ap->ops->lost_interrupt(ap);
- 
--		list_for_each_entry_safe(scmd, tmp, &host->eh_cmd_q, eh_entry) {
-+		list_for_each_entry_safe(scmd, tmp, &eh_work_q, eh_entry) {
- 			struct ata_queued_cmd *qc;
- 
- 			for (i = 0; i < ATA_MAX_QUEUE; i++) {
-@@ -762,7 +767,7 @@ void ata_scsi_error(struct Scsi_Host *host)
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 571603d..17ff3ac 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -301,55 +301,6 @@ static void sas_ata_post_internal(struct ata_queued_cmd *qc)
  	}
+ }
  
- 	/* finish or retry handled scmd's and clean up */
--	WARN_ON(host->host_failed || !list_empty(&host->eh_cmd_q));
-+	WARN_ON(host->host_failed || !list_empty(&eh_work_q));
+-static int sas_ata_scr_write(struct ata_link *link, unsigned int sc_reg_in,
+-			      u32 val)
+-{
+-	struct domain_device *dev = link->ap->private_data;
+-
+-	SAS_DPRINTK("STUB %s\n", __func__);
+-	switch (sc_reg_in) {
+-		case SCR_STATUS:
+-			dev->sata_dev.sstatus = val;
+-			break;
+-		case SCR_CONTROL:
+-			dev->sata_dev.scontrol = val;
+-			break;
+-		case SCR_ERROR:
+-			dev->sata_dev.serror = val;
+-			break;
+-		case SCR_ACTIVE:
+-			dev->sata_dev.ap->link.sactive = val;
+-			break;
+-		default:
+-			return -EINVAL;
+-	}
+-	return 0;
+-}
+-
+-static int sas_ata_scr_read(struct ata_link *link, unsigned int sc_reg_in,
+-			    u32 *val)
+-{
+-	struct domain_device *dev = link->ap->private_data;
+-
+-	SAS_DPRINTK("STUB %s\n", __func__);
+-	switch (sc_reg_in) {
+-		case SCR_STATUS:
+-			*val = dev->sata_dev.sstatus;
+-			return 0;
+-		case SCR_CONTROL:
+-			*val = dev->sata_dev.scontrol;
+-			return 0;
+-		case SCR_ERROR:
+-			*val = dev->sata_dev.serror;
+-			return 0;
+-		case SCR_ACTIVE:
+-			*val = dev->sata_dev.ap->link.sactive;
+-			return 0;
+-		default:
+-			return -EINVAL;
+-	}
+-}
+-
+ static struct ata_port_operations sas_sata_ops = {
+ 	.phy_reset		= sas_ata_phy_reset,
+ 	.post_internal_cmd	= sas_ata_post_internal,
+@@ -359,8 +310,6 @@ static struct ata_port_operations sas_sata_ops = {
+ 	.qc_fill_rtf		= sas_ata_qc_fill_rtf,
+ 	.port_start		= ata_sas_port_start,
+ 	.port_stop		= ata_sas_port_stop,
+-	.scr_read		= sas_ata_scr_read,
+-	.scr_write		= sas_ata_scr_write
+ };
  
- 	scsi_eh_flush_done_q(&ap->eh_done_q);
- 
--- 
-1.7.2.3
-
+ static struct ata_port_info sata_port_info = {
 
 
