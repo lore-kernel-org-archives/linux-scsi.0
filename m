@@ -1,396 +1,152 @@
-From: Fubo Chen <fubo.chen@gmail.com>
-Subject: [PATCH] target: Address sparse warnings
-Date: Sun, 23 Jan 2011 10:28:34 +0100
-Message-ID: <AANLkTi=MupdWyYnuY1rV9AkEobw8pZVO_-12JN6DteeJ@mail.gmail.com>
+From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
+Subject: Crash in 2.6.37
+Date: Sun, 23 Jan 2011 11:41:45 +0100
+Message-ID: <4D3C05E9.9030105@grumpydevil.homelinux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:42546 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169Ab1AWJ2f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2011 04:28:35 -0500
-Received: by iyj18 with SMTP id 18so3051650iyj.19
-        for <linux-scsi@vger.kernel.org>; Sun, 23 Jan 2011 01:28:35 -0800 (PST)
+Received: from tritonia.xxlwebhosting.nl ([81.4.88.63]:46700 "EHLO
+	tritonia.xxlwebhosting.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751374Ab1AWKlu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Jan 2011 05:41:50 -0500
+Received: from 5ed67623.cm-7-7b.dynamic.ziggo.nl ([94.214.118.35] helo=hermes.office.romunt.nl)
+	by tritonia.xxlwebhosting.nl with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.69)
+	(envelope-from <rudy@grumpydevil.homelinux.org>)
+	id 1PgxOF-0007Bq-QS
+	for linux-scsi@vger.kernel.org; Sun, 23 Jan 2011 11:41:47 +0100
+Received: from [192.168.1.15] (IDENT:506@cenedra.office.romunt.nl [192.168.1.15])
+	by hermes.office.romunt.nl (8.14.3/8.14.3) with ESMTP id p0NAfjwf022611
+	for <linux-scsi@vger.kernel.org>; Sun, 23 Jan 2011 11:41:45 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
+To: linux-scsi@vger.kernel.org
 
-Does this patch make sense ? With this patch sparse only complains
-about "warning: incorrect type in assignment (different address
-spaces)".
+Dears,
 
-diff --git a/drivers/target/target_core_configfs.c
-b/drivers/target/target_core_configfs.c
-index 2764510..a33ffeb 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -3128,7 +3128,7 @@ static int target_core_init_configfs(void)
- 	if (core_dev_setup_virtual_lun0() < 0)
- 		goto out;
+I got the following crash by:
+- cp several G onto a raid 5 on a Marvell 88SE6480//// based controller 
+while also doing
+- cp * ../test/ on the same raid.
 
--	scsi_target_proc = proc_mkdir("scsi_target", 0);
-+	scsi_target_proc = proc_mkdir("scsi_target", NULL);
- 	if (!(scsi_target_proc)) {
- 		printk(KERN_ERR "proc_mkdir(scsi_target, 0) failed\n");
- 		goto out;
-@@ -3142,7 +3142,7 @@ static int target_core_init_configfs(void)
- out:
- 	configfs_unregister_subsystem(subsys);
- 	if (scsi_target_proc)
--		remove_proc_entry("scsi_target", 0);
-+		remove_proc_entry("scsi_target", NULL);
- 	core_dev_release_virtual_lun0();
- 	rd_module_exit();
- out_global:
-@@ -3209,7 +3209,7 @@ static void target_core_exit_configfs(void)
- 			" Infrastructure\n");
+I strongly suspect mvsas to be the cause
 
- 	remove_scsi_target_mib();
--	remove_proc_entry("scsi_target", 0);
-+	remove_proc_entry("scsi_target", NULL);
- 	core_dev_release_virtual_lun0();
- 	rd_module_exit();
- 	release_se_global();
-diff --git a/drivers/target/target_core_device.c
-b/drivers/target/target_core_device.c
-index 317ce58..fb01f4a 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -392,12 +392,14 @@ int core_update_device_list_for_node(
- 		 */
- 		if (deve->lun_flags & TRANSPORT_LUNFLAGS_INITIATOR_ACCESS) {
- 			if (deve->se_lun_acl != NULL) {
-+				spin_unlock_irq(&nacl->device_list_lock);
- 				printk(KERN_ERR "struct se_dev_entry->se_lun_acl"
- 					" already set for demo mode -> explict"
- 					" LUN ACL transition\n");
- 				return -1;
- 			}
- 			if (deve->se_lun != lun) {
-+				spin_unlock_irq(&nacl->device_list_lock);
- 				printk(KERN_ERR "struct se_dev_entry->se_lun does"
- 					" match passed struct se_lun for demo mode"
- 					" -> explict LUN ACL transition\n");
-@@ -588,6 +590,8 @@ static void core_export_port(
-  *	Called with struct se_device->se_port_lock spinlock held.
-  */
- static void core_release_port(struct se_device *dev, struct se_port *port)
-+	__releases(&dev->se_port_lock)
-+	__acquires(&dev->se_port_lock)
- {
- 	/*
- 	 * Wait for any port reference for PR ALL_TG_PT=1 operation
-@@ -798,6 +802,8 @@ void se_clear_dev_ports(struct se_device *dev)
- 		spin_lock(&lun->lun_sep_lock);
- 		if (lun->lun_se_dev == NULL) {
- 			spin_unlock(&lun->lun_sep_lock);
-+			spin_lock(&hba->device_lock);
-+			spin_lock(&dev->se_port_lock);
- 			continue;
- 		}
- 		spin_unlock(&lun->lun_sep_lock);
-diff --git a/drivers/target/target_core_fabric_lib.c
-b/drivers/target/target_core_fabric_lib.c
-index 2628564..bddab5d 100644
---- a/drivers/target/target_core_fabric_lib.c
-+++ b/drivers/target/target_core_fabric_lib.c
-@@ -35,6 +35,7 @@
- #include <target/target_core_base.h>
- #include <target/target_core_device.h>
- #include <target/target_core_transport.h>
-+#include <target/target_core_fabric_lib.h>
- #include <target/target_core_fabric_ops.h>
- #include <target/target_core_configfs.h>
+Please keep me on cc, as i am not subscribed to linux-scsi
 
-diff --git a/drivers/target/target_core_iblock.c
-b/drivers/target/target_core_iblock.c
-index c6e0d75..b933e24 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -133,7 +133,7 @@ static struct se_device *iblock_create_virtdevice(
+Thanks,
 
- 	if (!(ib_dev)) {
- 		printk(KERN_ERR "Unable to locate struct iblock_dev parameter\n");
--		return 0;
-+		return NULL;
- 	}
- 	memset(&dev_limits, 0, sizeof(struct se_dev_limits));
- 	/*
-@@ -142,7 +142,7 @@ static struct se_device *iblock_create_virtdevice(
- 	ib_dev->ibd_bio_set = bioset_create(32, 64);
- 	if (!(ib_dev->ibd_bio_set)) {
- 		printk(KERN_ERR "IBLOCK: Unable to create bioset()\n");
--		return 0;
-+		return NULL;
- 	}
- 	printk(KERN_INFO "IBLOCK: Created bio_set()\n");
- 	/*
-diff --git a/drivers/target/target_core_mib.c b/drivers/target/target_core_mib.c
-index d5a48aa..0347b1c 100644
---- a/drivers/target/target_core_mib.c
-+++ b/drivers/target/target_core_mib.c
-@@ -70,6 +70,7 @@ static inline int list_is_first(const struct list_head *list,
- static void *locate_hba_start(
- 	struct seq_file *seq,
- 	loff_t *pos)
-+	__acquires(&se_global->g_device_lock)
- {
- 	spin_lock(&se_global->g_device_lock);
- 	return seq_list_start(&se_global->g_se_dev_list, *pos);
-@@ -84,6 +85,7 @@ static void *locate_hba_next(
- }
 
- static void locate_hba_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->g_device_lock)
- {
- 	spin_unlock(&se_global->g_device_lock);
- }
-@@ -98,6 +100,7 @@ static void locate_hba_stop(struct seq_file *seq, void *v)
- static void *scsi_inst_seq_start(
- 	struct seq_file *seq,
- 	loff_t *pos)
-+	__acquires(&se_global->g_device_lock)
- {
- 	spin_lock(&se_global->hba_lock);
- 	return seq_list_start(&se_global->g_hba_list, *pos);
-@@ -112,6 +115,7 @@ static void *scsi_inst_seq_next(
- }
+Rudy
 
- static void scsi_inst_seq_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->g_device_lock)
- {
- 	spin_unlock(&se_global->hba_lock);
- }
-@@ -154,6 +158,7 @@ static const struct file_operations scsi_inst_seq_fops = {
-  * SCSI Device Table
-  */
- static void *scsi_dev_seq_start(struct seq_file *seq, loff_t *pos)
-+	__acquires(&se_global->g_device_lock)
- {
- 	return locate_hba_start(seq, pos);
- }
-@@ -164,6 +169,7 @@ static void *scsi_dev_seq_next(struct seq_file
-*seq, void *v, loff_t *pos)
- }
+The crash:
 
- static void scsi_dev_seq_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->g_device_lock)
- {
- 	locate_hba_stop(seq, v);
- }
-@@ -235,6 +241,7 @@ static const struct file_operations scsi_dev_seq_fops = {
-  * SCSI Port Table
-  */
- static void *scsi_port_seq_start(struct seq_file *seq, loff_t *pos)
-+	__acquires(&se_global->g_device_lock)
- {
- 	return locate_hba_start(seq, pos);
- }
-@@ -245,6 +252,7 @@ static void *scsi_port_seq_next(struct seq_file
-*seq, void *v, loff_t *pos)
- }
+[ 2821.392849] BUG: unable to handle kernel paging request at 
+000000000000bbbb
+[ 2821.393697] IP: [<ffffffff815a1b5c>] cache_revisit_request+0xab/0x105
+[ 2821.393697] PGD 78e4d067 PUD 78c9a067 PMD 0
+[ 2821.393697] Oops: 0000 [#1] SMP
+[ 2821.393697] last sysfs file: 
+/sys/bus/pci/drivers/megaraid_sas/release_date
+[ 2821.393697] CPU 2
+[ 2821.393697] Modules linked in: parport_pc parport rc_tt_1500 
+ir_lirc_codec lirc_dev ir_sony_decoder ir_jvc_decoder ir_rc6_decoder 
+budget_ci lnbp21 budget_core saa7146 ir_rc5_decoder ir_nec_decoder 
+ttpci_eeprom tda1004x ir_core stb6100 tda10023 stv0297 stb0899 stv0299 
+dvb_core tda827x floppy
+[ 2821.393697]
+[ 2821.393697] Pid: 1105, comm: rpc.mountd Not tainted 2.6.37 #1 
+X7SB4/E/X7SB4/E
+[ 2821.393697] RIP: 0010:[<ffffffff815a1b5c>]  [<ffffffff815a1b5c>] 
+cache_revisit_request+0xab/0x105
+[ 2821.393697] RSP: 0018:ffff880069e45c18  EFLAGS: 00010206
+[ 2821.393697] RAX: 000000000000bbbb RBX: ffff880069e45c18 RCX: 
+000000000000bbbb
+[ 2821.393697] RDX: fffffffc4003d6e4 RSI: 0000000000000000 RDI: 
+ffffffff81c73774
+[ 2821.393697] RBP: ffff880069e45c38 R08: 00000000000000d0 R09: 
+0000000000000000
+[ 2821.393697] R10: 0000000000000000 R11: e000000000000000 R12: 
+ffff88007adc9f00
+[ 2821.393697] R13: ffff88007adc9f00 R14: ffff880069e7ee00 R15: 
+ffff88007adc9f20
+[ 2821.393697] FS:  00007f0247a2a740(0000) GS:ffff88007fd00000(0000) 
+knlGS:0000000000000000
+[ 2821.393697] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2821.393697] CR2: 000000000000bbbb CR3: 000000007917a000 CR4: 
+00000000000406e0
+[ 2821.393697] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 
+0000000000000000
+[ 2821.393697] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 
+0000000000000400
+[ 2821.393697] Process rpc.mountd (pid: 1105, threadinfo 
+ffff880069e44000, task ffff880072408750)
+[ 2821.393697] Stack:
+[ 2821.393697]  ffff880069e45c18 ffff880069e45c18 ffff88007adc9f00 
+ffffffff81a39860
+[ 2821.393697] PGD 78e4d067 PUD 78c9a067 PMD 0
+[ 2821.393697] Oops: 0000 [#1] SMP
+[ 2821.393697] last sysfs file: 
+/sys/bus/pci/drivers/megaraid_sas/release_date
+[ 2821.393697] CPU 2
+[ 2821.393697] Modules linked in: parport_pc parport rc_tt_1500 
+ir_lirc_codec lirc_dev ir_sony_decoder ir_jvc_decoder ir_rc6_decoder 
+budget_ci lnbp21 budget_core saa7146 ir_rc5_decoder ir_nec_decoder 
+ttpci_eeprom tda1004x ir_core stb6100 tda10023 stv0297 stb0899 stv0299 
+dvb_core tda827x floppy
+[ 2821.393697]
+[ 2821.393697] Pid: 1105, comm: rpc.mountd Not tainted 2.6.37 #1 
+X7SB4/E/X7SB4/E
+[ 2821.393697] RIP: 0010:[<ffffffff815a1b5c>]  [<ffffffff815a1b5c>] 
+cache_revisit_request+0xab/0x105
+[ 2821.393697] RSP: 0018:ffff880069e45c18  EFLAGS: 00010206
+[ 2821.393697] RAX: 000000000000bbbb RBX: ffff880069e45c18 RCX: 
+000000000000bbbb
+[ 2821.393697] RDX: fffffffc4003d6e4 RSI: 0000000000000000 RDI: 
+ffffffff81c73774
+[ 2821.393697] RBP: ffff880069e45c38 R08: 00000000000000d0 R09: 
+0000000000000000
+[ 2821.393697] R10: 0000000000000000 R11: e000000000000000 R12: 
+ffff88007adc9f00
+[ 2821.393697] R13: ffff88007adc9f00 R14: ffff880069e7ee00 R15: 
+ffff88007adc9f20
+[ 2821.393697] FS:  00007f0247a2a740(0000) GS:ffff88007fd00000(0000) 
+knlGS:0000000000000000
+[ 2821.393697] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[ 2821.393697] CR2: 000000000000bbbb CR3: 000000007917a000 CR4: 
+00000000000406e0
+[ 2821.393697] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 
+0000000000000000
+[ 2821.393697] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 
+0000000000000400
+[ 2821.393697] Process rpc.mountd (pid: 1105, threadinfo 
+ffff880069e44000, task ffff880072408750)
+[ 2821.393697] Stack:
+[ 2821.393697]  ffff880069e45c18 ffff880069e45c18 ffff88007adc9f00 
+ffffffff81a39860
+[ 2821.393697]  ffff880069e45c58 ffffffff815a2698 ffffffff81a39860 
+ffff880069e45d08
+[ 2821.393697]  ffff880069e45ca8 ffffffff815a2f80 ffffffff81c43df8 
+0000006781c43df8
+[ 2821.393697] Call Trace:
+[ 2821.393697]  [<ffffffff815a2698>] cache_fresh_unlocked+0x1e/0x2e
+[ 2821.393697]  [<ffffffff815a2f80>] sunrpc_cache_update+0x15d/0x17d
+[ 2821.393697]  [<ffffffff811aadb8>] svc_export_update+0x29/0x2e
+[ 2821.393697]  [<ffffffff811ab2a4>] svc_export_parse+0x4e7/0x586
+[ 2821.393697]  [<ffffffff815a158d>] cache_do_downcall+0x3b/0x4c
+[ 2821.393697]  [<ffffffff815a1e1b>] cache_write+0xaf/0x129
+[ 2821.393697]  [<ffffffff815a1ec8>] cache_write_procfs+0x19/0x1b
+[ 2821.393697]  [<ffffffff81126ac0>] proc_reg_write+0x87/0xa6
+[ 2821.393697]  [<ffffffff8123df1d>] ? security_file_permission+0x29/0x2e
+[ 2821.393697]  [<ffffffff815a1eaf>] ? cache_write_procfs+0x0/0x1b
+[ 2821.393697]  [<ffffffff810de19f>] vfs_write+0xa9/0x105
+[ 2821.393697]  [<ffffffff810de2b1>] sys_write+0x45/0x69
+[ 2821.393697]  [<ffffffff81002a52>] system_call_fastpath+0x16/0x1b
+[ 2821.393697] Code: 4c 89 47 08 49 89 38 48 89 50 10 48 89 50 18 48 8b 
+7d e0 48 89 57 08 48 89 78 10 48 89 58 18 48 89 55 e0 48 89 c8 48 85 c0 
+74 0b <48> 8b 08 4c 39 60 20 75 ef eb 93 89 35 a3 24 6d 00 48 c7 c7 74
+[ 2821.393697] RIP  [<ffffffff815a1b5c>] cache_revisit_request+0xab/0x105
+[ 2821.393697]  RSP <ffff880069e45c18>
+[ 2821.393697] CR2: 000000000000bbbb
+[ 2821.716219] ---[ end trace a4730c6e3ffc5077 ]---
 
- static void scsi_port_seq_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->g_device_lock)
- {
- 	locate_hba_stop(seq, v);
- }
-@@ -305,6 +313,7 @@ static const struct file_operations scsi_port_seq_fops = {
-  * SCSI Transport Table
-  */
- static void *scsi_transport_seq_start(struct seq_file *seq, loff_t *pos)
-+	__acquires(&se_global->g_device_lock)
- {
- 	return locate_hba_start(seq, pos);
- }
-@@ -315,6 +324,7 @@ static void *scsi_transport_seq_next(struct
-seq_file *seq, void *v, loff_t *pos)
- }
-
- static void scsi_transport_seq_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->g_device_lock)
- {
- 	locate_hba_stop(seq, v);
- }
-@@ -390,6 +400,7 @@ static const struct file_operations
-scsi_transport_seq_fops = {
-  * SCSI Target Device Table
-  */
- static void *scsi_tgt_dev_seq_start(struct seq_file *seq, loff_t *pos)
-+	__acquires(&se_global->g_device_lock)
- {
- 	return locate_hba_start(seq, pos);
- }
-@@ -400,6 +411,7 @@ static void *scsi_tgt_dev_seq_next(struct seq_file
-*seq, void *v, loff_t *pos)
- }
-
- static void scsi_tgt_dev_seq_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->g_device_lock)
- {
- 	locate_hba_stop(seq, v);
- }
-@@ -481,6 +493,7 @@ static const struct file_operations
-scsi_tgt_dev_seq_fops = {
-  * SCSI Target Port Table
-  */
- static void *scsi_tgt_port_seq_start(struct seq_file *seq, loff_t *pos)
-+	__acquires(&se_global->g_device_lock)
- {
- 	return locate_hba_start(seq, pos);
- }
-@@ -491,6 +504,7 @@ static void *scsi_tgt_port_seq_next(struct
-seq_file *seq, void *v, loff_t *pos)
- }
-
- static void scsi_tgt_port_seq_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->g_device_lock)
- {
- 	locate_hba_stop(seq, v);
- }
-@@ -575,6 +589,7 @@ static const struct file_operations
-scsi_tgt_port_seq_fops = {
-  * Iterates through all active TPGs and extracts the info from the ACLs
-  */
- static void *scsi_auth_intr_seq_start(struct seq_file *seq, loff_t *pos)
-+	__acquires(&se_global->se_tpg_lock)
- {
- 	spin_lock_bh(&se_global->se_tpg_lock);
- 	return seq_list_start(&se_global->g_se_tpg_list, *pos);
-@@ -587,6 +602,7 @@ static void *scsi_auth_intr_seq_next(struct
-seq_file *seq, void *v,
- }
-
- static void scsi_auth_intr_seq_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->se_tpg_lock)
- {
- 	spin_unlock_bh(&se_global->se_tpg_lock);
- }
-@@ -700,6 +716,7 @@ static const struct file_operations
-scsi_auth_intr_seq_fops = {
-  * to list the info fo this table.
-  */
- static void *scsi_att_intr_port_seq_start(struct seq_file *seq, loff_t *pos)
-+	__acquires(&se_global->se_tpg_lock)
- {
- 	spin_lock_bh(&se_global->se_tpg_lock);
- 	return seq_list_start(&se_global->g_se_tpg_list, *pos);
-@@ -712,6 +729,7 @@ static void *scsi_att_intr_port_seq_next(struct
-seq_file *seq, void *v,
- }
-
- static void scsi_att_intr_port_seq_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->se_tpg_lock)
- {
- 	spin_unlock_bh(&se_global->se_tpg_lock);
- }
-@@ -824,6 +842,7 @@ static const struct file_operations
-scsi_att_intr_port_seq_fops = {
-  * SCSI Logical Unit Table
-  */
- static void *scsi_lu_seq_start(struct seq_file *seq, loff_t *pos)
-+	__acquires(&se_global->g_device_lock)
- {
- 	return locate_hba_start(seq, pos);
- }
-@@ -834,6 +853,7 @@ static void *scsi_lu_seq_next(struct seq_file
-*seq, void *v, loff_t *pos)
- }
-
- static void scsi_lu_seq_stop(struct seq_file *seq, void *v)
-+	__releases(&se_global->g_device_lock)
- {
- 	locate_hba_stop(seq, v);
- }
-diff --git a/drivers/target/target_core_pscsi.c
-b/drivers/target/target_core_pscsi.c
-index 742d246..3546e9a 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -442,6 +442,7 @@ static struct se_device *pscsi_create_type_disk(
- 	struct pscsi_dev_virt *pdv,
- 	struct se_subsystem_dev *se_dev,
- 	struct se_hba *hba)
-+	__releases(sh->host_lock)
- {
- 	struct se_device *dev;
- 	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt
-*)pdv->pdv_se_hba->hba_ptr;
-@@ -489,6 +490,7 @@ static struct se_device *pscsi_create_type_rom(
- 	struct pscsi_dev_virt *pdv,
- 	struct se_subsystem_dev *se_dev,
- 	struct se_hba *hba)
-+	__releases(sh->host_lock)
- {
- 	struct se_device *dev;
- 	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt
-*)pdv->pdv_se_hba->hba_ptr;
-@@ -523,6 +525,7 @@ static struct se_device *pscsi_create_type_other(
- 	struct pscsi_dev_virt *pdv,
- 	struct se_subsystem_dev *se_dev,
- 	struct se_hba *hba)
-+	__releases(sh->host_lock)
- {
- 	struct se_device *dev;
- 	struct pscsi_hba_virt *phv = (struct pscsi_hba_virt
-*)pdv->pdv_se_hba->hba_ptr;
-diff --git a/drivers/target/target_core_rd.h b/drivers/target/target_core_rd.h
-index 13badfb..3ea19e2 100644
---- a/drivers/target/target_core_rd.h
-+++ b/drivers/target/target_core_rd.h
-@@ -14,8 +14,6 @@
- #define RD_BLOCKSIZE		512
- #define RD_MAX_SECTORS		1024
-
--extern struct kmem_cache *se_mem_cache;
--
- /* Used in target_core_init_configfs() for virtual LUN 0 access */
- int __init rd_module_init(void);
- void rd_module_exit(void);
-diff --git a/drivers/target/target_core_transport.c
-b/drivers/target/target_core_transport.c
-index 28b6292..a318927 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -228,8 +228,6 @@ static void transport_remove_cmd_from_queue(struct
-se_cmd *cmd,
- static int transport_set_sense_codes(struct se_cmd *cmd, u8 asc, u8 ascq);
- static void transport_stop_all_task_timers(struct se_cmd *cmd);
-
--int transport_emulate_control_cdb(struct se_task *task);
--
- int init_se_global(void)
- {
- 	struct se_global *global;
-@@ -4370,7 +4368,7 @@ out:
- 	return -1;
- }
-
--extern u32 transport_calc_sg_num(
-+u32 transport_calc_sg_num(
- 	struct se_task *task,
- 	struct se_mem *in_se_mem,
- 	u32 task_offset)
-diff --git a/include/target/target_core_transport.h
-b/include/target/target_core_transport.h
-index 66f44e5..f87f20d 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -109,6 +109,8 @@
- struct se_mem;
- struct se_subsystem_api;
-
-+extern struct kmem_cache *se_mem_cache;
-+
- extern int init_se_global(void);
- extern void release_se_global(void);
- extern void transport_init_queue_obj(struct se_queue_obj *);
-@@ -163,6 +165,7 @@ extern void transport_free_se_cmd(struct se_cmd *);
- extern int transport_generic_allocate_tasks(struct se_cmd *, unsigned char *);
- extern int transport_generic_handle_cdb(struct se_cmd *);
- extern int transport_generic_handle_cdb_map(struct se_cmd *);
-+extern int transport_emulate_control_cdb(struct se_task *);
- extern int transport_generic_handle_data(struct se_cmd *);
- extern void transport_new_cmd_failure(struct se_cmd *);
- extern int transport_generic_handle_tmr(struct se_cmd *);
