@@ -1,51 +1,65 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 17/32] scsi/ibmvstgt: use system_wq instead of vtgtd
- workqueue
-Date: Mon, 24 Jan 2011 17:24:14 +0100
-Message-ID: <20110124162414.GD27510@htj.dyndns.org>
-References: <1294062595-30097-1-git-send-email-tj@kernel.org>
- <1294062595-30097-18-git-send-email-tj@kernel.org>
- <AANLkTi=Fg8wjf-XfVsq0X4RWx7i8F1V7gC6-8Y5LPbnL@mail.gmail.com>
+From: Rudy Zijlstra <rudy@grumpydevil.homelinux.org>
+Subject: Re: Crash in 2.6.37
+Date: Mon, 24 Jan 2011 19:14:02 +0100
+Message-ID: <1295892842.4379.16.camel@belgarion.office.romunt.nl>
+References: <4D3C05E9.9030105@grumpydevil.homelinux.org>
+	 <1295828488.8278.33.camel@mulgrave.site>
+	 <4D3D2054.1060905@grumpydevil.homelinux.org>
+	 <20110124150031.0a30e263@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <AANLkTi=Fg8wjf-XfVsq0X4RWx7i8F1V7gC6-8Y5LPbnL@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tritonia.xxlwebhosting.nl ([81.4.88.63]:60150 "EHLO
+	tritonia.xxlwebhosting.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753789Ab1AXSOY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2011 13:14:24 -0500
+In-Reply-To: <20110124150031.0a30e263@stein>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org
 
-Hello,
+On Mon, 2011-01-24 at 15:00 +0100, Stefan Richter wrote:
+> On Jan 24 Rudy Zijlstra wrote:
+> > On 01/24/2011 01:21 AM, James Bottomley wrote:
+> > > On Sun, 2011-01-23 at 11:41 +0100, Rudy Zijlstra wrote:
+> > >    
+> > >> Dears,
+> > >>
+> > >> I got the following crash by:
+> > >> - cp several G onto a raid 5 on a Marvell 88SE6480//// based controller
+> > >> while also doing
+> > >> - cp * ../test/ on the same raid.
+> > >>
+> > >> I strongly suspect mvsas to be the cause
+> > >>      
+> > > I've got to ask why?
+> > >    
+> > cause the 88SE6480 has been giving grief for a long time, and i was 
+> > loading that one specifically.
+> > you may well be right (i do not read crash info i fear), but a bit 
+> > strange to have NFS crash when nfs was not much used at that moment
+> > 
+> [...]
+> > >> [ 2821.393697] Pid: 1105, comm: rpc.mountd Not tainted 2.6.37 #1
+> > >> X7SB4/E/X7SB4/E
+> > >> [ 2821.393697] RIP: 0010:[<ffffffff815a1b5c>]  [<ffffffff815a1b5c>]
+> > >> cache_revisit_request+0xab/0x105
+> > >>      
+> > > This says the bad deref occurred in the sunrpc authentication cache.
+> > > Nothing at all in the trace implicates mvsas ... in fact nothing even
+> > > remotely relates to it at all.  It really looks like an NFS problem.
+> 
+> Perhaps a silent memory corruption, with an innocent bystander becoming a
+> victim?
+> 
+> Rudy, if possible repeat the test with NFS completely shut down and
+> disabled.
 
-On Mon, Jan 24, 2011 at 05:09:18PM +0100, Bart Van Assche wrote:
-> Insertion of  flush_work_sync() fixes a race - that's a good catch.
-> flush_work_sync() should be invoked a little earlier though because
-> the scheduled work may access the queue destroyed by the
-> crq_queue_destroy(target) call. And the CRQ interrupt should be
-> disabled from before flush_work_sync() is invoked until after the CRQ
-> has been destroyed.
 
-Heh, I'm a bit out of my depth here.  If you know what's necessary,
-please go ahead and make the change.
+I'll schedule that for Saturday morning. Earliest time i can disable NFS
+without user impact and do another stress test on mvsas. And i need to
+be physically close to the system, as a kernel crash needs a reset
+button to recover.
 
-> Regarding the queue removal: I might have missed something, but why
-> would you like to remove the vtgtd work queue ? Since the ibmvstgt
-> driver is a storage target driver, processing latency matters. I'm
-> afraid that switching from a dedicated queue to the global work queue
-> will increase processing latency.
-
-Having a dedicated workqueue no longer makes any difference regarding
-processing latency.  Each workqueue is mere frontend to the shared
-worker pool anyway.  Dedicated workqueues are now meaningful only as
-forward progress guarantee, attribute and/or flush domain - IOW, when
-the workqueue needs to be used during memory reclaim, the work items
-need to have specific attributes or certain group of work items need
-to be flushed together.  Apart from that, there's virtually no
-difference between using the system_wq and a dedicated one.  As using
-the system one is usually simpler, it's natural to do that.
-
-Thank you.
-
--- 
-tejun
