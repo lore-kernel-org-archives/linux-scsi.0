@@ -1,61 +1,68 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH 3/3] target: Minor sparse warning fixes and annotations
-Date: Mon, 24 Jan 2011 15:25:57 -0800
-Message-ID: <1295911557.24778.85.camel@haakon2.linux-iscsi.org>
+Date: Tue, 25 Jan 2011 00:56:10 +0100
+Message-ID: <20110125005610.11d5d143@stein>
 References: <1295901446-17089-1-git-send-email-nab@linux-iscsi.org>
-	 <1295901446-17089-4-git-send-email-nab@linux-iscsi.org>
-	 <1295902567.15425.13.camel@mulgrave.site>
-	 <1295904802.24778.47.camel@haakon2.linux-iscsi.org>
-	 <4D3E08BA.6000105@gmail.com>
+	<1295901446-17089-4-git-send-email-nab@linux-iscsi.org>
+	<1295902567.15425.13.camel@mulgrave.site>
+	<1295904802.24778.47.camel@haakon2.linux-iscsi.org>
+	<1295905896.15425.17.camel@mulgrave.site>
+	<1295907147.24778.53.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:44243 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752245Ab1AXX0A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2011 18:26:00 -0500
-In-Reply-To: <4D3E08BA.6000105@gmail.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:45640 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751508Ab1AXX4S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2011 18:56:18 -0500
+In-Reply-To: <1295907147.24778.53.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Eykholt <joe.eykholt@gmail.com>
-Cc: linux-iscsi-target-dev@googlegroups.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@lst.de>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@lst.de>
 
-On Mon, 2011-01-24 at 15:18 -0800, Joe Eykholt wrote:
-> On 1/24/11 1:33 PM, Nicholas A. Bellinger wrote:
-> > On Mon, 2011-01-24 at 14:56 -0600, James Bottomley wrote:
-> >> On Mon, 2011-01-24 at 12:37 -0800, Nicholas A. Bellinger wrote:
-> >>> -#define TASK_CMD(task) ((struct se_cmd *)task->task_se_cmd)
-> >>> -#define TASK_DEV(task) ((struct se_device *)task->se_dev)
-> >>> +#define TASK_CMD(task) ((task)->task_se_cmd)
-> >>> +#define TASK_DEV(task) ((task)->se_dev)
-> Part of the problem with the old code is that task was not parenthesized,
-> so if TASK_CMD() were used with an expression, you might not get what
-> you want.  If you did TASK_CMD(p + 5), for example, you would get
+On Jan 24 Nicholas A. Bellinger wrote:
+> On Mon, 2011-01-24 at 15:51 -0600, James Bottomley wrote:
+> > On Mon, 2011-01-24 at 13:33 -0800, Nicholas A. Bellinger wrote:
+> > > On Mon, 2011-01-24 at 14:56 -0600, James Bottomley wrote:
+> > > > On Mon, 2011-01-24 at 12:37 -0800, Nicholas A. Bellinger wrote:
+> > > > > -#define TASK_CMD(task) ((struct se_cmd *)task->task_se_cmd)
+> > > > > -#define TASK_DEV(task) ((struct se_device *)task->se_dev)
+> > > > > +#define TASK_CMD(task) ((task)->task_se_cmd)
+> > > > > +#define TASK_DEV(task) ((task)->se_dev)
+> > > > 
+> > > > If sparse is objecting to things like this then sparse needs fixing:
+> > > > It's decreasing typesafety.  the things being cast are void * ... they'd
+> > > > be depositable into any pointer whatsoever without the cast.  With the
+> > > > cast in the #define, we pick up pointer mismatches (as we should).
+> > > > Without it, we don't.  As long as the define is always a specific type,
+> > > > it *should* cast to it.
+> > > > 
+> > > 
+> > > Hmmm, good point..  In that case I will go ahead and drop this part of
+> > > the patch.
+> > 
+> > Actually, I misspoke on this.  They're not void *; they're defined as
+> > struct pointers ... so the cast is actually a spurious double cast.  As
+> > long as the rest are, I'm fine with this.
+> > 
 > 
->      ((struct se_cmd *)p + 5->task_se_cmd)
-> 
-> Which wouldn't compile, but maybe other examples would compile and
-> would cause strange problems.   So, it's a bad macro as it is.
-> Just my 2 cents.
-> 
+> Committed as seperate commit b58b76c -> lio-core-2.6.git/linus-38-rc2,
+> and picked into the mainline queue @ scsi-post-merge-2.6.git/for-jejb.
 
-Good point here Joe..  AFAIK there are no cases of this in actual usage,
-but for good measure all of these within target_core_base.h where
-converted to:
+Why do you provide macros for a simple structure member dereference?
 
- 	#define TCM_FOO(p)  ((p)->member)
+And if you *really* need these helpers, why not
 
-for:
+static inline struct se_cmd *cmd_of(struct se_task *task)
+{
+	return task->task_se_cmd;
+}
 
-commit b58b76cd21bf461308e7fba175931f8f8c089bd7
-Author: Nicholas Bellinger <nab@linux-iscsi.org>
-Date:   Mon Jan 24 14:29:08 2011 -0800
-
-    target: Remove spurious double cast from structure macro accessors
-
-
-Thanks for your comments!
-
---nab
-
+(But then, I see no reason at all not to write it as task->task_se_cmd at
+the user sites.)
+-- 
+Stefan Richter
+-=====-==-== ---= ==--=
+http://arcgraph.de/sr/
