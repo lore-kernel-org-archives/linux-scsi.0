@@ -1,23 +1,20 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
-Date: Mon, 24 Jan 2011 16:12:59 -0500
-Message-ID: <4D3DEB5B.9080803@garzik.org>
-References: <1295797260.3007.118.camel@mulgrave.site>
+From: "Kazanas, Chris" <Chris.Kazanas@richardson.k12.tx.us>
+Subject: PROMO
+Date: Mon, 24 Jan 2011 15:11:13 -0600
+Message-ID: <75A5437A8AFC574DA45672CE6961FA95A1AE65957E@email.risd.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1295797260.3007.118.camel@mulgrave.site>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exgate.richardson.k12.tx.us ([165.199.3.203]:3148 "EHLO
+	richardson.k12.tx.us" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751605Ab1AXVQ2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2011 16:16:28 -0500
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-About to dive into this.  Thanks for tackling the new-EH conversion, 
-libsas is the last straggler in this regard.  As you noted, "old-EH" is 
-now a synonym for "SAS EH code path".
-
-	Jeff
-
-
-
+You have been officially granted Eight Hundred and Fifty Thousand . from the OXFAM GB -UK JANUARY PROMO, You are to send in your Full name,contact address and phone number if any ,to Mr Glenn Morgan via email:   mrmorganoxfam@algish.com<mailto:mrmorganoxfam@algish.com>
+ to claim this prize.
+Co-ordinator
+Kazana  Chris
