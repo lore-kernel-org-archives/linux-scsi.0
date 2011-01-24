@@ -1,127 +1,61 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [ANNOUNCE] TCM/LIO v4.0.0-rc7 for 2.6.38-rc2
-Date: Mon, 24 Jan 2011 15:21:04 -0800
-Message-ID: <1295911264.24778.79.camel@haakon2.linux-iscsi.org>
+Subject: Re: [PATCH 3/3] target: Minor sparse warning fixes and annotations
+Date: Mon, 24 Jan 2011 15:25:57 -0800
+Message-ID: <1295911557.24778.85.camel@haakon2.linux-iscsi.org>
+References: <1295901446-17089-1-git-send-email-nab@linux-iscsi.org>
+	 <1295901446-17089-4-git-send-email-nab@linux-iscsi.org>
+	 <1295902567.15425.13.camel@mulgrave.site>
+	 <1295904802.24778.47.camel@haakon2.linux-iscsi.org>
+	 <4D3E08BA.6000105@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:43081 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:44243 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753082Ab1AXXVI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2011 18:21:08 -0500
+	with ESMTP id S1752245Ab1AXX0A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2011 18:26:00 -0500
+In-Reply-To: <4D3E08BA.6000105@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
-Cc: "Linux-iSCSI.org Target Dev" <linux-iscsi-target-dev@googlegroups.com>
+To: Joe Eykholt <joe.eykholt@gmail.com>
+Cc: linux-iscsi-target-dev@googlegroups.com, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@lst.de>
 
-Greetings all,
+On Mon, 2011-01-24 at 15:18 -0800, Joe Eykholt wrote:
+> On 1/24/11 1:33 PM, Nicholas A. Bellinger wrote:
+> > On Mon, 2011-01-24 at 14:56 -0600, James Bottomley wrote:
+> >> On Mon, 2011-01-24 at 12:37 -0800, Nicholas A. Bellinger wrote:
+> >>> -#define TASK_CMD(task) ((struct se_cmd *)task->task_se_cmd)
+> >>> -#define TASK_DEV(task) ((struct se_device *)task->se_dev)
+> >>> +#define TASK_CMD(task) ((task)->task_se_cmd)
+> >>> +#define TASK_DEV(task) ((task)->se_dev)
+> Part of the problem with the old code is that task was not parenthesized,
+> so if TASK_CMD() were used with an expression, you might not get what
+> you want.  If you did TASK_CMD(p + 5), for example, you would get
+> 
+>      ((struct se_cmd *)p + 5->task_se_cmd)
+> 
+> Which wouldn't compile, but maybe other examples would compile and
+> would cause strange problems.   So, it's a bad macro as it is.
+> Just my 2 cents.
+> 
 
-TCM/LIO v4.0.0-rc7 for 2.6.38-rc2 has been tagged and pushed into the
-LIO upstream tree at @ lio-core-2.6.git/linus-38-rc2.  At this point
-lio-core-2.6.git/linus-38-rc2 has been synced with mainline target code,
-and the v4.0.0-rc7 PULL requests will be sent out shortly.
+Good point here Joe..  AFAIK there are no cases of this in actual usage,
+but for good measure all of these within target_core_base.h where
+converted to:
 
-Thanks again to everyone who submitted patches and gave feedback this
-round for LIO upstream code.  With these v4.0 changes headed into
-mainline, the new lio-4.1 development tree will be starting shortly for
-items tagged as 'for-39'.
+ 	#define TCM_FOO(p)  ((p)->member)
 
-Thanks!
+for:
+
+commit b58b76cd21bf461308e7fba175931f8f8c089bd7
+Author: Nicholas Bellinger <nab@linux-iscsi.org>
+Date:   Mon Jan 24 14:29:08 2011 -0800
+
+    target: Remove spurious double cast from structure macro accessors
+
+
+Thanks for your comments!
 
 --nab
-
-Christoph Hellwig (2):
-  target: do not include target_core_mib.h under include/target
-  target: remove EXTRA_CFLAGS
-
-Dan Carpenter (2):
-  target: remove an unused variable
-  target: unlock on error path in configfs
-
-Fubo Chen (3):
-  target: Drop nacl->device_list_lock on
-    core_update_device_list_for_node failure
-  target: Reaquire hba_lock + se_port_lock during se_clear_dev_ports
-    continue
-  target: Minor sparse warning fixes and annotations
-
-Jesper Juhl (2):
-  target/file: Fix memory leak in fd_set_configfs_dev_params().
-  target: remove duplicate include target_core_device.h
-
-Kiran Patil (3):
-  TCM/LIO: Support for large FC offload (write exchange)
-  ixgbe: Added support for receive offload in base driver for storage
-    target.
-  TCM/OpenFCoE : Added Large Send Offload
-
-Nicholas Bellinger (25):
-  tcm_fc: Clear frame_len before skipping to next frame
-  Revert "tcm_fc: Clear frame_len before skipping to next frame"
-  target: Add linux/blkdev.h include in target_core_base.h
-  target: Add SCSI and BLOCK depends for TARGET_CORE
-  target: Fix excessive stack usage
-  target: Fix T_TASK(cmd)->t_task_cdb assignement breakage
-  target: Add missing core_scsi3_put_pr_reg() for explict REGISTER key
-    change
-  target: Call transport_new_cmd_failure() while draining qobj_list
-    during LUN_RESET
-  target: Convert remaining usage of simple_strtoul -> strict_strtoul
-  [SCSI] target: Add LIO target core v4.0.0-rc6
-  target: iblock/pscsi claim checking for NULL instead of IS_ERR
-  target: fix dubious one-bit signed bitfield
-  target/iblock: Fix failed bd claim NULL pointer dereference
-  iscsi: Fix OOPs in crypto_free_hash() exception path
-  iscsi: select CRYPTO and CRYPTO_CRC32C* by default
-  target/iblock: Fix memory leak in iblock_set_configfs_dev_params
-  target: Fix memory leaks in
-    target_core_dev_pr_store_attr_res_aptpl_metadata
-  target: Fix demo-mode MappedLUN shutdown UA/PR breakage
-  target: Release left-over demo-mode NodeACLs w/
-    tfo->tpg_check_demo_mode_cache()=1
-  target: Call missing list_del() for demo-mode MappedLUN disable
-  target: Call proc_mkdir + remove_proc_entry with NULL parameter
-  target: Convert backend ->create_virtdevice() call to return ERR_PTR
-  target: Remove spurious double cast from structure macro accessors
-  lio-core v4.0.0-rc7
-  target core v4.0.0-rc7
-
-Roland Dreier (2):
-  target: Fix memory leak on error path
-  target: Remove unneeded test of se_cmd
-
- drivers/target/Kconfig                           |    2 +
- drivers/target/Makefile                          |    1 -
- drivers/target/lio-target/Kconfig                |    3 +
- drivers/target/lio-target/iscsi_target_login.c   |    4 +-
- drivers/target/lio-target/iscsi_target_version.h |    2 +-
- drivers/target/target_core_configfs.c            |   56 ++++++++---
- drivers/target/target_core_device.c              |   51 +++++-----
- drivers/target/target_core_fabric_configfs.c     |   79 ++++++++---------
- drivers/target/target_core_fabric_lib.c          |    7 +-
- drivers/target/target_core_file.c                |   30 +++++--
- drivers/target/target_core_hba.c                 |    2 +-
- drivers/target/target_core_iblock.c              |   48 ++++++----
- drivers/target/target_core_mib.c                 |   20 ++++
- drivers/target/target_core_mib.h                 |    8 --
- drivers/target/target_core_pr.c                  |   59 ++++++------
- drivers/target/target_core_pscsi.c               |   45 +++++----
- drivers/target/target_core_pscsi.h               |    2 +-
- drivers/target/target_core_rd.c                  |   10 +-
- drivers/target/target_core_rd.h                  |    2 -
- drivers/target/target_core_scdb.c                |    2 +-
- drivers/target/target_core_tmr.c                 |   13 ++-
- drivers/target/target_core_tpg.c                 |   27 +++++-
- drivers/target/target_core_transport.c           |   68 +++++++-------
- drivers/target/tcm_fc/tcm_fc.h                   |    3 +
- drivers/target/tcm_fc/tfc_cmd.c                  |   33 ++++++-
- drivers/target/tcm_fc/tfc_conf.c                 |    4 +
- drivers/target/tcm_fc/tfc_io.c                   |  108 ++++++++++++++++++++--
- include/target/target_core_base.h                |   51 ++++++-----
- include/target/target_core_fabric_configfs.h     |    2 +-
- include/target/target_core_fabric_ops.h          |    2 +-
- include/target/target_core_transport.h           |    5 +
- 31 files changed, 495 insertions(+), 254 deletions(-)
-
 
