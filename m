@@ -1,135 +1,129 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: Erroneous handling of sense status in SCSI EH commands
-Date: Mon, 24 Jan 2011 08:59:57 +0100
-Message-ID: <4D3D317D.6060403@suse.de>
-References: <1295597274-5844-1-git-send-email-hare@suse.de> <4D39F16A.5020002@cs.wisc.edu>
+Subject: Re: [LSF/MM TOPIC] SCSI referrals support
+Date: Mon, 24 Jan 2011 09:04:15 +0100
+Message-ID: <4D3D327F.1040807@suse.de>
+References: <4D385C0A.3000901@suse.de>  <4D385F69.5060209@interlog.com> <1295541361.3014.8.camel@mulgrave.site> <4D3C100C.1010609@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:58460 "EHLO mx2.suse.de"
+Received: from cantor.suse.de ([195.135.220.2]:48930 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751832Ab1AXHws (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Jan 2011 02:52:48 -0500
-In-Reply-To: <4D39F16A.5020002@cs.wisc.edu>
+	id S1751832Ab1AXH5I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Jan 2011 02:57:08 -0500
+In-Reply-To: <4D3C100C.1010609@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: James Bottomley <jbottomley@suse.de>, linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, dgilbert@interlog.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 01/21/2011 09:49 PM, Mike Christie wrote:
-> On 01/21/2011 02:07 AM, Hannes Reinecke wrote:
->> Consider a scenario where a SCSI EH command like TUR fails with a NO=
-T
->> READY
->> status - MANUAL INTERVENTION REQUIRED (02/04/03). As evident in the
->> ASC/ASCQ
->> description, manual intervention is required in this case i.e. the
->> target wants
->> TUR to fail here so that the host administrator can take corrective
->> action.
+On 01/23/2011 12:25 PM, Boaz Harrosh wrote:
+> On 01/20/2011 06:36 PM, James Bottomley wrote:
+>> On Thu, 2011-01-20 at 17:14 +0100, Douglas Gilbert wrote:
+>>> On 11-01-20 05:00 PM, Hannes Reinecke wrote:
+>>>> Agenda topic proposal:
+>>>>
+>>>> SCSI referrals support has already been discussed at last year's L=
+SF
+>>>> conference. However, the solution proposed there would not support
+>>>> failover and would require quite a lot of changes to multipathing.
+>>>>
+>>>> To enable failover it might be an idea to handle the LUN directly =
+in
+>>>> multipathing. This would require eg:
+>>>> - request splitting
+>>>> - I/O alignment handling
+>>>> - SCSI unit attention handling
+>>>>
+>>>> I would be giving a short overview/presentation of the current
+>>>> state of the art, the shortcomings on the original proposal,
+>>>> and would like to invite a discussion on how to best support
+>>>> SCSI referrals.
+>>>
+>>> IMO a worrying aspect of the changes associated with SCSI
+>>> referrals is that sense data can now be returned with any
+>>> SCSI status (i.e. not just CHECK CONDITION). How well would
+>>> the SCSI subsystem cope with that? I know that the sg driver
+>>> (and probably bsg) would need changes, as would my libsgutils
+>>> library used by sg3_utils.
 >>
->> But this particular ASC/ASCQ is not handled in the scsi_check_sense,
->> which
->> ultimately causes scsi_eh_tur to erroneously report a SUCCESS (devic=
-e
->> ready)
->> instead of the actual FAILURE state (device not ready).
+>> Well, not necessarily.  It scuppers plans to try to use the sense bu=
+ffer
+>> more efficiently, but right at the moment, we can receive sense for =
+any
+>> command.  We only actually look at it on a check condition return, b=
+ut
+>> that's easily updated.
 >>
->> This patch converts scsi_check_sense() to return SOFT_ERROR in
->> cases where an error has been signalled via the sense code, but
->> we should not wake the error handler. This error code will be
->> reverted back to SUCCESS for normal command handling, but
->> scsi_eh_completed_normally() will convert it to FAILED.
+>> As I read the standard, referrals sense data on successfully complet=
+ed
+>> commands is only really relevant to mp implementations, so it looks =
+like
+>> the mid-layer should ignore it anyway (as it would now) but provide =
+a
+>> hook for the device handlers to see it if they wanted.
 >>
->> Reported-by: Martin George<marting@netapp.com>
->> Signed-off-by: Hannes Reinecke<hare@suse.de>
+>> James
 >>
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index 45c7564..e86e62e 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -223,7 +223,7 @@ static inline void scsi_eh_prt_fail_stats(struct
->> Scsi_Host *shost,
->>    * @scmd:    Cmd to have sense checked.
->>    *
->>    * Return value:
->> - *     SUCCESS or FAILED or NEEDS_RETRY
->> + *     SUCCESS or FAILED or NEEDS_RETRY or SOFT_ERROR
->>    *
->>    * Notes:
->>    *    When a deferred error is detected the current command has
->> @@ -278,7 +278,7 @@ static int scsi_check_sense(struct scsi_cmnd *sc=
-md)
->>
->>       case ABORTED_COMMAND:
->>           if (sshdr.asc =3D=3D 0x10) /* DIF */
->> -            return SUCCESS;
->> +            return SOFT_ERROR;
->>
->>           return NEEDS_RETRY;
->>       case NOT_READY:
->> @@ -324,19 +324,19 @@ static int scsi_check_sense(struct scsi_cmnd *=
-scmd)
->>            * Pass the UA upwards for a determination in the completi=
-on
->>            * functions.
->>            */
->> -        return SUCCESS;
->> +        return SOFT_ERROR;
->>
+> Something like:
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index eafeeda..454e562 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -722,20 +722,23 @@ void scsi_io_completion(struct scsi_cmnd *cmd, =
+unsigned int good_bytes)
+>  			sense_deferred =3D scsi_sense_is_deferred(&sshdr);
+>  	}
+> =20
+> +	if (req->sense) {
+> +		/*
+> +		 * SG_IO wants current and deferred errors
+> +		 */
+> +		int len =3D 8 + cmd->sense_buffer[7];
+> +
+> +		if (unlikely(len)) {
+> +			if (len > SCSI_SENSE_BUFFERSIZE)
+> +				len =3D SCSI_SENSE_BUFFERSIZE;
+> +			memcpy(req->sense, cmd->sense_buffer,  len);
+> +			req->sense_len =3D len;
+> +		}
+> +	}
+> +
+>  	if (req->cmd_type =3D=3D REQ_TYPE_BLOCK_PC) { /* SG_IO ioctl from b=
+lock level */
+>  		req->errors =3D result;
+>  		if (result) {
+> -			if (sense_valid && req->sense) {
+> -				/*
+> -				 * SG_IO wants current and deferred errors
+> -				 */
+> -				int len =3D 8 + cmd->sense_buffer[7];
+> -
+> -				if (len > SCSI_SENSE_BUFFERSIZE)
+> -					len =3D SCSI_SENSE_BUFFERSIZE;
+> -				memcpy(req->sense, cmd->sense_buffer,  len);
+> -				req->sense_len =3D len;
+> -			}
+>  			if (!sense_deferred)
+>  				error =3D -EIO;
+>  		}
 >=20
+> Then an interested user can just look at req->sense_len. The reset of=
+ the stack will
+> ignore all that because it looks for status/error-code.
 >=20
-> For normal IO execution the UA, not ready, and illegal request handli=
-ng
-> in scsi_io_completion would determine that some of these are retryabl=
-e
-> conditions, but with the patch in the scsi_error.cs path we will retu=
-rn
-> soft error and fail. Also a lot of these that were retryable were
-> returned as success in the past, but with the patch are being failed.
->=20
-No. scsi_check_sense() is not called from scsi_io_completion; that
-just calls scsi_normalize_sense().
-scsi_check_sense() is only called from
+Ah, if it were so easy. Currently sense codes have two problems:
 
-- scsi_eh_completed_normally()
-- scsi_eh_stu()
-- scsi_decide_disposition()
+- They are limited to 96 bytes. Anything larger than that will just
+  be discarded (or crash with your patch above :-)
+- They inherit the same lifetime than the scsi command. But for any
+  decent handling you really need to push them into some
+  asynchronous context as you might well be within an interrupt
+  handler here.
 
-All of which have been checked against this patch.
-scsi_io_completion() has it's own set of checks for sense codes
-which I don't modify here.
-
-> Martin made me the same bugzilla :) I was thinking we needed to make
-> check_sense smarter or move some of the scsi_io_completion code to so=
-me
-> lib helpers so scsi_error.c could call them.
->=20
-> And does scsi_eh_stu need to be covnerted to check for soft error and
-> failed.
->=20
-No. scsi_eh_stu() needs to check if a START STOP UNIT command needs
-to be send. The trigger for this is that scsi_check_sense() returns
-=46AILED:
-
-		list_for_each_entry(scmd, work_q, eh_entry)
-			if (scmd->device =3D=3D sdev && SCSI_SENSE_VALID(scmd) &&
-			    scsi_check_sense(scmd) =3D=3D FAILED ) {
-				stu_scmd =3D scmd;
-				break;
-			}
-
-		if (!stu_scmd)
-			continue;
-
-so this logic hasn't changed.
-
-> Also if we did this patch, then I think we also have to convert the
-> device handlers.
-Not necessarily. This patch just allows check_sense() to return
-an additional error code; the device handlers are not forced to
-use them. If they don't things will work like before.
+I'm currently working on a handling framework using relayfs
+(basically blktrace for SCSI Unit Attention); I can be doing a short
+presentation at LSF if requested.
 
 Cheers,
 
@@ -137,8 +131,8 @@ Hannes
 --=20
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
