@@ -1,42 +1,43 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
-Date: Mon, 24 Jan 2011 15:16:51 -0600
-Message-ID: <1295903811.15425.16.camel@mulgrave.site>
-References: <1295797260.3007.118.camel@mulgrave.site>
-	 <4D3DEB5B.9080803@garzik.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 3/3] target: Minor sparse warning fixes and annotations
+Date: Mon, 24 Jan 2011 13:33:22 -0800
+Message-ID: <1295904802.24778.47.camel@haakon2.linux-iscsi.org>
+References: <1295901446-17089-1-git-send-email-nab@linux-iscsi.org>
+	 <1295901446-17089-4-git-send-email-nab@linux-iscsi.org>
+	 <1295902567.15425.13.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:55849 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751505Ab1AXVQ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Jan 2011 16:16:57 -0500
-In-Reply-To: <4D3DEB5B.9080803@garzik.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:45981 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751446Ab1AXVdZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2011 16:33:25 -0500
+In-Reply-To: <1295902567.15425.13.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@lst.de>
 
-On Mon, 2011-01-24 at 16:12 -0500, Jeff Garzik wrote:
-> About to dive into this.
+On Mon, 2011-01-24 at 14:56 -0600, James Bottomley wrote:
+> On Mon, 2011-01-24 at 12:37 -0800, Nicholas A. Bellinger wrote:
+> > -#define TASK_CMD(task) ((struct se_cmd *)task->task_se_cmd)
+> > -#define TASK_DEV(task) ((struct se_device *)task->se_dev)
+> > +#define TASK_CMD(task) ((task)->task_se_cmd)
+> > +#define TASK_DEV(task) ((task)->se_dev)
+> 
+> If sparse is objecting to things like this then sparse needs fixing:
+> It's decreasing typesafety.  the things being cast are void * ... they'd
+> be depositable into any pointer whatsoever without the cast.  With the
+> cast in the #define, we pick up pointer mismatches (as we should).
+> Without it, we don't.  As long as the define is always a specific type,
+> it *should* cast to it.
+> 
 
-You're welcome.
+Hmmm, good point..  In that case I will go ahead and drop this part of
+the patch.
 
->   Thanks for tackling the new-EH conversion, 
-> libsas is the last straggler in this regard.
+Thanks!
 
-No it's not ... there's still ipr (and any other external consumer).
-In it's current form, the new eh simply wasn't usable externally.  As I
-said for ipr in the intro blurb, I can't see a way to convert it without
-making it attach fully to libsas, although an alternative might be to
-get the raid transport class to proxy.
-
->   As you noted, "old-EH" is 
-> now a synonym for "SAS EH code path".
-
-Say more "external EH code path".
-
-James
-
+--nab
 
