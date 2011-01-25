@@ -1,52 +1,56 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: Re: [PATCH 3/4] fcoe: use dedicated workqueue instead of system_wq
-Date: Tue, 25 Jan 2011 10:26:30 -0800
-Message-ID: <1295979990.12667.7.camel@fritz>
-References: <1295877451-16602-1-git-send-email-tj@kernel.org>
-	 <1295877451-16602-4-git-send-email-tj@kernel.org>
-	 <1295930614.15425.137.camel@mulgrave.site>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
+Date: Tue, 25 Jan 2011 12:56:06 -0600
+Message-ID: <4D3F1CC6.5080208@linux.vnet.ibm.com>
+References: <1295797260.3007.118.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:57669 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751492Ab1AYS0b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2011 13:26:31 -0500
-In-Reply-To: <1295930614.15425.137.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1295797260.3007.118.camel@mulgrave.site>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Robert Jennings <rcj@linux.vnet.ibm.com>, Wayne Boyer <wayneb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Eric.Moore@lsi.com" <Eric.Moore@lsi.com>
 
-On Mon, 2011-01-24 at 20:43 -0800, James Bottomley wrote:
-> On Mon, 2011-01-24 at 14:57 +0100, Tejun Heo wrote:
-> > fcoe uses the system_wq to destroy ports and the work items need to be
-> > flushed before the driver is unloaded.  As the work items free the
-> > containing data structure, they can't be flushed directly.  The
-> > workqueue should be flushed instead.
-> > 
-> > Also, the destruction works can be chained - ie. destruction of a port
-> > may lead to destruction of another port where the work item for the
-> > former queues the work for the latter.  Currently, the depth of chain
-> > can be at most two and fcoe_exit() makes sure everything is complete
-> > by calling flush_scheduled_work() twice.
-> > 
-> > With commit c8efcc25 (workqueue: allow chained queueing during
-> > destruction), destroy_workqueue() can take care of chained works on
-> > workqueue destruction.  Add and use fcoe_wq instead.  Simply
-> > destroying fcoe_wq on driver unload takes care of flushing.
+On 01/23/2011 09:41 AM, James Bottomley wrote:
+> The bad news is that this is a pretty horrific conversion.  Because of
+> the amount of control the new eh wants (and the slew of monolithic
+> assumptions it makes), the entire error handler routine has to be sliced
+> apart and sewn back together to make it callable as part of an existing
+> error handler (rather than trying to do everything on its own).
 > 
-> Cc'ing FCoE maintainer for an opinion.
-> 
-> Robert, I assume this will come back via your queue with an ack.
-> 
-> James
-> 
-Yes, I will take care of it. There is going to be a lot of code movement
-in the next fcoe update to make way for a new fcoe model that will allow
-for new transports. It's the pre-work that the bnx2fc driver can plug
-into. I think having this go through my tree is a good idea.
+> The even worse news is that unless you have an existing strategy
+> handler, you can't make use of this.  That means that ipr is
+> unconvertable in its current form.  Given the two really nasty options:
+> give ipr its own error handler via its own transport class, or attach
+> ipr to libsas and let it do the work, I'd choose the latter.
 
-Thanks, //Rob
+I've got a patch set that's been sitting collecting dust for quite some time
+that implements yet another option. The basic idea is that we move away from
+the idea of having a single scsi_host for the entire SAS adapter, but
+rather have one for the SAS devices and one for each SATA rphy.
+
+This allows us to use libata's EH pretty much as is, but does introduce
+some issues to solve:
+
+1. Adapter queue depth. Since we have multiple scsi_hosts for a single
+   HBA, we lose the adapter queue depth tracking done by scsi core.
+   Anything in block that can help us here?
+2. Locking gets messy since we have a lock for each sata rphy as well
+   as one for the sas scsi_host.
+
+There were some other smaller issues as well. I liked the idea of moving
+to multiple scsi_host's since that eliminates the issue of userspace polling an
+empty CD drive causing EH to get invoked and quiescing all SAS I/O as well,
+but it does result in potentially a lot of scsi_hosts getting created.
+
+-Brian
+
+
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
 
