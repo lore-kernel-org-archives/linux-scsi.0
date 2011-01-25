@@ -1,198 +1,67 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 2/3] target: Reaquire hba_lock + se_port_lock during
-	se_clear_dev_ports continue
-Date: Mon, 24 Jan 2011 18:03:14 -0800
-Message-ID: <1295920994.24778.181.camel@haakon2.linux-iscsi.org>
-References: <1295901446-17089-1-git-send-email-nab@linux-iscsi.org>
-	 <1295901446-17089-3-git-send-email-nab@linux-iscsi.org>
-	 <20110125010817.2baee6cf@stein>
-	 <1295918416.24778.157.camel@haakon2.linux-iscsi.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [GIT PULL for 38-rc3]  target updates for v4.0.0-rc7
+Date: Mon, 24 Jan 2011 20:26:51 -0600
+Message-ID: <1295922411.15425.126.camel@mulgrave.site>
+References: <1295914455.24778.115.camel@haakon2.linux-iscsi.org>
+	 <1295915790.15425.44.camel@mulgrave.site>
+	 <1295918871.24778.161.camel@haakon2.linux-iscsi.org>
+	 <1295919523.15425.104.camel@mulgrave.site>
+	 <1295920509.24778.172.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:35858 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751374Ab1AYCDS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2011 21:03:18 -0500
-In-Reply-To: <1295918416.24778.157.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1295920509.24778.172.camel@haakon2.linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Mon, 2011-01-24 at 17:20 -0800, Nicholas A. Bellinger wrote:
-> On Tue, 2011-01-25 at 01:08 +0100, Stefan Richter wrote:
-> > On Jan 24 Nicholas A. Bellinger wrote:
-> > > From: Fubo Chen <fubo.chen@gmail.com>
-> > > 
-> > > This patch reaquires hba->device_lock and dev->se_port_lock in
-> > > se_clear_dev_ports() if lun->lun_se_dev is NULL and we need
-> > > to continue in dev->dev_sep_list.
-> > > 
-> > > Signed-off-by: Fubo Chen <fubo.chen@gmail.com>
-> > > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > > ---
-> > >  drivers/target/target_core_device.c |    2 ++
-> > >  1 files changed, 2 insertions(+), 0 deletions(-)
-> > > 
-> > > diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-> > > index 95dfe3a..02b835f 100644
-> > > --- a/drivers/target/target_core_device.c
-> > > +++ b/drivers/target/target_core_device.c
-> > > @@ -796,6 +796,8 @@ void se_clear_dev_ports(struct se_device *dev)
-> > >  		spin_lock(&lun->lun_sep_lock);
-> > >  		if (lun->lun_se_dev == NULL) {
-> > >  			spin_unlock(&lun->lun_sep_lock);
-> > > +			spin_lock(&hba->device_lock);
-> > > +			spin_lock(&dev->se_port_lock);
-> > >  			continue;
-> > >  		}
-> > >  		spin_unlock(&lun->lun_sep_lock);
+On Mon, 2011-01-24 at 17:55 -0800, Nicholas A. Bellinger wrote:
+> On Mon, 2011-01-24 at 19:38 -0600, James Bottomley wrote:
+[...]
+> > Over the list, please, not in a git tree.  What I need is for others to
+> > review them ... and appearing on the list best encourages that.
 > > 
-> > The patch might be OK.  But the code that it fixed is... stunning.
-> > 
-> > void se_clear_dev_ports(struct se_device *dev)
-> > {
-> > 	struct se_hba *hba = dev->se_hba;
-> > 	struct se_lun *lun;
-> > 	struct se_portal_group *tpg;
-> > 	struct se_port *sep, *sep_tmp;
-> > 
-> > 	spin_lock(&dev->se_port_lock);
-> > 	list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
-> > 		spin_unlock(&dev->se_port_lock);
-> > 		spin_unlock(&hba->device_lock);
-> > 
-> > 		lun = sep->sep_lun;
-> > 		tpg = sep->sep_tpg;
-> > 		spin_lock(&lun->lun_sep_lock);
-> > 		if (lun->lun_se_dev == NULL) {
-> > 			spin_unlock(&lun->lun_sep_lock);
-> > 			continue;
-> > 		}
-> > 		spin_unlock(&lun->lun_sep_lock);
-> > 
-> > 		core_dev_del_lun(tpg, lun->unpacked_lun);
-> > 
-> > 		spin_lock(&hba->device_lock);
-> > 		spin_lock(&dev->se_port_lock);
-> > 	}
-> > 	spin_unlock(&dev->se_port_lock);
-> > 
-> > 	return;
-> > }
-> > 
-> > Can this mess of releasing and reacquiring locks --- which looks all rather
-> > dangerous --- be cleaned up if you move the logical units (?) to be deleted
-> > over to a secondary list?
 > 
-> Fair point on this one.  Having to sleep in core_dev_del_lun() waiting
-> for all outstanding struct se_cmd -> struct se_lun I/O descriptor
-> mappings to be shutdown makes this look pretty ugly currently in
-> se_clear_dev_ports().  However adding another list+lock to this mix
-> really does not make it any less complex.
+> Yes, but to clarify one item.   All of these patches in for-38-rc3 and
+> for-jejb branches have already been sent out to linux-scsi incrementally
+> when they where committed into LIO upstream code.  Are you asking that
+> the entire patch series be re-sent to linux-scsi against .38-rc2..?
+
+What I want is for you to tidy them up, make changelogs intelligible,
+sanity  check them (like merge patches for people who submit one patch
+per file), run checkpatch, make sure series compiles and integration
+test them before rolling them up in a batch and sending them on (at an
+interval of about one or two batches per merge window) ... in essence,
+what a maintainer does.
+
+James
+
+> > It's also better to use something more stable as the base, like linus
+> > head or scsi-misc as the base.  The postmerge tree is my most volatile
+> > tree (fairly constantly rebasing as I try to get the merge fixes
+> > right) ... and it's currently defunct until another merge clash appears.
+> > 
+> > By way of demonstration, try pulling your current postmerge tree into
+> > linus head and see what happens (the resulting conflicts are because of
+> > the rebases).
 > 
-> Looking at se_clear_dev_ports() again in the two usage contexts
-> target_core_device.c:se_free_virtual_device() and
-> target_core_hba.c:core_delete_hba(), I am thinking now that
-> se_clear_dev_ports() is in fact a genuine piece of left-over legacy
-> shutdown (eg: IOCTL) cruft from the pre-configfs 'dark ages' where TCM
-> backend device + port LUN removal was not guaranteed by Linux/VFS (and
-> hence the extra shutdown logic hacks).
+> Yes sorry, I should have been more specific here wrt to my
+> scsi-post-merge-2.6.git branches:
 > 
-> Because TPG port / LUN shutdown from backend HBA+devices is *always*
-> done via a configfs unlink syscall on parent/child protected struct
-> config_group structures, I think se_clear_dev_ports() should be able to
-> be dropped all together now.  I will take a deeper look and see if this
-> is really in fact safe for v4.0/for-38 code.
+> *) for-38-rc3: rebased to linus .38-rc2 tag
 > 
-
-Ok, after a quick test w/o se_clear_dev_ports() @ struct se_device and
-struct se_hba configfs context shutdown callers using iSCSI target
-TargetName+TargetPortalGrouPTag endpoints with normal and demo mode TPG
-LUNs, everything appears to be functioning as expected with the inline
-patch below.
-
-I am going to do some more testing and code review before pushing into
-the upstream LIO tree, but I am pretty confident at this point with the
-last assessment of this code being pre-configfs + pre-parent/child VFS
-protected port shutdown cruft that can safely be dropped with modern
-target_core_fabric_configfs.c code.
-
-Best Regards,
-
---nab
-
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 1afddb5..9220dba 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -777,52 +777,12 @@ void se_release_vpd_for_dev(struct se_device *dev)
-        return;
- }
- 
--/*
-- * Called with struct se_hba->device_lock held.
-- */
--void se_clear_dev_ports(struct se_device *dev)
--{
--       struct se_hba *hba = dev->se_hba;
--       struct se_lun *lun;
--       struct se_portal_group *tpg;
--       struct se_port *sep, *sep_tmp;
--
--       spin_lock(&dev->se_port_lock);
--       list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
--               spin_unlock(&dev->se_port_lock);
--               spin_unlock(&hba->device_lock);
--
--               lun = sep->sep_lun;
--               tpg = sep->sep_tpg;
--               spin_lock(&lun->lun_sep_lock);
--               if (lun->lun_se_dev == NULL) {
--                       spin_unlock(&lun->lun_sep_lock);
--                       spin_lock(&hba->device_lock);
--                       spin_lock(&dev->se_port_lock);
--                       continue;
--               }
--               spin_unlock(&lun->lun_sep_lock);
--
--               core_dev_del_lun(tpg, lun->unpacked_lun);
--
--               spin_lock(&hba->device_lock);
--               spin_lock(&dev->se_port_lock);
--       }
--       spin_unlock(&dev->se_port_lock);
--
--       return;
--}
--
- /*     se_free_virtual_device():
-  *
-  *     Used for IBLOCK, RAMDISK, and FILEIO Transport Drivers.
-  */
- int se_free_virtual_device(struct se_device *dev, struct se_hba *hba)
- {
--       spin_lock(&hba->device_lock);
--       se_clear_dev_ports(dev);
--       spin_unlock(&hba->device_lock);
--
-        core_alua_free_lu_gp_mem(dev);
-        se_release_device_for_hba(dev);
- 
-diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
-index a99760a..1232da9 100644
---- a/drivers/target/target_core_hba.c
-+++ b/drivers/target/target_core_hba.c
-@@ -157,8 +157,6 @@ core_delete_hba(struct se_hba *hba)
- 
-        spin_lock(&hba->device_lock);
-        list_for_each_entry_safe(dev, dev_tmp, &hba->hba_dev_list, dev_list) {
--
--               se_clear_dev_ports(dev);
-                spin_unlock(&hba->device_lock);
- 
-                se_release_device_for_hba(dev);
-
-
+> *) for-jejb: based on jejb scsi-post-merge-2.6.git/master @ .37-FINAL
+> from commit 7d2087a1820b (initial LIO target core v4.0.0-rc6 commit)
+> 
+> Both are now in sync with the upstream LIO tree v4.0.0-rc7 bugfixes, and
+> I have been keeping 'for-jejb' as convience for you against your initial
+> target merge.
+> 
+> --nab
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
