@@ -1,63 +1,52 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 2/3] target: Reaquire hba_lock + se_port_lock during
- se_clear_dev_ports continue
-Date: Tue, 25 Jan 2011 15:39:26 +0100
-Message-ID: <20110125153926.710639bd@stein>
-References: <1295901446-17089-1-git-send-email-nab@linux-iscsi.org>
-	<1295901446-17089-3-git-send-email-nab@linux-iscsi.org>
-	<20110125010817.2baee6cf@stein>
-	<1295918416.24778.157.camel@haakon2.linux-iscsi.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] scsi: Erroneous handling of sense status in SCSI EH
+ commands
+Date: Tue, 25 Jan 2011 15:38:02 +0000
+Message-ID: <1295969882.4955.82.camel@mulgrave.site>
+References: <1295597274-5844-1-git-send-email-hare@suse.de>
+	 <4D39F16A.5020002@cs.wisc.edu> <4D3D317D.6060403@suse.de>
+	 <4D3DDE3F.2030902@cs.wisc.edu> <4D3E5D25.9000604@cs.wisc.edu>
+	 <4D3E60F0.80407@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:50043 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753768Ab1AYOjh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2011 09:39:37 -0500
-In-Reply-To: <1295918416.24778.157.camel@haakon2.linux-iscsi.org>
+Received: from cantor2.suse.de ([195.135.220.15]:54272 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753093Ab1AYPiG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2011 10:38:06 -0500
+In-Reply-To: <4D3E60F0.80407@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On Jan 24 Nicholas A. Bellinger wrote:
-> On Tue, 2011-01-25 at 01:08 +0100, Stefan Richter wrote:
-> > void se_clear_dev_ports(struct se_device *dev)
-[...]
-> > Can this mess of releasing and reacquiring locks --- which looks all rather
-> > dangerous --- be cleaned up if you move the logical units (?) to be deleted
-> > over to a secondary list?
+On Mon, 2011-01-24 at 23:34 -0600, Mike Christie wrote:
+> On 01/24/2011 11:18 PM, Mike Christie wrote:
+> > On 01/24/2011 02:17 PM, Mike Christie wrote:
+> >> For example, with your patch if for the
+> >> scsi_send_eh_cmnd/scsi_eh_completed_normally/scsi_check_sense path we
+> >> got 02/04/01 (not ready - becomming ready), scsi_send_eh_cmnd would see
+> >> SOFT_ERROR and fail the scsi eh. And, I am saying don't we want retry
+> >> this like we would if we were going through the normal IO path, so we do
+> >> not offline devices on this type of failure?
+> >>
+> >
+> > Just some corrections/clarifications. The device, target and bus reset
+> > handling are ok, but just host reset handling seems like the problem (at
+> > least the problem I was hitting I think). We do not call
+> > __scsi_report_device_reset for host reset handling, but some LLD
+> > eh_host_reset_handler implementations execute operations that can cause
+> > us to get something like a UA for the scsi eh TUR. For your patch do you
+> > also want to call __scsi_report_device_reset for the host reset handling
+> > for these drivers then?
 > 
-> Fair point on this one.  Having to sleep in core_dev_del_lun() waiting
-> for all outstanding struct se_cmd -> struct se_lun I/O descriptor
-> mappings to be shutdown makes this look pretty ugly currently in
-> se_clear_dev_ports().  However adding another list+lock to this mix
-> really does not make it any less complex.
+> Ignore that. I see it is getting called for the host reset code. I am 
+> not sure what happened when I was testing it.
 
-I meant an on-stack throwaway list which you can change inside
-se_clear_dev_ports() without any lock.  But I didn't look whether this is
-actually possible and beneficial.
+Just so I'm clear ... that's you withdrawing all objections to this
+patch, so I can put it in scsi-misc for testing?
 
-> Looking at se_clear_dev_ports() again in the two usage contexts
-> target_core_device.c:se_free_virtual_device() and
-> target_core_hba.c:core_delete_hba(),
-[...]
-> config_group structures, I think se_clear_dev_ports() should be able to
-> be dropped all together now.
+James
 
-That of course sounds great.
 
-> I will take a deeper look and see if this
-> is really in fact safe for v4.0/for-38 code.
-
-As a thought from an outsider:  If drivers/target/ weren't entirely new in
-2.6.38, then only a minimal cautious locking fix would be post -rc1
-material.  Linus releases so frequently that anything beyond essential
-fixes can easily wait for regular merge windows.  "Essential" = very low
-risk : reward ratio && with reasonable reward.  Those who directly work
-with the code tend to underestimate risk and to overestimate reward. ;-)
--- 
-Stefan Richter
--=====-==-== ---= ==--=
-http://arcgraph.de/sr/
