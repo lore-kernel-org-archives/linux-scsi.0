@@ -1,67 +1,40 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Remove unnecessary hba_dev_list walk + release from core_delete_hba
-Date: Mon, 24 Jan 2011 21:13:33 -0800
-Message-ID: <1295932414-19434-1-git-send-email-nab@linux-iscsi.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] scsi: Erroneous handling of sense status in SCSI EH commands
+Date: Mon, 24 Jan 2011 23:34:40 -0600
+Message-ID: <4D3E60F0.80407@cs.wisc.edu>
+References: <1295597274-5844-1-git-send-email-hare@suse.de> <4D39F16A.5020002@cs.wisc.edu> <4D3D317D.6060403@suse.de> <4D3DDE3F.2030902@cs.wisc.edu> <4D3E5D25.9000604@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm4-vm0.bullet.mail.ne1.yahoo.com ([98.138.90.253]:25649 "HELO
-	nm4-vm0.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751281Ab1AYFTn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2011 00:19:43 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:40994 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751449Ab1AYFev (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2011 00:34:51 -0500
+In-Reply-To: <4D3E5D25.9000604@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@suse.de>, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 01/24/2011 11:18 PM, Mike Christie wrote:
+> On 01/24/2011 02:17 PM, Mike Christie wrote:
+>> For example, with your patch if for the
+>> scsi_send_eh_cmnd/scsi_eh_completed_normally/scsi_check_sense path we
+>> got 02/04/01 (not ready - becomming ready), scsi_send_eh_cmnd would see
+>> SOFT_ERROR and fail the scsi eh. And, I am saying don't we want retry
+>> this like we would if we were going through the normal IO path, so we do
+>> not offline devices on this type of failure?
+>>
+>
+> Just some corrections/clarifications. The device, target and bus reset
+> handling are ok, but just host reset handling seems like the problem (at
+> least the problem I was hitting I think). We do not call
+> __scsi_report_device_reset for host reset handling, but some LLD
+> eh_host_reset_handler implementations execute operations that can cause
+> us to get something like a UA for the scsi eh TUR. For your patch do you
+> also want to call __scsi_report_device_reset for the host reset handling
+> for these drivers then?
 
-This patch removes a legacy struct se_hba->hba_dev_list -> se_release_device_for_hba()
-list walk in core_delete_hba(), which is no longer required while using configfs
-VFS level parent/child struct config_group dependency referencing.  The reason
-is because any struct se_hba->hba_dev_list-> struct se_device members are going
-to have to be released via:
-
-	rmdir /sys/kernel/config/target/core/$HBA/*
-
-before rmdir release of struct se_hba via target_core_configfs.c:
-target_core_call_delhbafromtarget() -> core_delete_hba()
-
-	rmdir /sys/kernel/config/target/core/$HBA
-
-to release struct se_hba in core_delete_hba().
-
-Reported-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_hba.c |   15 ++-------------
- 1 files changed, 2 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
-index a99760a..1f44cd2 100644
---- a/drivers/target/target_core_hba.c
-+++ b/drivers/target/target_core_hba.c
-@@ -153,19 +153,8 @@ out_free_hba:
- int
- core_delete_hba(struct se_hba *hba)
- {
--	struct se_device *dev, *dev_tmp;
--
--	spin_lock(&hba->device_lock);
--	list_for_each_entry_safe(dev, dev_tmp, &hba->hba_dev_list, dev_list) {
--
--		se_clear_dev_ports(dev);
--		spin_unlock(&hba->device_lock);
--
--		se_release_device_for_hba(dev);
--
--		spin_lock(&hba->device_lock);
--	}
--	spin_unlock(&hba->device_lock);
-+	if (!list_empty(&hba->hba_dev_list))
-+		dump_stack();
- 
- 	hba->transport->detach_hba(hba);
- 
--- 
-1.5.6.5
-
+Ignore that. I see it is getting called for the host reset code. I am 
+not sure what happened when I was testing it.
