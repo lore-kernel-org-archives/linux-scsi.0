@@ -1,38 +1,78 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [GIT PULL for 38-rc3]  target updates for v4.0.0-rc7
-Date: Mon, 24 Jan 2011 18:36:30 -0600
-Message-ID: <1295915790.15425.44.camel@mulgrave.site>
-References: <1295914455.24778.115.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 3/3] target: Minor sparse warning fixes and annotations
+Date: Mon, 24 Jan 2011 16:37:17 -0800
+Message-ID: <1295915837.24778.123.camel@haakon2.linux-iscsi.org>
+References: <1295901446-17089-1-git-send-email-nab@linux-iscsi.org>
+	 <1295901446-17089-4-git-send-email-nab@linux-iscsi.org>
+	 <1295902567.15425.13.camel@mulgrave.site>
+	 <1295904802.24778.47.camel@haakon2.linux-iscsi.org>
+	 <1295905896.15425.17.camel@mulgrave.site>
+	 <1295907147.24778.53.camel@haakon2.linux-iscsi.org>
+	 <20110125005610.11d5d143@stein>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1295914455.24778.115.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:44014 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499Ab1AYAhV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Jan 2011 19:37:21 -0500
+In-Reply-To: <20110125005610.11d5d143@stein>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@lst.de>
 
-On Mon, 2011-01-24 at 16:14 -0800, Nicholas A. Bellinger wrote:
-> Hi James and Co,
+On Tue, 2011-01-25 at 00:56 +0100, Stefan Richter wrote:
+> On Jan 24 Nicholas A. Bellinger wrote:
+> > On Mon, 2011-01-24 at 15:51 -0600, James Bottomley wrote:
+> > > On Mon, 2011-01-24 at 13:33 -0800, Nicholas A. Bellinger wrote:
+> > > > On Mon, 2011-01-24 at 14:56 -0600, James Bottomley wrote:
+> > > > > On Mon, 2011-01-24 at 12:37 -0800, Nicholas A. Bellinger wrote:
+> > > > > > -#define TASK_CMD(task) ((struct se_cmd *)task->task_se_cmd)
+> > > > > > -#define TASK_DEV(task) ((struct se_device *)task->se_dev)
+> > > > > > +#define TASK_CMD(task) ((task)->task_se_cmd)
+> > > > > > +#define TASK_DEV(task) ((task)->se_dev)
+> > > > > 
+> > > > > If sparse is objecting to things like this then sparse needs fixing:
+> > > > > It's decreasing typesafety.  the things being cast are void * ... they'd
+> > > > > be depositable into any pointer whatsoever without the cast.  With the
+> > > > > cast in the #define, we pick up pointer mismatches (as we should).
+> > > > > Without it, we don't.  As long as the define is always a specific type,
+> > > > > it *should* cast to it.
+> > > > > 
+> > > > 
+> > > > Hmmm, good point..  In that case I will go ahead and drop this part of
+> > > > the patch.
+> > > 
+> > > Actually, I misspoke on this.  They're not void *; they're defined as
+> > > struct pointers ... so the cast is actually a spurious double cast.  As
+> > > long as the rest are, I'm fine with this.
+> > > 
+> > 
+> > Committed as seperate commit b58b76c -> lio-core-2.6.git/linus-38-rc2,
+> > and picked into the mainline queue @ scsi-post-merge-2.6.git/for-jejb.
 > 
-> Here are the latest v4.0.0-rc7 updates for mainline drivers/target/ code
-> rebased against linux-2.6.git -> .38-rc2.  These individual patches have
-> been reviewed on linux-scsi and commited into the upstream LIO kernel
-> tree, so please consider pulling for .38-rc3:
+> Why do you provide macros for a simple structure member dereference?
 > 
->    git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-38-rc3
+> And if you *really* need these helpers, why not
 > 
-> Also at this point, having Linus pull directly from
-> scsi-post-merge-2.6.git/for-38-rcX for mainline target bugfixes +
-> improvements may make more sense.
+> static inline struct se_cmd *cmd_of(struct se_task *task)
+> {
+> 	return task->task_se_cmd;
+> }
 > 
-> Linus/Andrew/James, please let me know which you prefer here.
+> (But then, I see no reason at all not to write it as task->task_se_cmd at
+> the user sites.)
 
-Right at the moment, I'm trying to encourage a few people with
-established areas to experiment with their own git trees in SCSI, but
-the target subsystem, being a newcomer, wouldn't be one of these, so,
-for the time being, patch series over linux-scsi please for review and
-feedback.
+Most of these accessor macros originally came from the usage of more
+than a single pointer deference.  These days only DEV_ATTRIB and
+DEV_T10_WWN still deference multiple pointers, so it's really just a
+matter of style in modern v4.0 code.
 
-James
+So my perference would be against using inlined cmd_of() callers, and
+just access things directly.  Btw at this point this type of cleanup
+would be considered for-39 material.
+
+--nab
+
