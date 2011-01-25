@@ -1,53 +1,46 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: PMP and SEMB messages to SEP
-Date: Tue, 25 Jan 2011 09:14:14 -0500
-Message-ID: <1295964854.4955.21.camel@mulgrave.site>
-References: <20110113192558.GE16039@MAIL.13thfloor.at>
-	 <20110114142018.GA978@htj.dyndns.org>
-	 <20110114165957.GH16039@MAIL.13thfloor.at>
-	 <20110114170407.GE978@htj.dyndns.org>
-	 <20110114173759.GI16039@MAIL.13thfloor.at>
-	 <20110117154042.GG27123@htj.dyndns.org>
-	 <1295281131.3015.44.camel@mulgrave.site>
-	 <20110117171836.GI27123@htj.dyndns.org>
-	 <1295284906.3015.136.camel@mulgrave.site>
-	 <20110117172415.GK27123@htj.dyndns.org>
-	 <20110125030740.GB24024@MAIL.13thfloor.at>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCHSET] workqueue: update workqueue users - replace
+ create_workqueue()
+Date: Tue, 25 Jan 2011 15:29:21 +0100
+Message-ID: <20110125142921.GB27510@htj.dyndns.org>
+References: <1294062595-30097-1-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20110125030740.GB24024@MAIL.13thfloor.at>
-Sender: linux-ide-owner@vger.kernel.org
-To: Herbert Poetzl <herbert@13thfloor.at>
-Cc: Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <reiserfs-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1294062595-30097-1-git-send-email-tj@kernel.org>
+Sender: reiserfs-devel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: lenb@kernel.org, linux-acpi@vger.kernel.org, davej@redhat.com, cpufreq@vger.kernel.org, Markus.Lidel@shadowconnect.com, tomas.winkler@intel.com, jayamohank@serverengines.com, andrew.vasquez@qlogic.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, tomof@acm.org, stf_xl@wp.pl, linux-usb@vger.kernel.org, tytso@mit.edu, mfasheh@suse.com, joel.becker@oracle.com, reiserfs-devel@vger.kernel.org, aelder@sgi.com, hch@infradead.org, ericvh@gmail.com, rminnich@sandia.gov, v9fs-developer@lists.sourceforge.net, lucho@ionkov.net, andy.grover@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2011-01-25 at 04:07 +0100, Herbert Poetzl wrote:
-> On Mon, Jan 17, 2011 at 06:24:15PM +0100, Tejun Heo wrote:
-> > On Mon, Jan 17, 2011 at 11:21:46AM -0600, James Bottomley wrote:
-> > > Expanders aren't SCSI devices either ... that means they don't
-> > > appear as visible to standard SCSI mechanisms like INQUIRY (SMP
-> > > isn't a SCSI protocol it's a SAS extension). They just appear as
-> > > part of the topology in the device tree.
-> 
-> > Ah, okay.  Then, things would be much simpler.  I was worrying about
-> > how it would map to SCSI layer including INQUIRY emulations and all
-> > those stuff.  Thanks for the info.
-> 
-> So, any thoughts on how and where to add the PMP to the devices
-> available for sending SCSI or ATA commands to?
-> 
-> I'm willing to try to add the required code, but I'm sure I'll
-> benefit from a few hints from the experts ...
+Hello,
 
-Well, I'm not sure I'd count as an expert on this piece:  I haven't read
-the relevant ATA standards.  From what I understand, SES packets are
-encapsulated over an ATA command for SEMB.  In that case, it should be
-fairly simple to recognise this and present a SCSI device which simply
-encapsulates everything sent to it over this protocol.  That would allow
-the ses ULD to attach seamlessly.
+There was no response for the following patches and I'm planning on
+routing them through workqueue#for-2.6.39.  If you have an objection
+or want to take the patch through a different tree, please let me
+know.
 
-James
+ 0006-acpi-kacpi-_wq-don-t-need-WQ_MEM_RECLAIM.patch
+ 0007-cpufreq-use-system_wq-instead-of-dedicated-workqueue.patch
+ 0012-i2o-use-alloc_workqueue-instead-of-create_workqueue.patch
+ 0013-misc-iwmc3200top-use-system_wq-instead-of-dedicated-.patch
+ 0016-scsi-be2iscsi-qla2xxx-convert-to-alloc_workqueue.patch
+ 0018-scsi-scsi_tgt_lib-scsi_tgtd-isn-t-used-in-memory-rec.patch
+ 0019-usb-ueagle-atm-use-system_wq-instead-of-dedicated-wo.patch
+ 0025-ext4-convert-to-alloc_workqueue.patch
+ 0026-ocfs2-use-system_wq-instead-of-ocfs2_quota_wq.patch
+ 0027-reiserfs-make-commit_wq-use-the-default-concurrency-.patch
+ 0028-xfs-convert-to-alloc_workqueue.patch
+ 0029-net-9p-use-system_wq-instead-of-p9_mux_wq.patch
+ 0030-net-9p-replace-p9_poll_task-with-a-work.patch
+ 0031-rds-ib-use-system_wq-instead-of-rds_ib_fmr_wq.patch
 
+The whole series can be found at the following URL.
 
+ http://thread.gmane.org/gmane.linux.kernel/1082587
+
+Thank you.
+
+-- 
+tejun
