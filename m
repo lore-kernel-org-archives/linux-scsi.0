@@ -1,46 +1,63 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCHSET] workqueue: update workqueue users - replace
- create_workqueue()
-Date: Tue, 25 Jan 2011 15:29:21 +0100
-Message-ID: <20110125142921.GB27510@htj.dyndns.org>
-References: <1294062595-30097-1-git-send-email-tj@kernel.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 2/3] target: Reaquire hba_lock + se_port_lock during
+ se_clear_dev_ports continue
+Date: Tue, 25 Jan 2011 15:39:26 +0100
+Message-ID: <20110125153926.710639bd@stein>
+References: <1295901446-17089-1-git-send-email-nab@linux-iscsi.org>
+	<1295901446-17089-3-git-send-email-nab@linux-iscsi.org>
+	<20110125010817.2baee6cf@stein>
+	<1295918416.24778.157.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <reiserfs-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1294062595-30097-1-git-send-email-tj@kernel.org>
-Sender: reiserfs-devel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: lenb@kernel.org, linux-acpi@vger.kernel.org, davej@redhat.com, cpufreq@vger.kernel.org, Markus.Lidel@shadowconnect.com, tomas.winkler@intel.com, jayamohank@serverengines.com, andrew.vasquez@qlogic.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, tomof@acm.org, stf_xl@wp.pl, linux-usb@vger.kernel.org, tytso@mit.edu, mfasheh@suse.com, joel.becker@oracle.com, reiserfs-devel@vger.kernel.org, aelder@sgi.com, hch@infradead.org, ericvh@gmail.com, rminnich@sandia.gov, v9fs-developer@lists.sourceforge.net, lucho@ionkov.net, andy.grover@oracle.com
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:50043 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753768Ab1AYOjh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Jan 2011 09:39:37 -0500
+In-Reply-To: <1295918416.24778.157.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-Hello,
+On Jan 24 Nicholas A. Bellinger wrote:
+> On Tue, 2011-01-25 at 01:08 +0100, Stefan Richter wrote:
+> > void se_clear_dev_ports(struct se_device *dev)
+[...]
+> > Can this mess of releasing and reacquiring locks --- which looks all rather
+> > dangerous --- be cleaned up if you move the logical units (?) to be deleted
+> > over to a secondary list?
+> 
+> Fair point on this one.  Having to sleep in core_dev_del_lun() waiting
+> for all outstanding struct se_cmd -> struct se_lun I/O descriptor
+> mappings to be shutdown makes this look pretty ugly currently in
+> se_clear_dev_ports().  However adding another list+lock to this mix
+> really does not make it any less complex.
 
-There was no response for the following patches and I'm planning on
-routing them through workqueue#for-2.6.39.  If you have an objection
-or want to take the patch through a different tree, please let me
-know.
+I meant an on-stack throwaway list which you can change inside
+se_clear_dev_ports() without any lock.  But I didn't look whether this is
+actually possible and beneficial.
 
- 0006-acpi-kacpi-_wq-don-t-need-WQ_MEM_RECLAIM.patch
- 0007-cpufreq-use-system_wq-instead-of-dedicated-workqueue.patch
- 0012-i2o-use-alloc_workqueue-instead-of-create_workqueue.patch
- 0013-misc-iwmc3200top-use-system_wq-instead-of-dedicated-.patch
- 0016-scsi-be2iscsi-qla2xxx-convert-to-alloc_workqueue.patch
- 0018-scsi-scsi_tgt_lib-scsi_tgtd-isn-t-used-in-memory-rec.patch
- 0019-usb-ueagle-atm-use-system_wq-instead-of-dedicated-wo.patch
- 0025-ext4-convert-to-alloc_workqueue.patch
- 0026-ocfs2-use-system_wq-instead-of-ocfs2_quota_wq.patch
- 0027-reiserfs-make-commit_wq-use-the-default-concurrency-.patch
- 0028-xfs-convert-to-alloc_workqueue.patch
- 0029-net-9p-use-system_wq-instead-of-p9_mux_wq.patch
- 0030-net-9p-replace-p9_poll_task-with-a-work.patch
- 0031-rds-ib-use-system_wq-instead-of-rds_ib_fmr_wq.patch
+> Looking at se_clear_dev_ports() again in the two usage contexts
+> target_core_device.c:se_free_virtual_device() and
+> target_core_hba.c:core_delete_hba(),
+[...]
+> config_group structures, I think se_clear_dev_ports() should be able to
+> be dropped all together now.
 
-The whole series can be found at the following URL.
+That of course sounds great.
 
- http://thread.gmane.org/gmane.linux.kernel/1082587
+> I will take a deeper look and see if this
+> is really in fact safe for v4.0/for-38 code.
 
-Thank you.
-
+As a thought from an outsider:  If drivers/target/ weren't entirely new in
+2.6.38, then only a minimal cautious locking fix would be post -rc1
+material.  Linus releases so frequently that anything beyond essential
+fixes can easily wait for regular merge windows.  "Essential" = very low
+risk : reward ratio && with reasonable reward.  Those who directly work
+with the code tend to underestimate risk and to overestimate reward. ;-)
 -- 
-tejun
+Stefan Richter
+-=====-==-== ---= ==--=
+http://arcgraph.de/sr/
