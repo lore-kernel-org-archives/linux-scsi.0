@@ -1,106 +1,36 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Remove unnecessary se_clear_dev_ports legacy code
-Date: Mon, 24 Jan 2011 21:13:34 -0800
-Message-ID: <1295932414-19434-2-git-send-email-nab@linux-iscsi.org>
-References: <1295932414-19434-1-git-send-email-nab@linux-iscsi.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] scsi: Erroneous handling of sense status in SCSI EH commands
+Date: Mon, 24 Jan 2011 23:18:29 -0600
+Message-ID: <4D3E5D25.9000604@cs.wisc.edu>
+References: <1295597274-5844-1-git-send-email-hare@suse.de> <4D39F16A.5020002@cs.wisc.edu> <4D3D317D.6060403@suse.de> <4D3DDE3F.2030902@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm15.bullet.mail.ne1.yahoo.com ([98.138.90.78]:44157 "HELO
-	nm15.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751456Ab1AYFNX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2011 00:13:23 -0500
-In-Reply-To: <1295932414-19434-1-git-send-email-nab@linux-iscsi.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:43407 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751281Ab1AYFSj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2011 00:18:39 -0500
+In-Reply-To: <4D3DDE3F.2030902@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <jbottomley@suse.de>, linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 01/24/2011 02:17 PM, Mike Christie wrote:
+> For example, with your patch if for the
+> scsi_send_eh_cmnd/scsi_eh_completed_normally/scsi_check_sense path we
+> got 02/04/01 (not ready - becomming ready), scsi_send_eh_cmnd would see
+> SOFT_ERROR and fail the scsi eh. And, I am saying don't we want retry
+> this like we would if we were going through the normal IO path, so we do
+> not offline devices on this type of failure?
+>
 
-This patch removes the legacy se_clear_dev_ports() function, which is
-left-over pre-configfs shutdown logic for when se_free_virtual_device()
-was responsible for walking struct se_device->dev_sep_list and calling
-core_dev_del_lun() for each individual active struct se_port->se_lun.
-
-The reason this can be removed is because all struct se_device->dev_sep_list
--> struct se_port communication is done via configfs symlinks, which
-means that an target fabric module's endpoints containg active struct
-se_port(s) will have to be released via target_core_fabric_configfs.c:
-target_fabric_port_unlink() via:
-
-	unlink /sys/kernel/config/target/$FABRIC_MOD/$ENDPOINT/tpgt_$TPGT/lun/lun_$LUN_ID/<symlink>
-
-before rmdir release of struct se_device in target_core_configfs.c:
-target_core_drop_subdev() -> se_free_virtual_device() can happen via:
-
-	rmdir /sys/kernel/config/target/core/$HBA/*
-
-to release struct se_subsystem_dev in target_core_drop_subdev()
-
-Reported-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_device.c |   41 +---------------------------------
- 1 files changed, 2 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 1afddb5..9cd87fd 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -777,51 +777,14 @@ void se_release_vpd_for_dev(struct se_device *dev)
- 	return;
- }
- 
--/*
-- * Called with struct se_hba->device_lock held.
-- */
--void se_clear_dev_ports(struct se_device *dev)
--{
--	struct se_hba *hba = dev->se_hba;
--	struct se_lun *lun;
--	struct se_portal_group *tpg;
--	struct se_port *sep, *sep_tmp;
--
--	spin_lock(&dev->se_port_lock);
--	list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
--		spin_unlock(&dev->se_port_lock);
--		spin_unlock(&hba->device_lock);
--
--		lun = sep->sep_lun;
--		tpg = sep->sep_tpg;
--		spin_lock(&lun->lun_sep_lock);
--		if (lun->lun_se_dev == NULL) {
--			spin_unlock(&lun->lun_sep_lock);
--			spin_lock(&hba->device_lock);
--			spin_lock(&dev->se_port_lock);
--			continue;
--		}
--		spin_unlock(&lun->lun_sep_lock);
--
--		core_dev_del_lun(tpg, lun->unpacked_lun);
--
--		spin_lock(&hba->device_lock);
--		spin_lock(&dev->se_port_lock);
--	}
--	spin_unlock(&dev->se_port_lock);
--
--	return;
--}
--
- /*	se_free_virtual_device():
-  *
-  *	Used for IBLOCK, RAMDISK, and FILEIO Transport Drivers.
-  */
- int se_free_virtual_device(struct se_device *dev, struct se_hba *hba)
- {
--	spin_lock(&hba->device_lock);
--	se_clear_dev_ports(dev);
--	spin_unlock(&hba->device_lock);
-+	if (!list_empty(&dev->dev_sep_list))
-+		dump_stack();
- 
- 	core_alua_free_lu_gp_mem(dev);
- 	se_release_device_for_hba(dev);
--- 
-1.5.6.5
-
+Just some corrections/clarifications. The device, target and bus reset 
+handling are ok, but just host reset handling seems like the problem (at 
+least the problem I was hitting I think). We do not call 
+__scsi_report_device_reset for host reset handling, but some LLD 
+eh_host_reset_handler implementations execute operations that can cause 
+us to get something like a UA for the scsi eh TUR. For your patch do you 
+also want to call __scsi_report_device_reset for the host reset handling 
+for these drivers then?
