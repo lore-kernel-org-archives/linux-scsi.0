@@ -1,41 +1,106 @@
-From: Herbert Poetzl <herbert@13thfloor.at>
-Subject: Re: PMP and SEMB messages to SEP
-Date: Tue, 25 Jan 2011 04:07:40 +0100
-Message-ID: <20110125030740.GB24024@MAIL.13thfloor.at>
-References: <20110113192558.GE16039@MAIL.13thfloor.at> <20110114142018.GA978@htj.dyndns.org> <20110114165957.GH16039@MAIL.13thfloor.at> <20110114170407.GE978@htj.dyndns.org> <20110114173759.GI16039@MAIL.13thfloor.at> <20110117154042.GG27123@htj.dyndns.org> <1295281131.3015.44.camel@mulgrave.site> <20110117171836.GI27123@htj.dyndns.org> <1295284906.3015.136.camel@mulgrave.site> <20110117172415.GK27123@htj.dyndns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110117172415.GK27123@htj.dyndns.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] target: Remove unnecessary se_clear_dev_ports legacy code
+Date: Mon, 24 Jan 2011 21:13:34 -0800
+Message-ID: <1295932414-19434-2-git-send-email-nab@linux-iscsi.org>
+References: <1295932414-19434-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm15.bullet.mail.ne1.yahoo.com ([98.138.90.78]:44157 "HELO
+	nm15.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751456Ab1AYFNX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Jan 2011 00:13:23 -0500
+In-Reply-To: <1295932414-19434-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Mon, Jan 17, 2011 at 06:24:15PM +0100, Tejun Heo wrote:
-> On Mon, Jan 17, 2011 at 11:21:46AM -0600, James Bottomley wrote:
-> > Expanders aren't SCSI devices either ... that means they don't
-> > appear as visible to standard SCSI mechanisms like INQUIRY (SMP
-> > isn't a SCSI protocol it's a SAS extension). They just appear as
-> > part of the topology in the device tree.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-> Ah, okay.  Then, things would be much simpler.  I was worrying about
-> how it would map to SCSI layer including INQUIRY emulations and all
-> those stuff.  Thanks for the info.
+This patch removes the legacy se_clear_dev_ports() function, which is
+left-over pre-configfs shutdown logic for when se_free_virtual_device()
+was responsible for walking struct se_device->dev_sep_list and calling
+core_dev_del_lun() for each individual active struct se_port->se_lun.
 
-So, any thoughts on how and where to add the PMP to the devices
-available for sending SCSI or ATA commands to?
+The reason this can be removed is because all struct se_device->dev_sep_list
+-> struct se_port communication is done via configfs symlinks, which
+means that an target fabric module's endpoints containg active struct
+se_port(s) will have to be released via target_core_fabric_configfs.c:
+target_fabric_port_unlink() via:
 
-I'm willing to try to add the required code, but I'm sure I'll
-benefit from a few hints from the experts ...
+	unlink /sys/kernel/config/target/$FABRIC_MOD/$ENDPOINT/tpgt_$TPGT/lun/lun_$LUN_ID/<symlink>
 
-thanks,
-Herbert
+before rmdir release of struct se_device in target_core_configfs.c:
+target_core_drop_subdev() -> se_free_virtual_device() can happen via:
 
-> -- 
-> tejun
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+	rmdir /sys/kernel/config/target/core/$HBA/*
+
+to release struct se_subsystem_dev in target_core_drop_subdev()
+
+Reported-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_device.c |   41 +---------------------------------
+ 1 files changed, 2 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 1afddb5..9cd87fd 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -777,51 +777,14 @@ void se_release_vpd_for_dev(struct se_device *dev)
+ 	return;
+ }
+ 
+-/*
+- * Called with struct se_hba->device_lock held.
+- */
+-void se_clear_dev_ports(struct se_device *dev)
+-{
+-	struct se_hba *hba = dev->se_hba;
+-	struct se_lun *lun;
+-	struct se_portal_group *tpg;
+-	struct se_port *sep, *sep_tmp;
+-
+-	spin_lock(&dev->se_port_lock);
+-	list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
+-		spin_unlock(&dev->se_port_lock);
+-		spin_unlock(&hba->device_lock);
+-
+-		lun = sep->sep_lun;
+-		tpg = sep->sep_tpg;
+-		spin_lock(&lun->lun_sep_lock);
+-		if (lun->lun_se_dev == NULL) {
+-			spin_unlock(&lun->lun_sep_lock);
+-			spin_lock(&hba->device_lock);
+-			spin_lock(&dev->se_port_lock);
+-			continue;
+-		}
+-		spin_unlock(&lun->lun_sep_lock);
+-
+-		core_dev_del_lun(tpg, lun->unpacked_lun);
+-
+-		spin_lock(&hba->device_lock);
+-		spin_lock(&dev->se_port_lock);
+-	}
+-	spin_unlock(&dev->se_port_lock);
+-
+-	return;
+-}
+-
+ /*	se_free_virtual_device():
+  *
+  *	Used for IBLOCK, RAMDISK, and FILEIO Transport Drivers.
+  */
+ int se_free_virtual_device(struct se_device *dev, struct se_hba *hba)
+ {
+-	spin_lock(&hba->device_lock);
+-	se_clear_dev_ports(dev);
+-	spin_unlock(&hba->device_lock);
++	if (!list_empty(&dev->dev_sep_list))
++		dump_stack();
+ 
+ 	core_alua_free_lu_gp_mem(dev);
+ 	se_release_device_for_hba(dev);
+-- 
+1.5.6.5
+
