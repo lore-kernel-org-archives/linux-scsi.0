@@ -1,265 +1,137 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 2/4] scsi: pm8001: simplify workqueue usage
-Date: Mon, 24 Jan 2011 22:42:23 -0600
-Message-ID: <1295930543.15425.136.camel@mulgrave.site>
+Subject: Re: [PATCH 3/4] fcoe: use dedicated workqueue instead of system_wq
+Date: Mon, 24 Jan 2011 22:43:34 -0600
+Message-ID: <1295930614.15425.137.camel@mulgrave.site>
 References: <1295877451-16602-1-git-send-email-tj@kernel.org>
-	 <1295877451-16602-3-git-send-email-tj@kernel.org>
+	 <1295877451-16602-4-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41368 "EHLO
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:41374 "EHLO
 	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751275Ab1AYGjL (ORCPT
+	by vger.kernel.org with ESMTP id S1751275Ab1AYGj7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Jan 2011 01:39:11 -0500
-In-Reply-To: <1295877451-16602-3-git-send-email-tj@kernel.org>
+	Tue, 25 Jan 2011 01:39:59 -0500
+In-Reply-To: <1295877451-16602-4-git-send-email-tj@kernel.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <tj@kernel.org>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, jack_wang@usish.com, lindar_liu@usish.com
+Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Robert Love <robert.w.love@intel.com>
 
 On Mon, 2011-01-24 at 14:57 +0100, Tejun Heo wrote:
-> pm8001 manages its own list of pending works and cancel them on device
-> free.  It is unnecessarily complex and has a race condition - the
-> works are canceled but not synced, so the work could still be running
-> during and after the data structures are freed.
+> fcoe uses the system_wq to destroy ports and the work items need to be
+> flushed before the driver is unloaded.  As the work items free the
+> containing data structure, they can't be flushed directly.  The
+> workqueue should be flushed instead.
 > 
-> This patch simplifies workqueue usage.
+> Also, the destruction works can be chained - ie. destruction of a port
+> may lead to destruction of another port where the work item for the
+> former queues the work for the latter.  Currently, the depth of chain
+> can be at most two and fcoe_exit() makes sure everything is complete
+> by calling flush_scheduled_work() twice.
 > 
-> * A driver specific workqueue pm8001_wq is created to serve these
->   work items.
-> 
-> * To avoid confusion, the "queue" suffixes are dropped from work items
->   and functions.
-> 
-> * Delayed queueing was never used.  pm8001_work now uses work_struct
->   instead.
-> 
-> * The driver no longer keeps track of pending works.  All pm8001_works
->   are queued to pm8001_wq and the workqueue is flushed as necessary.
-> 
-> flush_scheduled_work() usage is removed during conversion.
+> With commit c8efcc25 (workqueue: allow chained queueing during
+> destruction), destroy_workqueue() can take care of chained works on
+> workqueue destruction.  Add and use fcoe_wq instead.  Simply
+> destroying fcoe_wq on driver unload takes care of flushing.
 
-cc'ing pm8001 maintainers for an opinion.  Jack could you look at this
-and ack, please.
+Cc'ing FCoE maintainer for an opinion.
 
-Thanks,
+Robert, I assume this will come back via your queue with an ack.
 
 James
 
 
 > Signed-off-by: Tejun Heo <tj@kernel.org>
 > ---
->  drivers/scsi/pm8001/pm8001_hwi.c  |   37 +++++++++++++++++--------------------
->  drivers/scsi/pm8001/pm8001_init.c |   27 ++++++++++++++++++---------
->  drivers/scsi/pm8001/pm8001_sas.h  |   10 ++++++----
->  3 files changed, 41 insertions(+), 33 deletions(-)
+>  drivers/scsi/fcoe/fcoe.c |   25 ++++++++++++++++---------
+>  1 files changed, 16 insertions(+), 9 deletions(-)
 > 
-> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-> index d8db013..18b6c55 100644
-> --- a/drivers/scsi/pm8001/pm8001_hwi.c
-> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
-> @@ -1382,53 +1382,50 @@ static u32 mpi_msg_consume(struct pm8001_hba_info *pm8001_ha,
->  	return MPI_IO_STATUS_BUSY;
->  }
+> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> index 9f9600b..e2f5820 100644
+> --- a/drivers/scsi/fcoe/fcoe.c
+> +++ b/drivers/scsi/fcoe/fcoe.c
+> @@ -31,6 +31,7 @@
+>  #include <linux/fs.h>
+>  #include <linux/sysfs.h>
+>  #include <linux/ctype.h>
+> +#include <linux/workqueue.h>
+>  #include <scsi/scsi_tcq.h>
+>  #include <scsi/scsicam.h>
+>  #include <scsi/scsi_transport.h>
+> @@ -58,6 +59,8 @@ MODULE_PARM_DESC(ddp_min, "Minimum I/O size in bytes for "	\
 >  
-> -static void pm8001_work_queue(struct work_struct *work)
-> +static void pm8001_work_fn(struct work_struct *work)
->  {
-> -	struct delayed_work *dw = container_of(work, struct delayed_work, work);
-> -	struct pm8001_wq *wq = container_of(dw, struct pm8001_wq, work_q);
-> +	struct pm8001_work *pw = container_of(work, struct pm8001_work, work);
->  	struct pm8001_device *pm8001_dev;
-> -	struct domain_device	*dev;
-> +	struct domain_device *dev;
+>  DEFINE_MUTEX(fcoe_config_mutex);
 >  
-> -	switch (wq->handler) {
-> +	switch (pw->handler) {
->  	case IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS:
-> -		pm8001_dev = wq->data;
-> +		pm8001_dev = pw->data;
->  		dev = pm8001_dev->sas_device;
->  		pm8001_I_T_nexus_reset(dev);
+> +static struct workqueue_struct *fcoe_wq;
+> +
+>  /* fcoe_percpu_clean completion.  Waiter protected by fcoe_create_mutex */
+>  static DECLARE_COMPLETION(fcoe_flush_completion);
+>  
+> @@ -1874,7 +1877,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+>  		list_del(&fcoe->list);
+>  		port = lport_priv(fcoe->ctlr.lp);
+>  		fcoe_interface_cleanup(fcoe);
+> -		schedule_work(&port->destroy_work);
+> +		queue_work(fcoe_wq, &port->destroy_work);
+>  		goto out;
 >  		break;
->  	case IO_OPEN_CNX_ERROR_STP_RESOURCES_BUSY:
-> -		pm8001_dev = wq->data;
-> +		pm8001_dev = pw->data;
->  		dev = pm8001_dev->sas_device;
->  		pm8001_I_T_nexus_reset(dev);
->  		break;
->  	case IO_DS_IN_ERROR:
-> -		pm8001_dev = wq->data;
-> +		pm8001_dev = pw->data;
->  		dev = pm8001_dev->sas_device;
->  		pm8001_I_T_nexus_reset(dev);
->  		break;
->  	case IO_DS_NON_OPERATIONAL:
-> -		pm8001_dev = wq->data;
-> +		pm8001_dev = pw->data;
->  		dev = pm8001_dev->sas_device;
->  		pm8001_I_T_nexus_reset(dev);
->  		break;
+>  	case NETDEV_FEAT_CHANGE:
+> @@ -2412,6 +2415,10 @@ static int __init fcoe_init(void)
+>  	unsigned int cpu;
+>  	int rc = 0;
+>  
+> +	fcoe_wq = alloc_workqueue("fcoe", 0, 0);
+> +	if (!fcoe_wq)
+> +		return -ENOMEM;
+> +
+>  	mutex_lock(&fcoe_config_mutex);
+>  
+>  	for_each_possible_cpu(cpu) {
+> @@ -2442,6 +2449,7 @@ out_free:
+>  		fcoe_percpu_thread_destroy(cpu);
 >  	}
-> -	list_del(&wq->entry);
-> -	kfree(wq);
-> +	kfree(pw);
->  }
->  
->  static int pm8001_handle_event(struct pm8001_hba_info *pm8001_ha, void *data,
->  			       int handler)
->  {
-> -	struct pm8001_wq *wq;
-> +	struct pm8001_work *pw;
->  	int ret = 0;
->  
-> -	wq = kmalloc(sizeof(struct pm8001_wq), GFP_ATOMIC);
-> -	if (wq) {
-> -		wq->pm8001_ha = pm8001_ha;
-> -		wq->data = data;
-> -		wq->handler = handler;
-> -		INIT_DELAYED_WORK(&wq->work_q, pm8001_work_queue);
-> -		list_add_tail(&wq->entry, &pm8001_ha->wq_list);
-> -		schedule_delayed_work(&wq->work_q, 0);
-> +	pw = kmalloc(sizeof(struct pm8001_work), GFP_ATOMIC);
-> +	if (pw) {
-> +		pw->pm8001_ha = pm8001_ha;
-> +		pw->data = data;
-> +		pw->handler = handler;
-> +		INIT_WORK(&pw->work, pm8001_work_fn);
-> +		queue_work(pm8001_wq, &pw->work);
->  	} else
->  		ret = -ENOMEM;
->  
-> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-> index b95285f..002360d 100644
-> --- a/drivers/scsi/pm8001/pm8001_init.c
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-> @@ -51,6 +51,8 @@ static int pm8001_id;
->  
->  LIST_HEAD(hba_list);
->  
-> +struct workqueue_struct *pm8001_wq;
-> +
->  /**
->   * The main structure which LLDD must register for scsi core.
->   */
-> @@ -134,7 +136,6 @@ static void __devinit pm8001_phy_init(struct pm8001_hba_info *pm8001_ha,
->  static void pm8001_free(struct pm8001_hba_info *pm8001_ha)
->  {
->  	int i;
-> -	struct pm8001_wq *wq;
->  
->  	if (!pm8001_ha)
->  		return;
-> @@ -150,8 +151,7 @@ static void pm8001_free(struct pm8001_hba_info *pm8001_ha)
->  	PM8001_CHIP_DISP->chip_iounmap(pm8001_ha);
->  	if (pm8001_ha->shost)
->  		scsi_host_put(pm8001_ha->shost);
-> -	list_for_each_entry(wq, &pm8001_ha->wq_list, entry)
-> -		cancel_delayed_work(&wq->work_q);
-> +	flush_workqueue(pm8001_wq);
->  	kfree(pm8001_ha->tags);
->  	kfree(pm8001_ha);
->  }
-> @@ -381,7 +381,6 @@ pm8001_pci_alloc(struct pci_dev *pdev, u32 chip_id, struct Scsi_Host *shost)
->  	pm8001_ha->sas = sha;
->  	pm8001_ha->shost = shost;
->  	pm8001_ha->id = pm8001_id++;
-> -	INIT_LIST_HEAD(&pm8001_ha->wq_list);
->  	pm8001_ha->logging_level = 0x01;
->  	sprintf(pm8001_ha->name, "%s%d", DRV_NAME, pm8001_ha->id);
->  #ifdef PM8001_USE_TASKLET
-> @@ -758,7 +757,7 @@ static int pm8001_pci_suspend(struct pci_dev *pdev, pm_message_t state)
->  	int i , pos;
->  	u32 device_state;
->  	pm8001_ha = sha->lldd_ha;
-> -	flush_scheduled_work();
-> +	flush_workqueue(pm8001_wq);
->  	scsi_block_requests(pm8001_ha->shost);
->  	pos = pci_find_capability(pdev, PCI_CAP_ID_PM);
->  	if (pos == 0) {
-> @@ -870,17 +869,26 @@ static struct pci_driver pm8001_pci_driver = {
->   */
->  static int __init pm8001_init(void)
->  {
-> -	int rc;
-> +	int rc = -ENOMEM;
-> +
-> +	pm8001_wq = alloc_workqueue("pm8001", 0, 0);
-> +	if (!pm8001_wq)
-> +		goto err;
-> +
->  	pm8001_id = 0;
->  	pm8001_stt = sas_domain_attach_transport(&pm8001_transport_ops);
->  	if (!pm8001_stt)
-> -		return -ENOMEM;
-> +		goto err_wq;
->  	rc = pci_register_driver(&pm8001_pci_driver);
->  	if (rc)
-> -		goto err_out;
-> +		goto err_tp;
->  	return 0;
-> -err_out:
-> +
-> +err_tp:
->  	sas_release_transport(pm8001_stt);
-> +err_wq:
-> +	destroy_workqueue(pm8001_wq);
-> +err:
+>  	mutex_unlock(&fcoe_config_mutex);
+> +	destroy_workqueue(fcoe_wq);
 >  	return rc;
 >  }
+>  module_init(fcoe_init);
+> @@ -2467,7 +2475,7 @@ static void __exit fcoe_exit(void)
+>  		list_del(&fcoe->list);
+>  		port = lport_priv(fcoe->ctlr.lp);
+>  		fcoe_interface_cleanup(fcoe);
+> -		schedule_work(&port->destroy_work);
+> +		queue_work(fcoe_wq, &port->destroy_work);
+>  	}
+>  	rtnl_unlock();
 >  
-> @@ -888,6 +896,7 @@ static void __exit pm8001_exit(void)
->  {
->  	pci_unregister_driver(&pm8001_pci_driver);
->  	sas_release_transport(pm8001_stt);
-> +	destroy_workqueue(pm8001_wq);
+> @@ -2478,12 +2486,11 @@ static void __exit fcoe_exit(void)
+>  
+>  	mutex_unlock(&fcoe_config_mutex);
+>  
+> -	/* flush any asyncronous interface destroys,
+> -	 * this should happen after the netdev notifier is unregistered */
+> -	flush_scheduled_work();
+> -	/* That will flush out all the N_Ports on the hostlist, but now we
+> -	 * may have NPIV VN_Ports scheduled for destruction */
+> -	flush_scheduled_work();
+> +	/*
+> +	 * destroy_work's may be chained but destroy_workqueue() can take
+> +	 * care of them.  Just kill the wq.
+> +	 */
+> +	destroy_workqueue(fcoe_wq);
+>  
+>  	/* detach from scsi transport
+>  	 * must happen after all destroys are done, therefor after the flush */
+> @@ -2632,7 +2639,7 @@ static int fcoe_vport_destroy(struct fc_vport *vport)
+>  	mutex_lock(&n_port->lp_mutex);
+>  	list_del(&vn_port->list);
+>  	mutex_unlock(&n_port->lp_mutex);
+> -	schedule_work(&port->destroy_work);
+> +	queue_work(fcoe_wq, &port->destroy_work);
+>  	return 0;
 >  }
 >  
->  module_init(pm8001_init);
-> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-> index 7f064f9..bdb6b27 100644
-> --- a/drivers/scsi/pm8001/pm8001_sas.h
-> +++ b/drivers/scsi/pm8001/pm8001_sas.h
-> @@ -50,6 +50,7 @@
->  #include <linux/dma-mapping.h>
->  #include <linux/pci.h>
->  #include <linux/interrupt.h>
-> +#include <linux/workqueue.h>
->  #include <scsi/libsas.h>
->  #include <scsi/scsi_tcq.h>
->  #include <scsi/sas_ata.h>
-> @@ -379,18 +380,16 @@ struct pm8001_hba_info {
->  #ifdef PM8001_USE_TASKLET
->  	struct tasklet_struct	tasklet;
->  #endif
-> -	struct list_head 	wq_list;
->  	u32			logging_level;
->  	u32			fw_status;
->  	const struct firmware 	*fw_image;
->  };
->  
-> -struct pm8001_wq {
-> -	struct delayed_work work_q;
-> +struct pm8001_work {
-> +	struct work_struct work;
->  	struct pm8001_hba_info *pm8001_ha;
->  	void *data;
->  	int handler;
-> -	struct list_head entry;
->  };
->  
->  struct pm8001_fw_image_header {
-> @@ -460,6 +459,9 @@ struct fw_control_ex {
->  	void			*param3;
->  };
->  
-> +/* pm8001 workqueue */
-> +extern struct workqueue_struct *pm8001_wq;
-> +
->  /******************** function prototype *********************/
->  int pm8001_tag_alloc(struct pm8001_hba_info *pm8001_ha, u32 *tag_out);
->  void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha);
 
 
