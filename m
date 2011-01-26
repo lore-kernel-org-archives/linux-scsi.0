@@ -1,68 +1,75 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
-Date: Wed, 26 Jan 2011 09:08:51 -0500
-Message-ID: <1296050931.4893.9.camel@mulgrave.site>
-References: <1295797260.3007.118.camel@mulgrave.site>
-	 <4D3F1CC6.5080208@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [LSF/MM TOPIC] SCSI referrals support
+Date: Wed, 26 Jan 2011 16:54:24 +0100
+Message-ID: <4D4043B0.5070209@suse.de>
+References: <4D385C0A.3000901@suse.de>  <4D385F69.5060209@interlog.com> <1295541361.3014.8.camel@mulgrave.site> <4D3C100C.1010609@panasas.com> <4D3D327F.1040807@suse.de> <4D3D43BB.1060805@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4D3F1CC6.5080208@linux.vnet.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Robert Jennings <rcj@linux.vnet.ibm.com>, Wayne Boyer <wayneb@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:55217 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751997Ab1AZPrG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Jan 2011 10:47:06 -0500
+In-Reply-To: <4D3D43BB.1060805@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, dgilbert@interlog.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Tue, 2011-01-25 at 12:56 -0600, Brian King wrote:
-> On 01/23/2011 09:41 AM, James Bottomley wrote:
-> > The bad news is that this is a pretty horrific conversion.  Because of
-> > the amount of control the new eh wants (and the slew of monolithic
-> > assumptions it makes), the entire error handler routine has to be sliced
-> > apart and sewn back together to make it callable as part of an existing
-> > error handler (rather than trying to do everything on its own).
-> > 
-> > The even worse news is that unless you have an existing strategy
-> > handler, you can't make use of this.  That means that ipr is
-> > unconvertable in its current form.  Given the two really nasty options:
-> > give ipr its own error handler via its own transport class, or attach
-> > ipr to libsas and let it do the work, I'd choose the latter.
-> 
-> I've got a patch set that's been sitting collecting dust for quite some time
-> that implements yet another option. The basic idea is that we move away from
-> the idea of having a single scsi_host for the entire SAS adapter, but
-> rather have one for the SAS devices and one for each SATA rphy.
+On 01/24/2011 10:17 AM, Boaz Harrosh wrote:
+> On 01/24/2011 10:04 AM, Hannes Reinecke wrote:
+[ .. ]
+>> Ah, if it were so easy. Currently sense codes have two problems:
+>>
+>> - They are limited to 96 bytes. Anything larger than that will just
+>>   be discarded (or crash with your patch above :-)
+>=20
+> It will not crash.
+>=20
+Oh, indeed. You are right.
 
-So, as I said already, I think this is a pretty nasty hack.  A host
-represents a single attachment to the bus (usually a card).  We have a
-lot of logic that crawls up the device tree looking for the host.  If we
-have multiple hosts in the hierarchy, that logic will always find the
-dummy one.
+> I have a patchset here that expands the request/scsi_cmnd sense_buffe=
+r
+> support to the maximum 260 bytes supported by the std.
+>=20
+> If you want I can revive it. It is a sweep of all drivers, but a smal=
+l
+> one, nothing like the accessors changes.
+>=20
+Please. Can you send it to me?
+I have a prototype working right now, and expanding the sense buffer
+would be a good idea here.
 
-> This allows us to use libata's EH pretty much as is, but does introduce
-> some issues to solve:
-> 
-> 1. Adapter queue depth. Since we have multiple scsi_hosts for a single
->    HBA, we lose the adapter queue depth tracking done by scsi core.
->    Anything in block that can help us here?
-> 2. Locking gets messy since we have a lock for each sata rphy as well
->    as one for the sas scsi_host.
-> 
-> There were some other smaller issues as well. I liked the idea of moving
-> to multiple scsi_host's since that eliminates the issue of userspace polling an
-> empty CD drive causing EH to get invoked and quiescing all SAS I/O as well,
-> but it does result in potentially a lot of scsi_hosts getting created.
+>> - They inherit the same lifetime than the scsi command. But for any
+>>   decent handling you really need to push them into some
+>>   asynchronous context as you might well be within an interrupt
+>>   handler here.
+>=20
+> No that's fine. request->sense is a user supplied buffer that extends
+> the life of scsi_cmnd. above code just copies from a scsi-layer dma-a=
+ble
+> buffer to the request->sense buffer. interrupt-time is fine.
+>=20
+>> I'm currently working on a handling framework using relayfs
+>> (basically blktrace for SCSI Unit Attention); I can be doing a short
+>> presentation at LSF if requested.
+>>
+>=20
+> That would be interesting. Thanks
+>=20
+Ok, will then be doing it.
 
-I think better might be to move the eh thread functionality into block.
-What libata really wants is one eh thread per phy.  It gets this by
-completely abusing the idea of a host.  There's actually good reasons
-why most of our modern HBAs would like one eh per port ... which would
-amount to per-phy on ata which can't do wide ports.  If we allowed the
-driver to determine the correct level for this, and block to provide the
-machinery, everyone should get what they want, and libata could dispense
-with its current corruption of multiple SCSI hosts per physical bus
-attachment.
+Cheers,
 
-James
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
