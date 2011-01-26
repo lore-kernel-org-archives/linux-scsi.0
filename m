@@ -1,46 +1,62 @@
-From: "Zou, Yi" <yi.zou@intel.com>
-Subject: RE: [v4 PATCH 1/5] libfcoe: Move common code from fcoe.c to
- libfcoe.c
-Date: Tue, 25 Jan 2011 23:53:55 -0800
-Message-ID: <7C88852EF6F99F4EB538472FCFEBE222014AA137B0@orsmsx509.amr.corp.intel.com>
-References: <1296010665.3536.2586.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
+From: Dan Carpenter <error27@gmail.com>
+Subject: [patch] [SCSI] target: return -ENOMEM instead of -1 in
+ target_core_rd.c
+Date: Wed, 26 Jan 2011 11:51:23 +0300
+Message-ID: <20110126085122.GL2721@bicker>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:42153 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752104Ab1AZHyS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2011 02:54:18 -0500
-In-Reply-To: <1296010665.3536.2586.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
-Content-Language: en-US
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:62527 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752560Ab1AZIvj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2011 03:51:39 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Gollapudi <bprakash@broadcom.com>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Michael Chan <mchan@broadcom.com>, "michaelc@cs.wisc.edu" <michaelc@cs.wisc.edu>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-> 
-> fcoe_start_io and fcoe_fc_crc are moved to libfcoe so that both
-> fcoe and bnx2fc drivers can use these common functions.
-> 
-> As part of this change, fixed fcoe_start_io to return ENOMEM if
-> skb_clone fails.
-> 
-> Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-> ---
->  drivers/scsi/fcoe/fcoe.c      |   58 -----------------------------------
-> --
->  drivers/scsi/fcoe/fcoe_ctlr.c |   63
-> +++++++++++++++++++++++++++++++++++++++++
->  include/scsi/libfcoe.h        |    2 +
->  3 files changed, 65 insertions(+), 58 deletions(-)
-> 
-I thought you were moving to fcoe_transport.c? Also, the patch title
-needs fixing to reflect this as there is no libfcoe.c any more.
+-1 is -EPERM but -ENOMEM is more appropriate for allocation errors.
 
-Thanks,
-yi
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 
->
-> <-- snip -->
->
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 979aebf..e7fc512 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -161,7 +161,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+ 	if (!(sg_table)) {
+ 		printk(KERN_ERR "Unable to allocate memory for Ramdisk"
+ 			" scatterlist tables\n");
+-		return -1;
++		return -ENOMEM;
+ 	}
+ 
+ 	rd_dev->sg_table_array = sg_table;
+@@ -176,7 +176,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+ 		if (!(sg)) {
+ 			printk(KERN_ERR "Unable to allocate scatterlist array"
+ 				" for struct rd_dev\n");
+-			return -1;
++			return -ENOMEM;
+ 		}
+ 
+ 		sg_init_table((struct scatterlist *)&sg[0], sg_per_table);
+@@ -192,7 +192,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+ 			if (!(pg)) {
+ 				printk(KERN_ERR "Unable to allocate scatterlist"
+ 					" pages for struct rd_dev_sg_table\n");
+-				return -1;
++				return -ENOMEM;
+ 			}
+ 			sg_assign_page(&sg[j], pg);
+ 			sg[j].length = PAGE_SIZE;
+@@ -780,7 +780,7 @@ static int rd_DIRECT_without_offset(
+ 		se_mem = kmem_cache_zalloc(se_mem_cache, GFP_KERNEL);
+ 		if (!(se_mem)) {
+ 			printk(KERN_ERR "Unable to allocate struct se_mem\n");
+-			return -1;
++			return -ENOMEM;
+ 		}
+ 		INIT_LIST_HEAD(&se_mem->se_list);
+ 
