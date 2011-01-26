@@ -1,44 +1,21 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] [SCSI] target: allow release() to be called on NULL
- pointers
-Date: Wed, 26 Jan 2011 11:58:25 +0300
-Message-ID: <20110126085825.GM2721@bicker>
+From: "FANG YEUNG" <fangyeung@mail.mn>
+Subject: CAN YOU PARTNER ON THIS?
+Date: Wed, 26 Jan 2011 11:06:43 +0100 (CET)
+Message-ID: <944518703.2177199.1296036403452.JavaMail.fmail@mwmweb008>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ww0-f42.google.com ([74.125.82.42]:51377 "EHLO
-	mail-ww0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751802Ab1AZI6q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2011 03:58:46 -0500
-Content-Disposition: inline
+Received: from fmmailgate09.web.de ([217.72.192.184]:48863 "EHLO
+	fmmailgate09.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752754Ab1AZKGz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2011 05:06:55 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: info@hangsengbank.com.hk
 
-This is a cleanup and not a bugfix.
-
-container_of() does pointer math and the result of that math can
-basically not be NULL here so "se_dev" is non-NULL.
-
-Normally release() type functions accept a NULL parameter.  I don't
-think target_core_dev_release() is ever called with a NULL parameter but
-it's a cleaner to allow that.
-
-So instead of checking "se_dev", I've changed it to check "item".
-
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 2764510..d9dcd9d 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -1973,7 +1973,7 @@ static void target_core_dev_release(struct config_item *item)
- 				struct se_subsystem_dev, se_dev_group);
- 	struct config_group *dev_cg;
- 
--	if (!(se_dev))
-+	if (!item)
- 		return;
- 
- 	dev_cg = &se_dev->se_dev_group;
+An iraqi oil business man made a fixed deposit of $24,500.000.00 in my bank branch where I am a director and he died with his entire family in the war leaving behind no next of kin. I Propose to present you as next of kin to claim the funds.Get back to me only if interested with your full name, and telephone number to reach you and most importantly, a confirmation of acceptance from you after which I shall furnish you with the full details of this transaction.Respond only if interested to my personal email: yeung_fang@yahoo.com.hk
+Yours Truly,
+Fang Yeung.
+yeung_fang@yahoo.com.hk
+NOTE:PLEASE SEND RESPONSE TO MY PERSONAL EMAIL IF INTERESTED yeung_fang@yahoo.com.hk
