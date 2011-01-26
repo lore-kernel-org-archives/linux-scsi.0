@@ -1,39 +1,68 @@
-From: Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: Re: [patch] kconfig: unify GENERIC_ISA_DMA and ISA_DMA_API
-Date: Wed, 26 Jan 2011 11:29:08 +0000
-Message-ID: <20110126112908.GD2562@n2100.arm.linux.org.uk>
-References: <alpine.DEB.2.00.1101251706040.9641@chino.kir.corp.google.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
+Date: Wed, 26 Jan 2011 09:08:51 -0500
+Message-ID: <1296050931.4893.9.camel@mulgrave.site>
+References: <1295797260.3007.118.camel@mulgrave.site>
+	 <4D3F1CC6.5080208@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-arch-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.00.1101251706040.9641@chino.kir.corp.google.com>
-Sender: linux-arch-owner@vger.kernel.org
-To: David Rientjes <rientjes@google.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Ralf Baechle <ralf@linux-mips.org>, Kyle McMartin <kyle@redhat.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Thomas Gleixner <tglx@linutronix.de>, "H. Peter Anvin" <hpa@zytor.com>, Ingo Molnar <mingo@redhat.com>, "David S. Miller" <davem@davemloft.net>, Greg Kroah-Hartman <gregkh@suse.de>, Randy Dunlap <randy.dunlap@oracle.com>, x86@kernel.org, linux-arch@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4D3F1CC6.5080208@linux.vnet.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Robert Jennings <rcj@linux.vnet.ibm.com>, Wayne Boyer <wayneb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 25, 2011 at 05:06:28PM -0800, David Rientjes wrote:
-> CONFIG_GENERIC_ISA_DMA and CONFIG_ISA_DMA_API usually have dependencies
-> on one another depending on the architecture and generic kernel code uses
-> either to determine whether an ISA-style DMA API is configured.
+On Tue, 2011-01-25 at 12:56 -0600, Brian King wrote:
+> On 01/23/2011 09:41 AM, James Bottomley wrote:
+> > The bad news is that this is a pretty horrific conversion.  Because of
+> > the amount of control the new eh wants (and the slew of monolithic
+> > assumptions it makes), the entire error handler routine has to be sliced
+> > apart and sewn back together to make it callable as part of an existing
+> > error handler (rather than trying to do everything on its own).
+> > 
+> > The even worse news is that unless you have an existing strategy
+> > handler, you can't make use of this.  That means that ipr is
+> > unconvertable in its current form.  Given the two really nasty options:
+> > give ipr its own error handler via its own transport class, or attach
+> > ipr to libsas and let it do the work, I'd choose the latter.
+> 
+> I've got a patch set that's been sitting collecting dust for quite some time
+> that implements yet another option. The basic idea is that we move away from
+> the idea of having a single scsi_host for the entire SAS adapter, but
+> rather have one for the SAS devices and one for each SATA rphy.
 
-Wrong.
+So, as I said already, I think this is a pretty nasty hack.  A host
+represents a single attachment to the bus (usually a card).  We have a
+lot of logic that crawls up the device tree looking for the host.  If we
+have multiple hosts in the hierarchy, that logic will always find the
+dummy one.
 
-GENERIC_ISA_DMA enables support for the standard ISA DMA allocator found
-in kernel/dma.c
+> This allows us to use libata's EH pretty much as is, but does introduce
+> some issues to solve:
+> 
+> 1. Adapter queue depth. Since we have multiple scsi_hosts for a single
+>    HBA, we lose the adapter queue depth tracking done by scsi core.
+>    Anything in block that can help us here?
+> 2. Locking gets messy since we have a lock for each sata rphy as well
+>    as one for the sas scsi_host.
+> 
+> There were some other smaller issues as well. I liked the idea of moving
+> to multiple scsi_host's since that eliminates the issue of userspace polling an
+> empty CD drive causing EH to get invoked and quiescing all SAS I/O as well,
+> but it does result in potentially a lot of scsi_hosts getting created.
 
-ISA_DMA_API says that a platform supports the ISA DMA interfaces.
+I think better might be to move the eh thread functionality into block.
+What libata really wants is one eh thread per phy.  It gets this by
+completely abusing the idea of a host.  There's actually good reasons
+why most of our modern HBAs would like one eh per port ... which would
+amount to per-phy on ata which can't do wide ports.  If we allowed the
+driver to determine the correct level for this, and block to provide the
+machinery, everyone should get what they want, and libata could dispense
+with its current corruption of multiple SCSI hosts per physical bus
+attachment.
 
-An architecture can provide the ISA DMA interfaces, but not use the
-standard ISA DMA allocator found in kernel/dma.c.  Such as the one in
-arch/arm/kernel/dma.c.
+James
 
-So on ARM, we have platforms where ISA_DMA_API=y but GENERIC_ISA_DMA=n.
 
-> This patch unifies both options and consolidates them into a single
-> option: CONFIG_GENERIC_ISA_DMA.  It is also a prerequisite for a 1% text
-> savings for a future x86 patch that allows these options to be disabled
-> on that architecture when CONFIG_ZONE_DMA also becomes configurable.
-
-NAK.  This is wrong.
