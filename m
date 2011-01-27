@@ -1,41 +1,52 @@
-From: Bandan Das <bandan.das@stratus.com>
-Subject: [PATCH] qla2xxx: Fix possible race that could hang kthread_stop()
-Date: Thu, 27 Jan 2011 15:59:22 -0500
-Message-ID: <20110127205922.GF31955@stratus.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v4 1/3] scsi: Detailed I/O errors
+Date: Thu, 27 Jan 2011 17:35:26 -0500
+Message-ID: <20110127223525.GH14951@redhat.com>
+References: <cover.1295340405.git.hare@suse.de>
+ <b6ba7efc491aec18cd501f73e2e6bbebc2e0727a.1295340405.git.hare@suse.de>
+ <4D357AA3.5070509@interlog.com>
+ <4D358130.6040508@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:1907 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751915Ab1A0Wfp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Jan 2011 17:35:45 -0500
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <4D358130.6040508@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: dgilbert@interlog.com, James Bottomley <jbottomley@suse.de>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, michaelc@cs.wisc.edu, agk@redhat.com
 
-There is a small race window in qla2x00_do_dpc() between
-checking for kthread_should_stop() and going to sleep after
-setting TASK_INTERRUPTIBLE. If qla2x00_free_device() is called
-in this window, kthread_stop will wait forever because there 
-will be no one to wake up the process.
+On Tue, Jan 18 2011 at  7:01am -0500,
+Hannes Reinecke <hare@suse.de> wrote:
 
+> On 01/18/2011 12:33 PM, Douglas Gilbert wrote:
+> 
+> This patchset is primarily for fixing up multipathing,
+> which has the habit of retrying failed I/Os on the
+> next path. For some errors this is just pointless
+> (eg MEDIUM ERROR), for some errors this is the desired
+> behaviour (namely transport errors), and for others
+> this is positively damaging (persistent reservation
+> failures).
+> Just plain EIO simply don't cover the whole range :-)
+> 
+> > 
+> > BTW might "vulgo" be "ergo" [Latin: therefore]?
+> > 
+> Nope. Correct etymology is from 'sermo vulgaris',
+> ie the language of the common people.
+> But maybe I should remove it for the next
+> round to avoid confusion.
 
-Signed-off-by: Bandan Das <bandan.das@stratus.com>
-Signed-off-by: Nate Dailey <nate.dailey@stratus.com>
----
- drivers/scsi/qla2xxx/qla_os.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+Is a new round even needed given there haven't been any code issues
+raised against v4?
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index c194c23..8d14d77 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3286,6 +3286,8 @@ qla2x00_do_dpc(void *data)
- 		DEBUG3(printk("qla2x00: DPC handler sleeping\n"));
- 
- 		set_current_state(TASK_INTERRUPTIBLE);
-+		if (kthread_should_stop())
-+			break;
- 		schedule();
- 		__set_current_state(TASK_RUNNING);
- 
--- 
-1.7.2.3
+James, what are your thoughts on this patchset?  Would be great to get
+this in scsi-misc for 2.6.39
+
+Please advise,
+Mike
