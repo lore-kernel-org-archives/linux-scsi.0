@@ -1,79 +1,61 @@
-From: Madhu Iyengar <madhu.iyengar@qlogic.com>
-Subject: RE: [PATCH] qla2xxx: Fix possible race that could hang
- kthread_stop()
-Date: Thu, 27 Jan 2011 14:36:45 -0800
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA87225EF8261@AVEXMB1.qlogic.org>
-References: <20110127205922.GF31955@stratus.com>
- <1296162757.3050.69.camel@mulgrave.site> <20110127213255.GG31955@stratus.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH v4 1/3] scsi: Detailed I/O errors
+Date: Thu, 27 Jan 2011 17:41:42 -0500
+Message-ID: <1296168102.3050.83.camel@mulgrave.site>
+References: <cover.1295340405.git.hare@suse.de>
+	 <b6ba7efc491aec18cd501f73e2e6bbebc2e0727a.1295340405.git.hare@suse.de>
+	 <4D357AA3.5070509@interlog.com> <4D358130.6040508@suse.de>
+	 <20110127223525.GH14951@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexcashub1.qlogic.com ([198.70.193.61]:3181 "EHLO
-	avexcashub1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753137Ab1A0Wgs convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Jan 2011 17:36:48 -0500
-In-Reply-To: <20110127213255.GG31955@stratus.com>
-Content-Language: en-US
+Received: from cantor.suse.de ([195.135.220.2]:50468 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752810Ab1A0Wlv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Jan 2011 17:41:51 -0500
+In-Reply-To: <20110127223525.GH14951@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bandan Das <bandan.das@stratus.com>, James Bottomley <James.Bottomley@suse.de>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Madhu Iyengar <madhu.iyengar@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Hannes Reinecke <hare@suse.de>, dgilbert@interlog.com, James Bottomley <jbottomley@suse.de>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, michaelc@cs.wisc.edu, agk@redhat.com
 
-We at QLogic are fine with James's fix. Here's my ack:
+On Thu, 2011-01-27 at 17:35 -0500, Mike Snitzer wrote:
+> On Tue, Jan 18 2011 at  7:01am -0500,
+> Hannes Reinecke <hare@suse.de> wrote:
+> 
+> > On 01/18/2011 12:33 PM, Douglas Gilbert wrote:
+> > 
+> > This patchset is primarily for fixing up multipathing,
+> > which has the habit of retrying failed I/Os on the
+> > next path. For some errors this is just pointless
+> > (eg MEDIUM ERROR), for some errors this is the desired
+> > behaviour (namely transport errors), and for others
+> > this is positively damaging (persistent reservation
+> > failures).
+> > Just plain EIO simply don't cover the whole range :-)
+> > 
+> > > 
+> > > BTW might "vulgo" be "ergo" [Latin: therefore]?
+> > > 
+> > Nope. Correct etymology is from 'sermo vulgaris',
+> > ie the language of the common people.
+> > But maybe I should remove it for the next
+> > round to avoid confusion.
+> 
+> Is a new round even needed given there haven't been any code issues
+> raised against v4?
+> 
+> James, what are your thoughts on this patchset?  Would be great to get
+> this in scsi-misc for 2.6.39
+> 
+> Please advise,
 
-Acked-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
+Well, it covers three subsystems ... I was waiting for Alasdair and Jens
+to ack ... but I bet they each were waiting for the other two to ack ...
 
-Cheers,
-Madhu
+So, I'll take it if no objections.
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Bandan Das
-Sent: Thursday, January 27, 2011 1:33 PM
-To: James Bottomley
-Cc: Andrew Vasquez; linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] qla2xxx: Fix possible race that could hang kthread_stop()
-
-
-> That's not really the accepted way to fix these race conditions because
-> of the double check of kthread_should_stop(); this is
-> James
->
-> ---
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index c194c23..15ce69e 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -3282,10 +3282,10 @@ qla2x00_do_dpc(void *data)
->
->       set_user_nice(current, -20);
->
-> +     set_current_state(TASK_INTERRUPTIBLE);
->       while (!kthread_should_stop()) {
->               DEBUG3(printk("qla2x00: DPC handler sleeping\n"));
->
-> -             set_current_state(TASK_INTERRUPTIBLE);
->               schedule();
->               __set_current_state(TASK_RUNNING);
->
-> @@ -3454,7 +3454,9 @@ qla2x00_do_dpc(void *data)
->               qla2x00_do_dpc_all_vps(base_vha);
->
->               ha->dpc_active = 0;
-> +             set_current_state(TASK_INTERRUPTIBLE);
->       } /* End of while(1) */
-> +     __set_current_state(TASK_RUNNING);
->
->       DEBUG(printk("scsi(%ld): DPC handler exiting\n", base_vha->host_no));
->
-Yes, this looks more clean and will take care of the problem I am hitting.
+James
 
 
-Bandan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
