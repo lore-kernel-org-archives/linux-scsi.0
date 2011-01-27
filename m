@@ -1,128 +1,54 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Avoid confusion with <scsi/scsi.h>
-Date: Wed, 26 Jan 2011 15:19:07 -0800
-Message-ID: <1296083947.14831.76.camel@haakon2.linux-iscsi.org>
-References: <AANLkTimb+pLTs8EK1WAKs5xQdzdbP6_ig88Oc=Cmy-F4@mail.gmail.com>
+From: BingJiun Luo <luobingjiun@gmail.com>
+Subject: Why is scsi_request_fn called every 4 milliseconds?
+Date: Thu, 27 Jan 2011 22:04:53 +0800
+Message-ID: <AANLkTinidWkKphNbYdtmhZc4G9WOJV-R6Mkyf_Vrpf4r@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:36560 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753608Ab1AZXTL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Jan 2011 18:19:11 -0500
-In-Reply-To: <AANLkTimb+pLTs8EK1WAKs5xQdzdbP6_ig88Oc=Cmy-F4@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fubo Chen <fubo.chen@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>
 
-On Wed, 2011-01-26 at 20:35 +0100, Fubo Chen wrote:
-> include/scsi/scsi.h says: #define ABORT_TASK          0x0d
-> include/target/target_core_tmr.h says: #define ABORT_TASK 1
-> 
-> This is confusing because seeing ABORT_TASK it is not possible to find
-> out the value without looking up which header files are included.
-> Also, including target_core_tmr.h and then scsi.h will give compiler
-> error. Rename ABORT_TASK and alike constants to avoid confusion.
-> 
+Hello,
 
-Hmmmmm, yes they originally came from iscsi_target_mod in upstream LIO
-code in drivers/target/lio-core/iscsi_protocol.h, but they need to be
-converted in fabric module code in the rest of the upstream LIO fabric
-module code (tcm_loop, iscsi_target_mod, and tcm_fc) asa well..
+I want to measure SATA AHCI Host controller read performance.  Open
+/dev/sda and using  read(int fildes, void *buf, size_t nbyte) user space
+function to read 2048 times, each time 64KByets, and total 128 Mbytes.
 
-Let me consider how to best resolve this for existing fabric modules,
-and I will get this patch (or something very similar) into the mainline
-target queue to be sent out for review.
+I measured the time start from one step before write CI register inside
+ahci_qc_issue() function until ahci_port_intr () is called in the interrupt
+context. It takes about 1 milliseconds to complete one 256KBytes READ
+DMA EXT command, and spend about 15 microseconds call to scsi_done().
 
-Thanks Fubo!
+However, why scsi_request_fn is called about after 4 milliseconds
+to pass next IO request for Hardware to issue? It take less if the READ
+DMA command with less number of sectors.
 
---nab
+My questions are:
+1. Is it the time to prepare one 256 KB READ DMA EXT command by upper
+layer (Block Layer or Virtual File system Layer)? Or, It is the time to copy
+data from kernel space memory to user space memory after data is read
+back from Hard Drive and delay the next command pass to SCSI?
 
-> Signed-off-by: Fubo Chen <fubo.chen@gmail.com>
-> 
-> ---
->  drivers/target/target_core_transport.c |   14 +++++++-------
->  include/target/target_core_tmr.h       |   28 ++++++++--------------------
->  2 files changed, 15 insertions(+), 27 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_transport.c
-> b/drivers/target/target_core_transport.c
-> index a318927..c83603e 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -5802,26 +5802,26 @@ int transport_generic_do_tmr(struct se_cmd *cmd)
->  	int ret;
-> 
->  	switch (tmr->function) {
-> -	case ABORT_TASK:
-> +	case TCM_ABORT_TASK:
->  		ref_cmd = tmr->ref_cmd;
->  		tmr->response = TMR_FUNCTION_REJECTED;
->  		break;
-> -	case ABORT_TASK_SET:
-> -	case CLEAR_ACA:
-> -	case CLEAR_TASK_SET:
-> +	case TCM_ABORT_TASK_SET:
-> +	case TCM_CLEAR_ACA:
-> +	case TCM_CLEAR_TASK_SET:
->  		tmr->response = TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED;
->  		break;
-> -	case LUN_RESET:
-> +	case TCM_LUN_RESET:
->  		ret = core_tmr_lun_reset(dev, tmr, NULL, NULL);
->  		tmr->response = (!ret) ? TMR_FUNCTION_COMPLETE :
->  					 TMR_FUNCTION_REJECTED;
->  		break;
->  #if 0
-> -	case TARGET_WARM_RESET:
-> +	case TCM_TARGET_WARM_RESET:
->  		transport_generic_host_reset(dev->se_hba);
->  		tmr->response = TMR_FUNCTION_REJECTED;
->  		break;
-> -	case TARGET_COLD_RESET:
-> +	case TCM_TARGET_COLD_RESET:
->  		transport_generic_host_reset(dev->se_hba);
->  		transport_generic_cold_reset(dev->se_hba);
->  		tmr->response = TMR_FUNCTION_REJECTED;
-> diff --git a/include/target/target_core_tmr.h b/include/target/target_core_tmr.h
-> index 6c8248b..c6f02a0 100644
-> --- a/include/target/target_core_tmr.h
-> +++ b/include/target/target_core_tmr.h
-> @@ -2,26 +2,14 @@
->  #define TARGET_CORE_TMR_H
-> 
->  /* task management function values */
-> -#ifdef ABORT_TASK
-> -#undef ABORT_TASK
-> -#endif /* ABORT_TASK */
-> -#define ABORT_TASK				1
-> -#ifdef ABORT_TASK_SET
-> -#undef ABORT_TASK_SET
-> -#endif /* ABORT_TASK_SET */
-> -#define ABORT_TASK_SET				2
-> -#ifdef CLEAR_ACA
-> -#undef CLEAR_ACA
-> -#endif /* CLEAR_ACA */
-> -#define CLEAR_ACA				3
-> -#ifdef CLEAR_TASK_SET
-> -#undef CLEAR_TASK_SET
-> -#endif /* CLEAR_TASK_SET */
-> -#define CLEAR_TASK_SET				4
-> -#define LUN_RESET				5
-> -#define TARGET_WARM_RESET			6
-> -#define TARGET_COLD_RESET			7
-> -#define TASK_REASSIGN				8
-> +#define TCM_ABORT_TASK				1
-> +#define TCM_ABORT_TASK_SET			2
-> +#define TCM_CLEAR_ACA				3
-> +#define TCM_CLEAR_TASK_SET			4
-> +#define TCM_LUN_RESET				5
-> +#define TCM_TARGET_WARM_RESET			6
-> +#define TCM_TARGET_COLD_RESET			7
-> +#define TCM_TASK_REASSIGN			8
-> 
->  /* task management response values */
->  #define TMR_FUNCTION_COMPLETE			0
+I know some architecture has not good enough performance to do memcpy
+or something like that.
 
+2. If I do not mount /dev/sda to any file system, what is the first
+kernel function
+called after read() function from user space? Is it located at VFS or
+directly to
+Block layer?
+
+Because I want to keep track the time spend at the layer higher than SCSI.
+
+3. When scsi_done() is called, what is the function to process this completed
+command and pass the data to user space? I think there might be somewhere
+inside the code to copy this data from kernel space memory address to user
+space memory address.
+
+
+Thank you very much in advance.
+
+
+Regards,
+BingJiun
