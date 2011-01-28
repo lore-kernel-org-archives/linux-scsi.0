@@ -1,26 +1,39 @@
-From: Alasdair G Kergon <agk@redhat.com>
-Subject: Re: [PATCH v4 1/3] scsi: Detailed I/O errors
-Date: Fri, 28 Jan 2011 13:11:42 +0000
-Message-ID: <20110128131141.GA13587@agk-dp.fab.redhat.com>
-References: <cover.1295340405.git.hare@suse.de> <b6ba7efc491aec18cd501f73e2e6bbebc2e0727a.1295340405.git.hare@suse.de> <4D357AA3.5070509@interlog.com> <4D358130.6040508@suse.de> <20110127223525.GH14951@redhat.com> <1296168102.3050.83.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Huang Weiyi <weiyi.huang@gmail.com>
+Subject: [PATCH 4/4] [SCSI] target: remove duplicated #include
+Date: Fri, 28 Jan 2011 22:05:45 +0800
+Message-ID: <1296223545-884-1-git-send-email-weiyi.huang@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:25644 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753272Ab1A1NLw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 08:11:52 -0500
-Content-Disposition: inline
-In-Reply-To: <1296168102.3050.83.camel@mulgrave.site>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:61579 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752935Ab1A1OGU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Jan 2011 09:06:20 -0500
+Received: by pxi15 with SMTP id 15so447386pxi.19
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Jan 2011 06:06:20 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, dgilbert@interlog.com, James Bottomley <jbottomley@suse.de>, linux-scsi@vger.kernel.org, jaxboe@fusionio.com, michaelc@cs.wisc.edu, agk@redhat.com
+To: James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org, Huang Weiyi <weiyi.huang@gmail.com>
 
-On Thu, Jan 27, 2011 at 05:41:42PM -0500, James Bottomley wrote:
-> So, I'll take it if no objections.
+Remove duplicated #include('s) in
+  drivers/target/target_core_hba.c
+
+Signed-off-by: Huang Weiyi <weiyi.huang@gmail.com>
+---
+ drivers/target/target_core_hba.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+index 4bbe820..74d84f7 100644
+--- a/drivers/target/target_core_hba.c
++++ b/drivers/target/target_core_hba.c
+@@ -38,7 +38,6 @@
  
-No objections - go for it.
-
-Alasdair
+ #include <target/target_core_base.h>
+ #include <target/target_core_device.h>
+-#include <target/target_core_device.h>
+ #include <target/target_core_tpg.h>
+ #include <target/target_core_transport.h>
+ 
+-- 
+1.6.1.3
 
