@@ -1,138 +1,68 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 00/28] libfc/libfcoe/fcoe updates for scsi-misc (2.6.39)
-Date: Fri, 28 Jan 2011 16:03:10 -0800
-Message-ID: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
+Subject: [PATCH 01/28] libfc: always initialize the FCoE DDP exchange id for
+	fsp as FC_XID_UNKNOWN
+Date: Fri, 28 Jan 2011 16:03:15 -0800
+Message-ID: <20110129000315.1784.42112.stgit@localhost6.localdomain6>
+References: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:8747 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([143.182.124.37]:55185 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753258Ab1A2ADO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:03:14 -0500
+	id S1752482Ab1A2ADQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:03:16 -0500
+In-Reply-To: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: Yi Zou <yi.zou@intel.com>
 
-This is a fairly significant update to libfc, libfcoe and fcoe.
-The two major changes are the addition hooks for a FC/FCoE target
-based on the new target infrastructure and the addition of a fcoe
-transport which will allow the upcoming bnx2fc driver to work
-with libfc and libfcoe.
+From: Yi Zou <yi.zou@intel.com>
 
-1) fc4 provider hooks
+The fsp's xfer_ddp is used as indication of the exchange id for the DDPed
+I/O. We should always initialize it as FC_XID_UNKNOWN for a newly allocated
+fsp, otherwise the fsp allocated in fc_fcp, i.e., not from queuecommand like
+LUN RESET that is not doing DDP may still think DDP is setup for it since xid
+0 is valid and goes on to call fc_fcp_ddp_done() in fc_fcp_resp() from
+fc_tm_done(). So, set xfer_ddp as FC_XID_UNKNOWN in fc_fcp_pkt_alloc() now.
 
-   These changes have been around for months and allow libfc to
-respond (as a target) to commands sent from an initiator. There
-are also a few small changes here and there to libfc to make a
-target mode work. This changeset paves the way for TCM_FC which
-will bridge the TCM core with libfc/fcoe.
+Also removes the setting of fsp->lp as it's already done when fsp is allocated.
 
-2) fcoe transport
-
-   libfcoe.c has now been split out into two new files:
-fcoe_transport.c and fcoe_ctlr.c. fcoe_transport.c implements
-a registration system for fcoe transports. The first transport
-is SW FCoE (i.e. fcoe.ko), the second will be bnx2fc (a brdcm
-fcoe driver). Any fcoe transport will simply provide a match
-function to determine if a netdevice is managed by the transport.
-fcoe.ko is the default and will be used if no other transport
-is available.
-
-   One interesting outcome of this is that the create/destroy/etc...
-entry points are moving from fcoe.ko to libfcoe.ko. There are
-corresponding changes to fcoe-utils (fcoe user space suite), but
-I don't intend to commit them until all of this code is accepted
-to mainline. fcoe-utils is tagged against mainline.
-
-3) Miscellaneous
-
-   a) Removal of scsi_host lock usage in fc_queuecommand
-   b) rport event callback to LLD from libfc (will be used by
-      bnx2fc)
-   c) Tejun Heo's workqueue change
-   d) Memory leak fix and version bump to fnic
-
-All of these patches have been tested against today's scsi-misc.
-
+Signed-off-by: Yi Zou <yi.zou@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
+ drivers/scsi/libfc/fc_fcp.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
-Bhanu Prakash Gollapudi (2):
-      libfc: introduce LLD event callback
-      libfcoe: Move common code from fcoe to libfcoe module
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 5962d1a..21a64d4 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -155,6 +155,7 @@ static struct fc_fcp_pkt *fc_fcp_pkt_alloc(struct fc_lport *lport, gfp_t gfp)
+ 	if (fsp) {
+ 		memset(fsp, 0, sizeof(*fsp));
+ 		fsp->lp = lport;
++		fsp->xfer_ddp = FC_XID_UNKNOWN;
+ 		atomic_set(&fsp->ref_cnt, 1);
+ 		init_timer(&fsp->timer);
+ 		INIT_LIST_HEAD(&fsp->list);
+@@ -1842,9 +1843,7 @@ static int fc_queuecommand_lck(struct scsi_cmnd *sc_cmd, void (*done)(struct scs
+ 	 * build the libfc request pkt
+ 	 */
+ 	fsp->cmd = sc_cmd;	/* save the cmd */
+-	fsp->lp = lport;	/* save the softc ptr */
+ 	fsp->rport = rport;	/* set the remote port ptr */
+-	fsp->xfer_ddp = FC_XID_UNKNOWN;
+ 	sc_cmd->scsi_done = done;
+ 
+ 	/*
+@@ -2112,7 +2111,6 @@ int fc_eh_device_reset(struct scsi_cmnd *sc_cmd)
+ 	 * the sc passed in is not setup for execution like when sent
+ 	 * through the queuecommand callout.
+ 	 */
+-	fsp->lp = lport;	/* save the softc ptr */
+ 	fsp->rport = rport;	/* set the remote port ptr */
+ 
+ 	/*
 
-Dan Carpenter (1):
-      libfc: dereferencing ERR_PTR in fc_tm_done()
-
-Hillf Danton (2):
-      libfc: Return a valid return code in fc_fcp_pkt_abort()
-      libfc: Cleanup return paths in fc_rport_error_retry
-
-Joe Eykholt (6):
-      libfc: add hook for FC-4 provider registration
-      libfc: add method for setting handler for incoming exchange
-      libfc: add local port hook for provider session lookup
-      libfc: add hook to notify providers of local port changes
-      libfc: use PRLI hook to get parameters when sending outgoing PRLI
-      libfc: export seq_release() for users of seq_assign()
-
-Kiran Patil (2):
-      libfc: Enhanced exchange ID selection mechanism and fix related EMA selection logic.
-      libfc: Extending lport's roles for target if there is a registered target.
-
-Randy Dunlap (1):
-      libfc: fix sparse static and non-ANSI warnings
-
-Robert Love (2):
-      fcoe: Fix module reference count for vports
-      libfc: Remove usage of the Scsi_Host's host_lock
-
-Tejun Heo (1):
-      fcoe: use dedicated workqueue instead of system_wq
-
-Vasu Dev (1):
-      fcoe: drop FCoE LOGO in FIP mode
-
-Venkata Siva Vijayendra Bhamidipati (2):
-      fnic: fix memory leak
-      fnic: Bumping up fnic version from 1.4.0.145 to 1.5.0.1.
-
-Yi Zou (8):
-      libfc: always initialize the FCoE DDP exchange id for fsp as FC_XID_UNKNOWN
-      libfcoe: move logging macros into the local libfcoe.h header file
-      libfcoe: add fcoe_transport structure defines to include/scsi/libfcoe.h
-      libfcoe: add implementation to support fcoe transport
-      libfcoe: rename libfcoe.c to fcoe_cltr.c for the coming fcoe_transport.c
-      libfcoe: include fcoe_transport.c into kernel libfcoe module
-      fcoe: prepare fcoe for using fcoe transport
-      fcoe: convert fcoe.ko to become an fcoe transport provider driver
-
-
- drivers/scsi/fcoe/Makefile         |    2 
- drivers/scsi/fcoe/fcoe.c           |  563 +++----
- drivers/scsi/fcoe/fcoe.h           |   44 -
- drivers/scsi/fcoe/fcoe_ctlr.c      | 2682 ++++++++++++++++++++++++++++++++++++
- drivers/scsi/fcoe/fcoe_transport.c |  726 ++++++++++
- drivers/scsi/fcoe/libfcoe.c        | 2708 ------------------------------------
- drivers/scsi/fcoe/libfcoe.h        |   31 
- drivers/scsi/fnic/fnic.h           |    2 
- drivers/scsi/fnic/vnic_dev.c       |    2 
- drivers/scsi/libfc/fc_exch.c       |  103 +
- drivers/scsi/libfc/fc_fcp.c        |   39 -
- drivers/scsi/libfc/fc_libfc.c      |  120 ++
- drivers/scsi/libfc/fc_libfc.h      |   14 
- drivers/scsi/libfc/fc_lport.c      |   68 +
- drivers/scsi/libfc/fc_npiv.c       |    1 
- drivers/scsi/libfc/fc_rport.c      |  190 ++-
- include/scsi/libfc.h               |   74 +
- include/scsi/libfcoe.h             |   99 +
- 18 files changed, 4252 insertions(+), 3216 deletions(-)
- create mode 100644 drivers/scsi/fcoe/fcoe_ctlr.c
- create mode 100644 drivers/scsi/fcoe/fcoe_transport.c
- delete mode 100644 drivers/scsi/fcoe/libfcoe.c
- create mode 100644 drivers/scsi/fcoe/libfcoe.h
-
--- 
-Thanks, //Rob
-
- LocalWords:  shortlog diffstat
