@@ -1,45 +1,41 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 05/28] fnic: fix memory leak
-Date: Fri, 28 Jan 2011 16:03:36 -0800
-Message-ID: <20110129000336.1784.24707.stgit@localhost6.localdomain6>
+Subject: [PATCH 06/28] fnic: Bumping up fnic version from 1.4.0.145 to 1.5.0.1.
+Date: Fri, 28 Jan 2011 16:03:42 -0800
+Message-ID: <20110129000342.1784.48354.stgit@localhost6.localdomain6>
 References: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:9625 "EHLO mga11.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:26475 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753732Ab1A2ADh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:03:37 -0500
+	id S1753732Ab1A2ADn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:03:43 -0500
 In-Reply-To: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Abhijeet Joglekar <abjoglek@cisco.com>, Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
+Cc: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
 
 From: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
 
-Fix memory leak arising due to incorrect freeing of allocated memory
-for vnic stats when unregistering a vnic.
-
-Signed-off-by: Abhijeet Joglekar <abjoglek@cisco.com>
 Signed-off-by: Venkata Siva Vijayendra Bhamidipati <vbhamidi@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fnic/vnic_dev.c |    2 +-
+ drivers/scsi/fnic/fnic.h |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
-index db71014..b576be7 100644
---- a/drivers/scsi/fnic/vnic_dev.c
-+++ b/drivers/scsi/fnic/vnic_dev.c
-@@ -654,7 +654,7 @@ void vnic_dev_unregister(struct vnic_dev *vdev)
- 				vdev->linkstatus_pa);
- 		if (vdev->stats)
- 			pci_free_consistent(vdev->pdev,
--				sizeof(struct vnic_dev),
-+				sizeof(struct vnic_stats),
- 				vdev->stats, vdev->stats_pa);
- 		if (vdev->fw_info)
- 			pci_free_consistent(vdev->pdev,
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 92f1850..671cde9 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -37,7 +37,7 @@
+ 
+ #define DRV_NAME		"fnic"
+ #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
+-#define DRV_VERSION		"1.4.0.145"
++#define DRV_VERSION		"1.5.0.1"
+ #define PFX			DRV_NAME ": "
+ #define DFX                     DRV_NAME "%d: "
+ 
 
