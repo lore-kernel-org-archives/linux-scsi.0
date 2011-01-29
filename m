@@ -1,63 +1,71 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 07/24] target/iblock: Fix memory leak in iblock_set_configfs_dev_params
-Date: Sat, 29 Jan 2011 10:36:07 -0800
-Message-ID: <1296326184-16664-8-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 06/24] target/file: Fix memory leak in fd_set_configfs_dev_params().
+Date: Sat, 29 Jan 2011 10:36:06 -0800
+Message-ID: <1296326184-16664-7-git-send-email-nab@linux-iscsi.org>
 References: <1296326184-16664-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm4.bullet.mail.ac4.yahoo.com ([98.139.52.201]:47351 "HELO
-	nm4.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754736Ab1A2Sg3 (ORCPT
+Received: from nm23-vm0.bullet.mail.ac4.yahoo.com ([98.139.53.220]:37789 "HELO
+	nm23-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754494Ab1A2Sg1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jan 2011 13:36:29 -0500
+	Sat, 29 Jan 2011 13:36:27 -0500
 In-Reply-To: <1296326184-16664-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jesper Juhl <jj@chaosbits.net>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Jesper Juhl <jj@chaosbits.net>
 
-The match_strdup() allocation for Opt_udev_path needs to be released
-after usage.
+match_strdup() dynamically allocates memory and it is the responsabillity
+of the caller to free that memory. In
+drivers/target/target_core_file.c::fd_set_configfs_dev_params() two calls
+are made to match_strdup() and in neither case is the allocated memory
+freed, but instead it is leaked.
 
-Reported-off-by: Jesper Juhl <jj@chaosbits.net>
+This patch should take care of the problem by kfree()'ing the allocated
+memory once it is no longer needed. It also makes sure to return -ENOMEM
+if the memory allocation in match_strdup() should fail.
+
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-(cherry picked from commit 7950e3cfa54b3bf11eecf6c0e47df3a5712334d1)
+(cherry picked from commit 5c45b37c62fad18543e3f5eb55892ef34d161830)
 ---
- drivers/target/target_core_iblock.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/target/target_core_file.c |   13 ++++++++++++-
+ 1 files changed, 12 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 67f0c09..422187b 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -469,7 +469,7 @@ static ssize_t iblock_set_configfs_dev_params(struct se_hba *hba,
- 					       const char *page, ssize_t count)
- {
- 	struct iblock_dev *ib_dev = se_dev->se_dev_su_ptr;
--	char *orig, *ptr, *opts;
-+	char *orig, *ptr, *arg_p, *opts;
- 	substring_t args[MAX_OPT_ARGS];
- 	int ret = 0, arg, token;
- 
-@@ -492,9 +492,14 @@ static ssize_t iblock_set_configfs_dev_params(struct se_hba *hba,
- 				ret = -EEXIST;
- 				goto out;
- 			}
--
--			ret = snprintf(ib_dev->ibd_udev_path, SE_UDEV_PATH_LEN,
--				"%s", match_strdup(&args[0]));
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core_file.c
+index 0aaca88..676a010 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -537,15 +537,26 @@ static ssize_t fd_set_configfs_dev_params(
+ 		token = match_token(ptr, tokens, args);
+ 		switch (token) {
+ 		case Opt_fd_dev_name:
 +			arg_p = match_strdup(&args[0]);
 +			if (!arg_p) {
 +				ret = -ENOMEM;
 +				break;
 +			}
-+			snprintf(ib_dev->ibd_udev_path, SE_UDEV_PATH_LEN,
+ 			snprintf(fd_dev->fd_dev_name, FD_MAX_DEV_NAME,
+-					"%s", match_strdup(&args[0]));
 +					"%s", arg_p);
 +			kfree(arg_p);
- 			printk(KERN_INFO "IBLOCK: Referencing UDEV path: %s\n",
- 					ib_dev->ibd_udev_path);
- 			ib_dev->ibd_flags |= IBDF_HAS_UDEV_PATH;
+ 			printk(KERN_INFO "FILEIO: Referencing Path: %s\n",
+ 					fd_dev->fd_dev_name);
+ 			fd_dev->fbd_flags |= FBDF_HAS_PATH;
+ 			break;
+ 		case Opt_fd_dev_size:
+ 			arg_p = match_strdup(&args[0]);
++			if (!arg_p) {
++				ret = -ENOMEM;
++				break;
++			}
+ 			ret = strict_strtoull(arg_p, 0, &fd_dev->fd_dev_size);
++			kfree(arg_p);
+ 			if (ret < 0) {
+ 				printk(KERN_ERR "strict_strtoull() failed for"
+ 						" fd_dev_size=\n");
 -- 
 1.7.3.5
 
