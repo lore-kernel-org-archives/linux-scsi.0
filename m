@@ -1,7 +1,7 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 07/28] fcoe: Fix module reference count for vports
-Date: Fri, 28 Jan 2011 16:03:47 -0800
-Message-ID: <20110129000347.1784.60143.stgit@localhost6.localdomain6>
+Subject: [PATCH 08/28] fcoe: drop FCoE LOGO in FIP mode
+Date: Fri, 28 Jan 2011 16:03:52 -0800
+Message-ID: <20110129000352.1784.56566.stgit@localhost6.localdomain6>
 References: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,133 +9,151 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga02.intel.com ([134.134.136.20]:5725 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753732Ab1A2ADs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:03:48 -0500
+	id S1753732Ab1A2ADx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:03:53 -0500
 In-Reply-To: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Ross Brattain <ross.b.brattain@intel.com>
+Cc: Vasu Dev <vasu.dev@intel.com>
 
-vports are not grabbing module references but are
-releasing them. This causes the module reference count
-to decrement too many times and it wraps around past 0.
+From: Vasu Dev <vasu.dev@linux.intel.com>
 
-The solution is to do a module_put() in
-fcoe_interface_release() so that the reference is only
-released when the fcoe_interface is released. There is a
-one-to-one relationship between the N_Port and the
-fcoe_interface, so the module reference will only be
-dropped when the N_Port is destroyed
+Allowing FCoE LOGO followed by CVL in this case prevents
+FIP login back to the FCF and then keeps lport offline,
+only FIP LOGO and CLV needs to be processed while in
+FIP mode, therefore this patch drops FCoE LOGO in FIP mode.
 
-To create symetry in the code this patch moves the
-try_module_get() call into fcoe_interface_create(). This
-means that only the N_Port will grab a reference to the
-module when its corresponding fcoe_interface is created.
+Added fcoe_filter_frames() to filter out above mentioned LOGO
+in fcoe rx path along with other existing filtering in code
+for bad CRC frames. Adding separate fcoe_filter_frames function
+helped with better code indentations and if needed then same
+will allow adding more filters at one place in future.
 
-This patch also makes it so that the fcoe_interface_create()
-routine encodes any error codes in the fcoe_interface
-pointer returned. This way its caller, fcoe_create(), can
-return an accurate error code.
+This LOGO drop is added after FCP frames passed up to avoid
+any additional checks on fast path for this.
 
+Signed-off-by: Vasu Dev <vasu.dev@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
-Tested-by: Ross Brattain <ross.b.brattain@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   33 ++++++++++++++++++++-------------
- 1 files changed, 20 insertions(+), 13 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   84 ++++++++++++++++++++++++++++++----------------
+ 1 files changed, 54 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 9f9600b..452b421 100644
+index 452b421..d114699 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -356,10 +356,18 @@ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
- 	struct fcoe_interface *fcoe;
- 	int err;
+@@ -1620,6 +1620,56 @@ static void fcoe_percpu_flush_done(struct sk_buff *skb)
+ }
  
-+	if (!try_module_get(THIS_MODULE)) {
-+		FCOE_NETDEV_DBG(netdev,
-+				"Could not get a reference to the module\n");
-+		fcoe = ERR_PTR(-EBUSY);
-+		goto out;
+ /**
++ * fcoe_filter_frames() - filter out bad fcoe frames, i.e. bad CRC
++ * @lport: The local port the frame was received on
++ * @fp:	   The received frame
++ *
++ * Return: 0 on passing filtering checks
++ */
++static inline int fcoe_filter_frames(struct fc_lport *lport,
++				     struct fc_frame *fp)
++{
++	struct fcoe_interface *fcoe;
++	struct fc_frame_header *fh;
++	struct sk_buff *skb = (struct sk_buff *)fp;
++	struct fcoe_dev_stats *stats;
++
++	/*
++	 * We only check CRC if no offload is available and if it is
++	 * it's solicited data, in which case, the FCP layer would
++	 * check it during the copy.
++	 */
++	if (lport->crc_offload && skb->ip_summed == CHECKSUM_UNNECESSARY)
++		fr_flags(fp) &= ~FCPHF_CRC_UNCHECKED;
++	else
++		fr_flags(fp) |= FCPHF_CRC_UNCHECKED;
++
++	fh = (struct fc_frame_header *) skb_transport_header(skb);
++	fh = fc_frame_header_get(fp);
++	if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA && fh->fh_type == FC_TYPE_FCP)
++		return 0;
++
++	fcoe = ((struct fcoe_port *)lport_priv(lport))->fcoe;
++	if (is_fip_mode(&fcoe->ctlr) && fc_frame_payload_op(fp) == ELS_LOGO &&
++	    ntoh24(fh->fh_s_id) == FC_FID_FLOGI) {
++		FCOE_DBG("fcoe: dropping FCoE lport LOGO in fip mode\n");
++		return -EINVAL;
 +	}
 +
- 	fcoe = kzalloc(sizeof(*fcoe), GFP_KERNEL);
- 	if (!fcoe) {
- 		FCOE_NETDEV_DBG(netdev, "Could not allocate fcoe structure\n");
--		return NULL;
-+		fcoe = ERR_PTR(-ENOMEM);
-+		goto out_nomod;
- 	}
- 
- 	dev_hold(netdev);
-@@ -378,9 +386,15 @@ static struct fcoe_interface *fcoe_interface_create(struct net_device *netdev,
- 		fcoe_ctlr_destroy(&fcoe->ctlr);
- 		kfree(fcoe);
- 		dev_put(netdev);
--		return NULL;
-+		fcoe = ERR_PTR(err);
-+		goto out_nomod;
- 	}
- 
-+	goto out;
++	if (!fr_flags(fp) & FCPHF_CRC_UNCHECKED ||
++	    le32_to_cpu(fr_crc(fp)) == ~crc32(~0, skb->data, skb->len)) {
++		fr_flags(fp) &= ~FCPHF_CRC_UNCHECKED;
++		return 0;
++	}
 +
-+out_nomod:
-+	module_put(THIS_MODULE);
-+out:
- 	return fcoe;
- }
- 
-@@ -442,6 +456,7 @@ static void fcoe_interface_release(struct kref *kref)
- 	fcoe_ctlr_destroy(&fcoe->ctlr);
- 	kfree(fcoe);
- 	dev_put(netdev);
-+	module_put(THIS_MODULE);
- }
- 
- /**
-@@ -886,7 +901,6 @@ static void fcoe_if_destroy(struct fc_lport *lport)
- 
- 	/* Release the Scsi_Host */
- 	scsi_host_put(lport->host);
--	module_put(THIS_MODULE);
- }
- 
- /**
-@@ -2135,15 +2149,10 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
++	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
++	stats->InvalidCRCCount++;
++	if (stats->InvalidCRCCount < 5)
++		printk(KERN_WARNING "fcoe: dropping frame with CRC error\n");
++	return -EINVAL;
++}
++
++/**
+  * fcoe_recv_frame() - process a single received frame
+  * @skb: frame to process
+  */
+@@ -1629,7 +1679,6 @@ static void fcoe_recv_frame(struct sk_buff *skb)
+ 	struct fc_lport *lport;
+ 	struct fcoe_rcv_info *fr;
+ 	struct fcoe_dev_stats *stats;
+-	struct fc_frame_header *fh;
+ 	struct fcoe_crc_eof crc_eof;
+ 	struct fc_frame *fp;
+ 	struct fcoe_port *port;
+@@ -1660,7 +1709,6 @@ static void fcoe_recv_frame(struct sk_buff *skb)
+ 	 * was done in fcoe_rcv already.
  	 */
- 	if (THIS_MODULE->state != MODULE_STATE_LIVE) {
- 		rc = -ENODEV;
--		goto out_nomod;
-+		goto out_nodev;
- 	}
- #endif
+ 	hp = (struct fcoe_hdr *) skb_network_header(skb);
+-	fh = (struct fc_frame_header *) skb_transport_header(skb);
  
--	if (!try_module_get(THIS_MODULE)) {
--		rc = -EINVAL;
--		goto out_nomod;
--	}
+ 	stats = per_cpu_ptr(lport->dev_stats, get_cpu());
+ 	if (unlikely(FC_FCOE_DECAPS_VER(hp) != FC_FCOE_VER)) {
+@@ -1693,35 +1741,11 @@ static void fcoe_recv_frame(struct sk_buff *skb)
+ 	if (pskb_trim(skb, fr_len))
+ 		goto drop;
+ 
+-	/*
+-	 * We only check CRC if no offload is available and if it is
+-	 * it's solicited data, in which case, the FCP layer would
+-	 * check it during the copy.
+-	 */
+-	if (lport->crc_offload &&
+-	    skb->ip_summed == CHECKSUM_UNNECESSARY)
+-		fr_flags(fp) &= ~FCPHF_CRC_UNCHECKED;
+-	else
+-		fr_flags(fp) |= FCPHF_CRC_UNCHECKED;
 -
- 	netdev = fcoe_if_to_netdev(buffer);
- 	if (!netdev) {
- 		rc = -ENODEV;
-@@ -2157,8 +2166,8 @@ static int fcoe_create(const char *buffer, struct kernel_param *kp)
+-	fh = fc_frame_header_get(fp);
+-	if ((fh->fh_r_ctl != FC_RCTL_DD_SOL_DATA ||
+-	    fh->fh_type != FC_TYPE_FCP) &&
+-	    (fr_flags(fp) & FCPHF_CRC_UNCHECKED)) {
+-		if (le32_to_cpu(fr_crc(fp)) !=
+-		    ~crc32(~0, skb->data, fr_len)) {
+-			if (stats->InvalidCRCCount < 5)
+-				printk(KERN_WARNING "fcoe: dropping "
+-				       "frame with CRC error\n");
+-			stats->InvalidCRCCount++;
+-			goto drop;
+-		}
+-		fr_flags(fp) &= ~FCPHF_CRC_UNCHECKED;
++	if (!fcoe_filter_frames(lport, fp)) {
++		put_cpu();
++		fc_exch_recv(lport, fp);
++		return;
  	}
- 
- 	fcoe = fcoe_interface_create(netdev, fip_mode);
--	if (!fcoe) {
--		rc = -ENOMEM;
-+	if (IS_ERR(fcoe)) {
-+		rc = PTR_ERR(fcoe);
- 		goto out_putdev;
- 	}
- 
-@@ -2198,8 +2207,6 @@ out_free:
- out_putdev:
- 	dev_put(netdev);
- out_nodev:
--	module_put(THIS_MODULE);
--out_nomod:
- 	rtnl_unlock();
- 	mutex_unlock(&fcoe_config_mutex);
- 	return rc;
+-	put_cpu();
+-	fc_exch_recv(lport, fp);
+-	return;
+-
+ drop:
+ 	stats->ErrorFrames++;
+ 	put_cpu();
 
