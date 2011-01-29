@@ -1,89 +1,128 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 16/28] libfc: export seq_release() for users of seq_assign()
-Date: Fri, 28 Jan 2011 16:04:34 -0800
-Message-ID: <20110129000434.1784.56821.stgit@localhost6.localdomain6>
+Subject: [PATCH 17/28] libfc: Enhanced exchange ID selection mechanism and fix
+	related EMA selection logic.
+Date: Fri, 28 Jan 2011 16:04:39 -0800
+Message-ID: <20110129000439.1784.57517.stgit@localhost6.localdomain6>
 References: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:39084 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:29268 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753896Ab1A2AEf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:04:35 -0500
+	id S1754371Ab1A2AEk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:04:40 -0500
 In-Reply-To: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Joe Eykholt <jeykholt@cisco.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Kiran Patil <kiran.patil@intel.com>
 
-From: Joe Eykholt <jeykholt@cisco.com>
+From: Kiran Patil <kiran.patil@intel.com>
 
-Target modules using lport->tt.seq_assign() get a hold on the
-exchange but have no way of releasing it.  Add that.
+Problem: In case of exchange responder case, EMA selection was defaulted to the last EMA
+         from EMA list (lport.ema_list).  If exchange ID is selected from offload pool
+         and not setup DDP, resulting into incorrect selection of EMA, and eventually
+         dropping the packet because unable to find exchange.
 
-Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
-Acked-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Fix:     Enhanced the exchange ID selection (depending upon request type and exchange responder)
+         Made necessary enhancement in EMA selection algorithm.
+
+Technical Notes: N/A
+
+Signed-off-by: Kiran Patil <kiran.patil@intel.com>
+Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_exch.c |   14 ++++++++++++++
- include/scsi/libfc.h         |    7 +++++++
- 2 files changed, 21 insertions(+), 0 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |   64 ++++++++++++++++++++++++++++--------------
+ 1 files changed, 43 insertions(+), 21 deletions(-)
 
 diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 1f124c0..a3d6402 100644
+index a3d6402..08bf5fa 100644
 --- a/drivers/scsi/libfc/fc_exch.c
 +++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1282,6 +1282,8 @@ free:
-  * @fp:    The request frame
-  *
-  * On success, the sequence pointer will be returned and also in fr_seq(@fp).
-+ * A reference will be held on the exchange/sequence for the caller, which
-+ * must call fc_seq_release().
-  */
- static struct fc_seq *fc_seq_assign(struct fc_lport *lport, struct fc_frame *fp)
- {
-@@ -1299,6 +1301,15 @@ static struct fc_seq *fc_seq_assign(struct fc_lport *lport, struct fc_frame *fp)
- }
+@@ -2281,16 +2281,45 @@ void fc_exch_mgr_free(struct fc_lport *lport)
+ EXPORT_SYMBOL(fc_exch_mgr_free);
  
  /**
-+ * fc_seq_release() - Release the hold
-+ * @sp:    The sequence.
++ * fc_find_ema() - Lookup and return appropriate Exchange Manager Anchor depending
++ * upon 'xid'.
++ * @f_ctl: f_ctl
++ * @lport: The local port the frame was received on
++ * @fh: The received frame header
 + */
-+static void fc_seq_release(struct fc_seq *sp)
++static struct fc_exch_mgr_anchor *fc_find_ema(u32 f_ctl,
++					      struct fc_lport *lport,
++					      struct fc_frame_header *fh)
 +{
-+	fc_exch_release(fc_seq_exch(sp));
++	struct fc_exch_mgr_anchor *ema;
++	u16 xid;
++
++	if (f_ctl & FC_FC_EX_CTX)
++		xid = ntohs(fh->fh_ox_id);
++	else {
++		xid = ntohs(fh->fh_rx_id);
++		if (xid == FC_XID_UNKNOWN)
++			return list_entry(lport->ema_list.prev,
++					  typeof(*ema), ema_list);
++	}
++
++	list_for_each_entry(ema, &lport->ema_list, ema_list) {
++		if ((xid >= ema->mp->min_xid) &&
++		    (xid <= ema->mp->max_xid))
++			return ema;
++	}
++	return NULL;
 +}
-+
 +/**
-  * fc_exch_recv_req() - Handler for an incoming request
-  * @lport: The local port that received the request
-  * @mp:	   The EM that the exchange is on
-@@ -2369,6 +2380,9 @@ int fc_exch_init(struct fc_lport *lport)
- 	if (!lport->tt.seq_assign)
- 		lport->tt.seq_assign = fc_seq_assign;
+  * fc_exch_recv() - Handler for received frames
+  * @lport: The local port the frame was received on
+- * @fp:	   The received frame
++ * @fp:	The received frame
+  */
+ void fc_exch_recv(struct fc_lport *lport, struct fc_frame *fp)
+ {
+ 	struct fc_frame_header *fh = fc_frame_header_get(fp);
+ 	struct fc_exch_mgr_anchor *ema;
+-	u32 f_ctl, found = 0;
+-	u16 oxid;
++	u32 f_ctl;
  
-+	if (!lport->tt.seq_release)
-+		lport->tt.seq_release = fc_seq_release;
-+
- 	return 0;
- }
- EXPORT_SYMBOL(fc_exch_init);
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 79d1c76..6d64e44 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -572,6 +572,13 @@ struct libfc_function_template {
- 	struct fc_seq *(*seq_assign)(struct fc_lport *, struct fc_frame *);
+ 	/* lport lock ? */
+ 	if (!lport || lport->state == LPORT_ST_DISABLED) {
+@@ -2301,24 +2330,17 @@ void fc_exch_recv(struct fc_lport *lport, struct fc_frame *fp)
+ 	}
+ 
+ 	f_ctl = ntoh24(fh->fh_f_ctl);
+-	oxid = ntohs(fh->fh_ox_id);
+-	if (f_ctl & FC_FC_EX_CTX) {
+-		list_for_each_entry(ema, &lport->ema_list, ema_list) {
+-			if ((oxid >= ema->mp->min_xid) &&
+-			    (oxid <= ema->mp->max_xid)) {
+-				found = 1;
+-				break;
+-			}
+-		}
+-
+-		if (!found) {
+-			FC_LPORT_DBG(lport, "Received response for out "
+-				     "of range oxid:%hx\n", oxid);
+-			fc_frame_free(fp);
+-			return;
+-		}
+-	} else
+-		ema = list_entry(lport->ema_list.prev, typeof(*ema), ema_list);
++	ema = fc_find_ema(f_ctl, lport, fh);
++	if (!ema) {
++		FC_LPORT_DBG(lport, "Unable to find Exchange Manager Anchor,"
++				    "fc_ctl <0x%x>, xid <0x%x>\n",
++				     f_ctl,
++				     (f_ctl & FC_FC_EX_CTX) ?
++				     ntohs(fh->fh_ox_id) :
++				     ntohs(fh->fh_rx_id));
++		fc_frame_free(fp);
++		return;
++	}
  
  	/*
-+	 * Release the reference on the sequence returned by seq_assign().
-+	 *
-+	 * STATUS: OPTIONAL
-+	 */
-+	void (*seq_release)(struct fc_seq *);
-+
-+	/*
- 	 * Reset an exchange manager, completing all sequences and exchanges.
- 	 * If s_id is non-zero, reset only exchanges originating from that FID.
- 	 * If d_id is non-zero, reset only exchanges sending to that FID.
+ 	 * If frame is marked invalid, just drop it.
 
