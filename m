@@ -1,109 +1,136 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 23/28] fcoe: prepare fcoe for using fcoe transport
-Date: Fri, 28 Jan 2011 16:05:11 -0800
-Message-ID: <20110129000511.1784.74841.stgit@localhost6.localdomain6>
+Subject: [PATCH 27/28] fcoe: use dedicated workqueue instead of system_wq
+Date: Fri, 28 Jan 2011 16:05:32 -0800
+Message-ID: <20110129000532.1784.82462.stgit@localhost6.localdomain6>
 References: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:3855 "EHLO mga02.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:42350 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753947Ab1A2AFM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:05:12 -0500
+	id S1754046Ab1A2AFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:05:33 -0500
 In-Reply-To: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Yi Zou <yi.zou@intel.com>
+Cc: Tejun Heo <tj@kernel.org>
 
-From: Yi Zou <yi.zou@intel.com>
+From: Tejun Heo <tj@kernel.org>
 
-Prepare the fcoe to convert it to use the newly added fcoe transport, making
-it as the default fcoe transport provider for libfcoe. This patch is to rename
-some of the variables to avoid any confusing names later as now there are
-several transports in the same file.
+fcoe uses the system_wq to destroy ports and the work items need to be
+flushed before the driver is unloaded.  As the work items free the
+containing data structure, they can't be flushed directly.  The
+workqueue should be flushed instead.
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
+Also, the destruction works can be chained - ie. destruction of a port
+may lead to destruction of another port where the work item for the
+former queues the work for the latter.  Currently, the depth of chain
+can be at most two and fcoe_exit() makes sure everything is complete
+by calling flush_scheduled_work() twice.
+
+With commit c8efcc25 (workqueue: allow chained queueing during
+destruction), destroy_workqueue() can take care of chained works on
+workqueue destruction.  Add and use fcoe_wq instead.  Simply
+destroying fcoe_wq on driver unload takes care of flushing.
+
+Signed-off-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/fcoe.c |   29 +++++++++++++++--------------
- 1 files changed, 15 insertions(+), 14 deletions(-)
+ drivers/scsi/fcoe/fcoe.c |   32 +++++++++++++++++++++-----------
+ 1 files changed, 21 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index d114699..6d6c8bf 100644
+index 8a1005d..46c57e5 100644
 --- a/drivers/scsi/fcoe/fcoe.c
 +++ b/drivers/scsi/fcoe/fcoe.c
-@@ -145,8 +145,8 @@ static struct notifier_block fcoe_cpu_notifier = {
- 	.notifier_call = fcoe_cpu_callback,
- };
+@@ -31,6 +31,7 @@
+ #include <linux/fs.h>
+ #include <linux/sysfs.h>
+ #include <linux/ctype.h>
++#include <linux/workqueue.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsicam.h>
+ #include <scsi/scsi_transport.h>
+@@ -58,6 +59,8 @@ MODULE_PARM_DESC(ddp_min, "Minimum I/O size in bytes for "	\
  
--static struct scsi_transport_template *fcoe_transport_template;
--static struct scsi_transport_template *fcoe_vport_transport_template;
-+static struct scsi_transport_template *fcoe_nport_scsi_transport;
-+static struct scsi_transport_template *fcoe_vport_scsi_transport;
+ DEFINE_MUTEX(fcoe_config_mutex);
  
- static int fcoe_vport_destroy(struct fc_vport *);
- static int fcoe_vport_create(struct fc_vport *, bool disabled);
-@@ -163,7 +163,7 @@ static struct libfc_function_template fcoe_libfc_fcn_templ = {
- 	.lport_set_port_id = fcoe_set_port_id,
- };
++static struct workqueue_struct *fcoe_wq;
++
+ /* fcoe_percpu_clean completion.  Waiter protected by fcoe_create_mutex */
+ static DECLARE_COMPLETION(fcoe_flush_completion);
  
--struct fc_function_template fcoe_transport_function = {
-+struct fc_function_template fcoe_nport_fc_functions = {
- 	.show_host_node_name = 1,
- 	.show_host_port_name = 1,
- 	.show_host_supported_classes = 1,
-@@ -203,7 +203,7 @@ struct fc_function_template fcoe_transport_function = {
- 	.bsg_request = fc_lport_bsg_request,
- };
+@@ -1896,7 +1899,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 		list_del(&fcoe->list);
+ 		port = lport_priv(fcoe->ctlr.lp);
+ 		fcoe_interface_cleanup(fcoe);
+-		schedule_work(&port->destroy_work);
++		queue_work(fcoe_wq, &port->destroy_work);
+ 		goto out;
+ 		break;
+ 	case NETDEV_FEAT_CHANGE:
+@@ -2387,6 +2390,10 @@ static int __init fcoe_init(void)
+ 	unsigned int cpu;
+ 	int rc = 0;
  
--struct fc_function_template fcoe_vport_transport_function = {
-+struct fc_function_template fcoe_vport_fc_functions = {
- 	.show_host_node_name = 1,
- 	.show_host_port_name = 1,
- 	.show_host_supported_classes = 1,
-@@ -723,9 +723,9 @@ static int fcoe_shost_config(struct fc_lport *lport, struct device *dev)
- 	lport->host->max_cmd_len = FCOE_MAX_CMD_LEN;
- 
- 	if (lport->vport)
--		lport->host->transportt = fcoe_vport_transport_template;
-+		lport->host->transportt = fcoe_vport_scsi_transport;
- 	else
--		lport->host->transportt = fcoe_transport_template;
-+		lport->host->transportt = fcoe_nport_scsi_transport;
- 
- 	/* add the new host to the SCSI-ml */
- 	rc = scsi_add_host(lport->host, dev);
-@@ -1064,11 +1064,12 @@ out:
- static int __init fcoe_if_init(void)
- {
- 	/* attach to scsi transport */
--	fcoe_transport_template = fc_attach_transport(&fcoe_transport_function);
--	fcoe_vport_transport_template =
--		fc_attach_transport(&fcoe_vport_transport_function);
-+	fcoe_nport_scsi_transport =
-+		fc_attach_transport(&fcoe_nport_fc_functions);
-+	fcoe_vport_scsi_transport =
-+		fc_attach_transport(&fcoe_vport_fc_functions);
- 
--	if (!fcoe_transport_template) {
-+	if (!fcoe_nport_scsi_transport) {
- 		printk(KERN_ERR "fcoe: Failed to attach to the FC transport\n");
- 		return -ENODEV;
++	fcoe_wq = alloc_workqueue("fcoe", 0, 0);
++	if (!fcoe_wq)
++		return -ENOMEM;
++
+ 	/* register as a fcoe transport */
+ 	rc = fcoe_transport_attach(&fcoe_sw_transport);
+ 	if (rc) {
+@@ -2425,6 +2432,7 @@ out_free:
+ 		fcoe_percpu_thread_destroy(cpu);
  	}
-@@ -1085,10 +1086,10 @@ static int __init fcoe_if_init(void)
-  */
- int __exit fcoe_if_exit(void)
- {
--	fc_release_transport(fcoe_transport_template);
--	fc_release_transport(fcoe_vport_transport_template);
--	fcoe_transport_template = NULL;
--	fcoe_vport_transport_template = NULL;
-+	fc_release_transport(fcoe_nport_scsi_transport);
-+	fc_release_transport(fcoe_vport_scsi_transport);
-+	fcoe_nport_scsi_transport = NULL;
-+	fcoe_vport_scsi_transport = NULL;
+ 	mutex_unlock(&fcoe_config_mutex);
++	destroy_workqueue(fcoe_wq);
+ 	return rc;
+ }
+ module_init(fcoe_init);
+@@ -2450,7 +2458,7 @@ static void __exit fcoe_exit(void)
+ 		list_del(&fcoe->list);
+ 		port = lport_priv(fcoe->ctlr.lp);
+ 		fcoe_interface_cleanup(fcoe);
+-		schedule_work(&port->destroy_work);
++		queue_work(fcoe_wq, &port->destroy_work);
+ 	}
+ 	rtnl_unlock();
+ 
+@@ -2461,15 +2469,17 @@ static void __exit fcoe_exit(void)
+ 
+ 	mutex_unlock(&fcoe_config_mutex);
+ 
+-	/* flush any asyncronous interface destroys,
+-	 * this should happen after the netdev notifier is unregistered */
+-	flush_scheduled_work();
+-	/* That will flush out all the N_Ports on the hostlist, but now we
+-	 * may have NPIV VN_Ports scheduled for destruction */
+-	flush_scheduled_work();
++	/*
++	 * destroy_work's may be chained but destroy_workqueue()
++	 * can take care of them. Just kill the fcoe_wq.
++	 */
++	destroy_workqueue(fcoe_wq);
+ 
+-	/* detach from scsi transport
+-	 * must happen after all destroys are done, therefor after the flush */
++	/*
++	 * Detaching from the scsi transport must happen after all
++	 * destroys are done on the fcoe_wq. destroy_workqueue will
++	 * enusre the fcoe_wq is flushed.
++	 */
+ 	fcoe_if_exit();
+ 
+ 	/* detach from fcoe transport */
+@@ -2618,7 +2628,7 @@ static int fcoe_vport_destroy(struct fc_vport *vport)
+ 	mutex_lock(&n_port->lp_mutex);
+ 	list_del(&vn_port->list);
+ 	mutex_unlock(&n_port->lp_mutex);
+-	schedule_work(&port->destroy_work);
++	queue_work(fcoe_wq, &port->destroy_work);
  	return 0;
  }
  
