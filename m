@@ -1,16 +1,17 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 10/28] libfc: add hook for FC-4 provider registration
-Date: Fri, 28 Jan 2011 16:04:02 -0800
-Message-ID: <20110129000402.1784.43277.stgit@localhost6.localdomain6>
+Subject: [PATCH 11/28] libfc: add method for setting handler for incoming
+	exchange
+Date: Fri, 28 Jan 2011 16:04:08 -0800
+Message-ID: <20110129000408.1784.69975.stgit@localhost6.localdomain6>
 References: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:24348 "EHLO mga01.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:24267 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753287Ab1A2AEE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:04:04 -0500
+	id S1754173Ab1A2AEJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:04:09 -0500
 In-Reply-To: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,481 +20,76 @@ Cc: Joe Eykholt <jeykholt@cisco.com>
 
 From: Joe Eykholt <jeykholt@cisco.com>
 
-Allow FC-4 provider modules to hook into libfc, mostly for targets.
-This should allow any FC-4 module to handle PRLI requests and maintain
-process-association states.
+Add a method for setting handler for incoming exchange.
+For multi-sequence exchanges, this allows the target driver
+to add a response handler for handling subsequent sequences,
+and exchange manager resets.
 
-Each provider registers its ops with libfc and then will be called for
-any incoming PRLI for that FC-4 type on any instance.   The provider
-can decide whether to handle that particular instance using any method
-it likes, such as ACLs or other configuration information.
-
-A count is kept of the number of successful PRLIs from the remote port.
-Providers are called back with an implicit PRLO when the remote port
-is about to be deleted or has been reset.
-
-fc_lport_recv_req() now sends incoming FC-4 requests to FC-4 providers,
-and there is a built-in provider always registered for handling
-incoming ELS requests.
-
-The call to provider recv() routines uses rcu_read_lock()
-so that providers aren't removed during the call.  That lock is very
-cheap and shouldn't affect any performance on ELS requests.
-Providers can rely on the RCU lock to protect a session lookup as well.
+The new function is called fc_seq_set_resp().
 
 Signed-off-by: Joe Eykholt <jeykholt@cisco.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/libfc/fc_libfc.c |   60 ++++++++++++++++++
- drivers/scsi/libfc/fc_libfc.h |   11 +++
- drivers/scsi/libfc/fc_lport.c |   65 +++++++++++++++++---
- drivers/scsi/libfc/fc_rport.c |  133 +++++++++++++++++++++++++++++++++--------
- include/scsi/libfc.h          |   26 ++++++++
- 5 files changed, 259 insertions(+), 36 deletions(-)
+ drivers/scsi/libfc/fc_exch.c |   19 +++++++++++++++++++
+ include/scsi/libfc.h         |   10 ++++++++++
+ 2 files changed, 29 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
-index 6a48c28..ae3abef 100644
---- a/drivers/scsi/libfc/fc_libfc.c
-+++ b/drivers/scsi/libfc/fc_libfc.c
-@@ -35,6 +35,23 @@ unsigned int fc_debug_logging;
- module_param_named(debug_logging, fc_debug_logging, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
- 
-+DEFINE_MUTEX(fc_prov_mutex);
-+
-+/*
-+ * Providers which primarily send requests and PRLIs.
-+ */
-+struct fc4_prov *fc_active_prov[FC_FC4_PROV_SIZE] = {
-+	[0] = &fc_rport_t0_prov,
-+	[FC_TYPE_FCP] = &fc_rport_fcp_init,
-+};
-+
-+/*
-+ * Providers which receive requests.
-+ */
-+struct fc4_prov *fc_passive_prov[FC_FC4_PROV_SIZE] = {
-+	[FC_TYPE_ELS] = &fc_lport_els_prov,
-+};
-+
- /**
-  * libfc_init() - Initialize libfc.ko
-  */
-@@ -210,3 +227,46 @@ void fc_fill_reply_hdr(struct fc_frame *fp, const struct fc_frame *in_fp,
- 	fc_fill_hdr(fp, in_fp, r_ctl, FC_FCTL_RESP, 0, parm_offset);
- }
- EXPORT_SYMBOL(fc_fill_reply_hdr);
-+
-+/**
-+ * fc_fc4_register_provider() - register FC-4 upper-level provider.
-+ * @type: FC-4 type, such as FC_TYPE_FCP
-+ * @prov: structure describing provider including ops vector.
-+ *
-+ * Returns 0 on success, negative error otherwise.
-+ */
-+int fc_fc4_register_provider(enum fc_fh_type type, struct fc4_prov *prov)
-+{
-+	struct fc4_prov **prov_entry;
-+	int ret = 0;
-+
-+	if (type >= FC_FC4_PROV_SIZE)
-+		return -EINVAL;
-+	mutex_lock(&fc_prov_mutex);
-+	prov_entry = (prov->recv ? fc_passive_prov : fc_active_prov) + type;
-+	if (*prov_entry)
-+		ret = -EBUSY;
-+	else
-+		*prov_entry = prov;
-+	mutex_unlock(&fc_prov_mutex);
-+	return ret;
-+}
-+EXPORT_SYMBOL(fc_fc4_register_provider);
-+
-+/**
-+ * fc_fc4_deregister_provider() - deregister FC-4 upper-level provider.
-+ * @type: FC-4 type, such as FC_TYPE_FCP
-+ * @prov: structure describing provider including ops vector.
-+ */
-+void fc_fc4_deregister_provider(enum fc_fh_type type, struct fc4_prov *prov)
-+{
-+	BUG_ON(type >= FC_FC4_PROV_SIZE);
-+	mutex_lock(&fc_prov_mutex);
-+	if (prov->recv)
-+		rcu_assign_pointer(fc_passive_prov[type], NULL);
-+	else
-+		rcu_assign_pointer(fc_active_prov[type], NULL);
-+	mutex_unlock(&fc_prov_mutex);
-+	synchronize_rcu();
-+}
-+EXPORT_SYMBOL(fc_fc4_deregister_provider);
-diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
-index eea0c35..205de28 100644
---- a/drivers/scsi/libfc/fc_libfc.h
-+++ b/drivers/scsi/libfc/fc_libfc.h
-@@ -94,6 +94,17 @@ extern unsigned int fc_debug_logging;
- 				(lport)->host->host_no,	##args))
- 
- /*
-+ * FC-4 Providers.
-+ */
-+extern struct fc4_prov *fc_active_prov[];	/* providers without recv */
-+extern struct fc4_prov *fc_passive_prov[];	/* providers with recv */
-+extern struct mutex fc_prov_mutex;		/* lock over table changes */
-+
-+extern struct fc4_prov fc_rport_t0_prov;	/* type 0 provider */
-+extern struct fc4_prov fc_lport_els_prov;	/* ELS provider */
-+extern struct fc4_prov fc_rport_fcp_init;	/* FCP initiator provider */
-+
-+/*
-  * Set up direct-data placement for this I/O request
-  */
- void fc_fcp_ddp_setup(struct fc_fcp_pkt *fsp, u16 xid);
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index c5a10f9..e2cd087 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -849,7 +849,7 @@ out:
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index e0b5b15..1f124c0 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -558,6 +558,22 @@ static struct fc_seq *fc_seq_start_next(struct fc_seq *sp)
+ 	return sp;
  }
  
- /**
-- * fc_lport_recv_req() - The generic lport request handler
-+ * fc_lport_recv_els_req() - The generic lport ELS request handler
-  * @lport: The local port that received the request
-  * @fp:	   The request frame
-  *
-@@ -859,9 +859,9 @@ out:
-  * Locking Note: This function should not be called with the lport
-  *		 lock held becuase it will grab the lock.
-  */
--static void fc_lport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
-+static void fc_lport_recv_els_req(struct fc_lport *lport,
-+				  struct fc_frame *fp)
- {
--	struct fc_frame_header *fh = fc_frame_header_get(fp);
- 	void (*recv)(struct fc_lport *, struct fc_frame *);
- 
- 	mutex_lock(&lport->lp_mutex);
-@@ -873,8 +873,7 @@ static void fc_lport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
- 	 */
- 	if (!lport->link_up)
- 		fc_frame_free(fp);
--	else if (fh->fh_type == FC_TYPE_ELS &&
--		 fh->fh_r_ctl == FC_RCTL_ELS_REQ) {
-+	else {
- 		/*
- 		 * Check opcode.
- 		 */
-@@ -903,14 +902,62 @@ static void fc_lport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
- 		}
- 
- 		recv(lport, fp);
--	} else {
--		FC_LPORT_DBG(lport, "dropping invalid frame (eof %x)\n",
--			     fr_eof(fp));
--		fc_frame_free(fp);
- 	}
- 	mutex_unlock(&lport->lp_mutex);
- }
- 
-+static int fc_lport_els_prli(struct fc_rport_priv *rdata, u32 spp_len,
-+			     const struct fc_els_spp *spp_in,
-+			     struct fc_els_spp *spp_out)
-+{
-+	return FC_SPP_RESP_INVL;
-+}
-+
-+struct fc4_prov fc_lport_els_prov = {
-+	.prli = fc_lport_els_prli,
-+	.recv = fc_lport_recv_els_req,
-+};
-+
-+/**
-+ * fc_lport_recv_req() - The generic lport request handler
-+ * @lport: The lport that received the request
-+ * @fp: The frame the request is in
-+ *
-+ * Locking Note: This function should not be called with the lport
-+ *		 lock held becuase it may grab the lock.
-+ */
-+static void fc_lport_recv_req(struct fc_lport *lport,
-+			      struct fc_frame *fp)
-+{
-+	struct fc_frame_header *fh = fc_frame_header_get(fp);
-+	struct fc_seq *sp = fr_seq(fp);
-+	struct fc4_prov *prov;
-+
-+	/*
-+	 * Use RCU read lock and module_lock to be sure module doesn't
-+	 * deregister and get unloaded while we're calling it.
-+	 * try_module_get() is inlined and accepts a NULL parameter.
-+	 * Only ELSes and FCP target ops should come through here.
-+	 * The locking is unfortunate, and a better scheme is being sought.
-+	 */
-+
-+	rcu_read_lock();
-+	if (fh->fh_type >= FC_FC4_PROV_SIZE)
-+		goto drop;
-+	prov = rcu_dereference(fc_passive_prov[fh->fh_type]);
-+	if (!prov || !try_module_get(prov->module))
-+		goto drop;
-+	rcu_read_unlock();
-+	prov->recv(lport, fp);
-+	module_put(prov->module);
-+	return;
-+drop:
-+	rcu_read_unlock();
-+	FC_LPORT_DBG(lport, "dropping unexpected frame type %x\n", fh->fh_type);
-+	fc_frame_free(fp);
-+	lport->tt.exch_done(sp);
-+}
-+
- /**
-  * fc_lport_reset() - Reset a local port
-  * @lport: The local port which should be reset
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 309e3e7..a92954c 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -257,6 +257,8 @@ static void fc_rport_work(struct work_struct *work)
- 	struct fc_rport_operations *rport_ops;
- 	struct fc_rport_identifiers ids;
- 	struct fc_rport *rport;
-+	struct fc4_prov *prov;
-+	u8 type;
- 
- 	mutex_lock(&rdata->rp_mutex);
- 	event = rdata->event;
-@@ -306,6 +308,15 @@ static void fc_rport_work(struct work_struct *work)
- 	case RPORT_EV_FAILED:
- 	case RPORT_EV_LOGO:
- 	case RPORT_EV_STOP:
-+		if (rdata->prli_count) {
-+			mutex_lock(&fc_prov_mutex);
-+			for (type = 1; type < FC_FC4_PROV_SIZE; type++) {
-+				prov = fc_passive_prov[type];
-+				if (prov && prov->prlo)
-+					prov->prlo(rdata);
-+			}
-+			mutex_unlock(&fc_prov_mutex);
-+		}
- 		port_id = rdata->ids.port_id;
- 		mutex_unlock(&rdata->rp_mutex);
- 
-@@ -1643,9 +1654,9 @@ static void fc_rport_recv_prli_req(struct fc_rport_priv *rdata,
- 	unsigned int len;
- 	unsigned int plen;
- 	enum fc_els_spp_resp resp;
-+	enum fc_els_spp_resp passive;
- 	struct fc_seq_els_data rjt_data;
--	u32 fcp_parm;
--	u32 roles = FC_RPORT_ROLE_UNKNOWN;
-+	struct fc4_prov *prov;
- 
- 	FC_RPORT_DBG(rdata, "Received PRLI request while in state %s\n",
- 		     fc_rport_state(rdata));
-@@ -1679,46 +1690,41 @@ static void fc_rport_recv_prli_req(struct fc_rport_priv *rdata,
- 	pp->prli.prli_len = htons(len);
- 	len -= sizeof(struct fc_els_prli);
- 
--	/* reinitialize remote port roles */
--	rdata->ids.roles = FC_RPORT_ROLE_UNKNOWN;
--
- 	/*
- 	 * Go through all the service parameter pages and build
- 	 * response.  If plen indicates longer SPP than standard,
- 	 * use that.  The entire response has been pre-cleared above.
- 	 */
- 	spp = &pp->spp;
-+	mutex_lock(&fc_prov_mutex);
- 	while (len >= plen) {
- 		spp->spp_type = rspp->spp_type;
- 		spp->spp_type_ext = rspp->spp_type_ext;
--		spp->spp_flags = rspp->spp_flags & FC_SPP_EST_IMG_PAIR;
--		resp = FC_SPP_RESP_ACK;
--
--		switch (rspp->spp_type) {
--		case 0:	/* common to all FC-4 types */
--			break;
--		case FC_TYPE_FCP:
--			fcp_parm = ntohl(rspp->spp_params);
--			if (fcp_parm & FCP_SPPF_RETRY)
--				rdata->flags |= FC_RP_FLAGS_RETRY;
--			rdata->supported_classes = FC_COS_CLASS3;
--			if (fcp_parm & FCP_SPPF_INIT_FCN)
--				roles |= FC_RPORT_ROLE_FCP_INITIATOR;
--			if (fcp_parm & FCP_SPPF_TARG_FCN)
--				roles |= FC_RPORT_ROLE_FCP_TARGET;
--			rdata->ids.roles = roles;
--
--			spp->spp_params = htonl(lport->service_params);
--			break;
--		default:
--			resp = FC_SPP_RESP_INVL;
--			break;
-+		resp = 0;
-+
-+		if (rspp->spp_type < FC_FC4_PROV_SIZE) {
-+			prov = fc_active_prov[rspp->spp_type];
-+			if (prov)
-+				resp = prov->prli(rdata, plen, rspp, spp);
-+			prov = fc_passive_prov[rspp->spp_type];
-+			if (prov) {
-+				passive = prov->prli(rdata, plen, rspp, spp);
-+				if (!resp || passive == FC_SPP_RESP_ACK)
-+					resp = passive;
-+			}
-+		}
-+		if (!resp) {
-+			if (spp->spp_flags & FC_SPP_EST_IMG_PAIR)
-+				resp |= FC_SPP_RESP_CONF;
-+			else
-+				resp |= FC_SPP_RESP_INVL;
- 		}
- 		spp->spp_flags |= resp;
- 		len -= plen;
- 		rspp = (struct fc_els_spp *)((char *)rspp + plen);
- 		spp = (struct fc_els_spp *)((char *)spp + plen);
- 	}
-+	mutex_unlock(&fc_prov_mutex);
- 
- 	/*
- 	 * Send LS_ACC.	 If this fails, the originator should retry.
-@@ -1888,6 +1894,79 @@ int fc_rport_init(struct fc_lport *lport)
- EXPORT_SYMBOL(fc_rport_init);
- 
- /**
-+ * fc_rport_fcp_prli() - Handle incoming PRLI for the FCP initiator.
-+ * @rdata: remote port private
-+ * @spp_len: service parameter page length
-+ * @rspp: received service parameter page
-+ * @spp: response service parameter page
-+ *
-+ * Returns the value for the response code to be placed in spp_flags;
-+ * Returns 0 if not an initiator.
-+ */
-+static int fc_rport_fcp_prli(struct fc_rport_priv *rdata, u32 spp_len,
-+			     const struct fc_els_spp *rspp,
-+			     struct fc_els_spp *spp)
-+{
-+	struct fc_lport *lport = rdata->local_port;
-+	u32 fcp_parm;
-+
-+	fcp_parm = ntohl(rspp->spp_params);
-+	rdata->ids.roles = FC_RPORT_ROLE_UNKNOWN;
-+	if (fcp_parm & FCP_SPPF_INIT_FCN)
-+		rdata->ids.roles |= FC_RPORT_ROLE_FCP_INITIATOR;
-+	if (fcp_parm & FCP_SPPF_TARG_FCN)
-+		rdata->ids.roles |= FC_RPORT_ROLE_FCP_TARGET;
-+	if (fcp_parm & FCP_SPPF_RETRY)
-+		rdata->flags |= FC_RP_FLAGS_RETRY;
-+	rdata->supported_classes = FC_COS_CLASS3;
-+
-+	if (!(lport->service_params & FC_RPORT_ROLE_FCP_INITIATOR))
-+		return 0;
-+
-+	spp->spp_flags |= rspp->spp_flags & FC_SPP_EST_IMG_PAIR;
-+
-+	/*
-+	 * OR in our service parameters with other providers (target), if any.
-+	 */
-+	fcp_parm = ntohl(spp->spp_params);
-+	spp->spp_params = htonl(fcp_parm | lport->service_params);
-+	return FC_SPP_RESP_ACK;
-+}
-+
 +/*
-+ * FC-4 provider ops for FCP initiator.
++ * Set the response handler for the exchange associated with a sequence.
 + */
-+struct fc4_prov fc_rport_fcp_init = {
-+	.prli = fc_rport_fcp_prli,
-+};
-+
-+/**
-+ * fc_rport_t0_prli() - Handle incoming PRLI parameters for type 0
-+ * @rdata: remote port private
-+ * @spp_len: service parameter page length
-+ * @rspp: received service parameter page
-+ * @spp: response service parameter page
-+ */
-+static int fc_rport_t0_prli(struct fc_rport_priv *rdata, u32 spp_len,
-+			    const struct fc_els_spp *rspp,
-+			    struct fc_els_spp *spp)
++static void fc_seq_set_resp(struct fc_seq *sp,
++			    void (*resp)(struct fc_seq *, struct fc_frame *,
++					 void *),
++			    void *arg)
 +{
-+	if (rspp->spp_flags & FC_SPP_EST_IMG_PAIR)
-+		return FC_SPP_RESP_INVL;
-+	return FC_SPP_RESP_ACK;
++	struct fc_exch *ep = fc_seq_exch(sp);
++
++	spin_lock_bh(&ep->ex_lock);
++	ep->resp = resp;
++	ep->arg = arg;
++	spin_unlock_bh(&ep->ex_lock);
 +}
 +
-+/*
-+ * FC-4 provider ops for type 0 service parameters.
-+ *
-+ * This handles the special case of type 0 which is always successful
-+ * but doesn't do anything otherwise.
-+ */
-+struct fc4_prov fc_rport_t0_prov = {
-+	.prli = fc_rport_t0_prli,
-+};
+ /**
+  * fc_seq_exch_abort() - Abort an exchange and sequence
+  * @req_sp:	The sequence to be aborted
+@@ -2329,6 +2345,9 @@ int fc_exch_init(struct fc_lport *lport)
+ 	if (!lport->tt.seq_start_next)
+ 		lport->tt.seq_start_next = fc_seq_start_next;
+ 
++	if (!lport->tt.seq_set_resp)
++		lport->tt.seq_set_resp = fc_seq_set_resp;
 +
-+/**
-  * fc_setup_rport() - Initialize the rport_event_queue
-  */
- int fc_setup_rport(void)
+ 	if (!lport->tt.exch_seq_send)
+ 		lport->tt.exch_seq_send = fc_exch_seq_send;
+ 
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index f53c8e3..3ae2a76 100644
+index 3ae2a76..3b8f5d8 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -35,6 +35,8 @@
+@@ -555,6 +555,16 @@ struct libfc_function_template {
+ 	struct fc_seq *(*seq_start_next)(struct fc_seq *);
  
- #include <scsi/fc_frame.h>
- 
-+#define	FC_FC4_PROV_SIZE	(FC_TYPE_FCP + 1)	/* size of tables */
+ 	/*
++	 * Set a response handler for the exchange of the sequence.
++	 *
++	 * STATUS: OPTIONAL
++	 */
++	void (*seq_set_resp)(struct fc_seq *sp,
++			     void (*resp)(struct fc_seq *, struct fc_frame *,
++					  void *),
++			     void *arg);
 +
- /*
-  * libfc error codes
-  */
-@@ -179,6 +181,7 @@ struct fc_rport_libfc_priv {
-  * @rp_mutex:       The mutex that protects the remote port
-  * @retry_work:     Handle for retries
-  * @event_callback: Callback when READY, FAILED or LOGO states complete
-+ * @prli_count:     Count of open PRLI sessions in providers
-  * @rcu:	    Structure used for freeing in an RCU-safe manner
-  */
- struct fc_rport_priv {
-@@ -202,6 +205,7 @@ struct fc_rport_priv {
- 	struct list_head            peers;
- 	struct work_struct          event_work;
- 	u32			    supported_classes;
-+	u16                         prli_count;
- 	struct rcu_head		    rcu;
- };
- 
-@@ -848,6 +852,28 @@ struct fc_lport {
- 	struct delayed_work	       retry_work;
- };
- 
-+/**
-+ * struct fc4_prov - FC-4 provider registration
-+ * @prli:               Handler for incoming PRLI
-+ * @prlo:               Handler for session reset
-+ * @recv:		Handler for incoming request
-+ * @module:		Pointer to module.  May be NULL.
-+ */
-+struct fc4_prov {
-+	int (*prli)(struct fc_rport_priv *, u32 spp_len,
-+		    const struct fc_els_spp *spp_in,
-+		    struct fc_els_spp *spp_out);
-+	void (*prlo)(struct fc_rport_priv *);
-+	void (*recv)(struct fc_lport *, struct fc_frame *);
-+	struct module *module;
-+};
-+
-+/*
-+ * Register FC-4 provider with libfc.
-+ */
-+int fc_fc4_register_provider(enum fc_fh_type type, struct fc4_prov *);
-+void fc_fc4_deregister_provider(enum fc_fh_type type, struct fc4_prov *);
-+
- /*
-  * FC_LPORT HELPER FUNCTIONS
-  *****************************/
++	/*
+ 	 * Assign a sequence for an incoming request frame.
+ 	 *
+ 	 * STATUS: OPTIONAL
 
