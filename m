@@ -1,14 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 10/24] target: Release left-over demo-mode NodeACLs w/ tfo->tpg_check_demo_mode_cache()=1
-Date: Sat, 29 Jan 2011 10:36:10 -0800
-Message-ID: <1296326184-16664-11-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 11/24] target: tcm_mod_builder.py generated Makefile cleanups
+Date: Sat, 29 Jan 2011 10:36:11 -0800
+Message-ID: <1296326184-16664-12-git-send-email-nab@linux-iscsi.org>
 References: <1296326184-16664-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm10.bullet.mail.ac4.yahoo.com ([98.139.52.207]:43963 "HELO
-	nm10.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754736Ab1A2Sgg (ORCPT
+Received: from nm8.bullet.mail.ac4.yahoo.com ([98.139.52.205]:34372 "HELO
+	nm8.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754736Ab1A2Sgj (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jan 2011 13:36:36 -0500
+	Sat, 29 Jan 2011 13:36:39 -0500
 In-Reply-To: <1296326184-16664-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,62 +17,83 @@ Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds the missing struct se_portal_groups->acl_node_list walk & release
-following target_core_transport.c:transport_deregister_session() logic with
-tfo->tpg_check_demo_mode_cache()=1 mode for left-over demo-mode struct se_node_acl
-dynamic allocations during the final core_tpg_deregister() shutdown sequence.
+This patch converts the tcm_mod_builder.py generation script to
+create a new drivers/target/$TCM_FABRIC_MOD/Makefile and update
+drivers/target/Makefile, instead of creating+updating a 'Kbuild'
+filename.
 
-As with transport_deregister_session() w/ tfo->tpg_check_demo_mode_cache()=0, it
-waits for any outstanding PR and MIBs references to be relinquished, and calls
-core_free_device_list_for_node() to release individual demo-mode MappedLUNs from
-struct se_node_acl->device_list[] via core_update_device_list_for_node().
+It also removes the remaining EXTRA_CFLAGS includes from
+tcm_mod_build_kbuild(), and converts fabric module generated .c
+code to us ""-style includes for $FABRIC_MOD_[base,fabric].h
 
+Reported-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-(cherry picked from commit 135c3f59ed66eb1a54dbbf9eca5eeade272b5259)
 ---
- drivers/target/target_core_tpg.c |   22 ++++++++++++++++++++++
- 1 files changed, 22 insertions(+), 0 deletions(-)
+ Documentation/target/tcm_mod_builder.py |   17 ++++++++---------
+ 1 files changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
-index abfa81a..d15deaf 100644
---- a/drivers/target/target_core_tpg.c
-+++ b/drivers/target/target_core_tpg.c
-@@ -701,6 +701,8 @@ EXPORT_SYMBOL(core_tpg_register);
+diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
+index dbeb8a0..89af6c7 100755
+--- a/Documentation/target/tcm_mod_builder.py
++++ b/Documentation/target/tcm_mod_builder.py
+@@ -239,8 +239,8 @@ def tcm_mod_build_configfs(proto_ident, fabric_mod_dir_var, fabric_mod_name):
+ 	buf += "#include <target/target_core_configfs.h>\n"
+ 	buf += "#include <target/target_core_base.h>\n"
+ 	buf += "#include <target/configfs_macros.h>\n\n"
+-	buf += "#include <" + fabric_mod_name + "_base.h>\n"
+-	buf += "#include <" + fabric_mod_name + "_fabric.h>\n\n"
++	buf += "#include \"" + fabric_mod_name + "_base.h\"\n"
++	buf += "#include \"" + fabric_mod_name + "_fabric.h\"\n\n"
  
- int core_tpg_deregister(struct se_portal_group *se_tpg)
- {
-+	struct se_node_acl *nacl, *nacl_tmp;
-+
- 	printk(KERN_INFO "TARGET_CORE[%s]: Deallocating %s struct se_portal_group"
- 		" for endpoint: %s Portal Tag %u\n",
- 		(se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL) ?
-@@ -714,6 +716,26 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
+ 	buf += "/* Local pointer to allocated TCM configfs fabric module */\n"
+ 	buf += "struct target_fabric_configfs *" + fabric_mod_name + "_fabric_configfs;\n\n"
+@@ -583,9 +583,9 @@ def tcm_mod_dump_fabric_ops(proto_ident, fabric_mod_dir_var, fabric_mod_name):
+ 	buf += "#include <target/target_core_fabric_lib.h>\n"
+ 	buf += "#include <target/target_core_device.h>\n"
+ 	buf += "#include <target/target_core_tpg.h>\n"
+-	buf += "#include <target/target_core_configfs.h>\n"
+-	buf += "#include <" + fabric_mod_name + "_base.h>\n"
+-	buf += "#include <" + fabric_mod_name + "_fabric.h>\n\n"
++	buf += "#include <target/target_core_configfs.h>\n\n"
++	buf += "#include \"" + fabric_mod_name + "_base.h\"\n"
++	buf += "#include \"" + fabric_mod_name + "_fabric.h\"\n\n"
  
- 	while (atomic_read(&se_tpg->tpg_pr_ref_count) != 0)
- 		cpu_relax();
-+	/*
-+	 * Release any remaining demo-mode generated se_node_acl that have
-+	 * not been released because of TFO->tpg_check_demo_mode_cache() == 1
-+	 * in transport_deregister_session().
-+	 */
-+	spin_lock_bh(&se_tpg->acl_node_lock);
-+	list_for_each_entry_safe(nacl, nacl_tmp, &se_tpg->acl_node_list,
-+			acl_list) {
-+		list_del(&nacl->acl_list);
-+		se_tpg->num_node_acls--;
-+		spin_unlock_bh(&se_tpg->acl_node_lock);
-+
-+		core_tpg_wait_for_nacl_pr_ref(nacl);
-+		core_tpg_wait_for_mib_ref(nacl);
-+		core_free_device_list_for_node(nacl, se_tpg);
-+		TPG_TFO(se_tpg)->tpg_release_fabric_acl(se_tpg, nacl);
-+
-+		spin_lock_bh(&se_tpg->acl_node_lock);
-+	}
-+	spin_unlock_bh(&se_tpg->acl_node_lock);
+ 	buf += "int " + fabric_mod_name + "_check_true(struct se_portal_group *se_tpg)\n"
+ 	buf += "{\n"
+@@ -973,14 +973,13 @@ def tcm_mod_dump_fabric_ops(proto_ident, fabric_mod_dir_var, fabric_mod_name):
+ def tcm_mod_build_kbuild(fabric_mod_dir_var, fabric_mod_name):
  
- 	if (se_tpg->se_tpg_type == TRANSPORT_TPG_TYPE_NORMAL)
- 		core_tpg_release_virtual_lun0(se_tpg);
+ 	buf = ""
+-	f = fabric_mod_dir_var + "/Kbuild"
++	f = fabric_mod_dir_var + "/Makefile"
+ 	print "Writing file: " + f
+ 
+ 	p = open(f, 'w')
+ 	if not p:
+ 		tcm_mod_err("Unable to open file: " + f)
+ 
+-	buf = "EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/include/ -I$(srctree)/drivers/scsi/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/" + fabric_mod_name + "\n\n"
+ 	buf += fabric_mod_name + "-objs			:= " + fabric_mod_name + "_fabric.o \\\n"
+ 	buf += "					   " + fabric_mod_name + "_configfs.o\n"
+ 	buf += "obj-$(CONFIG_" + fabric_mod_name.upper() + ")		+= " + fabric_mod_name + ".o\n"
+@@ -1018,7 +1017,7 @@ def tcm_mod_build_kconfig(fabric_mod_dir_var, fabric_mod_name):
+ 
+ def tcm_mod_add_kbuild(tcm_dir, fabric_mod_name):
+ 	buf = "obj-$(CONFIG_" + fabric_mod_name.upper() + ")	+= " + fabric_mod_name.lower() + "/\n"
+-	kbuild = tcm_dir + "/drivers/target/Kbuild"
++	kbuild = tcm_dir + "/drivers/target/Makefile"
+ 
+ 	f = open(kbuild, 'a')
+ 	f.write(buf)
+@@ -1064,7 +1063,7 @@ def main(modname, proto_ident):
+ 	tcm_mod_build_kbuild(fabric_mod_dir, fabric_mod_name)
+ 	tcm_mod_build_kconfig(fabric_mod_dir, fabric_mod_name)
+ 
+-	input = raw_input("Would you like to add " + fabric_mod_name + "to drivers/target/Kbuild..? [yes,no]: ")
++	input = raw_input("Would you like to add " + fabric_mod_name + "to drivers/target/Makefile..? [yes,no]: ")
+ 	if input == "yes" or input == "y":
+ 		tcm_mod_add_kbuild(tcm_dir, fabric_mod_name)
+ 
 -- 
 1.7.3.5
 
