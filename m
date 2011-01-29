@@ -1,17 +1,16 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 19/28] libfcoe: add fcoe_transport structure defines to
-	include/scsi/libfcoe.h
-Date: Fri, 28 Jan 2011 16:04:50 -0800
-Message-ID: <20110129000450.1784.73372.stgit@localhost6.localdomain6>
+Subject: [PATCH 20/28] libfcoe: add implementation to support fcoe transport
+Date: Fri, 28 Jan 2011 16:04:55 -0800
+Message-ID: <20110129000455.1784.95503.stgit@localhost6.localdomain6>
 References: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:10889 "EHLO mga11.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:56624 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754423Ab1A2AEu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:04:50 -0500
+	id S1754423Ab1A2AE4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:04:56 -0500
 In-Reply-To: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,73 +19,574 @@ Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>, Yi Zou <yi.zou@intel.com>
 
 From: Yi Zou <yi.zou@intel.com>
 
-add the fcoe_transport struct to the common libfcoe.h header so all fcoe
-transport provides can use it to attach itself as an fcoe transport. This
-is the header part, and the next patch will be the transport code itself.
+Add the new fcoe_transport.c file that implements basic fcoe transport
+interface. Eventually, the sysfs entries to create/destroy/enable/disable
+an FCoE instance will be coming to the fcoe transport layer, who does a
+look-up to find the corresponding transport provide and pass the corresponding
+action over to the identified provider.
+
+The fcoe.ko will become the default fcoe transport provider that can support
+FCoE on any given netdev interfaces, as the Open-FCoE.org's default software
+FCoE HBA solution. Any vendor specific FCoE HBA driver that is built on top
+of Open-FCoE's kernel stack of libfc & libfcoe as well as the user land tool
+of fcoe-utils can easily plug-in and start running FCoE on their network
+interfaces. The fcoe.ko will be converted to act as the default provider if
+no vendor specific transport provider is found, as it is always added to the
+very end of the list of attached transports.
 
 Signed-off-by: Yi Zou <yi.zou@intel.com>
 Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- include/scsi/libfcoe.h |   48 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 48 insertions(+), 0 deletions(-)
+ drivers/scsi/fcoe/fcoe_transport.c |  518 ++++++++++++++++++++++++++++++++++++
+ drivers/scsi/fcoe/libfcoe.h        |    6 
+ 2 files changed, 524 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/fcoe/fcoe_transport.c
 
-diff --git a/include/scsi/libfcoe.h b/include/scsi/libfcoe.h
-index feb6a94..efb6ae5 100644
---- a/include/scsi/libfcoe.h
-+++ b/include/scsi/libfcoe.h
-@@ -231,5 +231,53 @@ static inline bool is_fip_mode(struct fcoe_ctlr *fip)
- 	return fip->state == FIP_ST_ENABLED;
- }
- 
-+/* helper for FCoE SW HBA drivers, can include subven and subdev if needed. The
-+ * modpost would use pci_device_id table to auto-generate formatted module alias
-+ * into the corresponding .mod.c file, but there may or may not be a pci device
-+ * id table for FCoE drivers so we use the following helper for build the fcoe
-+ * driver module alias.
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+new file mode 100644
+index 0000000..41d69be
+--- /dev/null
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -0,0 +1,518 @@
++/*
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ * You should have received a copy of the GNU General Public License along with
++ * this program; if not, write to the Free Software Foundation, Inc.,
++ * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ *
++ * Maintained at www.Open-FCoE.org
 + */
-+#define MODULE_ALIAS_FCOE_PCI(ven, dev) \
-+	MODULE_ALIAS("fcoe-pci:"	\
-+		"v" __stringify(ven)	\
-+		"d" __stringify(dev) "sv*sd*bc*sc*i*")
 +
-+/* the name of the default FCoE transport driver fcoe.ko */
-+#define FCOE_TRANSPORT_DEFAULT	"fcoe"
++#include <linux/types.h>
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <linux/list.h>
++#include <linux/netdevice.h>
++#include <linux/errno.h>
++#include <scsi/libfcoe.h>
 +
-+/* struct fcoe_transport - The FCoE transport interface
-+ * @name:	a vendor specific name for their FCoE transport driver
-+ * @attached:	whether this transport is already attached
-+ * @list:	list linkage to all attached transports
-+ * @match:	handler to allow the transport driver to match up a given netdev
-+ * @create:	handler to sysfs entry of create for FCoE instances
-+ * @destroy:	handler to sysfs entry of destroy for FCoE instances
-+ * @enable:	handler to sysfs entry of enable for FCoE instances
-+ * @disable:	handler to sysfs entry of disable for FCoE instances
-+ */
-+struct fcoe_transport {
-+	char name[IFNAMSIZ];
-+	bool attached;
-+	struct list_head list;
-+	bool (*match) (struct net_device *device);
-+	int (*create) (struct net_device *device, enum fip_state fip_mode);
-+	int (*destroy) (struct net_device *device);
-+	int (*enable) (struct net_device *device);
-+	int (*disable) (struct net_device *device);
-+};
++#include "libfcoe.h"
++
++static int fcoe_transport_create(const char *, struct kernel_param *);
++static int fcoe_transport_destroy(const char *, struct kernel_param *);
++static int fcoe_transport_show(char *buffer, const struct kernel_param *kp);
++static struct fcoe_transport *fcoe_transport_lookup(struct net_device *device);
++static struct fcoe_transport *fcoe_netdev_map_lookup(struct net_device *device);
++static int fcoe_transport_enable(const char *, struct kernel_param *);
++static int fcoe_transport_disable(const char *, struct kernel_param *);
++
++static LIST_HEAD(fcoe_transports);
++static LIST_HEAD(fcoe_netdevs);
++static DEFINE_MUTEX(ft_mutex);
++
++module_param_call(show, NULL, fcoe_transport_show, NULL, S_IRUSR);
++__MODULE_PARM_TYPE(show, "string");
++MODULE_PARM_DESC(show, " Show attached FCoE transports");
++
++module_param_call(create, fcoe_transport_create, NULL,
++		  (void *)FIP_MODE_FABRIC, S_IWUSR);
++__MODULE_PARM_TYPE(create, "string");
++MODULE_PARM_DESC(create, " Creates fcoe instance on a ethernet interface");
++
++module_param_call(create_vn2vn, fcoe_transport_create, NULL,
++		  (void *)FIP_MODE_VN2VN, S_IWUSR);
++__MODULE_PARM_TYPE(create_vn2vn, "string");
++MODULE_PARM_DESC(create_vn2vn, " Creates a VN_node to VN_node FCoE instance "
++		 "on an Ethernet interface");
++
++module_param_call(destroy, fcoe_transport_destroy, NULL, NULL, S_IWUSR);
++__MODULE_PARM_TYPE(destroy, "string");
++MODULE_PARM_DESC(destroy, " Destroys fcoe instance on a ethernet interface");
++
++module_param_call(enable, fcoe_transport_enable, NULL, NULL, S_IWUSR);
++__MODULE_PARM_TYPE(enable, "string");
++MODULE_PARM_DESC(enable, " Enables fcoe on a ethernet interface.");
++
++module_param_call(disable, fcoe_transport_disable, NULL, NULL, S_IWUSR);
++__MODULE_PARM_TYPE(disable, "string");
++MODULE_PARM_DESC(disable, " Disables fcoe on a ethernet interface.");
 +
 +/**
-+ * struct netdev_list
-+ * A mapping from netdevice to fcoe_transport
++ * fcoe_transport_lookup - find an fcoe transport that matches a netdev
++ * @netdev: The netdev to look for from all attached transports
++ *
++ * Returns : ptr to the fcoe transport that supports this netdev or NULL
++ * if not found.
++ *
++ * The ft_mutex should be held when this is called
 + */
-+struct fcoe_netdev_mapping {
-+	struct list_head list;
-+	struct net_device *netdev;
-+	struct fcoe_transport *ft;
-+};
++static struct fcoe_transport *fcoe_transport_lookup(struct net_device *netdev)
++{
++	struct fcoe_transport *ft = NULL;
 +
-+/* fcoe transports registration and deregistration */
-+int fcoe_transport_attach(struct fcoe_transport *ft);
-+int fcoe_transport_detach(struct fcoe_transport *ft);
++	list_for_each_entry(ft, &fcoe_transports, list)
++		if (ft->match && ft->match(netdev))
++			return ft;
++	return NULL;
++}
++
++/**
++ * fcoe_transport_attach - Attaches an FCoE transport
++ * @ft: The fcoe transport to be attached
++ *
++ * Returns : 0 for success
++ */
++int fcoe_transport_attach(struct fcoe_transport *ft)
++{
++	int rc = 0;
++
++	mutex_lock(&ft_mutex);
++	if (ft->attached) {
++		LIBFCOE_TRANSPORT_DBG("transport %s already attached\n",
++				       ft->name);
++		rc = -EEXIST;
++		goto out_attach;
++	}
++
++	/* Add default transport to the tail */
++	if (strcmp(ft->name, FCOE_TRANSPORT_DEFAULT))
++		list_add(&ft->list, &fcoe_transports);
++	else
++		list_add_tail(&ft->list, &fcoe_transports);
++
++	ft->attached = true;
++	LIBFCOE_TRANSPORT_DBG("attaching transport %s\n", ft->name);
++
++out_attach:
++	mutex_unlock(&ft_mutex);
++	return rc;
++}
++EXPORT_SYMBOL(fcoe_transport_attach);
++
++/**
++ * fcoe_transport_attach - Detaches an FCoE transport
++ * @ft: The fcoe transport to be attached
++ *
++ * Returns : 0 for success
++ */
++int fcoe_transport_detach(struct fcoe_transport *ft)
++{
++	int rc = 0;
++
++	mutex_lock(&ft_mutex);
++	if (!ft->attached) {
++		LIBFCOE_TRANSPORT_DBG("transport %s already detached\n",
++			ft->name);
++		rc = -ENODEV;
++		goto out_attach;
++	}
++
++	list_del(&ft->list);
++	ft->attached = false;
++	LIBFCOE_TRANSPORT_DBG("detaching transport %s\n", ft->name);
++
++out_attach:
++	mutex_unlock(&ft_mutex);
++	return rc;
++
++}
++EXPORT_SYMBOL(fcoe_transport_detach);
++
++static int fcoe_transport_show(char *buffer, const struct kernel_param *kp)
++{
++	int i, j;
++	struct fcoe_transport *ft = NULL;
++
++	i = j = sprintf(buffer, "Attached FCoE transports:");
++	mutex_lock(&ft_mutex);
++	list_for_each_entry(ft, &fcoe_transports, list) {
++		i += snprintf(&buffer[i], IFNAMSIZ, "%s ", ft->name);
++		if (i >= PAGE_SIZE)
++			break;
++	}
++	mutex_unlock(&ft_mutex);
++	if (i == j)
++		i += snprintf(&buffer[i], IFNAMSIZ, "none");
++	return i;
++}
++
++static int __init fcoe_transport_init(void)
++{
++	return 0;
++}
++
++static int __exit fcoe_transport_exit(void)
++{
++	struct fcoe_transport *ft;
++
++	mutex_lock(&ft_mutex);
++	list_for_each_entry(ft, &fcoe_transports, list)
++		printk(KERN_ERR "FCoE transport %s is still attached!\n",
++		      ft->name);
++	mutex_unlock(&ft_mutex);
++	return 0;
++}
++
++
++static int fcoe_add_netdev_mapping(struct net_device *netdev,
++					struct fcoe_transport *ft)
++{
++	struct fcoe_netdev_mapping *nm;
++
++	nm = kmalloc(sizeof(*nm), GFP_KERNEL);
++	if (!nm) {
++		printk(KERN_ERR "Unable to allocate netdev_mapping");
++		return -ENOMEM;
++	}
++
++	nm->netdev = netdev;
++	nm->ft = ft;
++
++	list_add(&nm->list, &fcoe_netdevs);
++	return 0;
++}
++
++
++static void fcoe_del_netdev_mapping(struct net_device *netdev)
++{
++	struct fcoe_netdev_mapping *nm = NULL, *tmp;
++
++	list_for_each_entry_safe(nm, tmp, &fcoe_netdevs, list) {
++		if (nm->netdev == netdev) {
++			list_del(&nm->list);
++			kfree(nm);
++			return;
++		}
++	}
++}
++
++
++/**
++ * fcoe_netdev_map_lookup - find the fcoe transport that matches the netdev on which
++ * it was created
++ *
++ * Returns : ptr to the fcoe transport that supports this netdev or NULL
++ * if not found.
++ *
++ * The ft_mutex should be held when this is called
++ */
++static struct fcoe_transport *fcoe_netdev_map_lookup(struct net_device *netdev)
++{
++	struct fcoe_transport *ft = NULL;
++	struct fcoe_netdev_mapping *nm;
++
++	list_for_each_entry(nm, &fcoe_netdevs, list) {
++		if (netdev == nm->netdev) {
++			ft = nm->ft;
++			return ft;
++		}
++	}
++
++	return NULL;
++}
++
++/**
++ * fcoe_if_to_netdev() - Parse a name buffer to get a net device
++ * @buffer: The name of the net device
++ *
++ * Returns: NULL or a ptr to net_device
++ */
++static struct net_device *fcoe_if_to_netdev(const char *buffer)
++{
++	char *cp;
++	char ifname[IFNAMSIZ + 2];
++
++	if (buffer) {
++		strlcpy(ifname, buffer, IFNAMSIZ);
++		cp = ifname + strlen(ifname);
++		while (--cp >= ifname && *cp == '\n')
++			*cp = '\0';
++		return dev_get_by_name(&init_net, ifname);
++	}
++	return NULL;
++}
++
++/**
++ * fcoe_transport_create() - Create a fcoe interface
++ * @buffer: The name of the Ethernet interface to create on
++ * @kp:	    The associated kernel param
++ *
++ * Called from sysfs. This holds the ft_mutex while calling the
++ * registered fcoe transport's create function.
++ *
++ * Returns: 0 for success
++ */
++static int fcoe_transport_create(const char *buffer, struct kernel_param *kp)
++{
++	int rc = -ENODEV;
++	struct net_device *netdev = NULL;
++	struct fcoe_transport *ft = NULL;
++	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
++
++	if (!mutex_trylock(&ft_mutex))
++		return restart_syscall();
++
++#ifdef CONFIG_LIBFCOE_MODULE
++	/*
++	 * Make sure the module has been initialized, and is not about to be
++	 * removed.  Module parameter sysfs files are writable before the
++	 * module_init function is called and after module_exit.
++	 */
++	if (THIS_MODULE->state != MODULE_STATE_LIVE)
++		goto out_nodev;
++#endif
++
++	netdev = fcoe_if_to_netdev(buffer);
++	if (!netdev) {
++		LIBFCOE_TRANSPORT_DBG("Invalid device %s.\n", buffer);
++		goto out_nodev;
++	}
++
++	ft = fcoe_netdev_map_lookup(netdev);
++	if (ft) {
++		LIBFCOE_TRANSPORT_DBG("transport %s already has existing "
++				      "FCoE instance on %s.\n",
++				      ft->name, netdev->name);
++		rc = -EEXIST;
++		goto out_putdev;
++	}
++
++	ft = fcoe_transport_lookup(netdev);
++	if (!ft) {
++		LIBFCOE_TRANSPORT_DBG("no FCoE transport found for %s.\n",
++				      netdev->name);
++		goto out_putdev;
++	}
++
++	rc = fcoe_add_netdev_mapping(netdev, ft);
++	if (rc) {
++		LIBFCOE_TRANSPORT_DBG("failed to add new netdev mapping "
++				      "for FCoE transport %s for %s.\n",
++				      ft->name, netdev->name);
++		goto out_putdev;
++	}
++
++	/* pass to transport create */
++	rc = ft->create ? ft->create(netdev, fip_mode) : -ENODEV;
++	if (rc)
++		fcoe_del_netdev_mapping(netdev);
++
++	LIBFCOE_TRANSPORT_DBG("transport %s %s to create fcoe on %s.\n",
++			      ft->name, (rc) ? "failed" : "succeeded",
++			      netdev->name);
++
++out_putdev:
++	dev_put(netdev);
++out_nodev:
++	mutex_unlock(&ft_mutex);
++	if (rc == -ERESTARTSYS)
++		return restart_syscall();
++	else
++		return rc;
++}
++
++/**
++ * fcoe_transport_destroy() - Destroy a FCoE interface
++ * @buffer: The name of the Ethernet interface to be destroyed
++ * @kp:	    The associated kernel parameter
++ *
++ * Called from sysfs. This holds the ft_mutex while calling the
++ * registered fcoe transport's destroy function.
++ *
++ * Returns: 0 for success
++ */
++static int fcoe_transport_destroy(const char *buffer, struct kernel_param *kp)
++{
++	int rc = -ENODEV;
++	struct net_device *netdev = NULL;
++	struct fcoe_transport *ft = NULL;
++
++	if (!mutex_trylock(&ft_mutex))
++		return restart_syscall();
++
++#ifdef CONFIG_LIBFCOE_MODULE
++	/*
++	 * Make sure the module has been initialized, and is not about to be
++	 * removed.  Module parameter sysfs files are writable before the
++	 * module_init function is called and after module_exit.
++	 */
++	if (THIS_MODULE->state != MODULE_STATE_LIVE)
++		goto out_nodev;
++#endif
++
++	netdev = fcoe_if_to_netdev(buffer);
++	if (!netdev) {
++		LIBFCOE_TRANSPORT_DBG("invalid device %s.\n", buffer);
++		goto out_nodev;
++	}
++
++	ft = fcoe_netdev_map_lookup(netdev);
++	if (!ft) {
++		LIBFCOE_TRANSPORT_DBG("no FCoE transport found for %s.\n",
++				      netdev->name);
++		goto out_putdev;
++	}
++
++	/* pass to transport destroy */
++	rc = ft->destroy ? ft->destroy(netdev) : -ENODEV;
++	fcoe_del_netdev_mapping(netdev);
++	LIBFCOE_TRANSPORT_DBG("transport %s %s to destroy fcoe on %s.\n",
++			      ft->name, (rc) ? "failed" : "succeeded",
++			      netdev->name);
++
++out_putdev:
++	dev_put(netdev);
++out_nodev:
++	mutex_unlock(&ft_mutex);
++
++	if (rc == -ERESTARTSYS)
++		return restart_syscall();
++	else
++		return rc;
++}
++
++/**
++ * fcoe_transport_disable() - Disables a FCoE interface
++ * @buffer: The name of the Ethernet interface to be disabled
++ * @kp:	    The associated kernel parameter
++ *
++ * Called from sysfs.
++ *
++ * Returns: 0 for success
++ */
++static int fcoe_transport_disable(const char *buffer, struct kernel_param *kp)
++{
++	int rc = -ENODEV;
++	struct net_device *netdev = NULL;
++	struct fcoe_transport *ft = NULL;
++
++	if (!mutex_trylock(&ft_mutex))
++		return restart_syscall();
++
++#ifdef CONFIG_LIBFCOE_MODULE
++	/*
++	 * Make sure the module has been initialized, and is not about to be
++	 * removed.  Module parameter sysfs files are writable before the
++	 * module_init function is called and after module_exit.
++	 */
++	if (THIS_MODULE->state != MODULE_STATE_LIVE)
++		goto out_nodev;
++#endif
++
++	netdev = fcoe_if_to_netdev(buffer);
++	if (!netdev)
++		goto out_nodev;
++
++	ft = fcoe_netdev_map_lookup(netdev);
++	if (!ft)
++		goto out_putdev;
++
++	rc = ft->disable ? ft->disable(netdev) : -ENODEV;
++
++out_putdev:
++	dev_put(netdev);
++out_nodev:
++	mutex_unlock(&ft_mutex);
++
++	if (rc == -ERESTARTSYS)
++		return restart_syscall();
++	else
++		return rc;
++}
++
++/**
++ * fcoe_transport_enable() - Enables a FCoE interface
++ * @buffer: The name of the Ethernet interface to be enabled
++ * @kp:     The associated kernel parameter
++ *
++ * Called from sysfs.
++ *
++ * Returns: 0 for success
++ */
++static int fcoe_transport_enable(const char *buffer, struct kernel_param *kp)
++{
++	int rc = -ENODEV;
++	struct net_device *netdev = NULL;
++	struct fcoe_transport *ft = NULL;
++
++	if (!mutex_trylock(&ft_mutex))
++		return restart_syscall();
++
++#ifdef CONFIG_LIBFCOE_MODULE
++	/*
++	 * Make sure the module has been initialized, and is not about to be
++	 * removed.  Module parameter sysfs files are writable before the
++	 * module_init function is called and after module_exit.
++	 */
++	if (THIS_MODULE->state != MODULE_STATE_LIVE)
++		goto out_nodev;
++#endif
++
++	netdev = fcoe_if_to_netdev(buffer);
++	if (!netdev)
++		goto out_nodev;
++
++	ft = fcoe_netdev_map_lookup(netdev);
++	if (!ft)
++		goto out_putdev;
++
++	rc = ft->enable ? ft->enable(netdev) : -ENODEV;
++
++out_putdev:
++	dev_put(netdev);
++out_nodev:
++	mutex_unlock(&ft_mutex);
++	if (rc == -ERESTARTSYS)
++		return restart_syscall();
++	else
++		return rc;
++}
++
++/**
++ * libfcoe_init() - Initialization routine for libfcoe.ko
++ */
++static int __init libfcoe_init(void)
++{
++	fcoe_transport_init();
++
++	return 0;
++}
++module_init(libfcoe_init);
++
++/**
++ * libfcoe_exit() - Tear down libfcoe.ko
++ */
++static void __exit libfcoe_exit(void)
++{
++	fcoe_transport_exit();
++}
++module_exit(libfcoe_exit);
+diff --git a/drivers/scsi/fcoe/libfcoe.h b/drivers/scsi/fcoe/libfcoe.h
+index c3fe316..6af5fc3 100644
+--- a/drivers/scsi/fcoe/libfcoe.h
++++ b/drivers/scsi/fcoe/libfcoe.h
+@@ -4,6 +4,7 @@
+ extern unsigned int libfcoe_debug_logging;
+ #define LIBFCOE_LOGGING	    0x01 /* General logging, not categorized */
+ #define LIBFCOE_FIP_LOGGING 0x02 /* FIP logging */
++#define LIBFCOE_TRANSPORT_LOGGING	0x04 /* FCoE transport logging */
  
- #endif /* _LIBFCOE_H */
+ #define LIBFCOE_CHECK_LOGGING(LEVEL, CMD)		\
+ do {							\
+@@ -22,4 +23,9 @@ do {							\
+ 			      printk(KERN_INFO "host%d: fip: " fmt,	\
+ 				     (fip)->lp->host->host_no, ##args);)
+ 
++#define LIBFCOE_TRANSPORT_DBG(fmt, args...)				\
++	LIBFCOE_CHECK_LOGGING(LIBFCOE_TRANSPORT_LOGGING,		\
++			      printk(KERN_INFO "%s: " fmt,		\
++				     __func__, ##args);)
++
+ #endif /* _FCOE_LIBFCOE_H_ */
 
