@@ -1,41 +1,47 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 13/24] target: remove EXTRA_CFLAGS
-Date: Sat, 29 Jan 2011 10:36:13 -0800
-Message-ID: <1296326184-16664-14-git-send-email-nab@linux-iscsi.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 14/24] target: Call proc_mkdir + remove_proc_entry with
+ NULL parameter
+Date: Sat, 29 Jan 2011 12:18:20 -0800
+Message-ID: <1296332300.3020.42.camel@mulgrave.site>
 References: <1296326184-16664-1-git-send-email-nab@linux-iscsi.org>
+	 <1296326184-16664-15-git-send-email-nab@linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm24-vm0.bullet.mail.ac4.yahoo.com ([98.139.53.222]:40730 "HELO
-	nm24-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754858Ab1A2Smf (ORCPT
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59585 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754183Ab1A2USZ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Jan 2011 13:42:35 -0500
-In-Reply-To: <1296326184-16664-1-git-send-email-nab@linux-iscsi.org>
+	Sat, 29 Jan 2011 15:18:25 -0500
+In-Reply-To: <1296326184-16664-15-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Christoph Hellwig <hch@lst.de>
+On Sat, 2011-01-29 at 10:36 -0800, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch makes proc_mkdir() and remove_proc_entry() use a NULL
+> parameter to fix the following sparse warning:
+> 
+> CHECK   drivers/target/target_core_configfs.c
+> drivers/target/target_core_configfs.c:3131:54: warning: Using plain integer as NULL pointer
+> drivers/target/target_core_configfs.c:3145:50: warning: Using plain integer as NULL pointer
+> drivers/target/target_core_configfs.c:3212:42: warning: Using plain integer as NULL pointer
+> 
+> Reported-by: Fubo Chen <fubo.chen@gmail.com>
+> Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> (cherry picked from commit d83fca37fa4a6c2bcb2806800f221528a76fc080)
 
-Add the current directory is superflous in general, and no includes in
-drivers/scsi are needed either.
+Firstly, don't use git-cherry-pick -x ... it adds spurious information
+like this that I have to edit out manually.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-(cherry picked from commit c524edaf2c19a5c1caa06a3cba97cdb043eb165c)
----
- drivers/target/Makefile |    1 -
- 1 files changed, 0 insertions(+), 1 deletions(-)
+Secondly, if, as you said, you're transitioning to debugfs based
+interfaces, don't do this, just strip the /proc based interface from
+mainline.
 
-diff --git a/drivers/target/Makefile b/drivers/target/Makefile
-index 5cfd708..ab3b40f 100644
---- a/drivers/target/Makefile
-+++ b/drivers/target/Makefile
-@@ -1,4 +1,3 @@
--EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/
- 
- target_core_mod-y		:= target_core_configfs.o \
- 				   target_core_device.o \
--- 
-1.7.3.5
+James
+
 
