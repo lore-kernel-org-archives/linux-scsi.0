@@ -1,99 +1,94 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 22/28] libfcoe: include fcoe_transport.c into kernel libfcoe
-	module
-Date: Fri, 28 Jan 2011 16:05:06 -0800
-Message-ID: <20110129000506.1784.74029.stgit@localhost6.localdomain6>
+Subject: [PATCH 25/28] libfc: Extending lport's roles for target if there is a
+	registered target.
+Date: Fri, 28 Jan 2011 16:05:22 -0800
+Message-ID: <20110129000522.1784.63132.stgit@localhost6.localdomain6>
 References: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:16671 "EHLO mga09.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:35993 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754481Ab1A2AFH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:05:07 -0500
+	id S1753947Ab1A2AFW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:05:22 -0500
 In-Reply-To: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Bhanu Prakash Gollapudi <bprakash@broadcom.com>, Yi Zou <yi.zou@intel.com>
+Cc: Kiran Patil <kiran.patil@intel.com>
 
-From: Yi Zou <yi.zou@intel.com>
+From: Kiran Patil <kiran.patil@intel.com>
 
-Now we can include the fcoe_transport.c to the build of the kernel libfcoe
-module. Move the module information to fcoe_transport, and it will have
-all the module parameters later for the create/destroy/enable/disable of an
-FCoE instance.
+Reason: From initaitor machine, when queried role of target (other end of connection),
+        it is "initiator", hence SCSI-ml doesn't send any LUN Inquiry commands.
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+Fix:    If there is a registered target for FC_TYPE_FCP, extend lport's params (capability)
+        to be target as well, By default lport params are INITIATOR only. Having this fix,
+        caused initiator to send SCSI LUN inquiry command to target.
+
+Technical Details: N/A
+
+Signed-off-by: Kiran Patil <kiran.patil@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
- drivers/scsi/fcoe/Makefile         |    2 +-
- drivers/scsi/fcoe/fcoe_ctlr.c      |    8 --------
- drivers/scsi/fcoe/fcoe_transport.c |    8 ++++++++
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/libfc/fc_libfc.c |   19 +++++++++++++++++++
+ drivers/scsi/libfc/fc_libfc.h |    1 +
+ drivers/scsi/libfc/fc_lport.c |    1 +
+ 3 files changed, 21 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/Makefile b/drivers/scsi/fcoe/Makefile
-index b122b7a..f6d37d0 100644
---- a/drivers/scsi/fcoe/Makefile
-+++ b/drivers/scsi/fcoe/Makefile
-@@ -1,4 +1,4 @@
- obj-$(CONFIG_FCOE) += fcoe.o
- obj-$(CONFIG_LIBFCOE) += libfcoe.o
+diff --git a/drivers/scsi/libfc/fc_libfc.c b/drivers/scsi/libfc/fc_libfc.c
+index 5e40dab..b773512 100644
+--- a/drivers/scsi/libfc/fc_libfc.c
++++ b/drivers/scsi/libfc/fc_libfc.c
+@@ -232,6 +232,25 @@ void fc_fill_reply_hdr(struct fc_frame *fp, const struct fc_frame *in_fp,
+ }
+ EXPORT_SYMBOL(fc_fill_reply_hdr);
  
--libfcoe-objs := fcoe_ctlr.o
-+libfcoe-objs := fcoe_ctlr.o fcoe_transport.o
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index c12d0a7..c93f007 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -46,10 +46,6 @@
- 
- #include "libfcoe.h"
- 
--MODULE_AUTHOR("Open-FCoE.org");
--MODULE_DESCRIPTION("FIP discovery protocol support for FCoE HBAs");
--MODULE_LICENSE("GPL v2");
--
- #define	FCOE_CTLR_MIN_FKA	500		/* min keep alive (mS) */
- #define	FCOE_CTLR_DEF_FKA	FIP_DEF_FKA	/* default keep alive (mS) */
- 
-@@ -68,10 +64,6 @@ static u8 fcoe_all_enode[ETH_ALEN] = FIP_ALL_ENODE_MACS;
- static u8 fcoe_all_vn2vn[ETH_ALEN] = FIP_ALL_VN2VN_MACS;
- static u8 fcoe_all_p2p[ETH_ALEN] = FIP_ALL_P2P_MACS;
- 
--unsigned int libfcoe_debug_logging;
--module_param_named(debug_logging, libfcoe_debug_logging, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
--
- static const char * const fcoe_ctlr_states[] = {
- 	[FIP_ST_DISABLED] =	"DISABLED",
- 	[FIP_ST_LINK_WAIT] =	"LINK_WAIT",
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index 41d69be..e5aef56 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -27,6 +27,10 @@
- 
- #include "libfcoe.h"
- 
-+MODULE_AUTHOR("Open-FCoE.org");
-+MODULE_DESCRIPTION("FIP discovery protocol and FCoE transport for FCoE HBAs");
-+MODULE_LICENSE("GPL v2");
++/**
++ * fc_fc4_conf_lport_params() - Modify "service_params" of specified lport
++ * if there is service provider (target provider) registered with libfc
++ * for specified "fc_ft_type"
++ * @lport: Local port which service_params needs to be modified
++ * @type: FC-4 type, such as FC_TYPE_FCP
++ */
++void fc_fc4_conf_lport_params(struct fc_lport *lport, enum fc_fh_type type)
++{
++	struct fc4_prov *prov_entry;
++	BUG_ON(type >= FC_FC4_PROV_SIZE);
++	BUG_ON(!lport);
++	prov_entry = fc_passive_prov[type];
++	if (type == FC_TYPE_FCP) {
++		if (prov_entry && prov_entry->recv)
++			lport->service_params |= FCP_SPPF_TARG_FCN;
++	}
++}
 +
- static int fcoe_transport_create(const char *, struct kernel_param *);
- static int fcoe_transport_destroy(const char *, struct kernel_param *);
- static int fcoe_transport_show(char *buffer, const struct kernel_param *kp);
-@@ -39,6 +43,10 @@ static LIST_HEAD(fcoe_transports);
- static LIST_HEAD(fcoe_netdevs);
- static DEFINE_MUTEX(ft_mutex);
+ void fc_lport_iterate(void (*notify)(struct fc_lport *, void *), void *arg)
+ {
+ 	struct fc_lport *lport;
+diff --git a/drivers/scsi/libfc/fc_libfc.h b/drivers/scsi/libfc/fc_libfc.h
+index 8496f70..fedc819 100644
+--- a/drivers/scsi/libfc/fc_libfc.h
++++ b/drivers/scsi/libfc/fc_libfc.h
+@@ -125,6 +125,7 @@ void fc_destroy_fcp(void);
+ const char *fc_els_resp_type(struct fc_frame *);
+ extern void fc_fc4_add_lport(struct fc_lport *);
+ extern void fc_fc4_del_lport(struct fc_lport *);
++extern void fc_fc4_conf_lport_params(struct fc_lport *, enum fc_fh_type);
  
-+unsigned int libfcoe_debug_logging;
-+module_param_named(debug_logging, libfcoe_debug_logging, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
-+
- module_param_call(show, NULL, fcoe_transport_show, NULL, S_IRUSR);
- __MODULE_PARM_TYPE(show, "string");
- MODULE_PARM_DESC(show, " Show attached FCoE transports");
+ /*
+  * Copies a buffer into an sg list
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index e0ef814..735f1f8 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1597,6 +1597,7 @@ int fc_lport_config(struct fc_lport *lport)
+ 
+ 	fc_lport_add_fc4_type(lport, FC_TYPE_FCP);
+ 	fc_lport_add_fc4_type(lport, FC_TYPE_CT);
++	fc_fc4_conf_lport_params(lport, FC_TYPE_FCP);
+ 
+ 	return 0;
+ }
 
