@@ -1,128 +1,102 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 17/28] libfc: Enhanced exchange ID selection mechanism and fix
-	related EMA selection logic.
-Date: Fri, 28 Jan 2011 16:04:39 -0800
-Message-ID: <20110129000439.1784.57517.stgit@localhost6.localdomain6>
+Subject: [PATCH 15/28] libfc: Remove usage of the Scsi_Host's host_lock
+Date: Fri, 28 Jan 2011 16:04:29 -0800
+Message-ID: <20110129000429.1784.71077.stgit@localhost6.localdomain6>
 References: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:29268 "EHLO mga02.intel.com"
+Received: from mga01.intel.com ([192.55.52.88]:14827 "EHLO mga01.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754371Ab1A2AEk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Jan 2011 19:04:40 -0500
+	id S1753929Ab1A2AEp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Jan 2011 19:04:45 -0500
 In-Reply-To: <20110129000310.1784.58748.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: Kiran Patil <kiran.patil@intel.com>
+Cc: Ross Brattain <ross.b.brattain@intel.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-From: Kiran Patil <kiran.patil@intel.com>
+This patch removes the use of the Scsi_Host's host_lock
+within fc_queuecommand. It also removes the DEF_SCSI_QCMD
+usage so that libfc has fully moved on to the new
+queuecommand interface.
 
-Problem: In case of exchange responder case, EMA selection was defaulted to the last EMA
-         from EMA list (lport.ema_list).  If exchange ID is selected from offload pool
-         and not setup DDP, resulting into incorrect selection of EMA, and eventually
-         dropping the packet because unable to find exchange.
-
-Fix:     Enhanced the exchange ID selection (depending upon request type and exchange responder)
-         Made necessary enhancement in EMA selection algorithm.
-
-Technical Notes: N/A
-
-Signed-off-by: Kiran Patil <kiran.patil@intel.com>
 Signed-off-by: Robert Love <robert.w.love@intel.com>
+Tested-by: Ross Brattain <ross.b.brattain@intel.com>
+Reviewed-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/libfc/fc_exch.c |   64 ++++++++++++++++++++++++++++--------------
- 1 files changed, 43 insertions(+), 21 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c |   20 ++++++--------------
+ 1 files changed, 6 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index a3d6402..08bf5fa 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -2281,16 +2281,45 @@ void fc_exch_mgr_free(struct fc_lport *lport)
- EXPORT_SYMBOL(fc_exch_mgr_free);
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 383a982..b1b03af 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1789,15 +1789,14 @@ static inline int fc_fcp_lport_queue_ready(struct fc_lport *lport)
  
  /**
-+ * fc_find_ema() - Lookup and return appropriate Exchange Manager Anchor depending
-+ * upon 'xid'.
-+ * @f_ctl: f_ctl
-+ * @lport: The local port the frame was received on
-+ * @fh: The received frame header
-+ */
-+static struct fc_exch_mgr_anchor *fc_find_ema(u32 f_ctl,
-+					      struct fc_lport *lport,
-+					      struct fc_frame_header *fh)
-+{
-+	struct fc_exch_mgr_anchor *ema;
-+	u16 xid;
-+
-+	if (f_ctl & FC_FC_EX_CTX)
-+		xid = ntohs(fh->fh_ox_id);
-+	else {
-+		xid = ntohs(fh->fh_rx_id);
-+		if (xid == FC_XID_UNKNOWN)
-+			return list_entry(lport->ema_list.prev,
-+					  typeof(*ema), ema_list);
-+	}
-+
-+	list_for_each_entry(ema, &lport->ema_list, ema_list) {
-+		if ((xid >= ema->mp->min_xid) &&
-+		    (xid <= ema->mp->max_xid))
-+			return ema;
-+	}
-+	return NULL;
-+}
-+/**
-  * fc_exch_recv() - Handler for received frames
-  * @lport: The local port the frame was received on
-- * @fp:	   The received frame
-+ * @fp:	The received frame
+  * fc_queuecommand() - The queuecommand function of the SCSI template
++ * @shost: The Scsi_Host that the command was issued to
+  * @cmd:   The scsi_cmnd to be executed
+- * @done:  The callback function to be called when the scsi_cmnd is complete
+  *
+- * This is the i/o strategy routine, called by the SCSI layer. This routine
+- * is called with the host_lock held.
++ * This is the i/o strategy routine, called by the SCSI layer.
   */
- void fc_exch_recv(struct fc_lport *lport, struct fc_frame *fp)
+-static int fc_queuecommand_lck(struct scsi_cmnd *sc_cmd, void (*done)(struct scsi_cmnd *))
++int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
  {
- 	struct fc_frame_header *fh = fc_frame_header_get(fp);
- 	struct fc_exch_mgr_anchor *ema;
--	u32 f_ctl, found = 0;
--	u16 oxid;
-+	u32 f_ctl;
+-	struct fc_lport *lport;
++	struct fc_lport *lport = shost_priv(shost);
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
+ 	struct fc_fcp_pkt *fsp;
+ 	struct fc_rport_libfc_priv *rpriv;
+@@ -1805,15 +1804,12 @@ static int fc_queuecommand_lck(struct scsi_cmnd *sc_cmd, void (*done)(struct scs
+ 	int rc = 0;
+ 	struct fcoe_dev_stats *stats;
  
- 	/* lport lock ? */
- 	if (!lport || lport->state == LPORT_ST_DISABLED) {
-@@ -2301,24 +2330,17 @@ void fc_exch_recv(struct fc_lport *lport, struct fc_frame *fp)
+-	lport = shost_priv(sc_cmd->device->host);
+-
+ 	rval = fc_remote_port_chkready(rport);
+ 	if (rval) {
+ 		sc_cmd->result = rval;
+-		done(sc_cmd);
++		sc_cmd->scsi_done(sc_cmd);
+ 		return 0;
+ 	}
+-	spin_unlock_irq(lport->host->host_lock);
+ 
+ 	if (!*(struct fc_remote_port **)rport->dd_data) {
+ 		/*
+@@ -1821,7 +1817,7 @@ static int fc_queuecommand_lck(struct scsi_cmnd *sc_cmd, void (*done)(struct scs
+ 		 * online
+ 		 */
+ 		sc_cmd->result = DID_IMM_RETRY << 16;
+-		done(sc_cmd);
++		sc_cmd->scsi_done(sc_cmd);
+ 		goto out;
  	}
  
- 	f_ctl = ntoh24(fh->fh_f_ctl);
--	oxid = ntohs(fh->fh_ox_id);
--	if (f_ctl & FC_FC_EX_CTX) {
--		list_for_each_entry(ema, &lport->ema_list, ema_list) {
--			if ((oxid >= ema->mp->min_xid) &&
--			    (oxid <= ema->mp->max_xid)) {
--				found = 1;
--				break;
--			}
--		}
--
--		if (!found) {
--			FC_LPORT_DBG(lport, "Received response for out "
--				     "of range oxid:%hx\n", oxid);
--			fc_frame_free(fp);
--			return;
--		}
--	} else
--		ema = list_entry(lport->ema_list.prev, typeof(*ema), ema_list);
-+	ema = fc_find_ema(f_ctl, lport, fh);
-+	if (!ema) {
-+		FC_LPORT_DBG(lport, "Unable to find Exchange Manager Anchor,"
-+				    "fc_ctl <0x%x>, xid <0x%x>\n",
-+				     f_ctl,
-+				     (f_ctl & FC_FC_EX_CTX) ?
-+				     ntohs(fh->fh_ox_id) :
-+				     ntohs(fh->fh_rx_id));
-+		fc_frame_free(fp);
-+		return;
-+	}
+@@ -1845,7 +1841,6 @@ static int fc_queuecommand_lck(struct scsi_cmnd *sc_cmd, void (*done)(struct scs
+ 	 */
+ 	fsp->cmd = sc_cmd;	/* save the cmd */
+ 	fsp->rport = rport;	/* set the remote port ptr */
+-	sc_cmd->scsi_done = done;
  
  	/*
- 	 * If frame is marked invalid, just drop it.
+ 	 * set up the transfer length
+@@ -1886,11 +1881,8 @@ static int fc_queuecommand_lck(struct scsi_cmnd *sc_cmd, void (*done)(struct scs
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 	}
+ out:
+-	spin_lock_irq(lport->host->host_lock);
+ 	return rc;
+ }
+-
+-DEF_SCSI_QCMD(fc_queuecommand)
+ EXPORT_SYMBOL(fc_queuecommand);
+ 
+ /**
 
