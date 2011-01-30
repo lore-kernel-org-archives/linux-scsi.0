@@ -1,94 +1,80 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: hpsa: Convert SCSI LLD ->queuecommand() for host_lock less
-	operation
-Date: Sat, 29 Jan 2011 14:38:22 -0800
-Message-ID: <1296340702.14831.219.camel@haakon2.linux-iscsi.org>
+From: Simon Arlott <simon@fire.lp0.eu>
+Subject: Re: [PATCH 7/8] sr: implement sr_check_events()
+Date: Sun, 30 Jan 2011 01:26:22 +0000
+Message-ID: <4D44BE3E.5080107@simon.arlott.org.uk>
+References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-8-git-send-email-tj@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:34098 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752171Ab1A2Wi1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Jan 2011 17:38:27 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1291838262-21274-8-git-send-email-tj@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, axboe@kernel.dk, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, "J.H." <warthog9@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Stephen and Co,
+On 08/12/10 19:57, Tejun Heo wrote:
+> Replace sr_media_change() with sr_check_events().  It normally only
+> uses GET_EVENT_STATUS_NOTIFICATION to check both media change and
+> eject request.  If @clearing includes DISK_EVENT_MEDIA_CHANGE, it
+> issues TUR and compares whether media presence has changed.  The SCSI
+> specific media change uevent is kept for compatibility.
+> 
+> sr_media_change() was doing both media change check and revalidation.
+> The revalidation part is split into sr_block_revalidate_disk().
+> 
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> Cc: Kay Sievers <kay.sievers@vrfy.org>
+> ---
+>  drivers/scsi/sr.c   |  147 +++++++++++++++++++++++++++++++++------------------
+>  drivers/scsi/sr.h   |    2 +-
+>  include/scsi/scsi.h |    1 +
+>  3 files changed, 98 insertions(+), 52 deletions(-)
 
-Attached is a quick patch to enable modern SCSI host_lock' less
-operation for the HPSA SCSI LLD driver on >= .37 kernels.  After an
-initial LLD conversion and review, I would like to verify with you that
-the following calls are currently protected by HPDA LLD internal locks
-that disable interrupts from the newly renamed hpsa_scsi_queue_command()
-dispatcher below..
+This breaks growisofs:
+:-( /dev/dvd: CD_ROM_MEDIA_CHANGED ioctl failed: Inappropriate ioctl for device
 
-*) For cmd_alloc(), struct ctlr_info *h->lock + spin_lock_irqsave() is
-obtained and released.
+SR_CAPABILITIES in sr.c includes CDC_MEDIA_CHANGED but cdrom.c removes
+this capability in register_cdrom because there is no media_changed op:
+	ENSURE(media_changed, CDC_MEDIA_CHANGED);
 
-*) For enqueue_cmd_and_start_io(), struct ctlr_info *h->lock +
-spin_lock_irqsave() is obtained for addQ() + start_io() and released.
+The ioctl function cdrom_ioctl_media_changed() then returns -ENOSYS.
 
-So the one new piece wrt to host_lock less mode that is *not* protected
-in hpsa_scsi_queue_command() is the call to hpsa_scatter_gather().  This
-should be OK to get called without h->lock held w/ spin_lock_irqsave(),
-yes..?
+The media_changed() function again checks this capability but never uses
+the media_changed op if the check_events op exists.
 
-So far this patch has been compile tested only.  Please have a look and
-comment.
+The cdrom_media_changed() function requires the media_changed op but
+then calls media_changed().
 
-Thanks!
+It looks like cdrom_select_disc() is going to dereference the NULL
+media_changed pointer if both check_events and media_changed don't
+exist.
 
---nab
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index f6d8ee4..1e4b9b1 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -104,14 +104,15 @@ static void sr_release(struct cdrom_device_info *);
+>  static void get_sectorsize(struct scsi_cd *);
+>  static void get_capabilities(struct scsi_cd *);
+>  
+> -static int sr_media_change(struct cdrom_device_info *, int);
+> +static unsigned int sr_check_events(struct cdrom_device_info *cdi,
+> +				    unsigned int clearing, int slot);
+>  static int sr_packet(struct cdrom_device_info *, struct packet_command *);
+>  
+>  static struct cdrom_device_ops sr_dops = {
+>  	.open			= sr_open,
+>  	.release	 	= sr_release,
+>  	.drive_status	 	= sr_drive_status,
+> -	.media_changed		= sr_media_change,
+> +	.check_events		= sr_check_events,
+>  	.tray_move		= sr_tray_move,
+>  	.lock_door		= sr_lock_door,
+>  	.select_speed		= sr_select_speed,
+> @@ -165,69 +166,96 @@ static void scsi_cd_put(struct scsi_cd *cd)
+>  	mutex_unlock(&sr_ref_mutex);
+>  }
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 12deffc..e205f33 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -1906,9 +1906,11 @@ sglist_finished:
-        return 0;
- }
- 
--
--static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
--       void (*done)(struct scsi_cmnd *))
-+/*
-+ * Running in struct Scsi_Host->host_lock less mode using LLD internal
-+ * struct ctlr_info *h->lock w/ spin_lock_irqsave() protection.
-+ */
-+static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- {
-        struct ctlr_info *h;
-        struct hpsa_scsi_dev_t *dev;
-@@ -1921,7 +1923,7 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
-        dev = cmd->device->hostdata;
-        if (!dev) {
-                cmd->result = DID_NO_CONNECT << 16;
--               done(cmd);
-+               cmd->scsi_done(cmd);
-                return 0;
-        }
-        memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
-@@ -1936,9 +1938,6 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
-        }
- 
-        /* Fill in the command list header */
--
--       cmd->scsi_done = done;    /* save this for use by completion code */
--
-        /* save c in case we have to abort it  */
-        cmd->host_scribble = (unsigned char *) c;
- 
-@@ -2001,8 +2000,6 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
-        return 0;
- }
- 
--static DEF_SCSI_QCMD(hpsa_scsi_queue_command)
--
- static void hpsa_scan_start(struct Scsi_Host *sh)
- {
-        struct ctlr_info *h = shost_to_hba(sh);
-
-
+-- 
+Simon Arlott
