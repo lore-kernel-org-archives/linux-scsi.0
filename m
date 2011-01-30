@@ -1,109 +1,232 @@
-From: Fubo Chen <fubo.chen@gmail.com>
-Subject: 2.6.38-rc2+ tcm_mvsas kernel oops
-Date: Sun, 30 Jan 2011 20:02:51 +0100
-Message-ID: <AANLkTinUu81OtTud=GZcJwGRHn1REJQ+ROoRygF4pKM1@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: hpsa: Convert SCSI LLD ->queuecommand() for host_lock less
+	operation
+Date: Sun, 30 Jan 2011 13:18:19 -0800
+Message-ID: <1296422299.14831.302.camel@haakon2.linux-iscsi.org>
+References: <1296340702.14831.219.camel@haakon2.linux-iscsi.org>
+	 <4D44DA55.7060505@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iw0-f174.google.com ([209.85.214.174]:39464 "EHLO
-	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753492Ab1A3TCw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Jan 2011 14:02:52 -0500
-Received: by iwn9 with SMTP id 9so4729749iwn.19
-        for <linux-scsi@vger.kernel.org>; Sun, 30 Jan 2011 11:02:52 -0800 (PST)
+Received: from mail.linux-iscsi.org ([67.23.28.174]:43560 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754159Ab1A3VSY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Jan 2011 16:18:24 -0500
+In-Reply-To: <4D44DA55.7060505@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, James Bottomley <James.Bottomley@suse.de>, "J.H." <warthog9@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello,
+On Sat, 2011-01-29 at 22:26 -0500, Jeff Garzik wrote:
+> On 01/29/2011 05:38 PM, Nicholas A. Bellinger wrote:
+> > Hi Stephen and Co,
+> >
+> > Attached is a quick patch to enable modern SCSI host_lock' less
+> > operation for the HPSA SCSI LLD driver on>= .37 kernels.  After an
+> > initial LLD conversion and review, I would like to verify with you that
+> > the following calls are currently protected by HPDA LLD internal locks
+> > that disable interrupts from the newly renamed hpsa_scsi_queue_command()
+> > dispatcher below..
+> >
+> > *) For cmd_alloc(), struct ctlr_info *h->lock + spin_lock_irqsave() is
+> > obtained and released.
+> >
+> > *) For enqueue_cmd_and_start_io(), struct ctlr_info *h->lock +
+> > spin_lock_irqsave() is obtained for addQ() + start_io() and released.
+> >
+> > So the one new piece wrt to host_lock less mode that is *not* protected
+> > in hpsa_scsi_queue_command() is the call to hpsa_scatter_gather().  This
+> > should be OK to get called without h->lock held w/ spin_lock_irqsave(),
+> > yes..?
+> >
+> > So far this patch has been compile tested only.  Please have a look and
+> > comment.
+> >
+> > Thanks!
+> >
+> > --nab
+> >
+> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> > index 12deffc..e205f33 100644
+> > --- a/drivers/scsi/hpsa.c
+> > +++ b/drivers/scsi/hpsa.c
+> > @@ -1906,9 +1906,11 @@ sglist_finished:
+> >          return 0;
+> >   }
+> >
+> > -
+> > -static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+> > -       void (*done)(struct scsi_cmnd *))
+> > +/*
+> > + * Running in struct Scsi_Host->host_lock less mode using LLD internal
+> > + * struct ctlr_info *h->lock w/ spin_lock_irqsave() protection.
+> > + */
+> 
+> The way I read this comment, it initially misled me into thinking that 
+> this queuecommand was somehow wrapped entirely within this protection 
+> you described.
+> 
+> Only after an in-depth review did I figure out that cmd_alloc() and 
+> enqueue_cmd_and_start_io() did all the locking necessary.
+> 
+> Therefore, here are some observations and recommendations:
+> 
+> * the code changes are correct.  Reviewed-by: Jeff Garzik 
+> <jgarzik@redhat.com>
+> 
+> * delete the comment.  lack of "_lck" alone tells you its lockless.
+> 
+> * I question whether the following hpsa.c logic
+> 	lock_irqsave
+> 	cmd_alloc()
+> 	unlock_irqrestore
+> 
+> 	init cmd
+> 
+> 	lock_irqsave
+> 	enqueue
+> 	unlock_irqrestore
+>    isn't more expensive than simply
+> 	lock_irqsave
+> 	cmd_alloc()
+> 	init cmd
+> 	enqueue
+> 	unlock_irqrestore
+> 
+> It seems like the common case would cycle the spinlock and interrupts 
+> twice for an uncontended lock, which the initialization portion of the 
+> cmd, which may indeed occur in parallel, is so cheap you'll spend more 
+> time on the double-lock than anywhere else.
+> 
 
-Today I did what I should have done before: try to load and unload
-tcm_mvsas kernel module. Surprised to see that this triggered kernel
-oops. Did I make stupid mistake ?
+Hi Jeff,
 
-What I did:
+I was wondering about the overhead of double h->lock cycle for parallel
+struct scsi_cmnd -> struct CommandList initialization vs. single h->
+lock cycle..  Thanks for your input here!
 
-# rm -rf drivers/target/tcm_mvsas
-# cd Documentation/target
-# { echo yes; echo yes; } | ./tcm_mod_builder.py -m tcm_mvsas -p SAS
-# cd ../..
-# echo m | make oldconfig
-# make prepare
-# make M=drivers/target/tcm_mvsas modules modules_install
-# modprobe tcm_mvsas
-# rmmod tcm_mvsas
-# rmmod target_core_mod
-Segmentation fault
+Attached is a v2 to address your comments.
 
->From console:
+--nab
 
-<<<<<<<<<<<<<<<<<<<<<< BEGIN FABRIC API >>>>>>>>>>>>>>>>>>>>>>
-Initialized struct target_fabric_configfs: ffff880027680000 for mvsas
-<<<<<<<<<<<<<<<<<<<<<< END FABRIC API >>>>>>>>>>>>>>>>>>>>>>
-TCM_MVSAS[0] - Set fabric -> tcm_mvsas_fabric_configfs
-<<<<<<<<<<<<<<<<<<<<<< BEGIN FABRIC API >>>>>>>>>>>>>>>>>>>>>>
-Target_Core_ConfigFS: DEREGISTER -> Releasing tf: mvsas
-<<<<<<<<<<<<<<<<<<<<<< END FABRIC API >>>>>>>>>>>>>>>>>>>>>>
-TCM_MVSAS[0] - Cleared tcm_mvsas_fabric_configfs
-general protection fault: 0000 [#1] SMP
-last sysfs file:
-/sys/devices/pci0000:00/0000:00:11.0/0000:02:03.0/usb1/1-0:1.0/uevent
-CPU 0
-Modules linked in: target_core_mod(-) configfs netconsole iscsi_tcp
-libiscsi_tcp libiscsi scsi_transport_iscsi binfmt_misc psmouse
-serio_raw shpchp i2c_piix4 mptspi mptscsih mptbase scsi_transport_spi
-e1000 floppy [last unloaded: tcm_mvsas]
+------------------------------------------------------------------------
 
-Pid: 2346, comm: rmmod Not tainted 2.6.38-rc2+
-RIP: 0010:[<ffffffff810946a4>]  [<ffffffff810946a4>] __lock_acquire+0x64/0x1510
-RSP: 0018:ffff8800275cdb18  EFLAGS: 00010046
-RAX: 0000000000000046 RBX: 6b6b6b6b6b6b6be3 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
-RBP: ffff8800275cdbe8 R08: 0000000000000001 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000002
-R13: 0000000000000000 R14: 0000000000000000 R15: ffff88002cb4a350
-FS:  00007f9238be4700(0000) GS:ffff88003d600000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 00007f92386d1fc0 CR3: 0000000027560000 CR4: 00000000000006f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process rmmod (pid: 2346, threadinfo ffff8800275cc000, task ffff88002cb4a350)
-Stack:
- 0000000000000004 ffff88002cb4a350 ffffffff82033ee0 ffffffff81010dfd
- ffff8800275cdb68 ffffffff81ed1590 ffff8800275cdb68 0000000000000000
- 32a19d8cf067a674 ffff88002cb4ab08 ffff8800275cdc48 0000000000000002
-Call Trace:
- [<ffffffff81010dfd>] ? save_stack_trace+0x2d/0x50
- [<ffffffff81095bf0>] lock_acquire+0xa0/0x150
- [<ffffffffa0146f8f>] ? detach_groups+0x2f/0x120 [configfs]
- [<ffffffff81545a04>] ? __mutex_lock_common+0x2a4/0x3e0
- [<ffffffffa0147004>] ? detach_groups+0xa4/0x120 [configfs]
- [<ffffffff815472b6>] _raw_spin_lock+0x36/0x70
- [<ffffffffa0146f8f>] ? detach_groups+0x2f/0x120 [configfs]
- [<ffffffffa0146f8f>] detach_groups+0x2f/0x120 [configfs]
- [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
- [<ffffffffa0147012>] detach_groups+0xb2/0x120 [configfs]
- [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
- [<ffffffffa0147012>] detach_groups+0xb2/0x120 [configfs]
- [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
- [<ffffffffa0147012>] detach_groups+0xb2/0x120 [configfs]
- [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
- [<ffffffffa0147012>] detach_groups+0xb2/0x120 [configfs]
- [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
- [<ffffffffa0147122>] configfs_unregister_subsystem+0xa2/0x130 [configfs]
- [<ffffffffa014fc84>] target_core_exit_configfs+0x184/0x1c0 [target_core_mod]
- [<ffffffff810a0a32>] sys_delete_module+0x1a2/0x280
- [<ffffffff81547019>] ? trace_hardirqs_on_thunk+0x3a/0x3f
- [<ffffffff81002f82>] system_call_fastpath+0x16/0x1b
-Code: 8b 05 a1 64 9a 00 4c 89 75 f0 48 89 fb 41 89 d5 4c 8b 55 10 45
-85 c0 0f 84 4a 04 00 00 8b 3d 08 96 cd 00 85 ff 0f 84 5c 04 00 00 <48>
-81 3b 20 15 dd 81 b8 01 00 00 00 44 0f 44 e0 83 fe 01 0f 86
-RIP  [<ffffffff810946a4>] __lock_acquire+0x64/0x1510
- RSP <ffff8800275cdb18>
----[ end trace f4ddfaa61a61623b ]---
+[PATCH] hpsa: Convert SCSI LLD ->queuecommand() for host_lock less operation
+
+This patch first converts HPSA to run in struct Scsi_Host->host_lock'
+less operation by removing DEF_SCSI_QCMD() and '_lck' suffix from the
+hpsa_scsi_queue_command() I/O dispatcher.
+
+Secondly in hpsa_scsi_queue_command() the struct ctlr_info *h->lock is
+now held a single lock obtain/release cycle while struct CommandList
+initialization is performed, and enqueued into HW.  This enqueuing
+is done using a new h->lock unlocked __enqueue_cmd_and_start_io(),
+wrapper and conversion of the the original enqueue_cmd_and_start_io()
+to use this new code.
+
+Reviewed-by: Jeff Garzik <jgarzik@redhat.com>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/scsi/hpsa.c |   34 +++++++++++++++++++---------------
+ 1 files changed, 19 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 12deffc..fff7cd4 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -329,16 +329,25 @@ static void set_performant_mode(struct ctlr_info *h, struct CommandList *c)
+                c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
+ }
+
+-static void enqueue_cmd_and_start_io(struct ctlr_info *h,
++/*
++ * Must be called with struct ctlr_info *h->lock held w/ interrupts disabled
++ */
++static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
+        struct CommandList *c)
+ {
+-       unsigned long flags;
+-
+        set_performant_mode(h, c);
+-       spin_lock_irqsave(&h->lock, flags);
+        addQ(&h->reqQ, c);
+        h->Qdepth++;
+        start_io(h);
++}
++
++static void enqueue_cmd_and_start_io(struct ctlr_info *h,
++       struct CommandList *c)
++{
++       unsigned long flags;
++
++       spin_lock_irqsave(&h->lock, flags);
++       __enqueue_cmd_and_start_io(h, c);
+        spin_unlock_irqrestore(&h->lock, flags);
+ }
+
+@@ -1906,9 +1915,7 @@ sglist_finished:
+        return 0;
+ }
+
+-
+-static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+-       void (*done)(struct scsi_cmnd *))
++static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ {
+        struct ctlr_info *h;
+        struct hpsa_scsi_dev_t *dev;
+@@ -1921,7 +1928,7 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+        dev = cmd->device->hostdata;
+        if (!dev) {
+                cmd->result = DID_NO_CONNECT << 16;
+-               done(cmd);
++               cmd->scsi_done(cmd);
+                return 0;
+        }
+        memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
+@@ -1929,16 +1936,13 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+        /* Need a lock as this is being allocated from the pool */
+        spin_lock_irqsave(&h->lock, flags);
+        c = cmd_alloc(h);
+-       spin_unlock_irqrestore(&h->lock, flags);
+        if (c == NULL) {                        /* trouble... */
+                dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
++               spin_unlock_irqrestore(&h->lock, flags);
+                return SCSI_MLQUEUE_HOST_BUSY;
+        }
+
+        /* Fill in the command list header */
+-
+-       cmd->scsi_done = done;    /* save this for use by completion code */
+-
+        /* save c in case we have to abort it  */
+        cmd->host_scribble = (unsigned char *) c;
+
+@@ -1994,15 +1998,15 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+
+        if (hpsa_scatter_gather(h, c, cmd) < 0) { /* Fill SG list */
+                cmd_free(h, c);
++               spin_unlock_irqrestore(&h->lock, flags);
+                return SCSI_MLQUEUE_HOST_BUSY;
+        }
+-       enqueue_cmd_and_start_io(h, c);
++       __enqueue_cmd_and_start_io(h, c);
++       spin_unlock_irqrestore(&h->lock, flags);
+        /* the cmd'll come back via intr handler in complete_scsi_command()  */
+        return 0;
+ }
+
+-static DEF_SCSI_QCMD(hpsa_scsi_queue_command)
+-
+ static void hpsa_scan_start(struct Scsi_Host *sh)
+ {
+        struct ctlr_info *h = shost_to_hba(sh);
+-- 
+1.7.3.5
 
 
-Thanks for all help.
 
-Fubo.
+
+
