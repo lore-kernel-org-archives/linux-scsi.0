@@ -1,129 +1,159 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] hpsa: Convert SCSI LLD ->queuecommand() for host_lock less operation
-Date: Mon, 31 Jan 2011 12:33:50 -0800
-Message-ID: <1296506030-30442-1-git-send-email-nab@linux-iscsi.org>
+Subject: Re: 2.6.38-rc2+ tcm_mvsas kernel oops
+Date: Mon, 31 Jan 2011 12:55:16 -0800
+Message-ID: <1296507316.14831.409.camel@haakon2.linux-iscsi.org>
+References: <AANLkTinUu81OtTud=GZcJwGRHn1REJQ+ROoRygF4pKM1@mail.gmail.com>
+	 <1296423247.14831.321.camel@haakon2.linux-iscsi.org>
+	 <AANLkTi=j94Wj_sdsm2sfwA+XSxh1QFhOPpbFJ_fim3sL@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm9-vm0.bullet.mail.ne1.yahoo.com ([98.138.91.67]:30168 "HELO
-	nm9-vm0.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754083Ab1AaUdg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Jan 2011 15:33:36 -0500
+Received: from mail.linux-iscsi.org ([67.23.28.174]:47505 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753729Ab1AaUzV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jan 2011 15:55:21 -0500
+In-Reply-To: <AANLkTi=j94Wj_sdsm2sfwA+XSxh1QFhOPpbFJ_fim3sL@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>, Jeff Garzik <jeff@garzik.org>, John Hawley <warthog9@kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Fubo Chen <fubo.chen@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Mon, 2011-01-31 at 18:21 +0100, Fubo Chen wrote:
+> On Sun, Jan 30, 2011 at 10:34 PM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> > On Sun, 2011-01-30 at 20:02 +0100, Fubo Chen wrote:
+> >> [ ... ]
+> >> # make M=drivers/target/tcm_mvsas modules modules_install
+> >> # modprobe tcm_mvsas
+> >
+> > What happened to 'modprobe target_core_mod' before loading tcm_mvsas..?
+> 
+> 'modprobe tcm_mvsas' loads target_core_mod automatically as far as i know ?
+> 
 
-This patch first converts HPSA to run in struct Scsi_Host->host_lock'
-less operation by removing DEF_SCSI_QCMD() and '_lck' suffix from the
-hpsa_scsi_queue_command() I/O dispatcher.
+Hmmm, yes..  Typically after target_core_mod is initial loaded, and then
+doing a:
 
-Secondly in hpsa_scsi_queue_command() the struct ctlr_info *h->lock is
-now held a single lock obtain/release cycle while struct CommandList
-initialization is performed, and enqueued into HW.  This enqueuing
-is done using a new h->lock unlocked __enqueue_cmd_and_start_io(),
-wrapper and conversion of the the original enqueue_cmd_and_start_io()
-to use this new code.
+	mkdir -p /sys/kernel/config/target/$FABRIC_MOD
 
-Reviewed-by: Jeff Garzik <jgarzik@redhat.com>
-Reviewed-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/scsi/hpsa.c |   34 +++++++++++++++++++---------------
- 1 files changed, 19 insertions(+), 15 deletions(-)
+will call request_module() based on known module names in
+target_core_configfs.c:target_core_register_fabric() to autoload the
+fabric module.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 12deffc..69e06bd 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -329,16 +329,25 @@ static void set_performant_mode(struct ctlr_info *h, struct CommandList *c)
- 		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
- }
- 
--static void enqueue_cmd_and_start_io(struct ctlr_info *h,
-+/*
-+ * Must be called with struct ctlr_info *h->lock held w/ interrupts disabled
-+ */
-+static inline void __enqueue_cmd_and_start_io(struct ctlr_info *h,
- 	struct CommandList *c)
- {
--	unsigned long flags;
--
- 	set_performant_mode(h, c);
--	spin_lock_irqsave(&h->lock, flags);
- 	addQ(&h->reqQ, c);
- 	h->Qdepth++;
- 	start_io(h);
-+}
-+
-+static inline void enqueue_cmd_and_start_io(struct ctlr_info *h,
-+	struct CommandList *c)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&h->lock, flags);
-+	__enqueue_cmd_and_start_io(h, c);
- 	spin_unlock_irqrestore(&h->lock, flags);
- }
- 
-@@ -1906,9 +1915,7 @@ sglist_finished:
- 	return 0;
- }
- 
--
--static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
--	void (*done)(struct scsi_cmnd *))
-+static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- {
- 	struct ctlr_info *h;
- 	struct hpsa_scsi_dev_t *dev;
-@@ -1921,7 +1928,7 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
- 	dev = cmd->device->hostdata;
- 	if (!dev) {
- 		cmd->result = DID_NO_CONNECT << 16;
--		done(cmd);
-+		cmd->scsi_done(cmd);
- 		return 0;
- 	}
- 	memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
-@@ -1929,16 +1936,13 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
- 	/* Need a lock as this is being allocated from the pool */
- 	spin_lock_irqsave(&h->lock, flags);
- 	c = cmd_alloc(h);
--	spin_unlock_irqrestore(&h->lock, flags);
- 	if (c == NULL) {			/* trouble... */
- 		dev_err(&h->pdev->dev, "cmd_alloc returned NULL!\n");
-+		spin_unlock_irqrestore(&h->lock, flags);
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
- 
- 	/* Fill in the command list header */
--
--	cmd->scsi_done = done;    /* save this for use by completion code */
--
- 	/* save c in case we have to abort it  */
- 	cmd->host_scribble = (unsigned char *) c;
- 
-@@ -1994,15 +1998,15 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
- 
- 	if (hpsa_scatter_gather(h, c, cmd) < 0) { /* Fill SG list */
- 		cmd_free(h, c);
-+		spin_unlock_irqrestore(&h->lock, flags);
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
--	enqueue_cmd_and_start_io(h, c);
-+	__enqueue_cmd_and_start_io(h, c);
-+	spin_unlock_irqrestore(&h->lock, flags);
- 	/* the cmd'll come back via intr handler in complete_scsi_command()  */
- 	return 0;
- }
- 
--static DEF_SCSI_QCMD(hpsa_scsi_queue_command)
--
- static void hpsa_scan_start(struct Scsi_Host *sh)
- {
- 	struct ctlr_info *h = shost_to_hba(sh);
--- 
-1.7.4
+But since tcm_mvsas does not have an entry there yet, this AFAIK should
+not many any difference.
+
+> > Typically if you are running 'make oldconfig' and change your .config,
+> > you need to be running a matched set of modules, and not something that
+> > was potentially built from a different .config.
+> >
+> >> # rmmod tcm_mvsas
+> >> # rmmod target_core_mod
+> >> Segmentation fault
+> >>
+> >> >From console:
+> >>
+> >> <<<<<<<<<<<<<<<<<<<<<< BEGIN FABRIC API >>>>>>>>>>>>>>>>>>>>>>
+> >> Initialized struct target_fabric_configfs: ffff880027680000 for mvsas
+> >> <<<<<<<<<<<<<<<<<<<<<< END FABRIC API >>>>>>>>>>>>>>>>>>>>>>
+> >> TCM_MVSAS[0] - Set fabric -> tcm_mvsas_fabric_configfs
+> >> <<<<<<<<<<<<<<<<<<<<<< BEGIN FABRIC API >>>>>>>>>>>>>>>>>>>>>>
+> >> Target_Core_ConfigFS: DEREGISTER -> Releasing tf: mvsas
+> >> <<<<<<<<<<<<<<<<<<<<<< END FABRIC API >>>>>>>>>>>>>>>>>>>>>>
+> >> TCM_MVSAS[0] - Cleared tcm_mvsas_fabric_configfs
+> >> general protection fault: 0000 [#1] SMP
+> >> last sysfs file:
+> >> /sys/devices/pci0000:00/0000:00:11.0/0000:02:03.0/usb1/1-0:1.0/uevent
+> >> CPU 0
+> >> Modules linked in: target_core_mod(-) configfs netconsole iscsi_tcp
+> >> libiscsi_tcp libiscsi scsi_transport_iscsi binfmt_misc psmouse
+> >> serio_raw shpchp i2c_piix4 mptspi mptscsih mptbase scsi_transport_spi
+> >> e1000 floppy [last unloaded: tcm_mvsas]
+> >>
+> >> Pid: 2346, comm: rmmod Not tainted 2.6.38-rc2+
+> >> RIP: 0010:[<ffffffff810946a4>]  [<ffffffff810946a4>] __lock_acquire+0x64/0x1510
+> >> RSP: 0018:ffff8800275cdb18  EFLAGS: 00010046
+> >> RAX: 0000000000000046 RBX: 6b6b6b6b6b6b6be3 RCX: 0000000000000000
+> >> RDX: 0000000000000000 RSI: 0000000000000000 RDI: 0000000000000000
+> >> RBP: ffff8800275cdbe8 R08: 0000000000000001 R09: 0000000000000000
+> >> R10: 0000000000000000 R11: 0000000000000001 R12: 0000000000000002
+> >> R13: 0000000000000000 R14: 0000000000000000 R15: ffff88002cb4a350
+> >> FS:  00007f9238be4700(0000) GS:ffff88003d600000(0000) knlGS:0000000000000000
+> >> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> >> CR2: 00007f92386d1fc0 CR3: 0000000027560000 CR4: 00000000000006f0
+> >> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> >> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> >> Process rmmod (pid: 2346, threadinfo ffff8800275cc000, task ffff88002cb4a350)
+> >> Stack:
+> >>  0000000000000004 ffff88002cb4a350 ffffffff82033ee0 ffffffff81010dfd
+> >>  ffff8800275cdb68 ffffffff81ed1590 ffff8800275cdb68 0000000000000000
+> >>  32a19d8cf067a674 ffff88002cb4ab08 ffff8800275cdc48 0000000000000002
+> >> Call Trace:
+> >>  [<ffffffff81010dfd>] ? save_stack_trace+0x2d/0x50
+> >>  [<ffffffff81095bf0>] lock_acquire+0xa0/0x150
+> >>  [<ffffffffa0146f8f>] ? detach_groups+0x2f/0x120 [configfs]
+> >>  [<ffffffff81545a04>] ? __mutex_lock_common+0x2a4/0x3e0
+> >>  [<ffffffffa0147004>] ? detach_groups+0xa4/0x120 [configfs]
+> >>  [<ffffffff815472b6>] _raw_spin_lock+0x36/0x70
+> >>  [<ffffffffa0146f8f>] ? detach_groups+0x2f/0x120 [configfs]
+> >>  [<ffffffffa0146f8f>] detach_groups+0x2f/0x120 [configfs]
+> >>  [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
+> >>  [<ffffffffa0147012>] detach_groups+0xb2/0x120 [configfs]
+> >>  [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
+> >>  [<ffffffffa0147012>] detach_groups+0xb2/0x120 [configfs]
+> >>  [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
+> >>  [<ffffffffa0147012>] detach_groups+0xb2/0x120 [configfs]
+> >>  [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
+> >>  [<ffffffffa0147012>] detach_groups+0xb2/0x120 [configfs]
+> >>  [<ffffffffa0146f46>] configfs_detach_group+0x16/0x30 [configfs]
+> >>  [<ffffffffa0147122>] configfs_unregister_subsystem+0xa2/0x130 [configfs]
+> >>  [<ffffffffa014fc84>] target_core_exit_configfs+0x184/0x1c0 [target_core_mod]
+> >>  [<ffffffff810a0a32>] sys_delete_module+0x1a2/0x280
+> >>  [<ffffffff81547019>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+> >>  [<ffffffff81002f82>] system_call_fastpath+0x16/0x1b
+> >> Code: 8b 05 a1 64 9a 00 4c 89 75 f0 48 89 fb 41 89 d5 4c 8b 55 10 45
+> >> 85 c0 0f 84 4a 04 00 00 8b 3d 08 96 cd 00 85 ff 0f 84 5c 04 00 00 <48>
+> >> 81 3b 20 15 dd 81 b8 01 00 00 00 44 0f 44 e0 83 fe 01 0f 86
+> >> RIP  [<ffffffff810946a4>] __lock_acquire+0x64/0x1510
+> >>  RSP <ffff8800275cdb18>
+> >> ---[ end trace f4ddfaa61a61623b ]---
+> >>
+> >>
+> >
+> > Ok, just to verify.  I have tried a couple varitions of the following
+> > after generating a fresh 'tcm_mvsas' fabric skeleton on
+> > lio-core-2.6.git/linus-38-rc2:
+> >
+> > while [ 1 ]; do modprobe target_core_mod ; sleep 1 ; modprobe
+> > tcm_mvsas ; rmmod tcm_mvsas ; rmmod target_core_mod; done
+> >
+> > and nothing out of the ordinary appers with .38-rc2 target code on
+> > x86_64 VM while this runs so far..
+> >
+> > Did something change in your .config between the running target_core_mod
+> > and newly built tcm_mvsas.ko that could cause a GFP like this..?
+> >
+> > Please verify your 'rmmod tcm_mvsas' test with a single set of .config
+> > options and rebuild + reboot with:
+> >
+> >        make clean ; make bzImage ; make modules ; make modules_install ; make install
+> 
+> Thanks for hint. I have rebuilt kernel but unfortunately crash still
+> occurs. Maybe it's because I have enabled SLUB poisoning ?
+> 
+
+Hmmm, I don't see how this would make a difference, and FYI the above
+test loops for 'rmmod tcm_mvsas' where running with slub_debug=FZ w/o
+issue.
+
+Well, if you are certain things are working fine on .37-FINAL, you can
+try using 'git bisect' from a known working LIO .37 commit and build
++test until you locate an offending commit.
+
+But again, this appears to be working in lio-core-2.6.git/linus-38-rc2,
+please verify this is what is being tested..?
+
+--nab
+
 
