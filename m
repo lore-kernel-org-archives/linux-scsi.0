@@ -1,72 +1,39 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] cdrom: support devices that have check_events but not
- media_changed
-Date: Mon, 31 Jan 2011 11:12:44 +0100
-Message-ID: <20110131101244.GA7459@htj.dyndns.org>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org>
- <1291838262-21274-8-git-send-email-tj@kernel.org>
- <4D44BE3E.5080107@simon.arlott.org.uk>
- <4D44BF64.4060205@simon.arlott.org.uk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4D44BF64.4060205@simon.arlott.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Simon Arlott <simon@fire.lp0.eu>
-Cc: axboe@kernel.dk, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 0/3] target: Add target_core_stat.c configfs code
+Date: Mon, 31 Jan 2011 02:29:52 -0800
+Message-ID: <1296469795-27632-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm6.bullet.mail.ac4.yahoo.com ([98.139.52.203]:26794 "HELO
+	nm6.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755343Ab1AaK3z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Jan 2011 05:29:55 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Joel Becker <jlbec@evilplan.org>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hello,
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-On Sun, Jan 30, 2011 at 01:31:16AM +0000, Simon Arlott wrote:
-> 93aae17af1172c40c6f74b7294e93a90c3cfaa5d replaced the media_changed op
-> with the check_events op in drivers/scsi/sr.c
-> 
-> All users that check for the CDC_MEDIA_CHANGED capability try both
-> the check_events op and the media_changed op, but register_cdrom()
-> was requiring media_changed.
-> 
-> This patch fixes the capability checking and removes a redundant
-> check that media_changed != NULL.
-> 
-> The cdrom_select_disc ioctl is also using the two operations, so
-> they should be required for CDC_SELECT_DISC too.
+Hi James and Co,
 
-First of all, thanks a lot for fixing this.  Just minor nits below.
+This patch series adds support for TCM backend, fabric port/LUN,
+and MappedLUN/LunACL context struct config_group based statistics in
+target_core_configfs.c and target_core_fabric_configfs.c code using
+CONFIGFS_EATTR() based struct config_item_types.
 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index 14033a3..4716d76 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -409,7 +409,9 @@ int register_cdrom(struct cdrom_device_info *cdi)
->  	}
->  
->  	ENSURE(drive_status, CDC_DRIVE_STATUS );
-> -	ENSURE(media_changed, CDC_MEDIA_CHANGED);
-> +	if (cdo->check_events == NULL && cdo->media_changed == NULL) {
-> +		*change_capability = ~(CDC_MEDIA_CHANGED | CDC_SELECT_DISC);
-> +	}
+This is based on target_core_mib.c procfs + seq_list based logic
+broken up into individual configfs groups and attributes following
+RFC4455.
 
-Can we lose the unnecessary {}?
+Please have a look for review and comment,
 
->  	ENSURE(tray_move, CDC_CLOSE_TRAY | CDC_OPEN_TRAY);
->  	ENSURE(lock_door, CDC_LOCK);
->  	ENSURE(select_speed, CDC_SELECT_SPEED);
-> @@ -1471,7 +1473,7 @@ int cdrom_media_changed(struct cdrom_device_info *cdi)
->  	/* This talks to the VFS, which doesn't like errors - just 1 or 0.  
->  	 * Returning "0" is always safe (media hasn't been changed). Do that 
->  	 * if the low-level cdrom driver dosn't support media changed. */ 
-> -	if (cdi == NULL || cdi->ops->media_changed == NULL)
-> +	if (cdi == NULL)
+Thanks!
 
-This change is probably not necessary as cdrom_media_changed() is only
-called from drivers which implement media_changed.  I don't think it's
-gonna break anything but the whole media_changed stuff is scheduled
-for removal anyway, so I think it would be better to keep the changes
-minimal.
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-Thank you.
+Nicholas Bellinger (3):
+  target: add initial device backend context target_core_stat.c code
+  target: add initial fabric port context target_core_stat.c code
+  target: add initial fabric MappedLUN context target_core_stat.c code
 
--- 
-tejun
