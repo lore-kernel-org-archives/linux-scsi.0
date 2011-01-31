@@ -1,58 +1,110 @@
-From: Sergei Shtylyov <sshtylyov@mvista.com>
-Subject: Re: [PATCH] cdrom: support devices that have check_events but not
- media_changed
-Date: Mon, 31 Jan 2011 14:22:58 +0300
-Message-ID: <4D469B92.6050705@ru.mvista.com>
-References: <1291838262-21274-1-git-send-email-tj@kernel.org> <1291838262-21274-8-git-send-email-tj@kernel.org> <4D44BE3E.5080107@simon.arlott.org.uk> <4D44BF64.4060205@simon.arlott.org.uk>
+From: scameron@beardog.cce.hp.com
+Subject: Re: hpsa: Convert SCSI LLD ->queuecommand() for host_lock less operation
+Date: Mon, 31 Jan 2011 08:24:28 -0600
+Message-ID: <20110131142428.GL27398@beardog.cce.hp.com>
+References: <1296340702.14831.219.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4D44BF64.4060205@simon.arlott.org.uk>
-Sender: linux-ide-owner@vger.kernel.org
-To: Simon Arlott <simon@fire.lp0.eu>
-Cc: axboe@kernel.dk, Tejun Heo <tj@kernel.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, jack@suse.cz, James.Bottomley@HansenPartnership.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g4t0015.houston.hp.com ([15.201.24.18]:8936 "EHLO
+	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752129Ab1AaOYa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jan 2011 09:24:30 -0500
+Content-Disposition: inline
+In-Reply-To: <1296340702.14831.219.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@suse.de>, "J.H." <warthog9@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello.
+On Sat, Jan 29, 2011 at 02:38:22PM -0800, Nicholas A. Bellinger wrote:
+> Hi Stephen and Co,
+> 
+> Attached is a quick patch to enable modern SCSI host_lock' less
+> operation for the HPSA SCSI LLD driver on >= .37 kernels.  After an
+> initial LLD conversion and review, I would like to verify with you that
+> the following calls are currently protected by HPDA LLD internal locks
+> that disable interrupts from the newly renamed hpsa_scsi_queue_command()
+> dispatcher below..
+> 
+> *) For cmd_alloc(), struct ctlr_info *h->lock + spin_lock_irqsave() is
+> obtained and released.
 
-On 30-01-2011 4:31, Simon Arlott wrote:
+Yes (but not inside cmd_alloc()), the lock is taken to protect
+the bitmap that's used to track allocated commands, h->cmd_pool_bits.
 
-> 93aae17af1172c40c6f74b7294e93a90c3cfaa5d replaced the media_changed op
+> 
+> *) For enqueue_cmd_and_start_io(), struct ctlr_info *h->lock +
+> spin_lock_irqsave() is obtained for addQ() + start_io() and released.
 
-    Please specify the commit summary in parens, as asked by Linus.
+Yes.
 
-> with the check_events op in drivers/scsi/sr.c
+> 
+> So the one new piece wrt to host_lock less mode that is *not* protected
+> in hpsa_scsi_queue_command() is the call to hpsa_scatter_gather().  This
+> should be OK to get called without h->lock held w/ spin_lock_irqsave(),
+> yes..?
 
-> All users that check for the CDC_MEDIA_CHANGED capability try both
-> the check_events op and the media_changed op, but register_cdrom()
-> was requiring media_changed.
+Yes, hpsa_scatter_gather() doesn't require the lock to be held.
 
-> This patch fixes the capability checking and removes a redundant
-> check that media_changed != NULL.
+> 
+> So far this patch has been compile tested only.  Please have a look and
+> comment.
 
-> The cdrom_select_disc ioctl is also using the two operations, so
-> they should be required for CDC_SELECT_DISC too.
+Nothing obviously wrong that I see.
 
-> Signed-off-by: Simon Arlott<simon@fire.lp0.eu>
-> Cc: Jens Axboe<axboe@kernel.dk>
-> Cc: Tejun Heo<tj@kernel.org>
-> Cc: Kay Sievers<kay.sievers@vrfy.org>
-[...]
+-- steve
 
-> diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-> index 14033a3..4716d76 100644
-> --- a/drivers/cdrom/cdrom.c
-> +++ b/drivers/cdrom/cdrom.c
-> @@ -409,7 +409,9 @@ int register_cdrom(struct cdrom_device_info *cdi)
->   	}
->
->   	ENSURE(drive_status, CDC_DRIVE_STATUS );
-> -	ENSURE(media_changed, CDC_MEDIA_CHANGED);
-> +	if (cdo->check_events == NULL && cdo->media_changed == NULL) {
-> +		*change_capability = ~(CDC_MEDIA_CHANGED | CDC_SELECT_DISC);
-> +	}
-
-    {} are not needed here. I think checkstatus.pl should detect this...
-
-WBR, Sergei
+> 
+> Thanks!
+> 
+> --nab
+> 
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 12deffc..e205f33 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -1906,9 +1906,11 @@ sglist_finished:
+>         return 0;
+>  }
+>  
+> -
+> -static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+> -       void (*done)(struct scsi_cmnd *))
+> +/*
+> + * Running in struct Scsi_Host->host_lock less mode using LLD internal
+> + * struct ctlr_info *h->lock w/ spin_lock_irqsave() protection.
+> + */
+> +static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+>  {
+>         struct ctlr_info *h;
+>         struct hpsa_scsi_dev_t *dev;
+> @@ -1921,7 +1923,7 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+>         dev = cmd->device->hostdata;
+>         if (!dev) {
+>                 cmd->result = DID_NO_CONNECT << 16;
+> -               done(cmd);
+> +               cmd->scsi_done(cmd);
+>                 return 0;
+>         }
+>         memcpy(scsi3addr, dev->scsi3addr, sizeof(scsi3addr));
+> @@ -1936,9 +1938,6 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+>         }
+>  
+>         /* Fill in the command list header */
+> -
+> -       cmd->scsi_done = done;    /* save this for use by completion code */
+> -
+>         /* save c in case we have to abort it  */
+>         cmd->host_scribble = (unsigned char *) c;
+>  
+> @@ -2001,8 +2000,6 @@ static int hpsa_scsi_queue_command_lck(struct scsi_cmnd *cmd,
+>         return 0;
+>  }
+>  
+> -static DEF_SCSI_QCMD(hpsa_scsi_queue_command)
+> -
+>  static void hpsa_scan_start(struct Scsi_Host *sh)
+>  {
+>         struct ctlr_info *h = shost_to_hba(sh);
+> 
