@@ -1,55 +1,46 @@
 From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 17/32] scsi/ibmvstgt: use system_wq instead of vtgtd
- workqueue
-Date: Tue, 1 Feb 2011 11:40:43 +0100
-Message-ID: <20110201104043.GH14211@htj.dyndns.org>
+Subject: Re: [PATCHSET] workqueue: update workqueue users - replace
+ create_workqueue()
+Date: Tue, 1 Feb 2011 11:44:21 +0100
+Message-ID: <20110201104421.GJ14211@htj.dyndns.org>
 References: <1294062595-30097-1-git-send-email-tj@kernel.org>
- <1294062595-30097-18-git-send-email-tj@kernel.org>
- <AANLkTi=Fg8wjf-XfVsq0X4RWx7i8F1V7gC6-8Y5LPbnL@mail.gmail.com>
- <20110124162414.GD27510@htj.dyndns.org>
+ <20110125142921.GB27510@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-acpi-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110124162414.GD27510@htj.dyndns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
+In-Reply-To: <20110125142921.GB27510@htj.dyndns.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: lenb@kernel.org, linux-acpi@vger.kernel.org, davej@redhat.com, cpufreq@vger.kernel.org, Markus.Lidel@shadowconnect.com, tomas.winkler@intel.com, jayamohank@serverengines.com, andrew.vasquez@qlogic.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, tomof@acm.org, stf_xl@wp.pl, linux-usb@vger.kernel.org, tytso@mit.edu, mfasheh@suse.com, joel.becker@oracle.com, reiserfs-devel@vger.kernel.org, aelder@sgi.com, hch@infradead.org, ericvh@gmail.com, rminnich@sandia.gov, v9fs-developer@lists.sourceforge.net, lucho@ionkov.net, andy.grover@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 24, 2011 at 05:24:14PM +0100, Tejun Heo wrote:
+On Tue, Jan 25, 2011 at 03:29:21PM +0100, Tejun Heo wrote:
 > Hello,
 > 
-> On Mon, Jan 24, 2011 at 05:09:18PM +0100, Bart Van Assche wrote:
-> > Insertion of  flush_work_sync() fixes a race - that's a good catch.
-> > flush_work_sync() should be invoked a little earlier though because
-> > the scheduled work may access the queue destroyed by the
-> > crq_queue_destroy(target) call. And the CRQ interrupt should be
-> > disabled from before flush_work_sync() is invoked until after the CRQ
-> > has been destroyed.
+> There was no response for the following patches and I'm planning on
+> routing them through workqueue#for-2.6.39.  If you have an objection
+> or want to take the patch through a different tree, please let me
+> know.
 > 
-> Heh, I'm a bit out of my depth here.  If you know what's necessary,
-> please go ahead and make the change.
-> 
-> > Regarding the queue removal: I might have missed something, but why
-> > would you like to remove the vtgtd work queue ? Since the ibmvstgt
-> > driver is a storage target driver, processing latency matters. I'm
-> > afraid that switching from a dedicated queue to the global work queue
-> > will increase processing latency.
-> 
-> Having a dedicated workqueue no longer makes any difference regarding
-> processing latency.  Each workqueue is mere frontend to the shared
-> worker pool anyway.  Dedicated workqueues are now meaningful only as
-> forward progress guarantee, attribute and/or flush domain - IOW, when
-> the workqueue needs to be used during memory reclaim, the work items
-> need to have specific attributes or certain group of work items need
-> to be flushed together.  Apart from that, there's virtually no
-> difference between using the system_wq and a dedicated one.  As using
-> the system one is usually simpler, it's natural to do that.
+>  0006-acpi-kacpi-_wq-don-t-need-WQ_MEM_RECLAIM.patch
+>  0007-cpufreq-use-system_wq-instead-of-dedicated-workqueue.patch
+>  0012-i2o-use-alloc_workqueue-instead-of-create_workqueue.patch
+>  0013-misc-iwmc3200top-use-system_wq-instead-of-dedicated-.patch
+>  0016-scsi-be2iscsi-qla2xxx-convert-to-alloc_workqueue.patch
+>  0018-scsi-scsi_tgt_lib-scsi_tgtd-isn-t-used-in-memory-rec.patch
+>  0019-usb-ueagle-atm-use-system_wq-instead-of-dedicated-wo.patch
+>  0025-ext4-convert-to-alloc_workqueue.patch
+>  0026-ocfs2-use-system_wq-instead-of-ocfs2_quota_wq.patch
+>  0027-reiserfs-make-commit_wq-use-the-default-concurrency-.patch
+>  0028-xfs-convert-to-alloc_workqueue.patch
+>  0029-net-9p-use-system_wq-instead-of-p9_mux_wq.patch
+>  0030-net-9p-replace-p9_poll_task-with-a-work.patch
+>  0031-rds-ib-use-system_wq-instead-of-rds_ib_fmr_wq.patch
 
-Ping.  Are you interested in doing the conversion?
+Patches applied to wq#for-2.6.39 w/ collected acks added.
 
-Thanks.
+Thank you.
 
 -- 
 tejun
