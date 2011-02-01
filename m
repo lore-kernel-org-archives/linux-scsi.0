@@ -1,56 +1,55 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: hpsa: Convert SCSI LLD ->queuecommand() for host_lock less	operation
-Date: Tue, 01 Feb 2011 11:13:54 +0200
-Message-ID: <4D47CED2.4040303@panasas.com>
-References: <1296340702.14831.219.camel@haakon2.linux-iscsi.org>	 <4D44DA55.7060505@garzik.org>	 <1296422299.14831.302.camel@haakon2.linux-iscsi.org>	 <20110131144235.GM27398@beardog.cce.hp.com> <1296505560.14831.389.camel@haakon2.linux-iscsi.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 17/32] scsi/ibmvstgt: use system_wq instead of vtgtd
+ workqueue
+Date: Tue, 1 Feb 2011 11:40:43 +0100
+Message-ID: <20110201104043.GH14211@htj.dyndns.org>
+References: <1294062595-30097-1-git-send-email-tj@kernel.org>
+ <1294062595-30097-18-git-send-email-tj@kernel.org>
+ <AANLkTi=Fg8wjf-XfVsq0X4RWx7i8F1V7gC6-8Y5LPbnL@mail.gmail.com>
+ <20110124162414.GD27510@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from daytona.panasas.com ([67.152.220.89]:22842 "EHLO
-	daytona.panasas.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753031Ab1BAJN7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2011 04:13:59 -0500
-In-Reply-To: <1296505560.14831.389.camel@haakon2.linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110124162414.GD27510@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: scameron@beardog.cce.hp.com, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@suse.de>, "J.H." <warthog9@kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On 01/31/2011 10:26 PM, Nicholas A. Bellinger wrote:
->>> +static void enqueue_cmd_and_start_io(struct ctlr_info *h,
->>> +       struct CommandList *c)
->>> +{
->>> +       unsigned long flags;
->>> +
->>> +       spin_lock_irqsave(&h->lock, flags);
->>> +       __enqueue_cmd_and_start_io(h, c);
->>>         spin_unlock_irqrestore(&h->lock, flags);
->>>  }
->>
->> Should that be "static inline"?  Or maybe the compiler's smart enough
->> to decide whether to inline that on its own these days?
->>
+On Mon, Jan 24, 2011 at 05:24:14PM +0100, Tejun Heo wrote:
+> Hello,
 > 
-> Inlining both of these makes sense to me.  I will add this change and
-> send out an updated [PATCH] with your Reviewed-by shortly.
+> On Mon, Jan 24, 2011 at 05:09:18PM +0100, Bart Van Assche wrote:
+> > Insertion of  flush_work_sync() fixes a race - that's a good catch.
+> > flush_work_sync() should be invoked a little earlier though because
+> > the scheduled work may access the queue destroyed by the
+> > crq_queue_destroy(target) call. And the CRQ interrupt should be
+> > disabled from before flush_work_sync() is invoked until after the CRQ
+> > has been destroyed.
 > 
-
-Don't do that. Yes in an header but in a .c file never do.
-
-If there is only a single user the compiler will inline it.
-if there are lots of users then the compiler will choose by
-the compile-for-size or not and the function size. In any way
-the compiler will make a better choice then you regarding size
-and speed gained.
-
-I never put inline in .c files. Just make sure that functions
-are not forward declared. (that will kill the inline) and
-the gcc will always makes the better choice.
-
-Thanks
-Boaz
-
-> Thanks for your comments!
+> Heh, I'm a bit out of my depth here.  If you know what's necessary,
+> please go ahead and make the change.
 > 
-> --nab
+> > Regarding the queue removal: I might have missed something, but why
+> > would you like to remove the vtgtd work queue ? Since the ibmvstgt
+> > driver is a storage target driver, processing latency matters. I'm
+> > afraid that switching from a dedicated queue to the global work queue
+> > will increase processing latency.
+> 
+> Having a dedicated workqueue no longer makes any difference regarding
+> processing latency.  Each workqueue is mere frontend to the shared
+> worker pool anyway.  Dedicated workqueues are now meaningful only as
+> forward progress guarantee, attribute and/or flush domain - IOW, when
+> the workqueue needs to be used during memory reclaim, the work items
+> need to have specific attributes or certain group of work items need
+> to be flushed together.  Apart from that, there's virtually no
+> difference between using the system_wq and a dedicated one.  As using
+> the system one is usually simpler, it's natural to do that.
+
+Ping.  Are you interested in doing the conversion?
+
+Thanks.
+
+-- 
+tejun
