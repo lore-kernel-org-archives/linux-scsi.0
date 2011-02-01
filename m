@@ -1,35 +1,39 @@
-From: <tyder13@cox.net>
-Subject: Lucky Winner!
-Date: Mon, 31 Jan 2011 17:42:37 -0800
-Message-ID: <20110131204237.17XWR.1067459.imail__40777.7202934541$1296524956$gmane$org@fed1rmwml34>
-Reply-To: enquiry_jommyjacob01@londonmail.com
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH] scsi_debug: Fix 32-bit overflow in do_device_access
+Date: Mon, 31 Jan 2011 18:47:54 -0800
+Message-ID: <20110201024754.GS27190@tux1.beaverton.ibm.com>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fed1rmmtai113.cox.net ([68.230.241.47]:54321 "EHLO
-	fed1rmmtai113.cox.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754062Ab1BABs7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Jan 2011 20:48:59 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Douglas Gilbert <dgilbert@interlog.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-You have been awarded =C3=82=C2=A3850,000 from the OXFAM GB - UK=20
-the cash/grant donation Promo for Global Economic Scheme.
-=46or claims, Contact Dr. Ben Andrew.=20
-via e-mail
+If I create a scsi_debug device that is larger than 4GB, the multiplication of
+(block * scsi_debug_sector_size) can produce a 64-bit value.  Unfortunately,
+the compiler sees two 32-bit quantities and performs a 32-bit multiplication,
+thus truncating the bits above 2^32.  This causes the wrong memory location to
+be read or written.  Change block and rest to be unsigned long long.
 
-Name:
-Country:
-Age:
-Phone Number:
-Gender:
-Occupation:
-Your Qualification Number (OG/N231/E101/BDB)=20
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+---
 
- (oxfam003@aol.com)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ drivers/scsi/scsi_debug.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 7b31093..a6b2d72 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1671,7 +1671,7 @@ static int do_device_access(struct scsi_cmnd *scmd,
+ 			    unsigned long long lba, unsigned int num, int write)
+ {
+ 	int ret;
+-	unsigned int block, rest = 0;
++	unsigned long long block, rest = 0;
+ 	int (*func)(struct scsi_cmnd *, unsigned char *, int);
+ 
+ 	func = write ? fetch_to_dev_buffer : fill_from_dev_buffer;
