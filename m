@@ -1,37 +1,48 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 17/32] scsi/ibmvstgt: use system_wq instead of vtgtd
- workqueue
-Date: Tue, 1 Feb 2011 15:29:46 +0100
-Message-ID: <20110201142946.GN14211@htj.dyndns.org>
-References: <AANLkTi=Fg8wjf-XfVsq0X4RWx7i8F1V7gC6-8Y5LPbnL@mail.gmail.com>
- <20110124162414.GD27510@htj.dyndns.org>
- <20110201104043.GH14211@htj.dyndns.org>
- <20110201231836D.fujita.tomonori@lab.ntt.co.jp>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Current plans for SDEV_EVT_* and friends
+Date: Tue, 01 Feb 2011 15:55:14 +0100
+Message-ID: <4D481ED2.1060109@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110201231836D.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-kernel-owner@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bvanassche@acm.org, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, rcj@linux.vnet.ibm.com
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:42240 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753253Ab1BAOr3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Feb 2011 09:47:29 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <jbottomley@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Richard Sharpe <realrichardsharpe@gmail.com>
 
-On Tue, Feb 01, 2011 at 11:18:54PM +0900, FUJITA Tomonori wrote:
-> > Ping.  Are you interested in doing the conversion?
-> 
-> FYI, this driver will be replaced shortly. Now I have the working
-> ibmvscsis driver for the new target framework. I'll submit it this
-> week. So this driver will be removed soon or later (if James prefer to
-> go through the proper Documentation/feature-removal-schedule.txt
-> process, it'll be for some time). You could leave this alone, I guess.
+Hi Tejun,
 
-I see.  I'll drop the patch then.  Please keep in mind that I'm
-planning on marking flush_scheduled_work() deprecated in linux-next in
-a month or so.  create_singlethread_workqueue() will follow in the
-next cycle and then create_workqueue() the next.
+seeing that you are moving the old SCSI / libata AEN handling over
+to the new block-based workqueue, I was wondering what your plans
+are with the remaining SDEV_EVT_* things.
 
-Thank you.
+Thing is I'm currently working on implementing proper Unit Attention
+handling in the SCSI stack. For this I would need to have some field
+off the scsi_device structure into which I can store information
+about which events / event types are supported and which are activated.
+So the existing bitmap approach with 'supported_events' would quite
+a good starting point here, and it will even be useful to add
+another one, eg 'enabled_events'.
+And, of course, plan is to route appropriate events over to the
+block workqueue by calling disk_check_events().
 
--- 
-tejun
+Unless you have other ideas/plans here ...
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
