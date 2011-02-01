@@ -1,38 +1,58 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 1/2] scsi: remove bogus use of struct execute_work in sg
-Date: Tue, 1 Feb 2011 11:58:56 +0100
-Message-ID: <20110201105856.GL14211@htj.dyndns.org>
-References: <20110124133105.GC11404@htj.dyndns.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 17/32] scsi/ibmvstgt: use system_wq instead of vtgtd
+ workqueue
+Date: Tue, 1 Feb 2011 23:18:54 +0900
+Message-ID: <20110201231836D.fujita.tomonori@lab.ntt.co.jp>
+References: <AANLkTi=Fg8wjf-XfVsq0X4RWx7i8F1V7gC6-8Y5LPbnL@mail.gmail.com>
+	<20110124162414.GD27510@htj.dyndns.org>
+	<20110201104043.GH14211@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:57331 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752474Ab1BAK70 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Feb 2011 05:59:26 -0500
-Content-Disposition: inline
-In-Reply-To: <20110124133105.GC11404@htj.dyndns.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110201104043.GH14211@htj.dyndns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: bvanassche@acm.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com, rcj@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, lkml <linux-kernel@vger.kernel.org>
 
-On Mon, Jan 24, 2011 at 02:31:05PM +0100, Tejun Heo wrote:
-> execute_work usage in sg is bogus.  execute_in_process_context() is
-> never used and ew is used purely as wrapper around work_struct which
-> is superflous.  Use work_struct directly.
+On Tue, 1 Feb 2011 11:40:43 +0100
+Tejun Heo <tj@kernel.org> wrote:
+
+> On Mon, Jan 24, 2011 at 05:24:14PM +0100, Tejun Heo wrote:
+> > Hello,
+> > 
+> > On Mon, Jan 24, 2011 at 05:09:18PM +0100, Bart Van Assche wrote:
+> > > Insertion of  flush_work_sync() fixes a race - that's a good catch.
+> > > flush_work_sync() should be invoked a little earlier though because
+> > > the scheduled work may access the queue destroyed by the
+> > > crq_queue_destroy(target) call. And the CRQ interrupt should be
+> > > disabled from before flush_work_sync() is invoked until after the CRQ
+> > > has been destroyed.
+> > 
+> > Heh, I'm a bit out of my depth here.  If you know what's necessary,
+> > please go ahead and make the change.
+> > 
+> > > Regarding the queue removal: I might have missed something, but why
+> > > would you like to remove the vtgtd work queue ? Since the ibmvstgt
+> > > driver is a storage target driver, processing latency matters. I'm
+> > > afraid that switching from a dedicated queue to the global work queue
+> > > will increase processing latency.
+> > 
+> > Having a dedicated workqueue no longer makes any difference regarding
+> > processing latency.  Each workqueue is mere frontend to the shared
+> > worker pool anyway.  Dedicated workqueues are now meaningful only as
+> > forward progress guarantee, attribute and/or flush domain - IOW, when
+> > the workqueue needs to be used during memory reclaim, the work items
+> > need to have specific attributes or certain group of work items need
+> > to be flushed together.  Apart from that, there's virtually no
+> > difference between using the system_wq and a dedicated one.  As using
+> > the system one is usually simpler, it's natural to do that.
 > 
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-> ---
-> This hasn't changed from the previous posting.
-> 
->   http://thread.gmane.org/gmane.linux.scsi/62923
+> Ping.  Are you interested in doing the conversion?
 
-James, are you gonna take these two?
-
-Thanks.
-
--- 
-tejun
+FYI, this driver will be replaced shortly. Now I have the working
+ibmvscsis driver for the new target framework. I'll submit it this
+week. So this driver will be removed soon or later (if James prefer to
+go through the proper Documentation/feature-removal-schedule.txt
+process, it'll be for some time). You could leave this alone, I guess.
