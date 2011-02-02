@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/4] target: Move core_delete_hba() into ->release() callback
-Date: Wed,  2 Feb 2011 00:26:48 -0800
-Message-ID: <1296635211-6269-2-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 3/4] target: Move core_alua_free_lu_gp() into ->release() callback
+Date: Wed,  2 Feb 2011 00:26:50 -0800
+Message-ID: <1296635211-6269-4-git-send-email-nab@linux-iscsi.org>
 References: <1296635211-6269-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm24.bullet.mail.ac4.yahoo.com ([98.139.52.221]:22962 "HELO
-	nm24.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753395Ab1BBI0w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2011 03:26:52 -0500
+Received: from nm14.bullet.mail.ac4.yahoo.com ([98.139.52.211]:40749 "HELO
+	nm14.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753574Ab1BBI06 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2011 03:26:58 -0500
 In-Reply-To: <1296635211-6269-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,71 +16,66 @@ Cc: Christoph Hellwig <hch@lst.de>, Joel Becker <jlbec@evilplan.org>, Fubo Chen 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch moves the core_delete_hba() call in target_core_call_delhbafromtarget()
-and subsequent release struct se_hba memory to inside of the configfs callback
-target_core_hba_item_ops->release() called from within fs/configfs/item.c:
-config_item_cleanup() context.  This patch resolves the following SLUB
-'Poison overwritten' warning while calling core_delete_hba() -> kfree(hba)
-directly after config_item_put():
+This patch moves the core_alua_free_lu_gp() and subsequent release of
+struct t10_alua_lu_gp memory to inside of the configfs callback
+target_core_alua_lu_gp_ops->release() called from within
+fs/configfs/item.c:config_item_cleanup() context.  This patch resolves the
+following SLUB 'Poison overwritten' warning when calling core_alua_free_lu_gp()
+-> kfree(lu_gp) directly after config_item_put():
 
-[ 1734.081444] =============================================================================
-[ 1734.081635] BUG kmalloc-256: Poison overwritten
-[ 1734.081635] -----------------------------------------------------------------------------
-[ 1734.081635]
-[ 1734.081635] INFO: 0xffff88000d290824-0xffff88000d290824. First byte 0x6a instead of 0x6b
-[ 1734.081635] INFO: Allocated in core_alloc_hba+0x3a/0x231 [target_core_mod] age=3714 cpu=0 pid=11015
-[ 1734.081635] INFO: Freed in core_delete_hba+0x8a/0x90 [target_core_mod] age=4 cpu=0 pid=11040
-[ 1734.081635] INFO: Slab 0xffffea00002e0f80 objects=24 used=6 fp=0xffff88000d2907b0 flags=0x1000000000040c1
-[ 1734.081635] INFO: Object 0xffff88000d2907b0 @offset=1968 fp=0xffff88000d290b88
+[  293.452366] =============================================================================
+[  293.452653] BUG t10_alua_lu_gp_cache: Poison overwritten
+[  293.452653] -----------------------------------------------------------------------------
+[  293.452653]
+[  293.452653] INFO: 0xffff88001f7c2174-0xffff88001f7c2174. First byte 0x6a instead of 0x6b
+[  293.452653] INFO: Allocated in core_alua_allocate_lu_gp+0x1c/0xa0 [target_core_mod] age=1799 cpu=0 pid=5229
+[  293.452653] INFO: Freed in core_alua_free_lu_gp+0x105/0x111 [target_core_mod] age=52 cpu=0 pid=5235
+[  293.452653] INFO: Slab 0xffffea00006e3270 objects=25 used=0 fp=0xffff88001f7c2000 flags=0x100000000004080
+[  293.452653] INFO: Object 0xffff88001f7c2140 @offset=320 fp=0xffff88001f7c2280
+[  293.452653]
 
 Cc: Joel Becker <jlbec@evilplan.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_configfs.c |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
+ drivers/target/target_core_configfs.c |   15 +++++++++++++--
+ 1 files changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 7d7dfbc..ccb5554 100644
+index 3715c91..3933409 100644
 --- a/drivers/target/target_core_configfs.c
 +++ b/drivers/target/target_core_configfs.c
-@@ -2998,6 +2998,13 @@ SE_HBA_ATTR(hba_mode, S_IRUGO | S_IWUSR);
+@@ -2195,7 +2195,16 @@ static struct configfs_attribute *target_core_alua_lu_gp_attrs[] = {
+ 	NULL,
+ };
  
- CONFIGFS_EATTR_OPS(target_core_hba, se_hba, hba_group);
- 
-+static void target_core_hba_release(struct config_item *item)
++static void target_core_alua_lu_gp_release(struct config_item *item)
 +{
-+	struct se_hba *hba = container_of(to_config_group(item),
-+				struct se_hba, hba_group);
-+	core_delete_hba(hba);
++	struct t10_alua_lu_gp *lu_gp = container_of(to_config_group(item),
++			struct t10_alua_lu_gp, lu_gp_group);
++
++	core_alua_free_lu_gp(lu_gp);
 +}
 +
- static struct configfs_attribute *target_core_hba_attrs[] = {
- 	&target_core_hba_hba_info.attr,
- 	&target_core_hba_hba_mode.attr,
-@@ -3005,6 +3012,7 @@ static struct configfs_attribute *target_core_hba_attrs[] = {
+ static struct configfs_item_operations target_core_alua_lu_gp_ops = {
++	.release		= target_core_alua_lu_gp_release,
+ 	.show_attribute		= target_core_alua_lu_gp_attr_show,
+ 	.store_attribute	= target_core_alua_lu_gp_attr_store,
  };
- 
- static struct configfs_item_operations target_core_hba_item_ops = {
-+	.release		= target_core_hba_release,
- 	.show_attribute		= target_core_hba_attr_show,
- 	.store_attribute	= target_core_hba_attr_store,
- };
-@@ -3081,10 +3089,11 @@ static void target_core_call_delhbafromtarget(
- 	struct config_group *group,
- 	struct config_item *item)
- {
--	struct se_hba *hba = item_to_hba(item);
+@@ -2246,9 +2255,11 @@ static void target_core_alua_drop_lu_gp(
+ 	printk(KERN_INFO "Target_Core_ConfigFS: Releasing ALUA Logical Unit"
+ 		" Group: core/alua/lu_gps/%s, ID: %hu\n",
+ 		config_item_name(item), lu_gp->lu_gp_id);
 -
 +	/*
-+	 * core_delete_hba() is called from target_core_hba_item_ops->release()
-+	 * -> target_core_hba_release()
++	 * core_alua_free_lu_gp() is called from target_core_alua_lu_gp_ops->release()
++	 * -> target_core_alua_lu_gp_release()
 +	 */
  	config_item_put(item);
--	core_delete_hba(hba);
+-	core_alua_free_lu_gp(lu_gp);
  }
  
- static struct configfs_group_operations target_core_group_ops = {
+ static struct configfs_group_operations target_core_alua_lu_gps_group_ops = {
 -- 
 1.5.6.5
 
