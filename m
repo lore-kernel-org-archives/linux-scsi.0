@@ -1,98 +1,47 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Fix top-level configfs_subsystem default_group shutdown breakage
-Date: Tue,  1 Feb 2011 21:18:18 -0800
-Message-ID: <1296623898-5341-1-git-send-email-nab@linux-iscsi.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 20/28] libfcoe: add implementation to support fcoe transport
+Date: Wed, 02 Feb 2011 00:43:58 -0600
+Message-ID: <4D48FD2E.1000307@cs.wisc.edu>
+References: <20110129000310.1784.58748.stgit@localhost6.localdomain6> <20110129000455.1784.95503.stgit@localhost6.localdomain6>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm20-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.218]:26748 "HELO
-	nm20-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750760Ab1BBFSC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2011 00:18:02 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:55109 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752421Ab1BBGoN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Feb 2011 01:44:13 -0500
+In-Reply-To: <20110129000455.1784.95503.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>
-Cc: Joel Becker <jlbec@evilplan.org>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
+To: Robert Love <robert.w.love@intel.com>
+Cc: James.Bottomley@suse.de, linux-scsi@vger.kernel.org, Bhanu Prakash Gollapudi <bprakash@broadcom.com>, Yi Zou <yi.zou@intel.com>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 01/28/2011 06:04 PM, Robert Love wrote:
+> +static int fcoe_transport_create(const char *buffer, struct kernel_param *kp)
+> +{
+> +	int rc = -ENODEV;
+> +	struct net_device *netdev = NULL;
+> +	struct fcoe_transport *ft = NULL;
+> +	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
+> +
+> +	if (!mutex_trylock(&ft_mutex))
+> +		return restart_syscall();
 
-This patch fixes two bugs uncovered during testing with slub_debug=FPUZ
-during module_exit() -> target_core_exit_configfs() with release of
-configfs subsystem consumer default groups, namely how this should be
-working with fs/configfs/dir.c:configfs_unregister_subsystem() release
-logic for struct config_group->default_group.
+I was just wondering what is the reason for this. I see it in other 
+network related sysfs code but no where else. Is there some networky reason?
 
-The first issue involves configfs_unregister_subsystem() expecting to
-walk+drain the top-level subsys->su_group.default_groups directly in
-unlink_group(), and not directly from the configfs subsystem consumer
-for the top level struct config_group->default_groups.  This patch drops
-the walk+drain of subsys->su_group.default_groups from TCM configfs
-subsystem consumer code, and moves the top-level ->default_groups kfree()
-after configfs_unregister_subsystem() has been called.
+> +
+> +#ifdef CONFIG_LIBFCOE_MODULE
+> +	/*
+> +	 * Make sure the module has been initialized, and is not about to be
+> +	 * removed.  Module parameter sysfs files are writable before the
+> +	 * module_init function is called and after module_exit.
+> +	 */
+> +	if (THIS_MODULE->state != MODULE_STATE_LIVE)
+> +		goto out_nodev;
+> +#endif
 
-The second issue involves calling core_alua_free_lu_gp(se_global->default_lu_gp)
-to release the default_lu_gp->lu_gp_group before configfs_unregister_subsystem()
-has been called.  This patches also moves the core_alua_free_lu_gp() call to
-release default_lu_group->lu_gp_group after the subsys has been unregistered.
-
-Finally, this patch explictly clears the [lu_gp,alua,hba]_cg->default_groups
-pointers after kfree() to ensure that no stale memory is picked up from
-child struct config_group->default_group[] while configfs_unregister_subsystem()
-is called.
-
-Reported-by: Fubo Chen <fubo.chen@gmail.com>
-Cc: Joel Becker <jlbec@evilplan.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_configfs.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 9ff1942..7d7dfbc 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -3262,8 +3262,7 @@ static void target_core_exit_configfs(void)
- 		config_item_put(item);
- 	}
- 	kfree(lu_gp_cg->default_groups);
--	core_alua_free_lu_gp(se_global->default_lu_gp);
--	se_global->default_lu_gp = NULL;
-+	lu_gp_cg->default_groups = NULL;
- 
- 	alua_cg = &se_global->alua_group;
- 	for (i = 0; alua_cg->default_groups[i]; i++) {
-@@ -3272,6 +3271,7 @@ static void target_core_exit_configfs(void)
- 		config_item_put(item);
- 	}
- 	kfree(alua_cg->default_groups);
-+	alua_cg->default_groups = NULL;
- 
- 	hba_cg = &se_global->target_core_hbagroup;
- 	for (i = 0; hba_cg->default_groups[i]; i++) {
-@@ -3280,15 +3280,17 @@ static void target_core_exit_configfs(void)
- 		config_item_put(item);
- 	}
- 	kfree(hba_cg->default_groups);
--
--	for (i = 0; subsys->su_group.default_groups[i]; i++) {
--		item = &subsys->su_group.default_groups[i]->cg_item;
--		subsys->su_group.default_groups[i] = NULL;
--		config_item_put(item);
--	}
-+	hba_cg->default_groups = NULL;
-+	/*
-+	 * We expect subsys->su_group.default_groups to be released
-+	 * by configfs subsystem provider logic..
-+	 */
-+	configfs_unregister_subsystem(subsys);
- 	kfree(subsys->su_group.default_groups);
- 
--	configfs_unregister_subsystem(subsys);
-+	core_alua_free_lu_gp(se_global->default_lu_gp);
-+	se_global->default_lu_gp = NULL;
-+
- 	printk(KERN_INFO "TARGET_CORE[0]: Released ConfigFS Fabric"
- 			" Infrastructure\n");
- 
--- 
-1.5.6.5
-
+It seems that this would be a problem for every driver that uses module 
+params. Should the module code be getting a module refcount or doing 
+this test?
