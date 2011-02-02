@@ -1,108 +1,52 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 4/5] target: Move fabric dependent struct se_tpg_np free into ->release() callback
-Date: Wed,  2 Feb 2011 03:10:45 -0800
-Message-ID: <1296645046-7076-5-git-send-email-nab@linux-iscsi.org>
-References: <1296645046-7076-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.mud.yahoo.com ([68.142.198.200]:24393 "HELO
-	smtp101.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753096Ab1BBLKs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2011 06:10:48 -0500
-In-Reply-To: <1296645046-7076-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Justin Mattock <justinmattock@gmail.com>
+Subject: Re: [PATCH 1/8]arch:ia64:perfmon.h change a typo comamnd to command
+Date: Wed, 2 Feb 2011 08:01:43 -0800
+Message-ID: <792EE80F-000E-44CA-9E0A-F18995591126@gmail.com>
+References: <1296623130-5130-1-git-send-email-justinmattock@gmail.com> <alpine.LNX.2.00.1102021132330.2160@pobox.suse.cz>
+Mime-Version: 1.0 (Apple Message framework v936)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ia64-owner@vger.kernel.org>
+In-Reply-To: <alpine.LNX.2.00.1102021132330.2160@pobox.suse.cz>
+Sender: linux-ia64-owner@vger.kernel.org
+To: Jiri Kosina <jkosina@suse.cz>
+Cc: tony.luck@intel.com, fenghua.yu@intel.com, linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org, megaraidlinux@lsi.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linville@tuxdriver.com, linux-wireless@vger.kernel.org, chas@cmf.nrl.navy.mil, linux-atm-general@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Joel Becker <jlbec@evilplan.org>, Fubo Chen <fubo.chen@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch moves the struct target_core_fabric_ops->fabric_drop_np() callback
-and subsequent fabric dependent release of struct se_tpg_np memory to the
-configfs callback target_fabric_np_base_item_ops->release() called from within
-fs/configfs/item.c:config_item_cleanup() context.  This patch resolves the
-following SLUB 'Poison overwritten' warning when calling tfc->fabric_drop_np()
-directly after config_item_put() for the fabric dependent data structure
-containing struct se_tpg_np->tpg_np_group:
+On Feb 2, 2011, at 2:33 AM, Jiri Kosina wrote:
 
-[ 3967.988931] =============================================================================
-[ 3967.989501] BUG kmalloc-512: Poison overwritten
-[ 3967.989692] -----------------------------------------------------------------------------
-[ 3967.989692]
-[ 3967.989692] INFO: 0xffff880012255524-0xffff880012255524. First byte 0x6a instead of 0x6b
-[ 3967.989692] INFO: Allocated in kzalloc+0xf/0x11 [iscsi_target_mod] age=6769 cpu=0 pid=9702
-[ 3967.989692] INFO: Freed in iscsi_tpg_del_network_portal+0x18e/0x205 [iscsi_target_mod] age=7 cpu=0 pid=9723
-[ 3967.989692] INFO: Slab 0xffffea00003f8260 objects=28 used=12 fp=0xffff880012255488 flags=0x1000000000040c1
-[ 3967.989692] INFO: Object 0xffff880012255488 @offset=5256 fp=0xffff880012255b60
+> On Tue, 1 Feb 2011, Justin P. Mattock wrote:
+>
+>> The below patch fixes a typo comamnd to command.
+>>
+>> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+>>
+>> ---
+>> arch/ia64/include/asm/perfmon.h |    2 +-
+>> 1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/arch/ia64/include/asm/perfmon.h b/arch/ia64/include/ 
+>> asm/perfmon.h
+>> index 7f3333d..d551183 100644
+>> --- a/arch/ia64/include/asm/perfmon.h
+>> +++ b/arch/ia64/include/asm/perfmon.h
+>> @@ -7,7 +7,7 @@
+>> #define _ASM_IA64_PERFMON_H
+>>
+>> /*
+>> - * perfmon comamnds supported on all CPU models
+>> + * perfmon commands supported on all CPU models
+>
+> I have consended all the patches in this thread (modulo the staging  
+> ones)
+> into one and applied.
+>
+> -- 
+> Jiri Kosina
+> SUSE Labs, Novell Inc.
 
-Cc: Joel Becker <jlbec@evilplan.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_fabric_configfs.c |   22 +++++++++++++++-------
- include/target/target_core_base.h            |    1 +
- 2 files changed, 16 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index b9cae9d..41fea37 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -520,7 +520,18 @@ TF_CIT_SETUP(tpg_nacl, NULL, &target_fabric_nacl_group_ops, NULL);
- 
- CONFIGFS_EATTR_OPS(target_fabric_np_base, se_tpg_np, tpg_np_group);
- 
-+static void target_fabric_np_base_release(struct config_item *item)
-+{
-+	struct se_tpg_np *se_tpg_np = container_of(to_config_group(item),
-+				struct se_tpg_np, tpg_np_group);
-+	struct se_portal_group *se_tpg = se_tpg_np->tpg_np_parent;
-+	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
-+
-+	tf->tf_ops.fabric_drop_np(se_tpg_np);
-+}
-+
- static struct configfs_item_operations target_fabric_np_base_item_ops = {
-+	.release		= target_fabric_np_base_release,
- 	.show_attribute		= target_fabric_np_base_attr_show,
- 	.store_attribute	= target_fabric_np_base_attr_store,
- };
-@@ -549,6 +560,7 @@ static struct config_group *target_fabric_make_np(
- 	if (!(se_tpg_np) || IS_ERR(se_tpg_np))
- 		return ERR_PTR(-EINVAL);
- 
-+	se_tpg_np->tpg_np_parent = se_tpg;
- 	config_group_init_type_name(&se_tpg_np->tpg_np_group, name,
- 			&TF_CIT_TMPL(tf)->tfc_tpg_np_base_cit);
- 
-@@ -559,14 +571,10 @@ static void target_fabric_drop_np(
- 	struct config_group *group,
- 	struct config_item *item)
- {
--	struct se_portal_group *se_tpg = container_of(group,
--				struct se_portal_group, tpg_np_group);
--	struct target_fabric_configfs *tf = se_tpg->se_tpg_wwn->wwn_tf;
--	struct se_tpg_np *se_tpg_np = container_of(to_config_group(item),
--				struct se_tpg_np, tpg_np_group);
--
-+	/*
-+	 * struct se_tpg_np is released via target_fabric_np_base_release()
-+	 */
- 	config_item_put(item);
--	tf->tf_ops.fabric_drop_np(se_tpg_np);
- }
- 
- static struct configfs_group_operations target_fabric_np_group_ops = {
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 9d18115..ea1f01d 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -901,6 +901,7 @@ struct se_port {
- } ____cacheline_aligned;
- 
- struct se_tpg_np {
-+	struct se_portal_group *tpg_np_parent;
- 	struct config_group	tpg_np_group;
- } ____cacheline_aligned;
- 
--- 
-1.5.6.5
+cool... if I find anymore Ill send it on up!!
 
+Justin P. Mattock
