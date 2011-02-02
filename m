@@ -1,56 +1,98 @@
-From: "Justin P. Mattock" <justinmattock@gmail.com>
-Subject: [PATCH 2/8]drivers:scsi:megaraid.c change a typo comamnd to command
-Date: Tue,  1 Feb 2011 21:05:59 -0800
-Message-ID: <1296623159-5193-1-git-send-email-justinmattock@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: trivial@kernel.org
-Cc: megaraidlinux@lsi.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "Justin P. Mattock" <justinmattock@gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH] target: Fix top-level configfs_subsystem default_group shutdown breakage
+Date: Tue,  1 Feb 2011 21:18:18 -0800
+Message-ID: <1296623898-5341-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm20-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.218]:26748 "HELO
+	nm20-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1750760Ab1BBFSC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2011 00:18:02 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Fubo Chen <fubo.chen@gmail.com>
+Cc: Joel Becker <jlbec@evilplan.org>, Christoph Hellwig <hch@lst.de>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-The below patch fixes a typo comamnd to command.
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+This patch fixes two bugs uncovered during testing with slub_debug=FPUZ
+during module_exit() -> target_core_exit_configfs() with release of
+configfs subsystem consumer default groups, namely how this should be
+working with fs/configfs/dir.c:configfs_unregister_subsystem() release
+logic for struct config_group->default_group.
 
+The first issue involves configfs_unregister_subsystem() expecting to
+walk+drain the top-level subsys->su_group.default_groups directly in
+unlink_group(), and not directly from the configfs subsystem consumer
+for the top level struct config_group->default_groups.  This patch drops
+the walk+drain of subsys->su_group.default_groups from TCM configfs
+subsystem consumer code, and moves the top-level ->default_groups kfree()
+after configfs_unregister_subsystem() has been called.
+
+The second issue involves calling core_alua_free_lu_gp(se_global->default_lu_gp)
+to release the default_lu_gp->lu_gp_group before configfs_unregister_subsystem()
+has been called.  This patches also moves the core_alua_free_lu_gp() call to
+release default_lu_group->lu_gp_group after the subsys has been unregistered.
+
+Finally, this patch explictly clears the [lu_gp,alua,hba]_cg->default_groups
+pointers after kfree() to ensure that no stale memory is picked up from
+child struct config_group->default_group[] while configfs_unregister_subsystem()
+is called.
+
+Reported-by: Fubo Chen <fubo.chen@gmail.com>
+Cc: Joel Becker <jlbec@evilplan.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/scsi/megaraid.c                   |    4 ++--
- drivers/scsi/megaraid/megaraid_sas_base.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/target/target_core_configfs.c |   20 +++++++++++---------
+ 1 files changed, 11 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 9aa0485..c212694 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -1412,7 +1412,7 @@ megaraid_isr_memmapped(int irq, void *devp)
-  * @nstatus - number of completed commands
-  * @status - status of the last command completed
-  *
-- * Complete the comamnds and call the scsi mid-layer callback hooks.
-+ * Complete the commands and call the scsi mid-layer callback hooks.
-  */
- static void
- mega_cmd_done(adapter_t *adapter, u8 completed[], int nstatus, int status)
-@@ -4296,7 +4296,7 @@ mega_support_cluster(adapter_t *adapter)
-  * @adapter - pointer to our soft state
-  * @dma_handle - DMA address of the buffer
-  *
-- * Issue internal comamnds while interrupts are available.
-+ * Issue internal commands while interrupts are available.
-  * We only issue direct mailbox commands from within the driver. ioctl()
-  * interface using these routines can issue passthru commands.
-  */
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 5d6d07b..a18ba43 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -877,7 +877,7 @@ megasas_issue_blocked_cmd(struct megasas_instance *instance,
-  * @instance:				Adapter soft state
-  * @cmd_to_abort:			Previously issued cmd to be aborted
-  *
-- * MFI firmware can abort previously issued AEN comamnd (automatic event
-+ * MFI firmware can abort previously issued AEN command (automatic event
-  * notification). The megasas_issue_blocked_abort_cmd() issues such abort
-  * cmd and waits for return status.
-  * Max wait time is MEGASAS_INTERNAL_CMD_WAIT_TIME secs
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 9ff1942..7d7dfbc 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -3262,8 +3262,7 @@ static void target_core_exit_configfs(void)
+ 		config_item_put(item);
+ 	}
+ 	kfree(lu_gp_cg->default_groups);
+-	core_alua_free_lu_gp(se_global->default_lu_gp);
+-	se_global->default_lu_gp = NULL;
++	lu_gp_cg->default_groups = NULL;
+ 
+ 	alua_cg = &se_global->alua_group;
+ 	for (i = 0; alua_cg->default_groups[i]; i++) {
+@@ -3272,6 +3271,7 @@ static void target_core_exit_configfs(void)
+ 		config_item_put(item);
+ 	}
+ 	kfree(alua_cg->default_groups);
++	alua_cg->default_groups = NULL;
+ 
+ 	hba_cg = &se_global->target_core_hbagroup;
+ 	for (i = 0; hba_cg->default_groups[i]; i++) {
+@@ -3280,15 +3280,17 @@ static void target_core_exit_configfs(void)
+ 		config_item_put(item);
+ 	}
+ 	kfree(hba_cg->default_groups);
+-
+-	for (i = 0; subsys->su_group.default_groups[i]; i++) {
+-		item = &subsys->su_group.default_groups[i]->cg_item;
+-		subsys->su_group.default_groups[i] = NULL;
+-		config_item_put(item);
+-	}
++	hba_cg->default_groups = NULL;
++	/*
++	 * We expect subsys->su_group.default_groups to be released
++	 * by configfs subsystem provider logic..
++	 */
++	configfs_unregister_subsystem(subsys);
+ 	kfree(subsys->su_group.default_groups);
+ 
+-	configfs_unregister_subsystem(subsys);
++	core_alua_free_lu_gp(se_global->default_lu_gp);
++	se_global->default_lu_gp = NULL;
++
+ 	printk(KERN_INFO "TARGET_CORE[0]: Released ConfigFS Fabric"
+ 			" Infrastructure\n");
+ 
 -- 
-1.6.5.GIT
+1.5.6.5
+
