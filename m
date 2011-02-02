@@ -1,12 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/5] Move fabric configfs memory release to configfs_item_operations->release()
-Date: Wed,  2 Feb 2011 03:10:41 -0800
-Message-ID: <1296645046-7076-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 2/5] target: Move fabric dependent se_portal_group free into ->release() callback
+Date: Wed,  2 Feb 2011 03:10:43 -0800
+Message-ID: <1296645046-7076-3-git-send-email-nab@linux-iscsi.org>
+References: <1296645046-7076-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp101.sbc.mail.mud.yahoo.com ([68.142.198.200]:24327 "HELO
+Received: from smtp101.sbc.mail.mud.yahoo.com ([68.142.198.200]:24358 "HELO
 	smtp101.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752125Ab1BBLKh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2011 06:10:37 -0500
+	by vger.kernel.org with SMTP id S1753096Ab1BBLKn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2011 06:10:43 -0500
+In-Reply-To: <1296645046-7076-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>
@@ -14,55 +16,71 @@ Cc: Christoph Hellwig <hch@lst.de>, Joel Becker <jlbec@evilplan.org>, Fubo Chen 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Greetings all,
+This patch moves the struct target_core_fabric_ops->fabric_drop_tpg() callback
+and subsequent fabric dependent release of struct se_portal_group memory to
+inside of the configfs callback target_fabric_tpg_base_item_ops->release()
+called from within fs/configfs/item.c:config_item_cleanup() context.
+This patch resolves the following SLUB 'Poison overwritten' warning when calling
+tfc->fabric_drop_tpg() directly after config_item_put() for the fabric dependent
+data structure containing struct se_portal_group->tpg_group:
 
-This followup series addresses five scenarios in generic target_core_fabric_configfs.c
-code where config_item_put() being called upon the following fabric groups with
-struct configfs_group_operations->drop_item() directly releasing struct
-config_group memory is causing a number of SLUB 'Poison overwritten' warnings
-during testing with .38-rc2.
+[ 2283.331123] =============================================================================
+[ 2283.331282] BUG lio_tpg_cache: Poison overwritten
+[ 2283.331282] -----------------------------------------------------------------------------
+[ 2283.331282]
+[ 2283.331282] INFO: 0xffff880001e48b7c-0xffff880001e48b7c. First byte 0x6a instead of 0x6b
+[ 2283.331282] INFO: Allocated in core_alloc_portal_group+0x24/0x102 [iscsi_target_mod] age=48820 cpu=0 pid=8220
+[ 2283.331282] INFO: Freed in iscsi_tpg_del_portal_group+0x290/0x2a1 [iscsi_target_mod] age=34618 cpu=0 pid=8266
+[ 2283.331282] INFO: Slab 0xffffea0000069fc0 objects=16 used=0 fp=0xffff880001e48000 flags=0x100000000004080
+[ 2283.331282] INFO: Object 0xffff880001e487c0 @offset=1984 fp=0xffff880001e48f80
 
-	struct se_wwn->wwn_group
-
-	struct se_portal_group->tpg_group
-
-	struct se_node_acl->acl_group
-
-	struct se_tpg_np->tpg_np_group
-
-	struct se_lun_acl->se_lun_group
-
-As with the earlier series, these patches address the issue by using moving
-existing release logic of the parent structures containing a struct config_group
-into their own seperate struct configfs_item_operations->release() callbacks.
-
-The first four patches are for struct target_core_fabric_ops cases where
-se_wwn, se_portal_group, se_node_acl and se_tpg_np memory is presented from
-target fabric module memory.  The fifth patch is for struct se_lun_acl memory
-which is internal to target_core_fabric_configfs.c and not accessed directly
-by target fabric module code.
-
-These patches resolve the existing slub_debug=FPUZ warnings/errors that
-I have encountered with generic /sys/kernel/config/target/$FABRIC_MOD ops,
-so please test, review and comment.
-
-Thanks!
-
+Cc: Joel Becker <jlbec@evilplan.org>
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_fabric_configfs.c |   14 +++++++++++---
+ 1 files changed, 11 insertions(+), 3 deletions(-)
 
-Nicholas Bellinger (5):
-  target: Move fabric dependent struct se_wwn free into ->release()
-    callback
-  target: Move fabric dependent se_portal_group free into ->release()
-    callback
-  target: Move fabric dependent se_node_acl free into ->release
-    callback()
-  target: Move fabric dependent struct se_tpg_np free into ->release()
-    callback
-  target: Move fabric independent se_lun_acl free into ->release()
-    callback
-
- drivers/target/target_core_fabric_configfs.c |   93 +++++++++++++++++++-------
- include/target/target_core_base.h            |    1 +
- 2 files changed, 69 insertions(+), 25 deletions(-)
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 8410ee4..0de0ee2 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -963,7 +963,18 @@ TF_CIT_SETUP(tpg_param, &target_fabric_tpg_param_item_ops, NULL, NULL);
+  */
+ CONFIGFS_EATTR_OPS(target_fabric_tpg, se_portal_group, tpg_group);
+ 
++static void target_fabric_tpg_release(struct config_item *item)
++{
++	struct se_portal_group *se_tpg = container_of(to_config_group(item),
++			struct se_portal_group, tpg_group);
++	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
++	struct target_fabric_configfs *tf = wwn->wwn_tf;
++
++	tf->tf_ops.fabric_drop_tpg(se_tpg);
++}
++
+ static struct configfs_item_operations target_fabric_tpg_base_item_ops = {
++	.release		= target_fabric_tpg_release,
+ 	.show_attribute		= target_fabric_tpg_attr_show,
+ 	.store_attribute	= target_fabric_tpg_attr_store,
+ };
+@@ -1021,8 +1032,6 @@ static void target_fabric_drop_tpg(
+ 	struct config_group *group,
+ 	struct config_item *item)
+ {
+-	struct se_wwn *wwn = container_of(group, struct se_wwn, wwn_group);
+-	struct target_fabric_configfs *tf = wwn->wwn_tf;
+ 	struct se_portal_group *se_tpg = container_of(to_config_group(item),
+ 				struct se_portal_group, tpg_group);
+ 	struct config_group *tpg_cg = &se_tpg->tpg_group;
+@@ -1039,7 +1048,6 @@ static void target_fabric_drop_tpg(
+ 	}
+ 
+ 	config_item_put(item);
+-	tf->tf_ops.fabric_drop_tpg(se_tpg);
+ }
+ 
+ static void target_fabric_release_wwn(struct config_item *item)
+-- 
+1.5.6.5
 
