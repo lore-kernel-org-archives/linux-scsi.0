@@ -1,59 +1,42 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 16/32] scsi/be2iscsi,qla2xxx: convert to
- alloc_workqueue()
-Date: Wed, 2 Feb 2011 11:25:21 +0100
-Message-ID: <20110202102521.GA24115@htj.dyndns.org>
-References: <1294062595-30097-1-git-send-email-tj@kernel.org>
- <1294062595-30097-17-git-send-email-tj@kernel.org>
- <4D489B09.9010906@cs.wisc.edu>
+From: Jiri Kosina <jkosina@suse.cz>
+Subject: Re: [PATCH 1/8]arch:ia64:perfmon.h change a typo comamnd to
+ command
+Date: Wed, 2 Feb 2011 11:33:51 +0100 (CET)
+Message-ID: <alpine.LNX.2.00.1102021132330.2160@pobox.suse.cz>
+References: <1296623130-5130-1-git-send-email-justinmattock@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:58657 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751677Ab1BBKZ1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Feb 2011 05:25:27 -0500
-Content-Disposition: inline
-In-Reply-To: <4D489B09.9010906@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ia64-owner@vger.kernel.org>
+In-Reply-To: <1296623130-5130-1-git-send-email-justinmattock@gmail.com>
+Sender: linux-ia64-owner@vger.kernel.org
+To: "Justin P. Mattock" <justinmattock@gmail.com>
+Cc: tony.luck@intel.com, fenghua.yu@intel.com, linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org, megaraidlinux@lsi.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, linville@tuxdriver.com, linux-wireless@vger.kernel.org, chas@cmf.nrl.navy.mil, linux-atm-general@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-kernel@vger.kernel.org, Jayamohan Kallickal <jayamohank@serverengines.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-Hello,
+On Tue, 1 Feb 2011, Justin P. Mattock wrote:
 
-On Tue, Feb 01, 2011 at 05:45:13PM -0600, Mike Christie wrote:
-> I think these are used in the main IO path, so would you also want
-> WQ_HIGHPRI | WQ_CPU_INTENSIVE to be set?
+> The below patch fixes a typo comamnd to command.
+> 
+> Signed-off-by: Justin P. Mattock <justinmattock@gmail.com>
+> 
+> ---
+>  arch/ia64/include/asm/perfmon.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/arch/ia64/include/asm/perfmon.h b/arch/ia64/include/asm/perfmon.h
+> index 7f3333d..d551183 100644
+> --- a/arch/ia64/include/asm/perfmon.h
+> +++ b/arch/ia64/include/asm/perfmon.h
+> @@ -7,7 +7,7 @@
+>  #define _ASM_IA64_PERFMON_H
+>  
+>  /*
+> - * perfmon comamnds supported on all CPU models
+> + * perfmon commands supported on all CPU models
 
-Maybe HIGHPRI but definitely not CPU_INTENSIVE, but even HIGHPRI isn't
-usually necessary.  The queue of pending works tend to be short and
-consumed pretty fast.
-
-> I think qla2xxx was using this in a path they expected to have high
-> throughput/low latency, and from the interrupt handler they would
-> try to queue the work on the same cpu the isr was answered on. With
-> the new workqueue code could you possibly get queued onto a
-> workqueue that is doing other work for other drivers?
-
-There are no separate workqueues.  There's one per cpu which is used
-by all workqueue users.  HIGHPRI boosts the queueing order in that
-queue.
-
-> Should qla2xxx be using the blkiopoll framework instead of a
-> workqueue or will workqueues still provide the same performance when
-> setting WQ_HIGHPRI | WQ_CPU_INTENSIVE?
-
-CPU_INTENSIVE isn't applicable at all unless you want to run crypto or
-zlib from the driver.
-
-blk_iopoll runs off softirq and will always have lower latency than
-workqueue which requires scheduling, so it depends on the
-requirements.  I guess the best thing would be playing with things a
-bit and make decisions on test results.  It shouldn't be too difficult
-to switch among them.
-
-Thanks.
+I have consended all the patches in this thread (modulo the staging ones) 
+into one and applied.
 
 -- 
-tejun
+Jiri Kosina
+SUSE Labs, Novell Inc.
