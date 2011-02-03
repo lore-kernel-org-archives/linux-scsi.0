@@ -1,49 +1,55 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH] atp870u: use pci_dev->revision
-Date: Thu, 3 Feb 2011 21:27:04 +0300
-Message-ID: <201102032127.04543.sshtylyov@ru.mvista.com>
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: Re: [PATCH] scsi_debug: Fix 32-bit overflow in do_device_access
+Date: Thu, 03 Feb 2011 13:53:01 -0500
+Message-ID: <4D4AF98D.9020000@interlog.com>
+References: <20110201024754.GS27190@tux1.beaverton.ibm.com>
+Reply-To: dgilbert@interlog.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:55476 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1755077Ab1BCS22 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2011 13:28:28 -0500
-Content-Disposition: inline
+Received: from smtp.infotech.no ([82.134.31.41]:49919 "EHLO smtp.infotech.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932423Ab1BCSxL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Feb 2011 13:53:11 -0500
+In-Reply-To: <20110201024754.GS27190@tux1.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
+To: djwong@us.ibm.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-This driver uses PCI_CLASS_REVISION instead of PCI_REVISION_ID, so it wasn't
-converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all
-drivers to use pci_device->revision).
+On 11-01-31 09:47 PM, Darrick J. Wong wrote:
+> If I create a scsi_debug device that is larger than 4GB, the multiplication of
+> (block * scsi_debug_sector_size) can produce a 64-bit value.  Unfortunately,
+> the compiler sees two 32-bit quantities and performs a 32-bit multiplication,
+> thus truncating the bits above 2^32.  This causes the wrong memory location to
+> be read or written.  Change block and rest to be unsigned long long.
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Not sure why 'rest' also needs to be 64 bit.
+The third argument of this call:
+    ret = func(scmd, fake_storep, rest * scsi_debug_sector_size);
+later in do_device_access() is declared int.
 
- drivers/scsi/atp870u.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> Signed-off-by: Darrick J. Wong<djwong@us.ibm.com>
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
 
-Index: linux-2.6/drivers/scsi/atp870u.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/atp870u.c
-+++ linux-2.6/drivers/scsi/atp870u.c
-@@ -2583,7 +2583,7 @@ static int atp870u_probe(struct pci_dev 
- 	 * this than via the PCI device table
- 	 */
- 	if (ent->device == PCI_DEVICE_ID_ARTOP_AEC7610) {
--		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
-+		atpdev->chip_ver = pdev->revision;
- 		if (atpdev->chip_ver < 2)
- 			goto err_eio;
- 	}
-@@ -2602,7 +2602,7 @@ static int atp870u_probe(struct pci_dev 
- 	base_io &= 0xfffffff8;
- 
- 	if ((ent->device == ATP880_DEVID1)||(ent->device == ATP880_DEVID2)) {
--		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
-+		atpdev->chip_ver = pdev->revision;
- 		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x80);//JCC082803
- 
- 		host_id = inb(base_io + 0x39);
+> ---
+>
+>   drivers/scsi/scsi_debug.c |    2 +-
+>   1 files changed, 1 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 7b31093..a6b2d72 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -1671,7 +1671,7 @@ static int do_device_access(struct scsi_cmnd *scmd,
+>   			    unsigned long long lba, unsigned int num, int write)
+>   {
+>   	int ret;
+> -	unsigned int block, rest = 0;
+> +	unsigned long long block, rest = 0;
+>   	int (*func)(struct scsi_cmnd *, unsigned char *, int);
+>
+>   	func = write ? fetch_to_dev_buffer : fill_from_dev_buffer;
+>
+
