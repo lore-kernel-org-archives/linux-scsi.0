@@ -1,34 +1,49 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 01/06] mptfusion: Added new sysfs parameters for
- handle, sas_addr and handles
-Date: Thu, 03 Feb 2011 11:34:03 -0600
-Message-ID: <1296754443.3022.19.camel@mulgrave.site>
-References: <20110203095925.GB23502@lsi.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: [PATCH] atp870u: use pci_dev->revision
+Date: Thu, 3 Feb 2011 21:27:04 +0300
+Message-ID: <201102032127.04543.sshtylyov@ru.mvista.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:39794 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756196Ab1BCReF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2011 12:34:05 -0500
-In-Reply-To: <20110203095925.GB23502@lsi.com>
+Received: from mail.dev.rtsoft.ru ([213.79.90.226]:55476 "HELO
+	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755077Ab1BCS22 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2011 13:28:28 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-On Thu, 2011-02-03 at 15:29 +0530, Kashyap, Desai wrote:
-> New feature is added. sas_address, sad_device_hanlde and firmware id will be visible from 
-> sysfs parameters.
+This driver uses PCI_CLASS_REVISION instead of PCI_REVISION_ID, so it wasn't
+converted by commit 44c10138fd4bbc4b6d6bff0873c24902f2a9da65 (PCI: Change all
+drivers to use pci_device->revision).
 
-Well, sas_address, no ... it's already part of the phy properties of the
-sas transport class.
+Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
 
-Why handle and firmware_id ... they're fairly irrelevant properties of
-the internal firmware ... so what's the point in exposing them
-externally?
+ drivers/scsi/atp870u.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-James
-
-
+Index: linux-2.6/drivers/scsi/atp870u.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/atp870u.c
++++ linux-2.6/drivers/scsi/atp870u.c
+@@ -2583,7 +2583,7 @@ static int atp870u_probe(struct pci_dev 
+ 	 * this than via the PCI device table
+ 	 */
+ 	if (ent->device == PCI_DEVICE_ID_ARTOP_AEC7610) {
+-		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
++		atpdev->chip_ver = pdev->revision;
+ 		if (atpdev->chip_ver < 2)
+ 			goto err_eio;
+ 	}
+@@ -2602,7 +2602,7 @@ static int atp870u_probe(struct pci_dev 
+ 	base_io &= 0xfffffff8;
+ 
+ 	if ((ent->device == ATP880_DEVID1)||(ent->device == ATP880_DEVID2)) {
+-		error = pci_read_config_byte(pdev, PCI_CLASS_REVISION, &atpdev->chip_ver);
++		atpdev->chip_ver = pdev->revision;
+ 		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x80);//JCC082803
+ 
+ 		host_id = inb(base_io + 0x39);
