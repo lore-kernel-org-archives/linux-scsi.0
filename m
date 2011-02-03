@@ -1,126 +1,180 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [Open-FCoE] [v2 PATCH 4/5] bnx2fc: Broadcom FCoE Offload driver
- submission - part 2
-Date: Thu, 03 Feb 2011 15:02:27 -0600
-Message-ID: <4D4B17E3.8070400@cs.wisc.edu>
-References: <1293170555.4676.574.camel@ltsjc-bprakash2.corp.ad.broadcom.com>	<4D316634.5030300@cs.wisc.edu>	<1295311066.3536.105.camel@ltsjc-bprakash2.corp.ad.broadcom.com>	<4D4922BE.40907@cs.wisc.edu>	<1296704558.268.552.camel@LTLNR-SJCE10.corp.ad.broadcom.com>	<4D4A29A1.7010105@cs.wisc.edu> <4D4A3374.4010306@cs.wisc.edu>	<1296716694.268.643.camel@LTLNR-SJCE10.corp.ad.broadcom.com> <4D4B165E.2010805@cs.wisc.edu>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 2/4] target: Move subdev release logic into ->release()
+	callback
+Date: Thu, 03 Feb 2011 13:19:55 -0800
+Message-ID: <1296767995.902.159.camel@haakon2.linux-iscsi.org>
+References: <1296635211-6269-1-git-send-email-nab@linux-iscsi.org>
+	 <1296635211-6269-3-git-send-email-nab@linux-iscsi.org>
+	 <AANLkTikO_5nukkv_9-h0U8uuUzYa9Pxf0mUEBXFAp2Hz@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:49181 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752247Ab1BCVCC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Feb 2011 16:02:02 -0500
-In-Reply-To: <4D4B165E.2010805@cs.wisc.edu>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:33828 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752568Ab1BCVUA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2011 16:20:00 -0500
+In-Reply-To: <AANLkTikO_5nukkv_9-h0U8uuUzYa9Pxf0mUEBXFAp2Hz@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Gollapudi <bprakash@broadcom.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, andrew.vasquez@qlogic.com, "devel@open-fcoe.org" <devel@open-fcoe.org>
+To: Fubo Chen <fubo.chen@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Joel Becker <jlbec@evilplan.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On 02/03/2011 02:55 PM, Mike Christie wrote:
-> On 02/03/2011 01:04 AM, Bhanu Gollapudi wrote:
->> On Wed, 2011-02-02 at 20:47 -0800, Mike Christie wrote:
->>> On 02/02/2011 10:05 PM, Mike Christie wrote:
->>>> On 02/02/2011 09:42 PM, Bhanu Gollapudi wrote:
->>>>>>
->>>>>> Actually you do not have to wait for the scsi eh to run, right. It
->>>>>> looks
->>>>>> like bnx2fc would log out the port, which ends up calling
->>>>>> fc_remote_port_delete and that would cause the fc timed out function
->>>>>> to
->>>>>> return BLK_EH_RESET_TIMER to prevent the scsi eh from running. Is
->>>>>> that
->>>>>> right? That type of eh strategy behavior seems like something you
->>>>>> want
->>>>>> to sync up with libfc or the fc class so all drivers do something
->>>>>> similar.
->>>>>
->>>>> As per FCP-4, if the ABTS times out, we will have to explicitly
->>>>> LOGO the
->>>>
->>>> What section is that in?
->>>>
->>>
->>> Ok read it (12.5.1, right).
->>>
->>>>> target and relogin back. If we rely on 60 sec eh_abort_handler, and if
->>>>> ABTS times out, SCSI error handling will go to LUN RESET, TGT reset
->>>>> path, which is a generic error handling than transport specific error
->>>>> handling.
->>>>
->>>> If that is right, then it seems the other FC drivers are doing it wrong
->>>> then, and you hit that problem if someone sets the scsi cmd timer lower
->>>> than BNX2FC_IO_TIMEOUT. If that is right, that just does not seem right
->>>> to hack around the issue in the driver too.
->>>
->>> So if your reading of 12.5.1 is right then libfc is wrong and it seems
->>> other drivers (if they are not doing some magic in firmware) are
->>> wrong too.
->>>
->>> My confidence in my FCP skills are very shaken right now :) I am not
->>> sure I what I was thinking when I read it and reviewed libfc. I think
->>> you need to discuss this out the fcoe list people and James Smart and
->>> Andrew Vasquez.
->>>
->>> I think some of them disagree with the other aborting commands (or maybe
->>> just disagree about some of the details), so that should be discussed
->>> too.
->>>
->>> But if you are right then you cannot work around this in a driver
->>> specific way. You need to change libfc and the fc class in a way that
->>> the error strategy is correct. For example from fc_timed_out you could
->>> kick off the abort. I was slightly off on the other comment about libfc
->>> not doing a abort from their internal timeout handler. They do an abort
->>> still, but if that fails they let the scsi eh run eventually. I thought
->>> they were going to clean that up too when they removed their internal
->>> timer value in the "libfc: use rport timeout values for fcp recovery"
->>> patch.
->>
->> James, Robert, Andrew,
->>
->> Can you please shed some light on this?
->>
->
-> I got a response from James S offlist, and I think Bahnu is right. I am
-> not sure if we have to change the driver before it is merged. That is up
-> to JamesB. However, I would like to fix this in a common way (maybe a ok
-> LSF topic or something).
->
-> To fix this I think we have to do:
->
-> 1. For issue of sending aborts after resets, it seems we need to do
-> this. libfc needs this fixed. Maybe qlogic does too (if the firmware
-> does not do this then the driver needs code added). I think bfa does too
-> if it does not do it in firmware (did not see any code for it in driver).
->
-> 2. For the ABTS if it timed out, do a logout issue. Maybe this is time
-> to finally have the transport classes help out more, because it does not
-> make sense for drivers to side step the eh code.
->
-> My idea and some questions.
->
-> I was thinking that this could be kicked off from fc_timed_out instead
-> of eh_strategy_handler. This would allow us to do recovery without
-> having to stop the entire host. I think this will be ok, because FC
-> drivers seem to support the ability to send aborts and logout of ports
-> without having to stop the entire host.
->
-> 1. So fc_timed_out would have the driver kick of an abort, if the port
-> state is online.
-> 2.
-> - If the abort times out, the fc class will have the driver do a logout
-> of the port.
-> - If the abort completes but indicates failure, do we do want to still
-> do a lun reset? If we do a lun reset and that fails, then instead of a
-> target reset do the logout of the port.
->
-> 4. If logout of the port fails for #2, then let scsi eh have it so it
-> can reset the host and possibly offline devices
->
+On Thu, 2011-02-03 at 20:48 +0100, Fubo Chen wrote:
+> On Wed, Feb 2, 2011 at 9:26 AM, Nicholas A. Bellinger
+> <nab@linux-iscsi.org> wrote:
+> > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> >
+> > This patch moves the se_free_virtual_device() / se_subsystem_api->free_device()
+> > and subsequent release of struct se_subsystem_dev memory to inside of the
+> > configfs callback target_core_dev_item_ops->release() called from within
+> > fs/configfs/item.c:config_item_cleanup() context.  This patch resolves the
+> > following SLUB 'Poison overwritten' warning when calling target_core_drop_subdev()
+> > -> kfree(se_dev) directly after config_item_put():
+> >
+> > [ 5147.638639] =============================================================================
+> > [ 5147.638959] BUG kmalloc-4096: Poison overwritten
+> > [ 5147.639124] -----------------------------------------------------------------------------
+> > [ 5147.639124]
+> > [ 5147.639294] INFO: 0xffff88000d2f887c-0xffff88000d2f887c. First byte 0x6a instead of 0x6b
+> > [ 5147.639294] INFO: Allocated in kzalloc+0xf/0x11 [target_core_mod] age=2602 cpu=0 pid=14639
+> > [ 5147.639294] INFO: Freed in target_core_drop_subdev+0x18d/0x199 [target_core_mod] age=25 cpu=0 pid=14654
+> > [ 5147.639294] INFO: Slab 0xffffea00002e2640 objects=7 used=1 fp=0xffff88000d2f8000 flags=0x1000000000040c1
+> > [ 5147.639294] INFO: Object 0xffff88000d2f8000 @offset=0 fp=0xffff88000d2fb0d8
+> >
+> > Cc: Joel Becker <jlbec@evilplan.org>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+> > ---
+> >  drivers/target/target_core_configfs.c |   64 ++++++++++++++++-----------------
+> >  1 files changed, 31 insertions(+), 33 deletions(-)
+> >
+> > diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+> > index ccb5554..3715c91 100644
+> > --- a/drivers/target/target_core_configfs.c
+> > +++ b/drivers/target/target_core_configfs.c
+> > @@ -2004,9 +2004,35 @@ static void target_core_dev_release(struct config_item *item)
+> >  {
+> >        struct se_subsystem_dev *se_dev = container_of(to_config_group(item),
+> >                                struct se_subsystem_dev, se_dev_group);
+> > +       struct se_hba *hba = item_to_hba(&se_dev->se_dev_hba->hba_group.cg_item);
+> > +       struct se_subsystem_api *t = hba->transport;
+> >        struct config_group *dev_cg = &se_dev->se_dev_group;
+> >
+> >        kfree(dev_cg->default_groups);
+> > +       /*
+> > +        * This pointer will set when the storage is enabled with:
+> > +        *`echo 1 > $CONFIGFS/core/$HBA/$DEV/dev_enable`
+> > +        */
+> > +       if (se_dev->se_dev_ptr) {
+> > +               printk(KERN_INFO "Target_Core_ConfigFS: Calling se_free_"
+> > +                       "virtual_device() for se_dev_ptr: %p\n",
+> > +                       se_dev->se_dev_ptr);
+> > +
+> > +               se_free_virtual_device(se_dev->se_dev_ptr, hba);
+> > +       } else {
+> > +               /*
+> > +                * Release struct se_subsystem_dev->se_dev_su_ptr..
+> > +                */
+> > +               printk(KERN_INFO "Target_Core_ConfigFS: Calling t->free_"
+> > +                       "device() for se_dev_su_ptr: %p\n",
+> > +                       se_dev->se_dev_su_ptr);
+> > +
+> > +               t->free_device(se_dev->se_dev_su_ptr);
+> > +       }
+> > +
+> > +       printk(KERN_INFO "Target_Core_ConfigFS: Deallocating se_subsystem"
+> > +                       "_dev_t: %p\n", se_dev);
+> > +       kfree(se_dev);
+> >  }
+> >
+> >  static ssize_t target_core_dev_show(struct config_item *item,
+> > @@ -2847,13 +2873,11 @@ static void target_core_drop_subdev(
+> >        struct se_subsystem_api *t;
+> >        struct config_item *df_item;
+> >        struct config_group *dev_cg, *tg_pt_gp_cg, *dev_stat_grp;
+> > -       int i, ret;
+> > +       int i;
+> >
+> >        hba = item_to_hba(&se_dev->se_dev_hba->hba_group.cg_item);
+> >
+> > -       if (mutex_lock_interruptible(&hba->hba_access_mutex))
+> > -               goto out;
+> > -
+> > +       mutex_lock(&hba->hba_access_mutex);
+> >        t = hba->transport;
+> >
+> >        spin_lock(&se_global->g_device_lock);
+> > @@ -2884,38 +2908,12 @@ static void target_core_drop_subdev(
+> >                dev_cg->default_groups[i] = NULL;
+> >                config_item_put(df_item);
+> >        }
+> > -
+> > -       config_item_put(item);
+> >        /*
+> > -        * This pointer will set when the storage is enabled with:
+> > -        * `echo 1 > $CONFIGFS/core/$HBA/$DEV/dev_enable`
+> > +        * The releasing of se_dev and associated se_dev->se_dev_ptr is done
+> > +        * from target_core_dev_item_ops->release() ->target_core_dev_release().
+> >         */
+> > -       if (se_dev->se_dev_ptr) {
+> > -               printk(KERN_INFO "Target_Core_ConfigFS: Calling se_free_"
+> > -                       "virtual_device() for se_dev_ptr: %p\n",
+> > -                               se_dev->se_dev_ptr);
+> > -
+> > -               ret = se_free_virtual_device(se_dev->se_dev_ptr, hba);
+> > -               if (ret < 0)
+> > -                       goto hba_out;
+> > -       } else {
+> > -               /*
+> > -                * Release struct se_subsystem_dev->se_dev_su_ptr..
+> > -                */
+> > -               printk(KERN_INFO "Target_Core_ConfigFS: Calling t->free_"
+> > -                       "device() for se_dev_su_ptr: %p\n",
+> > -                       se_dev->se_dev_su_ptr);
+> > -
+> > -               t->free_device(se_dev->se_dev_su_ptr);
+> > -       }
+> > -
+> > -       printk(KERN_INFO "Target_Core_ConfigFS: Deallocating se_subsystem"
+> > -               "_dev_t: %p\n", se_dev);
+> > -
+> > -hba_out:
+> > +       config_item_put(item);
+> >        mutex_unlock(&hba->hba_access_mutex);
+> > -out:
+> > -       kfree(se_dev);
+> >  }
+> >
+> >  static struct configfs_group_operations target_core_hba_group_ops = {
+> 
+> Hello Nicholas,
+> 
+> How to apply this patch ? This is what I get:
+> 
+> # git diff v2.6.38-rc2 | wc
+>       0       0       0
+> # patch -p1 < ../p2.patch
+> patching file drivers/target/target_core_configfs.c
+> Hunk #1 FAILED at 2004.
+> Hunk #2 FAILED at 2847.
+> Hunk #3 succeeded at 2800 (offset -84 lines).
+> 2 out of 3 hunks FAILED -- saving rejects to file
+> drivers/target/target_core_configfs.c.rej
+> 
 
-One clarification to #4. fast io fail is not set then I guess we wait 
-for dev_loss to timeout and if it does we remove devices (devs never go 
-into offline then). If fast io fail is set then I guess we do like we do 
-today where we fast fail from the scsi eh and devcies would get offlined 
-then removed later if dev_loss fires.
+Hi Fubo,
+
+Note that these are all incremental patches against the LIO upstream
+lio-core-2.6.git/linus-38-rc3 tree, and not against the mainline target
+code.
+
+If you really want to apply these by hand (you should really be using
+git btw ;), then you will need to first apply the series of 24 patches
+against .38-rc2 mainline target code from my
+scsi-post-merge-2.6.git/for-38-rc3-v2 here:
+
+http://marc.info/?l=linux-scsi&m=129632617326015&w=2
+
+--nab
+
