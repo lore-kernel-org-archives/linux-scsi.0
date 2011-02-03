@@ -1,40 +1,47 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [LSF/MM TOPIC] Sparseness in storage
-Date: Thu, 03 Feb 2011 09:40:25 -0500
-Message-ID: <4D4ABE59.5010409@interlog.com>
-References: <4D498F4B.3050207@interlog.com> <20110203022312.GA8529@infradead.org>
-Reply-To: dgilbert@interlog.com
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: [PATCH] mpt2sas: fix a compile issue
+Date: Thu, 03 Feb 2011 15:41:25 +0100
+Message-ID: <4D4ABE95.5090105@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:56783 "EHLO smtp.infotech.no"
+Received: from mx1.redhat.com ([209.132.183.28]:4989 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753283Ab1BCOka (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Feb 2011 09:40:30 -0500
-In-Reply-To: <20110203022312.GA8529@infradead.org>
+	id S1755272Ab1BCOl3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Feb 2011 09:41:29 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-On 11-02-02 09:23 PM, Christoph Hellwig wrote:
-> On Wed, Feb 02, 2011 at 12:07:23PM -0500, Douglas Gilbert wrote:
->> are improving their sparseness handling as well, with Linux
->> playing "catch up" to NTFS in this regard (e.g. the new
->> FALLOC_FL_PUNCH_HOLE flag in fallocate() ).
->
-> FYI: XFS has supported hole punching for more than 15 years, although
-> the first years obviously were't on Linux.
+Without CONFIG_SCSI_MPT2SAS_LOGGING defined the 
+variable mpi_reply isn't defined. 
 
-I was looking at the Windows API yesterday and you need
-to check each volume for sparse support. So it is file
-system dependent there as well: VFAT doesn't support
-sparseness and NTFS (version ?) does.
+This patch moves the #endif below the expression where
+the mpi_reply is used.
 
- From the perspective of user space tools, POSIX support
-for sparseness would be helpful and FALLOC_FL_PUNCH_HOLE
-looks like a step in that direction.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 
-Doug Gilbert
+diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+index eda347c..40b57c6 100644
+--- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
++++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
+@@ -2741,13 +2741,14 @@ _scsih_sas_control_complete(struct MPT2SAS_ADAPTER *ioc, u16 smid,
+ #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+ 	Mpi2SasIoUnitControlReply_t *mpi_reply =
+ 	    mpt2sas_base_get_reply_virt_addr(ioc, reply);
+-#endif
++
+ 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT
+ 	    "sc_complete:handle(0x%04x), (open) "
+ 	    "smid(%d), ioc_status(0x%04x), loginfo(0x%08x)\n",
+ 	    ioc->name, le16_to_cpu(mpi_reply->DevHandle), smid,
+ 	    le16_to_cpu(mpi_reply->IOCStatus),
+ 	    le32_to_cpu(mpi_reply->IOCLogInfo)));
++#endif
+ 	return 1;
+ }
+ 
+
 
