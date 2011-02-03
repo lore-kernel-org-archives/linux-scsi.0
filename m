@@ -1,88 +1,43 @@
-From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: Re: [Open-FCoE] [v2 PATCH 4/5] bnx2fc: Broadcom FCoE Offload
- driver submission - part 2
-Date: Wed, 2 Feb 2011 23:04:54 -0800
-Message-ID: <1296716694.268.643.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
-References: <1293170555.4676.574.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
- <4D316634.5030300@cs.wisc.edu>
- <1295311066.3536.105.camel@ltsjc-bprakash2.corp.ad.broadcom.com>
- <4D4922BE.40907@cs.wisc.edu>
- <1296704558.268.552.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
- <4D4A29A1.7010105@cs.wisc.edu> <4D4A3374.4010306@cs.wisc.edu>
+From: "Mrs Angela Rual" <euroconsultsaes@gmail.com>
+Subject: Your email ID has won
+Date: Thu, 3 Feb 2011 00:06:24 -0800
+Message-ID: <20110203080627.LXWM11941.viefep11-int.chello.at@edge05.upcmail.net>
+Reply-To: <pacificconsults@aol.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
- charset=cp1252
+	charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:4823 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752392Ab1BCHFN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Feb 2011 02:05:13 -0500
-In-Reply-To: <4D4A3374.4010306@cs.wisc.edu>
+Received: from fep22.mx.upcmail.net ([62.179.121.42]:44615 "EHLO
+	fep22.mx.upcmail.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754423Ab1BCIWm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2011 03:22:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, james.smart@emulex.com, andrew.vasquez@qlogic.com, robert.w.love@intel.com
-Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-
-On Wed, 2011-02-02 at 20:47 -0800, Mike Christie wrote: 
-> On 02/02/2011 10:05 PM, Mike Christie wrote:
-> > On 02/02/2011 09:42 PM, Bhanu Gollapudi wrote:
-> >>>
-> >>> Actually you do not have to wait for the scsi eh to run, right. It
-> >>> looks
-> >>> like bnx2fc would log out the port, which ends up calling
-> >>> fc_remote_port_delete and that would cause the fc timed out function
-> >>> to
-> >>> return BLK_EH_RESET_TIMER to prevent the scsi eh from running. Is
-> >>> that
-> >>> right? That type of eh strategy behavior seems like something you
-> >>> want
-> >>> to sync up with libfc or the fc class so all drivers do something
-> >>> similar.
-> >>
-> >> As per FCP-4, if the ABTS times out, we will have to explicitly LOGO the
-> >
-> > What section is that in?
-> >
-> 
-> Ok read it (12.5.1, right).
-> 
-> >> target and relogin back. If we rely on 60 sec eh_abort_handler, and if
-> >> ABTS times out, SCSI error handling will go to LUN RESET, TGT reset
-> >> path, which is a generic error handling than transport specific error
-> >> handling.
-> >
-> > If that is right, then it seems the other FC drivers are doing it wrong
-> > then, and you hit that problem if someone sets the scsi cmd timer lower
-> > than BNX2FC_IO_TIMEOUT. If that is right, that just does not seem right
-> > to hack around the issue in the driver too.
-> 
-> So if your reading of 12.5.1 is right then libfc is wrong and it seems 
-> other drivers (if they are not doing some magic in firmware) are wrong too.
-> 
-> My confidence in my FCP skills are very shaken right now :) I am not 
-> sure I what I was thinking when I read it and reviewed libfc. I think 
-> you need to discuss this out the fcoe list people and James Smart and 
-> Andrew Vasquez.
-> 
-> I think some of them disagree with the other aborting commands (or maybe 
-> just disagree about some of the details), so that should be discussed too.
-> 
-> But if you are right then you cannot work around this in a driver 
-> specific way. You need to change libfc and the fc class in a way that 
-> the error strategy is correct. For example from fc_timed_out you could 
-> kick off the abort. I was slightly off on the other comment about libfc 
-> not doing a abort from their internal timeout handler. They do an abort 
-> still, but if that fails they let the scsi eh run eventually. I thought 
-> they were going to clean that up too when they removed their internal 
-> timer value in the "libfc: use rport timeout values for fcp recovery" patch.
-
-James, Robert, Andrew,
-
-Can you please shed some light on this?  
-
-Thanks,
-Bhanu
 
 
+Dear winner,
 
+Your Email address has won the sum of (950,000 US Dollars) in an International Email Sweepstakes Program Cooporation held on the 27Th of Jan  2011 in Spain. 
+
+E-mail Euro Program Corporation,We write to officially notify you of this award and to advise you to contact the processing office immediately for the claim,
+Winning Information's
+
+
+(A) Lucky No:  QBL/13977 
+
+
+Mr.David Botin.
+Euro Consults S.A
+Tel: 0034 664 170 816
+EMAIL:pacificonsults@aol.com
+EMAIL:pacificonsultsa@aol.com
+
+Your full Names:
+Fax/Telephone:
+Age:
+Nationality:
+
+Congratulations!!!
+
+Mrs. Angela Rual
