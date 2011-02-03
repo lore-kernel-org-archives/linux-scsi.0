@@ -1,47 +1,62 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] mpt2sas: fix a compile issue
-Date: Thu, 03 Feb 2011 15:41:25 +0100
-Message-ID: <4D4ABE95.5090105@redhat.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
+Date: Thu, 3 Feb 2011 07:42:05 -0800
+Message-ID: <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
+References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera>
+	<20110203112316.GA3718@linux-yscl.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:4989 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755272Ab1BCOl3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Feb 2011 09:41:29 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org>
+In-Reply-To: <20110203112316.GA3718@linux-yscl.site>
+List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/dri-devel>,
+	<mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <http://lists.freedesktop.org/archives/dri-devel>
+List-Post: <mailto:dri-devel@lists.freedesktop.org>
+List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/dri-devel>,
+	<mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
+Sender: dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org
+Errors-To: dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org
+To: "Carlos R. Mafra" <crmafra2@gmail.com>, Keith Packard <keithp@keithp.com>, Dave Airlie <airlied@redhat.com>
+Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-Without CONFIG_SCSI_MPT2SAS_LOGGING defined the 
-variable mpi_reply isn't defined. 
+On Thu, Feb 3, 2011 at 3:23 AM, Carlos R. Mafra <crmafra2@gmail.com> wrote:
+> On Thu =A03.Feb'11 at =A01:03:41 +0100, Rafael J. Wysocki wrote:
+>>
+>> If you know of any other unresolved post-2.6.36 regressions, please let =
+us know
+>> either and we'll add them to the list. =A0Also, please let us know if any
+>> of the entries below are invalid.
+>
+> I'm sorry if I'm overlooking something, but as far as I can see the regre=
+ssion
+> reported here:
+>
+> https://lkml.org/lkml/2011/1/24/457
+>
+> is not in the list (update on that report: reverting that commit on top of
+> 2.6.37 fixes the issue).
 
-This patch moves the #endif below the expression where
-the mpi_reply is used.
+Ok, added Keith and Dave to the cc, since they are the signers of that comm=
+it.
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> After some time, I also ended up finding an earlier report in the kernel =
+bugzilla
+> which I think is the same regression (it was bisected to the same commit):
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=3D24982
+>
+> but I do not see it in the list either, even though it's marked as a
+> regression in the bugzilla.
+>
+> The issue was also present in 2.6.38-rc2 last time I tested.
 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_scsih.c b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-index eda347c..40b57c6 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_scsih.c
-@@ -2741,13 +2741,14 @@ _scsih_sas_control_complete(struct MPT2SAS_ADAPTER *ioc, u16 smid,
- #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
- 	Mpi2SasIoUnitControlReply_t *mpi_reply =
- 	    mpt2sas_base_get_reply_virt_addr(ioc, reply);
--#endif
-+
- 	dewtprintk(ioc, printk(MPT2SAS_INFO_FMT
- 	    "sc_complete:handle(0x%04x), (open) "
- 	    "smid(%d), ioc_status(0x%04x), loginfo(0x%08x)\n",
- 	    ioc->name, le16_to_cpu(mpi_reply->DevHandle), smid,
- 	    le16_to_cpu(mpi_reply->IOCStatus),
- 	    le32_to_cpu(mpi_reply->IOCLogInfo)));
-+#endif
- 	return 1;
- }
- 
+Just to confirm, can you also check -rc3? I'm pretty sure nothing has
+changed, but there were a few drm patches after -rc2, so it's alsways
+good to double-check.
 
+Keithp?
 
+                        Linus
