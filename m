@@ -1,55 +1,59 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: Re: [PATCH] scsi_debug: Fix 32-bit overflow in do_device_access
-Date: Thu, 03 Feb 2011 13:53:01 -0500
-Message-ID: <4D4AF98D.9020000@interlog.com>
-References: <20110201024754.GS27190@tux1.beaverton.ibm.com>
-Reply-To: dgilbert@interlog.com
+From: "Rafael J. Wysocki" <rjw@sisk.pl>
+Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
+Date: Thu, 3 Feb 2011 20:09:16 +0100
+Message-ID: <201102032009.17100.rjw@sisk.pl>
+References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera> <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com> <s5haaid3xos.wl%tiwai@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:49919 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932423Ab1BCSxL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Feb 2011 13:53:11 -0500
-In-Reply-To: <20110201024754.GS27190@tux1.beaverton.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-acpi-owner@vger.kernel.org>
+In-Reply-To: <s5haaid3xos.wl%tiwai@suse.de>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Takashi Iwai <tiwai@suse.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "Carlos R. Mafra" <crmafra2@gmail.com>, Keith Packard <keithp@keithp.com>, Dave Airlie <airlied@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>
 List-Id: linux-scsi@vger.kernel.org
-To: djwong@us.ibm.com
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On 11-01-31 09:47 PM, Darrick J. Wong wrote:
-> If I create a scsi_debug device that is larger than 4GB, the multiplication of
-> (block * scsi_debug_sector_size) can produce a 64-bit value.  Unfortunately,
-> the compiler sees two 32-bit quantities and performs a 32-bit multiplication,
-> thus truncating the bits above 2^32.  This causes the wrong memory location to
-> be read or written.  Change block and rest to be unsigned long long.
+On Thursday, February 03, 2011, Takashi Iwai wrote:
+> At Thu, 3 Feb 2011 07:42:05 -0800,
+> Linus Torvalds wrote:
+> > 
+> > On Thu, Feb 3, 2011 at 3:23 AM, Carlos R. Mafra <crmafra2@gmail.com> wrote:
+> > > On Thu  3.Feb'11 at  1:03:41 +0100, Rafael J. Wysocki wrote:
+> > >>
+> > >> If you know of any other unresolved post-2.6.36 regressions, please let us know
+> > >> either and we'll add them to the list.  Also, please let us know if any
+> > >> of the entries below are invalid.
+> > >
+> > > I'm sorry if I'm overlooking something, but as far as I can see the regression
+> > > reported here:
+> > >
+> > > https://lkml.org/lkml/2011/1/24/457
+> > >
+> > > is not in the list (update on that report: reverting that commit on top of
+> > > 2.6.37 fixes the issue).
+> > 
+> > Ok, added Keith and Dave to the cc, since they are the signers of that commit.
+> > 
+> > > After some time, I also ended up finding an earlier report in the kernel bugzilla
+> > > which I think is the same regression (it was bisected to the same commit):
+> > >
+> > > https://bugzilla.kernel.org/show_bug.cgi?id=24982
+> > >
+> > > but I do not see it in the list either, even though it's marked as a
+> > > regression in the bugzilla.
+> > >
+> > > The issue was also present in 2.6.38-rc2 last time I tested.
+> > 
+> > Just to confirm, can you also check -rc3? I'm pretty sure nothing has
+> > changed, but there were a few drm patches after -rc2, so it's alsways
+> > good to double-check.
+> 
+> The problem I reported in the bugzilla above is still present in
+> 2.6.38-rc3.  I'm pretty sure that's the same issue as Carlos' case.
 
-Not sure why 'rest' also needs to be 64 bit.
-The third argument of this call:
-    ret = func(scmd, fake_storep, rest * scsi_debug_sector_size);
-later in do_device_access() is declared int.
+I added https://bugzilla.kernel.org/show_bug.cgi?id=24982 to the list of
+post-2.6.36 regressions for further tracking.
 
-> Signed-off-by: Darrick J. Wong<djwong@us.ibm.com>
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-
-> ---
->
->   drivers/scsi/scsi_debug.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 7b31093..a6b2d72 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -1671,7 +1671,7 @@ static int do_device_access(struct scsi_cmnd *scmd,
->   			    unsigned long long lba, unsigned int num, int write)
->   {
->   	int ret;
-> -	unsigned int block, rest = 0;
-> +	unsigned long long block, rest = 0;
->   	int (*func)(struct scsi_cmnd *, unsigned char *, int);
->
->   	func = write ? fetch_to_dev_buffer : fill_from_dev_buffer;
->
-
+Thanks,
+Rafael
