@@ -1,92 +1,35 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 02/06] mptfusion: Support SAS2.0 Devices with SAS1.0 Controllers
-Date: Thu, 3 Feb 2011 15:30:21 +0530
-Message-ID: <20110203100011.GC23502@lsi.com>
+Subject: [PATCH 03/06] mptfusion: Remove bus reset for mptsas module
+Date: Thu, 3 Feb 2011 15:31:51 +0530
+Message-ID: <20110203100142.GD23502@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:34365 "EHLO
-	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755929Ab1BCKqk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2011 05:46:40 -0500
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:49013 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755929Ab1BCKsM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Feb 2011 05:48:12 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-SAS1.0 Controller was not able to detect SAS2.0 Expanders due to Link RATE detection was
-limited to 1.5 Gbps and 3.0 Gbps for SAS1 controllers. Added detection for 6.0 Gbps link.
-Now, user can mix-up 6.0 Gpbs links with SAS1.0 controller.
-
-e.a SAS1.0 HBA <----> SAS2.0 Expander <------> SAS2.0 Expander <--------> SAS1.0 Drive.
- 
+Bus reset is not required for SAS Controller. It is valid for mptspi and mptfc, but for mptsas
+it is not required. It is an extra work for Error handling escallation for mptsas.
+Removing bus reset from error handling will eventually speedup Error handling for SAS controller.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
-index 013c7d8..22027e7 100644
---- a/drivers/message/fusion/lsi/mpi_cnfg.h
-+++ b/drivers/message/fusion/lsi/mpi_cnfg.h
-@@ -2593,6 +2593,7 @@ typedef struct _CONFIG_PAGE_SAS_IO_UNIT_0
- #define MPI_SAS_IOUNIT0_RATE_SATA_OOB_COMPLETE              (0x03)
- #define MPI_SAS_IOUNIT0_RATE_1_5                            (0x08)
- #define MPI_SAS_IOUNIT0_RATE_3_0                            (0x09)
-+#define MPI_SAS_IOUNIT0_RATE_6_0                            (0x0A)
- 
- /* see mpi_sas.h for values for SAS IO Unit Page 0 ControllerPhyDeviceInfo values */
- 
-diff --git a/drivers/message/fusion/lsi/mpi_ioc.h b/drivers/message/fusion/lsi/mpi_ioc.h
-index 8faa4fa..fd62228 100644
---- a/drivers/message/fusion/lsi/mpi_ioc.h
-+++ b/drivers/message/fusion/lsi/mpi_ioc.h
-@@ -841,6 +841,7 @@ typedef struct _EVENT_DATA_SAS_PHY_LINK_STATUS
- #define MPI_EVENT_SAS_PLS_LR_RATE_SATA_OOB_COMPLETE         (0x03)
- #define MPI_EVENT_SAS_PLS_LR_RATE_1_5                       (0x08)
- #define MPI_EVENT_SAS_PLS_LR_RATE_3_0                       (0x09)
-+#define MPI_EVENT_SAS_PLS_LR_RATE_6_0                       (0x0A)
- 
- /* SAS Discovery Event data */
- 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 3e57b61..49f1d92 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -7418,7 +7418,12 @@ mpt_display_event_info(MPT_ADAPTER *ioc, EventNotificationReply_t *pEventReply)
- 		case MPI_EVENT_SAS_PLS_LR_RATE_3_0:
- 			snprintf(evStr, EVENT_DESCR_STR_SZ,
- 			   "SAS PHY Link Status: Phy=%d:"
--			   " Rate 3.0 Gpbs",PhyNumber);
-+			   " Rate 3.0 Gbps",PhyNumber);
-+			break;
-+		case MPI_EVENT_SAS_PLS_LR_RATE_6_0:
-+			snprintf(evStr, EVENT_DESCR_STR_SZ,
-+			   "SAS PHY Link Status: Phy=%d:"
-+			   " Rate 6.0 Gbps",PhyNumber);
- 			break;
- 		default:
- 			snprintf(evStr, EVENT_DESCR_STR_SZ,
 diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 7daf098..d89d027 100644
+index d89d027..c4bf181 100644
 --- a/drivers/message/fusion/mptsas.c
 +++ b/drivers/message/fusion/mptsas.c
-@@ -3067,6 +3067,9 @@ static int mptsas_probe_one_phy(struct device *dev,
- 	case MPI_SAS_IOUNIT0_RATE_3_0:
- 		phy->negotiated_linkrate = SAS_LINK_RATE_3_0_GBPS;
- 		break;
-+	case MPI_SAS_IOUNIT0_RATE_6_0:
-+		phy->negotiated_linkrate = SAS_LINK_RATE_6_0_GBPS;
-+		break;
- 	case MPI_SAS_IOUNIT0_RATE_SATA_OOB_COMPLETE:
- 	case MPI_SAS_IOUNIT0_RATE_UNKNOWN:
- 	default:
-@@ -3695,7 +3698,8 @@ mptsas_send_link_status_event(struct fw_event_work *fw_event)
- 	}
- 
- 	if (link_rate == MPI_SAS_IOUNIT0_RATE_1_5 ||
--	    link_rate == MPI_SAS_IOUNIT0_RATE_3_0) {
-+	    link_rate == MPI_SAS_IOUNIT0_RATE_3_0 ||
-+	    link_rate == MPI_SAS_IOUNIT0_RATE_6_0) {
- 
- 		if (!port_info) {
- 			if (ioc->old_sas_discovery_protocal) {
+@@ -1976,7 +1976,6 @@ static struct scsi_host_template mptsas_driver_template = {
+ 	.change_queue_depth 		= mptscsih_change_queue_depth,
+ 	.eh_abort_handler		= mptscsih_abort,
+ 	.eh_device_reset_handler	= mptscsih_dev_reset,
+-	.eh_bus_reset_handler		= mptscsih_bus_reset,
+ 	.eh_host_reset_handler		= mptscsih_host_reset,
+ 	.bios_param			= mptscsih_bios_param,
+ 	.can_queue			= MPT_SAS_CAN_QUEUE,
