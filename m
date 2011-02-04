@@ -1,42 +1,90 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 01/06] mptfusion: Added new sysfs parameters for handle,
- sas_addr and handles
-Date: Fri, 4 Feb 2011 11:54:33 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED71121F371@inbmail01.lsi.com>
-References: <20110203095925.GB23502@lsi.com>
- <1296754443.3022.19.camel@mulgrave.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 00/12] target: Updates for .38-rc4
+Date: Thu,  3 Feb 2011 22:45:00 -0800
+Message-ID: <1296801912-18857-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:54312 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750790Ab1BDGYG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 01:24:06 -0500
-In-Reply-To: <1296754443.3022.19.camel@mulgrave.site>
-Content-Language: en-US
+Received: from nm18-vm0.bullet.mail.ac4.yahoo.com ([98.139.53.210]:37037 "HELO
+	nm18-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751417Ab1BDGpL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 01:45:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Joel Becker <jlbec@evilplan.org>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-VGh1cnNkYXksIEZlYnJ1YXJ5IDAzLCAyMDExIDExOjA0IFBNDQo+IFRvOiBEZXNhaSwgS2FzaHlh
-cA0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IE1vb3JlLCBFcmljOyBQcmFrYXNo
-LCBTYXRoeWENCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwMS8wNl0gbXB0ZnVzaW9uOiBBZGRlZCBu
-ZXcgc3lzZnMgcGFyYW1ldGVycyBmb3INCj4gaGFuZGxlLCBzYXNfYWRkciBhbmQgaGFuZGxlcw0K
-PiANCj4gT24gVGh1LCAyMDExLTAyLTAzIGF0IDE1OjI5ICswNTMwLCBLYXNoeWFwLCBEZXNhaSB3
-cm90ZToNCj4gPiBOZXcgZmVhdHVyZSBpcyBhZGRlZC4gc2FzX2FkZHJlc3MsIHNhZF9kZXZpY2Vf
-aGFubGRlIGFuZCBmaXJtd2FyZSBpZA0KPiB3aWxsIGJlIHZpc2libGUgZnJvbQ0KPiA+IHN5c2Zz
-IHBhcmFtZXRlcnMuDQo+IA0KPiBXZWxsLCBzYXNfYWRkcmVzcywgbm8gLi4uIGl0J3MgYWxyZWFk
-eSBwYXJ0IG9mIHRoZSBwaHkgcHJvcGVydGllcyBvZg0KPiB0aGUNCj4gc2FzIHRyYW5zcG9ydCBj
-bGFzcy4NCg0KDQpKYW1lcywNCkkgYWdyZWUgb24gdGhpcyBwb2ludC4NCg0KPiANCj4gV2h5IGhh
-bmRsZSBhbmQgZmlybXdhcmVfaWQgLi4uIHRoZXkncmUgZmFpcmx5IGlycmVsZXZhbnQgcHJvcGVy
-dGllcyBvZg0KPiB0aGUgaW50ZXJuYWwgZmlybXdhcmUgLi4uIHNvIHdoYXQncyB0aGUgcG9pbnQg
-aW4gZXhwb3NpbmcgdGhlbQ0KPiBleHRlcm5hbGx5Pw0KDQpUaGlzIGlzIG1haW5seSBmb3IgZGVi
-dWdnaW5nIGluIGNhc2UgaWYgZGV2aWNlIGlzIG5vdCBtYXBwZWQgdG8gY29ycmVjdCBoYW5kbGUg
-YW5kIGZ3X2lkICh3aGljaCBhcmUgY29tcGxldGVseSBMU0kgZmlybXdhcmUncyBpbnRlcm5hbCku
-DQpUaGlzIHdhcyByYWlzZWQgYnkgZmV3IGN1c3RvbWVycyB3aG8gcmVhbGx5IHdhbnRlZCB0byB3
-YXRjaCBoYW5kbGVzIGFuZCBmd19pZCBvZiBMU0kgZmlybXdhcmUgdGhyb3VnaCBzeXNmcy4NCg0K
-fiBLYXNoeWFwDQoNCj4gDQo+IEphbWVzDQo+IA0KDQo=
+From: Nicholas Bellinger <nab@linux-iscsi.org>
+
+Hi James and Co,
+
+Please consider the following patch series for mainline target code.
+It consists of predominately configfs bugfixes uncovered with recent SLUB
+poison testing, and proper removal of legacy procfs target_core_mib.c code.
+Note that the complete set of fabric independent statistics (SCSI MIBs) and
+fabric dependent statistics will be included as native configfs group context
+'per value' attribute series during the .39 time frame.
+
+Note this series is expected to be applied on top of the 24 patch series
+from scsi-post-merge-2.6.git/for-38-rc3-v2 here:
+
+[PATCH 00/24] target updates for .38-rc3 (v2)
+http://marc.info/?l=linux-scsi&m=129632617326015&w=2
+
+This patch series is against the following commit with the above series
+applied:
+
+   commit ebf53826e105f488f4f628703a108e98940d1dc5
+   Author: Linus Torvalds <torvalds@linux-foundation.org>
+   Date:   Tue Feb 1 13:05:49 2011 +1000
+
+       Linux 2.6.38-rc3
+
+This series is also availible for a direct PULL from here:
+
+   git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-38-rc4
+
+Please review and apply for mainline.
+
+Thanks!
+
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+
+Jesper Juhl (1):
+  target: Avoid mem leak and needless work in transport_generic_get_mem
+
+Nicholas Bellinger (11):
+  target: Fix top-level configfs_subsystem default_group shutdown
+    breakage
+  target: Move core_delete_hba() into ->release() callback
+  target: Move subdev release logic into ->release() callback
+  target: Move core_alua_free_lu_gp() into ->release() callback
+  target: Move core_alua_free_tg_pt_gp() into ->release() callback
+  target: Move fabric dependent struct se_wwn free into ->release()
+    callback
+  target: Move fabric dependent se_portal_group free into ->release()
+    callback
+  target: Move fabric dependent se_node_acl free into ->release
+    callback()
+  target: Move fabric dependent struct se_tpg_np free into ->release()
+    callback
+  target: Move fabric independent se_lun_acl free into ->release()
+    callback
+  target: Remove procfs based target_core_mib.c code
+
+ drivers/target/Makefile                      |    1 -
+ drivers/target/target_core_configfs.c        |  149 ++--
+ drivers/target/target_core_device.c          |    3 -
+ drivers/target/target_core_fabric_configfs.c |   92 ++-
+ drivers/target/target_core_hba.c             |    1 -
+ drivers/target/target_core_mib.c             | 1098 --------------------------
+ drivers/target/target_core_mib.h             |   21 -
+ drivers/target/target_core_tpg.c             |   10 -
+ drivers/target/target_core_transport.c       |   52 +-
+ include/target/target_core_base.h            |   21 +-
+ include/target/target_core_transport.h       |    2 +
+ 11 files changed, 207 insertions(+), 1243 deletions(-)
+ delete mode 100644 drivers/target/target_core_mib.c
+ delete mode 100644 drivers/target/target_core_mib.h
+
+-- 
+1.7.4
+
