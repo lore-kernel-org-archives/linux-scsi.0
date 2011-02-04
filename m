@@ -1,42 +1,78 @@
-From: Dave Airlie <airlied@gmail.com>
-Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
-Date: Fri, 4 Feb 2011 11:42:33 +1000
-Message-ID: <AANLkTim-1MofNWc_PkmKE3dPWB3Ahe8d8jP_aUD5konx@mail.gmail.com>
-References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera>
-	<AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
-	<s5haaid3xos.wl%tiwai@suse.de>
-	<201102032009.17100.rjw@sisk.pl>
-	<AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
-	<AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
-	<AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
-	<AANLkTimQPPDyBwkN0HWM2+bPcbzVd8YHZvn2iR8MVzfL@mail.gmail.com>
-	<yund3n88v7x.fsf@aiko.keithp.com>
-	<AANLkTin-9a5Z3qq4t8UakRvgB1G3_CT2RLKMVaHXvnLr@mail.gmail.com>
+From: "Bhanu Gollapudi" <bprakash@broadcom.com>
+Subject: [PATCH] libfc: introduce __fc_fill_fc_hdr that accepts fc_hdr
+ as an argument
+Date: Thu, 3 Feb 2011 18:47:18 -0800
+Message-ID: <1296787638.268.788.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <AANLkTin-9a5Z3qq4t8UakRvgB1G3_CT2RLKMVaHXvnLr@mail.gmail.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Keith Packard <keithp@keithp.com>, Carlos Mafra <crmafra2@gmail.com>, Dave Airlie <airlied@redhat.com>, "Rafael J. Wysocki" <rjw@sisk.pl>, Takashi Iwai <tiwai@suse.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Maciej Rutecki <maciej.rutecki@gmail.com>, Florian Mickler <florian@mickler.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Network Development <netdev@vger.kernel.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Linux SCSI List <linux-scsi@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>
+Content-Type: text/plain;
+ charset=cp1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms1.broadcom.com ([216.31.210.17]:1026 "EHLO mms1.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752420Ab1BDCre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Feb 2011 21:47:34 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-On Fri, Feb 4, 2011 at 11:11 AM, Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
-> On Thu, Feb 3, 2011 at 5:05 PM, Keith Packard <keithp@keithp.com> wrote:
->>
->> The goal is to make it so that when you *do* set a mode, DPMS gets set
->> to ON (as the monitor will actually be "on" at that point). Here's a
->> patch which does the DPMS_ON precisely when setting a mode.
->
-> Ok, patch looks sane, but it does leave me with the "what about the
-> 'fb_changed' case?" question. Is that case basically guaranteed to not
-> change any existing dpms state?
+fc_fill_fc_hdr() expects fc_frame as an argument. Introduce __fc_fill_fc_hdr to
+accept fc_frame_header as an argument.
 
-Yes its inconsistent behaviour but nothing in the fb_changed case will
-affect the DPMS
-state. I expect we should probably do that so all paths via that
-function turn DPMS on,
-and it'll be consistent, might be something for 39.
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+ include/scsi/fc_encode.h |   26 +++++++++++++++++---------
+ 1 files changed, 17 insertions(+), 9 deletions(-)
 
-Dave.
+diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
+index 6d293c8..be418d8 100644
+--- a/include/scsi/fc_encode.h
++++ b/include/scsi/fc_encode.h
+@@ -46,16 +46,11 @@ struct fc_ct_req {
+ 	} payload;
+ };
+ 
+-/**
+- * fill FC header fields in specified fc_frame
+- */
+-static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
+-				  u32 did, u32 sid, enum fc_fh_type type,
+-				  u32 f_ctl, u32 parm_offset)
++static inline void __fc_fill_fc_hdr(struct fc_frame_header *fh,
++				    enum fc_rctl r_ctl,
++				    u32 did, u32 sid, enum fc_fh_type type,
++				    u32 f_ctl, u32 parm_offset)
+ {
+-	struct fc_frame_header *fh;
+-
+-	fh = fc_frame_header_get(fp);
+ 	WARN_ON(r_ctl == 0);
+ 	fh->fh_r_ctl = r_ctl;
+ 	hton24(fh->fh_d_id, did);
+@@ -68,6 +63,19 @@ static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
+ }
+ 
+ /**
++ * fill FC header fields in specified fc_frame
++ */
++static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
++				  u32 did, u32 sid, enum fc_fh_type type,
++				  u32 f_ctl, u32 parm_offset)
++{
++	struct fc_frame_header *fh;
++
++	fh = fc_frame_header_get(fp);
++	__fc_fill_fc_hdr(fh, r_ctl, did, sid, type, f_ctl, parm_offset);
++}
++
++/**
+  * fc_adisc_fill() - Fill in adisc request frame
+  * @lport: local port.
+  * @fp: fc frame where payload will be placed.
+-- 
+1.7.0.6
+
+
+
+
