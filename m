@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 02/12] target: Fix top-level configfs_subsystem default_group shutdown breakage
-Date: Thu,  3 Feb 2011 22:45:02 -0800
-Message-ID: <1296801912-18857-3-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 04/12] target: Move subdev release logic into ->release() callback
+Date: Thu,  3 Feb 2011 22:45:04 -0800
+Message-ID: <1296801912-18857-5-git-send-email-nab@linux-iscsi.org>
 References: <1296801912-18857-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm24.bullet.mail.ac4.yahoo.com ([98.139.52.221]:31987 "HELO
-	nm24.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752549Ab1BDGpQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 01:45:16 -0500
+Received: from nm11.bullet.mail.ac4.yahoo.com ([98.139.52.208]:30750 "HELO
+	nm11.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752549Ab1BDGpU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 01:45:20 -0500
 In-Reply-To: <1296801912-18857-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,85 +16,128 @@ Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes two bugs uncovered during testing with slub_debug=FPUZ
-during module_exit() -> target_core_exit_configfs() with release of
-configfs subsystem consumer default groups, namely how this should be
-working with fs/configfs/dir.c:configfs_unregister_subsystem() release
-logic for struct config_group->default_group.
+This patch moves the se_free_virtual_device() / se_subsystem_api->free_device()
+and subsequent release of struct se_subsystem_dev memory to inside of the
+configfs callback target_core_dev_item_ops->release() called from within
+fs/configfs/item.c:config_item_cleanup() context.  This patch resolves the
+following SLUB 'Poison overwritten' warning when calling target_core_drop_subdev()
+-> kfree(se_dev) directly after config_item_put():
 
-The first issue involves configfs_unregister_subsystem() expecting to
-walk+drain the top-level subsys->su_group.default_groups directly in
-unlink_group(), and not directly from the configfs subsystem consumer
-for the top level struct config_group->default_groups.  This patch drops
-the walk+drain of subsys->su_group.default_groups from TCM configfs
-subsystem consumer code, and moves the top-level ->default_groups kfree()
-after configfs_unregister_subsystem() has been called.
+[ 5147.638639] =============================================================================
+[ 5147.638959] BUG kmalloc-4096: Poison overwritten
+[ 5147.639124] -----------------------------------------------------------------------------
+[ 5147.639124]
+[ 5147.639294] INFO: 0xffff88000d2f887c-0xffff88000d2f887c. First byte 0x6a instead of 0x6b
+[ 5147.639294] INFO: Allocated in kzalloc+0xf/0x11 [target_core_mod] age=2602 cpu=0 pid=14639
+[ 5147.639294] INFO: Freed in target_core_drop_subdev+0x18d/0x199 [target_core_mod] age=25 cpu=0 pid=14654
+[ 5147.639294] INFO: Slab 0xffffea00002e2640 objects=7 used=1 fp=0xffff88000d2f8000 flags=0x1000000000040c1
+[ 5147.639294] INFO: Object 0xffff88000d2f8000 @offset=0 fp=0xffff88000d2fb0d8
 
-The second issue involves calling core_alua_free_lu_gp(se_global->default_lu_gp)
-to release the default_lu_gp->lu_gp_group before configfs_unregister_subsystem()
-has been called.  This patches also moves the core_alua_free_lu_gp() call to
-release default_lu_group->lu_gp_group after the subsys has been unregistered.
-
-Finally, this patch explictly clears the [lu_gp,alua,hba]_cg->default_groups
-pointers after kfree() to ensure that no stale memory is picked up from
-child struct config_group->default_group[] while configfs_unregister_subsystem()
-is called.
-
-Reported-by: Fubo Chen <fubo.chen@gmail.com>
 Cc: Joel Becker <jlbec@evilplan.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_configfs.c |   20 +++++++++++---------
- 1 files changed, 11 insertions(+), 9 deletions(-)
+ drivers/target/target_core_configfs.c |   64 ++++++++++++++++-----------------
+ 1 files changed, 31 insertions(+), 33 deletions(-)
 
 diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 30ae3af..431cd2e 100644
+index 9e74aa1..a9e0c66 100644
 --- a/drivers/target/target_core_configfs.c
 +++ b/drivers/target/target_core_configfs.c
-@@ -3206,8 +3206,7 @@ static void target_core_exit_configfs(void)
- 		config_item_put(item);
- 	}
- 	kfree(lu_gp_cg->default_groups);
--	core_alua_free_lu_gp(se_global->default_lu_gp);
--	se_global->default_lu_gp = NULL;
-+	lu_gp_cg->default_groups = NULL;
+@@ -2003,9 +2003,35 @@ static void target_core_dev_release(struct config_item *item)
+ {
+ 	struct se_subsystem_dev *se_dev = container_of(to_config_group(item),
+ 				struct se_subsystem_dev, se_dev_group);
++	struct se_hba *hba = item_to_hba(&se_dev->se_dev_hba->hba_group.cg_item);
++	struct se_subsystem_api *t = hba->transport;
+ 	struct config_group *dev_cg = &se_dev->se_dev_group;
  
- 	alua_cg = &se_global->alua_group;
- 	for (i = 0; alua_cg->default_groups[i]; i++) {
-@@ -3216,6 +3215,7 @@ static void target_core_exit_configfs(void)
- 		config_item_put(item);
- 	}
- 	kfree(alua_cg->default_groups);
-+	alua_cg->default_groups = NULL;
- 
- 	hba_cg = &se_global->target_core_hbagroup;
- 	for (i = 0; hba_cg->default_groups[i]; i++) {
-@@ -3224,15 +3224,17 @@ static void target_core_exit_configfs(void)
- 		config_item_put(item);
- 	}
- 	kfree(hba_cg->default_groups);
--
--	for (i = 0; subsys->su_group.default_groups[i]; i++) {
--		item = &subsys->su_group.default_groups[i]->cg_item;
--		subsys->su_group.default_groups[i] = NULL;
--		config_item_put(item);
--	}
-+	hba_cg->default_groups = NULL;
+ 	kfree(dev_cg->default_groups);
 +	/*
-+	 * We expect subsys->su_group.default_groups to be released
-+	 * by configfs subsystem provider logic..
++	 * This pointer will set when the storage is enabled with:
++	 *`echo 1 > $CONFIGFS/core/$HBA/$DEV/dev_enable`
 +	 */
-+	configfs_unregister_subsystem(subsys);
- 	kfree(subsys->su_group.default_groups);
- 
--	configfs_unregister_subsystem(subsys);
-+	core_alua_free_lu_gp(se_global->default_lu_gp);
-+	se_global->default_lu_gp = NULL;
++	if (se_dev->se_dev_ptr) {
++		printk(KERN_INFO "Target_Core_ConfigFS: Calling se_free_"
++			"virtual_device() for se_dev_ptr: %p\n",
++			se_dev->se_dev_ptr);
 +
- 	printk(KERN_INFO "TARGET_CORE[0]: Released ConfigFS Fabric"
- 			" Infrastructure\n");
++		se_free_virtual_device(se_dev->se_dev_ptr, hba);
++	} else {
++		/*
++		 * Release struct se_subsystem_dev->se_dev_su_ptr..
++		 */
++		printk(KERN_INFO "Target_Core_ConfigFS: Calling t->free_"
++			"device() for se_dev_su_ptr: %p\n",
++			se_dev->se_dev_su_ptr);
++
++		t->free_device(se_dev->se_dev_su_ptr);
++	}
++
++	printk(KERN_INFO "Target_Core_ConfigFS: Deallocating se_subsystem"
++			"_dev_t: %p\n", se_dev);
++	kfree(se_dev);
+ }
  
+ static ssize_t target_core_dev_show(struct config_item *item,
+@@ -2799,13 +2825,11 @@ static void target_core_drop_subdev(
+ 	struct se_subsystem_api *t;
+ 	struct config_item *df_item;
+ 	struct config_group *dev_cg, *tg_pt_gp_cg;
+-	int i, ret;
++	int i;
+ 
+ 	hba = item_to_hba(&se_dev->se_dev_hba->hba_group.cg_item);
+ 
+-	if (mutex_lock_interruptible(&hba->hba_access_mutex))
+-		goto out;
+-
++	mutex_lock(&hba->hba_access_mutex);
+ 	t = hba->transport;
+ 
+ 	spin_lock(&se_global->g_device_lock);
+@@ -2828,38 +2852,12 @@ static void target_core_drop_subdev(
+ 		dev_cg->default_groups[i] = NULL;
+ 		config_item_put(df_item);
+ 	}
+-
+-	config_item_put(item);
+ 	/*
+-	 * This pointer will set when the storage is enabled with:
+-	 * `echo 1 > $CONFIGFS/core/$HBA/$DEV/dev_enable`
++	 * The releasing of se_dev and associated se_dev->se_dev_ptr is done
++	 * from target_core_dev_item_ops->release() ->target_core_dev_release().
+ 	 */
+-	if (se_dev->se_dev_ptr) {
+-		printk(KERN_INFO "Target_Core_ConfigFS: Calling se_free_"
+-			"virtual_device() for se_dev_ptr: %p\n",
+-				se_dev->se_dev_ptr);
+-
+-		ret = se_free_virtual_device(se_dev->se_dev_ptr, hba);
+-		if (ret < 0)
+-			goto hba_out;
+-	} else {
+-		/*
+-		 * Release struct se_subsystem_dev->se_dev_su_ptr..
+-		 */
+-		printk(KERN_INFO "Target_Core_ConfigFS: Calling t->free_"
+-			"device() for se_dev_su_ptr: %p\n",
+-			se_dev->se_dev_su_ptr);
+-
+-		t->free_device(se_dev->se_dev_su_ptr);
+-	}
+-
+-	printk(KERN_INFO "Target_Core_ConfigFS: Deallocating se_subsystem"
+-		"_dev_t: %p\n", se_dev);
+-
+-hba_out:
++	config_item_put(item);
+ 	mutex_unlock(&hba->hba_access_mutex);
+-out:
+-	kfree(se_dev);
+ }
+ 
+ static struct configfs_group_operations target_core_hba_group_ops = {
 -- 
 1.7.4
 
