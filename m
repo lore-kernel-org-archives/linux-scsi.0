@@ -1,41 +1,45 @@
-From: Vasiliy Kulikov <segoon@openwall.com>
-Subject: [PATCH 19/20] scsi: iscsi: world-writable sysfs priv_sess file
-Date: Fri,  4 Feb 2011 15:24:14 +0300
-Message-ID: <1ca8a99eaadde79e662573d89e4f17a20457fba0.1296818921.git.segoon@openwall.com>
+From: Linus Walleij <linus.walleij@stericsson.com>
+Subject: Re: [rtc-linux] [PATCH 00/20] world-writable files in sysfs and
+	debugfs
+Date: Fri, 4 Feb 2011 14:11:36 +0100
+Message-ID: <AANLkTik9FkP==O7athEugN4gLrnh7qyg_pPRR3MZ0La7@mail.gmail.com>
 References: <cover.1296818921.git.segoon@openwall.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-fx0-f46.google.com ([209.85.161.46]:32973 "EHLO
-	mail-fx0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752429Ab1BDMYT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 07:24:19 -0500
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
 In-Reply-To: <cover.1296818921.git.segoon@openwall.com>
-Sender: linux-scsi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+	<mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: linux-arm-kernel-bounces@lists.infradead.org
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: rtc-linux@googlegroups.com
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Srinidhi Kasagar <srinidhi.kasagar@stericsson.com>, Tony Lindgren <tony@atomide.com>, platform-driver-x86@vger.kernel.org, socketcan-core@lists.berlios.de, Corentin Chary <corentincj@iksaif.net>, "James E.J. Bottomley" <James.Bottomley@suse.de>, Julia Lawall <julia@diku.dk>, Russell King <linux@arm.linux.org.uk>, Samuel Ortiz <sameo@linux.intel.com>, linux-scsi@vger.kernel.org, Karol Kozimor <sziwan@users.sourceforge.net>, Kevin Hilman <khilman@deeprootsystems.com>, Luca Risolia <luca.risolia@studio.unibo.it>, open-iscsi@googlegroups.com, Wolfgang Grandegger <wg@grandegger.com>, Matthew Garrett <mjg@redhat.com>, acpi4asus-user@lists.sourceforge.net, Carlos Corbacho <carlos@strangeworlds.co.uk>, Mauro Carvalho Chehab <mchehab@infradead.org>, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Alessandro Zummo <a.zummo@>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: security@kernel.org, Mike Christie <michaelc@cs.wisc.edu>, "James E.J. Bottomley" <James.Bottomley@suse.de>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org
 
-Don't allow everybody to change iSCSI settings.
+2011/2/4 Vasiliy Kulikov <segoon@openwall.com>:
 
-Signed-off-by: Vasiliy Kulikov <segoon@openwall.com>
----
- Compile tested only.
+> The search was made with trivial shell commands:
+>
+> find | xargs grep S_IWUGO
+> find | xargs grep S_IWOTH
 
- drivers/scsi/scsi_transport_iscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+We only use our debugfs entries as root so it shouldn't matter much, this
+is way better, thanks for fixing.
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index f905ecb..01543d2 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -1847,7 +1847,7 @@ store_priv_session_##field(struct device *dev,				\
- #define iscsi_priv_session_rw_attr(field, format)			\
- 	iscsi_priv_session_attr_show(field, format)			\
- 	iscsi_priv_session_attr_store(field)				\
--static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO | S_IWUGO,		\
-+static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO | S_IWUSR,		\
- 			show_priv_session_##field,			\
- 			store_priv_session_##field)
- iscsi_priv_session_rw_attr(recovery_tmo, "%d");
--- 
-1.7.0.4
+> =A0mach-ux500: mbox-db5500: world-writable sysfs fifo file
+> =A0mfd: ab3100: world-writable debugfs *_priv files
+> =A0mfd: ab3500: world-writable debugfs register-* files
+> =A0mfd: ab8500: world-writable debugfs register-* files
 
+Acked-by: Linus Walleij <linus.walleij@stericsson.com>
+
+For these.
+
+Yours,
+Linus Walleij
