@@ -1,62 +1,40 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: [stable] [PATCH 04/06] mptfusion: mptctl_release is required
- in mptctl.c
-Date: Fri, 04 Feb 2011 08:53:59 -0600
-Message-ID: <1296831239.3025.0.camel@mulgrave.site>
-References: <20110203100250.GE23502@lsi.com>
-	 <20110203171930.GA11533@kroah.com>
-	 <B2FD678A64EAAD45B089B123FDFC3ED71121F381@inbmail01.lsi.com>
+From: "Mr. Song Lile" <songlile222@aol.nl>
+Subject: Business Proposal
+Date: Fri, 4 Feb 2011 16:10:10 +0100
+Message-ID: <80c7e5f498ec19155872ad457020aac5.squirrel__47924.8896045194$1296832902$gmane$org@mail.teletoria.ru>
+Reply-To: songlile222@aol.nl
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60796 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750863Ab1BDOyE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 09:54:04 -0500
-In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED71121F381@inbmail01.lsi.com>
+Received: from mail.kolatelecom.ru ([94.100.192.6]:35697 "EHLO
+	mail.teletoria.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880Ab1BDPVY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 10:21:24 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: Greg KH <greg@kroah.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "stable@kernel.org" <stable@kernel.org>
 
-On Fri, 2011-02-04 at 12:20 +0530, Desai, Kashyap wrote:
-> 
-> > -----Original Message-----
-> > From: Greg KH [mailto:greg@kroah.com]
-> > Sent: Thursday, February 03, 2011 10:50 PM
-> > To: Desai, Kashyap
-> > Cc: linux-scsi@vger.kernel.org; James.Bottomley@HansenPartnership.com;
-> > Prakash, Sathya; Moore, Eric; stable@kernel.org
-> > Subject: Re: [stable] [PATCH 04/06] mptfusion: mptctl_release is
-> > required in mptctl.c
-> > 
-> > On Thu, Feb 03, 2011 at 03:33:00PM +0530, Kashyap, Desai wrote:
-> > >
-> > > Added missing release callback for file_operations mptctl_fops.
-> > > Without release callback there will be never freed. It remains on
-> > > mptctl's eent list even after the file is closed and released.
-> > >
-> > > Relavent RHEL bugzilla is 660871
-> > >
-> > > Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-> > > ---
-> > 
-> > <snip>
-> > 
-> > This is NOT the way to get patches into a stable kernel release.
-> > Please
-> > read the file, Documentation/stable_kernel_rules.txt for how to do it
-> > properly.
-> 
-> 
-> Greg, Thanks for the redirecting to correct process. I understood that I have to add "CC: stable@kernel.org " in header of the patch itself instead of 
-> CCing stable@kernel.org from email client.
-> Do I need to resend those patches?
 
-Well, as I said, I need the series split into enhancements and bug
-fixes ... so why not do that with a resend and add it?
 
-James
 
+Mijn naam is de heer Song Li le werk ik met de Hang Seng Bank.There is de
+som van $ 19,500,000.00 in mijn bank "Hang Seng Bank", Hong kong.I niet te
+werven voor uw hulp bij het uitvoeren van dit plan transaction.I tot en
+met 30 geven % van de totale middelen als compensatie voor uw hulp.
+Met vriendelijke groet,
+De heer Song Lile
+Prive e-mail: songlile222@aol.nl
+Telefoon: +852-9534-8675
+
+English:-
+Business Proposal
+===============
+My name is Mr. Song Li le I work with the Hang Seng Bank.There is the sum
+of $19,500,000.00 in my bank"Hang Seng Bank",Hong kong.I do solicit for
+your assistance in effecting this transaction.I intend to give 30% of the
+total funds as compensation for your assistance.
+Sincerely,
+Mr. Song Lile
+Private e-mail: songlile222@aol.nl
+Phone: +852-9534-8675
 
