@@ -1,40 +1,67 @@
-From: "Mr. Song Lile" <songlile222@aol.nl>
-Subject: Business Proposal
-Date: Fri, 4 Feb 2011 16:10:10 +0100
-Message-ID: <80c7e5f498ec19155872ad457020aac5.squirrel__47924.8896045194$1296832902$gmane$org@mail.teletoria.ru>
-Reply-To: songlile222@aol.nl
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [v6 PATCH 4/4] bnx2fc: Makefile, Kconfig changes and FCoE interfaces
+Date: Fri, 04 Feb 2011 11:03:12 -0600
+Message-ID: <4D4C3150.60709@cs.wisc.edu>
+References: <1296790527.268.827.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kolatelecom.ru ([94.100.192.6]:35697 "EHLO
-	mail.teletoria.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751880Ab1BDPVY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 10:21:24 -0500
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:41803 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752794Ab1BDRCu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Feb 2011 12:02:50 -0500
+In-Reply-To: <1296790527.268.827.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bhanu Gollapudi <bprakash@broadcom.com>
+Cc: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, mchan@broadcom.com
 
+On 02/03/2011 09:35 PM, Bhanu Gollapudi wrote:
 
+> +
+> +static int bnx2fc_l2_rcv_thread(void *arg)
+> +{
+> +	struct fcoe_percpu_s *bg = arg;
+> +	struct sk_buff *skb;
+> +
+> +	while (!kthread_should_stop()) {
+> +		spin_lock_bh(&bg->fcoe_rx_list.lock);
+> +		while ((skb = __skb_dequeue(&bg->fcoe_rx_list)) == NULL) {
+> +			set_current_state(TASK_INTERRUPTIBLE);
+> +			spin_unlock_bh(&bg->fcoe_rx_list.lock);
+> +			schedule();
+> +			set_current_state(TASK_RUNNING);
+> +			if (kthread_should_stop())
+> +				return 0;
+> +			spin_lock_bh(&bg->fcoe_rx_list.lock);
+> +		}
+> +		spin_unlock_bh(&bg->fcoe_rx_list.lock);
+> +		bnx2fc_recv_frame(skb);
+> +	}
+> +	return 0;
+> +}
+> +
+> +
 
+I am not sure this is correct. Do you want to set the state to 
+interruptible before calling kthread_should_stop and before scheduling? 
+If kthread_stop is called after the check for kthread_should_stop() and 
+before setting the state to interruptible then will you have missed 
+kthread_stop's wake_up and will you schedule and not wake up again?
 
-Mijn naam is de heer Song Li le werk ik met de Hang Seng Bank.There is de
-som van $ 19,500,000.00 in mijn bank "Hang Seng Bank", Hong kong.I niet te
-werven voor uw hulp bij het uitvoeren van dit plan transaction.I tot en
-met 30 geven % van de totale middelen als compensatie voor uw hulp.
-Met vriendelijke groet,
-De heer Song Lile
-Prive e-mail: songlile222@aol.nl
-Telefoon: +852-9534-8675
+Do you need something like:
 
-English:-
-Business Proposal
-===============
-My name is Mr. Song Li le I work with the Hang Seng Bank.There is the sum
-of $19,500,000.00 in my bank"Hang Seng Bank",Hong kong.I do solicit for
-your assistance in effecting this transaction.I intend to give 30% of the
-total funds as compensation for your assistance.
-Sincerely,
-Mr. Song Lile
-Private e-mail: songlile222@aol.nl
-Phone: +852-9534-8675
-
+set_current_state(TASK_INTERRUPTIBLE);
+while (!kthread_should_stop()) {
+	schedule();
+	set_current_state(TASK_RUNNING);
+	spin_lock_bh(&bg->fcoe_rx_list.lock);
+	while ((skb = __skb_dequeue(&bg->fcoe_rx_list)) != NULL) {
+		spin_unlock_bh(&bg->fcoe_rx_list.lock);
+		bnx2fc_recv_frame(skb);
+		spin_lock_bh(&bg->fcoe_rx_list.lock);
+	}
+	set_current_state(TASK_INTERRUPTIBLE);
+}
+set_current_state(TASK_RUNNING);
