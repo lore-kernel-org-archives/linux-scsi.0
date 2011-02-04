@@ -1,77 +1,101 @@
 From: "Bhanu Gollapudi" <bprakash@broadcom.com>
-Subject: [PATCH] libfc: introduce __fc_fill_fc_hdr that accepts fc_hdr
- as an argument
-Date: Thu, 3 Feb 2011 18:47:18 -0800
-Message-ID: <1296787638.268.788.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
+Subject: [v6 PATCH 0/4] bnx2fc: Broadcom FCoE offload driver submission
+Date: Thu, 3 Feb 2011 19:35:19 -0800
+Message-ID: <1296790519.268.823.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
  charset=cp1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:1026 "EHLO mms1.broadcom.com"
+Received: from mms2.broadcom.com ([216.31.210.18]:1531 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752420Ab1BDCre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Feb 2011 21:47:34 -0500
+	id S1755591Ab1BDDff (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Feb 2011 22:35:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, mchan@broadcom.com
 
-fc_fill_fc_hdr() expects fc_frame as an argument. Introduce __fc_fill_fc_hdr to
-accept fc_frame_header as an argument.
+This is the v6 submission of Broadcom FCoE offload driver(bnx2fc)
+to the upstream kernel. This driver is for Broadcom Netxtreme II 57712
+chip. The following patches contain the driver sources for bnx2fc driver,
+and the libfc/libfcoe changes to enable bnx2fc. bnx2fc is a SCSI low level
+driver that interfaces with SCSI midlayer, libfc, libfcoe, cnic modules.
+bnx2fc driver uses services of libfc for slow path operations such as FIP and
+fabric discovery. The fast path IO perations are performed after offloading
+the session information to the underlying FCoE firmware.
 
-Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
----
- include/scsi/fc_encode.h |   26 +++++++++++++++++---------
- 1 files changed, 17 insertions(+), 9 deletions(-)
+v6 patches have the following review comments by Mike Chrisite
+	- Uses shost_printk
+	- Handle NULL pointer check
+	- Avoid unnecessary goto
+	- use __fc_fill_fc_hdr from fc_encode.h
+	- Donot encapsulate unsol ELS to FCoE format
+	- Return -ENOMEM instead of FAILED in bnx2fc_initiate_els
+	Pre-requisite for this patch is
+	http://marc.info/?l=linux-scsi&m=129678765615282&w=2
 
-diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-index 6d293c8..be418d8 100644
---- a/include/scsi/fc_encode.h
-+++ b/include/scsi/fc_encode.h
-@@ -46,16 +46,11 @@ struct fc_ct_req {
- 	} payload;
- };
- 
--/**
-- * fill FC header fields in specified fc_frame
-- */
--static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
--				  u32 did, u32 sid, enum fc_fh_type type,
--				  u32 f_ctl, u32 parm_offset)
-+static inline void __fc_fill_fc_hdr(struct fc_frame_header *fh,
-+				    enum fc_rctl r_ctl,
-+				    u32 did, u32 sid, enum fc_fh_type type,
-+				    u32 f_ctl, u32 parm_offset)
- {
--	struct fc_frame_header *fh;
--
--	fh = fc_frame_header_get(fp);
- 	WARN_ON(r_ctl == 0);
- 	fh->fh_r_ctl = r_ctl;
- 	hton24(fh->fh_d_id, did);
-@@ -68,6 +63,19 @@ static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
- }
- 
- /**
-+ * fill FC header fields in specified fc_frame
-+ */
-+static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
-+				  u32 did, u32 sid, enum fc_fh_type type,
-+				  u32 f_ctl, u32 parm_offset)
-+{
-+	struct fc_frame_header *fh;
-+
-+	fh = fc_frame_header_get(fp);
-+	__fc_fill_fc_hdr(fh, r_ctl, did, sid, type, f_ctl, parm_offset);
-+}
-+
-+/**
-  * fc_adisc_fill() - Fill in adisc request frame
-  * @lport: local port.
-  * @fp: fc frame where payload will be placed.
--- 
-1.7.0.6
+v5 patches have the following changes
+	- Modify bnx2fc to access common code libfcoe transport code.
+	  Pre-requisite for this patch is 
+	  http://marc.info/?l=linux-scsi&m=129625954108557&w=2
+
+v4 patches have the following changes
+        - libfcoe transport match function implemented for bnx2fc
+        - Changed DID_REQUEUE to DID_ERROR
+
+v3 patches incorporate the following review comments by Mike Christie, perf
+improvements in IO path
+        - Remove unused symbols/functions.
+        - Consolidated header files into bnx2fc_constants.h.
+        - Use symbols from fc_fcp.h
+        - Modify cmd_refcnt with krefs
+        - Modify debug logging to include host_no/port_id
+        - Modify GFP_ATOMIC to GFP_NOIO whereever possible
+        - Bound checks for memcpy
+        - Resolve couple of race conditions
+        - Include brief desciption of the files in the header
+        - Move common function to libfcoe
+        - Pass device to scsi_add_host instead of NULL
+        - Handle kthread_create failure in mod_init
+        - Remove unnecessary returns.
+        - Remove unnecessary type casts.
+        - Use setup_timer instead of init_timer/add_timer
+        - Use fc_block_scsi_eh() instead of fc_remote_port_chkready.
+        - Use scsi_dma_map/unmap() instead of pci_map_sg() calls.
+        - modify to lockless queuecommand
+
+Bhanu Prakash Gollapudi (4):
+  bnx2fc: Header files
+  bnx2fc: Firmware interface and ELS handling
+  bnx2fc: SCSI IO handling and session offload
+  bnx2fc: Makefile, Kconfig changes and FCoE interfaces
+
+ drivers/scsi/Kconfig                   |    1 +
+ drivers/scsi/Makefile                  |    1 +
+ drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h  | 1080 ++++++++++++++
+ drivers/scsi/bnx2fc/Kconfig            |   11 +
+ drivers/scsi/bnx2fc/Makefile           |    3 +
+ drivers/scsi/bnx2fc/bnx2fc.h           |  511 +++++++
+ drivers/scsi/bnx2fc/bnx2fc_constants.h |  206 +++
+ drivers/scsi/bnx2fc/bnx2fc_debug.h     |   70 +
+ drivers/scsi/bnx2fc/bnx2fc_els.c       |  515 +++++++
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c      | 2536 ++++++++++++++++++++++++++++++++
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c       | 1868 +++++++++++++++++++++++
+ drivers/scsi/bnx2fc/bnx2fc_io.c        | 1833 +++++++++++++++++++++++
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c       |  844 +++++++++++
+ 13 files changed, 9479 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h
+ create mode 100644 drivers/scsi/bnx2fc/Kconfig
+ create mode 100644 drivers/scsi/bnx2fc/Makefile
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc.h
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_constants.h
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_debug.h
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_els.c
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_hwi.c
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_io.c
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_tgt.c
 
 
 
