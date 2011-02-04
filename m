@@ -1,94 +1,106 @@
-From: scameron@beardog.cce.hp.com
-Subject: Add some kind of unique_id attribute to disks in scsi mid layer?
-Date: Fri, 4 Feb 2011 13:36:51 -0600
-Message-ID: <20110204193651.GM9565@beardog.cce.hp.com>
+From: "Bhanu Gollapudi" <bprakash@broadcom.com>
+Subject: [v7 PATCH 0/4] bnx2fc: Broadcom FCoE offload driver submission
+Date: Fri, 4 Feb 2011 12:10:32 -0800
+Message-ID: <1296850232.268.908.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+ charset=cp1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0015.houston.hp.com ([15.201.24.18]:38369 "EHLO
-	g4t0015.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751538Ab1BDThU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 14:37:20 -0500
-Received: from g4t0018.houston.hp.com (g4t0018.houston.hp.com [16.234.32.27])
-	by g4t0015.houston.hp.com (Postfix) with ESMTP id CF34191E6
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Feb 2011 19:36:51 +0000 (UTC)
-Received: from beardog.cce.hp.com (beardog.cce.hp.com [16.84.84.24])
-	by g4t0018.houston.hp.com (Postfix) with ESMTP id C619E1012A
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Feb 2011 19:36:51 +0000 (UTC)
-Content-Disposition: inline
+Received: from mms3.broadcom.com ([216.31.210.19]:3860 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752603Ab1BDUKn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Feb 2011 15:10:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: scameron@beardog.cce.hp.com
+To: "devel@open-fcoe.org" <devel@open-fcoe.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Michael Chan <mchan@broadcom.com>
 
-Would it be a reasonable idea to add some sort of unique_id attribute
-to scsi devices in the mid layer?
+This is the v7 submission of Broadcom FCoE offload driver(bnx2fc)
+to the upstream kernel. This driver is for Broadcom Netxtreme II 57712
+chip. The following patches contain the driver sources for bnx2fc driver,
+and the libfc/libfcoe changes to enable bnx2fc. bnx2fc is a SCSI low level
+driver that interfaces with SCSI midlayer, libfc, libfcoe, cnic modules.
+bnx2fc driver uses services of libfc for slow path operations such as FIP and
+fabric discovery. The fast path IO perations are performed after offloading
+the session information to the underlying FCoE firmware.
 
-For example, sg_inq, from sg3_utils, will print out a serial number:
+v7 patches have the following review comments by Mike Chrisite
+	- Fix kthread_should_stop() bug.
+	Pre-requisite for this patch is
+	http://marc.info/?l=linux-scsi&m=129678765615282&w=2
 
-[root@localhost scameron]# sg_inq /dev/sda
-standard INQUIRY:
-  PQual=0  Device_type=0  RMB=0  version=0x05  [SPC-3]
-  [AERC=0]  [TrmTsk=0]  NormACA=0  HiSUP=0  Resp_data_format=2
-  SCCS=0  ACC=0  TPGS=0  3PC=0  Protect=0  BQue=0
-  EncServ=0  MultiP=0  [MChngr=0]  [ACKREQQ=0]  Addr16=0
-  [RelAdr=0]  WBus16=0  Sync=0  Linked=0  [TranDis=0]  CmdQue=1
-    length=56 (0x38)   Peripheral device type: disk
- Vendor identification: HP      
- Product identification: LOGICAL VOLUME  
- Product revision level: 3.66
- Unit serial number: 50014380065020C0
+v6 patches have the following review comments by Mike Chrisite
+	- Uses shost_printk
+	- Handle NULL pointer check
+	- Avoid unnecessary goto
+	- use __fc_fill_fc_hdr from fc_encode.h
+	- Donot encapsulate unsol ELS to FCoE format
+	Pre-requisite for this patch is
+	http://marc.info/?l=linux-scsi&m=129678765615282&w=2
 
-And there's also some stuff in page 0x83 on some devices which might
-be useful as suck an identifier:
+v5 patches have the following changes
+	- Modify bnx2fc to access common code libfcoe transport code.
+	  Pre-requisite for this patch is 
+	  http://marc.info/?l=linux-scsi&m=129625954108557&w=2
 
-[root@localhost scameron]# sg_inq --page 0x83 /dev/sda
-VPD INQUIRY: Device Identification page
-  Designation descriptor number 1, descriptor length: 20
-    designator_type: NAA,  code_set: Binary
-    associated with the addressed logical unit
-      NAA 6, IEEE Company_id: 0x508b
-      Vendor Specific Identifier: 0x1001ce88b
-      Vendor Specific Identifier Extension: 0x746f381eedf6577
-      [0x600508b1001ce88b0746f381eedf6577]
-  Designation descriptor number 2, descriptor length: 8
-    designator_type: vendor specific [0x0],  code_set: Binary
-    associated with the addressed logical unit
- 00     00 00 00 00                                         ....            
-[root@localhost scameron]#
+v4 patches have the following changes
+        - libfcoe transport match function implemented for bnx2fc
+        - Changed DID_REQUEUE to DID_ERROR
 
-The hpsa driver, for example, currently exports a "unique_id"
-attribute itself for disks, which is the same data reported by
-inquire page 0x83.
+v3 patches incorporate the following review comments by Mike Christie, perf
+improvements in IO path
+        - Remove unused symbols/functions.
+        - Consolidated header files into bnx2fc_constants.h.
+        - Use symbols from fc_fcp.h
+        - Modify cmd_refcnt with krefs
+        - Modify debug logging to include host_no/port_id
+        - Modify GFP_ATOMIC to GFP_NOIO whereever possible
+        - Bound checks for memcpy
+        - Resolve couple of race conditions
+        - Include brief desciption of the files in the header
+        - Move common function to libfcoe
+        - Pass device to scsi_add_host instead of NULL
+        - Handle kthread_create failure in mod_init
+        - Remove unnecessary returns.
+        - Remove unnecessary type casts.
+        - Use setup_timer instead of init_timer/add_timer
+        - Use fc_block_scsi_eh() instead of fc_remote_port_chkready.
+        - Use scsi_dma_map/unmap() instead of pci_map_sg() calls.
+        - modify to lockless queuecommand
 
-[root@localhost 0:0:0:1]# pwd 
-/sys/bus/scsi/devices/0:0:0:1
-[root@localhost 0:0:0:1]# cat unique_id 
-600508B1001CE88B0746F381EEDF6577
+Bhanu Prakash Gollapudi (4):
+  bnx2fc: Header files
+  bnx2fc: Firmware interface and ELS handling
+  bnx2fc: SCSI IO handling and session offload
+  bnx2fc: Makefile, Kconfig changes and FCoE interfaces
 
-It occurs to me that maybe something
-like that would be useful for all disks serviced by the scsi mid layer.
-For example, kdump userland stuff, as typically implemented,
-has a very small ramdisk which it operates from, and has a fairly
-simple minded way of recognizing which disk is which (e.g. looks at
-vendor, model, rev, and type attributes, arguably not a very good way
-to do it, as just flashing firmware on a drive will change the rev, but
-won't mean the disk is not the same disk, for example, and likewise, all
-disks on a given Smart Array will carry the same vendor/model/rev/type,
-and type?  Type is always going to be zero for a disk anyhow.) 
+ drivers/scsi/Kconfig                   |    1 +
+ drivers/scsi/Makefile                  |    1 +
+ drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h  | 1080 ++++++++++++++
+ drivers/scsi/bnx2fc/Kconfig            |   11 +
+ drivers/scsi/bnx2fc/Makefile           |    3 +
+ drivers/scsi/bnx2fc/bnx2fc.h           |  511 +++++++
+ drivers/scsi/bnx2fc/bnx2fc_constants.h |  206 +++
+ drivers/scsi/bnx2fc/bnx2fc_debug.h     |   70 +
+ drivers/scsi/bnx2fc/bnx2fc_els.c       |  515 +++++++
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c      | 2535 ++++++++++++++++++++++++++++++++
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c       | 1868 +++++++++++++++++++++++
+ drivers/scsi/bnx2fc/bnx2fc_io.c        | 1833 +++++++++++++++++++++++
+ drivers/scsi/bnx2fc/bnx2fc_tgt.c       |  844 +++++++++++
+ 13 files changed, 9478 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/bnx2fc/57xx_hsi_bnx2fc.h
+ create mode 100644 drivers/scsi/bnx2fc/Kconfig
+ create mode 100644 drivers/scsi/bnx2fc/Makefile
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc.h
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_constants.h
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_debug.h
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_els.c
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_hwi.c
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_io.c
+ create mode 100644 drivers/scsi/bnx2fc/bnx2fc_tgt.c
 
-So kdump needs some kind of a unique_id to help it out, but would prefer
-not to carry around e.g. sg_inq in the kdump initrd (so you may ask
-"stuffing it in the kernel is a better idea?")  Well, _if_ the LLDs are
-typically already getting this info (as in the case of hpsa and cciss
-at least) maybe they should have some standard way of informing the
-mid layer, so the midlayer could expose this attribute in a standard way?
-Or, maybe the mid layer could send down the necessary inquiries to get
-the information itself with no interface changes needed?
 
-Well, this seems like such an obvious idea, that the mere fact that it 
-is not already implemented makes me think there may be some good reason
-why not.
 
--- steve
 
