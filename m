@@ -1,66 +1,43 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: Re: [PATCH 04/06] mptfusion: mptctl_release is required in
- mptctl.c
-Date: Fri, 4 Feb 2011 12:20:59 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED71121F381@inbmail01.lsi.com>
-References: <20110203100250.GE23502@lsi.com> <20110203171930.GA11533@kroah.com>
+From: "Carlos R. Mafra" <crmafra2-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: 2.6.38-rc3-git1: Reported regressions 2.6.36 -> 2.6.37
+Date: Fri, 4 Feb 2011 08:05:46 +0100
+Message-ID: <20110204070546.GA12621@linux-yscl.site>
+References: <e9vOd5LzdBK.A.dyD.h6eSNB@chimera>
+ <AANLkTikELiGS+fM5WguZS=Fo-sSXmej1UnKWqCFmnE0k@mail.gmail.com>
+ <s5haaid3xos.wl%tiwai@suse.de>
+ <201102032009.17100.rjw@sisk.pl>
+ <AANLkTi=suS1VDL=6EtT0D2=0c1DWwxdwZBBv=-BySNX-@mail.gmail.com>
+ <AANLkTi=7EOih=fY5FCvhQbewSc=3a49cYVaKJRWM+-3d@mail.gmail.com>
+ <AANLkTin7kBur95H=UBcYEcjYsUkrdG8znX-7PFZ4rrHf@mail.gmail.com>
+ <AANLkTimQPPDyBwkN0HWM2+bPcbzVd8YHZvn2iR8MVzfL@mail.gmail.com>
+ <yund3n88v7x.fsf@aiko.keithp.com>
+ <AANLkTin-9a5Z3qq4t8UakRvgB1G3_CT2RLKMVaHXvnLr@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-bounces@linux.kernel.org>
-In-Reply-To: <20110203171930.GA11533@kroah.com>
-Content-Language: en-US
-List-Unsubscribe: <http://linux.kernel.org/mailman/options/stable>,
-	<mailto:stable-request@linux.kernel.org?subject=unsubscribe>
-List-Archive: <http://linux.kernel.org/mailman/private/stable/>
-List-Post: <mailto:stable@linux.kernel.org>
-List-Help: <mailto:stable-request@linux.kernel.org?subject=help>
-List-Subscribe: <http://linux.kernel.org/mailman/listinfo/stable>,
-	<mailto:stable-request@linux.kernel.org?subject=subscribe>
-Sender: stable-bounces@linux.kernel.org
-Errors-To: stable-bounces@linux.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "Prakash,
-	Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "stable@kernel.org" <stable@kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <AANLkTin-9a5Z3qq4t8UakRvgB1G3_CT2RLKMVaHXvnLr-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: kernel-testers-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Cc: Keith Packard <keithp-aN4HjG94KOLQT0dZR+AlfA@public.gmane.org>, Dave Airlie <airlied-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Airlie <airlied-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Rafael J. Wysocki" <rjw-KKrjLPT3xs0@public.gmane.org>, Takashi Iwai <tiwai-l3A5Bk7waGM@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Maciej Rutecki <maciej.rutecki-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Florian Mickler <florian-sVu6HhrpSfRAfugRpC6u6w@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Kernel Testers List <kernel-testers-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Network Development <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux ACPI <linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux PM List <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Wireless List <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, DRI <dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-> -----Original Message-----
-> From: Greg KH [mailto:greg@kroah.com]
-> Sent: Thursday, February 03, 2011 10:50 PM
-> To: Desai, Kashyap
-> Cc: linux-scsi@vger.kernel.org; James.Bottomley@HansenPartnership.com;
-> Prakash, Sathya; Moore, Eric; stable@kernel.org
-> Subject: Re: [stable] [PATCH 04/06] mptfusion: mptctl_release is
-> required in mptctl.c
-> 
-> On Thu, Feb 03, 2011 at 03:33:00PM +0530, Kashyap, Desai wrote:
+On Thu  3.Feb'11 at 17:11:14 -0800, Linus Torvalds wrote:
+> On Thu, Feb 3, 2011 at 5:05 PM, Keith Packard <keithp-aN4HjG94KOLQT0dZR+AlfA@public.gmane.org> wrote:
 > >
-> > Added missing release callback for file_operations mptctl_fops.
-> > Without release callback there will be never freed. It remains on
-> > mptctl's eent list even after the file is closed and released.
-> >
-> > Relavent RHEL bugzilla is 660871
-> >
-> > Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-> > ---
+> > The goal is to make it so that when you *do* set a mode, DPMS gets set
+> > to ON (as the monitor will actually be "on" at that point). Here's a
+> > patch which does the DPMS_ON precisely when setting a mode.
 > 
-> <snip>
+> Ok, patch looks sane, but it does leave me with the "what about the
+> 'fb_changed' case?" question. Is that case basically guaranteed to not
+> change any existing dpms state?
 > 
-> This is NOT the way to get patches into a stable kernel release.
-> Please
-> read the file, Documentation/stable_kernel_rules.txt for how to do it
-> properly.
-
-
-Greg, Thanks for the redirecting to correct process. I understood that I have to add "CC: stable@kernel.org " in header of the patch itself instead of 
-CCing stable@kernel.org from email client.
-Do I need to resend those patches?
-
-~ Kashyap
-
+> > (note, this patch compiles, but is otherwise only lightly tested).
 > 
-> thanks,
-> 
-> greg k-h
+> Carlos? Takashi? Ignore my crazy patch, try this one instead. Does it
+> fix things for you?
+
+Yes! (tested on top of 2.6.38-rc3+).
+
+Thanks to everyone involved!
