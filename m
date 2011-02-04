@@ -1,27 +1,26 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [stable] [PATCH 04/06] mptfusion: mptctl_release is required
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: [stable] [PATCH 04/06] mptfusion: mptctl_release is required
  in mptctl.c
-Date: Fri, 4 Feb 2011 06:50:55 -0800
-Message-ID: <20110204145055.GB11393@kroah.com>
+Date: Fri, 04 Feb 2011 08:53:59 -0600
+Message-ID: <1296831239.3025.0.camel@mulgrave.site>
 References: <20110203100250.GE23502@lsi.com>
- <20110203171930.GA11533@kroah.com>
- <B2FD678A64EAAD45B089B123FDFC3ED71121F381@inbmail01.lsi.com>
+	 <20110203171930.GA11533@kroah.com>
+	 <B2FD678A64EAAD45B089B123FDFC3ED71121F381@inbmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kroah.org ([198.145.64.141]:33848 "EHLO coco.kroah.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751009Ab1BDOuD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Feb 2011 09:50:03 -0500
-Content-Disposition: inline
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:60796 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750863Ab1BDOyE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Feb 2011 09:54:04 -0500
 In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED71121F381@inbmail01.lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "stable@kernel.org" <stable@kernel.org>
+Cc: Greg KH <greg@kroah.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "stable@kernel.org" <stable@kernel.org>
 
-On Fri, Feb 04, 2011 at 12:20:59PM +0530, Desai, Kashyap wrote:
-> 
+On Fri, 2011-02-04 at 12:20 +0530, Desai, Kashyap wrote:
 > 
 > > -----Original Message-----
 > > From: Greg KH [mailto:greg@kroah.com]
@@ -51,17 +50,13 @@ On Fri, Feb 04, 2011 at 12:20:59PM +0530, Desai, Kashyap wrote:
 > > properly.
 > 
 > 
-> Greg, Thanks for the redirecting to correct process. I understood that
-> I have to add "CC: stable@kernel.org " in header of the patch itself
-> instead of CCing stable@kernel.org from email client.
+> Greg, Thanks for the redirecting to correct process. I understood that I have to add "CC: stable@kernel.org " in header of the patch itself instead of 
+> CCing stable@kernel.org from email client.
 > Do I need to resend those patches?
 
-To get these into a stable release?  I don't know, that's up to the
-subsystem maintainer if he is going to be willing to edit the patch and
-add that line himself.
+Well, as I said, I need the series split into enhancements and bug
+fixes ... so why not do that with a resend and add it?
 
-I'd defer and resend it to make sure it gets there.
+James
 
-good luck,
 
-greg k-h
