@@ -1,30 +1,38 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
+From: Emmanuel Florac <eflorac@intellique.com>
 Subject: Re: Supermicro X8DTH-6: Only ~250MiB/s from RAID<->RAID over 10GbE?
-Date: Sat, 05 Feb 2011 14:39:07 -0600
-Message-ID: <4D4DB56B.9020806@hardwarefreak.com>
-References: <alpine.DEB.2.00.1102051427360.8518@p34.internal.lan> <1296934967.2599.2.camel@jeff-ubuntu> <alpine.DEB.2.00.1102051510080.8518@p34.internal.lan>
+Date: Sat, 5 Feb 2011 21:45:50 +0100
+Message-ID: <20110205214550.3cb0f0d1@galadriel2.home>
+References: <alpine.DEB.2.00.1102051427360.8518@p34.internal.lan>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1102051510080.8518@p34.internal.lan>
+In-Reply-To: <alpine.DEB.2.00.1102051427360.8518@p34.internal.lan>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Jean Gobin <jf@gobinjf.be>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-net@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-net@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Justin Piszcz put forth on 2/5/2011 2:18 PM:
+Le Sat, 5 Feb 2011 14:35:52 -0500 (EST) vous =C3=A9criviez:
 
-> Everything > 1 Gbyte/sec but when you use the network, 250MiB/s, it does not
-> make sense.
+> No single component is < 1Gbyte/sec but when data is transferred from=
+=20
+> hostA to hostB, then it degrades to 250MiB/s.
 
-Did you try launching 4 simultaneous cp operations over nfs to get to 1.2 GB/s?
- I've witnessed single stream copy performance with Samba being less than
-maximum due to Samba limitations.  Running multiple copy ops in parallel then
-usually saturates the pipe.
+Running 2 Supermicro H8-DIi+ with 2378 Opteron, Intel 10 GigE CX4, 3War=
+e
+RAID-6 24 drives : 550 MB/s reading sustained over NFS with 2.6.32.*
+(plain vanilla kernel).
 
-I'm thinking you may have a single threaded process involved that's eating all
-of one core, at which point there is no scalability left for that operation.
+I know that Xeon used to suck IO wise, but this is surprising. Isn't
+something preventing DMA ?
 
--- 
-Stan
+--=20
+-----------------------------------------------------------------------=
+-
+Emmanuel Florac     |   Direction technique
+                    |   Intellique
+                    |	<eflorac@intellique.com>
+                    |   +33 1 78 94 84 02
+-----------------------------------------------------------------------=
+-
