@@ -1,153 +1,82 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: Supermicro X8DTH-6: Only ~250MiB/s from RAID<->RAID over 10GbE?
-Date: Sun, 6 Feb 2011 12:52:57 -0500
-Message-ID: <49DCE0D0-F33C-4041-8494-4758B9082968@lucidpixels.com>
-References: <alpine.DEB.2.00.1102051427360.8518@p34.internal.lan> <20110205214550.3cb0f0d1@galadriel2.home> <alpine.DEB.2.00.1102051553591.8518@p34.internal.lan> <20110205220621.GB17347@gallifrey> <alpine.DEB.2.00.1102051729010.8518@p34.internal.lan> <alpine.DEB.2.00.1102051753100.8518@p34.internal.lan> <4D4DE34E.7010308@hardwarefreak.com> <alpine.DEB.2.00.1102051958370.28109@p34.internal.lan> <4D4E127D.3060105@hardwarefreak.com> <alpine.DEB.2.00.1102060515230.28109@p34.internal.lan> <alpine.DEB.2.00.1102060817590.28109@p34.internal.lan> <4D4ED29B.8010903@gmail.com>
-Mime-Version: 1.0 (iPad Mail 8C148)
-Content-Type: text/plain;
-	charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <4D4ED29B.8010903@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Zdenek Kaspar <zkaspar82@gmail.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, "Dr. David Alan Gilbert" <linux@treblig.org>, Emmanuel Florac <eflorac@intellique.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-net@vger.kernel.org" <linux-net@vger.kernel.org>, Alan Piszcz <ap@solarrain.com>
+From: Fubo Chen <fubo.chen@gmail.com>
+Subject: target: Fix crash triggered by removing node ACL
+Date: Sun, 6 Feb 2011 20:52:34 +0100
+Message-ID: <AANLkTikJLdR58V-tvCPYYFc4pAxv_mzJ0LFZGMJ=BtKA@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:48298 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753173Ab1BFTwf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Feb 2011 14:52:35 -0500
+Received: by iwn9 with SMTP id 9so3938005iwn.19
+        for <linux-scsi@vger.kernel.org>; Sun, 06 Feb 2011 11:52:34 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
+With tcm_mvsas creating tpg, creating acl, removing acl and removing
+tpg triggers kernel crash during removing tpg.
+With patch below crash disappears. Does patch make sense ?
 
+Signed-off-by: Fubo Chen <fubo.chen@gmail.com>
 
-On Feb 6, 2011, at 11:55 AM, Zdenek Kaspar <zkaspar82@gmail.com> wrote:
+---
+ Documentation/target/tcm_mod_builder.py |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-> Dne 6.2.2011 14:46, Justin Piszcz napsal(a):
->> 
->> 
->> On Sun, 6 Feb 2011, Justin Piszcz wrote:
->> 
->>> 
->>> 
->>> On Sat, 5 Feb 2011, Stan Hoeppner wrote:
->>> 
->>>> Justin Piszcz put forth on 2/5/2011 7:08 PM:
->>>> 
->> 
->> 
->> Hi,
-> 
-> Hi, just few comments for maximal throughput..
-> 
->> 1. Defaults below:
->> sysctl -w net.core.wmem_max=131071
->> sysctl -w net.core.rmem_max=131071
->> sysctl -w net.core.wmem_default=118784
->> sysctl -w net.core.rmem_default=118784
->> sysctl -w net.core.optmem_max=20480
->> sysctl -w net.ipv4.igmp_max_memberships=20
->> sysctl -w net.ipv4.tcp_mem="379104       505472  758208"
->> sysctl -w net.ipv4.tcp_wmem="4096        16384   4194304"
->> sysctl -w net.ipv4.tcp_rmem="4096        87380   4194304"
->> sysctl -w net.ipv4.udp_mem="379104       505472  758208"
->> sysctl -w net.ipv4.udp_rmem_min=4096
->> sysctl -w net.ipv4.udp_wmem_min=4096
->> sysctl -w net.core.netdev_max_backlog=1024
-> 
-> sysctl net.ipv4.tcp_timestamps=0
-> 
->> 2. Optimized settings, for > 800MiB/:
->> 
->> # for 3ware raid, use 16384 readahead, > 16384 readahead, no improvement
->> blockdev --setra 16384 /dev/sda
-> 
-> elevator=deadline
-> 
->> # not sure if this helps much
->> ethtool -K eth0 lro on
-> 
-> Maybe try to _disable_ NIC offloads functions, sometimes its contra
-> productive (with enough CPU power, but I doubt on 2 socket box) + check
-> irqbalance..
-> 
-> If you have connection just between machines try the biggest possible MTU.
-> 
->> # seems to get performance > 600-700MiB/s faster
->> sysctl -w net.core.wmem_max=4194304
->> sysctl -w net.core.rmem_max=4194304
->> sysctl -w net.core.wmem_default=4194304
->> sysctl -w net.core.rmem_default=4194304
->> sysctl -w net.core.optmem_max=20480
->> sysctl -w net.ipv4.igmp_max_memberships=20
->> sysctl -w net.ipv4.tcp_mem="4194304 4194304 4194304"
->> sysctl -w net.ipv4.tcp_wmem="4194304 4194304 4194304"
->> sysctl -w net.ipv4.tcp_rmem="4194304 4194304 4194304"
->> sysctl -w net.ipv4.udp_mem="4194304 4194304 4194304"
->> sysctl -w net.ipv4.udp_rmem_min=4096
->> sysctl -w net.ipv4.udp_wmem_min=4096
->> sysctl -w net.core.netdev_max_backlog=1048576
->> 
->> # the main option that makes all of the difference, the golden option
->> # is the rszie and wsize of 1megabyte below:
->> 10.0.1.4:/r1    /nfs/box2/r1  nfs  
->> tcp,bg,rw,hard,intr,nolock,nfsvers=3,rsize=1048576,wsize=1048576  0 0
->> 
->> CPU utilization:
->>  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
->> 2069 root      20   0 18640 1304  688 R   91  0.0   0:15.50 cp
->>  703 root      20   0     0    0    0 S   25  0.0   2:46.95 kswapd0
->> 
->> With a single copy I get roughly 700-800MiB/s:
->> 
->> Device eth0 [10.0.1.3] (1/1):
->> ================================================================================
->> 
->> Incoming:
->> ######################     ####################  ####
->> ######################     ####################  ####
->> ######################     ####################  ####
->> ######################     ####################  ####
->> ######################     ####################  ####
->> ######################     ####################  ####  Curr: 808.71 MByte/s
->> ######################     ####################  ####  Avg: 706.11 MByte/s
->> ######################     ####################  ####  Min: 0.00 MByte/s
->> ######################     ####################  ####  Max: 860.17 MByte/s
->> ######################     ####################  ####  Ttl: 344.70 GByte
->> 
->> With two copies I get up to 830-850MiB/s:
->> 
->> Device eth0 [10.0.1.3] (1/1):
->> ================================================================================
->> 
->> Incoming:
->> ############################################     ####
->> ############################################     ####
->> ############################################     ####
->> ############################################     ####
->> ############################################     ####
->> ############################################     ####  Curr: 846.61 MByte/s
->> ############################################     ####  Avg: 683.14 MByte/s
->> ############################################     ####  Min: 0.00 MByte/s
->> ############################################     ####  Max: 860.17 MByte/s
->> ############################################     ####  Ttl: 305.71 GByte
->> 
->> Using a 4MiB r/w size with NFS improves performance to sustain > 750MiB/s
->> a little better I think:
->> 10.0.1.4:/r1    /nfs/box2/r1  nfs  
->> tcp,bg,rw,hard,intr,nolock,nfsvers=3,rsize=4194304,wsize=4194304 0
-> 
-> What about using UDP ?
-> 
->> Anyhow, roughly 750-850MiB/s it would be nice to get 1Gbyte/sec but I guess
->> the kerrnel (or my HW, CPU not fast enough) is not there yet.
->> 
->> Also found a good doc from RedHat:
->> http://www.redhat.com/promo/summit/2008/downloads/pdf/Thursday/Mark_Wagner.pdf
->> 
->> 
->> Justin.
->> 
-> 
-> HTH, Z.
+diff --git a/Documentation/target/tcm_mod_builder.py
+b/Documentation/target/tcm_mod_builder.py
+index 89af6c7..3925481 100755
+--- a/Documentation/target/tcm_mod_builder.py
++++ b/Documentation/target/tcm_mod_builder.py
+@@ -57,6 +57,7 @@ def tcm_mod_build_FC_include(fabric_mod_dir_var,
+fabric_mod_name):
+ 	buf += "	char nport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
+ 	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
+ 	buf += "	struct se_node_acl se_node_acl;\n"
++	buf += "	struct se_portal_group *se_tpg;\n"
+ 	buf += "};\n"
+ 	buf += "\n"
+ 	buf += "struct " + fabric_mod_name + "_tpg {\n"
+@@ -112,6 +113,7 @@ def tcm_mod_build_SAS_include(fabric_mod_dir_var,
+fabric_mod_name):
+ 	buf += "	char iport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
+ 	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
+ 	buf += "	struct se_node_acl se_node_acl;\n"
++	buf += "	struct se_portal_group *se_tpg;\n"
+ 	buf += "};\n\n"
+ 	buf += "struct " + fabric_mod_name + "_tpg {\n"
+ 	buf += "	/* SAS port target portal group tag for TCM */\n"
+@@ -163,6 +165,7 @@ def
+tcm_mod_build_iSCSI_include(fabric_mod_dir_var, fabric_mod_name):
+ 	buf += "	char iport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
+ 	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
+ 	buf += "	struct se_node_acl se_node_acl;\n"
++	buf += "	struct se_portal_group *se_tpg;\n"
+ 	buf += "};\n\n"
+ 	buf += "struct " + fabric_mod_name + "_tpg {\n"
+ 	buf += "	/* iSCSI target portal group tag for TCM */\n"
+@@ -278,6 +281,7 @@ def tcm_mod_build_configfs(proto_ident,
+fabric_mod_dir_var, fabric_mod_name):
+ 	buf += "	 * Locate our struct " + fabric_mod_name + "_nacl and set
+the FC Nport WWPN\n"
+ 	buf += "	 */\n"
+ 	buf += "	nacl = container_of(se_nacl, struct " + fabric_mod_name +
+"_nacl, se_node_acl);\n"
++	buf += "	nacl->se_tpg = se_tpg;\n"
 
-Thx for suggestions, I have tried some of those additional optimizations in the past but they did not seem to give increases in performance, but will revisit them if I have time, thanks.
+ 	if proto_ident == "FC" or proto_ident == "SAS":
+ 		buf += "	nacl->" + fabric_mod_init_port + "_wwpn = wwpn;\n"
+@@ -289,6 +293,7 @@ def tcm_mod_build_configfs(proto_ident,
+fabric_mod_dir_var, fabric_mod_name):
+ 	buf += "{\n"
+ 	buf += "	struct " + fabric_mod_name + "_nacl *nacl = container_of(se_acl,\n"
+ 	buf += "				struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
++	buf += "	core_tpg_del_initiator_node_acl(nacl->se_tpg, se_acl, 1);\n"
+ 	buf += "	kfree(nacl);\n"
+ 	buf += "}\n\n"
 
-UDP seemed to hit and stay at 650MiB/s.
-
-Justin.
+-- 
+1.7.1
