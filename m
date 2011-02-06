@@ -1,39 +1,74 @@
-From: Stan Hoeppner <stan@hardwarefreak.com>
-Subject: Re: Supermicro X8DTH-6: Only ~250MiB/s from RAID<->RAID over 10GbE?
-Date: Sun, 06 Feb 2011 16:01:33 -0600
-Message-ID: <4D4F1A3D.2090107@hardwarefreak.com>
-References: <alpine.DEB.2.00.1102051427360.8518@p34.internal.lan> <20110205214550.3cb0f0d1@galadriel2.home> <alpine.DEB.2.00.1102051553591.8518@p34.internal.lan> <20110205220621.GB17347@gallifrey> <alpine.DEB.2.00.1102051729010.8518@p34.internal.lan> <alpine.DEB.2.00.1102051753100.8518@p34.internal.lan> <4D4DE34E.7010308@hardwarefreak.com> <alpine.DEB.2.00.1102051958370.28109@p34.internal.lan> <4D4E127D.3060105@hardwarefreak.com> <alpine.DEB.2.00.1102060515230.28109@p34.internal.lan>
+From: <Shyam_Iyer@Dell.com>
+Subject: RE: [LSF/MM TOPIC] Sparseness in storage
+Date: Mon, 7 Feb 2011 03:48:11 +0530
+Message-ID: <DBFB1B45AF80394ABD1C807E9F28D1570264CAA094@BLRX7MCDC203.AMER.DELL.COM>
+References: <4D498F4B.3050207@interlog.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.00.1102060515230.28109@p34.internal.lan>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: "Dr. David Alan Gilbert" <linux@treblig.org>, Emmanuel Florac <eflorac@intellique.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-net@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:18959 "EHLO
+	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859Ab1BFWTM convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Feb 2011 17:19:12 -0500
+In-Reply-To: <4D498F4B.3050207@interlog.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-Justin Piszcz put forth on 2/6/2011 4:16 AM:
-
-> Workflow process-
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Douglas Gilbert
+> Sent: Wednesday, February 02, 2011 12:07 PM
+> To: linux-scsi
+> Subject: [LSF/MM TOPIC] Sparseness in storage
 > 
-> Migrate data from old/legacy RAID sets to new ones, possibly also 2TB->3TB, so
-> the faster the transfer speed, the better.
+> There are a lot of zeros out there. Efficient use of sparseness
+> involves techniques to detect large quantities of zeros in
+> advance rather than just reading them all. And on the write side
+> there are standard techniques to append zeros to a file without
+> actually writing them.
+> 
+> Seems a damn shame to read a terabyte of zeros and then write them
+> to another device or file. Carrying the idea further: if we know
+> random data has no meaning *** and we are asked to copy it,
+> why not "write" zeros to the output file? 
+> Over the last few years various commands have been added to the
+> SCSI and ATA command sets to better handle sparseness (and
+> trim/unmap/write_same can be viewed in this light). File systems
+> are improving their sparseness handling as well, with Linux
+> playing "catch up" to NTFS in this regard (e.g. the new
+> FALLOC_FL_PUNCH_HOLE flag in fallocate() ).
+> 
+> So I am proposing a discussion of the:
+>    - existing SCSI commands to support sparseness
+>    - existing ATA commands to support sparseness
+>    - suggestions for more sparseness support to be
+>      added to the SCSI and ATA command sets
+>    - user space tools that support sparseness
+>    - file system support for sparseness
+> 
 
-This type of data migration is probably going to include many many files of
-various sizes from small to large.  You have optimized your system performance
-only for individual large file xfers.  Thus, when you go to copy directories
-containing hundreds or thousands of files of various sizes, you will likely see
-much lower throughput using a single copy stream.  Thus if you want to keep that
-10 GbE pipe full, you'll likely need to run multiple copies in parallel, one per
-large parent directory.  Or, run a single copy from say, 10 legacy systems to
-one new system simultaneously, etc.
+On the last point I was talking to Ted on the same topic in Plumbers more so in the context of thin provisioned LUNs and he suggested creating profiles ...
 
-Given this situation, you may want to consider tar'ing up entire directories
-with gz or bz compression, if you have enough free space on the legacy machines,
-and copying the tarballs to the new system.  This will maximize your throughput,
-although I don't know if it will decrease your total work flow completion time,
-which should really be your overall goal.
+The zeroes out there also tend to change I/O patterns which are quite tied to low-level chunk size details in storage SANs.  I had like to think that the hole size could be linked to the chunk sizes exported by the Storage SANs and so it makes a lot of sense to create profiles.
 
--- 
-Stan
+
+> Perhaps the latter point should involve the file system track as
+> well.
+> 
+> Doug Gilbert
+> 20100202
+> 
+> 
+> *** For example: after ATA CRYPTO SCRAMBLE EXT command (which
+>      is one of the "sanitize device" commands and is fast) the
+>      data read will be random and meaningless. If the disk does
+>      "read zero after trim" why not follow the scramble with a
+>      trim/unmap of the whole disk?
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
