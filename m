@@ -1,54 +1,32 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH] target: Fix bogus return in transport_add_device_to_core_hba failure path
-Date: Sat,  5 Feb 2011 17:57:03 -0800
-Message-ID: <1296957423-30480-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp103.sbc.mail.ac4.yahoo.com ([76.13.13.242]:46581 "HELO
-	smtp103.sbc.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751640Ab1BFB4p (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Feb 2011 20:56:45 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Stan Hoeppner <stan@hardwarefreak.com>
+Subject: Re: Supermicro X8DTH-6: Only ~250MiB/s from RAID<->RAID over 10GbE?
+Date: Sat, 05 Feb 2011 21:16:13 -0600
+Message-ID: <4D4E127D.3060105@hardwarefreak.com>
+References: <alpine.DEB.2.00.1102051427360.8518@p34.internal.lan> <20110205214550.3cb0f0d1@galadriel2.home> <alpine.DEB.2.00.1102051553591.8518@p34.internal.lan> <20110205220621.GB17347@gallifrey> <alpine.DEB.2.00.1102051729010.8518@p34.internal.lan> <alpine.DEB.2.00.1102051753100.8518@p34.internal.lan> <4D4DE34E.7010308@hardwarefreak.com> <alpine.DEB.2.00.1102051958370.28109@p34.internal.lan>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-net-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.00.1102051958370.28109@p34.internal.lan>
+Sender: linux-net-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: "Dr. David Alan Gilbert" <linux@treblig.org>, Emmanuel Florac <eflorac@intellique.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-net@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Julia Lawall <julia@diku.dk>, James Bottomley <James.Bottomley@HansenPartnership.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+Justin Piszcz put forth on 2/5/2011 7:08 PM:
 
-This patch removes a bogus conditional+return check within the failure path
-of transport_add_device_to_core_hba().  This breakage was introduced during
-the v4 conversion to remove struct se_cmd passthrough ops for INQUIRY /
-READ_CAPCITY during struct se_device creation and registration process.
+> Overall performance is good, but now I need to figure out how to tweak the
+> network and/or disk paths so I can achieve > 1Gbyte/sec, as the RAID-0s can
+> read and write > 1.2Gbyte/sec.
+> 
+> Has anyone with 10GbE <-> 10GbE been able to transfer at or near line rate
+> with a single connection, or > 700MiB/s with multiple connections?  Problem
+> I worry about with creating multiple connections between two machines it will
+> create contention within the RAID that is being read from..
 
-Reported-by: Julia Lawall <julia@diku.dk>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_transport.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+Are you trying to maximize this for the sake of maximizing it, or do you have an
+actual application or work flow process that needs to be able to transfer a
+single large file via NFS at >1 GB/s throughput?
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index b2fc558..123bd94 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1622,7 +1622,7 @@ struct se_device *transport_add_device_to_core_hba(
- 	const char *inquiry_prod,
- 	const char *inquiry_rev)
- {
--	int ret = 0, force_pt;
-+	int force_pt;
- 	struct se_device  *dev;
- 
- 	dev = kzalloc(sizeof(struct se_device), GFP_KERNEL);
-@@ -1739,9 +1739,8 @@ struct se_device *transport_add_device_to_core_hba(
- 	}
- 	scsi_dump_inquiry(dev);
- 
-+	return dev;
- out:
--	if (!ret)
--		return dev;
- 	kthread_stop(dev->process_thread);
- 
- 	spin_lock(&hba->device_lock);
 -- 
-1.5.6.5
-
+Stan
