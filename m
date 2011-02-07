@@ -1,91 +1,139 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [LSF/MM TOPIC] Target fabric module for SCSI para-virtualization
-Date: Mon, 07 Feb 2011 09:07:49 +0100
-Message-ID: <4D4FA855.2030904@suse.de>
-References: <1297065435.13752.173.camel@haakon2.linux-iscsi.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: target: Fix crash triggered by removing node ACL
+Date: Mon, 07 Feb 2011 00:54:13 -0800
+Message-ID: <1297068853.13752.181.camel@haakon2.linux-iscsi.org>
+References: <AANLkTikJLdR58V-tvCPYYFc4pAxv_mzJ0LFZGMJ=BtKA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:38279 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752708Ab1BGH7k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Feb 2011 02:59:40 -0500
-In-Reply-To: <1297065435.13752.173.camel@haakon2.linux-iscsi.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51961 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753064Ab1BGIyT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2011 03:54:19 -0500
+In-Reply-To: <AANLkTikJLdR58V-tvCPYYFc4pAxv_mzJ0LFZGMJ=BtKA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-iscsi-target-dev@googlegroups.com
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, lsf-pc@lists.linuxfoundation.org, linux-scsi <linux-scsi@vger.kernel.org>, Stefan Hajnoczi <stefanha@gmail.com>, Anthony Liguori <anthony@codemonkey.ws>, Christoph Hellwig <hch@lst.de>
+To: Fubo Chen <fubo.chen@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On 02/07/2011 08:57 AM, Nicholas A. Bellinger wrote:
-> Greetings all,
->=20
-> [Topic]
->=20
-> A hybrid target fabric module for QEMU/KVM SCSI para-virtualization
->=20
-> [Abstract]
->=20
-> Currently we use the TCM_Loop v4 fabric module with mainline .38 targ=
-et
-> code to present SCSI LUNs with high level multi-fabric (iSCSI, FC, SA=
-S)
-> SPC-3 port WWN emulation into KVM guests using two different forms of
-> QEMU HBA hardware emulation.  However both of these currently require
-> interaction with the QEMU block layer and extra overhead of OS
-> independent code running in user-space connected to our existing
-> SG_IO/BSG interfaces.  This also has the limitiation that we currentl=
-y
-> cannot perform explict SCSI Initiator Port access management for LUNs
-> also present via TCM_Loop SCSI LLD driver on the KVM host.
->=20
-> Recently there has been an off-list discussion between myself and
-> members of the QEMU/KVM community, and they have expressed an interes=
-t
-> in seeing a native paravirtualized SCSI passthrough available to QEMU
-> guests with direct interaction into TCM fabric module code running on
-> KVM host.  This would be using existing CDB level port emulation code=
- in
-> target_core_fabric_lib.c, and (mostly) generic fabric control plane i=
-n
-> target_core_fabric_configfs.c..  Beyond the TCM fabric module specifi=
-cs,
-> this will require:
->=20
-> *) An asynchronous I/O capable virtio interface for KVM that does not
-> require direct QEMU block-layer interaction
->=20
-> *) A multi-fabric WWN naming capable TCM fabric module using native
-> virtio-scsi connections to individual KVM guests for kernel-level
-> passthrough into TCM backend storage.  (eg: similar to TCM_Loop, but =
-w/o
-> the Linux/SCSI LLD frontend, and full explict Initiator port NodeACL =
-+
-> MappedLUN control abstraction)
->=20
-> *) Guest OS specific para-virtualized SCSI driver packages (similar t=
-o
-> virtio-blk) performing SCSI I/O handoff into passthrough interface vi=
-a
-> SCSI I_T nexues, with proper T10 WWN Port and LUN naming provided fro=
-m
-> underlying TCM v4.x infrastructure  (eg: full compat w/ existing SPC-=
-3
-> capable cluster clients)
->=20
-YES!
-One item less on my long-term to-do list.
+On Sun, 2011-02-06 at 20:52 +0100, Fubo Chen wrote:
+> With tcm_mvsas creating tpg, creating acl, removing acl and removing
+> tpg triggers kernel crash during removing tpg.
+> With patch below crash disappears. Does patch make sense ?
+> 
+> Signed-off-by: Fubo Chen <fubo.chen@gmail.com>
+> 
 
-Cheers,
+Thanks for spotting this bug with the tcm_mod_builder.py generated
+configfs skeleton!
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+My comments are below..
+
+> ---
+>  Documentation/target/tcm_mod_builder.py |    5 +++++
+>  1 files changed, 5 insertions(+), 0 deletions(-)
+> 
+> diff --git a/Documentation/target/tcm_mod_builder.py
+> b/Documentation/target/tcm_mod_builder.py
+> index 89af6c7..3925481 100755
+> --- a/Documentation/target/tcm_mod_builder.py
+> +++ b/Documentation/target/tcm_mod_builder.py
+> @@ -57,6 +57,7 @@ def tcm_mod_build_FC_include(fabric_mod_dir_var,
+> fabric_mod_name):
+>  	buf += "	char nport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
+>  	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
+>  	buf += "	struct se_node_acl se_node_acl;\n"
+> +	buf += "	struct se_portal_group *se_tpg;\n"
+>  	buf += "};\n"
+>  	buf += "\n"
+>  	buf += "struct " + fabric_mod_name + "_tpg {\n"
+> @@ -112,6 +113,7 @@ def tcm_mod_build_SAS_include(fabric_mod_dir_var,
+> fabric_mod_name):
+>  	buf += "	char iport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
+>  	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
+>  	buf += "	struct se_node_acl se_node_acl;\n"
+> +	buf += "	struct se_portal_group *se_tpg;\n"
+>  	buf += "};\n\n"
+>  	buf += "struct " + fabric_mod_name + "_tpg {\n"
+>  	buf += "	/* SAS port target portal group tag for TCM */\n"
+> @@ -163,6 +165,7 @@ def
+> tcm_mod_build_iSCSI_include(fabric_mod_dir_var, fabric_mod_name):
+>  	buf += "	char iport_name[" + fabric_mod_name.upper() + "_NAMELEN];\n"
+>  	buf += "	/* Returned by " + fabric_mod_name + "_make_nodeacl() */\n"
+>  	buf += "	struct se_node_acl se_node_acl;\n"
+> +	buf += "	struct se_portal_group *se_tpg;\n"
+>  	buf += "};\n\n"
+>  	buf += "struct " + fabric_mod_name + "_tpg {\n"
+>  	buf += "	/* iSCSI target portal group tag for TCM */\n"
+> @@ -278,6 +281,7 @@ def tcm_mod_build_configfs(proto_ident,
+> fabric_mod_dir_var, fabric_mod_name):
+>  	buf += "	 * Locate our struct " + fabric_mod_name + "_nacl and set
+> the FC Nport WWPN\n"
+>  	buf += "	 */\n"
+>  	buf += "	nacl = container_of(se_nacl, struct " + fabric_mod_name +
+> "_nacl, se_node_acl);\n"
+> +	buf += "	nacl->se_tpg = se_tpg;\n"
+> 
+>  	if proto_ident == "FC" or proto_ident == "SAS":
+>  		buf += "	nacl->" + fabric_mod_init_port + "_wwpn = wwpn;\n"
+> @@ -289,6 +293,7 @@ def tcm_mod_build_configfs(proto_ident,
+> fabric_mod_dir_var, fabric_mod_name):
+>  	buf += "{\n"
+>  	buf += "	struct " + fabric_mod_name + "_nacl *nacl = container_of(se_acl,\n"
+>  	buf += "				struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
+> +	buf += "	core_tpg_del_initiator_node_acl(nacl->se_tpg, se_acl, 1);\n"
+>  	buf += "	kfree(nacl);\n"
+>  	buf += "}\n\n"
+> 
+
+Ok, calling core_tpg_del_initiator_node_acl() is the main bit that was
+missing here, and so we can go ahead and just use:
+
+	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);\n"
+
+w/o the extra se_tpg member reference in the fabric dependent nacl
+structure.
+
+Here is the patch I am pushing into lio-core-2.6.git/linus-38-rc3.
+
+Thanks Fubo!
+
+--nab
+
+>From 279abc85152ed82add01086871e29cf029ef1403 Mon Sep 17 00:00:00 2001
+From: Fubo Chen <fubo.chen@gmail.com>
+Date: Mon, 7 Feb 2011 01:13:54 -0800
+Subject: [PATCH] target: Fix generated *_drop_nodeacl() handler in tcm_mod_builder.py
+
+This patch adds the missing core_tpg_del_initiator_node_acl() call required
+by fabric modules for struct se_node_acl->acl_group context shutdown via
+
+        target_core_fabric_configfs.c:target_fabric_nacl_base_release() ->
+
+                struct target_core_fabric_ops->fabric_drop_nodeacl()
+
+for tcm_mod_builder.py generated $FABRIC_MOD_configfs.c skeleton code.
+
+Signed-off-by: Fubo Chen <fubo.chen@gmail.com>
+Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ Documentation/target/tcm_mod_builder.py |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
+index 89af6c7..7ef9b84 100755
+--- a/Documentation/target/tcm_mod_builder.py
++++ b/Documentation/target/tcm_mod_builder.py
+@@ -289,6 +289,7 @@ def tcm_mod_build_configfs(proto_ident, fabric_mod_dir_var, fabric_mod_name):
+        buf += "{\n"
+        buf += "        struct " + fabric_mod_name + "_nacl *nacl = container_of(se_acl,\n"
+        buf += "                                struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
++       buf += "        core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);\n"
+        buf += "        kfree(nacl);\n"
+        buf += "}\n\n"
+
+-- 
+1.5.6.5
+
+
