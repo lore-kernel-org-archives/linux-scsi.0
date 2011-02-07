@@ -1,72 +1,50 @@
-From: Stefan Hajnoczi <stefanha@gmail.com>
-Subject: Re: [LSF/MM TOPIC] Target fabric module for SCSI para-virtualization
-Date: Mon, 7 Feb 2011 11:06:33 +0000
-Message-ID: <AANLkTikXXsF010TC9mh2JMimfOgQ+-3UK_o+V+Z8eo4X@mail.gmail.com>
-References: <1297065435.13752.173.camel@haakon2.linux-iscsi.org>
-	<4D4FC90E.60701@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: Why using configfs as the only interface is wrong for a storage target
+Date: Mon, 7 Feb 2011 12:41:18 +0100
+Message-ID: <AANLkTi=b0mcWp3ergh=GvUF2CvgXUDv3Rq1fHY=xKf9L@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw0-f46.google.com ([74.125.83.46]:61835 "EHLO
-	mail-gw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753568Ab1BGLGe convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2011 06:06:34 -0500
-Received: by gwj20 with SMTP id 20so1636810gwj.19
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Feb 2011 03:06:33 -0800 (PST)
-In-Reply-To: <4D4FC90E.60701@gmail.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:34500 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753767Ab1BGLlj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2011 06:41:39 -0500
+Received: by iyj8 with SMTP id 8so2026147iyj.19
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Feb 2011 03:41:38 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <openosd@gmail.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, lsf-pc@lists.linuxfoundation.org, linux-scsi <linux-scsi@vger.kernel.org>, Anthony Liguori <anthony@codemonkey.ws>, Christoph Hellwig <hch@lst.de>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Boaz Harrosh <bharrosh@panasas.com>
 
-On Mon, Feb 7, 2011 at 10:27 AM, Boaz Harrosh <openosd@gmail.com> wrote=
-:
-> On 02/07/2011 09:57 AM, Nicholas A. Bellinger wrote:
->> *) Guest OS specific para-virtualized SCSI driver packages (similar =
-to
->> virtio-blk) performing SCSI I/O handoff into passthrough interface v=
-ia
->> SCSI I_T nexues, with proper T10 WWN Port and LUN naming provided fr=
-om
->> underlying TCM v4.x infrastructure =A0(eg: full compat w/ existing S=
-PC-3
->> capable cluster clients)
->>
->
-> I agree with the 2 above points on a better scsi-based Kernel-only
-> passthrough code in the KVM host. But the 3rd point, could we not use=
-d any
-> one of the few LLDs that already exist? I think there are already 3 o=
-f these,
-> no? including the one Microsoft submitted.
+On Fri, Feb 4, 2011 at 7:45 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> Please consider the following patch series for mainline target code.
+> It consists of predominately configfs bugfixes uncovered with recent SLUB
+> poison testing, and proper removal of legacy procfs target_core_mib.c code.
+> Note that the complete set of fabric independent statistics (SCSI MIBs) and
+> fabric dependent statistics will be included as native configfs group context
+> 'per value' attribute series during the .39 time frame.
 
-It could be done either way but there are some unique properties of a
-virtio-scsi HBA.
+I'm still not convinced that using configfs in a storage target as the
+only interface between kernel space and user space is a good idea.
+While configfs may satisfy all the needs of an iSCSI target, the use
+of configfs in combination with hot-pluggable HCAs is really awkward.
+Whenever a HCA is plugged in, the user has to issue mkdir commands to
+make these interfaces appear in configfs. And whenever a HCA is
+removed, stale information will remain present in configfs until the
+user issues an rmdir command. As we all know, it is not possible for a
+storage target to make these directories appear / disappear
+automatically in configfs because of basic configfs design choices.
 
-A virtio-scsi HBA can be implemented on the host as a vhost-scsi
-in-kernel device (like vhost-net today).  That allows it to hand off
-requests to the SCSI target without switching to userspace.  It can
-interact directly with the TCM fabric module because it is in the
-kernel, like TCM_Loop today.
+Regarding the SCSI-MIB (RFC 4455): using configfs makes it impossible
+to ensure that the information in the scsiTgtPortEntry table is
+current. If a HCA is plugged in, it won't appear in that table until
+the user or some software issues an mkdir command. If a HCA is
+removed, it won't appear in that table until an rmdir command is
+issued. All these mkdir / rmdir commands are redundant since the
+target core already knows which HCAs are available - a natural way to
+implement a storage target driver that has to handle HCA hot-plugging
+is to let it tell the storage target core about hot-plug events in the
+bus add_one / remove_one callbacks.
 
-The alternative is to emulate an existing HBA and that would be done
-in QEMU userspace, at which point you need an interface to talk to the
-SCSI target stack inside the kernel - this already exists today with
-QEMU SCSI emulation and scsi-generic/BSG devices but is not the same
-as fabric-level support.
-
-Virtio is extensible and this has proven essential for evolving and
-optimizing the I/O path.  If we choose an interface whose
-specification we cannot modify, then we're stuck with its feature set
-and performance limitations.
-
-Guest support is important though, so it's worth looking more at
-well-supported SCSI HBAs and see if there is a middle path to take.
-
-Stefan
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bart.
