@@ -1,63 +1,120 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [LSF/MM TOPIC] Target fabric module for SCSI para-virtualization
-Date: Sun, 06 Feb 2011 23:57:15 -0800
-Message-ID: <1297065435.13752.173.camel@haakon2.linux-iscsi.org>
+From: "=?utf-8?B?amFja193YW5n?=" <jack_wang@usish.com>
+Subject: =?utf-8?B?UmU6IFtSRkMgUEFUQ0ggMS82XSBpc2NpOiBpbml0aWFsaXphdGlvbg==?=
+Date: Mon, 7 Feb 2011 15:58:46 +0800
+Message-ID: <201102071558449371072@usish.com>
+References: <20110207003056.27040.89174.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:54555 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752708Ab1BGH52 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2011 02:57:28 -0500
+Received: from sr-smtp.usish.com ([210.5.144.203]:56554 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752694Ab1BGH6u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2011 02:58:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: lsf-pc@lists.linuxfoundation.org
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Stefan Hajnoczi <stefanha@gmail.com>, Anthony Liguori <anthony@codemonkey.ws>, Christoph Hellwig <hch@lst.de>
+To: =?utf-8?B?RGFuIFdpbGxpYW1z?= <dan.j.williams@intel.com>, =?utf-8?B?amFtZXMuYm90dG9tbGV5?= <james.bottomley@suse.de>
+Cc: =?utf-8?B?ZGF2ZS5qaWFuZw==?= <dave.jiang@intel.com>, =?utf-8?B?bGludXgtc2NzaQ==?= <linux-scsi@vger.kernel.org>, =?utf-8?B?amFjZWsuZGFuZWNraQ==?= <jacek.danecki@intel.com>, =?utf-8?B?ZWQuY2llY2hhbm93c2tp?= <ed.ciechanowski@intel.com>, =?utf-8?B?amVmZnJleS5kLnNraXJ2aW4=?= <jeffrey.d.skirvin@intel.com>, =?utf-8?B?ZWRtdW5kLm5hZG9sc2tp?= <edmund.nadolski@intel.com>
 
-Greetings all,
 
-[Topic]
++
++ /**
++  * check interrupt_handler's status and call completion_handler if true,
++  * link_up events should be coming from the scu core lib, as phy's come
++  * online. for each link_up from the core, call
++  * get_received_identify_address_frame, copy the frame into the
++  * sas_phy object and call libsas notify_port_event(PORTE_BYTES_DMAED).
++  * continue to return zero from thee scan_finished routine until
 
-A hybrid target fabric module for QEMU/KVM SCSI para-virtualization
+[Jack] Here "thee" seams typo of "the"
 
-[Abstract]
 
-Currently we use the TCM_Loop v4 fabric module with mainline .38 target
-code to present SCSI LUNs with high level multi-fabric (iSCSI, FC, SAS)
-SPC-3 port WWN emulation into KVM guests using two different forms of
-QEMU HBA hardware emulation.  However both of these currently require
-interaction with the QEMU block layer and extra overhead of OS
-independent code running in user-space connected to our existing
-SG_IO/BSG interfaces.  This also has the limitiation that we currently
-cannot perform explict SCSI Initiator Port access management for LUNs
-also present via TCM_Loop SCSI LLD driver on the KVM host.
 
-Recently there has been an off-list discussion between myself and
-members of the QEMU/KVM community, and they have expressed an interest
-in seeing a native paravirtualized SCSI passthrough available to QEMU
-guests with direct interaction into TCM fabric module code running on
-KVM host.  This would be using existing CDB level port emulation code in
-target_core_fabric_lib.c, and (mostly) generic fabric control plane in
-target_core_fabric_configfs.c..  Beyond the TCM fabric module specifics,
-this will require:
 
-*) An asynchronous I/O capable virtio interface for KVM that does not
-require direct QEMU block-layer interaction
++static struct coherent_memory_info *isci_host_alloc_mdl_struct(
++ struct isci_host *isci_host,
++ u32 size)
++{
++ struct coherent_memory_info *mdl_struct;
++ void *uncached_address = NULL;
++
++
++ mdl_struct = devm_kzalloc(&isci_host->pdev->dev,
++   sizeof(*mdl_struct),
++   GFP_KERNEL);
++ if (!mdl_struct)
++ return NULL;
++
++ INIT_LIST_HEAD(&mdl_struct->node);
++
++ uncached_address = dmam_alloc_coherent(&isci_host->pdev->dev,
++        size,
++        &mdl_struct->dma_handle,
++        GFP_KERNEL);
++ if (!uncached_address)
++ return NULL;
++
++ /* memset the whole memory area. */
++ memset((char *)uncached_address, 0, size);
+[Jack] cast void * is not needed.
++ mdl_struct->vaddr = uncached_address;
++ mdl_struct->size = (size_t)size;
++
++ return mdl_struct;
++}
++
++static void isci_host_build_mde(
++ struct sci_physical_memory_descriptor *mde_struct,
++ struct coherent_memory_info *mdl_struct)
++{
++ unsigned long address = 0;
++ dma_addr_t dma_addr = 0;
++
++ address = (unsigned long)mdl_struct->vaddr;
+[Jack] Why cast void vadd to usigned long? This may cause problem on x64.
 
-*) A multi-fabric WWN naming capable TCM fabric module using native
-virtio-scsi connections to individual KVM guests for kernel-level
-passthrough into TCM backend storage.  (eg: similar to TCM_Loop, but w/o
-the Linux/SCSI LLD frontend, and full explict Initiator port NodeACL +
-MappedLUN control abstraction)
++ dma_addr = mdl_struct->dma_handle;
++
++ /* to satisfy the alignment. */
++ if ((address % mde_struct->constant_memory_alignment) != 0) {
++ int align_offset
++ = (mde_struct->constant_memory_alignment
++    - (address % mde_struct->constant_memory_alignment));
++ address += align_offset;
++ dma_addr += align_offset;
++ }
++
++ mde_struct->virtual_address = (void *)address;
++ mde_struct->physical_address = dma_addr;
++ mdl_struct->mde = mde_struct;
++}
++
 
-*) Guest OS specific para-virtualized SCSI driver packages (similar to
-virtio-blk) performing SCSI I/O handoff into passthrough interface via
-SCSI I_T nexues, with proper T10 WWN Port and LUN naming provided from
-underlying TCM v4.x infrastructure  (eg: full compat w/ existing SPC-3
-capable cluster clients)
 
---nab
+
++
++ /* stop the comtroller and wait for completion.  */
+[Jack] controller.
+
++
+
++
++static inline struct isci_pci_info *to_pci_info(struct pci_dev *pdev)
++{
++ return pci_get_drvdata(pdev);
++}
++
+[Jack] This wrap is not needed I think.
+
+
++static inline
++enum isci_status isci_host_get_state(
++ struct isci_host *isci_host)
++{
++ return isci_host->status;
++}
+[Jack] This wrap is not needed too.
 
 
 
