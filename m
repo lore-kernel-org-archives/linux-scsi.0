@@ -1,7 +1,7 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 2/6] isci: task (libsas interface support)
-Date: Sun, 06 Feb 2011 16:34:45 -0800
-Message-ID: <20110207003445.27040.67152.stgit@localhost6.localdomain6>
+Subject: [RFC PATCH 3/6] isci: request (core request infrastructure)
+Date: Sun, 06 Feb 2011 16:34:50 -0800
+Message-ID: <20110207003450.27040.61422.stgit@localhost6.localdomain6>
 References: <20110207003056.27040.89174.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -9,30 +9,31 @@ Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mga03.intel.com ([143.182.124.21]:28199 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754398Ab1BGAQx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Feb 2011 19:16:53 -0500
+	id S1754399Ab1BGAQ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Feb 2011 19:16:58 -0500
 In-Reply-To: <20110207003056.27040.89174.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@suse.de
 Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-libsas interface routines and infrastructure.
+Interface to core/ for request construction, submission, completion and
+error handling.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/task.c | 1691 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/isci/task.h |  368 ++++++++++
- 2 files changed, 2059 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/isci/task.c
- create mode 100644 drivers/scsi/isci/task.h
+ drivers/scsi/isci/request.c | 1472 +++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/isci/request.h |  429 +++++++++++++
+ 2 files changed, 1901 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/isci/request.c
+ create mode 100644 drivers/scsi/isci/request.h
 
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+diff --git a/drivers/scsi/isci/request.c b/drivers/scsi/isci/request.c
 new file mode 100644
-index 0000000..5e6f558
+index 0000000..e564121
 --- /dev/null
-+++ b/drivers/scsi/isci/task.c
-@@ -0,0 +1,1691 @@
++++ b/drivers/scsi/isci/request.c
+@@ -0,0 +1,1472 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -88,1958 +89,727 @@ index 0000000..5e6f558
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#include <linux/completion.h>
-+#include "scic_task_request.h"
++#include "isci.h"
 +#include "scic_remote_device.h"
 +#include "scic_io_request.h"
-+#include "scic_sds_remote_device.h"
-+#include "scic_sds_remote_node_context.h"
-+#include "isci.h"
++#include "scic_task_request.h"
++#include "scic_port.h"
++#include "task.h"
 +#include "request.h"
 +#include "sata.h"
-+#include "task.h"
++#include "scu_completion_codes.h"
 +
 +
-+/**
-+ * isci_task_execute_task() - This function is one of the SAS Domain Template
-+ *    functions. This function is called by libsas to send a task down to
-+ *    hardware.
-+ * @task: This parameter specifies the SAS task to send.
-+ * @num: This parameter specifies the number of tasks to queue.
-+ * @gfp_flags: This parameter specifies the context of this call.
-+ *
-+ * status, zero indicates success.
-+ */
-+int isci_task_execute_task(struct sas_task *task, int num, gfp_t gfp_flags)
++static enum sci_status isci_request_ssp_request_construct(
++	struct isci_request *request)
 +{
-+	struct isci_host *isci_host;
-+	struct isci_request *request = NULL;
-+	struct isci_remote_device *device;
-+	unsigned long flags;
-+	unsigned long quiesce_flags = 0;
-+	int ret;
 +	enum sci_status status;
 +
-+
-+	dev_dbg(task->dev->port->ha->dev, "%s: num=%d\n", __func__, num);
-+
-+	if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
-+
-+		isci_task_complete_for_upper_layer(
-+			task,
-+			SAS_TASK_UNDELIVERED,
-+			SAM_STAT_TASK_ABORTED,
-+			isci_perform_normal_io_completion
-+			);
-+
-+		return 0;  /* The I/O was accepted (and failed). */
-+	}
-+	if ((task->dev == NULL) || (task->dev->port == NULL)) {
-+
-+		/* Indicate SAS_TASK_UNDELIVERED, so that the scsi midlayer
-+		 * removes the target.
-+		 */
-+		isci_task_complete_for_upper_layer(
-+			task,
-+			SAS_TASK_UNDELIVERED,
-+			SAS_DEVICE_UNKNOWN,
-+			isci_perform_normal_io_completion
-+			);
-+		return 0;  /* The I/O was accepted (and failed). */
-+	}
-+	isci_host = isci_host_from_sas_ha(task->dev->port->ha);
-+
-+	/* Check if we have room for more tasks */
-+	ret = isci_host_can_queue(isci_host, num);
-+
-+	if (ret) {
-+		dev_warn(task->dev->port->ha->dev, "%s: queue full\n", __func__);
-+		return ret;
-+	}
-+
-+	do {
-+		dev_dbg(task->dev->port->ha->dev,
-+			"task = %p, num = %d; dev = %p; cmd = %p\n",
-+			    task, num, task->dev, task->uldd_task);
-+
-+		if ((task->dev == NULL) || (task->dev->port == NULL)) {
-+			dev_warn(task->dev->port->ha->dev,
-+				 "%s: task %p's port or dev == NULL!\n",
-+				 __func__, task);
-+
-+			/* Indicate SAS_TASK_UNDELIVERED, so that the scsi
-+			 * midlayer removes the target.
-+			 */
-+			isci_task_complete_for_upper_layer(
-+				task,
-+				SAS_TASK_UNDELIVERED,
-+				SAS_DEVICE_UNKNOWN,
-+				isci_perform_normal_io_completion
-+				);
-+			/* We don't have a valid host reference, so we
-+			 * can't control the host queueing condition.
-+			 */
-+			continue;
-+		}
-+
-+		device = isci_dev_from_domain_dev(task->dev);
-+
-+		isci_host = isci_host_from_sas_ha(task->dev->port->ha);
-+
-+		/* check if the controller hasn't started or if the device
-+		 * is ready but not accepting IO.
-+		 */
-+		if (device) {
-+
-+			spin_lock_irqsave(&device->host_quiesce_lock,
-+					  quiesce_flags);
-+		}
-+		/* From this point onward, any process that needs to guarantee
-+		 * that there is no kernel I/O being started will have to wait
-+		 * for the quiesce spinlock.
-+		 */
-+
-+		if (isci_host_get_state(isci_host) == isci_starting ||
-+		    (device && ((isci_remote_device_get_state(device) == isci_ready) ||
-+		    (isci_remote_device_get_state(device) == isci_host_quiesce)))) {
-+
-+			/* Forces a retry from scsi mid layer. */
-+			dev_warn(task->dev->port->ha->dev,
-+				 "%s: task %p: isci_host->status = %d, "
-+				 "device = %p\n",
-+				 __func__,
-+				 task,
-+				 isci_host_get_state(isci_host),
-+				 device);
-+
-+			if (device)
-+				dev_dbg(task->dev->port->ha->dev,
-+					"%s: device->status = 0x%x\n",
-+					__func__,
-+					isci_remote_device_get_state(device));
-+
-+			/* Indicate QUEUE_FULL so that the scsi midlayer
-+			 * retries.
-+			 */
-+			isci_task_complete_for_upper_layer(
-+				task,
-+				SAS_TASK_COMPLETE,
-+				SAS_QUEUE_FULL,
-+				isci_perform_normal_io_completion
-+				);
-+			isci_host_can_dequeue(isci_host, 1);
-+		}
-+		/* the device is going down... */
-+		else if (!device || (isci_ready_for_io != isci_remote_device_get_state(device))) {
-+
-+			dev_dbg(task->dev->port->ha->dev,
-+				"%s: task %p: isci_host->status = %d, "
-+				"device = %p\n",
-+				__func__,
-+				task,
-+				isci_host_get_state(isci_host),
-+				device);
-+
-+			if (device)
-+				dev_dbg(task->dev->port->ha->dev,
-+					"%s: device->status = 0x%x\n",
-+					__func__,
-+					isci_remote_device_get_state(device));
-+
-+			/* Indicate SAS_TASK_UNDELIVERED, so that the scsi
-+			 * midlayer removes the target.
-+			 */
-+			isci_task_complete_for_upper_layer(
-+				task,
-+				SAS_TASK_UNDELIVERED,
-+				SAS_DEVICE_UNKNOWN,
-+				isci_perform_normal_io_completion
-+				);
-+			isci_host_can_dequeue(isci_host, 1);
-+
-+		} else {
-+			/* build and send the request. */
-+			status = isci_request_execute(isci_host, task, &request,
-+						      gfp_flags);
-+
-+			if (status == SCI_SUCCESS) {
-+				spin_lock_irqsave(&task->task_state_lock, flags);
-+				task->task_state_flags |= SAS_TASK_AT_INITIATOR;
-+				spin_unlock_irqrestore(&task->task_state_lock, flags);
-+			} else {
-+				/* Indicate QUEUE_FULL so that the scsi
-+				 * midlayer retries. if the request
-+				 * failed for remote device reasons,
-+				 * it gets returned as
-+				 * SAS_TASK_UNDELIVERED next time
-+				 * through.
-+				 */
-+				isci_task_complete_for_upper_layer(
-+						task,
-+						SAS_TASK_COMPLETE,
-+						SAS_QUEUE_FULL,
-+						isci_perform_normal_io_completion
-+						);
-+				isci_host_can_dequeue(isci_host, 1);
-+			}
-+		}
-+		if (device) {
-+			spin_unlock_irqrestore(&device->host_quiesce_lock,
-+					       quiesce_flags
-+					       );
-+		}
-+		task = list_entry(task->list.next, struct sas_task, list);
-+	} while (--num > 0);
-+	return 0;
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: request = %p\n",
++		__func__,
++		request);
++	status = scic_io_request_construct_basic_ssp(
++		request->sci_request_handle
++		);
++	return status;
 +}
 +
++static enum sci_status isci_request_stp_request_construct(
++	struct isci_request *request)
++{
++	struct sas_task *task = isci_request_access_task(request);
++	enum sci_status status;
++	struct host_to_dev_fis *register_fis;
 +
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: request = %p\n",
++		__func__,
++		request);
++
++	/* Get the host_to_dev_fis from the core and copy
++	 * the fis from the task into it.
++	 */
++	register_fis = isci_sata_task_to_fis_copy(task);
++
++	status = scic_io_request_construct_basic_sata(
++		request->sci_request_handle
++		);
++
++	/* Set the ncq tag in the fis, from the queue
++	 * command in the task.
++	 */
++	if (isci_sata_is_task_ncq(task)) {
++
++		isci_sata_set_ncq_tag(
++			register_fis,
++			task
++			);
++	}
++
++	return status;
++}
 +
 +/**
-+ * isci_task_request_build() - This function builds the task request object.
++ * isci_smp_request_build() - This function builds the smp request object.
 + * @isci_host: This parameter specifies the ISCI host object
 + * @request: This parameter points to the isci_request object allocated in the
 + *    request construct function.
-+ * @tmf: This parameter is the task management struct to be built
++ * @sci_device: This parameter is the handle for the sci core's remote device
++ *    object that is the destination for this request.
 + *
 + * SCI_SUCCESS on successfull completion, or specific failure code.
 + */
-+static enum sci_status isci_task_request_build(
-+	struct isci_host *isci_host,
-+	struct isci_request **isci_request,
-+	struct isci_tmf *isci_tmf)
++static enum sci_status isci_smp_request_build(
++	struct isci_request *request)
 +{
-+	struct scic_sds_remote_device *sci_device;
 +	enum sci_status status = SCI_FAILURE;
-+	struct isci_request *request;
-+	struct isci_remote_device *isci_device;
-+/*	struct sci_sas_identify_address_frame_protocols dev_protocols; */
-+	struct smp_discover_response_protocols dev_protocols;
++	struct sas_task *task = isci_request_access_task(request);
 +
++	void *command_iu_address =
++		scic_io_request_get_command_iu_address(
++			request->sci_request_handle
++			);
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: request = %p\n",
++		__func__,
++		request);
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: smp_req len = %d\n",
++		__func__,
++		task->smp_task.smp_req.length);
++
++	/* copy the smp_command to the address; */
++	sg_copy_to_buffer(&task->smp_task.smp_req, 1,
++			  (char *)command_iu_address,
++			  sizeof(struct smp_request)
++			  );
++
++	status = scic_io_request_construct_smp(request->sci_request_handle);
++	if (status != SCI_SUCCESS)
++		dev_warn(&request->isci_host->pdev->dev,
++			 "%s: scic_io_request_construct_smp failed with "
++			 "status = %d\n",
++			 __func__,
++			 status);
++
++	return status;
++}
++
++/**
++ * isci_io_request_build() - This function builds the io request object.
++ * @isci_host: This parameter specifies the ISCI host object
++ * @request: This parameter points to the isci_request object allocated in the
++ *    request construct function.
++ * @sci_device: This parameter is the handle for the sci core's remote device
++ *    object that is the destination for this request.
++ *
++ * SCI_SUCCESS on successfull completion, or specific failure code.
++ */
++static enum sci_status isci_io_request_build(
++	struct isci_host *isci_host,
++	struct isci_request *request,
++	struct isci_remote_device *isci_device)
++{
++	struct smp_discover_response_protocols dev_protocols;
++	enum sci_status status = SCI_SUCCESS;
++	struct sas_task *task = isci_request_access_task(request);
++	struct scic_sds_remote_device *sci_device =
++		isci_device->sci_device_handle;
 +
 +	dev_dbg(&isci_host->pdev->dev,
-+		"%s: isci_tmf = %p\n", __func__, isci_tmf);
-+
-+	isci_device = isci_tmf->device;
-+	sci_device = isci_device->sci_device_handle;
-+
-+	/* do common allocation and init of request object. */
-+	status = isci_request_alloc_tmf(
-+		isci_host,
-+		isci_tmf,
-+		&request,
++		"%s: isci_device = 0x%p; request = %p, "
++		"num_scatter = %d\n",
++		__func__,
 +		isci_device,
-+		GFP_ATOMIC
-+		);
++		request,
++		task->num_scatter);
 +
-+	if (status != SCI_SUCCESS)
-+		goto out;
++	/* map the sgl addresses, if present.
++	 * libata does the mapping for sata devices
++	 * before we get the request.
++	 */
++	if (task->num_scatter &&
++	    !sas_protocol_ata(task->task_proto) &&
++	    !(SAS_PROTOCOL_SMP & task->task_proto)) {
 +
-+	/* let the core do it's construct. */
-+	status = scic_task_request_construct(
++		request->num_sg_entries = dma_map_sg(
++			&isci_host->pdev->dev,
++			task->scatter,
++			task->num_scatter,
++			task->data_dir
++			);
++
++		if (request->num_sg_entries == 0)
++			return SCI_FAILURE_INSUFFICIENT_RESOURCES;
++	}
++
++	/* build the common request object. For now,
++	 * we will let the core allocate the IO tag.
++	 */
++	status = scic_io_request_construct(
 +		isci_host->core_controller,
 +		sci_device,
 +		SCI_CONTROLLER_INVALID_IO_TAG,
 +		request,
 +		request->sci_request_mem_ptr,
-+		&request->sci_request_handle
++		(struct scic_sds_request **)&request->sci_request_handle
 +		);
 +
 +	if (status != SCI_SUCCESS) {
 +		dev_warn(&isci_host->pdev->dev,
-+			 "%s: scic_task_request_construct failed - "
-+			 "status = 0x%x\n",
-+			 __func__,
-+			 status);
-+		goto errout;
++			 "%s: failed request construct\n",
++			 __func__);
++		return SCI_FAILURE;
 +	}
 +
-+	sci_object_set_association(
-+		request->sci_request_handle,
-+		request
-+		);
++	sci_object_set_association(request->sci_request_handle, request);
 +
-+	scic_remote_device_get_protocols(
-+		sci_device,
-+		&dev_protocols
-+		);
-+
-+	/* let the core do it's protocol
-+	 * specific construction.
-+	 */
-+	if (dev_protocols.u.bits.attached_ssp_target) {
-+
-+		isci_tmf->proto = SAS_PROTOCOL_SSP;
-+		status = scic_task_request_construct_ssp(
-+			request->sci_request_handle
-+			);
-+		if (status != SCI_SUCCESS)
-+			goto errout;
++	/* Determine protocol and call the appropriate basic constructor */
++	scic_remote_device_get_protocols(sci_device, &dev_protocols);
++	if (dev_protocols.u.bits.attached_ssp_target)
++		status = isci_request_ssp_request_construct(request);
++	else if (dev_protocols.u.bits.attached_stp_target)
++		status = isci_request_stp_request_construct(request);
++	else if (dev_protocols.u.bits.attached_smp_target)
++		status = isci_smp_request_build(request);
++	else {
++		dev_warn(&isci_host->pdev->dev,
++			 "%s: unknown protocol\n", __func__);
++		return SCI_FAILURE;
 +	}
 +
-+	if (dev_protocols.u.bits.attached_stp_target) {
-+
-+		isci_tmf->proto = SAS_PROTOCOL_SATA;
-+		status = isci_sata_management_task_request_build(request);
-+
-+		if (status != SCI_SUCCESS)
-+			goto errout;
-+	}
-+
-+	goto out;
-+
-+ errout:
-+
-+	/* release the dma memory if we fail. */
-+	isci_request_free(isci_host, request);
-+	request = NULL;
-+
-+ out:
-+	*isci_request = request;
-+	return status;
++	return SCI_SUCCESS;
 +}
 +
-+/**
-+ * isci_tmf_timeout_cb() - This function is called as a kernel callback when
-+ *    the timeout period for the TMF has expired.
-+ *
-+ *
-+ */
-+static void isci_tmf_timeout_cb(void *tmf_request_arg)
-+{
-+	struct isci_request *request = (struct isci_request *)tmf_request_arg;
-+	struct isci_tmf *tmf = isci_request_access_tmf(request);
-+	enum sci_status status;
-+
-+	BUG_ON(request->ttype != tmf_task);
-+
-+	/* This task management request has timed-out.  Terminate the request
-+	 * so that the request eventually completes to the requestor in the
-+	 * request completion callback path.
-+	 */
-+	/* Note - the timer callback function itself has provided spinlock
-+	 * exclusion from the start and completion paths.  No need to take
-+	 * the request->isci_host->scic_lock here.
-+	 */
-+
-+	if (tmf->timeout_timer != NULL) {
-+		/* Call the users callback, if any. */
-+		if (tmf->cb_state_func != NULL)
-+			tmf->cb_state_func(isci_tmf_timed_out, tmf,
-+					   tmf->cb_data);
-+
-+		/* Terminate the TMF transmit request. */
-+		status = scic_controller_terminate_request(
-+			request->isci_host->core_controller,
-+			request->isci_device->sci_device_handle,
-+			request->sci_request_handle
-+			);
-+
-+		dev_dbg(&request->isci_host->pdev->dev,
-+			"%s: tmf_request = %p; tmf = %p; status = %d\n",
-+			__func__, request, tmf, status);
-+	} else
-+		dev_dbg(&request->isci_host->pdev->dev,
-+			"%s: timer already canceled! "
-+			"tmf_request = %p; tmf = %p\n",
-+			__func__, request, tmf);
-+
-+	/* No need to unlock since the caller to this callback is doing it for
-+	 * us.
-+	 * request->isci_host->scic_lock
-+	 */
-+}
 +
 +/**
-+ * isci_task_execute_tmf() - This function builds and sends a task request,
-+ *    then waits for the completion.
++ * isci_request_alloc_core() - This function gets the request object from the
++ *    isci_host dma cache.
 + * @isci_host: This parameter specifies the ISCI host object
-+ * @tmf: This parameter is the pointer to the task management structure for
-+ *    this request.
-+ * @timeout_ms: This parameter specifies the timeout period for the task
-+ *    management request.
++ * @isci_request: This parameter will contain the pointer to the new
++ *    isci_request object.
++ * @isci_device: This parameter is the pointer to the isci remote device object
++ *    that is the destination for this request.
++ * @gfp_flags: This parameter specifies the os allocation flags.
 + *
-+ * TMF_RESP_FUNC_COMPLETE on successful completion of the TMF (this includes
-+ * error conditions reported in the IU status), or TMF_RESP_FUNC_FAILED.
++ * SCI_SUCCESS on successfull completion, or specific failure code.
 + */
-+int isci_task_execute_tmf(
++static int isci_request_alloc_core(
 +	struct isci_host *isci_host,
-+	struct isci_tmf *tmf,
-+	unsigned long timeout_ms)
++	struct isci_request **isci_request,
++	struct isci_remote_device *isci_device,
++	gfp_t gfp_flags)
 +{
-+	DECLARE_COMPLETION_ONSTACK(completion);
-+	enum sci_status status = SCI_FAILURE;
-+	struct scic_sds_remote_device *sci_device;
-+	struct isci_remote_device *isci_device = tmf->device;
++	int ret = 0;
++	dma_addr_t handle;
 +	struct isci_request *request;
-+	int ret = TMF_RESP_FUNC_FAILED;
-+	unsigned long flags;
 +
-+	/* sanity check, return TMF_RESP_FUNC_FAILED
-+	 * if the device is not there and ready.
++
++	/* get pointer to dma memory. This actually points
++	 * to both the isci_remote_device object and the
++	 * sci object. The isci object is at the beginning
++	 * of the memory allocated here.
 +	 */
-+	if (!isci_device ||
-+	    ((isci_ready_for_io != isci_remote_device_get_state(isci_device)) &&
-+	    (isci_host_quiesce != isci_remote_device_get_state(isci_device)))) {
-+		dev_dbg(&isci_host->pdev->dev,
-+			"%s: isci_device = %p not ready (%d)\n",
-+			__func__,
-+			isci_device,
-+			isci_remote_device_get_state(isci_device));
-+		return TMF_RESP_FUNC_FAILED;
-+	} else
-+		dev_dbg(&isci_host->pdev->dev,
-+			"%s: isci_device = %p\n",
-+			__func__, isci_device);
-+
-+	sci_device = isci_device->sci_device_handle;
-+
-+	/* Assign the pointer to the TMF's completion kernel wait structure. */
-+	tmf->complete = &completion;
-+
-+	isci_task_request_build(
-+		isci_host,
-+		&request,
-+		tmf
-+		);
-+
++	request = dma_pool_alloc(isci_host->dma_pool, gfp_flags, &handle);
 +	if (!request) {
 +		dev_warn(&isci_host->pdev->dev,
-+			"%s: isci_task_request_build failed\n",
-+			__func__);
-+		return TMF_RESP_FUNC_FAILED;
++			 "%s: dma_pool_alloc returned NULL\n", __func__);
++		return -ENOMEM;
 +	}
 +
-+	/* Allocate the TMF timeout timer. */
-+	tmf->timeout_timer = isci_timer_create(
-+		&isci_host->timer_list_struct,
-+		isci_host,
-+		request,
-+		isci_tmf_timeout_cb
-+		);
++	/* initialize the request object.	*/
++	spin_lock_init(&request->state_lock);
++	isci_request_change_state(request, allocated);
++	request->sci_request_mem_ptr = ((u8 *)request) +
++				       sizeof(struct isci_request);
++	request->request_daddr = handle;
++	request->isci_host = isci_host;
++	request->isci_device = isci_device;
++	request->io_request_completion = NULL;
 +
-+	spin_lock_irqsave(&isci_host->scic_lock, flags);
++	request->request_alloc_size = isci_host->dma_pool_alloc_size;
++	request->num_sg_entries = 0;
 +
-+	/* Start the timer. */
-+	if (tmf->timeout_timer)
-+		isci_timer_start(tmf->timeout_timer, timeout_ms);
-+	else
-+		dev_warn(&isci_host->pdev->dev,
-+			 "%s: isci_timer_create failed!!!!\n",
-+			 __func__);
++	request->complete_in_target = false;
 +
-+	/* start the TMF io. */
-+	status = scic_controller_start_task(
-+		isci_host->core_controller,
-+		sci_device,
-+		request->sci_request_handle,
-+		SCI_CONTROLLER_INVALID_IO_TAG
-+		);
++	INIT_LIST_HEAD(&request->completed_node);
++	INIT_LIST_HEAD(&request->dev_node);
 +
-+	if (status != SCI_SUCCESS) {
-+		dev_warn(&isci_host->pdev->dev,
-+			 "%s: start_io failed - status = 0x%x, request = %p\n",
-+			 __func__,
-+			 status,
-+			 request);
-+		goto cleanup_request;
-+	}
-+
-+	/* Call the users callback, if any. */
-+	if (tmf->cb_state_func != NULL)
-+		tmf->cb_state_func(isci_tmf_started, tmf, tmf->cb_data);
-+
-+	/* Change the state of the TMF-bearing request to "started". */
-+	isci_request_change_state(request, started);
-+
-+	/* add the request to the remote device request list. */
-+	list_add(&request->dev_node, &isci_device->reqs_in_process);
-+
-+	spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+	/* Wait for the TMF to complete, or a timeout. */
-+	wait_for_completion(&completion);
-+
-+	isci_print_tmf(tmf);
-+
-+	if (tmf->status == SCI_SUCCESS)
-+		ret =  TMF_RESP_FUNC_COMPLETE;
-+	else if (tmf->status == SCI_FAILURE_IO_RESPONSE_VALID) {
-+		dev_dbg(&isci_host->pdev->dev,
-+			"%s: tmf.status == "
-+			"SCI_FAILURE_IO_RESPONSE_VALID\n",
-+			__func__);
-+		ret =  TMF_RESP_FUNC_COMPLETE;
-+	}
-+	/* Else - leave the default "failed" status alone. */
-+
-+	dev_dbg(&isci_host->pdev->dev,
-+		"%s: completed request = %p\n",
-+		__func__,
-+		request);
-+
-+	if (request->io_request_completion != NULL) {
-+
-+		/* The fact that this is non-NULL for a TMF request
-+		 * means there is a thread waiting for this TMF to
-+		 * finish.
-+		 */
-+		complete(request->io_request_completion);
-+	}
-+
-+	spin_lock_irqsave(&isci_host->scic_lock, flags);
-+
-+ cleanup_request:
-+
-+	/* Clean up the timer if needed. */
-+	if (tmf->timeout_timer) {
-+		isci_timer_stop(tmf->timeout_timer);
-+		isci_timer_free(&isci_host->timer_list_struct,
-+				tmf->timeout_timer);
-+		tmf->timeout_timer = NULL;
-+	}
-+
-+	spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+	isci_request_free(isci_host, request);
++	*isci_request = request;
 +
 +	return ret;
 +}
 +
-+void isci_task_build_tmf(
-+	struct isci_tmf *tmf,
-+	struct isci_remote_device *isci_device,
-+	enum isci_tmf_function_codes code,
-+	void (*tmf_sent_cb)(enum isci_tmf_cb_state,
-+			    struct isci_tmf *,
-+			    void *),
-+	void *cb_data)
-+{
-+	dev_dbg(&isci_device->isci_port->isci_host->pdev->dev,
-+		"%s: isci_device = %p\n", __func__, isci_device);
-+
-+	memset(tmf, 0, sizeof(*tmf));
-+
-+	tmf->device        = isci_device;
-+	tmf->tmf_code      = code;
-+	tmf->timeout_timer = NULL;
-+	tmf->cb_state_func = tmf_sent_cb;
-+	tmf->cb_data       = cb_data;
-+}
-+
-+static struct isci_request *isci_task_get_request_from_task(
++static int isci_request_alloc_io(
++	struct isci_host *isci_host,
 +	struct sas_task *task,
-+	struct isci_host **isci_host,
-+	struct isci_remote_device **isci_device)
++	struct isci_request **isci_request,
++	struct isci_remote_device *isci_device,
++	gfp_t gfp_flags)
 +{
++	int retval = isci_request_alloc_core(isci_host, isci_request,
++					     isci_device, gfp_flags);
 +
-+	struct isci_request *request = NULL;
-+	unsigned long flags;
++	if (!retval) {
++		(*isci_request)->ttype_ptr.io_task_ptr = task;
++		(*isci_request)->ttype                 = io_task;
 +
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+
-+	request = task->lldd_task;
-+
-+	/* If task is already done, the request isn't valid */
-+	if (!(task->task_state_flags & SAS_TASK_STATE_DONE) &&
-+	    (task->task_state_flags & SAS_TASK_AT_INITIATOR) &&
-+	    (request != NULL)) {
-+
-+		if (isci_host != NULL)
-+			*isci_host = request->isci_host;
-+
-+		if (isci_device != NULL)
-+			*isci_device = request->isci_device;
++		task->lldd_task = *isci_request;
 +	}
-+
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+
-+	return request;
++	return retval;
 +}
 +
 +/**
-+ * isci_task_validate_request_to_abort() - This function checks the given I/O
-+ *    against the "started" state.  If the request is still "started", it's
-+ *    state is changed to aborted. NOTE: isci_host->scic_lock MUST BE HELD
-+ *    BEFORE CALLING THIS FUNCTION.
-+ * @isci_request: This parameter specifies the request object to control.
++ * isci_request_alloc_tmf() - This function gets the request object from the
++ *    isci_host dma cache and initializes the relevant fields as a sas_task.
 + * @isci_host: This parameter specifies the ISCI host object
-+ * @isci_device: This is the device to which the request is pending.
-+ * @aborted_io_completion: This is a completion structure that will be added to
-+ *    the request in case it is changed to aborting; this completion is
-+ *    triggered when the request is fully completed.
++ * @sas_task: This parameter is the task struct from the upper layer driver.
++ * @isci_request: This parameter will contain the pointer to the new
++ *    isci_request object.
++ * @isci_device: This parameter is the pointer to the isci remote device object
++ *    that is the destination for this request.
++ * @gfp_flags: This parameter specifies the os allocation flags.
 + *
-+ * Either "started" on successful change of the task status to "aborted", or
-+ * "unallocated" if the task cannot be controlled.
++ * SCI_SUCCESS on successfull completion, or specific failure code.
 + */
-+static enum isci_request_status isci_task_validate_request_to_abort(
-+	struct isci_request *isci_request,
++int isci_request_alloc_tmf(
 +	struct isci_host *isci_host,
++	struct isci_tmf *isci_tmf,
++	struct isci_request **isci_request,
 +	struct isci_remote_device *isci_device,
-+	struct completion *aborted_io_completion)
++	gfp_t gfp_flags)
 +{
-+	enum isci_request_status old_state = unallocated;
++	int retval = isci_request_alloc_core(isci_host, isci_request,
++					     isci_device, gfp_flags);
 +
-+	/* Only abort the task if it's in the
-+	 *  device's request_in_process list
-+	 */
-+	if (isci_request && !list_empty(&isci_request->dev_node)) {
-+		old_state = isci_request_change_started_to_aborted(
-+			isci_request, aborted_io_completion);
++	if (!retval) {
 +
-+		/* Only abort requests in the started state. */
-+		if (old_state != started)
-+			old_state = unallocated;
++		(*isci_request)->ttype_ptr.tmf_task_ptr = isci_tmf;
++		(*isci_request)->ttype = tmf_task;
 +	}
-+
-+	return old_state;
++	return retval;
 +}
 +
-+static void isci_request_cleanup_completed_loiterer(
-+	struct isci_host *isci_host,
-+	struct isci_remote_device *isci_device,
++/**
++ * isci_request_signal_device_reset() - This function will set the "device
++ *    needs target reset" flag in the given sas_tasks' task_state_flags, and
++ *    then cause the task to be added into the SCSI error handler queue which
++ *    will eventually be escalated to a target reset.
++ *
++ *
++ */
++static void isci_request_signal_device_reset(
 +	struct isci_request *isci_request)
 +{
++	unsigned long flags;
 +	struct sas_task *task = isci_request_access_task(isci_request);
-+	unsigned long flags;
 +
-+	dev_dbg(&isci_host->pdev->dev,
-+		"%s: isci_device=%p, request=%p, task=%p\n",
-+		__func__, isci_device, isci_request,
-+		isci_request->ttype_ptr.io_task_ptr);
++	dev_dbg(&isci_request->isci_host->pdev->dev,
++		"%s: request=%p, task=%p\n", __func__, isci_request, task);
 +
-+	spin_lock_irqsave(&isci_host->scic_lock, flags);
-+	list_del_init(&isci_request->dev_node);
-+	if (task != NULL)
-+		task->lldd_task = NULL;
-+	spin_unlock_irqrestore(&isci_host->scic_lock, flags);
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	task->task_state_flags |= SAS_TASK_NEED_DEV_RESET;
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
 +
-+	isci_request_free(isci_host, isci_request);
++	/* Cause this task to be scheduled in the SCSI error handler
++	 * thread.
++	 */
++	sas_task_abort(task);
 +}
++
 +/**
-+ * isci_terminate_request_core() - This function will terminate the given
-+ *    request, and wait for it to complete.  This function must only be called
-+ *    from a thread that can wait.  Note that the request is terminated and
-+ *    completed (back to the host, if started there).
-+ * @isci_host: This SCU.
-+ * @isci_device: The target.
-+ * @isci_request: The I/O request to be terminated.
++ * isci_request_execute() - This function allocates the isci_request object,
++ *    all fills in some common fields.
++ * @isci_host: This parameter specifies the ISCI host object
++ * @sas_task: This parameter is the task struct from the upper layer driver.
++ * @isci_request: This parameter will contain the pointer to the new
++ *    isci_request object.
++ * @gfp_flags: This parameter specifies the os allocation flags.
 + *
-+ *
++ * SCI_SUCCESS on successfull completion, or specific failure code.
 + */
-+static void isci_terminate_request_core(
++int isci_request_execute(
 +	struct isci_host *isci_host,
-+	struct isci_remote_device *isci_device,
-+	struct isci_request *isci_request,
-+	struct completion *request_completion)
++	struct sas_task *task,
++	struct isci_request **isci_request,
++	gfp_t gfp_flags)
 +{
-+	enum sci_status status                 = SCI_SUCCESS;
-+	bool was_terminated         = false;
-+	bool needs_cleanup_handling = false;
-+	enum isci_request_status request_status;
++	int ret = 0;
++	struct scic_sds_remote_device *sci_device;
++	enum sci_status status = SCI_FAILURE_UNSUPPORTED_PROTOCOL;
++	struct isci_remote_device *isci_device;
++	struct isci_request *request;
 +	unsigned long flags;
 +
-+	dev_dbg(&isci_host->pdev->dev,
-+		"%s: device = %p; request = %p\n",
-+		__func__, isci_device, isci_request);
++	isci_device = isci_dev_from_domain_dev(task->dev);
++	sci_device = isci_device->sci_device_handle;
 +
-+	/* Peek at the current status of the request.  This will tell
-+	 * us if there was special handling on the request such that it
-+	 * needs to be detached and freed here.
-+	 */
-+	spin_lock_irqsave(&isci_request->state_lock, flags);
-+	request_status = isci_request_get_state(isci_request);
-+
-+	/* TMFs are in their own thread */
-+	if ((isci_request->ttype == io_task) &&
-+	    ((request_status == aborted) ||
-+	     (request_status == aborting) ||
-+	     (request_status == terminating)))
-+		/* The completion routine won't free a request in
-+		 * the aborted/aborting/terminating state, so we do
-+		 * it here.
-+		 */
-+		needs_cleanup_handling = true;
-+
-+	spin_unlock_irqrestore(&isci_request->state_lock, flags);
-+
-+	spin_lock_irqsave(&isci_host->scic_lock, flags);
-+	/* Make sure the request wasn't just sitting around signalling
-+	 * device condition (if the request handle is NULL, then the
-+	 * request completed but needed additional handling here).
-+	 */
-+	if (isci_request->sci_request_handle != NULL) {
-+		was_terminated = true;
-+		status = scic_controller_terminate_request(
-+			isci_host->core_controller,
-+			isci_device->sci_device_handle,
-+			isci_request->sci_request_handle
-+			);
-+	}
-+	spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+	/*
-+	 * The only time the request to terminate will
-+	 * fail is when the io request is completed and
-+	 * being aborted.
-+	 */
-+	if (status != SCI_SUCCESS)
-+		dev_err(&isci_host->pdev->dev,
-+			"%s: scic_controller_terminate_request"
-+			" returned = 0x%x\n",
-+			__func__,
-+			status);
-+	else {
-+		if (was_terminated) {
-+			dev_dbg(&isci_host->pdev->dev,
-+				"%s: before completion wait (%p)\n",
-+				__func__,
-+				request_completion);
-+
-+			/* Wait here for the request to complete. */
-+			wait_for_completion(request_completion);
-+
-+			dev_dbg(&isci_host->pdev->dev,
-+				"%s: after completion wait (%p)\n",
-+				__func__,
-+				request_completion);
-+		}
-+
-+		if (needs_cleanup_handling)
-+			isci_request_cleanup_completed_loiterer(
-+				isci_host, isci_device, isci_request
-+				);
-+	}
-+}
-+static void isci_terminate_request(
-+	struct isci_host *isci_host,
-+	struct isci_remote_device *isci_device,
-+	struct isci_request *isci_request,
-+	enum isci_request_status new_request_state)
-+{
-+	enum isci_request_status old_state;
-+
-+	DECLARE_COMPLETION_ONSTACK(request_completion);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&isci_host->scic_lock, flags);
-+
-+	/* Change state to "new_request_state" if it is currently "started" */
-+	old_state = isci_request_change_started_to_newstate(
-+		isci_request,
-+		&request_completion,
-+		new_request_state
++	/* do common allocation and init of request object. */
++	ret = isci_request_alloc_io(
++		isci_host,
++		task,
++		&request,
++		isci_device,
++		gfp_flags
 +		);
 +
-+	spin_unlock_irqrestore(&isci_host->scic_lock, flags);
++	if (ret)
++		goto out;
 +
-+	if (old_state == started)
-+		/* This request was not already being aborted. If it had been,
-+		 * then the aborting I/O (ie. the TMF request) would not be in
-+		 * the aborting state, and thus would be terminated here.  Note
-+		 * that since the TMF completion's call to the kernel function
-+		 * "complete()" does not happen until the pending I/O request
-+		 * terminate fully completes, we do not have to implement a
-+		 * special wait here for already aborting requests - the
-+		 * termination of the TMF request will force the request
-+		 * to finish it's already started terminate.
-+		 */
-+		isci_terminate_request_core(isci_host, isci_device,
-+					    isci_request, &request_completion);
-+}
++	status = isci_io_request_build(isci_host, request, isci_device);
++	if (status == SCI_SUCCESS) {
 +
-+/**
-+ * isci_terminate_pending_requests() - This function will change the all of the
-+ *    requests on the given device's state to "aborting", will terminate the
-+ *    requests, and wait for them to complete.  This function must only be
-+ *    called from a thread that can wait.  Note that the requests are all
-+ *    terminated and completed (back to the host, if started there).
-+ * @isci_host: This parameter specifies SCU.
-+ * @isci_device: This parameter specifies the target.
-+ *
-+ *
-+ */
-+void isci_terminate_pending_requests(
-+	struct isci_host *isci_host,
-+	struct isci_remote_device *isci_device,
-+	enum isci_request_status new_request_state)
-+{
-+	struct isci_request *isci_request;
-+	struct sas_task *task;
-+	bool done = false;
-+	unsigned long flags;
-+
-+	dev_dbg(&isci_host->pdev->dev,
-+		"%s: isci_device = %p (new request state = %d)\n",
-+		__func__, isci_device, new_request_state);
-+
-+	#define ISCI_TERMINATE_SHOW_PENDING_REQUESTS
-+	#ifdef ISCI_TERMINATE_SHOW_PENDING_REQUESTS
-+	{
-+		struct isci_request *request;
-+
-+		/* Only abort the task if it's in the
-+		 * device's request_in_process list
-+		 */
-+		list_for_each_entry(request,
-+				    &isci_device->reqs_in_process,
-+				    dev_node)
-+			dev_dbg(&isci_host->pdev->dev,
-+				"%s: isci_device = %p; request is on "
-+				"reqs_in_process list: %p\n",
-+				__func__, isci_device, request);
-+	}
-+	#endif /* ISCI_TERMINATE_SHOW_PENDING_REQUESTS */
-+
-+	/* Clean up all pending requests. */
-+	do {
 +		spin_lock_irqsave(&isci_host->scic_lock, flags);
 +
-+		if (list_empty(&isci_device->reqs_in_process)) {
-+
-+			done = true;
-+			spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+			dev_dbg(&isci_host->pdev->dev,
-+				"%s: isci_device = %p; done.\n",
-+				__func__, isci_device);
-+		} else {
-+			/* The list was not empty - grab the first request. */
-+			isci_request = list_first_entry(
-+				&isci_device->reqs_in_process,
-+				struct isci_request, dev_node
-+				);
-+			/* Note that we are not expecting to have to control
-+			 * the target to abort the request.
-+			 */
-+			isci_request->complete_in_target = true;
-+
-+			spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+			/* Get the libsas task reference. */
-+			task = isci_request_access_task(isci_request);
-+
-+			dev_dbg(&isci_host->pdev->dev,
-+				"%s: isci_device=%p request=%p; task=%p\n",
-+				__func__, isci_device, isci_request, task);
-+
-+			/* Mark all still pending I/O with the selected next
-+			 * state.
-+			 */
-+			isci_terminate_request(isci_host, isci_device,
-+					       isci_request, new_request_state
-+					       );
-+
-+			/* Set the 'done' state on the task. */
-+			if (task)
-+				isci_task_all_done(task);
-+		}
-+	} while (!done);
-+}
-+
-+/**
-+ * isci_task_send_lu_reset_sas() - This function is called by of the SAS Domain
-+ *    Template functions.
-+ * @lun: This parameter specifies the lun to be reset.
-+ *
-+ * status, zero indicates success.
-+ */
-+static int isci_task_send_lu_reset_sas(
-+	struct isci_host *isci_host,
-+	struct isci_remote_device *isci_device,
-+	u8 *lun)
-+{
-+	struct isci_tmf tmf;
-+	int ret = TMF_RESP_FUNC_FAILED;
-+
-+	dev_dbg(&isci_host->pdev->dev,
-+		"%s: isci_host = %p, isci_device = %p\n",
-+		__func__, isci_host, isci_device);
-+	/* Send the LUN reset to the target.  By the time the call returns,
-+	 * the TMF has fully exected in the target (in which case the return
-+	 * value is "TMF_RESP_FUNC_COMPLETE", or the request timed-out (or
-+	 * was otherwise unable to be executed ("TMF_RESP_FUNC_FAILED").
-+	 */
-+	isci_task_build_tmf(&tmf, isci_device, isci_tmf_ssp_lun_reset, NULL,
-+			    NULL);
-+
-+	#define ISCI_LU_RESET_TIMEOUT_MS 2000 /* 2 second timeout. */
-+	ret = isci_task_execute_tmf(isci_host, &tmf, ISCI_LU_RESET_TIMEOUT_MS);
-+
-+	if (ret == TMF_RESP_FUNC_COMPLETE)
-+		dev_dbg(&isci_host->pdev->dev,
-+			"%s: %p: TMF_LU_RESET passed\n",
-+			__func__, isci_device);
-+	else
-+		dev_dbg(&isci_host->pdev->dev,
-+			"%s: %p: TMF_LU_RESET failed (%x)\n",
-+			__func__, isci_device, ret);
-+
-+	return ret;
-+}
-+
-+/**
-+ * isci_task_lu_reset() - This function is one of the SAS Domain Template
-+ *    functions. This is one of the Task Management functoins called by libsas,
-+ *    to reset the given lun. Note the assumption that while this call is
-+ *    executing, no I/O will be sent by the host to the device.
-+ * @lun: This parameter specifies the lun to be reset.
-+ *
-+ * status, zero indicates success.
-+ */
-+int isci_task_lu_reset(
-+	struct domain_device *domain_device,
-+	u8 *lun)
-+{
-+	struct isci_host *isci_host = NULL;
-+	struct isci_remote_device *isci_device = NULL;
-+	int ret;
-+	bool device_stopping = false;
-+
-+	if (domain_device == NULL) {
-+		pr_warn("%s: domain_device == NULL\n", __func__);
-+		return TMF_RESP_FUNC_FAILED;
-+	}
-+
-+	isci_device = isci_dev_from_domain_dev(domain_device);
-+
-+	if (domain_device->port != NULL)
-+		isci_host = isci_host_from_sas_ha(domain_device->port->ha);
-+
-+	pr_debug("%s: domain_device=%p, isci_host=%p; isci_device=%p\n",
-+		 __func__, domain_device, isci_host, isci_device);
-+
-+	if (isci_device != NULL)
-+		device_stopping = (isci_device->status == isci_stopping)
-+				  || (isci_device->status == isci_stopped);
-+
-+	/* If there is a device reset pending on any request in the
-+	 * device's list, fail this LUN reset request in order to
-+	 * escalate to the device reset.
-+	 */
-+	if ((isci_device == NULL) ||
-+	    (isci_host == NULL) ||
-+	    ((isci_host != NULL) &&
-+	     (isci_device != NULL) &&
-+	     (device_stopping ||
-+	      (isci_device_is_reset_pending(isci_host, isci_device))))) {
-+		dev_warn(&isci_host->pdev->dev,
-+			 "%s: No dev (%p), no host (%p), or "
-+			 "RESET PENDING: domain_device=%p\n",
-+			 __func__, isci_device, isci_host, domain_device);
-+		return TMF_RESP_FUNC_FAILED;
-+	}
-+
-+	/* Stop I/O to the remote device. */
-+	isci_device_set_host_quiesce_lock_state(isci_device, true);
-+
-+	/* Send the task management part of the reset. */
-+	if (sas_protocol_ata(domain_device->tproto)) {
-+		ret = isci_task_send_lu_reset_sata(
-+			isci_host, isci_device, lun
++		/* send the request, let the core assign the IO TAG.	*/
++		status = scic_controller_start_io(
++			isci_host->core_controller,
++			sci_device,
++			request->sci_request_handle,
++			SCI_CONTROLLER_INVALID_IO_TAG
 +			);
-+	} else
-+		ret = isci_task_send_lu_reset_sas(isci_host, isci_device, lun);
 +
-+	/* If the LUN reset worked, all the I/O can now be terminated. */
-+	if (ret == TMF_RESP_FUNC_COMPLETE)
-+		/* Terminate all I/O now. */
-+		isci_terminate_pending_requests(isci_host,
-+						isci_device,
-+						terminating);
++		if (status == SCI_SUCCESS ||
++		    status == SCI_FAILURE_REMOTE_DEVICE_RESET_REQUIRED) {
 +
-+	/* Resume I/O to the remote device. */
-+	isci_device_set_host_quiesce_lock_state(isci_device, false);
-+
-+	return ret;
-+}
-+
-+
-+/*	 int (*lldd_clear_nexus_port)(struct asd_sas_port *); */
-+int isci_task_clear_nexus_port(struct asd_sas_port *port)
-+{
-+	return TMF_RESP_FUNC_FAILED;
-+}
-+
-+
-+
-+int isci_task_clear_nexus_ha(struct sas_ha_struct *ha)
-+{
-+	return TMF_RESP_FUNC_FAILED;
-+}
-+
-+int isci_task_I_T_nexus_reset(struct domain_device *dev)
-+{
-+	return TMF_RESP_FUNC_FAILED;
-+}
-+
-+
-+/* Task Management Functions. Must be called from process context.	 */
-+
-+/**
-+ * isci_abort_task_process_cb() - This is a helper function for the abort task
-+ *    TMF command.  It manages the request state with respect to the successful
-+ *    transmission / completion of the abort task request.
-+ * @cb_state: This parameter specifies when this function was called - after
-+ *    the TMF request has been started and after it has timed-out.
-+ * @tmf: This parameter specifies the TMF in progress.
-+ *
-+ *
-+ */
-+static void isci_abort_task_process_cb(
-+	enum isci_tmf_cb_state cb_state,
-+	struct isci_tmf *tmf,
-+	void *cb_data)
-+{
-+	struct isci_request *old_request;
-+
-+	old_request = (struct isci_request *)cb_data;
-+
-+	dev_dbg(&old_request->isci_host->pdev->dev,
-+		"%s: tmf=%p, old_request=%p\n",
-+		__func__, tmf, old_request);
-+
-+	switch (cb_state) {
-+
-+	case isci_tmf_started:
-+		/* The TMF has been started.  Nothing to do here, since the
-+		 * request state was already set to "aborted" by the abort
-+		 * task function.
-+		 */
-+		BUG_ON(old_request->status != aborted);
-+		break;
-+
-+	case isci_tmf_timed_out:
-+
-+		/* Set the task's state to "aborting", since the abort task
-+		 * function thread set it to "aborted" (above) in anticipation
-+		 * of the task management request working correctly.  Since the
-+		 * timeout has now fired, the TMF request failed.  We set the
-+		 * state such that the request completion will indicate the
-+		 * device is no longer present.
-+		 */
-+		isci_request_change_state(old_request, aborting);
-+		break;
-+
-+	default:
-+		dev_err(&old_request->isci_host->pdev->dev,
-+			"%s: Bad cb_state (%d): tmf=%p, old_request=%p\n",
-+			__func__, cb_state, tmf, old_request);
-+		break;
-+	}
-+}
-+
-+/**
-+ * isci_task_abort_task() - This function is one of the SAS Domain Template
-+ *    functions. This function is called by libsas to abort a specified task.
-+ * @task: This parameter specifies the SAS task to abort.
-+ *
-+ * status, zero indicates success.
-+ */
-+int isci_task_abort_task(struct sas_task *task)
-+{
-+	DECLARE_COMPLETION_ONSTACK(aborted_io_completion);
-+	struct isci_request *old_request = NULL;
-+	struct isci_remote_device *isci_device = NULL;
-+	struct isci_host *isci_host = NULL;
-+	struct isci_tmf tmf;
-+	int ret = TMF_RESP_FUNC_FAILED;
-+	unsigned long flags;
-+	bool any_dev_reset, device_stopping;
-+
-+	/* Get the isci_request reference from the task.  Note that
-+	 * this check does not depend on the pending request list
-+	 * in the device, because tasks driving resets may land here
-+	 * after completion in the core.
-+	 */
-+	old_request = isci_task_get_request_from_task(task, &isci_host,
-+						      &isci_device);
-+
-+	dev_dbg(&isci_host->pdev->dev,
-+		"%s: task = %p\n", __func__, task);
-+
-+	/* Check if the device has been / is currently being removed.
-+	 * If so, no task management will be done, and the I/O will
-+	 * be terminated.
-+	 */
-+	device_stopping = (isci_device->status == isci_stopping)
-+			  || (isci_device->status == isci_stopped);
-+
-+#ifdef NOMORE
-+	/* This abort task function is the first stop of the libsas error
-+	 * handler thread. Since libsas is executing in a thread with a
-+	 * referernce to the "task" parameter, that task cannot be completed
-+	 * directly back to the upper layers.  In order to make sure that
-+	 * the task is managed correctly if this abort task fails, set the
-+	 * "SAS_TASK_STATE_ABORTED" bit now such that completions up the
-+	 * stack will be intercepted and only allowed to happen in the
-+	 * libsas SCSI error handler thread.
-+	 */
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+#endif  /* NOMORE */
-+
-+	/* This version of the driver will fail abort requests for
-+	 * SATA/STP.  Failing the abort request this way will cause the
-+	 * SCSI error handler thread to escalate to LUN reset
-+	 */
-+	if (sas_protocol_ata(task->task_proto) && !device_stopping) {
-+		dev_warn(&isci_host->pdev->dev,
-+			    " task %p is for a STP/SATA device;"
-+			    " returning TMF_RESP_FUNC_FAILED\n"
-+			    " to cause a LUN reset...\n", task);
-+		return TMF_RESP_FUNC_FAILED;
-+	}
-+
-+	dev_dbg(&isci_host->pdev->dev,
-+		"%s: old_request == %p\n", __func__, old_request);
-+
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+
-+	/* Don't do resets to stopping devices. */
-+	if (device_stopping)
-+		task->task_state_flags &= ~SAS_TASK_NEED_DEV_RESET;
-+
-+	/* See if there is a pending device reset for this device. */
-+	any_dev_reset = task->task_state_flags & SAS_TASK_NEED_DEV_RESET;
-+
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+
-+	if ((isci_device != NULL) && !device_stopping)
-+		any_dev_reset = any_dev_reset
-+				|| isci_device_is_reset_pending(isci_host,
-+								isci_device
-+								);
-+
-+	/* If the extraction of the request reference from the task
-+	 * failed, then the request has been completed (or if there is a
-+	 * pending reset then this abort request function must be failed
-+	 * in order to escalate to the target reset).
-+	 */
-+	if ((old_request == NULL) ||
-+	    ((old_request != NULL) &&
-+	     (old_request->sci_request_handle == NULL) &&
-+	     (old_request->complete_in_target)) ||
-+	     any_dev_reset) {
-+
-+		spin_lock_irqsave(&task->task_state_lock, flags);
-+
-+		/* If the device reset task flag is set, fail the task
-+		 * management request.  Otherwise, the original request
-+		 * has completed.
-+		 */
-+		if (any_dev_reset) {
-+
-+			/* Turn off the task's DONE to make sure this
-+			 * task is escalated to a target reset.
++			/* Either I/O started OK, or the core has signaled that
++			 * the device needs a target reset.
++			 *
++			 * In either case, hold onto the I/O for later.
++			 *
++			 * Update it's status and add it to the list in the
++			 * remote device object.
 +			 */
-+			task->task_state_flags &= ~SAS_TASK_STATE_DONE;
++			isci_request_change_state(request, started);
++			list_add(&request->dev_node,
++				 &isci_device->reqs_in_process);
 +
-+			/* Fail the task management request in order to
-+			 * escalate to the target reset.
-+			 */
-+			ret = TMF_RESP_FUNC_FAILED;
++			if (status ==
++				SCI_FAILURE_REMOTE_DEVICE_RESET_REQUIRED) {
++				/* Signal libsas that we need the SCSI error
++				 * handler thread to work on this I/O and that
++				 * we want a device reset.
++				 */
++				isci_request_signal_device_reset(request);
 +
-+			dev_dbg(&isci_host->pdev->dev,
-+				"%s: Failing task abort in order to "
-+				"escalate to target reset because\n"
-+				"SAS_TASK_NEED_DEV_RESET is set for "
-+				"task %p on dev %p\n",
-+				__func__, task, isci_device);
-+
-+		} else {
-+			ret = TMF_RESP_FUNC_COMPLETE;
-+
-+			dev_dbg(&isci_host->pdev->dev,
-+				"%s: abort task not needed for %p\n",
-+				__func__, task);
-+
-+			/* The request has already completed and there
-+			 * is nothing to do here other than to set the task
-+			 * done bit, and indicate that the task abort function
-+			 * was sucessful.
-+			 */
-+			isci_set_task_doneflags(task);
-+
-+			/* Set the abort bit to make sure that libsas sticks the
-+			 * task in the completed task queue.
-+			 */
-+/*			task->task_state_flags |= SAS_TASK_STATE_ABORTED; */
-+
-+			/* Check for the situation where the request was
-+			 * left around on the device list but the
-+			 * request already completed.
-+			 */
-+			if (old_request && !old_request->sci_request_handle) {
-+
-+				isci_request_cleanup_completed_loiterer(
-+					isci_host, isci_device, old_request
-+					);
++				/* Change the status, since we are holding
++				 * the I/O until it is managed by the SCSI
++				 * error handler.
++				 */
++				status = SCI_SUCCESS;
 +			}
-+		}
-+		spin_unlock_irqrestore(&task->task_state_lock, flags);
-+
-+		return ret;
-+	}
-+
-+	spin_lock_irqsave(&isci_host->scic_lock, flags);
-+
-+	/* Sanity check the request status, and set the I/O kernel completion
-+	 * struct that will be triggered when the request completes.
-+	 */
-+	if (isci_task_validate_request_to_abort(
-+		    old_request,
-+		    isci_host,
-+		    isci_device,
-+		    &aborted_io_completion)
-+	    == unallocated) {
-+		dev_dbg(&isci_host->pdev->dev,
-+			"%s: old_request not valid for device = %p\n",
-+			__func__,
-+			isci_device);
-+		old_request = NULL;
-+	}
-+
-+	if (!old_request) {
-+
-+		/* There is no isci_request attached to the sas_task.
-+		 * It must have been completed and detached.
-+		 */
-+		dev_dbg(&isci_host->pdev->dev,
-+			"%s: old_request == NULL\n",
-+			__func__);
-+
-+		spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+		/* Set the state on the task. */
-+		isci_task_all_done(task);
-+
-+		return TMF_RESP_FUNC_COMPLETE;
-+	}
-+	if (task->task_proto == SAS_PROTOCOL_SMP || device_stopping) {
-+
-+		if (device_stopping)
-+			dev_dbg(&isci_host->pdev->dev,
-+				"%s: device is stopping, thus no TMF\n",
-+				__func__);
-+		else
-+			dev_dbg(&isci_host->pdev->dev,
-+				"%s: request is SMP, thus no TMF\n",
-+				__func__);
-+
-+		old_request->complete_in_target = true;
-+
-+		spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+		/* Set the state on the task. */
-+		isci_task_all_done(task);
-+
-+		ret = TMF_RESP_FUNC_COMPLETE;
-+
-+		/* Stopping and SMP devices are not sent a TMF, and are not
-+		 * reset, but the outstanding I/O request is terminated here.
-+		 *
-+		 * Clean up the request on our side, and wait for the aborted
-+		 * I/O to complete.
-+		 */
-+		isci_terminate_request_core(isci_host, isci_device, old_request,
-+					    &aborted_io_completion);
-+	} else {
-+		/* Fill in the tmf stucture */
-+		isci_task_build_tmf(&tmf, isci_device, isci_tmf_ssp_task_abort,
-+				    isci_abort_task_process_cb, old_request);
-+
-+		tmf.io_tag = scic_io_request_get_io_tag(
-+			old_request->sci_request_handle
-+			);
-+
-+		spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+		#define ISCI_ABORT_TASK_TIMEOUT_MS 500 /* half second timeout. */
-+		ret = isci_task_execute_tmf(isci_host, &tmf,
-+					    ISCI_ABORT_TASK_TIMEOUT_MS);
-+
-+		if (ret == TMF_RESP_FUNC_COMPLETE) {
-+			old_request->complete_in_target = true;
-+
-+			/* Clean up the request on our side, and wait for the aborted I/O to
-+			 * complete.
-+			 */
-+			isci_terminate_request_core(isci_host, isci_device, old_request,
-+						    &aborted_io_completion);
-+
-+			/* Set the state on the task. */
-+			isci_task_all_done(task);
 +		} else
-+			dev_err(&isci_host->pdev->dev,
-+				"%s: isci_task_send_tmf failed\n",
-+				__func__);
++			dev_warn(&isci_host->pdev->dev,
++				 "%s: failed request start\n",
++				 __func__);
++
++		spin_unlock_irqrestore(&isci_host->scic_lock, flags);
++
++	} else
++		dev_warn(&isci_host->pdev->dev,
++			 "%s: request_construct failed - status = 0x%x\n",
++			 __func__,
++			 status);
++
++ out:
++	if (status != SCI_SUCCESS) {
++
++		/* release dma memory on failure. */
++		isci_request_free(isci_host, request);
++		request = NULL;
++		ret = SCI_FAILURE;
 +	}
 +
++	*isci_request = request;
 +	return ret;
 +}
 +
-+/**
-+ * isci_task_abort_task_set() - This function is one of the SAS Domain Template
-+ *    functions. This is one of the Task Management functoins called by libsas,
-+ *    to abort all task for the given lun.
-+ * @d_device: This parameter specifies the domain device associated with this
-+ *    request.
-+ * @lun: This parameter specifies the lun associated with this request.
-+ *
-+ * status, zero indicates success.
-+ */
-+int isci_task_abort_task_set(
-+	struct domain_device *d_device,
-+	u8 *lun)
-+{
-+	return TMF_RESP_FUNC_FAILED;
-+}
-+
 +
 +/**
-+ * isci_task_clear_aca() - This function is one of the SAS Domain Template
-+ *    functions. This is one of the Task Management functoins called by libsas.
-+ * @d_device: This parameter specifies the domain device associated with this
-+ *    request.
-+ * @lun: This parameter specifies the lun	 associated with this request.
-+ *
-+ * status, zero indicates success.
-+ */
-+int isci_task_clear_aca(
-+	struct domain_device *d_device,
-+	u8 *lun)
-+{
-+	return TMF_RESP_FUNC_FAILED;
-+}
-+
-+
-+
-+/**
-+ * isci_task_clear_task_set() - This function is one of the SAS Domain Template
-+ *    functions. This is one of the Task Management functoins called by libsas.
-+ * @d_device: This parameter specifies the domain device associated with this
-+ *    request.
-+ * @lun: This parameter specifies the lun	 associated with this request.
-+ *
-+ * status, zero indicates success.
-+ */
-+int isci_task_clear_task_set(
-+	struct domain_device *d_device,
-+	u8 *lun)
-+{
-+	return TMF_RESP_FUNC_FAILED;
-+}
-+
-+
-+/**
-+ * isci_task_query_task() - This function is implemented to cause libsas to
-+ *    correctly escalate the failed abort to a LUN or target reset (this is
-+ *    because sas_scsi_find_task libsas function does not correctly interpret
-+ *    all return codes from the abort task call).  When TMF_RESP_FUNC_SUCC is
-+ *    returned, libsas turns this into a LUN reset; when FUNC_FAILED is
-+ *    returned, libsas will turn this into a target reset
-+ * @task: This parameter specifies the sas task being queried.
-+ * @lun: This parameter specifies the lun associated with this request.
-+ *
-+ * status, zero indicates success.
-+ */
-+int isci_task_query_task(
-+	struct sas_task *task)
-+{
-+	/* See if there is a pending device reset for this device. */
-+	if (task->task_state_flags & SAS_TASK_NEED_DEV_RESET)
-+		return TMF_RESP_FUNC_FAILED;
-+	else
-+		return TMF_RESP_FUNC_SUCC;
-+}
-+
-+/**
-+ * isci_task_request_complete() - This function is called by the sci core when
-+ *    an task request completes.
-+ * @isci_host: This parameter specifies the ISCI host object
-+ * @request: This parameter is the completed isci_request object.
-+ * @completion_status: This parameter specifies the completion status from the
-+ *    sci core.
++ * isci_request_process_response_iu() - This function sets the status and
++ *    response iu, in the task struct, from the request object for the upper
++ *    layer driver.
++ * @sas_task: This parameter is the task struct from the upper layer driver.
++ * @resp_iu: This parameter points to the response iu of the completed request.
++ * @dev: This parameter specifies the linux device struct.
 + *
 + * none.
 + */
-+void isci_task_request_complete(
-+	struct isci_host *isci_host,
-+	struct isci_request *request,
-+	enum sci_task_status completion_status)
++static void isci_request_process_response_iu(
++	struct sas_task *task,
++	struct ssp_response_iu *resp_iu,
++	struct device *dev)
 +{
-+	struct isci_remote_device *isci_device = request->isci_device;
-+	enum isci_request_status old_state;
-+	struct isci_tmf *tmf = isci_request_access_tmf(request);
-+	struct completion *tmf_complete;
++	dev_dbg(dev,
++		"%s: resp_iu = %p "
++		"resp_iu->status = 0x%x,\nresp_iu->datapres = %d "
++		"resp_iu->response_data_len = %x, "
++		"resp_iu->sense_data_len = %x\nrepsonse data: ",
++		__func__,
++		resp_iu,
++		resp_iu->status,
++		resp_iu->datapres,
++		resp_iu->response_data_len,
++		resp_iu->sense_data_len);
 +
-+	dev_dbg(&isci_host->pdev->dev,
-+		"%s: request = %p, status=%d\n",
-+		__func__, request, completion_status);
++	task->task_status.stat = resp_iu->status;
 +
-+	old_state = isci_request_change_state(request, completed);
++	/* libsas updates the task status fields based on the response iu. */
++	sas_ssp_task_response(dev, task, resp_iu);
++}
 +
-+	tmf->status = completion_status;
-+	request->complete_in_target = true;
++/**
++ * isci_request_set_open_reject_status() - This function prepares the I/O
++ *    completion for OPEN_REJECT conditions.
++ * @request: This parameter is the completed isci_request object.
++ * @response_ptr: This parameter specifies the service response for the I/O.
++ * @status_ptr: This parameter specifies the exec status for the I/O.
++ * @complete_to_host_ptr: This parameter specifies the action to be taken by
++ *    the LLDD with respect to completing this request or forcing an abort
++ *    condition on the I/O.
++ * @open_rej_reason: This parameter specifies the encoded reason for the
++ *    abandon-class reject.
++ *
++ * none.
++ */
++static void isci_request_set_open_reject_status(
++	struct isci_request *request,
++	struct sas_task *task,
++	enum service_response *response_ptr,
++	enum exec_status *status_ptr,
++	enum isci_completion_selection *complete_to_host_ptr,
++	enum sas_open_rej_reason open_rej_reason)
++{
++	/* Task in the target is done. */
++	request->complete_in_target       = true;
++	*response_ptr                     = SAS_TASK_UNDELIVERED;
++	*status_ptr                       = SAS_OPEN_REJECT;
++	*complete_to_host_ptr             = isci_perform_normal_io_completion;
++	task->task_status.open_rej_reason = open_rej_reason;
++}
 +
-+	if (SAS_PROTOCOL_SSP == tmf->proto) {
++/**
++ * isci_request_handle_controller_specific_errors() - This function decodes
++ *    controller-specific I/O completion error conditions.
++ * @request: This parameter is the completed isci_request object.
++ * @response_ptr: This parameter specifies the service response for the I/O.
++ * @status_ptr: This parameter specifies the exec status for the I/O.
++ * @complete_to_host_ptr: This parameter specifies the action to be taken by
++ *    the LLDD with respect to completing this request or forcing an abort
++ *    condition on the I/O.
++ *
++ * none.
++ */
++static void isci_request_handle_controller_specific_errors(
++	struct isci_remote_device *isci_device,
++	struct isci_request *request,
++	struct sas_task *task,
++	enum service_response *response_ptr,
++	enum exec_status *status_ptr,
++	enum isci_completion_selection *complete_to_host_ptr)
++{
++	unsigned int cstatus;
 +
-+		memcpy(&tmf->resp.resp_iu,
-+		       scic_io_request_get_response_iu_address(
-+			       request->sci_request_handle
-+			       ),
-+		       sizeof(struct sci_ssp_response_iu));
-+
-+	} else if (SAS_PROTOCOL_SATA == tmf->proto) {
-+
-+		memcpy(&tmf->resp.d2h_fis,
-+		       scic_stp_io_request_get_d2h_reg_address(
-+			       request->sci_request_handle
-+			       ),
-+		       sizeof(struct sata_fis_reg_d2h)
-+		       );
-+	}
-+
-+	/* Manage the timer if it is still running. */
-+	if (tmf->timeout_timer) {
-+
-+		isci_timer_stop(tmf->timeout_timer);
-+		isci_timer_free(&isci_host->timer_list_struct,
-+				tmf->timeout_timer);
-+		tmf->timeout_timer = NULL;
-+	}
-+
-+	/* PRINT_TMF( ((struct isci_tmf *)request->task)); */
-+	tmf_complete = tmf->complete;
-+
-+	scic_controller_complete_task(
-+		isci_host->core_controller,
-+		isci_device->sci_device_handle,
++	cstatus = scic_request_get_controller_status(
 +		request->sci_request_handle
 +		);
-+	/* NULL the request handle to make sure it cannot be terminated
-+	 *  or completed again.
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: %p SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR "
++		"- controller status = 0x%x\n",
++		__func__, request, cstatus);
++
++	/* Decode the controller-specific errors; most
++	 * important is to recognize those conditions in which
++	 * the target may still have a task outstanding that
++	 * must be aborted.
++	 *
++	 * Note that there are SCU completion codes being
++	 * named in the decode below for which SCIC has already
++	 * done work to handle them in a way other than as
++	 * a controller-specific completion code; these are left
++	 * in the decode below for completeness sake.
 +	 */
-+	request->sci_request_handle = NULL;
++	switch (cstatus) {
++	case SCU_TASK_DONE_DMASETUP_DIRERR:
++	/* Also SCU_TASK_DONE_SMP_FRM_TYPE_ERR: */
++	case SCU_TASK_DONE_XFERCNT_ERR:
++		/* Also SCU_TASK_DONE_SMP_UFI_ERR: */
++		if (task->task_proto == SAS_PROTOCOL_SMP) {
++			/* SCU_TASK_DONE_SMP_UFI_ERR == Task Done. */
++			*response_ptr = SAS_TASK_COMPLETE;
 +
-+	isci_request_change_state(request, unallocated);
-+	list_del_init(&request->dev_node);
++			/* See if the device has been/is being stopped. Note
++			 * that we ignore the quiesce state, since we are
++			 * concerned about the actual device state.
++			 */
++			if ((isci_device->status == isci_stopping) ||
++			    (isci_device->status == isci_stopped))
++				*status_ptr = SAS_DEVICE_UNKNOWN;
++			else
++				*status_ptr = SAS_ABORTED_TASK;
 +
-+	/* The task management part completes last. */
-+	complete(tmf_complete);
-+}
++			request->complete_in_target = true;
 +
++			*complete_to_host_ptr =
++				isci_perform_normal_io_completion;
++		} else {
++			/* Task in the target is not done. */
++			*response_ptr = SAS_TASK_UNDELIVERED;
 +
-+/**
-+ * isci_task_ssp_request_get_lun() - This function is called by the sci core to
-+ *    retrieve the lun for a given task request.
-+ * @request: This parameter is the isci_request object.
-+ *
-+ * lun for specified task request.
-+ */
-+u32 isci_task_ssp_request_get_lun(struct isci_request *request)
-+{
-+	struct isci_tmf *isci_tmf = isci_request_access_tmf(request);
++			if ((isci_device->status == isci_stopping) ||
++			    (isci_device->status == isci_stopped))
++				*status_ptr = SAS_DEVICE_UNKNOWN;
++			else
++				*status_ptr = SAM_STAT_TASK_ABORTED;
 +
-+	dev_dbg(&request->isci_host->pdev->dev,
-+		"%s: lun = %d\n", __func__, isci_tmf->lun[0]);
-+/* @todo: build lun from array of bytes to 32 bit */
-+	return isci_tmf->lun[0];
-+}
++			request->complete_in_target = false;
 +
-+/**
-+ * isci_task_ssp_request_get_function() - This function is called by the sci
-+ *    core to retrieve the function for a given task request.
-+ * @request: This parameter is the isci_request object.
-+ *
-+ * function code for specified task request.
-+ */
-+u8 isci_task_ssp_request_get_function(struct isci_request *request)
-+{
-+	struct isci_tmf *isci_tmf = isci_request_access_tmf(request);
++			*complete_to_host_ptr =
++				isci_perform_error_io_completion;
++		}
 +
-+	dev_dbg(&request->isci_host->pdev->dev,
-+		"%s: func = %d\n", __func__, isci_tmf->tmf_code);
++		break;
 +
-+	return isci_tmf->tmf_code;
-+}
-+
-+/**
-+ * isci_task_ssp_request_get_io_tag_to_manage() - This function is called by
-+ *    the sci core to retrieve the io tag for a given task request.
-+ * @request: This parameter is the isci_request object.
-+ *
-+ * io tag for specified task request.
-+ */
-+u16 isci_task_ssp_request_get_io_tag_to_manage(struct isci_request *request)
-+{
-+	u16 io_tag = SCI_CONTROLLER_INVALID_IO_TAG;
-+
-+	if (tmf_task == request->ttype) {
-+		struct isci_tmf *tmf = isci_request_access_tmf(request);
-+		io_tag = tmf->io_tag;
-+	}
-+
-+	dev_dbg(&request->isci_host->pdev->dev,
-+		"%s: request = %p, io_tag = %d\n",
-+		__func__, request, io_tag);
-+
-+	return io_tag;
-+}
-+
-+/**
-+ * isci_task_ssp_request_get_response_data_address() - This function is called
-+ *    by the sci core to retrieve the response data address for a given task
-+ *    request.
-+ * @request: This parameter is the isci_request object.
-+ *
-+ * response data address for specified task request.
-+ */
-+void *isci_task_ssp_request_get_response_data_address(
-+	struct isci_request *request)
-+{
-+	struct isci_tmf *isci_tmf = isci_request_access_tmf(request);
-+
-+	return &isci_tmf->resp.resp_iu;
-+}
-+
-+/**
-+ * isci_task_ssp_request_get_response_data_length() - This function is called
-+ *    by the sci core to retrieve the response data length for a given task
-+ *    request.
-+ * @request: This parameter is the isci_request object.
-+ *
-+ * response data length for specified task request.
-+ */
-+u32 isci_task_ssp_request_get_response_data_length(
-+	struct isci_request *request)
-+{
-+	struct isci_tmf *isci_tmf = isci_request_access_tmf(request);
-+
-+	return sizeof(isci_tmf->resp.resp_iu);
-+}
-+
-+/**
-+ * isci_bus_reset_handler() - This function performs a target reset of the
-+ *    device referenced by "cmd'.  This function is exported through the
-+ *    "struct scsi_host_template" structure such that it is called when an I/O
-+ *    recovery process has escalated to a target reset. Note that this function
-+ *    is called from the scsi error handler event thread, so may block on calls.
-+ * @scsi_cmd: This parameter specifies the target to be reset.
-+ *
-+ * SUCCESS if the reset process was successful, else FAILED.
-+ */
-+int isci_bus_reset_handler(struct scsi_cmnd *cmd)
-+{
-+	unsigned long flags = 0;
-+	struct isci_host *isci_host = NULL;
-+	enum sci_status status;
-+	int base_status;
-+	struct isci_remote_device *isci_dev
-+		= isci_dev_from_domain_dev(
-+		sdev_to_domain_dev(cmd->device));
-+
-+	dev_dbg(&cmd->device->sdev_gendev,
-+		"%s: cmd %p, isci_dev %p\n",
-+		__func__, cmd, isci_dev);
-+
-+	if (!isci_dev) {
-+		dev_warn(&cmd->device->sdev_gendev,
-+			 "%s: isci_dev is GONE!\n",
-+			 __func__);
-+
-+		return TMF_RESP_FUNC_COMPLETE; /* Nothing to reset. */
-+	}
-+
-+	if (isci_dev->isci_port != NULL)
-+		isci_host = isci_dev->isci_port->isci_host;
-+
-+	if (isci_host != NULL)
-+		spin_lock_irqsave(&isci_host->scic_lock, flags);
-+
-+	status = scic_remote_device_reset(isci_dev->sci_device_handle);
-+	if (status != SCI_SUCCESS) {
-+
-+		if (isci_host != NULL)
-+			spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+		scmd_printk(KERN_WARNING, cmd,
-+			    "%s: scic_remote_device_reset(%p) returned %d!\n",
-+			    __func__, isci_dev, status);
-+
-+		return TMF_RESP_FUNC_FAILED;
-+	}
-+	if (isci_host != NULL)
-+		spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+	/* Stop I/O to the remote device. */
-+	isci_device_set_host_quiesce_lock_state(isci_dev, true);
-+
-+	/* Make sure all pending requests are able to be fully terminated. */
-+	isci_device_clear_reset_pending(isci_dev);
-+
-+	/* Terminate in-progress I/O now. */
-+	isci_remote_device_nuke_requests(isci_dev);
-+
-+	/* Call into the libsas default handler (which calls sas_phy_reset). */
-+	base_status = sas_eh_bus_reset_handler(cmd);
-+
-+	if (base_status != SUCCESS) {
-+
-+		/* There can be cases where the resets to individual devices
-+		 * behind an expander will fail because of an unplug of the
-+		 * expander itself.
++	case SCU_TASK_DONE_CRC_ERR:
++	case SCU_TASK_DONE_NAK_CMD_ERR:
++	case SCU_TASK_DONE_EXCESS_DATA:
++	case SCU_TASK_DONE_UNEXP_FIS:
++	/* Also SCU_TASK_DONE_UNEXP_RESP: */
++	case SCU_TASK_DONE_VIIT_ENTRY_NV:       /* TODO - conditions? */
++	case SCU_TASK_DONE_IIT_ENTRY_NV:        /* TODO - conditions? */
++	case SCU_TASK_DONE_RNCNV_OUTBOUND:      /* TODO - conditions? */
++		/* These are conditions in which the target
++		 * has completed the task, so that no cleanup
++		 * is necessary.
 +		 */
-+		scmd_printk(KERN_WARNING, cmd,
-+			    "%s: sas_eh_bus_reset_handler(%p) returned %d!\n",
-+			    __func__, cmd, base_status);
++		*response_ptr = SAS_TASK_COMPLETE;
++
++		/* See if the device has been/is being stopped. Note
++		 * that we ignore the quiesce state, since we are
++		 * concerned about the actual device state.
++		 */
++		if ((isci_device->status == isci_stopping) ||
++		    (isci_device->status == isci_stopped))
++			*status_ptr = SAS_DEVICE_UNKNOWN;
++		else
++			*status_ptr = SAS_ABORTED_TASK;
++
++		request->complete_in_target = true;
++
++		*complete_to_host_ptr = isci_perform_normal_io_completion;
++		break;
++
++
++	/* Note that the only open reject completion codes seen here will be
++	 * abandon-class codes; all others are automatically retried in the SCU.
++	 */
++	case SCU_TASK_OPEN_REJECT_WRONG_DESTINATION:
++
++		isci_request_set_open_reject_status(
++			request, task, response_ptr, status_ptr,
++			complete_to_host_ptr, SAS_OREJ_WRONG_DEST);
++		break;
++
++	case SCU_TASK_OPEN_REJECT_ZONE_VIOLATION:
++
++		/* Note - the return of AB0 will change when
++		 * libsas implements detection of zone violations.
++		 */
++		isci_request_set_open_reject_status(
++			request, task, response_ptr, status_ptr,
++			complete_to_host_ptr, SAS_OREJ_RESV_AB0);
++		break;
++
++	case SCU_TASK_OPEN_REJECT_RESERVED_ABANDON_1:
++
++		isci_request_set_open_reject_status(
++			request, task, response_ptr, status_ptr,
++			complete_to_host_ptr, SAS_OREJ_RESV_AB1);
++		break;
++
++	case SCU_TASK_OPEN_REJECT_RESERVED_ABANDON_2:
++
++		isci_request_set_open_reject_status(
++			request, task, response_ptr, status_ptr,
++			complete_to_host_ptr, SAS_OREJ_RESV_AB2);
++		break;
++
++	case SCU_TASK_OPEN_REJECT_RESERVED_ABANDON_3:
++
++		isci_request_set_open_reject_status(
++			request, task, response_ptr, status_ptr,
++			complete_to_host_ptr, SAS_OREJ_RESV_AB3);
++		break;
++
++	case SCU_TASK_OPEN_REJECT_BAD_DESTINATION:
++
++		isci_request_set_open_reject_status(
++			request, task, response_ptr, status_ptr,
++			complete_to_host_ptr, SAS_OREJ_BAD_DEST);
++		break;
++
++	case SCU_TASK_OPEN_REJECT_STP_RESOURCES_BUSY:
++
++		isci_request_set_open_reject_status(
++			request, task, response_ptr, status_ptr,
++			complete_to_host_ptr, SAS_OREJ_STP_NORES);
++		break;
++
++	case SCU_TASK_OPEN_REJECT_PROTOCOL_NOT_SUPPORTED:
++
++		isci_request_set_open_reject_status(
++			request, task, response_ptr, status_ptr,
++			complete_to_host_ptr, SAS_OREJ_EPROTO);
++		break;
++
++	case SCU_TASK_OPEN_REJECT_CONNECTION_RATE_NOT_SUPPORTED:
++
++		isci_request_set_open_reject_status(
++			request, task, response_ptr, status_ptr,
++			complete_to_host_ptr, SAS_OREJ_CONN_RATE);
++		break;
++
++	case SCU_TASK_DONE_LL_R_ERR:
++	/* Also SCU_TASK_DONE_ACK_NAK_TO: */
++	case SCU_TASK_DONE_LL_PERR:
++	case SCU_TASK_DONE_LL_SY_TERM:
++	/* Also SCU_TASK_DONE_NAK_ERR:*/
++	case SCU_TASK_DONE_LL_LF_TERM:
++	/* Also SCU_TASK_DONE_DATA_LEN_ERR: */
++	case SCU_TASK_DONE_LL_ABORT_ERR:
++	case SCU_TASK_DONE_SEQ_INV_TYPE:
++	/* Also SCU_TASK_DONE_UNEXP_XR: */
++	case SCU_TASK_DONE_XR_IU_LEN_ERR:
++	case SCU_TASK_DONE_INV_FIS_LEN:
++	/* Also SCU_TASK_DONE_XR_WD_LEN: */
++	case SCU_TASK_DONE_SDMA_ERR:
++	case SCU_TASK_DONE_OFFSET_ERR:
++	case SCU_TASK_DONE_MAX_PLD_ERR:
++	case SCU_TASK_DONE_LF_ERR:
++	case SCU_TASK_DONE_SMP_RESP_TO_ERR:  /* Escalate to dev reset? */
++	case SCU_TASK_DONE_SMP_LL_RX_ERR:
++	case SCU_TASK_DONE_UNEXP_DATA:
++	case SCU_TASK_DONE_UNEXP_SDBFIS:
++	case SCU_TASK_DONE_REG_ERR:
++	case SCU_TASK_DONE_SDB_ERR:
++	case SCU_TASK_DONE_TASK_ABORT:
++	default:
++		/* Task in the target is not done. */
++		*response_ptr = SAS_TASK_UNDELIVERED;
++		*status_ptr = SAM_STAT_TASK_ABORTED;
++		request->complete_in_target = false;
++
++		*complete_to_host_ptr = isci_perform_error_io_completion;
++		break;
 +	}
-+
-+	/* WHAT TO DO HERE IF sas_phy_reset FAILS? */
-+
-+	if (isci_host != NULL)
-+		spin_lock_irqsave(&isci_host->scic_lock, flags);
-+	status
-+		= scic_remote_device_reset_complete(isci_dev->sci_device_handle);
-+
-+	if (isci_host != NULL)
-+		spin_unlock_irqrestore(&isci_host->scic_lock, flags);
-+
-+	if (status != SCI_SUCCESS) {
-+		scmd_printk(KERN_WARNING, cmd,
-+			    "%s: scic_remote_device_reset_complete(%p) "
-+			    "returned %d!\n",
-+			    __func__, isci_dev, status);
-+	}
-+	/* WHAT TO DO HERE IF scic_remote_device_reset_complete FAILS? */
-+
-+	dev_dbg(&cmd->device->sdev_gendev,
-+		"%s: cmd %p, isci_dev %p complete.\n",
-+		__func__, cmd, isci_dev);
-+
-+	/* Resume I/O to the remote device. */
-+	isci_device_set_host_quiesce_lock_state(isci_dev, false);
-+
-+	return TMF_RESP_FUNC_COMPLETE;
-+}
-diff --git a/drivers/scsi/isci/task.h b/drivers/scsi/isci/task.h
-new file mode 100644
-index 0000000..ced6a8b
---- /dev/null
-+++ b/drivers/scsi/isci/task.h
-@@ -0,0 +1,368 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *   * Redistributions of source code must retain the above copyright
-+ *     notice, this list of conditions and the following disclaimer.
-+ *   * Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in
-+ *     the documentation and/or other materials provided with the
-+ *     distribution.
-+ *   * Neither the name of Intel Corporation nor the names of its
-+ *     contributors may be used to endorse or promote products derived
-+ *     from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#if !defined(_ISCI_TASK_H_)
-+#define _ISCI_TASK_H_
-+
-+struct isci_request;
-+struct isci_host;
-+
-+/**
-+ * enum isci_tmf_cb_state - This enum defines the possible states in which the
-+ *    TMF callback function is invoked during the TMF execution process.
-+ *
-+ *
-+ */
-+enum isci_tmf_cb_state {
-+
-+	isci_tmf_init_state = 0,
-+	isci_tmf_started,
-+	isci_tmf_timed_out
-+};
-+
-+/**
-+ * enum isci_tmf_function_codes - This enum defines the possible preparations
-+ *    of task management requests.
-+ *
-+ *
-+ */
-+enum isci_tmf_function_codes {
-+
-+	isci_tmf_func_none      = 0,
-+	isci_tmf_ssp_task_abort = TMF_ABORT_TASK,
-+	isci_tmf_ssp_lun_reset  = TMF_LU_RESET,
-+	isci_tmf_sata_srst_high = TMF_LU_RESET + 0x100, /* Non SCSI */
-+	isci_tmf_sata_srst_low  = TMF_LU_RESET + 0x101  /* Non SCSI */
-+};
-+/**
-+ * struct isci_tmf - This class represents the task management object which
-+ *    acts as an interface to libsas for processing task management requests
-+ *
-+ *
-+ */
-+struct isci_tmf {
-+
-+	struct completion *complete;
-+	enum sas_protocol proto;
-+	union {
-+		struct sci_ssp_response_iu resp_iu;
-+		struct dev_to_host_fis d2h_fis;
-+	}                            resp;
-+	unsigned char lun[8];
-+	u16 io_tag;
-+	struct isci_remote_device *device;
-+	enum isci_tmf_function_codes tmf_code;
-+	int status;
-+
-+	struct isci_timer *timeout_timer;
-+
-+	/* The optional callback function allows the user process to
-+	 * track the TMF transmit / timeout conditions.
-+	 */
-+	void (*cb_state_func)(
-+		enum isci_tmf_cb_state,
-+		struct isci_tmf *, void *);
-+	void *cb_data;
-+
-+};
-+
-+static inline void isci_print_tmf(
-+	struct isci_tmf *tmf)
-+{
-+	if (SAS_PROTOCOL_SATA == tmf->proto)
-+		dev_dbg(&tmf->device->isci_port->isci_host->pdev->dev,
-+			"%s: status = %x\n"
-+			"tmf->resp.d2h_fis.status = %x\n"
-+			"tmf->resp.d2h_fis.error = %x\n",
-+			__func__,
-+			tmf->status,
-+			tmf->resp.d2h_fis.status,
-+			tmf->resp.d2h_fis.error);
-+	else
-+		dev_dbg(&tmf->device->isci_port->isci_host->pdev->dev,
-+			"%s: status = %x\n"
-+			"tmf->resp.resp_iu.data_present = %x\n"
-+			"tmf->resp.resp_iu.status = %x\n"
-+			"tmf->resp.resp_iu.data_length = %x\n"
-+			"tmf->resp.resp_iu.data[0] = %x\n"
-+			"tmf->resp.resp_iu.data[1] = %x\n"
-+			"tmf->resp.resp_iu.data[2] = %x\n"
-+			"tmf->resp.resp_iu.data[3] = %x\n",
-+			__func__,
-+			tmf->status,
-+			tmf->resp.resp_iu.data_present,
-+			tmf->resp.resp_iu.status,
-+			(tmf->resp.resp_iu.response_data_length[0] << 24) +
-+			(tmf->resp.resp_iu.response_data_length[1] << 16) +
-+			(tmf->resp.resp_iu.response_data_length[2] << 8) +
-+			tmf->resp.resp_iu.response_data_length[3],
-+			tmf->resp.resp_iu.data[0],
-+			tmf->resp.resp_iu.data[1],
-+			tmf->resp.resp_iu.data[2],
-+			tmf->resp.resp_iu.data[3]);
-+}
-+
-+
-+int isci_task_execute_task(
-+	struct sas_task *task,
-+	int num,
-+	gfp_t gfp_flags);
-+
-+int isci_task_abort_task(
-+	struct sas_task *task);
-+
-+int isci_task_abort_task_set(
-+	struct domain_device *d_device,
-+	u8 *lun);
-+
-+int isci_task_clear_aca(
-+	struct domain_device *d_device,
-+	u8 *lun);
-+
-+int isci_task_clear_task_set(
-+	struct domain_device *d_device,
-+	u8 *lun);
-+
-+int isci_task_query_task(
-+	struct sas_task *task);
-+
-+int isci_task_lu_reset(
-+	struct domain_device *d_device,
-+	u8 *lun);
-+
-+int isci_task_clear_nexus_port(
-+	struct asd_sas_port *port);
-+
-+int isci_task_clear_nexus_ha(
-+	struct sas_ha_struct *ha);
-+
-+int isci_task_I_T_nexus_reset(
-+	struct domain_device *d_device);
-+
-+void isci_task_request_complete(
-+	struct isci_host *isci_host,
-+	struct isci_request *request,
-+	enum sci_task_status completion_status);
-+
-+u16 isci_task_ssp_request_get_io_tag_to_manage(
-+	struct isci_request *request);
-+
-+u8 isci_task_ssp_request_get_function(
-+	struct isci_request *request);
-+
-+u32 isci_task_ssp_request_get_lun(
-+	struct isci_request *request);
-+
-+void *isci_task_ssp_request_get_response_data_address(
-+	struct isci_request *request);
-+
-+u32 isci_task_ssp_request_get_response_data_length(
-+	struct isci_request *request);
-+
-+int isci_queuecommand(
-+	struct scsi_cmnd *scsi_cmd,
-+	void (*donefunc)(struct scsi_cmnd *));
-+
-+int isci_bus_reset_handler(struct scsi_cmnd *cmd);
-+
-+void isci_task_build_tmf(
-+	struct isci_tmf *tmf,
-+	struct isci_remote_device *isci_device,
-+	enum isci_tmf_function_codes code,
-+	void (*tmf_sent_cb)(
-+		enum isci_tmf_cb_state,
-+		struct isci_tmf *, void *),
-+	void *cb_data);
-+
-+int isci_task_execute_tmf(
-+	struct isci_host *isci_host,
-+	struct isci_tmf *tmf,
-+	unsigned long timeout_ms);
-+
-+/**
-+ * enum isci_completion_selection - This enum defines the possible actions to
-+ *    take with respect to a given request's notification back to libsas.
-+ *
-+ *
-+ */
-+enum isci_completion_selection {
-+
-+	isci_perform_normal_io_completion,      /* Normal notify (task_done) */
-+	isci_perform_aborted_io_completion,     /* No notification.   */
-+	isci_perform_error_io_completion        /* Use sas_task_abort */
-+};
-+
-+static inline void isci_set_task_doneflags(
-+	struct sas_task *task)
-+{
-+	/* Since no futher action will be taken on this task,
-+	 * make sure to mark it complete from the lldd perspective.
-+	 */
-+	task->task_state_flags |= SAS_TASK_STATE_DONE;
-+	task->task_state_flags &= ~SAS_TASK_AT_INITIATOR;
-+	task->task_state_flags &= ~SAS_TASK_STATE_PENDING;
-+}
-+/**
-+ * isci_task_all_done() - This function clears the task bits to indicate the
-+ *    LLDD is done with the task.
-+ *
-+ *
-+ */
-+static inline void isci_task_all_done(
-+	struct sas_task *task)
-+{
-+	unsigned long flags;
-+
-+	/* Since no futher action will be taken on this task,
-+	 * make sure to mark it complete from the lldd perspective.
-+	 */
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+	isci_set_task_doneflags(task);
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
 +}
 +
 +/**
-+ * isci_task_set_completion_status() - This function sets the completion status
-+ *    for the request.
-+ * @task: This parameter is the completed request.
-+ * @response: This parameter is the response code for the completed task.
-+ * @status: This parameter is the status code for the completed task.
-+ *
-+ * none.
-+ */
-+static inline void isci_task_set_completion_status(
-+	struct sas_task *task,
-+	enum service_response response,
-+	enum exec_status status,
-+	enum isci_completion_selection task_notification_selection)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&task->task_state_lock, flags);
-+
-+	task->task_status.resp = response;
-+	task->task_status.stat = status;
-+
-+	/* Don't set DONE (or clear AT_INITIATOR) for any task going into the
-+	 * error path, because the EH interprets that as a handled error condition.
-+	 * Also don't take action if there is a reset pending.
-+	 */
-+	if ((task_notification_selection != isci_perform_error_io_completion)
-+	    && !(task->task_state_flags & SAS_TASK_NEED_DEV_RESET))
-+		isci_set_task_doneflags(task);
-+
-+	spin_unlock_irqrestore(&task->task_state_lock, flags);
-+}
-+/**
-+ * isci_task_complete_for_upper_layer() - This function completes the request
-+ *    to the upper layer driver.
++ * isci_task_save_for_upper_layer_completion() - This function saves the
++ *    request for later completion to the upper layer driver.
 + * @host: This parameter is a pointer to the host on which the the request
 + *    should be queued (either as an error or success).
 + * @request: This parameter is the completed request.
@@ -2048,12 +818,15 @@ index 0000000..ced6a8b
 + *
 + * none.
 + */
-+static inline void isci_task_complete_for_upper_layer(
-+	struct sas_task *task,
++static void isci_task_save_for_upper_layer_completion(
++	struct isci_host *host,
++	struct isci_request *request,
 +	enum service_response response,
 +	enum exec_status status,
 +	enum isci_completion_selection task_notification_selection)
 +{
++	struct sas_task *task = isci_request_access_task(request);
++
 +	isci_task_set_completion_status(task, response, status,
 +					 task_notification_selection);
 +
@@ -2062,40 +835,1110 @@ index 0000000..ced6a8b
 +	 * function should not be completed to the host in the regular path.
 +	 */
 +	switch (task_notification_selection) {
++
 +	case isci_perform_normal_io_completion:
++
 +		/* Normal notification (task_done) */
-+		dev_dbg(task->dev->port->ha->dev,
++		dev_dbg(&host->pdev->dev,
 +			"%s: Normal - task = %p, response=%d, status=%d\n",
-+			__func__, task, response, status);
-+		task->task_done(task);
-+		task->lldd_task = NULL;
++			__func__,
++			task,
++			response,
++			status);
++		/* Add to the completed list. */
++		list_add(&request->completed_node,
++			 &host->requests_to_complete);
 +		break;
 +
 +	case isci_perform_aborted_io_completion:
-+		/* No notification because this request is already in the
-+		 * abort path.
++		/*
++		 * No notification because this request is already
++		 * in the abort path.
 +		 */
-+		dev_warn(task->dev->port->ha->dev,
++		dev_warn(&host->pdev->dev,
 +			 "%s: Aborted - task = %p, response=%d, status=%d\n",
-+			 __func__, task, response, status);
++			 __func__,
++			 task,
++			 response,
++			 status);
 +		break;
 +
 +	case isci_perform_error_io_completion:
 +		/* Use sas_task_abort */
-+		dev_warn(task->dev->port->ha->dev,
++		dev_warn(&host->pdev->dev,
 +			 "%s: Error - task = %p, response=%d, status=%d\n",
-+			 __func__, task, response, status);
-+		sas_task_abort(task);
++			 __func__,
++			 task,
++			 response,
++			 status);
++		/* Add to the aborted list. */
++		list_add(&request->completed_node,
++			 &host->requests_to_abort);
 +		break;
 +
 +	default:
-+		dev_warn(task->dev->port->ha->dev,
-+			 "%s: isci task notification default case!",
-+			 __func__);
-+		sas_task_abort(task);
++		dev_warn(&host->pdev->dev,
++			 "%s: Unknown - task = %p, response=%d, status=%d\n",
++			 __func__,
++			 task,
++			 response,
++			 status);
++
++		/* Add to the aborted list. */
++		list_add(&request->completed_node,
++			 &host->requests_to_abort);
 +		break;
 +	}
 +}
 +
-+#endif /* !defined(_SCI_TASK_H_) */
++/**
++ * isci_request_io_request_complete() - This function is called by the sci core
++ *    when an io request completes.
++ * @isci_host: This parameter specifies the ISCI host object
++ * @request: This parameter is the completed isci_request object.
++ * @completion_status: This parameter specifies the completion status from the
++ *    sci core.
++ *
++ * none.
++ */
++void isci_request_io_request_complete(
++	struct        isci_host *isci_host,
++	struct        isci_request *request,
++	enum sci_io_status completion_status)
++{
++	struct sas_task *task = isci_request_access_task(request);
++	struct ssp_response_iu *resp_iu;
++	void *resp_buf;
++	unsigned long task_flags;
++	unsigned long state_flags;
++	struct completion *io_request_completion;
++	struct isci_remote_device *isci_device   = request->isci_device;
++	enum service_response response       = SAS_TASK_UNDELIVERED;
++	enum exec_status status         = SAS_ABORTED_TASK;
++	enum isci_request_status request_status;
++	enum isci_completion_selection complete_to_host
++		= isci_perform_normal_io_completion;
++
++	dev_dbg(&isci_host->pdev->dev,
++		"%s: request = %p, task = %p,\n"
++		"task->data_dir = %d completion_status = 0x%x\n",
++		__func__,
++		request,
++		task,
++		task->data_dir,
++		completion_status);
++
++	spin_lock_irqsave(&request->state_lock, state_flags);
++	request_status = isci_request_get_state(request);
++	spin_unlock_irqrestore(&request->state_lock, state_flags);
++
++	/* Decode the request status.  Note that if the request has been
++	 * aborted by a task management function, we don't care
++	 * what the status is.
++	 */
++	switch (request_status) {
++
++	case aborted:
++		/* "aborted" indicates that the request was aborted by a task
++		 * management function, since once a task management request is
++		 * perfomed by the device, the request only completes because
++		 * of the subsequent driver terminate.
++		 *
++		 * Aborted also means an external thread is explicitly managing
++		 * this request, so that we do not complete it up the stack.
++		 *
++		 * The target is still there (since the TMF was successful).
++		 */
++		request->complete_in_target = true;
++		response = SAS_TASK_COMPLETE;
++
++		/* See if the device has been/is being stopped. Note
++		 * that we ignore the quiesce state, since we are
++		 * concerned about the actual device state.
++		 */
++		if ((isci_device->status == isci_stopping)
++		    || (isci_device->status == isci_stopped)
++		    )
++			status = SAS_DEVICE_UNKNOWN;
++		else
++			status = SAS_ABORTED_TASK;
++
++		complete_to_host = isci_perform_aborted_io_completion;
++		/* This was an aborted request. */
++		break;
++
++	case aborting:
++		/* aborting means that the task management function tried and
++		 * failed to abort the request. We need to note the request
++		 * as SAS_TASK_UNDELIVERED, so that the scsi mid layer marks the
++		 * target as down.
++		 *
++		 * Aborting also means an external thread is explicitly managing
++		 * this request, so that we do not complete it up the stack.
++		 */
++		request->complete_in_target = true;
++		response = SAS_TASK_UNDELIVERED;
++
++		if ((isci_device->status == isci_stopping) ||
++		    (isci_device->status == isci_stopped))
++			/* The device has been /is being stopped. Note that
++			 * we ignore the quiesce state, since we are
++			 * concerned about the actual device state.
++			 */
++			status = SAS_DEVICE_UNKNOWN;
++		else
++			status = SAS_PHY_DOWN;
++
++		complete_to_host = isci_perform_aborted_io_completion;
++
++		/* This was an aborted request. */
++		break;
++
++	case terminating:
++
++		/* This was an terminated request.  This happens when
++		 * the I/O is being terminated because of an action on
++		 * the device (reset, tear down, etc.), and the I/O needs
++		 * to be completed up the stack.
++		 */
++		request->complete_in_target = true;
++		response = SAS_TASK_UNDELIVERED;
++
++		/* See if the device has been/is being stopped. Note
++		 * that we ignore the quiesce state, since we are
++		 * concerned about the actual device state.
++		 */
++		if ((isci_device->status == isci_stopping) ||
++		    (isci_device->status == isci_stopped))
++			status = SAS_DEVICE_UNKNOWN;
++		else
++			status = SAS_ABORTED_TASK;
++
++		complete_to_host = isci_perform_normal_io_completion;
++
++		/* This was a terminated request. */
++		break;
++
++	default:
++
++		/* This is an active request being completed from the core. */
++		switch (completion_status) {
++
++		case SCI_IO_FAILURE_RESPONSE_VALID:
++			dev_dbg(&isci_host->pdev->dev,
++				"%s: SCI_IO_FAILURE_RESPONSE_VALID (%p/%p)\n",
++				__func__,
++				request,
++				task);
++
++			if (sas_protocol_ata(task->task_proto)) {
++				resp_buf
++					= scic_stp_io_request_get_d2h_reg_address(
++					request->sci_request_handle
++					);
++				isci_request_process_stp_response(task,
++								  resp_buf
++								  );
++
++			} else if (SAS_PROTOCOL_SSP == task->task_proto) {
++
++				/* crack the iu response buffer. */
++				resp_iu
++					= scic_io_request_get_response_iu_address(
++					request->sci_request_handle
++					);
++
++				isci_request_process_response_iu(task, resp_iu,
++								 &isci_host->pdev->dev
++								 );
++
++			} else if (SAS_PROTOCOL_SMP == task->task_proto) {
++
++				dev_err(&isci_host->pdev->dev,
++					"%s: SCI_IO_FAILURE_RESPONSE_VALID: "
++					"SAS_PROTOCOL_SMP protocol\n",
++					__func__);
++
++			} else
++				dev_err(&isci_host->pdev->dev,
++					"%s: unknown protocol\n", __func__);
++
++			/* use the task status set in the task struct by the
++			 * isci_request_process_response_iu call.
++			 */
++			request->complete_in_target = true;
++			response = task->task_status.resp;
++			status = task->task_status.stat;
++			break;
++
++		case SCI_IO_SUCCESS:
++		case SCI_IO_SUCCESS_IO_DONE_EARLY:
++
++			response = SAS_TASK_COMPLETE;
++			status   = SAM_STAT_GOOD;
++			request->complete_in_target = true;
++
++			if (task->task_proto == SAS_PROTOCOL_SMP) {
++
++				u8 *command_iu_address
++					= scic_io_request_get_command_iu_address(
++					request->sci_request_handle
++					);
++
++				dev_dbg(&isci_host->pdev->dev,
++					"%s: SMP protocol completion\n",
++					__func__);
++
++				sg_copy_from_buffer(
++					&task->smp_task.smp_resp, 1,
++					command_iu_address
++					+ sizeof(struct smp_request),
++					sizeof(struct smp_resp)
++					);
++			} else if (completion_status
++				   == SCI_IO_SUCCESS_IO_DONE_EARLY) {
++
++				/* This was an SSP / STP / SATA transfer.
++				 * There is a possibility that less data than
++				 * the maximum was transferred.
++				 */
++				u32 transferred_length
++					= scic_io_request_get_number_of_bytes_transferred(
++					request->sci_request_handle);
++
++				task->task_status.residual
++					= task->total_xfer_len - transferred_length;
++
++				/* If there were residual bytes, call this an
++				 * underrun.
++				 */
++				if (task->task_status.residual != 0)
++					status = SAS_DATA_UNDERRUN;
++
++				dev_dbg(&isci_host->pdev->dev,
++					"%s: SCI_IO_SUCCESS_IO_DONE_EARLY %d\n",
++					__func__,
++					status);
++
++			} else
++				dev_dbg(&isci_host->pdev->dev,
++					"%s: SCI_IO_SUCCESS\n",
++					__func__);
++
++			break;
++
++		case SCI_IO_FAILURE_TERMINATED:
++			dev_dbg(&isci_host->pdev->dev,
++				"%s: SCI_IO_FAILURE_TERMINATED (%p/%p)\n",
++				__func__,
++				request,
++				task);
++
++			/* The request was terminated explicitly.  No handling
++			 * is needed in the SCSI error handler path.
++			 */
++			request->complete_in_target = true;
++			response = SAS_TASK_UNDELIVERED;
++
++			/* See if the device has been/is being stopped. Note
++			 * that we ignore the quiesce state, since we are
++			 * concerned about the actual device state.
++			 */
++			if ((isci_device->status == isci_stopping) ||
++			    (isci_device->status == isci_stopped))
++				status = SAS_DEVICE_UNKNOWN;
++			else
++				status = SAS_ABORTED_TASK;
++
++			complete_to_host = isci_perform_normal_io_completion;
++			break;
++
++		case SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR:
++
++			isci_request_handle_controller_specific_errors(
++				isci_device, request, task, &response, &status,
++				&complete_to_host);
++
++			break;
++
++		case SCI_IO_FAILURE_REMOTE_DEVICE_RESET_REQUIRED:
++			/* This is a special case, in that the I/O completion
++			 * is telling us that the device needs a reset.
++			 * In order for the device reset condition to be
++			 * noticed, the I/O has to be handled in the error
++			 * handler.  Set the reset flag and cause the
++			 * SCSI error thread to be scheduled.
++			 */
++			spin_lock_irqsave(&task->task_state_lock, task_flags);
++			task->task_state_flags |= SAS_TASK_NEED_DEV_RESET;
++			spin_unlock_irqrestore(&task->task_state_lock, task_flags);
++
++			complete_to_host = isci_perform_error_io_completion;
++			request->complete_in_target = false;
++			break;
++
++		default:
++			/* Catch any otherwise unhandled error codes here. */
++			dev_warn(&isci_host->pdev->dev,
++				 "%s: invalid completion code: 0x%x - "
++				 "isci_request = %p\n",
++				 __func__, completion_status, request);
++
++			response = SAS_TASK_UNDELIVERED;
++
++			/* See if the device has been/is being stopped. Note
++			 * that we ignore the quiesce state, since we are
++			 * concerned about the actual device state.
++			 */
++			if ((isci_device->status == isci_stopping) ||
++			    (isci_device->status == isci_stopped))
++				status = SAS_DEVICE_UNKNOWN;
++			else
++				status = SAS_ABORTED_TASK;
++
++			complete_to_host = isci_perform_error_io_completion;
++			request->complete_in_target = false;
++			break;
++		}
++		break;
++	}
++
++	isci_request_unmap_sgl(request, isci_host->pdev);
++
++	/* Put the completed request on the correct list */
++	isci_task_save_for_upper_layer_completion(isci_host, request, response,
++						  status, complete_to_host
++						  );
++
++	/* complete the io request to the core. */
++	scic_controller_complete_io(
++		isci_host->core_controller,
++		isci_device->sci_device_handle,
++		request->sci_request_handle
++		);
++	/* NULL the request handle so it cannot be completed or
++	 * terminated again, and to cause any calls into abort
++	 * task to recognize the already completed case.
++	 */
++	request->sci_request_handle = NULL;
++
++	/* Only remove the request from the remote device list
++	 * of pending requests if we have not requested error
++	 * handling on this request.
++	 */
++	if (complete_to_host != isci_perform_error_io_completion)
++		list_del_init(&request->dev_node);
++
++
++	/* Save possible completion ptr. */
++	io_request_completion = request->io_request_completion;
++
++	if (io_request_completion) {
++
++		/* This is inherantly a regular I/O request,
++		 * since we are currently in the regular
++		 * I/O completion callback function.
++		 * Signal whoever is waiting that this
++		 * request is complete.
++		 */
++		complete(io_request_completion);
++	}
++
++	isci_host_can_dequeue(isci_host, 1);
++}
++
++/**
++ * isci_request_io_request_get_transfer_length() - This function is called by
++ *    the sci core to retrieve the transfer length for a given request.
++ * @request: This parameter is the isci_request object.
++ *
++ * length of transfer for specified request.
++ */
++u32 isci_request_io_request_get_transfer_length(struct isci_request *request)
++{
++	struct sas_task *task = isci_request_access_task(request);
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: total_xfer_len: %d\n",
++		__func__,
++		task->total_xfer_len);
++	return task->total_xfer_len;
++}
++
++
++/**
++ * isci_request_io_request_get_data_direction() - This function is called by
++ *    the sci core to retrieve the data direction for a given request.
++ * @request: This parameter is the isci_request object.
++ *
++ * data direction for specified request.
++ */
++SCI_IO_REQUEST_DATA_DIRECTION isci_request_io_request_get_data_direction(
++	struct isci_request *request)
++{
++	struct sas_task *task = isci_request_access_task(request);
++	SCI_IO_REQUEST_DATA_DIRECTION ret;
++
++	switch (task->data_dir) {
++
++	case DMA_FROM_DEVICE:
++		ret = SCI_IO_REQUEST_DATA_IN;
++		dev_dbg(&request->isci_host->pdev->dev,
++			"%s: request=%p, FROM_DEVICE\n",
++			__func__,
++			request);
++		break;
++
++	case DMA_TO_DEVICE:
++		ret = SCI_IO_REQUEST_DATA_OUT;
++		dev_dbg(&request->isci_host->pdev->dev,
++			"%s: request=%p, TO_DEVICE\n",
++			__func__,
++			request);
++		break;
++
++	case DMA_BIDIRECTIONAL:
++	case DMA_NONE:
++	default:
++		ret = SCI_IO_REQUEST_NO_DATA;
++		dev_dbg(&request->isci_host->pdev->dev,
++			"%s: request=%p, unhandled direction case, "
++			"data_dir=%d\n",
++			__func__,
++			request,
++			task->data_dir);
++		break;
++
++	}
++	return ret;
++}
++
++/**
++ * isci_request_sge_get_address_field() - This function is called by the sci
++ *    core to retrieve the address field contents for a given sge.
++ * @request: This parameter is the isci_request object.
++ * @sge_address: This parameter is the sge.
++ *
++ * physical address in the specified sge.
++ */
++dma_addr_t isci_request_sge_get_address_field(
++	struct isci_request *request,
++	void *sge_address)
++{
++	struct sas_task *task = isci_request_access_task(request);
++	dma_addr_t ret;
++	struct isci_host *isci_host = isci_host_from_sas_ha(
++		task->dev->port->ha);
++
++	dev_dbg(&isci_host->pdev->dev,
++		"%s: request = %p, sge_address = %p\n",
++		__func__,
++		request,
++		sge_address);
++
++	if (task->data_dir == PCI_DMA_NONE)
++		return 0;
++
++	/* the case where num_scatter == 0 is special, in that
++	 * task->scatter is the actual buffer address, not an sgl.
++	 * so a map single is required here.
++	 */
++	if ((task->num_scatter == 0) &&
++	    !sas_protocol_ata(task->task_proto)) {
++		ret = dma_map_single(
++			&isci_host->pdev->dev,
++			task->scatter,
++			task->total_xfer_len,
++			task->data_dir
++			);
++		request->zero_scatter_daddr = ret;
++	} else
++		ret = sg_dma_address(((struct scatterlist *)sge_address));
++
++	dev_dbg(&isci_host->pdev->dev,
++		"%s: bus address = %lx\n",
++		__func__,
++		(unsigned long)ret);
++
++	return ret;
++}
++
++
++/**
++ * isci_request_sge_get_length_field() - This function is called by the sci
++ *    core to retrieve the length field contents for a given sge.
++ * @request: This parameter is the isci_request object.
++ * @sge_address: This parameter is the sge.
++ *
++ * length field value in the specified sge.
++ */
++u32 isci_request_sge_get_length_field(
++	struct isci_request *request,
++	void *sge_address)
++{
++	struct sas_task *task = isci_request_access_task(request);
++	int ret;
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: request = %p, sge_address = %p\n",
++		__func__,
++		request,
++		sge_address);
++
++	if (task->data_dir == PCI_DMA_NONE)
++		return 0;
++
++	/* the case where num_scatter == 0 is special, in that
++	 * task->scatter is the actual buffer address, not an sgl.
++	 * so we return total_xfer_len here.
++	 */
++	if (task->num_scatter == 0)
++		ret = task->total_xfer_len;
++	else
++		ret = sg_dma_len((struct scatterlist *)sge_address);
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: len = %d\n",
++		__func__,
++		ret);
++
++	return ret;
++}
++
++
++/**
++ * isci_request_ssp_io_request_get_cdb_address() - This function is called by
++ *    the sci core to retrieve the cdb address for a given request.
++ * @request: This parameter is the isci_request object.
++ *
++ * cdb address for specified request.
++ */
++void *isci_request_ssp_io_request_get_cdb_address(
++	struct isci_request *request)
++{
++	struct sas_task *task = isci_request_access_task(request);
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: request->task->ssp_task.cdb = %p\n",
++		__func__,
++		task->ssp_task.cdb);
++	return task->ssp_task.cdb;
++}
++
++
++/**
++ * isci_request_ssp_io_request_get_cdb_length() - This function is called by
++ *    the sci core to retrieve the cdb length for a given request.
++ * @request: This parameter is the isci_request object.
++ *
++ * cdb length for specified request.
++ */
++u32 isci_request_ssp_io_request_get_cdb_length(
++	struct isci_request *request)
++{
++	return 16;
++}
++
++
++/**
++ * isci_request_ssp_io_request_get_lun() - This function is called by the sci
++ *    core to retrieve the lun for a given request.
++ * @request: This parameter is the isci_request object.
++ *
++ * lun for specified request.
++ */
++u32 isci_request_ssp_io_request_get_lun(
++	struct isci_request *request)
++{
++	struct sas_task *task = isci_request_access_task(request);
++
++#ifdef DEBUG
++	int i;
++
++	for (i = 0; i < 8; i++)
++		dev_dbg(&request->isci_host->pdev->dev,
++			"%s: request->task->ssp_task.LUN[%d] = %x\n",
++			__func__, i, request->task->ssp_task.LUN[i]);
++
++#endif
++
++	return task->ssp_task.LUN[0];
++}
++
++
++/**
++ * isci_request_ssp_io_request_get_task_attribute() - This function is called
++ *    by the sci core to retrieve the task attribute for a given request.
++ * @request: This parameter is the isci_request object.
++ *
++ * task attribute for specified request.
++ */
++u32 isci_request_ssp_io_request_get_task_attribute(
++	struct isci_request *request)
++{
++	struct sas_task *task = isci_request_access_task(request);
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: request->task->ssp_task.task_attr = %x\n",
++		__func__,
++		task->ssp_task.task_attr);
++
++	return task->ssp_task.task_attr;
++}
++
++
++/**
++ * isci_request_ssp_io_request_get_command_priority() - This function is called
++ *    by the sci core to retrieve the command priority for a given request.
++ * @request: This parameter is the isci_request object.
++ *
++ * command priority for specified request.
++ */
++u32 isci_request_ssp_io_request_get_command_priority(
++	struct isci_request *request)
++{
++	struct sas_task *task = isci_request_access_task(request);
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: request->task->ssp_task.task_prio = %x\n",
++		__func__,
++		task->ssp_task.task_prio);
++
++	return task->ssp_task.task_prio;
++}
+diff --git a/drivers/scsi/isci/request.h b/drivers/scsi/isci/request.h
+new file mode 100644
+index 0000000..5079d4a
+--- /dev/null
++++ b/drivers/scsi/isci/request.h
+@@ -0,0 +1,429 @@
++/*
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *   * Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *   * Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in
++ *     the documentation and/or other materials provided with the
++ *     distribution.
++ *   * Neither the name of Intel Corporation nor the names of its
++ *     contributors may be used to endorse or promote products derived
++ *     from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#if !defined(_ISCI_REQUEST_H_)
++#define _ISCI_REQUEST_H_
++
++#include "isci.h"
++
++/**
++ * struct isci_request_status - This enum defines the possible states of an I/O
++ *    request.
++ *
++ *
++ */
++enum isci_request_status {
++	unallocated = 0x00,
++	allocated   = 0x01,
++	started     = 0x02,
++	completed   = 0x03,
++	aborting    = 0x04,
++	aborted     = 0x05,
++	terminating = 0x06
++};
++
++enum task_type {
++	io_task  = 0,
++	tmf_task = 1
++};
++
++/**
++ * struct isci_request - This class represents the request object used to track
++ *    IO, smp and TMF request internal. It wraps the SCIC request object.
++ *
++ *
++ */
++struct isci_request {
++
++	struct scic_sds_request *sci_request_handle;
++
++	enum isci_request_status status;
++	enum task_type ttype;
++	unsigned short io_tag;
++	bool complete_in_target;
++
++	union ttype_ptr_union {
++		struct sas_task *io_task_ptr;   /* When ttype==io_task  */
++		struct isci_tmf *tmf_task_ptr;  /* When ttype==tmf_task */
++	} ttype_ptr;
++	struct isci_host *isci_host;
++	struct isci_remote_device *isci_device;
++	/* For use in the requests_to_{complete|abort} lists: */
++	struct list_head completed_node;
++	/* For use in the reqs_in_process list: */
++	struct list_head dev_node;
++	void *sci_request_mem_ptr;
++	spinlock_t state_lock;
++	dma_addr_t request_daddr;
++	dma_addr_t zero_scatter_daddr;
++
++	unsigned int num_sg_entries;                    /* returned by pci_alloc_sg */
++	unsigned int request_alloc_size;                /* size of block from dma_pool_alloc */
++
++	/** Note: "io_request_completion" is completed in two different ways
++	 * depending on whether this is a TMF or regular request.
++	 * - TMF requests are completed in the thread that started them;
++	 * - regular requests are completed in the request completion callback
++	 *   function.
++	 * This difference in operation allows the aborter of a TMF request
++	 * to be sure that once the TMF request completes, the I/O that the
++	 * TMF was aborting is guaranteed to have completed.
++	 */
++	struct completion *io_request_completion;
++};
++
++/**
++ * This function gets the status of the request object.
++ * @request: This parameter points to the isci_request object
++ *
++ * status of the object as a isci_request_status enum.
++ */
++static inline
++enum isci_request_status isci_request_get_state(
++	struct isci_request *isci_request)
++{
++	BUG_ON(isci_request == NULL);
++
++	/*probably a bad sign...	*/
++	if (isci_request->status == unallocated)
++		dev_warn(&isci_request->isci_host->pdev->dev,
++			 "%s: isci_request->status == unallocated\n",
++			 __func__);
++
++	return isci_request->status;
++}
++
++
++/**
++ * isci_request_change_state() - This function sets the status of the request
++ *    object.
++ * @request: This parameter points to the isci_request object
++ * @status: This Parameter is the new status of the object
++ *
++ */
++static inline enum isci_request_status isci_request_change_state(
++	struct isci_request *isci_request,
++	enum isci_request_status status)
++{
++	enum isci_request_status old_state;
++	unsigned long flags;
++
++	dev_dbg(&isci_request->isci_host->pdev->dev,
++		"%s: isci_request = %p, state = 0x%x\n",
++		__func__,
++		isci_request,
++		status);
++
++	BUG_ON(isci_request == NULL);
++
++	spin_lock_irqsave(&isci_request->state_lock, flags);
++	old_state = isci_request->status;
++	isci_request->status = status;
++	spin_unlock_irqrestore(&isci_request->state_lock, flags);
++
++	return old_state;
++}
++
++/**
++ * isci_request_change_started_to_newstate() - This function sets the status of
++ *    the request object.
++ * @request: This parameter points to the isci_request object
++ * @status: This Parameter is the new status of the object
++ *
++ * state previous to any change.
++ */
++static inline enum isci_request_status isci_request_change_started_to_newstate(
++	struct isci_request *isci_request,
++	struct completion *completion_ptr,
++	enum isci_request_status newstate)
++{
++	enum isci_request_status old_state;
++	unsigned long flags;
++
++	BUG_ON(isci_request == NULL);
++
++	spin_lock_irqsave(&isci_request->state_lock, flags);
++
++	old_state = isci_request->status;
++
++	if (old_state == started) {
++		BUG_ON(isci_request->io_request_completion != NULL);
++
++		isci_request->io_request_completion = completion_ptr;
++		isci_request->status = newstate;
++	}
++	spin_unlock_irqrestore(&isci_request->state_lock, flags);
++
++	dev_dbg(&isci_request->isci_host->pdev->dev,
++		"%s: isci_request = %p, old_state = 0x%x\n",
++		__func__,
++		isci_request,
++		old_state);
++
++	return old_state;
++}
++
++/**
++ * isci_request_change_started_to_aborted() - This function sets the status of
++ *    the request object.
++ * @request: This parameter points to the isci_request object
++ * @completion_ptr: This parameter is saved as the kernel completion structure
++ *    signalled when the old request completes.
++ *
++ * state previous to any change.
++ */
++static inline enum isci_request_status isci_request_change_started_to_aborted(
++	struct isci_request *isci_request,
++	struct completion *completion_ptr)
++{
++	return isci_request_change_started_to_newstate(
++		       isci_request, completion_ptr, aborted
++		       );
++}
++/**
++ * isci_request_free() - This function frees the request object.
++ * @isci_host: This parameter specifies the ISCI host object
++ * @isci_request: This parameter points to the isci_request object
++ *
++ */
++static inline void isci_request_free(
++	struct isci_host *isci_host,
++	struct isci_request *isci_request)
++{
++	BUG_ON(isci_request == NULL);
++
++	/* release the dma memory if we fail. */
++	dma_pool_free(isci_host->dma_pool, isci_request,
++		      isci_request->request_daddr);
++}
++
++
++/* #define ISCI_REQUEST_VALIDATE_ACCESS
++ */
++
++#ifdef ISCI_REQUEST_VALIDATE_ACCESS
++
++static inline
++struct sas_task *isci_request_access_task(struct isci_request *isci_request)
++{
++	BUG_ON(isci_request->ttype != io_task);
++	return isci_request->ttype_ptr.io_task_ptr;
++}
++
++static inline
++struct isci_tmf *isci_request_access_tmf(struct isci_request *isci_request)
++{
++	BUG_ON(isci_request->ttype != tmf_task);
++	return isci_request->ttype_ptr.tmf_task_ptr;
++}
++
++#else  /* not ISCI_REQUEST_VALIDATE_ACCESS */
++
++#define isci_request_access_task(RequestPtr) \
++	((RequestPtr)->ttype_ptr.io_task_ptr)
++
++#define isci_request_access_tmf(RequestPtr)  \
++	((RequestPtr)->ttype_ptr.tmf_task_ptr)
++
++#endif /* not ISCI_REQUEST_VALIDATE_ACCESS */
++
++
++int isci_request_alloc_tmf(
++	struct isci_host *isci_host,
++	struct isci_tmf *isci_tmf,
++	struct isci_request **isci_request,
++	struct isci_remote_device *isci_device,
++	gfp_t gfp_flags);
++
++
++int isci_request_execute(
++	struct isci_host *isci_host,
++	struct sas_task *task,
++	struct isci_request **request,
++	gfp_t gfp_flags);
++
++/**
++ * isci_request_unmap_sgl() - This function unmaps the DMA address of a given
++ *    sgl
++ * @request: This parameter points to the isci_request object
++ * @*pdev: This Parameter is the pci_device struct for the controller
++ *
++ */
++static inline void isci_request_unmap_sgl(
++	struct isci_request *request,
++	struct pci_dev *pdev)
++{
++	struct sas_task *task = isci_request_access_task(request);
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: request = %p, task = %p,\n"
++		"task->data_dir = %d, is_sata = %d\n ",
++		__func__,
++		request,
++		task,
++		task->data_dir,
++		sas_protocol_ata(task->task_proto));
++
++	if ((task->data_dir != PCI_DMA_NONE) &&
++	    !sas_protocol_ata(task->task_proto)) {
++		if (task->num_scatter == 0)
++			/* 0 indicates a single dma address */
++			dma_unmap_single(
++				&pdev->dev,
++				request->zero_scatter_daddr,
++				task->total_xfer_len,
++				task->data_dir
++				);
++
++		else  /* unmap the sgl dma addresses */
++			dma_unmap_sg(
++				&pdev->dev,
++				task->scatter,
++				request->num_sg_entries,
++				task->data_dir
++				);
++	}
++}
++
++
++void isci_request_io_request_complete(
++	struct isci_host *isci_host,
++	struct isci_request *request,
++	enum sci_io_status completion_status);
++
++u32 isci_request_io_request_get_transfer_length(
++	struct isci_request *request);
++
++SCI_IO_REQUEST_DATA_DIRECTION isci_request_io_request_get_data_direction(
++	struct isci_request *request);
++
++/**
++ * isci_request_io_request_get_next_sge() - This function is called by the sci
++ *    core to retrieve the next sge for a given request.
++ * @request: This parameter is the isci_request object.
++ * @current_sge_address: This parameter is the last sge retrieved by the sci
++ *    core for this request.
++ *
++ * pointer to the next sge for specified request.
++ */
++static inline void *isci_request_io_request_get_next_sge(
++	struct isci_request *request,
++	void *current_sge_address)
++{
++	struct sas_task *task = isci_request_access_task(request);
++	void *ret = NULL;
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: request = %p, "
++		"current_sge_address = %p, "
++		"num_scatter = %d\n",
++		__func__,
++		request,
++		current_sge_address,
++		task->num_scatter);
++
++	if (!current_sge_address)	/* First time through.. */
++		ret = task->scatter;    /* always task->scatter */
++	else if (task->num_scatter == 0) /* Next element, if num_scatter == 0 */
++		ret = NULL;              /* there is only one element. */
++	else
++		ret = sg_next(current_sge_address);     /* sg_next returns NULL
++							 * for the last element
++							 */
++
++	dev_dbg(&request->isci_host->pdev->dev,
++		"%s: next sge address = %p\n",
++		__func__,
++		ret);
++
++	return ret;
++}
++
++dma_addr_t isci_request_sge_get_address_field(
++	struct isci_request *request,
++	void *sge_address);
++
++u32 isci_request_sge_get_length_field(
++	struct isci_request *request,
++	void *sge_address);
++
++void *isci_request_ssp_io_request_get_cdb_address(
++	struct isci_request *request);
++
++u32 isci_request_ssp_io_request_get_cdb_length(
++	struct isci_request *request);
++
++u32  isci_request_ssp_io_request_get_lun(
++	struct isci_request *request);
++
++u32 isci_request_ssp_io_request_get_task_attribute(
++	struct isci_request *request);
++
++u32 isci_request_ssp_io_request_get_command_priority(
++	struct isci_request *request);
++
++
++
++
++
++void isci_terminate_pending_requests(
++	struct isci_host *isci_host,
++	struct isci_remote_device *isci_device,
++	enum isci_request_status new_request_state);
++
++
++
++
++#endif /* !defined(_ISCI_REQUEST_H_) */
 
