@@ -1,131 +1,152 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Add some kind of unique_id attribute to disks in scsi mid layer?
-Date: Mon, 07 Feb 2011 08:33:20 +0100
-Message-ID: <4D4FA040.8080201@suse.de>
-References: <20110204193651.GM9565@beardog.cce.hp.com> <4D4C5FEF.20807@interlog.com>
+Subject: Re: [LSF/MM Topic] SCSI Unit Attention Handling
+Date: Mon, 07 Feb 2011 08:46:51 +0100
+Message-ID: <4D4FA36B.5080502@suse.de>
+References: <AANLkTikARn9U17fVKDo+dgyfz554LV=Dz+_M_xB5dfe+@mail.gmail.com> <DBFB1B45AF80394ABD1C807E9F28D1570264CAA097@BLRX7MCDC203.AMER.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45738 "EHLO mx2.suse.de"
+Received: from cantor.suse.de ([195.135.220.2]:37813 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751823Ab1BGHZM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Feb 2011 02:25:12 -0500
-In-Reply-To: <4D4C5FEF.20807@interlog.com>
+	id S1752358Ab1BGHio (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Feb 2011 02:38:44 -0500
+In-Reply-To: <DBFB1B45AF80394ABD1C807E9F28D1570264CAA097@BLRX7MCDC203.AMER.DELL.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dgilbert@interlog.com
-Cc: scameron@beardog.cce.hp.com, linux-scsi@vger.kernel.org
+To: Shyam_Iyer@Dell.com
+Cc: realrichardsharpe@gmail.com, lsf-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org
 
-On 02/04/2011 09:22 PM, Douglas Gilbert wrote:
-> On 11-02-04 02:36 PM, scameron@beardog.cce.hp.com wrote:
->> Would it be a reasonable idea to add some sort of unique_id attribut=
+On 02/06/2011 11:32 PM, Shyam_Iyer@Dell.com wrote:
+>=20
+>=20
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Richard Sharpe
+>> Sent: Sunday, February 06, 2011 3:44 PM
+>> To: lsf-pc@lists.linuxfoundation.org; linux-scsi; Hannes Reinecke
+>> Subject: [LSF/MM Topic] SCSI Unit Attention Handling
+>>
+>> I would like to propose a topic around SCSI Unit Attention Handling.
+>>
+>> The current scsi_error.c:scsi_check_sense handling of UNIT ATTENTION
+>> consists of explicitly printing warnings for for ASC=3D0x3f events a=
+nd
+>> then returning SOFT_ERROR which scsi_error.c:scsi_decide_disposition
+>> ignores because it returns SUCCESS to SOFT_ERROR being returned from
+>> scst_check_sense on a CHECK_CONDITION.
+>>
+>> There are a number of cases where we might want to perform further
+>> processing on a UNIT ATTENTION. For example, ASC/ASCQ 0x3f/0x0e
+>> REPORTED LUNS DATA HAS CHANGED or 0x2a/0x09 CAPACITY DATA HAS CHANGE=
+D,
+>> 0x28/0x03 IMPORT/EXPORT ELEMENT ACCESSED, MEDIUM CHANGED, etc. When
+>> the LUNS have changed it would be useful to have a recan performed
+>> automatically. If capacity data has changed, it would be useful if
+>> someone could react to that and perhaps resize the file system on th=
+at
+>> LUN if possible, and so forth.
+>>
+>> It is not clear that any of these items should be handled in the
+>> kernel anyway, and perhaps they should be exported to user-space for
+>> correct handling, but rather than just the raw SENSE data being
+>> exported, perhaps some sort of relevant event should be exported.
+>>
+> We spoke about this in the plumbers conf last November as well and
+> the few ideas then was to handle them via scsi netlink.
+> I see that Hannes is working on a relayfs method to handle them.
+>
+I made an initial framework using netlink some way back (and it's
+actually part of SLES11 :-), but I figured it's not the best way of
+handling things.
+
+> Some of the new problems that we can see with handling such events ar=
+e -
+>=20
+> If the thin provisioned LUN is snapshotted or cloned then you can als=
+o
+> get a flurry of UNIT attentions for the same data that has been
+replicated.
+>
+Yes.
+
+
+>=20
+>> To avoid having to code all of the relevant combinations in the abov=
 e
->> to scsi devices in the mid layer?
+>> routine, Hannes and I have been discussing a framework for handling
+>> this. Hannes suggested a notifier chain of some sort to deal with
+>> this, and points out that because the above routine is called in a
+>> softirq context we don't want to be performing lots of processing in
+>> that context.
 >>
->> For example, sg_inq, from sg3_utils, will print out a serial number:
->>
->> [root@localhost scameron]# sg_inq /dev/sda
->> standard INQUIRY:
->>    PQual=3D0  Device_type=3D0  RMB=3D0  version=3D0x05  [SPC-3]
->>    [AERC=3D0]  [TrmTsk=3D0]  NormACA=3D0  HiSUP=3D0  Resp_data_forma=
-t=3D2
->>    SCCS=3D0  ACC=3D0  TPGS=3D0  3PC=3D0  Protect=3D0  BQue=3D0
->>    EncServ=3D0  MultiP=3D0  [MChngr=3D0]  [ACKREQQ=3D0]  Addr16=3D0
->>    [RelAdr=3D0]  WBus16=3D0  Sync=3D0  Linked=3D0  [TranDis=3D0]  Cm=
-dQue=3D1
->>      length=3D56 (0x38)   Peripheral device type: disk
->>   Vendor identification: HP
->>   Product identification: LOGICAL VOLUME
->>   Product revision level: 3.66
->>   Unit serial number: 50014380065020C0
->>
->> And there's also some stuff in page 0x83 on some devices which might
->> be useful as suck an identifier:
->>
->> [root@localhost scameron]# sg_inq --page 0x83 /dev/sda
->> VPD INQUIRY: Device Identification page
->>    Designation descriptor number 1, descriptor length: 20
->>      designator_type: NAA,  code_set: Binary
->>      associated with the addressed logical unit
->>        NAA 6, IEEE Company_id: 0x508b
->>        Vendor Specific Identifier: 0x1001ce88b
->>        Vendor Specific Identifier Extension: 0x746f381eedf6577
->>        [0x600508b1001ce88b0746f381eedf6577]
->>    Designation descriptor number 2, descriptor length: 8
->>      designator_type: vendor specific [0x0],  code_set: Binary
->>      associated with the addressed logical unit
->>   00     00 00 00 00                                         ....
->> [root@localhost scameron]#
->>
->> The hpsa driver, for example, currently exports a "unique_id"
->> attribute itself for disks, which is the same data reported by
->> inquire page 0x83.
->>
->> [root@localhost 0:0:0:1]# pwd
->> /sys/bus/scsi/devices/0:0:0:1
->> [root@localhost 0:0:0:1]# cat unique_id
->> 600508B1001CE88B0746F381EEDF6577
->>
->> It occurs to me that maybe something
->> like that would be useful for all disks serviced by the scsi mid lay=
-er.
->> For example, kdump userland stuff, as typically implemented,
->> has a very small ramdisk which it operates from, and has a fairly
->> simple minded way of recognizing which disk is which (e.g. looks at
->> vendor, model, rev, and type attributes, arguably not a very good wa=
-y
->> to do it, as just flashing firmware on a drive will change the rev, =
-but
->> won't mean the disk is not the same disk, for example, and likewise,=
- all
->> disks on a given Smart Array will carry the same vendor/model/rev/ty=
-pe,
->> and type?  Type is always going to be zero for a disk anyhow.)
->>
->> So kdump needs some kind of a unique_id to help it out, but would pr=
-efer
->> not to carry around e.g. sg_inq in the kdump initrd (so you may ask
->> "stuffing it in the kernel is a better idea?")  Well, _if_ the LLDs =
-are
->> typically already getting this info (as in the case of hpsa and ccis=
-s
->> at least) maybe they should have some standard way of informing the
->> mid layer, so the midlayer could expose this attribute in a standard=
- way?
->> Or, maybe the mid layer could send down the necessary inquiries to g=
-et
->> the information itself with no interface changes needed?
->>
->> Well, this seems like such an obvious idea, that the mere fact that =
-it
->> is not already implemented makes me think there may be some good rea=
-son
->> why not.
->=20
-> Yes, indeed :-)
->=20
-> The problem is those pesky little storage devices that
-> (ab)use the SCSI command set (e.g. some USB keys). Some of
-> them lock up when given anything other than a bog standard
-> INQUIRY command requesting a 36 byte response with
-> EVPD=3D0. After the lock up such devices typically need a
-> power cycle to come back to life, then if the OS sends them
-> the same command again that locked them up ... you
-> probably get the idea.
->=20
-> Redmond seems to like globally unique identifiers (GUIDs)
-> for storage devices, I wonder how they handle this problem.
-> A heuristic based in the transport may be one approach.
->=20
-Main problem is that device do not exactly have _one_ unique ID, but
-rather several; check scsi_id to approve the real complexity here.
-So when adding this field we would actually move quite some bit of
-policy into the kernel.
+> I guess my curiosity would be on why the scsi_netlink framework
+> abandoned or possibly not considered..
+>
+It was (see above).
+There are two major issues with it:
+- memory allocation: For each and every event you have to allocate
+  skbs. Either you do it in-line (ie at the time when the event
+  happens), which means you have to do a memory allocation in the
+  interrupt service routine. Or you do it asynchronously, in which
+  case you have to have a separate memory area into which the event
+  can be stored temporarily before the skb is allocated.
+  But then you already have some sort of ring-buffer here, which
+  you might as well use directly and do away with the skbs
+  altogether -> relayfs.
+- Scalability. I'm not sure how well netlink behaves under pressure,
+  and what does happen with those events (blame me for not being a
+  network guy). ISTR that netlink will just drop events if the
+  buffer is full.
 
-The transport ID OTOH is well defined and actually used in some
-contexts (persistent reservation spring to mind here).
-Having that in sysfs would be great.
+>> It seems that we need to defer processing of these items as well as
+>> provide some mechanism for drivers (sd.c, st.c, etc, to register the
+>> UNIT ATTENTIONs they are interested in). The registration seems quit=
+e
+>> straight forward ... each driver can provide a list of the ASC/ASCQ
+>> pairs they are interested in and a mapping to an event of some sort,
+>> but the issue then is how to defer this processing. One approach I
+>> have thought of is to extend the error handler thread to handle thes=
+e
+>> sorts of events and on a UNIT ATTENTION give the command to the erro=
+r
+>> handling thread. However, others might suggest that the processing
+>> done in the error handler thread should be moved to work queues
+>> anyway, and overloading the error handling thread like this is the
+>> wrong way to do this and that they would rather see the error handli=
+ng
+>> thread go away.
+>>
+>> So, I would like to have a discussion around the issues involved in
+>> providing some sort of a framework for letting drivers indicate what
+>> UNIT ATTENTIONS they are interested in and how to handle those, eith=
+er
+>> by exporting them to userspace or providing a callback or other
+>> mechanism for handling them. We also need some discussion around
+>> communicating with user space. Whether to use uevent/udev, use netli=
+nk
+>> (Hannes suggests this has issues in heavy memory use cases), relayfs=
+,
+>> etc.
+> I see that the uevent method has been tried in the past.. and I am no=
+t
+> currently inclined to anything at the moment but I can think that
+> although the events will follow T10 guidelines, the frequency of the
+> events is vendor dependent and user configurable.
+> So they need to be tied to a thin profile.
+Errm. Yes to the former, but I'd be very suprised if we can _set_
+the frequency of the events.
+
+>=20
+> In another thread Douglas Gilbert talks about improving efficiency
+> of sparse files and I think that such events can be very closely tied
+> to creating profiles per LUN before formatting them and taking dynami=
+c
+> corrective actions.
+>=20
+Profiles for LUNs? Vendor-independent?
+
+Now _that_ would be a very interesting topic to talk about :-)
 
 Cheers,
 
