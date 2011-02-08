@@ -1,150 +1,80 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Why using configfs as the only interface is wrong for a
-	storage target
-Date: Mon, 07 Feb 2011 16:03:53 -0800
-Message-ID: <1297123433.13752.362.camel@haakon2.linux-iscsi.org>
-References: <AANLkTi=b0mcWp3ergh=GvUF2CvgXUDv3Rq1fHY=xKf9L@mail.gmail.com>
-	 <20110207115347.GA7503@noexit> <1297089709.3012.19.camel@mulgrave.site>
-	 <20110207160223.598210a2@harpe.intellique.com>
-	 <1297109379.13752.250.camel@haakon2.linux-iscsi.org>
-	 <20110207223845.71d2ab18@galadriel2.home>  <20110207224407.GC13518@noexit>
+From: Richard Sharpe <realrichardsharpe@gmail.com>
+Subject: Re: [LSF/MM Topic] SCSI Unit Attention Handling
+Date: Mon, 7 Feb 2011 21:00:49 -0500
+Message-ID: <AANLkTimm-MC6kNGRgvFvrPh+YGTW5M6MPLrEd3C9K4vC@mail.gmail.com>
+References: <AANLkTikARn9U17fVKDo+dgyfz554LV=Dz+_M_xB5dfe+@mail.gmail.com>
+	<DBFB1B45AF80394ABD1C807E9F28D1570264CAA097@BLRX7MCDC203.AMER.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:49701 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755344Ab1BHAD7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2011 19:03:59 -0500
-In-Reply-To: <20110207224407.GC13518@noexit>
+Received: from mail-iw0-f174.google.com ([209.85.214.174]:59273 "EHLO
+	mail-iw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755437Ab1BHCAt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Feb 2011 21:00:49 -0500
+Received: by iwn9 with SMTP id 9so5255693iwn.19
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Feb 2011 18:00:49 -0800 (PST)
+In-Reply-To: <DBFB1B45AF80394ABD1C807E9F28D1570264CAA097@BLRX7MCDC203.AMER.DELL.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joel Becker <jlbec@evilplan.org>
-Cc: Emmanuel Florac <eflorac@intellique.com>, James Bottomley <James.Bottomley@suse.de>, Bart Van Assche <bvanassche@acm.org>, linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
+To: Shyam_Iyer@dell.com
+Cc: lsf-pc@lists.linuxfoundation.org, linux-scsi@vger.kernel.org, hare@suse.de
 
-On Mon, 2011-02-07 at 14:44 -0800, Joel Becker wrote:
-> On Mon, Feb 07, 2011 at 10:38:45PM +0100, Emmanuel Florac wrote:
-> > Le Mon, 07 Feb 2011 12:09:39 -0800 vous =C3=A9criviez:
-> > The configuration files are actually programs, because even a simpl=
-e
-> > bash script is a program. I'm getting uneasy. These are not your
-> > regular, non executable config files.
->=20
-> 	This is independent of configfs vs other methods, and probably
-> wants to be visited on its own.  More on this below.
->=20
-> > > Having python code walk this layout and output the exact
-> > > running configuration is how we save -> reinstate the running con=
-fig,
-> > > and it's really quite trivial with configfs.
-> >=20
-> > Please understand that at this point, anybody lacking a deep
-> > understanding of kernel innards like me or 99.9% of linux system
-> > admins or users, really don't give a fsck. I actually understand th=
-e
->=20
-> 	Nor should they.  That's kind of the point.  Again, see below.
->=20
-> > Aaaaargh. Are you trying to convince me that you've done the window=
-s
-> > registry right this time? I don't want no stinking object oriented
-> > library to manage my scsi targets.
-> >=20
-> > But finally, OK, I see the point for infrastructure. Now tell me, c=
-ould
-> > we avoid more virtual fs creep in the future ?=20
->=20
-> 	Configfs is not a registry.
-> 	Let me try to restate the issue.  The kernel doesn't persist
-> state; whether DM maps, iSCSI target configs, or network interface
-> addresses, some userspace entity has to tell the kernel about it on
-> each boot.  We have multiple methods of doing this: proc/sys, sysfs,
-> configfs, ioctl(2)s, etc.  So if you want to have your system adverti=
-se
-> sdb1 as an iSCSI LUN, you have to tell the target code.
-> 	configfs was designed for exactly this case.  You want to create
-> a kernel object (eg a "target" or a "LUN mapping"), and userspace dri=
-ves
-> this.  You might have multiple objects that need to be connected
-> ("targets" and "LUNs advertised by this target"), and configfs handle=
-s
-> this too.
-> 	You could do this with an ioctl(2), but you'd still have to have
-> some persistent configuration in userspace so that the ioctl(2) gets
-> called on each reboot to rebuild the mapping.  This is exactly analog=
-ous
-> to "mdadm --assemble" running on each boot.  mdadm(8) uses an ioctl(2=
-),
-> but it still needs /etc/mdadm.conf to know what to send down the
-> ioctl(2).  Similarly, /etc/sysctl.conf tells sysctl(8) what to store =
-on
-> boot.
-> 	So any of these services have to provide some userspace program
-> that reads a configuration and knows how to send it down to the kerne=
-l.
-> They should be isolating the "how I send it down to the kernel" from
-> your average admin.  Whether that config is a simple text file or a
-> complex scripty mess is independent of this.  One would hope that, li=
-ke
-> mdadm(8), you have a simple human-readable text file that a program
-> turns into the proper kernel invocation.
+On Sun, Feb 6, 2011 at 5:32 PM,  <Shyam_Iyer@dell.com> wrote:
+>
+>
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Richard Sharpe
+>> Sent: Sunday, February 06, 2011 3:44 PM
+>> To: lsf-pc@lists.linuxfoundation.org; linux-scsi; Hannes Reinecke
+>> Subject: [LSF/MM Topic] SCSI Unit Attention Handling
+>>
+>> I would like to propose a topic around SCSI Unit Attention Handling.
+>>
+>> The current scsi_error.c:scsi_check_sense handling of UNIT ATTENTION
+>> consists of explicitly printing warnings for for ASC=0x3f events and
+>> then returning SOFT_ERROR which scsi_error.c:scsi_decide_disposition
+>> ignores because it returns SUCCESS to SOFT_ERROR being returned from
+>> scst_check_sense on a CHECK_CONDITION.
+>>
+>> There are a number of cases where we might want to perform further
+>> processing on a UNIT ATTENTION. For example, ASC/ASCQ 0x3f/0x0e
+>> REPORTED LUNS DATA HAS CHANGED or 0x2a/0x09 CAPACITY DATA HAS CHANGED,
+>> 0x28/0x03 IMPORT/EXPORT ELEMENT ACCESSED, MEDIUM CHANGED, etc. When
+>> the LUNS have changed it would be useful to have a recan performed
+>> automatically. If capacity data has changed, it would be useful if
+>> someone could react to that and perhaps resize the file system on that
+>> LUN if possible, and so forth.
+>>
+>> It is not clear that any of these items should be handled in the
+>> kernel anyway, and perhaps they should be exported to user-space for
+>> correct handling, but rather than just the raw SENSE data being
+>> exported, perhaps some sort of relevant event should be exported.
+>>
+> We spoke about this in the plumbers conf last November as well and the few ideas then was to handle them via scsi netlink.
+> I see that Hannes is working on a relayfs method to handle them.
+>
+> Some of the new problems that we can see with handling such events are -
+>
+> If the thin provisioned LUN is snapshotted or cloned then you can also get a flurry of UNIT attentions for the same data
+> that has been replicated.
 
-Completely agreed.  I prefer having a /bin/sh walkable layout of target
-kernel data structures using struct config_group references, and using
-easily maintainable intrepreted code running in userspace to handle
-changes to that layout.
+So, I wonder if adding just the ability for SCSI upper drivers (sd,
+st, etc) to register interest in different UNIT ATTENTIONS is all that
+interesting and whether vendors would rather have the ability to tell
+drivers (via an ioctl, say) the UNIT ATTENTIONS they are interested
+in, and how they should be mapped.
 
-IOCTLs are fine for nuts-and-bolts pieces like mdadm, but I think tryin=
-g
-to provide an easily expandable control interface across multiple linux
-kernel modules w/ internal data structure reference counting is a prett=
-y
-painful exercise for actually adding new fabric module kernel and new
-<cough> and flexiable userspace code.
+It might be more useful to allow user-land utilities to perform the re-scanning.
 
-> 	It's great that Nick has fancy tools to fly around the target
-> configfs space, but that's all fluff for people writing and debugging
-> the tools.  Same with mdadm(8) and the MD ioctl(2)s.  You don't want =
-to
-> know the details of the ioctl(2) call; you just want mdadm(8) to work=
-=2E
->=20
+I would imagine that you will get unit attentions saying that REPORTED
+LUNS DATA HAS CHANGED, but what other UNIT ATTENTIONS would you get?
+If you add storage to a LUN, then perhaps CAPACITY DATA HAS CHANGED.
 
-So wrt to the last point, I would like to clarify one item wrt to the
-RTS userspace tools with LIO target mode v4 kernel code.
+Perhaps there is also a need to say things like, for these ASC/ASCQ
+values, take the device off line, and all the rest are just advisory
+but pass them all to user land as well.
 
-We (RisingTideSystems & Linux-iSCSI.org) will be publically releasing
-our single-node high level shell+CLI (rtsadmin) and object oriented
-python library (rtslib) to drive real-time management of 'for-38'
-mainline /sys/kernel/config/target/ configfs code.  These are the
-userspace packages that RTS/LIO customers+partners+friends have been
-using in production with iscsi_target_mod and tcm_loop in v3.x
-lio-core-backports.git before the mainline adoption of TCM v4 code.  Th=
-e
-public documentation for both of these is available here:
-
-http://www.risingtidesystems.com/doc/rtsadmin/html/rtsadmin_reference.h=
-tml
-http://www.risingtidesystems.com/doc/rtslib/html/
-
-Our code will also be including generic support for all v4 compatiable
--> target_core_fabric_configfs.c modules, and will be released in git
-trees as the 'for-39' merge window opens later this spring.=20
-
-We are currently offering rtsadmin-frozen packages on v4.0-rc and v3.x
-LIO kernel code on a case-by-case basis to a number of folks, and we
-would be happy to provide new forward looking TCM fabric module
-developers with this high level shell that can be used directly during
-their own fabric port I/O bringup efforts from generic fabric level
-struct config_group /sys/kernel/config/target/core/$HBA/$DEV/ backends
-on for-38 code.
-
-Best Regards,
-
---nab
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Regards,
+Richard Sharpe
