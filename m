@@ -1,45 +1,77 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Linux 2.6.38-rc4 (target_core: rmmod GP fault)
-Date: Wed, 09 Feb 2011 14:28:55 -0600
-Message-ID: <1297283335.3016.48.camel@mulgrave.site>
-References: <AANLkTimmb26UiBSukdNnVdxLJpCGd=QqpCw8vQoHALh-@mail.gmail.com>
-	 <20110209092851.bba6c40c.randy.dunlap@oracle.com>
-	 <AANLkTikvGppAi1JCGY1vjAugzpk3g5rDriBjc8k6M9Qg@mail.gmail.com>
-	 <1297281744.18212.44.camel@haakon2.linux-iscsi.org>
-	 <1297282433.3016.43.camel@mulgrave.site>
-	 <1297282835.18212.57.camel@haakon2.linux-iscsi.org>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 2/2] cciss: Disable ASPM
+Date: Wed, 9 Feb 2011 20:35:02 +0000
+Message-ID: <0F5B06BAB751E047AB5C87D1F77A77887D479C5C9C@GVW0547EXC.americas.hpqcorp.net>
+References: <1297274831-10405-1-git-send-email-mjg@redhat.com>
+ <1297274831-10405-2-git-send-email-mjg@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1297282835.18212.57.camel@haakon2.linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Randy Dunlap <randy.dunlap@oracle.com>, Joel Becker <jlbec@evilplan.org>, scsi <linux-scsi@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from g1t0027.austin.hp.com ([15.216.28.34]:28745 "EHLO
+	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752007Ab1BIUgK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 15:36:10 -0500
+In-Reply-To: <1297274831-10405-2-git-send-email-mjg@redhat.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Garrett <mjg@redhat.com>
+Cc: ISS StorageDev <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, 2011-02-09 at 12:20 -0800, Nicholas A. Bellinger wrote:
-> On Wed, 2011-02-09 at 14:13 -0600, James Bottomley wrote:
-> > Firstly, could we get the serious bug fixes identified and separated
-> > from the general enhancement updates, so they can go in a fixes tree
-> > without depending on enhancements?  The former category would include
-> > the /proc interface removal, since we don't want the legacy interface to
-> > be in a released kernel.
-> > 
+
+
+> -----Original Message-----
+> From: Matthew Garrett [mailto:mjg@redhat.com]
+> Sent: Wednesday, February 09, 2011 12:07 PM
+> To: mjg@redhat.com
+> Cc: Miller, Mike (OS Dev); ISS StorageDev; linux-scsi@vger.kernel.org
+> Subject: [PATCH 2/2] cciss: Disable ASPM
 > 
-> Everything in those two series should be considered bug fixes and
-> immediate for-38 mainline material.
+> https://bugzilla.redhat.com/show_bug.cgi?id=618612 indicates that
+> current
+> hpsa hardware has problems if ASPM is enabled. Disable it to avoid
+> crashes.
 
-Things like this:
+ASPM is supposed to be fixed on both Proliant and Smart Array by the next generation of hardware. If that comes to fruition I suppose we could make this patch conditional based on whether the underlying hw really supports ASPM. Other than that this looks good.
 
-target: remove EXTRA_CFLAGS
-target: Remove unnecessary container_of() pointer check
-target: Remove unnecessary se_clear_dev_ports legacy code
-target: Remove spurious double cast from structure macro accessors
-target: Convert TMR REQ/RSP definitions to target namespace
-target: Minor sparse warning fixes and annotations
-target: Remove unneeded test of se_cmd
+Matthew, if Proliant BIOS tells the OS that ASPM is not supported does the OS honor that and not attempt to use ASPM? I know there was a time (maybe still is) when that bit in the ACPI table was not being set so rhel6 tried to use ASPM and hence the BZ you mention. Sorry, but I can't recall the proper terminology for the ACPI table related stuff.
 
-Are not serious bug fixes.  I could go either way on some of the error path changes.
+-- mikem
 
-James
+> 
+> Signed-off-by: Matthew Garrett <mjg@redhat.com>
+> Cc: Mike Miller <mike.miller@hp.com>
+> Cc: iss_storagedev@hp.com
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>  drivers/block/cciss.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+> index 516d5bb..bb77666 100644
+> --- a/drivers/block/cciss.c
+> +++ b/drivers/block/cciss.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/interrupt.h>
+>  #include <linux/types.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-aspm.h>
+>  #include <linux/kernel.h>
+>  #include <linux/slab.h>
+>  #include <linux/delay.h>
+> @@ -4561,6 +4562,9 @@ static int __devinit cciss_init_one(struct pci_dev
+> *pdev,
+>  	InquiryData_struct *inq_buff;
+>  	ctlr_info_t *h;
+> 
+> +	pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S |
+> PCIE_LINK_STATE_L1 |
+> +			       PCIE_LINK_STATE_CLKPM);
+> +
+>  	rc = cciss_init_reset_devices(pdev);
+>  	if (rc)
+>  		return rc;
+> --
+> 1.7.4
+
