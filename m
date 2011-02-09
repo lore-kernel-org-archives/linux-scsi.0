@@ -1,70 +1,86 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 17/31] target: Avoid mem leak and needless work in transport_generic_get_mem
-Date: Wed,  9 Feb 2011 15:34:52 -0800
-Message-ID: <1297294506-23579-18-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 19/31] target: Move core_delete_hba() into ->release() callback
+Date: Wed,  9 Feb 2011 15:34:54 -0800
+Message-ID: <1297294506-23579-20-git-send-email-nab@linux-iscsi.org>
 References: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm10-vm0.bullet.mail.ne1.yahoo.com ([98.138.91.72]:35699 "HELO
-	nm10-vm0.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756024Ab1BIXfk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:40 -0500
+Received: from nm6-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.206]:46149 "HELO
+	nm6-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756024Ab1BIXfo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:44 -0500
 In-Reply-To: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jesper Juhl <jj@chaosbits.net>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Joel Becker <jlbec@evilplan.org>, Christoph Hellwig <hch@lst.de>
 
-From: Jesper Juhl <jj@chaosbits.net>
+From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-In drivers/target/target_core_transport.c::transport_generic_get_mem()
-there are a few potential memory leaks in the error paths. This patch
-makes sure that we free previously allocated memory when other allocations
-fail.  It also moves some work (INIT_LIST_HEAD() and assignment to
-se_mem->se_len) below all the allocations so that if something fails we
-don't do the work at all.
+This patch moves the core_delete_hba() call in target_core_call_delhbafromtarget()
+and subsequent release struct se_hba memory to inside of the configfs callback
+target_core_hba_item_ops->release() called from within fs/configfs/item.c:
+config_item_cleanup() context.  This patch resolves the following SLUB
+'Poison overwritten' warning while calling core_delete_hba() -> kfree(hba)
+directly after config_item_put():
 
-Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+[ 1734.081444] =============================================================================
+[ 1734.081635] BUG kmalloc-256: Poison overwritten
+[ 1734.081635] -----------------------------------------------------------------------------
+[ 1734.081635]
+[ 1734.081635] INFO: 0xffff88000d290824-0xffff88000d290824. First byte 0x6a instead of 0x6b
+[ 1734.081635] INFO: Allocated in core_alloc_hba+0x3a/0x231 [target_core_mod] age=3714 cpu=0 pid=11015
+[ 1734.081635] INFO: Freed in core_delete_hba+0x8a/0x90 [target_core_mod] age=4 cpu=0 pid=11040
+[ 1734.081635] INFO: Slab 0xffffea00002e0f80 objects=24 used=6 fp=0xffff88000d2907b0 flags=0x1000000000040c1
+[ 1734.081635] INFO: Object 0xffff88000d2907b0 @offset=1968 fp=0xffff88000d290b88
+
+Cc: Joel Becker <jlbec@evilplan.org>
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |    9 ++++++---
- 1 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/target/target_core_configfs.c |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 9c27d1d..04c68c9 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -4335,11 +4335,9 @@ transport_generic_get_mem(struct se_cmd *cmd, u32 length, u32 dma_size)
- 			printk(KERN_ERR "Unable to allocate struct se_mem\n");
- 			goto out;
- 		}
--		INIT_LIST_HEAD(&se_mem->se_list);
--		se_mem->se_len = (length > dma_size) ? dma_size : length;
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index ec41db3..3438e73 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -2946,6 +2946,13 @@ SE_HBA_ATTR(hba_mode, S_IRUGO | S_IWUSR);
  
- /* #warning FIXME Allocate contigous pages for struct se_mem elements */
--		se_mem->se_page = (struct page *) alloc_pages(GFP_KERNEL, 0);
-+		se_mem->se_page = alloc_pages(GFP_KERNEL, 0);
- 		if (!(se_mem->se_page)) {
- 			printk(KERN_ERR "alloc_pages() failed\n");
- 			goto out;
-@@ -4350,6 +4348,8 @@ transport_generic_get_mem(struct se_cmd *cmd, u32 length, u32 dma_size)
- 			printk(KERN_ERR "kmap_atomic() failed\n");
- 			goto out;
- 		}
-+		INIT_LIST_HEAD(&se_mem->se_list);
-+		se_mem->se_len = (length > dma_size) ? dma_size : length;
- 		memset(buf, 0, se_mem->se_len);
- 		kunmap_atomic(buf, KM_IRQ0);
+ CONFIGFS_EATTR_OPS(target_core_hba, se_hba, hba_group);
  
-@@ -4368,6 +4368,9 @@ transport_generic_get_mem(struct se_cmd *cmd, u32 length, u32 dma_size)
++static void target_core_hba_release(struct config_item *item)
++{
++	struct se_hba *hba = container_of(to_config_group(item),
++				struct se_hba, hba_group);
++	core_delete_hba(hba);
++}
++
+ static struct configfs_attribute *target_core_hba_attrs[] = {
+ 	&target_core_hba_hba_info.attr,
+ 	&target_core_hba_hba_mode.attr,
+@@ -2953,6 +2960,7 @@ static struct configfs_attribute *target_core_hba_attrs[] = {
+ };
  
- 	return 0;
- out:
-+	if (se_mem)
-+		__free_pages(se_mem->se_page, 0);
-+	kmem_cache_free(se_mem_cache, se_mem);
- 	return -1;
+ static struct configfs_item_operations target_core_hba_item_ops = {
++	.release		= target_core_hba_release,
+ 	.show_attribute		= target_core_hba_attr_show,
+ 	.store_attribute	= target_core_hba_attr_store,
+ };
+@@ -3029,10 +3037,11 @@ static void target_core_call_delhbafromtarget(
+ 	struct config_group *group,
+ 	struct config_item *item)
+ {
+-	struct se_hba *hba = item_to_hba(item);
+-
++	/*
++	 * core_delete_hba() is called from target_core_hba_item_ops->release()
++	 * -> target_core_hba_release()
++	 */
+ 	config_item_put(item);
+-	core_delete_hba(hba);
  }
  
+ static struct configfs_group_operations target_core_group_ops = {
 -- 
 1.7.4
 
