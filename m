@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 20/31] target: Move subdev release logic into ->release() callback
-Date: Wed,  9 Feb 2011 15:34:55 -0800
-Message-ID: <1297294506-23579-21-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 21/31] target: Move core_alua_free_lu_gp() into ->release() callback
+Date: Wed,  9 Feb 2011 15:34:56 -0800
+Message-ID: <1297294506-23579-22-git-send-email-nab@linux-iscsi.org>
 References: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm12-vm0.bullet.mail.ne1.yahoo.com ([98.138.91.51]:36504 "HELO
-	nm12-vm0.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755920Ab1BIXfq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:46 -0500
+Received: from nm3.bullet.mail.ne1.yahoo.com ([98.138.90.66]:38557 "HELO
+	nm3.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756049Ab1BIXfr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:47 -0500
 In-Reply-To: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,133 +16,66 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Joel Becker <jlbec@evilplan.org>, 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch moves the se_free_virtual_device() / se_subsystem_api->free_device()
-and subsequent release of struct se_subsystem_dev memory to inside of the
-configfs callback target_core_dev_item_ops->release() called from within
+This patch moves the core_alua_free_lu_gp() and subsequent release of
+struct t10_alua_lu_gp memory to inside of the configfs callback
+target_core_alua_lu_gp_ops->release() called from within
 fs/configfs/item.c:config_item_cleanup() context.  This patch resolves the
-following SLUB 'Poison overwritten' warning when calling target_core_drop_subdev()
--> kfree(se_dev) directly after config_item_put():
+following SLUB 'Poison overwritten' warning when calling core_alua_free_lu_gp()
+-> kfree(lu_gp) directly after config_item_put():
 
-[ 5147.638639] =============================================================================
-[ 5147.638959] BUG kmalloc-4096: Poison overwritten
-[ 5147.639124] -----------------------------------------------------------------------------
-[ 5147.639124]
-[ 5147.639294] INFO: 0xffff88000d2f887c-0xffff88000d2f887c. First byte 0x6a instead of 0x6b
-[ 5147.639294] INFO: Allocated in kzalloc+0xf/0x11 [target_core_mod] age=2602 cpu=0 pid=14639
-[ 5147.639294] INFO: Freed in target_core_drop_subdev+0x18d/0x199 [target_core_mod] age=25 cpu=0 pid=14654
-[ 5147.639294] INFO: Slab 0xffffea00002e2640 objects=7 used=1 fp=0xffff88000d2f8000 flags=0x1000000000040c1
-[ 5147.639294] INFO: Object 0xffff88000d2f8000 @offset=0 fp=0xffff88000d2fb0d8
+[  293.452366] =============================================================================
+[  293.452653] BUG t10_alua_lu_gp_cache: Poison overwritten
+[  293.452653] -----------------------------------------------------------------------------
+[  293.452653]
+[  293.452653] INFO: 0xffff88001f7c2174-0xffff88001f7c2174. First byte 0x6a instead of 0x6b
+[  293.452653] INFO: Allocated in core_alua_allocate_lu_gp+0x1c/0xa0 [target_core_mod] age=1799 cpu=0 pid=5229
+[  293.452653] INFO: Freed in core_alua_free_lu_gp+0x105/0x111 [target_core_mod] age=52 cpu=0 pid=5235
+[  293.452653] INFO: Slab 0xffffea00006e3270 objects=25 used=0 fp=0xffff88001f7c2000 flags=0x100000000004080
+[  293.452653] INFO: Object 0xffff88001f7c2140 @offset=320 fp=0xffff88001f7c2280
+[  293.452653]
 
 Cc: Joel Becker <jlbec@evilplan.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_configfs.c |   70 +++++++++++++++------------------
- 1 files changed, 32 insertions(+), 38 deletions(-)
+ drivers/target/target_core_configfs.c |   15 +++++++++++++--
+ 1 files changed, 13 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 3438e73..812eb8b 100644
+index 812eb8b..af1dd98 100644
 --- a/drivers/target/target_core_configfs.c
 +++ b/drivers/target/target_core_configfs.c
-@@ -2003,13 +2003,35 @@ static void target_core_dev_release(struct config_item *item)
- {
- 	struct se_subsystem_dev *se_dev = container_of(to_config_group(item),
- 				struct se_subsystem_dev, se_dev_group);
--	struct config_group *dev_cg;
--
--	if (!(se_dev))
--		return;
-+	struct se_hba *hba = item_to_hba(&se_dev->se_dev_hba->hba_group.cg_item);
-+	struct se_subsystem_api *t = hba->transport;
-+	struct config_group *dev_cg = &se_dev->se_dev_group;
+@@ -2194,7 +2194,16 @@ static struct configfs_attribute *target_core_alua_lu_gp_attrs[] = {
+ 	NULL,
+ };
  
--	dev_cg = &se_dev->se_dev_group;
- 	kfree(dev_cg->default_groups);
++static void target_core_alua_lu_gp_release(struct config_item *item)
++{
++	struct t10_alua_lu_gp *lu_gp = container_of(to_config_group(item),
++			struct t10_alua_lu_gp, lu_gp_group);
++
++	core_alua_free_lu_gp(lu_gp);
++}
++
+ static struct configfs_item_operations target_core_alua_lu_gp_ops = {
++	.release		= target_core_alua_lu_gp_release,
+ 	.show_attribute		= target_core_alua_lu_gp_attr_show,
+ 	.store_attribute	= target_core_alua_lu_gp_attr_store,
+ };
+@@ -2245,9 +2254,11 @@ static void target_core_alua_drop_lu_gp(
+ 	printk(KERN_INFO "Target_Core_ConfigFS: Releasing ALUA Logical Unit"
+ 		" Group: core/alua/lu_gps/%s, ID: %hu\n",
+ 		config_item_name(item), lu_gp->lu_gp_id);
+-
 +	/*
-+	 * This pointer will set when the storage is enabled with:
-+	 *`echo 1 > $CONFIGFS/core/$HBA/$DEV/dev_enable`
++	 * core_alua_free_lu_gp() is called from target_core_alua_lu_gp_ops->release()
++	 * -> target_core_alua_lu_gp_release()
 +	 */
-+	if (se_dev->se_dev_ptr) {
-+		printk(KERN_INFO "Target_Core_ConfigFS: Calling se_free_"
-+			"virtual_device() for se_dev_ptr: %p\n",
-+			se_dev->se_dev_ptr);
-+
-+		se_free_virtual_device(se_dev->se_dev_ptr, hba);
-+	} else {
-+		/*
-+		 * Release struct se_subsystem_dev->se_dev_su_ptr..
-+		 */
-+		printk(KERN_INFO "Target_Core_ConfigFS: Calling t->free_"
-+			"device() for se_dev_su_ptr: %p\n",
-+			se_dev->se_dev_su_ptr);
-+
-+		t->free_device(se_dev->se_dev_su_ptr);
-+	}
-+
-+	printk(KERN_INFO "Target_Core_ConfigFS: Deallocating se_subsystem"
-+			"_dev_t: %p\n", se_dev);
-+	kfree(se_dev);
+ 	config_item_put(item);
+-	core_alua_free_lu_gp(lu_gp);
  }
  
- static ssize_t target_core_dev_show(struct config_item *item,
-@@ -2803,13 +2825,11 @@ static void target_core_drop_subdev(
- 	struct se_subsystem_api *t;
- 	struct config_item *df_item;
- 	struct config_group *dev_cg, *tg_pt_gp_cg;
--	int i, ret;
-+	int i;
- 
- 	hba = item_to_hba(&se_dev->se_dev_hba->hba_group.cg_item);
- 
--	if (mutex_lock_interruptible(&hba->hba_access_mutex))
--		goto out;
--
-+	mutex_lock(&hba->hba_access_mutex);
- 	t = hba->transport;
- 
- 	spin_lock(&se_global->g_device_lock);
-@@ -2832,38 +2852,12 @@ static void target_core_drop_subdev(
- 		dev_cg->default_groups[i] = NULL;
- 		config_item_put(df_item);
- 	}
--
--	config_item_put(item);
- 	/*
--	 * This pointer will set when the storage is enabled with:
--	 * `echo 1 > $CONFIGFS/core/$HBA/$DEV/dev_enable`
-+	 * The releasing of se_dev and associated se_dev->se_dev_ptr is done
-+	 * from target_core_dev_item_ops->release() ->target_core_dev_release().
- 	 */
--	if (se_dev->se_dev_ptr) {
--		printk(KERN_INFO "Target_Core_ConfigFS: Calling se_free_"
--			"virtual_device() for se_dev_ptr: %p\n",
--				se_dev->se_dev_ptr);
--
--		ret = se_free_virtual_device(se_dev->se_dev_ptr, hba);
--		if (ret < 0)
--			goto hba_out;
--	} else {
--		/*
--		 * Release struct se_subsystem_dev->se_dev_su_ptr..
--		 */
--		printk(KERN_INFO "Target_Core_ConfigFS: Calling t->free_"
--			"device() for se_dev_su_ptr: %p\n",
--			se_dev->se_dev_su_ptr);
--
--		t->free_device(se_dev->se_dev_su_ptr);
--	}
--
--	printk(KERN_INFO "Target_Core_ConfigFS: Deallocating se_subsystem"
--		"_dev_t: %p\n", se_dev);
--
--hba_out:
-+	config_item_put(item);
- 	mutex_unlock(&hba->hba_access_mutex);
--out:
--	kfree(se_dev);
- }
- 
- static struct configfs_group_operations target_core_hba_group_ops = {
+ static struct configfs_group_operations target_core_alua_lu_gps_group_ops = {
 -- 
 1.7.4
 
