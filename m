@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 19/31] target: Move core_delete_hba() into ->release() callback
-Date: Wed,  9 Feb 2011 15:34:54 -0800
-Message-ID: <1297294506-23579-20-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 18/31] target: Fix top-level configfs_subsystem default_group shutdown breakage
+Date: Wed,  9 Feb 2011 15:34:53 -0800
+Message-ID: <1297294506-23579-19-git-send-email-nab@linux-iscsi.org>
 References: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm6-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.206]:46149 "HELO
-	nm6-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756024Ab1BIXfo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:44 -0500
+Received: from nm30-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.238]:30325 "HELO
+	nm30-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756024Ab1BIXfl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:41 -0500
 In-Reply-To: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,71 +16,85 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Joel Becker <jlbec@evilplan.org>, 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch moves the core_delete_hba() call in target_core_call_delhbafromtarget()
-and subsequent release struct se_hba memory to inside of the configfs callback
-target_core_hba_item_ops->release() called from within fs/configfs/item.c:
-config_item_cleanup() context.  This patch resolves the following SLUB
-'Poison overwritten' warning while calling core_delete_hba() -> kfree(hba)
-directly after config_item_put():
+This patch fixes two bugs uncovered during testing with slub_debug=FPUZ
+during module_exit() -> target_core_exit_configfs() with release of
+configfs subsystem consumer default groups, namely how this should be
+working with fs/configfs/dir.c:configfs_unregister_subsystem() release
+logic for struct config_group->default_group.
 
-[ 1734.081444] =============================================================================
-[ 1734.081635] BUG kmalloc-256: Poison overwritten
-[ 1734.081635] -----------------------------------------------------------------------------
-[ 1734.081635]
-[ 1734.081635] INFO: 0xffff88000d290824-0xffff88000d290824. First byte 0x6a instead of 0x6b
-[ 1734.081635] INFO: Allocated in core_alloc_hba+0x3a/0x231 [target_core_mod] age=3714 cpu=0 pid=11015
-[ 1734.081635] INFO: Freed in core_delete_hba+0x8a/0x90 [target_core_mod] age=4 cpu=0 pid=11040
-[ 1734.081635] INFO: Slab 0xffffea00002e0f80 objects=24 used=6 fp=0xffff88000d2907b0 flags=0x1000000000040c1
-[ 1734.081635] INFO: Object 0xffff88000d2907b0 @offset=1968 fp=0xffff88000d290b88
+The first issue involves configfs_unregister_subsystem() expecting to
+walk+drain the top-level subsys->su_group.default_groups directly in
+unlink_group(), and not directly from the configfs subsystem consumer
+for the top level struct config_group->default_groups.  This patch drops
+the walk+drain of subsys->su_group.default_groups from TCM configfs
+subsystem consumer code, and moves the top-level ->default_groups kfree()
+after configfs_unregister_subsystem() has been called.
 
+The second issue involves calling core_alua_free_lu_gp(se_global->default_lu_gp)
+to release the default_lu_gp->lu_gp_group before configfs_unregister_subsystem()
+has been called.  This patches also moves the core_alua_free_lu_gp() call to
+release default_lu_group->lu_gp_group after the subsys has been unregistered.
+
+Finally, this patch explictly clears the [lu_gp,alua,hba]_cg->default_groups
+pointers after kfree() to ensure that no stale memory is picked up from
+child struct config_group->default_group[] while configfs_unregister_subsystem()
+is called.
+
+Reported-by: Fubo Chen <fubo.chen@gmail.com>
 Cc: Joel Becker <jlbec@evilplan.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_configfs.c |   15 ++++++++++++---
- 1 files changed, 12 insertions(+), 3 deletions(-)
+ drivers/target/target_core_configfs.c |   20 +++++++++++---------
+ 1 files changed, 11 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index ec41db3..3438e73 100644
+index 80fec9a..ec41db3 100644
 --- a/drivers/target/target_core_configfs.c
 +++ b/drivers/target/target_core_configfs.c
-@@ -2946,6 +2946,13 @@ SE_HBA_ATTR(hba_mode, S_IRUGO | S_IWUSR);
+@@ -3210,8 +3210,7 @@ static void target_core_exit_configfs(void)
+ 		config_item_put(item);
+ 	}
+ 	kfree(lu_gp_cg->default_groups);
+-	core_alua_free_lu_gp(se_global->default_lu_gp);
+-	se_global->default_lu_gp = NULL;
++	lu_gp_cg->default_groups = NULL;
  
- CONFIGFS_EATTR_OPS(target_core_hba, se_hba, hba_group);
+ 	alua_cg = &se_global->alua_group;
+ 	for (i = 0; alua_cg->default_groups[i]; i++) {
+@@ -3220,6 +3219,7 @@ static void target_core_exit_configfs(void)
+ 		config_item_put(item);
+ 	}
+ 	kfree(alua_cg->default_groups);
++	alua_cg->default_groups = NULL;
  
-+static void target_core_hba_release(struct config_item *item)
-+{
-+	struct se_hba *hba = container_of(to_config_group(item),
-+				struct se_hba, hba_group);
-+	core_delete_hba(hba);
-+}
-+
- static struct configfs_attribute *target_core_hba_attrs[] = {
- 	&target_core_hba_hba_info.attr,
- 	&target_core_hba_hba_mode.attr,
-@@ -2953,6 +2960,7 @@ static struct configfs_attribute *target_core_hba_attrs[] = {
- };
- 
- static struct configfs_item_operations target_core_hba_item_ops = {
-+	.release		= target_core_hba_release,
- 	.show_attribute		= target_core_hba_attr_show,
- 	.store_attribute	= target_core_hba_attr_store,
- };
-@@ -3029,10 +3037,11 @@ static void target_core_call_delhbafromtarget(
- 	struct config_group *group,
- 	struct config_item *item)
- {
--	struct se_hba *hba = item_to_hba(item);
+ 	hba_cg = &se_global->target_core_hbagroup;
+ 	for (i = 0; hba_cg->default_groups[i]; i++) {
+@@ -3228,15 +3228,17 @@ static void target_core_exit_configfs(void)
+ 		config_item_put(item);
+ 	}
+ 	kfree(hba_cg->default_groups);
 -
+-	for (i = 0; subsys->su_group.default_groups[i]; i++) {
+-		item = &subsys->su_group.default_groups[i]->cg_item;
+-		subsys->su_group.default_groups[i] = NULL;
+-		config_item_put(item);
+-	}
++	hba_cg->default_groups = NULL;
 +	/*
-+	 * core_delete_hba() is called from target_core_hba_item_ops->release()
-+	 * -> target_core_hba_release()
++	 * We expect subsys->su_group.default_groups to be released
++	 * by configfs subsystem provider logic..
 +	 */
- 	config_item_put(item);
--	core_delete_hba(hba);
- }
++	configfs_unregister_subsystem(subsys);
+ 	kfree(subsys->su_group.default_groups);
  
- static struct configfs_group_operations target_core_group_ops = {
+-	configfs_unregister_subsystem(subsys);
++	core_alua_free_lu_gp(se_global->default_lu_gp);
++	se_global->default_lu_gp = NULL;
++
+ 	printk(KERN_INFO "TARGET_CORE[0]: Released ConfigFS Fabric"
+ 			" Infrastructure\n");
+ 
 -- 
 1.7.4
 
