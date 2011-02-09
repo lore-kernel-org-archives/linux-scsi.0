@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 15/31] target: Convert TMR REQ/RSP definitions to target namespace
-Date: Wed,  9 Feb 2011 15:34:50 -0800
-Message-ID: <1297294506-23579-16-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 16/31] target core v4.0.0-rc7
+Date: Wed,  9 Feb 2011 15:34:51 -0800
+Message-ID: <1297294506-23579-17-git-send-email-nab@linux-iscsi.org>
 References: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm2.bullet.mail.ne1.yahoo.com ([98.138.90.65]:41018 "HELO
-	nm2.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755755Ab1BIXfg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:36 -0500
+Received: from nm11-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.240]:39509 "HELO
+	nm11-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756024Ab1BIXfh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:37 -0500
 In-Reply-To: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,124 +16,24 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch changes include/target/target_core_tmr.h code to use
-target specific 'TMR_*' prefixed definitions for fabric independent
-SCSI Task Management Request/Request naming in include/scsi/scsi.h
-definitions for mainline target code.
-
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   19 ++++-------
- include/target/target_core_tmr.h       |   52 +++++++++++++------------------
- 2 files changed, 29 insertions(+), 42 deletions(-)
+ include/target/target_core_base.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 8cb628b..9c27d1d 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -5805,31 +5805,26 @@ int transport_generic_do_tmr(struct se_cmd *cmd)
- 	int ret;
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index c071907..51bd709 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -9,7 +9,7 @@
+ #include <net/sock.h>
+ #include <net/tcp.h>
  
- 	switch (tmr->function) {
--	case ABORT_TASK:
-+	case TMR_ABORT_TASK:
- 		ref_cmd = tmr->ref_cmd;
- 		tmr->response = TMR_FUNCTION_REJECTED;
- 		break;
--	case ABORT_TASK_SET:
--	case CLEAR_ACA:
--	case CLEAR_TASK_SET:
-+	case TMR_ABORT_TASK_SET:
-+	case TMR_CLEAR_ACA:
-+	case TMR_CLEAR_TASK_SET:
- 		tmr->response = TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED;
- 		break;
--	case LUN_RESET:
-+	case TMR_LUN_RESET:
- 		ret = core_tmr_lun_reset(dev, tmr, NULL, NULL);
- 		tmr->response = (!ret) ? TMR_FUNCTION_COMPLETE :
- 					 TMR_FUNCTION_REJECTED;
- 		break;
--#if 0
--	case TARGET_WARM_RESET:
--		transport_generic_host_reset(dev->se_hba);
-+	case TMR_TARGET_WARM_RESET:
- 		tmr->response = TMR_FUNCTION_REJECTED;
- 		break;
--	case TARGET_COLD_RESET:
--		transport_generic_host_reset(dev->se_hba);
--		transport_generic_cold_reset(dev->se_hba);
-+	case TMR_TARGET_COLD_RESET:
- 		tmr->response = TMR_FUNCTION_REJECTED;
- 		break;
--#endif
- 	default:
- 		printk(KERN_ERR "Uknown TMR function: 0x%02x.\n",
- 				tmr->function);
-diff --git a/include/target/target_core_tmr.h b/include/target/target_core_tmr.h
-index 6c8248b..bd55968 100644
---- a/include/target/target_core_tmr.h
-+++ b/include/target/target_core_tmr.h
-@@ -1,37 +1,29 @@
- #ifndef TARGET_CORE_TMR_H
- #define TARGET_CORE_TMR_H
+-#define TARGET_CORE_MOD_VERSION		"v4.0.0-rc6"
++#define TARGET_CORE_MOD_VERSION		"v4.0.0-rc7"
+ #define SHUTDOWN_SIGS	(sigmask(SIGKILL)|sigmask(SIGINT)|sigmask(SIGABRT))
  
--/* task management function values */
--#ifdef ABORT_TASK
--#undef ABORT_TASK
--#endif /* ABORT_TASK */
--#define ABORT_TASK				1
--#ifdef ABORT_TASK_SET
--#undef ABORT_TASK_SET
--#endif /* ABORT_TASK_SET */
--#define ABORT_TASK_SET				2
--#ifdef CLEAR_ACA
--#undef CLEAR_ACA
--#endif /* CLEAR_ACA */
--#define CLEAR_ACA				3
--#ifdef CLEAR_TASK_SET
--#undef CLEAR_TASK_SET
--#endif /* CLEAR_TASK_SET */
--#define CLEAR_TASK_SET				4
--#define LUN_RESET				5
--#define TARGET_WARM_RESET			6
--#define TARGET_COLD_RESET			7
--#define TASK_REASSIGN				8
-+/* fabric independent task management function values */
-+enum tcm_tmreq_table {
-+	TMR_ABORT_TASK		= 1,
-+	TMR_ABORT_TASK_SET	= 2,
-+	TMR_CLEAR_ACA		= 3,
-+	TMR_CLEAR_TASK_SET	= 4,
-+	TMR_LUN_RESET		= 5,
-+	TMR_TARGET_WARM_RESET	= 6,
-+	TMR_TARGET_COLD_RESET	= 7,
-+	TMR_FABRIC_TMR		= 255,
-+};
- 
--/* task management response values */
--#define TMR_FUNCTION_COMPLETE			0
--#define TMR_TASK_DOES_NOT_EXIST			1
--#define TMR_LUN_DOES_NOT_EXIST			2
--#define TMR_TASK_STILL_ALLEGIANT		3
--#define TMR_TASK_FAILOVER_NOT_SUPPORTED		4
--#define TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED	5
--#define TMR_FUNCTION_AUTHORIZATION_FAILED	6
--#define TMR_FUNCTION_REJECTED			255
-+/* fabric independent task management response values */
-+enum tcm_tmrsp_table {
-+	TMR_FUNCTION_COMPLETE		= 0,
-+	TMR_TASK_DOES_NOT_EXIST		= 1,
-+	TMR_LUN_DOES_NOT_EXIST		= 2,
-+	TMR_TASK_STILL_ALLEGIANT	= 3,
-+	TMR_TASK_FAILOVER_NOT_SUPPORTED	= 4,
-+	TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED	= 5,
-+	TMR_FUNCTION_AUTHORIZATION_FAILED = 6,
-+	TMR_FUNCTION_REJECTED		= 255,
-+};
- 
- extern struct kmem_cache *se_tmr_req_cache;
- 
+ /* Used by transport_generic_allocate_iovecs() */
 -- 
 1.7.4
 
