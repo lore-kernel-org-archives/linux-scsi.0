@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 22/31] target: Move core_alua_free_tg_pt_gp() into ->release() callback
-Date: Wed,  9 Feb 2011 15:34:57 -0800
-Message-ID: <1297294506-23579-23-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 27/31] target: Move fabric independent se_lun_acl free into ->release() callback
+Date: Wed,  9 Feb 2011 15:35:02 -0800
+Message-ID: <1297294506-23579-28-git-send-email-nab@linux-iscsi.org>
 References: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm16.bullet.mail.sp2.yahoo.com ([98.139.91.86]:35727 "HELO
-	nm16.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756051Ab1BIXft (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:49 -0500
+Received: from nm19.bullet.mail.sp2.yahoo.com ([98.139.91.89]:21988 "HELO
+	nm19.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756123Ab1BIXf7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:59 -0500
 In-Reply-To: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,77 +16,71 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Joel Becker <jlbec@evilplan.org>, 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch moves the core_alua_free_tg_pt_gp() and subsequent release of
-struct t10_alua_tg_pt_gp memory to inside of the configfs callback
-target_core_alua_tg_pt_gp_ops->release() called from within
-fs/configfs/item.c:config_item_cleanup() context.  This patch resolves
-the following SLUB 'Poison overwritten' warning when calling
-core_alua_free_tg_pt_gp() -> kfree(tg_pt_gp) directly after config_item_put():
+This patch moves the call for core_dev_free_initiator_node_lun_acl() and
+subsequent release of fabric independent struct se_lun_acl memory to inside
+of the configfs callback target_fabric_mappedlun_item_ops->release() called
+from within fs/configfs/item.c:config_item_cleanup() context.  This patch
+resolves the following SLUB 'Poison overwritten' warning when calling
+core_dev_free_initiator_node_lun_acl() directly after config_item_put()
+for the fabric independent struct se_lun_acl->se_lun_group:
 
-[10703.173250] =============================================================================
-[10703.173250] BUG t10_alua_tg_pt_gp_cache: Poison overwritten
-[10703.173250] -----------------------------------------------------------------------------
-[10703.173250]
-[10703.173250] INFO: 0xffff88001eb1637c-0xffff88001eb1637c. First byte 0x6a instead of 0x6b
-[10703.173250] INFO: Allocated in core_alua_allocate_tg_pt_gp+0x21/0x126 [target_core_mod] age=2297 cpu=0 pid=21770
-[10703.173250] INFO: Freed in core_alua_free_tg_pt_gp+0xf2/0xfe [target_core_mod] age=67 cpu=0 pid=21775
-[10703.173250] INFO: Slab 0xffffea00006b6cd0 objects=21 used=0 fp=0xffff88001eb16000 flags=0x100000000004080
-[10703.173250] INFO: Object 0xffff88001eb16300 @offset=768 fp=0xffff88001eb16480
+[ 3968.067934] =============================================================================
+[ 3968.068257] BUG kmalloc-1024: Poison overwritten
+[ 3968.068423] -----------------------------------------------------------------------------
+[ 3968.068424]
+[ 3968.068844] INFO: 0xffff88001ac5b8cc-0xffff88001ac5b8cc. First byte 0x6a instead of 0x6b
+[ 3968.068844] INFO: Allocated in kzalloc+0xf/0x11 [target_core_mod] age=6749 cpu=0 pid=9707
+[ 3968.068844] INFO: Freed in core_dev_free_initiator_node_lun_acl+0x6b/0x77 [target_core_mod] age=2 cpu=0 pid=9725
+[ 3968.068844] INFO: Slab 0xffffea00005db340 objects=29 used=10 fp=0xffff88001ac5b7a8 flags=0x1000000000040c1
+[ 3968.068844] INFO: Object 0xffff88001ac5b7a8 @offset=14248 fp=0xffff88001ac5c8c8
 
 Cc: Joel Becker <jlbec@evilplan.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_configfs.c |   20 +++++++++++++++++---
- 1 files changed, 17 insertions(+), 3 deletions(-)
+ drivers/target/target_core_fabric_configfs.c |   15 ++++++++++-----
+ 1 files changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index af1dd98..c54c4c0 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -2614,7 +2614,16 @@ static struct configfs_attribute *target_core_alua_tg_pt_gp_attrs[] = {
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 9b6dd20..b65d1c8 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -214,12 +214,22 @@ TCM_MAPPEDLUN_ATTR(write_protect, S_IRUGO | S_IWUSR);
+ 
+ CONFIGFS_EATTR_OPS(target_fabric_mappedlun, se_lun_acl, se_lun_group);
+ 
++static void target_fabric_mappedlun_release(struct config_item *item)
++{
++	struct se_lun_acl *lacl = container_of(to_config_group(item),
++				struct se_lun_acl, se_lun_group);
++	struct se_portal_group *se_tpg = lacl->se_lun_nacl->se_tpg;
++
++	core_dev_free_initiator_node_lun_acl(se_tpg, lacl);
++}
++
+ static struct configfs_attribute *target_fabric_mappedlun_attrs[] = {
+ 	&target_fabric_mappedlun_write_protect.attr,
  	NULL,
  };
  
-+static void target_core_alua_tg_pt_gp_release(struct config_item *item)
-+{
-+	struct t10_alua_tg_pt_gp *tg_pt_gp = container_of(to_config_group(item),
-+			struct t10_alua_tg_pt_gp, tg_pt_gp_group);
-+
-+	core_alua_free_tg_pt_gp(tg_pt_gp);
-+}
-+
- static struct configfs_item_operations target_core_alua_tg_pt_gp_ops = {
-+	.release		= target_core_alua_tg_pt_gp_release,
- 	.show_attribute		= target_core_alua_tg_pt_gp_attr_show,
- 	.store_attribute	= target_core_alua_tg_pt_gp_attr_store,
- };
-@@ -2667,9 +2676,11 @@ static void target_core_alua_drop_tg_pt_gp(
- 	printk(KERN_INFO "Target_Core_ConfigFS: Releasing ALUA Target Port"
- 		" Group: alua/tg_pt_gps/%s, ID: %hu\n",
- 		config_item_name(item), tg_pt_gp->tg_pt_gp_id);
+ static struct configfs_item_operations target_fabric_mappedlun_item_ops = {
++	.release		= target_fabric_mappedlun_release,
+ 	.show_attribute		= target_fabric_mappedlun_attr_show,
+ 	.store_attribute	= target_fabric_mappedlun_attr_store,
+ 	.allow_link		= target_fabric_mappedlun_link,
+@@ -337,12 +347,7 @@ static void target_fabric_drop_mappedlun(
+ 	struct config_group *group,
+ 	struct config_item *item)
+ {
+-	struct se_lun_acl *lacl = container_of(to_config_group(item),
+-			struct se_lun_acl, se_lun_group);
+-	struct se_portal_group *se_tpg = lacl->se_lun_nacl->se_tpg;
 -
-+	/*
-+	 * core_alua_free_tg_pt_gp() is called from target_core_alua_tg_pt_gp_ops->release()
-+	 * -> target_core_alua_tg_pt_gp_release().
-+	 */
  	config_item_put(item);
--	core_alua_free_tg_pt_gp(tg_pt_gp);
+-	core_dev_free_initiator_node_lun_acl(se_tpg, lacl);
  }
  
- static struct configfs_group_operations target_core_alua_tg_pt_gps_group_ops = {
-@@ -2854,7 +2865,10 @@ static void target_core_drop_subdev(
- 		config_item_put(df_item);
- 	}
- 	kfree(tg_pt_gp_cg->default_groups);
--	core_alua_free_tg_pt_gp(T10_ALUA(se_dev)->default_tg_pt_gp);
-+	/*
-+	 * core_alua_free_tg_pt_gp() is called from ->default_tg_pt_gp
-+	 * directly from target_core_alua_tg_pt_gp_release().
-+	 */
- 	T10_ALUA(se_dev)->default_tg_pt_gp = NULL;
- 
- 	dev_cg = &se_dev->se_dev_group;
+ static void target_fabric_nacl_base_release(struct config_item *item)
 -- 
 1.7.4
 
