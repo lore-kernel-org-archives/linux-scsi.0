@@ -1,13 +1,13 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 21/31] target: Move core_alua_free_lu_gp() into ->release() callback
-Date: Wed,  9 Feb 2011 15:34:56 -0800
-Message-ID: <1297294506-23579-22-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 24/31] target: Move fabric dependent se_portal_group free into ->release() callback
+Date: Wed,  9 Feb 2011 15:34:59 -0800
+Message-ID: <1297294506-23579-25-git-send-email-nab@linux-iscsi.org>
 References: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm3.bullet.mail.ne1.yahoo.com ([98.138.90.66]:38557 "HELO
-	nm3.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756049Ab1BIXfr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:47 -0500
+Received: from nm6.bullet.mail.ne1.yahoo.com ([98.138.90.69]:39170 "HELO
+	nm6.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756115Ab1BIXfy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:35:54 -0500
 In-Reply-To: <1297294506-23579-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,66 +16,71 @@ Cc: Nicholas Bellinger <nab@linux-iscsi.org>, Joel Becker <jlbec@evilplan.org>, 
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch moves the core_alua_free_lu_gp() and subsequent release of
-struct t10_alua_lu_gp memory to inside of the configfs callback
-target_core_alua_lu_gp_ops->release() called from within
-fs/configfs/item.c:config_item_cleanup() context.  This patch resolves the
-following SLUB 'Poison overwritten' warning when calling core_alua_free_lu_gp()
--> kfree(lu_gp) directly after config_item_put():
+This patch moves the struct target_core_fabric_ops->fabric_drop_tpg() callback
+and subsequent fabric dependent release of struct se_portal_group memory to
+inside of the configfs callback target_fabric_tpg_base_item_ops->release()
+called from within fs/configfs/item.c:config_item_cleanup() context.
+This patch resolves the following SLUB 'Poison overwritten' warning when calling
+tfc->fabric_drop_tpg() directly after config_item_put() for the fabric dependent
+data structure containing struct se_portal_group->tpg_group:
 
-[  293.452366] =============================================================================
-[  293.452653] BUG t10_alua_lu_gp_cache: Poison overwritten
-[  293.452653] -----------------------------------------------------------------------------
-[  293.452653]
-[  293.452653] INFO: 0xffff88001f7c2174-0xffff88001f7c2174. First byte 0x6a instead of 0x6b
-[  293.452653] INFO: Allocated in core_alua_allocate_lu_gp+0x1c/0xa0 [target_core_mod] age=1799 cpu=0 pid=5229
-[  293.452653] INFO: Freed in core_alua_free_lu_gp+0x105/0x111 [target_core_mod] age=52 cpu=0 pid=5235
-[  293.452653] INFO: Slab 0xffffea00006e3270 objects=25 used=0 fp=0xffff88001f7c2000 flags=0x100000000004080
-[  293.452653] INFO: Object 0xffff88001f7c2140 @offset=320 fp=0xffff88001f7c2280
-[  293.452653]
+[ 2283.331123] =============================================================================
+[ 2283.331282] BUG lio_tpg_cache: Poison overwritten
+[ 2283.331282] -----------------------------------------------------------------------------
+[ 2283.331282]
+[ 2283.331282] INFO: 0xffff880001e48b7c-0xffff880001e48b7c. First byte 0x6a instead of 0x6b
+[ 2283.331282] INFO: Allocated in core_alloc_portal_group+0x24/0x102 [iscsi_target_mod] age=48820 cpu=0 pid=8220
+[ 2283.331282] INFO: Freed in iscsi_tpg_del_portal_group+0x290/0x2a1 [iscsi_target_mod] age=34618 cpu=0 pid=8266
+[ 2283.331282] INFO: Slab 0xffffea0000069fc0 objects=16 used=0 fp=0xffff880001e48000 flags=0x100000000004080
+[ 2283.331282] INFO: Object 0xffff880001e487c0 @offset=1984 fp=0xffff880001e48f80
 
 Cc: Joel Becker <jlbec@evilplan.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_configfs.c |   15 +++++++++++++--
- 1 files changed, 13 insertions(+), 2 deletions(-)
+ drivers/target/target_core_fabric_configfs.c |   14 +++++++++++---
+ 1 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 812eb8b..af1dd98 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -2194,7 +2194,16 @@ static struct configfs_attribute *target_core_alua_lu_gp_attrs[] = {
- 	NULL,
- };
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 1ef3783..225284d 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -814,7 +814,18 @@ TF_CIT_SETUP(tpg_param, &target_fabric_tpg_param_item_ops, NULL, NULL);
+  */
+ CONFIGFS_EATTR_OPS(target_fabric_tpg, se_portal_group, tpg_group);
  
-+static void target_core_alua_lu_gp_release(struct config_item *item)
++static void target_fabric_tpg_release(struct config_item *item)
 +{
-+	struct t10_alua_lu_gp *lu_gp = container_of(to_config_group(item),
-+			struct t10_alua_lu_gp, lu_gp_group);
++	struct se_portal_group *se_tpg = container_of(to_config_group(item),
++			struct se_portal_group, tpg_group);
++	struct se_wwn *wwn = se_tpg->se_tpg_wwn;
++	struct target_fabric_configfs *tf = wwn->wwn_tf;
 +
-+	core_alua_free_lu_gp(lu_gp);
++	tf->tf_ops.fabric_drop_tpg(se_tpg);
 +}
 +
- static struct configfs_item_operations target_core_alua_lu_gp_ops = {
-+	.release		= target_core_alua_lu_gp_release,
- 	.show_attribute		= target_core_alua_lu_gp_attr_show,
- 	.store_attribute	= target_core_alua_lu_gp_attr_store,
+ static struct configfs_item_operations target_fabric_tpg_base_item_ops = {
++	.release		= target_fabric_tpg_release,
+ 	.show_attribute		= target_fabric_tpg_attr_show,
+ 	.store_attribute	= target_fabric_tpg_attr_store,
  };
-@@ -2245,9 +2254,11 @@ static void target_core_alua_drop_lu_gp(
- 	printk(KERN_INFO "Target_Core_ConfigFS: Releasing ALUA Logical Unit"
- 		" Group: core/alua/lu_gps/%s, ID: %hu\n",
- 		config_item_name(item), lu_gp->lu_gp_id);
--
-+	/*
-+	 * core_alua_free_lu_gp() is called from target_core_alua_lu_gp_ops->release()
-+	 * -> target_core_alua_lu_gp_release()
-+	 */
+@@ -872,8 +883,6 @@ static void target_fabric_drop_tpg(
+ 	struct config_group *group,
+ 	struct config_item *item)
+ {
+-	struct se_wwn *wwn = container_of(group, struct se_wwn, wwn_group);
+-	struct target_fabric_configfs *tf = wwn->wwn_tf;
+ 	struct se_portal_group *se_tpg = container_of(to_config_group(item),
+ 				struct se_portal_group, tpg_group);
+ 	struct config_group *tpg_cg = &se_tpg->tpg_group;
+@@ -890,7 +899,6 @@ static void target_fabric_drop_tpg(
+ 	}
+ 
  	config_item_put(item);
--	core_alua_free_lu_gp(lu_gp);
+-	tf->tf_ops.fabric_drop_tpg(se_tpg);
  }
  
- static struct configfs_group_operations target_core_alua_lu_gps_group_ops = {
+ static void target_fabric_release_wwn(struct config_item *item)
 -- 
 1.7.4
 
