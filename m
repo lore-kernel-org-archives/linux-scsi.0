@@ -1,12 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/3] target: Updates for .38-rc5
-Date: Wed,  9 Feb 2011 14:01:44 -0800
-Message-ID: <1297288907-23066-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 2/3] target: Fix bogus return in transport_add_device_to_core_hba failure path
+Date: Wed,  9 Feb 2011 14:01:46 -0800
+Message-ID: <1297288907-23066-3-git-send-email-nab@linux-iscsi.org>
+References: <1297288907-23066-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm29-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.248]:24844 "HELO
-	nm29-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755907Ab1BIWBw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 17:01:52 -0500
+Received: from nm4.bullet.mail.ac4.yahoo.com ([98.139.52.201]:47952 "HELO
+	nm4.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755952Ab1BIWCA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 17:02:00 -0500
+In-Reply-To: <1297288907-23066-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -14,33 +16,41 @@ Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi James and Co,
+This patch removes a bogus conditional+return check within the failure path
+of transport_add_device_to_core_hba().  This breakage was introduced during
+the v4 conversion to remove struct se_cmd passthrough ops for INQUIRY /
+READ_CAPCITY during struct se_device creation and registration process.
 
-The following three patches should also be included into for-38 mainline from
-upstream LIO target code in lio-core-2.6.git.  These patches are against my
-scsi-post-merge-2.6.git/for-38-rc5 tree containing the original 24 and 12 part
-for-38 series here:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-38-rc5
-
-Please review and let me know if these need to be rebased.
-
-Thanks,
-
+Reported-by: Julia Lawall <julia@diku.dk>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_transport.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-Fubo Chen (1):
-  target: Fix generated *_drop_nodeacl() handler in tcm_mod_builder.py
-
-Nicholas Bellinger (2):
-  target: Fix SCF_SCSI_CONTROL_SG_IO_CDB breakage
-  target: Fix bogus return in transport_add_device_to_core_hba failure
-    path
-
- Documentation/target/tcm_mod_builder.py |    1 +
- drivers/target/target_core_transport.c  |   11 +++++++----
- 2 files changed, 8 insertions(+), 4 deletions(-)
-
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 77d690b..b107a06 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1621,7 +1621,7 @@ struct se_device *transport_add_device_to_core_hba(
+ 	const char *inquiry_prod,
+ 	const char *inquiry_rev)
+ {
+-	int ret = 0, force_pt;
++	int force_pt;
+ 	struct se_device  *dev;
+ 
+ 	dev = kzalloc(sizeof(struct se_device), GFP_KERNEL);
+@@ -1738,9 +1738,8 @@ struct se_device *transport_add_device_to_core_hba(
+ 	}
+ 	scsi_dump_inquiry(dev);
+ 
++	return dev;
+ out:
+-	if (!ret)
+-		return dev;
+ 	kthread_stop(dev->process_thread);
+ 
+ 	spin_lock(&hba->device_lock);
 -- 
 1.7.4
 
