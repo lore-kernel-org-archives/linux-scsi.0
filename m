@@ -1,14 +1,12 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/3] target: Fix SCF_SCSI_CONTROL_SG_IO_CDB breakage
-Date: Wed,  9 Feb 2011 14:01:45 -0800
-Message-ID: <1297288907-23066-2-git-send-email-nab@linux-iscsi.org>
-References: <1297288907-23066-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 0/3] target: Updates for .38-rc5
+Date: Wed,  9 Feb 2011 14:01:44 -0800
+Message-ID: <1297288907-23066-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm29.bullet.mail.ac4.yahoo.com ([98.139.52.226]:24944 "HELO
-	nm29.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755952Ab1BIWBz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 17:01:55 -0500
-In-Reply-To: <1297288907-23066-1-git-send-email-nab@linux-iscsi.org>
+Received: from nm29-vm0.bullet.mail.ac4.yahoo.com ([98.139.52.248]:24844 "HELO
+	nm29-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755907Ab1BIWBw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 17:01:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
@@ -16,43 +14,33 @@ Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch fixes a bug introduced during the v4 control CDB emulation
-refactoring that broke SCF_SCSI_CONTROL_SG_IO_CDB operation within
-transport_map_control_cmd_to_task().  It moves the BUG_ON() into
-transport_do_se_mem_map() after the TRANSPORT(dev)->do_se_mem_map()
-RAMDISK_DR special case, and adds the proper struct se_mem assignment
-when !list_empty() for normal non RAMDISK_DR backend device cases.
+Hi James and Co,
 
-Reported-by: Kai-Thorsten Hambrecht <kai@hambrecht.org>
+The following three patches should also be included into for-38 mainline from
+upstream LIO target code in lio-core-2.6.git.  These patches are against my
+scsi-post-merge-2.6.git/for-38-rc5 tree containing the original 24 and 12 part
+for-38 series here:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-38-rc5
+
+Please review and let me know if these need to be rebased.
+
+Thanks,
+
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_transport.c |    6 +++++-
- 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 89b4446..77d690b 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -4854,6 +4854,8 @@ static int transport_do_se_mem_map(
- 
- 		return ret;
- 	}
-+
-+	BUG_ON(list_empty(se_mem_list));
- 	/*
- 	 * This is the normal path for all normal non BIDI and BIDI-COMMAND
- 	 * WRITE payloads..  If we need to do BIDI READ passthrough for
-@@ -5035,7 +5037,9 @@ transport_map_control_cmd_to_task(struct se_cmd *cmd)
- 		struct se_mem *se_mem = NULL, *se_mem_lout = NULL;
- 		u32 se_mem_cnt = 0, task_offset = 0;
- 
--		BUG_ON(list_empty(cmd->t_task->t_mem_list));
-+		if (!list_empty(T_TASK(cmd)->t_mem_list))
-+			se_mem = list_entry(T_TASK(cmd)->t_mem_list->next,
-+					struct se_mem, se_list);
- 
- 		ret = transport_do_se_mem_map(dev, task,
- 				cmd->t_task->t_mem_list, NULL, se_mem,
+Fubo Chen (1):
+  target: Fix generated *_drop_nodeacl() handler in tcm_mod_builder.py
+
+Nicholas Bellinger (2):
+  target: Fix SCF_SCSI_CONTROL_SG_IO_CDB breakage
+  target: Fix bogus return in transport_add_device_to_core_hba failure
+    path
+
+ Documentation/target/tcm_mod_builder.py |    1 +
+ drivers/target/target_core_transport.c  |   11 +++++++----
+ 2 files changed, 8 insertions(+), 4 deletions(-)
+
 -- 
 1.7.4
 
