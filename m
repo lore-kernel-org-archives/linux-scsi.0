@@ -1,336 +1,137 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: [RFC PATCH 2/6] isci: task (libsas interface support)
-Date: Wed, 09 Feb 2011 09:01:46 -0600
-Message-ID: <4D52AC5A.7020206@redhat.com>
-References: <20110207003056.27040.89174.stgit@localhost6.localdomain6> <20110207003445.27040.67152.stgit@localhost6.localdomain6>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [LSF/MM Topic] SCSI Unit Attention Handling
+Date: Wed, 09 Feb 2011 16:44:07 +0100
+Message-ID: <4D52B647.9060601@suse.de>
+References: <AANLkTikARn9U17fVKDo+dgyfz554LV=Dz+_M_xB5dfe+@mail.gmail.com>	<DBFB1B45AF80394ABD1C807E9F28D1570264CAA097@BLRX7MCDC203.AMER.DELL.COM>	<AANLkTimm-MC6kNGRgvFvrPh+YGTW5M6MPLrEd3C9K4vC@mail.gmail.com>	<DBFB1B45AF80394ABD1C807E9F28D1570264CAA563@BLRX7MCDC203.AMER.DELL.COM> <AANLkTinGE6v2DiTSf9VxjFD6EY=3kQz7QCxpaaF=Mr5T@mail.gmail.com> <DBFB1B45AF80394ABD1C807E9F28D1570264CAA99E@BLRX7MCDC203.AMER.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:18105 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:57923 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750889Ab1BIPBp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Feb 2011 10:01:45 -0500
-In-Reply-To: <20110207003445.27040.67152.stgit@localhost6.localdomain6>
+	id S1752291Ab1BIPfs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 Feb 2011 10:35:48 -0500
+In-Reply-To: <DBFB1B45AF80394ABD1C807E9F28D1570264CAA99E@BLRX7MCDC203.AMER.DELL.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
+To: Shyam_Iyer@Dell.com
+Cc: realrichardsharpe@gmail.com, linux-scsi@vger.kernel.org
 
-Dan Williams wrote:
-> libsas interface routines and infrastructure.
-> 
-> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-> ---
->  drivers/scsi/isci/task.c | 1691 ++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/isci/task.h |  368 ++++++++++
->  2 files changed, 2059 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/scsi/isci/task.c
->  create mode 100644 drivers/scsi/isci/task.h
-> 
-> diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-> new file mode 100644
-> index 0000000..5e6f558
-> --- /dev/null
-> +++ b/drivers/scsi/isci/task.c
-> @@ -0,0 +1,1691 @@
-> +/*
-> + * This file is provided under a dual BSD/GPLv2 license.  When using or
-> + * redistributing this file, you may do so under either license.
-> + *
-> + * GPL LICENSE SUMMARY
-> + *
-> + * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of version 2 of the GNU General Public License as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; if not, write to the Free Software
-> + * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-> + * The full GNU General Public License is included in this distribution
-> + * in the file called LICENSE.GPL.
-> + *
-> + * BSD LICENSE
-> + *
-> + * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-> + * All rights reserved.
-> + *
-> + * Redistribution and use in source and binary forms, with or without
-> + * modification, are permitted provided that the following conditions
-> + * are met:
-> + *
-> + *   * Redistributions of source code must retain the above copyright
-> + *     notice, this list of conditions and the following disclaimer.
-> + *   * Redistributions in binary form must reproduce the above copyright
-> + *     notice, this list of conditions and the following disclaimer in
-> + *     the documentation and/or other materials provided with the
-> + *     distribution.
-> + *   * Neither the name of Intel Corporation nor the names of its
-> + *     contributors may be used to endorse or promote products derived
-> + *     from this software without specific prior written permission.
-> + *
-> + * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-> + * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-> + * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-> + * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-> + * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-> + * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-> + * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-> + * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-> + * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-> + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-> + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-> + */
-> +
-> +#include <linux/completion.h>
-> +#include "scic_task_request.h"
-> +#include "scic_remote_device.h"
-> +#include "scic_io_request.h"
-> +#include "scic_sds_remote_device.h"
-> +#include "scic_sds_remote_node_context.h"
-> +#include "isci.h"
-> +#include "request.h"
-> +#include "sata.h"
-> +#include "task.h"
-> +
-> +
-> +/**
-> + * isci_task_execute_task() - This function is one of the SAS Domain Template
-> + *    functions. This function is called by libsas to send a task down to
-> + *    hardware.
-> + * @task: This parameter specifies the SAS task to send.
-> + * @num: This parameter specifies the number of tasks to queue.
-> + * @gfp_flags: This parameter specifies the context of this call.
-> + *
-> + * status, zero indicates success.
-> + */
-> +int isci_task_execute_task(struct sas_task *task, int num, gfp_t gfp_flags)
-> +{
-> +	struct isci_host *isci_host;
-> +	struct isci_request *request = NULL;
-> +	struct isci_remote_device *device;
-> +	unsigned long flags;
-> +	unsigned long quiesce_flags = 0;
-> +	int ret;
-> +	enum sci_status status;
-> +
-> +
-> +	dev_dbg(task->dev->port->ha->dev, "%s: num=%d\n", __func__, num);
-> +
-> +	if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
-> +
-> +		isci_task_complete_for_upper_layer(
-> +			task,
-> +			SAS_TASK_UNDELIVERED,
-> +			SAM_STAT_TASK_ABORTED,
-> +			isci_perform_normal_io_completion
-> +			);
-> +
-> +		return 0;  /* The I/O was accepted (and failed). */
+Hi all,
 
-Dan, is this the right status to return to libsas?
+On 02/09/2011 06:02 AM, Shyam_Iyer@Dell.com wrote:
+[ .. ]
+>=20
+> I get you there. The ioctl implementation to inform the driver will
+> not plug the storage from sending the UAs.
+>=20
+> The LUN could be multipathed so then if you have UAs come through
+> one sdX path and not through the other that is adding complication.
+> Also, if you are using persistent reservations and one of the path
+> goes down the UAs could be going to a path that has been excluded.
+> We are introducing scenarios for bugs here.
+>=20
+Hence using debugfs; with this we would be getting an entire
+configfs space for free which would allow us to set this kind of things=
+=2E
+ioctls are evil. Avoid at all cost.
 
-Looks like it checks (->lldd_execute_task) for non-zero result.
+>>
+>>> Even if registering for UAs per vendor was envisioned there are
+>>> scenarios that can cause a flurry of UAs too..
+>>> (I initially opined to have a vendor specific implementation of
+>>> logging scsi_netlink events from the scsi_device handler,
+>>> it was gloriously shot down ;-))
+>>>
+>>> Consider this scenario..
+>>>
+>>> Above water mark.. --> Unit Attention
+>>> Discard to free up space
+>>> Below water mark ... -> Unit Attention
+>>>
+>>> Consider a ripple scenario where this repeats..
+>>> (Although this can not happen too often it is very much akin to a
+>>> thrashing scenario)
+>>>
+>>> The UA should be hints for the filesystem to optimize online. Here =
+is
+>>> where the thin profile can reduce the UAs.
+>>>
+>>> Also, you delete a file - select a good age time to discard the
+>>> associated blocks(debatable and worth any good algorithm writer's
+>>> salt).
+>>> Now I am not sure if the filesystem should run an inkernel thread t=
+o
+>>> do this profile management..
+>>>
+>>>> It might be more useful to allow user-land utilities to perform th=
+e
+>>>> re-scanning.
+>>>>
+>>>> I would imagine that you will get unit attentions saying that
+>>>> REPORTED LUNS DATA HAS CHANGED, but what other UNIT ATTENTIONS wou=
+ld
+>>>> you get?
+>>>> If you add storage to a LUN, then perhaps CAPACITY DATA HAS CHANGE=
+D.
+>>>>
+>>>> Perhaps there is also a need to say things like, for these ASC/ASC=
+Q
+>>>> values, take the device off line, and all the rest are just adviso=
+ry
+>>>> but pass them all to user land as well.
+>>>>
+>>>
+>>> This is a kind of policy that needs to go into the thin profile
+>>> although Storage Arrays do take the device offline on reaching
+>>> certain hard limits there is nothing like mounting a filesystem rea=
+d-
+>>> only ;-)
+>>
+>> Well, yes, but Ext3/4 and XFS tend to remount the fs RO when writes =
+to
+>> the journal fail as well because the SCSI stack takes the device
+>> offline :-(
+>>
+>> If the device has lied in its response to a READ_CAPACITY or
+>> READ_CAPACITY16 that is hard to prevent unless the file system has t=
+he
+>> concept of a lying reserve ...
+> The lying reserve is again a profile/policy setting aka like a SWAP c=
+oncept.
+>=20
+> If the device has lied in either READ_CAPACITY_16 or GET_LBA_STATUS..
+> then we are anyways not consistent to the tee on the profile. Putting
+> my open-source hat on that is a Carrot and stick bait.
 
-> +	}
-> +	if ((task->dev == NULL) || (task->dev->port == NULL)) {
-> +
-> +		/* Indicate SAS_TASK_UNDELIVERED, so that the scsi midlayer
-> +		 * removes the target.
-> +		 */
-> +		isci_task_complete_for_upper_layer(
-> +			task,
-> +			SAS_TASK_UNDELIVERED,
-> +			SAS_DEVICE_UNKNOWN,
-> +			isci_perform_normal_io_completion
-> +			);
-> +		return 0;  /* The I/O was accepted (and failed). */
+Quite. Currently we know of about three events / event classes which
+need to be handled:
 
-Same here?
+REPORTED LUNS DATA HAS CHANGED
+CAPACITY DATA HAS CHANGED
+thin provisioning water mark warnings
 
-> +	}
-> +	isci_host = isci_host_from_sas_ha(task->dev->port->ha);
-> +
-> +	/* Check if we have room for more tasks */
-> +	ret = isci_host_can_queue(isci_host, num);
-> +
-> +	if (ret) {
-> +		dev_warn(task->dev->port->ha->dev, "%s: queue full\n", __func__);
-> +		return ret;
-> +	}
-> +
+Everything else is pretty much handled by the SCSI stack nowadays
+anyway.
 
+However, currently we don't handle them at all and hence don't have
+any experience as to how often they would occur. Which would be
+pretty much vendor-specific anyway.
+So we need to design something which is
+a) capable of handling even large number of events
+b) selectable per device
+c) modular enough to have further sense codes added
 
+Cheers,
 
-> +/**
-> + * isci_task_send_lu_reset_sas() - This function is called by of the SAS Domain
-> + *    Template functions.
-> + * @lun: This parameter specifies the lun to be reset.
-> + *
-> + * status, zero indicates success.
-> + */
-> +static int isci_task_send_lu_reset_sas(
-> +	struct isci_host *isci_host,
-> +	struct isci_remote_device *isci_device,
-> +	u8 *lun)
-> +{
-> +	struct isci_tmf tmf;
-> +	int ret = TMF_RESP_FUNC_FAILED;
-> +
-> +	dev_dbg(&isci_host->pdev->dev,
-> +		"%s: isci_host = %p, isci_device = %p\n",
-> +		__func__, isci_host, isci_device);
-> +	/* Send the LUN reset to the target.  By the time the call returns,
-> +	 * the TMF has fully exected in the target (in which case the return
-> +	 * value is "TMF_RESP_FUNC_COMPLETE", or the request timed-out (or
-> +	 * was otherwise unable to be executed ("TMF_RESP_FUNC_FAILED").
-> +	 */
-> +	isci_task_build_tmf(&tmf, isci_device, isci_tmf_ssp_lun_reset, NULL,
-> +			    NULL);
-> +
-> +	#define ISCI_LU_RESET_TIMEOUT_MS 2000 /* 2 second timeout. */
-
-Maybe move #define to isci_task.h?
-
-> +	ret = isci_task_execute_tmf(isci_host, &tmf, ISCI_LU_RESET_TIMEOUT_MS);
-> +
-> +	if (ret == TMF_RESP_FUNC_COMPLETE)
-> +		dev_dbg(&isci_host->pdev->dev,
-> +			"%s: %p: TMF_LU_RESET passed\n",
-> +			__func__, isci_device);
-> +	else
-> +		dev_dbg(&isci_host->pdev->dev,
-> +			"%s: %p: TMF_LU_RESET failed (%x)\n",
-> +			__func__, isci_device, ret);
-> +
-> +	return ret;
-> +}
-> +
-> +/**
-
-> +
-> +/*	 int (*lldd_clear_nexus_port)(struct asd_sas_port *); */
-> +int isci_task_clear_nexus_port(struct asd_sas_port *port)
-> +{
-> +	return TMF_RESP_FUNC_FAILED;
-> +}
-> +
-> +
-> +
-> +int isci_task_clear_nexus_ha(struct sas_ha_struct *ha)
-> +{
-> +	return TMF_RESP_FUNC_FAILED;
-> +}
-> +
-> +int isci_task_I_T_nexus_reset(struct domain_device *dev)
-> +{
-> +	return TMF_RESP_FUNC_FAILED;
-> +}
-> +
-
-These will be used during libsas error handling.
-
-
-> +/**
-> + * isci_task_abort_task() - This function is one of the SAS Domain Template
-> + *    functions. This function is called by libsas to abort a specified task.
-> + * @task: This parameter specifies the SAS task to abort.
-> + *
-> + * status, zero indicates success.
-> + */
-> +int isci_task_abort_task(struct sas_task *task)
-> +{
-scic_lock, flags);
-
-
-> +
-> +		#define ISCI_ABORT_TASK_TIMEOUT_MS 500 /* half second timeout. */
-
-Maybe move this #define to isci_task.h?
-
-> +		ret = isci_task_execute_tmf(isci_host, &tmf,
-> +					    ISCI_ABORT_TASK_TIMEOUT_MS);
-> +
-> +		if (ret == TMF_RESP_FUNC_COMPLETE) {
-> +			old_request->complete_in_target = true;
-> +
-> +			/* Clean up the request on our side, and wait for the aborted I/O to
-> +			 * complete.
-> +			 */
-> +			isci_terminate_request_core(isci_host, isci_device, old_request,
-> +						    &aborted_io_completion);
-> +
-> +			/* Set the state on the task. */
-> +			isci_task_all_done(task);
-> +		} else
-> +			dev_err(&isci_host->pdev->dev,
-> +				"%s: isci_task_send_tmf failed\n",
-> +				__func__);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +/**
-> + * isci_task_abort_task_set() - This function is one of the SAS Domain Template
-> + *    functions. This is one of the Task Management functoins called by libsas,
-> + *    to abort all task for the given lun.
-> + * @d_device: This parameter specifies the domain device associated with this
-> + *    request.
-> + * @lun: This parameter specifies the lun associated with this request.
-> + *
-> + * status, zero indicates success.
-> + */
-> +int isci_task_abort_task_set(
-> +	struct domain_device *d_device,
-> +	u8 *lun)
-> +{
-> +	return TMF_RESP_FUNC_FAILED;
-> +}
-> +
-> +
-> +/**
-> + * isci_task_clear_aca() - This function is one of the SAS Domain Template
-> + *    functions. This is one of the Task Management functoins called by libsas.
-> + * @d_device: This parameter specifies the domain device associated with this
-> + *    request.
-> + * @lun: This parameter specifies the lun	 associated with this request.
-> + *
-> + * status, zero indicates success.
-> + */
-> +int isci_task_clear_aca(
-> +	struct domain_device *d_device,
-> +	u8 *lun)
-> +{
-> +	return TMF_RESP_FUNC_FAILED;
-> +}
-> +
-> +
-> +
-> +/**
-> + * isci_task_clear_task_set() - This function is one of the SAS Domain Template
-> + *    functions. This is one of the Task Management functoins called by libsas.
-> + * @d_device: This parameter specifies the domain device associated with this
-> + *    request.
-> + * @lun: This parameter specifies the lun	 associated with this request.
-> + *
-> + * status, zero indicates success.
-> + */
-> +int isci_task_clear_task_set(
-> +	struct domain_device *d_device,
-> +	u8 *lun)
-> +{
-> +	return TMF_RESP_FUNC_FAILED;
-> +}
-
-More libsas error recovery functions.
-
-Thanks,
-David
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
