@@ -1,137 +1,82 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [LSF/MM Topic] SCSI Unit Attention Handling
-Date: Wed, 09 Feb 2011 16:44:07 +0100
-Message-ID: <4D52B647.9060601@suse.de>
-References: <AANLkTikARn9U17fVKDo+dgyfz554LV=Dz+_M_xB5dfe+@mail.gmail.com>	<DBFB1B45AF80394ABD1C807E9F28D1570264CAA097@BLRX7MCDC203.AMER.DELL.COM>	<AANLkTimm-MC6kNGRgvFvrPh+YGTW5M6MPLrEd3C9K4vC@mail.gmail.com>	<DBFB1B45AF80394ABD1C807E9F28D1570264CAA563@BLRX7MCDC203.AMER.DELL.COM> <AANLkTinGE6v2DiTSf9VxjFD6EY=3kQz7QCxpaaF=Mr5T@mail.gmail.com> <DBFB1B45AF80394ABD1C807E9F28D1570264CAA99E@BLRX7MCDC203.AMER.DELL.COM>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: Linux 2.6.38-rc4 (target_core: rmmod GP fault)
+Date: Wed, 9 Feb 2011 09:28:51 -0800
+Message-ID: <20110209092851.bba6c40c.randy.dunlap@oracle.com>
+References: <AANLkTimmb26UiBSukdNnVdxLJpCGd=QqpCw8vQoHALh-@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:57923 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752291Ab1BIPfs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Feb 2011 10:35:48 -0500
-In-Reply-To: <DBFB1B45AF80394ABD1C807E9F28D1570264CAA99E@BLRX7MCDC203.AMER.DELL.COM>
+Received: from rcsinet10.oracle.com ([148.87.113.121]:19076 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755228Ab1BIRaA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 12:30:00 -0500
+In-Reply-To: <AANLkTimmb26UiBSukdNnVdxLJpCGd=QqpCw8vQoHALh-@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shyam_Iyer@Dell.com
-Cc: realrichardsharpe@gmail.com, linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, scsi <linux-scsi@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-Hi all,
+x86_64, nearly allmodconfig.  No target hardware.
 
-On 02/09/2011 06:02 AM, Shyam_Iyer@Dell.com wrote:
-[ .. ]
->=20
-> I get you there. The ioctl implementation to inform the driver will
-> not plug the storage from sending the UAs.
->=20
-> The LUN could be multipathed so then if you have UAs come through
-> one sdX path and not through the other that is adding complication.
-> Also, if you are using persistent reservations and one of the path
-> goes down the UAs could be going to a path that has been excluded.
-> We are introducing scenarios for bugs here.
->=20
-Hence using debugfs; with this we would be getting an entire
-configfs space for free which would allow us to set this kind of things=
-=2E
-ioctls are evil. Avoid at all cost.
 
->>
->>> Even if registering for UAs per vendor was envisioned there are
->>> scenarios that can cause a flurry of UAs too..
->>> (I initially opined to have a vendor specific implementation of
->>> logging scsi_netlink events from the scsi_device handler,
->>> it was gloriously shot down ;-))
->>>
->>> Consider this scenario..
->>>
->>> Above water mark.. --> Unit Attention
->>> Discard to free up space
->>> Below water mark ... -> Unit Attention
->>>
->>> Consider a ripple scenario where this repeats..
->>> (Although this can not happen too often it is very much akin to a
->>> thrashing scenario)
->>>
->>> The UA should be hints for the filesystem to optimize online. Here =
-is
->>> where the thin profile can reduce the UAs.
->>>
->>> Also, you delete a file - select a good age time to discard the
->>> associated blocks(debatable and worth any good algorithm writer's
->>> salt).
->>> Now I am not sure if the filesystem should run an inkernel thread t=
-o
->>> do this profile management..
->>>
->>>> It might be more useful to allow user-land utilities to perform th=
-e
->>>> re-scanning.
->>>>
->>>> I would imagine that you will get unit attentions saying that
->>>> REPORTED LUNS DATA HAS CHANGED, but what other UNIT ATTENTIONS wou=
-ld
->>>> you get?
->>>> If you add storage to a LUN, then perhaps CAPACITY DATA HAS CHANGE=
-D.
->>>>
->>>> Perhaps there is also a need to say things like, for these ASC/ASC=
-Q
->>>> values, take the device off line, and all the rest are just adviso=
-ry
->>>> but pass them all to user land as well.
->>>>
->>>
->>> This is a kind of policy that needs to go into the thin profile
->>> although Storage Arrays do take the device offline on reaching
->>> certain hard limits there is nothing like mounting a filesystem rea=
-d-
->>> only ;-)
->>
->> Well, yes, but Ext3/4 and XFS tend to remount the fs RO when writes =
-to
->> the journal fail as well because the SCSI stack takes the device
->> offline :-(
->>
->> If the device has lied in its response to a READ_CAPACITY or
->> READ_CAPACITY16 that is hard to prevent unless the file system has t=
-he
->> concept of a lying reserve ...
-> The lying reserve is again a profile/policy setting aka like a SWAP c=
-oncept.
->=20
-> If the device has lied in either READ_CAPACITY_16 or GET_LBA_STATUS..
-> then we are anyways not consistent to the tee on the profile. Putting
-> my open-source hat on that is a Carrot and stick bait.
+[  144.508473] general protection fault: 0000 [#1] SMP DEBUG_PAGEALLOC
+[  144.509901] last sysfs file: /sys/devices/pci0000:00/0000:00:1d.1/usb6/6-1/6-1.3/devnum
+[  144.512026] CPU 1 
+[  144.512026] Modules linked in: target_core_mod(-) configfs af_packet nfsd lockd nfs_acl auth_rpcgss exportfs sunrpc ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4 iptable_filter ip_tables ip6t_REJECT xt_tcpudp nf_conntrack_ipv6 nf_defrag_ipv6 xt_state nf_conntrack ip6table_filter ip6_tables x_tables ipv6 cpufreq_ondemand acpi_cpufreq freq_table mperf binfmt_misc dm_mirror dm_region_hash dm_log dm_multipath scsi_dh dm_mod mousedev joydev evdev mac_hid snd_hda_codec_analog usbmouse snd_hda_intel snd_hda_codec usbkbd usbhid hid snd_hwdep snd_seq 8250_pnp snd_seq_device dcdbas pcspkr sr_mod i2c_i801 cdrom tg3 sg iTCO_wdt snd_pcm 8250 iTCO_vendor_support rtc_cmos serial_core rtc_core snd_timer rtc_lib snd processor button thermal_sys soundcore intel_agp hwmon snd_page_alloc intel_gtt unix ide_p
+ ci_generic ide_core ata_generic pata_acpi ata_piix sd_mod crc_t10dif ext3 jbd mbcache uhci_hcd ohci_hcd ssb mmc_core pcmcia pcmcia_core firmware_class ehci_hcd usbcore nls_base [last unload!
+ ed: microcode]
+[  144.512026] 
+[  144.512026] Pid: 2597, comm: rmmod Not tainted 2.6.38-rc4 #1 0TY565/OptiPlex 745                 
+[  144.512026] RIP: 0010:[<ffffffff810c3e5f>]  [<ffffffff810c3e5f>] __lock_acquire+0xd8/0x4e8
+[  144.512026] RSP: 0018:ffff88006df1bb78  EFLAGS: 00010006
+[  144.512026] RAX: 0000000000000002 RBX: 6b6b6b6b6b6b6be3 RCX: 0000000000000000
+[  144.512026] RDX: 0000000000000000 RSI: 0000000000000000 RDI: 6b6b6b6b6b6b6be3
+[  144.512026] RBP: ffff88006df1bbd8 R08: 0000000000000001 R09: 0000000000000000
+[  144.512026] R10: 0000000000000006 R11: ffffffffa06ab0ef R12: 0000000000000000
+[  144.512026] R13: ffff88006dec3000 R14: 0000000000000000 R15: 0000000000000000
+[  144.512026] FS:  00007fe0320d36f0(0000) GS:ffff88007c600000(0000) knlGS:0000000000000000
+[  144.512026] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[  144.512026] CR2: 0000003fadc7bf20 CR3: 000000006de4f000 CR4: 00000000000006e0
+[  144.512026] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[  144.512026] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[  144.512026] Process rmmod (pid: 2597, threadinfo ffff88006df1a000, task ffff88006dec3000)
+[  144.512026] Stack:
+[  144.512026]  0000000000000118 ffff8800000003a7 0000000000000005 00000000810b175b
+[  144.512026]  ffff88006df1bba8 0000000000000000 ffff88006dec3000 0000000000000000
+[  144.512026]  ffff88006dec3000 ffffffffa06ab0ef 0000000000000001 0000000000000000
+[  144.512026] Call Trace:
+[  144.512026]  [<ffffffffa06ab0ef>] ? spin_lock+0x15/0x1e [configfs]
+[  144.512026]  [<ffffffff810c436f>] lock_acquire+0x100/0x150
+[  144.512026]  [<ffffffffa06ab0ef>] ? spin_lock+0x15/0x1e [configfs]
+[  144.512026]  [<ffffffffa06ac40f>] ? detach_groups+0x91/0x12e [configfs]
+[  144.512026]  [<ffffffffa06ac40f>] ? detach_groups+0x91/0x12e [configfs]
+[  144.512026]  [<ffffffff81556300>] _raw_spin_lock+0x44/0xaf
+[  144.512026]  [<ffffffffa06ab0ef>] ? spin_lock+0x15/0x1e [configfs]
+[  144.512026]  [<ffffffff810c47db>] ? lock_release_nested+0xfb/0x133
+[  144.512026]  [<ffffffffa06ab0ef>] spin_lock+0x15/0x1e [configfs]
+[  144.512026]  [<ffffffffa06ab144>] dget+0x2e/0x56 [configfs]
+[  144.512026]  [<ffffffffa06ac3a4>] detach_groups+0x26/0x12e [configfs]
+[  144.512026]  [<ffffffffa06ac363>] configfs_detach_group+0x2d/0x48 [configfs]
+[  144.512026]  [<ffffffffa06ac41f>] detach_groups+0xa1/0x12e [configfs]
+[  144.512026]  [<ffffffffa06ac363>] configfs_detach_group+0x2d/0x48 [configfs]
+[  144.512026]  [<ffffffffa06ac41f>] detach_groups+0xa1/0x12e [configfs]
+[  144.512026]  [<ffffffffa06ac363>] configfs_detach_group+0x2d/0x48 [configfs]
+[  144.512026]  [<ffffffffa06ac41f>] detach_groups+0xa1/0x12e [configfs]
+[  144.512026]  [<ffffffffa06ac363>] configfs_detach_group+0x2d/0x48 [configfs]
+[  144.512026]  [<ffffffffa06ac41f>] detach_groups+0xa1/0x12e [configfs]
+[  144.512026]  [<ffffffffa06ac363>] configfs_detach_group+0x2d/0x48 [configfs]
+[  144.512026]  [<ffffffffa06ace26>] configfs_unregister_subsystem+0x105/0x194 [configfs]
+[  144.512026]  [<ffffffffa06baf55>] target_core_exit_configfs+0x185/0x1eb [target_core_mod]
+[  144.512026]  [<ffffffff810d46a8>] sys_delete_module+0x2d6/0x368
+[  144.512026]  [<ffffffff8155602d>] ? lockdep_sys_exit_thunk+0x35/0x67
+[  144.512026]  [<ffffffff81555fb7>] ? trace_hardirqs_on_thunk+0x3a/0x3f
+[  144.512026]  [<ffffffff8100e942>] system_call_fastpath+0x16/0x1b
+[  144.512026] Code: 05 8f 32 8d 01 e8 6c b1 fb ff 48 ff 05 8b 32 8d 01 48 ff 05 8c 32 8d 01 48 ff 05 95 32 8d 01 e9 e3 03 00 00 48 ff 05 81 32 8d 01 <48> 81 3b 40 5f 26 82 75 07 48 ff 05 81 32 8d 01 83 fe 01 77 13 
+[  144.512026] RIP  [<ffffffff810c3e5f>] __lock_acquire+0xd8/0x4e8
+[  144.512026]  RSP <ffff88006df1bb78>
+[  144.512026] ---[ end trace 37e0ba5347875330 ]---
 
-Quite. Currently we know of about three events / event classes which
-need to be handled:
-
-REPORTED LUNS DATA HAS CHANGED
-CAPACITY DATA HAS CHANGED
-thin provisioning water mark warnings
-
-Everything else is pretty much handled by the SCSI stack nowadays
-anyway.
-
-However, currently we don't handle them at all and hence don't have
-any experience as to how often they would occur. Which would be
-pretty much vendor-specific anyway.
-So we need to design something which is
-a) capable of handling even large number of events
-b) selectable per device
-c) modular enough to have further sense codes added
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
