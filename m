@@ -1,56 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 00/06] mptfusion : (Resend) Description patch
-Date: Thu, 10 Feb 2011 15:05:58 +0000
-Message-ID: <1297350358.4933.22.camel@mulgrave.site>
-References: <20110210061746.GA31424@lsi.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] scsi: make scsi_devinfo infrastructure optional
+Date: Thu, 10 Feb 2011 09:07:36 -0600
+Message-ID: <1297350456.4933.25.camel@mulgrave.site>
+References: <201102091515.16202.bzolnier@gmail.com>
+	 <1297274408.3016.29.camel@mulgrave.site>
+	 <AANLkTimE1H=hos+YMW3Ge9vkETC9f1k1Dt6AMi5iLHGW@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47925 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752054Ab1BJPGD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Feb 2011 10:06:03 -0500
-In-Reply-To: <20110210061746.GA31424@lsi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <AANLkTimE1H=hos+YMW3Ge9vkETC9f1k1Dt6AMi5iLHGW@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-On Thu, 2011-02-10 at 11:47 +0530, Kashyap, Desai wrote:
-> MPT Fusion driver updates. Please consider it for next rc update.
+On Thu, 2011-02-10 at 10:18 +0100, Bartlomiej Zolnierkiewicz wrote:
+> On Wed, Feb 9, 2011 at 7:00 PM, James Bottomley <James.Bottomley@suse.de> wrote:
+> > On Wed, 2011-02-09 at 15:15 +0100, Bartlomiej Zolnierkiewicz wrote:
+> >> Add SCSI_QUIRKS config option (default y and dependent on EMBEDDED
+> >> config option) to allow disabling of scsi_devinfo infrastructure.
+> >>
+> >> The output code size savings are ~14k for CONFIG_SCSI_QUIRKS=n
+> >> (as measured on x86-32):
+> >
+> > I don't understand the point of this patch ... without the quirks SCSI
+> > will do the wrong thing on a whole bunch of stuff.  The savings look to
+> > be tiny ... since the SCSI module is habitually a lot larger than your
+> > figures suggest.
+> 
+> The patch was originally done for embedded ATA-only setups.
 
-We still have a basic confusion here:  Things that are enhancements or
-optimisations can't go in the next rc update, they have to wait for the
-merge window.  What I need are two separate patch sets: one for the
-fixes tree and one for the merge window.  As long as the patches below
-separate easily, I can do this manually (basically only 4,5 are bug
-fixes) ... where do you want the version change to go?  With the entire
-patch set (so in the merge window)?
+Well, if it's for ATA only then the better course would be extracting
+libata from scsi.  It's also a bit misleading to do sizings on x86,
+because that doesn't imply embedded to me.  Aren't there still ATAPI
+devices that require the quirks?
+
+Most embedded setups include some form of USB ... again, the pluggable
+CD/DVD use the quirks table.
+
+Given the potential for disaster even on embedded systems, I don't
+really think something like this is a good idea.
 
 James
-
-
-> Resending patch set. Corrected posting to stable kernel as requested by
-> Greg and following correct process of posting patches to stable kernel.
-> 
-> First three patches are New  Feature/Optimization. Patch 4,5 are Fixes.
-> Removed sas_address sysfs addition as commented by James from patch-1.
-> 
-> [PATCH 01/06] mptfusion: (New Feature)Added new sysfs parameters for handle
-> and haldles.
-> [PATCH 02/06] mptfusion: (New Feature)Support SAS2.0 Devices with SAS1.0 Controllers
-> [PATCH 03/06] mptfusion: (Optmization)Remove bus reset for mptsas module
-> [PATCH 04/06] mptfusion: (Fix) mptctl_release is required in mptctl.c
-> [PATCH 05/06] mptfusion: (Fix) Incorrect return value in mptscsih_dev_reset
-> [PATCH 06/06] mptfusion: Bump version 03.04.18
-> 
-> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
-> ---
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
