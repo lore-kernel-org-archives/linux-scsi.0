@@ -1,54 +1,61 @@
 From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH 04/06] mptfusion: (Fix) mptctl_release is required in mptctl.c
-Date: Thu, 10 Feb 2011 11:52:21 +0530
-Message-ID: <20110210062212.GE31424@lsi.com>
+Subject: [PATCH 05/06] mptfusion: (Fix) Incorrect return value in mptscsih_dev_reset
+Date: Thu, 10 Feb 2011 11:53:44 +0530
+Message-ID: <20110210062336.GF31424@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:47215 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751022Ab1BJHJA (ORCPT
+Received: from na3sys009aog105.obsmtp.com ([74.125.149.75]:56262 "EHLO
+	na3sys009aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751022Ab1BJHKX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Feb 2011 02:09:00 -0500
+	Thu, 10 Feb 2011 02:10:23 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com, peter.petrakis@canonical.com
 
 
-Added missing release callback for file_operations mptctl_fops.
-Without release callback there will be never freed. It remains on 
-mptctl's eent list even after the file is closed and released.
+There's a branch at the end of this function that
+is supposed to normalize the return value with what
+the mid-layer expects. In this one case, we get it wrong.
 
-Relavent RHEL bugzilla is 660871
+Also increase the verbosity of the INFO level printk
+at the end of mptscsih_abort to include the actual return value
+and the scmd->serial_number. The reason being success
+or failure is actually determined by the state of
+the internal tag list when a TMF is issued, and not the
+return value of the TMF cmd. The serial_number is also
+used in this decision, thus it's useful to know for debugging
+purposes.
 
 Cc: stable@kernel.org
+Reported-by: Peter M. Petrakis <peter.petrakis@canonical.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index a3856ed..e8deb8e 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -597,6 +597,13 @@ mptctl_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *pEvReply)
- }
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index b1496b3..7a4c479 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1873,8 +1873,9 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
+ 	}
  
- static int
-+mptctl_release(struct inode *inode, struct file *filep)
-+{
-+	fasync_helper(-1, filep, 0, &async_queue);
-+	return 0;
-+}
-+
-+static int
- mptctl_fasync(int fd, struct file *filep, int mode)
- {
- 	MPT_ADAPTER	*ioc;
-@@ -2815,6 +2822,7 @@ static const struct file_operations mptctl_fops = {
- 	.llseek =	no_llseek,
- 	.fasync = 	mptctl_fasync,
- 	.unlocked_ioctl = mptctl_ioctl,
-+	.release =	mptctl_release,
- #ifdef CONFIG_COMPAT
- 	.compat_ioctl = compat_mpctl_ioctl,
- #endif
+  out:
+-	printk(MYIOC_s_INFO_FMT "task abort: %s (sc=%p)\n",
+-	    ioc->name, ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), SCpnt);
++	printk(MYIOC_s_INFO_FMT "task abort: %s (rv=%04x) (sc=%p) (sn=%ld)\n",
++	    ioc->name, ((retval == SUCCESS) ? "SUCCESS" : "FAILED"), retval,
++	    SCpnt, SCpnt->serial_number);
+ 
+ 	return retval;
+ }
+@@ -1911,7 +1912,7 @@ mptscsih_dev_reset(struct scsi_cmnd * SCpnt)
+ 
+ 	vdevice = SCpnt->device->hostdata;
+ 	if (!vdevice || !vdevice->vtarget) {
+-		retval = SUCCESS;
++		retval = 0;
+ 		goto out;
+ 	}
+ 
