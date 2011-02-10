@@ -1,46 +1,37 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 31/31] target: Fix generated *_drop_nodeacl() handler in tcm_mod_builder.py
-Date: Wed,  9 Feb 2011 15:36:45 -0800
-Message-ID: <1297294605-23662-32-git-send-email-nab@linux-iscsi.org>
+From: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Subject: [PATCH 00/06] mptfusion : (Resend) Description patch
+Date: Thu, 10 Feb 2011 11:47:53 +0530
+Message-ID: <20110210061746.GA31424@lsi.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp105.sbc.mail.mud.yahoo.com ([68.142.198.204]:44077 "HELO
-	smtp105.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1750738Ab1BIXgl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Feb 2011 18:36:41 -0500
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:39972 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750997Ab1BJHEc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Feb 2011 02:04:32 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Fubo Chen <fubo.chen@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-From: Fubo Chen <fubo.chen@gmail.com>
 
-This patch adds the missing core_tpg_del_initiator_node_acl() call required
-by fabric modules for struct se_node_acl->acl_group context shutdown via
+MPT Fusion driver updates. Please consider it for next rc update.
 
-	target_core_fabric_configfs.c:target_fabric_nacl_base_release() ->
+Resending patch set. Corrected posting to stable kernel as requested by
+Greg and following correct process of posting patches to stable kernel.
 
-		struct target_core_fabric_ops->fabric_drop_nodeacl()
+First three patches are New  Feature/Optimization. Patch 4,5 are Fixes.
+Removed sas_address sysfs addition as commented by James from patch-1.
 
-for tcm_mod_builder.py generated $FABRIC_MOD_configfs.c skeleton code.
+[PATCH 01/06] mptfusion: (New Feature)Added new sysfs parameters for handle
+and haldles.
+[PATCH 02/06] mptfusion: (New Feature)Support SAS2.0 Devices with SAS1.0 Controllers
+[PATCH 03/06] mptfusion: (Optmization)Remove bus reset for mptsas module
+[PATCH 04/06] mptfusion: (Fix) mptctl_release is required in mptctl.c
+[PATCH 05/06] mptfusion: (Fix) Incorrect return value in mptscsih_dev_reset
+[PATCH 06/06] mptfusion: Bump version 03.04.18
 
-Signed-off-by: Fubo Chen <fubo.chen@gmail.com>
-Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
+Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
 ---
- Documentation/target/tcm_mod_builder.py |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
-
-diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
-index 89af6c7..7ef9b84 100755
---- a/Documentation/target/tcm_mod_builder.py
-+++ b/Documentation/target/tcm_mod_builder.py
-@@ -289,6 +289,7 @@ def tcm_mod_build_configfs(proto_ident, fabric_mod_dir_var, fabric_mod_name):
- 	buf += "{\n"
- 	buf += "	struct " + fabric_mod_name + "_nacl *nacl = container_of(se_acl,\n"
- 	buf += "				struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
-+	buf += "	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);\n"
- 	buf += "	kfree(nacl);\n"
- 	buf += "}\n\n"
- 
--- 
-1.7.4
-
