@@ -1,64 +1,45 @@
-From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
-Subject: RE: [PATCH 00/06] mptfusion : (Resend) Description patch
-Date: Thu, 10 Feb 2011 21:34:04 +0530
-Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED71121F840@inbmail01.lsi.com>
-References: <20110210061746.GA31424@lsi.com>
- <1297350358.4933.22.camel@mulgrave.site>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/3] ibmvscsis driver rewrite
+Date: Thu, 10 Feb 2011 10:34:44 -0800
+Message-ID: <1297362884.18212.146.camel@haakon2.linux-iscsi.org>
+References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog112.obsmtp.com ([74.125.149.207]:33813 "EHLO
-	na3sys009aog112.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756339Ab1BJQDZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Feb 2011 11:03:25 -0500
-In-Reply-To: <1297350358.4933.22.camel@mulgrave.site>
-Content-Language: en-US
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51989 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137Ab1BJSeu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Feb 2011 13:34:50 -0500
+In-Reply-To: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
-IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
-VGh1cnNkYXksIEZlYnJ1YXJ5IDEwLCAyMDExIDg6MzYgUE0NCj4gVG86IERlc2FpLCBLYXNoeWFw
-DQo+IENjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZzsgTW9vcmUsIEVyaWM7IFByYWthc2gs
-IFNhdGh5YQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIDAwLzA2XSBtcHRmdXNpb24gOiAoUmVzZW5k
-KSBEZXNjcmlwdGlvbiBwYXRjaA0KPiANCj4gT24gVGh1LCAyMDExLTAyLTEwIGF0IDExOjQ3ICsw
-NTMwLCBLYXNoeWFwLCBEZXNhaSB3cm90ZToNCj4gPiBNUFQgRnVzaW9uIGRyaXZlciB1cGRhdGVz
-LiBQbGVhc2UgY29uc2lkZXIgaXQgZm9yIG5leHQgcmMgdXBkYXRlLg0KPiANCj4gV2Ugc3RpbGwg
-aGF2ZSBhIGJhc2ljIGNvbmZ1c2lvbiBoZXJlOiAgVGhpbmdzIHRoYXQgYXJlIGVuaGFuY2VtZW50
-cyBvcg0KPiBvcHRpbWlzYXRpb25zIGNhbid0IGdvIGluIHRoZSBuZXh0IHJjIHVwZGF0ZSwgdGhl
-eSBoYXZlIHRvIHdhaXQgZm9yIHRoZQ0KPiBtZXJnZSB3aW5kb3cuICBXaGF0IEkgbmVlZCBhcmUg
-dHdvIHNlcGFyYXRlIHBhdGNoIHNldHM6IG9uZSBmb3IgdGhlDQo+IGZpeGVzIHRyZWUgYW5kIG9u
-ZSBmb3IgdGhlIG1lcmdlIHdpbmRvdy4gIEFzIGxvbmcgYXMgdGhlIHBhdGNoZXMgYmVsb3cNCj4g
-c2VwYXJhdGUgZWFzaWx5LCBJIGNhbiBkbyB0aGlzIG1hbnVhbGx5IChiYXNpY2FsbHkgb25seSA0
-LDUgYXJlIGJ1Zw0KPiBmaXhlcykgLi4uIHdoZXJlIGRvIHlvdSB3YW50IHRoZSB2ZXJzaW9uIGNo
-YW5nZSB0byBnbz8gIFdpdGggdGhlIGVudGlyZQ0KPiBwYXRjaCBzZXQgKHNvIGluIHRoZSBtZXJn
-ZSB3aW5kb3cpPw0KDQpKYW1lcyBUaGFua3MgZm9yIHRoZSBjbGFyaWZpY2F0aW9uLiBBY3R1YWxs
-eSBlYXJsaWVyIEkgZGlkIG5vdCBjYXRjaCB5b3VyIHBvaW50IHRoYXQgSSBoYXZlIHRvIHNlbmQg
-dHdvIGRpZmZlcmVudCBwYXRjaCBzZXQuDQpOZXh0IHRpbWUgSSB3b3VsZCBjb25zaWRlciB0aGF0
-IGFzIGEgc3RhbmRhcmQgcHJhY3RpY2UuDQpUaGFua3MgZm9yIG1hcmtpbmcgcGF0Y2ggNCwgNSBh
-cyB2YWxpZCBjYW5kaWRhdGUgZm9yIHRoaXMgdGltZS4gSXQgd2lsbCBiZSBnb29kIHRvIGhhdmUg
-dmVyc2lvbiBwYXRjaCB1cGRhdGUgd2l0aCBmaXhlcy4NCg0KS2FzaHlhcA0KDQo+IA0KPiBKYW1l
-cw0KPiANCj4gDQo+ID4gUmVzZW5kaW5nIHBhdGNoIHNldC4gQ29ycmVjdGVkIHBvc3RpbmcgdG8g
-c3RhYmxlIGtlcm5lbCBhcyByZXF1ZXN0ZWQNCj4gYnkNCj4gPiBHcmVnIGFuZCBmb2xsb3dpbmcg
-Y29ycmVjdCBwcm9jZXNzIG9mIHBvc3RpbmcgcGF0Y2hlcyB0byBzdGFibGUNCj4ga2VybmVsLg0K
-PiA+DQo+ID4gRmlyc3QgdGhyZWUgcGF0Y2hlcyBhcmUgTmV3ICBGZWF0dXJlL09wdGltaXphdGlv
-bi4gUGF0Y2ggNCw1IGFyZQ0KPiBGaXhlcy4NCj4gPiBSZW1vdmVkIHNhc19hZGRyZXNzIHN5c2Zz
-IGFkZGl0aW9uIGFzIGNvbW1lbnRlZCBieSBKYW1lcyBmcm9tIHBhdGNoLQ0KPiAxLg0KPiA+DQo+
-ID4gW1BBVENIIDAxLzA2XSBtcHRmdXNpb246IChOZXcgRmVhdHVyZSlBZGRlZCBuZXcgc3lzZnMg
-cGFyYW1ldGVycyBmb3INCj4gaGFuZGxlDQo+ID4gYW5kIGhhbGRsZXMuDQo+ID4gW1BBVENIIDAy
-LzA2XSBtcHRmdXNpb246IChOZXcgRmVhdHVyZSlTdXBwb3J0IFNBUzIuMCBEZXZpY2VzIHdpdGgN
-Cj4gU0FTMS4wIENvbnRyb2xsZXJzDQo+ID4gW1BBVENIIDAzLzA2XSBtcHRmdXNpb246IChPcHRt
-aXphdGlvbilSZW1vdmUgYnVzIHJlc2V0IGZvciBtcHRzYXMNCj4gbW9kdWxlDQo+ID4gW1BBVENI
-IDA0LzA2XSBtcHRmdXNpb246IChGaXgpIG1wdGN0bF9yZWxlYXNlIGlzIHJlcXVpcmVkIGluIG1w
-dGN0bC5jDQo+ID4gW1BBVENIIDA1LzA2XSBtcHRmdXNpb246IChGaXgpIEluY29ycmVjdCByZXR1
-cm4gdmFsdWUgaW4NCj4gbXB0c2NzaWhfZGV2X3Jlc2V0DQo+ID4gW1BBVENIIDA2LzA2XSBtcHRm
-dXNpb246IEJ1bXAgdmVyc2lvbiAwMy4wNC4xOA0KPiA+DQo+ID4gU2lnbmVkLW9mZi1ieTogS2Fz
-aHlhcCBEZXNhaSA8a2FzaHlhcC5kZXNhaUBsc2kuY29tPg0KPiA+IC0tLQ0KPiA+IC0tDQo+ID4g
-VG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJl
-IGxpbnV4LXNjc2kiDQo+IGluDQo+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9t
-b0B2Z2VyLmtlcm5lbC5vcmcNCj4gPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdl
-ci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCj4gDQoNCg==
+On Thu, 2011-02-10 at 21:21 +0900, FUJITA Tomonori wrote:
+> Finally, I have the working driver. We are ready to remove the old
+> ibmvstgt driver.
+> 
+> This is for scsi-misc tree.
+> 
+> =
+>  drivers/scsi/ibmvscsi/Makefile    |    4 +-
+>  drivers/scsi/ibmvscsi/ibmvscsis.c | 1759 +++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/libsrp.c             |   18 +-
+>  include/scsi/libsrp.h             |   10 +-
+>  4 files changed, 1778 insertions(+), 13 deletions(-)
+> 
+
+Many thanks for this updated patch series Tomo-san.
+
+I will add this series to a working lio-core-2.6.git/tcm_ibmvscsis
+branch from the current LIO upstream HEAD (linus-38-rc4).  I will review
+shortly and add my comments..
+
+Also, would you mind sending along 'tree', 'dmesg' and 'lsmod' output of
+a functional ibmvscsis system so we can add a proper LIO wiki
+entry..?  :-)
+
+--nab
+
