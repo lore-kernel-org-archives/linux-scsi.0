@@ -1,82 +1,56 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH 2/2] arcmsr: code cleanup and some corrections
-Date: Thu, 10 Feb 2011 15:36:31 +0100
-Message-ID: <4D53F7EF.70003@redhat.com>
-References: <4D53F4B7.2030806@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 00/06] mptfusion : (Resend) Description patch
+Date: Thu, 10 Feb 2011 15:05:58 +0000
+Message-ID: <1297350358.4933.22.camel@mulgrave.site>
+References: <20110210061746.GA31424@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:20125 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752987Ab1BJOge (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Feb 2011 09:36:34 -0500
-In-Reply-To: <4D53F4B7.2030806@redhat.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:47925 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752054Ab1BJPGD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Feb 2011 10:06:03 -0500
+In-Reply-To: <20110210061746.GA31424@lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: nick.cheng@areca.com.tw
+To: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-Hi Nick,
-I'm confused with what this code does, I think I must miss something.
+On Thu, 2011-02-10 at 11:47 +0530, Kashyap, Desai wrote:
+> MPT Fusion driver updates. Please consider it for next rc update.
 
-	dma_coherent = dma_alloc_coherent(&pdev->dev, acb->uncache_size, &dma_coherent_handle, GFP_KERNEL);
-...
-I think that the dma_alloc_coherent returns a page address with zeroes in the lowest bits 
-That would mean the offset computed below is useless as the result is zero every time.
-Added to that is that you then increase dma_coherent_handle by the offset,
-while dma_coherent is increased by multiples of sizeof CommandControlBlock, at least it looks so
-...
-	offset = roundup((unsigned long)dma_coherent, 32) - (unsigned long)dma_coherent;
-	dma_coherent_handle = dma_coherent_handle + offset;
-	dma_coherent = (struct CommandControlBlock *)dma_coherent + offset;
+We still have a basic confusion here:  Things that are enhancements or
+optimisations can't go in the next rc update, they have to wait for the
+merge window.  What I need are two separate patch sets: one for the
+fixes tree and one for the merge window.  As long as the patches below
+separate easily, I can do this manually (basically only 4,5 are bug
+fixes) ... where do you want the version change to go?  With the entire
+patch set (so in the merge window)?
 
-The patch below removes the offset computation.
-
-Signed-off-by: Tomas henzl <thenzl@redhat.com>
+James
 
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 4cd522b..da93974 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -441,10 +441,11 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
- 	struct CommandControlBlock *ccb_tmp;
- 	int i = 0, j = 0;
- 	dma_addr_t cdb_phyaddr;
--	unsigned long roundup_ccbsize = 0, offset;
-+	unsigned long roundup_ccbsize;
- 	unsigned long max_xfer_len;
- 	unsigned long max_sg_entrys;
- 	uint32_t  firm_config_version;
-+
- 	for (i = 0; i < ARCMSR_MAX_TARGETID; i++)
- 		for (j = 0; j < ARCMSR_MAX_TARGETLUN; j++)
- 			acb->devstate[i][j] = ARECA_RAID_GONE;
-@@ -454,12 +455,12 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
- 	firm_config_version = acb->firm_cfg_version;
- 	if((firm_config_version & 0xFF) >= 3){
- 		max_xfer_len = (ARCMSR_CDB_SG_PAGE_LENGTH << ((firm_config_version >> 8) & 0xFF)) * 1024;/* max 4M byte */
--		max_sg_entrys = (max_xfer_len/4096);	
-+		max_sg_entrys = (max_xfer_len/4096);
- 	}
- 	acb->host->max_sectors = max_xfer_len/512;
- 	acb->host->sg_tablesize = max_sg_entrys;
- 	roundup_ccbsize = roundup(sizeof(struct CommandControlBlock) + (max_sg_entrys - 1) * sizeof(struct SG64ENTRY), 32);
--	acb->uncache_size = roundup_ccbsize * ARCMSR_MAX_FREECCB_NUM + 32;
-+	acb->uncache_size = roundup_ccbsize * ARCMSR_MAX_FREECCB_NUM;
- 	dma_coherent = dma_alloc_coherent(&pdev->dev, acb->uncache_size, &dma_coherent_handle, GFP_KERNEL);
- 	if(!dma_coherent){
- 		printk(KERN_NOTICE "arcmsr%d: dma_alloc_coherent got error \n", acb->host->host_no);
-@@ -468,9 +469,6 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
- 	acb->dma_coherent = dma_coherent;
- 	acb->dma_coherent_handle = dma_coherent_handle;
- 	memset(dma_coherent, 0, acb->uncache_size);
--	offset = roundup((unsigned long)dma_coherent, 32) - (unsigned long)dma_coherent;
--	dma_coherent_handle = dma_coherent_handle + offset;
--	dma_coherent = (struct CommandControlBlock *)dma_coherent + offset;
- 	ccb_tmp = dma_coherent;
- 	acb->vir2phy_offset = (unsigned long)dma_coherent - (unsigned long)dma_coherent_handle;
- 	for(i = 0; i < ARCMSR_MAX_FREECCB_NUM; i++){
+> Resending patch set. Corrected posting to stable kernel as requested by
+> Greg and following correct process of posting patches to stable kernel.
+> 
+> First three patches are New  Feature/Optimization. Patch 4,5 are Fixes.
+> Removed sas_address sysfs addition as commented by James from patch-1.
+> 
+> [PATCH 01/06] mptfusion: (New Feature)Added new sysfs parameters for handle
+> and haldles.
+> [PATCH 02/06] mptfusion: (New Feature)Support SAS2.0 Devices with SAS1.0 Controllers
+> [PATCH 03/06] mptfusion: (Optmization)Remove bus reset for mptsas module
+> [PATCH 04/06] mptfusion: (Fix) mptctl_release is required in mptctl.c
+> [PATCH 05/06] mptfusion: (Fix) Incorrect return value in mptscsih_dev_reset
+> [PATCH 06/06] mptfusion: Bump version 03.04.18
+> 
+> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+> ---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
