@@ -1,104 +1,79 @@
 From: "Moger, Babu" <Babu.Moger@lsi.com>
-Subject: [PATCH} scsi_dh_rdac: fix for lun_table update for rdac device
- handler
-Date: Fri, 11 Feb 2011 15:14:08 -0700
-Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4FF60C1F1@cosmail01.lsi.com>
+Subject: [PATCH v2] [SCSI] fix kzalloc in scsi device handler
+Date: Fri, 11 Feb 2011 15:17:33 -0700
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4FF60C1F7@cosmail01.lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:47884 "EHLO
-	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757938Ab1BKWNO convert rfc822-to-8bit
+Received: from na3sys009aog109.obsmtp.com ([74.125.149.201]:38500 "EHLO
+	na3sys009aog109.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758267Ab1BKWQj convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Feb 2011 17:13:14 -0500
+	Fri, 11 Feb 2011 17:16:39 -0500
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
-Cc: "Qi, Yanling" <Yanling.Qi@lsi.com>, "Krishnasamy, Somasundaram" <Somasundaram.Krishnasamy@lsi.com>
+Cc: "dhillf@gmail.com" <dhillf@gmail.com>
 
-During one of our testing, we noticed that mode select command sent from the host did not have the lun_table updated.
+From: Hillf Danton <dhillf@gmail.com>
 
-Problem is root caused to the way lun table is updated. Lun table update was done after the call to blk_rq_map_kern is made. This was causing problem because kernel uses bounce buffer(bio_copy_kern) if the address is not aligned.  The command buffer updated after the call(blk_rq_map_kern) was not going on the wire. Moved the code to update the lun_table before the call to fix the problem.
+Fixing the type for the kzalloc. Original path is here. http://marc.info/?l=linux-scsi&m=128991446117137&w=2
 
+Signed-off-by: Hillf Danton <dhillf@gmail.com>
 Signed-off-by: Babu Moger <babu.moger@lsi.com>
-Signed-off-by: Somasundaram Krishnasamy <Somasundaram.Krishnasamy@lsi.com>
-Signed-off-by: Yanling Qi <Yanling.Qi@lsi.com>
 
 ---
---- linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2011-02-11 12:41:27.000000000 -0600
-+++ linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-02-11 14:04:23.000000000 -0600
-@@ -281,11 +281,13 @@ static struct request *get_rdac_req(stru
- }
+diff -uprN -X linux-2.6.38-rc4/Documentation/dontdiff linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_alua.c linux-2.6.38-rc4-patched//drivers/scsi/device_handler/scsi_dh_alua.c
+--- linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_alua.c	2011-02-07 18:03:55.000000000 -0600
++++ linux-2.6.38-rc4-patched//drivers/scsi/device_handler/scsi_dh_alua.c	2011-02-11 15:29:31.000000000 -0600
+@@ -759,7 +759,7 @@ static int alua_bus_attach(struct scsi_d
+ 	unsigned long flags;
+ 	int err = SCSI_DH_OK;
  
- static struct request *rdac_failover_get(struct scsi_device *sdev,
--					 struct rdac_dh_data *h)
-+			struct rdac_dh_data *h, struct list_head *list)
- {
- 	struct request *rq;
- 	struct rdac_mode_common *common;
- 	unsigned data_size;
-+	struct rdac_queue_data *qdata;
-+	u8 *lun_table;
+-	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
++	scsi_dh_data = kzalloc(sizeof(*scsi_dh_data)
+ 			       + sizeof(*h) , GFP_KERNEL);
+ 	if (!scsi_dh_data) {
+ 		sdev_printk(KERN_ERR, sdev, "%s: Attach failed\n",
+diff -uprN -X linux-2.6.38-rc4/Documentation/dontdiff linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_emc.c linux-2.6.38-rc4-patched//drivers/scsi/device_handler/scsi_dh_emc.c
+--- linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_emc.c	2011-02-07 18:03:55.000000000 -0600
++++ linux-2.6.38-rc4-patched//drivers/scsi/device_handler/scsi_dh_emc.c	2011-02-11 15:29:50.000000000 -0600
+@@ -650,7 +650,7 @@ static int clariion_bus_attach(struct sc
+ 	unsigned long flags;
+ 	int err;
  
- 	if (h->ctlr->use_ms10) {
- 		struct rdac_pg_expanded *rdac_pg;
-@@ -298,6 +300,7 @@ static struct request *rdac_failover_get
- 		rdac_pg->subpage_code = 0x1;
- 		rdac_pg->page_len[0] = 0x01;
- 		rdac_pg->page_len[1] = 0x28;
-+		lun_table = rdac_pg->lun_table;
- 	} else {
- 		struct rdac_pg_legacy *rdac_pg;
+-	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
++	scsi_dh_data = kzalloc(sizeof(*scsi_dh_data)
+ 			       + sizeof(*h) , GFP_KERNEL);
+ 	if (!scsi_dh_data) {
+ 		sdev_printk(KERN_ERR, sdev, "%s: Attach failed\n",
+diff -uprN -X linux-2.6.38-rc4/Documentation/dontdiff linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_hp_sw.c linux-2.6.38-rc4-patched//drivers/scsi/device_handler/scsi_dh_hp_sw.c
+--- linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_hp_sw.c	2011-02-07 18:03:55.000000000 -0600
++++ linux-2.6.38-rc4-patched//drivers/scsi/device_handler/scsi_dh_hp_sw.c	2011-02-11 15:30:45.000000000 -0600
+@@ -338,8 +338,8 @@ static int hp_sw_bus_attach(struct scsi_
+ 	unsigned long flags;
+ 	int ret;
  
-@@ -307,11 +310,16 @@ static struct request *rdac_failover_get
- 		common = &rdac_pg->common;
- 		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
- 		rdac_pg->page_len = 0x68;
-+		lun_table = rdac_pg->lun_table;
- 	}
- 	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
- 	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
- 	common->rdac_options = RDAC_FORCED_QUIESENCE;
+-	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
+-			       + sizeof(struct hp_sw_dh_data) , GFP_KERNEL);
++	scsi_dh_data = kzalloc(sizeof(*scsi_dh_data)
++			       + sizeof(*h) , GFP_KERNEL);
+ 	if (!scsi_dh_data) {
+ 		sdev_printk(KERN_ERR, sdev, "%s: Attach Failed\n",
+ 			    HP_SW_NAME);
+diff -uprN -X linux-2.6.38-rc4/Documentation/dontdiff linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c linux-2.6.38-rc4-patched//drivers/scsi/device_handler/scsi_dh_rdac.c
+--- linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-02-07 18:03:55.000000000 -0600
++++ linux-2.6.38-rc4-patched//drivers/scsi/device_handler/scsi_dh_rdac.c	2011-02-11 15:29:18.000000000 -0600
+@@ -800,7 +800,7 @@ static int rdac_bus_attach(struct scsi_d
+ 	int err;
+ 	char array_name[ARRAY_LABEL_LEN];
  
-+	list_for_each_entry(qdata, list, entry) {
-+		lun_table[qdata->h->lun] = 0x81;
-+	}
-+
- 	/* get request for block layer packet command */
- 	rq = get_rdac_req(sdev, &h->ctlr->mode_select, data_size, WRITE);
- 	if (!rq)
-@@ -565,7 +573,6 @@ static void send_mode_select(struct work
- 	int err, retry_cnt = RDAC_RETRY_COUNT;
- 	struct rdac_queue_data *tmp, *qdata;
- 	LIST_HEAD(list);
--	u8 *lun_table;
- 
- 	spin_lock(&ctlr->ms_lock);
- 	list_splice_init(&ctlr->ms_head, &list);
-@@ -573,21 +580,12 @@ static void send_mode_select(struct work
- 	ctlr->ms_sdev = NULL;
- 	spin_unlock(&ctlr->ms_lock);
- 
--	if (ctlr->use_ms10)
--		lun_table = ctlr->mode_select.expanded.lun_table;
--	else
--		lun_table = ctlr->mode_select.legacy.lun_table;
--
- retry:
- 	err = SCSI_DH_RES_TEMP_UNAVAIL;
--	rq = rdac_failover_get(sdev, h);
-+	rq = rdac_failover_get(sdev, h, &list);
- 	if (!rq)
- 		goto done;
- 
--	list_for_each_entry(qdata, &list, entry) {
--		lun_table[qdata->h->lun] = 0x81;
--	}
--
- 	RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
- 		"%s MODE_SELECT command",
- 		(char *) h->ctlr->array_name, h->ctlr->index,
+-	scsi_dh_data = kzalloc(sizeof(struct scsi_device_handler *)
++	scsi_dh_data = kzalloc(sizeof(*scsi_dh_data)
+ 			       + sizeof(*h) , GFP_KERNEL);
+ 	if (!scsi_dh_data) {
+ 		sdev_printk(KERN_ERR, sdev, "%s: Attach failed\n",
 
 
