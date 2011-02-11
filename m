@@ -1,57 +1,93 @@
-From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
-Subject: [PATCH v2] qla4xxx: use pci_dev->revision
-Date: Fri, 11 Feb 2011 22:58:48 +0300
-Message-ID: <201102112258.48495.sshtylyov@ru.mvista.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Fri, 11 Feb 2011 15:13:40 -0600
+Message-ID: <4D55A684.9060208@linux.vnet.ibm.com>
+References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <4D543951.2000207@linux.vnet.ibm.com> <1297366739.18212.182.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.dev.rtsoft.ru ([213.79.90.226]:60479 "HELO
-	mail.dev.rtsoft.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757392Ab1BKUAO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Feb 2011 15:00:14 -0500
-Content-Disposition: inline
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:53840 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756781Ab1BKVNm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Feb 2011 16:13:42 -0500
+Received: from d01dlp02.pok.ibm.com (d01dlp02.pok.ibm.com [9.56.224.85])
+	by e6.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p1BKwpI7028655
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2011 15:59:35 -0500
+Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 560E14DE803E
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2011 16:12:47 -0500 (EST)
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p1BLDfRS344004
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2011 16:13:41 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p1BLDdnW015381
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2011 16:13:40 -0500
+In-Reply-To: <1297366739.18212.182.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
-Cc: ravi.anand@qlogic.com, vikas.chaudhary@qlogic.com, iscsi-driver@qlogic.com
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
 
-Commit f4f5df23bf72208d0c2f1d8be629839924c2f4c2 ([SCSI] qla4xxx: Added support
-for ISP82XX) added code to read the PCI revision ID from the PCI configuration
-register while it's already stored by PCI subsystem in the 'revision' field of
-'struct pci_dev'...
+On 02/10/2011 01:38 PM, Nicholas A. Bellinger wrote:
+> On Thu, 2011-02-10 at 13:15 -0600, Brian King wrote:
+>> On 02/10/2011 06:21 AM, FUJITA Tomonori wrote:
+> 
+> Hi Brian,
+> 
+> <SNIP>
+> 
+>>> +
+>>> +static int ibmvscsis_new_cmd_map(struct se_cmd *se_cmd)
+>>> +{
+>>> +	struct ibmvscsis_cmnd *cmd =
+>>> +		container_of(se_cmd, struct ibmvscsis_cmnd, se_cmd);
+>>> +	struct scsi_cmnd *sc = &cmd->sc;
+>>> +	struct iu_entry *iue = (struct iu_entry *)sc->SCp.ptr;
+>>> +	struct srp_cmd *scmd = iue->sbuf->buf;
+>>> +	int ret;
+>>> +
+>>> +	/*
+>>> +	 * Allocate the necessary tasks to complete the received CDB+data
+>>> +	 */
+>>> +	ret = transport_generic_allocate_tasks(se_cmd, scmd->cdb);
+>>> +	if (ret == -1) {
+>>> +		/* Out of Resources */
+>>> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
+>>> +	} else if (ret == -2) {
+>>> +		/*
+>>> +		 * Handle case for SAM_STAT_RESERVATION_CONFLICT
+>>> +		 */
+>>> +		if (se_cmd->se_cmd_flags & SCF_SCSI_RESERVATION_CONFLICT)
+>>> +			return PYX_TRANSPORT_RESERVATION_CONFLICT;
+>>
+>> Does this imply the driver supports scsi reservations? If it supports SCSI-2 reservations,
+>> there is a capability that could be set in the capabilities MAD to advertise this
+>> fact such that it can be used by the client.
+>>
+> 
+> Absoulutely, the target core struct se_device backends being serviced as
+> VSCSI LUN would normally return SCSI-3 from INQUIRY data, and support
+> the full set of persistent reservations and CRH=1 (Compatible
+> Reservations Handling) in drivers/target/target_core_pr.c code.
+> 
+> Also, we are able to explictly limit individual struct se_device
+> backends to disable PR and only use the older SCSI-2 reservations, but I
+> don't think we have a way to do this on a fabric module wide basis just
+> yet.
+> 
+> Is this something we should be doing for this code..?
 
-Signed-off-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Disregard my previous comment. It looks like current client should handle reservations
+just fine without any further changes.
 
----
-The patch is against the recent Linus' tree.
+Thanks,
 
- drivers/scsi/qla4xxx/ql4_os.c |    6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Brian
 
-Index: linux-2.6/drivers/scsi/qla4xxx/ql4_os.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/qla4xxx/ql4_os.c
-+++ linux-2.6/drivers/scsi/qla4xxx/ql4_os.c
-@@ -1441,7 +1441,6 @@ static void qla4xxx_free_adapter(struct 
- int qla4_8xxx_iospace_config(struct scsi_qla_host *ha)
- {
- 	int status = 0;
--	uint8_t revision_id;
- 	unsigned long mem_base, mem_len, db_base, db_len;
- 	struct pci_dev *pdev = ha->pdev;
- 
-@@ -1453,10 +1452,9 @@ int qla4_8xxx_iospace_config(struct scsi
- 		goto iospace_error_exit;
- 	}
- 
--	pci_read_config_byte(pdev, PCI_REVISION_ID, &revision_id);
- 	DEBUG2(printk(KERN_INFO "%s: revision-id=%d\n",
--	    __func__, revision_id));
--	ha->revision_id = revision_id;
-+	    __func__, pdev->revision));
-+	ha->revision_id = pdev->revision;
- 
- 	/* remap phys address */
- 	mem_base = pci_resource_start(pdev, 0); /* 0 is for BAR 0 */
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
+
+
