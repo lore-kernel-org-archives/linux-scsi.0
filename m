@@ -1,93 +1,104 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Fri, 11 Feb 2011 15:13:40 -0600
-Message-ID: <4D55A684.9060208@linux.vnet.ibm.com>
-References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp> <4D543951.2000207@linux.vnet.ibm.com> <1297366739.18212.182.camel@haakon2.linux-iscsi.org>
+From: "Moger, Babu" <Babu.Moger@lsi.com>
+Subject: [PATCH} scsi_dh_rdac: fix for lun_table update for rdac device
+ handler
+Date: Fri, 11 Feb 2011 15:14:08 -0700
+Message-ID: <E463DF2B2E584B4A82673F53D62C2EF4FF60C1F1@cosmail01.lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:53840 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756781Ab1BKVNm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Feb 2011 16:13:42 -0500
-Received: from d01dlp02.pok.ibm.com (d01dlp02.pok.ibm.com [9.56.224.85])
-	by e6.ny.us.ibm.com (8.14.4/8.13.1) with ESMTP id p1BKwpI7028655
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2011 15:59:35 -0500
-Received: from d01relay03.pok.ibm.com (d01relay03.pok.ibm.com [9.56.227.235])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 560E14DE803E
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2011 16:12:47 -0500 (EST)
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p1BLDfRS344004
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2011 16:13:41 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p1BLDdnW015381
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Feb 2011 16:13:40 -0500
-In-Reply-To: <1297366739.18212.182.camel@haakon2.linux-iscsi.org>
+Received: from na3sys009aog116.obsmtp.com ([74.125.149.240]:47884 "EHLO
+	na3sys009aog116.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757938Ab1BKWNO convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Feb 2011 17:13:14 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>
+Cc: "Qi, Yanling" <Yanling.Qi@lsi.com>, "Krishnasamy, Somasundaram" <Somasundaram.Krishnasamy@lsi.com>
 
-On 02/10/2011 01:38 PM, Nicholas A. Bellinger wrote:
-> On Thu, 2011-02-10 at 13:15 -0600, Brian King wrote:
->> On 02/10/2011 06:21 AM, FUJITA Tomonori wrote:
-> 
-> Hi Brian,
-> 
-> <SNIP>
-> 
->>> +
->>> +static int ibmvscsis_new_cmd_map(struct se_cmd *se_cmd)
->>> +{
->>> +	struct ibmvscsis_cmnd *cmd =
->>> +		container_of(se_cmd, struct ibmvscsis_cmnd, se_cmd);
->>> +	struct scsi_cmnd *sc = &cmd->sc;
->>> +	struct iu_entry *iue = (struct iu_entry *)sc->SCp.ptr;
->>> +	struct srp_cmd *scmd = iue->sbuf->buf;
->>> +	int ret;
->>> +
->>> +	/*
->>> +	 * Allocate the necessary tasks to complete the received CDB+data
->>> +	 */
->>> +	ret = transport_generic_allocate_tasks(se_cmd, scmd->cdb);
->>> +	if (ret == -1) {
->>> +		/* Out of Resources */
->>> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
->>> +	} else if (ret == -2) {
->>> +		/*
->>> +		 * Handle case for SAM_STAT_RESERVATION_CONFLICT
->>> +		 */
->>> +		if (se_cmd->se_cmd_flags & SCF_SCSI_RESERVATION_CONFLICT)
->>> +			return PYX_TRANSPORT_RESERVATION_CONFLICT;
->>
->> Does this imply the driver supports scsi reservations? If it supports SCSI-2 reservations,
->> there is a capability that could be set in the capabilities MAD to advertise this
->> fact such that it can be used by the client.
->>
-> 
-> Absoulutely, the target core struct se_device backends being serviced as
-> VSCSI LUN would normally return SCSI-3 from INQUIRY data, and support
-> the full set of persistent reservations and CRH=1 (Compatible
-> Reservations Handling) in drivers/target/target_core_pr.c code.
-> 
-> Also, we are able to explictly limit individual struct se_device
-> backends to disable PR and only use the older SCSI-2 reservations, but I
-> don't think we have a way to do this on a fabric module wide basis just
-> yet.
-> 
-> Is this something we should be doing for this code..?
+During one of our testing, we noticed that mode select command sent from the host did not have the lun_table updated.
 
-Disregard my previous comment. It looks like current client should handle reservations
-just fine without any further changes.
+Problem is root caused to the way lun table is updated. Lun table update was done after the call to blk_rq_map_kern is made. This was causing problem because kernel uses bounce buffer(bio_copy_kern) if the address is not aligned.  The command buffer updated after the call(blk_rq_map_kern) was not going on the wire. Moved the code to update the lun_table before the call to fix the problem.
 
-Thanks,
+Signed-off-by: Babu Moger <babu.moger@lsi.com>
+Signed-off-by: Somasundaram Krishnasamy <Somasundaram.Krishnasamy@lsi.com>
+Signed-off-by: Yanling Qi <Yanling.Qi@lsi.com>
 
-Brian
-
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+---
+--- linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2011-02-11 12:41:27.000000000 -0600
++++ linux-2.6.38-rc4/drivers/scsi/device_handler/scsi_dh_rdac.c	2011-02-11 14:04:23.000000000 -0600
+@@ -281,11 +281,13 @@ static struct request *get_rdac_req(stru
+ }
+ 
+ static struct request *rdac_failover_get(struct scsi_device *sdev,
+-					 struct rdac_dh_data *h)
++			struct rdac_dh_data *h, struct list_head *list)
+ {
+ 	struct request *rq;
+ 	struct rdac_mode_common *common;
+ 	unsigned data_size;
++	struct rdac_queue_data *qdata;
++	u8 *lun_table;
+ 
+ 	if (h->ctlr->use_ms10) {
+ 		struct rdac_pg_expanded *rdac_pg;
+@@ -298,6 +300,7 @@ static struct request *rdac_failover_get
+ 		rdac_pg->subpage_code = 0x1;
+ 		rdac_pg->page_len[0] = 0x01;
+ 		rdac_pg->page_len[1] = 0x28;
++		lun_table = rdac_pg->lun_table;
+ 	} else {
+ 		struct rdac_pg_legacy *rdac_pg;
+ 
+@@ -307,11 +310,16 @@ static struct request *rdac_failover_get
+ 		common = &rdac_pg->common;
+ 		rdac_pg->page_code = RDAC_PAGE_CODE_REDUNDANT_CONTROLLER;
+ 		rdac_pg->page_len = 0x68;
++		lun_table = rdac_pg->lun_table;
+ 	}
+ 	common->rdac_mode[1] = RDAC_MODE_TRANSFER_SPECIFIED_LUNS;
+ 	common->quiescence_timeout = RDAC_QUIESCENCE_TIME;
+ 	common->rdac_options = RDAC_FORCED_QUIESENCE;
+ 
++	list_for_each_entry(qdata, list, entry) {
++		lun_table[qdata->h->lun] = 0x81;
++	}
++
+ 	/* get request for block layer packet command */
+ 	rq = get_rdac_req(sdev, &h->ctlr->mode_select, data_size, WRITE);
+ 	if (!rq)
+@@ -565,7 +573,6 @@ static void send_mode_select(struct work
+ 	int err, retry_cnt = RDAC_RETRY_COUNT;
+ 	struct rdac_queue_data *tmp, *qdata;
+ 	LIST_HEAD(list);
+-	u8 *lun_table;
+ 
+ 	spin_lock(&ctlr->ms_lock);
+ 	list_splice_init(&ctlr->ms_head, &list);
+@@ -573,21 +580,12 @@ static void send_mode_select(struct work
+ 	ctlr->ms_sdev = NULL;
+ 	spin_unlock(&ctlr->ms_lock);
+ 
+-	if (ctlr->use_ms10)
+-		lun_table = ctlr->mode_select.expanded.lun_table;
+-	else
+-		lun_table = ctlr->mode_select.legacy.lun_table;
+-
+ retry:
+ 	err = SCSI_DH_RES_TEMP_UNAVAIL;
+-	rq = rdac_failover_get(sdev, h);
++	rq = rdac_failover_get(sdev, h, &list);
+ 	if (!rq)
+ 		goto done;
+ 
+-	list_for_each_entry(qdata, &list, entry) {
+-		lun_table[qdata->h->lun] = 0x81;
+-	}
+-
+ 	RDAC_LOG(RDAC_LOG_FAILOVER, sdev, "array %s, ctlr %d, "
+ 		"%s MODE_SELECT command",
+ 		(char *) h->ctlr->array_name, h->ctlr->index,
 
 
