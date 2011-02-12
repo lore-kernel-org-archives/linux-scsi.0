@@ -1,82 +1,93 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Sat, 12 Feb 2011 14:27:26 -0600
-Message-ID: <1297542446.29128.0.camel@mulgrave.site>
-References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	 <4D543951.2000207@linux.vnet.ibm.com>
-	 <1297366739.18212.182.camel@haakon2.linux-iscsi.org>
-	 <4D55A684.9060208@linux.vnet.ibm.com>
+From: Marcin Slusarz <marcin.slusarz@gmail.com>
+Subject: Re: [PATCH] scsi: make scsi_devinfo infrastructure optional
+Date: Sat, 12 Feb 2011 21:54:43 +0100
+Message-ID: <20110212205443.GA2912@joi.lan>
+References: <201102091515.16202.bzolnier@gmail.com>
+ <AANLkTinbsTuvRWQXt8ViTKaD+VbH9YG9X-RqzvsdEV_h@mail.gmail.com>
+ <1297440366.4967.83.camel@mulgrave.site>
+ <201102121316.51333.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:44297 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752411Ab1BLU1e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Feb 2011 15:27:34 -0500
-In-Reply-To: <4D55A684.9060208@linux.vnet.ibm.com>
+Received: from mail-bw0-f46.google.com ([209.85.214.46]:49678 "EHLO
+	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750922Ab1BLU4l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2011 15:56:41 -0500
+Content-Disposition: inline
+In-Reply-To: <201102121316.51333.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2011-02-11 at 15:13 -0600, Brian King wrote:
-> On 02/10/2011 01:38 PM, Nicholas A. Bellinger wrote:
-> > On Thu, 2011-02-10 at 13:15 -0600, Brian King wrote:
-> >> On 02/10/2011 06:21 AM, FUJITA Tomonori wrote:
-> > 
-> > Hi Brian,
-> > 
-> > <SNIP>
-> > 
-> >>> +
-> >>> +static int ibmvscsis_new_cmd_map(struct se_cmd *se_cmd)
-> >>> +{
-> >>> +	struct ibmvscsis_cmnd *cmd =
-> >>> +		container_of(se_cmd, struct ibmvscsis_cmnd, se_cmd);
-> >>> +	struct scsi_cmnd *sc = &cmd->sc;
-> >>> +	struct iu_entry *iue = (struct iu_entry *)sc->SCp.ptr;
-> >>> +	struct srp_cmd *scmd = iue->sbuf->buf;
-> >>> +	int ret;
-> >>> +
-> >>> +	/*
-> >>> +	 * Allocate the necessary tasks to complete the received CDB+data
-> >>> +	 */
-> >>> +	ret = transport_generic_allocate_tasks(se_cmd, scmd->cdb);
-> >>> +	if (ret == -1) {
-> >>> +		/* Out of Resources */
-> >>> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
-> >>> +	} else if (ret == -2) {
-> >>> +		/*
-> >>> +		 * Handle case for SAM_STAT_RESERVATION_CONFLICT
-> >>> +		 */
-> >>> +		if (se_cmd->se_cmd_flags & SCF_SCSI_RESERVATION_CONFLICT)
-> >>> +			return PYX_TRANSPORT_RESERVATION_CONFLICT;
-> >>
-> >> Does this imply the driver supports scsi reservations? If it supports SCSI-2 reservations,
-> >> there is a capability that could be set in the capabilities MAD to advertise this
-> >> fact such that it can be used by the client.
-> >>
-> > 
-> > Absoulutely, the target core struct se_device backends being serviced as
-> > VSCSI LUN would normally return SCSI-3 from INQUIRY data, and support
-> > the full set of persistent reservations and CRH=1 (Compatible
-> > Reservations Handling) in drivers/target/target_core_pr.c code.
-> > 
-> > Also, we are able to explictly limit individual struct se_device
-> > backends to disable PR and only use the older SCSI-2 reservations, but I
-> > don't think we have a way to do this on a fabric module wide basis just
-> > yet.
-> > 
-> > Is this something we should be doing for this code..?
+On Sat, Feb 12, 2011 at 01:16:50PM +0100, Bartlomiej Zolnierkiewicz wrote:
+> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> Subject: [PATCH] scsi: make scsi_devinfo table content optional
 > 
-> Disregard my previous comment. It looks like current client should handle reservations
-> just fine without any further changes.
+> Add CONFIG_SCSI_QUIRKS config option (default y and dependent
+> on EMBEDDED config option) to allow disabling of the default
+> scsi_devinfo table content.
 
-So is that an ack for putting this in scsi-misc ... or did you want to
-do more testing first?
+Note: all uses of CONFIG_EMBEDDED were recently moved to CONFIG_EXPERT.
+(see commit 6a108a14fa356ef607be308b68337939e56ea94e)
+This one should probably use it too.
 
-James
-
-
+> 
+> The output code size savings are ~7.5k for CONFIG_SCSI_QUIRKS=n
+> (as measured on x86-64):
+> 
+> CONFIG_SCSI_QUIRKS=y:
+>    text    data     bss     dec     hex filename
+>    5965    5520     288   11773    2dfd drivers/scsi/scsi_devinfo.o
+> 
+> CONFIG_SCSI_QUIRKS=n:
+>    text    data     bss     dec     hex filename
+>    3740      48     288    4076     fec drivers/scsi/scsi_devinfo.o
+> 
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> ---
+>  drivers/scsi/Kconfig        |    9 +++++++++
+>  drivers/scsi/scsi_devinfo.c |    2 ++
+>  2 files changed, 11 insertions(+)
+> 
+> Index: b/drivers/scsi/Kconfig
+> ===================================================================
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -47,6 +47,15 @@ config SCSI_TGT
+>  	  If you want to use SCSI target mode drivers enable this option.
+>  	  If you choose M, the module will be called scsi_tgt.
+>  
+> +config SCSI_QUIRKS
+> +	bool "SCSI quirks list" if EMBEDDED
+> +	default y
+> +	help
+> +	  This option enables deprecated in-kernel list of devices
+> +	  that require settings that differ from the default.
+> +
+> +	  If unsure say Y.
+> +
+>  config SCSI_NETLINK
+>  	bool
+>  	default	n
+> Index: b/drivers/scsi/scsi_devinfo.c
+> ===================================================================
+> --- a/drivers/scsi/scsi_devinfo.c
+> +++ b/drivers/scsi/scsi_devinfo.c
+> @@ -53,6 +53,7 @@ static struct {
+>  	char *revision;	/* revision known to be bad, unused */
+>  	unsigned flags;
+>  } scsi_static_device_list[] __initdata = {
+> +#ifdef CONFIG_SCSI_QUIRKS
+>  	/*
+>  	 * The following devices are known not to tolerate a lun != 0 scan
+>  	 * for one reason or another. Some will respond to all luns,
+> @@ -251,6 +252,7 @@ static struct {
+>  	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+>  	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
+>  	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
+> +#endif
+>  	{ NULL, NULL, NULL, 0 },
+>  };
+>  
+> --
