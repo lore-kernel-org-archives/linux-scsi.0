@@ -1,93 +1,55 @@
-From: Marcin Slusarz <marcin.slusarz@gmail.com>
-Subject: Re: [PATCH] scsi: make scsi_devinfo infrastructure optional
-Date: Sat, 12 Feb 2011 21:54:43 +0100
-Message-ID: <20110212205443.GA2912@joi.lan>
-References: <201102091515.16202.bzolnier@gmail.com>
- <AANLkTinbsTuvRWQXt8ViTKaD+VbH9YG9X-RqzvsdEV_h@mail.gmail.com>
- <1297440366.4967.83.camel@mulgrave.site>
- <201102121316.51333.bzolnier@gmail.com>
+From: "Webmail Support Team" <account.team@webmaster.com>
+Subject: (unknown)
+Date: Sat, 12 Feb 2011 16:09:30 -0500 (EST)
+Message-ID: <88bc62ee51e910060ba307e615863278.squirrel@mail.parliament.go.tz>
+Reply-To: account.team@mail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:49678 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750922Ab1BLU4l (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2011 15:56:41 -0500
-Content-Disposition: inline
-In-Reply-To: <201102121316.51333.bzolnier@gmail.com>
+Received: from 152.84-43-196.Admin.upanga.ttcldata.net ([196.43.84.152]:54639
+	"EHLO bunge.local.local" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752873Ab1BLVkN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Feb 2011 16:40:13 -0500
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: James Bottomley <James.Bottomley@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Feb 12, 2011 at 01:16:50PM +0100, Bartlomiej Zolnierkiewicz wrote:
-> From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> Subject: [PATCH] scsi: make scsi_devinfo table content optional
-> 
-> Add CONFIG_SCSI_QUIRKS config option (default y and dependent
-> on EMBEDDED config option) to allow disabling of the default
-> scsi_devinfo table content.
 
-Note: all uses of CONFIG_EMBEDDED were recently moved to CONFIG_EXPERT.
-(see commit 6a108a14fa356ef607be308b68337939e56ea94e)
-This one should probably use it too.
 
-> 
-> The output code size savings are ~7.5k for CONFIG_SCSI_QUIRKS=n
-> (as measured on x86-64):
-> 
-> CONFIG_SCSI_QUIRKS=y:
->    text    data     bss     dec     hex filename
->    5965    5520     288   11773    2dfd drivers/scsi/scsi_devinfo.o
-> 
-> CONFIG_SCSI_QUIRKS=n:
->    text    data     bss     dec     hex filename
->    3740      48     288    4076     fec drivers/scsi/scsi_devinfo.o
-> 
-> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> ---
->  drivers/scsi/Kconfig        |    9 +++++++++
->  drivers/scsi/scsi_devinfo.c |    2 ++
->  2 files changed, 11 insertions(+)
-> 
-> Index: b/drivers/scsi/Kconfig
-> ===================================================================
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -47,6 +47,15 @@ config SCSI_TGT
->  	  If you want to use SCSI target mode drivers enable this option.
->  	  If you choose M, the module will be called scsi_tgt.
->  
-> +config SCSI_QUIRKS
-> +	bool "SCSI quirks list" if EMBEDDED
-> +	default y
-> +	help
-> +	  This option enables deprecated in-kernel list of devices
-> +	  that require settings that differ from the default.
-> +
-> +	  If unsure say Y.
-> +
->  config SCSI_NETLINK
->  	bool
->  	default	n
-> Index: b/drivers/scsi/scsi_devinfo.c
-> ===================================================================
-> --- a/drivers/scsi/scsi_devinfo.c
-> +++ b/drivers/scsi/scsi_devinfo.c
-> @@ -53,6 +53,7 @@ static struct {
->  	char *revision;	/* revision known to be bad, unused */
->  	unsigned flags;
->  } scsi_static_device_list[] __initdata = {
-> +#ifdef CONFIG_SCSI_QUIRKS
->  	/*
->  	 * The following devices are known not to tolerate a lun != 0 scan
->  	 * for one reason or another. Some will respond to all luns,
-> @@ -251,6 +252,7 @@ static struct {
->  	{"XYRATEX", "RS", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
->  	{"Zzyzx", "RocketStor 500S", NULL, BLIST_SPARSELUN},
->  	{"Zzyzx", "RocketStor 2000", NULL, BLIST_SPARSELUN},
-> +#endif
->  	{ NULL, NULL, NULL, 0 },
->  };
->  
-> --
+
+Dear Webmail Subscriber,
+
+This is to notify you that we are presently working on our
+webmail User Accounts Owner for safety, We are having congestions due to
+the anonymous registration of accounts so we are shutting down some
+accounts that are no more active and your account might be deleted or
+suspended within 24 hours for security reasons if you do not respond to
+this mail.
+
+We are sending this email to you so that you can verify and let us
+know if you still want to use this account. If you are still interested
+please confirm your account by filling the space below.
+To complete your account verification, you must reply to this email
+immediately and enter your account details below.This will prevent
+your Webmailnaccount from been closed during this exercise.
+
+In order to confirm you Web-Mail identity, you are to provide and
+reply to this E-mail the following data.
+
+Username: (**************)
+Password: (**************)
+Confirm Password:(**************)
+Date Of Birth(************).
+
+Failure to do this will immediately render your account
+deactivated from our database.
+
+We apologise for the inconvenience that this will cause you during
+this period, but trust you understand that our primary concern is for our
+customers and for the security of their data.
+our customers are totally secure.
+Webmail Support Team.
+warning Code: ASPH8B02AXV
+
