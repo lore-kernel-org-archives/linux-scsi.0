@@ -1,44 +1,82 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: target: Question about transport_generic_allocate_tasks()
-Date: Sat, 12 Feb 2011 12:10:27 -0800
-Message-ID: <1297541427.13306.48.camel@haakon2.linux-iscsi.org>
-References: <AANLkTi=HhpMKKW6J7R5GR2yQ_V=222TeR1KKRpUp-Z0V@mail.gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Sat, 12 Feb 2011 14:27:26 -0600
+Message-ID: <1297542446.29128.0.camel@mulgrave.site>
+References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+	 <4D543951.2000207@linux.vnet.ibm.com>
+	 <1297366739.18212.182.camel@haakon2.linux-iscsi.org>
+	 <4D55A684.9060208@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:43096 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752602Ab1BLUQ6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2011 15:16:58 -0500
-In-Reply-To: <AANLkTi=HhpMKKW6J7R5GR2yQ_V=222TeR1KKRpUp-Z0V@mail.gmail.com>
+Received: from cantor2.suse.de ([195.135.220.15]:44297 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752411Ab1BLU1e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Feb 2011 15:27:34 -0500
+In-Reply-To: <4D55A684.9060208@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fubo Chen <fubo.chen@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org
 
-On Sat, 2011-02-12 at 15:33 +0100, Fubo Chen wrote:
-> Target drivers assume that transport_generic_allocate_tasks() returns
-> 0, -1 or -2. But if transport_generic_allocate_tasks() invoks
-> transport_generic_cmd_sequencer() and if
-> transport_generic_cmd_sequencer() invokes core_alua_state_check() the
-> value 1 can be returned. Which is correct - drivers or core ? And what
-> is meaning of return values ?
+On Fri, 2011-02-11 at 15:13 -0600, Brian King wrote:
+> On 02/10/2011 01:38 PM, Nicholas A. Bellinger wrote:
+> > On Thu, 2011-02-10 at 13:15 -0600, Brian King wrote:
+> >> On 02/10/2011 06:21 AM, FUJITA Tomonori wrote:
+> > 
+> > Hi Brian,
+> > 
+> > <SNIP>
+> > 
+> >>> +
+> >>> +static int ibmvscsis_new_cmd_map(struct se_cmd *se_cmd)
+> >>> +{
+> >>> +	struct ibmvscsis_cmnd *cmd =
+> >>> +		container_of(se_cmd, struct ibmvscsis_cmnd, se_cmd);
+> >>> +	struct scsi_cmnd *sc = &cmd->sc;
+> >>> +	struct iu_entry *iue = (struct iu_entry *)sc->SCp.ptr;
+> >>> +	struct srp_cmd *scmd = iue->sbuf->buf;
+> >>> +	int ret;
+> >>> +
+> >>> +	/*
+> >>> +	 * Allocate the necessary tasks to complete the received CDB+data
+> >>> +	 */
+> >>> +	ret = transport_generic_allocate_tasks(se_cmd, scmd->cdb);
+> >>> +	if (ret == -1) {
+> >>> +		/* Out of Resources */
+> >>> +		return PYX_TRANSPORT_LU_COMM_FAILURE;
+> >>> +	} else if (ret == -2) {
+> >>> +		/*
+> >>> +		 * Handle case for SAM_STAT_RESERVATION_CONFLICT
+> >>> +		 */
+> >>> +		if (se_cmd->se_cmd_flags & SCF_SCSI_RESERVATION_CONFLICT)
+> >>> +			return PYX_TRANSPORT_RESERVATION_CONFLICT;
+> >>
+> >> Does this imply the driver supports scsi reservations? If it supports SCSI-2 reservations,
+> >> there is a capability that could be set in the capabilities MAD to advertise this
+> >> fact such that it can be used by the client.
+> >>
+> > 
+> > Absoulutely, the target core struct se_device backends being serviced as
+> > VSCSI LUN would normally return SCSI-3 from INQUIRY data, and support
+> > the full set of persistent reservations and CRH=1 (Compatible
+> > Reservations Handling) in drivers/target/target_core_pr.c code.
+> > 
+> > Also, we are able to explictly limit individual struct se_device
+> > backends to disable PR and only use the older SCSI-2 reservations, but I
+> > don't think we have a way to do this on a fabric module wide basis just
+> > yet.
+> > 
+> > Is this something we should be doing for this code..?
 > 
+> Disregard my previous comment. It looks like current client should handle reservations
+> just fine without any further changes.
 
-Hi Fubo,
+So is that an ack for putting this in scsi-misc ... or did you want to
+do more testing first?
 
-Note that when 'ret = T10_ALUA(su_dev)->alua_state_check(...)' is non
-zero, there are two possible cases:
+James
 
-*) transport_generic_cmd_sequencer() will still 'return -2' when the
-   (ret > 0) check is true from ->alua_state_check(...)
-
-*) Or jump to the label out_invalid_cdb_field: that also will
-   'return -2'.
-
-So AFAICT transport_generic_cmd_sequencer() will never actually
-'return ret' when 'ret = 1';
-
---nab
 
