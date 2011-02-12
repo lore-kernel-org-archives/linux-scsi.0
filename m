@@ -1,50 +1,52 @@
 From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] scsi: Erroneous handling of sense status in SCSI EH
- commands
-Date: Sat, 12 Feb 2011 10:30:06 -0600
-Message-ID: <1297528206.3026.7.camel@mulgrave.site>
-References: <1295597274-5844-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 1/3] qla2xxx: Remove check to return DID_NO_CONNECT
+ when FC device is lost.
+Date: Sat, 12 Feb 2011 10:52:13 -0600
+Message-ID: <1297529533.3026.8.camel@mulgrave.site>
+References: <1296256677-11572-1-git-send-email-madhu.iyengar@qlogic.com>
+	 <1296256677-11572-2-git-send-email-madhu.iyengar@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:37959 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:38513 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751014Ab1BLQaM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Feb 2011 11:30:12 -0500
-Received: from relay2.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	by mx2.suse.de (Postfix) with ESMTP id 66DD789FC6
-	for <linux-scsi@vger.kernel.org>; Sat, 12 Feb 2011 17:30:11 +0100 (CET)
-In-Reply-To: <1295597274-5844-1-git-send-email-hare@suse.de>
+	id S1751093Ab1BLQwU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Feb 2011 11:52:20 -0500
+In-Reply-To: <1296256677-11572-2-git-send-email-madhu.iyengar@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: madhu.iyengar@qlogic.com
+Cc: giridhar.malavali@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Fri, 2011-01-21 at 09:07 +0100, Hannes Reinecke wrote:
-> Consider a scenario where a SCSI EH command like TUR fails with a NOT READY
-> status - MANUAL INTERVENTION REQUIRED (02/04/03). As evident in the ASC/ASCQ
-> description, manual intervention is required in this case i.e. the target wants
-> TUR to fail here so that the host administrator can take corrective action.
+On Fri, 2011-01-28 at 15:17 -0800, madhu.iyengar@qlogic.com wrote:
+> From: Andrew Vasquez <andrew.vasquez@qlogic.com>
 > 
-> But this particular ASC/ASCQ is not handled in the scsi_check_sense, which
-> ultimately causes scsi_eh_tur to erroneously report a SUCCESS (device ready)
-> instead of the actual FAILURE state (device not ready).
+> Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_os.c |    1 -
+>  1 files changed, 0 insertions(+), 1 deletions(-)
 > 
-> This patch converts scsi_check_sense() to return SOFT_ERROR in
-> cases where an error has been signalled via the sense code, but
-> we should not wake the error handler. This error code will be
-> reverted back to SUCCESS for normal command handling, but
-> scsi_eh_completed_normally() will convert it to FAILED.
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index c194c23..5dc548b 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -562,7 +562,6 @@ qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *)
+>  	}
+>  	if (atomic_read(&fcport->state) != FCS_ONLINE) {
+>  		if (atomic_read(&fcport->state) == FCS_DEVICE_DEAD ||
+> -			atomic_read(&fcport->state) == FCS_DEVICE_LOST ||
 
-I can't reconcile this patch with the detailed error handling ones: you
-change a lot of call sites to TARGET_ERROR in that patch and SOFT_ERROR
-in this one.  Since the detailed error handling seems the more
-important, I'll drop this one ... can you work out a reconciliation,
-please?
-
-Thanks,
+This looks like you're actually *not* returning DID_NO_CONNECT when the
+device is lost ... what are you returning instead, and why is this an
+important bug fix?
 
 James
+
+
+>  			atomic_read(&base_vha->loop_state) == LOOP_DEAD) {
+>  			cmd->result = DID_NO_CONNECT << 16;
+>  			goto qc24_fail_command;
 
 
