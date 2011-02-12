@@ -1,74 +1,44 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 01/06] mptfusion: (New Feature)Added new sysfs
- parameters for handle and firmware id
-Date: Sat, 12 Feb 2011 13:55:06 -0600
-Message-ID: <1297540506.3026.27.camel@mulgrave.site>
-References: <20110210061934.GB31424@lsi.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: target: Question about transport_generic_allocate_tasks()
+Date: Sat, 12 Feb 2011 12:10:27 -0800
+Message-ID: <1297541427.13306.48.camel@haakon2.linux-iscsi.org>
+References: <AANLkTi=HhpMKKW6J7R5GR2yQ_V=222TeR1KKRpUp-Z0V@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58752 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752589Ab1BLTzJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Feb 2011 14:55:09 -0500
-In-Reply-To: <20110210061934.GB31424@lsi.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:43096 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752602Ab1BLUQ6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Feb 2011 15:16:58 -0500
+In-Reply-To: <AANLkTi=HhpMKKW6J7R5GR2yQ_V=222TeR1KKRpUp-Z0V@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
+To: Fubo Chen <fubo.chen@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2011-02-10 at 11:49 +0530, Kashyap, Desai wrote:
-> New feature is added.  sas_device_hanlde and firmware id will be visible from 
-> sysfs parameters. handle and firmware id is internal to LSI firmware.
-> It is merely debugging purpose.
+On Sat, 2011-02-12 at 15:33 +0100, Fubo Chen wrote:
+> Target drivers assume that transport_generic_allocate_tasks() returns
+> 0, -1 or -2. But if transport_generic_allocate_tasks() invoks
+> transport_generic_cmd_sequencer() and if
+> transport_generic_cmd_sequencer() invokes core_alua_state_check() the
+> value 1 can be returned. Which is correct - drivers or core ? And what
+> is meaning of return values ?
+> 
 
-Broken record time: checkpatch.pl:
+Hi Fubo,
 
-WARNING: please, no space before tabs
-#21: FILE: drivers/message/fusion/mptbase.h:402:
-+^Iu16     ^I^I handle;$
+Note that when 'ret = T10_ALUA(su_dev)->alua_state_check(...)' is non
+zero, there are two possible cases:
 
-WARNING: please, no spaces at the start of a line
-#67: FILE: drivers/message/fusion/mptscsih.c:3350:
-+    char *buf)$
+*) transport_generic_cmd_sequencer() will still 'return -2' when the
+   (ret > 0) check is true from ->alua_state_check(...)
 
-ERROR: code indent should use tabs where possible
-#79: FILE: drivers/message/fusion/mptscsih.c:3362:
-+ ^I^INULL);$
+*) Or jump to the label out_invalid_cdb_field: that also will
+   'return -2'.
 
-WARNING: please, no space before tabs
-#79: FILE: drivers/message/fusion/mptscsih.c:3362:
-+ ^I^INULL);$
+So AFAICT transport_generic_cmd_sequencer() will never actually
+'return ret' when 'ret = 1';
 
-WARNING: please, no spaces at the start of a line
-#79: FILE: drivers/message/fusion/mptscsih.c:3362:
-+ ^I^INULL);$
-
-WARNING: please, no spaces at the start of a line
-#91: FILE: drivers/message/fusion/mptscsih.c:3374:
-+    char *buf)$
-
-ERROR: code indent should use tabs where possible
-#103: FILE: drivers/message/fusion/mptscsih.c:3386:
-+ ^I^INULL);$
-
-WARNING: please, no space before tabs
-#103: FILE: drivers/message/fusion/mptscsih.c:3386:
-+ ^I^INULL);$
-
-WARNING: please, no spaces at the start of a line
-#103: FILE: drivers/message/fusion/mptscsih.c:3386:
-+ ^I^INULL);$
-
-total: 2 errors, 7 warnings, 93 lines checked
-
-Also, as I read through this patch, doesn't it add these two parameters
-for every fusion device type (SPI, SAS and FC) but only set them for
-SAS?  If you want SAS only parameters, they should probably be visible
-only for SAS cards.
-
-James
-
+--nab
 
