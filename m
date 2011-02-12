@@ -1,42 +1,73 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [v5 PATCH 1/4] bnx2fc: Header files
-Date: Sat, 12 Feb 2011 13:44:06 -0600
-Message-ID: <1297539846.3026.19.camel@mulgrave.site>
-References: <1296266426.268.50.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 01/06] mptfusion: (New Feature)Added new sysfs
+ parameters for handle and firmware id
+Date: Sat, 12 Feb 2011 13:55:06 -0600
+Message-ID: <1297540506.3026.27.camel@mulgrave.site>
+References: <20110210061934.GB31424@lsi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:43095 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751246Ab1BLToN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Feb 2011 14:44:13 -0500
-In-Reply-To: <1296266426.268.50.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58752 "EHLO
+	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752589Ab1BLTzJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Feb 2011 14:55:09 -0500
+In-Reply-To: <20110210061934.GB31424@lsi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Gollapudi <bprakash@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, devel@open-fcoe.org, Mike Christie <michaelc@cs.wisc.edu>, mchan@broadcom.com
+To: "Kashyap, Desai" <kashyap.desai@lsi.com>
+Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-On Fri, 2011-01-28 at 18:00 -0800, Bhanu Gollapudi wrote:
-> This patch contains header files for bnx2fc driver.
+On Thu, 2011-02-10 at 11:49 +0530, Kashyap, Desai wrote:
+> New feature is added.  sas_device_hanlde and firmware id will be visible from 
+> sysfs parameters. handle and firmware id is internal to LSI firmware.
+> It is merely debugging purpose.
 
-Do we have to have this litter of
+Broken record time: checkpatch.pl:
 
-#ifdef (__BIG_ENDIAN)
-...
-#else
-...
-#endif
+WARNING: please, no space before tabs
+#21: FILE: drivers/message/fusion/mptbase.h:402:
++^Iu16     ^I^I handle;$
 
-throughout all the structures ... it really makes quite a mess, and is
-very fragile (you have two entries to change and test each time, not
-just one).  You can use the cpu neutral format for all the headers and
-then use the cpu_to... accessors to make the conversions.
+WARNING: please, no spaces at the start of a line
+#67: FILE: drivers/message/fusion/mptscsih.c:3350:
++    char *buf)$
 
-To see how to do all of this, here's an ancient driver that used to look
-like yours and got converted:
+ERROR: code indent should use tabs where possible
+#79: FILE: drivers/message/fusion/mptscsih.c:3362:
++ ^I^INULL);$
 
-http://git.kernel.org/?p=linux/kernel/git/tglx/history.git;a=commit;h=0353305208ae64b5d4a27957bb3e25c6045b3f68
+WARNING: please, no space before tabs
+#79: FILE: drivers/message/fusion/mptscsih.c:3362:
++ ^I^INULL);$
+
+WARNING: please, no spaces at the start of a line
+#79: FILE: drivers/message/fusion/mptscsih.c:3362:
++ ^I^INULL);$
+
+WARNING: please, no spaces at the start of a line
+#91: FILE: drivers/message/fusion/mptscsih.c:3374:
++    char *buf)$
+
+ERROR: code indent should use tabs where possible
+#103: FILE: drivers/message/fusion/mptscsih.c:3386:
++ ^I^INULL);$
+
+WARNING: please, no space before tabs
+#103: FILE: drivers/message/fusion/mptscsih.c:3386:
++ ^I^INULL);$
+
+WARNING: please, no spaces at the start of a line
+#103: FILE: drivers/message/fusion/mptscsih.c:3386:
++ ^I^INULL);$
+
+total: 2 errors, 7 warnings, 93 lines checked
+
+Also, as I read through this patch, doesn't it add these two parameters
+for every fusion device type (SPI, SAS and FC) but only set them for
+SAS?  If you want SAS only parameters, they should probably be visible
+only for SAS cards.
 
 James
 
