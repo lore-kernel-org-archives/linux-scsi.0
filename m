@@ -1,65 +1,80 @@
-From: "Michael Chan" <mchan@broadcom.com>
-Subject: Re: [v5 PATCH 1/4] bnx2fc: Header files
-Date: Sat, 12 Feb 2011 18:39:59 -0800
-Message-ID: <C27F8246C663564A84BB7AB34397724240D01B4875@IRVEXCHCCR01.corp.ad.broadcom.com>
-References: <1296266426.268.50.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
- <1297539846.3026.19.camel@mulgrave.site>
+From: Madhu Iyengar <madhu.iyengar@qlogic.com>
+Subject: RE: [PATCH 1/3] qla2xxx: Remove check to return DID_NO_CONNECT when
+ FC device is lost.
+Date: Sat, 12 Feb 2011 19:20:21 -0800
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA8722614B053@AVEXMB1.qlogic.org>
+References: <1296256677-11572-1-git-send-email-madhu.iyengar@qlogic.com>
+	 <1296256677-11572-2-git-send-email-madhu.iyengar@qlogic.com>
+ <1297529533.3026.8.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms1.broadcom.com ([216.31.210.17]:2499 "EHLO mms1.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753461Ab1BMCkI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Feb 2011 21:40:08 -0500
-In-Reply-To: <1297539846.3026.19.camel@mulgrave.site>
+Received: from ch1outboundpool.messaging.microsoft.com ([216.32.181.184]:58491
+	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753298Ab1BMDf2 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 Feb 2011 22:35:28 -0500
+In-Reply-To: <1297529533.3026.8.camel@mulgrave.site>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'James Bottomley' <James.Bottomley@suse.de>, "Bhanu (Venkata Bhanu Prakash) Gollapudi" <bprakash@broadcom.com>
-Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'devel@open-fcoe.org'" <devel@open-fcoe.org>, 'Mike Christie' <michaelc@cs.wisc.edu>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Giridhar Malavali <giridhar.malavali@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Madhu Iyengar <madhu.iyengar@qlogic.com>
 
-SmFtZXMgQm90dG9tbGV5IHdyb3RlOg0KDQo+IE9uIEZyaSwgMjAxMS0wMS0yOCBhdCAxODowMCAt
-MDgwMCwgQmhhbnUgR29sbGFwdWRpIHdyb3RlOg0KPiA+IFRoaXMgcGF0Y2ggY29udGFpbnMgaGVh
-ZGVyIGZpbGVzIGZvciBibngyZmMgZHJpdmVyLg0KPiANCj4gRG8gd2UgaGF2ZSB0byBoYXZlIHRo
-aXMgbGl0dGVyIG9mDQo+IA0KPiAjaWZkZWYgKF9fQklHX0VORElBTikNCj4gLi4uDQo+ICNlbHNl
-DQo+IC4uLg0KPiAjZW5kaWYNCj4gDQo+IHRocm91Z2hvdXQgYWxsIHRoZSBzdHJ1Y3R1cmVzIC4u
-LiBpdCByZWFsbHkgbWFrZXMgcXVpdGUgYSBtZXNzLCBhbmQgaXMNCj4gdmVyeSBmcmFnaWxlICh5
-b3UgaGF2ZSB0d28gZW50cmllcyB0byBjaGFuZ2UgYW5kIHRlc3QgZWFjaCB0aW1lLCBub3QNCj4g
-anVzdCBvbmUpLiAgWW91IGNhbiB1c2UgdGhlIGNwdSBuZXV0cmFsIGZvcm1hdCBmb3IgYWxsIHRo
-ZSBoZWFkZXJzIGFuZA0KPiB0aGVuIHVzZSB0aGUgY3B1X3RvLi4uIGFjY2Vzc29ycyB0byBtYWtl
-IHRoZSBjb252ZXJzaW9ucy4NCj4gDQo+IFRvIHNlZSBob3cgdG8gZG8gYWxsIG9mIHRoaXMsIGhl
-cmUncyBhbiBhbmNpZW50IGRyaXZlciB0aGF0IHVzZWQgdG8NCj4gbG9vaw0KPiBsaWtlIHlvdXJz
-IGFuZCBnb3QgY29udmVydGVkOg0KPiANCj4gaHR0cDovL2dpdC5rZXJuZWwub3JnLz9wPWxpbnV4
-L2tlcm5lbC9naXQvdGdseC9oaXN0b3J5LmdpdDthPWNvbW1pdDtoPTANCj4gMzUzMzA1MjA4YWU2
-NGI1ZDRhMjc5NTdiYjNlMjVjNjA0NWIzZjY4DQo+IA0KDQpJIHRoaW5rIG91ciBzaXR1YXRpb24g
-aXMgYSBsaXR0bGUgZGlmZmVyZW50LiAgT3VyIGNoaXAgZG9lcyBhdXRvbWF0aWMNCmVuZGlhbiBz
-d2FwcGluZyBvbiB0aGVzZSBzdHJ1Y3R1cmVzIGR1cmluZyBETUEsIHNvIHdlIGRvbid0IG5lZWQg
-dG8gZG8NCmFueSBjcHVfdG9feHh4KCkveHh4X3RvX2NwdSgpIHdoZW4gd3JpdGluZyBvciByZWFk
-aW5nIHRoZXNlIGZpZWxkcy4gIE9uDQphIGJpZyBlbmRpYW4gc3lzdGVtLCB3ZSBzZXQgYSBzcGVj
-aWFsIGJpdCBpbiBhIERNQSBjb250cm9sIHJlZ2lzdGVyIHRvDQp0ZWxsIHRoZSBjaGlwIHRvIERN
-QSB0aGVzZSBjb250cm9sIHN0cnVjdHVyZXMgd2l0aCBzd2FwcGluZy4gIEJ1dCB0aGUNCnN0cnVj
-dHVyZSBkZWZpbml0aW9uIG5lZWRzIHRvIGJlIGRpZmZlcmVudCBvbiBiaWcgZW5kaWFuIGFuZCBs
-aXR0bGUNCmVuZGlhbiB3aGVuIHRoZSBmaWVsZCBpcyBub3QgYSAzMi1iaXQgZmllbGQuDQoNCkhl
-cmUncyBhbiBleGFtcGxlOg0KDQorc3RydWN0IGZjb2VfYmRfY3R4IHsNCisJdTMyIGJ1Zl9hZGRy
-X2hpOw0KKwl1MzIgYnVmX2FkZHJfbG87DQorI2lmIGRlZmluZWQoX19CSUdfRU5ESUFOKQ0KKwl1
-MTYgcnNydjA7DQorCXUxNiBidWZfbGVuOw0KKyNlbGlmIGRlZmluZWQoX19MSVRUTEVfRU5ESUFO
-KQ0KKwl1MTYgYnVmX2xlbjsNCisJdTE2IHJzcnYwOw0KKyNlbmRpZg0KKyNpZiBkZWZpbmVkKF9f
-QklHX0VORElBTikNCisJdTE2IHJzcnYxOw0KKwl1MTYgZmxhZ3M7DQorI2VsaWYgZGVmaW5lZChf
-X0xJVFRMRV9FTkRJQU4pDQorCXUxNiBmbGFnczsNCisJdTE2IHJzcnYxOw0KKyNlbmRpZg0KDQpU
-aGUgMzItYml0IGJ1Zl9hZGRyX2hpL2J1Zl9hZGRyX2xvIGZpZWxkcyBhcmUgdGhlIHNhbWUuICBC
-dXQgdGhlIDE2LWJpdCBmaWVsZHMNCmhhdmUgdG8gYmUgcmV2ZXJzZWQgaW4gdGhlaXIgb3JkZXIu
-ICBJbiB0aGUgY29kZSwgd2UgcmVmZXJlbmNlIHRoZXNlIGZpZWxkcyBhcy0NCmlzIGRpcmVjdGx5
-IGFuZCB0aGUgY2hpcCBkb2VzIHRoZSBlbmRpYW4gc3dhcHBpbmcgd2hlbiBETUEnaW5nIHRoZSB3
-aG9sZQ0Kc3RydWN0dXJlLg0KDQpJZiB3ZSB3YW50IHRvIGdldCByaWQgb2YgZXZlbiB0aGUgI2lm
-ZGVmIGluIHRoZSAuaCBmaWxlLCAgd2UnbGwgbmVlZCB0byByZWRlZmluZQ0KYWxsIDgtYml0IGFu
-ZCAxNi1iaXQgZmllbGRzIGFuZCBjb21iaW5lIHRoZW0gYXMgMzItYml0IGZpZWxkcy4gIFdoZW4g
-YXNzaWduaW5nDQo4LWJpdCBvciAxNi1iaXQgcXVhbnRpdGllcywgd2UnbGwgaGF2ZSB0byBtYXNr
-IGFuZCBzaGlmdCB0aGVtIGluIHByb3Blcmx5Lg0KQWdhaW4sIG5vIGNwdV90b194eHggaXMgbmVl
-ZGVkIGJlY2F1c2Ugb2YgdGhlIERNQSBlbmRpYW4gc3dhcCBkb25lIGJ5IHRoZSBjaGlwLg0KDQpT
-byB3ZSB0cmFkZSBjbGVhbiAuaCBmaWxlcyBmb3Igc2hpZnRpbmcgYW5kIG1hc2tpbmcgb3BlcmF0
-aW9ucyBpbiB0aGUgY29kZS4NClRoZXNlIC5oIGZpbGVzIGFyZSBnZW5lcmF0ZWQgYnkgYXV0b21h
-dGljIHNjcmlwdHMgdG8gbWF0Y2ggdGhlIGZpcm13YXJlDQpzdHJ1Y3R1cmVzLg0KDQpUaGFua3Mu
-DQoNCg0KDQo=
+James,
+
+Sorry about that. Here's the commit message, which explains the patch. Can you please add this to the patch? Thanks in advance:
+
+---
+If the target device gets lost, this fix is needed, as it causes negative unintended responses on basic I/O tests. If the target device gets lost, the upstream qla2xxx driver returns SCSI_MLQUEUE_TARGET_BUSY which causes an immediate retry without drop in the number of allowed retries. This semantic change, as a result of removing FC_DEVICE_LOST check is reasonable, as it only extends a short transitional period, until the transport is called to notify that the rport as lost (fc_remote_port_delete()). Once transport notification is done, fc_remote_port_chkready() check will take over.
+---
+
+Cheers,
+Madhu
+
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@suse.de]
+> Sent: Saturday, February 12, 2011 8:52 AM
+> To: Madhu Iyengar
+> Cc: Giridhar Malavali; Andrew Vasquez; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 1/3] qla2xxx: Remove check to return DID_NO_CONNECT
+> when FC device is lost.
+>
+> On Fri, 2011-01-28 at 15:17 -0800, madhu.iyengar@qlogic.com wrote:
+> > From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> >
+> > Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> > Signed-off-by: Madhuranath Iyengar <Madhu.Iyengar@qlogic.com>
+> > ---
+> >  drivers/scsi/qla2xxx/qla_os.c |    1 -
+> >  1 files changed, 0 insertions(+), 1 deletions(-)
+> >
+> > diff --git a/drivers/scsi/qla2xxx/qla_os.c
+> b/drivers/scsi/qla2xxx/qla_os.c
+> > index c194c23..5dc548b 100644
+> > --- a/drivers/scsi/qla2xxx/qla_os.c
+> > +++ b/drivers/scsi/qla2xxx/qla_os.c
+> > @@ -562,7 +562,6 @@ qla2xxx_queuecommand_lck(struct scsi_cmnd *cmd, void
+> (*done)(struct scsi_cmnd *)
+> >     }
+> >     if (atomic_read(&fcport->state) != FCS_ONLINE) {
+> >             if (atomic_read(&fcport->state) == FCS_DEVICE_DEAD ||
+> > -                   atomic_read(&fcport->state) == FCS_DEVICE_LOST ||
+>
+> This looks like you're actually *not* returning DID_NO_CONNECT when the
+> device is lost ... what are you returning instead, and why is this an
+> important bug fix?
+>
+> James
+>
+>
+> >                     atomic_read(&base_vha->loop_state) == LOOP_DEAD) {
+> >                     cmd->result = DID_NO_CONNECT << 16;
+> >                     goto qc24_fail_command;
+>
+>
+
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
