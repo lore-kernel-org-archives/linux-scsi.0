@@ -1,52 +1,74 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
-Date: Sun, 13 Feb 2011 13:18:37 -0600
-Message-ID: <1297624717.3001.2.camel@mulgrave.site>
-References: <1295797260.3007.118.camel@mulgrave.site>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Storage target performance
+Date: Sun, 13 Feb 2011 20:26:16 +0100
+Message-ID: <AANLkTikGG-uWFTZbkd_5ZFZ6_crhbKLLc-QwLcEa28x_@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1295797260.3007.118.camel@mulgrave.site>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-ide <linux-ide@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:56051 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754782Ab1BMT0h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Feb 2011 14:26:37 -0500
+Received: by iyj8 with SMTP id 8so4135958iyj.19
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2011 11:26:37 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, 2011-01-23 at 09:41 -0600, James Bottomley wrote:
-> The bad news is that this is a pretty horrific conversion.  Because of
-> the amount of control the new eh wants (and the slew of monolithic
-> assumptions it makes), the entire error handler routine has to be sliced
-> apart and sewn back together to make it callable as part of an existing
-> error handler (rather than trying to do everything on its own).
-> 
-> The even worse news is that unless you have an existing strategy
-> handler, you can't make use of this.  That means that ipr is
-> unconvertable in its current form.  Given the two really nasty options:
-> give ipr its own error handler via its own transport class, or attach
-> ipr to libsas and let it do the work, I'd choose the latter.
-> Unfortunately, my power box with IPR has been non-functional for a year
-> (and all pleas to IBM to fix it have so far gone unanswered), so I can't
-> really do this myself.
-> 
-> Once we carve up libata, it's still a rather complex call sequence for
-> libsas because of libata's annoying insistance on calling the error
-> handler at the drop of a hat.  The principle differentiator used is the
-> fact that if a SCSI command no longer has an associated SAS task, (i.e.
-> libsas thinks it's complete) it must be destined for libata.  This works
-> correctly in all the ATAPI sense processing instances I've tested.
-> Finally, we still have to call port recovery.  Currently, it's
-> impossible to tell which port libata thinks is in error (libata knows
-> because it has one host per port, but libsas doesn't), so the final
-> solution is just to call port recovery for every SATA/STP attached port.
-> 
-> I've tested all of this with mvsas over expander attached ATA devices
-> using STP (aic94xx seems to have developed some handling fault for STP,
-> which I'll look into next).
+Hi,
 
-Since there's been remarkably little discussion of the ata changes, I
-think it's time to put this in linux-next to see what shakes out.
+Out of curiosity I have been running a few performance tests with the
+SCST and TCM versions of the ib_srpt driver and a RAM disk (tmpfs) as
+storage target. The results are as follows:
 
-James
+(1) fio --bs=4K --ioengine=psync --buffered=0 --rw=read
+24.014 IOPS with the SCST version and 22.028 IOPS with the TCM version
+or a difference of about 9%. This confirms that the TCM core needs
+more time for processing a single command.
 
+(2) fio --bs=4K --ioengine=libaio --iodepth=16 --buffered=0 --rw=read
+--thread --numjobs=2 --gtod_reduce=1 --group_reporting --loops=10
+184.000 IOPS with the SCST version and 167.000 IOPS with the TCM
+version or a difference of about 10%.
 
+(3) fio --bs=64M --ioengine=psync --buffered=0 --rw=read
+1584 MB/s with the SCST version and 1262 MB/s with the TCM version, or
+SCST reaching a 25% higher bandwidth (where SCST was using a single
+I/O thread).
+
+(4) fio --bs=64M --ioengine=psync --buffered=0 --rw=write
+1409 MB/s with the SCST version and 992 MB/s with the TCM version, or
+SCST reaching a 42% higher bandwidth (where SCST was using a single
+I/O thread).
+
+Notes:
+- At least for the SRP protocol the initiator system is the
+bottleneck. This means that the ratio of the TCM to SCST processing
+overhead in the TCM core is probably larger than the IOPS ratios for
+the above tests. Tests have shown that about four initiator systems
+are necessary to saturate one system running ib_srpt.
+- The above results should be representative for a setup with
+low-latency storage (SSD). For a setup where data is stored on a RAID
+array, random I/O performance depends a lot on the number of threads
+used by the storage target for processing I/O. SCST, TGT and IET all
+use multiple threads for processing I/O while TCM has been designed to
+use a single I/O thread per target device.
+- For the above tests the results did not depend on the number of
+threads configured in SCST. This is consistent with what has been
+observed for SCST setups with high-end SSDs - optimal IOPS numbers
+with a small number of I/O threads (one or two).
+- One performance optimization has been applied in the TCM version
+that has not yet been applied in the SCST version: embedding the
+target command data structure in another structure such that it does
+not have to be allocated and deallocated each time a SCSI command is
+processed.
+
+Setup details:
+- Kernel version: 2.6.38-rc4.
+- Default kernel module parameter values were used for ib_srp and
+ib_srpt. This means that the ib_srp parameter srp_sg_tablesize had the
+value 12 in this test.
+- IB hardware: QDR HCA in a PCIe slot.
+- CPU model: Intel Core 2 Duo.
+
+Bart.
