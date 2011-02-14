@@ -1,29 +1,43 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Mon, 14 Feb 2011 18:11:23 +0900
-Message-ID: <20110214181129X.fujita.tomonori@lab.ntt.co.jp>
-References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<AANLkTikWDxfTFeGqG36Z1dAdWLeXmN7r=AsR3fsjBok+@mail.gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH v2 3/3] tcm ibmvscsis driver
+Date: Mon, 14 Feb 2011 01:12:54 -0800
+Message-ID: <1297674774.7114.52.camel@haakon2.linux-iscsi.org>
+References: <20110214124821T.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:34430 "EHLO sh.osrg.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752462Ab1BNJLc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Feb 2011 04:11:32 -0500
-In-Reply-To: <AANLkTikWDxfTFeGqG36Z1dAdWLeXmN7r=AsR3fsjBok+@mail.gmail.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:51483 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752051Ab1BNJTZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2011 04:19:25 -0500
+In-Reply-To: <20110214124821T.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bvanassche@acm.org
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, nab@linux-iscsi.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, brking@linux.vnet.ibm.com
 
-On Mon, 14 Feb 2011 08:16:45 +0100
-Bart Van Assche <bvanassche@acm.org> wrote:
+On Mon, 2011-02-14 at 12:48 +0900, FUJITA Tomonori wrote:
+> This is the second version of tcm ibmvscsis driver. You can find the
+> first version at:
+> 
+> http://marc.info/?t=129734085600004&r=1&w=2
+> 
+> The changes are:
+> 
+> - send VIOSRP_MAD_NOT_SUPPORTED for unknown mad type requests.
+> - fix inquiry typo
+> - sends task management response (for now, 'NOT SUPPORTED').
+> - remove dead code.
+> 
 
-> Are you sure that it is fine to pass values like MSG_SIMPLE_TAG as the
-> sixth argument of transport_init_se_cmd() ? As far as I know TCM
-> doesn' t support any of the MSG_..._TAG values.
+Your rev2 patch has been merged into lio-core-2.6.git/tcm_ibmvscsis
+currently @ .38-rc4.
 
-Oops, I'll send the next version soon.
+Thanks!
+
+--nab
+
+
+
+
