@@ -1,69 +1,65 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: Erroneous handling of sense status in SCSI EH commands
-Date: Mon, 14 Feb 2011 08:26:00 +0100
-Message-ID: <4D58D908.7070306@suse.de>
-References: <1295597274-5844-1-git-send-email-hare@suse.de> <1297528206.3026.7.camel@mulgrave.site>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Mon, 14 Feb 2011 08:16:45 +0100
+Message-ID: <AANLkTikWDxfTFeGqG36Z1dAdWLeXmN7r=AsR3fsjBok+@mail.gmail.com>
+References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp> <1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38976 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751358Ab1BNHRV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Feb 2011 02:17:21 -0500
-Received: from relay1.suse.de (charybdis-ext.suse.de [195.135.221.2])
-	by mx2.suse.de (Postfix) with ESMTP id 0DE475FC9F
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2011 08:17:21 +0100 (CET)
-In-Reply-To: <1297528206.3026.7.camel@mulgrave.site>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:39346 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770Ab1BNHTi convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2011 02:19:38 -0500
+Received: by iyj8 with SMTP id 8so4514830iyj.19
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Feb 2011 23:19:38 -0800 (PST)
+In-Reply-To: <1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, nab@linux-iscsi.org
 
-On 02/12/2011 05:30 PM, James Bottomley wrote:
-> On Fri, 2011-01-21 at 09:07 +0100, Hannes Reinecke wrote:
->> Consider a scenario where a SCSI EH command like TUR fails with a NO=
-T READY
->> status - MANUAL INTERVENTION REQUIRED (02/04/03). As evident in the =
-ASC/ASCQ
->> description, manual intervention is required in this case i.e. the t=
-arget wants
->> TUR to fail here so that the host administrator can take corrective =
-action.
->>
->> But this particular ASC/ASCQ is not handled in the scsi_check_sense,=
- which
->> ultimately causes scsi_eh_tur to erroneously report a SUCCESS (devic=
-e ready)
->> instead of the actual FAILURE state (device not ready).
->>
->> This patch converts scsi_check_sense() to return SOFT_ERROR in
->> cases where an error has been signalled via the sense code, but
->> we should not wake the error handler. This error code will be
->> reverted back to SUCCESS for normal command handling, but
->> scsi_eh_completed_normally() will convert it to FAILED.
->=20
-> I can't reconcile this patch with the detailed error handling ones: y=
-ou
-> change a lot of call sites to TARGET_ERROR in that patch and SOFT_ERR=
-OR
-> in this one.  Since the detailed error handling seems the more
-> important, I'll drop this one ... can you work out a reconciliation,
-> please?
->=20
-Yes. I'm in discussion with NetApp (as the original reporter)
-about details about this patch anyway.
+On Thu, Feb 10, 2011 at 1:21 PM, FUJITA Tomonori
+<fujita.tomonori@lab.ntt.co.jp> wrote:
+> + =A0 =A0 =A0 switch (cmd->task_attr) {
+> + =A0 =A0 =A0 case SRP_SIMPLE_TASK:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 attr =3D MSG_SIMPLE_TAG;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 case SRP_ORDERED_TASK:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 attr =3D MSG_ORDERED_TAG;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 case SRP_HEAD_TASK:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 attr =3D MSG_HEAD_TAG;
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 break;
+> + =A0 =A0 =A0 default:
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 printk(KERN_WARNING "Task attribute %d =
+not supported\n",
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0cmd->task_attr);
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 attr =3D MSG_SIMPLE_TAG;
+> + =A0 =A0 =A0 }
+> +
+> + =A0 =A0 =A0 data_len =3D srp_data_length(cmd, srp_cmd_direction(cmd=
+));
+> +
+> + =A0 =A0 =A0 se_cmd =3D &vsc->se_cmd;
+> +
+> + =A0 =A0 =A0 transport_init_se_cmd(se_cmd,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 adapter->se=
+_tpg.se_tpg_tfo,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 adapter->se=
+_sess, data_len,
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 srp_cmd_dir=
+ection(cmd),
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 attr, vsc->=
+sense_buf);
 
-I'll be sending an update.
+Hi Tomo,
 
-Cheers,
+Are you sure that it is fine to pass values like MSG_SIMPLE_TAG as the
+sixth argument of transport_init_se_cmd() ? As far as I know TCM
+doesn' t support any of the MSG_..._TAG values.
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
+Bart.
 --
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
