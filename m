@@ -1,184 +1,130 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Mon, 14 Feb 2011 10:36:24 +0900
-Message-ID: <20110214103408I.fujita.tomonori@lab.ntt.co.jp>
+Date: Mon, 14 Feb 2011 10:42:54 +0900
+Message-ID: <20110214104108N.fujita.tomonori@lab.ntt.co.jp>
 References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
 	<1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
-	<1297364591.18212.172.camel@haakon2.linux-iscsi.org>
+	<4D543951.2000207@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sh.osrg.net ([192.16.179.4]:38157 "EHLO sh.osrg.net"
+Received: from sh.osrg.net ([192.16.179.4]:33678 "EHLO sh.osrg.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755386Ab1BNBg3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Feb 2011 20:36:29 -0500
-In-Reply-To: <1297364591.18212.172.camel@haakon2.linux-iscsi.org>
+	id S1754706Ab1BNBnC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 Feb 2011 20:43:02 -0500
+In-Reply-To: <4D543951.2000207@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
+To: brking@linux.vnet.ibm.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, nab@linux-iscsi.org
 
-On Thu, 10 Feb 2011 11:03:11 -0800
-"Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
+On Thu, 10 Feb 2011 13:15:29 -0600
+Brian King <brking@linux.vnet.ibm.com> wrote:
 
-> > +#define	INITIAL_SRP_LIMIT	16
-> > +#define	DEFAULT_MAX_SECTORS	256
-> > +
+> On 02/10/2011 06:21 AM, FUJITA Tomonori wrote:
 > 
-> Ok, these two hardcoded defs can  be converted into context specific
-> fabric dependent configfs attributes (TF_CIT_TMPL(fabric)->tfc_* below)
-> using target_core_fabric_configfs.h wrappers..
-
-I think that these values are used when you load the driver. No chance
-to configure them via configfs.
-
-
-> > +static char *ibmvscsis_parse_pr_out_transport_id(struct se_portal_group *se_tpg,
-> > +						 const char *buf,
-> > +						 u32 *out_tid_len,
-> > +						 char **port_nexus_ptr)
+> > +static int process_mad_iu(struct iu_entry *iue)
 > > +{
-> > +	return NULL;
-> > +}
+> > +	union viosrp_iu *iu = vio_iu(iue);
+> > +	struct viosrp_adapter_info *info;
+> > +	struct viosrp_host_config *conf;
 > > +
+> > +	switch (iu->mad.empty_iu.common.type) {
+> > +	case VIOSRP_EMPTY_IU_TYPE:
+> > +		printk(KERN_ERR "%s\n", "Unsupported EMPTY MAD IU");
+> > +		break;
+> > +	case VIOSRP_ERROR_LOG_TYPE:
+> > +		printk(KERN_ERR "%s\n", "Unsupported ERROR LOG MAD IU");
+> > +		iu->mad.error_log.common.status = 1;
+> > +		send_iu(iue, sizeof(iu->mad.error_log),	VIOSRP_MAD_FORMAT);
+> > +		break;
+> > +	case VIOSRP_ADAPTER_INFO_TYPE:
+> > +		info = &iu->mad.adapter_info;
+> > +		info->common.status = send_adapter_info(iue, info->buffer,
+> > +							info->common.length);
+> > +		send_iu(iue, sizeof(*info), VIOSRP_MAD_FORMAT);
+> > +		break;
+> > +	case VIOSRP_HOST_CONFIG_TYPE:
+> > +		conf = &iu->mad.host_config;
+> > +		conf->common.status = 1;
+> > +		send_iu(iue, sizeof(*conf), VIOSRP_MAD_FORMAT);
+> > +		break;
+> > +	default:
+> > +		printk(KERN_ERR "Unknown type %u\n", iu->srp.rsp.opcode);
 > 
-> OK, I still need to add generic SCSI_PROTOCOL_SRP handlers for PR
-> TransportID processing, and get up and running with TCM_Loop SRP target
-> ports.  I will look at getting this resolved in LIO upstream in the near
-> future, and make sure this gets converted..
+> We should be sending back the MAD not supported response here (0xF1):
+> 
+> iu->mad.common.status = 0xF1;
+> send_iu(iue, sizeof(iu->mad.common), VIOSRP_MAD_FORMAT);
+> 
+> Should also be doing this for the unsupported MAD types above, otherwise
+> the client never receives a response to these commands and times them out.
 
-I don't care much.
-
-FYI, ibmvscsis initiators don't share a target device. So PR is
-pointless in reality.
+I'll fix.
 
 
+> > +static int ibmvscsis_inquery(struct ibmvscsis_adapter *adapter,
+> 
+> /inquery/inquiry/
 
-> > +static int ibmvscsis_queue_tm_rsp(struct se_cmd *se_cmd)
+Oops.
+
+
+> > +			      struct srp_cmd *cmd, char *data)
 > > +{
-> > +	return 0;
-> > +}
+> > +	struct se_portal_group *se_tpg = &adapter->se_tpg;
+> > +	struct inquiry_data *id = (struct inquiry_data *)data;
+> > +	u64 unpacked_lun, lun = cmd->lun;
+> > +	u8 *cdb = cmd->cdb;
+> > +	int len;
 > > +
-> 
-> The TM request/response logic still needs to be hooked up, right..?
-
-Yeah, I'll add soon.
-
-
-> > +	case 0x08: /* Cache page */
-> > +		/* length should be 4 */
-> > +#if 0
-> > +		if (cmd->cdb[4] != 4
-> > +		    && cmd->cdb[4] != 0x20) {
-> > +			send_rsp(iue, ILLEGAL_REQUEST, 0x20);
-> > +			dma_free_coherent(iue->adapter->dev,
-> > +					  MODE_SENSE_BUFFER_SIZE,
-> > +					  mode, data_token);
-> > +			return FREE_IU;
-> > +		}
-> > +#endif
+> > +	if (!data)
+> > +		printk(KERN_INFO "%s %d: oomu\n", __func__, __LINE__);
 > > +
-> 
-> Can this be dropped..?
-
-Yeah, I had better to add the proper error handling though.
-
-
-> > +static int ibmvscsis_queue_data_in(struct se_cmd *se_cmd)
-> > +{
-> > +	struct ibmvscsis_cmnd *cmd = container_of(se_cmd,
-> > +			struct ibmvscsis_cmnd, se_cmd);
-> > +	struct scsi_cmnd *sc = &cmd->sc;
-> > +	/*
-> > +	 * Check for overflow residual count
-> > +	 */
-> > +	if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT)
-> > +		scsi_set_resid(sc, se_cmd->residual_count);
-> > +
-> > +	sc->sdb.length = se_cmd->data_length;
-> > +
-> > +	/*
-> > +	 * Setup the struct se_task->task_sg[] chained SG list
-> > +	 */
-> > +	if ((se_cmd->se_cmd_flags & SCF_SCSI_DATA_SG_IO_CDB) ||
-> > +	    (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_SG_IO_CDB)) {
-> > +		transport_do_task_sg_chain(se_cmd);
-> > +
-> > +		sc->sdb.table.nents = T_TASK(se_cmd)->t_tasks_sg_chained_no;
-> > +		sc->sdb.table.sgl = T_TASK(se_cmd)->t_tasks_sg_chained;
-> > +	} else if (se_cmd->se_cmd_flags & SCF_SCSI_CONTROL_NONSG_IO_CDB) {
-> > +		/*
-> > +		 * Use T_TASK(se_cmd)->t_tasks_sg_bounce for control CDBs
-> > +		 * using a contigious buffer
-> > +		 */
-> > +		sg_init_table(&T_TASK(se_cmd)->t_tasks_sg_bounce, 1);
-> > +		sg_set_buf(&T_TASK(se_cmd)->t_tasks_sg_bounce,
-> > +			T_TASK(se_cmd)->t_task_buf, se_cmd->data_length);
-> > +
-> > +		sc->sdb.table.nents = 1;
-> > +		sc->sdb.table.sgl = &T_TASK(se_cmd)->t_tasks_sg_bounce;
+> > +	if (((cdb[1] & 0x3) == 0x3) || (!(cdb[1] & 0x3) && cdb[2])) {
+> > +		printk(KERN_INFO "%s %d: invalid req\n", __func__, __LINE__);
+> > +		return 0;
 > > +	}
-> > +	/*
-> > +	 * Perform the SCSI READ data transfer from sc->sdb.table into
-> > +	 * VIO LPAR memory.  This will occur via libsrp in the
-> > +	 * ibmvscsis_rdma() callback
-> > +	 */
-> > +#if 0
-> > +	ret = srp_transfer_data(sc, &vio_iu(iue)->srp.cmd,
-> > +				ibmvscsis_rdma, 1, 1);
-> > +	if (ret) {
-> > +		printk(KERN_ERR "srp_transfer_data() failed: %d, returning"
-> > +				" DID_ERROR\n", ret);
-> > +		sc->result = host_byte(DID_ERROR) | se_cmd->scsi_status;
-> > +	} else
-> > +		sc->result = host_byte(DID_OK) | se_cmd->scsi_status;
-> > +#endif
-> 
-> Mmmm, is this really supposed to be disabled..?
-
-ibmvscsis_cmd_done calls srp_transfer_data(). I should remove the
-above.
-
-
-> > +	/*
-> > +	 * This will call srp_transfer_data() and post the response
-> > +	 * to VIO via libsrp.
-> > +	 */
-> > +	ibmvscsis_cmd_done(sc);
-> > +	return 0;
-> > +}
 > > +
-
-
-> > +	case REPORT_LUNS:
-> > +		sg_alloc_table(&sc->sdb.table, 1, GFP_KERNEL);
-> > +		pg = alloc_page(GFP_KERNEL|__GFP_ZERO);
-> > +		sc->sdb.length = ibmvscsis_report_luns(adapter, cmd,
-> > +						       page_address(pg));
-> > +		sg_set_page(sc->sdb.table.sgl, pg, sc->sdb.length, 0);
-> > +		ibmvscsis_cmd_done(sc);
-> > +		sg_free_table(&sc->sdb.table);
-> > +		__free_page(pg);
-> > +		kfree(vsc);
-> > +		break;
-> > +	case MODE_SENSE:
-> > +		/* fixme: needs to use tcm */
-> > +		sg_alloc_table(&sc->sdb.table, 1, GFP_KERNEL);
-> > +		pg = alloc_page(GFP_KERNEL|__GFP_ZERO);
-> > +		sc->sdb.length = ibmvscsis_mode_sense(adapter,
-> > +						      cmd, page_address(pg));
-> > +		sg_set_page(sc->sdb.table.sgl, pg, sc->sdb.length, 0);
-> > +		ibmvscsis_cmd_done(sc);
-> > +		sg_free_table(&sc->sdb.table);
-> > +		__free_page(pg);
-> > +		kfree(vsc);
-> > +		break;
+> > +	if (cdb[1] & 0x3)
+> > +		printk(KERN_INFO "%s %d: needs the normal path\n",
+> > +		       __func__, __LINE__);
+> > +	else {
+> > +		id->qual_type = TYPE_DISK;
+> > +		id->rmb_reserve = 0x00;
+> > +		id->version = 0x84; /* ISO/IE */
+> > +		id->aerc_naca_hisup_format = 0x22; /* naca & fmt 0x02 */
+> > +		id->addl_len = sizeof(*id) - 4;
+> > +		id->bque_encserv_vs_multip_mchngr_reserved = 0x00;
+> > +		id->reladr_reserved_linked_cmdqueue_vs = 0x02; /* CMDQ */
+> > +		memcpy(id->vendor, "IBM	    ", 8);
+> > +		/*
+> > +		 * Don't even ask about the next bit.  AIX uses
+> > +		 * hardcoded device naming to recognize device types
+> > +		 * and their client won't  work unless we use VOPTA and
+> > +		 * VDASD.
+> > +		 */
+> > +		if (id->qual_type == TYPE_ROM)
+> > +			memcpy(id->product, "VOPTA blkdev    ", 16);
+> > +		else
+> > +			memcpy(id->product, "VDASD blkdev    ", 16);
+> > +
+> > +		memcpy(id->revision, "0001", 4);
+> > +
+> > +		snprintf(id->unique, sizeof(id->unique),
+> > +			 "IBM-VSCSI-%s-P%d-%x-%d-%d-%d\n",
+> > +			 system_id,
+> > +			 partition_number,
+> > +			 adapter->dma_dev->unit_address,
+> > +			 GETBUS(lun),
+> > +			 GETTARGET(lun),
+> > +			 GETLUN(lun));
+> > +	}
 > 
-> Just to verify again, INQUIRY and REPORT_LUNS are the only CDBs that
-> have a hard requirement of being intercepted in order for VSCSI to
-> function, right..?
+> Do we have any persistent unique identifying data which we could use to
+> build a page 0x83 response such that persistent naming would work in the client?
 
-tcm MODE_SENSE needed to be modified slightly to handle
-ibmvscsis. It's a todo item.
+I guess that we could enable it to be configured via configfs.
 
+Thanks,
