@@ -1,48 +1,40 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Mon, 14 Feb 2011 12:50:40 +0100
-Message-ID: <AANLkTin3Zb3OQz0942-2bcpfwqd8dGGnHyBjmeYt0FwZ@mail.gmail.com>
-References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
- <AANLkTikWDxfTFeGqG36Z1dAdWLeXmN7r=AsR3fsjBok+@mail.gmail.com> <20110214181129X.fujita.tomonori@lab.ntt.co.jp>
+From: "Bryn M. Reeves" <bmr@redhat.com>
+Subject: Re: scsi_mod issue
+Date: Mon, 14 Feb 2011 14:08:14 +0000
+Message-ID: <4D59374E.2020607@redhat.com>
+References: <AANLkTikyGMHeE-k8J=j7axdjzcJKoHedOLfk3YuK7N5_@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-iy0-f174.google.com ([209.85.210.174]:39601 "EHLO
-	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752921Ab1BNLvN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2011 06:51:13 -0500
-Received: by iyj8 with SMTP id 8so4718297iyj.19
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2011 03:51:13 -0800 (PST)
-In-Reply-To: <20110214181129X.fujita.tomonori@lab.ntt.co.jp>
+Received: from mx1.redhat.com ([209.132.183.28]:4775 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755207Ab1BNOIR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Feb 2011 09:08:17 -0500
+In-Reply-To: <AANLkTikyGMHeE-k8J=j7axdjzcJKoHedOLfk3YuK7N5_@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, Brian King <brking@linux.vnet.ibm.com>
+To: John Reynolds <bigjohn067@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Feb 14, 2011 at 10:11 AM, FUJITA Tomonori
-<fujita.tomonori@lab.ntt.co.jp> wrote:
-> On Mon, 14 Feb 2011 08:16:45 +0100
-> Bart Van Assche <bvanassche@acm.org> wrote:
->
->> Are you sure that it is fine to pass values like MSG_SIMPLE_TAG as the
->> sixth argument of transport_init_se_cmd() ? As far as I know TCM
->> doesn' t support any of the MSG_..._TAG values.
->
-> Oops, I'll send the next version soon.
+On 02/13/2011 02:07 PM, John Reynolds wrote:
+> it would appear the scsi module does recognise the vendor and module
+> as a scsi block device.
+> I have tried adding the following lines to /etc/modprobe.conf.local
+> options scsi_mod dev_flags="IET:VIRTUAL-DISK:0x240"
+> or
+> options scsi_mod dev_flags="IET:VIRTUAL-DISK:0x1000240"
+> 
+> rebooted several times, with the same error message
+> even added the scsi_mod.dev_flags=IET:VIRTUAL-DISK:0x240 to the kernel
+> boot options, again the same error.
 
-Hi Tomo,
+Did you rebuild the initramfs image after modifying these options?
 
-Two other issues I noticed are:
-- send_rsp() sends back an SRP response with req_lim_delta = 1 before
-srp_iu_put() is invoked. I think this is a race condition: it can
-happen that the SRP initiator has received an SRP_RSP and sends a new
-SRP_CMD before srp_iu_put() was invoked. On a heavily loaded system
-that can trigger a queue overflow in the target.
-- As anyone can see in the driver code (and as specified in the PAPR)
-management datagrams (MADs) fall outside the SRP credit mechanism.
-Hence not reserving one credit (assuming that the initiator makes sure
-there is at most one outstanding MAD) for MAD can - at least in theory
-- trigger a queue overflow.
+Also, I don't think anything in the standard module-init-tools checks for a
+modprobe.conf.local - most distributions today either still use
+/etc/modprobe.conf for everything (it's been deprecated for some time) or have
+switched to using .conf files in /etc/modprobe.d.
 
-Bart.
+Regards,
+Bryn.
