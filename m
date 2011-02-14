@@ -1,54 +1,48 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH v3 3/3] tcm ibmvscsis driver
-Date: Mon, 14 Feb 2011 02:29:49 -0800
-Message-ID: <1297679389.21049.32.camel@haakon2.linux-iscsi.org>
-References: <20110214192600L.fujita.tomonori@lab.ntt.co.jp>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Mon, 14 Feb 2011 12:50:40 +0100
+Message-ID: <AANLkTin3Zb3OQz0942-2bcpfwqd8dGGnHyBjmeYt0FwZ@mail.gmail.com>
+References: <1297340495-13347-1-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <1297340495-13347-4-git-send-email-fujita.tomonori@lab.ntt.co.jp>
+ <AANLkTikWDxfTFeGqG36Z1dAdWLeXmN7r=AsR3fsjBok+@mail.gmail.com> <20110214181129X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:37846 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752268Ab1BNKgV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2011 05:36:21 -0500
-In-Reply-To: <20110214192600L.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:39601 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752921Ab1BNLvN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2011 06:51:13 -0500
+Received: by iyj8 with SMTP id 8so4718297iyj.19
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2011 03:51:13 -0800 (PST)
+In-Reply-To: <20110214181129X.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, brking@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, Brian King <brking@linux.vnet.ibm.com>
 
-On Mon, 2011-02-14 at 19:25 +0900, FUJITA Tomonori wrote:
-> This is the third version of tcm ibmvscsis driver. You can find the
-> first version at:
-> 
-> http://marc.info/?t=129734085600004&r=1&w=2
-> 
-> The changes are:
-> v3:
-> - fix task attribute (convert MSG_* to TASK_ATTR_*)
-> v2:
-> - send VIOSRP_MAD_NOT_SUPPORTED for unknown mad type requests.
-> - fix inquiry typo
-> - sends task management response (for now, 'NOT SUPPORTED').
-> - remove dead code.
-> 
-> =
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH v3 3/3] tcm ibmvscsis driver
-> 
-> This replaces ibmvstgt driver that uses the old target framework.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  drivers/scsi/ibmvscsi/Makefile    |    4 +-
->  drivers/scsi/ibmvscsi/ibmvscsis.c | 1761 +++++++++++++++++++++++++++++++++++++
->  2 files changed, 1764 insertions(+), 1 deletions(-)
->  create mode 100644 drivers/scsi/ibmvscsi/ibmvscsis.c
-> 
+On Mon, Feb 14, 2011 at 10:11 AM, FUJITA Tomonori
+<fujita.tomonori@lab.ntt.co.jp> wrote:
+> On Mon, 14 Feb 2011 08:16:45 +0100
+> Bart Van Assche <bvanassche@acm.org> wrote:
+>
+>> Are you sure that it is fine to pass values like MSG_SIMPLE_TAG as the
+>> sixth argument of transport_init_se_cmd() ? As far as I know TCM
+>> doesn' t support any of the MSG_..._TAG values.
+>
+> Oops, I'll send the next version soon.
 
-Merged and pushed your rev3 changes into lio-core-2.6.git/tcm_ibmvscsis
+Hi Tomo,
 
-Thanks again Tomo-san!
+Two other issues I noticed are:
+- send_rsp() sends back an SRP response with req_lim_delta = 1 before
+srp_iu_put() is invoked. I think this is a race condition: it can
+happen that the SRP initiator has received an SRP_RSP and sends a new
+SRP_CMD before srp_iu_put() was invoked. On a heavily loaded system
+that can trigger a queue overflow in the target.
+- As anyone can see in the driver code (and as specified in the PAPR)
+management datagrams (MADs) fall outside the SRP credit mechanism.
+Hence not reserving one credit (assuming that the initiator makes sure
+there is at most one outstanding MAD) for MAD can - at least in theory
+- trigger a queue overflow.
 
---nab
-
+Bart.
