@@ -1,57 +1,84 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] target: Remove unused variable
-Date: Mon, 14 Feb 2011 15:12:09 -0800
-Message-ID: <1297725129.29207.34.camel@haakon2.linux-iscsi.org>
-References: <AANLkTi=dHh9Ombj=ZgA4AnPUyD3qo9kcr8z7UbXce-Or@mail.gmail.com>
+From: Hank Janssen <hjanssen@microsoft.com>
+Subject: Process for subsystem maintainers to get Hyper-V code out of
+ staging.
+Date: Mon, 14 Feb 2011 23:30:07 +0000
+Message-ID: <8AFC7968D54FB448A30D8F38F259C56233F95737__18777.7757797905$1297726539$gmane$org@TK5EX14MBXC114.redmond.corp.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:53887 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435Ab1BNXSq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2011 18:18:46 -0500
-In-Reply-To: <AANLkTi=dHh9Ombj=ZgA4AnPUyD3qo9kcr8z7UbXce-Or@mail.gmail.com>
+Received: from mail3.microsoft.com ([131.107.115.214]:46037 "EHLO
+	smtp.microsoft.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751487Ab1BNXf3 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2011 18:35:29 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Fubo Chen <fubo.chen@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: "shemminger@linux-foundation.org" <shemminger@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, linux-ide@vger.ke
+Cc: KY Srinivasan <kys@microsoft.com>, Hashir Abdi <habdi@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "gregkh@suse.de" <gregkh@suse.de>
 
-On Mon, 2011-02-14 at 20:09 +0100, Fubo Chen wrote:
-> Does this patch make sense ?
-> 
-> ---
->  drivers/target/target_core_transport.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
-> 
 
-Hi Fubo,
+Stephen/James/David,
 
-> diff --git a/drivers/target/target_core_transport.c
-> b/drivers/target/target_core_transport.c
-> index 236e22d..d0e1ce8 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -5828,14 +5828,12 @@ void transport_send_task_abort(struct se_cmd *cmd)
->   */
->  int transport_generic_do_tmr(struct se_cmd *cmd)
->  {
-> -	struct se_cmd *ref_cmd;
->  	struct se_device *dev = SE_DEV(cmd);
->  	struct se_tmr_req *tmr = cmd->se_tmr_req;
->  	int ret;
-> 
->  	switch (tmr->function) {
->  	case ABORT_TASK:
-> -		ref_cmd = tmr->ref_cmd;
->  		tmr->response = TMR_FUNCTION_REJECTED;
->  		break;
->  	case ABORT_TASK_SET:
+Greetings to you all. As you might be aware, we submitted Hyper-V drive=
+rs to the kernel 2009. =A0
+We have been extending these drivers with additional functionality and =
+our primary focus=20
+now is doing the work needed to exit the staging area.
 
-The usage of ref_cmd here will be used in for-39 code, so this should be
-kept in place for now..
+To give you some background, the following are Hyper-V specific Linux d=
+rivers:
 
-Thanks,
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hv_vmbus=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 The vmbus driver that is the bridge between guest and the=20
+			host
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hv_storvsc=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 The SCSI device driver
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hv_blkvsc=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0=A0 The IDE driver
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hv_netvsc=A0=A0=A0=A0=A0=A0=
+=A0=A0=A0=A0 The network driver
 
---nab
+We think our drivers are pretty close to be reviewed by the subsystem m=
+aintainers.
 
+We have been  working with Greg on  hv_vmbus, and several other driver =
+issues as it=20
+relates to exiting staging. And now we are looking for guidance for the=
+ other drivers.
+
+	1. Most important thing of course, did we contact the correct subsyste=
+m=20
+	    maintainers?
+		i. IDE/Blkvsc		David Miller
+		ii. SCSI/Storvsc		James Bottomley
+		iii. Network/Netvsc	Stephen Hemminger
+	2. What is the process to submit the code for review?
+	3. Which mailing list(s) do we need to use for the code reviews
+	4. I assume normal patch format is required?
+	5. What additional information is needed
+	6. Once they leave staging where do they need to go? Because they all
+	    pretty much come as a package we were thinking drivers/hyperv migh=
+t
+	    be a good place.
+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=20
+There are still a few outstanding items we are currently working on. Bu=
+t they should be=20
+wrapped up shortly. (There are a few remaining FIXME comments in the co=
+de we are
+cleaning up as I write this). But if possible we would like to get your=
+ feedback even as
+we are addressing the issues we currently know about.
+
+Thanks
+
+Hank.
+
+
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
