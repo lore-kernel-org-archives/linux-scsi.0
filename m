@@ -1,73 +1,57 @@
-From: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
-Subject: [PATCH] ipr: Fix a race on multiple configuration changes
-Date: Mon, 14 Feb 2011 20:19:31 -0200
-Message-ID: <1297721971.20599.9.camel@dream>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] target: Remove unused variable
+Date: Mon, 14 Feb 2011 15:12:09 -0800
+Message-ID: <1297725129.29207.34.camel@haakon2.linux-iscsi.org>
+References: <AANLkTi=dHh9Ombj=ZgA4AnPUyD3qo9kcr8z7UbXce-Or@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e24smtp04.br.ibm.com ([32.104.18.25]:57788 "EHLO
-	e24smtp04.br.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211Ab1BNWTr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2011 17:19:47 -0500
-Received: from /spool/local
-	by e24smtp04.br.ibm.com with XMail ESMTP
-	for <linux-scsi@vger.kernel.org> from <klebers@linux.vnet.ibm.com>;
-	Mon, 14 Feb 2011 20:19:44 -0200
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
-	by mailhub3.br.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p1EMRoXs3002476
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2011 20:27:54 -0200
-Received: from d24av02.br.ibm.com (loopback [127.0.0.1])
-	by d24av02.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p1EMJa8g026966
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2011 20:19:36 -0200
-Received: from [9.12.224.39] ([9.12.224.39])
-	by d24av02.br.ibm.com (8.14.4/8.13.1/NCO v10.0 AVin) with ESMTP id p1EMJY6C026954
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Feb 2011 20:19:35 -0200
+Received: from mail.linux-iscsi.org ([67.23.28.174]:53887 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751435Ab1BNXSq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Feb 2011 18:18:46 -0500
+In-Reply-To: <AANLkTi=dHh9Ombj=ZgA4AnPUyD3qo9kcr8z7UbXce-Or@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Fubo Chen <fubo.chen@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-In a multiple configuration change scenario a remove notification can be
-followed by an immediate add notification for the same device, which
-will cause the device to be removed but never added back. This patch
-fixes the problem by ensuring that in such situations the device will be
-added back.
+On Mon, 2011-02-14 at 20:09 +0100, Fubo Chen wrote:
+> Does this patch make sense ?
+> 
+> ---
+>  drivers/target/target_core_transport.c |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
 
-Signed-off-by: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
----
- drivers/scsi/ipr.c |    7 +++++--
- 1 files changed, 5 insertions(+), 2 deletions(-)
+Hi Fubo,
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index a8e24f0..1485767 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -1301,7 +1301,7 @@ static void ipr_handle_config_change(struct ipr_ioa_cfg *ioa_cfg,
- 			ipr_clear_res_target(res);
- 			list_move_tail(&res->queue, &ioa_cfg->free_res_q);
- 		}
--	} else if (!res->sdev) {
-+	} else if (!res->sdev || res->del_from_ml) {
- 		res->add_to_ml = 1;
- 		if (ioa_cfg->allow_ml_add_del)
- 			schedule_work(&ioa_cfg->work_q);
-@@ -3104,7 +3104,10 @@ restart:
- 				did_work = 1;
- 				sdev = res->sdev;
- 				if (!scsi_device_get(sdev)) {
--					list_move_tail(&res->queue, &ioa_cfg->free_res_q);
-+					if (!res->add_to_ml)
-+						list_move_tail(&res->queue, &ioa_cfg->free_res_q);
-+					else
-+						res->del_from_ml = 0;
- 					spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
- 					scsi_remove_device(sdev);
- 					scsi_device_put(sdev);
--- 
-1.7.1
+> diff --git a/drivers/target/target_core_transport.c
+> b/drivers/target/target_core_transport.c
+> index 236e22d..d0e1ce8 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -5828,14 +5828,12 @@ void transport_send_task_abort(struct se_cmd *cmd)
+>   */
+>  int transport_generic_do_tmr(struct se_cmd *cmd)
+>  {
+> -	struct se_cmd *ref_cmd;
+>  	struct se_device *dev = SE_DEV(cmd);
+>  	struct se_tmr_req *tmr = cmd->se_tmr_req;
+>  	int ret;
+> 
+>  	switch (tmr->function) {
+>  	case ABORT_TASK:
+> -		ref_cmd = tmr->ref_cmd;
+>  		tmr->response = TMR_FUNCTION_REJECTED;
+>  		break;
+>  	case ABORT_TASK_SET:
 
+The usage of ref_cmd here will be used in for-39 code, so this should be
+kept in place for now..
 
--- 
-Kleber S. Souza
-IBM Linux Technology Center
+Thanks,
+
+--nab
 
