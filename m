@@ -1,39 +1,39 @@
-From: Artem Bokhan <aptem@ngs.ru>
-Subject: sct erc does not work with megaraid
-Date: Tue, 15 Feb 2011 16:20:56 +0600
-Message-ID: <4D5A5388.3010208@ngs.ru>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Process for subsystem maintainers to get Hyper-V code out of
+ staging.
+Date: Tue, 15 Feb 2011 10:33:45 +0000
+Message-ID: <20110215103345.0b121493@lxorguk.ukuu.org.uk>
+References: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>
+To: Hank Janssen <hjanssen@microsoft.com>
+Cc: "shemminger@linux-foundation.org" <shemminger@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Jame.Bottomley@HansenPartnership.com" <Jame.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, Hashir Abdi <habdi@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "gregkh@suse.de" <gregkh@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello!
+> 	1. Most important thing of course, did we contact the correct subsystem 
+> 	    maintainers?
+> 		i. IDE/Blkvsc		David Miller
 
-I'm trying to get/set sctserc (SMART Command Transport Error Recovery  Control) 
-data from sata disk attached to lsi megaraid controller with smartmontools, but 
-this function does not work.
+Libata - Jeff Garzik & linux-ide@vger.kernel.org
 
-I want to figure out: is this driver or firmware issue? May someone to help to 
-fix this?
+drivers/ide is obsolete and on its way out.
 
-The issue can be described as follows:
+drivers/ata replaced it as the old code couldn't really cope with things
+like SATA NCQ or hotplug. The new stuff can which is probably handy in a
+hypervisor.
 
-The ATA PASS-THROUGH(16) implementation in the SAT layer of the megaraid driver 
-or firmware does not return the ATA output registers if requested. This violates 
-SAT standard (http://www.t10.org/drafts.htm#SAT).
+> 		ii. SCSI/Storvsc		James Bottomley
 
-Expected: If CK_COND (bit 5 of CDB[2]) is set, ATA PASS-THROUGH(16) (CDB[0] = 
-0x85) shall return a CHECK CONDITION even if the ATA command completed 
-successfully, and return the ATA output registers in the sense data using ATA 
-return descriptor format (descriptor code 0x09).
+Yes & linux-scsi@vger.kernel.org
 
-Observed: If CK_COND is set and the ATA command completed successfully, ATA 
-PASS-THROUGH(16) does not return a CHECK CONDITION or the sense data does not 
-contain an ATA return descriptor.
+> 		iii. Network/Netvsc	Stephen Hemminger
+> 	2. What is the process to submit the code for review?
 
-See also the smartmontools SAT implementation 
-(http://sourceforge.net/apps/trac/smartmontools/browser/trunk/smartmontools/scsiata.cpp?rev=3258#L146) 
-for further info.
+See: Documentation/SubmittingPatches in your kernel tree
+
+That should answer the rest. If not then keep a tag on things that should
+have been in there but weren't and that can also get updated.
