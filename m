@@ -1,75 +1,49 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
-Date: Tue, 15 Feb 2011 08:15:06 -0600
-Message-ID: <1297779306.3015.8.camel@mulgrave.site>
-References: <1295797260.3007.118.camel@mulgrave.site>
-	 <1297624717.3001.2.camel@mulgrave.site>  <4D5A254D.8000900@garzik.org>
+From: Bokhan Artem <aptem@ngs.ru>
+Subject: sct erc does not work with megaraid
+Date: Tue, 15 Feb 2011 21:05:21 +0600
+Message-ID: <4D5A9631.6050708@ngs.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4D5A254D.8000900@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtpout10.ngs.ru ([195.93.186.216]:31234 "EHLO smtpout.ngs.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755047Ab1BOPFg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Feb 2011 10:05:36 -0500
+Received: from [192.168.3.4] (unknown [192.168.3.4])
+	(using TLSv1 with cipher AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	(Authenticated sender: aptem@ngs.ru)
+	by mail.ngs.ru (smtp) with ESMTP id 719BE173A4DC8B
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2011 21:05:34 +0600 (NOVT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, 2011-02-15 at 02:03 -0500, Jeff Garzik wrote:
-> On 02/13/2011 02:18 PM, James Bottomley wrote:
-> > On Sun, 2011-01-23 at 09:41 -0600, James Bottomley wrote:
-> >> The bad news is that this is a pretty horrific conversion.  Because of
-> >> the amount of control the new eh wants (and the slew of monolithic
-> >> assumptions it makes), the entire error handler routine has to be sliced
-> >> apart and sewn back together to make it callable as part of an existing
-> >> error handler (rather than trying to do everything on its own).
-> >>
-> >> The even worse news is that unless you have an existing strategy
-> >> handler, you can't make use of this.  That means that ipr is
-> >> unconvertable in its current form.  Given the two really nasty options:
-> >> give ipr its own error handler via its own transport class, or attach
-> >> ipr to libsas and let it do the work, I'd choose the latter.
-> >> Unfortunately, my power box with IPR has been non-functional for a year
-> >> (and all pleas to IBM to fix it have so far gone unanswered), so I can't
-> >> really do this myself.
-> >>
-> >> Once we carve up libata, it's still a rather complex call sequence for
-> >> libsas because of libata's annoying insistance on calling the error
-> >> handler at the drop of a hat.  The principle differentiator used is the
-> >> fact that if a SCSI command no longer has an associated SAS task, (i.e.
-> >> libsas thinks it's complete) it must be destined for libata.  This works
-> >> correctly in all the ATAPI sense processing instances I've tested.
-> >> Finally, we still have to call port recovery.  Currently, it's
-> >> impossible to tell which port libata thinks is in error (libata knows
-> >> because it has one host per port, but libsas doesn't), so the final
-> >> solution is just to call port recovery for every SATA/STP attached port.
-> >>
-> >> I've tested all of this with mvsas over expander attached ATA devices
-> >> using STP (aic94xx seems to have developed some handling fault for STP,
-> >> which I'll look into next).
-> >
-> > Since there's been remarkably little discussion of the ata changes, I
-> > think it's time to put this in linux-next to see what shakes out.
-> 
-> The fix series was quite straightforward, and the error handler 
-> separation is almost mechanical.  All looks good and tests well here, so 
-> I threw it into libata-dev.git#upstream (and thus linux-next).
+Hello!
 
-Well, as you know, it's already in scsi-misc; as long as we don't get a
-merge conflict in linux-next, I don't really care.
+I'm trying to get/set sctserc (SMART Command Transport Error Recovery 
+Control) data from sata disk attached to lsi megaraid controller with 
+smartmontools, but this function does not work.
 
-However, since it's a SCSI feature, which depends on patches in the scsi
-tree both before and after, it doesn't make a whole lot of sense in the
-ata tree.  It's just one actual patch that is libata impacting (the eh
-split).  The other three correct the sas paths, which only have SCSI
-users.
+I want to figure out: is this driver or firmware issue? May someone to 
+help to fix this?
 
-> Let me know if you want to peel off patch 2/2 here into a post-merge tree...
+The issue can be described as follows:
 
-Well, you're missing the precursor patches to make it functional ...
-what you have will hang fairly fast on an actual SAS device.  But, as
-long as people with SAS only test scsi-misc or linux-next, hopefully it
-won't matter.
+The ATA PASS-THROUGH(16) implementation in the SAT layer of the megaraid 
+driver or firmware does not return the ATA output registers if 
+requested. This violates SAT standard (http://www.t10.org/drafts.htm#SAT).
 
-James
+Expected: If CK_COND (bit 5 of CDB[2]) is set, ATA PASS-THROUGH(16) 
+(CDB[0] = 0x85) shall return a CHECK CONDITION even if the ATA command 
+completed successfully, and return the ATA output registers in the sense 
+data using ATA return descriptor format (descriptor code 0x09).
 
+Observed: If CK_COND is set and the ATA command completed successfully, 
+ATA PASS-THROUGH(16) does not return a CHECK CONDITION or the sense data 
+does not contain an ATA return descriptor.
 
+See also the smartmontools SAT implementation 
+(http://sourceforge.net/apps/trac/smartmontools/browser/trunk/smartmontools/scsiata.cpp?rev=3258#L146) 
+for further info.
