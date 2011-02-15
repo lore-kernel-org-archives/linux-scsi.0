@@ -1,39 +1,36 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: Process for subsystem maintainers to get Hyper-V code out of
- staging.
-Date: Tue, 15 Feb 2011 10:33:45 +0000
-Message-ID: <20110215103345.0b121493@lxorguk.ukuu.org.uk>
-References: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ipr: Fix a race on multiple configuration changes
+Date: Tue, 15 Feb 2011 08:00:13 -0600
+Message-ID: <4D5A86ED.2010305@linux.vnet.ibm.com>
+References: <1297721971.20599.9.camel@dream>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Hank Janssen <hjanssen@microsoft.com>
-Cc: "shemminger@linux-foundation.org" <shemminger@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Jame.Bottomley@HansenPartnership.com" <Jame.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, Hashir Abdi <habdi@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "gregkh@suse.de" <gregkh@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:44992 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754900Ab1BOOAW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2011 09:00:22 -0500
+Received: from d03relay01.boulder.ibm.com (d03relay01.boulder.ibm.com [9.17.195.226])
+	by e33.co.us.ibm.com (8.14.4/8.13.1) with ESMTP id p1FDs0LC021796
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2011 06:54:00 -0700
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id p1FE0F95023542
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2011 07:00:16 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id p1FE0FGE022522
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2011 07:00:15 -0700
+In-Reply-To: <1297721971.20599.9.camel@dream>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kleber Sacilotto de Souza <klebers@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> 	1. Most important thing of course, did we contact the correct subsystem 
-> 	    maintainers?
-> 		i. IDE/Blkvsc		David Miller
+Acked-by: Brian King <brking@linux.vnet.ibm.com>
 
-Libata - Jeff Garzik & linux-ide@vger.kernel.org
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
 
-drivers/ide is obsolete and on its way out.
 
-drivers/ata replaced it as the old code couldn't really cope with things
-like SATA NCQ or hotplug. The new stuff can which is probably handy in a
-hypervisor.
-
-> 		ii. SCSI/Storvsc		James Bottomley
-
-Yes & linux-scsi@vger.kernel.org
-
-> 		iii. Network/Netvsc	Stephen Hemminger
-> 	2. What is the process to submit the code for review?
-
-See: Documentation/SubmittingPatches in your kernel tree
-
-That should answer the rest. If not then keep a tag on things that should
-have been in there but weren't and that can also get updated.
