@@ -1,99 +1,52 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: Process for subsystem maintainers to get Hyper-V code out of
- staging.
-Date: Mon, 14 Feb 2011 15:45:56 -0800
-Message-ID: <20110214234556.GA9620@suse.de>
-References: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Tue, 15 Feb 2011 12:42:21 +0900
+Message-ID: <20110215124208B.fujita.tomonori@lab.ntt.co.jp>
+References: <AANLkTikWDxfTFeGqG36Z1dAdWLeXmN7r=AsR3fsjBok+@mail.gmail.com>
+	<20110214181129X.fujita.tomonori@lab.ntt.co.jp>
+	<AANLkTin3Zb3OQz0942-2bcpfwqd8dGGnHyBjmeYt0FwZ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Hank Janssen <hjanssen@microsoft.com>
-Cc: "shemminger@linux-foundation.org" <shemminger@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Jame.Bottomley@HansenPartnership.com" <Jame.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, Hashir Abdi <habdi@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sh.osrg.net ([192.16.179.4]:50897 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751196Ab1BODm3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Feb 2011 22:42:29 -0500
+In-Reply-To: <AANLkTin3Zb3OQz0942-2bcpfwqd8dGGnHyBjmeYt0FwZ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bvanassche@acm.org
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-On Mon, Feb 14, 2011 at 11:30:07PM +0000, Hank Janssen wrote:
->=20
-> Stephen/James/David,
->=20
-> Greetings to you all. As you might be aware, we submitted Hyper-V dri=
-vers to the kernel 2009. =A0
-> We have been extending these drivers with additional functionality an=
-d our primary focus=20
-> now is doing the work needed to exit the staging area.
->=20
-> To give you some background, the following are Hyper-V specific Linux=
- drivers:
->=20
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hv_vmbus=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0 The vmbus driver that is the bridge between guest and t=
-he=20
-> 			host
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hv_storvsc=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0 The SCSI device driver
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hv_blkvsc=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 The IDE driver
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 hv_netvsc=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0 The network driver
->=20
-> We think our drivers are pretty close to be reviewed by the subsystem=
- maintainers.
->=20
-> We have been  working with Greg on  hv_vmbus, and several other drive=
-r issues as it=20
-> relates to exiting staging. And now we are looking for guidance for t=
-he other drivers.
->=20
-> 	1. Most important thing of course, did we contact the correct subsys=
-tem=20
-> 	    maintainers?
-> 		i. IDE/Blkvsc		David Miller
-> 		ii. SCSI/Storvsc		James Bottomley
-> 		iii. Network/Netvsc	Stephen Hemminger
+On Mon, 14 Feb 2011 12:50:40 +0100
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-That's what the MAINTAINERS file says, right?
+> - send_rsp() sends back an SRP response with req_lim_delta = 1 before
+> srp_iu_put() is invoked. I think this is a race condition: it can
+> happen that the SRP initiator has received an SRP_RSP and sends a new
+> SRP_CMD before srp_iu_put() was invoked. On a heavily loaded system
+> that can trigger a queue overflow in the target.
 
-> 	2. What is the process to submit the code for review?
+Yeah, we had better to handle such case better.
 
-Like Documentation/SubmittingPatches shows, send patches.
+But I don't think that we hit a critical event such as crash, memory
+corruption, etc, with the current code.
 
-> 	3. Which mailing list(s) do we need to use for the code reviews
+In such case, srp_iu_get return NULL, so the target ignores the
+request, then eventually the initiator recovers.
 
-Again, MAINTAINERS shows this.
+Probably, we should set the queue size to INITIAL_SRP_LIMIT + 1.
 
-> 	4. I assume normal patch format is required?
 
-Yes.
+> - As anyone can see in the driver code (and as specified in the PAPR)
+> management datagrams (MADs) fall outside the SRP credit mechanism.
+> Hence not reserving one credit (assuming that the initiator makes sure
+> there is at most one outstanding MAD) for MAD can - at least in theory
+> - trigger a queue overflow.
 
-> 	5. What additional information is needed
+I think that MAD is used only before the initiator starts real
+I/Os. So I don't think that we can hit this issue in reality.
 
-What's normally needed.
 
-> 	6. Once they leave staging where do they need to go? Because they al=
-l
-> 	    pretty much come as a package we were thinking drivers/hyperv mi=
-ght
-> 	    be a good place.
-
-That's up to the subsystem, if they want all network drivers in
-drivers/net/ then they go there, same for scsi, it's up to the
-maintainer.
-
-> There are still a few outstanding items we are currently working on. =
-But they should be=20
-> wrapped up shortly. (There are a few remaining FIXME comments in the =
-code we are
-> cleaning up as I write this). But if possible we would like to get yo=
-ur feedback even as
-> we are addressing the issues we currently know about.
-
-I would wait and only ask for review _after_ you fix the things you kno=
-w
-about first.  Otherwise it just wastes everyone's time.
-
-thanks,
-
-greg k-h
+Thanks,
