@@ -1,64 +1,67 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 0/2] convert libsas to the libata new eh
-Date: Tue, 15 Feb 2011 02:03:41 -0500
-Message-ID: <4D5A254D.8000900@garzik.org>
-References: <1295797260.3007.118.camel@mulgrave.site> <1297624717.3001.2.camel@mulgrave.site>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Process for subsystem maintainers to get Hyper-V code out of
+ staging.
+Date: Tue, 15 Feb 2011 05:21:32 -0500
+Message-ID: <20110215102132.GA9077@infradead.org>
+References: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vx0-f174.google.com ([209.85.220.174]:55501 "EHLO
-	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751758Ab1BOHDq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2011 02:03:46 -0500
-In-Reply-To: <1297624717.3001.2.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <8AFC7968D54FB448A30D8F38F259C56233F95737@TK5EX14MBXC114.redmond.corp.microsoft.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Hank Janssen <hjanssen@microsoft.com>
+Cc: "shemminger@linux-foundation.org" <shemminger@linux-foundation.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "Jame.Bottomley@HansenPartnership.com" <Jame.Bottomley@HansenPartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, KY Srinivasan <kys@microsoft.com>, Hashir Abdi <habdi@microsoft.com>, Mike Sterling <Mike.Sterling@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, "gregkh@suse.de" <gregkh@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Brian King <brking@linux.vnet.ibm.com>, Robert Jennings <rcj@linux.vnet.ibm.com>
 
-On 02/13/2011 02:18 PM, James Bottomley wrote:
-> On Sun, 2011-01-23 at 09:41 -0600, James Bottomley wrote:
->> The bad news is that this is a pretty horrific conversion.  Because of
->> the amount of control the new eh wants (and the slew of monolithic
->> assumptions it makes), the entire error handler routine has to be sliced
->> apart and sewn back together to make it callable as part of an existing
->> error handler (rather than trying to do everything on its own).
->>
->> The even worse news is that unless you have an existing strategy
->> handler, you can't make use of this.  That means that ipr is
->> unconvertable in its current form.  Given the two really nasty options:
->> give ipr its own error handler via its own transport class, or attach
->> ipr to libsas and let it do the work, I'd choose the latter.
->> Unfortunately, my power box with IPR has been non-functional for a year
->> (and all pleas to IBM to fix it have so far gone unanswered), so I can't
->> really do this myself.
->>
->> Once we carve up libata, it's still a rather complex call sequence for
->> libsas because of libata's annoying insistance on calling the error
->> handler at the drop of a hat.  The principle differentiator used is the
->> fact that if a SCSI command no longer has an associated SAS task, (i.e.
->> libsas thinks it's complete) it must be destined for libata.  This works
->> correctly in all the ATAPI sense processing instances I've tested.
->> Finally, we still have to call port recovery.  Currently, it's
->> impossible to tell which port libata thinks is in error (libata knows
->> because it has one host per port, but libsas doesn't), so the final
->> solution is just to call port recovery for every SATA/STP attached port.
->>
->> I've tested all of this with mvsas over expander attached ATA devices
->> using STP (aic94xx seems to have developed some handling fault for STP,
->> which I'll look into next).
->
-> Since there's been remarkably little discussion of the ata changes, I
-> think it's time to put this in linux-next to see what shakes out.
+Please give all the driver a unique prefix, hv_ is a bit to generic.
+mshv might be better.
 
-The fix series was quite straightforward, and the error handler 
-separation is almost mechanical.  All looks good and tests well here, so 
-I threw it into libata-dev.git#upstream (and thus linux-next).
+What's the point of the blksvc driver?  It is implemented as a block
+driver, steals the major number of the IDE driver, which is a big no-no
+and speaks a SCSI-like protocol to the host.  In what way does this
+protocol differ from the full SCSI protocol in the storvsc driver?
 
-Let me know if you want to peel off patch 2/2 here into a post-merge tree...
+As far as the storsvc driver is converned: please merge the storvsc.c
+and storvsc_drv.c, as they are only used together.  Also please try to
+clean up the way you use function pointers.  E.g. the
+OnDeviceAdd/OnDeviceRemove/OnCleanup methods should be part of a
+mshv_driver structure, and not store into individual objects.
 
-	Jeff
+Please get rid of the *_context structure that only have a single
+intance anyway.  In generaly a Linux driver should not have any global
+state except for maybe module paramters or a list of devices in cases
+where the device model can't handle that.
 
+Please clean up the calling convention for the init code, there is
+absolutely no reason to pass stor_vsc_initialize as a function pointer
+to storvsc_drv_init instead of calling it directly, and in fact there
+is no reason to not just inline both of those into storvsc_init.  One
+all the function pointers are moved into a driver struct and the global
+context is gone there will be almost no code left in there anyway.
 
+Similarly the exit routine is implemented entirely wrong.  The core
+bus layer should iterate over all devices for the driver beeing
+unregister and call back into the ->remove callback just for that
+device.  Try to follow common real hardware busses like pci, usb or for
+a really simple one eisa in your design.
 
+There is no reason to have a per-device slab cache, a global one is
+enough.  But for per-I/O allocations you'll need a mempool to make it
+deadlock-free.
+
+Do you really need scsi_scan_host for a virtualized scsi transport?  Is
+there no way for the host to tell you which LUNs actually are present?
+
+Why do you bother to linearize S/G lists?  If your host can't handle it
+just tell the scsi layer that you have a sg_tablesize of 1, which means
+you'll never get multiple S/G elements.  (Not doing SG is really, really
+sad for new virtual hardware btw, please take the crack away from the
+person who designed it).
+
+Also can you please avoid forward declaration of functions as much as
+possible?  They really make the code hard to read if used as much as in
+these drivers.
+
+That's it for the first round, I'm pretty sure there will be more
+comments once the code is better structured and more readabke.
