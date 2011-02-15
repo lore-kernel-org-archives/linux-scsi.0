@@ -1,53 +1,74 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 5/6] hpsa: Do not attempt kdump if we detect resetting
-	controller failed.
-Date: Tue, 15 Feb 2011 15:33:08 -0600
-Message-ID: <20110215213308.5407.39755.stgit@beardog.cce.hp.com>
-References: <20110215212856.5407.3438.stgit@beardog.cce.hp.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Wed, 16 Feb 2011 08:21:57 +0900
+Message-ID: <20110216082140T.fujita.tomonori@lab.ntt.co.jp>
+References: <AANLkTin3Zb3OQz0942-2bcpfwqd8dGGnHyBjmeYt0FwZ@mail.gmail.com>
+	<20110215124208B.fujita.tomonori@lab.ntt.co.jp>
+	<AANLkTimPyjgoSnZrSXT2asV1Ly5D3NFUM3cn0-Jmp3Zm@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0027.austin.hp.com ([15.216.28.34]:47109 "EHLO
-	g1t0027.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756217Ab1BOVdK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2011 16:33:10 -0500
-In-Reply-To: <20110215212856.5407.3438.stgit@beardog.cce.hp.com>
+Received: from sh.osrg.net ([192.16.179.4]:35860 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755731Ab1BOXWG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Feb 2011 18:22:06 -0500
+In-Reply-To: <AANLkTimPyjgoSnZrSXT2asV1Ly5D3NFUM3cn0-Jmp3Zm@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, mike.mikem@beardog.cce.hp.com, thenzl@redhat.com, akpm@linux-foundation.org, smcameron@yahoo.com
+To: bvanassche@acm.org
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
+On Tue, 15 Feb 2011 20:20:53 +0100
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-We can get completions left over from before the attempted reset which
-will interfere with the kdump.  Better to just not make the attempt in
-that case.
+> On Tue, Feb 15, 2011 at 4:42 AM, FUJITA Tomonori
+> <fujita.tomonori@lab.ntt.co.jp> wrote:
+> > On Mon, 14 Feb 2011 12:50:40 +0100
+> > Bart Van Assche <bvanassche@acm.org> wrote:
+> >
+> >> - send_rsp() sends back an SRP response with req_lim_delta = 1 before
+> >> srp_iu_put() is invoked. I think this is a race condition: it can
+> >> happen that the SRP initiator has received an SRP_RSP and sends a new
+> >> SRP_CMD before srp_iu_put() was invoked. On a heavily loaded system
+> >> that can trigger a queue overflow in the target.
+> >
+> > Yeah, we had better to handle such case better.
+> >
+> > But I don't think that we hit a critical event such as crash, memory
+> > corruption, etc, with the current code.
+> >
+> > In such case, srp_iu_get return NULL, so the target ignores the
+> > request, then eventually the initiator recovers.
+> 
+> Sorry but I do not agree that hitting this race is harmless. If this
+> race gets triggered the credit associated with the lost SRP
+> information unit will never be returned to the initiator. If this
+> happens frequently enough (INITIAL_SRP_LIMIT times), the initiator
+> will run out of credits and will lock up forever.
 
-Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
----
- drivers/scsi/hpsa.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+I'm not sure that happens because the initiator increases
+hostdata->request_limit when the request hits the time out.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index a778cb1..eb6938f 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -3264,13 +3264,13 @@ static __devinit int hpsa_kdump_hard_reset_controller(struct pci_dev *pdev)
- 	 * It means we're on one of those controllers which doesn't support
- 	 * the doorbell reset method and on which the PCI power management reset
- 	 * method doesn't work (P800, for example.)
--	 * In those cases, pretend the reset worked and hope for the best.
-+	 * In those cases, don't try to proceed, as it generally doesn't work.
- 	 */
- 	active_transport = readl(&cfgtable->TransportActive);
- 	if (active_transport & PERFORMANT_MODE) {
- 		dev_warn(&pdev->dev, "Unable to successfully reset controller,"
--			" proceeding anyway.\n");
--		rc = -ENOTSUPP;
-+			" Ignoring controller.\n");
-+		rc = -ENODEV;
- 	}
- 
- unmap_cfgtable:
 
+> > Probably, we should set the queue size to INITIAL_SRP_LIMIT + 1.
+> 
+> With the current implementation of the SCSI storage target core that's
+> probably sufficient. But if that core is ever modified such that
+> multiple SCSI commands can be processed concurrently, that limit
+> wouldn't be sufficient anymore because then the described race
+> condition could be triggered in multiple threads simultaneously - at
+> least in theory.
+
+ok.
+
+
+> An alternative solution is to modify send_iu() such that srp_iu_put()
+> is invoked after all relevant data has been copied via h_copy_rdma()
+> and to the CRQ and before h_send_crq() is invoked. That approach has
+> e.g. been implemented in this patch:
+> http://www.spinics.net/lists/linux-scsi/msg49105.html.
+
+Sounds an option. I'll take a look.
+
+Thanks,
