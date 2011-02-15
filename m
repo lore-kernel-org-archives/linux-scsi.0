@@ -1,63 +1,58 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
-Date: Tue, 15 Feb 2011 20:20:53 +0100
-Message-ID: <AANLkTimPyjgoSnZrSXT2asV1Ly5D3NFUM3cn0-Jmp3Zm@mail.gmail.com>
-References: <AANLkTikWDxfTFeGqG36Z1dAdWLeXmN7r=AsR3fsjBok+@mail.gmail.com>
- <20110214181129X.fujita.tomonori@lab.ntt.co.jp> <AANLkTin3Zb3OQz0942-2bcpfwqd8dGGnHyBjmeYt0FwZ@mail.gmail.com>
- <20110215124208B.fujita.tomonori@lab.ntt.co.jp>
+From: Fubo Chen <fubo.chen@gmail.com>
+Subject: Re: [PATCH] target: Remove unused variable
+Date: Tue, 15 Feb 2011 21:02:27 +0100
+Message-ID: <AANLkTikxd4QeKjFhBAWbH6fqo2ef0xZQLQEgtB3Mj0rk@mail.gmail.com>
+References: <AANLkTi=dHh9Ombj=ZgA4AnPUyD3qo9kcr8z7UbXce-Or@mail.gmail.com>
+	<1297725129.29207.34.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gx0-f174.google.com ([209.85.161.174]:52120 "EHLO
-	mail-gx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751792Ab1BOTVO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2011 14:21:14 -0500
-Received: by gxk9 with SMTP id 9so255734gxk.19
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2011 11:21:14 -0800 (PST)
-In-Reply-To: <20110215124208B.fujita.tomonori@lab.ntt.co.jp>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:63173 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751726Ab1BOUC1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Feb 2011 15:02:27 -0500
+Received: by iyj8 with SMTP id 8so431983iyj.19
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Feb 2011 12:02:27 -0800 (PST)
+In-Reply-To: <1297725129.29207.34.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Feb 15, 2011 at 4:42 AM, FUJITA Tomonori
-<fujita.tomonori@lab.ntt.co.jp> wrote:
-> On Mon, 14 Feb 2011 12:50:40 +0100
-> Bart Van Assche <bvanassche@acm.org> wrote:
->
->> - send_rsp() sends back an SRP response with req_lim_delta = 1 before
->> srp_iu_put() is invoked. I think this is a race condition: it can
->> happen that the SRP initiator has received an SRP_RSP and sends a new
->> SRP_CMD before srp_iu_put() was invoked. On a heavily loaded system
->> that can trigger a queue overflow in the target.
->
-> Yeah, we had better to handle such case better.
->
-> But I don't think that we hit a critical event such as crash, memory
-> corruption, etc, with the current code.
->
-> In such case, srp_iu_get return NULL, so the target ignores the
-> request, then eventually the initiator recovers.
+On Tue, Feb 15, 2011 at 12:12 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> The usage of ref_cmd here will be used in for-39 code, so this should be
+> kept in place for now..
 
-Sorry but I do not agree that hitting this race is harmless. If this
-race gets triggered the credit associated with the lost SRP
-information unit will never be returned to the initiator. If this
-happens frequently enough (INITIAL_SRP_LIMIT times), the initiator
-will run out of credits and will lock up forever.
+I'm curious to see it.
 
-> Probably, we should set the queue size to INITIAL_SRP_LIMIT + 1.
+Does the patch below make sense ? It removes an unused argument from
+transport_get_lun_for_cmd().
 
-With the current implementation of the SCSI storage target core that's
-probably sufficient. But if that core is ever modified such that
-multiple SCSI commands can be processed concurrently, that limit
-wouldn't be sufficient anymore because then the described race
-condition could be triggered in multiple threads simultaneously - at
-least in theory.
+diff --git a/drivers/target/target_core_device.c
+b/drivers/target/target_core_device.c
+index 5da051a..53f31fd 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -56,7 +56,6 @@ static void se_dev_stop(struct se_device *dev);
 
-An alternative solution is to modify send_iu() such that srp_iu_put()
-is invoked after all relevant data has been copied via h_copy_rdma()
-and to the CRQ and before h_send_crq() is invoked. That approach has
-e.g. been implemented in this patch:
-http://www.spinics.net/lists/linux-scsi/msg49105.html.
+ int transport_get_lun_for_cmd(
+ 	struct se_cmd *se_cmd,
+-	unsigned char *cdb,
+ 	u32 unpacked_lun)
+ {
+ 	struct se_dev_entry *deve;
+diff --git a/include/target/target_core_device.h
+b/include/target/target_core_device.h
+index 52b18a5..d9745bf 100644
+--- a/include/target/target_core_device.h
++++ b/include/target/target_core_device.h
+@@ -1,7 +1,7 @@
+ #ifndef TARGET_CORE_DEVICE_H
+ #define TARGET_CORE_DEVICE_H
 
-Bart.
+-extern int transport_get_lun_for_cmd(struct se_cmd *, unsigned char *, u32);
++extern int transport_get_lun_for_cmd(struct se_cmd *, u32);
+ extern int transport_get_lun_for_tmr(struct se_cmd *, u32);
+ extern struct se_dev_entry *core_get_se_deve_from_rtpi(
+ 					struct se_node_acl *, u16);
