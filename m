@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 1/6] hpsa: do not re-order commands in internal queues
-Date: Tue, 15 Feb 2011 15:32:48 -0600
-Message-ID: <20110215213248.5407.68204.stgit@beardog.cce.hp.com>
+Subject: [PATCH 4/6] hpsa: Inform controller we are using 32-bit tags.
+Date: Tue, 15 Feb 2011 15:33:03 -0600
+Message-ID: <20110215213303.5407.70802.stgit@beardog.cce.hp.com>
 References: <20110215212856.5407.3438.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,121 +15,117 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-Driver's internal queues should be FIFO, not LIFO.
-This is a port of an almost identical patch from cciss by Jens Axboe.
+Controller will transfer only 32-bits on completion if it
+knows we are only using 32-bit tags.  Also, some newer controllers
+apparently (and erroneously) require that we only use 32-bit tags,
+and that we inform the controller of this.
 
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- drivers/scsi/hpsa.c     |   23 +++++++++++------------
- drivers/scsi/hpsa.h     |    4 ++--
- drivers/scsi/hpsa_cmd.h |    2 +-
- 3 files changed, 14 insertions(+), 15 deletions(-)
+ drivers/scsi/hpsa.c     |   24 +++++++++++++-----------
+ drivers/scsi/hpsa_cmd.h |    1 +
+ 2 files changed, 14 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 959eeb2..0f40de2 100644
+index 563d439..a778cb1 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -314,9 +314,9 @@ static ssize_t host_show_commands_outstanding(struct device *dev,
+@@ -326,7 +326,7 @@ static ssize_t host_show_transport_mode(struct device *dev,
+ 
+ 	h = shost_to_hba(shost);
+ 	return snprintf(buf, 20, "%s\n",
+-		h->transMethod == CFGTBL_Trans_Performant ?
++		h->transMethod & CFGTBL_Trans_Performant ?
+ 			"performant" : "simple");
  }
  
- /* Enqueuing and dequeuing functions for cmdlists. */
--static inline void addQ(struct hlist_head *list, struct CommandList *c)
-+static inline void addQ(struct list_head *list, struct CommandList *c)
+@@ -340,7 +340,7 @@ static inline u32 next_command(struct ctlr_info *h)
  {
--	hlist_add_head(&c->list, list);
-+	list_add_tail(&c->list, list);
- }
+ 	u32 a;
  
- static inline u32 next_command(struct ctlr_info *h)
-@@ -366,9 +366,9 @@ static void enqueue_cmd_and_start_io(struct ctlr_info *h,
+-	if (unlikely(h->transMethod != CFGTBL_Trans_Performant))
++	if (unlikely(!(h->transMethod & CFGTBL_Trans_Performant)))
+ 		return h->access.command_completed(h);
  
- static inline void removeQ(struct CommandList *c)
+ 	if ((*(h->reply_pool_head) & 1) == (h->reply_pool_wraparound)) {
+@@ -364,7 +364,7 @@ static inline u32 next_command(struct ctlr_info *h)
+  */
+ static void set_performant_mode(struct ctlr_info *h, struct CommandList *c)
  {
--	if (WARN_ON(hlist_unhashed(&c->list)))
-+	if (WARN_ON(list_empty(&c->list)))
- 		return;
--	hlist_del_init(&c->list);
-+	list_del_init(&c->list);
+-	if (likely(h->transMethod == CFGTBL_Trans_Performant))
++	if (likely(h->transMethod & CFGTBL_Trans_Performant))
+ 		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
  }
  
- static inline int is_hba_lunid(unsigned char scsi3addr[])
-@@ -2228,7 +2228,7 @@ static struct CommandList *cmd_alloc(struct ctlr_info *h)
- 
- 	c->cmdindex = i;
- 
--	INIT_HLIST_NODE(&c->list);
-+	INIT_LIST_HEAD(&c->list);
- 	c->busaddr = (u32) cmd_dma_handle;
- 	temp64.val = (u64) err_dma_handle;
- 	c->ErrDesc.Addr.lower = temp64.val32.lower;
-@@ -2266,7 +2266,7 @@ static struct CommandList *cmd_special_alloc(struct ctlr_info *h)
+@@ -2924,7 +2924,7 @@ static inline u32 hpsa_tag_discard_error_bits(struct ctlr_info *h, u32 tag)
+ {
+ #define HPSA_PERF_ERROR_BITS ((1 << DIRECT_LOOKUP_SHIFT) - 1)
+ #define HPSA_SIMPLE_ERROR_BITS 0x03
+-	if (unlikely(h->transMethod != CFGTBL_Trans_Performant))
++	if (unlikely(!(h->transMethod & CFGTBL_Trans_Performant)))
+ 		return tag & ~HPSA_SIMPLE_ERROR_BITS;
+ 	return tag & ~HPSA_PERF_ERROR_BITS;
+ }
+@@ -3640,6 +3640,7 @@ static int __devinit hpsa_enter_simple_mode(struct ctlr_info *h)
+ 			"unable to get board into simple mode\n");
+ 		return -ENODEV;
  	}
- 	memset(c->err_info, 0, sizeof(*c->err_info));
++	h->transMethod = CFGTBL_Trans_Simple;
+ 	return 0;
+ }
  
--	INIT_HLIST_NODE(&c->list);
-+	INIT_LIST_HEAD(&c->list);
- 	c->busaddr = (u32) cmd_dma_handle;
- 	temp64.val = (u64) err_dma_handle;
- 	c->ErrDesc.Addr.lower = temp64.val32.lower;
-@@ -2837,8 +2837,8 @@ static void start_io(struct ctlr_info *h)
+@@ -4025,7 +4026,8 @@ static void  calc_bucket_map(int bucket[], int num_buckets,
+ 	}
+ }
+ 
+-static __devinit void hpsa_enter_performant_mode(struct ctlr_info *h)
++static __devinit void hpsa_enter_performant_mode(struct ctlr_info *h,
++	u32 use_short_tags)
  {
- 	struct CommandList *c;
+ 	int i;
+ 	unsigned long register_value;
+@@ -4073,7 +4075,7 @@ static __devinit void hpsa_enter_performant_mode(struct ctlr_info *h)
+ 	writel(0, &h->transtable->RepQCtrAddrHigh32);
+ 	writel(h->reply_pool_dhandle, &h->transtable->RepQAddr0Low32);
+ 	writel(0, &h->transtable->RepQAddr0High32);
+-	writel(CFGTBL_Trans_Performant,
++	writel(CFGTBL_Trans_Performant | use_short_tags,
+ 		&(h->cfgtable->HostWrite.TransportRequest));
+ 	writel(CFGTBL_ChangeReq, h->vaddr + SA5_DOORBELL);
+ 	hpsa_wait_for_mode_change_ack(h);
+@@ -4083,6 +4085,9 @@ static __devinit void hpsa_enter_performant_mode(struct ctlr_info *h)
+ 					" performant mode\n");
+ 		return;
+ 	}
++	/* Change the access methods to the performant access methods */
++	h->access = SA5_performant_access;
++	h->transMethod = CFGTBL_Trans_Performant;
+ }
  
--	while (!hlist_empty(&h->reqQ)) {
--		c = hlist_entry(h->reqQ.first, struct CommandList, list);
-+	while (!list_empty(&h->reqQ)) {
-+		c = list_entry(h->reqQ.next, struct CommandList, list);
- 		/* can't do anything if fifo is full */
- 		if ((h->access.fifo_full(h))) {
- 			dev_warn(&h->pdev->dev, "fifo full\n");
-@@ -2929,10 +2929,9 @@ static inline u32 process_nonindexed_cmd(struct ctlr_info *h,
- {
- 	u32 tag;
- 	struct CommandList *c = NULL;
--	struct hlist_node *tmp;
+ static __devinit void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+@@ -4111,11 +4116,8 @@ static __devinit void hpsa_put_ctlr_into_performant_mode(struct ctlr_info *h)
+ 		|| (h->blockFetchTable == NULL))
+ 		goto clean_up;
  
- 	tag = hpsa_tag_discard_error_bits(raw_tag);
--	hlist_for_each_entry(c, tmp, &h->cmpQ, list) {
-+	list_for_each_entry(c, &h->cmpQ, list) {
- 		if ((c->busaddr & 0xFFFFFFE0) == (tag & 0xFFFFFFE0)) {
- 			finish_cmd(c, raw_tag);
- 			return next_command(h);
-@@ -3761,8 +3760,8 @@ static int __devinit hpsa_init_one(struct pci_dev *pdev,
+-	hpsa_enter_performant_mode(h);
+-
+-	/* Change the access methods to the performant access methods */
+-	h->access = SA5_performant_access;
+-	h->transMethod = CFGTBL_Trans_Performant;
++	hpsa_enter_performant_mode(h,
++		trans_support & CFGTBL_Trans_use_short_tags);
  
- 	h->pdev = pdev;
- 	h->busy_initializing = 1;
--	INIT_HLIST_HEAD(&h->cmpQ);
--	INIT_HLIST_HEAD(&h->reqQ);
-+	INIT_LIST_HEAD(&h->cmpQ);
-+	INIT_LIST_HEAD(&h->reqQ);
- 	spin_lock_init(&h->lock);
- 	spin_lock_init(&h->scan_lock);
- 	rc = hpsa_pci_init(h);
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 074d237..e898193 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -75,8 +75,8 @@ struct ctlr_info {
- 	struct access_method access;
+ 	return;
  
- 	/* queue and queue Info */
--	struct hlist_head reqQ;
--	struct hlist_head cmpQ;
-+	struct list_head reqQ;
-+	struct list_head cmpQ;
- 	unsigned int Qdepth;
- 	unsigned int maxQsinceinit;
- 	unsigned int maxSG;
 diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
-index 7910c14..785abdd 100644
+index 785abdd..1846490 100644
 --- a/drivers/scsi/hpsa_cmd.h
 +++ b/drivers/scsi/hpsa_cmd.h
-@@ -292,7 +292,7 @@ struct CommandList {
- 	struct ctlr_info	   *h;
- 	int			   cmd_type;
- 	long			   cmdindex;
--	struct hlist_node list;
-+	struct list_head list;
- 	struct request *rq;
- 	struct completion *waiting;
- 	void   *scsi_cmd;
+@@ -104,6 +104,7 @@
+ 
+ #define CFGTBL_Trans_Simple     0x00000002l
+ #define CFGTBL_Trans_Performant 0x00000004l
++#define CFGTBL_Trans_use_short_tags 0x20000000l
+ 
+ #define CFGTBL_BusType_Ultra2   0x00000001l
+ #define CFGTBL_BusType_Ultra3   0x00000002l
