@@ -1,37 +1,67 @@
-From: Dan Carpenter <error27@gmail.com>
-Subject: [patch] [SCSI] fcoe: precedence bug in fcoe_filter_frames()
-Date: Wed, 16 Feb 2011 14:10:55 +0300
-Message-ID: <20110216111055.GU4384@bicker>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH 01/06] mptfusion: (New Feature)Added new sysfs
+ parameters for handle and firmware id
+Date: Wed, 16 Feb 2011 17:18:45 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED71121FC22@inbmail01.lsi.com>
+References: <20110210061934.GB31424@lsi.com>
+ <1297540506.3026.27.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bw0-f46.google.com ([209.85.214.46]:34290 "EHLO
-	mail-bw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752983Ab1BPLLR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2011 06:11:17 -0500
-Received: by bwz15 with SMTP id 15so491708bwz.19
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2011 03:11:16 -0800 (PST)
-Content-Disposition: inline
+Received: from na3sys009aog104.obsmtp.com ([74.125.149.73]:42344 "EHLO
+	na3sys009aog104.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755241Ab1BPLsW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Feb 2011 06:48:22 -0500
+In-Reply-To: <1297540506.3026.27.camel@mulgrave.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Robert Love <robert.w.love@intel.com>, Vasu Dev <vasu.dev@linux.intel.com>, James Bottomley <James.Bottomley@suse.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-Negate has higher precedence than bitwise AND.  FCPHF_CRC_UNCHECKED is
-0x1 so the original code is equivalent to: if (!fr_flags(fp)) { ...
-
-Signed-off-by: Dan Carpenter <error27@gmail.com>
-
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 495456f..a2875d9 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1546,7 +1546,7 @@ static inline int fcoe_filter_frames(struct fc_lport *lport,
- 		return -EINVAL;
- 	}
- 
--	if (!fr_flags(fp) & FCPHF_CRC_UNCHECKED ||
-+	if (!(fr_flags(fp) & FCPHF_CRC_UNCHECKED) ||
- 	    le32_to_cpu(fr_crc(fp)) == ~crc32(~0, skb->data, skb->len)) {
- 		fr_flags(fp) &= ~FCPHF_CRC_UNCHECKED;
- 		return 0;
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSmFtZXMgQm90dG9tbGV5
+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbV0NCj4gU2VudDog
+U3VuZGF5LCBGZWJydWFyeSAxMywgMjAxMSAxOjI1IEFNDQo+IFRvOiBEZXNhaSwgS2FzaHlhcA0K
+PiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc7IE1vb3JlLCBFcmljOyBQcmFrYXNoLCBT
+YXRoeWENCj4gU3ViamVjdDogUmU6IFtQQVRDSCAwMS8wNl0gbXB0ZnVzaW9uOiAoTmV3IEZlYXR1
+cmUpQWRkZWQgbmV3IHN5c2ZzDQo+IHBhcmFtZXRlcnMgZm9yIGhhbmRsZSBhbmQgZmlybXdhcmUg
+aWQNCj4gDQo+IE9uIFRodSwgMjAxMS0wMi0xMCBhdCAxMTo0OSArMDUzMCwgS2FzaHlhcCwgRGVz
+YWkgd3JvdGU6DQo+ID4gTmV3IGZlYXR1cmUgaXMgYWRkZWQuICBzYXNfZGV2aWNlX2hhbmxkZSBh
+bmQgZmlybXdhcmUgaWQgd2lsbCBiZQ0KPiB2aXNpYmxlIGZyb20NCj4gPiBzeXNmcyBwYXJhbWV0
+ZXJzLiBoYW5kbGUgYW5kIGZpcm13YXJlIGlkIGlzIGludGVybmFsIHRvIExTSSBmaXJtd2FyZS4N
+Cj4gPiBJdCBpcyBtZXJlbHkgZGVidWdnaW5nIHB1cnBvc2UuDQo+IA0KPiBCcm9rZW4gcmVjb3Jk
+IHRpbWU6IGNoZWNrcGF0Y2gucGw6DQo+IA0KPiBXQVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlIGJl
+Zm9yZSB0YWJzDQo+ICMyMTogRklMRTogZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRiYXNlLmg6
+NDAyOg0KPiArXkl1MTYgICAgIF5JXkkgaGFuZGxlOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwg
+bm8gc3BhY2VzIGF0IHRoZSBzdGFydCBvZiBhIGxpbmUNCj4gIzY3OiBGSUxFOiBkcml2ZXJzL21l
+c3NhZ2UvZnVzaW9uL21wdHNjc2loLmM6MzM1MDoNCj4gKyAgICBjaGFyICpidWYpJA0KPiANCj4g
+RVJST1I6IGNvZGUgaW5kZW50IHNob3VsZCB1c2UgdGFicyB3aGVyZSBwb3NzaWJsZQ0KPiAjNzk6
+IEZJTEU6IGRyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2NzaWguYzozMzYyOg0KPiArIF5JXklO
+VUxMKTskDQo+IA0KPiBXQVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlIGJlZm9yZSB0YWJzDQo+ICM3
+OTogRklMRTogZHJpdmVycy9tZXNzYWdlL2Z1c2lvbi9tcHRzY3NpaC5jOjMzNjI6DQo+ICsgXkle
+SU5VTEwpOyQNCj4gDQo+IFdBUk5JTkc6IHBsZWFzZSwgbm8gc3BhY2VzIGF0IHRoZSBzdGFydCBv
+ZiBhIGxpbmUNCj4gIzc5OiBGSUxFOiBkcml2ZXJzL21lc3NhZ2UvZnVzaW9uL21wdHNjc2loLmM6
+MzM2MjoNCj4gKyBeSV5JTlVMTCk7JA0KPiANCj4gV0FSTklORzogcGxlYXNlLCBubyBzcGFjZXMg
+YXQgdGhlIHN0YXJ0IG9mIGEgbGluZQ0KPiAjOTE6IEZJTEU6IGRyaXZlcnMvbWVzc2FnZS9mdXNp
+b24vbXB0c2NzaWguYzozMzc0Og0KPiArICAgIGNoYXIgKmJ1ZikkDQo+IA0KPiBFUlJPUjogY29k
+ZSBpbmRlbnQgc2hvdWxkIHVzZSB0YWJzIHdoZXJlIHBvc3NpYmxlDQo+ICMxMDM6IEZJTEU6IGRy
+aXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2NzaWguYzozMzg2Og0KPiArIF5JXklOVUxMKTskDQo+
+IA0KPiBXQVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlIGJlZm9yZSB0YWJzDQo+ICMxMDM6IEZJTEU6
+IGRyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2NzaWguYzozMzg2Og0KPiArIF5JXklOVUxMKTsk
+DQo+IA0KPiBXQVJOSU5HOiBwbGVhc2UsIG5vIHNwYWNlcyBhdCB0aGUgc3RhcnQgb2YgYSBsaW5l
+DQo+ICMxMDM6IEZJTEU6IGRyaXZlcnMvbWVzc2FnZS9mdXNpb24vbXB0c2NzaWguYzozMzg2Og0K
+PiArIF5JXklOVUxMKTskDQo+IA0KPiB0b3RhbDogMiBlcnJvcnMsIDcgd2FybmluZ3MsIDkzIGxp
+bmVzIGNoZWNrZWQNCkphbWVzLCBteSBzY3JpcHQgbWlzc2VkIHRoaXMgd2hlbiBJIHJlc2VuZCB0
+aGUgcGF0Y2guIEkgbWlzc2VkIHRvIHJ1biAiY2xlYW5wYXRjaCIgZnJvbSBzY3JpcHRzIGRpcmVj
+dG9yeS4NCkkgd2lsbCByZWRvIHRoaXMuIA0KPiANCj4gQWxzbywgYXMgSSByZWFkIHRocm91Z2gg
+dGhpcyBwYXRjaCwgZG9lc24ndCBpdCBhZGQgdGhlc2UgdHdvIHBhcmFtZXRlcnMNCj4gZm9yIGV2
+ZXJ5IGZ1c2lvbiBkZXZpY2UgdHlwZSAoU1BJLCBTQVMgYW5kIEZDKSBidXQgb25seSBzZXQgdGhl
+bSBmb3INCj4gU0FTPyAgSWYgeW91IHdhbnQgU0FTIG9ubHkgcGFyYW1ldGVycywgdGhleSBzaG91
+bGQgcHJvYmFibHkgYmUgdmlzaWJsZQ0KPiBvbmx5IGZvciBTQVMgY2FyZHMuDQpJIGhhdmUgb25s
+eSB1c2VkIHNkZXZfYXR0cnMgZm9yIG1wdHNhcy5jIGFzIGJlbG93DQouc2Rldl9hdHRycwkJCT0g
+bXB0c2NzaWhfZGV2X2F0dHJzDQpJdCBtZWFucyBhbGwgcGFyYW1ldGVycyBhcmUgdmlzaWJsZSB0
+byBvbmx5IE1QVFNBUyBtb2R1bGVzLiBOb3QgZm9yIG1wdGZjIGFuZCBtcHRzcGkuDQpEbyB5b3Ug
+d2FudCBzb21lIGNoYW5nZXMgaW4gdGhpcyBhcmVhID8gDQoNCn4gS2FzaHlhcA0KDQo+IA0KPiBK
+YW1lcw0KPiANCg0K
