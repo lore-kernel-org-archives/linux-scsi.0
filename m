@@ -1,726 +1,444 @@
 From: James Smart <james.smart@emulex.com>
-Subject: [PATCH 1/6] lpfc 8.3.21: Critical Errors and Bug Fixes
-Date: Wed, 16 Feb 2011 12:39:24 -0500
-Message-ID: <1297877964.1492.20.camel@wookie>
+Subject: [PATCH 4/6] lpfc 8.3.21: Initialization and user interface changes
+Date: Wed, 16 Feb 2011 12:39:57 -0500
+Message-ID: <1297877997.1492.27.camel@wookie>
 Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from exht1.emulex.com ([138.239.113.183]:7544 "EHLO
+Received: from exht1.emulex.com ([138.239.113.183]:7549 "EHLO
 	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753591Ab1BPRjm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2011 12:39:42 -0500
+	with ESMTP id S1753738Ab1BPRkJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Feb 2011 12:40:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Critical Errors:
-- Correctly handle non-zero return lpfc_workq_post_event and return ENOMEM
-- Save the irq level when locking the host_lock in lpfc_findnode_did
-
-Bug Fixes:
-- Adjust payload_length and request_length for sli4_config mailbox commands.
-- Add the freed sgl/XRI to the tail of the list rather than to the head.
-- Set the FC_VPORT_NEEDS_INIT_VPI on vport deletes and check it before
-  issuing a fdisc on an els retry.
-- Only call lpfc_hba_init_link() if phba->cfg_suppress_link_up
-  is LPFC_INITIALIZE_LINK.
-- Add support for SLI-4 Performance Hints 
+- Make link speed not supported by port message an error message.
+- Add support for new SLI failure codes add sysfs parameter to reflect the
+  security setting and current state.
+- Add all lpfc module parameters to the /sys/modules/lpfc/parameters directory.
 
  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
  Signed-off-by: James Smart <james.smart@emulex.com>
 
  ---
 
- lpfc.h         |    2 +
- lpfc_attr.c    |   29 ++++++++++++--
- lpfc_crtn.h    |    4 +-
- lpfc_els.c     |    3 +
- lpfc_hbadisc.c |    5 +-
- lpfc_hw4.h     |  104 ++++++++++++++++++++++++++++++++++++++++++++++++++--
- lpfc_init.c    |  113 +++++++++++++++++++++++++++++++++++++++++++--------------
- lpfc_mbox.c    |   16 ++++----
- lpfc_scsi.c    |   15 +++++++
- lpfc_sli.c     |   21 +++++++---
- lpfc_sli4.h    |    4 ++
- lpfc_vport.c   |    4 ++
- 12 files changed, 264 insertions(+), 56 deletions(-)
+ lpfc.h         |    2 -
+ lpfc_attr.c    |   75 ++++++++++++++++++++++++++++++++++++++-------------------
+ lpfc_debugfs.c |    8 +++---
+ lpfc_hw.h      |    5 +++
+ lpfc_init.c    |    2 -
+ lpfc_mbox.c    |    3 +-
+ lpfc_scsi.c    |   14 +++++++---
+ 7 files changed, 72 insertions(+), 37 deletions(-)
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2011-02-15 10:03:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2011-02-16 11:23:50.000000000 -0500
-@@ -623,10 +623,14 @@ lpfc_do_offline(struct lpfc_hba *phba, u
- 	int status = 0;
- 	int cnt = 0;
- 	int i;
-+	int rc;
- 
- 	init_completion(&online_compl);
--	lpfc_workq_post_event(phba, &status, &online_compl,
-+	rc = lpfc_workq_post_event(phba, &status, &online_compl,
- 			      LPFC_EVT_OFFLINE_PREP);
-+	if (rc == 0)
-+		return -ENOMEM;
-+
- 	wait_for_completion(&online_compl);
- 
- 	if (status != 0)
-@@ -652,7 +656,10 @@ lpfc_do_offline(struct lpfc_hba *phba, u
- 	}
- 
- 	init_completion(&online_compl);
--	lpfc_workq_post_event(phba, &status, &online_compl, type);
-+	rc = lpfc_workq_post_event(phba, &status, &online_compl, type);
-+	if (rc == 0)
-+		return -ENOMEM;
-+
- 	wait_for_completion(&online_compl);
- 
- 	if (status != 0)
-@@ -682,6 +689,7 @@ lpfc_selective_reset(struct lpfc_hba *ph
- {
- 	struct completion online_compl;
- 	int status = 0;
-+	int rc;
- 
- 	if (!phba->cfg_enable_hba_reset)
- 		return -EIO;
-@@ -692,8 +700,11 @@ lpfc_selective_reset(struct lpfc_hba *ph
- 		return status;
- 
- 	init_completion(&online_compl);
--	lpfc_workq_post_event(phba, &status, &online_compl,
-+	rc = lpfc_workq_post_event(phba, &status, &online_compl,
- 			      LPFC_EVT_ONLINE);
-+	if (rc == 0)
-+		return -ENOMEM;
-+
- 	wait_for_completion(&online_compl);
- 
- 	if (status != 0)
-@@ -812,14 +823,17 @@ lpfc_board_mode_store(struct device *dev
- 	struct lpfc_hba   *phba = vport->phba;
- 	struct completion online_compl;
- 	int status=0;
-+	int rc;
- 
- 	if (!phba->cfg_enable_hba_reset)
- 		return -EACCES;
- 	init_completion(&online_compl);
- 
- 	if(strncmp(buf, "online", sizeof("online") - 1) == 0) {
--		lpfc_workq_post_event(phba, &status, &online_compl,
-+		rc = lpfc_workq_post_event(phba, &status, &online_compl,
- 				      LPFC_EVT_ONLINE);
-+		if (rc == 0)
-+			return -ENOMEM;
- 		wait_for_completion(&online_compl);
- 	} else if (strncmp(buf, "offline", sizeof("offline") - 1) == 0)
- 		status = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
-@@ -1813,6 +1827,7 @@ lpfc_soft_wwpn_store(struct device *dev,
- 	int stat1=0, stat2=0;
- 	unsigned int i, j, cnt=count;
- 	u8 wwpn[8];
-+	int rc;
- 
- 	if (!phba->cfg_enable_hba_reset)
- 		return -EACCES;
-@@ -1863,7 +1878,11 @@ lpfc_soft_wwpn_store(struct device *dev,
- 				"0463 lpfc_soft_wwpn attribute set failed to "
- 				"reinit adapter - %d\n", stat1);
- 	init_completion(&online_compl);
--	lpfc_workq_post_event(phba, &stat2, &online_compl, LPFC_EVT_ONLINE);
-+	rc = lpfc_workq_post_event(phba, &stat2, &online_compl,
-+				   LPFC_EVT_ONLINE);
-+	if (rc == 0)
-+		return -ENOMEM;
-+
- 	wait_for_completion(&online_compl);
- 	if (stat2)
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2011-02-15 10:03:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2011-02-16 11:23:37.000000000 -0500
-@@ -53,9 +53,9 @@ void lpfc_unreg_vpi(struct lpfc_hba *, u
- void lpfc_init_link(struct lpfc_hba *, LPFC_MBOXQ_t *, uint32_t, uint32_t);
- void lpfc_request_features(struct lpfc_hba *, struct lpfcMboxq *);
- void lpfc_supported_pages(struct lpfcMboxq *);
--void lpfc_sli4_params(struct lpfcMboxq *);
-+void lpfc_pc_sli4_params(struct lpfcMboxq *);
- int lpfc_pc_sli4_params_get(struct lpfc_hba *, LPFC_MBOXQ_t *);
--
-+int lpfc_get_sli4_parameters(struct lpfc_hba *, LPFC_MBOXQ_t *);
- struct lpfc_vport *lpfc_find_vport_by_did(struct lpfc_hba *, uint32_t);
- void lpfc_cleanup_rcv_buffers(struct lpfc_vport *);
- void lpfc_rcv_seq_check_edtov(struct lpfc_vport *);
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2011-02-15 10:03:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2011-02-16 11:23:37.000000000 -0500
-@@ -2745,7 +2745,8 @@ lpfc_els_retry_delay_handler(struct lpfc
- 		}
- 		break;
- 	case ELS_CMD_FDISC:
--		lpfc_issue_els_fdisc(vport, ndlp, retry);
-+		if (!(vport->fc_flag & FC_VPORT_NEEDS_INIT_VPI))
-+			lpfc_issue_els_fdisc(vport, ndlp, retry);
- 		break;
- 	}
- 	return;
-diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2010-12-11 21:56:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc.h	2011-02-16 11:23:37.000000000 -0500
-@@ -548,6 +548,8 @@ struct lpfc_hba {
- #define LPFC_SLI3_CRP_ENABLED		0x08
- #define LPFC_SLI3_BG_ENABLED		0x20
- #define LPFC_SLI3_DSS_ENABLED		0x40
-+#define LPFC_SLI4_PERFH_ENABLED		0x80
-+#define LPFC_SLI4_PHWQ_ENABLED		0x100
- 	uint32_t iocb_cmd_size;
- 	uint32_t iocb_rsp_size;
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-02-15 10:03:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2011-02-16 11:23:50.000000000 -0500
-@@ -4426,10 +4426,11 @@ lpfc_findnode_did(struct lpfc_vport *vpo
- {
- 	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
- 	struct lpfc_nodelist *ndlp;
-+	unsigned long iflags;
- 
--	spin_lock_irq(shost->host_lock);
-+	spin_lock_irqsave(shost->host_lock, iflags);
- 	ndlp = __lpfc_findnode_did(vport, did);
--	spin_unlock_irq(shost->host_lock);
-+	spin_unlock_irqrestore(shost->host_lock, iflags);
- 	return ndlp;
- }
- 
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
---- a/drivers/scsi/lpfc/lpfc_hw4.h	2011-02-15 10:03:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h	2011-02-16 11:23:37.000000000 -0500
-@@ -778,6 +778,7 @@ struct mbox_header {
- #define LPFC_MBOX_OPCODE_QUERY_FW_CFG		0x3A
- #define LPFC_MBOX_OPCODE_FUNCTION_RESET		0x3D
- #define LPFC_MBOX_OPCODE_MQ_CREATE_EXT		0x5A
-+#define LPFC_MBOX_OPCODE_GET_SLI4_PARAMETERS	0xB5
- 
- /* FCoE Opcodes */
- #define LPFC_MBOX_OPCODE_FCOE_WQ_CREATE			0x01
-@@ -1852,6 +1853,9 @@ struct lpfc_mbx_request_features {
- #define lpfc_mbx_rq_ftr_rq_ifip_SHIFT		7
- #define lpfc_mbx_rq_ftr_rq_ifip_MASK		0x00000001
- #define lpfc_mbx_rq_ftr_rq_ifip_WORD		word2
-+#define lpfc_mbx_rq_ftr_rq_perfh_SHIFT		11
-+#define lpfc_mbx_rq_ftr_rq_perfh_MASK		0x00000001
-+#define lpfc_mbx_rq_ftr_rq_perfh_WORD		word2
- 	uint32_t word3;
- #define lpfc_mbx_rq_ftr_rsp_iaab_SHIFT		0
- #define lpfc_mbx_rq_ftr_rsp_iaab_MASK		0x00000001
-@@ -1877,6 +1881,9 @@ struct lpfc_mbx_request_features {
- #define lpfc_mbx_rq_ftr_rsp_ifip_SHIFT		7
- #define lpfc_mbx_rq_ftr_rsp_ifip_MASK		0x00000001
- #define lpfc_mbx_rq_ftr_rsp_ifip_WORD		word3
-+#define lpfc_mbx_rq_ftr_rsp_perfh_SHIFT		11
-+#define lpfc_mbx_rq_ftr_rsp_perfh_MASK		0x00000001
-+#define lpfc_mbx_rq_ftr_rsp_perfh_WORD		word3
- };
- 
- struct lpfc_mbx_supp_pages {
-@@ -1935,7 +1942,7 @@ struct lpfc_mbx_supp_pages {
- #define LPFC_SLI4_PARAMETERS		2
- };
- 
--struct lpfc_mbx_sli4_params {
-+struct lpfc_mbx_pc_sli4_params {
- 	uint32_t word1;
- #define qs_SHIFT				0
- #define qs_MASK					0x00000001
-@@ -2051,6 +2058,88 @@ struct lpfc_mbx_sli4_params {
- 	uint32_t rsvd_13_63[51];
- };
- 
-+struct lpfc_sli4_parameters {
-+	uint32_t word0;
-+#define cfg_prot_type_SHIFT			0
-+#define cfg_prot_type_MASK			0x000000FF
-+#define cfg_prot_type_WORD			word0
-+	uint32_t word1;
-+#define cfg_ft_SHIFT				0
-+#define cfg_ft_MASK				0x00000001
-+#define cfg_ft_WORD				word1
-+#define cfg_sli_rev_SHIFT			4
-+#define cfg_sli_rev_MASK			0x0000000f
-+#define cfg_sli_rev_WORD			word1
-+#define cfg_sli_family_SHIFT			8
-+#define cfg_sli_family_MASK			0x0000000f
-+#define cfg_sli_family_WORD			word1
-+#define cfg_if_type_SHIFT			12
-+#define cfg_if_type_MASK			0x0000000f
-+#define cfg_if_type_WORD			word1
-+#define cfg_sli_hint_1_SHIFT			16
-+#define cfg_sli_hint_1_MASK			0x000000ff
-+#define cfg_sli_hint_1_WORD			word1
-+#define cfg_sli_hint_2_SHIFT			24
-+#define cfg_sli_hint_2_MASK			0x0000001f
-+#define cfg_sli_hint_2_WORD			word1
-+	uint32_t word2;
-+	uint32_t word3;
-+	uint32_t word4;
-+#define cfg_cqv_SHIFT				14
-+#define cfg_cqv_MASK				0x00000003
-+#define cfg_cqv_WORD				word4
-+	uint32_t word5;
-+	uint32_t word6;
-+#define cfg_mqv_SHIFT				14
-+#define cfg_mqv_MASK				0x00000003
-+#define cfg_mqv_WORD				word6
-+	uint32_t word7;
-+	uint32_t word8;
-+#define cfg_wqv_SHIFT				14
-+#define cfg_wqv_MASK				0x00000003
-+#define cfg_wqv_WORD				word8
-+	uint32_t word9;
-+	uint32_t word10;
-+#define cfg_rqv_SHIFT				14
-+#define cfg_rqv_MASK				0x00000003
-+#define cfg_rqv_WORD				word10
-+	uint32_t word11;
-+#define cfg_rq_db_window_SHIFT			28
-+#define cfg_rq_db_window_MASK			0x0000000f
-+#define cfg_rq_db_window_WORD			word11
-+	uint32_t word12;
-+#define cfg_fcoe_SHIFT 				0
-+#define cfg_fcoe_MASK				0x00000001
-+#define cfg_fcoe_WORD				word12
-+#define cfg_phwq_SHIFT 				15
-+#define cfg_phwq_MASK				0x00000001
-+#define cfg_phwq_WORD				word12
-+#define cfg_loopbk_scope_SHIFT			28
-+#define cfg_loopbk_scope_MASK			0x0000000f
-+#define cfg_loopbk_scope_WORD			word12
-+	uint32_t sge_supp_len;
-+	uint32_t word14;
-+#define cfg_sgl_page_cnt_SHIFT			0
-+#define cfg_sgl_page_cnt_MASK			0x0000000f
-+#define cfg_sgl_page_cnt_WORD			word14
-+#define cfg_sgl_page_size_SHIFT			8
-+#define cfg_sgl_page_size_MASK			0x000000ff
-+#define cfg_sgl_page_size_WORD			word14
-+#define cfg_sgl_pp_align_SHIFT			16
-+#define cfg_sgl_pp_align_MASK			0x000000ff
-+#define cfg_sgl_pp_align_WORD			word14
-+	uint32_t word15;
-+	uint32_t word16;
-+	uint32_t word17;
-+	uint32_t word18;
-+	uint32_t word19;
-+};
-+
-+struct lpfc_mbx_get_sli4_parameters {
-+	struct mbox_header header;
-+	struct lpfc_sli4_parameters sli4_parameters;
-+};
-+
- /* Mailbox Completion Queue Error Messages */
- #define MB_CQE_STATUS_SUCCESS 			0x0
- #define MB_CQE_STATUS_INSUFFICIENT_PRIVILEGES	0x1
-@@ -2103,7 +2192,8 @@ struct lpfc_mqe {
- 		struct lpfc_mbx_post_hdr_tmpl hdr_tmpl;
- 		struct lpfc_mbx_query_fw_cfg query_fw_cfg;
- 		struct lpfc_mbx_supp_pages supp_pages;
--		struct lpfc_mbx_sli4_params sli4_params;
-+		struct lpfc_mbx_pc_sli4_params sli4_params;
-+		struct lpfc_mbx_get_sli4_parameters get_sli4_parameters;
- 		struct lpfc_mbx_nop nop;
- 	} un;
- };
-@@ -2381,6 +2471,10 @@ struct wqe_common {
- #define wqe_wqes_SHIFT        15
- #define wqe_wqes_MASK         0x00000001
- #define wqe_wqes_WORD         word10
-+/* Note that this field overlaps above fields */
-+#define wqe_wqid_SHIFT        1
-+#define wqe_wqid_MASK         0x0000007f
-+#define wqe_wqid_WORD         word10
- #define wqe_pri_SHIFT         16
- #define wqe_pri_MASK          0x00000007
- #define wqe_pri_WORD          word10
-@@ -2599,7 +2693,8 @@ struct fcp_iwrite64_wqe {
- 	uint32_t total_xfer_len;
- 	uint32_t initial_xfer_len;
- 	struct wqe_common wqe_com;     /* words 6-11 */
--	uint32_t rsvd_12_15[4];         /* word 12-15 */
-+	uint32_t rsrvd12;
-+	struct ulp_bde64 ph_bde;       /* words 13-15 */
- };
- 
- struct fcp_iread64_wqe {
-@@ -2608,7 +2703,8 @@ struct fcp_iread64_wqe {
- 	uint32_t total_xfer_len;       /* word 4 */
- 	uint32_t rsrvd5;               /* word 5 */
- 	struct wqe_common wqe_com;     /* words 6-11 */
--	uint32_t rsvd_12_15[4];         /* word 12-15 */
-+	uint32_t rsrvd12;
-+	struct ulp_bde64 ph_bde;       /* words 13-15 */
- };
- 
- struct fcp_icmnd64_wqe {
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2011-02-15 10:03:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2011-02-16 11:23:37.000000000 -0500
-@@ -4283,36 +4283,37 @@ lpfc_sli4_driver_resource_setup(struct l
- 		goto out_free_bsmbx;
- 	}
- 
--	/* Get the Supported Pages. It is always available. */
-+	/* Get the Supported Pages if PORT_CAPABILITIES is supported by port. */
- 	lpfc_supported_pages(mboxq);
- 	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
--	if (unlikely(rc)) {
--		rc = -EIO;
--		mempool_free(mboxq, phba->mbox_mem_pool);
--		goto out_free_bsmbx;
--	}
--
--	mqe = &mboxq->u.mqe;
--	memcpy(&pn_page[0], ((uint8_t *)&mqe->un.supp_pages.word3),
--	       LPFC_MAX_SUPPORTED_PAGES);
--	for (i = 0; i < LPFC_MAX_SUPPORTED_PAGES; i++) {
--		switch (pn_page[i]) {
--		case LPFC_SLI4_PARAMETERS:
--			phba->sli4_hba.pc_sli4_params.supported = 1;
--			break;
--		default:
--			break;
-+	if (!rc) {
-+		mqe = &mboxq->u.mqe;
-+		memcpy(&pn_page[0], ((uint8_t *)&mqe->un.supp_pages.word3),
-+		       LPFC_MAX_SUPPORTED_PAGES);
-+		for (i = 0; i < LPFC_MAX_SUPPORTED_PAGES; i++) {
-+			switch (pn_page[i]) {
-+			case LPFC_SLI4_PARAMETERS:
-+				phba->sli4_hba.pc_sli4_params.supported = 1;
-+				break;
-+			default:
-+				break;
-+			}
-+		}
-+		/* Read the port's SLI4 Parameters capabilities if supported. */
-+		if (phba->sli4_hba.pc_sli4_params.supported)
-+			rc = lpfc_pc_sli4_params_get(phba, mboxq);
-+		if (rc) {
-+			mempool_free(mboxq, phba->mbox_mem_pool);
-+			rc = -EIO;
-+			goto out_free_bsmbx;
- 		}
- 	}
--
--	/* Read the port's SLI4 Parameters capabilities if supported. */
--	if (phba->sli4_hba.pc_sli4_params.supported)
--		rc = lpfc_pc_sli4_params_get(phba, mboxq);
-+	/*
-+	 * Get sli4 parameters that override parameters from Port capabilities.
-+	 * If this call fails it is not a critical error so continue loading.
-+	 */
-+	lpfc_get_sli4_parameters(phba, mboxq);
- 	mempool_free(mboxq, phba->mbox_mem_pool);
--	if (rc) {
--		rc = -EIO;
--		goto out_free_bsmbx;
--	}
- 	/* Create all the SLI4 queues */
- 	rc = lpfc_sli4_queue_create(phba);
- 	if (rc)
-@@ -7810,7 +7811,7 @@ lpfc_pc_sli4_params_get(struct lpfc_hba 
- 	mqe = &mboxq->u.mqe;
- 
- 	/* Read the port's SLI4 Parameters port capabilities */
--	lpfc_sli4_params(mboxq);
-+	lpfc_pc_sli4_params(mboxq);
- 	if (!phba->sli4_hba.intr_enable)
- 		rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
- 	else {
-@@ -7854,6 +7855,66 @@ lpfc_pc_sli4_params_get(struct lpfc_hba 
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2011-02-16 11:32:37.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2011-02-16 11:35:01.000000000 -0500
+@@ -678,6 +678,7 @@ lpfc_do_offline(struct lpfc_hba *phba, u
+  *
+  * Notes:
+  * Assumes any error from lpfc_do_offline() will be negative.
++ * Do not make this function static.
+  *
+  * Returns:
+  * lpfc_do_offline() return code if not zero
+@@ -1293,6 +1294,28 @@ lpfc_fips_rev_show(struct device *dev,  
  }
  
  /**
-+ * lpfc_get_sli4_parameters - Get the SLI4 Config PARAMETERS.
-+ * @phba: Pointer to HBA context object.
-+ * @mboxq: Pointer to the mailboxq memory for the mailbox command response.
++ * lpfc_dss_show - Return the current state of dss and the configured state
++ * @dev: class converted to a Scsi_host structure.
++ * @attr: device attribute, not used.
++ * @buf: on return contains the formatted text.
 + *
-+ * This function is called in the SLI4 code path to read the port's
-+ * sli4 capabilities.
-+ *
-+ * This function may be be called from any context that can block-wait
-+ * for the completion.  The expectation is that this routine is called
-+ * typically from probe_one or from the online routine.
++ * Returns: size of formatted string.
 + **/
-+int
-+lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
++static ssize_t
++lpfc_dss_show(struct device *dev, struct device_attribute *attr,
++	      char *buf)
 +{
-+	int rc;
-+	struct lpfc_mqe *mqe = &mboxq->u.mqe;
-+	struct lpfc_pc_sli4_params *sli4_params;
-+	int length;
-+	struct lpfc_sli4_parameters *mbx_sli4_parameters;
++	struct Scsi_Host *shost = class_to_shost(dev);
++	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
++	struct lpfc_hba   *phba = vport->phba;
 +
-+	/* Read the port's SLI4 Config Parameters */
-+	length = (sizeof(struct lpfc_mbx_get_sli4_parameters) -
-+		  sizeof(struct lpfc_sli4_cfg_mhdr));
-+	lpfc_sli4_config(phba, mboxq, LPFC_MBOX_SUBSYSTEM_COMMON,
-+			 LPFC_MBOX_OPCODE_GET_SLI4_PARAMETERS,
-+			 length, LPFC_SLI4_MBX_EMBED);
-+	if (!phba->sli4_hba.intr_enable)
-+		rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-+	else
-+		rc = lpfc_sli_issue_mbox_wait(phba, mboxq,
-+			lpfc_mbox_tmo_val(phba, MBX_SLI4_CONFIG));
-+	if (unlikely(rc))
-+		return rc;
-+	sli4_params = &phba->sli4_hba.pc_sli4_params;
-+	mbx_sli4_parameters = &mqe->un.get_sli4_parameters.sli4_parameters;
-+	sli4_params->if_type = bf_get(cfg_if_type, mbx_sli4_parameters);
-+	sli4_params->sli_rev = bf_get(cfg_sli_rev, mbx_sli4_parameters);
-+	sli4_params->sli_family = bf_get(cfg_sli_family, mbx_sli4_parameters);
-+	sli4_params->featurelevel_1 = bf_get(cfg_sli_hint_1,
-+					     mbx_sli4_parameters);
-+	sli4_params->featurelevel_2 = bf_get(cfg_sli_hint_2,
-+					     mbx_sli4_parameters);
-+	if (bf_get(cfg_phwq, mbx_sli4_parameters))
-+		phba->sli3_options |= LPFC_SLI4_PHWQ_ENABLED;
-+	else
-+		phba->sli3_options &= ~LPFC_SLI4_PHWQ_ENABLED;
-+	sli4_params->sge_supp_len = mbx_sli4_parameters->sge_supp_len;
-+	sli4_params->loopbk_scope = bf_get(loopbk_scope, mbx_sli4_parameters);
-+	sli4_params->cqv = bf_get(cfg_cqv, mbx_sli4_parameters);
-+	sli4_params->mqv = bf_get(cfg_mqv, mbx_sli4_parameters);
-+	sli4_params->wqv = bf_get(cfg_wqv, mbx_sli4_parameters);
-+	sli4_params->rqv = bf_get(cfg_rqv, mbx_sli4_parameters);
-+	sli4_params->sgl_pages_max = bf_get(cfg_sgl_page_cnt,
-+					    mbx_sli4_parameters);
-+	sli4_params->sgl_pp_align = bf_get(cfg_sgl_pp_align,
-+					   mbx_sli4_parameters);
-+	return 0;
++	return snprintf(buf, PAGE_SIZE, "%s - %sOperational\n",
++			(phba->cfg_enable_dss) ? "Enabled" : "Disabled",
++			(phba->sli3_options & LPFC_SLI3_DSS_ENABLED) ?
++				"" : "Not ");
 +}
 +
 +/**
-  * lpfc_pci_probe_one_s3 - PCI probe func to reg SLI-3 device to PCI subsystem.
-  * @pdev: pointer to PCI device
-  * @pid: pointer to PCI device identifier
-diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
---- a/drivers/scsi/lpfc/lpfc_mbox.c	2011-02-15 10:03:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c	2011-02-16 11:23:37.000000000 -0500
-@@ -1692,7 +1692,7 @@ lpfc_sli4_mbox_cmd_free(struct lpfc_hba 
-  * @mbox: pointer to lpfc mbox command.
-  * @subsystem: The sli4 config sub mailbox subsystem.
-  * @opcode: The sli4 config sub mailbox command opcode.
-- * @length: Length of the sli4 config mailbox command.
-+ * @length: Length of the sli4 config mailbox command (including sub-header).
+  * lpfc_param_show - Return a cfg attribute value in decimal
   *
-  * This routine sets up the header fields of SLI4 specific mailbox command
-  * for sending IOCTL command.
-@@ -1723,14 +1723,14 @@ lpfc_sli4_config(struct lpfc_hba *phba, 
- 	if (emb) {
- 		/* Set up main header fields */
- 		bf_set(lpfc_mbox_hdr_emb, &sli4_config->header.cfg_mhdr, 1);
--		sli4_config->header.cfg_mhdr.payload_length =
--					LPFC_MBX_CMD_HDR_LENGTH + length;
-+		sli4_config->header.cfg_mhdr.payload_length = length;
- 		/* Set up sub-header fields following main header */
- 		bf_set(lpfc_mbox_hdr_opcode,
- 			&sli4_config->header.cfg_shdr.request, opcode);
- 		bf_set(lpfc_mbox_hdr_subsystem,
- 			&sli4_config->header.cfg_shdr.request, subsystem);
--		sli4_config->header.cfg_shdr.request.request_length = length;
-+		sli4_config->header.cfg_shdr.request.request_length =
-+			length - LPFC_MBX_CMD_HDR_LENGTH;
- 		return length;
- 	}
+  * Description:
+@@ -1611,13 +1634,13 @@ lpfc_##attr##_store(struct device *dev, 
  
-@@ -1902,6 +1902,7 @@ lpfc_request_features(struct lpfc_hba *p
+ #define LPFC_ATTR(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_init(name, defval, minval, maxval)
  
- 	/* Set up host requested features. */
- 	bf_set(lpfc_mbx_rq_ftr_rq_fcpi, &mboxq->u.mqe.un.req_ftrs, 1);
-+	bf_set(lpfc_mbx_rq_ftr_rq_perfh, &mboxq->u.mqe.un.req_ftrs, 1);
+ #define LPFC_ATTR_R(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_show(name)\
+ lpfc_param_init(name, defval, minval, maxval)\
+@@ -1625,7 +1648,7 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
  
- 	/* Enable DIF (block guard) only if configured to do so. */
- 	if (phba->cfg_enable_bg)
-@@ -2159,17 +2160,16 @@ lpfc_supported_pages(struct lpfcMboxq *m
+ #define LPFC_ATTR_RW(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_show(name)\
+ lpfc_param_init(name, defval, minval, maxval)\
+@@ -1636,7 +1659,7 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
+ 
+ #define LPFC_ATTR_HEX_R(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_hex_show(name)\
+ lpfc_param_init(name, defval, minval, maxval)\
+@@ -1644,7 +1667,7 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
+ 
+ #define LPFC_ATTR_HEX_RW(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_param_hex_show(name)\
+ lpfc_param_init(name, defval, minval, maxval)\
+@@ -1655,13 +1678,13 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
+ 
+ #define LPFC_VPORT_ATTR(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_init(name, defval, minval, maxval)
+ 
+ #define LPFC_VPORT_ATTR_R(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_show(name)\
+ lpfc_vport_param_init(name, defval, minval, maxval)\
+@@ -1669,7 +1692,7 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
+ 
+ #define LPFC_VPORT_ATTR_RW(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_show(name)\
+ lpfc_vport_param_init(name, defval, minval, maxval)\
+@@ -1680,7 +1703,7 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
+ 
+ #define LPFC_VPORT_ATTR_HEX_R(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_hex_show(name)\
+ lpfc_vport_param_init(name, defval, minval, maxval)\
+@@ -1688,7 +1711,7 @@ static DEVICE_ATTR(lpfc_##name, S_IRUGO 
+ 
+ #define LPFC_VPORT_ATTR_HEX_RW(name, defval, minval, maxval, desc) \
+ static uint lpfc_##name = defval;\
+-module_param(lpfc_##name, uint, 0);\
++module_param(lpfc_##name, uint, S_IRUGO);\
+ MODULE_PARM_DESC(lpfc_##name, desc);\
+ lpfc_vport_param_hex_show(name)\
+ lpfc_vport_param_init(name, defval, minval, maxval)\
+@@ -1732,7 +1755,7 @@ static DEVICE_ATTR(npiv_info, S_IRUGO, l
+ static DEVICE_ATTR(lpfc_temp_sensor, S_IRUGO, lpfc_temp_sensor_show, NULL);
+ static DEVICE_ATTR(lpfc_fips_level, S_IRUGO, lpfc_fips_level_show, NULL);
+ static DEVICE_ATTR(lpfc_fips_rev, S_IRUGO, lpfc_fips_rev_show, NULL);
+-
++static DEVICE_ATTR(lpfc_dss, S_IRUGO, lpfc_dss_show, NULL);
+ 
+ static char *lpfc_soft_wwn_key = "C99G71SL8032A";
+ 
+@@ -1973,7 +1996,7 @@ static DEVICE_ATTR(lpfc_soft_wwnn, S_IRU
+ 
+ 
+ static int lpfc_poll = 0;
+-module_param(lpfc_poll, int, 0);
++module_param(lpfc_poll, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_poll, "FCP ring polling mode control:"
+ 		 " 0 - none,"
+ 		 " 1 - poll with interrupts enabled"
+@@ -1983,21 +2006,21 @@ static DEVICE_ATTR(lpfc_poll, S_IRUGO | 
+ 		   lpfc_poll_show, lpfc_poll_store);
+ 
+ int  lpfc_sli_mode = 0;
+-module_param(lpfc_sli_mode, int, 0);
++module_param(lpfc_sli_mode, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_sli_mode, "SLI mode selector:"
+ 		 " 0 - auto (SLI-3 if supported),"
+ 		 " 2 - select SLI-2 even on SLI-3 capable HBAs,"
+ 		 " 3 - select SLI-3");
+ 
+ int lpfc_enable_npiv = 1;
+-module_param(lpfc_enable_npiv, int, 0);
++module_param(lpfc_enable_npiv, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_enable_npiv, "Enable NPIV functionality");
+ lpfc_param_show(enable_npiv);
+ lpfc_param_init(enable_npiv, 1, 0, 1);
+ static DEVICE_ATTR(lpfc_enable_npiv, S_IRUGO, lpfc_enable_npiv_show, NULL);
+ 
+ int lpfc_enable_rrq;
+-module_param(lpfc_enable_rrq, int, 0);
++module_param(lpfc_enable_rrq, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_enable_rrq, "Enable RRQ functionality");
+ lpfc_param_show(enable_rrq);
+ lpfc_param_init(enable_rrq, 0, 0, 1);
+@@ -2059,7 +2082,7 @@ static DEVICE_ATTR(txcmplq_hw, S_IRUGO,
+ 			 lpfc_txcmplq_hw_show, NULL);
+ 
+ int lpfc_iocb_cnt = 2;
+-module_param(lpfc_iocb_cnt, int, 1);
++module_param(lpfc_iocb_cnt, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_iocb_cnt,
+ 	"Number of IOCBs alloc for ELS, CT, and ABTS: 1k to 5k IOCBs");
+ lpfc_param_show(iocb_cnt);
+@@ -2211,7 +2234,7 @@ static DEVICE_ATTR(lpfc_nodev_tmo, S_IRU
+ # disappear until the timer expires. Value range is [0,255]. Default
+ # value is 30.
+ */
+-module_param(lpfc_devloss_tmo, int, 0);
++module_param(lpfc_devloss_tmo, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_devloss_tmo,
+ 		 "Seconds driver will hold I/O waiting "
+ 		 "for a device to come back");
+@@ -2321,7 +2344,7 @@ LPFC_VPORT_ATTR_R(peer_port_login, 0, 0,
+ # Default value of this parameter is 1.
+ */
+ static int lpfc_restrict_login = 1;
+-module_param(lpfc_restrict_login, int, 0);
++module_param(lpfc_restrict_login, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_restrict_login,
+ 		 "Restrict virtual ports login to remote initiators.");
+ lpfc_vport_param_show(restrict_login);
+@@ -2492,7 +2515,7 @@ lpfc_topology_store(struct device *dev, 
+ 	return -EINVAL;
+ }
+ static int lpfc_topology = 0;
+-module_param(lpfc_topology, int, 0);
++module_param(lpfc_topology, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_topology, "Select Fibre Channel topology");
+ lpfc_param_show(topology)
+ lpfc_param_init(topology, 0, 0, 6)
+@@ -2934,7 +2957,7 @@ lpfc_link_speed_store(struct device *dev
  }
  
- /**
-- * lpfc_sli4_params - Initialize the PORT_CAPABILITIES SLI4 Params
-- *                    mailbox command.
-+ * lpfc_pc_sli4_params - Initialize the PORT_CAPABILITIES SLI4 Params mbox cmd.
-  * @mbox: pointer to lpfc mbox command to initialize.
-  *
-  * The PORT_CAPABILITIES SLI4 parameters mailbox command is issued to
-  * retrieve the particular SLI4 features supported by the port.
-  **/
- void
--lpfc_sli4_params(struct lpfcMboxq *mbox)
-+lpfc_pc_sli4_params(struct lpfcMboxq *mbox)
- {
--	struct lpfc_mbx_sli4_params *sli4_params;
-+	struct lpfc_mbx_pc_sli4_params *sli4_params;
+ static int lpfc_link_speed = 0;
+-module_param(lpfc_link_speed, int, 0);
++module_param(lpfc_link_speed, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_link_speed, "Select link speed");
+ lpfc_param_show(link_speed)
  
- 	memset(mbox, 0, sizeof(*mbox));
- 	sli4_params = &mbox->u.mqe.un.sli4_params;
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2010-12-11 21:56:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2011-02-16 11:23:37.000000000 -0500
-@@ -1981,12 +1981,14 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hb
- 	struct scatterlist *sgel = NULL;
- 	struct fcp_cmnd *fcp_cmnd = lpfc_cmd->fcp_cmnd;
- 	struct sli4_sge *sgl = (struct sli4_sge *)lpfc_cmd->fcp_bpl;
-+	struct sli4_sge *first_data_sgl;
- 	IOCB_t *iocb_cmd = &lpfc_cmd->cur_iocbq.iocb;
- 	dma_addr_t physaddr;
- 	uint32_t num_bde = 0;
- 	uint32_t dma_len;
- 	uint32_t dma_offset = 0;
- 	int nseg;
-+	struct ulp_bde64 *bde;
+@@ -3062,7 +3085,7 @@ lpfc_aer_support_store(struct device *de
+ }
  
- 	/*
- 	 * There are three possibilities here - use scatter-gather segment, use
-@@ -2011,7 +2013,7 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hb
- 		bf_set(lpfc_sli4_sge_last, sgl, 0);
- 		sgl->word2 = cpu_to_le32(sgl->word2);
- 		sgl += 1;
--
-+		first_data_sgl = sgl;
- 		lpfc_cmd->seg_cnt = nseg;
- 		if (lpfc_cmd->seg_cnt > phba->cfg_sg_seg_cnt) {
- 			lpfc_printf_log(phba, KERN_ERR, LOG_BG, "9074 BLKGRD:"
-@@ -2047,6 +2049,17 @@ lpfc_scsi_prep_dma_buf_s4(struct lpfc_hb
- 			dma_offset += dma_len;
- 			sgl++;
- 		}
-+		/* setup the performance hint (first data BDE) if enabled */
-+		if (phba->sli3_options & LPFC_SLI4_PERFH_ENABLED) {
-+			bde = (struct ulp_bde64 *)
-+					&(iocb_cmd->unsli3.sli3Words[5]);
-+			bde->addrLow = first_data_sgl->addr_lo;
-+			bde->addrHigh = first_data_sgl->addr_hi;
-+			bde->tus.f.bdeSize =
-+					le32_to_cpu(first_data_sgl->sge_len);
-+			bde->tus.f.bdeFlags = BUFF_TYPE_BDE_64;
-+			bde->tus.w = cpu_to_le32(bde->tus.w);
-+		}
- 	} else {
- 		sgl += 1;
- 		/* clear the last flag in the fcp_rsp map entry */
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
---- a/drivers/scsi/lpfc/lpfc_sli4.h	2011-02-15 10:03:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h	2011-02-16 11:23:37.000000000 -0500
-@@ -359,6 +359,10 @@ struct lpfc_pc_sli4_params {
- 	uint32_t hdr_pp_align;
- 	uint32_t sgl_pages_max;
- 	uint32_t sgl_pp_align;
-+	uint8_t cqv;
-+	uint8_t mqv;
-+	uint8_t wqv;
-+	uint8_t rqv;
+ static int lpfc_aer_support = 1;
+-module_param(lpfc_aer_support, int, 1);
++module_param(lpfc_aer_support, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_aer_support, "Enable PCIe device AER support");
+ lpfc_param_show(aer_support)
+ 
+@@ -3174,7 +3197,7 @@ LPFC_VPORT_ATTR_RW(use_adisc, 0, 0, 1,
+ # The value is set in milliseconds.
+ */
+ static int lpfc_max_scsicmpl_time;
+-module_param(lpfc_max_scsicmpl_time, int, 0);
++module_param(lpfc_max_scsicmpl_time, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_max_scsicmpl_time,
+ 	"Use command completion time to control queue depth");
+ lpfc_vport_param_show(max_scsicmpl_time);
+@@ -3350,7 +3373,7 @@ LPFC_ATTR_R(enable_bg, 0, 0, 1, "Enable 
+ */
+ unsigned int lpfc_prot_mask = SHOST_DIF_TYPE1_PROTECTION;
+ 
+-module_param(lpfc_prot_mask, uint, 0);
++module_param(lpfc_prot_mask, uint, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_prot_mask, "host protection mask");
+ 
+ /*
+@@ -3362,7 +3385,7 @@ MODULE_PARM_DESC(lpfc_prot_mask, "host p
+ #
+ */
+ unsigned char lpfc_prot_guard = SHOST_DIX_GUARD_IP;
+-module_param(lpfc_prot_guard, byte, 0);
++module_param(lpfc_prot_guard, byte, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_prot_guard, "host protection guard type");
+ 
+ /*
+@@ -3380,7 +3403,7 @@ MODULE_PARM_DESC(lpfc_prot_guard, "host 
+  * Default value is 0.
+  */
+ int lpfc_delay_discovery;
+-module_param(lpfc_delay_discovery, int, 0);
++module_param(lpfc_delay_discovery, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_delay_discovery,
+ 	"Delay NPort discovery when Clean Address bit is cleared. "
+ 	"Allowed values: 0,1.");
+@@ -3475,6 +3498,7 @@ struct device_attribute *lpfc_hba_attrs[
+ 	&dev_attr_txcmplq_hw,
+ 	&dev_attr_lpfc_fips_level,
+ 	&dev_attr_lpfc_fips_rev,
++	&dev_attr_lpfc_dss,
+ 	NULL,
  };
  
- /* SLI4 HBA data structure entries */
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2011-02-15 10:03:48.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2011-02-16 11:23:37.000000000 -0500
-@@ -96,7 +96,8 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, u
- 	/* set consumption flag every once in a while */
- 	if (!((q->host_index + 1) % LPFC_RELEASE_NOTIFICATION_INTERVAL))
- 		bf_set(wqe_wqec, &wqe->generic.wqe_com, 1);
+@@ -4677,6 +4701,7 @@ lpfc_get_cfgparam(struct lpfc_hba *phba)
+ 	lpfc_aer_support_init(phba, lpfc_aer_support);
+ 	lpfc_suppress_link_up_init(phba, lpfc_suppress_link_up);
+ 	lpfc_iocb_cnt_init(phba, lpfc_iocb_cnt);
++	phba->cfg_enable_dss = 1;
+ 	return;
+ }
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c	2010-08-04 10:31:45.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c	2011-02-16 11:33:35.000000000 -0500
+@@ -82,23 +82,23 @@
+  *                               the HBA. X MUST also be a power of 2.
+  */
+ static int lpfc_debugfs_enable = 1;
+-module_param(lpfc_debugfs_enable, int, 0);
++module_param(lpfc_debugfs_enable, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_debugfs_enable, "Enable debugfs services");
+ 
+ /* This MUST be a power of 2 */
+ static int lpfc_debugfs_max_disc_trc;
+-module_param(lpfc_debugfs_max_disc_trc, int, 0);
++module_param(lpfc_debugfs_max_disc_trc, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_debugfs_max_disc_trc,
+ 	"Set debugfs discovery trace depth");
+ 
+ /* This MUST be a power of 2 */
+ static int lpfc_debugfs_max_slow_ring_trc;
+-module_param(lpfc_debugfs_max_slow_ring_trc, int, 0);
++module_param(lpfc_debugfs_max_slow_ring_trc, int, S_IRUGO0);
+ MODULE_PARM_DESC(lpfc_debugfs_max_slow_ring_trc,
+ 	"Set debugfs slow ring trace depth");
+ 
+ static int lpfc_debugfs_mask_disc_trc;
+-module_param(lpfc_debugfs_mask_disc_trc, int, 0);
++module_param(lpfc_debugfs_mask_disc_trc, int, S_IRUGO);
+ MODULE_PARM_DESC(lpfc_debugfs_mask_disc_trc,
+ 	"Set debugfs discovery trace mask");
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2011-02-16 11:32:37.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc.h	2011-02-16 11:33:35.000000000 -0500
+@@ -662,7 +662,7 @@ struct lpfc_hba {
+ #define LPFC_INITIALIZE_LINK              0	/* do normal init_link mbox */
+ #define LPFC_DELAY_INIT_LINK              1	/* layered driver hold off */
+ #define LPFC_DELAY_INIT_LINK_INDEFINITELY 2	/* wait, manual intervention */
 -
-+	if (q->phba->sli3_options & LPFC_SLI4_PHWQ_ENABLED)
-+		bf_set(wqe_wqid, &wqe->generic.wqe_com, q->queue_id);
- 	lpfc_sli_pcimem_bcopy(wqe, temp_wqe, q->entry_size);
++	uint32_t cfg_enable_dss;
+ 	lpfc_vpd_t vpd;		/* vital product data */
  
- 	/* Update the host index before invoking device */
-@@ -969,7 +970,8 @@ __lpfc_sli_release_iocbq_s4(struct lpfc_
- 		} else {
- 			sglq->state = SGL_FREED;
- 			sglq->ndlp = NULL;
--			list_add(&sglq->list, &phba->sli4_hba.lpfc_sgl_list);
-+			list_add_tail(&sglq->list,
-+				&phba->sli4_hba.lpfc_sgl_list);
- 
- 			/* Check if TXQ queue needs to be serviced */
- 			if (pring->txq_cnt)
-@@ -4817,7 +4819,10 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
- 				"0378 No support for fcpi mode.\n");
- 		ftr_rsp++;
- 	}
+ 	struct pci_dev *pcidev;
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2011-02-16 11:32:37.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2011-02-16 11:33:35.000000000 -0500
+@@ -3204,7 +3204,10 @@ typedef struct {
+ #define IOERR_SLER_RRQ_RJT_ERR        0x4C
+ #define IOERR_SLER_RRQ_RETRY_ERR      0x4D
+ #define IOERR_SLER_ABTS_ERR           0x4E
 -
-+	if (bf_get(lpfc_mbx_rq_ftr_rsp_perfh, &mqe->un.req_ftrs))
-+		phba->sli3_options |= LPFC_SLI4_PERFH_ENABLED;
-+	else
-+		phba->sli3_options &= ~LPFC_SLI4_PERFH_ENABLED;
- 	/*
- 	 * If the port cannot support the host's requested features
- 	 * then turn off the global config parameters to disable the
-@@ -5004,7 +5009,8 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phb
- 	spin_lock_irq(&phba->hbalock);
- 	phba->link_state = LPFC_LINK_DOWN;
- 	spin_unlock_irq(&phba->hbalock);
--	rc = phba->lpfc_hba_init_link(phba, MBX_NOWAIT);
-+	if (phba->cfg_suppress_link_up == LPFC_INITIALIZE_LINK)
-+		rc = phba->lpfc_hba_init_link(phba, MBX_NOWAIT);
- out_unset_queue:
- 	/* Unset all the queues set up in this routine when error out */
- 	if (rc)
-@@ -11189,7 +11195,7 @@ lpfc_rq_destroy(struct lpfc_hba *phba, s
- 	if (!mbox)
- 		return -ENOMEM;
- 	length = (sizeof(struct lpfc_mbx_rq_destroy) -
--		  sizeof(struct mbox_header));
-+		  sizeof(struct lpfc_sli4_cfg_mhdr));
- 	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_FCOE,
- 			 LPFC_MBOX_OPCODE_FCOE_RQ_DESTROY,
- 			 length, LPFC_SLI4_MBX_EMBED);
-@@ -11279,7 +11285,7 @@ lpfc_sli4_post_sgl(struct lpfc_hba *phba
- 	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_FCOE,
- 			LPFC_MBOX_OPCODE_FCOE_POST_SGL_PAGES,
- 			sizeof(struct lpfc_mbx_post_sgl_pages) -
--			sizeof(struct mbox_header), LPFC_SLI4_MBX_EMBED);
-+			sizeof(struct lpfc_sli4_cfg_mhdr), LPFC_SLI4_MBX_EMBED);
++#define IOERR_ELXSEC_KEY_UNWRAP_ERROR		0xF0
++#define IOERR_ELXSEC_KEY_UNWRAP_COMPARE_ERROR	0xF1
++#define IOERR_ELXSEC_CRYPTO_ERROR		0xF2
++#define IOERR_ELXSEC_CRYPTO_COMPARE_ERROR	0xF3
+ #define IOERR_DRVR_MASK               0x100
+ #define IOERR_SLI_DOWN                0x101  /* ulpStatus  - Driver defined */
+ #define IOERR_SLI_BRESET              0x102
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2011-02-16 11:32:37.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_init.c	2011-02-16 11:33:35.000000000 -0500
+@@ -460,7 +460,7 @@ lpfc_config_port_post(struct lpfc_hba *p
+ 	    || ((phba->cfg_link_speed == LPFC_USER_LINK_SPEED_16G)
+ 		&& !(phba->lmt & LMT_16Gb))) {
+ 		/* Reset link speed to auto */
+-		lpfc_printf_log(phba, KERN_WARNING, LOG_LINK_EVENT,
++		lpfc_printf_log(phba, KERN_ERR, LOG_LINK_EVENT,
+ 			"1302 Invalid speed for this board: "
+ 			"Reset link speed to auto: x%x\n",
+ 			phba->cfg_link_speed);
+diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
+--- a/drivers/scsi/lpfc/lpfc_mbox.c	2011-02-16 11:23:37.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_mbox.c	2011-02-16 11:33:35.000000000 -0500
+@@ -1263,7 +1263,8 @@ lpfc_config_port(struct lpfc_hba *phba, 
+ 	if (phba->sli_rev == LPFC_SLI_REV3 && phba->vpd.sli3Feat.cerbm) {
+ 		if (phba->cfg_enable_bg)
+ 			mb->un.varCfgPort.cbg = 1; /* configure BlockGuard */
+-		mb->un.varCfgPort.cdss = 1; /* Configure Security */
++		if (phba->cfg_enable_dss)
++			mb->un.varCfgPort.cdss = 1; /* Configure Security */
+ 		mb->un.varCfgPort.cerbm = 1; /* Request HBQs */
+ 		mb->un.varCfgPort.ccrp = 1; /* Command Ring Polling */
+ 		mb->un.varCfgPort.max_hbq = lpfc_sli_hbq_count();
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2011-02-16 11:25:15.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2011-02-16 11:33:35.000000000 -0500
+@@ -2508,6 +2508,15 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
+ 			break;
+ 		case IOSTAT_LOCAL_REJECT:
+ 		case IOSTAT_REMOTE_STOP:
++			if (lpfc_cmd->result == IOERR_ELXSEC_KEY_UNWRAP_ERROR ||
++			    lpfc_cmd->result ==
++					IOERR_ELXSEC_KEY_UNWRAP_COMPARE_ERROR ||
++			    lpfc_cmd->result == IOERR_ELXSEC_CRYPTO_ERROR ||
++			    lpfc_cmd->result ==
++					IOERR_ELXSEC_CRYPTO_COMPARE_ERROR) {
++				cmd->result = ScsiResult(DID_NO_CONNECT, 0);
++				break;
++			}
+ 			if (lpfc_cmd->result == IOERR_INVALID_RPI ||
+ 			    lpfc_cmd->result == IOERR_NO_RESOURCES ||
+ 			    lpfc_cmd->result == IOERR_ABORT_REQUESTED ||
+@@ -2515,7 +2524,6 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
+ 				cmd->result = ScsiResult(DID_REQUEUE, 0);
+ 				break;
+ 			}
+-
+ 			if ((lpfc_cmd->result == IOERR_RX_DMA_FAILED ||
+ 			     lpfc_cmd->result == IOERR_TX_DMA_FAILED) &&
+ 			     pIocbOut->iocb.unsli3.sli3_bg.bgstat) {
+@@ -2545,7 +2553,6 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
+ 						lpfc_cmd->cur_iocbq.sli4_xritag,
+ 						0, 0);
+ 			}
+-
+ 		/* else: fall through */
+ 		default:
+ 			cmd->result = ScsiResult(DID_ERROR, 0);
+@@ -2556,9 +2563,8 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba 
+ 		    || (pnode->nlp_state != NLP_STE_MAPPED_NODE))
+ 			cmd->result = ScsiResult(DID_TRANSPORT_DISRUPTED,
+ 						 SAM_STAT_BUSY);
+-	} else {
++	} else
+ 		cmd->result = ScsiResult(DID_OK, 0);
+-	}
  
- 	post_sgl_pages = (struct lpfc_mbx_post_sgl_pages *)
- 				&mbox->u.mqe.un.post_sgl_pages;
-@@ -12402,7 +12408,8 @@ lpfc_sli4_post_rpi_hdr(struct lpfc_hba *
- 	lpfc_sli4_config(phba, mboxq, LPFC_MBOX_SUBSYSTEM_FCOE,
- 			 LPFC_MBOX_OPCODE_FCOE_POST_HDR_TEMPLATE,
- 			 sizeof(struct lpfc_mbx_post_hdr_tmpl) -
--			 sizeof(struct mbox_header), LPFC_SLI4_MBX_EMBED);
-+			 sizeof(struct lpfc_sli4_cfg_mhdr),
-+			 LPFC_SLI4_MBX_EMBED);
- 	bf_set(lpfc_mbx_post_hdr_tmpl_page_cnt,
- 	       hdr_tmpl, rpi_page->page_count);
- 	bf_set(lpfc_mbx_post_hdr_tmpl_rpi_offset, hdr_tmpl,
-diff -upNr a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
---- a/drivers/scsi/lpfc/lpfc_vport.c	2010-12-11 21:56:17.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_vport.c	2011-02-16 11:23:37.000000000 -0500
-@@ -464,6 +464,7 @@ disable_vport(struct fc_vport *fc_vport)
- 	struct lpfc_hba   *phba = vport->phba;
- 	struct lpfc_nodelist *ndlp = NULL, *next_ndlp = NULL;
- 	long timeout;
-+	struct Scsi_Host *shost = lpfc_shost_from_vport(vport);
- 
- 	ndlp = lpfc_findnode_did(vport, Fabric_DID);
- 	if (ndlp && NLP_CHK_NODE_ACT(ndlp)
-@@ -498,6 +499,9 @@ disable_vport(struct fc_vport *fc_vport)
- 	 * scsi_host_put() to release the vport.
- 	 */
- 	lpfc_mbx_unreg_vpi(vport);
-+	spin_lock_irq(shost->host_lock);
-+	vport->fc_flag |= FC_VPORT_NEEDS_INIT_VPI;
-+	spin_unlock_irq(shost->host_lock);
- 
- 	lpfc_vport_set_state(vport, FC_VPORT_DISABLED);
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_VPORT,
+ 	if (cmd->result || lpfc_cmd->fcp_rsp->rspSnsLen) {
+ 		uint32_t *lp = (uint32_t *)cmd->sense_buffer;
 
 
