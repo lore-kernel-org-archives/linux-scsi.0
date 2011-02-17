@@ -1,121 +1,52 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 17/17] be2iscsi: fix null ptr ref in conn get param
-Date: Wed, 16 Feb 2011 15:04:41 -0600
-Message-ID: <1297890281-9076-18-git-send-email-michaelc@cs.wisc.edu>
-References: <1297890281-9076-1-git-send-email-michaelc@cs.wisc.edu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48042 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754377Ab1BPVEn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Feb 2011 16:04:43 -0500
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id p1GL4gqG027099
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2011 16:04:42 -0500
-Received: from meanminna.corp.redhat.com (vpn-11-254.rdu.redhat.com [10.11.11.254])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP id p1GL4Tt6004636
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Feb 2011 16:04:42 -0500
-In-Reply-To: <1297890281-9076-1-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.31 available
+Date: Wed, 16 Feb 2011 20:57:50 -0500
+Message-ID: <4D5C809E.8010705@interlog.com>
+Reply-To: dgilbert@interlog.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: SCSI development list <linux-scsi@vger.kernel.org>
+Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+sg3_utils is a package of command line utilities for sending
+SCSI and some ATA commands to devices. This package targets
+the linux kernel (lk) 2.6 and lk 2.4 series. It also has
+ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
 
-The ep_disconnect function could be freeing the ep
-while beiscsi_conn_get_param is running. This has
-the driver use the get ep param callback instead
-of the get conn param to fix this.
+This version tracks various changes made by www.t10.org
+since November 2010. A new utility called sg_decode_sense
+has been added.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/be2iscsi/be_iscsi.c |   18 +++++-------------
- drivers/scsi/be2iscsi/be_iscsi.h |    4 ++--
- drivers/scsi/be2iscsi/be_main.c  |    3 ++-
- 3 files changed, 9 insertions(+), 16 deletions(-)
+For an overview of sg3_utils and downloads see this page:
+     http://sg.danny.cz/sg/sg3_utils.html
+The sg_dd utility has its own page at:
+     http://sg.danny.cz/sg/sg_dd.html
+The SG_IO ioctl is discussed at:
+     http://sg.danny.cz/sg/sg_io.html
+A full changelog can be found at:
+     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index eaaa881..868cc55 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -210,28 +210,20 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
- }
- 
- /**
-- * beiscsi_conn_get_param - get the iscsi parameter
-- * @cls_conn: pointer to iscsi cls conn
-+ * beiscsi_ep_get_param - get the iscsi parameter
-+ * @ep: pointer to iscsi ep
-  * @param: parameter type identifier
-  * @buf: buffer pointer
-  *
-  * returns iscsi parameter
-  */
--int beiscsi_conn_get_param(struct iscsi_cls_conn *cls_conn,
-+int beiscsi_ep_get_param(struct iscsi_endpoint *ep,
- 			   enum iscsi_param param, char *buf)
- {
--	struct beiscsi_endpoint *beiscsi_ep;
--	struct iscsi_conn *conn = cls_conn->dd_data;
--	struct beiscsi_conn *beiscsi_conn = conn->dd_data;
-+	struct beiscsi_endpoint *beiscsi_ep = ep->dd_data;
- 	int len = 0;
- 
- 	SE_DEBUG(DBG_LVL_8, "In beiscsi_conn_get_param, param= %d\n", param);
--	beiscsi_ep = beiscsi_conn->ep;
--	if (!beiscsi_ep) {
--		SE_DEBUG(DBG_LVL_1,
--			 "In beiscsi_conn_get_param , no beiscsi_ep\n");
--		return -ENODEV;
--	}
- 
- 	switch (param) {
- 	case ISCSI_PARAM_CONN_PORT:
-@@ -244,7 +236,7 @@ int beiscsi_conn_get_param(struct iscsi_cls_conn *cls_conn,
- 			len = sprintf(buf, "%pI6\n", &beiscsi_ep->dst6_addr);
- 		break;
- 	default:
--		return iscsi_conn_get_param(cls_conn, param, buf);
-+		return -ENOSYS;
- 	}
- 	return len;
- }
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.h b/drivers/scsi/be2iscsi/be_iscsi.h
-index 8950a70..9c53279 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.h
-+++ b/drivers/scsi/be2iscsi/be_iscsi.h
-@@ -48,8 +48,8 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
- 		      struct iscsi_cls_conn *cls_conn,
- 		      uint64_t transport_fd, int is_leading);
- 
--int beiscsi_conn_get_param(struct iscsi_cls_conn *cls_conn,
--			   enum iscsi_param param, char *buf);
-+int beiscsi_ep_get_param(struct iscsi_endpoint *ep, enum iscsi_param param,
-+			 char *buf);
- 
- int beiscsi_get_host_param(struct Scsi_Host *shost,
- 			   enum iscsi_host_param param, char *buf);
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 79cefbe..bd50145 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4384,7 +4384,7 @@ struct iscsi_transport beiscsi_iscsi_transport = {
- 	.bind_conn = beiscsi_conn_bind,
- 	.destroy_conn = iscsi_conn_teardown,
- 	.set_param = beiscsi_set_param,
--	.get_conn_param = beiscsi_conn_get_param,
-+	.get_conn_param = iscsi_conn_get_param,
- 	.get_session_param = iscsi_session_get_param,
- 	.get_host_param = beiscsi_get_host_param,
- 	.start_conn = beiscsi_conn_start,
-@@ -4395,6 +4395,7 @@ struct iscsi_transport beiscsi_iscsi_transport = {
- 	.alloc_pdu = beiscsi_alloc_pdu,
- 	.parse_pdu_itt = beiscsi_parse_pdu,
- 	.get_stats = beiscsi_conn_get_stats,
-+	.get_ep_param = beiscsi_ep_get_param,
- 	.ep_connect = beiscsi_ep_connect,
- 	.ep_poll = beiscsi_ep_poll,
- 	.ep_disconnect = beiscsi_ep_disconnect,
--- 
-1.7.2.3
+A release announcement will be sent to freshmeat.net .
 
+Changelog for sg3_utils-1.31 [20110216] [svn: r386]
+   - sg_decode_sense: new utility to decode sense data
+   - sg_vpd: LB provisioning + Block limits pages (sbc3r26)
+   - sync asc/ascq and version descriptors with spc4r28
+   - sg_get_config, sg_rmsn, sg_verify: add --readonly option
+   - sg_lib: implement forwarded sense data descriptor
+     - decode user data segment referral sense data descriptor
+   - sg_lib, sg_turs, sg_format: more precision for progress
+     indication (two places after decimal point)
+   - sg_lib(win32): add runtime selection of SPT direct or
+     indirect interface
+     - sg_read_buffer+sg_write_buffer: set SPT direct
+   - add examples/forwarded_sense.txt + examples/ref_sense.txt
+
+Changelog for sg3_utils-1.30 [20101111] [svn: r363]
+...
+
+Doug Gilbert
