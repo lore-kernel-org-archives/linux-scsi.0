@@ -1,52 +1,109 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [Announce] sg3_utils-1.31 available
-Date: Wed, 16 Feb 2011 20:57:50 -0500
-Message-ID: <4D5C809E.8010705@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: [PATCH] libsas: flush initial device discovery before completing
+	->scan_finished()
+Date: Wed, 16 Feb 2011 19:06:54 -0800
+Message-ID: <20110217030633.4303.61603.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>
-Cc: =?ISO-8859-1?Q?Dan_Hor=E1k?= <dhorak@redhat.com>, Ritesh Raj Sarraf <rrs@researchut.com>, "Robin H. Johnson" <robbat2@gentoo.org>, Martin Pitt <mpitt@debian.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:41008 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754678Ab1BQCqO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Feb 2011 21:46:14 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: james.bottomley@suse.de
+Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, David Milburn <dmilburn@redhat.com>, jacek.danecki@intel.com, jack_wang@usish.com, lindar_liu@usish.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com, Srinivas <satyasrinivasp@hcl.in>
 
-sg3_utils is a package of command line utilities for sending
-SCSI and some ATA commands to devices. This package targets
-the linux kernel (lk) 2.6 and lk 2.4 series. It also has
-ports to FreeBSD, Tru64, Solaris, and Windows (cygwin and mingw).
+During initial scan libsas drivers start their phys and notify libsas
+with PORTE_BYTES_DMAED events as port links are established.  This
+notification in turn causes libsas to post DISCE_DISCOVER_DOMAIN events
+to the queue.  Calling scsi_flush_work() at the end of scan_finished
+guarantees that all preceding PORTE_BYTES_DMAED events have been
+registered in the queue, but it does not guarantee that the resulting
+DISCE_DISCOVER_DOMAIN events have been processed because
+flush_workqueue() explicitly avoids live-locking with incoming work.
 
-This version tracks various changes made by www.t10.org
-since November 2010. A new utility called sg_decode_sense
-has been added.
+Introduce sas_flush_discovery() to guarantee that all initial discovery
+events have completed.  It is called after the driver determines all
+initial PORTE_BYTES_DMAED events have had a chance to enter the queue.
+This does not cover BCNs that are generated during expander bring up,
+only the initial sas_discover_domain() event.
 
-For an overview of sg3_utils and downloads see this page:
-     http://sg.danny.cz/sg/sg3_utils.html
-The sg_dd utility has its own page at:
-     http://sg.danny.cz/sg/sg_dd.html
-The SG_IO ioctl is discussed at:
-     http://sg.danny.cz/sg/sg_io.html
-A full changelog can be found at:
-     http://sg.danny.cz/sg/p/sg3_utils.ChangeLog
+Cc: David Milburn <dmilburn@redhat.com>
+Cc: Srinivas <satyasrinivasp@hcl.in>
+Cc: jack_wang@usish.com
+Cc: lindar_liu@usish.com
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/scsi/aic94xx/aic94xx_init.c |    2 +-
+ drivers/scsi/mvsas/mv_sas.c         |    2 +-
+ drivers/scsi/pm8001/pm8001_sas.c    |    2 +-
+ include/scsi/libsas.h               |   13 +++++++++++++
+ 4 files changed, 16 insertions(+), 3 deletions(-)
 
-A release announcement will be sent to freshmeat.net .
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index 3b7e83d..f763daa 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -972,7 +972,7 @@ static int asd_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 	if (time < HZ)
+ 		return 0;
+ 	/* Wait for discovery to finish */
+-	scsi_flush_work(shost);
++	sas_flush_discovery(shost);
+ 	return 1;
+ }
+ 
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index adedaa9..e34c378 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -440,7 +440,7 @@ int mvs_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 	if (time < HZ)
+ 		return 0;
+ 	/* Wait for discovery to finish */
+-	scsi_flush_work(shost);
++	sas_flush_discovery(shost);
+ 	return 1;
+ }
+ 
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 6ae059e..997cf59 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -253,7 +253,7 @@ int pm8001_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 	if (time < HZ)
+ 		return 0;
+ 	/* Wait for discovery to finish */
+-	scsi_flush_work(shost);
++	sas_flush_discovery(shost);
+ 	return 1;
+ }
+ 
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 5173bba..d4ada3b 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -405,6 +405,19 @@ static inline void sas_phy_disconnected(struct asd_sas_phy *phy)
+ 	phy->linkrate = SAS_LINK_RATE_UNKNOWN;
+ }
+ 
++/* Before returning from ->scan_finished() an LLDD calls this routine to
++ * ensure that all port notifications have been promoted to domain
++ * discovery events, and that initial domain discovery has completed
++ */
++static inline void sas_flush_discovery(struct Scsi_Host *shost)
++{
++	/* flush port events */
++	scsi_flush_work(shost);
++
++	/* flush domain discovery events queued by the port events */
++	scsi_flush_work(shost);
++}
++
+ /* ---------- Tasks ---------- */
+ /*
+       service_response |  SAS_TASK_COMPLETE  |  SAS_TASK_UNDELIVERED |
 
-Changelog for sg3_utils-1.31 [20110216] [svn: r386]
-   - sg_decode_sense: new utility to decode sense data
-   - sg_vpd: LB provisioning + Block limits pages (sbc3r26)
-   - sync asc/ascq and version descriptors with spc4r28
-   - sg_get_config, sg_rmsn, sg_verify: add --readonly option
-   - sg_lib: implement forwarded sense data descriptor
-     - decode user data segment referral sense data descriptor
-   - sg_lib, sg_turs, sg_format: more precision for progress
-     indication (two places after decimal point)
-   - sg_lib(win32): add runtime selection of SPT direct or
-     indirect interface
-     - sg_read_buffer+sg_write_buffer: set SPT direct
-   - add examples/forwarded_sense.txt + examples/ref_sense.txt
-
-Changelog for sg3_utils-1.30 [20101111] [svn: r363]
-...
-
-Doug Gilbert
