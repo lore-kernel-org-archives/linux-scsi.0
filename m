@@ -1,241 +1,61 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] libsas: fix/amend device gone notification in
-	sas_deform_port()
-Date: Wed, 16 Feb 2011 19:11:24 -0800
-Message-ID: <20110217030659.4303.12762.stgit@localhost6.localdomain6>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC PATCH 1/6] isci: initialization
+Date: Thu, 17 Feb 2011 03:22:51 -0500
+Message-ID: <4D5CDADB.6040508@garzik.org>
+References: <20110207003056.27040.89174.stgit@localhost6.localdomain6> <20110207003440.27040.22825.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:15174 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752020Ab1BQCuo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Feb 2011 21:50:44 -0500
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:55816 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751663Ab1BQIW4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Feb 2011 03:22:56 -0500
+Received: by vws16 with SMTP id 16so950151vws.19
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Feb 2011 00:22:55 -0800 (PST)
+In-Reply-To: <20110207003440.27040.22825.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@suse.de
-Cc: Haipao Fan <haipao.fan@intel.com>, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, Maciej Trela <maciej.trela@intel.com>, jeffrey.d.skirvin@intel.com, David Milburn <dmilburn@redhat.com>, edmund.nadolski@intel.com, "Darrick J. Wong" <djwong@us.ibm.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: james.bottomley@suse.de, dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-Commit 56dd2c06 "libsas: Don't issue commands to devices that have been
-hot-removed" edited Darrick's original patch to remove setting 'gone' in
-the sas_deform_port() path because that prevented scsi sync cache
-commands from being issued when the driver was unloaded.  However, this
-allows true device gone notifications (as signaled port phy events) to
-trigger sync cache commands to devices that are known to be unreachable.
+On 02/06/2011 07:34 PM, Dan Williams wrote:
+> +irqreturn_t isci_isr(int vec, void *data)
+> +{
+> +	struct isci_host *isci_host
+> +		= (struct isci_host *)data;
+> +	struct scic_controller_handler_methods *handlers
+> +		=&isci_host->scic_irq_handlers[SCI_MSIX_NORMAL_VECTOR];
+> +	irqreturn_t ret = IRQ_NONE;
+> +
+> +	if (isci_host_get_state(isci_host) != isci_starting
+> +	&&  handlers->interrupt_handler) {
+> +
+> +		if (handlers->interrupt_handler(isci_host->core_controller)) {
+> +			if (isci_host_get_state(isci_host) != isci_stopped) {
+> +				tasklet_schedule(
+> +					&isci_host->completion_tasklet);
+> +			} else
+> +				dev_dbg(&isci_host->pdev->dev,
+> +					"%s: controller stopped\n",
+> +					__func__);
+> +			ret = IRQ_HANDLED;
+> +		}
+> +	} else
+> +		dev_warn(&isci_host->pdev->dev,
+> +			 "%s: get_handler_methods failed, "
+> +			 "isci_host->status = 0x%x\n",
+> +			 __func__,
+> +			 isci_host_get_state(isci_host));
+> +
+> +	return ret;
+> +}
 
-Teach libsas which sas_deform_port() invocations are likely device gone
-events.
+Obviously my grep-fu is failing me...  where is interrupt_handler 
+assigned a value?  Creating a pointer for the interrupt handler, rather 
+than directly registering the proper callback with the kernel, seems a 
+bit odd.
 
-This patch also introduces sas_device_gone() which hopefully allows
-subtle/tricky locking to be dropped from lldd drivers, like the
-following in mvsas which is broken if the ata path is ever converted to
-call lldd_execute_task() with irqs enabled:
+	Jeff
 
-	flags_libsas = 0;
-	[...]
-	spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags_libsas);
-	spin_unlock_irqrestore(&mvi->lock, flags);
-	t->task_done(t);
-	spin_lock_irqsave(&mvi->lock, flags);
-	spin_lock_irqsave(dev->sata_dev.ap->lock, flags_libsas);
-
-Cc: Darrick J. Wong <djwong@us.ibm.com>
-Cc: Haipao Fan <haipao.fan@intel.com>
-Cc: Maciej Trela <maciej.trela@intel.com>
-Cc: David Milburn <dmilburn@redhat.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
-The sas_device_gone() change could be split into its own patch for bisection
-purposes, let me know if you want me to resubmit.  This is being driven by a
-lockdep error in isci as it calls task->done() from lldd_execute_task()
-when it finds lldd_dev == NULL for the ata domain_device.
-
---
-Dan
-
- drivers/scsi/libsas/sas_expander.c |   20 +++++++++++++++++---
- drivers/scsi/libsas/sas_internal.h |    3 ++-
- drivers/scsi/libsas/sas_phy.c      |    4 ++--
- drivers/scsi/libsas/sas_port.c     |   21 ++++++++++++---------
- 4 files changed, 33 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index 505ffe3..7a785df 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1721,13 +1721,27 @@ out:
- 	return res;
- }
- 
-+/* FIXME: delete this routine when/if sas_ata stops submitting tasks
-+ * with host_lock held
-+ */
-+void sas_device_gone(struct domain_device *dev)
-+{
-+	struct sas_rphy *rphy = dev->rphy;
-+	struct Scsi_Host *shost = dev_to_shost(rphy->dev.parent);
-+
-+	/* take the lock to synchronize against incoming sata i/o */
-+	spin_lock_irq(shost->host_lock);
-+	dev->gone = 1;
-+	spin_unlock_irq(shost->host_lock);
-+}
-+
- static void sas_unregister_ex_tree(struct domain_device *dev)
- {
- 	struct expander_device *ex = &dev->ex_dev;
- 	struct domain_device *child, *n;
- 
- 	list_for_each_entry_safe(child, n, &ex->children, siblings) {
--		child->gone = 1;
-+		sas_device_gone(child);
- 		if (child->dev_type == EDGE_DEV ||
- 		    child->dev_type == FANOUT_DEV)
- 			sas_unregister_ex_tree(child);
-@@ -1748,7 +1762,7 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
- 			&ex_dev->children, siblings) {
- 			if (SAS_ADDR(child->sas_addr) ==
- 			    SAS_ADDR(phy->attached_sas_addr)) {
--				child->gone = 1;
-+				sas_device_gone(child);
- 				if (child->dev_type == EDGE_DEV ||
- 				    child->dev_type == FANOUT_DEV)
- 					sas_unregister_ex_tree(child);
-@@ -1757,7 +1771,7 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
- 				break;
- 			}
- 		}
--		parent->gone = 1;
-+		sas_device_gone(parent);
- 		sas_disable_routing(parent, phy->attached_sas_addr);
- 	}
- 	memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 2d5c460..4db2752 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -61,7 +61,7 @@ int  sas_init_queue(struct sas_ha_struct *sas_ha);
- int  sas_init_events(struct sas_ha_struct *sas_ha);
- void sas_shutdown_queue(struct sas_ha_struct *sas_ha);
- 
--void sas_deform_port(struct asd_sas_phy *phy);
-+void sas_deform_port(struct asd_sas_phy *phy, int gone);
- 
- void sas_porte_bytes_dmaed(struct work_struct *work);
- void sas_porte_broadcast_rcvd(struct work_struct *work);
-@@ -71,6 +71,7 @@ void sas_porte_hard_reset(struct work_struct *work);
- 
- int sas_notify_lldd_dev_found(struct domain_device *);
- void sas_notify_lldd_dev_gone(struct domain_device *);
-+void sas_device_gone(struct domain_device *dev);
- 
- int sas_smp_phy_control(struct domain_device *dev, int phy_id,
- 			enum phy_func phy_func, struct sas_phy_linkrates *);
-diff --git a/drivers/scsi/libsas/sas_phy.c b/drivers/scsi/libsas/sas_phy.c
-index b459c4b..e0f5018 100644
---- a/drivers/scsi/libsas/sas_phy.c
-+++ b/drivers/scsi/libsas/sas_phy.c
-@@ -39,7 +39,7 @@ static void sas_phye_loss_of_signal(struct work_struct *work)
- 	sas_begin_event(PHYE_LOSS_OF_SIGNAL, &phy->ha->event_lock,
- 			&phy->phy_events_pending);
- 	phy->error = 0;
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- static void sas_phye_oob_done(struct work_struct *work)
-@@ -66,7 +66,7 @@ static void sas_phye_oob_error(struct work_struct *work)
- 	sas_begin_event(PHYE_OOB_ERROR, &phy->ha->event_lock,
- 			&phy->phy_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- 
- 	if (!port && phy->enabled && i->dft->lldd_control_phy) {
- 		phy->error++;
-diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
-index 5257fdf..be490e4 100644
---- a/drivers/scsi/libsas/sas_port.c
-+++ b/drivers/scsi/libsas/sas_port.c
-@@ -57,7 +57,7 @@ static void sas_form_port(struct asd_sas_phy *phy)
- 
- 	if (port) {
- 		if (!phy_is_wideport_member(port, phy))
--			sas_deform_port(phy);
-+			sas_deform_port(phy, 0);
- 		else {
- 			SAS_DPRINTK("%s: phy%d belongs to port%d already(%d)!\n",
- 				    __func__, phy->id, phy->port->id,
-@@ -153,28 +153,31 @@ static void sas_form_port(struct asd_sas_phy *phy)
-  * This is called when the physical link to the other phy has been
-  * lost (on this phy), in Event thread context. We cannot delay here.
-  */
--void sas_deform_port(struct asd_sas_phy *phy)
-+void sas_deform_port(struct asd_sas_phy *phy, int gone)
- {
- 	struct sas_ha_struct *sas_ha = phy->ha;
- 	struct asd_sas_port *port = phy->port;
- 	struct sas_internal *si =
- 		to_sas_internal(sas_ha->core.shost->transportt);
-+	struct domain_device *dev;
- 	unsigned long flags;
- 
- 	if (!port)
- 		return;		  /* done by a phy event */
- 
--	if (port->port_dev)
--		port->port_dev->pathways--;
-+	dev = port->port_dev;
-+	if (dev)
-+		dev->pathways--;
- 
- 	if (port->num_phys == 1) {
-+		if (dev && gone)
-+			sas_device_gone(dev);
- 		sas_unregister_domain_devices(port);
- 		sas_port_delete(port->port);
- 		port->port = NULL;
- 	} else
- 		sas_port_delete_phy(port->port, phy->phy);
- 
--
- 	if (si->dft->lldd_port_deformed)
- 		si->dft->lldd_port_deformed(phy);
- 
-@@ -244,7 +247,7 @@ void sas_porte_link_reset_err(struct work_struct *work)
- 	sas_begin_event(PORTE_LINK_RESET_ERR, &phy->ha->event_lock,
- 			&phy->port_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- void sas_porte_timer_event(struct work_struct *work)
-@@ -256,7 +259,7 @@ void sas_porte_timer_event(struct work_struct *work)
- 	sas_begin_event(PORTE_TIMER_EVENT, &phy->ha->event_lock,
- 			&phy->port_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- void sas_porte_hard_reset(struct work_struct *work)
-@@ -268,7 +271,7 @@ void sas_porte_hard_reset(struct work_struct *work)
- 	sas_begin_event(PORTE_HARD_RESET, &phy->ha->event_lock,
- 			&phy->port_events_pending);
- 
--	sas_deform_port(phy);
-+	sas_deform_port(phy, 1);
- }
- 
- /* ---------- SAS port registration ---------- */
-@@ -306,6 +309,6 @@ void sas_unregister_ports(struct sas_ha_struct *sas_ha)
- 
- 	for (i = 0; i < sas_ha->num_phys; i++)
- 		if (sas_ha->sas_phy[i]->port)
--			sas_deform_port(sas_ha->sas_phy[i]);
-+			sas_deform_port(sas_ha->sas_phy[i], 0);
- 
- }
 
