@@ -1,21 +1,35 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 1/2] arcmsr: code cleanup and some corrections
-Date: Fri, 18 Feb 2011 12:04:24 +0100
-Message-ID: <4D5E5238.9060607@redhat.com>
-References: <4D53F4B7.2030806@redhat.com> <4D5D39C9.4000402@redhat.com> <D9C1E110C4CD41E09D8CD394801A7588@arecaaebe11fae>
+From: "NickCheng" <nick.cheng@areca.com.tw>
+Subject: RE: [PATCH 1/2] arcmsr: code cleanup and some corrections
+Date: Fri, 18 Feb 2011 19:36:23 +0800
+Message-ID: <38A69576E1844BC29ABBFE1279A14D7D@arecaaebe11fae>
+References: <4D53F4B7.2030806@redhat.com> <4D5D39C9.4000402@redhat.com> <D9C1E110C4CD41E09D8CD394801A7588@arecaaebe11fae> <4D5E5238.9060607@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59447 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753203Ab1BRLE2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Feb 2011 06:04:28 -0500
-In-Reply-To: <D9C1E110C4CD41E09D8CD394801A7588@arecaaebe11fae>
+Received: from mail-yw0-f46.google.com ([209.85.213.46]:55999 "EHLO
+	mail-yw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754005Ab1BRLiE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2011 06:38:04 -0500
+Received: by ywo7 with SMTP id 7so1543781ywo.19
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Feb 2011 03:38:04 -0800 (PST)
+In-Reply-To: <4D5E5238.9060607@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: NickCheng <nick.cheng@areca.com.tw>
+To: 'Tomas Henzl' <thenzl@redhat.com>
 Cc: linux-scsi@vger.kernel.org
+
+Hi Tomas,
+I will make time to test it.
+Please give me few days.
+
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com] 
+Sent: Friday, February 18, 2011 7:04 PM
+To: NickCheng
+Cc: linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/2] arcmsr: code cleanup and some corrections
 
 On 02/18/2011 02:26 AM, NickCheng wrote:
 > Hi Tomas,
@@ -65,7 +79,8 @@ be better readable?
 >> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
 >> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
 >> @@ -75,8 +75,10 @@ MODULE_AUTHOR("Nick Cheng <support@areca.com.tw>");
->>  MODULE_DESCRIPTION("ARECA (ARC11xx/12xx/16xx/1880) SATA/SAS RAID Host Bus
+>>  MODULE_DESCRIPTION("ARECA (ARC11xx/12xx/16xx/1880) SATA/SAS RAID Host
+Bus
 >>     
 > Adapter");
 >   
@@ -83,10 +98,12 @@ be better readable?
 >> @@ -171,24 +173,6 @@ static struct pci_driver arcmsr_pci_driver = {
 >>
 >>     
-> ****************************************************************************
+>
+****************************************************************************
 >   
 >>     
-> ****************************************************************************
+>
+****************************************************************************
 >   
 >>  */
 >> -int arcmsr_sleep_for_bus_reset(struct scsi_cmnd *cmd)
@@ -279,7 +296,8 @@ be better readable?
 >>     
 > &reg->inbound_msgaddr0);
 >   
->> @@ -2955,10 +2933,10 @@ static int arcmsr_bus_reset(struct scsi_cmnd *cmd)
+>> @@ -2955,10 +2933,10 @@ static int arcmsr_bus_reset(struct scsi_cmnd
+*cmd)
 >>  				arcmsr_hardware_reset(acb);
 >>  				acb->acb_flags &= ~ACB_F_IOP_INITED;
 >>  sleep_again:
