@@ -1,46 +1,84 @@
-From: Justin Piszcz <jpiszcz@lucidpixels.com>
-Subject: Re: 2.6.37: USB Thermaltake Dock: Only see's 1 HDD? [SOLVED, but
- which option fixed it?]
-Date: Fri, 18 Feb 2011 16:45:47 -0500 (EST)
-Message-ID: <alpine.DEB.2.02.1102181645400.5553@p34.internal.lan>
-References: <alpine.DEB.2.02.1102181621190.4561@p34.internal.lan> <1298065469.3007.193.camel@mulgrave.site>
+From: James Smart <james.smart@emulex.com>
+Subject: Re: [PATCH 4/6] lpfc 8.3.21: Initialization and user interface changes
+Date: Fri, 18 Feb 2011 17:29:37 -0500
+Message-ID: <4D5EF2D1.4080106@emulex.com>
+References: <1297877997.1492.27.camel@wookie> <1298062769.3007.181.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1298065469.3007.193.camel@mulgrave.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, Alan Piszcz <ap@solarrain.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from exht1.emulex.com ([138.239.113.183]:44392 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754895Ab1BRWaB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Feb 2011 17:30:01 -0500
+In-Reply-To: <1298062769.3007.181.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 
 
-On Fri, 18 Feb 2011, James Bottomley wrote:
-
-> On Fri, 2011-02-18 at 16:33 -0500, Justin Piszcz wrote:
->> When I attach a dock with two HDD's on it in Linux, it only picks up one HDD,
->> this is with a Thermaltake BlackX Duet, is there a special module/etc
->> I need to load so it sees both drives on USB?
+On 2/18/2011 3:59 PM, James Bottomley wrote:
+> On Wed, 2011-02-16 at 12:39 -0500, James Smart wrote:
+>> - Make link speed not supported by port message an error message.
+>> - Add support for new SLI failure codes add sysfs parameter to reflect the
+>>    security setting and current state.
+>> - Add all lpfc module parameters to the /sys/modules/lpfc/parameters directory.
 >>
->> So I added some additional kernel options and now it seems fixed, but
->> this is more of a shotgun approach, instead of rebuilding/rebooting
->> several times does anyone know which module enabled support of > 1 HDD on
->> the USB dock as shown below?
-> [...]
->> Now:
->>
->> [    4.176148] scsi 12:0:0:0: Direct-Access     ST310003 40AS                  PQ: 0 ANSI: 2 CCS
->> [    4.176370] sd 12:0:0:0: Attached scsi generic sg2 type 0
->> [    4.176893] scsi 12:0:0:1: Direct-Access     ST310003 40AS                  PQ: 0 ANSI: 2 CCS
->> [    4.177063] sd 12:0:0:1: Attached scsi generic sg3 type 0
+>>   Signed-off-by: Alex Iannicelli<alex.iannicelli@emulex.com>
+>>   Signed-off-by: James Smart<james.smart@emulex.com>
 >
-> Well that's showing as one disc with multiple LUNs , so
-> CONFIG_SCSI_MULTI_LUN=y
+> Someone didn't compile check this:
+>
+> drivers/scsi/lpfc/lpfc_debugfs.c:96: error: 'S_IRUGO0' undeclared here (not in a function)
+> drivers/scsi/lpfc/lpfc_debugfs.c:96: error: bit-field '<anonymous>' width not an integer constant
+> make[3]: *** [drivers/scsi/lpfc/lpfc_debugfs.o] Error 1
+>
+> The error is here:
+
+Actually I did. I compile check after every patch application, and started 
+with a scsi-misc-2.6 git snapshot the evening prior to the post.  We also do 
+PPC cross builds and checks as well before posting.  So I'm a little at a loss 
+why this is failing.  Hmmm.... maybe my check didn't enable DEBUGFS, as we've 
+been running this in so many places it didn't seem meaningful.  If so - crud. 
+I apologize.
+
+Checking it out now....
+
+-- james s
+
+
+
+
+>
+>> diff -upNr a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+>> --- a/drivers/scsi/lpfc/lpfc_debugfs.c	2010-08-04 10:31:45.000000000 -0400
+>> +++ b/drivers/scsi/lpfc/lpfc_debugfs.c	2011-02-16 11:33:35.000000000 -0500
+>> @@ -82,23 +82,23 @@
+>>    *                               the HBA. X MUST also be a power of 2.
+>>    */
+>>   static int lpfc_debugfs_enable = 1;
+>> -module_param(lpfc_debugfs_enable, int, 0);
+>> +module_param(lpfc_debugfs_enable, int, S_IRUGO);
+>>   MODULE_PARM_DESC(lpfc_debugfs_enable, "Enable debugfs services");
+>>
+>>   /* This MUST be a power of 2 */
+>>   static int lpfc_debugfs_max_disc_trc;
+>> -module_param(lpfc_debugfs_max_disc_trc, int, 0);
+>> +module_param(lpfc_debugfs_max_disc_trc, int, S_IRUGO);
+>>   MODULE_PARM_DESC(lpfc_debugfs_max_disc_trc,
+>>   	"Set debugfs discovery trace depth");
+>>
+>>   /* This MUST be a power of 2 */
+>>   static int lpfc_debugfs_max_slow_ring_trc;
+>> -module_param(lpfc_debugfs_max_slow_ring_trc, int, 0);
+>> +module_param(lpfc_debugfs_max_slow_ring_trc, int, S_IRUGO0);
+>>   MODULE_PARM_DESC(lpfc_debugfs_max_slow_ring_trc,
+>>   	"Set debugfs slow ring trace depth");
+>
+> I assume this is just supposed to be S_IRUGO like everything else?
 >
 > James
 >
 >
-
-Thanks!
-
-Justin.
