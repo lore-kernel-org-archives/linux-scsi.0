@@ -1,371 +1,44 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH 1/6] isci: initialization
-Date: Fri, 18 Feb 2011 16:23:21 -0800
-Message-ID: <1298075001.19161.44.camel@dwillia2-linux>
-References: <20110207003056.27040.89174.stgit@localhost6.localdomain6>
-	 <20110207003440.27040.22825.stgit@localhost6.localdomain6>
-	 <20110217082544.GA23662@infradead.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] libsas: flush initial device discovery before
+ completing ->scan_finished()
+Date: Fri, 18 Feb 2011 18:02:39 -0600
+Message-ID: <1298073759.3007.216.camel@mulgrave.site>
+References: <20110217030633.4303.61603.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:16510 "EHLO mga02.intel.com"
+Received: from cantor.suse.de ([195.135.220.2]:33300 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754895Ab1BSACJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Feb 2011 19:02:09 -0500
-In-Reply-To: <20110217082544.GA23662@infradead.org>
+	id S1758679Ab1BSACw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Feb 2011 19:02:52 -0500
+In-Reply-To: <20110217030633.4303.61603.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, "Jiang, Dave" <dave.jiang@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Ciechanowski, Ed" <ed.ciechanowski@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, David Milburn <dmilburn@redhat.com>, jacek.danecki@intel.com, jack_wang@usish.com, lindar_liu@usish.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com, Srinivas <satyasrinivasp@hcl.in>
 
-On Thu, 2011-02-17 at 00:25 -0800, Christoph Hellwig wrote:
-> > +irqreturn_t isci_isr(int vec, void *data)
-> > +{
-> > +	struct isci_host *isci_host
-> > +		= (struct isci_host *)data;
-> > +	struct scic_controller_handler_methods *handlers
-> > +		= &isci_host->scic_irq_handlers[SCI_MSIX_NORMAL_VECTOR];
-> > +	irqreturn_t ret = IRQ_NONE;
+On Wed, 2011-02-16 at 19:06 -0800, Dan Williams wrote:
+> During initial scan libsas drivers start their phys and notify libsas
+> with PORTE_BYTES_DMAED events as port links are established.  This
+> notification in turn causes libsas to post DISCE_DISCOVER_DOMAIN events
+> to the queue.  Calling scsi_flush_work() at the end of scan_finished
+> guarantees that all preceding PORTE_BYTES_DMAED events have been
+> registered in the queue, but it does not guarantee that the resulting
+> DISCE_DISCOVER_DOMAIN events have been processed because
+> flush_workqueue() explicitly avoids live-locking with incoming work.
 > 
-> > +	if (isci_host_get_state(isci_host) != isci_starting
-> > +	    && handlers->interrupt_handler) {
-> 
-> Also there should be no need for a state check here.  register_irq
-> must not happen before you're ready to handle the interrupt.
-> 
+> Introduce sas_flush_discovery() to guarantee that all initial discovery
+> events have completed.  It is called after the driver determines all
+> initial PORTE_BYTES_DMAED events have had a chance to enter the queue.
+> This does not cover BCNs that are generated during expander bring up,
+> only the initial sas_discover_domain() event.
 
-Yes, the state checks are not needed.  Here is the proposed clean up.
+I think this is a workaround for an old bug in workqueue flushing (the
+flush doesn't clean work it causes) ... I thought that's been fixed for
+ages (well, months at least) ... have you verified that this is still a
+problem?
 
->From 2f89431766a7178e4a1beb87d3606d020f981e94 Mon Sep 17 00:00:00 2001
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Fri, 18 Feb 2011 09:25:07 -0800
-Subject: [PATCH] isci: cleanup "starting" state handling
-
-The lldd actively disallows requests in the "starting" state.  Retrying
-or holding off commands in this state is sub-optimal:
-1/ it adds another state check to the fast path
-2/ retrying can cause libsas to give up
-
-However, isci's ->lldd_dev_found() routine already waits for controller
-start to complete before allowing further progress.  Checking the
-"starting" state in isci_task_execute_task and the isr is redundant and
-misleading.  Clean this up and introduce a controller-wide event queue
-to start reeling in "completion" proliferation in the driver.
-
-The "stopping" state cleanups are in a similar vein, rely on the the isr
-and other paths being precluded from occurring rather than implementing
-state checking logic.
-
-Reported-by: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Garzik <jeff@garzik.org>
-Signed-off-by: Edmund Nadolski <edmund.nadolski@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- drivers/scsi/isci/host.c          |  145 +++++++++++++------------------------
- drivers/scsi/isci/host.h          |   17 ++++-
- drivers/scsi/isci/remote_device.c |    4 +-
- drivers/scsi/isci/task.c          |    3 +-
- 4 files changed, 67 insertions(+), 102 deletions(-)
-
-diff --git a/drivers/scsi/isci/host.c b/drivers/scsi/isci/host.c
-index b66e620..dbdc3ba 100644
---- a/drivers/scsi/isci/host.c
-+++ b/drivers/scsi/isci/host.c
-@@ -67,15 +67,8 @@ irqreturn_t isci_msix_isr(int vec, void *data)
- 	struct isci_host *ihost = data;
- 	struct scic_sds_controller *scic = ihost->core_controller;
- 
--	if (isci_host_get_state(ihost) != isci_starting) {
--		if (scic_sds_controller_isr(scic)) {
--			if (isci_host_get_state(ihost) != isci_stopped)
--				tasklet_schedule(&ihost->completion_tasklet);
--			else
--				dev_dbg(&ihost->pdev->dev,
--					"%s: controller stopped\n", __func__);
--		}
--	}
-+	if (scic_sds_controller_isr(scic))
-+		tasklet_schedule(&ihost->completion_tasklet);
- 
- 	return IRQ_HANDLED;
- }
-@@ -89,22 +82,10 @@ irqreturn_t isci_intx_isr(int vec, void *data)
- 	for_each_isci_host(ihost, pdev) {
- 		struct scic_sds_controller *scic = ihost->core_controller;
- 
--		if (isci_host_get_state(ihost) != isci_starting) {
--			if (scic_sds_controller_isr(scic)) {
--				if (isci_host_get_state(ihost) != isci_stopped)
--					tasklet_schedule(&ihost->completion_tasklet);
--				else
--					dev_dbg(&ihost->pdev->dev,
--						"%s: controller stopped\n",
--						__func__);
--				ret = IRQ_HANDLED;
--			}
--		} else
--			dev_warn(&ihost->pdev->dev,
--				 "%s: get_handler_methods failed, "
--				 "ihost->status = 0x%x\n",
--				 __func__,
--				 isci_host_get_state(ihost));
-+		if (scic_sds_controller_isr(scic)) {
-+			tasklet_schedule(&ihost->completion_tasklet);
-+			ret = IRQ_HANDLED;
-+		}
- 	}
- 	return ret;
- }
-@@ -118,26 +99,19 @@ irqreturn_t isci_intx_isr(int vec, void *data)
-  *    core library.
-  *
-  */
--void isci_host_start_complete(
--	struct isci_host *isci_host,
--	enum sci_status completion_status)
-+void isci_host_start_complete(struct isci_host *ihost, enum sci_status completion_status)
- {
--	if (completion_status == SCI_SUCCESS) {
--		dev_dbg(&isci_host->pdev->dev,
--			"%s: completion_status: SCI_SUCCESS\n", __func__);
--		isci_host_change_state(isci_host, isci_ready);
--		complete_all(&isci_host->start_complete);
--	} else
--		dev_err(&isci_host->pdev->dev,
--			"controller start failed with "
--			"completion_status = 0x%x;",
--			completion_status);
--
-+	if (completion_status != SCI_SUCCESS)
-+		dev_info(&ihost->pdev->dev,
-+			"controller start timed out, continuing...\n");
-+	isci_host_change_state(ihost, isci_ready);
-+	clear_bit(IHOST_START_PENDING, &ihost->flags);
-+	wake_up(&ihost->eventq);
- }
- 
- int isci_host_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
--	struct isci_host *isci_host = isci_host_from_sas_ha(SHOST_TO_SAS_HA(shost));
-+	struct isci_host *ihost = isci_host_from_sas_ha(SHOST_TO_SAS_HA(shost));
- 
- 	/**
- 	 * check interrupt_handler's status and call completion_handler if true,
-@@ -148,61 +122,44 @@ int isci_host_scan_finished(struct Scsi_Host *shost, unsigned long time)
- 	 * continue to return zero from thee scan_finished routine until
- 	 * the scic_cb_controller_start_complete() call comes from the core.
- 	 **/
--	if (scic_sds_controller_isr(isci_host->core_controller))
--		scic_sds_controller_completion_handler(isci_host->core_controller);
-+	if (scic_sds_controller_isr(ihost->core_controller))
-+		scic_sds_controller_completion_handler(ihost->core_controller);
- 
--	if (isci_starting == isci_host_get_state(isci_host)
--	    && time < (HZ * 10)) {
--		dev_dbg(&isci_host->pdev->dev,
--			"%s: isci_host->status = %d, time = %ld\n",
--			     __func__, isci_host_get_state(isci_host), time);
-+	if (test_bit(IHOST_START_PENDING, &ihost->flags) && time < HZ*10) {
-+		dev_dbg(&ihost->pdev->dev,
-+			"%s: ihost->status = %d, time = %ld\n",
-+			     __func__, isci_host_get_state(ihost), time);
- 		return 0;
- 	}
- 
- 
--	dev_dbg(&isci_host->pdev->dev,
--		"%s: isci_host->status = %d, time = %ld\n",
--		 __func__, isci_host_get_state(isci_host), time);
-+	dev_dbg(&ihost->pdev->dev,
-+		"%s: ihost->status = %d, time = %ld\n",
-+		 __func__, isci_host_get_state(ihost), time);
- 
--	scic_controller_enable_interrupts(isci_host->core_controller);
-+	scic_controller_enable_interrupts(ihost->core_controller);
- 
- 	return 1;
- 
- }
- 
--
--/**
-- * isci_host_scan_start() - This function is one of the SCSI Host Template
-- *    function, called by the SCSI mid layer berfore a target scan begins. The
-- *    core library controller start routine is called from here.
-- * @shost: This parameter specifies the SCSI host to be scanned
-- *
-- */
- void isci_host_scan_start(struct Scsi_Host *shost)
- {
--	struct isci_host *isci_host;
--
--	isci_host = isci_host_from_sas_ha(SHOST_TO_SAS_HA(shost));
--	isci_host_change_state(isci_host, isci_starting);
-+	struct isci_host *ihost = isci_host_from_sas_ha(SHOST_TO_SAS_HA(shost));
-+	struct scic_sds_controller *scic = ihost->core_controller;
-+	unsigned long tmo = scic_controller_get_suggested_start_timeout(scic);
- 
--	scic_controller_disable_interrupts(isci_host->core_controller);
--	init_completion(&isci_host->start_complete);
--	scic_controller_start(
--		isci_host->core_controller,
--		scic_controller_get_suggested_start_timeout(
--			isci_host->core_controller)
--		);
-+	set_bit(IHOST_START_PENDING, &ihost->flags);
-+	scic_controller_disable_interrupts(ihost->core_controller);
-+	scic_controller_start(scic, tmo);
- }
- 
--void isci_host_stop_complete(
--	struct isci_host *isci_host,
--	enum sci_status completion_status)
-+void isci_host_stop_complete(struct isci_host *ihost, enum sci_status completion_status)
- {
--	isci_host_change_state(isci_host, isci_stopped);
--	scic_controller_disable_interrupts(
--		isci_host->core_controller
--		);
--	complete(&isci_host->stop_complete);
-+	isci_host_change_state(ihost, isci_stopped);
-+	scic_controller_disable_interrupts(ihost->core_controller);
-+	clear_bit(IHOST_STOP_PENDING, &ihost->flags);
-+	wake_up(&ihost->eventq);
- }
- 
- static struct coherent_memory_info *isci_host_alloc_mdl_struct(
-@@ -370,31 +327,26 @@ static void isci_host_completion_routine(unsigned long data)
- 
- }
- 
--void isci_host_deinit(
--	struct isci_host *isci_host)
-+void isci_host_deinit(struct isci_host *ihost)
- {
-+	struct scic_sds_controller *scic = ihost->core_controller;
- 	int i;
- 
--	isci_host_change_state(isci_host, isci_stopping);
-+	isci_host_change_state(ihost, isci_stopping);
- 	for (i = 0; i < SCI_MAX_PORTS; i++) {
--		struct isci_port *port = &isci_host->isci_ports[i];
--		struct isci_remote_device *device, *tmpdev;
--		list_for_each_entry_safe(device, tmpdev,
--					 &port->remote_dev_list, node) {
--			isci_remote_device_change_state(device, isci_stopping);
--			isci_remote_device_stop(device);
-+		struct isci_port *port = &ihost->isci_ports[i];
-+		struct isci_remote_device *idev, *d;
-+
-+		list_for_each_entry_safe(idev, d, &port->remote_dev_list, node) {
-+			isci_remote_device_change_state(idev, isci_stopping);
-+			isci_remote_device_stop(idev);
- 		}
- 	}
- 
--	/* stop the comtroller and wait for completion.  */
--	init_completion(&isci_host->stop_complete);
--	scic_controller_stop(
--		isci_host->core_controller,
--		SCIC_CONTROLLER_STOP_TIMEOUT
--		);
--	wait_for_completion(&isci_host->stop_complete);
--	/* next, reset the controller.           */
--	scic_controller_reset(isci_host->core_controller);
-+	set_bit(IHOST_STOP_PENDING, &ihost->flags);
-+	scic_controller_stop(scic, SCIC_CONTROLLER_STOP_TIMEOUT);
-+	wait_for_stop(ihost);
-+	scic_controller_reset(scic);
- }
- 
- static int isci_verify_firmware(const struct firmware *fw,
-@@ -506,6 +458,7 @@ int isci_host_init(struct isci_host *isci_host)
- 	spin_lock_init(&isci_host->state_lock);
- 	spin_lock_init(&isci_host->scic_lock);
- 	spin_lock_init(&isci_host->queue_lock);
-+	init_waitqueue_head(&isci_host->eventq);
- 
- 	isci_host_change_state(isci_host, isci_starting);
- 	isci_host->can_queue = ISCI_CAN_QUEUE_VAL;
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 421d3de..26768c5 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -109,13 +109,15 @@ struct isci_host {
- 	u8 sas_addr[SAS_ADDR_SIZE];
- 
- 	enum isci_status status;
-+	#define IHOST_START_PENDING 0
-+	#define IHOST_STOP_PENDING 1
-+	unsigned long flags;
-+	wait_queue_head_t eventq;
- 	struct Scsi_Host *shost;
- 	struct tasklet_struct completion_tasklet;
- 	struct list_head mdl_struct_list;
- 	struct list_head requests_to_complete;
- 	struct list_head requests_to_abort;
--	struct completion stop_complete;
--	struct completion start_complete;
- 	spinlock_t scic_lock;
- 	struct isci_host *next;
- };
-@@ -202,6 +204,17 @@ static inline void isci_host_can_dequeue(
- 	spin_unlock_irqrestore(&isci_host->queue_lock, flags);
- }
- 
-+static inline void wait_for_start(struct isci_host *ihost)
-+{
-+	wait_event(ihost->eventq, !test_bit(IHOST_START_PENDING, &ihost->flags));
-+}
-+
-+static inline void wait_for_stop(struct isci_host *ihost)
-+{
-+	wait_event(ihost->eventq, !test_bit(IHOST_STOP_PENDING, &ihost->flags));
-+}
-+
-+
- /**
-  * isci_host_from_sas_ha() - This accessor retrieves the isci_host object
-  *    reference from the Linux sas_ha_struct reference.
-diff --git a/drivers/scsi/isci/remote_device.c b/drivers/scsi/isci/remote_device.c
-index dbf3c82..936f229 100644
---- a/drivers/scsi/isci/remote_device.c
-+++ b/drivers/scsi/isci/remote_device.c
-@@ -507,6 +507,8 @@ int isci_remote_device_found(struct domain_device *domain_dev)
- 	dev_dbg(&isci_host->pdev->dev,
- 		"%s: domain_device = %p\n", __func__, domain_dev);
- 
-+	wait_for_start(isci_host);
-+
- 	sas_port = domain_dev->port;
- 	sas_phy = list_first_entry(&sas_port->phy_list, struct asd_sas_phy,
- 				   port_phy_el);
-@@ -560,8 +562,6 @@ int isci_remote_device_found(struct domain_device *domain_dev)
- 		return -ENODEV;
- 	}
- 
--	wait_for_completion(&isci_host->start_complete);
--
- 	return 0;
- }
- /**
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 5e6f558..6f98f6c 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -164,8 +164,7 @@ int isci_task_execute_task(struct sas_task *task, int num, gfp_t gfp_flags)
- 		 * for the quiesce spinlock.
- 		 */
- 
--		if (isci_host_get_state(isci_host) == isci_starting ||
--		    (device && ((isci_remote_device_get_state(device) == isci_ready) ||
-+		if ((device && ((isci_remote_device_get_state(device) == isci_ready) ||
- 		    (isci_remote_device_get_state(device) == isci_host_quiesce)))) {
- 
- 			/* Forces a retry from scsi mid layer. */
--- 
-1.7.2.3
-
+James
 
 
