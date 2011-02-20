@@ -1,236 +1,171 @@
 From: adam radford <aradford@gmail.com>
-Subject: [PATCH 14/15] megaraid_sas: Fix iMR OCR support to work correctly
-Date: Sat, 19 Feb 2011 18:23:27 -0800
-Message-ID: <AANLkTindHWbf2Y-3j70GYTQu9N1ua4V8YidfxAb6gC7q@mail.gmail.com>
+Subject: [PATCH 15/15] megaraid_sas: Documentation and Changelog update
+Date: Sat, 19 Feb 2011 18:23:32 -0800
+Message-ID: <AANLkTinhBLopkSiz27PC9BGEMV6RhiijHCzjWzhfJsgK@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=0016e64c0b8cb19128049cad6e33
+Content-Type: multipart/mixed; boundary=001485f6c5ee01cc2f049cad6fb1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wy0-f174.google.com ([74.125.82.174]:50704 "EHLO
-	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752923Ab1BTCX2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2011 21:23:28 -0500
-Received: by mail-wy0-f174.google.com with SMTP id 38so105867wyb.19
-        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2011 18:23:27 -0800 (PST)
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:55470 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752923Ab1BTCXd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2011 21:23:33 -0500
+Received: by wwa36 with SMTP id 36so5037643wwa.1
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2011 18:23:32 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
---0016e64c0b8cb19128049cad6e33
+--001485f6c5ee01cc2f049cad6fb1
 Content-Type: text/plain; charset=ISO-8859-1
 
 James/Linux-scsi,
 
-The following patch for megaraid_sas fixes iMR OCR support to work correctly.
+The following patch for megaraid_sas updates the
+ChangeLog.megaraid_sas file and driver version of the megaraid_sas
+driver.
 
 Signed-off-by: Adam Radford <aradford@gmail.com>
 
+diff -Naur linux-2.6.38-rc5/Documentation/scsi/ChangeLog.megaraid_sas
+linux-2.6.38-rc5.new/Documentation/scsi/ChangeLog.megaraid_sas
+--- linux-2.6.38-rc5/Documentation/scsi/ChangeLog.megaraid_sas	2011-02-15
+19:23:45.000000000 -0800
++++ linux-2.6.38-rc5.new/Documentation/scsi/ChangeLog.megaraid_sas	2011-02-19
+15:18:21.752426376 -0800
+@@ -1,3 +1,29 @@
++Release Date    : Sat. Feb 19, 2011 17:00:00 PST 2010 -
++			(emaild-id:megaraidlinux@lsi.com)
++			Adam Radford
++Current Version : 00.00.05.33-rc1
++Old Version     : 00.00.05.29-rc1
++    1. Fix some failure gotos from megasas_probe_one(), etc.
++    2. Add missing check_and_restore_queue_depth() call in
++       complete_cmd_fusion().
++    3. Enable MSI-X before calling megasas_init_fw().
++    4. Call tasklet_schedule() even if outbound_intr_status == 0 for MFI based
++       boards in MSI-X mode.
++    5. Fix megasas_probe_one() to clear PCI_MSIX_FLAGS_ENABLE in msi control
++       register in kdump kernel.
++    6. Fix megasas_get_cmd() to only print "Command pool empty" if
++       megasas_dbg_lvl is set.
++    7. Sanity check user spplied length in megasas_mgmt_fw_ioctl() to prevent
++       NULL pointer dereference in dma_alloc_coherent() when running
++       smartmontools.
++    8. Fix megasas_build_dcdb_fusion() to not filter by TYPE_DISK.
++    9. Fix megasas_build_dcdb_fusion() to use io_request->LUN[1] field.
++    10. Add MR_EVT_CFG_CLEARED to megasas_aen_polling().
++    11. Fix tasklet_init() in megasas_init_fw() to use instancet->tasklet.
++    12. Fix fault state handling in megasas_transition_to_ready().
++    13. Fix max_sectors setting for IEEE SGL's.
++    14. Fix iMR OCR support to work correctly.
++-------------------------------------------------------------------------------
+ Release Date    : Tues.  Dec 14, 2010 17:00:00 PST 2010 -
+ 			(emaild-id:megaraidlinux@lsi.com)
+ 			Adam Radford
 diff -Naur linux-2.6.38-rc5/drivers/scsi/megaraid/megaraid_sas_base.c
 linux-2.6.38-rc5.new/drivers/scsi/megaraid/megaraid_sas_base.c
 --- linux-2.6.38-rc5/drivers/scsi/megaraid/megaraid_sas_base.c	2011-02-19
-14:39:15.185274156 -0800
+15:09:04.782332317 -0800
 +++ linux-2.6.38-rc5.new/drivers/scsi/megaraid/megaraid_sas_base.c	2011-02-19
-15:07:15.028428379 -0800
-@@ -134,7 +134,11 @@
- void
- megasas_complete_cmd(struct megasas_instance *instance, struct
-megasas_cmd *cmd,
- 		     u8 alt_status);
--
-+static u32
-+megasas_read_fw_status_reg_gen2(struct megasas_register_set __iomem *regs);
-+static int
-+megasas_adp_reset_gen2(struct megasas_instance *instance,
-+		       struct megasas_register_set __iomem *reg_set);
- static irqreturn_t megasas_isr(int irq, void *devp);
- static u32
- megasas_init_adapter_mfi(struct megasas_instance *instance);
-@@ -555,6 +559,8 @@
- megasas_clear_intr_skinny(struct megasas_register_set __iomem *regs)
- {
- 	u32 status;
-+	u32 mfiStatus = 0;
-+
- 	/*
- 	 * Check if it is our interrupt
- 	 */
-@@ -565,6 +571,15 @@
- 	}
-
- 	/*
-+	 * Check if it is our interrupt
-+	 */
-+	if ((megasas_read_fw_status_reg_gen2(regs) & MFI_STATE_MASK) ==
-+	    MFI_STATE_FAULT) {
-+		mfiStatus = MFI_INTR_FLAG_FIRMWARE_STATE_CHANGE;
-+	} else
-+		mfiStatus = MFI_INTR_FLAG_REPLY_MESSAGE;
-+
-+	/*
- 	 * Clear the interrupt by writing back the same value
- 	 */
- 	writel(status, &regs->outbound_intr_status);
-@@ -574,7 +589,7 @@
- 	*/
- 	readl(&regs->outbound_intr_status);
-
--	return 1;
-+	return mfiStatus;
- }
-
- /**
-@@ -598,17 +613,6 @@
- }
-
- /**
-- * megasas_adp_reset_skinny -	For controller reset
-- * @regs:				MFI register set
-- */
--static int
--megasas_adp_reset_skinny(struct megasas_instance *instance,
--			struct megasas_register_set __iomem *regs)
--{
--	return 0;
--}
--
--/**
-  * megasas_check_reset_skinny -	For controller reset check
-  * @regs:				MFI register set
+15:10:40.667362798 -0800
+@@ -18,12 +18,13 @@
+  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+  *
+  *  FILE: megaraid_sas_base.c
+- *  Version : v00.00.05.29-rc1
++ *  Version : v00.00.05.33-rc1
+  *
+  *  Authors: LSI Corporation
+  *           Sreenivas Bagalkote
+  *           Sumant Patro
+  *           Bo Yang
++ *           Adam Radford <linuxraid@lsi.com>
+  *
+  *  Send feedback to: <megaraidlinux@lsi.com>
+  *
+diff -Naur linux-2.6.38-rc5/drivers/scsi/megaraid/megaraid_sas.h
+linux-2.6.38-rc5.new/drivers/scsi/megaraid/megaraid_sas.h
+--- linux-2.6.38-rc5/drivers/scsi/megaraid/megaraid_sas.h	2011-02-19
+14:39:15.186332469 -0800
++++ linux-2.6.38-rc5.new/drivers/scsi/megaraid/megaraid_sas.h	2011-02-19
+15:09:56.409364538 -0800
+@@ -33,9 +33,9 @@
+ /*
+  * MegaRAID SAS Driver meta data
   */
-@@ -626,7 +630,7 @@
- 	.disable_intr = megasas_disable_intr_skinny,
- 	.clear_intr = megasas_clear_intr_skinny,
- 	.read_fw_status_reg = megasas_read_fw_status_reg_skinny,
--	.adp_reset = megasas_adp_reset_skinny,
-+	.adp_reset = megasas_adp_reset_gen2,
- 	.check_reset = megasas_check_reset_skinny,
- 	.service_isr = megasas_isr,
- 	.tasklet = megasas_complete_cmd_dpc,
-@@ -741,20 +745,28 @@
- {
- 	u32			retry = 0 ;
- 	u32			HostDiag;
-+	u32			*seq_offset = &reg_set->seq_offset;
-+	u32			*hostdiag_offset = &reg_set->host_diag;
-+
-+	if (instance->instancet == &megasas_instance_template_skinny) {
-+		seq_offset = &reg_set->fusion_seq_offset;
-+		hostdiag_offset = &reg_set->fusion_host_diag;
-+	}
-+
-+	writel(0, seq_offset);
-+	writel(4, seq_offset);
-+	writel(0xb, seq_offset);
-+	writel(2, seq_offset);
-+	writel(7, seq_offset);
-+	writel(0xd, seq_offset);
+-#define MEGASAS_VERSION				"00.00.05.29-rc1"
+-#define MEGASAS_RELDATE				"Dec. 7, 2010"
+-#define MEGASAS_EXT_VERSION			"Tue. Dec. 7 17:00:00 PDT 2010"
++#define MEGASAS_VERSION				"00.00.05.33-rc1"
++#define MEGASAS_RELDATE				"Feb. 19, 2011"
++#define MEGASAS_EXT_VERSION			"Sat. Feb. 19 17:00:00 PDT 2011"
 
--	writel(0, &reg_set->seq_offset);
--	writel(4, &reg_set->seq_offset);
--	writel(0xb, &reg_set->seq_offset);
--	writel(2, &reg_set->seq_offset);
--	writel(7, &reg_set->seq_offset);
--	writel(0xd, &reg_set->seq_offset);
- 	msleep(1000);
+ /*
+  * Device IDs
 
--	HostDiag = (u32)readl(&reg_set->host_diag);
-+	HostDiag = (u32)readl(hostdiag_offset);
-
- 	while ( !( HostDiag & DIAG_WRITE_ENABLE) ) {
- 		msleep(100);
--		HostDiag = (u32)readl(&reg_set->host_diag);
-+		HostDiag = (u32)readl(hostdiag_offset);
- 		printk(KERN_NOTICE "RESETGEN2: retry=%x, hostdiag=%x\n",
- 					retry, HostDiag);
-
-@@ -765,14 +777,14 @@
-
- 	printk(KERN_NOTICE "ADP_RESET_GEN2: HostDiag=%x\n", HostDiag);
-
--	writel((HostDiag | DIAG_RESET_ADAPTER), &reg_set->host_diag);
-+	writel((HostDiag | DIAG_RESET_ADAPTER), hostdiag_offset);
-
- 	ssleep(10);
-
--	HostDiag = (u32)readl(&reg_set->host_diag);
-+	HostDiag = (u32)readl(hostdiag_offset);
- 	while ( ( HostDiag & DIAG_RESET_ADAPTER) ) {
- 		msleep(100);
--		HostDiag = (u32)readl(&reg_set->host_diag);
-+		HostDiag = (u32)readl(hostdiag_offset);
- 		printk(KERN_NOTICE "RESET_GEN2: retry=%x, hostdiag=%x\n",
- 				retry, HostDiag);
-
---0016e64c0b8cb19128049cad6e33
-Content-Type: application/octet-stream; name="megaraid_sas.patch14"
-Content-Disposition: attachment; filename="megaraid_sas.patch14"
+--001485f6c5ee01cc2f049cad6fb1
+Content-Type: application/octet-stream; name="megaraid_sas.patch15"
+Content-Disposition: attachment; filename="megaraid_sas.patch15"
 Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gkdbiumj0
+X-Attachment-Id: f_gkdblgdq0
 
-ZGlmZiAtTmF1ciBsaW51eC0yLjYuMzgtcmM1L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
-ZF9zYXNfYmFzZS5jIGxpbnV4LTIuNi4zOC1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9t
-ZWdhcmFpZF9zYXNfYmFzZS5jCi0tLSBsaW51eC0yLjYuMzgtcmM1L2RyaXZlcnMvc2NzaS9tZWdh
-cmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jCTIwMTEtMDItMTkgMTQ6Mzk6MTUuMTg1Mjc0MTU2IC0w
-ODAwCisrKyBsaW51eC0yLjYuMzgtcmM1Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJh
-aWRfc2FzX2Jhc2UuYwkyMDExLTAyLTE5IDE1OjA3OjE1LjAyODQyODM3OSAtMDgwMApAQCAtMTM0
-LDcgKzEzNCwxMSBAQAogdm9pZAogbWVnYXNhc19jb21wbGV0ZV9jbWQoc3RydWN0IG1lZ2FzYXNf
-aW5zdGFuY2UgKmluc3RhbmNlLCBzdHJ1Y3QgbWVnYXNhc19jbWQgKmNtZCwKIAkJICAgICB1OCBh
-bHRfc3RhdHVzKTsKLQorc3RhdGljIHUzMgorbWVnYXNhc19yZWFkX2Z3X3N0YXR1c19yZWdfZ2Vu
-MihzdHJ1Y3QgbWVnYXNhc19yZWdpc3Rlcl9zZXQgX19pb21lbSAqcmVncyk7CitzdGF0aWMgaW50
-CittZWdhc2FzX2FkcF9yZXNldF9nZW4yKHN0cnVjdCBtZWdhc2FzX2luc3RhbmNlICppbnN0YW5j
-ZSwKKwkJICAgICAgIHN0cnVjdCBtZWdhc2FzX3JlZ2lzdGVyX3NldCBfX2lvbWVtICpyZWdfc2V0
-KTsKIHN0YXRpYyBpcnFyZXR1cm5fdCBtZWdhc2FzX2lzcihpbnQgaXJxLCB2b2lkICpkZXZwKTsK
-IHN0YXRpYyB1MzIKIG1lZ2FzYXNfaW5pdF9hZGFwdGVyX21maShzdHJ1Y3QgbWVnYXNhc19pbnN0
-YW5jZSAqaW5zdGFuY2UpOwpAQCAtNTU1LDYgKzU1OSw4IEBACiBtZWdhc2FzX2NsZWFyX2ludHJf
-c2tpbm55KHN0cnVjdCBtZWdhc2FzX3JlZ2lzdGVyX3NldCBfX2lvbWVtICpyZWdzKQogewogCXUz
-MiBzdGF0dXM7CisJdTMyIG1maVN0YXR1cyA9IDA7CisKIAkvKgogCSAqIENoZWNrIGlmIGl0IGlz
-IG91ciBpbnRlcnJ1cHQKIAkgKi8KQEAgLTU2NSw2ICs1NzEsMTUgQEAKIAl9CiAKIAkvKgorCSAq
-IENoZWNrIGlmIGl0IGlzIG91ciBpbnRlcnJ1cHQKKwkgKi8KKwlpZiAoKG1lZ2FzYXNfcmVhZF9m
-d19zdGF0dXNfcmVnX2dlbjIocmVncykgJiBNRklfU1RBVEVfTUFTSykgPT0KKwkgICAgTUZJX1NU
-QVRFX0ZBVUxUKSB7CisJCW1maVN0YXR1cyA9IE1GSV9JTlRSX0ZMQUdfRklSTVdBUkVfU1RBVEVf
-Q0hBTkdFOworCX0gZWxzZQorCQltZmlTdGF0dXMgPSBNRklfSU5UUl9GTEFHX1JFUExZX01FU1NB
-R0U7CisKKwkvKgogCSAqIENsZWFyIHRoZSBpbnRlcnJ1cHQgYnkgd3JpdGluZyBiYWNrIHRoZSBz
-YW1lIHZhbHVlCiAJICovCiAJd3JpdGVsKHN0YXR1cywgJnJlZ3MtPm91dGJvdW5kX2ludHJfc3Rh
-dHVzKTsKQEAgLTU3NCw3ICs1ODksNyBAQAogCSovCiAJcmVhZGwoJnJlZ3MtPm91dGJvdW5kX2lu
-dHJfc3RhdHVzKTsKIAotCXJldHVybiAxOworCXJldHVybiBtZmlTdGF0dXM7CiB9CiAKIC8qKgpA
-QCAtNTk4LDE3ICs2MTMsNiBAQAogfQogCiAvKioKLSAqIG1lZ2FzYXNfYWRwX3Jlc2V0X3NraW5u
-eSAtCUZvciBjb250cm9sbGVyIHJlc2V0Ci0gKiBAcmVnczoJCQkJTUZJIHJlZ2lzdGVyIHNldAot
-ICovCi1zdGF0aWMgaW50Ci1tZWdhc2FzX2FkcF9yZXNldF9za2lubnkoc3RydWN0IG1lZ2FzYXNf
-aW5zdGFuY2UgKmluc3RhbmNlLAotCQkJc3RydWN0IG1lZ2FzYXNfcmVnaXN0ZXJfc2V0IF9faW9t
-ZW0gKnJlZ3MpCi17Ci0JcmV0dXJuIDA7Ci19Ci0KLS8qKgogICogbWVnYXNhc19jaGVja19yZXNl
-dF9za2lubnkgLQlGb3IgY29udHJvbGxlciByZXNldCBjaGVjawogICogQHJlZ3M6CQkJCU1GSSBy
-ZWdpc3RlciBzZXQKICAqLwpAQCAtNjI2LDcgKzYzMCw3IEBACiAJLmRpc2FibGVfaW50ciA9IG1l
-Z2FzYXNfZGlzYWJsZV9pbnRyX3NraW5ueSwKIAkuY2xlYXJfaW50ciA9IG1lZ2FzYXNfY2xlYXJf
-aW50cl9za2lubnksCiAJLnJlYWRfZndfc3RhdHVzX3JlZyA9IG1lZ2FzYXNfcmVhZF9md19zdGF0
-dXNfcmVnX3NraW5ueSwKLQkuYWRwX3Jlc2V0ID0gbWVnYXNhc19hZHBfcmVzZXRfc2tpbm55LAor
-CS5hZHBfcmVzZXQgPSBtZWdhc2FzX2FkcF9yZXNldF9nZW4yLAogCS5jaGVja19yZXNldCA9IG1l
-Z2FzYXNfY2hlY2tfcmVzZXRfc2tpbm55LAogCS5zZXJ2aWNlX2lzciA9IG1lZ2FzYXNfaXNyLAog
-CS50YXNrbGV0ID0gbWVnYXNhc19jb21wbGV0ZV9jbWRfZHBjLApAQCAtNzQxLDIwICs3NDUsMjgg
-QEAKIHsKIAl1MzIJCQlyZXRyeSA9IDAgOwogCXUzMgkJCUhvc3REaWFnOworCXUzMgkJCSpzZXFf
-b2Zmc2V0ID0gJnJlZ19zZXQtPnNlcV9vZmZzZXQ7CisJdTMyCQkJKmhvc3RkaWFnX29mZnNldCA9
-ICZyZWdfc2V0LT5ob3N0X2RpYWc7CisKKwlpZiAoaW5zdGFuY2UtPmluc3RhbmNldCA9PSAmbWVn
-YXNhc19pbnN0YW5jZV90ZW1wbGF0ZV9za2lubnkpIHsKKwkJc2VxX29mZnNldCA9ICZyZWdfc2V0
-LT5mdXNpb25fc2VxX29mZnNldDsKKwkJaG9zdGRpYWdfb2Zmc2V0ID0gJnJlZ19zZXQtPmZ1c2lv
-bl9ob3N0X2RpYWc7CisJfQorCisJd3JpdGVsKDAsIHNlcV9vZmZzZXQpOworCXdyaXRlbCg0LCBz
-ZXFfb2Zmc2V0KTsKKwl3cml0ZWwoMHhiLCBzZXFfb2Zmc2V0KTsKKwl3cml0ZWwoMiwgc2VxX29m
-ZnNldCk7CisJd3JpdGVsKDcsIHNlcV9vZmZzZXQpOworCXdyaXRlbCgweGQsIHNlcV9vZmZzZXQp
-OwogCi0Jd3JpdGVsKDAsICZyZWdfc2V0LT5zZXFfb2Zmc2V0KTsKLQl3cml0ZWwoNCwgJnJlZ19z
-ZXQtPnNlcV9vZmZzZXQpOwotCXdyaXRlbCgweGIsICZyZWdfc2V0LT5zZXFfb2Zmc2V0KTsKLQl3
-cml0ZWwoMiwgJnJlZ19zZXQtPnNlcV9vZmZzZXQpOwotCXdyaXRlbCg3LCAmcmVnX3NldC0+c2Vx
-X29mZnNldCk7Ci0Jd3JpdGVsKDB4ZCwgJnJlZ19zZXQtPnNlcV9vZmZzZXQpOwogCW1zbGVlcCgx
-MDAwKTsKIAotCUhvc3REaWFnID0gKHUzMilyZWFkbCgmcmVnX3NldC0+aG9zdF9kaWFnKTsKKwlI
-b3N0RGlhZyA9ICh1MzIpcmVhZGwoaG9zdGRpYWdfb2Zmc2V0KTsKIAogCXdoaWxlICggISggSG9z
-dERpYWcgJiBESUFHX1dSSVRFX0VOQUJMRSkgKSB7CiAJCW1zbGVlcCgxMDApOwotCQlIb3N0RGlh
-ZyA9ICh1MzIpcmVhZGwoJnJlZ19zZXQtPmhvc3RfZGlhZyk7CisJCUhvc3REaWFnID0gKHUzMily
-ZWFkbChob3N0ZGlhZ19vZmZzZXQpOwogCQlwcmludGsoS0VSTl9OT1RJQ0UgIlJFU0VUR0VOMjog
-cmV0cnk9JXgsIGhvc3RkaWFnPSV4XG4iLAogCQkJCQlyZXRyeSwgSG9zdERpYWcpOwogCkBAIC03
-NjUsMTQgKzc3NywxNCBAQAogCiAJcHJpbnRrKEtFUk5fTk9USUNFICJBRFBfUkVTRVRfR0VOMjog
-SG9zdERpYWc9JXhcbiIsIEhvc3REaWFnKTsKIAotCXdyaXRlbCgoSG9zdERpYWcgfCBESUFHX1JF
-U0VUX0FEQVBURVIpLCAmcmVnX3NldC0+aG9zdF9kaWFnKTsKKwl3cml0ZWwoKEhvc3REaWFnIHwg
-RElBR19SRVNFVF9BREFQVEVSKSwgaG9zdGRpYWdfb2Zmc2V0KTsKIAogCXNzbGVlcCgxMCk7CiAK
-LQlIb3N0RGlhZyA9ICh1MzIpcmVhZGwoJnJlZ19zZXQtPmhvc3RfZGlhZyk7CisJSG9zdERpYWcg
-PSAodTMyKXJlYWRsKGhvc3RkaWFnX29mZnNldCk7CiAJd2hpbGUgKCAoIEhvc3REaWFnICYgRElB
-R19SRVNFVF9BREFQVEVSKSApIHsKIAkJbXNsZWVwKDEwMCk7Ci0JCUhvc3REaWFnID0gKHUzMily
-ZWFkbCgmcmVnX3NldC0+aG9zdF9kaWFnKTsKKwkJSG9zdERpYWcgPSAodTMyKXJlYWRsKGhvc3Rk
-aWFnX29mZnNldCk7CiAJCXByaW50ayhLRVJOX05PVElDRSAiUkVTRVRfR0VOMjogcmV0cnk9JXgs
-IGhvc3RkaWFnPSV4XG4iLAogCQkJCXJldHJ5LCBIb3N0RGlhZyk7CiAK
---0016e64c0b8cb19128049cad6e33--
+ZGlmZiAtTmF1ciBsaW51eC0yLjYuMzgtcmM1L0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cu
+bWVnYXJhaWRfc2FzIGxpbnV4LTIuNi4zOC1yYzUubmV3L0RvY3VtZW50YXRpb24vc2NzaS9DaGFu
+Z2VMb2cubWVnYXJhaWRfc2FzCi0tLSBsaW51eC0yLjYuMzgtcmM1L0RvY3VtZW50YXRpb24vc2Nz
+aS9DaGFuZ2VMb2cubWVnYXJhaWRfc2FzCTIwMTEtMDItMTUgMTk6MjM6NDUuMDAwMDAwMDAwIC0w
+ODAwCisrKyBsaW51eC0yLjYuMzgtcmM1Lm5ldy9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9n
+Lm1lZ2FyYWlkX3NhcwkyMDExLTAyLTE5IDE1OjE4OjIxLjc1MjQyNjM3NiAtMDgwMApAQCAtMSwz
+ICsxLDI5IEBACitSZWxlYXNlIERhdGUgICAgOiBTYXQuIEZlYiAxOSwgMjAxMSAxNzowMDowMCBQ
+U1QgMjAxMCAtCisJCQkoZW1haWxkLWlkOm1lZ2FyYWlkbGludXhAbHNpLmNvbSkKKwkJCUFkYW0g
+UmFkZm9yZAorQ3VycmVudCBWZXJzaW9uIDogMDAuMDAuMDUuMzMtcmMxCitPbGQgVmVyc2lvbiAg
+ICAgOiAwMC4wMC4wNS4yOS1yYzEKKyAgICAxLiBGaXggc29tZSBmYWlsdXJlIGdvdG9zIGZyb20g
+bWVnYXNhc19wcm9iZV9vbmUoKSwgZXRjLgorICAgIDIuIEFkZCBtaXNzaW5nIGNoZWNrX2FuZF9y
+ZXN0b3JlX3F1ZXVlX2RlcHRoKCkgY2FsbCBpbgorICAgICAgIGNvbXBsZXRlX2NtZF9mdXNpb24o
+KS4KKyAgICAzLiBFbmFibGUgTVNJLVggYmVmb3JlIGNhbGxpbmcgbWVnYXNhc19pbml0X2Z3KCku
+CisgICAgNC4gQ2FsbCB0YXNrbGV0X3NjaGVkdWxlKCkgZXZlbiBpZiBvdXRib3VuZF9pbnRyX3N0
+YXR1cyA9PSAwIGZvciBNRkkgYmFzZWQKKyAgICAgICBib2FyZHMgaW4gTVNJLVggbW9kZS4KKyAg
+ICA1LiBGaXggbWVnYXNhc19wcm9iZV9vbmUoKSB0byBjbGVhciBQQ0lfTVNJWF9GTEFHU19FTkFC
+TEUgaW4gbXNpIGNvbnRyb2wKKyAgICAgICByZWdpc3RlciBpbiBrZHVtcCBrZXJuZWwuCisgICAg
+Ni4gRml4IG1lZ2FzYXNfZ2V0X2NtZCgpIHRvIG9ubHkgcHJpbnQgIkNvbW1hbmQgcG9vbCBlbXB0
+eSIgaWYKKyAgICAgICBtZWdhc2FzX2RiZ19sdmwgaXMgc2V0LgorICAgIDcuIFNhbml0eSBjaGVj
+ayB1c2VyIHNwcGxpZWQgbGVuZ3RoIGluIG1lZ2FzYXNfbWdtdF9md19pb2N0bCgpIHRvIHByZXZl
+bnQKKyAgICAgICBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgaW4gZG1hX2FsbG9jX2NvaGVyZW50
+KCkgd2hlbiBydW5uaW5nCisgICAgICAgc21hcnRtb250b29scy4KKyAgICA4LiBGaXggbWVnYXNh
+c19idWlsZF9kY2RiX2Z1c2lvbigpIHRvIG5vdCBmaWx0ZXIgYnkgVFlQRV9ESVNLLgorICAgIDku
+IEZpeCBtZWdhc2FzX2J1aWxkX2RjZGJfZnVzaW9uKCkgdG8gdXNlIGlvX3JlcXVlc3QtPkxVTlsx
+XSBmaWVsZC4KKyAgICAxMC4gQWRkIE1SX0VWVF9DRkdfQ0xFQVJFRCB0byBtZWdhc2FzX2Flbl9w
+b2xsaW5nKCkuCisgICAgMTEuIEZpeCB0YXNrbGV0X2luaXQoKSBpbiBtZWdhc2FzX2luaXRfZnco
+KSB0byB1c2UgaW5zdGFuY2V0LT50YXNrbGV0LgorICAgIDEyLiBGaXggZmF1bHQgc3RhdGUgaGFu
+ZGxpbmcgaW4gbWVnYXNhc190cmFuc2l0aW9uX3RvX3JlYWR5KCkuCisgICAgMTMuIEZpeCBtYXhf
+c2VjdG9ycyBzZXR0aW5nIGZvciBJRUVFIFNHTCdzLgorICAgIDE0LiBGaXggaU1SIE9DUiBzdXBw
+b3J0IHRvIHdvcmsgY29ycmVjdGx5LgorLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQogUmVsZWFzZSBE
+YXRlICAgIDogVHVlcy4gIERlYyAxNCwgMjAxMCAxNzowMDowMCBQU1QgMjAxMCAtCiAJCQkoZW1h
+aWxkLWlkOm1lZ2FyYWlkbGludXhAbHNpLmNvbSkKIAkJCUFkYW0gUmFkZm9yZApkaWZmIC1OYXVy
+IGxpbnV4LTIuNi4zOC1yYzUvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19iYXNl
+LmMgbGludXgtMi42LjM4LXJjNS5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nh
+c19iYXNlLmMKLS0tIGxpbnV4LTIuNi4zOC1yYzUvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2Fy
+YWlkX3Nhc19iYXNlLmMJMjAxMS0wMi0xOSAxNTowOTowNC43ODIzMzIzMTcgLTA4MDAKKysrIGxp
+bnV4LTIuNi4zOC1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfYmFz
+ZS5jCTIwMTEtMDItMTkgMTU6MTA6NDAuNjY3MzYyNzk4IC0wODAwCkBAIC0xOCwxMiArMTgsMTMg
+QEAKICAqICBGb3VuZGF0aW9uLCBJbmMuLCA1OSBUZW1wbGUgUGxhY2UsIFN1aXRlIDMzMCwgQm9z
+dG9uLCBNQSAwMjExMS0xMzA3IFVTQQogICoKICAqICBGSUxFOiBtZWdhcmFpZF9zYXNfYmFzZS5j
+Ci0gKiAgVmVyc2lvbiA6IHYwMC4wMC4wNS4yOS1yYzEKKyAqICBWZXJzaW9uIDogdjAwLjAwLjA1
+LjMzLXJjMQogICoKICAqICBBdXRob3JzOiBMU0kgQ29ycG9yYXRpb24KICAqICAgICAgICAgICBT
+cmVlbml2YXMgQmFnYWxrb3RlCiAgKiAgICAgICAgICAgU3VtYW50IFBhdHJvCiAgKiAgICAgICAg
+ICAgQm8gWWFuZworICogICAgICAgICAgIEFkYW0gUmFkZm9yZCA8bGludXhyYWlkQGxzaS5jb20+
+CiAgKgogICogIFNlbmQgZmVlZGJhY2sgdG86IDxtZWdhcmFpZGxpbnV4QGxzaS5jb20+CiAgKgpk
+aWZmIC1OYXVyIGxpbnV4LTIuNi4zOC1yYzUvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlk
+X3Nhcy5oIGxpbnV4LTIuNi4zOC1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXMuaAotLS0gbGludXgtMi42LjM4LXJjNS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJh
+aWRfc2FzLmgJMjAxMS0wMi0xOSAxNDozOToxNS4xODYzMzI0NjkgLTA4MDAKKysrIGxpbnV4LTIu
+Ni4zOC1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXMuaAkyMDExLTAy
+LTE5IDE1OjA5OjU2LjQwOTM2NDUzOCAtMDgwMApAQCAtMzMsOSArMzMsOSBAQAogLyoKICAqIE1l
+Z2FSQUlEIFNBUyBEcml2ZXIgbWV0YSBkYXRhCiAgKi8KLSNkZWZpbmUgTUVHQVNBU19WRVJTSU9O
+CQkJCSIwMC4wMC4wNS4yOS1yYzEiCi0jZGVmaW5lIE1FR0FTQVNfUkVMREFURQkJCQkiRGVjLiA3
+LCAyMDEwIgotI2RlZmluZSBNRUdBU0FTX0VYVF9WRVJTSU9OCQkJIlR1ZS4gRGVjLiA3IDE3OjAw
+OjAwIFBEVCAyMDEwIgorI2RlZmluZSBNRUdBU0FTX1ZFUlNJT04JCQkJIjAwLjAwLjA1LjMzLXJj
+MSIKKyNkZWZpbmUgTUVHQVNBU19SRUxEQVRFCQkJCSJGZWIuIDE5LCAyMDExIgorI2RlZmluZSBN
+RUdBU0FTX0VYVF9WRVJTSU9OCQkJIlNhdC4gRmViLiAxOSAxNzowMDowMCBQRFQgMjAxMSIKIAog
+LyoKICAqIERldmljZSBJRHMK
+--001485f6c5ee01cc2f049cad6fb1--
