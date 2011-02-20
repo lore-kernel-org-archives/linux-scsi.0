@@ -1,148 +1,156 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 29442] New: target: Race between target driver unregistration
- and LUN removal
-Date: Sat, 19 Feb 2011 12:28:29 GMT
-Message-ID: <bug-29442-11613@https.bugzilla.kernel.org/>
+From: adam radford <aradford@gmail.com>
+Subject: [PATCH 1/15] megaraid_sas: Fix failure gotos
+Date: Sat, 19 Feb 2011 18:22:13 -0800
+Message-ID: <AANLkTikPZ4X_DiOHtBTHrPVP=SFjnM5Fg0WPs09xTJ+d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/mixed; boundary=0016e65b52a64a8e72049cad6ab5
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:60177 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752885Ab1BSM2a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2011 07:28:30 -0500
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p1JCSTnq028994
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2011 12:28:29 GMT
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:52251 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752358Ab1BTCWP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Feb 2011 21:22:15 -0500
+Received: by wwa36 with SMTP id 36so5037267wwa.1
+        for <linux-scsi@vger.kernel.org>; Sat, 19 Feb 2011 18:22:13 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=29442
+--0016e65b52a64a8e72049cad6ab5
+Content-Type: text/plain; charset=ISO-8859-1
 
-           Summary: target: Race between target driver unregistration and
-                    LUN removal
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 2.6.38-rc5
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-        AssignedTo: linux-scsi@vger.kernel.org
-        ReportedBy: bart.vanassche@gmail.com
-        Regression: No
+James/Linux-scsi,
 
+This patch fixes some failure gotos in megaraid_sas.
 
-With the ib_srpt driver from branch srpt of https://github.com/bvanassche/srpt,
-the call trace included below sometimes appears in the kernel log while
-removing ib_srpt-related nodes from configfs and unloading ib_srpt. IMHO this
-call trace reveals a race condition in the target core between target driver
-template unregistration and LUN removal.
+Signed-off-by: Adam Radford <aradford@gmail.com>
 
-Session 0x00000000000000000002c9030005f34f: kernel thread ib_srpt_compl (PID
-7298) stopped
-srpt_TPG[1] - Deleted ACL with TCQ Depth: 1 for srpt Initiator Node:
-0x00000000000000000002c9030005f34f
-srpt_TPG[2] - Deleted ACL with TCQ Depth: 1 for srpt Initiator Node:
-0x00000000000000000002c9030003cca3
-srpt_TPG[2] - Deleted ACL with TCQ Depth: 1 for srpt Initiator Node:
-0x00000000000000000002c9030003cca7
-srpt_TPG[2] - Deleted ACL with TCQ Depth: 1 for srpt Initiator Node:
-0x00000000000000000002c9030005f34b
-srpt_TPG[2] - Deleted ACL with TCQ Depth: 1 for srpt Initiator Node:
-0x00000000000000000002c9030005f34f
-srpt_TPG[1]_LUN[0] - Deactivated srpt Logical Unit from device object
-srpt_TPG[1]_LUN[1] - Deactivated srpt Logical Unit from device object
-srpt_TPG[1]_LUN[2] - Deactivated srpt Logical Unit from device object
-srpt_TPG[2]_LUN[0] - Deactivated srpt Logical Unit from device object
-srpt_TPG[2]_LUN[1] - Deactivated srpt Logical Unit from device object
-srpt_TPG[2]_LUN[2] - Deactivated srpt Logical Unit from device object
-ib_srpt drop_tpg(mlx4_0, mlx4_0)
-ib_srpt drop_tpg(mlx4_1, mlx4_1)
-ib_srpt drop_tport(mlx4_0)
-ib_srpt drop_tport(mlx4_1)
-Target_Core_ConfigFS: DEREGISTER -> Looking up srpt in tf list
-Target_Core_ConfigFS: DEREGISTER -> located fabric: srpt
-Target_Core_ConfigFS: DEREGISTER -> Releasing tf->tf_fabric for srpt
-Target_Core_ConfigFS: DEREGISTER -> Releasing ci srpt
-Target_Core_ConfigFS: Calling se_free_virtual_device() for se_dev_ptr:
-ffff880063f02120
-Target_Core_ConfigFS: Deallocating se_subsystem_dev_t: ffff88006a914120
-Target_Core_ConfigFS: Calling se_free_virtual_device() for se_dev_ptr:
-ffff880063f00848
-Target_Core_ConfigFS: Deallocating se_subsystem_dev_t: ffff88006a070000
-Target_Core_ConfigFS: Calling se_free_virtual_device() for se_dev_ptr:
-ffff880063f018d8
-CORE_RD[0] - Released device space for Ramdisk Device ID: 0, pages 2 in 1
-tables total bytes 8192
-Target_Core_ConfigFS: Deallocating se_subsystem_dev_t: ffff88006a075168
-CORE_HBA[1] - Detached FILEIO HBA: 0 from Generic Target Core
-CORE_HBA[1] - Detached HBA from Generic Target Core
-CORE_HBA[3] - Detached FILEIO HBA: 1 from Generic Target Core
-CORE_HBA[3] - Detached HBA from Generic Target Core
-CORE_HBA[2] - Detached Ramdisk HBA: 0 from Generic Target Core
-CORE_HBA[2] - Detached HBA from Generic Target Core
-TARGET_CORE[Normal]: Deallocating srpt struct se_portal_group for endpoint:
-0x2c9030005f34a Portal Tag 1
-general protection fault: 0000 [#1] PREEMPT SMP 
-last sysfs file: /sys/devices/system/cpu/cpu1/cache/index2/shared_cpu_map
-CPU 0 
-Modules linked in: target_core_pscsi target_core_iblock target_core_file
-ib_srpt(-) target_core_mod netconsole configfs af_packet rdma_ucm rdma_cm iw_cm
-ib_addr ib_ipoib ib_cm ib_sa ib_uverbs ib_umad cpufreq_conservative
-cpufreq_userspace cpufreq_powersave acpi_cpufreq mlx4_ib ib_mad ib_core mperf
-loop dm_mod mlx4_core sr_mod i2c_i801 pcspkr sg cdrom intel_agp intel_gtt
-serio_raw i2c_core button uhci_hcd ehci_hcd usbcore rtc_cmos sd_mod crc_t10dif
-rtc_core rtc_lib edd ext3 mbcache jbd fan ata_generic ata_piix pata_marvell
-ahci libahci libata scsi_mod thermal processor thermal_sys hwmon [last
-unloaded: target_core_mod]
+diff -Naur linux-2.6.38-rc5/drivers/scsi/megaraid/megaraid_sas_base.c
+linux-2.6.38-rc5.new/drivers/scsi/megaraid/megaraid_sas_base.c
+--- linux-2.6.38-rc5/drivers/scsi/megaraid/megaraid_sas_base.c	2011-02-15
+19:23:45.000000000 -0800
++++ linux-2.6.38-rc5.new/drivers/scsi/megaraid/megaraid_sas_base.c	2011-02-19
+13:31:40.505394814 -0800
+@@ -3424,7 +3424,6 @@
+ 	megasas_free_cmds(instance);
 
-Pid: 7324, comm: tcm_cl_0 Not tainted 2.6.38-rc5-dbg+ #2 System manufacturer
-P5Q DELUXE/P5Q DELUXE
-RIP: 0010:[<ffffffff811f4bf0>]  [<ffffffff811f4bf0>] list_del+0x30/0x110
-RSP: 0018:ffff8800446b3e20  EFLAGS: 00010883
-RAX: dead000000200200 RBX: ffff880044760130 RCX: 6b6b6b6b6b6b6b6b
-RDX: ffff880044760130 RSI: ffff88006a1266e8 RDI: ffff880044760130
-RBP: ffff8800446b3e30 R08: 0000000000000000 R09: 0000000000000001
-R10: 0000000000000000 R11: 0000000000000000 R12: dead000000100100
-R13: ffff88006a1266d0 R14: ffff88006a1267c0 R15: ffff88006a1266d0
-FS:  0000000000000000(0000) GS:ffff88007ce00000(0000) knlGS:0000000000000000
-CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-CR2: 00007faf05a335e0 CR3: 000000003bdc8000 CR4: 00000000000006f0
-DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-Process tcm_cl_0 (pid: 7324, threadinfo ffff8800446b2000, task
-ffff88007180dfa0)
-Stack:
- ffff8800447600c0 ffff88006a126670 ffff8800446b3e80 ffffffffa034a5a1
- 00000000001d2180 0000000000000286 ffff8800767d9320 ffff88006a126670
- ffff8800446b3ec0 ffff88006a126670 ffffffffa034a820 0000000000000000
-Call Trace:
- [<ffffffffa034a5a1>] __transport_clear_lun_from_sessions+0x61/0x2e0
-[target_core_mod]
- [<ffffffffa034a820>] ? transport_clear_lun_thread+0x0/0x30 [target_core_mod]
- [<ffffffffa034a836>] transport_clear_lun_thread+0x16/0x30 [target_core_mod]
- [<ffffffffa034a820>] ? transport_clear_lun_thread+0x0/0x30 [target_core_mod]
- [<ffffffff81070256>] kthread+0xa6/0xb0
- [<ffffffff81003d54>] kernel_thread_helper+0x4/0x10
- [<ffffffff8103e170>] ? finish_task_switch+0x80/0xe0
- [<ffffffff813cb97b>] ? _raw_spin_unlock_irq+0x3b/0x60
- [<ffffffff813cbfc4>] ? restore_args+0x0/0x30
- [<ffffffff810701b0>] ? kthread+0x0/0xb0
- [<ffffffff81003d50>] ? kernel_thread_helper+0x0/0x10
-Code: 54 49 bc 00 01 10 00 00 00 ad de 53 48 89 fb 4c 39 27 0f 84 9a 00 00 00
-48 8b 4b 08 48 b8 00 02 20 00 00 00 ad de 48 39 c1 74 48 <4c> 8b 01 4c 39 c3 75
-60 48 8b 03 4c 8b 40 08 4c 39 c3 0f 85 96 
-RIP  [<ffffffff811f4bf0>] list_del+0x30/0x110
- RSP <ffff8800446b3e20>
----[ end trace a00acd2001b8e456 ]---
-note: tcm_cl_0[7324] exited with preempt_count 1
+ fail_alloc_cmds:
+-	iounmap(instance->reg_set);
+ 	return 1;
+ }
 
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+@@ -3494,7 +3493,7 @@
+
+ 	/* Get operational params, sge flags, send init cmd to controller */
+ 	if (instance->instancet->init_adapter(instance))
+-		return -ENODEV;
++		goto fail_init_adapter;
+
+ 	printk(KERN_ERR "megasas: INIT adapter done\n");
+
+@@ -3553,6 +3552,7 @@
+ 				MEGASAS_COMPLETION_TIMER_INTERVAL);
+ 	return 0;
+
++fail_init_adapter:
+ fail_ready_state:
+ 	iounmap(instance->reg_set);
+
+@@ -4107,7 +4107,10 @@
+ 		 instance->pdev->irq, instance);
+ 	if (instance->msi_flag)
+ 		pci_disable_msix(instance->pdev);
+-
++	if (instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION)
++		megasas_release_fusion(instance);
++	else
++		megasas_release_mfi(instance);
+       fail_irq:
+       fail_init_mfi:
+       fail_alloc_dma_buf:
+@@ -4116,13 +4119,9 @@
+ 				    instance->evt_detail,
+ 				    instance->evt_detail_h);
+
+-	if (instance->producer) {
++	if (instance->producer)
+ 		pci_free_consistent(pdev, sizeof(u32), instance->producer,
+ 				    instance->producer_h);
+-		megasas_release_mfi(instance);
+-	} else {
+-		megasas_release_fusion(instance);
+-	}
+ 	if (instance->consumer)
+ 		pci_free_consistent(pdev, sizeof(u32), instance->consumer,
+ 				    instance->consumer_h);
+diff -Naur linux-2.6.38-rc5/drivers/scsi/megaraid/megaraid_sas_fusion.c
+linux-2.6.38-rc5.new/drivers/scsi/megaraid/megaraid_sas_fusion.c
+--- linux-2.6.38-rc5/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-02-15
+19:23:45.000000000 -0800
++++ linux-2.6.38-rc5.new/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-02-19
+13:30:04.826364313 -0800
+@@ -984,13 +984,15 @@
+
+ 	return 0;
+
+-fail_alloc_cmds:
+-fail_alloc_mfi_cmds:
+ fail_map_info:
+ 	if (i == 1)
+ 		dma_free_coherent(&instance->pdev->dev, fusion->map_sz,
+ 				  fusion->ld_map[0], fusion->ld_map_phys[0]);
+ fail_ioc_init:
++	megasas_free_cmds_fusion(instance);
++fail_alloc_cmds:
++	megasas_free_cmds(instance);
++fail_alloc_mfi_cmds:
+ 	return 1;
+ }
+
+--0016e65b52a64a8e72049cad6ab5
+Content-Type: application/octet-stream; name="megaraid_sas.patch1"
+Content-Disposition: attachment; filename="megaraid_sas.patch1"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_gkdalz2g0
+
+ZGlmZiAtTmF1ciBsaW51eC0yLjYuMzgtcmM1L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXNfYmFzZS5jIGxpbnV4LTIuNi4zOC1yYzUubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9t
+ZWdhcmFpZF9zYXNfYmFzZS5jCi0tLSBsaW51eC0yLjYuMzgtcmM1L2RyaXZlcnMvc2NzaS9tZWdh
+cmFpZC9tZWdhcmFpZF9zYXNfYmFzZS5jCTIwMTEtMDItMTUgMTk6MjM6NDUuMDAwMDAwMDAwIC0w
+ODAwCisrKyBsaW51eC0yLjYuMzgtcmM1Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJh
+aWRfc2FzX2Jhc2UuYwkyMDExLTAyLTE5IDEzOjMxOjQwLjUwNTM5NDgxNCAtMDgwMApAQCAtMzQy
+NCw3ICszNDI0LDYgQEAKIAltZWdhc2FzX2ZyZWVfY21kcyhpbnN0YW5jZSk7CiAKIGZhaWxfYWxs
+b2NfY21kczoKLQlpb3VubWFwKGluc3RhbmNlLT5yZWdfc2V0KTsKIAlyZXR1cm4gMTsKIH0KIApA
+QCAtMzQ5NCw3ICszNDkzLDcgQEAKIAogCS8qIEdldCBvcGVyYXRpb25hbCBwYXJhbXMsIHNnZSBm
+bGFncywgc2VuZCBpbml0IGNtZCB0byBjb250cm9sbGVyICovCiAJaWYgKGluc3RhbmNlLT5pbnN0
+YW5jZXQtPmluaXRfYWRhcHRlcihpbnN0YW5jZSkpCi0JCXJldHVybiAtRU5PREVWOworCQlnb3Rv
+IGZhaWxfaW5pdF9hZGFwdGVyOwogCiAJcHJpbnRrKEtFUk5fRVJSICJtZWdhc2FzOiBJTklUIGFk
+YXB0ZXIgZG9uZVxuIik7CiAKQEAgLTM1NTMsNiArMzU1Miw3IEBACiAJCQkJTUVHQVNBU19DT01Q
+TEVUSU9OX1RJTUVSX0lOVEVSVkFMKTsKIAlyZXR1cm4gMDsKIAorZmFpbF9pbml0X2FkYXB0ZXI6
+CiBmYWlsX3JlYWR5X3N0YXRlOgogCWlvdW5tYXAoaW5zdGFuY2UtPnJlZ19zZXQpOwogCkBAIC00
+MTA3LDcgKzQxMDcsMTAgQEAKIAkJIGluc3RhbmNlLT5wZGV2LT5pcnEsIGluc3RhbmNlKTsKIAlp
+ZiAoaW5zdGFuY2UtPm1zaV9mbGFnKQogCQlwY2lfZGlzYWJsZV9tc2l4KGluc3RhbmNlLT5wZGV2
+KTsKLQorCWlmIChpbnN0YW5jZS0+cGRldi0+ZGV2aWNlID09IFBDSV9ERVZJQ0VfSURfTFNJX0ZV
+U0lPTikKKwkJbWVnYXNhc19yZWxlYXNlX2Z1c2lvbihpbnN0YW5jZSk7CisJZWxzZQorCQltZWdh
+c2FzX3JlbGVhc2VfbWZpKGluc3RhbmNlKTsKICAgICAgIGZhaWxfaXJxOgogICAgICAgZmFpbF9p
+bml0X21maToKICAgICAgIGZhaWxfYWxsb2NfZG1hX2J1ZjoKQEAgLTQxMTYsMTMgKzQxMTksOSBA
+QAogCQkJCSAgICBpbnN0YW5jZS0+ZXZ0X2RldGFpbCwKIAkJCQkgICAgaW5zdGFuY2UtPmV2dF9k
+ZXRhaWxfaCk7CiAKLQlpZiAoaW5zdGFuY2UtPnByb2R1Y2VyKSB7CisJaWYgKGluc3RhbmNlLT5w
+cm9kdWNlcikKIAkJcGNpX2ZyZWVfY29uc2lzdGVudChwZGV2LCBzaXplb2YodTMyKSwgaW5zdGFu
+Y2UtPnByb2R1Y2VyLAogCQkJCSAgICBpbnN0YW5jZS0+cHJvZHVjZXJfaCk7Ci0JCW1lZ2FzYXNf
+cmVsZWFzZV9tZmkoaW5zdGFuY2UpOwotCX0gZWxzZSB7Ci0JCW1lZ2FzYXNfcmVsZWFzZV9mdXNp
+b24oaW5zdGFuY2UpOwotCX0KIAlpZiAoaW5zdGFuY2UtPmNvbnN1bWVyKQogCQlwY2lfZnJlZV9j
+b25zaXN0ZW50KHBkZXYsIHNpemVvZih1MzIpLCBpbnN0YW5jZS0+Y29uc3VtZXIsCiAJCQkJICAg
+IGluc3RhbmNlLT5jb25zdW1lcl9oKTsKZGlmZiAtTmF1ciBsaW51eC0yLjYuMzgtcmM1L2RyaXZl
+cnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9zYXNfZnVzaW9uLmMgbGludXgtMi42LjM4LXJjNS5u
+ZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2FyYWlkX3Nhc19mdXNpb24uYwotLS0gbGludXgt
+Mi42LjM4LXJjNS9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jCTIw
+MTEtMDItMTUgMTk6MjM6NDUuMDAwMDAwMDAwIC0wODAwCisrKyBsaW51eC0yLjYuMzgtcmM1Lm5l
+dy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Z1c2lvbi5jCTIwMTEtMDItMTkg
+MTM6MzA6MDQuODI2MzY0MzEzIC0wODAwCkBAIC05ODQsMTMgKzk4NCwxNSBAQAogCiAJcmV0dXJu
+IDA7CiAKLWZhaWxfYWxsb2NfY21kczoKLWZhaWxfYWxsb2NfbWZpX2NtZHM6CiBmYWlsX21hcF9p
+bmZvOgogCWlmIChpID09IDEpCiAJCWRtYV9mcmVlX2NvaGVyZW50KCZpbnN0YW5jZS0+cGRldi0+
+ZGV2LCBmdXNpb24tPm1hcF9zeiwKIAkJCQkgIGZ1c2lvbi0+bGRfbWFwWzBdLCBmdXNpb24tPmxk
+X21hcF9waHlzWzBdKTsKIGZhaWxfaW9jX2luaXQ6CisJbWVnYXNhc19mcmVlX2NtZHNfZnVzaW9u
+KGluc3RhbmNlKTsKK2ZhaWxfYWxsb2NfY21kczoKKwltZWdhc2FzX2ZyZWVfY21kcyhpbnN0YW5j
+ZSk7CitmYWlsX2FsbG9jX21maV9jbWRzOgogCXJldHVybiAxOwogfQogCg==
+--0016e65b52a64a8e72049cad6ab5--
