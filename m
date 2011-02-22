@@ -1,14 +1,14 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH 09/11] zfcp: Move SCSI host and transport templates out of struct zfcp_data
-Date: Tue, 22 Feb 2011 19:54:46 +0100
-Message-ID: <20110222185537.191158203@linux.vnet.ibm.com>
+Subject: [PATCH 11/11] zfcp: Add information to symbolic port name when running in NPIV mode
+Date: Tue, 22 Feb 2011 19:54:48 +0100
+Message-ID: <20110222185537.495568514@linux.vnet.ibm.com>
 References: <20110222185437.385767855@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.uk.ibm.com ([194.196.100.162]:52307 "EHLO
+Received: from mtagate2.uk.ibm.com ([194.196.100.162]:52306 "EHLO
 	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754720Ab1BVSzk (ORCPT
+	with ESMTP id S1754715Ab1BVSzk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Feb 2011 13:55:40 -0500
-Content-Disposition: inline; filename=709-zfcp-move-templates.diff
+Content-Disposition: inline; filename=711-zfcp-port-name-info.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
@@ -16,211 +16,278 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schwidefsky@de.ibm.c
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-The SCSI host and transport templates are the only members left in the
-global zfcp_data struct. Move them out of zfcp_data  and remove the
-now unused zfcp_data struct. Also update the names of the register and
-unregister functions to use the zfcp_scsi prefix.
+Query the FC symbolic port name for reporting in the fc_host sysfs and
+enable the symbolic_name attribute in the fc_host sysfs. When running
+in NPIV mode, extend the symbolic port name with the devno and the
+hostname. This allows better identification of Linux systems for SAN
+and storage administrators.
 
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
 ---
 
 
- drivers/s390/scsi/zfcp_aux.c  |   14 ++++----
- drivers/s390/scsi/zfcp_def.h  |    6 ---
- drivers/s390/scsi/zfcp_ext.h  |    6 +--
- drivers/s390/scsi/zfcp_scsi.c |   70 ++++++++++++++++++++++--------------------
- 4 files changed, 48 insertions(+), 48 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c  |    2 
+ drivers/s390/scsi/zfcp_def.h  |    1 
+ drivers/s390/scsi/zfcp_erp.c  |    2 
+ drivers/s390/scsi/zfcp_ext.h  |    1 
+ drivers/s390/scsi/zfcp_fc.c   |  120 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/s390/scsi/zfcp_fc.h   |   42 ++++++++++++++
+ drivers/s390/scsi/zfcp_scsi.c |    1 
+ 7 files changed, 169 insertions(+)
 --- a/drivers/s390/scsi/zfcp_aux.c
 +++ b/drivers/s390/scsi/zfcp_aux.c
-@@ -132,11 +132,11 @@ static int __init zfcp_module_init(void)
- 	if (!zfcp_fc_req_cache)
- 		goto out_fc_cache;
+@@ -362,6 +362,7 @@ struct zfcp_adapter *zfcp_adapter_enqueu
  
--	zfcp_data.scsi_transport_template =
-+	zfcp_scsi_transport_template =
- 		fc_attach_transport(&zfcp_transport_functions);
--	if (!zfcp_data.scsi_transport_template)
-+	if (!zfcp_scsi_transport_template)
- 		goto out_transport;
--	scsi_transport_reserve_device(zfcp_data.scsi_transport_template,
-+	scsi_transport_reserve_device(zfcp_scsi_transport_template,
- 				      sizeof(struct zfcp_scsi_dev));
+ 	INIT_WORK(&adapter->stat_work, _zfcp_status_read_scheduler);
+ 	INIT_WORK(&adapter->scan_work, zfcp_fc_scan_ports);
++	INIT_WORK(&adapter->ns_up_work, zfcp_fc_sym_name_update);
  
+ 	if (zfcp_qdio_setup(adapter))
+ 		goto failed;
+@@ -427,6 +428,7 @@ void zfcp_adapter_unregister(struct zfcp
  
-@@ -160,7 +160,7 @@ static int __init zfcp_module_init(void)
- out_ccw_register:
- 	misc_deregister(&zfcp_cfdc_misc);
- out_misc:
--	fc_release_transport(zfcp_data.scsi_transport_template);
-+	fc_release_transport(zfcp_scsi_transport_template);
- out_transport:
- 	kmem_cache_destroy(zfcp_fc_req_cache);
- out_fc_cache:
-@@ -175,7 +175,7 @@ static void __exit zfcp_module_exit(void
- {
- 	ccw_driver_unregister(&zfcp_ccw_driver);
- 	misc_deregister(&zfcp_cfdc_misc);
--	fc_release_transport(zfcp_data.scsi_transport_template);
-+	fc_release_transport(zfcp_scsi_transport_template);
- 	kmem_cache_destroy(zfcp_fc_req_cache);
- 	kmem_cache_destroy(zfcp_fsf_qtcb_cache);
- }
-@@ -413,7 +413,7 @@ struct zfcp_adapter *zfcp_adapter_enqueu
- 	adapter->dma_parms.max_segment_size = ZFCP_QDIO_SBALE_LEN;
- 	adapter->ccw_device->dev.dma_parms = &adapter->dma_parms;
- 
--	if (!zfcp_adapter_scsi_register(adapter))
-+	if (!zfcp_scsi_adapter_register(adapter))
- 		return adapter;
- 
- failed:
-@@ -430,7 +430,7 @@ void zfcp_adapter_unregister(struct zfcp
+ 	cancel_work_sync(&adapter->scan_work);
+ 	cancel_work_sync(&adapter->stat_work);
++	cancel_work_sync(&adapter->ns_up_work);
  	zfcp_destroy_adapter_work_queue(adapter);
  
  	zfcp_fc_wka_ports_force_offline(adapter->gs);
--	zfcp_adapter_scsi_unregister(adapter);
-+	zfcp_scsi_adapter_unregister(adapter);
- 	sysfs_remove_group(&cdev->dev.kobj, &zfcp_sysfs_adapter_attrs);
- 
- 	zfcp_erp_thread_kill(adapter);
 --- a/drivers/s390/scsi/zfcp_def.h
 +++ b/drivers/s390/scsi/zfcp_def.h
-@@ -313,10 +313,4 @@ struct zfcp_fsf_req {
- 	void			(*handler)(struct zfcp_fsf_req *);
- };
- 
--/* driver data */
--struct zfcp_data {
--	struct scsi_host_template scsi_host_template;
--	struct scsi_transport_template *scsi_transport_template;
--};
--
- #endif /* ZFCP_DEF_H */
+@@ -189,6 +189,7 @@ struct zfcp_adapter {
+ 	struct fsf_qtcb_bottom_port *stats_reset_data;
+ 	unsigned long		stats_reset;
+ 	struct work_struct	scan_work;
++	struct work_struct	ns_up_work;
+ 	struct service_level	service_level;
+ 	struct workqueue_struct	*work_queue;
+ 	struct device_dma_parameters dma_parms;
+--- a/drivers/s390/scsi/zfcp_erp.c
++++ b/drivers/s390/scsi/zfcp_erp.c
+@@ -1231,8 +1231,10 @@ static void zfcp_erp_action_cleanup(stru
+ 		if (result == ZFCP_ERP_SUCCEEDED) {
+ 			register_service_level(&adapter->service_level);
+ 			queue_work(adapter->work_queue, &adapter->scan_work);
++			queue_work(adapter->work_queue, &adapter->ns_up_work);
+ 		} else
+ 			unregister_service_level(&adapter->service_level);
++
+ 		kref_put(&adapter->ref, zfcp_adapter_release);
+ 		break;
+ 	}
 --- a/drivers/s390/scsi/zfcp_ext.h
 +++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -141,9 +141,9 @@ extern struct zfcp_fsf_req *zfcp_fsf_get
- 					     struct qdio_buffer *);
+@@ -96,6 +96,7 @@ extern int zfcp_fc_gs_setup(struct zfcp_
+ extern void zfcp_fc_gs_destroy(struct zfcp_adapter *);
+ extern int zfcp_fc_exec_bsg_job(struct fc_bsg_job *);
+ extern int zfcp_fc_timeout_bsg_job(struct fc_bsg_job *);
++extern void zfcp_fc_sym_name_update(struct work_struct *);
  
- /* zfcp_scsi.c */
--extern struct zfcp_data zfcp_data;
--extern int zfcp_adapter_scsi_register(struct zfcp_adapter *);
--extern void zfcp_adapter_scsi_unregister(struct zfcp_adapter *);
-+extern struct scsi_transport_template *zfcp_scsi_transport_template;
-+extern int zfcp_scsi_adapter_register(struct zfcp_adapter *);
-+extern void zfcp_scsi_adapter_unregister(struct zfcp_adapter *);
- extern struct fc_function_template zfcp_transport_functions;
- extern void zfcp_scsi_rport_work(struct work_struct *);
- extern void zfcp_scsi_schedule_rport_register(struct zfcp_port *);
+ /* zfcp_fsf.c */
+ extern struct kmem_cache *zfcp_fsf_qtcb_cache;
+--- a/drivers/s390/scsi/zfcp_fc.c
++++ b/drivers/s390/scsi/zfcp_fc.c
+@@ -11,6 +11,7 @@
+ 
+ #include <linux/types.h>
+ #include <linux/slab.h>
++#include <linux/utsname.h>
+ #include <scsi/fc/fc_els.h>
+ #include <scsi/libfc.h>
+ #include "zfcp_ext.h"
+@@ -696,6 +697,125 @@ out:
+ 	zfcp_fc_wka_port_put(&adapter->gs->ds);
+ }
+ 
++static int zfcp_fc_gspn(struct zfcp_adapter *adapter,
++			struct zfcp_fc_req *fc_req)
++{
++	DECLARE_COMPLETION_ONSTACK(completion);
++	char devno[] = "DEVNO:";
++	struct zfcp_fsf_ct_els *ct_els = &fc_req->ct_els;
++	struct zfcp_fc_gspn_req *gspn_req = &fc_req->u.gspn.req;
++	struct zfcp_fc_gspn_rsp *gspn_rsp = &fc_req->u.gspn.rsp;
++	int ret;
++
++	zfcp_fc_ct_ns_init(&gspn_req->ct_hdr, FC_NS_GSPN_ID,
++			   FC_SYMBOLIC_NAME_SIZE);
++	hton24(gspn_req->gspn.fp_fid, fc_host_port_id(adapter->scsi_host));
++
++	sg_init_one(&fc_req->sg_req, gspn_req, sizeof(*gspn_req));
++	sg_init_one(&fc_req->sg_rsp, gspn_rsp, sizeof(*gspn_rsp));
++
++	ct_els->handler = zfcp_fc_complete;
++	ct_els->handler_data = &completion;
++	ct_els->req = &fc_req->sg_req;
++	ct_els->resp = &fc_req->sg_rsp;
++
++	ret = zfcp_fsf_send_ct(&adapter->gs->ds, ct_els, NULL,
++			       ZFCP_FC_CTELS_TMO);
++	if (ret)
++		return ret;
++
++	wait_for_completion(&completion);
++	if (ct_els->status)
++		return ct_els->status;
++
++	if (fc_host_port_type(adapter->scsi_host) == FC_PORTTYPE_NPIV &&
++	    !(strstr(gspn_rsp->gspn.fp_name, devno)))
++		snprintf(fc_host_symbolic_name(adapter->scsi_host),
++			 FC_SYMBOLIC_NAME_SIZE, "%s%s %s NAME: %s",
++			 gspn_rsp->gspn.fp_name, devno,
++			 dev_name(&adapter->ccw_device->dev),
++			 init_utsname()->nodename);
++	else
++		strlcpy(fc_host_symbolic_name(adapter->scsi_host),
++			gspn_rsp->gspn.fp_name, FC_SYMBOLIC_NAME_SIZE);
++
++	return 0;
++}
++
++static void zfcp_fc_rspn(struct zfcp_adapter *adapter,
++			 struct zfcp_fc_req *fc_req)
++{
++	DECLARE_COMPLETION_ONSTACK(completion);
++	struct Scsi_Host *shost = adapter->scsi_host;
++	struct zfcp_fsf_ct_els *ct_els = &fc_req->ct_els;
++	struct zfcp_fc_rspn_req *rspn_req = &fc_req->u.rspn.req;
++	struct fc_ct_hdr *rspn_rsp = &fc_req->u.rspn.rsp;
++	int ret, len;
++
++	zfcp_fc_ct_ns_init(&rspn_req->ct_hdr, FC_NS_RSPN_ID,
++			   FC_SYMBOLIC_NAME_SIZE);
++	hton24(rspn_req->rspn.fr_fid.fp_fid, fc_host_port_id(shost));
++	len = strlcpy(rspn_req->rspn.fr_name, fc_host_symbolic_name(shost),
++		      FC_SYMBOLIC_NAME_SIZE);
++	rspn_req->rspn.fr_name_len = len;
++
++	sg_init_one(&fc_req->sg_req, rspn_req, sizeof(*rspn_req));
++	sg_init_one(&fc_req->sg_rsp, rspn_rsp, sizeof(*rspn_rsp));
++
++	ct_els->handler = zfcp_fc_complete;
++	ct_els->handler_data = &completion;
++	ct_els->req = &fc_req->sg_req;
++	ct_els->resp = &fc_req->sg_rsp;
++
++	ret = zfcp_fsf_send_ct(&adapter->gs->ds, ct_els, NULL,
++			       ZFCP_FC_CTELS_TMO);
++	if (!ret)
++		wait_for_completion(&completion);
++}
++
++/**
++ * zfcp_fc_sym_name_update - Retrieve and update the symbolic port name
++ * @work: ns_up_work of the adapter where to update the symbolic port name
++ *
++ * Retrieve the current symbolic port name that may have been set by
++ * the hardware using the GSPN request and update the fc_host
++ * symbolic_name sysfs attribute. When running in NPIV mode (and hence
++ * the port name is unique for this system), update the symbolic port
++ * name to add Linux specific information and update the FC nameserver
++ * using the RSPN request.
++ */
++void zfcp_fc_sym_name_update(struct work_struct *work)
++{
++	struct zfcp_adapter *adapter = container_of(work, struct zfcp_adapter,
++						    ns_up_work);
++	int ret;
++	struct zfcp_fc_req *fc_req;
++
++	if (fc_host_port_type(adapter->scsi_host) != FC_PORTTYPE_NPORT &&
++	    fc_host_port_type(adapter->scsi_host) != FC_PORTTYPE_NPIV)
++		return;
++
++	fc_req = kmem_cache_zalloc(zfcp_fc_req_cache, GFP_KERNEL);
++	if (!fc_req)
++		return;
++
++	ret = zfcp_fc_wka_port_get(&adapter->gs->ds);
++	if (ret)
++		goto out_free;
++
++	ret = zfcp_fc_gspn(adapter, fc_req);
++	if (ret || fc_host_port_type(adapter->scsi_host) != FC_PORTTYPE_NPIV)
++		goto out_ds_put;
++
++	memset(fc_req, 0, sizeof(*fc_req));
++	zfcp_fc_rspn(adapter, fc_req);
++
++out_ds_put:
++	zfcp_fc_wka_port_put(&adapter->gs->ds);
++out_free:
++	kmem_cache_free(zfcp_fc_req_cache, fc_req);
++}
++
+ static void zfcp_fc_ct_els_job_handler(void *data)
+ {
+ 	struct fc_bsg_job *job = data;
+--- a/drivers/s390/scsi/zfcp_fc.h
++++ b/drivers/s390/scsi/zfcp_fc.h
+@@ -84,6 +84,40 @@ struct zfcp_fc_gpn_ft_req {
+ } __packed;
+ 
+ /**
++ * struct zfcp_fc_gspn_req - container for ct header plus GSPN_ID request
++ * @ct_hdr: FC GS common transport header
++ * @gspn: GSPN_ID request
++ */
++struct zfcp_fc_gspn_req {
++	struct fc_ct_hdr	ct_hdr;
++	struct fc_gid_pn_resp	gspn;
++} __packed;
++
++/**
++ * struct zfcp_fc_gspn_rsp - container for ct header plus GSPN_ID response
++ * @ct_hdr: FC GS common transport header
++ * @gspn: GSPN_ID response
++ * @name: The name string of the GSPN_ID response
++ */
++struct zfcp_fc_gspn_rsp {
++	struct fc_ct_hdr	ct_hdr;
++	struct fc_gspn_resp	gspn;
++	char			name[FC_SYMBOLIC_NAME_SIZE];
++} __packed;
++
++/**
++ * struct zfcp_fc_rspn_req - container for ct header plus RSPN_ID request
++ * @ct_hdr: FC GS common transport header
++ * @rspn: RSPN_ID request
++ * @name: The name string of the RSPN_ID request
++ */
++struct zfcp_fc_rspn_req {
++	struct fc_ct_hdr	ct_hdr;
++	struct fc_ns_rspn	rspn;
++	char			name[FC_SYMBOLIC_NAME_SIZE];
++} __packed;
++
++/**
+  * struct zfcp_fc_req - Container for FC ELS and CT requests sent from zfcp
+  * @ct_els: data required for issuing fsf command
+  * @sg_req: scatterlist entry for request data
+@@ -107,6 +141,14 @@ struct zfcp_fc_req {
+ 			struct scatterlist sg_rsp2[ZFCP_FC_GPN_FT_NUM_BUFS - 1];
+ 			struct zfcp_fc_gpn_ft_req	req;
+ 		} gpn_ft;
++		struct {
++			struct zfcp_fc_gspn_req		req;
++			struct zfcp_fc_gspn_rsp		rsp;
++		} gspn;
++		struct {
++			struct zfcp_fc_rspn_req		req;
++			struct fc_ct_hdr		rsp;
++		} rspn;
+ 	} u;
+ };
+ 
 --- a/drivers/s390/scsi/zfcp_scsi.c
 +++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -292,7 +292,37 @@ static int zfcp_scsi_eh_host_reset_handl
- 	return SUCCESS;
- }
- 
--int zfcp_adapter_scsi_register(struct zfcp_adapter *adapter)
-+struct scsi_transport_template *zfcp_scsi_transport_template;
-+
-+static struct scsi_host_template zfcp_scsi_host_template = {
-+	.module			 = THIS_MODULE,
-+	.name			 = "zfcp",
-+	.queuecommand		 = zfcp_scsi_queuecommand,
-+	.eh_abort_handler	 = zfcp_scsi_eh_abort_handler,
-+	.eh_device_reset_handler = zfcp_scsi_eh_device_reset_handler,
-+	.eh_target_reset_handler = zfcp_scsi_eh_target_reset_handler,
-+	.eh_host_reset_handler	 = zfcp_scsi_eh_host_reset_handler,
-+	.slave_alloc		 = zfcp_scsi_slave_alloc,
-+	.slave_configure	 = zfcp_scsi_slave_configure,
-+	.slave_destroy		 = zfcp_scsi_slave_destroy,
-+	.change_queue_depth	 = zfcp_scsi_change_queue_depth,
-+	.proc_name		 = "zfcp",
-+	.can_queue		 = 4096,
-+	.this_id		 = -1,
-+	.sg_tablesize		 = ZFCP_QDIO_MAX_SBALES_PER_REQ,
-+	.max_sectors		 = (ZFCP_QDIO_MAX_SBALES_PER_REQ * 8),
-+	.dma_boundary		 = ZFCP_QDIO_SBALE_LEN - 1,
-+	.cmd_per_lun		 = 1,
-+	.use_clustering		 = 1,
-+	.shost_attrs		 = zfcp_sysfs_shost_attrs,
-+	.sdev_attrs		 = zfcp_sysfs_sdev_attrs,
-+};
-+
-+/**
-+ * zfcp_scsi_adapter_register - Register SCSI and FC host with SCSI midlayer
-+ * @adapter: The zfcp adapter to register with the SCSI midlayer
-+ */
-+int zfcp_scsi_adapter_register(struct zfcp_adapter *adapter)
- {
- 	struct ccw_dev_id dev_id;
- 
-@@ -301,7 +331,7 @@ int zfcp_adapter_scsi_register(struct zf
- 
- 	ccw_device_get_id(adapter->ccw_device, &dev_id);
- 	/* register adapter as SCSI host with mid layer of SCSI stack */
--	adapter->scsi_host = scsi_host_alloc(&zfcp_data.scsi_host_template,
-+	adapter->scsi_host = scsi_host_alloc(&zfcp_scsi_host_template,
- 					     sizeof (struct zfcp_adapter *));
- 	if (!adapter->scsi_host) {
- 		dev_err(&adapter->ccw_device->dev,
-@@ -316,7 +346,7 @@ int zfcp_adapter_scsi_register(struct zf
- 	adapter->scsi_host->max_channel = 0;
- 	adapter->scsi_host->unique_id = dev_id.devno;
- 	adapter->scsi_host->max_cmd_len = 16; /* in struct fcp_cmnd */
--	adapter->scsi_host->transportt = zfcp_data.scsi_transport_template;
-+	adapter->scsi_host->transportt = zfcp_scsi_transport_template;
- 
- 	adapter->scsi_host->hostdata[0] = (unsigned long) adapter;
- 
-@@ -328,7 +358,11 @@ int zfcp_adapter_scsi_register(struct zf
- 	return 0;
- }
- 
--void zfcp_adapter_scsi_unregister(struct zfcp_adapter *adapter)
-+/**
-+ * zfcp_scsi_adapter_unregister - Unregister SCSI and FC host from SCSI midlayer
-+ * @adapter: The zfcp adapter to unregister.
-+ */
-+void zfcp_scsi_adapter_unregister(struct zfcp_adapter *adapter)
- {
- 	struct Scsi_Host *shost;
- 	struct zfcp_port *port;
-@@ -346,8 +380,6 @@ void zfcp_adapter_scsi_unregister(struct
- 	scsi_remove_host(shost);
- 	scsi_host_put(shost);
- 	adapter->scsi_host = NULL;
--
--	return;
- }
- 
- static struct fc_host_statistics*
-@@ -692,29 +724,3 @@ struct fc_function_template zfcp_transpo
+@@ -720,6 +720,7 @@ struct fc_function_template zfcp_transpo
+ 	/* no functions registered for following dynamic attributes but
+ 	   directly set by LLDD */
+ 	.show_host_port_type = 1,
++	.show_host_symbolic_name = 1,
+ 	.show_host_speed = 1,
  	.show_host_port_id = 1,
  	.dd_bsg_size = sizeof(struct zfcp_fsf_ct_els),
- };
--
--struct zfcp_data zfcp_data = {
--	.scsi_host_template = {
--		.name			 = "zfcp",
--		.module			 = THIS_MODULE,
--		.proc_name		 = "zfcp",
--		.change_queue_depth	 = zfcp_scsi_change_queue_depth,
--		.slave_alloc		 = zfcp_scsi_slave_alloc,
--		.slave_configure	 = zfcp_scsi_slave_configure,
--		.slave_destroy		 = zfcp_scsi_slave_destroy,
--		.queuecommand		 = zfcp_scsi_queuecommand,
--		.eh_abort_handler	 = zfcp_scsi_eh_abort_handler,
--		.eh_device_reset_handler = zfcp_scsi_eh_device_reset_handler,
--		.eh_target_reset_handler = zfcp_scsi_eh_target_reset_handler,
--		.eh_host_reset_handler	 = zfcp_scsi_eh_host_reset_handler,
--		.can_queue		 = 4096,
--		.this_id		 = -1,
--		.sg_tablesize		 = ZFCP_QDIO_MAX_SBALES_PER_REQ,
--		.cmd_per_lun		 = 1,
--		.use_clustering		 = 1,
--		.sdev_attrs		 = zfcp_sysfs_sdev_attrs,
--		.max_sectors		 = (ZFCP_QDIO_MAX_SBALES_PER_REQ * 8),
--		.dma_boundary		 = ZFCP_QDIO_SBALE_LEN - 1,
--		.shost_attrs		 = zfcp_sysfs_shost_attrs,
--	},
--};
 
