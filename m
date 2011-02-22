@@ -1,39 +1,64 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [stable] 2.6.38-rc5-git6: Reported regressions 2.6.36 -> 2.6.37
-Date: Tue, 22 Feb 2011 12:07:24 -0800
-Message-ID: <20110222200724.GB11679@kroah.com>
-References: <JwKd6rET8XO.A._ZC.gbuYNB@chimera>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC] block integrity: Fix write after checksum calculation
+ problem
+Date: Wed, 23 Feb 2011 09:53:51 +1100
+Message-ID: <20110222225351.GG3166@dastard>
+References: <20110222020022.GH32261@tux1.beaverton.ibm.com>
+ <180713DB-114C-454B-A91E-063AB0116251@dilger.ca>
+ <20110222194538.GU27190@tux1.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <JwKd6rET8XO.A._ZC.gbuYNB@chimera>
-List-Unsubscribe: <http://lists.freedesktop.org/mailman/options/dri-devel>,
-	<mailto:dri-devel-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <http://lists.freedesktop.org/archives/dri-devel>
-List-Post: <mailto:dri-devel@lists.freedesktop.org>
-List-Help: <mailto:dri-devel-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <http://lists.freedesktop.org/mailman/listinfo/dri-devel>,
-	<mailto:dri-devel-request@lists.freedesktop.org?subject=subscribe>
-Sender: dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org
-Errors-To: dri-devel-bounces+sf-dri-devel=m.gmane.org@lists.freedesktop.org
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Linux SCSI List <linux-scsi@vger.kernel.org>, Florian Mickler <florian@mickler.org>, Network Development <netdev@vger.kernel.org>, Linux Wireless List <linux-wireless@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, DRI <dri-devel@lists.freedesktop.org>, Linux ACPI <linux-acpi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Kernel Testers List <kernel-testers@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Linux PM List <linux-pm@lists.linux-foundation.org>, Maciej Rutecki <maciej.rutecki@gmail.com>
+In-Reply-To: <20110222194538.GU27190@tux1.beaverton.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Andreas Dilger <adilger@dilger.ca>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Feb 21, 2011 at 11:29:26PM +0100, Rafael J. Wysocki wrote:
-> Bug-Entry	: http://bugzilla.kernel.org/show_bug.cgi?id=24582
-> Subject		: Kernel Oops at tty_buffer_request_room when using pppd program (2.6.37-rc4)
-> Submitter	: baoyb <baoyb@avit.org.cn>
-> Date		: 2010-12-08 13:55 (76 days old)
-> Message-ID	: <EF6DDE218DB34702B1FA84D6CD7EA771@baoyb>
-> References	: http://marc.info/?l=linux-kernel&m=129181763525738&w=2
-> Handled-By	: Jiri Slaby <jslaby@suse.cz>
-> Patch		: https://bugzilla.kernel.org/attachment.cgi?id=47872
+On Tue, Feb 22, 2011 at 11:45:38AM -0800, Darrick J. Wong wrote:
+> On Tue, Feb 22, 2011 at 09:13:49AM -0700, Andreas Dilger wrote:
+> > On 2011-02-21, at 19:00, "Darrick J. Wong" <djwong@us.ibm.com> wrote:
+> > > Last summer there was a long thread entitled "Wrong DIF guard tag on ext2
+> > > write" (http://marc.info/?l=linux-scsi&m=127530531808556&w=2) that started a
+> > > discussion about how to deal with the situation where one program tells the
+> > > kernel to write a block to disk, the kernel computes the checksum of that data,
+> > > and then a second program begins writing to that same block before the disk HBA
+> > > can DMA the memory block, thereby causing the disk to complain about being sent
+> > > invalid checksums.
+> > > 
+> > > I was able to write a
+> > > trivial program to trigger the write problem, I'm pretty sure that this has not
+> > > been fixed upstream.  (FYI, using O_DIRECT still seems fine.)
+> > 
+> > Can you please attach your reproducer? IIRC it needed mmap() to hit this
+> > problem?  Did you measure CPU usage during your testing?
+> 
+> I didn't need mmap; a lot of threads using write() was enough.  (The reproducer
+> program does have a mmap mode though).  Basically it creates a lot of threads
+> to write small blobs to random offsets in a file, with optional mmap, dio, and
+> sync options.
 
-This is queued up already for sending to Linus soon.
+*nod*
 
-thanks,
+Both mmap and write paths need to be block on
+wait_for_page_writeback(page) once they have a locked page ready for
+modification. btrfs does this in btrfs_page_mkwrite() and
+prepare_pages(), so adding similar calls into block_page_mkwrite()
+and grab_cache_page_write_begin() would probably fix the problem for
+the other major filesystems....
 
-greg k-h
+> Agreed.  I too am curious to study which circumstances favor copying vs
+> blocking.
+
+IMO blocking is generally preferable in high throughput threaded
+workloads as there is always another thread that can do useful work
+while we wait for IO to complete. Most use cases for DIF center
+around high throughput environments....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
