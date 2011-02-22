@@ -1,17 +1,18 @@
 From: "Joey Lee" <jlee@novell.com>
 Subject: Re: [PATCH RFC v2] support SATA ODD zero power
-Date: Tue, 22 Feb 2011 03:38:56 -0700
-Message-ID: <4D642CF00200002300028E41@novprvlin0050.provo.novell.com>
+Date: Tue, 22 Feb 2011 03:48:31 -0700
+Message-ID: <4D642F2F0200002300028E4A@novprvlin0050.provo.novell.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-ide-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-Cc: henry.su.ati@gmail.com, tj@kernel.org, Joey Lee <JLee@novell.com>, James.Bottomley@suse.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: henry.su.ati@gmail.com
+Cc: tj@kernel.org, Joey Lee <JLee@novell.com>, James.Bottomley@suse.de, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Henry,=20
+Hi Henry,
 
 =E6=96=BC =E4=B8=89=EF=BC=8C2010-12-08 =E6=96=BC 17:56 +0000=EF=BC=8Cjo=
 eyli(Joey Lee) =E6=8F=90=E5=88=B0=EF=BC=9A
@@ -72,6 +73,7 @@ BLK_DEV_SR_ZERO_POWER:
 +       cd->type =3D buffer[n + 6] >> 5;
 +#endif
 
+
 > > Hmmm... at the same time, I'm a little bit doubtful about its
 > > usefulness.  How much power does it save?  Furthermore, ODDs are of=
 ten
@@ -95,6 +97,7 @@ Management on ODD"?
 s
 from my customer's lab.)
 
+
 > > omitted on mobile devices these days.  So, I have a slight reluctan=
 ce
 > > against including it but if the implementation is clean enough and
@@ -105,7 +108,7 @@ ce
 >=20
 > Thank's a lot!
 > Joey Lee
-=20
+
 The last question is:
 
 - This Linux patch's behavior is different with Windows platform:
@@ -124,3 +127,9 @@ tray?
 Thank's a lot!
 Joey Lee
 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
