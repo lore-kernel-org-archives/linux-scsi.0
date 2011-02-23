@@ -1,49 +1,53 @@
-From: Joel Becker <jlbec@evilplan.org>
-Subject: Re: [RFC] block integrity: Fix write after checksum calculation
- problem
-Date: Wed, 23 Feb 2011 13:42:27 -0800
-Message-ID: <20110223214227.GL4020@noexit>
-References: <20110222020022.GH32261@tux1.beaverton.ibm.com>
- <yq1vd0cf26f.fsf@sermon.lab.mkp.net>
- <20110223202446.GG4020@noexit>
- <1298493173-sup-8301@think>
+From: Giridhar Malavali <giridhar.malavali@qlogic.com>
+Subject: [LSF/SCSI ATTEND] Continuation of discussions to represent CNA and
+ its attributes in Linux system.
+Date: Wed, 23 Feb 2011 14:24:46 -0800
+Message-ID: <C98AC92E.11C49%giridhar.malavali@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:57361 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753663Ab1BWVme (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Feb 2011 16:42:34 -0500
-Content-Disposition: inline
-In-Reply-To: <1298493173-sup-8301@think>
+Received: from tx2ehsobe002.messaging.microsoft.com ([65.55.88.12]:53912 "EHLO
+	TX2EHSOBE004.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754226Ab1BWWYu convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Feb 2011 17:24:50 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, djwong <djwong@us.ibm.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "lsf-pc@lists.linuxfoundation.org" <lsf-pc@lists.linuxfoundation.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
 
-On Wed, Feb 23, 2011 at 03:35:11PM -0500, Chris Mason wrote:
-> >     ocfs2 handles stable metadata for its checksums when feeding
-> > things to the journal.  If we're doing pagecache-based I/O, is the
-> > pagecache going to help here for data?
-> 
-> Data is much easier than metadata.  All you really need is to wait on
-> writeback in file_write, wait on writeback in page_mkwrite, and make
-> sure you don't free blocks back to the allocator that are actively under
-> IO.
-> 
-> I expect the hard part to be jbd and metadata in ext34.
+At present there is no clear way of representing the CNA and its
+attributes in Linux system.
+The initial proposal with patch was submitted to address this. Here is the
+pointer for the submission.
+ http://marc.info/?l=linux-scsi&m=124026598328893&w=2
 
-	Yeah, catching use-without-access is not trivial.  I keep
-thinking we've found them all, and then another bug crops up ;-)  At
-least our checksums catch it.
+This triggered a series of discussions for representing FC as a bus in
+sysfs which could represent both FC and FCoE.
+During last summit, the topic was discussed further but the challenge to
+represent non-scsi end points because of converged
+technology could not be addressed completely. With no better
+representation the current proposal was agreed and patches
+were submitted for better solution.
 
-Joel
+http://marc.info/?t=127369568900001&r=1&w=2
+http://open-fcoe.org/rwlove/fc_sysfs.jpg
 
--- 
+I would like to attend to discuss more in the following areas.
 
-"The doctrine of human equality reposes on this: that there is no
- man really clever who has not found that he is stupid."
-	- Gilbert K. Chesterson
+1) Generalized implementation of new FC sysfs and FCoE to address both
+offloaded and non-offloaded adapters.
+ The current submission address the new FC sysfs and FCoE changes w.r.t
+non-offloaded adapters perspective.
+This needs to be generalized to address both offloaded and non-offloaded
+adapters. I would like to discuss more for a generic approach here.
 
-			http://www.jlbec.org/
-			jlbec@evilplan.org
+2) Represent the non-scsi end points and common attributes across both FC
+and ethernet in sysfs layout.
+
+Giridhar Malavalli
+
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+
