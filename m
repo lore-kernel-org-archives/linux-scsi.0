@@ -1,45 +1,34 @@
-From: "H. Peter Anvin" <hpa@zytor.com>
-Subject: Re: [RFC PATCH] x86: Moving probe_roms_32 to probe_roms
-Date: Thu, 24 Feb 2011 17:51:03 -0800
-Message-ID: <4D670B07.90005@zytor.com>
-References: <20110222201538.15443.81915.stgit@localhost6.localdomain6> <AANLkTikimHCsFmavDoXn3Pka8WWMePqk+hNUK8h=DqSQ@mail.gmail.com>
+From: "Ian Davies" <iandavies198@gmail.com>
+Subject: Please i wait to hear from you urgently, it very important
+Date: Thu, 24 Feb 2011 11:14:15 -0800
+Message-ID: <20110224200930.B5F185E000D__34756.3494965017$1298602519$gmane$org@mail.dumlupinar.edu.tr>
+Reply-To: <iandavies822@yahoo.no>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;charset="Windows-1251"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <AANLkTikimHCsFmavDoXn3Pka8WWMePqk+hNUK8h=DqSQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Dave Jiang <dave.jiang@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, David Milburn <dmilburn@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dpusmtpgw.dumlupinar.edu.tr ([194.27.43.31]:64833 "EHLO
+	dpusmtpgw.dumlupinar.edu.tr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754665Ab1BYCye (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 Feb 2011 21:54:34 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/24/2011 05:27 PM, Dan Williams wrote:
-> On Tue, Feb 22, 2011 at 12:16 PM, Dan Williams <dan.j.williams@intel.com> wrote:
->> From: Dave Jiang <dave.jiang@intel.com>
->>
->> Moving the probe_roms_32 code to probe_roms and make available for all x86. The
->> end result adapter roms data structure is made available read-only to drivers.
->> The Intel isci SAS driver needs to scan the OROM memory in order to pull OEM
->> parameters from the OROM.
->>
->> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
->> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
->> ---
->>
->> We could just export adapter_rom_resources directly and be done with it, but
->> it seemed reasonable to have a compile time catch for drivers that try to
->> modify the resources, and that drivers should not assume the number of
->> available adapter roms.
->>
-> 
-> Ping?  The "RFC" was probably not needed, just wanted clarification if
-> the interface for modules to retrieve the adapter rom data was in good
-> taste.
-> 
+I am Ian Davies ;an accredited vendor of Alliot Groups, a subsidiary firm of Emirates International Holding (EIH); A private equity funds holding company that focuses on hedge funds.
 
-Rather than exporting the array -- which is functionally what you're
-doing -- I would prefer if the actual probing code can be generalized
-and put into probe_roms.c.  Extra bonus if it can be unified with the
-existing probing code.
+I have contacted you in the hope that you can be my associate by accepting to stand as the legal recipient to a Fixed-Income deposit, valued at 25MUSD by provind an International Offshore account to clear the funds.
 
-	-hpa
+Once I file your details as the new recipient to the funds, the fundswill be approved through the AUTOMATED CLEARING HOUSE (ACH) - A facility used by financial institutions to distribute electronic debit and credit entries to bank accounts and therefore settles such entries. Under the automated clearing house system. 
+
+
+upon approval of your details  as the new recipient; a Credit advice will be issued in your favor and the funds will clear in your account within three banking days. I am willing to give you 40% which is 10MUSD as your commission out of the 25MUSD for your assistance in providing an International Offshore account to clear the funds.
+
+
+I am confident you will be honest enough to adhere to our agreed commissions in spite of the 25MUSD coming through your account. I will need you to forward me your legal names address and phone to file your details on the fund as the new recipient in this first Quater of the financial fiscal year 2011.
+
+Looking forward to working with you.
+Ian Davies
+Accredited vendor
+Alliot Groups PS
+
