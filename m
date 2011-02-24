@@ -1,52 +1,47 @@
 From: Jan Kara <jack@suse.cz>
 Subject: Re: [RFC] block integrity: Fix write after checksum calculation
  problem
-Date: Thu, 24 Feb 2011 17:43:35 +0100
-Message-ID: <20110224164335.GG23042@quack.suse.cz>
+Date: Thu, 24 Feb 2011 17:47:58 +0100
+Message-ID: <20110224164758.GH23042@quack.suse.cz>
 References: <20110222020022.GH32261@tux1.beaverton.ibm.com>
- <180713DB-114C-454B-A91E-063AB0116251@dilger.ca>
- <20110222194538.GU27190@tux1.beaverton.ibm.com>
- <20110222225351.GG3166@dastard>
- <yq1vd0awwfh.fsf@sermon.lab.mkp.net>
+ <yq1vd0cf26f.fsf@sermon.lab.mkp.net>
+ <20110223202446.GG4020@noexit>
+ <1298493173-sup-8301@think>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <yq1vd0awwfh.fsf@sermon.lab.mkp.net>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <djwong@us.ibm.com>, Andreas Dilger <adilger@dilger.ca>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+In-Reply-To: <1298493173-sup-8301@think>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>
+Cc: Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, djwong <djwong@us.ibm.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed 23-02-11 11:24:50, Martin K. Petersen wrote:
-> >>>>> "Dave" == Dave Chinner <david@fromorbit.com> writes:
+On Wed 23-02-11 15:35:11, Chris Mason wrote:
+> Excerpts from Joel Becker's message of 2011-02-23 15:24:47 -0500:
+> > On Tue, Feb 22, 2011 at 11:45:44AM -0500, Martin K. Petersen wrote:
+> > > Also, DIX is only the tip of the iceberg. Many other impending
+> > > technologies feature checksums and require pages to be stable during I/O
+> > > due to checksumming, encryption and so on.
+> > > 
+> > > The VM is already trying to do the right thing. We just need the
+> > > relevant filesystems to catch up.
+> > 
+> >     ocfs2 handles stable metadata for its checksums when feeding
+> > things to the journal.  If we're doing pagecache-based I/O, is the
+> > pagecache going to help here for data?
 > 
-> >> Agreed.  I too am curious to study which circumstances favor copying
-> >> vs blocking.
+> Data is much easier than metadata.  All you really need is to wait on
+> writeback in file_write, wait on writeback in page_mkwrite, and make
+> sure you don't free blocks back to the allocator that are actively under
+> IO.
 > 
-> Dave> IMO blocking is generally preferable in high throughput threaded
-> Dave> workloads as there is always another thread that can do useful
-> Dave> work while we wait for IO to complete. Most use cases for DIF
-> Dave> center around high throughput environments....
-> 
-> Yeah.
-> 
-> A while back I did a bunch of tests with a liberal amount of
-> wait_on_page_writeback() calls added to (I think) ext2, ext3, and
-> XFS. For my regular workloads there was no measurable change (kernel
-> builds, random database and I/O tests). I'm sure we'll unearth some apps
-> that will suffer when DI is on but so far I'm not too worried about
-> blocking in the data path.
-> 
-> My main concern is wrt. metadata because that's where extN really
-> hurts. Simple test: Unpack a kernel tarball and watch the directory
-> block fireworks. Given how frequently those buffers get hit I'm sure
-> blocking would cause performance to tank completely. I looked into
-> fixing this in ext2 but I had to stop because my eyes were bleeding.
-  Ext2 is problematic yes, but ext[34] should be OK because we do
-metadata copy anyway because of journalling. So for ext[34] you shouldn't
-need any additional metadata protection since JBD does it for you (apart
-from nojournal mode of ext4 of course).
+> I expect the hard part to be jbd and metadata in ext34.
+  But JBD already has to do data copy if a buffer is going to be modified
+before/while it is written to the journal. So we should alredy do all that
+is needed for metadata. I don't say there aren't any bugs as they could be
+triggered only by crashing at the wrong moment and observing fs corruption.
+But most of the work should be there...
 
 								Honza
 -- 
