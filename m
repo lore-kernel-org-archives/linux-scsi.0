@@ -1,53 +1,35 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/2] lpfc: block target when port queueing limit is hit
-Date: Fri, 25 Feb 2011 14:04:28 -0600
-Message-ID: <1298664268-12967-3-git-send-email-michaelc@cs.wisc.edu>
-References: <1298664268-12967-1-git-send-email-michaelc@cs.wisc.edu>
+From: adam radford <aradford@gmail.com>
+Subject: Re: [PATCH] megaraid_sas: some corrections in megasas_transition_to_ready
+Date: Fri, 25 Feb 2011 14:37:54 -0800
+Message-ID: <AANLkTikfiYnzUJ3w89KyVShWRNKR6gb0G7g240g=GGSP@mail.gmail.com>
+References: <4D67D739.3020002@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54879 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932920Ab1BYUEr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Feb 2011 15:04:47 -0500
-In-Reply-To: <1298664268-12967-1-git-send-email-michaelc@cs.wisc.edu>
+Received: from mail-ww0-f44.google.com ([74.125.82.44]:61476 "EHLO
+	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754912Ab1BYWhz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Feb 2011 17:37:55 -0500
+Received: by wwb22 with SMTP id 22so934507wwb.1
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Feb 2011 14:37:54 -0800 (PST)
+In-Reply-To: <4D67D739.3020002@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: james.smart@emulex.com, Mike Christie <michaelc@cs.wisc.edu>
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Yang, Bo" <Bo.Yang@lsi.com>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On Fri, Feb 25, 2011 at 8:22 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+> Hi,
+>
+> megasas_transition_to_ready seems to use some code which isn't needed.
+> I removed some variables, I hope this makes the code easier thus better readable.
+> max_wait - the assigned value is the same in al cases
 
-Instead of blocking the entire host when the port's
-queueing limit is hit, we should only block the port's
-target. This will allow IO to other ports to execute.
+Tomas,
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/lpfc/lpfc_scsi.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+Your patch removes the ability to easily assign different wait times
+for each controller state.  Although we are currently using a maximum
+of 180 seconds for all states, there is talk within LSI (at this very
+moment) about altering how long we wait in each state.
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index af5aaaa..63a81a4 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -3008,7 +3008,7 @@ lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
- 		goto out_fail_command;
- 	}
- 	if (atomic_read(&ndlp->cmd_pending) >= ndlp->cmd_qdepth)
--		goto out_host_busy;
-+		goto out_tgt_busy;
- 
- 	lpfc_cmd = lpfc_get_scsi_buf(phba, ndlp);
- 	if (lpfc_cmd == NULL) {
-@@ -3125,6 +3125,9 @@ lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
-  out_host_busy:
- 	return SCSI_MLQUEUE_HOST_BUSY;
- 
-+ out_tgt_busy:
-+	return SCSI_MLQUEUE_TARGET_BUSY;
-+
-  out_fail_command:
- 	done(cmnd);
- 	return 0;
--- 
-1.7.2.3
-
+-Adam
