@@ -1,90 +1,49 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 09/14] target: Convert rd_build_device_space() to use errno
-Date: Fri, 25 Feb 2011 11:50:01 -0800
-Message-ID: <1298663406-5118-10-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 13/14] target: Fix generated *_drop_nodeacl() handler in tcm_mod_builder.py
+Date: Fri, 25 Feb 2011 11:50:05 -0800
+Message-ID: <1298663406-5118-14-git-send-email-nab@linux-iscsi.org>
 References: <1298663406-5118-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm5-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.204]:42245 "HELO
-	nm5-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932644Ab1BYTuk (ORCPT
+Received: from nm12.bullet.mail.sp2.yahoo.com ([98.139.91.82]:24612 "HELO
+	nm12.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S932644Ab1BYTur (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Feb 2011 14:50:40 -0500
+	Fri, 25 Feb 2011 14:50:47 -0500
 In-Reply-To: <1298663406-5118-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Dan Carpenter <error27@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Fubo Chen <fubo.chen@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-From: Dan Carpenter <error27@gmail.com>
+From: Fubo Chen <fubo.chen@gmail.com>
 
-This patch converts rd_build_device_space() to return errno usage
-for failures in rd_create_virtdevice().
+This patch adds the missing core_tpg_del_initiator_node_acl() call required
+by fabric modules for struct se_node_acl->acl_group context shutdown via
 
-Signed-off-by: Dan Carpenter <error27@gmail.com>
+	target_core_fabric_configfs.c:target_fabric_nacl_base_release() ->
+
+		struct target_core_fabric_ops->fabric_drop_nodeacl()
+
+for tcm_mod_builder.py generated $FABRIC_MOD_configfs.c skeleton code.
+
+Signed-off-by: Fubo Chen <fubo.chen@gmail.com>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_rd.c |   15 +++++++--------
- 1 files changed, 7 insertions(+), 8 deletions(-)
+ Documentation/target/tcm_mod_builder.py |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 0d0a583..663177e 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -151,7 +151,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
- 	if (rd_dev->rd_page_count <= 0) {
- 		printk(KERN_ERR "Illegal page count: %u for Ramdisk device\n",
- 			rd_dev->rd_page_count);
--		return -1;
-+		return -EINVAL;
- 	}
- 	total_sg_needed = rd_dev->rd_page_count;
+diff --git a/Documentation/target/tcm_mod_builder.py b/Documentation/target/tcm_mod_builder.py
+index 89af6c7..7ef9b84 100755
+--- a/Documentation/target/tcm_mod_builder.py
++++ b/Documentation/target/tcm_mod_builder.py
+@@ -289,6 +289,7 @@ def tcm_mod_build_configfs(proto_ident, fabric_mod_dir_var, fabric_mod_name):
+ 	buf += "{\n"
+ 	buf += "	struct " + fabric_mod_name + "_nacl *nacl = container_of(se_acl,\n"
+ 	buf += "				struct " + fabric_mod_name + "_nacl, se_node_acl);\n"
++	buf += "	core_tpg_del_initiator_node_acl(se_acl->se_tpg, se_acl, 1);\n"
+ 	buf += "	kfree(nacl);\n"
+ 	buf += "}\n\n"
  
-@@ -161,7 +161,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
- 	if (!(sg_table)) {
- 		printk(KERN_ERR "Unable to allocate memory for Ramdisk"
- 			" scatterlist tables\n");
--		return -1;
-+		return -ENOMEM;
- 	}
- 
- 	rd_dev->sg_table_array = sg_table;
-@@ -176,7 +176,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
- 		if (!(sg)) {
- 			printk(KERN_ERR "Unable to allocate scatterlist array"
- 				" for struct rd_dev\n");
--			return -1;
-+			return -ENOMEM;
- 		}
- 
- 		sg_init_table((struct scatterlist *)&sg[0], sg_per_table);
-@@ -192,7 +192,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
- 			if (!(pg)) {
- 				printk(KERN_ERR "Unable to allocate scatterlist"
- 					" pages for struct rd_dev_sg_table\n");
--				return -1;
-+				return -ENOMEM;
- 			}
- 			sg_assign_page(&sg[j], pg);
- 			sg[j].length = PAGE_SIZE;
-@@ -254,15 +254,14 @@ static struct se_device *rd_create_virtdevice(
- 	struct se_dev_limits dev_limits;
- 	struct rd_dev *rd_dev = p;
- 	struct rd_host *rd_host = hba->hba_ptr;
--	int dev_flags = 0, ret = -EINVAL;
-+	int dev_flags = 0, ret;
- 	char prod[16], rev[4];
- 
- 	memset(&dev_limits, 0, sizeof(struct se_dev_limits));
- 
--	if (rd_build_device_space(rd_dev) < 0) {
--		ret = -ENOMEM;
-+	ret = rd_build_device_space(rd_dev);
-+	if (ret < 0)
- 		goto fail;
--	}
- 
- 	snprintf(prod, 16, "RAMDISK-%s", (rd_dev->rd_direct) ? "DR" : "MCP");
- 	snprintf(rev, 4, "%s", (rd_dev->rd_direct) ? RD_DR_VERSION :
 -- 
 1.7.4.1
 
