@@ -1,61 +1,66 @@
 From: adam radford <aradford@gmail.com>
-Subject: [PATCH 6/14] megaraid_sas: Fix megasas_get_cmd printk
-Date: Thu, 24 Feb 2011 20:56:36 -0800
-Message-ID: <AANLkTimMuwYPbmear_zD49_=h7HhSy4NHg9hYh8esLSN@mail.gmail.com>
+Subject: [PATCH 7/14] megaraid_sas: Fix megasas_build_dcdb_fusion to not
+ filter by TYPE_DISK
+Date: Thu, 24 Feb 2011 20:56:43 -0800
+Message-ID: <AANLkTi=Zjhei2Mji+ojFDU2BOypoW7UgdkxU5KHWNPF4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=00163683340a9c3d3f049d142703
+Content-Type: multipart/mixed; boundary=0016e64c18ac05ac95049d1428a8
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-ww0-f44.google.com ([74.125.82.44]:49097 "EHLO
 	mail-ww0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116Ab1BYE4h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2011 23:56:37 -0500
-Received: by wwb39 with SMTP id 39so1696373wwb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2011 20:56:36 -0800 (PST)
+	with ESMTP id S1753033Ab1BYE4n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2011 23:56:43 -0500
+Received: by mail-ww0-f44.google.com with SMTP id 39so1696373wwb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2011 20:56:43 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
---00163683340a9c3d3f049d142703
+--0016e64c18ac05ac95049d1428a8
 Content-Type: text/plain; charset=ISO-8859-1
 
 James/Linux-scsi,
 
-The following patch for megaraid_sas fixes a megasas_get_cmd printk.
+The following patch for megaraid_sas fixes megasas_build_dcdb_fusion()
+to not filter by TYPE_DISK.
 
 Signed-off-by: Adam Radford <aradford@gmail.com>
 
-diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c
-scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c
---- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c	2011-02-24
-18:49:07.531369391 -0800
-+++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c	2011-02-24
-18:49:45.987337951 -0800
-@@ -186,7 +186,8 @@
- 				 struct megasas_cmd, list);
- 		list_del_init(&cmd->list);
- 	} else {
--		printk(KERN_ERR "megasas: Command pool empty!\n");
-+		if (megasas_dbg_lvl)
-+			printk(KERN_ERR "megasas: Command pool empty!\n");
- 	}
+diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.c
+scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fusion.c
+--- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-02-24
+18:35:30.484151432 -0800
++++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-02-24
+18:51:17.011276050 -0800
+@@ -1438,8 +1438,7 @@
+ 	local_map_ptr = fusion->ld_map[(instance->map_id & 1)];
 
- 	spin_unlock_irqrestore(&instance->cmd_pool_lock, flags);
+ 	/* Check if this is a system PD I/O */
+-	if ((instance->pd_list[pd_index].driveState == MR_PD_STATE_SYSTEM) &&
+-	    (instance->pd_list[pd_index].driveType == TYPE_DISK)) {
++	if (instance->pd_list[pd_index].driveState == MR_PD_STATE_SYSTEM) {
+ 		io_request->Function = 0;
+ 		io_request->DevHandle =
+ 			local_map_ptr->raidMap.devHndlInfo[device_id].curDevHdl;
 
---00163683340a9c3d3f049d142703
-Content-Type: application/octet-stream; name="megaraid_sas.patch6"
-Content-Disposition: attachment; filename="megaraid_sas.patch6"
+--0016e64c18ac05ac95049d1428a8
+Content-Type: application/octet-stream; name="megaraid_sas.patch7"
+Content-Disposition: attachment; filename="megaraid_sas.patch7"
 Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gkkmigwh0
+X-Attachment-Id: f_gkkmj0zk0
 
 ZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9z
-YXNfYmFzZS5jIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
-ZF9zYXNfYmFzZS5jCi0tLSBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdh
-cmFpZF9zYXNfYmFzZS5jCTIwMTEtMDItMjQgMTg6NDk6MDcuNTMxMzY5MzkxIC0wODAwCisrKyBz
-Y3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2Uu
-YwkyMDExLTAyLTI0IDE4OjQ5OjQ1Ljk4NzMzNzk1MSAtMDgwMApAQCAtMTg2LDcgKzE4Niw4IEBA
-CiAJCQkJIHN0cnVjdCBtZWdhc2FzX2NtZCwgbGlzdCk7CiAJCWxpc3RfZGVsX2luaXQoJmNtZC0+
-bGlzdCk7CiAJfSBlbHNlIHsKLQkJcHJpbnRrKEtFUk5fRVJSICJtZWdhc2FzOiBDb21tYW5kIHBv
-b2wgZW1wdHkhXG4iKTsKKwkJaWYgKG1lZ2FzYXNfZGJnX2x2bCkKKwkJCXByaW50ayhLRVJOX0VS
-UiAibWVnYXNhczogQ29tbWFuZCBwb29sIGVtcHR5IVxuIik7CiAJfQogCiAJc3Bpbl91bmxvY2tf
-aXJxcmVzdG9yZSgmaW5zdGFuY2UtPmNtZF9wb29sX2xvY2ssIGZsYWdzKTsK
---00163683340a9c3d3f049d142703--
+YXNfZnVzaW9uLmMgc2NzaS1taXNjLTIuNi5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2Fy
+YWlkX3Nhc19mdXNpb24uYwotLS0gc2NzaS1taXNjLTIuNi9kcml2ZXJzL3Njc2kvbWVnYXJhaWQv
+bWVnYXJhaWRfc2FzX2Z1c2lvbi5jCTIwMTEtMDItMjQgMTg6MzU6MzAuNDg0MTUxNDMyIC0wODAw
+CisrKyBzY3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2Fz
+X2Z1c2lvbi5jCTIwMTEtMDItMjQgMTg6NTE6MTcuMDExMjc2MDUwIC0wODAwCkBAIC0xNDM4LDgg
+KzE0MzgsNyBAQAogCWxvY2FsX21hcF9wdHIgPSBmdXNpb24tPmxkX21hcFsoaW5zdGFuY2UtPm1h
+cF9pZCAmIDEpXTsKIAogCS8qIENoZWNrIGlmIHRoaXMgaXMgYSBzeXN0ZW0gUEQgSS9PICovCi0J
+aWYgKChpbnN0YW5jZS0+cGRfbGlzdFtwZF9pbmRleF0uZHJpdmVTdGF0ZSA9PSBNUl9QRF9TVEFU
+RV9TWVNURU0pICYmCi0JICAgIChpbnN0YW5jZS0+cGRfbGlzdFtwZF9pbmRleF0uZHJpdmVUeXBl
+ID09IFRZUEVfRElTSykpIHsKKwlpZiAoaW5zdGFuY2UtPnBkX2xpc3RbcGRfaW5kZXhdLmRyaXZl
+U3RhdGUgPT0gTVJfUERfU1RBVEVfU1lTVEVNKSB7CiAJCWlvX3JlcXVlc3QtPkZ1bmN0aW9uID0g
+MDsKIAkJaW9fcmVxdWVzdC0+RGV2SGFuZGxlID0KIAkJCWxvY2FsX21hcF9wdHItPnJhaWRNYXAu
+ZGV2SG5kbEluZm9bZGV2aWNlX2lkXS5jdXJEZXZIZGw7Cg==
+--0016e64c18ac05ac95049d1428a8--
