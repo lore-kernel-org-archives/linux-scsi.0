@@ -1,132 +1,88 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-FOR-38] target: Fix t_transport_aborted handling in LUN_RESET + active I/O shutdown
-Date: Thu, 24 Feb 2011 16:58:20 -0800
-Message-ID: <1298595500-1558-1-git-send-email-nab@linux-iscsi.org>
+Subject: [GIT PULL] target patches for .39 scsi-misc
+Date: Thu, 24 Feb 2011 17:14:48 -0800
+Message-ID: <1298596488-1661-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp102.sbc.mail.mud.yahoo.com ([68.142.198.201]:44657 "HELO
-	smtp102.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755673Ab1BYA6c (ORCPT
+Received: from nm6.bullet.mail.ne1.yahoo.com ([98.138.90.69]:25584 "HELO
+	nm6.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755279Ab1BYBOw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Feb 2011 19:58:32 -0500
+	Thu, 24 Feb 2011 20:14:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Nicholas Bellinger <nab@linux-iscsi.org>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi James and Co,
+Hi James,
 
-This is a urgent target bugfix patch 'for-38' mainline.  At this point
-everything else is non-critical, and is being queued up in 'for-39-misc'
-branch going out to linux-scsi shortly.
+Here are the remaining non critical bugfixes and improvements originally
+slated for .38, but which have been queued as .39 misc items upon your
+request.
 
-Please review and apply,
+These patches have already been posted a number of times to linux-scsi,
+so to reduce the extra noise I am sending an PULL request for these
+minor changes.  This tree is against .38-rc6, and please apply to
+scsi-misc for .39 from here:
 
---nab
+git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-39-misc
 
--------------------------------------------------------------------------------------
-
-This patch addresses two outstanding bugs related to T_TASK(cmd)->t_transport_aborted
-handling during TMR LUN_RESET and active I/O shutdown.
-
-This first involves adding two explict t_transport_aborted=1 assignments in
-core_tmr_lun_reset() in order to signal the task has been aborted, and
-updating transport_generic_wait_for_tasks() to skip sleeping when
-t_transport_aborted=1 has been set.  This fixes an issue where
-transport_generic_wait_for_tasks() would end up sleeping indefinately when
-called from fabric module context while TMR LUN_RESET was happening with
-long outstanding backend struct se_task not yet being completed.
-
-The second adds a missing call to transport_remove_task_from_execute_queue()
-when task->task_execute_queue=1 is set in order to fix an OOPs when
-task->t_execute_list has not been dropped.  It also fixes the same case in
-transport_processing_shutdown() to prevent the issue from happening during
-active I/O struct se_device shutdown.
+Thanks!
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_tmr.c       |    5 +++++
- drivers/target/target_core_transport.c |    8 ++++++--
- include/target/target_core_transport.h |    2 ++
- 3 files changed, 13 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/target_core_tmr.c b/drivers/target/target_core_tmr.c
-index 158cecb..4a10983 100644
---- a/drivers/target/target_core_tmr.c
-+++ b/drivers/target/target_core_tmr.c
-@@ -282,6 +282,9 @@ int core_tmr_lun_reset(
- 
- 			atomic_set(&task->task_active, 0);
- 			atomic_set(&task->task_stop, 0);
-+		} else {
-+			if (atomic_read(&task->task_execute_queue) != 0)
-+				transport_remove_task_from_execute_queue(task, dev);
- 		}
- 		__transport_stop_task_timer(task, &flags);
- 
-@@ -301,6 +304,7 @@ int core_tmr_lun_reset(
- 			DEBUG_LR("LUN_RESET: got t_transport_active = 1 for"
- 				" task: %p, t_fe_count: %d dev: %p\n", task,
- 				fe_count, dev);
-+			atomic_set(&T_TASK(cmd)->t_transport_aborted, 1);
- 			spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock,
- 						flags);
- 			core_tmr_handle_tas_abort(tmr_nacl, cmd, tas, fe_count);
-@@ -310,6 +314,7 @@ int core_tmr_lun_reset(
- 		}
- 		DEBUG_LR("LUN_RESET: Got t_transport_active = 0 for task: %p,"
- 			" t_fe_count: %d dev: %p\n", task, fe_count, dev);
-+		atomic_set(&T_TASK(cmd)->t_transport_aborted, 1);
- 		spin_unlock_irqrestore(&T_TASK(cmd)->t_state_lock, flags);
- 		core_tmr_handle_tas_abort(tmr_nacl, cmd, tas, fe_count);
- 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 236e22d..4bbf6c1 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1207,7 +1207,7 @@ transport_get_task_from_execute_queue(struct se_device *dev)
-  *
-  *
-  */
--static void transport_remove_task_from_execute_queue(
-+void transport_remove_task_from_execute_queue(
- 	struct se_task *task,
- 	struct se_device *dev)
- {
-@@ -5549,7 +5549,8 @@ static void transport_generic_wait_for_tasks(
- 
- 		atomic_set(&T_TASK(cmd)->transport_lun_stop, 0);
- 	}
--	if (!atomic_read(&T_TASK(cmd)->t_transport_active))
-+	if (!atomic_read(&T_TASK(cmd)->t_transport_active) ||
-+	     atomic_read(&T_TASK(cmd)->t_transport_aborted))
- 		goto remove;
- 
- 	atomic_set(&T_TASK(cmd)->t_transport_stop, 1);
-@@ -5956,6 +5957,9 @@ static void transport_processing_shutdown(struct se_device *dev)
- 
- 			atomic_set(&task->task_active, 0);
- 			atomic_set(&task->task_stop, 0);
-+		} else {
-+			if (atomic_read(&task->task_execute_queue) != 0)
-+				transport_remove_task_from_execute_queue(task, dev);
- 		}
- 		__transport_stop_task_timer(task, &flags);
- 
-diff --git a/include/target/target_core_transport.h b/include/target/target_core_transport.h
-index 2469405..2e8ec51 100644
---- a/include/target/target_core_transport.h
-+++ b/include/target/target_core_transport.h
-@@ -135,6 +135,8 @@ extern void transport_complete_task(struct se_task *, int);
- extern void transport_add_task_to_execute_queue(struct se_task *,
- 						struct se_task *,
- 						struct se_device *);
-+extern void transport_remove_task_from_execute_queue(struct se_task *,
-+						struct se_device *);
- unsigned char *transport_dump_cmd_direction(struct se_cmd *);
- extern void transport_dump_dev_state(struct se_device *, char *, int *);
- extern void transport_dump_dev_info(struct se_device *, struct se_lun *,
+Christoph Hellwig (1):
+  target: remove EXTRA_CFLAGS
+
+Dan Carpenter (2):
+  target: fix dubious one-bit signed bitfield
+  target: Convert rd_build_device_space() to use errno
+
+Fubo Chen (3):
+  target: Remove unnecessary hba_dev_list walk + release from
+    core_delete_hba
+  target: Minor sparse warning fixes and annotations
+  target: Fix generated *_drop_nodeacl() handler in tcm_mod_builder.py
+
+Jesper Juhl (2):
+  target/file: Fix memory leak in fd_set_configfs_dev_params().
+  target: Avoid mem leak and needless work in transport_generic_get_mem
+
+Nicholas Bellinger (9):
+  target/iblock: Fix memory leak in iblock_set_configfs_dev_params
+  target: Fix memory leaks in
+    target_core_dev_pr_store_attr_res_aptpl_metadata
+  target: tcm_mod_builder.py generated Makefile cleanups
+  target: Convert backend ->create_virtdevice() call to return ERR_PTR
+  target: Remove unnecessary se_clear_dev_ports legacy code
+  target: Remove spurious double cast from structure macro accessors
+  target: Convert TMR REQ/RSP definitions to target namespace
+  target core v4.0.0-rc7
+  target: Fix bogus return in transport_add_device_to_core_hba failure
+    path
+
+Roland Dreier (1):
+  target: Fix memory leak on error path
+
+ Documentation/target/tcm_mod_builder.py |   18 +++++-----
+ drivers/target/Makefile                 |    1 -
+ drivers/target/target_core_configfs.c   |   37 ++++++++++++++++++++--
+ drivers/target/target_core_device.c     |   40 ++----------------------
+ drivers/target/target_core_fabric_lib.c |    1 +
+ drivers/target/target_core_file.c       |   26 ++++++++++++---
+ drivers/target/target_core_hba.c        |   15 +--------
+ drivers/target/target_core_iblock.c     |   28 ++++++++++------
+ drivers/target/target_core_pscsi.c      |   22 ++++++++-----
+ drivers/target/target_core_rd.c         |   15 +++++----
+ drivers/target/target_core_rd.h         |    2 -
+ drivers/target/target_core_transport.c  |   37 +++++++++------------
+ include/target/target_core_base.h       |   38 +++++++++++-----------
+ include/target/target_core_fabric_ops.h |    2 +-
+ include/target/target_core_tmr.h        |   52 +++++++++++++------------------
+ include/target/target_core_transport.h  |    4 ++
+ 16 files changed, 170 insertions(+), 168 deletions(-)
+
 -- 
 1.7.4.1
 
