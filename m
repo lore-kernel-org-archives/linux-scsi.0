@@ -1,34 +1,42 @@
-From: "Ian Davies" <iandavies198@gmail.com>
-Subject: Please i wait to hear from you urgently, it very important
-Date: Thu, 24 Feb 2011 11:14:15 -0800
-Message-ID: <20110224200930.B5F185E000D__34756.3494965017$1298602519$gmane$org@mail.dumlupinar.edu.tr>
-Reply-To: <iandavies822@yahoo.no>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 13547] Buffer overrun in FlashPoint.c
+Date: Fri, 25 Feb 2011 03:48:55 GMT
+Message-ID: <201102250348.p1P3mt4j010825@demeter1.kernel.org>
+References: <bug-13547-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;charset="Windows-1251"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dpusmtpgw.dumlupinar.edu.tr ([194.27.43.31]:64833 "EHLO
-	dpusmtpgw.dumlupinar.edu.tr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754665Ab1BYCye (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Feb 2011 21:54:34 -0500
+Received: from demeter1.kernel.org ([140.211.167.39]:48226 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755910Ab1BYDs4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2011 22:48:56 -0500
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p1P3muE4010826
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Feb 2011 03:48:56 GMT
+In-Reply-To: <bug-13547-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-I am Ian Davies ;an accredited vendor of Alliot Groups, a subsidiary firm of Emirates International Holding (EIH); A private equity funds holding company that focuses on hedge funds.
-
-I have contacted you in the hope that you can be my associate by accepting to stand as the legal recipient to a Fixed-Income deposit, valued at 25MUSD by provind an International Offshore account to clear the funds.
-
-Once I file your details as the new recipient to the funds, the fundswill be approved through the AUTOMATED CLEARING HOUSE (ACH) - A facility used by financial institutions to distribute electronic debit and credit entries to bank accounts and therefore settles such entries. Under the automated clearing house system. 
+https://bugzilla.kernel.org/show_bug.cgi?id=13547
 
 
-upon approval of your details  as the new recipient; a Credit advice will be issued in your favor and the funds will clear in your account within three banking days. I am willing to give you 40% which is 10MUSD as your commission out of the 25MUSD for your assistance in providing an International Offshore account to clear the funds.
 
 
-I am confident you will be honest enough to adhere to our agreed commissions in spite of the 25MUSD coming through your account. I will need you to forward me your legal names address and phone to file your details on the fund as the new recipient in this first Quater of the financial fiscal year 2011.
 
-Looking forward to working with you.
-Ian Davies
-Accredited vendor
-Alliot Groups PS
+--- Comment #3 from L.C. <chenliunju@gmail.com>  2011-02-25 03:48:51 ---
+Created an attachment (id=49072)
+ --> (https://bugzilla.kernel.org/attachment.cgi?id=49072)
+Patch for bug 13547
 
+Fix the potential bu
+er overrun by making fewer iterations in the for loop.
+This patch
+is generated automatically by the tool R2Fix.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
