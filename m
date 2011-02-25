@@ -1,13 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/2] lpfc: force retry in queuecommand when port is transitioning
-Date: Fri, 25 Feb 2011 14:04:27 -0600
-Message-ID: <1298664268-12967-2-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 2/2] lpfc: block target when port queueing limit is hit
+Date: Fri, 25 Feb 2011 14:04:28 -0600
+Message-ID: <1298664268-12967-3-git-send-email-michaelc@cs.wisc.edu>
 References: <1298664268-12967-1-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:28305 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:54879 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932920Ab1BYUEm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Feb 2011 15:04:42 -0500
+	id S932920Ab1BYUEr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Feb 2011 15:04:47 -0500
 In-Reply-To: <1298664268-12967-1-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,34 +16,38 @@ Cc: james.smart@emulex.com, Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-If the port takes a while to transition we could exhaust
-the retries when using DID_TRANSPORT_DISRUPTED. For this
-case we do not want to use any of the cmd's
-retries, because if the command was running then when
-it got failed the retry counter was already incremented.
-And if this is the first time we are seeing the command,
-(it got queued because it slipped through during the race)
-then it should not have its retries incremented. The
-fc class will decide the correct handling later.
+Instead of blocking the entire host when the port's
+queueing limit is hit, we should only block the port's
+target. This will allow IO to other ports to execute.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index c97751c..af5aaaa 100644
+index af5aaaa..63a81a4 100644
 --- a/drivers/scsi/lpfc/lpfc_scsi.c
 +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -3004,7 +3004,7 @@ lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
- 	 * transport is still transitioning.
- 	 */
- 	if (!ndlp || !NLP_CHK_NODE_ACT(ndlp)) {
--		cmnd->result = ScsiResult(DID_TRANSPORT_DISRUPTED, 0);
-+		cmnd->result = ScsiResult(DID_IMM_RETRY, 0);
+@@ -3008,7 +3008,7 @@ lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
  		goto out_fail_command;
  	}
  	if (atomic_read(&ndlp->cmd_pending) >= ndlp->cmd_qdepth)
+-		goto out_host_busy;
++		goto out_tgt_busy;
+ 
+ 	lpfc_cmd = lpfc_get_scsi_buf(phba, ndlp);
+ 	if (lpfc_cmd == NULL) {
+@@ -3125,6 +3125,9 @@ lpfc_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd *))
+  out_host_busy:
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ 
++ out_tgt_busy:
++	return SCSI_MLQUEUE_TARGET_BUSY;
++
+  out_fail_command:
+ 	done(cmnd);
+ 	return 0;
 -- 
 1.7.2.3
 
