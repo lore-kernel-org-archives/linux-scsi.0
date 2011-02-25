@@ -1,63 +1,43 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [RFC] block integrity: Fix write after checksum calculation
-	problem
-Date: Thu, 24 Feb 2011 10:27:32 -0800
-Message-ID: <20110224182732.GV27190@tux1.beaverton.ibm.com>
-References: <20110222020022.GH32261@tux1.beaverton.ibm.com> <yq1vd0cf26f.fsf@sermon.lab.mkp.net> <20110223202446.GG4020@noexit> <1298493173-sup-8301@think> <20110224164758.GH23042@quack.suse.cz> <1298566775-sup-730@think>
-Reply-To: djwong@us.ibm.com
+From: adam radford <aradford@gmail.com>
+Subject: Re: [PATCH 7/15] megaraid_sas: Sanity check user supplied length in megasas_mgmt_fw_ioctl
+Date: Thu, 24 Feb 2011 16:54:50 -0800
+Message-ID: <AANLkTinCLCYeF_MF0KRSt6duuqWsYH3nsvWULFWN1JGp@mail.gmail.com>
+References: <AANLkTimgTBkOXV3gdvrQH0Vj7UnY6fXNECsFGc=7j2fO@mail.gmail.com>
+	<4D6664BD.4080205@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-fsdevel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1298566775-sup-730@think>
-Sender: linux-fsdevel-owner@vger.kernel.org
-To: Chris Mason <chris.mason@oracle.com>
-Cc: Jan Kara <jack@suse.cz>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wy0-f174.google.com ([74.125.82.174]:50848 "EHLO
+	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755992Ab1BYAyv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2011 19:54:51 -0500
+Received: by wyg36 with SMTP id 36so1150103wyg.19
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2011 16:54:50 -0800 (PST)
+In-Reply-To: <4D6664BD.4080205@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
-On Thu, Feb 24, 2011 at 12:37:53PM -0500, Chris Mason wrote:
-> Excerpts from Jan Kara's message of 2011-02-24 11:47:58 -0500:
-> > On Wed 23-02-11 15:35:11, Chris Mason wrote:
-> > > Excerpts from Joel Becker's message of 2011-02-23 15:24:47 -0500:
-> > > > On Tue, Feb 22, 2011 at 11:45:44AM -0500, Martin K. Petersen wrote:
-> > > > > Also, DIX is only the tip of the iceberg. Many other impending
-> > > > > technologies feature checksums and require pages to be stable during I/O
-> > > > > due to checksumming, encryption and so on.
-> > > > > 
-> > > > > The VM is already trying to do the right thing. We just need the
-> > > > > relevant filesystems to catch up.
-> > > > 
-> > > >     ocfs2 handles stable metadata for its checksums when feeding
-> > > > things to the journal.  If we're doing pagecache-based I/O, is the
-> > > > pagecache going to help here for data?
-> > > 
-> > > Data is much easier than metadata.  All you really need is to wait on
-> > > writeback in file_write, wait on writeback in page_mkwrite, and make
-> > > sure you don't free blocks back to the allocator that are actively under
-> > > IO.
-> > > 
-> > > I expect the hard part to be jbd and metadata in ext34.
-> >   But JBD already has to do data copy if a buffer is going to be modified
-> > before/while it is written to the journal. So we should alredy do all that
-> > is needed for metadata. I don't say there aren't any bugs as they could be
-> > triggered only by crashing at the wrong moment and observing fs corruption.
-> > But most of the work should be there...
-> 
-> Most of it is there, but there are always little bits and pieces.  The
-> ext4 journal csumming code was one semi-recent example where we found
-> metadata changing in flight.
-> 
-> A big part of testing this is getting some way to detect the bugs
-> without dif/dix.  With btrfs I have patches to do set_memory_ro on
-> pages once I've don the crc, hopefully we can generalize that idea or
-> some up with something smarter.
+On Thu, Feb 24, 2011 at 6:01 AM, Tomas Henzl <thenzl@redhat.com> wrote:
+>
+> there was proposed another patch for this issue -
+> http://marc.info/?l=3Dlinux-scsi&m=3D129542474703680&w=3D2
+> I think it's a little bit more precise.
+>
+> =A0 =A0 =A0 =A0for (i =3D 0; i < ioc->sge_count; i++) {
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 if (!ioc->sgl[i].iov_len)
+> + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 continue;
+> +
+>
 
-Right now I'm faking it with modprobe scsi_debug ato=1 guard=1 dif=3 dix=199.
+I didn't see this was already in scsi-misc-2.6.  I will re-base my
+patch series and repost.
 
-Hm, would you mind sharing those patches?  I've been working on a second patch
-to do the wait-on-writeback per everyone's suggestions, but I still see the
-occasional corruption error as soon as I enable the mmap write case and covet
-some more debugging tools.  It does seem to be working for the pure pwrite()
-case. :)
-
---D
+-Adam
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
