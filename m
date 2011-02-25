@@ -1,76 +1,63 @@
 From: adam radford <aradford@gmail.com>
-Subject: [PATCH 2/14] megaraid_sas: Add missing check_and_restore_queue_depth call
-Date: Thu, 24 Feb 2011 20:56:05 -0800
-Message-ID: <AANLkTi=-G=6S+swXANOAGYyO9oFZXBSbjY4=ja=jEp89@mail.gmail.com>
+Subject: [PATCH 4/14] megaraid_sas: Call tasklet_schedule for MSI-X
+Date: Thu, 24 Feb 2011 20:56:21 -0800
+Message-ID: <AANLkTin0iFsdi-m7B_XSqEsvTTEq6ydb-22NvJqb6BYo@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=0016e6d59d66c91e9d049d142581
+Content-Type: multipart/mixed; boundary=000e0ce00132b838b9049d142691
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-wy0-f174.google.com ([74.125.82.174]:44391 "EHLO
 	mail-wy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753116Ab1BYE4G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2011 23:56:06 -0500
+	with ESMTP id S1753116Ab1BYE4V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Feb 2011 23:56:21 -0500
 Received: by mail-wy0-f174.google.com with SMTP id 36so1266125wyg.19
-        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2011 20:56:05 -0800 (PST)
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Feb 2011 20:56:21 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, Bo.Yang@lsi.com
 
---0016e6d59d66c91e9d049d142581
+--000e0ce00132b838b9049d142691
 Content-Type: text/plain; charset=ISO-8859-1
 
 James/Linux-scsi,
 
-This patch adds a missing check_and_restore_queue_depth call to megaraid_sas.
+The following patch for megaraid_sas calls tasklet_schedule() even if
+outbound_intr_status == 0 for MFI based boards in MSI-X mode.
 
 Signed-off-by: Adam Radford <aradford@gmail.com>
 
-diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.c
-scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fusion.c
---- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-02-24
-18:27:47.193306786 -0800
-+++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_fusion.c	2011-02-24
-18:34:25.104215511 -0800
-@@ -82,6 +82,10 @@
- struct MR_LD_RAID *MR_LdRaidGet(u32 ld, struct MR_FW_RAID_MAP_ALL *map);
+diff -Naur scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c
+scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c
+--- scsi-misc-2.6/drivers/scsi/megaraid/megaraid_sas_base.c	2011-02-24
+18:40:57.489181971 -0800
++++ scsi-misc-2.6.new/drivers/scsi/megaraid/megaraid_sas_base.c	2011-02-24
+18:42:34.277276308 -0800
+@@ -2503,7 +2503,9 @@
+ 	if ((mfiStatus = instance->instancet->clear_intr(
+ 						instance->reg_set)
+ 						) == 0) {
+-		return IRQ_NONE;
++		/* Hardware may not set outbound_intr_status in MSI-X mode */
++		if (!instance->msi_flag)
++			return IRQ_NONE;
+ 	}
 
- u16 MR_GetLDTgtId(u32 ld, struct MR_FW_RAID_MAP_ALL *map);
-+
-+void
-+megasas_check_and_restore_queue_depth(struct megasas_instance *instance);
-+
- u8 MR_ValidateMapInfo(struct MR_FW_RAID_MAP_ALL *map,
- 		      struct LD_LOAD_BALANCE_INFO *lbInfo);
- u16 get_updated_dev_handle(struct LD_LOAD_BALANCE_INFO *lbInfo,
-@@ -1746,7 +1750,7 @@
- 	wmb();
- 	writel(fusion->last_reply_idx,
- 	       &instance->reg_set->reply_post_host_index);
--
-+	megasas_check_and_restore_queue_depth(instance);
- 	return IRQ_HANDLED;
- }
+ 	instance->mfiStatus = mfiStatus;
 
---0016e6d59d66c91e9d049d142581
-Content-Type: application/octet-stream; name="megaraid_sas.patch2"
-Content-Disposition: attachment; filename="megaraid_sas.patch2"
+--000e0ce00132b838b9049d142691
+Content-Type: application/octet-stream; name="megaraid_sas.patch4"
+Content-Disposition: attachment; filename="megaraid_sas.patch4"
 Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gkkm2kbe0
+X-Attachment-Id: f_gkkm46dm0
 
 ZGlmZiAtTmF1ciBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFpZF9z
-YXNfZnVzaW9uLmMgc2NzaS1taXNjLTIuNi5uZXcvZHJpdmVycy9zY3NpL21lZ2FyYWlkL21lZ2Fy
-YWlkX3Nhc19mdXNpb24uYwotLS0gc2NzaS1taXNjLTIuNi9kcml2ZXJzL3Njc2kvbWVnYXJhaWQv
-bWVnYXJhaWRfc2FzX2Z1c2lvbi5jCTIwMTEtMDItMjQgMTg6Mjc6NDcuMTkzMzA2Nzg2IC0wODAw
-CisrKyBzY3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2Fz
-X2Z1c2lvbi5jCTIwMTEtMDItMjQgMTg6MzQ6MjUuMTA0MjE1NTExIC0wODAwCkBAIC04Miw2ICs4
-MiwxMCBAQAogc3RydWN0IE1SX0xEX1JBSUQgKk1SX0xkUmFpZEdldCh1MzIgbGQsIHN0cnVjdCBN
-Ul9GV19SQUlEX01BUF9BTEwgKm1hcCk7CiAKIHUxNiBNUl9HZXRMRFRndElkKHUzMiBsZCwgc3Ry
-dWN0IE1SX0ZXX1JBSURfTUFQX0FMTCAqbWFwKTsKKwordm9pZAorbWVnYXNhc19jaGVja19hbmRf
-cmVzdG9yZV9xdWV1ZV9kZXB0aChzdHJ1Y3QgbWVnYXNhc19pbnN0YW5jZSAqaW5zdGFuY2UpOwor
-CiB1OCBNUl9WYWxpZGF0ZU1hcEluZm8oc3RydWN0IE1SX0ZXX1JBSURfTUFQX0FMTCAqbWFwLAog
-CQkgICAgICBzdHJ1Y3QgTERfTE9BRF9CQUxBTkNFX0lORk8gKmxiSW5mbyk7CiB1MTYgZ2V0X3Vw
-ZGF0ZWRfZGV2X2hhbmRsZShzdHJ1Y3QgTERfTE9BRF9CQUxBTkNFX0lORk8gKmxiSW5mbywKQEAg
-LTE3NDYsNyArMTc1MCw3IEBACiAJd21iKCk7CiAJd3JpdGVsKGZ1c2lvbi0+bGFzdF9yZXBseV9p
-ZHgsCiAJICAgICAgICZpbnN0YW5jZS0+cmVnX3NldC0+cmVwbHlfcG9zdF9ob3N0X2luZGV4KTsK
-LQorCW1lZ2FzYXNfY2hlY2tfYW5kX3Jlc3RvcmVfcXVldWVfZGVwdGgoaW5zdGFuY2UpOwogCXJl
-dHVybiBJUlFfSEFORExFRDsKIH0KIAo=
---0016e6d59d66c91e9d049d142581--
+YXNfYmFzZS5jIHNjc2ktbWlzYy0yLjYubmV3L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdhcmFp
+ZF9zYXNfYmFzZS5jCi0tLSBzY3NpLW1pc2MtMi42L2RyaXZlcnMvc2NzaS9tZWdhcmFpZC9tZWdh
+cmFpZF9zYXNfYmFzZS5jCTIwMTEtMDItMjQgMTg6NDA6NTcuNDg5MTgxOTcxIC0wODAwCisrKyBz
+Y3NpLW1pc2MtMi42Lm5ldy9kcml2ZXJzL3Njc2kvbWVnYXJhaWQvbWVnYXJhaWRfc2FzX2Jhc2Uu
+YwkyMDExLTAyLTI0IDE4OjQyOjM0LjI3NzI3NjMwOCAtMDgwMApAQCAtMjUwMyw3ICsyNTAzLDkg
+QEAKIAlpZiAoKG1maVN0YXR1cyA9IGluc3RhbmNlLT5pbnN0YW5jZXQtPmNsZWFyX2ludHIoCiAJ
+CQkJCQlpbnN0YW5jZS0+cmVnX3NldCkKIAkJCQkJCSkgPT0gMCkgewotCQlyZXR1cm4gSVJRX05P
+TkU7CisJCS8qIEhhcmR3YXJlIG1heSBub3Qgc2V0IG91dGJvdW5kX2ludHJfc3RhdHVzIGluIE1T
+SS1YIG1vZGUgKi8KKwkJaWYgKCFpbnN0YW5jZS0+bXNpX2ZsYWcpCisJCQlyZXR1cm4gSVJRX05P
+TkU7CiAJfQogCiAJaW5zdGFuY2UtPm1maVN0YXR1cyA9IG1maVN0YXR1czsK
+--000e0ce00132b838b9049d142691--
