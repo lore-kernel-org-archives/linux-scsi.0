@@ -1,84 +1,62 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] libfc: introduce __fc_fill_fc_hdr that accepts fc_hdr
- as an argument
-Date: Fri, 25 Feb 2011 11:53:04 -0500
-Message-ID: <1298652784.2459.37.camel@mulgrave.site>
-References: <1296787638.268.788.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: scsi LLD implementation question
+Date: Fri, 25 Feb 2011 18:12:36 +0100
+Message-ID: <AANLkTinzhNr7FtKW5LR6QJ3O3b_Xy50wN0tS+NRg4KL2@mail.gmail.com>
+References: <AANLkTi=+6z4qRS7MGSNTyomtyQTu5A20iBF-T92xAPMA@mail.gmail.com> <1298641025.8617.63.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53129 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755387Ab1BYQxK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Feb 2011 11:53:10 -0500
-In-Reply-To: <1296787638.268.788.camel@LTLNR-SJCE10.corp.ad.broadcom.com>
+Received: from mail-vw0-f46.google.com ([209.85.212.46]:49166 "EHLO
+	mail-vw0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932664Ab1BYRNL convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Feb 2011 12:13:11 -0500
+Received: by vws12 with SMTP id 12so1535829vws.19
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Feb 2011 09:13:11 -0800 (PST)
+In-Reply-To: <1298641025.8617.63.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhanu Gollapudi <bprakash@broadcom.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>, Mike Christie <michaelc@cs.wisc.edu>, robert.w.love@intel.com
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2011-02-03 at 18:47 -0800, Bhanu Gollapudi wrote:
-> fc_fill_fc_hdr() expects fc_frame as an argument. Introduce __fc_fill_fc_hdr to
-> accept fc_frame_header as an argument.
+On Fri, Feb 25, 2011 at 2:37 PM, James Bottomley
+<James.Bottomley@suse.de> wrote:
+> Having a kthread process responses is generally not a good idea becau=
+se
+> completions will come in at interrupt level ... you need a context
+> switch to get to a thread and this costs latency. =A0The idea of done
+> processing in SCSI is to identify the scsi_cmnd as quickly as possibl=
+e
+> and post it. =A0All back end SCSI processing is done in the block sof=
+tirq
+> (a level between hard interrupt and user context), again to keep late=
+ncy
+> low. =A0That also means that the kthread architecture is wrong becaus=
+e
+> it's difficult for the kernel to go hardirq->user->softirq without
+> adding an extra interrupt latency (usually a clock tick).
+>
+> If you want a "threaded" response in a multiqueue card using MSIs, th=
+en
+> you bind the MSIs to CPU groups and use the hardware interrupt contex=
+t
+> as the threading (I think drivers like lpfc already do this). =A0The =
+best
+> performance is actually observed when the MSI comes back in on the sa=
+me
+> CPU that issued the I/O because the cache is still hot. =A0The block =
+keeps
+> an rq->cpu to tag this which internal HBA setup can use for programmi=
+ng
+> MSI completions.
 
-Not sure you noticed this, Robert, but I need it to get the bnx2fc
-driver compiling ... could you ack or send as part of the libfc updates?
+The above sounds like great advice if the processing time is
+reasonably short. But what if the processing time can be anything
+between e.g. a microsecond and twenty minutes ?
 
-Thanks,
-
-James
-
-
-> Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
-> ---
->       include/scsi/fc_encode.h |   26 +++++++++++++++++---------
->  1 files changed, 17 insertions(+), 9 deletions(-)
-> 
-> diff --git a/include/scsi/fc_encode.h b/include/scsi/fc_encode.h
-> index 6d293c8..be418d8 100644
-> --- a/include/scsi/fc_encode.h
-> +++ b/include/scsi/fc_encode.h
-> @@ -46,16 +46,11 @@ struct fc_ct_req {
->  	} payload;
->  };
->  
-> -/**
-> - * fill FC header fields in specified fc_frame
-> - */
-> -static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
-> -				  u32 did, u32 sid, enum fc_fh_type type,
-> -				  u32 f_ctl, u32 parm_offset)
-> +static inline void __fc_fill_fc_hdr(struct fc_frame_header *fh,
-> +				    enum fc_rctl r_ctl,
-> +				    u32 did, u32 sid, enum fc_fh_type type,
-> +				    u32 f_ctl, u32 parm_offset)
->  {
-> -	struct fc_frame_header *fh;
-> -
-> -	fh = fc_frame_header_get(fp);
->  	WARN_ON(r_ctl == 0);
->  	fh->fh_r_ctl = r_ctl;
->  	hton24(fh->fh_d_id, did);
-> @@ -68,6 +63,19 @@ static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
->  }
->  
->  /**
-> + * fill FC header fields in specified fc_frame
-> + */
-> +static inline void fc_fill_fc_hdr(struct fc_frame *fp, enum fc_rctl r_ctl,
-> +				  u32 did, u32 sid, enum fc_fh_type type,
-> +				  u32 f_ctl, u32 parm_offset)
-> +{
-> +	struct fc_frame_header *fh;
-> +
-> +	fh = fc_frame_header_get(fp);
-> +	__fc_fill_fc_hdr(fh, r_ctl, did, sid, type, f_ctl, parm_offset);
-> +}
-> +
-> +/**
->   * fc_adisc_fill() - Fill in adisc request frame
->   * @lport: local port.
->   * @fp: fc frame where payload will be placed.
-
-
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
