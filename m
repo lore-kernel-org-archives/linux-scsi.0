@@ -1,92 +1,97 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] sd: sd should not modify read capacity, cache type or
-	write protect flag on rescan when there is a transport error
-Date: Sun, 27 Feb 2011 07:51:12 -0700
-Message-ID: <20110227145112.GG13726@parisc-linux.org>
-References: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>
+From: <Menny_Hamburger@Dell.com>
+Subject: [PATCH] sd: sd should not modify read capacity, cache type or write
+ protect flag on rescan when there is a transport error
+Date: Sun, 27 Feb 2011 14:58:35 +0000
+Message-ID: <D8C50530D6022F40A817A35C40CC06A706576F7759@DUBX7MCDUB01.EMEA.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="_002_D8C50530D6022F40A817A35C40CC06A706576F7759DUBX7MCDUB01E_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:35601 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751795Ab1B0OvO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2011 09:51:14 -0500
-Content-Disposition: inline
-In-Reply-To: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:51669 "EHLO
+	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144Ab1B0O7d (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2011 09:59:33 -0500
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Menny_Hamburger@Dell.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Sun, Feb 27, 2011 at 02:21:58PM +0000, Menny_Hamburger@Dell.com wrote:
-> @@ -1502,10 +1502,16 @@
->           set_media_not_present(sdkp);
-> 
-> -    /*
-> -    * We used to set media_present to 0 here to indicate no media
-> -    * in the drive, but some drives fail read capacity even with
-> -    * media present, so we can't do that.
-> -    */
-> -    sdkp->capacity = 0; /* unknown mapped to zero - as usual */
-> +    if (host_byte(the_result) && !sdkp->first_scan)
-> +          sd_printk(KERN_NOTICE, sdkp, "host error while reading capacity\n");
+--_002_D8C50530D6022F40A817A35C40CC06A706576F7759DUBX7MCDUB01E_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-This patch is corrupted ... looks like Exchange has converted tabs
-to spaces.
+Attached is the original patch file.
 
-> +    else {
-> +          /*
-> +          * We used to set media_present to 0 here to indicate no media
-> +          * in the drive, but some drives fail read capacity even with
-> +          * media present, so we can't do that.
-> +          */
-> +          sdkp->capacity = 0; /* unknown mapped to zero - as usual */
-> +    }
-> +
-> +    sd_printk(KERN_NOTICE, sdkp, "assuming capacity %llu.\n", sdkp->capacity);
-> }
-> 
-> @@ -1878,6 +1884,11 @@
-> 
->      if (!scsi_status_is_good(res)) {
-> -          sd_printk(KERN_WARNING, sdkp,
-> -                 "Test WP failed, assume Write Enabled\n");
-> +          if (host_byte(res) && !sdkp->first_scan) {
-> +               sd_printk(KERN_NOTICE, sdkp, "host error while reading write protect flag\n");
-> +               set_disk_ro(sdkp->disk, sdkp->write_prot);
-> +          }
-> +
-> +          sd_printk(KERN_WARNING, sdkp, 
-> +                 "Test WP failed, assume Write %s\n", (sdkp->write_prot) ? "Disabled" : "Enabled");
->     } else {
->           sdkp->write_prot = ((data.device_specific & 0x80) != 0);
-> @@ -2034,8 +2045,14 @@
-> 
->  defaults:
-> -    sd_printk(KERN_ERR, sdkp, "Assuming drive cache: write through\n");
-> -    sdkp->WCE = 0;
-> -    sdkp->RCD = 0;
-> -    sdkp->DPOFUA = 0;
-> +    if (host_byte(res) && !sdkp->first_scan) 
-> +          sd_printk(KERN_NOTICE, sdkp, "host error while reading cache type\n");
-> +    else {
-> +          sdkp->WCE = 0;
-> +          sdkp->RCD = 0;
-> +          sdkp->DPOFUA = 0;
-> +    }
-> +
-> +    sd_printk(KERN_ERR, sdkp, "Assuming drive cache: %s\n", 
-> +            sd_cache_types[sdkp->RCD + 2*sdkp->WCE]);
-> }
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
--- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
+--_002_D8C50530D6022F40A817A35C40CC06A706576F7759DUBX7MCDUB01E_
+Content-Type: application/octet-stream;
+	name="scsi_host_error_during_propery_read.patch"
+Content-Description: scsi_host_error_during_propery_read.patch
+Content-Disposition: attachment;
+	filename="scsi_host_error_during_propery_read.patch"; size=3323;
+	creation-date="Sun, 27 Feb 2011 10:11:49 GMT";
+	modification-date="Sun, 27 Feb 2011 09:57:52 GMT"
+Content-Transfer-Encoding: base64
+
+RnJvbTogTWVubnkgSGFtYnVyZ2VyIDxNZW5ueV9IYW1idXJnZXJARGVsbC5jb20+CgpXaGVuIHNk
+IHNjYW4gZmFpbHMgaW4gYXBwcmVoZW5kaW5nIGNhcGFjaXR5LCBjYWNoZV90eXBlIG9yIHdyaXRl
+IHByb3RlY3QgZmxhZwpwcm9wZXJ0eSBmcm9tIHRoZSBkZXZpY2UsIGl0IGF1dG9tYXRpY2FsbHkg
+YXNzaWducyBhIGRlZmF1bHQgdmFsdWUgdG8gdGhlCmZhaWxlZCBwcm9wZXJ0eS4gV2hlbiByZXNj
+YW5uaW5nLCBpbiBjYXNlIG9mIHRyYW5zcG9ydC9ob3N0IGVycm9yIHRoaXMgZGVmYXVsdCAKdmFs
+dWUgaXMgaW52YWxpZCBzaW5jZSB0aGUgcHJvYmxlbSBpcyB3aXRoIHRoZSBjb25uZWN0aW9uIHRv
+IHRoZSBkZXZpY2UgYW5kIG5vdCBpbiAKdGhlIGRldmljZSBpdHNlbGYgdGhhdCBtYXkgKGluIG1v
+c3QgY2FzZXMpIHN0aWxsIGJlIGludGFjdC4gQXBwbHlpbmcgYSBkZWZhdWx0IHZhbHVlCndoZW4g
+ZmFpbGluZyBtYXkgbGVhZCB0byBwcm9ibGVtcyB3aGVuIGNvbm5lY3Rpb24gaXMgcmUtZXN0YWJs
+aXNoZWQgc2luY2UgdGhlIGRlZmF1bHQKdmFsdWUgcGVyc2lzdHMgdW5sZXNzIGFuIGFkZGl0aW9u
+YWwgcmVzY2FuIGlzIHBlcmZvcm1lZC4KClRoaXMgcHJvYmxlbSB3YXMgd2l0bmVzc2VkIHdoZW4g
+cnVubmluZyBpbiBhIGlTQ1NJIGVudmlyb25tZW50IHVuZGVyIG11bHRpcGF0aAood2l0aCBJL08g
+b24gdGhlIGFjdGl2ZSBwYXRoKS4gSW4gdGhpcyBjYXNlIHdlIGdldCBhIHBpbmctcGluZyBlZmZl
+Y3Qgd2hlcmUKbXVsdGlwYXRoZCBzd2l0Y2hlcyBiZXR3ZWVuIGFsdGVybmF0ZSBwYXRocyBmb3Jl
+dmVyICh1bnRpbCByZXNjYW4pIGJlY2F1c2UgdGhlCnBhdGggY2hlY2tlciBzdGF0ZXMgdGhhdCB0
+aGUgZGV2aWNlIGlzIE9LLCBhbmQgSS9PIGZhaWxzIGltbWVkaWF0ZWx5IGJlY2F1c2Ugb2YKdGhl
+IDAgY2FwYWNpdHkuCgpSZXByb2R1Y3Rpb24gb3ZlciBJU0NTSSBlbnZpcm9ubWVudDoKMSkgZGQg
+aWY9L2Rldi9kbS0wIG9mPS9kZXYvemVybyBicz02NCBjb3VudD0xMDAwMAoyKSBpZmRvd24gZXRo
+TiwgZXRoTSwgZXRoSywgLi4uICh3aGVyZSBldGhYIGlzIGFuIGludGVyZmFjZSBmcm9tIHdoaWNo
+IHRoZQogICBtYWNoaW5lIGVzdGFibGlzaGVzIGNvbm5lY3Rpb24gdG8gdGhlIHN0b3JhZ2UgYXJy
+YXkpLgozKSBpc2NzaWFkbSAtbSBzZXNzaW9uIC1SCjQpIGlmdXAgZXRoTiwgZXRoTSwgZXRoSywg
+Li4uCgpUaGUgZm9sbG93aW5nIHBhdGNoIGxlYXZlcyB0aGUgY2FwYWNpdHksIGNhY2hlIHR5cGUg
+YW5kIHdyaXRlIHByb3RlY3QgZmxhZyB1bmNoYW5nZWQgb24gYSBob3N0L3RyYW5zcG9ydCBwcm9i
+bGVtLiAKSSB3YW50IHRvIHRoYW5rICBNaWtlIENyaXN0aWUgKG1jaHJpc3RpQHJlZGhhdC5jb20p
+IGZvciBoZWxwaW5nIG91dCB3aXRoIHRoaXMgb25lLgoKZGlmZiAtciAtVSAyIGEvZHJpdmVycy9z
+Y3NpL3NkLmMgYi9kcml2ZXJzL3Njc2kvc2QuYwotLS0gYS9kcml2ZXJzL3Njc2kvc2QuYwkyMDEx
+LTAyLTI3IDExOjU3OjUyLjE1OTMzMzAwMCArMDIwMAorKysgYi9kcml2ZXJzL3Njc2kvc2QuYwky
+MDExLTAyLTI3IDExOjU3OjUyLjIyMjY1OTAwMCArMDIwMApAQCAtMTUwMiwxMCArMTUwMiwxNiBA
+QAogCQlzZXRfbWVkaWFfbm90X3ByZXNlbnQoc2RrcCk7CiAKLQkvKgotCSAqIFdlIHVzZWQgdG8g
+c2V0IG1lZGlhX3ByZXNlbnQgdG8gMCBoZXJlIHRvIGluZGljYXRlIG5vIG1lZGlhCi0JICogaW4g
+dGhlIGRyaXZlLCBidXQgc29tZSBkcml2ZXMgZmFpbCByZWFkIGNhcGFjaXR5IGV2ZW4gd2l0aAot
+CSAqIG1lZGlhIHByZXNlbnQsIHNvIHdlIGNhbid0IGRvIHRoYXQuCi0JICovCi0Jc2RrcC0+Y2Fw
+YWNpdHkgPSAwOyAvKiB1bmtub3duIG1hcHBlZCB0byB6ZXJvIC0gYXMgdXN1YWwgKi8KKwlpZiAo
+aG9zdF9ieXRlKHRoZV9yZXN1bHQpICYmICFzZGtwLT5maXJzdF9zY2FuKQorCQlzZF9wcmludGso
+S0VSTl9OT1RJQ0UsIHNka3AsICJob3N0IGVycm9yIHdoaWxlIHJlYWRpbmcgY2FwYWNpdHlcbiIp
+OworCWVsc2UgeworCQkvKgorCQkgKiBXZSB1c2VkIHRvIHNldCBtZWRpYV9wcmVzZW50IHRvIDAg
+aGVyZSB0byBpbmRpY2F0ZSBubyBtZWRpYQorCQkgKiBpbiB0aGUgZHJpdmUsIGJ1dCBzb21lIGRy
+aXZlcyBmYWlsIHJlYWQgY2FwYWNpdHkgZXZlbiB3aXRoCisJCSAqIG1lZGlhIHByZXNlbnQsIHNv
+IHdlIGNhbid0IGRvIHRoYXQuCisJCSAqLworCQlzZGtwLT5jYXBhY2l0eSA9IDA7IC8qIHVua25v
+d24gbWFwcGVkIHRvIHplcm8gLSBhcyB1c3VhbCAqLworCX0KKworCXNkX3ByaW50ayhLRVJOX05P
+VElDRSwgc2RrcCwgImFzc3VtaW5nIGNhcGFjaXR5ICVsbHUuXG4iLCBzZGtwLT5jYXBhY2l0eSk7
+CiB9CiAKQEAgLTE4NzgsNiArMTg4NCwxMSBAQAogCiAJaWYgKCFzY3NpX3N0YXR1c19pc19nb29k
+KHJlcykpIHsKLQkJc2RfcHJpbnRrKEtFUk5fV0FSTklORywgc2RrcCwKLQkJCSAgIlRlc3QgV1Ag
+ZmFpbGVkLCBhc3N1bWUgV3JpdGUgRW5hYmxlZFxuIik7CisJCWlmIChob3N0X2J5dGUocmVzKSAm
+JiAhc2RrcC0+Zmlyc3Rfc2NhbikgeworCQkJc2RfcHJpbnRrKEtFUk5fTk9USUNFLCBzZGtwLCAi
+aG9zdCBlcnJvciB3aGlsZSByZWFkaW5nIHdyaXRlIHByb3RlY3QgZmxhZ1xuIik7CisJCQlzZXRf
+ZGlza19ybyhzZGtwLT5kaXNrLCBzZGtwLT53cml0ZV9wcm90KTsKKwkJfQorCisJCXNkX3ByaW50
+ayhLRVJOX1dBUk5JTkcsIHNka3AsIAorCQkJICAiVGVzdCBXUCBmYWlsZWQsIGFzc3VtZSBXcml0
+ZSAlc1xuIiwgKHNka3AtPndyaXRlX3Byb3QpID8gIkRJU0FCTEVEIiA6ICJFTkFCTEVEIik7CiAJ
+fSBlbHNlIHsKIAkJc2RrcC0+d3JpdGVfcHJvdCA9ICgoZGF0YS5kZXZpY2Vfc3BlY2lmaWMgJiAw
+eDgwKSAhPSAwKTsKQEAgLTIwMzQsOCArMjA0NSwxNCBAQAogCiBkZWZhdWx0czoKLQlzZF9wcmlu
+dGsoS0VSTl9FUlIsIHNka3AsICJBc3N1bWluZyBkcml2ZSBjYWNoZTogd3JpdGUgdGhyb3VnaFxu
+Iik7Ci0Jc2RrcC0+V0NFID0gMDsKLQlzZGtwLT5SQ0QgPSAwOwotCXNka3AtPkRQT0ZVQSA9IDA7
+CisJaWYgKGhvc3RfYnl0ZShyZXMpICYmICFzZGtwLT5maXJzdF9zY2FuKSAKKwkJc2RfcHJpbnRr
+KEtFUk5fTk9USUNFLCBzZGtwLCAiaG9zdCBlcnJvciB3aGlsZSByZWFkaW5nIGNhY2hlIHR5cGVc
+biIpOworCWVsc2UgeworCQlzZGtwLT5XQ0UgPSAwOworCQlzZGtwLT5SQ0QgPSAwOworCQlzZGtw
+LT5EUE9GVUEgPSAwOworCX0KKworCXNkX3ByaW50ayhLRVJOX0VSUiwgc2RrcCwgIkFzc3VtaW5n
+IGRyaXZlIGNhY2hlOiAlc1xuIiwgCisJCSAgc2RfY2FjaGVfdHlwZXNbc2RrcC0+UkNEICsgMipz
+ZGtwLT5XQ0VdKTsKIH0KIAo=
+
+--_002_D8C50530D6022F40A817A35C40CC06A706576F7759DUBX7MCDUB01E_--
