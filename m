@@ -1,97 +1,31 @@
-From: <Menny_Hamburger@Dell.com>
-Subject: [PATCH] sd: sd should not modify read capacity, cache type or write
- protect flag on rescan when there is a transport error
-Date: Sun, 27 Feb 2011 14:58:35 +0000
-Message-ID: <D8C50530D6022F40A817A35C40CC06A706576F7759@DUBX7MCDUB01.EMEA.DELL.COM>
+From: john smith <whalajam@yahoo.com>
+Subject: scsi_host_template.queuecommand() instances
+Date: Sun, 27 Feb 2011 11:22:06 -0800 (PST)
+Message-ID: <304254.22314.qm@web161906.mail.bf1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_D8C50530D6022F40A817A35C40CC06A706576F7759DUBX7MCDUB01E_"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:51669 "EHLO
-	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144Ab1B0O7d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2011 09:59:33 -0500
-Content-Language: en-US
+Received: from web161906.mail.bf1.yahoo.com ([98.139.210.197]:28353 "HELO
+	web161906.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751074Ab1B0T2r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 Feb 2011 14:28:47 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
---_002_D8C50530D6022F40A817A35C40CC06A706576F7759DUBX7MCDUB01E_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+I understand that inside LDD's scsi_host_template.queuecommand(), the card->spinlock can be used to protect shared data between concurrent instances of queuecommand and bottom-half/tasklets IO completion code.
+For SMP system with PCIE/MSIX enabled interrupts, there can be multiple instances of completion tasklets.
+The questions I have are:
+ 
+- can there be multiple instances of queuecommand as well?
+- if so, I would assume they are IO commands issued for different targets (controlled by LDD), correct?
+Also, if true, these multiple instances must be running on different kernel threads spwaned by the SCSI mid layer, or block layer?
 
-Attached is the original patch file.
+Links to detailed and uptodate Block layer description would be appreciated (the ones I found are either old and superficial),
+
+thanks,
+John 
 
 
-
---_002_D8C50530D6022F40A817A35C40CC06A706576F7759DUBX7MCDUB01E_
-Content-Type: application/octet-stream;
-	name="scsi_host_error_during_propery_read.patch"
-Content-Description: scsi_host_error_during_propery_read.patch
-Content-Disposition: attachment;
-	filename="scsi_host_error_during_propery_read.patch"; size=3323;
-	creation-date="Sun, 27 Feb 2011 10:11:49 GMT";
-	modification-date="Sun, 27 Feb 2011 09:57:52 GMT"
-Content-Transfer-Encoding: base64
-
-RnJvbTogTWVubnkgSGFtYnVyZ2VyIDxNZW5ueV9IYW1idXJnZXJARGVsbC5jb20+CgpXaGVuIHNk
-IHNjYW4gZmFpbHMgaW4gYXBwcmVoZW5kaW5nIGNhcGFjaXR5LCBjYWNoZV90eXBlIG9yIHdyaXRl
-IHByb3RlY3QgZmxhZwpwcm9wZXJ0eSBmcm9tIHRoZSBkZXZpY2UsIGl0IGF1dG9tYXRpY2FsbHkg
-YXNzaWducyBhIGRlZmF1bHQgdmFsdWUgdG8gdGhlCmZhaWxlZCBwcm9wZXJ0eS4gV2hlbiByZXNj
-YW5uaW5nLCBpbiBjYXNlIG9mIHRyYW5zcG9ydC9ob3N0IGVycm9yIHRoaXMgZGVmYXVsdCAKdmFs
-dWUgaXMgaW52YWxpZCBzaW5jZSB0aGUgcHJvYmxlbSBpcyB3aXRoIHRoZSBjb25uZWN0aW9uIHRv
-IHRoZSBkZXZpY2UgYW5kIG5vdCBpbiAKdGhlIGRldmljZSBpdHNlbGYgdGhhdCBtYXkgKGluIG1v
-c3QgY2FzZXMpIHN0aWxsIGJlIGludGFjdC4gQXBwbHlpbmcgYSBkZWZhdWx0IHZhbHVlCndoZW4g
-ZmFpbGluZyBtYXkgbGVhZCB0byBwcm9ibGVtcyB3aGVuIGNvbm5lY3Rpb24gaXMgcmUtZXN0YWJs
-aXNoZWQgc2luY2UgdGhlIGRlZmF1bHQKdmFsdWUgcGVyc2lzdHMgdW5sZXNzIGFuIGFkZGl0aW9u
-YWwgcmVzY2FuIGlzIHBlcmZvcm1lZC4KClRoaXMgcHJvYmxlbSB3YXMgd2l0bmVzc2VkIHdoZW4g
-cnVubmluZyBpbiBhIGlTQ1NJIGVudmlyb25tZW50IHVuZGVyIG11bHRpcGF0aAood2l0aCBJL08g
-b24gdGhlIGFjdGl2ZSBwYXRoKS4gSW4gdGhpcyBjYXNlIHdlIGdldCBhIHBpbmctcGluZyBlZmZl
-Y3Qgd2hlcmUKbXVsdGlwYXRoZCBzd2l0Y2hlcyBiZXR3ZWVuIGFsdGVybmF0ZSBwYXRocyBmb3Jl
-dmVyICh1bnRpbCByZXNjYW4pIGJlY2F1c2UgdGhlCnBhdGggY2hlY2tlciBzdGF0ZXMgdGhhdCB0
-aGUgZGV2aWNlIGlzIE9LLCBhbmQgSS9PIGZhaWxzIGltbWVkaWF0ZWx5IGJlY2F1c2Ugb2YKdGhl
-IDAgY2FwYWNpdHkuCgpSZXByb2R1Y3Rpb24gb3ZlciBJU0NTSSBlbnZpcm9ubWVudDoKMSkgZGQg
-aWY9L2Rldi9kbS0wIG9mPS9kZXYvemVybyBicz02NCBjb3VudD0xMDAwMAoyKSBpZmRvd24gZXRo
-TiwgZXRoTSwgZXRoSywgLi4uICh3aGVyZSBldGhYIGlzIGFuIGludGVyZmFjZSBmcm9tIHdoaWNo
-IHRoZQogICBtYWNoaW5lIGVzdGFibGlzaGVzIGNvbm5lY3Rpb24gdG8gdGhlIHN0b3JhZ2UgYXJy
-YXkpLgozKSBpc2NzaWFkbSAtbSBzZXNzaW9uIC1SCjQpIGlmdXAgZXRoTiwgZXRoTSwgZXRoSywg
-Li4uCgpUaGUgZm9sbG93aW5nIHBhdGNoIGxlYXZlcyB0aGUgY2FwYWNpdHksIGNhY2hlIHR5cGUg
-YW5kIHdyaXRlIHByb3RlY3QgZmxhZyB1bmNoYW5nZWQgb24gYSBob3N0L3RyYW5zcG9ydCBwcm9i
-bGVtLiAKSSB3YW50IHRvIHRoYW5rICBNaWtlIENyaXN0aWUgKG1jaHJpc3RpQHJlZGhhdC5jb20p
-IGZvciBoZWxwaW5nIG91dCB3aXRoIHRoaXMgb25lLgoKZGlmZiAtciAtVSAyIGEvZHJpdmVycy9z
-Y3NpL3NkLmMgYi9kcml2ZXJzL3Njc2kvc2QuYwotLS0gYS9kcml2ZXJzL3Njc2kvc2QuYwkyMDEx
-LTAyLTI3IDExOjU3OjUyLjE1OTMzMzAwMCArMDIwMAorKysgYi9kcml2ZXJzL3Njc2kvc2QuYwky
-MDExLTAyLTI3IDExOjU3OjUyLjIyMjY1OTAwMCArMDIwMApAQCAtMTUwMiwxMCArMTUwMiwxNiBA
-QAogCQlzZXRfbWVkaWFfbm90X3ByZXNlbnQoc2RrcCk7CiAKLQkvKgotCSAqIFdlIHVzZWQgdG8g
-c2V0IG1lZGlhX3ByZXNlbnQgdG8gMCBoZXJlIHRvIGluZGljYXRlIG5vIG1lZGlhCi0JICogaW4g
-dGhlIGRyaXZlLCBidXQgc29tZSBkcml2ZXMgZmFpbCByZWFkIGNhcGFjaXR5IGV2ZW4gd2l0aAot
-CSAqIG1lZGlhIHByZXNlbnQsIHNvIHdlIGNhbid0IGRvIHRoYXQuCi0JICovCi0Jc2RrcC0+Y2Fw
-YWNpdHkgPSAwOyAvKiB1bmtub3duIG1hcHBlZCB0byB6ZXJvIC0gYXMgdXN1YWwgKi8KKwlpZiAo
-aG9zdF9ieXRlKHRoZV9yZXN1bHQpICYmICFzZGtwLT5maXJzdF9zY2FuKQorCQlzZF9wcmludGso
-S0VSTl9OT1RJQ0UsIHNka3AsICJob3N0IGVycm9yIHdoaWxlIHJlYWRpbmcgY2FwYWNpdHlcbiIp
-OworCWVsc2UgeworCQkvKgorCQkgKiBXZSB1c2VkIHRvIHNldCBtZWRpYV9wcmVzZW50IHRvIDAg
-aGVyZSB0byBpbmRpY2F0ZSBubyBtZWRpYQorCQkgKiBpbiB0aGUgZHJpdmUsIGJ1dCBzb21lIGRy
-aXZlcyBmYWlsIHJlYWQgY2FwYWNpdHkgZXZlbiB3aXRoCisJCSAqIG1lZGlhIHByZXNlbnQsIHNv
-IHdlIGNhbid0IGRvIHRoYXQuCisJCSAqLworCQlzZGtwLT5jYXBhY2l0eSA9IDA7IC8qIHVua25v
-d24gbWFwcGVkIHRvIHplcm8gLSBhcyB1c3VhbCAqLworCX0KKworCXNkX3ByaW50ayhLRVJOX05P
-VElDRSwgc2RrcCwgImFzc3VtaW5nIGNhcGFjaXR5ICVsbHUuXG4iLCBzZGtwLT5jYXBhY2l0eSk7
-CiB9CiAKQEAgLTE4NzgsNiArMTg4NCwxMSBAQAogCiAJaWYgKCFzY3NpX3N0YXR1c19pc19nb29k
-KHJlcykpIHsKLQkJc2RfcHJpbnRrKEtFUk5fV0FSTklORywgc2RrcCwKLQkJCSAgIlRlc3QgV1Ag
-ZmFpbGVkLCBhc3N1bWUgV3JpdGUgRW5hYmxlZFxuIik7CisJCWlmIChob3N0X2J5dGUocmVzKSAm
-JiAhc2RrcC0+Zmlyc3Rfc2NhbikgeworCQkJc2RfcHJpbnRrKEtFUk5fTk9USUNFLCBzZGtwLCAi
-aG9zdCBlcnJvciB3aGlsZSByZWFkaW5nIHdyaXRlIHByb3RlY3QgZmxhZ1xuIik7CisJCQlzZXRf
-ZGlza19ybyhzZGtwLT5kaXNrLCBzZGtwLT53cml0ZV9wcm90KTsKKwkJfQorCisJCXNkX3ByaW50
-ayhLRVJOX1dBUk5JTkcsIHNka3AsIAorCQkJICAiVGVzdCBXUCBmYWlsZWQsIGFzc3VtZSBXcml0
-ZSAlc1xuIiwgKHNka3AtPndyaXRlX3Byb3QpID8gIkRJU0FCTEVEIiA6ICJFTkFCTEVEIik7CiAJ
-fSBlbHNlIHsKIAkJc2RrcC0+d3JpdGVfcHJvdCA9ICgoZGF0YS5kZXZpY2Vfc3BlY2lmaWMgJiAw
-eDgwKSAhPSAwKTsKQEAgLTIwMzQsOCArMjA0NSwxNCBAQAogCiBkZWZhdWx0czoKLQlzZF9wcmlu
-dGsoS0VSTl9FUlIsIHNka3AsICJBc3N1bWluZyBkcml2ZSBjYWNoZTogd3JpdGUgdGhyb3VnaFxu
-Iik7Ci0Jc2RrcC0+V0NFID0gMDsKLQlzZGtwLT5SQ0QgPSAwOwotCXNka3AtPkRQT0ZVQSA9IDA7
-CisJaWYgKGhvc3RfYnl0ZShyZXMpICYmICFzZGtwLT5maXJzdF9zY2FuKSAKKwkJc2RfcHJpbnRr
-KEtFUk5fTk9USUNFLCBzZGtwLCAiaG9zdCBlcnJvciB3aGlsZSByZWFkaW5nIGNhY2hlIHR5cGVc
-biIpOworCWVsc2UgeworCQlzZGtwLT5XQ0UgPSAwOworCQlzZGtwLT5SQ0QgPSAwOworCQlzZGtw
-LT5EUE9GVUEgPSAwOworCX0KKworCXNkX3ByaW50ayhLRVJOX0VSUiwgc2RrcCwgIkFzc3VtaW5n
-IGRyaXZlIGNhY2hlOiAlc1xuIiwgCisJCSAgc2RfY2FjaGVfdHlwZXNbc2RrcC0+UkNEICsgMipz
-ZGtwLT5XQ0VdKTsKIH0KIAo=
-
---_002_D8C50530D6022F40A817A35C40CC06A706576F7759DUBX7MCDUB01E_--
+      
