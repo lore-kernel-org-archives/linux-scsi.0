@@ -1,52 +1,36 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: scsi_host_template.queuecommand() instances
-Date: Sun, 27 Feb 2011 15:21:02 -0700
-Message-ID: <20110227222102.GH13726@parisc-linux.org>
-References: <304254.22314.qm@web161906.mail.bf1.yahoo.com>
+From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+Subject: Re: [PATCH 0/5]: Proposal for iSCSI Network Configuration
+Date: Sun, 27 Feb 2011 20:25:05 -0600
+Message-ID: <4D6B0781.1050403@cs.wisc.edu>
+References: <5E4F49720D0BAD499EE1F01232234BA8722624A352@AVEXMB1.qlogic.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:51627 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751236Ab1B0WVD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 27 Feb 2011 17:21:03 -0500
-Content-Disposition: inline
-In-Reply-To: <304254.22314.qm@web161906.mail.bf1.yahoo.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Return-path: <open-iscsi+bncCLPJla3WGRCXj6zrBBoEDsMrWA-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA8722624A352-HolNjIBXvBOXx9kJd3VG2h2eb7JE58TQ@public.gmane.org>
+List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
+ <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+To: Vikas Chaudhary <vikas.chaudhary-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+Cc: James Bottomley <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lalit Chandivade <lalit.chandivade-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Harish Zunjarrao <harish.zunjarrao-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Manish Rangankar <manish.rangankar-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Ravi Anand <ravi.anand-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, open-iscsi <open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: john smith <whalajam@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, Feb 27, 2011 at 11:22:06AM -0800, john smith wrote:
-> I understand that inside LDD's scsi_host_template.queuecommand(), the card->spinlock can be used to protect shared data between concurrent instances of queuecommand and bottom-half/tasklets IO completion code.
-> For SMP system with PCIE/MSIX enabled interrupts, there can be multiple instances of completion tasklets.
-> The questions I have are:
->  
-> - can there be multiple instances of queuecommand as well?
+On 02/25/2011 05:05 AM, Vikas Chaudhary wrote:
+> These are set of patches for  configuring network setting for iSCSI adapter (qla4xxx) that use private IP address.
+> Please review  proposal/implementation and let us know  the feedback.
+>
 
-Yes, queuecommand can be called on multiple CPUs simultaneously.
-That's only been true since 2.6.37, though.
+Hey,
 
-> - if so, I would assume they are IO commands issued for different targets (controlled by LDD), correct?
-
-Not correct, they could easily be for the same LUN.
-
-> Also, if true, these multiple instances must be running on different kernel threads spwaned by the SCSI mid layer, or block layer?
-
-Linux doesn't use threads like this ... what usually happens is a
-user thread makes a syscall (eg write() or read()) or faults on an
-mmaped region.  The thread switches into kernel mode, and winds its way
-through the file system, into the page cache, then the block layer, down
-to the scsi layer, and invokes queuecommand.  Once queuecommand finishes,
-the thread returns to the page cache to wait for the I/O to complete.
-
-> Links to detailed and uptodate Block layer description would be appreciated (the ones I found are either old and superficial),
-
-It's a lot of effort to keep these things up to date, and generally those
-making the changes don't have the interest in updating documentation.
+So what happened with bsg? Why did you switch again?
 
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
