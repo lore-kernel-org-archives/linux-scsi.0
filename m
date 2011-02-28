@@ -1,73 +1,65 @@
-From: Joe Eykholt <joe.eykholt@gmail.com>
-Subject: Re: [Open-FCoE] [PATCH] fcoe: correct checking for bonding
-Date: Mon, 28 Feb 2011 09:54:29 -0800
-Message-ID: <4D6BE155.7050109@gmail.com>
-References: <20110228133245.GB7096@psychotron.brq.redhat.com> <8433.1298913321@death>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH-FOR-38] target: Fix t_transport_aborted handling in
+ LUN_RESET + active I/O shutdown
+Date: Mon, 28 Feb 2011 20:37:39 +0100
+Message-ID: <AANLkTimcRB3jC6WsKxAQz+TYMhG5aSLQwPkbEn9qYJ29@mail.gmail.com>
+References: <1298595500-1558-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <8433.1298913321@death>
-Sender: netdev-owner@vger.kernel.org
-To: Jay Vosburgh <fubar@us.ibm.com>
-Cc: Jiri Pirko <jpirko@redhat.com>, James.Bottomley@HansenPartnership.com, netdev@vger.kernel.org, devel@open-fcoe.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vx0-f174.google.com ([209.85.220.174]:39960 "EHLO
+	mail-vx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752805Ab1B1Tsv convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2011 14:48:51 -0500
+Received: by vxi39 with SMTP id 39so3466938vxi.19
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2011 11:48:50 -0800 (PST)
+In-Reply-To: <1298595500-1558-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-iscsi-target-dev@googlegroups.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
 
-On 2/28/11 9:15 AM, Jay Vosburgh wrote:
-> Jiri Pirko<jpirko@redhat.com>  wrote:
+On Fri, Feb 25, 2011 at 1:58 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> This patch addresses two outstanding bugs related to T_TASK(cmd)->t_t=
+ransport_aborted
+> handling during TMR LUN_RESET and active I/O shutdown.
 >
->> Check for IFF_BONDING as this flag is set-up for all bonding devices.
->>
->> Signed-off-by: Jiri Pirko<jpirko@redhat.com>
->> ---
->> drivers/scsi/fcoe/fcoe.c |    4 +---
->> 1 files changed, 1 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
->> index 9f9600b..67714a4 100644
->> --- a/drivers/scsi/fcoe/fcoe.c
->> +++ b/drivers/scsi/fcoe/fcoe.c
->> @@ -285,9 +285,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
->> 	}
->>
->> 	/* Do not support for bonding device */
->> -	if ((netdev->priv_flags&  IFF_MASTER_ALB) ||
->> -	    (netdev->priv_flags&  IFF_SLAVE_INACTIVE) ||
->> -	    (netdev->priv_flags&  IFF_MASTER_8023AD)) {
->> +	if (netdev->priv_flags&  IFF_BONDING) {
->> 		FCOE_NETDEV_DBG(netdev, "Bonded interfaces not supported\n");
->> 		return -EOPNOTSUPP;
->> 	}
+> This first involves adding two explict t_transport_aborted=3D1 assign=
+ments in
+> core_tmr_lun_reset() in order to signal the task has been aborted, an=
+d
+> updating transport_generic_wait_for_tasks() to skip sleeping when
+> t_transport_aborted=3D1 has been set. =A0This fixes an issue where
+> transport_generic_wait_for_tasks() would end up sleeping indefinately=
+ when
+> called from fabric module context while TMR LUN_RESET was happening w=
+ith
+> long outstanding backend struct se_task not yet being completed.
 >
-> 	Based on past discussions, I believe the intent of the code is
-> to permit FCOE over bonding only for active-backup mode, and possibly
-> for -xor/-rr as well.
->
-> 	I'm not sure if the slave or the master is what's being tested
-> here, so I'm not sure what the right thing to do is.  I suspect it's the
-> master, as I recall discussion of one configuration involving
-> active-backup mode balancing FCOE traffic over both the active and
-> inactive slaves.  FCOE uses the "orig_dev" logic in __netif_receive_skb
-> to have the packets delivered even on the nominally inactive slave.
->
-> 	-J
->
-> ---
-> 	-Jay Vosburgh, IBM Linux Technology Center, fubar@us.ibm.com
+> The second adds a missing call to transport_remove_task_from_execute_=
+queue()
+> when task->task_execute_queue=3D1 is set in order to fix an OOPs when
+> task->t_execute_list has not been dropped. =A0It also fixes the same =
+case in
+> transport_processing_shutdown() to prevent the issue from happening d=
+uring
+> active I/O struct se_device shutdown.
 
-Right.  That was the intent.  It should work on the physical dev, but probably
-not on the master of the bond.
+Hello Nicholas,
 
-If you have a master/slave bond for IPv4 between eth1 and eth2, say,
-and they are going to two different DCE (FCoE) switches, presumably on
-different VSANs but with ultimate access to the same disks,
-then you want to split the FCoE traffic in active/active
-mode using separate FCoE instances on eth1 and eth2 even though IP
-is using active/standby on bond0.  This should work.  But, putting fcoe
-on bond0 isn't going to do what you want.
+Are all I/O shutdown improvements present in the lio-4.1 branch
+included in this patch ? I'm asking because with the lio-4.1 branch I
+can't reproduce https://bugzilla.kernel.org/show_bug.cgi?id=3D29442. If
+so, it seems like a good idea to me to refer to that bugzilla item in
+the patch description. See also
+https://github.com/bvanassche/srpt-lio/tree/srpt-lio-4.1 if you want
+to have a look at the code I have been testing.
 
-However, it seems like the check above shouldn't be checking
-IFF_SLAVE_INACTIVE.   I can't test this.
-
-	Joe
-
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
