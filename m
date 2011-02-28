@@ -1,59 +1,26 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 30062] New: Huge amounts of "HDIO_GET_IDENTITY failed for
- /dev/sr0" messages during boot
-Date: Mon, 28 Feb 2011 10:52:28 GMT
-Message-ID: <bug-30062-11613@https.bugzilla.kernel.org/>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 0/5] target updates for scsi-post-merge .39 (round one)
+Date: Mon, 28 Feb 2011 12:39:02 +0100
+Message-ID: <AANLkTimDu-KFFfvWd95URQJMt2YbWU9tLwzNeE2Lf4OW@mail.gmail.com>
+References: <1298874020-15628-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from demeter1.kernel.org ([140.211.167.39]:34163 "EHLO
-	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162Ab1B1Kw3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2011 05:52:29 -0500
-Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
-	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p1SAqSPj002145
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2011 10:52:29 GMT
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1298874020-15628-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-iscsi-target-dev@googlegroups.com
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Joel Becker <jlbec@evilplan.org>, Douglas Gilbert <dgilbert@interlog.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=30062
+On Mon, Feb 28, 2011 at 7:20 AM, Nicholas A. Bellinger
+<nab@linux-iscsi.org> wrote:
+> Patches #1 -> #4 involve the addition of new ConfigFS context based
+> statistics groups in target_core_stat.c following RFC-4455 to address
+> the removal of the legacy ProcFS based target_core_mib.c in .38 code.
 
-           Summary: Huge amounts of "HDIO_GET_IDENTITY failed for
-                    /dev/sr0" messages during boot
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 2.6.38-rc6
-          Platform: All
-        OS/Version: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: blocking
-          Priority: P1
-         Component: SCSI
-        AssignedTo: linux-scsi@vger.kernel.org
-        ReportedBy: monoped@sudrala.de
-        Regression: Yes
+Hot-pluggable InfiniBand HCAs are available since some time. As I
+wrote before, exporting RFC-4455 data via configfs instead of sysfs
+makes implementing RFC 4455 in a (user space) SNMP agent overly
+complex.
 
-
-My system (Crux 2.7) contains an older SCSI disk, and a SCSI CD writer
-(Plextor). When booting into 2.6.38, I get an endless sequence of errors like
-
-    ata_id[xyz]: HDIO_GET_IDENTITY failed for '/dev/sr0'
-
-The errors start when the command
-
-    udevadm trigger --type=devices --action=add
-
-is executed. There are also about 50 udevd processes in the process list. The
-system gets extremely slow, and the only way to make it usable again is by
-saying 'killall udevd'. Apparently udev has an issue with the CD writer (while
-it handles the harddisk correctly).
-
-The same system works well with kernel 2.6.37.
-
--- 
-Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug.
+Bart.
