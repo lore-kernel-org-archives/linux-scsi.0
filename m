@@ -1,42 +1,47 @@
-From: Jiri Pirko <jpirko@redhat.com>
-Subject: [PATCH] fcoe: correct checking for bonding
-Date: Mon, 28 Feb 2011 14:32:45 +0100
-Message-ID: <20110228133245.GB7096@psychotron.brq.redhat.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: scsi_host_template.queuecommand() instances
+Date: Mon, 28 Feb 2011 08:14:39 -0600
+Message-ID: <1298902479.2487.9.camel@mulgrave.site>
+References: <20110227222102.GH13726@parisc-linux.org>
+	 <439834.81106.qm@web161913.mail.bf1.yahoo.com>
+	 <20110228132402.GI13726@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41212 "EHLO mx1.redhat.com"
+Received: from cantor.suse.de ([195.135.220.2]:37673 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753653Ab1B1Ncv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Feb 2011 08:32:51 -0500
-Content-Disposition: inline
+	id S1754315Ab1B1OOo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Feb 2011 09:14:44 -0500
+In-Reply-To: <20110228132402.GI13726@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: devel@open-fcoe.org, robert.w.love@intel.com, James.Bottomley@HansenPartnership.com, netdev@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: john smith <whalajam@yahoo.com>, linux-scsi@vger.kernel.org
 
-Check for IFF_BONDING as this flag is set-up for all bonding devices.
+On Mon, 2011-02-28 at 06:24 -0700, Matthew Wilcox wrote:
+> On Sun, Feb 27, 2011 at 11:21:20PM -0800, john smith wrote:
+> > How does the queuecommand get called for concurrent application threads  before 2.6.37?
+> 
+> Before 2.6.37, there's a per-host lock acquired in the scsi layer that
+> prevents queuecommand being called twice for the same host simultaneously.
+> If your driver is drivign two cards, then it can still be executing
+> twice ...  but it's a rare driver that has global instead of per-host
+> state to protect.
 
-Signed-off-by: Jiri Pirko <jpirko@redhat.com>
----
- drivers/scsi/fcoe/fcoe.c |    4 +---
- 1 files changed, 1 insertions(+), 3 deletions(-)
+Actually, that's not quite correct.  What happened in 2.6.37 is that the
+host lock was no longer taken prior to entry to ->queuecommand.  Before
+that most of the threaded HBAs dropped it immediately in the
+->queuecommand routines so they could be multi threaded, which meant all
+we were doing a pointless lock shuffle.
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 9f9600b..67714a4 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -285,9 +285,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
- 	}
- 
- 	/* Do not support for bonding device */
--	if ((netdev->priv_flags & IFF_MASTER_ALB) ||
--	    (netdev->priv_flags & IFF_SLAVE_INACTIVE) ||
--	    (netdev->priv_flags & IFF_MASTER_8023AD)) {
-+	if (netdev->priv_flags & IFF_BONDING) {
- 		FCOE_NETDEV_DBG(netdev, "Bonded interfaces not supported\n");
- 		return -EOPNOTSUPP;
- 	}
--- 
-1.7.3.4
+What actually governs the threading is the ioscheduler entry context to
+the request function, which tends to be governed by how the I/O is
+called at the top.
+
+James
+
+
+
+
 
