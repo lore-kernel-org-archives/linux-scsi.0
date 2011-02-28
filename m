@@ -1,33 +1,42 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: scsi_host_template.queuecommand() instances
-Date: Mon, 28 Feb 2011 06:24:03 -0700
-Message-ID: <20110228132402.GI13726@parisc-linux.org>
-References: <20110227222102.GH13726@parisc-linux.org> <439834.81106.qm@web161913.mail.bf1.yahoo.com>
+From: Jiri Pirko <jpirko@redhat.com>
+Subject: [PATCH] fcoe: correct checking for bonding
+Date: Mon, 28 Feb 2011 14:32:45 +0100
+Message-ID: <20110228133245.GB7096@psychotron.brq.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:54793 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753871Ab1B1NYE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2011 08:24:04 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:41212 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753653Ab1B1Ncv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Feb 2011 08:32:51 -0500
 Content-Disposition: inline
-In-Reply-To: <439834.81106.qm@web161913.mail.bf1.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: john smith <whalajam@yahoo.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: devel@open-fcoe.org, robert.w.love@intel.com, James.Bottomley@HansenPartnership.com, netdev@vger.kernel.org
 
-On Sun, Feb 27, 2011 at 11:21:20PM -0800, john smith wrote:
-> How does the queuecommand get called for concurrent application threads  before 2.6.37?
+Check for IFF_BONDING as this flag is set-up for all bonding devices.
 
-Before 2.6.37, there's a per-host lock acquired in the scsi layer that
-prevents queuecommand being called twice for the same host simultaneously.
-If your driver is drivign two cards, then it can still be executing
-twice ...  but it's a rare driver that has global instead of per-host
-state to protect.
+Signed-off-by: Jiri Pirko <jpirko@redhat.com>
+---
+ drivers/scsi/fcoe/fcoe.c |    4 +---
+ 1 files changed, 1 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 9f9600b..67714a4 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -285,9 +285,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ 	}
+ 
+ 	/* Do not support for bonding device */
+-	if ((netdev->priv_flags & IFF_MASTER_ALB) ||
+-	    (netdev->priv_flags & IFF_SLAVE_INACTIVE) ||
+-	    (netdev->priv_flags & IFF_MASTER_8023AD)) {
++	if (netdev->priv_flags & IFF_BONDING) {
+ 		FCOE_NETDEV_DBG(netdev, "Bonded interfaces not supported\n");
+ 		return -EOPNOTSUPP;
+ 	}
 -- 
-Matthew Wilcox				Intel Open Source Technology Centre
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.7.3.4
+
