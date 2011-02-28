@@ -1,147 +1,25 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 5/5] tcm_loop: Add multi-fabric Linux/SCSI LLD fabric module
-Date: Mon, 28 Feb 2011 09:07:48 +0100
-Message-ID: <20110228080748.GA15238@lst.de>
-References: <1298874020-15628-1-git-send-email-nab@linux-iscsi.org> <1298874020-15628-6-git-send-email-nab@linux-iscsi.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 0/5]: Proposal for iSCSI Network Configuration
+Date: Mon, 28 Feb 2011 02:14:19 -0600
+Message-ID: <4D6B595B.4000109@cs.wisc.edu>
+References: <5E4F49720D0BAD499EE1F01232234BA8722624A352@AVEXMB1.qlogic.org> <4D6B0781.1050403@cs.wisc.edu> <5E4F49720D0BAD499EE1F01232234BA87226303BCC@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1298874020-15628-6-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Joel Becker <jlbec@evilplan.org>, Douglas Gilbert <dgilbert@interlog.com>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49497 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752463Ab1B1IOb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 28 Feb 2011 03:14:31 -0500
+In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA87226303BCC@AVEXMB1.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Harish Zunjarrao <harish.zunjarrao@qlogic.com>, Manish Rangankar <manish.rangankar@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
 
-> --- /dev/null
-> +++ b/drivers/target/tcm_loop/Makefile
-> @@ -0,0 +1,11 @@
-> +EXTRA_CFLAGS += -I$(srctree)/drivers/target/ -I$(srctree)/drivers/scsi/ -I$(srctree)/include/scsi/ -I$(srctree)/drivers/target/tcm_loop/
+On 02/28/2011 12:02 AM, Vikas Chaudhary wrote:
+> - We still need the BSG interface, which we are working on our side, to get the
+>    adapter FLASH related read/write operations.
 
-This should not be needed.
-
-> +
-> +tcm_loop-y			:= tcm_loop_fabric.o \
-> +				   tcm_loop_fabric_scsi.o \
-> +				   tcm_loop_configfs.o \
-> +
-> +obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop.o
-> +
-> +ifdef CONFIG_TCM_LOOP_CDB_DEBUG
-> +EXTRA_CFLAGS			+= -DTCM_LOOP_CDB_DEBUG
-> +endif
-
-Please just test for CONFIG_TCM_LOOP_CDB_DEBUG directly in the code.
-
-> +#include <linux/version.h>
-> +#include <generated/utsrelease.h>
-> +#include <linux/utsname.h>
-
-These should not be needed.
-
-> +#include <linux/init.h>
-> +#include <linux/slab.h>
-> +#include <linux/kthread.h>
-
-You don't use kthreads in this file, so it shouldn't be needed either.
-
-> +#include <tcm_loop_core.h>
-> +#include <tcm_loop_configfs.h>
-> +#include <tcm_loop_fabric.h>
-> +#include <tcm_loop_fabric_scsi.h>
-
-Theseshould be ""-style includes.
-
-> +	tl_nexus = kzalloc(sizeof(struct tcm_loop_nexus), GFP_KERNEL);
-> +	if (!(tl_nexus)) {
-
-Please remove all these totally pointless braces inside negations.
-
-> diff --git a/drivers/target/tcm_loop/tcm_loop_configfs.h b/drivers/target/tcm_loop/tcm_loop_configfs.h
-> new file mode 100644
-> index 0000000..f46aa4b
-> --- /dev/null
-> +++ b/drivers/target/tcm_loop/tcm_loop_configfs.h
-> @@ -0,0 +1,2 @@
-> +extern int tcm_loop_register_configfs(void);
-> +extern void tcm_loop_deregister_configfs(void);
-
-I think just having one header for this module instead of mini-headers
-like this is a lot easier to read/maintain.
-
-> +#include <linux/kthread.h>
-
-Again, this should not be needed.
-
-> +int tcm_loop_queue_data_in(struct se_cmd *se_cmd)
-> +{
-> +	struct tcm_loop_cmd *tl_cmd = container_of(se_cmd,
-> +				struct tcm_loop_cmd, tl_se_cmd);
-> +	struct scsi_cmnd *sc = tl_cmd->sc;
-> +
-> +	TL_CDB_DEBUG( "tcm_loop_queue_data_in() called for scsi_cmnd: %p"
-> +			" cdb: 0x%02x\n", sc, sc->cmnd[0]);
-> +
-> +	sc->result = SAM_STAT_GOOD;
-> +	set_host_byte(sc, DID_OK);
-> +	(*sc->scsi_done)(sc);
-
-This can be written simpler as sc->scsi_done(sc);
-
-> +#include <linux/version.h>
-> +#include <generated/utsrelease.h>
-> +#include <linux/utsname.h>
-
-not needed.
-
-> +#include <scsi/libsas.h> /* For TASK_ATTR_* */
-
-I thought that got fixed for the next merge window?
-
-> + * Copied from drivers/scsi/libfc/fc_fcp.c:fc_change_queue_depth() and
-> + * drivers/scsi/libiscsi.c:iscsi_change_queue_depth()
-> + */
-
-Sounds like we should move it to generic code instead of adding a third
-duplicate.
-
-> +static inline struct tcm_loop_hba *tcm_loop_get_hba(struct scsi_cmnd *sc)
-> +{
-> +	return (struct tcm_loop_hba *)sc->device->host->hostdata[0];
-> +}
-
-You probably want to use shost_priv instead.
-
-> +	struct se_portal_group *se_tpg;
-> +	struct tcm_loop_hba *tl_hba;
-> +	struct tcm_loop_tpg *tl_tpg;
-> +
-> +	TL_CDB_DEBUG("tcm_loop_queuecommand() %d:%d:%d:%d got CDB: 0x%02x"
-> +		" scsi_buf_len: %u\n", sc->device->host->host_no,
-> +		sc->device->id, sc->device->channel, sc->device->lun,
-> +		sc->cmnd[0], scsi_bufflen(sc));
-> +	/*
-> +	 * Locate the tcm_loop_hba_t pointer 
-> +	 */
-> +	tl_hba = tcm_loop_get_hba(sc);
-> +	if (!(tl_hba)) {
-> +		printk(KERN_ERR "Unable to locate struct tcm_loop_hba from"
-> +				" struct scsi_cmnd\n");
-> +		set_host_byte(sc, DID_ERROR);
-> +		sc->scsi_done(sc);
-> +		return 0;	
-> +	}
-
-This can't ever be null.
-
-> +static struct scsi_host_template tcm_loop_driver_template = {
-> +	.proc_info		= tcm_loop_proc_info,
-> +	.proc_name		= "tcm_loopback",
-> +	.name			= "TCM_Loopback",
-> +	.info			= NULL,
-> +	.slave_alloc		= NULL,
-> +	.slave_configure	= NULL,
-> +	.slave_destroy		= NULL,
-> +	.ioctl			= NULL,
-
-There is no need to fill unused methods with NULLs.
+So would that be the operations to do something like store/get targets, 
+discovery info, isns, chap, iscsi settings like FirstBurst, etc?
