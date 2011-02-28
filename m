@@ -1,71 +1,43 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH-FOR-38] target: Fix t_transport_aborted handling in
-	LUN_RESET + active I/O shutdown
-Date: Mon, 28 Feb 2011 15:28:15 -0800
-Message-ID: <1298935695.5401.235.camel@haakon2.linux-iscsi.org>
-References: <1298595500-1558-1-git-send-email-nab@linux-iscsi.org>
-	 <AANLkTimcRB3jC6WsKxAQz+TYMhG5aSLQwPkbEn9qYJ29@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 29442] target: Race between target driver unregistration and
+ LUN removal
+Date: Mon, 28 Feb 2011 23:43:11 GMT
+Message-ID: <201102282343.p1SNhBVq028757@demeter2.kernel.org>
+References: <bug-29442-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:60756 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753889Ab1B1XfA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2011 18:35:00 -0500
-In-Reply-To: <AANLkTimcRB3jC6WsKxAQz+TYMhG5aSLQwPkbEn9qYJ29@mail.gmail.com>
+Received: from demeter2.kernel.org ([140.211.167.42]:47083 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754544Ab1B1XnL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2011 18:43:11 -0500
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p1SNhBoe028758
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2011 23:43:11 GMT
+In-Reply-To: <bug-29442-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-iscsi-target-dev@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>
+To: linux-scsi@vger.kernel.org
 
-On Mon, 2011-02-28 at 20:37 +0100, Bart Van Assche wrote:
-> On Fri, Feb 25, 2011 at 1:58 AM, Nicholas A. Bellinger
-> <nab@linux-iscsi.org> wrote:
-> > This patch addresses two outstanding bugs related to T_TASK(cmd)->t_transport_aborted
-> > handling during TMR LUN_RESET and active I/O shutdown.
-> >
-> > This first involves adding two explict t_transport_aborted=1 assignments in
-> > core_tmr_lun_reset() in order to signal the task has been aborted, and
-> > updating transport_generic_wait_for_tasks() to skip sleeping when
-> > t_transport_aborted=1 has been set.  This fixes an issue where
-> > transport_generic_wait_for_tasks() would end up sleeping indefinately when
-> > called from fabric module context while TMR LUN_RESET was happening with
-> > long outstanding backend struct se_task not yet being completed.
-> >
-> > The second adds a missing call to transport_remove_task_from_execute_queue()
-> > when task->task_execute_queue=1 is set in order to fix an OOPs when
-> > task->t_execute_list has not been dropped.  It also fixes the same case in
-> > transport_processing_shutdown() to prevent the issue from happening during
-> > active I/O struct se_device shutdown.
-> 
-> Hello Nicholas,
-> 
-> Are all I/O shutdown improvements present in the lio-4.1 branch
-> included in this patch ?
+https://bugzilla.kernel.org/show_bug.cgi?id=29442
 
-Correct, the TCM specific pieces for this between v4.1.0-rc1 and
-v4.0.0-rc7 are in sync in lio-core-2.6.git upstream at this point, and
-this patch should do the same for mainline .38.
 
-> I'm asking because with the lio-4.1 branch I
-> can't reproduce https://bugzilla.kernel.org/show_bug.cgi?id=29442. If
-> so, it seems like a good idea to me to refer to that bugzilla item in
-> the patch description.
 
-Yep, I will update this with the lio-core-2.6.git commit reference and
-linux-scsi URL shortly.
 
->  See also
-> https://github.com/bvanassche/srpt-lio/tree/srpt-lio-4.1 if you want
-> to have a look at the code I have been testing.
-> 
 
-My apologies here as I have not been able to personally test your code
-yet, but this is still on my list of TODO items for the week.  I am
-happy to pull directly from srpt-lio-4.1 into lio-core-2.6.git to track
-your progress, and thank you for rebasing and testing against the
-lastest TCM/LIO v4.1 development code.
+--- Comment #3 from nab <nab@linux-iscsi.org>  2011-02-28 23:43:09 ---
+>From Bart's feedback the following commit in upstream lio-core-2.6.git appears
+to resolve the issue using the latest lio-4.1 (v4.1.0-rc1) development code:
 
---nab
+target: Fix t_transport_aborted handling in LUN_RESET + active I/O shutdown
+http://git.kernel.org/?p=linux/kernel/git/nab/lio-core-2.6.git;a=commitdiff;h=90c9861627c2b5ab4a79fabf34ffb0c7f59fb34b
 
+This patch has been queued for mainline .38 here:
+
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commitdiff;h=52208ae3fc60cbcb214c10fb8b82304199e2cc3a
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
