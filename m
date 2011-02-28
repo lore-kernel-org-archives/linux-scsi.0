@@ -1,47 +1,59 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: RE: [PATCH 0/5]: Proposal for iSCSI Network Configuration
-Date: Mon, 28 Feb 2011 01:34:59 -0800
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA87226303BEB@AVEXMB1.qlogic.org>
-References: <5E4F49720D0BAD499EE1F01232234BA8722624A352@AVEXMB1.qlogic.org>
- <4D6B0781.1050403@cs.wisc.edu>
- <5E4F49720D0BAD499EE1F01232234BA87226303BCC@AVEXMB1.qlogic.org>
- <4D6B595B.4000109@cs.wisc.edu>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 30062] New: Huge amounts of "HDIO_GET_IDENTITY failed for
+ /dev/sr0" messages during boot
+Date: Mon, 28 Feb 2011 10:52:28 GMT
+Message-ID: <bug-30062-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tx2ehsobe004.messaging.microsoft.com ([65.55.88.14]:45520 "EHLO
-	TX2EHSOBE007.bigfish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752384Ab1B1JfE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2011 04:35:04 -0500
-In-Reply-To: <4D6B595B.4000109@cs.wisc.edu>
-Content-Language: en-US
+Received: from demeter1.kernel.org ([140.211.167.39]:34163 "EHLO
+	demeter1.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753162Ab1B1Kw3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Feb 2011 05:52:29 -0500
+Received: from demeter1.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter1.kernel.org (8.14.4/8.14.3) with ESMTP id p1SAqSPj002145
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Feb 2011 10:52:29 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Harish Zunjarrao <harish.zunjarrao@qlogic.com>, Manish Rangankar <manish.rangankar@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
->-----Original Message-----
->From: Mike Christie [mailto:michaelc@cs.wisc.edu]
->Sent: Monday, February 28, 2011 1:44 PM
->To: Vikas Chaudhary
->Cc: open-iscsi@googlegroups.com; James Bottomley; linux-
->scsi@vger.kernel.org; Lalit Chandivade; Harish Zunjarrao; Manish Rangankar;
->Ravi Anand
->Subject: Re: [PATCH 0/5]: Proposal for iSCSI Network Configuration
->
->On 02/28/2011 12:02 AM, Vikas Chaudhary wrote:
->> - We still need the BSG interface, which we are working on our side, to
->get the
->>    adapter FLASH related read/write operations.
->
->So would that be the operations to do something like store/get targets,
->discovery info, isns, chap, iscsi settings like FirstBurst, etc?
+https://bugzilla.kernel.org/show_bug.cgi?id=30062
 
-We are planning to add BSG for Vendor specific flash updates like, read/write operations of - NVRAM, firmware and bootcode.
-
-We will use Netlink interface for target discovery info, iscsi settings, login/logout of target.
+           Summary: Huge amounts of "HDIO_GET_IDENTITY failed for
+                    /dev/sr0" messages during boot
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 2.6.38-rc6
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: blocking
+          Priority: P1
+         Component: SCSI
+        AssignedTo: linux-scsi@vger.kernel.org
+        ReportedBy: monoped@sudrala.de
+        Regression: Yes
 
 
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
+My system (Crux 2.7) contains an older SCSI disk, and a SCSI CD writer
+(Plextor). When booting into 2.6.38, I get an endless sequence of errors like
 
+    ata_id[xyz]: HDIO_GET_IDENTITY failed for '/dev/sr0'
+
+The errors start when the command
+
+    udevadm trigger --type=devices --action=add
+
+is executed. There are also about 50 udevd processes in the process list. The
+system gets extremely slow, and the only way to make it usable again is by
+saying 'killall udevd'. Apparently udev has an issue with the CD writer (while
+it handles the harddisk correctly).
+
+The same system works well with kernel 2.6.37.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
