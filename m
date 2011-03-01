@@ -1,87 +1,125 @@
-From: Jiri Pirko <jpirko@redhat.com>
-Subject: Re: [Open-FCoE] [PATCH] fcoe: correct checking for bonding
-Date: Tue, 1 Mar 2011 07:37:11 +0100
-Message-ID: <20110301063710.GD2855@psychotron.redhat.com>
-References: <20110228133245.GB7096@psychotron.brq.redhat.com>
- <8433.1298913321@death>
- <4D6BE155.7050109@gmail.com>
+From: "Jan Beulich" <JBeulich@novell.com>
+Subject: Re: [PATCH] cxgb{3,4}*: improve Kconfig dependencies
+Date: Tue, 01 Mar 2011 07:46:32 +0000
+Message-ID: <4D6CB26802000078000343BD@vpn.id2.novell.com>
+References: <1298950455-4497-1-git-send-email-dm@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+In-Reply-To: <1298950455-4497-1-git-send-email-dm@chelsio.com>
 Content-Disposition: inline
-In-Reply-To: <4D6BE155.7050109@gmail.com>
-Sender: netdev-owner@vger.kernel.org
-To: Joe Eykholt <joe.eykholt@gmail.com>
-Cc: Jay Vosburgh <fubar@us.ibm.com>, James.Bottomley@HansenPartnership.com, netdev@vger.kernel.org, devel@open-fcoe.org, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dimitris Michailidis <dm@chelsio.com>
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
-Mon, Feb 28, 2011 at 06:54:29PM CET, joe.eykholt@gmail.com wrote:
->On 2/28/11 9:15 AM, Jay Vosburgh wrote:
->>Jiri Pirko<jpirko@redhat.com>  wrote:
->>
->>>Check for IFF_BONDING as this flag is set-up for all bonding devices.
->>>
->>>Signed-off-by: Jiri Pirko<jpirko@redhat.com>
->>>---
->>>drivers/scsi/fcoe/fcoe.c |    4 +---
->>>1 files changed, 1 insertions(+), 3 deletions(-)
->>>
->>>diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
->>>index 9f9600b..67714a4 100644
->>>--- a/drivers/scsi/fcoe/fcoe.c
->>>+++ b/drivers/scsi/fcoe/fcoe.c
->>>@@ -285,9 +285,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
->>>	}
->>>
->>>	/* Do not support for bonding device */
->>>-	if ((netdev->priv_flags&  IFF_MASTER_ALB) ||
->>>-	    (netdev->priv_flags&  IFF_SLAVE_INACTIVE) ||
->>>-	    (netdev->priv_flags&  IFF_MASTER_8023AD)) {
->>>+	if (netdev->priv_flags&  IFF_BONDING) {
->>>		FCOE_NETDEV_DBG(netdev, "Bonded interfaces not supported\n");
->>>		return -EOPNOTSUPP;
->>>	}
->>
->>	Based on past discussions, I believe the intent of the code is
->>to permit FCOE over bonding only for active-backup mode, and possibly
->>for -xor/-rr as well.
->>
->>	I'm not sure if the slave or the master is what's being tested
->>here, so I'm not sure what the right thing to do is.  I suspect it's the
->>master, as I recall discussion of one configuration involving
->>active-backup mode balancing FCOE traffic over both the active and
->>inactive slaves.  FCOE uses the "orig_dev" logic in __netif_receive_skb
->>to have the packets delivered even on the nominally inactive slave.
->>
->>	-J
->>
->>---
->>	-Jay Vosburgh, IBM Linux Technology Center, fubar@us.ibm.com
->
->Right.  That was the intent.  It should work on the physical dev, but probably
->not on the master of the bond.
->
->If you have a master/slave bond for IPv4 between eth1 and eth2, say,
->and they are going to two different DCE (FCoE) switches, presumably on
->different VSANs but with ultimate access to the same disks,
->then you want to split the FCoE traffic in active/active
->mode using separate FCoE instances on eth1 and eth2 even though IP
->is using active/standby on bond0.  This should work.  But, putting fcoe
->on bond0 isn't going to do what you want.
->
->However, it seems like the check above shouldn't be checking
->IFF_SLAVE_INACTIVE.   I can't test this.
+>>> On 01.03.11 at 04:34, Dimitris Michailidis <dm@chelsio.com> wrote:
+> - Remove the dependency of cxgb4 and cxgb4vf on INET.  cxgb3 really
+>   depends on INET, keep it but add it directly to the driver's Kconfig
+>   entry.
+> - Make the iSCSI drivers cxgb3i and cxgb4i available in the SCSI menu
+>   without requiring any options in the net driver menu to be enabled
+>   first.  Add needed selects so the iSCSI drivers can build their
+>   corresponding net drivers.
+> - Remove CHELSIO_T*_DEPENDS.
+> 
+> Signed-off-by: Dimitris Michailidis <dm@chelsio.com>
+> ---
+>  drivers/net/Kconfig               |   21 +++------------------
+>  drivers/scsi/cxgbi/cxgb3i/Kconfig |    4 +++-
+>  drivers/scsi/cxgbi/cxgb4i/Kconfig |    4 +++-
+>  3 files changed, 9 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/net/Kconfig b/drivers/net/Kconfig
+> index f4b3927..6e09d5f 100644
+> --- a/drivers/net/Kconfig
+> +++ b/drivers/net/Kconfig
+> @@ -2595,14 +2595,9 @@ config CHELSIO_T1_1G
+>  	  Enables support for Chelsio's gigabit Ethernet PCI cards.  If you
+>  	  are using only 10G cards say 'N' here.
+>  
+> -config CHELSIO_T3_DEPENDS
+> -	tristate
+> -	depends on PCI && INET
+> -	default y
+> -
+>  config CHELSIO_T3
+>  	tristate "Chelsio Communications T3 10Gb Ethernet support"
+> -	depends on CHELSIO_T3_DEPENDS
+> +	depends on PCI && INET
 
-OK. So I guess the right check should be for:
-(netdev->priv_flags & IFF_BONDING && netdev->flags & IFF_MASTER)
+Forgot to remove INET here?
 
-This would disable adding all bond devices (like bond0 etc) and allows
-to use enslaved physdevs.
+Besides that,
+Acked-by: Jan Beulich <jbeulich@novell.com>
 
-Note that checking for mode is irrelevant here. Mode could be easily
-changed later without fcoe knowing that.
+>  	select FW_LOADER
+>  	select MDIO
+>  	help
+> @@ -2620,14 +2615,9 @@ config CHELSIO_T3
+>  	  To compile this driver as a module, choose M here: the module
+>  	  will be called cxgb3.
+>  
+> -config CHELSIO_T4_DEPENDS
+> -	tristate
+> -	depends on PCI && INET
+> -	default y
+> -
+>  config CHELSIO_T4
+>  	tristate "Chelsio Communications T4 Ethernet support"
+> -	depends on CHELSIO_T4_DEPENDS
+> +	depends on PCI
+>  	select FW_LOADER
+>  	select MDIO
+>  	help
+> @@ -2645,14 +2635,9 @@ config CHELSIO_T4
+>  	  To compile this driver as a module choose M here; the module
+>  	  will be called cxgb4.
+>  
+> -config CHELSIO_T4VF_DEPENDS
+> -	tristate
+> -	depends on PCI && INET
+> -	default y
+> -
+>  config CHELSIO_T4VF
+>  	tristate "Chelsio Communications T4 Virtual Function Ethernet support"
+> -	depends on CHELSIO_T4VF_DEPENDS
+> +	depends on PCI
+>  	help
+>  	  This driver supports Chelsio T4-based gigabit and 10Gb Ethernet
+>  	  adapters with PCI-E SR-IOV Virtual Functions.
+> diff --git a/drivers/scsi/cxgbi/cxgb3i/Kconfig 
+> b/drivers/scsi/cxgbi/cxgb3i/Kconfig
+> index 5cf4e98..11dff23 100644
+> --- a/drivers/scsi/cxgbi/cxgb3i/Kconfig
+> +++ b/drivers/scsi/cxgbi/cxgb3i/Kconfig
+> @@ -1,6 +1,8 @@
+>  config SCSI_CXGB3_ISCSI
+>  	tristate "Chelsio T3 iSCSI support"
+> -	depends on CHELSIO_T3_DEPENDS
+> +	depends on PCI && INET
+> +	select NETDEVICES
+> +	select NETDEV_10000
+>  	select CHELSIO_T3
+>  	select SCSI_ISCSI_ATTRS
+>  	---help---
+> diff --git a/drivers/scsi/cxgbi/cxgb4i/Kconfig 
+> b/drivers/scsi/cxgbi/cxgb4i/Kconfig
+> index bb94b39..d5302c2 100644
+> --- a/drivers/scsi/cxgbi/cxgb4i/Kconfig
+> +++ b/drivers/scsi/cxgbi/cxgb4i/Kconfig
+> @@ -1,6 +1,8 @@
+>  config SCSI_CXGB4_ISCSI
+>  	tristate "Chelsio T4 iSCSI support"
+> -	depends on CHELSIO_T4_DEPENDS
+> +	depends on PCI && INET
+> +	select NETDEVICES
+> +	select NETDEV_10000
+>  	select CHELSIO_T4
+>  	select SCSI_ISCSI_ATTRS
+>  	---help---
 
-Jirka
->
->	Joe
->
+
+
+
