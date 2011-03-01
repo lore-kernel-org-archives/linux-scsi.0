@@ -1,53 +1,105 @@
-From: Stephen Clark <sclark46@earthlink.net>
-Subject: Re: NEC ND-4550A problems reading DVD-R
-Date: Tue, 01 Mar 2011 10:47:41 -0500
-Message-ID: <4D6D151D.8030307@earthlink.net>
-References: <m339n7g7tw.fsf@intrepid.localdomain> <20110301080153.GA26074@htj.dyndns.org> <4D6CF92A.4020105@teksavvy.com>
-Reply-To: sclark46@earthlink.net
+From: Joe Eykholt <joe.eykholt@gmail.com>
+Subject: Re: [Open-FCoE] [PATCH] fcoe: correct checking for bonding
+Date: Tue, 01 Mar 2011 09:49:46 -0800
+Message-ID: <4D6D31BA.3000105@gmail.com>
+References: <20110228133245.GB7096@psychotron.brq.redhat.com> <8433.1298913321@death> <4D6BE155.7050109@gmail.com> <20110301063710.GD2855@psychotron.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4D6CF92A.4020105@teksavvy.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <kernel@teksavvy.com>
-Cc: Tejun Heo <tj@kernel.org>, Krzysztof Halasa <khc@pm.waw.pl>, linux-ide@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-px0-f174.google.com ([209.85.212.174]:61914 "EHLO
+	mail-px0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752168Ab1CARtx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Mar 2011 12:49:53 -0500
+In-Reply-To: <20110301063710.GD2855@psychotron.redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jiri Pirko <jpirko@redhat.com>
+Cc: Jay Vosburgh <fubar@us.ibm.com>, James.Bottomley@HansenPartnership.com, netdev@vger.kernel.org, devel@open-fcoe.org, linux-scsi@vger.kernel.org
 
-On 03/01/2011 08:48 AM, Mark Lord wrote:
-> On 11-03-01 03:01 AM, Tejun Heo wrote:
-> ..
->    
->> I think that's determined by drivers/scsi/sr.h::SR_TIMEOUT which is
->> hardcoded to be 30 seconds.  Maybe it's better to move it to use the
->> block parameter.  Anyways, the drive actually takes longer than 30secs
->> to recognize the media?
->>      
-> That slow behaviour is not uncommon, especially as drives struggle
-> to recognize various forms of copy-protected media (DVD-Video).
-> A longer default, or tuneable timeout, would help.
+On 2/28/11 10:37 PM, Jiri Pirko wrote:
+> Mon, Feb 28, 2011 at 06:54:29PM CET, joe.eykholt@gmail.com wrote:
+>> On 2/28/11 9:15 AM, Jay Vosburgh wrote:
+>>> Jiri Pirko<jpirko@redhat.com>   wrote:
+>>>
+>>>> Check for IFF_BONDING as this flag is set-up for all bonding devices.
+>>>>
+>>>> Signed-off-by: Jiri Pirko<jpirko@redhat.com>
+>>>> ---
+>>>> drivers/scsi/fcoe/fcoe.c |    4 +---
+>>>> 1 files changed, 1 insertions(+), 3 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+>>>> index 9f9600b..67714a4 100644
+>>>> --- a/drivers/scsi/fcoe/fcoe.c
+>>>> +++ b/drivers/scsi/fcoe/fcoe.c
+>>>> @@ -285,9 +285,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+>>>> 	}
+>>>>
+>>>> 	/* Do not support for bonding device */
+>>>> -	if ((netdev->priv_flags&   IFF_MASTER_ALB) ||
+>>>> -	    (netdev->priv_flags&   IFF_SLAVE_INACTIVE) ||
+>>>> -	    (netdev->priv_flags&   IFF_MASTER_8023AD)) {
+>>>> +	if (netdev->priv_flags&   IFF_BONDING) {
+>>>> 		FCOE_NETDEV_DBG(netdev, "Bonded interfaces not supported\n");
+>>>> 		return -EOPNOTSUPP;
+>>>> 	}
+>>>
+>>> 	Based on past discussions, I believe the intent of the code is
+>>> to permit FCOE over bonding only for active-backup mode, and possibly
+>>> for -xor/-rr as well.
+>>>
+>>> 	I'm not sure if the slave or the master is what's being tested
+>>> here, so I'm not sure what the right thing to do is.  I suspect it's the
+>>> master, as I recall discussion of one configuration involving
+>>> active-backup mode balancing FCOE traffic over both the active and
+>>> inactive slaves.  FCOE uses the "orig_dev" logic in __netif_receive_skb
+>>> to have the packets delivered even on the nominally inactive slave.
+>>>
+>>> 	-J
+>>>
+>>> ---
+>>> 	-Jay Vosburgh, IBM Linux Technology Center, fubar@us.ibm.com
+>>
+>> Right.  That was the intent.  It should work on the physical dev, but probably
+>> not on the master of the bond.
+>>
+>> If you have a master/slave bond for IPv4 between eth1 and eth2, say,
+>> and they are going to two different DCE (FCoE) switches, presumably on
+>> different VSANs but with ultimate access to the same disks,
+>> then you want to split the FCoE traffic in active/active
+>> mode using separate FCoE instances on eth1 and eth2 even though IP
+>> is using active/standby on bond0.  This should work.  But, putting fcoe
+>> on bond0 isn't going to do what you want.
+>>
+>> However, it seems like the check above shouldn't be checking
+>> IFF_SLAVE_INACTIVE.   I can't test this.
 >
-> Cheers
+> OK. So I guess the right check should be for:
+> (netdev->priv_flags&  IFF_BONDING&&  netdev->flags&  IFF_MASTER)
+
+I think that's OK.  How about just checking for MASTER?
+When is MASTER going to be set without BONDING?
+
+Otherwise I'd add some parens or I might code this as:
+
+	if ((netdev->priv_flags & (IFF_BONDING | IFF_MASTER)) ==
+	    (IFF_BONDING | IFF_MASTER))
+
+Which is less clear, I know, but used to generate better code.
+The compiler might generate the same code these days.
+Not that this is performance-critical or anything.
+
+> This would disable adding all bond devices (like bond0 etc) and allows
+> to use enslaved physdevs.
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
+> Note that checking for mode is irrelevant here. Mode could be easily
+> changed later without fcoe knowing that.
 >
->    
-I agree with Mark, this should be a user tuneable value. My 2006 LG 
-dvd-rw frequently times out
-trying to identify the media. But after numerous timeout error messages 
-it usually suceeds.
+> Jirka
 
--- 
-
-"They that give up essential liberty to obtain temporary safety,
-deserve neither liberty nor safety."  (Ben Franklin)
-
-"The course of history shows that as a government grows, liberty
-decreases."  (Thomas Jefferson)
+	Cheers,
+	Joe
 
 
 
