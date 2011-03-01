@@ -1,89 +1,989 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/5] target updates for scsi-post-merge .39 (round one, v2)
-Date: Mon, 28 Feb 2011 16:17:26 -0800
-Message-ID: <1298938651-18784-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm13-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.244]:38543 "HELO
-	nm13-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753143Ab1CAARk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 28 Feb 2011 19:17:40 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH 1/5] target: add initial device backend context target_core_stat.c code
+Date: Mon, 28 Feb 2011 16:17:27 -0800
+Message-ID: <1298938651-18784-2-git-send-email-nab@linux-iscsi.org>
+References: <1298938651-18784-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1298938651-18784-1-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Joel Becker <jlbec@evilplan.org>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi James and Co,
+This patch adds a target_core_mib.c statistics conversion for
+backend context struct se_subsystem_dev + struct se_device config_group
+based statistics in target_core_device.c using CONFIGFS_EATTR()
+based struct config_item_types from target_core_stat.c code.
 
-The following is the first round (v2) of target patches intended for .39
-scsi-post-merge tree that introduces new target functionality and the
-first mainline TCM fabric module (TCM_Loop).
+The conversion from backend /proc/scsi_target/mib/ context output to configfs
+default groups+attributes include scsi_dev, scsi_lu, and scsi_tgt_dev output
+from within individual:
 
-Patches #1 -> #4 involve the addition of new ConfigFS context based
-statistics groups in target_core_stat.c following RFC-4455 to address
-the removal of the legacy ProcFS based target_core_mib.c in .38 code.
+	/sys/kernel/config/target/core/$HBA/DEV/
 
-Patch #5 adds the TCM_Loop virtual SCSI LLD module that was originally
-reviewed and intended for .38 code.  This module currently supports
-high level port emulation for SAS, FC and iSCSI ProtoIdents.  The changes
-from v1 -> v2 include address Christoph's comments for patch #5 for
-TCM_Loop included into lio-core-2.6.git/lio-4.1.
+The legacy procfs output now appear as individual configfs attributes under:
 
-Please be sure to apply this series on top the critical 'for-38-urgent'
-fix posted here:
+*) $HBA/$DEV/statistics/scsi_dev:
 
-[PATCH-FOR-38] target: Fix t_transport_aborted handling in LUN_RESET + active I/O shutdown
-http://marc.info/?l=linux-scsi&m=129859551620778&w=2
+|-- indx
+|-- inst
+|-- ports
+`-- role
 
-as well as the 14 patch series for-39-misc-v2 posted recently here:
+*) $HBA/$DEV/statistics/scsi_lu:
 
-[PATCH 00/14] target patches for .39 scsi-misc (v2)
-http://marc.info/?l=linux-scsi&m=129866341626173&w=2
+|-- creation_time
+|-- dev
+|-- dev_type
+|-- full_stat
+|-- hs_num_cmds
+|-- indx
+|-- inst
+|-- lu_name
+|-- lun
+|-- num_cmds
+|-- prod
+|-- read_mbytes
+|-- resets
+|-- rev
+|-- state_bit
+|-- status
+|-- vend
+`-- write_mbytes
 
-This full series is also available directly from git here:
+*) $HBA/$DEV/statistics/scsi_tgt_dev:
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-39-post-merge-v2
-
-Please review and apply,
-
-Thanks!
+|-- indx
+|-- inst
+|-- non_access_lus
+|-- num_lus
+|-- resets
+`-- status
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-
-Nicholas Bellinger (5):
-  target: add initial device backend context target_core_stat.c code
-  target: add initial fabric port context target_core_stat.c code
-  target: add initial fabric MappedLUN context target_core_stat.c code
-  target: Add fabric_stat_group for fabric module statistics
-    default_group
-  tcm_loop: Add multi-fabric Linux/SCSI LLD fabric module
-
- drivers/target/Kconfig                         |    2 +
- drivers/target/Makefile                        |    6 +-
- drivers/target/target_core_configfs.c          |   76 +-
- drivers/target/target_core_fabric_configfs.c   |  209 +++-
- drivers/target/target_core_stat.c              | 1810 ++++++++++++++++++++++++
- drivers/target/target_core_stat.h              |    8 +
- drivers/target/tcm_loop/Kconfig                |   11 +
- drivers/target/tcm_loop/Makefile               |    5 +
- drivers/target/tcm_loop/tcm_loop_configfs.c    |  643 +++++++++
- drivers/target/tcm_loop/tcm_loop_core.h        |  141 ++
- drivers/target/tcm_loop/tcm_loop_fabric.c      |  472 ++++++
- drivers/target/tcm_loop/tcm_loop_fabric_scsi.c |  574 ++++++++
- include/target/target_core_base.h              |   35 +-
- include/target/target_core_configfs.h          |    4 +
- 14 files changed, 3978 insertions(+), 18 deletions(-)
+---
+ drivers/target/Makefile               |    3 +-
+ drivers/target/target_core_configfs.c |   76 ++++-
+ drivers/target/target_core_stat.c     |  684 +++++++++++++++++++++++++++++++++
+ drivers/target/target_core_stat.h     |    6 +
+ include/target/target_core_base.h     |   10 +
+ 5 files changed, 768 insertions(+), 11 deletions(-)
  create mode 100644 drivers/target/target_core_stat.c
  create mode 100644 drivers/target/target_core_stat.h
- create mode 100644 drivers/target/tcm_loop/Kconfig
- create mode 100644 drivers/target/tcm_loop/Makefile
- create mode 100644 drivers/target/tcm_loop/tcm_loop_configfs.c
- create mode 100644 drivers/target/tcm_loop/tcm_loop_core.h
- create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric.c
- create mode 100644 drivers/target/tcm_loop/tcm_loop_fabric_scsi.c
 
+diff --git a/drivers/target/Makefile b/drivers/target/Makefile
+index 050ee65..4f3cb78 100644
+--- a/drivers/target/Makefile
++++ b/drivers/target/Makefile
+@@ -12,7 +12,8 @@ target_core_mod-y		:= target_core_configfs.o \
+ 				   target_core_transport.o \
+ 				   target_core_cdb.o \
+ 				   target_core_ua.o \
+-				   target_core_rd.o
++				   target_core_rd.o \
++				   target_core_stat.o
+ 
+ obj-$(CONFIG_TARGET_CORE)	+= target_core_mod.o
+ 
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 9721ef2..67ba913 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -3,8 +3,8 @@
+  *
+  * This file contains ConfigFS logic for the Generic Target Engine project.
+  *
+- * Copyright (c) 2008-2010 Rising Tide Systems
+- * Copyright (c) 2008-2010 Linux-iSCSI.org
++ * Copyright (c) 2008-2011 Rising Tide Systems
++ * Copyright (c) 2008-2011 Linux-iSCSI.org
+  *
+  * Nicholas A. Bellinger <nab@kernel.org>
+  *
+@@ -50,6 +50,7 @@
+ #include "target_core_hba.h"
+ #include "target_core_pr.h"
+ #include "target_core_rd.h"
++#include "target_core_stat.h"
+ 
+ static struct list_head g_tf_list;
+ static struct mutex g_tf_lock;
+@@ -2709,6 +2710,34 @@ static struct config_item_type target_core_alua_cit = {
+ 
+ /* End functions for struct config_item_type target_core_alua_cit */
+ 
++/* Start functions for struct config_item_type target_core_stat_cit */
++
++static struct config_group *target_core_stat_mkdir(
++	struct config_group *group,
++	const char *name)
++{
++	return ERR_PTR(-ENOSYS);
++}
++
++static void target_core_stat_rmdir(
++	struct config_group *group,
++	struct config_item *item)
++{
++	return;
++}
++
++static struct configfs_group_operations target_core_stat_group_ops = {
++	.make_group		= &target_core_stat_mkdir,
++	.drop_item		= &target_core_stat_rmdir,
++};
++
++static struct config_item_type target_core_stat_cit = {
++	.ct_group_ops		= &target_core_stat_group_ops,
++	.ct_owner		= THIS_MODULE,
++};
++
++/* End functions for struct config_item_type target_core_stat_cit */
++
+ /* Start functions for struct config_item_type target_core_hba_cit */
+ 
+ static struct config_group *target_core_make_subdev(
+@@ -2721,10 +2750,12 @@ static struct config_group *target_core_make_subdev(
+ 	struct config_item *hba_ci = &group->cg_item;
+ 	struct se_hba *hba = item_to_hba(hba_ci);
+ 	struct config_group *dev_cg = NULL, *tg_pt_gp_cg = NULL;
++	struct config_group *dev_stat_grp = NULL;
++	int errno = -ENOMEM, ret;
+ 
+-	if (mutex_lock_interruptible(&hba->hba_access_mutex))
+-		return NULL;
+-
++	ret = mutex_lock_interruptible(&hba->hba_access_mutex);
++	if (ret)
++		return ERR_PTR(ret);
+ 	/*
+ 	 * Locate the struct se_subsystem_api from parent's struct se_hba.
+ 	 */
+@@ -2754,7 +2785,7 @@ static struct config_group *target_core_make_subdev(
+ 	se_dev->se_dev_hba = hba;
+ 	dev_cg = &se_dev->se_dev_group;
+ 
+-	dev_cg->default_groups = kzalloc(sizeof(struct config_group) * 6,
++	dev_cg->default_groups = kzalloc(sizeof(struct config_group) * 7,
+ 			GFP_KERNEL);
+ 	if (!(dev_cg->default_groups))
+ 		goto out;
+@@ -2786,13 +2817,17 @@ static struct config_group *target_core_make_subdev(
+ 			&target_core_dev_wwn_cit);
+ 	config_group_init_type_name(&se_dev->t10_alua.alua_tg_pt_gps_group,
+ 			"alua", &target_core_alua_tg_pt_gps_cit);
++	config_group_init_type_name(&se_dev->dev_stat_grps.stat_group,
++			"statistics", &target_core_stat_cit);
++
+ 	dev_cg->default_groups[0] = &se_dev->se_dev_attrib.da_group;
+ 	dev_cg->default_groups[1] = &se_dev->se_dev_pr_group;
+ 	dev_cg->default_groups[2] = &se_dev->t10_wwn.t10_wwn_group;
+ 	dev_cg->default_groups[3] = &se_dev->t10_alua.alua_tg_pt_gps_group;
+-	dev_cg->default_groups[4] = NULL;
++	dev_cg->default_groups[4] = &se_dev->dev_stat_grps.stat_group;
++	dev_cg->default_groups[5] = NULL;
+ 	/*
+-	 * Add core/$HBA/$DEV/alua/tg_pt_gps/default_tg_pt_gp
++	 * Add core/$HBA/$DEV/alua/default_tg_pt_gp
+ 	 */
+ 	tg_pt_gp = core_alua_allocate_tg_pt_gp(se_dev, "default_tg_pt_gp", 1);
+ 	if (!(tg_pt_gp))
+@@ -2812,6 +2847,17 @@ static struct config_group *target_core_make_subdev(
+ 	tg_pt_gp_cg->default_groups[0] = &tg_pt_gp->tg_pt_gp_group;
+ 	tg_pt_gp_cg->default_groups[1] = NULL;
+ 	T10_ALUA(se_dev)->default_tg_pt_gp = tg_pt_gp;
++	/*
++	 * Add core/$HBA/$DEV/statistics/ default groups
++	 */
++	dev_stat_grp = &DEV_STAT_GRP(se_dev)->stat_group;
++	dev_stat_grp->default_groups = kzalloc(sizeof(struct config_group) * 4,
++				GFP_KERNEL);
++	if (!dev_stat_grp->default_groups) {
++		printk(KERN_ERR "Unable to allocate dev_stat_grp->default_groups\n");
++		goto out;
++	}
++	target_stat_setup_dev_default_groups(se_dev);
+ 
+ 	printk(KERN_INFO "Target_Core_ConfigFS: Allocated struct se_subsystem_dev:"
+ 		" %p se_dev_su_ptr: %p\n", se_dev, se_dev->se_dev_su_ptr);
+@@ -2823,6 +2869,8 @@ out:
+ 		core_alua_free_tg_pt_gp(T10_ALUA(se_dev)->default_tg_pt_gp);
+ 		T10_ALUA(se_dev)->default_tg_pt_gp = NULL;
+ 	}
++	if (dev_stat_grp)
++		kfree(dev_stat_grp->default_groups);
+ 	if (tg_pt_gp_cg)
+ 		kfree(tg_pt_gp_cg->default_groups);
+ 	if (dev_cg)
+@@ -2832,7 +2880,7 @@ out:
+ 	kfree(se_dev);
+ unlock:
+ 	mutex_unlock(&hba->hba_access_mutex);
+-	return NULL;
++	return ERR_PTR(errno);
+ }
+ 
+ static void target_core_drop_subdev(
+@@ -2844,7 +2892,7 @@ static void target_core_drop_subdev(
+ 	struct se_hba *hba;
+ 	struct se_subsystem_api *t;
+ 	struct config_item *df_item;
+-	struct config_group *dev_cg, *tg_pt_gp_cg;
++	struct config_group *dev_cg, *tg_pt_gp_cg, *dev_stat_grp;
+ 	int i;
+ 
+ 	hba = item_to_hba(&se_dev->se_dev_hba->hba_group.cg_item);
+@@ -2856,6 +2904,14 @@ static void target_core_drop_subdev(
+ 	list_del(&se_dev->g_se_dev_list);
+ 	spin_unlock(&se_global->g_device_lock);
+ 
++	dev_stat_grp = &DEV_STAT_GRP(se_dev)->stat_group;
++	for (i = 0; dev_stat_grp->default_groups[i]; i++) {
++		df_item = &dev_stat_grp->default_groups[i]->cg_item;
++		dev_stat_grp->default_groups[i] = NULL;
++		config_item_put(df_item);
++	}
++	kfree(dev_stat_grp->default_groups);
++
+ 	tg_pt_gp_cg = &T10_ALUA(se_dev)->alua_tg_pt_gps_group;
+ 	for (i = 0; tg_pt_gp_cg->default_groups[i]; i++) {
+ 		df_item = &tg_pt_gp_cg->default_groups[i]->cg_item;
+diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
+new file mode 100644
+index 0000000..c1428f2
+--- /dev/null
++++ b/drivers/target/target_core_stat.c
+@@ -0,0 +1,684 @@
++/*******************************************************************************
++ * Filename:  target_core_stat.c
++ *
++ * Copyright (c) 2011 Rising Tide Systems
++ * Copyright (c) 2011 Linux-iSCSI.org
++ *
++ * Modern ConfigFS group context specific statistics based on original
++ * target_core_mib.c code
++ *
++ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
++ *
++ * Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
++ ******************************************************************************/
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/delay.h>
++#include <linux/timer.h>
++#include <linux/string.h>
++#include <linux/version.h>
++#include <generated/utsrelease.h>
++#include <linux/utsname.h>
++#include <linux/proc_fs.h>
++#include <linux/seq_file.h>
++#include <linux/blkdev.h>
++#include <linux/configfs.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_host.h>
++
++#include <target/target_core_base.h>
++#include <target/target_core_transport.h>
++#include <target/target_core_fabric_ops.h>
++#include <target/target_core_configfs.h>
++#include <target/configfs_macros.h>
++
++#include "target_core_hba.h"
++
++#ifndef INITIAL_JIFFIES
++#define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
++#endif
++
++#define NONE		"None"
++#define ISPRINT(a)   ((a >= ' ') && (a <= '~'))
++
++#define SCSI_LU_INDEX			1
++#define LU_COUNT			1
++
++/*
++ * SCSI Device Table
++ */
++
++CONFIGFS_EATTR_STRUCT(target_stat_scsi_dev, se_dev_stat_grps);
++#define DEV_STAT_SCSI_DEV_ATTR(_name, _mode)				\
++static struct target_stat_scsi_dev_attribute				\
++			target_stat_scsi_dev_##_name =			\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_stat_scsi_dev_show_attr_##_name,				\
++	target_stat_scsi_dev_store_attr_##_name);
++
++#define DEV_STAT_SCSI_DEV_ATTR_RO(_name)				\
++static struct target_stat_scsi_dev_attribute				\
++			target_stat_scsi_dev_##_name =			\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_stat_scsi_dev_show_attr_##_name);
++
++static ssize_t target_stat_scsi_dev_show_attr_inst(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_hba *hba = se_subdev->se_dev_hba;
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", hba->hba_index);
++}
++DEV_STAT_SCSI_DEV_ATTR_RO(inst);
++
++static ssize_t target_stat_scsi_dev_show_attr_indx(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", dev->dev_index);
++}
++DEV_STAT_SCSI_DEV_ATTR_RO(indx);
++
++static ssize_t target_stat_scsi_dev_show_attr_role(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "Target\n");
++}
++DEV_STAT_SCSI_DEV_ATTR_RO(role);
++
++static ssize_t target_stat_scsi_dev_show_attr_ports(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", dev->dev_port_count);
++}
++DEV_STAT_SCSI_DEV_ATTR_RO(ports);
++
++CONFIGFS_EATTR_OPS(target_stat_scsi_dev, se_dev_stat_grps, scsi_dev_group);
++
++static struct configfs_attribute *target_stat_scsi_dev_attrs[] = {
++	&target_stat_scsi_dev_inst.attr,
++	&target_stat_scsi_dev_indx.attr,
++	&target_stat_scsi_dev_role.attr,
++	&target_stat_scsi_dev_ports.attr,
++	NULL,
++};
++
++static struct configfs_item_operations target_stat_scsi_dev_attrib_ops = {
++	.show_attribute		= target_stat_scsi_dev_attr_show,
++	.store_attribute	= target_stat_scsi_dev_attr_store,
++};
++
++static struct config_item_type target_stat_scsi_dev_cit = {
++	.ct_item_ops		= &target_stat_scsi_dev_attrib_ops,
++	.ct_attrs		= target_stat_scsi_dev_attrs,
++	.ct_owner		= THIS_MODULE,
++};
++
++/*
++ * SCSI Target Device Table
++ */
++
++CONFIGFS_EATTR_STRUCT(target_stat_scsi_tgt_dev, se_dev_stat_grps);
++#define DEV_STAT_SCSI_TGT_DEV_ATTR(_name, _mode)			\
++static struct target_stat_scsi_tgt_dev_attribute			\
++			target_stat_scsi_tgt_dev_##_name =		\
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_stat_scsi_tgt_dev_show_attr_##_name,			\
++	target_stat_scsi_tgt_dev_store_attr_##_name);
++
++#define DEV_STAT_SCSI_TGT_DEV_ATTR_RO(_name)				\
++static struct target_stat_scsi_tgt_dev_attribute			\
++			target_stat_scsi_tgt_dev_##_name =		\
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_stat_scsi_tgt_dev_show_attr_##_name);
++
++static ssize_t target_stat_scsi_tgt_dev_show_attr_inst(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_hba *hba = se_subdev->se_dev_hba;
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", hba->hba_index);
++}
++DEV_STAT_SCSI_TGT_DEV_ATTR_RO(inst);
++
++static ssize_t target_stat_scsi_tgt_dev_show_attr_indx(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", dev->dev_index);
++}
++DEV_STAT_SCSI_TGT_DEV_ATTR_RO(indx);
++
++static ssize_t target_stat_scsi_tgt_dev_show_attr_num_lus(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", LU_COUNT);
++}
++DEV_STAT_SCSI_TGT_DEV_ATTR_RO(num_lus);
++
++static ssize_t target_stat_scsi_tgt_dev_show_attr_status(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++	char status[16];
++
++	if (!dev)
++		return -ENODEV;
++
++	switch (dev->dev_status) {
++	case TRANSPORT_DEVICE_ACTIVATED:
++		strcpy(status, "activated");
++		break;
++	case TRANSPORT_DEVICE_DEACTIVATED:
++		strcpy(status, "deactivated");
++		break;
++	case TRANSPORT_DEVICE_SHUTDOWN:
++		strcpy(status, "shutdown");
++		break;
++	case TRANSPORT_DEVICE_OFFLINE_ACTIVATED:
++	case TRANSPORT_DEVICE_OFFLINE_DEACTIVATED:
++		strcpy(status, "offline");
++		break;
++	default:
++		sprintf(status, "unknown(%d)", dev->dev_status);
++		break;
++	}
++
++	return snprintf(page, PAGE_SIZE, "%s\n", status);
++}
++DEV_STAT_SCSI_TGT_DEV_ATTR_RO(status);
++
++static ssize_t target_stat_scsi_tgt_dev_show_attr_non_access_lus(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++	int non_accessible_lus;
++
++	if (!dev)
++		return -ENODEV;
++
++	switch (dev->dev_status) {
++	case TRANSPORT_DEVICE_ACTIVATED:
++		non_accessible_lus = 0;
++		break;
++	case TRANSPORT_DEVICE_DEACTIVATED:
++	case TRANSPORT_DEVICE_SHUTDOWN:
++	case TRANSPORT_DEVICE_OFFLINE_ACTIVATED:
++	case TRANSPORT_DEVICE_OFFLINE_DEACTIVATED:
++	default:
++		non_accessible_lus = 1;
++		break;
++	}
++
++	return snprintf(page, PAGE_SIZE, "%u\n", non_accessible_lus);
++}
++DEV_STAT_SCSI_TGT_DEV_ATTR_RO(non_access_lus);
++
++static ssize_t target_stat_scsi_tgt_dev_show_attr_resets(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", dev->num_resets);
++}
++DEV_STAT_SCSI_TGT_DEV_ATTR_RO(resets);
++
++
++CONFIGFS_EATTR_OPS(target_stat_scsi_tgt_dev, se_dev_stat_grps, scsi_tgt_dev_group);
++
++static struct configfs_attribute *target_stat_scsi_tgt_dev_attrs[] = {
++	&target_stat_scsi_tgt_dev_inst.attr,
++	&target_stat_scsi_tgt_dev_indx.attr,
++	&target_stat_scsi_tgt_dev_num_lus.attr,
++	&target_stat_scsi_tgt_dev_status.attr,
++	&target_stat_scsi_tgt_dev_non_access_lus.attr,
++	&target_stat_scsi_tgt_dev_resets.attr,
++	NULL,
++};
++
++static struct configfs_item_operations target_stat_scsi_tgt_dev_attrib_ops = {
++	.show_attribute		= target_stat_scsi_tgt_dev_attr_show,
++	.store_attribute	= target_stat_scsi_tgt_dev_attr_store,
++};
++
++static struct config_item_type target_stat_scsi_tgt_dev_cit = {
++	.ct_item_ops		= &target_stat_scsi_tgt_dev_attrib_ops,
++	.ct_attrs		= target_stat_scsi_tgt_dev_attrs,
++	.ct_owner		= THIS_MODULE,
++};
++
++/*
++ * SCSI Logical Unit Table
++ */
++
++CONFIGFS_EATTR_STRUCT(target_stat_scsi_lu, se_dev_stat_grps);
++#define DEV_STAT_SCSI_LU_ATTR(_name, _mode)				\
++static struct target_stat_scsi_lu_attribute target_stat_scsi_lu_##_name = \
++	__CONFIGFS_EATTR(_name, _mode,					\
++	target_stat_scsi_lu_show_attr_##_name,				\
++	target_stat_scsi_lu_store_attr_##_name);
++
++#define DEV_STAT_SCSI_LU_ATTR_RO(_name)					\
++static struct target_stat_scsi_lu_attribute target_stat_scsi_lu_##_name = \
++	__CONFIGFS_EATTR_RO(_name,					\
++	target_stat_scsi_lu_show_attr_##_name);
++
++static ssize_t target_stat_scsi_lu_show_attr_inst(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_hba *hba = se_subdev->se_dev_hba;
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", hba->hba_index);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(inst);
++
++static ssize_t target_stat_scsi_lu_show_attr_dev(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", dev->dev_index);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(dev);
++
++static ssize_t target_stat_scsi_lu_show_attr_indx(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	return snprintf(page, PAGE_SIZE, "%u\n", SCSI_LU_INDEX);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(indx);
++
++static ssize_t target_stat_scsi_lu_show_attr_lun(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++	/* FIXME: scsiLuDefaultLun */
++	return snprintf(page, PAGE_SIZE, "%llu\n", (unsigned long long)0);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(lun);
++
++static ssize_t target_stat_scsi_lu_show_attr_lu_name(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++	/* scsiLuWwnName */
++	return snprintf(page, PAGE_SIZE, "%s\n",
++			(strlen(DEV_T10_WWN(dev)->unit_serial)) ?
++			(char *)&DEV_T10_WWN(dev)->unit_serial[0] : "None");
++}
++DEV_STAT_SCSI_LU_ATTR_RO(lu_name);
++
++static ssize_t target_stat_scsi_lu_show_attr_vend(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++	int j;
++	char str[28];
++
++	if (!dev)
++		return -ENODEV;
++	/* scsiLuVendorId */
++	memcpy(&str[0], (void *)DEV_T10_WWN(dev), 28);
++	for (j = 0; j < 8; j++)
++		str[j] = ISPRINT(DEV_T10_WWN(dev)->vendor[j]) ?
++				DEV_T10_WWN(dev)->vendor[j] : 0x20;
++	str[8] = 0;
++	return snprintf(page, PAGE_SIZE, "%s\n", str);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(vend);
++
++static ssize_t target_stat_scsi_lu_show_attr_prod(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++	int j;
++	char str[28];
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuProductId */
++	memcpy(&str[0], (void *)DEV_T10_WWN(dev), 28);
++	for (j = 0; j < 16; j++)
++		str[j] = ISPRINT(DEV_T10_WWN(dev)->model[j]) ?
++				DEV_T10_WWN(dev)->model[j] : 0x20;
++	str[16] = 0;
++	return snprintf(page, PAGE_SIZE, "%s\n", str);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(prod);
++
++static ssize_t target_stat_scsi_lu_show_attr_rev(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++	int j;
++	char str[28];
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuRevisionId */
++	memcpy(&str[0], (void *)DEV_T10_WWN(dev), 28);
++	for (j = 0; j < 4; j++)
++		str[j] = ISPRINT(DEV_T10_WWN(dev)->revision[j]) ?
++				DEV_T10_WWN(dev)->revision[j] : 0x20;
++	str[4] = 0;
++	return snprintf(page, PAGE_SIZE, "%s\n", str);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(rev);
++
++static ssize_t target_stat_scsi_lu_show_attr_dev_type(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuPeripheralType */
++	return snprintf(page, PAGE_SIZE, "%u\n",
++			TRANSPORT(dev)->get_device_type(dev));
++}
++DEV_STAT_SCSI_LU_ATTR_RO(dev_type);
++
++static ssize_t target_stat_scsi_lu_show_attr_status(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuStatus */
++	return snprintf(page, PAGE_SIZE, "%s\n",
++		(dev->dev_status == TRANSPORT_DEVICE_ACTIVATED) ?
++		"available" : "notavailable");
++}
++DEV_STAT_SCSI_LU_ATTR_RO(status);
++
++static ssize_t target_stat_scsi_lu_show_attr_state_bit(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuState */
++	return snprintf(page, PAGE_SIZE, "exposed\n");
++}
++DEV_STAT_SCSI_LU_ATTR_RO(state_bit);
++
++static ssize_t target_stat_scsi_lu_show_attr_num_cmds(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuNumCommands */
++	return snprintf(page, PAGE_SIZE, "%llu\n",
++			(unsigned long long)dev->num_cmds);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(num_cmds);
++
++static ssize_t target_stat_scsi_lu_show_attr_read_mbytes(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuReadMegaBytes */
++	return snprintf(page, PAGE_SIZE, "%u\n", (u32)(dev->read_bytes >> 20));
++}
++DEV_STAT_SCSI_LU_ATTR_RO(read_mbytes);
++
++static ssize_t target_stat_scsi_lu_show_attr_write_mbytes(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuWrittenMegaBytes */
++	return snprintf(page, PAGE_SIZE, "%u\n", (u32)(dev->write_bytes >> 20));
++}
++DEV_STAT_SCSI_LU_ATTR_RO(write_mbytes);
++
++static ssize_t target_stat_scsi_lu_show_attr_resets(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuInResets */
++	return snprintf(page, PAGE_SIZE, "%u\n", dev->num_resets);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(resets);
++
++static ssize_t target_stat_scsi_lu_show_attr_full_stat(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* FIXME: scsiLuOutTaskSetFullStatus */
++	return snprintf(page, PAGE_SIZE, "%u\n", 0);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(full_stat);
++
++static ssize_t target_stat_scsi_lu_show_attr_hs_num_cmds(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* FIXME: scsiLuHSInCommands */
++	return snprintf(page, PAGE_SIZE, "%u\n", 0);
++}
++DEV_STAT_SCSI_LU_ATTR_RO(hs_num_cmds);
++
++static ssize_t target_stat_scsi_lu_show_attr_creation_time(
++	struct se_dev_stat_grps *sgrps, char *page)
++{
++	struct se_subsystem_dev *se_subdev = container_of(sgrps,
++			struct se_subsystem_dev, dev_stat_grps);
++	struct se_device *dev = se_subdev->se_dev_ptr;
++
++	if (!dev)
++		return -ENODEV;
++
++	/* scsiLuCreationTime */
++	return snprintf(page, PAGE_SIZE, "%u\n", (u32)(((u32)dev->creation_time -
++				INITIAL_JIFFIES) * 100 / HZ));
++}
++DEV_STAT_SCSI_LU_ATTR_RO(creation_time);
++
++CONFIGFS_EATTR_OPS(target_stat_scsi_lu, se_dev_stat_grps, scsi_lu_group);
++
++static struct configfs_attribute *target_stat_scsi_lu_attrs[] = {
++	&target_stat_scsi_lu_inst.attr,
++	&target_stat_scsi_lu_dev.attr,
++	&target_stat_scsi_lu_indx.attr,
++	&target_stat_scsi_lu_lun.attr,
++	&target_stat_scsi_lu_lu_name.attr,
++	&target_stat_scsi_lu_vend.attr,
++	&target_stat_scsi_lu_prod.attr,
++	&target_stat_scsi_lu_rev.attr,
++	&target_stat_scsi_lu_dev_type.attr,
++	&target_stat_scsi_lu_status.attr,
++	&target_stat_scsi_lu_state_bit.attr,
++	&target_stat_scsi_lu_num_cmds.attr,
++	&target_stat_scsi_lu_read_mbytes.attr,
++	&target_stat_scsi_lu_write_mbytes.attr,
++	&target_stat_scsi_lu_resets.attr,
++	&target_stat_scsi_lu_full_stat.attr,
++	&target_stat_scsi_lu_hs_num_cmds.attr,
++	&target_stat_scsi_lu_creation_time.attr,
++	NULL,
++};
++
++static struct configfs_item_operations target_stat_scsi_lu_attrib_ops = {
++	.show_attribute		= target_stat_scsi_lu_attr_show,
++	.store_attribute	= target_stat_scsi_lu_attr_store,
++};
++
++static struct config_item_type target_stat_scsi_lu_cit = {
++	.ct_item_ops		= &target_stat_scsi_lu_attrib_ops,
++	.ct_attrs		= target_stat_scsi_lu_attrs,
++	.ct_owner		= THIS_MODULE,
++};
++
++/*
++ * Called from target_core_configfs.c:target_core_make_subdev() to setup
++ * the target statistics groups + configfs CITs located in target_core_stat.c
++ */
++void target_stat_setup_dev_default_groups(struct se_subsystem_dev *se_subdev)
++{
++	struct config_group *dev_stat_grp = &DEV_STAT_GRP(se_subdev)->stat_group;
++
++	config_group_init_type_name(&DEV_STAT_GRP(se_subdev)->scsi_dev_group,
++			"scsi_dev", &target_stat_scsi_dev_cit);
++	config_group_init_type_name(&DEV_STAT_GRP(se_subdev)->scsi_tgt_dev_group,
++			"scsi_tgt_dev", &target_stat_scsi_tgt_dev_cit);
++	config_group_init_type_name(&DEV_STAT_GRP(se_subdev)->scsi_lu_group,
++			"scsi_lu", &target_stat_scsi_lu_cit);
++
++	dev_stat_grp->default_groups[0] = &DEV_STAT_GRP(se_subdev)->scsi_dev_group;
++	dev_stat_grp->default_groups[1] = &DEV_STAT_GRP(se_subdev)->scsi_tgt_dev_group;
++	dev_stat_grp->default_groups[2] = &DEV_STAT_GRP(se_subdev)->scsi_lu_group;
++	dev_stat_grp->default_groups[3] = NULL;
++}
+diff --git a/drivers/target/target_core_stat.h b/drivers/target/target_core_stat.h
+new file mode 100644
+index 0000000..015562b
+--- /dev/null
++++ b/drivers/target/target_core_stat.h
+@@ -0,0 +1,6 @@
++#ifndef TARGET_CORE_STAT_H
++#define TARGET_CORE_STAT_H
++
++extern void target_stat_setup_dev_default_groups(struct se_subsystem_dev *);
++
++#endif   /*** TARGET_CORE_STAT_H ***/
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 79f2e0a..9b905ab 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -693,6 +693,13 @@ struct se_dev_attrib {
+ 	struct config_group da_group;
+ } ____cacheline_aligned;
+ 
++struct se_dev_stat_grps {
++	struct config_group stat_group;
++	struct config_group scsi_dev_group;
++	struct config_group scsi_tgt_dev_group;
++	struct config_group scsi_lu_group;
++};
++
+ struct se_subsystem_dev {
+ /* Used for struct se_subsystem_dev-->se_dev_alias, must be less than PAGE_SIZE */
+ #define SE_DEV_ALIAS_LEN		512
+@@ -716,11 +723,14 @@ struct se_subsystem_dev {
+ 	struct config_group se_dev_group;
+ 	/* For T10 Reservations */
+ 	struct config_group se_dev_pr_group;
++	/* For target_core_stat.c groups */
++	struct se_dev_stat_grps dev_stat_grps;
+ } ____cacheline_aligned;
+ 
+ #define T10_ALUA(su_dev)	(&(su_dev)->t10_alua)
+ #define T10_RES(su_dev)		(&(su_dev)->t10_reservation)
+ #define T10_PR_OPS(su_dev)	(&(su_dev)->t10_reservation.pr_ops)
++#define DEV_STAT_GRP(dev)	(&(dev)->dev_stat_grps)
+ 
+ struct se_device {
+ 	/* Set to 1 if thread is NOT sleeping on thread_sem */
 -- 
 1.7.4.1
-
