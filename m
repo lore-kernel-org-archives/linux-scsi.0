@@ -1,234 +1,88 @@
-From: David Zeuthen <davidz@redhat.com>
-Subject: [PATCH] scsi: ensure bsg device is available before announcing scsi
- device
-Date: Wed, 02 Mar 2011 14:02:44 -0500
-Message-ID: <1299092565.26023.2.camel@satan>
+From: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+Subject: UASP: updates and merges
+Date: Wed, 2 Mar 2011 11:05:05 -0800 (PST)
+Message-ID: <147799.16314.qm@web31802.mail.mud.yahoo.com>
+Reply-To: ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:63417 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756919Ab1CBTCy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2011 14:02:54 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, kay.sievers@vrfy.org
 
-From: David Zeuthen <davidz@redhat.com>
+I've merged the latest master (dd9c154). The UASP driver saw the follow=
+ing update:
 
-udev should be able to examine a scsi device (e.g. retrieving VPD like
-the make/model and serial number) before announcing it to the rest of
-user space. Currently this is not possible because the scsi device has
-no device node of its own. Instead, user space will have to use either
-the bsg device or sg device but these are not available at uevent add
-time since both are children of the scsi device
+    [USB] UASP: Unlock device after reset; EP updates
+   =20
+    * Unlock the device after reset.
+   =20
+    * Initialize urb->ep directly. struct
+      uasp_tport_info already records the struct
+      usb_host_endpoint which makes it easy to
+      directly initialize urb->ep. This anticipates
+      when drivers would have to initialize the ep in
+      the urb directly as opposed to the USB core
+      having to use pipes.
+   =20
+    * Use the UAS pipe macros throughout the code for
+      endpoint indexes.
 
-This patch ensures that the bsg device is created before user space is
-notified of add event for the scsi device. With devtmpfs, this thus
-enables udev to use the /dev/bsg/$kernel device node to examine the
-scsi device.
+The branch can be found here off of master:
+https://github.com/ltuikov/linux-2.6
 
-Related udev commits:
+Original posting of the UASP driver can be found here:
+http://marc.info/?l=3Dlinux-usb&m=3D129165511732388&w=3D2
 
- http://git.kernel.org/?p=linux/hotplug/udev.git;a=commitdiff;h=2938220037862b7698df091a1e5cd45f44132d73
- http://git.kernel.org/?p=linux/hotplug/udev.git;a=commitdiff;h=310f99d33595afdc1962611a913c429785f9ad40
-
-Signed-off-by: David Zeuthen <davidz@redhat.com>
-Acked-by: Kay Sievers <kay.sievers@vrfy.org>
----
- block/bsg.c                       |   53 +++++++++++++++++++++++++++++++++++-
- drivers/scsi/scsi_sysfs.c         |   27 +++++++++++++-----
- drivers/scsi/scsi_transport_fc.c  |    4 +-
- drivers/scsi/scsi_transport_sas.c |    2 +-
- include/linux/bsg.h               |    6 +++-
- 5 files changed, 77 insertions(+), 15 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index 0c8b64a..7148b4c 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -993,8 +993,48 @@ void bsg_unregister_queue(struct request_queue *q)
- }
- EXPORT_SYMBOL_GPL(bsg_unregister_queue);
- 
-+static void bsg_release_class_device(struct device *dev)
-+{
-+	pr_debug("device: '%s': %s\n", dev_name(dev), __func__);
-+	kfree(dev);
-+}
-+
-+static struct device *bsg_create_class_device(struct class *class,
-+					      struct device *parent,
-+					      dev_t devt,
-+					      const char *name)
-+{
-+	struct device *dev = NULL;
-+	int retval = -ENODEV;
-+
-+	if (class == NULL || IS_ERR(class))
-+		goto error;
-+
-+	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
-+	if (!dev) {
-+		retval = -ENOMEM;
-+		goto error;
-+	}
-+
-+	dev->devt = devt;
-+	dev->class = class;
-+	dev->parent = parent;
-+	dev->release = bsg_release_class_device;
-+
-+	retval = kobject_set_name(&dev->kobj, name);
-+	if (retval)
-+		goto error;
-+
-+	return dev;
-+
-+error:
-+	put_device(dev);
-+	return ERR_PTR(retval);
-+}
-+
- int bsg_register_queue(struct request_queue *q, struct device *parent,
--		       const char *name, void (*release)(struct device *))
-+		       const char *name, void (*release)(struct device *),
-+		       bool suppress_add_uevent)
- {
- 	struct bsg_class_device *bcd;
- 	dev_t dev;
-@@ -1040,11 +1080,20 @@ int bsg_register_queue(struct request_queue *q, struct device *parent,
- 	bcd->release = release;
- 	kref_init(&bcd->ref);
- 	dev = MKDEV(bsg_major, bcd->minor);
--	class_dev = device_create(bsg_class, parent, dev, NULL, "%s", devname);
-+	class_dev = bsg_create_class_device(bsg_class, parent, dev, devname);
- 	if (IS_ERR(class_dev)) {
- 		ret = PTR_ERR(class_dev);
- 		goto put_dev;
- 	}
-+	if (suppress_add_uevent) {
-+		dev_set_uevent_suppress(class_dev, true);
-+		ret = device_register(class_dev);
-+		dev_set_uevent_suppress(class_dev, false);
-+	} else {
-+		ret = device_register(class_dev);
-+	}
-+	if (ret)
-+		goto put_dev;
- 	bcd->class_dev = class_dev;
- 
- 	if (q->kobj.sd) {
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 490ce21..fd8c43f 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -862,12 +862,31 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	 */
- 	scsi_autopm_get_device(sdev);
- 
-+	/* Delay add uevent for device until bsg device has been
-+	 * created - this way user space can use the bsg device node
-+	 * when handling the uevent
-+	 */
-+	dev_set_uevent_suppress(&sdev->sdev_gendev, true);
- 	error = device_add(&sdev->sdev_gendev);
-+	dev_set_uevent_suppress(&sdev->sdev_gendev, false);
- 	if (error) {
- 		sdev_printk(KERN_INFO, sdev,
- 				"failed to add device: %d\n", error);
- 		return error;
- 	}
-+
-+	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL, NULL, true);
-+	if (error) {
-+		/* we're treating error on bsg register as non-fatal,
-+		 * so pretend nothing went wrong */
-+		sdev_printk(KERN_INFO, sdev,
-+			    "Failed to register bsg queue, errno=%d\n", error);
-+		kobject_uevent(&sdev->sdev_gendev.kobj, KOBJ_ADD);
-+	} else {
-+		kobject_uevent(&sdev->sdev_gendev.kobj, KOBJ_ADD);
-+		kobject_uevent(&rq->bsg_dev.class_dev->kobj, KOBJ_ADD);
-+	}
-+
- 	device_enable_async_suspend(&sdev->sdev_dev);
- 	error = device_add(&sdev->sdev_dev);
- 	if (error) {
-@@ -898,14 +917,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	if (error)
- 		return error;
- 
--	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL, NULL);
--
--	if (error)
--		/* we're treating error on bsg register as non-fatal,
--		 * so pretend nothing went wrong */
--		sdev_printk(KERN_INFO, sdev,
--			    "Failed to register bsg queue, errno=%d\n", error);
--
- 	/* add additional host specific attributes */
- 	if (sdev->host->hostt->sdev_attrs) {
- 		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 998c01b..6066b9a7 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -4037,7 +4037,7 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
- 	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
- 	blk_queue_rq_timeout(q, FC_DEFAULT_BSG_TIMEOUT);
- 
--	err = bsg_register_queue(q, dev, bsg_name, NULL);
-+	err = bsg_register_queue(q, dev, bsg_name, NULL, false);
- 	if (err) {
- 		printk(KERN_ERR "fc_host%d: bsg interface failed to "
- 				"initialize - register queue\n",
-@@ -4083,7 +4083,7 @@ fc_bsg_rportadd(struct Scsi_Host *shost, struct fc_rport *rport)
- 	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
- 	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
- 
--	err = bsg_register_queue(q, dev, NULL, NULL);
-+	err = bsg_register_queue(q, dev, NULL, NULL, false);
- 	if (err) {
- 		printk(KERN_ERR "%s: bsg interface failed to "
- 				"initialize - register queue\n",
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 927e99c..0da85fe 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -241,7 +241,7 @@ static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
- 	if (!q)
- 		return -ENOMEM;
- 
--	error = bsg_register_queue(q, dev, name, release);
-+	error = bsg_register_queue(q, dev, name, release, false);
- 	if (error) {
- 		blk_cleanup_queue(q);
- 		return -ENOMEM;
-diff --git a/include/linux/bsg.h b/include/linux/bsg.h
-index ecb4730..999f3e9 100644
---- a/include/linux/bsg.h
-+++ b/include/linux/bsg.h
-@@ -75,12 +75,14 @@ struct bsg_class_device {
- 
- extern int bsg_register_queue(struct request_queue *q,
- 			      struct device *parent, const char *name,
--			      void (*release)(struct device *));
-+			      void (*release)(struct device *),
-+			      bool suppress_add_uevent);
- extern void bsg_unregister_queue(struct request_queue *);
- #else
- static inline int bsg_register_queue(struct request_queue *q,
- 				     struct device *parent, const char *name,
--				     void (*release)(struct device *))
-+				     void (*release)(struct device *),
-+				     bool suppress_add_uevent)
- {
- 	return 0;
- }
--- 
-1.7.4.1
+    Luben
 
 
+--- On Thu, 1/13/11, Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org> wrote:
+
+> From: Luben Tuikov <ltuikov-/E1597aS9LQAvxtiuMwx3w@public.gmane.org>
+> Subject: UASP: updates and merges
+> To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-u=
+sb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Greg KH" <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+> Date: Thursday, January 13, 2011, 2:45 AM
+> The UASP driver allows you to connect
+> to UAS devices and use them
+> as SCSI devices.
+>=20
+> I've merged latest master (f87813) and resolved a conflict
+> in drivers/scsi/sd.c by adding back the truncation of the
+> mode sense data.
+>=20
+> The UASP driver saw the following update:
+>=20
+> =A0 =A0 [USB] UASP: factor out GFP flags and make
+> them GFP_ATOMIC
+> =A0 =A0=20
+> =A0 =A0 Factor out the GFP flags and make them
+> atomic:
+> =A0 =A0 1) The SCSI subsystem uses GFP_ATOMIC, e.g.
+> before
+> =A0 =A0 calling the host's slave_alloc callback (at
+> the
+> =A0 =A0 time of this commit).
+> =A0 =A0 2) As we are a storage driver doing I/O, we
+> should
+> =A0 =A0 use the lowest denominator (highest
+> priority)
+> =A0 =A0 allocation, and of course we shouldn't sleep,
+> thus
+> =A0 =A0 use GFP_ATOMIC.
+>=20
+> The branch can be found here (off of master):
+> https://github.com/ltuikov/linux-2.6
+>=20
+> Original posting of the UASP driver can be found here:
+> http://marc.info/?l=3Dlinux-usb&m=3D129165511732388&w=3D2
+>=20
+> =A0=A0=A0Luben
+>=20
+>=20
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
