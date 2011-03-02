@@ -1,134 +1,234 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Should isci create its own device class?
-Date: Wed, 02 Mar 2011 10:38:45 -0800
-Message-ID: <1299091125.11010.4.camel@dwillia2-linux>
-References: <4D6DB7FF.4090506@intel.com>
-	 <1299070146.604.3.camel@mulgrave.site>
+From: David Zeuthen <davidz@redhat.com>
+Subject: [PATCH] scsi: ensure bsg device is available before announcing scsi
+ device
+Date: Wed, 02 Mar 2011 14:02:44 -0500
+Message-ID: <1299092565.26023.2.camel@satan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:36786 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:63417 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755371Ab1CBSOT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2011 13:14:19 -0500
-In-Reply-To: <1299070146.604.3.camel@mulgrave.site>
+	id S1756919Ab1CBTCy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Mar 2011 14:02:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Greg KH <greg@kroah.com>, Kay Sievers <kay.sievers@vrfy.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, kay.sievers@vrfy.org
 
-On Wed, 2011-03-02 at 04:49 -0800, James Bottomley wrote:
-> On Tue, 2011-03-01 at 19:22 -0800, Dan Williams wrote:
-> > For compatibility with other software raid environments an isci [1] 
-> > device may contain up to two controller instances per pci device.
-> 
-> So every other SCSI card I've seen that's done this, the multiple
-> controllers have been different PCI functions, and thus distinguishable
-> at the PCI level ... why is isci different?
-> 
+From: David Zeuthen <davidz@redhat.com>
 
-The existence of multiple SAS controllers is hidden behind a single
-"RAID controller" in environments where software RAID is "request" based
-and cannot span controllers with a single driver instance.  Linux
-software RAID in contrast is bio based and controller spanning happens
-naturally.
+udev should be able to examine a scsi device (e.g. retrieving VPD like
+the make/model and serial number) before announcing it to the rest of
+user space. Currently this is not possible because the scsi device has
+no device node of its own. Instead, user space will have to use either
+the bsg device or sg device but these are not available at uevent add
+time since both are children of the scsi device
 
-> > Currently the sysfs path for its scsi_host objects is:
-> > > ../../devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:08.0/0000:03:00.0/host10/scsi_host/host10
-> > > ../../devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:08.0/0000:03:00.0/host11/scsi_host/host11
-> > 
-> > But to reflect reality the pci device is actually the parent of two 
-> > independent controller instances.  With a mockup like:
-> > > ../../devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:08.0/0000:03:00.0/controller0/host10/scsi_host/host10
-> > > ../../devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:08.0/0000:03:00.0/controller1/host11/scsi_host/host11
-> > 
-> > I can see this being beneficial in a few ways:
-> > 
-> > 1/ fix dev_printk() messages which right now give an ambiguous "isci 
-> > 0000:03:00.0" prefix
-> > 2/ controller boundaries are visible via the sysfs path without need to 
-> > to look at sas_addresses to determine the controller.
-> > 2/ if we ever wanted to support some per controller attributes between 
-> > the global pci attributes and the scsi_host attributes.
-> 
-> So what's wrong with just using the hostX for this instead of inventing
-> a new dummy level in the tree?
-> 
+This patch ensures that the bsg device is created before user space is
+notified of add event for the scsi device. With devtmpfs, this thus
+enables udev to use the /dev/bsg/$kernel device node to examine the
+scsi device.
 
-Ok, I'm primarily concerned with userspace being able to map physical
-connectors back to sas_phy objects.  I think an "isci_id" file at the
-hostX level would be sufficient, and cleaner in the case of single
-controller isci instances.  It does not address the dev_printk() nit,
-but that is easy enough to workaround.  Is the following acceptable?
+Related udev commits:
 
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 124f4c7..5f46124 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -237,12 +237,28 @@ static int isci_register_sas_ha(struct isci_host *isci_host)
- 	return 0;
+ http://git.kernel.org/?p=linux/hotplug/udev.git;a=commitdiff;h=2938220037862b7698df091a1e5cd45f44132d73
+ http://git.kernel.org/?p=linux/hotplug/udev.git;a=commitdiff;h=310f99d33595afdc1962611a913c429785f9ad40
+
+Signed-off-by: David Zeuthen <davidz@redhat.com>
+Acked-by: Kay Sievers <kay.sievers@vrfy.org>
+---
+ block/bsg.c                       |   53 +++++++++++++++++++++++++++++++++++-
+ drivers/scsi/scsi_sysfs.c         |   27 +++++++++++++-----
+ drivers/scsi/scsi_transport_fc.c  |    4 +-
+ drivers/scsi/scsi_transport_sas.c |    2 +-
+ include/linux/bsg.h               |    6 +++-
+ 5 files changed, 77 insertions(+), 15 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index 0c8b64a..7148b4c 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -993,8 +993,48 @@ void bsg_unregister_queue(struct request_queue *q)
  }
+ EXPORT_SYMBOL_GPL(bsg_unregister_queue);
  
--static void isci_unregister_sas_ha(struct isci_host *isci_host)
-+static ssize_t isci_show_id(struct device *dev, struct device_attribute *attr, char *buf)
- {
-+	struct Scsi_Host *shost = container_of(dev, typeof(*shost), shost_dev);
-+	struct sas_ha_struct *sas_ha = SHOST_TO_SAS_HA(shost);
-+	struct isci_host *ihost = container_of(sas_ha, typeof(*ihost), sas_ha);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n", ihost->id);
++static void bsg_release_class_device(struct device *dev)
++{
++	pr_debug("device: '%s': %s\n", dev_name(dev), __func__);
++	kfree(dev);
 +}
 +
-+static DEVICE_ATTR(isci_id, S_IRUGO, isci_show_id, NULL);
-+
-+static void isci_unregister(struct isci_host *isci_host)
++static struct device *bsg_create_class_device(struct class *class,
++					      struct device *parent,
++					      dev_t devt,
++					      const char *name)
 +{
-+	struct Scsi_Host *shost;
++	struct device *dev = NULL;
++	int retval = -ENODEV;
 +
- 	if (!isci_host)
- 		return;
- 
--	sas_unregister_ha(&(isci_host->sas_ha));
-+	shost = isci_host->shost;
-+	device_remove_file(&shost->shost_dev, &dev_attr_isci_id);
++	if (class == NULL || IS_ERR(class))
++		goto error;
 +
-+	sas_unregister_ha(&isci_host->sas_ha);
- 
- 	sas_remove_host(isci_host->shost);
- 	scsi_remove_host(isci_host->shost);
-@@ -413,8 +429,14 @@ static struct isci_host *isci_host_alloc(struct pci_dev *pdev, int id)
- 	if (err)
- 		goto err_shost_remove;
- 
-+	err = device_create_file(&shost->shost_dev, &dev_attr_isci_id);
-+	if (err)
-+		goto err_unregister_ha;
++	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
++	if (!dev) {
++		retval = -ENOMEM;
++		goto error;
++	}
 +
- 	return isci_host;
- 
-+ err_unregister_ha:
-+	sas_unregister_ha(&(isci_host->sas_ha));
-  err_shost_remove:
- 	scsi_remove_host(shost);
-  err_shost:
-@@ -516,7 +538,7 @@ static int __devinit isci_pci_probe(struct pci_dev *pdev, const struct pci_devic
- 
-  err_host_alloc:
- 	for_each_isci_host(isci_host, pdev)
--		isci_unregister_sas_ha(isci_host);
-+		isci_unregister(isci_host);
- 	return err;
- }
- 
-@@ -525,7 +547,7 @@ static void __devexit isci_pci_remove(struct pci_dev *pdev)
- 	struct isci_host *isci_host;
- 
- 	for_each_isci_host(isci_host, pdev) {
--		isci_unregister_sas_ha(isci_host);
-+		isci_unregister(isci_host);
- 		isci_host_deinit(isci_host);
- 		scic_controller_disable_interrupts(isci_host->core_controller);
++	dev->devt = devt;
++	dev->class = class;
++	dev->parent = parent;
++	dev->release = bsg_release_class_device;
++
++	retval = kobject_set_name(&dev->kobj, name);
++	if (retval)
++		goto error;
++
++	return dev;
++
++error:
++	put_device(dev);
++	return ERR_PTR(retval);
++}
++
+ int bsg_register_queue(struct request_queue *q, struct device *parent,
+-		       const char *name, void (*release)(struct device *))
++		       const char *name, void (*release)(struct device *),
++		       bool suppress_add_uevent)
+ {
+ 	struct bsg_class_device *bcd;
+ 	dev_t dev;
+@@ -1040,11 +1080,20 @@ int bsg_register_queue(struct request_queue *q, struct device *parent,
+ 	bcd->release = release;
+ 	kref_init(&bcd->ref);
+ 	dev = MKDEV(bsg_major, bcd->minor);
+-	class_dev = device_create(bsg_class, parent, dev, NULL, "%s", devname);
++	class_dev = bsg_create_class_device(bsg_class, parent, dev, devname);
+ 	if (IS_ERR(class_dev)) {
+ 		ret = PTR_ERR(class_dev);
+ 		goto put_dev;
  	}
++	if (suppress_add_uevent) {
++		dev_set_uevent_suppress(class_dev, true);
++		ret = device_register(class_dev);
++		dev_set_uevent_suppress(class_dev, false);
++	} else {
++		ret = device_register(class_dev);
++	}
++	if (ret)
++		goto put_dev;
+ 	bcd->class_dev = class_dev;
+ 
+ 	if (q->kobj.sd) {
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 490ce21..fd8c43f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -862,12 +862,31 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	 */
+ 	scsi_autopm_get_device(sdev);
+ 
++	/* Delay add uevent for device until bsg device has been
++	 * created - this way user space can use the bsg device node
++	 * when handling the uevent
++	 */
++	dev_set_uevent_suppress(&sdev->sdev_gendev, true);
+ 	error = device_add(&sdev->sdev_gendev);
++	dev_set_uevent_suppress(&sdev->sdev_gendev, false);
+ 	if (error) {
+ 		sdev_printk(KERN_INFO, sdev,
+ 				"failed to add device: %d\n", error);
+ 		return error;
+ 	}
++
++	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL, NULL, true);
++	if (error) {
++		/* we're treating error on bsg register as non-fatal,
++		 * so pretend nothing went wrong */
++		sdev_printk(KERN_INFO, sdev,
++			    "Failed to register bsg queue, errno=%d\n", error);
++		kobject_uevent(&sdev->sdev_gendev.kobj, KOBJ_ADD);
++	} else {
++		kobject_uevent(&sdev->sdev_gendev.kobj, KOBJ_ADD);
++		kobject_uevent(&rq->bsg_dev.class_dev->kobj, KOBJ_ADD);
++	}
++
+ 	device_enable_async_suspend(&sdev->sdev_dev);
+ 	error = device_add(&sdev->sdev_dev);
+ 	if (error) {
+@@ -898,14 +917,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 	if (error)
+ 		return error;
+ 
+-	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL, NULL);
+-
+-	if (error)
+-		/* we're treating error on bsg register as non-fatal,
+-		 * so pretend nothing went wrong */
+-		sdev_printk(KERN_INFO, sdev,
+-			    "Failed to register bsg queue, errno=%d\n", error);
+-
+ 	/* add additional host specific attributes */
+ 	if (sdev->host->hostt->sdev_attrs) {
+ 		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 998c01b..6066b9a7 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -4037,7 +4037,7 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
+ 	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+ 	blk_queue_rq_timeout(q, FC_DEFAULT_BSG_TIMEOUT);
+ 
+-	err = bsg_register_queue(q, dev, bsg_name, NULL);
++	err = bsg_register_queue(q, dev, bsg_name, NULL, false);
+ 	if (err) {
+ 		printk(KERN_ERR "fc_host%d: bsg interface failed to "
+ 				"initialize - register queue\n",
+@@ -4083,7 +4083,7 @@ fc_bsg_rportadd(struct Scsi_Host *shost, struct fc_rport *rport)
+ 	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+ 	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
+ 
+-	err = bsg_register_queue(q, dev, NULL, NULL);
++	err = bsg_register_queue(q, dev, NULL, NULL, false);
+ 	if (err) {
+ 		printk(KERN_ERR "%s: bsg interface failed to "
+ 				"initialize - register queue\n",
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 927e99c..0da85fe 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -241,7 +241,7 @@ static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
+ 	if (!q)
+ 		return -ENOMEM;
+ 
+-	error = bsg_register_queue(q, dev, name, release);
++	error = bsg_register_queue(q, dev, name, release, false);
+ 	if (error) {
+ 		blk_cleanup_queue(q);
+ 		return -ENOMEM;
+diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+index ecb4730..999f3e9 100644
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -75,12 +75,14 @@ struct bsg_class_device {
+ 
+ extern int bsg_register_queue(struct request_queue *q,
+ 			      struct device *parent, const char *name,
+-			      void (*release)(struct device *));
++			      void (*release)(struct device *),
++			      bool suppress_add_uevent);
+ extern void bsg_unregister_queue(struct request_queue *);
+ #else
+ static inline int bsg_register_queue(struct request_queue *q,
+ 				     struct device *parent, const char *name,
+-				     void (*release)(struct device *))
++				     void (*release)(struct device *),
++				     bool suppress_add_uevent)
+ {
+ 	return 0;
+ }
+-- 
+1.7.4.1
 
 
