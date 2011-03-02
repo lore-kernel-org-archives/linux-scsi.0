@@ -1,58 +1,91 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Should isci create its own device class?
-Date: Wed, 02 Mar 2011 07:49:06 -0500
-Message-ID: <1299070146.604.3.camel@mulgrave.site>
-References: <4D6DB7FF.4090506@intel.com>
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+Subject: HP G6 hardware kernel boot issue > 2.6.37 cciss/hpsa
+Date: Wed, 02 Mar 2011 18:42:49 +0100
+Message-ID: <1299087769.4279.27.camel__28868.4732433923$1299088195$gmane$org@firesoul.comx.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:57250 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757117Ab1CBMtS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Mar 2011 07:49:18 -0500
-In-Reply-To: <4D6DB7FF.4090506@intel.com>
+Received: from lanfw001a.cxnet.dk ([87.72.215.196]:35296 "EHLO
+	lanfw001a.cxnet.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756263Ab1CBRtH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2011 12:49:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Greg KH <greg@kroah.com>, Kay Sievers <kay.sievers@vrfy.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, "Danecki, Jacek" <jacek.danecki@intel.com>
+To: Maximilian Attems <max@stro.at>, Michael Prokop <mika@debian.org>, Marco d'Itri <md@linux.it>, Debian kernel team <debian-kernel@lists.debian.org>, Mike Miller <mike.miller@hp.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>
 
-On Tue, 2011-03-01 at 19:22 -0800, Dan Williams wrote:
-> For compatibility with other software raid environments an isci [1] 
-> device may contain up to two controller instances per pci device.
+Hi Google and maintainers,
 
-So every other SCSI card I've seen that's done this, the multiple
-controllers have been different PCI functions, and thus distinguishable
-at the PCI level ... why is isci different?
+I have a kernel booting problem with kernels above 2.6.37 on Debian
+Squeeze, on HP G6 hardware, which have the harddisk controller:
 
-> Currently the sysfs path for its scsi_host objects is:
-> > ../../devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:08.0/0000:03:00.0/host10/scsi_host/host10
-> > ../../devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:08.0/0000:03:00.0/host11/scsi_host/host11
-> 
-> But to reflect reality the pci device is actually the parent of two 
-> independent controller instances.  With a mockup like:
-> > ../../devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:08.0/0000:03:00.0/controller0/host10/scsi_host/host10
-> > ../../devices/pci0000:00/0000:00:01.0/0000:01:00.0/0000:02:08.0/0000:03:00.0/controller1/host11/scsi_host/host11
-> 
-> I can see this being beneficial in a few ways:
-> 
-> 1/ fix dev_printk() messages which right now give an ambiguous "isci 
-> 0000:03:00.0" prefix
-> 2/ controller boundaries are visible via the sysfs path without need to 
-> to look at sas_addresses to determine the controller.
-> 2/ if we ever wanted to support some per controller attributes between 
-> the global pci attributes and the scsi_host attributes.
+ HP Smart Array P410i Controller / Smart Array G6 controllers
 
-So what's wrong with just using the hostX for this instead of inventing
-a new dummy level in the tree?
+This problem is (of cause) related to the introduction of the driver
+HPSA, which takes over from the driver CCISS (the overlapping PCI IDs
+were removed in commit 6fa977520871 see below).
 
-> ...but would this confuse /dev/disk/by-path/ or any other unintended 
-> side effects?
+This driver transition causes the device names to change
+  from /dev/cciss/c0d0p1
+  to   /dev/sda1.
 
-Yes and no ... yes as in this extra piece now has to be in the tree so
-any tool that actually parses by path could get confused, but no because
-all the usual links will update correctly.
+Thus, it would be really nice if UUID / LABEL / udev worked, as it
+would make it possible to boot kernels above and below 2.6.37.
 
-James
+== Here comes the BUG and work-around ==
+
+The BUG is that, if I compile the kernel and include the CCISS driver
+(even-though it will not be used), then initramfs will drop me into a
+shell, complaining that it cannot find /dev/disk/by-uuid/...
+
+The work-around is, either
+ 1) to avoid using initrd images, or
+ 2) don't compile the kernel with the CCISS driver.
+
+== Maintainers tasks ==
+
+I suspect the bug lies in initramfs-tools, or the udev version used by
+initramfs-tools.
+
+Could the maintainers of initramfs-tools and udev, please tell me
+something like its fixed in version XXX, and the Debian maintainers
+just need to compile initramfs-tools with this version to fix the
+issue? ;-)
+
+ initramfs-tools Version: 0.98.8
+ udev            Version: 164-3
+
+ps. I'm testing with net-next 2.6.38-rc5-02558-g07df529
+-- 
+Med venlig hilsen / Best regards
+  Jesper Brouer
+  ComX Networks A/S
+  Linux Network Kernel Developer
+  Cand. Scient Datalog / MSc.CS
+  Author of http://adsl-optimizer.dk
+  LinkedIn: http://www.linkedin.com/in/brouer
+
+Keywords: driver CCISS, HPSA, HP DL G6, uuid, udev, mkinitramfs,
+initramfs-tools, debian squeeze
+
+== Commit info ==
+
+commit 6fa977520871b1fc0be64247abad02b678c13fda
+Author: Mike Miller <mike.miller@hp.com>
+Date:   Thu Oct 28 06:33:27 2010 -0600
+
+    cciss: remove overlapping PCI IDs
+    
+    This patch removes the controller overlap between cciss and hpsa. It was
+    decided that no overlap should exist. All new controllers will use the hpsa
+    SCSI based driver.
+    
+    Signed-off-by: Jens Axboe <jaxboe@fusionio.com>
+
+git describe --contains 6fa977520871b1
+v2.6.37-rc1~75^2
+
+
 
 
