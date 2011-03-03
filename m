@@ -1,63 +1,55 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH-FOR-38] target: Fix READ_CAPACITY_16 regression
-Date: Wed,  2 Mar 2011 15:52:51 -0800
-Message-ID: <1299109971-27268-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm24-vm0.bullet.mail.ac4.yahoo.com ([98.139.53.222]:27191 "HELO
-	nm24-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1756151Ab1CBXxQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Mar 2011 18:53:16 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: fcoe: correct checking for bonding
+Date: Wed, 02 Mar 2011 17:09:18 -0800
+Message-ID: <1299114558.1688.5.camel@fritz>
+References: <20110302060535.GA2829@psychotron.redhat.com>
+	 <20110302095550.GA2858@psychotron.brq.redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20110302095550.GA2858@psychotron.brq.redhat.com>
+Sender: netdev-owner@vger.kernel.org
+To: James.Bottomley@suse.de, Jiri Pirko <jpirko@redhat.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "davem@davemloft.net" <davem@davemloft.net>, "devel@open-fcoe.org" <devel@open-fcoe.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "fubar@us.ibm.com" <fubar@us.ibm.com>, "joe.eykholt@gmail.com" <joe.eykholt@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, Ben Jarvis <bjarvismn@gmail.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Wed, 2011-03-02 at 01:55 -0800, Jiri Pirko wrote:
+> Or perhaps this should be applied to net-next?
+> 
+I think this should go through scsi-misc as all the other
+libfc/libfcoe/fcoe patches do.
 
-Hi James,
+> Wed, Mar 02, 2011 at 07:05:35AM CET, jpirko@redhat.com wrote:
+> >Check for bonding master and refuse to use that.
+> >
+> >Signed-off-by: Jiri Pirko <jpirko@redhat.com>
+> >---
+> > drivers/scsi/fcoe/fcoe.c |    4 +---
+> > 1 files changed, 1 insertions(+), 3 deletions(-)
+> >
+> >diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+> >index 9f9600b..3becc6a 100644
+> >--- a/drivers/scsi/fcoe/fcoe.c
+> >+++ b/drivers/scsi/fcoe/fcoe.c
+> >@@ -285,9 +285,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+> > 	}
+> > 
+> > 	/* Do not support for bonding device */
+> >-	if ((netdev->priv_flags & IFF_MASTER_ALB) ||
+> >-	    (netdev->priv_flags & IFF_SLAVE_INACTIVE) ||
+> >-	    (netdev->priv_flags & IFF_MASTER_8023AD)) {
+> >+	if (netdev->priv_flags & IFF_BONDING && netdev->flags & IFF_MASTER) {
+> > 		FCOE_NETDEV_DBG(netdev, "Bonded interfaces not supported\n");
+> > 		return -EOPNOTSUPP;
+> > 	}
+> >-- 
+> >1.7.3.4
+> >
 
-This patch fixes a regression for READ_CAPACITY to trigger SAI READ_CAPACITY_16 for
->= 0xffffffff virtual backends.  This occured during v4.0.0-rc6 when the backend
-read_capacity* handlers where moved into generic target_core_cdb.c code, and the
-'unsigned long long blocks_long' piece was dropped from target_emulate_readcapacity().
+James, feel free to pick up this patch. I don't have anything in my fcoe
+tree right now that it would conflict with. I'll also put it in my tree
+and resend if you don't put it into scsi-misc directly.
 
-This fix has been tested with TCM_Loop on .38-rc7 with lio-4.1 and is working as expected
-with large block virtual backends:
-
-[67826.897061] TARGET_CORE[loopback]->TPG[1]_LUN[0] - Adding READ-WRITE access for LUN in Demo Mode
-[67826.897061] scsi 7:0:1:0: Direct-Access     LIO-ORG  FILEIO           4.0  PQ: 0 ANSI: 5
-[67826.900933] sd 7:0:1:0: [sdd] 2621440000001 512-byte logical blocks: (1.34 PB/1.19 PiB)
-[67826.901510] sd 7:0:1:0: [sdd] Write Protect is off
-[67826.901684] sd 7:0:1:0: [sdd] Mode Sense: 2f 00 00 00
-
-Please include into scsi-rc-fixes going to Linus for-38 mainline target code.
-
-Reported-by: Ben Jarvis <bjarvismn@gmail.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_cdb.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/target/target_core_cdb.c b/drivers/target/target_core_cdb.c
-index 366080b..7f19c8b 100644
---- a/drivers/target/target_core_cdb.c
-+++ b/drivers/target/target_core_cdb.c
-@@ -667,7 +667,13 @@ target_emulate_readcapacity(struct se_cmd *cmd)
- {
- 	struct se_device *dev = SE_DEV(cmd);
- 	unsigned char *buf = cmd->t_task->t_task_buf;
--	u32 blocks = dev->transport->get_blocks(dev);
-+	unsigned long long blocks_long = dev->transport->get_blocks(dev);
-+	u32 blocks;
-+
-+	if (blocks_long >= 0x00000000ffffffff)
-+		blocks = 0xffffffff;
-+	else
-+		blocks = (u32)blocks_long;
- 
- 	buf[0] = (blocks >> 24) & 0xff;
- 	buf[1] = (blocks >> 16) & 0xff;
--- 
-1.5.6.5
+Acked-by: Robert Love <robert.w.love@intel.com>
 
