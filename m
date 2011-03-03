@@ -1,79 +1,68 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: Re: [PATCH] aacraid: Remove mem leak in aac_send_raw_srb().
-Date: Thu, 3 Mar 2011 21:49:33 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1103032148300.2430@swampdragon.chaosbits.net>
-References: <alpine.LNX.2.00.1101062120090.13988@swampdragon.chaosbits.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC 12/12] iscsi-target: Add Makefile/Kconfig and update TCM
+	top level
+Date: Thu, 03 Mar 2011 12:58:25 -0800
+Message-ID: <1299185905.5401.405.camel@haakon2.linux-iscsi.org>
+References: <1299036841-23677-1-git-send-email-nab@linux-iscsi.org>
+	 <1299036841-23677-13-git-send-email-nab@linux-iscsi.org>
+	 <20110301223251.11c95eed.rdunlap@xenotime.net>
+	 <1299101531.5401.313.camel@haakon2.linux-iscsi.org>
+	 <20110303141928.GA25256@infradead.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1101062120090.13988@swampdragon.chaosbits.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:39917 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758665Ab1CCVFK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Mar 2011 16:05:10 -0500
+In-Reply-To: <20110303141928.GA25256@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-PING!
-
-Any chance we could get this patch merged? Any objections?
-
-
-/Jesper Juhl
-
-
-On Thu, 6 Jan 2011, Jesper Juhl wrote:
-
+On Thu, 2011-03-03 at 09:19 -0500, Christoph Hellwig wrote:
+> On Wed, Mar 02, 2011 at 01:32:11PM -0800, Nicholas A. Bellinger wrote:
+> > The kernel code itself that is specific to using the SSE v4.2
+> > instruction for CRC32C offload are using #ifdef CONFIG_X86 stubs in
+> > iscsi_target_login.c:iscsi_login_setup_crypto(), and !CONFIG_X86 will
+> > default to using the unoptimized 1x8 slicing soft CRC32C code.  This
+> > particular piece of logic has been tested on powerpc and arm and is
+> > funcitoning as expected from the kernel level using the arch independent
+> > soft code.
 > 
-> We leak in drivers/scsi/aacraid/commctrl.c::aac_send_raw_srb().
+> I don't think you need that code at all.  The crypto code is structured
+> to prefer the optimized implementation if it is present.  Just stripping
+> the x86-specific code out and always requesting the plain crc32c
+> algorithm should give you the optimized one if it is present on your
+> system.
 > 
-> We allocate memory:
-> 	...
-> 			struct user_sgmap* usg;
-> 			usg = kmalloc(actual_fibsize - sizeof(struct aac_srb)
-> 			  + sizeof(struct sgmap), GFP_KERNEL);
-> and then neglect to free it:
-> 	...
-> 			for (i = 0; i < usg->count; i++) {
-> 				u64 addr;
-> 				void* p;
-> 				if (usg->sg[i].count >
-> 				    ((dev->adapter_info.options &
-> 				     AAC_OPT_NEW_COMM) ?
-> 				      (dev->scsi_host_ptr->max_sectors << 9) :
-> 				      65536)) {
-> 					rcode = -EINVAL;
-> 					goto cleanup;
-> 	... this 'goto' makes 'usg' go out of scope and leak the memory we 
-> 	    allocated.
-> 	    Other exits properly kfree(usg), it's just here it is 
-> 	    neglected.
-> 
-> 
-> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-> ---
->  commctrl.c |    1 +
->  1 file changed, 1 insertion(+)
-> 
->   Compile tested only, I don't have a way to test this properly, but I 
->   think it's fairly obvious.
-> 
-> diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-> index 645ddd9..33370fb 100644
-> --- a/drivers/scsi/aacraid/commctrl.c
-> +++ b/drivers/scsi/aacraid/commctrl.c
-> @@ -649,6 +649,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
->  				     AAC_OPT_NEW_COMM) ?
->  				      (dev->scsi_host_ptr->max_sectors << 9) :
->  				      65536)) {
-> +					kfree(usg);
->  					rcode = -EINVAL;
->  					goto cleanup;
->  				}
-> 
-> 
-> 
+> Please give it a try.
 > 
 
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Plain text mails only, please.
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
+This is what I originally thought as well, but this ended up not being
+the case when the logic was originally coded up.   I just tried again
+with .38-rc7 on a 5500 series machine and simply stubbing out the
+CONFIG_X86 part from iscsi_login_setup_crypto() and calling:
+
+   crypto_alloc_hash("crc32c", 0, CRYPTO_ALG_ASYNC)
+
+does not automatically load and use crc32c_intel.ko when only requesting
+plain crc32c.
+
+The reason for the extra crypto_alloc_hash("crc32c-intel", ...) call in
+iscsi_login_setup_crypto() is to load crc32c_intel.ko on-demand for
+cpu_has_xmm4_2 capable machines.
+
+I should mention this is with the following .config:
+
+CONFIG_CRYPTO_CRC32C=y
+CONFIG_CRYPTO_CRC32C_INTEL=m
+
+This would seem to indicate that CRC32C_INTEL needs to be compiled in
+(or at least manually loaded) for libcypto to use the optimized
+instructions when the plain crc32c is called, correct..?
+
+--nab
+
