@@ -1,123 +1,105 @@
-From: Andreas Dilger <adilger@dilger.ca>
-Subject: Re: [RFC] block integrity: Fix write after checksum calculation	problem
-Date: Fri, 4 Mar 2011 15:22:30 -0700
-Message-ID: <8C2F258E-60BE-45F8-B6E2-87988DEE2776@dilger.ca>
-References: <20110222020022.GH32261@tux1.beaverton.ibm.com> <yq1vd0cf26f.fsf@sermon.lab.mkp.net> <20110223202446.GG4020@noexit> <1298493173-sup-8301@think> <20110224164758.GH23042@quack.suse.cz> <1298566775-sup-730@think> <20110224182732.GV27190@tux1.beaverton.ibm.com> <1298897186-sup-9394@think> <20110304210724.GF27190@tux1.beaverton.ibm.com>
-Mime-Version: 1.0 (Apple Message framework v1082)
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110304210724.GF27190@tux1.beaverton.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: djwong@us.ibm.com
-Cc: Chris Mason <chris.mason@oracle.com>, Jan Kara <jack@suse.cz>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: [PATCH] libsas: fix/amend device gone notification in	sas_deform_port()
+Date: Fri, 04 Mar 2011 16:44:53 -0600
+Message-ID: <4D716B65.20007@redhat.com>
+References: <20110217030659.4303.12762.stgit@localhost6.localdomain6> <4D5DB0F0.4060006@redhat.com> <4D5DBB10.4030905@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51058 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932569Ab1CDWow (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 4 Mar 2011 17:44:52 -0500
+In-Reply-To: <4D5DBB10.4030905@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: "james.bottomley@suse.de" <james.bottomley@suse.de>, "Fan, Haipao" <haipao.fan@intel.com>, "Jiang, Dave" <dave.jiang@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Danecki, Jacek" <jacek.danecki@intel.com>, "Trela, Maciej" <Maciej.Trela@intel.com>, "Skirvin, Jeffrey D" <jeffrey.d.skirvin@intel.com>, "Nadolski, Edmund" <edmund.nadolski@intel.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On 2011-03-04, at 2:07 PM, Darrick J. Wong wrote:
-> Ok, here's what I have so far.  I took everyone's suggestions of where to add
-> calls to wait_on_page_writeback, which seems to handle the multiple-write case
-> adequately.  Unfortunately, it is still possible to generate checksum errors by
-> scribbling furiously on a mmap'd region, even after adding the writeback wait
-> in the ext4 writepage function.  Oddly, I couldn't break btrfs with mmap by
-> removing its wait_for_page_writeback call, so I suspect there's a bit more
-> going on in btrfs than I've been able to figure out.
+Dan Williams wrote:
+> On 2/17/2011 3:36 PM, David Milburn wrote:
+>> Dan Williams wrote:
+>>> Commit 56dd2c06 "libsas: Don't issue commands to devices that have been
+>>> hot-removed" edited Darrick's original patch to remove setting 'gone' in
+>>> the sas_deform_port() path because that prevented scsi sync cache
+>>> commands from being issued when the driver was unloaded.  However, this
+>>> allows true device gone notifications (as signaled port phy events) to
+>>> trigger sync cache commands to devices that are known to be unreachable.
+>>>
+>>> Teach libsas which sas_deform_port() invocations are likely device gone
+>>> events.
+>>>
+>>> This patch also introduces sas_device_gone() which hopefully allows
+>>> subtle/tricky locking to be dropped from lldd drivers, like the
+>>> following in mvsas which is broken if the ata path is ever converted to
+>>> call lldd_execute_task() with irqs enabled:
+>>>
+>>>     flags_libsas = 0;
+>>>     [...]
+>>>     spin_unlock_irqrestore(dev->sata_dev.ap->lock, flags_libsas);
+>>>     spin_unlock_irqrestore(&mvi->lock, flags);
+>>>     t->task_done(t);
+>>>     spin_lock_irqsave(&mvi->lock, flags);
+>>>     spin_lock_irqsave(dev->sata_dev.ap->lock, flags_libsas);
+>>>
+>>> Cc: Darrick J. Wong<djwong@us.ibm.com>
+>>> Cc: Haipao Fan<haipao.fan@intel.com>
+>>> Cc: Maciej Trela<maciej.trela@intel.com>
+>>> Cc: David Milburn<dmilburn@redhat.com>
+>>> Signed-off-by: Dan Williams<dan.j.williams@intel.com>
+>>> ---
+>>>
+>>> The sas_device_gone() change could be split into its own patch for 
+>>> bisection
+>>> purposes, let me know if you want me to resubmit.  This is being 
+>>> driven by a
+>>> lockdep error in isci as it calls task->done() from lldd_execute_task()
+>>> when it finds lldd_dev == NULL for the ata domain_device.
+>>
+>> Dan,
+>>
+>> So, you are seeing sas_ata_task_done() trying to get the ata_port lock,
+>> but it has already been taken earlier in the code path?
+>>
+>> ata_scsi_queuecmd (spin_lock_irqsave(ap->lock, irq_flags)
+>>     __ata_scsi_queuecmd
+>>       ata_scsi_translate
+>>         ata_qc_issue
+>>           sas_ata_qc_issue
+>>             isci_task_execute_task
+>>               isci_task_complete_for_upper_layer
+>>                 sas_ata_task_done
+>> (spin_lock_irqsave(dev->sata_dev.ap->lock, flags)
+> 
+> Exactly.
+> 
+> sas_device_gone() should prevent an lldd from ever attempting an i/o to 
+> a missing sata device (one that has been notified via lldd_dev_gone). 
+> Although, I have only had time to verify the simple unplug case and 
+> sync-cache commands at driver unload.  We'll still need to handle 
+> missing ssp devices, but there are no lldd-external locking concerns in 
+> that path.
+> 
 
-Did you add this to ext4_page_mkwrite() or only ext4_writepage()?  It wasn't clear from your description above.
+Dan,
 
-> The set_memory_ro debugging trick didn't ferret out any write paths that I
-> didn't catch... though it did have the effect of causing occasional fsync()
-> deadlocks.  I suppose I could sprinkle in a few more of those write calls to
-> see what happens.
-> 
-> Either way, I'm emailing to ask everyone's advice since I've run out of ideas.
-> Or: Did I miss something?
-> 
-> Thanks all for the feedback so far!
-> 
-> --
-> fs: Wait for page writeback when rewrite detected
-> 
-> Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
-> ---
-> 
-> fs/buffer.c     |    4 +++-
-> fs/ext4/inode.c |    3 +++
-> mm/filemap.c    |   15 +++++++++++++--
-> 3 files changed, 19 insertions(+), 3 deletions(-)
-> 
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index 2219a76..39e934c 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -2379,8 +2379,10 @@ block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-> 			ret = VM_FAULT_OOM;
-> 		else /* -ENOSPC, -EIO, etc */
-> 			ret = VM_FAULT_SIGBUS;
-> -	} else
-> +	} else {
-> +		wait_on_page_writeback(page);
-> 		ret = VM_FAULT_LOCKED;
-> +	}
-> 
-> out:
-> 	return ret;
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 9f7f9e4..2364704 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -2730,12 +2730,15 @@ static int ext4_writepage(struct page *page,
-> 	struct inode *inode = page->mapping->host;
-> 
-> 	trace_ext4_writepage(inode, page);
-> +lock_page(page);
-> 	size = i_size_read(inode);
-> 	if (page->index == size >> PAGE_CACHE_SHIFT)
-> 		len = size & ~PAGE_CACHE_MASK;
-> 	else
-> 		len = PAGE_CACHE_SIZE;
-> 
-> +wait_on_page_writeback(page);
-> +
-> 	/*
-> 	 * If the page does not have buffers (for whatever reason),
-> 	 * try to create them using __block_write_begin.  If this
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index 83a45d3..f201d80 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -2217,8 +2217,8 @@ EXPORT_SYMBOL(generic_file_direct_write);
->  * Find or create a page at the given pagecache position. Return the locked
->  * page. This function is specifically for buffered writes.
->  */
-> -struct page *grab_cache_page_write_begin(struct address_space *mapping,
-> -					pgoff_t index, unsigned flags)
-> +struct page *__grab_cache_page_write_begin(struct address_space *mapping,
-> +					   pgoff_t index, unsigned flags)
-> {
-> 	int status;
-> 	struct page *page;
-> @@ -2243,6 +2243,17 @@ repeat:
-> 	}
-> 	return page;
-> }
-> +struct page *grab_cache_page_write_begin(struct address_space *mapping,
-> +					pgoff_t index, unsigned flags)
-> +{
-> +	struct page *p;
-> +
-> +	p = __grab_cache_page_write_begin(mapping, index, flags);
-> +	if (p)
-> +		wait_on_page_writeback(p);
-> +
-> +	return p;
-> +}
-> EXPORT_SYMBOL(grab_cache_page_write_begin);
-> 
-> static ssize_t generic_perform_write(struct file *file,
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+One other question, should sas_device_gone() be sync'ing with sata io
+thru ata port lock instead of the Scsi_Host lock?
+
+Looking at sas_queuecommand, the host_lock is released and the ata
+port lock is taken before calling ata_sas_queuecmd, and ata port lock is 
+held
+down the __ata_scsi_queuecmd path.
+
+Should sas_device_gone get the ap->lock from the domain_device->
+sata_dev to better sync against sata io?
+
+Thanks,
+David
 
 
-Cheers, Andreas
+
+> -- 
+> Dan
+
