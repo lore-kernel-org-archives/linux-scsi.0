@@ -1,101 +1,78 @@
-From: David Zeuthen <davidz@redhat.com>
-Subject: Re: [PATCH] scsi: ensure bsg device is available before announcing
- scsi device
-Date: Fri, 04 Mar 2011 11:50:16 -0500
-Message-ID: <1299257417.4710.29.camel@satan>
-References: <1299092565.26023.2.camel@satan>
-	 <1299175019.9151.16.camel@mulgrave.site>  <1299249176.4710.15.camel@satan>
-	 <1299253276.2461.33.camel@mulgrave.site>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC 12/12] iscsi-target: Add Makefile/Kconfig and update TCM
+ top level
+Date: Fri, 04 Mar 2011 11:00:21 -0600
+Message-ID: <1299258022.7041.64.camel@mulgrave.site>
+References: <1299036841-23677-1-git-send-email-nab@linux-iscsi.org>
+	 <1299036841-23677-13-git-send-email-nab@linux-iscsi.org>
+	 <20110301223251.11c95eed.rdunlap@xenotime.net>
+	 <1299101531.5401.313.camel@haakon2.linux-iscsi.org>
+	 <20110303141928.GA25256@infradead.org>
+	 <1299185905.5401.405.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:10594 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759825Ab1CDQu2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Mar 2011 11:50:28 -0500
-In-Reply-To: <1299253276.2461.33.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1299185905.5401.405.camel@haakon2.linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Randy Dunlap <rdunlap@xenotime.net>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, kay.sievers@vrfy.org
 
-On Fri, 2011-03-04 at 09:41 -0600, James Bottomley wrote:
-> > Note that we can already do all this today but since the sysfs layo=
-ut
-> > looks like this
-> >=20
-> >  0:0:0:0
-> >  |-- block
-> >  =E2=94=82   +-- sdb
-> >  |   |   ...
-> >  |
-> >  |-- bsg
-> >  |   +-- 0:0:0:0
-> >  |   |   ...
-> >=20
-> > This setup is rather unfortunate because the bsg device and block d=
-evice
-> > are siblings and, thus, cannot share information with each other. T=
-his
-> > is because only children can import information from their parents =
--
-> > anything else is prone to races.
-> >=20
-> > Now, since we currently run scsi_id + friends on the block device i=
-t
-> > would mean running these tools _again_ on the bsg device. Which,
-> > honestly is a waste. So the idea was simply to always run it on the=
- scsi
-> > device (using the bsg node) and simply just import the data to the =
-block
-> > device and bsg devices (both are children of the scsi device).
->=20
-> OK, so why not simply an event on BSG device creation then?  To make
-> what you want to do work, it sounds like we should be moving BSG bind=
-ing
-> farther back in the configure sequence (to the same place where we'd =
-be
-> binding an ordinary ULD).  It also perhaps sounds like we don't need =
-any
-> events on the sdev.  The only reason we might find them useful is if =
-we
-> were going to do configuration from user space (which was a proposal
-> once upon a time).  The sdev was never designed to be any sort of thi=
-ng
-> the user saw (well, except as an identifying label).  That's why you
-> need to bind a driver (including bsg) to speak to it.
+On Thu, 2011-03-03 at 12:58 -0800, Nicholas A. Bellinger wrote:
+> On Thu, 2011-03-03 at 09:19 -0500, Christoph Hellwig wrote:
+> > On Wed, Mar 02, 2011 at 01:32:11PM -0800, Nicholas A. Bellinger wrote:
+> > > The kernel code itself that is specific to using the SSE v4.2
+> > > instruction for CRC32C offload are using #ifdef CONFIG_X86 stubs in
+> > > iscsi_target_login.c:iscsi_login_setup_crypto(), and !CONFIG_X86 will
+> > > default to using the unoptimized 1x8 slicing soft CRC32C code.  This
+> > > particular piece of logic has been tested on powerpc and arm and is
+> > > funcitoning as expected from the kernel level using the arch independent
+> > > soft code.
+> > 
+> > I don't think you need that code at all.  The crypto code is structured
+> > to prefer the optimized implementation if it is present.  Just stripping
+> > the x86-specific code out and always requesting the plain crc32c
+> > algorithm should give you the optimized one if it is present on your
+> > system.
+> > 
+> > Please give it a try.
+> > 
+> 
+> This is what I originally thought as well, but this ended up not being
+> the case when the logic was originally coded up.   I just tried again
+> with .38-rc7 on a 5500 series machine and simply stubbing out the
+> CONFIG_X86 part from iscsi_login_setup_crypto() and calling:
+> 
+>    crypto_alloc_hash("crc32c", 0, CRYPTO_ALG_ASYNC)
+> 
+> does not automatically load and use crc32c_intel.ko when only requesting
+> plain crc32c.
 
-Not entirely sure what you exactly are proposing here but note that the
-root problem is that the block device and bsg device are siblings... th=
-e
-only way this can work without races in user space is to have their
-common ancestor do the work (e.g. run /lib/udev/scsi_id + friends) on
-the 'add' uevent, not on some 'change' uevent later... there is just no
-way it will work otherwise.
+It sounds like there might be a bug in the crypto layer, so the Linux
+way is to make it work as intended.
 
-If we didn't care about backward compat, maybe it could look like this
+It's absolutely not acceptable just to pull other layer workarounds into
+drivers.
 
- 0:0:0:0
- +-- dev    <-- this is dev file for the bsg device
- |
- +-- block
- |   +-- sdb
- |   |   +-- dev  <-- this is the dev file for the block device
+> The reason for the extra crypto_alloc_hash("crc32c-intel", ...) call in
+> iscsi_login_setup_crypto() is to load crc32c_intel.ko on-demand for
+> cpu_has_xmm4_2 capable machines.
+> 
+> I should mention this is with the following .config:
+> 
+> CONFIG_CRYPTO_CRC32C=y
+> CONFIG_CRYPTO_CRC32C_INTEL=m
+> 
+> This would seem to indicate that CRC32C_INTEL needs to be compiled in
+> (or at least manually loaded) for libcypto to use the optimized
+> instructions when the plain crc32c is called, correct..?
 
-so we get the bsg device as the first uevent and the block device with
-the other one. With this setup we'd run /lib/udev/scsi_id + friends on
-the bsg device node and then we'd import it for the block device node
-and everything would be good.
+That sounds right.  There's probably not an autoload for this on
+recognising sse instructions.
 
-That said, I don't think we can make such a change as it would probably
-break some parts of user space...
-
-    David
+James
 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+James
