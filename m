@@ -1,27 +1,37 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] block integrity: Fix write after checksum calculation
- problem
-Date: Fri, 4 Mar 2011 15:53:15 -0500
-Message-ID: <20110304205315.GA10389@infradead.org>
-References: <20110222020022.GH32261@tux1.beaverton.ibm.com>
- <4D634D8F.4070401@panasas.com>
- <20110222114222.GA24728@quack.suse.cz>
- <20110304205143.GE27190@tux1.beaverton.ibm.com>
+From: john smith <whalajam@yahoo.com>
+Subject: Re: scsi_host_template.queuecommand() instances
+Date: Fri, 4 Mar 2011 12:58:05 -0800 (PST)
+Message-ID: <842460.81825.qm@web161919.mail.bf1.yahoo.com>
+References: <20110228132402.GI13726@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20110304205143.GE27190@tux1.beaverton.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: Jan Kara <jack@suse.cz>, Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web161919.mail.bf1.yahoo.com ([98.139.211.227]:20481 "HELO
+	web161919.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1760065Ab1CDU6H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2011 15:58:07 -0500
+In-Reply-To: <20110228132402.GI13726@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Mar 04, 2011 at 12:51:43PM -0800, Darrick J. Wong wrote:
-> Hmm.  Any interest in pushing the page copy patch as an interim solution while
-> I work on getting the wait-on-writeback strategy to function?  I agree it's not
-> the fastest solution, but at least it won't be running broken while I find the
-> faster solution(s).
+--- On Mon, 2/28/11, Matthew Wilcox <matthew@wil.cx> wrote:
+> Before 2.6.37, there's a per-host lock acquired in the scsi
+> layer that
+> prevents queuecommand being called twice for the same host
+> simultaneously.
+> If your driver is drivign two cards, then it can still be
+> executing
+> twice ...  but it's a rare driver that has global
+> instead of per-host
+> state to protect.
 
-It's not only slow but also butt ugly.  NAK from me - we need to get
-this completely right, not hack around it.
+If precautions are taken (to protect shared data), I assume it is safe to spin_unlock(host->host_lock) - at the entry in queuecommand() and spin_lock(host->host_lock) - at the exit, to make it MT?
+(I believe I've seen this done)
+
+thanks,
+John
+
+
+      
