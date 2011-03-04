@@ -1,142 +1,73 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: ensure bsg device is available before announcing
- scsi device
-Date: Fri, 04 Mar 2011 11:10:03 -0600
-Message-ID: <1299258603.7041.84.camel@mulgrave.site>
-References: <1299092565.26023.2.camel@satan>
-	 <1299175019.9151.16.camel@mulgrave.site>  <1299249176.4710.15.camel@satan>
-	 <1299253276.2461.33.camel@mulgrave.site>  <1299257417.4710.29.camel@satan>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [RFC] block integrity: Fix write after checksum calculation
+	problem
+Date: Fri, 4 Mar 2011 12:51:43 -0800
+Message-ID: <20110304205143.GE27190@tux1.beaverton.ibm.com>
+References: <20110222020022.GH32261@tux1.beaverton.ibm.com> <4D634D8F.4070401@panasas.com> <20110222114222.GA24728@quack.suse.cz>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:54368 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759801Ab1CDRKF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Mar 2011 12:10:05 -0500
-In-Reply-To: <1299257417.4710.29.camel@satan>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20110222114222.GA24728@quack.suse.cz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: David Zeuthen <davidz@redhat.com>
-Cc: linux-scsi@vger.kernel.org, kay.sievers@vrfy.org
 
-On Fri, 2011-03-04 at 11:50 -0500, David Zeuthen wrote:
-> On Fri, 2011-03-04 at 09:41 -0600, James Bottomley wrote:
-> > > Note that we can already do all this today but since the sysfs la=
-yout
-> > > looks like this
-> > >=20
-> > >  0:0:0:0
-> > >  |-- block
-> > >  =E2=94=82   +-- sdb
-> > >  |   |   ...
-> > >  |
-> > >  |-- bsg
-> > >  |   +-- 0:0:0:0
-> > >  |   |   ...
-> > >=20
-> > > This setup is rather unfortunate because the bsg device and block=
- device
-> > > are siblings and, thus, cannot share information with each other.=
- This
-> > > is because only children can import information from their parent=
-s -
-> > > anything else is prone to races.
-> > >=20
-> > > Now, since we currently run scsi_id + friends on the block device=
- it
-> > > would mean running these tools _again_ on the bsg device. Which,
-> > > honestly is a waste. So the idea was simply to always run it on t=
-he scsi
-> > > device (using the bsg node) and simply just import the data to th=
-e block
-> > > device and bsg devices (both are children of the scsi device).
-> >=20
-> > OK, so why not simply an event on BSG device creation then?  To mak=
-e
-> > what you want to do work, it sounds like we should be moving BSG bi=
-nding
-> > farther back in the configure sequence (to the same place where we'=
-d be
-> > binding an ordinary ULD).  It also perhaps sounds like we don't nee=
-d any
-> > events on the sdev.  The only reason we might find them useful is i=
-f we
-> > were going to do configuration from user space (which was a proposa=
-l
-> > once upon a time).  The sdev was never designed to be any sort of t=
-hing
-> > the user saw (well, except as an identifying label).  That's why yo=
-u
-> > need to bind a driver (including bsg) to speak to it.
->=20
-> Not entirely sure what you exactly are proposing here but note that t=
-he
-> root problem is that the block device and bsg device are siblings...
+On Tue, Feb 22, 2011 at 12:42:22PM +0100, Jan Kara wrote:
+>   Hi Boaz,
+> 
+> On Mon 21-02-11 21:45:51, Boaz Harrosh wrote:
+> > On 02/21/2011 06:00 PM, Darrick J. Wong wrote:
+> > > Last summer there was a long thread entitled "Wrong DIF guard tag on ext2
+> > > write" (http://marc.info/?l=linux-scsi&m=127530531808556&w=2) that started a
+> > > discussion about how to deal with the situation where one program tells the
+> > > kernel to write a block to disk, the kernel computes the checksum of that data,
+> > > and then a second program begins writing to that same block before the disk HBA
+> > > can DMA the memory block, thereby causing the disk to complain about being sent
+> > > invalid checksums.
+> > 
+> > The brokenness is in ext2/3 if you'll use btrfs, xfs and I think late versions
+> > of ext4 it should work much better. (If you still have problems please report
+> > them, those FSs advertise stable pages write-out)
+>   Do they? I've just checked ext4 and xfs and they don't seem to enforce
+> stable pages. They do lock the page (which implicitely happens in mm code
+> for any filesystem BTW) but this is not enough. You have to wait for
+> PageWriteback to get cleared and only btrfs does that.
+> 
+> > This problem is easily fixed at the FS layer or even at VFS, by overriding mk_write
+> > and syncing with write-out for example by taking the page-lock. Currently each
+> > FS is to itself because in VFS it would force the behaviour on FSs that it does
+> > not make sense to.
+>   Yes, it's easy to fix but at a performance cost for any application doing
+> frequent rewrites regardless whether integrity features are used or not.
+> And I don't think that's a good thing. I even remember someone measured the
+> hit last time this came up and it was rather noticeable.
+> 
+> > Note that the proper solution does not copy any data, just forces the app to
+> > wait before changing write-out pages.
+>   I think that's up for discussion. In fact what is going to be faster
+> depends pretty much on your system config. If you have enough CPU/RAM
+> bandwidth compared to storage speed, you're better of doing copying. If
+> you can barely saturate storage with your CPU/RAM, waiting is probably
+> better for you. 
+> 
+> Moreover if you do data copyout, you push the performance cost only on
+> users of the integrity feature which is nice. But on the other hand users
+> of integrity take the cost even if they are not doing rewrites.
+> 
+> A solution which is technically plausible and penalizing only rewrites
+> of data-integrity protected pages would be a use of shadow pages as Darrick
+> describes below. So I'd lean towards that long term. But for now I think
+> Darrick's solution is OK to make the integrity feature actually useful and
+> later someone can try something more clever.
 
-Right, but that's a consequence of the fact that we allow multiple uppe=
-r
-layer driver bindings.
+Hmm.  Any interest in pushing the page copy patch as an interim solution while
+I work on getting the wait-on-writeback strategy to function?  I agree it's not
+the fastest solution, but at least it won't be running broken while I find the
+faster solution(s).
 
-What I'm telling you is that you can't trigger off the ADD event on the
-sdev because the device isn't ready at that point.  What you need to do
-is trigger off the event for binding the ULD(s) ... but I'm also warnin=
-g
-that the multiple binding nature of ULDs always makes this racy.  If yo=
-u
-shift to using the bsg device, we'll have to make sure it isn't
-advertised until the system is ready to receive packets down it ... and
-I suspect we might be creating it a bit early in the current setup,
-simply because no-one has used it like this before.
+(More on that writeback patch in a short while.)
 
-You have a guarantee that there will always be a bsg device ... so if
-you want to use that for a probe, fine, cache the results on it.  I
-don't think we can ever guarantee that the other ULD will (or won't) be
-there at the same time, so surely you can make udev on the other device
-wait until the bsg based probe completes?
-
-James
-
->  the
-> only way this can work without races in user space is to have their
-> common ancestor do the work (e.g. run /lib/udev/scsi_id + friends) on
-> the 'add' uevent, not on some 'change' uevent later... there is just =
-no
-> way it will work otherwise.
->=20
-> If we didn't care about backward compat, maybe it could look like thi=
-s
->=20
->  0:0:0:0
->  +-- dev    <-- this is dev file for the bsg device
->  |
->  +-- block
->  |   +-- sdb
->  |   |   +-- dev  <-- this is the dev file for the block device
->=20
-> so we get the bsg device as the first uevent and the block device wit=
-h
-> the other one. With this setup we'd run /lib/udev/scsi_id + friends o=
-n
-> the bsg device node and then we'd import it for the block device node
-> and everything would be good.
->=20
-> That said, I don't think we can make such a change as it would probab=
-ly
-> break some parts of user space...
->=20
->     David
->=20
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--D
