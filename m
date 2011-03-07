@@ -1,26 +1,33 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: target: Remaining for-38 regression bugfix
-Date: Mon, 07 Mar 2011 15:25:55 -0800
-Message-ID: <1299540355.19683.344.camel@haakon2.linux-iscsi.org>
+From: "Bhanu Gollapudi" <bprakash@broadcom.com>
+Subject: Re: [PATCH] [SCSI] bnx2fc: fix build error when !CONFIG_MODULES
+Date: Mon, 7 Mar 2011 15:54:35 -0800
+Message-ID: <1299542075.5232.5.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+References: <20110302182740.e4dfd79f.sfr@canb.auug.org.au>
+ <1299103803-32594-1-git-send-email-mk@lab.zgora.pl>
+ <20110307201610.GA9032@mako-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=cp1252
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <20110307201610.GA9032@mako-laptop>
+Sender: linux-next-owner@vger.kernel.org
+To: Mariusz Kozlowski <mk@lab.zgora.pl>
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>, "James E.J. Bottomley" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi James,
+On Mon, 2011-03-07 at 12:16 -0800, Mariusz Kozlowski wrote:=20
+> On Wed, Mar 02, 2011 at 11:10:03PM +0100, Mariusz Kozlowski wrote:
+> > drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815: error: dereferencing pointe=
+r to incomplete type
+> > drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815: error: =91MODULE_STATE_LIVE=
+=92 undeclared (first use in this function)
+>=20
+> Hm. Still there in next-20110307. Is this patch wrong or..?
+>=20
 
-At this point there is still one critical regression bugfix caused by
-the target_core_cdb.c v4.0 refactoring from Christoph that needs to go
-in ASAP.  Please make sure the following patch is included into your
-final for-38 scsi-rc-fixes pull request for Linus.
+James,
 
-target: Fix READ_CAPACITY_16 regression
-http://marc.info/?l=linux-kernel&m=129911001806783&w=2
+Here is my ack for this patch.
 
-Please let me know if you have any questions,
-
---nab
+Thanks,
+Bhanu
