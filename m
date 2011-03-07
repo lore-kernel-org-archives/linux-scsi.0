@@ -1,48 +1,54 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] [SCSI] bnx2fc: fix build error when !CONFIG_MODULES
-Date: Mon, 07 Mar 2011 18:18:17 -0600
-Message-ID: <1299543497.15955.108.camel@mulgrave.site>
-References: <20110302182740.e4dfd79f.sfr@canb.auug.org.au>
-	 <1299103803-32594-1-git-send-email-mk@lab.zgora.pl>
-	 <20110307201610.GA9032@mako-laptop>
-	 <1299542075.5232.5.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+From: "Michael Chan" <mchan@broadcom.com>
+Subject: [PATCH 5/6] [SCSI] bnx2fc: Remove network bonding checking
+Date: Mon, 7 Mar 2011 15:42:28 -0800
+Message-ID: <1299541349-2438-5-git-send-email-mchan@broadcom.com>
+References: <1299541349-2438-1-git-send-email-mchan@broadcom.com>
+ <1299541349-2438-2-git-send-email-mchan@broadcom.com>
+ <1299541349-2438-3-git-send-email-mchan@broadcom.com>
+ <1299541349-2438-4-git-send-email-mchan@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <1299542075.5232.5.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
-Sender: linux-next-owner@vger.kernel.org
-To: Bhanu Gollapudi <bprakash@broadcom.com>
-Cc: Mariusz Kozlowski <mk@lab.zgora.pl>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:4213 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756847Ab1CHAgm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Mar 2011 19:36:42 -0500
+In-Reply-To: <1299541349-2438-4-git-send-email-mchan@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@suse.de
+Cc: linux-scsi@vger.kernel.org, devel@open-fcoe.org, michaelc@cs.wisc.edu, bprakash@broadcom.com, nsujir@broadcom.com, Michael Chan <mchan@broadcom.com>
 
-On Mon, 2011-03-07 at 15:54 -0800, Bhanu Gollapudi wrote:
-> On Mon, 2011-03-07 at 12:16 -0800, Mariusz Kozlowski wrote:=20
-> > On Wed, Mar 02, 2011 at 11:10:03PM +0100, Mariusz Kozlowski wrote:
-> > > drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815: error: dereferencing poin=
-ter to incomplete type
-> > > drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815: error: =E2=80=98MODULE_ST=
-ATE_LIVE=E2=80=99 undeclared (first use in this function)
-> >=20
-> > Hm. Still there in next-20110307. Is this patch wrong or..?
-> >=20
->=20
-> James,
->=20
-> Here is my ack for this patch.
+bnx2fc only operates on bnx2x hardware devices and not master bonding
+devices, so there is no need to check for bonding.  Even if the bnx2x
+device is "enslaved" into a bonding device, FCoE is unaffected as it
+has its own MAC address and queues.
 
-OK, so the patch is actually wrong because adding #ifdefs on modules in
-files really impedes readability.  The bug is using a direct deref on
-module state instead of one of the APIs which work in the non-modular
-case, namely try_module_get(). That means the other two need to come ou=
-t
-and be reworked (plus all the others in fcoe).
+Signed-off-by: Michael Chan <mchan@broadcom.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |    7 -------
+ 1 files changed, 0 insertions(+), 7 deletions(-)
 
-Reworked looks like it might be a bigger item than bnx2fc.  If any of
-those tests is ever relevant, it means we have a race in the
-fcoe_transport because it shouldn't be calling function pointers on a
-dying module (unless it wants to trigger an oops).
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index a626920..b3afaf2 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -1095,13 +1095,6 @@ static int bnx2fc_netdev_setup(struct bnx2fc_hba *hba)
+ 	struct netdev_hw_addr *ha;
+ 	int sel_san_mac = 0;
+ 
+-	/* Do not support for bonding device */
+-	if ((netdev->priv_flags & IFF_MASTER_ALB) ||
+-			(netdev->priv_flags & IFF_SLAVE_INACTIVE) ||
+-			(netdev->priv_flags & IFF_MASTER_8023AD)) {
+-		return -EOPNOTSUPP;
+-	}
+-
+ 	/* setup Source MAC Address */
+ 	rcu_read_lock();
+ 	for_each_dev_addr(physdev, ha) {
+-- 
+1.6.4.GIT
 
-So, why are you trying to do this in the first place?
 
-James
