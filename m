@@ -1,72 +1,63 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH] [SCSI] target: Add __init/__exit annotation for
-	target_core_init_configfs/target_core_exit_configfs
-Date: Sun, 06 Mar 2011 22:44:33 -0800
-Message-ID: <1299480273.19683.201.camel@haakon2.linux-iscsi.org>
-References: <1299467950.4791.1.camel@mola>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Sun, 06 Mar 2011 22:55:41 -0800
+Message-ID: <1299480941.19683.210.camel@haakon2.linux-iscsi.org>
+References: <1297542446.29128.0.camel@mulgrave.site>
+	 <20110307134033K.fujita.tomonori@lab.ntt.co.jp>
+	 <1299478645.19683.194.camel@haakon2.linux-iscsi.org>
+	 <20110307152438C.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:49230 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:56082 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169Ab1CGGvT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2011 01:51:19 -0500
-In-Reply-To: <1299467950.4791.1.camel@mola>
+	with ESMTP id S1752020Ab1CGHC1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Mar 2011 02:02:27 -0500
+In-Reply-To: <20110307152438C.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Axel Lin <axel.lin@gmail.com>
-Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@suse.de, brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-On Mon, 2011-03-07 at 11:19 +0800, Axel Lin wrote:
-> This patch fixes below section mismatch warning.
-> WARNING: vmlinux.o(.text+0x21617a): Section mismatch in reference from the function target_core_init_configfs() to the function .init.text:rd_module_init()
-> The function target_core_init_configfs() references
-> the function __init rd_module_init().
-> This is often because target_core_init_configfs lacks a __init
-> annotation or the annotation of rd_module_init is wrong.
+On Mon, 2011-03-07 at 15:24 +0900, FUJITA Tomonori wrote:
+> On Sun, 06 Mar 2011 22:17:25 -0800
+> "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 > 
-> Signed-off-by: Axel Lin <axel.lin@gmail.com>
-> ---
->  drivers/target/target_core_configfs.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
+> > On Mon, 2011-03-07 at 13:41 +0900, FUJITA Tomonori wrote:
+> > > On Sat, 12 Feb 2011 14:27:26 -0600
+> > > James Bottomley <James.Bottomley@suse.de> wrote:
+> > > 
+> > > > > Disregard my previous comment. It looks like current client should handle reservations
+> > > > > just fine without any further changes.
+> > > > 
+> > > > So is that an ack for putting this in scsi-misc ... or did you want to
+> > > > do more testing first?
+> > > 
+> > > Ping,
+> > > 
+> > > Brian, James, can we merge this during the next merge window?
+> > > 
+> > 
+> > Hi Tomo-san,
+> > 
+> > Just a heads up that I have merged the lio-core-2.6.git/tcm_ibmvscsis
+> > working branch into lio-4.1+master with your latest IBMVSCSIS code
+> > posted here:
 > 
+> Thanks, however, I'm not sure the inclusion of your tree automatically
+> means the inclusion of mainline via scsi-misc :)
 
-Hi Axel,
+Unfortuately not, but having IBMVSCSIS included into the main LIO
+upstream branch is a good way to ensure a fabric module will stay
+current against the latest target code.  ;)
 
-I have committed this patch with a few minor commit-log cleanups into
-lio-core-2.6.git/lio-4.1 here:
+So at this point (for Brian and James) I am happy enough with the
+current state of things to give my ack for-39 mainline.
 
-Created commit dbb7295:: target: Add __init/__exit annotation for target_core_[init,exit]_configfs
- 1 files changed, 2 insertions(+), 2 deletions(-)
+Acked-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 
-This will get cherry-picked into lio v4.0 branches shortly, and I will
-queue up as a for-39 mainline fix.
-
-Thanks for your patch!
+Thanks Tomo!
 
 --nab
-
-> diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-> index caf8dc1..378835e 100644
-> --- a/drivers/target/target_core_configfs.c
-> +++ b/drivers/target/target_core_configfs.c
-> @@ -3044,7 +3044,7 @@ static struct config_item_type target_core_cit = {
->  
->  /* Stop functions for struct config_item_type target_core_hba_cit */
->  
-> -static int target_core_init_configfs(void)
-> +static int __init target_core_init_configfs(void)
->  {
->  	struct config_group *target_cg, *hba_cg = NULL, *alua_cg = NULL;
->  	struct config_group *lu_gp_cg = NULL;
-> @@ -3176,7 +3176,7 @@ out_global:
->  	return -1;
->  }
->  
-> -static void target_core_exit_configfs(void)
-> +static void __exit target_core_exit_configfs(void)
->  {
->  	struct configfs_subsystem *subsys;
->  	struct config_group *hba_cg, *alua_cg, *lu_gp_cg;
 
