@@ -1,48 +1,35 @@
-From: "Augusta Mubarak" <mubaragusta.67@att.net>
-Subject: RE:
-Date: Sun, 06 Mar 2011 22:28:38 +0100
-Message-ID: <ABEYPC80ad941b224247b682c894e0132afac1@AbeyPC>
-Reply-To: augusta.mubar57@gmail.com
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 3/3] tcm ibmvscsis driver
+Date: Mon, 7 Mar 2011 13:41:11 +0900
+Message-ID: <20110307134033K.fujita.tomonori@lab.ntt.co.jp>
+References: <1297366739.18212.182.camel@haakon2.linux-iscsi.org>
+	<4D55A684.9060208@linux.vnet.ibm.com>
+	<1297542446.29128.0.camel@mulgrave.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm1-vm0.bullet.mail.ac4.yahoo.com ([98.139.53.202]:27940 "HELO
-	nm1-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754752Ab1CFWy4 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 6 Mar 2011 17:54:56 -0500
+Received: from sh.osrg.net ([192.16.179.4]:44988 "EHLO sh.osrg.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751787Ab1CGEl2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 6 Mar 2011 23:41:28 -0500
+In-Reply-To: <1297542446.29128.0.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "<#[frankla@odscompanies.com]#" <linux-scsi@vger.kernel.org>
+To: James.Bottomley@suse.de
+Cc: brking@linux.vnet.ibm.com, nab@linux-iscsi.org, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
-Greetings to you in the name of the Lord Jesus Christ.
+On Sat, 12 Feb 2011 14:27:26 -0600
+James Bottomley <James.Bottomley@suse.de> wrote:
 
+> > Disregard my previous comment. It looks like current client should handle reservations
+> > just fine without any further changes.
+> 
+> So is that an ack for putting this in scsi-misc ... or did you want to
+> do more testing first?
 
+Ping,
 
-I am Ms. Augusta Mubarak,a widow to late Sheik Mubarak. I am 61 years old.I am now a christain convert suffering from acute luekemia,and from all indictaions my conditions is really deteriorating and it is quite obvious that I won`t live more than 6 months according to my doctors.
+Brian, James, can we merge this during the next merge window?
 
-This is because the cancer stage has gotten to a very bad stage.
-
-
-
-My late husband was killed during the US raid against terrorism in Afghanistan and during the period of our marriage,we couldn`t produce any child.
-
-My late husband was very wealthy, and after his death,I inherited all his business and wealth.
-
-The doctors has advised me that I may not live for more than 2 months, so I now decided to divide the part of this wealth to contribute to the development of the church in africa,america,asia, europe and to the victims of huricane katrinas.
-
-I selected you  after visiting your site and I prayed over it.
-
-
-
-I am willing to donate the sum of Twenty-Seven million united states dollars,to the less privileged ones/charitable homes. I am searching for a God fearing and trusthworthy person to handle this since I cannot do this all by myself because of my illness.
-
-Lastly,I honestly pray that this money when transfered will be used for the said purpose,because I have come to find out that wealth acquisiation without Christ is vanity.
-
- 
-
-In Christ
-
-Augusta Mubarak
 
