@@ -1,135 +1,59 @@
-From: Matthew Curley <Matthewc@pivot3.com>
-Subject: RE: mpt2sas - SG_IO return truncated with cross page buffe
-Date: Tue, 8 Mar 2011 09:19:07 -0600
-Message-ID: <A94BFDB17DC4E1478F7ACF6EBA3FD8234B3179CBB5@p3saturn.p3corpnet.pivot3.com>
-References: <A94BFDB17DC4E1478F7ACF6EBA3FD8234B3169A355@p3saturn.p3corpnet.pivot3.com>
- <4D6FD35C.6030703@interlog.com>
- <A94BFDB17DC4E1478F7ACF6EBA3FD8234B3169A3BE@p3saturn.p3corpnet.pivot3.com>
- <B2FD678A64EAAD45B089B123FDFC3ED711304547@inbmail01.lsi.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: dm: Integrity errors should not cause failover
+Date: Tue, 08 Mar 2011 09:20:25 -0600
+Message-ID: <1299597625.2476.23.camel@mulgrave.site>
+References: <yq1aah6drw7.fsf@sermon.lab.mkp.net>
+	 <20110308151430.GB4669@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wg.pivot3.com ([74.202.66.30]:33098 "EHLO
-	p3saturn.p3corpnet.pivot3.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753611Ab1CHPTk convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Mar 2011 10:19:40 -0500
-In-Reply-To: <B2FD678A64EAAD45B089B123FDFC3ED711304547@inbmail01.lsi.com>
-Content-Language: en-US
+Received: from cantor.suse.de ([195.135.220.2]:44039 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754877Ab1CHPUa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Mar 2011 10:20:30 -0500
+In-Reply-To: <20110308151430.GB4669@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Desai, Kashyap" <Kashyap.Desai@lsi.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 
-The kernel output on this card is:
-FWVersion(02.15.59.00), ChipRevision(0x02), BiosVersion(07.01.08.00)
+On Tue, 2011-03-08 at 10:14 -0500, Mike Snitzer wrote:
+> On Tue, Mar 08 2011 at  1:54am -0500,
+> Martin K. Petersen <martin.petersen@oracle.com> wrote:
+> 
+> > 
+> > Integrity errors need to be passed to the owner of the integrity
+> > metadata for processing. Consequently EILSEQ should be passed up the
+> > stack.
+> > 
+> > Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> 
+> Acked-by: Mike Snitzer <snitzer@redhat.com>
+> 
+> Thanks Martin.  But James has already staged a few patches associated
+> with IO error differentation for 2.6.39.  Your dm-mpath patch will need
+> to be rebased on that work; best to feed it to James too.
+> 
+> (we were gambling that there wouldn't be additional DM or block changes
+> related to this work and figured it safe to have James carry all the
+> SCSI, block and DM changes... ;)
+> 
+> Problem is I'm not seeing a 2.6.39 branch in James' scsi-2.6-misc.git
+> (even though I know the changes are staged there ;)
+> 
+> See:
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=79775567e0439ca47eb9f501e52c4b713d44cf89
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=751b2a7d623ead9e55f751a6087efeab454b5659
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=63583cca745f440167bf27877182dc13e19d4bcf
+> 
+> James,
+> Any easy way to get Martin your 2.6.39 tree?  Do you have a branch (just
+> the tag isn't exposed)?
 
-I'm also working this through another guy on our team who has a Dell contact
-(since it's their customized firmware).  If it helps, we have an LSI2008
-programmed with standard firmware that we can try to use.
+Branch for what?  It's a linear tree with all the SCSI patches on
+master.
 
------Original Message-----
-From: Desai, Kashyap [mailto:Kashyap.Desai@lsi.com] 
-Sent: Tuesday, March 08, 2011 4:34 AM
-To: Matthew Curley; dgilbert@interlog.com
-Cc: linux-scsi@vger.kernel.org; Prakash, Sathya; Moore, Eric
-Subject: RE: mpt2sas - SG_IO return truncated with cross page buffe
+James
 
-Matthew,
 
-Which firmware version you have for mpt2sas card?
-
-Adding other MPTlinux folks.
-
-> -----Original Message-----
-> From: Matthew Curley [mailto:Matthewc@pivot3.com]
-> Sent: Thursday, March 03, 2011 11:26 PM
-> To: dgilbert@interlog.com
-> Cc: Desai, Kashyap; linux-scsi@vger.kernel.org
-> Subject: RE: mpt2sas - SG_IO return truncated with cross page buffe
-> 
-> 0x80 was what I initially noticed this with (a script on our product
-> was
-> retrieving that info), VPD 0x89 was what I used for debug for exactly
-> the reason you noted: it gave me a lot more buffer to play with.
-> I initially thought this might be cache-line size related since the
-> buffer misalign from sdparm was so small.  It seems to happen with
-> any SG_IO inquiry I've done so far though.
-> 
-> Sorry about the line formatting, apparently something from outlook
-> isn't handling that right.  I'll try to manually keep lines short,
-> and I can resend anything unreadable to anyone that cares.
-> 
-> Matthew Curley
-> -----Original Message-----
-> From: Douglas Gilbert [mailto:dgilbert@interlog.com]
-> Sent: Thursday, March 03, 2011 11:44 AM
-> To: Matthew Curley
-> Cc: kashyap.desai@lsi.com; linux-scsi@vger.kernel.org
-> Subject: Re: mpt2sas - SG_IO return truncated with cross page buffe
-> 
-> On 11-03-03 11:52 AM, Matthew Curley wrote:
-> > Apologies to Kashyap on the resend, accidentally sent this the first
-> > time with HTML formatting.
-> >
-> > Description:
-> > If the user space buffer passed to the SG_IO command crosses the 4K
-> > page boundary and the return data is greater than the amount of
-> buffer
-> > before that page boundary, the command output can be truncated at the
-> > end of the first page.  Depending on the kernel version, additional
-> error
-> > handling may occur at the driver.
-> >
-> > Configuration:
-> > The platform is a Dell PowerEdge R510 with 2 processors (from
-> > /proc/cpuinfo: 'Intel(R) Xeon(R) CPU           E5620  @ 2.40GH')
-> > Initial discovery environment was a 2.6.32 pvops kernel using sdparm
-> v0.96
-> > on mpt2sas 06.00.00, where the SG_IO ioctl was retrieving VPD 0x80
-> output.
-> > The behavior has also been reproduced on Fedora Core 14,  using
-> 2.6.38-rc6
-> > with mpt2sas version 07.100.0.   The controller involved is an LSI
-> 2008
-> > with Dell Firmware.  Running the test with 2.6.38-rc6, I also get a
-> number
-> > of kernel errors starting with an mpt2sas fault state.  That output
-> is
-> > shown below, it includes firmware/chip revision/adapter BIOS versions
-> and
-> > some information about the storage layout on the adapter.
-> 
-> Matthew,
-> You mention VPD page 0x80 (unit serial number) and later
-> page 0x89 (ATA information). Did you mean 0x89 in both cases
-> as page 0x80 is particularly short?
-> 
-> Doug Gilbert
-> 
-> P.S. Your lines at too long in my email reader.
-> 
-> > Additional info:
-> > Reproducing required disabling the PCI DMA Remapping support in the
-> kernel.
-> > With this setting off the two pages in the command's scatter list
-> were
-> > physically discontiguous every time I tried, and the problem occurs.
-> > With DMAR enabled the DMA addresses were always contiguous, and the
-> problem
-> > behavior wasn't seen.  I'm not sure about the stability/risks of
-> enabling
-> > this experimental setting as a 'fix'.
-> >
-> > The only other LSI controller I have access to is a 1068--using a
-> different
-> > driver stack of course--which does not appear to show the same
-> behavior in
-> > limited testing.
-> >
-> > Appreciate any help or information.  I have a simple debug utility
-> that
-> > issues VPD 0x89 if that's useful, and of course will provide any
-> other
-> > needed details.  Please cc-me on replies.
