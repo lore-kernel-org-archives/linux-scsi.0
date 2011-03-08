@@ -1,78 +1,46 @@
-From: <Menny_Hamburger@Dell.com>
-Subject: RE: [PATCH] sd: sd should not modify read capacity, cache type or
- write protect flag on rescan when there is a transport error
-Date: Tue, 8 Mar 2011 09:30:37 +0000
-Message-ID: <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM>
-References: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>
- <1298907291.2487.18.camel@mulgrave.site>
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [RFC 12/12] iscsi-target: Add Makefile/Kconfig and update TCM
+	top level
+Date: Tue, 8 Mar 2011 17:33:34 +0800
+Message-ID: <20110308093334.GA21996@gondor.apana.org.au>
+References: <1299539747.19683.333.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:62899 "EHLO
-	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750844Ab1CHJay (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2011 04:30:54 -0500
-In-Reply-To: <1298907291.2487.18.camel@mulgrave.site>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1299539747.19683.333.camel@haakon2.linux-iscsi.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James.Bottomley@hansenpartnership.com, hch@infradead.org, rdunlap@xenotime.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@suse.de
-Cc: linux-scsi@vger.kernel.org
 
-SSB0aGluayB0aGUga2VybmVsIHNob3VsZCBoYXZlIHNvbWUgYWJpbGl0eSB0byBoYW5kbGUgdGhp
-cyBzaXR1YXRpb24gKG9yIGF0IGxlYXN0IHByb3BhZ2F0ZSB0aGUgZmFjdCB0aGF0IHRoZXJlIGlz
-IGEgcHJvYmxlbSkgd2l0aG91dCB0aGUgdXNlcmxhbmQgYmVpbmcgaW52b2x2ZWQuDQoNCldlIGNv
-dWxkIGFkZCB0aGlzIGFzIGEgZGV2aW5mbyBvcHRpb24gLSBlbmFibGUgdGhpcyBmdW5jdGlvbmFs
-aXR5IGZvciBzcGVjaWZpYyBkZXZpY2VzLg0KQW5vdGhlciB0b3RhbGx5IGRpZmZlcmVudCB3YXkg
-bWF5IGJlIHRvIGhhdmUgdGhlIFNDU0kgbGF5ZXIgc2VuZCBzb21lIG5vdGlmaWNhdGlvbiAodW5r
-bm93biBwcm9wZXJ0eSwgbmVlZHMgcmVzY2FuKSB0aGF0IGNvdWxkIGJlIHBpY2tlZCB1cCBhbmQg
-aGFuZGxlZCBieSB0aGUgdHJhbnNwb3J0IGxheWVyLiAgDQoNCk1lbm55DQoNCi0tLS0tT3JpZ2lu
-YWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZnZXIua2VybmVsLm9yZyBb
-bWFpbHRvOmxpbnV4LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgSmFt
-ZXMgQm90dG9tbGV5DQpTZW50OiAyOCBGZWJydWFyeSwgMjAxMSAxNzozNQ0KVG86IEhhbWJ1cmdl
-ciwgTWVubnkNCkNjOiBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtQ
-QVRDSF0gc2Q6IHNkIHNob3VsZCBub3QgbW9kaWZ5IHJlYWQgY2FwYWNpdHksIGNhY2hlIHR5cGUg
-b3Igd3JpdGUgcHJvdGVjdCBmbGFnIG9uIHJlc2NhbiB3aGVuIHRoZXJlIGlzIGEgdHJhbnNwb3J0
-IGVycm9yDQoNCk9uIFN1biwgMjAxMS0wMi0yNyBhdCAxNDoyMSArMDAwMCwgTWVubnlfSGFtYnVy
-Z2VyQERlbGwuY29tIHdyb3RlOg0KPiBGcm9tOiBNZW5ueSBIYW1idXJnZXIgPE1lbm55X0hhbWJ1
-cmdlckBEZWxsLmNvbT4NCj4gDQo+IFdoZW4gc2Qgc2NhbiBmYWlscyBpbiBhcHByZWhlbmRpbmcg
-Y2FwYWNpdHksIGNhY2hlX3R5cGUgb3Igd3JpdGUgcHJvdGVjdCBmbGFnDQo+IHByb3BlcnR5IGZy
-b20gdGhlIGRldmljZSwgaXQgYXV0b21hdGljYWxseSBhc3NpZ25zIGEgZGVmYXVsdCB2YWx1ZSB0
-byB0aGUNCj4gZmFpbGVkIHByb3BlcnR5LiBXaGVuIHJlc2Nhbm5pbmcsIGluIGNhc2Ugb2YgdHJh
-bnNwb3J0L2hvc3QgZXJyb3IsIHRoaXMgZGVmYXVsdCANCj4gdmFsdWUgaXMgaW52YWxpZCBzaW5j
-ZSB0aGUgcHJvYmxlbSBpcyB3aXRoIHRoZSBjb25uZWN0aW9uIHRvIHRoZSBkZXZpY2UgYW5kIG5v
-dCBpbiANCj4gdGhlIGRldmljZSBpdHNlbGYgdGhhdCBtYXkgKGluIG1vc3QgY2FzZXMpIHN0aWxs
-IGJlIGludGFjdC4gQXBwbHlpbmcgYSBkZWZhdWx0IHZhbHVlDQo+IHdoZW4gZmFpbGluZyBtYXkg
-bGVhZCB0byBwcm9ibGVtcyB3aGVuIGNvbm5lY3Rpb24gaXMgcmUtZXN0YWJsaXNoZWQgc2luY2Ug
-dGhlIGRlZmF1bHQNCj4gdmFsdWUgcGVyc2lzdHMgdW5sZXNzIGFuIGFkZGl0aW9uYWwgcmVzY2Fu
-IGlzIHBlcmZvcm1lZC4NCg0KVGhhdCdzIGNvcnJlY3QuICBaZXJvIG1lYW5zIHdlIGtub3cgdGhl
-cmUncyBzb21ldGhpbmcgdGhlcmUgYnV0IHdlDQpjb3VsZG4ndCBnZXQgdGhlIG5lY2Vzc2FyeSBp
-bmZvcm1hdGlvbi4gIEEgemVybyBzaXplIGRldmljZSBjYW4ndCBiZQ0KcmVhZCBmcm9tIG9yIHdy
-aXR0ZW4gdG8uDQoNCj4gVGhpcyBwcm9ibGVtIHdhcyB3aXRuZXNzZWQgd2hlbiBydW5uaW5nIGlu
-IGEgaVNDU0kgZW52aXJvbm1lbnQgdW5kZXIgbXVsdGlwYXRoDQo+ICh3aXRoIEkvTyBvbiB0aGUg
-YWN0aXZlIHBhdGgpLiBJbiB0aGlzIGNhc2Ugd2UgZ2V0IGEgcGluZy1waW5nIGVmZmVjdCB3aGVy
-ZQ0KPiBtdWx0aXBhdGhkIHN3aXRjaGVzIGJldHdlZW4gYWx0ZXJuYXRlIHBhdGhzIGZvcmV2ZXIg
-KHVudGlsIHJlc2NhbikgYmVjYXVzZSB0aGUNCj4gcGF0aCBjaGVja2VyIHN0YXRlcyB0aGF0IHRo
-ZSBkZXZpY2UgaXMgT0ssIGFuZCBJL08gZmFpbHMgaW1tZWRpYXRlbHkgYmVjYXVzZSBvZg0KPiB0
-aGUgMCBjYXBhY2l0eSAoYXNzaWduZWQgdG8gdGhlIGRldmljZSB3aGVuIHJlc2Nhbm5pbmcgd2hp
-bGUgdGhlIGRldmljZSB3YXMgDQo+IGRpc2Nvbm5lY3RlZCBmcm9tIHRoZSBzdG9yYWdlKS4NCj4g
-DQo+IFJlcHJvZHVjdGlvbiBvdmVyIElTQ1NJIGVudmlyb25tZW50Og0KPiAxKSBkZCBpZj0vZGV2
-L2RtLTAgb2Y9L2Rldi96ZXJvIGJzPTY0IGNvdW50PTEwMDAwDQo+IDIpIGlmZG93biBldGhOLCBl
-dGhNLCBldGhLLCAuLi4gKHdoZXJlIGV0aFggaXMgYW4gaW50ZXJmYWNlIGZyb20gd2hpY2ggdGhl
-DQo+ICAgIG1hY2hpbmUgZXN0YWJsaXNoZXMgY29ubmVjdGlvbiB0byB0aGUgc3RvcmFnZSBhcnJh
-eSkuDQo+IDMpIGlzY3NpYWRtIC1tIHNlc3Npb24gLVINCj4gNCkgaWZ1cCBldGhOLCBldGhNLCBl
-dGhLLCAuLi4NCg0KVGhpcyByZWFsbHkgZG9lc24ndCBsb29rIGxpa2UgYSBnb29kIGlkZWEuICBJ
-dCdzIGEgbGF5ZXJpbmcgdmlvbGF0aW9uIGluDQp0aGF0IHRoZSBTQ1NJIG1pZCBsYXllciBub3cg
-aGFzIHRvIHRyeSB0byBkZXRlcm1pbmUgaWYgY2VydGFpbiBjb21tYW5kDQpmYWlsdXJlcyBhcmUg
-dGhlIHJlc3VsdCBvZiBob3N0IGRpc3J1cHRpb24uDQoNClRoZSBpZGVhIG9mIGJlbGlldmluZyBh
-IHByaW9yIHZhbHVlIGlmIGEgUkVBRF9DQVBBQ0lUWSBmYWlscyBhbHNvDQpkb2Vzbid0IGxvb2sg
-dG8gYmUgc3VjaCBhIGdvb2Qgb25lLiAgVGhpcyBjb3VsZCBsZWFkIHRvIHZvbHVtZQ0KY29ycnVw
-dGlvbiBpZiB0aGUgZGlzcnVwdGlvbiBpcyBwYXJ0IG9mIGFuIGFycmF5IGNvbmZpZ3VyYXRpb24u
-DQoNClRoZSBjb3JyZWN0IGZpeCBsb29rcyB0byBiZSB0byBpbml0aWF0ZSBhIHJlc2NhbiB3aGVu
-IHRoZSBob3N0IGlzIGFjdGl2ZQ0KdmlhIGhvdHBsdWcsIGFuZCBqdXN0IHRlYWNoIHRoZSBwYXRo
-IGNoZWNrZXIgYWJvdXQgemVybyBzaXplIGRldmljZXM/DQoNCkphbWVzDQoNCg0KLS0NClRvIHVu
-c3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNjcmliZSBsaW51
-eC1zY3NpIiBpbg0KdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtlcm5l
-bC5vcmcNCk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFq
-b3Jkb21vLWluZm8uaHRtbA0K
+Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
+>
+>> > I should mention this is with the following .config:
+>> > 
+>> > CONFIG_CRYPTO_CRC32C=y
+>> > CONFIG_CRYPTO_CRC32C_INTEL=m
+
+This is why you get the unoptimised version.  Had you selected
+both as built-in or both as modules, then it would have worked
+as intended.
+ 
+> What about the following to simply call request_module("crc32c_intel")
+> at module_init() time and top the extra iscsi_login_setup_crypto()
+> code..?
+
+If we're going to do this we should do it in the crypto layer,
+and not litter every single crypto API user with such crap.
+
+Currently we don't invoke request_module unless no implementation
+is reigstered for an algorithm.  You can change this so that it
+also invokes request_module if we have not yet done so at least
+once for that algorithm.
+
+Patches are welcome.
+
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
