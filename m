@@ -1,41 +1,73 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: RE: [PATCH] sd: sd should not modify read capacity, cache type or
- write protect flag on rescan when there is a transport error
-Date: Tue, 08 Mar 2011 08:22:31 -0600
-Message-ID: <1299594151.2476.10.camel@mulgrave.site>
-References: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>
-	 <1298907291.2487.18.camel@mulgrave.site>
-	 <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm: Integrity errors should not cause failover
+Date: Tue, 8 Mar 2011 10:14:31 -0500
+Message-ID: <20110308151430.GB4669@redhat.com>
+References: <yq1aah6drw7.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:50321 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:51220 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750931Ab1CHOWg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Mar 2011 09:22:36 -0500
-In-Reply-To: <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM>
+	id S1754902Ab1CHPOm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Mar 2011 10:14:42 -0500
+Content-Disposition: inline
+In-Reply-To: <yq1aah6drw7.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Menny_Hamburger@Dell.com
-Cc: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 
-Could you not top post: it makes it hard to follow what you're actually
-replying to.
+On Tue, Mar 08 2011 at  1:54am -0500,
+Martin K. Petersen <martin.petersen@oracle.com> wrote:
 
-On Tue, 2011-03-08 at 09:30 +0000, Menny_Hamburger@Dell.com wrote:
-> I think the kernel should have some ability to handle this situation
-> (or at least propagate the fact that there is a problem) without the
-> userland being involved.
 > 
-> We could add this as a devinfo option - enable this functionality for
-> specific devices.
-> Another totally different way may be to have the SCSI layer send some
-> notification (unknown property, needs rescan) that could be picked up
-> and handled by the transport layer.  
+> Integrity errors need to be passed to the owner of the integrity
+> metadata for processing. Consequently EILSEQ should be passed up the
+> stack.
+> 
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 
-This is the hotplug I suggested, isn't it?
+Acked-by: Mike Snitzer <snitzer@redhat.com>
 
-James
+Thanks Martin.  But James has already staged a few patches associated
+with IO error differentation for 2.6.39.  Your dm-mpath patch will need
+to be rebased on that work; best to feed it to James too.
 
+(we were gambling that there wouldn't be additional DM or block changes
+related to this work and figured it safe to have James carry all the
+SCSI, block and DM changes... ;)
 
+Problem is I'm not seeing a 2.6.39 branch in James' scsi-2.6-misc.git
+(even though I know the changes are staged there ;)
+
+See:
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=79775567e0439ca47eb9f501e52c4b713d44cf89
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=751b2a7d623ead9e55f751a6087efeab454b5659
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=63583cca745f440167bf27877182dc13e19d4bcf
+
+James,
+Any easy way to get Martin your 2.6.39 tree?  Do you have a branch (just
+the tag isn't exposed)?
+
+Mike
+
+> ---
+> 
+> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> index f336c69..57f7dd3 100644
+> --- a/drivers/md/dm-mpath.c
+> +++ b/drivers/md/dm-mpath.c
+> @@ -1215,7 +1215,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
+>  	if (!error && !clone->errors)
+>  		return 0;	/* I/O complete */
+>  
+> -	if (error == -EOPNOTSUPP)
+> +	if (error == -EOPNOTSUPP || error == -EILSEQ)
+>  		return error;
+>  
+>  	if (mpio->pgpath)
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://www.redhat.com/mailman/listinfo/dm-devel
