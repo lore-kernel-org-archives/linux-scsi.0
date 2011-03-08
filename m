@@ -1,46 +1,51 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [RFC 12/12] iscsi-target: Add Makefile/Kconfig and update TCM
-	top level
-Date: Tue, 8 Mar 2011 17:33:34 +0800
-Message-ID: <20110308093334.GA21996@gondor.apana.org.au>
-References: <1299539747.19683.333.camel@haakon2.linux-iscsi.org>
+From: Jesper Dangaard Brouer <hawk@comx.dk>
+Subject: Re: HP G6 hardware kernel boot issue > 2.6.37 cciss/hpsa
+Date: Tue, 08 Mar 2011 11:29:26 +0100
+Message-ID: <1299580166.11985.11.camel@firesoul.comx.local>
+References: <1299087769.4279.27.camel@firesoul.comx.local>
+	 <20110303124705.GA19471@stro.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-crypto-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1299539747.19683.333.camel@haakon2.linux-iscsi.org>
-Sender: linux-crypto-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: James.Bottomley@hansenpartnership.com, hch@infradead.org, rdunlap@xenotime.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110303124705.GA19471@stro.at>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Maximilian Attems <max@stro.at>
+Cc: Michael Prokop <mika@debian.org>, Marco d'Itri <md@linux.it>, Debian kernel team <debian-kernel@lists.debian.org>, Mike Miller <mike.miller@hp.com>, Jens Axboe <jaxboe@fusionio.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Martin Pitt <martin.pitt@ubuntu.com>, Eric Dumazet <eric.dumazet@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
->
->> > I should mention this is with the following .config:
->> > 
->> > CONFIG_CRYPTO_CRC32C=y
->> > CONFIG_CRYPTO_CRC32C_INTEL=m
 
-This is why you get the unoptimised version.  Had you selected
-both as built-in or both as modules, then it would have worked
-as intended.
- 
-> What about the following to simply call request_module("crc32c_intel")
-> at module_init() time and top the extra iscsi_login_setup_crypto()
-> code..?
+On Thu, 2011-03-03 at 13:47 +0100, Maximilian Attems wrote:
+> On Wed, 02 Mar 2011, Jesper Dangaard Brouer wrote:
+> 
+[...]
+> please file proper Debian bug report with reportbug.
+> we already have scripts dealing with such device changes.
+> Had previously thought that the need of them was over after the
+> libata change, but obviously you show the contrare.
+> 
+> So fire up reportbug and report against linux-2.6 with severity grave.
 
-If we're going to do this we should do it in the crypto layer,
-and not litter every single crypto API user with such crap.
+I finally succeeded filing a Debian bug-report (as Debians mail system
+clamav kept categorizing me as malware... hmm)
 
-Currently we don't invoke request_module unless no implementation
-is reigstered for an algorithm.  You can change this so that it
-also invokes request_module if we have not yet done so at least
-once for that algorithm.
+ Debian bug number: 617256
+ Link: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=617256
+ Update the case via email: 617256@bugs.debian.org
 
-Patches are welcome.
-
-Cheers,
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Med venlig hilsen / Best regards
+  Jesper Brouer
+  ComX Networks A/S
+  Linux Network Kernel Developer
+  Cand. Scient Datalog / MSc.CS
+  Author of http://adsl-optimizer.dk
+  LinkedIn: http://www.linkedin.com/in/brouer
+
+
+[...]
+> > Keywords: driver CCISS, HPSA, HP DL G6, uuid, udev, mkinitramfs,
+> > initramfs-tools, debian squeeze
+More keywords:
+ HP Smart Array P410i Controller / Smart Array G6 controllers
+ /dev/cciss/ scsi
