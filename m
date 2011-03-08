@@ -1,230 +1,90 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH] x86: introduce pci_map_biosrom()
-Date: Tue, 08 Mar 2011 10:36:19 -0800
-Message-ID: <20110308183226.6246.90354.stgit@localhost6.localdomain6>
+From: "Zou, Yi" <yi.zou@intel.com>
+Subject: RE: [PATCH] [SCSI] bnx2fc: fix build error when !CONFIG_MODULES
+Date: Tue, 8 Mar 2011 11:36:53 -0800
+Message-ID: <7C88852EF6F99F4EB538472FCFEBE222014F6FE66D@orsmsx509.amr.corp.intel.com>
+References: <20110302182740.e4dfd79f.sfr@canb.auug.org.au>
+	 <1299103803-32594-1-git-send-email-mk@lab.zgora.pl>
+	 <20110307201610.GA9032@mako-laptop>
+	 <1299542075.5232.5.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+	 <1299543497.15955.108.camel@mulgrave.site> <1299546546.1689.40.camel@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: hpa@zytor.com
-Cc: dmilburn@redhat.com, Dave Jiang <dave.jiang@intel.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-next-owner@vger.kernel.org>
+In-Reply-To: <1299546546.1689.40.camel@fritz>
+Content-Language: en-US
+Sender: linux-next-owner@vger.kernel.org
+To: "Love, Robert W" <robert.w.love@intel.com>, James Bottomley <James.Bottomley@suse.de>
+Cc: Bhanu Gollapudi <bprakash@broadcom.com>, Mariusz Kozlowski <mk@lab.zgora.pl>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The isci driver needs to retrieve its preboot orom image which contains
-necessary runtime parameters like platform specific sas addresses and
-phy configuration.  There is no rom bar associated with this area,
-instead we need to scan legacy expansion rom space.
-
-1/ Promote the probe_roms_32 implementation to x86-64
-2/ Add a facility to find and map an adapter rom by pci device (according to
-   PCI Firmware Specification Revision 3.0)
-
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-
-Here is the updated rom scanning implementation as initially presented
-here [1].  Dave has been able to verify this implementation on his
-platform.  This is modelled loosely on the interface provided by
-pci_map_rom().
-
---
-Dan
-
-[1]: http://marc.info/?l=linux-scsi&m=129862745115270&w=2
-
- arch/x86/include/asm/probe_roms.h |    8 +++
- arch/x86/include/asm/setup.h      |    3 +
- arch/x86/kernel/Makefile          |    2 -
- arch/x86/kernel/head32.c          |    1 
- arch/x86/kernel/probe_roms.c      |  101 +++++++++++++++++++++++++++++++++++++
- arch/x86/kernel/x86_init.c        |    2 -
- 6 files changed, 113 insertions(+), 4 deletions(-)
- create mode 100644 arch/x86/include/asm/probe_roms.h
- rename arch/x86/kernel/{probe_roms_32.c => probe_roms.c} (65%)
-
-diff --git a/arch/x86/include/asm/probe_roms.h b/arch/x86/include/asm/probe_roms.h
-new file mode 100644
-index 0000000..4950a0b
---- /dev/null
-+++ b/arch/x86/include/asm/probe_roms.h
-@@ -0,0 +1,8 @@
-+#ifndef _PROBE_ROMS_H_
-+#define _PROBE_ROMS_H_
-+struct pci_dev;
-+
-+extern void __iomem *pci_map_biosrom(struct pci_dev *pdev);
-+extern void pci_unmap_biosrom(void __iomem *rom);
-+extern size_t pci_biosrom_size(struct pci_dev *pdev);
-+#endif
-diff --git a/arch/x86/include/asm/setup.h b/arch/x86/include/asm/setup.h
-index ef292c7..52edb6d 100644
---- a/arch/x86/include/asm/setup.h
-+++ b/arch/x86/include/asm/setup.h
-@@ -93,10 +93,11 @@ void *extend_brk(size_t size, size_t align);
- 			: : "i" (sz));					\
- 	}
- 
-+extern void probe_roms(void);
-+
- #ifdef __i386__
- 
- void __init i386_start_kernel(void);
--extern void probe_roms(void);
- 
- #else
- void __init x86_64_start_kernel(char *real_mode);
-diff --git a/arch/x86/kernel/Makefile b/arch/x86/kernel/Makefile
-index fedf32a..f31ae9b 100644
---- a/arch/x86/kernel/Makefile
-+++ b/arch/x86/kernel/Makefile
-@@ -36,7 +36,7 @@ obj-y			+= traps.o irq.o irq_$(BITS).o dumpstack_$(BITS).o
- obj-y			+= time.o ioport.o ldt.o dumpstack.o
- obj-y			+= setup.o x86_init.o i8259.o irqinit.o
- obj-$(CONFIG_X86_VISWS)	+= visws_quirks.o
--obj-$(CONFIG_X86_32)	+= probe_roms_32.o
-+obj-y			+= probe_roms.o
- obj-$(CONFIG_X86_32)	+= sys_i386_32.o i386_ksyms_32.o
- obj-$(CONFIG_X86_64)	+= sys_x86_64.o x8664_ksyms_64.o
- obj-$(CONFIG_X86_64)	+= syscall_64.o vsyscall_64.o
-diff --git a/arch/x86/kernel/head32.c b/arch/x86/kernel/head32.c
-index 784360c..e7605ed 100644
---- a/arch/x86/kernel/head32.c
-+++ b/arch/x86/kernel/head32.c
-@@ -21,7 +21,6 @@
- static void __init i386_default_early_setup(void)
- {
- 	/* Initialize 32bit specific setup functions */
--	x86_init.resources.probe_roms = probe_roms;
- 	x86_init.resources.reserve_resources = i386_reserve_resources;
- 	x86_init.mpparse.setup_ioapic_ids = setup_ioapic_ids_from_mpc;
- 
-diff --git a/arch/x86/kernel/probe_roms_32.c b/arch/x86/kernel/probe_roms.c
-similarity index 65%
-rename from arch/x86/kernel/probe_roms_32.c
-rename to arch/x86/kernel/probe_roms.c
-index 071e7fe..ba0a4cc 100644
---- a/arch/x86/kernel/probe_roms_32.c
-+++ b/arch/x86/kernel/probe_roms.c
-@@ -73,6 +73,107 @@ static struct resource video_rom_resource = {
- 	.flags	= IORESOURCE_BUSY | IORESOURCE_READONLY | IORESOURCE_MEM
- };
- 
-+/* does this oprom support the given pci device, or any of the devices
-+ * that the driver supports?
-+ */
-+static bool match_id(struct pci_dev *pdev, unsigned short vendor, unsigned short device)
-+{
-+	struct pci_driver *drv = pdev->driver;
-+	const struct pci_device_id *id;
-+
-+	if (pdev->vendor == vendor && pdev->device == device)
-+		return true;
-+
-+	for (id = drv ? drv->id_table : NULL; id && id->vendor; id++)
-+		if (id->vendor == vendor && id->device == device)
-+			break;
-+
-+	return id && id->vendor;
-+}
-+
-+static bool probe_list(struct pci_dev *pdev, unsigned short vendor,
-+		       const unsigned char *rom_list)
-+{
-+	unsigned short device;
-+
-+	do {
-+		if (probe_kernel_address(rom_list, device) != 0)
-+			device = 0;
-+
-+		if (device && match_id(pdev, vendor, device))
-+			break;
-+
-+		rom_list += 2;
-+	} while (device);
-+
-+	return !!device;
-+}
-+
-+static struct resource *find_oprom(struct pci_dev *pdev)
-+{
-+	struct resource *oprom = NULL;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(adapter_rom_resources); i++) {
-+		struct resource *res = &adapter_rom_resources[i];
-+		unsigned short offset, vendor, device, list, rev;
-+		const unsigned char *rom;
-+
-+		if (res->end == 0)
-+			break;
-+
-+		rom = isa_bus_to_virt(res->start);
-+		if (probe_kernel_address(rom + 0x18, offset) != 0)
-+			continue;
-+
-+		if (probe_kernel_address(rom + offset + 0x4, vendor) != 0)
-+			continue;
-+
-+		if (probe_kernel_address(rom + offset + 0x6, device) != 0)
-+			continue;
-+
-+		if (match_id(pdev, vendor, device)) {
-+			oprom = res;
-+			break;
-+		}
-+
-+		if (probe_kernel_address(rom + offset + 0x8, list) == 0 &&
-+		    probe_kernel_address(rom + offset + 0xc, rev) == 0 &&
-+		    rev >= 3 && list &&
-+		    probe_list(pdev, vendor, rom + offset + list)) {
-+			oprom = res;
-+			break;
-+		}
-+	}
-+
-+	return oprom;
-+}
-+
-+void *pci_map_biosrom(struct pci_dev *pdev)
-+{
-+	struct resource *oprom = find_oprom(pdev);
-+
-+	if (!oprom)
-+		return NULL;
-+
-+	return ioremap(oprom->start, resource_size(oprom));
-+}
-+EXPORT_SYMBOL(pci_map_biosrom);
-+
-+void pci_unmap_biosrom(void __iomem *image)
-+{
-+	iounmap(image);
-+}
-+EXPORT_SYMBOL(pci_unmap_biosrom);
-+
-+size_t pci_biosrom_size(struct pci_dev *pdev)
-+{
-+	struct resource *oprom = find_oprom(pdev);
-+
-+	return oprom ? resource_size(oprom) : 0;
-+}
-+EXPORT_SYMBOL(pci_biosrom_size);
-+
- #define ROMSIGNATURE 0xaa55
- 
- static int __init romsignature(const unsigned char *rom)
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index cd6da6b..1bc104f 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -33,7 +33,7 @@ void iommu_shutdown_noop(void) { }
- struct x86_init_ops x86_init __initdata = {
- 
- 	.resources = {
--		.probe_roms		= x86_init_noop,
-+		.probe_roms		= probe_roms,
- 		.reserve_resources	= reserve_standard_io_resources,
- 		.memory_setup		= default_machine_specific_memory_setup,
- 	},
+PiBPbiBNb24sIDIwMTEtMDMtMDcgYXQgMTY6MTggLTA4MDAsIEphbWVzIEJvdHRvbWxleSB3cm90
+ZToNCj4gPiBPbiBNb24sIDIwMTEtMDMtMDcgYXQgMTU6NTQgLTA4MDAsIEJoYW51IEdvbGxhcHVk
+aSB3cm90ZToNCj4gPiA+IE9uIE1vbiwgMjAxMS0wMy0wNyBhdCAxMjoxNiAtMDgwMCwgTWFyaXVz
+eiBLb3psb3dza2kgd3JvdGU6DQo+ID4gPiA+IE9uIFdlZCwgTWFyIDAyLCAyMDExIGF0IDExOjEw
+OjAzUE0gKzAxMDAsIE1hcml1c3ogS296bG93c2tpIHdyb3RlOg0KPiA+ID4gPiA+IGRyaXZlcnMv
+c2NzaS9ibngyZmMvYm54MmZjX2Zjb2UuYzoxODE1OiBlcnJvcjogZGVyZWZlcmVuY2luZw0KPiBw
+b2ludGVyIHRvIGluY29tcGxldGUgdHlwZQ0KPiA+ID4gPiA+IGRyaXZlcnMvc2NzaS9ibngyZmMv
+Ym54MmZjX2Zjb2UuYzoxODE1OiBlcnJvcjoNCj4g4oCYTU9EVUxFX1NUQVRFX0xJVkXigJkgdW5k
+ZWNsYXJlZCAoZmlyc3QgdXNlIGluIHRoaXMgZnVuY3Rpb24pDQo+ID4gPiA+DQo+ID4gPiA+IEht
+LiBTdGlsbCB0aGVyZSBpbiBuZXh0LTIwMTEwMzA3LiBJcyB0aGlzIHBhdGNoIHdyb25nIG9yLi4/
+DQo+ID4gPiA+DQo+ID4gPg0KPiA+ID4gSmFtZXMsDQo+ID4gPg0KPiA+ID4gSGVyZSBpcyBteSBh
+Y2sgZm9yIHRoaXMgcGF0Y2guDQo+ID4NCj4gPiBPSywgc28gdGhlIHBhdGNoIGlzIGFjdHVhbGx5
+IHdyb25nIGJlY2F1c2UgYWRkaW5nICNpZmRlZnMgb24gbW9kdWxlcyBpbg0KPiA+IGZpbGVzIHJl
+YWxseSBpbXBlZGVzIHJlYWRhYmlsaXR5LiAgVGhlIGJ1ZyBpcyB1c2luZyBhIGRpcmVjdCBkZXJl
+ZiBvbg0KPiA+IG1vZHVsZSBzdGF0ZSBpbnN0ZWFkIG9mIG9uZSBvZiB0aGUgQVBJcyB3aGljaCB3
+b3JrIGluIHRoZSBub24tbW9kdWxhcg0KPiA+IGNhc2UsIG5hbWVseSB0cnlfbW9kdWxlX2dldCgp
+LiBUaGF0IG1lYW5zIHRoZSBvdGhlciB0d28gbmVlZCB0byBjb21lDQo+IG91dA0KPiA+IGFuZCBi
+ZSByZXdvcmtlZCAocGx1cyBhbGwgdGhlIG90aGVycyBpbiBmY29lKS4NCj4gPg0KPiA+IFJld29y
+a2VkIGxvb2tzIGxpa2UgaXQgbWlnaHQgYmUgYSBiaWdnZXIgaXRlbSB0aGFuIGJueDJmYy4gIElm
+IGFueSBvZg0KPiA+IHRob3NlIHRlc3RzIGlzIGV2ZXIgcmVsZXZhbnQsIGl0IG1lYW5zIHdlIGhh
+dmUgYSByYWNlIGluIHRoZQ0KPiA+IGZjb2VfdHJhbnNwb3J0IGJlY2F1c2UgaXQgc2hvdWxkbid0
+IGJlIGNhbGxpbmcgZnVuY3Rpb24gcG9pbnRlcnMgb24gYQ0KPiA+IGR5aW5nIG1vZHVsZSAodW5s
+ZXNzIGl0IHdhbnRzIHRvIHRyaWdnZXIgYW4gb29wcykuDQo+ID4NCj4gPiBTbywgd2h5IGFyZSB5
+b3UgdHJ5aW5nIHRvIGRvIHRoaXMgaW4gdGhlIGZpcnN0IHBsYWNlPw0KPiA+DQo+IEZpcnN0LCBm
+Y29lLmMgc3RhcnRlZCB3aXRoIHRoZXNlIGNoZWNrcy4gSGVyZSBpcyBhIGNvbW1lbnQgaW4gZmNv
+ZS5jIGF0DQo+IHRoZSBwb2ludCBvZiBvbmUgb2YgdGhlIGNoZWNrcy4NCj4gDQo+IC8qDQo+ICAq
+IE1ha2Ugc3VyZSB0aGUgbW9kdWxlIGhhcyBiZWVuIGluaXRpYWxpemVkLCBhbmQgaXMgbm90IGFi
+b3V0IHRvIGJlDQo+ICAqIHJlbW92ZWQuICBNb2R1bGUgcGFyYW10ZXIgc3lzZnMgZmlsZXMgYXJl
+IHdyaXRhYmxlIGJlZm9yZSB0aGUNCj4gICogbW9kdWxlX2luaXQgZnVuY3Rpb24gaXMgY2FsbGVk
+IGFuZCBhZnRlciBtb2R1bGVfZXhpdC4NCj4gICovDQo+IA0KPiBJIGRvbid0IGtub3cgdGhlIGNv
+cnJlY3Qgd2F5IHRvIGZpeCB0aGF0IHJhY2UgaXMsIGJ1dCB3ZSBtYXkgYmUgcGFzdCB0aGUNCj4g
+bmVlZCB0byBmaXggaXQgaW4gdGhlIExMRHMuDQo+IA0KPiBOZXh0LCB0aGUgZmNvZSB0cmFuc3Bv
+cnQgd2FzIGFkZGVkLiBTaW5jZSBpdCAobGliZmNvZS5rbykgaXMgbm93IGNhbGxpbmcNCj4gd2hh
+dCB1c2VkIHRvIGJlIHRoZSBmY29lLmtvIHN5c2ZzIGVudHJ5IHBvaW50cyBJIGRvbid0IHRoaW5r
+IHRoZSBwcm9ibGVtDQo+IGV4aXN0cyBpbiBmY29lLmMgb3IgaW4gYm54MmZjX2Zjb2UuYywgdGhl
+IHByb2JsZW0gc2hvdWxkIGJlIGluIHRoZSBmY29lDQo+IHRyYW5zcG9ydCBjb2RlLCBhcyBKYW1l
+cyBzdWdnZXN0ZWQuDQo+IA0KPiBUaGUgZmNvZSB0cmFuc3BvcnQgY29kZSBhbHJlYWR5IGhhcyB0
+aGVzZSBjaGVja3MgdG8gcHJvdGVjdCBhZ2FpbnN0DQo+IHN5c2ZzIGZpbGVzIGJlaW5nIHdyaXRh
+YmxlIGJlZm9yZSBtb2R1bGUgaW5pdGlhbGl6YXRpb24gaXMgY29tcGxldGUuIEl0DQo+IHVzZXMg
+dGhlIGZ0X211dGV4IHRvIHByb3RlY3QgdGhlIGxpc3Qgb2YgdHJhbnNwb3J0cyhMTERzKSBzbyB3
+aGVuDQo+ICdjcmVhdGUnIGlzIGNhbGxlZCBpdCBrbm93cyB0aGF0IHRoZSB0cmFuc3BvcnQgaXMg
+c3RpbGwgdGhlcmUgdG8gY2FsbA0KPiBkb3duIHRvLiBJdCBob2xkcyB0aGUgZnRfbXV0ZXggdW50
+aWwgdGhlIExMRCdzICdjcmVhdGUnIHJvdXRpbmUgcmV0dXJucy4NCj4gVGhlIHRyYW5zcG9ydHMo
+TExEcykgc2hvdWxkIGJlIGRldGFjaGluZyB0aGVtc2VsdmVzIGZyb20gdGhlIGZjb2UNCj4gdHJh
+bnNwb3J0IGxheWVyIGJlZm9yZSB0aGV5IGV4aXQuIGZjb2VfdHJhbnNwb3J0X2RldGFjaCB3aWxs
+IHRyeSB0bw0KPiBhY3F1aXJlIHRoZSBmdF9tdXRleCBhbmQgYmxvY2sgdW50aWwgdGhlICdjcmVh
+dGUnIGNhbGwgcmV0dXJucyBhbmQNCj4gcmVsZWFzZXMgdGhlIGZ0X211dGV4LiBJIHRoaW5rIHRo
+aXMgZW5zdXJlcyB0aGF0IHRoZSB0cmFuc3BvcnQoTExEKSB3aWxsDQo+IGJlIGZpbmUgd2hlbiB0
+aGUgZmNvZSB0cmFuc3BvcnQgY2FsbHMgaXQuDQo+IA0KPiBNeSBmZWVsaW5nIGlzIHRoYXQgdGhl
+c2UgY2hlY2tzIGFyZSBzdGlsbCBuZWVkZWQgaW4gdGhlIGZjb2UgdHJhbnNwb3J0LA0KPiBidXQg
+bm90IGluIHRoZSBMTERzLiBJZiBzb21lb25lIGNhbiBzdWdnZXN0IGEgYmV0dGVyIHdheSB0byBw
+cm90ZWN0DQo+IGFnYWluc3Qgd3JpdGFibGUgc3lzZnMgZmlsZXMgd2hlbiB0aGUgbW9kdWxlIGhh
+c24ndCBmaW5pc2hlZA0KPiBpbml0aWFsaXppbmcsIHdlIHNob3VsZCBkbyB0aGF0IGluc3RlYWQg
+b2YgdGhlIGlmZGVmcy4NCj4gDQo+IEhvcGUgdGhpcyBoZWxwcywNCj4gDQo+IC8vUm9iDQo+IA0K
+PiBGWUk6IG1uYyBhc2tlZCBhYm91dCB0aGlzIGNvZGUgYW5kIHRoZSB0cnlsb2NrIGNvZGUgaW4g
+ZmNvZSBhbmQgbGliZmNvZS4NCj4gSSBoYXZlIHBhdGNoZXMgaW4gb3VyIGludGVybmFsIHZhbGlk
+YXRpb24gdG8gcmVtb3ZlIHRoZSB0cnlsb2NrIHVzYWdlLA0KPiBidXQgSSBkb24ndCBoYXZlIHBh
+dGNoZXMgdG8gZml4IHRoZSBtb2R1bGUgc3RhdGUgY2hlY2tpbmcuDQo+IA0KWWVhaCwgdGhpcyBs
+b2dpYyB3YXMgZnJvbSBvcmlnaW5hbCBmaXhpbmcgcmFjZSBjb25kaXRpb24gaW4gZmNvZS5rbywg
+bm90ZQ0KdGhhdCB3ZSBkbyBuZWVkIGNoZWNrIHRoZSBNT0RVTEVfU1RBVEVfTElWRSwgdHJ5X21v
+ZHVsZV9nZXQoKSBpcyBub3Qgd2hhdA0Kd2Ugd2FudGVkLCBwbHVzIG1vZHVsZV9pc19saXZlICgp
+IGNoZWNrcyBpZiBpdCBpcyAhR09JTkcuIEFueXdheSwgSSBkb24ndA0KdGhpbmsgdGhpcyBpcyBu
+ZWVkZWQgYW55IG1vcmUgZm9yIGluZGl2aWR1YWwgZmNvZSB0cmFuc3BvcnQgZHJpdmVyLCBlLmcu
+LA0KZmNvZS5rbyBvciBibngyZmMsIGFzIHRoZSByYWNlIGlzIG5vdyBmb3Igc3lzZnMgb2YgbGli
+ZmNvZS4NCg0KSSB3aWxsIHNlbmQgb3V0IGEgcGF0Y2ggdG8gY2xlYW4gdXAgdGhlIGZjb2UuYyBm
+b3IgdGhpcy4NCg0KVGhhbmtzLA0KeWkNCg0KDQoNCg0KDQoNCj4gLS0NCj4gVG8gdW5zdWJzY3Jp
+YmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LXNjc2ki
+IGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3Jn
+DQo+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jk
+b21vLWluZm8uaHRtbA0K
