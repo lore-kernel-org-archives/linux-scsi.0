@@ -1,60 +1,41 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] mptfusion: fix msgContext in mptctl_hp_hostinfo
-Date: Tue, 08 Mar 2011 15:12:04 +0100
-Message-ID: <4D763934.2050901@redhat.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: RE: [PATCH] sd: sd should not modify read capacity, cache type or
+ write protect flag on rescan when there is a transport error
+Date: Tue, 08 Mar 2011 08:22:31 -0600
+Message-ID: <1299594151.2476.10.camel@mulgrave.site>
+References: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>
+	 <1298907291.2487.18.camel@mulgrave.site>
+	 <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54887 "EHLO mx1.redhat.com"
+Received: from cantor2.suse.de ([195.135.220.15]:50321 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750931Ab1CHOMI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Mar 2011 09:12:08 -0500
+	id S1750931Ab1CHOWg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Mar 2011 09:22:36 -0500
+In-Reply-To: <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: djeffery@redhat.com, Kashyap.Desai@lsi.com
+To: Menny_Hamburger@Dell.com
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Could you not top post: it makes it hard to follow what you're actually
+replying to.
 
-without this patch the istwiRWRequest->MsgContext is always set to zero,
-this patch saves the MsgContext in a msgcontext variable and then restores 
-the value.
-Thanks to  <mailto:djeffery@redhat.com>David Jeffery who found the issue and did the analysis.
+On Tue, 2011-03-08 at 09:30 +0000, Menny_Hamburger@Dell.com wrote:
+> I think the kernel should have some ability to handle this situation
+> (or at least propagate the fact that there is a problem) without the
+> userland being involved.
+> 
+> We could add this as a devinfo option - enable this functionality for
+> specific devices.
+> Another totally different way may be to have the SCSI layer send some
+> notification (unknown property, needs rescan) that could be picked up
+> and handled by the transport layer.  
 
+This is the hotplug I suggested, isn't it?
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
-
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index 4dbe546..43c0749 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -2423,9 +2423,9 @@ mptctl_hp_hostinfo(unsigned long arg, unsigned int data_size)
- 	int			rc, cim_rev;
- 	ToolboxIstwiReadWriteRequest_t	*IstwiRWRequest;
- 	MPT_FRAME_HDR		*mf = NULL;
--	MPIHeader_t		*mpi_hdr;
- 	unsigned long		timeleft;
- 	int			retval;
-+	u32			msgcontext;
- 
- 	/* Reset long to int. Should affect IA64 and SPARC only
- 	 */
-@@ -2572,11 +2572,11 @@ mptctl_hp_hostinfo(unsigned long arg, unsigned int data_size)
- 	}
- 
- 	IstwiRWRequest = (ToolboxIstwiReadWriteRequest_t *)mf;
--	mpi_hdr = (MPIHeader_t *) mf;
-+	msgcontext = IstwiRWRequest->MsgContext;
- 	memset(IstwiRWRequest,0,sizeof(ToolboxIstwiReadWriteRequest_t));
-+	IstwiRWRequest->MsgContext = msgcontext;
- 	IstwiRWRequest->Function = MPI_FUNCTION_TOOLBOX;
- 	IstwiRWRequest->Tool = MPI_TOOLBOX_ISTWI_READ_WRITE_TOOL;
--	IstwiRWRequest->MsgContext = mpi_hdr->MsgContext;
- 	IstwiRWRequest->Flags = MPI_TB_ISTWI_FLAGS_READ;
- 	IstwiRWRequest->NumAddressBytes = 0x01;
- 	IstwiRWRequest->DataLength = cpu_to_le16(0x04);
-
-
+James
 
 
