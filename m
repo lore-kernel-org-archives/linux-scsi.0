@@ -1,51 +1,120 @@
-From: Jesper Dangaard Brouer <hawk@comx.dk>
-Subject: Re: HP G6 hardware kernel boot issue > 2.6.37 cciss/hpsa
-Date: Tue, 08 Mar 2011 11:29:26 +0100
-Message-ID: <1299580166.11985.11.camel@firesoul.comx.local>
-References: <1299087769.4279.27.camel@firesoul.comx.local>
-	 <20110303124705.GA19471@stro.at>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: mpt2sas - SG_IO return truncated with cross page buffe
+Date: Tue, 8 Mar 2011 16:03:49 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED711304547@inbmail01.lsi.com>
+References: <A94BFDB17DC4E1478F7ACF6EBA3FD8234B3169A355@p3saturn.p3corpnet.pivot3.com>
+ <4D6FD35C.6030703@interlog.com>
+ <A94BFDB17DC4E1478F7ACF6EBA3FD8234B3169A3BE@p3saturn.p3corpnet.pivot3.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110303124705.GA19471@stro.at>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Maximilian Attems <max@stro.at>
-Cc: Michael Prokop <mika@debian.org>, Marco d'Itri <md@linux.it>, Debian kernel team <debian-kernel@lists.debian.org>, Mike Miller <mike.miller@hp.com>, Jens Axboe <jaxboe@fusionio.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Martin Pitt <martin.pitt@ubuntu.com>, Eric Dumazet <eric.dumazet@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from na3sys009aog111.obsmtp.com ([74.125.149.205]:45552 "EHLO
+	na3sys009aog111.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751809Ab1CHKcz convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Mar 2011 05:32:55 -0500
+In-Reply-To: <A94BFDB17DC4E1478F7ACF6EBA3FD8234B3169A3BE@p3saturn.p3corpnet.pivot3.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Curley <Matthewc@pivot3.com>, "dgilbert@interlog.com" <dgilbert@interlog.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, "Moore, Eric" <Eric.Moore@lsi.com>
 
+Matthew,
 
-On Thu, 2011-03-03 at 13:47 +0100, Maximilian Attems wrote:
-> On Wed, 02 Mar 2011, Jesper Dangaard Brouer wrote:
+Which firmware version you have for mpt2sas card?
+
+Adding other MPTlinux folks.
+
+> -----Original Message-----
+> From: Matthew Curley [mailto:Matthewc@pivot3.com]
+> Sent: Thursday, March 03, 2011 11:26 PM
+> To: dgilbert@interlog.com
+> Cc: Desai, Kashyap; linux-scsi@vger.kernel.org
+> Subject: RE: mpt2sas - SG_IO return truncated with cross page buffe
 > 
-[...]
-> please file proper Debian bug report with reportbug.
-> we already have scripts dealing with such device changes.
-> Had previously thought that the need of them was over after the
-> libata change, but obviously you show the contrare.
+> 0x80 was what I initially noticed this with (a script on our product
+> was
+> retrieving that info), VPD 0x89 was what I used for debug for exactly
+> the reason you noted: it gave me a lot more buffer to play with.
+> I initially thought this might be cache-line size related since the
+> buffer misalign from sdparm was so small.  It seems to happen with
+> any SG_IO inquiry I've done so far though.
 > 
-> So fire up reportbug and report against linux-2.6 with severity grave.
-
-I finally succeeded filing a Debian bug-report (as Debians mail system
-clamav kept categorizing me as malware... hmm)
-
- Debian bug number: 617256
- Link: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=617256
- Update the case via email: 617256@bugs.debian.org
-
--- 
-Med venlig hilsen / Best regards
-  Jesper Brouer
-  ComX Networks A/S
-  Linux Network Kernel Developer
-  Cand. Scient Datalog / MSc.CS
-  Author of http://adsl-optimizer.dk
-  LinkedIn: http://www.linkedin.com/in/brouer
-
-
-[...]
-> > Keywords: driver CCISS, HPSA, HP DL G6, uuid, udev, mkinitramfs,
-> > initramfs-tools, debian squeeze
-More keywords:
- HP Smart Array P410i Controller / Smart Array G6 controllers
- /dev/cciss/ scsi
+> Sorry about the line formatting, apparently something from outlook
+> isn't handling that right.  I'll try to manually keep lines short,
+> and I can resend anything unreadable to anyone that cares.
+> 
+> Matthew Curley
+> -----Original Message-----
+> From: Douglas Gilbert [mailto:dgilbert@interlog.com]
+> Sent: Thursday, March 03, 2011 11:44 AM
+> To: Matthew Curley
+> Cc: kashyap.desai@lsi.com; linux-scsi@vger.kernel.org
+> Subject: Re: mpt2sas - SG_IO return truncated with cross page buffe
+> 
+> On 11-03-03 11:52 AM, Matthew Curley wrote:
+> > Apologies to Kashyap on the resend, accidentally sent this the first
+> > time with HTML formatting.
+> >
+> > Description:
+> > If the user space buffer passed to the SG_IO command crosses the 4K
+> > page boundary and the return data is greater than the amount of
+> buffer
+> > before that page boundary, the command output can be truncated at the
+> > end of the first page.  Depending on the kernel version, additional
+> error
+> > handling may occur at the driver.
+> >
+> > Configuration:
+> > The platform is a Dell PowerEdge R510 with 2 processors (from
+> > /proc/cpuinfo: 'Intel(R) Xeon(R) CPU           E5620  @ 2.40GH')
+> > Initial discovery environment was a 2.6.32 pvops kernel using sdparm
+> v0.96
+> > on mpt2sas 06.00.00, where the SG_IO ioctl was retrieving VPD 0x80
+> output.
+> > The behavior has also been reproduced on Fedora Core 14,  using
+> 2.6.38-rc6
+> > with mpt2sas version 07.100.0.   The controller involved is an LSI
+> 2008
+> > with Dell Firmware.  Running the test with 2.6.38-rc6, I also get a
+> number
+> > of kernel errors starting with an mpt2sas fault state.  That output
+> is
+> > shown below, it includes firmware/chip revision/adapter BIOS versions
+> and
+> > some information about the storage layout on the adapter.
+> 
+> Matthew,
+> You mention VPD page 0x80 (unit serial number) and later
+> page 0x89 (ATA information). Did you mean 0x89 in both cases
+> as page 0x80 is particularly short?
+> 
+> Doug Gilbert
+> 
+> P.S. Your lines at too long in my email reader.
+> 
+> > Additional info:
+> > Reproducing required disabling the PCI DMA Remapping support in the
+> kernel.
+> > With this setting off the two pages in the command's scatter list
+> were
+> > physically discontiguous every time I tried, and the problem occurs.
+> > With DMAR enabled the DMA addresses were always contiguous, and the
+> problem
+> > behavior wasn't seen.  I'm not sure about the stability/risks of
+> enabling
+> > this experimental setting as a 'fix'.
+> >
+> > The only other LSI controller I have access to is a 1068--using a
+> different
+> > driver stack of course--which does not appear to show the same
+> behavior in
+> > limited testing.
+> >
+> > Appreciate any help or information.  I have a simple debug utility
+> that
+> > issues VPD 0x89 if that's useful, and of course will provide any
+> other
+> > needed details.  Please cc-me on replies.
