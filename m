@@ -1,24 +1,43 @@
-From: Benjamin LaHaise <bcrl@kvack.org>
-Subject: Re: [PATCH][SCSI] mvsas: Add support for HighPoint RR27xx series HBA
-Date: Tue, 8 Mar 2011 10:28:24 -0500
-Message-ID: <20110308152824.GH5497@kvack.org>
-References: <200902121128.31303.linux@highpoint-tech.com> <201102231628.44678.linux@highpoint-tech.com>
+From: john smith <whalajam@yahoo.com>
+Subject: Re: scsi_host_template.queuecommand() instances
+Date: Tue, 8 Mar 2011 10:22:19 -0800 (PST)
+Message-ID: <149126.21460.qm@web161909.mail.bf1.yahoo.com>
+References: <1298902479.2487.9.camel@mulgrave.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <201102231628.44678.linux@highpoint-tech.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: HighPoint Linux Team <linux@highpoint-tech.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web161909.mail.bf1.yahoo.com ([98.139.210.200]:37340 "HELO
+	web161909.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753405Ab1CHSWV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Mar 2011 13:22:21 -0500
+In-Reply-To: <1298902479.2487.9.camel@mulgrave.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hi folks,
+> What actually governs the threading is the ioscheduler
+> entry context to
+> the request function, which tends to be governed by how the
+> I/O is
+> called at the top.
+> 
+> James
 
-On Wed, Feb 23, 2011 at 04:28:44PM +0800, HighPoint Linux Team wrote:
-> This patch is to add support for HighPoint RR27xx SAS/SATA HBA which is based on Marvell 88SE9480 chipset.
+Considering the IO scheduler and the IO merges: I can imagine how it works if all the concurrent IO's for the same device are scheduled and merged and re-issued by another thread - that is the scheduler theread.
 
-Any chance of getting this merged soon?  I've been using a similar patch 
-with my HighPoint cards on 2.6.37 for a while now with good results.
+But how the two activities are accomplished such that IO's are still issued by their original threads?
+For ex., IO_1 is issued by thread1 and IO_2 issued by thread2; they are merged/re-ordered and IO_2 is merged with IO_1 in one single IO (IO_2, IO_1); 
+which thread is issueing the single, but larger IO? 
+what is the other thread doing if there are no/fewer IO's left to issue?
+Some IO's are issued on behalf of an other IO thread context?
+It is even uglier for scheduling (which may involve interlacing IO's from different threads), is the scheduler lock-stepping the IO threads to enforce the sequence?
 
-		-ben
+I doubt it this is the way it is implemented and I'd like to understand how is it done.
+It would be more efficient that all IO's for a particular device are handled by one (queue and) thread
+
+thanks,
+John
+
+
+      
