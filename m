@@ -1,123 +1,126 @@
-From: Chuck Tuffli <chuck_tuffli@pmc-sierra.com>
-Subject: [RFC PATCH 1/1] libsas: Add data integrity support
-Date: Wed, 9 Mar 2011 14:19:48 -0800
-Message-ID: <20110309221948.GA11376@rtllnx49.pmc-sierra.bc.ca>
+From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
+Subject: [PATCH 2/2] hpsa: export resettable host attribute
+Date: Wed, 09 Mar 2011 17:00:06 -0600
+Message-ID: <20110309230006.26877.68951.stgit@beardog.cce.hp.com>
+References: <20110309225822.26877.94051.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:43499 "EHLO
-	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751189Ab1CIWwy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2011 17:52:54 -0500
-Received: from bby1mta02.pmc-sierra.bc.ca (localhost.pmc-sierra.bc.ca [127.0.0.1])
-	by localhost (Postfix) with SMTP id B3B2A8E00A7
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Mar 2011 14:19:48 -0800 (PST)
-Received: from pmc-sierra.com (rtllnx49.pmc-sierra.bc.ca [209.68.173.73])
-	by bby1mta02.pmc-sierra.bc.ca (Postfix) with ESMTP id 956448E007F
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Mar 2011 14:19:48 -0800 (PST)
-Received: (from tufflich@localhost)
-	by pmc-sierra.com (8.13.1/8.13.1/Submit) id p29MJmOS011515
-	for linux-scsi@vger.kernel.org; Wed, 9 Mar 2011 14:19:48 -0800
-Content-Disposition: inline; filename="libsas_dix.patch"
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110309225822.26877.94051.stgit@beardog.cce.hp.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-From: Chuck Tuffli <chuck_tuffli@pmc-sierra.com>
+From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-This patch adds Data Integrity support to libsas
+This attribute, requested by Redhat, allows kexec-tools to know
+whether the controller can honor the reset_devices kernel parameter
+and actually reset the controller.  For kdump to work properly it
+is necessary that the reset_devices parameter be honored.  This
+attribute enables kexec-tools to warn the user if they attempt to
+designate a non-resettable controller as the dump device.
 
-Signed-off-by: Chuck Tuffli <chuck_tuffli@pmc-sierra.com>
+Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
+ Documentation/scsi/hpsa.txt |   12 ++++++++++++
+ drivers/scsi/hpsa.c         |   41 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 53 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 2119871..91c6afe 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -54,7 +54,7 @@ static void sas_scsi_task_done(struct sas_task *task)
- {
- 	struct task_status_struct *ts = &task->task_status;
- 	struct scsi_cmnd *sc = task->uldd_task;
--	int hs = 0, stat = 0;
-+	int ds = 0, hs = 0, stat = 0;
+diff --git a/Documentation/scsi/hpsa.txt b/Documentation/scsi/hpsa.txt
+index dca6583..8b418b3 100644
+--- a/Documentation/scsi/hpsa.txt
++++ b/Documentation/scsi/hpsa.txt
+@@ -39,6 +39,7 @@ HPSA specific entries in /sys
  
- 	if (unlikely(task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
- 		/* Aborted tasks will be completed by the error handler */
-@@ -118,13 +118,39 @@ static void sas_scsi_task_done(struct sas_task *task)
- 			       min(SCSI_SENSE_BUFFERSIZE, ts->buf_valid_size));
- 			stat = SAM_STAT_CHECK_CONDITION;
- 			break;
-+		case SAS_DIF_ERR_GUARD_TAG:
-+			BUG_ON(NULL == sc->sense_buffer);
-+			scsi_build_sense_buffer(1, sc->sense_buffer,
-+					ILLEGAL_REQUEST, 0x10, 0x1);
-+			ds = DRIVER_SENSE;
-+			hs = DID_ABORT;
-+			stat = SAM_STAT_CHECK_CONDITION;
-+			break;
-+		case SAS_DIF_ERR_APP_TAG:
-+			BUG_ON(NULL == sc->sense_buffer);
-+			scsi_build_sense_buffer(1, sc->sense_buffer,
-+					ILLEGAL_REQUEST, 0x10, 0x2);
-+			ds = DRIVER_SENSE;
-+			hs = DID_ABORT;
-+			stat = SAM_STAT_CHECK_CONDITION;
-+			break;
-+		case SAS_DIF_ERR_REF_TAG:
-+			BUG_ON(NULL == sc->sense_buffer);
-+			scsi_build_sense_buffer(1, sc->sense_buffer,
-+					ILLEGAL_REQUEST, 0x10, 0x3);
-+			ds = DRIVER_SENSE;
-+			hs = DID_ABORT;
-+			stat = SAM_STAT_CHECK_CONDITION;
-+			break;
- 		default:
- 			stat = ts->stat;
- 			break;
- 		}
- 	}
- 	ASSIGN_SAS_TASK(sc, NULL);
--	sc->result = (hs << 16) | stat;
-+	sc->result = stat;
-+	set_host_byte(sc, hs);
-+	set_driver_byte(sc, ds);
- 	list_del_init(&task->list);
- 	sas_free_task(task);
- 	sc->scsi_done(sc);
-@@ -152,6 +178,10 @@ static struct sas_task *sas_create_task(struct scsi_cmnd *cmd,
- 	task->ssp_task.task_attr = TASK_ATTR_SIMPLE;
- 	memcpy(task->ssp_task.cdb, cmd->cmnd, 16);
+   /sys/class/scsi_host/host*/rescan
+   /sys/class/scsi_host/host*/firmware_revision
++  /sys/class/scsi_host/host*/resettable
  
-+	task->prot = scsi_get_prot_op(cmd);
-+	task->prot_sg = scsi_prot_sglist(cmd);
-+	task->prot_num_scatter = scsi_prot_sg_count(cmd);
+   the host "rescan" attribute is a write only attribute.  Writing to this
+   attribute will cause the driver to scan for new, changed, or removed devices
+@@ -55,6 +56,17 @@ HPSA specific entries in /sys
+ 	root@host:/sys/class/scsi_host/host4# cat firmware_revision
+ 	7.14
+ 
++  The "resettable" read-only attribute indicates whether a particular
++  controller is able to honor the "reset_devices" kernel parameter.  If the
++  device is resettable, this file will contain a "1", otherwise, a "0".  This
++  parameter is used by kdump, for example, to reset the controller at driver
++  load time to eliminate any outstanding commands on the controller and get the
++  controller into a known state so that the kdump initiated i/o will work right
++  and not be disrupted in any way by stale commands or other stale state
++  remaining on the controller from the previous kernel.  This attribute enables
++  kexec tools to warn the user if they attempt to designate a device which is
++  unable to honor the reset_devices kernel parameter as a dump device.
 +
- 	task->scatter = scsi_sglist(cmd);
- 	task->num_scatter = scsi_sg_count(cmd);
- 	task->total_xfer_len = scsi_bufflen(cmd);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 8f6bb9c..04bfa42 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -441,6 +441,9 @@ enum exec_status {
- 	SAS_NAK_R_ERR,
- 	SAS_PENDING,
- 	SAS_ABORTED_TASK,
-+	SAS_DIF_ERR_APP_TAG,
-+	SAS_DIF_ERR_REF_TAG,
-+	SAS_DIF_ERR_GUARD_TAG,
+   HPSA specific disk attributes:
+   ------------------------------
+ 
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index dcabef4..415ad4f 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -273,6 +273,44 @@ static ssize_t host_show_transport_mode(struct device *dev,
+ 			"performant" : "simple");
+ }
+ 
++/* List of controllers which cannot be reset on kexec with reset_devices */
++static u32 unresettable_controller[] = {
++	0x324a103C, /* Smart Array P712m */
++	0x324b103C, /* SmartArray P711m */
++	0x3223103C, /* Smart Array P800 */
++	0x3234103C, /* Smart Array P400 */
++	0x3235103C, /* Smart Array P400i */
++	0x3211103C, /* Smart Array E200i */
++	0x3212103C, /* Smart Array E200 */
++	0x3213103C, /* Smart Array E200i */
++	0x3214103C, /* Smart Array E200i */
++	0x3215103C, /* Smart Array E200i */
++	0x3237103C, /* Smart Array E500 */
++	0x323D103C, /* Smart Array P700m */
++	0x409C0E11, /* Smart Array 6400 */
++	0x409D0E11, /* Smart Array 6400 EM */
++};
++
++static int ctlr_is_resettable(struct ctlr_info *h)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(unresettable_controller); i++)
++		if (unresettable_controller[i] == h->board_id)
++			return 0;
++	return 1;
++}
++
++static ssize_t host_show_resettable(struct device *dev,
++	struct device_attribute *attr, char *buf)
++{
++	struct ctlr_info *h;
++	struct Scsi_Host *shost = class_to_shost(dev);
++
++	h = shost_to_hba(shost);
++	return snprintf(buf, 20, "%d\n", ctlr_is_resettable(h));
++}
++
+ static inline int is_logical_dev_addr_mode(unsigned char scsi3addr[])
+ {
+ 	return (scsi3addr[3] & 0xC0) == 0x40;
+@@ -379,6 +417,8 @@ static DEVICE_ATTR(commands_outstanding, S_IRUGO,
+ 	host_show_commands_outstanding, NULL);
+ static DEVICE_ATTR(transport_mode, S_IRUGO,
+ 	host_show_transport_mode, NULL);
++static DEVICE_ATTR(resettable, S_IRUGO,
++	host_show_resettable, NULL);
+ 
+ static struct device_attribute *hpsa_sdev_attrs[] = {
+ 	&dev_attr_raid_level,
+@@ -392,6 +432,7 @@ static struct device_attribute *hpsa_shost_attrs[] = {
+ 	&dev_attr_firmware_revision,
+ 	&dev_attr_commands_outstanding,
+ 	&dev_attr_transport_mode,
++	&dev_attr_resettable,
+ 	NULL,
  };
  
- /* When a task finishes with a response, the LLDD examines the
-@@ -544,7 +547,10 @@ struct sas_task {
- 	struct scatterlist *scatter;
- 	int    num_scatter;
- 	u32    total_xfer_len;
--	u8     data_dir:2;	  /* Use PCI_DMA_... */
-+	struct scatterlist *prot_sg;
-+	int    prot_num_scatter;
-+	u8     data_dir:2,	  /* Use PCI_DMA_... */
-+		   prot:3;
- 
- 	struct task_status_struct task_status;
- 	void   (*task_done)(struct sas_task *);
