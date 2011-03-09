@@ -1,31 +1,46 @@
-From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 0/2] hpsa: add resettable sysfs host attribute
-Date: Wed, 09 Mar 2011 16:59:56 -0600
-Message-ID: <20110309225822.26877.94051.stgit@beardog.cce.hp.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 30762] Oops when plugging in an usb stick
+Date: Wed, 9 Mar 2011 23:15:58 GMT
+Message-ID: <201103092315.p29NFwO9020568@demeter2.kernel.org>
+References: <bug-30762-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
+Content-Type: text/plain; charset="UTF-8"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from demeter2.kernel.org ([140.211.167.42]:51904 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750699Ab1CIXP7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2011 18:15:59 -0500
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p29NFwYo020599
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 9 Mar 2011 23:15:58 GMT
+In-Reply-To: <bug-30762-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-At Redhat's request, this adds a sysfs host attribute to indicate whether
-the reset_devices kernel parameter can be honored by the device.  This enables 
-kexec tools to warn the user if they attempt to designate a non-resettable device
-as the dump device.  If the device is not resettable, kdump won't work.
-
----
-
-Stephen M. Cameron (2):
-      hpsa: move device attributes to avoid forward declarations
-      hpsa: export resettable host attribute
+https://bugzilla.kernel.org/show_bug.cgi?id=30762
 
 
- Documentation/scsi/hpsa.txt |   12 ++
- drivers/scsi/hpsa.c         |  276 ++++++++++++++++++++++++-------------------
- 2 files changed, 164 insertions(+), 124 deletions(-)
+Andrew Morton <akpm@linux-foundation.org> changed:
 
---
--- steve
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+             Status|RESOLVED                    |REOPENED
+                 CC|                            |akpm@linux-foundation.org
+          Component|SCSI                        |USB
+         Resolution|INVALID                     |
+         AssignedTo|linux-scsi@vger.kernel.org  |greg@kroah.com
+            Product|IO/Storage                  |Drivers
+
+
+
+
+--- Comment #3 from Andrew Morton <akpm@linux-foundation.org>  2011-03-09 23:15:55 ---
+If the kernel ever goes BUG then that's a kernel bug.  So I'll reopen this and
+hopefully the USB guys can take a look.
+
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug.
