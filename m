@@ -1,7 +1,7 @@
 From: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Subject: [PATCH 2/2] hpsa: export resettable host attribute
-Date: Wed, 09 Mar 2011 17:00:06 -0600
-Message-ID: <20110309230006.26877.68951.stgit@beardog.cce.hp.com>
+Subject: [PATCH 1/2] hpsa: move device attributes to avoid forward declarations
+Date: Wed, 09 Mar 2011 17:00:01 -0600
+Message-ID: <20110309230001.26877.90949.stgit@beardog.cce.hp.com>
 References: <20110309225822.26877.94051.stgit@beardog.cce.hp.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -15,112 +15,299 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 
-This attribute, requested by Redhat, allows kexec-tools to know
-whether the controller can honor the reset_devices kernel parameter
-and actually reset the controller.  For kdump to work properly it
-is necessary that the reset_devices parameter be honored.  This
-attribute enables kexec-tools to warn the user if they attempt to
-designate a non-resettable controller as the dump device.
-
 Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
 ---
- Documentation/scsi/hpsa.txt |   12 ++++++++++++
- drivers/scsi/hpsa.c         |   41 +++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 53 insertions(+), 0 deletions(-)
+ drivers/scsi/hpsa.c |  253 ++++++++++++++++++++++++---------------------------
+ 1 files changed, 120 insertions(+), 133 deletions(-)
 
-diff --git a/Documentation/scsi/hpsa.txt b/Documentation/scsi/hpsa.txt
-index dca6583..8b418b3 100644
---- a/Documentation/scsi/hpsa.txt
-+++ b/Documentation/scsi/hpsa.txt
-@@ -39,6 +39,7 @@ HPSA specific entries in /sys
- 
-   /sys/class/scsi_host/host*/rescan
-   /sys/class/scsi_host/host*/firmware_revision
-+  /sys/class/scsi_host/host*/resettable
- 
-   the host "rescan" attribute is a write only attribute.  Writing to this
-   attribute will cause the driver to scan for new, changed, or removed devices
-@@ -55,6 +56,17 @@ HPSA specific entries in /sys
- 	root@host:/sys/class/scsi_host/host4# cat firmware_revision
- 	7.14
- 
-+  The "resettable" read-only attribute indicates whether a particular
-+  controller is able to honor the "reset_devices" kernel parameter.  If the
-+  device is resettable, this file will contain a "1", otherwise, a "0".  This
-+  parameter is used by kdump, for example, to reset the controller at driver
-+  load time to eliminate any outstanding commands on the controller and get the
-+  controller into a known state so that the kdump initiated i/o will work right
-+  and not be disrupted in any way by stale commands or other stale state
-+  remaining on the controller from the previous kernel.  This attribute enables
-+  kexec tools to warn the user if they attempt to designate a device which is
-+  unable to honor the reset_devices kernel parameter as a dump device.
-+
-   HPSA specific disk attributes:
-   ------------------------------
- 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index dcabef4..415ad4f 100644
+index 09a529e..dcabef4 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -273,6 +273,44 @@ static ssize_t host_show_transport_mode(struct device *dev,
+@@ -155,21 +155,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd);
+ static int hpsa_slave_alloc(struct scsi_device *sdev);
+ static void hpsa_slave_destroy(struct scsi_device *sdev);
+ 
+-static ssize_t raid_level_show(struct device *dev,
+-	struct device_attribute *attr, char *buf);
+-static ssize_t lunid_show(struct device *dev,
+-	struct device_attribute *attr, char *buf);
+-static ssize_t unique_id_show(struct device *dev,
+-	struct device_attribute *attr, char *buf);
+-static ssize_t host_show_firmware_revision(struct device *dev,
+-	     struct device_attribute *attr, char *buf);
+-static ssize_t host_show_commands_outstanding(struct device *dev,
+-	     struct device_attribute *attr, char *buf);
+-static ssize_t host_show_transport_mode(struct device *dev,
+-	struct device_attribute *attr, char *buf);
+ static void hpsa_update_scsi_devices(struct ctlr_info *h, int hostno);
+-static ssize_t host_store_rescan(struct device *dev,
+-	 struct device_attribute *attr, const char *buf, size_t count);
+ static int check_for_unit_attention(struct ctlr_info *h,
+ 	struct CommandList *c);
+ static void check_ioctl_unit_attention(struct ctlr_info *h,
+@@ -190,53 +176,6 @@ static int __devinit hpsa_wait_for_board_state(struct pci_dev *pdev,
+ #define BOARD_NOT_READY 0
+ #define BOARD_READY 1
+ 
+-static DEVICE_ATTR(raid_level, S_IRUGO, raid_level_show, NULL);
+-static DEVICE_ATTR(lunid, S_IRUGO, lunid_show, NULL);
+-static DEVICE_ATTR(unique_id, S_IRUGO, unique_id_show, NULL);
+-static DEVICE_ATTR(rescan, S_IWUSR, NULL, host_store_rescan);
+-static DEVICE_ATTR(firmware_revision, S_IRUGO,
+-	host_show_firmware_revision, NULL);
+-static DEVICE_ATTR(commands_outstanding, S_IRUGO,
+-	host_show_commands_outstanding, NULL);
+-static DEVICE_ATTR(transport_mode, S_IRUGO,
+-	host_show_transport_mode, NULL);
+-
+-static struct device_attribute *hpsa_sdev_attrs[] = {
+-	&dev_attr_raid_level,
+-	&dev_attr_lunid,
+-	&dev_attr_unique_id,
+-	NULL,
+-};
+-
+-static struct device_attribute *hpsa_shost_attrs[] = {
+-	&dev_attr_rescan,
+-	&dev_attr_firmware_revision,
+-	&dev_attr_commands_outstanding,
+-	&dev_attr_transport_mode,
+-	NULL,
+-};
+-
+-static struct scsi_host_template hpsa_driver_template = {
+-	.module			= THIS_MODULE,
+-	.name			= "hpsa",
+-	.proc_name		= "hpsa",
+-	.queuecommand		= hpsa_scsi_queue_command,
+-	.scan_start		= hpsa_scan_start,
+-	.scan_finished		= hpsa_scan_finished,
+-	.change_queue_depth	= hpsa_change_queue_depth,
+-	.this_id		= -1,
+-	.use_clustering		= ENABLE_CLUSTERING,
+-	.eh_device_reset_handler = hpsa_eh_device_reset_handler,
+-	.ioctl			= hpsa_ioctl,
+-	.slave_alloc		= hpsa_slave_alloc,
+-	.slave_destroy		= hpsa_slave_destroy,
+-#ifdef CONFIG_COMPAT
+-	.compat_ioctl		= hpsa_compat_ioctl,
+-#endif
+-	.sdev_attrs = hpsa_sdev_attrs,
+-	.shost_attrs = hpsa_shost_attrs,
+-};
+-
+ static inline struct ctlr_info *sdev_to_hba(struct scsi_device *sdev)
+ {
+ 	unsigned long *priv = shost_priv(sdev->host);
+@@ -334,83 +273,11 @@ static ssize_t host_show_transport_mode(struct device *dev,
  			"performant" : "simple");
  }
  
-+/* List of controllers which cannot be reset on kexec with reset_devices */
-+static u32 unresettable_controller[] = {
-+	0x324a103C, /* Smart Array P712m */
-+	0x324b103C, /* SmartArray P711m */
-+	0x3223103C, /* Smart Array P800 */
-+	0x3234103C, /* Smart Array P400 */
-+	0x3235103C, /* Smart Array P400i */
-+	0x3211103C, /* Smart Array E200i */
-+	0x3212103C, /* Smart Array E200 */
-+	0x3213103C, /* Smart Array E200i */
-+	0x3214103C, /* Smart Array E200i */
-+	0x3215103C, /* Smart Array E200i */
-+	0x3237103C, /* Smart Array E500 */
-+	0x323D103C, /* Smart Array P700m */
-+	0x409C0E11, /* Smart Array 6400 */
-+	0x409D0E11, /* Smart Array 6400 EM */
-+};
-+
-+static int ctlr_is_resettable(struct ctlr_info *h)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(unresettable_controller); i++)
-+		if (unresettable_controller[i] == h->board_id)
-+			return 0;
-+	return 1;
-+}
-+
-+static ssize_t host_show_resettable(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct ctlr_info *h;
-+	struct Scsi_Host *shost = class_to_shost(dev);
-+
-+	h = shost_to_hba(shost);
-+	return snprintf(buf, 20, "%d\n", ctlr_is_resettable(h));
-+}
-+
+-/* Enqueuing and dequeuing functions for cmdlists. */
+-static inline void addQ(struct list_head *list, struct CommandList *c)
+-{
+-	list_add_tail(&c->list, list);
+-}
+-
+-static inline u32 next_command(struct ctlr_info *h)
+-{
+-	u32 a;
+-
+-	if (unlikely(!(h->transMethod & CFGTBL_Trans_Performant)))
+-		return h->access.command_completed(h);
+-
+-	if ((*(h->reply_pool_head) & 1) == (h->reply_pool_wraparound)) {
+-		a = *(h->reply_pool_head); /* Next cmd in ring buffer */
+-		(h->reply_pool_head)++;
+-		h->commands_outstanding--;
+-	} else {
+-		a = FIFO_EMPTY;
+-	}
+-	/* Check for wraparound */
+-	if (h->reply_pool_head == (h->reply_pool + h->max_commands)) {
+-		h->reply_pool_head = h->reply_pool;
+-		h->reply_pool_wraparound ^= 1;
+-	}
+-	return a;
+-}
+-
+-/* set_performant_mode: Modify the tag for cciss performant
+- * set bit 0 for pull model, bits 3-1 for block fetch
+- * register number
+- */
+-static void set_performant_mode(struct ctlr_info *h, struct CommandList *c)
+-{
+-	if (likely(h->transMethod & CFGTBL_Trans_Performant))
+-		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
+-}
+-
+-static void enqueue_cmd_and_start_io(struct ctlr_info *h,
+-	struct CommandList *c)
+-{
+-	unsigned long flags;
+-
+-	set_performant_mode(h, c);
+-	spin_lock_irqsave(&h->lock, flags);
+-	addQ(&h->reqQ, c);
+-	h->Qdepth++;
+-	start_io(h);
+-	spin_unlock_irqrestore(&h->lock, flags);
+-}
+-
+-static inline void removeQ(struct CommandList *c)
+-{
+-	if (WARN_ON(list_empty(&c->list)))
+-		return;
+-	list_del_init(&c->list);
+-}
+-
+-static inline int is_hba_lunid(unsigned char scsi3addr[])
+-{
+-	return memcmp(scsi3addr, RAID_CTLR_LUNID, 8) == 0;
+-}
+-
  static inline int is_logical_dev_addr_mode(unsigned char scsi3addr[])
  {
  	return (scsi3addr[3] & 0xC0) == 0x40;
-@@ -379,6 +417,8 @@ static DEVICE_ATTR(commands_outstanding, S_IRUGO,
- 	host_show_commands_outstanding, NULL);
- static DEVICE_ATTR(transport_mode, S_IRUGO,
- 	host_show_transport_mode, NULL);
-+static DEVICE_ATTR(resettable, S_IRUGO,
-+	host_show_resettable, NULL);
+ }
  
- static struct device_attribute *hpsa_sdev_attrs[] = {
- 	&dev_attr_raid_level,
-@@ -392,6 +432,7 @@ static struct device_attribute *hpsa_shost_attrs[] = {
- 	&dev_attr_firmware_revision,
- 	&dev_attr_commands_outstanding,
- 	&dev_attr_transport_mode,
-+	&dev_attr_resettable,
- 	NULL,
+-static inline int is_scsi_rev_5(struct ctlr_info *h)
+-{
+-	if (!h->hba_inquiry_data)
+-		return 0;
+-	if ((h->hba_inquiry_data[2] & 0x07) == 5)
+-		return 1;
+-	return 0;
+-}
+-
+ static const char *raid_label[] = { "0", "4", "1(1+0)", "5", "5+1", "ADG",
+ 	"UNKNOWN"
  };
+@@ -502,6 +369,126 @@ static ssize_t unique_id_show(struct device *dev,
+ 			sn[12], sn[13], sn[14], sn[15]);
+ }
  
++static DEVICE_ATTR(raid_level, S_IRUGO, raid_level_show, NULL);
++static DEVICE_ATTR(lunid, S_IRUGO, lunid_show, NULL);
++static DEVICE_ATTR(unique_id, S_IRUGO, unique_id_show, NULL);
++static DEVICE_ATTR(rescan, S_IWUSR, NULL, host_store_rescan);
++static DEVICE_ATTR(firmware_revision, S_IRUGO,
++	host_show_firmware_revision, NULL);
++static DEVICE_ATTR(commands_outstanding, S_IRUGO,
++	host_show_commands_outstanding, NULL);
++static DEVICE_ATTR(transport_mode, S_IRUGO,
++	host_show_transport_mode, NULL);
++
++static struct device_attribute *hpsa_sdev_attrs[] = {
++	&dev_attr_raid_level,
++	&dev_attr_lunid,
++	&dev_attr_unique_id,
++	NULL,
++};
++
++static struct device_attribute *hpsa_shost_attrs[] = {
++	&dev_attr_rescan,
++	&dev_attr_firmware_revision,
++	&dev_attr_commands_outstanding,
++	&dev_attr_transport_mode,
++	NULL,
++};
++
++static struct scsi_host_template hpsa_driver_template = {
++	.module			= THIS_MODULE,
++	.name			= "hpsa",
++	.proc_name		= "hpsa",
++	.queuecommand		= hpsa_scsi_queue_command,
++	.scan_start		= hpsa_scan_start,
++	.scan_finished		= hpsa_scan_finished,
++	.change_queue_depth	= hpsa_change_queue_depth,
++	.this_id		= -1,
++	.use_clustering		= ENABLE_CLUSTERING,
++	.eh_device_reset_handler = hpsa_eh_device_reset_handler,
++	.ioctl			= hpsa_ioctl,
++	.slave_alloc		= hpsa_slave_alloc,
++	.slave_destroy		= hpsa_slave_destroy,
++#ifdef CONFIG_COMPAT
++	.compat_ioctl		= hpsa_compat_ioctl,
++#endif
++	.sdev_attrs = hpsa_sdev_attrs,
++	.shost_attrs = hpsa_shost_attrs,
++};
++
++
++/* Enqueuing and dequeuing functions for cmdlists. */
++static inline void addQ(struct list_head *list, struct CommandList *c)
++{
++	list_add_tail(&c->list, list);
++}
++
++static inline u32 next_command(struct ctlr_info *h)
++{
++	u32 a;
++
++	if (unlikely(!(h->transMethod & CFGTBL_Trans_Performant)))
++		return h->access.command_completed(h);
++
++	if ((*(h->reply_pool_head) & 1) == (h->reply_pool_wraparound)) {
++		a = *(h->reply_pool_head); /* Next cmd in ring buffer */
++		(h->reply_pool_head)++;
++		h->commands_outstanding--;
++	} else {
++		a = FIFO_EMPTY;
++	}
++	/* Check for wraparound */
++	if (h->reply_pool_head == (h->reply_pool + h->max_commands)) {
++		h->reply_pool_head = h->reply_pool;
++		h->reply_pool_wraparound ^= 1;
++	}
++	return a;
++}
++
++/* set_performant_mode: Modify the tag for cciss performant
++ * set bit 0 for pull model, bits 3-1 for block fetch
++ * register number
++ */
++static void set_performant_mode(struct ctlr_info *h, struct CommandList *c)
++{
++	if (likely(h->transMethod & CFGTBL_Trans_Performant))
++		c->busaddr |= 1 | (h->blockFetchTable[c->Header.SGList] << 1);
++}
++
++static void enqueue_cmd_and_start_io(struct ctlr_info *h,
++	struct CommandList *c)
++{
++	unsigned long flags;
++
++	set_performant_mode(h, c);
++	spin_lock_irqsave(&h->lock, flags);
++	addQ(&h->reqQ, c);
++	h->Qdepth++;
++	start_io(h);
++	spin_unlock_irqrestore(&h->lock, flags);
++}
++
++static inline void removeQ(struct CommandList *c)
++{
++	if (WARN_ON(list_empty(&c->list)))
++		return;
++	list_del_init(&c->list);
++}
++
++static inline int is_hba_lunid(unsigned char scsi3addr[])
++{
++	return memcmp(scsi3addr, RAID_CTLR_LUNID, 8) == 0;
++}
++
++static inline int is_scsi_rev_5(struct ctlr_info *h)
++{
++	if (!h->hba_inquiry_data)
++		return 0;
++	if ((h->hba_inquiry_data[2] & 0x07) == 5)
++		return 1;
++	return 0;
++}
++
+ static int hpsa_find_target_lun(struct ctlr_info *h,
+ 	unsigned char scsi3addr[], int bus, int *target, int *lun)
+ {
