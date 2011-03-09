@@ -1,68 +1,123 @@
-From: denys@visp.net.lb
-Subject: 2.6.38-rc7 WARNING, megaraid, smartctl
-Date: Wed, 09 Mar 2011 21:47:11 +0000
-Message-ID: <1167f08af1e2b97b06fab57d5dd195db@visp.net.lb>
+From: Chuck Tuffli <chuck_tuffli@pmc-sierra.com>
+Subject: [RFC PATCH 1/1] libsas: Add data integrity support
+Date: Wed, 9 Mar 2011 14:19:48 -0800
+Message-ID: <20110309221948.GA11376@rtllnx49.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hosting.visp.net.lb ([194.146.153.11]:59928 "EHLO
-	hosting.visp.net.lb" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752356Ab1CIV4I (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2011 16:56:08 -0500
+Received: from bby1mta02.pmc-sierra.com ([216.241.235.117]:43499 "EHLO
+	bby1mta02.pmc-sierra.bc.ca" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751189Ab1CIWwy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2011 17:52:54 -0500
+Received: from bby1mta02.pmc-sierra.bc.ca (localhost.pmc-sierra.bc.ca [127.0.0.1])
+	by localhost (Postfix) with SMTP id B3B2A8E00A7
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Mar 2011 14:19:48 -0800 (PST)
+Received: from pmc-sierra.com (rtllnx49.pmc-sierra.bc.ca [209.68.173.73])
+	by bby1mta02.pmc-sierra.bc.ca (Postfix) with ESMTP id 956448E007F
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Mar 2011 14:19:48 -0800 (PST)
+Received: (from tufflich@localhost)
+	by pmc-sierra.com (8.13.1/8.13.1/Submit) id p29MJmOS011515
+	for linux-scsi@vger.kernel.org; Wed, 9 Mar 2011 14:19:48 -0800
+Content-Disposition: inline; filename="libsas_dix.patch"
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
- Got warning after running command:
- smartctl -d megaraid,0 /dev/sdb
+From: Chuck Tuffli <chuck_tuffli@pmc-sierra.com>
 
- [ 1350.883338] ------------[ cut here ]------------
- [ 1350.883578] WARNING: at mm/page_alloc.c:2012 
- __alloc_pages_nodemask+0x15d/0x5cc()
- [ 1350.884016] Hardware name: PowerEdge 2900
- [ 1350.884243] Modules linked in: rtc_cmos rtc_core rtc_lib ext4 jbd2 
- mptspi mptsas scsi_transport_spi scsi_transport_sas mptscsih mptbase 
- xt_owner ipt_REDIRECT xt_dscp iptable_raw iptable_nat nf_nat 
- nf_conntrack_ipv4 nf_conntrack nf_defrag_ipv4 iptable_filter 8021q garp 
- stp llc loop usb_storage ioatdma dca iTCO_wdt iTCO_vendor_support 
- ata_generic pata_acpi ata_piix libata megaraid_sas bnx2 sr_mod cdrom 
- tulip r8169 sky2 via_velocity via_rhine sis900 ne2k_pci 8390 skge tg3 
- libphy 8139too e1000 e100 usbhid ohci_hcd uhci_hcd ehci_hcd usbcore 
- nls_base [last unloaded: usb_storage]
- [ 1350.886186] Pid: 2136, comm: smartctl Not tainted 
- 2.6.38-rc7-build-0057 #27
- [ 1350.886414] Call Trace:
- [ 1350.886629]  [<c0132388>] ? warn_slowpath_common+0x77/0x8c
- [ 1350.886851]  [<c0176cd2>] ? __alloc_pages_nodemask+0x15d/0x5cc
- [ 1350.887100]  [<c0176cd2>] ? __alloc_pages_nodemask+0x15d/0x5cc
- [ 1350.887318]  [<c01323ba>] ? warn_slowpath_null+0x1d/0x1f
- [ 1350.887572]  [<c0176cd2>] ? __alloc_pages_nodemask+0x15d/0x5cc
- [ 1350.887797]  [<c0122fd1>] ? need_resched+0x14/0x1e
- [ 1350.888039]  [<c032acbc>] ? schedule+0x70c/0x71f
- [ 1350.888254]  [<c01823c2>] ? page_address+0x33/0xb4
- [ 1350.888478]  [<c017481a>] ? __pfn_to_section+0xb/0xd
- [ 1350.888715]  [<c0105fe9>] ? dma_generic_alloc_coherent+0x5c/0xfb
- [ 1350.888941]  [<c01073d3>] ? nommu_free_coherent+0x0/0x1d
- [ 1350.889168]  [<c0283f72>] ? dma_alloc_from_coherent+0x1b/0x81
- [ 1350.889395]  [<c0105f8d>] ? dma_generic_alloc_coherent+0x0/0xfb
- [ 1350.889616]  [<f8720687>] ? dma_alloc_coherent+0x84/0x8c 
- [megaraid_sas]
- [ 1350.889846]  [<f87218c5>] ? megasas_mgmt_ioctl+0x21f/0x4fd 
- [megaraid_sas]
- [ 1350.890082]  [<f87216a6>] ? megasas_mgmt_ioctl+0x0/0x4fd 
- [megaraid_sas]
- [ 1350.890300]  [<c01a7d8c>] ? do_vfs_ioctl+0x484/0x4be
- [ 1350.890546]  [<c011c10e>] ? do_page_fault+0x2c1/0x2ef
- [ 1350.890765]  [<c019be7e>] ? do_sys_open+0xd2/0xdc
- [ 1350.890983]  [<c01a7df9>] ? sys_ioctl+0x33/0x4e
- [ 1350.891265]  [<c032bf2d>] ? syscall_call+0x7/0xb
- [ 1350.891486] ---[ end trace 80686703a477504c ]---
- [ 1350.891697] megasas: Failed to alloc kernel SGL buffer for IOCTL
+This patch adds Data Integrity support to libsas
 
- 01:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS 
- 1078 (rev 04)
- 01:00.0 Class 0104: 1000:0060
+Signed-off-by: Chuck Tuffli <chuck_tuffli@pmc-sierra.com>
+---
 
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 2119871..91c6afe 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -54,7 +54,7 @@ static void sas_scsi_task_done(struct sas_task *task)
+ {
+ 	struct task_status_struct *ts = &task->task_status;
+ 	struct scsi_cmnd *sc = task->uldd_task;
+-	int hs = 0, stat = 0;
++	int ds = 0, hs = 0, stat = 0;
+ 
+ 	if (unlikely(task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+ 		/* Aborted tasks will be completed by the error handler */
+@@ -118,13 +118,39 @@ static void sas_scsi_task_done(struct sas_task *task)
+ 			       min(SCSI_SENSE_BUFFERSIZE, ts->buf_valid_size));
+ 			stat = SAM_STAT_CHECK_CONDITION;
+ 			break;
++		case SAS_DIF_ERR_GUARD_TAG:
++			BUG_ON(NULL == sc->sense_buffer);
++			scsi_build_sense_buffer(1, sc->sense_buffer,
++					ILLEGAL_REQUEST, 0x10, 0x1);
++			ds = DRIVER_SENSE;
++			hs = DID_ABORT;
++			stat = SAM_STAT_CHECK_CONDITION;
++			break;
++		case SAS_DIF_ERR_APP_TAG:
++			BUG_ON(NULL == sc->sense_buffer);
++			scsi_build_sense_buffer(1, sc->sense_buffer,
++					ILLEGAL_REQUEST, 0x10, 0x2);
++			ds = DRIVER_SENSE;
++			hs = DID_ABORT;
++			stat = SAM_STAT_CHECK_CONDITION;
++			break;
++		case SAS_DIF_ERR_REF_TAG:
++			BUG_ON(NULL == sc->sense_buffer);
++			scsi_build_sense_buffer(1, sc->sense_buffer,
++					ILLEGAL_REQUEST, 0x10, 0x3);
++			ds = DRIVER_SENSE;
++			hs = DID_ABORT;
++			stat = SAM_STAT_CHECK_CONDITION;
++			break;
+ 		default:
+ 			stat = ts->stat;
+ 			break;
+ 		}
+ 	}
+ 	ASSIGN_SAS_TASK(sc, NULL);
+-	sc->result = (hs << 16) | stat;
++	sc->result = stat;
++	set_host_byte(sc, hs);
++	set_driver_byte(sc, ds);
+ 	list_del_init(&task->list);
+ 	sas_free_task(task);
+ 	sc->scsi_done(sc);
+@@ -152,6 +178,10 @@ static struct sas_task *sas_create_task(struct scsi_cmnd *cmd,
+ 	task->ssp_task.task_attr = TASK_ATTR_SIMPLE;
+ 	memcpy(task->ssp_task.cdb, cmd->cmnd, 16);
+ 
++	task->prot = scsi_get_prot_op(cmd);
++	task->prot_sg = scsi_prot_sglist(cmd);
++	task->prot_num_scatter = scsi_prot_sg_count(cmd);
++
+ 	task->scatter = scsi_sglist(cmd);
+ 	task->num_scatter = scsi_sg_count(cmd);
+ 	task->total_xfer_len = scsi_bufflen(cmd);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 8f6bb9c..04bfa42 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -441,6 +441,9 @@ enum exec_status {
+ 	SAS_NAK_R_ERR,
+ 	SAS_PENDING,
+ 	SAS_ABORTED_TASK,
++	SAS_DIF_ERR_APP_TAG,
++	SAS_DIF_ERR_REF_TAG,
++	SAS_DIF_ERR_GUARD_TAG,
+ };
+ 
+ /* When a task finishes with a response, the LLDD examines the
+@@ -544,7 +547,10 @@ struct sas_task {
+ 	struct scatterlist *scatter;
+ 	int    num_scatter;
+ 	u32    total_xfer_len;
+-	u8     data_dir:2;	  /* Use PCI_DMA_... */
++	struct scatterlist *prot_sg;
++	int    prot_num_scatter;
++	u8     data_dir:2,	  /* Use PCI_DMA_... */
++		   prot:3;
+ 
+ 	struct task_status_struct task_status;
+ 	void   (*task_done)(struct sas_task *);
