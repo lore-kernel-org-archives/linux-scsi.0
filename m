@@ -1,124 +1,63 @@
 From: scameron@beardog.cce.hp.com
 Subject: Re: [PATCH 2/2] hpsa: export resettable_on_kexec host attribute
-Date: Wed, 9 Mar 2011 08:51:35 -0600
-Message-ID: <20110309145135.GH12760@beardog.cce.hp.com>
-References: <20110308230749.22291.56200.stgit@beardog.cce.hp.com> <20110308231003.22291.20417.stgit@beardog.cce.hp.com> <20110309143624.GB10346@redhat.com>
+Date: Wed, 9 Mar 2011 09:14:57 -0600
+Message-ID: <20110309151457.GI12760@beardog.cce.hp.com>
+References: <20110308230749.22291.56200.stgit@beardog.cce.hp.com> <20110308231003.22291.20417.stgit@beardog.cce.hp.com> <4D777249.10400@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0017.houston.hp.com ([15.201.24.20]:40282 "EHLO
-	g4t0017.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757013Ab1CIOvg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Mar 2011 09:51:36 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20110309143624.GB10346@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <4D777249.10400@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, thenzl@redhat.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 
-On Wed, Mar 09, 2011 at 09:36:24AM -0500, Vivek Goyal wrote:
-> On Tue, Mar 08, 2011 at 05:10:03PM -0600, Stephen M. Cameron wrote:
+On Wed, Mar 09, 2011 at 01:27:53PM +0100, Tomas Henzl wrote:
+> On 03/09/2011 12:10 AM, Stephen M. Cameron wrote:
 > > From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > 
+> >
 > > This attribute, requested by Redhat, allows kexec-tools to know
 > > whether the controller can honor the reset_devices kernel parameter
-> > and actually reset the controller.  For kdump to work properly it
-> > is necessary that the reset_devices parameter be honored.  This
-> > attribute enables kexec-tools to warn the user if they attempt to
-> > designate a non-resettable controller as the dump device.
-> > 
-> 
+>
+
+[...]
+
+> and actually reset the controller.  For kdump to work properly it
 > Hi Stephen,
 > 
-> Thinking more about it, can we make "resettable_on_kexec" name even more
-> generic. Kexec/kdump is just one of the users of this functionality.
-> 
-> So the idea is whether device is soft resettable or not by the driver.
-> May be "soft_resettable" or just "resettable" might be a better name.
+> thanks for posting this.
+> Some of the devices are served by the cciss driver by default - I guess
+> a very similar patch for cciss is needed too.
+> Shouldn't be the 0x409C0E11 and 0x409D0E11 (640x boards) also added to the list?
+> (And the 'unknown' devices.)
 
-Sure.  "resettable" seems fine.
+There's a bit of a fine point here regarding the unknown devices.
+
+If hpsa_allow_any=1 module parameter is set, then the unknown device
+is considered to be resettable (as it's unknown, it's obviously not
+on the list of known unresettable controllers).  If hpsa_allow_any
+is not set, then the unknown devices are not reset -- and the driver
+doesn't even try to do anything with them.  
+
+So, the patch is consistent with this, in that if hpsa_allow_any is
+not set, then there won't be any corresponding sysfs entries at all
+for those devices because those devices won't be service by hpsa
+at all.  And if hpsa_allow_any is set, then those devices will be
+marked as resettable, and the reset code will attempt to reset them.
+
+I think we've got all the unresettable devices listed (when I add the 6400
+boards to the list of course) and I think we're going to try pretty hard to
+make sure new boards are resettable, so, that's probably ok, right?
+
+Or, do you want to be extra safe, and say that new, unknown boards are assumed
+to be non-resettable?  (Since new boards generally mean driver changes to make
+sure the driver knows those boards, that's not such a big deal -- except for
+people who want to continue to use old OSes on new hardware, which, there seem
+to be quite a few of those people.)
+
+I think my preference would be to assume that unknown boards are resettable
+if hpsa_allow_any=1, and assume unresettable otherwise (and for purposes of
+sysfs attributes, this is what the patch already does.)
 
 -- steve
-
-> 
-> Thanks
-> Vivek
-> 
-> > Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
-> > ---
-> >  drivers/scsi/hpsa.c |   41 +++++++++++++++++++++++++++++++++++++++++
-> >  1 files changed, 41 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> > index dcabef4..1d4fe80 100644
-> > --- a/drivers/scsi/hpsa.c
-> > +++ b/drivers/scsi/hpsa.c
-> > @@ -273,6 +273,44 @@ static ssize_t host_show_transport_mode(struct device *dev,
-> >  			"performant" : "simple");
-> >  }
-> >  
-> > +/* List of controllers which cannot be reset on kexec with reset_devices */
-> > +static u32 unresettable_controller[] = {
-> > +	0x324a103C, /* Smart Array P712m */
-> > +	0x324b103C, /* SmartArray P711m */
-> > +	0x3223103C, /* Smart Array P800 */
-> > +	0x3234103C, /* Smart Array P400 */
-> > +	0x3235103C, /* Smart Array P400i */
-> > +	0x3211103C, /* Smart Array E200i */
-> > +	0x3212103C, /* Smart Array E200 */
-> > +	0x3213103C, /* Smart Array E200i */
-> > +	0x3214103C, /* Smart Array E200i */
-> > +	0x3215103C, /* Smart Array E200i */
-> > +	0x3237103C, /* Smart Array E500 */
-> > +	0x3223103C, /* Smart Array P800 */
-> > +	0x3234103C, /* Smart Array P400 */
-> > +	0x323D103C, /* Smart Array P700m */
-> > +};
-> > +
-> > +static int resettable_on_kexec(struct ctlr_info *h)
-> > +{
-> > +	int i;
-> > +
-> > +	for (i = 0; i < ARRAY_SIZE(unresettable_controller); i++)
-> > +		if (unresettable_controller[i] == h->board_id)
-> > +			return 0;
-> > +	return 1;
-> > +}
-> > +
-> > +static ssize_t host_show_resettable_on_kexec(struct device *dev,
-> > +	struct device_attribute *attr, char *buf)
-> > +{
-> > +	struct ctlr_info *h;
-> > +	struct Scsi_Host *shost = class_to_shost(dev);
-> > +
-> > +	h = shost_to_hba(shost);
-> > +	return snprintf(buf, 20, "%d\n", resettable_on_kexec(h));
-> > +}
-> > +
-> >  static inline int is_logical_dev_addr_mode(unsigned char scsi3addr[])
-> >  {
-> >  	return (scsi3addr[3] & 0xC0) == 0x40;
-> > @@ -379,6 +417,8 @@ static DEVICE_ATTR(commands_outstanding, S_IRUGO,
-> >  	host_show_commands_outstanding, NULL);
-> >  static DEVICE_ATTR(transport_mode, S_IRUGO,
-> >  	host_show_transport_mode, NULL);
-> > +static DEVICE_ATTR(resettable_on_kexec, S_IRUGO,
-> > +	host_show_resettable_on_kexec, NULL);
-> >  
-> >  static struct device_attribute *hpsa_sdev_attrs[] = {
-> >  	&dev_attr_raid_level,
-> > @@ -392,6 +432,7 @@ static struct device_attribute *hpsa_shost_attrs[] = {
-> >  	&dev_attr_firmware_revision,
-> >  	&dev_attr_commands_outstanding,
-> >  	&dev_attr_transport_mode,
-> > +	&dev_attr_resettable_on_kexec,
-> >  	NULL,
-> >  };
-> >  
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > Please read the FAQ at  http://www.tux.org/lkml/
