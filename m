@@ -1,14 +1,14 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/2] crypto: Add struct crypto_alg->cra_check_optimized
-Date: Thu, 10 Mar 2011 00:21:11 -0800
-Message-ID: <1299745272-25477-2-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 2/2] crypto/crc32c: Add crc32c_cra_check_optimized for crc32c_intel
+Date: Thu, 10 Mar 2011 00:21:12 -0800
+Message-ID: <1299745272-25477-3-git-send-email-nab@linux-iscsi.org>
 References: <1299745272-25477-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm14.bullet.mail.ac4.yahoo.com ([98.139.52.211]:42675 "HELO
-	nm14.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752238Ab1CJIV2 (ORCPT
+Received: from nm21-vm0.bullet.mail.ac4.yahoo.com ([98.139.53.216]:40769 "HELO
+	nm21-vm0.bullet.mail.ac4.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752292Ab1CJIVb (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Mar 2011 03:21:28 -0500
+	Thu, 10 Mar 2011 03:21:31 -0500
 In-Reply-To: <1299745272-25477-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -17,51 +17,70 @@ Cc: James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, R
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds an optional struct crypto_alg->cra_check_optimized() caller
-that can be used by libcrypto algorithms in order to load an architecture
-dependent optimized / HW offload module.
-
-This includes adding the call to alg->cra_check_optimized() inside of
-crypto_larval_lookup() once the initial generic algorithm has been
-loaded via request_module().
+This patch adds crc32c_cra_check_optimized() for use by the new
+struct crypto_alg->cra_check_optimized() API caller in order to
+call request_module() to load crc32c_intel.ko for CRC32C instruction
+offload when available on CONFIG_X86 w/ SSE v4.2 compatiable hardware.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 Cc: Herbert Xu <herbert@gondor.apana.org.au>
 ---
- crypto/api.c           |    6 +++++-
- include/linux/crypto.h |    1 +
- 2 files changed, 6 insertions(+), 1 deletions(-)
+ crypto/crc32c.c |   23 +++++++++++++++++++++++
+ 1 files changed, 23 insertions(+), 0 deletions(-)
 
-diff --git a/crypto/api.c b/crypto/api.c
-index 033a714..4dcbef6 100644
---- a/crypto/api.c
-+++ b/crypto/api.c
-@@ -226,8 +226,12 @@ struct crypto_alg *crypto_larval_lookup(const char *name, u32 type, u32 mask)
- 		alg = crypto_alg_lookup(name, type, mask);
- 	}
+diff --git a/crypto/crc32c.c b/crypto/crc32c.c
+index de9e55c..3f1d3a3 100644
+--- a/crypto/crc32c.c
++++ b/crypto/crc32c.c
+@@ -44,6 +44,8 @@
+ #define CHKSUM_BLOCK_SIZE	1
+ #define CHKSUM_DIGEST_SIZE	4
  
--	if (alg)
-+	if (alg) {
-+		if (alg->cra_check_optimized)
-+			alg->cra_check_optimized(alg);
++static int crc32c_offload_enabled;
 +
- 		return crypto_is_larval(alg) ? crypto_larval_wait(alg) : alg;
-+	}
- 
- 	return crypto_larval_add(name, type, mask);
+ struct chksum_ctx {
+ 	u32 key;
+ };
+@@ -221,6 +223,24 @@ static int crc32c_cra_init(struct crypto_tfm *tfm)
+ 	return 0;
  }
-diff --git a/include/linux/crypto.h b/include/linux/crypto.h
-index a6a7a1c..ea7c426 100644
---- a/include/linux/crypto.h
-+++ b/include/linux/crypto.h
-@@ -295,6 +295,7 @@ struct crypto_alg {
  
- 	int (*cra_init)(struct crypto_tfm *tfm);
- 	void (*cra_exit)(struct crypto_tfm *tfm);
-+	void (*cra_check_optimized)(struct crypto_alg *alg);
- 	void (*cra_destroy)(struct crypto_alg *alg);
- 	
- 	struct module *cra_module;
++static void crc32c_cra_check_optimized(struct crypto_alg *alg)
++{
++	if (crc32c_offload_enabled)
++		return;
++#ifdef CONFIG_X86
++	/*
++	 * For cpu_has_xmm4_2 go ahead and load crc32c_intel.ko in order so
++	 * crypto_alloc_hash("crc32c", ...) will automatically use SSE v4.2
++	 * CRC32C instruction offload.
++	 */
++	if (cpu_has_xmm4_2) {
++		int rc = request_module("crc32c_intel");
++		if (rc == 0)
++			crc32c_offload_enabled = 1;
++	}
++#endif
++}
++
+ static struct shash_alg alg = {
+ 	.digestsize		=	CHKSUM_DIGEST_SIZE,
+ 	.setkey			=	chksum_setkey,
+@@ -239,11 +259,14 @@ static struct shash_alg alg = {
+ 		.cra_ctxsize		=	sizeof(struct chksum_ctx),
+ 		.cra_module		=	THIS_MODULE,
+ 		.cra_init		=	crc32c_cra_init,
++		.cra_check_optimized	=	crc32c_cra_check_optimized,
+ 	}
+ };
+ 
+ static int __init crc32c_mod_init(void)
+ {
++	crc32c_offload_enabled = 0;
++
+ 	return crypto_register_shash(&alg);
+ }
+ 
 -- 
 1.5.6.5
 
