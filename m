@@ -1,48 +1,59 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 03/10] isci/core: port
-Date: Thu, 10 Mar 2011 02:54:34 -0800
-Message-ID: <20110310105434.6485.73437.stgit@localhost6.localdomain6>
+Subject: [RFC PATCH 09/10] isci/core: base state machine and memory descriptors
+Date: Thu, 10 Mar 2011 02:55:06 -0800
+Message-ID: <20110310105506.6485.77370.stgit@localhost6.localdomain6>
 References: <20110310105347.6485.20780.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:22402 "EHLO mga01.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:32521 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752220Ab1CJKxT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Mar 2011 05:53:19 -0500
+	id S1752969Ab1CJKxu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Mar 2011 05:53:50 -0500
 In-Reply-To: <20110310105347.6485.20780.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@suse.de
 Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-Port state machines and port configuration agent.
+Generic state machine implementation, and the memory descriptor
+interface for the lldd to pass buffers to the core.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/core/sci_base_port.h             |  203 +
- drivers/scsi/isci/core/scic_port.h                 |  195 +
- drivers/scsi/isci/core/scic_sds_port.c             | 2915 ++++++++++++++++++++
- drivers/scsi/isci/core/scic_sds_port.h             |  499 +++
- .../isci/core/scic_sds_port_configuration_agent.c  |  863 ++++++
- .../isci/core/scic_sds_port_configuration_agent.h  |  108 +
- drivers/scsi/isci/core/scic_sds_port_registers.h   |  147 +
- 7 files changed, 4930 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/isci/core/sci_base_port.h
- create mode 100644 drivers/scsi/isci/core/scic_port.h
- create mode 100644 drivers/scsi/isci/core/scic_sds_port.c
- create mode 100644 drivers/scsi/isci/core/scic_sds_port.h
- create mode 100644 drivers/scsi/isci/core/scic_sds_port_configuration_agent.c
- create mode 100644 drivers/scsi/isci/core/scic_sds_port_configuration_agent.h
- create mode 100644 drivers/scsi/isci/core/scic_sds_port_registers.h
+ .../isci/core/sci_base_memory_descriptor_list.c    |  159 +++
+ .../isci/core/sci_base_memory_descriptor_list.h    |  153 +++
+ drivers/scsi/isci/core/sci_base_state.h            |   90 ++
+ drivers/scsi/isci/core/sci_base_state_machine.c    |  182 ++++
+ drivers/scsi/isci/core/sci_base_state_machine.h    |  141 +++
+ .../scsi/isci/core/sci_memory_descriptor_list.h    |  168 ++++
+ drivers/scsi/isci/core/sci_object.h                |   98 ++
+ drivers/scsi/isci/core/scu_completion_codes.h      |  283 ++++++
+ drivers/scsi/isci/core/scu_constants.h             |  151 +++
+ drivers/scsi/isci/core/scu_event_codes.h           |  336 +++++++
+ drivers/scsi/isci/core/scu_task_context.h          |  942 ++++++++++++++++++++
+ drivers/scsi/isci/core/scu_viit_data.h             |  178 ++++
+ 12 files changed, 2881 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/isci/core/sci_base_memory_descriptor_list.c
+ create mode 100644 drivers/scsi/isci/core/sci_base_memory_descriptor_list.h
+ create mode 100644 drivers/scsi/isci/core/sci_base_state.h
+ create mode 100644 drivers/scsi/isci/core/sci_base_state_machine.c
+ create mode 100644 drivers/scsi/isci/core/sci_base_state_machine.h
+ create mode 100644 drivers/scsi/isci/core/sci_memory_descriptor_list.h
+ create mode 100644 drivers/scsi/isci/core/sci_object.h
+ create mode 100644 drivers/scsi/isci/core/scu_completion_codes.h
+ create mode 100644 drivers/scsi/isci/core/scu_constants.h
+ create mode 100644 drivers/scsi/isci/core/scu_event_codes.h
+ create mode 100644 drivers/scsi/isci/core/scu_task_context.h
+ create mode 100644 drivers/scsi/isci/core/scu_viit_data.h
 
-diff --git a/drivers/scsi/isci/core/sci_base_port.h b/drivers/scsi/isci/core/sci_base_port.h
+diff --git a/drivers/scsi/isci/core/sci_base_memory_descriptor_list.c b/drivers/scsi/isci/core/sci_base_memory_descriptor_list.c
 new file mode 100644
-index 0000000..4e2031d
+index 0000000..2d785b5
 --- /dev/null
-+++ b/drivers/scsi/isci/core/sci_base_port.h
-@@ -0,0 +1,203 @@
++++ b/drivers/scsi/isci/core/sci_base_memory_descriptor_list.c
+@@ -0,0 +1,159 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -98,160 +109,371 @@ index 0000000..4e2031d
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#ifndef _SCI_BASE_PORT_H_
-+#define _SCI_BASE_PORT_H_
++/**
++ * This file contains the base implementation for the memory descriptor list.
++ *    This is currently comprised of MDL iterator methods.
++ *
++ *
++ */
 +
-+#include "sci_base_state_machine.h"
++#include "sci_environment.h"
++#include "sci_base_memory_descriptor_list.h"
++
++/*
++ * ******************************************************************************
++ * * P U B L I C   M E T H O D S
++ * ****************************************************************************** */
++
++void sci_mdl_first_entry(
++	struct sci_base_memory_descriptor_list *base_mdl)
++{
++	base_mdl->next_index = 0;
++
++	/*
++	 * If this MDL is managing another MDL, then recursively rewind that MDL
++	 * object as well. */
++	if (base_mdl->next_mdl != NULL)
++		sci_mdl_first_entry(base_mdl->next_mdl);
++}
++
++
++void sci_mdl_next_entry(
++	struct sci_base_memory_descriptor_list *base_mdl)
++{
++	/*
++	 * If there is at least one more entry left in the array, then change
++	 * the next pointer to it. */
++	if (base_mdl->next_index < base_mdl->length)
++		base_mdl->next_index++;
++	else if (base_mdl->next_index == base_mdl->length) {
++		/*
++		 * This MDL has exhausted it's set of entries.  If this MDL is managing
++		 * another MDL, then start iterating through that MDL. */
++		if (base_mdl->next_mdl != NULL)
++			sci_mdl_next_entry(base_mdl->next_mdl);
++	}
++}
++
++
++struct sci_physical_memory_descriptor *sci_mdl_get_current_entry(
++	struct sci_base_memory_descriptor_list *base_mdl)
++{
++	if (base_mdl->next_index < base_mdl->length)
++		return &base_mdl->mde_array[base_mdl->next_index];
++	else if (base_mdl->next_index == base_mdl->length) {
++		/*
++		 * This MDL has exhausted it's set of entries.  If this MDL is managing
++		 * another MDL, then return it's current entry. */
++		if (base_mdl->next_mdl != NULL)
++			return sci_mdl_get_current_entry(base_mdl->next_mdl);
++	}
++
++	return NULL;
++}
++
++/*
++ * ******************************************************************************
++ * * P R O T E C T E D   M E T H O D S
++ * ****************************************************************************** */
++
++void sci_base_mdl_construct(
++	struct sci_base_memory_descriptor_list *mdl,
++	struct sci_physical_memory_descriptor *mde_array,
++	u32 mde_array_length,
++	struct sci_base_memory_descriptor_list *next_mdl)
++{
++	mdl->length     = mde_array_length;
++	mdl->mde_array  = mde_array;
++	mdl->next_index = 0;
++	mdl->next_mdl   = next_mdl;
++}
++
++/* --------------------------------------------------------------------------- */
++
++bool sci_base_mde_is_valid(
++	struct sci_physical_memory_descriptor *mde,
++	u32 alignment,
++	u32 size,
++	u16 attributes)
++{
++	/* Only need the lower 32 bits to ensure alignment is met. */
++	u32 physical_address = lower_32_bits(mde->physical_address);
++
++	if (
++		((((unsigned long)mde->virtual_address) & (alignment - 1)) != 0)
++		|| ((physical_address & (alignment - 1)) != 0)
++		|| (mde->constant_memory_alignment != alignment)
++		|| (mde->constant_memory_size != size)
++		|| (mde->virtual_address == NULL)
++		|| (mde->constant_memory_attributes != attributes)
++		) {
++		return false;
++	}
++
++	return true;
++}
++
+diff --git a/drivers/scsi/isci/core/sci_base_memory_descriptor_list.h b/drivers/scsi/isci/core/sci_base_memory_descriptor_list.h
+new file mode 100644
+index 0000000..b58d4e8
+--- /dev/null
++++ b/drivers/scsi/isci/core/sci_base_memory_descriptor_list.h
+@@ -0,0 +1,153 @@
++/*
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *   * Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *   * Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in
++ *     the documentation and/or other materials provided with the
++ *     distribution.
++ *   * Neither the name of Intel Corporation nor the names of its
++ *     contributors may be used to endorse or promote products derived
++ *     from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef _SCI_BASE_MEMORY_DESCRIPTOR_LIST_H_
++#define _SCI_BASE_MEMORY_DESCRIPTOR_LIST_H_
++
++/**
++ * This file contains the protected interface structures, constants and
++ *    interface methods for the struct sci_base_memory_descriptor_list object.
++ *
++ *
++ */
++
++
++#include "sci_memory_descriptor_list.h"
++
++
++/**
++ * struct sci_base_memory_descriptor_list - This structure contains all of the
++ *    fields necessary to implement a simple stack for managing the list of
++ *    available controller indices.
++ *
++ *
++ */
++struct sci_base_memory_descriptor_list {
++	/**
++	 * This field indicates the length of the memory descriptor entry array.
++	 */
++	u32 length;
++
++	/**
++	 * This field is utilized to provide iterator pattern functionality.
++	 * It indicates the index of the next memory descriptor in the iteration.
++	 */
++	u32 next_index;
++
++	/**
++	 * This field will point to the list of memory descriptors.
++	 */
++	struct sci_physical_memory_descriptor *mde_array;
++
++	/**
++	 * This field simply allows a user to chain memory descriptor lists
++	 * together if desired.  This field will be initialized to NULL.
++	 */
++	struct sci_base_memory_descriptor_list *next_mdl;
++
++};
++
++/**
++ * sci_base_mdl_construct() - This method is invoked to construct an memory
++ *    descriptor list. It initializes the fields of the MDL.
++ * @mdl: This parameter specifies the memory descriptor list to be constructed.
++ * @mde_array: This parameter specifies the array of memory descriptor entries
++ *    to be managed by this list.
++ * @mde_array_length: This parameter specifies the size of the array of entries.
++ * @next_mdl: This parameter specifies a subsequent MDL object to be managed by
++ *    this MDL object.
++ *
++ * none.
++ */
++void sci_base_mdl_construct(
++	struct sci_base_memory_descriptor_list *mdl,
++	struct sci_physical_memory_descriptor *mde_array,
++	u32 mde_array_length,
++	struct sci_base_memory_descriptor_list *next_mdl);
++
++/**
++ * sci_base_mde_construct() -
++ *
++ * This macro constructs an memory descriptor entry with the given alignment
++ * and size
++ */
++#define sci_base_mde_construct(mde, alignment, size, attributes) \
++	{ \
++		(mde)->constant_memory_alignment  = (alignment); \
++		(mde)->constant_memory_size       = (size); \
++		(mde)->constant_memory_attributes = (attributes); \
++	}
++
++/**
++ * sci_base_mde_is_valid() - This method validates that the memory descriptor
++ *    is correctly filled out by the SCI User
++ * @mde: This parameter is the mde entry to validate
++ * @alignment: This parameter specifies the expected alignment of the memory
++ *    for the mde.
++ * @size: This parameter specifies the memory size expected for the mde its
++ *    value should not have been changed by the SCI User.
++ * @attributes: This parameter specifies the attributes for the memory
++ *    descriptor provided.
++ *
++ * bool This method returns an indication as to whether the supplied MDE is
++ * valid or not. true The MDE is valid. false The MDE is not valid.
++ */
++bool sci_base_mde_is_valid(
++	struct sci_physical_memory_descriptor *mde,
++	u32 alignment,
++	u32 size,
++	u16 attributes);
++
++#endif /* _SCI_BASE_MEMORY_DESCRIPTOR_LIST_H_ */
+diff --git a/drivers/scsi/isci/core/sci_base_state.h b/drivers/scsi/isci/core/sci_base_state.h
+new file mode 100644
+index 0000000..d6b9c1a
+--- /dev/null
++++ b/drivers/scsi/isci/core/sci_base_state.h
+@@ -0,0 +1,90 @@
++/*
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *   * Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *   * Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in
++ *     the documentation and/or other materials provided with the
++ *     distribution.
++ *   * Neither the name of Intel Corporation nor the names of its
++ *     contributors may be used to endorse or promote products derived
++ *     from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef _SCI_BASE_STATE_H_
++#define _SCI_BASE_STATE_H_
++
 +#include "sci_object.h"
 +
-+/**
-+ * enum sci_base_port_states - This enumeration depicts all the states for the
-+ *    common port state machine.
-+ *
-+ *
-+ */
-+enum sci_base_port_states {
-+	/**
-+	 * This state indicates that the port has successfully been stopped.
-+	 * In this state no new IO operations are permitted.
-+	 * This state is entered from the STOPPING state.
-+	 */
-+	SCI_BASE_PORT_STATE_STOPPED,
-+
-+	/**
-+	 * This state indicates that the port is in the process of stopping.
-+	 * In this state no new IO operations are permitted, but existing IO
-+	 * operations are allowed to complete.
-+	 * This state is entered from the READY state.
-+	 */
-+	SCI_BASE_PORT_STATE_STOPPING,
-+
-+	/**
-+	 * This state indicates the port is now ready.  Thus, the user is
-+	 * able to perform IO operations on this port.
-+	 * This state is entered from the STARTING state.
-+	 */
-+	SCI_BASE_PORT_STATE_READY,
-+
-+	/**
-+	 * This state indicates the port is in the process of performing a hard
-+	 * reset.  Thus, the user is unable to perform IO operations on this
-+	 * port.
-+	 * This state is entered from the READY state.
-+	 */
-+	SCI_BASE_PORT_STATE_RESETTING,
-+
-+	/**
-+	 * This state indicates the port has failed a reset request.  This state
-+	 * is entered when a port reset request times out.
-+	 * This state is entered from the RESETTING state.
-+	 */
-+	SCI_BASE_PORT_STATE_FAILED,
-+
-+	SCI_BASE_PORT_MAX_STATES
-+
-+};
-+
-+/**
-+ * struct sci_base_port - The base port object abstracts the fields common to
-+ *    all SCI port objects.
-+ *
-+ *
-+ */
-+struct sci_base_port {
-+	/**
-+	 * The field specifies that the parent object for the base controller
-+	 * is the base object itself.
-+	 */
-+	struct sci_base_object parent;
-+
-+	/**
-+	 * This field contains the information for the base port state machine.
-+	 */
-+	struct sci_base_state_machine state_machine;
-+};
-+
-+struct sci_base_phy;
-+
-+typedef enum sci_status (*SCI_BASE_PORT_HANDLER_T)(
-+	struct sci_base_port *
++typedef void (*SCI_BASE_STATE_HANDLER_T)(
++	void
 +	);
 +
-+typedef enum sci_status (*SCI_BASE_PORT_PHY_HANDLER_T)(
-+	struct sci_base_port *,
-+	struct sci_base_phy *
-+	);
-+
-+typedef enum sci_status (*SCI_BASE_PORT_RESET_HANDLER_T)(
-+	struct sci_base_port *,
-+	u32 timeout
++typedef void (*SCI_STATE_TRANSITION_T)(
++	struct sci_base_object *base_object
 +	);
 +
 +/**
-+ * struct sci_base_port_state_handler - This structure contains all of the
-+ *    state handler methods common to base port state machines.  Handler
-+ *    methods provide the ability to change the behavior for user requests or
-+ *    transitions depending on the state the machine is in.
++ * struct sci_base_state - The base state object abstracts the fields common to
++ *    all state objects defined in SCI.
 + *
 + *
 + */
-+struct sci_base_port_state_handler {
++struct sci_base_state {
 +	/**
-+	 * The start_handler specifies the method invoked when a user attempts to
-+	 * start a port.
++	 * This field is a function pointer that defines the method to be
++	 * invoked when the state is entered.
 +	 */
-+	SCI_BASE_PORT_HANDLER_T start_handler;
++	SCI_STATE_TRANSITION_T enter_state;
 +
 +	/**
-+	 * The stop_handler specifies the method invoked when a user attempts to
-+	 * stop a port.
++	 * This field is a function pointer that defines the method to be
++	 * invoked when the state is exited.
 +	 */
-+	SCI_BASE_PORT_HANDLER_T stop_handler;
-+
-+	/**
-+	 * The destruct_handler specifies the method invoked when attempting to
-+	 * destruct a port.
-+	 */
-+	SCI_BASE_PORT_HANDLER_T destruct_handler;
-+
-+	/**
-+	 * The reset_handler specifies the method invoked when a user attempts to
-+	 * hard reset a port.
-+	 */
-+	SCI_BASE_PORT_RESET_HANDLER_T reset_handler;
-+
-+	/**
-+	 * The add_phy_handler specifies the method invoked when a user attempts to
-+	 * add another phy into the port.
-+	 */
-+	SCI_BASE_PORT_PHY_HANDLER_T add_phy_handler;
-+
-+	/**
-+	 * The remove_phy_handler specifies the method invoked when a user
-+	 * attempts to remove a phy from the port.
-+	 */
-+	SCI_BASE_PORT_PHY_HANDLER_T remove_phy_handler;
++	SCI_STATE_TRANSITION_T exit_state;
 +
 +};
 +
-+/**
-+ * sci_base_port_construct() - Construct the base port object
-+ * @this_port: This parameter specifies the base port to be constructed.
-+ * @state_table: This parameter specifies the table of state definitions to be
-+ *    utilized for the domain state machine.
-+ *
-+ */
-+void sci_base_port_construct(
-+	struct sci_base_port *this_port,
-+	const struct sci_base_state *state_table);
-+
-+#endif /* _SCI_BASE_PORT_H_ */
-diff --git a/drivers/scsi/isci/core/scic_port.h b/drivers/scsi/isci/core/scic_port.h
++#endif /* _SCI_BASE_STATE_H_ */
+diff --git a/drivers/scsi/isci/core/sci_base_state_machine.c b/drivers/scsi/isci/core/sci_base_state_machine.c
 new file mode 100644
-index 0000000..8222443
+index 0000000..5b1e8da
 --- /dev/null
-+++ b/drivers/scsi/isci/core/scic_port.h
-@@ -0,0 +1,195 @@
++++ b/drivers/scsi/isci/core/sci_base_state_machine.c
+@@ -0,0 +1,182 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -307,152 +529,564 @@ index 0000000..8222443
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#ifndef _SCIC_PORT_H_
-+#define _SCIC_PORT_H_
++/**
++ * This file contains all of the functionality common to all state machine
++ *    object implementations.
++ *
++ *
++ */
++
++#include "sci_base_state_machine.h"
++
++static void sci_state_machine_exit_state(struct sci_base_state_machine *sm)
++{
++	u32 state = sm->current_state_id;
++	SCI_STATE_TRANSITION_T exit = sm->state_table[state].exit_state;
++
++	if (exit)
++		exit(sm->state_machine_owner);
++}
++
++static void sci_state_machine_enter_state(struct sci_base_state_machine *sm)
++{
++	u32 state = sm->current_state_id;
++	SCI_STATE_TRANSITION_T enter = sm->state_table[state].enter_state;
++
++	if (enter)
++		enter(sm->state_machine_owner);
++}
++
++/*
++ * ******************************************************************************
++ * * P R O T E C T E D    M E T H O D S
++ * ****************************************************************************** */
 +
 +/**
-+ * This file contains all of the interface methods that can be called by an SCI
-+ *    Core user on a SAS or SATA port.
++ * This method will set the initial state and state table for the state
++ *    machine. The caller should follow this request with the initialize
++ *    request to cause the state machine to start.
++ * @sm: This parameter provides the state machine object to be
++ *    constructed.
++ * @state_machine_owner: This parameter indicates the object that is owns the
++ *    state machine being constructed.
++ * @state_table: This parameter specifies the table of state objects that is
++ *    managed by this state machine.
++ * @initial_state: This parameter specifies the value of the initial state for
++ *    this state machine.
++ *
++ */
++void sci_base_state_machine_construct(struct sci_base_state_machine *sm,
++				      struct sci_base_object *owner,
++				      const struct sci_base_state *state_table,
++				      u32 initial_state)
++{
++	sm->state_machine_owner = owner;
++	sm->initial_state_id    = initial_state;
++	sm->previous_state_id   = initial_state;
++	sm->current_state_id    = initial_state;
++	sm->state_table         = state_table;
++}
++
++/**
++ * This method will cause the state machine to enter the initial state.
++ * @sm: This parameter specifies the state machine that is to
++ *    be started.
++ *
++ * sci_base_state_machine_construct() for how to set the initial state none
++ */
++void sci_base_state_machine_start(struct sci_base_state_machine *sm)
++{
++	sm->current_state_id = sm->initial_state_id;
++#if defined(SCI_BASE_ENABLE_SUBJECT_NOTIFICATION)
++	sci_base_subject_notify(&sm->parent);
++#endif
++	sci_state_machine_enter_state(sm);
++}
++
++/**
++ * This method will cause the state machine to exit it's current state only.
++ * @sm: This parameter specifies the state machine that is to
++ *    be stopped.
++ *
++ */
++void sci_base_state_machine_stop(
++	struct sci_base_state_machine *sm)
++{
++	sci_state_machine_exit_state(sm);
++#if defined(SCI_BASE_ENABLE_SUBJECT_NOTIFICATION)
++	sci_base_subject_notify(&sm->parent);
++#endif
++}
++
++/**
++ * This method performs an update to the current state of the state machine.
++ * @sm: This parameter specifies the state machine for which
++ *    the caller wishes to perform a state change.
++ * @next_state: This parameter specifies the new state for the state machine.
++ *
++ */
++void sci_base_state_machine_change_state(
++	struct sci_base_state_machine *sm,
++	u32 next_state)
++{
++	sci_state_machine_exit_state(sm);
++
++	sm->previous_state_id = sm->current_state_id;
++	sm->current_state_id = next_state;
++
++#if defined(SCI_BASE_ENABLE_SUBJECT_NOTIFICATION)
++	/* Notify of the state change prior to entering the state. */
++	sci_base_subject_notify(&sm->parent);
++#endif
++
++	sci_state_machine_enter_state(sm);
++}
++
++/**
++ * This method simply returns the current state of the state machine to the
++ *    caller.
++ * @sm: This parameter specifies the state machine for which to
++ *    retrieve the current state.
++ *
++ * This method returns a u32 value indicating the current state for the
++ * supplied state machine.
++ */
++u32 sci_base_state_machine_get_state(struct sci_base_state_machine *sm)
++{
++	return sm->current_state_id;
++}
++
+diff --git a/drivers/scsi/isci/core/sci_base_state_machine.h b/drivers/scsi/isci/core/sci_base_state_machine.h
+new file mode 100644
+index 0000000..13f6ee8
+--- /dev/null
++++ b/drivers/scsi/isci/core/sci_base_state_machine.h
+@@ -0,0 +1,141 @@
++/*
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *   * Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *   * Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in
++ *     the documentation and/or other materials provided with the
++ *     distribution.
++ *   * Neither the name of Intel Corporation nor the names of its
++ *     contributors may be used to endorse or promote products derived
++ *     from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef _SCI_BASE_STATE_MACHINE_H_
++#define _SCI_BASE_STATE_MACHINE_H_
++
++#include <linux/string.h>
++
++/**
++ * This file contains all structures, constants, or method declarations common
++ *    to all state machines defined in SCI.
++ *
++ *
++ */
++
++
++#include "sci_base_state.h"
++
++
++/**
++ * SET_STATE_HANDLER() -
++ *
++ * This macro simply provides simplified retrieval of an objects state handler.
++ */
++#define SET_STATE_HANDLER(object, table, state)	\
++	(object)->state_handlers = &(table)[(state)]
++
++/**
++ * struct sci_base_state_machine - This structure defines the fields common to
++ *    all state machines.
++ *
++ *
++ */
++struct sci_base_state_machine {
++	/**
++	 * This field points to the start of the state machine's state table.
++	 */
++	const struct sci_base_state *state_table;
++
++	/**
++	 * This field points to the object to which this state machine is
++	 * associated.  It serves as a cookie to be provided to the state
++	 * enter/exit methods.
++	 */
++	struct sci_base_object *state_machine_owner;
++
++	/**
++	 * This field simply indicates the state value for the state machine's
++	 * initial state.
++	 */
++	u32 initial_state_id;
++
++	/**
++	 * This field indicates the current state of the state machine.
++	 */
++	u32 current_state_id;
++
++	/**
++	 * This field indicates the previous state of the state machine.
++	 */
++	u32 previous_state_id;
++
++};
++
++/*
++ * ******************************************************************************
++ * * P R O T E C T E D    M E T H O D S
++ * ****************************************************************************** */
++
++void sci_base_state_machine_construct(
++	struct sci_base_state_machine *this_state_machine,
++	struct sci_base_object *state_machine_owner,
++	const struct sci_base_state *state_table,
++	u32 initial_state);
++
++void sci_base_state_machine_start(
++	struct sci_base_state_machine *this_state_machine);
++
++void sci_base_state_machine_stop(
++	struct sci_base_state_machine *this_state_machine);
++
++void sci_base_state_machine_change_state(
++	struct sci_base_state_machine *this_state_machine,
++	u32 next_state);
++
++u32 sci_base_state_machine_get_state(
++	struct sci_base_state_machine *this_state_machine);
++
++#endif /* _SCI_BASE_STATE_MACHINE_H_ */
+diff --git a/drivers/scsi/isci/core/sci_memory_descriptor_list.h b/drivers/scsi/isci/core/sci_memory_descriptor_list.h
+new file mode 100644
+index 0000000..a039998
+--- /dev/null
++++ b/drivers/scsi/isci/core/sci_memory_descriptor_list.h
+@@ -0,0 +1,168 @@
++/*
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *   * Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *   * Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in
++ *     the documentation and/or other materials provided with the
++ *     distribution.
++ *   * Neither the name of Intel Corporation nor the names of its
++ *     contributors may be used to endorse or promote products derived
++ *     from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef _SCI_MEMORY_DESCRIPTOR_LIST_H_
++#define _SCI_MEMORY_DESCRIPTOR_LIST_H_
++
++/**
++ * This file contains all of the basic data types utilized by an SCI user or
++ *    implementor.
++ *
++ *
++ */
++
++
++
++struct sci_base_memory_descriptor_list;
++
++/**
++ *
++ *
++ * SCI_MDE_ATTRIBUTES These constants depict memory attributes for the Memory
++ * Descriptor Entries (MDEs) contained in the MDL.
++ */
++#define SCI_MDE_ATTRIBUTE_CACHEABLE              0x0001
++#define SCI_MDE_ATTRIBUTE_PHYSICALLY_CONTIGUOUS  0x0002
++
++/**
++ * struct sci_physical_memory_descriptor - This structure defines a description
++ *    of a memory location for the SCI implementation.
++ *
++ *
++ */
++struct sci_physical_memory_descriptor {
++	/**
++	 * This field contains the virtual address associated with this descriptor
++	 * element. This field shall be zero when the descriptor is retrieved from
++	 * the SCI implementation.  The user shall set this field prior
++	 * sci_controller_start()
++	 */
++	void *virtual_address;
++
++	/**
++	 * This field contains the physical address associated with this desciptor
++	 * element. This field shall be zero when the descriptor is retrieved from
++	 * the SCI implementation.  The user shall set this field prior
++	 * sci_controller_start()
++	 */
++	dma_addr_t physical_address;
++
++	/**
++	 * This field contains the size requirement for this memory descriptor.
++	 * A value of zero for this field indicates the end of the descriptor
++	 * list.  The value should be treated as read only for an SCI user.
++	 */
++	u32 constant_memory_size;
++
++	/**
++	 * This field contains the alignment requirement for this memory
++	 * descriptor.  A value of zero for this field indicates the end of the
++	 * descriptor list.  All other values indicate the number of bytes to
++	 * achieve the necessary alignment.  The value should be treated as
++	 * read only for an SCI user.
++	 */
++	u32 constant_memory_alignment;
++
++	/**
++	 * This field contains an indication regarding the desired memory
++	 * attributes for this memory descriptor entry.
++	 * Notes:
++	 * - If the cacheable attribute is set, the user can allocate
++	 *   memory that is backed by cache for better performance. It
++	 *   is not required that the memory be backed by cache.
++	 * - If the physically contiguous attribute is set, then the
++	 *   entire memory must be physically contiguous across all
++	 *   page boundaries.
++	 */
++	u16 constant_memory_attributes;
++
++};
++
++/**
++ * sci_mdl_first_entry() - This method simply rewinds the MDL iterator back to
++ *    the first memory descriptor entry in the list.
++ * @mdl: This parameter specifies the memory descriptor list that is to be
++ *    rewound.
++ *
++ */
++void sci_mdl_first_entry(
++	struct sci_base_memory_descriptor_list *mdl);
++
++/**
++ * sci_mdl_next_entry() - This method simply updates the "current" pointer to
++ *    the next sequential memory descriptor.
++ * @mdl: This parameter specifies the memory descriptor list for which to
++ *    return the next memory descriptor entry in the list.
++ *
++ * none.
++ */
++void sci_mdl_next_entry(
++	struct sci_base_memory_descriptor_list *mdl);
++
++/**
++ * sci_mdl_get_current_entry() - This method simply returns the current memory
++ *    descriptor entry.
++ * @mdl: This parameter specifies the memory descriptor list for which to
++ *    return the current memory descriptor entry.
++ *
++ * This method returns a pointer to the current physical memory descriptor in
++ * the MDL. NULL This value is returned if there are no descriptors in the list.
++ */
++struct sci_physical_memory_descriptor *sci_mdl_get_current_entry(
++	struct sci_base_memory_descriptor_list *mdl);
++
++
++#endif  /* _SCI_MEMORY_DESCRIPTOR_LIST_H_ */
++
+diff --git a/drivers/scsi/isci/core/sci_object.h b/drivers/scsi/isci/core/sci_object.h
+new file mode 100644
+index 0000000..801b01b
+--- /dev/null
++++ b/drivers/scsi/isci/core/sci_object.h
+@@ -0,0 +1,98 @@
++/*
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *   * Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *   * Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in
++ *     the documentation and/or other materials provided with the
++ *     distribution.
++ *   * Neither the name of Intel Corporation nor the names of its
++ *     contributors may be used to endorse or promote products derived
++ *     from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef _SCI_OBJECT_H_
++#define _SCI_OBJECT_H_
++
++/**
++ * This file contains all of the method and constants associated with the SCI
++ *    base object.  The SCI base object is the class from which all other
++ *    objects derive in the Storage Controller Interface.
 + *
 + *
 + */
 +
 +
 +#include "sci_status.h"
-+#include "intel_sas.h"
 +
-+struct scic_sds_port;
-+
-+enum SCIC_PORT_NOT_READY_REASON_CODE {
-+	SCIC_PORT_NOT_READY_NO_ACTIVE_PHYS,
-+	SCIC_PORT_NOT_READY_HARD_RESET_REQUESTED,
-+	SCIC_PORT_NOT_READY_INVALID_PORT_CONFIGURATION,
-+	SCIC_PORT_NOT_READY_RECONFIGURING,
-+
-+	SCIC_PORT_NOT_READY_REASON_CODE_MAX
++/**
++ * struct sci_base_object - all core objects must include this as their
++ *     first member to permit the casting below
++ *
++ * TODO: unwind this assumption, convert these routines and callers to pass a struct
++ * sci_base_object pointer without casting, or convert 'private' to the
++ * expected type per-object
++ *
++ */
++struct sci_base_object {
++	void *private;
 +};
 +
-+/**
-+ * struct scic_port_end_point_properties - This structure defines the
-+ *    properties that can be retrieved for each end-point local or remote
-+ *    (attached) port in the controller.
-+ *
-+ *
-+ */
-+struct scic_port_end_point_properties {
-+	/**
-+	 * This field indicates the SAS address for the associated end
-+	 * point in the port.
-+	 */
-+	struct sci_sas_address sas_address;
++static inline void *sci_object_get_association(void *obj)
++{
++	struct sci_base_object *base = obj;
 +
-+	/**
-+	 * This field indicates the protocols supported by the associated
-+	 * end-point in the port.
-+	 */
-+	struct sci_sas_identify_address_frame_protocols protocols;
++	return base->private;
++}
 +
-+};
++static inline void sci_object_set_association(void *obj, void *private)
++{
++	struct sci_base_object *base = obj;
 +
-+/**
-+ * struct scic_port_properties - This structure defines the properties that can
-+ *    be retrieved for each port in the controller.
-+ *
-+ *
-+ */
-+struct scic_port_properties {
-+	/**
-+	 * This field specifies the logical index of the port (0 relative).
-+	 */
-+	u32 index;
++	base->private = private;
++}
 +
-+	/**
-+	 * This field indicates the local end-point properties for port.
-+	 */
-+	struct scic_port_end_point_properties local;
++#endif  /* _SCI_OBJECT_H_ */
 +
-+	/**
-+	 * This field indicates the remote (attached) end-point properties
-+	 * for the port.
-+	 */
-+	struct scic_port_end_point_properties remote;
-+
-+	/**
-+	 * This field specifies the phys contained inside the port.
-+	 */
-+	u32 phy_mask;
-+
-+};
-+
-+/**
-+ * scic_port_get_properties() - This method simply returns the properties
-+ *    regarding the port, such as: physical index, protocols, sas address, etc.
-+ * @port: this parameter specifies the port for which to retrieve the physical
-+ *    index.
-+ * @properties: This parameter specifies the properties structure into which to
-+ *    copy the requested information.
-+ *
-+ * Indicate if the user specified a valid port. SCI_SUCCESS This value is
-+ * returned if the specified port was valid. SCI_FAILURE_INVALID_PORT This
-+ * value is returned if the specified port is not valid.  When this value is
-+ * returned, no data is copied to the properties output parameter.
-+ */
-+enum sci_status scic_port_get_properties(
-+	struct scic_sds_port *port,
-+	struct scic_port_properties *properties);
-+
-+/**
-+ * scic_port_stop() - This method will make the port no longer ready for
-+ *    operation.  After invoking this method IO operation is not possible.
-+ * @port: This parameter specifies the port to be stopped.
-+ *
-+ * Indicate if the port was successfully stopped. SCI_SUCCESS This value is
-+ * returned if the port was successfully stopped. SCI_WARNING_ALREADY_IN_STATE
-+ * This value is returned if the port is already stopped or in the process of
-+ * stopping. SCI_FAILURE_INVALID_PORT This value is returned if the supplied
-+ * port is not valid. SCI_FAILURE_INVALID_STATE This value is returned if a
-+ * stop operation can't be completed due to the state of port.
-+ */
-+enum sci_status scic_port_stop(
-+	struct scic_sds_port *port);
-+
-+/**
-+ * scic_port_hard_reset() - This method will request the SCI implementation to
-+ *    perform a HARD RESET on the SAS Port.  If/When the HARD RESET completes
-+ *    the SCI user will be notified via an SCI OS callback indicating a direct
-+ *    attached device was found.
-+ * @port: a handle corresponding to the SAS port to be hard reset.
-+ * @reset_timeout: This parameter specifies the number of milliseconds in which
-+ *    the port reset operation should complete.
-+ *
-+ * The SCI User callback in SCIC_USER_CALLBACKS_T will only be called once for
-+ * each phy in the SAS Port at completion of the hard reset sequence. Return a
-+ * status indicating whether the hard reset started successfully. SCI_SUCCESS
-+ * This value is returned if the hard reset operation started successfully.
-+ */
-+enum sci_status scic_port_hard_reset(
-+	struct scic_sds_port *port,
-+	u32 reset_timeout);
-+
-+/**
-+ * scic_port_enable_broadcast_change_notification() - This API method enables
-+ *    the broadcast change notification from underneath hardware.
-+ * @port: The port upon which broadcast change notifications (BCN) are to be
-+ *    enabled.
-+ *
-+ */
-+void scic_port_enable_broadcast_change_notification(
-+	struct scic_sds_port *port);
-+
-+
-+#endif  /* _SCIC_PORT_H_ */
-+
-diff --git a/drivers/scsi/isci/core/scic_sds_port.c b/drivers/scsi/isci/core/scic_sds_port.c
+diff --git a/drivers/scsi/isci/core/scu_completion_codes.h b/drivers/scsi/isci/core/scu_completion_codes.h
 new file mode 100644
-index 0000000..a41fe42
+index 0000000..c8b329c
 --- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_port.c
-@@ -0,0 +1,2915 @@
++++ b/drivers/scsi/isci/core/scu_completion_codes.h
+@@ -0,0 +1,283 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -508,2872 +1142,240 @@ index 0000000..a41fe42
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#include "intel_sas.h"
-+#include "sci_base_port.h"
-+#include "scic_controller.h"
-+#include "scic_phy.h"
-+#include "scic_port.h"
-+#include "scic_sds_controller.h"
-+#include "scic_sds_phy.h"
-+#include "scic_sds_phy_registers.h"
-+#include "scic_sds_port.h"
-+#include "scic_sds_port_registers.h"
-+#include "scic_sds_remote_device.h"
-+#include "scic_sds_remote_node_context.h"
-+#include "scic_sds_request.h"
-+#include "sci_environment.h"
-+#include "scic_sds_controller_registers.h"
++#ifndef _SCU_COMPLETION_CODES_HEADER_
++#define _SCU_COMPLETION_CODES_HEADER_
 +
-+
-+static void scic_sds_port_invalid_link_up(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy);
-+static void scic_sds_port_timeout_handler(
-+	void *port);
-+#define SCIC_SDS_PORT_MIN_TIMER_COUNT  (SCI_MAX_PORTS)
-+#define SCIC_SDS_PORT_MAX_TIMER_COUNT  (SCI_MAX_PORTS)
-+
-+#define SCIC_SDS_PORT_HARD_RESET_TIMEOUT  (1000)
-+#define SCU_DUMMY_INDEX    (0xFFFF)
-+
-+void sci_base_port_construct(
-+	struct sci_base_port *base_port,
-+	const struct sci_base_state *state_table)
-+{
-+	base_port->parent.private = NULL;
-+	sci_base_state_machine_construct(
-+		&base_port->state_machine,
-+		&base_port->parent,
-+		state_table,
-+		SCI_BASE_PORT_STATE_STOPPED
-+		);
-+
-+	sci_base_state_machine_start(
-+		&base_port->state_machine
-+		);
-+}
-+
-+/**
-+ *
-+ * @this_port: This is the port object to which the phy is being assigned.
-+ * @phy_index: This is the phy index that is being assigned to the port.
-+ *
-+ * This method will return a true value if the specified phy can be assigned to
-+ * this port The following is a list of phys for each port that are allowed: -
-+ * Port 0 - 3 2 1 0 - Port 1 -     1 - Port 2 - 3 2 - Port 3 - 3 This method
-+ * doesn't preclude all configurations.  It merely ensures that a phy is part
-+ * of the allowable set of phy identifiers for that port.  For example, one
-+ * could assign phy 3 to port 0 and no other phys.  Please refer to
-+ * scic_sds_port_is_phy_mask_valid() for information regarding whether the
-+ * phy_mask for a port can be supported. bool true if this is a valid phy
-+ * assignment for the port false if this is not a valid phy assignment for the
-+ * port
-+ */
-+bool scic_sds_port_is_valid_phy_assignment(
-+	struct scic_sds_port *this_port,
-+	u32 phy_index)
-+{
-+	/* Initialize to invalid value. */
-+	u32 existing_phy_index = SCI_MAX_PHYS;
-+	u32 index;
-+
-+	if ((this_port->physical_port_index == 1) && (phy_index != 1)) {
-+		return false;
-+	}
-+
-+	if (this_port->physical_port_index == 3 && phy_index != 3) {
-+		return false;
-+	}
-+
-+	if (
-+		(this_port->physical_port_index == 2)
-+		&& ((phy_index == 0) || (phy_index == 1))
-+		) {
-+		return false;
-+	}
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		if ((this_port->phy_table[index] != NULL)
-+		    && (index != phy_index)) {
-+			existing_phy_index = index;
-+		}
-+	}
-+
-+	/*
-+	 * Ensure that all of the phys in the port are capable of
-+	 * operating at the same maximum link rate. */
-+	if (
-+		(existing_phy_index < SCI_MAX_PHYS)
-+		&& (this_port->owning_controller->user_parameters.sds1.phys[
-+			    phy_index].max_speed_generation !=
-+		    this_port->owning_controller->user_parameters.sds1.phys[
-+			    existing_phy_index].max_speed_generation)
-+		)
-+		return false;
-+
-+	return true;
-+}
-+
-+/**
-+ * This method requests a list (mask) of the phys contained in the supplied SAS
-+ *    port.
-+ * @this_port: a handle corresponding to the SAS port for which to return the
-+ *    phy mask.
-+ *
-+ * Return a bit mask indicating which phys are a part of this port. Each bit
-+ * corresponds to a phy identifier (e.g. bit 0 = phy id 0).
-+ */
-+u32 scic_sds_port_get_phys(struct scic_sds_port *this_port)
-+{
-+	u32 index;
-+	u32 mask;
-+
-+	mask = 0;
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		if (this_port->phy_table[index] != NULL) {
-+			mask |= (1 << index);
-+		}
-+	}
-+
-+	return mask;
-+}
-+
-+/**
-+ *
-+ * @this_port: This is the port object for which to determine if the phy mask
-+ *    can be supported.
-+ *
-+ * This method will return a true value if the port's phy mask can be supported
-+ * by the SCU. The following is a list of valid PHY mask configurations for
-+ * each port: - Port 0 - [[3  2] 1] 0 - Port 1 -        [1] - Port 2 - [[3] 2]
-+ * - Port 3 -  [3] This method returns a boolean indication specifying if the
-+ * phy mask can be supported. true if this is a valid phy assignment for the
-+ * port false if this is not a valid phy assignment for the port
-+ */
-+bool scic_sds_port_is_phy_mask_valid(
-+	struct scic_sds_port *this_port,
-+	u32 phy_mask)
-+{
-+	if (this_port->physical_port_index == 0) {
-+		if (((phy_mask & 0x0F) == 0x0F)
-+		    || ((phy_mask & 0x03) == 0x03)
-+		    || ((phy_mask & 0x01) == 0x01)
-+		    || (phy_mask == 0))
-+			return true;
-+	} else if (this_port->physical_port_index == 1) {
-+		if (((phy_mask & 0x02) == 0x02)
-+		    || (phy_mask == 0))
-+			return true;
-+	} else if (this_port->physical_port_index == 2) {
-+		if (((phy_mask & 0x0C) == 0x0C)
-+		    || ((phy_mask & 0x04) == 0x04)
-+		    || (phy_mask == 0))
-+			return true;
-+	} else if (this_port->physical_port_index == 3) {
-+		if (((phy_mask & 0x08) == 0x08)
-+		    || (phy_mask == 0))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+/**
-+ *
-+ * @this_port: This parameter specifies the port from which to return a
-+ *    connected phy.
-+ *
-+ * This method retrieves a currently active (i.e. connected) phy contained in
-+ * the port.  Currently, the lowest order phy that is connected is returned.
-+ * This method returns a pointer to a SCIS_SDS_PHY object. NULL This value is
-+ * returned if there are no currently active (i.e. connected to a remote end
-+ * point) phys contained in the port. All other values specify a struct scic_sds_phy
-+ * object that is active in the port.
-+ */
-+static struct scic_sds_phy *scic_sds_port_get_a_connected_phy(
-+	struct scic_sds_port *this_port
-+	) {
-+	u32 index;
-+	struct scic_sds_phy *phy;
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		/*
-+		 * Ensure that the phy is both part of the port and currently
-+		 * connected to the remote end-point. */
-+		phy = this_port->phy_table[index];
-+		if (
-+			(phy != NULL)
-+			&& scic_sds_port_active_phy(this_port, phy)
-+			) {
-+			return phy;
-+		}
-+	}
-+
-+	return NULL;
-+}
-+
-+/**
-+ * scic_sds_port_set_phy() -
-+ * @out]: port The port object to which the phy assignement is being made.
-+ * @out]: phy The phy which is being assigned to the port.
-+ *
-+ * This method attempts to make the assignment of the phy to the port. If
-+ * successful the phy is assigned to the ports phy table. bool true if the phy
-+ * assignment can be made. false if the phy assignement can not be made. This
-+ * is a functional test that only fails if the phy is currently assigned to a
-+ * different port.
-+ */
-+enum sci_status scic_sds_port_set_phy(
-+	struct scic_sds_port *port,
-+	struct scic_sds_phy *phy)
-+{
-+	/*
-+	 * Check to see if we can add this phy to a port
-+	 * that means that the phy is not part of a port and that the port does
-+	 * not already have a phy assinged to the phy index. */
-+	if (
-+		(port->phy_table[phy->phy_index] == NULL)
-+		&& (scic_sds_phy_get_port(phy) == NULL)
-+		&& scic_sds_port_is_valid_phy_assignment(port, phy->phy_index)
-+		) {
-+		/*
-+		 * Phy is being added in the stopped state so we are in MPC mode
-+		 * make logical port index = physical port index */
-+		port->logical_port_index = port->physical_port_index;
-+		port->phy_table[phy->phy_index] = phy;
-+		scic_sds_phy_set_port(phy, port);
-+
-+		return SCI_SUCCESS;
-+	}
-+
-+	return SCI_FAILURE;
-+}
-+
-+/**
-+ * scic_sds_port_clear_phy() -
-+ * @out]: port The port from which the phy is being cleared.
-+ * @out]: phy The phy being cleared from the port.
-+ *
-+ * This method will clear the phy assigned to this port.  This method fails if
-+ * this phy is not currently assinged to this port. bool true if the phy is
-+ * removed from the port. false if this phy is not assined to this port.
-+ */
-+enum sci_status scic_sds_port_clear_phy(
-+	struct scic_sds_port *port,
-+	struct scic_sds_phy *phy)
-+{
-+	/* Make sure that this phy is part of this port */
-+	if (
-+		(port->phy_table[phy->phy_index] == phy)
-+		&& (scic_sds_phy_get_port(phy) == port)
-+		) {
-+		/* Yep it is assigned to this port so remove it */
-+		scic_sds_phy_set_port(
-+			phy,
-+			&scic_sds_port_get_controller(port)->port_table[SCI_MAX_PORTS]
-+			);
-+
-+		port->phy_table[phy->phy_index] = NULL;
-+
-+		return SCI_SUCCESS;
-+	}
-+
-+	return SCI_FAILURE;
-+}
-+
-+/**
-+ * scic_sds_port_add_phy() -
-+ * @this_port: This parameter specifies the port in which the phy will be added.
-+ * @the_phy: This parameter is the phy which is to be added to the port.
-+ *
-+ * This method will add a PHY to the selected port. This method returns an
-+ * enum sci_status. SCI_SUCCESS the phy has been added to the port. Any other status
-+ * is failre to add the phy to the port.
-+ */
-+enum sci_status scic_sds_port_add_phy(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy)
-+{
-+	return this_port->state_handlers->parent.add_phy_handler(
-+		       &this_port->parent, &the_phy->parent);
-+}
-+
-+
-+/**
-+ * scic_sds_port_remove_phy() -
-+ * @this_port: This parameter specifies the port in which the phy will be added.
-+ * @the_phy: This parameter is the phy which is to be added to the port.
-+ *
-+ * This method will remove the PHY from the selected PORT. This method returns
-+ * an enum sci_status. SCI_SUCCESS the phy has been removed from the port. Any other
-+ * status is failre to add the phy to the port.
-+ */
-+enum sci_status scic_sds_port_remove_phy(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy)
-+{
-+	return this_port->state_handlers->parent.remove_phy_handler(
-+		       &this_port->parent, &the_phy->parent);
-+}
-+
-+/**
-+ * This method requests the SAS address for the supplied SAS port from the SCI
-+ *    implementation.
-+ * @this_port: a handle corresponding to the SAS port for which to return the
-+ *    SAS address.
-+ * @sas_address: This parameter specifies a pointer to a SAS address structure
-+ *    into which the core will copy the SAS address for the port.
-+ *
-+ */
-+void scic_sds_port_get_sas_address(
-+	struct scic_sds_port *this_port,
-+	struct sci_sas_address *sas_address)
-+{
-+	u32 index;
-+
-+	sas_address->high = 0;
-+	sas_address->low  = 0;
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		if (this_port->phy_table[index] != NULL) {
-+			scic_sds_phy_get_sas_address(this_port->phy_table[index], sas_address);
-+		}
-+	}
-+}
-+
-+/**
-+ * This method will indicate which protocols are supported by this port.
-+ * @this_port: a handle corresponding to the SAS port for which to return the
-+ *    supported protocols.
-+ * @protocols: This parameter specifies a pointer to an IAF protocol field
-+ *    structure into which the core will copy the protocol values for the port.
-+ *     The values are returned as part of a bit mask in order to allow for
-+ *    multi-protocol support.
-+ *
-+ */
-+static void scic_sds_port_get_protocols(
-+	struct scic_sds_port *this_port,
-+	struct sci_sas_identify_address_frame_protocols *protocols)
-+{
-+	u8 index;
-+
-+	protocols->u.all = 0;
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		if (this_port->phy_table[index] != NULL) {
-+			scic_sds_phy_get_protocols(this_port->phy_table[index], protocols);
-+		}
-+	}
-+}
-+
-+/**
-+ * This method requests the SAS address for the device directly attached to
-+ *    this SAS port.
-+ * @this_port: a handle corresponding to the SAS port for which to return the
-+ *    SAS address.
-+ * @sas_address: This parameter specifies a pointer to a SAS address structure
-+ *    into which the core will copy the SAS address for the device directly
-+ *    attached to the port.
-+ *
-+ */
-+void scic_sds_port_get_attached_sas_address(
-+	struct scic_sds_port *this_port,
-+	struct sci_sas_address *sas_address)
-+{
-+	struct sci_sas_identify_address_frame_protocols protocols;
-+	struct scic_sds_phy *phy;
-+
-+	/*
-+	 * Ensure that the phy is both part of the port and currently
-+	 * connected to the remote end-point. */
-+	phy = scic_sds_port_get_a_connected_phy(this_port);
-+	if (phy != NULL) {
-+		scic_sds_phy_get_attached_phy_protocols(phy, &protocols);
-+
-+		if (!protocols.u.bits.stp_target) {
-+			scic_sds_phy_get_attached_sas_address(phy, sas_address);
-+		} else {
-+			scic_sds_phy_get_sas_address(phy, sas_address);
-+			sas_address->low += phy->phy_index;
-+		}
-+	} else {
-+		sas_address->high = 0;
-+		sas_address->low  = 0;
-+	}
-+}
-+
-+/**
-+ * This method will indicate which protocols are supported by this remote
-+ *    device.
-+ * @this_port: a handle corresponding to the SAS port for which to return the
-+ *    supported protocols.
-+ * @protocols: This parameter specifies a pointer to an IAF protocol field
-+ *    structure into which the core will copy the protocol values for the port.
-+ *     The values are returned as part of a bit mask in order to allow for
-+ *    multi-protocol support.
-+ *
-+ */
-+void scic_sds_port_get_attached_protocols(
-+	struct scic_sds_port *this_port,
-+	struct sci_sas_identify_address_frame_protocols *protocols)
-+{
-+	struct scic_sds_phy *phy;
-+
-+	/*
-+	 * Ensure that the phy is both part of the port and currently
-+	 * connected to the remote end-point. */
-+	phy = scic_sds_port_get_a_connected_phy(this_port);
-+	if (phy != NULL)
-+		scic_sds_phy_get_attached_phy_protocols(phy, protocols);
-+	else
-+		protocols->u.all = 0;
-+}
-+
-+/**
-+ * scic_sds_port_construct_dummy_rnc() - create dummy rnc for si workaround
-+ *
-+ * @sci_port: logical port on which we need to create the remote node context
-+ * @rni: remote node index for this remote node context.
-+ *
-+ * This routine will construct a dummy remote node context data structure
-+ * This structure will be posted to the hardware to work around a scheduler
-+ * error in the hardware.
-+ */
-+void scic_sds_port_construct_dummy_rnc(struct scic_sds_port *sci_port, u16 rni)
-+{
-+	union scu_remote_node_context *rnc;
-+
-+	rnc = &sci_port->owning_controller->remote_node_context_table[rni];
-+
-+	memset(rnc, 0, sizeof(union scu_remote_node_context));
-+
-+	rnc->ssp.remote_sas_address_hi = 0;
-+	rnc->ssp.remote_sas_address_lo = 0;
-+
-+	rnc->ssp.remote_node_index = rni;
-+	rnc->ssp.remote_node_port_width = 1;
-+	rnc->ssp.logical_port_index = sci_port->physical_port_index;
-+
-+	rnc->ssp.nexus_loss_timer_enable = false;
-+	rnc->ssp.check_bit = false;
-+	rnc->ssp.is_valid = true;
-+	rnc->ssp.is_remote_node_context = true;
-+	rnc->ssp.function_number = 0;
-+	rnc->ssp.arbitration_wait_time = 0;
-+}
-+
-+/**
-+ * scic_sds_port_construct_dummy_task() - create dummy task for si workaround
-+ * @sci_port The logical port on which we need to create the
-+ *            remote node context.
-+ *            context.
-+ * @tci The remote node index for this remote node context.
-+ *
-+ * This routine will construct a dummy task context data structure.  This
-+ * structure will be posted to the hardwre to work around a scheduler error
-+ * in the hardware.
-+ *
-+ */
-+void scic_sds_port_construct_dummy_task(struct scic_sds_port *sci_port, u16 tci)
-+{
-+	struct scu_task_context *task_context;
-+
-+	task_context = scic_sds_controller_get_task_context_buffer(sci_port->owning_controller, tci);
-+
-+	memset(task_context, 0, sizeof(struct scu_task_context));
-+
-+	task_context->abort = 0;
-+	task_context->priority = 0;
-+	task_context->initiator_request = 1;
-+	task_context->connection_rate = 1;
-+	task_context->protocol_engine_index = 0;
-+	task_context->logical_port_index = sci_port->physical_port_index;
-+	task_context->protocol_type = SCU_TASK_CONTEXT_PROTOCOL_SSP;
-+	task_context->task_index = scic_sds_io_tag_get_index(tci);
-+	task_context->valid = SCU_TASK_CONTEXT_VALID;
-+	task_context->context_type = SCU_TASK_CONTEXT_TYPE;
-+
-+	task_context->remote_node_index = sci_port->reserved_rni;
-+	task_context->command_code = 0;
-+
-+	task_context->link_layer_control = 0;
-+	task_context->do_not_dma_ssp_good_response = 1;
-+	task_context->strict_ordering = 0;
-+	task_context->control_frame = 0;
-+	task_context->timeout_enable = 0;
-+	task_context->block_guard_enable = 0;
-+
-+	task_context->address_modifier = 0;
-+
-+	task_context->task_phase = 0x01;
-+}
-+
-+void scic_sds_port_destroy_dummy_resources(struct scic_sds_port *sci_port)
-+{
-+	struct scic_sds_controller *scic = sci_port->owning_controller;
-+
-+	if (sci_port->reserved_tci != SCU_DUMMY_INDEX)
-+		scic_controller_free_io_tag(scic, sci_port->reserved_tci);
-+
-+	if (sci_port->reserved_rni != SCU_DUMMY_INDEX)
-+		scic_sds_remote_node_table_release_remote_node_index(&scic->available_remote_nodes,
-+								     1, sci_port->reserved_rni);
-+
-+	sci_port->reserved_rni = SCU_DUMMY_INDEX;
-+	sci_port->reserved_tci = SCU_DUMMY_INDEX;
-+}
-+
-+void scic_sds_port_construct(struct scic_sds_port *sci_port, u8 port_index,
-+			     struct scic_sds_controller *scic)
-+{
-+	u32 index;
-+
-+	sci_base_port_construct(&sci_port->parent, scic_sds_port_state_table);
-+
-+	sci_base_state_machine_construct(
-+		scic_sds_port_get_ready_substate_machine(sci_port),
-+		&sci_port->parent.parent,
-+		scic_sds_port_ready_substate_table,
-+		SCIC_SDS_PORT_READY_SUBSTATE_WAITING
-+		);
-+
-+	sci_port->logical_port_index  = SCIC_SDS_DUMMY_PORT;
-+	sci_port->physical_port_index = port_index;
-+	sci_port->active_phy_mask     = 0;
-+
-+	sci_port->owning_controller = scic;
-+
-+	sci_port->started_request_count = 0;
-+	sci_port->assigned_device_count = 0;
-+
-+	sci_port->reserved_rni = SCU_DUMMY_INDEX;
-+	sci_port->reserved_tci = SCU_DUMMY_INDEX;
-+
-+	sci_port->timer_handle = NULL;
-+
-+	sci_port->port_task_scheduler_registers = NULL;
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++)
-+		sci_port->phy_table[index] = NULL;
-+}
-+
-+/**
-+ * This method performs initialization of the supplied port. Initialization
-+ *    includes: - state machine initialization - member variable initialization
-+ *    - configuring the phy_mask
-+ * @this_port:
-+ * @transport_layer_registers:
-+ * @port_task_scheduler_registers:
-+ * @port_configuration_regsiter:
-+ *
-+ * enum sci_status SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION This value is returned
-+ * if the phy being added to the port
-+ */
-+enum sci_status scic_sds_port_initialize(
-+	struct scic_sds_port *this_port,
-+	void __iomem *port_task_scheduler_registers,
-+	void __iomem *port_configuration_regsiter,
-+	void __iomem *viit_registers)
-+{
-+	this_port->port_task_scheduler_registers  = port_task_scheduler_registers;
-+	this_port->port_pe_configuration_register = port_configuration_regsiter;
-+	this_port->viit_registers                 = viit_registers;
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/**
-+ *
-+ * @this_port: This is the struct scic_sds_port object for which has a phy that has
-+ *    gone link up.
-+ * @the_phy: This is the struct scic_sds_phy object that has gone link up.
-+ * @do_notify_user: This parameter specifies whether to inform the user (via
-+ *    scic_cb_port_link_up()) as to the fact that a new phy as become ready.
-+ *
-+ * This method is the a general link up handler for the struct scic_sds_port object.
-+ * This function will determine if this struct scic_sds_phy can be assigned to this
-+ * struct scic_sds_port object. If the struct scic_sds_phy object can is not a valid PHY for
-+ * this port then the function will notify the SCIC_USER. A PHY can only be
-+ * part of a port if it's attached SAS ADDRESS is the same as all other PHYs in
-+ * the same port. none
-+ */
-+void scic_sds_port_general_link_up_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy,
-+	bool do_notify_user)
-+{
-+	struct sci_sas_address port_sas_address;
-+	struct sci_sas_address phy_sas_address;
-+
-+	scic_sds_port_get_attached_sas_address(this_port, &port_sas_address);
-+	scic_sds_phy_get_attached_sas_address(the_phy, &phy_sas_address);
-+
-+	/*
-+	 * If the SAS address of the new phy matches the SAS address of
-+	 * other phys in the port OR this is the first phy in the port,
-+	 * then activate the phy and allow it to be used for operations
-+	 * in this port. */
-+	if (
-+		(
-+			(phy_sas_address.high == port_sas_address.high)
-+			&& (phy_sas_address.low  == port_sas_address.low)
-+		)
-+		|| (this_port->active_phy_mask == 0)
-+		) {
-+		scic_sds_port_activate_phy(this_port, the_phy, do_notify_user);
-+
-+		if (this_port->parent.state_machine.current_state_id
-+		    == SCI_BASE_PORT_STATE_RESETTING) {
-+			sci_base_state_machine_change_state(
-+				&this_port->parent.state_machine, SCI_BASE_PORT_STATE_READY
-+				);
-+		}
-+	} else {
-+		scic_sds_port_invalid_link_up(this_port, the_phy);
-+	}
-+}
-+
-+enum sci_status scic_port_stop(struct scic_sds_port *port)
-+{
-+	return port->state_handlers->parent.stop_handler(&port->parent);
-+}
-+
-+enum sci_status scic_port_get_properties(
-+	struct scic_sds_port *port,
-+	struct scic_port_properties *prop)
-+{
-+	if ((port == NULL) ||
-+	    (port->logical_port_index == SCIC_SDS_DUMMY_PORT))
-+		return SCI_FAILURE_INVALID_PORT;
-+
-+	prop->index    = port->logical_port_index;
-+	prop->phy_mask = scic_sds_port_get_phys(port);
-+	scic_sds_port_get_sas_address(port, &prop->local.sas_address);
-+	scic_sds_port_get_protocols(port, &prop->local.protocols);
-+	scic_sds_port_get_attached_sas_address(port, &prop->remote.sas_address);
-+	scic_sds_port_get_attached_protocols(port, &prop->remote.protocols);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+
-+enum sci_status scic_port_hard_reset(
-+	struct scic_sds_port *port,
-+	u32 reset_timeout)
-+{
-+	return port->state_handlers->parent.reset_handler(
-+		       &port->parent, reset_timeout);
-+}
-+
-+/**
-+ * This method assigns the direct attached device ID for this port.
-+ *
-+ * @param[in] this_port The port for which the direct attached device id is to
-+ *       be assigned.
-+ * @param[in] device_id The direct attached device ID to assign to the port.
-+ *       This will be the RNi for the device
-+ */
-+void scic_sds_port_setup_transports(
-+	struct scic_sds_port *this_port,
-+	u32 device_id)
-+{
-+	u8 index;
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		if (this_port->active_phy_mask & (1 << index))
-+			scic_sds_phy_setup_transport(this_port->phy_table[index], device_id);
-+	}
-+}
-+
-+/**
-+ *
-+ * @this_port: This is the port on which the phy should be enabled.
-+ * @the_phy: This is the specific phy which to enable.
-+ * @do_notify_user: This parameter specifies whether to inform the user (via
-+ *    scic_cb_port_link_up()) as to the fact that a new phy as become ready.
-+ *
-+ * This method will activate the phy in the port. Activation includes: - adding
-+ * the phy to the port - enabling the Protocol Engine in the silicon. -
-+ * notifying the user that the link is up. none
-+ */
-+void scic_sds_port_activate_phy(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy,
-+	bool do_notify_user)
-+{
-+	struct scic_sds_controller *controller;
-+	struct sci_sas_identify_address_frame_protocols protocols;
-+
-+	controller = scic_sds_port_get_controller(this_port);
-+	scic_sds_phy_get_attached_phy_protocols(the_phy, &protocols);
-+
-+	/* If this is sata port then the phy has already been resumed */
-+	if (!protocols.u.bits.stp_target) {
-+		scic_sds_phy_resume(the_phy);
-+	}
-+
-+	this_port->active_phy_mask |= 1 << the_phy->phy_index;
-+
-+	scic_sds_controller_clear_invalid_phy(controller, the_phy);
-+
-+	if (do_notify_user == true)
-+		isci_event_port_link_up(this_port->owning_controller,
-+					this_port,
-+					the_phy);
-+}
-+
-+/**
-+ *
-+ * @this_port: This is the port on which the phy should be deactivated.
-+ * @the_phy: This is the specific phy that is no longer active in the port.
-+ * @do_notify_user: This parameter specifies whether to inform the user (via
-+ *    isci_event_port_link_down()) as to the fact that a new phy as become
-+ *    ready.
-+ *
-+ * This method will deactivate the supplied phy in the port. none
-+ */
-+void scic_sds_port_deactivate_phy(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy,
-+	bool do_notify_user)
-+{
-+	this_port->active_phy_mask &= ~(1 << the_phy->phy_index);
-+
-+	the_phy->max_negotiated_speed = SCI_SAS_NO_LINK_RATE;
-+
-+	/* Re-assign the phy back to the LP as if it were a narrow port */
-+	SCU_PCSPExCR_WRITE(this_port, the_phy->phy_index, the_phy->phy_index);
-+
-+	if (do_notify_user == true)
-+		isci_event_port_link_down(this_port->owning_controller,
-+					  this_port,
-+					  the_phy);
-+}
-+
-+/**
-+ *
-+ * @this_port: This is the port on which the phy should be disabled.
-+ * @the_phy: This is the specific phy which to disabled.
-+ *
-+ * This method will disable the phy and report that the phy is not valid for
-+ * this port object. None
-+ */
-+static void scic_sds_port_invalid_link_up(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy)
-+{
-+	struct scic_sds_controller *controller = scic_sds_port_get_controller(this_port);
-+
-+	/*
-+	 * Check to see if we have alreay reported this link as bad and if not go
-+	 * ahead and tell the SCI_USER that we have discovered an invalid link. */
-+	if ((controller->invalid_phy_mask & (1 << the_phy->phy_index)) == 0) {
-+		scic_sds_controller_set_invalid_phy(controller, the_phy);
-+
-+		isci_event_port_invalid_link_up(controller, this_port, the_phy);
-+	}
-+}
-+
-+/**
-+ * This method returns false if the port only has a single phy object assigned.
-+ *     If there are no phys or more than one phy then the method will return
-+ *    true.
-+ * @this_port: The port for which the wide port condition is to be checked.
-+ *
-+ * bool true Is returned if this is a wide ported port. false Is returned if
-+ * this is a narrow port.
-+ */
-+static bool scic_sds_port_is_wide(struct scic_sds_port *this_port)
-+{
-+	u32 index;
-+	u32 phy_count = 0;
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		if (this_port->phy_table[index] != NULL) {
-+			phy_count++;
-+		}
-+	}
-+
-+	return phy_count != 1;
-+}
-+
-+/**
-+ * This method is called by the PHY object when the link is detected. if the
-+ *    port wants the PHY to continue on to the link up state then the port
-+ *    layer must return true.  If the port object returns false the phy object
-+ *    must halt its attempt to go link up.
-+ * @this_port: The port associated with the phy object.
-+ * @the_phy: The phy object that is trying to go link up.
-+ *
-+ * true if the phy object can continue to the link up condition. true Is
-+ * returned if this phy can continue to the ready state. false Is returned if
-+ * can not continue on to the ready state. This notification is in place for
-+ * wide ports and direct attached phys.  Since there are no wide ported SATA
-+ * devices this could become an invalid port configuration.
-+ */
-+bool scic_sds_port_link_detected(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy)
-+{
-+	struct sci_sas_identify_address_frame_protocols protocols;
-+
-+	scic_sds_phy_get_attached_phy_protocols(the_phy, &protocols);
-+
-+	if (
-+		(this_port->logical_port_index != SCIC_SDS_DUMMY_PORT)
-+		&& (protocols.u.bits.stp_target)
-+		&& scic_sds_port_is_wide(this_port)
-+		) {
-+		scic_sds_port_invalid_link_up(this_port, the_phy);
-+
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
-+/**
-+ * This method is the entry point for the phy to inform the port that it is now
-+ *    in a ready state
-+ * @this_port:
-+ *
-+ *
-+ */
-+void scic_sds_port_link_up(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy)
-+{
-+	the_phy->is_in_link_training = false;
-+
-+	this_port->state_handlers->link_up_handler(this_port, the_phy);
-+}
-+
-+/**
-+ * This method is the entry point for the phy to inform the port that it is no
-+ *    longer in a ready state
-+ * @this_port:
-+ *
-+ *
-+ */
-+void scic_sds_port_link_down(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy)
-+{
-+	this_port->state_handlers->link_down_handler(this_port, the_phy);
-+}
-+
-+/**
-+ * This method is called to start an IO request on this port.
-+ * @this_port:
-+ * @the_device:
-+ * @the_io_request:
-+ *
-+ * enum sci_status
-+ */
-+enum sci_status scic_sds_port_start_io(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_remote_device *the_device,
-+	struct scic_sds_request *the_io_request)
-+{
-+	return this_port->state_handlers->start_io_handler(
-+		       this_port, the_device, the_io_request);
-+}
-+
-+/**
-+ * This method is called to complete an IO request to the port.
-+ * @this_port:
-+ * @the_device:
-+ * @the_io_request:
-+ *
-+ * enum sci_status
-+ */
-+enum sci_status scic_sds_port_complete_io(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_remote_device *the_device,
-+	struct scic_sds_request *the_io_request)
-+{
-+	return this_port->state_handlers->complete_io_handler(
-+		       this_port, the_device, the_io_request);
-+}
-+
-+/**
-+ * This method is provided to timeout requests for port operations. Mostly its
-+ *    for the port reset operation.
-+ *
-+ *
-+ */
-+static void scic_sds_port_timeout_handler(void *port)
-+{
-+	struct scic_sds_port *this_port = port;
-+	u32 current_state;
-+
-+	current_state = sci_base_state_machine_get_state(
-+		&this_port->parent.state_machine);
-+
-+	if (current_state == SCI_BASE_PORT_STATE_RESETTING) {
-+		/*
-+		 * if the port is still in the resetting state then the timeout fired
-+		 * before the reset completed. */
-+		sci_base_state_machine_change_state(
-+			&this_port->parent.state_machine,
-+			SCI_BASE_PORT_STATE_FAILED
-+			);
-+	} else if (current_state == SCI_BASE_PORT_STATE_STOPPED) {
-+		/*
-+		 * if the port is stopped then the start request failed
-+		 * In this case stay in the stopped state. */
-+		dev_err(sciport_to_dev(this_port),
-+			"%s: SCIC Port 0x%p failed to stop before tiemout.\n",
-+			__func__,
-+			this_port);
-+	} else if (current_state == SCI_BASE_PORT_STATE_STOPPING) {
-+		/* if the port is still stopping then the stop has not completed */
-+		isci_event_port_stop_complete(
-+			scic_sds_port_get_controller(this_port),
-+			port,
-+			SCI_FAILURE_TIMEOUT
-+			);
-+	} else {
-+		/*
-+		 * The port is in the ready state and we have a timer reporting a timeout
-+		 * this should not happen. */
-+		dev_err(sciport_to_dev(this_port),
-+			"%s: SCIC Port 0x%p is processing a timeout operation "
-+			"in state %d.\n",
-+			__func__,
-+			this_port,
-+			current_state);
-+	}
-+}
-+
-+/* --------------------------------------------------------------------------- */
-+
-+/**
-+ * This function updates the hardwares VIIT entry for this port.
-+ *
-+ *
-+ */
-+void scic_sds_port_update_viit_entry(struct scic_sds_port *this_port)
-+{
-+	struct sci_sas_address sas_address;
-+
-+	scic_sds_port_get_sas_address(this_port, &sas_address);
-+
-+	scu_port_viit_register_write(
-+		this_port, initiator_sas_address_hi, sas_address.high);
-+
-+	scu_port_viit_register_write(
-+		this_port, initiator_sas_address_lo, sas_address.low);
-+
-+	/* This value get cleared just in case its not already cleared */
-+	scu_port_viit_register_write(
-+		this_port, reserved, 0);
-+
-+	/* We are required to update the status register last */
-+	scu_port_viit_register_write(
-+		this_port, status, (
-+			SCU_VIIT_ENTRY_ID_VIIT
-+			| SCU_VIIT_IPPT_INITIATOR
-+			| ((1 << this_port->physical_port_index) << SCU_VIIT_ENTRY_LPVIE_SHIFT)
-+			| SCU_VIIT_STATUS_ALL_VALID
-+			)
-+		);
-+}
-+
-+/**
-+ * This method returns the maximum allowed speed for data transfers on this
-+ *    port.  This maximum allowed speed evaluates to the maximum speed of the
-+ *    slowest phy in the port.
-+ * @this_port: This parameter specifies the port for which to retrieve the
-+ *    maximum allowed speed.
-+ *
-+ * This method returns the maximum negotiated speed of the slowest phy in the
-+ * port.
-+ */
-+enum sci_sas_link_rate scic_sds_port_get_max_allowed_speed(
-+	struct scic_sds_port *this_port)
-+{
-+	u16 index             = 0;
-+	enum sci_sas_link_rate max_allowed_speed = SCI_SAS_600_GB;
-+	struct scic_sds_phy *phy               = NULL;
-+
-+	/*
-+	 * Loop through all of the phys in this port and find the phy with the
-+	 * lowest maximum link rate. */
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		phy = this_port->phy_table[index];
-+		if (
-+			(phy != NULL)
-+			&& (scic_sds_port_active_phy(this_port, phy) == true)
-+			&& (phy->max_negotiated_speed < max_allowed_speed)
-+			)
-+			max_allowed_speed = phy->max_negotiated_speed;
-+	}
-+
-+	return max_allowed_speed;
-+}
-+
-+
-+/**
-+ * This method passes the event to core user.
-+ * @this_port: The port that a BCN happens.
-+ * @this_phy: The phy that receives BCN.
-+ *
-+ */
-+void scic_sds_port_broadcast_change_received(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *this_phy)
-+{
-+	/* notify the user. */
-+	isci_event_port_bc_change_primitive_received(
-+		this_port->owning_controller, this_port, this_phy
-+		);
-+}
-+
-+
-+/**
-+ * This API methhod enables the broadcast change notification from underneath
-+ *    hardware.
-+ * @this_port: The port that a BCN had been disabled from.
-+ *
-+ */
-+void scic_port_enable_broadcast_change_notification(
-+	struct scic_sds_port *port)
-+{
-+	struct scic_sds_phy *phy;
-+	u32 register_value;
-+	u8 index;
-+
-+	/* Loop through all of the phys to enable BCN. */
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		phy = port->phy_table[index];
-+		if (phy != NULL) {
-+			register_value = SCU_SAS_LLCTL_READ(phy);
-+
-+			/* clear the bit by writing 1. */
-+			SCU_SAS_LLCTL_WRITE(phy, register_value);
-+		}
-+	}
-+}
-+
-+/*
-+ * ****************************************************************************
-+ * *  READY SUBSTATE HANDLERS
-+ * **************************************************************************** */
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This method is the general ready state stop handler for the struct scic_sds_port
-+ * object.  This function will transition the ready substate machine to its
-+ * final state. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_port_ready_substate_stop_handler(
-+	struct sci_base_port *port)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+
-+	sci_base_state_machine_change_state(
-+		&this_port->parent.state_machine,
-+		SCI_BASE_PORT_STATE_STOPPING
-+		);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ * @device: This is the struct sci_base_remote_device object which is not used in this
-+ *    function.
-+ * @io_request: This is the struct sci_base_request object which is not used in this
-+ *    function.
-+ *
-+ * This method is the general ready substate complete io handler for the
-+ * struct scic_sds_port object.  This function decrments the outstanding request count
-+ * for this port object. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_port_ready_substate_complete_io_handler(
-+	struct scic_sds_port *port,
-+	struct scic_sds_remote_device *device,
-+	struct scic_sds_request *io_request)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+
-+	scic_sds_port_decrement_request_count(this_port);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+static enum sci_status scic_sds_port_ready_substate_add_phy_handler(
-+	struct sci_base_port *port,
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+	struct scic_sds_phy *this_phy  = (struct scic_sds_phy *)phy;
-+	enum sci_status status;
-+
-+	status = scic_sds_port_set_phy(this_port, this_phy);
-+
-+	if (status == SCI_SUCCESS) {
-+		scic_sds_port_general_link_up_handler(this_port, this_phy, true);
-+
-+		this_port->not_ready_reason = SCIC_PORT_NOT_READY_RECONFIGURING;
-+
-+		sci_base_state_machine_change_state(
-+			&this_port->ready_substate_machine,
-+			SCIC_SDS_PORT_READY_SUBSTATE_CONFIGURING
-+			);
-+	}
-+
-+	return status;
-+}
-+
-+
-+static enum sci_status scic_sds_port_ready_substate_remove_phy_handler(
-+	struct sci_base_port *port,
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+	struct scic_sds_phy *this_phy  = (struct scic_sds_phy *)phy;
-+	enum sci_status status;
-+
-+	status = scic_sds_port_clear_phy(this_port, this_phy);
-+
-+	if (status == SCI_SUCCESS) {
-+		scic_sds_port_deactivate_phy(this_port, this_phy, true);
-+
-+		this_port->not_ready_reason = SCIC_PORT_NOT_READY_RECONFIGURING;
-+
-+		sci_base_state_machine_change_state(
-+			&this_port->ready_substate_machine,
-+			SCIC_SDS_PORT_READY_SUBSTATE_CONFIGURING
-+			);
-+	}
-+
-+	return status;
-+}
-+
-+/*
-+ * ****************************************************************************
-+ * *  READY SUBSTATE WAITING HANDLERS
-+ * **************************************************************************** */
-+
-+/**
-+ *
-+ * @this_port: This is the struct scic_sds_port object that which has a phy that has
-+ *    gone link up.
-+ * @the_phy: This is the struct scic_sds_phy object that has gone link up.
-+ *
-+ * This method is the ready waiting substate link up handler for the
-+ * struct scic_sds_port object.  This methos will report the link up condition for
-+ * this port and will transition to the ready operational substate. none
-+ */
-+static void scic_sds_port_ready_waiting_substate_link_up_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy)
-+{
-+	/*
-+	 * Since this is the first phy going link up for the port we can just enable
-+	 * it and continue. */
-+	scic_sds_port_activate_phy(this_port, the_phy, true);
-+
-+	sci_base_state_machine_change_state(
-+		&this_port->ready_substate_machine,
-+		SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL
-+		);
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ * @device: This is the struct sci_base_remote_device object which is not used in this
-+ *    request.
-+ * @io_request: This is the struct sci_base_request object which is not used in this
-+ *    function.
-+ *
-+ * This method is the ready waiting substate start io handler for the
-+ * struct scic_sds_port object. The port object can not accept new requests so the
-+ * request is failed. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+static enum sci_status scic_sds_port_ready_waiting_substate_start_io_handler(
-+	struct scic_sds_port *port,
-+	struct scic_sds_remote_device *device,
-+	struct scic_sds_request *io_request)
-+{
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/*
-+ * ****************************************************************************
-+ * *  READY SUBSTATE OPERATIONAL HANDLERS
-+ * **************************************************************************** */
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ * @timeout: This is the timeout for the reset request to complete.
-+ *
-+ * This method will casue the port to reset. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_port_ready_operational_substate_reset_handler(
-+	struct sci_base_port *port,
-+	u32 timeout)
-+{
-+	enum sci_status status = SCI_FAILURE_INVALID_PHY;
-+	u32 phy_index;
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+	struct scic_sds_phy *selected_phy = NULL;
-+
-+
-+	/* Select a phy on which we can send the hard reset request. */
-+	for (
-+		phy_index = 0;
-+		(phy_index < SCI_MAX_PHYS)
-+		&& (selected_phy == NULL);
-+		phy_index++
-+		) {
-+		selected_phy = this_port->phy_table[phy_index];
-+
-+		if (
-+			(selected_phy != NULL)
-+			&& !scic_sds_port_active_phy(this_port, selected_phy)
-+			) {
-+			/* We found a phy but it is not ready select different phy */
-+			selected_phy = NULL;
-+		}
-+	}
-+
-+	/* If we have a phy then go ahead and start the reset procedure */
-+	if (selected_phy != NULL) {
-+		status = scic_sds_phy_reset(selected_phy);
-+
-+		if (status == SCI_SUCCESS) {
-+			isci_event_timer_start(
-+				scic_sds_port_get_controller(this_port),
-+				this_port->timer_handle,
-+				timeout
-+				);
-+
-+			this_port->not_ready_reason = SCIC_PORT_NOT_READY_HARD_RESET_REQUESTED;
-+
-+			sci_base_state_machine_change_state(
-+				&this_port->parent.state_machine,
-+				SCI_BASE_PORT_STATE_RESETTING
-+				);
-+		}
-+	}
-+
-+	return status;
-+}
-+
-+/**
-+ * scic_sds_port_ready_operational_substate_link_up_handler() -
-+ * @this_port: This is the struct scic_sds_port object that which has a phy that has
-+ *    gone link up.
-+ * @the_phy: This is the struct scic_sds_phy object that has gone link up.
-+ *
-+ * This method is the ready operational substate link up handler for the
-+ * struct scic_sds_port object. This function notifies the SCI User that the phy has
-+ * gone link up. none
-+ */
-+static void scic_sds_port_ready_operational_substate_link_up_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy)
-+{
-+	scic_sds_port_general_link_up_handler(this_port, the_phy, true);
-+}
-+
-+/**
-+ * scic_sds_port_ready_operational_substate_link_down_handler() -
-+ * @this_port: This is the struct scic_sds_port object that which has a phy that has
-+ *    gone link down.
-+ * @the_phy: This is the struct scic_sds_phy object that has gone link down.
-+ *
-+ * This method is the ready operational substate link down handler for the
-+ * struct scic_sds_port object. This function notifies the SCI User that the phy has
-+ * gone link down and if this is the last phy in the port the port will change
-+ * state to the ready waiting substate. none
-+ */
-+static void scic_sds_port_ready_operational_substate_link_down_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy)
-+{
-+	scic_sds_port_deactivate_phy(this_port, the_phy, true);
-+
-+	/*
-+	 * If there are no active phys left in the port, then transition
-+	 * the port to the WAITING state until such time as a phy goes
-+	 * link up. */
-+	if (this_port->active_phy_mask == 0) {
-+		sci_base_state_machine_change_state(
-+			scic_sds_port_get_ready_substate_machine(this_port),
-+			SCIC_SDS_PORT_READY_SUBSTATE_WAITING
-+			);
-+	}
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ * @device: This is the struct sci_base_remote_device object which is not used in this
-+ *    function.
-+ * @io_request: This is the struct sci_base_request object which is not used in this
-+ *    function.
-+ *
-+ * This method is the ready operational substate start io handler for the
-+ * struct scic_sds_port object.  This function incremetns the outstanding request
-+ * count for this port object. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_port_ready_operational_substate_start_io_handler(
-+	struct scic_sds_port *port,
-+	struct scic_sds_remote_device *device,
-+	struct scic_sds_request *io_request)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+
-+	scic_sds_port_increment_request_count(this_port);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/*
-+ * ****************************************************************************
-+ * *  READY SUBSTATE OPERATIONAL HANDLERS
-+ * **************************************************************************** */
-+
-+/**
-+ * scic_sds_port_ready_configuring_substate_add_phy_handler() -
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port add phy request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+static enum sci_status scic_sds_port_ready_configuring_substate_add_phy_handler(
-+	struct sci_base_port *port,
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+	struct scic_sds_phy *this_phy  = (struct scic_sds_phy *)phy;
-+	enum sci_status status;
-+
-+	status = scic_sds_port_set_phy(this_port, this_phy);
-+
-+	if (status == SCI_SUCCESS) {
-+		scic_sds_port_general_link_up_handler(this_port, this_phy, true);
-+
-+		/*
-+		 * Re-enter the configuring state since this may be the last phy in
-+		 * the port. */
-+		sci_base_state_machine_change_state(
-+			&this_port->ready_substate_machine,
-+			SCIC_SDS_PORT_READY_SUBSTATE_CONFIGURING
-+			);
-+	}
-+
-+	return status;
-+}
-+
-+/**
-+ * scic_sds_port_ready_configuring_substate_remove_phy_handler() -
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port remove phy request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+static enum sci_status scic_sds_port_ready_configuring_substate_remove_phy_handler(
-+	struct sci_base_port *port,
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+	struct scic_sds_phy *this_phy  = (struct scic_sds_phy *)phy;
-+	enum sci_status status;
-+
-+	status = scic_sds_port_clear_phy(this_port, this_phy);
-+
-+	if (status == SCI_SUCCESS) {
-+		scic_sds_port_deactivate_phy(this_port, this_phy, true);
-+
-+		/*
-+		 * Re-enter the configuring state since this may be the last phy in
-+		 * the port. */
-+		sci_base_state_machine_change_state(
-+			&this_port->ready_substate_machine,
-+			SCIC_SDS_PORT_READY_SUBSTATE_CONFIGURING
-+			);
-+	}
-+
-+	return status;
-+}
-+
-+/**
-+ * scic_sds_port_ready_configuring_substate_complete_io_handler() -
-+ * @port: This is the port that is being requested to complete the io request.
-+ * @device: This is the device on which the io is completing.
-+ *
-+ * This method will decrement the outstanding request count for this port. If
-+ * the request count goes to 0 then the port can be reprogrammed with its new
-+ * phy data.
-+ */
-+static enum sci_status scic_sds_port_ready_configuring_substate_complete_io_handler(
-+	struct scic_sds_port *port,
-+	struct scic_sds_remote_device *device,
-+	struct scic_sds_request *io_request)
-+{
-+	scic_sds_port_decrement_request_count(port);
-+
-+	if (port->started_request_count == 0) {
-+		sci_base_state_machine_change_state(
-+			&port->ready_substate_machine,
-+			SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL
-+			);
-+	}
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/* --------------------------------------------------------------------------- */
-+
-+struct scic_sds_port_state_handler
-+scic_sds_port_ready_substate_handler_table[SCIC_SDS_PORT_READY_MAX_SUBSTATES] =
-+{
-+	/* SCIC_SDS_PORT_READY_SUBSTATE_WAITING */
-+	{
-+		{
-+			scic_sds_port_default_start_handler,
-+			scic_sds_port_ready_substate_stop_handler,
-+			scic_sds_port_default_destruct_handler,
-+			scic_sds_port_default_reset_handler,
-+			scic_sds_port_ready_substate_add_phy_handler,
-+			scic_sds_port_default_remove_phy_handler
-+		},
-+		scic_sds_port_default_frame_handler,
-+		scic_sds_port_default_event_handler,
-+		scic_sds_port_ready_waiting_substate_link_up_handler,
-+		scic_sds_port_default_link_down_handler,
-+		scic_sds_port_ready_waiting_substate_start_io_handler,
-+		scic_sds_port_ready_substate_complete_io_handler,
-+	},
-+	/* SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL */
-+	{
-+		{
-+			scic_sds_port_default_start_handler,
-+			scic_sds_port_ready_substate_stop_handler,
-+			scic_sds_port_default_destruct_handler,
-+			scic_sds_port_ready_operational_substate_reset_handler,
-+			scic_sds_port_ready_substate_add_phy_handler,
-+			scic_sds_port_ready_substate_remove_phy_handler
-+		},
-+		scic_sds_port_default_frame_handler,
-+		scic_sds_port_default_event_handler,
-+		scic_sds_port_ready_operational_substate_link_up_handler,
-+		scic_sds_port_ready_operational_substate_link_down_handler,
-+		scic_sds_port_ready_operational_substate_start_io_handler,
-+		scic_sds_port_ready_substate_complete_io_handler
-+	},
-+	/* SCIC_SDS_PORT_READY_SUBSTATE_CONFIGURING */
-+	{
-+		{
-+			scic_sds_port_default_start_handler,
-+			scic_sds_port_ready_substate_stop_handler,
-+			scic_sds_port_default_destruct_handler,
-+			scic_sds_port_default_reset_handler,
-+			scic_sds_port_ready_configuring_substate_add_phy_handler,
-+			scic_sds_port_ready_configuring_substate_remove_phy_handler
-+		},
-+		scic_sds_port_default_frame_handler,
-+		scic_sds_port_default_event_handler,
-+		scic_sds_port_default_link_up_handler,
-+		scic_sds_port_default_link_down_handler,
-+		scic_sds_port_default_start_io_handler,
-+		scic_sds_port_ready_configuring_substate_complete_io_handler
-+	}
-+};
-+
-+
-+/**
-+ * scic_sds_port_set_ready_state_handlers() -
-+ *
-+ * This macro sets the port ready substate handlers.
-+ */
-+#define scic_sds_port_set_ready_state_handlers(port, state_id) \
-+	scic_sds_port_set_state_handlers(\
-+		port, &scic_sds_port_ready_substate_handler_table[(state_id)] \
-+		)
-+
-+/*
-+ * ******************************************************************************
-+ * *  PORT STATE PRIVATE METHODS
-+ * ****************************************************************************** */
-+
-+/**
-+ *
-+ * @this_port: This is the struct scic_sds_port object to suspend.
-+ *
-+ * This method will susped the port task scheduler for this port object. none
-+ */
-+static void scic_sds_port_suspend_port_task_scheduler(
-+	struct scic_sds_port *this_port)
-+{
-+	u32 pts_control_value;
-+
-+	pts_control_value = scu_port_task_scheduler_read(this_port, control);
-+
-+	pts_control_value |= SCU_PTSxCR_GEN_BIT(SUSPEND);
-+
-+	scu_port_task_scheduler_write(this_port, control, pts_control_value);
-+}
-+
-+/**
-+ * scic_sds_port_post_dummy_request() - post dummy/workaround request
-+ * @sci_port: port to post task
-+ *
-+ * Prevent the hardware scheduler from posting new requests to the front
-+ * of the scheduler queue causing a starvation problem for currently
-+ * ongoing requests.
-+ *
-+ */
-+void scic_sds_port_post_dummy_request(struct scic_sds_port *sci_port)
-+{
-+	u32 command;
-+	struct scu_task_context *task_context;
-+	struct scic_sds_controller *scic = sci_port->owning_controller;
-+	u16 tci = sci_port->reserved_tci;
-+
-+	task_context = scic_sds_controller_get_task_context_buffer(scic, tci);
-+
-+	task_context->abort = 0;
-+
-+	command = SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_TC |
-+		  sci_port->physical_port_index << SCU_CONTEXT_COMMAND_LOGICAL_PORT_SHIFT |
-+		  tci;
-+
-+	scic_sds_controller_post_request(scic, command);
-+}
-+
-+/**
-+ * This routine will abort the dummy request.  This will alow the hardware to
-+ * power down parts of the silicon to save power.
-+ *
-+ * @sci_port: The port on which the task must be aborted.
-+ *
-+ */
-+void scic_sds_port_abort_dummy_request(struct scic_sds_port *sci_port)
-+{
-+	struct scic_sds_controller *scic = sci_port->owning_controller;
-+	u16 tci = sci_port->reserved_tci;
-+	struct scu_task_context *tc;
-+	u32 command;
-+
-+	tc = scic_sds_controller_get_task_context_buffer(scic, tci);
-+
-+	tc->abort = 1;
-+
-+	command = SCU_CONTEXT_COMMAND_REQUEST_POST_TC_ABORT |
-+		  sci_port->physical_port_index << SCU_CONTEXT_COMMAND_LOGICAL_PORT_SHIFT |
-+		  tci;
-+
-+	scic_sds_controller_post_request(scic, command);
-+}
-+
-+/**
-+ *
-+ * @this_port: This is the struct scic_sds_port object to resume.
-+ *
-+ * This method will resume the port task scheduler for this port object. none
-+ */
-+static void scic_sds_port_resume_port_task_scheduler(
-+	struct scic_sds_port *this_port)
-+{
-+	u32 pts_control_value;
-+
-+	pts_control_value = scu_port_task_scheduler_read(this_port, control);
-+
-+	pts_control_value &= ~SCU_PTSxCR_GEN_BIT(SUSPEND);
-+
-+	scu_port_task_scheduler_write(this_port, control, pts_control_value);
-+}
-+
-+/*
-+ * ******************************************************************************
-+ * *  PORT READY SUBSTATE METHODS
-+ * ****************************************************************************** */
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * entering the SCIC_SDS_PORT_READY_SUBSTATE_WAITING. This function checks the
-+ * port for any ready phys.  If there is at least one phy in a ready state then
-+ * the port transitions to the ready operational substate. none
-+ */
-+static void scic_sds_port_ready_substate_waiting_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)object;
-+
-+	scic_sds_port_set_ready_state_handlers(
-+		this_port, SCIC_SDS_PORT_READY_SUBSTATE_WAITING
-+		);
-+
-+	scic_sds_port_suspend_port_task_scheduler(this_port);
-+
-+	this_port->not_ready_reason = SCIC_PORT_NOT_READY_NO_ACTIVE_PHYS;
-+
-+	if (this_port->active_phy_mask != 0) {
-+		/* At least one of the phys on the port is ready */
-+		sci_base_state_machine_change_state(
-+			&this_port->ready_substate_machine,
-+			SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL
-+			);
-+	}
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * entering the SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL. This function sets
-+ * the state handlers for the port object, notifies the SCI User that the port
-+ * is ready, and resumes port operations. none
-+ */
-+static void scic_sds_port_ready_substate_operational_enter(
-+	struct sci_base_object *object)
-+{
-+	u32 index;
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)object;
-+
-+	scic_sds_port_set_ready_state_handlers(
-+		this_port, SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL
-+		);
-+
-+	isci_event_port_ready(
-+		scic_sds_port_get_controller(this_port), this_port
-+		);
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		if (this_port->phy_table[index] != NULL) {
-+			scic_sds_port_write_phy_assignment(
-+				this_port, this_port->phy_table[index]
-+				);
-+		}
-+	}
-+
-+	scic_sds_port_update_viit_entry(this_port);
-+
-+	scic_sds_port_resume_port_task_scheduler(this_port);
-+
-+	/* Post the dummy task for the port so the hardware can schedule
-+	 * io correctly
-+	 */
-+	scic_sds_port_post_dummy_request(this_port);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * exiting the SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL. This function reports
-+ * the port not ready and suspends the port task scheduler. none
-+ */
-+static void scic_sds_port_ready_substate_operational_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)object;
-+
-+/*
-+ * Kill the dummy task for this port if it has not yet posted
-+ * the hardware will treat this as a NOP and just return abort
-+ * complete.
-+ */
-+	scic_sds_port_abort_dummy_request(this_port);
-+
-+	isci_event_port_not_ready(
-+		scic_sds_port_get_controller(this_port),
-+		this_port,
-+		this_port->not_ready_reason
-+		);
-+}
-+
-+/*
-+ * ******************************************************************************
-+ * *  PORT READY CONFIGURING METHODS
-+ * ****************************************************************************** */
-+
-+/**
-+ * scic_sds_port_ready_substate_configuring_enter() -
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * exiting the SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL. This function reports
-+ * the port not ready and suspends the port task scheduler. none
-+ */
-+static void scic_sds_port_ready_substate_configuring_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)object;
-+
-+	scic_sds_port_set_ready_state_handlers(
-+		this_port, SCIC_SDS_PORT_READY_SUBSTATE_CONFIGURING
-+		);
-+
-+	if (this_port->active_phy_mask == 0) {
-+		isci_event_port_not_ready(
-+			scic_sds_port_get_controller(this_port),
-+			this_port,
-+			SCIC_PORT_NOT_READY_NO_ACTIVE_PHYS
-+			);
-+
-+		sci_base_state_machine_change_state(
-+			&this_port->ready_substate_machine,
-+			SCIC_SDS_PORT_READY_SUBSTATE_WAITING
-+			);
-+	} else if (this_port->started_request_count == 0) {
-+		sci_base_state_machine_change_state(
-+			&this_port->ready_substate_machine,
-+			SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL
-+			);
-+	}
-+}
-+
-+static void scic_sds_port_ready_substate_configuring_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)object;
-+
-+	scic_sds_port_suspend_port_task_scheduler(this_port);
-+}
-+
-+/* --------------------------------------------------------------------------- */
-+
-+const struct sci_base_state scic_sds_port_ready_substate_table[] = {
-+	[SCIC_SDS_PORT_READY_SUBSTATE_WAITING] = {
-+		.enter_state = scic_sds_port_ready_substate_waiting_enter,
-+	},
-+	[SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL] = {
-+		.enter_state = scic_sds_port_ready_substate_operational_enter,
-+		.exit_state  = scic_sds_port_ready_substate_operational_exit
-+	},
-+	[SCIC_SDS_PORT_READY_SUBSTATE_CONFIGURING] = {
-+		.enter_state = scic_sds_port_ready_substate_configuring_enter,
-+		.exit_state  = scic_sds_port_ready_substate_configuring_exit
-+	},
-+};
-+
-+/*
-+ * ***************************************************************************
-+ * *  DEFAULT HANDLERS
-+ * *************************************************************************** */
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for port a start request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_port_default_start_handler(
-+	struct sci_base_port *port)
-+{
-+	struct scic_sds_port *sci_port = (struct scic_sds_port *)port;
-+
-+	dev_warn(sciport_to_dev(sci_port),
-+		 "%s: SCIC Port 0x%p requested to start while in invalid "
-+		 "state %d\n",
-+		 __func__,
-+		 port,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(
-+				 (struct scic_sds_port *)port)));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port stop request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+static enum sci_status scic_sds_port_default_stop_handler(
-+	struct sci_base_port *port)
-+{
-+	struct scic_sds_port *sci_port = (struct scic_sds_port *)port;
-+
-+	dev_warn(sciport_to_dev(sci_port),
-+		 "%s: SCIC Port 0x%p requested to stop while in invalid "
-+		 "state %d\n",
-+		 __func__,
-+		 port,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(
-+				 (struct scic_sds_port *)port)));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port destruct request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_port_default_destruct_handler(
-+	struct sci_base_port *port)
-+{
-+	struct scic_sds_port *sci_port = (struct scic_sds_port *)port;
-+
-+	dev_warn(sciport_to_dev(sci_port),
-+		 "%s: SCIC Port 0x%p requested to destruct while in invalid "
-+		 "state %d\n",
-+		 __func__,
-+		 port,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(
-+				 (struct scic_sds_port *)port)));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ * @timeout: This is the timeout for the reset request to complete.
-+ *
-+ * This is the default method for a port reset request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_port_default_reset_handler(
-+	struct sci_base_port *port,
-+	u32 timeout)
-+{
-+	struct scic_sds_port *sci_port = (struct scic_sds_port *)port;
-+
-+	dev_warn(sciport_to_dev(sci_port),
-+		 "%s: SCIC Port 0x%p requested to reset while in invalid "
-+		 "state %d\n",
-+		 __func__,
-+		 port,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(
-+				 (struct scic_sds_port *)port)));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port add phy request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+static enum sci_status scic_sds_port_default_add_phy_handler(
-+	struct sci_base_port *port,
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_port *sci_port = (struct scic_sds_port *)port;
-+
-+	dev_warn(sciport_to_dev(sci_port),
-+		 "%s: SCIC Port 0x%p requested to add phy 0x%p while in "
-+		 "invalid state %d\n",
-+		 __func__,
-+		 port,
-+		 phy,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(
-+				 (struct scic_sds_port *)port)));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port remove phy request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_port_default_remove_phy_handler(
-+	struct sci_base_port *port,
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_port *sci_port = (struct scic_sds_port *)port;
-+
-+	dev_warn(sciport_to_dev(sci_port),
-+		 "%s: SCIC Port 0x%p requested to remove phy 0x%p while in "
-+		 "invalid state %d\n",
-+		 __func__,
-+		 port,
-+		 phy,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(
-+				 (struct scic_sds_port *)port)));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port unsolicited frame request.  It will
-+ * report a warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE Is it even
-+ * possible to receive an unsolicited frame directed to a port object?  It
-+ * seems possible if we implementing virtual functions but until then?
-+ */
-+enum sci_status scic_sds_port_default_frame_handler(
-+	struct scic_sds_port *port,
-+	u32 frame_index)
-+{
-+	dev_warn(sciport_to_dev(port),
-+		 "%s: SCIC Port 0x%p requested to process frame %d while in "
-+		 "invalid state %d\n",
-+		 __func__,
-+		 port,
-+		 frame_index,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(port)));
-+
-+	scic_sds_controller_release_frame(
-+		scic_sds_port_get_controller(port), frame_index
-+		);
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port event request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_port_default_event_handler(
-+	struct scic_sds_port *port,
-+	u32 event_code)
-+{
-+	dev_warn(sciport_to_dev(port),
-+		 "%s: SCIC Port 0x%p requested to process event 0x%x while "
-+		 "in invalid state %d\n",
-+		 __func__,
-+		 port,
-+		 event_code,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(
-+				 (struct scic_sds_port *)port)));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port link up notification.  It will report
-+ * a warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+void scic_sds_port_default_link_up_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy)
-+{
-+	dev_warn(sciport_to_dev(this_port),
-+		 "%s: SCIC Port 0x%p received link_up notification from phy "
-+		 "0x%p while in invalid state %d\n",
-+		 __func__,
-+		 this_port,
-+		 phy,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(this_port)));
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port link down notification.  It will
-+ * report a warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+void scic_sds_port_default_link_down_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy)
-+{
-+	dev_warn(sciport_to_dev(this_port),
-+		 "%s: SCIC Port 0x%p received link down notification from "
-+		 "phy 0x%p while in invalid state %d\n",
-+		 __func__,
-+		 this_port,
-+		 phy,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(this_port)));
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port start io request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_port_default_start_io_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_remote_device *device,
-+	struct scic_sds_request *io_request)
-+{
-+	dev_warn(sciport_to_dev(this_port),
-+		 "%s: SCIC Port 0x%p requested to start io request 0x%p "
-+		 "while in invalid state %d\n",
-+		 __func__,
-+		 this_port,
-+		 io_request,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(this_port)));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This is the default method for a port complete io request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+static enum sci_status scic_sds_port_default_complete_io_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_remote_device *device,
-+	struct scic_sds_request *io_request)
-+{
-+	dev_warn(sciport_to_dev(this_port),
-+		 "%s: SCIC Port 0x%p requested to complete io request 0x%p "
-+		 "while in invalid state %d\n",
-+		 __func__,
-+		 this_port,
-+		 io_request,
-+		 sci_base_state_machine_get_state(
-+			 scic_sds_port_get_base_state_machine(this_port)));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/*
-+ * ****************************************************************************
-+ * * GENERAL STATE HANDLERS
-+ * **************************************************************************** */
-+
-+/**
-+ *
-+ * @port: This is the struct scic_sds_port object on which the io request count will
-+ *    be decremented.
-+ * @device: This is the struct scic_sds_remote_device object to which the io request
-+ *    is being directed.  This parameter is not required to complete this
-+ *    operation.
-+ * @io_request: This is the request that is being completed on this port
-+ *    object.  This parameter is not required to complete this operation.
-+ *
-+ * This is a general complete io request handler for the struct scic_sds_port object.
-+ * enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_port_general_complete_io_handler(
-+	struct scic_sds_port *port,
-+	struct scic_sds_remote_device *device,
-+	struct scic_sds_request *io_request)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+
-+	scic_sds_port_decrement_request_count(this_port);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/*
-+ * ****************************************************************************
-+ * * STOPPED STATE HANDLERS
-+ * **************************************************************************** */
-+
-+/**
-+ * scic_sds_port_stopped_state_start_handler() - stop a port from "started"
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This method takes the struct scic_sds_port from a stopped state and attempts to
-+ * start it.  To start a port it must have no assiged devices and it must have
-+ * at least one phy assigned to it.  If those conditions are met then the port
-+ * can transition to the ready state. enum sci_status
-+ * SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION This struct scic_sds_port object could
-+ * not be started because the port configuration is not valid. SCI_SUCCESS the
-+ * start request is successful and the struct scic_sds_port object has transitioned to
-+ * the SCI_BASE_PORT_STATE_READY.
-+ */
-+static enum sci_status scic_sds_port_stopped_state_start_handler(struct sci_base_port *base_port)
-+{
-+	struct scic_sds_port *sci_port = container_of(base_port, typeof(*sci_port), parent);
-+	struct scic_sds_controller *scic = sci_port->owning_controller;
-+	enum sci_status status = SCI_SUCCESS;
-+	u32 phy_mask;
-+
-+	if (sci_port->assigned_device_count > 0) {
-+		/*
-+		 * / @todo This is a start failure operation because there are still
-+		 * /       devices assigned to this port.  There must be no devices
-+		 * /       assigned to a port on a start operation. */
-+		return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+	}
-+
-+	sci_port->timer_handle = isci_event_timer_create(scic,
-+							 scic_sds_port_timeout_handler,
-+							 sci_port);
-+
-+	if (!sci_port->timer_handle)
-+		return SCI_FAILURE_INSUFFICIENT_RESOURCES;
-+
-+	if (sci_port->reserved_rni == SCU_DUMMY_INDEX) {
-+		u16 rni = scic_sds_remote_node_table_allocate_remote_node(&scic->available_remote_nodes, 1);
-+
-+		if (rni != SCU_DUMMY_INDEX)
-+			scic_sds_port_construct_dummy_rnc(sci_port, rni);
-+		else
-+			status = SCI_FAILURE_INSUFFICIENT_RESOURCES;
-+		sci_port->reserved_rni = rni;
-+	}
-+
-+	if (sci_port->reserved_tci == SCU_DUMMY_INDEX) {
-+		/* Allocate a TCI and remove the sequence nibble */
-+		u16 tci = scic_controller_allocate_io_tag(scic);
-+
-+		if (tci != SCU_DUMMY_INDEX)
-+			scic_sds_port_construct_dummy_task(sci_port, tci);
-+		else
-+			status = SCI_FAILURE_INSUFFICIENT_RESOURCES;
-+		sci_port->reserved_tci = tci;
-+	}
-+
-+	if (status == SCI_SUCCESS) {
-+		phy_mask = scic_sds_port_get_phys(sci_port);
-+
-+		/*
-+		 * There are one or more phys assigned to this port.  Make sure
-+		 * the port's phy mask is in fact legal and supported by the
-+		 * silicon.
-+		 */
-+		if (scic_sds_port_is_phy_mask_valid(sci_port, phy_mask) == true) {
-+			sci_base_state_machine_change_state(
-+				scic_sds_port_get_base_state_machine(sci_port),
-+				SCI_BASE_PORT_STATE_READY);
-+
-+			return SCI_SUCCESS;
-+		} else
-+			status = SCI_FAILURE;
-+	}
-+
-+	if (status != SCI_SUCCESS)
-+		scic_sds_port_destroy_dummy_resources(sci_port);
-+
-+	return status;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This method takes the struct scic_sds_port that is in a stopped state and handles a
-+ * stop request.  This function takes no action. enum sci_status SCI_SUCCESS the
-+ * stop request is successful as the struct scic_sds_port object is already stopped.
-+ */
-+static enum sci_status scic_sds_port_stopped_state_stop_handler(
-+	struct sci_base_port *port)
-+{
-+	/* We are already stopped so there is nothing to do here */
-+	return SCI_SUCCESS;
-+}
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This method takes the struct scic_sds_port that is in a stopped state and handles
-+ * the destruct request.  The stopped state is the only state in which the
-+ * struct scic_sds_port can be destroyed.  This function causes the port object to
-+ * transition to the SCI_BASE_PORT_STATE_FINAL. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_port_stopped_state_destruct_handler(
-+	struct sci_base_port *port)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+
-+	sci_base_state_machine_stop(&this_port->parent.state_machine);
-+
-+	return SCI_SUCCESS;
-+}
-+
 +/**
++ * This file contains the constants and macros for the SCU hardware completion
++ *    codes.
 + *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
 + *
-+ * This method takes the struct scic_sds_port that is in a stopped state and handles
-+ * the add phy request.  In MPC mode the only time a phy can be added to a port
-+ * is in the SCI_BASE_PORT_STATE_STOPPED. enum sci_status
-+ * SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION is returned when the phy can not
-+ * be added to the port. SCI_SUCCESS if the phy is added to the port.
 + */
-+static enum sci_status scic_sds_port_stopped_state_add_phy_handler(
-+	struct sci_base_port *port,
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+	struct scic_sds_phy *this_phy  = (struct scic_sds_phy *)phy;
-+	struct sci_sas_address port_sas_address;
 +
-+	/* Read the port assigned SAS Address if there is one */
-+	scic_sds_port_get_sas_address(this_port, &port_sas_address);
++#define SCU_COMPLETION_TYPE_SHIFT      28
++#define SCU_COMPLETION_TYPE_MASK       0x70000000
 +
-+	if (port_sas_address.high != 0 && port_sas_address.low != 0) {
-+		struct sci_sas_address phy_sas_address;
-+
-+		/*
-+		 * Make sure that the PHY SAS Address matches the SAS Address
-+		 * for this port. */
-+		scic_sds_phy_get_sas_address(this_phy, &phy_sas_address);
-+
-+		if (
-+			(port_sas_address.high != phy_sas_address.high)
-+			|| (port_sas_address.low  != phy_sas_address.low)
-+			) {
-+			return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+		}
-+	}
-+
-+	return scic_sds_port_set_phy(this_port, this_phy);
-+}
-+
-+
-+/**
-+ *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This method takes the struct scic_sds_port that is in a stopped state and handles
-+ * the remove phy request.  In MPC mode the only time a phy can be removed from
-+ * a port is in the SCI_BASE_PORT_STATE_STOPPED. enum sci_status
-+ * SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION is returned when the phy can not
-+ * be added to the port. SCI_SUCCESS if the phy is added to the port.
-+ */
-+static enum sci_status scic_sds_port_stopped_state_remove_phy_handler(
-+	struct sci_base_port *port,
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+	struct scic_sds_phy *this_phy  = (struct scic_sds_phy *)phy;
-+
-+	return scic_sds_port_clear_phy(this_port, this_phy);
-+}
-+
-+/*
-+ * ****************************************************************************
-+ * *  READY STATE HANDLERS
-+ * **************************************************************************** */
-+
-+/*
-+ * ****************************************************************************
-+ * *  RESETTING STATE HANDLERS
-+ * **************************************************************************** */
-+
-+/*
-+ * ****************************************************************************
-+ * *  STOPPING STATE HANDLERS
-+ * **************************************************************************** */
-+
-+/**
-+ *
-+ * @port: This is the struct scic_sds_port object on which the io request count will
-+ *    be decremented.
-+ * @device: This is the struct scic_sds_remote_device object to which the io request
-+ *    is being directed.  This parameter is not required to complete this
-+ *    operation.
-+ * @io_request: This is the request that is being completed on this port
-+ *    object.  This parameter is not required to complete this operation.
-+ *
-+ * This method takes the struct scic_sds_port that is in a stopping state and handles
-+ * the complete io request. Should the request count reach 0 then the port
-+ * object will transition to the stopped state. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_port_stopping_state_complete_io_handler(
-+	struct scic_sds_port *port,
-+	struct scic_sds_remote_device *device,
-+	struct scic_sds_request *io_request)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+
-+	scic_sds_port_decrement_request_count(this_port);
-+
-+	if (this_port->started_request_count == 0) {
-+		sci_base_state_machine_change_state(
-+			scic_sds_port_get_base_state_machine(this_port),
-+			SCI_BASE_PORT_STATE_STOPPED
-+			);
-+	}
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/*
-+ * ****************************************************************************
-+ * *  RESETTING STATE HANDLERS
-+ * **************************************************************************** */
-+
-+/**
-+ *
-+ * @port: This is the port object which is being requested to stop.
-+ *
-+ * This method will stop a failed port.  This causes a transition to the
-+ * stopping state. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_port_reset_state_stop_handler(
-+	struct sci_base_port *port)
-+{
-+	struct scic_sds_port *this_port = (struct scic_sds_port *)port;
-+
-+	sci_base_state_machine_change_state(
-+		&this_port->parent.state_machine,
-+		SCI_BASE_PORT_STATE_STOPPING
-+		);
-+
-+	return SCI_SUCCESS;
-+}
-+
 +/**
++ * SCU_COMPLETION_TYPE() -
 + *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This method will transition a failed port to its ready state.  The port
-+ * failed because a hard reset request timed out but at some time later one or
-+ * more phys in the port became ready. enum sci_status SCI_SUCCESS
++ * This macro constructs an SCU completion type
 + */
-+static void scic_sds_port_reset_state_link_up_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy)
-+{
-+	/*
-+	 * / @todo We should make sure that the phy that has gone link up is the same
-+	 * /       one on which we sent the reset.  It is possible that the phy on
-+	 * /       which we sent the reset is not the one that has gone link up and we
-+	 * /       want to make sure that phy being reset comes back.  Consider the
-+	 * /       case where a reset is sent but before the hardware processes the
-+	 * /       reset it get a link up on the port because of a hot plug event.
-+	 * /       because of the reset request this phy will go link down almost
-+	 * /       immediately. */
-+
-+	/*
-+	 * In the resetting state we don't notify the user regarding
-+	 * link up and link down notifications. */
-+	scic_sds_port_general_link_up_handler(this_port, phy, false);
-+}
++#define SCU_COMPLETION_TYPE(type) \
++	((u32)(type) << SCU_COMPLETION_TYPE_SHIFT)
 +
 +/**
++ * SCU_COMPLETION_TYPE() -
 + *
-+ * @port: This is the struct sci_base_port object which is cast into a struct scic_sds_port
-+ *    object.
-+ *
-+ * This method process link down notifications that occur during a port reset
-+ * operation. Link downs can occur during the reset operation. enum sci_status
-+ * SCI_SUCCESS
++ * These macros contain the SCU completion types SCU_COMPLETION_TYPE
 + */
-+static void scic_sds_port_reset_state_link_down_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy)
-+{
-+	/*
-+	 * In the resetting state we don't notify the user regarding
-+	 * link up and link down notifications. */
-+	scic_sds_port_deactivate_phy(this_port, phy, false);
-+}
-+
-+/* --------------------------------------------------------------------------- */
-+
-+struct scic_sds_port_state_handler
-+scic_sds_port_state_handler_table[SCI_BASE_PORT_MAX_STATES] =
-+{
-+	/* SCI_BASE_PORT_STATE_STOPPED */
-+	{
-+		{
-+			scic_sds_port_stopped_state_start_handler,
-+			scic_sds_port_stopped_state_stop_handler,
-+			scic_sds_port_stopped_state_destruct_handler,
-+			scic_sds_port_default_reset_handler,
-+			scic_sds_port_stopped_state_add_phy_handler,
-+			scic_sds_port_stopped_state_remove_phy_handler
-+		},
-+		scic_sds_port_default_frame_handler,
-+		scic_sds_port_default_event_handler,
-+		scic_sds_port_default_link_up_handler,
-+		scic_sds_port_default_link_down_handler,
-+		scic_sds_port_default_start_io_handler,
-+		scic_sds_port_default_complete_io_handler
-+	},
-+	/* SCI_BASE_PORT_STATE_STOPPING */
-+	{
-+		{
-+			scic_sds_port_default_start_handler,
-+			scic_sds_port_default_stop_handler,
-+			scic_sds_port_default_destruct_handler,
-+			scic_sds_port_default_reset_handler,
-+			scic_sds_port_default_add_phy_handler,
-+			scic_sds_port_default_remove_phy_handler
-+		},
-+		scic_sds_port_default_frame_handler,
-+		scic_sds_port_default_event_handler,
-+		scic_sds_port_default_link_up_handler,
-+		scic_sds_port_default_link_down_handler,
-+		scic_sds_port_default_start_io_handler,
-+		scic_sds_port_stopping_state_complete_io_handler
-+	},
-+	/* SCI_BASE_PORT_STATE_READY */
-+	{
-+		{
-+			scic_sds_port_default_start_handler,
-+			scic_sds_port_default_stop_handler,
-+			scic_sds_port_default_destruct_handler,
-+			scic_sds_port_default_reset_handler,
-+			scic_sds_port_default_add_phy_handler,
-+			scic_sds_port_default_remove_phy_handler
-+		},
-+		scic_sds_port_default_frame_handler,
-+		scic_sds_port_default_event_handler,
-+		scic_sds_port_default_link_up_handler,
-+		scic_sds_port_default_link_down_handler,
-+		scic_sds_port_default_start_io_handler,
-+		scic_sds_port_general_complete_io_handler
-+	},
-+	/* SCI_BASE_PORT_STATE_RESETTING */
-+	{
-+		{
-+			scic_sds_port_default_start_handler,
-+			scic_sds_port_reset_state_stop_handler,
-+			scic_sds_port_default_destruct_handler,
-+			scic_sds_port_default_reset_handler,
-+			scic_sds_port_default_add_phy_handler,
-+			scic_sds_port_default_remove_phy_handler
-+		},
-+		scic_sds_port_default_frame_handler,
-+		scic_sds_port_default_event_handler,
-+		scic_sds_port_reset_state_link_up_handler,
-+		scic_sds_port_reset_state_link_down_handler,
-+		scic_sds_port_default_start_io_handler,
-+		scic_sds_port_general_complete_io_handler
-+	},
-+	/* SCI_BASE_PORT_STATE_FAILED */
-+	{
-+		{
-+			scic_sds_port_default_start_handler,
-+			scic_sds_port_default_stop_handler,
-+			scic_sds_port_default_destruct_handler,
-+			scic_sds_port_default_reset_handler,
-+			scic_sds_port_default_add_phy_handler,
-+			scic_sds_port_default_remove_phy_handler
-+		},
-+		scic_sds_port_default_frame_handler,
-+		scic_sds_port_default_event_handler,
-+		scic_sds_port_default_link_up_handler,
-+		scic_sds_port_default_link_down_handler,
-+		scic_sds_port_default_start_io_handler,
-+		scic_sds_port_general_complete_io_handler
-+	}
-+};
-+
-+/*
-+ * ******************************************************************************
-+ * *  PORT STATE PRIVATE METHODS
-+ * ****************************************************************************** */
++#define SCU_COMPLETION_TYPE_TASK       SCU_COMPLETION_TYPE(0)
++#define SCU_COMPLETION_TYPE_SDMA       SCU_COMPLETION_TYPE(1)
++#define SCU_COMPLETION_TYPE_UFI        SCU_COMPLETION_TYPE(2)
++#define SCU_COMPLETION_TYPE_EVENT      SCU_COMPLETION_TYPE(3)
++#define SCU_COMPLETION_TYPE_NOTIFY     SCU_COMPLETION_TYPE(4)
 +
 +/**
 + *
-+ * @this_port: This is the port object which to suspend.
 + *
-+ * This method will enable the SCU Port Task Scheduler for this port object but
-+ * will leave the port task scheduler in a suspended state. none
++ * These constants provide the shift and mask values for the various parts of
++ * an SCU completion code.
 + */
-+static void scic_sds_port_enable_port_task_scheduler(
-+	struct scic_sds_port *this_port)
-+{
-+	u32 pts_control_value;
++#define SCU_COMPLETION_STATUS_MASK       0x0FFC0000
++#define SCU_COMPLETION_TL_STATUS_MASK    0x0FC00000
++#define SCU_COMPLETION_TL_STATUS_SHIFT   22
++#define SCU_COMPLETION_SDMA_STATUS_MASK  0x003C0000
++#define SCU_COMPLETION_PEG_MASK          0x00010000
++#define SCU_COMPLETION_PORT_MASK         0x00007000
++#define SCU_COMPLETION_PE_MASK           SCU_COMPLETION_PORT_MASK
++#define SCU_COMPLETION_PE_SHIFT          12
++#define SCU_COMPLETION_INDEX_MASK        0x00000FFF
 +
-+	pts_control_value = scu_port_task_scheduler_read(this_port, control);
-+
-+	pts_control_value |= SCU_PTSxCR_GEN_BIT(ENABLE) | SCU_PTSxCR_GEN_BIT(SUSPEND);
-+
-+	scu_port_task_scheduler_write(this_port, control, pts_control_value);
-+}
-+
 +/**
-+ *
-+ * @this_port: This is the port object which to resume.
++ * SCU_GET_COMPLETION_TYPE() -
 + *
-+ * This method will disable the SCU port task scheduler for this port object.
-+ * none
++ * This macro returns the SCU completion type.
 + */
-+static void scic_sds_port_disable_port_task_scheduler(
-+	struct scic_sds_port *this_port)
-+{
-+	u32 pts_control_value;
-+
-+	pts_control_value = scu_port_task_scheduler_read(this_port, control);
-+
-+	pts_control_value &= ~(SCU_PTSxCR_GEN_BIT(ENABLE)
-+			       | SCU_PTSxCR_GEN_BIT(SUSPEND));
-+
-+	scu_port_task_scheduler_write(this_port, control, pts_control_value);
-+}
-+
-+void scic_sds_port_post_dummy_remote_node(struct scic_sds_port *sci_port)
-+{
-+	struct scic_sds_controller *scic = sci_port->owning_controller;
-+	u8 phys_index = sci_port->physical_port_index;
-+	union scu_remote_node_context *rnc;
-+	u16 rni = sci_port->reserved_rni;
-+	u32 command;
-+
-+	rnc = &scic->remote_node_context_table[rni];
-+	rnc->ssp.is_valid = true;
-+
-+	command = SCU_CONTEXT_COMMAND_POST_RNC_32 |
-+		  phys_index << SCU_CONTEXT_COMMAND_LOGICAL_PORT_SHIFT | rni;
-+
-+	scic_sds_controller_post_request(scic, command);
-+
-+	/* ensure hardware has seen the post rnc command and give it
-+	 * ample time to act before sending the suspend
-+	 */
-+	SMU_ISR_READ(scic); /* flush */
-+	udelay(10);
++#define SCU_GET_COMPLETION_TYPE(completion_code) \
++	((completion_code) & SCU_COMPLETION_TYPE_MASK)
 +
-+	command = SCU_CONTEXT_COMMAND_POST_RNC_SUSPEND_TX_RX |
-+		  phys_index << SCU_CONTEXT_COMMAND_LOGICAL_PORT_SHIFT | rni;
-+
-+	scic_sds_controller_post_request(scic, command);
-+}
-+
-+void scic_sds_port_invalidate_dummy_remote_node(struct scic_sds_port *sci_port)
-+{
-+	struct scic_sds_controller *scic = sci_port->owning_controller;
-+	u8 phys_index = sci_port->physical_port_index;
-+	union scu_remote_node_context *rnc;
-+	u16 rni = sci_port->reserved_rni;
-+	u32 command;
-+
-+	rnc = &scic->remote_node_context_table[rni];
-+
-+	rnc->ssp.is_valid = false;
-+
-+	/* ensure the preceding tc abort request has reached the
-+	 * controller and give it ample time to act before posting the rnc
-+	 * invalidate
-+	 */
-+	SMU_ISR_READ(scic); /* flush */
-+	udelay(10);
-+
-+	command = SCU_CONTEXT_COMMAND_POST_RNC_INVALIDATE |
-+		  phys_index << SCU_CONTEXT_COMMAND_LOGICAL_PORT_SHIFT | rni;
-+
-+	scic_sds_controller_post_request(scic, command);
-+}
-+
-+/*
-+ * ******************************************************************************
-+ * *  PORT STATE METHODS
-+ * ****************************************************************************** */
-+
 +/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
++ * SCU_GET_COMPLETION_STATUS() -
 + *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * entering the SCI_BASE_PORT_STATE_STOPPED. This function sets the stopped
-+ * state handlers for the struct scic_sds_port object and disables the port task
-+ * scheduler in the hardware. none
++ * This macro returns the SCU completion status.
 + */
-+static void scic_sds_port_stopped_state_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port;
-+
-+	this_port = (struct scic_sds_port *)object;
-+
-+	scic_sds_port_set_base_state_handlers(
-+		this_port, SCI_BASE_PORT_STATE_STOPPED
-+		);
++#define SCU_GET_COMPLETION_STATUS(completion_code) \
++	((completion_code) & SCU_COMPLETION_STATUS_MASK)
 +
-+	if (
-+		SCI_BASE_PORT_STATE_STOPPING
-+		== this_port->parent.state_machine.previous_state_id
-+		) {
-+		/*
-+		 * If we enter this state becasuse of a request to stop
-+		 * the port then we want to disable the hardwares port
-+		 * task scheduler. */
-+		scic_sds_port_disable_port_task_scheduler(this_port);
-+	}
-+}
-+
 +/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
++ * SCU_GET_COMPLETION_TL_STATUS() -
 + *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * exiting the SCI_BASE_STATE_STOPPED. This function enables the SCU hardware
-+ * port task scheduler. none
++ * This macro returns the transport layer completion status.
 + */
-+static void scic_sds_port_stopped_state_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port;
-+
-+	this_port = (struct scic_sds_port *)object;
-+
-+	/* Enable and suspend the port task scheduler */
-+	scic_sds_port_enable_port_task_scheduler(this_port);
-+}
++#define SCU_GET_COMPLETION_TL_STATUS(completion_code) \
++	((completion_code) & SCU_COMPLETION_TL_STATUS_MASK)
 +
 +/**
++ * SCU_MAKE_COMPLETION_STATUS() -
 + *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * entering the SCI_BASE_PORT_STATE_READY. This function sets the ready state
-+ * handlers for the struct scic_sds_port object, reports the port object as not ready
-+ * and starts the ready substate machine. none
++ * This macro takes a completion code and performs the shift and mask
++ * operations to turn it into a completion code that can be compared to a
++ * SCU_GET_COMPLETION_TL_STATUS.
 + */
-+static void scic_sds_port_ready_state_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port;
-+
-+	this_port = (struct scic_sds_port *)object;
-+
-+	/* Put the ready state handlers in place though they will not be there long */
-+	scic_sds_port_set_base_state_handlers(
-+		this_port, SCI_BASE_PORT_STATE_READY
-+		);
-+
-+	if (
-+		SCI_BASE_PORT_STATE_RESETTING
-+		== this_port->parent.state_machine.previous_state_id
-+		) {
-+		isci_event_port_hard_reset_complete(
-+			scic_sds_port_get_controller(this_port),
-+			this_port,
-+			SCI_SUCCESS
-+			);
-+	} else {
-+		/* Notify the caller that the port is not yet ready */
-+		isci_event_port_not_ready(
-+			scic_sds_port_get_controller(this_port),
-+			this_port,
-+			SCIC_PORT_NOT_READY_NO_ACTIVE_PHYS
-+			);
-+	}
++#define SCU_MAKE_COMPLETION_STATUS(completion_code) \
++	((u32)(completion_code) << SCU_COMPLETION_TL_STATUS_SHIFT)
 +
-+	/* Post and suspend the dummy remote node context for this port. */
-+	scic_sds_port_post_dummy_remote_node(this_port);
-+
-+	/* Start the ready substate machine */
-+	sci_base_state_machine_start(
-+		scic_sds_port_get_ready_substate_machine(this_port)
-+		);
-+}
-+
 +/**
++ * SCU_NORMALIZE_COMPLETION_STATUS() -
 + *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * exiting the SCI_BASE_STATE_READY. This function does nothing. none
++ * This macro takes a SCU_GET_COMPLETION_TL_STATUS and normalizes it for a
++ * return code.
 + */
-+static void scic_sds_port_ready_state_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port;
-+
-+	this_port = (struct scic_sds_port *)object;
++#define SCU_NORMALIZE_COMPLETION_STATUS(completion_code) \
++	(\
++		((completion_code) & SCU_COMPLETION_TL_STATUS_MASK) \
++		>> SCU_COMPLETION_TL_STATUS_SHIFT \
++	)
 +
-+	sci_base_state_machine_stop(&this_port->ready_substate_machine);
-+
-+	scic_sds_port_invalidate_dummy_remote_node(this_port);
-+}
-+
 +/**
++ * SCU_GET_COMPLETION_SDMA_STATUS() -
 + *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * entering the SCI_BASE_PORT_STATE_RESETTING. This function sets the resetting
-+ * state handlers for the struct scic_sds_port object. none
++ * This macro returns the SDMA completion status.
 + */
-+static void scic_sds_port_resetting_state_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port;
-+
-+	this_port = (struct scic_sds_port *)object;
++#define SCU_GET_COMPLETION_SDMA_STATUS(completion_code)	\
++	((completion_code) & SCU_COMPLETION_SDMA_STATUS_MASK)
 +
-+	scic_sds_port_set_base_state_handlers(
-+		this_port, SCI_BASE_PORT_STATE_RESETTING
-+		);
-+}
-+
 +/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
++ * SCU_GET_COMPLETION_PEG() -
 + *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * exiting the SCI_BASE_STATE_RESETTING. This function does nothing. none
++ * This macro returns the Protocol Engine Group from the completion code.
 + */
-+static void scic_sds_port_resetting_state_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port;
-+
-+	this_port = (struct scic_sds_port *)object;
-+
-+	isci_event_timer_stop(
-+		scic_sds_port_get_controller(this_port),
-+		this_port->timer_handle
-+		);
-+}
++#define SCU_GET_COMPLETION_PEG(completion_code)	\
++	((completion_code) & SCU_COMPLETION_PEG_MASK)
 +
 +/**
++ * SCU_GET_COMPLETION_PORT() -
 + *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * entering the SCI_BASE_PORT_STATE_STOPPING. This function sets the stopping
-+ * state handlers for the struct scic_sds_port object. none
++ * This macro reuturns the logical port index from the completion code.
 + */
-+static void scic_sds_port_stopping_state_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port;
-+
-+	this_port = (struct scic_sds_port *)object;
++#define SCU_GET_COMPLETION_PORT(completion_code) \
++	((completion_code) & SCU_COMPLETION_PORT_MASK)
 +
-+	scic_sds_port_set_base_state_handlers(
-+		this_port, SCI_BASE_PORT_STATE_STOPPING
-+		);
-+}
-+
 +/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
++ * SCU_GET_PROTOCOL_ENGINE_INDEX() -
 + *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * exiting the SCI_BASE_STATE_STOPPING. This function does nothing. none
++ * This macro returns the PE index from the completion code.
 + */
-+static void scic_sds_port_stopping_state_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port;
-+
-+	this_port = (struct scic_sds_port *)object;
-+
-+	isci_event_timer_stop(
-+		scic_sds_port_get_controller(this_port),
-+		this_port->timer_handle
-+		);
-+
-+	scic_sds_port_destroy_dummy_resources(this_port);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_port object.
++#define SCU_GET_PROTOCOL_ENGINE_INDEX(completion_code) \
++	(((completion_code) & SCU_COMPLETION_PE_MASK) >> SCU_COMPLETION_PE_SHIFT)
++
++/**
++ * SCU_GET_COMPLETION_INDEX() -
 + *
-+ * This method will perform the actions required by the struct scic_sds_port on
-+ * entering the SCI_BASE_PORT_STATE_STOPPING. This function sets the stopping
-+ * state handlers for the struct scic_sds_port object. none
-+ */
-+static void scic_sds_port_failed_state_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_port *this_port;
-+
-+	this_port = (struct scic_sds_port *)object;
-+
-+	scic_sds_port_set_base_state_handlers(
-+		this_port,
-+		SCI_BASE_PORT_STATE_FAILED
-+		);
-+
-+	isci_event_port_hard_reset_complete(
-+		scic_sds_port_get_controller(this_port),
-+		this_port,
-+		SCI_FAILURE_TIMEOUT
-+		);
-+}
-+
-+/* --------------------------------------------------------------------------- */
-+
-+const struct sci_base_state scic_sds_port_state_table[] = {
-+	[SCI_BASE_PORT_STATE_STOPPED] = {
-+		.enter_state = scic_sds_port_stopped_state_enter,
-+		.exit_state  = scic_sds_port_stopped_state_exit
-+	},
-+	[SCI_BASE_PORT_STATE_STOPPING] = {
-+		.enter_state = scic_sds_port_stopping_state_enter,
-+		.exit_state  = scic_sds_port_stopping_state_exit
-+	},
-+	[SCI_BASE_PORT_STATE_READY] = {
-+		.enter_state = scic_sds_port_ready_state_enter,
-+		.exit_state  = scic_sds_port_ready_state_exit
-+	},
-+	[SCI_BASE_PORT_STATE_RESETTING] = {
-+		.enter_state = scic_sds_port_resetting_state_enter,
-+		.exit_state  = scic_sds_port_resetting_state_exit
-+	},
-+	[SCI_BASE_PORT_STATE_FAILED] = {
-+		.enter_state = scic_sds_port_failed_state_enter,
-+	}
-+};
-+
-diff --git a/drivers/scsi/isci/core/scic_sds_port.h b/drivers/scsi/isci/core/scic_sds_port.h
++ * This macro returns the index of the completion which is either a TCi or an
++ * RNi depending on the completion type.
++ */
++#define SCU_GET_COMPLETION_INDEX(completion_code) \
++	((completion_code) & SCU_COMPLETION_INDEX_MASK)
++
++#define SCU_UNSOLICITED_FRAME_MASK     0x0FFF0000
++#define SCU_UNSOLICITED_FRAME_SHIFT    16
++
++/**
++ * SCU_GET_FRAME_INDEX() -
++ *
++ * This macro returns a normalized frame index from an unsolicited frame
++ * completion.
++ */
++#define SCU_GET_FRAME_INDEX(completion_code) \
++	(\
++		((completion_code) & SCU_UNSOLICITED_FRAME_MASK) \
++		>> SCU_UNSOLICITED_FRAME_SHIFT \
++	)
++
++#define SCU_UNSOLICITED_FRAME_ERROR_MASK  0x00008000
++
++/**
++ * SCU_GET_FRAME_ERROR() -
++ *
++ * This macro returns a zero (0) value if there is no frame error otherwise it
++ * returns non-zero (!0).
++ */
++#define SCU_GET_FRAME_ERROR(completion_code) \
++	((completion_code) & SCU_UNSOLICITED_FRAME_ERROR_MASK)
++
++/**
++ *
++ *
++ * These constants represent normalized completion codes which must be shifted
++ * 18 bits to match it with the hardware completion code. In a 16-bit compiler,
++ * immediate constants are 16-bit values (the size of an int). If we shift
++ * those by 18 bits, we completely lose the value. To ensure the value is a
++ * 32-bit value like we want, each immediate value must be cast to a u32.
++ */
++#define SCU_TASK_DONE_GOOD                                  ((u32)0x00)
++#define SCU_TASK_DONE_CRC_ERR                               ((u32)0x14)
++#define SCU_TASK_DONE_CHECK_RESPONSE                        ((u32)0x14)
++#define SCU_TASK_DONE_GEN_RESPONSE                          ((u32)0x15)
++#define SCU_TASK_DONE_NAK_CMD_ERR                           ((u32)0x16)
++#define SCU_TASK_DONE_CMD_LL_R_ERR                          ((u32)0x16)
++#define SCU_TASK_DONE_LL_R_ERR                              ((u32)0x17)
++#define SCU_TASK_DONE_ACK_NAK_TO                            ((u32)0x17)
++#define SCU_TASK_DONE_LL_PERR                               ((u32)0x18)
++#define SCU_TASK_DONE_LL_SY_TERM                            ((u32)0x19)
++#define SCU_TASK_DONE_NAK_ERR                               ((u32)0x19)
++#define SCU_TASK_DONE_LL_LF_TERM                            ((u32)0x1A)
++#define SCU_TASK_DONE_DATA_LEN_ERR                          ((u32)0x1A)
++#define SCU_TASK_DONE_LL_CL_TERM                            ((u32)0x1B)
++#define SCU_TASK_DONE_LL_ABORT_ERR                          ((u32)0x1B)
++#define SCU_TASK_DONE_SEQ_INV_TYPE                          ((u32)0x1C)
++#define SCU_TASK_DONE_UNEXP_XR                              ((u32)0x1C)
++#define SCU_TASK_DONE_INV_FIS_TYPE                          ((u32)0x1D)
++#define SCU_TASK_DONE_XR_IU_LEN_ERR                         ((u32)0x1D)
++#define SCU_TASK_DONE_INV_FIS_LEN                           ((u32)0x1E)
++#define SCU_TASK_DONE_XR_WD_LEN                             ((u32)0x1E)
++#define SCU_TASK_DONE_SDMA_ERR                              ((u32)0x1F)
++#define SCU_TASK_DONE_OFFSET_ERR                            ((u32)0x20)
++#define SCU_TASK_DONE_MAX_PLD_ERR                           ((u32)0x21)
++#define SCU_TASK_DONE_EXCESS_DATA                           ((u32)0x22)
++#define SCU_TASK_DONE_LF_ERR                                ((u32)0x23)
++#define SCU_TASK_DONE_UNEXP_FIS                             ((u32)0x24)
++#define SCU_TASK_DONE_UNEXP_RESP                            ((u32)0x24)
++#define SCU_TASK_DONE_EARLY_RESP                            ((u32)0x25)
++#define SCU_TASK_DONE_SMP_RESP_TO_ERR                       ((u32)0x26)
++#define SCU_TASK_DONE_DMASETUP_DIRERR                       ((u32)0x27)
++#define SCU_TASK_DONE_SMP_UFI_ERR                           ((u32)0x27)
++#define SCU_TASK_DONE_XFERCNT_ERR                           ((u32)0x28)
++#define SCU_TASK_DONE_SMP_FRM_TYPE_ERR                      ((u32)0x28)
++#define SCU_TASK_DONE_SMP_LL_RX_ERR                         ((u32)0x29)
++#define SCU_TASK_DONE_RESP_LEN_ERR                          ((u32)0x2A)
++#define SCU_TASK_DONE_UNEXP_DATA                            ((u32)0x2B)
++#define SCU_TASK_DONE_OPEN_FAIL                             ((u32)0x2C)
++#define SCU_TASK_DONE_UNEXP_SDBFIS                          ((u32)0x2D)
++#define SCU_TASK_DONE_REG_ERR                               ((u32)0x2E)
++#define SCU_TASK_DONE_SDB_ERR                               ((u32)0x2F)
++#define SCU_TASK_DONE_TASK_ABORT                            ((u32)0x30)
++#define SCU_TASK_DONE_CMD_SDMA_ERR                          ((U32)0x32)
++#define SCU_TASK_DONE_CMD_LL_ABORT_ERR                      ((U32)0x33)
++#define SCU_TASK_OPEN_REJECT_WRONG_DESTINATION              ((u32)0x34)
++#define SCU_TASK_OPEN_REJECT_RESERVED_ABANDON_1             ((u32)0x35)
++#define SCU_TASK_OPEN_REJECT_RESERVED_ABANDON_2             ((u32)0x36)
++#define SCU_TASK_OPEN_REJECT_RESERVED_ABANDON_3             ((u32)0x37)
++#define SCU_TASK_OPEN_REJECT_BAD_DESTINATION                ((u32)0x38)
++#define SCU_TASK_OPEN_REJECT_ZONE_VIOLATION                 ((u32)0x39)
++#define SCU_TASK_DONE_VIIT_ENTRY_NV                         ((u32)0x3A)
++#define SCU_TASK_DONE_IIT_ENTRY_NV                          ((u32)0x3B)
++#define SCU_TASK_DONE_RNCNV_OUTBOUND                        ((u32)0x3C)
++#define SCU_TASK_OPEN_REJECT_STP_RESOURCES_BUSY             ((u32)0x3D)
++#define SCU_TASK_OPEN_REJECT_PROTOCOL_NOT_SUPPORTED         ((u32)0x3E)
++#define SCU_TASK_OPEN_REJECT_CONNECTION_RATE_NOT_SUPPORTED  ((u32)0x3F)
++
++#endif /* _SCU_COMPLETION_CODES_HEADER_ */
+diff --git a/drivers/scsi/isci/core/scu_constants.h b/drivers/scsi/isci/core/scu_constants.h
 new file mode 100644
-index 0000000..c98caef
+index 0000000..a99d110
 --- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_port.h
-@@ -0,0 +1,499 @@
++++ b/drivers/scsi/isci/core/scu_constants.h
+@@ -0,0 +1,151 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -3429,456 +1431,108 @@ index 0000000..c98caef
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#ifndef _SCIC_SDS_PORT_H_
-+#define _SCIC_SDS_PORT_H_
++#ifndef _SCU_CONSTANTS_H_
++#define _SCU_CONSTANTS_H_
 +
 +/**
-+ * This file contains the structures, constants and prototypes for the
-+ *    struct scic_sds_port object.
++ * This file contains the SCU hardware constants.
 + *
 + *
 + */
 +
-+#include <linux/kernel.h>
 +#include "sci_controller_constants.h"
-+#include "intel_sas.h"
-+#include "sci_base_port.h"
-+#include "sci_base_phy.h"
-+#include "scu_registers.h"
-+
-+#define SCIC_SDS_DUMMY_PORT   0xFF
 +
 +/**
-+ * This constant defines the value utilized by SCI Components to indicate
-+ * an invalid handle.
-+ */
-+#define SCI_INVALID_HANDLE 0x0
-+
-+/**
-+ * enum SCIC_SDS_PORT_READY_SUBSTATES -
 + *
-+ * This enumeration depicts all of the states for the core port ready substate
-+ * machine.
++ *
++ * 2 indicates the maximum number of UFs that can occur for a given IO request.
++ *  The hardware handles reception of additional unsolicited frames while all
++ * UFs are in use, by holding off the transmitting device.  This number could
++ * be theoretically reduced to 1, but 2 provides for more reliable operation.
++ * During SATA PIO operation, it is possible under some conditions for there to
++ * be 3 separate FISes received, back to back to back (PIO Setup, Data, D2H
++ * Register). It is unlikely to have all 3 pending all at once without some of
++ * them already being processed.
 + */
-+enum SCIC_SDS_PORT_READY_SUBSTATES {
-+	/**
-+	 * The substate where the port is started and ready but has no active phys.
-+	 */
-+	SCIC_SDS_PORT_READY_SUBSTATE_WAITING,
++#define SCU_MIN_UNSOLICITED_FRAMES        (1)
++#define SCU_MIN_CRITICAL_NOTIFICATIONS    (24)
++#define SCU_MIN_EVENTS                    (4)
++#define SCU_MIN_COMPLETION_QUEUE_SCRATCH  (2)
++#define SCU_MIN_COMPLETION_QUEUE_ENTRIES  (SCU_MIN_CRITICAL_NOTIFICATIONS \
++					   + SCU_MIN_EVENTS \
++					   + SCU_MIN_UNSOLICITED_FRAMES	\
++					   + SCI_MIN_IO_REQUESTS \
++					   + SCU_MIN_COMPLETION_QUEUE_SCRATCH)
 +
-+	/**
-+	 * The substate where the port is started and ready and there is at least one
-+	 * phy operational.
-+	 */
-+	SCIC_SDS_PORT_READY_SUBSTATE_OPERATIONAL,
++#define SCU_MAX_CRITICAL_NOTIFICATIONS    (384)
++#define SCU_MAX_EVENTS                    (128)
++#define SCU_MAX_UNSOLICITED_FRAMES        (128)
++#define SCU_MAX_COMPLETION_QUEUE_SCRATCH  (128)
++#define SCU_MAX_COMPLETION_QUEUE_ENTRIES  (SCU_MAX_CRITICAL_NOTIFICATIONS \
++					   + SCU_MAX_EVENTS \
++					   + SCU_MAX_UNSOLICITED_FRAMES	\
++					   + SCI_MAX_IO_REQUESTS \
++					   + SCU_MAX_COMPLETION_QUEUE_SCRATCH)
 +
-+	/**
-+	 * The substate where the port is started and there was an add/remove phy
-+	 * event.  This state is only used in Automatic Port Configuration Mode (APC)
-+	 */
-+	SCIC_SDS_PORT_READY_SUBSTATE_CONFIGURING,
-+
-+	SCIC_SDS_PORT_READY_MAX_SUBSTATES
-+};
-+
-+struct scic_sds_controller;
-+struct scic_sds_phy;
-+struct scic_sds_remote_device;
-+struct scic_sds_request;
++#if !defined(ENABLE_MINIMUM_MEMORY_MODE)
++#define SCU_UNSOLICITED_FRAME_COUNT      SCU_MAX_UNSOLICITED_FRAMES
++#define SCU_CRITICAL_NOTIFICATION_COUNT  SCU_MAX_CRITICAL_NOTIFICATIONS
++#define SCU_EVENT_COUNT                  SCU_MAX_EVENTS
++#define SCU_COMPLETION_QUEUE_SCRATCH     SCU_MAX_COMPLETION_QUEUE_SCRATCH
++#define SCU_IO_REQUEST_COUNT             SCI_MAX_IO_REQUESTS
++#define SCU_IO_REQUEST_SGE_COUNT         SCI_MAX_SCATTER_GATHER_ELEMENTS
++#define SCU_COMPLETION_QUEUE_COUNT       SCU_MAX_COMPLETION_QUEUE_ENTRIES
++#else
++#define SCU_UNSOLICITED_FRAME_COUNT      SCU_MIN_UNSOLICITED_FRAMES
++#define SCU_CRITICAL_NOTIFICATION_COUNT  SCU_MIN_CRITICAL_NOTIFICATIONS
++#define SCU_EVENT_COUNT                  SCU_MIN_EVENTS
++#define SCU_COMPLETION_QUEUE_SCRATCH     SCU_MIN_COMPLETION_QUEUE_SCRATCH
++#define SCU_IO_REQUEST_COUNT             SCI_MIN_IO_REQUESTS
++#define SCU_IO_REQUEST_SGE_COUNT         SCI_MIN_SCATTER_GATHER_ELEMENTS
++#define SCU_COMPLETION_QUEUE_COUNT       SCU_MIN_COMPLETION_QUEUE_ENTRIES
++#endif /* !defined(ENABLE_MINIMUM_MEMORY_OPERATION) */
 +
 +/**
-+ * struct scic_sds_port -
 + *
-+ * The core port object provides the the abstraction for an SCU port.
++ *
++ * The SCU_COMPLETION_QUEUE_COUNT constant indicates the size of the completion
++ * queue into which the hardware DMAs 32-bit quantas (completion entries).
 + */
-+struct scic_sds_port {
-+	/**
-+	 * This field is the oommon base port object.
-+	 */
-+	struct sci_base_port parent;
-+
-+	/**
-+	 * This field is the port index that is reported to the SCI USER.  This allows
-+	 * the actual hardware physical port to change without the SCI USER getting a
-+	 * different answer for the get port index.
-+	 */
-+	u8 logical_port_index;
-+
-+	/**
-+	 * This field is the port index used to program the SCU hardware.
-+	 */
-+	u8 physical_port_index;
-+
-+	/**
-+	 * This field contains the active phy mask for the port.  This mask is used in
-+	 * conjunction with the phy state to determine which phy to select for some
-+	 * port operations.
-+	 */
-+	u8 active_phy_mask;
-+
-+	u16 reserved_rni;
-+	u16 reserved_tci;
-+
-+	/**
-+	 * This field contains the count of the io requests started on this port
-+	 * object.  It is used to control controller shutdown.
-+	 */
-+	u32 started_request_count;
-+
-+	/**
-+	 * This field contains the number of devices assigned to this port.  It is
-+	 * used to control port start requests.
-+	 */
-+	u32 assigned_device_count;
-+
-+	/**
-+	 * This field contains the reason for the port not going ready.  It is
-+	 * assigned in the state handlers and used in the state transition.
-+	 */
-+	u32 not_ready_reason;
-+
-+	/**
-+	 * This field is the table of phys assigned to the port.
-+	 */
-+	struct scic_sds_phy *phy_table[SCI_MAX_PHYS];
-+
-+	/**
-+	 * This field is a pointer back to the controller that owns this port object.
-+	 */
-+	struct scic_sds_controller *owning_controller;
-+
-+	/**
-+	 * This field contains the port start/stop timer handle.
-+	 */
-+	void *timer_handle;
-+
-+	/**
-+	 * This field points to the current set of state handlers for this port
-+	 * object.  These state handlers are assigned at each enter state of the state
-+	 * machine.
-+	 */
-+	struct scic_sds_port_state_handler *state_handlers;
-+
-+	/**
-+	 * This field is the ready substate machine for the port.
-+	 */
-+	struct sci_base_state_machine ready_substate_machine;
-+
-+	/* / Memory mapped hardware register space */
-+
-+	/**
-+	 * This field is the pointer to the port task scheduler registers for the SCU
-+	 * hardware.
-+	 */
-+	struct scu_port_task_scheduler_registers __iomem *port_task_scheduler_registers;
-+
-+	/**
-+	 * This field is identical for all port objects and points to the port task
-+	 * scheduler group PE configuration registers.  It is used to assign PEs to a
-+	 * port.
-+	 */
-+	SCU_PORT_PE_CONFIGURATION_REGISTER_T *port_pe_configuration_register;
-+
-+	/**
-+	 * This field is the VIIT register space for ths port object.
-+	 */
-+	struct scu_viit_entry __iomem *viit_registers;
-+
-+};
-+
-+
-+typedef enum sci_status (*SCIC_SDS_PORT_EVENT_HANDLER_T)(struct scic_sds_port *, u32);
-+
-+typedef enum sci_status (*SCIC_SDS_PORT_FRAME_HANDLER_T)(struct scic_sds_port *, u32);
-+
-+typedef void (*SCIC_SDS_PORT_LINK_HANDLER_T)(struct scic_sds_port *, struct scic_sds_phy *);
-+
-+typedef enum sci_status (*SCIC_SDS_PORT_IO_REQUEST_HANDLER_T)(
-+	struct scic_sds_port *,
-+	struct scic_sds_remote_device *,
-+	struct scic_sds_request *);
-+
-+struct scic_sds_port_state_handler {
-+	struct sci_base_port_state_handler parent;
-+
-+	SCIC_SDS_PORT_FRAME_HANDLER_T frame_handler;
-+	SCIC_SDS_PORT_EVENT_HANDLER_T event_handler;
-+
-+	SCIC_SDS_PORT_LINK_HANDLER_T link_up_handler;
-+	SCIC_SDS_PORT_LINK_HANDLER_T link_down_handler;
-+
-+	SCIC_SDS_PORT_IO_REQUEST_HANDLER_T start_io_handler;
-+	SCIC_SDS_PORT_IO_REQUEST_HANDLER_T complete_io_handler;
-+
-+};
-+
-+extern const struct sci_base_state scic_sds_port_state_table[];
-+extern const struct sci_base_state scic_sds_port_ready_substate_table[];
-+
-+extern struct scic_sds_port_state_handler scic_sds_port_state_handler_table[];
-+extern struct scic_sds_port_state_handler scic_sds_port_ready_substate_handler_table[];
 +
 +/**
-+ * scic_sds_port_get_controller() -
 + *
-+ * Helper macro to get the owning controller of this port
-+ */
-+#define scic_sds_port_get_controller(this_port)	\
-+	((this_port)->owning_controller)
-+
-+/**
-+ * scic_sds_port_get_base_state_machine() -
 + *
-+ * Helper macro to get the base state machine for this port
++ * This queue must be programmed to a power of 2 size (e.g. 32, 64, 1024, etc.).
 + */
-+#define scic_sds_port_get_base_state_machine(this_port)	\
-+	(&(this_port)->parent.state_machine)
++#if (SCU_COMPLETION_QUEUE_COUNT != 16)  && \
++	(SCU_COMPLETION_QUEUE_COUNT != 32)  && \
++	(SCU_COMPLETION_QUEUE_COUNT != 64)  && \
++	(SCU_COMPLETION_QUEUE_COUNT != 128) && \
++	(SCU_COMPLETION_QUEUE_COUNT != 256) && \
++	(SCU_COMPLETION_QUEUE_COUNT != 512) && \
++	(SCU_COMPLETION_QUEUE_COUNT != 1024)
++#error "SCU_COMPLETION_QUEUE_COUNT must be set to a power of 2."
++#endif
 +
-+/**
-+ * scic_sds_port_set_base_state_handlers() -
-+ *
-+ * This macro will change the state handlers to those of the specified state id
-+ */
-+#define scic_sds_port_set_base_state_handlers(this_port, state_id) \
-+	scic_sds_port_set_state_handlers(\
-+		(this_port), &scic_sds_port_state_handler_table[(state_id)])
++#if SCU_MIN_UNSOLICITED_FRAMES > SCU_MAX_UNSOLICITED_FRAMES
++#error "Invalid configuration of unsolicited frame constants"
++#endif /* SCU_MIN_UNSOLICITED_FRAMES > SCU_MAX_UNSOLICITED_FRAMES */
 +
-+/**
-+ * scic_sds_port_get_ready_substate_machine() -
-+ *
-+ * Helper macro to get the ready substate machine for this port
-+ */
-+#define scic_sds_port_get_ready_substate_machine(this_port) \
-+	(&(this_port)->ready_substate_machine)
++#define SCU_MIN_UF_TABLE_ENTRIES            (8)
++#define SCU_ABSOLUTE_MAX_UNSOLICITED_FRAMES (4096)
++#define SCU_UNSOLICITED_FRAME_BUFFER_SIZE   (1024)
++#define SCU_INVALID_FRAME_INDEX             (0xFFFF)
 +
-+/**
-+ * scic_sds_port_set_state_handlers() -
-+ *
-+ * Helper macro to set the port object state handlers
-+ */
-+#define scic_sds_port_set_state_handlers(this_port, handlers) \
-+	((this_port)->state_handlers = (handlers))
++#define SCU_IO_REQUEST_MAX_SGE_SIZE         (0x00FFFFFF)
++#define SCU_IO_REQUEST_MAX_TRANSFER_LENGTH  (0x00FFFFFF)
 +
-+/**
-+ * scic_sds_port_get_index() -
-+ *
-+ * This macro returns the physical port index for this port object
-+ */
-+#define scic_sds_port_get_index(this_port) \
-+	((this_port)->physical_port_index)
-+
-+
-+static inline void scic_sds_port_increment_request_count(struct scic_sds_port *sci_port)
-+{
-+	sci_port->started_request_count++;
-+}
-+
-+static inline void scic_sds_port_decrement_request_count(struct scic_sds_port *sci_port)
-+{
-+	if (WARN_ONCE(sci_port->started_request_count == 0,
-+		       "%s: tried to decrement started_request_count past 0!?",
-+			__func__))
-+		/* pass */;
-+	else
-+		sci_port->started_request_count--;
-+}
-+
-+/**
-+ * scic_sds_port_write_phy_assignment() -
-+ *
-+ * Helper macro to write the phys port assignment
-+ */
-+#define scic_sds_port_write_phy_assignment(port, phy) \
-+	SCU_PCSPExCR_WRITE(\
-+		(port),	\
-+		(phy)->phy_index, \
-+		(port)->physical_port_index \
-+		)
-+
-+/**
-+ * scic_sds_port_read_phy_assignment() -
-+ *
-+ * Helper macro to read the phys port assignment
-+ */
-+#define scic_sds_port_read_phy_assignment(port, phy) \
-+	SCU_PCSPExCR_READ(\
-+		(port),	\
-+		(phy)->phy_index \
-+		)
-+
-+#define scic_sds_port_active_phy(port, phy) \
-+	(((port)->active_phy_mask & (1 << (phy)->phy_index)) != 0)
-+
-+/* --------------------------------------------------------------------------- */
-+
-+
-+
-+
-+/* --------------------------------------------------------------------------- */
-+
-+/* --------------------------------------------------------------------------- */
-+
-+void scic_sds_port_construct(
-+	struct scic_sds_port *this_port,
-+	u8 port_index,
-+	struct scic_sds_controller *owning_controller);
-+
-+enum sci_status scic_sds_port_initialize(
-+	struct scic_sds_port *this_port,
-+	void __iomem *port_task_scheduler_registers,
-+	void __iomem *port_configuration_regsiter,
-+	void __iomem *viit_registers);
-+
-+/* --------------------------------------------------------------------------- */
-+
-+enum sci_status scic_sds_port_add_phy(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy);
-+
-+enum sci_status scic_sds_port_remove_phy(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy);
-+
-+void scic_sds_port_setup_transports(
-+	struct scic_sds_port *this_port,
-+	u32 device_id);
-+
-+void scic_sds_port_activate_phy(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy,
-+	bool do_notify_user);
-+
-+void scic_sds_port_deactivate_phy(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy,
-+	bool do_notify_user);
-+
-+
-+
-+void scic_sds_port_general_link_up_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *the_phy,
-+	bool do_notify_user);
-+
-+bool scic_sds_port_link_detected(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy);
-+
-+void scic_sds_port_link_up(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy);
-+
-+void scic_sds_port_link_down(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy);
-+
-+/* --------------------------------------------------------------------------- */
-+
-+
-+/* --------------------------------------------------------------------------- */
-+
-+enum sci_status scic_sds_port_start_io(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_remote_device *the_device,
-+	struct scic_sds_request *the_io_request);
-+
-+enum sci_status scic_sds_port_complete_io(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_remote_device *the_device,
-+	struct scic_sds_request *the_io_request);
-+
-+/* --------------------------------------------------------------------------- */
-+
-+void scic_sds_port_update_viit_entry(
-+	struct scic_sds_port *this_port);
-+
-+/* --------------------------------------------------------------------------- */
-+
-+enum sci_status scic_sds_port_default_start_handler(
-+	struct sci_base_port *port);
-+
-+
-+enum sci_status scic_sds_port_default_destruct_handler(
-+	struct sci_base_port *port);
-+
-+enum sci_status scic_sds_port_default_reset_handler(
-+	struct sci_base_port *port,
-+	u32 timeout);
-+
-+
-+enum sci_status scic_sds_port_default_remove_phy_handler(
-+	struct sci_base_port *port,
-+	struct sci_base_phy *phy);
-+
-+enum sci_status scic_sds_port_default_frame_handler(
-+	struct scic_sds_port *port,
-+	u32 frame_index);
-+
-+enum sci_status scic_sds_port_default_event_handler(
-+	struct scic_sds_port *port,
-+	u32 event_code);
-+
-+void scic_sds_port_default_link_up_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy);
-+
-+void scic_sds_port_default_link_down_handler(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *phy);
-+
-+enum sci_status scic_sds_port_default_start_io_handler(
-+	struct scic_sds_port *port,
-+	struct scic_sds_remote_device *device,
-+	struct scic_sds_request *io_request);
-+
-+
-+enum sci_sas_link_rate scic_sds_port_get_max_allowed_speed(
-+	struct scic_sds_port *this_port);
-+
-+void scic_sds_port_broadcast_change_received(
-+	struct scic_sds_port *this_port,
-+	struct scic_sds_phy *this_phy);
-+
-+bool scic_sds_port_is_valid_phy_assignment(
-+	struct scic_sds_port *this_port,
-+	u32 phy_index);
-+
-+bool scic_sds_port_is_phy_mask_valid(
-+	struct scic_sds_port *this_port,
-+	u32 phy_mask);
-+
-+u32 scic_sds_port_get_phys(
-+	struct scic_sds_port *this_port);
-+
-+void scic_sds_port_get_sas_address(
-+	struct scic_sds_port *this_port,
-+	struct sci_sas_address *sas_address);
-+
-+void scic_sds_port_get_attached_sas_address(
-+	struct scic_sds_port *this_port,
-+	struct sci_sas_address *sas_address);
-+
-+void scic_sds_port_get_attached_protocols(
-+	struct scic_sds_port *this_port,
-+	struct sci_sas_identify_address_frame_protocols *protocols);
-+
-+enum sci_status scic_sds_port_set_phy(
-+	struct scic_sds_port *port,
-+	struct scic_sds_phy *phy);
-+
-+enum sci_status scic_sds_port_clear_phy(
-+	struct scic_sds_port *port,
-+	struct scic_sds_phy *phy);
-+
-+
-+
-+#endif /* _SCIC_SDS_PORT_H_ */
-diff --git a/drivers/scsi/isci/core/scic_sds_port_configuration_agent.c b/drivers/scsi/isci/core/scic_sds_port_configuration_agent.c
++#endif /* _SCU_CONSTANTS_H_ */
+diff --git a/drivers/scsi/isci/core/scu_event_codes.h b/drivers/scsi/isci/core/scu_event_codes.h
 new file mode 100644
-index 0000000..e26a4e6
+index 0000000..36a945a
 --- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_port_configuration_agent.c
-@@ -0,0 +1,863 @@
++++ b/drivers/scsi/isci/core/scu_event_codes.h
+@@ -0,0 +1,336 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -3934,820 +1588,293 @@ index 0000000..e26a4e6
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
++#ifndef __SCU_EVENT_CODES_HEADER__
++#define __SCU_EVENT_CODES_HEADER__
++
 +/**
-+ * This file contains the implementation for the public and protected methods
-+ *    for the port configuration agent.
++ * This file contains the constants and macros for the SCU event codes.
 + *
 + *
 + */
 +
-+#include "sci_environment.h"
-+#include "scic_controller.h"
-+#include "scic_sds_controller.h"
-+#include "scic_sds_port_configuration_agent.h"
++#define SCU_EVENT_TYPE_CODE_SHIFT      24
++#define SCU_EVENT_TYPE_CODE_MASK       0x0F000000
 +
-+#define SCIC_SDS_MPC_RECONFIGURATION_TIMEOUT    (10)
-+#define SCIC_SDS_APC_RECONFIGURATION_TIMEOUT    (10)
-+#define SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION  (100)
++#define SCU_EVENT_SPECIFIC_CODE_SHIFT  18
++#define SCU_EVENT_SPECIFIC_CODE_MASK   0x00FC0000
 +
-+enum SCIC_SDS_APC_ACTIVITY {
-+	SCIC_SDS_APC_SKIP_PHY,
-+	SCIC_SDS_APC_ADD_PHY,
-+	SCIC_SDS_APC_START_TIMER,
-+
-+	SCIC_SDS_APC_ACTIVITY_MAX
-+};
-+
-+/*
-+ * ******************************************************************************
-+ * General port configuration agent routines
-+ * ****************************************************************************** */
++#define SCU_EVENT_CODE_MASK \
++	(SCU_EVENT_TYPE_CODE_MASK | SCU_EVENT_SPECIFIC_CODE_MASK)
 +
 +/**
++ * SCU_EVENT_TYPE() -
 + *
-+ * @address_one: A SAS Address to be compared.
-+ * @address_two: A SAS Address to be compared.
-+ *
-+ * Compare the two SAS Address and if SAS Address One is greater than SAS
-+ * Address Two then return > 0 else if SAS Address One is less than SAS Address
-+ * Two return < 0 Otherwise they are the same return 0 A signed value of x > 0
-+ * > y where x is returned for Address One > Address Two y is returned for
-+ * Address One < Address Two 0 is returned ofr Address One = Address Two
++ * This macro constructs an SCU event type from the type value.
 + */
-+static s32 sci_sas_address_compare(
-+	struct sci_sas_address address_one,
-+	struct sci_sas_address address_two)
-+{
-+	if (address_one.high > address_two.high) {
-+		return 1;
-+	} else if (address_one.high < address_two.high) {
-+		return -1;
-+	} else if (address_one.low > address_two.low) {
-+		return 1;
-+	} else if (address_one.low < address_two.low) {
-+		return -1;
-+	}
-+
-+	/* The two SAS Address must be identical */
-+	return 0;
-+}
++#define SCU_EVENT_TYPE(type) \
++	((u32)(type) << SCU_EVENT_TYPE_CODE_SHIFT)
 +
 +/**
++ * SCU_EVENT_SPECIFIC() -
 + *
-+ * @controller: The controller object used for the port search.
-+ * @phy: The phy object to match.
-+ *
-+ * This routine will find a matching port for the phy.  This means that the
-+ * port and phy both have the same broadcast sas address and same received sas
-+ * address. The port address or the NULL if there is no matching
-+ * port. port address if the port can be found to match the phy.
-+ * NULL if there is no matching port for the phy.
++ * This macro constructs an SCU event specifier from the code value.
 + */
-+static struct scic_sds_port *scic_sds_port_configuration_agent_find_port(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_phy *phy)
-+{
-+	u8 port_index;
-+	struct scic_sds_port *port_handle;
-+	struct sci_sas_address port_sas_address;
-+	struct sci_sas_address port_attached_device_address;
-+	struct sci_sas_address phy_sas_address;
-+	struct sci_sas_address phy_attached_device_address;
-+
-+	/*
-+	 * Since this phy can be a member of a wide port check to see if one or
-+	 * more phys match the sent and received SAS address as this phy in which
-+	 * case it should participate in the same port. */
-+	scic_sds_phy_get_sas_address(phy, &phy_sas_address);
-+	scic_sds_phy_get_attached_sas_address(phy, &phy_attached_device_address);
-+
-+	for (port_index = 0; port_index < SCI_MAX_PORTS; port_index++) {
-+		if (scic_controller_get_port_handle(controller, port_index, &port_handle) == SCI_SUCCESS) {
-+			struct scic_sds_port *port = (struct scic_sds_port *)port_handle;
-+
-+			scic_sds_port_get_sas_address(port, &port_sas_address);
-+			scic_sds_port_get_attached_sas_address(port, &port_attached_device_address);
-+
-+			if (
-+				(sci_sas_address_compare(port_sas_address, phy_sas_address) == 0)
-+				&& (sci_sas_address_compare(port_attached_device_address, phy_attached_device_address) == 0)
-+				) {
-+				return port;
-+			}
-+		}
-+	}
-+
-+	return NULL;
-+}
++#define SCU_EVENT_SPECIFIC(code) \
++	((u32)(code) << SCU_EVENT_SPECIFIC_CODE_SHIFT)
 +
 +/**
++ * SCU_EVENT_MESSAGE() -
 + *
-+ * @controller: This is the controller object that contains the port agent
-+ * @port_agent: This is the port configruation agent for the controller.
-+ *
-+ * This routine will validate the port configuration is correct for the SCU
-+ * hardware.  The SCU hardware allows for port configurations as follows. LP0
-+ * -> (PE0), (PE0, PE1), (PE0, PE1, PE2, PE3) LP1 -> (PE1) LP2 -> (PE2), (PE2,
-+ * PE3) LP3 -> (PE3) enum sci_status SCI_SUCCESS the port configuration is valid for
-+ * this port configuration agent. SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION
-+ * the port configuration is not valid for this port configuration agent.
++ * This macro constructs a combines an SCU event type and SCU event specifier
++ * from the type and code values.
 + */
-+static enum sci_status scic_sds_port_configuration_agent_validate_ports(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent)
-+{
-+	struct sci_sas_address first_address;
-+	struct sci_sas_address second_address;
++#define SCU_EVENT_MESSAGE(type, code) \
++	((type) | SCU_EVENT_SPECIFIC(code))
 +
-+	/*
-+	 * Sanity check the max ranges for all the phys the max index
-+	 * is always equal to the port range index */
-+	if (
-+		(port_agent->phy_valid_port_range[0].max_index != 0)
-+		|| (port_agent->phy_valid_port_range[1].max_index != 1)
-+		|| (port_agent->phy_valid_port_range[2].max_index != 2)
-+		|| (port_agent->phy_valid_port_range[3].max_index != 3)
-+		) {
-+		return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+	}
-+
-+	/*
-+	 * This is a request to configure a single x4 port or at least attempt
-+	 * to make all the phys into a single port */
-+	if (
-+		(port_agent->phy_valid_port_range[0].min_index == 0)
-+		&& (port_agent->phy_valid_port_range[1].min_index == 0)
-+		&& (port_agent->phy_valid_port_range[2].min_index == 0)
-+		&& (port_agent->phy_valid_port_range[3].min_index == 0)
-+		) {
-+		return SCI_SUCCESS;
-+	}
-+
-+	/*
-+	 * This is a degenerate case where phy 1 and phy 2 are assigned
-+	 * to the same port this is explicitly disallowed by the hardware
-+	 * unless they are part of the same x4 port and this condition was
-+	 * already checked above. */
-+	if (port_agent->phy_valid_port_range[2].min_index == 1) {
-+		return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+	}
-+
-+	/*
-+	 * PE0 and PE3 can never have the same SAS Address unless they
-+	 * are part of the same x4 wide port and we have already checked
-+	 * for this condition. */
-+	scic_sds_phy_get_sas_address(&controller->phy_table[0], &first_address);
-+	scic_sds_phy_get_sas_address(&controller->phy_table[3], &second_address);
-+
-+	if (sci_sas_address_compare(first_address, second_address) == 0) {
-+		return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+	}
-+
-+	/*
-+	 * PE0 and PE1 are configured into a 2x1 ports make sure that the
-+	 * SAS Address for PE0 and PE2 are different since they can not be
-+	 * part of the same port. */
-+	if (
-+		(port_agent->phy_valid_port_range[0].min_index == 0)
-+		&& (port_agent->phy_valid_port_range[1].min_index == 1)
-+		) {
-+		scic_sds_phy_get_sas_address(&controller->phy_table[0], &first_address);
-+		scic_sds_phy_get_sas_address(&controller->phy_table[2], &second_address);
-+
-+		if (sci_sas_address_compare(first_address, second_address) == 0) {
-+			return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+		}
-+	}
-+
-+	/*
-+	 * PE2 and PE3 are configured into a 2x1 ports make sure that the
-+	 * SAS Address for PE1 and PE3 are different since they can not be
-+	 * part of the same port. */
-+	if (
-+		(port_agent->phy_valid_port_range[2].min_index == 2)
-+		&& (port_agent->phy_valid_port_range[3].min_index == 3)
-+		) {
-+		scic_sds_phy_get_sas_address(&controller->phy_table[1], &first_address);
-+		scic_sds_phy_get_sas_address(&controller->phy_table[3], &second_address);
-+
-+		if (sci_sas_address_compare(first_address, second_address) == 0) {
-+			return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+		}
-+	}
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/*
-+ * ******************************************************************************
-+ * Manual port configuration agent routines
-+ * ****************************************************************************** */
++/**
++ * SCU_EVENT_TYPE() -
++ *
++ * SCU_EVENT_TYPES
++ */
++#define SCU_EVENT_TYPE_SMU_COMMAND_ERROR  SCU_EVENT_TYPE(0x08)
++#define SCU_EVENT_TYPE_SMU_PCQ_ERROR      SCU_EVENT_TYPE(0x09)
++#define SCU_EVENT_TYPE_SMU_ERROR          SCU_EVENT_TYPE(0x00)
++#define SCU_EVENT_TYPE_TRANSPORT_ERROR    SCU_EVENT_TYPE(0x01)
++#define SCU_EVENT_TYPE_BROADCAST_CHANGE   SCU_EVENT_TYPE(0x02)
++#define SCU_EVENT_TYPE_OSSP_EVENT         SCU_EVENT_TYPE(0x03)
++#define SCU_EVENT_TYPE_FATAL_MEMORY_ERROR SCU_EVENT_TYPE(0x0F)
++#define SCU_EVENT_TYPE_RNC_SUSPEND_TX     SCU_EVENT_TYPE(0x04)
++#define SCU_EVENT_TYPE_RNC_SUSPEND_TX_RX  SCU_EVENT_TYPE(0x05)
++#define SCU_EVENT_TYPE_RNC_OPS_MISC       SCU_EVENT_TYPE(0x06)
++#define SCU_EVENT_TYPE_PTX_SCHEDULE_EVENT SCU_EVENT_TYPE(0x07)
++#define SCU_EVENT_TYPE_ERR_CNT_EVENT      SCU_EVENT_TYPE(0x0A)
 +
 +/**
 + *
 + *
-+ * This routine will verify that all of the phys in the same port are using the
-+ * same SAS address.
++ * SCU_EVENT_SPECIFIERS
 + */
-+static enum sci_status scic_sds_mpc_agent_validate_phy_configuration(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent)
-+{
-+	u32 phy_mask;
-+	u32 assigned_phy_mask;
-+	struct sci_sas_address sas_address;
-+	struct sci_sas_address phy_assigned_address;
-+	u8 port_index;
-+	u8 phy_index;
-+
-+	assigned_phy_mask = 0;
-+	sas_address.high = 0;
-+	sas_address.low = 0;
-+
-+	for (port_index = 0; port_index < SCI_MAX_PORTS; port_index++) {
-+		phy_mask = controller->oem_parameters.sds1.ports[port_index].phy_mask;
-+
-+		if (phy_mask != 0) {
-+			/*
-+			 * Make sure that one or more of the phys were not already assinged to
-+			 * a different port. */
-+			if ((phy_mask & ~assigned_phy_mask) == 0) {
-+				return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+			}
-+
-+			/* Find the starting phy index for this round through the loop */
-+			for (phy_index = 0; phy_index < SCI_MAX_PHYS; phy_index++) {
-+				if ((1 << phy_index) & phy_mask) {
-+					scic_sds_phy_get_sas_address(
-+						&controller->phy_table[phy_index], &sas_address
-+						);
-+
-+					/*
-+					 * The phy_index can be used as the starting point for the
-+					 * port range since the hardware starts all logical ports
-+					 * the same as the PE index. */
-+					port_agent->phy_valid_port_range[phy_index].min_index = port_index;
-+					port_agent->phy_valid_port_range[phy_index].max_index = phy_index;
-+
-+					if (phy_index != port_index) {
-+						return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+					}
-+
-+					break;
-+				}
-+			}
-+
-+			/*
-+			 * See how many additional phys are being added to this logical port.
-+			 * Note: We have not moved the current phy_index so we will actually
-+			 *       compare the startting phy with itself.
-+			 *       This is expected and required to add the phy to the port. */
-+			while (phy_index < SCI_MAX_PHYS) {
-+				if ((1 << phy_index) & phy_mask) {
-+					scic_sds_phy_get_sas_address(
-+						&controller->phy_table[phy_index], &phy_assigned_address
-+						);
-+
-+					if (sci_sas_address_compare(sas_address, phy_assigned_address) != 0) {
-+						/*
-+						 * The phy mask specified that this phy is part of the same port
-+						 * as the starting phy and it is not so fail this configuration */
-+						return SCI_FAILURE_UNSUPPORTED_PORT_CONFIGURATION;
-+					}
-+
-+					port_agent->phy_valid_port_range[phy_index].min_index = port_index;
-+					port_agent->phy_valid_port_range[phy_index].max_index = phy_index;
-+
-+					scic_sds_port_add_phy(
-+						&controller->port_table[port_index],
-+						&controller->phy_table[phy_index]
-+						);
-+
-+					assigned_phy_mask |= (1 << phy_index);
-+				}
-+
-+				phy_index++;
-+			}
-+		}
-+	}
-+
-+	return scic_sds_port_configuration_agent_validate_ports(controller, port_agent);
-+}
++#define SCU_EVENT_SPECIFIER_DRIVER_SUSPEND 0x20
++#define SCU_EVENT_SPECIFIER_RNC_RELEASE    0x00
 +
 +/**
 + *
 + *
-+ * This timer routine is used to allow the SCI User to rediscover or change
-+ * device objects before a new series of link up notifications because a link
-+ * down has allowed a better port configuration.
++ * SMU_COMMAND_EVENTS
 + */
-+static void scic_sds_mpc_agent_timeout_handler(
-+	void *object)
-+{
-+	u8 index;
-+	struct scic_sds_controller *controller = (struct scic_sds_controller *)object;
-+	struct scic_sds_port_configuration_agent *port_agent = &controller->port_agent;
-+	u16 configure_phy_mask;
-+
-+	port_agent->timer_pending = false;
-+
-+	/* Find the mask of phys that are reported read but as yet unconfigured into a port */
-+	configure_phy_mask = ~port_agent->phy_configured_mask & port_agent->phy_ready_mask;
-+
-+	for (index = 0; index < SCI_MAX_PHYS; index++) {
-+		if (configure_phy_mask & (1 << index)) {
-+			port_agent->link_up_handler(
-+				controller,
-+				port_agent,
-+				scic_sds_phy_get_port(&controller->phy_table[index]),
-+				&controller->phy_table[index]
-+				);
-+		}
-+	}
-+}
-+
-+/**
-+ *
-+ * @controller: This is the controller object that receives the link up
-+ *    notification.
-+ * @port: This is the port object associated with the phy.  If the is no
-+ *    associated port this is an NULL.
-+ * @phy: This is the phy object which has gone ready.
-+ *
-+ * This method handles the manual port configuration link up notifications.
-+ * Since all ports and phys are associate at initialization time we just turn
-+ * around and notifiy the port object that there is a link up.  If this PHY is
-+ * not associated with a port there is no action taken. Is it possible to get a
-+ * link up notification from a phy that has no assocoated port?
-+ */
-+static void scic_sds_mpc_agent_link_up(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent,
-+	struct scic_sds_port *port,
-+	struct scic_sds_phy *phy)
-+{
-+	/*
-+	 * If the port has an invalid handle then the phy was not assigned to
-+	 * a port.  This is because the phy was not given the same SAS Address
-+	 * as the other PHYs in the port. */
-+	if (port != NULL) {
-+		port_agent->phy_ready_mask |= (1 << scic_sds_phy_get_index(phy));
-+
-+		scic_sds_port_link_up(port, phy);
-+
-+		if ((port->active_phy_mask & (1 << scic_sds_phy_get_index(phy))) != 0) {
-+			port_agent->phy_configured_mask |= (1 << scic_sds_phy_get_index(phy));
-+		}
-+	}
-+}
-+
-+/**
-+ *
-+ * @controller: This is the controller object that receives the link down
-+ *    notification.
-+ * @port: This is the port object associated with the phy.  If the is no
-+ *    associated port this is an NULL.  The port is an invalid
-+ *    handle only if the phy was never port of this port.  This happens when
-+ *    the phy is not broadcasting the same SAS address as the other phys in the
-+ *    assigned port.
-+ * @phy: This is the phy object which has gone link down.
-+ *
-+ * This method handles the manual port configuration link down notifications.
-+ * Since all ports and phys are associated at initialization time we just turn
-+ * around and notifiy the port object of the link down event.  If this PHY is
-+ * not associated with a port there is no action taken. Is it possible to get a
-+ * link down notification from a phy that has no assocoated port?
-+ */
-+static void scic_sds_mpc_agent_link_down(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent,
-+	struct scic_sds_port *port,
-+	struct scic_sds_phy *phy)
-+{
-+	if (port != NULL) {
-+		/*
-+		 * If we can form a new port from the remainder of the phys then we want
-+		 * to start the timer to allow the SCI User to cleanup old devices and
-+		 * rediscover the port before rebuilding the port with the phys that
-+		 * remain in the ready state. */
-+		port_agent->phy_ready_mask &= ~(1 << scic_sds_phy_get_index(phy));
-+		port_agent->phy_configured_mask &= ~(1 << scic_sds_phy_get_index(phy));
-+
-+		/*
-+		 * Check to see if there are more phys waiting to be configured into a port.
-+		 * If there are allow the SCI User to tear down this port, if necessary, and
-+		 * then reconstruc the port after the timeout. */
-+		if (
-+			(port_agent->phy_configured_mask == 0x0000)
-+			&& (port_agent->phy_ready_mask != 0x0000)
-+			&& !port_agent->timer_pending
-+			) {
-+			port_agent->timer_pending = true;
-+
-+			isci_event_timer_start(
-+				controller,
-+				port_agent->timer,
-+				SCIC_SDS_MPC_RECONFIGURATION_TIMEOUT
-+				);
-+		}
-+
-+		scic_sds_port_link_down(port, phy);
-+	}
-+}
-+
-+/*
-+ * ******************************************************************************
-+ * Automatic port configuration agent routines
-+ * ****************************************************************************** */
++#define SCU_EVENT_INVALID_CONTEXT_COMMAND \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_SMU_COMMAND_ERROR, 0x00)
 +
 +/**
 + *
 + *
-+ * This routine will verify that the phys are assigned a valid SAS address for
-+ * automatic port configuration mode.
++ * SMU_PCQ_EVENTS
 + */
-+static enum sci_status scic_sds_apc_agent_validate_phy_configuration(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent)
-+{
-+	u8 phy_index;
-+	u8 port_index;
-+	struct sci_sas_address sas_address;
-+	struct sci_sas_address phy_assigned_address;
-+
-+	phy_index = 0;
-+
-+	while (phy_index < SCI_MAX_PHYS) {
-+		port_index = phy_index;
-+
-+		/* Get the assigned SAS Address for the first PHY on the controller. */
-+		scic_sds_phy_get_sas_address(
-+			&controller->phy_table[phy_index], &sas_address
-+			);
-+
-+		while (++phy_index < SCI_MAX_PHYS) {
-+			scic_sds_phy_get_sas_address(
-+				&controller->phy_table[phy_index], &phy_assigned_address
-+				);
-+
-+			/* Verify each of the SAS address are all the same for every PHY */
-+			if (sci_sas_address_compare(sas_address, phy_assigned_address) == 0) {
-+				port_agent->phy_valid_port_range[phy_index].min_index = port_index;
-+				port_agent->phy_valid_port_range[phy_index].max_index = phy_index;
-+			} else {
-+				port_agent->phy_valid_port_range[phy_index].min_index = phy_index;
-+				port_agent->phy_valid_port_range[phy_index].max_index = phy_index;
-+				break;
-+			}
-+		}
-+	}
-+
-+	return scic_sds_port_configuration_agent_validate_ports(controller, port_agent);
-+}
-+
-+/**
-+ *
-+ * @controller: This is the controller that to which the port agent is assigned.
-+ * @port_agent: This is the port agent that is requesting the timer start
-+ *    operation.
-+ * @phy: This is the phy that has caused the timer operation to be scheduled.
-+ *
-+ * This routine will restart the automatic port configuration timeout timer for
-+ * the next time period.  This could be caused by either a link down event or a
-+ * link up event where we can not yet tell to which port a phy belongs.
-+ */
-+static void scic_sds_apc_agent_start_timer(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent,
-+	struct scic_sds_phy *phy,
-+	u32 timeout)
-+{
-+	if (port_agent->timer_pending) {
-+		isci_event_timer_stop(controller, port_agent->timer);
-+	}
-+
-+	port_agent->timer_pending = true;
-+
-+	isci_event_timer_start(controller, port_agent->timer, timeout);
-+}
-+
-+/**
-+ *
-+ * @controller: This is the controller object that receives the link up
-+ *    notification.
-+ * @phy: This is the phy object which has gone link up.
-+ *
-+ * This method handles the automatic port configuration for link up
-+ * notifications.
-+ */
-+static void scic_sds_apc_agent_configure_ports(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent,
-+	struct scic_sds_phy *phy,
-+	bool start_timer)
-+{
-+	u8 port_index;
-+	enum sci_status status;
-+	struct scic_sds_port *port;
-+	struct scic_sds_port *port_handle;
-+	enum SCIC_SDS_APC_ACTIVITY apc_activity = SCIC_SDS_APC_SKIP_PHY;
-+
-+	port = scic_sds_port_configuration_agent_find_port(controller, phy);
-+
-+	if (port != NULL) {
-+		if (scic_sds_port_is_valid_phy_assignment(port, phy->phy_index))
-+			apc_activity = SCIC_SDS_APC_ADD_PHY;
-+		else
-+			apc_activity = SCIC_SDS_APC_SKIP_PHY;
-+	} else {
-+		/*
-+		 * There is no matching Port for this PHY so lets search through the
-+		 * Ports and see if we can add the PHY to its own port or maybe start
-+		 * the timer and wait to see if a wider port can be made.
-+		 *
-+		 * Note the break when we reach the condition of the port id == phy id */
-+		for (
-+			port_index = port_agent->phy_valid_port_range[phy->phy_index].min_index;
-+			port_index <= port_agent->phy_valid_port_range[phy->phy_index].max_index;
-+			port_index++
-+			) {
-+			scic_controller_get_port_handle(controller, port_index, &port_handle);
-+
-+			port = (struct scic_sds_port *)port_handle;
-+
-+			/* First we must make sure that this PHY can be added to this Port. */
-+			if (scic_sds_port_is_valid_phy_assignment(port, phy->phy_index)) {
-+				/*
-+				 * Port contains a PHY with a greater PHY ID than the current
-+				 * PHY that has gone link up.  This phy can not be part of any
-+				 * port so skip it and move on. */
-+				if (port->active_phy_mask > (1 << phy->phy_index)) {
-+					apc_activity = SCIC_SDS_APC_SKIP_PHY;
-+					break;
-+				}
-+
-+				/*
-+				 * We have reached the end of our Port list and have not found
-+				 * any reason why we should not either add the PHY to the port
-+				 * or wait for more phys to become active. */
-+				if (port->physical_port_index == phy->phy_index) {
-+					/*
-+					 * The Port either has no active PHYs.
-+					 * Consider that if the port had any active PHYs we would have
-+					 * or active PHYs with
-+					 * a lower PHY Id than this PHY. */
-+					if (apc_activity != SCIC_SDS_APC_START_TIMER) {
-+						apc_activity = SCIC_SDS_APC_ADD_PHY;
-+					}
-+
-+					break;
-+				}
-+
-+				/*
-+				 * The current Port has no active PHYs and this PHY could be part
-+				 * of this Port.  Since we dont know as yet setup to start the
-+				 * timer and see if there is a better configuration. */
-+				if (port->active_phy_mask == 0) {
-+					apc_activity = SCIC_SDS_APC_START_TIMER;
-+				}
-+			} else if (port->active_phy_mask != 0) {
-+				/*
-+				 * The Port has an active phy and the current Phy can not
-+				 * participate in this port so skip the PHY and see if
-+				 * there is a better configuration. */
-+				apc_activity = SCIC_SDS_APC_SKIP_PHY;
-+			}
-+		}
-+	}
-+
-+	/*
-+	 * Check to see if the start timer operations should instead map to an
-+	 * add phy operation.  This is caused because we have been waiting to
-+	 * add a phy to a port but could not becuase the automatic port
-+	 * configuration engine had a choice of possible ports for the phy.
-+	 * Since we have gone through a timeout we are going to restrict the
-+	 * choice to the smallest possible port. */
-+	if (
-+		(start_timer == false)
-+		&& (apc_activity == SCIC_SDS_APC_START_TIMER)
-+		) {
-+		apc_activity = SCIC_SDS_APC_ADD_PHY;
-+	}
-+
-+	switch (apc_activity) {
-+	case SCIC_SDS_APC_ADD_PHY:
-+		status = scic_sds_port_add_phy(port, phy);
-+
-+		if (status == SCI_SUCCESS) {
-+			port_agent->phy_configured_mask |= (1 << phy->phy_index);
-+		}
-+		break;
-+
-+	case SCIC_SDS_APC_START_TIMER:
-+		scic_sds_apc_agent_start_timer(
-+			controller, port_agent, phy, SCIC_SDS_APC_WAIT_LINK_UP_NOTIFICATION
-+			);
-+		break;
-+
-+	case SCIC_SDS_APC_SKIP_PHY:
-+	default:
-+		/* do nothing the PHY can not be made part of a port at this time. */
-+		break;
-+	}
-+}
-+
-+/**
-+ * scic_sds_apc_agent_link_up - handle apc link up events
-+ * @scic: This is the controller object that receives the link up
-+ *    notification.
-+ * @sci_port: This is the port object associated with the phy.  If the is no
-+ *    associated port this is an NULL.
-+ * @sci_phy: This is the phy object which has gone link up.
-+ *
-+ * This method handles the automatic port configuration for link up
-+ * notifications. Is it possible to get a link down notification from a phy
-+ * that has no assocoated port?
-+ */
-+static void scic_sds_apc_agent_link_up(struct scic_sds_controller *scic,
-+				       struct scic_sds_port_configuration_agent *port_agent,
-+				       struct scic_sds_port *sci_port,
-+				       struct scic_sds_phy *sci_phy)
-+{
-+	u8 phy_index  = sci_phy->phy_index;
-+
-+	if (!sci_port) {
-+		/* the phy is not the part of this port */
-+		port_agent->phy_ready_mask |= 1 << phy_index;
-+		scic_sds_apc_agent_configure_ports(scic, port_agent, sci_phy, true);
-+	} else {
-+		/* the phy is already the part of the port */
-+		u32 port_state = sci_port->parent.state_machine.current_state_id;
-+
-+		/* if the PORT'S state is resetting then the link up is from
-+		 * port hard reset in this case, we need to tell the port
-+		 * that link up is recieved
-+		 */
-+		BUG_ON(port_state != SCI_BASE_PORT_STATE_RESETTING);
-+		port_agent->phy_ready_mask |= 1 << phy_index;
-+		scic_sds_port_link_up(sci_port, sci_phy);
-+	}
-+}
-+
-+/**
-+ *
-+ * @controller: This is the controller object that receives the link down
-+ *    notification.
-+ * @port: This is the port object associated with the phy.  If the is no
-+ *    associated port this is an NULL.
-+ * @phy: This is the phy object which has gone link down.
-+ *
-+ * This method handles the automatic port configuration link down
-+ * notifications. not associated with a port there is no action taken. Is it
-+ * possible to get a link down notification from a phy that has no assocoated
-+ * port?
-+ */
-+static void scic_sds_apc_agent_link_down(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent,
-+	struct scic_sds_port *port,
-+	struct scic_sds_phy *phy)
-+{
-+	port_agent->phy_ready_mask &= ~(1 << scic_sds_phy_get_index(phy));
-+
-+	if (port != NULL) {
-+		if (port_agent->phy_configured_mask & (1 << phy->phy_index)) {
-+			enum sci_status status;
-+
-+			status = scic_sds_port_remove_phy(port, phy);
-+
-+			if (status == SCI_SUCCESS) {
-+				port_agent->phy_configured_mask &= ~(1 << phy->phy_index);
-+			}
-+		}
-+	}
-+}
++#define SCU_EVENT_UNCORRECTABLE_PCQ_ERROR \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_SMU_PCQ_ERROR, 0x00)
 +
 +/**
 + *
 + *
-+ * This routine will try to configure the phys into ports when the timer fires.
++ * SMU_EVENTS
 + */
-+static void scic_sds_apc_agent_timeout_handler(
-+	void *object)
-+{
-+	u32 index;
-+	struct scic_sds_port_configuration_agent *port_agent;
-+	struct scic_sds_controller *controller = (struct scic_sds_controller *)object;
-+	u16 configure_phy_mask;
-+
-+	port_agent = scic_sds_controller_get_port_configuration_agent(controller);
-+
-+	port_agent->timer_pending = false;
-+
-+	configure_phy_mask = ~port_agent->phy_configured_mask & port_agent->phy_ready_mask;
-+
-+	if (configure_phy_mask != 0x00) {
-+		for (index = 0; index < SCI_MAX_PHYS; index++) {
-+			if (configure_phy_mask & (1 << index)) {
-+				scic_sds_apc_agent_configure_ports(
-+					controller, port_agent, &controller->phy_table[index], false
-+					);
-+			}
-+		}
-+	}
-+}
-+
-+/*
-+ * ******************************************************************************
-+ * Public port configuration agent routines
-+ * ****************************************************************************** */
++#define SCU_EVENT_UNCORRECTABLE_REGISTER_WRITE \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_SMU_ERROR, 0x02)
++#define SCU_EVENT_UNCORRECTABLE_REGISTER_READ \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_SMU_ERROR, 0x03)
++#define SCU_EVENT_PCIE_INTERFACE_ERROR \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_SMU_ERROR, 0x04)
++#define SCU_EVENT_FUNCTION_LEVEL_RESET \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_SMU_ERROR, 0x05)
 +
 +/**
 + *
 + *
-+ * This method will construct the port configuration agent for operation. This
-+ * call is universal for both manual port configuration and automatic port
-+ * configuration modes.
++ * TRANSPORT_LEVEL_ERRORS
 + */
-+void scic_sds_port_configuration_agent_construct(
-+	struct scic_sds_port_configuration_agent *port_agent)
-+{
-+	u32 index;
-+
-+	port_agent->phy_configured_mask = 0x00;
-+	port_agent->phy_ready_mask = 0x00;
-+
-+	port_agent->link_up_handler = NULL;
-+	port_agent->link_down_handler = NULL;
-+
-+	port_agent->timer_pending = false;
-+	port_agent->timer = NULL;
-+
-+	for (index = 0; index < SCI_MAX_PORTS; index++) {
-+		port_agent->phy_valid_port_range[index].min_index = 0;
-+		port_agent->phy_valid_port_range[index].max_index = 0;
-+	}
-+}
++#define SCU_EVENT_ACK_NAK_TIMEOUT_ERROR	\
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_TRANSPORT_ERROR, 0x00)
 +
 +/**
 + *
-+ * @controller: This is the controller object for which the port agent is being
-+ *    initialized.
 + *
-+ * This method will construct the port configuration agent for this controller.
++ * BROADCAST_CHANGE_EVENTS
 + */
-+enum sci_status scic_sds_port_configuration_agent_initialize(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent)
-+{
-+	enum sci_status status = SCI_SUCCESS;
-+	enum SCIC_PORT_CONFIGURATION_MODE mode;
++#define SCU_EVENT_BROADCAST_CHANGE \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_BROADCAST_CHANGE, 0x01)
++#define SCU_EVENT_BROADCAST_RESERVED0 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_BROADCAST_CHANGE, 0x02)
++#define SCU_EVENT_BROADCAST_RESERVED1 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_BROADCAST_CHANGE, 0x03)
++#define SCU_EVENT_BROADCAST_SES	\
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_BROADCAST_CHANGE, 0x04)
++#define SCU_EVENT_BROADCAST_EXPANDER \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_BROADCAST_CHANGE, 0x05)
++#define SCU_EVENT_BROADCAST_AEN	\
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_BROADCAST_CHANGE, 0x06)
++#define SCU_EVENT_BROADCAST_RESERVED3 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_BROADCAST_CHANGE, 0x07)
++#define SCU_EVENT_BROADCAST_RESERVED4 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_BROADCAST_CHANGE, 0x08)
++#define SCU_EVENT_PE_SUSPENDED \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_BROADCAST_CHANGE, 0x09)
 +
-+	mode = scic_sds_controller_get_port_configuration_mode(controller);
++/**
++ *
++ *
++ * OSSP_EVENTS
++ */
++#define SCU_EVENT_PORT_SELECTOR_DETECTED \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x10)
++#define SCU_EVENT_SENT_PORT_SELECTION \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x11)
++#define SCU_EVENT_HARD_RESET_TRANSMITTED \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x12)
++#define SCU_EVENT_HARD_RESET_RECEIVED \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x13)
++#define SCU_EVENT_RECEIVED_IDENTIFY_TIMEOUT \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x15)
++#define SCU_EVENT_LINK_FAILURE \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x16)
++#define SCU_EVENT_SATA_SPINUP_HOLD \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x17)
++#define SCU_EVENT_SAS_15_SSC \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x18)
++#define SCU_EVENT_SAS_15 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x19)
++#define SCU_EVENT_SAS_30_SSC \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x1A)
++#define SCU_EVENT_SAS_30 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x1B)
++#define SCU_EVENT_SAS_60_SSC \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x1C)
++#define SCU_EVENT_SAS_60 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x1D)
++#define SCU_EVENT_SATA_15_SSC \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x1E)
++#define SCU_EVENT_SATA_15 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x1F)
++#define SCU_EVENT_SATA_30_SSC \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x20)
++#define SCU_EVENT_SATA_30 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x21)
++#define SCU_EVENT_SATA_60_SSC \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x22)
++#define SCU_EVENT_SATA_60 \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x23)
++#define SCU_EVENT_SAS_PHY_DETECTED \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x24)
++#define SCU_EVENT_SATA_PHY_DETECTED \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_OSSP_EVENT, 0x25)
 +
-+	if (mode == SCIC_PORT_MANUAL_CONFIGURATION_MODE) {
-+		status = scic_sds_mpc_agent_validate_phy_configuration(controller, port_agent);
++/**
++ *
++ *
++ * FATAL_INTERNAL_MEMORY_ERROR_EVENTS
++ */
++#define SCU_EVENT_TSC_RNSC_UNCORRECTABLE_ERROR \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_FATAL_MEMORY_ERROR,  0x00)
++#define SCU_EVENT_TC_RNC_UNCORRECTABLE_ERROR \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_FATAL_MEMORY_ERROR,  0x01)
++#define SCU_EVENT_ZPT_UNCORRECTABLE_ERROR \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_FATAL_MEMORY_ERROR,  0x02)
 +
-+		port_agent->link_up_handler = scic_sds_mpc_agent_link_up;
-+		port_agent->link_down_handler = scic_sds_mpc_agent_link_down;
++/**
++ *
++ *
++ * REMOTE_NODE_SUSPEND_EVENTS
++ */
++#define SCU_EVENT_TL_RNC_SUSPEND_TX \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_RNC_SUSPEND_TX, 0x00)
++#define SCU_EVENT_TL_RNC_SUSPEND_TX_RX \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_RNC_SUSPEND_TX_RX, 0x00)
++#define SCU_EVENT_DRIVER_POST_RNC_SUSPEND_TX \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_RNC_SUSPEND_TX, 0x20)
++#define SCU_EVENT_DRIVER_POST_RNC_SUSPEND_TX_RX	\
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_RNC_SUSPEND_TX_RX, 0x20)
 +
-+		port_agent->timer = isci_event_timer_create(
-+			controller,
-+			scic_sds_mpc_agent_timeout_handler,
-+			controller
-+			);
-+	} else {
-+		status = scic_sds_apc_agent_validate_phy_configuration(controller, port_agent);
++/**
++ *
++ *
++ * REMOTE_NODE_MISC_EVENTS
++ */
++#define SCU_EVENT_POST_RCN_RELEASE \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_RNC_OPS_MISC, SCU_EVENT_SPECIFIER_RNC_RELEASE)
++#define SCU_EVENT_POST_IT_NEXUS_LOSS_TIMER_ENABLE \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_RNC_OPS_MISC, 0x01)
++#define SCU_EVENT_POST_IT_NEXUS_LOSS_TIMER_DISABLE \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_RNC_OPS_MISC, 0x02)
++#define SCU_EVENT_POST_RNC_COMPLETE \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_RNC_OPS_MISC, 0x03)
++#define SCU_EVENT_POST_RNC_INVALIDATE_COMPLETE \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_RNC_OPS_MISC, 0x04)
 +
-+		port_agent->link_up_handler = scic_sds_apc_agent_link_up;
-+		port_agent->link_down_handler = scic_sds_apc_agent_link_down;
++/**
++ *
++ *
++ * ERROR_COUNT_EVENT
++ */
++#define SCU_EVENT_RX_CREDIT_BLOCKED_RECEIVED \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_ERR_CNT_EVENT, 0x00)
++#define SCU_EVENT_TX_DONE_CREDIT_TIMEOUT \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_ERR_CNT_EVENT, 0x01)
++#define SCU_EVENT_RX_DONE_CREDIT_TIMEOUT \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_ERR_CNT_EVENT, 0x02)
 +
-+		port_agent->timer = isci_event_timer_create(
-+			controller,
-+			scic_sds_apc_agent_timeout_handler,
-+			controller
-+			);
-+	}
++/**
++ * scu_get_event_type() -
++ *
++ * This macro returns the SCU event type from the event code.
++ */
++#define scu_get_event_type(event_code) \
++	((event_code) & SCU_EVENT_TYPE_CODE_MASK)
 +
-+	/* Make sure we have actually gotten a timer */
-+	if ((status == SCI_SUCCESS) && (port_agent->timer == NULL)) {
-+		dev_err(scic_to_dev(controller),
-+			"%s: Controller 0x%p automatic port configuration "
-+			"agent could not get timer.\n",
-+			__func__,
-+			controller);
++/**
++ * scu_get_event_specifier() -
++ *
++ * This macro returns the SCU event specifier from the event code.
++ */
++#define scu_get_event_specifier(event_code) \
++	((event_code) & SCU_EVENT_SPECIFIC_CODE_MASK)
 +
-+		status = SCI_FAILURE;
-+	}
++/**
++ * scu_get_event_code() -
++ *
++ * This macro returns the combined SCU event type and SCU event specifier from
++ * the event code.
++ */
++#define scu_get_event_code(event_code) \
++	((event_code) & SCU_EVENT_CODE_MASK)
 +
-+	return status;
-+}
-diff --git a/drivers/scsi/isci/core/scic_sds_port_configuration_agent.h b/drivers/scsi/isci/core/scic_sds_port_configuration_agent.h
++
++/**
++ *
++ *
++ * PTS_SCHEDULE_EVENT
++ */
++#define SCU_EVENT_SMP_RESPONSE_NO_PE \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_PTX_SCHEDULE_EVENT, 0x00)
++#define SCU_EVENT_SPECIFIC_SMP_RESPONSE_NO_PE \
++	scu_get_event_specifier(SCU_EVENT_SMP_RESPONSE_NO_PE)
++
++#define SCU_EVENT_TASK_TIMEOUT \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_PTX_SCHEDULE_EVENT, 0x01)
++#define SCU_EVENT_SPECIFIC_TASK_TIMEOUT	\
++	scu_get_event_specifier(SCU_EVENT_TASK_TIMEOUT)
++
++#define SCU_EVENT_IT_NEXUS_TIMEOUT \
++	SCU_EVENT_MESSAGE(SCU_EVENT_TYPE_PTX_SCHEDULE_EVENT, 0x02)
++#define SCU_EVENT_SPECIFIC_IT_NEXUS_TIMEOUT \
++	scu_get_event_specifier(SCU_EVENT_IT_NEXUS_TIMEOUT)
++
++
++#endif /* __SCU_EVENT_CODES_HEADER__ */
+diff --git a/drivers/scsi/isci/core/scu_task_context.h b/drivers/scsi/isci/core/scu_task_context.h
 new file mode 100644
-index 0000000..4146735
+index 0000000..818a575
 --- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_port_configuration_agent.h
-@@ -0,0 +1,108 @@
++++ b/drivers/scsi/isci/core/scu_task_context.h
+@@ -0,0 +1,942 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -4803,65 +1930,899 @@ index 0000000..4146735
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#ifndef _SCIC_SDS_PORT_CONFIGURATION_AGENT_H_
-+#define _SCIC_SDS_PORT_CONFIGURATION_AGENT_H_
++#ifndef _SCU_TASK_CONTEXT_H_
++#define _SCU_TASK_CONTEXT_H_
 +
 +/**
-+ * This file contains the structures, constants and prototypes used for the
-+ *    core controller automatic port configuration engine.
++ * This file contains the structures and constants for the SCU hardware task
++ *    context.
 + *
 + *
 + */
 +
-+#include "scic_sds_port.h"
-+#include "scic_sds_phy.h"
 +
-+struct scic_sds_controller;
-+struct scic_sds_port_configuration_agent;
-+struct scic_sds_port;
-+struct scic_sds_phy;
++/**
++ * enum SCU_SSP_TASK_TYPE - This enumberation defines the various SSP task
++ *    types the SCU hardware will accept. The definition for the various task
++ *    types the SCU hardware will accept can be found in the DS specification.
++ *
++ *
++ */
++typedef enum {
++	SCU_TASK_TYPE_IOREAD,           /* /< IO READ direction or no direction */
++	SCU_TASK_TYPE_IOWRITE,          /* /< IO Write direction */
++	SCU_TASK_TYPE_SMP_REQUEST,      /* /< SMP Request type */
++	SCU_TASK_TYPE_RESPONSE,         /* /< Driver generated response frame (targt mode) */
++	SCU_TASK_TYPE_RAW_FRAME,        /* /< Raw frame request type */
++	SCU_TASK_TYPE_PRIMITIVE         /* /< Request for a primitive to be transmitted */
++} SCU_SSP_TASK_TYPE;
 +
-+typedef void (*SCIC_SDS_PORT_CONFIGURATION_AGENT_PHY_HANDLER_T)(
-+	struct scic_sds_controller *,
-+	struct scic_sds_port_configuration_agent *,
-+	struct scic_sds_port *,
-+	struct scic_sds_phy *
-+	);
++/**
++ * enum SCU_SATA_TASK_TYPE - This enumeration defines the various SATA task
++ *    types the SCU hardware will accept. The definition for the various task
++ *    types the SCU hardware will accept can be found in the DS specification.
++ *
++ *
++ */
++typedef enum {
++	SCU_TASK_TYPE_DMA_IN,           /* /< Read request */
++	SCU_TASK_TYPE_FPDMAQ_READ,      /* /< NCQ read request */
++	SCU_TASK_TYPE_PACKET_DMA_IN,    /* /< Packet read request */
++	SCU_TASK_TYPE_SATA_RAW_FRAME,   /* /< Raw frame request */
++	RESERVED_4,
++	RESERVED_5,
++	RESERVED_6,
++	RESERVED_7,
++	SCU_TASK_TYPE_DMA_OUT,          /* /< Write request */
++	SCU_TASK_TYPE_FPDMAQ_WRITE,     /* /< NCQ write Request */
++	SCU_TASK_TYPE_PACKET_DMA_OUT    /* /< Packet write request */
++} SCU_SATA_TASK_TYPE;
 +
-+struct SCIC_SDS_PORT_RANGE {
-+	u8 min_index;
-+	u8 max_index;
++
++/**
++ *
++ *
++ * SCU_CONTEXT_TYPE
++ */
++#define SCU_TASK_CONTEXT_TYPE  0
++#define SCU_RNC_CONTEXT_TYPE   1
++
++/**
++ *
++ *
++ * SCU_TASK_CONTEXT_VALIDITY
++ */
++#define SCU_TASK_CONTEXT_INVALID          0
++#define SCU_TASK_CONTEXT_VALID            1
++
++/**
++ *
++ *
++ * SCU_COMMAND_CODE
++ */
++#define SCU_COMMAND_CODE_INITIATOR_NEW_TASK   0
++#define SCU_COMMAND_CODE_ACTIVE_TASK          1
++#define SCU_COMMAND_CODE_PRIMITIVE_SEQ_TASK   2
++#define SCU_COMMAND_CODE_TARGET_RAW_FRAMES    3
++
++/**
++ *
++ *
++ * SCU_TASK_PRIORITY
++ */
++/**
++ *
++ *
++ * This priority is used when there is no priority request for this request.
++ */
++#define SCU_TASK_PRIORITY_NORMAL          0
++
++/**
++ *
++ *
++ * This priority indicates that the task should be scheduled to the head of the
++ * queue.  The task will NOT be executed if the TX is suspended for the remote
++ * node.
++ */
++#define SCU_TASK_PRIORITY_HEAD_OF_Q       1
++
++/**
++ *
++ *
++ * This priority indicates that the task will be executed before all
++ * SCU_TASK_PRIORITY_NORMAL and SCU_TASK_PRIORITY_HEAD_OF_Q tasks. The task
++ * WILL be executed if the TX is suspended for the remote node.
++ */
++#define SCU_TASK_PRIORITY_HIGH            2
++
++/**
++ *
++ *
++ * This task priority is reserved and should not be used.
++ */
++#define SCU_TASK_PRIORITY_RESERVED        3
++
++#define SCU_TASK_INITIATOR_MODE           1
++#define SCU_TASK_TARGET_MODE              0
++
++#define SCU_TASK_REGULAR                  0
++#define SCU_TASK_ABORTED                  1
++
++/* direction bit defintion */
++/**
++ *
++ *
++ * SATA_DIRECTION
++ */
++#define SCU_SATA_WRITE_DATA_DIRECTION     0
++#define SCU_SATA_READ_DATA_DIRECTION      1
++
++/**
++ *
++ *
++ * SCU_COMMAND_CONTEXT_MACROS These macros provide the mask and shift
++ * operations to construct the various SCU commands
++ */
++#define SCU_CONTEXT_COMMAND_REQUEST_TYPE_SHIFT           21
++#define SCU_CONTEXT_COMMAND_REQUEST_TYPE_MASK            0x00E00000
++#define scu_get_command_request_type(x)	\
++	((x) & SCU_CONTEXT_COMMAND_REQUEST_TYPE_MASK)
++
++#define SCU_CONTEXT_COMMAND_REQUEST_SUBTYPE_SHIFT        18
++#define SCU_CONTEXT_COMMAND_REQUEST_SUBTYPE_MASK         0x001C0000
++#define scu_get_command_request_subtype(x) \
++	((x) & SCU_CONTEXT_COMMAND_REQUEST_SUBTYPE_MASK)
++
++#define SCU_CONTEXT_COMMAND_REQUEST_FULLTYPE_MASK	 \
++	(\
++		SCU_CONTEXT_COMMAND_REQUEST_TYPE_MASK		  \
++		| SCU_CONTEXT_COMMAND_REQUEST_SUBTYPE_MASK	    \
++	)
++#define scu_get_command_request_full_type(x) \
++	((x) & SCU_CONTEXT_COMMAND_REQUEST_FULLTYPE_MASK)
++
++#define SCU_CONTEXT_COMMAND_PROTOCOL_ENGINE_GROUP_SHIFT  16
++#define SCU_CONTEXT_COMMAND_PROTOCOL_ENGINE_GROUP_MASK   0x00010000
++#define scu_get_command_protocl_engine_group(x)	\
++	((x) & SCU_CONTEXT_COMMAND_PROTOCOL_ENGINE_GROUP_MASK)
++
++#define SCU_CONTEXT_COMMAND_LOGICAL_PORT_SHIFT           12
++#define SCU_CONTEXT_COMMAND_LOGICAL_PORT_MASK            0x00007000
++#define scu_get_command_reqeust_logical_port(x)	\
++	((x) & SCU_CONTEXT_COMMAND_LOGICAL_PORT_MASK)
++
++
++#define MAKE_SCU_CONTEXT_COMMAND_TYPE(type) \
++	((u32)(type) << SCU_CONTEXT_COMMAND_REQUEST_TYPE_SHIFT)
++
++/**
++ * MAKE_SCU_CONTEXT_COMMAND_TYPE() -
++ *
++ * SCU_COMMAND_TYPES These constants provide the grouping of the different SCU
++ * command types.
++ */
++#define SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_TC    MAKE_SCU_CONTEXT_COMMAND_TYPE(0)
++#define SCU_CONTEXT_COMMAND_REQUEST_TYPE_DUMP_TC    MAKE_SCU_CONTEXT_COMMAND_TYPE(1)
++#define SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_RNC   MAKE_SCU_CONTEXT_COMMAND_TYPE(2)
++#define SCU_CONTEXT_COMMAND_REQUEST_TYPE_DUMP_RNC   MAKE_SCU_CONTEXT_COMMAND_TYPE(3)
++#define SCU_CONTEXT_COMMAND_REQUEST_TYPE_OTHER_RNC  MAKE_SCU_CONTEXT_COMMAND_TYPE(6)
++
++#define MAKE_SCU_CONTEXT_COMMAND_REQUEST(type, command)	\
++	((type) | ((command) << SCU_CONTEXT_COMMAND_REQUEST_SUBTYPE_SHIFT))
++
++/**
++ *
++ *
++ * SCU_REQUEST_TYPES These constants are the various request types that can be
++ * posted to the SCU hardware.
++ */
++#define SCU_CONTEXT_COMMAND_REQUST_POST_TC \
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_TC, 0))
++
++#define SCU_CONTEXT_COMMAND_REQUEST_POST_TC_ABORT \
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_TC, 1))
++
++#define SCU_CONTEXT_COMMAND_REQUST_DUMP_TC \
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_DUMP_TC, 0))
++
++#define SCU_CONTEXT_COMMAND_POST_RNC_32	\
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_RNC, 0))
++
++#define SCU_CONTEXT_COMMAND_POST_RNC_96	\
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_RNC, 1))
++
++#define SCU_CONTEXT_COMMAND_POST_RNC_INVALIDATE	\
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_RNC, 2))
++
++#define SCU_CONTEXT_COMMAND_DUMP_RNC_32	\
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_DUMP_RNC, 0))
++
++#define SCU_CONTEXT_COMMAND_DUMP_RNC_96	\
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_DUMP_RNC, 1))
++
++#define SCU_CONTEXT_COMMAND_POST_RNC_SUSPEND_TX	\
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_OTHER_RNC, 0))
++
++#define SCU_CONTEXT_COMMAND_POST_RNC_SUSPEND_TX_RX \
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_OTHER_RNC, 1))
++
++#define SCU_CONTEXT_COMMAND_POST_RNC_RESUME \
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_OTHER_RNC, 2))
++
++#define SCU_CONTEXT_IT_NEXUS_LOSS_TIMER_ENABLE \
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_OTHER_RNC, 3))
++
++#define SCU_CONTEXT_IT_NEXUS_LOSS_TIMER_DISABLE	\
++	(MAKE_SCU_CONTEXT_COMMAND_REQUEST(SCU_CONTEXT_COMMAND_REQUEST_TYPE_OTHER_RNC, 4))
++
++/**
++ *
++ *
++ * SCU_TASK_CONTEXT_PROTOCOL SCU Task context protocol types this is uesd to
++ * program the SCU Task context protocol field in word 0x00.
++ */
++#define SCU_TASK_CONTEXT_PROTOCOL_SMP    0x00
++#define SCU_TASK_CONTEXT_PROTOCOL_SSP    0x01
++#define SCU_TASK_CONTEXT_PROTOCOL_STP    0x02
++#define SCU_TASK_CONTEXT_PROTOCOL_NONE   0x07
++
++/**
++ * struct SSP_TASK_CONTEXT - This is the SCU hardware definition for an SSP
++ *    request.
++ *
++ *
++ */
++struct SSP_TASK_CONTEXT {
++	/* OFFSET 0x18 */
++	u32 reserved00:24;
++	u32 frame_type:8;
++
++	/* OFFSET 0x1C */
++	u32 reserved01;
++
++	/* OFFSET 0x20 */
++	u32 fill_bytes:2;
++	u32 reserved02:6;
++	u32 changing_data_pointer:1;
++	u32 retransmit:1;
++	u32 retry_data_frame:1;
++	u32 tlr_control:2;
++	u32 reserved03:19;
++
++	/* OFFSET 0x24 */
++	u32 uiRsvd4;
++
++	/* OFFSET 0x28 */
++	u32 target_port_transfer_tag:16;
++	u32 tag:16;
++
++	/* OFFSET 0x2C */
++	u32 data_offset;
 +};
 +
-+struct scic_sds_port_configuration_agent {
-+	u16 phy_configured_mask;
-+	u16 phy_ready_mask;
++/**
++ * struct STP_TASK_CONTEXT - This is the SCU hardware definition for an STP
++ *    request.
++ *
++ *
++ */
++struct STP_TASK_CONTEXT {
++	/* OFFSET 0x18 */
++	u32 fis_type:8;
++	u32 pm_port:4;
++	u32 reserved0:3;
++	u32 control:1;
++	u32 command:8;
++	u32 features:8;
 +
-+	struct SCIC_SDS_PORT_RANGE phy_valid_port_range[SCI_MAX_PHYS];
++	/* OFFSET 0x1C */
++	u32 reserved1;
 +
-+	bool timer_pending;
++	/* OFFSET 0x20 */
++	u32 reserved2;
 +
-+	SCIC_SDS_PORT_CONFIGURATION_AGENT_PHY_HANDLER_T link_up_handler;
-+	SCIC_SDS_PORT_CONFIGURATION_AGENT_PHY_HANDLER_T link_down_handler;
++	/* OFFSET 0x24 */
++	u32 reserved3;
 +
-+	void *timer;
++	/* OFFSET 0x28 */
++	u32 ncq_tag:5;
++	u32 reserved4:27;
++
++	/* OFFSET 0x2C */
++	u32 data_offset; /* TODO: What is this used for? */
++};
++
++/**
++ * struct SMP_TASK_CONTEXT - This is the SCU hardware definition for an SMP
++ *    request.
++ *
++ *
++ */
++struct SMP_TASK_CONTEXT {
++	/* OFFSET 0x18 */
++	u32 response_length:8;
++	u32 function_result:8;
++	u32 function:8;
++	u32 frame_type:8;
++
++	/* OFFSET 0x1C */
++	u32 smp_response_ufi:12;
++	u32 reserved1:20;
++
++	/* OFFSET 0x20 */
++	u32 reserved2;
++
++	/* OFFSET 0x24 */
++	u32 reserved3;
++
++	/* OFFSET 0x28 */
++	u32 reserved4;
++
++	/* OFFSET 0x2C */
++	u32 reserved5;
++};
++
++/**
++ * struct PRIMITIVE_TASK_CONTEXT - This is the SCU hardware definition used
++ *    when the driver wants to send a primitive on the link.
++ *
++ *
++ */
++struct PRIMITIVE_TASK_CONTEXT {
++	/* OFFSET 0x18 */
++	/**
++	 * This field is the control word and it must be 0.
++	 */
++	u32 control; /* /< must be set to 0 */
++
++	/* OFFSET 0x1C */
++	/**
++	 * This field specifies the primitive that is to be transmitted.
++	 */
++	u32 sequence;
++
++	/* OFFSET 0x20 */
++	u32 reserved0;
++
++	/* OFFSET 0x24 */
++	u32 reserved1;
++
++	/* OFFSET 0x28 */
++	u32 reserved2;
++
++	/* OFFSET 0x2C */
++	u32 reserved3;
++};
++
++/**
++ * The union of the protocols that can be selected in the SCU task context
++ *    field.
++ *
++ * PROTOCOL_CONTEXT
++ */
++union PROTOCOL_CONTEXT {
++	struct SSP_TASK_CONTEXT ssp;
++	struct STP_TASK_CONTEXT stp;
++	struct SMP_TASK_CONTEXT smp;
++	struct PRIMITIVE_TASK_CONTEXT primitive;
++	u32 words[6];
++};
++
++/**
++ * struct scu_sgl_element - This structure represents a single SCU defined SGL
++ *    element. SCU SGLs contain a 64 bit address with the maximum data transfer
++ *    being 24 bits in size.  The SGL can not cross a 4GB boundary.
++ *
++ * struct scu_sgl_element
++ */
++struct scu_sgl_element {
++	/**
++	 * This field is the upper 32 bits of the 64 bit physical address.
++	 */
++	u32 address_upper;
++
++	/**
++	 * This field is the lower 32 bits of the 64 bit physical address.
++	 */
++	u32 address_lower;
++
++	/**
++	 * This field is the number of bytes to transfer.
++	 */
++	u32 length:24;
++
++	/**
++	 * This field is the address modifier to be used when a virtual function is
++	 * requesting a data transfer.
++	 */
++	u32 address_modifier:8;
 +
 +};
 +
-+void scic_sds_port_configuration_agent_construct(
-+	struct scic_sds_port_configuration_agent *port_agent);
++#define SCU_SGL_ELEMENT_PAIR_A   0
++#define SCU_SGL_ELEMENT_PAIR_B   1
 +
-+enum sci_status scic_sds_port_configuration_agent_initialize(
-+	struct scic_sds_controller *controller,
-+	struct scic_sds_port_configuration_agent *port_agent);
++/**
++ * struct scu_sgl_element_pair - This structure is the SCU hardware definition
++ *    of a pair of SGL elements. The SCU hardware always works on SGL pairs.
++ *    They are refered to in the DS specification as SGL A and SGL B.  Each SGL
++ *    pair is followed by the address of the next pair.
++ *
++ *
++ */
++struct scu_sgl_element_pair {
++	/* OFFSET 0x60-0x68 */
++	/**
++	 * This field is the SGL element A of the SGL pair.
++	 */
++	struct scu_sgl_element A;
 +
-+#endif /* _SCIC_SDS_PORT_CONFIGURATION_AGENT_H_ */
-diff --git a/drivers/scsi/isci/core/scic_sds_port_registers.h b/drivers/scsi/isci/core/scic_sds_port_registers.h
++	/* OFFSET 0x6C-0x74 */
++	/**
++	 * This field is the SGL element B of the SGL pair.
++	 */
++	struct scu_sgl_element B;
++
++	/* OFFSET 0x78-0x7C */
++	/**
++	 * This field is the upper 32 bits of the 64 bit address to the next SGL
++	 * element pair.
++	 */
++	u32 next_pair_upper;
++
++	/**
++	 * This field is the lower 32 bits of the 64 bit address to the next SGL
++	 * element pair.
++	 */
++	u32 next_pair_lower;
++
++};
++
++/**
++ * struct TRANSPORT_SNAPSHOT - This structure is the SCU hardware scratch area
++ *    for the task context. This is set to 0 by the driver but can be read by
++ *    issuing a dump TC request to the SCU.
++ *
++ *
++ */
++struct TRANSPORT_SNAPSHOT {
++	/* OFFSET 0x48 */
++	u32 xfer_rdy_write_data_length;
++
++	/* OFFSET 0x4C */
++	u32 data_offset;
++
++	/* OFFSET 0x50 */
++	u32 data_transfer_size:24;
++	u32 reserved_50_0:8;
++
++	/* OFFSET 0x54 */
++	u32 next_initiator_write_data_offset;
++
++	/* OFFSET 0x58 */
++	u32 next_initiator_write_data_xfer_size:24;
++	u32 reserved_58_0:8;
++};
++
++/**
++ * struct scu_task_context - This structure defines the contents of the SCU
++ *    silicon task context. It lays out all of the fields according to the
++ *    expected order and location for the Storage Controller unit.
++ *
++ *
++ */
++struct scu_task_context {
++	/* OFFSET 0x00 ------ */
++	/**
++	 * This field must be encoded to one of the valid SCU task priority values
++	 *    - SCU_TASK_PRIORITY_NORMAL
++	 *    - SCU_TASK_PRIORITY_HEAD_OF_Q
++	 *    - SCU_TASK_PRIORITY_HIGH
++	 */
++	u32 priority:2;
++
++	/**
++	 * This field must be set to true if this is an initiator generated request.
++	 * Until target mode is supported all task requests are initiator requests.
++	 */
++	u32 initiator_request:1;
++
++	/**
++	 * This field must be set to one of the valid connection rates valid values
++	 * are 0x8, 0x9, and 0xA.
++	 */
++	u32 connection_rate:4;
++
++	/**
++	 * This field muse be programed when generating an SMP response since the SMP
++	 * connection remains open until the SMP response is generated.
++	 */
++	u32 protocol_engine_index:3;
++
++	/**
++	 * This field must contain the logical port for the task request.
++	 */
++	u32 logical_port_index:3;
++
++	/**
++	 * This field must be set to one of the SCU_TASK_CONTEXT_PROTOCOL values
++	 *    - SCU_TASK_CONTEXT_PROTOCOL_SMP
++	 *    - SCU_TASK_CONTEXT_PROTOCOL_SSP
++	 *    - SCU_TASK_CONTEXT_PROTOCOL_STP
++	 *    - SCU_TASK_CONTEXT_PROTOCOL_NONE
++	 */
++	u32 protocol_type:3;
++
++	/**
++	 * This filed must be set to the TCi allocated for this task
++	 */
++	u32 task_index:12;
++
++	/**
++	 * This field is reserved and must be set to 0x00
++	 */
++	u32 reserved_00_0:1;
++
++	/**
++	 * For a normal task request this must be set to 0.  If this is an abort of
++	 * this task request it must be set to 1.
++	 */
++	u32 abort:1;
++
++	/**
++	 * This field must be set to true for the SCU hardware to process the task.
++	 */
++	u32 valid:1;
++
++	/**
++	 * This field must be set to SCU_TASK_CONTEXT_TYPE
++	 */
++	u32 context_type:1;
++
++	/* OFFSET 0x04 */
++	/**
++	 * This field contains the RNi that is the target of this request.
++	 */
++	u32 remote_node_index:12;
++
++	/**
++	 * This field is programmed if this is a mirrored request, which we are not
++	 * using, in which case it is the RNi for the mirrored target.
++	 */
++	u32 mirrored_node_index:12;
++
++	/**
++	 * This field is programmed with the direction of the SATA reqeust
++	 *    - SCU_SATA_WRITE_DATA_DIRECTION
++	 *    - SCU_SATA_READ_DATA_DIRECTION
++	 */
++	u32 sata_direction:1;
++
++	/**
++	 * This field is programmsed with one of the following SCU_COMMAND_CODE
++	 *    - SCU_COMMAND_CODE_INITIATOR_NEW_TASK
++	 *    - SCU_COMMAND_CODE_ACTIVE_TASK
++	 *    - SCU_COMMAND_CODE_PRIMITIVE_SEQ_TASK
++	 *    - SCU_COMMAND_CODE_TARGET_RAW_FRAMES
++	 */
++	u32 command_code:2;
++
++	/**
++	 * This field is set to true if the remote node should be suspended.
++	 * This bit is only valid for SSP & SMP target devices.
++	 */
++	u32 suspend_node:1;
++
++	/**
++	 * This field is programmed with one of the following command type codes
++	 *
++	 * For SAS requests use the SCU_SSP_TASK_TYPE
++	 *    - SCU_TASK_TYPE_IOREAD
++	 *    - SCU_TASK_TYPE_IOWRITE
++	 *    - SCU_TASK_TYPE_SMP_REQUEST
++	 *    - SCU_TASK_TYPE_RESPONSE
++	 *    - SCU_TASK_TYPE_RAW_FRAME
++	 *    - SCU_TASK_TYPE_PRIMITIVE
++	 *
++	 * For SATA requests use the SCU_SATA_TASK_TYPE
++	 *    - SCU_TASK_TYPE_DMA_IN
++	 *    - SCU_TASK_TYPE_FPDMAQ_READ
++	 *    - SCU_TASK_TYPE_PACKET_DMA_IN
++	 *    - SCU_TASK_TYPE_SATA_RAW_FRAME
++	 *    - SCU_TASK_TYPE_DMA_OUT
++	 *    - SCU_TASK_TYPE_FPDMAQ_WRITE
++	 *    - SCU_TASK_TYPE_PACKET_DMA_OUT
++	 */
++	u32 task_type:4;
++
++	/* OFFSET 0x08 */
++	/**
++	 * This field is reserved and the must be set to 0x00
++	 */
++	u32 link_layer_control:8; /* presently all reserved */
++
++	/**
++	 * This field is set to true when TLR is to be enabled
++	 */
++	u32 ssp_tlr_enable:1;
++
++	/**
++	 * This is field specifies if the SCU DMAs a response frame to host
++	 * memory for good response frames when operating in target mode.
++	 */
++	u32 dma_ssp_target_good_response:1;
++
++	/**
++	 * This field indicates if the SCU should DMA the response frame to
++	 * host memory.
++	 */
++	u32 do_not_dma_ssp_good_response:1;
++
++	/**
++	 * This field is set to true when strict ordering is to be enabled
++	 */
++	u32 strict_ordering:1;
++
++	/**
++	 * This field indicates the type of endianess to be utilized for the
++	 * frame.  command, task, and response frames utilized control_frame
++	 * set to 1.
++	 */
++	u32 control_frame:1;
++
++	/**
++	 * This field is reserved and the driver should set to 0x00
++	 */
++	u32 tl_control_reserved:3;
++
++	/**
++	 * This field is set to true when the SCU hardware task timeout control is to
++	 * be enabled
++	 */
++	u32 timeout_enable:1;
++
++	/**
++	 * This field is reserved and the driver should set it to 0x00
++	 */
++	u32 pts_control_reserved:7;
++
++	/**
++	 * This field should be set to true when block guard is to be enabled
++	 */
++	u32 block_guard_enable:1;
++
++	/**
++	 * This field is reserved and the driver should set to 0x00
++	 */
++	u32 sdma_control_reserved:7;
++
++	/* OFFSET 0x0C */
++	/**
++	 * This field is the address modifier for this io request it should be
++	 * programmed with the virtual function that is making the request.
++	 */
++	u32 address_modifier:16;
++
++	/**
++	 * @todo What we support mirrored SMP response frame?
++	 */
++	u32 mirrored_protocol_engine:3;  /* mirrored protocol Engine Index */
++
++	/**
++	 * If this is a mirrored request the logical port index for the mirrored RNi
++	 * must be programmed.
++	 */
++	u32 mirrored_logical_port:4;  /* mirrored local port index */
++
++	/**
++	 * This field is reserved and the driver must set it to 0x00
++	 */
++	u32 reserved_0C_0:8;
++
++	/**
++	 * This field must be set to true if the mirrored request processing is to be
++	 * enabled.
++	 */
++	u32 mirror_request_enable:1;  /* Mirrored request Enable */
++
++	/* OFFSET 0x10 */
++	/**
++	 * This field is the command iu length in dwords
++	 */
++	u32 ssp_command_iu_length:8;
++
++	/**
++	 * This is the target TLR enable bit it must be set to 0 when creatning the
++	 * task context.
++	 */
++	u32 xfer_ready_tlr_enable:1;
++
++	/**
++	 * This field is reserved and the driver must set it to 0x00
++	 */
++	u32 reserved_10_0:7;
++
++	/**
++	 * This is the maximum burst size that the SCU hardware will send in one
++	 * connection its value is (N x 512) and N must be a multiple of 2.  If the
++	 * value is 0x00 then maximum burst size is disabled.
++	 */
++	u32 ssp_max_burst_size:16;
++
++	/* OFFSET 0x14 */
++	/**
++	 * This filed is set to the number of bytes to be transfered in the request.
++	 */
++	u32 transfer_length_bytes:24; /* In terms of bytes */
++
++	/**
++	 * This field is reserved and the driver should set it to 0x00
++	 */
++	u32 reserved_14_0:8;
++
++	/* OFFSET 0x18-0x2C */
++	/**
++	 * This union provides for the protocol specif part of the SCU Task Context.
++	 */
++	union PROTOCOL_CONTEXT type;
++
++	/* OFFSET 0x30-0x34 */
++	/**
++	 * This field is the upper 32 bits of the 64 bit physical address of the
++	 * command iu buffer
++	 */
++	u32 command_iu_upper;
++
++	/**
++	 * This field is the lower 32 bits of the 64 bit physical address of the
++	 * command iu buffer
++	 */
++	u32 command_iu_lower;
++
++	/* OFFSET 0x38-0x3C */
++	/**
++	 * This field is the upper 32 bits of the 64 bit physical address of the
++	 * response iu buffer
++	 */
++	u32 response_iu_upper;
++
++	/**
++	 * This field is the lower 32 bits of the 64 bit physical address of the
++	 * response iu buffer
++	 */
++	u32 response_iu_lower;
++
++	/* OFFSET 0x40 */
++	/**
++	 * This field is set to the task phase of the SCU hardware. The driver must
++	 * set this to 0x01
++	 */
++	u32 task_phase:8;
++
++	/**
++	 * This field is set to the transport layer task status.  The driver must set
++	 * this to 0x00
++	 */
++	u32 task_status:8;
++
++	/**
++	 * This field is used during initiator write TLR
++	 */
++	u32 previous_extended_tag:4;
++
++	/**
++	 * This field is set the maximum number of retries for a STP non-data FIS
++	 */
++	u32 stp_retry_count:2;
++
++	/**
++	 * This field is reserved and the driver must set it to 0x00
++	 */
++	u32 reserved_40_1:2;
++
++	/**
++	 * This field is used by the SCU TL to determine when to take a snapshot when
++	 * tranmitting read data frames.
++	 *    - 0x00 The entire IO
++	 *    - 0x01 32k
++	 *    - 0x02 64k
++	 *    - 0x04 128k
++	 *    - 0x08 256k
++	 */
++	u32 ssp_tlr_threshold:4;
++
++	/**
++	 * This field is reserved and the driver must set it to 0x00
++	 */
++	u32 reserved_40_2:4;
++
++	/* OFFSET 0x44 */
++	u32 write_data_length; /* read only set to 0 */
++
++	/* OFFSET 0x48-0x58 */
++	struct TRANSPORT_SNAPSHOT snapshot; /* read only set to 0 */
++
++	/* OFFSET 0x5C */
++	u32 block_protection_enable:1;
++	u32 block_size:2;
++	u32 block_protection_function:2;
++	u32 reserved_5C_0:9;
++	u32 active_sgl_element:2;  /* read only set to 0 */
++	u32 sgl_exhausted:1;  /* read only set to 0 */
++	u32 payload_data_transfer_error:4;  /* read only set to 0 */
++	u32 frame_buffer_offset:11; /* read only set to 0 */
++
++	/* OFFSET 0x60-0x7C */
++	/**
++	 * This field is the first SGL element pair found in the TC data structure.
++	 */
++	struct scu_sgl_element_pair sgl_pair_ab;
++	/* OFFSET 0x80-0x9C */
++	/**
++	 * This field is the second SGL element pair found in the TC data structure.
++	 */
++	struct scu_sgl_element_pair sgl_pair_cd;
++
++	/* OFFSET 0xA0-BC */
++	struct scu_sgl_element_pair sgl_snapshot_ac;
++
++	/* OFFSET 0xC0 */
++	u32 active_sgl_element_pair; /* read only set to 0 */
++
++	/* OFFSET 0xC4-0xCC */
++	u32 reserved_C4_CC[3];
++
++	/* OFFSET 0xD0 */
++	u32 intermediate_crc_value:16;
++	u32 initial_crc_seed:16;
++
++	/* OFFSET 0xD4 */
++	u32 application_tag_for_verify:16;
++	u32 application_tag_for_generate:16;
++
++	/* OFFSET 0xD8 */
++	u32 reference_tag_seed_for_verify_function;
++
++	/* OFFSET 0xDC */
++	u32 reserved_DC;
++
++	/* OFFSET 0xE0 */
++	u32 reserved_E0_0:16;
++	u32 application_tag_mask_for_generate:16;
++
++	/* OFFSET 0xE4 */
++	u32 block_protection_control:16;
++	u32 application_tag_mask_for_verify:16;
++
++	/* OFFSET 0xE8 */
++	u32 block_protection_error:8;
++	u32 reserved_E8_0:24;
++
++	/* OFFSET 0xEC */
++	u32 reference_tag_seed_for_verify;
++
++	/* OFFSET 0xF0 */
++	u32 intermediate_crc_valid_snapshot:16;
++	u32 reserved_F0_0:16;
++
++	/* OFFSET 0xF4 */
++	u32 reference_tag_seed_for_verify_function_snapshot;
++
++	/* OFFSET 0xF8 */
++	u32 snapshot_of_reserved_dword_DC_of_tc;
++
++	/* OFFSET 0xFC */
++	u32 reference_tag_seed_for_generate_function_snapshot;
++
++};
++
++#endif /* _SCU_TASK_CONTEXT_H_ */
+diff --git a/drivers/scsi/isci/core/scu_viit_data.h b/drivers/scsi/isci/core/scu_viit_data.h
 new file mode 100644
-index 0000000..dbe82d8
+index 0000000..c959d91
 --- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_port_registers.h
-@@ -0,0 +1,147 @@
++++ b/drivers/scsi/isci/core/scu_viit_data.h
+@@ -0,0 +1,178 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -4917,96 +2878,127 @@ index 0000000..dbe82d8
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#ifndef _SCIC_SDS_PORT_REGISTERS_H_
-+#define _SCIC_SDS_PORT_REGISTERS_H_
++#ifndef _SCU_VIIT_DATA_HEADER_
++#define _SCU_VIIT_DATA_HEADER_
 +
 +/**
-+ * This file contains a set of macros that assist in reading the SCU hardware
-+ *    registers.
++ * This file contains the constants and structures for the SCU hardware VIIT
++ *    table entries.
 + *
 + *
 + */
 +
-+/**
-+ * scu_port_task_scheduler_read() -
-+ *
-+ * Macro to read the port task scheduler register associated with this port
-+ * object
-+ */
-+#define scu_port_task_scheduler_read(port, reg)	\
-+	scu_register_read(\
-+		scic_sds_port_get_controller(port), \
-+		(port)->port_task_scheduler_registers->reg \
-+		)
++
++#define SCU_VIIT_ENTRY_ID_MASK         (0xC0000000)
++#define SCU_VIIT_ENTRY_ID_SHIFT        (30)
++
++#define SCU_VIIT_ENTRY_FUNCTION_MASK   (0x0FF00000)
++#define SCU_VIIT_ENTRY_FUNCTION_SHIFT  (20)
++
++#define SCU_VIIT_ENTRY_IPPTMODE_MASK   (0x0001F800)
++#define SCU_VIIT_ENTRY_IPPTMODE_SHIFT  (12)
++
++#define SCU_VIIT_ENTRY_LPVIE_MASK      (0x00000F00)
++#define SCU_VIIT_ENTRY_LPVIE_SHIFT     (8)
++
++#define SCU_VIIT_ENTRY_STATUS_MASK     (0x000000FF)
++#define SCU_VIIT_ENTRY_STATUS_SHIFT    (0)
++
++#define SCU_VIIT_ENTRY_ID_INVALID   (0 << SCU_VIIT_ENTRY_ID_SHIFT)
++#define SCU_VIIT_ENTRY_ID_VIIT      (1 << SCU_VIIT_ENTRY_ID_SHIFT)
++#define SCU_VIIT_ENTRY_ID_IIT       (2 << SCU_VIIT_ENTRY_ID_SHIFT)
++#define SCU_VIIT_ENTRY_ID_VIRT_EXP  (3 << SCU_VIIT_ENTRY_ID_SHIFT)
++
++#define SCU_VIIT_IPPT_SSP_INITIATOR (0x01 << SCU_VIIT_ENTRY_IPPTMODE_SHIFT)
++#define SCU_VIIT_IPPT_SMP_INITIATOR (0x02 << SCU_VIIT_ENTRY_IPPTMODE_SHIFT)
++#define SCU_VIIT_IPPT_STP_INITIATOR (0x04 << SCU_VIIT_ENTRY_IPPTMODE_SHIFT)
++#define SCU_VIIT_IPPT_INITIATOR	    \
++	(\
++		SCU_VIIT_IPPT_SSP_INITIATOR  \
++		| SCU_VIIT_IPPT_SMP_INITIATOR  \
++		| SCU_VIIT_IPPT_STP_INITIATOR  \
++	)
++
++#define SCU_VIIT_STATUS_RNC_VALID      (0x01 << SCU_VIIT_ENTRY_STATUS_SHIFT)
++#define SCU_VIIT_STATUS_ADDRESS_VALID  (0x02 << SCU_VIIT_ENTRY_STATUS_SHIFT)
++#define SCU_VIIT_STATUS_RNI_VALID      (0x04 << SCU_VIIT_ENTRY_STATUS_SHIFT)
++#define SCU_VIIT_STATUS_ALL_VALID      \
++	(\
++		SCU_VIIT_STATUS_RNC_VALID	\
++		| SCU_VIIT_STATUS_ADDRESS_VALID	  \
++		| SCU_VIIT_STATUS_RNI_VALID	  \
++	)
++
++#define SCU_VIIT_IPPT_SMP_TARGET    (0x10 << SCU_VIIT_ENTRY_IPPTMODE_SHIFT)
 +
 +/**
-+ * scu_port_task_scheduler_write() -
++ * struct scu_viit_entry - This is the SCU Virtual Initiator Table Entry
 + *
-+ * Macro to write the port task scheduler register associated with this port
-+ * object
++ *
 + */
-+#define scu_port_task_scheduler_write(port, reg, value)	\
-+	scu_register_write(\
-+		scic_sds_port_get_controller(port), \
-+		(port)->port_task_scheduler_registers->reg, \
-+		(value)	\
-+		)
++struct scu_viit_entry {
++	/**
++	 * This must be encoded as to the type of initiator that is being constructed
++	 * for this port.
++	 */
++	u32 status;
 +
-+#define scu_port_viit_register_write(port, reg, value) \
-+	scu_register_write(\
-+		scic_sds_port_get_controller(port), \
-+		(port)->viit_registers->reg, \
-+		(value)	\
-+		)
++	/**
++	 * Virtual initiator high SAS Address
++	 */
++	u32 initiator_sas_address_hi;
 +
-+/*
-+ * ****************************************************************************
-+ * * Port Task Scheduler registers controlled by the port object
-+ * **************************************************************************** */
++	/**
++	 * Virtual initiator low SAS Address
++	 */
++	u32 initiator_sas_address_lo;
++
++	/**
++	 * This must be 0
++	 */
++	u32 reserved;
++
++};
++
++
++/* IIT Status Defines */
++#define SCU_IIT_ENTRY_ID_MASK                (0xC0000000)
++#define SCU_IIT_ENTRY_ID_SHIFT               (30)
++
++#define SCU_IIT_ENTRY_STATUS_UPDATE_MASK     (0x20000000)
++#define SCU_IIT_ENTRY_STATUS_UPDATE_SHIFT    (29)
++
++#define SCU_IIT_ENTRY_LPI_MASK               (0x00000F00)
++#define SCU_IIT_ENTRY_LPI_SHIFT              (8)
++
++#define SCU_IIT_ENTRY_STATUS_MASK            (0x000000FF)
++#define SCU_IIT_ENTRY_STATUS_SHIFT           (0)
++
++/* IIT Remote Initiator Defines */
++#define SCU_IIT_ENTRY_REMOTE_TAG_MASK  (0x0000FFFF)
++#define SCU_IIT_ENTRY_REMOTE_TAG_SHIFT (0)
++
++#define SCU_IIT_ENTRY_REMOTE_RNC_MASK  (0x0FFF0000)
++#define SCU_IIT_ENTRY_REMOTE_RNC_SHIFT (16)
++
++#define SCU_IIT_ENTRY_ID_INVALID   (0 << SCU_IIT_ENTRY_ID_SHIFT)
++#define SCU_IIT_ENTRY_ID_VIIT      (1 << SCU_IIT_ENTRY_ID_SHIFT)
++#define SCU_IIT_ENTRY_ID_IIT       (2 << SCU_IIT_ENTRY_ID_SHIFT)
++#define SCU_IIT_ENTRY_ID_VIRT_EXP  (3 << SCU_IIT_ENTRY_ID_SHIFT)
 +
 +/**
-+ * SCU_PTSxCR_READ() -
++ * struct scu_iit_entry - This will be implemented later when we support
++ *    virtual functions
 + *
-+ * Macro to read the port task scheduler control register
-+ */
-+#define SCU_PTSxCR_READ(port) \
-+	scu_port_task_scheduler_read(port, control)
-+
-+/**
-+ * SCU_PTSxCR_WRITE() -
 + *
-+ * Macro to write the port task scheduler control regsister
 + */
-+#define SCU_PTSxCR_WRITE(port, value) \
-+	scu_port_task_scheduler_write(port, control, value)
++struct scu_iit_entry {
++	u32 status;
++	u32 remote_initiator_sas_address_hi;
++	u32 remote_initiator_sas_address_lo;
++	u32 remote_initiator;
 +
-+/*
-+ * ****************************************************************************
-+ * * Port PE Configuration registers
-+ * **************************************************************************** */
++};
 +
-+/**
-+ * SCU_PCSPExCR_WRITE() -
-+ *
-+ * Macro to write the PE Port Configuration Register
-+ */
-+#define SCU_PCSPExCR_WRITE(port, phy_id, value)	\
-+	scu_register_write(\
-+		scic_sds_port_get_controller(port), \
-+		(port)->port_pe_configuration_register[phy_id],	\
-+		(value)	\
-+		)
-+
-+/**
-+ * SCU_PCSPExCR_READ() -
-+ *
-+ * Macro to read the PE Port Configuration Regsiter
-+ */
-+#define SCU_PCSPExCR_READ(port, phy_id)	\
-+	scu_register_read(\
-+		scic_sds_port_get_controller(port), \
-+		(port)->port_pe_configuration_register[phy_id] \
-+		)
-+
-+#endif /* _SCIC_SDS_PORT_REGISTERS_H_ */
++#endif /* _SCU_VIIT_DATA_HEADER_ */
 
