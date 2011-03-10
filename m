@@ -1,36 +1,60 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] sd: sd should not modify read capacity, cache type or
- write protect flag on rescan when there is a transport error
-Date: Wed, 09 Mar 2011 18:01:22 -0600
-Message-ID: <4D7814D2.8090101@cs.wisc.edu>
-References: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>	 <1298907291.2487.18.camel@mulgrave.site>	 <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM> <1299594151.2476.10.camel@mulgrave.site>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC 12/12] iscsi-target: Add Makefile/Kconfig and update TCM
+	top level
+Date: Thu, 10 Mar 2011 00:02:21 -0800
+Message-ID: <1299744141.5263.25.camel@haakon2.linux-iscsi.org>
+References: <20110308093334.GA21996@gondor.apana.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:34934 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751005Ab1CJABO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 9 Mar 2011 19:01:14 -0500
-In-Reply-To: <1299594151.2476.10.camel@mulgrave.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-crypto-owner@vger.kernel.org>
+In-Reply-To: <20110308093334.GA21996@gondor.apana.org.au>
+Sender: linux-crypto-owner@vger.kernel.org
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: James.Bottomley@hansenpartnership.com, hch@infradead.org, rdunlap@xenotime.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: Menny_Hamburger@Dell.com, linux-scsi@vger.kernel.org
 
-On 03/08/2011 08:22 AM, James Bottomley wrote:
-> On Tue, 2011-03-08 at 09:30 +0000, Menny_Hamburger@Dell.com wrote:
->> Another totally different way may be to have the SCSI layer send some
->> notification (unknown property, needs rescan) that could be picked up
->> and handled by the transport layer.
->
-> This is the hotplug I suggested, isn't it?
->
+On Tue, 2011-03-08 at 17:33 +0800, Herbert Xu wrote:
+> Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
+> >
+> >> > I should mention this is with the following .config:
+> >> > 
+> >> > CONFIG_CRYPTO_CRC32C=y
+> >> > CONFIG_CRYPTO_CRC32C_INTEL=m
+> 
+> This is why you get the unoptimised version.  Had you selected
+> both as built-in or both as modules, then it would have worked
+> as intended.
+>  
 
-Yeah.
+<nod>
 
-Menny, I think you can just do the scsi/iscsi_rescan_target option I 
-suggested in my pseudo patch where when the transport comes back online 
-the iscsi class calls some helper scsi function that calls 
-scsi_rescan_device for each device on the target, so proper values are 
-picked up.
+> > What about the following to simply call request_module("crc32c_intel")
+> > at module_init() time and top the extra iscsi_login_setup_crypto()
+> > code..?
+> 
+> If we're going to do this we should do it in the crypto layer,
+> and not litter every single crypto API user with such crap.
+> 
+> Currently we don't invoke request_module unless no implementation
+> is reigstered for an algorithm.  You can change this so that it
+> also invokes request_module if we have not yet done so at least
+> once for that algorithm.
+> 
+> Patches are welcome.
+> 
+
+Ok, fair enough point..  I have addressed this with a new struct
+crypto_alg->cra_check_optimized() callback in order for crc32c.ko to
+have a method to call request_module("crc32c_intel.ko") after the base
+software alg has been loaded.
+
+This is working w/ CONFIG_CRYPTO_CRC32C=y + CONFIG_CRYPTO_CRC32C_INTEL=m
+case and should satisfy current (and future) architecture dependent
+cases for CRC32C HW offload.
+
+Sending out a patch series for your comments shortly..
+
+Thanks!
+
+--nab
