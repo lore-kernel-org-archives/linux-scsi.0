@@ -1,2675 +1,1415 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 08/10] isci/core: unsolicited frame handling and registers
-Date: Thu, 10 Mar 2011 02:55:00 -0800
-Message-ID: <20110310105500.6485.55522.stgit@localhost6.localdomain6>
-References: <20110310105347.6485.20780.stgit@localhost6.localdomain6>
+From: "Desai, Kashyap" <Kashyap.Desai@lsi.com>
+Subject: RE: [PATCH] mpt2sas : WarpDrive New product SSS6200 support added
+Date: Thu, 10 Mar 2011 18:41:46 +0530
+Message-ID: <B2FD678A64EAAD45B089B123FDFC3ED71130477A@inbmail01.lsi.com>
+References: <20110203100758.GH23502@lsi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8061 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752014Ab1CJKxo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Mar 2011 05:53:44 -0500
-In-Reply-To: <20110310105347.6485.20780.stgit@localhost6.localdomain6>
+Received: from na3sys009aog115.obsmtp.com ([74.125.149.238]:42680 "EHLO
+	na3sys009aog115.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751197Ab1CJNK5 convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Mar 2011 08:10:57 -0500
+In-Reply-To: <20110203100758.GH23502@lsi.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@suse.de
-Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "Moore, Eric" <Eric.Moore@lsi.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
-The hardware kicks unaccelerated / unknown traffic to an unsolicited
-frame queue for handling in software.
+James,
+Any feedback on this patch submission?  I observe that this patch is not following relative depth.
+It has "mpt2sas-phase8.0_wd/mpt2sas_base.c" path, so need to apply using -p1 instead of -p4.
 
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- .../isci/core/scic_sds_unsolicited_frame_control.c |  383 ++++
- .../isci/core/scic_sds_unsolicited_frame_control.h |  286 +++
- drivers/scsi/isci/core/scu_registers.h             | 1830 ++++++++++++++++++++
- drivers/scsi/isci/core/scu_unsolicited_frame.h     |  117 +
- 4 files changed, 2616 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/isci/core/scic_sds_unsolicited_frame_control.c
- create mode 100644 drivers/scsi/isci/core/scic_sds_unsolicited_frame_control.h
- create mode 100644 drivers/scsi/isci/core/scu_registers.h
- create mode 100644 drivers/scsi/isci/core/scu_unsolicited_frame.h
+Is there any need to resend patch with correct relative depth? Please let me know I will resend in that case.
 
-diff --git a/drivers/scsi/isci/core/scic_sds_unsolicited_frame_control.c b/drivers/scsi/isci/core/scic_sds_unsolicited_frame_control.c
-new file mode 100644
-index 0000000..66be58b
---- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_unsolicited_frame_control.c
-@@ -0,0 +1,383 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *   * Redistributions of source code must retain the above copyright
-+ *     notice, this list of conditions and the following disclaimer.
-+ *   * Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in
-+ *     the documentation and/or other materials provided with the
-+ *     distribution.
-+ *   * Neither the name of Intel Corporation nor the names of its
-+ *     contributors may be used to endorse or promote products derived
-+ *     from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+/**
-+ * This file contains the implementation of the
-+ *    struct scic_sds_unsolicited_frame_control object and it's public, protected, and
-+ *    private methods.
-+ *
-+ *
-+ */
-+
-+#include "scic_sds_unsolicited_frame_control.h"
-+#include "scu_registers.h"
-+#include "scic_sds_controller.h"
-+#include "sci_util.h"
-+#include "sci_environment.h"
-+
-+/**
-+ * The UF buffer address table size must be programmed to a power of 2.  Find
-+ *    the first power of 2 that is equal to or greater then the number of
-+ *    unsolicited frame buffers to be utilized.
-+ * @uf_control: This parameter specifies the UF control object for which to
-+ *    update the address table count.
-+ *
-+ */
-+void scic_sds_unsolicited_frame_control_set_address_table_count(
-+	struct scic_sds_unsolicited_frame_control *uf_control)
-+{
-+	uf_control->address_table.count = SCU_MIN_UF_TABLE_ENTRIES;
-+	while (
-+		(uf_control->address_table.count < uf_control->buffers.count)
-+		&& (uf_control->address_table.count < SCU_ABSOLUTE_MAX_UNSOLICITED_FRAMES)
-+		) {
-+		uf_control->address_table.count <<= 1;
-+	}
-+}
-+
-+/**
-+ * This method will program the unsolicited frames (UFs) into the UF address
-+ *    table and construct the UF frame structure being modeled in the core.  It
-+ *    will handle the case where some of the UFs are not being used and thus
-+ *    should have entries programmed to zero in the address table.
-+ * @uf_control: This parameter specifies the unsolicted frame control object
-+ *    for which to construct the unsolicited frames objects.
-+ * @uf_buffer_phys_address: This parameter specifies the physical address for
-+ *    the first unsolicited frame buffer.
-+ * @uf_buffer_virt_address: This parameter specifies the virtual address for
-+ *    the first unsolicited frame buffer.
-+ * @unused_uf_header_entries: This parameter specifies the number of unused UF
-+ *    headers.  This value can be non-zero when there are a non-power of 2
-+ *    number of unsolicited frames being supported.
-+ * @used_uf_header_entries: This parameter specifies the number of actually
-+ *    utilized UF headers.
-+ *
-+ */
-+static void scic_sds_unsolicited_frame_control_construct_frames(
-+	struct scic_sds_unsolicited_frame_control *uf_control,
-+	dma_addr_t uf_buffer_phys_address,
-+	void *uf_buffer_virt_address,
-+	u32 unused_uf_header_entries,
-+	u32 used_uf_header_entries)
-+{
-+	u32 index;
-+	struct scic_sds_unsolicited_frame *uf;
-+
-+	/*
-+	 * Program the unused buffers into the UF address table and the
-+	 * controller's array of UFs.
-+	 */
-+	for (index = 0; index < unused_uf_header_entries; index++) {
-+		uf = &uf_control->buffers.array[index];
-+
-+		sci_cb_make_physical_address(
-+			uf_control->address_table.array[index], 0, 0
-+			);
-+		uf->buffer = NULL;
-+		uf->header = &uf_control->headers.array[index];
-+		uf->state  = UNSOLICITED_FRAME_EMPTY;
-+	}
-+
-+	/*
-+	 * Program the actual used UF buffers into the UF address table and
-+	 * the controller's array of UFs.
-+	 */
-+	for (index = unused_uf_header_entries;
-+	     index < unused_uf_header_entries + used_uf_header_entries;
-+	     index++) {
-+		uf = &uf_control->buffers.array[index];
-+
-+		uf_control->address_table.array[index] = uf_buffer_phys_address;
-+
-+		uf->buffer = uf_buffer_virt_address;
-+		uf->header = &uf_control->headers.array[index];
-+		uf->state  = UNSOLICITED_FRAME_EMPTY;
-+
-+		/*
-+		 * Increment the address of the physical and virtual memory
-+		 * pointers. Everything is aligned on 1k boundary with an
-+		 * increment of 1k.
-+		 */
-+		uf_buffer_virt_address += SCU_UNSOLICITED_FRAME_BUFFER_SIZE;
-+		uf_buffer_phys_address += SCU_UNSOLICITED_FRAME_BUFFER_SIZE;
-+	}
-+}
-+
-+/**
-+ * This method constructs the various members of the unsolicted frame control
-+ *    object (buffers, headers, address, table, etc).
-+ * @uf_control: This parameter specifies the unsolicited frame control object
-+ *    to construct.
-+ * @mde: This parameter specifies the memory descriptor from which to derive
-+ *    all of the address information needed to get the unsolicited frame
-+ *    functionality working.
-+ * @controller: This parameter specifies the controller object associated with
-+ *    the uf_control being constructed.
-+ *
-+ */
-+void scic_sds_unsolicited_frame_control_construct(
-+	struct scic_sds_unsolicited_frame_control *uf_control,
-+	struct sci_physical_memory_descriptor *mde,
-+	struct scic_sds_controller *controller)
-+{
-+	u32 unused_uf_header_entries;
-+	u32 used_uf_header_entries;
-+	u32 used_uf_buffer_bytes;
-+	u32 unused_uf_header_bytes;
-+	u32 used_uf_header_bytes;
-+	dma_addr_t uf_buffer_phys_address;
-+	void *uf_buffer_virt_address;
-+
-+	/*
-+	 * Prepare all of the memory sizes for the UF headers, UF address
-+	 * table, and UF buffers themselves. */
-+	used_uf_buffer_bytes     = uf_control->buffers.count
-+				   * SCU_UNSOLICITED_FRAME_BUFFER_SIZE;
-+	unused_uf_header_entries = uf_control->address_table.count
-+				   - uf_control->buffers.count;
-+	used_uf_header_entries   = uf_control->buffers.count;
-+	unused_uf_header_bytes   = unused_uf_header_entries
-+				   * sizeof(struct scu_unsolicited_frame_header);
-+	used_uf_header_bytes     = used_uf_header_entries
-+				   * sizeof(struct scu_unsolicited_frame_header);
-+
-+	/*
-+	 * The Unsolicited Frame buffers are set at the start of the UF
-+	 * memory descriptor entry. The headers and address table will be
-+	 * placed after the buffers.
-+	 */
-+	uf_buffer_phys_address = mde->physical_address;
-+	uf_buffer_virt_address = mde->virtual_address;
-+
-+	/*
-+	 * Program the location of the UF header table into the SCU.
-+	 * Notes:
-+	 * - The address must align on a 64-byte boundary. Guaranteed to be
-+	 *   on 64-byte boundary already 1KB boundary for unsolicited frames.
-+	 * - Program unused header entries to overlap with the last
-+	 *   unsolicited frame.  The silicon will never DMA to these unused
-+	 *   headers, since we program the UF address table pointers to
-+	 *   NULL.
-+	 */
-+	uf_control->headers.physical_address =
-+				uf_buffer_phys_address +
-+				used_uf_buffer_bytes -
-+				unused_uf_header_bytes;
-+
-+	uf_control->headers.array =
-+				uf_buffer_virt_address +
-+				used_uf_buffer_bytes -
-+				unused_uf_header_bytes;
-+
-+	/*
-+	 * Program the location of the UF address table into the SCU.
-+	 * Notes:
-+	 * - The address must align on a 64-bit boundary. Guaranteed to be on 64
-+	 *   byte boundary already due to above programming headers being on a
-+	 *   64-bit boundary and headers are on a 64-bytes in size.
-+	 */
-+	uf_control->address_table.physical_address =
-+				uf_buffer_phys_address +
-+				used_uf_buffer_bytes +
-+				used_uf_header_bytes;
-+
-+	uf_control->address_table.array =
-+				uf_buffer_virt_address +
-+				used_uf_buffer_bytes +
-+				used_uf_header_bytes;
-+
-+	uf_control->get = 0;
-+
-+	/*
-+	 * UF buffer requirements are:
-+	 * - The last entry in the UF queue is not NULL.
-+	 * - There is a power of 2 number of entries (NULL or not-NULL)
-+	 *   programmed into the queue.
-+	 * - Aligned on a 1KB boundary. */
-+
-+	/*
-+	 * If the user provided less then the maximum amount of memory,
-+	 * then be sure that we programm the first entries in the UF
-+	 * address table to NULL. */
-+	scic_sds_unsolicited_frame_control_construct_frames(
-+		uf_control,
-+		uf_buffer_phys_address,
-+		mde->virtual_address,
-+		unused_uf_header_entries,
-+		used_uf_header_entries
-+		);
-+}
-+
-+/**
-+ * This method returns the frame header for the specified frame index.
-+ * @uf_control:
-+ * @frame_index:
-+ * @frame_header:
-+ *
-+ * enum sci_status
-+ */
-+enum sci_status scic_sds_unsolicited_frame_control_get_header(
-+	struct scic_sds_unsolicited_frame_control *uf_control,
-+	u32 frame_index,
-+	void **frame_header)
-+{
-+	if (frame_index < uf_control->address_table.count) {
-+		/*
-+		 * Skip the first word in the frame since this is a controll word used
-+		 * by the hardware. */
-+		*frame_header = &uf_control->buffers.array[frame_index].header->data;
-+
-+		return SCI_SUCCESS;
-+	}
-+
-+	return SCI_FAILURE_INVALID_PARAMETER_VALUE;
-+}
-+
-+/**
-+ * This method returns the frame buffer for the specified frame index.
-+ * @uf_control:
-+ * @frame_index:
-+ * @frame_buffer:
-+ *
-+ * enum sci_status
-+ */
-+enum sci_status scic_sds_unsolicited_frame_control_get_buffer(
-+	struct scic_sds_unsolicited_frame_control *uf_control,
-+	u32 frame_index,
-+	void **frame_buffer)
-+{
-+	if (frame_index < uf_control->address_table.count) {
-+		*frame_buffer = uf_control->buffers.array[frame_index].buffer;
-+
-+		return SCI_SUCCESS;
-+	}
-+
-+	return SCI_FAILURE_INVALID_PARAMETER_VALUE;
-+}
-+
-+/**
-+ * This method releases the frame once this is done the frame is available for
-+ *    re-use by the hardware.  The data contained in the frame header and frame
-+ *    buffer is no longer valid.
-+ * @uf_control: This parameter specifies the UF control object
-+ * @frame_index: This parameter specifies the frame index to attempt to release.
-+ *
-+ * This method returns an indication to the caller as to whether the
-+ * unsolicited frame get pointer should be updated. true This value indicates
-+ * the unsolicited frame get pointer should be updated (i.e. write
-+ * SCU_UFQGP_WRITE). false This value indicates the get pointer should not be
-+ * updated.
-+ */
-+bool scic_sds_unsolicited_frame_control_release_frame(
-+	struct scic_sds_unsolicited_frame_control *uf_control,
-+	u32 frame_index)
-+{
-+	u32 frame_get;
-+	u32 frame_cycle;
-+
-+	frame_get   = uf_control->get & (uf_control->address_table.count - 1);
-+	frame_cycle = uf_control->get & uf_control->address_table.count;
-+
-+	/*
-+	 * In the event there are NULL entries in the UF table, we need to
-+	 * advance the get pointer in order to find out if this frame should
-+	 * be released (i.e. update the get pointer). */
-+	while (((lower_32_bits(uf_control->address_table.array[frame_get])
-+					== 0) &&
-+		(upper_32_bits(uf_control->address_table.array[frame_get])
-+					== 0)) &&
-+	       (frame_get < uf_control->address_table.count))
-+		frame_get++;
-+
-+	/*
-+	 * The table has a NULL entry as it's last element.  This is
-+	 * illegal. */
-+	BUG_ON(frame_get >= uf_control->address_table.count);
-+
-+	if (frame_index < uf_control->address_table.count) {
-+		uf_control->buffers.array[frame_index].state = UNSOLICITED_FRAME_RELEASED;
-+
-+		/*
-+		 * The frame index is equal to the current get pointer so we
-+		 * can now free up all of the frame entries that */
-+		if (frame_get == frame_index) {
-+			while (
-+				uf_control->buffers.array[frame_get].state
-+				== UNSOLICITED_FRAME_RELEASED
-+				) {
-+				uf_control->buffers.array[frame_get].state = UNSOLICITED_FRAME_EMPTY;
-+
-+				INCREMENT_QUEUE_GET(
-+					frame_get,
-+					frame_cycle,
-+					uf_control->address_table.count - 1,
-+					uf_control->address_table.count
-+					);
-+			}
-+
-+			uf_control->get =
-+				(SCU_UFQGP_GEN_BIT(ENABLE_BIT) | frame_cycle | frame_get);
-+
-+			return true;
-+		} else {
-+			/*
-+			 * Frames remain in use until we advance the get pointer
-+			 * so there is nothing we can do here */
-+		}
-+	}
-+
-+	return false;
-+}
-+
-diff --git a/drivers/scsi/isci/core/scic_sds_unsolicited_frame_control.h b/drivers/scsi/isci/core/scic_sds_unsolicited_frame_control.h
-new file mode 100644
-index 0000000..49db83f
---- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_unsolicited_frame_control.h
-@@ -0,0 +1,286 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *   * Redistributions of source code must retain the above copyright
-+ *     notice, this list of conditions and the following disclaimer.
-+ *   * Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in
-+ *     the documentation and/or other materials provided with the
-+ *     distribution.
-+ *   * Neither the name of Intel Corporation nor the names of its
-+ *     contributors may be used to endorse or promote products derived
-+ *     from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+/**
-+ * This file contains all of the unsolicited frame related management for the
-+ *    address table, the headers, and actual payload buffers.
-+ *
-+ *
-+ */
-+
-+#ifndef _SCIC_SDS_UNSOLICITED_FRAME_CONTROL_H_
-+#define _SCIC_SDS_UNSOLICITED_FRAME_CONTROL_H_
-+
-+#include "scu_unsolicited_frame.h"
-+#include "sci_memory_descriptor_list.h"
-+#include "scu_constants.h"
-+#include "sci_status.h"
-+
-+/**
-+ * enum UNSOLICITED_FRAME_STATE -
-+ *
-+ * This enumeration represents the current unsolicited frame state.  The
-+ * controller object can not updtate the hardware unsolicited frame put pointer
-+ * unless it has already processed the priror unsolicited frames.
-+ */
-+enum UNSOLICITED_FRAME_STATE {
-+	/**
-+	 * This state is when the frame is empty and not in use.  It is
-+	 * different from the released state in that the hardware could DMA
-+	 * data to this frame buffer.
-+	 */
-+	UNSOLICITED_FRAME_EMPTY,
-+
-+	/**
-+	 * This state is set when the frame buffer is in use by by some
-+	 * object in the system.
-+	 */
-+	UNSOLICITED_FRAME_IN_USE,
-+
-+	/**
-+	 * This state is set when the frame is returned to the free pool
-+	 * but one or more frames prior to this one are still in use.
-+	 * Once all of the frame before this one are freed it will go to
-+	 * the empty state.
-+	 */
-+	UNSOLICITED_FRAME_RELEASED,
-+
-+	UNSOLICITED_FRAME_MAX_STATES
-+};
-+
-+/**
-+ * struct scic_sds_unsolicited_frame -
-+ *
-+ * This is the unsolicited frame data structure it acts as the container for
-+ * the current frame state, frame header and frame buffer.
-+ */
-+struct scic_sds_unsolicited_frame {
-+	/**
-+	 * This field contains the current frame state
-+	 */
-+	enum UNSOLICITED_FRAME_STATE state;
-+
-+	/**
-+	 * This field points to the frame header data.
-+	 */
-+	struct scu_unsolicited_frame_header *header;
-+
-+	/**
-+	 * This field points to the frame buffer data.
-+	 */
-+	void *buffer;
-+
-+};
-+
-+/**
-+ * struct scic_sds_uf_header_array -
-+ *
-+ * This structure contains all of the unsolicited frame header information.
-+ */
-+struct scic_sds_uf_header_array {
-+	/**
-+	 * This field is represents a virtual pointer to the start
-+	 * address of the UF address table.  The table contains
-+	 * 64-bit pointers as required by the hardware.
-+	 */
-+	struct scu_unsolicited_frame_header *array;
-+
-+	/**
-+	 * This field specifies the physical address location for the UF
-+	 * buffer array.
-+	 */
-+	dma_addr_t physical_address;
-+
-+};
-+
-+/*
-+ * Determine the size of the unsolicited frame array including
-+ * unused buffers. */
-+#if SCU_UNSOLICITED_FRAME_COUNT <= SCU_MIN_UF_TABLE_ENTRIES
-+#define SCU_UNSOLICITED_FRAME_CONTROL_ARRAY_SIZE SCU_MIN_UF_TABLE_ENTRIES
-+#else
-+#define SCU_UNSOLICITED_FRAME_CONTROL_ARRAY_SIZE SCU_MAX_UNSOLICITED_FRAMES
-+#endif /* SCU_UNSOLICITED_FRAME_COUNT <= SCU_MIN_UF_TABLE_ENTRIES */
-+
-+/**
-+ * struct scic_sds_uf_buffer_array -
-+ *
-+ * This structure contains all of the unsolicited frame buffer (actual payload)
-+ * information.
-+ */
-+struct scic_sds_uf_buffer_array {
-+	/**
-+	 * This field is the minimum number of unsolicited frames supported by the
-+	 * hardware and the number of unsolicited frames requested by the software.
-+	 */
-+	u32 count;
-+
-+	/**
-+	 * This field is the SCIC_UNSOLICITED_FRAME data its used to manage
-+	 * the data for the unsolicited frame requests.  It also represents
-+	 * the virtual address location that corresponds to the
-+	 * physical_address field.
-+	 */
-+	struct scic_sds_unsolicited_frame array[SCU_UNSOLICITED_FRAME_CONTROL_ARRAY_SIZE];
-+
-+	/**
-+	 * This field specifies the physical address location for the UF
-+	 * buffer array.
-+	 */
-+	dma_addr_t physical_address;
-+
-+};
-+
-+/**
-+ * struct scic_sds_uf_address_table_array -
-+ *
-+ * This object maintains all of the unsolicited frame address table specific
-+ * data.  The address table is a collection of 64-bit pointers that point to
-+ * 1KB buffers into which the silicon will DMA unsolicited frames.
-+ */
-+struct scic_sds_uf_address_table_array {
-+	/**
-+	 * This field specifies the actual programmed size of the
-+	 * unsolicited frame buffer address table.  The size of the table
-+	 * can be larger than the actual number of UF buffers, but it must
-+	 * be a power of 2 and the last entry in the table is not allowed
-+	 * to be NULL.
-+	 */
-+	u32 count;
-+
-+	/**
-+	 * This field represents a virtual pointer that refers to the
-+	 * starting address of the UF address table.
-+	 * 64-bit pointers are required by the hardware.
-+	 */
-+	dma_addr_t *array;
-+
-+	/**
-+	 * This field specifies the physical address location for the UF
-+	 * address table.
-+	 */
-+	dma_addr_t physical_address;
-+
-+};
-+
-+/**
-+ * struct scic_sds_unsolicited_frame_control -
-+ *
-+ * This object contains all of the data necessary to handle unsolicited frames.
-+ */
-+struct scic_sds_unsolicited_frame_control {
-+	/**
-+	 * This field is the software copy of the unsolicited frame queue
-+	 * get pointer.  The controller object writes this value to the
-+	 * hardware to let the hardware put more unsolicited frame entries.
-+	 */
-+	u32 get;
-+
-+	/**
-+	 * This field contains all of the unsolicited frame header
-+	 * specific fields.
-+	 */
-+	struct scic_sds_uf_header_array headers;
-+
-+	/**
-+	 * This field contains all of the unsolicited frame buffer
-+	 * specific fields.
-+	 */
-+	struct scic_sds_uf_buffer_array buffers;
-+
-+	/**
-+	 * This field contains all of the unsolicited frame address table
-+	 * specific fields.
-+	 */
-+	struct scic_sds_uf_address_table_array address_table;
-+
-+};
-+
-+void scic_sds_unsolicited_frame_control_set_address_table_count(
-+	struct scic_sds_unsolicited_frame_control *uf_control);
-+
-+struct scic_sds_controller;
-+void scic_sds_unsolicited_frame_control_construct(
-+	struct scic_sds_unsolicited_frame_control *uf_control,
-+	struct sci_physical_memory_descriptor *mde,
-+	struct scic_sds_controller *this_controller);
-+
-+enum sci_status scic_sds_unsolicited_frame_control_get_header(
-+	struct scic_sds_unsolicited_frame_control *uf_control,
-+	u32 frame_index,
-+	void **frame_header);
-+
-+enum sci_status scic_sds_unsolicited_frame_control_get_buffer(
-+	struct scic_sds_unsolicited_frame_control *uf_control,
-+	u32 frame_index,
-+	void **frame_buffer);
-+
-+bool scic_sds_unsolicited_frame_control_release_frame(
-+	struct scic_sds_unsolicited_frame_control *uf_control,
-+	u32 frame_index);
-+
-+/**
-+ * scic_sds_unsolicited_frame_control_get_mde_size() -
-+ *
-+ * This macro simply calculates the size of the memory descriptor entry that
-+ * relates to unsolicited frames and the surrounding silicon memory required to
-+ * utilize it.
-+ */
-+#define scic_sds_unsolicited_frame_control_get_mde_size(uf_control) \
-+	(((uf_control).buffers.count * SCU_UNSOLICITED_FRAME_BUFFER_SIZE) \
-+	 + ((uf_control).address_table.count * sizeof(dma_addr_t)) \
-+	 + ((uf_control).buffers.count * sizeof(struct scu_unsolicited_frame_header)))
-+
-+#endif /* _SCIC_SDS_UNSOLICITED_FRAME_CONTROL_H_ */
-diff --git a/drivers/scsi/isci/core/scu_registers.h b/drivers/scsi/isci/core/scu_registers.h
-new file mode 100644
-index 0000000..05a1411
---- /dev/null
-+++ b/drivers/scsi/isci/core/scu_registers.h
-@@ -0,0 +1,1830 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *   * Redistributions of source code must retain the above copyright
-+ *     notice, this list of conditions and the following disclaimer.
-+ *   * Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in
-+ *     the documentation and/or other materials provided with the
-+ *     distribution.
-+ *   * Neither the name of Intel Corporation nor the names of its
-+ *     contributors may be used to endorse or promote products derived
-+ *     from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#ifndef _SCU_REGISTERS_H_
-+#define _SCU_REGISTERS_H_
-+
-+/**
-+ * This file contains the constants and structures for the SCU memory mapped
-+ *    registers.
-+ *
-+ *
-+ */
-+
-+#include "scu_viit_data.h"
-+
-+
-+/* Generate a value for an SCU register */
-+#define SCU_GEN_VALUE(name, value) \
-+	(((value) << name ## _SHIFT) & (name ## _MASK))
-+
-+/*
-+ * Generate a bit value for an SCU register
-+ * Make sure that the register MASK is just a single bit */
-+#define SCU_GEN_BIT(name) \
-+	SCU_GEN_VALUE(name, ((u32)1))
-+
-+#define SCU_SET_BIT(name, reg_value) \
-+	((reg_value) | SCU_GEN_BIT(name))
-+
-+#define SCU_CLEAR_BIT(name, reg_value) \
-+	((reg_value)$ ~(SCU_GEN_BIT(name)))
-+
-+/*
-+ * *****************************************************************************
-+ * Unions for bitfield definitions of SCU Registers
-+ * SMU Post Context Port
-+ * ***************************************************************************** */
-+#define SMU_POST_CONTEXT_PORT_CONTEXT_INDEX_SHIFT         (0)
-+#define SMU_POST_CONTEXT_PORT_CONTEXT_INDEX_MASK          (0x00000FFF)
-+#define SMU_POST_CONTEXT_PORT_LOGICAL_PORT_INDEX_SHIFT    (12)
-+#define SMU_POST_CONTEXT_PORT_LOGICAL_PORT_INDEX_MASK     (0x0000F000)
-+#define SMU_POST_CONTEXT_PORT_PROTOCOL_ENGINE_SHIFT       (16)
-+#define SMU_POST_CONTEXT_PORT_PROTOCOL_ENGINE_MASK        (0x00030000)
-+#define SMU_POST_CONTEXT_PORT_COMMAND_CONTEXT_SHIFT       (18)
-+#define SMU_POST_CONTEXT_PORT_COMMAND_CONTEXT_MASK        (0x00FC0000)
-+#define SMU_POST_CONTEXT_PORT_RESERVED_MASK               (0xFF000000)
-+
-+#define SMU_PCP_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SMU_POST_CONTEXT_PORT_ ## name, value)
-+
-+/* ***************************************************************************** */
-+#define SMU_INTERRUPT_STATUS_COMPLETION_SHIFT       (31)
-+#define SMU_INTERRUPT_STATUS_COMPLETION_MASK        (0x80000000)
-+#define SMU_INTERRUPT_STATUS_QUEUE_SUSPEND_SHIFT    (1)
-+#define SMU_INTERRUPT_STATUS_QUEUE_SUSPEND_MASK     (0x00000002)
-+#define SMU_INTERRUPT_STATUS_QUEUE_ERROR_SHIFT      (0)
-+#define SMU_INTERRUPT_STATUS_QUEUE_ERROR_MASK       (0x00000001)
-+#define SMU_INTERRUPT_STATUS_RESERVED_MASK          (0x7FFFFFFC)
-+
-+#define SMU_ISR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SMU_INTERRUPT_STATUS_ ## name)
-+
-+#define SMU_ISR_QUEUE_ERROR   SMU_ISR_GEN_BIT(QUEUE_ERROR)
-+#define SMU_ISR_QUEUE_SUSPEND SMU_ISR_GEN_BIT(QUEUE_SUSPEND)
-+#define SMU_ISR_COMPLETION    SMU_ISR_GEN_BIT(COMPLETION)
-+
-+/* ***************************************************************************** */
-+#define SMU_INTERRUPT_MASK_COMPLETION_SHIFT         (31)
-+#define SMU_INTERRUPT_MASK_COMPLETION_MASK          (0x80000000)
-+#define SMU_INTERRUPT_MASK_QUEUE_SUSPEND_SHIFT      (1)
-+#define SMU_INTERRUPT_MASK_QUEUE_SUSPEND_MASK       (0x00000002)
-+#define SMU_INTERRUPT_MASK_QUEUE_ERROR_SHIFT        (0)
-+#define SMU_INTERRUPT_MASK_QUEUE_ERROR_MASK         (0x00000001)
-+#define SMU_INTERRUPT_MASK_RESERVED_MASK            (0x7FFFFFFC)
-+
-+#define SMU_IMR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SMU_INTERRUPT_MASK_ ## name)
-+
-+#define SMU_IMR_QUEUE_ERROR   SMU_IMR_GEN_BIT(QUEUE_ERROR)
-+#define SMU_IMR_QUEUE_SUSPEND SMU_IMR_GEN_BIT(QUEUE_SUSPEND)
-+#define SMU_IMR_COMPLETION    SMU_IMR_GEN_BIT(COMPLETION)
-+
-+/* ***************************************************************************** */
-+#define SMU_INTERRUPT_COALESCING_CONTROL_TIMER_SHIFT    (0)
-+#define SMU_INTERRUPT_COALESCING_CONTROL_TIMER_MASK     (0x0000001F)
-+#define SMU_INTERRUPT_COALESCING_CONTROL_NUMBER_SHIFT   (8)
-+#define SMU_INTERRUPT_COALESCING_CONTROL_NUMBER_MASK    (0x0000FF00)
-+#define SMU_INTERRUPT_COALESCING_CONTROL_RESERVED_MASK  (0xFFFF00E0)
-+
-+#define SMU_ICC_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SMU_INTERRUPT_COALESCING_CONTROL_ ## name, value)
-+
-+/* ***************************************************************************** */
-+#define SMU_TASK_CONTEXT_RANGE_START_SHIFT      (0)
-+#define SMU_TASK_CONTEXT_RANGE_START_MASK       (0x00000FFF)
-+#define SMU_TASK_CONTEXT_RANGE_ENDING_SHIFT     (16)
-+#define SMU_TASK_CONTEXT_RANGE_ENDING_MASK      (0x0FFF0000)
-+#define SMU_TASK_CONTEXT_RANGE_ENABLE_SHIFT     (31)
-+#define SMU_TASK_CONTEXT_RANGE_ENABLE_MASK      (0x80000000)
-+#define SMU_TASK_CONTEXT_RANGE_RESERVED_MASK    (0x7000F000)
-+
-+#define SMU_TCR_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SMU_TASK_CONTEXT_RANGE_ ## name, value)
-+
-+#define SMU_TCR_GEN_BIT(name, value) \
-+	SCU_GEN_BIT(SMU_TASK_CONTEXT_RANGE_ ## name)
-+
-+/* ***************************************************************************** */
-+
-+#define SMU_COMPLETION_QUEUE_PUT_POINTER_SHIFT          (0)
-+#define SMU_COMPLETION_QUEUE_PUT_POINTER_MASK           (0x00003FFF)
-+#define SMU_COMPLETION_QUEUE_PUT_CYCLE_BIT_SHIFT        (15)
-+#define SMU_COMPLETION_QUEUE_PUT_CYCLE_BIT_MASK         (0x00008000)
-+#define SMU_COMPLETION_QUEUE_PUT_EVENT_POINTER_SHIFT    (16)
-+#define SMU_COMPLETION_QUEUE_PUT_EVENT_POINTER_MASK     (0x03FF0000)
-+#define SMU_COMPLETION_QUEUE_PUT_EVENT_CYCLE_BIT_SHIFT  (26)
-+#define SMU_COMPLETION_QUEUE_PUT_EVENT_CYCLE_BIT_MASK   (0x04000000)
-+#define SMU_COMPLETION_QUEUE_PUT_RESERVED_MASK          (0xF8004000)
-+
-+#define SMU_CQPR_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SMU_COMPLETION_QUEUE_PUT_ ## name, value)
-+
-+#define SMU_CQPR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SMU_COMPLETION_QUEUE_PUT_ ## name)
-+
-+/* ***************************************************************************** */
-+
-+#define SMU_COMPLETION_QUEUE_GET_POINTER_SHIFT          (0)
-+#define SMU_COMPLETION_QUEUE_GET_POINTER_MASK           (0x00003FFF)
-+#define SMU_COMPLETION_QUEUE_GET_CYCLE_BIT_SHIFT        (15)
-+#define SMU_COMPLETION_QUEUE_GET_CYCLE_BIT_MASK         (0x00008000)
-+#define SMU_COMPLETION_QUEUE_GET_EVENT_POINTER_SHIFT    (16)
-+#define SMU_COMPLETION_QUEUE_GET_EVENT_POINTER_MASK     (0x03FF0000)
-+#define SMU_COMPLETION_QUEUE_GET_EVENT_CYCLE_BIT_SHIFT  (26)
-+#define SMU_COMPLETION_QUEUE_GET_EVENT_CYCLE_BIT_MASK   (0x04000000)
-+#define SMU_COMPLETION_QUEUE_GET_ENABLE_SHIFT           (30)
-+#define SMU_COMPLETION_QUEUE_GET_ENABLE_MASK            (0x40000000)
-+#define SMU_COMPLETION_QUEUE_GET_EVENT_ENABLE_SHIFT     (31)
-+#define SMU_COMPLETION_QUEUE_GET_EVENT_ENABLE_MASK      (0x80000000)
-+#define SMU_COMPLETION_QUEUE_GET_RESERVED_MASK          (0x38004000)
-+
-+#define SMU_CQGR_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SMU_COMPLETION_QUEUE_GET_ ## name, value)
-+
-+#define SMU_CQGR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SMU_COMPLETION_QUEUE_GET_ ## name)
-+
-+#define SMU_CQGR_CYCLE_BIT \
-+	SMU_CQGR_GEN_BIT(CYCLE_BIT)
-+
-+#define SMU_CQGR_EVENT_CYCLE_BIT \
-+	SMU_CQGR_GEN_BIT(EVENT_CYCLE_BIT)
-+
-+#define SMU_CQGR_GET_POINTER_SET(value)	\
-+	SMU_CQGR_GEN_VAL(POINTER, value)
-+
-+
-+/* ***************************************************************************** */
-+#define SMU_COMPLETION_QUEUE_CONTROL_QUEUE_LIMIT_SHIFT  (0)
-+#define SMU_COMPLETION_QUEUE_CONTROL_QUEUE_LIMIT_MASK   (0x00003FFF)
-+#define SMU_COMPLETION_QUEUE_CONTROL_EVENT_LIMIT_SHIFT  (16)
-+#define SMU_COMPLETION_QUEUE_CONTROL_EVENT_LIMIT_MASK   (0x03FF0000)
-+#define SMU_COMPLETION_QUEUE_CONTROL_RESERVED_MASK      (0xFC00C000)
-+
-+#define SMU_CQC_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SMU_COMPLETION_QUEUE_CONTROL_ ## name, value)
-+
-+#define SMU_CQC_QUEUE_LIMIT_SET(value) \
-+	SMU_CQC_GEN_VAL(QUEUE_LIMIT, value)
-+
-+#define SMU_CQC_EVENT_LIMIT_SET(value) \
-+	SMU_CQC_GEN_VAL(EVENT_LIMIT, value)
-+
-+
-+/* ***************************************************************************** */
-+#define SMU_DEVICE_CONTEXT_CAPACITY_MAX_TC_SHIFT    (0)
-+#define SMU_DEVICE_CONTEXT_CAPACITY_MAX_TC_MASK     (0x00000FFF)
-+#define SMU_DEVICE_CONTEXT_CAPACITY_MAX_LP_SHIFT    (12)
-+#define SMU_DEVICE_CONTEXT_CAPACITY_MAX_LP_MASK     (0x00007000)
-+#define SMU_DEVICE_CONTEXT_CAPACITY_MAX_RNC_SHIFT   (15)
-+#define SMU_DEVICE_CONTEXT_CAPACITY_MAX_RNC_MASK    (0x07FF8000)
-+#define SMU_DEVICE_CONTEXT_CAPACITY_MAX_PEG_SHIFT   (27)
-+#define SMU_DEVICE_CONTEXT_CAPACITY_MAX_PEG_MASK    (0x08000000)
-+#define SMU_DEVICE_CONTEXT_CAPACITY_RESERVED_MASK   (0xF0000000)
-+
-+#define SMU_DCC_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SMU_DEVICE_CONTEXT_CAPACITY_ ## name, value)
-+
-+#define SMU_DCC_GET_MAX_PEG(value) \
-+	(\
-+		((value) & SMU_DEVICE_CONTEXT_CAPACITY_MAX_PEG_MASK) \
-+		>> SMU_DEVICE_CONTEXT_CAPACITY_MAX_LP_SHIFT \
-+	)
-+
-+#define SMU_DCC_GET_MAX_LP(value) \
-+	(\
-+		((value) & SMU_DEVICE_CONTEXT_CAPACITY_MAX_LP_MASK) \
-+		>> SMU_DEVICE_CONTEXT_CAPACITY_MAX_LP_SHIFT \
-+	)
-+
-+#define SMU_DCC_GET_MAX_TC(value) \
-+	(\
-+		((value) & SMU_DEVICE_CONTEXT_CAPACITY_MAX_TC_MASK) \
-+		>> SMU_DEVICE_CONTEXT_CAPACITY_MAX_TC_SHIFT \
-+	)
-+
-+#define SMU_DCC_GET_MAX_RNC(value) \
-+	(\
-+		((value) & SMU_DEVICE_CONTEXT_CAPACITY_MAX_RNC_MASK) \
-+		>> SMU_DEVICE_CONTEXT_CAPACITY_MAX_RNC_SHIFT \
-+	)
-+
-+/* -------------------------------------------------------------------------- */
-+
-+#define SMU_CONTROL_STATUS_TASK_CONTEXT_RANGE_ENABLE_SHIFT      (0)
-+#define SMU_CONTROL_STATUS_TASK_CONTEXT_RANGE_ENABLE_MASK       (0x00000001)
-+#define SMU_CONTROL_STATUS_COMPLETION_BYTE_SWAP_ENABLE_SHIFT    (1)
-+#define SMU_CONTROL_STATUS_COMPLETION_BYTE_SWAP_ENABLE_MASK     (0x00000002)
-+#define SMU_CONTROL_STATUS_CONTEXT_RAM_INIT_COMPLETED_SHIFT     (16)
-+#define SMU_CONTROL_STATUS_CONTEXT_RAM_INIT_COMPLETED_MASK      (0x00010000)
-+#define SMU_CONTROL_STATUS_SCHEDULER_RAM_INIT_COMPLETED_SHIFT   (17)
-+#define SMU_CONTROL_STATUS_SCHEDULER_RAM_INIT_COMPLETED_MASK    (0x00020000)
-+#define SMU_CONTROL_STATUS_RESERVED_MASK                        (0xFFFCFFFC)
-+
-+#define SMU_SMUCSR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SMU_CONTROL_STATUS_ ## name)
-+
-+#define SMU_SMUCSR_SCHEDULER_RAM_INIT_COMPLETED	\
-+	(SMU_SMUCSR_GEN_BIT(SCHEDULER_RAM_INIT_COMPLETED))
-+
-+#define SMU_SMUCSR_CONTEXT_RAM_INIT_COMPLETED	\
-+	(SMU_SMUCSR_GEN_BIT(CONTEXT_RAM_INIT_COMPLETED))
-+
-+#define SCU_RAM_INIT_COMPLETED \
-+	(\
-+		SMU_SMUCSR_CONTEXT_RAM_INIT_COMPLETED \
-+		| SMU_SMUCSR_SCHEDULER_RAM_INIT_COMPLETED \
-+	)
-+
-+/* -------------------------------------------------------------------------- */
-+
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_PE0_SHIFT  (0)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_PE0_MASK   (0x00000001)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_PE1_SHIFT  (1)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_PE1_MASK   (0x00000002)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_PE2_SHIFT  (2)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_PE2_MASK   (0x00000004)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_PE3_SHIFT  (3)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_PE3_MASK   (0x00000008)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_PE0_SHIFT  (8)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_PE0_MASK   (0x00000100)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_PE1_SHIFT  (9)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_PE1_MASK   (0x00000200)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_PE2_SHIFT  (10)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_PE2_MASK   (0x00000400)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_PE3_SHIFT  (11)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_PE3_MASK   (0x00000800)
-+
-+#define SMU_RESET_PROTOCOL_ENGINE(peg, pe) \
-+	((1 << (pe)) << ((peg) * 8))
-+
-+#define SMU_RESET_PEG_PROTOCOL_ENGINES(peg) \
-+	(\
-+		SMU_RESET_PROTOCOL_ENGINE(peg, 0) \
-+		| SMU_RESET_PROTOCOL_ENGINE(peg, 1) \
-+		| SMU_RESET_PROTOCOL_ENGINE(peg, 2) \
-+		| SMU_RESET_PROTOCOL_ENGINE(peg, 3) \
-+	)
-+
-+#define SMU_RESET_ALL_PROTOCOL_ENGINES() \
-+	(\
-+		SMU_RESET_PEG_PROTOCOL_ENGINES(0) \
-+		| SMU_RESET_PEG_PROTOCOL_ENGINES(1) \
-+	)
-+
-+#define SMU_SOFTRESET_CONTROL_RESET_WIDE_PORT_PEG0_LP0_SHIFT  (16)
-+#define SMU_SOFTRESET_CONTROL_RESET_WIDE_PORT_PEG0_LP0_MASK   (0x00010000)
-+#define SMU_SOFTRESET_CONTROL_RESET_WIDE_PORT_PEG0_LP2_SHIFT  (17)
-+#define SMU_SOFTRESET_CONTROL_RESET_WIDE_PORT_PEG0_LP2_MASK   (0x00020000)
-+#define SMU_SOFTRESET_CONTROL_RESET_WIDE_PORT_PEG1_LP0_SHIFT  (18)
-+#define SMU_SOFTRESET_CONTROL_RESET_WIDE_PORT_PEG1_LP0_MASK   (0x00040000)
-+#define SMU_SOFTRESET_CONTROL_RESET_WIDE_PORT_PEG1_LP2_SHIFT  (19)
-+#define SMU_SOFTRESET_CONTROL_RESET_WIDE_PORT_PEG1_LP2_MASK   (0x00080000)
-+
-+#define SMU_RESET_WIDE_PORT_QUEUE(peg, wide_port) \
-+	((1 << ((wide_port) / 2)) << ((peg) * 2) << 16)
-+
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_SHIFT      (20)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG0_MASK       (0x00100000)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_SHIFT      (21)
-+#define SMU_SOFTRESET_CONTROL_RESET_PEG1_MASK       (0x00200000)
-+#define SMU_SOFTRESET_CONTROL_RESET_SCU_SHIFT       (22)
-+#define SMU_SOFTRESET_CONTROL_RESET_SCU_MASK        (0x00400000)
-+
-+/*
-+ * It seems to make sense that if you are going to reset the protocol
-+ * engine group that you would also reset all of the protocol engines */
-+#define SMU_RESET_PROTOCOL_ENGINE_GROUP(peg) \
-+	(\
-+		(1 << ((peg) + 20)) \
-+		| SMU_RESET_WIDE_PORT_QUEUE(peg, 0) \
-+		| SMU_RESET_WIDE_PORT_QUEUE(peg, 1) \
-+		| SMU_RESET_PEG_PROTOCOL_ENGINES(peg) \
-+	)
-+
-+#define SMU_RESET_ALL_PROTOCOL_ENGINE_GROUPS() \
-+	(\
-+		SMU_RESET_PROTOCOL_ENGINE_GROUP(0) \
-+		| SMU_RESET_PROTOCOL_ENGINE_GROUP(1) \
-+	)
-+
-+#define SMU_RESET_SCU()  (0xFFFFFFFF)
-+
-+
-+
-+/* ***************************************************************************** */
-+#define SMU_TASK_CONTEXT_ASSIGNMENT_STARTING_SHIFT              (0)
-+#define SMU_TASK_CONTEXT_ASSIGNMENT_STARTING_MASK               (0x00000FFF)
-+#define SMU_TASK_CONTEXT_ASSIGNMENT_ENDING_SHIFT                (16)
-+#define SMU_TASK_CONTEXT_ASSIGNMENT_ENDING_MASK                 (0x0FFF0000)
-+#define SMU_TASK_CONTEXT_ASSIGNMENT_RANGE_CHECK_ENABLE_SHIFT    (31)
-+#define SMU_TASK_CONTEXT_ASSIGNMENT_RANGE_CHECK_ENABLE_MASK     (0x80000000)
-+#define SMU_TASK_CONTEXT_ASSIGNMENT_RESERVED_MASK               (0x7000F000)
-+
-+#define SMU_TCA_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SMU_TASK_CONTEXT_ASSIGNMENT_ ## name, value)
-+
-+#define SMU_TCA_GEN_BIT(name) \
-+	SCU_GEN_BIT(SMU_TASK_CONTEXT_ASSIGNMENT_ ## name)
-+
-+/* ***************************************************************************** */
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_CONTROL_QUEUE_SIZE_SHIFT   (0)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_CONTROL_QUEUE_SIZE_MASK    (0x00000FFF)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_CONTROL_RESERVED_MASK      (0xFFFFF000)
-+
-+#define SCU_UFQC_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_SDMA_UNSOLICITED_FRAME_QUEUE_CONTROL_ ## name, value)
-+
-+#define SCU_UFQC_QUEUE_SIZE_SET(value) \
-+	SCU_UFQC_GEN_VAL(QUEUE_SIZE, value)
-+
-+/* ***************************************************************************** */
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_PUT_POINTER_SHIFT      (0)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_PUT_POINTER_MASK       (0x00000FFF)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_PUT_CYCLE_BIT_SHIFT    (12)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_PUT_CYCLE_BIT_MASK     (0x00001000)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_PUT_RESERVED_MASK      (0xFFFFE000)
-+
-+#define SCU_UFQPP_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_SDMA_UNSOLICITED_FRAME_QUEUE_PUT_ ## name, value)
-+
-+#define SCU_UFQPP_GEN_BIT(name)	\
-+	SCU_GEN_BIT(SCU_SDMA_UNSOLICITED_FRAME_QUEUE_PUT_ ## name)
-+
-+/*
-+ * *****************************************************************************
-+ * * SDMA Registers
-+ * ***************************************************************************** */
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_GET_POINTER_SHIFT      (0)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_GET_POINTER_MASK       (0x00000FFF)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_GET_CYCLE_BIT_SHIFT    (12)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_GET_CYCLE_BIT_MASK     (12)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_GET_ENABLE_BIT_SHIFT   (31)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_GET_ENABLE_BIT_MASK    (0x80000000)
-+#define SCU_SDMA_UNSOLICITED_FRAME_QUEUE_GET_RESERVED_MASK      (0x7FFFE000)
-+
-+#define SCU_UFQGP_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_SDMA_UNSOLICITED_FRAME_QUEUE_GET_ ## name, value)
-+
-+#define SCU_UFQGP_GEN_BIT(name)	\
-+	SCU_GEN_BIT(SCU_SDMA_UNSOLICITED_FRAME_QUEUE_GET_ ## name)
-+
-+#define SCU_UFQGP_CYCLE_BIT(value) \
-+	SCU_UFQGP_GEN_BIT(CYCLE_BIT, value)
-+
-+#define SCU_UFQGP_GET_POINTER(value) \
-+	SCU_UFQGP_GEN_VALUE(POINTER, value)
-+
-+#define SCU_UFQGP_ENABLE(value)	\
-+	(SCU_UFQGP_GEN_BIT(ENABLE) | value)
-+
-+#define SCU_UFQGP_DISABLE(value) \
-+	(~SCU_UFQGP_GEN_BIT(ENABLE) & value)
-+
-+#define SCU_UFQGP_VALUE(bit, value) \
-+	(SCU_UFQGP_CYCLE_BIT(bit) | SCU_UFQGP_GET_POINTER(value))
-+
-+/* ***************************************************************************** */
-+#define SCU_PDMA_CONFIGURATION_ADDRESS_MODIFIER_SHIFT                               (0)
-+#define SCU_PDMA_CONFIGURATION_ADDRESS_MODIFIER_MASK                                (0x0000FFFF)
-+#define SCU_PDMA_CONFIGURATION_PCI_RELAXED_ORDERING_ENABLE_SHIFT                    (16)
-+#define SCU_PDMA_CONFIGURATION_PCI_RELAXED_ORDERING_ENABLE_MASK                     (0x00010000)
-+#define SCU_PDMA_CONFIGURATION_PCI_NO_SNOOP_ENABLE_SHIFT                            (17)
-+#define SCU_PDMA_CONFIGURATION_PCI_NO_SNOOP_ENABLE_MASK                             (0x00020000)
-+#define SCU_PDMA_CONFIGURATION_BIG_ENDIAN_CONTROL_BYTE_SWAP_SHIFT                   (18)
-+#define SCU_PDMA_CONFIGURATION_BIG_ENDIAN_CONTROL_BYTE_SWAP_MASK                    (0x00040000)
-+#define SCU_PDMA_CONFIGURATION_BIG_ENDIAN_CONTROL_XPI_SGL_FETCH_SHIFT               (19)
-+#define SCU_PDMA_CONFIGURATION_BIG_ENDIAN_CONTROL_XPI_SGL_FETCH_MASK                (0x00080000)
-+#define SCU_PDMA_CONFIGURATION_BIG_ENDIAN_CONTROL_XPI_RX_HEADER_RAM_WRITE_SHIFT     (20)
-+#define SCU_PDMA_CONFIGURATION_BIG_ENDIAN_CONTROL_XPI_RX_HEADER_RAM_WRITE_MASK      (0x00100000)
-+#define SCU_PDMA_CONFIGURATION_BIG_ENDIAN_CONTROL_XPI_UF_ADDRESS_FETCH_SHIFT        (21)
-+#define SCU_PDMA_CONFIGURATION_BIG_ENDIAN_CONTROL_XPI_UF_ADDRESS_FETCH_MASK         (0x00200000)
-+#define SCU_PDMA_CONFIGURATION_ADDRESS_MODIFIER_SELECT_SHIFT                        (22)
-+#define SCU_PDMA_CONFIGURATION_ADDRESS_MODIFIER_SELECT_MASK                         (0x00400000)
-+#define SCU_PDMA_CONFIGURATION_RESERVED_MASK                                        (0xFF800000)
-+
-+#define SCU_PDMACR_GEN_VALUE(name, value) \
-+	SCU_GEN_VALUE(SCU_PDMA_CONFIGURATION_ ## name, value)
-+
-+#define SCU_PDMACR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_PDMA_CONFIGURATION_ ## name)
-+
-+#define SCU_PDMACR_BE_GEN_BIT(name) \
-+	SCU_PCMACR_GEN_BIT(BIG_ENDIAN_CONTROL_ ## name)
-+
-+/* ***************************************************************************** */
-+#define SCU_CDMA_CONFIGURATION_PCI_RELAXED_ORDERING_ENABLE_SHIFT                    (8)
-+#define SCU_CDMA_CONFIGURATION_PCI_RELAXED_ORDERING_ENABLE_MASK                     (0x00000100)
-+
-+#define SCU_CDMACR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_CDMA_CONFIGURATION_ ## name)
-+
-+/*
-+ * *****************************************************************************
-+ * * SCU Link Layer Registers
-+ * ***************************************************************************** */
-+#define SCU_LINK_LAYER_SPEED_NEGOTIATION_TIMER_VALUES_TIMEOUT_SHIFT             (0)
-+#define SCU_LINK_LAYER_SPEED_NEGOTIATION_TIMER_VALUES_TIMEOUT_MASK              (0x000000FF)
-+#define SCU_LINK_LAYER_SPEED_NEGOTIATION_TIMER_VALUES_LOCK_TIME_SHIFT           (8)
-+#define SCU_LINK_LAYER_SPEED_NEGOTIATION_TIMER_VALUES_LOCK_TIME_MASK            (0x0000FF00)
-+#define SCU_LINK_LAYER_SPEED_NEGOTIATION_TIMER_VALUES_RATE_CHANGE_DELAY_SHIFT   (16)
-+#define SCU_LINK_LAYER_SPEED_NEGOTIATION_TIMER_VALUES_RATE_CHANGE_DELAY_MASK    (0x00FF0000)
-+#define SCU_LINK_LAYER_SPEED_NEGOTIATION_TIMER_VALUES_DWORD_SYNC_TIMEOUT_SHIFT  (24)
-+#define SCU_LINK_LAYER_SPEED_NEGOTIATION_TIMER_VALUES_DWORD_SYNC_TIMEOUT_MASK   (0xFF000000)
-+#define SCU_LINK_LAYER_SPEED_NECGOIATION_TIMER_VALUES_REQUIRED_MASK             (0x00000000)
-+#define SCU_LINK_LAYER_SPEED_NECGOIATION_TIMER_VALUES_DEFAULT_MASK              (0x7D00676F)
-+#define SCU_LINK_LAYER_SPEED_NECGOIATION_TIMER_VALUES_RESERVED_MASK             (0x00FF0000)
-+
-+#define SCU_SAS_SPDTOV_GEN_VALUE(name, value) \
-+	SCU_GEN_VALUE(SCU_LINK_LAYER_SPEED_NEGOTIATION_TIMER_VALUES_ ## name, value)
-+
-+
-+#define SCU_LINK_STATUS_DWORD_SYNC_AQUIRED_SHIFT            (2)
-+#define SCU_LINK_STATUS_DWORD_SYNC_AQUIRED_MASK             (0x00000004)
-+#define SCU_LINK_STATUS_TRANSMIT_PORT_SELECTION_DONE_SHIFT  (4)
-+#define SCU_LINK_STATUS_TRANSMIT_PORT_SELECTION_DONE_MASK   (0x00000010)
-+#define SCU_LINK_STATUS_RECEIVER_CREDIT_EXHAUSTED_SHIFT     (5)
-+#define SCU_LINK_STATUS_RECEIVER_CREDIT_EXHAUSTED_MASK      (0x00000020)
-+#define SCU_LINK_STATUS_RESERVED_MASK                       (0xFFFFFFCD)
-+
-+#define SCU_SAS_LLSTA_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_LINK_STATUS_ ## name)
-+
-+
-+/* TODO: Where is the SATA_PSELTOV register? */
-+
-+/*
-+ * *****************************************************************************
-+ * * SCU SAS Maximum Arbitration Wait Time Timeout Register
-+ * ***************************************************************************** */
-+#define SCU_SAS_MAX_ARBITRATION_WAIT_TIME_TIMEOUT_VALUE_SHIFT       (0)
-+#define SCU_SAS_MAX_ARBITRATION_WAIT_TIME_TIMEOUT_VALUE_MASK        (0x00007FFF)
-+#define SCU_SAS_MAX_ARBITRATION_WAIT_TIME_TIMEOUT_SCALE_SHIFT       (15)
-+#define SCU_SAS_MAX_ARBITRATION_WAIT_TIME_TIMEOUT_SCALE_MASK        (0x00008000)
-+
-+#define SCU_SAS_MAWTTOV_GEN_VALUE(name, value) \
-+	SCU_GEN_VALUE(SCU_SAS_MAX_ARBITRATION_WAIT_TIME_TIMEOUT_ ## name, value)
-+
-+#define SCU_SAS_MAWTTOV_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_SAS_MAX_ARBITRATION_WAIT_TIME_TIMEOUT_ ## name)
-+
-+
-+/*
-+ * TODO: Where is the SAS_LNKTOV regsiter?
-+ * TODO: Where is the SAS_PHYTOV register? */
-+
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_SMP_TARGET_SHIFT            (1)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_SMP_TARGET_MASK             (0x00000002)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_STP_TARGET_SHIFT            (2)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_STP_TARGET_MASK             (0x00000004)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_SSP_TARGET_SHIFT            (3)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_SSP_TARGET_MASK             (0x00000008)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_DA_SATA_HOST_SHIFT          (8)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_DA_SATA_HOST_MASK           (0x00000100)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_SMP_INITIATOR_SHIFT         (9)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_SMP_INITIATOR_MASK          (0x00000200)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_STP_INITIATOR_SHIFT         (10)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_STP_INITIATOR_MASK          (0x00000400)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_SSP_INITIATOR_SHIFT         (11)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_SSP_INITIATOR_MASK          (0x00000800)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_REASON_CODE_SHIFT           (16)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_REASON_CODE_MASK            (0x000F0000)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_ADDRESS_FRAME_TYPE_SHIFT    (24)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_ADDRESS_FRAME_TYPE_MASK     (0x0F000000)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_DEVICE_TYPE_SHIFT           (28)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_DEVICE_TYPE_MASK            (0x70000000)
-+#define SCU_SAS_TRANSMIT_IDENTIFICATION_RESERVED_MASK               (0x80F0F1F1)
-+
-+#define SCU_SAS_TIID_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_SAS_TRANSMIT_IDENTIFICATION_ ## name, value)
-+
-+#define SCU_SAS_TIID_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_SAS_TRANSMIT_IDENTIFICATION_ ## name)
-+
-+/* SAS Identify Frame PHY Identifier Register */
-+#define SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_BREAK_REPLY_CAPABLE_SHIFT      (16)
-+#define SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_BREAK_REPLY_CAPABLE_MASK       (0x00010000)
-+#define SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_REQUESTED_INSIDE_ZPSDS_SHIFT   (17)
-+#define SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_REQUESTED_INSIDE_ZPSDS_MASK    (0x00020000)
-+#define SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_INSIDE_ZPSDS_PERSISTENT_SHIFT  (18)
-+#define SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_INSIDE_ZPSDS_PERSISTENT_MASK   (0x00040000)
-+#define SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_ID_SHIFT                       (24)
-+#define SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_ID_MASK                        (0xFF000000)
-+#define SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_RESERVED_MASK                  (0x00F800FF)
-+
-+#define SCU_SAS_TIPID_GEN_VALUE(name, value) \
-+	SCU_GEN_VALUE(SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_ ## name, value)
-+
-+#define SCU_SAS_TIPID_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_LINK_LAYER_IDENTIFY_FRAME_PHY_IDENTIFIER_ ## name)
-+
-+
-+#define SCU_SAS_PHY_CONFIGURATION_TX_PARITY_CHECK_SHIFT                     (4)
-+#define SCU_SAS_PHY_CONFIGURATION_TX_PARITY_CHECK_MASK                      (0x00000010)
-+#define SCU_SAS_PHY_CONFIGURATION_TX_BAD_CRC_SHIFT                          (6)
-+#define SCU_SAS_PHY_CONFIGURATION_TX_BAD_CRC_MASK                           (0x00000040)
-+#define SCU_SAS_PHY_CONFIGURATION_DISABLE_SCRAMBLER_SHIFT                   (7)
-+#define SCU_SAS_PHY_CONFIGURATION_DISABLE_SCRAMBLER_MASK                    (0x00000080)
-+#define SCU_SAS_PHY_CONFIGURATION_DISABLE_DESCRAMBLER_SHIFT                 (8)
-+#define SCU_SAS_PHY_CONFIGURATION_DISABLE_DESCRAMBLER_MASK                  (0x00000100)
-+#define SCU_SAS_PHY_CONFIGURATION_DISABLE_CREDIT_INSERTION_SHIFT            (9)
-+#define SCU_SAS_PHY_CONFIGURATION_DISABLE_CREDIT_INSERTION_MASK             (0x00000200)
-+#define SCU_SAS_PHY_CONFIGURATION_SUSPEND_PROTOCOL_ENGINE_SHIFT             (11)
-+#define SCU_SAS_PHY_CONFIGURATION_SUSPEND_PROTOCOL_ENGINE_MASK              (0x00000800)
-+#define SCU_SAS_PHY_CONFIGURATION_SATA_SPINUP_HOLD_SHIFT                    (12)
-+#define SCU_SAS_PHY_CONFIGURATION_SATA_SPINUP_HOLD_MASK                     (0x00001000)
-+#define SCU_SAS_PHY_CONFIGURATION_TRANSMIT_PORT_SELECTION_SIGNAL_SHIFT      (13)
-+#define SCU_SAS_PHY_CONFIGURATION_TRANSMIT_PORT_SELECTION_SIGNAL_MASK       (0x00002000)
-+#define SCU_SAS_PHY_CONFIGURATION_HARD_RESET_SHIFT                          (14)
-+#define SCU_SAS_PHY_CONFIGURATION_HARD_RESET_MASK                           (0x00004000)
-+#define SCU_SAS_PHY_CONFIGURATION_OOB_ENABLE_SHIFT                          (15)
-+#define SCU_SAS_PHY_CONFIGURATION_OOB_ENABLE_MASK                           (0x00008000)
-+#define SCU_SAS_PHY_CONFIGURATION_ENABLE_FRAME_TX_INSERT_ALIGN_SHIFT        (23)
-+#define SCU_SAS_PHY_CONFIGURATION_ENABLE_FRAME_TX_INSERT_ALIGN_MASK         (0x00800000)
-+#define SCU_SAS_PHY_CONFIGURATION_FORWARD_IDENTIFY_FRAME_SHIFT              (27)
-+#define SCU_SAS_PHY_CONFIGURATION_FORWARD_IDENTIFY_FRAME_MASK               (0x08000000)
-+#define SCU_SAS_PHY_CONFIGURATION_DISABLE_BYTE_TRANSPOSE_STP_FRAME_SHIFT    (28)
-+#define SCU_SAS_PHY_CONFIGURATION_DISABLE_BYTE_TRANSPOSE_STP_FRAME_MASK     (0x10000000)
-+#define SCU_SAS_PHY_CONFIGURATION_OOB_RESET_SHIFT                           (29)
-+#define SCU_SAS_PHY_CONFIGURATION_OOB_RESET_MASK                            (0x20000000)
-+#define SCU_SAS_PHY_CONFIGURATION_THREE_IAF_ENABLE_SHIFT                    (30)
-+#define SCU_SAS_PHY_CONFIGURATION_THREE_IAF_ENABLE_MASK                     (0x40000000)
-+#define SCU_SAS_PHY_CONFIGURATION_OOB_ALIGN0_ENABLE_SHIFT                   (31)
-+#define SCU_SAS_PHY_CONFIGURATION_OOB_ALIGN0_ENABLE_MASK                    (0x80000000)
-+#define SCU_SAS_PHY_CONFIGURATION_REQUIRED_MASK                             (0x0100000F)
-+#define SCU_SAS_PHY_CONFIGURATION_DEFAULT_MASK                              (0x4180100F)
-+#define SCU_SAS_PHY_CONFIGURATION_RESERVED_MASK                             (0x00000000)
-+
-+#define SCU_SAS_PCFG_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_SAS_PHY_CONFIGURATION_ ## name)
-+
-+#define SCU_LINK_LAYER_ALIGN_INSERTION_FREQUENCY_GENERAL_SHIFT      (0)
-+#define SCU_LINK_LAYER_ALIGN_INSERTION_FREQUENCY_GENERAL_MASK       (0x000007FF)
-+#define SCU_LINK_LAYER_ALIGN_INSERTION_FREQUENCY_CONNECTED_SHIFT    (16)
-+#define SCU_LINK_LAYER_ALIGN_INSERTION_FREQUENCY_CONNECTED_MASK     (0x00ff0000)
-+
-+#define SCU_ALIGN_INSERTION_FREQUENCY_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_LINK_LAYER_ALIGN_INSERTION_FREQUENCY_##name, value)
-+
-+#define SCU_LINK_LAYER_ENABLE_SPINUP_CONTROL_COUNT_SHIFT    (0)
-+#define SCU_LINK_LAYER_ENABLE_SPINUP_CONTROL_COUNT_MASK     (0x0003FFFF)
-+#define SCU_LINK_LAYER_ENABLE_SPINUP_CONTROL_ENABLE_SHIFT   (31)
-+#define SCU_LINK_LAYER_ENABLE_SPINUP_CONTROL_ENABLE_MASK    (0x80000000)
-+#define SCU_LINK_LAYER_ENABLE_SPINUP_CONTROL_RESERVED_MASK  (0x7FFC0000)
-+
-+#define SCU_ENSPINUP_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_LINK_LAYER_ENABLE_SPINUP_CONTROL_ ## name, value)
-+
-+#define SCU_ENSPINUP_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_LINK_LAYER_ENABLE_SPINUP_CONTROL_ ## name)
-+
-+
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_TXSSCTYPE_SHIFT     (1)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_TXSSCTYPE_MASK      (0x00000002)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_RLLRATE_SHIFT       (4)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_RLLRATE_MASK        (0x000000F0)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SWO15GBPS_SHIFT     (8)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SWO15GBPS_MASK      (0x00000100)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SW15GBPS_SHIFT      (9)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SW15GBPS_MASK       (0x00000201)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SWO30GBPS_SHIFT     (10)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SWO30GBPS_MASK      (0x00000401)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SW30GBPS_SHIFT      (11)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SW30GBPS_MASK       (0x00000801)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SWO60GBPS_SHIFT     (12)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SWO60GBPS_MASK      (0x00001001)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SW60GBPS_SHIFT      (13)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_SW60GBPS_MASK       (0x00002001)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_EVEN_PARITY_SHIFT   (31)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_EVEN_PARITY_MASK    (0x80000000)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_DEFAULT_MASK        (0x00003F01)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_REQUIRED_MASK       (0x00000001)
-+#define SCU_LINK_LAYER_PHY_CAPABILITIES_RESERVED_MASK       (0x7FFFC00D)
-+
-+#define SCU_SAS_PHYCAP_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_LINK_LAYER_PHY_CAPABILITIES_ ## name, value)
-+
-+#define SCU_SAS_PHYCAP_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_LINK_LAYER_PHY_CAPABILITIES_ ## name)
-+
-+
-+#define SCU_LINK_LAYER_PHY_SOURCE_ZONE_GROUP_CONTROL_VIRTUAL_EXPANDER_PHY_ZONE_GROUP_SHIFT  (0)
-+#define SCU_LINK_LAYER_PHY_SOURCE_ZONE_GROUP_CONTROL_VIRTUAL_EXPANDER_PHY_ZONE_GROUP_MASK   (0x000000FF)
-+#define SCU_LINK_LAYER_PHY_SOURCE_ZONE_GROUP_CONTROL_INSIDE_SOURCE_ZONE_GROUP_SHIFT         (31)
-+#define SCU_LINK_LAYER_PHY_SOURCE_ZONE_GROUP_CONTROL_INSIDE_SOURCE_ZONE_GROUP_MASK          (0x80000000)
-+#define SCU_LINK_LAYER_PHY_SOURCE_ZONE_GROUP_CONTROL_RESERVED_MASK                          (0x7FFFFF00)
-+
-+#define SCU_PSZGCR_GEN_VAL(name, value)	\
-+	SCU_GEN_VALUE(SCU_LINK_LAYER_PHY_SOURCE_ZONE_GROUP_CONTROL_ ## name, value)
-+
-+#define SCU_PSZGCR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_LINK_LAYER_PHY_SOURCE_ZONE_GROUP_CONTROL_ ## name)
-+
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZONE0_LOCKED_SHIFT        (1)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZONE0_LOCKED_MASK         (0x00000002)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZONE0_UPDATING_SHIFT      (2)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZONE0_UPDATING_MASK       (0x00000004)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZONE1_LOCKED_SHIFT        (4)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZONE1_LOCKED_MASK         (0x00000010)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZONE1_UPDATING_SHIFT      (5)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZONE1_UPDATING_MASK       (0x00000020)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZPT_ASSOCIATION_PE0_SHIFT (16)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZPT_ASSOCIATION_PE0_MASK  (0x00030000)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_AIP_ENABLE_PE0_SHIFT      (19)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_AIP_ENABLE_PE0_MASK       (0x00080000)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZPT_ASSOCIATION_PE1_SHIFT (20)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZPT_ASSOCIATION_PE1_MASK  (0x00300000)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_AIP_ENABLE_PE1_SHIFT      (23)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_AIP_ENABLE_PE1_MASK       (0x00800000)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZPT_ASSOCIATION_PE2_SHIFT (24)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZPT_ASSOCIATION_PE2_MASK  (0x03000000)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_AIP_ENABLE_PE2_SHIFT      (27)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_AIP_ENABLE_PE2_MASK       (0x08000000)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZPT_ASSOCIATION_PE3_SHIFT (28)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ZPT_ASSOCIATION_PE3_MASK  (0x30000000)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_AIP_ENABLE_PE3_SHIFT      (31)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_AIP_ENABLE_PE3_MASK       (0x80000000)
-+#define SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_RESERVED_MASK             (0x4444FFC9)
-+
-+#define SCU_PEG_SCUVZECR_GEN_VAL(name, val) \
-+	SCU_GEN_VALUE(SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ ## name, val)
-+
-+#define SCU_PEG_SCUVZECR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_PROTOCOL_ENGINE_GROUP_VIRTUAL_ZONING_EXPANDER_CONTROL_ ## name)
-+
-+
-+/*
-+ * *****************************************************************************
-+ * * Port Task Scheduler registers shift and mask values
-+ * ***************************************************************************** */
-+#define SCU_PTSG_CONTROL_IT_NEXUS_TIMEOUT_SHIFT     (0)
-+#define SCU_PTSG_CONTROL_IT_NEXUS_TIMEOUT_MASK      (0x0000FFFF)
-+#define SCU_PTSG_CONTROL_TASK_TIMEOUT_SHIFT         (16)
-+#define SCU_PTSG_CONTROL_TASK_TIMEOUT_MASK          (0x00FF0000)
-+#define SCU_PTSG_CONTROL_PTSG_ENABLE_SHIFT          (24)
-+#define SCU_PTSG_CONTROL_PTSG_ENABLE_MASK           (0x01000000)
-+#define SCU_PTSG_CONTROL_ETM_ENABLE_SHIFT           (25)
-+#define SCU_PTSG_CONTROL_ETM_ENABLE_MASK            (0x02000000)
-+#define SCU_PTSG_CONTROL_DEFAULT_MASK               (0x00020002)
-+#define SCU_PTSG_CONTROL_REQUIRED_MASK              (0x00000000)
-+#define SCU_PTSG_CONTROL_RESERVED_MASK              (0xFC000000)
-+
-+#define SCU_PTSGCR_GEN_VAL(name, val) \
-+	SCU_GEN_VALUE(SCU_PTSG_CONTROL_ ## name, val)
-+
-+#define SCU_PTSGCR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_PTSG_CONTROL_ ## name)
-+
-+
-+/* ***************************************************************************** */
-+#define SCU_PTSG_REAL_TIME_CLOCK_SHIFT          (0)
-+#define SCU_PTSG_REAL_TIME_CLOCK_MASK           (0x0000FFFF)
-+#define SCU_PTSG_REAL_TIME_CLOCK_RESERVED_MASK  (0xFFFF0000)
-+
-+#define SCU_RTCR_GEN_VAL(name, val) \
-+	SCU_GEN_VALUE(SCU_PTSG_ ## name, val)
-+
-+
-+#define SCU_PTSG_REAL_TIME_CLOCK_CONTROL_PRESCALER_VALUE_SHIFT  (0)
-+#define SCU_PTSG_REAL_TIME_CLOCK_CONTROL_PRESCALER_VALUE_MASK   (0x00FFFFFF)
-+#define SCU_PTSG_REAL_TIME_CLOCK_CONTROL_RESERVED_MASK          (0xFF000000)
-+
-+#define SCU_RTCCR_GEN_VAL(name, val) \
-+	SCU_GEN_VALUE(SCU_PTSG_REAL_TIME_CLOCK_CONTROL_ ## name, val)
-+
-+
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_CONTROL_SUSPEND_SHIFT  (0)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_CONTROL_SUSPEND_MASK   (0x00000001)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_CONTROL_ENABLE_SHIFT   (1)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_CONTROL_ENABLE_MASK    (0x00000002)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_CONTROL_RESERVED_MASK  (0xFFFFFFFC)
-+
-+#define SCU_PTSxCR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_PTSG_PORT_TASK_SCHEDULER_CONTROL_ ## name)
-+
-+
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_STATUS_NEXT_RN_VALID_SHIFT             (0)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_STATUS_NEXT_RN_VALID_MASK              (0x00000001)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_STATUS_ACTIVE_RNSC_LIST_VALID_SHIFT    (1)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_STATUS_ACTIVE_RNSC_LIST_VALID_MASK     (0x00000002)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_STATUS_PTS_SUSPENDED_SHIFT             (2)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_STATUS_PTS_SUSPENDED_MASK              (0x00000004)
-+#define SCU_PTSG_PORT_TASK_SCHEDULER_STATUS_RESERVED_MASK                   (0xFFFFFFF8)
-+
-+#define SCU_PTSxSR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_PTSG_PORT_TASK_SCHEDULER_STATUS_ ## name)
-+
-+
-+/*
-+ * *****************************************************************************
-+ * * SGPIO Register shift and mask values
-+ * ***************************************************************************** */
-+#define SCU_SGPIO_CONTROL_SGPIO_ENABLE_SHIFT                    (0)
-+#define SCU_SGPIO_CONTROL_SGPIO_ENABLE_MASK                     (0x00000001)
-+#define SCU_SGPIO_CONTROL_SGPIO_SERIAL_CLOCK_SELECT_SHIFT       (1)
-+#define SCU_SGPIO_CONTROL_SGPIO_SERIAL_CLOCK_SELECT_MASK        (0x00000002)
-+#define SCU_SGPIO_CONTROL_SGPIO_SERIAL_SHIFT_WIDTH_SELECT_SHIFT (2)
-+#define SCU_SGPIO_CONTROL_SGPIO_SERIAL_SHIFT_WIDTH_SELECT_MASK  (0x00000004)
-+#define SCU_SGPIO_CONTROL_SGPIO_TEST_BIT_SHIFT                  (15)
-+#define SCU_SGPIO_CONTROL_SGPIO_TEST_BIT_MASK                   (0x00008000)
-+#define SCU_SGPIO_CONTROL_SGPIO_RESERVED_MASK                   (0xFFFF7FF8)
-+
-+#define SCU_SGICRx_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_SGPIO_CONTROL_SGPIO_ ## name)
-+
-+#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R0_SHIFT      (0)
-+#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R0_MASK       (0x0000000F)
-+#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R1_SHIFT      (4)
-+#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R1_MASK       (0x000000F0)
-+#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R2_SHIFT      (8)
-+#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R2_MASK       (0x00000F00)
-+#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R3_SHIFT      (12)
-+#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_R3_MASK       (0x0000F000)
-+#define SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_RESERVED_MASK (0xFFFF0000)
-+
-+#define SCU_SGPBRx_GEN_VAL(name, value)	\
-+	SCU_GEN_VALUE(SCU_SGPIO_PROGRAMMABLE_BLINK_REGISTER_ ## name, value)
-+
-+#define SCU_SGPIO_START_DRIVE_LOWER_R0_SHIFT        (0)
-+#define SCU_SGPIO_START_DRIVE_LOWER_R0_MASK         (0x00000003)
-+#define SCU_SGPIO_START_DRIVE_LOWER_R1_SHIFT        (4)
-+#define SCU_SGPIO_START_DRIVE_LOWER_R1_MASK         (0x00000030)
-+#define SCU_SGPIO_START_DRIVE_LOWER_R2_SHIFT        (8)
-+#define SCU_SGPIO_START_DRIVE_LOWER_R2_MASK         (0x00000300)
-+#define SCU_SGPIO_START_DRIVE_LOWER_R3_SHIFT        (12)
-+#define SCU_SGPIO_START_DRIVE_LOWER_R3_MASK         (0x00003000)
-+#define SCU_SGPIO_START_DRIVE_LOWER_RESERVED_MASK   (0xFFFF8888)
-+
-+#define SCU_SGSDLRx_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_SGPIO_START_DRIVE_LOWER_ ## name, value)
-+
-+#define SCU_SGPIO_START_DRIVE_UPPER_R0_SHIFT        (0)
-+#define SCU_SGPIO_START_DRIVE_UPPER_R0_MASK         (0x00000003)
-+#define SCU_SGPIO_START_DRIVE_UPPER_R1_SHIFT        (4)
-+#define SCU_SGPIO_START_DRIVE_UPPER_R1_MASK         (0x00000030)
-+#define SCU_SGPIO_START_DRIVE_UPPER_R2_SHIFT        (8)
-+#define SCU_SGPIO_START_DRIVE_UPPER_R2_MASK         (0x00000300)
-+#define SCU_SGPIO_START_DRIVE_UPPER_R3_SHIFT        (12)
-+#define SCU_SGPIO_START_DRIVE_UPPER_R3_MASK         (0x00003000)
-+#define SCU_SGPIO_START_DRIVE_UPPER_RESERVED_MASK   (0xFFFF8888)
-+
-+#define SCU_SGSDURx_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_SGPIO_START_DRIVE_LOWER_ ## name, value)
-+
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D0_SHIFT      (0)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D0_MASK       (0x00000003)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D1_SHIFT      (4)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D1_MASK       (0x00000030)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D2_SHIFT      (8)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D2_MASK       (0x00000300)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D3_SHIFT      (12)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_D3_MASK       (0x00003000)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_RESERVED_MASK (0xFFFF8888)
-+
-+#define SCU_SGSIDLRx_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_ ## name, value)
-+
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D0_SHIFT      (0)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D0_MASK       (0x00000003)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D1_SHIFT      (4)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D1_MASK       (0x00000030)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D2_SHIFT      (8)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D2_MASK       (0x00000300)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D3_SHIFT      (12)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_D3_MASK       (0x00003000)
-+#define SCU_SGPIO_SERIAL_INPUT_DATA_UPPER_RESERVED_MASK (0xFFFF8888)
-+
-+#define SCU_SGSIDURx_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_SGPIO_SERIAL_INPUT_DATA_LOWER_ ## name, value)
-+
-+#define SCU_SGPIO_VENDOR_SPECIFIC_CODE_SHIFT            (0)
-+#define SCU_SGPIO_VENDOR_SPECIFIC_CODE_MASK             (0x0000000F)
-+#define SCU_SGPIO_VENDOR_SPECIFIC_CODE_RESERVED_MASK    (0xFFFFFFF0)
-+
-+#define SCU_SGVSCR_GEN_VAL(value) \
-+	SCU_GEN_VALUE(SCU_SGPIO_VENDOR_SPECIFIC_CODE ## name, value)
-+
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA0_SHIFT           (0)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA0_MASK            (0x00000003)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA0_SHIFT    (2)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA0_MASK     (0x00000004)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA0_SHIFT      (3)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA0_MASK       (0x00000008)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA1_SHIFT           (4)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA1_MASK            (0x00000030)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA1_SHIFT    (6)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA1_MASK     (0x00000040)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA1_SHIFT      (7)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA1_MASK       (0x00000080)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA2_SHIFT           (8)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INPUT_DATA2_MASK            (0x00000300)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA2_SHIFT    (10)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_INVERT_INPUT_DATA2_MASK     (0x00000400)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA2_SHIFT      (11)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_JOG_ENABLE_DATA2_MASK       (0x00000800)
-+#define SCU_SGPIO_OUPUT_DATA_SELECT_RESERVED_MASK               (0xFFFFF000)
-+
-+#define SCU_SGODSR_GEN_VAL(name, value)	\
-+	SCU_GEN_VALUE(SCU_SGPIO_OUPUT_DATA_SELECT_ ## name, value)
-+
-+#define SCU_SGODSR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_SGPIO_OUPUT_DATA_SELECT_ ## name)
-+
-+/*
-+ * *****************************************************************************
-+ * * SMU Registers
-+ * ***************************************************************************** */
-+
-+/*
-+ * ----------------------------------------------------------------------------
-+ * SMU Registers
-+ * These registers are based off of BAR0
-+ *
-+ * To calculate the offset for other functions use
-+ *       BAR0 + FN# * SystemPageSize * 2
-+ *
-+ * The TCA is only accessable from FN#0 (Physical Function) and each
-+ * is programmed by (BAR0 + SCU_SMU_TCA_OFFSET + (FN# * 0x04)) or
-+ *    TCA0 for FN#0 is at BAR0 + 0x0400
-+ *    TCA1 for FN#1 is at BAR0 + 0x0404
-+ *    etc.
-+ * ----------------------------------------------------------------------------
-+ * Accessable to all FN#s */
-+#define SCU_SMU_PCP_OFFSET          0x0000
-+#define SCU_SMU_AMR_OFFSET          0x0004
-+#define SCU_SMU_ISR_OFFSET          0x0010
-+#define SCU_SMU_IMR_OFFSET          0x0014
-+#define SCU_SMU_ICC_OFFSET          0x0018
-+#define SCU_SMU_HTTLBAR_OFFSET      0x0020
-+#define SCU_SMU_HTTUBAR_OFFSET      0x0024
-+#define SCU_SMU_TCR_OFFSET          0x0028
-+#define SCU_SMU_CQLBAR_OFFSET       0x0030
-+#define SCU_SMU_CQUBAR_OFFSET       0x0034
-+#define SCU_SMU_CQPR_OFFSET         0x0040
-+#define SCU_SMU_CQGR_OFFSET         0x0044
-+#define SCU_SMU_CQC_OFFSET          0x0048
-+/* Accessable to FN#0 only */
-+#define SCU_SMU_RNCLBAR_OFFSET      0x0080
-+#define SCU_SMU_RNCUBAR_OFFSET      0x0084
-+#define SCU_SMU_DCC_OFFSET          0x0090
-+#define SCU_SMU_DFC_OFFSET          0x0094
-+#define SCU_SMU_SMUCSR_OFFSET       0x0098
-+#define SCU_SMU_SCUSRCR_OFFSET      0x009C
-+#define SCU_SMU_SMAW_OFFSET         0x00A0
-+#define SCU_SMU_SMDW_OFFSET         0x00A4
-+/* Accessable to FN#0 only */
-+#define SCU_SMU_TCA_OFFSET          0x0400
-+/* Accessable to all FN#s */
-+#define SCU_SMU_MT_MLAR0_OFFSET     0x2000
-+#define SCU_SMU_MT_MUAR0_OFFSET     0x2004
-+#define SCU_SMU_MT_MDR0_OFFSET      0x2008
-+#define SCU_SMU_MT_VCR0_OFFSET      0x200C
-+#define SCU_SMU_MT_MLAR1_OFFSET     0x2010
-+#define SCU_SMU_MT_MUAR1_OFFSET     0x2014
-+#define SCU_SMU_MT_MDR1_OFFSET      0x2018
-+#define SCU_SMU_MT_VCR1_OFFSET      0x201C
-+#define SCU_SMU_MPBA_OFFSET         0x3000
-+
-+/**
-+ * struct smu_registers - These are the SMU registers
-+ *
-+ *
-+ */
-+struct smu_registers {
-+/* 0x0000 PCP */
-+	u32 post_context_port;
-+/* 0x0004 AMR */
-+	u32 address_modifier;
-+	u32 reserved_08;
-+	u32 reserved_0C;
-+/* 0x0010 ISR */
-+	u32 interrupt_status;
-+/* 0x0014 IMR */
-+	u32 interrupt_mask;
-+/* 0x0018 ICC */
-+	u32 interrupt_coalesce_control;
-+	u32 reserved_1C;
-+/* 0x0020 HTTLBAR */
-+	u32 host_task_table_lower;
-+/* 0x0024 HTTUBAR */
-+	u32 host_task_table_upper;
-+/* 0x0028 TCR */
-+	u32 task_context_range;
-+	u32 reserved_2C;
-+/* 0x0030 CQLBAR */
-+	u32 completion_queue_lower;
-+/* 0x0034 CQUBAR */
-+	u32 completion_queue_upper;
-+	u32 reserved_38;
-+	u32 reserved_3C;
-+/* 0x0040 CQPR */
-+	u32 completion_queue_put;
-+/* 0x0044 CQGR */
-+	u32 completion_queue_get;
-+/* 0x0048 CQC */
-+	u32 completion_queue_control;
-+	u32 reserved_4C;
-+	u32 reserved_5x[4];
-+	u32 reserved_6x[4];
-+	u32 reserved_7x[4];
-+/*
-+ * Accessable to FN#0 only
-+ * 0x0080 RNCLBAR */
-+	u32 remote_node_context_lower;
-+/* 0x0084 RNCUBAR */
-+	u32 remote_node_context_upper;
-+	u32 reserved_88;
-+	u32 reserved_8C;
-+/* 0x0090 DCC */
-+	u32 device_context_capacity;
-+/* 0x0094 DFC */
-+	u32 device_function_capacity;
-+/* 0x0098 SMUCSR */
-+	u32 control_status;
-+/* 0x009C SCUSRCR */
-+	u32 soft_reset_control;
-+/* 0x00A0 SMAW */
-+	u32 mmr_address_window;
-+/* 0x00A4 SMDW */
-+	u32 mmr_data_window;
-+	u32 reserved_A8;
-+	u32 reserved_AC;
-+/* A whole bunch of reserved space */
-+	u32 reserved_Bx[4];
-+	u32 reserved_Cx[4];
-+	u32 reserved_Dx[4];
-+	u32 reserved_Ex[4];
-+	u32 reserved_Fx[4];
-+	u32 reserved_1xx[64];
-+	u32 reserved_2xx[64];
-+	u32 reserved_3xx[64];
-+/*
-+ * Accessable to FN#0 only
-+ * 0x0400 TCA */
-+	u32 task_context_assignment[256];
-+/* MSI-X registers not included */
-+};
-+
-+/*
-+ * *****************************************************************************
-+ * SDMA Registers
-+ * ***************************************************************************** */
-+#define SCU_SDMA_BASE               0x6000
-+#define SCU_SDMA_PUFATLHAR_OFFSET   0x0000
-+#define SCU_SDMA_PUFATUHAR_OFFSET   0x0004
-+#define SCU_SDMA_UFLHBAR_OFFSET     0x0008
-+#define SCU_SDMA_UFUHBAR_OFFSET     0x000C
-+#define SCU_SDMA_UFQC_OFFSET        0x0010
-+#define SCU_SDMA_UFQPP_OFFSET       0x0014
-+#define SCU_SDMA_UFQGP_OFFSET       0x0018
-+#define SCU_SDMA_PDMACR_OFFSET      0x001C
-+#define SCU_SDMA_CDMACR_OFFSET      0x0080
-+
-+/**
-+ * struct scu_sdma_registers - These are the SCU SDMA Registers
-+ *
-+ *
-+ */
-+struct scu_sdma_registers {
-+/* 0x0000 PUFATLHAR */
-+	u32 uf_address_table_lower;
-+/* 0x0004 PUFATUHAR */
-+	u32 uf_address_table_upper;
-+/* 0x0008 UFLHBAR */
-+	u32 uf_header_base_address_lower;
-+/* 0x000C UFUHBAR */
-+	u32 uf_header_base_address_upper;
-+/* 0x0010 UFQC */
-+	u32 unsolicited_frame_queue_control;
-+/* 0x0014 UFQPP */
-+	u32 unsolicited_frame_put_pointer;
-+/* 0x0018 UFQGP */
-+	u32 unsolicited_frame_get_pointer;
-+/* 0x001C PDMACR */
-+	u32 pdma_configuration;
-+/* Reserved until offset 0x80 */
-+	u32 reserved_0020_007C[0x18];
-+/* 0x0080 CDMACR */
-+	u32 cdma_configuration;
-+/* Remainder SDMA register space */
-+	u32 reserved_0084_0400[0xDF];
-+
-+};
-+
-+/*
-+ * *****************************************************************************
-+ * * SCU Link Registers
-+ * ***************************************************************************** */
-+#define SCU_PEG0_OFFSET    0x0000
-+#define SCU_PEG1_OFFSET    0x8000
-+
-+#define SCU_TL0_OFFSET     0x0000
-+#define SCU_TL1_OFFSET     0x0400
-+#define SCU_TL2_OFFSET     0x0800
-+#define SCU_TL3_OFFSET     0x0C00
-+
-+#define SCU_LL_OFFSET      0x0080
-+#define SCU_LL0_OFFSET     (SCU_TL0_OFFSET + SCU_LL_OFFSET)
-+#define SCU_LL1_OFFSET     (SCU_TL1_OFFSET + SCU_LL_OFFSET)
-+#define SCU_LL2_OFFSET     (SCU_TL2_OFFSET + SCU_LL_OFFSET)
-+#define SCU_LL3_OFFSET     (SCU_TL3_OFFSET + SCU_LL_OFFSET)
-+
-+/* Transport Layer Offsets (PEG + TL) */
-+#define SCU_TLCR_OFFSET         0x0000
-+#define SCU_TLADTR_OFFSET       0x0004
-+#define SCU_TLTTMR_OFFSET       0x0008
-+#define SCU_TLEECR0_OFFSET      0x000C
-+#define SCU_STPTLDARNI_OFFSET   0x0010
-+
-+
-+#define SCU_TLCR_HASH_SAS_CHECKING_ENABLE_SHIFT    (0)
-+#define SCU_TLCR_HASH_SAS_CHECKING_ENABLE_MASK     (0x00000001)
-+#define SCU_TLCR_CLEAR_TCI_NCQ_MAPPING_TABLE_SHIFT (1)
-+#define SCU_TLCR_CLEAR_TCI_NCQ_MAPPING_TABLE_MASK  (0x00000002)
-+#define SCU_TLCR_STP_WRITE_DATA_PREFETCH_SHIFT     (3)
-+#define SCU_TLCR_STP_WRITE_DATA_PREFETCH_MASK      (0x00000008)
-+#define SCU_TLCR_CMD_NAK_STATUS_CODE_SHIFT         (4)
-+#define SCU_TLCR_CMD_NAK_STATUS_CODE_MASK          (0x00000010)
-+#define SCU_TLCR_RESERVED_MASK                     (0xFFFFFFEB)
-+
-+#define SCU_TLCR_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_TLCR_ ## name)
-+
-+/**
-+ * struct scu_transport_layer_registers - These are the SCU Transport Layer
-+ *    registers
-+ *
-+ *
-+ */
-+struct scu_transport_layer_registers {
-+	/* 0x0000 TLCR */
-+	u32 control;
-+	/* 0x0004 TLADTR */
-+	u32 arbitration_delay_timer;
-+	/* 0x0008 TLTTMR */
-+	u32 timer_test_mode;
-+	/* 0x000C reserved */
-+	u32 reserved_0C;
-+	/* 0x0010 STPTLDARNI */
-+	u32 stp_rni;
-+	/* 0x0014 TLFEWPORCTRL */
-+	u32 tlfe_wpo_read_control;
-+	/* 0x0018 TLFEWPORDATA */
-+	u32 tlfe_wpo_read_data;
-+	/* 0x001C RXTLSSCSR1 */
-+	u32 rxtl_single_step_control_status_1;
-+	/* 0x0020 RXTLSSCSR2 */
-+	u32 rxtl_single_step_control_status_2;
-+	/* 0x0024 AWTRDDCR */
-+	u32 tlfe_awt_retry_delay_debug_control;
-+	/* Remainder of TL memory space */
-+	u32 reserved_0028_007F[0x16];
-+
-+};
-+
-+/* Protocol Engine Group Registers */
-+#define SCU_SCUVZECRx_OFFSET        0x1080
-+
-+/* Link Layer Offsets (PEG + TL + LL) */
-+#define SCU_SAS_SPDTOV_OFFSET       0x0000
-+#define SCU_SAS_LLSTA_OFFSET        0x0004
-+#define SCU_SATA_PSELTOV_OFFSET     0x0008
-+#define SCU_SAS_TIMETOV_OFFSET      0x0010
-+#define SCU_SAS_LOSTOT_OFFSET       0x0014
-+#define SCU_SAS_LNKTOV_OFFSET       0x0018
-+#define SCU_SAS_PHYTOV_OFFSET       0x001C
-+#define SCU_SAS_AFERCNT_OFFSET      0x0020
-+#define SCU_SAS_WERCNT_OFFSET       0x0024
-+#define SCU_SAS_TIID_OFFSET         0x0028
-+#define SCU_SAS_TIDNH_OFFSET        0x002C
-+#define SCU_SAS_TIDNL_OFFSET        0x0030
-+#define SCU_SAS_TISSAH_OFFSET       0x0034
-+#define SCU_SAS_TISSAL_OFFSET       0x0038
-+#define SCU_SAS_TIPID_OFFSET        0x003C
-+#define SCU_SAS_TIRES2_OFFSET       0x0040
-+#define SCU_SAS_ADRSTA_OFFSET       0x0044
-+#define SCU_SAS_MAWTTOV_OFFSET      0x0048
-+#define SCU_SAS_FRPLDFIL_OFFSET     0x0054
-+#define SCU_SAS_RFCNT_OFFSET        0x0060
-+#define SCU_SAS_TFCNT_OFFSET        0x0064
-+#define SCU_SAS_RFDCNT_OFFSET       0x0068
-+#define SCU_SAS_TFDCNT_OFFSET       0x006C
-+#define SCU_SAS_LERCNT_OFFSET       0x0070
-+#define SCU_SAS_RDISERRCNT_OFFSET   0x0074
-+#define SCU_SAS_CRERCNT_OFFSET      0x0078
-+#define SCU_STPCTL_OFFSET           0x007C
-+#define SCU_SAS_PCFG_OFFSET         0x0080
-+#define SCU_SAS_CLKSM_OFFSET        0x0084
-+#define SCU_SAS_TXCOMWAKE_OFFSET    0x0088
-+#define SCU_SAS_TXCOMINIT_OFFSET    0x008C
-+#define SCU_SAS_TXCOMSAS_OFFSET     0x0090
-+#define SCU_SAS_COMINIT_OFFSET      0x0094
-+#define SCU_SAS_COMWAKE_OFFSET      0x0098
-+#define SCU_SAS_COMSAS_OFFSET       0x009C
-+#define SCU_SAS_SFERCNT_OFFSET      0x00A0
-+#define SCU_SAS_CDFERCNT_OFFSET     0x00A4
-+#define SCU_SAS_DNFERCNT_OFFSET     0x00A8
-+#define SCU_SAS_PRSTERCNT_OFFSET    0x00AC
-+#define SCU_SAS_CNTCTL_OFFSET       0x00B0
-+#define SCU_SAS_SSPTOV_OFFSET       0x00B4
-+#define SCU_FTCTL_OFFSET            0x00B8
-+#define SCU_FRCTL_OFFSET            0x00BC
-+#define SCU_FTWMRK_OFFSET           0x00C0
-+#define SCU_ENSPINUP_OFFSET         0x00C4
-+#define SCU_SAS_TRNTOV_OFFSET       0x00C8
-+#define SCU_SAS_PHYCAP_OFFSET       0x00CC
-+#define SCU_SAS_PHYCTL_OFFSET       0x00D0
-+#define SCU_SAS_LLCTL_OFFSET        0x00D8
-+#define SCU_AFE_XCVRCR_OFFSET       0x00DC
-+#define SCU_AFE_LUTCR_OFFSET        0x00E0
-+
-+#define SCU_SAS_LINK_LAYER_CONTROL_MAX_LINK_RATE_SHIFT                  (0)
-+#define SCU_SAS_LINK_LAYER_CONTROL_MAX_LINK_RATE_MASK                   (0x00000003)
-+#define SCU_SAS_LINK_LAYER_CONTROL_MAX_LINK_RATE_GEN1                   (0)
-+#define SCU_SAS_LINK_LAYER_CONTROL_MAX_LINK_RATE_GEN2                   (1)
-+#define SCU_SAS_LINK_LAYER_CONTROL_MAX_LINK_RATE_GEN3                   (2)
-+#define SCU_SAS_LINK_LAYER_CONTROL_BROADCAST_PRIMITIVE_SHIFT            (2)
-+#define SCU_SAS_LINK_LAYER_CONTROL_BROADCAST_PRIMITIVE_MASK             (0x000003FC)
-+#define SCU_SAS_LINK_LAYER_CONTROL_CLOSE_NO_ACTIVE_TASK_DISABLE_SHIFT   (16)
-+#define SCU_SAS_LINK_LAYER_CONTROL_CLOSE_NO_ACTIVE_TASK_DISABLE_MASK    (0x00010000)
-+#define SCU_SAS_LINK_LAYER_CONTROL_CLOSE_NO_OUTBOUND_TASK_DISABLE_SHIFT (17)
-+#define SCU_SAS_LINK_LAYER_CONTROL_CLOSE_NO_OUTBOUND_TASK_DISABLE_MASK  (0x00020000)
-+#define SCU_SAS_LINK_LAYER_CONTROL_NO_OUTBOUND_TASK_TIMEOUT_SHIFT       (24)
-+#define SCU_SAS_LINK_LAYER_CONTROL_NO_OUTBOUND_TASK_TIMEOUT_MASK        (0xFF000000)
-+#define SCU_SAS_LINK_LAYER_CONTROL_RESERVED                             (0x00FCFC00)
-+
-+#define SCU_SAS_LLCTL_GEN_VAL(name, value) \
-+	SCU_GEN_VALUE(SCU_SAS_LINK_LAYER_CONTROL_ ## name, value)
-+
-+#define SCU_SAS_LLCTL_GEN_BIT(name) \
-+	SCU_GEN_BIT(SCU_SAS_LINK_LAYER_CONTROL_ ## name)
-+
-+
-+/* #define SCU_FRXHECR_DCNT_OFFSET      0x00B0 */
-+#define SCU_PSZGCR_OFFSET           0x00E4
-+#define SCU_SAS_RECPHYCAP_OFFSET    0x00E8
-+/* #define SCU_TX_LUTSEL_OFFSET         0x00B8 */
-+
-+#define SCU_SAS_PTxC_OFFSET         0x00D4 /* Same offset as SAS_TCTSTM */
-+
-+/**
-+ * struct scu_link_layer_registers - SCU Link Layer Registers
-+ *
-+ *
-+ */
-+struct scu_link_layer_registers {
-+/* 0x0000 SAS_SPDTOV */
-+	u32 speed_negotiation_timers;
-+/* 0x0004 SAS_LLSTA */
-+	u32 link_layer_status;
-+/* 0x0008 SATA_PSELTOV */
-+	u32 port_selector_timeout;
-+	u32 reserved0C;
-+/* 0x0010 SAS_TIMETOV */
-+	u32 timeout_unit_value;
-+/* 0x0014 SAS_RCDTOV */
-+	u32 rcd_timeout;
-+/* 0x0018 SAS_LNKTOV */
-+	u32 link_timer_timeouts;
-+/* 0x001C SAS_PHYTOV */
-+	u32 sas_phy_timeouts;
-+/* 0x0020 SAS_AFERCNT */
-+	u32 received_address_frame_error_counter;
-+/* 0x0024 SAS_WERCNT */
-+	u32 invalid_dword_counter;
-+/* 0x0028 SAS_TIID */
-+	u32 transmit_identification;
-+/* 0x002C SAS_TIDNH */
-+	u32 sas_device_name_high;
-+/* 0x0030 SAS_TIDNL */
-+	u32 sas_device_name_low;
-+/* 0x0034 SAS_TISSAH */
-+	u32 source_sas_address_high;
-+/* 0x0038 SAS_TISSAL */
-+	u32 source_sas_address_low;
-+/* 0x003C SAS_TIPID */
-+	u32 identify_frame_phy_id;
-+/* 0x0040 SAS_TIRES2 */
-+	u32 identify_frame_reserved;
-+/* 0x0044 SAS_ADRSTA */
-+	u32 received_address_frame;
-+/* 0x0048 SAS_MAWTTOV */
-+	u32 maximum_arbitration_wait_timer_timeout;
-+/* 0x004C SAS_PTxC */
-+	u32 transmit_primitive;
-+/* 0x0050 SAS_RORES */
-+	u32 error_counter_event_notification_control;
-+/* 0x0054 SAS_FRPLDFIL */
-+	u32 frxq_payload_fill_threshold;
-+/* 0x0058 SAS_LLHANG_TOT */
-+	u32 link_layer_hang_detection_timeout;
-+	u32 reserved_5C;
-+/* 0x0060 SAS_RFCNT */
-+	u32 received_frame_count;
-+/* 0x0064 SAS_TFCNT */
-+	u32 transmit_frame_count;
-+/* 0x0068 SAS_RFDCNT */
-+	u32 received_dword_count;
-+/* 0x006C SAS_TFDCNT */
-+	u32 transmit_dword_count;
-+/* 0x0070 SAS_LERCNT */
-+	u32 loss_of_sync_error_count;
-+/* 0x0074 SAS_RDISERRCNT */
-+	u32 running_disparity_error_count;
-+/* 0x0078 SAS_CRERCNT */
-+	u32 received_frame_crc_error_count;
-+/* 0x007C STPCTL */
-+	u32 stp_control;
-+/* 0x0080 SAS_PCFG */
-+	u32 phy_configuration;
-+/* 0x0084 SAS_CLKSM */
-+	u32 clock_skew_management;
-+/* 0x0088 SAS_TXCOMWAKE */
-+	u32 transmit_comwake_signal;
-+/* 0x008C SAS_TXCOMINIT */
-+	u32 transmit_cominit_signal;
-+/* 0x0090 SAS_TXCOMSAS */
-+	u32 transmit_comsas_signal;
-+/* 0x0094 SAS_COMINIT */
-+	u32 cominit_control;
-+/* 0x0098 SAS_COMWAKE */
-+	u32 comwake_control;
-+/* 0x009C SAS_COMSAS */
-+	u32 comsas_control;
-+/* 0x00A0 SAS_SFERCNT */
-+	u32 received_short_frame_count;
-+/* 0x00A4 SAS_CDFERCNT */
-+	u32 received_frame_without_credit_count;
-+/* 0x00A8 SAS_DNFERCNT */
-+	u32 received_frame_after_done_count;
-+/* 0x00AC SAS_PRSTERCNT */
-+	u32 phy_reset_problem_count;
-+/* 0x00B0 SAS_CNTCTL */
-+	u32 counter_control;
-+/* 0x00B4 SAS_SSPTOV */
-+	u32 ssp_timer_timeout_values;
-+/* 0x00B8 FTCTL */
-+	u32 ftx_control;
-+/* 0x00BC FRCTL */
-+	u32 frx_control;
-+/* 0x00C0 FTWMRK */
-+	u32 ftx_watermark;
-+/* 0x00C4 ENSPINUP */
-+	u32 notify_enable_spinup_control;
-+/* 0x00C8 SAS_TRNTOV */
-+	u32 sas_training_sequence_timer_values;
-+/* 0x00CC SAS_PHYCAP */
-+	u32 phy_capabilities;
-+/* 0x00D0 SAS_PHYCTL */
-+	u32 phy_control;
-+	u32 reserved_d4;
-+/* 0x00D8 LLCTL */
-+	u32 link_layer_control;
-+/* 0x00DC AFE_XCVRCR */
-+	u32 afe_xcvr_control;
-+/* 0x00E0 AFE_LUTCR */
-+	u32 afe_lookup_table_control;
-+/* 0x00E4 PSZGCR */
-+	u32 phy_source_zone_group_control;
-+/* 0x00E8 SAS_RECPHYCAP */
-+	u32 receive_phycap;
-+	u32 reserved_ec;
-+/* 0x00F0 SNAFERXRSTCTL */
-+	u32 speed_negotiation_afe_rx_reset_control;
-+/* 0x00F4 SAS_SSIPMCTL */
-+	u32 power_management_control;
-+/* 0x00F8 SAS_PSPREQ_PRIM */
-+	u32 sas_pm_partial_request_primitive;
-+/* 0x00FC SAS_PSSREQ_PRIM */
-+	u32 sas_pm_slumber_request_primitive;
-+/* 0x0100 SAS_PPSACK_PRIM */
-+	u32 sas_pm_ack_primitive_register;
-+/* 0x0104 SAS_PSNAK_PRIM */
-+	u32 sas_pm_nak_primitive_register;
-+/* 0x0108 SAS_SSIPMTOV */
-+	u32 sas_primitive_timeout;
-+	u32 reserved_10c;
-+/* 0x0110 - 0x011C PLAPRDCTRLxREG */
-+	u32 pla_product_control[4];
-+/* 0x0120 PLAPRDSUMREG */
-+	u32 pla_product_sum;
-+/* 0x0124 PLACONTROLREG */
-+	u32 pla_control;
-+/* Remainder of memory space 896 bytes */
-+	u32 reserved_0128_037f[0x96];
-+
-+};
-+
-+/*
-+ * 0x00D4 // Same offset as SAS_TCTSTM SAS_PTxC
-+ *   u32   primitive_transmit_control; */
-+
-+/*
-+ * ----------------------------------------------------------------------------
-+ * SGPIO
-+ * ---------------------------------------------------------------------------- */
-+#define SCU_SGPIO_OFFSET         0x1400
-+
-+/* #define SCU_SGPIO_OFFSET         0x6000   // later moves to 0x1400 see HSD 652625 */
-+#define SCU_SGPIO_SGICR_OFFSET   0x0000
-+#define SCU_SGPIO_SGPBR_OFFSET   0x0004
-+#define SCU_SGPIO_SGSDLR_OFFSET  0x0008
-+#define SCU_SGPIO_SGSDUR_OFFSET  0x000C
-+#define SCU_SGPIO_SGSIDLR_OFFSET 0x0010
-+#define SCU_SGPIO_SGSIDUR_OFFSET 0x0014
-+#define SCU_SGPIO_SGVSCR_OFFSET  0x0018
-+/* Address from 0x0820 to 0x083C */
-+#define SCU_SGPIO_SGODSR_OFFSET  0x0020
-+
-+/**
-+ * struct scu_sgpio_registers - SCU SGPIO Registers
-+ *
-+ *
-+ */
-+struct scu_sgpio_registers {
-+/* 0x0000 SGPIO_SGICR */
-+	u32 interface_control;
-+/* 0x0004 SGPIO_SGPBR */
-+	u32 blink_rate;
-+/* 0x0008 SGPIO_SGSDLR */
-+	u32 start_drive_lower;
-+/* 0x000C SGPIO_SGSDUR */
-+	u32 start_drive_upper;
-+/* 0x0010 SGPIO_SGSIDLR */
-+	u32 serial_input_lower;
-+/* 0x0014 SGPIO_SGSIDUR */
-+	u32 serial_input_upper;
-+/* 0x0018 SGPIO_SGVSCR */
-+	u32 vendor_specific_code;
-+/* 0x0020 SGPIO_SGODSR */
-+	u32 ouput_data_select[8];
-+/* Remainder of memory space 256 bytes */
-+	u32 reserved_1444_14ff[0x31];
-+
-+};
-+
-+/*
-+ * *****************************************************************************
-+ * * Defines for VIIT entry offsets
-+ * * Access additional entries by SCU_VIIT_BASE + index * 0x10
-+ * ***************************************************************************** */
-+#define     SCU_VIIT_BASE     0x1c00
-+
-+struct SCU_VIIT_REGISTERS {
-+	u32 registers[256];
-+};
-+
-+/*
-+ * *****************************************************************************
-+ * * SCU PORT TASK SCHEDULER REGISTERS
-+ * ***************************************************************************** */
-+
-+#define SCU_PTSG_BASE               0x1000
-+
-+#define SCU_PTSG_PTSGCR_OFFSET      0x0000
-+#define SCU_PTSG_RTCR_OFFSET        0x0004
-+#define SCU_PTSG_RTCCR_OFFSET       0x0008
-+#define SCU_PTSG_PTS0CR_OFFSET      0x0010
-+#define SCU_PTSG_PTS0SR_OFFSET      0x0014
-+#define SCU_PTSG_PTS1CR_OFFSET      0x0018
-+#define SCU_PTSG_PTS1SR_OFFSET      0x001C
-+#define SCU_PTSG_PTS2CR_OFFSET      0x0020
-+#define SCU_PTSG_PTS2SR_OFFSET      0x0024
-+#define SCU_PTSG_PTS3CR_OFFSET      0x0028
-+#define SCU_PTSG_PTS3SR_OFFSET      0x002C
-+#define SCU_PTSG_PCSPE0CR_OFFSET    0x0030
-+#define SCU_PTSG_PCSPE1CR_OFFSET    0x0034
-+#define SCU_PTSG_PCSPE2CR_OFFSET    0x0038
-+#define SCU_PTSG_PCSPE3CR_OFFSET    0x003C
-+#define SCU_PTSG_ETMTSCCR_OFFSET    0x0040
-+#define SCU_PTSG_ETMRNSCCR_OFFSET   0x0044
-+
-+/**
-+ * struct scu_port_task_scheduler_registers - These are the control/stats pairs
-+ *    for each Port Task Scheduler.
-+ *
-+ *
-+ */
-+struct scu_port_task_scheduler_registers {
-+	u32 control;
-+	u32 status;
-+};
-+
-+typedef u32 SCU_PORT_PE_CONFIGURATION_REGISTER_T;
-+
-+/**
-+ * struct scu_port_task_scheduler_group_registers - These are the PORT Task
-+ *    Scheduler registers
-+ *
-+ *
-+ */
-+struct scu_port_task_scheduler_group_registers {
-+/* 0x0000 PTSGCR */
-+	u32 control;
-+/* 0x0004 RTCR */
-+	u32 real_time_clock;
-+/* 0x0008 RTCCR */
-+	u32 real_time_clock_control;
-+/* 0x000C */
-+	u32 reserved_0C;
-+/*
-+ * 0x0010 PTS0CR
-+ * 0x0014 PTS0SR
-+ * 0x0018 PTS1CR
-+ * 0x001C PTS1SR
-+ * 0x0020 PTS2CR
-+ * 0x0024 PTS2SR
-+ * 0x0028 PTS3CR
-+ * 0x002C PTS3SR */
-+	struct scu_port_task_scheduler_registers port[4];
-+/*
-+ * 0x0030 PCSPE0CR
-+ * 0x0034 PCSPE1CR
-+ * 0x0038 PCSPE2CR
-+ * 0x003C PCSPE3CR */
-+	SCU_PORT_PE_CONFIGURATION_REGISTER_T protocol_engine[4];
-+/* 0x0040 ETMTSCCR */
-+	u32 tc_scanning_interval_control;
-+/* 0x0044 ETMRNSCCR */
-+	u32 rnc_scanning_interval_control;
-+/* Remainder of memory space 128 bytes */
-+	u32 reserved_1048_107f[0x0E];
-+
-+};
-+
-+#define SCU_PTSG_SCUVZECR_OFFSET        0x003C
-+
-+/*
-+ * *****************************************************************************
-+ * * AFE REGISTERS
-+ * ***************************************************************************** */
-+#define SCU_AFE_MMR_BASE                  0xE000
-+
-+/*
-+ * AFE 0 is at offset 0x0800
-+ * AFE 1 is at offset 0x0900
-+ * AFE 2 is at offset 0x0a00
-+ * AFE 3 is at offset 0x0b00 */
-+struct scu_afe_transceiver {
-+	/* 0x0000 AFE_XCVR_CTRL0 */
-+	u32 afe_xcvr_control0;
-+	/* 0x0004 AFE_XCVR_CTRL1 */
-+	u32 afe_xcvr_control1;
-+	/* 0x0008 */
-+	u32 reserved_0008;
-+	/* 0x000c afe_dfx_rx_control0 */
-+	u32 afe_dfx_rx_control0;
-+	/* 0x0010 AFE_DFX_RX_CTRL1 */
-+	u32 afe_dfx_rx_control1;
-+	/* 0x0014 */
-+	u32 reserved_0014;
-+	/* 0x0018 AFE_DFX_RX_STS0 */
-+	u32 afe_dfx_rx_status0;
-+	/* 0x001c AFE_DFX_RX_STS1 */
-+	u32 afe_dfx_rx_status1;
-+	/* 0x0020 */
-+	u32 reserved_0020;
-+	/* 0x0024 AFE_TX_CTRL */
-+	u32 afe_tx_control;
-+	/* 0x0028 AFE_TX_AMP_CTRL0 */
-+	u32 afe_tx_amp_control0;
-+	/* 0x002c AFE_TX_AMP_CTRL1 */
-+	u32 afe_tx_amp_control1;
-+	/* 0x0030 AFE_TX_AMP_CTRL2 */
-+	u32 afe_tx_amp_control2;
-+	/* 0x0034 AFE_TX_AMP_CTRL3 */
-+	u32 afe_tx_amp_control3;
-+	/* 0x0038 afe_tx_ssc_control */
-+	u32 afe_tx_ssc_control;
-+	/* 0x003c */
-+	u32 reserved_003c;
-+	/* 0x0040 AFE_RX_SSC_CTRL0 */
-+	u32 afe_rx_ssc_control0;
-+	/* 0x0044 AFE_RX_SSC_CTRL1 */
-+	u32 afe_rx_ssc_control1;
-+	/* 0x0048 AFE_RX_SSC_CTRL2 */
-+	u32 afe_rx_ssc_control2;
-+	/* 0x004c AFE_RX_EQ_STS0 */
-+	u32 afe_rx_eq_status0;
-+	/* 0x0050 AFE_RX_EQ_STS1 */
-+	u32 afe_rx_eq_status1;
-+	/* 0x0054 AFE_RX_CDR_STS */
-+	u32 afe_rx_cdr_status;
-+	/* 0x0058 */
-+	u32 reserved_0058;
-+	/* 0x005c AFE_CHAN_CTRL */
-+	u32 afe_channel_control;
-+	/* 0x0060-0x006c */
-+	u32 reserved_0060_006c[0x04];
-+	/* 0x0070 AFE_XCVR_EC_STS0 */
-+	u32 afe_xcvr_error_capture_status0;
-+	/* 0x0074 AFE_XCVR_EC_STS1 */
-+	u32 afe_xcvr_error_capture_status1;
-+	/* 0x0078 AFE_XCVR_EC_STS2 */
-+	u32 afe_xcvr_error_capture_status2;
-+	/* 0x007c afe_xcvr_ec_status3 */
-+	u32 afe_xcvr_error_capture_status3;
-+	/* 0x0080 AFE_XCVR_EC_STS4 */
-+	u32 afe_xcvr_error_capture_status4;
-+	/* 0x0084 AFE_XCVR_EC_STS5 */
-+	u32 afe_xcvr_error_capture_status5;
-+	/* 0x0088-0x00fc */
-+	u32 reserved_008c_00fc[0x1e];
-+};
-+
-+/**
-+ * struct scu_afe_registers - AFE Regsiters
-+ *
-+ *
-+ */
-+/* Uaoa AFE registers */
-+struct scu_afe_registers {
-+	/* 0Xe000 AFE_BIAS_CTRL */
-+	u32 afe_bias_control;
-+	u32 reserved_0004;
-+	/* 0x0008 AFE_PLL_CTRL0 */
-+	u32 afe_pll_control0;
-+	/* 0x000c AFE_PLL_CTRL1 */
-+	u32 afe_pll_control1;
-+	/* 0x0010 AFE_PLL_CTRL2 */
-+	u32 afe_pll_control2;
-+	/* 0x0014 AFE_CB_STS */
-+	u32 afe_common_block_status;
-+	/* 0x0018-0x007c */
-+	u32 reserved_18_7c[0x1a];
-+	/* 0x0080 AFE_PMSN_MCTRL0 */
-+	u32 afe_pmsn_master_control0;
-+	/* 0x0084 AFE_PMSN_MCTRL1 */
-+	u32 afe_pmsn_master_control1;
-+	/* 0x0088 AFE_PMSN_MCTRL2 */
-+	u32 afe_pmsn_master_control2;
-+	/* 0x008C-0x00fc */
-+	u32 reserved_008c_00fc[0x1D];
-+	/* 0x0100 AFE_DFX_MST_CTRL0 */
-+	u32 afe_dfx_master_control0;
-+	/* 0x0104 AFE_DFX_MST_CTRL1 */
-+	u32 afe_dfx_master_control1;
-+	/* 0x0108 AFE_DFX_DCL_CTRL */
-+	u32 afe_dfx_dcl_control;
-+	/* 0x010c AFE_DFX_DMON_CTRL */
-+	u32 afe_dfx_digital_monitor_control;
-+	/* 0x0110 AFE_DFX_AMONP_CTRL */
-+	u32 afe_dfx_analog_p_monitor_control;
-+	/* 0x0114 AFE_DFX_AMONN_CTRL */
-+	u32 afe_dfx_analog_n_monitor_control;
-+	/* 0x0118 AFE_DFX_NTL_STS */
-+	u32 afe_dfx_ntl_status;
-+	/* 0x011c AFE_DFX_FIFO_STS0 */
-+	u32 afe_dfx_fifo_status0;
-+	/* 0x0120 AFE_DFX_FIFO_STS1 */
-+	u32 afe_dfx_fifo_status1;
-+	/* 0x0124 AFE_DFX_MPAT_CTRL */
-+	u32 afe_dfx_master_pattern_control;
-+	/* 0x0128 AFE_DFX_P0_CTRL */
-+	u32 afe_dfx_p0_control;
-+	/* 0x012c-0x01a8 AFE_DFX_P0_DRx */
-+	u32 afe_dfx_p0_data[32];
-+	/* 0x01ac */
-+	u32 reserved_01ac;
-+	/* 0x01b0-0x020c AFE_DFX_P0_IRx */
-+	u32 afe_dfx_p0_instruction[24];
-+	/* 0x0210 */
-+	u32 reserved_0210;
-+	/* 0x0214 AFE_DFX_P1_CTRL */
-+	u32 afe_dfx_p1_control;
-+	/* 0x0218-0x245 AFE_DFX_P1_DRx */
-+	u32 afe_dfx_p1_data[16];
-+	/* 0x0258-0x029c */
-+	u32 reserved_0258_029c[0x12];
-+	/* 0x02a0-0x02bc AFE_DFX_P1_IRx */
-+	u32 afe_dfx_p1_instruction[8];
-+	/* 0x02c0-0x2fc */
-+	u32 reserved_02c0_02fc[0x10];
-+	/* 0x0300 AFE_DFX_TX_PMSN_CTRL */
-+	u32 afe_dfx_tx_pmsn_control;
-+	/* 0x0304 AFE_DFX_RX_PMSN_CTRL */
-+	u32 afe_dfx_rx_pmsn_control;
-+	u32 reserved_0308;
-+	/* 0x030c AFE_DFX_NOA_CTRL0 */
-+	u32 afe_dfx_noa_control0;
-+	/* 0x0310 AFE_DFX_NOA_CTRL1 */
-+	u32 afe_dfx_noa_control1;
-+	/* 0x0314 AFE_DFX_NOA_CTRL2 */
-+	u32 afe_dfx_noa_control2;
-+	/* 0x0318 AFE_DFX_NOA_CTRL3 */
-+	u32 afe_dfx_noa_control3;
-+	/* 0x031c AFE_DFX_NOA_CTRL4 */
-+	u32 afe_dfx_noa_control4;
-+	/* 0x0320 AFE_DFX_NOA_CTRL5 */
-+	u32 afe_dfx_noa_control5;
-+	/* 0x0324 AFE_DFX_NOA_CTRL6 */
-+	u32 afe_dfx_noa_control6;
-+	/* 0x0328 AFE_DFX_NOA_CTRL7 */
-+	u32 afe_dfx_noa_control7;
-+	/* 0x032c-0x07fc */
-+	u32 reserved_032c_07fc[0x135];
-+
-+	/* 0x0800-0x0bfc */
-+	struct scu_afe_transceiver scu_afe_xcvr[4];
-+
-+	/* 0x0c00-0x0ffc */
-+	u32 reserved_0c00_0ffc[0x0100];
-+};
-+
-+struct SCU_PROTOCOL_ENGINE_GROUP_REGISTERS {
-+	u32 table[0xE0];
-+};
-+
-+
-+struct SCU_VIIT_IIT {
-+	u32 table[256];
-+};
-+
-+/**
-+ * Placeholder for the ZONE Partition Table information ZONING will not be
-+ *    included in the 1.1 release.
-+ *
-+ *
-+ */
-+struct SCU_ZONE_PARTITION_TABLE {
-+	u32 table[2048];
-+};
-+
-+/**
-+ * Placeholder for the CRAM register since I am not sure if we need to
-+ *    read/write to these registers as yet.
-+ *
-+ *
-+ */
-+struct SCU_COMPLETION_RAM {
-+	u32 ram[128];
-+};
-+
-+/**
-+ * Placeholder for the FBRAM registers since I am not sure if we need to
-+ *    read/write to these registers as yet.
-+ *
-+ *
-+ */
-+struct SCU_FRAME_BUFFER_RAM {
-+	u32 ram[128];
-+};
-+
-+#define SCU_SCRATCH_RAM_SIZE_IN_DWORDS  256
-+
-+/**
-+ * Placeholder for the scratch RAM registers.
-+ *
-+ *
-+ */
-+struct SCU_SCRATCH_RAM {
-+	u32 ram[SCU_SCRATCH_RAM_SIZE_IN_DWORDS];
-+};
-+
-+/**
-+ * Placeholder since I am not yet sure what these registers are here for.
-+ *
-+ *
-+ */
-+struct NOA_PROTOCOL_ENGINE_PARTITION {
-+	u32 reserved[64];
-+};
-+
-+/**
-+ * Placeholder since I am not yet sure what these registers are here for.
-+ *
-+ *
-+ */
-+struct NOA_HUB_PARTITION {
-+	u32 reserved[64];
-+};
-+
-+/**
-+ * Placeholder since I am not yet sure what these registers are here for.
-+ *
-+ *
-+ */
-+struct NOA_HOST_INTERFACE_PARTITION {
-+	u32 reserved[64];
-+};
-+
-+/**
-+ * struct TRANSPORT_LINK_LAYER_PAIR - The SCU Hardware pairs up the TL
-+ *    registers with the LL registers so we must place them adjcent to make the
-+ *    array of registers in the PEG.
-+ *
-+ *
-+ */
-+struct TRANSPORT_LINK_LAYER_PAIR {
-+	struct scu_transport_layer_registers tl;
-+	struct scu_link_layer_registers ll;
-+};
-+
-+/**
-+ * struct SCU_PEG_REGISTERS - SCU Protocol Engine Memory mapped register space.
-+ *     These registers are unique to each protocol engine group.  There can be
-+ *    at most two PEG for a single SCU part.
-+ *
-+ *
-+ */
-+struct SCU_PEG_REGISTERS {
-+	struct TRANSPORT_LINK_LAYER_PAIR pe[4];
-+	struct scu_port_task_scheduler_group_registers ptsg;
-+	struct SCU_PROTOCOL_ENGINE_GROUP_REGISTERS peg;
-+	struct scu_sgpio_registers sgpio;
-+	u32 reserved_01500_1BFF[0x1C0];
-+	struct scu_viit_entry viit[64];
-+	struct SCU_ZONE_PARTITION_TABLE zpt0;
-+	struct SCU_ZONE_PARTITION_TABLE zpt1;
-+};
-+
-+/**
-+ * struct scu_registers - SCU regsiters including both PEG registers if we turn
-+ *    on that compile option. All of these registers are in the memory mapped
-+ *    space returned from BAR1.
-+ *
-+ *
-+ */
-+struct scu_registers {
-+	/* 0x0000 - PEG 0 */
-+	struct SCU_PEG_REGISTERS peg0;
-+
-+	/* 0x6000 - SDMA and Miscellaneous */
-+	struct scu_sdma_registers sdma;
-+	struct SCU_COMPLETION_RAM cram;
-+	struct SCU_FRAME_BUFFER_RAM fbram;
-+	u32 reserved_6800_69FF[0x80];
-+	struct NOA_PROTOCOL_ENGINE_PARTITION noa_pe;
-+	struct NOA_HUB_PARTITION noa_hub;
-+	struct NOA_HOST_INTERFACE_PARTITION noa_if;
-+	u32 reserved_6d00_7fff[0x4c0];
-+
-+	/* 0x8000 - PEG 1 */
-+	struct SCU_PEG_REGISTERS peg1;
-+
-+	/* 0xE000 - AFE Registers */
-+	struct scu_afe_registers afe;
-+
-+	/* 0xF000 - reserved */
-+	u32 reserved_f000_211fff[0x80c00];
-+
-+	/* 0x212000 - scratch RAM */
-+	struct SCU_SCRATCH_RAM scratch_ram;
-+
-+};
-+
-+
-+#endif   /* _SCU_REGISTERS_HEADER_ */
-diff --git a/drivers/scsi/isci/core/scu_unsolicited_frame.h b/drivers/scsi/isci/core/scu_unsolicited_frame.h
-new file mode 100644
-index 0000000..187c4f0
---- /dev/null
-+++ b/drivers/scsi/isci/core/scu_unsolicited_frame.h
-@@ -0,0 +1,117 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *   * Redistributions of source code must retain the above copyright
-+ *     notice, this list of conditions and the following disclaimer.
-+ *   * Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in
-+ *     the documentation and/or other materials provided with the
-+ *     distribution.
-+ *   * Neither the name of Intel Corporation nor the names of its
-+ *     contributors may be used to endorse or promote products derived
-+ *     from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+/**
-+ * This field defines the SCU format of an unsolicited frame (UF).  A UF is a
-+ *    frame received by the SCU for which there is no known corresponding task
-+ *    context (TC).
-+ *
-+ *
-+ */
-+
-+#ifndef _SCU_UNSOLICITED_FRAME_H_
-+#define _SCU_UNSOLICITED_FRAME_H_
-+
-+#include <linux/string.h>
-+
-+/**
-+ *
-+ *
-+ * This constant defines the number of DWORDS found the unsolicited frame
-+ * header data member.
-+ */
-+#define SCU_UNSOLICITED_FRAME_HEADER_DATA_DWORDS 15
-+
-+/**
-+ * struct scu_unsolicited_frame_header -
-+ *
-+ * This structure delineates the format of an unsolicited frame header. The
-+ * first DWORD are UF attributes defined by the silicon architecture. The data
-+ * depicts actual header information received on the link.
-+ */
-+struct scu_unsolicited_frame_header {
-+	/**
-+	 * This field indicates if there is an Initiator Index Table entry with
-+	 * which this header is associated.
-+	 */
-+	u32 iit_exists:1;
-+
-+	/**
-+	 * This field simply indicates the protocol type (i.e. SSP, STP, SMP).
-+	 */
-+	u32 protocol_type:3;
-+
-+	/**
-+	 * This field indicates if the frame is an address frame (IAF or OAF)
-+	 * or if it is a information unit frame.
-+	 */
-+	u32 is_address_frame:1;
-+
-+	/**
-+	 * This field simply indicates the connection rate at which the frame
-+	 * was received.
-+	 */
-+	u32 connection_rate:4;
-+
-+	u32 reserved:23;
-+
-+	/**
-+	 * This field represents the actual header data received on the link.
-+	 */
-+	u32 data[SCU_UNSOLICITED_FRAME_HEADER_DATA_DWORDS];
-+
-+};
-+
-+#endif /* _SCU_UNSOLICITED_FRAME_H_ */
+~ Kashyap
 
+
+
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Kashyap, Desai
+> Sent: Thursday, February 03, 2011 3:38 PM
+> To: linux-scsi@vger.kernel.org
+> Cc: James.Bottomley@HansenPartnership.com; Moore, Eric; Prakash, Sathya
+> Subject: [PATCH] mpt2sas : WarpDrive New product SSS6200 support added
+>
+>
+> Introduction
+> This patch has
+> Support for the new solid state device product SSS6200 from LSI and
+> relavent
+> features w.r.t SSS6200.
+>
+> The major feature added in this driver is supporting Direct-I/O to the
+> SSS6200 storage.There are some additional changes done to avoid
+> exposing
+> the RAID member disks to the OS and hiding/exposing drives based on the
+> OEM Specific Flag in Manufacturing Page10 (this is required to handle
+> specific changes in the SSS6200 firmware).
+>
+> Each and every changes are listed below.
+> 1. Hiding IR related messages.
+> For SSS6200, the driver is modified not to print IR related events.
+> Even if the debugging is enabled the IR related messages will not be
+> displayed.
+> In some places if there is a need to display a message related to IR
+> the
+> string "IR" is replaced with string "DD" and the string "volume" is
+> replaced
+> with "direct drive". But the function names are not changed hence there
+> are
+> some places where the reference to volume can be seen if debug level is
+> set.
+>
+> 2. Removed RAID transport support
+> In Linux the user can retrieve RAID volume information from the sysfs
+> directory.
+> This support is removed for SSS6200.
+>
+> 3. Direct I/O support.
+> The driver tries to enable direct I/O when a volume is reported to the
+> driver
+> by the firmware through IRCC events and the driver does this just
+> before
+> reporting to the OS, hence all the OS issued I/O can go through direct
+> path
+> if they can, The first validation is to see whether the manufacturing
+> page10
+> flag is set to expose all drives always. If that is set, the driver
+> will not
+> enable direct I/O and displays the message "DDIO" is disabled globally
+> as
+> drives are exposed. The driver checks whether there is more than one
+> volume
+> in the controller, if so the direct I/O will be disabled globally for
+> all
+> volumes in the controller and the message displayed will be "DDIO is
+> disabled
+> globally as number of drives > 1.
+> If retrieving number of PD is failed the driver will not enable direct
+> I/O
+> and displays the message Failure in computing number of drives DDIO
+> disabled.
+> If memory allocation for RAIDVolumePage0 is failed, the driver will not
+> enable
+> direct I/O and displays the message Memory allocation failure for
+> RVPG0 DDIO disabled.  If retrieving RAIDVolumePage0 is failed the
+> driver will
+> not enable direct I/O and displays the message Failure in retrieving
+> RVPG0 DDIO disabled
+>
+> If the number of PD in a volume is greater than 8, then the direct I/O
+> will
+> be disabled.
+> If any of individual drives handle retrieval is failed then the DD-IO
+> will
+> be disabled.
+> If the volume is not RAID0 or if the block size is not 512 then the DD-
+> IO will
+> be disabled.
+> If the volume size is greater than 2TB then the DD-IO will be disabled.
+> If the driver is not able to find a valid stripe exponent using the
+> configured
+> stripe size then the DD-IO will be disabled
+>
+> When the DD-IO is enabled the driver will check every I/O request
+> issued to
+> the storage and checks whether the request is either
+> READ6/WRITE6/READ10/WRITE10, if it is and if the complete I/O transfer
+> is within a stripe size then the I/O is redirected to
+> the drive directly instead of the volume.
+>
+> On completion of every I/O, if the completion is failure means if the
+> reply
+> is address reply with a reply frame associated with it, then the type
+> of I/O
+> will be checked, if the I/O is direct then the I/O will be retried to
+> the volume once.
+>
+> Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
+> Reviewed-by: Eric Moore <eric.moore@lsi.com>
+> Reviewed-by: Sathya Prakash <sathya.prakash@lsi.com>
+> ---
+>
+> diff -aurp mpt2sas-phase8.0/mpt2sas_base.c mpt2sas-
+> phase8.0_wd/mpt2sas_base.c
+> --- mpt2sas-phase8.0/mpt2sas_base.c   2011-01-18 11:33:41.384202609 +0530
+> +++ mpt2sas-phase8.0_wd/mpt2sas_base.c        2011-01-27 20:48:35.080000040
+> +0530
+> @@ -522,7 +522,8 @@ _base_display_event_data(struct MPT2SAS_
+>               desc = "Device Status Change";
+>               break;
+>       case MPI2_EVENT_IR_OPERATION_STATUS:
+> -             desc = "IR Operation Status";
+> +             if (!ioc->hide_ir_msg)
+> +                     desc = "IR Operation Status";
+>               break;
+>       case MPI2_EVENT_SAS_DISCOVERY:
+>       {
+> @@ -553,16 +554,20 @@ _base_display_event_data(struct MPT2SAS_
+>               desc = "SAS Enclosure Device Status Change";
+>               break;
+>       case MPI2_EVENT_IR_VOLUME:
+> -             desc = "IR Volume";
+> +             if (!ioc->hide_ir_msg)
+> +                     desc = "IR Volume";
+>               break;
+>       case MPI2_EVENT_IR_PHYSICAL_DISK:
+> -             desc = "IR Physical Disk";
+> +             if (!ioc->hide_ir_msg)
+> +                     desc = "IR Physical Disk";
+>               break;
+>       case MPI2_EVENT_IR_CONFIGURATION_CHANGE_LIST:
+> -             desc = "IR Configuration Change List";
+> +             if (!ioc->hide_ir_msg)
+> +                     desc = "IR Configuration Change List";
+>               break;
+>       case MPI2_EVENT_LOG_ENTRY_ADDED:
+> -             desc = "Log Entry Added";
+> +             if (!ioc->hide_ir_msg)
+> +                     desc = "Log Entry Added";
+>               break;
+>       }
+>
+> @@ -616,7 +621,10 @@ _base_sas_log_info(struct MPT2SAS_ADAPTE
+>               originator_str = "PL";
+>               break;
+>       case 2:
+> -             originator_str = "IR";
+> +             if (!ioc->hide_ir_msg)
+> +                     originator_str = "IR";
+> +             else
+> +                     originator_str = "WarpDrive";
+>               break;
+>       }
+>
+> @@ -1508,6 +1516,7 @@ mpt2sas_base_free_smid(struct MPT2SAS_AD
+>               }
+>               ioc->scsi_lookup[i].cb_idx = 0xFF;
+>               ioc->scsi_lookup[i].scmd = NULL;
+> +             ioc->scsi_lookup[i].direct_io = 0;
+>               list_add_tail(&ioc->scsi_lookup[i].tracker_list,
+>                   &ioc->free_list);
+>               spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+> @@ -1795,10 +1804,12 @@ _base_display_ioc_capabilities(struct MP
+>       printk("), ");
+>       printk("Capabilities=(");
+>
+> -     if (ioc->facts.IOCCapabilities &
+> -         MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID) {
+> -             printk("Raid");
+> -             i++;
+> +     if (!ioc->hide_ir_msg) {
+> +             if (ioc->facts.IOCCapabilities &
+> +                 MPI2_IOCFACTS_CAPABILITY_INTEGRATED_RAID) {
+> +                     printk("Raid");
+> +                     i++;
+> +             }
+>       }
+>
+>       if (ioc->facts.IOCCapabilities & MPI2_IOCFACTS_CAPABILITY_TLR) {
+> @@ -3631,6 +3642,7 @@ _base_make_ioc_operational(struct MPT2SA
+>       u32 reply_address;
+>       u16 smid;
+>       struct _tr_list *delayed_tr, *delayed_tr_next;
+> +     u8 hide_flag;
+>
+>       dinitprintk(ioc, printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
+>           __func__));
+> @@ -3657,6 +3669,7 @@ _base_make_ioc_operational(struct MPT2SA
+>               ioc->scsi_lookup[i].cb_idx = 0xFF;
+>               ioc->scsi_lookup[i].smid = smid;
+>               ioc->scsi_lookup[i].scmd = NULL;
+> +             ioc->scsi_lookup[i].direct_io = 0;
+>               list_add_tail(&ioc->scsi_lookup[i].tracker_list,
+>                   &ioc->free_list);
+>       }
+> @@ -3717,6 +3730,15 @@ _base_make_ioc_operational(struct MPT2SA
+>       if (sleep_flag == CAN_SLEEP)
+>               _base_static_config_pages(ioc);
+>
+> +     if (ioc->wait_for_port_enable_to_complete && ioc->is_warpdrive) {
+> +             if (ioc->manu_pg10.OEMIdentifier  == 0x80) {
+> +                     hide_flag = (u8) (ioc->manu_pg10.OEMSpecificFlags0 &
+> +                         MFG_PAGE10_HIDE_SSDS_MASK);
+> +                     if (hide_flag != MFG_PAGE10_HIDE_SSDS_MASK)
+> +                             ioc->mfg_pg10_hide_flag = hide_flag;
+> +             }
+> +     }
+> +
+>       if (ioc->wait_for_port_enable_to_complete) {
+>               if (diag_buffer_enable != 0)
+>                       mpt2sas_enable_diag_buffer(ioc, diag_buffer_enable);
+> diff -aurp mpt2sas-phase8.0/mpt2sas_base.h mpt2sas-
+> phase8.0_wd/mpt2sas_base.h
+> --- mpt2sas-phase8.0/mpt2sas_base.h   2011-01-18 11:33:45.711139872 +0530
+> +++ mpt2sas-phase8.0_wd/mpt2sas_base.h        2011-01-27 20:57:45.016000126
+> +0530
+> @@ -69,11 +69,11 @@
+>  #define MPT2SAS_DRIVER_NAME          "mpt2sas"
+>  #define MPT2SAS_AUTHOR       "LSI Corporation <DL-MPTFusionLinux@lsi.com>"
+>  #define MPT2SAS_DESCRIPTION  "LSI MPT Fusion SAS 2.0 Device Driver"
+> -#define MPT2SAS_DRIVER_VERSION               "08.100.00.00"
+> +#define MPT2SAS_DRIVER_VERSION               "08.100.00.01"
+>  #define MPT2SAS_MAJOR_VERSION                08
+>  #define MPT2SAS_MINOR_VERSION                100
+>  #define MPT2SAS_BUILD_VERSION                00
+> -#define MPT2SAS_RELEASE_VERSION              00
+> +#define MPT2SAS_RELEASE_VERSION              01
+>
+>  /*
+>   * Set MPT2SAS_SG_DEPTH value based on user input.
+> @@ -169,6 +169,16 @@
+>  #define MPT2SAS_INTEL_RMS2LL040_SSDID          0x350F
+>
+>  /*
+> + *  WarpDrive Specific Log codes
+> + */
+> +
+> +#define MPT2_WARPDRIVE_LOGENTRY              (0x8002)
+> +#define MPT2_WARPDRIVE_LC_SSDT               (0x41)
+> +#define MPT2_WARPDRIVE_LC_SSDLW              (0x43)
+> +#define MPT2_WARPDRIVE_LC_SSDLF              (0x44)
+> +#define MPT2_WARPDRIVE_LC_BRMF               (0x4D)
+> +
+> +/*
+>   * per target private data
+>   */
+>  #define MPT_TARGET_FLAGS_RAID_COMPONENT      0x01
+> @@ -179,6 +189,7 @@
+>   * struct MPT2SAS_TARGET - starget private hostdata
+>   * @starget: starget object
+>   * @sas_address: target sas address
+> + * @raid_device: raid_device pointer to access volume data
+>   * @handle: device handle
+>   * @num_luns: number luns
+>   * @flags: MPT_TARGET_FLAGS_XXX flags
+> @@ -188,6 +199,7 @@
+>  struct MPT2SAS_TARGET {
+>       struct scsi_target *starget;
+>       u64     sas_address;
+> +     struct _raid_device *raid_device;
+>       u16     handle;
+>       int     num_luns;
+>       u32     flags;
+> @@ -195,6 +207,7 @@ struct MPT2SAS_TARGET {
+>       u8      tm_busy;
+>  };
+>
+> +
+>  /*
+>   * per device private data
+>   */
+> @@ -242,6 +255,12 @@ typedef struct _MPI2_CONFIG_PAGE_MAN_10
+>    MPI2_POINTER PTR_MPI2_CONFIG_PAGE_MAN_10,
+>    Mpi2ManufacturingPage10_t, MPI2_POINTER pMpi2ManufacturingPage10_t;
+>
+> +#define MFG_PAGE10_HIDE_SSDS_MASK    (0x00000003)
+> +#define MFG_PAGE10_HIDE_ALL_DISKS    (0x00)
+> +#define MFG_PAGE10_EXPOSE_ALL_DISKS  (0x01)
+> +#define MFG_PAGE10_HIDE_IF_VOL_PRESENT       (0x02)
+> +
+> +
+>  struct MPT2SAS_DEVICE {
+>       struct MPT2SAS_TARGET *sas_target;
+>       unsigned int    lun;
+> @@ -321,6 +340,7 @@ struct _sas_device {
+>   * @sdev: scsi device struct (volumes are single lun)
+>   * @wwid: unique identifier for the volume
+>   * @handle: device handle
+> + * @block_size: Block size of the volume
+>   * @id: target id
+>   * @channel: target channel
+>   * @volume_type: the raid level
+> @@ -328,20 +348,33 @@ struct _sas_device {
+>   * @num_pds: number of hidden raid components
+>   * @responding: used in _scsih_raid_device_mark_responding
+>   * @percent_complete: resync percent complete
+> + * @direct_io_enabled: Whether direct io to PDs are allowed or not
+> + * @stripe_exponent: X where 2powX is the stripe sz in blocks
+> + * @max_lba: Maximum number of LBA in the volume
+> + * @stripe_sz: Stripe Size of the volume
+> + * @device_info: Device info of the volume member disk
+> + * @pd_handle: Array of handles of the physical drives for direct I/O
+> in le16
+>   */
+> +#define MPT_MAX_WARPDRIVE_PDS                8
+>  struct _raid_device {
+>       struct list_head list;
+>       struct scsi_target *starget;
+>       struct scsi_device *sdev;
+>       u64     wwid;
+>       u16     handle;
+> +     u16     block_sz;
+>       int     id;
+>       int     channel;
+>       u8      volume_type;
+> -     u32     device_info;
+>       u8      num_pds;
+>       u8      responding;
+>       u8      percent_complete;
+> +     u8      direct_io_enabled;
+> +     u8      stripe_exponent;
+> +     u64     max_lba;
+> +     u32     stripe_sz;
+> +     u32     device_info;
+> +     u16     pd_handle[MPT_MAX_WARPDRIVE_PDS];
+>  };
+>
+>  /**
+> @@ -450,6 +483,7 @@ struct chain_tracker {
+>   * @smid: system message id
+>   * @scmd: scsi request pointer
+>   * @cb_idx: callback index
+> + * @direct_io: To indicate whether I/O is direct (WARPDRIVE)
+>   * @chain_list: list of chains associated to this IO
+>   * @tracker_list: list of free request (ioc->free_list)
+>   */
+> @@ -457,14 +491,14 @@ struct scsiio_tracker {
+>       u16     smid;
+>       struct scsi_cmnd *scmd;
+>       u8      cb_idx;
+> +     u8      direct_io;
+>       struct list_head chain_list;
+>       struct list_head tracker_list;
+>  };
+>
+>  /**
+> - * struct request_tracker - misc mf request tracker
+> + * struct request_tracker - firmware request tracker
+>   * @smid: system message id
+> - * @scmd: scsi request pointer
+>   * @cb_idx: callback index
+>   * @tracker_list: list of free request (ioc->free_list)
+>   */
+> @@ -812,6 +846,11 @@ struct MPT2SAS_ADAPTER {
+>       u32             diagnostic_flags[MPI2_DIAG_BUF_TYPE_COUNT];
+>       u32             ring_buffer_offset;
+>       u32             ring_buffer_sz;
+> +     u8              is_warpdrive;
+> +     u8              hide_ir_msg;
+> +     u8              mfg_pg10_hide_flag;
+> +     u8              hide_drives;
+> +
+>  };
+>
+>  typedef u8 (*MPT_CALLBACK)(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8
+> msix_index,
+> diff -aurp mpt2sas-phase8.0/mpt2sas_ctl.c mpt2sas-
+> phase8.0_wd/mpt2sas_ctl.c
+> --- mpt2sas-phase8.0/mpt2sas_ctl.c    2011-01-18 11:30:28.453140352 +0530
+> +++ mpt2sas-phase8.0_wd/mpt2sas_ctl.c 2011-01-27 20:48:35.096000040
+> +0530
+> @@ -1034,7 +1034,10 @@ _ctl_getiocinfo(void __user *arg)
+>           __func__));
+>
+>       memset(&karg, 0 , sizeof(karg));
+> -     karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2;
+> +     if (ioc->is_warpdrive)
+> +             karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2_SSS6200;
+> +     else
+> +             karg.adapter_type = MPT2_IOCTL_INTERFACE_SAS2;
+>       if (ioc->pfacts)
+>               karg.port_number = ioc->pfacts[0].PortNumber;
+>       pci_read_config_byte(ioc->pdev, PCI_CLASS_REVISION, &revision);
+> diff -aurp mpt2sas-phase8.0/mpt2sas_ctl.h mpt2sas-
+> phase8.0_wd/mpt2sas_ctl.h
+> --- mpt2sas-phase8.0/mpt2sas_ctl.h    2011-01-18 11:30:28.450141059 +0530
+> +++ mpt2sas-phase8.0_wd/mpt2sas_ctl.h 2011-01-19 12:13:47.568012329
+> +0530
+> @@ -133,6 +133,7 @@ struct mpt2_ioctl_pci_info {
+>  #define MPT2_IOCTL_INTERFACE_FC_IP   (0x02)
+>  #define MPT2_IOCTL_INTERFACE_SAS     (0x03)
+>  #define MPT2_IOCTL_INTERFACE_SAS2    (0x04)
+> +#define MPT2_IOCTL_INTERFACE_SAS2_SSS6200    (0x05)
+>  #define MPT2_IOCTL_VERSION_LENGTH    (32)
+>
+>  /**
+> diff -aurp mpt2sas-phase8.0/mpt2sas_scsih.c mpt2sas-
+> phase8.0_wd/mpt2sas_scsih.c
+> --- mpt2sas-phase8.0/mpt2sas_scsih.c  2011-01-18 11:33:43.225202675
+> +0530
+> +++ mpt2sas-phase8.0_wd/mpt2sas_scsih.c       2011-02-03 15:42:45.974149344
+> +0530
+> @@ -233,6 +233,9 @@ static struct pci_device_id scsih_pci_ta
+>               PCI_ANY_ID, PCI_ANY_ID },
+>       { MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SAS2308_3,
+>               PCI_ANY_ID, PCI_ANY_ID },
+> +     /* SSS6200 */
+> +     { MPI2_MFGPAGE_VENDORID_LSI, MPI2_MFGPAGE_DEVID_SSS6200,
+> +             PCI_ANY_ID, PCI_ANY_ID },
+>       {0}     /* Terminating entry */
+>  };
+>  MODULE_DEVICE_TABLE(pci, scsih_pci_table);
+> @@ -1256,6 +1259,7 @@ _scsih_target_alloc(struct scsi_target *
+>                       sas_target_priv_data->handle = raid_device->handle;
+>                       sas_target_priv_data->sas_address = raid_device-
+> >wwid;
+>                       sas_target_priv_data->flags |=
+> MPT_TARGET_FLAGS_VOLUME;
+> +                     sas_target_priv_data->raid_device = raid_device;
+>                       raid_device->starget = starget;
+>               }
+>               spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+> @@ -1455,7 +1459,10 @@ static int
+>  _scsih_is_raid(struct device *dev)
+>  {
+>       struct scsi_device *sdev = to_scsi_device(dev);
+> +     struct MPT2SAS_ADAPTER *ioc = shost_priv(sdev->host);
+>
+> +     if (ioc->is_warpdrive)
+> +             return 0;
+>       return (sdev->channel == RAID_CHANNEL) ? 1 : 0;
+>  }
+>
+> @@ -1480,7 +1487,7 @@ _scsih_get_resync(struct device *dev)
+>           sdev->channel);
+>       spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+>
+> -     if (!raid_device)
+> +     if (!raid_device || ioc->is_warpdrive)
+>               goto out;
+>
+>       if (mpt2sas_config_get_raid_volume_pg0(ioc, &mpi_reply, &vol_pg0,
+> @@ -1640,6 +1647,212 @@ _scsih_get_volume_capabilities(struct MP
+>
+>       kfree(vol_pg0);
+>  }
+> +/**
+> + * _scsih_disable_ddio - Disable direct I/O for all the volumes
+> + * @ioc: per adapter object
+> + */
+> +static void
+> +_scsih_disable_ddio(struct MPT2SAS_ADAPTER *ioc)
+> +{
+> +     Mpi2RaidVolPage1_t vol_pg1;
+> +     Mpi2ConfigReply_t mpi_reply;
+> +     struct _raid_device *raid_device;
+> +     u16 handle;
+> +     u16 ioc_status;
+> +
+> +     handle = 0xFFFF;
+> +     while (!(mpt2sas_config_get_raid_volume_pg1(ioc, &mpi_reply,
+> +         &vol_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE,
+> handle))) {
+> +             ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+> +                 MPI2_IOCSTATUS_MASK;
+> +             if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+> +                     break;
+> +             handle = le16_to_cpu(vol_pg1.DevHandle);
+> +             raid_device = _scsih_raid_device_find_by_handle(ioc,
+> handle);
+> +             if (raid_device)
+> +                     raid_device->direct_io_enabled = 0;
+> +     }
+> +     return;
+> +}
+> +
+> +
+> +/**
+> + * _scsih_get_num_volumes - Get number of volumes in the ioc
+> + * @ioc: per adapter object
+> + */
+> +static u8
+> +_scsih_get_num_volumes(struct MPT2SAS_ADAPTER *ioc)
+> +{
+> +     Mpi2RaidVolPage1_t vol_pg1;
+> +     Mpi2ConfigReply_t mpi_reply;
+> +     u16 handle;
+> +     u8 vol_cnt = 0;
+> +     u16 ioc_status;
+> +
+> +     handle = 0xFFFF;
+> +     while (!(mpt2sas_config_get_raid_volume_pg1(ioc, &mpi_reply,
+> +         &vol_pg1, MPI2_RAID_VOLUME_PGAD_FORM_GET_NEXT_HANDLE,
+> handle))) {
+> +             ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+> +                 MPI2_IOCSTATUS_MASK;
+> +             if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+> +                     break;
+> +             vol_cnt++;
+> +             handle = le16_to_cpu(vol_pg1.DevHandle);
+> +     }
+> +     return vol_cnt;
+> +}
+> +
+> +
+> +/**
+> + * _scsih_init_warpdrive_properties - Set properties for warpdrive
+> direct I/O.
+> + * @ioc: per adapter object
+> + * @raid_device: the raid_device object
+> + */
+> +static void
+> +_scsih_init_warpdrive_properties(struct MPT2SAS_ADAPTER *ioc,
+> +     struct _raid_device *raid_device)
+> +{
+> +     Mpi2RaidVolPage0_t *vol_pg0;
+> +     Mpi2RaidPhysDiskPage0_t pd_pg0;
+> +     Mpi2ConfigReply_t mpi_reply;
+> +     u16 sz;
+> +     u8 num_pds, count;
+> +     u64 mb = 1024 * 1024;
+> +     u64 tb_2 = 2 * mb * mb;
+> +     u64 capacity;
+> +     u32 stripe_sz;
+> +     u8 i, stripe_exp;
+> +
+> +     if (!ioc->is_warpdrive)
+> +             return;
+> +
+> +     if (ioc->mfg_pg10_hide_flag ==  MFG_PAGE10_EXPOSE_ALL_DISKS) {
+> +             printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled
+> "
+> +                 "globally as drives are exposed\n", ioc->name);
+> +             return;
+> +     }
+> +     if (_scsih_get_num_volumes(ioc) > 1) {
+> +             _scsih_disable_ddio(ioc);
+> +             printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled
+> "
+> +                 "globally as number of drives > 1\n", ioc->name);
+> +             return;
+> +     }
+> +     if ((mpt2sas_config_get_number_pds(ioc, raid_device->handle,
+> +         &num_pds)) || !num_pds) {
+> +             printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled
+> "
+> +                 "Failure in computing number of drives\n", ioc->name);
+> +             return;
+> +     }
+> +
+> +     sz = offsetof(Mpi2RaidVolPage0_t, PhysDisk) + (num_pds *
+> +         sizeof(Mpi2RaidVol0PhysDisk_t));
+> +     vol_pg0 = kzalloc(sz, GFP_KERNEL);
+> +     if (!vol_pg0) {
+> +             printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled
+> "
+> +                 "Memory allocation failure for RVPG0\n", ioc->name);
+> +             return;
+> +     }
+> +
+> +     if ((mpt2sas_config_get_raid_volume_pg0(ioc, &mpi_reply, vol_pg0,
+> +          MPI2_RAID_VOLUME_PGAD_FORM_HANDLE, raid_device->handle,
+> sz))) {
+> +             printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled
+> "
+> +                 "Failure in retrieving RVPG0\n", ioc->name);
+> +             kfree(vol_pg0);
+> +             return;
+> +     }
+> +
+> +     /*
+> +      * WARPDRIVE:If number of physical disks in a volume exceeds the
+> max pds
+> +      * assumed for WARPDRIVE, disable direct I/O
+> +      */
+> +     if (num_pds > MPT_MAX_WARPDRIVE_PDS) {
+> +             printk(MPT2SAS_WARN_FMT "WarpDrive : Direct IO is disabled
+> "
+> +                 "for the drive with handle(0x%04x): num_mem=%d, "
+> +                 "max_mem_allowed=%d\n", ioc->name, raid_device->handle,
+> +                 num_pds, MPT_MAX_WARPDRIVE_PDS);
+> +             kfree(vol_pg0);
+> +             return;
+> +     }
+> +     for (count = 0; count < num_pds; count++) {
+> +             if (mpt2sas_config_get_phys_disk_pg0(ioc, &mpi_reply,
+> +                 &pd_pg0, MPI2_PHYSDISK_PGAD_FORM_PHYSDISKNUM,
+> +                 vol_pg0->PhysDisk[count].PhysDiskNum) ||
+> +                 pd_pg0.DevHandle == MPT2SAS_INVALID_DEVICE_HANDLE) {
+> +                     printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is "
+> +                         "disabled for the drive with handle(0x%04x)
+> member"
+> +                         "handle retrieval failed for member number=%d\n",
+> +                         ioc->name, raid_device->handle,
+> +                         vol_pg0->PhysDisk[count].PhysDiskNum);
+> +                     goto out_error;
+> +             }
+> +             raid_device->pd_handle[count] =
+> le16_to_cpu(pd_pg0.DevHandle);
+> +     }
+> +
+> +     /*
+> +      * Assumption for WD: Direct I/O is not supported if the volume
+> is
+> +      * not RAID0, if the stripe size is not 64KB, if the block size
+> is
+> +      * not 512 and if the volume size is >2TB
+> +      */
+> +     if (raid_device->volume_type != MPI2_RAID_VOL_TYPE_RAID0 ||
+> +         le16_to_cpu(vol_pg0->BlockSize) != 512) {
+> +             printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled
+> "
+> +                 "for the drive with handle(0x%04x): type=%d, "
+> +                 "s_sz=%uK, blk_size=%u\n", ioc->name,
+> +                 raid_device->handle, raid_device->volume_type,
+> +                 le32_to_cpu(vol_pg0->StripeSize)/2,
+> +                 le16_to_cpu(vol_pg0->BlockSize));
+> +             goto out_error;
+> +     }
+> +
+> +     capacity = (u64) le16_to_cpu(vol_pg0->BlockSize) *
+> +         (le64_to_cpu(vol_pg0->MaxLBA) + 1);
+> +
+> +     if (capacity > tb_2) {
+> +             printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled
+> "
+> +             "for the drive with handle(0x%04x) since drive sz > 2TB\n",
+> +             ioc->name, raid_device->handle);
+> +             goto out_error;
+> +     }
+> +
+> +     stripe_sz = le32_to_cpu(vol_pg0->StripeSize);
+> +     stripe_exp = 0;
+> +     for (i = 0; i < 32; i++) {
+> +             if (stripe_sz & 1)
+> +                     break;
+> +             stripe_exp++;
+> +             stripe_sz >>= 1;
+> +     }
+> +     if (i == 32) {
+> +             printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is disabled
+> "
+> +                 "for the drive with handle(0x%04x) invalid stripe sz
+> %uK\n",
+> +                 ioc->name, raid_device->handle,
+> +                 le32_to_cpu(vol_pg0->StripeSize)/2);
+> +             goto out_error;
+> +     }
+> +     raid_device->stripe_exponent = stripe_exp;
+> +     raid_device->direct_io_enabled = 1;
+> +
+> +     printk(MPT2SAS_INFO_FMT "WarpDrive : Direct IO is Enabled for the
+> drive"
+> +         " with handle(0x%04x)\n", ioc->name, raid_device->handle);
+> +     /*
+> +      * WARPDRIVE: Though the following fields are not used for direct
+> IO,
+> +      * stored for future purpose:
+> +      */
+> +     raid_device->max_lba = le64_to_cpu(vol_pg0->MaxLBA);
+> +     raid_device->stripe_sz = le32_to_cpu(vol_pg0->StripeSize);
+> +     raid_device->block_sz = le16_to_cpu(vol_pg0->BlockSize);
+> +
+> +
+> +     kfree(vol_pg0);
+> +     return;
+> +
+> +out_error:
+> +     raid_device->direct_io_enabled = 0;
+> +     for (count = 0; count < num_pds; count++)
+> +             raid_device->pd_handle[count] = 0;
+> +     kfree(vol_pg0);
+> +     return;
+> +}
+>
+>  /**
+>   * _scsih_enable_tlr - setting TLR flags
+> @@ -1710,6 +1923,11 @@ _scsih_slave_configure(struct scsi_devic
+>
+>               _scsih_get_volume_capabilities(ioc, raid_device);
+>
+> +             /*
+> +              * WARPDRIVE: Initialize the required data for Direct IO
+> +              */
+> +             _scsih_init_warpdrive_properties(ioc, raid_device);
+> +
+>               /* RAID Queue Depth Support
+>                * IS volume = underlying qdepth of drive type, either
+>                *    MPT2SAS_SAS_QUEUE_DEPTH or MPT2SAS_SATA_QUEUE_DEPTH
+> @@ -1757,14 +1975,16 @@ _scsih_slave_configure(struct scsi_devic
+>                       break;
+>               }
+>
+> -             sdev_printk(KERN_INFO, sdev, "%s: "
+> -                 "handle(0x%04x), wwid(0x%016llx), pd_count(%d),
+> type(%s)\n",
+> -                 r_level, raid_device->handle,
+> -                 (unsigned long long)raid_device->wwid,
+> -                 raid_device->num_pds, ds);
+> +             if (!ioc->hide_ir_msg)
+> +                     sdev_printk(KERN_INFO, sdev, "%s: handle(0x%04x), "
+> +                         "wwid(0x%016llx), pd_count(%d), type(%s)\n",
+> +                         r_level, raid_device->handle,
+> +                         (unsigned long long)raid_device->wwid,
+> +                         raid_device->num_pds, ds);
+>               _scsih_change_queue_depth(sdev, qdepth,
+> SCSI_QDEPTH_DEFAULT);
+>               /* raid transport support */
+> -             _scsih_set_level(sdev, raid_device);
+> +             if (!ioc->is_warpdrive)
+> +                     _scsih_set_level(sdev, raid_device);
+>               return 0;
+>       }
+>
+> @@ -2182,16 +2402,20 @@ _scsih_tm_display_info(struct MPT2SAS_AD
+>       struct MPT2SAS_TARGET *priv_target = starget->hostdata;
+>       struct _sas_device *sas_device = NULL;
+>       unsigned long flags;
+> +     char *device_str = NULL;
+>
+>       if (!priv_target)
+>               return;
+> +     if (ioc->hide_ir_msg)
+> +             device_str = "WarpDrive";
+> +     else
+> +             device_str = "volume";
+>
+>       scsi_print_command(scmd);
+>       if (priv_target->flags & MPT_TARGET_FLAGS_VOLUME) {
+> -             starget_printk(KERN_INFO, starget, "volume handle(0x%04x),
+> "
+> -                 "volume wwid(0x%016llx)\n",
+> -                 priv_target->handle,
+> -                 (unsigned long long)priv_target->sas_address);
+> +             starget_printk(KERN_INFO, starget, "%s handle(0x%04x), "
+> +                 "%s wwid(0x%016llx)\n", device_str, priv_target-
+> >handle,
+> +                 device_str, (unsigned long long)priv_target-
+> >sas_address);
+>       } else {
+>               spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>               sas_device =
+> mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
+> @@ -3130,6 +3354,9 @@ _scsih_check_ir_config_unhide_events(str
+>       a = 0;
+>       b = 0;
+>
+> +     if (ioc->is_warpdrive)
+> +             return;
+> +
+>       /* Volume Resets for Deleted or Removed */
+>       element = (Mpi2EventIrConfigElement_t *)&event_data-
+> >ConfigElement[0];
+>       for (i = 0; i < event_data->NumElements; i++, element++) {
+> @@ -3347,6 +3574,105 @@ _scsih_eedp_error_handling(struct scsi_c
+>  }
+>
+>  /**
+> + * _scsih_scsi_direct_io_get - returns direct io flag
+> + * @ioc: per adapter object
+> + * @smid: system request message index
+> + *
+> + * Returns the smid stored scmd pointer.
+> + */
+> +static inline u8
+> +_scsih_scsi_direct_io_get(struct MPT2SAS_ADAPTER *ioc, u16 smid)
+> +{
+> +     return ioc->scsi_lookup[smid - 1].direct_io;
+> +}
+> +
+> +/**
+> + * _scsih_scsi_direct_io_set - sets direct io flag
+> + * @ioc: per adapter object
+> + * @smid: system request message index
+> + * @direct_io: Zero or non-zero value to set in the direct_io flag
+> + *
+> + * Returns Nothing.
+> + */
+> +static inline void
+> +_scsih_scsi_direct_io_set(struct MPT2SAS_ADAPTER *ioc, u16 smid, u8
+> direct_io)
+> +{
+> +     ioc->scsi_lookup[smid - 1].direct_io = direct_io;
+> +}
+> +
+> +
+> +/**
+> + * _scsih_setup_direct_io - setup MPI request for WARPDRIVE Direct I/O
+> + * @ioc: per adapter object
+> + * @scmd: pointer to scsi command object
+> + * @raid_device: pointer to raid device data structure
+> + * @mpi_request: pointer to the SCSI_IO reqest message frame
+> + * @smid: system request message index
+> + *
+> + * Returns nothing
+> + */
+> +static void
+> +_scsih_setup_direct_io(struct MPT2SAS_ADAPTER *ioc, struct scsi_cmnd
+> *scmd,
+> +     struct _raid_device *raid_device, Mpi2SCSIIORequest_t
+> *mpi_request,
+> +     u16 smid)
+> +{
+> +     u32 v_lba, p_lba, stripe_off, stripe_unit, column, io_size;
+> +     u32 stripe_sz, stripe_exp;
+> +     u8 num_pds, *cdb_ptr, *tmp_ptr, *lba_ptr1, *lba_ptr2;
+> +     u8 cdb0 = scmd->cmnd[0];
+> +
+> +     /*
+> +      * Try Direct I/O to RAID memeber disks
+> +      */
+> +     if (cdb0 == READ_16 || cdb0 == READ_10 ||
+> +         cdb0 == WRITE_16 || cdb0 == WRITE_10) {
+> +             cdb_ptr = mpi_request->CDB.CDB32;
+> +
+> +             if ((cdb0 < READ_16) || !(cdb_ptr[2] | cdb_ptr[3] |
+> cdb_ptr[4]
+> +                     | cdb_ptr[5])) {
+> +                     io_size = scsi_bufflen(scmd) >> 9;
+> +                     /* get virtual lba */
+> +                     lba_ptr1 = lba_ptr2 = (cdb0 < READ_16) ? &cdb_ptr[2]
+> :
+> +                         &cdb_ptr[6];
+> +                     tmp_ptr = (u8 *)&v_lba + 3;
+> +                     *tmp_ptr-- = *lba_ptr1++;
+> +                     *tmp_ptr-- = *lba_ptr1++;
+> +                     *tmp_ptr-- = *lba_ptr1++;
+> +                     *tmp_ptr = *lba_ptr1;
+> +
+> +                     if (((u64)v_lba + (u64)io_size - 1) <=
+> +                         (u32)raid_device->max_lba) {
+> +                             stripe_sz = raid_device->stripe_sz;
+> +                             stripe_exp = raid_device->stripe_exponent;
+> +                             stripe_off = v_lba & (stripe_sz - 1);
+> +
+> +                             /* Check whether IO falls within a stripe */
+> +                             if ((stripe_off + io_size) <= stripe_sz) {
+> +                                     num_pds = raid_device->num_pds;
+> +                                     p_lba = v_lba >> stripe_exp;
+> +                                     stripe_unit = p_lba / num_pds;
+> +                                     column = p_lba % num_pds;
+> +                                     p_lba = (stripe_unit << stripe_exp) +
+> +                                         stripe_off;
+> +                                     mpi_request->DevHandle =
+> +                                             cpu_to_le16(raid_device->
+> +                                                 pd_handle[column]);
+> +                                     tmp_ptr = (u8 *)&p_lba + 3;
+> +                                     *lba_ptr2++ = *tmp_ptr--;
+> +                                     *lba_ptr2++ = *tmp_ptr--;
+> +                                     *lba_ptr2++ = *tmp_ptr--;
+> +                                     *lba_ptr2 = *tmp_ptr;
+> +                                     /*
+> +                                     * WD: To indicate this I/O is directI/O
+> +                                     */
+> +                                     _scsih_scsi_direct_io_set(ioc, smid, 1);
+> +                             }
+> +                     }
+> +             }
+> +     }
+> +}
+> +
+> +/**
+>   * _scsih_qcmd - main scsi request entry point
+>   * @scmd: pointer to scsi command object
+>   * @done: function pointer to be invoked on completion
+> @@ -3363,6 +3689,7 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd,
+>       struct MPT2SAS_ADAPTER *ioc = shost_priv(scmd->device->host);
+>       struct MPT2SAS_DEVICE *sas_device_priv_data;
+>       struct MPT2SAS_TARGET *sas_target_priv_data;
+> +     struct _raid_device *raid_device;
+>       Mpi2SCSIIORequest_t *mpi_request;
+>       u32 mpi_control;
+>       u16 smid;
+> @@ -3424,8 +3751,10 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd,
+>
+>       } else
+>               mpi_control |= MPI2_SCSIIO_CONTROL_SIMPLEQ;
+> -     /* Make sure Device is not raid volume */
+> -     if (!_scsih_is_raid(&scmd->device->sdev_gendev) &&
+> +     /* Make sure Device is not raid volume.
+> +      * We do not expose raid functionality to upper layer for
+> warpdrive.
+> +      */
+> +     if (!ioc->is_warpdrive && _scsih_is_raid(&scmd->device-
+> >sdev_gendev) &&
+>           sas_is_tlr_enabled(scmd->device) && scmd->cmd_len != 32)
+>               mpi_control |= MPI2_SCSIIO_CONTROL_TLR_ON;
+>
+> @@ -3473,9 +3802,14 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd,
+>               }
+>       }
+>
+> +     raid_device = sas_target_priv_data->raid_device;
+> +     if (raid_device && raid_device->direct_io_enabled)
+> +             _scsih_setup_direct_io(ioc, scmd, raid_device, mpi_request,
+> +                 smid);
+> +
+>       if (likely(mpi_request->Function ==
+> MPI2_FUNCTION_SCSI_IO_REQUEST))
+>               mpt2sas_base_put_smid_scsi_io(ioc, smid,
+> -                 sas_device_priv_data->sas_target->handle);
+> +                 le16_to_cpu(mpi_request->DevHandle));
+>       else
+>               mpt2sas_base_put_smid_default(ioc, smid);
+>       return 0;
+> @@ -3540,10 +3874,16 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAP
+>       unsigned long flags;
+>       struct scsi_target *starget = scmd->device->sdev_target;
+>       struct MPT2SAS_TARGET *priv_target = starget->hostdata;
+> +     char *device_str = NULL;
+>
+>       if (!priv_target)
+>               return;
+>
+> +     if (ioc->hide_ir_msg)
+> +             device_str = "WarpDrive";
+> +     else
+> +             device_str = "volume";
+> +
+>       if (log_info == 0x31170000)
+>               return;
+>
+> @@ -3660,8 +4000,8 @@ _scsih_scsi_ioc_info(struct MPT2SAS_ADAP
+>       scsi_print_command(scmd);
+>
+>       if (priv_target->flags & MPT_TARGET_FLAGS_VOLUME) {
+> -             printk(MPT2SAS_WARN_FMT "\tvolume wwid(0x%016llx)\n", ioc-
+> >name,
+> -                 (unsigned long long)priv_target->sas_address);
+> +             printk(MPT2SAS_WARN_FMT "\t%s wwid(0x%016llx)\n", ioc-
+> >name,
+> +                 device_str, (unsigned long long)priv_target-
+> >sas_address);
+>       } else {
+>               spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>               sas_device =
+> mpt2sas_scsih_sas_device_find_by_sas_address(ioc,
+> @@ -3840,6 +4180,20 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *i
+>               scmd->result = DID_NO_CONNECT << 16;
+>               goto out;
+>       }
+> +     /*
+> +      * WARPDRIVE: If direct_io is set then it is directIO,
+> +      * the failed direct I/O should be redirected to volume
+> +      */
+> +     if (_scsih_scsi_direct_io_get(ioc, smid)) {
+> +             _scsih_scsi_direct_io_set(ioc, smid, 0);
+> +             memcpy(mpi_request->CDB.CDB32, scmd->cmnd, scmd->cmd_len);
+> +             mpi_request->DevHandle =
+> +                 cpu_to_le16(sas_device_priv_data->sas_target->handle);
+> +             mpt2sas_base_put_smid_scsi_io(ioc, smid,
+> +                 sas_device_priv_data->sas_target->handle);
+> +             return 0;
+> +     }
+> +
+>
+>       /* turning off TLR */
+>       scsi_state = mpi_reply->SCSIState;
+> @@ -3848,7 +4202,10 @@ _scsih_io_done(struct MPT2SAS_ADAPTER *i
+>                   le32_to_cpu(mpi_reply->ResponseInfo) & 0xFF;
+>       if (!sas_device_priv_data->tlr_snoop_check) {
+>               sas_device_priv_data->tlr_snoop_check++;
+> -     if (!_scsih_is_raid(&scmd->device->sdev_gendev) &&
+> +     /* Make sure Device is not raid volume.
+> +      * We do not expose raid functionality to upper layer for
+> warpdrive.
+> +      */
+> +     if (!ioc->is_warpdrive && !_scsih_is_raid(&scmd->device-
+> >sdev_gendev) &&
+>               sas_is_tlr_enabled(scmd->device) &&
+>                   response_code == MPI2_SCSITASKMGMT_RSP_INVALID_FRAME) {
+>                       sas_disable_tlr(scmd->device);
+> @@ -4681,8 +5038,10 @@ _scsih_remove_device(struct MPT2SAS_ADAP
+>
+>       _scsih_ublock_io_device(ioc, sas_device_backup.handle);
+>
+> -     mpt2sas_transport_port_remove(ioc, sas_device_backup.sas_address,
+> -         sas_device_backup.sas_address_parent);
+> +     if (!ioc->hide_drives)
+> +             mpt2sas_transport_port_remove(ioc,
+> +                 sas_device_backup.sas_address,
+> +                 sas_device_backup.sas_address_parent);
+>
+>       printk(MPT2SAS_INFO_FMT "removing handle(0x%04x), sas_addr"
+>           "(0x%016llx)\n", ioc->name, sas_device_backup.handle,
+> @@ -5413,6 +5772,7 @@ _scsih_sas_pd_hide(struct MPT2SAS_ADAPTE
+>           &sas_device->volume_wwid);
+>       set_bit(handle, ioc->pd_handles);
+>       _scsih_reprobe_target(sas_device->starget, 1);
+> +
+>  }
+>
+>  /**
+> @@ -5591,7 +5951,8 @@ _scsih_sas_ir_config_change_event(struct
+>       Mpi2EventDataIrConfigChangeList_t *event_data = fw_event-
+> >event_data;
+>
+>  #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+> -     if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+> +     if ((ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+> +         && !ioc->hide_ir_msg)
+>               _scsih_sas_ir_config_change_event_debug(ioc, event_data);
+>
+>  #endif
+> @@ -5614,16 +5975,20 @@ _scsih_sas_ir_config_change_event(struct
+>                                   le16_to_cpu(element->VolDevHandle));
+>                       break;
+>               case MPI2_EVENT_IR_CHANGE_RC_PD_CREATED:
+> -                     _scsih_sas_pd_hide(ioc, element);
+> +                     if (!ioc->is_warpdrive)
+> +                             _scsih_sas_pd_hide(ioc, element);
+>                       break;
+>               case MPI2_EVENT_IR_CHANGE_RC_PD_DELETED:
+> -                     _scsih_sas_pd_expose(ioc, element);
+> +                     if (!ioc->is_warpdrive)
+> +                             _scsih_sas_pd_expose(ioc, element);
+>                       break;
+>               case MPI2_EVENT_IR_CHANGE_RC_HIDE:
+> -                     _scsih_sas_pd_add(ioc, element);
+> +                     if (!ioc->is_warpdrive)
+> +                             _scsih_sas_pd_add(ioc, element);
+>                       break;
+>               case MPI2_EVENT_IR_CHANGE_RC_UNHIDE:
+> -                     _scsih_sas_pd_delete(ioc, element);
+> +                     if (!ioc->is_warpdrive)
+> +                             _scsih_sas_pd_delete(ioc, element);
+>                       break;
+>               }
+>       }
+> @@ -5654,9 +6019,10 @@ _scsih_sas_ir_volume_event(struct MPT2SA
+>
+>       handle = le16_to_cpu(event_data->VolDevHandle);
+>       state = le32_to_cpu(event_data->NewValue);
+> -     dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: handle(0x%04x), "
+> -         "old(0x%08x), new(0x%08x)\n", ioc->name, __func__,  handle,
+> -         le32_to_cpu(event_data->PreviousValue), state));
+> +     if (!ioc->hide_ir_msg)
+> +             dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s:
+> handle(0x%04x), "
+> +                 "old(0x%08x), new(0x%08x)\n", ioc->name, __func__,
+> handle,
+> +                 le32_to_cpu(event_data->PreviousValue), state));
+>
+>       switch (state) {
+>       case MPI2_RAID_VOL_STATE_MISSING:
+> @@ -5736,9 +6102,10 @@ _scsih_sas_ir_physical_disk_event(struct
+>       handle = le16_to_cpu(event_data->PhysDiskDevHandle);
+>       state = le32_to_cpu(event_data->NewValue);
+>
+> -     dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s: handle(0x%04x), "
+> -         "old(0x%08x), new(0x%08x)\n", ioc->name, __func__,  handle,
+> -         le32_to_cpu(event_data->PreviousValue), state));
+> +     if (!ioc->hide_ir_msg)
+> +             dewtprintk(ioc, printk(MPT2SAS_INFO_FMT "%s:
+> handle(0x%04x), "
+> +                 "old(0x%08x), new(0x%08x)\n", ioc->name, __func__,
+> handle,
+> +                 le32_to_cpu(event_data->PreviousValue), state));
+>
+>       switch (state) {
+>       case MPI2_RAID_PD_STATE_ONLINE:
+> @@ -5747,7 +6114,8 @@ _scsih_sas_ir_physical_disk_event(struct
+>       case MPI2_RAID_PD_STATE_OPTIMAL:
+>       case MPI2_RAID_PD_STATE_HOT_SPARE:
+>
+> -             set_bit(handle, ioc->pd_handles);
+> +             if (!ioc->is_warpdrive)
+> +                     set_bit(handle, ioc->pd_handles);
+>
+>               spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>               sas_device = _scsih_sas_device_find_by_handle(ioc, handle);
+> @@ -5851,7 +6219,8 @@ _scsih_sas_ir_operation_status_event(str
+>       u16 handle;
+>
+>  #ifdef CONFIG_SCSI_MPT2SAS_LOGGING
+> -     if (ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+> +     if ((ioc->logging_level & MPT_DEBUG_EVENT_WORK_TASK)
+> +         && !ioc->hide_ir_msg)
+>               _scsih_sas_ir_operation_status_event_debug(ioc,
+>                    event_data);
+>  #endif
+> @@ -5910,7 +6279,7 @@ static void
+>  _scsih_mark_responding_sas_device(struct MPT2SAS_ADAPTER *ioc, u64
+> sas_address,
+>      u16 slot, u16 handle)
+>  {
+> -     struct MPT2SAS_TARGET *sas_target_priv_data;
+> +     struct MPT2SAS_TARGET *sas_target_priv_data = NULL;
+>       struct scsi_target *starget;
+>       struct _sas_device *sas_device;
+>       unsigned long flags;
+> @@ -5918,7 +6287,7 @@ _scsih_mark_responding_sas_device(struct
+>       spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>       list_for_each_entry(sas_device, &ioc->sas_device_list, list) {
+>               if (sas_device->sas_address == sas_address &&
+> -                 sas_device->slot == slot && sas_device->starget) {
+> +                 sas_device->slot == slot) {
+>                       sas_device->responding = 1;
+>                       starget = sas_device->starget;
+>                       if (starget && starget->hostdata) {
+> @@ -5927,13 +6296,15 @@ _scsih_mark_responding_sas_device(struct
+>                               sas_target_priv_data->deleted = 0;
+>                       } else
+>                               sas_target_priv_data = NULL;
+> -                     starget_printk(KERN_INFO, sas_device->starget,
+> -                         "handle(0x%04x), sas_addr(0x%016llx), enclosure "
+> -                         "logical id(0x%016llx), slot(%d)\n", handle,
+> -                         (unsigned long long)sas_device->sas_address,
+> -                         (unsigned long long)
+> -                         sas_device->enclosure_logical_id,
+> -                         sas_device->slot);
+> +                     if (starget)
+> +                             starget_printk(KERN_INFO, starget,
+> +                                 "handle(0x%04x), sas_addr(0x%016llx), "
+> +                                 "enclosure logical id(0x%016llx), "
+> +                                 "slot(%d)\n", handle,
+> +                                 (unsigned long long)sas_device-
+> >sas_address,
+> +                                 (unsigned long long)
+> +                                 sas_device->enclosure_logical_id,
+> +                                 sas_device->slot);
+>                       if (sas_device->handle == handle)
+>                               goto out;
+>                       printk(KERN_INFO "\thandle changed
+> from(0x%04x)!!!\n",
+> @@ -6025,6 +6396,12 @@ _scsih_mark_responding_raid_device(struc
+>                       starget_printk(KERN_INFO, raid_device->starget,
+>                           "handle(0x%04x), wwid(0x%016llx)\n", handle,
+>                           (unsigned long long)raid_device->wwid);
+> +                     /*
+> +                      * WARPDRIVE: The handles of the PDs might have
+> changed
+> +                      * across the host reset so re-initialize the
+> +                      * required data for Direct IO
+> +                      */
+> +                     _scsih_init_warpdrive_properties(ioc, raid_device);
+>                       if (raid_device->handle == handle)
+>                               goto out;
+>                       printk(KERN_INFO "\thandle changed
+> from(0x%04x)!!!\n",
+> @@ -6086,18 +6463,20 @@ _scsih_search_responding_raid_devices(st
+>       }
+>
+>       /* refresh the pd_handles */
+> -     phys_disk_num = 0xFF;
+> -     memset(ioc->pd_handles, 0, ioc->pd_handles_sz);
+> -     while (!(mpt2sas_config_get_phys_disk_pg0(ioc, &mpi_reply,
+> -         &pd_pg0, MPI2_PHYSDISK_PGAD_FORM_GET_NEXT_PHYSDISKNUM,
+> -         phys_disk_num))) {
+> -             ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+> -                 MPI2_IOCSTATUS_MASK;
+> -             if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+> -                     break;
+> -             phys_disk_num = pd_pg0.PhysDiskNum;
+> -             handle = le16_to_cpu(pd_pg0.DevHandle);
+> -             set_bit(handle, ioc->pd_handles);
+> +     if (!ioc->is_warpdrive) {
+> +             phys_disk_num = 0xFF;
+> +             memset(ioc->pd_handles, 0, ioc->pd_handles_sz);
+> +             while (!(mpt2sas_config_get_phys_disk_pg0(ioc, &mpi_reply,
+> +                 &pd_pg0, MPI2_PHYSDISK_PGAD_FORM_GET_NEXT_PHYSDISKNUM,
+> +                 phys_disk_num))) {
+> +                     ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
+> +                         MPI2_IOCSTATUS_MASK;
+> +                     if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
+> +                             break;
+> +                     phys_disk_num = pd_pg0.PhysDiskNum;
+> +                     handle = le16_to_cpu(pd_pg0.DevHandle);
+> +                     set_bit(handle, ioc->pd_handles);
+> +             }
+>       }
+>  }
+>
+> @@ -6243,6 +6622,50 @@ _scsih_remove_unresponding_sas_devices(s
+>  }
+>
+>  /**
+> + * _scsih_hide_unhide_sas_devices - add/remove device to/from OS
+> + * @ioc: per adapter object
+> + *
+> + * Return nothing.
+> + */
+> +static void
+> +_scsih_hide_unhide_sas_devices(struct MPT2SAS_ADAPTER *ioc)
+> +{
+> +     struct _sas_device *sas_device, *sas_device_next;
+> +
+> +     if (!ioc->is_warpdrive || ioc->mfg_pg10_hide_flag !=
+> +         MFG_PAGE10_HIDE_IF_VOL_PRESENT)
+> +             return;
+> +
+> +     if (ioc->hide_drives) {
+> +             if (_scsih_get_num_volumes(ioc))
+> +                     return;
+> +             ioc->hide_drives = 0;
+> +             list_for_each_entry_safe(sas_device, sas_device_next,
+> +                 &ioc->sas_device_list, list) {
+> +                     if (!mpt2sas_transport_port_add(ioc, sas_device-
+> >handle,
+> +                             sas_device->sas_address_parent)) {
+> +                             _scsih_sas_device_remove(ioc, sas_device);
+> +                     } else if (!sas_device->starget) {
+> +                             mpt2sas_transport_port_remove(ioc,
+> +                                 sas_device->sas_address,
+> +                                 sas_device->sas_address_parent);
+> +                             _scsih_sas_device_remove(ioc, sas_device);
+> +                     }
+> +             }
+> +     } else {
+> +             if (!_scsih_get_num_volumes(ioc))
+> +                     return;
+> +             ioc->hide_drives = 1;
+> +             list_for_each_entry_safe(sas_device, sas_device_next,
+> +                 &ioc->sas_device_list, list) {
+> +                     mpt2sas_transport_port_remove(ioc,
+> +                         sas_device->sas_address,
+> +                         sas_device->sas_address_parent);
+> +             }
+> +     }
+> +}
+> +
+> +/**
+>   * mpt2sas_scsih_reset_handler - reset callback handler (for scsih)
+>   * @ioc: per adapter object
+>   * @reset_phase: phase
+> @@ -6326,6 +6749,7 @@ _firmware_event_work(struct work_struct
+>                       spin_unlock_irqrestore(&ioc-
+> >ioc_reset_in_progress_lock,
+>                           flags);
+>               _scsih_remove_unresponding_sas_devices(ioc);
+> +             _scsih_hide_unhide_sas_devices(ioc);
+>               return;
+>       }
+>
+> @@ -6425,6 +6849,53 @@ mpt2sas_scsih_event_callback(struct MPT2
+>                   (Mpi2EventDataIrVolume_t *)
+>                   mpi_reply->EventData);
+>               break;
+> +     case MPI2_EVENT_LOG_ENTRY_ADDED:
+> +     {
+> +             Mpi2EventDataLogEntryAdded_t *log_entry;
+> +             u32 *log_code;
+> +
+> +             if (!ioc->is_warpdrive)
+> +                     break;
+> +
+> +             log_entry = (Mpi2EventDataLogEntryAdded_t *)
+> +                 mpi_reply->EventData;
+> +             log_code = (u32 *)log_entry->LogData;
+> +
+> +             if (le16_to_cpu(log_entry->LogEntryQualifier)
+> +                 != MPT2_WARPDRIVE_LOGENTRY)
+> +                     break;
+> +
+> +             switch (le32_to_cpu(*log_code)) {
+> +             case MPT2_WARPDRIVE_LC_SSDT:
+> +                     printk(MPT2SAS_WARN_FMT "WarpDrive Warning: "
+> +                         "IO Throttling has occurred in the WarpDrive "
+> +                         "subsystem. Check WarpDrive documentation for "
+> +                         "additional details.\n", ioc->name);
+> +                     break;
+> +             case MPT2_WARPDRIVE_LC_SSDLW:
+> +                     printk(MPT2SAS_WARN_FMT "WarpDrive Warning: "
+> +                         "Program/Erase Cycles for the WarpDrive subsystem
+> "
+> +                         "in degraded range. Check WarpDrive documentation
+> "
+> +                         "for additional details.\n", ioc->name);
+> +                     break;
+> +             case MPT2_WARPDRIVE_LC_SSDLF:
+> +                     printk(MPT2SAS_ERR_FMT "WarpDrive Fatal Error: "
+> +                         "There are no Program/Erase Cycles for the "
+> +                         "WarpDrive subsystem. The storage device will be
+> "
+> +                         "in read-only mode. Check WarpDrive documentation
+> "
+> +                         "for additional details.\n", ioc->name);
+> +                     break;
+> +             case MPT2_WARPDRIVE_LC_BRMF:
+> +                     printk(MPT2SAS_ERR_FMT "WarpDrive Fatal Error: "
+> +                         "The Backup Rail Monitor has failed on the "
+> +                         "WarpDrive subsystem. Check WarpDrive "
+> +                         "documentation for additional details.\n",
+> +                         ioc->name);
+> +                     break;
+> +             }
+> +
+> +             break;
+> +     }
+>       case MPI2_EVENT_SAS_DEVICE_STATUS_CHANGE:
+>       case MPI2_EVENT_IR_OPERATION_STATUS:
+>       case MPI2_EVENT_SAS_DISCOVERY:
+> @@ -6583,7 +7054,8 @@ _scsih_ir_shutdown(struct MPT2SAS_ADAPTE
+>       mpi_request->Function = MPI2_FUNCTION_RAID_ACTION;
+>       mpi_request->Action = MPI2_RAID_ACTION_SYSTEM_SHUTDOWN_INITIATED;
+>
+> -     printk(MPT2SAS_INFO_FMT "IR shutdown (sending)\n", ioc->name);
+> +     if (!ioc->hide_ir_msg)
+> +             printk(MPT2SAS_INFO_FMT "IR shutdown (sending)\n", ioc-
+> >name);
+>       init_completion(&ioc->scsih_cmds.done);
+>       mpt2sas_base_put_smid_default(ioc, smid);
+>       wait_for_completion_timeout(&ioc->scsih_cmds.done, 10*HZ);
+> @@ -6597,10 +7069,11 @@ _scsih_ir_shutdown(struct MPT2SAS_ADAPTE
+>       if (ioc->scsih_cmds.status & MPT2_CMD_REPLY_VALID) {
+>               mpi_reply = ioc->scsih_cmds.reply;
+>
+> -             printk(MPT2SAS_INFO_FMT "IR shutdown (complete): "
+> -                 "ioc_status(0x%04x), loginfo(0x%08x)\n",
+> -                 ioc->name, le16_to_cpu(mpi_reply->IOCStatus),
+> -                 le32_to_cpu(mpi_reply->IOCLogInfo));
+> +             if (!ioc->hide_ir_msg)
+> +                     printk(MPT2SAS_INFO_FMT "IR shutdown (complete): "
+> +                         "ioc_status(0x%04x), loginfo(0x%08x)\n",
+> +                         ioc->name, le16_to_cpu(mpi_reply->IOCStatus),
+> +                         le32_to_cpu(mpi_reply->IOCLogInfo));
+>       }
+>
+>   out:
+> @@ -6759,6 +7232,9 @@ _scsih_probe_boot_devices(struct MPT2SAS
+>               spin_lock_irqsave(&ioc->sas_device_lock, flags);
+>               list_move_tail(&sas_device->list, &ioc->sas_device_list);
+>               spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+> +
+> +             if (ioc->hide_drives)
+> +                     return;
+>               if (!mpt2sas_transport_port_add(ioc, sas_device->handle,
+>                   sas_device->sas_address_parent)) {
+>                       _scsih_sas_device_remove(ioc, sas_device);
+> @@ -6812,6 +7288,9 @@ _scsih_probe_sas(struct MPT2SAS_ADAPTER
+>               list_move_tail(&sas_device->list, &ioc->sas_device_list);
+>               spin_unlock_irqrestore(&ioc->sas_device_lock, flags);
+>
+> +             if (ioc->hide_drives)
+> +                     continue;
+> +
+>               if (!mpt2sas_transport_port_add(ioc, sas_device->handle,
+>                   sas_device->sas_address_parent)) {
+>                       _scsih_sas_device_remove(ioc, sas_device);
+> @@ -6882,6 +7361,11 @@ _scsih_probe(struct pci_dev *pdev, const
+>       ioc->id = mpt_ids++;
+>       sprintf(ioc->name, "%s%d", MPT2SAS_DRIVER_NAME, ioc->id);
+>       ioc->pdev = pdev;
+> +     if (id->device == MPI2_MFGPAGE_DEVID_SSS6200) {
+> +             ioc->is_warpdrive = 1;
+> +             ioc->hide_ir_msg = 1;
+> +     } else
+> +             ioc->mfg_pg10_hide_flag = MFG_PAGE10_EXPOSE_ALL_DISKS;
+>       ioc->scsi_io_cb_idx = scsi_io_cb_idx;
+>       ioc->tm_cb_idx = tm_cb_idx;
+>       ioc->ctl_cb_idx = ctl_cb_idx;
+> @@ -6947,6 +7431,20 @@ _scsih_probe(struct pci_dev *pdev, const
+>       }
+>
+>       ioc->wait_for_port_enable_to_complete = 0;
+> +     if (ioc->is_warpdrive) {
+> +             if (ioc->mfg_pg10_hide_flag ==
+> MFG_PAGE10_EXPOSE_ALL_DISKS)
+> +                     ioc->hide_drives = 0;
+> +             else if (ioc->mfg_pg10_hide_flag ==
+> MFG_PAGE10_HIDE_ALL_DISKS)
+> +                     ioc->hide_drives = 1;
+> +             else {
+> +                     if (_scsih_get_num_volumes(ioc))
+> +                             ioc->hide_drives = 1;
+> +                     else
+> +                             ioc->hide_drives = 0;
+> +             }
+> +     } else
+> +             ioc->hide_drives = 0;
+> +
+>       _scsih_probe_devices(ioc);
+>       return 0;
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
