@@ -1,142 +1,139 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 2/2] hpsa: export resettable host attribute
-Date: Thu, 10 Mar 2011 16:29:06 +0100
-Message-ID: <4D78EE42.7090800@redhat.com>
-References: <20110309225822.26877.94051.stgit@beardog.cce.hp.com> <20110309230006.26877.68951.stgit@beardog.cce.hp.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH] [SCSI] bnx2fc: fix build error when !CONFIG_MODULES
+Date: Thu, 10 Mar 2011 09:32:56 -0600
+Message-ID: <1299771177.10246.41.camel@mulgrave.site>
+References: <20110302182740.e4dfd79f.sfr@canb.auug.org.au>
+	 <1299103803-32594-1-git-send-email-mk@lab.zgora.pl>
+	 <20110307201610.GA9032@mako-laptop>
+	 <1299542075.5232.5.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
+	 <1299543497.15955.108.camel@mulgrave.site> <1299546546.1689.40.camel@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42938 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753098Ab1CJPaw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Mar 2011 10:30:52 -0500
-In-Reply-To: <20110309230006.26877.68951.stgit@beardog.cce.hp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1299546546.1689.40.camel@fritz>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Robert Love <robert.w.love@intel.com>
+Cc: Bhanu Gollapudi <bprakash@broadcom.com>, Mariusz Kozlowski <mk@lab.zgora.pl>, Stephen Rothwell <sfr@canb.auug.org.au>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-next@vger.kernel.org" <linux-next@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Stephen M. Cameron" <scameron@beardog.cce.hp.com>
-Cc: james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, smcameron@yahoo.com, akpm@linux-foundation.org, mikem@beardog.cce.hp.com
 
->
-> From: Stephen M. Cameron <scameron@beardog.cce.hp.com>
->
-> This attribute, requested by Redhat, allows kexec-tools to know
-> whether the controller can honor the reset_devices kernel parameter
-> and actually reset the controller.  For kdump to work properly it
-> is necessary that the reset_devices parameter be honored.  This
-> attribute enables kexec-tools to warn the user if they attempt to
-> designate a non-resettable controller as the dump device.
->
-> Signed-off-by: Stephen M. Cameron <scameron@beardog.cce.hp.com>
->   
-Thanks,looks good to me.
-Tomas
+On Mon, 2011-03-07 at 17:09 -0800, Robert Love wrote:
+> On Mon, 2011-03-07 at 16:18 -0800, James Bottomley wrote:
+> > On Mon, 2011-03-07 at 15:54 -0800, Bhanu Gollapudi wrote:
+> > > On Mon, 2011-03-07 at 12:16 -0800, Mariusz Kozlowski wrote:=20
+> > > > On Wed, Mar 02, 2011 at 11:10:03PM +0100, Mariusz Kozlowski wro=
+te:
+> > > > > drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815: error: dereferencing =
+pointer to incomplete type
+> > > > > drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1815: error: =E2=80=98MODUL=
+E_STATE_LIVE=E2=80=99 undeclared (first use in this function)
+> > > >=20
+> > > > Hm. Still there in next-20110307. Is this patch wrong or..?
+> > > >=20
+> > >=20
+> > > James,
+> > >=20
+> > > Here is my ack for this patch.
+> >=20
+> > OK, so the patch is actually wrong because adding #ifdefs on module=
+s in
+> > files really impedes readability.  The bug is using a direct deref =
+on
+> > module state instead of one of the APIs which work in the non-modul=
+ar
+> > case, namely try_module_get(). That means the other two need to com=
+e out
+> > and be reworked (plus all the others in fcoe).
+> >=20
+> > Reworked looks like it might be a bigger item than bnx2fc.  If any =
+of
+> > those tests is ever relevant, it means we have a race in the
+> > fcoe_transport because it shouldn't be calling function pointers on=
+ a
+> > dying module (unless it wants to trigger an oops).
+> >=20
+> > So, why are you trying to do this in the first place?
+> >=20
+> First, fcoe.c started with these checks. Here is a comment in fcoe.c =
+at
+> the point of one of the checks.
+>=20
+> /*
+>  * Make sure the module has been initialized, and is not about to be
+>  * removed.  Module paramter sysfs files are writable before the
+>  * module_init function is called and after module_exit.
+>  */
+>=20
+> I don't know the correct way to fix that race is, but we may be past =
+the
+> need to fix it in the LLDs.
 
-> ---
->  Documentation/scsi/hpsa.txt |   12 ++++++++++++
->  drivers/scsi/hpsa.c         |   41 +++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 53 insertions(+), 0 deletions(-)
->
-> diff --git a/Documentation/scsi/hpsa.txt b/Documentation/scsi/hpsa.txt
-> index dca6583..8b418b3 100644
-> --- a/Documentation/scsi/hpsa.txt
-> +++ b/Documentation/scsi/hpsa.txt
-> @@ -39,6 +39,7 @@ HPSA specific entries in /sys
->  
->    /sys/class/scsi_host/host*/rescan
->    /sys/class/scsi_host/host*/firmware_revision
-> +  /sys/class/scsi_host/host*/resettable
->  
->    the host "rescan" attribute is a write only attribute.  Writing to this
->    attribute will cause the driver to scan for new, changed, or removed devices
-> @@ -55,6 +56,17 @@ HPSA specific entries in /sys
->  	root@host:/sys/class/scsi_host/host4# cat firmware_revision
->  	7.14
->  
-> +  The "resettable" read-only attribute indicates whether a particular
-> +  controller is able to honor the "reset_devices" kernel parameter.  If the
-> +  device is resettable, this file will contain a "1", otherwise, a "0".  This
-> +  parameter is used by kdump, for example, to reset the controller at driver
-> +  load time to eliminate any outstanding commands on the controller and get the
-> +  controller into a known state so that the kdump initiated i/o will work right
-> +  and not be disrupted in any way by stale commands or other stale state
-> +  remaining on the controller from the previous kernel.  This attribute enables
-> +  kexec tools to warn the user if they attempt to designate a device which is
-> +  unable to honor the reset_devices kernel parameter as a dump device.
-> +
->    HPSA specific disk attributes:
->    ------------------------------
->  
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index dcabef4..415ad4f 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -273,6 +273,44 @@ static ssize_t host_show_transport_mode(struct device *dev,
->  			"performant" : "simple");
->  }
->  
-> +/* List of controllers which cannot be reset on kexec with reset_devices */
-> +static u32 unresettable_controller[] = {
-> +	0x324a103C, /* Smart Array P712m */
-> +	0x324b103C, /* SmartArray P711m */
-> +	0x3223103C, /* Smart Array P800 */
-> +	0x3234103C, /* Smart Array P400 */
-> +	0x3235103C, /* Smart Array P400i */
-> +	0x3211103C, /* Smart Array E200i */
-> +	0x3212103C, /* Smart Array E200 */
-> +	0x3213103C, /* Smart Array E200i */
-> +	0x3214103C, /* Smart Array E200i */
-> +	0x3215103C, /* Smart Array E200i */
-> +	0x3237103C, /* Smart Array E500 */
-> +	0x323D103C, /* Smart Array P700m */
-> +	0x409C0E11, /* Smart Array 6400 */
-> +	0x409D0E11, /* Smart Array 6400 EM */
-> +};
-> +
-> +static int ctlr_is_resettable(struct ctlr_info *h)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < ARRAY_SIZE(unresettable_controller); i++)
-> +		if (unresettable_controller[i] == h->board_id)
-> +			return 0;
-> +	return 1;
-> +}
-> +
-> +static ssize_t host_show_resettable(struct device *dev,
-> +	struct device_attribute *attr, char *buf)
-> +{
-> +	struct ctlr_info *h;
-> +	struct Scsi_Host *shost = class_to_shost(dev);
-> +
-> +	h = shost_to_hba(shost);
-> +	return snprintf(buf, 20, "%d\n", ctlr_is_resettable(h));
-> +}
-> +
->  static inline int is_logical_dev_addr_mode(unsigned char scsi3addr[])
->  {
->  	return (scsi3addr[3] & 0xC0) == 0x40;
-> @@ -379,6 +417,8 @@ static DEVICE_ATTR(commands_outstanding, S_IRUGO,
->  	host_show_commands_outstanding, NULL);
->  static DEVICE_ATTR(transport_mode, S_IRUGO,
->  	host_show_transport_mode, NULL);
-> +static DEVICE_ATTR(resettable, S_IRUGO,
-> +	host_show_resettable, NULL);
->  
->  static struct device_attribute *hpsa_sdev_attrs[] = {
->  	&dev_attr_raid_level,
-> @@ -392,6 +432,7 @@ static struct device_attribute *hpsa_shost_attrs[] = {
->  	&dev_attr_firmware_revision,
->  	&dev_attr_commands_outstanding,
->  	&dev_attr_transport_mode,
-> +	&dev_attr_resettable,
->  	NULL,
->  };
->  
->
+Well, what you've done isn't even fixing the race ... it's just
+narrowing the window.  count checks on refcounted objects are almost
+always wrong.  To see this just think what happens if the module goes
+dead the instruction cycle after you do the check.
+
+I don't understand the problem with the comments above.  The way we
+solve the sysfs race in most systems (including modules) is to make sur=
+e
+they're initialised with the module and torn down as part of its exit
+process ... modules.c follows this pattern.  The parameters are suppose=
+d
+to be initialised before the module has any state (because the init cod=
+e
+may rely on them).
+
+I think the problem is you have what are essentially functional sysfs
+files done as module parameters in fcoe_transport.c ... this looks to b=
+e
+wrong.  What you should have is these added as group attributes once th=
+e
+module is capable of processing them; that way you control the
+lifetimes.
+
+James
+
+
+> Next, the fcoe transport was added. Since it (libfcoe.ko) is now call=
+ing
+> what used to be the fcoe.ko sysfs entry points I don't think the prob=
+lem
+> exists in fcoe.c or in bnx2fc_fcoe.c, the problem should be in the fc=
+oe
+> transport code, as James suggested.
+>=20
+> The fcoe transport code already has these checks to protect against
+> sysfs files being writable before module initialization is complete. =
+It
+> uses the ft_mutex to protect the list of transports(LLDs) so when
+> 'create' is called it knows that the transport is still there to call
+> down to. It holds the ft_mutex until the LLD's 'create' routine retur=
+ns.
+> The transports(LLDs) should be detaching themselves from the fcoe
+> transport layer before they exit. fcoe_transport_detach will try to
+> acquire the ft_mutex and block until the 'create' call returns and
+> releases the ft_mutex. I think this ensures that the transport(LLD) w=
+ill
+> be fine when the fcoe transport calls it.
+>=20
+> My feeling is that these checks are still needed in the fcoe transpor=
+t,
+> but not in the LLDs. If someone can suggest a better way to protect
+> against writable sysfs files when the module hasn't finished
+> initializing, we should do that instead of the ifdefs.
+>=20
+> Hope this helps,
+>=20
+> //Rob
+>=20
+> FYI: mnc asked about this code and the trylock code in fcoe and libfc=
+oe.
+> I have patches in our internal validation to remove the trylock usage=
+,
+> but I don't have patches to fix the module state checking.
+>=20
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
+ in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
->   
-
