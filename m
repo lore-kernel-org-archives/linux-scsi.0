@@ -1,44 +1,51 @@
-From: va stg2010 <va.storage2010@gmail.com>
-Subject: Calling scsi_add_host multiple times for concurency
-Date: Thu, 10 Mar 2011 08:35:34 -0800
-Message-ID: <AANLkTikKbsoSmfoW9Ma7agW4SFBPEFPPPp7QeB_+9i0H@mail.gmail.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: Calling scsi_add_host multiple times for concurency
+Date: Thu, 10 Mar 2011 13:41:12 -0600
+Message-ID: <1299786072.11933.162.camel@mulgrave.site>
 References: <AANLkTinKxORC1P0zY6LUupUU89WTAsN_FQ+dPhjtw6EW@mail.gmail.com>
+	 <AANLkTikKbsoSmfoW9Ma7agW4SFBPEFPPPp7QeB_+9i0H@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yx0-f174.google.com ([209.85.213.174]:59989 "EHLO
-	mail-yx0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752014Ab1CJQff convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2011 11:35:35 -0500
-Received: by yxs7 with SMTP id 7so732398yxs.19
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Mar 2011 08:35:35 -0800 (PST)
-In-Reply-To: <AANLkTinKxORC1P0zY6LUupUU89WTAsN_FQ+dPhjtw6EW@mail.gmail.com>
+Received: from cantor.suse.de ([195.135.220.2]:52851 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751125Ab1CJTlT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Mar 2011 14:41:19 -0500
+In-Reply-To: <AANLkTikKbsoSmfoW9Ma7agW4SFBPEFPPPp7QeB_+9i0H@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: va stg2010 <va.storage2010@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi
-My initiator HBA=A0 has 4 ports. Right now=A0 I call scsi_add_host() on=
-ly once.
-Currently I have single queue for all 4 ports where=A0 pending scsi
-commands wait till interrupt handler posts response.=A0 I am trying to
-add more queue (one per port) to reduce some locking contention.
+On Thu, 2011-03-10 at 08:35 -0800, va stg2010 wrote:
+> Hi
+> My initiator HBA  has 4 ports. Right now  I call scsi_add_host() only once.
+> Currently I have single queue for all 4 ports where  pending scsi
+> commands wait till interrupt handler posts response.  I am trying to
+> add more queue (one per port) to reduce some locking contention.
 
-Can I expect higher concurrency if I call scsi_add_host 4 times , one
-for each port. ?
-Is it going to work if I call scsi_add_host=A0 4 times and=A0 will
-allocate queue (for pending scsi commands) for each scsi host I
-registered?
-What performance benefits can I expect, if any?
+Why do you have a single issue queue?  If the contention is in that,
+then you can easily fix that without altering the host structure.
 
-There can be multiple initiators doing I/O=A0 via=A0 my 4 port initiato=
-r=A0 HBA.
+> Can I expect higher concurrency if I call scsi_add_host 4 times , one
+> for each port. ?
+> Is it going to work if I call scsi_add_host  4 times and  will
+> allocate queue (for pending scsi commands) for each scsi host I
+> registered?
 
-thankyou
-vks
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Um, so this makes me think you don't understand the SCSI queuing.  The
+block queue is per registered sdev (which is usually a LUN) not per
+host.  However, pending commands aren't kept on the block queue: we
+dequeue them in the request queue.
+
+> What performance benefits can I expect, if any?
+
+SCSI counts things per host, Like maximum number of commands.  It
+doesn't really impact concurrency, since that's done per queue (which is
+per LUN) but it does mean there's a per-host lock in the submit path
+which can show up in profiling (particularly for high iop devices).
+
+James
+
+
