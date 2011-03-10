@@ -1,44 +1,45 @@
 From: Dan Williams <dan.j.williams@intel.com>
-Subject: [RFC PATCH 02/10] isci/core: phy
-Date: Thu, 10 Mar 2011 02:54:29 -0800
-Message-ID: <20110310105429.6485.99269.stgit@localhost6.localdomain6>
+Subject: [RFC PATCH 06/10] isci/core: stp
+Date: Thu, 10 Mar 2011 02:54:50 -0800
+Message-ID: <20110310105450.6485.64487.stgit@localhost6.localdomain6>
 References: <20110310105347.6485.20780.stgit@localhost6.localdomain6>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:38817 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:32328 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751368Ab1CJKxO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Mar 2011 05:53:14 -0500
+	id S1752701Ab1CJKxe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Mar 2011 05:53:34 -0500
 In-Reply-To: <20110310105347.6485.20780.stgit@localhost6.localdomain6>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: james.bottomley@suse.de
 Cc: dave.jiang@intel.com, linux-scsi@vger.kernel.org, jacek.danecki@intel.com, ed.ciechanowski@intel.com, jeffrey.d.skirvin@intel.com, edmund.nadolski@intel.com
 
-Phy state machines and hardware interface.
+stp request support and state machines.  pio and exceptions handled in
+software, fpdma and udma handled in hardware.
 
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/scsi/isci/core/sci_base_phy.h           |  200 ++
- drivers/scsi/isci/core/scic_phy.h               |  305 +++
- drivers/scsi/isci/core/scic_sds_phy.c           | 2726 +++++++++++++++++++++++
- drivers/scsi/isci/core/scic_sds_phy.h           |  476 ++++
- drivers/scsi/isci/core/scic_sds_phy_registers.h |  248 ++
- 5 files changed, 3955 insertions(+), 0 deletions(-)
- create mode 100644 drivers/scsi/isci/core/sci_base_phy.h
- create mode 100644 drivers/scsi/isci/core/scic_phy.h
- create mode 100644 drivers/scsi/isci/core/scic_sds_phy.c
- create mode 100644 drivers/scsi/isci/core/scic_sds_phy.h
- create mode 100644 drivers/scsi/isci/core/scic_sds_phy_registers.h
+ .../scsi/isci/core/scic_sds_stp_packet_request.c   |  834 +++++++++
+ .../scsi/isci/core/scic_sds_stp_packet_request.h   |  153 ++
+ drivers/scsi/isci/core/scic_sds_stp_pio_request.h  |  116 +
+ drivers/scsi/isci/core/scic_sds_stp_request.c      | 1941 ++++++++++++++++++++
+ drivers/scsi/isci/core/scic_sds_stp_request.h      |  221 ++
+ 5 files changed, 3265 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/scsi/isci/core/scic_sds_stp_packet_request.c
+ create mode 100644 drivers/scsi/isci/core/scic_sds_stp_packet_request.h
+ create mode 100644 drivers/scsi/isci/core/scic_sds_stp_pio_request.h
+ create mode 100644 drivers/scsi/isci/core/scic_sds_stp_request.c
+ create mode 100644 drivers/scsi/isci/core/scic_sds_stp_request.h
 
-diff --git a/drivers/scsi/isci/core/sci_base_phy.h b/drivers/scsi/isci/core/sci_base_phy.h
+diff --git a/drivers/scsi/isci/core/scic_sds_stp_packet_request.c b/drivers/scsi/isci/core/scic_sds_stp_packet_request.c
 new file mode 100644
-index 0000000..7e2c7e3
+index 0000000..97dc9bf
 --- /dev/null
-+++ b/drivers/scsi/isci/core/sci_base_phy.h
-@@ -0,0 +1,200 @@
++++ b/drivers/scsi/isci/core/scic_sds_stp_packet_request.c
+@@ -0,0 +1,834 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -93,158 +94,792 @@ index 0000000..7e2c7e3
 + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
++#if !defined(DISABLE_ATAPI)
 +
-+#ifndef _SCI_BASE_PHY_H_
-+#define _SCI_BASE_PHY_H_
++#include "intel_ata.h"
++#include "intel_sas.h"
++#include "intel_sata.h"
++#include "intel_sat.h"
++#include "sati_translator_sequence.h"
++#include "sci_base_state.h"
++#include "scic_controller.h"
++#include "scic_remote_device.h"
++#include "scic_sds_controller.h"
++#include "scic_sds_remote_device.h"
++#include "scic_sds_request.h"
++#include "scic_sds_stp_packet_request.h"
++#include "scic_user_callback.h"
++#include "sci_util.h"
++#include "scu_completion_codes.h"
++#include "scu_task_context.h"
 +
-+/**
-+ * This file contains all of the structures, constants, and methods common to
-+ *    all phy object definitions.
-+ *
-+ *
-+ */
-+
-+#include "sci_base_state_machine.h"
-+
-+/**
-+ * enum sci_base_phy_states - This enumeration depicts the standard states
-+ *    common to all phy state machine implementations.
-+ *
-+ *
-+ */
-+enum sci_base_phy_states {
-+	/**
-+	 * Simply the initial state for the base domain state machine.
-+	 */
-+	SCI_BASE_PHY_STATE_INITIAL,
-+
-+	/**
-+	 * This state indicates that the phy has successfully been stopped.
-+	 * In this state no new IO operations are permitted on this phy.
-+	 * This state is entered from the INITIAL state.
-+	 * This state is entered from the STARTING state.
-+	 * This state is entered from the READY state.
-+	 * This state is entered from the RESETTING state.
-+	 */
-+	SCI_BASE_PHY_STATE_STOPPED,
-+
-+	/**
-+	 * This state indicates that the phy is in the process of becomming
-+	 * ready.  In this state no new IO operations are permitted on this phy.
-+	 * This state is entered from the STOPPED state.
-+	 * This state is entered from the READY state.
-+	 * This state is entered from the RESETTING state.
-+	 */
-+	SCI_BASE_PHY_STATE_STARTING,
-+
-+	/**
-+	 * This state indicates the the phy is now ready.  Thus, the user
-+	 * is able to perform IO operations utilizing this phy as long as it
-+	 * is currently part of a valid port.
-+	 * This state is entered from the STARTING state.
-+	 */
-+	SCI_BASE_PHY_STATE_READY,
-+
-+	/**
-+	 * This state indicates that the phy is in the process of being reset.
-+	 * In this state no new IO operations are permitted on this phy.
-+	 * This state is entered from the READY state.
-+	 */
-+	SCI_BASE_PHY_STATE_RESETTING,
-+
-+	/**
-+	 * Simply the final state for the base phy state machine.
-+	 */
-+	SCI_BASE_PHY_STATE_FINAL,
-+};
 +
 +/**
-+ * struct sci_base_phy - This structure defines all of the fields common to PHY
-+ *    objects.
-+ *
-+ *
-+ */
-+struct sci_base_phy {
-+	/**
-+	 * This field depicts the parent object (struct sci_base_object) for the phy.
-+	 */
-+	struct sci_base_object parent;
-+
-+	/**
-+	 * This field contains the information for the base phy state machine.
-+	 */
-+	struct sci_base_state_machine state_machine;
-+};
-+
-+typedef enum sci_status (*sci_base_phy_handler_t)(struct sci_base_phy *);
-+
-+/**
-+ * struct sci_base_phy_state_handler - This structure contains all of the state
-+ *    handler methods common to base phy state machines.  Handler methods
-+ *    provide the ability to change the behavior for user requests or
-+ *    transitions depending on the state the machine is in.
-+ *
++ * This method will fill in the SCU Task Context for a PACKET fis. And
++ *    construct the request STARTED sub-state machine for Packet Protocol IO.
++ * @this_request: This parameter specifies the stp packet request object being
++ *    constructed.
 + *
 + */
-+struct sci_base_phy_state_handler {
-+	/**
-+	 * The start_handler specifies the method invoked when there is an
-+	 * attempt to start a phy.
-+	 */
-+	sci_base_phy_handler_t start_handler;
-+
-+	/**
-+	 * The stop_handler specifies the method invoked when there is an
-+	 * attempt to stop a phy.
-+	 */
-+	sci_base_phy_handler_t stop_handler;
-+
-+	/**
-+	 * The reset_handler specifies the method invoked when there is an
-+	 * attempt to reset a phy.
-+	 */
-+	sci_base_phy_handler_t reset_handler;
-+
-+	/**
-+	 * The destruct_handler specifies the method invoked when attempting to
-+	 * destruct a phy.
-+	 */
-+	sci_base_phy_handler_t destruct_handler;
-+
-+};
-+
-+/**
-+ * sci_base_phy_construct() - Construct the base phy
-+ * @this_phy: This parameter specifies the base phy to be constructed.
-+ * @state_table: This parameter specifies the table of state definitions to be
-+ *    utilized for the phy state machine.
-+ *
-+ */
-+static inline void sci_base_phy_construct(
-+	struct sci_base_phy *base_phy,
-+	const struct sci_base_state *state_table)
++enum sci_status scic_sds_stp_packet_request_construct(
++	struct scic_sds_request *this_request)
 +{
-+	base_phy->parent.private = NULL;
-+	sci_base_state_machine_construct(
-+		&base_phy->state_machine,
-+		&base_phy->parent,
-+		state_table,
-+		SCI_BASE_PHY_STATE_INITIAL
++	struct sata_fis_reg_h2d *h2d_fis =
++		scic_stp_io_request_get_h2d_reg_address(
++			this_request
++			);
++
++	/*
++	 * Work around, we currently only support PACKET DMA protocol, so we
++	 * need to make change to Packet Fis features field. */
++	h2d_fis->features = h2d_fis->features | ATA_PACKET_FEATURE_DMA;
++
++	scic_sds_stp_non_ncq_request_construct(this_request);
++
++	/* Build the Packet Fis task context structure */
++	scu_stp_raw_request_construct_task_context(
++		(struct scic_sds_stp_request *)this_request,
++		this_request->task_context_buffer
 +		);
 +
-+	sci_base_state_machine_start(
-+		&base_phy->state_machine
++	sci_base_state_machine_construct(
++		&this_request->started_substate_machine,
++		&this_request->parent.parent,
++		scic_sds_stp_packet_request_started_substate_table,
++		SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_TC_COMPLETION_SUBSTATE
++		);
++
++	return SCI_SUCCESS;
++}
++
++
++/**
++ * This method will fill in the SCU Task Context for a Packet request command
++ *    phase in PACKET DMA DATA (IN/OUT) type. The following important settings
++ *    are utilized: -# task_type == SCU_TASK_TYPE_PACKET_DMA.  This simply
++ *    indicates that a normal request type (i.e. non-raw frame) is being
++ *    utilized to perform task management. -# control_frame == 1.  This ensures
++ *    that the proper endianess is set so that the bytes are transmitted in the
++ *    right order for a smp request frame.
++ * @this_request: This parameter specifies the smp request object being
++ *    constructed.
++ * @task_context: The task_context to be reconstruct for packet request command
++ *    phase.
++ *
++ */
++void scu_stp_packet_request_command_phase_construct_task_context(
++	struct scic_sds_request *this_request,
++	struct scu_task_context *task_context)
++{
++	void *atapi_cdb;
++	u32 atapi_cdb_length;
++	struct scic_sds_stp_request *stp_request = (struct scic_sds_stp_request *)this_request;
++
++	/*
++	 * reference: SSTL 1.13.4.2
++	 * task_type, sata_direction */
++	if (scic_cb_io_request_get_data_direction(this_request->user_request)
++	     == SCI_IO_REQUEST_DATA_OUT) {
++		task_context->task_type = SCU_TASK_TYPE_PACKET_DMA_OUT;
++		task_context->sata_direction = 0;
++	} else {  /* todo: for NO_DATA command, we need to send out raw frame. */
++		task_context->task_type = SCU_TASK_TYPE_PACKET_DMA_IN;
++		task_context->sata_direction = 1;
++	}
++
++	/* sata header */
++	memset(&(task_context->type.stp), 0, sizeof(struct STP_TASK_CONTEXT));
++	task_context->type.stp.fis_type = SATA_FIS_TYPE_DATA;
++
++	/*
++	 * Copy in the command IU with CDB so that the commandIU address doesn't
++	 * change. */
++	memset(this_request->command_buffer, 0, sizeof(struct sata_fis_reg_h2d));
++
++	atapi_cdb =
++		scic_cb_stp_packet_io_request_get_cdb_address(this_request->user_request);
++
++	atapi_cdb_length =
++		scic_cb_stp_packet_io_request_get_cdb_length(this_request->user_request);
++
++	memcpy(((u8 *)this_request->command_buffer + sizeof(u32)), atapi_cdb, atapi_cdb_length);
++
++	atapi_cdb_length =
++		max(atapi_cdb_length, stp_request->type.packet.device_preferred_cdb_length);
++
++	task_context->ssp_command_iu_length =
++		((atapi_cdb_length % 4) == 0) ?
++		(atapi_cdb_length / 4) : ((atapi_cdb_length / 4) + 1);
++
++	/* task phase is set to TX_CMD */
++	task_context->task_phase = 0x1;
++
++	/* retry counter */
++	task_context->stp_retry_count = 0;
++
++	if (scic_cb_request_is_initial_construction(this_request->user_request)) {
++		/* data transfer size. */
++		task_context->transfer_length_bytes =
++			scic_cb_io_request_get_transfer_length(this_request->user_request);
++
++		/* setup sgl */
++		scic_sds_request_build_sgl(this_request);
++	} else {
++		/* data transfer size, need to be 4 bytes aligned. */
++		task_context->transfer_length_bytes = (SCSI_FIXED_SENSE_DATA_BASE_LENGTH + 2);
++
++		scic_sds_stp_packet_internal_request_sense_build_sgl(this_request);
++	}
++}
++
++/**
++ * This method will fill in the SCU Task Context for a DATA fis containing CDB
++ *    in Raw Frame type. The TC for previous Packet fis was already there, we
++ *    only need to change the H2D fis content.
++ * @this_request: This parameter specifies the smp request object being
++ *    constructed.
++ * @task_context: The task_context to be reconstruct for packet request command
++ *    phase.
++ *
++ */
++void scu_stp_packet_request_command_phase_reconstruct_raw_frame_task_context(
++	struct scic_sds_request *this_request,
++	struct scu_task_context *task_context)
++{
++	void *atapi_cdb =
++		scic_cb_stp_packet_io_request_get_cdb_address(this_request->user_request);
++
++	u32 atapi_cdb_length =
++		scic_cb_stp_packet_io_request_get_cdb_length(this_request->user_request);
++
++	memset(this_request->command_buffer, 0, sizeof(struct sata_fis_reg_h2d));
++	memcpy(((u8 *)this_request->command_buffer + sizeof(u32)), atapi_cdb, atapi_cdb_length);
++
++	memset(&(task_context->type.stp), 0, sizeof(struct STP_TASK_CONTEXT));
++	task_context->type.stp.fis_type = SATA_FIS_TYPE_DATA;
++
++	/*
++	 * Note the data send out has to be 4 bytes aligned. Or else out hardware will
++	 * patch non-zero bytes and cause the target device unhappy. */
++	task_context->transfer_length_bytes = 12;
++}
++
++
++/*
++ * *@brief This methods decode the D2H status FIS and retrieve the sense data,
++ *          then pass the sense data to user request.
++ *
++ ***@param[in] this_request The request receive D2H status FIS.
++ ***@param[in] status_fis The D2H status fis to be processed.
++ *
++ */
++enum sci_status scic_sds_stp_packet_request_process_status_fis(
++	struct scic_sds_request *this_request,
++	struct sata_fis_reg_d2h *status_fis)
++{
++	enum sci_status status = SCI_SUCCESS;
++
++	/* TODO: Process the error status fis, retrieve sense data. */
++	if (status_fis->status & ATA_STATUS_REG_ERROR_BIT)
++		status = SCI_FAILURE_IO_RESPONSE_VALID;
++
++	return status;
++}
++
++/*
++ * *@brief This methods builds sgl for internal REQUEST SENSE stp packet
++ *          command using this request response buffer, only one sge is
++ *          needed.
++ *
++ ***@param[in] this_request The request receive request sense data.
++ *
++ */
++void scic_sds_stp_packet_internal_request_sense_build_sgl(
++	struct scic_sds_request *sds_request)
++{
++	void *sge;
++	struct scu_sgl_element_pair *scu_sgl_list   = NULL;
++	struct scu_task_context *task_context;
++	dma_addr_t dma_addr;
++
++	struct sci_ssp_response_iu *rsp_iu =
++		(struct sci_ssp_response_iu *)sds_request->response_buffer;
++
++	sge =  (void *)&rsp_iu->data[0];
++
++	task_context =
++		(struct scu_task_context *)sds_request->task_context_buffer;
++	scu_sgl_list = &task_context->sgl_pair_ab;
++
++	dma_addr = scic_io_request_get_dma_addr(sds_request, sge);
++
++	scu_sgl_list->A.address_upper = upper_32_bits(dma_addr);
++	scu_sgl_list->A.address_lower = lower_32_bits(dma_addr);
++	scu_sgl_list->A.length = task_context->transfer_length_bytes;
++	scu_sgl_list->A.address_modifier = 0;
++
++	SCU_SGL_ZERO(scu_sgl_list->B);
++}
++
++/**
++ * This method processes the completions transport layer (TL) status to
++ *    determine if the Packet FIS was sent successfully. If the Packet FIS was
++ *    sent successfully, then the state for the Packet request transits to
++ *    waiting for a PIO SETUP frame.
++ * @this_request: This parameter specifies the request for which the TC
++ *    completion was received.
++ * @completion_code: This parameter indicates the completion status information
++ *    for the TC.
++ *
++ * Indicate if the tc completion handler was successful. SCI_SUCCESS currently
++ * this method always returns success.
++ */
++enum sci_status scic_sds_stp_packet_request_packet_phase_await_tc_completion_tc_completion_handler(
++	struct scic_sds_request *this_request,
++	u32 completion_code)
++{
++	enum sci_status status = SCI_SUCCESS;
++
++	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
++		scic_sds_request_set_status(
++			this_request, SCU_TASK_DONE_GOOD, SCI_SUCCESS
++			);
++
++		sci_base_state_machine_change_state(
++			&this_request->started_substate_machine,
++			SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_PIO_SETUP_SUBSTATE
++			);
++		break;
++
++	default:
++		/*
++		 * All other completion status cause the IO to be complete.  If a NAK
++		 * was received, then it is up to the user to retry the request. */
++		scic_sds_request_set_status(
++			this_request,
++			SCU_NORMALIZE_COMPLETION_STATUS(completion_code),
++			SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR
++			);
++
++		sci_base_state_machine_change_state(
++			&this_request->parent.state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED
++			);
++		break;
++	}
++
++	return status;
++}
++
++
++/**
++ * This method processes an unsolicited frame while the Packet request is
++ *    waiting for a PIO SETUP FIS.  It will release the unsolicited frame, and
++ *    transition the request to the COMMAND_PHASE_AWAIT_TC_COMPLETION_SUBSTATE
++ *    state.
++ * @this_request: This parameter specifies the request for which the
++ *    unsolicited frame was received.
++ * @frame_index: This parameter indicates the unsolicited frame index that
++ *    should contain the response.
++ *
++ * This method returns an indication of whether the pio setup frame was handled
++ * successfully or not. SCI_SUCCESS Currently this value is always returned and
++ * indicates successful processing of the TC response.
++ */
++enum sci_status scic_sds_stp_packet_request_packet_phase_await_pio_setup_frame_handler(
++	struct scic_sds_request *request,
++	u32 frame_index)
++{
++	enum sci_status status;
++	struct sata_fis_header *frame_header;
++	u32 *frame_buffer;
++	struct scic_sds_stp_request *this_request;
++
++	this_request = (struct scic_sds_stp_request *)request;
++
++	status = scic_sds_unsolicited_frame_control_get_header(
++		&(this_request->parent.owning_controller->uf_control),
++		frame_index,
++		(void **)&frame_header
++		);
++
++	if (status == SCI_SUCCESS) {
++		BUG_ON(frame_header->fis_type != SATA_FIS_TYPE_PIO_SETUP);
++
++		/*
++		 * Get from the frame buffer the PIO Setup Data, although we don't need
++		 * any info from this pio setup fis. */
++		scic_sds_unsolicited_frame_control_get_buffer(
++			&(this_request->parent.owning_controller->uf_control),
++			frame_index,
++			(void **)&frame_buffer
++			);
++
++		/*
++		 * Get the data from the PIO Setup
++		 * The SCU Hardware returns first word in the frame_header and the rest
++		 * of the data is in the frame buffer so we need to back up one dword */
++		this_request->type.packet.device_preferred_cdb_length =
++			(u16)((struct sata_fis_pio_setup *)(&frame_buffer[-1]))->transfter_count;
++
++		/* Frame has been decoded return it to the controller */
++		scic_sds_controller_release_frame(
++			this_request->parent.owning_controller, frame_index
++			);
++
++		sci_base_state_machine_change_state(
++			&this_request->parent.started_substate_machine,
++			SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_TC_COMPLETION_SUBSTATE
++			);
++	} else
++		dev_err(scic_to_dev(request->owning_controller),
++			"%s: SCIC IO Request 0x%p could not get frame header "
++			"for frame index %d, status %x\n",
++			__func__, this_request, frame_index, status);
++
++	return status;
++}
++
++
++/**
++ * This method processes the completions transport layer (TL) status to
++ *    determine if the PACKET command data FIS was sent successfully. If
++ *    successfully, then the state for the packet request transits to COMPLETE
++ *    state. If not successfuly, the request transits to
++ *    COMMAND_PHASE_AWAIT_D2H_FIS_SUBSTATE.
++ * @this_request: This parameter specifies the request for which the TC
++ *    completion was received.
++ * @completion_code: This parameter indicates the completion status information
++ *    for the TC.
++ *
++ * Indicate if the tc completion handler was successful. SCI_SUCCESS currently
++ * this method always returns success.
++ */
++enum sci_status scic_sds_stp_packet_request_command_phase_await_tc_completion_tc_completion_handler(
++	struct scic_sds_request *this_request,
++	u32 completion_code)
++{
++	enum sci_status status = SCI_SUCCESS;
++	u8 sat_packet_protocol =
++		scic_cb_request_get_sat_protocol(this_request->user_request);
++
++	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
++	case (SCU_TASK_DONE_GOOD << SCU_COMPLETION_TL_STATUS_SHIFT):
++		scic_sds_request_set_status(
++			this_request, SCU_TASK_DONE_GOOD, SCI_SUCCESS
++			);
++
++		if (sat_packet_protocol == SAT_PROTOCOL_PACKET_DMA_DATA_IN
++		     || sat_packet_protocol == SAT_PROTOCOL_PACKET_DMA_DATA_OUT
++		     )
++			sci_base_state_machine_change_state(
++				&this_request->parent.state_machine,
++				SCI_BASE_REQUEST_STATE_COMPLETED
++				);
++		else
++			sci_base_state_machine_change_state(
++				&this_request->started_substate_machine,
++				SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_D2H_FIS_SUBSTATE
++				);
++		break;
++
++	case (SCU_TASK_DONE_UNEXP_FIS << SCU_COMPLETION_TL_STATUS_SHIFT):
++		if (scic_io_request_get_number_of_bytes_transferred(this_request) <
++		    scic_cb_io_request_get_transfer_length(this_request->user_request)) {
++			scic_sds_request_set_status(
++				this_request, SCU_TASK_DONE_GOOD, SCI_SUCCESS_IO_DONE_EARLY
++				);
++
++			sci_base_state_machine_change_state(
++				&this_request->parent.state_machine,
++				SCI_BASE_REQUEST_STATE_COMPLETED
++				);
++
++			status = this_request->sci_status;
++		}
++		break;
++
++	case (SCU_TASK_DONE_EXCESS_DATA << SCU_COMPLETION_TL_STATUS_SHIFT):
++		/* In this case, there is no UF coming after. compelte the IO now. */
++		scic_sds_request_set_status(
++			this_request, SCU_TASK_DONE_GOOD, SCI_SUCCESS
++			);
++
++		sci_base_state_machine_change_state(
++			&this_request->parent.state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED
++			);
++
++		break;
++
++	default:
++		if (this_request->sci_status != SCI_SUCCESS) {  /* The io status was set already. This means an UF for the status
++								 * fis was received already.
++								 */
++
++			/*
++			 * A device suspension event is expected, we need to have the device
++			 * coming out of suspension, then complete the IO. */
++			sci_base_state_machine_change_state(
++				&this_request->started_substate_machine,
++				SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMPLETION_DELAY_SUBSTATE
++				);
++
++			/* change the device state to ATAPI_ERROR. */
++			sci_base_state_machine_change_state(
++				&this_request->target_device->ready_substate_machine,
++				SCIC_SDS_STP_REMOTE_DEVICE_READY_SUBSTATE_ATAPI_ERROR
++				);
++
++			status = this_request->sci_status;
++		} else {  /* If receiving any non-sucess TC status, no UF received yet, then an UF for
++			   * the status fis is coming after.
++			   */
++			scic_sds_request_set_status(
++				this_request,
++				SCU_TASK_DONE_CHECK_RESPONSE,
++				SCI_FAILURE_IO_RESPONSE_VALID
++				);
++
++			sci_base_state_machine_change_state(
++				&this_request->started_substate_machine,
++				SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_D2H_FIS_SUBSTATE
++				);
++		}
++		break;
++	}
++
++	return status;
++}
++
++
++/**
++ * This method processes an unsolicited frame.
++ * @this_request: This parameter specifies the request for which the
++ *    unsolicited frame was received.
++ * @frame_index: This parameter indicates the unsolicited frame index that
++ *    should contain the response.
++ *
++ * This method returns an indication of whether the UF frame was handled
++ * successfully or not. SCI_SUCCESS Currently this value is always returned and
++ * indicates successful processing of the TC response.
++ */
++enum sci_status scic_sds_stp_packet_request_command_phase_common_frame_handler(
++	struct scic_sds_request *request,
++	u32 frame_index)
++{
++	enum sci_status status;
++	struct sata_fis_header *frame_header;
++	u32 *frame_buffer;
++	struct scic_sds_stp_request *this_request;
++
++	this_request = (struct scic_sds_stp_request *)request;
++
++	status = scic_sds_unsolicited_frame_control_get_header(
++		&(this_request->parent.owning_controller->uf_control),
++		frame_index,
++		(void **)&frame_header
++		);
++
++	if (status == SCI_SUCCESS) {
++		BUG_ON(frame_header->fis_type != SATA_FIS_TYPE_REGD2H);
++
++		/*
++		 * Get from the frame buffer the PIO Setup Data, although we don't need
++		 * any info from this pio setup fis. */
++		scic_sds_unsolicited_frame_control_get_buffer(
++			&(this_request->parent.owning_controller->uf_control),
++			frame_index,
++			(void **)&frame_buffer
++			);
++
++		scic_sds_controller_copy_sata_response(
++			&this_request->d2h_reg_fis, (u32 *)frame_header, frame_buffer
++			);
++
++		/* Frame has been decoded return it to the controller */
++		scic_sds_controller_release_frame(
++			this_request->parent.owning_controller, frame_index
++			);
++	}
++
++	return status;
++}
++
++/**
++ * This method processes an unsolicited frame while the packet request is
++ *    expecting TC completion. It will process the FIS and construct sense data.
++ * @this_request: This parameter specifies the request for which the
++ *    unsolicited frame was received.
++ * @frame_index: This parameter indicates the unsolicited frame index that
++ *    should contain the response.
++ *
++ * This method returns an indication of whether the UF frame was handled
++ * successfully or not. SCI_SUCCESS Currently this value is always returned and
++ * indicates successful processing of the TC response.
++ */
++enum sci_status scic_sds_stp_packet_request_command_phase_await_tc_completion_frame_handler(
++	struct scic_sds_request *request,
++	u32 frame_index)
++{
++	struct scic_sds_stp_request *this_request = (struct scic_sds_stp_request *)request;
++
++	enum sci_status status =
++		scic_sds_stp_packet_request_command_phase_common_frame_handler(
++			request, frame_index);
++
++	if (status == SCI_SUCCESS) {
++		/* The command has completed with error status from target device. */
++		status = scic_sds_stp_packet_request_process_status_fis(
++			request, &this_request->d2h_reg_fis);
++
++		if (status != SCI_SUCCESS) {
++			scic_sds_request_set_status(
++				&this_request->parent,
++				SCU_TASK_DONE_CHECK_RESPONSE,
++				status
++				);
++		} else
++			scic_sds_request_set_status(
++				&this_request->parent, SCU_TASK_DONE_GOOD, SCI_SUCCESS
++				);
++	}
++
++	return status;
++}
++
++
++/**
++ * This method processes an unsolicited frame while the packet request is
++ *    expecting TC completion. It will process the FIS and construct sense data.
++ * @this_request: This parameter specifies the request for which the
++ *    unsolicited frame was received.
++ * @frame_index: This parameter indicates the unsolicited frame index that
++ *    should contain the response.
++ *
++ * This method returns an indication of whether the UF frame was handled
++ * successfully or not. SCI_SUCCESS Currently this value is always returned and
++ * indicates successful processing of the TC response.
++ */
++enum sci_status scic_sds_stp_packet_request_command_phase_await_d2h_fis_frame_handler(
++	struct scic_sds_request *request,
++	u32 frame_index)
++{
++	enum sci_status status =
++		scic_sds_stp_packet_request_command_phase_common_frame_handler(
++			request, frame_index);
++
++	struct scic_sds_stp_request *this_request = (struct scic_sds_stp_request *)request;
++
++	if (status == SCI_SUCCESS) {
++		/* The command has completed with error status from target device. */
++		status = scic_sds_stp_packet_request_process_status_fis(
++			request, &this_request->d2h_reg_fis);
++
++		if (status != SCI_SUCCESS) {
++			scic_sds_request_set_status(
++				request,
++				SCU_TASK_DONE_CHECK_RESPONSE,
++				status
++				);
++		} else
++			scic_sds_request_set_status(
++				request, SCU_TASK_DONE_GOOD, SCI_SUCCESS
++				);
++
++		/*
++		 * Always complete the NON_DATA command right away, no need to delay completion
++		 * even an error status fis came from target device. */
++		sci_base_state_machine_change_state(
++			&request->parent.state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED
++			);
++	}
++
++	return status;
++}
++
++enum sci_status scic_sds_stp_packet_request_started_completion_delay_complete_handler(
++	struct sci_base_request *request)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)request;
++
++	sci_base_state_machine_change_state(
++		&this_request->parent.state_machine,
++		SCI_BASE_REQUEST_STATE_COMPLETED
++		);
++
++	return this_request->sci_status;
++}
++
++/* --------------------------------------------------------------------------- */
++
++const struct scic_sds_io_request_state_handler scic_sds_stp_packet_request_started_substate_handler_table[] = {
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_TC_COMPLETION_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler
++		.tc_completion_handler   = scic_sds_stp_packet_request_packet_phase_await_tc_completion_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_request_default_frame_handler
++	},
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_PIO_SETUP_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler
++		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_stp_packet_request_packet_phase_await_pio_setup_frame_handler
++	},
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_TC_COMPLETION_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler
++		.tc_completion_handler   = scic_sds_stp_packet_request_command_phase_await_tc_completion_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_stp_packet_request_command_phase_await_tc_completion_frame_handler
++	},
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_D2H_FIS_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler
++		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_stp_packet_request_command_phase_await_d2h_fis_frame_handler
++	},
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMPLETION_DELAY_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_stp_packet_request_started_completion_delay_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler
++		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_request_default_frame_handler
++	},
++};
++
++void scic_sds_stp_packet_request_started_packet_phase_await_tc_completion_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_packet_request_started_substate_handler_table,
++		SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_TC_COMPLETION_SUBSTATE
++		);
++
++	scic_sds_remote_device_set_working_request(
++		this_request->target_device, this_request
++		);
++}
++
++void scic_sds_stp_packet_request_started_packet_phase_await_pio_setup_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_packet_request_started_substate_handler_table,
++		SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_PIO_SETUP_SUBSTATE
++		);
++}
++
++void scic_sds_stp_packet_request_started_command_phase_await_tc_completion_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++	u8 sat_packet_protocol =
++		scic_cb_request_get_sat_protocol(this_request->user_request);
++
++	struct scu_task_context *task_context;
++	enum sci_status status;
++
++	/*
++	 * Recycle the TC and reconstruct it for sending out data fis containing
++	 * CDB. */
++	task_context = scic_sds_controller_get_task_context_buffer(
++		this_request->owning_controller, this_request->io_tag);
++
++	if (sat_packet_protocol == SAT_PROTOCOL_PACKET_NON_DATA)
++		scu_stp_packet_request_command_phase_reconstruct_raw_frame_task_context(
++			this_request, task_context);
++	else
++		scu_stp_packet_request_command_phase_construct_task_context(
++			this_request, task_context);
++
++	/* send the new TC out. */
++	status = this_request->owning_controller->state_handlers->parent.continue_io_handler(
++		&this_request->owning_controller->parent,
++		&this_request->target_device->parent,
++		&this_request->parent
++		);
++
++	if (status == SCI_SUCCESS)
++		SET_STATE_HANDLER(
++			this_request,
++			scic_sds_stp_packet_request_started_substate_handler_table,
++			SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_TC_COMPLETION_SUBSTATE
++			);
++}
++
++void scic_sds_stp_packet_request_started_command_phase_await_d2h_fis_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_packet_request_started_substate_handler_table,
++		SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_D2H_FIS_SUBSTATE
++		);
++}
++
++void scic_sds_stp_packet_request_started_completion_delay_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_packet_request_started_substate_handler_table,
++		SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMPLETION_DELAY_SUBSTATE
 +		);
 +}
 +
 +
-+#endif /* _SCI_BASE_PHY_H_ */
-diff --git a/drivers/scsi/isci/core/scic_phy.h b/drivers/scsi/isci/core/scic_phy.h
++/* --------------------------------------------------------------------------- */
++const struct sci_base_state scic_sds_stp_packet_request_started_substate_table[] = {
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_TC_COMPLETION_SUBSTATE] = {
++		.enter_state = scic_sds_stp_packet_request_started_packet_phase_await_tc_completion_enter,
++	},
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_PIO_SETUP_SUBSTATE] = {
++		.enter_state = scic_sds_stp_packet_request_started_packet_phase_await_pio_setup_enter,
++	},
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_TC_COMPLETION_SUBSTATE] = {
++		.enter_state = scic_sds_stp_packet_request_started_command_phase_await_tc_completion_enter,
++	},
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_D2H_FIS_SUBSTATE] = {
++		.enter_state = scic_sds_stp_packet_request_started_command_phase_await_d2h_fis_enter,
++	},
++	[SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMPLETION_DELAY_SUBSTATE] = {
++		.enter_state scic_sds_stp_packet_request_started_completion_delay_enter,
++	}
++};
++
++#endif /* !defined(DISABLE_ATAPI) */
+diff --git a/drivers/scsi/isci/core/scic_sds_stp_packet_request.h b/drivers/scsi/isci/core/scic_sds_stp_packet_request.h
 new file mode 100644
-index 0000000..bf0d3be
+index 0000000..2a7aec9
 --- /dev/null
-+++ b/drivers/scsi/isci/core/scic_phy.h
-@@ -0,0 +1,305 @@
++++ b/drivers/scsi/isci/core/scic_sds_stp_packet_request.h
+@@ -0,0 +1,153 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -299,263 +934,111 @@ index 0000000..bf0d3be
 + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
++#ifndef _SCIC_SDS_STP_PACKET_REQUEST_H_
++#define _SCIC_SDS_STP_PACKET_REQUEST_H_
 +
-+#ifndef _SCIC_PHY_H_
-+#define _SCIC_PHY_H_
-+
-+/**
-+ * This file contains all of the interface methods that can be called by an
-+ *    SCIC user on a phy (SAS or SATA) object.
-+ *
-+ *
-+ */
-+
-+
-+#include "sci_status.h"
-+
-+#include "intel_sata.h"
 +#include "intel_sas.h"
-+
-+struct scic_sds_phy;
-+struct scic_sds_port;
-+
-+
-+enum sas_linkrate sci_phy_linkrate(struct scic_sds_phy *sci_phy);
++#include "scic_sds_stp_request.h"
 +
 +/**
-+ * struct scic_phy_properties - This structure defines the properties common to
-+ *    all phys that can be retrieved.
++ * This file contains the structures and constants for PACKET protocol requests.
 + *
 + *
 + */
-+struct scic_phy_properties {
-+	/**
-+	 * This field specifies the port that currently contains the
-+	 * supplied phy.  This field may be set to NULL
-+	 * if the phy is not currently contained in a port.
-+	 */
-+	struct scic_sds_port *owning_port;
 +
-+	/**
-+	 * This field specifies the link rate at which the phy is
-+	 * currently operating.
-+	 */
-+	enum sci_sas_link_rate negotiated_link_rate;
-+
-+	/**
-+	 * This field indicates the protocols supported by the phy.
-+	 */
-+	struct sci_sas_identify_address_frame_protocols protocols;
-+
-+	/**
-+	 * This field specifies the index of the phy in relation to other
-+	 * phys within the controller.  This index is zero relative.
-+	 */
-+	u8 index;
-+
-+};
 +
 +/**
-+ * struct scic_sas_phy_properties - This structure defines the properties,
-+ *    specific to a SAS phy, that can be retrieved.
 + *
 + *
++ * This is the enumeration of the SATA PIO DATA IN started substate machine.
 + */
-+struct scic_sas_phy_properties {
++enum _SCIC_SDS_STP_PACKET_REQUEST_STARTED_SUBSTATES {
 +	/**
-+	 * This field delineates the Identify Address Frame received
-+	 * from the remote end point.
++	 * While in this state the IO request object is waiting for the TC completion
++	 * notification for the H2D Register FIS
 +	 */
-+	struct sci_sas_identify_address_frame received_iaf;
-+
-+	/**
-+	 * This field delineates the Phy capabilities structure received
-+	 * from the remote end point.
-+	 */
-+	struct sas_capabilities received_capabilities;
-+
-+};
-+
-+/**
-+ * struct scic_sata_phy_properties - This structure defines the properties,
-+ *    specific to a SATA phy, that can be retrieved.
-+ *
-+ *
-+ */
-+struct scic_sata_phy_properties {
-+	/**
-+	 * This field delineates the signature FIS received from the
-+	 * attached target.
-+	 */
-+	struct sata_fis_reg_d2h signature_fis;
++	SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_TC_COMPLETION_SUBSTATE,
 +
 +	/**
-+	 * This field specifies to the user if a port selector is connected
-+	 * on the specified phy.
++	 * While in this state the IO request object is waiting for either a PIO Setup.
 +	 */
-+	bool is_port_selector_present;
-+
-+};
-+
-+/**
-+ * enum scic_phy_counter_id - This enumeration depicts the various pieces of
-+ *    optional information that can be retrieved for a specific phy.
-+ *
-+ *
-+ */
-+enum scic_phy_counter_id {
-+	/**
-+	 * This PHY information field tracks the number of frames received.
-+	 */
-+	SCIC_PHY_COUNTER_RECEIVED_FRAME,
++	SCIC_SDS_STP_PACKET_REQUEST_STARTED_PACKET_PHASE_AWAIT_PIO_SETUP_SUBSTATE,
 +
 +	/**
-+	 * This PHY information field tracks the number of frames transmitted.
++	 * While in this state the IO request object is waiting for TC completion for
++	 * the Packet DMA DATA fis or Raw Frame.
 +	 */
-+	SCIC_PHY_COUNTER_TRANSMITTED_FRAME,
++	SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_TC_COMPLETION_SUBSTATE,
 +
 +	/**
-+	 * This PHY information field tracks the number of DWORDs received.
++	 * The non-data IO transit to this state in this state after receiving TC
++	 * completion. While in this state IO request object is waiting for D2H status
++	 * frame as UF.
 +	 */
-+	SCIC_PHY_COUNTER_RECEIVED_FRAME_WORD,
++	SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMMAND_PHASE_AWAIT_D2H_FIS_SUBSTATE,
 +
 +	/**
-+	 * This PHY information field tracks the number of DWORDs transmitted.
++	 * The IO transit to this state in this state if the previous TC completion status
++	 * is not success and the atapi device is suspended due to target device failed the IO.
++	 * While in this state IO request object is waiting for device coming out of the
++	 * suspension state then complete the IO.
 +	 */
-+	SCIC_PHY_COUNTER_TRANSMITTED_FRAME_DWORD,
-+
-+	/**
-+	 * This PHY information field tracks the number of times DWORD
-+	 * synchronization was lost.
-+	 */
-+	SCIC_PHY_COUNTER_LOSS_OF_SYNC_ERROR,
-+
-+	/**
-+	 * This PHY information field tracks the number of received DWORDs with
-+	 * running disparity errors.
-+	 */
-+	SCIC_PHY_COUNTER_RECEIVED_DISPARITY_ERROR,
-+
-+	/**
-+	 * This PHY information field tracks the number of received frames with a
-+	 * CRC error (not including short or truncated frames).
-+	 */
-+	SCIC_PHY_COUNTER_RECEIVED_FRAME_CRC_ERROR,
-+
-+	/**
-+	 * This PHY information field tracks the number of DONE (ACK/NAK TIMEOUT)
-+	 * primitives received.
-+	 */
-+	SCIC_PHY_COUNTER_RECEIVED_DONE_ACK_NAK_TIMEOUT,
-+
-+	/**
-+	 * This PHY information field tracks the number of DONE (ACK/NAK TIMEOUT)
-+	 * primitives transmitted.
-+	 */
-+	SCIC_PHY_COUNTER_TRANSMITTED_DONE_ACK_NAK_TIMEOUT,
-+
-+	/**
-+	 * This PHY information field tracks the number of times the inactivity
-+	 * timer for connections on the phy has been utilized.
-+	 */
-+	SCIC_PHY_COUNTER_INACTIVITY_TIMER_EXPIRED,
-+
-+	/**
-+	 * This PHY information field tracks the number of DONE (CREDIT TIMEOUT)
-+	 * primitives received.
-+	 */
-+	SCIC_PHY_COUNTER_RECEIVED_DONE_CREDIT_TIMEOUT,
-+
-+	/**
-+	 * This PHY information field tracks the number of DONE (CREDIT TIMEOUT)
-+	 * primitives transmitted.
-+	 */
-+	SCIC_PHY_COUNTER_TRANSMITTED_DONE_CREDIT_TIMEOUT,
-+
-+	/**
-+	 * This PHY information field tracks the number of CREDIT BLOCKED
-+	 * primitives received.
-+	 * @note Depending on remote device implementation, credit blocks
-+	 *       may occur regularly.
-+	 */
-+	SCIC_PHY_COUNTER_RECEIVED_CREDIT_BLOCKED,
-+
-+	/**
-+	 * This PHY information field contains the number of short frames
-+	 * received.  A short frame is simply a frame smaller then what is
-+	 * allowed by either the SAS or SATA specification.
-+	 */
-+	SCIC_PHY_COUNTER_RECEIVED_SHORT_FRAME,
-+
-+	/**
-+	 * This PHY information field contains the number of frames received after
-+	 * credit has been exhausted.
-+	 */
-+	SCIC_PHY_COUNTER_RECEIVED_FRAME_WITHOUT_CREDIT,
-+
-+	/**
-+	 * This PHY information field contains the number of frames received after
-+	 * a DONE has been received.
-+	 */
-+	SCIC_PHY_COUNTER_RECEIVED_FRAME_AFTER_DONE,
-+
-+	/**
-+	 * This PHY information field contains the number of times the phy
-+	 * failed to achieve DWORD synchronization during speed negotiation.
-+	 */
-+	SCIC_PHY_COUNTER_SN_DWORD_SYNC_ERROR
++	SCIC_SDS_STP_PACKET_REQUEST_STARTED_COMPLETION_DELAY_SUBSTATE,
 +};
 +
 +
-+/**
-+ * scic_sas_phy_get_properties() - This method will enable the user to retrieve
-+ *    information specific to a SAS phy, such as: the received identify address
-+ *    frame, received phy capabilities, etc.
-+ * @phy: this parameter specifies the phy for which to retrieve properties.
-+ * @properties: This parameter specifies the properties structure into which to
-+ *    copy the requested information.
-+ *
-+ * This method returns an indication as to whether the SAS phy properties were
-+ * successfully retrieved. SCI_SUCCESS This value is returned if the SAS
-+ * properties are successfully retrieved. SCI_FAILURE This value is returned if
-+ * the SAS properties are not successfully retrieved (e.g. It's not a SAS Phy).
-+ */
-+enum sci_status scic_sas_phy_get_properties(
-+	struct scic_sds_phy *phy,
-+	struct scic_sas_phy_properties *properties);
 +
-+/**
-+ * scic_sata_phy_get_properties() - This method will enable the user to
-+ *    retrieve information specific to a SATA phy, such as: the received
-+ *    signature FIS, if a port selector is present, etc.
-+ * @phy: this parameter specifies the phy for which to retrieve properties.
-+ * @properties: This parameter specifies the properties structure into which to
-+ *    copy the requested information.
-+ *
-+ * This method returns an indication as to whether the SATA phy properties were
-+ * successfully retrieved. SCI_SUCCESS This value is returned if the SATA
-+ * properties are successfully retrieved. SCI_FAILURE This value is returned if
-+ * the SATA properties are not successfully retrieved (e.g. It's not a SATA
-+ * Phy).
-+ */
-+enum sci_status scic_sata_phy_get_properties(
-+	struct scic_sds_phy *phy,
-+	struct scic_sata_phy_properties *properties);
++#if !defined(DISABLE_ATAPI)
++extern const struct sci_base_state scic_sds_stp_packet_request_started_substate_table[];
++extern const struct scic_sds_io_request_state_handler scic_sds_stp_packet_request_started_substate_handler_table[];
++#endif /* !defined(DISABLE_ATAPI) */
 +
++#if !defined(DISABLE_ATAPI)
++enum sci_status scic_sds_stp_packet_request_construct(
++	struct scic_sds_request *this_request);
++#else  /* !defined(DISABLE_ATAPI) */
++#define scic_sds_stp_packet_request_construct(request) SCI_FAILURE
++#endif /* !defined(DISABLE_ATAPI) */
 +
++#if !defined(DISABLE_ATAPI)
++void scu_stp_packet_request_command_phase_construct_task_context(
++	struct scic_sds_request *this_request,
++	struct scu_task_context *task_context);
++#else  /* !defined(DISABLE_ATAPI) */
++#define scu_stp_packet_request_command_phase_construct_task_context(reqeust, tc)
++#endif /* !defined(DISABLE_ATAPI) */
 +
++#if !defined(DISABLE_ATAPI)
++void scu_stp_packet_request_command_phase_reconstruct_raw_frame_task_context(
++	struct scic_sds_request *this_request,
++	struct scu_task_context *task_context);
++#else  /* !defined(DISABLE_ATAPI) */
++#define scu_stp_packet_request_command_phase_reconstruct_raw_frame_task_context(reqeust, tc)
++#endif /* !defined(DISABLE_ATAPI) */
 +
++#if !defined(DISABLE_ATAPI)
++enum sci_status scic_sds_stp_packet_request_process_status_fis(
++	struct scic_sds_request *this_request,
++	struct sata_fis_reg_d2h *status_fis);
++#else  /* !defined(DISABLE_ATAPI) */
++#define scic_sds_stp_packet_request_process_status_fis(reqeust, fis) SCI_FAILURE
++#endif /* !defined(DISABLE_ATAPI) */
 +
++#if !defined(DISABLE_ATAPI)
++void scic_sds_stp_packet_internal_request_sense_build_sgl(
++	struct scic_sds_request *this_request);
++#else  /* !defined(DISABLE_ATAPI) */
++#define scic_sds_stp_packet_internal_request_sense_build_sgl(request)
++#endif /* !defined(DISABLE_ATAPI) */
 +
++#endif /* _SCIC_SDS_STP_PACKET_REQUEST_H_ */
 +
-+#endif  /* _SCIC_PHY_H_ */
-+
-diff --git a/drivers/scsi/isci/core/scic_sds_phy.c b/drivers/scsi/isci/core/scic_sds_phy.c
+diff --git a/drivers/scsi/isci/core/scic_sds_stp_pio_request.h b/drivers/scsi/isci/core/scic_sds_stp_pio_request.h
 new file mode 100644
-index 0000000..2717458
+index 0000000..64bf40a
 --- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_phy.c
-@@ -0,0 +1,2726 @@
++++ b/drivers/scsi/isci/core/scic_sds_stp_pio_request.h
+@@ -0,0 +1,116 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -610,2684 +1093,2021 @@ index 0000000..2717458
 + * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
++
++#ifndef _SCIC_SDS_SATA_PIO_REQUEST_H_
++#define _SCIC_SDS_SATA_PIO_REQUEST_H_
++
++#include "sci_base_state.h"
++#include "scic_sds_request.h"
++#include "scu_task_context.h"
++
++/**
++ * This file contains the structures and constants for SATA PIO requests.
++ *
++ *
++ */
++
++
++/**
++ *
++ *
++ * This is the enumeration of the SATA PIO DATA IN started substate machine.
++ */
++enum _SCIC_SDS_STP_REQUEST_STARTED_PIO_SUBSTATES {
++	/**
++	 * While in this state the IO request object is waiting for the TC completion
++	 * notification for the H2D Register FIS
++	 */
++	SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_H2D_COMPLETION_SUBSTATE,
++
++	/**
++	 * While in this state the IO request object is waiting for either a PIO Setup
++	 * FIS or a D2H register FIS.  The type of frame received is based on the
++	 * result of the prior frame and line conditions.
++	 */
++	SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE,
++
++	/**
++	 * While in this state the IO request object is waiting for a DATA frame from
++	 * the device.
++	 */
++	SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_IN_AWAIT_DATA_SUBSTATE,
++
++	/**
++	 * While in this state the IO request object is waiting to transmit the next data
++	 * frame to the device.
++	 */
++	SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_OUT_TRANSMIT_DATA_SUBSTATE,
++};
++
++
++/* --------------------------------------------------------------------------- */
++
++extern const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_pio_substate_handler_table[];
++
++extern const struct sci_base_state scic_sds_stp_request_started_pio_substate_table[];
++
++/* --------------------------------------------------------------------------- */
++
++struct scic_sds_stp_request;
++
++struct scu_sgl_element *scic_sds_stp_request_pio_get_next_sgl(
++	struct scic_sds_stp_request *this_request);
++
++#endif   /* _SCIC_SDS_SATA_PIO_REQUEST_H_ */
+diff --git a/drivers/scsi/isci/core/scic_sds_stp_request.c b/drivers/scsi/isci/core/scic_sds_stp_request.c
+new file mode 100644
+index 0000000..8da309f
+--- /dev/null
++++ b/drivers/scsi/isci/core/scic_sds_stp_request.c
+@@ -0,0 +1,1941 @@
++/*
++ * This file is provided under a dual BSD/GPLv2 license.  When using or
++ * redistributing this file, you may do so under either license.
++ *
++ * GPL LICENSE SUMMARY
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of version 2 of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful, but
++ * WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
++ * The full GNU General Public License is included in this distribution
++ * in the file called LICENSE.GPL.
++ *
++ * BSD LICENSE
++ *
++ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ *   * Redistributions of source code must retain the above copyright
++ *     notice, this list of conditions and the following disclaimer.
++ *   * Redistributions in binary form must reproduce the above copyright
++ *     notice, this list of conditions and the following disclaimer in
++ *     the documentation and/or other materials provided with the
++ *     distribution.
++ *   * Neither the name of Intel Corporation nor the names of its
++ *     contributors may be used to endorse or promote products derived
++ *     from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
 +
 +#include "intel_ata.h"
 +#include "intel_sata.h"
++#include "intel_sat.h"
 +#include "sci_base_state.h"
 +#include "sci_base_state_machine.h"
-+#include "scic_phy.h"
++#include "scic_io_request.h"
++#include "scic_remote_device.h"
 +#include "scic_sds_controller.h"
-+#include "scic_sds_phy.h"
-+#include "scic_sds_phy_registers.h"
-+#include "scic_sds_port.h"
-+#include "scic_sds_remote_node_context.h"
++#include "scic_sds_remote_device.h"
++#include "scic_sds_request.h"
++#include "scic_sds_stp_pio_request.h"
++#include "scic_sds_stp_request.h"
++#include "scic_sds_unsolicited_frame_control.h"
 +#include "sci_environment.h"
 +#include "sci_util.h"
++#include "scu_completion_codes.h"
 +#include "scu_event_codes.h"
-+
-+#define SCIC_SDS_PHY_MIN_TIMER_COUNT  (SCI_MAX_PHYS)
-+#define SCIC_SDS_PHY_MAX_TIMER_COUNT  (SCI_MAX_PHYS)
-+
-+/* Maximum arbitration wait time in micro-seconds */
-+#define SCIC_SDS_PHY_MAX_ARBITRATION_WAIT_TIME  (700)
-+
-+enum sas_linkrate sci_phy_linkrate(struct scic_sds_phy *sci_phy)
-+{
-+	return sci_phy->max_negotiated_speed;
-+}
-+
-+/*
-+ * *****************************************************************************
-+ * * SCIC SDS PHY Internal Methods
-+ * ***************************************************************************** */
++#include "scu_task_context.h"
 +
 +/**
-+ * This method will initialize the phy transport layer registers
-+ * @this_phy:
-+ * @transport_layer_registers
++ * scic_sds_stp_request_get_h2d_reg_buffer() -
 + *
-+ * enum sci_status
++ * This macro returns the address of the stp h2d reg fis buffer in the io
++ * request memory
 + */
-+static enum sci_status scic_sds_phy_transport_layer_initialization(
-+	struct scic_sds_phy *this_phy,
-+	struct scu_transport_layer_registers __iomem *transport_layer_registers)
++#define scic_sds_stp_request_get_h2d_reg_buffer(memory)	\
++	((struct sata_fis_reg_h2d *)(\
++		 ((char *)(memory)) + sizeof(struct scic_sds_stp_request) \
++		 ))
++
++/**
++ * scic_sds_stp_request_get_response_buffer() -
++ *
++ * This macro returns the address of the ssp response iu buffer in the io
++ * request memory
++ */
++#define scic_sds_stp_request_get_response_buffer(memory) \
++	((struct sata_fis_reg_d2h *)(\
++		 ((char *)(scic_sds_stp_request_get_h2d_reg_buffer(memory))) \
++		 + sizeof(struct sata_fis_reg_h2d) \
++		 ))
++
++/**
++ * scic_sds_stp_request_get_task_context_buffer() -
++ *
++ * This macro returns the address of the task context buffer in the io request
++ * memory
++ */
++#define scic_sds_stp_request_get_task_context_buffer(memory) \
++	((struct scu_task_context *)(\
++		 ((char *)(scic_sds_stp_request_get_response_buffer(memory))) \
++		 + sizeof(struct sci_ssp_response_iu) \
++		 ))
++
++/**
++ * scic_sds_stp_request_get_sgl_element_buffer() -
++ *
++ * This macro returns the address of the sgl elment pairs in the io request
++ * memory buffer
++ */
++#define scic_sds_stp_request_get_sgl_element_buffer(memory) \
++	((struct scu_sgl_element_pair *)(\
++		 ((char *)(scic_sds_stp_request_get_task_context_buffer(memory))) \
++		 + sizeof(struct scu_task_context) \
++		 ))
++
++/**
++ *
++ *
++ * This method return the memory space required for STP PIO requests. u32
++ */
++u32 scic_sds_stp_request_get_object_size(void)
 +{
-+	u32 tl_control;
++	return sizeof(struct scic_sds_stp_request)
++	       + sizeof(struct sata_fis_reg_h2d)
++	       + sizeof(struct sata_fis_reg_d2h)
++	       + sizeof(struct scu_task_context)
++	       + SMP_CACHE_BYTES
++	       + sizeof(struct scu_sgl_element_pair) * SCU_MAX_SGL_ELEMENT_PAIRS;
++}
 +
-+	this_phy->transport_layer_registers = transport_layer_registers;
++void scic_sds_stp_request_assign_buffers(struct scic_sds_request *sci_req)
++{
++	struct scic_sds_stp_request *stp_req = container_of(sci_req, typeof(*stp_req), parent);
 +
-+	SCU_STPTLDARNI_WRITE(this_phy, SCIC_SDS_REMOTE_NODE_CONTEXT_INVALID_INDEX);
++	sci_req->command_buffer = scic_sds_stp_request_get_h2d_reg_buffer(stp_req);
++	sci_req->response_buffer = scic_sds_stp_request_get_response_buffer(stp_req);
++	sci_req->sgl_element_pair_buffer = scic_sds_stp_request_get_sgl_element_buffer(stp_req);
++	sci_req->sgl_element_pair_buffer = PTR_ALIGN(sci_req->sgl_element_pair_buffer,
++						     sizeof(struct scu_sgl_element_pair));
 +
-+	/* Hardware team recommends that we enable the STP prefetch for all transports */
-+	tl_control = SCU_TLCR_READ(this_phy);
-+	tl_control |= SCU_TLCR_GEN_BIT(STP_WRITE_DATA_PREFETCH);
-+	SCU_TLCR_WRITE(this_phy, tl_control);
++	if (sci_req->was_tag_assigned_by_user == false) {
++		sci_req->task_context_buffer =
++			scic_sds_stp_request_get_task_context_buffer(stp_req);
++		sci_req->task_context_buffer = PTR_ALIGN(sci_req->task_context_buffer,
++							 SMP_CACHE_BYTES);
++	}
++}
++
++/**
++ * This method is will fill in the SCU Task Context for any type of SATA
++ *    request.  This is called from the various SATA constructors.
++ * @this_request: The general IO request object which is to be used in
++ *    constructing the SCU task context.
++ * @task_context: The buffer pointer for the SCU task context which is being
++ *    constructed.
++ *
++ * The general io request construction is complete. The buffer assignment for
++ * the command buffer is complete. none Revisit task context construction to
++ * determine what is common for SSP/SMP/STP task context structures.
++ */
++static void scu_sata_reqeust_construct_task_context(
++	struct scic_sds_request *sds_request,
++	struct scu_task_context *task_context)
++{
++	dma_addr_t dma_addr;
++	struct scic_sds_controller *controller;
++	struct scic_sds_remote_device *target_device;
++	struct scic_sds_port *target_port;
++
++	controller = scic_sds_request_get_controller(sds_request);
++	target_device = scic_sds_request_get_device(sds_request);
++	target_port = scic_sds_request_get_port(sds_request);
++
++	/* Fill in the TC with the its required data */
++	task_context->abort = 0;
++	task_context->priority = SCU_TASK_PRIORITY_NORMAL;
++	task_context->initiator_request = 1;
++	task_context->connection_rate =
++		scic_remote_device_get_connection_rate(target_device);
++	task_context->protocol_engine_index =
++		scic_sds_controller_get_protocol_engine_group(controller);
++	task_context->logical_port_index =
++		scic_sds_port_get_index(target_port);
++	task_context->protocol_type = SCU_TASK_CONTEXT_PROTOCOL_STP;
++	task_context->valid = SCU_TASK_CONTEXT_VALID;
++	task_context->context_type = SCU_TASK_CONTEXT_TYPE;
++
++	task_context->remote_node_index =
++		scic_sds_remote_device_get_index(sds_request->target_device);
++	task_context->command_code = 0;
++
++	task_context->link_layer_control = 0;
++	task_context->do_not_dma_ssp_good_response = 1;
++	task_context->strict_ordering = 0;
++	task_context->control_frame = 0;
++	task_context->timeout_enable = 0;
++	task_context->block_guard_enable = 0;
++
++	task_context->address_modifier = 0;
++	task_context->task_phase = 0x01;
++
++	task_context->ssp_command_iu_length =
++		(sizeof(struct sata_fis_reg_h2d) - sizeof(u32)) / sizeof(u32);
++
++	/* Set the first word of the H2D REG FIS */
++	task_context->type.words[0] = *(u32 *)sds_request->command_buffer;
++
++	if (sds_request->was_tag_assigned_by_user) {
++		/*
++		 * Build the task context now since we have already read
++		 * the data
++		 */
++		sds_request->post_context =
++			(SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_TC |
++			 (scic_sds_controller_get_protocol_engine_group(
++							controller) <<
++			  SCU_CONTEXT_COMMAND_PROTOCOL_ENGINE_GROUP_SHIFT) |
++			 (scic_sds_port_get_index(target_port) <<
++			  SCU_CONTEXT_COMMAND_LOGICAL_PORT_SHIFT) |
++			 scic_sds_io_tag_get_index(sds_request->io_tag));
++	} else {
++		/*
++		 * Build the task context now since we have already read
++		 * the data.
++		 * I/O tag index is not assigned because we have to wait
++		 * until we get a TCi.
++		 */
++		sds_request->post_context =
++			(SCU_CONTEXT_COMMAND_REQUEST_TYPE_POST_TC |
++			 (scic_sds_controller_get_protocol_engine_group(
++							controller) <<
++			  SCU_CONTEXT_COMMAND_PROTOCOL_ENGINE_GROUP_SHIFT) |
++			 (scic_sds_port_get_index(target_port) <<
++			  SCU_CONTEXT_COMMAND_LOGICAL_PORT_SHIFT));
++	}
++
++	/*
++	 * Copy the physical address for the command buffer to the SCU Task
++	 * Context. We must offset the command buffer by 4 bytes because the
++	 * first 4 bytes are transfered in the body of the TC.
++	 */
++	dma_addr =
++		scic_io_request_get_dma_addr(sds_request,
++						(char *)sds_request->
++							command_buffer +
++							sizeof(u32));
++
++	task_context->command_iu_upper = upper_32_bits(dma_addr);
++	task_context->command_iu_lower = lower_32_bits(dma_addr);
++
++	/* SATA Requests do not have a response buffer */
++	task_context->response_iu_upper = 0;
++	task_context->response_iu_lower = 0;
++}
++
++/**
++ *
++ * @this_request:
++ *
++ * This method will perform any general sata request construction. What part of
++ * SATA IO request construction is general? none
++ */
++void scic_sds_stp_non_ncq_request_construct(
++	struct scic_sds_request *this_request)
++{
++	this_request->has_started_substate_machine = true;
++}
++
++/**
++ *
++ * @sci_req: This parameter specifies the request to be constructed as an
++ *    optimized request.
++ * @optimized_task_type: This parameter specifies whether the request is to be
++ *    an UDMA request or a NCQ request. - A value of 0 indicates UDMA. - A
++ *    value of 1 indicates NCQ.
++ *
++ * This method will perform request construction common to all types of STP
++ * requests that are optimized by the silicon (i.e. UDMA, NCQ). This method
++ * returns an indication as to whether the construction was successful.
++ */
++static void scic_sds_stp_optimized_request_construct(struct scic_sds_request *sci_req,
++						     u8 optimized_task_type,
++						     u32 len,
++						     enum dma_data_direction dir)
++{
++	struct scu_task_context *task_context = sci_req->task_context_buffer;
++
++	/* Build the STP task context structure */
++	scu_sata_reqeust_construct_task_context(sci_req, task_context);
++
++	/* Copy over the SGL elements */
++	scic_sds_request_build_sgl(sci_req);
++
++	/* Copy over the number of bytes to be transfered */
++	task_context->transfer_length_bytes = len;
++
++	if (dir == DMA_TO_DEVICE) {
++		/*
++		 * The difference between the DMA IN and DMA OUT request task type
++		 * values are consistent with the difference between FPDMA READ
++		 * and FPDMA WRITE values.  Add the supplied task type parameter
++		 * to this difference to set the task type properly for this
++		 * DATA OUT (WRITE) case. */
++		task_context->task_type = optimized_task_type + (SCU_TASK_TYPE_DMA_OUT
++								 - SCU_TASK_TYPE_DMA_IN);
++	} else {
++		/*
++		 * For the DATA IN (READ) case, simply save the supplied
++		 * optimized task type. */
++		task_context->task_type = optimized_task_type;
++	}
++}
++
++/**
++ *
++ * @sci_req: This parameter specifies the request to be constructed.
++ *
++ * This method will construct the STP UDMA request and its associated TC data.
++ * This method returns an indication as to whether the construction was
++ * successful. SCI_SUCCESS Currently this method always returns this value.
++ */
++enum sci_status scic_sds_stp_udma_request_construct(struct scic_sds_request *sci_req,
++						    u32 len,
++						    enum dma_data_direction dir)
++{
++	scic_sds_stp_non_ncq_request_construct(sci_req);
++
++	scic_sds_stp_optimized_request_construct(sci_req, SCU_TASK_TYPE_DMA_IN,
++						 len, dir);
++
++	sci_base_state_machine_construct(
++		&sci_req->started_substate_machine,
++		&sci_req->parent.parent,
++		scic_sds_stp_request_started_udma_substate_table,
++		SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_TC_COMPLETION_SUBSTATE
++		);
 +
 +	return SCI_SUCCESS;
 +}
 +
 +/**
-+ * This method will initialize the phy link layer registers
-+ * @sci_phy:
-+ * @link_layer_registers:
++ *
++ * @sci_req: This parameter specifies the request to be constructed.
++ *
++ * This method will construct the STP UDMA request and its associated TC data.
++ * This method returns an indication as to whether the construction was
++ * successful. SCI_SUCCESS Currently this method always returns this value.
++ */
++enum sci_status scic_sds_stp_ncq_request_construct(struct scic_sds_request *sci_req,
++						   u32 len,
++						   enum dma_data_direction dir)
++{
++	scic_sds_stp_optimized_request_construct(sci_req,
++						 SCU_TASK_TYPE_FPDMAQ_READ,
++						 len, dir);
++	return SCI_SUCCESS;
++}
++
++/**
++ *
++ * @this_request: This parameter specifies the STP request object for which to
++ *    construct a RAW command frame task context.
++ * @task_context: This parameter specifies the SCU specific task context buffer
++ *    to construct.
++ *
++ * This method performs the operations common to all SATA/STP requests
++ * utilizing the raw frame method. none
++ */
++void scu_stp_raw_request_construct_task_context(
++	struct scic_sds_stp_request *this_request,
++	struct scu_task_context *task_context)
++{
++	scu_sata_reqeust_construct_task_context(&this_request->parent, task_context);
++
++	task_context->control_frame         = 0;
++	task_context->priority              = SCU_TASK_PRIORITY_NORMAL;
++	task_context->task_type             = SCU_TASK_TYPE_SATA_RAW_FRAME;
++	task_context->type.stp.fis_type     = SATA_FIS_TYPE_REGH2D;
++	task_context->transfer_length_bytes = sizeof(struct sata_fis_reg_h2d) - sizeof(u32);
++}
++
++/**
++ *
++ * @this_request: This parameter specifies the core request object to
++ *    construction into an STP/SATA non-data request.
++ *
++ * This method will construct the STP Non-data request and its associated TC
++ * data.  A non-data request essentially behaves like a 0 length read request
++ * in the SCU. This method currently always returns SCI_SUCCESS
++ */
++enum sci_status scic_sds_stp_non_data_request_construct(
++	struct scic_sds_request *this_request)
++{
++	scic_sds_stp_non_ncq_request_construct(this_request);
++
++	/* Build the STP task context structure */
++	scu_stp_raw_request_construct_task_context(
++		(struct scic_sds_stp_request *)this_request,
++		this_request->task_context_buffer
++		);
++
++	sci_base_state_machine_construct(
++		&this_request->started_substate_machine,
++		&this_request->parent.parent,
++		scic_sds_stp_request_started_non_data_substate_table,
++		SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_H2D_COMPLETION_SUBSTATE
++		);
++
++	return SCI_SUCCESS;
++}
++
++
++enum sci_status scic_sds_stp_soft_reset_request_construct(
++	struct scic_sds_request *this_request)
++{
++	scic_sds_stp_non_ncq_request_construct(this_request);
++
++	/* Build the STP task context structure */
++	scu_stp_raw_request_construct_task_context(
++		(struct scic_sds_stp_request *)this_request,
++		this_request->task_context_buffer
++		);
++
++	sci_base_state_machine_construct(
++		&this_request->started_substate_machine,
++		&this_request->parent.parent,
++		scic_sds_stp_request_started_soft_reset_substate_table,
++		SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_ASSERTED_COMPLETION_SUBSTATE
++		);
++
++	return SCI_SUCCESS;
++}
++
++
++void scic_stp_io_request_set_ncq_tag(
++	struct scic_sds_request *req,
++	u16 ncq_tag)
++{
++	/**
++	 * @note This could be made to return an error to the user if the user
++	 *       attempts to set the NCQ tag in the wrong state.
++	 */
++	req->task_context_buffer->type.stp.ncq_tag = ncq_tag;
++}
++
++
++void *scic_stp_io_request_get_h2d_reg_address(
++	struct scic_sds_request *req)
++{
++	return req->command_buffer;
++}
++
++
++void *scic_stp_io_request_get_d2h_reg_address(
++	struct scic_sds_request *req)
++{
++	return &((struct scic_sds_stp_request *)req)->d2h_reg_fis;
++}
++
++/**
++ *
++ * @this_request:
++ *
++ * Get the next SGL element from the request. - Check on which SGL element pair
++ * we are working - if working on SLG pair element A - advance to element B -
++ * else - check to see if there are more SGL element pairs for this IO request
++ * - if there are more SGL element pairs - advance to the next pair and return
++ * element A struct scu_sgl_element*
++ */
++struct scu_sgl_element *scic_sds_stp_request_pio_get_next_sgl(struct scic_sds_stp_request *stp_req)
++{
++	struct scu_sgl_element *current_sgl;
++	struct scic_sds_request *sci_req = &stp_req->parent;
++	struct scic_sds_request_pio_sgl *pio_sgl = &stp_req->type.pio.request_current;
++
++	if (pio_sgl->sgl_set == SCU_SGL_ELEMENT_PAIR_A) {
++		if (pio_sgl->sgl_pair->B.address_lower == 0 &&
++		    pio_sgl->sgl_pair->B.address_upper == 0) {
++			current_sgl = NULL;
++		} else {
++			pio_sgl->sgl_set = SCU_SGL_ELEMENT_PAIR_B;
++			current_sgl = &pio_sgl->sgl_pair->B;
++		}
++	} else {
++		if (pio_sgl->sgl_pair->next_pair_lower == 0 &&
++		    pio_sgl->sgl_pair->next_pair_upper == 0) {
++			current_sgl = NULL;
++		} else {
++			u64 phys_addr;
++
++			phys_addr = pio_sgl->sgl_pair->next_pair_upper;
++			phys_addr <<= 32;
++			phys_addr |= pio_sgl->sgl_pair->next_pair_lower;
++
++			pio_sgl->sgl_pair = scic_request_get_virt_addr(sci_req, phys_addr);
++			pio_sgl->sgl_set = SCU_SGL_ELEMENT_PAIR_A;
++			current_sgl = &pio_sgl->sgl_pair->A;
++		}
++	}
++
++	return current_sgl;
++}
++
++/**
++ *
++ * @scic_io_request: The core request object which is cast to a SATA PIO
++ *    request object.
++ *
++ * This method will construct the SATA PIO request. This method returns an
++ * indication as to whether the construction was successful. SCI_SUCCESS
++ * Currently this method always returns this value.
++ */
++enum sci_status scic_sds_stp_pio_request_construct(
++	struct scic_sds_request *scic_io_request,
++	u8 sat_protocol,
++	bool copy_rx_frame)
++{
++	struct scic_sds_stp_request *this_request;
++
++	this_request = (struct scic_sds_stp_request *)scic_io_request;
++
++	scic_sds_stp_non_ncq_request_construct(&this_request->parent);
++
++	scu_stp_raw_request_construct_task_context(
++		this_request, this_request->parent.task_context_buffer
++		);
++
++	this_request->type.pio.current_transfer_bytes = 0;
++	this_request->type.pio.ending_error = 0;
++	this_request->type.pio.ending_status = 0;
++
++	this_request->type.pio.request_current.sgl_offset = 0;
++	this_request->type.pio.request_current.sgl_set = SCU_SGL_ELEMENT_PAIR_A;
++	this_request->type.pio.sat_protocol = sat_protocol;
++
++	if (copy_rx_frame) {
++		scic_sds_request_build_sgl(&this_request->parent);
++		/*
++		 * Since the IO request copy of the TC contains the same data as
++		 * the actual TC this pointer is vaild for either. */
++		this_request->type.pio.request_current.sgl_pair =
++			&this_request->parent.task_context_buffer->sgl_pair_ab;
++	} else {
++		/* The user does not want the data copied to the SGL buffer location */
++		this_request->type.pio.request_current.sgl_pair = NULL;
++	}
++
++	sci_base_state_machine_construct(
++		&this_request->parent.started_substate_machine,
++		&this_request->parent.parent.parent,
++		scic_sds_stp_request_started_pio_substate_table,
++		SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_H2D_COMPLETION_SUBSTATE
++		);
++
++	return SCI_SUCCESS;
++}
++
++/**
++ *
++ * @this_request:
++ * @completion_code:
++ *
++ * This method processes a TC completion.  The expected TC completion is for
++ * the transmission of the H2D register FIS containing the SATA/STP non-data
++ * request. This method always successfully processes the TC completion.
++ * SCI_SUCCESS This value is always returned.
++ */
++static enum sci_status scic_sds_stp_request_non_data_await_h2d_tc_completion_handler(
++	struct scic_sds_request *this_request,
++	u32 completion_code)
++{
++	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
++		scic_sds_request_set_status(
++			this_request, SCU_TASK_DONE_GOOD, SCI_SUCCESS
++			);
++
++		sci_base_state_machine_change_state(
++			&this_request->started_substate_machine,
++			SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_D2H_SUBSTATE
++			);
++		break;
++
++	default:
++		/*
++		 * All other completion status cause the IO to be complete.  If a NAK
++		 * was received, then it is up to the user to retry the request. */
++		scic_sds_request_set_status(
++			this_request,
++			SCU_NORMALIZE_COMPLETION_STATUS(completion_code),
++			SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR
++			);
++
++		sci_base_state_machine_change_state(
++			&this_request->parent.state_machine, SCI_BASE_REQUEST_STATE_COMPLETED
++			);
++		break;
++	}
++
++	return SCI_SUCCESS;
++}
++
++/**
++ *
++ * @request: This parameter specifies the request for which a frame has been
++ *    received.
++ * @frame_index: This parameter specifies the index of the frame that has been
++ *    received.
++ *
++ * This method processes frames received from the target while waiting for a
++ * device to host register FIS.  If a non-register FIS is received during this
++ * time, it is treated as a protocol violation from an IO perspective. Indicate
++ * if the received frame was processed successfully.
++ */
++static enum sci_status scic_sds_stp_request_non_data_await_d2h_frame_handler(
++	struct scic_sds_request *request,
++	u32 frame_index)
++{
++	enum sci_status status;
++	struct sata_fis_header *frame_header;
++	u32 *frame_buffer;
++	struct scic_sds_stp_request *this_request = (struct scic_sds_stp_request *)request;
++
++	status = scic_sds_unsolicited_frame_control_get_header(
++		&(this_request->parent.owning_controller->uf_control),
++		frame_index,
++		(void **)&frame_header
++		);
++
++	if (status == SCI_SUCCESS) {
++		switch (frame_header->fis_type) {
++		case SATA_FIS_TYPE_REGD2H:
++			scic_sds_unsolicited_frame_control_get_buffer(
++				&(this_request->parent.owning_controller->uf_control),
++				frame_index,
++				(void **)&frame_buffer
++				);
++
++			scic_sds_controller_copy_sata_response(
++				&this_request->d2h_reg_fis, (u32 *)frame_header, frame_buffer
++				);
++
++			/* The command has completed with error */
++			scic_sds_request_set_status(
++				&this_request->parent,
++				SCU_TASK_DONE_CHECK_RESPONSE,
++				SCI_FAILURE_IO_RESPONSE_VALID
++				);
++			break;
++
++		default:
++			dev_warn(scic_to_dev(request->owning_controller),
++				 "%s: IO Request:0x%p Frame Id:%d protocol "
++				 "violation occurred\n",
++				 __func__, this_request, frame_index);
++
++			scic_sds_request_set_status(
++				&this_request->parent,
++				SCU_TASK_DONE_UNEXP_FIS,
++				SCI_FAILURE_PROTOCOL_VIOLATION
++				);
++			break;
++		}
++
++		sci_base_state_machine_change_state(
++			&this_request->parent.parent.state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED
++			);
++
++		/* Frame has been decoded return it to the controller */
++		scic_sds_controller_release_frame(
++			this_request->parent.owning_controller, frame_index
++			);
++	} else
++		dev_err(scic_to_dev(request->owning_controller),
++			"%s: SCIC IO Request 0x%p could not get frame header "
++			"for frame index %d, status %x\n",
++			__func__, this_request, frame_index, status);
++
++	return status;
++}
++
++/* --------------------------------------------------------------------------- */
++
++const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_non_data_substate_handler_table[] = {
++	[SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_H2D_COMPLETION_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_stp_request_non_data_await_h2d_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_request_default_frame_handler,
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_D2H_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_stp_request_non_data_await_d2h_frame_handler,
++	}
++};
++
++static void scic_sds_stp_request_started_non_data_await_h2d_completion_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_non_data_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_H2D_COMPLETION_SUBSTATE
++		);
++
++	scic_sds_remote_device_set_working_request(
++		this_request->target_device, this_request
++		);
++}
++
++static void scic_sds_stp_request_started_non_data_await_d2h_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_non_data_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_D2H_SUBSTATE
++		);
++}
++
++/* --------------------------------------------------------------------------- */
++
++const struct sci_base_state scic_sds_stp_request_started_non_data_substate_table[] = {
++	[SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_H2D_COMPLETION_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_non_data_await_h2d_completion_enter,
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_D2H_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_non_data_await_d2h_enter,
++	},
++};
++
++#define SCU_MAX_FRAME_BUFFER_SIZE  0x400  /* 1K is the maximum SCU frame data payload */
++
++/**
++ *
++ * @this_request:
++ * @length:
++ *
++ * This function will transmit DATA_FIS from (current sgl + offset) for input
++ * parameter length. current sgl and offset is alreay stored in the IO request
++ * enum sci_status
++ */
++
++static enum sci_status scic_sds_stp_request_pio_data_out_trasmit_data_frame(
++	struct scic_sds_request *this_request,
++	u32 length)
++{
++	struct scic_sds_stp_request *this_sds_stp_request = (struct scic_sds_stp_request *)this_request;
++	sci_base_controller_request_handler_t continue_io;
++	struct scu_sgl_element *current_sgl;
++	struct scic_sds_controller *scic;
++	u32 state;
++
++	/*
++	 * Recycle the TC and reconstruct it for sending out DATA FIS containing
++	 * for the data from current_sgl+offset for the input length */
++	struct scu_task_context *task_context = scic_sds_controller_get_task_context_buffer(
++		this_request->owning_controller,
++		this_request->io_tag
++		);
++
++	if (this_sds_stp_request->type.pio.request_current.sgl_set == SCU_SGL_ELEMENT_PAIR_A)
++		current_sgl = &(this_sds_stp_request->type.pio.request_current.sgl_pair->A);
++	else
++		current_sgl = &(this_sds_stp_request->type.pio.request_current.sgl_pair->B);
++
++	/* update the TC */
++	task_context->command_iu_upper = current_sgl->address_upper;
++	task_context->command_iu_lower = current_sgl->address_lower;
++	task_context->transfer_length_bytes = length;
++	task_context->type.stp.fis_type = SATA_FIS_TYPE_DATA;
++
++	/* send the new TC out. */
++	scic = this_request->owning_controller;
++	state = scic->parent.state_machine.current_state_id;
++	continue_io = scic_sds_controller_state_handler_table[state].base.continue_io;
++	return continue_io(&scic->parent, &this_request->target_device->parent,
++			   &this_request->parent);
++}
++
++/**
++ *
++ * @this_request:
 + *
 + * enum sci_status
++ */
++static enum sci_status scic_sds_stp_request_pio_data_out_transmit_data(
++	struct scic_sds_request *this_sds_request)
++{
++
++	struct scu_sgl_element *current_sgl;
++	u32 sgl_offset;
++	u32 remaining_bytes_in_current_sgl = 0;
++	enum sci_status status = SCI_SUCCESS;
++
++	struct scic_sds_stp_request *this_sds_stp_request = (struct scic_sds_stp_request *)this_sds_request;
++
++	sgl_offset = this_sds_stp_request->type.pio.request_current.sgl_offset;
++
++	if (this_sds_stp_request->type.pio.request_current.sgl_set == SCU_SGL_ELEMENT_PAIR_A) {
++		current_sgl = &(this_sds_stp_request->type.pio.request_current.sgl_pair->A);
++		remaining_bytes_in_current_sgl = this_sds_stp_request->type.pio.request_current.sgl_pair->A.length - sgl_offset;
++	} else {
++		current_sgl = &(this_sds_stp_request->type.pio.request_current.sgl_pair->B);
++		remaining_bytes_in_current_sgl = this_sds_stp_request->type.pio.request_current.sgl_pair->B.length - sgl_offset;
++	}
++
++
++	if (this_sds_stp_request->type.pio.pio_transfer_bytes > 0) {
++		if (this_sds_stp_request->type.pio.pio_transfer_bytes >= remaining_bytes_in_current_sgl) {
++			/* recycle the TC and send the H2D Data FIS from (current sgl + sgl_offset) and length = remaining_bytes_in_current_sgl */
++			status = scic_sds_stp_request_pio_data_out_trasmit_data_frame(this_sds_request, remaining_bytes_in_current_sgl);
++			if (status == SCI_SUCCESS) {
++				this_sds_stp_request->type.pio.pio_transfer_bytes -= remaining_bytes_in_current_sgl;
++
++				/* update the current sgl, sgl_offset and save for future */
++				current_sgl = scic_sds_stp_request_pio_get_next_sgl(this_sds_stp_request);
++				sgl_offset = 0;
++			}
++		} else if (this_sds_stp_request->type.pio.pio_transfer_bytes < remaining_bytes_in_current_sgl) {
++			/* recycle the TC and send the H2D Data FIS from (current sgl + sgl_offset) and length = type.pio.pio_transfer_bytes */
++			scic_sds_stp_request_pio_data_out_trasmit_data_frame(this_sds_request, this_sds_stp_request->type.pio.pio_transfer_bytes);
++
++			if (status == SCI_SUCCESS) {
++				/* Sgl offset will be adjusted and saved for future */
++				sgl_offset += this_sds_stp_request->type.pio.pio_transfer_bytes;
++				current_sgl->address_lower += this_sds_stp_request->type.pio.pio_transfer_bytes;
++				this_sds_stp_request->type.pio.pio_transfer_bytes = 0;
++			}
++		}
++	}
++
++	if (status == SCI_SUCCESS) {
++		this_sds_stp_request->type.pio.request_current.sgl_offset = sgl_offset;
++	}
++
++	return status;
++}
++
++/**
++ *
++ * @stp_request: The request that is used for the SGL processing.
++ * @data_buffer: The buffer of data to be copied.
++ * @length: The length of the data transfer.
++ *
++ * Copy the data from the buffer for the length specified to the IO reqeust SGL
++ * specified data region. enum sci_status
 + */
 +static enum sci_status
-+scic_sds_phy_link_layer_initialization(struct scic_sds_phy *sci_phy,
-+				       struct scu_link_layer_registers __iomem *link_layer_registers)
++scic_sds_stp_request_pio_data_in_copy_data_buffer(struct scic_sds_stp_request *stp_req,
++						  u8 *data_buf, u32 len)
 +{
-+	struct scic_sds_controller *scic = sci_phy->owning_port->owning_controller;
-+	int phy_idx = sci_phy->phy_index;
-+	struct sci_phy_user_params *phy_user = &scic->user_parameters.sds1.phys[phy_idx];
-+	struct sci_phy_oem_params *phy_oem = &scic->oem_parameters.sds1.phys[phy_idx];
-+	u32 phy_configuration;
-+	struct sas_capabilities phy_capabilities;
-+	u32 parity_check = 0;
-+	u32 parity_count = 0;
-+	u32 llctl, link_rate;
-+	u32 clksm_value = 0;
++	struct scic_sds_request *sci_req;
++	struct isci_request *ireq;
++	u8 *src_addr;
++	int copy_len;
++	struct sas_task *task;
++	struct scatterlist *sg;
++	void *kaddr;
++	int total_len = len;
 +
-+	sci_phy->link_layer_registers = link_layer_registers;
++	sci_req = &stp_req->parent;
++	ireq = scic_sds_request_get_user_request(sci_req);
++	task = isci_request_access_task(ireq);
++	src_addr = data_buf;
 +
-+	/* Set our IDENTIFY frame data */
-+	#define SCI_END_DEVICE 0x01
++	if (task->num_scatter > 0) {
++		sg = task->scatter;
 +
-+	SCU_SAS_TIID_WRITE(sci_phy, (SCU_SAS_TIID_GEN_BIT(SMP_INITIATOR) |
-+				     SCU_SAS_TIID_GEN_BIT(SSP_INITIATOR) |
-+				     SCU_SAS_TIID_GEN_BIT(STP_INITIATOR) |
-+				     SCU_SAS_TIID_GEN_BIT(DA_SATA_HOST) |
-+				     SCU_SAS_TIID_GEN_VAL(DEVICE_TYPE, SCI_END_DEVICE)));
++		while (total_len > 0) {
++			struct page *page = sg_page(sg);
 +
-+	/* Write the device SAS Address */
-+	SCU_SAS_TIDNH_WRITE(sci_phy, 0xFEDCBA98);
-+	SCU_SAS_TIDNL_WRITE(sci_phy, phy_idx);
-+
-+	/* Write the source SAS Address */
-+	SCU_SAS_TISSAH_WRITE(sci_phy, phy_oem->sas_address.high);
-+	SCU_SAS_TISSAL_WRITE(sci_phy, phy_oem->sas_address.low);
-+
-+	/* Clear and Set the PHY Identifier */
-+	SCU_SAS_TIPID_WRITE(sci_phy, 0x00000000);
-+	SCU_SAS_TIPID_WRITE(sci_phy, SCU_SAS_TIPID_GEN_VALUE(ID, phy_idx));
-+
-+	/* Change the initial state of the phy configuration register */
-+	phy_configuration = SCU_SAS_PCFG_READ(sci_phy);
-+
-+	/* Hold OOB state machine in reset */
-+	phy_configuration |=  SCU_SAS_PCFG_GEN_BIT(OOB_RESET);
-+	SCU_SAS_PCFG_WRITE(sci_phy, phy_configuration);
-+
-+	/* Configure the SNW capabilities */
-+	phy_capabilities.u.all = 0;
-+	phy_capabilities.u.bits.start                      = 1;
-+	phy_capabilities.u.bits.gen3_without_ssc_supported = 1;
-+	phy_capabilities.u.bits.gen2_without_ssc_supported = 1;
-+	phy_capabilities.u.bits.gen1_without_ssc_supported = 1;
-+	if (scic->oem_parameters.sds1.controller.do_enable_ssc == true) {
-+		phy_capabilities.u.bits.gen3_with_ssc_supported = 1;
-+		phy_capabilities.u.bits.gen2_with_ssc_supported = 1;
-+		phy_capabilities.u.bits.gen1_with_ssc_supported = 1;
++			copy_len = min_t(int, total_len, sg_dma_len(sg));
++			kaddr = kmap_atomic(page, KM_IRQ0);
++			memcpy(kaddr + sg->offset, src_addr, copy_len);
++			kunmap_atomic(kaddr, KM_IRQ0);
++			total_len -= copy_len;
++			src_addr += copy_len;
++			sg = sg_next(sg);
++		}
++	} else {
++		BUG_ON(task->total_xfer_len < total_len);
++		memcpy(task->scatter, src_addr, total_len);
 +	}
 +
++	return SCI_SUCCESS;
++}
++
++/**
++ *
++ * @this_request: The PIO DATA IN request that is to receive the data.
++ * @data_buffer: The buffer to copy from.
++ *
++ * Copy the data buffer to the io request data region. enum sci_status
++ */
++static enum sci_status scic_sds_stp_request_pio_data_in_copy_data(
++	struct scic_sds_stp_request *this_request,
++	u8 *data_buffer)
++{
++	enum sci_status status;
++
 +	/*
-+	 * The SAS specification indicates that the phy_capabilities that
-+	 * are transmitted shall have an even parity.  Calculate the parity. */
-+	parity_check = phy_capabilities.u.all;
-+	while (parity_check != 0) {
-+		if (parity_check & 0x1)
-+			parity_count++;
-+		parity_check >>= 1;
++	 * If there is less than 1K remaining in the transfer request
++	 * copy just the data for the transfer */
++	if (this_request->type.pio.pio_transfer_bytes < SCU_MAX_FRAME_BUFFER_SIZE) {
++		status = scic_sds_stp_request_pio_data_in_copy_data_buffer(
++			this_request, data_buffer, this_request->type.pio.pio_transfer_bytes);
++
++		if (status == SCI_SUCCESS)
++			this_request->type.pio.pio_transfer_bytes = 0;
++	} else {
++		/* We are transfering the whole frame so copy */
++		status = scic_sds_stp_request_pio_data_in_copy_data_buffer(
++			this_request, data_buffer, SCU_MAX_FRAME_BUFFER_SIZE);
++
++		if (status == SCI_SUCCESS)
++			this_request->type.pio.pio_transfer_bytes -= SCU_MAX_FRAME_BUFFER_SIZE;
 +	}
 +
-+	/*
-+	 * If parity indicates there are an odd number of bits set, then
-+	 * set the parity bit to 1 in the phy capabilities. */
-+	if ((parity_count % 2) != 0)
-+		phy_capabilities.u.bits.parity = 1;
++	return status;
++}
 +
-+	SCU_SAS_PHYCAP_WRITE(sci_phy, phy_capabilities.u.all);
++/**
++ *
++ * @this_request:
++ * @completion_code:
++ *
++ * enum sci_status
++ */
++static enum sci_status scic_sds_stp_request_pio_await_h2d_completion_tc_completion_handler(
++	struct scic_sds_request *this_request,
++	u32 completion_code)
++{
++	enum sci_status status = SCI_SUCCESS;
 +
-+	/* Set the enable spinup period but disable the ability to send
-+	 * notify enable spinup
-+	 */
-+	SCU_SAS_ENSPINUP_WRITE(sci_phy, SCU_ENSPINUP_GEN_VAL(COUNT,
-+			       phy_user->notify_enable_spin_up_insertion_frequency));
++	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
++		scic_sds_request_set_status(
++			this_request, SCU_TASK_DONE_GOOD, SCI_SUCCESS
++			);
 +
-+	/* Write the ALIGN Insertion Ferequency for connected phy and
-+	 * inpendent of connected state
-+	 */
-+	clksm_value = SCU_ALIGN_INSERTION_FREQUENCY_GEN_VAL(CONNECTED,
-+			phy_user->in_connection_align_insertion_frequency);
-+
-+	clksm_value |= SCU_ALIGN_INSERTION_FREQUENCY_GEN_VAL(GENERAL,
-+			phy_user->align_insertion_frequency);
-+
-+	SCU_SAS_CLKSM_WRITE(sci_phy, clksm_value);
-+
-+	/* @todo Provide a way to write this register correctly */
-+	scu_link_layer_register_write(sci_phy, afe_lookup_table_control, 0x02108421);
-+
-+	llctl = SCU_SAS_LLCTL_GEN_VAL(NO_OUTBOUND_TASK_TIMEOUT,
-+		(u8)scic->user_parameters.sds1.no_outbound_task_timeout);
-+
-+	switch(phy_user->max_speed_generation) {
-+	case SCIC_SDS_PARM_GEN3_SPEED:
-+		link_rate = SCU_SAS_LINK_LAYER_CONTROL_MAX_LINK_RATE_GEN3;
++		sci_base_state_machine_change_state(
++			&this_request->started_substate_machine,
++			SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE
++			);
 +		break;
-+	case SCIC_SDS_PARM_GEN2_SPEED:
-+		link_rate = SCU_SAS_LINK_LAYER_CONTROL_MAX_LINK_RATE_GEN2;
-+		break;
++
 +	default:
-+		link_rate = SCU_SAS_LINK_LAYER_CONTROL_MAX_LINK_RATE_GEN1;
++		/*
++		 * All other completion status cause the IO to be complete.  If a NAK
++		 * was received, then it is up to the user to retry the request. */
++		scic_sds_request_set_status(
++			this_request,
++			SCU_NORMALIZE_COMPLETION_STATUS(completion_code),
++			SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR
++			);
++
++		sci_base_state_machine_change_state(
++			&this_request->parent.state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED
++			);
 +		break;
 +	}
-+	llctl |= SCU_SAS_LLCTL_GEN_VAL(MAX_LINK_RATE, link_rate);
 +
-+	scu_link_layer_register_write(sci_phy, link_layer_control, llctl);
-+
-+	if (is_a0() || is_a2()) {
-+		/* Program the max ARB time for the PHY to 700us so we inter-operate with
-+		 * the PMC expander which shuts down PHYs if the expander PHY generates too
-+		 * many breaks.  This time value will guarantee that the initiator PHY will
-+		 * generate the break.
-+		 */
-+		scu_link_layer_register_write(sci_phy,
-+					      maximum_arbitration_wait_timer_timeout,
-+					      SCIC_SDS_PHY_MAX_ARBITRATION_WAIT_TIME);
-+	}
-+
-+	/*
-+	 * Set the link layer hang detection to 500ms (0x1F4) from its default
-+	 * value of 128ms.  Max value is 511 ms. */
-+	scu_link_layer_register_write(sci_phy, link_layer_hang_detection_timeout,
-+				      0x1F4);
-+
-+	/* We can exit the initial state to the stopped state */
-+	sci_base_state_machine_change_state(scic_sds_phy_get_base_state_machine(sci_phy),
-+					    SCI_BASE_PHY_STATE_STOPPED);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/**
-+ * This function will handle the sata SIGNATURE FIS timeout condition.  It will
-+ * restart the starting substate machine since we dont know what has actually
-+ * happening.
-+ */
-+void scic_sds_phy_sata_timeout(void *phy)
-+{
-+	struct scic_sds_phy *sci_phy = phy;
-+
-+	dev_dbg(sciphy_to_dev(sci_phy),
-+		 "%s: SCIC SDS Phy 0x%p did not receive signature fis before "
-+		 "timeout.\n",
-+		 __func__,
-+		 sci_phy);
-+
-+	sci_base_state_machine_stop(
-+		scic_sds_phy_get_starting_substate_machine(sci_phy));
-+
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_base_state_machine(sci_phy),
-+		SCI_BASE_PHY_STATE_STARTING
-+		);
-+}
-+
-+/**
-+ * This method will construct the struct scic_sds_phy object
-+ * @this_phy:
-+ * @owning_port:
-+ * @phy_index:
-+ *
-+ */
-+void scic_sds_phy_construct(
-+	struct scic_sds_phy *this_phy,
-+	struct scic_sds_port *owning_port,
-+	u8 phy_index)
-+{
-+	/*
-+	 * Call the base constructor first
-+	 */
-+	sci_base_phy_construct(
-+		&this_phy->parent,
-+		scic_sds_phy_state_table
-+		);
-+
-+	/* Copy the rest of the input data to our locals */
-+	this_phy->owning_port = owning_port;
-+	this_phy->phy_index = phy_index;
-+	this_phy->bcn_received_while_port_unassigned = false;
-+	this_phy->protocol = SCIC_SDS_PHY_PROTOCOL_UNKNOWN;
-+	this_phy->link_layer_registers = NULL;
-+	this_phy->max_negotiated_speed = SCI_SAS_NO_LINK_RATE;
-+	this_phy->sata_timeout_timer = NULL;
-+
-+	/* Clear out the identification buffer data */
-+	memset(&this_phy->phy_type, 0, sizeof(this_phy->phy_type));
-+
-+	/* Initialize the the substate machines */
-+	sci_base_state_machine_construct(
-+		&this_phy->starting_substate_machine,
-+		&this_phy->parent.parent,
-+		scic_sds_phy_starting_substates,
-+		SCIC_SDS_PHY_STARTING_SUBSTATE_INITIAL
-+		);
-+}
-+
-+/**
-+ * This method returns the port currently containing this phy. If the phy is
-+ *    currently contained by the dummy port, then the phy is considered to not
-+ *    be part of a port.
-+ * @this_phy: This parameter specifies the phy for which to retrieve the
-+ *    containing port.
-+ *
-+ * This method returns a handle to a port that contains the supplied phy.
-+ * NULL This value is returned if the phy is not part of a real
-+ * port (i.e. it's contained in the dummy port). !NULL All other
-+ * values indicate a handle/pointer to the port containing the phy.
-+ */
-+struct scic_sds_port *scic_sds_phy_get_port(
-+	struct scic_sds_phy *this_phy)
-+{
-+	if (scic_sds_port_get_index(this_phy->owning_port) == SCIC_SDS_DUMMY_PORT)
-+		return NULL;
-+
-+	return this_phy->owning_port;
-+}
-+
-+/**
-+ * This method will assign a port to the phy object.
-+ * @out]: this_phy This parameter specifies the phy for which to assign a port
-+ *    object.
-+ *
-+ *
-+ */
-+void scic_sds_phy_set_port(
-+	struct scic_sds_phy *this_phy,
-+	struct scic_sds_port *the_port)
-+{
-+	this_phy->owning_port = the_port;
-+
-+	if (this_phy->bcn_received_while_port_unassigned) {
-+		this_phy->bcn_received_while_port_unassigned = false;
-+		scic_sds_port_broadcast_change_received(this_phy->owning_port, this_phy);
-+	}
-+}
-+
-+/**
-+ * This method will initialize the constructed phy
-+ * @sci_phy:
-+ * @link_layer_registers:
-+ *
-+ * enum sci_status
-+ */
-+enum sci_status scic_sds_phy_initialize(
-+	struct scic_sds_phy *sci_phy,
-+		struct scu_transport_layer_registers __iomem *transport_layer_registers,
-+		struct scu_link_layer_registers __iomem *link_layer_registers)
-+{
-+	/* Create the SIGNATURE FIS Timeout timer for this phy */
-+	sci_phy->sata_timeout_timer = isci_event_timer_create(
-+		scic_sds_phy_get_controller(sci_phy),
-+		scic_sds_phy_sata_timeout,
-+		sci_phy
-+		);
-+
-+	/* Perfrom the initialization of the TL hardware */
-+	scic_sds_phy_transport_layer_initialization(sci_phy, transport_layer_registers);
-+
-+	/* Perofrm the initialization of the PE hardware */
-+	scic_sds_phy_link_layer_initialization(sci_phy, link_layer_registers);
-+
-+	/*
-+	 * There is nothing that needs to be done in this state just
-+	 * transition to the stopped state. */
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_base_state_machine(sci_phy),
-+		SCI_BASE_PHY_STATE_STOPPED
-+		);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/**
-+ * This method assigns the direct attached device ID for this phy.
-+ *
-+ * @this_phy The phy for which the direct attached device id is to
-+ *       be assigned.
-+ * @device_id The direct attached device ID to assign to the phy.
-+ *       This will either be the RNi for the device or an invalid RNi if there
-+ *       is no current device assigned to the phy.
-+ */
-+void scic_sds_phy_setup_transport(
-+	struct scic_sds_phy *this_phy,
-+	u32 device_id)
-+{
-+	u32 tl_control;
-+
-+	SCU_STPTLDARNI_WRITE(this_phy, device_id);
-+
-+	/*
-+	 * The read should guarantee that the first write gets posted
-+	 * before the next write
-+	 */
-+	tl_control = SCU_TLCR_READ(this_phy);
-+	tl_control |= SCU_TLCR_GEN_BIT(CLEAR_TCI_NCQ_MAPPING_TABLE);
-+	SCU_TLCR_WRITE(this_phy, tl_control);
++	return status;
 +}
 +
 +/**
 + *
-+ * @this_phy: The phy object to be suspended.
-+ *
-+ * This function will perform the register reads/writes to suspend the SCU
-+ * hardware protocol engine. none
-+ */
-+void scic_sds_phy_suspend(
-+	struct scic_sds_phy *this_phy)
-+{
-+	u32 scu_sas_pcfg_value;
-+
-+	scu_sas_pcfg_value = SCU_SAS_PCFG_READ(this_phy);
-+	scu_sas_pcfg_value |= SCU_SAS_PCFG_GEN_BIT(SUSPEND_PROTOCOL_ENGINE);
-+	SCU_SAS_PCFG_WRITE(this_phy, scu_sas_pcfg_value);
-+	scic_sds_phy_setup_transport(this_phy, SCIC_SDS_REMOTE_NODE_CONTEXT_INVALID_INDEX);
-+}
-+
-+/**
-+ *
-+ * @this_phy: The phy object to resume.
-+ *
-+ * This function will perform the register reads/writes required to resume the
-+ * SCU hardware protocol engine. none
-+ */
-+void scic_sds_phy_resume(
-+	struct scic_sds_phy *this_phy)
-+{
-+	u32 scu_sas_pcfg_value;
-+
-+	scu_sas_pcfg_value = SCU_SAS_PCFG_READ(this_phy);
-+
-+	scu_sas_pcfg_value &= ~SCU_SAS_PCFG_GEN_BIT(SUSPEND_PROTOCOL_ENGINE);
-+
-+	SCU_SAS_PCFG_WRITE(this_phy, scu_sas_pcfg_value);
-+}
-+
-+/**
-+ * This method returns the local sas address assigned to this phy.
-+ * @this_phy: This parameter specifies the phy for which to retrieve the local
-+ *    SAS address.
-+ * @sas_address: This parameter specifies the location into which to copy the
-+ *    local SAS address.
-+ *
-+ */
-+void scic_sds_phy_get_sas_address(
-+	struct scic_sds_phy *this_phy,
-+	struct sci_sas_address *sas_address)
-+{
-+	sas_address->high = SCU_SAS_TISSAH_READ(this_phy);
-+	sas_address->low  = SCU_SAS_TISSAL_READ(this_phy);
-+}
-+
-+/**
-+ * This method returns the remote end-point (i.e. attached) sas address
-+ *    assigned to this phy.
-+ * @this_phy: This parameter specifies the phy for which to retrieve the remote
-+ *    end-point SAS address.
-+ * @sas_address: This parameter specifies the location into which to copy the
-+ *    remote end-point SAS address.
-+ *
-+ */
-+void scic_sds_phy_get_attached_sas_address(
-+	struct scic_sds_phy *this_phy,
-+	struct sci_sas_address *sas_address)
-+{
-+	sas_address->high
-+		= this_phy->phy_type.sas.identify_address_frame_buffer.sas_address.high;
-+	sas_address->low
-+		= this_phy->phy_type.sas.identify_address_frame_buffer.sas_address.low;
-+}
-+
-+/**
-+ * This method returns the supported protocols assigned to this phy
-+ * @this_phy:
-+ *
-+ *
-+ */
-+void scic_sds_phy_get_protocols(
-+	struct scic_sds_phy *this_phy,
-+	struct sci_sas_identify_address_frame_protocols *protocols)
-+{
-+	protocols->u.all = (u16)(SCU_SAS_TIID_READ(this_phy) & 0x0000FFFF);
-+}
-+
-+/**
-+ *
-+ * @this_phy: The parameter is the phy object for which the attached phy
-+ *    protcols are to be returned.
-+ *
-+ * This method returns the supported protocols for the attached phy.  If this
-+ * is a SAS phy the protocols are returned from the identify address frame. If
-+ * this is a SATA phy then protocols are made up and the target phy is an STP
-+ * target phy. The caller will get the entire set of bits for the protocol
-+ * value.
-+ */
-+void scic_sds_phy_get_attached_phy_protocols(
-+	struct scic_sds_phy *this_phy,
-+	struct sci_sas_identify_address_frame_protocols *protocols)
-+{
-+	protocols->u.all = 0;
-+
-+	if (this_phy->protocol == SCIC_SDS_PHY_PROTOCOL_SAS) {
-+		protocols->u.all =
-+			this_phy->phy_type.sas.identify_address_frame_buffer.protocols.u.all;
-+	} else if (this_phy->protocol == SCIC_SDS_PHY_PROTOCOL_SATA) {
-+		protocols->u.bits.stp_target = 1;
-+	}
-+}
-+
-+/*
-+ * *****************************************************************************
-+ * * SCIC SDS PHY Handler Redirects
-+ * ***************************************************************************** */
-+
-+/**
-+ * This method will attempt to start the phy object. This request is only valid
-+ *    when the phy is in the stopped state
-+ * @sci_phy:
-+ *
-+ * enum sci_status
-+ */
-+enum sci_status scic_sds_phy_start(struct scic_sds_phy *sci_phy)
-+{
-+	return sci_phy->state_handlers->parent.start_handler(&sci_phy->parent);
-+}
-+
-+/**
-+ * This method will attempt to stop the phy object.
-+ * @sci_phy:
-+ *
-+ * enum sci_status SCI_SUCCESS if the phy is going to stop SCI_INVALID_STATE
-+ * if the phy is not in a valid state to stop
-+ */
-+enum sci_status scic_sds_phy_stop(struct scic_sds_phy *sci_phy)
-+{
-+	return sci_phy->state_handlers->parent.stop_handler(&sci_phy->parent);
-+}
-+
-+/**
-+ * This method will attempt to reset the phy.  This request is only valid when
-+ *    the phy is in an ready state
-+ * @this_phy:
-+ *
-+ * enum sci_status
-+ */
-+enum sci_status scic_sds_phy_reset(
-+	struct scic_sds_phy *this_phy)
-+{
-+	return this_phy->state_handlers->parent.reset_handler(
-+		       &this_phy->parent
-+		       );
-+}
-+
-+/**
-+ * This method will process the event code received.
-+ * @this_phy:
-+ * @event_code:
-+ *
-+ * enum sci_status
-+ */
-+enum sci_status scic_sds_phy_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	return this_phy->state_handlers->event_handler(this_phy, event_code);
-+}
-+
-+/**
-+ * This method will process the frame index received.
-+ * @this_phy:
++ * @this_request:
 + * @frame_index:
 + *
 + * enum sci_status
 + */
-+enum sci_status scic_sds_phy_frame_handler(
-+	struct scic_sds_phy *this_phy,
++static enum sci_status scic_sds_stp_request_pio_await_frame_frame_handler(
++	struct scic_sds_request *request,
 +	u32 frame_index)
 +{
-+	return this_phy->state_handlers->frame_handler(this_phy, frame_index);
++	enum sci_status status;
++	struct sata_fis_header *frame_header;
++	u32 *frame_buffer;
++	struct scic_sds_stp_request *this_request;
++
++	this_request = (struct scic_sds_stp_request *)request;
++
++	status = scic_sds_unsolicited_frame_control_get_header(
++		&(this_request->parent.owning_controller->uf_control),
++		frame_index,
++		(void **)&frame_header
++		);
++
++	if (status == SCI_SUCCESS) {
++		switch (frame_header->fis_type) {
++		case SATA_FIS_TYPE_PIO_SETUP:
++			/* Get from the frame buffer the PIO Setup Data */
++			scic_sds_unsolicited_frame_control_get_buffer(
++				&(this_request->parent.owning_controller->uf_control),
++				frame_index,
++				(void **)&frame_buffer
++				);
++
++			/*
++			 * Get the data from the PIO Setup
++			 * The SCU Hardware returns first word in the frame_header and the rest
++			 * of the data is in the frame buffer so we need to back up one dword */
++			this_request->type.pio.pio_transfer_bytes =
++				(u16)((struct sata_fis_pio_setup *)(&frame_buffer[-1]))->transfter_count;
++			this_request->type.pio.ending_status =
++				(u8)((struct sata_fis_pio_setup *)(&frame_buffer[-1]))->ending_status;
++
++			scic_sds_controller_copy_sata_response(
++				&this_request->d2h_reg_fis, (u32 *)frame_header, frame_buffer
++				);
++
++			this_request->d2h_reg_fis.status =
++				this_request->type.pio.ending_status;
++
++			/* The next state is dependent on whether the request was PIO Data-in or Data out */
++			if (this_request->type.pio.sat_protocol == SAT_PROTOCOL_PIO_DATA_IN) {
++				sci_base_state_machine_change_state(
++					&this_request->parent.started_substate_machine,
++					SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_IN_AWAIT_DATA_SUBSTATE
++					);
++			} else if (this_request->type.pio.sat_protocol == SAT_PROTOCOL_PIO_DATA_OUT) {
++				/* Transmit data */
++				status = scic_sds_stp_request_pio_data_out_transmit_data(request);
++				if (status == SCI_SUCCESS) {
++					sci_base_state_machine_change_state(
++						&this_request->parent.started_substate_machine,
++						SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_OUT_TRANSMIT_DATA_SUBSTATE
++						);
++				}
++			}
++			break;
++
++		case SATA_FIS_TYPE_SETDEVBITS:
++			sci_base_state_machine_change_state(
++				&this_request->parent.started_substate_machine,
++				SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE
++				);
++			break;
++
++		case SATA_FIS_TYPE_REGD2H:
++			if ((frame_header->status & ATA_STATUS_REG_BSY_BIT) == 0) {
++				scic_sds_unsolicited_frame_control_get_buffer(
++					&(this_request->parent.owning_controller->uf_control),
++					frame_index,
++					(void **)&frame_buffer
++					);
++
++				scic_sds_controller_copy_sata_response(
++					&this_request->d2h_reg_fis, (u32 *)frame_header, frame_buffer);
++
++				scic_sds_request_set_status(
++					&this_request->parent,
++					SCU_TASK_DONE_CHECK_RESPONSE,
++					SCI_FAILURE_IO_RESPONSE_VALID
++					);
++
++				sci_base_state_machine_change_state(
++					&this_request->parent.parent.state_machine,
++					SCI_BASE_REQUEST_STATE_COMPLETED
++					);
++			} else {
++				/*
++				 * Now why is the drive sending a D2H Register FIS when it is still busy?
++				 * Do nothing since we are still in the right state. */
++				dev_dbg(scic_to_dev(request->owning_controller),
++					"%s: SCIC PIO Request 0x%p received "
++					"D2H Register FIS with BSY status "
++					"0x%x\n",
++					__func__,
++					this_request,
++					frame_header->status);
++			}
++			break;
++
++		default:
++			break;
++		}
++
++		/* Frame is decoded return it to the controller */
++		scic_sds_controller_release_frame(
++			this_request->parent.owning_controller,
++			frame_index
++			);
++	} else
++		dev_err(scic_to_dev(request->owning_controller),
++			"%s: SCIC IO Request 0x%p could not get frame header "
++			"for frame index %d, status %x\n",
++			__func__, this_request, frame_index, status);
++
++	return status;
 +}
 +
 +/**
-+ * This method will give the phy permission to consume power
-+ * @this_phy:
++ *
++ * @this_request:
++ * @frame_index:
 + *
 + * enum sci_status
 + */
-+enum sci_status scic_sds_phy_consume_power_handler(
-+	struct scic_sds_phy *this_phy)
-+{
-+	return this_phy->state_handlers->consume_power_handler(this_phy);
-+}
-+
-+/*
-+ * *****************************************************************************
-+ * * SCIC PHY Public Methods
-+ * ***************************************************************************** */
-+
-+
-+enum sci_status scic_sas_phy_get_properties(
-+	struct scic_sds_phy *sci_phy,
-+	struct scic_sas_phy_properties *properties)
-+{
-+	if (sci_phy->protocol == SCIC_SDS_PHY_PROTOCOL_SAS) {
-+		memcpy(
-+			&properties->received_iaf,
-+			&sci_phy->phy_type.sas.identify_address_frame_buffer,
-+			sizeof(struct sci_sas_identify_address_frame)
-+			);
-+
-+		properties->received_capabilities.u.all
-+			= SCU_SAS_RECPHYCAP_READ(sci_phy);
-+
-+		return SCI_SUCCESS;
-+	}
-+
-+	return SCI_FAILURE;
-+}
-+
-+
-+enum sci_status scic_sata_phy_get_properties(
-+	struct scic_sds_phy *sci_phy,
-+	struct scic_sata_phy_properties *properties)
-+{
-+	if (sci_phy->protocol == SCIC_SDS_PHY_PROTOCOL_SATA) {
-+		memcpy(
-+			&properties->signature_fis,
-+			&sci_phy->phy_type.sata.signature_fis_buffer,
-+			sizeof(struct sata_fis_reg_d2h)
-+			);
-+
-+		/* / @todo add support for port selectors. */
-+		properties->is_port_selector_present = false;
-+
-+		return SCI_SUCCESS;
-+	}
-+
-+	return SCI_FAILURE;
-+}
-+
-+/*
-+ * *****************************************************************************
-+ * * SCIC SDS PHY HELPER FUNCTIONS
-+ * ***************************************************************************** */
-+
-+
-+/**
-+ *
-+ * @this_phy: The phy object that received SAS PHY DETECTED.
-+ *
-+ * This method continues the link training for the phy as if it were a SAS PHY
-+ * instead of a SATA PHY. This is done because the completion queue had a SAS
-+ * PHY DETECTED event when the state machine was expecting a SATA PHY event.
-+ * none
-+ */
-+static void scic_sds_phy_start_sas_link_training(
-+	struct scic_sds_phy *this_phy)
-+{
-+	u32 phy_control;
-+
-+	phy_control = SCU_SAS_PCFG_READ(this_phy);
-+	phy_control |= SCU_SAS_PCFG_GEN_BIT(SATA_SPINUP_HOLD);
-+	SCU_SAS_PCFG_WRITE(this_phy, phy_control);
-+
-+	sci_base_state_machine_change_state(
-+		&this_phy->starting_substate_machine,
-+		SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_SPEED_EN
-+		);
-+
-+	this_phy->protocol = SCIC_SDS_PHY_PROTOCOL_SAS;
-+}
-+
-+/**
-+ *
-+ * @this_phy: The phy object that received a SATA SPINUP HOLD event
-+ *
-+ * This method continues the link training for the phy as if it were a SATA PHY
-+ * instead of a SAS PHY.  This is done because the completion queue had a SATA
-+ * SPINUP HOLD event when the state machine was expecting a SAS PHY event. none
-+ */
-+static void scic_sds_phy_start_sata_link_training(
-+	struct scic_sds_phy *this_phy)
-+{
-+	sci_base_state_machine_change_state(
-+		&this_phy->starting_substate_machine,
-+		SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_POWER
-+		);
-+
-+	this_phy->protocol = SCIC_SDS_PHY_PROTOCOL_SATA;
-+}
-+
-+/**
-+ * This method performs processing common to all protocols upon completion of
-+ *    link training.
-+ * @this_phy: This parameter specifies the phy object for which link training
-+ *    has completed.
-+ * @max_link_rate: This parameter specifies the maximum link rate to be
-+ *    associated with this phy.
-+ * @next_state: This parameter specifies the next state for the phy's starting
-+ *    sub-state machine.
-+ *
-+ */
-+static void scic_sds_phy_complete_link_training(
-+	struct scic_sds_phy *this_phy,
-+	enum sci_sas_link_rate max_link_rate,
-+	u32 next_state)
-+{
-+	this_phy->max_negotiated_speed = max_link_rate;
-+
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_starting_substate_machine(this_phy), next_state
-+		);
-+}
-+
-+/**
-+ *
-+ * @this_phy: The struct scic_sds_phy object to restart.
-+ *
-+ * This method restarts the struct scic_sds_phy objects base state machine in the
-+ * starting state from any starting substate. none
-+ */
-+static void scic_sds_phy_restart_starting_state(
-+	struct scic_sds_phy *this_phy)
-+{
-+	/* Stop the current substate machine */
-+	sci_base_state_machine_stop(
-+		scic_sds_phy_get_starting_substate_machine(this_phy)
-+		);
-+
-+	/* Re-enter the base state machine starting state */
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_base_state_machine(this_phy),
-+		SCI_BASE_PHY_STATE_STARTING
-+		);
-+}
-+
-+/* ****************************************************************************
-+   * SCIC SDS PHY general handlers
-+   ************************************************************************** */
-+static enum sci_status scic_sds_phy_starting_substate_general_stop_handler(
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_phy *this_phy;
-+	this_phy = (struct scic_sds_phy *)phy;
-+
-+	sci_base_state_machine_stop(&this_phy->starting_substate_machine);
-+
-+	sci_base_state_machine_change_state(&phy->state_machine,
-+						 SCI_BASE_PHY_STATE_STOPPED);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/*
-+ * *****************************************************************************
-+ * * SCIC SDS PHY EVENT_HANDLERS
-+ * ***************************************************************************** */
-+
-+/**
-+ *
-+ * @phy: This struct scic_sds_phy object which has received an event.
-+ * @event_code: This is the event code which the phy object is to decode.
-+ *
-+ * This method is called when an event notification is received for the phy
-+ * object when in the state SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SPEED_EN. -
-+ * decode the event - sas phy detected causes a state transition to the wait
-+ * for speed event notification. - any other events log a warning message and
-+ * set a failure status enum sci_status SCI_SUCCESS on any valid event notification
-+ * SCI_FAILURE on any unexpected event notifation
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_ossp_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	u32 result = SCI_SUCCESS;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_SAS_PHY_DETECTED:
-+		scic_sds_phy_start_sas_link_training(this_phy);
-+		this_phy->is_in_link_training = true;
-+		break;
-+
-+	case SCU_EVENT_SATA_SPINUP_HOLD:
-+		scic_sds_phy_start_sata_link_training(this_phy);
-+		this_phy->is_in_link_training = true;
-+		break;
-+
-+	default:
-+		dev_dbg(sciphy_to_dev(this_phy),
-+			"%s: PHY starting substate machine received "
-+			"unexpected event_code %x\n",
-+			__func__,
-+			event_code);
-+
-+		result = SCI_FAILURE;
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+/**
-+ *
-+ * @phy: This struct scic_sds_phy object which has received an event.
-+ * @event_code: This is the event code which the phy object is to decode.
-+ *
-+ * This method is called when an event notification is received for the phy
-+ * object when in the state SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SPEED_EN. -
-+ * decode the event - sas phy detected returns us back to this state. - speed
-+ * event detected causes a state transition to the wait for iaf. - identify
-+ * timeout is an un-expected event and the state machine is restarted. - link
-+ * failure events restart the starting state machine - any other events log a
-+ * warning message and set a failure status enum sci_status SCI_SUCCESS on any valid
-+ * event notification SCI_FAILURE on any unexpected event notifation
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_sas_phy_speed_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	u32 result = SCI_SUCCESS;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_SAS_PHY_DETECTED:
-+		/*
-+		 * Why is this being reported again by the controller?
-+		 * We would re-enter this state so just stay here */
-+		break;
-+
-+	case SCU_EVENT_SAS_15:
-+	case SCU_EVENT_SAS_15_SSC:
-+		scic_sds_phy_complete_link_training(
-+			this_phy, SCI_SAS_150_GB, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF
-+			);
-+		break;
-+
-+	case SCU_EVENT_SAS_30:
-+	case SCU_EVENT_SAS_30_SSC:
-+		scic_sds_phy_complete_link_training(
-+			this_phy, SCI_SAS_300_GB, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF
-+			);
-+		break;
-+
-+	case SCU_EVENT_SAS_60:
-+	case SCU_EVENT_SAS_60_SSC:
-+		scic_sds_phy_complete_link_training(
-+			this_phy, SCI_SAS_600_GB, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF
-+			);
-+		break;
-+
-+	case SCU_EVENT_SATA_SPINUP_HOLD:
-+		/*
-+		 * We were doing SAS PHY link training and received a SATA PHY event
-+		 * continue OOB/SN as if this were a SATA PHY */
-+		scic_sds_phy_start_sata_link_training(this_phy);
-+		break;
-+
-+	case SCU_EVENT_LINK_FAILURE:
-+		/* Link failure change state back to the starting state */
-+		scic_sds_phy_restart_starting_state(this_phy);
-+		break;
-+
-+	default:
-+		dev_warn(sciphy_to_dev(this_phy),
-+			 "%s: PHY starting substate machine received "
-+			 "unexpected event_code %x\n",
-+			 __func__,
-+			 event_code);
-+
-+		result = SCI_FAILURE;
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+/**
-+ *
-+ * @phy: This struct scic_sds_phy object which has received an event.
-+ * @event_code: This is the event code which the phy object is to decode.
-+ *
-+ * This method is called when an event notification is received for the phy
-+ * object when in the state SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF. -
-+ * decode the event - sas phy detected event backs up the state machine to the
-+ * await speed notification. - identify timeout is an un-expected event and the
-+ * state machine is restarted. - link failure events restart the starting state
-+ * machine - any other events log a warning message and set a failure status
-+ * enum sci_status SCI_SUCCESS on any valid event notification SCI_FAILURE on any
-+ * unexpected event notifation
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_iaf_uf_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	u32 result = SCI_SUCCESS;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_SAS_PHY_DETECTED:
-+		/* Backup the state machine */
-+		scic_sds_phy_start_sas_link_training(this_phy);
-+		break;
-+
-+	case SCU_EVENT_SATA_SPINUP_HOLD:
-+		/*
-+		 * We were doing SAS PHY link training and received a SATA PHY event
-+		 * continue OOB/SN as if this were a SATA PHY */
-+		scic_sds_phy_start_sata_link_training(this_phy);
-+		break;
-+
-+	case SCU_EVENT_RECEIVED_IDENTIFY_TIMEOUT:
-+	case SCU_EVENT_LINK_FAILURE:
-+	case SCU_EVENT_HARD_RESET_RECEIVED:
-+		/* Start the oob/sn state machine over again */
-+		scic_sds_phy_restart_starting_state(this_phy);
-+		break;
-+
-+	default:
-+		dev_warn(sciphy_to_dev(this_phy),
-+			 "%s: PHY starting substate machine received "
-+			 "unexpected event_code %x\n",
-+			 __func__,
-+			 event_code);
-+
-+		result = SCI_FAILURE;
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+/**
-+ *
-+ * @phy: This struct scic_sds_phy object which has received an event.
-+ * @event_code: This is the event code which the phy object is to decode.
-+ *
-+ * This method is called when an event notification is received for the phy
-+ * object when in the state SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_POWER. -
-+ * decode the event - link failure events restart the starting state machine -
-+ * any other events log a warning message and set a failure status enum sci_status
-+ * SCI_SUCCESS on a link failure event SCI_FAILURE on any unexpected event
-+ * notifation
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_sas_power_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	u32 result = SCI_SUCCESS;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_LINK_FAILURE:
-+		/* Link failure change state back to the starting state */
-+		scic_sds_phy_restart_starting_state(this_phy);
-+		break;
-+
-+	default:
-+		dev_warn(sciphy_to_dev(this_phy),
-+			"%s: PHY starting substate machine received unexpected "
-+			"event_code %x\n",
-+			__func__,
-+			event_code);
-+
-+		result = SCI_FAILURE;
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+/**
-+ *
-+ * @phy: This struct scic_sds_phy object which has received an event.
-+ * @event_code: This is the event code which the phy object is to decode.
-+ *
-+ * This method is called when an event notification is received for the phy
-+ * object when in the state SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_POWER. -
-+ * decode the event - link failure events restart the starting state machine -
-+ * sata spinup hold events are ignored since they are expected - any other
-+ * events log a warning message and set a failure status enum sci_status SCI_SUCCESS
-+ * on a link failure event SCI_FAILURE on any unexpected event notifation
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_sata_power_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	u32 result = SCI_SUCCESS;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_LINK_FAILURE:
-+		/* Link failure change state back to the starting state */
-+		scic_sds_phy_restart_starting_state(this_phy);
-+		break;
-+
-+	case SCU_EVENT_SATA_SPINUP_HOLD:
-+		/* These events are received every 10ms and are expected while in this state */
-+		break;
-+
-+	case SCU_EVENT_SAS_PHY_DETECTED:
-+		/*
-+		 * There has been a change in the phy type before OOB/SN for the
-+		 * SATA finished start down the SAS link traning path. */
-+		scic_sds_phy_start_sas_link_training(this_phy);
-+		break;
-+
-+	default:
-+		dev_warn(sciphy_to_dev(this_phy),
-+			 "%s: PHY starting substate machine received "
-+			 "unexpected event_code %x\n",
-+			 __func__,
-+			 event_code);
-+
-+		result = SCI_FAILURE;
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+/**
-+ *
-+ * @phy: This struct scic_sds_phy object which has received an event.
-+ * @event_code: This is the event code which the phy object is to decode.
-+ *
-+ * This method is called when an event notification is received for the phy
-+ * object when in the state SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_PHY_EN. -
-+ * decode the event - link failure events restart the starting state machine -
-+ * sata spinup hold events are ignored since they are expected - sata phy
-+ * detected event change to the wait speed event - any other events log a
-+ * warning message and set a failure status enum sci_status SCI_SUCCESS on a link
-+ * failure event SCI_FAILURE on any unexpected event notifation
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_sata_phy_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	u32 result = SCI_SUCCESS;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_LINK_FAILURE:
-+		/* Link failure change state back to the starting state */
-+		scic_sds_phy_restart_starting_state(this_phy);
-+		break;
-+
-+	case SCU_EVENT_SATA_SPINUP_HOLD:
-+		/*
-+		 * These events might be received since we dont know how many may be in
-+		 * the completion queue while waiting for power */
-+		break;
-+
-+	case SCU_EVENT_SATA_PHY_DETECTED:
-+		this_phy->protocol = SCIC_SDS_PHY_PROTOCOL_SATA;
-+
-+		/* We have received the SATA PHY notification change state */
-+		sci_base_state_machine_change_state(
-+			scic_sds_phy_get_starting_substate_machine(this_phy),
-+			SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN
-+			);
-+		break;
-+
-+	case SCU_EVENT_SAS_PHY_DETECTED:
-+		/*
-+		 * There has been a change in the phy type before OOB/SN for the
-+		 * SATA finished start down the SAS link traning path. */
-+		scic_sds_phy_start_sas_link_training(this_phy);
-+		break;
-+
-+	default:
-+		dev_warn(sciphy_to_dev(this_phy),
-+			 "%s: PHY starting substate machine received "
-+			 "unexpected event_code %x\n",
-+			 __func__,
-+			 event_code);
-+
-+		result = SCI_FAILURE;
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+/**
-+ *
-+ * @phy: This struct scic_sds_phy object which has received an event.
-+ * @event_code: This is the event code which the phy object is to decode.
-+ *
-+ * This method is called when an event notification is received for the phy
-+ * object when in the state SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN.
-+ * - decode the event - sata phy detected returns us back to this state. -
-+ * speed event detected causes a state transition to the wait for signature. -
-+ * link failure events restart the starting state machine - any other events
-+ * log a warning message and set a failure status enum sci_status SCI_SUCCESS on any
-+ * valid event notification SCI_FAILURE on any unexpected event notifation
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_sata_speed_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	u32 result = SCI_SUCCESS;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_SATA_PHY_DETECTED:
-+		/*
-+		 * The hardware reports multiple SATA PHY detected events
-+		 * ignore the extras */
-+		break;
-+
-+	case SCU_EVENT_SATA_15:
-+	case SCU_EVENT_SATA_15_SSC:
-+		scic_sds_phy_complete_link_training(
-+			this_phy,
-+			SCI_SAS_150_GB,
-+			SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF
-+			);
-+		break;
-+
-+	case SCU_EVENT_SATA_30:
-+	case SCU_EVENT_SATA_30_SSC:
-+		scic_sds_phy_complete_link_training(
-+			this_phy,
-+			SCI_SAS_300_GB,
-+			SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF
-+			);
-+		break;
-+
-+	case SCU_EVENT_SATA_60:
-+	case SCU_EVENT_SATA_60_SSC:
-+		scic_sds_phy_complete_link_training(
-+			this_phy,
-+			SCI_SAS_600_GB,
-+			SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF
-+			);
-+		break;
-+
-+	case SCU_EVENT_LINK_FAILURE:
-+		/* Link failure change state back to the starting state */
-+		scic_sds_phy_restart_starting_state(this_phy);
-+		break;
-+
-+	case SCU_EVENT_SAS_PHY_DETECTED:
-+		/*
-+		 * There has been a change in the phy type before OOB/SN for the
-+		 * SATA finished start down the SAS link traning path. */
-+		scic_sds_phy_start_sas_link_training(this_phy);
-+		break;
-+
-+	default:
-+		dev_warn(sciphy_to_dev(this_phy),
-+			 "%s: PHY starting substate machine received "
-+			 "unexpected event_code %x\n",
-+			 __func__,
-+			 event_code);
-+
-+		result = SCI_FAILURE;
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+/**
-+ *
-+ * @phy: This struct scic_sds_phy object which has received an event.
-+ * @event_code: This is the event code which the phy object is to decode.
-+ *
-+ * This method is called when an event notification is received for the phy
-+ * object when in the state SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF. -
-+ * decode the event - sas phy detected event backs up the state machine to the
-+ * await speed notification. - identify timeout is an un-expected event and the
-+ * state machine is restarted. - link failure events restart the starting state
-+ * machine - any other events log a warning message and set a failure status
-+ * enum sci_status SCI_SUCCESS on any valid event notification SCI_FAILURE on any
-+ * unexpected event notifation
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_sig_fis_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	u32 result = SCI_SUCCESS;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_SATA_PHY_DETECTED:
-+		/* Backup the state machine */
-+		sci_base_state_machine_change_state(
-+			scic_sds_phy_get_starting_substate_machine(this_phy),
-+			SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN
-+			);
-+		break;
-+
-+	case SCU_EVENT_LINK_FAILURE:
-+		/* Link failure change state back to the starting state */
-+		scic_sds_phy_restart_starting_state(this_phy);
-+		break;
-+
-+	default:
-+		dev_warn(sciphy_to_dev(this_phy),
-+			 "%s: PHY starting substate machine received "
-+			 "unexpected event_code %x\n",
-+			 __func__,
-+			 event_code);
-+
-+		result = SCI_FAILURE;
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+
-+/*
-+ * *****************************************************************************
-+ * *  SCIC SDS PHY FRAME_HANDLERS
-+ * ***************************************************************************** */
-+
-+/**
-+ *
-+ * @phy: This is struct scic_sds_phy object which is being requested to decode the
-+ *    frame data.
-+ * @frame_index: This is the index of the unsolicited frame which was received
-+ *    for this phy.
-+ *
-+ * This method decodes the unsolicited frame when the struct scic_sds_phy is in the
-+ * SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF. - Get the UF Header - If the UF
-+ * is an IAF - Copy IAF data to local phy object IAF data buffer. - Change
-+ * starting substate to wait power. - else - log warning message of unexpected
-+ * unsolicted frame - release frame buffer enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_iaf_uf_frame_handler(
-+	struct scic_sds_phy *this_phy,
++static enum sci_status scic_sds_stp_request_pio_data_in_await_data_frame_handler(
++	struct scic_sds_request *request,
 +	u32 frame_index)
 +{
-+	enum sci_status result;
-+	u32 *frame_words;
-+	struct sci_sas_identify_address_frame *identify_frame;
++	enum sci_status status;
++	struct sata_fis_header *frame_header;
++	struct sata_fis_data *frame_buffer;
++	struct scic_sds_stp_request *this_request;
 +
-+	result = scic_sds_unsolicited_frame_control_get_header(
-+		&(scic_sds_phy_get_controller(this_phy)->uf_control),
++	this_request = (struct scic_sds_stp_request *)request;
++
++	status = scic_sds_unsolicited_frame_control_get_header(
++		&(this_request->parent.owning_controller->uf_control),
 +		frame_index,
-+		(void **)&frame_words);
++		(void **)&frame_header
++		);
 +
-+	if (result != SCI_SUCCESS) {
-+		return result;
-+	}
++	if (status == SCI_SUCCESS) {
++		if (frame_header->fis_type == SATA_FIS_TYPE_DATA) {
++			if (this_request->type.pio.request_current.sgl_pair == NULL) {
++				this_request->parent.saved_rx_frame_index = frame_index;
++				this_request->type.pio.pio_transfer_bytes = 0;
++			} else {
++				status = scic_sds_unsolicited_frame_control_get_buffer(
++					&(this_request->parent.owning_controller->uf_control),
++					frame_index,
++					(void **)&frame_buffer
++					);
 +
-+	frame_words[0] = SCIC_SWAP_DWORD(frame_words[0]);
-+	identify_frame = (struct sci_sas_identify_address_frame *)frame_words;
++				status = scic_sds_stp_request_pio_data_in_copy_data(this_request, (u8 *)frame_buffer);
 +
-+	if (identify_frame->address_frame_type == 0) {
-+		/*
-+		 * Byte swap the rest of the frame so we can make
-+		 * a copy of the buffer */
-+		frame_words[1] = SCIC_SWAP_DWORD(frame_words[1]);
-+		frame_words[2] = SCIC_SWAP_DWORD(frame_words[2]);
-+		frame_words[3] = SCIC_SWAP_DWORD(frame_words[3]);
-+		frame_words[4] = SCIC_SWAP_DWORD(frame_words[4]);
-+		frame_words[5] = SCIC_SWAP_DWORD(frame_words[5]);
++				/* Frame is decoded return it to the controller */
++				scic_sds_controller_release_frame(
++					this_request->parent.owning_controller,
++					frame_index
++					);
++			}
 +
-+		memcpy(
-+			&this_phy->phy_type.sas.identify_address_frame_buffer,
-+			identify_frame,
-+			sizeof(struct sci_sas_identify_address_frame)
-+			);
-+
-+		if (identify_frame->protocols.u.bits.smp_target) {
 +			/*
-+			 * We got the IAF for an expander PHY go to the final state since
-+			 * there are no power requirements for expander phys. */
-+			sci_base_state_machine_change_state(
-+				scic_sds_phy_get_starting_substate_machine(this_phy),
-+				SCIC_SDS_PHY_STARTING_SUBSTATE_FINAL
-+				);
++			 * Check for the end of the transfer, are there more bytes remaining
++			 * for this data transfer */
++			if (
++				(status == SCI_SUCCESS)
++				&& (this_request->type.pio.pio_transfer_bytes == 0)
++				) {
++				if ((this_request->type.pio.ending_status & ATA_STATUS_REG_BSY_BIT) == 0) {
++					scic_sds_request_set_status(
++						&this_request->parent,
++						SCU_TASK_DONE_CHECK_RESPONSE,
++						SCI_FAILURE_IO_RESPONSE_VALID
++						);
++
++					sci_base_state_machine_change_state(
++						&this_request->parent.parent.state_machine,
++						SCI_BASE_REQUEST_STATE_COMPLETED
++						);
++				} else {
++					sci_base_state_machine_change_state(
++						&this_request->parent.started_substate_machine,
++						SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE
++						);
++				}
++			}
 +		} else {
-+			/* We got the IAF we can now go to the await spinup semaphore state */
++			dev_err(scic_to_dev(request->owning_controller),
++				"%s: SCIC PIO Request 0x%p received frame %d "
++				"with fis type 0x%02x when expecting a data "
++				"fis.\n",
++				__func__,
++				this_request,
++				frame_index,
++				frame_header->fis_type);
++
++			scic_sds_request_set_status(
++				&this_request->parent,
++				SCU_TASK_DONE_GOOD,
++				SCI_FAILURE_IO_REQUIRES_SCSI_ABORT
++				);
++
 +			sci_base_state_machine_change_state(
-+				scic_sds_phy_get_starting_substate_machine(this_phy),
-+				SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_POWER
++				&this_request->parent.parent.state_machine,
++				SCI_BASE_REQUEST_STATE_COMPLETED
++				);
++
++			/* Frame is decoded return it to the controller */
++			scic_sds_controller_release_frame(
++				this_request->parent.owning_controller,
++				frame_index
 +				);
 +		}
-+
-+		result = SCI_SUCCESS;
 +	} else
-+		dev_warn(sciphy_to_dev(this_phy),
-+			"%s: PHY starting substate machine received "
-+			"unexpected frame id %x\n",
-+			__func__,
-+			frame_index);
++		dev_err(scic_to_dev(request->owning_controller),
++			"%s: SCIC IO Request 0x%p could not get frame header "
++			"for frame index %d, status %x\n",
++			__func__, this_request, frame_index, status);
 +
-+	/* Regardless of the result release this frame since we are done with it */
-+	scic_sds_controller_release_frame(
-+		scic_sds_phy_get_controller(this_phy), frame_index
-+		);
++	return status;
++}
 +
-+	return result;
++
++/**
++ *
++ * @this_request:
++ * @completion_code:
++ *
++ * enum sci_status
++ */
++static enum sci_status scic_sds_stp_request_pio_data_out_await_data_transmit_completion_tc_completion_handler(
++
++	struct scic_sds_request *this_request,
++	u32 completion_code)
++{
++	enum sci_status status                     = SCI_SUCCESS;
++	bool all_frames_transferred     = false;
++
++	struct scic_sds_stp_request *this_scic_sds_stp_request = (struct scic_sds_stp_request *)this_request;
++
++	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
++		/* Transmit data */
++		if (this_scic_sds_stp_request->type.pio.pio_transfer_bytes != 0) {
++			status = scic_sds_stp_request_pio_data_out_transmit_data(this_request);
++			if (status == SCI_SUCCESS) {
++				if (this_scic_sds_stp_request->type.pio.pio_transfer_bytes == 0)
++					all_frames_transferred = true;
++			}
++		} else if (this_scic_sds_stp_request->type.pio.pio_transfer_bytes == 0) {
++			/*
++			 * this will happen if the all data is written at the
++			 * first time after the pio setup fis is received
++			 */
++			all_frames_transferred  = true;
++		}
++
++		/* all data transferred. */
++		if (all_frames_transferred) {
++			/*
++			 * Change the state to SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_IN_AWAIT_FRAME_SUBSTATE
++			 * and wait for PIO_SETUP fis / or D2H REg fis. */
++			sci_base_state_machine_change_state(
++				&this_request->started_substate_machine,
++				SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE
++				);
++		}
++		break;
++
++	default:
++		/*
++		 * All other completion status cause the IO to be complete.  If a NAK
++		 * was received, then it is up to the user to retry the request. */
++		scic_sds_request_set_status(
++			this_request,
++			SCU_NORMALIZE_COMPLETION_STATUS(completion_code),
++			SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR
++			);
++
++		sci_base_state_machine_change_state(
++			&this_request->parent.state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED
++			);
++		break;
++	}
++
++	return status;
 +}
 +
 +/**
 + *
-+ * @phy: This is struct scic_sds_phy object which is being requested to decode the
-+ *    frame data.
-+ * @frame_index: This is the index of the unsolicited frame which was received
-+ *    for this phy.
++ * @request: This is the request which is receiving the event.
++ * @event_code: This is the event code that the request on which the request is
++ *    expected to take action.
 + *
-+ * This method decodes the unsolicited frame when the struct scic_sds_phy is in the
-+ * SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF. - Get the UF Header - If
-+ * the UF is an SIGNATURE FIS - Copy IAF data to local phy object SIGNATURE FIS
-+ * data buffer. - else - log warning message of unexpected unsolicted frame -
-+ * release frame buffer enum sci_status SCI_SUCCESS Must decode the SIGNATURE FIS
-+ * data
++ * This method will handle any link layer events while waiting for the data
++ * frame. enum sci_status SCI_SUCCESS SCI_FAILURE
 + */
-+static enum sci_status scic_sds_phy_starting_substate_await_sig_fis_frame_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 frame_index)
++static enum sci_status scic_sds_stp_request_pio_data_in_await_data_event_handler(
++	struct scic_sds_request *request,
++	u32 event_code)
 +{
-+	enum sci_status result;
-+	u32 *frame_words;
-+	struct sata_fis_header *fis_frame_header;
-+	u32 *fis_frame_data;
++	enum sci_status status;
 +
-+	result = scic_sds_unsolicited_frame_control_get_header(
-+		&(scic_sds_phy_get_controller(this_phy)->uf_control),
-+		frame_index,
-+		(void **)&frame_words);
++	switch (scu_get_event_specifier(event_code)) {
++	case SCU_TASK_DONE_CRC_ERR << SCU_EVENT_SPECIFIC_CODE_SHIFT:
++		/*
++		 * We are waiting for data and the SCU has R_ERR the data frame.
++		 * Go back to waiting for the D2H Register FIS */
++		sci_base_state_machine_change_state(
++			&request->started_substate_machine,
++			SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE
++			);
 +
-+	if (result != SCI_SUCCESS) {
-+		return result;
++		status = SCI_SUCCESS;
++		break;
++
++	default:
++		dev_err(scic_to_dev(request->owning_controller),
++			"%s: SCIC PIO Request 0x%p received unexpected "
++			"event 0x%08x\n",
++			__func__, request, event_code);
++
++		/* / @todo Should we fail the PIO request when we get an unexpected event? */
++		status = SCI_FAILURE;
++		break;
 +	}
 +
-+	fis_frame_header = (struct sata_fis_header *)frame_words;
++	return status;
++}
++
++/* --------------------------------------------------------------------------- */
++
++const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_pio_substate_handler_table[] = {
++	[SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_H2D_COMPLETION_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_stp_request_pio_await_h2d_completion_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_request_default_frame_handler
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_stp_request_pio_await_frame_frame_handler
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_IN_AWAIT_DATA_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
++		.event_handler           = scic_sds_stp_request_pio_data_in_await_data_event_handler,
++		.frame_handler           = scic_sds_stp_request_pio_data_in_await_data_frame_handler
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_OUT_TRANSMIT_DATA_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_stp_request_pio_data_out_await_data_transmit_completion_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_request_default_frame_handler,
++	}
++};
++
++static void scic_sds_stp_request_started_pio_await_h2d_completion_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_pio_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_H2D_COMPLETION_SUBSTATE
++		);
++
++	scic_sds_remote_device_set_working_request(
++		this_request->target_device, this_request);
++}
++
++static void scic_sds_stp_request_started_pio_await_frame_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_pio_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE
++		);
++}
++
++static void scic_sds_stp_request_started_pio_data_in_await_data_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_pio_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_IN_AWAIT_DATA_SUBSTATE
++		);
++}
++
++static void scic_sds_stp_request_started_pio_data_out_transmit_data_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_pio_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_OUT_TRANSMIT_DATA_SUBSTATE
++		);
++}
++
++/* --------------------------------------------------------------------------- */
++
++const struct sci_base_state scic_sds_stp_request_started_pio_substate_table[] = {
++	[SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_H2D_COMPLETION_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_pio_await_h2d_completion_enter,
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_PIO_AWAIT_FRAME_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_pio_await_frame_enter,
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_IN_AWAIT_DATA_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_pio_data_in_await_data_enter,
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_PIO_DATA_OUT_TRANSMIT_DATA_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_pio_data_out_transmit_data_enter,
++	}
++};
++
++static void scic_sds_stp_request_udma_complete_request(
++	struct scic_sds_request *this_request,
++	u32 scu_status,
++	enum sci_status sci_status)
++{
++	scic_sds_request_set_status(
++		this_request, scu_status, sci_status
++		);
++
++	sci_base_state_machine_change_state(
++		&this_request->parent.state_machine,
++		SCI_BASE_REQUEST_STATE_COMPLETED
++		);
++}
++
++/**
++ *
++ * @this_request:
++ * @frame_index:
++ *
++ * enum sci_status
++ */
++static enum sci_status scic_sds_stp_request_udma_general_frame_handler(
++	struct scic_sds_request *this_request,
++	u32 frame_index)
++{
++	enum sci_status status;
++	struct sata_fis_header *frame_header;
++	u32 *frame_buffer;
++
++	status = scic_sds_unsolicited_frame_control_get_header(
++		&this_request->owning_controller->uf_control,
++		frame_index,
++		(void **)&frame_header
++		);
 +
 +	if (
-+		(fis_frame_header->fis_type == SATA_FIS_TYPE_REGD2H)
-+		&& !(fis_frame_header->status & ATA_STATUS_REG_BSY_BIT)
++		(status == SCI_SUCCESS)
++		&& (frame_header->fis_type == SATA_FIS_TYPE_REGD2H)
 +		) {
 +		scic_sds_unsolicited_frame_control_get_buffer(
-+			&(scic_sds_phy_get_controller(this_phy)->uf_control),
++			&this_request->owning_controller->uf_control,
 +			frame_index,
-+			(void **)&fis_frame_data
++			(void **)&frame_buffer
 +			);
 +
 +		scic_sds_controller_copy_sata_response(
-+			&this_phy->phy_type.sata.signature_fis_buffer,
-+			frame_words,
-+			fis_frame_data
++			&((struct scic_sds_stp_request *)this_request)->d2h_reg_fis,
++			(u32 *)frame_header,
++			frame_buffer
 +			);
++	}
 +
-+		/* We got the IAF we can now go to the await spinup semaphore state */
-+		sci_base_state_machine_change_state(
-+			scic_sds_phy_get_starting_substate_machine(this_phy),
-+			SCIC_SDS_PHY_STARTING_SUBSTATE_FINAL
-+			);
-+
-+		result = SCI_SUCCESS;
-+	} else
-+		dev_warn(sciphy_to_dev(this_phy),
-+			 "%s: PHY starting substate machine received "
-+			 "unexpected frame id %x\n",
-+			 __func__,
-+			 frame_index);
-+
-+	/* Regardless of the result release this frame since we are done with it */
 +	scic_sds_controller_release_frame(
-+		scic_sds_phy_get_controller(this_phy), frame_index
-+		);
++		this_request->owning_controller, frame_index);
 +
-+	return result;
-+}
-+
-+/*
-+ * *****************************************************************************
-+ * * SCIC SDS PHY POWER_HANDLERS
-+ * ***************************************************************************** */
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This method is called by the struct scic_sds_controller when the phy object is
-+ * granted power. - The notify enable spinups are turned on for this phy object
-+ * - The phy state machine is transitioned to the
-+ * SCIC_SDS_PHY_STARTING_SUBSTATE_FINAL. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_phy_starting_substate_await_sas_power_consume_power_handler(
-+	struct scic_sds_phy *this_phy)
-+{
-+	u32 enable_spinup;
-+
-+	enable_spinup = SCU_SAS_ENSPINUP_READ(this_phy);
-+	enable_spinup |= SCU_ENSPINUP_GEN_BIT(ENABLE);
-+	SCU_SAS_ENSPINUP_WRITE(this_phy, enable_spinup);
-+
-+	/* Change state to the final state this substate machine has run to completion */
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_starting_substate_machine(this_phy),
-+		SCIC_SDS_PHY_STARTING_SUBSTATE_FINAL
-+		);
-+
-+	return SCI_SUCCESS;
++	return status;
 +}
 +
 +/**
++ * This method process TC completions while in the state where we are waiting
++ *    for TC completions.
++ * @this_request:
++ * @completion_code:
 + *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This method is called by the struct scic_sds_controller when the phy object is
-+ * granted power. - The phy state machine is transitioned to the
-+ * SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_PHY_EN. enum sci_status SCI_SUCCESS
++ * enum sci_status
 + */
-+static enum sci_status scic_sds_phy_starting_substate_await_sata_power_consume_power_handler(
-+	struct scic_sds_phy *this_phy)
++static enum sci_status scic_sds_stp_request_udma_await_tc_completion_tc_completion_handler(
++	struct scic_sds_request *request,
++	u32 completion_code)
 +{
-+	u32 scu_sas_pcfg_value;
++	enum sci_status status = SCI_SUCCESS;
++	struct scic_sds_stp_request *this_request = (struct scic_sds_stp_request *)request;
 +
-+	/* Release the spinup hold state and reset the OOB state machine */
-+	scu_sas_pcfg_value = SCU_SAS_PCFG_READ(this_phy);
-+	scu_sas_pcfg_value &=
-+		~(SCU_SAS_PCFG_GEN_BIT(SATA_SPINUP_HOLD) | SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE));
-+	scu_sas_pcfg_value |= SCU_SAS_PCFG_GEN_BIT(OOB_RESET);
-+	SCU_SAS_PCFG_WRITE(this_phy, scu_sas_pcfg_value);
-+
-+	/* Now restart the OOB operation */
-+	scu_sas_pcfg_value &= ~SCU_SAS_PCFG_GEN_BIT(OOB_RESET);
-+	scu_sas_pcfg_value |= SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE);
-+	SCU_SAS_PCFG_WRITE(this_phy, scu_sas_pcfg_value);
-+
-+	/* Change state to the final state this substate machine has run to completion */
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_starting_substate_machine(this_phy),
-+		SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_PHY_EN
-+		);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+const struct scic_sds_phy_state_handler scic_sds_phy_starting_substate_handler_table[] = {
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_INITIAL] = {
-+		.parent.start_handler    = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler     = scic_sds_phy_starting_substate_general_stop_handler,
-+		.parent.reset_handler    = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler           = scic_sds_phy_default_frame_handler,
-+		.event_handler           = scic_sds_phy_default_event_handler,
-+		.consume_power_handler   = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_OSSP_EN] = {
-+		.parent.start_handler	 = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler	 = scic_sds_phy_starting_substate_general_stop_handler,
-+		.parent.reset_handler	 = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_starting_substate_await_ossp_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_SPEED_EN] = {
-+		.parent.start_handler	 = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler	 = scic_sds_phy_starting_substate_general_stop_handler,
-+		.parent.reset_handler	 = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_starting_substate_await_sas_phy_speed_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF] = {
-+		.parent.start_handler	 = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler	 = scic_sds_phy_default_stop_handler,
-+		.parent.reset_handler	 = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_starting_substate_await_iaf_uf_frame_handler,
-+		.event_handler		 = scic_sds_phy_starting_substate_await_iaf_uf_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_POWER] = {
-+		.parent.start_handler	 = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler	 = scic_sds_phy_starting_substate_general_stop_handler,
-+		.parent.reset_handler	 = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_starting_substate_await_sas_power_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_starting_substate_await_sas_power_consume_power_handler
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_POWER] = {
-+		.parent.start_handler	 = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler	 = scic_sds_phy_starting_substate_general_stop_handler,
-+		.parent.reset_handler	 = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_starting_substate_await_sata_power_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_starting_substate_await_sata_power_consume_power_handler
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_PHY_EN] = {
-+		.parent.start_handler	 = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler	 = scic_sds_phy_starting_substate_general_stop_handler,
-+		.parent.reset_handler	 = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_starting_substate_await_sata_phy_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN] = {
-+		.parent.start_handler	 = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler	 = scic_sds_phy_starting_substate_general_stop_handler,
-+		.parent.reset_handler	 = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_starting_substate_await_sata_speed_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF] = {
-+		.parent.start_handler	 = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler	 = scic_sds_phy_starting_substate_general_stop_handler,
-+		.parent.reset_handler	 = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_starting_substate_await_sig_fis_frame_handler,
-+		.event_handler		 = scic_sds_phy_starting_substate_await_sig_fis_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_FINAL] = {
-+		.parent.start_handler	 = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler	 = scic_sds_phy_starting_substate_general_stop_handler,
-+		.parent.reset_handler	 = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_default_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	}
-+};
-+
-+/**
-+ * scic_sds_phy_set_starting_substate_handlers() -
-+ *
-+ * This macro sets the starting substate handlers by state_id
-+ */
-+#define scic_sds_phy_set_starting_substate_handlers(phy, state_id) \
-+	scic_sds_phy_set_state_handlers(\
-+		(phy), \
-+		&scic_sds_phy_starting_substate_handler_table[(state_id)] \
-+		)
-+
-+/*
-+ * ****************************************************************************
-+ * *  PHY STARTING SUBSTATE METHODS
-+ * **************************************************************************** */
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_INITIAL. - The initial state
-+ * handlers are put in place for the struct scic_sds_phy object. - The state is
-+ * changed to the wait phy type event notification. none
-+ */
-+static void scic_sds_phy_starting_initial_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_INITIAL);
-+
-+	/* This is just an temporary state go off to the starting state */
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_starting_substate_machine(this_phy),
-+		SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_OSSP_EN
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_PHY_TYPE_EN. - Set the
-+ * struct scic_sds_phy object state handlers for this state. none
-+ */
-+static void scic_sds_phy_starting_await_ossp_en_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_OSSP_EN
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SPEED_EN. - Set the
-+ * struct scic_sds_phy object state handlers for this state. none
-+ */
-+static void scic_sds_phy_starting_await_sas_speed_en_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_SPEED_EN
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF. - Set the
-+ * struct scic_sds_phy object state handlers for this state. none
-+ */
-+static void scic_sds_phy_starting_await_iaf_uf_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_POWER. - Set the
-+ * struct scic_sds_phy object state handlers for this state. - Add this phy object to
-+ * the power control queue none
-+ */
-+static void scic_sds_phy_starting_await_sas_power_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_POWER
-+		);
-+
-+	scic_sds_controller_power_control_queue_insert(
-+		scic_sds_phy_get_controller(this_phy),
-+		this_phy
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on exiting
-+ * the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_POWER. - Remove the
-+ * struct scic_sds_phy object from the power control queue. none
-+ */
-+static void scic_sds_phy_starting_await_sas_power_substate_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_controller_power_control_queue_remove(
-+		scic_sds_phy_get_controller(this_phy), this_phy
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_POWER. - Set the
-+ * struct scic_sds_phy object state handlers for this state. - Add this phy object to
-+ * the power control queue none
-+ */
-+static void scic_sds_phy_starting_await_sata_power_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_POWER
-+		);
-+
-+	scic_sds_controller_power_control_queue_insert(
-+		scic_sds_phy_get_controller(this_phy),
-+		this_phy
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on exiting
-+ * the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_POWER. - Remove the
-+ * struct scic_sds_phy object from the power control queue. none
-+ */
-+static void scic_sds_phy_starting_await_sata_power_substate_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_controller_power_control_queue_remove(
-+		scic_sds_phy_get_controller(this_phy),
-+		this_phy
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_PHY_EN. - Set the
-+ * struct scic_sds_phy object state handlers for this state. none
-+ */
-+static void scic_sds_phy_starting_await_sata_phy_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_PHY_EN
-+		);
-+
-+	isci_event_timer_start(
-+		scic_sds_phy_get_controller(this_phy),
-+		this_phy->sata_timeout_timer,
-+		SCIC_SDS_SATA_LINK_TRAINING_TIMEOUT
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on exiting
-+ * the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN. - stop the timer
-+ * that was started on entry to await sata phy event notification none
-+ */
-+static void scic_sds_phy_starting_await_sata_phy_substate_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	isci_event_timer_stop(
-+		scic_sds_phy_get_controller(this_phy),
-+		this_phy->sata_timeout_timer
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN. - Set the
-+ * struct scic_sds_phy object state handlers for this state. none
-+ */
-+static void scic_sds_phy_starting_await_sata_speed_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN
-+		);
-+
-+	isci_event_timer_start(
-+		scic_sds_phy_get_controller(this_phy),
-+		this_phy->sata_timeout_timer,
-+		SCIC_SDS_SATA_LINK_TRAINING_TIMEOUT
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on exiting
-+ * the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN. - stop the timer
-+ * that was started on entry to await sata phy event notification none
-+ */
-+static void scic_sds_phy_starting_await_sata_speed_substate_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	isci_event_timer_stop(
-+		scic_sds_phy_get_controller(this_phy),
-+		this_phy->sata_timeout_timer
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF. - Set the
-+ * struct scic_sds_phy object state handlers for this state. - Start the SIGNATURE FIS
-+ * timeout timer none
-+ */
-+static void scic_sds_phy_starting_await_sig_fis_uf_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	bool continue_to_ready_state;
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF
-+		);
-+
-+	continue_to_ready_state = scic_sds_port_link_detected(
-+		this_phy->owning_port,
-+		this_phy
-+		);
-+
-+	if (continue_to_ready_state) {
-+		/*
-+		 * Clear the PE suspend condition so we can actually receive SIG FIS
-+		 * The hardware will not respond to the XRDY until the PE suspend
-+		 * condition is cleared. */
-+		scic_sds_phy_resume(this_phy);
-+
-+		isci_event_timer_start(
-+			scic_sds_phy_get_controller(this_phy),
-+			this_phy->sata_timeout_timer,
-+			SCIC_SDS_SIGNATURE_FIS_TIMEOUT
++	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
++		scic_sds_stp_request_udma_complete_request(
++			&this_request->parent, SCU_TASK_DONE_GOOD, SCI_SUCCESS
 +			);
-+	} else {
-+		this_phy->is_in_link_training = false;
-+	}
-+}
++		break;
 +
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on exiting
-+ * the SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF. - Stop the SIGNATURE
-+ * FIS timeout timer. none
-+ */
-+static void scic_sds_phy_starting_await_sig_fis_uf_substate_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_UNEXP_FIS):
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_REG_ERR):
++		/*
++		 * We must check ther response buffer to see if the D2H Register FIS was
++		 * received before we got the TC completion. */
++		if (this_request->d2h_reg_fis.fis_type == SATA_FIS_TYPE_REGD2H) {
++			scic_sds_remote_device_suspend(
++				this_request->parent.target_device,
++				SCU_EVENT_SPECIFIC(SCU_NORMALIZE_COMPLETION_STATUS(completion_code))
++				);
 +
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	isci_event_timer_stop(
-+		scic_sds_phy_get_controller(this_phy),
-+		this_phy->sata_timeout_timer
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCIC_SDS_PHY_STARTING_SUBSTATE_FINAL. - Set the struct scic_sds_phy
-+ * object state handlers for this state. - Change base state machine to the
-+ * ready state. none
-+ */
-+static void scic_sds_phy_starting_final_substate_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_starting_substate_handlers(
-+		this_phy, SCIC_SDS_PHY_STARTING_SUBSTATE_FINAL
-+		);
++			scic_sds_stp_request_udma_complete_request(
++				&this_request->parent,
++				SCU_TASK_DONE_CHECK_RESPONSE,
++				SCI_FAILURE_IO_RESPONSE_VALID
++				);
++		} else {
++			/*
++			 * If we have an error completion status for the TC then we can expect a
++			 * D2H register FIS from the device so we must change state to wait for it */
++			sci_base_state_machine_change_state(
++				&this_request->parent.started_substate_machine,
++				SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_D2H_REG_FIS_SUBSTATE
++				);
++		}
++		break;
 +
 +	/*
-+	 * State machine has run to completion so exit out and change
-+	 * the base state machine to the ready state */
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_base_state_machine(this_phy),
-+		SCI_BASE_PHY_STATE_READY);
-+}
-+
-+/* --------------------------------------------------------------------------- */
-+
-+const struct sci_base_state scic_sds_phy_starting_substates[] = {
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_INITIAL] = {
-+		.enter_state = scic_sds_phy_starting_initial_substate_enter,
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_OSSP_EN] = {
-+		.enter_state = scic_sds_phy_starting_await_ossp_en_substate_enter,
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_SPEED_EN] = {
-+		.enter_state = scic_sds_phy_starting_await_sas_speed_en_substate_enter,
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF] = {
-+		.enter_state = scic_sds_phy_starting_await_iaf_uf_substate_enter,
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_POWER] = {
-+		.enter_state = scic_sds_phy_starting_await_sas_power_substate_enter,
-+		.exit_state  = scic_sds_phy_starting_await_sas_power_substate_exit,
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_POWER] = {
-+		.enter_state = scic_sds_phy_starting_await_sata_power_substate_enter,
-+		.exit_state  = scic_sds_phy_starting_await_sata_power_substate_exit
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_PHY_EN] = {
-+		.enter_state = scic_sds_phy_starting_await_sata_phy_substate_enter,
-+		.exit_state  = scic_sds_phy_starting_await_sata_phy_substate_exit
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN] = {
-+		.enter_state = scic_sds_phy_starting_await_sata_speed_substate_enter,
-+		.exit_state  = scic_sds_phy_starting_await_sata_speed_substate_exit
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF] = {
-+		.enter_state = scic_sds_phy_starting_await_sig_fis_uf_substate_enter,
-+		.exit_state  = scic_sds_phy_starting_await_sig_fis_uf_substate_exit
-+	},
-+	[SCIC_SDS_PHY_STARTING_SUBSTATE_FINAL] = {
-+		.enter_state = scic_sds_phy_starting_final_substate_enter,
++	 * / @todo Check to see if any of these completion status need to wait for
++	 * /       the device to host register fis. */
++	/* / @todo We can retry the command for SCU_TASK_DONE_CMD_LL_R_ERR - this comes only for B0 */
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_INV_FIS_LEN):
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_MAX_PLD_ERR):
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_LL_R_ERR):
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_CMD_LL_R_ERR):
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_CRC_ERR):
++		scic_sds_remote_device_suspend(
++			this_request->parent.target_device,
++			SCU_EVENT_SPECIFIC(SCU_NORMALIZE_COMPLETION_STATUS(completion_code))
++			);
++	/* Fall through to the default case */
++	default:
++		/* All other completion status cause the IO to be complete. */
++		scic_sds_stp_request_udma_complete_request(
++			&this_request->parent,
++			SCU_NORMALIZE_COMPLETION_STATUS(completion_code),
++			SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR
++			);
++		break;
 +	}
-+};
 +
-+/*
-+ * ***************************************************************************
-+ * *  DEFAULT HANDLERS
-+ * *************************************************************************** */
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This is the default method for phy a start request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_phy_default_start_handler(
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)phy;
-+
-+	dev_warn(sciphy_to_dev(this_phy),
-+		 "%s: SCIC Phy 0x%p requested to start from invalid "
-+		 "state %d\n",
-+		 __func__,
-+		 this_phy,
-+		 sci_base_state_machine_get_state(
-+			 &this_phy->parent.state_machine));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+
++	return status;
 +}
 +
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a
-+ * struct scic_sds_phy object.
-+ *
-+ * This is the default method for phy a stop request.  It will report a warning
-+ * and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_phy_default_stop_handler(struct sci_base_phy *base_phy)
-+{
-+	struct scic_sds_phy *sci_phy;
-+
-+	sci_phy = (struct scic_sds_phy *)base_phy;
-+
-+	dev_dbg(sciphy_to_dev(sci_phy),
-+		"%s: SCIC Phy 0x%p requested to stop from invalid state %d\n",
-+		__func__,
-+		sci_phy,
-+		sci_base_state_machine_get_state(
-+			&sci_phy->parent.state_machine));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This is the default method for phy a reset request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_phy_default_reset_handler(
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)phy;
-+
-+	dev_warn(sciphy_to_dev(this_phy),
-+		 "%s: SCIC Phy 0x%p requested to reset from invalid state "
-+		 "%d\n",
-+		 __func__,
-+		 this_phy,
-+		 sci_base_state_machine_get_state(
-+			 &this_phy->parent.state_machine));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This is the default method for phy a destruct request.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_phy_default_destroy_handler(
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)phy;
-+
-+	/* / @todo Implement something for the default */
-+	dev_warn(sciphy_to_dev(this_phy),
-+		 "%s: SCIC Phy 0x%p requested to destroy from invalid "
-+		 "state %d\n",
-+		 __func__,
-+		 this_phy,
-+		 sci_base_state_machine_get_state(
-+			 &this_phy->parent.state_machine));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ * @frame_index: This is the frame index that was received from the SCU
-+ *    hardware.
-+ *
-+ * This is the default method for a phy frame handling request.  It will report
-+ * a warning, release the frame and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_phy_default_frame_handler(
-+	struct scic_sds_phy *this_phy,
++static enum sci_status scic_sds_stp_request_udma_await_d2h_reg_fis_frame_handler(
++	struct scic_sds_request *this_request,
 +	u32 frame_index)
 +{
-+	dev_warn(sciphy_to_dev(this_phy),
-+		 "%s: SCIC Phy 0x%p received unexpected frame data %d "
-+		 "while in state %d\n",
-+		 __func__,
-+		 this_phy,
-+		 frame_index,
-+		 sci_base_state_machine_get_state(
-+			 &this_phy->parent.state_machine));
++	enum sci_status status;
 +
-+	scic_sds_controller_release_frame(
-+		scic_sds_phy_get_controller(this_phy), frame_index);
++	/* Use the general frame handler to copy the resposne data */
++	status = scic_sds_stp_request_udma_general_frame_handler(this_request, frame_index);
 +
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ * @event_code: This is the event code that was received from the SCU hardware.
-+ *
-+ * This is the default method for a phy event handler.  It will report a
-+ * warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_phy_default_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	dev_dbg(sciphy_to_dev(this_phy),
-+		"%s: SCIC Phy 0x%p received unexpected event status %x "
-+		"while in state %d\n",
-+		__func__,
-+		this_phy,
-+		event_code,
-+		sci_base_state_machine_get_state(
-+			&this_phy->parent.state_machine));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This is the default method for a phy consume power handler.  It will report
-+ * a warning and exit. enum sci_status SCI_FAILURE_INVALID_STATE
-+ */
-+enum sci_status scic_sds_phy_default_consume_power_handler(
-+	struct scic_sds_phy *this_phy)
-+{
-+	dev_warn(sciphy_to_dev(this_phy),
-+		 "%s: SCIC Phy 0x%p given unexpected permission to consume "
-+		 "power while in state %d\n",
-+		 __func__,
-+		 this_phy,
-+		 sci_base_state_machine_get_state(
-+			 &this_phy->parent.state_machine));
-+
-+	return SCI_FAILURE_INVALID_STATE;
-+}
-+
-+/*
-+ * ******************************************************************************
-+ * * PHY STOPPED STATE HANDLERS
-+ * ****************************************************************************** */
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This method takes the struct scic_sds_phy from a stopped state and attempts to
-+ * start it. - The phy state machine is transitioned to the
-+ * SCI_BASE_PHY_STATE_STARTING. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_phy_stopped_state_start_handler(struct sci_base_phy *phy)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)phy;
-+
-+	/* Create the SIGNATURE FIS Timeout timer for this phy */
-+	this_phy->sata_timeout_timer = isci_event_timer_create(
-+		scic_sds_phy_get_controller(this_phy),
-+		scic_sds_phy_sata_timeout, this_phy);
-+
-+	if (this_phy->sata_timeout_timer != NULL) {
-+		sci_base_state_machine_change_state(
-+			scic_sds_phy_get_base_state_machine(this_phy),
-+			SCI_BASE_PHY_STATE_STARTING);
-+	}
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This method takes the struct scic_sds_phy from a stopped state and destroys it. -
-+ * This function takes no action. Shouldnt this function transition the
-+ * struct sci_base_phy::state_machine to the SCI_BASE_PHY_STATE_FINAL? enum sci_status
-+ * SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_phy_stopped_state_destroy_handler(
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)phy;
-+
-+	/* @todo what do we actually need to do here? */
-+	return SCI_SUCCESS;
-+}
-+
-+/*
-+ * ******************************************************************************
-+ * * PHY STARTING STATE HANDLERS
-+ * ****************************************************************************** */
-+
-+/* All of these state handlers are mapped to the starting sub-state machine */
-+
-+/*
-+ * ******************************************************************************
-+ * * PHY READY STATE HANDLERS
-+ * ****************************************************************************** */
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This method takes the struct scic_sds_phy from a ready state and attempts to stop
-+ * it. - The phy state machine is transitioned to the
-+ * SCI_BASE_PHY_STATE_STOPPED. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_phy_ready_state_stop_handler(
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)phy;
-+
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_base_state_machine(this_phy),
-+		SCI_BASE_PHY_STATE_STOPPED
-+		);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/**
-+ *
-+ * @phy: This is the struct sci_base_phy object which is cast into a struct scic_sds_phy
-+ *    object.
-+ *
-+ * This method takes the struct scic_sds_phy from a ready state and attempts to reset
-+ * it. - The phy state machine is transitioned to the
-+ * SCI_BASE_PHY_STATE_STARTING. enum sci_status SCI_SUCCESS
-+ */
-+static enum sci_status scic_sds_phy_ready_state_reset_handler(
-+	struct sci_base_phy *phy)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)phy;
-+
-+	sci_base_state_machine_change_state(
-+		scic_sds_phy_get_base_state_machine(this_phy),
-+		SCI_BASE_PHY_STATE_RESETTING
-+		);
-+
-+	return SCI_SUCCESS;
-+}
-+
-+/**
-+ *
-+ * @phy: This is the struct scic_sds_phy object which has received the event.
-+ *
-+ * This method request the struct scic_sds_phy handle the received event.  The only
-+ * event that we are interested in while in the ready state is the link failure
-+ * event. - decoded event is a link failure - transition the struct scic_sds_phy back
-+ * to the SCI_BASE_PHY_STATE_STARTING state. - any other event recived will
-+ * report a warning message enum sci_status SCI_SUCCESS if the event received is a
-+ * link failure SCI_FAILURE_INVALID_STATE for any other event received.
-+ */
-+static enum sci_status scic_sds_phy_ready_state_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	enum sci_status result = SCI_FAILURE;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_LINK_FAILURE:
-+		/* Link failure change state back to the starting state */
-+		sci_base_state_machine_change_state(
-+			scic_sds_phy_get_base_state_machine(this_phy),
-+			SCI_BASE_PHY_STATE_STARTING
++	if (status == SCI_SUCCESS) {
++		scic_sds_stp_request_udma_complete_request(
++			this_request,
++			SCU_TASK_DONE_CHECK_RESPONSE,
++			SCI_FAILURE_IO_RESPONSE_VALID
 +			);
-+
-+		result = SCI_SUCCESS;
-+		break;
-+
-+	case SCU_EVENT_BROADCAST_CHANGE:
-+		/* Broadcast change received. Notify the port. */
-+		if (scic_sds_phy_get_port(this_phy) != NULL)
-+			scic_sds_port_broadcast_change_received(this_phy->owning_port, this_phy);
-+		else
-+			this_phy->bcn_received_while_port_unassigned = true;
-+		break;
-+
-+	default:
-+		dev_warn(sciphy_to_dev(this_phy),
-+			 "%sP SCIC PHY 0x%p ready state machine received "
-+			 "unexpected event_code %x\n",
-+			 __func__,
-+			 this_phy,
-+			 event_code);
-+
-+		result = SCI_FAILURE_INVALID_STATE;
-+		break;
 +	}
 +
-+	return result;
++	return status;
 +}
 +
 +/* --------------------------------------------------------------------------- */
 +
-+/**
-+ *
-+ * @this_phy: This is the struct scic_sds_phy object which is receiving the event.
-+ * @event_code: This is the event code to be processed.
-+ *
-+ * This is the resetting state event handler. enum sci_status
-+ * SCI_FAILURE_INVALID_STATE
-+ */
-+static enum sci_status scic_sds_phy_resetting_state_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code)
-+{
-+	enum sci_status result = SCI_FAILURE;
-+
-+	switch (scu_get_event_code(event_code)) {
-+	case SCU_EVENT_HARD_RESET_TRANSMITTED:
-+		/* Link failure change state back to the starting state */
-+		sci_base_state_machine_change_state(
-+			scic_sds_phy_get_base_state_machine(this_phy),
-+			SCI_BASE_PHY_STATE_STARTING
-+			);
-+
-+		result = SCI_SUCCESS;
-+		break;
-+
-+	default:
-+		dev_warn(sciphy_to_dev(this_phy),
-+			 "%s: SCIC PHY 0x%p resetting state machine received "
-+			 "unexpected event_code %x\n",
-+			 __func__,
-+			 this_phy,
-+			 event_code);
-+
-+		result = SCI_FAILURE_INVALID_STATE;
-+		break;
-+	}
-+
-+	return result;
-+}
-+
-+/* --------------------------------------------------------------------------- */
-+
-+const struct scic_sds_phy_state_handler scic_sds_phy_state_handler_table[] = {
-+	[SCI_BASE_PHY_STATE_INITIAL] = {
-+		.parent.start_handler = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler  = scic_sds_phy_default_stop_handler,
-+		.parent.reset_handler = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_default_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
++const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_udma_substate_handler_table[] = {
++	[SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_TC_COMPLETION_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_stp_request_udma_await_tc_completion_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_stp_request_udma_general_frame_handler,
 +	},
-+	[SCI_BASE_PHY_STATE_STOPPED]  = {
-+		.parent.start_handler = scic_sds_phy_stopped_state_start_handler,
-+		.parent.stop_handler  = scic_sds_phy_default_stop_handler,
-+		.parent.reset_handler = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_stopped_state_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_default_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
++	[SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_D2H_REG_FIS_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_stp_request_udma_await_d2h_reg_fis_frame_handler,
 +	},
-+	[SCI_BASE_PHY_STATE_STARTING] = {
-+		.parent.start_handler = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler  = scic_sds_phy_default_stop_handler,
-+		.parent.reset_handler = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_default_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCI_BASE_PHY_STATE_READY] = {
-+		.parent.start_handler = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler  = scic_sds_phy_ready_state_stop_handler,
-+		.parent.reset_handler = scic_sds_phy_ready_state_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_ready_state_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCI_BASE_PHY_STATE_RESETTING] = {
-+		.parent.start_handler = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler  = scic_sds_phy_default_stop_handler,
-+		.parent.reset_handler = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_resetting_state_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	},
-+	[SCI_BASE_PHY_STATE_FINAL] = {
-+		.parent.start_handler = scic_sds_phy_default_start_handler,
-+		.parent.stop_handler  = scic_sds_phy_default_stop_handler,
-+		.parent.reset_handler = scic_sds_phy_default_reset_handler,
-+		.parent.destruct_handler = scic_sds_phy_default_destroy_handler,
-+		.frame_handler		 = scic_sds_phy_default_frame_handler,
-+		.event_handler		 = scic_sds_phy_default_event_handler,
-+		.consume_power_handler	 = scic_sds_phy_default_consume_power_handler
-+	}
 +};
 +
-+/*
-+ * ****************************************************************************
-+ * *  PHY STATE PRIVATE METHODS
-+ * **************************************************************************** */
-+
-+/**
-+ *
-+ * @this_phy: This is the struct scic_sds_phy object to stop.
-+ *
-+ * This method will stop the struct scic_sds_phy object. This does not reset the
-+ * protocol engine it just suspends it and places it in a state where it will
-+ * not cause the end device to power up. none
-+ */
-+static void scu_link_layer_stop_protocol_engine(
-+	struct scic_sds_phy *this_phy)
++static void scic_sds_stp_request_started_udma_await_tc_completion_enter(
++	struct sci_base_object *object)
 +{
-+	u32 scu_sas_pcfg_value;
-+	u32 enable_spinup_value;
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
 +
-+	/* Suspend the protocol engine and place it in a sata spinup hold state */
-+	scu_sas_pcfg_value  = SCU_SAS_PCFG_READ(this_phy);
-+	scu_sas_pcfg_value |= (
-+		SCU_SAS_PCFG_GEN_BIT(OOB_RESET)
-+		| SCU_SAS_PCFG_GEN_BIT(SUSPEND_PROTOCOL_ENGINE)
-+		| SCU_SAS_PCFG_GEN_BIT(SATA_SPINUP_HOLD)
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_udma_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_TC_COMPLETION_SUBSTATE
 +		);
-+	SCU_SAS_PCFG_WRITE(this_phy, scu_sas_pcfg_value);
-+
-+	/* Disable the notify enable spinup primitives */
-+	enable_spinup_value = SCU_SAS_ENSPINUP_READ(this_phy);
-+	enable_spinup_value &= ~SCU_ENSPINUP_GEN_BIT(ENABLE);
-+	SCU_SAS_ENSPINUP_WRITE(this_phy, enable_spinup_value);
 +}
 +
 +/**
 + *
 + *
-+ * This method will start the OOB/SN state machine for this struct scic_sds_phy object.
++ * This state is entered when there is an TC completion failure.  The hardware
++ * received an unexpected condition while processing the IO request and now
++ * will UF the D2H register FIS to complete the IO.
 + */
-+static void scu_link_layer_start_oob(
-+	struct scic_sds_phy *this_phy)
-+{
-+	u32 scu_sas_pcfg_value;
-+
-+	scu_sas_pcfg_value = SCU_SAS_PCFG_READ(this_phy);
-+	scu_sas_pcfg_value |= SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE);
-+	scu_sas_pcfg_value &=
-+		~(SCU_SAS_PCFG_GEN_BIT(OOB_RESET) | SCU_SAS_PCFG_GEN_BIT(HARD_RESET));
-+
-+	SCU_SAS_PCFG_WRITE(this_phy, scu_sas_pcfg_value);
-+}
-+
-+/**
-+ *
-+ *
-+ * This method will transmit a hard reset request on the specified phy. The SCU
-+ * hardware requires that we reset the OOB state machine and set the hard reset
-+ * bit in the phy configuration register. We then must start OOB over with the
-+ * hard reset bit set.
-+ */
-+static void scu_link_layer_tx_hard_reset(
-+	struct scic_sds_phy *this_phy)
-+{
-+	u32 phy_configuration_value;
-+
-+	/*
-+	 * SAS Phys must wait for the HARD_RESET_TX event notification to transition
-+	 * to the starting state. */
-+	phy_configuration_value = SCU_SAS_PCFG_READ(this_phy);
-+	phy_configuration_value |=
-+		(SCU_SAS_PCFG_GEN_BIT(HARD_RESET) | SCU_SAS_PCFG_GEN_BIT(OOB_RESET));
-+	SCU_SAS_PCFG_WRITE(this_phy, phy_configuration_value);
-+
-+	/* Now take the OOB state machine out of reset */
-+	phy_configuration_value |= SCU_SAS_PCFG_GEN_BIT(OOB_ENABLE);
-+	phy_configuration_value &= ~SCU_SAS_PCFG_GEN_BIT(OOB_RESET);
-+	SCU_SAS_PCFG_WRITE(this_phy, phy_configuration_value);
-+}
-+
-+/*
-+ * ****************************************************************************
-+ * *  PHY BASE STATE METHODS
-+ * **************************************************************************** */
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCI_BASE_PHY_STATE_INITIAL. - This function sets the state
-+ * handlers for the phy object base state machine initial state. none
-+ */
-+static void scic_sds_phy_initial_state_enter(
++static void scic_sds_stp_request_started_udma_await_d2h_reg_fis_enter(
 +	struct sci_base_object *object)
 +{
-+	struct scic_sds_phy *this_phy;
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
 +
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_base_state_handlers(this_phy, SCI_BASE_PHY_STATE_INITIAL);
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_udma_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_D2H_REG_FIS_SUBSTATE
++		);
 +}
++
++/* --------------------------------------------------------------------------- */
++
++const struct sci_base_state scic_sds_stp_request_started_udma_substate_table[] = {
++	[SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_TC_COMPLETION_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_udma_await_tc_completion_enter,
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_D2H_REG_FIS_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_udma_await_d2h_reg_fis_enter,
++	},
++};
 +
 +/**
 + *
-+ * @object: This is the struct sci_base_object which is cast to a
-+ * struct scic_sds_phy object.
++ * @this_request:
++ * @completion_code:
 + *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCI_BASE_PHY_STATE_INITIAL. - This function sets the state
-+ * handlers for the phy object base state machine initial state. - The SCU
-+ * hardware is requested to stop the protocol engine. none
++ * This method processes a TC completion.  The expected TC completion is for
++ * the transmission of the H2D register FIS containing the SATA/STP non-data
++ * request. This method always successfully processes the TC completion.
++ * SCI_SUCCESS This value is always returned.
 + */
-+static void scic_sds_phy_stopped_state_enter(struct sci_base_object *object)
++static enum sci_status scic_sds_stp_request_soft_reset_await_h2d_asserted_tc_completion_handler(
++	struct scic_sds_request *this_request,
++	u32 completion_code)
 +{
-+	struct scic_sds_phy *sci_phy;
-+
-+	sci_phy = (struct scic_sds_phy *)object;
-+
-+	/*
-+	 * @todo We need to get to the controller to place this PE in a
-+	 * reset state
-+	 */
-+
-+	scic_sds_phy_set_base_state_handlers(sci_phy, SCI_BASE_PHY_STATE_STOPPED);
-+
-+	if (sci_phy->sata_timeout_timer != NULL) {
-+		isci_event_timer_destroy(scic_sds_phy_get_controller(sci_phy),
-+					 sci_phy->sata_timeout_timer);
-+
-+		sci_phy->sata_timeout_timer = NULL;
-+	}
-+
-+	scu_link_layer_stop_protocol_engine(sci_phy);
-+
-+	if (sci_phy->parent.state_machine.previous_state_id !=
-+			SCI_BASE_PHY_STATE_INITIAL)
-+		scic_sds_controller_link_down(scic_sds_phy_get_controller(sci_phy),
-+					      scic_sds_phy_get_port(sci_phy),
-+					      sci_phy);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCI_BASE_PHY_STATE_STARTING. - This function sets the state
-+ * handlers for the phy object base state machine starting state. - The SCU
-+ * hardware is requested to start OOB/SN on this protocl engine. - The phy
-+ * starting substate machine is started. - If the previous state was the ready
-+ * state then the struct scic_sds_controller is informed that the phy has gone link
-+ * down. none
-+ */
-+static void scic_sds_phy_starting_state_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_base_state_handlers(this_phy, SCI_BASE_PHY_STATE_STARTING);
-+
-+	scu_link_layer_stop_protocol_engine(this_phy);
-+	scu_link_layer_start_oob(this_phy);
-+
-+	/* We don't know what kind of phy we are going to be just yet */
-+	this_phy->protocol = SCIC_SDS_PHY_PROTOCOL_UNKNOWN;
-+	this_phy->bcn_received_while_port_unassigned = false;
-+
-+	/* Change over to the starting substate machine to continue */
-+	sci_base_state_machine_start(&this_phy->starting_substate_machine);
-+
-+	if (this_phy->parent.state_machine.previous_state_id
-+	    == SCI_BASE_PHY_STATE_READY) {
-+		scic_sds_controller_link_down(
-+			scic_sds_phy_get_controller(this_phy),
-+			scic_sds_phy_get_port(this_phy),
-+			this_phy
++	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
++		scic_sds_request_set_status(
++			this_request, SCU_TASK_DONE_GOOD, SCI_SUCCESS
 +			);
-+	}
-+}
 +
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCI_BASE_PHY_STATE_READY. - This function sets the state
-+ * handlers for the phy object base state machine ready state. - The SCU
-+ * hardware protocol engine is resumed. - The struct scic_sds_controller is informed
-+ * that the phy object has gone link up. none
-+ */
-+static void scic_sds_phy_ready_state_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
++		sci_base_state_machine_change_state(
++			&this_request->started_substate_machine,
++			SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_DIAGNOSTIC_COMPLETION_SUBSTATE
++			);
++		break;
 +
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_base_state_handlers(this_phy, SCI_BASE_PHY_STATE_READY);
-+
-+	scic_sds_controller_link_up(
-+		scic_sds_phy_get_controller(this_phy),
-+		scic_sds_phy_get_port(this_phy),
-+		this_phy
-+		);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on exiting
-+ * the SCI_BASE_PHY_STATE_INITIAL. This function suspends the SCU hardware
-+ * protocol engine represented by this struct scic_sds_phy object. none
-+ */
-+static void scic_sds_phy_ready_state_exit(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_suspend(this_phy);
-+}
-+
-+/**
-+ *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
-+ *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCI_BASE_PHY_STATE_RESETTING. - This function sets the state
-+ * handlers for the phy object base state machine resetting state. none
-+ */
-+static void scic_sds_phy_resetting_state_enter(
-+	struct sci_base_object *object)
-+{
-+	struct scic_sds_phy *this_phy;
-+
-+	this_phy = (struct scic_sds_phy *)object;
-+
-+	scic_sds_phy_set_base_state_handlers(this_phy, SCI_BASE_PHY_STATE_RESETTING);
-+
-+	/*
-+	 * The phy is being reset, therefore deactivate it from the port.
-+	 * In the resetting state we don't notify the user regarding
-+	 * link up and link down notifications. */
-+	scic_sds_port_deactivate_phy(this_phy->owning_port, this_phy, false);
-+
-+	if (this_phy->protocol == SCIC_SDS_PHY_PROTOCOL_SAS) {
-+		scu_link_layer_tx_hard_reset(this_phy);
-+	} else {
++	default:
 +		/*
-+		 * The SCU does not need to have a descrete reset state so just go back to
-+		 * the starting state. */
-+		sci_base_state_machine_change_state(
-+			&this_phy->parent.state_machine,
-+			SCI_BASE_PHY_STATE_STARTING
++		 * All other completion status cause the IO to be complete.  If a NAK
++		 * was received, then it is up to the user to retry the request. */
++		scic_sds_request_set_status(
++			this_request,
++			SCU_NORMALIZE_COMPLETION_STATUS(completion_code),
++			SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR
 +			);
++
++		sci_base_state_machine_change_state(
++			&this_request->parent.state_machine, SCI_BASE_REQUEST_STATE_COMPLETED
++			);
++		break;
 +	}
++
++	return SCI_SUCCESS;
 +}
 +
 +/**
 + *
-+ * @object: This is the struct sci_base_object which is cast to a struct scic_sds_phy object.
++ * @this_request:
++ * @completion_code:
 + *
-+ * This method will perform the actions required by the struct scic_sds_phy on
-+ * entering the SCI_BASE_PHY_STATE_FINAL. - This function sets the state
-+ * handlers for the phy object base state machine final state. none
++ * This method processes a TC completion.  The expected TC completion is for
++ * the transmission of the H2D register FIS containing the SATA/STP non-data
++ * request. This method always successfully processes the TC completion.
++ * SCI_SUCCESS This value is always returned.
 + */
-+static void scic_sds_phy_final_state_enter(
-+	struct sci_base_object *object)
++static enum sci_status scic_sds_stp_request_soft_reset_await_h2d_diagnostic_tc_completion_handler(
++	struct scic_sds_request *this_request,
++	u32 completion_code)
 +{
-+	struct scic_sds_phy *this_phy;
++	switch (SCU_GET_COMPLETION_TL_STATUS(completion_code)) {
++	case SCU_MAKE_COMPLETION_STATUS(SCU_TASK_DONE_GOOD):
++		scic_sds_request_set_status(
++			this_request, SCU_TASK_DONE_GOOD, SCI_SUCCESS
++			);
 +
-+	this_phy = (struct scic_sds_phy *)object;
++		sci_base_state_machine_change_state(
++			&this_request->started_substate_machine,
++			SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_D2H_RESPONSE_FRAME_SUBSTATE
++			);
++		break;
 +
-+	scic_sds_phy_set_base_state_handlers(this_phy, SCI_BASE_PHY_STATE_FINAL);
++	default:
++		/*
++		 * All other completion status cause the IO to be complete.  If a NAK
++		 * was received, then it is up to the user to retry the request. */
++		scic_sds_request_set_status(
++			this_request,
++			SCU_NORMALIZE_COMPLETION_STATUS(completion_code),
++			SCI_FAILURE_CONTROLLER_SPECIFIC_IO_ERR
++			);
 +
-+	/* Nothing to do here */
++		sci_base_state_machine_change_state(
++			&this_request->parent.state_machine, SCI_BASE_REQUEST_STATE_COMPLETED
++			);
++		break;
++	}
++
++	return SCI_SUCCESS;
++}
++
++/**
++ *
++ * @request: This parameter specifies the request for which a frame has been
++ *    received.
++ * @frame_index: This parameter specifies the index of the frame that has been
++ *    received.
++ *
++ * This method processes frames received from the target while waiting for a
++ * device to host register FIS.  If a non-register FIS is received during this
++ * time, it is treated as a protocol violation from an IO perspective. Indicate
++ * if the received frame was processed successfully.
++ */
++static enum sci_status scic_sds_stp_request_soft_reset_await_d2h_frame_handler(
++	struct scic_sds_request *request,
++	u32 frame_index)
++{
++	enum sci_status status;
++	struct sata_fis_header *frame_header;
++	u32 *frame_buffer;
++	struct scic_sds_stp_request *this_request = (struct scic_sds_stp_request *)request;
++
++	status = scic_sds_unsolicited_frame_control_get_header(
++		&(this_request->parent.owning_controller->uf_control),
++		frame_index,
++		(void **)&frame_header
++		);
++
++	if (status == SCI_SUCCESS) {
++		switch (frame_header->fis_type) {
++		case SATA_FIS_TYPE_REGD2H:
++			scic_sds_unsolicited_frame_control_get_buffer(
++				&(this_request->parent.owning_controller->uf_control),
++				frame_index,
++				(void **)&frame_buffer
++				);
++
++			scic_sds_controller_copy_sata_response(
++				&this_request->d2h_reg_fis, (u32 *)frame_header, frame_buffer
++				);
++
++			/* The command has completed with error */
++			scic_sds_request_set_status(
++				&this_request->parent,
++				SCU_TASK_DONE_CHECK_RESPONSE,
++				SCI_FAILURE_IO_RESPONSE_VALID
++				);
++			break;
++
++		default:
++			dev_warn(scic_to_dev(request->owning_controller),
++				 "%s: IO Request:0x%p Frame Id:%d protocol "
++				 "violation occurred\n",
++				 __func__,
++				 this_request,
++				 frame_index);
++
++			scic_sds_request_set_status(
++				&this_request->parent,
++				SCU_TASK_DONE_UNEXP_FIS,
++				SCI_FAILURE_PROTOCOL_VIOLATION
++				);
++			break;
++		}
++
++		sci_base_state_machine_change_state(
++			&this_request->parent.parent.state_machine,
++			SCI_BASE_REQUEST_STATE_COMPLETED
++			);
++
++		/* Frame has been decoded return it to the controller */
++		scic_sds_controller_release_frame(
++			this_request->parent.owning_controller, frame_index
++			);
++	} else
++		dev_err(scic_to_dev(request->owning_controller),
++			"%s: SCIC IO Request 0x%p could not get frame header "
++			"for frame index %d, status %x\n",
++			__func__, this_request, frame_index, status);
++
++	return status;
 +}
 +
 +/* --------------------------------------------------------------------------- */
 +
-+const struct sci_base_state scic_sds_phy_state_table[] = {
-+	[SCI_BASE_PHY_STATE_INITIAL] = {
-+		.enter_state = scic_sds_phy_initial_state_enter,
++const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_soft_reset_substate_handler_table[] = {
++	[SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_ASSERTED_COMPLETION_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_stp_request_soft_reset_await_h2d_asserted_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_request_default_frame_handler,
 +	},
-+	[SCI_BASE_PHY_STATE_STOPPED] = {
-+		.enter_state = scic_sds_phy_stopped_state_enter,
++	[SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_DIAGNOSTIC_COMPLETION_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_stp_request_soft_reset_await_h2d_diagnostic_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_request_default_frame_handler,
 +	},
-+	[SCI_BASE_PHY_STATE_STARTING] = {
-+		.enter_state = scic_sds_phy_starting_state_enter,
-+	},
-+	[SCI_BASE_PHY_STATE_READY] = {
-+		.enter_state = scic_sds_phy_ready_state_enter,
-+		.exit_state = scic_sds_phy_ready_state_exit,
-+	},
-+	[SCI_BASE_PHY_STATE_RESETTING] = {
-+		.enter_state = scic_sds_phy_resetting_state_enter,
-+	},
-+	[SCI_BASE_PHY_STATE_FINAL] = {
-+		.enter_state = scic_sds_phy_final_state_enter,
++	[SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_D2H_RESPONSE_FRAME_SUBSTATE] = {
++		.parent.start_handler    = scic_sds_request_default_start_handler,
++		.parent.abort_handler    = scic_sds_request_started_state_abort_handler,
++		.parent.complete_handler = scic_sds_request_default_complete_handler,
++		.parent.destruct_handler = scic_sds_request_default_destruct_handler,
++		.tc_completion_handler   = scic_sds_request_default_tc_completion_handler,
++		.event_handler           = scic_sds_request_default_event_handler,
++		.frame_handler           = scic_sds_stp_request_soft_reset_await_d2h_frame_handler,
 +	},
 +};
 +
-diff --git a/drivers/scsi/isci/core/scic_sds_phy.h b/drivers/scsi/isci/core/scic_sds_phy.h
++static void scic_sds_stp_request_started_soft_reset_await_h2d_asserted_completion_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_soft_reset_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_ASSERTED_COMPLETION_SUBSTATE
++		);
++
++	scic_sds_remote_device_set_working_request(
++		this_request->target_device, this_request
++		);
++}
++
++static void scic_sds_stp_request_started_soft_reset_await_h2d_diagnostic_completion_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++	sci_base_controller_request_handler_t continue_io;
++	struct scu_task_context *task_context;
++	struct sata_fis_reg_h2d *h2d_fis;
++	struct scic_sds_controller *scic;
++	enum sci_status status;
++	u32 state;
++
++	/* Clear the SRST bit */
++	h2d_fis = scic_stp_io_request_get_h2d_reg_address(this_request);
++	h2d_fis->control = 0;
++
++	/* Clear the TC control bit */
++	task_context = scic_sds_controller_get_task_context_buffer(
++		this_request->owning_controller, this_request->io_tag);
++	task_context->control_frame = 0;
++
++	scic = this_request->owning_controller;
++	state = scic->parent.state_machine.current_state_id;
++	continue_io = scic_sds_controller_state_handler_table[state].base.continue_io;
++
++	status = continue_io(&scic->parent, &this_request->target_device->parent,
++			     &this_request->parent);
++
++	if (status == SCI_SUCCESS) {
++		SET_STATE_HANDLER(
++			this_request,
++			scic_sds_stp_request_started_soft_reset_substate_handler_table,
++			SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_DIAGNOSTIC_COMPLETION_SUBSTATE
++			);
++	}
++}
++
++static void scic_sds_stp_request_started_soft_reset_await_d2h_response_enter(
++	struct sci_base_object *object)
++{
++	struct scic_sds_request *this_request = (struct scic_sds_request *)object;
++
++	SET_STATE_HANDLER(
++		this_request,
++		scic_sds_stp_request_started_soft_reset_substate_handler_table,
++		SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_D2H_RESPONSE_FRAME_SUBSTATE
++		);
++}
++
++/* --------------------------------------------------------------------------- */
++
++const struct sci_base_state scic_sds_stp_request_started_soft_reset_substate_table[] = {
++	[SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_ASSERTED_COMPLETION_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_soft_reset_await_h2d_asserted_completion_enter,
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_DIAGNOSTIC_COMPLETION_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_soft_reset_await_h2d_diagnostic_completion_enter,
++	},
++	[SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_D2H_RESPONSE_FRAME_SUBSTATE] = {
++		.enter_state = scic_sds_stp_request_started_soft_reset_await_d2h_response_enter,
++	},
++};
++
+diff --git a/drivers/scsi/isci/core/scic_sds_stp_request.h b/drivers/scsi/isci/core/scic_sds_stp_request.h
 new file mode 100644
-index 0000000..b611e33
+index 0000000..c950bb3
 --- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_phy.h
-@@ -0,0 +1,476 @@
++++ b/drivers/scsi/isci/core/scic_sds_stp_request.h
+@@ -0,0 +1,221 @@
 +/*
 + * This file is provided under a dual BSD/GPLv2 license.  When using or
 + * redistributing this file, you may do so under either license.
@@ -3343,679 +3163,170 @@ index 0000000..b611e33
 + * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#ifndef _SCIC_SDS_PHY_H_
-+#define _SCIC_SDS_PHY_H_
++#ifndef _SCIC_SDS_STP_REQUEST_T_
++#define _SCIC_SDS_STP_REQUEST_T_
 +
-+/**
-+ * This file contains the structures, constants and prototypes for the
-+ *    struct scic_sds_phy object.
-+ *
-+ *
-+ */
-+
++#include <linux/dma-mapping.h>
 +#include "intel_sata.h"
-+#include "intel_sas.h"
-+#include "sci_base_phy.h"
-+#include "scu_registers.h"
-+
-+struct scic_sds_port;
-+/**
-+ *
-+ *
-+ * This is the timeout value for the SATA phy to wait for a SIGNATURE FIS
-+ * before restarting the starting state machine.  Technically, the old parallel
-+ * ATA specification required up to 30 seconds for a device to issue its
-+ * signature FIS as a result of a soft reset.  Now we see that devices respond
-+ * generally within 15 seconds, but we'll use 25 for now.
-+ */
-+#define SCIC_SDS_SIGNATURE_FIS_TIMEOUT    25000
++#include "scic_sds_request.h"
 +
 +/**
-+ *
-+ *
-+ * This is the timeout for the SATA OOB/SN because the hardware does not
-+ * recognize a hot plug after OOB signal but before the SN signals.  We need to
-+ * make sure after a hotplug timeout if we have not received the speed event
-+ * notification from the hardware that we restart the hardware OOB state
-+ * machine.
-+ */
-+#define SCIC_SDS_SATA_LINK_TRAINING_TIMEOUT  250
-+
-+/**
-+ * enum SCIC_SDS_PHY_STARTING_SUBSTATES -
++ * This structure represents the additional information that is required to
++ *    handle SATA PIO requests.
 + *
 + *
 + */
-+enum SCIC_SDS_PHY_STARTING_SUBSTATES {
-+	/**
-+	 * Initial state
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_INITIAL,
++struct scic_sds_stp_request {
++	struct scic_sds_request parent;
 +
-+	/**
-+	 * Wait state for the hardware OSSP event type notification
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_OSSP_EN,
-+
-+	/**
-+	 * Wait state for the PHY speed notification
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_SPEED_EN,
-+
-+	/**
-+	 * Wait state for the IAF Unsolicited frame notification
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_IAF_UF,
-+
-+	/**
-+	 * Wait state for the request to consume power
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SAS_POWER,
-+
-+	/**
-+	 * Wait state for request to consume power
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_POWER,
-+
-+	/**
-+	 * Wait state for the SATA PHY notification
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_PHY_EN,
-+
-+	/**
-+	 * Wait for the SATA PHY speed notification
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SATA_SPEED_EN,
-+
-+	/**
-+	 * Wait state for the SIGNATURE FIS unsolicited frame notification
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_AWAIT_SIG_FIS_UF,
-+
-+	/**
-+	 * Exit state for this state machine
-+	 */
-+	SCIC_SDS_PHY_STARTING_SUBSTATE_FINAL,
-+};
-+
-+struct scic_sds_port;
-+struct scic_sds_controller;
-+
-+/**
-+ * This enumeration provides a named phy type for the state machine
-+ *
-+ *
-+ */
-+enum SCIC_SDS_PHY_PROTOCOL {
-+	/**
-+	 * This is an unknown phy type since there is either nothing on the other
-+	 * end or we have not detected the phy type as yet.
-+	 */
-+	SCIC_SDS_PHY_PROTOCOL_UNKNOWN,
-+
-+	/**
-+	 * This is a SAS PHY
-+	 */
-+	SCIC_SDS_PHY_PROTOCOL_SAS,
-+
-+	/**
-+	 * This is a SATA PHY
-+	 */
-+	SCIC_SDS_PHY_PROTOCOL_SATA,
-+
-+	SCIC_SDS_MAX_PHY_PROTOCOLS
-+};
-+
-+/**
-+ * struct scic_sds_phy - This structure  contains or references all of the data
-+ *    necessary to represent the core phy object and SCU harware protocol
-+ *    engine.
-+ *
-+ *
-+ */
-+struct scic_sds_phy {
-+	struct sci_base_phy parent;
-+
-+	/**
-+	 * This field specifies the port object that owns/contains this phy.
-+	 */
-+	struct scic_sds_port *owning_port;
-+
-+	/**
-+	 * This field indicates whether the phy supports 1.5 Gb/s, 3.0 Gb/s,
-+	 * or 6.0 Gb/s operation.
-+	 */
-+	enum sci_sas_link_rate max_negotiated_speed;
-+
-+	/**
-+	 * This member specifies the protocol being utilized on this phy.  This
-+	 * field contains a legitamite value once the PHY has link trained with
-+	 * a remote phy.
-+	 */
-+	enum SCIC_SDS_PHY_PROTOCOL protocol;
-+
-+	/**
-+	 * This field specifies the index with which this phy is associated (0-3).
-+	 */
-+	u8 phy_index;
-+
-+	/**
-+	 * This member indicates if this particular PHY has received a BCN while
-+	 * it had no port assignement.  This BCN will be reported once the phy is
-+	 * assigned to a port.
-+	 */
-+	bool bcn_received_while_port_unassigned;
-+
-+	/**
-+	 * This field indicates if this PHY is currently in the process of
-+	 * link training (i.e. it has started OOB, but has yet to perform
-+	 * IAF exchange/Signature FIS reception).
-+	 */
-+	bool is_in_link_training;
++	struct sata_fis_reg_d2h d2h_reg_fis;
 +
 +	union {
++		u32 ncq;
++
++		u32 udma;
++
 +		struct {
-+			struct sci_sas_identify_address_frame identify_address_frame_buffer;
++			/**
++			 * Total transfer for the entire PIO request recorded at request constuction
++			 * time.
++			 *
++			 * @todo Should we just decrement this value for each byte of data transitted
++			 *       or received to elemenate the current_transfer_bytes field?
++			 */
++			u32 total_transfer_bytes;
 +
-+		} sas;
++			/**
++			 * Total number of bytes received/transmitted in data frames since the start
++			 * of the IO request.  At the end of the IO request this should equal the
++			 * total_transfer_bytes.
++			 */
++			u32 current_transfer_bytes;
++
++			/**
++			 * The number of bytes requested in the in the PIO setup.
++			 */
++			u32 pio_transfer_bytes;
++
++			/**
++			 * PIO Setup ending status value to tell us if we need to wait for another FIS
++			 * or if the transfer is complete. On the receipt of a D2H FIS this will be
++			 * the status field of that FIS.
++			 */
++			u8 ending_status;
++
++			/**
++			 * On receipt of a D2H FIS this will be the ending error field if the
++			 * ending_status has the SATA_STATUS_ERR bit set.
++			 */
++			u8 ending_error;
++
++			/**
++			 * Protocol Type. This is filled in by core during IO Request construction type.
++			 */
++			u8 sat_protocol;
++
++			struct scic_sds_request_pio_sgl {
++				struct scu_sgl_element_pair *sgl_pair;
++				u8 sgl_set;
++				u32 sgl_offset;
++			} request_current;
++		} pio;
 +
 +		struct {
-+			struct sata_fis_reg_d2h signature_fis_buffer;
-+
-+		} sata;
-+
-+	} phy_type;
-+
-+	/**
-+	 * This field contains a reference to the timer utilized in detecting
-+	 * when a signature FIS timeout has occurred.  The signature FIS is the
-+	 * first FIS sent by an attached SATA device after OOB/SN.
-+	 */
-+	void *sata_timeout_timer;
-+
-+	const struct scic_sds_phy_state_handler *state_handlers;
-+
-+	struct sci_base_state_machine starting_substate_machine;
-+
-+	/**
-+	 * This field is the pointer to the transport layer register for the SCU
-+	 * hardware.
-+	 */
-+	struct scu_transport_layer_registers __iomem *transport_layer_registers;
-+
-+	/**
-+	 * This field points to the link layer register set within the SCU.
-+	 */
-+	struct scu_link_layer_registers __iomem *link_layer_registers;
++			/**
++			 * The number of bytes requested in the PIO setup before CDB data frame.
++			 */
++			u32 device_preferred_cdb_length;
++		} packet;
++	} type;
 +
 +};
 +
-+
-+typedef enum sci_status (*scic_sds_phy_event_handler_t)(struct scic_sds_phy *, u32);
-+typedef enum sci_status (*scic_sds_phy_frame_handler_t)(struct scic_sds_phy *, u32);
-+typedef enum sci_status (*scic_sds_phy_power_handler_t)(struct scic_sds_phy *);
-+
 +/**
-+ * struct scic_sds_phy_state_handler -
++ * enum SCIC_SDS_STP_REQUEST_STARTED_UDMA_SUBSTATES - This enumeration depicts
++ *    the various sub-states associated with a SATA/STP UDMA protocol operation.
 + *
 + *
 + */
-+struct scic_sds_phy_state_handler {
-+	/**
-+	 * This is the struct sci_base_phy object state handlers.
-+	 */
-+	struct sci_base_phy_state_handler parent;
-+
-+	/**
-+	 * The state handler for unsolicited frames received from the SCU hardware.
-+	 */
-+	scic_sds_phy_frame_handler_t frame_handler;
-+
-+	/**
-+	 * The state handler for events received from the SCU hardware.
-+	 */
-+	scic_sds_phy_event_handler_t event_handler;
-+
-+	/**
-+	 * The state handler for staggered spinup.
-+	 */
-+	scic_sds_phy_power_handler_t consume_power_handler;
-+
++enum SCIC_SDS_STP_REQUEST_STARTED_UDMA_SUBSTATES {
++	SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_TC_COMPLETION_SUBSTATE,
++	SCIC_SDS_STP_REQUEST_STARTED_UDMA_AWAIT_D2H_REG_FIS_SUBSTATE,
 +};
 +
-+extern const struct scic_sds_phy_state_handler scic_sds_phy_state_handler_table[];
-+extern const struct sci_base_state scic_sds_phy_state_table[];
-+extern const struct sci_base_state scic_sds_phy_starting_substates[];
-+extern const struct scic_sds_phy_state_handler scic_sds_phy_starting_substate_handler_table[];
-+
-+
 +/**
-+ * scic_sds_phy_get_index() -
-+ *
-+ * This macro returns the phy index for the specified phy
-+ */
-+#define scic_sds_phy_get_index(phy) \
-+	((phy)->phy_index)
-+
-+/**
-+ * scic_sds_phy_get_controller() - This macro returns the controller for this
-+ *    phy
++ * enum SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_SUBSTATES - This enumeration
++ *    depicts the various sub-states associated with a SATA/STP non-data
++ *    protocol operation.
 + *
 + *
 + */
-+#define scic_sds_phy_get_controller(phy) \
-+	(scic_sds_port_get_controller((phy)->owning_port))
++enum SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_SUBSTATES {
++	SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_H2D_COMPLETION_SUBSTATE,
++	SCIC_SDS_STP_REQUEST_STARTED_NON_DATA_AWAIT_D2H_SUBSTATE,
++};
 +
 +/**
-+ * scic_sds_phy_get_base_state_machine() - This macro returns the state machine
-+ *    for the base phy
++ * enum SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_SUBSTATES - THis enumeration
++ *    depicts the various sub-states associated with a SATA/STP soft reset
++ *    operation.
 + *
 + *
 + */
-+#define scic_sds_phy_get_base_state_machine(phy) \
-+	(&(phy)->parent.state_machine)
++enum SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_SUBSTATES {
++	SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_ASSERTED_COMPLETION_SUBSTATE,
++	SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_H2D_DIAGNOSTIC_COMPLETION_SUBSTATE,
++	SCIC_SDS_STP_REQUEST_STARTED_SOFT_RESET_AWAIT_D2H_RESPONSE_FRAME_SUBSTATE,
++};
 +
-+/**
-+ * scic_sds_phy_get_starting_substate_machine() - This macro returns the
-+ *    starting substate machine for this phy
-+ *
-+ *
-+ */
-+#define scic_sds_phy_get_starting_substate_machine(phy)	\
-+	(&(phy)->starting_substate_machine)
++extern const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_udma_substate_handler_table[];
 +
-+/**
-+ * scic_sds_phy_set_state_handlers() - This macro sets the state handlers for
-+ *    this phy object
-+ *
-+ *
-+ */
-+#define scic_sds_phy_set_state_handlers(phy, handlers) \
-+	((phy)->state_handlers = (handlers))
++extern const struct sci_base_state scic_sds_stp_request_started_udma_substate_table[];
 +
-+/**
-+ * scic_sds_phy_set_base_state_handlers() -
-+ *
-+ * This macro set the base state handlers for the phy object.
-+ */
-+#define scic_sds_phy_set_base_state_handlers(phy, state_id) \
-+	scic_sds_phy_set_state_handlers(\
-+		(phy), \
-+		&scic_sds_phy_state_handler_table[(state_id)] \
-+		)
++extern const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_non_data_substate_handler_table[];
 +
-+/**
-+ * scic_sds_phy_is_ready() -
-+ *
-+ * This macro returns true if the current base state for this phy is
-+ * SCI_BASE_PHY_STATE_READY
-+ */
-+#define scic_sds_phy_is_ready(phy) \
-+	(\
-+		SCI_BASE_PHY_STATE_READY \
-+		== sci_base_state_machine_get_state(\
-+			scic_sds_phy_get_base_state_machine(phy) \
-+			) \
-+	)
++extern const struct sci_base_state scic_sds_stp_request_started_non_data_substate_table[];
++
++extern const struct scic_sds_io_request_state_handler scic_sds_stp_request_started_soft_reset_substate_handler_table[];
++
++extern const struct sci_base_state scic_sds_stp_request_started_soft_reset_substate_table[];
 +
 +/* --------------------------------------------------------------------------- */
 +
++u32 scic_sds_stp_request_get_object_size(void);
 +
 +
++void scic_sds_stp_non_ncq_request_construct(
++	struct scic_sds_request *this_request);
 +
-+/* --------------------------------------------------------------------------- */
++enum sci_status scic_sds_stp_pio_request_construct(
++	struct scic_sds_request *scic_io_request,
++	u8 sat_protocol,
++	bool copy_rx_frame);
 +
-+void scic_sds_phy_construct(
-+	struct scic_sds_phy *this_phy,
-+	struct scic_sds_port *owning_port,
-+	u8 phy_index);
++enum sci_status scic_sds_stp_pio_request_construct_pass_through(
++	struct scic_sds_request *scic_io_request,
++	struct scic_stp_passthru_request_callbacks *passthru_cb);
 +
-+struct scic_sds_port *scic_sds_phy_get_port(
-+	struct scic_sds_phy *this_phy);
++enum sci_status scic_sds_stp_udma_request_construct(
++	struct scic_sds_request *this_request,
++	u32 transfer_length,
++	enum dma_data_direction dir);
 +
-+void scic_sds_phy_set_port(
-+	struct scic_sds_phy *this_phy,
-+	struct scic_sds_port *owning_port);
++enum sci_status scic_sds_stp_non_data_request_construct(
++	struct scic_sds_request *this_request);
 +
-+enum sci_status scic_sds_phy_initialize(
-+	struct scic_sds_phy *this_phy,
-+	struct scu_transport_layer_registers __iomem *transport_layer_registers,
-+	struct scu_link_layer_registers __iomem *link_layer_registers);
++enum sci_status scic_sds_stp_soft_reset_request_construct(
++	struct scic_sds_request *this_request);
 +
-+enum sci_status scic_sds_phy_start(
-+	struct scic_sds_phy *this_phy);
++enum sci_status scic_sds_stp_ncq_request_construct(
++	struct scic_sds_request *this_request,
++	u32 transfer_length,
++	enum dma_data_direction dir);
 +
-+enum sci_status scic_sds_phy_stop(
-+	struct scic_sds_phy *this_phy);
++void scu_stp_raw_request_construct_task_context(
++	struct scic_sds_stp_request *this_request,
++	struct scu_task_context *task_context);
 +
-+enum sci_status scic_sds_phy_reset(
-+	struct scic_sds_phy *this_phy);
-+
-+void scic_sds_phy_sata_timeout(
-+	void *cookie);
-+
-+/* --------------------------------------------------------------------------- */
-+
-+void scic_sds_phy_suspend(
-+	struct scic_sds_phy *this_phy);
-+
-+void scic_sds_phy_resume(
-+	struct scic_sds_phy *this_phy);
-+
-+void scic_sds_phy_setup_transport(
-+	struct scic_sds_phy *this_phy,
-+	u32 device_id);
-+
-+/* --------------------------------------------------------------------------- */
-+
-+enum sci_status scic_sds_phy_event_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 event_code);
-+
-+enum sci_status scic_sds_phy_frame_handler(
-+	struct scic_sds_phy *this_phy,
-+	u32 frame_index);
-+
-+enum sci_status scic_sds_phy_consume_power_handler(
-+	struct scic_sds_phy *this_phy);
-+
-+void scic_sds_phy_get_sas_address(
-+	struct scic_sds_phy *this_phy,
-+	struct sci_sas_address *sas_address);
-+
-+void scic_sds_phy_get_attached_sas_address(
-+	struct scic_sds_phy *this_phy,
-+	struct sci_sas_address *sas_address);
-+
-+void scic_sds_phy_get_protocols(
-+	struct scic_sds_phy *this_phy,
-+	struct sci_sas_identify_address_frame_protocols *protocols);
-+
-+void scic_sds_phy_get_attached_phy_protocols(
-+	struct scic_sds_phy *this_phy,
-+	struct sci_sas_identify_address_frame_protocols *protocols);
-+
-+/*
-+ * ****************************************************************************-
-+ * * SCIC SDS PHY Handler Methods
-+ * ****************************************************************************- */
-+
-+enum sci_status scic_sds_phy_default_start_handler(
-+	struct sci_base_phy *phy);
-+
-+enum sci_status scic_sds_phy_default_stop_handler(
-+	struct sci_base_phy *phy);
-+
-+enum sci_status scic_sds_phy_default_reset_handler(
-+	struct sci_base_phy *phy);
-+
-+enum sci_status scic_sds_phy_default_destroy_handler(
-+	struct sci_base_phy *phy);
-+
-+enum sci_status scic_sds_phy_default_frame_handler(
-+	struct scic_sds_phy *phy,
-+	u32 frame_index);
-+
-+enum sci_status scic_sds_phy_default_event_handler(
-+	struct scic_sds_phy *phy,
-+	u32 evnet_code);
-+
-+enum sci_status scic_sds_phy_default_consume_power_handler(
-+	struct scic_sds_phy *phy);
-+
-+#endif /* _SCIC_SDS_PHY_H_ */
-diff --git a/drivers/scsi/isci/core/scic_sds_phy_registers.h b/drivers/scsi/isci/core/scic_sds_phy_registers.h
-new file mode 100644
-index 0000000..ddbb236
---- /dev/null
-+++ b/drivers/scsi/isci/core/scic_sds_phy_registers.h
-@@ -0,0 +1,248 @@
-+/*
-+ * This file is provided under a dual BSD/GPLv2 license.  When using or
-+ * redistributing this file, you may do so under either license.
-+ *
-+ * GPL LICENSE SUMMARY
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of version 2 of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-+ * The full GNU General Public License is included in this distribution
-+ * in the file called LICENSE.GPL.
-+ *
-+ * BSD LICENSE
-+ *
-+ * Copyright(c) 2008 - 2011 Intel Corporation. All rights reserved.
-+ * All rights reserved.
-+ *
-+ * Redistribution and use in source and binary forms, with or without
-+ * modification, are permitted provided that the following conditions
-+ * are met:
-+ *
-+ *   * Redistributions of source code must retain the above copyright
-+ *     notice, this list of conditions and the following disclaimer.
-+ *   * Redistributions in binary form must reproduce the above copyright
-+ *     notice, this list of conditions and the following disclaimer in
-+ *     the documentation and/or other materials provided with the
-+ *     distribution.
-+ *   * Neither the name of Intel Corporation nor the names of its
-+ *     contributors may be used to endorse or promote products derived
-+ *     from this software without specific prior written permission.
-+ *
-+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-+ */
-+
-+#ifndef _SCIC_SDS_PHY_REGISTERS_H_
-+#define _SCIC_SDS_PHY_REGISTERS_H_
-+
-+/**
-+ * This file contains the macros used by the phy object to read/write to the
-+ *    SCU link layer registers.
-+ *
-+ *
-+ */
-+
-+#include "scic_sds_controller.h"
-+
-+/* **************************************************************************
-+ * * SCU TRANSPORT LAYER REGISTER OPERATIONS
-+ * ************************************************************************** */
-+
-+/**
-+ * Macro to read the transport layer register associated with this phy
-+ * object.
-+ */
-+#define scu_transport_layer_read(phy, reg) \
-+	scu_register_read( \
-+		scic_sds_phy_get_controller(phy), \
-+		(phy)->transport_layer_registers->reg \
-+		)
-+
-+/**
-+ * Macro to write the transport layer register associated with this phy
-+ * object.
-+ */
-+#define scu_transport_layer_write(phy, reg, value) \
-+	scu_register_write( \
-+		scic_sds_phy_get_controller(phy), \
-+		(phy)->transport_layer_registers->reg, \
-+		(value) \
-+		)
-+
-+/* **************************************************************************
-+ * * Transport Layer registers controlled by the phy object
-+ * ************************************************************************** */
-+
-+/* This macro reads the Transport layer control register */
-+#define SCU_TLCR_READ(phy) \
-+	scu_transport_layer_read(phy, control)
-+
-+/* This macro writes the Transport layer control register */
-+#define SCU_TLCR_WRITE(phy, value) \
-+	scu_transport_layer_write(phy, control, value)
-+
-+/* This macro reads the Transport layer address translation register */
-+#define SCU_TLADTR_READ(phy) \
-+	scu_transport_layer_read(phy, address_translation)
-+
-+/* This macro writes the Transport layer address translation register */
-+#define SCU_TLADTR_WRITE(phy) \
-+	scu_transport_layer_write(phy, address_translation, value)
-+
-+/* This macro writes the STP Transport Layer Direct Attached RNi register */
-+#define SCU_STPTLDARNI_WRITE(phy, index) \
-+	scu_transport_layer_write(phy, stp_rni, index)
-+
-+/* This macro reads the STP Transport Layer Direct Attached RNi register */
-+#define SCU_STPTLDARNI_READ(phy) \
-+	scu_transport_layer_read(phy, stp_rni)
-+
-+/*
-+ * *****************************************************************************
-+ * * SCU LINK LAYER REGISTER OPERATIONS
-+ * ***************************************************************************** */
-+
-+/**
-+ * scu_link_layer_register_read() -
-+ *
-+ * THis macro requests the SCU register write for the specified link layer
-+ * register.
-+ */
-+#define scu_link_layer_register_read(phy, reg) \
-+	scu_register_read(\
-+		scic_sds_phy_get_controller(phy), \
-+		(phy)->link_layer_registers->reg \
-+		)
-+
-+/**
-+ * scu_link_layer_register_write() -
-+ *
-+ * This macro requests the SCU register read for the specified link layer
-+ * register.
-+ */
-+#define scu_link_layer_register_write(phy, reg, value) \
-+	scu_register_write(\
-+		scic_sds_phy_get_controller(phy), \
-+		(phy)->link_layer_registers->reg, \
-+		(value)	\
-+		)
-+
-+/*
-+ * *****************************************************************************
-+ * * SCU LINK LAYER REGISTERS
-+ * ***************************************************************************** */
-+
-+/* / This macro reads from the SAS Identify Frame PHY Identifier register */
-+#define SCU_SAS_TIPID_READ(phy)	\
-+	scu_link_layer_register_read(phy, identify_frame_phy_id)
-+
-+/* / This macro writes to the SAS Identify Frame PHY Identifier register */
-+#define SCU_SAS_TIPID_WRITE(phy, value)	\
-+	scu_link_layer_register_write(phy, identify_frame_phy_id, value)
-+
-+/* / This macro reads from the SAS Identification register */
-+#define SCU_SAS_TIID_READ(phy) \
-+	scu_link_layer_register_read(phy, transmit_identification)
-+
-+/* / This macro writes to the SAS Identification register */
-+#define SCU_SAS_TIID_WRITE(phy, value) \
-+	scu_link_layer_register_write(phy, transmit_identification, value)
-+
-+/* / This macro reads the SAS Device Name High register */
-+#define SCU_SAS_TIDNH_READ(phy)	\
-+	scu_link_layer_register_read(phy, sas_device_name_high)
-+
-+/* / This macro writes the SAS Device Name High register */
-+#define SCU_SAS_TIDNH_WRITE(phy, value)	\
-+	scu_link_layer_register_write(phy, sas_device_name_high, value)
-+
-+/* / This macro reads the SAS Device Name Low register */
-+#define SCU_SAS_TIDNL_READ(phy)	\
-+	scu_link_layer_register_read(phy, sas_device_name_low)
-+
-+/* / This macro writes the SAS Device Name Low register */
-+#define SCU_SAS_TIDNL_WRITE(phy, value)	\
-+	scu_link_layer_register_write(phy, sas_device_name_low, value)
-+
-+/* / This macro reads the Source SAS Address High register */
-+#define SCU_SAS_TISSAH_READ(phy) \
-+	scu_link_layer_register_read(phy, source_sas_address_high)
-+
-+/* / This macro writes the Source SAS Address High register */
-+#define SCU_SAS_TISSAH_WRITE(phy, value) \
-+	scu_link_layer_register_write(phy, source_sas_address_high, value)
-+
-+/* / This macro reads the Source SAS Address Low register */
-+#define SCU_SAS_TISSAL_READ(phy) \
-+	scu_link_layer_register_read(phy, source_sas_address_low)
-+
-+/* / This macro writes the Source SAS Address Low register */
-+#define SCU_SAS_TISSAL_WRITE(phy, value) \
-+	scu_link_layer_register_write(phy, source_sas_address_low, value)
-+
-+/* / This macro reads the PHY Configuration register */
-+#define SCU_SAS_PCFG_READ(phy) \
-+	scu_link_layer_register_read(phy, phy_configuration);
-+
-+/* / This macro writes the PHY Configuration register */
-+#define SCU_SAS_PCFG_WRITE(phy, value) \
-+	scu_link_layer_register_write(phy, phy_configuration, value)
-+
-+/* / This macro reads the PHY Enable Spinup register */
-+#define SCU_SAS_ENSPINUP_READ(phy) \
-+	scu_link_layer_register_read(phy, notify_enable_spinup_control)
-+
-+/* / This macro writes the PHY Enable Spinup register */
-+#define SCU_SAS_ENSPINUP_WRITE(phy, value) \
-+	scu_link_layer_register_write(phy, notify_enable_spinup_control, value)
-+
-+/* This macro reads the CLKSM register */
-+#define SCU_SAS_CLKSM_READ(phy) \
-+	scu_link_layer_register_read(phy, clock_skew_management)
-+
-+/* This macro writes the CLKSM register */
-+#define SCU_SAS_CLKSM_WRITE(phy, value) \
-+	scu_link_layer_register_write(phy, clock_skew_management, value)
-+
-+/* / This macro reads the PHY Capacity register */
-+#define SCU_SAS_PHYCAP_READ(phy) \
-+	scu_link_layer_register_read(phy, phy_capabilities)
-+
-+/* / This macro writes the PHY Capacity register */
-+#define SCU_SAS_PHYCAP_WRITE(phy, value) \
-+	scu_link_layer_register_write(phy, phy_capabilities, value)
-+
-+/* / This macro reads the Recieved PHY Capacity register */
-+#define SCU_SAS_RECPHYCAP_READ(phy) \
-+	scu_link_layer_register_read(phy, receive_phycap)
-+
-+/* / This macro reads the link layer control register */
-+#define SCU_SAS_LLCTL_READ(phy)	\
-+	scu_link_layer_register_read(phy, link_layer_control);
-+
-+/* / This macro writes the link layer control register */
-+#define SCU_SAS_LLCTL_WRITE(phy, value)	\
-+	scu_link_layer_register_write(phy, link_layer_control, value);
-+
-+#endif /* _SCIC_SDS_PHY_REGISTERS_H_ */
++#endif /* _SCIC_SDS_STP_REQUEST_T_ */
 
