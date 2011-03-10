@@ -1,51 +1,40 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: Calling scsi_add_host multiple times for concurency
-Date: Thu, 10 Mar 2011 13:41:12 -0600
-Message-ID: <1299786072.11933.162.camel@mulgrave.site>
-References: <AANLkTinKxORC1P0zY6LUupUU89WTAsN_FQ+dPhjtw6EW@mail.gmail.com>
-	 <AANLkTikKbsoSmfoW9Ma7agW4SFBPEFPPPp7QeB_+9i0H@mail.gmail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] sd: sd should not modify read capacity, cache type or
+ write protect flag on rescan when there is a transport error
+Date: Thu, 10 Mar 2011 14:28:58 -0600
+Message-ID: <4D79348A.7060609@cs.wisc.edu>
+References: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>	 <1298907291.2487.18.camel@mulgrave.site>	 <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM> <1299594151.2476.10.camel@mulgrave.site> <4D7814D2.8090101@cs.wisc.edu> <D8C50530D6022F40A817A35C40CC06A7065780048F@DUBX7MCDUB01.EMEA.DELL.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:52851 "EHLO mx1.suse.de"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:52551 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751125Ab1CJTlT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Mar 2011 14:41:19 -0500
-In-Reply-To: <AANLkTikKbsoSmfoW9Ma7agW4SFBPEFPPPp7QeB_+9i0H@mail.gmail.com>
+	id S1751768Ab1CJU2t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Mar 2011 15:28:49 -0500
+In-Reply-To: <D8C50530D6022F40A817A35C40CC06A7065780048F@DUBX7MCDUB01.EMEA.DELL.COM>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: va stg2010 <va.storage2010@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Menny_Hamburger@Dell.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-On Thu, 2011-03-10 at 08:35 -0800, va stg2010 wrote:
-> Hi
-> My initiator HBA  has 4 ports. Right now  I call scsi_add_host() only once.
-> Currently I have single queue for all 4 ports where  pending scsi
-> commands wait till interrupt handler posts response.  I am trying to
-> add more queue (one per port) to reduce some locking contention.
+On 03/10/2011 02:49 AM, Menny_Hamburger@Dell.com wrote:
+> Mike,
+>
+> I think there are still two open issues still here:
+> 1) Should we always rescan when transport comes back up? My own opinion to this question is that doing a full rescan may be an overkill
 
-Why do you have a single issue queue?  If the contention is in that,
-then you can easily fix that without altering the host structure.
+I think we should always rescan. The values could have changed on the 
+target even if we have not actually sent a command and had it failed, so 
+either way we need to pick up new values.
 
-> Can I expect higher concurrency if I call scsi_add_host 4 times , one
-> for each port. ?
-> Is it going to work if I call scsi_add_host  4 times and  will
-> allocate queue (for pending scsi commands) for each scsi host I
-> registered?
+>     In this case. If the decision is not to rescan always (only when we have invalid capacity, cache type, write protect flag), we will need to maintain
+>     Additional state information in the device to indicate that the current values are invalid and a rescan is required.
+>     James stated that it is a layering violation to test the host byte of the result in order to decide whether or not a rescan is required, so we will
+>     need setup this state information in any case of failure when getting these properties from the device.
+> 2) Should we rescan from within the kernel, or issue a uevent (hotplug) that would be picked up by userland (that would initiate the rescan)?
+>     Rescanning from within the kernel seems a bit more "clean", however there may be other considerations here.
 
-Um, so this makes me think you don't understand the SCSI queuing.  The
-block queue is per registered sdev (which is usually a LUN) not per
-host.  However, pending commands aren't kept on the block queue: we
-dequeue them in the request queue.
-
-> What performance benefits can I expect, if any?
-
-SCSI counts things per host, Like maximum number of commands.  It
-doesn't really impact concurrency, since that's done per queue (which is
-per LUN) but it does mean there's a per-host lock in the submit path
-which can show up in profiling (particularly for high iop devices).
-
-James
-
-
+Kernel. In the iscsi and fc class we already do a scan for devices when 
+the transport comes back up from the kernel, so this rescan of devices 
+values can just run from the same function.
