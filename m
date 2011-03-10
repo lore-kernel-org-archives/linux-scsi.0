@@ -1,36 +1,53 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 0/2] Add struct crypto_alg->cra_check_optimized for
-	crc32c_intel
-Date: Thu, 10 Mar 2011 16:43:46 +0800
-Message-ID: <20110310084346.GA10650@gondor.apana.org.au>
-References: <1299745272-25477-1-git-send-email-nab@linux-iscsi.org>
+From: <Menny_Hamburger@Dell.com>
+Subject: RE: [PATCH] sd: sd should not modify read capacity, cache type or
+ write protect flag on rescan when there is a transport error
+Date: Thu, 10 Mar 2011 08:49:49 +0000
+Message-ID: <D8C50530D6022F40A817A35C40CC06A7065780048F@DUBX7MCDUB01.EMEA.DELL.COM>
+References: <D8C50530D6022F40A817A35C40CC06A706576F76F2@DUBX7MCDUB01.EMEA.DELL.COM>
+	 <1298907291.2487.18.camel@mulgrave.site>
+	 <D8C50530D6022F40A817A35C40CC06A706577BC8AE@DUBX7MCDUB01.EMEA.DELL.COM>
+ <1299594151.2476.10.camel@mulgrave.site> <4D7814D2.8090101@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-crypto-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1299745272-25477-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-crypto-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto <linux-crypto@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Randy Dunlap <rdunlap@xenotime.net>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:37187 "EHLO
+	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751022Ab1CJIuD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Mar 2011 03:50:03 -0500
+In-Reply-To: <4D7814D2.8090101@cs.wisc.edu>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@suse.de
 
-On Thu, Mar 10, 2011 at 12:21:10AM -0800, Nicholas A. Bellinger wrote:
-> 
-> Nicholas Bellinger (2):
->   crypto: Add struct crypto_alg->cra_check_optimized
->   crypto/crc32c: Add crc32c_cra_check_optimized for crc32c_intel
-
-I think you misunderstood my suggestion.  The reason I asked
-for this to be done in the crypto API is because it is not specific
-to crc32c_intel.
-
-So sending me a patch that modifies crc32c clearly misses the
-point :)
-
-This should be done in the core API, i.e., api.c/algapi.c.
-
-Thanks,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+TWlrZSwgDQoNCkkgdGhpbmsgdGhlcmUgYXJlIHN0aWxsIHR3byBvcGVuIGlzc3VlcyBzdGlsbCBo
+ZXJlOg0KMSkgU2hvdWxkIHdlIGFsd2F5cyByZXNjYW4gd2hlbiB0cmFuc3BvcnQgY29tZXMgYmFj
+ayB1cD8gTXkgb3duIG9waW5pb24gdG8gdGhpcyBxdWVzdGlvbiBpcyB0aGF0IGRvaW5nIGEgZnVs
+bCByZXNjYW4gbWF5IGJlIGFuIG92ZXJraWxsIA0KICAgSW4gdGhpcyBjYXNlLiBJZiB0aGUgZGVj
+aXNpb24gaXMgbm90IHRvIHJlc2NhbiBhbHdheXMgKG9ubHkgd2hlbiB3ZSBoYXZlIGludmFsaWQg
+Y2FwYWNpdHksIGNhY2hlIHR5cGUsIHdyaXRlIHByb3RlY3QgZmxhZyksIHdlIHdpbGwgbmVlZCB0
+byBtYWludGFpbg0KICAgQWRkaXRpb25hbCBzdGF0ZSBpbmZvcm1hdGlvbiBpbiB0aGUgZGV2aWNl
+IHRvIGluZGljYXRlIHRoYXQgdGhlIGN1cnJlbnQgdmFsdWVzIGFyZSBpbnZhbGlkIGFuZCBhIHJl
+c2NhbiBpcyByZXF1aXJlZC4NCiAgIEphbWVzIHN0YXRlZCB0aGF0IGl0IGlzIGEgbGF5ZXJpbmcg
+dmlvbGF0aW9uIHRvIHRlc3QgdGhlIGhvc3QgYnl0ZSBvZiB0aGUgcmVzdWx0IGluIG9yZGVyIHRv
+IGRlY2lkZSB3aGV0aGVyIG9yIG5vdCBhIHJlc2NhbiBpcyByZXF1aXJlZCwgc28gd2Ugd2lsbCAN
+CiAgIG5lZWQgc2V0dXAgdGhpcyBzdGF0ZSBpbmZvcm1hdGlvbiBpbiBhbnkgY2FzZSBvZiBmYWls
+dXJlIHdoZW4gZ2V0dGluZyB0aGVzZSBwcm9wZXJ0aWVzIGZyb20gdGhlIGRldmljZS4NCjIpIFNo
+b3VsZCB3ZSByZXNjYW4gZnJvbSB3aXRoaW4gdGhlIGtlcm5lbCwgb3IgaXNzdWUgYSB1ZXZlbnQg
+KGhvdHBsdWcpIHRoYXQgd291bGQgYmUgcGlja2VkIHVwIGJ5IHVzZXJsYW5kICh0aGF0IHdvdWxk
+IGluaXRpYXRlIHRoZSByZXNjYW4pPw0KICAgUmVzY2FubmluZyBmcm9tIHdpdGhpbiB0aGUga2Vy
+bmVsIHNlZW1zIGEgYml0IG1vcmUgImNsZWFuIiwgaG93ZXZlciB0aGVyZSBtYXkgYmUgb3RoZXIg
+Y29uc2lkZXJhdGlvbnMgaGVyZS4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206
+IE1pa2UgQ2hyaXN0aWUgW21haWx0bzptaWNoYWVsY0Bjcy53aXNjLmVkdV0gDQpTZW50OiAxMCBN
+YXJjaCwgMjAxMSAwMjowMQ0KVG86IEphbWVzIEJvdHRvbWxleQ0KQ2M6IEhhbWJ1cmdlciwgTWVu
+bnk7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnDQpTdWJqZWN0OiBSZTogW1BBVENIXSBzZDog
+c2Qgc2hvdWxkIG5vdCBtb2RpZnkgcmVhZCBjYXBhY2l0eSwgY2FjaGUgdHlwZSBvciB3cml0ZSBw
+cm90ZWN0IGZsYWcgb24gcmVzY2FuIHdoZW4gdGhlcmUgaXMgYSB0cmFuc3BvcnQgZXJyb3INCg0K
+WWVhaC4NCg0KTWVubnksIEkgdGhpbmsgeW91IGNhbiBqdXN0IGRvIHRoZSBzY3NpL2lzY3NpX3Jl
+c2Nhbl90YXJnZXQgb3B0aW9uIEkgDQpzdWdnZXN0ZWQgaW4gbXkgcHNldWRvIHBhdGNoIHdoZXJl
+IHdoZW4gdGhlIHRyYW5zcG9ydCBjb21lcyBiYWNrIG9ubGluZSANCnRoZSBpc2NzaSBjbGFzcyBj
+YWxscyBzb21lIGhlbHBlciBzY3NpIGZ1bmN0aW9uIHRoYXQgY2FsbHMgDQpzY3NpX3Jlc2Nhbl9k
+ZXZpY2UgZm9yIGVhY2ggZGV2aWNlIG9uIHRoZSB0YXJnZXQsIHNvIHByb3BlciB2YWx1ZXMgYXJl
+IA0KcGlja2VkIHVwLg0K
