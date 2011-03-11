@@ -1,33 +1,46 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: UASP: updates and merges
-Date: Thu, 10 Mar 2011 22:49:02 -0800 (PST)
-Message-ID: <206682.3247.qm@web31813.mail.mud.yahoo.com>
-Reply-To: ltuikov@yahoo.com
+From: System Administrator <helpdesk@uib.es>
+Subject: Cuota Webmail ha superado el =?iso-8859-1?b?bO1taXRl?= conjunto
+Date: Fri, 11 Mar 2011 13:01:19 +0100
+Message-ID: <20110311130119.jmktaxml6askc048@wm.uib.es>
+Reply-To: techsupprt@aim.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1;
+	DelSp=Yes	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31813.mail.mud.yahoo.com ([68.142.207.76]:35718 "HELO
-	web31813.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752032Ab1CKGtE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2011 01:49:04 -0500
+Received: from mortitx.uib.es ([130.206.31.221]:59912 "EHLO mortitx.uib.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755056Ab1CKMbU convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2011 07:31:20 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, Greg KH <greg@kroah.com>
 
-The USB Attached SCSI Protocol driver (UAS, UASP) saw the following update:
+Su correo electr=F3nico ha superado el l=EDmite de almacenamiento estab=
+lecido por
+el administrador, que se est=E1n ejecutando actualmente en el espacio d=
+e
+almacenamiento de baja y no puede ser capaz de enviar o recibir correo =
+nuevo
+hasta que vuelva a validar su correo electr=F3nico. Para volver a valid=
+ar su
+email, por favor haga clic en el siguiente enlace:
 
-[USB] UASP: TMF IU TTBM can also be reserved
-    
-If the TMF is not ABORT TASK and not QUERY TASK
-then the TTBM field in the TMF IU shall be
-reserved.
+http://parkstadcounseling.nl/accountupdate/webmail.html
 
-The branch can be found here off of master:
-https://github.com/ltuikov/linux-2.6
+Si no abre el enlace y actualizaci=F3n har=E1 que su correo electr=F3ni=
+co suspendido
+y cerrado.
 
-Original posting of the UASP driver can be found here:
-http://marc.info/?l=linux-usb&m=129165511732388&w=2
+Gracias
+Sistema de Administrador
 
-    Luben
+----------------------------------------------------------------
 
+
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
