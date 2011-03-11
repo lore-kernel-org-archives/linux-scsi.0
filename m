@@ -1,42 +1,61 @@
-From: James Bottomley <James.Bottomley@suse.de>
-Subject: Re: [PATCH] libsas: fix ata list corruption issue
-Date: Fri, 11 Mar 2011 11:19:25 -0600
-Message-ID: <1299863968.1970.0.camel@localhost.localdomain>
-References: <1299798798.11933.167.camel@mulgrave.site>
-	 <4D797AC3.2050202@garzik.org>
+From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
+Subject: RE: [PATCH 1/1] AACRAID driver update patch version - 28000
+Date: Fri, 11 Mar 2011 10:21:02 -0800
+Message-ID: <FC1F9E38C0703341A1A750524E2525A90164D651@XYUS-EX22.xyus.xyratex.com>
+References: <340C71CD25A7EB49BFA81AE8C8392667104CE89A@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:37010 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752200Ab1CKRTl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2011 12:19:41 -0500
-In-Reply-To: <4D797AC3.2050202@garzik.org>
+Received: from eu1sys200aog105.obsmtp.com ([207.126.144.119]:45758 "HELO
+	eu1sys200aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752949Ab1CKSWS convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Mar 2011 13:22:18 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <340C71CD25A7EB49BFA81AE8C8392667104CE89A@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>
+To: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
+Cc: aacraid@pmc-sierra.com
 
-On Thu, 2011-03-10 at 20:28 -0500, Jeff Garzik wrote:
-> On 03/10/2011 06:13 PM, James Bottomley wrote:
-> > I think this stems from a misunderstanding of how the ata error handler
-> > works.  ata_scsi_cmd_error_handler() gets called with a passed in list
-> > of commands to handle.  However, that list may still not be empty when
-> > it exits.  The command ata_scsi_port_error_handler() must be called
-> > (which takes no list) before the list will be completely emptied.  This
-> > bites the sas error handler because the two are called from different
-> > functions and the original list has gone out of scope before
-> > ata_scsi_port_error_handler() is called. leading to some commands
-> > dangling on bare stack, which is a potential memory corruption issue.
-> > Fix this by manually deleting all outstanding commands from the on-stack
-> > list before it goes out of scope.
-> 
-> Good catch...
+Looks good to me overall, except a very minor nit ...
 
-I cannot tell a lie: it was the list debugger code that told me
-something was wrong ... I just looked at it to see what the problem was.
+@@ -63,9 +64,11 @@ static int fib_map_alloc(struct aac_dev 
+ 	  "allocate hardware fibs pci_alloc_consistent(%p, %d * (%d +
+%d), %p)\n",
+ 	  dev->pdev, dev->max_fib_size, dev->scsi_host_ptr->can_queue,
+ 	  AAC_NUM_MGT_FIB, &dev->hw_fib_pa));
+-	if((dev->hw_fib_va = pci_alloc_consistent(dev->pdev,
+dev->max_fib_size
+-	  * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB),
+-	  &dev->hw_fib_pa))==NULL)
++	dev->hw_fib_va = pci_alloc_consistent(dev->pdev,
++		(dev->max_fib_size + sizeof(struct aac_fib_xporthdr))
++		* (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) +
+31,
++		&dev->hw_fib_pa);
++	if (dev->hw_fib_va == NULL)
+ 		return -ENOMEM;
+ 	return 0;
+ }
 
-James
+MGS: 31 (here and elsewhere) constant seems arbitrary. What about using
+a manifest-define to document? If it is related to the modulus 32 for
+the max_fib_size for the new controller card(s), then these need to be
+tied together with a manifest.
+
+Sincerely -- Mark Salyzyn
+______________________________________________________________________
+This email may contain privileged or confidential information, which should only be used for the purpose for which it was sent by Xyratex. No further rights or licenses are granted to use such information. If you are not the intended recipient of this message, please notify the sender by return and delete it. You may not use, copy, disclose or rely on the information contained in it.
+ 
+Internet email is susceptible to data corruption, interception and unauthorised amendment for which Xyratex does not accept liability. While we have taken reasonable precautions to ensure that this email is free of viruses, Xyratex does not accept liability for the presence of any computer viruses in this email, nor for any losses caused as a result of viruses.
+ 
+Xyratex Technology Limited (03134912), Registered in England & Wales, Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
+ 
+The Xyratex group of companies also includes, Xyratex Ltd, registered in Bermuda, Xyratex International Inc, registered in California, Xyratex (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd registered in The People's Republic of China and Xyratex Japan Limited registered in Japan.
+______________________________________________________________________
+ 
 
 
