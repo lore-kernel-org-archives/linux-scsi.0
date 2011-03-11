@@ -1,40 +1,55 @@
-From: <Yanqing_Liu@Dell.com>
-Subject: [patch] Add MD36xxf into RDAC device list
-Date: Fri, 11 Mar 2011 09:47:11 -0600
-Message-ID: <DB6E482E89290547898851B8CC9D81100161718E@AUSX7MCPS302.AMER.DELL.COM>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: Chris Mason <chris.mason@oracle.com>
+Subject: Re: [RFC] block integrity: Fix write after checksum calculation problem
+Date: Fri, 11 Mar 2011 11:34:05 -0500
+Message-ID: <1299860233-sup-4443@think>
+References: <20110222020022.GH32261@tux1.beaverton.ibm.com> <yq1vd0cf26f.fsf@sermon.lab.mkp.net> <20110223202446.GG4020@noexit> <1298493173-sup-8301@think> <20110224164758.GH23042@quack.suse.cz> <1298566775-sup-730@think> <20110224182732.GV27190@tux1.beaverton.ibm.com> <1298897186-sup-9394@think> <20110304210724.GF27190@tux1.beaverton.ibm.com> <20110308045626.GD1956@dastard> <20110310235722.GA1110@tux1.beaverton.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60ps301.us.dell.com ([143.166.148.206]:37067 "EHLO
-	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754390Ab1CKPrN convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2011 10:47:13 -0500
-Content-Language: en-US
+Received: from rcsinet10.oracle.com ([148.87.113.121]:36930 "EHLO
+	rcsinet10.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752679Ab1CKQey (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2011 11:34:54 -0500
+In-reply-to: <20110310235722.GA1110@tux1.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: Amer_Hadba@Dell.com, Clayton_Walther@Dell.com, Joel_S@Dell.com, Sudhir.Dachepalli@lsi.com, Babu.Moger@lsi.com, Shyam_Iyer@Dell.com, Narayanan_D@Dell.com
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+Excerpts from Darrick J. Wong's message of 2011-03-10 18:57:22 -0500:
+> On Tue, Mar 08, 2011 at 03:56:26PM +1100, Dave Chinner wrote:
+> 
+> > On Fri, Mar 04, 2011 at 01:07:24PM -0800, Darrick J. Wong wrote:
+> > > On Mon, Feb 28, 2011 at 07:54:05AM -0500, Chris Mason wrote:
+> > > > Excerpts from Darrick J. Wong's message of 2011-02-24 13:27:32 -0500:
+> > > > > On Thu, Feb 24, 2011 at 12:37:53PM -0500, Chris Mason wrote:
+> > > > > > Excerpts from Jan Kara's message of 2011-02-24 11:47:58 -0500:
+> > > > > > > On Wed 23-02-11 15:35:11, Chris Mason wrote:
+> > > > > > > > Excerpts from Joel Becker's message of 2011-02-23 15:24:47 -0500:
+> > > > > > > > > On Tue, Feb 22, 2011 at 11:45:44AM -0500, Martin K. Petersen wrote:
+> > > > > > > > > > Also, DIX is only the tip of the iceberg. Many other impending
+> > > > > > > > > > technologies feature checksums and require pages to be stable during I/O
+> > > > > > > > > > due to checksumming, encryption and so on.
+> > > > > > > > > > 
+> > > > > > > > > > The VM is already trying to do the right thing. We just need the
+> > > > > > > > > > relevant filesystems to catch up.
+> > > > > > > > > 
+> > > > > > > > >     ocfs2 handles stable metadata for its checksums when feeding
+> > > > > > > > > things to the journal.  If we're doing pagecache-based I/O, is the
+> > > > > > > > > pagecache going to help here for data?
+> > > > > > > > 
+> > > > > > > > Data is much easier than metadata.  All you really need is to wait on
+> > > > > > > > writeback in file_write, wait on writeback in page_mkwrite, and make
+> 
+> Hrm... I've been looking for a file_write in ext4; was the aio_write function
+> pointer what you had in mind here?
 
-This patch is to add Dell MD36xxf array into the RDAC handler device list.
+Your change to grab_cache_page_write_begin looks good to me, at least
+for ext4.  For ext3 you have to actually go in and wait for each of the
+buffer heads in the page, since ext3 (and reiserfs) will write the buffer heads
+directly without using writepage.
 
-Thanks,
-Yanqing
+Have you confirmed by looking at the block mapping that your crc errors
+are from data blocks?
 
-
-Singed-off-by Yanqing Liu <Yanqing_Liu@Dell.com>
----
-
---- drivers/scsi/device_handler/scsi_dh_rdac.c.orig	2011-02-05 09:12:39.355376053 -0600
-+++ drivers/scsi/device_handler/scsi_dh_rdac.c	2011-02-05 09:12:53.749455577 -0600
-@@ -769,6 +769,7 @@
- 	{"DELL", "MD32xx"},
- 	{"DELL", "MD32xxi"},
- 	{"DELL", "MD36xxi"},
-+	{"DELL", "MD36xxf"},
- 	{"LSI", "INF-01-00"},
- 	{"ENGENIO", "INF-01-00"},
- 	{"STK", "FLEXLINE 380"},
-
+-chris
