@@ -1,61 +1,60 @@
-From: "Mark Salyzyn" <mark_salyzyn@us.xyratex.com>
-Subject: RE: [PATCH 1/1] AACRAID driver update patch version - 28000
-Date: Fri, 11 Mar 2011 10:21:02 -0800
-Message-ID: <FC1F9E38C0703341A1A750524E2525A90164D651@XYUS-EX22.xyus.xyratex.com>
-References: <340C71CD25A7EB49BFA81AE8C8392667104CE89A@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [RFC] block integrity: Fix write after checksum calculation
+	problem
+Date: Fri, 11 Mar 2011 10:51:18 -0800
+Message-ID: <20110311185118.GB1110@tux1.beaverton.ibm.com>
+References: <20110223202446.GG4020@noexit> <1298493173-sup-8301@think> <20110224164758.GH23042@quack.suse.cz> <1298566775-sup-730@think> <20110224182732.GV27190@tux1.beaverton.ibm.com> <1298897186-sup-9394@think> <20110304210724.GF27190@tux1.beaverton.ibm.com> <20110308045626.GD1956@dastard> <20110310235722.GA1110@tux1.beaverton.ibm.com> <1299860233-sup-4443@think>
+Reply-To: djwong@us.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eu1sys200aog105.obsmtp.com ([207.126.144.119]:45758 "HELO
-	eu1sys200aog105.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752949Ab1CKSWS convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2011 13:22:18 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <340C71CD25A7EB49BFA81AE8C8392667104CE89A@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1299860233-sup-4443@think>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chris Mason <chris.mason@oracle.com>
+Cc: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>, Joel Becker <jlbec@evilplan.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-kernel <linux-kernel@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Mingming Cao <mcao@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>, James.Bottomley@suse.de, linux-scsi@vger.kernel.org
-Cc: aacraid@pmc-sierra.com
 
-Looks good to me overall, except a very minor nit ...
+On Fri, Mar 11, 2011 at 11:34:05AM -0500, Chris Mason wrote:
+> Excerpts from Darrick J. Wong's message of 2011-03-10 18:57:22 -0500:
+> > On Tue, Mar 08, 2011 at 03:56:26PM +1100, Dave Chinner wrote:
+> > 
+> > > On Fri, Mar 04, 2011 at 01:07:24PM -0800, Darrick J. Wong wrote:
+> > > > On Mon, Feb 28, 2011 at 07:54:05AM -0500, Chris Mason wrote:
+> > > > > Excerpts from Darrick J. Wong's message of 2011-02-24 13:27:32 -0500:
+> > > > > > On Thu, Feb 24, 2011 at 12:37:53PM -0500, Chris Mason wrote:
+> > > > > > > Excerpts from Jan Kara's message of 2011-02-24 11:47:58 -0500:
+> > > > > > > > On Wed 23-02-11 15:35:11, Chris Mason wrote:
+> > > > > > > > > Excerpts from Joel Becker's message of 2011-02-23 15:24:47 -0500:
+> > > > > > > > > > On Tue, Feb 22, 2011 at 11:45:44AM -0500, Martin K. Petersen wrote:
+> > > > > > > > > > > Also, DIX is only the tip of the iceberg. Many other impending
+> > > > > > > > > > > technologies feature checksums and require pages to be stable during I/O
+> > > > > > > > > > > due to checksumming, encryption and so on.
+> > > > > > > > > > > 
+> > > > > > > > > > > The VM is already trying to do the right thing. We just need the
+> > > > > > > > > > > relevant filesystems to catch up.
+> > > > > > > > > > 
+> > > > > > > > > >     ocfs2 handles stable metadata for its checksums when feeding
+> > > > > > > > > > things to the journal.  If we're doing pagecache-based I/O, is the
+> > > > > > > > > > pagecache going to help here for data?
+> > > > > > > > > 
+> > > > > > > > > Data is much easier than metadata.  All you really need is to wait on
+> > > > > > > > > writeback in file_write, wait on writeback in page_mkwrite, and make
+> > 
+> > Hrm... I've been looking for a file_write in ext4; was the aio_write function
+> > pointer what you had in mind here?
+> 
+> Your change to grab_cache_page_write_begin looks good to me, at least
+> for ext4.  For ext3 you have to actually go in and wait for each of the
+> buffer heads in the page, since ext3 (and reiserfs) will write the buffer heads
+> directly without using writepage.
 
-@@ -63,9 +64,11 @@ static int fib_map_alloc(struct aac_dev 
- 	  "allocate hardware fibs pci_alloc_consistent(%p, %d * (%d +
-%d), %p)\n",
- 	  dev->pdev, dev->max_fib_size, dev->scsi_host_ptr->can_queue,
- 	  AAC_NUM_MGT_FIB, &dev->hw_fib_pa));
--	if((dev->hw_fib_va = pci_alloc_consistent(dev->pdev,
-dev->max_fib_size
--	  * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB),
--	  &dev->hw_fib_pa))==NULL)
-+	dev->hw_fib_va = pci_alloc_consistent(dev->pdev,
-+		(dev->max_fib_size + sizeof(struct aac_fib_xporthdr))
-+		* (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) +
-31,
-+		&dev->hw_fib_pa);
-+	if (dev->hw_fib_va == NULL)
- 		return -ENOMEM;
- 	return 0;
- }
+Heh, I hadn't really given much thought to ext2/3 yet.  I'm still trying to
+figure out what causes the occasional ext4 failures. :)
 
-MGS: 31 (here and elsewhere) constant seems arbitrary. What about using
-a manifest-define to document? If it is related to the modulus 32 for
-the max_fib_size for the new controller card(s), then these need to be
-tied together with a manifest.
+> Have you confirmed by looking at the block mapping that your crc errors
+> are from data blocks?
 
-Sincerely -- Mark Salyzyn
-______________________________________________________________________
-This email may contain privileged or confidential information, which should only be used for the purpose for which it was sent by Xyratex. No further rights or licenses are granted to use such information. If you are not the intended recipient of this message, please notify the sender by return and delete it. You may not use, copy, disclose or rely on the information contained in it.
- 
-Internet email is susceptible to data corruption, interception and unauthorised amendment for which Xyratex does not accept liability. While we have taken reasonable precautions to ensure that this email is free of viruses, Xyratex does not accept liability for the presence of any computer viruses in this email, nor for any losses caused as a result of viruses.
- 
-Xyratex Technology Limited (03134912), Registered in England & Wales, Registered Office, Langstone Road, Havant, Hampshire, PO9 1SA.
- 
-The Xyratex group of companies also includes, Xyratex Ltd, registered in Bermuda, Xyratex International Inc, registered in California, Xyratex (Malaysia) Sdn Bhd registered in Malaysia, Xyratex Technology (Wuxi) Co Ltd registered in The People's Republic of China and Xyratex Japan Limited registered in Japan.
-______________________________________________________________________
- 
+Yes, debugfs confirms that they are data blocks.
 
-
+--D
