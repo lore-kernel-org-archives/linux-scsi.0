@@ -1,54 +1,40 @@
-From: Douglas Gilbert <dgilbert@interlog.com>
-Subject: [ANNOUNCE] lsscsi 0.25 beta 1, adds --size
-Date: Fri, 11 Mar 2011 15:33:16 -0500
-Message-ID: <4D7A870C.7040809@interlog.com>
-Reply-To: dgilbert@interlog.com
+From: James Smart <james.smart@emulex.com>
+Subject: [PATCH 0/6] lpfc 8.3.22: Update lpfc to revision 8.3.22
+Date: Fri, 11 Mar 2011 16:05:01 -0500
+Message-ID: <1299877515.31589.13.camel@wookie>
+Reply-To: james.smart@emulex.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.infotech.no ([82.134.31.41]:37281 "EHLO smtp.infotech.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752895Ab1CKUdU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2011 15:33:20 -0500
+Received: from exht1.emulex.com ([138.239.113.183]:23172 "EHLO
+	exht1.ad.emulex.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754735Ab1CKVFu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Mar 2011 16:05:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI development list <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@ORACLE.COM>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>
-
-Martin Petersen recently sent me some patches
-to add a --size (or '-s') option to lsscsi:
-
-# lsscsi -s
-[0:0:0:0]  disk  ATA    INTEL SSD  2CV1 /dev/sda 80.0GB
-[10:0:0:0] disk  Linux  scsi_debug 0004 /dev/sdb 1.09TB
-
-Martin and I had several hacks at this. Getting
-utilities to work reliably with sysfs across various
-kernel versions continues to be a crap shoot. So
-I am putting this out as a beta and hoping that
-anyone with problems will contact me (or Martin).
-
-Note that this logic decodes /sys/block/sda/size
-(for example) so disks that are present but without
-a block interface (e.g. physical disks in a RAID)
-will not have a size shown ('-' is shown instead).
-
-Version 0.25 beta 1 is available at:
-     http://sg.danny.cz/scsi/lsscsi.html
-More information can be found on that page including examples
-and a Download section for the tarball:
-   http://sg.danny.cz/scsi/lsscsi-0.25b1.tgz
-There are no debian or redhat packages built for this beta.
-
-Version 0.25 2011/03/04 [svn: r91]
-   - add sas_port and fc_remote_ports transport information
-   - print enclosure_device entry
-   - add '--size' option to show size of disks
-   - add '--protmode' option to show protection information mode
-
-Version 0.24 2010/06/12 [svn: r83]
-.....
+To: linux-scsi@vger.kernel.org
 
 
-Doug Gilbert
+This patch set updates the lpfc driver to revision 8.3.22
+
+The patches for 8.3.22. contain:
+
+- Add new mailbox command and new BSG fix
+- T10-DIF corrections
+- Add support for PCI Adapter Failure 
+- FC Discovery fixes
+- Update Copyright Dates
+- Update driver version to 8.3.22
+
+The bugfixes were cut against scsi-misc-2.6
+
+-- james s
+
+
+  Signed-off-by: Alex Iannicelli <alex.iannicelli@emulex.com>
+  Signed-off-by: James Smart <james.smart@emulex.com>
+
+
+
+
