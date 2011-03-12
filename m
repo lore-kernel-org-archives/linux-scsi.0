@@ -1,159 +1,65 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [RFC PATCH] libfcoe: Replace module state checking with global flag
-	checking
-Date: Fri, 11 Mar 2011 18:07:37 -0800
-Message-ID: <20110312020737.21655.31389.stgit@localhost6.localdomain6>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH-FOR-38] target: Fix READ_CAPACITY_16 regression
+Date: Fri, 11 Mar 2011 18:40:43 -0800
+Message-ID: <20110311184043.6438fe31.akpm@linux-foundation.org>
+References: <1299109971-27268-1-git-send-email-nab@linux-iscsi.org>
+	<1299885455.6938.6.camel@mulgrave.site>
+	<1299894371.31170.4.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:3029 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753317Ab1CLCHh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Mar 2011 21:07:37 -0500
+Received: from smtp1.linux-foundation.org ([140.211.169.13]:47001 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753317Ab1CLCmV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Mar 2011 21:42:21 -0500
+In-Reply-To: <1299894371.31170.4.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Ben Jarvis <bjarvismn@gmail.com>
 
-libfcoe uses module parameters for its create, destroy,
-etc... interfaces. The user land application will write
-the name of the netdevice to these interface files to
-trigger the kernel to take some action.
+On Fri, 11 Mar 2011 17:46:11 -0800 "Nicholas A. Bellinger" <nab@linux-iscsi.org> wrote:
 
-Module parameter sysfs files are both present and writable
-before the module has completed its initialization routine.
-This means that the user could call 'create' before
-libfcoe's global data structures have been initialized.
+> On Fri, 2011-03-11 at 17:17 -0600, James Bottomley wrote:
+> > On Wed, 2011-03-02 at 15:52 -0800, Nicholas A. Bellinger wrote:
+> > > From: Nicholas Bellinger <nab@linux-iscsi.org>
+> > > 
+> > > Hi James,
+> > > 
+> > > This patch fixes a regression for READ_CAPACITY to trigger SAI READ_CAPACITY_16 for
+> > > >= 0xffffffff virtual backends.  This occured during v4.0.0-rc6 when the backend
+> > > read_capacity* handlers where moved into generic target_core_cdb.c code, and the
+> > > 'unsigned long long blocks_long' piece was dropped from target_emulate_readcapacity().
+> > > 
+> > > This fix has been tested with TCM_Loop on .38-rc7 with lio-4.1 and is working as expected
+> > > with large block virtual backends:
+> > > 
+> > > [67826.897061] TARGET_CORE[loopback]->TPG[1]_LUN[0] - Adding READ-WRITE access for LUN in Demo Mode
+> > > [67826.897061] scsi 7:0:1:0: Direct-Access     LIO-ORG  FILEIO           4.0  PQ: 0 ANSI: 5
+> > > [67826.900933] sd 7:0:1:0: [sdd] 2621440000001 512-byte logical blocks: (1.34 PB/1.19 PiB)
+> > > [67826.901510] sd 7:0:1:0: [sdd] Write Protect is off
+> > > [67826.901684] sd 7:0:1:0: [sdd] Mode Sense: 2f 00 00 00
+> > > 
+> > > Please include into scsi-rc-fixes going to Linus for-38 mainline target code.
+> > 
+> > So the piece you didn't say is that this only affects volumes >2TB
+> > volume which misreport the capacity (which is actually what the bug
+> > description should have been).
+> > 
+> > That's hardly an oopsworthy fix at this stage ... I'll put it into misc
+> > with a cc stable.
+> > 
+> 
+> This has already been picked up by AKPM last week, and (I assume) will
+> be queued to Linus for .38-FINAL via -mm.
 
-The current solution is to check the module's state in
-the sysfs store functions and if the module is not
-MODULE_STATE_LIVE the sysfs store routine will immediately
-exit, thus not doing anything if the module has not
-completed initialization. This solution is not sufficient
-because it expects THIS_MODULE to have been initialized,
-which is not guaranteed.
+Not really.  I often grab important-looking fixes which cross my
+desk, in case they end up getting mis-scheduled or mislaid.
 
-This patch adds a global (to libfcoe) atomic variable
-which is used to track the modules initialization state.
-In other words, this patch uses a flag to indicate
-whether the module has completed initialization or not.
+> Considering that is a critical fix that is not trigger by some obsecure
+> corner case, I am not sure why this would be deferred for for a
+> v2.6.38.x release when we already have a proper fix in place..?
 
-A few #defines are added to make the calling code more
-readable.
-
-This patch was created and tested on scsi-misc + two
-patches:
-
-fcoe: Remove mutex_trylock/restart_syscall checks
-libfcoe: Remove mutex_trylock/restart_syscall checks
-
-Applying this patch shouldn't be necessary for the
-current discussion, but if someone wants to, these
-dependent patches were patches 01/10 and 02/10 of my
-recent fc_sysfs posting to scsi-misc.
-
-Signed-off-by: Robert Love <robert.w.love@intel.com>
----
- drivers/scsi/fcoe/fcoe_transport.c |   42 ++++++++----------------------------
- 1 files changed, 9 insertions(+), 33 deletions(-)
-
-diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-index 7b61d00..70a8717 100644
---- a/drivers/scsi/fcoe/fcoe_transport.c
-+++ b/drivers/scsi/fcoe/fcoe_transport.c
-@@ -47,6 +47,9 @@ static DEFINE_MUTEX(ft_mutex);
- static LIST_HEAD(fcoe_netdevs);
- static DEFINE_MUTEX(fn_mutex);
- 
-+atomic_t libfcoe_initialized;
-+#define libfcoe_module_usable() atomic_read(&libfcoe_initialized)
-+
- unsigned int libfcoe_debug_logging;
- module_param_named(debug_logging, libfcoe_debug_logging, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
-@@ -530,15 +533,8 @@ static int fcoe_transport_create(const char *buffer, struct kernel_param *kp)
- 	struct fcoe_transport *ft = NULL;
- 	enum fip_state fip_mode = (enum fip_state)(long)kp->arg;
- 
--#ifdef CONFIG_LIBFCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module parameter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE)
-+	if (!libfcoe_module_usable())
- 		goto out_nodev;
--#endif
- 
- 	mutex_lock(&ft_mutex);
- 
-@@ -604,15 +600,8 @@ static int fcoe_transport_destroy(const char *buffer, struct kernel_param *kp)
- 	struct net_device *netdev = NULL;
- 	struct fcoe_transport *ft = NULL;
- 
--#ifdef CONFIG_LIBFCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module parameter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE)
-+	if (!libfcoe_module_usable())
- 		goto out_nodev;
--#endif
- 
- 	mutex_lock(&ft_mutex);
- 
-@@ -658,15 +647,8 @@ static int fcoe_transport_disable(const char *buffer, struct kernel_param *kp)
- 	struct net_device *netdev = NULL;
- 	struct fcoe_transport *ft = NULL;
- 
--#ifdef CONFIG_LIBFCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module parameter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE)
-+	if (!libfcoe_module_usable())
- 		goto out_nodev;
--#endif
- 
- 	mutex_lock(&ft_mutex);
- 
-@@ -706,15 +688,8 @@ static int fcoe_transport_enable(const char *buffer, struct kernel_param *kp)
- 	struct net_device *netdev = NULL;
- 	struct fcoe_transport *ft = NULL;
- 
--#ifdef CONFIG_LIBFCOE_MODULE
--	/*
--	 * Make sure the module has been initialized, and is not about to be
--	 * removed.  Module parameter sysfs files are writable before the
--	 * module_init function is called and after module_exit.
--	 */
--	if (THIS_MODULE->state != MODULE_STATE_LIVE)
-+	if (!libfcoe_module_usable())
- 		goto out_nodev;
--#endif
- 
- 	mutex_lock(&ft_mutex);
- 
-@@ -741,7 +716,7 @@ out_nodev:
- static int __init libfcoe_init(void)
- {
- 	fcoe_transport_init();
--
-+	atomic_set(&libfcoe_initialized, 1); /* module usable */
- 	return 0;
- }
- module_init(libfcoe_init);
-@@ -751,6 +726,7 @@ module_init(libfcoe_init);
-  */
- static void __exit libfcoe_exit(void)
- {
-+	atomic_set(&libfcoe_initialized, 0); /* module unusable */
- 	fcoe_transport_exit();
- }
- module_exit(libfcoe_exit);
-
+2.6.38.1 is OK.  No sane people will run 2.6.38 anyway ;)
