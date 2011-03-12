@@ -1,66 +1,33 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: fcoe: correct checking for bonding
-Date: Sat, 12 Mar 2011 10:59:44 -0800 (PST)
-Message-ID: <20110312.105944.193725929.davem@davemloft.net>
-References: <20110302095550.GA2858@psychotron.brq.redhat.com>
-	<1299114558.1688.5.camel@fritz>
-	<20110312120109.GA2899@psychotron.redhat.com>
+From: Vasiliy Kulikov <segoon@openwall.com>
+Subject: Re: [PATCH 00/20] world-writable files in sysfs and debugfs
+Date: Sat, 12 Mar 2011 23:23:06 +0300
+Message-ID: <AANLkTikE-A=Fe-yRrN0opWwJGQ0f4uOzkyB3XCcEUrFE__14465.3154690333$1299961416$gmane$org@mail.gmail.com>
+References: <cover.1296818921.git.segoon@openwall.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:48786
-	"EHLO sunset.davemloft.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754216Ab1CLS7H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 12 Mar 2011 13:59:07 -0500
-In-Reply-To: <20110312120109.GA2899@psychotron.redhat.com>
+Received: from mail-iy0-f174.google.com ([209.85.210.174]:41357 "EHLO
+	mail-iy0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754717Ab1CLUXI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Mar 2011 15:23:08 -0500
+In-Reply-To: <cover.1296818921.git.segoon@openwall.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jpirko@redhat.com
-Cc: robert.w.love@intel.com, James.Bottomley@suse.de, linux-scsi@vger.kernel.org, devel@open-fcoe.org, netdev@vger.kernel.org, fubar@us.ibm.com, joe.eykholt@gmail.com
+To: linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-usb@vger.kernel.org, linux-media@vger.kernel.org, platform-driver-x86@vger.kernel.
 
-From: Jiri Pirko <jpirko@redhat.com>
-Date: Sat, 12 Mar 2011 13:01:10 +0100
+> Vasiliy Kulikov (20):
+> =A0mach-ux500: mbox-db5500: world-writable sysfs fifo file
+> =A0leds: lp5521: world-writable sysfs engine* files
+> =A0leds: lp5523: world-writable engine* sysfs files
+> =A0misc: ep93xx_pwm: world-writable sysfs files
+> =A0rtc: rtc-ds1511: world-writable sysfs nvram file
+> =A0scsi: aic94xx: world-writable sysfs update_bios file
+> =A0scsi: iscsi: world-writable sysfs priv_sess file
 
-> Thu, Mar 03, 2011 at 02:09:18AM CET, robert.w.love@intel.com wrote:
->>On Wed, 2011-03-02 at 01:55 -0800, Jiri Pirko wrote:
->>> Or perhaps this should be applied to net-next?
->>> 
->>I think this should go through scsi-misc as all the other
->>libfc/libfcoe/fcoe patches do.
->>
->>> Wed, Mar 02, 2011 at 07:05:35AM CET, jpirko@redhat.com wrote:
->>> >Check for bonding master and refuse to use that.
->>> >
->>> >Signed-off-by: Jiri Pirko <jpirko@redhat.com>
->>> >---
->>> > drivers/scsi/fcoe/fcoe.c |    4 +---
->>> > 1 files changed, 1 insertions(+), 3 deletions(-)
->>> >
->>> >diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
->>> >index 9f9600b..3becc6a 100644
->>> >--- a/drivers/scsi/fcoe/fcoe.c
->>> >+++ b/drivers/scsi/fcoe/fcoe.c
->>> >@@ -285,9 +285,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
->>> > 	}
->>> > 
->>> > 	/* Do not support for bonding device */
->>> >-	if ((netdev->priv_flags & IFF_MASTER_ALB) ||
->>> >-	    (netdev->priv_flags & IFF_SLAVE_INACTIVE) ||
->>> >-	    (netdev->priv_flags & IFF_MASTER_8023AD)) {
->>> >+	if (netdev->priv_flags & IFF_BONDING && netdev->flags & IFF_MASTER) {
->>> > 		FCOE_NETDEV_DBG(netdev, "Bonded interfaces not supported\n");
->>> > 		return -EOPNOTSUPP;
->>> > 	}
->>> >-- 
->>> >1.7.3.4
->>> >
->>
->>James, feel free to pick up this patch. I don't have anything in my fcoe
->>tree right now that it would conflict with. I'll also put it in my tree
->>and resend if you don't put it into scsi-misc directly.
-> 
-> What's the status of this? Maybe this should rather go thru net-next
-
-Sure, I can take this.  I'll look at it later.
+These are still not merged :(
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
