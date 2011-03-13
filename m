@@ -1,57 +1,53 @@
-From: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-Subject: Re: [PATCH 19/20] scsi: iscsi: world-writable sysfs priv_sess file
-Date: Sun, 13 Mar 2011 03:28:03 -0500
-Message-ID: <4D7C8013.3090500@cs.wisc.edu>
-References: <cover.1296818921.git.segoon@openwall.com> <1ca8a99eaadde79e662573d89e4f17a20457fba0.1296818921.git.segoon@openwall.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH 0/2] Add struct crypto_alg->cra_check_optimized for
+	crc32c_intel
+Date: Sun, 13 Mar 2011 17:01:58 +0800
+Message-ID: <20110313090158.GA12473@gondor.apana.org.au>
+References: <1299745272-25477-1-git-send-email-nab@linux-iscsi.org> <20110310084346.GA10650@gondor.apana.org.au> <1299747264.5263.35.camel@haakon2.linux-iscsi.org> <20110310090929.GA10919@gondor.apana.org.au> <1299748387.5263.45.camel@haakon2.linux-iscsi.org> <1299751517.5263.60.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Return-path: <open-iscsi+bncCLPJla3WGRCbgPLrBBoEx4mVJg-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-In-Reply-To: <1ca8a99eaadde79e662573d89e4f17a20457fba0.1296818921.git.segoon-cxoSlKxDwOJWk0Htik3J/w@public.gmane.org>
-List-Post: <http://groups.google.com/group/open-iscsi/post?hl=en_US>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <http://groups.google.com/support/?hl=en_US>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <http://groups.google.com/group/open-iscsi?hl=en_US>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Subscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <http://groups.google.com/group/open-iscsi/subscribe?hl=en_US>,
- <mailto:open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-To: Vasiliy Kulikov <segoon-cxoSlKxDwOJWk0Htik3J/w@public.gmane.org>
-Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, security-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, "James E.J. Bottomley" <James.Bottomley-l3A5Bk7waGM@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-crypto-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1299751517.5263.60.camel@haakon2.linux-iscsi.org>
+Sender: linux-crypto-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto <linux-crypto@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Randy Dunlap <rdunlap@xenotime.net>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/04/2011 06:24 AM, Vasiliy Kulikov wrote:
-> Don't allow everybody to change iSCSI settings.
+On Thu, Mar 10, 2011 at 02:05:17AM -0800, Nicholas A. Bellinger wrote:
 >
-> Signed-off-by: Vasiliy Kulikov<segoon-cxoSlKxDwOJWk0Htik3J/w@public.gmane.org>
-> ---
->   Compile tested only.
->
->   drivers/scsi/scsi_transport_iscsi.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index f905ecb..01543d2 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -1847,7 +1847,7 @@ store_priv_session_##field(struct device *dev,				\
->   #define iscsi_priv_session_rw_attr(field, format)			\
->   	iscsi_priv_session_attr_show(field, format)			\
->   	iscsi_priv_session_attr_store(field)				\
-> -static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO | S_IWUGO,		\
-> +static ISCSI_CLASS_ATTR(priv_sess, field, S_IRUGO | S_IWUSR,		\
->   			show_priv_session_##field,			\
->   			store_priv_session_##field)
->   iscsi_priv_session_rw_attr(recovery_tmo, "%d");
+> We are still expecting the libcrypto consumer (iscsi_target_mod.ko) to
+> call the arch independent crypto_alloc_hash("crc32c", ...) in order to
+> have libcrypto backend logic perform a request_module() upon
+> architecture dependent offload modules (like crc32c_intel.ko) that
+> libcrypto consumers are not (and should not) be calling directly via
+> crypto_alloc_host("crc32c_intel", ...), correct..?
 
+Right.
 
-Sorry for the late reply. Messed up on my side. Patch is correct and ok 
-with me. Tested here.
+> Where I am getting confused is wrt to a new crypto_alg_mod_lookup() ->
+> request_module() call for a struct shash_alg that has not yet be loaded
+> via arch/x86/crypto/crc32c-intel.c:crc32c_intel_mod_init() ->
+> crypto_register_shash().
 
-Acked-by: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
+If you look at crypto_alg_mod_lookup, basically there are two paths.
+Either we already have a registered algorithm of the requested name,
+or we don't.
 
+In the first case, we won't invoke request_module and in the second
+case we will.
+
+So what I'm suggesting is that in the first case we also invoke
+request_module conditionally.  Now exactly what that condition is
+is the tricky bit.
+
+The easiest is to flip a bit in the algorithm we just found.  This
+isn't optimal as it'll mean that for each unregistered algorithm
+we'll end up modprobing twice, but that shouldn't be too bad I
+think.
+
+Cheers,
 -- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To unsubscribe from this group, send email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit this group at http://groups.google.com/group/open-iscsi?hl=en.
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
