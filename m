@@ -1,53 +1,130 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 0/2] Add struct crypto_alg->cra_check_optimized for
-	crc32c_intel
-Date: Sun, 13 Mar 2011 17:01:58 +0800
-Message-ID: <20110313090158.GA12473@gondor.apana.org.au>
-References: <1299745272-25477-1-git-send-email-nab@linux-iscsi.org> <20110310084346.GA10650@gondor.apana.org.au> <1299747264.5263.35.camel@haakon2.linux-iscsi.org> <20110310090929.GA10919@gondor.apana.org.au> <1299748387.5263.45.camel@haakon2.linux-iscsi.org> <1299751517.5263.60.camel@haakon2.linux-iscsi.org>
+From: "Jack Wang" <jack_wang@usish.com>
+Subject: RE: [RFC PATCH 1/1] libsas: Add data integrity support
+Date: Sun, 13 Mar 2011 21:22:11 +0800
+Message-ID: <BAFD794CD4B64DDCBF3E3647EE9F9D9B@usish.com.cn>
+References: <20110309221948.GA11376@rtllnx49.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-crypto-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1299751517.5263.60.camel@haakon2.linux-iscsi.org>
-Sender: linux-crypto-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto <linux-crypto@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Randy Dunlap <rdunlap@xenotime.net>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sr-smtp.usish.com ([210.5.144.203]:58157 "EHLO
+	sr-smtp.usish.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755401Ab1CMNWX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Mar 2011 09:22:23 -0400
+In-Reply-To: <20110309221948.GA11376@rtllnx49.pmc-sierra.bc.ca>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Chuck Tuffli' <chuck_tuffli@pmc-sierra.com>, linux-scsi@vger.kernel.org
 
-On Thu, Mar 10, 2011 at 02:05:17AM -0800, Nicholas A. Bellinger wrote:
->
-> We are still expecting the libcrypto consumer (iscsi_target_mod.ko) to
-> call the arch independent crypto_alloc_hash("crc32c", ...) in order to
-> have libcrypto backend logic perform a request_module() upon
-> architecture dependent offload modules (like crc32c_intel.ko) that
-> libcrypto consumers are not (and should not) be calling directly via
-> crypto_alloc_host("crc32c_intel", ...), correct..?
+> From: Chuck Tuffli <chuck_tuffli@pmc-sierra.com>
+> 
+> This patch adds Data Integrity support to libsas
+> 
+> Signed-off-by: Chuck Tuffli <chuck_tuffli@pmc-sierra.com>
+> ---
+> 
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c
+> b/drivers/scsi/libsas/sas_scsi_host.c
+> index 2119871..91c6afe 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -54,7 +54,7 @@ static void sas_scsi_task_done(struct sas_task *task)
+>  {
+>  	struct task_status_struct *ts = &task->task_status;
+>  	struct scsi_cmnd *sc = task->uldd_task;
+> -	int hs = 0, stat = 0;
+> +	int ds = 0, hs = 0, stat = 0;
+> 
+>  	if (unlikely(task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+>  		/* Aborted tasks will be completed by the error handler */
+> @@ -118,13 +118,39 @@ static void sas_scsi_task_done(struct sas_task
+*task)
+>  			       min(SCSI_SENSE_BUFFERSIZE,
+ts->buf_valid_size));
+>  			stat = SAM_STAT_CHECK_CONDITION;
+>  			break;
+> +		case SAS_DIF_ERR_GUARD_TAG:
+> +			BUG_ON(NULL == sc->sense_buffer);
+> +			scsi_build_sense_buffer(1, sc->sense_buffer,
+> +					ILLEGAL_REQUEST, 0x10, 0x1);
+> +			ds = DRIVER_SENSE;
+> +			hs = DID_ABORT;
+> +			stat = SAM_STAT_CHECK_CONDITION;
+> +			break;
+> +		case SAS_DIF_ERR_APP_TAG:
+> +			BUG_ON(NULL == sc->sense_buffer);
+> +			scsi_build_sense_buffer(1, sc->sense_buffer,
+> +					ILLEGAL_REQUEST, 0x10, 0x2);
+> +			ds = DRIVER_SENSE;
+> +			hs = DID_ABORT;
+> +			stat = SAM_STAT_CHECK_CONDITION;
+> +			break;
+> +		case SAS_DIF_ERR_REF_TAG:
+> +			BUG_ON(NULL == sc->sense_buffer);
+> +			scsi_build_sense_buffer(1, sc->sense_buffer,
+> +					ILLEGAL_REQUEST, 0x10, 0x3);
+> +			ds = DRIVER_SENSE;
+> +			hs = DID_ABORT;
+> +			stat = SAM_STAT_CHECK_CONDITION;
+> +			break;
+>  		default:
+>  			stat = ts->stat;
+>  			break;
+>  		}
+>  	}
+>  	ASSIGN_SAS_TASK(sc, NULL);
+> -	sc->result = (hs << 16) | stat;
+> +	sc->result = stat;
+> +	set_host_byte(sc, hs);
+> +	set_driver_byte(sc, ds);
+>  	list_del_init(&task->list);
+>  	sas_free_task(task);
+>  	sc->scsi_done(sc);
+> @@ -152,6 +178,10 @@ static struct sas_task *sas_create_task(struct
+scsi_cmnd
+> *cmd,
+>  	task->ssp_task.task_attr = TASK_ATTR_SIMPLE;
+>  	memcpy(task->ssp_task.cdb, cmd->cmnd, 16);
+> 
+> +	task->prot = scsi_get_prot_op(cmd);
+> +	task->prot_sg = scsi_prot_sglist(cmd);
+> +	task->prot_num_scatter = scsi_prot_sg_count(cmd);
+> +
+[Jack Wang] Should we also save prot_type into a field in task?
+Others looks fine.
+Reviewed-by: Jack Wang <jack_wang@usish.com>
+>  	task->scatter = scsi_sglist(cmd);
+>  	task->num_scatter = scsi_sg_count(cmd);
+>  	task->total_xfer_len = scsi_bufflen(cmd);
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index 8f6bb9c..04bfa42 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -441,6 +441,9 @@ enum exec_status {
+>  	SAS_NAK_R_ERR,
+>  	SAS_PENDING,
+>  	SAS_ABORTED_TASK,
+> +	SAS_DIF_ERR_APP_TAG,
+> +	SAS_DIF_ERR_REF_TAG,
+> +	SAS_DIF_ERR_GUARD_TAG,
+>  };
+> 
+>  /* When a task finishes with a response, the LLDD examines the
+> @@ -544,7 +547,10 @@ struct sas_task {
+>  	struct scatterlist *scatter;
+>  	int    num_scatter;
+>  	u32    total_xfer_len;
+> -	u8     data_dir:2;	  /* Use PCI_DMA_... */
+> +	struct scatterlist *prot_sg;
+> +	int    prot_num_scatter;
+> +	u8     data_dir:2,	  /* Use PCI_DMA_... */
+> +		   prot:3;
+> 
+>  	struct task_status_struct task_status;
+>  	void   (*task_done)(struct sas_task *);
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Right.
-
-> Where I am getting confused is wrt to a new crypto_alg_mod_lookup() ->
-> request_module() call for a struct shash_alg that has not yet be loaded
-> via arch/x86/crypto/crc32c-intel.c:crc32c_intel_mod_init() ->
-> crypto_register_shash().
-
-If you look at crypto_alg_mod_lookup, basically there are two paths.
-Either we already have a registered algorithm of the requested name,
-or we don't.
-
-In the first case, we won't invoke request_module and in the second
-case we will.
-
-So what I'm suggesting is that in the first case we also invoke
-request_module conditionally.  Now exactly what that condition is
-is the tricky bit.
-
-The easiest is to flip a bit in the algorithm we just found.  This
-isn't optimal as it'll mean that for each unregistered algorithm
-we'll end up modprobing twice, but that shouldn't be too bad I
-think.
-
-Cheers,
--- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
