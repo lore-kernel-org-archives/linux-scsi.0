@@ -1,77 +1,64 @@
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 07/13] qla4xxx: cleanup function qla4xxx_process_ddb_changed
-Date: Sun, 13 Mar 2011 22:24:30 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA872263B150D@AVEXMB1.qlogic.org>
+Subject: [PATCH 08/13] qla4xxx: Add support for ql4xmaxqdepth command line
+ parameter
+Date: Sun, 13 Mar 2011 22:24:38 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA872263B150E@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from db3ehsobe006.messaging.microsoft.com ([213.199.154.144]:46377
-	"EHLO DB3EHSOBE006.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752192Ab1CNFYk convert rfc822-to-8bit
+Received: from db3ehsobe003.messaging.microsoft.com ([213.199.154.141]:13912
+	"EHLO DB3EHSOBE003.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752192Ab1CNFYp convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Mar 2011 01:24:40 -0400
+	Mon, 14 Mar 2011 01:24:45 -0400
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
 Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-We don't need to check ddb old state, we can take action
-based on ddb new state.
+This provides the flexibility to modify the qdepth based on different
+target devices to make the best use of system resources.
 
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Signed-off-by: Lalit Chandivade <lalit.chandivade@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_init.c |   15 +++------------
- 1 files changed, 3 insertions(+), 12 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c |   12 +++++++++++-
+ 1 files changed, 11 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 8b5453a..bbb2e90 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -1409,7 +1409,6 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
-                uint32_t state, uint32_t conn_err)
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 59c5552..c7c675b 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -56,6 +56,11 @@ MODULE_PARM_DESC(ql4xenablemsix,
+                " 2 = enable MSI interrupt mechanism.");
+
+ #define QL4_DEF_QDEPTH 32
++static int ql4xmaxqdepth = QL4_DEF_QDEPTH;
++module_param(ql4xmaxqdepth, int, S_IRUGO | S_IWUSR);
++MODULE_PARM_DESC(ql4xmaxqdepth,
++               "Maximum queue depth to report for target devices.\n"
++               " Default: 32.");
+
+ /*
+  * SCSI host template entry points
+@@ -1912,10 +1917,15 @@ static int qla4xxx_slave_alloc(struct scsi_device *sdev)
  {
-        struct ddb_entry * ddb_entry;
--       uint32_t old_fw_ddb_device_state;
+        struct iscsi_cls_session *sess = starget_to_session(sdev->sdev_target);
+        struct ddb_entry *ddb = sess->dd_data;
++       int queue_depth = QL4_DEF_QDEPTH;
 
-        /* check for out of range index */
-        if (fw_ddb_index >= MAX_DDB_ENTRIES)
-@@ -1425,22 +1424,14 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
-        }
+        sdev->hostdata = ddb;
+        sdev->tagged_supported = 1;
+-       scsi_activate_tcq(sdev, QL4_DEF_QDEPTH);
++
++       if (ql4xmaxqdepth != 0 && ql4xmaxqdepth <= 0xffffU)
++               queue_depth = ql4xmaxqdepth;
++
++       scsi_activate_tcq(sdev, queue_depth);
+        return 0;
+ }
 
-        /* Device already exists in our database. */
--       old_fw_ddb_device_state = ddb_entry->fw_ddb_device_state;
-        DEBUG2(printk("scsi%ld: %s DDB - old state= 0x%x, new state=0x%x for "
-                      "index [%d]\n", ha->host_no, __func__,
-                      ddb_entry->fw_ddb_device_state, state, fw_ddb_index));
--       if (old_fw_ddb_device_state == state &&
--           state == DDB_DS_SESSION_ACTIVE) {
--               if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
--                       atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
--                       iscsi_unblock_session(ddb_entry->sess);
--               }
--               return QLA_SUCCESS;
--       }
-
-        ddb_entry->fw_ddb_device_state = state;
-        /* Device is back online. */
--       if (ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE) {
-+       if ((ddb_entry->fw_ddb_device_state == DDB_DS_SESSION_ACTIVE) &&
-+          (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE)) {
-                atomic_set(&ddb_entry->state, DDB_STATE_ONLINE);
-                atomic_set(&ddb_entry->relogin_retry_count, 0);
-                atomic_set(&ddb_entry->relogin_timer, 0);
-@@ -1452,7 +1443,7 @@ int qla4xxx_process_ddb_changed(struct scsi_qla_host *ha, uint32_t fw_ddb_index,
-                 * Change the lun state to READY in case the lun TIMEOUT before
-                 * the device came back.
-                 */
--       } else {
-+       } else if (ddb_entry->fw_ddb_device_state != DDB_DS_SESSION_ACTIVE) {
-                /* Device went away, mark device missing */
-                if (atomic_read(&ddb_entry->state) == DDB_STATE_ONLINE) {
-                        DEBUG2(ql4_printk(KERN_INFO, ha, "%s mark missing "
 --
 1.7.3.2
 
