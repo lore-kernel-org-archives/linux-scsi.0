@@ -1,8 +1,11 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC-v2 04/12] iscsi-target: Add configfs fabric dependent statistics
-Date: Mon, 14 Mar 2011 04:57:01 -0700
-Message-ID: <1300103829-10337-5-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC-v2 08/12] iscsi-target: Add Sequence/PDU list + DataIN response logic
+Date: Mon, 14 Mar 2011 04:57:05 -0700
+Message-ID: <1300103829-10337-9-git-send-email-nab@linux-iscsi.org>
 References: <1300103829-10337-1-git-send-email-nab@linux-iscsi.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1300103829-10337-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
@@ -10,37 +13,53 @@ To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.ker
 Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+=46rom: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for iSCSI fabric dependent configfs statistics
-using TCM v4 default statistics groups.
+This patch adds Sequence/PDU list logic used by RFC-3720 for
+DataSequenceInOrder=3D[Yes,No] and DataPDUInOrder=3D[Yes,No].  It also
+includes support for these modes of support for generating iSCSI
+DataIN response data from iscsi_target.c:iscsi_send_data_in().
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_stat.c |  955 ++++++++++++++++++++++++++++++
- drivers/target/iscsi/iscsi_target_stat.h |   79 +++
- 2 files changed, 1034 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/iscsi/iscsi_target_stat.c
- create mode 100644 drivers/target/iscsi/iscsi_target_stat.h
+ drivers/target/iscsi/iscsi_seq_and_pdu_list.c     |  712 +++++++++++++=
+++++++++
+ drivers/target/iscsi/iscsi_seq_and_pdu_list.h     |   88 +++
+ drivers/target/iscsi/iscsi_target_datain_values.c |  549 +++++++++++++=
++++
+ drivers/target/iscsi/iscsi_target_datain_values.h |   15 +
+ 4 files changed, 1364 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/iscsi/iscsi_seq_and_pdu_list.c
+ create mode 100644 drivers/target/iscsi/iscsi_seq_and_pdu_list.h
+ create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_datain_values.h
 
-diff --git a/drivers/target/iscsi/iscsi_target_stat.c b/drivers/target/iscsi/iscsi_target_stat.c
+diff --git a/drivers/target/iscsi/iscsi_seq_and_pdu_list.c b/drivers/ta=
+rget/iscsi/iscsi_seq_and_pdu_list.c
 new file mode 100644
-index 0000000..3a83bb7
+index 0000000..732215f
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_stat.c
-@@ -0,0 +1,955 @@
-+/*******************************************************************************
-+ * Modern ConfigFS group context specific iSCSI statistics based on original
-+ * iscsi_target_mib.c code
++++ b/drivers/target/iscsi/iscsi_seq_and_pdu_list.c
+@@ -0,0 +1,712 @@
++/*********************************************************************=
+**********
++ * This file contains main functions related to iSCSI DataSequenceInOr=
+der=3DNo
++ * and DataPDUInOrder=3DNo.
 + *
-+ * Copyright (c) 2011 Rising Tide Systems
++ * Copyright (c) 2003 PyX Technologies, Inc.
++ * Copyright (c) 2006-2007 SBE, Inc.  All Rights Reserved.
++ =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
 + *
-+ * Licensed to the Linux Foundation under the General Public License (GPL) version 2.
++ * Licensed to the Linux Foundation under the General Public License (=
+GPL) version 2.
 + *
 + * Author: Nicholas A. Bellinger <nab@linux-iscsi.org>
 + *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
++ * This program is free software; you can redistribute it and/or modif=
+y
++ * it under the terms of the GNU General Public License as published b=
+y
 + * the Free Software Foundation; either version 2 of the License, or
 + * (at your option) any later version.
 + *
@@ -48,1026 +67,1398 @@ index 0000000..3a83bb7
 + * but WITHOUT ANY WARRANTY; without even the implied warranty of
 + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 + * GNU General Public License for more details.
-+ ******************************************************************************/
++ *********************************************************************=
+*********/
 +
-+#include <linux/kernel.h>
-+#include <linux/version.h>
-+#include <generated/utsrelease.h>
-+#include <linux/utsname.h>
-+#include <linux/configfs.h>
-+#include <scsi/iscsi_proto.h>
-+#include <target/target_core_base.h>
-+#include <target/target_core_transport.h>
-+#include <target/configfs_macros.h>
++#include <linux/slab.h>
++#include <linux/random.h>
 +
++#include "iscsi_debug.h"
 +#include "iscsi_target_core.h"
-+#include "iscsi_parameters.h"
-+#include "iscsi_target_device.h"
-+#include "iscsi_target_tpg.h"
 +#include "iscsi_target_util.h"
-+#include "iscsi_target_stat.h"
++#include "iscsi_seq_and_pdu_list.h"
 +
-+#ifndef INITIAL_JIFFIES
-+#define INITIAL_JIFFIES ((unsigned long)(unsigned int) (-300*HZ))
++#define OFFLOAD_BUF_SIZE	32768
++
++/*	iscsi_dump_seq_list():
++ *
++ *
++ */
++void iscsi_dump_seq_list(struct iscsi_cmd *cmd)
++{
++	int i;
++	struct iscsi_seq *seq;
++
++	printk(KERN_INFO "Dumping Sequence List for ITT: 0x%08x:\n",
++			cmd->init_task_tag);
++
++	for (i =3D 0; i < cmd->seq_count; i++) {
++		seq =3D &cmd->seq_list[i];
++		printk(KERN_INFO "i: %d, pdu_start: %d, pdu_count: %d,"
++			" offset: %d, xfer_len: %d, seq_send_order: %d,"
++			" seq_no: %d\n", i, seq->pdu_start, seq->pdu_count,
++			seq->offset, seq->xfer_len, seq->seq_send_order,
++			seq->seq_no);
++	}
++}
++
++/*	iscsi_dump_pdu_list():
++ *
++ *
++ */
++void iscsi_dump_pdu_list(struct iscsi_cmd *cmd)
++{
++	int i;
++	struct iscsi_pdu *pdu;
++
++	printk(KERN_INFO "Dumping PDU List for ITT: 0x%08x:\n",
++			cmd->init_task_tag);
++
++	for (i =3D 0; i < cmd->pdu_count; i++) {
++		pdu =3D &cmd->pdu_list[i];
++		printk(KERN_INFO "i: %d, offset: %d, length: %d,"
++			" pdu_send_order: %d, seq_no: %d\n", i, pdu->offset,
++			pdu->length, pdu->pdu_send_order, pdu->seq_no);
++	}
++}
++
++/*	iscsi_ordered_seq_lists():
++ *
++ *
++ */
++static inline void iscsi_ordered_seq_lists(
++	struct iscsi_cmd *cmd,
++	u8 type)
++{
++	u32 i, seq_count =3D 0;
++
++	for (i =3D 0; i < cmd->seq_count; i++) {
++		if (cmd->seq_list[i].type !=3D SEQTYPE_NORMAL)
++			continue;
++		cmd->seq_list[i].seq_send_order =3D seq_count++;
++	}
++}
++
++/*	iscsi_ordered_pdu_lists():
++ *
++ *
++ */
++static inline void iscsi_ordered_pdu_lists(
++	struct iscsi_cmd *cmd,
++	u8 type)
++{
++	u32 i, pdu_send_order =3D 0, seq_no =3D 0;
++
++	for (i =3D 0; i < cmd->pdu_count; i++) {
++redo:
++		if (cmd->pdu_list[i].seq_no =3D=3D seq_no) {
++			cmd->pdu_list[i].pdu_send_order =3D pdu_send_order++;
++			continue;
++		}
++		seq_no++;
++		pdu_send_order =3D 0;
++		goto redo;
++	}
++}
++
++/*	iscsi_create_random_array():
++ *
++ *	Generate count random values into array.
++ *	Use 0x80000000 to mark generates valued in array[].
++ */
++static inline void iscsi_create_random_array(u32 *array, u32 count)
++{
++	int i, j, k;
++
++	if (count =3D=3D 1) {
++		array[0] =3D 0;
++		return;
++	}
++
++	for (i =3D 0; i < count; i++) {
++redo:
++		get_random_bytes(&j, sizeof(u32));
++		j =3D (1 + (int) (9999 + 1) - j) % count;
++		for (k =3D 0; k < i + 1; k++) {
++			j |=3D 0x80000000;
++			if ((array[k] & 0x80000000) && (array[k] =3D=3D j))
++				goto redo;
++		}
++		array[i] =3D j;
++	}
++
++	for (i =3D 0; i < count; i++)
++		array[i] &=3D ~0x80000000;
++
++	return;
++}
++
++/*	iscsi_randomize_pdu_lists():
++ *
++ *
++ */
++static inline int iscsi_randomize_pdu_lists(
++	struct iscsi_cmd *cmd,
++	u8 type)
++{
++	int i =3D 0;
++	u32 *array, pdu_count, seq_count =3D 0, seq_no =3D 0, seq_offset =3D =
+0;
++
++	for (pdu_count =3D 0; pdu_count < cmd->pdu_count; pdu_count++) {
++redo:
++		if (cmd->pdu_list[pdu_count].seq_no =3D=3D seq_no) {
++			seq_count++;
++			continue;
++		}
++		array =3D kzalloc(seq_count * sizeof(u32), GFP_KERNEL);
++		if (!(array)) {
++			printk(KERN_ERR "Unable to allocate memory"
++				" for random array.\n");
++			return -1;
++		}
++		iscsi_create_random_array(array, seq_count);
++
++		for (i =3D 0; i < seq_count; i++)
++			cmd->pdu_list[seq_offset+i].pdu_send_order =3D array[i];
++
++		kfree(array);
++
++		seq_offset +=3D seq_count;
++		seq_count =3D 0;
++		seq_no++;
++		goto redo;
++	}
++
++	if (seq_count) {
++		array =3D kzalloc(seq_count * sizeof(u32), GFP_KERNEL);
++		if (!(array)) {
++			printk(KERN_ERR "Unable to allocate memory for"
++				" random array.\n");
++			return -1;
++		}
++		iscsi_create_random_array(array, seq_count);
++
++		for (i =3D 0; i < seq_count; i++)
++			cmd->pdu_list[seq_offset+i].pdu_send_order =3D array[i];
++
++		kfree(array);
++	}
++
++	return 0;
++}
++
++/*	iscsi_randomize_seq_lists():
++ *
++ *
++ */
++static inline int iscsi_randomize_seq_lists(
++	struct iscsi_cmd *cmd,
++	u8 type)
++{
++	int i, j =3D 0;
++	u32 *array, seq_count =3D cmd->seq_count;
++
++	if ((type =3D=3D PDULIST_IMMEDIATE) || (type =3D=3D PDULIST_UNSOLICIT=
+ED))
++		seq_count--;
++	else if (type =3D=3D PDULIST_IMMEDIATE_AND_UNSOLICITED)
++		seq_count -=3D 2;
++
++	if (!seq_count)
++		return 0;
++
++	array =3D kzalloc(seq_count * sizeof(u32), GFP_KERNEL);
++	if (!(array)) {
++		printk(KERN_ERR "Unable to allocate memory for random array.\n");
++		return -1;
++	}
++	iscsi_create_random_array(array, seq_count);
++
++	for (i =3D 0; i < cmd->seq_count; i++) {
++		if (cmd->seq_list[i].type !=3D SEQTYPE_NORMAL)
++			continue;
++		cmd->seq_list[i].seq_send_order =3D array[j++];
++	}
++
++	kfree(array);
++	return 0;
++}
++
++/*	iscsi_determine_counts_for_list():
++ *
++ *
++ */
++static inline void iscsi_determine_counts_for_list(
++	struct iscsi_cmd *cmd,
++	struct iscsi_build_list *bl,
++	u32 *seq_count,
++	u32 *pdu_count)
++{
++	int check_immediate =3D 0;
++	u32 burstlength =3D 0, offset =3D 0;
++	u32 unsolicited_data_length =3D 0;
++	struct iscsi_conn *conn =3D CONN(cmd);
++
++	if ((bl->type =3D=3D PDULIST_IMMEDIATE) ||
++	    (bl->type =3D=3D PDULIST_IMMEDIATE_AND_UNSOLICITED))
++		check_immediate =3D 1;
++
++	if ((bl->type =3D=3D PDULIST_UNSOLICITED) ||
++	    (bl->type =3D=3D PDULIST_IMMEDIATE_AND_UNSOLICITED))
++		unsolicited_data_length =3D (cmd->data_length >
++			SESS_OPS_C(conn)->FirstBurstLength) ?
++			SESS_OPS_C(conn)->FirstBurstLength : cmd->data_length;
++
++	while (offset < cmd->data_length) {
++		*pdu_count +=3D 1;
++
++		if (check_immediate) {
++			check_immediate =3D 0;
++			offset +=3D bl->immediate_data_length;
++			*seq_count +=3D 1;
++			if (unsolicited_data_length)
++				unsolicited_data_length -=3D
++					bl->immediate_data_length;
++			continue;
++		}
++		if (unsolicited_data_length > 0) {
++			if ((offset + CONN_OPS(conn)->MaxRecvDataSegmentLength)
++					>=3D cmd->data_length) {
++				unsolicited_data_length -=3D
++					(cmd->data_length - offset);
++				offset +=3D (cmd->data_length - offset);
++				continue;
++			}
++			if ((offset + CONN_OPS(conn)->MaxRecvDataSegmentLength)
++					>=3D SESS_OPS_C(conn)->FirstBurstLength) {
++				unsolicited_data_length -=3D
++					(SESS_OPS_C(conn)->FirstBurstLength -
++					offset);
++				offset +=3D (SESS_OPS_C(conn)->FirstBurstLength -
++					offset);
++				burstlength =3D 0;
++				*seq_count +=3D 1;
++				continue;
++			}
++
++			offset +=3D CONN_OPS(conn)->MaxRecvDataSegmentLength;
++			unsolicited_data_length -=3D
++				CONN_OPS(conn)->MaxRecvDataSegmentLength;
++			continue;
++		}
++		if ((offset + CONN_OPS(conn)->MaxRecvDataSegmentLength) >=3D
++		     cmd->data_length) {
++			offset +=3D (cmd->data_length - offset);
++			continue;
++		}
++		if ((burstlength + CONN_OPS(conn)->MaxRecvDataSegmentLength) >=3D
++		     SESS_OPS_C(conn)->MaxBurstLength) {
++			offset +=3D (SESS_OPS_C(conn)->MaxBurstLength -
++					burstlength);
++			burstlength =3D 0;
++			*seq_count +=3D 1;
++			continue;
++		}
++
++		burstlength +=3D CONN_OPS(conn)->MaxRecvDataSegmentLength;
++		offset +=3D CONN_OPS(conn)->MaxRecvDataSegmentLength;
++	}
++}
++
++
++/*	iscsi_build_pdu_and_seq_list():
++ *
++ *	Builds PDU and/or Sequence list,  called while DataSequenceInOrder=3D=
+No
++ *	and DataPDUInOrder=3DNo.
++ */
++static inline int iscsi_build_pdu_and_seq_list(
++	struct iscsi_cmd *cmd,
++	struct iscsi_build_list *bl)
++{
++	int check_immediate =3D 0, datapduinorder, datasequenceinorder;
++	u32 burstlength =3D 0, offset =3D 0, i =3D 0;
++	u32 pdu_count =3D 0, seq_no =3D 0, unsolicited_data_length =3D 0;
++	struct iscsi_conn *conn =3D CONN(cmd);
++	struct iscsi_pdu *pdu =3D cmd->pdu_list;
++	struct iscsi_seq *seq =3D cmd->seq_list;
++
++	datapduinorder =3D SESS_OPS_C(conn)->DataPDUInOrder;
++	datasequenceinorder =3D SESS_OPS_C(conn)->DataSequenceInOrder;
++
++	if ((bl->type =3D=3D PDULIST_IMMEDIATE) ||
++	    (bl->type =3D=3D PDULIST_IMMEDIATE_AND_UNSOLICITED))
++		check_immediate =3D 1;
++
++	if ((bl->type =3D=3D PDULIST_UNSOLICITED) ||
++	    (bl->type =3D=3D PDULIST_IMMEDIATE_AND_UNSOLICITED))
++		unsolicited_data_length =3D (cmd->data_length >
++			SESS_OPS_C(conn)->FirstBurstLength) ?
++			SESS_OPS_C(conn)->FirstBurstLength : cmd->data_length;
++
++	while (offset < cmd->data_length) {
++		pdu_count++;
++		if (!datapduinorder) {
++			pdu[i].offset =3D offset;
++			pdu[i].seq_no =3D seq_no;
++		}
++		if (!datasequenceinorder && (pdu_count =3D=3D 1)) {
++			seq[seq_no].pdu_start =3D i;
++			seq[seq_no].seq_no =3D seq_no;
++			seq[seq_no].offset =3D offset;
++			seq[seq_no].orig_offset =3D offset;
++		}
++
++		if (check_immediate) {
++			check_immediate =3D 0;
++			if (!datapduinorder) {
++				pdu[i].type =3D PDUTYPE_IMMEDIATE;
++				pdu[i++].length =3D bl->immediate_data_length;
++			}
++			if (!datasequenceinorder) {
++				seq[seq_no].type =3D SEQTYPE_IMMEDIATE;
++				seq[seq_no].pdu_count =3D 1;
++				seq[seq_no].xfer_len =3D
++					bl->immediate_data_length;
++			}
++			offset +=3D bl->immediate_data_length;
++			pdu_count =3D 0;
++			seq_no++;
++			if (unsolicited_data_length)
++				unsolicited_data_length -=3D
++					bl->immediate_data_length;
++			continue;
++		}
++		if (unsolicited_data_length > 0) {
++			if ((offset +
++			     CONN_OPS(conn)->MaxRecvDataSegmentLength) >=3D
++			     cmd->data_length) {
++				if (!datapduinorder) {
++					pdu[i].type =3D PDUTYPE_UNSOLICITED;
++					pdu[i].length =3D
++						(cmd->data_length - offset);
++				}
++				if (!datasequenceinorder) {
++					seq[seq_no].type =3D SEQTYPE_UNSOLICITED;
++					seq[seq_no].pdu_count =3D pdu_count;
++					seq[seq_no].xfer_len =3D (burstlength +
++						(cmd->data_length - offset));
++				}
++				unsolicited_data_length -=3D
++						(cmd->data_length - offset);
++				offset +=3D (cmd->data_length - offset);
++				continue;
++			}
++			if ((offset +
++			     CONN_OPS(conn)->MaxRecvDataSegmentLength) >=3D
++					SESS_OPS_C(conn)->FirstBurstLength) {
++				if (!datapduinorder) {
++					pdu[i].type =3D PDUTYPE_UNSOLICITED;
++					pdu[i++].length =3D
++					   (SESS_OPS_C(conn)->FirstBurstLength -
++						offset);
++				}
++				if (!datasequenceinorder) {
++					seq[seq_no].type =3D SEQTYPE_UNSOLICITED;
++					seq[seq_no].pdu_count =3D pdu_count;
++					seq[seq_no].xfer_len =3D (burstlength +
++					   (SESS_OPS_C(conn)->FirstBurstLength -
++						offset));
++				}
++				unsolicited_data_length -=3D
++					(SESS_OPS_C(conn)->FirstBurstLength -
++						offset);
++				offset +=3D (SESS_OPS_C(conn)->FirstBurstLength -
++						offset);
++				burstlength =3D 0;
++				pdu_count =3D 0;
++				seq_no++;
++				continue;
++			}
++
++			if (!datapduinorder) {
++				pdu[i].type =3D PDUTYPE_UNSOLICITED;
++				pdu[i++].length =3D
++				     CONN_OPS(conn)->MaxRecvDataSegmentLength;
++			}
++			burstlength +=3D CONN_OPS(conn)->MaxRecvDataSegmentLength;
++			offset +=3D CONN_OPS(conn)->MaxRecvDataSegmentLength;
++			unsolicited_data_length -=3D
++				CONN_OPS(conn)->MaxRecvDataSegmentLength;
++			continue;
++		}
++		if ((offset + CONN_OPS(conn)->MaxRecvDataSegmentLength) >=3D
++		     cmd->data_length) {
++			if (!datapduinorder) {
++				pdu[i].type =3D PDUTYPE_NORMAL;
++				pdu[i].length =3D (cmd->data_length - offset);
++			}
++			if (!datasequenceinorder) {
++				seq[seq_no].type =3D SEQTYPE_NORMAL;
++				seq[seq_no].pdu_count =3D pdu_count;
++				seq[seq_no].xfer_len =3D (burstlength +
++					(cmd->data_length - offset));
++			}
++			offset +=3D (cmd->data_length - offset);
++			continue;
++		}
++		if ((burstlength + CONN_OPS(conn)->MaxRecvDataSegmentLength) >=3D
++		     SESS_OPS_C(conn)->MaxBurstLength) {
++			if (!datapduinorder) {
++				pdu[i].type =3D PDUTYPE_NORMAL;
++				pdu[i++].length =3D
++					(SESS_OPS_C(conn)->MaxBurstLength -
++						burstlength);
++			}
++			if (!datasequenceinorder) {
++				seq[seq_no].type =3D SEQTYPE_NORMAL;
++				seq[seq_no].pdu_count =3D pdu_count;
++				seq[seq_no].xfer_len =3D (burstlength +
++					(SESS_OPS_C(conn)->MaxBurstLength -
++					burstlength));
++			}
++			offset +=3D (SESS_OPS_C(conn)->MaxBurstLength -
++					burstlength);
++			burstlength =3D 0;
++			pdu_count =3D 0;
++			seq_no++;
++			continue;
++		}
++
++		if (!datapduinorder) {
++			pdu[i].type =3D PDUTYPE_NORMAL;
++			pdu[i++].length =3D
++				CONN_OPS(conn)->MaxRecvDataSegmentLength;
++		}
++		burstlength +=3D CONN_OPS(conn)->MaxRecvDataSegmentLength;
++		offset +=3D CONN_OPS(conn)->MaxRecvDataSegmentLength;
++	}
++
++	if (!datasequenceinorder) {
++		if (bl->data_direction & ISCSI_PDU_WRITE) {
++			if (bl->randomize & RANDOM_R2T_OFFSETS) {
++				if (iscsi_randomize_seq_lists(cmd, bl->type)
++						< 0)
++					return -1;
++			} else
++				iscsi_ordered_seq_lists(cmd, bl->type);
++		} else if (bl->data_direction & ISCSI_PDU_READ) {
++			if (bl->randomize & RANDOM_DATAIN_SEQ_OFFSETS) {
++				if (iscsi_randomize_seq_lists(cmd, bl->type)
++						< 0)
++					return -1;
++			} else
++				iscsi_ordered_seq_lists(cmd, bl->type);
++		}
++#if 0
++		iscsi_dump_seq_list(cmd);
 +#endif
++	}
++	if (!datapduinorder) {
++		if (bl->data_direction & ISCSI_PDU_WRITE) {
++			if (bl->randomize & RANDOM_DATAOUT_PDU_OFFSETS) {
++				if (iscsi_randomize_pdu_lists(cmd, bl->type)
++						< 0)
++					return -1;
++			} else
++				iscsi_ordered_pdu_lists(cmd, bl->type);
++		} else if (bl->data_direction & ISCSI_PDU_READ) {
++			if (bl->randomize & RANDOM_DATAIN_PDU_OFFSETS) {
++				if (iscsi_randomize_pdu_lists(cmd, bl->type)
++						< 0)
++					return -1;
++			} else
++				iscsi_ordered_pdu_lists(cmd, bl->type);
++		}
++#if 0
++		iscsi_dump_pdu_list(cmd);
++#endif
++	}
 +
-+/* Instance Attributes Table */
-+#define ISCSI_INST_NUM_NODES		1
-+#define ISCSI_INST_DESCR		"Storage Engine Target"
-+#define ISCSI_INST_LAST_FAILURE_TYPE	0
-+#define ISCSI_DISCONTINUITY_TIME	0
++	return 0;
++}
 +
-+#define ISCSI_NODE_INDEX		1
-+
-+#define ISPRINT(a)   ((a >= ' ') && (a <= '~'))
-+
-+/****************************************************************************
-+ * iSCSI MIB Tables
-+ ****************************************************************************/
-+/*
-+ * Instance Attributes Table
++/*	iscsi_do_build_list():
++ *
++ *	Only called while DataSequenceInOrder=3DNo or DataPDUInOrder=3DNo.
 + */
-+CONFIGFS_EATTR_STRUCT(iscsi_stat_instance, iscsi_wwn_stat_grps);
-+#define ISCSI_STAT_INSTANCE_ATTR(_name, _mode)			\
-+static struct iscsi_stat_instance_attribute			\
-+			iscsi_stat_instance_##_name =		\
-+	__CONFIGFS_EATTR(_name, _mode,				\
-+	iscsi_stat_instance_show_attr_##_name,			\
-+	iscsi_stat_instance_store_attr_##_name);
-+
-+#define ISCSI_STAT_INSTANCE_ATTR_RO(_name)			\
-+static struct iscsi_stat_instance_attribute			\
-+			iscsi_stat_instance_##_name =		\
-+	__CONFIGFS_EATTR_RO(_name,				\
-+	iscsi_stat_instance_show_attr_##_name);
-+
-+static ssize_t iscsi_stat_instance_show_attr_inst(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
++int iscsi_do_build_list(
++	struct iscsi_cmd *cmd,
++	struct iscsi_build_list *bl)
 +{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
++	u32 pdu_count =3D 0, seq_count =3D 1;
++	struct iscsi_conn *conn =3D CONN(cmd);
++	struct iscsi_pdu *pdu =3D NULL;
++	struct iscsi_seq *seq =3D NULL;
 +
-+	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
++	iscsi_determine_counts_for_list(cmd, bl, &seq_count, &pdu_count);
++
++	if (!SESS_OPS_C(conn)->DataSequenceInOrder) {
++		seq =3D kzalloc(seq_count * sizeof(struct iscsi_seq), GFP_ATOMIC);
++		if (!(seq)) {
++			printk(KERN_ERR "Unable to allocate struct iscsi_seq list\n");
++			return -1;
++		}
++		cmd->seq_list =3D seq;
++		cmd->seq_count =3D seq_count;
++	}
++
++	if (!SESS_OPS_C(conn)->DataPDUInOrder) {
++		pdu =3D kzalloc(pdu_count * sizeof(struct iscsi_pdu), GFP_ATOMIC);
++		if (!(pdu)) {
++			printk(KERN_ERR "Unable to allocate struct iscsi_pdu list.\n");
++			kfree(seq);
++			return -1;
++		}
++		cmd->pdu_list =3D pdu;
++		cmd->pdu_count =3D pdu_count;
++	}
++
++	return iscsi_build_pdu_and_seq_list(cmd, bl);
 +}
-+ISCSI_STAT_INSTANCE_ATTR_RO(inst);
 +
-+static ssize_t iscsi_stat_instance_show_attr_min_ver(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_DRAFT20_VERSION);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(min_ver);
-+
-+static ssize_t iscsi_stat_instance_show_attr_max_ver(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_DRAFT20_VERSION);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(max_ver);
-+
-+static ssize_t iscsi_stat_instance_show_attr_portals(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_num_tpg_nps);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(portals);
-+
-+static ssize_t iscsi_stat_instance_show_attr_nodes(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_INST_NUM_NODES);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(nodes);
-+
-+static ssize_t iscsi_stat_instance_show_attr_sessions(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_nsessions);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(sessions);
-+
-+static ssize_t iscsi_stat_instance_show_attr_fail_sess(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
-+	u32 sess_err_count;
-+
-+	spin_lock_bh(&sess_err->lock);
-+	sess_err_count = (sess_err->digest_errors +
-+			  sess_err->cxn_timeout_errors +
-+			  sess_err->pdu_format_errors);
-+	spin_unlock_bh(&sess_err->lock);
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", sess_err_count);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(fail_sess);
-+
-+static ssize_t iscsi_stat_instance_show_attr_fail_type(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n",
-+			sess_err->last_sess_failure_type);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(fail_type);
-+
-+static ssize_t iscsi_stat_instance_show_attr_fail_rem_name(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
-+
-+	return snprintf(page, PAGE_SIZE, "%s\n",
-+			sess_err->last_sess_fail_rem_name[0] ?
-+			sess_err->last_sess_fail_rem_name : NONE);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(fail_rem_name);
-+
-+static ssize_t iscsi_stat_instance_show_attr_disc_time(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_DISCONTINUITY_TIME);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(disc_time);
-+
-+static ssize_t iscsi_stat_instance_show_attr_description(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%s\n", ISCSI_INST_DESCR);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(description);
-+
-+static ssize_t iscsi_stat_instance_show_attr_vendor(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "Linux-iSCSI.org\n");
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(vendor);
-+
-+static ssize_t iscsi_stat_instance_show_attr_version(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%s on %s/%s\n", ISCSI_VERSION,
-+			utsname()->sysname, utsname()->machine);
-+}
-+ISCSI_STAT_INSTANCE_ATTR_RO(version);
-+
-+CONFIGFS_EATTR_OPS(iscsi_stat_instance, iscsi_wwn_stat_grps,
-+		iscsi_instance_group);
-+
-+static struct configfs_attribute *iscsi_stat_instance_attrs[] = {
-+	&iscsi_stat_instance_inst.attr,
-+	&iscsi_stat_instance_min_ver.attr,
-+	&iscsi_stat_instance_max_ver.attr,
-+	&iscsi_stat_instance_portals.attr,
-+	&iscsi_stat_instance_nodes.attr,
-+	&iscsi_stat_instance_sessions.attr,
-+	&iscsi_stat_instance_fail_sess.attr,
-+	&iscsi_stat_instance_fail_type.attr,
-+	&iscsi_stat_instance_fail_rem_name.attr,
-+	&iscsi_stat_instance_disc_time.attr,
-+	&iscsi_stat_instance_description.attr,
-+	&iscsi_stat_instance_vendor.attr,
-+	&iscsi_stat_instance_version.attr,
-+	NULL,
-+};
-+
-+static struct configfs_item_operations iscsi_stat_instance_item_ops = {
-+	.show_attribute		= iscsi_stat_instance_attr_show,
-+	.store_attribute	= iscsi_stat_instance_attr_store,
-+};
-+
-+struct config_item_type iscsi_stat_instance_cit = {
-+	.ct_item_ops		= &iscsi_stat_instance_item_ops,
-+	.ct_attrs		= iscsi_stat_instance_attrs,
-+	.ct_owner		= THIS_MODULE,
-+};
-+
-+/*
-+ * Instance Session Failure Stats Table
++/*	iscsi_get_pdu_holder():
++ *
++ *
 + */
-+CONFIGFS_EATTR_STRUCT(iscsi_stat_sess_err, iscsi_wwn_stat_grps);
-+#define ISCSI_STAT_SESS_ERR_ATTR(_name, _mode)			\
-+static struct iscsi_stat_sess_err_attribute			\
-+			iscsi_stat_sess_err_##_name =		\
-+	__CONFIGFS_EATTR(_name, _mode,				\
-+	iscsi_stat_sess_err_show_attr_##_name,			\
-+	iscsi_stat_sess_err_store_attr_##_name);
-+
-+#define ISCSI_STAT_SESS_ERR_ATTR_RO(_name)			\
-+static struct iscsi_stat_sess_err_attribute			\
-+			iscsi_stat_sess_err_##_name =		\
-+	__CONFIGFS_EATTR_RO(_name,				\
-+	iscsi_stat_sess_err_show_attr_##_name);
-+
-+static ssize_t iscsi_stat_sess_err_show_attr_inst(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
++struct iscsi_pdu *iscsi_get_pdu_holder(
++	struct iscsi_cmd *cmd,
++	u32 offset,
++	u32 length)
 +{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
++	u32 i;
++	struct iscsi_pdu *pdu =3D NULL;
 +
-+	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
++	if (!cmd->pdu_list) {
++		printk(KERN_ERR "struct iscsi_cmd->pdu_list is NULL!\n");
++		return NULL;
++	}
++
++	pdu =3D &cmd->pdu_list[0];
++
++	for (i =3D 0; i < cmd->pdu_count; i++)
++		if ((pdu[i].offset =3D=3D offset) && (pdu[i].length =3D=3D length))
++			return &pdu[i];
++
++	printk(KERN_ERR "Unable to locate PDU holder for ITT: 0x%08x, Offset:=
+"
++		" %u, Length: %u\n", cmd->init_task_tag, offset, length);
++	return NULL;
 +}
-+ISCSI_STAT_SESS_ERR_ATTR_RO(inst);
 +
-+static ssize_t iscsi_stat_sess_err_show_attr_digest_errors(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", sess_err->digest_errors);
-+}
-+ISCSI_STAT_SESS_ERR_ATTR_RO(digest_errors);
-+
-+static ssize_t iscsi_stat_sess_err_show_attr_cxn_errors(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", sess_err->cxn_timeout_errors);
-+}
-+ISCSI_STAT_SESS_ERR_ATTR_RO(cxn_errors);
-+
-+static ssize_t iscsi_stat_sess_err_show_attr_format_errors(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_sess_err_stats *sess_err = &tiqn->sess_err_stats;
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", sess_err->pdu_format_errors);
-+}
-+ISCSI_STAT_SESS_ERR_ATTR_RO(format_errors);
-+
-+CONFIGFS_EATTR_OPS(iscsi_stat_sess_err, iscsi_wwn_stat_grps,
-+		iscsi_sess_err_group);
-+
-+static struct configfs_attribute *iscsi_stat_sess_err_attrs[] = {
-+	&iscsi_stat_sess_err_inst.attr,
-+	&iscsi_stat_sess_err_digest_errors.attr,
-+	&iscsi_stat_sess_err_cxn_errors.attr,
-+	&iscsi_stat_sess_err_format_errors.attr,
-+	NULL,
-+};
-+
-+static struct configfs_item_operations iscsi_stat_sess_err_item_ops = {
-+	.show_attribute		= iscsi_stat_sess_err_attr_show,
-+	.store_attribute	= iscsi_stat_sess_err_attr_store,
-+};
-+
-+struct config_item_type iscsi_stat_sess_err_cit = {
-+	.ct_item_ops		= &iscsi_stat_sess_err_item_ops,
-+	.ct_attrs		= iscsi_stat_sess_err_attrs,
-+	.ct_owner		= THIS_MODULE,
-+};
-+
-+/*
-+ * Target Attributes Table
++/*	iscsi_get_pdu_holder_for_seq():
++ *
++ *
 + */
-+CONFIGFS_EATTR_STRUCT(iscsi_stat_tgt_attr, iscsi_wwn_stat_grps);
-+#define ISCSI_STAT_TGT_ATTR(_name, _mode)			\
-+static struct iscsi_stat_tgt_attr_attribute			\
-+			iscsi_stat_tgt_attr_##_name =		\
-+	__CONFIGFS_EATTR(_name, _mode,				\
-+	iscsi_stat_tgt-attr_show_attr_##_name,			\
-+	iscsi_stat_tgt_attr_store_attr_##_name);
-+
-+#define ISCSI_STAT_TGT_ATTR_RO(_name)				\
-+static struct iscsi_stat_tgt_attr_attribute			\
-+			iscsi_stat_tgt_attr_##_name =		\
-+	__CONFIGFS_EATTR_RO(_name,				\
-+	iscsi_stat_tgt_attr_show_attr_##_name);
-+
-+static ssize_t iscsi_stat_tgt_attr_show_attr_inst(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
++struct iscsi_pdu *iscsi_get_pdu_holder_for_seq(
++	struct iscsi_cmd *cmd,
++	struct iscsi_seq *seq)
 +{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
++	u32 i;
++	struct iscsi_conn *conn =3D CONN(cmd);
++	struct iscsi_pdu *pdu =3D NULL;
 +
-+	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
++	if (!cmd->pdu_list) {
++		printk(KERN_ERR "struct iscsi_cmd->pdu_list is NULL!\n");
++		return NULL;
++	}
++
++	if (SESS_OPS_C(conn)->DataSequenceInOrder) {
++redo:
++		pdu =3D &cmd->pdu_list[cmd->pdu_start];
++
++		for (i =3D 0; pdu[i].seq_no !=3D cmd->seq_no; i++) {
++#if 0
++			printk(KERN_INFO "pdu[i].seq_no: %d, pdu[i].pdu"
++				"_send_order: %d, pdu[i].offset: %d,"
++				" pdu[i].length: %d\n", pdu[i].seq_no,
++				pdu[i].pdu_send_order, pdu[i].offset,
++				pdu[i].length);
++#endif
++			if (pdu[i].pdu_send_order =3D=3D cmd->pdu_send_order) {
++				cmd->pdu_send_order++;
++				return &pdu[i];
++			}
++		}
++
++		cmd->pdu_start +=3D cmd->pdu_send_order;
++		cmd->pdu_send_order =3D 0;
++		cmd->seq_no++;
++
++		if (cmd->pdu_start < cmd->pdu_count)
++			goto redo;
++
++		printk(KERN_ERR "Command ITT: 0x%08x unable to locate"
++			" struct iscsi_pdu for cmd->pdu_send_order: %u.\n",
++			cmd->init_task_tag, cmd->pdu_send_order);
++		return NULL;
++	} else {
++		if (!seq) {
++			printk(KERN_ERR "struct iscsi_seq is NULL!\n");
++			return NULL;
++		}
++#if 0
++		printk(KERN_INFO "seq->pdu_start: %d, seq->pdu_count: %d,"
++			" seq->seq_no: %d\n", seq->pdu_start, seq->pdu_count,
++			seq->seq_no);
++#endif
++		pdu =3D &cmd->pdu_list[seq->pdu_start];
++
++		if (seq->pdu_send_order =3D=3D seq->pdu_count) {
++			printk(KERN_ERR "Command ITT: 0x%08x seq->pdu_send"
++				"_order: %u equals seq->pdu_count: %u\n",
++				cmd->init_task_tag, seq->pdu_send_order,
++				seq->pdu_count);
++			return NULL;
++		}
++
++		for (i =3D 0; i < seq->pdu_count; i++) {
++			if (pdu[i].pdu_send_order =3D=3D seq->pdu_send_order) {
++				seq->pdu_send_order++;
++				return &pdu[i];
++			}
++		}
++
++		printk(KERN_ERR "Command ITT: 0x%08x unable to locate iscsi"
++			"_pdu_t for seq->pdu_send_order: %u.\n",
++			cmd->init_task_tag, seq->pdu_send_order);
++		return NULL;
++	}
++
++	return NULL;
 +}
-+ISCSI_STAT_TGT_ATTR_RO(inst);
 +
-+static ssize_t iscsi_stat_tgt_attr_show_attr_indx(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_NODE_INDEX);
-+}
-+ISCSI_STAT_TGT_ATTR_RO(indx);
-+
-+static ssize_t iscsi_stat_tgt_attr_show_attr_login_fails(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	u32 fail_count;
-+
-+	spin_lock(&lstat->lock);
-+	fail_count = (lstat->redirects + lstat->authorize_fails +
-+			lstat->authenticate_fails + lstat->negotiate_fails +
-+			lstat->other_fails);
-+	spin_unlock(&lstat->lock);
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", fail_count);
-+}
-+ISCSI_STAT_TGT_ATTR_RO(login_fails);
-+
-+static ssize_t iscsi_stat_tgt_attr_show_attr_last_fail_time(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	u32 last_fail_time;
-+
-+	spin_lock(&lstat->lock);
-+	last_fail_time = lstat->last_fail_time ?
-+			(u32)(((u32)lstat->last_fail_time -
-+				INITIAL_JIFFIES) * 100 / HZ) : 0;
-+	spin_unlock(&lstat->lock);
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", last_fail_time);
-+}
-+ISCSI_STAT_TGT_ATTR_RO(last_fail_time);
-+
-+static ssize_t iscsi_stat_tgt_attr_show_attr_last_fail_type(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	u32 last_fail_type;
-+
-+	spin_lock(&lstat->lock);
-+	last_fail_type = lstat->last_fail_type;
-+	spin_unlock(&lstat->lock);
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", last_fail_type);
-+}
-+ISCSI_STAT_TGT_ATTR_RO(last_fail_type);
-+
-+static ssize_t iscsi_stat_tgt_attr_show_attr_fail_intr_name(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	unsigned char buf[224];
-+
-+	spin_lock(&lstat->lock);
-+	snprintf(buf, 224, "%s", lstat->last_intr_fail_name[0] ?
-+				lstat->last_intr_fail_name : NONE);
-+	spin_unlock(&lstat->lock);
-+
-+	return snprintf(page, PAGE_SIZE, "%s\n", buf);
-+}
-+ISCSI_STAT_TGT_ATTR_RO(fail_intr_name);
-+
-+static ssize_t iscsi_stat_tgt_attr_show_attr_fail_intr_addr_type(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+			struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	unsigned char buf[8];
-+
-+	spin_lock(&lstat->lock);
-+	snprintf(buf, 8, "%s", (lstat->last_intr_fail_ip6_addr != NULL) ?
-+				"ipv6" : "ipv4");
-+	spin_unlock(&lstat->lock);
-+
-+	return snprintf(page, PAGE_SIZE, "%s\n", buf);
-+}
-+ISCSI_STAT_TGT_ATTR_RO(fail_intr_addr_type);
-+
-+static ssize_t iscsi_stat_tgt_attr_show_attr_fail_intr_addr(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+			struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	unsigned char buf[32];
-+
-+	spin_lock(&lstat->lock);
-+	if (lstat->last_intr_fail_ip6_addr != NULL)
-+		snprintf(buf, 32, "[%s]", lstat->last_intr_fail_ip6_addr);
-+	else
-+		snprintf(buf, 32, "%08X", lstat->last_intr_fail_addr);
-+	spin_unlock(&lstat->lock);
-+
-+	return snprintf(page, PAGE_SIZE, "%s\n", buf);
-+}
-+ISCSI_STAT_TGT_ATTR_RO(fail_intr_addr);
-+
-+CONFIGFS_EATTR_OPS(iscsi_stat_tgt_attr, iscsi_wwn_stat_grps,
-+		iscsi_tgt_attr_group);
-+
-+static struct configfs_attribute *iscsi_stat_tgt_attr_attrs[] = {
-+	&iscsi_stat_tgt_attr_inst.attr,
-+	&iscsi_stat_tgt_attr_indx.attr,
-+	&iscsi_stat_tgt_attr_login_fails.attr,
-+	&iscsi_stat_tgt_attr_last_fail_time.attr,
-+	&iscsi_stat_tgt_attr_last_fail_type.attr,
-+	&iscsi_stat_tgt_attr_fail_intr_name.attr,
-+	&iscsi_stat_tgt_attr_fail_intr_addr_type.attr,
-+	&iscsi_stat_tgt_attr_fail_intr_addr.attr,
-+	NULL,
-+};
-+
-+static struct configfs_item_operations iscsi_stat_tgt_attr_item_ops = {
-+	.show_attribute		= iscsi_stat_tgt_attr_attr_show,
-+	.store_attribute	= iscsi_stat_tgt_attr_attr_store,
-+};
-+
-+struct config_item_type iscsi_stat_tgt_attr_cit = {
-+	.ct_item_ops		= &iscsi_stat_tgt_attr_item_ops,
-+	.ct_attrs		= iscsi_stat_tgt_attr_attrs,
-+	.ct_owner		= THIS_MODULE,
-+};
-+
-+/*
-+ * Target Login Stats Table
++/*	iscsi_get_seq_holder():
++ *
++ *
 + */
-+CONFIGFS_EATTR_STRUCT(iscsi_stat_login, iscsi_wwn_stat_grps);
-+#define ISCSI_STAT_LOGIN(_name, _mode)				\
-+static struct iscsi_stat_login_attribute			\
-+			iscsi_stat_login_##_name =		\
-+	__CONFIGFS_EATTR(_name, _mode,				\
-+	iscsi_stat_login_show_attr_##_name,			\
-+	iscsi_stat_login_store_attr_##_name);
-+
-+#define ISCSI_STAT_LOGIN_RO(_name)				\
-+static struct iscsi_stat_login_attribute			\
-+			iscsi_stat_login_##_name =		\
-+	__CONFIGFS_EATTR_RO(_name,				\
-+	iscsi_stat_login_show_attr_##_name);
-+
-+static ssize_t iscsi_stat_login_show_attr_inst(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
++struct iscsi_seq *iscsi_get_seq_holder(
++	struct iscsi_cmd *cmd,
++	u32 offset,
++	u32 length)
 +{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
++	u32 i;
 +
-+	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
-+}
-+ISCSI_STAT_LOGIN_RO(inst);
-+
-+static ssize_t iscsi_stat_login_show_attr_indx(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_NODE_INDEX);
-+}
-+ISCSI_STAT_LOGIN_RO(indx);
-+
-+static ssize_t iscsi_stat_login_show_attr_accepts(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	ssize_t ret;
-+
-+	spin_lock(&lstat->lock);
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->accepts);
-+	spin_unlock(&lstat->lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_LOGIN_RO(accepts);
-+
-+static ssize_t iscsi_stat_login_show_attr_other_fails(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	ssize_t ret;
-+
-+	spin_lock(&lstat->lock);
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->other_fails);
-+	spin_unlock(&lstat->lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_LOGIN_RO(other_fails);
-+
-+static ssize_t iscsi_stat_login_show_attr_redirects(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	ssize_t ret;
-+
-+	spin_lock(&lstat->lock);
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->redirects);
-+	spin_unlock(&lstat->lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_LOGIN_RO(redirects);
-+
-+static ssize_t iscsi_stat_login_show_attr_authorize_fails(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	ssize_t ret;
-+
-+	spin_lock(&lstat->lock);
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->authorize_fails);
-+	spin_unlock(&lstat->lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_LOGIN_RO(authorize_fails);
-+
-+static ssize_t iscsi_stat_login_show_attr_authenticate_fails(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	ssize_t ret;
-+
-+	spin_lock(&lstat->lock);
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->authenticate_fails);
-+	spin_unlock(&lstat->lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_LOGIN_RO(authenticate_fails);
-+
-+static ssize_t iscsi_stat_login_show_attr_negotiate_fails(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+				struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_login_stats *lstat = &tiqn->login_stats;
-+	ssize_t ret;
-+
-+	spin_lock(&lstat->lock);
-+	ret = snprintf(page, PAGE_SIZE, "%u\n", lstat->negotiate_fails);
-+	spin_unlock(&lstat->lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_LOGIN_RO(negotiate_fails);
-+
-+CONFIGFS_EATTR_OPS(iscsi_stat_login, iscsi_wwn_stat_grps,
-+		iscsi_login_stats_group);
-+
-+static struct configfs_attribute *iscsi_stat_login_stats_attrs[] = {
-+	&iscsi_stat_login_inst.attr,
-+	&iscsi_stat_login_indx.attr,
-+	&iscsi_stat_login_accepts.attr,
-+	&iscsi_stat_login_other_fails.attr,
-+	&iscsi_stat_login_redirects.attr,
-+	&iscsi_stat_login_authorize_fails.attr,
-+	&iscsi_stat_login_authenticate_fails.attr,
-+	&iscsi_stat_login_negotiate_fails.attr,
-+	NULL,
-+};
-+
-+static struct configfs_item_operations iscsi_stat_login_stats_item_ops = {
-+	.show_attribute		= iscsi_stat_login_attr_show,
-+	.store_attribute	= iscsi_stat_login_attr_store,
-+};
-+
-+struct config_item_type iscsi_stat_login_cit = {
-+	.ct_item_ops		= &iscsi_stat_login_stats_item_ops,
-+	.ct_attrs		= iscsi_stat_login_stats_attrs,
-+	.ct_owner		= THIS_MODULE,
-+};
-+
-+/*
-+ * Target Logout Stats Table
-+ */
-+
-+CONFIGFS_EATTR_STRUCT(iscsi_stat_logout, iscsi_wwn_stat_grps);
-+#define ISCSI_STAT_LOGOUT(_name, _mode)				\
-+static struct iscsi_stat_logout_attribute			\
-+			iscsi_stat_logout_##_name =		\
-+	__CONFIGFS_EATTR(_name, _mode,				\
-+	iscsi_stat_logout_show_attr_##_name,			\
-+	iscsi_stat_logout_store_attr_##_name);
-+
-+#define ISCSI_STAT_LOGOUT_RO(_name)				\
-+static struct iscsi_stat_logout_attribute			\
-+			iscsi_stat_logout_##_name =		\
-+	__CONFIGFS_EATTR_RO(_name,				\
-+	iscsi_stat_logout_show_attr_##_name);
-+
-+static ssize_t iscsi_stat_logout_show_attr_inst(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+			struct iscsi_tiqn, tiqn_stat_grps);
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
-+}
-+ISCSI_STAT_LOGOUT_RO(inst);
-+
-+static ssize_t iscsi_stat_logout_show_attr_indx(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	return snprintf(page, PAGE_SIZE, "%u\n", ISCSI_NODE_INDEX);
-+}
-+ISCSI_STAT_LOGOUT_RO(indx);
-+
-+static ssize_t iscsi_stat_logout_show_attr_normal_logouts(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+			struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_logout_stats *lstats = &tiqn->logout_stats;
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", lstats->normal_logouts);
-+}
-+ISCSI_STAT_LOGOUT_RO(normal_logouts);
-+
-+static ssize_t iscsi_stat_logout_show_attr_abnormal_logouts(
-+	struct iscsi_wwn_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_tiqn *tiqn = container_of(igrps,
-+			struct iscsi_tiqn, tiqn_stat_grps);
-+	struct iscsi_logout_stats *lstats = &tiqn->logout_stats;
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", lstats->abnormal_logouts);
-+}
-+ISCSI_STAT_LOGOUT_RO(abnormal_logouts);
-+
-+CONFIGFS_EATTR_OPS(iscsi_stat_logout, iscsi_wwn_stat_grps,
-+		iscsi_logout_stats_group);
-+
-+static struct configfs_attribute *iscsi_stat_logout_stats_attrs[] = {
-+	&iscsi_stat_logout_inst.attr,
-+	&iscsi_stat_logout_indx.attr,
-+	&iscsi_stat_logout_normal_logouts.attr,
-+	&iscsi_stat_logout_abnormal_logouts.attr,
-+	NULL,
-+};
-+
-+static struct configfs_item_operations iscsi_stat_logout_stats_item_ops = {
-+	.show_attribute		= iscsi_stat_logout_attr_show,
-+	.store_attribute	= iscsi_stat_logout_attr_store,
-+};
-+
-+struct config_item_type iscsi_stat_logout_cit = {
-+	.ct_item_ops		= &iscsi_stat_logout_stats_item_ops,
-+	.ct_attrs		= iscsi_stat_logout_stats_attrs,
-+	.ct_owner		= THIS_MODULE,
-+};
-+
-+/*
-+ * Session Stats Table
-+ */
-+
-+CONFIGFS_EATTR_STRUCT(iscsi_stat_sess, iscsi_node_stat_grps);
-+#define ISCSI_STAT_SESS(_name, _mode)				\
-+static struct iscsi_stat_sess_attribute				\
-+			iscsi_stat_sess_##_name =		\
-+	__CONFIGFS_EATTR(_name, _mode,				\
-+	iscsi_stat_sess_show_attr_##_name,			\
-+	iscsi_stat_sess_store_attr_##_name);
-+
-+#define ISCSI_STAT_SESS_RO(_name)				\
-+static struct iscsi_stat_sess_attribute				\
-+			iscsi_stat_sess_##_name =		\
-+	__CONFIGFS_EATTR_RO(_name,				\
-+	iscsi_stat_sess_show_attr_##_name);
-+
-+static ssize_t iscsi_stat_sess_show_attr_inst(
-+	struct iscsi_node_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_node_acl *acl = container_of(igrps,
-+			struct iscsi_node_acl, node_stat_grps);
-+	struct se_wwn *wwn = acl->se_node_acl.se_tpg->se_tpg_wwn;
-+	struct iscsi_tiqn *tiqn = container_of(wwn,
-+			struct iscsi_tiqn, tiqn_wwn);
-+
-+	return snprintf(page, PAGE_SIZE, "%u\n", tiqn->tiqn_index);
-+}
-+ISCSI_STAT_SESS_RO(inst);
-+
-+static ssize_t iscsi_stat_sess_show_attr_node(
-+	struct iscsi_node_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_node_acl *acl = container_of(igrps,
-+			struct iscsi_node_acl, node_stat_grps);
-+	struct se_node_acl *se_nacl = &acl->se_node_acl;
-+	struct iscsi_session *sess;
-+	struct se_session *se_sess;
-+	ssize_t ret = 0;
-+
-+	spin_lock_bh(&se_nacl->nacl_sess_lock);
-+	se_sess = se_nacl->nacl_sess;
-+	if (se_sess) {
-+		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
-+		if (sess)
-+			ret = snprintf(page, PAGE_SIZE, "%u\n",
-+				sess->sess_ops->SessionType ? 0 : ISCSI_NODE_INDEX);
++	if (!cmd->seq_list) {
++		printk(KERN_ERR "struct iscsi_cmd->seq_list is NULL!\n");
++		return NULL;
 +	}
-+	spin_unlock_bh(&se_nacl->nacl_sess_lock);
 +
-+	return ret;
-+}
-+ISCSI_STAT_SESS_RO(node);
-+
-+static ssize_t iscsi_stat_sess_show_attr_indx(
-+	struct iscsi_node_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_node_acl *acl = container_of(igrps,
-+			struct iscsi_node_acl, node_stat_grps);
-+	struct se_node_acl *se_nacl = &acl->se_node_acl;
-+	struct iscsi_session *sess;
-+	struct se_session *se_sess;
-+	ssize_t ret = 0;
-+
-+	spin_lock_bh(&se_nacl->nacl_sess_lock);
-+	se_sess = se_nacl->nacl_sess;
-+	if (se_sess) {
-+		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
-+		if (sess)
-+			ret = snprintf(page, PAGE_SIZE, "%u\n",
-+					sess->session_index);
++	for (i =3D 0; i < cmd->seq_count; i++) {
++#if 0
++		printk(KERN_INFO "seq_list[i].orig_offset: %d, seq_list[i]."
++			"xfer_len: %d, seq_list[i].seq_no %u\n",
++			cmd->seq_list[i].orig_offset, cmd->seq_list[i].xfer_len,
++			cmd->seq_list[i].seq_no);
++#endif
++		if ((cmd->seq_list[i].orig_offset +
++				cmd->seq_list[i].xfer_len) >=3D
++				(offset + length))
++			return &cmd->seq_list[i];
 +	}
-+	spin_unlock_bh(&se_nacl->nacl_sess_lock);
 +
-+	return ret;
++	printk(KERN_ERR "Unable to locate Sequence holder for ITT: 0x%08x,"
++		" Offset: %u, Length: %u\n", cmd->init_task_tag, offset,
++		length);
++	return NULL;
 +}
-+ISCSI_STAT_SESS_RO(indx);
-+
-+static ssize_t iscsi_stat_sess_show_attr_cmd_pdus(
-+	struct iscsi_node_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_node_acl *acl = container_of(igrps,
-+			struct iscsi_node_acl, node_stat_grps);
-+	struct se_node_acl *se_nacl = &acl->se_node_acl;
-+	struct iscsi_session *sess;
-+	struct se_session *se_sess;
-+	ssize_t ret = 0;
-+
-+	spin_lock_bh(&se_nacl->nacl_sess_lock);
-+	se_sess = se_nacl->nacl_sess;
-+	if (se_sess) {
-+		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
-+		if (sess)
-+			ret = snprintf(page, PAGE_SIZE, "%u\n", sess->cmd_pdus);
-+	}
-+	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_SESS_RO(cmd_pdus);
-+
-+static ssize_t iscsi_stat_sess_show_attr_rsp_pdus(
-+	struct iscsi_node_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_node_acl *acl = container_of(igrps,
-+			struct iscsi_node_acl, node_stat_grps);
-+	struct se_node_acl *se_nacl = &acl->se_node_acl;
-+	struct iscsi_session *sess;
-+	struct se_session *se_sess;
-+	ssize_t ret = 0;
-+
-+	spin_lock_bh(&se_nacl->nacl_sess_lock);
-+	se_sess = se_nacl->nacl_sess;
-+	if (se_sess) {
-+		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
-+		if (sess)
-+			ret = snprintf(page, PAGE_SIZE, "%u\n", sess->rsp_pdus);
-+	}
-+	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_SESS_RO(rsp_pdus);
-+
-+static ssize_t iscsi_stat_sess_show_attr_txdata_octs(
-+	struct iscsi_node_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_node_acl *acl = container_of(igrps,
-+			struct iscsi_node_acl, node_stat_grps);
-+	struct se_node_acl *se_nacl = &acl->se_node_acl;
-+	struct iscsi_session *sess;
-+	struct se_session *se_sess;
-+	ssize_t ret = 0;
-+
-+	spin_lock_bh(&se_nacl->nacl_sess_lock);
-+	se_sess = se_nacl->nacl_sess;
-+	if (se_sess) {
-+		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
-+		if (sess)
-+			ret = snprintf(page, PAGE_SIZE, "%llu\n",
-+				(unsigned long long)sess->tx_data_octets);
-+	}
-+	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_SESS_RO(txdata_octs);
-+
-+static ssize_t iscsi_stat_sess_show_attr_rxdata_octs(
-+	struct iscsi_node_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_node_acl *acl = container_of(igrps,
-+			struct iscsi_node_acl, node_stat_grps);
-+	struct se_node_acl *se_nacl = &acl->se_node_acl;
-+	struct iscsi_session *sess;
-+	struct se_session *se_sess;
-+	ssize_t ret = 0;
-+
-+	spin_lock_bh(&se_nacl->nacl_sess_lock);
-+	se_sess = se_nacl->nacl_sess;
-+	if (se_sess) {
-+		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
-+		if (sess)
-+			ret = snprintf(page, PAGE_SIZE, "%llu\n",
-+				(unsigned long long)sess->rx_data_octets);
-+	}
-+	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_SESS_RO(rxdata_octs);
-+
-+static ssize_t iscsi_stat_sess_show_attr_conn_digest_errors(
-+	struct iscsi_node_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_node_acl *acl = container_of(igrps,
-+			struct iscsi_node_acl, node_stat_grps);
-+	struct se_node_acl *se_nacl = &acl->se_node_acl;
-+	struct iscsi_session *sess;
-+	struct se_session *se_sess;
-+	ssize_t ret = 0;
-+
-+	spin_lock_bh(&se_nacl->nacl_sess_lock);
-+	se_sess = se_nacl->nacl_sess;
-+	if (se_sess) {
-+		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
-+		if (sess)
-+			ret = snprintf(page, PAGE_SIZE, "%u\n",
-+					sess->conn_digest_errors);
-+	}
-+	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_SESS_RO(conn_digest_errors);
-+
-+static ssize_t iscsi_stat_sess_show_attr_conn_timeout_errors(
-+	struct iscsi_node_stat_grps *igrps, char *page)
-+{
-+	struct iscsi_node_acl *acl = container_of(igrps,
-+			struct iscsi_node_acl, node_stat_grps);
-+	struct se_node_acl *se_nacl = &acl->se_node_acl;
-+	struct iscsi_session *sess;
-+	struct se_session *se_sess;
-+	ssize_t ret = 0;
-+
-+	spin_lock_bh(&se_nacl->nacl_sess_lock);
-+	se_sess = se_nacl->nacl_sess;
-+	if (se_sess) {
-+		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
-+		if (sess)
-+			ret = snprintf(page, PAGE_SIZE, "%u\n",
-+					sess->conn_timeout_errors);
-+	}
-+	spin_unlock_bh(&se_nacl->nacl_sess_lock);
-+
-+	return ret;
-+}
-+ISCSI_STAT_SESS_RO(conn_timeout_errors);
-+
-+CONFIGFS_EATTR_OPS(iscsi_stat_sess, iscsi_node_stat_grps,
-+		iscsi_sess_stats_group);
-+
-+static struct configfs_attribute *iscsi_stat_sess_stats_attrs[] = {
-+	&iscsi_stat_sess_inst.attr,
-+	&iscsi_stat_sess_node.attr,
-+	&iscsi_stat_sess_indx.attr,
-+	&iscsi_stat_sess_cmd_pdus.attr,
-+	&iscsi_stat_sess_rsp_pdus.attr,
-+	&iscsi_stat_sess_txdata_octs.attr,
-+	&iscsi_stat_sess_rxdata_octs.attr,
-+	&iscsi_stat_sess_conn_digest_errors.attr,
-+	&iscsi_stat_sess_conn_timeout_errors.attr,
-+	NULL,
-+};
-+
-+static struct configfs_item_operations iscsi_stat_sess_stats_item_ops = {
-+	.show_attribute		= iscsi_stat_sess_attr_show,
-+	.store_attribute	= iscsi_stat_sess_attr_store,
-+};
-+
-+struct config_item_type iscsi_stat_sess_cit = {
-+	.ct_item_ops		= &iscsi_stat_sess_stats_item_ops,
-+	.ct_attrs		= iscsi_stat_sess_stats_attrs,
-+	.ct_owner		= THIS_MODULE,
-+};
-diff --git a/drivers/target/iscsi/iscsi_target_stat.h b/drivers/target/iscsi/iscsi_target_stat.h
+diff --git a/drivers/target/iscsi/iscsi_seq_and_pdu_list.h b/drivers/ta=
+rget/iscsi/iscsi_seq_and_pdu_list.h
 new file mode 100644
-index 0000000..f23d79a
+index 0000000..7b4c1bd
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_stat.h
-@@ -0,0 +1,79 @@
-+#ifndef ISCSI_TARGET_STAT_H
-+#define ISCSI_TARGET_STAT_H
++++ b/drivers/target/iscsi/iscsi_seq_and_pdu_list.h
+@@ -0,0 +1,88 @@
++#ifndef ISCSI_SEQ_AND_PDU_LIST_H
++#define ISCSI_SEQ_AND_PDU_LIST_H
 +
-+/*
-+ * For struct iscsi_tiqn->tiqn_wwn default groups
++/* struct iscsi_pdu->status */
++#define DATAOUT_PDU_SENT			1
++
++/* struct iscsi_seq->type */
++#define SEQTYPE_IMMEDIATE			1
++#define SEQTYPE_UNSOLICITED			2
++#define SEQTYPE_NORMAL				3
++
++/* struct iscsi_seq->status */
++#define DATAOUT_SEQUENCE_GOT_R2T		1
++#define DATAOUT_SEQUENCE_WITHIN_COMMAND_RECOVERY 2
++#define DATAOUT_SEQUENCE_COMPLETE		3
++
++/* iscsi_determine_counts_for_list() type */
++#define PDULIST_NORMAL				1
++#define PDULIST_IMMEDIATE			2
++#define PDULIST_UNSOLICITED			3
++#define PDULIST_IMMEDIATE_AND_UNSOLICITED	4
++
++/* struct iscsi_pdu->type */
++#define PDUTYPE_IMMEDIATE			1
++#define PDUTYPE_UNSOLICITED			2
++#define PDUTYPE_NORMAL				3
++
++/* struct iscsi_pdu->status */
++#define ISCSI_PDU_NOT_RECEIVED			0
++#define ISCSI_PDU_RECEIVED_OK			1
++#define ISCSI_PDU_CRC_FAILED			2
++#define ISCSI_PDU_TIMED_OUT			3
++
++/* struct iscsi_build_list->randomize */
++#define RANDOM_DATAIN_PDU_OFFSETS		0x01
++#define RANDOM_DATAIN_SEQ_OFFSETS		0x02
++#define RANDOM_DATAOUT_PDU_OFFSETS		0x04
++#define RANDOM_R2T_OFFSETS			0x08
++
++/* struct iscsi_build_list->data_direction */
++#define ISCSI_PDU_READ				0x01
++#define ISCSI_PDU_WRITE				0x02
++
++struct iscsi_build_list {
++	u8		data_direction;
++	u8		randomize;
++	u8		type;
++	u32		immediate_data_length;
++} ____cacheline_aligned;
++
++struct iscsi_pdu {
++	int		status;
++	int		type;
++	u8		flags;
++	u32		data_sn;
++	u32		length;
++	u32		offset;
++	u32		pdu_send_order;
++	u32		seq_no;
++} ____cacheline_aligned;
++
++struct iscsi_seq {
++	int		sent;
++	int		status;
++	int		type;
++	u32		data_sn;
++	u32		first_datasn;
++	u32		last_datasn;
++	u32		next_burst_len;
++	u32		pdu_start;
++	u32		pdu_count;
++	u32		offset;
++	u32		orig_offset;
++	u32		pdu_send_order;
++	u32		r2t_sn;
++	u32		seq_send_order;
++	u32		seq_no;
++	u32		xfer_len;
++} ____cacheline_aligned;
++
++extern struct iscsi_global *iscsi_global;
++
++extern int iscsi_do_build_list(struct iscsi_cmd *, struct iscsi_build_=
+list *);
++extern struct iscsi_pdu *iscsi_get_pdu_holder(struct iscsi_cmd *, u32,=
+ u32);
++extern struct iscsi_pdu *iscsi_get_pdu_holder_for_seq(struct iscsi_cmd=
+ *, struct iscsi_seq *);
++extern struct iscsi_seq *iscsi_get_seq_holder(struct iscsi_cmd *, u32,=
+ u32);
++
++#endif /* ISCSI_SEQ_AND_PDU_LIST_H */
+diff --git a/drivers/target/iscsi/iscsi_target_datain_values.c b/driver=
+s/target/iscsi/iscsi_target_datain_values.c
+new file mode 100644
+index 0000000..b6986d3
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_datain_values.c
+@@ -0,0 +1,549 @@
++/*********************************************************************=
+**********
++ * This file contains the iSCSI Target DataIN value generation functio=
+ns.
++ *
++ * Copyright (c) 2003, 2004, 2005 PyX Technologies, Inc.
++ * Copyright (c) 2006 SBE, Inc.  All Rights Reserved.
++ * =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
++ *
++ * Licensed to the Linux Foundation under the General Public License (=
+GPL) version 2.
++ *
++ * Author: Nicholas A. Bellinger <nab@linux-iscsi.org>
++ *
++ * This program is free software; you can redistribute it and/or modif=
+y
++ * it under the terms of the GNU General Public License as published b=
+y
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *********************************************************************=
+*********/
++
++#include <linux/delay.h>
++#include <linux/string.h>
++#include <linux/timer.h>
++#include <linux/slab.h>
++#include <linux/init.h>
++#include <linux/spinlock.h>
++#include <linux/smp_lock.h>
++#include <linux/in.h>
++#include <scsi/iscsi_proto.h>
++
++#include "iscsi_debug.h"
++#include "iscsi_target_core.h"
++#include "iscsi_seq_and_pdu_list.h"
++#include "iscsi_target_erl1.h"
++#include "iscsi_target_util.h"
++#include "iscsi_target_datain_values.h"
++
++struct iscsi_datain_req *iscsi_allocate_datain_req(void)
++{
++	struct iscsi_datain_req *dr;
++
++	dr =3D kmem_cache_zalloc(lio_dr_cache, GFP_ATOMIC);
++	if (!(dr)) {
++		printk(KERN_ERR "Unable to allocate memory for"
++				" struct iscsi_datain_req\n");
++		return NULL;
++	}
++	INIT_LIST_HEAD(&dr->dr_list);
++
++	return dr;
++}
++
++void iscsi_attach_datain_req(struct iscsi_cmd *cmd, struct iscsi_datai=
+n_req *dr)
++{
++	spin_lock(&cmd->datain_lock);
++	list_add_tail(&dr->dr_list, &cmd->datain_list);
++	spin_unlock(&cmd->datain_lock);
++}
++
++void iscsi_free_datain_req(struct iscsi_cmd *cmd, struct iscsi_datain_=
+req *dr)
++{
++	spin_lock(&cmd->datain_lock);
++	list_del(&dr->dr_list);
++	spin_unlock(&cmd->datain_lock);
++
++	kmem_cache_free(lio_dr_cache, dr);
++}
++
++void iscsi_free_all_datain_reqs(struct iscsi_cmd *cmd)
++{
++	struct iscsi_datain_req *dr, *dr_tmp;
++
++	spin_lock(&cmd->datain_lock);
++	list_for_each_entry_safe(dr, dr_tmp, &cmd->datain_list, dr_list) {
++		list_del(&dr->dr_list);
++		kmem_cache_free(lio_dr_cache, dr);
++	}
++	spin_unlock(&cmd->datain_lock);
++}
++
++struct iscsi_datain_req *iscsi_get_datain_req(struct iscsi_cmd *cmd)
++{
++	struct iscsi_datain_req *dr;
++
++	if (list_empty(&cmd->datain_list)) {
++		printk(KERN_ERR "cmd->datain_list is empty for ITT:"
++			" 0x%08x\n", cmd->init_task_tag);
++		return NULL;
++	}
++	list_for_each_entry(dr, &cmd->datain_list, dr_list)
++		break;
++
++	return dr;
++}
++
++/*	iscsi_set_datain_values_yes_and_yes():
++ *
++ *	For Normal and Recovery DataSequenceInOrder=3DYes and DataPDUInOrde=
+r=3DYes.
 + */
-+extern struct config_item_type iscsi_stat_instance_cit;
-+extern struct config_item_type iscsi_stat_sess_err_cit;
-+extern struct config_item_type iscsi_stat_tgt_attr_cit;
-+extern struct config_item_type iscsi_stat_login_cit;
-+extern struct config_item_type iscsi_stat_logout_cit;
++static inline struct iscsi_datain_req *iscsi_set_datain_values_yes_and=
+_yes(
++	struct iscsi_cmd *cmd,
++	struct iscsi_datain *datain)
++{
++	u32 next_burst_len, read_data_done, read_data_left;
++	struct iscsi_conn *conn =3D CONN(cmd);
++	struct iscsi_datain_req *dr;
 +
-+/*
-+ * For struct iscsi_session->se_sess default groups
++	dr =3D iscsi_get_datain_req(cmd);
++	if (!(dr))
++		return NULL;
++
++	if (dr->recovery && dr->generate_recovery_values) {
++		if (iscsi_create_recovery_datain_values_datasequenceinorder_yes(
++					cmd, dr) < 0)
++			return NULL;
++
++		dr->generate_recovery_values =3D 0;
++	}
++
++	next_burst_len =3D (!dr->recovery) ?
++			cmd->next_burst_len : dr->next_burst_len;
++	read_data_done =3D (!dr->recovery) ?
++			cmd->read_data_done : dr->read_data_done;
++
++	read_data_left =3D (cmd->data_length - read_data_done);
++	if (!(read_data_left)) {
++		printk(KERN_ERR "ITT: 0x%08x read_data_left is zero!\n",
++				cmd->init_task_tag);
++		return NULL;
++	}
++
++	if ((read_data_left <=3D CONN_OPS(conn)->MaxRecvDataSegmentLength) &&
++	    (read_data_left <=3D (SESS_OPS_C(conn)->MaxBurstLength -
++	     next_burst_len))) {
++		datain->length =3D read_data_left;
++
++		datain->flags |=3D (ISCSI_FLAG_CMD_FINAL | ISCSI_FLAG_DATA_STATUS);
++		if (SESS_OPS_C(conn)->ErrorRecoveryLevel > 0)
++			datain->flags |=3D ISCSI_FLAG_DATA_ACK;
++	} else {
++		if ((next_burst_len +
++		     CONN_OPS(conn)->MaxRecvDataSegmentLength) <
++		     SESS_OPS_C(conn)->MaxBurstLength) {
++			datain->length =3D
++				CONN_OPS(conn)->MaxRecvDataSegmentLength;
++			next_burst_len +=3D datain->length;
++		} else {
++			datain->length =3D (SESS_OPS_C(conn)->MaxBurstLength -
++					  next_burst_len);
++			next_burst_len =3D 0;
++
++			datain->flags |=3D ISCSI_FLAG_CMD_FINAL;
++			if (SESS_OPS_C(conn)->ErrorRecoveryLevel > 0)
++				datain->flags |=3D ISCSI_FLAG_DATA_ACK;
++		}
++	}
++
++	datain->data_sn =3D (!dr->recovery) ? cmd->data_sn++ : dr->data_sn++;
++	datain->offset =3D read_data_done;
++
++	if (!dr->recovery) {
++		cmd->next_burst_len =3D next_burst_len;
++		cmd->read_data_done +=3D datain->length;
++	} else {
++		dr->next_burst_len =3D next_burst_len;
++		dr->read_data_done +=3D datain->length;
++	}
++
++	if (!dr->recovery) {
++		if (datain->flags & ISCSI_FLAG_DATA_STATUS)
++			dr->dr_complete =3D DATAIN_COMPLETE_NORMAL;
++
++		return dr;
++	}
++
++	if (!dr->runlength) {
++		if (datain->flags & ISCSI_FLAG_DATA_STATUS) {
++			dr->dr_complete =3D
++			    (dr->recovery =3D=3D DATAIN_WITHIN_COMMAND_RECOVERY) ?
++				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
++				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++		}
++	} else {
++		if ((dr->begrun + dr->runlength) =3D=3D dr->data_sn) {
++			dr->dr_complete =3D
++			    (dr->recovery =3D=3D DATAIN_WITHIN_COMMAND_RECOVERY) ?
++				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
++				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++		}
++	}
++
++	return dr;
++}
++
++/*	iscsi_set_datain_values_no_and_yes():
++ *
++ *	For Normal and Recovery DataSequenceInOrder=3DNo and DataPDUInOrder=
+=3DYes.
 + */
-+extern struct config_item_type iscsi_stat_sess_cit;
++static inline struct iscsi_datain_req *iscsi_set_datain_values_no_and_=
+yes(
++	struct iscsi_cmd *cmd,
++	struct iscsi_datain *datain)
++{
++	u32 offset, read_data_done, read_data_left, seq_send_order;
++	struct iscsi_conn *conn =3D CONN(cmd);
++	struct iscsi_datain_req *dr;
++	struct iscsi_seq *seq;
 +
-+/* iSCSI session error types */
-+#define ISCSI_SESS_ERR_UNKNOWN		0
-+#define ISCSI_SESS_ERR_DIGEST		1
-+#define ISCSI_SESS_ERR_CXN_TIMEOUT	2
-+#define ISCSI_SESS_ERR_PDU_FORMAT	3
++	dr =3D iscsi_get_datain_req(cmd);
++	if (!(dr))
++		return NULL;
 +
-+/* iSCSI session error stats */
-+struct iscsi_sess_err_stats {
-+	spinlock_t	lock;
-+	u32		digest_errors;
-+	u32		cxn_timeout_errors;
-+	u32		pdu_format_errors;
-+	u32		last_sess_failure_type;
-+	char		last_sess_fail_rem_name[224];
-+} ____cacheline_aligned;
++	if (dr->recovery && dr->generate_recovery_values) {
++		if (iscsi_create_recovery_datain_values_datasequenceinorder_no(
++					cmd, dr) < 0)
++			return NULL;
 +
-+/* iSCSI login failure types (sub oids) */
-+#define ISCSI_LOGIN_FAIL_OTHER		2
-+#define ISCSI_LOGIN_FAIL_REDIRECT	3
-+#define ISCSI_LOGIN_FAIL_AUTHORIZE	4
-+#define ISCSI_LOGIN_FAIL_AUTHENTICATE	5
-+#define ISCSI_LOGIN_FAIL_NEGOTIATE	6
++		dr->generate_recovery_values =3D 0;
++	}
 +
-+/* iSCSI login stats */
-+struct iscsi_login_stats {
-+	spinlock_t	lock;
-+	u32		accepts;
-+	u32		other_fails;
-+	u32		redirects;
-+	u32		authorize_fails;
-+	u32		authenticate_fails;
-+	u32		negotiate_fails;	/* used for notifications */
-+	u64		last_fail_time;		/* time stamp (jiffies) */
-+	u32		last_fail_type;
-+	u32		last_intr_fail_addr;
-+	unsigned char	last_intr_fail_ip6_addr[IPV6_ADDRESS_SPACE];
-+	char		last_intr_fail_name[224];
-+} ____cacheline_aligned;
++	read_data_done =3D (!dr->recovery) ?
++			cmd->read_data_done : dr->read_data_done;
++	seq_send_order =3D (!dr->recovery) ?
++			cmd->seq_send_order : dr->seq_send_order;
 +
-+/* iSCSI logout stats */
-+struct iscsi_logout_stats {
-+	spinlock_t	lock;
-+	u32		normal_logouts;
-+	u32		abnormal_logouts;
-+} ____cacheline_aligned;
++	read_data_left =3D (cmd->data_length - read_data_done);
++	if (!(read_data_left)) {
++		printk(KERN_ERR "ITT: 0x%08x read_data_left is zero!\n",
++				cmd->init_task_tag);
++		return NULL;
++	}
 +
-+/* Structures for table index support */
-+typedef enum {
-+	ISCSI_INST_INDEX,
-+	ISCSI_PORTAL_INDEX,
-+	ISCSI_TARGET_AUTH_INDEX,
-+	ISCSI_SESSION_INDEX,
-+	ISCSI_CONNECTION_INDEX,
-+	INDEX_TYPE_MAX
-+} iscsi_index_t;
++	seq =3D iscsi_get_seq_holder_for_datain(cmd, seq_send_order);
++	if (!(seq))
++		return NULL;
 +
-+struct iscsi_index_table {
-+	spinlock_t	lock;
-+	u32		iscsi_mib_index[INDEX_TYPE_MAX];
-+} ____cacheline_aligned;
++	seq->sent =3D 1;
 +
-+#endif   /*** ISCSI_TARGET_STAT_H ***/
--- 
++	if (!dr->recovery && !seq->next_burst_len)
++		seq->first_datasn =3D cmd->data_sn;
++
++	offset =3D (seq->offset + seq->next_burst_len);
++
++	if ((offset + CONN_OPS(conn)->MaxRecvDataSegmentLength) >=3D
++	     cmd->data_length) {
++		datain->length =3D (cmd->data_length - offset);
++		datain->offset =3D offset;
++
++		datain->flags |=3D ISCSI_FLAG_CMD_FINAL;
++		if (SESS_OPS_C(conn)->ErrorRecoveryLevel > 0)
++			datain->flags |=3D ISCSI_FLAG_DATA_ACK;
++
++		seq->next_burst_len =3D 0;
++		seq_send_order++;
++	} else {
++		if ((seq->next_burst_len +
++		     CONN_OPS(conn)->MaxRecvDataSegmentLength) <
++		     SESS_OPS_C(conn)->MaxBurstLength) {
++			datain->length =3D
++				CONN_OPS(conn)->MaxRecvDataSegmentLength;
++			datain->offset =3D (seq->offset + seq->next_burst_len);
++
++			seq->next_burst_len +=3D datain->length;
++		} else {
++			datain->length =3D (SESS_OPS_C(conn)->MaxBurstLength -
++					  seq->next_burst_len);
++			datain->offset =3D (seq->offset + seq->next_burst_len);
++
++			datain->flags |=3D ISCSI_FLAG_CMD_FINAL;
++			if (SESS_OPS_C(conn)->ErrorRecoveryLevel > 0)
++				datain->flags |=3D ISCSI_FLAG_DATA_ACK;
++
++			seq->next_burst_len =3D 0;
++			seq_send_order++;
++		}
++	}
++
++	if ((read_data_done + datain->length) =3D=3D cmd->data_length)
++		datain->flags |=3D ISCSI_FLAG_DATA_STATUS;
++
++	datain->data_sn =3D (!dr->recovery) ? cmd->data_sn++ : dr->data_sn++;
++	if (!dr->recovery) {
++		cmd->seq_send_order =3D seq_send_order;
++		cmd->read_data_done +=3D datain->length;
++	} else {
++		dr->seq_send_order =3D seq_send_order;
++		dr->read_data_done +=3D datain->length;
++	}
++
++	if (!dr->recovery) {
++		if (datain->flags & ISCSI_FLAG_CMD_FINAL)
++			seq->last_datasn =3D datain->data_sn;
++		if (datain->flags & ISCSI_FLAG_DATA_STATUS)
++			dr->dr_complete =3D DATAIN_COMPLETE_NORMAL;
++
++		return dr;
++	}
++
++	if (!dr->runlength) {
++		if (datain->flags & ISCSI_FLAG_DATA_STATUS) {
++			dr->dr_complete =3D
++			    (dr->recovery =3D=3D DATAIN_WITHIN_COMMAND_RECOVERY) ?
++				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
++				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++		}
++	} else {
++		if ((dr->begrun + dr->runlength) =3D=3D dr->data_sn) {
++			dr->dr_complete =3D
++			    (dr->recovery =3D=3D DATAIN_WITHIN_COMMAND_RECOVERY) ?
++				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
++				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++		}
++	}
++
++	return dr;
++}
++
++/*	iscsi_set_datain_values_yes_and_no():
++ *
++ *	For Normal and Recovery DataSequenceInOrder=3DYes and DataPDUInOrde=
+r=3DNo.
++ */
++static inline struct iscsi_datain_req *iscsi_set_datain_values_yes_and=
+_no(
++	struct iscsi_cmd *cmd,
++	struct iscsi_datain *datain)
++{
++	u32 next_burst_len, read_data_done, read_data_left;
++	struct iscsi_conn *conn =3D CONN(cmd);
++	struct iscsi_datain_req *dr;
++	struct iscsi_pdu *pdu;
++
++	dr =3D iscsi_get_datain_req(cmd);
++	if (!(dr))
++		return NULL;
++
++	if (dr->recovery && dr->generate_recovery_values) {
++		if (iscsi_create_recovery_datain_values_datasequenceinorder_yes(
++					cmd, dr) < 0)
++			return NULL;
++
++		dr->generate_recovery_values =3D 0;
++	}
++
++	next_burst_len =3D (!dr->recovery) ?
++			cmd->next_burst_len : dr->next_burst_len;
++	read_data_done =3D (!dr->recovery) ?
++			cmd->read_data_done : dr->read_data_done;
++
++	read_data_left =3D (cmd->data_length - read_data_done);
++	if (!(read_data_left)) {
++		printk(KERN_ERR "ITT: 0x%08x read_data_left is zero!\n",
++				cmd->init_task_tag);
++		return dr;
++	}
++
++	pdu =3D iscsi_get_pdu_holder_for_seq(cmd, NULL);
++	if (!(pdu))
++		return dr;
++
++	if ((read_data_done + pdu->length) =3D=3D cmd->data_length) {
++		pdu->flags |=3D (ISCSI_FLAG_CMD_FINAL | ISCSI_FLAG_DATA_STATUS);
++		if (SESS_OPS_C(conn)->ErrorRecoveryLevel > 0)
++			pdu->flags |=3D ISCSI_FLAG_DATA_ACK;
++
++		next_burst_len =3D 0;
++	} else {
++		if ((next_burst_len + CONN_OPS(conn)->MaxRecvDataSegmentLength) <
++		     SESS_OPS_C(conn)->MaxBurstLength)
++			next_burst_len +=3D pdu->length;
++		else {
++			pdu->flags |=3D ISCSI_FLAG_CMD_FINAL;
++			if (SESS_OPS_C(conn)->ErrorRecoveryLevel > 0)
++				pdu->flags |=3D ISCSI_FLAG_DATA_ACK;
++
++			next_burst_len =3D 0;
++		}
++	}
++
++	pdu->data_sn =3D (!dr->recovery) ? cmd->data_sn++ : dr->data_sn++;
++	if (!dr->recovery) {
++		cmd->next_burst_len =3D next_burst_len;
++		cmd->read_data_done +=3D pdu->length;
++	} else {
++		dr->next_burst_len =3D next_burst_len;
++		dr->read_data_done +=3D pdu->length;
++	}
++
++	datain->flags =3D pdu->flags;
++	datain->length =3D pdu->length;
++	datain->offset =3D pdu->offset;
++	datain->data_sn =3D pdu->data_sn;
++
++	if (!dr->recovery) {
++		if (datain->flags & ISCSI_FLAG_DATA_STATUS)
++			dr->dr_complete =3D DATAIN_COMPLETE_NORMAL;
++
++		return dr;
++	}
++
++	if (!dr->runlength) {
++		if (datain->flags & ISCSI_FLAG_DATA_STATUS) {
++			dr->dr_complete =3D
++			    (dr->recovery =3D=3D DATAIN_WITHIN_COMMAND_RECOVERY) ?
++				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
++				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++		}
++	} else {
++		if ((dr->begrun + dr->runlength) =3D=3D dr->data_sn) {
++			dr->dr_complete =3D
++			    (dr->recovery =3D=3D DATAIN_WITHIN_COMMAND_RECOVERY) ?
++				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
++				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++		}
++	}
++
++	return dr;
++}
++
++/*	iscsi_set_datain_values_no_and_no():
++ *
++ *	For Normal and Recovery DataSequenceInOrder=3DNo and DataPDUInOrder=
+=3DNo.
++ */
++static inline struct iscsi_datain_req *iscsi_set_datain_values_no_and_=
+no(
++	struct iscsi_cmd *cmd,
++	struct iscsi_datain *datain)
++{
++	u32 read_data_done, read_data_left, seq_send_order;
++	struct iscsi_conn *conn =3D CONN(cmd);
++	struct iscsi_datain_req *dr;
++	struct iscsi_pdu *pdu;
++	struct iscsi_seq *seq =3D NULL;
++
++	dr =3D iscsi_get_datain_req(cmd);
++	if (!(dr))
++		return NULL;
++
++	if (dr->recovery && dr->generate_recovery_values) {
++		if (iscsi_create_recovery_datain_values_datasequenceinorder_no(
++					cmd, dr) < 0)
++			return NULL;
++
++		dr->generate_recovery_values =3D 0;
++	}
++
++	read_data_done =3D (!dr->recovery) ?
++			cmd->read_data_done : dr->read_data_done;
++	seq_send_order =3D (!dr->recovery) ?
++			cmd->seq_send_order : dr->seq_send_order;
++
++	read_data_left =3D (cmd->data_length - read_data_done);
++	if (!(read_data_left)) {
++		printk(KERN_ERR "ITT: 0x%08x read_data_left is zero!\n",
++				cmd->init_task_tag);
++		return NULL;
++	}
++
++	seq =3D iscsi_get_seq_holder_for_datain(cmd, seq_send_order);
++	if (!(seq))
++		return NULL;
++
++	seq->sent =3D 1;
++
++	if (!dr->recovery && !seq->next_burst_len)
++		seq->first_datasn =3D cmd->data_sn;
++
++	pdu =3D iscsi_get_pdu_holder_for_seq(cmd, seq);
++	if (!(pdu))
++		return NULL;
++
++	if (seq->pdu_send_order =3D=3D seq->pdu_count) {
++		pdu->flags |=3D ISCSI_FLAG_CMD_FINAL;
++		if (SESS_OPS_C(conn)->ErrorRecoveryLevel > 0)
++			pdu->flags |=3D ISCSI_FLAG_DATA_ACK;
++
++		seq->next_burst_len =3D 0;
++		seq_send_order++;
++	} else
++		seq->next_burst_len +=3D pdu->length;
++
++	if ((read_data_done + pdu->length) =3D=3D cmd->data_length)
++		pdu->flags |=3D ISCSI_FLAG_DATA_STATUS;
++
++	pdu->data_sn =3D (!dr->recovery) ? cmd->data_sn++ : dr->data_sn++;
++	if (!dr->recovery) {
++		cmd->seq_send_order =3D seq_send_order;
++		cmd->read_data_done +=3D pdu->length;
++	} else {
++		dr->seq_send_order =3D seq_send_order;
++		dr->read_data_done +=3D pdu->length;
++	}
++
++	datain->flags =3D pdu->flags;
++	datain->length =3D pdu->length;
++	datain->offset =3D pdu->offset;
++	datain->data_sn =3D pdu->data_sn;
++
++	if (!dr->recovery) {
++		if (datain->flags & ISCSI_FLAG_CMD_FINAL)
++			seq->last_datasn =3D datain->data_sn;
++		if (datain->flags & ISCSI_FLAG_DATA_STATUS)
++			dr->dr_complete =3D DATAIN_COMPLETE_NORMAL;
++
++		return dr;
++	}
++
++	if (!dr->runlength) {
++		if (datain->flags & ISCSI_FLAG_DATA_STATUS) {
++			dr->dr_complete =3D
++			    (dr->recovery =3D=3D DATAIN_WITHIN_COMMAND_RECOVERY) ?
++				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
++				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++		}
++	} else {
++		if ((dr->begrun + dr->runlength) =3D=3D dr->data_sn) {
++			dr->dr_complete =3D
++			    (dr->recovery =3D=3D DATAIN_WITHIN_COMMAND_RECOVERY) ?
++				DATAIN_COMPLETE_WITHIN_COMMAND_RECOVERY :
++				DATAIN_COMPLETE_CONNECTION_RECOVERY;
++		}
++	}
++
++	return dr;
++}
++
++/*	iscsi_get_datain_values():
++ *
++ *
++ */
++struct iscsi_datain_req *iscsi_get_datain_values(
++	struct iscsi_cmd *cmd,
++	struct iscsi_datain *datain)
++{
++	struct iscsi_conn *conn =3D CONN(cmd);
++
++	if (SESS_OPS_C(conn)->DataSequenceInOrder &&
++	    SESS_OPS_C(conn)->DataPDUInOrder)
++		return iscsi_set_datain_values_yes_and_yes(cmd, datain);
++	else if (!SESS_OPS_C(conn)->DataSequenceInOrder &&
++		  SESS_OPS_C(conn)->DataPDUInOrder)
++		return iscsi_set_datain_values_no_and_yes(cmd, datain);
++	else if (SESS_OPS_C(conn)->DataSequenceInOrder &&
++		 !SESS_OPS_C(conn)->DataPDUInOrder)
++		return iscsi_set_datain_values_yes_and_no(cmd, datain);
++	else if (!SESS_OPS_C(conn)->DataSequenceInOrder &&
++		   !SESS_OPS_C(conn)->DataPDUInOrder)
++		return iscsi_set_datain_values_no_and_no(cmd, datain);
++
++	return NULL;
++}
+diff --git a/drivers/target/iscsi/iscsi_target_datain_values.h b/driver=
+s/target/iscsi/iscsi_target_datain_values.h
+new file mode 100644
+index 0000000..6d44288
+--- /dev/null
++++ b/drivers/target/iscsi/iscsi_target_datain_values.h
+@@ -0,0 +1,15 @@
++#ifndef ISCSI_TARGET_DATAIN_VALUES_H
++#define ISCSI_TARGET_DATAIN_VALUES_H
++
++extern struct iscsi_datain_req *iscsi_allocate_datain_req(void);
++extern void iscsi_attach_datain_req(struct iscsi_cmd *, struct iscsi_d=
+atain_req *);
++extern void iscsi_free_datain_req(struct iscsi_cmd *, struct iscsi_dat=
+ain_req *);
++extern void iscsi_free_all_datain_reqs(struct iscsi_cmd *);
++extern struct iscsi_datain_req *iscsi_get_datain_req(struct iscsi_cmd =
+*);
++extern struct iscsi_datain_req *iscsi_get_datain_values(struct iscsi_c=
+md *,
++			struct iscsi_datain *);
++
++extern struct iscsi_global *iscsi_global;
++extern struct kmem_cache *lio_dr_cache;
++
++#endif   /*** ISCSI_TARGET_DATAIN_VALUES_H ***/
+--=20
 1.7.4.1
