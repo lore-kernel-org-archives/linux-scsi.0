@@ -1,40 +1,61 @@
-From: "Eddie Wai" <eddie.wai@broadcom.com>
-Subject: Re: [PATCH 0/2] ISCSID: Added vlan field to the iface struct
-Date: Sun, 13 Mar 2011 14:44:59 -0700
-Message-ID: <1300052700.9768.44.camel@ltirv-waie-lx1>
-References: <eddie.wai@broadcom.com>
- <1299810073-7339-1-git-send-email-eddie.wai@broadcom.com>
- <4D7C7C36.2040206@cs.wisc.edu>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: [PATCH 00/13] qla4xxx: Updates for scsi-misc-2.6
+Date: Sun, 13 Mar 2011 22:23:29 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA872263B1506@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mms3.broadcom.com ([216.31.210.19]:1743 "EHLO MMS3.broadcom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754883Ab1CMVpQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Mar 2011 17:45:16 -0400
-In-Reply-To: <4D7C7C36.2040206@cs.wisc.edu>
+Received: from va3ehsobe001.messaging.microsoft.com ([216.32.180.11]:1463 "EHLO
+	VA3EHSOBE008.bigfish.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752207Ab1CNFXr convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Mar 2011 01:23:47 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>, James Bottomley <JBottomley@novell.com>, linux-scsi <linux-scsi@vger.kernel.org>, Michael Chan <mchan@broadcom.com>, Anil Veerabhadrappa <anilgv@broadcom.com>, Benjamin Li <benli@broadcom.com>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>, Prasanna Mumbai <prasanna.mumbai@qlogic.com>, Sarang Radke <sarang.radke@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-On Sun, 2011-03-13 at 00:11 -0800, Mike Christie wrote:
-> On 03/10/2011 08:21 PM, Eddie Wai wrote:
-> > Hello,
-> >
-> > This patch adds the iface.vlan field to the iface struct so that it
-> > can be defined in the iface file.
-> 
-> Does qlogic's patches do what you wanted? Please review those patches 
-> and work with them to figure out what works for both of you guys.
-> 
-Yes, I think the overall strategy to send the transport the new net
-params info for the offload adapter will work for our offload solution
-as well.  Some of the parameters like vlan is exactly how we want it to
-be sent down.  Others like subnetmask/gateway/etc. will have to be
-parsed by uIP directly from the iface file instead.
+James,
 
-All in all, it will work for us. Thanks.
+Please apply these patches on scsi-misc-2.6 tree.
 
+Karen Higgins (2):
+      qla4xxx: cleanup DDB relogin logic during initialization
+      qla4xxx: Prevent other port reinitialization during remove_adapter
+
+Prasanna Mumbai (3):
+      qla4xxx: Do not send mbox command if FW is in failed state
+      qla4xxx: Do not retry ISP82XX initialization if H/W state is failed
+      qla4xxx: masking required bits of add_fw_options during initialization
+
+Sarang Radke (1):
+      qla4xxx: Use polling mode for disable interrupt mailbox completion
+
+Vikas Chaudhary (7):
+      qla4xxx: cleanup qla4xxx_initialize_ddb_list()
+      qla4xxx: remove unused ddb flag DF_NO_RELOGIN
+      qla4xxx: cleanup function qla4xxx_process_ddb_changed
+      qla4xxx: Add support for ql4xmaxqdepth command line parameter
+      qla4xxx: add support for ql4xsess_recovery_tmo cmd line param
+      qla4xxx: added new function qla4xxx_relogin_all_devices
+      qla4xxx: Update driver version to 5.02.00-k6
+
+ drivers/scsi/qla4xxx/ql4_def.h     |   10 +--
+ drivers/scsi/qla4xxx/ql4_fw.h      |    1 +
+ drivers/scsi/qla4xxx/ql4_glbl.h    |    1 -
+ drivers/scsi/qla4xxx/ql4_init.c    |  207 ++++++------------------------------
+ drivers/scsi/qla4xxx/ql4_isr.c     |   31 +-----
+ drivers/scsi/qla4xxx/ql4_mbx.c     |   34 ++++--
+ drivers/scsi/qla4xxx/ql4_nx.c      |    3 +-
+ drivers/scsi/qla4xxx/ql4_os.c      |  155 ++++++++++++++++++---------
+ drivers/scsi/qla4xxx/ql4_version.h |    2 +-
+ 9 files changed, 170 insertions(+), 274 deletions(-)
+
+Thanks,
+Vikas.
+
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
