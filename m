@@ -1,195 +1,238 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 20/21] target: Add fabric_stat_group for fabric module statistics default_group
-Date: Mon, 14 Mar 2011 04:06:14 -0700
-Message-ID: <1300100775-10012-21-git-send-email-nab@linux-iscsi.org>
-References: <1300100775-10012-1-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC-v2 01/12] iscsi: Resolve iscsi_proto.h naming conflicts with drivers/target/iscsi
+Date: Mon, 14 Mar 2011 04:56:58 -0700
+Message-ID: <1300103829-10337-2-git-send-email-nab@linux-iscsi.org>
+References: <1300103829-10337-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm18-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.214]:45446 "HELO
-	nm18-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753934Ab1CNLH6 (ORCPT
+Received: from nm11.bullet.mail.sp2.yahoo.com ([98.139.91.81]:32821 "HELO
+	nm11.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754380Ab1CNL5V (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Mar 2011 07:07:58 -0400
-In-Reply-To: <1300100775-10012-1-git-send-email-nab@linux-iscsi.org>
+	Mon, 14 Mar 2011 07:57:21 -0400
+In-Reply-To: <1300103829-10337-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Joel Becker <jlbec@evilplan.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for struct se_wwn->fabric_stat_group in
-target_fabric_make_wwn() and target_fabric_drop_wwn() to allow fabric
-modules to access fabric_stat_group->default_groups[] for dependent
-/sys/kernel/config/target/$FABRIC_WWN/fabric_statistics groups.
+This patch renames the following iscsi_proto.h structures to avoid
+namespace issues with drivers/target/iscsi/iscsi_target_core.h:
 
-It also adds support for struct se_node_acl->acl_fabric_stat_group
-in target_fabric_make_nodeacl() to allow fabric modules to access
-acl_fabric_stat_group->default_groups[] for fabric dependent fabric
-groups as well.
+*) struct iscsi_cmd -> struct iscsi_scsi_cmd
+*) struct iscsi_cmd_rsp -> struct iscsi_scsi_rsp
+*) struct iscsi_login -> struct iscsi_login_req
 
-ALso, this includes adding struct target_fabric_configfs_template->
-tfc_wwn_fabric_stats_cit and ->tfc_tpg_nacl_stat_cit respectively for
-use during target_core_fabric_configfs.c:target_fabric_setup_cits()
+This patch includes useful ISCSI_FLAG_LOGIN_[CURRENT,NEXT]_STAGE*,
+and ISCSI_FLAG_SNACK_TYPE_* definitions used by iscsi_target_mod, and
+fixes the incorrect definition of struct iscsi_snack to following
+RFC-3720 Section 10.16. SNACK Request.
+
+Also, this patch updates libiscsi, iSER, be2iscsi, and bn2xi to
+use the updated structure definitions in a handful of locations.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_fabric_configfs.c |   47 +++++++++++++++++++++++++-
- include/target/target_core_base.h            |    5 ++-
- include/target/target_core_configfs.h        |    2 +
- 3 files changed, 52 insertions(+), 2 deletions(-)
+ drivers/infiniband/ulp/iser/iser_initiator.c |    2 +-
+ drivers/scsi/be2iscsi/be_main.h              |    4 +-
+ drivers/scsi/bnx2i/bnx2i_hwi.c               |    8 +++---
+ drivers/scsi/bnx2i/bnx2i_iscsi.c             |    2 +-
+ drivers/scsi/libiscsi.c                      |    6 ++--
+ include/scsi/iscsi_proto.h                   |   30 +++++++++++++++++++-------
+ 6 files changed, 33 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
-index 7d58be3..07ab5a3 100644
---- a/drivers/target/target_core_fabric_configfs.c
-+++ b/drivers/target/target_core_fabric_configfs.c
-@@ -453,6 +453,15 @@ TF_CIT_SETUP(tpg_nacl_base, &target_fabric_nacl_base_item_ops,
+diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c b/drivers/infiniband/ulp/iser/iser_initiator.c
+index 95a08a8..dd28367 100644
+--- a/drivers/infiniband/ulp/iser/iser_initiator.c
++++ b/drivers/infiniband/ulp/iser/iser_initiator.c
+@@ -271,7 +271,7 @@ int iser_send_command(struct iscsi_conn *conn,
+ 	unsigned long edtl;
+ 	int err;
+ 	struct iser_data_buf *data_buf;
+-	struct iscsi_cmd *hdr =  (struct iscsi_cmd *)task->hdr;
++	struct iscsi_scsi_cmd *hdr =  (struct iscsi_scsi_cmd *)task->hdr;
+ 	struct scsi_cmnd *sc  =  task->sc;
+ 	struct iser_tx_desc *tx_desc = &iser_task->desc;
  
- /* End of tfc_tpg_nacl_base_cit */
- 
-+/* Start of tfc_node_fabric_stats_cit */
-+/*
-+ * This is used as a placeholder for struct se_node_acl->acl_fabric_stat_group
-+ * to allow fabrics access to ->acl_fabric_stat_group->default_groups[]
-+ */
-+TF_CIT_SETUP(tpg_nacl_stat, NULL, NULL, NULL);
-+
-+/* End of tfc_wwn_fabric_stats_cit */
-+
- /* Start of tfc_tpg_nacl_cit */
- 
- static struct config_group *target_fabric_make_nodeacl(
-@@ -479,7 +488,8 @@ static struct config_group *target_fabric_make_nodeacl(
- 	nacl_cg->default_groups[0] = &se_nacl->acl_attrib_group;
- 	nacl_cg->default_groups[1] = &se_nacl->acl_auth_group;
- 	nacl_cg->default_groups[2] = &se_nacl->acl_param_group;
--	nacl_cg->default_groups[3] = NULL;
-+	nacl_cg->default_groups[3] = &se_nacl->acl_fabric_stat_group;
-+	nacl_cg->default_groups[4] = NULL;
- 
- 	config_group_init_type_name(&se_nacl->acl_group, name,
- 			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_base_cit);
-@@ -489,6 +499,9 @@ static struct config_group *target_fabric_make_nodeacl(
- 			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_auth_cit);
- 	config_group_init_type_name(&se_nacl->acl_param_group, "param",
- 			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_param_cit);
-+	config_group_init_type_name(&se_nacl->acl_fabric_stat_group,
-+			"fabric_statistics",
-+			&TF_CIT_TMPL(tf)->tfc_tpg_nacl_stat_cit);
- 
- 	return &se_nacl->acl_group;
- }
-@@ -1098,6 +1111,15 @@ TF_CIT_SETUP(tpg, &target_fabric_tpg_item_ops, &target_fabric_tpg_group_ops,
- 
- /* End of tfc_tpg_cit */
- 
-+/* Start of tfc_wwn_fabric_stats_cit */
-+/*
-+ * This is used as a placeholder for struct se_wwn->fabric_stat_group
-+ * to allow fabrics access to ->fabric_stat_group->default_groups[]
-+ */
-+TF_CIT_SETUP(wwn_fabric_stats, NULL, NULL, NULL);
-+
-+/* End of tfc_wwn_fabric_stats_cit */
-+
- /* Start of tfc_wwn_cit */
- 
- static struct config_group *target_fabric_make_wwn(
-@@ -1118,8 +1140,17 @@ static struct config_group *target_fabric_make_wwn(
- 		return ERR_PTR(-EINVAL);
- 
- 	wwn->wwn_tf = tf;
-+	/*
-+	 * Setup default groups from pre-allocated wwn->wwn_default_groups
-+	 */
-+	wwn->wwn_group.default_groups = wwn->wwn_default_groups;
-+	wwn->wwn_group.default_groups[0] = &wwn->fabric_stat_group;
-+	wwn->wwn_group.default_groups[1] = NULL;
-+
- 	config_group_init_type_name(&wwn->wwn_group, name,
- 			&TF_CIT_TMPL(tf)->tfc_tpg_cit);
-+	config_group_init_type_name(&wwn->fabric_stat_group, "fabric_statistics",
-+			&TF_CIT_TMPL(tf)->tfc_wwn_fabric_stats_cit);
- 
- 	return &wwn->wwn_group;
- }
-@@ -1128,6 +1159,18 @@ static void target_fabric_drop_wwn(
- 	struct config_group *group,
- 	struct config_item *item)
- {
-+	struct se_wwn *wwn = container_of(to_config_group(item),
-+				struct se_wwn, wwn_group);
-+	struct config_item *df_item;
-+	struct config_group *cg = &wwn->wwn_group;
-+	int i;
-+
-+	for (i = 0; cg->default_groups[i]; i++) {
-+		df_item = &cg->default_groups[i]->cg_item;
-+		cg->default_groups[i] = NULL;
-+		config_item_put(df_item);
-+	}
-+
- 	config_item_put(item);
- }
- 
-@@ -1167,6 +1210,7 @@ int target_fabric_setup_cits(struct target_fabric_configfs *tf)
- {
- 	target_fabric_setup_discovery_cit(tf);
- 	target_fabric_setup_wwn_cit(tf);
-+	target_fabric_setup_wwn_fabric_stats_cit(tf);
- 	target_fabric_setup_tpg_cit(tf);
- 	target_fabric_setup_tpg_base_cit(tf);
- 	target_fabric_setup_tpg_port_cit(tf);
-@@ -1181,6 +1225,7 @@ int target_fabric_setup_cits(struct target_fabric_configfs *tf)
- 	target_fabric_setup_tpg_nacl_attrib_cit(tf);
- 	target_fabric_setup_tpg_nacl_auth_cit(tf);
- 	target_fabric_setup_tpg_nacl_param_cit(tf);
-+	target_fabric_setup_tpg_nacl_stat_cit(tf);
- 	target_fabric_setup_tpg_mappedlun_cit(tf);
- 	target_fabric_setup_tpg_mappedlun_stat_cit(tf);
- 
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index 9c2b90c..c15ed50 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -601,7 +601,8 @@ struct se_node_acl {
- 	struct config_group	acl_attrib_group;
- 	struct config_group	acl_auth_group;
- 	struct config_group	acl_param_group;
--	struct config_group	*acl_default_groups[4];
-+	struct config_group	acl_fabric_stat_group;
-+	struct config_group	*acl_default_groups[5];
- 	struct list_head	acl_list;
- 	struct list_head	acl_sess_list;
- } ____cacheline_aligned;
-@@ -952,6 +953,8 @@ struct se_portal_group {
- struct se_wwn {
- 	struct target_fabric_configfs *wwn_tf;
- 	struct config_group	wwn_group;
-+	struct config_group	*wwn_default_groups[2];
-+	struct config_group	fabric_stat_group;
- } ____cacheline_aligned;
- 
- struct se_global {
-diff --git a/include/target/target_core_configfs.h b/include/target/target_core_configfs.h
-index fc3bb9f..6125095 100644
---- a/include/target/target_core_configfs.h
-+++ b/include/target/target_core_configfs.h
-@@ -14,6 +14,7 @@ extern void target_fabric_configfs_deregister(struct target_fabric_configfs *);
- struct target_fabric_configfs_template {
- 	struct config_item_type tfc_discovery_cit;
- 	struct config_item_type	tfc_wwn_cit;
-+	struct config_item_type tfc_wwn_fabric_stats_cit;
- 	struct config_item_type tfc_tpg_cit;
- 	struct config_item_type tfc_tpg_base_cit;
- 	struct config_item_type tfc_tpg_lun_cit;
-@@ -28,6 +29,7 @@ struct target_fabric_configfs_template {
- 	struct config_item_type tfc_tpg_nacl_attrib_cit;
- 	struct config_item_type tfc_tpg_nacl_auth_cit;
- 	struct config_item_type tfc_tpg_nacl_param_cit;
-+	struct config_item_type tfc_tpg_nacl_stat_cit;
- 	struct config_item_type tfc_tpg_mappedlun_cit;
- 	struct config_item_type tfc_tpg_mappedlun_stat_cit;
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 90eb74f..f05ada1 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -398,7 +398,7 @@ struct amap_pdu_data_out {
  };
+ 
+ struct be_cmd_bhs {
+-	struct iscsi_cmd iscsi_hdr;
++	struct iscsi_scsi_cmd iscsi_hdr;
+ 	unsigned char pad1[16];
+ 	struct pdu_data_out iscsi_data_pdu;
+ 	unsigned char pad2[BE_SENSE_INFO_SIZE -
+@@ -429,7 +429,7 @@ struct be_nonio_bhs {
+ };
+ 
+ struct be_status_bhs {
+-	struct iscsi_cmd iscsi_hdr;
++	struct iscsi_scsi_cmd iscsi_hdr;
+ 	unsigned char pad1[16];
+ 	/**
+ 	 * The plus 2 below is to hold the sense info length that gets
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 96505e3..f947c80 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -326,11 +326,11 @@ int bnx2i_send_iscsi_login(struct bnx2i_conn *bnx2i_conn,
+ {
+ 	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct bnx2i_login_request *login_wqe;
+-	struct iscsi_login *login_hdr;
++	struct iscsi_login_req *login_hdr;
+ 	u32 dword;
+ 
+ 	bnx2i_cmd = (struct bnx2i_cmd *)task->dd_data;
+-	login_hdr = (struct iscsi_login *)task->hdr;
++	login_hdr = (struct iscsi_login_req *)task->hdr;
+ 	login_wqe = (struct bnx2i_login_request *)
+ 						bnx2i_conn->ep->qp.sq_prod_qe;
+ 
+@@ -1288,7 +1288,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+ 	struct bnx2i_cmd_response *resp_cqe;
+ 	struct bnx2i_cmd *bnx2i_cmd;
+ 	struct iscsi_task *task;
+-	struct iscsi_cmd_rsp *hdr;
++	struct iscsi_scsi_rsp *hdr;
+ 	u32 datalen = 0;
+ 
+ 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
+@@ -1315,7 +1315,7 @@ static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+ 	}
+ 	bnx2i_iscsi_unmap_sg_list(bnx2i_cmd);
+ 
+-	hdr = (struct iscsi_cmd_rsp *)task->hdr;
++	hdr = (struct iscsi_scsi_rsp *)task->hdr;
+ 	resp_cqe = (struct bnx2i_cmd_response *)cqe;
+ 	hdr->opcode = resp_cqe->op_code;
+ 	hdr->max_cmdsn = cpu_to_be32(resp_cqe->max_cmd_sn);
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index f0dce26..8f047ba 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -1203,7 +1203,7 @@ static int bnx2i_task_xmit(struct iscsi_task *task)
+ 	struct bnx2i_conn *bnx2i_conn = conn->dd_data;
+ 	struct scsi_cmnd *sc = task->sc;
+ 	struct bnx2i_cmd *cmd = task->dd_data;
+-	struct iscsi_cmd *hdr = (struct iscsi_cmd *) task->hdr;
++	struct iscsi_scsi_cmd *hdr = (struct iscsi_scsi_cmd *) task->hdr;
+ 
+ 	/*
+ 	 * If there is no scsi_cmnd this must be a mgmt task
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index da8b615..61d6420 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -360,7 +360,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 	struct iscsi_conn *conn = task->conn;
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = task->sc;
+-	struct iscsi_cmd *hdr;
++	struct iscsi_scsi_cmd *hdr;
+ 	unsigned hdrlength, cmd_len;
+ 	itt_t itt;
+ 	int rc;
+@@ -374,7 +374,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 		if (rc)
+ 			return rc;
+ 	}
+-	hdr = (struct iscsi_cmd *) task->hdr;
++	hdr = (struct iscsi_scsi_cmd *) task->hdr;
+ 	itt = hdr->itt;
+ 	memset(hdr, 0, sizeof(*hdr));
+ 
+@@ -830,7 +830,7 @@ static void iscsi_scsi_cmd_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 			       struct iscsi_task *task, char *data,
+ 			       int datalen)
+ {
+-	struct iscsi_cmd_rsp *rhdr = (struct iscsi_cmd_rsp *)hdr;
++	struct iscsi_scsi_rsp *rhdr = (struct iscsi_scsi_rsp *)hdr;
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = task->sc;
+ 
+diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+index dd0a52c..c3e6d4f 100644
+--- a/include/scsi/iscsi_proto.h
++++ b/include/scsi/iscsi_proto.h
+@@ -116,7 +116,7 @@ struct iscsi_ahs_hdr {
+ #define ISCSI_CDB_SIZE			16
+ 
+ /* iSCSI PDU Header */
+-struct iscsi_cmd {
++struct iscsi_scsi_cmd {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+ 	__be16 rsvd2;
+@@ -161,7 +161,7 @@ struct iscsi_ecdb_ahdr {
+ };
+ 
+ /* SCSI Response Header */
+-struct iscsi_cmd_rsp {
++struct iscsi_scsi_rsp {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+ 	uint8_t response;
+@@ -406,7 +406,7 @@ struct iscsi_text_rsp {
+ };
+ 
+ /* Login Header */
+-struct iscsi_login {
++struct iscsi_login_req {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+ 	uint8_t max_version;	/* Max. version supported */
+@@ -427,7 +427,13 @@ struct iscsi_login {
+ #define ISCSI_FLAG_LOGIN_TRANSIT		0x80
+ #define ISCSI_FLAG_LOGIN_CONTINUE		0x40
+ #define ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK	0x0C	/* 2 bits */
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE1		0x04
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE2		0x08
++#define ISCSI_FLAG_LOGIN_CURRENT_STAGE3		0x0C
+ #define ISCSI_FLAG_LOGIN_NEXT_STAGE_MASK	0x03	/* 2 bits */
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE1		0x01
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE2		0x02
++#define ISCSI_FLAG_LOGIN_NEXT_STAGE3		0x03
+ 
+ #define ISCSI_LOGIN_CURRENT_STAGE(flags) \
+ 	((flags & ISCSI_FLAG_LOGIN_CURRENT_STAGE_MASK) >> 2)
+@@ -550,17 +556,25 @@ struct iscsi_logout_rsp {
+ struct iscsi_snack {
+ 	uint8_t opcode;
+ 	uint8_t flags;
+-	uint8_t rsvd2[14];
++	uint8_t rsvd2[2];
++	uint8_t hlength;
++	uint8_t dlength[3];
++	uint8_t lun[8];
+ 	itt_t	 itt;
++	__be32  ttt;
++	uint8_t rsvd3[4];
++	__be32  exp_statsn;
++	uint8_t rsvd4[8];
+ 	__be32	begrun;
+ 	__be32	runlength;
+-	__be32	exp_statsn;
+-	__be32	rsvd3;
+-	__be32	exp_datasn;
+-	uint8_t rsvd6[8];
+ };
+ 
+ /* SNACK PDU flags */
++#define ISCSI_FLAG_SNACK_TYPE_DATA		0
++#define ISCSI_FLAG_SNACK_TYPE_R2T		0
++#define ISCSI_FLAG_SNACK_TYPE_STATUS		1
++#define ISCSI_FLAG_SNACK_TYPE_DATA_ACK		2
++#define ISCSI_FLAG_SNACK_TYPE_RDATA		3
+ #define ISCSI_FLAG_SNACK_TYPE_MASK	0x0F	/* 4 bits */
+ 
+ /* Reject Message Header */
 -- 
 1.7.4.1
 
