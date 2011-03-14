@@ -1,147 +1,90 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 06/21] target: Remove unnecessary hba_dev_list walk and se_clear_dev_ports legacy code
-Date: Mon, 14 Mar 2011 04:06:00 -0700
-Message-ID: <1300100775-10012-7-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 09/21] target: Convert rd_build_device_space() to use errno
+Date: Mon, 14 Mar 2011 04:06:03 -0700
+Message-ID: <1300100775-10012-10-git-send-email-nab@linux-iscsi.org>
 References: <1300100775-10012-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm19-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.216]:44085 "HELO
-	nm19-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753492Ab1CNLGx (ORCPT
+Received: from nm2-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.248]:31838 "HELO
+	nm2-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753468Ab1CNLHJ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Mar 2011 07:06:53 -0400
+	Mon, 14 Mar 2011 07:07:09 -0400
 In-Reply-To: <1300100775-10012-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Joel Becker <jlbec@evilplan.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>, Fubo Chen <fubo.chen@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Joel Becker <jlbec@evilplan.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>, Dan Carpenter <error27@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-From: Fubo Chen <fubo.chen@gmail.com>
+From: Dan Carpenter <error27@gmail.com>
 
-This patch removes a legacy struct se_hba->hba_dev_list -> se_release_device_for_hba()
-list walk in core_delete_hba(), which is no longer required while using configfs
-VFS level parent/child struct config_group dependency referencing.  The reason
-is because any struct se_hba->hba_dev_list-> struct se_device members are going
-to have to be released via:
+This patch converts rd_build_device_space() to return errno usage
+for failures in rd_create_virtdevice().
 
-	rmdir /sys/kernel/config/target/core/$HBA/*
-
-before rmdir release of struct se_hba via target_core_configfs.c:
-target_core_call_delhbafromtarget() -> core_delete_hba()
-
-	rmdir /sys/kernel/config/target/core/$HBA
-
-to release struct se_hba in core_delete_hba().
-
-This patch also removes the legacy se_clear_dev_ports() function, which is
-left-over pre-configfs shutdown logic for when se_free_virtual_device()
-was responsible for walking struct se_device->dev_sep_list and calling
-core_dev_del_lun() for each individual active struct se_port->se_lun.
-
-The reason this can be removed is because all struct se_device->dev_sep_list
--> struct se_port communication is done via configfs symlinks, which
-means that an target fabric module's endpoints containg active struct
-se_port(s) will have to be released via target_core_fabric_configfs.c:
-target_fabric_port_unlink() via:
-
-	unlink /sys/kernel/config/target/$FABRIC_MOD/$ENDPOINT/tpgt_$TPGT/lun/lun_$LUN_ID/<symlink>
-
-before rmdir release of struct se_device in target_core_configfs.c:
-target_core_drop_subdev() -> se_free_virtual_device() can happen via:
-
-	rmdir /sys/kernel/config/target/core/$HBA/*
-
-to release struct se_subsystem_dev in target_core_drop_subdev()
-
-Reported-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Reported-by: Fubo Chen <fubo.chen@gmail.com>
+Signed-off-by: Dan Carpenter <error27@gmail.com>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_device.c |   39 +---------------------------------
- drivers/target/target_core_hba.c    |   15 +-----------
- 2 files changed, 4 insertions(+), 50 deletions(-)
+ drivers/target/target_core_rd.c |   15 +++++++--------
+ 1 files changed, 7 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 5da051a..c9085e3 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -780,49 +780,14 @@ void se_release_vpd_for_dev(struct se_device *dev)
- 	return;
- }
+diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
+index 0d0a583..663177e 100644
+--- a/drivers/target/target_core_rd.c
++++ b/drivers/target/target_core_rd.c
+@@ -151,7 +151,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+ 	if (rd_dev->rd_page_count <= 0) {
+ 		printk(KERN_ERR "Illegal page count: %u for Ramdisk device\n",
+ 			rd_dev->rd_page_count);
+-		return -1;
++		return -EINVAL;
+ 	}
+ 	total_sg_needed = rd_dev->rd_page_count;
  
--/*
-- * Called with struct se_hba->device_lock held.
-- */
--void se_clear_dev_ports(struct se_device *dev)
--{
--	struct se_hba *hba = dev->se_hba;
--	struct se_lun *lun;
--	struct se_portal_group *tpg;
--	struct se_port *sep, *sep_tmp;
--
--	spin_lock(&dev->se_port_lock);
--	list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
--		spin_unlock(&dev->se_port_lock);
--		spin_unlock(&hba->device_lock);
--
--		lun = sep->sep_lun;
--		tpg = sep->sep_tpg;
--		spin_lock(&lun->lun_sep_lock);
--		if (lun->lun_se_dev == NULL) {
--			spin_unlock(&lun->lun_sep_lock);
--			continue;
--		}
--		spin_unlock(&lun->lun_sep_lock);
--
--		core_dev_del_lun(tpg, lun->unpacked_lun);
--
--		spin_lock(&hba->device_lock);
--		spin_lock(&dev->se_port_lock);
+@@ -161,7 +161,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+ 	if (!(sg_table)) {
+ 		printk(KERN_ERR "Unable to allocate memory for Ramdisk"
+ 			" scatterlist tables\n");
+-		return -1;
++		return -ENOMEM;
+ 	}
+ 
+ 	rd_dev->sg_table_array = sg_table;
+@@ -176,7 +176,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+ 		if (!(sg)) {
+ 			printk(KERN_ERR "Unable to allocate scatterlist array"
+ 				" for struct rd_dev\n");
+-			return -1;
++			return -ENOMEM;
+ 		}
+ 
+ 		sg_init_table((struct scatterlist *)&sg[0], sg_per_table);
+@@ -192,7 +192,7 @@ static int rd_build_device_space(struct rd_dev *rd_dev)
+ 			if (!(pg)) {
+ 				printk(KERN_ERR "Unable to allocate scatterlist"
+ 					" pages for struct rd_dev_sg_table\n");
+-				return -1;
++				return -ENOMEM;
+ 			}
+ 			sg_assign_page(&sg[j], pg);
+ 			sg[j].length = PAGE_SIZE;
+@@ -254,15 +254,14 @@ static struct se_device *rd_create_virtdevice(
+ 	struct se_dev_limits dev_limits;
+ 	struct rd_dev *rd_dev = p;
+ 	struct rd_host *rd_host = hba->hba_ptr;
+-	int dev_flags = 0, ret = -EINVAL;
++	int dev_flags = 0, ret;
+ 	char prod[16], rev[4];
+ 
+ 	memset(&dev_limits, 0, sizeof(struct se_dev_limits));
+ 
+-	if (rd_build_device_space(rd_dev) < 0) {
+-		ret = -ENOMEM;
++	ret = rd_build_device_space(rd_dev);
++	if (ret < 0)
+ 		goto fail;
 -	}
--	spin_unlock(&dev->se_port_lock);
--
--	return;
--}
--
- /*	se_free_virtual_device():
-  *
-  *	Used for IBLOCK, RAMDISK, and FILEIO Transport Drivers.
-  */
- int se_free_virtual_device(struct se_device *dev, struct se_hba *hba)
- {
--	spin_lock(&hba->device_lock);
--	se_clear_dev_ports(dev);
--	spin_unlock(&hba->device_lock);
-+	if (!list_empty(&dev->dev_sep_list))
-+		dump_stack();
  
- 	core_alua_free_lu_gp_mem(dev);
- 	se_release_device_for_hba(dev);
-diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
-index 4bbe820..d0d2ecc 100644
---- a/drivers/target/target_core_hba.c
-+++ b/drivers/target/target_core_hba.c
-@@ -153,19 +153,8 @@ out_free_hba:
- int
- core_delete_hba(struct se_hba *hba)
- {
--	struct se_device *dev, *dev_tmp;
--
--	spin_lock(&hba->device_lock);
--	list_for_each_entry_safe(dev, dev_tmp, &hba->hba_dev_list, dev_list) {
--
--		se_clear_dev_ports(dev);
--		spin_unlock(&hba->device_lock);
--
--		se_release_device_for_hba(dev);
--
--		spin_lock(&hba->device_lock);
--	}
--	spin_unlock(&hba->device_lock);
-+	if (!list_empty(&hba->hba_dev_list))
-+		dump_stack();
- 
- 	hba->transport->detach_hba(hba);
- 
+ 	snprintf(prod, 16, "RAMDISK-%s", (rd_dev->rd_direct) ? "DR" : "MCP");
+ 	snprintf(rev, 4, "%s", (rd_dev->rd_direct) ? RD_DR_VERSION :
 -- 
 1.7.4.1
 
