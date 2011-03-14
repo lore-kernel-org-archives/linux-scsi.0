@@ -1,60 +1,37 @@
 From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 12/13] qla4xxx: masking required bits of add_fw_options
- during initialization
-Date: Sun, 13 Mar 2011 22:25:55 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA872263B1512@AVEXMB1.qlogic.org>
+Subject: [PATCH 13/13] qla4xxx: Update driver version to 5.02.00-k6
+Date: Sun, 13 Mar 2011 22:25:58 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA872263B1513@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1outboundpool.messaging.microsoft.com ([216.32.181.182]:21575
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753138Ab1CNF0B convert rfc822-to-8bit
+Received: from db3ehsobe005.messaging.microsoft.com ([213.199.154.143]:19461
+	"EHLO DB3EHSOBE005.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752510Ab1CNF0E convert rfc822-to-8bit
 	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Mar 2011 01:26:01 -0400
+	Mon, 14 Mar 2011 01:26:04 -0400
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Prasanna Mumbai <prasanna.mumbai@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
-
-From: Prasanna Mumbai <prasanna.mumbai@qlogic.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
 
 Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Signed-off-by: Prasanna Mumbai <prasanna.mumbai@qlogic.com>
 ---
- drivers/scsi/qla4xxx/ql4_fw.h  |    1 +
- drivers/scsi/qla4xxx/ql4_mbx.c |    5 +++++
- 2 files changed, 6 insertions(+), 0 deletions(-)
+ drivers/scsi/qla4xxx/ql4_version.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_fw.h b/drivers/scsi/qla4xxx/ql4_fw.h
-index c198579..31e2bf9 100644
---- a/drivers/scsi/qla4xxx/ql4_fw.h
-+++ b/drivers/scsi/qla4xxx/ql4_fw.h
-@@ -455,6 +455,7 @@ struct addr_ctrl_blk {
-        uint8_t res0;   /* 07 */
-        uint16_t eth_mtu_size;  /* 08-09 */
-        uint16_t add_fw_options;        /* 0A-0B */
-+#define SERIALIZE_TASK_MGMT            0x0400
+diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
+index 8475b30..6031557 100644
+--- a/drivers/scsi/qla4xxx/ql4_version.h
++++ b/drivers/scsi/qla4xxx/ql4_version.h
+@@ -5,4 +5,4 @@
+  * See LICENSE.qla4xxx for copyright and licensing details.
+  */
 
-        uint8_t hb_interval;    /* 0C */
-        uint8_t inst_num; /* 0D */
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 199fa64..f9d81c8 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -476,6 +476,11 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
-
-        init_fw_cb->fw_options &= __constant_cpu_to_le16(~FWOPT_TARGET_MODE);
-
-+       /* Set bit for "serialize task mgmt" all other bits need to be zero */
-+       init_fw_cb->add_fw_options = 0;
-+       init_fw_cb->add_fw_options |=
-+           __constant_cpu_to_le16(SERIALIZE_TASK_MGMT);
-+
-        if (qla4xxx_set_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma)
-                != QLA_SUCCESS) {
-                DEBUG2(printk(KERN_WARNING
+-#define QLA4XXX_DRIVER_VERSION "5.02.00-k5"
++#define QLA4XXX_DRIVER_VERSION "5.02.00-k6"
 --
 1.7.3.2
 
