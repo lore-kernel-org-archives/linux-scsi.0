@@ -1,134 +1,147 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 10/21] target: Convert TMR REQ/RSP definitions to target namespace
-Date: Mon, 14 Mar 2011 04:06:04 -0700
-Message-ID: <1300100775-10012-11-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 06/21] target: Remove unnecessary hba_dev_list walk and se_clear_dev_ports legacy code
+Date: Mon, 14 Mar 2011 04:06:00 -0700
+Message-ID: <1300100775-10012-7-git-send-email-nab@linux-iscsi.org>
 References: <1300100775-10012-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nm19-vm0.bullet.mail.sp2.yahoo.com ([98.139.91.216]:44085 "HELO
+	nm19-vm0.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753492Ab1CNLGx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Mar 2011 07:06:53 -0400
 In-Reply-To: <1300100775-10012-1-git-send-email-nab@linux-iscsi.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Joel Becker <jlbec@evilplan.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Joel Becker <jlbec@evilplan.org>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>, Fubo Chen <fubo.chen@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+From: Fubo Chen <fubo.chen@gmail.com>
 
-This patch changes include/target/target_core_tmr.h code to use
-target specific 'TMR_*' prefixed definitions for fabric independent
-SCSI Task Management Request/Request naming in include/scsi/scsi.h
-definitions for mainline target code.
+This patch removes a legacy struct se_hba->hba_dev_list -> se_release_device_for_hba()
+list walk in core_delete_hba(), which is no longer required while using configfs
+VFS level parent/child struct config_group dependency referencing.  The reason
+is because any struct se_hba->hba_dev_list-> struct se_device members are going
+to have to be released via:
 
+	rmdir /sys/kernel/config/target/core/$HBA/*
+
+before rmdir release of struct se_hba via target_core_configfs.c:
+target_core_call_delhbafromtarget() -> core_delete_hba()
+
+	rmdir /sys/kernel/config/target/core/$HBA
+
+to release struct se_hba in core_delete_hba().
+
+This patch also removes the legacy se_clear_dev_ports() function, which is
+left-over pre-configfs shutdown logic for when se_free_virtual_device()
+was responsible for walking struct se_device->dev_sep_list and calling
+core_dev_del_lun() for each individual active struct se_port->se_lun.
+
+The reason this can be removed is because all struct se_device->dev_sep_list
+-> struct se_port communication is done via configfs symlinks, which
+means that an target fabric module's endpoints containg active struct
+se_port(s) will have to be released via target_core_fabric_configfs.c:
+target_fabric_port_unlink() via:
+
+	unlink /sys/kernel/config/target/$FABRIC_MOD/$ENDPOINT/tpgt_$TPGT/lun/lun_$LUN_ID/<symlink>
+
+before rmdir release of struct se_device in target_core_configfs.c:
+target_core_drop_subdev() -> se_free_virtual_device() can happen via:
+
+	rmdir /sys/kernel/config/target/core/$HBA/*
+
+to release struct se_subsystem_dev in target_core_drop_subdev()
+
+Reported-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Reported-by: Fubo Chen <fubo.chen@gmail.com>
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_transport.c |   19 ++++-------
- include/target/target_core_tmr.h       |   52 +++++++++++++------------------
- 2 files changed, 29 insertions(+), 42 deletions(-)
+ drivers/target/target_core_device.c |   39 +---------------------------------
+ drivers/target/target_core_hba.c    |   15 +-----------
+ 2 files changed, 4 insertions(+), 50 deletions(-)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 8392b26..30c1223 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -5832,31 +5832,26 @@ int transport_generic_do_tmr(struct se_cmd *cmd)
- 	int ret;
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 5da051a..c9085e3 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -780,49 +780,14 @@ void se_release_vpd_for_dev(struct se_device *dev)
+ 	return;
+ }
  
- 	switch (tmr->function) {
--	case ABORT_TASK:
-+	case TMR_ABORT_TASK:
- 		ref_cmd = tmr->ref_cmd;
- 		tmr->response = TMR_FUNCTION_REJECTED;
- 		break;
--	case ABORT_TASK_SET:
--	case CLEAR_ACA:
--	case CLEAR_TASK_SET:
-+	case TMR_ABORT_TASK_SET:
-+	case TMR_CLEAR_ACA:
-+	case TMR_CLEAR_TASK_SET:
- 		tmr->response = TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED;
- 		break;
--	case LUN_RESET:
-+	case TMR_LUN_RESET:
- 		ret = core_tmr_lun_reset(dev, tmr, NULL, NULL);
- 		tmr->response = (!ret) ? TMR_FUNCTION_COMPLETE :
- 					 TMR_FUNCTION_REJECTED;
- 		break;
--#if 0
--	case TARGET_WARM_RESET:
--		transport_generic_host_reset(dev->se_hba);
-+	case TMR_TARGET_WARM_RESET:
- 		tmr->response = TMR_FUNCTION_REJECTED;
- 		break;
--	case TARGET_COLD_RESET:
--		transport_generic_host_reset(dev->se_hba);
--		transport_generic_cold_reset(dev->se_hba);
-+	case TMR_TARGET_COLD_RESET:
- 		tmr->response = TMR_FUNCTION_REJECTED;
- 		break;
--#endif
- 	default:
- 		printk(KERN_ERR "Uknown TMR function: 0x%02x.\n",
- 				tmr->function);
-diff --git a/include/target/target_core_tmr.h b/include/target/target_core_tmr.h
-index 6c8248b..bd55968 100644
---- a/include/target/target_core_tmr.h
-+++ b/include/target/target_core_tmr.h
-@@ -1,37 +1,29 @@
- #ifndef TARGET_CORE_TMR_H
- #define TARGET_CORE_TMR_H
+-/*
+- * Called with struct se_hba->device_lock held.
+- */
+-void se_clear_dev_ports(struct se_device *dev)
+-{
+-	struct se_hba *hba = dev->se_hba;
+-	struct se_lun *lun;
+-	struct se_portal_group *tpg;
+-	struct se_port *sep, *sep_tmp;
+-
+-	spin_lock(&dev->se_port_lock);
+-	list_for_each_entry_safe(sep, sep_tmp, &dev->dev_sep_list, sep_list) {
+-		spin_unlock(&dev->se_port_lock);
+-		spin_unlock(&hba->device_lock);
+-
+-		lun = sep->sep_lun;
+-		tpg = sep->sep_tpg;
+-		spin_lock(&lun->lun_sep_lock);
+-		if (lun->lun_se_dev == NULL) {
+-			spin_unlock(&lun->lun_sep_lock);
+-			continue;
+-		}
+-		spin_unlock(&lun->lun_sep_lock);
+-
+-		core_dev_del_lun(tpg, lun->unpacked_lun);
+-
+-		spin_lock(&hba->device_lock);
+-		spin_lock(&dev->se_port_lock);
+-	}
+-	spin_unlock(&dev->se_port_lock);
+-
+-	return;
+-}
+-
+ /*	se_free_virtual_device():
+  *
+  *	Used for IBLOCK, RAMDISK, and FILEIO Transport Drivers.
+  */
+ int se_free_virtual_device(struct se_device *dev, struct se_hba *hba)
+ {
+-	spin_lock(&hba->device_lock);
+-	se_clear_dev_ports(dev);
+-	spin_unlock(&hba->device_lock);
++	if (!list_empty(&dev->dev_sep_list))
++		dump_stack();
  
--/* task management function values */
--#ifdef ABORT_TASK
--#undef ABORT_TASK
--#endif /* ABORT_TASK */
--#define ABORT_TASK				1
--#ifdef ABORT_TASK_SET
--#undef ABORT_TASK_SET
--#endif /* ABORT_TASK_SET */
--#define ABORT_TASK_SET				2
--#ifdef CLEAR_ACA
--#undef CLEAR_ACA
--#endif /* CLEAR_ACA */
--#define CLEAR_ACA				3
--#ifdef CLEAR_TASK_SET
--#undef CLEAR_TASK_SET
--#endif /* CLEAR_TASK_SET */
--#define CLEAR_TASK_SET				4
--#define LUN_RESET				5
--#define TARGET_WARM_RESET			6
--#define TARGET_COLD_RESET			7
--#define TASK_REASSIGN				8
-+/* fabric independent task management function values */
-+enum tcm_tmreq_table {
-+	TMR_ABORT_TASK		= 1,
-+	TMR_ABORT_TASK_SET	= 2,
-+	TMR_CLEAR_ACA		= 3,
-+	TMR_CLEAR_TASK_SET	= 4,
-+	TMR_LUN_RESET		= 5,
-+	TMR_TARGET_WARM_RESET	= 6,
-+	TMR_TARGET_COLD_RESET	= 7,
-+	TMR_FABRIC_TMR		= 255,
-+};
+ 	core_alua_free_lu_gp_mem(dev);
+ 	se_release_device_for_hba(dev);
+diff --git a/drivers/target/target_core_hba.c b/drivers/target/target_core_hba.c
+index 4bbe820..d0d2ecc 100644
+--- a/drivers/target/target_core_hba.c
++++ b/drivers/target/target_core_hba.c
+@@ -153,19 +153,8 @@ out_free_hba:
+ int
+ core_delete_hba(struct se_hba *hba)
+ {
+-	struct se_device *dev, *dev_tmp;
+-
+-	spin_lock(&hba->device_lock);
+-	list_for_each_entry_safe(dev, dev_tmp, &hba->hba_dev_list, dev_list) {
+-
+-		se_clear_dev_ports(dev);
+-		spin_unlock(&hba->device_lock);
+-
+-		se_release_device_for_hba(dev);
+-
+-		spin_lock(&hba->device_lock);
+-	}
+-	spin_unlock(&hba->device_lock);
++	if (!list_empty(&hba->hba_dev_list))
++		dump_stack();
  
--/* task management response values */
--#define TMR_FUNCTION_COMPLETE			0
--#define TMR_TASK_DOES_NOT_EXIST			1
--#define TMR_LUN_DOES_NOT_EXIST			2
--#define TMR_TASK_STILL_ALLEGIANT		3
--#define TMR_TASK_FAILOVER_NOT_SUPPORTED		4
--#define TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED	5
--#define TMR_FUNCTION_AUTHORIZATION_FAILED	6
--#define TMR_FUNCTION_REJECTED			255
-+/* fabric independent task management response values */
-+enum tcm_tmrsp_table {
-+	TMR_FUNCTION_COMPLETE		= 0,
-+	TMR_TASK_DOES_NOT_EXIST		= 1,
-+	TMR_LUN_DOES_NOT_EXIST		= 2,
-+	TMR_TASK_STILL_ALLEGIANT	= 3,
-+	TMR_TASK_FAILOVER_NOT_SUPPORTED	= 4,
-+	TMR_TASK_MGMT_FUNCTION_NOT_SUPPORTED	= 5,
-+	TMR_FUNCTION_AUTHORIZATION_FAILED = 6,
-+	TMR_FUNCTION_REJECTED		= 255,
-+};
- 
- extern struct kmem_cache *se_tmr_req_cache;
+ 	hba->transport->detach_hba(hba);
  
 -- 
 1.7.4.1
+
