@@ -1,70 +1,106 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/2] Add struct crypto_alg->cra_check_optimized for
-	crc32c_intel
-Date: Mon, 14 Mar 2011 05:14:17 -0700
-Message-ID: <1300104857.28255.77.camel@haakon2.linux-iscsi.org>
-References: <1299745272-25477-1-git-send-email-nab@linux-iscsi.org>
-	 <20110310084346.GA10650@gondor.apana.org.au>
-	 <1299747264.5263.35.camel@haakon2.linux-iscsi.org>
-	 <20110310090929.GA10919@gondor.apana.org.au>
-	 <1299748387.5263.45.camel@haakon2.linux-iscsi.org>
-	 <1299751517.5263.60.camel@haakon2.linux-iscsi.org>
-	 <20110313090158.GA12473@gondor.apana.org.au>
+From: "Bhanu Gollapudi" <bprakash@broadcom.com>
+Subject: [PATCH] bnx2fc: Fix MTU issue by using static MTU
+Date: Mon, 14 Mar 2011 07:42:02 -0700
+Message-ID: <1300113722.1360.20.camel@LTSJC-BPRAKASH.corp.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+ charset=cp1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-crypto-owner@vger.kernel.org>
-In-Reply-To: <20110313090158.GA12473@gondor.apana.org.au>
-Sender: linux-crypto-owner@vger.kernel.org
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-crypto <linux-crypto@vger.kernel.org>, James Bottomley <James.Bottomley@suse.de>, Christoph Hellwig <hch@lst.de>, Randy Dunlap <rdunlap@xenotime.net>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mms3.broadcom.com ([216.31.210.19]:3880 "EHLO MMS3.broadcom.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750763Ab1CNOmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Mar 2011 10:42:10 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, devel@open-fcoe.org
 
-On Sun, 2011-03-13 at 17:01 +0800, Herbert Xu wrote:
-> On Thu, Mar 10, 2011 at 02:05:17AM -0800, Nicholas A. Bellinger wrote:
-> >
-> > We are still expecting the libcrypto consumer (iscsi_target_mod.ko) to
-> > call the arch independent crypto_alloc_hash("crc32c", ...) in order to
-> > have libcrypto backend logic perform a request_module() upon
-> > architecture dependent offload modules (like crc32c_intel.ko) that
-> > libcrypto consumers are not (and should not) be calling directly via
-> > crypto_alloc_host("crc32c_intel", ...), correct..?
-> 
-> Right.
-> 
-> > Where I am getting confused is wrt to a new crypto_alg_mod_lookup() ->
-> > request_module() call for a struct shash_alg that has not yet be loaded
-> > via arch/x86/crypto/crc32c-intel.c:crc32c_intel_mod_init() ->
-> > crypto_register_shash().
-> 
-> If you look at crypto_alg_mod_lookup, basically there are two paths.
-> Either we already have a registered algorithm of the requested name,
-> or we don't.
-> 
-> In the first case, we won't invoke request_module and in the second
-> case we will.
-> 
-> So what I'm suggesting is that in the first case we also invoke
-> request_module conditionally.  Now exactly what that condition is
-> is the tricky bit.
-> 
-> The easiest is to flip a bit in the algorithm we just found.  This
-> isn't optimal as it'll mean that for each unregistered algorithm
-> we'll end up modprobing twice, but that shouldn't be too bad I
-> think.
-> 
+bnx2x now uses seperate MTUs for networking and FCoE. FCoE MTU is fixed to 2500
+and bnx2fc now needs to match this logic by using FCOE_MTU instead of
+netdev->mtu.
 
-Hi Herbert,
+Signed-off-by: Bhanu Prakash Gollapudi <bprakash@broadcom.com>
+---
+ drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   35 +----------------------------------
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c  |    2 +-
+ 2 files changed, 2 insertions(+), 35 deletions(-)
 
-Thanks for your feedback on this issue, and again my apologies for the
-lack of experience beyond the external libcrypto API.  I will take
-another look this week and see if something can be produced more along
-the lines of what you had in mind to resolve this special case.  In the
-mean time the extra crypto_alloc_hash("crc32c-intel", ...) calls have
-been removed from RFC-v2 iscsi-target code posted earlier this morning.
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+index b3e9edc..9ea018d 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
+@@ -661,31 +661,6 @@ static int bnx2fc_shost_config(struct fc_lport *lport, struct device *dev)
+ 	return 0;
+ }
+ 
+-static int  bnx2fc_mfs_update(struct fc_lport *lport)
+-{
+-	struct fcoe_port *port = lport_priv(lport);
+-	struct bnx2fc_hba *hba = port->priv;
+-	struct net_device *netdev = hba->netdev;
+-	u32 mfs;
+-	u32 max_mfs;
+-
+-	mfs = netdev->mtu - (sizeof(struct fcoe_hdr) +
+-			     sizeof(struct fcoe_crc_eof));
+-	max_mfs = BNX2FC_MAX_PAYLOAD + sizeof(struct fc_frame_header);
+-	BNX2FC_HBA_DBG(lport, "mfs = %d, max_mfs = %d\n", mfs, max_mfs);
+-	if (mfs > max_mfs)
+-		mfs = max_mfs;
+-
+-	/* Adjust mfs to be a multiple of 256 bytes */
+-	mfs = (((mfs - sizeof(struct fc_frame_header)) / BNX2FC_MIN_PAYLOAD) *
+-			BNX2FC_MIN_PAYLOAD);
+-	mfs = mfs + sizeof(struct fc_frame_header);
+-
+-	BNX2FC_HBA_DBG(lport, "Set MFS = %d\n", mfs);
+-	if (fc_set_mfs(lport, mfs))
+-		return -EINVAL;
+-	return 0;
+-}
+ static void bnx2fc_link_speed_update(struct fc_lport *lport)
+ {
+ 	struct fcoe_port *port = lport_priv(lport);
+@@ -754,7 +729,7 @@ static int bnx2fc_net_config(struct fc_lport *lport)
+ 	    !hba->phys_dev->ethtool_ops->get_pauseparam)
+ 		return -EOPNOTSUPP;
+ 
+-	if (bnx2fc_mfs_update(lport))
++	if (fc_set_mfs(lport, FCOE_MTU))
+ 		return -EINVAL;
+ 
+ 	skb_queue_head_init(&port->fcoe_pending_queue);
+@@ -825,14 +800,6 @@ static void bnx2fc_indicate_netevent(void *context, unsigned long event)
+ 		if (!test_bit(ADAPTER_STATE_UP, &hba->adapter_state))
+ 			printk(KERN_ERR "indicate_netevent: "\
+ 					"adapter is not UP!!\n");
+-		/* fall thru to update mfs if MTU has changed */
+-	case NETDEV_CHANGEMTU:
+-		BNX2FC_HBA_DBG(lport, "NETDEV_CHANGEMTU event\n");
+-		bnx2fc_mfs_update(lport);
+-		mutex_lock(&lport->lp_mutex);
+-		list_for_each_entry(vport, &lport->vports, list)
+-			bnx2fc_mfs_update(vport);
+-		mutex_unlock(&lport->lp_mutex);
+ 		break;
+ 
+ 	case NETDEV_DOWN:
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index 3de1ce7..4296d21 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -87,7 +87,7 @@ int bnx2fc_send_fw_fcoe_init_msg(struct bnx2fc_hba *hba)
+ 	fcoe_init1.task_list_pbl_addr_lo = (u32) hba->task_ctx_bd_dma;
+ 	fcoe_init1.task_list_pbl_addr_hi =
+ 				(u32) ((u64) hba->task_ctx_bd_dma >> 32);
+-	fcoe_init1.mtu = hba->netdev->mtu;
++	fcoe_init1.mtu = FCOE_MTU;
+ 
+ 	fcoe_init1.flags = (PAGE_SHIFT <<
+ 				FCOE_KWQE_INIT1_LOG_PAGE_SIZE_SHIFT);
+-- 
+1.7.0.6
 
-Please feel free to add any other pointers and I will have a look.
 
-Best Regards,
 
---nab
+
