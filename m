@@ -1,68 +1,69 @@
-From: Jesper Juhl <jj@chaosbits.net>
-Subject: Re: [RFC-v2 12/12] iscsi-target: Add Makefile/Kconfig and update
- TCM top level
-Date: Tue, 15 Mar 2011 02:03:53 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1103150201050.26293@swampdragon.chaosbits.net>
-References: <1300103829-10337-1-git-send-email-nab@linux-iscsi.org> <1300103829-10337-13-git-send-email-nab@linux-iscsi.org>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [PATCH 1/1] AACRAID driver update patch version - 28000
+Date: Mon, 14 Mar 2011 18:57:25 -0500
+Message-ID: <1300147045.5665.8.camel@mulgrave.site>
+References: <340C71CD25A7EB49BFA81AE8C8392667104CE89A@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:20445 "EHLO
-	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756339Ab1COBEN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Mar 2011 21:04:13 -0400
-In-Reply-To: <1300103829-10337-13-git-send-email-nab@linux-iscsi.org>
+Received: from cantor.suse.de ([195.135.220.2]:44960 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750796Ab1COBiR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Mar 2011 21:38:17 -0400
+In-Reply-To: <340C71CD25A7EB49BFA81AE8C8392667104CE89A@BBY1EXM10.pmc_nt.nt.pmc-sierra.bc.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>
+To: Mahesh Rajashekhara <Mahesh_Rajashekhara@pmc-sierra.com>
+Cc: linux-scsi@vger.kernel.org, aacraid@pmc-sierra.com
 
-On Mon, 14 Mar 2011, Nicholas A. Bellinger wrote:
-
-> From: Nicholas Bellinger <nab@linux-iscsi.org>
+On Fri, 2011-03-11 at 05:01 -0800, Mahesh Rajashekhara wrote:
+> Hi James,
 > 
-[...]
-> diff --git a/drivers/target/Makefile b/drivers/target/Makefile
-> index 60028fe..b038b7d 100644
-> --- a/drivers/target/Makefile
-> +++ b/drivers/target/Makefile
-> @@ -24,3 +24,4 @@ obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
->  
->  # Fabric modules
->  obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop/
-> +obj-$(CONFIG_ISCSI_TARGET)	+= iscsi/
-> diff --git a/drivers/target/iscsi/Kconfig b/drivers/target/iscsi/Kconfig
-> new file mode 100644
-> index 0000000..cc34243
-> --- /dev/null
-> +++ b/drivers/target/iscsi/Kconfig
-> @@ -0,0 +1,17 @@
-> +config ISCSI_TARGET
-> +	tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
-> +	select CRYPTO
-> +	select CRYPTO_CRC32C
-> +	select CRYPTO_CRC32C_INTEL if X86
-> +	help
-> +	Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
-> +	Target Mode Stack.
-> +
-> +if ISCSI_TARGET
-> +
-> +config ISCSI_TARGET_DEBUG
-> +	bool "LIO-Target iscsi_debug.h ring buffer messages"
-> +	help
-> +	Say Y here to enable the legacy DEBUG_ISCSI macros in iscsi_debug.h
-> +
-> +endif
-[...]
+> The existing "aacraid" driver in the upstream kernel tree supports up to
+> Series-5 controller (3GB/Sec) family.
+> We launched Series-6 family of RAID controllers (6GB/Sec).
+> 
+> The new Series-6 adapters has PMC-Sierra's advanced ROC(RAID-on-chip)
+> silicon.
 
-Perhaps this is a stupid question, but if these are "legacy" macros, why 
-not save our users from having to deal with a new config option that is 
-presumably going to go away again soon-ish and instead make those legacy 
-macros go away sooner rather than later?
+OK, so this is line wrapped and won't apply.  Probably because you're
+using outlook:  I think microsoft specifically programmed it to mangle
+patch attachments.
 
--- 
-Jesper Juhl <jj@chaosbits.net>            http://www.chaosbits.net/
-Plain text mails only, please.
-Don't top-post http://www.catb.org/~esr/jargon/html/T/top-post.html
+If you can't use an email tool which can be made to work
+
+Documentation/email-clients.txt
+
+you'll need to attach the patches rather than inlining them (which will
+annoy people).
+
+> Patch description:
+> ------------------
+> Added new hardware device interface for PMC-Sierra's SRC based
+> controller family.
+
+This is a bit terse for a description.  It looks like you've added
+support for the new device 0x28b which requires an expansion of the
+doorbell registers to function?
+
+> Please review the driver patch and let us know your comments.
+> 
+> Please see the patch below.
+> 
+> Thanks & Regards,
+> Mahesh
+> Linux Driver Development Engineer,
+> PMC-Sierra ODC, Bangalore
+
+OK, so really you want patch description first, then a set of three
+dashes, then the rest of this (including the diffstat).  The automated
+tools ignore all text after the '---' line, so anything that's not
+description can go there.
+
+James
+
+P.S. can you take Mark Salyzyn's comments into account on the resend,
+please?
+
 
