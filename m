@@ -1,55 +1,42 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC-v2 11/12] iscsi-target: Add misc utility and debug logic
-Date: Tue, 15 Mar 2011 15:59:56 -0700
-Message-ID: <1300229996.28255.322.camel@haakon2.linux-iscsi.org>
-References: <1300103829-10337-1-git-send-email-nab@linux-iscsi.org>
-	 <1300103829-10337-12-git-send-email-nab@linux-iscsi.org>
-	 <20110315102720.GC24496@lst.de>
+From: Robert Love <robert.w.love@intel.com>
+Subject: Re: [PATCH 05/13] scsi: use list_move() instead of
+ list_del()/list_add() combination
+Date: Tue, 15 Mar 2011 16:52:25 -0700
+Message-ID: <1300233145.19083.383.camel@fritz>
+References: <1300229605-14499-1-git-send-email-kirill@shutemov.name>
+	 <1300229605-14499-5-git-send-email-kirill@shutemov.name>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:39387 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366Ab1COXHA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2011 19:07:00 -0400
-In-Reply-To: <20110315102720.GC24496@lst.de>
+Received: from mga03.intel.com ([143.182.124.21]:10037 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754727Ab1COXw1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2011 19:52:27 -0400
+In-Reply-To: <1300229605-14499-5-git-send-email-kirill@shutemov.name>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>
+To: "Kirill A. Shutemov" <kirill@shutemov.name>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "James E.J. Bottomley" <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "devel@open-fcoe.org" <devel@open-fcoe.org>
 
-On Tue, 2011-03-15 at 11:27 +0100, Christoph Hellwig wrote:
-> On Mon, Mar 14, 2011 at 04:57:08AM -0700, Nicholas A. Bellinger wrote:
-> > +++ b/drivers/target/iscsi/iscsi_debug.h
-> > @@ -0,0 +1,113 @@
-> > +#ifndef ISCSI_DEBUG_H
-> > +#define ISCSI_DEBUG_H
-> > +
-> > +/*
-> > + * Debugging Support
-> > + */
-> > +
-> > +#define TRACE_DEBUG	0x00000001	/* Verbose debugging */
-> > +#define TRACE_SCSI	0x00000002	/* Stuff related to SCSI Mid-layer */
-> 
-> Please use trace events for this kind of debugging.
-> 
+On Tue, 2011-03-15 at 15:53 -0700, Kirill A. Shutemov wrote:
+> Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
+> Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
+> Cc: Robert Love <robert.w.love@intel.com>
+> Cc: linux-scsi@vger.kernel.org
+> Cc: devel@open-fcoe.org
+> ---
+>  drivers/scsi/esp_scsi.c     |    6 ++----
+>  drivers/scsi/fcoe/libfcoe.c |    6 ++----
 
-<nod>, will have a closer look at Documentation/trace/events.txt
+Hi Kirill,
 
-> > +	spin_lock_bh(&conn->cmd_lock);
-> > +	list_add_tail(&cmd->i_list, &conn->conn_cmd_list);
-> > +	spin_unlock_bh(&conn->cmd_lock);
-> > +
-> > +	atomic_inc(&conn->active_cmds);
-> 
-> Seems like this counter is always maintained together with the list,
-> so it should be a non-atomic type under cmd_lock.
-> 
+   libfcoe.c doesn't exist anymore in the scsi-misc tree with recent
+fcoe transport changes. Specifically, the change you're trying to make
+should be to fcoe_ctlr.c.
 
-This counter (was) purely information and unused beyond the atomic_inc()
-+ atomic_dec().  Removing now..
+   I'll resend an updated patch that applies to scsi-misc and has my
+Ack.
 
---nab
+Thanks, //Rob
 
