@@ -1,365 +1,76 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC-v2 03/12] iscsi-target: Add TCM v4 compatiable ConfigFS
-	control plane
-Date: Mon, 14 Mar 2011 21:47:36 -0700
-Message-ID: <1300164456.28255.261.camel@haakon2.linux-iscsi.org>
+Subject: Re: [RFC-v2 12/12] iscsi-target: Add Makefile/Kconfig and update
+	TCM top level
+Date: Mon, 14 Mar 2011 21:52:13 -0700
+Message-ID: <1300164733.28255.267.camel@haakon2.linux-iscsi.org>
 References: <1300103829-10337-1-git-send-email-nab@linux-iscsi.org>
-	 <1300103829-10337-4-git-send-email-nab@linux-iscsi.org>
-	 <alpine.LNX.2.00.1103150130390.26293@swampdragon.chaosbits.net>
+	 <1300103829-10337-13-git-send-email-nab@linux-iscsi.org>
+	 <alpine.LNX.2.00.1103150201050.26293@swampdragon.chaosbits.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:58570 "EHLO
+Received: from mail.linux-iscsi.org ([67.23.28.174]:43351 "EHLO
 	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750814Ab1COEyl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2011 00:54:41 -0400
-In-Reply-To: <alpine.LNX.2.00.1103150130390.26293@swampdragon.chaosbits.net>
+	with ESMTP id S1753037Ab1COE7R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2011 00:59:17 -0400
+In-Reply-To: <alpine.LNX.2.00.1103150201050.26293@swampdragon.chaosbits.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jesper Juhl <jj@chaosbits.net>
 Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>
 
-On Tue, 2011-03-15 at 01:54 +0100, Jesper Juhl wrote:
+On Tue, 2011-03-15 at 02:03 +0100, Jesper Juhl wrote:
 > On Mon, 14 Mar 2011, Nicholas A. Bellinger wrote:
 > 
 > > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > > 
-> > This patch adds support for /sys/kernel/config/target/iscsi using
-> > TCM v4.0 compatiable calls following target_core_fabric_configfs.c
-> > 
-> > This includes a number of iSCSI fabric dependent attributes upon
-> > target_core_fabric_configfs.c provided struct config_item_types from
-> > include/target/target_core_configfs.hstruct target_fabric_configfs_template
-> > 
-> > It also includes iscsi_target_nodeattrib.[c,h] for handling the
-> > lio_target_nacl_attrib_attrs[] store/show for iSCSI fabric dependent
-> > attributes.
-> > 
+> [...]
+> > diff --git a/drivers/target/Makefile b/drivers/target/Makefile
+> > index 60028fe..b038b7d 100644
+> > --- a/drivers/target/Makefile
+> > +++ b/drivers/target/Makefile
+> > @@ -24,3 +24,4 @@ obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
+> >  
+> >  # Fabric modules
+> >  obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop/
+> > +obj-$(CONFIG_ISCSI_TARGET)	+= iscsi/
+> > diff --git a/drivers/target/iscsi/Kconfig b/drivers/target/iscsi/Kconfig
+> > new file mode 100644
+> > index 0000000..cc34243
+> > --- /dev/null
+> > +++ b/drivers/target/iscsi/Kconfig
+> > @@ -0,0 +1,17 @@
+> > +config ISCSI_TARGET
+> > +	tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
+> > +	select CRYPTO
+> > +	select CRYPTO_CRC32C
+> > +	select CRYPTO_CRC32C_INTEL if X86
+> > +	help
+> > +	Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
+> > +	Target Mode Stack.
+> > +
+> > +if ISCSI_TARGET
+> > +
+> > +config ISCSI_TARGET_DEBUG
+> > +	bool "LIO-Target iscsi_debug.h ring buffer messages"
+> > +	help
+> > +	Say Y here to enable the legacy DEBUG_ISCSI macros in iscsi_debug.h
+> > +
+> > +endif
 > [...]
 > 
-> A few minor comments below. Not a thorough review by any stretch of the 
-> imagination, just a quick glance and then pointing out a few things that 
-> caught my eye.
-> 
-> 
-> > +	op = simple_strtoul(page, &endptr, 0);
-> > +	 if ((op != 1) && (op != 0)) {
-> 
-> Indentation is <tab><space> here, should just be <tab>.
-> 
+> Perhaps this is a stupid question, but if these are "legacy" macros, why 
+> not save our users from having to deal with a new config option that is 
+> presumably going to go away again soon-ish and instead make those legacy 
+> macros go away sooner rather than later?
 > 
 
-Fixed
-
-> > +		printk(KERN_ERR "Illegal value for tpg_enable: %u\n", op);
-> > +		return -EINVAL;
-> > +	}
-> > +	np = tpg_np->tpg_np;
-> > +	if (!(np)) {
-> 
-> if (!np) {
-> 
-> 
-
-<nod>, fixed a ton of these earlier this afternoon.
-
-> > +		printk(KERN_ERR "Unable to locate struct iscsi_np from"
-> > +				" struct iscsi_tpg_np\n");
-> 
-> Perhaps put the entire log message text on one line. Makes it easier to 
-> grep for.
-> 
-> 
-
-Mmmmm, yes.  I fixed a bunch of the 80 line warnings at one point for
-checkpatch.pl,  but point taken for reference for new printk()'s..
-
-
-> > +	char buf[MAX_PORTAL_LEN];
-> > +
-> > +	if (strlen(name) > MAX_PORTAL_LEN) {
-> > +		printk(KERN_ERR "strlen(name): %d exceeds MAX_PORTAL_LEN: %d\n",
-> > +			(int)strlen(name), MAX_PORTAL_LEN);
-> 
-> Shouldn't this be 
-> 
->      char buf[MAX_PORTAL_LEN + 1];
->      
->      if (strlen(name) > MAX_PORTAL_LEN) {
->              printk(KERN_ERR "strlen(name): %d exceeds MAX_PORTAL_LEN: %d\n",
->                      (int)strlen(name), MAX_PORTAL_LEN);
-> 
-> so that there is room for the terminating \0 ?
-> 
-
-Mmmm, fair point.  Fixed.
-
-> 
-> > +	snprintf(buf, MAX_PORTAL_LEN, "%s", name);
-> > +
-> > +	memset((void *)&np_addr, 0, sizeof(struct iscsi_np_addr));
-> 
-> Unneeded cast?
-> 
-> 
-
-Dropped
-
-> > +
-> > +	str = strstr(buf, "[");
-> > +	if ((str)) {
-> 
-> if (str) {
-> 
-> 
-
-Fixed
-
-> > +		str2 = strstr(str, "]");
-> > +		if (!(str2)) {
-> 
-> if (!str2) {
-> 
-> 
-
-Ditto
-
-> > +			printk(KERN_ERR "Unable to locate trailing \"]\""
-> > +				" in IPv6 iSCSI network portal address\n");
-> > +			return ERR_PTR(-EINVAL);
-> > +		}
-> > +		str++; /* Skip over leading "[" */
-> > +		*str2 = '\0'; /* Terminate the IPv6 address */
-> > +		str2 += 1; /* Skip over the "]" */
-> 
-> why "str++" vs "str2 += 1" and not "str++" & "str2++" ?
-> 
-
-Mmmm, changing to '++' for consistency..
-
-> 
-> > +		port_str = strstr(str2, ":");
-> > +		if (!(port_str)) {
-> 
-> if (!port_str) {
-> 
-
-Fixed
-
-> > +			printk(KERN_ERR "Unable to locate \":port\""
-> > +				" in IPv6 iSCSI network portal address\n");
-> > +			return ERR_PTR(-EINVAL);
-> > +		}
-> > +		*port_str = '\0'; /* Terminate string for IP */
-> > +		port_str += 1; /* Skip over ":" */
-> 
-> port_str++;
-> 
-> 
-
-Ditto
-
-> > +		np_addr.np_port = simple_strtoul(port_str, &end_ptr, 0);
-> > +
-> > +		snprintf(np_addr.np_ipv6, IPV6_ADDRESS_SPACE, "%s", str);
-> > +		np_addr.np_flags |= NPF_NET_IPV6;
-> > +	} else {
-> > +		ip_str = &buf[0];
-> > +		port_str = strstr(ip_str, ":");
-> > +		if (!(port_str)) {
-> 
-> if (!port_str) {
-> 
-
-Fixed
-
-> > +			printk(KERN_ERR "Unable to locate \":port\""
-> > +				" in IPv4 iSCSI network portal address\n");
-> > +			return ERR_PTR(-EINVAL);
-> > +		}
-> > +		*port_str = '\0'; /* Terminate string for IP */
-> > +		port_str += 1; /* Skip over ":" */
-> 
-> port_str++;
-> 
-
-Fixed
-
-> 
-> > +static void lio_target_call_delnpfromtpg(
-> > +	struct se_tpg_np *se_tpg_np)
-> > +{
-> > +	struct iscsi_portal_group *tpg;
-> > +	struct iscsi_tpg_np *tpg_np;
-> > +	struct se_portal_group *se_tpg;
-> > +	int ret = 0;
-> > +
-> 
-> pointless initialization of 'ret' to 0
-> 
-
-Removed
-
-> > +	tpg_np = container_of(se_tpg_np, struct iscsi_tpg_np, se_tpg_np);
-> > +	tpg = tpg_np->tpg;
-> > +	ret = iscsi_get_tpg(tpg);
-> 
-> 'ret' is assigned to here before it's used.
-> 
-> 
-
-<nod>
-
-> > +#define DEF_NACL_PARAM(name)						\
-> > +static ssize_t iscsi_nacl_param_show_##name(				\
-> > +	struct se_node_acl *se_nacl,					\
-> > +	char *page)							\
-> > +{									\
-> > +	struct iscsi_session *sess;						\
-> > +	struct se_session *se_sess;						\
-> > +	ssize_t rb;							\
-> > +									\
-> > +	spin_lock_bh(&se_nacl->nacl_sess_lock);				\
-> > +	se_sess = se_nacl->nacl_sess;					\
-> > +	if (!(se_sess)) {						\
-> 
-> if (!se_sess) {
-> 
-> 
-
-Fixed
-
-> > +static ssize_t lio_target_nacl_show_info(
-> > +	struct se_node_acl *se_nacl,
-> > +	char *page)
-> > +{
-> > +	struct iscsi_session *sess;
-> > +	struct iscsi_conn *conn;
-> > +	struct se_session *se_sess;
-> > +	unsigned char *ip, buf_ipv4[IPV4_BUF_SIZE];
-> > +	ssize_t rb = 0;
-> > +
-> > +	spin_lock_bh(&se_nacl->nacl_sess_lock);
-> > +	se_sess = se_nacl->nacl_sess;
-> > +	if (!(se_sess))
-> 
-> if (!se_sess)
-> 
-> (not pointing out any more of these)
-> 
-
-<nod>, I fixed probably 100 of these this afternoon.  ;)
-
-> 
-> > +		rb += sprintf(page+rb, "No active iSCSI Session for Initiator"
-> > +			" Endpoint: %s\n", se_nacl->initiatorname);
-> > +	else {
-> 
-> when one branch has {}, please use them for the other as well.
-> 
-> 
-
-Fixed
-
-> > +			if (conn->net_size == IPV6_ADDRESS_SPACE)
-> > +				ip = &conn->ipv6_login_ip[0];
-> > +			else {
-> 
-> if () {
-> } else {
-> }
-> 
-> 
-
-Fixed
-
-> > +	u32 cmdsn_depth = 0;
-> > +	int ret = 0;
-> 
-> pointless default init of 'ret' to 0.
-> 
-
-Removed
-
-> > +
-> > +	cmdsn_depth = simple_strtoul(page, &endptr, 0);
-> > +	if (cmdsn_depth > TA_DEFAULT_CMDSN_DEPTH_MAX) {
-> > +		printk(KERN_ERR "Passed cmdsn_depth: %u exceeds"
-> > +			" TA_DEFAULT_CMDSN_DEPTH_MAX: %u\n", cmdsn_depth,
-> > +			TA_DEFAULT_CMDSN_DEPTH_MAX);
-> > +		return -EINVAL;
-> > +	}
-> > +	acl_ci = &se_nacl->acl_group.cg_item;
-> > +	if (!(acl_ci)) {
-> > +		printk(KERN_ERR "Unable to locatel acl_ci\n");
-> > +		return -EINVAL;
-> > +	}
-> > +	tpg_ci = &acl_ci->ci_parent->ci_group->cg_item;
-> > +	if (!(tpg_ci)) {
-> > +		printk(KERN_ERR "Unable to locate tpg_ci\n");
-> > +		return -EINVAL;
-> > +	}
-> > +	wwn_ci = &tpg_ci->ci_group->cg_item;
-> > +	if (!(wwn_ci)) {
-> > +		printk(KERN_ERR "Unable to locate config_item wwn_ci\n");
-> > +		return -EINVAL;
-> > +	}
-> > +
-> > +	if (iscsi_get_tpg(tpg) < 0)
-> > +		return -EINVAL;
-> > +	/*
-> > +	 * iscsi_tpg_set_initiator_node_queue_depth() assumes force=1
-> > +	 */
-> > +	ret = iscsi_tpg_set_initiator_node_queue_depth(tpg,
-> > +				config_item_name(acl_ci), cmdsn_depth, 1);
-> 
-> 'ret' is initialized nicely here before it is used.
-> 
-> 
-
-<nod>
-
-> 
-> > +	ssize_t len = 0;
-> > +
-> 
-> no need to initialize 'len' to 0 here - 
-> 
-
-Removed
-
-> > +	spin_lock(&tpg->tpg_state_lock);
-> > +	len = sprintf(page, "%d\n",
-> > +			(tpg->tpg_state == TPG_STATE_ACTIVE) ? 1 : 0);
-> 
->         it's initialized here.
-> 
-> 
-
-<nod>
-
-> > +static ssize_t lio_target_tpg_store_enable(
-> > +	struct se_portal_group *se_tpg,
-> > +	const char *page,
-> > +	size_t count)
-> > +{
-> > +	struct iscsi_portal_group *tpg = container_of(se_tpg,
-> > +			struct iscsi_portal_group, tpg_se_tpg);
-> > +	char *endptr;
-> > +	u32 op;
-> > +	int ret = 0;
-> > +
-> 
-> pointless init of 'ret'.
-> 
-> 
-
-Removed.
-
-Thanks alot for your review hereh Jesper.  I will get these changed
-pushed into lio-4.1 upstream shortly and included for the follow-up RFC
-posting for mainline.
+A fair point here.  Perhaps calling them 'legacy' is a bit harsh, as
+these are still useful for short-term v4.1 iSCSI target debugging
+purposes.  In the long run these do need to be converted to use debugfs
+(along with the rest of drivers/target/ as well), but this is currently
+a lower priority item on the TODO for the initial merge.
 
 Best Regards,
 
