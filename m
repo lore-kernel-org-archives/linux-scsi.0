@@ -1,78 +1,101 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [RFC-v2 12/12] iscsi-target: Add Makefile/Kconfig and update
-	TCM top level
-Date: Mon, 14 Mar 2011 21:52:13 -0700
-Message-ID: <1300164733.28255.267.camel@haakon2.linux-iscsi.org>
-References: <1300103829-10337-1-git-send-email-nab@linux-iscsi.org>
-	 <1300103829-10337-13-git-send-email-nab@linux-iscsi.org>
-	 <alpine.LNX.2.00.1103150201050.26293@swampdragon.chaosbits.net>
+From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Subject: RE: [PATCH 06/13] qla4xxx: Prevent other port reinitialization
+ during remove_adapter
+Date: Tue, 15 Mar 2011 02:21:40 -0700
+Message-ID: <5E4F49720D0BAD499EE1F01232234BA872263B1779@AVEXMB1.qlogic.org>
+References: <5E4F49720D0BAD499EE1F01232234BA872263B150C@AVEXMB1.qlogic.org>
+ <4D7E9188.8010606@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:43351 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753037Ab1COE7R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2011 00:59:17 -0400
-In-Reply-To: <alpine.LNX.2.00.1103150201050.26293@swampdragon.chaosbits.net>
+Received: from va3ehsobe002.messaging.microsoft.com ([216.32.180.12]:56029
+	"EHLO VA3EHSOBE002.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752201Ab1COJWK convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2011 05:22:10 -0400
+In-Reply-To: <4D7E9188.8010606@cs.wisc.edu>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>
 
-On Tue, 2011-03-15 at 02:03 +0100, Jesper Juhl wrote:
-> On Mon, 14 Mar 2011, Nicholas A. Bellinger wrote:
-> 
-> > From: Nicholas Bellinger <nab@linux-iscsi.org>
-> > 
-> [...]
-> > diff --git a/drivers/target/Makefile b/drivers/target/Makefile
-> > index 60028fe..b038b7d 100644
-> > --- a/drivers/target/Makefile
-> > +++ b/drivers/target/Makefile
-> > @@ -24,3 +24,4 @@ obj-$(CONFIG_TCM_PSCSI)		+= target_core_pscsi.o
-> >  
-> >  # Fabric modules
-> >  obj-$(CONFIG_TCM_LOOP_FABRIC)	+= tcm_loop/
-> > +obj-$(CONFIG_ISCSI_TARGET)	+= iscsi/
-> > diff --git a/drivers/target/iscsi/Kconfig b/drivers/target/iscsi/Kconfig
-> > new file mode 100644
-> > index 0000000..cc34243
-> > --- /dev/null
-> > +++ b/drivers/target/iscsi/Kconfig
-> > @@ -0,0 +1,17 @@
-> > +config ISCSI_TARGET
-> > +	tristate "Linux-iSCSI.org iSCSI Target Mode Stack"
-> > +	select CRYPTO
-> > +	select CRYPTO_CRC32C
-> > +	select CRYPTO_CRC32C_INTEL if X86
-> > +	help
-> > +	Say Y here to enable the ConfigFS enabled Linux-iSCSI.org iSCSI
-> > +	Target Mode Stack.
-> > +
-> > +if ISCSI_TARGET
-> > +
-> > +config ISCSI_TARGET_DEBUG
-> > +	bool "LIO-Target iscsi_debug.h ring buffer messages"
-> > +	help
-> > +	Say Y here to enable the legacy DEBUG_ISCSI macros in iscsi_debug.h
-> > +
-> > +endif
-> [...]
-> 
-> Perhaps this is a stupid question, but if these are "legacy" macros, why 
-> not save our users from having to deal with a new config option that is 
-> presumably going to go away again soon-ish and instead make those legacy 
-> macros go away sooner rather than later?
-> 
+>-----Original Message-----
+>From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>owner@vger.kernel.org] On Behalf Of Mike Christie
+>Sent: Tuesday, March 15, 2011 3:37 AM
+>To: Vikas Chaudhary
+>Cc: James Bottomley; linux-scsi@vger.kernel.org; Ravi Anand; Lalit
+>Chandivade; Karen Higgins
+>Subject: Re: [PATCH 06/13] qla4xxx: Prevent other port reinitialization
+>during remove_adapter
+>
+>On 03/14/2011 12:24 AM, Vikas Chaudhary wrote:
+>> index 6068f80..59c5552 100644
+>> --- a/drivers/scsi/qla4xxx/ql4_os.c
+>> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+>> @@ -27,6 +27,11 @@ static char qla4xxx_version_str[40];
+>>   static struct kmem_cache *srb_cachep;
+>>
+>>   /*
+>> + * List of host adapters
+>> + */
+>> +static struct klist qla4xxx_hostlist;
+>> +
+>
+>
+>
+>>
+>>   /**
+>> + * qla4xxx_prevent_other_port_reinit - Mark the other ISP-4xxx port to
+>indicate
+>> + * that the driver is being removed, so that the other port will not
+>> + * re-initialize while in the process of removing the ha due to driver
+>unload
+>> + * or hba hotplug.
+>
+>For docbook comments you use a one line description on the first line,
+>then add more informative stuff after the params.
+>
 
-A fair point here.  Perhaps calling them 'legacy' is a bit harsh, as
-these are still useful for short-term v4.1 iSCSI target debugging
-purposes.  In the long run these do need to be converted to use debugfs
-(along with the rest of drivers/target/ as well), but this is currently
-a lower priority item on the TODO for the initial merge.
+Ok, I will be sending updated patch in next email.
 
-Best Regards,
+>
+>> + * @ha: pointer to adapter structure
+>> + **/
+>> +static void qla4xxx_prevent_other_port_reinit(struct scsi_qla_host *ha)
+>> +{
+>> +       struct scsi_qla_host *ha_listp;
+>> +       struct klist_iter i;
+>> +       struct klist_node *n;
+>> +
+>> +       klist_iter_init(&qla4xxx_hostlist,&i);
+>> +       while ((n = klist_next(&i)) != NULL) {
+>> +               ha_listp = container_of(n, struct scsi_qla_host, node);
+>> +               if (ha == ha_listp)
+>> +                       continue;
+>> +
+>> +               if ((pci_domain_nr(ha->pdev->bus) ==
+>> +                   pci_domain_nr(ha_listp->pdev->bus))&&
+>> +                   (ha->pdev->bus->number ==
+>> +                   ha_listp->pdev->bus->number)&&
+>> +                   (PCI_SLOT(ha->pdev->devfn) ==
+>> +                   PCI_SLOT(ha_listp->pdev->devfn))) {
+>> +
+>
+>Is there a qla4xxx specific reason why you need to prevent other ports
+>from re-initing when removing a port? Does the hardware cause the other
+>ports to be disrupted and that causes them to run the re-init code?
 
---nab
+Yes, its ISP40XX specific. While unloading driver we make call to function
+"qla4xxx_hw_reset" from "qla4xxx_free_adapter". When driver do hw_reset
+for one port, hardware will generate interrupt for other ports to inform
+reset is about to happen. After this interrupt driver will schedule reset
+for other port by setting dpc flag "DPC_RESET_HA_INTR" in function
+"qla4xxx_intr_handler" this will cause re-initialization of other port
+after reset, but while unloading driver we don't want to schedule reset
+for the other port as other port does not need re-initialization".
+
+This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
 
