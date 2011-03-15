@@ -1,234 +1,176 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [PATCH] x86: introduce pci_map_biosrom()
-Date: Tue, 15 Mar 2011 15:17:47 -0700
-Message-ID: <1300227467.28000.10.camel@dwillia2-linux>
-References: <20110308183226.6246.90354.stgit@localhost6.localdomain6>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [RFC-v2 02/12] iscsi-target: Add primary iSCSI
+	request/response state machine logic
+Date: Tue, 15 Mar 2011 15:46:10 -0700
+Message-ID: <1300229170.28255.304.camel@haakon2.linux-iscsi.org>
+References: <1300103829-10337-1-git-send-email-nab@linux-iscsi.org>
+	 <1300103829-10337-3-git-send-email-nab@linux-iscsi.org>
+	 <20110314153300.GC28480@lst.de>
+	 <1300148232.28255.238.camel@haakon2.linux-iscsi.org>
+	 <20110315101500.GA23623@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20110308183226.6246.90354.stgit@localhost6.localdomain6>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "hpa@zytor.com" <hpa@zytor.com>
-Cc: "dmilburn@redhat.com" <dmilburn@redhat.com>, "Jiang, Dave" <dave.jiang@intel.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, x86@kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:33022 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304Ab1COWxP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Mar 2011 18:53:15 -0400
+In-Reply-To: <20110315101500.GA23623@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Hannes Reinecke <hare@suse.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Boaz Harrosh <bharrosh@panasas.com>, Stephen Rothwell <sfr@canb.auug.org.au>, Douglas Gilbert <dgilbert@interlog.com>
 
->From 2d9dae6870bbed75a94bc3b7478da7418e2a4d6a Mon Sep 17 00:00:00 2001
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 14 Mar 2011 17:01:55 -0700
-Subject: [PATCH v2] x86: introduce pci_map_biosrom()
+On Tue, 2011-03-15 at 11:15 +0100, Christoph Hellwig wrote:
+> On Mon, Mar 14, 2011 at 05:17:12PM -0700, Nicholas A. Bellinger wrote:
+> > > > +#include <linux/version.h>
+> > > > +#include <generated/utsrelease.h>
+> > > > +#include <linux/utsname.h>
+> > > 
+> > > You keep including these headers a lot, and I still don't understand why.  Even
+> > > if we need to expose data from it it should be done once in the core and not
+> > > all over the code.
+> > > 
+> > 
+> > OK, moved into a single iscsi_target_core.h include.
+> 
+> That's not what I meant.
+> 
+>  - for linux/version.h:
+> 
+> 	neither LINUX_VERSION_CODE nor KERNEL_VERSION is used anywhere in
+> 	the target code, so it can't possibly required at all.
+> 
 
-The isci driver needs to retrieve its preboot orom image which contains
-necessary runtime parameters like platform specific sas addresses and
-phy configuration.  There is no rom bar associated with this area,
-instead we need to scan legacy expansion rom space.
+OK, dropped.
 
-1/ Promote the probe_roms_32 implementation to x86-64
-2/ Add a facility to find and map an adapter rom by pci device (according to
-   PCI Firmware Specification Revision 3.0)
+>  - for linux/utsname.h and <generated/utsrelease.h>:
+> 
+> 	please either remove the attributes printing this information
+> 	into common code.  or better off just remove it all all.  You can
+> 	get the kernel version and release from the utsname system call,
+> 	there is absolutely no need to duplicate it in a different attribute in
+> 	every target frontend.
 
-Signed-off-by: Dave Jiang <dave.jiang@intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
-Here is an updated version rebased on tip/master.  Aside from fixing up
-the merge conflicts in Makefile and setup.h this is identical to the
-last release.
+Ok, sorry, I see what you mean wrt to UTS_RELEASE and dropping this
+usage and generated/utsrelease.h include.
 
---
-Dan
+> 	Also printing it during initialization is completely pointless, too.
+> 
 
- arch/x86/include/asm/probe_roms.h                 |    8 ++
- arch/x86/include/asm/setup.h                      |    2 +-
- arch/x86/kernel/Makefile                          |    2 +-
- arch/x86/kernel/head32.c                          |    1 -
- arch/x86/kernel/{probe_roms_32.c => probe_roms.c} |  101 +++++++++++++++++++++
- arch/x86/kernel/x86_init.c                        |    2 +-
- 6 files changed, 112 insertions(+), 4 deletions(-)
- create mode 100644 arch/x86/include/asm/probe_roms.h
- rename arch/x86/kernel/{probe_roms_32.c => probe_roms.c} (65%)
+the 'vX.Y.Z on Linux/$ARCH' in the version string has been around for a
+looong time, but I don't mind dropping it all together for the handful
+of informational cases here.
 
-diff --git a/arch/x86/include/asm/probe_roms.h b/arch/x86/include/asm/probe_roms.h
-new file mode 100644
-index 0000000..4950a0b
---- /dev/null
-+++ b/arch/x86/include/asm/probe_roms.h
-@@ -0,0 +1,8 @@
-+#ifndef _PROBE_ROMS_H_
-+#define _PROBE_ROMS_H_
-+struct pci_dev;
-+
-+extern void __iomem *pci_map_biosrom(struct pci_dev *pdev);
-+extern void pci_unmap_biosrom(void __iomem *rom);
-+extern size_t pci_biosrom_size(struct pci_dev *pdev);
-+#endif
-diff --git a/arch/x86/include/asm/setup.h b/arch/x86/include/asm/setup.h
-index db8aa19..03d3a32 100644
---- a/arch/x86/include/asm/setup.h
-+++ b/arch/x86/include/asm/setup.h
-@@ -104,10 +104,10 @@ void *extend_brk(size_t size, size_t align);
- 	type *name;					\
- 	RESERVE_BRK(name, sizeof(type) * entries)
- 
-+extern void probe_roms(void);
- #ifdef __i386__
- 
- void __init i386_start_kernel(void);
--extern void probe_roms(void);
- 
- #else
- void __init x86_64_start_kernel(char *real_mode);
-diff --git a/arch/x86/kernel/Makefile b/arch/x86/kernel/Makefile
-index 743642f..78eeffb 100644
---- a/arch/x86/kernel/Makefile
-+++ b/arch/x86/kernel/Makefile
-@@ -36,7 +36,7 @@ obj-y			+= traps.o irq.o irq_$(BITS).o dumpstack_$(BITS).o
- obj-y			+= time.o ioport.o ldt.o dumpstack.o
- obj-y			+= setup.o x86_init.o i8259.o irqinit.o jump_label.o
- obj-$(CONFIG_IRQ_WORK)  += irq_work.o
--obj-$(CONFIG_X86_32)	+= probe_roms_32.o
-+obj-y			+= probe_roms.o
- obj-$(CONFIG_X86_32)	+= sys_i386_32.o i386_ksyms_32.o
- obj-$(CONFIG_X86_64)	+= sys_x86_64.o x8664_ksyms_64.o
- obj-$(CONFIG_X86_64)	+= syscall_64.o vsyscall_64.o
-diff --git a/arch/x86/kernel/head32.c b/arch/x86/kernel/head32.c
-index d6d6bb3..3bb0850 100644
---- a/arch/x86/kernel/head32.c
-+++ b/arch/x86/kernel/head32.c
-@@ -23,7 +23,6 @@
- static void __init i386_default_early_setup(void)
- {
- 	/* Initialize 32bit specific setup functions */
--	x86_init.resources.probe_roms = probe_roms;
- 	x86_init.resources.reserve_resources = i386_reserve_resources;
- 	x86_init.mpparse.setup_ioapic_ids = setup_ioapic_ids_from_mpc;
- 
-diff --git a/arch/x86/kernel/probe_roms_32.c b/arch/x86/kernel/probe_roms.c
-similarity index 65%
-rename from arch/x86/kernel/probe_roms_32.c
-rename to arch/x86/kernel/probe_roms.c
-index 071e7fe..ba0a4cc 100644
---- a/arch/x86/kernel/probe_roms_32.c
-+++ b/arch/x86/kernel/probe_roms.c
-@@ -73,6 +73,107 @@ static struct resource video_rom_resource = {
- 	.flags	= IORESOURCE_BUSY | IORESOURCE_READONLY | IORESOURCE_MEM
- };
- 
-+/* does this oprom support the given pci device, or any of the devices
-+ * that the driver supports?
-+ */
-+static bool match_id(struct pci_dev *pdev, unsigned short vendor, unsigned short device)
-+{
-+	struct pci_driver *drv = pdev->driver;
-+	const struct pci_device_id *id;
-+
-+	if (pdev->vendor == vendor && pdev->device == device)
-+		return true;
-+
-+	for (id = drv ? drv->id_table : NULL; id && id->vendor; id++)
-+		if (id->vendor == vendor && id->device == device)
-+			break;
-+
-+	return id && id->vendor;
-+}
-+
-+static bool probe_list(struct pci_dev *pdev, unsigned short vendor,
-+		       const unsigned char *rom_list)
-+{
-+	unsigned short device;
-+
-+	do {
-+		if (probe_kernel_address(rom_list, device) != 0)
-+			device = 0;
-+
-+		if (device && match_id(pdev, vendor, device))
-+			break;
-+
-+		rom_list += 2;
-+	} while (device);
-+
-+	return !!device;
-+}
-+
-+static struct resource *find_oprom(struct pci_dev *pdev)
-+{
-+	struct resource *oprom = NULL;
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(adapter_rom_resources); i++) {
-+		struct resource *res = &adapter_rom_resources[i];
-+		unsigned short offset, vendor, device, list, rev;
-+		const unsigned char *rom;
-+
-+		if (res->end == 0)
-+			break;
-+
-+		rom = isa_bus_to_virt(res->start);
-+		if (probe_kernel_address(rom + 0x18, offset) != 0)
-+			continue;
-+
-+		if (probe_kernel_address(rom + offset + 0x4, vendor) != 0)
-+			continue;
-+
-+		if (probe_kernel_address(rom + offset + 0x6, device) != 0)
-+			continue;
-+
-+		if (match_id(pdev, vendor, device)) {
-+			oprom = res;
-+			break;
-+		}
-+
-+		if (probe_kernel_address(rom + offset + 0x8, list) == 0 &&
-+		    probe_kernel_address(rom + offset + 0xc, rev) == 0 &&
-+		    rev >= 3 && list &&
-+		    probe_list(pdev, vendor, rom + offset + list)) {
-+			oprom = res;
-+			break;
-+		}
-+	}
-+
-+	return oprom;
-+}
-+
-+void *pci_map_biosrom(struct pci_dev *pdev)
-+{
-+	struct resource *oprom = find_oprom(pdev);
-+
-+	if (!oprom)
-+		return NULL;
-+
-+	return ioremap(oprom->start, resource_size(oprom));
-+}
-+EXPORT_SYMBOL(pci_map_biosrom);
-+
-+void pci_unmap_biosrom(void __iomem *image)
-+{
-+	iounmap(image);
-+}
-+EXPORT_SYMBOL(pci_unmap_biosrom);
-+
-+size_t pci_biosrom_size(struct pci_dev *pdev)
-+{
-+	struct resource *oprom = find_oprom(pdev);
-+
-+	return oprom ? resource_size(oprom) : 0;
-+}
-+EXPORT_SYMBOL(pci_biosrom_size);
-+
- #define ROMSIGNATURE 0xaa55
- 
- static int __init romsignature(const unsigned char *rom)
-diff --git a/arch/x86/kernel/x86_init.c b/arch/x86/kernel/x86_init.c
-index c11514e..6eee082 100644
---- a/arch/x86/kernel/x86_init.c
-+++ b/arch/x86/kernel/x86_init.c
-@@ -35,7 +35,7 @@ void iommu_shutdown_noop(void) { }
- struct x86_init_ops x86_init __initdata = {
- 
- 	.resources = {
--		.probe_roms		= x86_init_noop,
-+		.probe_roms		= probe_roms,
- 		.reserve_resources	= reserve_standard_io_resources,
- 		.memory_setup		= default_machine_specific_memory_setup,
- 	},
--- 
-1.7.3.4
+> > > > +void core_put_tiqn_for_login(struct iscsi_tiqn *tiqn)
+> > > > +{
+> > > > +	spin_lock(&tiqn->tiqn_state_lock);
+> > > > +	atomic_dec(&tiqn->tiqn_access_count);
+> > > > +	spin_unlock(&tiqn->tiqn_state_lock);
+> > > > +	return;
+> > > 
+> > > no need for the return here.  Also what's the point of making tiqn_access_count
+> > > if you take a spinlock around all it's modifications?
+> > > 
+> > 
+> > Removed the unnecessary return here..  I was behind paranoid here..
+> 
+> Also please make tiqn_access_count a normal integer type, it is always
+> protected by tiqn_state_lock.
+> 
+
+Done.
+
+> > Indeed..  Ok, I am going to go ahead an rename everything using core_ to
+> > iscsi_
+> 
+> Looks like none of the initiator code currently uses iscsi_, but I'd still
+> feel better about iscsit_ to make sure we're not conflicting with other
+> initiator side code.
+> 
+
+Ok, will use this for the core_ prefixed bits..
+
+> > > Can't you just use the core idr code for generating indices?
+> > > 
+> > 
+> > Mmmm, not sure what you mean here..
+> 
+> Take a look at include/linux/idr.h.
+> 
+
+Thanks, looking at the code now.
+
+> Note that the uses for np_index, tpg_np_index and conn_index can be
+> removed entirely as they are unused.
+> 
+
+Done
+
+> > Ok, there are a quite a few struct semaphores that need to be converted
+> > into a struct mutex or struct completion..  I will get all of these
+> > converted over..
+> 
+> or sometimes spinlocks.  Or often removed at all, as they just implement weird
+> semantics for the threads - no need to have startup/shutdown synchronization
+> as the kthread semantics are synchronous, and for a wakeup after queueing
+> up work a simple wake_up_process on the task_struct pointer is enough.
+> 
+
+Ok, I will get this cleaned up for the NP login thread and TX conn
+thread cases first and find+locate the issue mentioned above for the RX
+case using kthread_stop()
+
+> If you have question on how to avoid certain uses feel free to ask.
+> 
+
+<nod>
+
+> > 
+> > Ok, this is where I have previously run into some issues after doing a
+> > kthread conversion for the RX/TX pairs using sock_recvmsg() some time a
+> > while back.  That said, I will go ahead will get the ulgiest pieces for
+> > the NP thread converted first and then have another look where the RX
+> > path code was (I think) having an issue to successfully perform iSCSI
+> > Logout Request -> Response processing..
+> 
+> Note that you might get away with less copies using the sk_data_ready,
+> sk_state_change callbacks and tcp_read_sock() and totally dropping the
+> traditional recvmsg path.  As this remove the blocking behaviour it
+> will as a side effect also remove any issues with thread startup/stop.
+> 
+> Take a look at drivers/scsi/iscsi_tcp.c for an implementation.
+> 
+
+<nod>, I am well aware of ->sk_data_ready() for directly accessing
+struct sk_buff memory for the RX side case, and currently consider this
+a future optimiziation item.
+
+> > > > +#define CONN(cmd)		((struct iscsi_conn *)(cmd)->conn)
+> > > > +#define CONN_OPS(conn)		((struct iscsi_conn_ops *)(conn)->conn_ops)
+> > > 
+> > > There really shouldn't be any need for these macros.
+> > > 
+> > > 
+> > > > +#define SESS(conn)		((struct iscsi_session *)(conn)->sess)
+> > > > +#define SESS_OPS(sess)		((struct iscsi_sess_ops *)(sess)->sess_ops)
+> > > > +#define SESS_OPS_C(conn)	((struct iscsi_sess_ops *)(conn)->sess->sess_ops)
+> > > > +#define SESS_NODE_ACL(sess)	((struct se_node_acl *)(sess)->se_sess->se_node_acl)
+> > > 
+> > > Same here.
+> > > 
+> > 
+> > Ok, I will drop the unnecessary casts here, and I will look at thinning
+> > -> removing these out these handful of macros.
+> 
+> It's not just the casts - macros just for dereferencing a field just obsfucate
+> the code.
+> 
+
+Yep, will get them cleaned up as the larger items are addressed.
+
+Thanks Christoph!
+
+--nab
+
