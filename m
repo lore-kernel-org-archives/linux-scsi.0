@@ -1,120 +1,58 @@
-From: "Kashyap, Desai" <kashyap.desai@lsi.com>
-Subject: [PATCH] mpt2sas : Added customer specific display support
-Date: Tue, 15 Mar 2011 20:04:26 +0530
-Message-ID: <20110315143422.GB6966@lsi.com>
+From: James Bottomley <James.Bottomley@suse.de>
+Subject: Re: [Security] [PATCH 00/20] world-writable files in sysfs and
+ debugfs
+Date: Tue, 15 Mar 2011 10:25:51 -0400
+Message-ID: <1300199151.7744.12.camel@mulgrave.site>
+References: <cover.1296818921.git.segoon@openwall.com>
+	 <AANLkTikE-A=Fe-yRrN0opWwJGQ0f4uOzkyB3XCcEUrFE@mail.gmail.com>
+	 <1300155965.5665.15.camel@mulgrave.site> <20110315030956.GA2234@kroah.com>
+	 <1300189828.4017.2.camel@mulgrave.site>  <20110315141859.GA19442@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from na3sys009aog114.obsmtp.com ([74.125.149.211]:47064 "EHLO
-	na3sys009aog114.obsmtp.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754964Ab1COOWv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Mar 2011 10:22:51 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20110315141859.GA19442@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg KH <greg@kroah.com>
+Cc: Vasiliy Kulikov <segoon@openwall.com>, security@kernel.org, acpi4asus-user@lists.sourceforge.net, linux-scsi@vger.kernel.org, rtc-linux@googlegroups.com, linux-usb@vger.kernel.org, linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org, open-iscsi@googlegroups.com, linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-media@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com, Eric.Moore@lsi.com, Sathya.Prakash@lsi.com
 
-Added Vendor specific branding message support.
+On Tue, 2011-03-15 at 07:18 -0700, Greg KH wrote:
+> On Tue, Mar 15, 2011 at 07:50:28AM -0400, James Bottomley wrote:
+> > On Mon, 2011-03-14 at 20:09 -0700, Greg KH wrote:
+> > > There are no capability checks on sysfs files right now, so these all
+> > > need to be fixed.
+> > 
+> > That statement is true but irrelevant, isn't it?  There can't be
+> > capabilities within sysfs files because the system that does them has no
+> > idea what the capabilities would be.  If there were capabilities checks,
+> > they'd have to be in the implementing routines.
+> 
+> Ah, you are correct, sorry for the misunderstanding.
+> 
+> > I think the questions are twofold:
+> > 
+> >      1. Did anyone actually check for capabilities before assuming world
+> >         writeable files were wrong?
+> 
+> I do not think so as the majority (i.e. all the ones that I looked at)
+> did no such checks.
 
-Signed-off-by: Kashyap Desai <kashyap.desai@lsi.com>
----
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.c b/drivers/scsi/mpt2sas/mpt2sas_base.c
-index 6bd1711..8745b8b 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.c
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.c
-@@ -1757,6 +1757,54 @@ _base_display_intel_branding(struct MPT2SAS_ADAPTER *ioc)
- }
- 
- /**
-+ * _base_display_hp_branding - Display branding string
-+ * @ioc: per adapter object
-+ *
-+ * Return nothing.
-+ */
-+static void
-+_base_display_hp_branding(struct MPT2SAS_ADAPTER *ioc)
-+{
-+	if (ioc->pdev->subsystem_vendor != MPT2SAS_HP_3PAR_SSVID)
-+		return;
-+
-+	switch (ioc->pdev->device) {
-+	case MPI2_MFGPAGE_DEVID_SAS2004:
-+		switch (ioc->pdev->subsystem_device) {
-+		case MPT2SAS_HP_DAUGHTER_2_4_INTERNAL_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_HP_DAUGHTER_2_4_INTERNAL_BRANDING);
-+			break;
-+		default:
-+			break;
-+		}
-+	case MPI2_MFGPAGE_DEVID_SAS2308_2:
-+		switch (ioc->pdev->subsystem_device) {
-+		case MPT2SAS_HP_2_4_INTERNAL_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_HP_2_4_INTERNAL_BRANDING);
-+			break;
-+		case MPT2SAS_HP_2_4_EXTERNAL_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_HP_2_4_EXTERNAL_BRANDING);
-+			break;
-+		case MPT2SAS_HP_1_4_INTERNAL_1_4_EXTERNAL_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_HP_1_4_INTERNAL_1_4_EXTERNAL_BRANDING);
-+			break;
-+		case MPT2SAS_HP_EMBEDDED_2_4_INTERNAL_SSDID:
-+			printk(MPT2SAS_INFO_FMT "%s\n", ioc->name,
-+			    MPT2SAS_HP_EMBEDDED_2_4_INTERNAL_BRANDING);
-+			break;
-+		default:
-+			break;
-+		}
-+	default:
-+		break;
-+	}
-+}
-+
-+/**
-  * _base_display_ioc_capabilities - Disply IOC's capabilities.
-  * @ioc: per adapter object
-  *
-@@ -1787,6 +1835,7 @@ _base_display_ioc_capabilities(struct MPT2SAS_ADAPTER *ioc)
- 
- 	_base_display_dell_branding(ioc);
- 	_base_display_intel_branding(ioc);
-+	_base_display_hp_branding(ioc);
- 
- 	printk(MPT2SAS_INFO_FMT "Protocol=(", ioc->name);
- 
-diff --git a/drivers/scsi/mpt2sas/mpt2sas_base.h b/drivers/scsi/mpt2sas/mpt2sas_base.h
-index b4aa105..cc02794 100644
---- a/drivers/scsi/mpt2sas/mpt2sas_base.h
-+++ b/drivers/scsi/mpt2sas/mpt2sas_base.h
-@@ -178,6 +178,26 @@
- #define MPT2_WARPDRIVE_LC_SSDLF		(0x44)
- #define MPT2_WARPDRIVE_LC_BRMF		(0x4D)
- 
-+
-+/*
-+ * HP HBA branding
-+ */
-+#define MPT2SAS_HP_3PAR_SSVID                0x1590
-+#define MPT2SAS_HP_2_4_INTERNAL_BRANDING        "HP H220 Host Bus Adapter"
-+#define MPT2SAS_HP_2_4_EXTERNAL_BRANDING        "HP H221 Host Bus Adapter"
-+#define MPT2SAS_HP_1_4_INTERNAL_1_4_EXTERNAL_BRANDING "HP H222 Host Bus Adapter"
-+#define MPT2SAS_HP_EMBEDDED_2_4_INTERNAL_BRANDING    "HP H220i Host Bus Adapter"
-+#define MPT2SAS_HP_DAUGHTER_2_4_INTERNAL_BRANDING    "HP H210i Host Bus Adapter"
-+
-+/*
-+ * HO HBA SSDIDs
-+ */
-+#define MPT2SAS_HP_2_4_INTERNAL_SSDID            0x0041
-+#define MPT2SAS_HP_2_4_EXTERNAL_SSDID            0x0042
-+#define MPT2SAS_HP_1_4_INTERNAL_1_4_EXTERNAL_SSDID    0x0043
-+#define MPT2SAS_HP_EMBEDDED_2_4_INTERNAL_SSDID        0x0044
-+#define MPT2SAS_HP_DAUGHTER_2_4_INTERNAL_SSDID        0x0046
-+
- /*
-  * per target private data
-  */
+OK, as long as someone checked, I'm happy.
+
+> >      2. Even if there aren't any capabilities checks in the implementing
+> >         routines, should there be (are we going the separated
+> >         capabilities route vs the monolithic root route)?
+> 
+> I think the general consensus is that we go the monolithic root route
+> for sysfs files in that we do not allow them to be world writable.
+> 
+> Do you have any exceptions that you know of that do these checks?
+
+Heh, I didn't call our security vacillations a dizzying ride for
+nothing.  I know the goal once was to try to run a distro without root
+daemons (which is what required the capabilities stuff).  I'm actually
+trying to avoid the issue ... I just want to make sure that people who
+care aren't all moving in different directions.
+
+James
