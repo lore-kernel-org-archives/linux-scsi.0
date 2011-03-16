@@ -1,182 +1,167 @@
-From: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Subject: [PATCH 06/13] qla4xxx: Prevent other port reinitialization during
- remove_adapter
-Date: Wed, 16 Mar 2011 05:29:34 -0700
-Message-ID: <5E4F49720D0BAD499EE1F01232234BA8722659E4D2@AVEXMB1.qlogic.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 31192] New: ioctl SG_GET_REQUEST_TABLE returns 64-bit structure
+ to 32-bit app.
+Date: Wed, 16 Mar 2011 13:24:13 GMT
+Message-ID: <bug-31192-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ch1outboundpool.messaging.microsoft.com ([216.32.181.182]:28577
-	"EHLO ch1outboundpool.messaging.microsoft.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751872Ab1CPM3o convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 16 Mar 2011 08:29:44 -0400
-Content-Language: en-US
+Received: from demeter2.kernel.org ([140.211.167.42]:43374 "EHLO
+	demeter2.kernel.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752804Ab1CPNYP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Mar 2011 09:24:15 -0400
+Received: from demeter2.kernel.org (localhost.localdomain [127.0.0.1])
+	by demeter2.kernel.org (8.14.4/8.14.3) with ESMTP id p2GDOEkB018332
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Mar 2011 13:24:14 GMT
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Vikas Chaudhary <vikas.chaudhary@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Ravi Anand <ravi.anand@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
+To: linux-scsi@vger.kernel.org
 
-From: Karen Higgins <karen.higgins@qlogic.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=31192
 
-remove ha flag AF_HBA_GOING_AWAY and added flag AF_HA_REMOVAL
-to mark the other ISP-4xxx port to indicate that the driver is
-being removed, so that the other port will not re-initialize
-while in the process of removing the ha due to driver unload
-or hba hotplug.
+           Summary: ioctl SG_GET_REQUEST_TABLE returns 64-bit structure to
+                    32-bit app.
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 2.6.18-194.32.1.el5
+          Platform: All
+        OS/Version: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+        AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+        ReportedBy: jbyers@stonefly.com
+                CC: jbyers@stonefly.com
+        Regression: No
 
-Signed-off-by: Karen Higgins <karen.higgins@qlogic.com>
-Signed-off-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
----
- drivers/scsi/qla4xxx/ql4_def.h |    5 +++-
- drivers/scsi/qla4xxx/ql4_isr.c |    2 +-
- drivers/scsi/qla4xxx/ql4_mbx.c |    2 +-
- drivers/scsi/qla4xxx/ql4_os.c  |   51 +++++++++++++++++++++++++++++----------
- 4 files changed, 44 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
-index 7aa60ee..c1f8d1b 100644
---- a/drivers/scsi/qla4xxx/ql4_def.h
-+++ b/drivers/scsi/qla4xxx/ql4_def.h
-@@ -53,6 +53,9 @@
- #define PCI_DEVICE_ID_QLOGIC_ISP8022   0x8022
- #endif
+The 'sg' module ioctl 'SG_GET_REQUEST_TABLE', when run on an
+2.6.18-194.32.1.el5 x86_64 kernel, from a 32-bit application
+seems to return the 64-bit version of the
+sg_req_info_t[SG_MAX_QUEUE] table, not the 32-bit version.
 
-+#define ISP4XXX_PCI_FN_1       0x1
-+#define ISP4XXX_PCI_FN_2       0x3
-+
- #define QLA_SUCCESS                    0
- #define QLA_ERROR                      1
+Because there is a pointer in the sg_req_info_t structure,
+the returned size is (4 * SG_MAX_QUEUE) = 64 bytes too
+large, and it corrupts neighboring user memory, as well as
+not returning the correct data.
 
-@@ -371,7 +374,7 @@ struct scsi_qla_host {
- #define AF_LINK_UP                     8 /* 0x00000100 */
- #define AF_IRQ_ATTACHED                        10 /* 0x00000400 */
- #define AF_DISABLE_ACB_COMPLETE                11 /* 0x00000800 */
--#define AF_HBA_GOING_AWAY              12 /* 0x00001000 */
-+#define AF_HA_REMOVAL                  12 /* 0x00001000 */
- #define AF_INTx_ENABLED                        15 /* 0x00008000 */
- #define AF_MSI_ENABLED                 16 /* 0x00010000 */
- #define AF_MSIX_ENABLED                        17 /* 0x00020000 */
-diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
-index 2ef1a98..2f40ac7 100644
---- a/drivers/scsi/qla4xxx/ql4_isr.c
-+++ b/drivers/scsi/qla4xxx/ql4_isr.c
-@@ -801,7 +801,7 @@ irqreturn_t qla4xxx_intr_handler(int irq, void *dev_id)
-                               &ha->reg->ctrl_status);
-                        readl(&ha->reg->ctrl_status);
+Although there is code in 'fs/compat_ioctl.c' that looks to
+be handling the 32-bit user to 64-bit kernel conversion, the
+"COMPATIBLE_IOCTL(SG_GET_REQUEST_TABLE)" line in
+'include/linux/compat_ioctl.h' conflicts with it and seems
+to prevent the conversion code from being called.
 
--                       if (!test_bit(AF_HBA_GOING_AWAY, &ha->flags))
-+                       if (!test_bit(AF_HA_REMOVAL, &ha->flags))
-                                set_bit(DPC_RESET_HA_INTR, &ha->dpc_flags);
+The same ioctl called from a 64-bit app works fine.
 
-                        break;
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 379df2b..199fa64 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -151,7 +151,7 @@ int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
-        if (test_bit(AF_IRQ_ATTACHED, &ha->flags) &&
-            test_bit(AF_INTERRUPTS_ON, &ha->flags) &&
-            test_bit(AF_ONLINE, &ha->flags) &&
--           !test_bit(AF_HBA_GOING_AWAY, &ha->flags)) {
-+           !test_bit(AF_HA_REMOVAL, &ha->flags)) {
-                /* Do not poll for completion. Use completion queue */
-                set_bit(AF_MBOX_COMMAND_NOPOLL, &ha->flags);
-                wait_for_completion_timeout(&ha->mbx_intr_comp, MBOX_TOV * HZ);
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 6068f80..3ab4618 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -749,12 +749,6 @@ static void qla4xxx_timer(struct scsi_qla_host *ha)
-        if (!pci_channel_offline(ha->pdev))
-                pci_read_config_word(ha->pdev, PCI_VENDOR_ID, &w);
+The problem looks to still be present in the newest kernel
+source, although I haven't tested it.
 
--       if (test_bit(AF_HBA_GOING_AWAY, &ha->flags)) {
--               DEBUG2(ql4_printk(KERN_INFO, ha, "%s exited. HBA GOING AWAY\n",
--                   __func__));
--               return;
--       }
--
-        if (is_qla8022(ha)) {
-                qla4_8xxx_watchdog(ha);
+It seems like the "COMPATIBLE_IOCTL(SG_GET_REQUEST_TABLE)"
+line should be removed from 'compat_ioctl.h' ('compat_ioctl.c'
+in the newest kernel).
+
+~ Jeff Byers ~
+
+# gcc -m32 -Wall -o sg_get_request_table sg_get_request_table.c
+# ./sg_get_request_table /dev/sg1
+SG Request Table:
+Memory fence damaged:
+0xff90c034: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0xff90c044: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0xff90c054: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0xff90c064: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+0xff90c074: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+0xff90c084: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+0xff90c094: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+0xff90c0a4: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
+============================
+
+// Test sg 'SG_GET_REQUEST_TABLE ioctl.
+// Build with:
+// gcc -m32 -Wall -o sg_get_request_table sg_get_request_table.c
+// gcc -m64 -Wall -o sg_get_request_table sg_get_request_table.c
+
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <sys/ioctl.h>
+#include <scsi/sg.h> /* take care: fetches glibc's /usr/include/scsi/sg.h */
+
+static void hex_dump(const unsigned char *buf, int len, const char *str);
+static int  memunchr(const void *s, int c, size_t n);
+
+int main(int argc, char * argv[])
+{
+    int sg_fd;
+    int idx;
+    unsigned char fence[128];
+    sg_req_info_t req_info[SG_MAX_QUEUE] = {{0}};
+
+    if (2 != argc) {
+        printf("Usage: '%s <sg_device>'\n", argv[0]);
+        return 1;
+    }
+    if ((sg_fd = open(argv[1], O_RDONLY)) < 0) {
+        perror("error opening given file name");
+        return 1;
+    }
+
+    printf("SG Request Table:\n");
+    memset(req_info, 0xFF, sizeof(req_info));
+    memset(fence, 0xFF, sizeof(fence));
+    if (ioctl(sg_fd, SG_GET_REQUEST_TABLE, &req_info) < 0) {
+        perror("SG_GET_REQUEST_TABLE ioctl error");
+        return 1;
+    }
+    for(idx=0; idx < SG_MAX_QUEUE; idx++){
+        if(req_info[idx].req_state == 0)
+            continue;
+        printf("req_info[%u]: req_state=%u, pack_id=%u, usr_ptr=%p,
+duration=%u\n",
+               idx, req_info[idx].req_state, req_info[idx].pack_id,
+               req_info[idx].usr_ptr, req_info[idx].duration);
+    }
+    if (memunchr(fence, 0xFF, sizeof(fence)) != 0){
+        hex_dump(fence, sizeof(fence), "Memory fence damaged:");
+    }
+    close(sg_fd);
+    return 0;
+}
+
+static void hex_dump(const unsigned char *buf, int len, const char *str)
+{
+    printf("%s\n", str);
+    int idx;
+    for(idx=0; idx < len; idx++){
+        if ((idx > 0) && ((idx & 0x0F) == 0)){
+            printf("\n");
         }
-@@ -1063,7 +1057,6 @@ void qla4xxx_dead_adapter_cleanup(struct scsi_qla_host *ha)
-
-        /* Disable the board */
-        ql4_printk(KERN_INFO, ha, "Disabling the board\n");
--       set_bit(AF_HBA_GOING_AWAY, &ha->flags);
-
-        qla4xxx_abort_active_cmds(ha, DID_NO_CONNECT << 16);
-        qla4xxx_mark_all_devices_missing(ha);
-@@ -1255,11 +1248,6 @@ static void qla4xxx_do_dpc(struct work_struct *work)
-                goto do_dpc_exit;
+        if ((idx & 0x0F) == 0){
+            printf("%p:", &buf[idx]);
         }
+        printf(" %02x", buf[idx]);
+    }
+    printf("\n");
+    return;
+}
 
--       /* HBA is in the process of being permanently disabled.
--        * Don't process anything */
--       if (test_bit(AF_HBA_GOING_AWAY, &ha->flags))
--               return;
--
-        if (is_qla8022(ha)) {
-                if (test_bit(DPC_HA_UNRECOVERABLE, &ha->dpc_flags)) {
-                        qla4_8xxx_idc_lock(ha);
-@@ -1824,6 +1812,42 @@ probe_disable_device:
- }
+static int memunchr(const void *s, int c, size_t n)
+{
+    unsigned char *ptr = (unsigned char *)s;
+    for(; n > 0; n--){
+        if (*ptr++ != c)
+            return 1;
+    }
+    return 0;
+}
 
- /**
-+ * qla4xxx_prevent_other_port_reinit - prevent other port from re-initialize
-+ * @ha: pointer to adapter structure
-+ *
-+ * Mark the other ISP-4xxx port to indicate that the driver is being removed,
-+ * so that the other port will not re-initialize while in the process of
-+ * removing the ha due to driver unload or hba hotplug.
-+ **/
-+static void qla4xxx_prevent_other_port_reinit(struct scsi_qla_host *ha)
-+{
-+       struct scsi_qla_host *other_ha = NULL;
-+       struct pci_dev *other_pdev = NULL;
-+       int fn = ISP4XXX_PCI_FN_2;
-+
-+       /*iscsi function numbers for ISP4xxx is 1 and 3*/
-+       if (PCI_FUNC(ha->pdev->devfn) & BIT_1)
-+               fn = ISP4XXX_PCI_FN_1;
-+
-+       other_pdev =
-+               pci_get_domain_bus_and_slot(pci_domain_nr(ha->pdev->bus),
-+               ha->pdev->bus->number, PCI_DEVFN(PCI_SLOT(ha->pdev->devfn),
-+               fn));
-+
-+       /* Get other_ha if other_pdev state is enable*/
-+       if (atomic_read(&other_pdev->enable_cnt)) {
-+               other_ha = pci_get_drvdata(other_pdev);
-+               if (other_ha) {
-+                       set_bit(AF_HA_REMOVAL, &other_ha->flags);
-+                       DEBUG2(ql4_printk(KERN_INFO, ha, "%s: Prevent %s "
-+                           "reinit\n", __func__,
-+                           dev_name(&other_ha->pdev->dev)));
-+                       pci_dev_put(other_pdev);
-+               }
-+       }
-+}
-+
-+/**
-  * qla4xxx_remove_adapter - calback function to remove adapter.
-  * @pci_dev: PCI device pointer
-  **/
-@@ -1833,7 +1857,8 @@ static void __devexit qla4xxx_remove_adapter(struct pci_dev *pdev)
-
-        ha = pci_get_drvdata(pdev);
-
--       set_bit(AF_HBA_GOING_AWAY, &ha->flags);
-+       if (!is_qla8022(ha))
-+               qla4xxx_prevent_other_port_reinit(ha);
-
-        /* remove devs from iscsi_sessions to scsi_devices */
-        qla4xxx_free_ddb_list(ha);
---
-1.7.3.2
-
-
-This message and any attached documents contain information from QLogic Corporation or its wholly-owned subsidiaries that may be confidential. If you are not the intended recipient, you may not read, copy, distribute, or use this information. If you have received this transmission in error, please notify the sender immediately by reply e-mail and then delete this message.
-
+-- 
+Configure bugmail: https://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are watching the assignee of the bug.
