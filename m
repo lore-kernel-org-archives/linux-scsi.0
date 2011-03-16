@@ -1,88 +1,103 @@
-From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH] scsi: use list_move() instead of list_del()/list_add()
-	combination
-Date: Tue, 15 Mar 2011 16:57:10 -0700
-Message-ID: <20110315235710.16992.33761.stgit@localhost6.localdomain6>
-References: <1300229605-14499-5-git-send-email-kirill@shutemov.name>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 06/13] qla4xxx: Prevent other port reinitialization during
+ remove_adapter
+Date: Tue, 15 Mar 2011 20:21:04 -0500
+Message-ID: <4D801080.5010801@cs.wisc.edu>
+References: <5E4F49720D0BAD499EE1F01232234BA872263B150C@AVEXMB1.qlogic.org> <4D7E9188.8010606@cs.wisc.edu> <5E4F49720D0BAD499EE1F01232234BA872263B1779@AVEXMB1.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1300229605-14499-5-git-send-email-kirill@shutemov.name>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kirill@shutemov.name
-Cc: James.Bottomley@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, devel@open-fcoe.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49919 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750975Ab1CPBUs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Mar 2011 21:20:48 -0400
+In-Reply-To: <5E4F49720D0BAD499EE1F01232234BA872263B1779@AVEXMB1.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: James Bottomley <James.Bottomley@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Ravi Anand <ravi.anand@qlogic.com>, Lalit Chandivade <lalit.chandivade@qlogic.com>, Karen Higgins <karen.higgins@qlogic.com>
 
-From: Kirill A. Shutemov <kirill@shutemov.name>
+On 03/15/2011 04:21 AM, Vikas Chaudhary wrote:
+>> -----Original Message-----
+>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>> owner@vger.kernel.org] On Behalf Of Mike Christie
+>> Sent: Tuesday, March 15, 2011 3:37 AM
+>> To: Vikas Chaudhary
+>> Cc: James Bottomley; linux-scsi@vger.kernel.org; Ravi Anand; Lalit
+>> Chandivade; Karen Higgins
+>> Subject: Re: [PATCH 06/13] qla4xxx: Prevent other port reinitialization
+>> during remove_adapter
+>>
+>> On 03/14/2011 12:24 AM, Vikas Chaudhary wrote:
+>>> index 6068f80..59c5552 100644
+>>> --- a/drivers/scsi/qla4xxx/ql4_os.c
+>>> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+>>> @@ -27,6 +27,11 @@ static char qla4xxx_version_str[40];
+>>>    static struct kmem_cache *srb_cachep;
+>>>
+>>>    /*
+>>> + * List of host adapters
+>>> + */
+>>> +static struct klist qla4xxx_hostlist;
+>>> +
+>>
+>>
+>>
+>>>
+>>>    /**
+>>> + * qla4xxx_prevent_other_port_reinit - Mark the other ISP-4xxx port to
+>> indicate
+>>> + * that the driver is being removed, so that the other port will not
+>>> + * re-initialize while in the process of removing the ha due to driver
+>> unload
+>>> + * or hba hotplug.
+>>
+>> For docbook comments you use a one line description on the first line,
+>> then add more informative stuff after the params.
+>>
+>
+> Ok, I will be sending updated patch in next email.
+>
+>>
+>>> + * @ha: pointer to adapter structure
+>>> + **/
+>>> +static void qla4xxx_prevent_other_port_reinit(struct scsi_qla_host *ha)
+>>> +{
+>>> +       struct scsi_qla_host *ha_listp;
+>>> +       struct klist_iter i;
+>>> +       struct klist_node *n;
+>>> +
+>>> +       klist_iter_init(&qla4xxx_hostlist,&i);
+>>> +       while ((n = klist_next(&i)) != NULL) {
+>>> +               ha_listp = container_of(n, struct scsi_qla_host, node);
+>>> +               if (ha == ha_listp)
+>>> +                       continue;
+>>> +
+>>> +               if ((pci_domain_nr(ha->pdev->bus) ==
+>>> +                   pci_domain_nr(ha_listp->pdev->bus))&&
+>>> +                   (ha->pdev->bus->number ==
+>>> +                   ha_listp->pdev->bus->number)&&
+>>> +                   (PCI_SLOT(ha->pdev->devfn) ==
+>>> +                   PCI_SLOT(ha_listp->pdev->devfn))) {
+>>> +
+>>
+>> Is there a qla4xxx specific reason why you need to prevent other ports
+>>from re-initing when removing a port? Does the hardware cause the other
+>> ports to be disrupted and that causes them to run the re-init code?
+>
+> Yes, its ISP40XX specific. While unloading driver we make call to function
+> "qla4xxx_hw_reset" from "qla4xxx_free_adapter". When driver do hw_reset
+> for one port, hardware will generate interrupt for other ports to inform
+> reset is about to happen. After this interrupt driver will schedule reset
+> for other port by setting dpc flag "DPC_RESET_HA_INTR" in function
+> "qla4xxx_intr_handler" this will cause re-initialization of other port
+> after reset, but while unloading driver we don't want to schedule reset
+> for the other port as other port does not need re-initialization".
+>
 
-Signed-off-by: Kirill A. Shutemov <kirill@shutemov.name>
-Cc: "James E.J. Bottomley" <James.Bottomley@suse.de>
-Cc: Robert Love <robert.w.love@intel.com>
-Cc: linux-scsi@vger.kernel.org
-Cc: devel@open-fcoe.org
-Acked-by: Robert Love <robert.w.love@intel.com>
----
- drivers/scsi/esp_scsi.c       |    6 ++----
- drivers/scsi/fcoe/fcoe_ctlr.c |    6 ++----
- drivers/scsi/scsi_tgt_lib.c   |    6 ++----
- 3 files changed, 6 insertions(+), 12 deletions(-)
+Ok.
 
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 5755852..9a1af1d 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -708,8 +708,7 @@ static void esp_maybe_execute_command(struct esp *esp)
- 	tp = &esp->target[tgt];
- 	lp = dev->hostdata;
- 
--	list_del(&ent->list);
--	list_add(&ent->list, &esp->active_cmds);
-+	list_move(&ent->list, &esp->active_cmds);
- 
- 	esp->active_cmd = ent;
- 
-@@ -1244,8 +1243,7 @@ static int esp_finish_select(struct esp *esp)
- 		/* Now that the state is unwound properly, put back onto
- 		 * the issue queue.  This command is no longer active.
- 		 */
--		list_del(&ent->list);
--		list_add(&ent->list, &esp->queued_cmds);
-+		list_move(&ent->list, &esp->queued_cmds);
- 		esp->active_cmd = NULL;
- 
- 		/* Return value ignored by caller, it directly invokes
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index c93f007..fb3a506 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -978,10 +978,8 @@ static void fcoe_ctlr_recv_adv(struct fcoe_ctlr *fip, struct sk_buff *skb)
- 	 * the FCF that answers multicast solicitations, not the others that
- 	 * are sending periodic multicast advertisements.
- 	 */
--	if (mtu_valid) {
--		list_del(&fcf->list);
--		list_add(&fcf->list, &fip->fcfs);
--	}
-+	if (mtu_valid)
-+		list_move(&fcf->list, &fip->fcfs);
- 
- 	/*
- 	 * If this is the first validated FCF, note the time and
-diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
-index c399be9..4c444b8 100644
---- a/drivers/scsi/scsi_tgt_lib.c
-+++ b/drivers/scsi/scsi_tgt_lib.c
-@@ -275,10 +275,8 @@ void scsi_tgt_free_queue(struct Scsi_Host *shost)
- 
- 	for (i = 0; i < ARRAY_SIZE(qdata->cmd_hash); i++) {
- 		list_for_each_entry_safe(tcmd, n, &qdata->cmd_hash[i],
--					 hash_list) {
--			list_del(&tcmd->hash_list);
--			list_add(&tcmd->hash_list, &cmds);
--		}
-+					 hash_list)
-+			list_move(&tcmd->hash_list, &cmds);
- 	}
- 
- 	spin_unlock_irqrestore(&qdata->cmd_hash_lock, flags);
+I think that the driver should not be needing to manage a list of hosts 
+though. We have the driver model related lists already. There is also 
+the pci bus stuff.  So I think you should be using one of those.
