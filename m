@@ -1,17 +1,17 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [RFC-v3 07/12] iscsi-target: Add CHAP Authentication support using libcrypto
-Date: Thu, 17 Mar 2011 14:53:12 -0700
-Message-ID: <1300398797-24536-8-git-send-email-nab@linux-iscsi.org>
+Subject: [RFC-v3 10/12] iscsi-target: Add support for task management operations
+Date: Thu, 17 Mar 2011 14:53:15 -0700
+Message-ID: <1300398797-24536-11-git-send-email-nab@linux-iscsi.org>
 References: <1300398797-24536-1-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm7.bullet.mail.bf1.yahoo.com ([98.139.212.166]:44916 "HELO
-	nm7.bullet.mail.bf1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755954Ab1CQVyX (ORCPT
+Received: from nm9.bullet.mail.sp2.yahoo.com ([98.139.91.79]:38117 "HELO
+	nm9.bullet.mail.sp2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755995Ab1CQVyl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Mar 2011 17:54:23 -0400
+	Thu, 17 Mar 2011 17:54:41 -0400
 In-Reply-To: <1300398797-24536-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,33 +20,31 @@ Cc: Christoph Hellwig <hch@lst.de>, Mike Christie <michaelc@cs.wisc.edu>, Hannes
 
 =46rom: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds support for libcrypto md5 based iSCSI CHAP authenticati=
-on
-support for iscsi_target_mod.  This includes support for mutual and one=
--way
-NodeACL authentication for SessionType=3DNormal and SessionType=3DDisco=
-very
-via /sys/kernel/config/target/iscsi.
+This patch adds support for iSCSI task management operations called
+directly from iscsi_target.c TMR request/response PDU logic, and
+interfaces struct se_lun -> struct se_device for assoication
+of TMRs to TCM backend devices.
 
 Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/iscsi/iscsi_target_auth.c |  500 ++++++++++++++++++++++=
+ drivers/target/iscsi/iscsi_target_tmr.c |  868 +++++++++++++++++++++++=
 ++++++++
- drivers/target/iscsi/iscsi_target_auth.h |   33 ++
- 2 files changed, 533 insertions(+), 0 deletions(-)
- create mode 100644 drivers/target/iscsi/iscsi_target_auth.c
- create mode 100644 drivers/target/iscsi/iscsi_target_auth.h
+ drivers/target/iscsi/iscsi_target_tmr.h |   16 +
+ 2 files changed, 884 insertions(+), 0 deletions(-)
+ create mode 100644 drivers/target/iscsi/iscsi_target_tmr.c
+ create mode 100644 drivers/target/iscsi/iscsi_target_tmr.h
 
-diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/=
-iscsi/iscsi_target_auth.c
+diff --git a/drivers/target/iscsi/iscsi_target_tmr.c b/drivers/target/i=
+scsi/iscsi_target_tmr.c
 new file mode 100644
-index 0000000..d3711f4
+index 0000000..ac2ea52
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_auth.c
-@@ -0,0 +1,500 @@
++++ b/drivers/target/iscsi/iscsi_target_tmr.c
+@@ -0,0 +1,868 @@
 +/*********************************************************************=
 **********
-+ * This file houses the main functions for the iSCSI CHAP support
++ * This file contains the iSCSI Target specific Task Management functi=
+ons.
 + *
 + * =C2=A9 Copyright 2007-2011 RisingTide Systems LLC.
 + *
@@ -69,540 +67,896 @@ y
 + *********************************************************************=
 *********/
 +
-+#include <linux/string.h>
-+#include <linux/crypto.h>
-+#include <linux/err.h>
-+#include <linux/scatterlist.h>
++#include <asm/unaligned.h>
++#include <scsi/iscsi_proto.h>
++#include <target/target_core_base.h>
++#include <target/target_core_transport.h>
 +
++#include "iscsi_target_debug.h"
 +#include "iscsi_target_core.h"
-+#include "iscsi_target_nego.h"
-+#include "iscsi_target_auth.h"
++#include "iscsi_target_seq_pdu_list.h"
++#include "iscsi_target_datain_values.h"
++#include "iscsi_target_device.h"
++#include "iscsi_target_erl0.h"
++#include "iscsi_target_erl1.h"
++#include "iscsi_target_erl2.h"
++#include "iscsi_target_tmr.h"
++#include "iscsi_target_tpg.h"
++#include "iscsi_target_util.h"
 +
-+#ifdef DEBUG_CHAP
-+#define PRINT(x...)		printk(KERN_INFO x)
-+#else
-+#define PRINT(x...)
-+#endif
-+
-+unsigned char chap_asciihex_to_binaryhex(unsigned char val[2])
++/*	iscsi_tmr_abort_task():
++ *
++ *	Called from iscsi_handle_task_mgt_cmd().
++ */
++u8 iscsi_tmr_abort_task(
++	struct iscsi_cmd *cmd,
++	unsigned char *buf)
 +{
-+	unsigned char result =3D 0;
-+	/*
-+	 * MSB
-+	 */
-+	if ((val[0] >=3D 'a') && (val[0] <=3D 'f'))
-+		result =3D ((val[0] - 'a' + 10) & 0xf) << 4;
-+	else
-+		if ((val[0] >=3D 'A') && (val[0] <=3D 'F'))
-+			result =3D ((val[0] - 'A' + 10) & 0xf) << 4;
-+		else /* digit */
-+			result =3D ((val[0] - '0') & 0xf) << 4;
-+	/*
-+	 * LSB
-+	 */
-+	if ((val[1] >=3D 'a') && (val[1] <=3D 'f'))
-+		result |=3D ((val[1] - 'a' + 10) & 0xf);
-+	else
-+		if ((val[1] >=3D 'A') && (val[1] <=3D 'F'))
-+			result |=3D ((val[1] - 'A' + 10) & 0xf);
-+		else /* digit */
-+			result |=3D ((val[1] - '0') & 0xf);
++	struct iscsi_cmd *ref_cmd;
++	struct iscsi_conn *conn =3D cmd->conn;
++	struct iscsi_tmr_req *tmr_req =3D cmd->tmr_req;
++	struct se_tmr_req *se_tmr =3D SE_CMD(cmd)->se_tmr_req;
++	struct iscsi_tm *hdr =3D (struct iscsi_tm *) buf;
 +
-+	return result;
-+}
-+
-+int chap_string_to_hex(unsigned char *dst, unsigned char *src, int len=
-)
-+{
-+	int i =3D 0, j =3D 0;
-+
-+	for (i =3D 0; i < len; i +=3D 2)
-+		dst[j++] =3D (unsigned char) chap_asciihex_to_binaryhex(&src[i]);
-+
-+	dst[j] =3D '\0';
-+	return j;
-+}
-+
-+void chap_binaryhex_to_asciihex(char *dst, char *src, int src_len)
-+{
-+	int i;
-+
-+	for (i =3D 0; i < src_len; i++)
-+		sprintf(&dst[i*2], "%02x", (int) src[i] & 0xff);
-+}
-+
-+void chap_set_random(char *data, int length)
-+{
-+	long r;
-+	unsigned n;
-+
-+	while (length > 0) {
-+
-+		get_random_bytes(&r, sizeof(long));
-+		r =3D r ^ (r >> 8);
-+		r =3D r ^ (r >> 4);
-+		n =3D r & 0x7;
-+
-+		get_random_bytes(&r, sizeof(long));
-+		r =3D r ^ (r >> 8);
-+		r =3D r ^ (r >> 5);
-+		n =3D (n << 3) | (r & 0x7);
-+
-+		get_random_bytes(&r, sizeof(long));
-+		r =3D r ^ (r >> 8);
-+		r =3D r ^ (r >> 5);
-+		n =3D (n << 2) | (r & 0x3);
-+
-+		*data++ =3D n;
-+		 length--;
++	ref_cmd =3D iscsi_find_cmd_from_itt(conn, hdr->rtt);
++	if (!ref_cmd) {
++		printk(KERN_ERR "Unable to locate RefTaskTag: 0x%08x on CID:"
++			" %hu.\n", hdr->rtt, conn->cid);
++		return ((hdr->refcmdsn >=3D conn->sess->exp_cmd_sn) &&
++			(hdr->refcmdsn <=3D conn->sess->max_cmd_sn)) ?
++			ISCSI_TMF_RSP_COMPLETE : ISCSI_TMF_RSP_NO_TASK;
 +	}
++	if (ref_cmd->cmd_sn !=3D hdr->refcmdsn) {
++		printk(KERN_ERR "RefCmdSN 0x%08x does not equal"
++			" task's CmdSN 0x%08x. Rejecting ABORT_TASK.\n",
++			hdr->refcmdsn, ref_cmd->cmd_sn);
++		return ISCSI_TMF_RSP_REJECTED;
++	}
++
++	se_tmr->ref_task_tag		=3D hdr->rtt;
++	se_tmr->ref_cmd			=3D &ref_cmd->se_cmd;
++	tmr_req->ref_cmd_sn		=3D hdr->refcmdsn;
++	tmr_req->exp_data_sn		=3D hdr->exp_datasn;
++
++	return ISCSI_TMF_RSP_COMPLETE;
 +}
 +
-+static struct iscsi_chap *chap_server_open(
++/*	iscsi_tmr_task_warm_reset():
++ *
++ *	Called from iscsi_handle_task_mgt_cmd().
++ */
++int iscsi_tmr_task_warm_reset(
 +	struct iscsi_conn *conn,
-+	struct iscsi_node_auth *auth,
-+	const char *A_str,
-+	char *AIC_str,
-+	unsigned int *AIC_len)
++	struct iscsi_tmr_req *tmr_req,
++	unsigned char *buf)
 +{
-+	struct iscsi_chap *chap;
++	struct iscsi_session *sess =3D conn->sess;
++	struct iscsi_node_attrib *na =3D iscsi_tpg_get_node_attrib(sess);
++#if 0
++	struct iscsi_init_task_mgt_cmnd *hdr =3D
++		(struct iscsi_init_task_mgt_cmnd *) buf;
++#endif
++	if (!na->tmr_warm_reset) {
++		printk(KERN_ERR "TMR Opcode TARGET_WARM_RESET authorization"
++			" failed for Initiator Node: %s\n",
++			sess->se_sess->se_node_acl->initiatorname);
++		 return -1;
++	}
++	/*
++	 * Do the real work in transport_generic_do_tmr().
++	 */
++	return 0;
++}
++
++/*	iscsi_tmr_task_cold_reset():
++ *
++ *	Called from iscsi_handle_task_mgt_cmd().
++ */
++int iscsi_tmr_task_cold_reset(
++	struct iscsi_conn *conn,
++	struct iscsi_tmr_req *tmr_req,
++	unsigned char *buf)
++{
++	struct iscsi_session *sess =3D conn->sess;
++	struct iscsi_node_attrib *na =3D iscsi_tpg_get_node_attrib(sess);
++
++	if (!na->tmr_cold_reset) {
++		printk(KERN_ERR "TMR Opcode TARGET_COLD_RESET authorization"
++			" failed for Initiator Node: %s\n",
++			sess->se_sess->se_node_acl->initiatorname);
++		return -1;
++	}
++	/*
++	 * Do the real work in transport_generic_do_tmr().
++	 */
++	return 0;
++}
++
++/*	iscsi_tmr_task_reassign():
++ *
++ *	Called from iscsi_handle_task_mgt_cmd().
++ */
++u8 iscsi_tmr_task_reassign(
++	struct iscsi_cmd *cmd,
++	unsigned char *buf)
++{
++	struct iscsi_cmd *ref_cmd =3D NULL;
++	struct iscsi_conn *conn =3D cmd->conn;
++	struct iscsi_conn_recovery *cr =3D NULL;
++	struct iscsi_tmr_req *tmr_req =3D cmd->tmr_req;
++	struct se_tmr_req *se_tmr =3D SE_CMD(cmd)->se_tmr_req;
++	struct iscsi_tm *hdr =3D (struct iscsi_tm *) buf;
 +	int ret;
 +
-+	if (!(auth->naf_flags & NAF_USERID_SET) ||
-+	    !(auth->naf_flags & NAF_PASSWORD_SET)) {
-+		printk(KERN_ERR "CHAP user or password not set for"
-+				" Initiator ACL\n");
-+		return NULL;
++	TRACE(TRACE_ERL2, "Got TASK_REASSIGN TMR ITT: 0x%08x,"
++		" RefTaskTag: 0x%08x, ExpDataSN: 0x%08x, CID: %hu\n",
++		hdr->itt, hdr->rtt, hdr->exp_datasn, conn->cid);
++
++	if (conn->sess->sess_ops->ErrorRecoveryLevel !=3D 2) {
++		printk(KERN_ERR "TMR TASK_REASSIGN not supported in ERL<2,"
++				" ignoring request.\n");
++		return ISCSI_TMF_RSP_NOT_SUPPORTED;
 +	}
 +
-+	conn->auth_protocol =3D kzalloc(sizeof(struct iscsi_chap), GFP_KERNEL=
-);
-+	if (!(conn->auth_protocol))
-+		return NULL;
-+
-+	chap =3D (struct iscsi_chap *) conn->auth_protocol;
-+	/*
-+	 * We only support MD5 MDA presently.
-+	 */
-+	if (strncmp(A_str, "CHAP_A=3D5", 8)) {
-+		printk(KERN_ERR "CHAP_A is not MD5.\n");
-+		return NULL;
++	ret =3D iscsi_find_cmd_for_recovery(conn->sess, &ref_cmd, &cr, hdr->r=
+tt);
++	if (ret =3D=3D -2) {
++		printk(KERN_ERR "Command ITT: 0x%08x is still alligent to CID:"
++			" %hu\n", ref_cmd->init_task_tag, cr->cid);
++		return ISCSI_TMF_RSP_TASK_ALLEGIANT;
++	} else if (ret =3D=3D -1) {
++		printk(KERN_ERR "Unable to locate RefTaskTag: 0x%08x in"
++			" connection recovery command list.\n", hdr->rtt);
++		return ISCSI_TMF_RSP_NO_TASK;
 +	}
-+	PRINT("[server] Got CHAP_A=3D5\n");
 +	/*
-+	 * Send back CHAP_A set to MD5.
++	 * Temporary check to prevent connection recovery for
++	 * connections with a differing MaxRecvDataSegmentLength.
 +	 */
-+	*AIC_len =3D sprintf(AIC_str, "CHAP_A=3D5");
-+	*AIC_len +=3D 1;
-+	chap->digest_type =3D CHAP_DIGEST_MD5;
-+	PRINT("[server] Sending CHAP_A=3D%d\n", chap->digest_type);
-+	/*
-+	 * Set Identifier.
-+	 */
-+	chap->id =3D ISCSI_TPG_C(conn)->tpg_chap_id++;
-+	*AIC_len +=3D sprintf(AIC_str + *AIC_len, "CHAP_I=3D%d", chap->id);
-+	*AIC_len +=3D 1;
-+	PRINT("[server] Sending CHAP_I=3D%d\n", chap->id);
-+	/*
-+	 * Generate Challenge.
-+	 */
-+	ret =3D chap_gen_challenge(conn, 1, AIC_str, AIC_len);
-+	if (ret < 0)
-+		return NULL;
++	if (cr->maxrecvdatasegmentlength !=3D
++	    conn->conn_ops->MaxRecvDataSegmentLength) {
++		printk(KERN_ERR "Unable to perform connection recovery for"
++			" differing MaxRecvDataSegmentLength, rejecting"
++			" TMR TASK_REASSIGN.\n");
++		return ISCSI_TMF_RSP_REJECTED;
++	}
 +
-+	return chap;
++	se_tmr->ref_task_tag		=3D hdr->rtt;
++	se_tmr->ref_cmd			=3D &ref_cmd->se_cmd;
++	se_tmr->ref_task_lun		=3D get_unaligned_le64(&hdr->lun[0]);
++	tmr_req->ref_cmd_sn		=3D hdr->refcmdsn;
++	tmr_req->exp_data_sn		=3D hdr->exp_datasn;
++	tmr_req->conn_recovery		=3D cr;
++	tmr_req->task_reassign		=3D 1;
++	/*
++	 * Command can now be reassigned to a new connection.
++	 * The task management response must be sent before the
++	 * reassignment actually happens.  See iscsi_tmr_post_handler().
++	 */
++	return ISCSI_TMF_RSP_COMPLETE;
 +}
 +
-+void chap_close(struct iscsi_conn *conn)
++static void iscsi_task_reassign_remove_cmd(
++	struct iscsi_cmd *cmd,
++	struct iscsi_conn_recovery *cr,
++	struct iscsi_session *sess)
 +{
-+	kfree(conn->auth_protocol);
-+	conn->auth_protocol =3D NULL;
++	int ret;
++
++	spin_lock(&cr->conn_recovery_cmd_lock);
++	ret =3D iscsi_remove_cmd_from_connection_recovery(cmd, sess);
++	spin_unlock(&cr->conn_recovery_cmd_lock);
++	if (!ret) {
++		printk(KERN_INFO "iSCSI connection recovery successful for CID:"
++			" %hu on SID: %u\n", cr->cid, sess->sid);
++		iscsi_remove_active_connection_recovery_entry(cr, sess);
++	}
++
++	return;
 +}
 +
-+int chap_gen_challenge(
-+	struct iscsi_conn *conn,
-+	int caller,
-+	char *C_str,
-+	unsigned int *C_len)
++static int iscsi_task_reassign_complete_nop_out(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
 +{
-+	unsigned char challenge_asciihex[CHAP_CHALLENGE_LENGTH * 2 + 1];
-+	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
-;
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd =3D se_tmr->ref_cmd;
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++	struct iscsi_conn_recovery *cr;
 +
-+	memset(challenge_asciihex, 0, CHAP_CHALLENGE_LENGTH * 2 + 1);
++	if (!cmd->cr) {
++		printk(KERN_ERR "struct iscsi_conn_recovery pointer for ITT: 0x%08x"
++			" is NULL!\n", cmd->init_task_tag);
++		return -1;
++	}
++	cr =3D cmd->cr;
 +
-+	chap_set_random(chap->challenge, CHAP_CHALLENGE_LENGTH);
-+	chap_binaryhex_to_asciihex(challenge_asciihex, chap->challenge,
-+					CHAP_CHALLENGE_LENGTH);
 +	/*
-+	 * Set CHAP_C, and copy the generated challenge into C_str.
++	 * Reset the StatSN so a new one for this commands new connection
++	 * will be assigned.
++	 * Reset the ExpStatSN as well so we may receive Status SNACKs.
 +	 */
-+	*C_len +=3D sprintf(C_str + *C_len, "CHAP_C=3D0x%s", challenge_asciih=
-ex);
-+	*C_len +=3D 1;
++	cmd->stat_sn =3D cmd->exp_stat_sn =3D 0;
 +
-+	PRINT("[%s] Sending CHAP_C=3D0x%s\n\n", (caller) ? "server" : "client=
-",
-+			challenge_asciihex);
++	iscsi_task_reassign_remove_cmd(cmd, cr, conn->sess);
++
++	iscsi_attach_cmd_to_queue(conn, cmd);
++
++	cmd->i_state =3D ISTATE_SEND_NOPIN;
++	iscsi_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
 +	return 0;
 +}
 +
-+int chap_server_compute_md5(
-+	struct iscsi_conn *conn,
-+	struct iscsi_node_auth *auth,
-+	char *NR_in_ptr,
-+	char *NR_out_ptr,
-+	unsigned int *NR_out_len)
++static int iscsi_task_reassign_complete_write(
++	struct iscsi_cmd *cmd,
++	struct iscsi_tmr_req *tmr_req)
 +{
-+	char *endptr;
-+	unsigned char id, digest[MD5_SIGNATURE_SIZE];
-+	unsigned char type, response[MD5_SIGNATURE_SIZE * 2 + 2];
-+	unsigned char identifier[10], *challenge, *challenge_binhex;
-+	unsigned char client_digest[MD5_SIGNATURE_SIZE];
-+	unsigned char server_digest[MD5_SIGNATURE_SIZE];
-+	unsigned char chap_n[MAX_CHAP_N_SIZE], chap_r[MAX_RESPONSE_LENGTH];
-+	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
-;
-+	struct crypto_hash *tfm;
-+	struct hash_desc desc;
-+	struct scatterlist sg;
-+	int auth_ret =3D -1, ret, challenge_len;
-+
-+	memset(identifier, 0, 10);
-+	memset(chap_n, 0, MAX_CHAP_N_SIZE);
-+	memset(chap_r, 0, MAX_RESPONSE_LENGTH);
-+	memset(digest, 0, MD5_SIGNATURE_SIZE);
-+	memset(response, 0, MD5_SIGNATURE_SIZE * 2 + 2);
-+	memset(client_digest, 0, MD5_SIGNATURE_SIZE);
-+	memset(server_digest, 0, MD5_SIGNATURE_SIZE);
-+
-+	challenge =3D kzalloc(CHAP_CHALLENGE_STR_LEN, GFP_KERNEL);
-+	if (!(challenge)) {
-+		printk(KERN_ERR "Unable to allocate challenge buffer\n");
-+		return -1;
-+	}
-+
-+	challenge_binhex =3D kzalloc(CHAP_CHALLENGE_STR_LEN, GFP_KERNEL);
-+	if (!(challenge_binhex)) {
-+		printk(KERN_ERR "Unable to allocate challenge_binhex buffer\n");
-+		kfree(challenge);
-+		return -1;
-+	}
++	int no_build_r2ts =3D 0;
++	u32 length =3D 0, offset =3D 0;
++	struct iscsi_conn *conn =3D cmd->conn;
++	struct se_cmd *se_cmd =3D SE_CMD(cmd);
 +	/*
-+	 * Extract CHAP_N.
++	 * The Initiator must not send a R2T SNACK with a Begrun less than
++	 * the TMR TASK_REASSIGN's ExpDataSN.
 +	 */
-+	if (extract_param(NR_in_ptr, "CHAP_N", MAX_CHAP_N_SIZE, chap_n,
-+				&type) < 0) {
-+		printk(KERN_ERR "Could not find CHAP_N.\n");
-+		goto out;
-+	}
-+	if (type =3D=3D HEX) {
-+		printk(KERN_ERR "Could not find CHAP_N.\n");
-+		goto out;
++	if (!tmr_req->exp_data_sn) {
++		cmd->cmd_flags &=3D ~ICF_GOT_DATACK_SNACK;
++		cmd->acked_data_sn =3D 0;
++	} else {
++		cmd->cmd_flags |=3D ICF_GOT_DATACK_SNACK;
++		cmd->acked_data_sn =3D (tmr_req->exp_data_sn - 1);
 +	}
 +
-+	if (memcmp(chap_n, auth->userid, strlen(auth->userid)) !=3D 0) {
-+		printk(KERN_ERR "CHAP_N values do not match!\n");
-+		goto out;
-+	}
-+	PRINT("[server] Got CHAP_N=3D%s\n", chap_n);
 +	/*
-+	 * Extract CHAP_R.
++	 * The TMR TASK_REASSIGN's ExpDataSN contains the next R2TSN the
++	 * Initiator is expecting.  The Target controls all WRITE operations
++	 * so if we have received all DataOUT we can safety ignore Initiator.
 +	 */
-+	if (extract_param(NR_in_ptr, "CHAP_R", MAX_RESPONSE_LENGTH, chap_r,
-+				&type) < 0) {
-+		printk(KERN_ERR "Could not find CHAP_R.\n");
-+		goto out;
-+	}
-+	if (type !=3D HEX) {
-+		printk(KERN_ERR "Could not find CHAP_R.\n");
-+		goto out;
-+	}
++	if (cmd->cmd_flags & ICF_GOT_LAST_DATAOUT) {
++		if (!atomic_read(&cmd->transport_sent)) {
++			TRACE(TRACE_ERL2, "WRITE ITT: 0x%08x: t_state: %d"
++				" never sent to transport\n",
++				cmd->init_task_tag, cmd->se_cmd.t_state);
++			return transport_generic_handle_data(se_cmd);
++		}
 +
-+	PRINT("[server] Got CHAP_R=3D%s\n", chap_r);
-+	chap_string_to_hex(client_digest, chap_r, strlen(chap_r));
-+
-+	tfm =3D crypto_alloc_hash("md5", 0, CRYPTO_ALG_ASYNC);
-+	if (IS_ERR(tfm)) {
-+		printk(KERN_ERR "Unable to allocate struct crypto_hash\n");
-+		goto out;
-+	}
-+	desc.tfm =3D tfm;
-+	desc.flags =3D 0;
-+
-+	ret =3D crypto_hash_init(&desc);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_init() failed\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)&chap->id, 1);
-+	ret =3D crypto_hash_update(&desc, &sg, 1);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for id\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)&auth->password, strlen(auth->password));
-+	ret =3D crypto_hash_update(&desc, &sg, strlen(auth->password));
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for password\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)chap->challenge, strlen(chap->challenge));
-+	ret =3D crypto_hash_update(&desc, &sg, strlen(chap->challenge));
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for challenge\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	ret =3D crypto_hash_final(&desc, server_digest);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_final() failed for server digest\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+	crypto_free_hash(tfm);
-+
-+	chap_binaryhex_to_asciihex(response, server_digest, MD5_SIGNATURE_SIZ=
-E);
-+	PRINT("[server] MD5 Server Digest: %s\n", response);
-+
-+	if (memcmp(server_digest, client_digest, MD5_SIGNATURE_SIZE) !=3D 0) =
-{
-+		PRINT("[server] MD5 Digests do not match!\n\n");
-+		goto out;
-+	} else
-+		PRINT("[server] MD5 Digests match, CHAP connetication"
-+				" successful.\n\n");
-+	/*
-+	 * One way authentication has succeeded, return now if mutual
-+	 * authentication is not enabled.
-+	 */
-+	if (!auth->authenticate_target) {
-+		kfree(challenge);
-+		kfree(challenge_binhex);
++		cmd->i_state =3D ISTATE_SEND_STATUS;
++		iscsi_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
 +		return 0;
 +	}
-+	/*
-+	 * Get CHAP_I.
-+	 */
-+	if (extract_param(NR_in_ptr, "CHAP_I", 10, identifier, &type) < 0) {
-+		printk(KERN_ERR "Could not find CHAP_I.\n");
-+		goto out;
-+	}
 +
-+	if (type =3D=3D HEX)
-+		id =3D (unsigned char)simple_strtoul((char *)&identifier[2],
-+					&endptr, 0);
-+	else
-+		id =3D (unsigned char)simple_strtoul(identifier, &endptr, 0);
 +	/*
-+	 * RFC 1994 says Identifier is no more than octet (8 bits).
++	 * Special case to deal with DataSequenceInOrder=3DNo and Non-Immeida=
+te
++	 * Unsolicited DataOut.
 +	 */
-+	PRINT("[server] Got CHAP_I=3D%d\n", id);
-+	/*
-+	 * Get CHAP_C.
-+	 */
-+	if (extract_param(NR_in_ptr, "CHAP_C", CHAP_CHALLENGE_STR_LEN,
-+			challenge, &type) < 0) {
-+		printk(KERN_ERR "Could not find CHAP_C.\n");
-+		goto out;
-+	}
++	if (cmd->unsolicited_data) {
++		cmd->unsolicited_data =3D 0;
 +
-+	if (type !=3D HEX) {
-+		printk(KERN_ERR "Could not find CHAP_C.\n");
-+		goto out;
-+	}
-+	PRINT("[server] Got CHAP_C=3D%s\n", challenge);
-+	challenge_len =3D chap_string_to_hex(challenge_binhex, challenge,
-+				strlen(challenge));
-+	if (!(challenge_len)) {
-+		printk(KERN_ERR "Unable to convert incoming challenge\n");
-+		goto out;
++		offset =3D cmd->next_burst_len =3D cmd->write_data_done;
++
++		if ((conn->sess->sess_ops->FirstBurstLength - offset) >=3D
++		     cmd->data_length) {
++			no_build_r2ts =3D 1;
++			length =3D (cmd->data_length - offset);
++		} else
++			length =3D (conn->sess->sess_ops->FirstBurstLength - offset);
++
++		spin_lock_bh(&cmd->r2t_lock);
++		if (iscsi_add_r2t_to_list(cmd, offset, length, 0, 0) < 0) {
++			spin_unlock_bh(&cmd->r2t_lock);
++			return -1;
++		}
++		cmd->outstanding_r2ts++;
++		spin_unlock_bh(&cmd->r2t_lock);
++
++		if (no_build_r2ts)
++			return 0;
 +	}
 +	/*
-+	 * Generate CHAP_N and CHAP_R for mutual authentication.
++	 * iscsi_build_r2ts_for_cmd() can handle the rest from here.
 +	 */
-+	tfm =3D crypto_alloc_hash("md5", 0, CRYPTO_ALG_ASYNC);
-+	if (IS_ERR(tfm)) {
-+		printk(KERN_ERR "Unable to allocate struct crypto_hash\n");
-+		goto out;
-+	}
-+	desc.tfm =3D tfm;
-+	desc.flags =3D 0;
-+
-+	ret =3D crypto_hash_init(&desc);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_init() failed\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)&id, 1);
-+	ret =3D crypto_hash_update(&desc, &sg, 1);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for id\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	sg_init_one(&sg, (void *)auth->password_mutual,
-+				strlen(auth->password_mutual));
-+	ret =3D crypto_hash_update(&desc, &sg, strlen(auth->password_mutual))=
-;
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for"
-+				" password_mutual\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+	/*
-+	 * Convert received challenge to binary hex.
-+	 */
-+	sg_init_one(&sg, (void *)challenge_binhex, challenge_len);
-+	ret =3D crypto_hash_update(&desc, &sg, challenge_len);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_update() failed for ma challenge\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+
-+	ret =3D crypto_hash_final(&desc, digest);
-+	if (ret < 0) {
-+		printk(KERN_ERR "crypto_hash_final() failed for ma digest\n");
-+		crypto_free_hash(tfm);
-+		goto out;
-+	}
-+	crypto_free_hash(tfm);
-+	/*
-+	 * Generate CHAP_N and CHAP_R.
-+	 */
-+	*NR_out_len =3D sprintf(NR_out_ptr, "CHAP_N=3D%s", auth->userid_mutua=
-l);
-+	*NR_out_len +=3D 1;
-+	PRINT("[server] Sending CHAP_N=3D%s\n", auth->userid_mutual);
-+	/*
-+	 * Convert response from binary hex to ascii hext.
-+	 */
-+	chap_binaryhex_to_asciihex(response, digest, MD5_SIGNATURE_SIZE);
-+	*NR_out_len +=3D sprintf(NR_out_ptr + *NR_out_len, "CHAP_R=3D0x%s",
-+			response);
-+	*NR_out_len +=3D 1;
-+	PRINT("[server] Sending CHAP_R=3D0x%s\n", response);
-+	auth_ret =3D 0;
-+out:
-+	kfree(challenge);
-+	kfree(challenge_binhex);
-+	return auth_ret;
++	return iscsi_build_r2ts_for_cmd(cmd, conn, 2);
 +}
 +
-+int chap_got_response(
-+	struct iscsi_conn *conn,
-+	struct iscsi_node_auth *auth,
-+	char *NR_in_ptr,
-+	char *NR_out_ptr,
-+	unsigned int *NR_out_len)
++static int iscsi_task_reassign_complete_read(
++	struct iscsi_cmd *cmd,
++	struct iscsi_tmr_req *tmr_req)
 +{
-+	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
-;
++	struct iscsi_conn *conn =3D cmd->conn;
++	struct iscsi_datain_req *dr;
++	struct se_cmd *se_cmd =3D SE_CMD(cmd);
++	/*
++	 * The Initiator must not send a Data SNACK with a BegRun less than
++	 * the TMR TASK_REASSIGN's ExpDataSN.
++	 */
++	if (!tmr_req->exp_data_sn) {
++		cmd->cmd_flags &=3D ~ICF_GOT_DATACK_SNACK;
++		cmd->acked_data_sn =3D 0;
++	} else {
++		cmd->cmd_flags |=3D ICF_GOT_DATACK_SNACK;
++		cmd->acked_data_sn =3D (tmr_req->exp_data_sn - 1);
++	}
 +
-+	switch (chap->digest_type) {
-+	case CHAP_DIGEST_MD5:
-+		if (chap_server_compute_md5(conn, auth, NR_in_ptr,
-+				NR_out_ptr, NR_out_len) < 0)
-+			return -1;
++	if (!atomic_read(&cmd->transport_sent)) {
++		printk(KERN_INFO "READ ITT: 0x%08x: t_state: %d never sent to"
++			" transport\n", cmd->init_task_tag,
++			SE_CMD(cmd)->t_state);
++		transport_generic_handle_cdb(se_cmd);
++		return 0;
++	}
++
++	if (!atomic_read(&T_TASK(se_cmd)->t_transport_complete)) {
++		printk(KERN_ERR "READ ITT: 0x%08x: t_state: %d, never returned"
++			" from transport\n", cmd->init_task_tag,
++			SE_CMD(cmd)->t_state);
++		return -1;
++	}
++
++	dr =3D iscsi_allocate_datain_req();
++	if (!dr)
++		return -1;
++	/*
++	 * The TMR TASK_REASSIGN's ExpDataSN contains the next DataSN the
++	 * Initiator is expecting.
++	 */
++	dr->data_sn =3D dr->begrun =3D tmr_req->exp_data_sn;
++	dr->runlength =3D 0;
++	dr->generate_recovery_values =3D 1;
++	dr->recovery =3D DATAIN_CONNECTION_RECOVERY;
++
++	iscsi_attach_datain_req(cmd, dr);
++
++	cmd->i_state =3D ISTATE_SEND_DATAIN;
++	iscsi_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
++	return 0;
++}
++
++static int iscsi_task_reassign_complete_none(
++	struct iscsi_cmd *cmd,
++	struct iscsi_tmr_req *tmr_req)
++{
++	struct iscsi_conn *conn =3D cmd->conn;
++
++	cmd->i_state =3D ISTATE_SEND_STATUS;
++	iscsi_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
++	return 0;
++}
++
++static int iscsi_task_reassign_complete_scsi_cmnd(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
++{
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd =3D se_tmr->ref_cmd;
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++	struct iscsi_conn_recovery *cr;
++
++	if (!cmd->cr) {
++		printk(KERN_ERR "struct iscsi_conn_recovery pointer for ITT: 0x%08x"
++			" is NULL!\n", cmd->init_task_tag);
++		return -1;
++	}
++	cr =3D cmd->cr;
++
++	/*
++	 * Reset the StatSN so a new one for this commands new connection
++	 * will be assigned.
++	 * Reset the ExpStatSN as well so we may receive Status SNACKs.
++	 */
++	cmd->stat_sn =3D cmd->exp_stat_sn =3D 0;
++
++	iscsi_task_reassign_remove_cmd(cmd, cr, conn->sess);
++	iscsi_attach_cmd_to_queue(conn, cmd);
++
++	if (se_cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION) {
++		cmd->i_state =3D ISTATE_SEND_STATUS;
++		iscsi_add_cmd_to_response_queue(cmd, conn, cmd->i_state);
++		return 0;
++	}
++
++	switch (cmd->data_direction) {
++	case DMA_TO_DEVICE:
++		return iscsi_task_reassign_complete_write(cmd, tmr_req);
++	case DMA_FROM_DEVICE:
++		return iscsi_task_reassign_complete_read(cmd, tmr_req);
++	case DMA_NONE:
++		return iscsi_task_reassign_complete_none(cmd, tmr_req);
++	default:
++		printk(KERN_ERR "Unknown cmd->data_direction: 0x%02x\n",
++				cmd->data_direction);
++		return -1;
++	}
++
++	return 0;
++}
++
++/*	iscsi_task_reassign_complete():
++ *
++ *	Called from iscsi_tmr_post_handler().
++ */
++static int iscsi_task_reassign_complete(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
++{
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd;
++	struct iscsi_cmd *cmd;
++	int ret =3D 0;
++
++	if (!se_tmr->ref_cmd) {
++		printk(KERN_ERR "TMR Request is missing a RefCmd struct iscsi_cmd.\n=
+");
++		return -1;
++	}
++	se_cmd =3D se_tmr->ref_cmd;
++	cmd =3D container_of(se_cmd, struct iscsi_cmd, se_cmd);
++
++	cmd->conn =3D conn;
++
++	switch (cmd->iscsi_opcode) {
++	case ISCSI_OP_NOOP_OUT:
++		ret =3D iscsi_task_reassign_complete_nop_out(tmr_req, conn);
++		break;
++	case ISCSI_OP_SCSI_CMD:
++		ret =3D iscsi_task_reassign_complete_scsi_cmnd(tmr_req, conn);
 +		break;
 +	default:
-+		printk(KERN_ERR "Unknown CHAP digest type %d!\n",
-+				chap->digest_type);
++		 printk(KERN_ERR "Illegal iSCSI Opcode 0x%02x during"
++			" command realligence\n", cmd->iscsi_opcode);
 +		return -1;
 +	}
++
++	if (ret !=3D 0)
++		return ret;
++
++	TRACE(TRACE_ERL2, "Completed connection realligence for Opcode: 0x%02=
+x,"
++		" ITT: 0x%08x to CID: %hu.\n", cmd->iscsi_opcode,
++			cmd->init_task_tag, conn->cid);
 +
 +	return 0;
 +}
 +
-+u32 chap_main_loop(
-+	struct iscsi_conn *conn,
-+	struct iscsi_node_auth *auth,
-+	char *in_text,
-+	char *out_text,
-+	int *in_len,
-+	int *out_len)
++/*	iscsi_tmr_post_handler():
++ *
++ *	Handles special after-the-fact actions related to TMRs.
++ *	Right now the only one that its really needed for is
++ *	connection recovery releated TASK_REASSIGN.
++ */
++extern int iscsi_tmr_post_handler(struct iscsi_cmd *cmd, struct iscsi_=
+conn *conn)
 +{
-+	struct iscsi_chap *chap =3D (struct iscsi_chap *) conn->auth_protocol=
-;
++	struct iscsi_tmr_req *tmr_req =3D cmd->tmr_req;
++	struct se_tmr_req *se_tmr =3D SE_CMD(cmd)->se_tmr_req;
 +
-+	if (!(chap)) {
-+		chap =3D chap_server_open(conn, auth, in_text, out_text, out_len);
-+		if (!(chap))
-+			return 2;
-+		chap->chap_state =3D CHAP_STAGE_SERVER_AIC;
-+		return 0;
-+	} else if (chap->chap_state =3D=3D CHAP_STAGE_SERVER_AIC) {
-+		convert_null_to_semi(in_text, *in_len);
-+		if (chap_got_response(conn, auth, in_text, out_text,
-+				out_len) < 0) {
-+			chap_close(conn);
-+			return 2;
++	if (tmr_req->task_reassign &&
++	   (se_tmr->response =3D=3D ISCSI_TMF_RSP_COMPLETE))
++		return iscsi_task_reassign_complete(tmr_req, conn);
++
++	return 0;
++}
++
++/*	iscsi_task_reassign_prepare_read():
++ *
++ *	Nothing to do here, but leave it for good measure. :-)
++ */
++int iscsi_task_reassign_prepare_read(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
++{
++	return 0;
++}
++
++static void iscsi_task_reassign_prepare_unsolicited_dataout(
++	struct iscsi_cmd *cmd,
++	struct iscsi_conn *conn)
++{
++	int i, j;
++	struct iscsi_pdu *pdu =3D NULL;
++	struct iscsi_seq *seq =3D NULL;
++
++	if (conn->sess->sess_ops->DataSequenceInOrder) {
++		cmd->data_sn =3D 0;
++
++		if (cmd->immediate_data)
++			cmd->r2t_offset +=3D (cmd->first_burst_len -
++				cmd->seq_start_offset);
++
++		if (conn->sess->sess_ops->DataPDUInOrder) {
++			cmd->write_data_done -=3D (cmd->immediate_data) ?
++						(cmd->first_burst_len -
++						 cmd->seq_start_offset) :
++						 cmd->first_burst_len;
++			cmd->first_burst_len =3D 0;
++			return;
 +		}
-+		if (auth->authenticate_target)
-+			chap->chap_state =3D CHAP_STAGE_SERVER_NR;
-+		else
-+			*out_len =3D 0;
-+		chap_close(conn);
-+		return 1;
++
++		for (i =3D 0; i < cmd->pdu_count; i++) {
++			pdu =3D &cmd->pdu_list[i];
++
++			if (pdu->status !=3D ISCSI_PDU_RECEIVED_OK)
++				continue;
++
++			if ((pdu->offset >=3D cmd->seq_start_offset) &&
++			   ((pdu->offset + pdu->length) <=3D
++			     cmd->seq_end_offset)) {
++				cmd->first_burst_len -=3D pdu->length;
++				cmd->write_data_done -=3D pdu->length;
++				pdu->status =3D ISCSI_PDU_NOT_RECEIVED;
++			}
++		}
++	} else {
++		for (i =3D 0; i < cmd->seq_count; i++) {
++			seq =3D &cmd->seq_list[i];
++
++			if (seq->type !=3D SEQTYPE_UNSOLICITED)
++				continue;
++
++			cmd->write_data_done -=3D
++					(seq->offset - seq->orig_offset);
++			cmd->first_burst_len =3D 0;
++			seq->data_sn =3D 0;
++			seq->offset =3D seq->orig_offset;
++			seq->next_burst_len =3D 0;
++			seq->status =3D DATAOUT_SEQUENCE_WITHIN_COMMAND_RECOVERY;
++
++			if (conn->sess->sess_ops->DataPDUInOrder)
++				continue;
++
++			for (j =3D 0; j < seq->pdu_count; j++) {
++				pdu =3D &cmd->pdu_list[j+seq->pdu_start];
++
++				if (pdu->status !=3D ISCSI_PDU_RECEIVED_OK)
++					continue;
++
++				pdu->status =3D ISCSI_PDU_NOT_RECEIVED;
++			}
++		}
 +	}
 +
-+	return 2;
++	return;
 +}
-diff --git a/drivers/target/iscsi/iscsi_target_auth.h b/drivers/target/=
-iscsi/iscsi_target_auth.h
++
++int iscsi_task_reassign_prepare_write(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
++{
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd =3D se_tmr->ref_cmd;
++	struct iscsi_cmd *cmd =3D container_of(se_cmd, struct iscsi_cmd, se_c=
+md);
++	struct iscsi_pdu *pdu =3D NULL;
++	struct iscsi_r2t *r2t =3D NULL, *r2t_tmp;
++	int first_incomplete_r2t =3D 1, i =3D 0;
++
++	/*
++	 * The command was in the process of receiving Unsolicited DataOUT wh=
+en
++	 * the connection failed.
++	 */
++	if (cmd->unsolicited_data)
++		iscsi_task_reassign_prepare_unsolicited_dataout(cmd, conn);
++
++	/*
++	 * The Initiator is requesting R2Ts starting from zero,  skip
++	 * checking acknowledged R2Ts and start checking struct iscsi_r2ts
++	 * greater than zero.
++	 */
++	if (!tmr_req->exp_data_sn)
++		goto drop_unacknowledged_r2ts;
++
++	/*
++	 * We now check that the PDUs in DataOUT sequences below
++	 * the TMR TASK_REASSIGN ExpDataSN (R2TSN the Initiator is
++	 * expecting next) have all the DataOUT they require to complete
++	 * the DataOUT sequence.  First scan from R2TSN 0 to TMR
++	 * TASK_REASSIGN ExpDataSN-1.
++	 *
++	 * If we have not received all DataOUT in question,  we must
++	 * make sure to make the appropriate changes to values in
++	 * struct iscsi_cmd (and elsewhere depending on session parameters)
++	 * so iscsi_build_r2ts_for_cmd() in iscsi_task_reassign_complete_writ=
+e()
++	 * will resend a new R2T for the DataOUT sequences in question.
++	 */
++	spin_lock_bh(&cmd->r2t_lock);
++	if (list_empty(&cmd->cmd_r2t_list)) {
++		spin_unlock_bh(&cmd->r2t_lock);
++		return -1;
++	}
++
++	list_for_each_entry(r2t, &cmd->cmd_r2t_list, r2t_list) {
++
++		if (r2t->r2t_sn >=3D tmr_req->exp_data_sn)
++			continue;
++		/*
++		 * Safely ignore Recovery R2Ts and R2Ts that have completed
++		 * DataOUT sequences.
++		 */
++		if (r2t->seq_complete)
++			continue;
++
++		if (r2t->recovery_r2t)
++			continue;
++
++		/*
++		 *                 DataSequenceInOrder=3DYes:
++		 *
++		 * Taking into account the iSCSI implementation requirement of
++		 * MaxOutstandingR2T=3D1 while ErrorRecoveryLevel>0 and
++		 * DataSequenceInOrder=3DYes, we must take into consideration
++		 * the following:
++		 *
++		 *                  DataSequenceInOrder=3DNo:
++		 *
++		 * Taking into account that the Initiator controls the (possibly
++		 * random) PDU Order in (possibly random) Sequence Order of
++		 * DataOUT the target requests with R2Ts,  we must take into
++		 * consideration the following:
++		 *
++		 *      DataPDUInOrder=3DYes for DataSequenceInOrder=3D[Yes,No]:
++		 *
++		 * While processing non-complete R2T DataOUT sequence requests
++		 * the Target will re-request only the total sequence length
++		 * minus current received offset.  This is because we must
++		 * assume the initiator will continue sending DataOUT from the
++		 * last PDU before the connection failed.
++		 *
++		 *      DataPDUInOrder=3DNo for DataSequenceInOrder=3D[Yes,No]:
++		 *
++		 * While processing non-complete R2T DataOUT sequence requests
++		 * the Target will re-request the entire DataOUT sequence if
++		 * any single PDU is missing from the sequence.  This is because
++		 * we have no logical method to determine the next PDU offset,
++		 * and we must assume the Initiator will be sending any random
++		 * PDU offset in the current sequence after TASK_REASSIGN
++		 * has completed.
++		 */
++		if (conn->sess->sess_ops->DataSequenceInOrder) {
++			if (!first_incomplete_r2t) {
++				cmd->r2t_offset -=3D r2t->xfer_len;
++				goto next;
++			}
++
++			if (conn->sess->sess_ops->DataPDUInOrder) {
++				cmd->data_sn =3D 0;
++				cmd->r2t_offset -=3D (r2t->xfer_len -
++					cmd->next_burst_len);
++				first_incomplete_r2t =3D 0;
++				goto next;
++			}
++
++			cmd->data_sn =3D 0;
++			cmd->r2t_offset -=3D r2t->xfer_len;
++
++			for (i =3D 0; i < cmd->pdu_count; i++) {
++				pdu =3D &cmd->pdu_list[i];
++
++				if (pdu->status !=3D ISCSI_PDU_RECEIVED_OK)
++					continue;
++
++				if ((pdu->offset >=3D r2t->offset) &&
++				    (pdu->offset < (r2t->offset +
++						r2t->xfer_len))) {
++					cmd->next_burst_len -=3D pdu->length;
++					cmd->write_data_done -=3D pdu->length;
++					pdu->status =3D ISCSI_PDU_NOT_RECEIVED;
++				}
++			}
++
++			first_incomplete_r2t =3D 0;
++		} else {
++			struct iscsi_seq *seq;
++
++			seq =3D iscsi_get_seq_holder(cmd, r2t->offset,
++					r2t->xfer_len);
++			if (!seq) {
++				spin_unlock_bh(&cmd->r2t_lock);
++				return -1;
++			}
++
++			cmd->write_data_done -=3D
++					(seq->offset - seq->orig_offset);
++			seq->data_sn =3D 0;
++			seq->offset =3D seq->orig_offset;
++			seq->next_burst_len =3D 0;
++			seq->status =3D DATAOUT_SEQUENCE_WITHIN_COMMAND_RECOVERY;
++
++			cmd->seq_send_order--;
++
++			if (conn->sess->sess_ops->DataPDUInOrder)
++				goto next;
++
++			for (i =3D 0; i < seq->pdu_count; i++) {
++				pdu =3D &cmd->pdu_list[i+seq->pdu_start];
++
++				if (pdu->status !=3D ISCSI_PDU_RECEIVED_OK)
++					continue;
++
++				pdu->status =3D ISCSI_PDU_NOT_RECEIVED;
++			}
++		}
++
++next:
++		cmd->outstanding_r2ts--;
++	}
++	spin_unlock_bh(&cmd->r2t_lock);
++
++	/*
++	 * We now drop all unacknowledged R2Ts, ie: ExpDataSN from TMR
++	 * TASK_REASSIGN to the last R2T in the list..  We are also careful
++	 * to check that the Initiator is not requesting R2Ts for DataOUT
++	 * sequences it has already completed.
++	 *
++	 * Free each R2T in question and adjust values in struct iscsi_cmd
++	 * accordingly so iscsi_build_r2ts_for_cmd() do the rest of
++	 * the work after the TMR TASK_REASSIGN Response is sent.
++	 */
++drop_unacknowledged_r2ts:
++
++	cmd->cmd_flags &=3D ~ICF_SENT_LAST_R2T;
++	cmd->r2t_sn =3D tmr_req->exp_data_sn;
++
++	spin_lock_bh(&cmd->r2t_lock);
++	list_for_each_entry_safe(r2t, r2t_tmp, &cmd->cmd_r2t_list, r2t_list) =
+{
++		/*
++		 * Skip up to the R2T Sequence number provided by the
++		 * iSCSI TASK_REASSIGN TMR
++		 */
++		if (r2t->r2t_sn < tmr_req->exp_data_sn)
++			continue;
++
++		if (r2t->seq_complete) {
++			printk(KERN_ERR "Initiator is requesting R2Ts from"
++				" R2TSN: 0x%08x, but R2TSN: 0x%08x, Offset: %u,"
++				" Length: %u is already complete."
++				"   BAD INITIATOR ERL=3D2 IMPLEMENTATION!\n",
++				tmr_req->exp_data_sn, r2t->r2t_sn,
++				r2t->offset, r2t->xfer_len);
++			spin_unlock_bh(&cmd->r2t_lock);
++			return -1;
++		}
++
++		if (r2t->recovery_r2t) {
++			iscsi_free_r2t(r2t, cmd);
++			continue;
++		}
++
++		/*		   DataSequenceInOrder=3DYes:
++		 *
++		 * Taking into account the iSCSI implementation requirement of
++		 * MaxOutstandingR2T=3D1 while ErrorRecoveryLevel>0 and
++		 * DataSequenceInOrder=3DYes, it's safe to subtract the R2Ts
++		 * entire transfer length from the commands R2T offset marker.
++		 *
++		 *		   DataSequenceInOrder=3DNo:
++		 *
++		 * We subtract the difference from struct iscsi_seq between the
++		 * current offset and original offset from cmd->write_data_done
++		 * for account for DataOUT PDUs already received.  Then reset
++		 * the current offset to the original and zero out the current
++		 * burst length,  to make sure we re-request the entire DataOUT
++		 * sequence.
++		 */
++		if (conn->sess->sess_ops->DataSequenceInOrder)
++			cmd->r2t_offset -=3D r2t->xfer_len;
++		else
++			cmd->seq_send_order--;
++
++		cmd->outstanding_r2ts--;
++		iscsi_free_r2t(r2t, cmd);
++	}
++	spin_unlock_bh(&cmd->r2t_lock);
++
++	return 0;
++}
++
++/*	iscsi_check_task_reassign_expdatasn():
++ *
++ *	Performs sanity checks TMR TASK_REASSIGN's ExpDataSN for
++ *	a given struct iscsi_cmd.
++ */
++int iscsi_check_task_reassign_expdatasn(
++	struct iscsi_tmr_req *tmr_req,
++	struct iscsi_conn *conn)
++{
++	struct se_tmr_req *se_tmr =3D tmr_req->se_tmr_req;
++	struct se_cmd *se_cmd =3D se_tmr->ref_cmd;
++	struct iscsi_cmd *ref_cmd =3D container_of(se_cmd, struct iscsi_cmd, =
+se_cmd);
++
++	if (ref_cmd->iscsi_opcode !=3D ISCSI_OP_SCSI_CMD)
++		return 0;
++
++	if (se_cmd->se_cmd_flags & SCF_SENT_CHECK_CONDITION)
++		return 0;
++
++	if (ref_cmd->data_direction =3D=3D DMA_NONE)
++		return 0;
++
++	/*
++	 * For READs the TMR TASK_REASSIGNs ExpDataSN contains the next DataS=
+N
++	 * of DataIN the Initiator is expecting.
++	 *
++	 * Also check that the Initiator is not re-requesting DataIN that has
++	 * already been acknowledged with a DataAck SNACK.
++	 */
++	if (ref_cmd->data_direction =3D=3D DMA_FROM_DEVICE) {
++		if (tmr_req->exp_data_sn > ref_cmd->data_sn) {
++			printk(KERN_ERR "Received ExpDataSN: 0x%08x for READ"
++				" in TMR TASK_REASSIGN greater than command's"
++				" DataSN: 0x%08x.\n", tmr_req->exp_data_sn,
++				ref_cmd->data_sn);
++			return -1;
++		}
++		if ((ref_cmd->cmd_flags & ICF_GOT_DATACK_SNACK) &&
++		    (tmr_req->exp_data_sn <=3D ref_cmd->acked_data_sn)) {
++			printk(KERN_ERR "Received ExpDataSN: 0x%08x for READ"
++				" in TMR TASK_REASSIGN for previously"
++				" acknowledged DataIN: 0x%08x,"
++				" protocol error\n", tmr_req->exp_data_sn,
++				ref_cmd->acked_data_sn);
++			return -1;
++		}
++		return iscsi_task_reassign_prepare_read(tmr_req, conn);
++	}
++
++	/*
++	 * For WRITEs the TMR TASK_REASSIGNs ExpDataSN contains the next R2TS=
+N
++	 * for R2Ts the Initiator is expecting.
++	 *
++	 * Do the magic in iscsi_task_reassign_prepare_write().
++	 */
++	if (ref_cmd->data_direction =3D=3D DMA_TO_DEVICE) {
++		if (tmr_req->exp_data_sn > ref_cmd->r2t_sn) {
++			printk(KERN_ERR "Received ExpDataSN: 0x%08x for WRITE"
++				" in TMR TASK_REASSIGN greater than command's"
++				" R2TSN: 0x%08x.\n", tmr_req->exp_data_sn,
++					ref_cmd->r2t_sn);
++			return -1;
++		}
++		return iscsi_task_reassign_prepare_write(tmr_req, conn);
++	}
++
++	printk(KERN_ERR "Unknown iSCSI data_direction: 0x%02x\n",
++			ref_cmd->data_direction);
++
++	return -1;
++}
+diff --git a/drivers/target/iscsi/iscsi_target_tmr.h b/drivers/target/i=
+scsi/iscsi_target_tmr.h
 new file mode 100644
-index 0000000..a4492b6
+index 0000000..3d5fd92
 --- /dev/null
-+++ b/drivers/target/iscsi/iscsi_target_auth.h
-@@ -0,0 +1,33 @@
-+#ifndef _ISCSI_CHAP_H_
-+#define _ISCSI_CHAP_H_
++++ b/drivers/target/iscsi/iscsi_target_tmr.h
+@@ -0,0 +1,16 @@
++#ifndef ISCSI_TARGET_TMR_H
++#define ISCSI_TARGET_TMR_H
 +
-+#define CHAP_DIGEST_MD5		5
-+#define CHAP_DIGEST_SHA		6
++extern u8 iscsi_tmr_abort_task(struct iscsi_cmd *, unsigned char *);
++extern int iscsi_tmr_task_warm_reset(struct iscsi_conn *, struct iscsi=
+_tmr_req *,
++			unsigned char *);
++extern int iscsi_tmr_task_cold_reset(struct iscsi_conn *, struct iscsi=
+_tmr_req *,
++			unsigned char *);
++extern u8 iscsi_tmr_task_reassign(struct iscsi_cmd *, unsigned char *)=
+;
++extern int iscsi_tmr_post_handler(struct iscsi_cmd *, struct iscsi_con=
+n *);
++extern int iscsi_check_task_reassign_expdatasn(struct iscsi_tmr_req *,
++			struct iscsi_conn *);
 +
-+#define CHAP_CHALLENGE_LENGTH	16
-+#define CHAP_CHALLENGE_STR_LEN	4096
-+#define MAX_RESPONSE_LENGTH	64	/* sufficient for MD5 */
-+#define	MAX_CHAP_N_SIZE		512
++extern int iscsi_build_r2ts_for_cmd(struct iscsi_cmd *, struct iscsi_c=
+onn *, int);
 +
-+#define MD5_SIGNATURE_SIZE	16	/* 16 bytes in a MD5 message digest */
-+
-+#define CHAP_STAGE_CLIENT_A	1
-+#define CHAP_STAGE_SERVER_AIC	2
-+#define CHAP_STAGE_CLIENT_NR	3
-+#define CHAP_STAGE_CLIENT_NRIC	4
-+#define CHAP_STAGE_SERVER_NR	5
-+
-+extern int chap_gen_challenge(struct iscsi_conn *, int, char *, unsign=
-ed int *);
-+extern u32 chap_main_loop(struct iscsi_conn *, struct iscsi_node_auth =
-*, char *, char *,
-+				int *, int *);
-+
-+struct iscsi_chap {
-+	unsigned char	digest_type;
-+	unsigned char	id;
-+	unsigned char	challenge[CHAP_CHALLENGE_LENGTH];
-+	unsigned int	challenge_len;
-+	unsigned int	authenticate_target;
-+	unsigned int	chap_state;
-+} ____cacheline_aligned;
-+
-+#endif   /*** _ISCSI_CHAP_H_ ***/
++#endif /* ISCSI_TARGET_TMR_H */
 --=20
 1.7.4.1
 
