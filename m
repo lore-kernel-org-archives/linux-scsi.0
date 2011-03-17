@@ -1,73 +1,60 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 1/1] libiscsi_tcp: use kmap in xmit path
-Date: Thu, 17 Mar 2011 16:22:17 -0500
-Message-ID: <1300396937-11869-1-git-send-email-michaelc@cs.wisc.edu>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [GIT PULL] First round of SCSI updates for 2.6.38 merge window
+Date: Thu, 17 Mar 2011 14:19:09 -0700
+Message-ID: <1300396749.28255.554.camel@haakon2.linux-iscsi.org>
+References: <1300392635.17266.5.camel@mulgrave.site>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26726 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755473Ab1CQVV4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Mar 2011 17:21:56 -0400
+Received: from mail.linux-iscsi.org ([67.23.28.174]:53210 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755650Ab1CQV0N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2011 17:26:13 -0400
+In-Reply-To: <1300392635.17266.5.camel@mulgrave.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+To: James Bottomley <James.Bottomley@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+On Thu, 2011-03-17 at 16:10 -0400, James Bottomley wrote:
+> This represents the usual round of driver updates (fcoe, lpfc, qla2xxx,
+> zfcp, bnx2i, mpt2sas, megaraid_sas, iscsi, cxgbi and hpsa) plus one new
+> driver (bnx2fc) and as a bonus we move libsas from the old libata eh to
+> the new one paving the way for junking the old one (once we can get ipr
+> converted).
+> 
+> The patch is available here:
+> 
+> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+> 
 
-The xmit path can sleep with a page kmapped in the network
-xmit code while it waits for space to open up, so we have to use
-kmap instead of kmap atomic in that path.
+<SNIP>
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/libiscsi_tcp.c |   15 +++++++++++++--
- include/scsi/libiscsi_tcp.h |    1 +
- 2 files changed, 14 insertions(+), 2 deletions(-)
+> 
+> Nicholas Bellinger (1):
+>       target: Fix volume size misreporting for volumes > 2TB
 
-diff --git a/drivers/scsi/libiscsi_tcp.c b/drivers/scsi/libiscsi_tcp.c
-index 8eeb39f..e98ae33 100644
---- a/drivers/scsi/libiscsi_tcp.c
-+++ b/drivers/scsi/libiscsi_tcp.c
-@@ -132,14 +132,25 @@ static void iscsi_tcp_segment_map(struct iscsi_segment *segment, int recv)
- 	if (page_count(sg_page(sg)) >= 1 && !recv)
- 		return;
- 
--	segment->sg_mapped = kmap_atomic(sg_page(sg), KM_SOFTIRQ0);
-+	if (recv) {
-+		segment->atomic_mapped = true;
-+		segment->sg_mapped = kmap_atomic(sg_page(sg), KM_SOFTIRQ0);
-+	} else {
-+		segment->atomic_mapped = false;
-+		/* the xmit path can sleep with the page mapped so use kmap */
-+		segment->sg_mapped = kmap(sg_page(sg));
-+	}
-+
- 	segment->data = segment->sg_mapped + sg->offset + segment->sg_offset;
- }
- 
- void iscsi_tcp_segment_unmap(struct iscsi_segment *segment)
- {
- 	if (segment->sg_mapped) {
--		kunmap_atomic(segment->sg_mapped, KM_SOFTIRQ0);
-+		if (segment->atomic_mapped)
-+			kunmap_atomic(segment->sg_mapped, KM_SOFTIRQ0);
-+		else
-+			kunmap(sg_page(segment->sg));
- 		segment->sg_mapped = NULL;
- 		segment->data = NULL;
- 	}
-diff --git a/include/scsi/libiscsi_tcp.h b/include/scsi/libiscsi_tcp.h
-index 741ae7e..e6b9fd2 100644
---- a/include/scsi/libiscsi_tcp.h
-+++ b/include/scsi/libiscsi_tcp.h
-@@ -47,6 +47,7 @@ struct iscsi_segment {
- 	struct scatterlist	*sg;
- 	void			*sg_mapped;
- 	unsigned int		sg_offset;
-+	bool			atomic_mapped;
- 
- 	iscsi_segment_done_fn_t	*done;
- };
--- 
-1.7.2.3
+James,
+
+Just as a heads up I have pushed the deferred 'for-38' target core fixes
+you requested previously and the new 'for-39' target_core_stat.c
+configfs statistics group code, which was posted to linux-scsi here:
+
+[PATCH 00/21] target patches for .39 scsi-misc (v3)
+
+http://marc.info/?l=linux-scsi&m=130010108521141&w=2
+
+into a branch available here:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/scsi-post-merge-2.6.git for-39-misc-v4
+
+Please make sure these are picked up for target core going to mainline
+ASAP.
+
+The RFC-v3 for iscsi_target_mod will be going out shortly.
+
+Thanks,
+
+--nab
 
