@@ -1,17 +1,17 @@
 From: Jesper Juhl <jj@chaosbits.net>
-Subject: Re: [RFC-v3 03/12] iscsi-target: Add TCM v4 compatiable ConfigFS
- control plane
-Date: Thu, 17 Mar 2011 23:22:33 +0100 (CET)
-Message-ID: <alpine.LNX.2.00.1103172307510.1980@swampdragon.chaosbits.net>
-References: <1300398797-24536-1-git-send-email-nab@linux-iscsi.org> <1300398797-24536-4-git-send-email-nab@linux-iscsi.org>
+Subject: Re: [RFC-v3 07/12] iscsi-target: Add CHAP Authentication support
+ using libcrypto
+Date: Thu, 17 Mar 2011 23:46:13 +0100 (CET)
+Message-ID: <alpine.LNX.2.00.1103172331160.1980@swampdragon.chaosbits.net>
+References: <1300398797-24536-1-git-send-email-nab@linux-iscsi.org> <1300398797-24536-8-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from swampdragon.chaosbits.net ([90.184.90.115]:11448 "EHLO
+Received: from swampdragon.chaosbits.net ([90.184.90.115]:11770 "EHLO
 	swampdragon.chaosbits.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754107Ab1CQWWt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2011 18:22:49 -0400
-In-Reply-To: <1300398797-24536-4-git-send-email-nab@linux-iscsi.org>
+	with ESMTP id S1755343Ab1CQWq3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Mar 2011 18:46:29 -0400
+In-Reply-To: <1300398797-24536-8-git-send-email-nab@linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
@@ -21,167 +21,223 @@ On Thu, 17 Mar 2011, Nicholas A. Bellinger wrote:
 
 > From: Nicholas Bellinger <nab@linux-iscsi.org>
 > 
-> This patch adds support for /sys/kernel/config/target/iscsi using
-> TCM v4.0 compatiable calls following target_core_fabric_configfs.c
-> 
-> This includes a number of iSCSI fabric dependent attributes upon
-> target_core_fabric_configfs.c provided struct config_item_types from
-> include/target/target_core_configfs.hstruct target_fabric_configfs_template
-> 
-> It also includes iscsi_target_nodeattrib.[c,h] for handling the
-> lio_target_nacl_attrib_attrs[] store/show for iSCSI fabric dependent
-> attributes.
+
+Minor nitpicks below.
+
+
+> This patch adds support for libcrypto md5 based iSCSI CHAP authentication
+> support for iscsi_target_mod.  This includes support for mutual and one-way
+> NodeACL authentication for SessionType=Normal and SessionType=Discovery
+> via /sys/kernel/config/target/iscsi.
 > 
 > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
 > ---
->  drivers/target/iscsi/iscsi_target_configfs.c   | 1593 ++++++++++++++++++++++++
->  drivers/target/iscsi/iscsi_target_configfs.h   |    7 +
->  drivers/target/iscsi/iscsi_target_nodeattrib.c |  264 ++++
->  drivers/target/iscsi/iscsi_target_nodeattrib.h |   14 +
->  4 files changed, 1878 insertions(+), 0 deletions(-)
->  create mode 100644 drivers/target/iscsi/iscsi_target_configfs.c
->  create mode 100644 drivers/target/iscsi/iscsi_target_configfs.h
->  create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.c
->  create mode 100644 drivers/target/iscsi/iscsi_target_nodeattrib.h
+>  drivers/target/iscsi/iscsi_target_auth.c |  500 ++++++++++++++++++++++++++++++
+>  drivers/target/iscsi/iscsi_target_auth.h |   33 ++
+>  2 files changed, 533 insertions(+), 0 deletions(-)
+>  create mode 100644 drivers/target/iscsi/iscsi_target_auth.c
+>  create mode 100644 drivers/target/iscsi/iscsi_target_auth.h
 > 
-> diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+> diff --git a/drivers/target/iscsi/iscsi_target_auth.c b/drivers/target/iscsi/iscsi_target_auth.c
 > new file mode 100644
-> index 0000000..ae88092
+> index 0000000..d3711f4
 > --- /dev/null
-> +++ b/drivers/target/iscsi/iscsi_target_configfs.c
-> @@ -0,0 +1,1593 @@
+> +++ b/drivers/target/iscsi/iscsi_target_auth.c
+> @@ -0,0 +1,500 @@
 > +/*******************************************************************************
-> + * This file contains the configfs implementation for iSCSI Target mode
-> + * from the LIO-Target Project.
+> + * This file houses the main functions for the iSCSI CHAP support
 > + *
 > + * ?? Copyright 2007-2011 RisingTide Systems LLC.
 
 "??" ?
-You have this in other files as well - what's the point of those two 
-question marks?
 
 
-> +struct se_tpg_np *lio_target_call_addnptotpg(
-> +	struct se_portal_group *se_tpg,
-> +	struct config_group *group,
-> +	const char *name)
+> +int chap_string_to_hex(unsigned char *dst, unsigned char *src, int len)
 > +{
-> +	struct iscsi_portal_group *tpg;
-> +	struct iscsi_tpg_np *tpg_np;
-> +	char *str, *str2, *end_ptr, *ip_str, *port_str;
-> +	struct iscsi_np_addr np_addr;
-> +	u32 ipv4 = 0;
-> +	int ret;
-> +	char buf[MAX_PORTAL_LEN + 1];
+> +	int i = 0, j = 0;
 > +
-> +	if (strlen(name) > MAX_PORTAL_LEN) {
-> +		printk(KERN_ERR "strlen(name): %d exceeds MAX_PORTAL_LEN: %d\n",
-> +			(int)strlen(name), MAX_PORTAL_LEN);
-> +		return ERR_PTR(-EOVERFLOW);
+> +	for (i = 0; i < len; i += 2)
+
+Initializing 'i' to zero twice is a little needless.
+
+
+> +void chap_binaryhex_to_asciihex(char *dst, char *src, int src_len)
+> +{
+> +	int i;
+> +
+> +	for (i = 0; i < src_len; i++)
+
+Do we still support compiler versions that don't understand 'for-scope'?
+
+for (int i = 0; ...
+
+
+> +void chap_set_random(char *data, int length)
+> +{
+> +	long r;
+> +	unsigned n;
+> +
+> +	while (length > 0) {
+> +
+
+Pointless newline IMHO.
+
+> +		get_random_bytes(&r, sizeof(long));
+> +		r = r ^ (r >> 8);
+> +		r = r ^ (r >> 4);
+> +		n = r & 0x7;
+> +
+> +		get_random_bytes(&r, sizeof(long));
+> +		r = r ^ (r >> 8);
+> +		r = r ^ (r >> 5);
+> +		n = (n << 3) | (r & 0x7);
+> +
+> +		get_random_bytes(&r, sizeof(long));
+> +		r = r ^ (r >> 8);
+> +		r = r ^ (r >> 5);
+> +		n = (n << 2) | (r & 0x3);
+> +
+> +		*data++ = n;
+> +		 length--;
+
+Mixing space and tab in indentation here.
+
+
+> +int chap_gen_challenge(
+> +	struct iscsi_conn *conn,
+> +	int caller,
+> +	char *C_str,
+> +	unsigned int *C_len)
+> +{
+> +	unsigned char challenge_asciihex[CHAP_CHALLENGE_LENGTH * 2 + 1];
+> +	struct iscsi_chap *chap = (struct iscsi_chap *) conn->auth_protocol;
+> +
+> +	memset(challenge_asciihex, 0, CHAP_CHALLENGE_LENGTH * 2 + 1);
+> +
+> +	chap_set_random(chap->challenge, CHAP_CHALLENGE_LENGTH);
+> +	chap_binaryhex_to_asciihex(challenge_asciihex, chap->challenge,
+> +					CHAP_CHALLENGE_LENGTH);
+> +	/*
+> +	 * Set CHAP_C, and copy the generated challenge into C_str.
+> +	 */
+> +	*C_len += sprintf(C_str + *C_len, "CHAP_C=0x%s", challenge_asciihex);
+> +	*C_len += 1;
+> +
+> +	PRINT("[%s] Sending CHAP_C=0x%s\n\n", (caller) ? "server" : "client",
+> +			challenge_asciihex);
+> +	return 0;
+
+You only ever return '0', so why couldn't this function just return 
+'void'?  - sorry, didn't bother to actually check how its used :-/
+
+
+> +int chap_server_compute_md5(
+> +	struct iscsi_conn *conn,
+> +	struct iscsi_node_auth *auth,
+> +	char *NR_in_ptr,
+> +	char *NR_out_ptr,
+> +	unsigned int *NR_out_len)
+> +{
+> +	char *endptr;
+> +	unsigned char id, digest[MD5_SIGNATURE_SIZE];
+> +	unsigned char type, response[MD5_SIGNATURE_SIZE * 2 + 2];
+> +	unsigned char identifier[10], *challenge, *challenge_binhex;
+
+If you changed the above line to 
+
+	unsigned char identifier[10], *challenge;
+	unsigned char *challenge_binhex = 0;
+
+> +	unsigned char client_digest[MD5_SIGNATURE_SIZE];
+> +	unsigned char server_digest[MD5_SIGNATURE_SIZE];
+> +	unsigned char chap_n[MAX_CHAP_N_SIZE], chap_r[MAX_RESPONSE_LENGTH];
+> +	struct iscsi_chap *chap = (struct iscsi_chap *) conn->auth_protocol;
+> +	struct crypto_hash *tfm;
+> +	struct hash_desc desc;
+> +	struct scatterlist sg;
+> +	int auth_ret = -1, ret, challenge_len;
+> +
+> +	memset(identifier, 0, 10);
+> +	memset(chap_n, 0, MAX_CHAP_N_SIZE);
+> +	memset(chap_r, 0, MAX_RESPONSE_LENGTH);
+> +	memset(digest, 0, MD5_SIGNATURE_SIZE);
+> +	memset(response, 0, MD5_SIGNATURE_SIZE * 2 + 2);
+> +	memset(client_digest, 0, MD5_SIGNATURE_SIZE);
+> +	memset(server_digest, 0, MD5_SIGNATURE_SIZE);
+> +
+> +	challenge = kzalloc(CHAP_CHALLENGE_STR_LEN, GFP_KERNEL);
+> +	if (!(challenge)) {
+> +		printk(KERN_ERR "Unable to allocate challenge buffer\n");
+> +		return -1;
+
+this could become "goto out;"
+
 > +	}
-> +	memset(buf, 0, MAX_PORTAL_LEN);
+> +
+> +	challenge_binhex = kzalloc(CHAP_CHALLENGE_STR_LEN, GFP_KERNEL);
+> +	if (!(challenge_binhex)) {
+> +		printk(KERN_ERR "Unable to allocate challenge_binhex buffer\n");
+> +		kfree(challenge);
+> +		return -1;
 
-memset(buf, 0, MAX_PORTAL_LEN + 1);
+and here the kfree() call could go away and the return be converted to 
+"goto out;".
+kfree(0) is a no-op.
 
+...
+> +	 * One way authentication has succeeded, return now if mutual
+> +	 * authentication is not enabled.
+> +	 */
+> +	if (!auth->authenticate_target) {
+> +		kfree(challenge);
+> +		kfree(challenge_binhex);
+> +		return 0;
 
-> +#define DEF_NACL_ATTRIB(name)						\
-> +static ssize_t iscsi_nacl_attrib_show_##name(				\
-> +	struct se_node_acl *se_nacl,					\
-> +	char *page)							\
-> +{									\
-> +	struct iscsi_node_acl *nacl = container_of(se_nacl, struct iscsi_node_acl, \
-> +					se_node_acl);			\
-> +	ssize_t rb;							\
-> +									\
-> +	rb = sprintf(page, "%u\n", ISCSI_NODE_ATTRIB(nacl)->name);	\
-> +	return rb;							\
+and here the two kfree() calls would also go away and "return 0" would be 
+replaced with 
 
-Why the 'rb' variable? Why not just
+	auth_ret = 0;
+	goto out;
 
-return sprintf(page, "%u\n", ISCSI_NODE_ATTRIB(nacl)->name);
+...
+> +out:
+> +	kfree(challenge);
+> +	kfree(challenge_binhex);
+> +	return auth_ret;
+> +}
 
-?
-
-
-> +#define __DEF_NACL_AUTH_STR(prefix, name, flags)			\
-> +static ssize_t __iscsi_##prefix##_show_##name(				\
-> +	struct iscsi_node_acl *nacl,					\
-> +	char *page)							\
-> +{									\
-> +	struct iscsi_node_auth *auth = &nacl->node_auth;		\
-> +	ssize_t rb;							\
-> +									\
-> +	if (!capable(CAP_SYS_ADMIN))					\
-> +		return -EPERM;						\
-> +	rb = snprintf(page, PAGE_SIZE, "%s\n", auth->name);		\
-> +	return rb;							\
-
-Kill 'rb' and just 
-
-  return snprintf(page, PAGE_SIZE, "%s\n", auth->name);
-
-I'd say.
+That would nicely consolidate *all* exits from the function in one
+place.
 
 
-> +#define __DEF_NACL_AUTH_INT(prefix, name)				\
-> +static ssize_t __iscsi_##prefix##_show_##name(				\
-> +	struct iscsi_node_acl *nacl,					\
-> +	char *page)							\
-> +{									\
-> +	struct iscsi_node_auth *auth = &nacl->node_auth;		\
-> +	ssize_t rb;							\
-> +									\
-> +	if (!capable(CAP_SYS_ADMIN))					\
-> +		return -EPERM;						\
-> +									\
-> +	rb = snprintf(page, PAGE_SIZE, "%d\n", auth->name);		\
-> +	return rb;							\
 
-Just kill that pointless 'rb' variable..
-
-
-> +static ssize_t lio_target_nacl_show_info(
-> +	struct se_node_acl *se_nacl,
-> +	char *page)
+> +
+> +int chap_got_response(
+> +	struct iscsi_conn *conn,
+> +	struct iscsi_node_auth *auth,
+> +	char *NR_in_ptr,
+> +	char *NR_out_ptr,
+> +	unsigned int *NR_out_len)
 > +{
-> +	struct iscsi_session *sess;
-> +	struct iscsi_conn *conn;
-> +	struct se_session *se_sess;
-> +	unsigned char *ip, buf_ipv4[IPV4_BUF_SIZE];
-> +	ssize_t rb = 0;
+> +	struct iscsi_chap *chap = (struct iscsi_chap *) conn->auth_protocol;
 > +
-> +	spin_lock_bh(&se_nacl->nacl_sess_lock);
-> +	se_sess = se_nacl->nacl_sess;
-> +	if (!se_sess) {
-> +		rb += sprintf(page+rb, "No active iSCSI Session for Initiator"
-> +			" Endpoint: %s\n", se_nacl->initiatorname);
-> +	} else {
-> +		sess = (struct iscsi_session *)se_sess->fabric_sess_ptr;
+> +	switch (chap->digest_type) {
+> +	case CHAP_DIGEST_MD5:
+> +		if (chap_server_compute_md5(conn, auth, NR_in_ptr,
+> +				NR_out_ptr, NR_out_len) < 0)
+> +			return -1;
+> +		break;
+> +	default:
+> +		printk(KERN_ERR "Unknown CHAP digest type %d!\n",
+> +				chap->digest_type);
+> +		return -1;
+> +	}
 > +
+> +	return 0;
 
-Is this cast needed?
-
-
-> +static ssize_t iscsi_tpg_param_store_##name(				\
-> +	struct se_portal_group *se_tpg,				\
-> +	const char *page,						\
-> +	size_t count)							\
-> +{									\
-> +	struct iscsi_portal_group *tpg = container_of(se_tpg,		\
-> +			struct iscsi_portal_group, tpg_se_tpg);		\
-> +	char *buf;							\
-> +	int ret;							\
-> +									\
-> +	buf = kzalloc(PAGE_SIZE, GFP_KERNEL);				\
-> +	if (!buf)							\
-> +		return -ENOMEM;						\
-> +	snprintf(buf, PAGE_SIZE, "%s=%s", __stringify(name), page);	\
-> +	buf[strlen(buf)-1] = '\0'; /* Kill newline */			\
-> +									\
-> +	if (iscsi_get_tpg(tpg) < 0)					\
-> +		return -EINVAL;						\
-
-You just leaked "buf".
+You could kill the 'return 0' and replace the 'break' above with 'return 
+0'. No difference in behaviour, but you'd save a few lines and it would be 
+just as readable IMHO.
 
 
 -- 
